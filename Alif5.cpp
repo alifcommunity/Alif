@@ -503,8 +503,10 @@ public:
             this->advance();
             this->tokens.push_back(Token(equalEqualT, positionStart));
         }
-        this->tokens.push_back(Token(equalT, this->position));
-
+        else
+        {
+            this->tokens.push_back(Token(equalT, this->position));
+        }
     }
 
     void make_less_than() {
@@ -527,8 +529,10 @@ public:
             this->advance();
             this->tokens.push_back(Token(greaterThanEqualT, positionStart));
         }
-        this->tokens.push_back(Token(greaterThanT, this->position));
-
+        else
+        {
+            this->tokens.push_back(Token(greaterThanT, this->position));
+        }
     }
 
     void skip_comment() {
@@ -578,9 +582,9 @@ public:
 
 class Parser {
 public:
-    // | NumberNode : 1             | UnaryOpNode : 2      | BinOpNode : 3     |
-    // | VarAccessNode : 4          | VarAssignNode : 5    | StringNode : 6    |
-    // | StatementConditionNode : 7 |
+    // | IntegerNumberNode : 1      | floatNumberNode : 2    | UnaryOpNode : 3      | BinOpNode : 4               |
+    // | VarAccessNode : 5          | VarAssignNode : 6      | StringNode : 7       | StatementConditionNode : 8  |
+
     list<Token> tokens;
     int tokenIndex;
     Token currentToken;
@@ -626,18 +630,18 @@ public:
         if (token.type_ == integerT or token.type_ == floatT)
         {
             this->advance();
-            node = new Node(token, 1);
+            node = new Node(token, 1); // 1 : NumberNode
             return;
         }
         else if (token.type_ == stringT) {
             this->advance();
-            node = new Node(token, 6);
+            node = new Node(token, 6); // 6 : StringNode
             return;
         }
         else if (token.type_ == nameT)
         {
             this->advance();
-            node = new Node(token, 4);
+            node = new Node(token, 4); // 4 : VarAccessNode
         }
         else if (token.type_ == keywordT and token.value_ == L"صح")
         {
@@ -679,7 +683,7 @@ public:
             this->advance();
             this->factor();
             factor = node;
-            node = new Node(token, factor, 2);
+            node = new Node(token, factor, 2); // 2 : UnaryOpNode
             return;
         }
 
@@ -736,6 +740,7 @@ public:
         }
 
         node = left;
+        //return;
     }
 
 
@@ -799,6 +804,8 @@ int main()
         // المعرب اللغوي
         /////////////////////////////////////////////////////////////////
 
+        clock_t start = clock(); // بداية حساب الوقت
+
         Lexer lexer(L"الملف_الرئيسي", input_);
         lexer.make_token();
 
@@ -832,6 +839,18 @@ int main()
         Node* AST = parser.node;
 
         parser.print_node(AST);
+
+        wcout << float(clock() - start) / CLOCKS_PER_SEC << endl; // طباعة نتائج الوقت
+
+
+        //wstring line;
+        //wifstream MyFile("C:\\Users\\Shadow\\Desktop\\AlifProject\\AlifPerformance\\AlifPerformanceTest\\x64\\Debug\\input.txt");
+        //while (getline(MyFile, line)) 
+        //{
+        //    Lexer lexer (L"fn", line);
+        //    lexer.make_token();
+        //}
+        //MyFile.close();
 
         result.clear();
     }
