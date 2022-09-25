@@ -517,7 +517,9 @@ public:
             this->advance();
             this->tokens.push_back(Token(lessThanEqualT, positionStart));
         }
-        this->tokens.push_back(Token(lessThanT, this->position));
+        else {
+            this->tokens.push_back(Token(lessThanT, this->position));
+        }
 
     }
 
@@ -546,30 +548,30 @@ public:
 // نتائج المحلل اللغوي
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+enum NodeType {
+    Undefined,
+    NumberNode,
+    StringNode,
+    UnaryOpNode,
+    BinOpNode,
+    VarAccessNode,
+    VarAssignNode,
+    StatementCondationNode,
+
+};
+
 class Node {
 public:
     Token token;
-    uint8_t opName;
-    Token opera_;
+    NodeType type;
     Node* left;
     Node* right;
 
-    Node(Token tok, uint8_t name) {
-        this->token = tok;
-        this->opName = name;
-    }
-
-    Node(Token opera, Node* right, uint8_t name) {
-        this->opera_ = opera;
+    Node(Node* left, Token opToken, Node* right, NodeType nodeType) {
+        this->left = left;
+        this->token = opToken;
         this->right = right;
-        this->opName = name;
-    }
-
-    Node(Node* left_, Token opera, Node* right_, uint8_t name) {
-        this->left = left_;
-        this->right = right_;
-        this->opera_ = opera;
-        this->opName = name;
+        this->type = nodeType;
     }
 
     ~Node() {
@@ -582,9 +584,6 @@ public:
 
 class Parser {
 public:
-    // | IntegerNumberNode : 1      | floatNumberNode : 2    | UnaryOpNode : 3      | BinOpNode : 4               |
-    // | VarAccessNode : 5          | VarAssignNode : 6      | StringNode : 7       | StatementConditionNode : 8  |
-
     list<Token> tokens;
     int tokenIndex;
     Token currentToken;
@@ -618,7 +617,6 @@ public:
     void parse()
     {
         this->expr();
-        return;
     }
 
     //////////////////////////////
@@ -630,36 +628,37 @@ public:
         if (token.type_ == integerT or token.type_ == floatT)
         {
             this->advance();
-            node = new Node(token, 1); // 1 : NumberNode
-            return;
+            node = new Node(nullptr, token, nullptr, NumberNode);
+
         }
         else if (token.type_ == stringT) {
             this->advance();
-            node = new Node(token, 6); // 6 : StringNode
-            return;
+            node = new Node(nullptr, token, nullptr, StringNode);
+
         }
         else if (token.type_ == nameT)
         {
             this->advance();
-            node = new Node(token, 4); // 4 : VarAccessNode
+            node = new Node(nullptr, token, nullptr, VarAccessNode);
+
         }
         else if (token.type_ == keywordT and token.value_ == L"صح")
         {
             this->advance();
-            node = new Node(token, 7); // 7 : StatementCondationNode
-            return;
+            node = new Node(nullptr, token, nullptr, StatementCondationNode);
+
         }
         else if (token.type_ == keywordT and token.value_ == L"خطأ")
         {
             this->advance();
-            node = new Node(token, 7); // 7 : StatementCondationNode
-            return;
+            node = new Node(nullptr, token, nullptr, StatementCondationNode);
+
         }
         else if (token.type_ == keywordT and token.value_ == L"عدم")
         {
             this->advance();
-            node = new Node(token, 7); // 7 : StatementCondationNode
-            return;
+            node = new Node(nullptr, token, nullptr, StatementCondationNode);
+
         }
         else if (token.type_ == lSquareT)
         {
@@ -683,8 +682,8 @@ public:
             this->advance();
             this->factor();
             factor = node;
-            node = new Node(token, factor, 2); // 2 : UnaryOpNode
-            return;
+            node = new Node(nullptr, token, factor, UnaryOpNode);
+
         }
 
         this->power();
@@ -711,7 +710,7 @@ public:
                 this->advance();
                 this->expr(); // نفذ المعادلة وضع القيم في node
                 expr = node;
-                node = new Node(varName, expr, 5);
+                node = new Node(nullptr, varName, expr, VarAccessNode);
                 return;
             }
         }
@@ -726,21 +725,17 @@ public:
 
         (this->*funcL)();
         left = node;
-        if (error)
-            return;
 
         while (this->currentToken.type_ == fop or this->currentToken.type_ == sop) {
             opToken = this->currentToken;
             this->advance();
             (this->*funcR)();
-            right = node;
-            if (error)
-                return;
-            left = new Node(left, opToken, right, 3);
-        }
 
+            right = node;
+
+            left = new Node(left, opToken, right, BinOpNode);
+        }
         node = left;
-        //return;
     }
 
 
@@ -748,7 +743,7 @@ public:
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     void print_node(Node* root, int space = 0, int t = 0) {
-        int count = 6;
+        int count = 5;
 
         if (root == NULL)
             return;
@@ -760,24 +755,13 @@ public:
             wcout << L" ";
         }
         if (t == 1) {
-            if (root->token.type_ == L"") {
-                wcout << L"/ " << root->opera_.type_ << endl;
-            }
-            else
-            {
-                wcout << L"/ " << root->token.type_ << endl;
-            }
+            wcout << L"/ " << root->token.type_ << endl;
         }
         else if (t == 2) {
-            if (root->token.type_ == L"") {
-                wcout << L"\\ " << root->opera_.type_ << endl;
-            }
-            else {
-                wcout << L"\\ " << root->token.type_ << endl;
-            }
+            wcout << L"\\ " << root->token.type_ << endl;
         }
         else {
-            wcout << root->opera_.type_ << endl;
+            wcout << root->token.type_ << endl;
         }
         print_node(root->left, space, 2);
     }
@@ -841,16 +825,6 @@ int main()
         parser.print_node(AST);
 
         wcout << float(clock() - start) / CLOCKS_PER_SEC << endl; // طباعة نتائج الوقت
-
-
-        //wstring line;
-        //wifstream MyFile("C:\\Users\\Shadow\\Desktop\\AlifProject\\AlifPerformance\\AlifPerformanceTest\\x64\\Debug\\input.txt");
-        //while (getline(MyFile, line)) 
-        //{
-        //    Lexer lexer (L"fn", line);
-        //    lexer.make_token();
-        //}
-        //MyFile.close();
 
         result.clear();
     }
