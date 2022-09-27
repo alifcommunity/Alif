@@ -605,10 +605,6 @@ public:
         delete error;
     }
 
-    explicit operator wstring() const {
-        return L"salam";
-    }
-
     void advance()
     {
         this->tokenIndex++;
@@ -669,14 +665,6 @@ public:
         {
             this->advance();
             this->list_expr();
-            //this->expr();
-            //expr = node;
-            //if (this->currentToken.type_ == rSquareT)
-            //{
-            //    this->advance();
-            //    node = expr;
-            //    return;
-            //}
         }
     }
 
@@ -861,8 +849,6 @@ int main()
         parser.parse();
         Node* AST = parser.node;
         
-        wcout << parser << endl;
-
         //parser.print_node(AST);
         for (int i = 0; i < AST->list_.size(); i++) {
             list<Node*> ::iterator listIter = AST->list_.begin();
