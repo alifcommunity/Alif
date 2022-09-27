@@ -557,6 +557,7 @@ enum NodeType {
     VarAccessNode,
     VarAssignNode,
     StatementCondationNode,
+    ListNode,
 
 };
 
@@ -566,12 +567,14 @@ public:
     NodeType type;
     Node* left;
     Node* right;
+    list<Node*> list_;
 
-    Node(Node* left, Token opToken, Node* right, NodeType nodeType) {
+    Node(Node* left, Token token, list<Node*> list_ ,Node* right, NodeType nodeType) {
         this->left = left;
-        this->token = opToken;
+        this->token = token;
         this->right = right;
         this->type = nodeType;
+        this->list_ = list_;
     }
 
     ~Node() {
@@ -602,6 +605,9 @@ public:
         delete error;
     }
 
+    explicit operator wstring() const {
+        return L"salam";
+    }
 
     void advance()
     {
@@ -623,55 +629,88 @@ public:
 
     void atom() {
         Token token = this->currentToken;
-        Node* expr;
 
         if (token.type_ == integerT or token.type_ == floatT)
         {
             this->advance();
-            node = new Node(nullptr, token, nullptr, NumberNode);
+            node = new Node(nullptr, token, list<Node*>(), nullptr, NumberNode); // قم بإنشاء صنف عقدة جديد ومرر فيه الرمز الذي تم حفظه في متغير رمز ومرر نوع العقدة المنشأءة واسندها الى متغير عقدة
 
         }
         else if (token.type_ == stringT) {
             this->advance();
-            node = new Node(nullptr, token, nullptr, StringNode);
+            node = new Node(nullptr, token, list<Node*>(), nullptr, StringNode);
 
         }
         else if (token.type_ == nameT)
         {
             this->advance();
-            node = new Node(nullptr, token, nullptr, VarAccessNode);
+            node = new Node(nullptr, token, list<Node*>(), nullptr, VarAccessNode);
 
         }
         else if (token.type_ == keywordT and token.value_ == L"صح")
         {
             this->advance();
-            node = new Node(nullptr, token, nullptr, StatementCondationNode);
+            node = new Node(nullptr, token, list<Node*>(), nullptr, StatementCondationNode);
 
         }
         else if (token.type_ == keywordT and token.value_ == L"خطأ")
         {
             this->advance();
-            node = new Node(nullptr, token, nullptr, StatementCondationNode);
+            node = new Node(nullptr, token, list<Node*>(), nullptr, StatementCondationNode);
 
         }
         else if (token.type_ == keywordT and token.value_ == L"عدم")
         {
             this->advance();
-            node = new Node(nullptr, token, nullptr, StatementCondationNode);
+            node = new Node(nullptr, token, list<Node*>(), nullptr, StatementCondationNode);
 
         }
         else if (token.type_ == lSquareT)
         {
             this->advance();
-            this->expr();
-            expr = node;
-            if (this->currentToken.type_ == rSquareT)
-            {
-                this->advance();
-                node = expr;
-                return;
-            }
+            this->list_expr();
+            //this->expr();
+            //expr = node;
+            //if (this->currentToken.type_ == rSquareT)
+            //{
+            //    this->advance();
+            //    node = expr;
+            //    return;
+            //}
         }
+    }
+
+    void list_expr() 
+    {
+        Token token = this->currentToken;
+        //Node* expr;
+        list<Node*> nodeElement;
+
+        if (this->currentToken.type_ == rSquareT)
+        {
+            this->advance();
+        }
+        else
+        {
+            this->expr(); // تقوم بتنفيذ التعبير وضبط نتيجة العملية في متغير node
+            nodeElement.push_back(node);
+
+            while (this->currentToken.type_ == commaT) {
+                this->advance();
+                this->expr();
+                nodeElement.push_back(node);
+
+            }
+
+            if (this->currentToken.type_ != rSquareT)
+            {
+                // error
+            }
+            this->advance();
+        }
+
+        node = new Node(nullptr, Token(), nodeElement, nullptr, ListNode);
+
     }
 
     void factor() {
@@ -682,7 +721,7 @@ public:
             this->advance();
             this->factor();
             factor = node;
-            node = new Node(nullptr, token, factor, UnaryOpNode);
+            node = new Node(nullptr, token, list<Node*>(), factor, UnaryOpNode);
 
         }
 
@@ -710,7 +749,7 @@ public:
                 this->advance();
                 this->expr(); // نفذ المعادلة وضع القيم في node
                 expr = node;
-                node = new Node(nullptr, varName, expr, VarAccessNode);
+                node = new Node(nullptr, varName, list<Node*>(), expr, VarAccessNode);
                 return;
             }
         }
@@ -733,7 +772,7 @@ public:
 
             right = node;
 
-            left = new Node(left, opToken, right, BinOpNode);
+            left = new Node(left, opToken, list<Node*>(), right, BinOpNode);
         }
         node = left;
     }
@@ -821,8 +860,16 @@ int main()
         Parser parser = Parser(lexer.tokens);
         parser.parse();
         Node* AST = parser.node;
+        
+        wcout << parser << endl;
 
-        parser.print_node(AST);
+        //parser.print_node(AST);
+        for (int i = 0; i < AST->list_.size(); i++) {
+            list<Node*> ::iterator listIter = AST->list_.begin();
+            std::advance(listIter, i);
+            Node* a = *listIter;
+            parser.print_node(a);
+        }
 
         wcout << float(clock() - start) / CLOCKS_PER_SEC << endl; // طباعة نتائج الوقت
 
