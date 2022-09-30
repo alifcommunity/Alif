@@ -3,61 +3,20 @@
 
 #include<iostream>
 #include<string>
-#include<fstream>
 #include<list>
 #include<algorithm> // لعمل تتالي على المصفوفات
 #include<fcntl.h> //لقبول ادخال الاحرف العربية من الكونسل
 #include<io.h> //لقبول ادخال الاحرف العربية من الكونسل
+#include "constants.h"
+#include "position.h"
 
-using namespace std;
 
-// ثوابت
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-const wstring digits = L"1234567890";
-const wstring letters = L"اأإآءىئؤبتثجحخدذرزعغقفسشكلصضطظمنوهية";
-const wstring lettersDigits = digits + letters;
-
-// الموقع
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class Position {
-public:
-    int index, lineNumber, columnNumber;
-    wstring input_, fileName;
-    wchar_t currentChar;
-    Position() {}
-    Position(int index, int lineNumber, int columnNumber, wstring fileName, wstring input_) : index(index), lineNumber(lineNumber), columnNumber(columnNumber), fileName(fileName), input_(input_)
-    {
-
-    }
-
-    void advance(wchar_t currentChar = L'\0') {
-        this->index++;
-        this->columnNumber++;
-
-        if (currentChar == L'\n') {
-            this->lineNumber++;
-            this->columnNumber = 0;
-        }
-    }
-
-    void reverse(wchar_t currentChar = L'\0') {
-        this->index--;
-        this->columnNumber--;
-
-        if (currentChar == L'\n') {
-            this->lineNumber--;
-            this->columnNumber = 0;
-        }
-    }
-};
 
 
 // الرموز
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const wstring
+const std::wstring
 integerT = L"Integer",
 floatT = L"Float",
 stringT = L"String",
@@ -96,21 +55,21 @@ tabT = L"Tab",
 dotT = L"Dot",
 endOfFileT = L"End_Of_File";
 
-const list<wstring> keywords = { L"مرر", L"توقف", L"استمر", L"حذف", L"استورد", L"من", L"اذا", L"بينما", L"لاجل", L"ارجع", L"دالة", L"صنف", L"والا", L"او", L"و", L"ليس", L"صح", L"خطا", L"عدم", L"اطبع", L"في" };
+const std::list<std::wstring> keywords = { L"مرر", L"توقف", L"استمر", L"حذف", L"استورد", L"من", L"اذا", L"بينما", L"لاجل", L"ارجع", L"دالة", L"صنف", L"والا", L"او", L"و", L"ليس", L"صح", L"خطا", L"عدم", L"اطبع", L"في" };
 
 
 class Token {
 public:
-    wstring type_, value_;
+    std::wstring type_, value_;
     Position positionStart, positionEnd;
     Token() {}
-    Token(wstring type_, Position positionStart) : type_(type_), positionStart(positionStart)
+    Token(std::wstring type_, Position positionStart) : type_(type_), positionStart(positionStart)
     {
         this->positionStart = positionStart;
         this->positionEnd = positionStart;
         this->positionEnd.advance();
     }
-    Token(wstring type_, wstring value_, Position positionStart, Position positionEnd) : type_(type_), value_(value_), positionStart(positionStart), positionEnd(positionEnd)
+    Token(std::wstring type_, std::wstring value_, Position positionStart, Position positionEnd) : type_(type_), value_(value_), positionStart(positionStart), positionEnd(positionEnd)
     {
         this->positionStart = positionStart;
         this->positionEnd = positionEnd;
@@ -123,12 +82,12 @@ public:
 
 class ErrorArrow {
 public:
-    wstring error_arrow(wstring input_, Position positionStart, Position positionEnd) {
-        wstring result;
+    std::wstring error_arrow(std::wstring input_, Position positionStart, Position positionEnd) {
+        std::wstring result;
         int columnStart, columnEnd;
 
         int newlineIndex = input_.rfind(L"\n", positionStart.index);
-        int indexStart = max(newlineIndex, 0);
+        int indexStart = std::max(newlineIndex, 0);
         int indexEnd = input_.find(L"\n", indexStart + 1);
         if (indexEnd < 0) {
             indexEnd = input_.length();
@@ -136,13 +95,13 @@ public:
 
         int lineCount = positionEnd.lineNumber - positionStart.lineNumber + 1;
         for (int i = 0; i < lineCount; i++) {
-            wstring line = input_.substr(indexStart, indexEnd);
+            std::wstring line = input_.substr(indexStart, indexEnd);
             if (i == 0) { columnStart = positionStart.columnNumber; }
             else { columnStart = 0; }
             if (i == lineCount - 1) { columnEnd = positionEnd.columnNumber + 1; }
             else { columnEnd = line.length() - 1; }
 
-            result += line + L"\n" + wstring(columnStart, ' ') + wstring(columnEnd - columnStart, '^');
+            result += line + L"\n" + std::wstring(columnStart, ' ') + std::wstring(columnEnd - columnStart, '^');
 
             indexStart = indexEnd;
             indexEnd = input_.find(L"\n", indexStart + 1);
@@ -160,14 +119,14 @@ public:
 class Error {
 public:
     Position positionStart, positionEnd;
-    wstring errorName;
+    std::wstring errorName;
     wchar_t details;
     Error() {}
-    Error(Position positionStart, Position positionEnd, wstring errorName, wchar_t details) : positionStart(positionStart), positionEnd(positionEnd), errorName(errorName), details(details) {}
+    Error(Position positionStart, Position positionEnd, std::wstring errorName, wchar_t details) : positionStart(positionStart), positionEnd(positionEnd), errorName(errorName), details(details) {}
 
-    wstring print_() {
-        wstring result = this->errorName + L": " + this->details + L"\n";
-        result += L"الملف " + this->positionStart.fileName + L", السطر " + to_wstring(this->positionStart.lineNumber + 1);
+    std::wstring print_() {
+        std::wstring result = this->errorName + L": " + this->details + L"\n";
+        result += L"الملف " + this->positionStart.fileName + L", السطر " + std::to_wstring(this->positionStart.lineNumber + 1);
         result += L"\n\n" + ErrorArrow().error_arrow(this->positionStart.input_, this->positionStart, this->positionEnd);
 
         return result;
@@ -186,12 +145,12 @@ public:
 
 class Lexer {
 public:
-    wstring fileName, input_;
+    std::wstring fileName, input_;
     wchar_t currentChar;
     Position position;
-    list<Token> tokens;
+    std::list<Token> tokens;
     Error* error;
-    Lexer(wstring fileName, wstring input_) : fileName(fileName), input_(input_), position(Position(-1, 0, -1, fileName, input_)), currentChar(L'\0') {
+    Lexer(std::wstring fileName, std::wstring input_) : fileName(fileName), input_(input_), position(Position(-1, 0, -1, fileName, input_)), currentChar(L'\0') {
         this->advance();
     }
     ~Lexer()
@@ -246,7 +205,7 @@ public:
                 this->advance();
 
             }
-            else if (digits.find(this->currentChar) != wstring::npos)
+            else if (digits.find(this->currentChar) != std::wstring::npos)
             {
                 this->make_number();
                 if (error) {
@@ -254,7 +213,7 @@ public:
                 }
 
             }
-            else if (letters.find(this->currentChar) != wstring::npos) {
+            else if (letters.find(this->currentChar) != std::wstring::npos) {
                 this->make_name();
 
             }
@@ -378,11 +337,11 @@ public:
 
 
     void make_number() {
-        wstring numberString = L"";
+        std::wstring numberString = L"";
         unsigned int dotCount = 0;
         Position positionStart = this->position;
 
-        while (this->currentChar != L'\0' and (digits + L".").find(this->currentChar) != wstring::npos) {
+        while (this->currentChar != L'\0' and (digits + L".").find(this->currentChar) != std::wstring::npos) {
             if (this->currentChar == L'.') {
                 if (dotCount == 1) {
                     dotCount++;
@@ -410,11 +369,11 @@ public:
 
     void make_name()
     {
-        wstring nameString;
-        wstring tokenType;
+        std::wstring nameString;
+        std::wstring tokenType;
         Position positionStart = this->position;
 
-        while (this->currentChar != L'\0' and (lettersDigits + L'_').find(this->currentChar) != wstring::npos) {
+        while (this->currentChar != L'\0' and (lettersDigits + L'_').find(this->currentChar) != std::wstring::npos) {
             nameString += this->currentChar;
             this->advance();
         }
@@ -430,7 +389,7 @@ public:
 
     void make_string()
     {
-        wstring string_ = L"";
+        std::wstring string_ = L"";
         Position positionStart = this->position;
         bool ClosedString = true;
         this->advance();
@@ -457,7 +416,7 @@ public:
     }
 
     void make_divide() {
-        wstring divide_ = L"";
+        std::wstring divide_ = L"";
         unsigned int slashCount = 0;
         wchar_t char_;
         Position positionStart = this->position;
@@ -567,9 +526,9 @@ public:
     NodeType type;
     Node* left;
     Node* right;
-    list<Node*> list_;
+    std::list<Node*> list_;
 
-    Node(Node* left, Token token, list<Node*> list_ ,Node* right, NodeType nodeType) {
+    Node(Node* left, Token token, std::list<Node*> list_ ,Node* right, NodeType nodeType) {
         this->left = left;
         this->token = token;
         this->right = right;
@@ -587,13 +546,13 @@ public:
 
 class Parser {
 public:
-    list<Token> tokens;
+    std::list<Token> tokens;
     int tokenIndex;
     Token currentToken;
     Node* node;
     Error* error;
 
-    Parser(list<Token> tokens) : tokens(tokens)
+    Parser(std::list<Token> tokens) : tokens(tokens)
     {
         tokenIndex = -1;
         this->advance();
@@ -610,7 +569,7 @@ public:
         this->tokenIndex++;
         if (this->tokenIndex >= 0 and this->tokenIndex < this->tokens.size())
         {
-            list<Token>::iterator listIter = tokens.begin();
+            std::list<Token>::iterator listIter = tokens.begin();
             std::advance(listIter, this->tokenIndex);
             this->currentToken = *listIter;
         }
@@ -629,36 +588,36 @@ public:
         if (token.type_ == integerT or token.type_ == floatT)
         {
             this->advance();
-            node = new Node(nullptr, token, list<Node*>(), nullptr, NumberNode); // قم بإنشاء صنف عقدة جديد ومرر فيه الرمز الذي تم حفظه في متغير رمز ومرر نوع العقدة المنشأءة واسندها الى متغير عقدة
+            node = new Node(nullptr, token, std::list<Node*>(), nullptr, NumberNode); // قم بإنشاء صنف عقدة جديد ومرر فيه الرمز الذي تم حفظه في متغير رمز ومرر نوع العقدة المنشأءة واسندها الى متغير عقدة
 
         }
         else if (token.type_ == stringT) {
             this->advance();
-            node = new Node(nullptr, token, list<Node*>(), nullptr, StringNode);
+            node = new Node(nullptr, token, std::list<Node*>(), nullptr, StringNode);
 
         }
         else if (token.type_ == nameT)
         {
             this->advance();
-            node = new Node(nullptr, token, list<Node*>(), nullptr, VarAccessNode);
+            node = new Node(nullptr, token, std::list<Node*>(), nullptr, VarAccessNode);
 
         }
         else if (token.type_ == keywordT and token.value_ == L"صح")
         {
             this->advance();
-            node = new Node(nullptr, token, list<Node*>(), nullptr, StatementCondationNode);
+            node = new Node(nullptr, token, std::list<Node*>(), nullptr, StatementCondationNode);
 
         }
         else if (token.type_ == keywordT and token.value_ == L"خطأ")
         {
             this->advance();
-            node = new Node(nullptr, token, list<Node*>(), nullptr, StatementCondationNode);
+            node = new Node(nullptr, token, std::list<Node*>(), nullptr, StatementCondationNode);
 
         }
         else if (token.type_ == keywordT and token.value_ == L"عدم")
         {
             this->advance();
-            node = new Node(nullptr, token, list<Node*>(), nullptr, StatementCondationNode);
+            node = new Node(nullptr, token, std::list<Node*>(), nullptr, StatementCondationNode);
 
         }
         else if (token.type_ == lSquareT)
@@ -671,8 +630,7 @@ public:
     void list_expr() 
     {
         Token token = this->currentToken;
-        //Node* expr;
-        list<Node*> nodeElement;
+        std::list<Node*> nodeElement;
 
         if (this->currentToken.type_ == rSquareT)
         {
@@ -709,7 +667,7 @@ public:
             this->advance();
             this->factor();
             factor = node;
-            node = new Node(nullptr, token, list<Node*>(), factor, UnaryOpNode);
+            node = new Node(nullptr, token, std::list<Node*>(), factor, UnaryOpNode);
 
         }
 
@@ -737,7 +695,7 @@ public:
                 this->advance();
                 this->expr(); // نفذ المعادلة وضع القيم في node
                 expr = node;
-                node = new Node(nullptr, varName, list<Node*>(), expr, VarAccessNode);
+                node = new Node(nullptr, varName, std::list<Node*>(), expr, VarAccessNode);
                 return;
             }
         }
@@ -745,7 +703,7 @@ public:
         bin_op_repeat(&Parser::term, plusT, minusT, &Parser::term);
     }
 
-    void bin_op_repeat(void(Parser::* funcL)(), wstring fop, wstring sop, void(Parser::* funcR)()) {
+    void bin_op_repeat(void(Parser::* funcL)(), std::wstring fop, std::wstring sop, void(Parser::* funcR)()) {
         Token opToken;
         Node* left;
         Node* right;
@@ -760,7 +718,7 @@ public:
 
             right = node;
 
-            left = new Node(left, opToken, list<Node*>(), right, BinOpNode);
+            left = new Node(left, opToken, std::list<Node*>(), right, BinOpNode);
         }
         node = left;
     }
@@ -779,16 +737,16 @@ public:
         print_node(root->right, space, 1);
 
         for (int i = count; i < space; i++) {
-            wcout << L" ";
+            std::wcout << L" ";
         }
         if (t == 1) {
-            wcout << L"/ " << root->token.type_ << endl;
+            std::wcout << L"/ " << root->token.type_ << std::endl;
         }
         else if (t == 2) {
-            wcout << L"\\ " << root->token.type_ << endl;
+            std::wcout << L"\\ " << root->token.type_ << std::endl;
         }
         else {
-            wcout << root->token.type_ << endl;
+            std::wcout << root->token.type_ << std::endl;
         }
         print_node(root->left, space, 2);
     }
@@ -800,12 +758,12 @@ int main()
     _setmode(_fileno(stdout), _O_U16TEXT);
     _setmode(_fileno(stdin), _O_U16TEXT);
 
-    wstring input_;
-    wstring result;
+    std::wstring input_;
+    std::wstring result;
 
     while (true) {
-        wcout << L"alif -> ";
-        getline(wcin, input_);
+        std::wcout << L"alif -> ";
+        std::getline(std::wcin, input_);
 
 
         if (input_ == L"خروج") {
@@ -823,23 +781,23 @@ int main()
 
         if (lexer.error)
         {
-            wcout << lexer.error->print_() << endl;
+            std::wcout << lexer.error->print_() << std::endl;
         }
         else
         {
-            for (list<Token>::iterator tokItr = lexer.tokens.begin(); tokItr != lexer.tokens.end(); ++tokItr)
+            for (std::list<Token>::iterator tokItr = lexer.tokens.begin(); tokItr != lexer.tokens.end(); ++tokItr)
             {
                 Token token = *tokItr;
                 if (token.value_ == L"")
                 {
-                    result += L"pos start: " + to_wstring(token.positionStart.index) + L", " + token.type_ + L", \n";
+                    result += L"pos start: " + std::to_wstring(token.positionStart.index) + L", " + token.type_ + L", \n";
                 }
                 else
                 {
-                    result += L"pos start: " + to_wstring(token.positionStart.index) + L" ,pos end: " + to_wstring(token.positionEnd.index) + L", " + token.type_ + L" : " + token.value_ + L", \n";
+                    result += L"pos start: " + std::to_wstring(token.positionStart.index) + L" ,pos end: " + std::to_wstring(token.positionEnd.index) + L", " + token.type_ + L" : " + token.value_ + L", \n";
                 }
             }
-            wcout << L"نتائج المعرب اللغوي : \n" << result << endl;
+            std::wcout << L"نتائج المعرب اللغوي : \n" << result << std::endl;
         }
 
         // المحلل اللغوي
@@ -851,13 +809,13 @@ int main()
         
         //parser.print_node(AST);
         for (int i = 0; i < AST->list_.size(); i++) {
-            list<Node*> ::iterator listIter = AST->list_.begin();
+            std::list<Node*> ::iterator listIter = AST->list_.begin();
             std::advance(listIter, i);
             Node* a = *listIter;
             parser.print_node(a);
         }
 
-        wcout << float(clock() - start) / CLOCKS_PER_SEC << endl; // طباعة نتائج الوقت
+        std::wcout << float(clock() - start) / CLOCKS_PER_SEC << std::endl; // طباعة نتائج الوقت
 
         result.clear();
     }
