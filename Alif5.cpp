@@ -11,8 +11,6 @@
 #include "position.h"
 
 
-
-
 // الرموز
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -153,6 +151,7 @@ public:
     Lexer(std::wstring fileName, std::wstring input_) : fileName(fileName), input_(input_), position(Position(-1, 0, -1, fileName, input_)), currentChar(L'\0') {
         this->advance();
     }
+
     ~Lexer()
     {
         delete error;
@@ -173,7 +172,6 @@ public:
     void reverse() {
         this->position.reverse(this->currentChar);
     }
-
 
     void make_token() {
 
@@ -502,6 +500,31 @@ public:
             this->advance();
         }
     }
+
+    void print() {
+        std::wstring result;
+
+        if (error)
+        {
+            std::wcout << error->print_() << std::endl;
+        }
+        else
+        {
+            for (std::list<Token>::iterator tokItr = tokens.begin(); tokItr != tokens.end(); ++tokItr)
+            {
+                Token token = *tokItr;
+                if (token.value_ == L"")
+                {
+                    result += L"pos start: " + std::to_wstring(token.positionStart.index) + L", " + token.type_ + L", \n";
+                }
+                else
+                {
+                    result += L"pos start: " + std::to_wstring(token.positionStart.index) + L" ,pos end: " + std::to_wstring(token.positionEnd.index) + L", " + token.type_ + L" : " + token.value_ + L", \n";
+                }
+            }
+            std::wcout << L"نتائج المعرب اللغوي : \n" << result << std::endl;
+        }
+    }
 };
 
 // نتائج المحلل اللغوي
@@ -759,7 +782,6 @@ int main()
     _setmode(_fileno(stdin), _O_U16TEXT);
 
     std::wstring input_;
-    std::wstring result;
 
     while (true) {
         std::wcout << L"alif -> ";
@@ -775,30 +797,13 @@ int main()
 
         clock_t start = clock(); // بداية حساب الوقت
 
-        Lexer lexer(L"الملف_الرئيسي", input_);
+
+        std::wstring fileName = L"الملف_الرئيسي";
+        Lexer lexer(fileName, input_);
         lexer.make_token();
+        //lexer.print();
 
 
-        if (lexer.error)
-        {
-            std::wcout << lexer.error->print_() << std::endl;
-        }
-        else
-        {
-            for (std::list<Token>::iterator tokItr = lexer.tokens.begin(); tokItr != lexer.tokens.end(); ++tokItr)
-            {
-                Token token = *tokItr;
-                if (token.value_ == L"")
-                {
-                    result += L"pos start: " + std::to_wstring(token.positionStart.index) + L", " + token.type_ + L", \n";
-                }
-                else
-                {
-                    result += L"pos start: " + std::to_wstring(token.positionStart.index) + L" ,pos end: " + std::to_wstring(token.positionEnd.index) + L", " + token.type_ + L" : " + token.value_ + L", \n";
-                }
-            }
-            std::wcout << L"نتائج المعرب اللغوي : \n" << result << std::endl;
-        }
 
         // المحلل اللغوي
         /////////////////////////////////////////////////////////////////
@@ -808,16 +813,14 @@ int main()
         Node* AST = parser.node;
         
         //parser.print_node(AST);
-        for (int i = 0; i < AST->list_.size(); i++) {
-            std::list<Node*> ::iterator listIter = AST->list_.begin();
-            std::advance(listIter, i);
-            Node* a = *listIter;
-            parser.print_node(a);
-        }
+        //for (int i = 0; i < AST->list_.size(); i++) {
+        //    std::list<Node*> ::iterator listIter = AST->list_.begin();
+        //    std::advance(listIter, i);
+        //    Node* a = *listIter;
+        //    parser.print_node(a);
+        //}
 
         std::wcout << float(clock() - start) / CLOCKS_PER_SEC << std::endl; // طباعة نتائج الوقت
 
-        result.clear();
     }
 }
-
