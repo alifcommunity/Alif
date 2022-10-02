@@ -257,7 +257,17 @@ public:
             std::wcout << L"\\ " << root->token.type_ << std::endl;
         }
         else {
-            std::wcout << root->token.type_ << std::endl;
+            if (root->type == ListNode) { // لطباعة المصفوفة
+                for (int i = 0; i < root->list_.size(); i++) {
+                    std::list<Node*> ::iterator listIter = root->list_.begin();
+                    std::advance(listIter, i);
+                    Node* a = *listIter;
+                    this->print_node(a);
+                }
+            }
+            else {
+                std::wcout << root->token.type_ << std::endl;
+            }
         }
         print_node(root->left, space, 2);
     }
@@ -283,11 +293,11 @@ int main()
         // المعرب اللغوي
         /////////////////////////////////////////////////////////////////
 
-        std::wstring fileName = L"الملف_الرئيسي";
         
         clock_t start = clock(); // بداية حساب الوقت
 
-        Lexer lexer(fileName, test);
+        std::wstring fileName = L"الملف_الرئيسي";
+        Lexer lexer(fileName, input_);
         lexer.make_token();
         //lexer.print();
 
@@ -300,13 +310,8 @@ int main()
         parser.parse();
         Node* AST = parser.node;
         
-        //parser.print_node(AST);
-        //for (int i = 0; i < AST->list_.size(); i++) {
-        //    std::list<Node*> ::iterator listIter = AST->list_.begin();
-        //    std::advance(listIter, i);
-        //    Node* a = *listIter;
-        //    parser.print_node(a);
-        //}
+        parser.print_node(AST);
+
 
         std::wcout << float(clock() - start) / CLOCKS_PER_SEC << std::endl; // طباعة نتائج الوقت
 
