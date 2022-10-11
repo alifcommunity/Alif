@@ -86,9 +86,18 @@ public:
         }
     }
 
+    void reverse() {
+        this->tokenIndex--;
+        if (this->tokenIndex >= 0 and this->tokenIndex < this->tokens.size()) {
+            std::list<Token>::iterator listIter = tokens.begin();
+            std::advance(listIter, this->tokenIndex);
+            this->currentToken = *listIter;
+        }
+    }
+
     void parse()
     {
-        this->expr();
+        this->statements();
     }
 
     //////////////////////////////
@@ -149,12 +158,12 @@ public:
         }
         else
         {
-            this->expr(); // تقوم بتنفيذ التعبير وضبط نتيجة العملية في متغير node
+            this->expression(); // تقوم بتنفيذ التعبير وضبط نتيجة العملية في متغير node
             nodeElement.push_back(node);
 
             while (this->currentToken.type_ == commaT) {
                 this->advance();
-                this->expr();
+                this->expression();
                 nodeElement.push_back(node);
 
             }
@@ -168,6 +177,28 @@ public:
 
         node = new Node(nullptr, Token(), nodeElement, nullptr, ListNode);
 
+    }
+
+    void primary() {
+        Token token = this->currentToken;
+        Node* name;
+
+        this->atom();
+        name = node;
+
+        if(this->currentToken.type_ == dotT) 
+        {
+            this->advance();
+            if (this->currentToken.type_ == nameT) {
+                node = new Node(nullptr, token, std::list<Node*>(), name, UnaryOpNode);
+            }
+        }
+
+    }
+
+    void power()
+    {
+        bin_op_repeat(&Parser::primary, powerT, L" ", &Parser::factor);
     }
 
     void factor() {
@@ -185,16 +216,27 @@ public:
         this->power();
     }
 
-    void power()
-    {
-        bin_op_repeat(&Parser::atom, powerT, L" ", &Parser::factor);
-    }
-
     void term() {
         bin_op_repeat(&Parser::factor, multiplyT, divideT, &Parser::factor);
     }
 
-    void expr() {
+    void sum(){
+        term();
+    }
+
+    void inversion(){
+        sum();
+    }
+
+    void conjuction(){
+        inversion();
+    }
+
+    void disjuction(){
+        conjuction();
+    }
+
+    void expression(){
         Node* expr;
 
         if (this->currentToken.type_ == nameT)
@@ -204,15 +246,83 @@ public:
             if (this->currentToken.type_ == equalT)
             {
                 this->advance();
-                this->expr(); // نفذ المعادلة وضع القيم في node
+                this->expression(); // نفذ المعادلة وضع القيم في node
                 expr = node;
                 node = new Node(nullptr, varName, std::list<Node*>(), expr, VarAccessNode);
                 return;
+            }
+            else {
+                this->reverse();
             }
         }
 
         bin_op_repeat(&Parser::term, plusT, minusT, &Parser::term);
     }
+
+    void expressions(){
+        expression();
+    }
+
+    void class_defination(){
+        expressions();
+    }
+
+    void function_defination(){
+        class_defination();
+    }
+
+    void return_statement(){
+        function_defination();
+    }
+
+    void while_statement(){
+        return_statement();
+    }
+
+    void if_statement(){
+        while_statement();
+    }
+
+    void import_from(){
+        if_statement();
+    }
+
+    void import_name(){
+        import_from();
+    }
+
+    void import_statement(){
+        import_name();
+    }
+
+    void delete_statement(){
+        import_statement();
+    }
+
+    void augassign(){
+        delete_statement();
+    }
+
+    void assignment(){
+        augassign();
+    }
+
+    void compound_statement(){}
+
+    void simple_statement()
+    {
+        assignment();
+    }
+
+    void statement(){
+        simple_statement();
+    }
+
+    void statements(){
+        statement();
+    }
+
+
 
     void bin_op_repeat(void(Parser::* funcL)(), std::wstring fop, std::wstring sop, void(Parser::* funcR)()) {
         Token opToken;
@@ -235,7 +345,7 @@ public:
     }
 
 
-    // النتائج في الوقت الفعلي
+    // طباعة نتائج المحلل اللغوي
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     void print_node(Node* root, int space = 0, int t = 0) {
@@ -250,26 +360,41 @@ public:
         for (int i = count; i < space; i++) {
             std::wcout << L" ";
         }
+
         if (t == 1) {
-            std::wcout << L"/ " << root->token.type_ << std::endl;
+            if (root->type == ListNode) { // لطباعة المصفوفة
+                this->print_list(root);
+            }
+            else {
+                std::wcout << L"/ " << root->token.type_ << std::endl;
+            }
         }
         else if (t == 2) {
-            std::wcout << L"\\ " << root->token.type_ << std::endl;
+            if (root->type == ListNode) { // لطباعة المصفوفة
+                this->print_list(root);
+            }
+            else {
+                std::wcout << L"\\ " << root->token.type_ << std::endl;
+            }
         }
         else {
             if (root->type == ListNode) { // لطباعة المصفوفة
-                for (int i = 0; i < root->list_.size(); i++) {
-                    std::list<Node*> ::iterator listIter = root->list_.begin();
-                    std::advance(listIter, i);
-                    Node* a = *listIter;
-                    this->print_node(a);
-                }
+                this->print_list(root);
             }
             else {
                 std::wcout << root->token.type_ << std::endl;
             }
         }
         print_node(root->left, space, 2);
+    }
+
+    void print_list(Node* root) {
+        for (int i = 0; i < root->list_.size(); i++) {
+            std::list<Node*> ::iterator listIter = root->list_.begin();
+            std::advance(listIter, i);
+            Node* a = *listIter;
+            this->print_node(a);
+        }
     }
 
 };
@@ -299,18 +424,17 @@ int main()
         std::wstring fileName = L"الملف_الرئيسي";
         Lexer lexer(fileName, input_);
         lexer.make_token();
-        //lexer.print();
-
+        lexer.print();
 
 
         // المحلل اللغوي
         /////////////////////////////////////////////////////////////////
 
-        Parser parser = Parser(lexer.tokens);
-        parser.parse();
-        Node* AST = parser.node;
+        //Parser parser = Parser(lexer.tokens);
+        //parser.parse();
+        //Node* AST = parser.node;
         
-        parser.print_node(AST);
+        //parser.print_node(AST);
 
 
         std::wcout << float(clock() - start) / CLOCKS_PER_SEC << std::endl; // طباعة نتائج الوقت

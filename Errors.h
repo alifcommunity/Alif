@@ -42,10 +42,9 @@ public:
 class Error {
 public:
     Position positionStart, positionEnd;
-    std::wstring errorName;
-    wchar_t details;
+    std::wstring errorName, details;
     Error() {}
-    Error(Position positionStart, Position positionEnd, std::wstring errorName, wchar_t details) : positionStart(positionStart), positionEnd(positionEnd), errorName(errorName), details(details) {}
+    Error(Position positionStart, Position positionEnd, std::wstring errorName, std::wstring details) : positionStart(positionStart), positionEnd(positionEnd), errorName(errorName), details(details) {}
 
     std::wstring print_() {
         std::wstring result = this->errorName + L": " + this->details + L"\n";
@@ -58,6 +57,6 @@ public:
 
 class SyntaxError : public Error {
 public:
-    SyntaxError(Position positionStart, Position positionEnd, wchar_t details) : Error(positionStart, positionEnd, L"خطأ في النسق", details) {
+    SyntaxError(Position positionStart, Position positionEnd, std::wstring details) : Error(positionStart, positionEnd, L"خطأ في النسق", details) {
     }
 };

@@ -89,20 +89,17 @@ public:
             }
             else if (this->currentChar == L'+')
             {
-                this->tokens.push_back(Token(plusT, this->position));
-                this->advance();
+                this->make_plus_equal();
 
             }
             else if (this->currentChar == L'-')
             {
-                this->tokens.push_back(Token(minusT, this->position));
-                this->advance();
+                this->make_minus_equal();
 
             }
             else if (this->currentChar == L'*')
             {
-                this->tokens.push_back(Token(multiplyT, this->position));
-                this->advance();
+                this->make_multiply_equal();
 
             }
             else if (this->currentChar == L'\\')
@@ -116,8 +113,7 @@ public:
             }
             else if (this->currentChar == L'^')
             {
-                this->tokens.push_back(Token(powerT, this->position));
-                this->advance();
+                this->make_power_equal();
 
             }
             else if (this->currentChar == L'(')
@@ -186,7 +182,7 @@ public:
             else
             {
                 wchar_t character = this->currentChar;
-                error = new SyntaxError(this->position, this->position, L'< حرف غير معروف \'' + character + L'\' >');
+                error = new SyntaxError(this->position, this->position, L"< حرف غير معروف \'" + std::to_wstring(character) + L"\' >");
                 return;
             }
         }
@@ -224,7 +220,7 @@ public:
         }
         else
         {
-            error = new SyntaxError(this->position, this->position, L'\'' + this->currentChar + L'\'');
+            error = new SyntaxError(this->position, this->position, L"\"" + std::to_wstring(this->currentChar) + L"\"");
         }
     }
 
@@ -272,35 +268,116 @@ public:
         }
         else {
             this->reverse();
-            error = new SyntaxError(this->position, this->position, L'< لم يتم إغلاق النص >');
+            error = new SyntaxError(this->position, this->position, L"< لم يتم إغلاق النص >");
+        }
+    }
+
+    void make_plus_equal(){
+        Position positionStart = this->position;
+        this->advance();
+
+        if ((lettersDigits + L' ').find(this->currentChar) != std::wstring::npos) {
+            this->tokens.push_back(Token(plusT, positionStart));
+        }
+        else if (this->currentChar == L'=') {
+            this->tokens.push_back(Token(plusEqualT, L"+=", positionStart, this->position));
+            this->advance();
+        }
+        else {
+            error = new SyntaxError(positionStart ,this->position, L"< هل تقصد += ؟ >");
+        }
+    }
+
+    void make_minus_equal() {
+        Position positionStart = this->position;
+        this->advance();
+
+        if ((lettersDigits + L' ').find(this->currentChar) != std::wstring::npos) {
+            this->tokens.push_back(Token(minusT, positionStart));
+        }
+        else if (this->currentChar == L'=') {
+            this->tokens.push_back(Token(minusEqualT, L"-=", positionStart, this->position));
+            this->advance();
+        }
+        else {
+            error = new SyntaxError(positionStart, this->position, L"< هل تقصد -= ؟ >");
+        }
+    }
+
+    void make_multiply_equal() {
+        Position positionStart = this->position;
+        this->advance();
+
+        if ((lettersDigits + L' ').find(this->currentChar) != std::wstring::npos) {
+            this->tokens.push_back(Token(multiplyT, positionStart));
+        }
+        else if (this->currentChar == L'=') {
+            this->tokens.push_back(Token(multiplyEqualT, L"*=", positionStart, this->position));
+            this->advance();
+        }
+        else {
+            error = new SyntaxError(positionStart, this->position, L"< هل تقصد *= ؟ >");
+        }
+    }
+
+    void make_power_equal() {
+        Position positionStart = this->position;
+        this->advance();
+
+        if ((lettersDigits + L' ').find(this->currentChar) != std::wstring::npos) {
+            this->tokens.push_back(Token(powerT, positionStart));
+        }
+        else if (this->currentChar == L'=') {
+            this->tokens.push_back(Token(powerEqualT, L"^=", positionStart, this->position));
+            this->advance();
+        }
+        else {
+            error = new SyntaxError(positionStart, this->position, L"< هل تقصد ^= ؟ >");
         }
     }
 
     void make_divide() {
-        std::wstring divide_ = L"";
-        unsigned int slashCount = 0;
-        wchar_t char_;
+        //std::wstring divide_ = L"";
+        //uint8_t slashCount = 0;
+        //wchar_t char_;
         Position positionStart = this->position;
+        this->advance();
 
-        while (this->currentChar != L'\0' and this->currentChar == L'\\') {
-            if (this->currentChar == L'\\') {
-                slashCount += 1;
-            }
-            divide_ += this->currentChar;
-            char_ = this->currentChar;
+        if ((lettersDigits + L' ').find(this->currentChar) != std::wstring::npos) {
+            this->tokens.push_back(Token(divideT, positionStart));
+        }
+        else if (this->currentChar == L'=') {
+            this->tokens.push_back(Token(divideEqualT, L"\\=", positionStart, this->position));
             this->advance();
         }
-
-        if (slashCount == 1) {
-            this->tokens.push_back(Token(divideT, this->position));
-        }
-        else if (slashCount == 2) {
-            this->tokens.push_back(Token(remainT, this->position));
+        else if (this->currentChar == L'\\') {
+            this->tokens.push_back(Token(remainT, L"\\\\", positionStart, this->position));
+            this->advance();
         }
         else {
-            this->reverse();
-            error = new SyntaxError(this->position, this->position, L'< حرف زائد \'' + char_ + L'\' >');
+            error = new SyntaxError(positionStart, this->position, L"< هل تقصد \\= ؟ >");
         }
+
+        //while (this->currentChar != L'\0' and this->currentChar == L'\\') {
+        //    if (this->currentChar == L'\\') {
+        //        slashCount += 1;
+        //    }
+        //    divide_ += this->currentChar;
+        //    char_ = this->currentChar;
+        //    this->advance();
+        //}
+
+
+        //if (slashCount == 1) {
+        //    this->tokens.push_back(Token(divideT, this->position));
+        //}
+        //else if (slashCount == 2) {
+        //    this->tokens.push_back(Token(remainT, this->position));
+        //}
+        //else {
+        //    this->reverse();
+        //    error = new SyntaxError(this->position, this->position, L"< حرف زائد \'" + std::to_wstring(char_) + L"\' >");
+        //}
     }
 
     void make_not_equals() {
@@ -312,7 +389,7 @@ public:
             this->tokens.push_back(Token(notEqualT, positionStart));
         }
         else {
-            error = new SyntaxError(this->position, this->position, L'< يتوقع وجود \'=\' بعد إشارة \'!\' >');
+            error = new SyntaxError(this->position, this->position, L"< يتوقع وجود \'=\' بعد إشارة \'!\' >");
         }
     }
 
