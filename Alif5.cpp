@@ -37,9 +37,9 @@ public:
     NodeType type;
     Node* left;
     Node* right;
-    std::list<Node*> list_;
+    std::list<Node*>* list_;
 
-    Node(Node* left, Token token, std::list<Node*> list_ ,Node* right, NodeType nodeType) {
+    Node(Node* left, Token token, Node* right, NodeType nodeType, std::list<Node*>* list_ = nullptr) {
         this->left = left;
         this->token = token;
         this->right = right;
@@ -50,6 +50,7 @@ public:
     ~Node() {
         delete left;
         delete right;
+        delete list_;
     }
 
 };
@@ -108,36 +109,36 @@ public:
         if (token.type_ == integerT or token.type_ == floatT)
         {
             this->advance();
-            node = new Node(nullptr, token, std::list<Node*>(), nullptr, NumberNode); // قم بإنشاء صنف عقدة جديد ومرر فيه الرمز الذي تم حفظه في متغير رمز ومرر نوع العقدة المنشأءة واسندها الى متغير عقدة
+            node = new Node(nullptr, token, nullptr, NumberNode); // قم بإنشاء صنف عقدة جديد ومرر فيه الرمز الذي تم حفظه في متغير رمز ومرر نوع العقدة المنشأءة واسندها الى متغير عقدة
 
         }
         else if (token.type_ == stringT) {
             this->advance();
-            node = new Node(nullptr, token, std::list<Node*>(), nullptr, StringNode);
+            node = new Node(nullptr, token, nullptr, StringNode);
 
         }
         else if (token.type_ == nameT)
         {
             this->advance();
-            node = new Node(nullptr, token, std::list<Node*>(), nullptr, VarAccessNode);
+            node = new Node(nullptr, token, nullptr, VarAccessNode);
 
         }
         else if (token.type_ == keywordT and token.value_ == L"صح")
         {
             this->advance();
-            node = new Node(nullptr, token, std::list<Node*>(), nullptr, StatementCondationNode);
+            node = new Node(nullptr, token, nullptr, StatementCondationNode);
 
         }
         else if (token.type_ == keywordT and token.value_ == L"خطأ")
         {
             this->advance();
-            node = new Node(nullptr, token, std::list<Node*>(), nullptr, StatementCondationNode);
+            node = new Node(nullptr, token, nullptr, StatementCondationNode);
 
         }
         else if (token.type_ == keywordT and token.value_ == L"عدم")
         {
             this->advance();
-            node = new Node(nullptr, token, std::list<Node*>(), nullptr, StatementCondationNode);
+            node = new Node(nullptr, token, nullptr, StatementCondationNode);
 
         }
         else if (token.type_ == lSquareT)
@@ -150,7 +151,7 @@ public:
     void list_expr() 
     {
         Token token = this->currentToken;
-        std::list<Node*> nodeElement;
+        std::list<Node*>* nodeElement = new std::list<Node*>;
 
         if (this->currentToken.type_ == rSquareT)
         {
@@ -159,23 +160,23 @@ public:
         else
         {
             this->expression(); // تقوم بتنفيذ التعبير وضبط نتيجة العملية في متغير node
-            nodeElement.push_back(node);
+            (*nodeElement).push_back(node);
 
             while (this->currentToken.type_ == commaT) {
                 this->advance();
                 this->expression();
-                nodeElement.push_back(node);
+                (*nodeElement).push_back(node);
 
             }
 
             if (this->currentToken.type_ != rSquareT)
             {
-                // error
+                error = new SyntaxError(this->currentToken.positionStart, this->currentToken.positionEnd, L"لم يتم إغلاق قوس المصفوفة");
             }
             this->advance();
         }
 
-        node = new Node(nullptr, Token(), nodeElement, nullptr, ListNode);
+        node = new Node(nullptr, Token(), nullptr, ListNode, nodeElement);
 
     }
 
@@ -190,7 +191,7 @@ public:
         {
             this->advance();
             if (this->currentToken.type_ == nameT) {
-                node = new Node(nullptr, token, std::list<Node*>(), name, UnaryOpNode);
+                node = new Node(nullptr, token, name, UnaryOpNode);
             }
         }
 
@@ -209,7 +210,7 @@ public:
             this->advance();
             this->factor();
             factor = node;
-            node = new Node(nullptr, token, std::list<Node*>(), factor, UnaryOpNode);
+            node = new Node(nullptr, token, factor, UnaryOpNode);
 
         }
 
@@ -248,7 +249,7 @@ public:
                 this->advance();
                 this->expression(); // نفذ المعادلة وضع القيم في node
                 expr = node;
-                node = new Node(nullptr, varName, std::list<Node*>(), expr, VarAccessNode);
+                node = new Node(nullptr, varName, expr, VarAccessNode);
                 return;
             }
             else {
@@ -339,7 +340,7 @@ public:
 
             right = node;
 
-            left = new Node(left, opToken, std::list<Node*>(), right, BinOpNode);
+            left = new Node(left, opToken, right, BinOpNode);
         }
         node = left;
     }
@@ -349,48 +350,44 @@ public:
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     void print_node(Node* root, int space = 0, int t = 0) {
-        int count = 5;
 
-        if (root == NULL)
-            return;
-        space += count;
-
-        print_node(root->right, space, 1);
-
-        for (int i = count; i < space; i++) {
-            std::wcout << L" ";
+        if (error) {
+            error->print_();
         }
+        else  {
+            int count = 5;
 
-        if (t == 1) {
-            if (root->type == ListNode) { // لطباعة المصفوفة
-                this->print_list(root);
+            if (root == NULL)
+                return;
+            space += count;
+
+            print_node(root->right, space, 1);
+
+            for (int i = count; i < space; i++) {
+                std::wcout << L" ";
             }
-            else {
+
+            if (t == 1) {
                 std::wcout << L"/ " << root->token.type_ << std::endl;
             }
-        }
-        else if (t == 2) {
-            if (root->type == ListNode) { // لطباعة المصفوفة
-                this->print_list(root);
+            else if (t == 2) {
+                    std::wcout << L"\\ " << root->token.type_ << std::endl;
             }
             else {
-                std::wcout << L"\\ " << root->token.type_ << std::endl;
+                if (root->type == ListNode) { // لطباعة المصفوفة
+                    this->print_list(root);
+                }
+                else {
+                    std::wcout << root->token.type_ << std::endl;
+                }
             }
+            print_node(root->left, space, 2);
         }
-        else {
-            if (root->type == ListNode) { // لطباعة المصفوفة
-                this->print_list(root);
-            }
-            else {
-                std::wcout << root->token.type_ << std::endl;
-            }
-        }
-        print_node(root->left, space, 2);
     }
 
     void print_list(Node* root) {
-        for (int i = 0; i < root->list_.size(); i++) {
-            std::list<Node*> ::iterator listIter = root->list_.begin();
+        for (int i = 0; i < root->list_->size(); i++) {
+            std::list<Node*> ::iterator listIter = root->list_->begin();
             std::advance(listIter, i);
             Node* a = *listIter;
             this->print_node(a);
@@ -430,11 +427,11 @@ int main()
         // المحلل اللغوي
         /////////////////////////////////////////////////////////////////
 
-        //Parser parser = Parser(lexer.tokens);
-        //parser.parse();
-        //Node* AST = parser.node;
+        Parser parser = Parser(lexer.tokens);
+        parser.parse();
+        Node* AST = parser.node;
         
-        //parser.print_node(AST);
+        parser.print_node(AST);
 
 
         std::wcout << float(clock() - start) / CLOCKS_PER_SEC << std::endl; // طباعة نتائج الوقت
