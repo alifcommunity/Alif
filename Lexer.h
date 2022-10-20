@@ -456,11 +456,11 @@ public:
                 Token token = *tokItr;
                 if (token.value_ == L"")
                 {
-                    result += L"pos start: " + std::to_wstring(token.positionStart.index) + L", " + token.type_ + L", \n";
+                    result += L"start position: " + std::to_wstring(token.positionStart.index) + L"  ->  " + token.type_ + L", \n";
                 }
                 else
                 {
-                    result += L"pos start: " + std::to_wstring(token.positionStart.index) + L" ,pos end: " + std::to_wstring(token.positionEnd.index) + L", " + token.type_ + L" : " + token.value_ + L", \n";
+                    result += L"start position: " + std::to_wstring(token.positionStart.index) + L" ,end position: " + std::to_wstring(token.positionEnd.index) + L"  ->  " + token.type_ + L" : " + token.value_ + L", \n";
                 }
             }
             std::wcout << L"نتائج المعرب اللغوي : \n" << result << std::endl;
