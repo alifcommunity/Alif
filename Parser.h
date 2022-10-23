@@ -4,7 +4,6 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 enum NodeType {
-    Undefined,
     NumberNode,
     StringNode,
     UnaryOpNode,
@@ -14,7 +13,7 @@ enum NodeType {
     StatementCondationNode,
     ListNode,
     NameCallNode,
-    NodeCallArgsNode
+    NameCallArgsNode
 
 };
 
@@ -35,9 +34,9 @@ public:
     }
 
     ~Node() {
-        delete left;
-        delete right;
-        delete list_;
+        //delete left;
+        //delete right;
+        //delete list_;
     }
 
 };
@@ -102,17 +101,17 @@ public:
             node = new Node(nullptr, token, nullptr, NumberNode); // قم بإنشاء صنف عقدة جديد ومرر فيه الرمز الذي تم حفظه في متغير رمز ومرر نوع العقدة المنشأءة واسندها الى متغير عقدة
 
         }
-        //else if (token.type_ == stringT) {
-        //    this->advance();
-        //    node = new Node(nullptr, token, nullptr, StringNode);
+        else if (token.type_ == stringT) {
+            this->advance();
+            node = new Node(nullptr, token, nullptr, StringNode);
 
-        //}
-        //else if (token.type_ == nameT)
-        //{
-        //    this->advance();
-        //    node = new Node(nullptr, token, nullptr, VarAccessNode);
+        }
+        else if (token.type_ == nameT)
+        {
+            this->advance();
+            node = new Node(nullptr, token, nullptr, VarAccessNode);
 
-        //}
+        }
         //else if (token.type_ == keywordT and token.value_ == L"صح")
         //{
         //    this->advance();
@@ -259,7 +258,7 @@ public:
                 this->advance();
                 this->expression(); // نفذ المعادلة وضع القيم في node
                 expr = node;
-                node = new Node(nullptr, varName, expr, VarAccessNode);
+                node = new Node(nullptr, varName, expr, VarAssignNode);
                 return;
             }
             else {
