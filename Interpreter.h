@@ -41,6 +41,17 @@ public:
 		{
 			return this->var_accsses(node);
 		}
+		else if (node->type == BuildInFunctionNode)
+		{
+			if (node->token.value_ == L"اطبع")
+			{
+				this->print_interprete(node);
+			}
+		}
+		else if (node->type == InverseNode)
+		{
+			return this->inverse_(node);
+		}
 	}
 
 	Node* bin_op_interprete(Node* node)
@@ -95,10 +106,22 @@ public:
 		return (*this->varTaple).get_(node->token.value_);
 	}
 
+	Node* inverse_(Node* node)
+	{
+		node->right->token.value_ = L"خطأ";
+		return node->right;
+	}
+
+	void print_interprete(Node* node)
+	{
+		Node* result = this->visit(node->right);
+		std::wcout << result->token.value_ << std::endl;
+	}
+
 	void Interpreter_print(Node* AST)
 	{
 		Node* res = visit(AST);
-		std::wcout << res->token.value_ << std::endl;
+		//std::wcout << res->token.value_ << std::endl;
 	}
 };
 

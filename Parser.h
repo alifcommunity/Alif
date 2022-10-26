@@ -174,12 +174,11 @@ public:
     }
 
     void primary() {
-        Token name;
+        Token name = this->currentToken;
 
         this->atom();
-        name = node->token;
 
-        if (name.type_ == nameT or (name.type_ == keywordT and name.value_ == L"اطبع"))
+        if (name.type_ == nameT)
         {
             if (this->currentToken.type_ == lParenthesisT)
             {
@@ -187,9 +186,6 @@ public:
                 if (this->currentToken.type_ != rParenthesisT)
                 {
                     //this->arguments();
-                    this->expression();
-                    Node* expr = node;
-                    node = new Node(nullptr, name, expr, BuildInFunctionNode);
                     if (this->currentToken.type_ == rParenthesisT)
                     {
                         this->advance();
@@ -209,6 +205,31 @@ public:
                 node = new Node(nullptr, name, node, NameCallNode);
             }
 
+        }
+
+        if (name.type_ == keywordT and name.value_ == L"اطبع")
+        {
+            this->advance();
+            if (this->currentToken.type_ == lParenthesisT)
+            {
+                this->advance();
+                if (this->currentToken.type_ != rParenthesisT)
+                {
+                    this->expression();
+                    Node* expr = node;
+                    node = new Node(nullptr, name, expr, BuildInFunctionNode);
+                    if (this->currentToken.type_ == rParenthesisT)
+                    {
+                        this->advance();
+                    }
+                }
+                else if (this->currentToken.type_ == rParenthesisT)
+                {
+                    this->advance();
+                    node = new Node(nullptr, name, node, BuildInFunctionNode);
+
+                }
+            }
         }
 
     }
@@ -325,6 +346,7 @@ public:
                 node = new Node(left, this->currentToken, right, BinOpNode);
             }
         }
+        node = left;
 
         //Node* expr;
 
@@ -367,16 +389,6 @@ public:
             left = new Node(left, opToken, right, ExpressionsNode);
         }
         node = left;
-
-
-        this->expression();
-        
-
-        while (this->currentToken.type_ == commaT)
-        {
-            this->expression();
-            
-        }
     }
 
     void class_defination() {
@@ -420,7 +432,24 @@ public:
     }
 
     void assignment() {
-        augassign();
+        Token varName = this->currentToken;
+        Node* expr;
+
+        this->augassign();
+
+        if (varName.type_ == nameT)
+        {
+            if (this->currentToken.type_ == equalT)
+            {
+                this->advance();
+                this->assignment(); // نفذ المعادلة وضع القيم في node
+                expr = node;
+                node = new Node(nullptr, varName, expr, VarAssignNode);
+            }
+            //else {
+            //    this->reverse();
+            //}
+        }
     }
 
     void compound_statement() {}
