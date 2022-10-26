@@ -1,6 +1,9 @@
 #pragma once
 
 
+// ملاحظات
+// يجب إضافة رمز : النقطتين
+
 // المعرب اللغوي
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -181,8 +184,11 @@ public:
             }
             else
             {
-                wchar_t character = this->currentChar;
-                error = new SyntaxError(this->position, this->position, L"< حرف غير معروف \'" + std::to_wstring(character) + L"\' >");
+                std::wstring detail = L"< حرف غير معروف \'";
+                detail.push_back(this->currentChar);
+                detail += L"\' >";
+
+                error = new SyntaxError(this->position, this->position, detail);
                 return;
             }
         }
@@ -220,7 +226,11 @@ public:
         }
         else
         {
-            error = new SyntaxError(this->position, this->position, L"\"" + std::to_wstring(this->currentChar) + L"\"");
+            std::wstring detail = L"\"";
+            detail.push_back(this->currentChar);
+            detail += L"\"";
+
+            error = new SyntaxError(this->position, this->position, detail);
         }
     }
 

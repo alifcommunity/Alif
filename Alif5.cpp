@@ -2,6 +2,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include<iostream>
+#include<fstream>
 #include<string>
 #include<list>
 #include<map>
@@ -25,6 +26,10 @@ int main()
     std::wstring input_;
     VarTaple* varTaple = new VarTaple;
     Interpreter interprete = Interpreter(varTaple);
+
+    //std::wstring file;
+    //std::wifstream fileContent("AlifCode.txt");
+    //fileContent.imbue(std::locale("ar_SA.UTF-8"));
 
     while (true) {
         std::wcout << L"alif -> ";
@@ -64,8 +69,9 @@ int main()
         //Node* res = interprete.visit(AST);
         //std::wcout << res->token.value_ << std::endl;
 
-
         std::wcout << float(clock() - start) / CLOCKS_PER_SEC << std::endl; // طباعة نتائج الوقت
 
     }
+
+    //fileContent.close();
 }

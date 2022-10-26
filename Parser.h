@@ -13,7 +13,11 @@ enum NodeType {
     StatementCondationNode,
     ListNode,
     NameCallNode,
-    NameCallArgsNode
+    NameCallArgsNode,
+    BuildInFunctionNode, // تجربة فقط
+    InverseNode,
+    LogicNode,
+    ExpressionsNode,
 
 };
 
@@ -95,7 +99,13 @@ public:
     void atom() {
         Token token = this->currentToken;
 
-        if (token.type_ == integerT or token.type_ == floatT)
+        if (token.type_ == nameT)
+        {
+            this->advance();
+            node = new Node(nullptr, token, nullptr, VarAccessNode);
+
+        }
+        else if (token.type_ == integerT or token.type_ == floatT)
         {
             this->advance();
             node = new Node(nullptr, token, nullptr, NumberNode); // قم بإنشاء صنف عقدة جديد ومرر فيه الرمز الذي تم حفظه في متغير رمز ومرر نوع العقدة المنشأءة واسندها الى متغير عقدة
@@ -106,102 +116,100 @@ public:
             node = new Node(nullptr, token, nullptr, StringNode);
 
         }
-        else if (token.type_ == nameT)
+        else if (token.type_ == keywordT and token.value_ == L"صح")
         {
             this->advance();
-            node = new Node(nullptr, token, nullptr, VarAccessNode);
+            node = new Node(nullptr, token, nullptr, StatementCondationNode);
 
         }
-        //else if (token.type_ == keywordT and token.value_ == L"صح")
-        //{
-        //    this->advance();
-        //    node = new Node(nullptr, token, nullptr, StatementCondationNode);
+        else if (token.type_ == keywordT and token.value_ == L"خطا")
+        {
+            this->advance();
+            node = new Node(nullptr, token, nullptr, StatementCondationNode);
 
-        //}
-        //else if (token.type_ == keywordT and token.value_ == L"خطأ")
-        //{
-        //    this->advance();
-        //    node = new Node(nullptr, token, nullptr, StatementCondationNode);
+        }
+        else if (token.type_ == keywordT and token.value_ == L"عدم")
+        {
+            this->advance();
+            node = new Node(nullptr, token, nullptr, StatementCondationNode);
 
-        //}
-        //else if (token.type_ == keywordT and token.value_ == L"عدم")
-        //{
-        //    this->advance();
-        //    node = new Node(nullptr, token, nullptr, StatementCondationNode);
-
-        //}
-        //else if (token.type_ == lSquareT)
-        //{
-        //    this->advance();
-        //    this->list_expr();
-        //}
+        }
+        else if (token.type_ == lSquareT)
+        {
+            this->advance();
+            this->list_expr();
+        }
     }
 
-    //void list_expr() 
-    //{
-    //    Token token = this->currentToken;
-    //    std::list<Node*>* nodeElement = new std::list<Node*>;
+    void list_expr() 
+    {
+        Token token = this->currentToken;
+        std::list<Node*>* nodeElement = new std::list<Node*>;
 
-    //    if (this->currentToken.type_ == rSquareT)
-    //    {
-    //        this->advance();
-    //    }
-    //    else
-    //    {
-    //        this->expression(); // تقوم بتنفيذ التعبير وضبط نتيجة العملية في متغير node
-    //        (*nodeElement).push_back(node);
+        if (this->currentToken.type_ == rSquareT)
+        {
+            this->advance();
+        }
+        else
+        {
+            this->expression(); // تقوم بتنفيذ التعبير وضبط نتيجة العملية في متغير node
+            (*nodeElement).push_back(node);
 
-    //        while (this->currentToken.type_ == commaT) {
-    //            this->advance();
-    //            this->expression();
-    //            (*nodeElement).push_back(node);
+            while (this->currentToken.type_ == commaT) {
+                this->advance();
+                this->expression();
+                (*nodeElement).push_back(node);
 
-    //        }
+            }
 
-    //        if (this->currentToken.type_ != rSquareT)
-    //        {
-    //            error = new SyntaxError(this->currentToken.positionStart, this->currentToken.positionStart, L"لم يتم إغلاق قوس المصفوفة");
-    //        }
-    //        this->advance();
-    //    }
+            if (this->currentToken.type_ != rSquareT)
+            {
+                error = new SyntaxError(this->currentToken.positionStart, this->currentToken.positionStart, L"لم يتم إغلاق قوس المصفوفة");
+            }
+            this->advance();
+        }
 
-    //    node = new Node(nullptr, Token(), nullptr, ListNode, nodeElement);
+        node = new Node(nullptr, Token(), nullptr, ListNode, nodeElement);
 
-    //}
+    }
 
     void primary() {
-        //Token name;
+        Token name;
 
         this->atom();
-        //name = node->token;
+        name = node->token;
 
-        //if (name.type_ == nameT)
-        //{
-        //    if (this->currentToken.type_ == lParenthesisT)
-        //    {
-        //        this->advance();
-        //        if (this->currentToken.type_ != rParenthesisT)
-        //        {
-        //            this->advance();
-        //            //this->arguments();
-        //            if (this->currentToken.type_ == rParenthesisT)
-        //            {
-        //                this->advance();
-        //            }
-        //        }
-        //        else if (this->currentToken.type_ == rParenthesisT)
-        //        {
-        //            this->advance();
-        //        }
-        //    }
-        //    if (this->currentToken.type_ == dotT)
-        //    {
-        //        this->advance();
-        //        this->primary();
-        //        node = new Node(nullptr, name, node, NameCallNode);
-        //    }
+        if (name.type_ == nameT or (name.type_ == keywordT and name.value_ == L"اطبع"))
+        {
+            if (this->currentToken.type_ == lParenthesisT)
+            {
+                this->advance();
+                if (this->currentToken.type_ != rParenthesisT)
+                {
+                    //this->arguments();
+                    this->expression();
+                    Node* expr = node;
+                    node = new Node(nullptr, name, expr, BuildInFunctionNode);
+                    if (this->currentToken.type_ == rParenthesisT)
+                    {
+                        this->advance();
+                    }
+                }
+                else if (this->currentToken.type_ == rParenthesisT)
+                {
+                    this->advance();
+                    node = new Node(nullptr, name, node, BuildInFunctionNode);
 
-        //}
+                }
+            }
+            if (this->currentToken.type_ == dotT)
+            {
+                this->advance();
+                this->primary();
+                node = new Node(nullptr, name, node, NameCallNode);
+            }
+
+        }
 
     }
 
@@ -235,42 +243,140 @@ public:
     }
 
     void inversion() {
-        sum();
+        Token token = this->currentToken;
+        Node* expr;
+
+        if (token.type_ == keywordT and token.value_ == L"ليس")
+        {
+            this->advance();
+            this->sum();
+            expr = node;
+            node = new Node(nullptr, token, expr, InverseNode);
+
+        }
+        else {
+            this->sum();
+
+        }
+        //sum();
     }
 
     void conjuction() {
-        inversion();
+        Token opToken;
+        Node* left;
+        Node* right;
+
+        this->inversion();
+        left = node;
+
+        while (this->currentToken.type_ == keywordT and this->currentToken.value_ == L"و") {
+            opToken = this->currentToken;
+            opToken.type_ = L"And";
+            this->advance();
+            this->conjuction();
+
+            right = node;
+
+            left = new Node(left, opToken, right, LogicNode);
+        }
+        node = left;
     }
 
     void disjuction() {
-        conjuction();
+        Token opToken;
+        Node* left;
+        Node* right;
+
+        this->conjuction();
+        left = node;
+
+        while (this->currentToken.type_ == keywordT and this->currentToken.value_ == L"او") {
+            opToken = this->currentToken;
+            opToken.type_ = L"Or";
+            this->advance();
+            this->disjuction();
+
+            right = node;
+
+            left = new Node(left, opToken, right, LogicNode);
+        }
+        node = left;
     }
 
     void expression() {
-        Node* expr;
+        Token token = this->currentToken;
+        Node* right;
+        Node* left;
 
-        if (this->currentToken.type_ == nameT)
+        this->disjuction();
+        left = node;
+
+        if (this->currentToken.type_ == keywordT and this->currentToken.value_ == L"اذا")
         {
-            Token varName = this->currentToken;
+            token = this->currentToken;
             this->advance();
-            if (this->currentToken.type_ == equalT)
+            this->disjuction();
+            right = node;
+            node = new Node(left, token, right, BinOpNode); 
+            if (this->currentToken.type_ == keywordT and this->currentToken.value_ == L"والا")
             {
-                this->advance();
-                this->expression(); // نفذ المعادلة وضع القيم في node
-                expr = node;
-                node = new Node(nullptr, varName, expr, VarAssignNode);
-                return;
-            }
-            else {
-                this->reverse();
+                this->expression();
+                right = node;
+                node = new Node(left, this->currentToken, right, BinOpNode);
             }
         }
 
-        bin_op_repeat(&Parser::term, plusT, minusT, &Parser::term);
+        //Node* expr;
+
+        //this->disjuction();
+
+        //if (this->currentToken.type_ == nameT)
+        //{
+        //    Token varName = this->currentToken;
+        //    this->advance();
+        //    if (this->currentToken.type_ == equalT)
+        //    {
+        //        this->advance();
+        //        this->expression(); // نفذ المعادلة وضع القيم في node
+        //        expr = node;
+        //        node = new Node(nullptr, varName, expr, VarAssignNode);
+        //        return;
+        //    }
+        //    else {
+        //        this->reverse();
+        //    }
+        //}
+        //bin_op_repeat(&Parser::term, plusT, minusT, &Parser::term);
     }
 
     void expressions() {
-        expression();
+        Token opToken;
+        Node* left;
+        Node* right;
+
+        this->expression();
+        left = node;
+
+        while (this->currentToken.type_ == commaT) {
+            opToken = this->currentToken;
+            this->advance();
+            this->expression();
+
+            right = node;
+
+            left = new Node(left, opToken, right, ExpressionsNode);
+        }
+        node = left;
+
+
+        this->expression();
+        
+
+        while (this->currentToken.type_ == commaT)
+        {
+            this->expression();
+            
+        }
     }
 
     void class_defination() {
@@ -377,10 +483,10 @@ public:
             }
 
             if (t == 1) {
-                std::wcout << L"/ " << root->token.type_ << std::endl;
+                std::wcout << L"/ " << root->token.type_ << L": " << root->token.value_ << std::endl;
             }
             else if (t == 2) {
-                std::wcout << L"\\ " << root->token.type_ << std::endl;
+                std::wcout << L"\\ " << root->token.type_ << L": " << root->token.value_ << std::endl;
             }
             else {
                 //if (root->type == ListNode) { // لطباعة المصفوفة
