@@ -51,16 +51,13 @@ public:
     Position positionStart, positionEnd;
     Token() {}
     Token(std::wstring type_, Position positionStart) :
-        type_(type_), positionStart(positionStart)
+        type_(type_), positionStart(positionStart), positionEnd(positionStart)
     {
-        this->positionStart = positionStart;
-        this->positionEnd = positionStart;
         this->positionEnd.advance();
     }
     Token(std::wstring type_, std::wstring value_, Position positionStart, Position positionEnd) :
         type_(type_), value_(value_), positionStart(positionStart), positionEnd(positionEnd)
     {
-        this->positionStart = positionStart;
-        this->positionEnd = positionEnd;
+
     }
 };

@@ -260,7 +260,6 @@ public:
 
     void sum() {
         bin_op_repeat(&Parser::term, plusT, minusT, &Parser::sum);
-        //term();
     }
 
     void inversion() {
@@ -279,7 +278,6 @@ public:
             this->sum();
 
         }
-        //sum();
     }
 
     void conjuction() {
@@ -346,29 +344,11 @@ public:
                 node = new Node(left, this->currentToken, right, BinOpNode);
             }
         }
-        node = left;
+        else
+        {
+            node = left;
 
-        //Node* expr;
-
-        //this->disjuction();
-
-        //if (this->currentToken.type_ == nameT)
-        //{
-        //    Token varName = this->currentToken;
-        //    this->advance();
-        //    if (this->currentToken.type_ == equalT)
-        //    {
-        //        this->advance();
-        //        this->expression(); // نفذ المعادلة وضع القيم في node
-        //        expr = node;
-        //        node = new Node(nullptr, varName, expr, VarAssignNode);
-        //        return;
-        //    }
-        //    else {
-        //        this->reverse();
-        //    }
-        //}
-        //bin_op_repeat(&Parser::term, plusT, minusT, &Parser::term);
+        }
     }
 
     void expressions() {

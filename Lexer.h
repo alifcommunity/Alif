@@ -35,10 +35,6 @@ public:
         }
     }
 
-    void reverse() {
-        this->position.reverse(this->currentChar);
-    }
-
     void make_token() {
 
         while (this->currentChar != L'\0')
@@ -271,13 +267,13 @@ public:
                 this->advance();
             }
         }
-        this->advance();
+
         if (ClosedString)
         {
+            this->advance();
             this->tokens.push_back(Token(stringT, string_, positionStart, this->position));
         }
         else {
-            this->reverse();
             error = new SyntaxError(this->position, this->position, L"< لم يتم إغلاق النص >");
         }
     }
@@ -347,9 +343,6 @@ public:
     }
 
     void make_divide() {
-        //std::wstring divide_ = L"";
-        //uint8_t slashCount = 0;
-        //wchar_t char_;
         Position positionStart = this->position;
         this->advance();
 
@@ -367,27 +360,6 @@ public:
         else {
             error = new SyntaxError(positionStart, this->position, L"< هل تقصد \\= ؟ >");
         }
-
-        //while (this->currentChar != L'\0' and this->currentChar == L'\\') {
-        //    if (this->currentChar == L'\\') {
-        //        slashCount += 1;
-        //    }
-        //    divide_ += this->currentChar;
-        //    char_ = this->currentChar;
-        //    this->advance();
-        //}
-
-
-        //if (slashCount == 1) {
-        //    this->tokens.push_back(Token(divideT, this->position));
-        //}
-        //else if (slashCount == 2) {
-        //    this->tokens.push_back(Token(remainT, this->position));
-        //}
-        //else {
-        //    this->reverse();
-        //    error = new SyntaxError(this->position, this->position, L"< حرف زائد \'" + std::to_wstring(char_) + L"\' >");
-        //}
     }
 
     void make_not_equals() {
@@ -466,11 +438,11 @@ public:
                 Token token = *tokItr;
                 if (token.value_ == L"")
                 {
-                    result += L"start position: " + std::to_wstring(token.positionStart.index) + L"  ->  " + token.type_ + L", \n";
+                    result += L"[" + std::to_wstring(token.positionStart.index) + L"]  ->  " + token.type_ + L", \n";
                 }
                 else
                 {
-                    result += L"start position: " + std::to_wstring(token.positionStart.index) + L" ,end position: " + std::to_wstring(token.positionEnd.index) + L"  ->  " + token.type_ + L" : " + token.value_ + L", \n";
+                    result += L"[" + std::to_wstring(token.positionStart.index) + L", " + std::to_wstring(token.positionEnd.index) + L"]  ->  " + token.type_ + L" : " + token.value_ + L", \n";
                 }
             }
             std::wcout << L"نتائج المعرب اللغوي : \n" << result << std::endl;
