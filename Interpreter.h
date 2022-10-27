@@ -25,7 +25,11 @@ public:
 
 	Node* visit(Node* node)
 	{
-		if (node->type == BinOpNode)
+		if (node->type == MultiStatementNode)
+		{
+			this->multi_statement(node);
+		}
+		else if (node->type == BinOpNode)
 		{
 			return this->bin_op_interprete(node);
 		}
@@ -110,6 +114,12 @@ public:
 	{
 		node->right->token.value_ = L"خطأ";
 		return node->right;
+	}
+
+	void multi_statement(Node* node)
+	{
+		this->visit(node->right);
+		this->visit(node->left);
 	}
 
 	void print_interprete(Node* node)

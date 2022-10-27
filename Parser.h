@@ -18,6 +18,7 @@ enum NodeType {
     InverseNode,
     LogicNode,
     ExpressionsNode,
+    MultiStatementNode,
 
 };
 
@@ -443,8 +444,31 @@ public:
         simple_statement();
     }
 
-    void statements() {
+    void statements() { // تجربة القراءة من ملف متعدد الاسطر
+        Token token ;
+        Node* right;
+        Node* left;
+
         statement();
+
+        token = this->currentToken;
+
+        while (this->currentToken.type_ == newlineT)
+        {
+            this->advance();
+            if (this->currentToken.type_ != newlineT)
+            {
+                right = node;
+                if (this->currentToken.type_ != endOfFileT)
+                {
+                    this->statements();
+                    left = node;
+                    node = new Node(left, token, right, MultiStatementNode);
+
+                }
+
+            }
+        }
     }
 
 
@@ -479,7 +503,7 @@ public:
             std::wcout << error->print_() << std::endl;
         }
         else {
-            int count = 5;
+            int count = 7;
 
             if (root == NULL)
                 return;

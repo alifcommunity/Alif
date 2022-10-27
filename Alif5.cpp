@@ -24,26 +24,48 @@ int main()
     _setmode(_fileno(stdin), _O_WTEXT);
 
     std::wstring input_;
+    std::wstring line;
     VarTaple* varTaple = new VarTaple;
     Interpreter interprete = Interpreter(varTaple);
 
-    //std::wstring file;
-    //std::wifstream fileContent("AlifCode.txt");
-    //fileContent.imbue(std::locale("ar_SA.UTF-8"));
+    std::wifstream fileContent("AlifCode.txt");
+    fileContent.imbue(std::locale("ar_SA.UTF-8"));
 
-    while (true) {
-        std::wcout << L"alif -> ";
-        std::getline(std::wcin, input_);
+
+    // القراءة من ملف
+    /////////////////////////////////////////////////////////////////
+
+    while (std::getline(fileContent, line))
+    {
+        if (line != L"")
+        {
+            input_ += line;
+            input_ += L"\n";
+        }
+        else
+        {
+            input_ += L"\n";
+        }
+    }
+    fileContent.close();
+
+    // القراءة من الكونسول
+    /////////////////////////////////////////////////////////////////
+
+    //while (true) {
+        //std::wcout << L"alif -> ";
+        //std::getline(std::wcin, input_);
 
 
         if (input_ == L"خروج") {
             exit(0);
         }
 
+        clock_t start = clock(); // بداية حساب الوقت
+
+
         // المعرب اللغوي
         /////////////////////////////////////////////////////////////////
-
-        clock_t start = clock(); // بداية حساب الوقت
 
         std::wstring fileName = L"الملف_الرئيسي";
         Lexer lexer(fileName, input_);
@@ -57,7 +79,6 @@ int main()
         Parser parser = Parser(lexer.tokens);
         parser.parse();
         Node* AST = parser.node;
-
         parser.print_node(AST);
 
 
@@ -66,12 +87,9 @@ int main()
 
         interprete.Interpreter_print(AST);
 
-        //Node* res = interprete.visit(AST);
-        //std::wcout << res->token.value_ << std::endl;
 
         std::wcout << float(clock() - start) / CLOCKS_PER_SEC << std::endl; // طباعة نتائج الوقت
 
-    }
+    //}
 
-    //fileContent.close();
 }
