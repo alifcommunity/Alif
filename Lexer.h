@@ -14,7 +14,7 @@ public:
     Position position;
     std::list<Token> tokens;
     Error* error;
-    Lexer(std::wstring fileName, std::wstring input_) : fileName(fileName), input_(input_), position(Position(-1, 0, -1, fileName, input_)), currentChar(L'\0') {
+    Lexer(std::wstring fileName, std::wstring input_) : fileName(fileName), input_(input_), position(Position()), currentChar(L'\0') {
         this->advance();
     }
 
@@ -436,13 +436,13 @@ public:
             for (std::list<Token>::iterator tokItr = tokens.begin(); tokItr != tokens.end(); ++tokItr)
             {
                 Token token = *tokItr;
-                if (token.value_ == L"")
+                if (token.value == nullptr)
                 {
-                    result += L"[" + std::to_wstring(token.positionStart.index) + L"]  ->  " + token.type_ + L", \n";
+                    result += L"[" + std::to_wstring(token.positionStart->index) + L"]  ->  " + *token.type + L", \n";
                 }
                 else
                 {
-                    result += L"[" + std::to_wstring(token.positionStart.index) + L", " + std::to_wstring(token.positionEnd.index) + L"]  ->  " + token.type_ + L" : " + token.value_ + L", \n";
+                    result += L"[" + std::to_wstring(token.positionStart->index) + L", " + std::to_wstring(token.positionEnd->index) + L"]  ->  " + *token.type + L" : " + *token.value + L", \n";
                 }
             }
             std::wcout << L"نتائج المعرب اللغوي : \n" << result << std::endl;

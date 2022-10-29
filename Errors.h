@@ -48,8 +48,10 @@ public:
 
     std::wstring print_() {
         std::wstring result = this->errorName + L": " + this->details + L"\n";
-        result += L"الملف " + this->positionStart.fileName + L", السطر " + std::to_wstring(this->positionStart.lineNumber + 1);
-        result += L"\n\n" + ErrorArrow().error_arrow(this->positionStart.input_, this->positionStart, this->positionEnd);
+        //result += L"الملف " + this->positionStart.fileName + L", السطر " + std::to_wstring(this->positionStart.lineNumber + 1);
+        result += L"الملف this->positionStart.fileName, السطر " + std::to_wstring(this->positionStart.lineNumber + 1); // يجب ايجاد حل لاسم الملف المأخوذ من الموقع
+        //result += L"\n\n" + ErrorArrow().error_arrow(this->positionStart.input_, this->positionStart, this->positionEnd);
+        result += L"\n\n" + ErrorArrow().error_arrow(L"input", this->positionStart, this->positionEnd); // يجب ايجاد حل لاسم الملف المأخوذ من الموقع
 
         return result;
     }

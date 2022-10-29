@@ -5,13 +5,10 @@
 
 class Position {
 public:
-    int index, lineNumber = 0;
-    int16_t columnNumber = 0;
-    std::wstring input_, fileName;
-    wchar_t currentChar = L'\0';
-    Position(){}
-    Position(int index, int lineNumber, int16_t columnNumber, std::wstring fileName, std::wstring input_) :
-        index(index), lineNumber(lineNumber), columnNumber(columnNumber), fileName(fileName), input_(input_){}
+    int index, lineNumber;
+    int16_t columnNumber;
+    wchar_t currentChar;
+    Position(int index = -1, int lineNumber = 0, int16_t columnNumber = -1) : index(index), lineNumber(lineNumber), columnNumber(columnNumber){}
 
     void advance(wchar_t currentChar = L'\0') {
         this->index++;
@@ -23,3 +20,5 @@ public:
         }
     }
 };
+
+// هل يفضل وضع قيم افتراضية للمتغيرات ام لا؟

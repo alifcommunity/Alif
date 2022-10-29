@@ -15,8 +15,8 @@
 #include "Tokens.h"
 #include "Errors.h"
 #include "Lexer.h"
-#include "Parser.h"
-#include "Interpreter.h"
+//#include "Parser.h"
+//#include "Interpreter.h"
 
 int main()
 {
@@ -25,8 +25,8 @@ int main()
 
     std::wstring input_;
     std::wstring line;
-    VarTaple* varTaple = new VarTaple;
-    Interpreter interprete = Interpreter(varTaple);
+    //VarTaple* varTaple = new VarTaple;
+    //Interpreter interprete = Interpreter(varTaple);
 
     std::wifstream fileContent("AlifCode.txt");
     fileContent.imbue(std::locale("ar_SA.UTF-8"));
@@ -55,7 +55,8 @@ int main()
     //while (true) {
         //std::wcout << L"alif -> ";
         //std::getline(std::wcin, input_);
-
+        
+    //std::wcout << input_ << std::endl;
 
         if (input_ == L"خروج") {
             exit(0);
@@ -70,22 +71,22 @@ int main()
         std::wstring fileName = L"الملف_الرئيسي";
         Lexer lexer(fileName, input_);
         lexer.make_token();
-        lexer.print();
+        //lexer.print();
 
 
         // المحلل اللغوي
         /////////////////////////////////////////////////////////////////
 
-        Parser parser = Parser(lexer.tokens);
-        parser.parse();
-        Node* AST = parser.node;
-        parser.print_node(AST);
+        //Parser parser = Parser(lexer.tokens);
+        //parser.parse();
+        //Node* AST = parser.node;
+        //parser.print_node(AST);
 
 
         // المنفذ
         /////////////////////////////////////////////////////////////////
 
-        interprete.Interpreter_print(AST);
+        //interprete.Interpreter_print(AST);
 
 
         std::wcout << float(clock() - start) / CLOCKS_PER_SEC << std::endl; // طباعة نتائج الوقت

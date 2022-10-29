@@ -4,60 +4,68 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const std::wstring
-integerT = L"Integer",
-floatT = L"Float",
-stringT = L"String",
-nameT = L"Name",
-keywordT = L"Keyword",
-plusT = L"Plus",
-plusEqualT = L"Plus_equal",
-minusT = L"Minus",
-minusEqualT = L"Minus_equal",
-multiplyT = L"Multiply",
-multiplyEqualT = L"Multiply_equal",
-divideT = L"Divide",
-divideEqualT = L"Divide_equal",
-powerT = L"Power",
-powerEqualT = L"Power_equal",
-remainT = L"Remain",
-remainEqualT = L"Remain_equal",
-equalT = L"Equal",
-lParenthesisT = L"L_Parenthesis",
-rParenthesisT = L"R_Parenthesis",
-lSquareT = L"L_Square",
-rSquareT = L"R_Square",
-lCurlyBraceT = L"L_curly_brace",
-rCurlyBraceT = L"R_curly_brace",
-equalEqualT = L"Equal_equal",
-notEqualT = L"Not_equal",
-lessThanT = L"Less_than",
-greaterThanT = L"Greater_than",
-lessThanEqualT = L"Less_than_equal",
-greaterThanEqualT = L"Greater_than_equal",
-commaT = L"Comma",
-colonT = L"Colon",
-arrowT = L"Arrow",
-newlineT = L"Newline",
-tabT = L"Tab",
-dotT = L"Dot",
-endOfFileT = L"End_Of_File";
+integerT = L"Int", // Integer
+floatT = L"Float", // Float
+stringT = L"Str", // String
+nameT = L"Nam", // Name
+keywordT = L"KW", // Keyword
+plusT = L"Pls", // Plus
+plusEqualT = L"Pls_eq", // Plus_equal
+minusT = L"Mins", // Minus
+minusEqualT = L"Mins_eq", // Minus_equal
+multiplyT = L"Multi", // Multiply
+multiplyEqualT = L"Multi_eq", // Multiply_equal
+divideT = L"Div", // Divide
+divideEqualT = L"Div_eq", // Divide_equal
+powerT = L"Pow", // Power
+powerEqualT = L"Pow_eq", // Power_equal
+remainT = L"Remain", // Remain
+remainEqualT = L"Remain_eq", // Remain_equal
+equalT = L"Eq", // Equal
+lParenthesisT = L"L_Paren", // L_Parenthesis
+rParenthesisT = L"R_Paren", // R_Parenthesis
+lSquareT = L"L_Sq", // L_Square
+rSquareT = L"R_Sq", // R_Square
+lCurlyBraceT = L"L_curl_bra", // L_curly_brace
+rCurlyBraceT = L"R_curly_brace", // R_curly_brace
+equalEqualT = L"Eq_eq", // Equal_equal 
+notEqualT = L"Not_eq", // Not_equal
+lessThanT = L"Les_tha", // Less_than
+greaterThanT = L"Gre_tha", // Greater_than
+lessThanEqualT = L"Les_tha_eq", // Less_than_equal
+greaterThanEqualT = L"Gre_tha_eq", // Greater_than_equal
+commaT = L"Com", // Comma
+colonT = L"Coln", // Colon
+arrowT = L"Arr", // Arrow
+newlineT = L"NL", // NewLine
+tabT = L"Tab", // Tab
+dotT = L"Dot", // Dot
+endOfFileT = L"EOF"; // End_Of_File
 
-const std::list<std::wstring> keywords = { L"مرر", L"توقف", L"استمر", L"حذف", L"استورد", L"من", L"اذا", L"بينما", L"لاجل", L"ارجع", L"دالة", L"صنف", L"والا", L"او", L"و", L"ليس", L"صح", L"خطا", L"عدم", L"اطبع", L"في" };
+const std::list<std::wstring> keywords = { L"مرر", L"توقف", L"استمر", L"حذف", L"استورد", L"من", L"اذا", L"واذا", L"بينما", L"لاجل", L"ارجع", L"دالة", L"صنف", L"والا", L"او", L"و", L"ليس", L"صح", L"خطا", L"عدم", L"اطبع", L"في" };
 
 
 class Token {
 public:
-    std::wstring type_, value_;
-    Position positionStart, positionEnd;
+    std::shared_ptr<std::wstring> type;
+    std::shared_ptr<std::wstring> value;
+    std::shared_ptr<Position> positionStart;
+    std::shared_ptr<Position> positionEnd;
+  
     Token() {}
-    Token(std::wstring type_, Position positionStart) :
-        type_(type_), positionStart(positionStart), positionEnd(positionStart)
+    Token(std::wstring type, Position positionStart)
     {
-        this->positionEnd.advance();
+        this->type = std::make_shared<std::wstring>(type);
+        this->positionStart = std::make_shared<Position>(positionStart);
+        this->positionEnd = std::make_shared<Position>(positionStart);
+        this->positionEnd->advance();
     }
-    Token(std::wstring type_, std::wstring value_, Position positionStart, Position positionEnd) :
-        type_(type_), value_(value_), positionStart(positionStart), positionEnd(positionEnd)
+    Token(std::wstring type, std::wstring value, Position positionStart, Position positionEnd)
     {
+        this->type = std::make_shared<std::wstring>(type);
+        this->value = std::make_shared<std::wstring>(value);
+        this->positionStart = std::make_shared<Position>(positionStart);
+        this->positionEnd = std::make_shared<Position>(positionEnd);
 
     }
 };
