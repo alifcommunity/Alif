@@ -12,13 +12,13 @@ public:
         int newlineIndex = input_.rfind(L"\n", positionStart.index);
         int indexStart = std::max(newlineIndex, 0);
         int indexEnd = input_.find(L"\n", indexStart + 1);
-        if (indexEnd < 0) {
-            indexEnd = input_.length();
-        }
+        //if (indexEnd < 0) {
+        //    indexEnd = input_.length();
+        //}
 
         int lineCount = positionEnd.lineNumber - positionStart.lineNumber + 1;
         for (int i = 0; i < lineCount; i++) {
-            std::wstring line = input_.substr(indexStart, indexEnd);
+            std::wstring line = input_.substr(indexStart, indexEnd - indexStart); // تم طرح قيمة النهاية من البداية ليقوم بإختيار سطر واحد فقط ويجب إيجاد حل للمشكلة
             if (i == 0) { columnStart = positionStart.columnNumber; }
             else { columnStart = 0; }
             if (i == lineCount - 1) { columnEnd = positionEnd.columnNumber + 1; }
