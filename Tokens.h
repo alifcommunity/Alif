@@ -19,15 +19,15 @@ divideT = L"Div", // Divide
 divideEqualT = L"Div_eq", // Divide_equal
 powerT = L"Pow", // Power
 powerEqualT = L"Pow_eq", // Power_equal
-remainT = L"Remain", // Remain
-remainEqualT = L"Remain_eq", // Remain_equal
+remainT = L"Remn", // Remain
+remainEqualT = L"Remn_eq", // Remain_equal
 equalT = L"Eq", // Equal
 lParenthesisT = L"L_Paren", // L_Parenthesis
 rParenthesisT = L"R_Paren", // R_Parenthesis
 lSquareT = L"L_Sq", // L_Square
 rSquareT = L"R_Sq", // R_Square
-lCurlyBraceT = L"L_curl_bra", // L_curly_brace
-rCurlyBraceT = L"R_curly_brace", // R_curly_brace
+lCurlyBraceT = L"L_cur_br", // L_curly_brace
+rCurlyBraceT = L"R_cur_br", // R_curly_brace
 equalEqualT = L"Eq_eq", // Equal_equal 
 notEqualT = L"Not_eq", // Not_equal
 lessThanT = L"Les_tha", // Less_than
@@ -53,14 +53,13 @@ public:
     std::shared_ptr<Position> positionEnd;
   
     Token() {}
-    Token(std::wstring type, Position positionStart)
+    Token(Position positionStart, Position positionEnd, std::wstring type)
     {
         this->type = std::make_shared<std::wstring>(type);
         this->positionStart = std::make_shared<Position>(positionStart);
-        this->positionEnd = std::make_shared<Position>(positionStart);
-        this->positionEnd->advance();
+        this->positionEnd = std::make_shared<Position>(positionEnd);
     }
-    Token(std::wstring type, std::wstring value, Position positionStart, Position positionEnd)
+    Token(Position positionStart, Position positionEnd, std::wstring type, std::wstring value)
     {
         this->type = std::make_shared<std::wstring>(type);
         this->value = std::make_shared<std::wstring>(value);

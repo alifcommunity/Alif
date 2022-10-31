@@ -42,16 +42,16 @@ public:
 class Error {
 public:
     Position positionStart, positionEnd;
-    std::wstring errorName, details;
+    std::wstring errorName, details, fileName, input;
     Error() {}
-    Error(Position positionStart, Position positionEnd, std::wstring errorName, std::wstring details) : positionStart(positionStart), positionEnd(positionEnd), errorName(errorName), details(details) {}
+    Error(Position positionStart, Position positionEnd, std::wstring errorName, std::wstring details, std::wstring fileName, std::wstring input) : positionStart(positionStart), positionEnd(positionEnd), errorName(errorName), details(details), fileName(fileName), input(input) {}
 
     std::wstring print_() {
         std::wstring result = this->errorName + L": " + this->details + L"\n";
         //result += L"الملف " + this->positionStart.fileName + L", السطر " + std::to_wstring(this->positionStart.lineNumber + 1);
-        result += L"الملف this->positionStart.fileName, السطر " + std::to_wstring(this->positionStart.lineNumber + 1); // يجب ايجاد حل لاسم الملف المأخوذ من الموقع
+        result += L"الملف " + fileName + L", السطر " + std::to_wstring(this->positionStart.lineNumber + 1);
         //result += L"\n\n" + ErrorArrow().error_arrow(this->positionStart.input_, this->positionStart, this->positionEnd);
-        result += L"\n\n" + ErrorArrow().error_arrow(L"input", this->positionStart, this->positionEnd); // يجب ايجاد حل لاسم الملف المأخوذ من الموقع
+        result += L"\n\n" + ErrorArrow().error_arrow(input, this->positionStart, this->positionEnd); // يجب ايجاد حل لاسم الملف المأخوذ من الموقع
 
         return result;
     }
@@ -59,6 +59,6 @@ public:
 
 class SyntaxError : public Error {
 public:
-    SyntaxError(Position positionStart, Position positionEnd, std::wstring details) : Error(positionStart, positionEnd, L"خطأ في النسق", details) {
+    SyntaxError(Position positionStart, Position positionEnd, std::wstring details, std::wstring fileName, std::wstring input) : Error(positionStart, positionEnd, L"خطأ في النسق", details, fileName, input) {
     }
 };

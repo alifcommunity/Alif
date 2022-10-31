@@ -3,6 +3,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include<iostream>
+#include<filesystem>
 #include<fstream>
 #include<string>
 #include<list>
@@ -68,10 +69,10 @@ int main()
         // المعرب اللغوي
         /////////////////////////////////////////////////////////////////
 
-        std::wstring fileName = L"الملف_الرئيسي";
+        std::wstring fileName = L"AlifCode.txt";
         Lexer lexer(fileName, input_);
         lexer.make_token();
-        //lexer.print();
+        lexer.print();
 
 
         // المحلل اللغوي
