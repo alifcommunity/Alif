@@ -238,7 +238,7 @@ public:
         this->advance();
 
         while (this->currentChar != L'\"') {
-            if (this->currentChar == L'\0') {
+            if (this->currentChar == L'\0' or this->currentChar == L'\n') {
                 ClosedString = false;
                 break;
             }
@@ -254,7 +254,7 @@ public:
             this->tokens.push_back(Token(positionStart, this->position, stringT, string_));
         }
         else {
-            error = std::make_shared<Error>(SyntaxError(this->position, this->position, L"< لم يتم إغلاق النص >", fileName, input_));
+            error = std::make_shared<Error>(SyntaxError(positionStart, this->position, L"< لم يتم إغلاق النص >", fileName, input_));
         }
     }
 
