@@ -6,30 +6,17 @@
 class ErrorArrow {
 public:
     std::wstring error_arrow(std::wstring input_, Position positionStart, Position positionEnd) {
-        std::wstring result;
-        int columnStart, columnEnd;
+        std::wstring line, result;
+        int indexStart, indexEnd, columnEnd;
 
-        int newlineIndex = input_.rfind(L"\n", positionStart.index);
-        int indexStart = std::max(newlineIndex, 0);
-        int indexEnd = input_.find(L"\n", indexStart + 1);
-        if (indexEnd < 0) {
-            indexEnd = input_.length();
-        }
+        indexStart = input_.rfind(L"\n", positionStart.index);
+        indexEnd = input_.find(L"\n", positionEnd.index);
+        columnEnd = positionEnd.columnNumber;
 
-        int lineCount = positionEnd.lineNumber - positionStart.lineNumber + 1;
-        for (int i = 0; i < lineCount; i++) {
-            std::wstring line = input_.substr(indexStart, indexEnd);
-            if (i == 0) { columnStart = positionStart.columnNumber; }
-            else { columnStart = 0; }
-            if (i == lineCount - 1) { columnEnd = positionEnd.columnNumber + 1; }
-            else { columnEnd = line.length() - 1; }
+        line = input_.substr(indexStart + 1, indexEnd - indexStart);
 
-            result += line + L"\n" + std::wstring(columnStart, ' ') + std::wstring(columnEnd - columnStart, '^');
-
-            indexStart = indexEnd;
-            indexEnd = input_.find(L"\n", indexStart + 1);
-            if (indexEnd < 0) { indexEnd = input_.length(); }
-        }
+        result += line;
+        result += std::wstring(columnEnd, ' ') + std::wstring(1, '^');
 
         replace(result.begin(), result.end(), '\t', ' ');
         return result;
@@ -42,14 +29,14 @@ public:
 class Error {
 public:
     Position positionStart, positionEnd;
-    std::wstring errorName, details;
+    std::wstring errorName, details, fileName, input;
     Error() {}
-    Error(Position positionStart, Position positionEnd, std::wstring errorName, std::wstring details) : positionStart(positionStart), positionEnd(positionEnd), errorName(errorName), details(details) {}
+    Error(Position positionStart, Position positionEnd, std::wstring errorName, std::wstring details, std::wstring fileName, std::wstring input) : positionStart(positionStart), positionEnd(positionEnd), errorName(errorName), details(details), fileName(fileName), input(input) {}
 
     std::wstring print_() {
         std::wstring result = this->errorName + L": " + this->details + L"\n";
-        result += L"الملف " + this->positionStart.fileName + L", السطر " + std::to_wstring(this->positionStart.lineNumber + 1);
-        result += L"\n\n" + ErrorArrow().error_arrow(this->positionStart.input_, this->positionStart, this->positionEnd);
+        result += L"الملف " + fileName + L", السطر " + std::to_wstring(this->positionStart.lineNumber + 1);
+        result += L"\n\n" + ErrorArrow().error_arrow(input, this->positionStart, this->positionEnd);
 
         return result;
     }
@@ -57,6 +44,6 @@ public:
 
 class SyntaxError : public Error {
 public:
-    SyntaxError(Position positionStart, Position positionEnd, std::wstring details) : Error(positionStart, positionEnd, L"خطأ في النسق", details) {
+    SyntaxError(Position positionStart, Position positionEnd, std::wstring details, std::wstring fileName, std::wstring input) : Error(positionStart, positionEnd, L"خطأ في النسق", details, fileName, input) {
     }
 };

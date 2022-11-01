@@ -170,7 +170,9 @@ public:
             this->advance();
         }
 
-        node = new Node(nullptr, Token(), nullptr, ListNode, nodeElement);
+        token.type_ = L"List"; // فقط لطباعة الشجرة
+        token.value_ = L"";
+        node = new Node(nullptr, token, nullptr, ListNode, nodeElement);
 
     }
 
@@ -502,7 +504,8 @@ public:
         if (error) {
             std::wcout << error->print_() << std::endl;
         }
-        else {
+        else
+        {
             int count = 7;
 
             if (root == NULL)
@@ -522,24 +525,10 @@ public:
                 std::wcout << L"\\ " << root->token.type_ << L": " << root->token.value_ << std::endl;
             }
             else {
-                //if (root->type == ListNode) { // لطباعة المصفوفة
-                //    this->print_list(root);
-                //}
-                //else {
                 std::wcout << root->token.type_ << std::endl;
-                //}
             }
             print_node(root->left, space, 2);
         }
     }
-
-    //void print_list(Node* root) {
-    //    for (int i = 0; i < root->list_->size(); i++) {
-    //        std::list<Node*> ::iterator listIter = root->list_->begin();
-    //        std::advance(listIter, i);
-    //        Node* a = *listIter;
-    //        this->print_node(a);
-    //    }
-    //}
 
 };
