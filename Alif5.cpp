@@ -5,7 +5,7 @@
 #include<iostream>
 #include<fstream>
 #include<string>
-#include<list>
+#include<vector>
 #include<map>
 #include<algorithm> // لعمل تتالي على المصفوفات
 #include<fcntl.h> //لقبول ادخال الاحرف العربية من الكونسل
@@ -71,7 +71,7 @@ int main()
         std::wstring fileName = L"AlifCode.txt";
         Lexer lexer(fileName, input_);
         lexer.make_token();
-        lexer.print();
+        //lexer.print();
 
 
         // المحلل اللغوي
@@ -94,3 +94,7 @@ int main()
     //}
 
 }
+
+
+// vectro [2.54, 2.54, 2.42] second
+// list [2.93, 3.05, 3.15] second
