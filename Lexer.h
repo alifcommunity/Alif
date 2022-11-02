@@ -12,7 +12,7 @@ public:
     std::wstring fileName, input_;
     wchar_t currentChar;
     Position position, positionEnd;
-    std::list<Token> tokens;
+    std::vector<Token> tokens;
     std::shared_ptr<Error>(error);
     Lexer(std::wstring fileName, std::wstring input_) : fileName(fileName), input_(input_), position(Position()), currentChar(L'\0') {
         this->advance();
@@ -30,9 +30,9 @@ public:
         }
     }
 
-    Position position_end(Position position)
+    Position position_end(Position position_)
     {
-        positionEnd = position;
+        positionEnd = position_;
         positionEnd.advance();
         return positionEnd;
     }
@@ -413,7 +413,7 @@ public:
         }
         else
         {
-            for (std::list<Token>::iterator tokItr = tokens.begin(); tokItr != tokens.end(); ++tokItr)
+            for (std::vector<Token>::iterator tokItr = tokens.begin(); tokItr != tokens.end(); ++tokItr)
             {
                 Token token = *tokItr;
                 if (!token.value)
