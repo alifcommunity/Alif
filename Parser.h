@@ -87,42 +87,42 @@ public:
     void atom() {
         std::shared_ptr<Token> token = this->currentToken;
 
-        if (*token->type == nameT)
+        if (token->type == nameT)
         {
             this->advance();
             node = std::make_shared<Node>(VarAccessNode, nullptr, nullptr, token);
 
         }
-        else if (*token->type == integerT or *token->type == floatT)
+        else if (token->type == integerT or token->type == floatT)
         {
             this->advance();
             node = std::make_shared<Node>(NumberNode, nullptr, nullptr, token); // قم بإنشاء صنف عقدة جديد ومرر فيه الرمز الذي تم حفظه في متغير رمز ومرر نوع العقدة المنشأءة واسندها الى متغير عقدة
 
         }
-        else if (*token->type == stringT) {
+        else if (token->type == stringT) {
             this->advance();
             node = std::make_shared<Node>(StringNode, nullptr, nullptr, token);
 
         }
-        else if (*token->type == keywordT and *token->value == L"صح")
+        else if (token->type == keywordT and token->value == L"صح")
         {
             this->advance();
             node = std::make_shared<Node>(CondationNode, nullptr, nullptr, token);
 
         }
-        else if (*token->type == keywordT and *token->value == L"خطا")
+        else if (token->type == keywordT and token->value == L"خطا")
         {
             this->advance();
             node = std::make_shared<Node>(CondationNode, nullptr, nullptr, token);
 
         }
-        else if (*token->type == keywordT and *token->value == L"عدم")
+        else if (token->type == keywordT and token->value == L"عدم")
         {
             this->advance();
             node = std::make_shared<Node>(CondationNode, nullptr, nullptr, token);
 
         }
-        else if (*token->type == lSquareT)
+        else if (token->type == lSquareT)
         {
             this->advance();
             //this->list_expr();
