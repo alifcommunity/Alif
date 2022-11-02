@@ -12,25 +12,26 @@ enum NodeType {
     VarAssignNode,
     CondationNode,
     ListNode,
-    NameCallNode,
-    NameCallArgsNode,
-    BuildInFunctionNode, // تجربة فقط
-    InverseNode,
-    LogicNode,
-    ExpressionsNode,
-    MultiStatementNode,
+    //NameCallNode,
+    //NameCallArgsNode,
+    //BuildInFunctionNode, // تجربة فقط
+    //InverseNode,
+    //LogicNode,
+    //ExpressionsNode,
+    //MultiStatementNode,
 
 };
 
 class Node {
 public:
-    std::shared_ptr<Node> left;
-    std::shared_ptr<Node> right;
-    std::shared_ptr<Token> token;
-    std::shared_ptr<std::vector<Token>> list_;
+    std::shared_ptr<Node> left = nullptr;
+    std::shared_ptr<Node> right = nullptr;
+    std::shared_ptr<Token> token = nullptr;
+    std::shared_ptr<std::vector<Token>> list_ = nullptr;
     NodeType type;
 
-    Node(NodeType nodeType, std::shared_ptr<Node> left = nullptr, std::shared_ptr<Node> right = nullptr, std::shared_ptr<Token> token = nullptr, std::shared_ptr<std::vector<Token>> list_ = nullptr) {
+    Node(){}
+    Node(NodeType nodeType, std::shared_ptr<Token> token = nullptr, std::shared_ptr<Node> left = nullptr, std::shared_ptr<Node> right = nullptr, std::shared_ptr<std::vector<Token>> list_ = nullptr) {
         this->left = left;
         this->right = right;
         this->token = token;
@@ -48,12 +49,11 @@ public:
     std::vector<Token> tokens;
     int tokenIndex = -1;
     std::shared_ptr<Token> currentToken;
-    std::shared_ptr<Node> node;
+    Node node;
     std::shared_ptr<Error> error;
 
     Parser(std::vector<Token> tokens) : tokens(tokens)
     {
-        //tokenIndex = -1;
         this->advance();
     }
 
@@ -64,7 +64,7 @@ public:
         {
             std::vector<Token>::iterator listIter = tokens.begin();
             std::advance(listIter, this->tokenIndex);
-            *this->currentToken = *listIter;
+            this->currentToken = std::make_shared<Token>(* listIter);
         }
     }
 
@@ -90,42 +90,52 @@ public:
         if (token->type == nameT)
         {
             this->advance();
-            node = std::make_shared<Node>(VarAccessNode, nullptr, nullptr, token);
+            node = Node(VarAccessNode, token);
 
         }
         else if (token->type == integerT or token->type == floatT)
         {
             this->advance();
-            node = std::make_shared<Node>(NumberNode, nullptr, nullptr, token); // قم بإنشاء صنف عقدة جديد ومرر فيه الرمز الذي تم حفظه في متغير رمز ومرر نوع العقدة المنشأءة واسندها الى متغير عقدة
+            node = Node(NumberNode, token);
 
         }
         else if (token->type == stringT) {
             this->advance();
-            node = std::make_shared<Node>(StringNode, nullptr, nullptr, token);
+            node = Node(StringNode, token);
 
         }
         else if (token->type == keywordT and token->value == L"صح")
         {
             this->advance();
-            node = std::make_shared<Node>(CondationNode, nullptr, nullptr, token);
+            node = Node(CondationNode, token);
 
         }
         else if (token->type == keywordT and token->value == L"خطا")
         {
             this->advance();
-            node = std::make_shared<Node>(CondationNode, nullptr, nullptr, token);
+            node = Node(CondationNode, token);
 
         }
         else if (token->type == keywordT and token->value == L"عدم")
         {
             this->advance();
-            node = std::make_shared<Node>(CondationNode, nullptr, nullptr, token);
+            node = Node(CondationNode, token);
 
         }
         else if (token->type == lSquareT)
         {
             this->advance();
             //this->list_expr();
+        }
+        else if (token->type == endOfFileT)
+        {
+            return;
+        }
+        else
+        {
+            this->advance();
+            this->atom();
+
         }
     }
 
@@ -157,8 +167,6 @@ public:
     //        this->advance();
     //    }
 
-    //    token.type_ = L"List"; // فقط لطباعة الشجرة
-    //    token.value_ = L"";
     //    node = new Node(nullptr, token, nullptr, ListNode, nodeElement);
 
     //}

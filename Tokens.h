@@ -48,12 +48,12 @@ const std::vector<std::wstring> keywords = { L"مرر", L"توقف", L"استم�
 class Token {
 
 public:
-    std::wstring type;
-    std::wstring value;
+    std::wstring type = L"";
+    std::wstring value = L"";
     Position positionStart;
     Position positionEnd;
 
-    //Token() {}
+    Token() {}
     Token(Position positionStart, Position positionEnd, std::wstring type)
     {
         this->type = type;

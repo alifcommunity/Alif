@@ -73,7 +73,7 @@ int main()
         lexer.make_token();
         if (lexer.error)
         {
-            //lexer.print();
+            lexer.print();
             exit(0);
         }
         //lexer.print();
@@ -81,7 +81,6 @@ int main()
 
         // المحلل اللغوي
         /////////////////////////////////////////////////////////////////
-
         Parser parser = Parser(lexer.tokens);
         parser.parse();
         //std::shared_ptr<Node> AST = parser.node;
