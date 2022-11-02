@@ -30,9 +30,9 @@ public:
         }
     }
 
-    Position position_end(Position position)
+    Position position_end(Position position_)
     {
-        positionEnd = position;
+        positionEnd = position_;
         positionEnd.advance();
         return positionEnd;
     }

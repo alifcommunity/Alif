@@ -71,15 +71,21 @@ int main()
         std::wstring fileName = L"AlifCode.txt";
         Lexer lexer(fileName, input_);
         lexer.make_token();
+        if (lexer.error)
+        {
+            lexer.print();
+            exit(0);
+        }
         //lexer.print();
 
 
         // المحلل اللغوي
         /////////////////////////////////////////////////////////////////
 
+        std::wcout << L"hala" << std::endl;
         Parser parser = Parser(lexer.tokens);
         parser.parse();
-        Node* AST = parser.node;
+        //std::shared_ptr<Node> AST = parser.node;
         //parser.print_node(AST);
 
 
