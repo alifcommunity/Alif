@@ -46,25 +46,26 @@ const std::vector<std::wstring> keywords = { L"مرر", L"توقف", L"استم�
 
 
 class Token {
+
 public:
-    std::shared_ptr<std::wstring> type;
-    std::shared_ptr<std::wstring> value;
-    std::shared_ptr<Position> positionStart;
-    std::shared_ptr<Position> positionEnd;
-  
-    Token() {}
+    std::wstring type;
+    std::wstring value;
+    Position positionStart;
+    Position positionEnd;
+
+    //Token() {}
     Token(Position positionStart, Position positionEnd, std::wstring type)
     {
-        this->type = std::make_shared<std::wstring>(type);
-        this->positionStart = std::make_shared<Position>(positionStart);
-        this->positionEnd = std::make_shared<Position>(positionEnd);
+        this->type = type;
+        this->positionStart = positionStart;
+        this->positionEnd = positionEnd;
     }
     Token(Position positionStart, Position positionEnd, std::wstring type, std::wstring value)
     {
-        this->type = std::make_shared<std::wstring>(type);
-        this->value = std::make_shared<std::wstring>(value);
-        this->positionStart = std::make_shared<Position>(positionStart);
-        this->positionEnd = std::make_shared<Position>(positionEnd);
+        this->type = type;
+        this->value = value;
+        this->positionStart = positionStart;
+        this->positionEnd = positionEnd;
 
     }
 };

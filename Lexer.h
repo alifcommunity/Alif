@@ -416,13 +416,13 @@ public:
             for (std::vector<Token>::iterator tokItr = tokens.begin(); tokItr != tokens.end(); ++tokItr)
             {
                 Token token = *tokItr;
-                if (!token.value)
+                if (token.value == L"")
                 {
-                    result += L"[" + std::to_wstring(token.positionStart->index) + L"]  ->  " + *token.type + L", \n";
+                    result += L"[" + std::to_wstring(token.positionStart.index) + L"]  ->  " + token.type + L", \n";
                 }
                 else
                 {
-                    result += L"[" + std::to_wstring(token.positionStart->index) + L", " + std::to_wstring(token.positionEnd->index) + L"]  ->  " + *token.type + L" : " + *token.value + L", \n";
+                    result += L"[" + std::to_wstring(token.positionStart.index) + L", " + std::to_wstring(token.positionEnd.index) + L"]  ->  " + token.type + L" : " + token.value + L", \n";
                 }
             }
             std::wcout << L"نتائج المعرب اللغوي : \n" << result << std::endl;
