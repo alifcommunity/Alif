@@ -15,7 +15,7 @@
 #include "Tokens.h"
 #include "Errors.h"
 #include "Lexer.h"
-//#include "Parser.h"
+#include "Parser.h"
 //#include "Interpreter.h"
 
 int main()
@@ -77,9 +77,9 @@ int main()
         // المحلل اللغوي
         /////////////////////////////////////////////////////////////////
 
-        //Parser parser = Parser(lexer.tokens);
-        //parser.parse();
-        //Node* AST = parser.node;
+        Parser parser = Parser(lexer.tokens);
+        parser.parse();
+        Node* AST = parser.node;
         //parser.print_node(AST);
 
 
@@ -96,5 +96,17 @@ int main()
 }
 
 
-// vectro [2.54, 2.54, 2.42] second
-// list [2.93, 3.05, 3.15] second
+// vectro [2.54, 2.54, 2.42] second in release
+// list [2.93, 3.05, 3.15] second in release
+
+// 1598401 line of this ->
+
+//#السلام عليكم
+//.
+//12345
+//اسم
+//"نص طويل الاجل"
+//ب += 4
+//ي -= 2
+//234 + 567 - 89 * 1 \ 2
+//(12 - 4, 43 * 5)

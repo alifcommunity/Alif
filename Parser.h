@@ -24,26 +24,19 @@ enum NodeType {
 
 class Node {
 public:
-    Token token;
+    std::shared_ptr<Node> left;
+    std::shared_ptr<Node> right;
+    std::shared_ptr<Token> token;
+    std::shared_ptr<std::vector<Token>> list_;
     NodeType type;
-    Node* left;
-    Node* right;
-    std::list<Node*>* list_;
 
-    Node(Node* left, Token token, Node* right, NodeType nodeType, std::list<Node*>* list_ = nullptr) {
+    Node(NodeType nodeType, std::shared_ptr<Node> left = nullptr, std::shared_ptr<Node> right = nullptr, std::shared_ptr<Token> token = nullptr, std::shared_ptr<std::vector<Token>> list_ = nullptr) {
         this->left = left;
-        this->token = token;
         this->right = right;
-        this->type = nodeType;
+        this->token = token;
         this->list_ = list_;
+        this->type = nodeType;
     }
-
-    ~Node() {
-        //delete left;
-        //delete right;
-        //delete list_;
-    }
-
 };
 
 
@@ -52,22 +45,16 @@ public:
 
 class Parser {
 public:
-    std::list<Token> tokens;
+    std::vector<Token> tokens;
     int tokenIndex;
     Token currentToken;
-    Node* node;
-    Error* error;
+    std::shared_ptr<Node> node;
+    std::shared_ptr<Error> error;
 
-    Parser(std::list<Token> tokens) : tokens(tokens)
+    Parser(std::vector<Token> tokens) : tokens(tokens)
     {
         tokenIndex = -1;
         this->advance();
-    }
-
-    ~Parser()
-    {
-        delete node;
-        delete error;
     }
 
     void advance()
@@ -75,16 +62,16 @@ public:
         this->tokenIndex++;
         if (this->tokenIndex >= 0 and this->tokenIndex < this->tokens.size())
         {
-            std::list<Token>::iterator listIter = tokens.begin();
+            std::vector<Token>::iterator listIter = tokens.begin();
             std::advance(listIter, this->tokenIndex);
             this->currentToken = *listIter;
         }
     }
 
-    void reverse() {
-        this->tokenIndex--;
+    void reverse(std::uint8_t count = 1) {
+        this->tokenIndex -= count;
         if (this->tokenIndex >= 0 and this->tokenIndex < this->tokens.size()) {
-            std::list<Token>::iterator listIter = tokens.begin();
+            std::vector<Token>::iterator listIter = tokens.begin();
             std::advance(listIter, this->tokenIndex);
             this->currentToken = *listIter;
         }
@@ -100,7 +87,7 @@ public:
     void atom() {
         Token token = this->currentToken;
 
-        if (token.type_ == nameT)
+        if (*token.type == nameT)
         {
             this->advance();
             node = new Node(nullptr, token, nullptr, VarAccessNode);
@@ -145,7 +132,7 @@ public:
     void list_expr() 
     {
         Token token = this->currentToken;
-        std::list<Node*>* nodeElement = new std::list<Node*>;
+        std::vector<Node*>* nodeElement = new std::vector<Node*>;
 
         if (this->currentToken.type_ == rSquareT)
         {
