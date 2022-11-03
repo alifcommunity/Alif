@@ -8,7 +8,7 @@ integerT = L"Int", // Integer
 floatT = L"Float", // Float
 stringT = L"Str", // String
 nameT = L"Nam", // Name
-keywordT = L"KW", // Keyword
+//keywordT = L"KW", // Keyword
 plusT = L"Pls", // Plus
 plusEqualT = L"Pls_eq", // Plus_equal
 minusT = L"Mins", // Minus
@@ -42,7 +42,7 @@ tabT = L"Tab", // Tab
 dotT = L"Dot", // Dot
 endOfFileT = L"EOF"; // End_Of_File
 
-const std::vector<std::wstring> keywords = { L"مرر", L"توقف", L"استمر", L"حذف", L"استورد", L"من", L"اذا", L"واذا", L"بينما", L"لاجل", L"ارجع", L"دالة", L"صنف", L"والا", L"او", L"و", L"ليس", L"صح", L"خطا", L"عدم", L"اطبع", L"في" };
+//const std::vector<std::wstring> keywords = { L"مرر", L"توقف", L"استمر", L"حذف", L"استورد", L"من", L"اذا", L"واذا", L"بينما", L"لاجل", L"ارجع", L"دالة", L"صنف", L"والا", L"او", L"و", L"ليس", L"صح", L"خطا", L"عدم", L"اطبع", L"في" };
 
 
 class Token {

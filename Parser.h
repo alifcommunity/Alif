@@ -12,7 +12,7 @@ enum NodeType {
     VarAssignNode,
     CondationNode,
     ListNode,
-    //NameCallNode,
+    NameCallNode,
     //NameCallArgsNode,
     //BuildInFunctionNode, // تجربة فقط
     //InverseNode,
@@ -79,7 +79,7 @@ public:
 
     void parse()
     {
-        this->atom();
+        this->primary();
     }
 
     //////////////////////////////
@@ -89,8 +89,15 @@ public:
 
         if (token->type == nameT)
         {
-            this->advance();
-            node = Node(VarAccessNode, token);
+            if (token->value == L"صح" or L"خطا" or L"عدم")
+            {
+                this->advance();
+                node = Node(CondationNode, token);
+            }
+            else {
+                this->advance();
+                node = Node(VarAccessNode, token);
+            }
 
         }
         else if (token->type == integerT or token->type == floatT)
@@ -104,38 +111,10 @@ public:
             node = Node(StringNode, token);
 
         }
-        else if (token->type == keywordT and token->value == L"صح")
-        {
-            this->advance();
-            node = Node(CondationNode, token);
-
-        }
-        else if (token->type == keywordT and token->value == L"خطا")
-        {
-            this->advance();
-            node = Node(CondationNode, token);
-
-        }
-        else if (token->type == keywordT and token->value == L"عدم")
-        {
-            this->advance();
-            node = Node(CondationNode, token);
-
-        }
         else if (token->type == lSquareT)
         {
             this->advance();
             //this->list_expr();
-        }
-        else if (token->type == endOfFileT)
-        {
-            return;
-        }
-        else
-        {
-            this->advance();
-            this->atom();
-
         }
     }
 
@@ -171,66 +150,69 @@ public:
 
     //}
 
-    //void primary() {
-    //    Token name = this->currentToken;
+    void primary() {
+        std::shared_ptr<Token> name = this->currentToken;
 
-    //    this->atom();
+        this->atom();
+        if (this->currentToken->type == dotT)
+        {
+            this->advance();
+            this->primary();
+            node = Node(NameCallNode, name, std::make_shared<Node>(node));
+        }
+        else if (this->currentToken->type == lParenthesisT)
+        {
+            this->advance();
+            if (this->currentToken->type != rParenthesisT)
+            {
+                //this->parameters();
+                if (this->currentToken->type == rParenthesisT)
+                {
+                    this->advance();
+                }
+                else
+                {
+                    // error
+                }
+            }
+            else if (this->currentToken->type == rParenthesisT)
+            {
+                this->advance();
+                node = Node(NameCallNode, name, std::make_shared<Node>(node));
 
-    //    if (name.type_ == nameT)
-    //    {
-    //        if (this->currentToken.type_ == lParenthesisT)
-    //        {
-    //            this->advance();
-    //            if (this->currentToken.type_ != rParenthesisT)
-    //            {
-    //                //this->arguments();
-    //                if (this->currentToken.type_ == rParenthesisT)
-    //                {
-    //                    this->advance();
-    //                }
-    //            }
-    //            else if (this->currentToken.type_ == rParenthesisT)
-    //            {
-    //                this->advance();
-    //                node = new Node(nullptr, name, node, BuildInFunctionNode);
+            }
+            else
+            {
+                // error
+            }
+        }
+        else if (this->currentToken->type == lSquareT)
+        {
+            this->advance();
+            if (this->currentToken->type != rSquareT)
+            {
+                //this->slices();
+                if (this->currentToken->type == rSquareT)
+                {
+                    this->advance();
+                }
+                else
+                {
+                    // error
+                }
+            }
+            else if (this->currentToken->type == rSquareT)
+            {
+                this->advance();
+                node = Node(NameCallNode, name, std::make_shared<Node>(node));
 
-    //            }
-    //        }
-    //        if (this->currentToken.type_ == dotT)
-    //        {
-    //            this->advance();
-    //            this->primary();
-    //            node = new Node(nullptr, name, node, NameCallNode);
-    //        }
-
-    //    }
-
-    //    if (name.type_ == keywordT and name.value_ == L"اطبع")
-    //    {
-    //        this->advance();
-    //        if (this->currentToken.type_ == lParenthesisT)
-    //        {
-    //            this->advance();
-    //            if (this->currentToken.type_ != rParenthesisT)
-    //            {
-    //                this->expression();
-    //                Node* expr = node;
-    //                node = new Node(nullptr, name, expr, BuildInFunctionNode);
-    //                if (this->currentToken.type_ == rParenthesisT)
-    //                {
-    //                    this->advance();
-    //                }
-    //            }
-    //            else if (this->currentToken.type_ == rParenthesisT)
-    //            {
-    //                this->advance();
-    //                node = new Node(nullptr, name, node, BuildInFunctionNode);
-
-    //            }
-    //        }
-    //    }
-
-    //}
+            }
+            else
+            {
+                // error
+            }
+        }
+    }
 
     //void power()
     //{
