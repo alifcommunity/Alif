@@ -213,21 +213,13 @@ public:
     void make_name()
     {
         std::wstring nameString;
-        std::wstring tokenType;
         Position positionStart = this->position;
 
         while (this->currentChar != L'\0' and (lettersDigits + L'_').find(this->currentChar) != std::wstring::npos) {
             nameString += this->currentChar;
             this->advance();
         }
-        bool keyword = (find(keywords.begin(), keywords.end(), nameString) != keywords.end());
-        if (keyword) {
-            tokenType = keywordT;
-        }
-        else {
-            tokenType = nameT;
-        }
-        this->tokens.push_back(Token(positionStart, this->position, tokenType, nameString));
+        this->tokens.push_back(Token(positionStart, this->position, nameT, nameString));
     }
 
     void make_string()

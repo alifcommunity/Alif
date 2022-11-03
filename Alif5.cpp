@@ -73,7 +73,7 @@ int main()
         lexer.make_token();
         if (lexer.error)
         {
-            //lexer.print();
+            lexer.print();
             exit(0);
         }
         //lexer.print();

@@ -13,24 +13,25 @@ enum NodeType {
     CondationNode,
     ListNode,
     NameCallNode,
-    NameCallArgsNode,
-    BuildInFunctionNode, // تجربة فقط
-    InverseNode,
-    LogicNode,
-    ExpressionsNode,
-    MultiStatementNode,
+    //NameCallArgsNode,
+    //BuildInFunctionNode, // تجربة فقط
+    //InverseNode,
+    //LogicNode,
+    //ExpressionsNode,
+    //MultiStatementNode,
 
 };
 
 class Node {
 public:
-    std::shared_ptr<Node> left;
-    std::shared_ptr<Node> right;
-    std::shared_ptr<Token> token;
-    std::shared_ptr<std::vector<Token>> list_;
+    std::shared_ptr<Node> left = nullptr;
+    std::shared_ptr<Node> right = nullptr;
+    std::shared_ptr<Token> token = nullptr;
+    std::shared_ptr<std::vector<Token>> list_ = nullptr;
     NodeType type;
 
-    Node(NodeType nodeType, std::shared_ptr<Node> left = nullptr, std::shared_ptr<Node> right = nullptr, std::shared_ptr<Token> token = nullptr, std::shared_ptr<std::vector<Token>> list_ = nullptr) {
+    Node(){}
+    Node(NodeType nodeType, std::shared_ptr<Token> token = nullptr, std::shared_ptr<Node> left = nullptr, std::shared_ptr<Node> right = nullptr, std::shared_ptr<std::vector<Token>> list_ = nullptr) {
         this->left = left;
         this->right = right;
         this->token = token;
@@ -48,12 +49,11 @@ public:
     std::vector<Token> tokens;
     int tokenIndex = -1;
     std::shared_ptr<Token> currentToken;
-    std::shared_ptr<Node> node;
+    Node node;
     std::shared_ptr<Error> error;
 
     Parser(std::vector<Token> tokens) : tokens(tokens)
     {
-        //tokenIndex = -1;
         this->advance();
     }
 
@@ -64,7 +64,7 @@ public:
         {
             std::vector<Token>::iterator listIter = tokens.begin();
             std::advance(listIter, this->tokenIndex);
-            *this->currentToken = *listIter;
+            this->currentToken = std::make_shared<Token>(* listIter);
         }
     }
 
@@ -79,7 +79,7 @@ public:
 
     void parse()
     {
-        this->atom();
+        this->primary();
     }
 
     //////////////////////////////
@@ -89,37 +89,26 @@ public:
 
         if (token->type == nameT)
         {
-            this->advance();
-            node = std::make_shared<Node>(VarAccessNode, nullptr, nullptr, token);
+            if (token->value == L"صح" or L"خطا" or L"عدم")
+            {
+                this->advance();
+                node = Node(CondationNode, token);
+            }
+            else {
+                this->advance();
+                node = Node(VarAccessNode, token);
+            }
 
         }
         else if (token->type == integerT or token->type == floatT)
         {
             this->advance();
-            node = std::make_shared<Node>(NumberNode, nullptr, nullptr, token); // قم بإنشاء صنف عقدة جديد ومرر فيه الرمز الذي تم حفظه في متغير رمز ومرر نوع العقدة المنشأءة واسندها الى متغير عقدة
+            node = Node(NumberNode, token);
 
         }
         else if (token->type == stringT) {
             this->advance();
-            node = std::make_shared<Node>(StringNode, nullptr, nullptr, token);
-
-        }
-        else if (token->type == keywordT and token->value == L"صح")
-        {
-            this->advance();
-            node = std::make_shared<Node>(CondationNode, nullptr, nullptr, token);
-
-        }
-        else if (token->type == keywordT and token->value == L"خطا")
-        {
-            this->advance();
-            node = std::make_shared<Node>(CondationNode, nullptr, nullptr, token);
-
-        }
-        else if (token->type == keywordT and token->value == L"عدم")
-        {
-            this->advance();
-            node = std::make_shared<Node>(CondationNode, nullptr, nullptr, token);
+            node = Node(StringNode, token);
 
         }
         else if (token->type == lSquareT)
@@ -157,72 +146,73 @@ public:
     //        this->advance();
     //    }
 
-    //    token.type_ = L"List"; // فقط لطباعة الشجرة
-    //    token.value_ = L"";
     //    node = new Node(nullptr, token, nullptr, ListNode, nodeElement);
 
     //}
 
-    //void primary() {
-    //    Token name = this->currentToken;
+    void primary() {
+        std::shared_ptr<Token> name = this->currentToken;
 
-    //    this->atom();
+        this->atom();
+        if (this->currentToken->type == dotT)
+        {
+            this->advance();
+            this->primary();
+            node = Node(NameCallNode, name, std::make_shared<Node>(node));
+        }
+        else if (this->currentToken->type == lParenthesisT)
+        {
+            this->advance();
+            if (this->currentToken->type != rParenthesisT)
+            {
+                //this->parameters();
+                if (this->currentToken->type == rParenthesisT)
+                {
+                    this->advance();
+                }
+                else
+                {
+                    // error
+                }
+            }
+            else if (this->currentToken->type == rParenthesisT)
+            {
+                this->advance();
+                node = Node(NameCallNode, name, std::make_shared<Node>(node));
 
-    //    if (name.type_ == nameT)
-    //    {
-    //        if (this->currentToken.type_ == lParenthesisT)
-    //        {
-    //            this->advance();
-    //            if (this->currentToken.type_ != rParenthesisT)
-    //            {
-    //                //this->arguments();
-    //                if (this->currentToken.type_ == rParenthesisT)
-    //                {
-    //                    this->advance();
-    //                }
-    //            }
-    //            else if (this->currentToken.type_ == rParenthesisT)
-    //            {
-    //                this->advance();
-    //                node = new Node(nullptr, name, node, BuildInFunctionNode);
+            }
+            else
+            {
+                // error
+            }
+        }
+        else if (this->currentToken->type == lSquareT)
+        {
+            this->advance();
+            if (this->currentToken->type != rSquareT)
+            {
+                //this->slices();
+                if (this->currentToken->type == rSquareT)
+                {
+                    this->advance();
+                }
+                else
+                {
+                    // error
+                }
+            }
+            else if (this->currentToken->type == rSquareT)
+            {
+                this->advance();
+                node = Node(NameCallNode, name, std::make_shared<Node>(node));
 
-    //            }
-    //        }
-    //        if (this->currentToken.type_ == dotT)
-    //        {
-    //            this->advance();
-    //            this->primary();
-    //            node = new Node(nullptr, name, node, NameCallNode);
-    //        }
-
-    //    }
-
-    //    if (name.type_ == keywordT and name.value_ == L"اطبع")
-    //    {
-    //        this->advance();
-    //        if (this->currentToken.type_ == lParenthesisT)
-    //        {
-    //            this->advance();
-    //            if (this->currentToken.type_ != rParenthesisT)
-    //            {
-    //                this->expression();
-    //                Node* expr = node;
-    //                node = new Node(nullptr, name, expr, BuildInFunctionNode);
-    //                if (this->currentToken.type_ == rParenthesisT)
-    //                {
-    //                    this->advance();
-    //                }
-    //            }
-    //            else if (this->currentToken.type_ == rParenthesisT)
-    //            {
-    //                this->advance();
-    //                node = new Node(nullptr, name, node, BuildInFunctionNode);
-
-    //            }
-    //        }
-    //    }
-
-    //}
+            }
+            else
+            {
+                // error
+            }
+        }
+    }
 
     //void power()
     //{
