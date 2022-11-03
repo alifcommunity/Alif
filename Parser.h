@@ -89,7 +89,7 @@ public:
 
         if (token->type == nameT)
         {
-            if (token->value == L"صح" or L"خطا" or L"عدم")
+            if (token->value == L"صح" or token->value == L"خطا" or token->value == L"عدم")
             {
                 this->advance();
                 node = Node(CondationNode, token);
@@ -97,6 +97,7 @@ public:
             else {
                 this->advance();
                 node = Node(VarAccessNode, token);
+
             }
 
         }
