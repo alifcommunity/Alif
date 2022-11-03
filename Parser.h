@@ -4,15 +4,15 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 enum NodeType {
-    NumberNode,
-    StringNode,
-    UnaryOpNode,
-    BinOpNode,
-    VarAccessNode,
-    VarAssignNode,
-    CondationNode,
-    ListNode,
-    NameCallNode,
+    numberNode,
+    stringNode,
+    unaryOpNode,
+    binOpNode,
+    varAccessNode,
+    varAssignNode,
+    condationNode,
+    listNode,
+    nameCallNode,
     //NameCallArgsNode,
     //BuildInFunctionNode, // تجربة فقط
     //InverseNode,
@@ -24,22 +24,119 @@ enum NodeType {
 
 class Node {
 public:
-    std::shared_ptr<Node> left = nullptr;
-    std::shared_ptr<Node> right = nullptr;
-    std::shared_ptr<Token> token = nullptr;
-    std::shared_ptr<std::vector<Token>> list_ = nullptr;
-    NodeType type;
+    //std::shared_ptr<Node> left = nullptr;
+    //std::shared_ptr<Node> right = nullptr;
+    //std::shared_ptr<Token> token = nullptr;
+    //std::shared_ptr<std::vector<Token>> list_ = nullptr;
+    //NodeType type;
 
     Node(){}
-    Node(NodeType nodeType, std::shared_ptr<Token> token = nullptr, std::shared_ptr<Node> left = nullptr, std::shared_ptr<Node> right = nullptr, std::shared_ptr<std::vector<Token>> list_ = nullptr) {
-        this->left = left;
-        this->right = right;
-        this->token = token;
-        this->list_ = list_;
+    //Node(NodeType nodeType, std::shared_ptr<Token> token = nullptr, std::shared_ptr<Node> left = nullptr, std::shared_ptr<Node> right = nullptr, std::shared_ptr<std::vector<Token>> list_ = nullptr) {
+    //    this->left = left;
+    //    this->right = right;
+    //    this->token = token;
+    //    this->list_ = list_;
+    //    this->type = nodeType;
+    //}
+
+};
+
+class NumberNode : public Node {
+public:
+    std::shared_ptr<Token> token = nullptr;
+    NodeType type;
+
+    NumberNode(NodeType nodeType, std::shared_ptr<Token> token)
+    {
         this->type = nodeType;
+        this->token = token;
     }
 };
 
+
+class VarAccessNode : public Node {
+public:
+    std::shared_ptr<Token> token = nullptr;
+    NodeType type;
+
+    VarAccessNode(NodeType nodeType, std::shared_ptr<Token> token)
+    {
+        this->type = nodeType;
+        this->token = token;
+    }
+
+};
+
+class CondetionNode : public Node {
+public:
+    std::shared_ptr<Token> token = nullptr;
+    NodeType type;
+
+    CondetionNode(NodeType nodeType, std::shared_ptr<Token> token)
+    {
+        this->type = nodeType;
+        this->token = token;
+    }
+
+};
+
+class StringNode : public Node {
+public:
+    std::shared_ptr<Token> token = nullptr;
+    NodeType type;
+
+    StringNode(NodeType nodeType, std::shared_ptr<Token> token)
+    {
+        this->type = nodeType;
+        this->token = token;
+    }
+
+};
+
+class NameCallNode : public Node {
+public:
+    std::shared_ptr<Token> token = nullptr;
+    std::shared_ptr<Node> left = nullptr;
+    NodeType type;
+
+    NameCallNode(NodeType nodeType, std::shared_ptr<Token> token, std::shared_ptr<Node> left)
+    {
+        this->type = nodeType;
+        this->left = left;
+        this->token = token;
+    }
+
+};
+
+class BinOpNode : public Node {
+public:
+    std::shared_ptr<Token> token = nullptr;
+    std::shared_ptr<Node> left = nullptr;
+    std::shared_ptr<Node> right = nullptr;
+    NodeType type;
+
+    BinOpNode(NodeType nodeType, std::shared_ptr<Token> token, std::shared_ptr<Node> left, std::shared_ptr<Node> right)
+    {
+        this->type = nodeType;
+        this->left = left;
+        this->left = right;
+        this->token = token;
+    }
+};
+
+class UnaryOpNode : public Node {
+public:
+    std::shared_ptr<Token> token = nullptr;
+    std::shared_ptr<Node> left = nullptr;
+    NodeType type;
+
+    UnaryOpNode(NodeType nodeType, std::shared_ptr<Token> token, std::shared_ptr<Node> left)
+    {
+        this->type = nodeType;
+        this->left = left;
+        this->token = token;
+    }
+};
 
 // المحلل اللغوي
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -79,7 +176,8 @@ public:
 
     void parse()
     {
-        this->primary();
+        this->sum();
+        //this->visit(node);
     }
 
     //////////////////////////////
@@ -92,11 +190,11 @@ public:
             if (token->value == L"صح" or token->value == L"خطا" or token->value == L"عدم")
             {
                 this->advance();
-                node = Node(CondationNode, token);
+                node = CondetionNode(condationNode, token);
             }
             else {
                 this->advance();
-                node = Node(VarAccessNode, token);
+                node = VarAccessNode(varAccessNode, token);
 
             }
 
@@ -104,12 +202,12 @@ public:
         else if (token->type == integerT or token->type == floatT)
         {
             this->advance();
-            node = Node(NumberNode, token);
+            node = NumberNode(numberNode, token);
 
         }
         else if (token->type == stringT) {
             this->advance();
-            node = Node(StringNode, token);
+            node = StringNode(stringNode, token);
 
         }
         else if (token->type == lSquareT)
@@ -159,7 +257,7 @@ public:
         {
             this->advance();
             this->primary();
-            node = Node(NameCallNode, name, std::make_shared<Node>(node));
+            node = NameCallNode(nameCallNode, name, std::make_shared<Node>(node));
         }
         else if (this->currentToken->type == lParenthesisT)
         {
@@ -179,7 +277,7 @@ public:
             else if (this->currentToken->type == rParenthesisT)
             {
                 this->advance();
-                node = Node(NameCallNode, name, std::make_shared<Node>(node));
+                node = NameCallNode(nameCallNode, name, std::make_shared<Node>(node));
 
             }
             else
@@ -205,7 +303,7 @@ public:
             else if (this->currentToken->type == rSquareT)
             {
                 this->advance();
-                node = Node(NameCallNode, name, std::make_shared<Node>(node));
+                node = NameCallNode(nameCallNode, name, std::make_shared<Node>(node));
 
             }
             else
@@ -215,33 +313,29 @@ public:
         }
     }
 
-    //void power()
-    //{
-    //    bin_op_repeat(&Parser::primary, powerT, L" ", &Parser::factor);
-    //}
+    void power()
+    {
+        binary_operation(&Parser::primary, powerT, L"", &Parser::factor);
+    }
 
-    //void factor() {
-    //    Token token = this->currentToken;
-    //    Node* factor;
+    void factor() {
+        std::shared_ptr<Token> token = this->currentToken;
 
-    //    if (token.type_ == plusT or token.type_ == minusT) {
-    //        this->advance();
-    //        this->factor();
-    //        factor = node;
-    //        node = new Node(nullptr, token, factor, UnaryOpNode);
+        if (token->type == plusT or token->type == minusT) {
+            this->advance();
+            this->factor();
+            node = UnaryOpNode(unaryOpNode, token, std::make_shared<Node>(node));
+        }
+        this->power();
+    }
 
-    //    }
+    void term() {
+        binary_operation(&Parser::factor, multiplyT, divideT, &Parser::term);
+    }
 
-    //    this->power();
-    //}
-
-    //void term() {
-    //    bin_op_repeat(&Parser::factor, multiplyT, divideT, &Parser::term);
-    //}
-
-    //void sum() {
-    //    bin_op_repeat(&Parser::term, plusT, minusT, &Parser::sum);
-    //}
+    void sum() {
+        binary_operation(&Parser::term, plusT, minusT, &Parser::sum);
+    }
 
     //void inversion() {
     //    Token token = this->currentToken;
@@ -453,26 +547,30 @@ public:
 
 
 
-    //void bin_op_repeat(void(Parser::* funcL)(), std::wstring fop, std::wstring sop, void(Parser::* funcR)()) {
-    //    Token opToken;
-    //    Node* left;
-    //    Node* right;
+    void binary_operation(void(Parser::* funcL)(), std::wstring fop, std::wstring sop, void(Parser::* funcR)()) {
+        std::shared_ptr<Token> opToken;
+        Node left;
+        Node right;
 
-    //    (this->*funcL)();
-    //    left = node;
+        (this->*funcL)();
+        left = node;
 
-    //    while (this->currentToken.type_ == fop or this->currentToken.type_ == sop) {
-    //        opToken = this->currentToken;
-    //        this->advance();
-    //        (this->*funcR)();
+        while (this->currentToken->type == fop or this->currentToken->type == sop) {
+            opToken = this->currentToken;
+            this->advance();
+            (this->*funcR)();
 
-    //        right = node;
+            right = node;
 
-    //        left = new Node(left, opToken, right, BinOpNode);
-    //    }
-    //    node = left;
-    //}
+            left = BinOpNode(binOpNode, opToken, std::make_shared<Node>(left), std::make_shared<Node>(right));
+        }
+        node = left;
+    }
 
+    Node visit(Node node)
+    {
+        
+    }
 
     //// طباعة نتائج المحلل اللغوي
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
