@@ -14,7 +14,7 @@ enum NodeType {
     ListNode,
     NameCallNode,
     //NameCallArgsNode,
-    //BuildInFunctionNode, // تجربة فقط
+    //BuildInFunctionNode,
     //InverseNode,
     //LogicNode,
     //ExpressionsNode,
@@ -24,10 +24,10 @@ enum NodeType {
 
 class Node {
 public:
-    std::shared_ptr<Node> left = nullptr;
-    std::shared_ptr<Node> right = nullptr;
-    std::shared_ptr<Token> token = nullptr;
-    std::shared_ptr<std::vector<Token>> list_ = nullptr;
+    std::shared_ptr<Node> left;
+    std::shared_ptr<Node> right;
+    std::shared_ptr<Token> token;
+    std::shared_ptr<std::vector<Token>> list_;
     NodeType type;
 
     Node(){}
@@ -472,7 +472,6 @@ public:
             right = node;
 
             left = Node(BinOpNode, opToken, std::make_shared<Node>(left), std::make_shared<Node>(right));
-            left = this->visit(left);
         }
         node = left;
     }

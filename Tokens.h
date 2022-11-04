@@ -50,7 +50,7 @@ class Token {
 
 public:
    TokenType type;
-    std::wstring value = L"";
+    std::wstring value;
     Position positionStart;
     Position positionEnd;
 
