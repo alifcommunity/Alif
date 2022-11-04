@@ -15,8 +15,8 @@ enum NodeType {
     NameCallNode,
     //NameCallArgsNode,
     //BuildInFunctionNode,
-    //InverseNode,
-    //LogicNode,
+    InverseNode,
+    LogicNode,
     //ExpressionsNode,
     //MultiStatementNode,
 
@@ -79,7 +79,7 @@ public:
 
     void parse()
     {
-        this->sum();
+        this->expression();
         node = this->visit(node);
         std::wcout << node.token->value << std::endl;
     }
@@ -239,101 +239,118 @@ public:
 
     void sum() {
         binary_operation(&Parser::term, plusT, minusT, &Parser::sum);
-        while (this->currentToken->type != endOfFileT)
+    }
+
+    void comparesion() {
+        std::shared_ptr<Token> opToken;
+        Node left;
+        Node right;
+
+        this->sum();
+        left = node;
+
+        while (this->currentToken->type == equalEqualT or this->currentToken->type == notEqualT or this->currentToken->type == lessThanT or this->currentToken->type == lessThanEqualT or this->currentToken->type == greaterThanT or this->currentToken->type == greaterThanEqualT) {
+            opToken = this->currentToken;
+            this->advance();
+            this->expression();
+
+            right = node;
+
+            left = Node(BinOpNode, opToken, std::make_shared<Node>(left), std::make_shared<Node>(right));
+        }
+        node = left;
+
+    }
+
+    void inversion() {
+        std::shared_ptr<Token> token = this->currentToken;
+
+        if (token->value == L"ليس")
         {
             this->advance();
-            this->sum();
+            this->comparesion();
+            node = Node(InverseNode, token, std::make_shared<Node>(node));
+
+        }
+        else {
+            this->comparesion();
+
         }
     }
 
-    //void inversion() {
-    //    Token token = this->currentToken;
-    //    Node* expr;
+    void conjuction() {
+        std::shared_ptr<Token> opToken;
+        Node left;
+        Node right;
 
-    //    if (token.type_ == keywordT and token.value_ == L"ليس")
-    //    {
-    //        this->advance();
-    //        this->sum();
-    //        expr = node;
-    //        node = new Node(nullptr, token, expr, InverseNode);
+        this->inversion();
+        left = node;
 
-    //    }
-    //    else {
-    //        this->sum();
+        while (this->currentToken->value == L"و") {
+            opToken = this->currentToken;
+            this->advance();
+            this->conjuction();
 
-    //    }
-    //}
+            right = node;
 
-    //void conjuction() {
-    //    Token opToken;
-    //    Node* left;
-    //    Node* right;
+            left = Node(LogicNode, opToken, std::make_shared<Node>(left), std::make_shared<Node>(right));
+        }
+        node = left;
+    }
 
-    //    this->inversion();
-    //    left = node;
+    void disjuction() {
+        std::shared_ptr<Token> opToken;
+        Node left;
+        Node right;
 
-    //    while (this->currentToken.type_ == keywordT and this->currentToken.value_ == L"و") {
-    //        opToken = this->currentToken;
-    //        opToken.type_ = L"And";
-    //        this->advance();
-    //        this->conjuction();
+        this->conjuction();
+        left = node;
 
-    //        right = node;
+        while (this->currentToken->value == L"او") {
+            opToken = this->currentToken;
+            this->advance();
+            this->disjuction();
 
-    //        left = new Node(left, opToken, right, LogicNode);
-    //    }
-    //    node = left;
-    //}
+            right = node;
 
-    //void disjuction() {
-    //    Token opToken;
-    //    Node* left;
-    //    Node* right;
+            left = Node(LogicNode, opToken, std::make_shared<Node>(left), std::make_shared<Node>(right));
+        }
+        node = left;
+    }
 
-    //    this->conjuction();
-    //    left = node;
+    void expression() {
+        std::shared_ptr<Token> token = this->currentToken;
+        Node right;
+        Node left;
 
-    //    while (this->currentToken.type_ == keywordT and this->currentToken.value_ == L"او") {
-    //        opToken = this->currentToken;
-    //        opToken.type_ = L"Or";
-    //        this->advance();
-    //        this->disjuction();
+        this->disjuction();
+        left = node;
 
-    //        right = node;
+        if (this->currentToken->value == L"اذا")
+        {
+            token = this->currentToken;
+            this->advance();
+            this->disjuction();
+            right = node;
+            node = Node(BinOpNode, token, std::make_shared<Node>(left), std::make_shared<Node>(right));
+            if (this->currentToken->value == L"والا")
+            {
+                this->expression();
+                right = node;
+                node = Node(BinOpNode, this->currentToken, std::make_shared<Node>(left), std::make_shared<Node>(right));
+            }
+        }
+        else
+        {
+            node = left;
 
-    //        left = new Node(left, opToken, right, LogicNode);
-    //    }
-    //    node = left;
-    //}
-
-    //void expression() {
-    //    Token token = this->currentToken;
-    //    Node* right;
-    //    Node* left;
-
-    //    this->disjuction();
-    //    left = node;
-
-    //    if (this->currentToken.type_ == keywordT and this->currentToken.value_ == L"اذا")
-    //    {
-    //        token = this->currentToken;
-    //        this->advance();
-    //        this->disjuction();
-    //        right = node;
-    //        node = new Node(left, token, right, BinOpNode); 
-    //        if (this->currentToken.type_ == keywordT and this->currentToken.value_ == L"والا")
-    //        {
-    //            this->expression();
-    //            right = node;
-    //            node = new Node(left, this->currentToken, right, BinOpNode);
-    //        }
-    //    }
-    //    else
-    //    {
-    //        node = left;
-
-    //    }
-    //}
+        }
+        while (this->currentToken->type != endOfFileT)
+        {
+            this->advance();
+            this->expression();
+        }
+    }
 
     //void expressions() {
     //    Token opToken;
