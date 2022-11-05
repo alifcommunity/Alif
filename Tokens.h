@@ -49,19 +49,12 @@ enum TokenType{
 class Token {
 
 public:
-   TokenType type;
-    std::wstring value;
-    Position positionStart;
-    Position positionEnd;
+   TokenType type = Undefined;
+    std::wstring value = L"عدم";
+    Position positionStart = Position();
+    Position positionEnd = Position();
 
-    Token() {}
-    Token(Position positionStart, Position positionEnd, TokenType type)
-    {
-        this->type = type;
-        this->positionStart = positionStart;
-        this->positionEnd = positionEnd;
-    }
-    Token(Position positionStart, Position positionEnd, TokenType type, std::wstring value)
+    Token(Position positionStart, Position positionEnd, TokenType type, std::wstring value = L"عدم")
     {
         this->type = type;
         this->value = value;
