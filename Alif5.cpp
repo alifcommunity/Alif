@@ -84,14 +84,6 @@ int main()
 
         Parser parser = Parser(lexer.tokens);
         parser.parse();
-        //std::shared_ptr<Node> AST = parser.node;
-        //parser.print_node(AST);
-
-
-        // المنفذ
-        /////////////////////////////////////////////////////////////////
-
-        //interprete.Interpreter_print(AST);
 
 
         std::wcout << float(clock() - start) / CLOCKS_PER_SEC << std::endl; // طباعة نتائج الوقت
