@@ -8,6 +8,7 @@ enum NodeType {
     StringNode,
     UnaryOpNode,
     BinOpNode,
+    CompareNode,
     VarAccessNode,
     VarAssignNode,
     CondationNode,
@@ -15,9 +16,8 @@ enum NodeType {
     NameCallNode,
     //NameCallArgsNode,
     //BuildInFunctionNode,
-    InverseNode,
     LogicNode,
-    //ExpressionsNode,
+    ExpressionNode,
     //MultiStatementNode,
 
 };
@@ -79,7 +79,7 @@ public:
 
     void parse()
     {
-        this->expression();
+        this->assignment();
         node = this->visit(node);
         std::wcout << node.token->value << std::endl;
     }
@@ -223,14 +223,17 @@ public:
     }
 
     void factor() {
-        std::shared_ptr<Token> token = this->currentToken;
 
-        if (token->type == plusT or token->type == minusT) {
+        if (this->currentToken->type == plusT or this->currentToken->type == minusT) {
+            std::shared_ptr<Token> token = this->currentToken;
             this->advance();
             this->factor();
             node = Node(UnaryOpNode, token, std::make_shared<Node>(node));
         }
-        this->power();
+        else
+        {
+            this->power();
+        }
     }
 
     void term() {
@@ -242,34 +245,33 @@ public:
     }
 
     void comparesion() {
-        std::shared_ptr<Token> opToken;
         Node left;
-        Node right;
 
         this->sum();
         left = node;
 
-        while (this->currentToken->type == equalEqualT or this->currentToken->type == notEqualT or this->currentToken->type == lessThanT or this->currentToken->type == lessThanEqualT or this->currentToken->type == greaterThanT or this->currentToken->type == greaterThanEqualT) {
-            opToken = this->currentToken;
+        while (this->currentToken->type == equalEqualT or this->currentToken->type == notEqualT or this->currentToken->type == lessThanT or this->currentToken->type == greaterThanT or this->currentToken->type == lessThanEqualT or this->currentToken->type == greaterThanEqualT) {
+            std::shared_ptr<Token> opToken = this->currentToken;
+
             this->advance();
-            this->expression();
+            this->sum();
 
-            right = node;
+            Node right = node;
 
-            left = Node(BinOpNode, opToken, std::make_shared<Node>(left), std::make_shared<Node>(right));
+            left = Node(CompareNode, opToken, std::make_shared<Node>(left), std::make_shared<Node>(right));
         }
         node = left;
 
     }
 
     void inversion() {
-        std::shared_ptr<Token> token = this->currentToken;
 
-        if (token->value == L"ليس")
+        if (this->currentToken->value == L"ليس")
         {
+            std::shared_ptr<Token> token = this->currentToken;
             this->advance();
-            this->comparesion();
-            node = Node(InverseNode, token, std::make_shared<Node>(node));
+            this->inversion();
+            node = Node(UnaryOpNode, token, std::make_shared<Node>(node));
 
         }
         else {
@@ -279,19 +281,18 @@ public:
     }
 
     void conjuction() {
-        std::shared_ptr<Token> opToken;
         Node left;
-        Node right;
 
         this->inversion();
         left = node;
 
         while (this->currentToken->value == L"و") {
-            opToken = this->currentToken;
-            this->advance();
-            this->conjuction();
+            std::shared_ptr<Token> opToken = this->currentToken;
 
-            right = node;
+            this->advance();
+            this->inversion();
+
+            Node right = node;
 
             left = Node(LogicNode, opToken, std::make_shared<Node>(left), std::make_shared<Node>(right));
         }
@@ -299,19 +300,18 @@ public:
     }
 
     void disjuction() {
-        std::shared_ptr<Token> opToken;
         Node left;
-        Node right;
 
         this->conjuction();
         left = node;
 
         while (this->currentToken->value == L"او") {
-            opToken = this->currentToken;
-            this->advance();
-            this->disjuction();
+            std::shared_ptr<Token> opToken = this->currentToken;
 
-            right = node;
+            this->advance();
+            this->conjuction();
+
+            Node right = node;
 
             left = Node(LogicNode, opToken, std::make_shared<Node>(left), std::make_shared<Node>(right));
         }
@@ -319,8 +319,6 @@ public:
     }
 
     void expression() {
-        std::shared_ptr<Token> token = this->currentToken;
-        Node right;
         Node left;
 
         this->disjuction();
@@ -328,57 +326,47 @@ public:
 
         if (this->currentToken->value == L"اذا")
         {
-            token = this->currentToken;
+            std::shared_ptr<Token> token = this->currentToken;
+
             this->advance();
             this->disjuction();
-            right = node;
-            node = Node(BinOpNode, token, std::make_shared<Node>(left), std::make_shared<Node>(right));
+            Node right = node;
+
+            Node condetionNode = Node(CompareNode, token, std::make_shared<Node>(left), std::make_shared<Node>(right));
+            
             if (this->currentToken->value == L"والا")
             {
+                token = this->currentToken;
+
+                this->advance();
                 this->expression();
                 right = node;
-                node = Node(BinOpNode, this->currentToken, std::make_shared<Node>(left), std::make_shared<Node>(right));
+
+                node = Node(ExpressionNode, token, std::make_shared<Node>(condetionNode), std::make_shared<Node>(right));
+            }
+            else
+            {
+                //error
             }
         }
         else
         {
             node = left;
+        }
 
-        }
-        while (this->currentToken->type != endOfFileT)
-        {
-            this->advance();
-            this->expression();
-        }
     }
 
-    //void expressions() {
-    //    Token opToken;
-    //    Node* left;
-    //    Node* right;
+    void expressions() {
+        this->expression();
+    }
 
-    //    this->expression();
-    //    left = node;
+    void class_defination() {
+        expressions();
+    }
 
-    //    while (this->currentToken.type_ == commaT) {
-    //        opToken = this->currentToken;
-    //        this->advance();
-    //        this->expression();
-
-    //        right = node;
-
-    //        left = new Node(left, opToken, right, ExpressionsNode);
-    //    }
-    //    node = left;
-    //}
-
-    //void class_defination() {
-    //    expressions();
-    //}
-
-    //void function_defination() {
-    //    class_defination();
-    //}
+    void function_defination() {
+        class_defination();
+    }
 
     //void return_statement() {
     //    function_defination();
@@ -412,26 +400,25 @@ public:
     //    delete_statement();
     //}
 
-    //void assignment() {
-    //    Token varName = this->currentToken;
-    //    Node* expr;
+    void assignment() {
 
-    //    this->augassign();
+        if (this->currentToken->type == nameT)
+        {
+            std::shared_ptr<Token> varName = this->currentToken;
+            this->advance();
+            if (this->currentToken->type == equalT)
+            {
+                this->advance();
+                this->assignment();
+                node = Node(VarAssignNode, varName, std::make_shared<Node>(node));
+            }
+        }
+        else
+        {
+            this->expression();
+        }
 
-    //    if (varName.type_ == nameT)
-    //    {
-    //        if (this->currentToken.type_ == equalT)
-    //        {
-    //            this->advance();
-    //            this->assignment(); // نفذ المعادلة وضع القيم في node
-    //            expr = node;
-    //            node = new Node(nullptr, varName, expr, VarAssignNode);
-    //        }
-    //        //else {
-    //        //    this->reverse();
-    //        //}
-    //    }
-    //}
+    }
 
     //void compound_statement() {}
 
@@ -474,19 +461,18 @@ public:
 
 
     void binary_operation(void(Parser::* funcL)(), TokenType fop, TokenType sop, void(Parser::* funcR)()) {
-        std::shared_ptr<Token> opToken;
         Node left;
-        Node right;
 
         (this->*funcL)();
         left = node;
 
         while (this->currentToken->type == fop or this->currentToken->type == sop) {
-            opToken = this->currentToken;
+            std::shared_ptr<Token> opToken = this->currentToken;
+
             this->advance();
             (this->*funcR)();
 
-            right = node;
+            Node right = node;
 
             left = Node(BinOpNode, opToken, std::make_shared<Node>(left), std::make_shared<Node>(right));
         }
@@ -497,42 +483,177 @@ public:
 
 
 
+    std::map<std::wstring, Node> namesTable;
+
 
     Node visit(Node node)
     {
-        if (node.type == BinOpNode)
-        {
-            return this->bin_op_interprete(node);
-        }
-        else if (node.type == NumberNode)
+        if (node.type == NumberNode)
         {
             return node;
         }
+        else if (node.type == BinOpNode)
+        {
+            return this->binary_op_interprete(node);
+        }
+        else if (node.type == UnaryOpNode)
+        {
+            return this->unary_op_interprete(node);
+        }
+        else if (node.type == CompareNode)
+        {
+            return this->compare_op_interprete(node);
+        }
+        else if (node.type == LogicNode)
+        {
+            return this->logic_op_interprete(node);
+        }
+        else if (node.type == ExpressionNode)
+        {
+            return this->expreesion_interprete(node);
+        }
+        else if (node.type == VarAssignNode)
+        {
+            return this->var_assign_interpreter(node);
+        }
     }
 
-    Node bin_op_interprete(Node node)
+    Node binary_op_interprete(Node node)
     {
         Node left = this->visit(*node.left);
         Node right = this->visit(*node.right);
-        Node result = Node(left.type, left.token, std::make_shared<Node>(left));
 
         if (node.token->type == plusT)
         {
-            result.token->value = std::to_wstring(std::stoi(left.token->value) + std::stoi(right.token->value));
+            left.token->value = std::to_wstring(std::stof(left.token->value) + std::stof(right.token->value));
         }
         else if (node.token->type == minusT)
         {
-            result.token->value = std::to_wstring(std::stoi(left.token->value) - std::stoi(right.token->value));
+            left.token->value = std::to_wstring(std::stof(left.token->value) - std::stof(right.token->value));
         }
         else if (node.token->type == multiplyT)
         {
-            result.token->value = std::to_wstring(std::stoi(left.token->value) * std::stoi(right.token->value));
+            left.token->value = std::to_wstring(std::stof(left.token->value) * std::stof(right.token->value));
         }
         else if (node.token->type == divideT)
         {
-            result.token->value = std::to_wstring(std::stoi(left.token->value) / std::stoi(right.token->value));
+            left.token->value = std::to_wstring(std::stof(left.token->value) / std::stof(right.token->value));
         }
-        return result;
+        else if (node.token->type == powerT)
+        {
+            left.token->value = std::to_wstring(pow(std::stof(left.token->value), std::stof(right.token->value)));
+        }
+        return left;
+    }
+
+    Node unary_op_interprete(Node node)
+    {
+        Node left = this->visit(*node.left);
+
+        if (node.token->type == plusT)
+        {
+            left.token->value = std::to_wstring(+ std::stof(left.token->value));
+        }
+        else if (node.token->type == minusT)
+        {
+            left.token->value = std::to_wstring(- std::stof(left.token->value));
+        }
+        else
+        {
+            if (left.token->value == L"0")
+            {
+                left.token->value = L"1";
+            }
+            else
+            {
+                left.token->value = L"0";
+            }
+        }
+        return left;
+
+    }
+
+    Node compare_op_interprete(Node node)
+    {
+        Node left = this->visit(*node.left);
+        Node right = this->visit(*node.right);
+
+        if (node.token->type == equalEqualT)
+        {
+            left.token->value = std::to_wstring(std::stof(left.token->value) == std::stof(right.token->value));
+        }
+        else if (node.token->type == notEqualT)
+        {
+            left.token->value = std::to_wstring(std::stof(left.token->value) != std::stof(right.token->value));
+        }
+        else if (node.token->type == lessThanT)
+        {
+            left.token->value = std::to_wstring(std::stof(left.token->value) < std::stof(right.token->value));
+        }
+        else if (node.token->type == greaterThanT)
+        {
+            left.token->value = std::to_wstring(std::stof(left.token->value) > std::stof(right.token->value));
+        }
+        else if (node.token->type == lessThanEqualT)
+        {
+            left.token->value = std::to_wstring(std::stof(left.token->value) <= std::stof(right.token->value));
+        }
+        else if (node.token->type == greaterThanEqualT)
+        {
+            left.token->value = std::to_wstring(std::stof(left.token->value) >= std::stof(right.token->value));
+        }
+        return left;
+    }
+
+    Node logic_op_interprete(Node node)
+    {
+        Node left = this->visit(*node.left);
+        Node right = this->visit(*node.right);
+
+        if (node.token->value == L"و")
+        {
+            if (left.token->value != L"0" and right.token->value != L"0")
+            {
+                left.token->value = L"1";
+            }
+            else
+            {
+                left.token->value = L"0";
+            }
+        }
+        else if (node.token->value == L"او")
+        {
+            if (left.token->value != L"0" or right.token->value != L"0")
+            {
+                left.token->value = L"1";
+            }
+            else
+            {
+                left.token->value = L"0";
+            }
+        }
+        return left;
+    }
+
+    Node expreesion_interprete(Node node)
+    {
+
+        Node condetion = this->visit(*node.left->right);
+        if (condetion.token->value == L"1")
+        {
+            return this->visit(*node.left);
+        }
+        else
+        {
+            return this->visit(*node.right);
+        }
+    }
+
+    Node var_assign_interpreter(Node node)
+    {
+        Node left = this->visit(*node.left);
+        namesTable[node.token->value] = left;
+        return namesTable[node.token->value];
     }
 
 
