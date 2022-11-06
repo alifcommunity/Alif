@@ -407,7 +407,6 @@ public:
         {
             std::shared_ptr<Token> varName = this->currentToken;
 
-            //this->advance();
             this->expression();
             Node varAccess = node;
 
@@ -684,29 +683,28 @@ public:
     {
         Node left = this->visit(*node.left);
         Node right = this->visit(*node.right);
-        Node result = Node(left.type, std::make_shared<Token>(Token()));
 
         if (node.token->type == plusEqualT)
         {
-            result.token->value = std::to_wstring(std::stof(left.token->value) + std::stof(right.token->value));
+            right.token->value = std::to_wstring(std::stof(left.token->value) + std::stof(right.token->value));
         }
         else if (node.token->type == minusEqualT)
         {
-            result.token->value = std::to_wstring(std::stof(left.token->value) - std::stof(right.token->value));
+            right.token->value = std::to_wstring(std::stof(left.token->value) - std::stof(right.token->value));
         }
         else if (node.token->type == multiplyEqualT)
         {
-            result.token->value = std::to_wstring(std::stof(left.token->value) * std::stof(right.token->value));
+            right.token->value = std::to_wstring(std::stof(left.token->value) * std::stof(right.token->value));
         }
         else if (node.token->type == divideEqualT)
         {
-            result.token->value = std::to_wstring(std::stof(left.token->value) / std::stof(right.token->value));
+            right.token->value = std::to_wstring(std::stof(left.token->value) / std::stof(right.token->value));
         }
         else if (node.token->type == powerEqualT)
         {
-            result.token->value = std::to_wstring(pow(std::stof(left.token->value), std::stof(right.token->value)));
+            right.token->value = std::to_wstring(pow(std::stof(left.token->value), std::stof(right.token->value)));
         }
-        return result;
+        return right;
 
     }
 
