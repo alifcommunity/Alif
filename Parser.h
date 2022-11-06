@@ -435,11 +435,11 @@ public:
 
     void simple_statement()
     {
-        assignment();
+        this->assignment();
         
         //if (StatementDone)
         //{
-        //    expression();
+            //this->expression();
         //}
     }
 
@@ -593,64 +593,62 @@ public:
     {
         Node left = this->visit(*node.left);
         Node right = this->visit(*node.right);
-        Node result = Node(left.type, std::make_shared<Token>(Token()));
 
         if (node.token->type == equalEqualT)
         {
-            result.token->value = std::to_wstring(std::stof(left.token->value) == std::stof(right.token->value));
+            left.token->value = std::to_wstring(std::stof(left.token->value) == std::stof(right.token->value));
         }
         else if (node.token->type == notEqualT)
         {
-            result.token->value = std::to_wstring(std::stof(left.token->value) != std::stof(right.token->value));
+            left.token->value = std::to_wstring(std::stof(left.token->value) != std::stof(right.token->value));
         }
         else if (node.token->type == lessThanT)
         {
-            result.token->value = std::to_wstring(std::stof(left.token->value) < std::stof(right.token->value));
+            left.token->value = std::to_wstring(std::stof(left.token->value) < std::stof(right.token->value));
         }
         else if (node.token->type == greaterThanT)
         {
-            result.token->value = std::to_wstring(std::stof(left.token->value) > std::stof(right.token->value));
+            left.token->value = std::to_wstring(std::stof(left.token->value) > std::stof(right.token->value));
         }
         else if (node.token->type == lessThanEqualT)
         {
-            result.token->value = std::to_wstring(std::stof(left.token->value) <= std::stof(right.token->value));
+            left.token->value = std::to_wstring(std::stof(left.token->value) <= std::stof(right.token->value));
         }
         else if (node.token->type == greaterThanEqualT)
         {
-            result.token->value = std::to_wstring(std::stof(left.token->value) >= std::stof(right.token->value));
+            left.token->value = std::to_wstring(std::stof(left.token->value) >= std::stof(right.token->value));
         }
-        return result;
+        return left;
     }
 
     Node logic_op_interprete(Node node)
     {
         Node left = this->visit(*node.left);
         Node right = this->visit(*node.right);
-        Node result = Node(left.type, std::make_shared<Token>(Token()));
 
         if (node.token->value == L"و")
         {
-            if (result.token->value != L"0" and right.token->value != L"0")
+            if (left.token->value != L"0" and right.token->value != L"0")
             {
-                result.token->value = L"1";
+                left.token->value = L"1";
             }
             else
             {
-                result.token->value = L"0";
+                left.token->value = L"0";
             }
         }
         else if (node.token->value == L"او")
         {
-            if (result.token->value != L"0" or right.token->value != L"0")
+            if (left.token->value != L"0" or right.token->value != L"0")
             {
-                result.token->value = L"1";
+                left.token->value = L"1";
             }
             else
             {
-                result.token->value = L"0";
+                left.token->value = L"0";
             }
         }
-        return result;
+        return left;
     }
 
     Node expreesion_interprete(Node node)
