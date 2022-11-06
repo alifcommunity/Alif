@@ -82,7 +82,7 @@ public:
     {
         this->statements();
         //node = this->visit(node);
-        std::wcout << node.token->value << std::endl;
+        //std::wcout << node.token->value << std::endl;
     }
 
     //////////////////////////////
@@ -432,7 +432,7 @@ public:
 
     }
 
-    //void compound_statement() {}
+    void compound_statement() {}
 
     void simple_statement()
     {
@@ -444,18 +444,25 @@ public:
         //}
     }
 
-    //void statement() {
-    //    simple_statement();
-    //}
+    void statement() {
+        if (this->currentToken->value == L"دالة" or this->currentToken->value == L"اذا" or this->currentToken->value == L"صنف" or this->currentToken->value == L"لاجل" or this->currentToken->value == L"بينما")
+        {
+            this->compound_statement();
+        }
+        else
+        {
+            simple_statement();
+        }
+    }
 
     void statements() {
-        simple_statement();
+        statement();
         while (this->currentToken->type != endOfFileT)
         {
             Node result = this->visit(node);
             std::wcout << result.token->value << std::endl;
             this->advance();
-            simple_statement();
+            statement();
         }
     }
 
