@@ -82,6 +82,13 @@ public:
     void parse()
     {
         this->statements();
+        while (this->currentToken->type != endOfFileT)
+        {
+            Node result = this->visit(node);
+            std::wcout << result.token->value << std::endl;
+            this->advance();
+            this->statements();
+        }
     }
 
     //////////////////////////////
@@ -506,13 +513,6 @@ public:
 
     void statements() {
         statement();
-        while (this->currentToken->type != endOfFileT)
-        {
-            Node result = this->visit(node);
-            std::wcout << result.token->value << std::endl;
-            this->advance();
-            statement();
-        }
     }
 
 
