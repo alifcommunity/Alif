@@ -17,6 +17,7 @@ enum NodeType {
     NameCallNode,
     //NameCallArgsNode,
     //BuildInFunctionNode,
+    FunctionDefine,
     LogicNode,
     ExpressionNode,
     //MultiStatementNode,
@@ -81,8 +82,6 @@ public:
     void parse()
     {
         this->statements();
-        //node = this->visit(node);
-        //std::wcout << node.token->value << std::endl;
     }
 
     //////////////////////////////
@@ -169,6 +168,7 @@ public:
             this->advance();
             if (this->currentToken->type != rParenthesisT)
             {
+                this->advance();
                 //this->parameters();
                 if (this->currentToken->type == rParenthesisT)
                 {
@@ -366,7 +366,59 @@ public:
     }
 
     void function_defination() {
-        class_defination();
+
+        if (this->currentToken->value == L"دالة")
+        {
+            this->advance();
+            if (this->currentToken->type == nameT)
+            {
+                std::shared_ptr<Token> name = this->currentToken;
+
+                this->advance();
+                if (this->currentToken->type == lParenthesisT)
+                {
+                    this->advance();
+                    if (this->currentToken->type != rParenthesisT)
+                    {
+                        this->advance();
+                        //this->parameter();
+                    }
+                    else if (this->currentToken->type == rParenthesisT)
+                    {
+                        this->advance();
+                    }
+
+                    if (this->currentToken->type == colonT)
+                    {
+                        this->advance();
+                        this->body();
+                        Node body = node;
+                        node = Node(VarAssignNode, name, std::make_shared<Node>(body));
+                    }
+                }
+            }
+        }
+    }
+
+    void body()
+    {
+        if (this->currentToken->type == newlineT) {
+            this->advance();
+            if (this->currentToken->type == tabT) {
+                this->advance();
+                this->statement();
+                if (this->currentToken->type == newlineT) {
+                    this->advance();
+                    if (this->currentToken->positionStart.columnNumber == 0)
+                    {
+                        return;
+                    }
+                }
+            }
+        }
+        else {
+            this->simple_statement();
+        }
     }
 
     //void return_statement() {
@@ -431,16 +483,14 @@ public:
 
     }
 
-    void compound_statement() {}
+    void compound_statement() 
+    {
+        this->function_defination();
+    }
 
     void simple_statement()
     {
         this->assignment();
-        
-        //if (StatementDone)
-        //{
-            //this->expression();
-        //}
     }
 
     void statement() {
