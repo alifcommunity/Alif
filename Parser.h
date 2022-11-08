@@ -20,7 +20,7 @@ enum NodeType {
     FunctionDefine,
     LogicNode,
     ExpressionNode,
-    //MultiStatementNode,
+    MultiStatementNode,
 
 };
 
@@ -53,15 +53,17 @@ public:
     std::shared_ptr<Token> currentToken;
     Node node;
     std::shared_ptr<Error> error;
+    uint16_t tabCount = 1;
+    uint16_t counter = 1;
 
     Parser(std::vector<Token> tokens) : tokens(tokens)
     {
         this->advance();
     }
 
-    void advance()
+    void advance(std::uint16_t count = 1)
     {
-        this->tokenIndex++;
+        this->tokenIndex += count;
         if (this->tokenIndex >= 0 and this->tokenIndex < this->tokens.size())
         {
             std::vector<Token>::iterator listIter = tokens.begin();
@@ -82,13 +84,6 @@ public:
     void parse()
     {
         this->statements();
-        while (this->currentToken->type != endOfFileT)
-        {
-            Node result = this->visit(node);
-            std::wcout << result.token->value << std::endl;
-            this->advance();
-            this->statements();
-        }
     }
 
     //////////////////////////////
@@ -400,7 +395,7 @@ public:
                         this->advance();
                         this->body();
                         Node body = node;
-                        node = Node(VarAssignNode, name, std::make_shared<Node>(body));
+                        node = Node(FunctionDefine, name, std::make_shared<Node>(body));
                     }
                 }
             }
@@ -412,15 +407,9 @@ public:
         if (this->currentToken->type == newlineT) {
             this->advance();
             if (this->currentToken->type == tabT) {
-                this->advance();
-                this->statement();
-                if (this->currentToken->type == newlineT) {
-                    this->advance();
-                    if (this->currentToken->positionStart.columnNumber == 0)
-                    {
-                        return;
-                    }
-                }
+                this->advance(tabCount);
+                tabCount += 1;
+                this->statements();
             }
         }
         else {
@@ -507,12 +496,42 @@ public:
         }
         else
         {
-            simple_statement();
+            this->simple_statement();
         }
     }
 
     void statements() {
-        statement();
+        
+        this->statement();
+
+
+        if (counter == tabCount)
+        {
+            Node right = node;
+        }
+        else
+        {
+            Node left = Node(MultiStatementNode, this->currentToken, std::make_shared<Node>(node), std::make_shared<Node>(node));
+        }
+
+        this->advance();
+        while (this->currentToken->type == tabT)
+        {
+            this->advance();
+            this->counter += 1;
+        }
+
+        //Node result = this->visit(node);
+        //std::wcout << result.token->value << std::endl;
+
+        if (this->currentToken->type != endOfFileT and error == nullptr)
+        {
+            this->statements();
+        }
+        else if (error)
+        {
+            // error;
+        }
     }
 
 
