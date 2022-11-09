@@ -62,9 +62,9 @@ public:
         this->advance();
     }
 
-    void advance(std::uint16_t count = 1)
+    void advance()
     {
-        this->tokenIndex += count;
+        this->tokenIndex++;
         if (this->tokenIndex >= 0 and this->tokenIndex < this->tokens.size())
         {
             std::vector<Token>::iterator listIter = tokens.begin();
@@ -73,14 +73,14 @@ public:
         }
     }
 
-    //void reverse(std::uint8_t count = 1) {
-    //    this->tokenIndex -= count;
-    //    if (this->tokenIndex >= 0 and this->tokenIndex < this->tokens.size()) {
-    //        std::vector<Token>::iterator listIter = tokens.begin();
-    //        std::advance(listIter, this->tokenIndex);
-    //        this->currentToken = *listIter;
-    //    }
-    //}
+    void reverse(std::uint8_t count = 1) {
+        this->tokenIndex -= count;
+        if (this->tokenIndex >= 0 and this->tokenIndex < this->tokens.size()) {
+            std::vector<Token>::iterator listIter = tokens.begin();
+            std::advance(listIter, this->tokenIndex);
+            this->currentToken = std::make_shared<Token>(*listIter);
+        }
+    }
 
     void parse()
     {
@@ -396,7 +396,7 @@ public:
                         this->advance();
                         this->body();
                         Node body = node;
-                        //node = Node(FunctionDefine, name, std::make_shared<Node>(body));
+                        node = Node(FunctionDefine, name, std::make_shared<Node>(body));
                     }
                 }
             }
@@ -525,17 +525,7 @@ public:
         uint16_t tabCount = 0;
 
         this->statement();
-
-        if (currentBlockCount == 0)
-        {
-            Node result = this->visit(node);
-            std::wcout << result.token->value << std::endl;
-        }
-        else
-        {
-            node = Node(MultiStatementNode, this->currentToken, std::make_shared<Node>(node));
-        }
-
+        Node right = node;
 
         this->advance();
         
@@ -544,14 +534,28 @@ public:
             this->advance();
             tabCount++;
         }
+
         if (currentTabCount != tabCount)
         {
             this->deindentent();
+            this->reverse(tabCount + 1);
             return;
 
         }
-        
 
+        if (currentBlockCount == 0)
+        {
+            Node result = this->visit(node);
+            std::wcout << result.token->value << std::endl;
+        }
+        else
+        {
+            //left = Node(MultiStatementNode, this->currentToken, std::make_shared<Node>(left), std::make_shared<Node>(right));;
+        }
+
+
+
+        
 
         if (this->currentToken->type != endOfFileT and error == nullptr)
         {
