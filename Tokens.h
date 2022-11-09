@@ -54,7 +54,7 @@ public:
     Position positionStart = Position();
     Position positionEnd = Position();
 
-    Token(Position positionStart, Position positionEnd, TokenType type, std::wstring value = L"عدم")
+    Token(Position positionStart = Position(), Position positionEnd = Position(), TokenType type = Undefined, std::wstring value = L"عدم")
     {
         this->type = type;
         this->value = value;

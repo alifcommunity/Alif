@@ -131,6 +131,12 @@ public:
                 this->advance();
 
             }
+            else if (this->currentChar == L':')
+            {
+                this->tokens.push_back(Token(this->position, position_end(this->position), colonT));
+                this->advance();
+
+            }
             else if (this->currentChar == L'!')
             {
                 this->make_not_equals();

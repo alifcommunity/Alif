@@ -25,8 +25,6 @@ int main()
 
     std::wstring input_;
     std::wstring line;
-    //VarTaple* varTaple = new VarTaple;
-    //Interpreter interprete = Interpreter(varTaple);
 
     std::wifstream fileContent("AlifCode.txt");
     fileContent.imbue(std::locale("ar_SA.UTF-8"));
@@ -40,10 +38,6 @@ int main()
         if (line != L"")
         {
             input_ += line;
-            input_ += L"\n";
-        }
-        else
-        {
             input_ += L"\n";
         }
     }
