@@ -538,6 +538,7 @@ public:
         if (currentTabCount != tabCount)
         {
             this->deindentent();
+            node = Node(MultiStatementNode, this->currentToken, std::make_shared<Node>(left), std::make_shared<Node>(right));
             this->reverse(tabCount + 1);
             return;
 
@@ -548,13 +549,6 @@ public:
             Node result = this->visit(node);
             std::wcout << result.token->value << std::endl;
         }
-        else
-        {
-            //left = Node(MultiStatementNode, this->currentToken, std::make_shared<Node>(left), std::make_shared<Node>(right));;
-        }
-
-
-
         
 
         if (this->currentToken->type != endOfFileT and error == nullptr)
