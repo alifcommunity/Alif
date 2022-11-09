@@ -396,7 +396,7 @@ public:
                         this->advance();
                         this->body();
                         Node body = node;
-                        node = Node(FunctionDefine, name, std::make_shared<Node>(body));
+                        //node = Node(FunctionDefine, name, std::make_shared<Node>(body));
                     }
                 }
             }
@@ -406,6 +406,7 @@ public:
     void body()
     {
         if (this->currentToken->type == newlineT) {
+
             this->advance();
 
             this->indentent();
@@ -524,11 +525,17 @@ public:
         uint16_t tabCount = 0;
 
         this->statement();
+
         if (currentBlockCount == 0)
         {
             Node result = this->visit(node);
             std::wcout << result.token->value << std::endl;
         }
+        else
+        {
+            node = Node(MultiStatementNode, this->currentToken, std::make_shared<Node>(node));
+        }
+
 
         this->advance();
         
@@ -539,16 +546,16 @@ public:
         }
         if (currentTabCount != tabCount)
         {
-            this->deindentent(); 
+            this->deindentent();
+            return;
+
         }
         
-        //Node left = node;
 
 
         if (this->currentToken->type != endOfFileT and error == nullptr)
         {
             this->statements();
-            //node = Node(MultiStatementNode, this->currentToken, std::make_shared<Node>(left), std::make_shared<Node>(node));
         }
         else if (error)
         {
@@ -620,6 +627,10 @@ public:
         else if (node.type == VarAccessNode)
         {
             return this->var_access_interperte(node);
+        }
+        else if (node.type == MultiStatementNode)
+        {
+            return this->multi_statement_interprete(node);
         }
     }
 
@@ -797,6 +808,10 @@ public:
 
     }
 
+    Node multi_statement_interprete(Node node)
+    {
+        return this->visit(*node.left);
+    }
 
 
 
