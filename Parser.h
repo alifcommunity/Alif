@@ -53,8 +53,9 @@ public:
     std::shared_ptr<Token> currentToken;
     Node node;
     std::shared_ptr<Error> error;
-    uint16_t tabCount = 1;
-    uint16_t counter = 1;
+
+    uint16_t currentBlockCount = 0;
+    uint16_t currentTabCount = 0;
 
     Parser(std::vector<Token> tokens) : tokens(tokens)
     {
@@ -406,15 +407,34 @@ public:
     {
         if (this->currentToken->type == newlineT) {
             this->advance();
-            if (this->currentToken->type == tabT) {
-                this->advance(tabCount);
-                tabCount += 1;
-                this->statements();
-            }
+
+            this->indentent();
+            
+            this->statements();
+            
         }
-        else {
-            this->simple_statement();
+        //else {
+        //    this->simple_statement();
+        //}
+    }
+
+    void indentent ()
+    {
+        currentBlockCount++;
+        while (this->currentToken->type == tabT) {
+            this->advance();
         }
+        currentTabCount++;
+    }
+
+    void deindentent ()
+    {
+        currentBlockCount--;
+        while (this->currentToken->type == tabT)
+        {
+            this->advance();
+        }
+        currentTabCount--;
     }
 
     //void return_statement() {
@@ -501,32 +521,34 @@ public:
     }
 
     void statements() {
-        
+        uint16_t tabCount = 0;
+
         this->statement();
-
-
-        if (counter == tabCount)
+        if (currentBlockCount == 0)
         {
-            Node right = node;
-        }
-        else
-        {
-            Node left = Node(MultiStatementNode, this->currentToken, std::make_shared<Node>(node), std::make_shared<Node>(node));
+            Node result = this->visit(node);
+            std::wcout << result.token->value << std::endl;
         }
 
         this->advance();
+        
         while (this->currentToken->type == tabT)
         {
             this->advance();
-            this->counter += 1;
+            tabCount++;
         }
+        if (currentTabCount != tabCount)
+        {
+            this->deindentent(); 
+        }
+        
+        //Node left = node;
 
-        //Node result = this->visit(node);
-        //std::wcout << result.token->value << std::endl;
 
         if (this->currentToken->type != endOfFileT and error == nullptr)
         {
             this->statements();
+            //node = Node(MultiStatementNode, this->currentToken, std::make_shared<Node>(left), std::make_shared<Node>(node));
         }
         else if (error)
         {
