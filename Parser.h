@@ -52,6 +52,7 @@ public:
     int tokenIndex = -1;
     std::shared_ptr<Token> currentToken;
     Node node;
+    std::vector<Node> list;
     std::shared_ptr<Error> error;
 
     uint16_t currentBlockCount = 0;
@@ -394,25 +395,34 @@ public:
                     if (this->currentToken->type == colonT)
                     {
                         this->advance();
-                        this->body();
-                        Node body = node;
-                        node = Node(FunctionDefine, name, std::make_shared<Node>(body));
+                        this->body(name);
                     }
                 }
             }
         }
     }
 
-    void body()
+    void body(std::shared_ptr<Token> name)
     {
         if (this->currentToken->type == newlineT) {
+
+
+            // move list content to other store temporary to start store new body content
+            std::vector<Node> tempList = this->list;
+            this->list.clear();
 
             this->advance();
 
             this->indentent();
             
             this->statements();
-            
+
+            node = Node(FunctionDefine, name, std::make_shared<Node>(node)); // node = body node
+            if (currentBlockCount != 0)
+            {
+                //tempList.push_back(node);
+                this->list = tempList;
+            }
         }
         //else {
         //    this->simple_statement();
@@ -525,7 +535,8 @@ public:
         uint16_t tabCount = 0;
 
         this->statement();
-        Node right = node;
+
+        this->list.push_back(node);
 
         this->advance();
         
@@ -538,7 +549,12 @@ public:
         if (currentTabCount != tabCount)
         {
             this->deindentent();
-            node = Node(MultiStatementNode, this->currentToken, std::make_shared<Node>(left), std::make_shared<Node>(right));
+            // for i in list : node = Node(MultiStatementNode, Token(), std::make_shared<Node>(i));
+            std::vector<Node>::iterator listIter;
+            for (listIter = this->list.begin(); listIter != this->list.end(); ++listIter)
+            {
+                node = Node(MultiStatementNode, std::make_shared<Token>(Token()), std::make_shared<Node>(node), std::make_shared<Node>(*listIter));
+            }
             this->reverse(tabCount + 1);
             return;
 
@@ -546,8 +562,13 @@ public:
 
         if (currentBlockCount == 0)
         {
+            this->list.clear();
             Node result = this->visit(node);
-            std::wcout << result.token->value << std::endl;
+
+            if (result.token != nullptr)
+            {
+                std::wcout << result.token->value << std::endl;
+            }
         }
         
 
@@ -626,9 +647,17 @@ public:
         {
             return this->var_access_interperte(node);
         }
+        else if (node.type == FunctionDefine)
+        {
+            return this->function_define_interprete(node);
+        }
         else if (node.type == MultiStatementNode)
         {
             return this->multi_statement_interprete(node);
+        }
+        else if (node.type == NameCallNode)
+        {
+            return this->name_call_interprete(node);
         }
     }
 
@@ -806,11 +835,24 @@ public:
 
     }
 
-    Node multi_statement_interprete(Node node)
+    Node function_define_interprete(Node node)
     {
-        return this->visit(*node.left);
+        return namesTable[node.token->value] = *node.left;
     }
 
+    Node multi_statement_interprete(Node node)
+    {
+        if (node.left->type == MultiStatementNode)
+        {
+            this->visit(*node.left);
+        }
+        return this->visit(*node.right);
+    }
+
+    Node name_call_interprete(Node node)
+    {
+        return this->visit(namesTable[node.token->value]);
+    }
 
 
 
