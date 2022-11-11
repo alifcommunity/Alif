@@ -1,6 +1,6 @@
 #pragma once
 
-// نتائج المحلل اللغوي
+// المحلل اللغوي
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 enum NodeType {
@@ -159,6 +159,7 @@ public:
 
     void primary() {
         std::shared_ptr<Token> name = this->currentToken;
+        Node params;
 
         this->atom();
         if (this->currentToken->type == dotT)
@@ -172,11 +173,13 @@ public:
             this->advance();
             if (this->currentToken->type != rParenthesisT)
             {
-                this->advance();
-                //this->parameters();
+                //this->advance();
+                this->parameters();
+                params = node;
                 if (this->currentToken->type == rParenthesisT)
                 {
                     this->advance();
+                    node = Node(NameCallNode, name, std::make_shared<Node>(node), std::make_shared<Node>(params));
                 }
                 else
                 {
@@ -186,7 +189,7 @@ public:
             else if (this->currentToken->type == rParenthesisT)
             {
                 this->advance();
-                node = Node(NameCallNode, name, std::make_shared<Node>(node));
+                node = Node(NameCallNode, name, std::make_shared<Node>(node), std::make_shared<Node>(params));
 
             }
             else
@@ -365,6 +368,11 @@ public:
         this->expression();
     }
 
+    void parameters()
+    {
+        this->expression();
+    }
+
     void class_defination() {
         expressions();
     }
@@ -395,14 +403,14 @@ public:
                     if (this->currentToken->type == colonT)
                     {
                         this->advance();
-                        this->body(name);
+                        this->func_body(name);
                     }
                 }
             }
         }
     }
 
-    void body(std::shared_ptr<Token> name)
+    void func_body(std::shared_ptr<Token> name)
     {
         if (this->currentToken->type == newlineT) {
 
@@ -420,7 +428,6 @@ public:
             node = Node(FunctionDefine, name, std::make_shared<Node>(node)); // node = body node
             if (currentBlockCount != 0)
             {
-                //tempList.push_back(node);
                 this->list = tempList;
             }
         }
@@ -435,7 +442,7 @@ public:
         while (this->currentToken->type == tabT) {
             this->advance();
         }
-        currentTabCount++;
+        currentTabCount++; // ملاحظة: يجب التقدم بعدد المسافات وليس تقدم مرة واحدة فقط
     }
 
     void deindentent ()
@@ -456,8 +463,36 @@ public:
     //    return_statement();
     //}
 
+    //void for_statement() {
+    //    
+    //    if (this->currentToken->value == L"لاجل")
+    //    {
+    //        this->advance();
+    //        if (this->currentToken->type == nameT)
+    //        {
+    //            if (this->currentToken->value == L"في")
+    //            {
+    //                this->advance();
+    //                if (this->currentToken->type == lParenthesisT)
+    //                {
+    //                    // this->expressions;
+    //                }
+    //                if (this->currentToken->type == rParenthesisT)
+    //                {
+    //                    this->advance();
+    //                }
+    //                if (this->currentToken->type == colonT)
+    //                {
+    //                    this->advance();
+    //                    this->loop_body(std::make_shared<Token>(Undefined));
+    //                }
+    //            }
+    //        }
+    //    }
+    //}
+
     //void if_statement() {
-    //    while_statement();
+    //    for_statement();
     //}
 
     //void import_from() {
@@ -536,7 +571,10 @@ public:
 
         this->statement();
 
-        this->list.push_back(node);
+        if (currentBlockCount != 0)
+        {
+            this->list.push_back(node);
+        }
 
         this->advance();
         
@@ -562,13 +600,12 @@ public:
 
         if (currentBlockCount == 0)
         {
-            this->list.clear();
             Node result = this->visit(node);
 
-            if (result.token != nullptr)
-            {
-                std::wcout << result.token->value << std::endl;
-            }
+            //if (result.token != nullptr)
+            //{
+            //    std::wcout << result.token->value << std::endl;
+            //}
         }
         
 
@@ -602,11 +639,11 @@ public:
         node = left;
     }
 
-
-
-
+    // المفسر اللغوي
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     std::map<std::wstring, Node> namesTable;
+    std::map<std::wstring, Node(Parser::*)(Node)> buildinFunction{{L"اطبع", &Parser::print}};
 
     Node visit(Node node)
     {
@@ -851,7 +888,15 @@ public:
 
     Node name_call_interprete(Node node)
     {
-        return this->visit(namesTable[node.token->value]);
+        return  (this->*(buildinFunction[node.token->value]))(*node.right);
+        //return this->visit(namesTable[node.token->value]);
+    }
+
+    Node print(Node node)
+    {
+        Node right = this->visit(node);
+        std::wcout << right.token->value << std::endl;
+        return right;
     }
 
 
