@@ -18,6 +18,7 @@ enum NodeType {
     //NameCallArgsNode,
     //BuildInFunctionNode,
     FunctionDefine,
+    ForLoop,
     LogicNode,
     ExpressionNode,
     MultiStatementNode,
@@ -460,33 +461,59 @@ public:
     //    return_statement();
     //}
 
-    //void for_statement() {
-    //    
-    //    if (this->currentToken->value == L"لاجل")
-    //    {
-    //        this->advance();
-    //        if (this->currentToken->type == nameT)
-    //        {
-    //            if (this->currentToken->value == L"في")
-    //            {
-    //                this->advance();
-    //                if (this->currentToken->type == lParenthesisT)
-    //                {
-    //                    // this->expressions;
-    //                }
-    //                if (this->currentToken->type == rParenthesisT)
-    //                {
-    //                    this->advance();
-    //                }
-    //                if (this->currentToken->type == colonT)
-    //                {
-    //                    this->advance();
-    //                    this->loop_body(std::make_shared<Token>(Undefined));
-    //                }
-    //            }
-    //        }
-    //    }
-    //}
+    void for_statement() 
+    {
+        this->advance();
+        if (this->currentToken->type == nameT)
+        {
+            this->advance();
+            if (this->currentToken->value == L"في")
+            {
+                this->advance();
+                if (this->currentToken->type == lParenthesisT)
+                {
+                    this->advance();
+                    this->expression();
+                    Node expr = node;
+                }
+                if (this->currentToken->type == rParenthesisT)
+                {
+                    this->advance();
+                }
+                if (this->currentToken->type == colonT)
+                {
+                    this->advance();
+                    this->loop_body();
+                }
+            }
+        }
+    }
+
+    void loop_body()
+    {
+        if (this->currentToken->type == newlineT) {
+
+
+            // move list content to other store temporary to start store new body content
+            std::vector<Node> tempList = this->list;
+            this->list.clear();
+
+            this->advance();
+
+            this->indentent();
+
+            this->statements();
+
+            node = Node(ForLoop, this->currentToken, std::make_shared<Node>(node)); // node = body node
+            if (currentBlockCount != 0)
+            {
+                this->list = tempList;
+            }
+        }
+        //else {
+        //    this->simple_statement();
+        //}
+    }
 
     //void if_statement() {
     //    for_statement();
@@ -544,7 +571,14 @@ public:
 
     void compound_statement() 
     {
-        this->function_defination();
+        if (this->currentToken->value == L"دالة")
+        {
+            this->function_defination();
+        }
+        else if (this->currentToken->value == L"لاجل")
+        {
+            this->for_statement();
+        }
     }
 
     void simple_statement()
@@ -651,6 +685,10 @@ public:
         {
             result = node;
         }
+        else if (node.type == StringNode)
+        {
+            result = node;
+        }
         else if (node.type == BinOpNode)
         {
             this->binary_op_interprete(node);
@@ -694,6 +732,10 @@ public:
         else if (node.type == NameCallNode)
         {
             this->name_call_interprete(node);
+        }
+        else if (node.type == ForLoop)
+        {
+            this->for_interprete(node);
         }
     }
 
@@ -911,6 +953,12 @@ public:
 
         }
     }
+
+    void for_interprete(Node node)
+    {
+
+    }
+    
 
     void print(Node node)
     {
