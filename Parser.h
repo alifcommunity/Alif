@@ -778,7 +778,6 @@ public:
     void unary_op_interprete(Node node)
     {
         this->visit(*node.left);
-        //Node left = result;
 
         if (node.token->type == plusT)
         {
@@ -799,7 +798,6 @@ public:
                 result.token->value = L"0";
             }
         }
-        //result = left;
 
     }
 
@@ -905,7 +903,6 @@ public:
         Node left = result;
         this->visit(*node.right);
         Node right = result;
-        //Node temp = Node(NumberNode, std::make_shared<Token>(Token()));
 
         if (node.token->type == plusEqualT)
         {
@@ -976,7 +973,7 @@ public:
     void print(Node node)
     {
         this->visit(node);
-        std::wcout << result.token->value + L"\n";
+        std::wcout << result.token->value << std::endl;
     }
 
 

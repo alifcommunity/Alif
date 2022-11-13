@@ -40,7 +40,7 @@ int main()
 
     while (std::getline(fileContent, line))
     {
-        if (line != L"")
+        if (line != L"" and line != L"\t")
         {
             input_ += line;
             input_ += L"\n";
