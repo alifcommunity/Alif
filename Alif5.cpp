@@ -20,15 +20,20 @@
 
 int main()
 {
-    _setmode(_fileno(stdout), _O_WTEXT);
-    _setmode(_fileno(stdin), _O_WTEXT);
+
+    bool outWText = _setmode(_fileno(stdout), _O_WTEXT);
+    bool inWText = _setmode(_fileno(stdin), _O_WTEXT);
+
+    if (not outWText and not inWText)
+    {
+        std::wcout << L"error" << std::endl;
+    } 
 
     std::wstring input_;
     std::wstring line;
 
     std::wifstream fileContent("AlifCode.txt");
     fileContent.imbue(std::locale("ar_SA.UTF-8"));
-
 
     // القراءة من ملف
     /////////////////////////////////////////////////////////////////
@@ -52,9 +57,10 @@ int main()
         
     //std::wcout << input_ << std::endl;
 
-        if (input_ == L"خروج") {
+    if (input_ == L"خروج")
+    {
             exit(0);
-        }
+    }
 
         clock_t start = clock(); // بداية حساب الوقت
 

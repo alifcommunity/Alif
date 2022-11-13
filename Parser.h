@@ -27,11 +27,11 @@ enum NodeType {
 
 class Node {
 public:
-    std::shared_ptr<Node> left;
-    std::shared_ptr<Node> right;
-    std::shared_ptr<Token> token;
-    std::shared_ptr<std::vector<Token>> list_;
-    NodeType type;
+    std::shared_ptr<Node> left{};
+    std::shared_ptr<Node> right{};
+    std::shared_ptr<Token> token{};
+    std::shared_ptr<std::vector<Token>> list_{};
+    NodeType type{};
 
     Node(){}
     Node(NodeType nodeType, std::shared_ptr<Token> token = nullptr, std::shared_ptr<Node> left = nullptr, std::shared_ptr<Node> right = nullptr, std::shared_ptr<std::vector<Token>> list_ = nullptr) {
@@ -509,6 +509,7 @@ public:
             this->statements();
 
             node = Node(ForLoop, name, std::make_shared<Node>(expr), std::make_shared<Node>(node)); // node = body node
+
             if (currentBlockCount != 0)
             {
                 this->list = tempList;
