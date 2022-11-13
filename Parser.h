@@ -463,9 +463,13 @@ public:
 
     void for_statement() 
     {
+        Node expr;
+        std::shared_ptr<Token> name;
+
         this->advance();
         if (this->currentToken->type == nameT)
         {
+            name = this->currentToken;
             this->advance();
             if (this->currentToken->value == L"في")
             {
@@ -474,7 +478,7 @@ public:
                 {
                     this->advance();
                     this->expression();
-                    Node expr = node;
+                    expr = node;
                 }
                 if (this->currentToken->type == rParenthesisT)
                 {
@@ -483,13 +487,13 @@ public:
                 if (this->currentToken->type == colonT)
                 {
                     this->advance();
-                    this->loop_body();
+                    this->loop_body(expr, name);
                 }
             }
         }
     }
 
-    void loop_body()
+    void loop_body(Node expr, std::shared_ptr<Token> name)
     {
         if (this->currentToken->type == newlineT) {
 
@@ -504,7 +508,7 @@ public:
 
             this->statements();
 
-            node = Node(ForLoop, this->currentToken, std::make_shared<Node>(node)); // node = body node
+            node = Node(ForLoop, name, std::make_shared<Node>(expr), std::make_shared<Node>(node)); // node = body node
             if (currentBlockCount != 0)
             {
                 this->list = tempList;
@@ -956,14 +960,22 @@ public:
 
     void for_interprete(Node node)
     {
+        this->visit(*node.left);
+        int value = stoi(result.token->value);
 
+        for (int i = 0; i < value; i++)
+        {
+            namesTable[node.token->value] = Node(NumberNode, std::make_shared<Token>(Token(Position(), Position(), integerT, std::to_wstring(i))));
+            this->visit(*node.right);
+
+        }
     }
     
 
     void print(Node node)
     {
         this->visit(node);
-        std::wcout << result.token->value << std::endl;
+        std::wcout << result.token->value + L"\n";
     }
 
 
