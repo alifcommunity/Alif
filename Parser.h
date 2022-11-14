@@ -23,6 +23,7 @@ enum NodeType {
     LogicNode,
     ExpressionNode,
     MultiStatementNode,
+    IfCondetion,
 
 };
 
@@ -487,8 +488,6 @@ public:
 
             this->statements();
 
-            //node = Node(WhileLoop, this->currentToken, std::make_shared<Node>(node)); // node = body node
-
             if (currentBlockCount != 0)
             {
                 this->list = tempList;
@@ -555,8 +554,43 @@ public:
         //}
     }
 
-    //void if_statement() {
-    //}
+    void if_statement() 
+    {
+        Node expr;
+
+        this->advance();
+
+        this->expression();
+        expr = node;
+
+        if (this->currentToken->type == colonT)
+        {
+            this->advance();
+            this->if_body();
+            node = Node(IfCondetion, this->currentToken, std::make_shared<Node>(expr), std::make_shared<Node>(node));
+        }
+    }
+
+    void if_body()
+    {
+        if (this->currentToken->type == newlineT)
+        {
+            // move list content to other store temporary to start store new body content
+            std::vector<Node> tempList = this->list;
+            this->list.clear();
+
+            this->advance();
+
+            this->indentent();
+
+            this->statements();
+
+            if (currentBlockCount != 0)
+            {
+                this->list = tempList;
+            }
+        }
+    }
 
     //void import_from() {
     //}
@@ -615,6 +649,10 @@ public:
         {
             this->while_statement();
         }
+        else if (this->currentToken->value == L"اذا")
+        {
+            this->if_statement();
+        }
     }
 
     void simple_statement()
@@ -668,11 +706,6 @@ public:
         if (currentBlockCount == 0)
         {
             this->visit(node);
-
-            //if (result.token != nullptr)
-            //{
-            //    std::wcout << result.token->value << std::endl;
-            //}
         }
         
 
@@ -776,6 +809,10 @@ public:
         else if (node.type == WhileLoop)
         {
             this->while_interprete(node);
+        }
+        else if (node.type == IfCondetion)
+        {
+            this->if_interprete(node);
         }
     }
 
@@ -1015,6 +1052,18 @@ public:
         }
     }
     
+    void if_interprete(Node node)
+    {
+        this->visit(*node.left);
+
+        if (result.token->value != L"0")
+        {
+            this->visit(*node.right);
+        }
+    }
+
+
+
 
     void print(Node node)
     {
