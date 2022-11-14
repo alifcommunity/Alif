@@ -18,19 +18,22 @@ enum NodeType {
     //NameCallArgsNode,
     //BuildInFunctionNode,
     FunctionDefine,
+    ForLoop,
+    WhileLoop,
     LogicNode,
     ExpressionNode,
     MultiStatementNode,
+    IfCondetion,
 
 };
 
 class Node {
 public:
-    std::shared_ptr<Node> left;
-    std::shared_ptr<Node> right;
-    std::shared_ptr<Token> token;
-    std::shared_ptr<std::vector<Token>> list_;
-    NodeType type;
+    std::shared_ptr<Node> left{};
+    std::shared_ptr<Node> right{};
+    std::shared_ptr<Token> token{};
+    std::shared_ptr<std::vector<Token>> list_{};
+    NodeType type{};
 
     Node(){}
     Node(NodeType nodeType, std::shared_ptr<Token> token = nullptr, std::shared_ptr<Node> left = nullptr, std::shared_ptr<Node> right = nullptr, std::shared_ptr<std::vector<Token>> list_ = nullptr) {
@@ -453,63 +456,153 @@ public:
     }
 
     //void return_statement() {
-    //    function_defination();
     //}
 
-    //void while_statement() {
-    //    return_statement();
-    //}
+    void while_statement() {
+        Node expr;
 
-    //void for_statement() {
-    //    
-    //    if (this->currentToken->value == L"لاجل")
-    //    {
-    //        this->advance();
-    //        if (this->currentToken->type == nameT)
-    //        {
-    //            if (this->currentToken->value == L"في")
-    //            {
-    //                this->advance();
-    //                if (this->currentToken->type == lParenthesisT)
-    //                {
-    //                    // this->expressions;
-    //                }
-    //                if (this->currentToken->type == rParenthesisT)
-    //                {
-    //                    this->advance();
-    //                }
-    //                if (this->currentToken->type == colonT)
-    //                {
-    //                    this->advance();
-    //                    this->loop_body(std::make_shared<Token>(Undefined));
-    //                }
-    //            }
-    //        }
-    //    }
-    //}
+        this->advance();
 
-    //void if_statement() {
-    //    for_statement();
-    //}
+        this->expression();
+        expr = node;
+
+        if (this->currentToken->type == colonT)
+        {
+            this->advance();
+            this->while_body();
+            node = Node(WhileLoop, this->currentToken, std::make_shared<Node>(expr), std::make_shared<Node>(node));
+        }
+    }
+
+    void while_body()
+    {
+        if (this->currentToken->type == newlineT)
+        {
+            // move list content to other store temporary to start store new body content
+            std::vector<Node> tempList = this->list;
+            this->list.clear();
+
+            this->advance();
+
+            this->indentent();
+
+            this->statements();
+
+            if (currentBlockCount != 0)
+            {
+                this->list = tempList;
+            }
+        }
+    }
+
+    void for_statement() 
+    {
+        Node expr;
+        std::shared_ptr<Token> name;
+
+        this->advance();
+        if (this->currentToken->type == nameT)
+        {
+            name = this->currentToken;
+            this->advance();
+            if (this->currentToken->value == L"في")
+            {
+                this->advance();
+                if (this->currentToken->type == lParenthesisT)
+                {
+                    this->advance();
+                    this->expression();
+                    expr = node;
+                }
+                if (this->currentToken->type == rParenthesisT)
+                {
+                    this->advance();
+                }
+                if (this->currentToken->type == colonT)
+                {
+                    this->advance();
+                    this->for_body(expr, name);
+                }
+            }
+        }
+    }
+
+    void for_body(Node expr, std::shared_ptr<Token> name)
+    {
+        if (this->currentToken->type == newlineT) {
+
+
+            // move list content to other store temporary to start store new body content
+            std::vector<Node> tempList = this->list;
+            this->list.clear();
+
+            this->advance();
+
+            this->indentent();
+
+            this->statements();
+
+            node = Node(ForLoop, name, std::make_shared<Node>(expr), std::make_shared<Node>(node)); // node = body node
+
+            if (currentBlockCount != 0)
+            {
+                this->list = tempList;
+            }
+        }
+        //else {
+        //    this->simple_statement();
+        //}
+    }
+
+    void if_statement() 
+    {
+        Node expr;
+
+        this->advance();
+
+        this->expression();
+        expr = node;
+
+        if (this->currentToken->type == colonT)
+        {
+            this->advance();
+            this->if_body();
+            node = Node(IfCondetion, this->currentToken, std::make_shared<Node>(expr), std::make_shared<Node>(node));
+        }
+    }
+
+    void if_body()
+    {
+        if (this->currentToken->type == newlineT)
+        {
+            // move list content to other store temporary to start store new body content
+            std::vector<Node> tempList = this->list;
+            this->list.clear();
+
+            this->advance();
+
+            this->indentent();
+
+            this->statements();
+
+            if (currentBlockCount != 0)
+            {
+                this->list = tempList;
+            }
+        }
+    }
 
     //void import_from() {
-    //    if_statement();
     //}
 
     //void import_name() {
-    //    import_from();
     //}
 
     //void import_statement() {
-    //    import_name();
     //}
 
     //void delete_statement() {
     //    import_statement();
-    //}
-
-    //void augassign() {
-    //    delete_statement();
     //}
 
     void assignment() {
@@ -544,7 +637,22 @@ public:
 
     void compound_statement() 
     {
-        this->function_defination();
+        if (this->currentToken->value == L"دالة")
+        {
+            this->function_defination();
+        }
+        else if (this->currentToken->value == L"لاجل")
+        {
+            this->for_statement();
+        }
+        else if (this->currentToken->value == L"بينما")
+        {
+            this->while_statement();
+        }
+        else if (this->currentToken->value == L"اذا")
+        {
+            this->if_statement();
+        }
     }
 
     void simple_statement()
@@ -598,11 +706,6 @@ public:
         if (currentBlockCount == 0)
         {
             this->visit(node);
-
-            //if (result.token != nullptr)
-            //{
-            //    std::wcout << result.token->value << std::endl;
-            //}
         }
         
 
@@ -651,6 +754,10 @@ public:
         {
             result = node;
         }
+        else if (node.type == StringNode)
+        {
+            result = node;
+        }
         else if (node.type == BinOpNode)
         {
             this->binary_op_interprete(node);
@@ -695,6 +802,18 @@ public:
         {
             this->name_call_interprete(node);
         }
+        else if (node.type == ForLoop)
+        {
+            this->for_interprete(node);
+        }
+        else if (node.type == WhileLoop)
+        {
+            this->while_interprete(node);
+        }
+        else if (node.type == IfCondetion)
+        {
+            this->if_interprete(node);
+        }
     }
 
     void binary_op_interprete(Node node)
@@ -731,7 +850,6 @@ public:
     void unary_op_interprete(Node node)
     {
         this->visit(*node.left);
-        //Node left = result;
 
         if (node.token->type == plusT)
         {
@@ -752,7 +870,6 @@ public:
                 result.token->value = L"0";
             }
         }
-        //result = left;
 
     }
 
@@ -858,7 +975,6 @@ public:
         Node left = result;
         this->visit(*node.right);
         Node right = result;
-        //Node temp = Node(NumberNode, std::make_shared<Token>(Token()));
 
         if (node.token->type == plusEqualT)
         {
@@ -911,6 +1027,43 @@ public:
 
         }
     }
+
+    void for_interprete(Node node)
+    {
+        this->visit(*node.left);
+        int value = stoi(result.token->value);
+
+        for (int i = 0; i < value; i++)
+        {
+            namesTable[node.token->value] = Node(NumberNode, std::make_shared<Token>(Token(Position(), Position(), integerT, std::to_wstring(i))));
+            this->visit(*node.right);
+
+        }
+    }
+
+    void while_interprete(Node node)
+    {
+        this->visit(*node.left);
+
+        while (result.token->value != L"0")
+        {
+            this->visit(*node.right);
+            this->visit(*node.left);
+        }
+    }
+    
+    void if_interprete(Node node)
+    {
+        this->visit(*node.left);
+
+        if (result.token->value != L"0")
+        {
+            this->visit(*node.right);
+        }
+    }
+
+
+
 
     void print(Node node)
     {
