@@ -19,6 +19,7 @@ enum NodeType {
     //BuildInFunctionNode,
     FunctionDefine,
     ForLoop,
+    WhileLoop,
     LogicNode,
     ExpressionNode,
     MultiStatementNode,
@@ -457,9 +458,44 @@ public:
     //    function_defination();
     //}
 
-    //void while_statement() {
-    //    return_statement();
-    //}
+    void while_statement() {
+        Node expr;
+
+        this->advance();
+
+        this->expression();
+        expr = node;
+
+        if (this->currentToken->type == colonT)
+        {
+            this->advance();
+            this->while_body();
+            node = Node(WhileLoop, this->currentToken, std::make_shared<Node>(expr), std::make_shared<Node>(node));
+        }
+    }
+
+    void while_body()
+    {
+        if (this->currentToken->type == newlineT)
+        {
+            // move list content to other store temporary to start store new body content
+            std::vector<Node> tempList = this->list;
+            this->list.clear();
+
+            this->advance();
+
+            this->indentent();
+
+            this->statements();
+
+            //node = Node(WhileLoop, this->currentToken, std::make_shared<Node>(node)); // node = body node
+
+            if (currentBlockCount != 0)
+            {
+                this->list = tempList;
+            }
+        }
+    }
 
     void for_statement() 
     {
@@ -487,13 +523,13 @@ public:
                 if (this->currentToken->type == colonT)
                 {
                     this->advance();
-                    this->loop_body(expr, name);
+                    this->for_body(expr, name);
                 }
             }
         }
     }
 
-    void loop_body(Node expr, std::shared_ptr<Token> name)
+    void for_body(Node expr, std::shared_ptr<Token> name)
     {
         if (this->currentToken->type == newlineT) {
 
@@ -583,6 +619,10 @@ public:
         else if (this->currentToken->value == L"لاجل")
         {
             this->for_statement();
+        }
+        else if (this->currentToken->value == L"بينما")
+        {
+            this->while_statement();
         }
     }
 
@@ -741,6 +781,10 @@ public:
         else if (node.type == ForLoop)
         {
             this->for_interprete(node);
+        }
+        else if (node.type == WhileLoop)
+        {
+            this->while_interprete(node);
         }
     }
 
@@ -966,6 +1010,17 @@ public:
             namesTable[node.token->value] = Node(NumberNode, std::make_shared<Token>(Token(Position(), Position(), integerT, std::to_wstring(i))));
             this->visit(*node.right);
 
+        }
+    }
+
+    void while_interprete(Node node)
+    {
+        this->visit(*node.left);
+
+        while (result.token->value != L"0")
+        {
+            this->visit(*node.right);
+            this->visit(*node.left);
         }
     }
     
