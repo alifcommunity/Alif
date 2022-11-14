@@ -455,7 +455,6 @@ public:
     }
 
     //void return_statement() {
-    //    function_defination();
     //}
 
     void while_statement() {
@@ -557,27 +556,19 @@ public:
     }
 
     //void if_statement() {
-    //    for_statement();
     //}
 
     //void import_from() {
-    //    if_statement();
     //}
 
     //void import_name() {
-    //    import_from();
     //}
 
     //void import_statement() {
-    //    import_name();
     //}
 
     //void delete_statement() {
     //    import_statement();
-    //}
-
-    //void augassign() {
-    //    delete_statement();
     //}
 
     void assignment() {
