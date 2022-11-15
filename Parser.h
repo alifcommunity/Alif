@@ -16,7 +16,6 @@ enum NodeType {
     ListNode,
     NameCallNode,
     //NameCallArgsNode,
-    //BuildInFunctionNode,
     FunctionDefine,
     ForLoop,
     WhileLoop,
@@ -24,6 +23,7 @@ enum NodeType {
     ExpressionNode,
     MultiStatementNode,
     IfCondetion,
+    ReturnNode,
 
 };
 
@@ -368,6 +368,13 @@ public:
         this->expression();
     }
 
+    void return_statement() {
+
+        this->advance();
+        this->expression();
+        node = Node(ReturnNode, this->currentToken, std::make_shared<Node>(node));
+    }
+
     void parameters()
     {
         this->expression();
@@ -455,8 +462,6 @@ public:
         currentTabCount--;
     }
 
-    //void return_statement() {
-    //}
 
     void while_statement() {
         Node expr;
@@ -557,9 +562,9 @@ public:
     void if_statement() 
     {
         Node expr;
+        std::vector<Node> tempList;
 
         this->advance();
-
         this->expression();
         expr = node;
 
@@ -568,7 +573,33 @@ public:
             this->advance();
             this->if_body();
             node = Node(IfCondetion, this->currentToken, std::make_shared<Node>(expr), std::make_shared<Node>(node));
+            tempList.push_back(node);
         }
+
+        this->advance();
+        while (this->currentToken->value == L"واذا")
+        {
+            this->advance();
+            this->expression();
+            expr = node;
+
+            if (this->currentToken->type == colonT)
+            {
+                this->advance();
+                this->if_body();
+                node = Node(IfCondetion, this->currentToken, std::make_shared<Node>(expr), std::make_shared<Node>(node));
+                tempList.push_back(node);
+            }
+            this->advance();
+        }
+
+        std::vector<Node>::iterator listIter;
+        for (listIter = tempList.begin(); listIter != tempList.end(); ++listIter)
+        {
+            node = Node(MultiStatementNode, std::make_shared<Token>(Token()), std::make_shared<Node>(node), std::make_shared<Node>(*listIter));
+        }
+
+        this->reverse();
     }
 
     void if_body()
@@ -657,7 +688,14 @@ public:
 
     void simple_statement()
     {
-        this->assignment();
+        if (this->currentToken->value == L"ارجع")
+        {
+            this->return_statement();
+        }
+        else if (this->currentToken->type == nameT)
+        {
+            this->assignment();
+        }
     }
 
     void statement() {
@@ -814,6 +852,11 @@ public:
         {
             this->if_interprete(node);
         }
+        else if (node.type == ReturnNode)
+        {
+            this->return_interprete(node);
+        }
+
     }
 
     void binary_op_interprete(Node node)
@@ -1024,8 +1067,12 @@ public:
         else
         {
             this->visit(namesTable[node.token->value]);
-
         }
+    }
+
+    void return_interprete(Node node)
+    {
+        this->visit(*node.left);
     }
 
     void for_interprete(Node node)
