@@ -557,6 +557,7 @@ public:
     void if_statement() 
     {
         Node expr;
+        std::vector<Node> tempList;
 
         this->advance();
 
@@ -568,7 +569,33 @@ public:
             this->advance();
             this->if_body();
             node = Node(IfCondetion, this->currentToken, std::make_shared<Node>(expr), std::make_shared<Node>(node));
+            tempList.push_back(node);
         }
+
+        this->advance();
+        while (this->currentToken->value == L"واذا")
+        {
+            this->advance();
+            this->expression();
+            expr = node;
+
+            if (this->currentToken->type == colonT)
+            {
+                this->advance();
+                this->if_body();
+                node = Node(IfCondetion, this->currentToken, std::make_shared<Node>(expr), std::make_shared<Node>(node));
+                tempList.push_back(node);
+            }
+            this->advance();
+        }
+
+        std::vector<Node>::iterator listIter;
+        for (listIter = tempList.begin(); listIter != tempList.end(); ++listIter)
+        {
+            node = Node(MultiStatementNode, std::make_shared<Token>(Token()), std::make_shared<Node>(node), std::make_shared<Node>(*listIter));
+        }
+
+        this->reverse();
     }
 
     void if_body()
