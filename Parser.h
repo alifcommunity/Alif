@@ -3,7 +3,7 @@
 // المحلل اللغوي
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-enum NodeType {
+enum NodeType : uint8_t {
     NumberNode,
     StringNode,
     UnaryOpNode,
@@ -15,7 +15,6 @@ enum NodeType {
     CondationNode,
     ListNode,
     NameCallNode,
-    //NameCallArgsNode,
     FunctionDefine,
     ForLoop,
     WhileLoop,
@@ -230,7 +229,7 @@ public:
 
     void power()
     {
-        binary_operation(&Parser::primary, powerT, Undefined, &Parser::factor);
+        binary_operation(&Parser::primary, powerT, None, &Parser::factor);
     }
 
     void factor() {
