@@ -3,12 +3,11 @@
 // الرموز
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-enum TokenType{
+enum TokenType : uint8_t{
     integerT, // Integer
     floatT, // Float
     stringT, // String
     nameT, // Name
-    //keywordT = L"KW", // Keyword
     plusT, // Plus
     plusEqualT, // Plus_equal
     minusT, // Minus
@@ -41,20 +40,18 @@ enum TokenType{
     tabT, // Tab
     dotT, // Dot
     endOfFileT, // End_Of_File
-    Undefined,
+    None,
 };
-//const std::vector<std::wstring> keywords = { L"مرر", L"توقف", L"استمر", L"حذف", L"استورد", L"من", L"اذا", L"واذا", L"بينما", L"لاجل", L"ارجع", L"دالة", L"صنف", L"والا", L"او", L"و", L"ليس", L"صح", L"خطا", L"عدم", L"اطبع", L"في" };
-
 
 class Token {
 
 public:
-   TokenType type = Undefined;
-    std::wstring value = L"عدم";
-    Position positionStart = Position();
-    Position positionEnd = Position();
+    TokenType type{};
+    std::wstring value{};
+    Position positionStart{};
+    Position positionEnd{};
 
-    Token(Position positionStart = Position(), Position positionEnd = Position(), TokenType type = Undefined, std::wstring value = L"عدم")
+    Token(Position positionStart = Position(), Position positionEnd = Position(), TokenType type = None, std::wstring value = L"عدم")
     {
         this->type = type;
         this->value = value;
