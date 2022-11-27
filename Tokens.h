@@ -40,7 +40,7 @@ enum TokenType : uint8_t{
     tabT, // Tab
     dotT, // Dot
     endOfFileT, // End_Of_File
-    None,
+    None, // None
 };
 
 class Token {
