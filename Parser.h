@@ -836,11 +836,11 @@ public:
 
         if (node.token.type == equalEqualT)
         {
-            temp.token.value = std::to_wstring(std::stof(left.token.value) == std::stof(right.token.value));
+            temp.token.value = std::to_wstring(left.token.value == right.token.value);
         }
         else if (node.token.type == notEqualT)
         {
-            temp.token.value = std::to_wstring(std::stof(left.token.value) != std::stof(right.token.value));
+            temp.token.value = std::to_wstring(left.token.value != right.token.value);
         }
         else if (node.token.type == lessThanT)
         {
@@ -931,24 +931,80 @@ public:
 
         if (node.token.type == plusEqualT)
         {
-            right.token.value = std::to_wstring(std::stof(left.token.value) + std::stof(right.token.value));
+            if (right.token.type == integerT and left.token.type == integerT) 
+            {
+                right.token.value = std::to_wstring(std::stoi(left.token.value) + std::stoi(right.token.value));
+            }
+            else if (right.token.type == floatT or left.token.type == floatT)
+            {
+                right.token.value = std::to_wstring(std::stof(left.token.value) + std::stof(right.token.value));
+            }
+            else
+            {
+                std::wcout << "return value error" << std::endl;
+            }
         }
         else if (node.token.type == minusEqualT)
         {
-            right.token.value = std::to_wstring(std::stof(left.token.value) - std::stof(right.token.value));
+            if (right.token.type == integerT and left.token.type == integerT)
+            {
+                right.token.value = std::to_wstring(std::stoi(left.token.value) - std::stoi(right.token.value));
+            }
+            else if (right.token.type == floatT or left.token.type == floatT)
+            {
+                right.token.value = std::to_wstring(std::stof(left.token.value) - std::stof(right.token.value));
+            }
+            else
+            {
+                std::wcout << "return value error" << std::endl;
+            }
         }
         else if (node.token.type == multiplyEqualT)
         {
-            right.token.value = std::to_wstring(std::stof(left.token.value) * std::stof(right.token.value));
+            if (right.token.type == integerT and left.token.type == integerT)
+            {
+                right.token.value = std::to_wstring(std::stoi(left.token.value) * std::stoi(right.token.value));
+            }
+            else if (right.token.type == floatT or left.token.type == floatT)
+            {
+                right.token.value = std::to_wstring(std::stof(left.token.value) * std::stof(right.token.value));
+            }
+            else
+            {
+                std::wcout << "return value error" << std::endl;
+            }
         }
         else if (node.token.type == divideEqualT)
         {
-            right.token.value = std::to_wstring(std::stof(left.token.value) / std::stof(right.token.value));
+            if (right.token.type == integerT and left.token.type == integerT)
+            {
+                right.token.value = std::to_wstring(std::stoi(left.token.value) / std::stoi(right.token.value));
+            }
+            else if (right.token.type == floatT or left.token.type == floatT)
+            {
+                right.token.value = std::to_wstring(std::stof(left.token.value) / std::stof(right.token.value));
+            }
+            else
+            {
+                std::wcout << "return value error" << std::endl;
+            }
         }
         else if (node.token.type == powerEqualT)
         {
-            right.token.value = std::to_wstring(pow(std::stof(left.token.value), std::stof(right.token.value)));
+            if (right.token.type == integerT and left.token.type == integerT)
+            {
+                right.token.value = std::to_wstring(pow(std::stoi(left.token.value), std::stoi(right.token.value)));
+            }
+            else if (right.token.type == floatT or left.token.type == floatT)
+            {
+                right.token.value = std::to_wstring(pow(std::stof(left.token.value), std::stof(right.token.value)));
+            }
+            else
+            {
+                std::wcout << "return value error" << std::endl;
+            }
         }
+
         namesTable[node.right->token.value] = right;
 
     }
@@ -989,10 +1045,12 @@ public:
     {
         (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
         int value = stoi(result.token.value);
+        Node res = Node(nullptr, Token(Position(), Position(), integerT, std::to_wstring(0)));
 
         for (int i = 0; i < value; i++)
         {
-            namesTable[node.token.value] = Node(nullptr, Token(Position(), Position(), integerT, std::to_wstring(i)));
+            res.token.value = std::to_wstring(i);
+            namesTable[node.token.value] = res;
             (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
 
         }
