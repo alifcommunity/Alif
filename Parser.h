@@ -769,7 +769,7 @@ public:
     std::map<std::wstring, Node> namesTable;
     std::map<std::wstring, void(Parser::*)(Node)> buildinFunction{{L"اطبع", &Parser::print}};
 
-    void str_num_interpreter(Node node)
+    inline void str_num_interpreter(Node node)
     {
         result = node;
     }
@@ -1019,7 +1019,7 @@ public:
         namesTable[node.token.value] = *node.left;
     }
 
-    void multi_statement_interprete(Node node)
+    inline  void multi_statement_interprete(Node node)
     {
         if (node.left->func == &Parser::multi_statement_interprete)
         {
@@ -1052,7 +1052,7 @@ public:
         int value = stoi(result.token.value);
         Node res = Node(nullptr, Token(Position(), Position(), integerT, std::to_wstring(0)));
 
-        for (int i = 0; i < value; i++)
+        for (unsigned int i = 0; i < value; i++)
         {
             res.token.value = std::to_wstring(i);
             namesTable[node.token.value] = res;
