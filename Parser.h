@@ -766,6 +766,7 @@ public:
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     Node result;
+    bool return_ = false;
     std::map<std::wstring, Node> namesTable;
     std::map<std::wstring, void(Parser::*)(Node)> buildinFunction{{L"اطبع", &Parser::print}};
 
@@ -1025,7 +1026,10 @@ public:
         {
             (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
         }
-        (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
+        if (!return_)
+        {
+            (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
+        }
     }
 
     void name_call_interpreter(Node node)
@@ -1038,12 +1042,14 @@ public:
         else
         {
             (this->*(namesTable[node.token.value].func))(namesTable[node.token.value]); // visit (node.left->func) and pass (node.left) as parameter node
+            return_ = false;
         }
     }
 
     void return_interprete(Node node)
     {
         (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
+        return_ = true;
     }
 
     void for_interprete(Node node)
@@ -1054,10 +1060,17 @@ public:
 
         for (unsigned int i = 0; i < value; i++)
         {
-            res.token.value = std::to_wstring(i);
-            namesTable[node.token.value] = res;
-            (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
+            if (!return_)
+            {
+                res.token.value = std::to_wstring(i);
+                namesTable[node.token.value] = res;
+                (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
 
+            }
+            else
+            {
+                break;
+            }
         }
     }
 
