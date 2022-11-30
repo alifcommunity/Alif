@@ -699,6 +699,11 @@ public:
             this->list.push_back(node);
         }
 
+        while (this->currentToken.type == tabT) // لتجاهل المسافة تاب بعد السطر
+        {
+            this->advance();
+        }
+
         this->advance();
         
         while (this->currentToken.type == tabT)
