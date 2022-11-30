@@ -699,6 +699,11 @@ public:
             this->list.push_back(node);
         }
 
+        while (this->currentToken.type == tabT) // لتجاهل المسافة تاب بعد السطر
+        {
+            this->advance();
+        }
+
         this->advance();
         
         while (this->currentToken.type == tabT)
@@ -761,10 +766,11 @@ public:
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     Node result;
+    bool return_ = false;
     std::map<std::wstring, Node> namesTable;
     std::map<std::wstring, void(Parser::*)(Node)> buildinFunction{{L"اطبع", &Parser::print}};
 
-    void str_num_interpreter(Node node)
+    inline void str_num_interpreter(Node node)
     {
         result = node;
     }
@@ -1014,13 +1020,16 @@ public:
         namesTable[node.token.value] = *node.left;
     }
 
-    void multi_statement_interprete(Node node)
+    inline  void multi_statement_interprete(Node node)
     {
         if (node.left->func == &Parser::multi_statement_interprete)
         {
             (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
         }
-        (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
+        if (!return_)
+        {
+            (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
+        }
     }
 
     void name_call_interpreter(Node node)
@@ -1033,12 +1042,14 @@ public:
         else
         {
             (this->*(namesTable[node.token.value].func))(namesTable[node.token.value]); // visit (node.left->func) and pass (node.left) as parameter node
+            return_ = false;
         }
     }
 
     void return_interprete(Node node)
     {
         (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
+        return_ = true;
     }
 
     void for_interprete(Node node)
@@ -1047,12 +1058,19 @@ public:
         int value = stoi(result.token.value);
         Node res = Node(nullptr, Token(Position(), Position(), integerT, std::to_wstring(0)));
 
-        for (int i = 0; i < value; i++)
+        for (unsigned int i = 0; i < value; i++)
         {
-            res.token.value = std::to_wstring(i);
-            namesTable[node.token.value] = res;
-            (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
+            if (!return_)
+            {
+                res.token.value = std::to_wstring(i);
+                namesTable[node.token.value] = res;
+                (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
 
+            }
+            else
+            {
+                break;
+            }
         }
     }
 
