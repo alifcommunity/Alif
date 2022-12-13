@@ -73,13 +73,14 @@ enum BuildInFuncType {
     Print,
 };
 
-extern std::map<BuildInFuncType, STR> buildInFunctions = { {Print , L"اطبع"} };
-extern std::map<KeywordType, STR> _keywords = { {Pass , L"مرر"}, {Stop , L"توقف"}, {Continue , L"استمر"}, {Delete, L"حذف"}, {From , L"من"}, {Import , L"استورد"} , {If , L"اذا"}, {Elseif , L"واذا"}, {Else , L"والا"}, {While , L"بينما"}, {For , L"لاجل"}, {In , L"في"}, {Return , L"ارجع"}, {Function , L"دالة"}, {Class , L"صنف"}, {Or , L"او"}, {And , L"و"}, {Not , L"ليس"}, {True , L"صح"}, {False , L"خطا"}, {None , L"عدم"} };
+std::map<BuildInFuncType, STR> buildInFunctions = { {Print , L"اطبع"} };
+std::map<KeywordType, STR> keywords_ = { {Pass , L"مرر"}, {Stop , L"توقف"}, {Continue , L"استمر"}, {Delete, L"حذف"}, {From , L"من"}, {Import , L"استورد"} , {If , L"اذا"}, {Elseif , L"واذا"}, {Else , L"والا"}, {While , L"بينما"}, {For , L"لاجل"}, {In , L"في"}, {Return , L"ارجع"}, {Function , L"دالة"}, {Class , L"صنف"}, {Or , L"او"}, {And , L"و"}, {Not , L"ليس"}, {True , L"صح"}, {False , L"خطا"}, {None , L"عدم"} };
 
 class Token {
 public:
-    TokenType _type{};
+    TokenType type_{};
     Position positionStart{}, positionEnd{};
+
     union Values
     {
         KeywordType keywordType;
@@ -88,31 +89,37 @@ public:
         NUM numVal;
     }val{};
 
-    Token(Position positionStart_, Position positionEnd_, TokenType type_, STR* strVal_) {
-        this->positionStart = positionStart_;
-        this->positionEnd = positionEnd_;
-        this->_type = type_;
-        this->val.strVal = strVal_;
+    Token(Position _positionStart, Position _positionEnd, TokenType _type) {
+        this->positionStart = _positionStart;
+        this->positionEnd = _positionEnd;
+        this->type_ = _type;
     }
 
-    Token(Position positionStart_, Position positionEnd_, TokenType type_, NUM numVal_) {
-        this->positionStart = positionStart_;
-        this->positionEnd = positionEnd_;
-        this->_type = type_;
-        this->val.numVal = numVal_;
+    Token(Position _positionStart, Position _positionEnd, TokenType _type, STR* _strVal) {
+        this->positionStart = _positionStart;
+        this->positionEnd = _positionEnd;
+        this->type_ = _type;
+        this->val.strVal = _strVal;
     }
 
-    Token(Position positionStart_, Position positionEnd_, TokenType type_, KeywordType keywordType_) {
-        this->positionStart = positionStart_;
-        this->positionEnd = positionEnd_;
-        this->_type = type_;
-        this->val.keywordType = keywordType_;
+    Token(Position _positionStart, Position _positionEnd, TokenType _type, NUM _numVal) {
+        this->positionStart = _positionStart;
+        this->positionEnd = _positionEnd;
+        this->type_ = _type;
+        this->val.numVal = _numVal;
     }
 
-    Token(Position positionStart_, Position positionEnd_, TokenType type_, BuildInFuncType buildInFunc_) {
-        this->positionStart = positionStart_;
-        this->positionEnd = positionEnd_;
-        this->_type = type_;
-        this->val.buildInFunc = buildInFunc_;
+    Token(Position _positionStart, Position _positionEnd, TokenType _type, KeywordType _keywordType) {
+        this->positionStart = _positionStart;
+        this->positionEnd = _positionEnd;
+        this->type_ = _type;
+        this->val.keywordType = _keywordType;
+    }
+
+    Token(Position _positionStart, Position _positionEnd, TokenType _type, BuildInFuncType _buildInFunc) {
+        this->positionStart = _positionStart;
+        this->positionEnd = _positionEnd;
+        this->type_ = _type;
+        this->val.buildInFunc = _buildInFunc;
     }
 };

@@ -18,9 +18,9 @@
 #include "Tokens.h"
 #include "Errors.h"
 #include "Lexer.h"
-#include "Parser.h"
+//#include "Parser.h"
 
-int main()
+int main(int argc, char* argv[])
 {
 
     bool outWText = _setmode(_fileno(stdout), _O_WTEXT);
@@ -34,7 +34,8 @@ int main()
     std::wstring input_;
     std::wstring line;
 
-    std::wifstream fileContent("AlifCode.txt");
+    std::wifstream fileContent("AlifCode.alif5");
+    //std::wifstream fileContent(argv[1]);
     fileContent.imbue(std::locale("ar_SA.UTF-8"));
 
     // القراءة من ملف
@@ -59,11 +60,6 @@ int main()
         
     //std::wcout << input_ << std::endl;
 
-    if (input_ == L"خروج")
-    {
-            exit(0);
-    }
-
         clock_t start = clock(); // بداية حساب الوقت
 
 
@@ -73,19 +69,19 @@ int main()
         std::wstring fileName = L"AlifCode.txt";
         Lexer lexer(fileName, input_);
         lexer.make_token();
-        if (lexer.error)
-        {
-            lexer.print();
-            exit(0);
-        }
+        //if (lexer.error)
+        //{
+        //    lexer.print();
+        //    exit(0);
+        //}
         //lexer.print();
 
 
         // المحلل اللغوي
         /////////////////////////////////////////////////////////////////
 
-        Parser parser = Parser(lexer.tokens);
-        parser.parse();
+        //Parser parser = Parser(&lexer.tokens);
+        //parser.parse();
 
 
         std::wcout << float(clock() - start) / CLOCKS_PER_SEC << std::endl; // طباعة نتائج الوقت
