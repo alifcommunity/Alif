@@ -5,18 +5,23 @@
 
 class Position {
 public:
-    int index{};
-    uint16_t lineNumber{}, columnNumber{};
+    int index_{}, line_{}, column_{};
     wchar_t currentChar{};
-    Position(int index = -1, uint16_t lineNumber = 0, uint16_t columnNumber = -1) : index(index), lineNumber(lineNumber), columnNumber(columnNumber), currentChar(L'\0') {}
+
+    Position(int _index = -1, int _line = 0, int _column = -1)
+    {
+        this->index_ = _index;
+        this->line_ = _line;
+        this->column_ = _column;
+    }
 
     void advance(wchar_t currentChar = L'\0') {
-        this->index++;
-        this->columnNumber++;
+        this->index_++;
+        this->column_++;
 
         if (currentChar == L'\n') {
-            this->lineNumber++;
-            this->columnNumber = 0;
+            this->line_++;
+            this->column_ = 0;
         }
     }
 };
