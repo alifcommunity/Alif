@@ -62,27 +62,25 @@ int main(int argc, char* argv[])
 
         clock_t start = clock(); // بداية حساب الوقت
 
+            // المعرب اللغوي
+            /////////////////////////////////////////////////////////////////
 
-        // المعرب اللغوي
-        /////////////////////////////////////////////////////////////////
-
-        std::wstring fileName = L"AlifCode.txt";
-        Lexer lexer(fileName, input_);
-        lexer.make_token();
-        //if (lexer.error)
-        //{
-        //    lexer.print();
-        //    exit(0);
-        //}
-        //lexer.print();
+            std::wstring fileName = L"AlifCode.txt";
+            Lexer lexer(fileName, input_);
+            lexer.make_token();
+            //lexer.print();
 
 
-        // المحلل اللغوي
-        /////////////////////////////////////////////////////////////////
+            // المحلل اللغوي
+            /////////////////////////////////////////////////////////////////
 
-        //Parser parser = Parser(&lexer.tokens);
-        //parser.parse();
+            //Parser parser = Parser(&lexer.tokens);
+            //parser.parse();
 
+            for (void* address : lexer.deleteAddresses)
+            {
+                delete address;
+            }
 
         std::wcout << float(clock() - start) / CLOCKS_PER_SEC << std::endl; // طباعة نتائج الوقت
 

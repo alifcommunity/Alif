@@ -13,15 +13,12 @@ public:
     // for delete pointers
     ////////////
     
-    std::vector<void*> deleteAdresses;
-
-    // flags
-    ////////////
+    std::vector<void*> deleteAddresses;
 
     // vars
     ////////////
 
-    int name = 0;
+    int name = 0; // for convert names to numbers
     std::map<STR, int> namesAlter = {};
     int lastIndentLength = 0; // for indent
 
@@ -84,95 +81,84 @@ public:
             {
                 this->make_plus_equal();
             }
-            //else if (this->currentChar == L'-')
-            //{
-            //    this->make_minus_equal();
+            else if (this->currentChar == L'-')
+            {
+                this->make_minus_equal();
+            }
+            else if (this->currentChar == L'*')
+            {
+                this->make_multiply_equal();
+            }
+            else if (this->currentChar == L'\\')
+            {
+                this->make_divide();
+            }
+            else if (this->currentChar == L'^')
+            {
+                this->make_power_equal();
+            }
+            else if (this->currentChar == L'(')
+            {
+                Position positionStart = this->position_;
+                this->advance();
+                this->tokens_.push_back(Token(positionStart, this->position_, TTlParenthesis));
+            }
+            else if (this->currentChar == L')')
+            {
+                Position positionStart = this->position_;
+                this->advance();
+                this->tokens_.push_back(Token(positionStart, this->position_, TTrParenthesis));
+            }
+            else if (this->currentChar == L'[')
+            {
+                Position positionStart = this->position_;
+                this->advance();
+                this->tokens_.push_back(Token(positionStart, this->position_, TTlSquare));
+            }
+            else if (this->currentChar == L']')
+            {
+                Position positionStart = this->position_;
+                this->advance();
+                this->tokens_.push_back(Token(positionStart, this->position_, TTrSquare));
+            }
+            else if (this->currentChar == L':')
+            {
+                Position positionStart = this->position_;
+                this->advance();
+                this->tokens_.push_back(Token(positionStart, this->position_, TTcolon));
+            }
+            else if (this->currentChar == L',')
+            {
+                Position positionStart = this->position_;
+                this->advance();
+                tokens_.push_back(Token(positionStart, this->position_, TTcomma));
+            }
+            else if (this->currentChar == L'!')
+            {
+                this->make_not_equals();
+            }
+            else if (this->currentChar == L'=')
+            {
+                this->make_equals();
+            }
+            else if (this->currentChar == L'<')
+            {
+                this->make_less_than();
+            }
+            else if (this->currentChar == L'>')
+            {
+                this->make_greater_than();
+            }
+            else
+            {
+                STR detail = L"< حرف غير معروف \'";
+                detail.push_back(this->currentChar);
+                detail += L"\' >";
 
-            //}
-            //else if (this->currentChar == L'*')
-            //{
-            //    this->make_multiply_equal();
-
-            //}
-            //else if (this->currentChar == L'\\')
-            //{
-            //    this->make_divide();
-
-            //}
-            //else if (this->currentChar == L'^')
-            //{
-            //    this->make_power_equal();
-
-            //}
-            //else if (this->currentChar == L'(')
-            //{
-            //    this->tokens_.push_back(Token(this->position_, position_end(this->position_), lParenthesisT));
-            //    this->advance();
-
-            //}
-            //else if (this->currentChar == L')')
-            //{
-            //    this->tokens_.push_back(Token(this->position_, position_end(this->position_), rParenthesisT));
-            //    this->advance();
-
-            //}
-            //else if (this->currentChar == L'[')
-            //{
-            //    this->tokens_.push_back(Token(this->position_, position_end(this->position_), lSquareT));
-            //    this->advance();
-
-            //}
-            //else if (this->currentChar == L']')
-            //{
-            //    this->tokens_.push_back(Token(this->position_, position_end(this->position_), rSquareT));
-            //    this->advance();
-
-            //}
-            //else if (this->currentChar == L':')
-            //{
-            //    this->tokens_.push_back(Token(this->position_, position_end(this->position_), colonT));
-            //    this->advance();
-
-            //}
-            //else if (this->currentChar == L'!')
-            //{
-            //    this->make_not_equals();
-
-            //}
-            //else if (this->currentChar == L'=')
-            //{
-            //    this->make_equals();
-
-            //}
-            //else if (this->currentChar == L'<')
-            //{
-            //    this->make_less_than();
-
-            //}
-            //else if (this->currentChar == L'>')
-            //{
-            //    this->make_greater_than();
-
-            //}
-            //else if (this->currentChar == L',') {
-            //    tokens_.push_back(Token(this->position_, position_end(this->position_), commaT));
-            //    this->advance();
-            //}
-            //else
-            //{
-            //    std::wstring detail = L"< حرف غير معروف \'";
-            //    detail.push_back(this->currentChar);
-            //    detail += L"\' >";
-
-            //    error = std::make_shared<Error>(SyntaxError(this->position_, this->position_, detail, fileName, input_));
-            //}
-
-            //if (error)
-            //{
-            //    return;
-            //}
+                prnt(SyntaxError(this->position_, this->position_, detail, fileName, input_).print_());
+                exit(0);
+            }
         }
-
 
         tokens_.push_back(Token(this->position_, this->position_, TTendOfFile));
 
@@ -338,7 +324,7 @@ public:
         {
             this->advance();
             STR* newString = new STR(string_);
-            this->deleteAdresses.push_back(newString);
+            this->deleteAddresses.push_back(newString);
             this->tokens_.push_back(Token(positionStart, this->position_, TTstring, newString));
         }
         else {
@@ -355,8 +341,8 @@ public:
             this->tokens_.push_back(Token(positionStart, this->position_, TTplus));
         }
         else if (this->currentChar == L'=') {
-            this->tokens_.push_back(Token(positionStart, this->position_, TTplusEqual));
             this->advance();
+            this->tokens_.push_back(Token(positionStart, this->position_, TTplusEqual));
         }
         else {
             prnt(SyntaxError(positionStart ,this->position_, L"< هل تقصد += ؟ >", fileName, input_).print_());
@@ -368,12 +354,12 @@ public:
         Position positionStart = this->position_;
         this->advance();
 
-        if ((lettersDigits + L' ').find(this->currentChar) != std::wstring::npos) {
+        if ((lettersDigits + L' ').find(this->currentChar) != STR::npos) {
             this->tokens_.push_back(Token(positionStart, this->position_, TTminus));
         }
         else if (this->currentChar == L'=') {
-            this->tokens_.push_back(Token(positionStart, this->position_, TTminusEqual));
             this->advance();
+            this->tokens_.push_back(Token(positionStart, this->position_, TTminusEqual));
         }
         else {
             prnt(SyntaxError(positionStart, this->position_, L"< هل تقصد -= ؟ >", fileName, input_).print_());
@@ -381,112 +367,116 @@ public:
         }
     }
 
-    //void make_multiply_equal() {
-    //    Position positionStart = this->position_;
-    //    this->advance();
+    void make_multiply_equal() {
+        Position positionStart = this->position_;
+        this->advance();
 
-    //    if ((lettersDigits + L' ').find(this->currentChar) != std::wstring::npos) {
-    //        this->tokens_.push_back(Token(positionStart, position_end(positionStart), multiplyT));
-    //    }
-    //    else if (this->currentChar == L'=') {
-    //        this->tokens_.push_back(Token(positionStart, this->position_, multiplyEqualT));
-    //        this->advance();
-    //    }
-    //    else {
-    //        error = std::make_shared<Error>(SyntaxError(positionStart, this->position_, L"< هل تقصد *= ؟ >", fileName, input_));
-    //    }
-    //}
+        if ((lettersDigits + L' ').find(this->currentChar) != std::wstring::npos) {
+            this->tokens_.push_back(Token(positionStart, this->position_, TTmultiply));
+        }
+        else if (this->currentChar == L'=') {
+            this->advance();
+            this->tokens_.push_back(Token(positionStart, this->position_, TTmultiplyEqual));
+        }
+        else {
+            prnt(SyntaxError(positionStart, this->position_, L"< هل تقصد *= ؟ >", fileName, input_).print_());
+            exit(0);
+        }
+    }
 
-    //void make_power_equal() {
-    //    Position positionStart = this->position_;
-    //    this->advance();
+    void make_power_equal() {
+        Position positionStart = this->position_;
+        this->advance();
 
-    //    if ((lettersDigits + L' ').find(this->currentChar) != std::wstring::npos) {
-    //        this->tokens_.push_back(Token(positionStart, position_end(positionStart), powerT));
-    //    }
-    //    else if (this->currentChar == L'=') {
-    //        this->tokens_.push_back(Token(positionStart, this->position_, powerEqualT));
-    //        this->advance();
-    //    }
-    //    else {
-    //        error = std::make_shared<Error>(SyntaxError(positionStart, this->position_, L"< هل تقصد ^= ؟ >", fileName, input_));
-    //    }
-    //}
+        if ((lettersDigits + L' ').find(this->currentChar) != std::wstring::npos) {
+            this->tokens_.push_back(Token(positionStart, this->position_, TTpower));
+        }
+        else if (this->currentChar == L'=') {
+            this->advance();
+            this->tokens_.push_back(Token(positionStart, this->position_, TTpowerEqual));
+        }
+        else {
+            prnt(SyntaxError(positionStart, this->position_, L"< هل تقصد ^= ؟ >", fileName, input_).print_());
+            exit(0);
+        }
+    }
 
-    //void make_divide() {
-    //    Position positionStart = this->position_;
-    //    this->advance();
+    void make_divide() {
+        Position positionStart = this->position_;
+        this->advance();
 
-    //    if ((lettersDigits + L' ').find(this->currentChar) != std::wstring::npos) {
-    //        this->tokens_.push_back(Token(positionStart, position_end(positionStart), divideT));
-    //    }
-    //    else if (this->currentChar == L'=') {
-    //        this->tokens_.push_back(Token(positionStart, this->position_, divideEqualT));
-    //        this->advance();
-    //    }
-    //    else if (this->currentChar == L'\\') {
-    //        this->tokens_.push_back(Token(positionStart, this->position_, remainT));
-    //        this->advance();
-    //    }
-    //    else {
-    //        error = std::make_shared<Error>(SyntaxError(positionStart, this->position_, L"< هل تقصد \\= ؟ >", fileName, input_));
-    //    }
-    //}
+        if ((lettersDigits + L' ').find(this->currentChar) != std::wstring::npos) {
+            this->tokens_.push_back(Token(positionStart, this->position_, TTdivide));
+        }
+        else if (this->currentChar == L'=') {
+            this->advance();
+            this->tokens_.push_back(Token(positionStart, this->position_, TTdivideEqual));
+        }
+        else if (this->currentChar == L'\\') {
+            this->advance();
+            this->tokens_.push_back(Token(positionStart, this->position_, TTremain));
+        }
+        else {
+            prnt(SyntaxError(positionStart, this->position_, L"< هل تقصد \\= ؟ >", fileName, input_).print_());
+            exit(0);
+        }
+    }
 
-    //void make_not_equals() {
-    //    Position positionStart = this->position_;
-    //    this->advance();
+    void make_not_equals() {
+        Position positionStart = this->position_;
+        this->advance();
 
-    //    if (this->currentChar == L'=') {
-    //        this->advance();
-    //        this->tokens_.push_back(Token(positionStart, position_end(positionStart), notEqualT));
-    //    }
-    //    else {
-    //        error = std::make_shared<Error>(SyntaxError(this->position_, this->position_, L"< يتوقع وجود \'=\' بعد إشارة \'!\' >", fileName, input_));
-    //    }
-    //}
+        if (this->currentChar == L'=') {
+            this->advance();
+            this->tokens_.push_back(Token(positionStart, this->position_, TTnotEqual));
+        }
+        else {
+            prnt(SyntaxError(this->position_, this->position_, L"< يتوقع وجود \'=\' بعد إشارة \'!\' >", fileName, input_).print_());
+            exit(0);
+        }
+    }
 
-    //void make_equals() {
-    //    Position positionStart = this->position_;
-    //    this->advance();
+    void make_equals() {
+        Position positionStart = this->position_;
+        this->advance();
 
-    //    if (this->currentChar == L'=') {
-    //        this->advance();
-    //        this->tokens_.push_back(Token(positionStart, this->position_, equalEqualT));
-    //    }
-    //    else
-    //    {
-    //        this->tokens_.push_back(Token(positionStart, position_end(positionStart), equalT));
-    //    }
-    //}
+        if (this->currentChar == L'=') {
+            this->advance();
+            this->tokens_.push_back(Token(positionStart, this->position_, TTequalEqual));
+        }
+        else
+        {
+            this->tokens_.push_back(Token(positionStart, this->position_, TTequal));
+        }
+    }
 
-    //void make_less_than() {
-    //    Position positionStart = this->position_;
-    //    this->advance();
+    void make_less_than() {
+        Position positionStart = this->position_;
+        this->advance();
 
-    //    if (this->currentChar == L'=') {
-    //        this->advance();
-    //        this->tokens_.push_back(Token(positionStart, this->position_, lessThanEqualT));
-    //    }
-    //    else {
-    //        this->tokens_.push_back(Token(positionStart, position_end(positionStart), lessThanT));
-    //    }
+        if (this->currentChar == L'=') {
+            this->advance();
+            this->tokens_.push_back(Token(positionStart, this->position_, TTlessThanEqual));
+        }
+        else {
+            this->tokens_.push_back(Token(positionStart, this->position_, TTlessThan));
+        }
 
-    //}
+    }
 
-    //void make_greater_than() {
-    //    Position positionStart = this->position_;
-    //    this->advance();
+    void make_greater_than() {
+        Position positionStart = this->position_;
+        this->advance();
 
-    //    if (this->currentChar == L'=') {
-    //        this->advance();
-    //        this->tokens_.push_back(Token(positionStart, this->position_, greaterThanEqualT));
-    //    }
-    //    else
-    //    {
-    //        this->tokens_.push_back(Token(positionStart, position_end(positionStart), greaterThanT));
-    //    }
-    //}
+        if (this->currentChar == L'=') {
+            this->advance();
+            this->tokens_.push_back(Token(positionStart, this->position_, TTgreaterThanEqual));
+        }
+        else
+        {
+            this->tokens_.push_back(Token(positionStart, this->position_, TTgreaterThan));
+        }
+    }
 
     void skip_comment() {
         this->advance();
@@ -495,28 +485,13 @@ public:
         }
     }
 
-    //void print() {
-    //    std::wstring result;
+    void print() {
+        STR result;
 
-    //    if (error)
-    //    {
-    //        std::wcout << error->print_() << std::endl;
-    //    }
-    //    else
-    //    {
-    //        for (std::vector<Token>::iterator tokItr = tokens.begin(); tokItr != tokens.end(); ++tokItr)
-    //        {
-    //            Token token = *tokItr;
-    //            if (token.value == L"")
-    //            {
-    //                result += L"[" + std::to_wstring(token.positionStart.index) + L"]  ->  " + std::to_wstring(token.type) + L", \n";
-    //            }
-    //            else
-    //            {
-    //                result += L"[" + std::to_wstring(token.positionStart.index) + L", " + std::to_wstring(token.positionEnd.index) + L"]  ->  " + std::to_wstring(token.type) + L" : " + token.value + L", \n";
-    //            }
-    //        }
-    //        std::wcout << L"نتائج المعرب اللغوي : \n" << result << std::endl;
-    //    }
-    //}
+        for (const Token i : tokens_)
+        {
+            result += L"[" + std::to_wstring(i.positionStart.index_) + L", " + std::to_wstring(i.positionEnd.index_) + L"]  ->  " + std::to_wstring(i.type_) + L" : " + std::to_wstring(i.val.numVal) + L", \n";
+        }
+        std::wcout << L"نتائج المعرب اللغوي : \n" << result << std::endl;
+    }
 };
