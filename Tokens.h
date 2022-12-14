@@ -75,8 +75,8 @@ enum BuildInFuncType {
     Print,
 };
 
-std::map<BuildInFuncType, STR> buildInFunctions = { {Print , L"اطبع"} };
-std::map<KeywordType, STR> keywords_ = { {Pass , L"مرر"}, {Stop , L"توقف"}, {Continue , L"استمر"}, {Delete, L"حذف"}, {From , L"من"}, {Import , L"استورد"} , {If , L"اذا"}, {Elseif , L"واذا"}, {Else , L"والا"}, {While , L"بينما"}, {For , L"لاجل"}, {In , L"في"}, {Return , L"ارجع"}, {Function , L"دالة"}, {Class , L"صنف"}, {Or , L"او"}, {And , L"و"}, {Not , L"ليس"}, {True , L"صح"}, {False , L"خطا"}, {None , L"عدم"} };
+std::map<STR, BuildInFuncType> buildInFunctions = { {L"اطبع", Print} };
+std::map<STR, KeywordType> keywords_ = { {L"مرر", Pass}, {L"توقف", Stop}, {L"استمر", Continue}, {L"حذف", Delete}, {L"من", From}, {L"استورد", Import} , {L"اذا", If}, {L"واذا", Elseif}, {L"والا", Else}, {L"بينما", While}, {L"لاجل", For}, {L"في", In}, {L"ارجع", Return}, {L"دالة", Function}, {L"صنف", Class}, {L"او", Or}, {L"و", And}, {L"ليس", Not}, {L"صح", True}, {L"خطا", False}, {L"عدم", None} };
 
 class Token {
 public:

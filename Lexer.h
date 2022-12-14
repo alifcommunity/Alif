@@ -10,9 +10,19 @@ public:
     Position position_{}, positionEnd{};
     std::vector<Token> tokens_{};
 
+    // for delete pointers
+    ////////////
+    
+    std::vector<void*> deleteAdresses;
+
+    // flags
+    ////////////
+
     // vars
     ////////////
 
+    int name = 0;
+    std::map<STR, int> namesAlter = {};
     int lastIndentLength = 0; // for indent
 
     ////////////
@@ -42,45 +52,38 @@ public:
 
         while (this->currentChar != L'\0')
         {
-            if (this->currentChar == L'\n') // most be before space and tab for indent
+            if (this->currentChar == L'\n') // most be call before space and tab for indent
             {
                 this->make_newline();
             }
-            else if (this->currentChar == L' ')
+            else if (this->currentChar == L' ' or this->currentChar == L'\t')
             {
-                this->make_space();
-            }
-            else if (this->currentChar == L'\t') 
-            {
-                this->make_space();
+                this->skip_space();
             }
             else if (this->currentChar == L'#')
             {
                 this->skip_comment();
+            }
+            else if (digits.find(this->currentChar) != STR::npos)
+            {
+                this->make_number();
             }
             else if (this->currentChar == L'.') {
                 Position positionStart = this->position_;
                 this->advance();
                 this->tokens_.push_back(Token(positionStart, this->position_, TTdot));
             }
-            else if (digits.find(this->currentChar) != STR::npos)
-            {
-                this->make_number();
+            else if (letters.find(this->currentChar) != std::wstring::npos) {
+                this->make_name();
             }
-            //else if (letters.find(this->currentChar) != std::wstring::npos) {
-            //    this->make_name();
-
-            //}
-            //else if (this->currentChar == L'\"')
-            //{
-            //    this->make_string();
-
-            //}
-            //else if (this->currentChar == L'+')
-            //{
-            //    this->make_plus_equal();
-
-            //}
+            else if (this->currentChar == L'\"')
+            {
+                this->make_string();
+            }
+            else if (this->currentChar == L'+')
+            {
+                this->make_plus_equal();
+            }
             //else if (this->currentChar == L'-')
             //{
             //    this->make_minus_equal();
@@ -170,14 +173,15 @@ public:
             //}
         }
 
-        //tokens_.push_back(Token(this->position_, position_end(this->position_), endOfFileT));
+
+        tokens_.push_back(Token(this->position_, this->position_, TTendOfFile));
 
     }
 
 
-    void make_space()
+    void skip_space()
     {
-        if (this->position_.line_ == 0)
+        if (this->position_.line_ == 0 and this->position_.column_ == 0)
         {
             this->make_indent();
         }
@@ -255,86 +259,127 @@ public:
         }
         else
         {
-            STR detail = L"> ";
+            STR detail = L"< ";
             detail.push_back(this->currentChar);
-            detail += L" <";
+            detail += L" >";
 
             prnt(SyntaxError(this->position_, this->position_, detail, fileName, input_).print_());
             exit(0);
         }
     }
 
-    //void make_name()
-    //{
-    //    std::wstring nameString;
-    //    Position positionStart = this->position_;
+    void make_name()
+    {
+        STR nameString;
+        Position positionStart = this->position_;
 
-    //    while (this->currentChar != L'\0' and (lettersDigits + L'_').find(this->currentChar) != std::wstring::npos) {
-    //        nameString += this->currentChar;
-    //        this->advance();
-    //    }
-    //    this->tokens_.push_back(Token(positionStart, this->position_, nameT, nameString));
-    //}
+        while (this->currentChar != L'\0' and (lettersDigits + L'_').find(this->currentChar) != STR::npos) {
+            nameString += this->currentChar;
+            this->advance();
+        }
 
-    //void make_string()
-    //{
-    //    std::wstring string_ = L"";
-    //    Position positionStart = this->position_;
-    //    bool ClosedString = true;
-    //    this->advance();
+        if (keywords_.find(nameString) != keywords_.end())
+        {
+            if (this->namesAlter.find(nameString) != namesAlter.end())
+            {
+                this->tokens_.push_back(Token(positionStart, this->position_, TTkeyword, this->namesAlter[nameString]));
+            }
+            else
+            {
+                name++;
+                this->namesAlter[nameString] = name;
+                this->tokens_.push_back(Token(positionStart, this->position_, TTkeyword, this->name));
+            }
+        }
+        else if (buildInFunctions.find(nameString) != buildInFunctions.end())
+        {
+            if (this->namesAlter.find(nameString) != namesAlter.end())
+            {
+                this->tokens_.push_back(Token(positionStart, this->position_, TTbuildInFunc, this->namesAlter[nameString]));
+            }
+            else
+            {
+                name++;
+                this->namesAlter[nameString] = name;
+                this->tokens_.push_back(Token(positionStart, this->position_, TTbuildInFunc, this->name));
+            }
+        }
+        else if (this->namesAlter.find(nameString) != namesAlter.end())
+        {
+            this->tokens_.push_back(Token(positionStart, this->position_, TTname, this->namesAlter[nameString]));
+        }
+        else
+        {
+            name++;
+            this->namesAlter[nameString] = name;
+            this->tokens_.push_back(Token(positionStart, this->position_, TTname, this->name));
+        }
+    }
 
-    //    while (this->currentChar != L'\"') {
-    //        if (this->currentChar == L'\0' or this->currentChar == L'\n') {
-    //            ClosedString = false;
-    //            break;
-    //        }
-    //        else {
-    //            string_ += this->currentChar;
-    //            this->advance();
-    //        }
-    //    }
+    void make_string()
+    {
+        STR string_ = L"";
+        Position positionStart = this->position_;
+        bool ClosedString = true;
+        this->advance();
 
-    //    if (ClosedString)
-    //    {
-    //        this->advance();
-    //        this->tokens_.push_back(Token(positionStart, this->position_, stringT, string_));
-    //    }
-    //    else {
-    //        error = std::make_shared<Error>(SyntaxError(positionStart, this->position_, L"< لم يتم إغلاق النص >", fileName, input_));
-    //    }
-    //}
+        while (this->currentChar != L'\"') {
+            if (this->currentChar == L'\0' or this->currentChar == L'\n') {
+                ClosedString = false;
+                break;
+            }
+            else {
+                string_ += this->currentChar;
+                this->advance();
+            }
+        }
 
-    //void make_plus_equal(){
-    //    Position positionStart = this->position_;
-    //    this->advance();
+        if (ClosedString)
+        {
+            this->advance();
+            STR* newString = new STR(string_);
+            this->deleteAdresses.push_back(newString);
+            this->tokens_.push_back(Token(positionStart, this->position_, TTstring, newString));
+        }
+        else {
+            prnt(SyntaxError(positionStart, this->position_, L"< لم يتم إغلاق النص >", fileName, input_).print_());
+            exit(0);
+        }
+    }
 
-    //    if ((lettersDigits + L' ').find(this->currentChar) != std::wstring::npos) {
-    //        this->tokens_.push_back(Token(positionStart, position_end(positionStart), plusT));
-    //    }
-    //    else if (this->currentChar == L'=') {
-    //        this->tokens_.push_back(Token(positionStart, this->position_, plusEqualT));
-    //        this->advance();
-    //    }
-    //    else {
-    //        error = std::make_shared<Error>(SyntaxError(positionStart ,this->position_, L"< هل تقصد += ؟ >", fileName, input_));
-    //    }
-    //}
+    void make_plus_equal(){
+        Position positionStart = this->position_;
+        this->advance();
 
-    //void make_minus_equal() {
-    //    Position positionStart = this->position_;
-    //    this->advance();
+        if ((lettersDigits + L' ').find(this->currentChar) != STR::npos) {
+            this->tokens_.push_back(Token(positionStart, this->position_, TTplus));
+        }
+        else if (this->currentChar == L'=') {
+            this->tokens_.push_back(Token(positionStart, this->position_, TTplusEqual));
+            this->advance();
+        }
+        else {
+            prnt(SyntaxError(positionStart ,this->position_, L"< هل تقصد += ؟ >", fileName, input_).print_());
+            exit(0);
+        }
+    }
 
-    //    if ((lettersDigits + L' ').find(this->currentChar) != std::wstring::npos) {
-    //        this->tokens_.push_back(Token(positionStart, position_end(positionStart), minusT));
-    //    }
-    //    else if (this->currentChar == L'=') {
-    //        this->tokens_.push_back(Token(positionStart, this->position_, minusEqualT));
-    //        this->advance();
-    //    }
-    //    else {
-    //        error = std::make_shared<Error>(SyntaxError(positionStart, this->position_, L"< هل تقصد -= ؟ >", fileName, input_));
-    //    }
-    //}
+    void make_minus_equal() {
+        Position positionStart = this->position_;
+        this->advance();
+
+        if ((lettersDigits + L' ').find(this->currentChar) != std::wstring::npos) {
+            this->tokens_.push_back(Token(positionStart, this->position_, TTminus));
+        }
+        else if (this->currentChar == L'=') {
+            this->tokens_.push_back(Token(positionStart, this->position_, TTminusEqual));
+            this->advance();
+        }
+        else {
+            prnt(SyntaxError(positionStart, this->position_, L"< هل تقصد -= ؟ >", fileName, input_).print_());
+            exit(0);
+        }
+    }
 
     //void make_multiply_equal() {
     //    Position positionStart = this->position_;
