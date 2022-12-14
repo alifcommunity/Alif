@@ -10,6 +10,13 @@ public:
     Position position_{}, positionEnd{};
     std::vector<Token> tokens_{};
 
+    // vars
+    ////////////
+
+    int lastIndentLength = 0; // for indent
+
+    ////////////
+
     Lexer(STR _fileName, STR _input)
     {
         this->fileName = _fileName;
@@ -35,22 +42,21 @@ public:
 
         while (this->currentChar != L'\0')
         {
-            if (this->currentChar == L' ')
+            if (this->currentChar == L'\n') // most be before space and tab for indent
+            {
+                this->make_newline();
+            }
+            else if (this->currentChar == L' ')
+            {
+                this->make_space();
+            }
+            else if (this->currentChar == L'\t') 
             {
                 this->make_space();
             }
             else if (this->currentChar == L'#')
             {
                 this->skip_comment();
-            }
-            else if (this->currentChar == L'\n')
-            {
-                Position positionStart = this->position_;
-                this->advance();
-                this->tokens_.push_back(Token(positionStart, this->position_, TTnewline));
-            }
-            else if (this->currentChar == L'\t') {
-                this->make_tab();
             }
             else if (this->currentChar == L'.') {
                 Position positionStart = this->position_;
@@ -168,46 +174,58 @@ public:
 
     }
 
+
     void make_space()
     {
-        if (this->position_.column_ == 0)
+        if (this->position_.line_ == 0)
         {
-            Position positionStart = this->position_;
-            int spaces = 0;
-
-            while (this->currentChar == L' ')
-            {
-                this->advance();
-                spaces++;
-            }
-
-            this->tokens_.push_back(Token(positionStart, this->position_, TTtab, spaces));
+            this->make_indent();
         }
         else
         {
-            this->advance();
+            while (this->currentChar == L' ' or this->currentChar == L'\t')
+            {
+                this->advance();
+            }
         }
     }
 
-    void make_tab()
+    void make_indent()
     {
-        if (this->position_.column_ == 0)
-        {
-            Position positionStart = this->position_;
-            int spaces = 0;
+        Position positionStart = this->position_;
+        int spaces = 0;
 
-            while (this->currentChar == L'\t')
-            {
-                this->advance();
-                spaces += 4;
-            }
-
-            this->tokens_.push_back(Token(positionStart, this->position_, TTtab, spaces));
-        }
-        else
+        while (this->currentChar == L' ')
         {
             this->advance();
+            spaces++;
         }
+
+        while (this->currentChar == L'\t')
+        {
+            this->advance();
+            spaces += 4;
+        }
+
+        if (spaces > lastIndentLength)
+        {
+            this->tokens_.push_back(Token(positionStart, this->position_, TTindent, spaces));
+        }
+        else if (spaces < lastIndentLength)
+        {
+            this->tokens_.push_back(Token(positionStart, this->position_, TTdedent, spaces));
+        }
+
+        this->lastIndentLength = spaces;
+    }
+
+    void make_newline()
+    {
+        Position positionStart = this->position_;
+        this->advance();
+        this->tokens_.push_back(Token(positionStart, this->position_, TTnewline));
+
+        this->make_indent();
     }
 
     void make_number() {
@@ -237,11 +255,12 @@ public:
         }
         else
         {
-            std::wstring detail = L"\"";
+            STR detail = L"> ";
             detail.push_back(this->currentChar);
-            detail += L"\"";
+            detail += L" <";
 
-            error = std::make_shared<Error>(SyntaxError(this->position_, this->position_, detail, fileName, input_));
+            prnt(SyntaxError(this->position_, this->position_, detail, fileName, input_).print_());
+            exit(0);
         }
     }
 

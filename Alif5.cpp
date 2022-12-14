@@ -1,6 +1,6 @@
 #define NUM long double
 #define STR std::wstring
-#define printSS(a){std::wcout << a << std::endl;}
+#define prnt(a){std::wcout << a << std::endl;}
 
 // استيراد
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////

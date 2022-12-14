@@ -37,7 +37,9 @@ enum TokenType {
     TTcolon, // Colon
     TTarrow, // Arrow
     TTnewline, // NewLine
-    TTtab, // Tab
+    //TTtab, // Tab
+    TTindent, // INDENT
+    TTdedent, // DEDENT
     TTdot, // Dot
     TTendOfFile, // End_Of_File
     TTbuildInFunc, // BuildInFunction
