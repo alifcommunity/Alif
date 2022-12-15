@@ -35,7 +35,6 @@ public:
     Token currentToken;
     Node node;
     std::vector<Node> list;
-    std::shared_ptr<Error> error;
 
     uint16_t currentBlockCount = 0;
     uint16_t currentTabCount = 0;

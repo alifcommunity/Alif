@@ -3,6 +3,6 @@
 // ثوابت
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const std::wstring digits = L"1234567890";
-const std::wstring letters = L"اأإآءىئؤبتثجحخدذرزعغقفسشكلصضطظمنوهية";
-const std::wstring lettersDigits = digits + letters;
+const STR digits = L"1234567890٠١٢٣٤٥٦٧٨٩";
+const STR letters = L"اأإآءىئؤبتثجحخدذرزعغقفسشكلصضطظمنوهية";
+const STR lettersDigits = digits + letters;

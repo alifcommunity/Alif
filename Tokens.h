@@ -3,60 +3,125 @@
 // الرموز
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-enum TokenType : uint8_t{
-    integerT, // Integer
-    floatT, // Float
-    stringT, // String
-    nameT, // Name
-    plusT, // Plus
-    plusEqualT, // Plus_equal
-    minusT, // Minus
-    minusEqualT, // Minus_equal
-    multiplyT, // Multiply
-    multiplyEqualT, // Multiply_equal
-    divideT, // Divide
-    divideEqualT, // Divide_equal
-    powerT, // Power
-    powerEqualT, // Power_equal
-    remainT, // Remain
-    remainEqualT, // Remain_equal
-    equalT, // Equal
-    lParenthesisT, // L_Parenthesis
-    rParenthesisT, // R_Parenthesis
-    lSquareT, // L_Square
-    rSquareT, // R_Square
-    lCurlyBraceT, // L_curly_brace
-    rCurlyBraceT, // R_curly_brace
-    equalEqualT, // Equal_equal 
-    notEqualT, // Not_equal
-    lessThanT, // Less_than
-    greaterThanT, // Greater_than
-    lessThanEqualT, // Less_than_equal
-    greaterThanEqualT, // Greater_than_equal
-    commaT, // Comma
-    colonT, // Colon
-    arrowT, // Arrow
-    newlineT, // NewLine
-    tabT, // Tab
-    dotT, // Dot
-    endOfFileT, // End_Of_File
-    None, // None
+enum TokenType {
+    TTinteger, // Integer
+    TTfloat, // Float
+    TTstring, // String
+    TTname, // Name
+    TTplus, // Plus
+    TTplusEqual, // Plus_equal
+    TTminus, // Minus
+    TTminusEqual, // Minus_equal
+    TTmultiply, // Multiply
+    TTmultiplyEqual, // Multiply_equal
+    TTdivide, // Divide
+    TTdivideEqual, // Divide_equal
+    TTpower, // Power
+    TTpowerEqual, // Power_equal
+    TTremain, // Remain
+    TTremainEqual, // Remain_equal
+    TTequal, // Equal
+    TTlParenthesis, // L_Parenthesis
+    TTrParenthesis, // R_Parenthesis
+    TTlSquare, // L_Square
+    TTrSquare, // R_Square
+    TTlCurlyBrace, // L_curly_brace
+    TTrCurlyBrace, // R_curly_brace
+    TTequalEqual, // Equal_equal 
+    TTnotEqual, // Not_equal
+    TTlessThan, // Less_than
+    TTgreaterThan, // Greater_than
+    TTlessThanEqual, // Less_than_equal
+    TTgreaterThanEqual, // Greater_than_equal
+    TTcomma, // Comma
+    TTcolon, // Colon
+    TTarrow, // Arrow
+    TTnewline, // NewLine
+    //TTtab, // Tab
+    TTindent, // INDENT
+    TTdedent, // DEDENT
+    TTdot, // Dot
+    TTendOfFile, // End_Of_File
+    TTbuildInFunc, // BuildInFunction
+    TTkeyword, // Keyword
+    TTnone, // None
 };
 
+enum KeywordType {
+    Pass,
+    Stop,
+    Continue,
+    Delete,
+    From,
+    Import,
+    If,
+    Elseif,
+    Else,
+    While,
+    For,
+    In,
+    Return,
+    Function,
+    Class,
+    Or,
+    And,
+    Not,
+    True,
+    False,
+    None,
+};
+
+enum BuildInFuncType {
+    Print,
+};
+
+std::map<STR, BuildInFuncType> buildInFunctions = { {L"اطبع", Print} };
+std::map<STR, KeywordType> keywords_ = { {L"مرر", Pass}, {L"توقف", Stop}, {L"استمر", Continue}, {L"حذف", Delete}, {L"من", From}, {L"استورد", Import} , {L"اذا", If}, {L"واذا", Elseif}, {L"والا", Else}, {L"بينما", While}, {L"لاجل", For}, {L"في", In}, {L"ارجع", Return}, {L"دالة", Function}, {L"صنف", Class}, {L"او", Or}, {L"و", And}, {L"ليس", Not}, {L"صح", True}, {L"خطا", False}, {L"عدم", None} };
+
 class Token {
-
 public:
-    TokenType type{};
-    std::wstring value{};
-    Position positionStart{};
-    Position positionEnd{};
+    TokenType type_{};
+    Position positionStart{}, positionEnd{};
 
-    Token(Position positionStart = Position(), Position positionEnd = Position(), TokenType type = None, std::wstring value = L"عدم")
+    union Values
     {
-        this->type = type;
-        this->value = value;
-        this->positionStart = positionStart;
-        this->positionEnd = positionEnd;
+        KeywordType keywordType;
+        BuildInFuncType buildInFunc;
+        STR* strVal;
+        NUM numVal;
+    }val{};
 
+    Token(Position _positionStart, Position _positionEnd, TokenType _type) {
+        this->positionStart = _positionStart;
+        this->positionEnd = _positionEnd;
+        this->type_ = _type;
+    }
+
+    Token(Position _positionStart, Position _positionEnd, TokenType _type, STR* _strVal) {
+        this->positionStart = _positionStart;
+        this->positionEnd = _positionEnd;
+        this->type_ = _type;
+        this->val.strVal = _strVal;
+    }
+
+    Token(Position _positionStart, Position _positionEnd, TokenType _type, NUM _numVal) {
+        this->positionStart = _positionStart;
+        this->positionEnd = _positionEnd;
+        this->type_ = _type;
+        this->val.numVal = _numVal;
+    }
+
+    Token(Position _positionStart, Position _positionEnd, TokenType _type, KeywordType _keywordType) {
+        this->positionStart = _positionStart;
+        this->positionEnd = _positionEnd;
+        this->type_ = _type;
+        this->val.keywordType = _keywordType;
+    }
+
+    Token(Position _positionStart, Position _positionEnd, TokenType _type, BuildInFuncType _buildInFunc) {
+        this->positionStart = _positionStart;
+        this->positionEnd = _positionEnd;
+        this->type_ = _type;
+        this->val.buildInFunc = _buildInFunc;
     }
 };

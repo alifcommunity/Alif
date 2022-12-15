@@ -9,9 +9,9 @@ public:
         std::wstring line, result;
         int indexStart, indexEnd, columnEnd;
 
-        indexStart = input_.rfind(L"\n", positionStart.index);
-        indexEnd = input_.find(L"\n", positionEnd.index);
-        columnEnd = positionEnd.columnNumber;
+        indexStart = input_.rfind(L"\n", positionStart.index_);
+        indexEnd = input_.find(L"\n", positionEnd.index_);
+        columnEnd = positionEnd.column_;
 
         line = input_.substr(indexStart + 1, indexEnd - indexStart);
 
@@ -35,7 +35,7 @@ public:
 
     std::wstring print_() {
         std::wstring result = this->errorName + L": " + this->details + L"\n";
-        result += L"الملف " + fileName + L", السطر " + std::to_wstring(this->positionStart.lineNumber + 1);
+        result += L"الملف " + fileName + L", السطر " + std::to_wstring(this->positionStart.line_ + 1);
         result += L"\n\n" + ErrorArrow().error_arrow(input, this->positionStart, this->positionEnd);
 
         return result;
