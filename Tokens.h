@@ -37,7 +37,6 @@ enum TokenType {
     TTcolon, // Colon
     TTarrow, // Arrow
     TTnewline, // NewLine
-    //TTtab, // Tab
     TTindent, // INDENT
     TTdedent, // DEDENT
     TTdot, // Dot
@@ -90,6 +89,8 @@ public:
         STR* strVal;
         NUM numVal;
     }val{};
+
+    Token(){}
 
     Token(Position _positionStart, Position _positionEnd, TokenType _type) {
         this->positionStart = _positionStart;
