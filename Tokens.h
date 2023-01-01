@@ -6,6 +6,7 @@
 enum TokenType {
     TTinteger, // Integer
     TTfloat, // Float
+    TTnumber, // Number
     TTstring, // String
     TTname, // Name
     TTplus, // Plus
@@ -46,6 +47,12 @@ enum TokenType {
     TTnone, // None
 };
 
+//enum Context {
+//    Set,
+//    Get,
+//    Del,
+//};
+
 enum KeywordType {
     Pass,
     Stop,
@@ -73,6 +80,7 @@ enum KeywordType {
 enum BuildInFuncType {
     Print,
 };
+
 
 std::map<STR, BuildInFuncType> buildInFunctions = { {L"اطبع", Print} };
 std::map<STR, KeywordType> keywords_ = { {L"مرر", Pass}, {L"توقف", Stop}, {L"استمر", Continue}, {L"حذف", Delete}, {L"من", From}, {L"استورد", Import} , {L"اذا", If}, {L"واذا", Elseif}, {L"والا", Else}, {L"بينما", While}, {L"لاجل", For}, {L"في", In}, {L"ارجع", Return}, {L"دالة", Function}, {L"صنف", Class}, {L"او", Or}, {L"و", And}, {L"ليس", Not}, {L"صح", True}, {L"خطا", False}, {L"عدم", None} };

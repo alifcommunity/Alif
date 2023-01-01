@@ -73,9 +73,11 @@ int main(int argc, char* argv[])
             // المحلل اللغوي
             /////////////////////////////////////////////////////////////////
             
-            clock_t start = clock(); // بداية حساب الوقت
 
             Parser parser = Parser(&lexer.tokens_, fileName, input_);
+
+            clock_t start = clock(); // بداية حساب الوقت
+            
             parser.parse();
 
             std::wcout << float(clock() - start) / CLOCKS_PER_SEC << std::endl; // طباعة نتائج الوقت

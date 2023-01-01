@@ -3,15 +3,87 @@
 class Parser;
 struct ExprNode;
 
+struct AlifObj
+{
+    TokenType kind_;
 
-struct List {
-    std::vector<ExprNode*> list_;
+    union UObj
+    {
+        struct None {
 
-    std::vector<ExprNode*> get_element() {
+            KeywordType kind_;
 
-    }
+        }None;
 
+        struct Bool {
+
+            KeywordType kind_;
+            NUM value_;
+
+        }Bool;
+
+        struct Number {
+
+            TokenType kind;
+            NUM value_;
+
+            void add_(AlifObj _other)
+            {
+                if (_other.kind_ == TTnumber)
+                {
+                    this->value_ = this->value_ + _other.A.Number.value_;
+                }
+                else {
+                    prnt(L"int add_ error");
+                }
+            }
+
+            void sub_(AlifObj _other)
+            {
+                if (_other.kind_ == TTnumber)
+                {
+                    this->value_ = this->value_ - _other.A.Number.value_;
+                }
+                else {
+                    prnt(L"int sub_ error");
+                }
+            }
+
+        }Number;
+
+        struct String{
+            STR* value_;
+
+            void add_(AlifObj _other)
+            {
+                if (_other.kind_ == TTstring)
+                {
+                    *this->value_ = *this->value_ + *_other.A.String.value_;
+                }
+                else {
+                    prnt(L"str add_ error");
+                }
+            }
+        }String;
+
+        struct Identifier
+        {
+            NUM name_;
+            //Context ctx_;
+        };
+
+        struct List {
+            std::vector<ExprNode*>* list_;
+
+            std::vector<ExprNode*>* get_element() {
+
+            }
+
+        }List;
+
+    }A;
 };
+
 
 // العقدة
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -23,12 +95,8 @@ struct ExprNode
     union UExprNode
     {
         struct {
-            NUM intVal;
-        }Number;
-
-        struct {
-            STR* stringVal;
-        }String;
+            AlifObj value_;
+        }Object;
 
         struct {
             ExprNode* left_;
@@ -46,17 +114,17 @@ struct ExprNode
         struct {
             std::vector<NUM>* name_;
             ExprNode* value_;
-        }VarAssign;
+        }NameAssign;
 
         struct {
             NUM name_;
             TokenType operator_;
             ExprNode* value_;
-        }AugVarAssign;
+        }AugNameAccess;
 
         struct {
             NUM name_;
-        }VarAccess;
+        }NameAccess;
 
         struct {
             ExprNode* node_;
@@ -73,27 +141,23 @@ struct ExprNode
             std::vector<ExprNode*>* exprs_;
         }Exprs;
 
-        struct {
-            List* list_;
-        }List;
-
     }U;
 
     Position posStart;
     Position posEnd;
-}; // 84 byte
+}; // 80 byte
 
-struct StmtsNode {
-
-    StmtsNode*(Parser::* func)(StmtsNode*);
-
-    union UStmtsNode
-    {
-        struct {
-            ExprNode* expr_;
-        }Expr;
-    }U;
-}; // 33 byte
+//struct StmtsNode {
+//
+//    StmtsNode*(Parser::* func)(StmtsNode*);
+//
+//    union UStmtsNode
+//    {
+//        struct {
+//            ExprNode* expr_;
+//        }Expr;
+//    }U;
+//}; // 33 byte
 
 // المحلل اللغوي
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -108,7 +172,7 @@ public:
 
     unsigned int level = 6000;
     ExprNode* exprNode = (ExprNode*)malloc(level * 80);
-    StmtsNode* stmtsNode = (StmtsNode*)malloc(level * 33);
+    //StmtsNode* stmtsNode = (StmtsNode*)malloc(level * 33);
     //std::vector<StmtsNode> list;
 
     //uint16_t currentBlockCount = 0;
@@ -130,9 +194,10 @@ public:
         }
     }
 
-    void reverse(unsigned int count = 1) {
-        this->tokenIndex -= count;
-        if (this->tokenIndex >= 0 and this->tokenIndex < this->tokens->size()) {
+    void reverse() {
+        this->tokenIndex--;
+        if (this->tokenIndex >= 0 and this->tokenIndex < this->tokens->size()) 
+        {
             std::vector<Token>::iterator listIter = tokens->begin();
             std::advance(listIter, this->tokenIndex);
             this->currentToken = *listIter;
@@ -142,53 +207,85 @@ public:
     void parse()
     {
         ExprNode* result = this->assignment();
-        (this->*result->func)(result);
+        res = (this->*result->func)(result);
         this->level = 6000;
         this->advance();
         if (currentToken.type_ != TTendOfFile)
         {
             this->parse();
         }
-        prnt(this->res->U.Number.intVal);
+
+        //prnt(this->res->U.Object.value_.A.Number.value_);
+        //prnt(*this->res->U.Object.value_.A.String.value_);
     }
 
     //////////////////////////////
 
     ExprNode* atom() {
+
         Token token = this->currentToken;
         level--;
 
         if (token.type_ == TTname)
         {
             this->advance();
-            (exprNode + level)->U.VarAccess.name_ = token.val.numVal;
+            (exprNode + level)->U.NameAccess.name_ = token.val.numVal;
             (exprNode + level)->func = &Parser::nameAccess_intr;
             return (exprNode + level);
         }
         else if (token.type_ == TTkeyword) {
-            if (token.val.keywordType == True or token.val.keywordType == False)
+            if (token.val.keywordType == True)
             {
                 this->advance();
-                // some work here
+                (exprNode + level)->U.Object.value_.A.Bool.kind_ = True;
+                (exprNode + level)->U.Object.value_.A.Bool.value_ = 1;
+                //(exprNode + level)->func = &Parser::logic_intr;
+
+                return (exprNode + level);
+            }
+            else if (token.val.keywordType == False)
+            {
+                this->advance();
+                (exprNode + level)->U.Object.value_.A.Bool.kind_ = False;
+                (exprNode + level)->U.Object.value_.A.Bool.value_ = 0;
+                //(exprNode + level)->func = &Parser::logic_intr;
+
+                return (exprNode + level);
             }
             else if (token.val.keywordType == None)
             {
                 this->advance();
-                // some work here
+                (exprNode + level)->U.Object.value_.kind_ = TTnone;
+                (exprNode + level)->U.Object.value_.A.None.kind_ = None;
+                //(exprNode + level)->func = &Parser::none_intr;
+
+                return (exprNode + level);
             }
         }
-        else if (token.type_ == TTinteger or token.type_ == TTfloat)
+        else if (token.type_ == TTinteger)
         {
             this->advance();
-            (exprNode + level)->U.Number.intVal = token.val.numVal;
-            (exprNode + level)->func = &Parser::number_intr;
+            (exprNode + level)->U.Object.value_.kind_ = TTnumber;
+            (exprNode + level)->U.Object.value_.A.Number.kind = token.type_;
+            (exprNode + level)->U.Object.value_.A.Number.value_ = token.val.numVal;
+            (exprNode + level)->func = &Parser::object_intr;
+            return (exprNode + level);
+        }
+        else if (token.type_ == TTfloat)
+        {
+            this->advance();
+            (exprNode + level)->U.Object.value_.kind_ = TTnumber;
+            (exprNode + level)->U.Object.value_.A.Number.kind = token.type_;
+            (exprNode + level)->U.Object.value_.A.Number.value_ = token.val.numVal;
+            (exprNode + level)->func = &Parser::object_intr;
             return (exprNode + level);
         }
         else if (token.type_ == TTstring)
         {
             this->advance();
-            (exprNode + level)->U.String.stringVal = token.val.strVal;
-            (exprNode + level)->func = &Parser::string_intr;
+            (exprNode + level)->U.Object.value_.kind_ = token.type_;
+            (exprNode + level)->U.Object.value_.A.String.value_ = token.val.strVal;
+            (exprNode + level)->func = &Parser::object_intr;
             return (exprNode + level);
         }
         else if (token.type_ == TTlSquare)
@@ -207,6 +304,7 @@ public:
             else
             {
                 prnt(L"priorExpr Error");
+                exit(0);
             }
         }
         else
@@ -218,8 +316,8 @@ public:
     ExprNode* list_expr() 
     {
         Token token = this->currentToken;
-        List* list_ = new List();
-        std::vector<ExprNode*> nodeElement;
+        //List* list_ = new List();
+        std::vector<ExprNode*>* nodeElement = {};
 
         if (this->currentToken.type_ == TTrSquare)
         {
@@ -236,8 +334,7 @@ public:
             }
         }
 
-        list_->list_ = nodeElement;
-        (exprNode + level)->U.List.list_ = list_;
+        (exprNode + level)->U.Object.value_.A.List.list_ = nodeElement;
         //(exprNode + level)->func = &Parser::list_intr;
         return (exprNode + level);
 
@@ -349,7 +446,7 @@ public:
             level--;
 
             (exprNode + level)->U.UnaryOp.operator_ = opToken.type_;
-            (exprNode + level)->U.UnaryOp.right_ = right;
+            (exprNode + level)->U.UnaryOp.right_ = this->factor();
             (exprNode + level)->func = &Parser::unaryOp_intr;
 
             return (exprNode + level);
@@ -372,6 +469,7 @@ public:
             (exprNode + level)->U.BinaryOp.operator_ = opToken.type_;
             (exprNode + level)->U.BinaryOp.left_ = left;
             (exprNode + level)->func = &Parser::binOp_intr;
+
             left = (exprNode + level);
             return left;
         }
@@ -393,6 +491,7 @@ public:
             (exprNode + level)->U.BinaryOp.operator_ = opToken.type_;
             (exprNode + level)->U.BinaryOp.left_ = left;
             (exprNode + level)->func = &Parser::binOp_intr;
+
             left = (exprNode + level);
             return left;
         }
@@ -414,7 +513,9 @@ public:
             (exprNode + level)->U.BinaryOp.operator_ = opToken.type_;
             (exprNode + level)->U.BinaryOp.left_ = left;
             (exprNode + level)->func = &Parser::binOp_intr;
+
             left = (exprNode + level);
+            return left;
         }
         
         return left;
@@ -454,11 +555,12 @@ public:
 
             (exprNode + level)->U.BinaryOp.right_ = right;
             (exprNode + level)->U.BinaryOp.operator_ = opToken.type_;
-            (exprNode + level)->U.BinaryOp.keyword_ = opToken.val.keywordType;          (exprNode + level)->U.BinaryOp.left_ = left;
+            (exprNode + level)->U.BinaryOp.keyword_ = opToken.val.keywordType;
             (exprNode + level)->U.BinaryOp.left_ = left;
             (exprNode + level)->func = &Parser::binOp_intr;
 
             left = (exprNode + level);
+            return left;
         }
 
         return left;
@@ -477,11 +579,12 @@ public:
 
             (exprNode + level)->U.BinaryOp.right_ = right;
             (exprNode + level)->U.BinaryOp.operator_ = opToken.type_;
-            (exprNode + level)->U.BinaryOp.keyword_ = opToken.val.keywordType;          (exprNode + level)->U.BinaryOp.left_ = left;
+            (exprNode + level)->U.BinaryOp.keyword_ = opToken.val.keywordType;
             (exprNode + level)->U.BinaryOp.left_ = left;
             (exprNode + level)->func = &Parser::binOp_intr;
 
             left = (exprNode + level);
+            return left;
         }
 
         return left;
@@ -525,19 +628,19 @@ public:
 
         if (this->currentToken.type_ == TTcomma)
         {
-            List* exprs_ = new List();
+            std::vector<ExprNode*>* exprs_ = {};
 
-            exprs_->list_.push_back(expr_);
+            exprs_->push_back(expr_);
             do
             {
                 this->advance();
-                exprs_->list_.push_back(this->expression());
+                exprs_->push_back(this->expression());
 
             } while (this->currentToken.type_ == TTcomma);
 
             level--;
         
-            (exprNode + level)->U.List.list_ = exprs_; 
+            (exprNode + level)->U.Object.value_.A.List.list_ = exprs_; 
             //(exprNode + level)->func = &Parser::list_intr;
             return (exprNode + level);
         }
@@ -578,8 +681,8 @@ public:
                 ExprNode* expr_ = this->expressions();
                 level--;
 
-                (exprNode + level)->U.VarAssign.name_ = names_;
-                (exprNode + level)->U.VarAssign.value_ = expr_;
+                (exprNode + level)->U.NameAssign.name_ = names_;
+                (exprNode + level)->U.NameAssign.value_ = expr_;
                 //(exprNode + level)->func = &Parser::varAssign_intr;
 
                 return (exprNode + level);
@@ -592,9 +695,9 @@ public:
                 ExprNode* expr_ = this->expression();
                 level--;
 
-                (exprNode + level)->U.AugVarAssign.name_ = AugVarName.val.numVal;
-                (exprNode + level)->U.AugVarAssign.operator_ = opToken.type_;
-                (exprNode + level)->U.AugVarAssign.value_ = expr_;
+                (exprNode + level)->U.AugNameAccess.name_ = AugVarName.val.numVal;
+                (exprNode + level)->U.AugNameAccess.operator_ = opToken.type_;
+                (exprNode + level)->U.AugNameAccess.value_ = expr_;
                 //(exprNode + level)->func = &Parser::augVarAssign_intr;
 
                 return (exprNode + level);
@@ -1353,20 +1456,18 @@ public:
     //        return unaryOp_intr(_node);
     //    }
     //}
-;
+
+    std::map<STR, ExprNode*> namesTable;
+
     ExprNode* res = new ExprNode();
     
+
+    ExprNode* object_intr(ExprNode* _node)
+    {
+        return _node;
+    }
+
     ExprNode* nameAccess_intr(ExprNode* _node)
-    {
-        return _node;
-    }
-
-    ExprNode* number_intr(ExprNode* _node)
-    {
-        return _node;
-    }
-
-    ExprNode* string_intr(ExprNode* _node)
     {
         return _node;
     }
@@ -1377,10 +1478,24 @@ public:
 
         if (_node->U.BinaryOp.operator_ == TTplus)
         {
-            res->U.Number.intVal = left->U.Number.intVal + right->U.Number.intVal;
+            if (left->U.Object.value_.kind_ == TTnumber)
+            {
+                left->U.Object.value_.A.Number.add_(right->U.Object.value_);
+            }
+            else if (left->U.Object.value_.kind_ == TTstring)
+            {
+                left->U.Object.value_.A.String.add_(right->U.Object.value_);
+            }
+        }
+        else if (_node->U.BinaryOp.operator_ == TTminus)
+        {
+            if (left->U.Object.value_.kind_ == TTnumber)
+            {
+                left->U.Object.value_.A.Number.sub_(right->U.Object.value_);
+            }
         }
 
-        return res;
+        return left;
     }
 
     ExprNode* unaryOp_intr(ExprNode* _node) {
@@ -1388,12 +1503,12 @@ public:
 
         if (_node->U.UnaryOp.operator_ == TTplus)
         {
-            res->U.Number.intVal = right->U.Number.intVal;
+            return right;
         }
         else if (_node->U.UnaryOp.operator_ == TTminus)
         {
-            res->U.Number.intVal = -right->U.Number.intVal;
+            right->U.Object.value_.A.Number.value_ = - right->U.Object.value_.A.Number.value_;
+            return right;
         }
-        return res;
     }
 };
