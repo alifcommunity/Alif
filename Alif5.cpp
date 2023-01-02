@@ -23,13 +23,13 @@
 int main(int argc, char* argv[])
 {
 
-    bool outWText = _setmode(_fileno(stdout), _O_WTEXT);
-    bool inWText = _setmode(_fileno(stdin), _O_WTEXT);
+    //bool outWText = _setmode(_fileno(stdout), _O_WTEXT);
+    //bool inWText = _setmode(_fileno(stdin), _O_WTEXT);
 
-    if (not outWText and not inWText)
-    {
-        std::wcout << L"error" << std::endl;
-    } 
+    //if (not outWText and not inWText)
+    //{
+    //    std::wcout << L"error" << std::endl;
+    //} 
 
     std::wstring input_;
     std::wstring line;

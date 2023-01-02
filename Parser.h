@@ -1129,48 +1129,11 @@ public:
     //bool return_ = false;
     //std::map<std::wstring, Node> namesTable;
     //std::map<std::wstring, void(Parser::*)(Node)> buildinFunction{{L"اطبع", &Parser::print}};
-
-
-    //inline void str_num_interpreter(Node node)
-    //{
-    //    result = node;
-    //}
-
-    //void binary_op_interprete(Node node)
-    //{
-    //    (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
-    //    Node left = result;
-    //    (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
-    //    Node right = result;
-    //    Node temp = Node();
-
-    //    if (node.token.type == plusT)
-    //    {
-    //        temp.token.value = std::to_wstring(std::stof(left.token.value) + std::stof(right.token.value));
-    //    }
-    //    else if (node.token.type == minusT)
-    //    {
-    //        temp.token.value = std::to_wstring(std::stof(left.token.value) - std::stof(right.token.value));
-    //    }
-    //    else if (node.token.type == multiplyT)
-    //    {
-    //        temp.token.value = std::to_wstring(std::stof(left.token.value) * std::stof(right.token.value));
-    //    }
-    //    else if (node.token.type == divideT)
-    //    {
-    //        temp.token.value = std::to_wstring(std::stof(left.token.value) / std::stof(right.token.value));
-    //    }
-    //    else if (node.token.type == powerT)
-    //    {
-    //        temp.token.value = std::to_wstring(pow(std::stof(left.token.value), std::stof(right.token.value)));
-    //    }
-    //    result = temp;
-    //}
-
+    //
     //void unary_op_interprete(Node node)
     //{
     //    (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
-
+    //
     //    if (node.token.type == plusT)
     //    {
     //        result.token.value = std::to_wstring(std::stof(result.token.value));
@@ -1190,9 +1153,9 @@ public:
     //            result.token.value = L"0";
     //        }
     //    }
-
+    //
     //}
-
+    //
     //void compare_op_interprete(Node node)
     //{
     //    (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
@@ -1200,7 +1163,7 @@ public:
     //    (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
     //    Node right = result;
     //    Node temp = Node(nullptr, Token());
-
+    //
     //    if (node.token.type == equalEqualT)
     //    {
     //        temp.token.value = std::to_wstring(left.token.value == right.token.value);
@@ -1227,7 +1190,7 @@ public:
     //    }
     //    result = temp;
     //}
-
+    //
     //void logic_op_interprete(Node node)
     //{
     //    (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
@@ -1235,7 +1198,7 @@ public:
     //    (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
     //    Node right = result;
     //    Node temp = Node(nullptr, Token());
-
+    //
     //    if (node.token.value == L"و")
     //    {
     //        if (left.token.value != L"0" and right.token.value != L"0")
@@ -1260,13 +1223,13 @@ public:
     //    }
     //    result = temp;
     //}
-
+    //
     //void expreesion_interprete(Node node)
     //{
-
+    //
     //    (this->*(node.left->right->func))(*node.left->right); // visit (node.left->func) and pass (node.left) as parameter node
     //    Node condetion = result;
-
+    //
     //    if (condetion.token.value == L"1")
     //    {
     //        (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
@@ -1276,26 +1239,26 @@ public:
     //        (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
     //    }
     //}
-
+    //
     //void var_assign_interpreter(Node node)
     //{
     //    (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
     //    Node temp = result;
     //    namesTable[node.token.value] = temp;
     //}
-
+    //
     //void var_access_interperte(Node node)
     //{
     //    result = namesTable[node.token.value];
     //}
-
+    //
     //void return_var_assign(Node node)
     //{
     //    (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
     //    Node right = result;
     //    (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
     //    Node left = result;
-
+    //
     //    if (node.token.type == plusEqualT)
     //    {
     //        if (right.token.type == integerT and left.token.type == integerT) 
@@ -1371,16 +1334,16 @@ public:
     //            std::wcout << "return value error" << std::endl;
     //        }
     //    }
-
+    //
     //    namesTable[node.right->token.value] = right;
-
+    //
     //}
-
+    //
     //void function_define_interprete(Node node)
     //{
     //    namesTable[node.token.value] = *node.left;
     //}
-
+    //
     //inline  void multi_statement_interprete(Node node)
     //{
     //    if (node.left->func == &Parser::multi_statement_interprete)
@@ -1392,13 +1355,13 @@ public:
     //        (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
     //    }
     //}
-
+    //
     //void name_call_interpreter(Node node)
     //{
     //    if (buildinFunction[node.token.value])
     //    {
     //        (this->*(buildinFunction[node.token.value]))(*node.right);
-
+    //
     //    }
     //    else
     //    {
@@ -1406,19 +1369,13 @@ public:
     //        return_ = false;
     //    }
     //}
-
-    //void return_interprete(Node node)
-    //{
-    //    (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
-    //    return_ = true;
-    //}
-
+    //
     //void for_interprete(Node node)
     //{
     //    (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
     //    int value = stoi(result.token.value);
     //    Node res = Node(nullptr, Token(Position(), Position(), integerT, std::to_wstring(0)));
-
+    //
     //    for (unsigned int i = 0; i < value; i++)
     //    {
     //        if (!return_)
@@ -1426,7 +1383,7 @@ public:
     //            res.token.value = std::to_wstring(i);
     //            namesTable[node.token.value] = res;
     //            (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
-
+    //
     //        }
     //        else
     //        {
@@ -1434,11 +1391,11 @@ public:
     //        }
     //    }
     //}
-
+    //
     //void while_interprete(Node node)
     //{
     //    (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
-
+    //
     //    while (result.token.value != L"0")
     //    {
     //        (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
@@ -1449,40 +1406,20 @@ public:
     //void if_interprete(Node node)
     //{
     //    (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
-
+    //
     //    if (result.token.value != L"0")
     //    {
     //        (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
     //    }
     //}
-
+    //
     //// الدوال المدمجة
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+    //
     //void print(Node node)
     //{
     //    (this->*(node.func))(node); // visit (node.left->func) and pass (node.left) as parameter node
     //    std::wcout << result.token.value << std::endl;
-    //}
-
-    //void visit(Node* _node)
-    //{
-    //    if (_node->nodeType == numberIntr)
-    //    {
-    //        _node;
-    //    }
-    //    else if (_node->nodeType == stringIntr)
-    //    {
-    //        return _node;
-    //    }
-    //    else if (_node->nodeType == binOpIntr)
-    //    {
-    //        return binOp_intr(_node);
-    //    }
-    //    else if (_node->nodeType == unaryOpIntr)
-    //    {
-    //        return unaryOp_intr(_node);
-    //    }
     //}
 
     std::map<STR, ExprNode*> namesTable;
