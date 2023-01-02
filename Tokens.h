@@ -47,6 +47,13 @@ enum TokenType {
     TTnone, // None
 };
 
+enum VisitType {
+    VObject,
+    VUnaryOp,
+    VBinOp,
+    VReturn,
+};
+
 //enum Context {
 //    Set,
 //    Get,

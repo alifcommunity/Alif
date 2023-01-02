@@ -5,44 +5,44 @@ struct ExprNode;
 
 struct AlifObj
 {
-    TokenType kind_;
+    TokenType type_;
 
     union UObj
     {
-        struct None {
+        struct {
 
             KeywordType kind_;
 
         }None;
 
-        struct Bool {
+        struct {
 
             KeywordType kind_;
             NUM value_;
 
-        }Bool;
+        }Boolean;
 
-        struct Number {
+        struct {
 
             TokenType kind;
             NUM value_;
 
-            void add_(AlifObj _other)
+            void add_(AlifObj* _other)
             {
-                if (_other.kind_ == TTnumber)
+                if (_other->type_ == TTnumber)
                 {
-                    this->value_ = this->value_ + _other.A.Number.value_;
+                    this->value_ = this->value_ + _other->A.Number.value_;
                 }
                 else {
                     prnt(L"int add_ error");
                 }
             }
 
-            void sub_(AlifObj _other)
+            void sub_(AlifObj* _other)
             {
-                if (_other.kind_ == TTnumber)
+                if (_other->type_ == TTnumber)
                 {
-                    this->value_ = this->value_ - _other.A.Number.value_;
+                    this->value_ = this->value_ - _other->A.Number.value_;
                 }
                 else {
                     prnt(L"int sub_ error");
@@ -51,14 +51,14 @@ struct AlifObj
 
         }Number;
 
-        struct String{
+        struct {
             STR* value_;
 
-            void add_(AlifObj _other)
+            void add_(AlifObj* _other)
             {
-                if (_other.kind_ == TTstring)
+                if (_other->type_ == TTstring)
                 {
-                    *this->value_ = *this->value_ + *_other.A.String.value_;
+                    *this->value_ = *this->value_ + *_other->A.String.value_;
                 }
                 else {
                     prnt(L"str add_ error");
@@ -66,13 +66,13 @@ struct AlifObj
             }
         }String;
 
-        struct Identifier
+        struct
         {
             NUM name_;
             //Context ctx_;
-        };
+        }Name;
 
-        struct List {
+        struct {
             std::vector<ExprNode*>* list_;
 
             std::vector<ExprNode*>* get_element() {
@@ -90,7 +90,7 @@ struct AlifObj
 
 struct ExprNode
 {
-    ExprNode*(Parser::* func)(ExprNode*);
+    VisitType type_;
 
     union UExprNode
     {
@@ -141,11 +141,15 @@ struct ExprNode
             std::vector<ExprNode*>* exprs_;
         }Exprs;
 
+        struct {
+            ExprNode* expr_;
+        }Return;
+
     }U;
 
     Position posStart;
     Position posEnd;
-}; // 80 byte
+};
 
 //struct StmtsNode {
 //
@@ -171,7 +175,7 @@ public:
     STR input_;
 
     unsigned int level = 6000;
-    ExprNode* exprNode = (ExprNode*)malloc(level * 80);
+    ExprNode* exprNode = (ExprNode*)malloc(level * 62);
     //StmtsNode* stmtsNode = (StmtsNode*)malloc(level * 33);
     //std::vector<StmtsNode> list;
 
@@ -207,7 +211,8 @@ public:
     void parse()
     {
         ExprNode* result = this->assignment();
-        res = (this->*result->func)(result);
+        AlifObj* res = this->visit(result);
+        //res = (this->*result->func)(result);
         this->level = 6000;
         this->advance();
         if (currentToken.type_ != TTendOfFile)
@@ -215,6 +220,7 @@ public:
             this->parse();
         }
 
+        //prnt(res->A.Number.value_);
         //prnt(this->res->U.Object.value_.A.Number.value_);
         //prnt(*this->res->U.Object.value_.A.String.value_);
     }
@@ -230,15 +236,15 @@ public:
         {
             this->advance();
             (exprNode + level)->U.NameAccess.name_ = token.val.numVal;
-            (exprNode + level)->func = &Parser::nameAccess_intr;
+            //(exprNode + level)->func = &Parser::nameAccess_intr;
             return (exprNode + level);
         }
         else if (token.type_ == TTkeyword) {
             if (token.val.keywordType == True)
             {
                 this->advance();
-                (exprNode + level)->U.Object.value_.A.Bool.kind_ = True;
-                (exprNode + level)->U.Object.value_.A.Bool.value_ = 1;
+                (exprNode + level)->U.Object.value_.A.Boolean.kind_ = True;
+                (exprNode + level)->U.Object.value_.A.Boolean.value_ = 1;
                 //(exprNode + level)->func = &Parser::logic_intr;
 
                 return (exprNode + level);
@@ -246,8 +252,8 @@ public:
             else if (token.val.keywordType == False)
             {
                 this->advance();
-                (exprNode + level)->U.Object.value_.A.Bool.kind_ = False;
-                (exprNode + level)->U.Object.value_.A.Bool.value_ = 0;
+                (exprNode + level)->U.Object.value_.A.Boolean.kind_ = False;
+                (exprNode + level)->U.Object.value_.A.Boolean.value_ = 0;
                 //(exprNode + level)->func = &Parser::logic_intr;
 
                 return (exprNode + level);
@@ -255,7 +261,7 @@ public:
             else if (token.val.keywordType == None)
             {
                 this->advance();
-                (exprNode + level)->U.Object.value_.kind_ = TTnone;
+                (exprNode + level)->U.Object.value_.type_ = TTnone;
                 (exprNode + level)->U.Object.value_.A.None.kind_ = None;
                 //(exprNode + level)->func = &Parser::none_intr;
 
@@ -265,27 +271,30 @@ public:
         else if (token.type_ == TTinteger)
         {
             this->advance();
-            (exprNode + level)->U.Object.value_.kind_ = TTnumber;
+            (exprNode + level)->U.Object.value_.type_ = TTnumber;
             (exprNode + level)->U.Object.value_.A.Number.kind = token.type_;
             (exprNode + level)->U.Object.value_.A.Number.value_ = token.val.numVal;
-            (exprNode + level)->func = &Parser::object_intr;
+            (exprNode + level)->type_ = VObject;
+            //(exprNode + level)->func = &Parser::object_intr;
             return (exprNode + level);
         }
         else if (token.type_ == TTfloat)
         {
             this->advance();
-            (exprNode + level)->U.Object.value_.kind_ = TTnumber;
+            (exprNode + level)->U.Object.value_.type_ = TTnumber;
             (exprNode + level)->U.Object.value_.A.Number.kind = token.type_;
             (exprNode + level)->U.Object.value_.A.Number.value_ = token.val.numVal;
-            (exprNode + level)->func = &Parser::object_intr;
+            (exprNode + level)->type_ = VObject;
+            //(exprNode + level)->func = &Parser::object_intr;
             return (exprNode + level);
         }
         else if (token.type_ == TTstring)
         {
             this->advance();
-            (exprNode + level)->U.Object.value_.kind_ = token.type_;
+            (exprNode + level)->U.Object.value_.type_ = token.type_;
             (exprNode + level)->U.Object.value_.A.String.value_ = token.val.strVal;
-            (exprNode + level)->func = &Parser::object_intr;
+            (exprNode + level)->type_ = VObject;
+            //(exprNode + level)->func = &Parser::object_intr;
             return (exprNode + level);
         }
         else if (token.type_ == TTlSquare)
@@ -428,7 +437,8 @@ public:
             (exprNode + level)->U.BinaryOp.right_ = right;
             (exprNode + level)->U.BinaryOp.operator_ = opToken.type_;
             (exprNode + level)->U.BinaryOp.left_ = left;
-            (exprNode + level)->func = &Parser::binOp_intr;
+            (exprNode + level)->type_ = VBinOp;
+            //(exprNode + level)->func = &Parser::binOp_intr;
             left = (exprNode + level);
             return left;
         }
@@ -447,7 +457,8 @@ public:
 
             (exprNode + level)->U.UnaryOp.operator_ = opToken.type_;
             (exprNode + level)->U.UnaryOp.right_ = this->factor();
-            (exprNode + level)->func = &Parser::unaryOp_intr;
+            (exprNode + level)->type_ = VUnaryOp;
+            //(exprNode + level)->func = &Parser::unaryOp_intr;
 
             return (exprNode + level);
         }
@@ -468,7 +479,8 @@ public:
             (exprNode + level)->U.BinaryOp.right_ = right;
             (exprNode + level)->U.BinaryOp.operator_ = opToken.type_;
             (exprNode + level)->U.BinaryOp.left_ = left;
-            (exprNode + level)->func = &Parser::binOp_intr;
+            (exprNode + level)->type_ = VBinOp;
+            //(exprNode + level)->func = &Parser::binOp_intr;
 
             left = (exprNode + level);
             return left;
@@ -490,7 +502,8 @@ public:
             (exprNode + level)->U.BinaryOp.right_ = right;
             (exprNode + level)->U.BinaryOp.operator_ = opToken.type_;
             (exprNode + level)->U.BinaryOp.left_ = left;
-            (exprNode + level)->func = &Parser::binOp_intr;
+            (exprNode + level)->type_ = VBinOp;
+            //(exprNode + level)->func = &Parser::binOp_intr;
 
             left = (exprNode + level);
             return left;
@@ -512,7 +525,8 @@ public:
             (exprNode + level)->U.BinaryOp.right_ = right;
             (exprNode + level)->U.BinaryOp.operator_ = opToken.type_;
             (exprNode + level)->U.BinaryOp.left_ = left;
-            (exprNode + level)->func = &Parser::binOp_intr;
+            (exprNode + level)->type_ = VBinOp;
+            //(exprNode + level)->func = &Parser::binOp_intr;
 
             left = (exprNode + level);
             return left;
@@ -534,7 +548,8 @@ public:
             (exprNode + level)->U.UnaryOp.right_ = right;
             (exprNode + level)->U.UnaryOp.operator_ = opToken.type_;
             (exprNode + level)->U.UnaryOp.keyword_ = opToken.val.keywordType;
-            (exprNode + level)->func = &Parser::unaryOp_intr;
+            (exprNode + level)->type_ = VUnaryOp;
+            //(exprNode + level)->func = &Parser::unaryOp_intr;
 
             return (exprNode + level);    
         }
@@ -557,7 +572,8 @@ public:
             (exprNode + level)->U.BinaryOp.operator_ = opToken.type_;
             (exprNode + level)->U.BinaryOp.keyword_ = opToken.val.keywordType;
             (exprNode + level)->U.BinaryOp.left_ = left;
-            (exprNode + level)->func = &Parser::binOp_intr;
+            (exprNode + level)->type_ = VBinOp;
+            //(exprNode + level)->func = &Parser::binOp_intr;
 
             left = (exprNode + level);
             return left;
@@ -581,7 +597,8 @@ public:
             (exprNode + level)->U.BinaryOp.operator_ = opToken.type_;
             (exprNode + level)->U.BinaryOp.keyword_ = opToken.val.keywordType;
             (exprNode + level)->U.BinaryOp.left_ = left;
-            (exprNode + level)->func = &Parser::binOp_intr;
+            (exprNode + level)->type_ = VBinOp;
+            //(exprNode + level)->func = &Parser::binOp_intr;
 
             left = (exprNode + level);
             return left;
@@ -689,6 +706,10 @@ public:
             }
             else if (this->currentToken.type_ == TTplusEqual or this->currentToken.type_ == TTminusEqual or this->currentToken.type_ == TTmultiplyEqual or this->currentToken.type_ == TTdivideEqual or this->currentToken.type_ == TTpowerEqual or this->currentToken.type_ == TTremainEqual)
             {
+                // يجب إختصار نوع التحقق الى TTaugAssign
+                // بحيث يتم تخزين النوع في العملية بشكل مباشر دون التحقق منها
+                // if token.type == TTaugassign then operator = opToken.type 
+
                 Token opToken = this->currentToken;
 
                 this->advance();
@@ -709,12 +730,19 @@ public:
     
     }
 
-    //void return_statement() {
+    ExprNode* return_statement() {
 
-    //    this->advance();
-    //    this->expression();
-    //    node = Node(&Parser::return_interprete, this->currentToken, std::make_shared<Node>(node));
-    //}
+        this->advance();
+        ExprNode* expr_ = this->expression();
+        level--;
+
+        (exprNode + level)->U.Return.expr_ = expr_;
+        (exprNode + level)->type_ = VReturn;
+
+        //(exprNode + level)->func = &Parser::return_intr;
+
+        return (exprNode + level);
+    }
 
     //void parameters()
     //{
@@ -1458,57 +1486,56 @@ public:
     //}
 
     std::map<STR, ExprNode*> namesTable;
-
-    ExprNode* res = new ExprNode();
     
+    AlifObj* visit(ExprNode* _node) {
 
-    ExprNode* object_intr(ExprNode* _node)
-    {
-        return _node;
-    }
-
-    ExprNode* nameAccess_intr(ExprNode* _node)
-    {
-        return _node;
-    }
-
-    ExprNode* binOp_intr(ExprNode* _node) {
-        ExprNode* left = (this->*(_node->U.BinaryOp.left_->func))(_node->U.BinaryOp.left_);
-        ExprNode* right = (this->*(_node->U.BinaryOp.right_->func))(_node->U.BinaryOp.right_);
-
-        if (_node->U.BinaryOp.operator_ == TTplus)
+        if (_node->type_ == VObject)
         {
-            if (left->U.Object.value_.kind_ == TTnumber)
-            {
-                left->U.Object.value_.A.Number.add_(right->U.Object.value_);
-            }
-            else if (left->U.Object.value_.kind_ == TTstring)
-            {
-                left->U.Object.value_.A.String.add_(right->U.Object.value_);
-            }
+            return &_node->U.Object.value_;
         }
-        else if (_node->U.BinaryOp.operator_ == TTminus)
+        else if (_node->type_ == VUnaryOp)
         {
-            if (left->U.Object.value_.kind_ == TTnumber)
+            AlifObj* right = this->visit(_node->U.UnaryOp.right_);
+
+            if (_node->U.UnaryOp.operator_ == TTplus)
             {
-                left->U.Object.value_.A.Number.sub_(right->U.Object.value_);
+                return right;
             }
-        }
-
-        return left;
-    }
-
-    ExprNode* unaryOp_intr(ExprNode* _node) {
-        ExprNode* right = (this->*(_node->U.UnaryOp.right_->func))(_node->U.UnaryOp.right_);
-
-        if (_node->U.UnaryOp.operator_ == TTplus)
-        {
+            else if (_node->U.UnaryOp.operator_ == TTminus)
+            {
+                right->A.Number.value_ = -right->A.Number.value_;
+            }
             return right;
         }
-        else if (_node->U.UnaryOp.operator_ == TTminus)
+        else if (_node->type_ == VBinOp)
         {
-            right->U.Object.value_.A.Number.value_ = - right->U.Object.value_.A.Number.value_;
-            return right;
+            AlifObj* right = this->visit(_node->U.BinaryOp.right_);
+            AlifObj* left = this->visit(_node->U.BinaryOp.left_);
+
+            if (_node->U.BinaryOp.operator_ == TTplus)
+            {
+                if (left->type_ == TTnumber)
+                {
+                    left->A.Number.add_(right);
+                }
+                else if (left->type_ == TTstring)
+                {
+                    left->A.String.add_(right);
+                }
+            }
+            else if (_node->U.BinaryOp.operator_ == TTminus)
+            {
+                if (left->type_ == TTnumber)
+                {
+                    left->A.Number.sub_(right);
+                }
+            }
+            return left;
+        }
+        else if (_node->type_ == VReturn)
+        {
+            return this->visit(_node->U.Return.expr_);
         }
     }
+
 };
