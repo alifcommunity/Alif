@@ -744,7 +744,7 @@ public:
 
                 }
 
-                ExprNode* expr_ = this->expression();
+                ExprNode* expr_ = this->expressions();
                 level--;
 
                 (exprNode + level)->U.NameAssign.name_.A.Name.name_ = names_;
