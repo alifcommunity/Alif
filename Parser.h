@@ -49,6 +49,45 @@ struct AlifObj
                 }
             }
 
+            void mul_(AlifObj* _other)
+            {
+                if (_other->type_ == TTnumber)
+                {
+                    this->value_ = this->value_ * _other->A.Number.value_;
+                }
+                else {
+                    prnt(L"int mul_ error");
+                }
+            }
+
+            void div_(AlifObj* _other)
+            {
+                if (_other->type_ == TTnumber)
+                {
+                    if (_other->A.Number.value_ != 0)
+                    {
+                        this->value_ = this->value_ / _other->A.Number.value_;
+                    }
+                    else
+                    {
+                        prnt(L"cant divide by zero error");
+                    }
+                }
+                else {
+                    prnt(L"int div_ error");
+                }
+            }
+
+            void rem_(AlifObj* _other)
+            {
+                if (_other->type_ == TTnumber and _other->A.Number.kind == TTinteger)
+                {
+                    this->value_ = (int)this->value_ % (int)_other->A.Number.value_;
+                }
+                else {
+                    prnt(L"int rem_ error");
+                }
+            }
         }Number;
 
         struct {
@@ -66,11 +105,14 @@ struct AlifObj
             }
         }String;
 
-        struct
-        {
-            NUM name_;
+        struct {
+            std::vector<NUM>* name_;
             //Context ctx_;
         }Name;
+
+        struct {
+            ExprNode* node_;
+        }ExprNodes;
 
         struct {
             std::vector<ExprNode*>* list_;
@@ -112,18 +154,18 @@ struct ExprNode
         }UnaryOp;
 
         struct {
-            std::vector<NUM>* name_;
+            AlifObj name_;
             ExprNode* value_;
         }NameAssign;
 
         struct {
-            NUM name_;
+            AlifObj name_;
             TokenType operator_;
             ExprNode* value_;
-        }AugNameAccess;
+        }AugNameAssign;
 
         struct {
-            NUM name_;
+            AlifObj name_;
         }NameAccess;
 
         struct {
@@ -174,8 +216,8 @@ public:
     STR fileName;
     STR input_;
 
-    unsigned int level = 6000;
-    ExprNode* exprNode = (ExprNode*)malloc(level * 62);
+    unsigned int level = 5500;
+    ExprNode* exprNode = (ExprNode*)malloc(level * 133);
     //StmtsNode* stmtsNode = (StmtsNode*)malloc(level * 33);
     //std::vector<StmtsNode> list;
 
@@ -210,19 +252,15 @@ public:
 
     void parse()
     {
-        ExprNode* result = this->assignment();
-        AlifObj* res = this->visit(result);
-        //res = (this->*result->func)(result);
-        this->level = 6000;
-        this->advance();
-        if (currentToken.type_ != TTendOfFile)
-        {
-            this->parse();
-        }
+        do {
+            ExprNode* result = this->assignment();
+            AlifObj* res = this->visit(result);
 
-        //prnt(res->A.Number.value_);
-        //prnt(this->res->U.Object.value_.A.Number.value_);
-        //prnt(*this->res->U.Object.value_.A.String.value_);
+            this->level = 5500;
+            this->advance();
+            prnt(res->A.Number.value_);
+        } while (currentToken.type_ != TTendOfFile);
+
     }
 
     //////////////////////////////
@@ -235,7 +273,7 @@ public:
         if (token.type_ == TTname)
         {
             this->advance();
-            (exprNode + level)->U.NameAccess.name_ = token.val.numVal;
+            (exprNode + level)->U.NameAccess.name_.A.Name.name_->push_back(token.val.numVal);
             //(exprNode + level)->func = &Parser::nameAccess_intr;
             return (exprNode + level);
         }
@@ -275,7 +313,6 @@ public:
             (exprNode + level)->U.Object.value_.A.Number.kind = token.type_;
             (exprNode + level)->U.Object.value_.A.Number.value_ = token.val.numVal;
             (exprNode + level)->type_ = VObject;
-            //(exprNode + level)->func = &Parser::object_intr;
             return (exprNode + level);
         }
         else if (token.type_ == TTfloat)
@@ -285,7 +322,6 @@ public:
             (exprNode + level)->U.Object.value_.A.Number.kind = token.type_;
             (exprNode + level)->U.Object.value_.A.Number.value_ = token.val.numVal;
             (exprNode + level)->type_ = VObject;
-            //(exprNode + level)->func = &Parser::object_intr;
             return (exprNode + level);
         }
         else if (token.type_ == TTstring)
@@ -294,7 +330,6 @@ public:
             (exprNode + level)->U.Object.value_.type_ = token.type_;
             (exprNode + level)->U.Object.value_.A.String.value_ = token.val.strVal;
             (exprNode + level)->type_ = VObject;
-            //(exprNode + level)->func = &Parser::object_intr;
             return (exprNode + level);
         }
         else if (token.type_ == TTlSquare)
@@ -325,7 +360,6 @@ public:
     ExprNode* list_expr() 
     {
         Token token = this->currentToken;
-        //List* list_ = new List();
         std::vector<ExprNode*>* nodeElement = {};
 
         if (this->currentToken.type_ == TTrSquare)
@@ -334,7 +368,7 @@ public:
         }
         else
         {
-            //nodeElement->push_back(this->expressions());
+            nodeElement->push_back(this->expression());
 
             if (this->currentToken.type_ != TTrSquare)
             {
@@ -469,7 +503,7 @@ public:
     ExprNode* term() {
         ExprNode* left = this->factor();
 
-        while (this->currentToken.type_ == TTmultiply or this->currentToken.type_ == TTdivide) {
+        while (this->currentToken.type_ == TTmultiply or this->currentToken.type_ == TTdivide or this->currentToken.type_ == TTremain) {
             Token opToken = this->currentToken;
 
             this->advance();
@@ -669,6 +703,7 @@ public:
         if (this->currentToken.type_ == TTname)
         {
             std::vector<NUM>* names_ = new std::vector<NUM>;
+
             Token AugVarName = this->currentToken;
             this->advance();
 
@@ -698,9 +733,9 @@ public:
                 ExprNode* expr_ = this->expressions();
                 level--;
 
-                (exprNode + level)->U.NameAssign.name_ = names_;
+                (exprNode + level)->U.NameAssign.name_.A.Name.name_ = names_;
                 (exprNode + level)->U.NameAssign.value_ = expr_;
-                //(exprNode + level)->func = &Parser::varAssign_intr;
+                (exprNode + level)->type_ = VAssign;
 
                 return (exprNode + level);
             }
@@ -716,10 +751,10 @@ public:
                 ExprNode* expr_ = this->expression();
                 level--;
 
-                (exprNode + level)->U.AugNameAccess.name_ = AugVarName.val.numVal;
-                (exprNode + level)->U.AugNameAccess.operator_ = opToken.type_;
-                (exprNode + level)->U.AugNameAccess.value_ = expr_;
-                //(exprNode + level)->func = &Parser::augVarAssign_intr;
+                (exprNode + level)->U.AugNameAssign.name_.A.Name.name_->push_back(AugVarName.val.numVal);
+                (exprNode + level)->U.AugNameAssign.operator_ = opToken.type_;
+                (exprNode + level)->U.AugNameAssign.value_ = expr_;
+                (exprNode + level)->type_ = VAugAssign;
 
                 return (exprNode + level);
 
@@ -738,8 +773,6 @@ public:
 
         (exprNode + level)->U.Return.expr_ = expr_;
         (exprNode + level)->type_ = VReturn;
-
-        //(exprNode + level)->func = &Parser::return_intr;
 
         return (exprNode + level);
     }
@@ -1422,7 +1455,7 @@ public:
     //    std::wcout << result.token.value << std::endl;
     //}
 
-    std::map<STR, ExprNode*> namesTable;
+    std::map<NUM, AlifObj> namesTable;
     
     AlifObj* visit(ExprNode* _node) {
 
@@ -1467,7 +1500,54 @@ public:
                     left->A.Number.sub_(right);
                 }
             }
+            else if (_node->U.BinaryOp.operator_ == TTmultiply)
+            {
+                if (left->type_ == TTnumber)
+                {
+                    left->A.Number.mul_(right);
+                }
+            }
+            else if (_node->U.BinaryOp.operator_ == TTdivide)
+            {
+                if (left->type_ == TTnumber)
+                {
+                    left->A.Number.div_(right);
+                }
+            }
+            else if (_node->U.BinaryOp.operator_ == TTremain)
+            {
+                if (left->type_ == TTnumber and left->A.Number.kind == TTinteger)
+                {
+                    left->A.Number.rem_(right);
+                }
+            }
             return left;
+        }
+        else if (_node->type_ == VAssign)
+        {
+            for (NUM i : *_node->U.NameAssign.name_.A.Name.name_)
+            {
+                namesTable[i] = *this->visit(_node->U.NameAssign.value_);
+            }
+        }
+        else if (_node->type_ == VAugAssign)
+        {
+            AlifObj* value = this->visit(_node->U.AugNameAssign.value_);
+            AlifObj name = namesTable[_node->U.AugNameAssign.name_.A.Name.name_->front()];
+
+            if (_node->U.AugNameAssign.operator_ == TTplusEqual)
+            {
+                if (name.type_ == TTnumber)
+                {
+                    name.A.Number.add_(value);
+                }
+                else if (name.type_ == TTstring)
+                {
+                    name.A.String.add_(value);
+                }
+            }
+            value->A.Number.value_ = name.A.Number.value_;
+            return value;
         }
         else if (_node->type_ == VReturn)
         {

@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
             // المعرب اللغوي
             /////////////////////////////////////////////////////////////////
 
-            std::wstring fileName = L"AlifCode.txt";
+            std::wstring fileName = L"AlifCode.Alif5";
             Lexer lexer(fileName, input_);
             lexer.make_token();
             //lexer.print();
@@ -72,7 +72,6 @@ int main(int argc, char* argv[])
 
             // المحلل اللغوي
             /////////////////////////////////////////////////////////////////
-            
 
             Parser parser = Parser(&lexer.tokens_, fileName, input_);
 

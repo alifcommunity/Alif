@@ -51,6 +51,9 @@ enum VisitType {
     VObject,
     VUnaryOp,
     VBinOp,
+    VExprs,
+    VAssign,
+    VAugAssign,
     VReturn,
 };
 
