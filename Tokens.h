@@ -6,7 +6,10 @@
 enum TokenType {
     TTinteger, // Integer
     TTfloat, // Float
+    
     TTnumber, // Number
+    TTlist, // List
+    
     TTstring, // String
     TTname, // Name
     TTplus, // Plus
@@ -49,6 +52,7 @@ enum TokenType {
 
 enum VisitType {
     VObject,
+    VList,
     VUnaryOp,
     VBinOp,
     VExprs,

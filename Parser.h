@@ -116,6 +116,7 @@ struct AlifObj
 
         struct {
             std::vector<ExprNode*>* list_;
+            std::vector<AlifObj*>* objList;
 
             std::vector<ExprNode*>* get_element() {
 
@@ -255,10 +256,16 @@ public:
         do {
             ExprNode* result = this->assignment();
             AlifObj* res = this->visit(result);
-
             this->level = 5500;
             this->advance();
-            prnt(res->A.Number.value_);
+
+            for (AlifObj* obj : *namesTable[1].A.List.objList)
+            {
+                prnt(obj->A.Number.value_);
+            } // for print list only
+
+            //prnt(res->A.Number.value_);
+
         } while (currentToken.type_ != TTendOfFile);
 
     }
@@ -359,8 +366,7 @@ public:
 
     ExprNode* list_expr() 
     {
-        Token token = this->currentToken;
-        std::vector<ExprNode*>* nodeElement = {};
+        std::vector<ExprNode*>* nodeElement = new std::vector<ExprNode*>;
 
         if (this->currentToken.type_ == TTrSquare)
         {
@@ -368,17 +374,25 @@ public:
         }
         else
         {
-            nodeElement->push_back(this->expression());
+            do {
+                this->advance();
+                nodeElement->push_back(this->expression());
+
+            } while (this->currentToken.type_ == TTcomma);
 
             if (this->currentToken.type_ != TTrSquare)
             {
                 prnt(SyntaxError(this->currentToken.positionStart, this->currentToken.positionEnd, L"لم يتم إغلاق قوس المصفوفة", fileName, input_).print_());
                 exit(0);
             }
+            this->advance();
         }
 
+        level--;
+        (exprNode + level)->U.Object.value_.type_ = TTlist;
         (exprNode + level)->U.Object.value_.A.List.list_ = nodeElement;
-        //(exprNode + level)->func = &Parser::list_intr;
+        (exprNode + level)->type_ = VList;
+
         return (exprNode + level);
 
     }
@@ -632,7 +646,6 @@ public:
             (exprNode + level)->U.BinaryOp.keyword_ = opToken.val.keywordType;
             (exprNode + level)->U.BinaryOp.left_ = left;
             (exprNode + level)->type_ = VBinOp;
-            //(exprNode + level)->func = &Parser::binOp_intr;
 
             left = (exprNode + level);
             return left;
@@ -679,7 +692,7 @@ public:
 
         if (this->currentToken.type_ == TTcomma)
         {
-            std::vector<ExprNode*>* exprs_ = {};
+            std::vector<ExprNode*>* exprs_ = new std::vector<ExprNode*>;
 
             exprs_->push_back(expr_);
             do
@@ -692,7 +705,8 @@ public:
             level--;
         
             (exprNode + level)->U.Object.value_.A.List.list_ = exprs_; 
-            //(exprNode + level)->func = &Parser::list_intr;
+            (exprNode + level)->type_ = VList;
+
             return (exprNode + level);
         }
         return expr_;
@@ -730,7 +744,7 @@ public:
 
                 }
 
-                ExprNode* expr_ = this->expressions();
+                ExprNode* expr_ = this->expression();
                 level--;
 
                 (exprNode + level)->U.NameAssign.name_.A.Name.name_ = names_;
@@ -1463,6 +1477,15 @@ public:
         {
             return &_node->U.Object.value_;
         }
+        else if (_node->type_ == VList)
+        {
+            _node->U.Object.value_.A.List.objList = new std::vector<AlifObj*>;
+            for (ExprNode* obj : *_node->U.Object.value_.A.List.list_)
+            {
+                _node->U.Object.value_.A.List.objList->push_back(this->visit(obj));
+            };
+            return &_node->U.Object.value_;
+        }
         else if (_node->type_ == VUnaryOp)
         {
             AlifObj* right = this->visit(_node->U.UnaryOp.right_);
@@ -1546,8 +1569,7 @@ public:
                     name.A.String.add_(value);
                 }
             }
-            value->A.Number.value_ = name.A.Number.value_;
-            return value;
+            return &name;
         }
         else if (_node->type_ == VReturn)
         {
