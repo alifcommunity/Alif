@@ -317,7 +317,8 @@ public:
     STR input_;
 
     unsigned int level = 5500;
-    ExprNode* exprNode = (ExprNode*)malloc(level * 133);
+    ExprNode* exprNode = (ExprNode*)malloc(level * sizeof(struct ExprNode));
+    //ExprNode* exprNode = (ExprNode*)malloc(level * 133);
     //StmtsNode* stmtsNode = (StmtsNode*)malloc(level * 33);
     //std::vector<StmtsNode> list;
 
@@ -354,7 +355,7 @@ public:
     {
         ExprNode* result = nullptr;
         AlifObj* res = nullptr;
-        int counter = 1; // for list names
+                
         do {
             result = this->assignment();
             res = this->visit(result);
@@ -362,14 +363,13 @@ public:
             this->advance();
 
             STR lst = L"[";
-            for (AlifObj* obj : *namesTable[counter].A.List.objList)
+            for (AlifObj* obj : *namesTable[result->U.NameAccess.name_.A.Name.name_->front()].A.List.objList)
             {
                 lst.append(std::to_wstring((int)obj->A.Number.value_));
                 lst.append(L", ");
             } // for print list only
             lst.replace(lst.length() - 2, lst.length(), L"]");
             prnt(lst);
-            counter++;
 
         } while (currentToken.type_ != TTendOfFile);
 
