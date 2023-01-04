@@ -354,16 +354,22 @@ public:
     {
         ExprNode* result = nullptr;
         AlifObj* res = nullptr;
+        int counter = 1; // for list names
         do {
             result = this->assignment();
             res = this->visit(result);
             this->level = 5500;
             this->advance();
 
-            //for (AlifObj* obj : *namesTable[1].A.List.objList)
-            //{
-            //    prnt(obj->A.Number.value_);
-            //} // for print list only
+            STR lst = L"[";
+            for (AlifObj* obj : *namesTable[counter].A.List.objList)
+            {
+                lst.append(std::to_wstring((int)obj->A.Number.value_));
+                lst.append(L", ");
+            } // for print list only
+            lst.replace(lst.length() - 2, lst.length(), L"]");
+            prnt(lst);
+            counter++;
 
         } while (currentToken.type_ != TTendOfFile);
 
