@@ -1253,122 +1253,12 @@ public:
     //    }
     //}
 
-
-    //void binary_operation(void(Parser::* funcL)(), TokenType fop, TokenType sop, void(Parser::* funcR)()) {
-    //    Node left;
-
-    //    (this->*funcL)();
-    //    left = node;
-
-    //    while (this->currentToken.type == fop or this->currentToken.type == sop) {
-    //        Token opToken = this->currentToken;
-
-    //        this->advance();
-    //        (this->*funcR)();
-
-    //        Node right = node;
-
-    //        left = Node(&Parser::binary_op_interprete, opToken, std::make_shared<Node>(left), std::make_shared<Node>(right));
-    //    }
-    //    node = left;
-    //}
-
     //// المفسر اللغوي
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //Node result;
     //bool return_ = false;
     //std::map<std::wstring, void(Parser::*)(Node)> buildinFunction{{L"اطبع", &Parser::print}};
-    //
-    //void unary_op_interprete(Node node)
-    //{
-    //    (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
-    //
-    //    if (node.token.type == plusT)
-    //    {
-    //        result.token.value = std::to_wstring(std::stof(result.token.value));
-    //    }
-    //    else if (node.token.type == minusT)
-    //    {
-    //        result.token.value = std::to_wstring(-1 * std::stof(result.token.value));
-    //    }
-    //    else
-    //    {
-    //        if (result.token.value == L"0")
-    //        {
-    //            result.token.value = L"1";
-    //        }
-    //        else
-    //        {
-    //            result.token.value = L"0";
-    //        }
-    //    }
-    //
-    //}
-    //
-    //void compare_op_interprete(Node node)
-    //{
-    //    (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
-    //    Node left = result;
-    //    (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
-    //    Node right = result;
-    //    Node temp = Node(nullptr, Token());
-    //
-    //    if (node.token.type == equalEqualT)
-    //    {
-    //        temp.token.value = std::to_wstring(left.token.value == right.token.value);
-    //    }
-    //    else if (node.token.type == notEqualT)
-    //    {
-    //        temp.token.value = std::to_wstring(left.token.value != right.token.value);
-    //    }
-    //    else if (node.token.type == lessThanT)
-    //    {
-    //        temp.token.value = std::to_wstring(std::stof(left.token.value) < std::stof(right.token.value));
-    //    }
-    //    else if (node.token.type == greaterThanT)
-    //    {
-    //        temp.token.value = std::to_wstring(std::stof(left.token.value) > std::stof(right.token.value));
-    //    }
-    //    else if (node.token.type == lessThanEqualT)
-    //    {
-    //        temp.token.value = std::to_wstring(std::stof(left.token.value) <= std::stof(right.token.value));
-    //    }
-    //    else if (node.token.type == greaterThanEqualT)
-    //    {
-    //        temp.token.value = std::to_wstring(std::stof(left.token.value) >= std::stof(right.token.value));
-    //    }
-    //    result = temp;
-    //}
-    //
-    //
-    //void expreesion_interprete(Node node)
-    //{
-    //
-    //    (this->*(node.left->right->func))(*node.left->right); // visit (node.left->func) and pass (node.left) as parameter node
-    //    Node condetion = result;
-    //
-    //    if (condetion.token.value == L"1")
-    //    {
-    //        (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
-    //    }
-    //    else
-    //    {
-    //        (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
-    //    }
-    //}
-    //
-    //void var_assign_interpreter(Node node)
-    //{
-    //    (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
-    //    Node temp = result;
-    //    namesTable[node.token.value] = temp;
-    //}
-    //
-    //void var_access_interperte(Node node)
-    //{
-    //    result = namesTable[node.token.value];
-    //}
     //
     //void return_var_assign(Node node)
     //{
