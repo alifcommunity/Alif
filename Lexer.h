@@ -266,29 +266,11 @@ public:
 
         if (keywords_.find(nameString) != keywords_.end())
         {
-            if (this->namesAlter.find(nameString) != namesAlter.end())
-            {
-                this->tokens_.push_back(Token(positionStart, this->position_, TTkeyword, this->namesAlter[nameString]));
-            }
-            else
-            {
-                name++;
-                this->namesAlter[nameString] = name;
-                this->tokens_.push_back(Token(positionStart, this->position_, TTkeyword, this->name));
-            }
+            this->tokens_.push_back(Token(positionStart, this->position_, TTkeyword, keywords_[nameString]));
         }
         else if (buildInFunctions.find(nameString) != buildInFunctions.end())
         {
-            if (this->namesAlter.find(nameString) != namesAlter.end())
-            {
-                this->tokens_.push_back(Token(positionStart, this->position_, TTbuildInFunc, this->namesAlter[nameString]));
-            }
-            else
-            {
-                name++;
-                this->namesAlter[nameString] = name;
-                this->tokens_.push_back(Token(positionStart, this->position_, TTbuildInFunc, this->name));
-            }
+            this->tokens_.push_back(Token(positionStart, this->position_, TTbuildInFunc, buildInFunctions[nameString]));
         }
         else if (this->namesAlter.find(nameString) != namesAlter.end())
         {

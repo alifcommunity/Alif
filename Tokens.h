@@ -6,6 +6,10 @@
 enum TokenType {
     TTinteger, // Integer
     TTfloat, // Float
+    
+    TTnumber, // Number
+    TTlist, // List
+    
     TTstring, // String
     TTname, // Name
     TTplus, // Plus
@@ -37,7 +41,6 @@ enum TokenType {
     TTcolon, // Colon
     TTarrow, // Arrow
     TTnewline, // NewLine
-    //TTtab, // Tab
     TTindent, // INDENT
     TTdedent, // DEDENT
     TTdot, // Dot
@@ -46,6 +49,25 @@ enum TokenType {
     TTkeyword, // Keyword
     TTnone, // None
 };
+
+enum VisitType {
+    VObject,
+    VList,
+    VUnaryOp,
+    VBinOp,
+    VExpr,
+    VExprs,
+    VAccess,
+    VAssign,
+    VAugAssign,
+    VReturn,
+};
+
+//enum Context {
+//    Set,
+//    Get,
+//    Del,
+//};
 
 enum KeywordType {
     Pass,
@@ -75,6 +97,7 @@ enum BuildInFuncType {
     Print,
 };
 
+
 std::map<STR, BuildInFuncType> buildInFunctions = { {L"اطبع", Print} };
 std::map<STR, KeywordType> keywords_ = { {L"مرر", Pass}, {L"توقف", Stop}, {L"استمر", Continue}, {L"حذف", Delete}, {L"من", From}, {L"استورد", Import} , {L"اذا", If}, {L"واذا", Elseif}, {L"والا", Else}, {L"بينما", While}, {L"لاجل", For}, {L"في", In}, {L"ارجع", Return}, {L"دالة", Function}, {L"صنف", Class}, {L"او", Or}, {L"و", And}, {L"ليس", Not}, {L"صح", True}, {L"خطا", False}, {L"عدم", None} };
 
@@ -90,6 +113,8 @@ public:
         STR* strVal;
         NUM numVal;
     }val{};
+
+    Token(){}
 
     Token(Position _positionStart, Position _positionEnd, TokenType _type) {
         this->positionStart = _positionStart;
