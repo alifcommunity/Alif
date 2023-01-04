@@ -30,6 +30,11 @@ struct AlifObj
                 this->value_ = this->value_ and _other->A.Boolean.value_;
             }
 
+            void not_()
+            {
+                this->value_ = not this->value_;
+            }
+
         }Boolean;
 
         struct : Boolean_{
@@ -107,6 +112,78 @@ struct AlifObj
                 else
                 {
                     prnt(L"int pow_ error");
+                }
+            }
+
+            void equalE_(AlifObj* _other)
+            {
+                if (_other->type_ == TTnumber)
+                {
+                    this->value_ = this->value_ == _other->A.Number.value_;
+                }
+                else
+                {
+                    prnt(L"int equalE_ error");
+                }
+            }
+
+            void notE_(AlifObj* _other)
+            {
+                if (_other->type_ == TTnumber)
+                {
+                    this->value_ = this->value_ != _other->A.Number.value_;
+                }
+                else
+                {
+                    prnt(L"int notE_ error");
+                }
+            }
+
+            void greaterT_(AlifObj* _other)
+            {
+                if (_other->type_ == TTnumber)
+                {
+                    this->value_ = this->value_ > _other->A.Number.value_;
+                }
+                else
+                {
+                    prnt(L"int greaterT_ error");
+                }
+            }
+
+            void lessT_(AlifObj* _other)
+            {
+                if (_other->type_ == TTnumber)
+                {
+                    this->value_ = this->value_ < _other->A.Number.value_;
+                }
+                else
+                {
+                    prnt(L"int lessT_ error");
+                }
+            }
+
+            void greaterTE_(AlifObj* _other)
+            {
+                if (_other->type_ == TTnumber)
+                {
+                    this->value_ = this->value_ >= _other->A.Number.value_;
+                }
+                else
+                {
+                    prnt(L"int greaterTE_ error");
+                }
+            }
+
+            void lessTE_(AlifObj* _other)
+            {
+                if (_other->type_ == TTnumber)
+                {
+                    this->value_ = this->value_ <= _other->A.Number.value_;
+                }
+                else
+                {
+                    prnt(L"int lessTE_ error");
                 }
             }
 
@@ -290,7 +367,8 @@ public:
 
         } while (currentToken.type_ != TTendOfFile);
 
-        prnt(res->A.Number.value_);
+        //prnt(res->A.Number.value_);
+        //prnt(namesTable[3].A.Number.value_);
 
     }
 
@@ -316,7 +394,7 @@ public:
                 this->advance();
                 (exprNode + level)->U.Object.value_.A.Boolean.Kkind_ = True;
                 (exprNode + level)->U.Object.value_.A.Boolean.value_ = 1;
-                //(exprNode + level)->func = &Parser::logic_intr;
+                (exprNode + level)->type_ = VObject;
 
                 return (exprNode + level);
             }
@@ -325,7 +403,7 @@ public:
                 this->advance();
                 (exprNode + level)->U.Object.value_.A.Boolean.Kkind_ = False;
                 (exprNode + level)->U.Object.value_.A.Boolean.value_ = 0;
-                //(exprNode + level)->func = &Parser::logic_intr;
+                (exprNode + level)->type_ = VObject;
 
                 return (exprNode + level);
             }
@@ -334,7 +412,7 @@ public:
                 this->advance();
                 (exprNode + level)->U.Object.value_.type_ = TTnone;
                 (exprNode + level)->U.Object.value_.A.None.kind_ = None;
-                //(exprNode + level)->func = &Parser::none_intr;
+                (exprNode + level)->type_ = VObject;
 
                 return (exprNode + level);
             }
@@ -532,7 +610,6 @@ public:
             (exprNode + level)->U.UnaryOp.operator_ = opToken.type_;
             (exprNode + level)->U.UnaryOp.right_ = this->factor();
             (exprNode + level)->type_ = VUnaryOp;
-            //(exprNode + level)->func = &Parser::unaryOp_intr;
 
             return (exprNode + level);
         }
@@ -554,7 +631,6 @@ public:
             (exprNode + level)->U.BinaryOp.operator_ = opToken.type_;
             (exprNode + level)->U.BinaryOp.left_ = left;
             (exprNode + level)->type_ = VBinOp;
-            //(exprNode + level)->func = &Parser::binOp_intr;
 
             left = (exprNode + level);
             return left;
@@ -577,7 +653,6 @@ public:
             (exprNode + level)->U.BinaryOp.operator_ = opToken.type_;
             (exprNode + level)->U.BinaryOp.left_ = left;
             (exprNode + level)->type_ = VBinOp;
-            //(exprNode + level)->func = &Parser::binOp_intr;
 
             left = (exprNode + level);
             return left;
@@ -600,7 +675,6 @@ public:
             (exprNode + level)->U.BinaryOp.operator_ = opToken.type_;
             (exprNode + level)->U.BinaryOp.left_ = left;
             (exprNode + level)->type_ = VBinOp;
-            //(exprNode + level)->func = &Parser::binOp_intr;
 
             left = (exprNode + level);
             return left;
@@ -623,7 +697,6 @@ public:
             (exprNode + level)->U.UnaryOp.operator_ = opToken.type_;
             (exprNode + level)->U.UnaryOp.keyword_ = opToken.val.keywordType;
             (exprNode + level)->type_ = VUnaryOp;
-            //(exprNode + level)->func = &Parser::unaryOp_intr;
 
             return (exprNode + level);    
         }
@@ -647,7 +720,6 @@ public:
             (exprNode + level)->U.BinaryOp.keyword_ = opToken.val.keywordType;
             (exprNode + level)->U.BinaryOp.left_ = left;
             (exprNode + level)->type_ = VBinOp;
-            //(exprNode + level)->func = &Parser::binOp_intr;
 
             left = (exprNode + level);
             return left;
@@ -689,7 +761,7 @@ public:
             this->advance();
             ExprNode* condetion = this->disjuction();
             
-            if (this->currentToken.type_ == TTkeyword and this->currentToken.val.keywordType == Elseif)
+            if (this->currentToken.type_ == TTkeyword and this->currentToken.val.keywordType == Else)
             {
                 this->advance();
                 ExprNode* elseExpr = this->expression();
@@ -1206,7 +1278,6 @@ public:
 
     //Node result;
     //bool return_ = false;
-    //std::map<std::wstring, Node> namesTable;
     //std::map<std::wstring, void(Parser::*)(Node)> buildinFunction{{L"اطبع", &Parser::print}};
     //
     //void unary_op_interprete(Node node)
@@ -1270,38 +1341,6 @@ public:
     //    result = temp;
     //}
     //
-    //void logic_op_interprete(Node node)
-    //{
-    //    (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
-    //    Node left = result;
-    //    (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
-    //    Node right = result;
-    //    Node temp = Node(nullptr, Token());
-    //
-    //    if (node.token.value == L"و")
-    //    {
-    //        if (left.token.value != L"0" and right.token.value != L"0")
-    //        {
-    //            temp.token.value = L"1";
-    //        }
-    //        else
-    //        {
-    //            temp.token.value = L"0";
-    //        }
-    //    }
-    //    else if (node.token.value == L"او")
-    //    {
-    //        if (left.token.value != L"0" or right.token.value != L"0")
-    //        {
-    //            temp.token.value = L"1";
-    //        }
-    //        else
-    //        {
-    //            temp.token.value = L"0";
-    //        }
-    //    }
-    //    result = temp;
-    //}
     //
     //void expreesion_interprete(Node node)
     //{
@@ -1522,13 +1561,23 @@ public:
         {
             AlifObj* right = this->visit(_node->U.UnaryOp.right_);
 
-            if (_node->U.UnaryOp.operator_ == TTplus)
+            if (_node->U.UnaryOp.operator_ != TTkeyword)
             {
-                return right;
+                if (_node->U.UnaryOp.operator_ == TTplus)
+                {
+                    return right;
+                }
+                else if (_node->U.UnaryOp.operator_ == TTminus)
+                {
+                    right->A.Number.value_ = -right->A.Number.value_;
+                }
             }
-            else if (_node->U.UnaryOp.operator_ == TTminus)
+            else
             {
-                right->A.Number.value_ = -right->A.Number.value_;
+                if (_node->U.UnaryOp.keyword_ == Not)
+                { 
+                    right->A.Boolean.not_();
+                }
             }
             return right;
         }
@@ -1585,6 +1634,49 @@ public:
                         left->A.Number.pow_(right);
                     }
                 }
+
+                else if (_node->U.BinaryOp.operator_ == TTequalEqual)
+                {
+                    if (left->type_ == TTnumber)
+                    {
+                        left->A.Number.equalE_(right);
+                    }
+                }
+                else if (_node->U.BinaryOp.operator_ == TTnotEqual)
+                {
+                    if (left->type_ == TTnumber)
+                    {
+                        left->A.Number.notE_(right);
+                    }
+                }
+                else if (_node->U.BinaryOp.operator_ == TTgreaterThan)
+                {
+                    if (left->type_ == TTnumber)
+                    {
+                        left->A.Number.greaterT_(right);
+                    }
+                }
+                else if (_node->U.BinaryOp.operator_ == TTlessThan)
+                {
+                    if (left->type_ == TTnumber)
+                    {
+                        left->A.Number.lessT_(right);
+                    }
+                }
+                else if (_node->U.BinaryOp.operator_ == TTgreaterThanEqual)
+                {
+                    if (left->type_ == TTnumber)
+                    {
+                        left->A.Number.greaterTE_(right);
+                    }
+                }
+                else if (_node->U.BinaryOp.operator_ == TTlessThanEqual)
+                {
+                    if (left->type_ == TTnumber)
+                    {
+                        left->A.Number.lessTE_(right);
+                    }
+                }
             }
             else
             {
@@ -1606,7 +1698,7 @@ public:
             if (_node->U.Expr.condetion_ != nullptr)
             {
                 AlifObj* condetion_ = this->visit(_node->U.Expr.condetion_);
-                if (condetion_ != nullptr)
+                if (condetion_->A.Boolean.value_ != 0)
                 {
                     return expr_;
                 }
