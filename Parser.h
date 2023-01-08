@@ -206,7 +206,6 @@ struct AlifObj
 
         struct {
             NUM name_;
-            std::vector<NUM>* names_;
             //Context ctx_;
         }Name;
 
@@ -238,7 +237,7 @@ struct ExprNode
     union UExprNode
     {
         struct {
-            AlifObj value_;
+            AlifObj* value_;
         }Object;
 
         struct {
@@ -255,18 +254,18 @@ struct ExprNode
         }UnaryOp;
 
         struct {
-            AlifObj name_;
+            std::vector<AlifObj*>* name_;
             ExprNode* value_;
         }NameAssign;
 
         struct {
-            AlifObj name_;
+            AlifObj* name_;
             TokenType operator_;
             ExprNode* value_;
         }AugNameAssign;
 
         struct {
-            AlifObj name_;
+            AlifObj* name_;
         }NameAccess;
 
         struct {
@@ -383,13 +382,15 @@ public:
     ExprNode* atom() {
 
         Token token = this->currentToken;
+        AlifObj* obj_ = new AlifObj;
         level--;
 
         if (token.type_ == TTname)
         {
             
             this->advance();
-            (exprNode + level)->U.NameAccess.name_.A.Name.name_ = token.val.numVal;
+            obj_->A.Name.name_ = token.val.numVal;
+            (exprNode + level)->U.NameAccess.name_ = obj_;
             (exprNode + level)->type_ = VAccess;
             return (exprNode + level);
         }
@@ -397,8 +398,9 @@ public:
             if (token.val.keywordType == True)
             {
                 this->advance();
-                (exprNode + level)->U.Object.value_.A.Boolean.Kkind_ = True;
-                (exprNode + level)->U.Object.value_.A.Boolean.value_ = 1;
+                obj_->A.Boolean.Kkind_ = True;
+                obj_->A.Boolean.value_ = 1;
+                (exprNode + level)->U.Object.value_ = obj_;
                 (exprNode + level)->type_ = VObject;
 
                 return (exprNode + level);
@@ -406,8 +408,9 @@ public:
             else if (token.val.keywordType == False)
             {
                 this->advance();
-                (exprNode + level)->U.Object.value_.A.Boolean.Kkind_ = False;
-                (exprNode + level)->U.Object.value_.A.Boolean.value_ = 0;
+                obj_->A.Boolean.Kkind_ = False;
+                obj_->A.Boolean.value_ = 0;
+                (exprNode + level)->U.Object.value_ = obj_;
                 (exprNode + level)->type_ = VObject;
 
                 return (exprNode + level);
@@ -415,8 +418,9 @@ public:
             else if (token.val.keywordType == None)
             {
                 this->advance();
-                (exprNode + level)->U.Object.value_.type_ = TTnone;
-                (exprNode + level)->U.Object.value_.A.None.kind_ = None;
+                obj_->type_ = TTnone;
+                obj_->A.None.kind_ = None;
+                (exprNode + level)->U.Object.value_ = obj_;
                 (exprNode + level)->type_ = VObject;
 
                 return (exprNode + level);
@@ -425,32 +429,35 @@ public:
         else if (token.type_ == TTinteger)
         {
             this->advance();
-            (exprNode + level)->U.Object.value_.type_ = TTnumber;
-            (exprNode + level)->U.Object.value_.A.Number.Tkind_ = token.type_;
-            (exprNode + level)->U.Object.value_.A.Number.value_ = token.val.numVal;
+            obj_->type_ = TTnumber;
+            obj_->A.Number.Tkind_ = token.type_;
+            obj_->A.Number.value_ = token.val.numVal;
+            (exprNode + level)->U.Object.value_ = obj_;
             (exprNode + level)->type_ = VObject;
             return (exprNode + level);
         }
         else if (token.type_ == TTfloat)
         {
             this->advance();
-            (exprNode + level)->U.Object.value_.type_ = TTnumber;
-            (exprNode + level)->U.Object.value_.A.Number.Tkind_ = token.type_;
-            (exprNode + level)->U.Object.value_.A.Number.value_ = token.val.numVal;
+            obj_->type_ = TTnumber;
+            obj_->A.Number.Tkind_ = token.type_;
+            obj_->A.Number.value_ = token.val.numVal;
+            (exprNode + level)->U.Object.value_ = obj_;
             (exprNode + level)->type_ = VObject;
             return (exprNode + level);
         }
         else if (token.type_ == TTstring)
         {
             this->advance();
-            (exprNode + level)->U.Object.value_.type_ = token.type_;
-            (exprNode + level)->U.Object.value_.A.String.value_ = token.val.strVal;
+            obj_->type_ = token.type_;
+            obj_->A.String.value_ = token.val.strVal;
+            (exprNode + level)->U.Object.value_ = obj_;
             (exprNode + level)->type_ = VObject;
             return (exprNode + level);
         }
         else if (token.type_ == TTlSquare)
         {
-            return this->list_expr();
+            return this->list_expr(obj_);
         }
         else if (this->currentToken.type_ == TTlParenthesis)
         {
@@ -473,7 +480,7 @@ public:
         }
     }
 
-    ExprNode* list_expr() 
+    ExprNode* list_expr(AlifObj* _obj) 
     {
         std::vector<ExprNode*>* nodeElement = new std::vector<ExprNode*>;
 
@@ -498,8 +505,10 @@ public:
         }
 
         level--;
-        (exprNode + level)->U.Object.value_.type_ = TTlist;
-        (exprNode + level)->U.Object.value_.A.List.list_ = nodeElement;
+
+        _obj->type_ = TTlist;
+        _obj->A.List.list_ = nodeElement;
+        (exprNode + level)->U.Object.value_ = _obj;
         (exprNode + level)->type_ = VList;
 
         return (exprNode + level);
@@ -797,6 +806,7 @@ public:
         if (this->currentToken.type_ == TTcomma)
         {
             std::vector<ExprNode*>* exprs_ = new std::vector<ExprNode*>;
+            AlifObj* obj_ = new AlifObj;
 
             exprs_->push_back(expr_);
             do
@@ -808,7 +818,8 @@ public:
 
             level--;
         
-            (exprNode + level)->U.Object.value_.A.List.list_ = exprs_; 
+            obj_->A.List.list_ = exprs_;
+            (exprNode + level)->U.Object.value_ = obj_; 
             (exprNode + level)->type_ = VList;
 
             return (exprNode + level);
@@ -820,23 +831,26 @@ public:
 
         if (this->currentToken.type_ == TTname)
         {
-            std::vector<NUM>* names_ = new std::vector<NUM>;
+            std::vector<AlifObj*>* names_ = new std::vector<AlifObj*>;
 
-            Token AugVarName = this->currentToken;
-            this->advance();
+            //Token AugVarName = this->currentToken;
+            ExprNode* name_ = this->atom();
 
             if (this->currentToken.type_ == TTequal)
             {
-                names_->push_back(AugVarName.val.numVal);
+                //names_->push_back(AugVarName.val.numVal);
+                names_->push_back(name_->U.NameAccess.name_);
                 this->advance();
 
                 while (this->currentToken.type_ == TTname)
                 {
-                    AugVarName = this->currentToken;
-                    this->advance();
+                    //AugVarName = this->currentToken;
+                    name_ = this->atom();
+
                     if (this->currentToken.type_ == TTequal)
                     {
-                        names_->push_back(AugVarName.val.numVal);
+                        //names_->push_back(AugVarName.val.numVal);
+                        names_->push_back(name_->U.NameAccess.name_);
                         this->advance();
 
                     }
@@ -851,7 +865,7 @@ public:
                 ExprNode* expr_ = this->expressions();
                 level--;
 
-                (exprNode + level)->U.NameAssign.name_.A.Name.names_ = names_;
+                (exprNode + level)->U.NameAssign.name_ = names_;
                 (exprNode + level)->U.NameAssign.value_ = expr_;
                 (exprNode + level)->type_ = VAssign;
 
@@ -869,7 +883,8 @@ public:
                 ExprNode* expr_ = this->expression();
                 level--;
 
-                (exprNode + level)->U.AugNameAssign.name_.A.Name.name_ = AugVarName.val.numVal;
+                //(exprNode + level)->U.AugNameAssign.name_.A.Name.name_ = AugVarName.val.numVal;
+                (exprNode + level)->U.AugNameAssign.name_ = name_->U.NameAccess.name_;
                 (exprNode + level)->U.AugNameAssign.operator_ = opToken.type_;
                 (exprNode + level)->U.AugNameAssign.value_ = expr_;
                 (exprNode + level)->type_ = VAugAssign;
@@ -1339,22 +1354,22 @@ public:
     //    std::wcout << result.token.value << std::endl;
     //}
 
-    std::map<NUM, AlifObj> namesTable;
+    std::map<NUM, AlifObj*> namesTable;
     
     AlifObj* visit(ExprNode* _node) {
 
         if (_node->type_ == VObject)
         {
-            return &_node->U.Object.value_;
+            return _node->U.Object.value_;
         }
         else if (_node->type_ == VList)
         {
-            _node->U.Object.value_.A.List.objList = new std::vector<AlifObj*>;
-            for (ExprNode* obj : *_node->U.Object.value_.A.List.list_)
+            _node->U.Object.value_->A.List.objList = new std::vector<AlifObj*>;
+            for (ExprNode* obj : *_node->U.Object.value_->A.List.list_)
             {
-                _node->U.Object.value_.A.List.objList->push_back(this->visit(obj));
+                _node->U.Object.value_->A.List.objList->push_back(this->visit(obj));
             };
-            return &_node->U.Object.value_;
+            return _node->U.Object.value_;
         }
         else if (_node->type_ == VUnaryOp)
         {
@@ -1380,7 +1395,7 @@ public:
             }
             return right;
         }
-        else if (_node->type_ == VBinOp)
+        else if (_node->type_ == VBinOp) // خطأ : عند جمع او طرح عددين وإسنادهم الى متغير يتم تغيير الطرف اليمين مثال : ج = ب - س في هذه الحالة سيتم تغيير قيمة ب لانه مؤشر اي ستتغير القيمة الاصلية للمؤشر ب وبالتالي ستتغير كل قيم ب
         {
             AlifObj* right = this->visit(_node->U.BinaryOp.right_);
             AlifObj* left = this->visit(_node->U.BinaryOp.left_);
@@ -1510,19 +1525,19 @@ public:
         }
         else if (_node->type_ == VAssign)
         {
-            for (NUM i : *_node->U.NameAssign.name_.A.Name.names_)
+            for (AlifObj* i : *_node->U.NameAssign.name_)
             {
-                namesTable[i] = *this->visit(_node->U.NameAssign.value_);
+                namesTable[i->A.Name.name_] = this->visit(_node->U.NameAssign.value_);
             }
         }
         else if (_node->type_ == VAccess)
         {
-            return &namesTable[_node->U.NameAccess.name_.A.Name.name_];
+            return namesTable[_node->U.NameAccess.name_->A.Name.name_];
         }
         else if (_node->type_ == VAugAssign)
         {
             AlifObj* value = this->visit(_node->U.AugNameAssign.value_);
-            AlifObj* name = &namesTable[_node->U.AugNameAssign.name_.A.Name.name_];
+            AlifObj* name = namesTable[_node->U.AugNameAssign.name_->A.Name.name_];
 
             if (_node->U.AugNameAssign.operator_ == TTplusEqual)
             {
