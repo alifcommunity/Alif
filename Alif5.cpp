@@ -80,11 +80,6 @@ int main(int argc, char* argv[])
             parser.parse();
 
             std::wcout << float(clock() - start) / CLOCKS_PER_SEC << std::endl; // طباعة نتائج الوقت
-            
-            for (void* address : lexer.deleteAddresses)
-            {
-                delete address;
-            }
 
     //}
 

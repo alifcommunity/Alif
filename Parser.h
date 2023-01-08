@@ -205,7 +205,8 @@ struct AlifObj
         }String;
 
         struct {
-            std::vector<NUM>* name_;
+            NUM name_;
+            std::vector<NUM>* names_;
             //Context ctx_;
         }Name;
 
@@ -217,8 +218,8 @@ struct AlifObj
             std::vector<ExprNode*>* list_;
             std::vector<AlifObj*>* objList;
 
-            std::vector<ExprNode*>* get_element() {
-
+            std::vector<ExprNode*>* add_element(AlifObj* _obj) {
+                objList->push_back(_obj);
             }
 
         }List;
@@ -318,7 +319,6 @@ public:
 
     unsigned int level = 5500;
     ExprNode* exprNode = (ExprNode*)malloc(level * sizeof(struct ExprNode));
-    //ExprNode* exprNode = (ExprNode*)malloc(level * 133);
     //StmtsNode* stmtsNode = (StmtsNode*)malloc(level * 33);
     //std::vector<StmtsNode> list;
 
@@ -362,18 +362,18 @@ public:
             this->level = 5500;
             this->advance();
 
-            STR lst = L"[";
-            for (AlifObj* obj : *namesTable[result->U.NameAccess.name_.A.Name.name_->front()].A.List.objList)
-            {
-                lst.append(std::to_wstring((int)obj->A.Number.value_));
-                lst.append(L", ");
-            } // for print list only
-            lst.replace(lst.length() - 2, lst.length(), L"]");
-            prnt(lst);
+            //STR lst = L"[";
+            //for (AlifObj* obj : *namesTable[result->U.NameAccess.name_.A.Name.name_].A.List.objList)
+            //{
+            //    lst.append(std::to_wstring((int)obj->A.Number.value_));
+            //    lst.append(L", ");
+            //} // for print list only
+            //lst.replace(lst.length() - 2, lst.length(), L"]");
+            //prnt(lst);
+            prnt(res->A.Number.value_);
 
         } while (currentToken.type_ != TTendOfFile);
 
-        //prnt(res->A.Number.value_);
         //prnt(namesTable[3].A.Number.value_);
 
     }
@@ -389,8 +389,7 @@ public:
         {
             
             this->advance();
-            (exprNode + level)->U.NameAccess.name_.A.Name.name_ = new std::vector<NUM>;
-            (exprNode + level)->U.NameAccess.name_.A.Name.name_->push_back(token.val.numVal);
+            (exprNode + level)->U.NameAccess.name_.A.Name.name_ = token.val.numVal;
             (exprNode + level)->type_ = VAccess;
             return (exprNode + level);
         }
@@ -852,7 +851,7 @@ public:
                 ExprNode* expr_ = this->expressions();
                 level--;
 
-                (exprNode + level)->U.NameAssign.name_.A.Name.name_ = names_;
+                (exprNode + level)->U.NameAssign.name_.A.Name.names_ = names_;
                 (exprNode + level)->U.NameAssign.value_ = expr_;
                 (exprNode + level)->type_ = VAssign;
 
@@ -870,7 +869,7 @@ public:
                 ExprNode* expr_ = this->expression();
                 level--;
 
-                (exprNode + level)->U.AugNameAssign.name_.A.Name.name_->push_back(AugVarName.val.numVal);
+                (exprNode + level)->U.AugNameAssign.name_.A.Name.name_ = AugVarName.val.numVal;
                 (exprNode + level)->U.AugNameAssign.operator_ = opToken.type_;
                 (exprNode + level)->U.AugNameAssign.value_ = expr_;
                 (exprNode + level)->type_ = VAugAssign;
@@ -1266,109 +1265,13 @@ public:
     //bool return_ = false;
     //std::map<std::wstring, void(Parser::*)(Node)> buildinFunction{{L"اطبع", &Parser::print}};
     //
-    //void return_var_assign(Node node)
-    //{
-    //    (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
-    //    Node right = result;
-    //    (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
-    //    Node left = result;
     //
-    //    if (node.token.type == plusEqualT)
-    //    {
-    //        if (right.token.type == integerT and left.token.type == integerT) 
-    //        {
-    //            right.token.value = std::to_wstring(std::stoi(left.token.value) + std::stoi(right.token.value));
-    //        }
-    //        else if (right.token.type == floatT or left.token.type == floatT)
-    //        {
-    //            right.token.value = std::to_wstring(std::stof(left.token.value) + std::stof(right.token.value));
-    //        }
-    //        else
-    //        {
-    //            std::wcout << "return value error" << std::endl;
-    //        }
-    //    }
-    //    else if (node.token.type == minusEqualT)
-    //    {
-    //        if (right.token.type == integerT and left.token.type == integerT)
-    //        {
-    //            right.token.value = std::to_wstring(std::stoi(left.token.value) - std::stoi(right.token.value));
-    //        }
-    //        else if (right.token.type == floatT or left.token.type == floatT)
-    //        {
-    //            right.token.value = std::to_wstring(std::stof(left.token.value) - std::stof(right.token.value));
-    //        }
-    //        else
-    //        {
-    //            std::wcout << "return value error" << std::endl;
-    //        }
-    //    }
-    //    else if (node.token.type == multiplyEqualT)
-    //    {
-    //        if (right.token.type == integerT and left.token.type == integerT)
-    //        {
-    //            right.token.value = std::to_wstring(std::stoi(left.token.value) * std::stoi(right.token.value));
-    //        }
-    //        else if (right.token.type == floatT or left.token.type == floatT)
-    //        {
-    //            right.token.value = std::to_wstring(std::stof(left.token.value) * std::stof(right.token.value));
-    //        }
-    //        else
-    //        {
-    //            std::wcout << "return value error" << std::endl;
-    //        }
-    //    }
-    //    else if (node.token.type == divideEqualT)
-    //    {
-    //        if (right.token.type == integerT and left.token.type == integerT)
-    //        {
-    //            right.token.value = std::to_wstring(std::stoi(left.token.value) / std::stoi(right.token.value));
-    //        }
-    //        else if (right.token.type == floatT or left.token.type == floatT)
-    //        {
-    //            right.token.value = std::to_wstring(std::stof(left.token.value) / std::stof(right.token.value));
-    //        }
-    //        else
-    //        {
-    //            std::wcout << "return value error" << std::endl;
-    //        }
-    //    }
-    //    else if (node.token.type == powerEqualT)
-    //    {
-    //        if (right.token.type == integerT and left.token.type == integerT)
-    //        {
-    //            right.token.value = std::to_wstring(pow(std::stoi(left.token.value), std::stoi(right.token.value)));
-    //        }
-    //        else if (right.token.type == floatT or left.token.type == floatT)
-    //        {
-    //            right.token.value = std::to_wstring(pow(std::stof(left.token.value), std::stof(right.token.value)));
-    //        }
-    //        else
-    //        {
-    //            std::wcout << "return value error" << std::endl;
-    //        }
-    //    }
-    //
-    //    namesTable[node.right->token.value] = right;
-    //
-    //}
     //
     //void function_define_interprete(Node node)
     //{
     //    namesTable[node.token.value] = *node.left;
     //}
     //
-    //inline  void multi_statement_interprete(Node node)
-    //{
-    //    if (node.left->func == &Parser::multi_statement_interprete)
-    //    {
-    //        (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
-    //    }
-    //    if (!return_)
-    //    {
-    //        (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
-    //    }
-    //}
     //
     //void name_call_interpreter(Node node)
     //{
@@ -1607,32 +1510,60 @@ public:
         }
         else if (_node->type_ == VAssign)
         {
-            for (NUM i : *_node->U.NameAssign.name_.A.Name.name_)
+            for (NUM i : *_node->U.NameAssign.name_.A.Name.names_)
             {
                 namesTable[i] = *this->visit(_node->U.NameAssign.value_);
             }
         }
         else if (_node->type_ == VAccess)
         {
-            return &namesTable[_node->U.NameAccess.name_.A.Name.name_->front()]; // ملاحظة : دائما يتم الوصول الى اسم واحد لذلك يفضل عمل متغير يحمل اسم واحد للوصول اليه
+            return &namesTable[_node->U.NameAccess.name_.A.Name.name_]; // ملاحظة : دائما يتم الوصول الى اسم واحد لذلك يفضل عمل متغير يحمل اسم واحد للوصول اليه
         }
         else if (_node->type_ == VAugAssign)
         {
             AlifObj* value = this->visit(_node->U.AugNameAssign.value_);
-            AlifObj name = namesTable[_node->U.AugNameAssign.name_.A.Name.name_->front()];
+            AlifObj* name = &namesTable[_node->U.AugNameAssign.name_.A.Name.name_];
 
             if (_node->U.AugNameAssign.operator_ == TTplusEqual)
             {
-                if (name.type_ == TTnumber)
+                if (name->type_ == TTnumber)
                 {
-                    name.A.Number.add_(value);
+                    name->A.Number.add_(value);
                 }
-                else if (name.type_ == TTstring)
+                else if (name->type_ == TTstring)
                 {
-                    name.A.String.add_(value);
+                    name->A.String.add_(value);
                 }
             }
-            return &name;
+            else if (_node->U.AugNameAssign.operator_ == TTminusEqual)
+            {
+                if (name->type_ == TTnumber)
+                {
+                    name->A.Number.sub_(value);
+                }
+            }
+            else if (_node->U.AugNameAssign.operator_ == TTmultiplyEqual)
+            {
+                if (name->type_ == TTnumber)
+                {
+                    name->A.Number.mul_(value);
+                }
+            }
+            else if (_node->U.AugNameAssign.operator_ == TTdivideEqual)
+            {
+                if (name->type_ == TTnumber)
+                {
+                    name->A.Number.div_(value);
+                }
+            }
+            else if (_node->U.AugNameAssign.operator_ == TTremainEqual)
+            {
+                if (name->type_ == TTnumber)
+                {
+                    name->A.Number.rem_(value);
+                }
+            }
+            return name;
         }
         else if (_node->type_ == VReturn)
         {
