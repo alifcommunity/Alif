@@ -1395,10 +1395,11 @@ public:
             }
             return right;
         }
-        else if (_node->type_ == VBinOp) // خطأ : عند جمع او طرح عددين وإسنادهم الى متغير يتم تغيير الطرف اليمين مثال : ج = ب - س في هذه الحالة سيتم تغيير قيمة ب لانه مؤشر اي ستتغير القيمة الاصلية للمؤشر ب وبالتالي ستتغير كل قيم ب
+        else if (_node->type_ == VBinOp) 
         {
             AlifObj* right = this->visit(_node->U.BinaryOp.right_);
             AlifObj* left = this->visit(_node->U.BinaryOp.left_);
+            AlifObj* res = new AlifObj(*left);
 
             if (_node->U.BinaryOp.operator_ != TTkeyword)
             {
@@ -1406,46 +1407,46 @@ public:
                 {
                     if (left->type_ == TTnumber)
                     {
-                        left->A.Number.add_(right);
+                        res->A.Number.add_(right);
                     }
                     else if (left->type_ == TTstring)
                     {
-                        left->A.String.add_(right);
+                        res->A.String.add_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTminus)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        left->A.Number.sub_(right);
+                        res->A.Number.sub_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTmultiply)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        left->A.Number.mul_(right);
+                        res->A.Number.mul_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTdivide)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        left->A.Number.div_(right);
+                        res->A.Number.div_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTremain)
                 {
                     if (left->type_ == TTnumber and left->A.Number.Tkind_ == TTinteger)
                     {
-                        left->A.Number.rem_(right);
+                        res->A.Number.rem_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTpower)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        left->A.Number.pow_(right);
+                        res->A.Number.pow_(right);
                     }
                 }
 
@@ -1453,42 +1454,42 @@ public:
                 {
                     if (left->type_ == TTnumber)
                     {
-                        left->A.Number.equalE_(right);
+                        res->A.Number.equalE_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTnotEqual)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        left->A.Number.notE_(right);
+                        res->A.Number.notE_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTgreaterThan)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        left->A.Number.greaterT_(right);
+                        res->A.Number.greaterT_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTlessThan)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        left->A.Number.lessT_(right);
+                        res->A.Number.lessT_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTgreaterThanEqual)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        left->A.Number.greaterTE_(right);
+                        res->A.Number.greaterTE_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTlessThanEqual)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        left->A.Number.lessTE_(right);
+                        res->A.Number.lessTE_(right);
                     }
                 }
             }
@@ -1496,15 +1497,15 @@ public:
             {
                 if (_node->U.BinaryOp.keyword_ == Or)
                 {
-                    left->A.Boolean.or_(right);
+                    res->A.Boolean.or_(right);
                 }
                 else if (_node->U.BinaryOp.keyword_ == And)
                 {
-                    left->A.Boolean.and_(right);
+                    res->A.Boolean.and_(right);
                 }
             }
 
-            return left;
+            return res;
         }
         else if (_node->type_ == VExpr)
         {
