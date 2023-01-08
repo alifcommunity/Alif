@@ -1517,7 +1517,7 @@ public:
         }
         else if (_node->type_ == VAccess)
         {
-            return &namesTable[_node->U.NameAccess.name_.A.Name.name_]; // ملاحظة : دائما يتم الوصول الى اسم واحد لذلك يفضل عمل متغير يحمل اسم واحد للوصول اليه
+            return &namesTable[_node->U.NameAccess.name_.A.Name.name_];
         }
         else if (_node->type_ == VAugAssign)
         {
