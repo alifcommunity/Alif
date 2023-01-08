@@ -53,6 +53,7 @@ enum TokenType {
 enum VisitType {
     VObject,
     VList,
+    VCall,
     VUnaryOp,
     VBinOp,
     VExpr,

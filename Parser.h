@@ -269,8 +269,8 @@ struct ExprNode
         }NameAccess;
 
         struct {
-            ExprNode* node_;
-            ExprNode* name_;
+            //ExprNode* node_;
+            std::vector<AlifObj*>* names_;
         }Call;
 
         struct {
@@ -315,6 +315,8 @@ public:
     Token currentToken;
     STR fileName;
     STR input_;
+
+    std::vector<AlifObj*>* names_ = new std::vector<AlifObj*>;
 
     unsigned int level = 5500;
     ExprNode* exprNode = (ExprNode*)malloc(level * sizeof(struct ExprNode));
@@ -480,7 +482,7 @@ public:
         }
     }
 
-    ExprNode* list_expr(AlifObj* _obj) 
+    ExprNode* list_expr(AlifObj* _obj)
     {
         std::vector<ExprNode*>* nodeElement = new std::vector<ExprNode*>;
 
@@ -517,18 +519,26 @@ public:
 
     ExprNode* primary() {
 
+        ExprNode* atom_ = this->atom();
+        names_->push_back(atom_->U.Object.value_);
+
         if (this->currentToken.type_ == TTdot)
         {
             this->advance();
+            this->primary();
 
             level--;
 
-            (exprNode + level)->U.Call.name_ = this->atom();
-            (exprNode + level)->U.Call.node_ = this->primary();
-            //(exprNode + level)->func = &Parser::call_intr;
+            (exprNode + level)->U.Call.names_ = names_;
+            (exprNode + level)->type_ = VCall;
 
             return (exprNode + level);
         }
+        else
+        {
+            return atom_;
+        }
+
         //else if (this->currentToken.type == lParenthesisT)
         //{
         //    this->advance();
@@ -584,8 +594,6 @@ public:
         //        // error
         //    }
         //}
-
-        return this->atom();
         
     }
 
@@ -831,25 +839,21 @@ public:
 
         if (this->currentToken.type_ == TTname)
         {
-            std::vector<AlifObj*>* names_ = new std::vector<AlifObj*>;
+            std::vector<AlifObj*>* names_ = new std::vector<AlifObj*>; // يجب الاستغناء عنها لانه تم إنشاء مصفوفة اسماء عامة
 
-            //Token AugVarName = this->currentToken;
             ExprNode* name_ = this->atom();
 
             if (this->currentToken.type_ == TTequal)
             {
-                //names_->push_back(AugVarName.val.numVal);
                 names_->push_back(name_->U.NameAccess.name_);
                 this->advance();
 
                 while (this->currentToken.type_ == TTname)
                 {
-                    //AugVarName = this->currentToken;
                     name_ = this->atom();
 
                     if (this->currentToken.type_ == TTequal)
                     {
-                        //names_->push_back(AugVarName.val.numVal);
                         names_->push_back(name_->U.NameAccess.name_);
                         this->advance();
 
@@ -883,7 +887,6 @@ public:
                 ExprNode* expr_ = this->expression();
                 level--;
 
-                //(exprNode + level)->U.AugNameAssign.name_.A.Name.name_ = AugVarName.val.numVal;
                 (exprNode + level)->U.AugNameAssign.name_ = name_->U.NameAccess.name_;
                 (exprNode + level)->U.AugNameAssign.operator_ = opToken.type_;
                 (exprNode + level)->U.AugNameAssign.value_ = expr_;
