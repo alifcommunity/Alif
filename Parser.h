@@ -358,7 +358,7 @@ public:
         AlifObj* res = nullptr;
                 
         do {
-            result = this->assignment();
+            result = this->statements();
             res = this->visit(result);
             this->level = 5500;
             this->advance();
@@ -1180,110 +1180,101 @@ public:
     ////}
 
 
-    //void compound_statement() 
-    //{
-    //    if (this->currentToken.value == L"دالة")
-    //    {
-    //        this->function_defination();
-    //    }
-    //    else if (this->currentToken.value == L"لاجل")
-    //    {
-    //        this->for_statement();
-    //    }
-    //    else if (this->currentToken.value == L"بينما")
-    //    {
-    //        this->while_statement();
-    //    }
-    //    else if (this->currentToken.value == L"اذا")
-    //    {
-    //        this->if_statement();
-    //    }
-    //}
+    void compound_statement() 
+    {
+        if (this->currentToken.val.keywordType == Function)
+        {
+            this->function_defination();
+        }
+        else if (this->currentToken.val.keywordType == If)
+        {
+            this->for_statement();
+        }
+        else if (this->currentToken.val.keywordType == For)
+        {
+            this->while_statement();
+        }
+        else if (this->currentToken.val.keywordType == While)
+        {
+            this->if_statement();
+        }
+    }
 
-    //void simple_statement()
-    //{
-    //    if (this->currentToken.value == L"ارجع")
-    //    {
-    //        this->return_statement();
-    //    }
-    //    else if (this->currentToken.type == nameT)
-    //    {
-    //        this->assignment();
-    //    }
-    //}
+    void simple_statement()
+    {
+        this->assignment();
+    }
 
-    //void statement() {
-    //    if (this->currentToken.value == L"دالة" or this->currentToken.value == L"اذا" or this->currentToken.value == L"صنف" or this->currentToken.value == L"لاجل" or this->currentToken.value == L"بينما")
-    //    {
-    //        this->compound_statement();
-    //    }
-    //    else
-    //    {
-    //        this->simple_statement();
-    //    }
-    //}
+    void statement() {
+        if (this->currentToken.type_ == TTkeyword)
+        {
+            if (this->currentToken.val.keywordType == Function or this->currentToken.val.keywordType == If or this->currentToken.val.keywordType == Class or this->currentToken.val.keywordType == For or this->currentToken.val.keywordType == While)
+            {
+                this->compound_statement();
+            }
+        }
+        else
+        {
+            this->simple_statement();
+        }
+    }
 
-    //void statements() {
-    //    uint16_t tabCount = 0;
+    void statements() {
 
-    //    this->statement();
+        this->statement();
 
-    //    if (currentBlockCount != 0)
-    //    {
-    //        this->list.push_back(node);
-    //    }
+        if (currentBlockCount != 0)
+        {
+            this->list.push_back(node);
+        }
 
-    //    while (this->currentToken.type == tabT) // لتجاهل المسافة تاب بعد السطر
-    //    {
-    //        this->advance();
-    //    }
+        while (this->currentToken.type == tabT) // لتجاهل المسافة تاب بعد السطر
+        {
+            this->advance();
+        }
 
-    //    this->advance();
-    //    
-    //    while (this->currentToken.type == tabT)
-    //    {
-    //        this->advance();
-    //        tabCount++;
-    //    }
+        this->advance();
+        
+        while (this->currentToken.type == tabT)
+        {
+            this->advance();
+            tabCount++;
+        }
 
-    //    if (currentTabCount != tabCount)
-    //    {
-    //        this->deindentent();
-    //        // for i in list : node = Node(MultiStatementNode, Token(), std::make_shared<Node>(i));
-    //        std::vector<Node>::iterator listIter;
-    //        for (listIter = this->list.begin(); listIter != this->list.end(); ++listIter)
-    //        {
-    //            node = Node(&Parser::multi_statement_interprete, Token(), std::make_shared<Node>(node), std::make_shared<Node>(*listIter));
-    //        }
-    //        this->reverse(tabCount + 1);
-    //        return;
+        if (currentTabCount != tabCount)
+        {
+            this->deindentent();
+            // for i in list : node = Node(MultiStatementNode, Token(), std::make_shared<Node>(i));
+            std::vector<Node>::iterator listIter;
+            for (listIter = this->list.begin(); listIter != this->list.end(); ++listIter)
+            {
+                node = Node(&Parser::multi_statement_interprete, Token(), std::make_shared<Node>(node), std::make_shared<Node>(*listIter));
+            }
+            this->reverse(tabCount + 1);
+            return;
 
-    //    }
+        }
 
-    //    if (currentBlockCount == 0)
-    //    {
-    //        (this->*(node.func))(node); // visit (node.left->func) and pass (node.left) as parameter node
-    //    }
-    //    
+        if (currentBlockCount == 0)
+        {
+            (this->*(node.func))(node); // visit (node.left->func) and pass (node.left) as parameter node
+        }
+        
 
-    //    if (this->currentToken.type != endOfFileT and error == nullptr)
-    //    {
-    //        this->statements();
-    //    }
-    //    else if (error)
-    //    {
-    //        // error;
-    //    }
-    //}
+        if (this->currentToken.type != endOfFileT and error == nullptr)
+        {
+            this->statements();
+        }
+        else if (error)
+        {
+            // error;
+        }
+    }
 
     //// المفسر اللغوي
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    //Node result;
     //bool return_ = false;
-    //std::map<std::wstring, void(Parser::*)(Node)> buildinFunction{{L"اطبع", &Parser::print}};
-    //
-    //
     //
     //void function_define_interprete(Node node)
     //{
