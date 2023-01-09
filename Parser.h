@@ -331,10 +331,6 @@ public:
     unsigned int level = 5500;
     ExprNode* exprNode = (ExprNode*)malloc(level * sizeof(struct ExprNode));
     StmtsNode* stmtsNode = (StmtsNode*)malloc(level * sizeof(struct StmtsNode));
-    //std::vector<StmtsNode> list;
-
-    //uint16_t currentBlockCount = 0;
-    //uint16_t currentTabCount = 0;
 
     Parser(std::vector<Token>* tokens, STR _fileName, STR _input) : tokens(tokens) , fileName(_fileName), input_(_input)
     {
@@ -383,8 +379,6 @@ public:
             prnt(res->A.Number.value_);
 
         } while (currentToken.type_ != TTendOfFile);
-
-        //prnt(namesTable[3].A.Number.value_);
 
     }
 
@@ -1111,6 +1105,63 @@ public:
     //    //}
     //}
 
+
+    StmtsNode* else_if(int _elseIfFlag) {
+
+        return this->if_statement(_elseIfFlag);
+    }
+
+    StmtsNode* else_() {
+        
+        if (this->currentToken.type_ == TTcolon)
+        {
+            this->advance();
+            return this->body_();
+        }
+        else
+        {
+            prnt(L"else of if statement error");
+            exit(-1);
+        }
+    }
+
+    StmtsNode* if_statement(int _elseIfFlag) 
+    {
+        StmtsNode* body_{};
+        StmtsNode* elseIf{};
+        StmtsNode* else_{};
+        ExprNode* condetion_ = this->expression();
+
+        if (this->currentToken.type_ == TTcolon)
+        {
+            this->advance();
+            body_ = this->body_();
+
+        }
+        if (this->currentToken.val.keywordType == Elseif)
+        {
+            this->advance();
+            _elseIfFlag++;
+            elseIf = this->else_if(_elseIfFlag);
+            _elseIfFlag--;
+
+        }
+        if (this->currentToken.val.keywordType == Else and _elseIfFlag == 0)
+        {
+            this->advance();
+            else_ = this->else_();
+        }
+
+        level--;
+        (stmtsNode + level)->type_ = VIf;
+        (stmtsNode + level)->U.If.condetion_ = condetion_;
+        (stmtsNode + level)->U.If.body_ = body_;
+        (stmtsNode + level)->U.If.elseIf = elseIf;
+        (stmtsNode + level)->U.If.else_ = else_;
+        return (stmtsNode + level);
+        
+    }
+
     StmtsNode* body_()
     {
         if (this->currentToken.type_ == TTnewline)
@@ -1137,85 +1188,6 @@ public:
         }
     }
 
-    StmtsNode* else_if() {
-        return (stmtsNode + level);
-    }
-
-    StmtsNode* else_() {
-        return (stmtsNode + level);
-    }
-
-    StmtsNode* if_statement() 
-    {
-        StmtsNode* body_{};
-        ExprNode* condetion_ = this->expression();
-
-        if (this->currentToken.type_ == TTcolon)
-        {
-            this->advance();
-            body_ = this->body_();
-
-            if (this->currentToken.val.keywordType == Elseif)
-            {
-                StmtsNode* elseIf = this->else_if();
-
-            }
-            else if (this->currentToken.val.keywordType == Else)
-            {
-                StmtsNode* else_ = this->else_();
-            }
-        }
-
-        level--;
-        (stmtsNode + level)->type_ = VIf;
-        (stmtsNode + level)->U.If.condetion_ = condetion_;
-        (stmtsNode + level)->U.If.body_ = body_;
-        return (stmtsNode + level);
-        
-
-
-        //Node expr;
-        //std::vector<Node> tempList;
-
-        //this->advance();
-        //this->expression();
-        //expr = node;
-
-        //if (this->currentToken.type == colonT)
-        //{
-        //    this->advance();
-        //    this->if_body();
-        //    node = Node(&Parser::if_interprete, this->currentToken, std::make_shared<Node>(expr), std::make_shared<Node>(node));
-        //    tempList.push_back(node);
-        //}
-
-        //this->advance();
-        //while (this->currentToken.value == L"واذا")
-        //{
-        //    this->advance();
-        //    this->expression();
-        //    expr = node;
-
-        //    if (this->currentToken.type == colonT)
-        //    {
-        //        this->advance();
-        //        this->if_body();
-        //        node = Node(&Parser::if_interprete, this->currentToken, std::make_shared<Node>(expr), std::make_shared<Node>(node));
-        //        tempList.push_back(node);
-        //    }
-        //    this->advance();
-        //}
-
-        //std::vector<Node>::iterator listIter;
-        //for (listIter = tempList.begin(); listIter != tempList.end(); ++listIter)
-        //{
-        //    node = Node(&Parser::multi_statement_interprete, Token(), std::make_shared<Node>(node), std::make_shared<Node>(*listIter));
-        //}
-
-        //this->reverse();
-    }
-
-
     ////void import_from() {
     ////}
 
@@ -1239,7 +1211,7 @@ public:
         else if (this->currentToken.val.keywordType == If)
         {
             this->advance();
-            return this->if_statement();
+            return this->if_statement(0);
         }
         else if (this->currentToken.val.keywordType == For)
         {
@@ -1267,6 +1239,8 @@ public:
         else
         {
             ExprNode* exprNode = this->simple_statement();
+            this->advance();
+
             level--;
             (stmtsNode + level)->type_ = VExpr;
             (stmtsNode + level)->U.Expr.expr_ = exprNode;
@@ -1281,8 +1255,6 @@ public:
         while (this->currentToken.type_ != TTdedent and this->currentToken.type_ != TTendOfFile)
         {
             statements_->push_back(this->statement());
-
-            this->advance();
 
         }
         level--;
@@ -1422,9 +1394,28 @@ public:
     {
         if (_node->type_ == VExpr)
         {
-            this->visit_expr(_node->U.Expr.expr_);
+            return this->visit_expr(_node->U.Expr.expr_);
         }
-        return _node->U.Expr.expr_->U.Object.value_;
+        else if (_node->type_ == VFunction)
+        {
+
+        }
+        else if (_node->type_ == VFor)
+        {
+
+        }
+        else if (_node->type_ == VWhile)
+        {
+
+        }
+        else if (_node->type_ == VIf)
+        {
+
+        }
+        else if (_node->type_ == VClass)
+        {
+
+        }
     }
 
 

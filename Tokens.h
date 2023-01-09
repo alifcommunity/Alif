@@ -62,7 +62,11 @@ enum VisitType {
     VAssign,
     VAugAssign,
     VReturn,
+    VClass,
+    VFunction,
     VIf,
+    VFor,
+    VWhile,
     VStmts,
 };
 
