@@ -65,6 +65,7 @@ enum VisitType {
     VClass,
     VFunction,
     VIf,
+    VElseIf,
     VFor,
     VWhile,
     VStmts,
