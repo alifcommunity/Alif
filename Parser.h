@@ -293,17 +293,24 @@ struct ExprNode
     Position posEnd;
 };
 
-//struct StmtsNode {
-//
-//    StmtsNode*(Parser::* func)(StmtsNode*);
-//
-//    union UStmtsNode
-//    {
-//        struct {
-//            ExprNode* expr_;
-//        }Expr;
-//    }U;
-//}; // 33 byte
+struct StmtsNode {
+
+    TokenType type_;
+
+    union UStmtsNode
+    {
+        struct {
+            ExprNode* expr_;
+        }Expr;
+
+        struct {
+            ExprNode* condetion_;
+            StmtsNode* body_;
+            StmtsNode* elseIf;
+            StmtsNode* else_;
+        }If;
+    }U;
+};
 
 // المحلل اللغوي
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -317,10 +324,11 @@ public:
     STR input_;
 
     std::vector<AlifObj*>* names_ = new std::vector<AlifObj*>;
+    std::vector<StmtsNode*>* statements_ = new std::vector<StmtsNode*>;
 
     unsigned int level = 5500;
     ExprNode* exprNode = (ExprNode*)malloc(level * sizeof(struct ExprNode));
-    //StmtsNode* stmtsNode = (StmtsNode*)malloc(level * 33);
+    StmtsNode* stmtsNode = (StmtsNode*)malloc(level * sizeof(struct StmtsNode));
     //std::vector<StmtsNode> list;
 
     //uint16_t currentBlockCount = 0;
@@ -354,12 +362,12 @@ public:
 
     void parse()
     {
-        ExprNode* result = nullptr;
+        StmtsNode* result = nullptr;
         AlifObj* res = nullptr;
                 
         do {
             result = this->statements();
-            res = this->visit(result);
+            res = this->visit_stmts(result);
             this->level = 5500;
             this->advance();
 
@@ -1102,69 +1110,109 @@ public:
     //    //}
     //}
 
-    //void if_statement() 
-    //{
-    //    Node expr;
-    //    std::vector<Node> tempList;
+    StmtsNode* if_body()
+    {
+        if (this->currentToken.type_ == TTindent)
+        {
+            this->advance();
 
-    //    this->advance();
-    //    this->expression();
-    //    expr = node;
+            return this->statements();
+        }
 
-    //    if (this->currentToken.type == colonT)
-    //    {
-    //        this->advance();
-    //        this->if_body();
-    //        node = Node(&Parser::if_interprete, this->currentToken, std::make_shared<Node>(expr), std::make_shared<Node>(node));
-    //        tempList.push_back(node);
-    //    }
 
-    //    this->advance();
-    //    while (this->currentToken.value == L"واذا")
-    //    {
-    //        this->advance();
-    //        this->expression();
-    //        expr = node;
 
-    //        if (this->currentToken.type == colonT)
-    //        {
-    //            this->advance();
-    //            this->if_body();
-    //            node = Node(&Parser::if_interprete, this->currentToken, std::make_shared<Node>(expr), std::make_shared<Node>(node));
-    //            tempList.push_back(node);
-    //        }
-    //        this->advance();
-    //    }
 
-    //    std::vector<Node>::iterator listIter;
-    //    for (listIter = tempList.begin(); listIter != tempList.end(); ++listIter)
-    //    {
-    //        node = Node(&Parser::multi_statement_interprete, Token(), std::make_shared<Node>(node), std::make_shared<Node>(*listIter));
-    //    }
+        //if (this->currentToken.type_ == TTnewline)
+        //{
+        //    // move list content to other store temporary to start store new body content
+        //    std::vector<Node> tempList = this->list;
+        //    this->list.clear();
 
-    //    this->reverse();
-    //}
+        //    this->advance();
 
-    //void if_body()
-    //{
-    //    if (this->currentToken.type == newlineT)
-    //    {
-    //        // move list content to other store temporary to start store new body content
-    //        std::vector<Node> tempList = this->list;
-    //        this->list.clear();
+        //    this->indentent();
 
-    //        this->advance();
+        //    this->statements();
 
-    //        this->indentent();
+        //    if (currentBlockCount != 0)
+        //    {
+        //        this->list = tempList;
+        //    }
+        //}
+    }
 
-    //        this->statements();
+    StmtsNode* else_if() {
 
-    //        if (currentBlockCount != 0)
-    //        {
-    //            this->list = tempList;
-    //        }
-    //    }
-    //}
+    }
+
+    StmtsNode* else_() {
+
+    }
+
+    StmtsNode* if_statement() 
+    {
+        ExprNode* condetion_ = this->expression();
+
+        if (this->currentToken.type_ == TTcolon)
+        {
+            StmtsNode* body_ = this->if_body();
+
+            if (this->currentToken.val.keywordType == Elseif)
+            {
+                StmtsNode* elseIf = this->else_if();
+
+            }
+            else if (this->currentToken.val.keywordType == Else)
+            {
+                StmtsNode* else_ = this->else_();
+            }
+
+        }
+
+        
+
+
+        //Node expr;
+        //std::vector<Node> tempList;
+
+        //this->advance();
+        //this->expression();
+        //expr = node;
+
+        //if (this->currentToken.type == colonT)
+        //{
+        //    this->advance();
+        //    this->if_body();
+        //    node = Node(&Parser::if_interprete, this->currentToken, std::make_shared<Node>(expr), std::make_shared<Node>(node));
+        //    tempList.push_back(node);
+        //}
+
+        //this->advance();
+        //while (this->currentToken.value == L"واذا")
+        //{
+        //    this->advance();
+        //    this->expression();
+        //    expr = node;
+
+        //    if (this->currentToken.type == colonT)
+        //    {
+        //        this->advance();
+        //        this->if_body();
+        //        node = Node(&Parser::if_interprete, this->currentToken, std::make_shared<Node>(expr), std::make_shared<Node>(node));
+        //        tempList.push_back(node);
+        //    }
+        //    this->advance();
+        //}
+
+        //std::vector<Node>::iterator listIter;
+        //for (listIter = tempList.begin(); listIter != tempList.end(); ++listIter)
+        //{
+        //    node = Node(&Parser::multi_statement_interprete, Token(), std::make_shared<Node>(node), std::make_shared<Node>(*listIter));
+        //}
+
+        //this->reverse();
+    }
+
 
     ////void import_from() {
     ////}
@@ -1180,95 +1228,99 @@ public:
     ////}
 
 
-    void compound_statement() 
+    StmtsNode* compound_statement() 
     {
         if (this->currentToken.val.keywordType == Function)
         {
-            this->function_defination();
+            // return this->function_defination();
         }
         else if (this->currentToken.val.keywordType == If)
         {
-            this->for_statement();
+            // return this->for_statement();
         }
         else if (this->currentToken.val.keywordType == For)
         {
-            this->while_statement();
+            // return this->while_statement();
         }
         else if (this->currentToken.val.keywordType == While)
         {
-            this->if_statement();
+            return this->if_statement();
         }
     }
 
-    void simple_statement()
+    ExprNode* simple_statement()
     {
-        this->assignment();
+        return this->assignment();
     }
 
-    void statement() {
+    StmtsNode* statement() {
         if (this->currentToken.type_ == TTkeyword)
         {
             if (this->currentToken.val.keywordType == Function or this->currentToken.val.keywordType == If or this->currentToken.val.keywordType == Class or this->currentToken.val.keywordType == For or this->currentToken.val.keywordType == While)
             {
-                this->compound_statement();
+                return this->compound_statement();
             }
         }
         else
         {
-            this->simple_statement();
+            ExprNode* exprNode = this->simple_statement();
+            level--;
+            (stmtsNode + level)->type_ = TTexpr;
+            (stmtsNode + level)->U.Expr.expr_ = exprNode;
+            return (stmtsNode + level);
         }
     }
 
-    void statements() {
+    StmtsNode* statements() {
 
         this->statement();
 
-        if (currentBlockCount != 0)
-        {
-            this->list.push_back(node);
-        }
+        //if (currentBlockCount != 0)
+        //{
+        //    this->list.push_back(node);
+        //}
 
-        while (this->currentToken.type == tabT) // لتجاهل المسافة تاب بعد السطر
-        {
-            this->advance();
-        }
+        //while (this->currentToken.type == tabT) // لتجاهل المسافة تاب بعد السطر
+        //{
+        //    this->advance();
+        //}
 
-        this->advance();
-        
-        while (this->currentToken.type == tabT)
-        {
-            this->advance();
-            tabCount++;
-        }
+        //this->advance();
+        //
+        //while (this->currentToken.type == tabT)
+        //{
+        //    this->advance();
+        //    tabCount++;
+        //}
 
-        if (currentTabCount != tabCount)
-        {
-            this->deindentent();
-            // for i in list : node = Node(MultiStatementNode, Token(), std::make_shared<Node>(i));
-            std::vector<Node>::iterator listIter;
-            for (listIter = this->list.begin(); listIter != this->list.end(); ++listIter)
-            {
-                node = Node(&Parser::multi_statement_interprete, Token(), std::make_shared<Node>(node), std::make_shared<Node>(*listIter));
-            }
-            this->reverse(tabCount + 1);
-            return;
+        //if (currentTabCount != tabCount)
+        //{
+        //    this->deindentent();
+        //    // for i in list : node = Node(MultiStatementNode, Token(), std::make_shared<Node>(i));
+        //    std::vector<Node>::iterator listIter;
+        //    for (listIter = this->list.begin(); listIter != this->list.end(); ++listIter)
+        //    {
+        //        node = Node(&Parser::multi_statement_interprete, Token(), std::make_shared<Node>(node), std::make_shared<Node>(*listIter));
+        //    }
+        //    this->reverse(tabCount + 1);
+        //    return;
 
-        }
+        //}
 
-        if (currentBlockCount == 0)
-        {
-            (this->*(node.func))(node); // visit (node.left->func) and pass (node.left) as parameter node
-        }
-        
+        //if (currentBlockCount == 0)
+        //{
+        //    (this->*(node.func))(node); // visit_expr (node.left->func) and pass (node.left) as parameter node
+        //}
+        //
 
-        if (this->currentToken.type != endOfFileT and error == nullptr)
-        {
-            this->statements();
-        }
-        else if (error)
-        {
-            // error;
-        }
+        //if (this->currentToken.type != endOfFileT and error == nullptr)
+        //{
+        //    this->statements();
+        //}
+        //else if (error)
+        //{
+        //    // error;
+        //}
     }
 
     //// المفسر اللغوي
@@ -1291,14 +1343,14 @@ public:
     //    }
     //    else
     //    {
-    //        (this->*(namesTable[node.token.value].func))(namesTable[node.token.value]); // visit (node.left->func) and pass (node.left) as parameter node
+    //        (this->*(namesTable[node.token.value].func))(namesTable[node.token.value]); // visit_expr (node.left->func) and pass (node.left) as parameter node
     //        return_ = false;
     //    }
     //}
     //
     //void for_interprete(Node node)
     //{
-    //    (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
+    //    (this->*(node.left->func))(*node.left); // visit_expr (node.left->func) and pass (node.left) as parameter node
     //    int value = stoi(result.token.value);
     //    Node res = Node(nullptr, Token(Position(), Position(), integerT, std::to_wstring(0)));
     //
@@ -1308,7 +1360,7 @@ public:
     //        {
     //            res.token.value = std::to_wstring(i);
     //            namesTable[node.token.value] = res;
-    //            (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
+    //            (this->*(node.right->func))(*node.right); // visit_expr (node.left->func) and pass (node.left) as parameter node
     //
     //        }
     //        else
@@ -1320,22 +1372,22 @@ public:
     //
     //void while_interprete(Node node)
     //{
-    //    (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
+    //    (this->*(node.left->func))(*node.left); // visit_expr (node.left->func) and pass (node.left) as parameter node
     //
     //    while (result.token.value != L"0")
     //    {
-    //        (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
-    //        (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
+    //        (this->*(node.right->func))(*node.right); // visit_expr (node.left->func) and pass (node.left) as parameter node
+    //        (this->*(node.left->func))(*node.left); // visit_expr (node.left->func) and pass (node.left) as parameter node
     //    }
     //}
     //
     //void if_interprete(Node node)
     //{
-    //    (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
+    //    (this->*(node.left->func))(*node.left); // visit_expr (node.left->func) and pass (node.left) as parameter node
     //
     //    if (result.token.value != L"0")
     //    {
-    //        (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
+    //        (this->*(node.right->func))(*node.right); // visit_expr (node.left->func) and pass (node.left) as parameter node
     //    }
     //}
     //
@@ -1344,13 +1396,23 @@ public:
     //
     //void print(Node node)
     //{
-    //    (this->*(node.func))(node); // visit (node.left->func) and pass (node.left) as parameter node
+    //    (this->*(node.func))(node); // visit_expr (node.left->func) and pass (node.left) as parameter node
     //    std::wcout << result.token.value << std::endl;
     //}
 
     std::map<NUM, AlifObj*> namesTable;
     
-    AlifObj* visit(ExprNode* _node) {
+    AlifObj* visit_stmts(StmtsNode* _node)
+    {
+
+    }
+
+
+
+
+
+    AlifObj* visit_expr(ExprNode* _node)
+    {
 
         if (_node->type_ == VObject)
         {
@@ -1361,13 +1423,13 @@ public:
             _node->U.Object.value_->A.List.objList = new std::vector<AlifObj*>;
             for (ExprNode* obj : *_node->U.Object.value_->A.List.list_)
             {
-                _node->U.Object.value_->A.List.objList->push_back(this->visit(obj));
+                _node->U.Object.value_->A.List.objList->push_back(this->visit_expr(obj));
             };
             return _node->U.Object.value_;
         }
         else if (_node->type_ == VUnaryOp)
         {
-            AlifObj* right = this->visit(_node->U.UnaryOp.right_);
+            AlifObj* right = this->visit_expr(_node->U.UnaryOp.right_);
 
             if (_node->U.UnaryOp.operator_ != TTkeyword)
             {
@@ -1391,8 +1453,8 @@ public:
         }
         else if (_node->type_ == VBinOp) 
         {
-            AlifObj* right = this->visit(_node->U.BinaryOp.right_);
-            AlifObj* left = this->visit(_node->U.BinaryOp.left_);
+            AlifObj* right = this->visit_expr(_node->U.BinaryOp.right_);
+            AlifObj* left = this->visit_expr(_node->U.BinaryOp.left_);
             AlifObj* res = new AlifObj(*left);
 
             if (_node->U.BinaryOp.operator_ != TTkeyword)
@@ -1503,17 +1565,17 @@ public:
         }
         else if (_node->type_ == VExpr)
         {
-            AlifObj* expr_ = this->visit(_node->U.Expr.expr_);
+            AlifObj* expr_ = this->visit_expr(_node->U.Expr.expr_);
             if (_node->U.Expr.condetion_ != nullptr)
             {
-                AlifObj* condetion_ = this->visit(_node->U.Expr.condetion_);
+                AlifObj* condetion_ = this->visit_expr(_node->U.Expr.condetion_);
                 if (condetion_->A.Boolean.value_ != 0)
                 {
                     return expr_;
                 }
                 else
                 {
-                    return this->visit(_node->U.Expr.elseExpr);
+                    return this->visit_expr(_node->U.Expr.elseExpr);
                 }
             }
             return expr_;
@@ -1522,7 +1584,7 @@ public:
         {
             for (AlifObj* i : *_node->U.NameAssign.name_)
             {
-                namesTable[i->A.Name.name_] = this->visit(_node->U.NameAssign.value_);
+                namesTable[i->A.Name.name_] = this->visit_expr(_node->U.NameAssign.value_);
             }
         }
         else if (_node->type_ == VAccess)
@@ -1531,7 +1593,7 @@ public:
         }
         else if (_node->type_ == VAugAssign)
         {
-            AlifObj* value = this->visit(_node->U.AugNameAssign.value_);
+            AlifObj* value = this->visit_expr(_node->U.AugNameAssign.value_);
             AlifObj* name = namesTable[_node->U.AugNameAssign.name_->A.Name.name_];
 
             if (_node->U.AugNameAssign.operator_ == TTplusEqual)
@@ -1577,7 +1639,7 @@ public:
         }
         else if (_node->type_ == VReturn)
         {
-            return this->visit(_node->U.Return.expr_);
+            return this->visit_expr(_node->U.Return.expr_);
         }
     }
 

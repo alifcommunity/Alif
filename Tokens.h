@@ -47,6 +47,7 @@ enum TokenType {
     TTendOfFile, // End_Of_File
     TTbuildInFunc, // BuildInFunction
     TTkeyword, // Keyword
+    TTexpr, // Expr
     TTnone, // None
 };
 
