@@ -47,7 +47,6 @@ enum TokenType {
     TTendOfFile, // End_Of_File
     TTbuildInFunc, // BuildInFunction
     TTkeyword, // Keyword
-    TTexpr, // Expr
     TTnone, // None
 };
 
@@ -63,6 +62,8 @@ enum VisitType {
     VAssign,
     VAugAssign,
     VReturn,
+    VIf,
+    VStmts,
 };
 
 //enum Context {

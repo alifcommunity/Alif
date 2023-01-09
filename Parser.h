@@ -269,7 +269,6 @@ struct ExprNode
         }NameAccess;
 
         struct {
-            //ExprNode* node_;
             std::vector<AlifObj*>* names_;
         }Call;
 
@@ -279,9 +278,9 @@ struct ExprNode
             ExprNode* elseExpr;
         }Expr;
 
-        struct {
-            std::vector<ExprNode*>* exprs_;
-        }Exprs;
+        //struct {
+        //    std::vector<ExprNode*>* exprs_;
+        //}Exprs;
 
         struct {
             ExprNode* expr_;
@@ -295,7 +294,7 @@ struct ExprNode
 
 struct StmtsNode {
 
-    TokenType type_;
+    VisitType type_;
 
     union UStmtsNode
     {
@@ -309,6 +308,10 @@ struct StmtsNode {
             StmtsNode* elseIf;
             StmtsNode* else_;
         }If;
+
+        struct {
+            std::vector<StmtsNode*>* stmts_;
+        }Stmts;
     }U;
 };
 
@@ -324,7 +327,6 @@ public:
     STR input_;
 
     std::vector<AlifObj*>* names_ = new std::vector<AlifObj*>;
-    std::vector<StmtsNode*>* statements_ = new std::vector<StmtsNode*>;
 
     unsigned int level = 5500;
     ExprNode* exprNode = (ExprNode*)malloc(level * sizeof(struct ExprNode));
@@ -366,10 +368,9 @@ public:
         AlifObj* res = nullptr;
                 
         do {
-            result = this->statements();
+            result = this->statement();
             res = this->visit_stmts(result);
             this->level = 5500;
-            this->advance();
 
             //STR lst = L"[";
             //for (AlifObj* obj : *namesTable[result->U.NameAccess.name_.A.Name.name_].A.List.objList)
@@ -1110,52 +1111,49 @@ public:
     //    //}
     //}
 
-    StmtsNode* if_body()
+    StmtsNode* body_()
     {
-        if (this->currentToken.type_ == TTindent)
+        if (this->currentToken.type_ == TTnewline)
         {
             this->advance();
 
-            return this->statements();
+            if (this->currentToken.type_ == TTindent)
+            {
+                this->advance();
+
+                StmtsNode* stmts_ = this->statements();
+
+                if (this->currentToken.type_ == TTdedent)
+                {
+                    this->advance();
+                    return stmts_;
+                }
+                else if (this->currentToken.type_ == TTindent)
+                {
+                    prnt(L"indent error in if body");
+                }
+            }
+
         }
-
-
-
-
-        //if (this->currentToken.type_ == TTnewline)
-        //{
-        //    // move list content to other store temporary to start store new body content
-        //    std::vector<Node> tempList = this->list;
-        //    this->list.clear();
-
-        //    this->advance();
-
-        //    this->indentent();
-
-        //    this->statements();
-
-        //    if (currentBlockCount != 0)
-        //    {
-        //        this->list = tempList;
-        //    }
-        //}
     }
 
     StmtsNode* else_if() {
-
+        return (stmtsNode + level);
     }
 
     StmtsNode* else_() {
-
+        return (stmtsNode + level);
     }
 
     StmtsNode* if_statement() 
     {
+        StmtsNode* body_{};
         ExprNode* condetion_ = this->expression();
 
         if (this->currentToken.type_ == TTcolon)
         {
-            StmtsNode* body_ = this->if_body();
+            this->advance();
+            body_ = this->body_();
 
             if (this->currentToken.val.keywordType == Elseif)
             {
@@ -1166,9 +1164,13 @@ public:
             {
                 StmtsNode* else_ = this->else_();
             }
-
         }
 
+        level--;
+        (stmtsNode + level)->type_ = VIf;
+        (stmtsNode + level)->U.If.condetion_ = condetion_;
+        (stmtsNode + level)->U.If.body_ = body_;
+        return (stmtsNode + level);
         
 
 
@@ -1236,15 +1238,16 @@ public:
         }
         else if (this->currentToken.val.keywordType == If)
         {
-            // return this->for_statement();
+            this->advance();
+            return this->if_statement();
         }
         else if (this->currentToken.val.keywordType == For)
         {
-            // return this->while_statement();
+            // return this->for_statement();
         }
         else if (this->currentToken.val.keywordType == While)
         {
-            return this->if_statement();
+            // return this->while_statement();
         }
     }
 
@@ -1265,7 +1268,7 @@ public:
         {
             ExprNode* exprNode = this->simple_statement();
             level--;
-            (stmtsNode + level)->type_ = TTexpr;
+            (stmtsNode + level)->type_ = VExpr;
             (stmtsNode + level)->U.Expr.expr_ = exprNode;
             return (stmtsNode + level);
         }
@@ -1273,7 +1276,20 @@ public:
 
     StmtsNode* statements() {
 
-        this->statement();
+        std::vector<StmtsNode*>* statements_ = new std::vector<StmtsNode*>;
+
+        while (this->currentToken.type_ != TTdedent and this->currentToken.type_ != TTendOfFile)
+        {
+            statements_->push_back(this->statement());
+
+            this->advance();
+
+        }
+        level--;
+
+        (stmtsNode + level)->type_ = VStmts;
+        (stmtsNode + level)->U.Stmts.stmts_ = statements_;
+        return (stmtsNode + level);
 
         //if (currentBlockCount != 0)
         //{
@@ -1404,7 +1420,11 @@ public:
     
     AlifObj* visit_stmts(StmtsNode* _node)
     {
-
+        if (_node->type_ == VExpr)
+        {
+            this->visit_expr(_node->U.Expr.expr_);
+        }
+        return _node->U.Expr.expr_->U.Object.value_;
     }
 
 
