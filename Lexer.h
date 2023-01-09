@@ -10,11 +10,6 @@ public:
     Position position_{}, positionEnd{};
     std::vector<Token> tokens_{};
 
-    // for delete pointers
-    ////////////
-    
-    std::vector<void*> deleteAddresses;
-
     // vars
     ////////////
 
@@ -306,7 +301,6 @@ public:
         {
             this->advance();
             STR* newString = new STR(string_);
-            this->deleteAddresses.push_back(newString);
             this->tokens_.push_back(Token(positionStart, this->position_, TTstring, newString));
         }
         else {

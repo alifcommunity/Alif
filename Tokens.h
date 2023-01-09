@@ -53,6 +53,7 @@ enum TokenType {
 enum VisitType {
     VObject,
     VList,
+    VCall,
     VUnaryOp,
     VBinOp,
     VExpr,
@@ -61,6 +62,12 @@ enum VisitType {
     VAssign,
     VAugAssign,
     VReturn,
+    VClass,
+    VFunction,
+    VIf,
+    VFor,
+    VWhile,
+    VStmts,
 };
 
 //enum Context {
@@ -95,10 +102,11 @@ enum KeywordType {
 
 enum BuildInFuncType {
     Print,
+    Push,
 };
 
 
-std::map<STR, BuildInFuncType> buildInFunctions = { {L"اطبع", Print} };
+std::map<STR, BuildInFuncType> buildInFunctions = { {L"اطبع", Print} , {L"اضف", Push} };
 std::map<STR, KeywordType> keywords_ = { {L"مرر", Pass}, {L"توقف", Stop}, {L"استمر", Continue}, {L"حذف", Delete}, {L"من", From}, {L"استورد", Import} , {L"اذا", If}, {L"واذا", Elseif}, {L"والا", Else}, {L"بينما", While}, {L"لاجل", For}, {L"في", In}, {L"ارجع", Return}, {L"دالة", Function}, {L"صنف", Class}, {L"او", Or}, {L"و", And}, {L"ليس", Not}, {L"صح", True}, {L"خطا", False}, {L"عدم", None} };
 
 class Token {

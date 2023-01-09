@@ -205,7 +205,7 @@ struct AlifObj
         }String;
 
         struct {
-            std::vector<NUM>* name_;
+            NUM name_;
             //Context ctx_;
         }Name;
 
@@ -217,8 +217,8 @@ struct AlifObj
             std::vector<ExprNode*>* list_;
             std::vector<AlifObj*>* objList;
 
-            std::vector<ExprNode*>* get_element() {
-
+            std::vector<ExprNode*>* add_element(AlifObj* _obj) {
+                objList->push_back(_obj);
             }
 
         }List;
@@ -237,7 +237,7 @@ struct ExprNode
     union UExprNode
     {
         struct {
-            AlifObj value_;
+            AlifObj* value_;
         }Object;
 
         struct {
@@ -254,23 +254,22 @@ struct ExprNode
         }UnaryOp;
 
         struct {
-            AlifObj name_;
+            std::vector<AlifObj*>* name_;
             ExprNode* value_;
         }NameAssign;
 
         struct {
-            AlifObj name_;
+            AlifObj* name_;
             TokenType operator_;
             ExprNode* value_;
         }AugNameAssign;
 
         struct {
-            AlifObj name_;
+            AlifObj* name_;
         }NameAccess;
 
         struct {
-            ExprNode* node_;
-            ExprNode* name_;
+            std::vector<AlifObj*>* names_;
         }Call;
 
         struct {
@@ -279,9 +278,9 @@ struct ExprNode
             ExprNode* elseExpr;
         }Expr;
 
-        struct {
-            std::vector<ExprNode*>* exprs_;
-        }Exprs;
+        //struct {
+        //    std::vector<ExprNode*>* exprs_;
+        //}Exprs;
 
         struct {
             ExprNode* expr_;
@@ -293,17 +292,28 @@ struct ExprNode
     Position posEnd;
 };
 
-//struct StmtsNode {
-//
-//    StmtsNode*(Parser::* func)(StmtsNode*);
-//
-//    union UStmtsNode
-//    {
-//        struct {
-//            ExprNode* expr_;
-//        }Expr;
-//    }U;
-//}; // 33 byte
+struct StmtsNode {
+
+    VisitType type_;
+
+    union UStmtsNode
+    {
+        struct {
+            ExprNode* expr_;
+        }Expr;
+
+        struct {
+            ExprNode* condetion_;
+            StmtsNode* body_;
+            StmtsNode* elseIf;
+            StmtsNode* else_;
+        }If;
+
+        struct {
+            std::vector<StmtsNode*>* stmts_;
+        }Stmts;
+    }U;
+};
 
 // المحلل اللغوي
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -316,14 +326,11 @@ public:
     STR fileName;
     STR input_;
 
+    std::vector<AlifObj*>* names_ = new std::vector<AlifObj*>;
+
     unsigned int level = 5500;
     ExprNode* exprNode = (ExprNode*)malloc(level * sizeof(struct ExprNode));
-    //ExprNode* exprNode = (ExprNode*)malloc(level * 133);
-    //StmtsNode* stmtsNode = (StmtsNode*)malloc(level * 33);
-    //std::vector<StmtsNode> list;
-
-    //uint16_t currentBlockCount = 0;
-    //uint16_t currentTabCount = 0;
+    StmtsNode* stmtsNode = (StmtsNode*)malloc(level * sizeof(struct StmtsNode));
 
     Parser(std::vector<Token>* tokens, STR _fileName, STR _input) : tokens(tokens) , fileName(_fileName), input_(_input)
     {
@@ -353,28 +360,25 @@ public:
 
     void parse()
     {
-        ExprNode* result = nullptr;
+        StmtsNode* result = nullptr;
         AlifObj* res = nullptr;
                 
         do {
-            result = this->assignment();
-            res = this->visit(result);
+            result = this->statement();
+            res = this->visit_stmts(result);
             this->level = 5500;
-            this->advance();
 
-            STR lst = L"[";
-            for (AlifObj* obj : *namesTable[result->U.NameAccess.name_.A.Name.name_->front()].A.List.objList)
-            {
-                lst.append(std::to_wstring((int)obj->A.Number.value_));
-                lst.append(L", ");
-            } // for print list only
-            lst.replace(lst.length() - 2, lst.length(), L"]");
-            prnt(lst);
+            //STR lst = L"[";
+            //for (AlifObj* obj : *namesTable[result->U.NameAccess.name_.A.Name.name_].A.List.objList)
+            //{
+            //    lst.append(std::to_wstring((int)obj->A.Number.value_));
+            //    lst.append(L", ");
+            //} // for print list only
+            //lst.replace(lst.length() - 2, lst.length(), L"]");
+            //prnt(lst);
+            prnt(res->A.Number.value_);
 
         } while (currentToken.type_ != TTendOfFile);
-
-        //prnt(res->A.Number.value_);
-        //prnt(namesTable[3].A.Number.value_);
 
     }
 
@@ -383,14 +387,15 @@ public:
     ExprNode* atom() {
 
         Token token = this->currentToken;
+        AlifObj* obj_ = new AlifObj;
         level--;
 
         if (token.type_ == TTname)
         {
             
             this->advance();
-            (exprNode + level)->U.NameAccess.name_.A.Name.name_ = new std::vector<NUM>;
-            (exprNode + level)->U.NameAccess.name_.A.Name.name_->push_back(token.val.numVal);
+            obj_->A.Name.name_ = token.val.numVal;
+            (exprNode + level)->U.NameAccess.name_ = obj_;
             (exprNode + level)->type_ = VAccess;
             return (exprNode + level);
         }
@@ -398,8 +403,9 @@ public:
             if (token.val.keywordType == True)
             {
                 this->advance();
-                (exprNode + level)->U.Object.value_.A.Boolean.Kkind_ = True;
-                (exprNode + level)->U.Object.value_.A.Boolean.value_ = 1;
+                obj_->A.Boolean.Kkind_ = True;
+                obj_->A.Boolean.value_ = 1;
+                (exprNode + level)->U.Object.value_ = obj_;
                 (exprNode + level)->type_ = VObject;
 
                 return (exprNode + level);
@@ -407,8 +413,9 @@ public:
             else if (token.val.keywordType == False)
             {
                 this->advance();
-                (exprNode + level)->U.Object.value_.A.Boolean.Kkind_ = False;
-                (exprNode + level)->U.Object.value_.A.Boolean.value_ = 0;
+                obj_->A.Boolean.Kkind_ = False;
+                obj_->A.Boolean.value_ = 0;
+                (exprNode + level)->U.Object.value_ = obj_;
                 (exprNode + level)->type_ = VObject;
 
                 return (exprNode + level);
@@ -416,8 +423,9 @@ public:
             else if (token.val.keywordType == None)
             {
                 this->advance();
-                (exprNode + level)->U.Object.value_.type_ = TTnone;
-                (exprNode + level)->U.Object.value_.A.None.kind_ = None;
+                obj_->type_ = TTnone;
+                obj_->A.None.kind_ = None;
+                (exprNode + level)->U.Object.value_ = obj_;
                 (exprNode + level)->type_ = VObject;
 
                 return (exprNode + level);
@@ -426,32 +434,35 @@ public:
         else if (token.type_ == TTinteger)
         {
             this->advance();
-            (exprNode + level)->U.Object.value_.type_ = TTnumber;
-            (exprNode + level)->U.Object.value_.A.Number.Tkind_ = token.type_;
-            (exprNode + level)->U.Object.value_.A.Number.value_ = token.val.numVal;
+            obj_->type_ = TTnumber;
+            obj_->A.Number.Tkind_ = token.type_;
+            obj_->A.Number.value_ = token.val.numVal;
+            (exprNode + level)->U.Object.value_ = obj_;
             (exprNode + level)->type_ = VObject;
             return (exprNode + level);
         }
         else if (token.type_ == TTfloat)
         {
             this->advance();
-            (exprNode + level)->U.Object.value_.type_ = TTnumber;
-            (exprNode + level)->U.Object.value_.A.Number.Tkind_ = token.type_;
-            (exprNode + level)->U.Object.value_.A.Number.value_ = token.val.numVal;
+            obj_->type_ = TTnumber;
+            obj_->A.Number.Tkind_ = token.type_;
+            obj_->A.Number.value_ = token.val.numVal;
+            (exprNode + level)->U.Object.value_ = obj_;
             (exprNode + level)->type_ = VObject;
             return (exprNode + level);
         }
         else if (token.type_ == TTstring)
         {
             this->advance();
-            (exprNode + level)->U.Object.value_.type_ = token.type_;
-            (exprNode + level)->U.Object.value_.A.String.value_ = token.val.strVal;
+            obj_->type_ = token.type_;
+            obj_->A.String.value_ = token.val.strVal;
+            (exprNode + level)->U.Object.value_ = obj_;
             (exprNode + level)->type_ = VObject;
             return (exprNode + level);
         }
         else if (token.type_ == TTlSquare)
         {
-            return this->list_expr();
+            return this->list_expr(obj_);
         }
         else if (this->currentToken.type_ == TTlParenthesis)
         {
@@ -474,7 +485,7 @@ public:
         }
     }
 
-    ExprNode* list_expr() 
+    ExprNode* list_expr(AlifObj* _obj)
     {
         std::vector<ExprNode*>* nodeElement = new std::vector<ExprNode*>;
 
@@ -499,8 +510,10 @@ public:
         }
 
         level--;
-        (exprNode + level)->U.Object.value_.type_ = TTlist;
-        (exprNode + level)->U.Object.value_.A.List.list_ = nodeElement;
+
+        _obj->type_ = TTlist;
+        _obj->A.List.list_ = nodeElement;
+        (exprNode + level)->U.Object.value_ = _obj;
         (exprNode + level)->type_ = VList;
 
         return (exprNode + level);
@@ -509,18 +522,26 @@ public:
 
     ExprNode* primary() {
 
+        ExprNode* atom_ = this->atom();
+        names_->push_back(atom_->U.Object.value_);
+
         if (this->currentToken.type_ == TTdot)
         {
             this->advance();
+            this->primary();
 
             level--;
 
-            (exprNode + level)->U.Call.name_ = this->atom();
-            (exprNode + level)->U.Call.node_ = this->primary();
-            //(exprNode + level)->func = &Parser::call_intr;
+            (exprNode + level)->U.Call.names_ = names_;
+            (exprNode + level)->type_ = VCall;
 
             return (exprNode + level);
         }
+        else
+        {
+            return atom_;
+        }
+
         //else if (this->currentToken.type == lParenthesisT)
         //{
         //    this->advance();
@@ -576,8 +597,6 @@ public:
         //        // error
         //    }
         //}
-
-        return this->atom();
         
     }
 
@@ -798,6 +817,7 @@ public:
         if (this->currentToken.type_ == TTcomma)
         {
             std::vector<ExprNode*>* exprs_ = new std::vector<ExprNode*>;
+            AlifObj* obj_ = new AlifObj;
 
             exprs_->push_back(expr_);
             do
@@ -809,7 +829,8 @@ public:
 
             level--;
         
-            (exprNode + level)->U.Object.value_.A.List.list_ = exprs_; 
+            obj_->A.List.list_ = exprs_;
+            (exprNode + level)->U.Object.value_ = obj_; 
             (exprNode + level)->type_ = VList;
 
             return (exprNode + level);
@@ -821,23 +842,22 @@ public:
 
         if (this->currentToken.type_ == TTname)
         {
-            std::vector<NUM>* names_ = new std::vector<NUM>;
+            std::vector<AlifObj*>* names_ = new std::vector<AlifObj*>; // يجب الاستغناء عنها لانه تم إنشاء مصفوفة اسماء عامة
 
-            Token AugVarName = this->currentToken;
-            this->advance();
+            ExprNode* name_ = this->atom();
 
             if (this->currentToken.type_ == TTequal)
             {
-                names_->push_back(AugVarName.val.numVal);
+                names_->push_back(name_->U.NameAccess.name_);
                 this->advance();
 
                 while (this->currentToken.type_ == TTname)
                 {
-                    AugVarName = this->currentToken;
-                    this->advance();
+                    name_ = this->atom();
+
                     if (this->currentToken.type_ == TTequal)
                     {
-                        names_->push_back(AugVarName.val.numVal);
+                        names_->push_back(name_->U.NameAccess.name_);
                         this->advance();
 
                     }
@@ -852,7 +872,7 @@ public:
                 ExprNode* expr_ = this->expressions();
                 level--;
 
-                (exprNode + level)->U.NameAssign.name_.A.Name.name_ = names_;
+                (exprNode + level)->U.NameAssign.name_ = names_;
                 (exprNode + level)->U.NameAssign.value_ = expr_;
                 (exprNode + level)->type_ = VAssign;
 
@@ -870,7 +890,7 @@ public:
                 ExprNode* expr_ = this->expression();
                 level--;
 
-                (exprNode + level)->U.AugNameAssign.name_.A.Name.name_->push_back(AugVarName.val.numVal);
+                (exprNode + level)->U.AugNameAssign.name_ = name_->U.NameAccess.name_;
                 (exprNode + level)->U.AugNameAssign.operator_ = opToken.type_;
                 (exprNode + level)->U.AugNameAssign.value_ = expr_;
                 (exprNode + level)->type_ = VAugAssign;
@@ -1085,69 +1105,88 @@ public:
     //    //}
     //}
 
-    //void if_statement() 
-    //{
-    //    Node expr;
-    //    std::vector<Node> tempList;
 
-    //    this->advance();
-    //    this->expression();
-    //    expr = node;
+    StmtsNode* else_if(int _elseIfFlag) {
 
-    //    if (this->currentToken.type == colonT)
-    //    {
-    //        this->advance();
-    //        this->if_body();
-    //        node = Node(&Parser::if_interprete, this->currentToken, std::make_shared<Node>(expr), std::make_shared<Node>(node));
-    //        tempList.push_back(node);
-    //    }
+        return this->if_statement(_elseIfFlag);
+    }
 
-    //    this->advance();
-    //    while (this->currentToken.value == L"واذا")
-    //    {
-    //        this->advance();
-    //        this->expression();
-    //        expr = node;
+    StmtsNode* else_() {
+        
+        if (this->currentToken.type_ == TTcolon)
+        {
+            this->advance();
+            return this->body_();
+        }
+        else
+        {
+            prnt(L"else of if statement error");
+            exit(-1);
+        }
+    }
 
-    //        if (this->currentToken.type == colonT)
-    //        {
-    //            this->advance();
-    //            this->if_body();
-    //            node = Node(&Parser::if_interprete, this->currentToken, std::make_shared<Node>(expr), std::make_shared<Node>(node));
-    //            tempList.push_back(node);
-    //        }
-    //        this->advance();
-    //    }
+    StmtsNode* if_statement(int _elseIfFlag) 
+    {
+        StmtsNode* body_{};
+        StmtsNode* elseIf{};
+        StmtsNode* else_{};
+        ExprNode* condetion_ = this->expression();
 
-    //    std::vector<Node>::iterator listIter;
-    //    for (listIter = tempList.begin(); listIter != tempList.end(); ++listIter)
-    //    {
-    //        node = Node(&Parser::multi_statement_interprete, Token(), std::make_shared<Node>(node), std::make_shared<Node>(*listIter));
-    //    }
+        if (this->currentToken.type_ == TTcolon)
+        {
+            this->advance();
+            body_ = this->body_();
 
-    //    this->reverse();
-    //}
+        }
+        if (this->currentToken.val.keywordType == Elseif)
+        {
+            this->advance();
+            _elseIfFlag++;
+            elseIf = this->else_if(_elseIfFlag);
+            _elseIfFlag--;
 
-    //void if_body()
-    //{
-    //    if (this->currentToken.type == newlineT)
-    //    {
-    //        // move list content to other store temporary to start store new body content
-    //        std::vector<Node> tempList = this->list;
-    //        this->list.clear();
+        }
+        if (this->currentToken.val.keywordType == Else and _elseIfFlag == 0)
+        {
+            this->advance();
+            else_ = this->else_();
+        }
 
-    //        this->advance();
+        level--;
+        (stmtsNode + level)->type_ = VIf;
+        (stmtsNode + level)->U.If.condetion_ = condetion_;
+        (stmtsNode + level)->U.If.body_ = body_;
+        (stmtsNode + level)->U.If.elseIf = elseIf;
+        (stmtsNode + level)->U.If.else_ = else_;
+        return (stmtsNode + level);
+        
+    }
 
-    //        this->indentent();
+    StmtsNode* body_()
+    {
+        if (this->currentToken.type_ == TTnewline)
+        {
+            this->advance();
 
-    //        this->statements();
+            if (this->currentToken.type_ == TTindent)
+            {
+                this->advance();
 
-    //        if (currentBlockCount != 0)
-    //        {
-    //            this->list = tempList;
-    //        }
-    //    }
-    //}
+                StmtsNode* stmts_ = this->statements();
+
+                if (this->currentToken.type_ == TTdedent)
+                {
+                    this->advance();
+                    return stmts_;
+                }
+                else if (this->currentToken.type_ == TTindent)
+                {
+                    prnt(L"indent error in if body");
+                }
+            }
+
+        }
+    }
 
     ////void import_from() {
     ////}
@@ -1163,212 +1202,125 @@ public:
     ////}
 
 
-    //void compound_statement() 
-    //{
-    //    if (this->currentToken.value == L"دالة")
-    //    {
-    //        this->function_defination();
-    //    }
-    //    else if (this->currentToken.value == L"لاجل")
-    //    {
-    //        this->for_statement();
-    //    }
-    //    else if (this->currentToken.value == L"بينما")
-    //    {
-    //        this->while_statement();
-    //    }
-    //    else if (this->currentToken.value == L"اذا")
-    //    {
-    //        this->if_statement();
-    //    }
-    //}
+    StmtsNode* compound_statement() 
+    {
+        if (this->currentToken.val.keywordType == Function)
+        {
+            // return this->function_defination();
+        }
+        else if (this->currentToken.val.keywordType == If)
+        {
+            this->advance();
+            return this->if_statement(0);
+        }
+        else if (this->currentToken.val.keywordType == For)
+        {
+            // return this->for_statement();
+        }
+        else if (this->currentToken.val.keywordType == While)
+        {
+            // return this->while_statement();
+        }
+    }
 
-    //void simple_statement()
-    //{
-    //    if (this->currentToken.value == L"ارجع")
-    //    {
-    //        this->return_statement();
-    //    }
-    //    else if (this->currentToken.type == nameT)
-    //    {
-    //        this->assignment();
-    //    }
-    //}
+    ExprNode* simple_statement()
+    {
+        return this->assignment();
+    }
 
-    //void statement() {
-    //    if (this->currentToken.value == L"دالة" or this->currentToken.value == L"اذا" or this->currentToken.value == L"صنف" or this->currentToken.value == L"لاجل" or this->currentToken.value == L"بينما")
-    //    {
-    //        this->compound_statement();
-    //    }
-    //    else
-    //    {
-    //        this->simple_statement();
-    //    }
-    //}
+    StmtsNode* statement() {
+        if (this->currentToken.type_ == TTkeyword)
+        {
+            if (this->currentToken.val.keywordType == Function or this->currentToken.val.keywordType == If or this->currentToken.val.keywordType == Class or this->currentToken.val.keywordType == For or this->currentToken.val.keywordType == While)
+            {
+                return this->compound_statement();
+            }
+        }
+        else
+        {
+            ExprNode* exprNode = this->simple_statement();
+            this->advance();
 
-    //void statements() {
-    //    uint16_t tabCount = 0;
+            level--;
+            (stmtsNode + level)->type_ = VExpr;
+            (stmtsNode + level)->U.Expr.expr_ = exprNode;
+            return (stmtsNode + level);
+        }
+    }
 
-    //    this->statement();
+    StmtsNode* statements() {
 
-    //    if (currentBlockCount != 0)
-    //    {
-    //        this->list.push_back(node);
-    //    }
+        std::vector<StmtsNode*>* statements_ = new std::vector<StmtsNode*>;
 
-    //    while (this->currentToken.type == tabT) // لتجاهل المسافة تاب بعد السطر
-    //    {
-    //        this->advance();
-    //    }
+        while (this->currentToken.type_ != TTdedent and this->currentToken.type_ != TTendOfFile)
+        {
+            statements_->push_back(this->statement());
 
-    //    this->advance();
-    //    
-    //    while (this->currentToken.type == tabT)
-    //    {
-    //        this->advance();
-    //        tabCount++;
-    //    }
+        }
+        level--;
 
-    //    if (currentTabCount != tabCount)
-    //    {
-    //        this->deindentent();
-    //        // for i in list : node = Node(MultiStatementNode, Token(), std::make_shared<Node>(i));
-    //        std::vector<Node>::iterator listIter;
-    //        for (listIter = this->list.begin(); listIter != this->list.end(); ++listIter)
-    //        {
-    //            node = Node(&Parser::multi_statement_interprete, Token(), std::make_shared<Node>(node), std::make_shared<Node>(*listIter));
-    //        }
-    //        this->reverse(tabCount + 1);
-    //        return;
+        (stmtsNode + level)->type_ = VStmts;
+        (stmtsNode + level)->U.Stmts.stmts_ = statements_;
+        return (stmtsNode + level);
 
-    //    }
+        //if (currentBlockCount != 0)
+        //{
+        //    this->list.push_back(node);
+        //}
 
-    //    if (currentBlockCount == 0)
-    //    {
-    //        (this->*(node.func))(node); // visit (node.left->func) and pass (node.left) as parameter node
-    //    }
-    //    
+        //while (this->currentToken.type == tabT) // لتجاهل المسافة تاب بعد السطر
+        //{
+        //    this->advance();
+        //}
 
-    //    if (this->currentToken.type != endOfFileT and error == nullptr)
-    //    {
-    //        this->statements();
-    //    }
-    //    else if (error)
-    //    {
-    //        // error;
-    //    }
-    //}
+        //this->advance();
+        //
+        //while (this->currentToken.type == tabT)
+        //{
+        //    this->advance();
+        //    tabCount++;
+        //}
+
+        //if (currentTabCount != tabCount)
+        //{
+        //    this->deindentent();
+        //    // for i in list : node = Node(MultiStatementNode, Token(), std::make_shared<Node>(i));
+        //    std::vector<Node>::iterator listIter;
+        //    for (listIter = this->list.begin(); listIter != this->list.end(); ++listIter)
+        //    {
+        //        node = Node(&Parser::multi_statement_interprete, Token(), std::make_shared<Node>(node), std::make_shared<Node>(*listIter));
+        //    }
+        //    this->reverse(tabCount + 1);
+        //    return;
+
+        //}
+
+        //if (currentBlockCount == 0)
+        //{
+        //    (this->*(node.func))(node); // visit_expr (node.left->func) and pass (node.left) as parameter node
+        //}
+        //
+
+        //if (this->currentToken.type != endOfFileT and error == nullptr)
+        //{
+        //    this->statements();
+        //}
+        //else if (error)
+        //{
+        //    // error;
+        //}
+    }
 
     //// المفسر اللغوي
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    //Node result;
     //bool return_ = false;
-    //std::map<std::wstring, void(Parser::*)(Node)> buildinFunction{{L"اطبع", &Parser::print}};
-    //
-    //void return_var_assign(Node node)
-    //{
-    //    (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
-    //    Node right = result;
-    //    (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
-    //    Node left = result;
-    //
-    //    if (node.token.type == plusEqualT)
-    //    {
-    //        if (right.token.type == integerT and left.token.type == integerT) 
-    //        {
-    //            right.token.value = std::to_wstring(std::stoi(left.token.value) + std::stoi(right.token.value));
-    //        }
-    //        else if (right.token.type == floatT or left.token.type == floatT)
-    //        {
-    //            right.token.value = std::to_wstring(std::stof(left.token.value) + std::stof(right.token.value));
-    //        }
-    //        else
-    //        {
-    //            std::wcout << "return value error" << std::endl;
-    //        }
-    //    }
-    //    else if (node.token.type == minusEqualT)
-    //    {
-    //        if (right.token.type == integerT and left.token.type == integerT)
-    //        {
-    //            right.token.value = std::to_wstring(std::stoi(left.token.value) - std::stoi(right.token.value));
-    //        }
-    //        else if (right.token.type == floatT or left.token.type == floatT)
-    //        {
-    //            right.token.value = std::to_wstring(std::stof(left.token.value) - std::stof(right.token.value));
-    //        }
-    //        else
-    //        {
-    //            std::wcout << "return value error" << std::endl;
-    //        }
-    //    }
-    //    else if (node.token.type == multiplyEqualT)
-    //    {
-    //        if (right.token.type == integerT and left.token.type == integerT)
-    //        {
-    //            right.token.value = std::to_wstring(std::stoi(left.token.value) * std::stoi(right.token.value));
-    //        }
-    //        else if (right.token.type == floatT or left.token.type == floatT)
-    //        {
-    //            right.token.value = std::to_wstring(std::stof(left.token.value) * std::stof(right.token.value));
-    //        }
-    //        else
-    //        {
-    //            std::wcout << "return value error" << std::endl;
-    //        }
-    //    }
-    //    else if (node.token.type == divideEqualT)
-    //    {
-    //        if (right.token.type == integerT and left.token.type == integerT)
-    //        {
-    //            right.token.value = std::to_wstring(std::stoi(left.token.value) / std::stoi(right.token.value));
-    //        }
-    //        else if (right.token.type == floatT or left.token.type == floatT)
-    //        {
-    //            right.token.value = std::to_wstring(std::stof(left.token.value) / std::stof(right.token.value));
-    //        }
-    //        else
-    //        {
-    //            std::wcout << "return value error" << std::endl;
-    //        }
-    //    }
-    //    else if (node.token.type == powerEqualT)
-    //    {
-    //        if (right.token.type == integerT and left.token.type == integerT)
-    //        {
-    //            right.token.value = std::to_wstring(pow(std::stoi(left.token.value), std::stoi(right.token.value)));
-    //        }
-    //        else if (right.token.type == floatT or left.token.type == floatT)
-    //        {
-    //            right.token.value = std::to_wstring(pow(std::stof(left.token.value), std::stof(right.token.value)));
-    //        }
-    //        else
-    //        {
-    //            std::wcout << "return value error" << std::endl;
-    //        }
-    //    }
-    //
-    //    namesTable[node.right->token.value] = right;
-    //
-    //}
     //
     //void function_define_interprete(Node node)
     //{
     //    namesTable[node.token.value] = *node.left;
     //}
     //
-    //inline  void multi_statement_interprete(Node node)
-    //{
-    //    if (node.left->func == &Parser::multi_statement_interprete)
-    //    {
-    //        (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
-    //    }
-    //    if (!return_)
-    //    {
-    //        (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
-    //    }
-    //}
     //
     //void name_call_interpreter(Node node)
     //{
@@ -1379,14 +1331,14 @@ public:
     //    }
     //    else
     //    {
-    //        (this->*(namesTable[node.token.value].func))(namesTable[node.token.value]); // visit (node.left->func) and pass (node.left) as parameter node
+    //        (this->*(namesTable[node.token.value].func))(namesTable[node.token.value]); // visit_expr (node.left->func) and pass (node.left) as parameter node
     //        return_ = false;
     //    }
     //}
     //
     //void for_interprete(Node node)
     //{
-    //    (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
+    //    (this->*(node.left->func))(*node.left); // visit_expr (node.left->func) and pass (node.left) as parameter node
     //    int value = stoi(result.token.value);
     //    Node res = Node(nullptr, Token(Position(), Position(), integerT, std::to_wstring(0)));
     //
@@ -1396,7 +1348,7 @@ public:
     //        {
     //            res.token.value = std::to_wstring(i);
     //            namesTable[node.token.value] = res;
-    //            (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
+    //            (this->*(node.right->func))(*node.right); // visit_expr (node.left->func) and pass (node.left) as parameter node
     //
     //        }
     //        else
@@ -1408,22 +1360,22 @@ public:
     //
     //void while_interprete(Node node)
     //{
-    //    (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
+    //    (this->*(node.left->func))(*node.left); // visit_expr (node.left->func) and pass (node.left) as parameter node
     //
     //    while (result.token.value != L"0")
     //    {
-    //        (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
-    //        (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
+    //        (this->*(node.right->func))(*node.right); // visit_expr (node.left->func) and pass (node.left) as parameter node
+    //        (this->*(node.left->func))(*node.left); // visit_expr (node.left->func) and pass (node.left) as parameter node
     //    }
     //}
     //
     //void if_interprete(Node node)
     //{
-    //    (this->*(node.left->func))(*node.left); // visit (node.left->func) and pass (node.left) as parameter node
+    //    (this->*(node.left->func))(*node.left); // visit_expr (node.left->func) and pass (node.left) as parameter node
     //
     //    if (result.token.value != L"0")
     //    {
-    //        (this->*(node.right->func))(*node.right); // visit (node.left->func) and pass (node.left) as parameter node
+    //        (this->*(node.right->func))(*node.right); // visit_expr (node.left->func) and pass (node.left) as parameter node
     //    }
     //}
     //
@@ -1432,30 +1384,63 @@ public:
     //
     //void print(Node node)
     //{
-    //    (this->*(node.func))(node); // visit (node.left->func) and pass (node.left) as parameter node
+    //    (this->*(node.func))(node); // visit_expr (node.left->func) and pass (node.left) as parameter node
     //    std::wcout << result.token.value << std::endl;
     //}
 
-    std::map<NUM, AlifObj> namesTable;
+    std::map<NUM, AlifObj*> namesTable;
     
-    AlifObj* visit(ExprNode* _node) {
+    AlifObj* visit_stmts(StmtsNode* _node)
+    {
+        if (_node->type_ == VExpr)
+        {
+            return this->visit_expr(_node->U.Expr.expr_);
+        }
+        else if (_node->type_ == VFunction)
+        {
+
+        }
+        else if (_node->type_ == VFor)
+        {
+
+        }
+        else if (_node->type_ == VWhile)
+        {
+
+        }
+        else if (_node->type_ == VIf)
+        {
+
+        }
+        else if (_node->type_ == VClass)
+        {
+
+        }
+    }
+
+
+
+
+
+    AlifObj* visit_expr(ExprNode* _node)
+    {
 
         if (_node->type_ == VObject)
         {
-            return &_node->U.Object.value_;
+            return _node->U.Object.value_;
         }
         else if (_node->type_ == VList)
         {
-            _node->U.Object.value_.A.List.objList = new std::vector<AlifObj*>;
-            for (ExprNode* obj : *_node->U.Object.value_.A.List.list_)
+            _node->U.Object.value_->A.List.objList = new std::vector<AlifObj*>;
+            for (ExprNode* obj : *_node->U.Object.value_->A.List.list_)
             {
-                _node->U.Object.value_.A.List.objList->push_back(this->visit(obj));
+                _node->U.Object.value_->A.List.objList->push_back(this->visit_expr(obj));
             };
-            return &_node->U.Object.value_;
+            return _node->U.Object.value_;
         }
         else if (_node->type_ == VUnaryOp)
         {
-            AlifObj* right = this->visit(_node->U.UnaryOp.right_);
+            AlifObj* right = this->visit_expr(_node->U.UnaryOp.right_);
 
             if (_node->U.UnaryOp.operator_ != TTkeyword)
             {
@@ -1477,10 +1462,11 @@ public:
             }
             return right;
         }
-        else if (_node->type_ == VBinOp)
+        else if (_node->type_ == VBinOp) 
         {
-            AlifObj* right = this->visit(_node->U.BinaryOp.right_);
-            AlifObj* left = this->visit(_node->U.BinaryOp.left_);
+            AlifObj* right = this->visit_expr(_node->U.BinaryOp.right_);
+            AlifObj* left = this->visit_expr(_node->U.BinaryOp.left_);
+            AlifObj* res = new AlifObj(*left);
 
             if (_node->U.BinaryOp.operator_ != TTkeyword)
             {
@@ -1488,46 +1474,46 @@ public:
                 {
                     if (left->type_ == TTnumber)
                     {
-                        left->A.Number.add_(right);
+                        res->A.Number.add_(right);
                     }
                     else if (left->type_ == TTstring)
                     {
-                        left->A.String.add_(right);
+                        res->A.String.add_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTminus)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        left->A.Number.sub_(right);
+                        res->A.Number.sub_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTmultiply)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        left->A.Number.mul_(right);
+                        res->A.Number.mul_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTdivide)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        left->A.Number.div_(right);
+                        res->A.Number.div_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTremain)
                 {
                     if (left->type_ == TTnumber and left->A.Number.Tkind_ == TTinteger)
                     {
-                        left->A.Number.rem_(right);
+                        res->A.Number.rem_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTpower)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        left->A.Number.pow_(right);
+                        res->A.Number.pow_(right);
                     }
                 }
 
@@ -1535,42 +1521,42 @@ public:
                 {
                     if (left->type_ == TTnumber)
                     {
-                        left->A.Number.equalE_(right);
+                        res->A.Number.equalE_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTnotEqual)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        left->A.Number.notE_(right);
+                        res->A.Number.notE_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTgreaterThan)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        left->A.Number.greaterT_(right);
+                        res->A.Number.greaterT_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTlessThan)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        left->A.Number.lessT_(right);
+                        res->A.Number.lessT_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTgreaterThanEqual)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        left->A.Number.greaterTE_(right);
+                        res->A.Number.greaterTE_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTlessThanEqual)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        left->A.Number.lessTE_(right);
+                        res->A.Number.lessTE_(right);
                     }
                 }
             }
@@ -1578,65 +1564,93 @@ public:
             {
                 if (_node->U.BinaryOp.keyword_ == Or)
                 {
-                    left->A.Boolean.or_(right);
+                    res->A.Boolean.or_(right);
                 }
                 else if (_node->U.BinaryOp.keyword_ == And)
                 {
-                    left->A.Boolean.and_(right);
+                    res->A.Boolean.and_(right);
                 }
             }
 
-            return left;
+            return res;
         }
         else if (_node->type_ == VExpr)
         {
-            AlifObj* expr_ = this->visit(_node->U.Expr.expr_);
+            AlifObj* expr_ = this->visit_expr(_node->U.Expr.expr_);
             if (_node->U.Expr.condetion_ != nullptr)
             {
-                AlifObj* condetion_ = this->visit(_node->U.Expr.condetion_);
+                AlifObj* condetion_ = this->visit_expr(_node->U.Expr.condetion_);
                 if (condetion_->A.Boolean.value_ != 0)
                 {
                     return expr_;
                 }
                 else
                 {
-                    return this->visit(_node->U.Expr.elseExpr);
+                    return this->visit_expr(_node->U.Expr.elseExpr);
                 }
             }
             return expr_;
         }
         else if (_node->type_ == VAssign)
         {
-            for (NUM i : *_node->U.NameAssign.name_.A.Name.name_)
+            for (AlifObj* i : *_node->U.NameAssign.name_)
             {
-                namesTable[i] = *this->visit(_node->U.NameAssign.value_);
+                namesTable[i->A.Name.name_] = this->visit_expr(_node->U.NameAssign.value_);
             }
         }
         else if (_node->type_ == VAccess)
         {
-            return &namesTable[_node->U.NameAccess.name_.A.Name.name_->front()]; // ملاحظة : دائما يتم الوصول الى اسم واحد لذلك يفضل عمل متغير يحمل اسم واحد للوصول اليه
+            return namesTable[_node->U.NameAccess.name_->A.Name.name_];
         }
         else if (_node->type_ == VAugAssign)
         {
-            AlifObj* value = this->visit(_node->U.AugNameAssign.value_);
-            AlifObj name = namesTable[_node->U.AugNameAssign.name_.A.Name.name_->front()];
+            AlifObj* value = this->visit_expr(_node->U.AugNameAssign.value_);
+            AlifObj* name = namesTable[_node->U.AugNameAssign.name_->A.Name.name_];
 
             if (_node->U.AugNameAssign.operator_ == TTplusEqual)
             {
-                if (name.type_ == TTnumber)
+                if (name->type_ == TTnumber)
                 {
-                    name.A.Number.add_(value);
+                    name->A.Number.add_(value);
                 }
-                else if (name.type_ == TTstring)
+                else if (name->type_ == TTstring)
                 {
-                    name.A.String.add_(value);
+                    name->A.String.add_(value);
                 }
             }
-            return &name;
+            else if (_node->U.AugNameAssign.operator_ == TTminusEqual)
+            {
+                if (name->type_ == TTnumber)
+                {
+                    name->A.Number.sub_(value);
+                }
+            }
+            else if (_node->U.AugNameAssign.operator_ == TTmultiplyEqual)
+            {
+                if (name->type_ == TTnumber)
+                {
+                    name->A.Number.mul_(value);
+                }
+            }
+            else if (_node->U.AugNameAssign.operator_ == TTdivideEqual)
+            {
+                if (name->type_ == TTnumber)
+                {
+                    name->A.Number.div_(value);
+                }
+            }
+            else if (_node->U.AugNameAssign.operator_ == TTremainEqual)
+            {
+                if (name->type_ == TTnumber)
+                {
+                    name->A.Number.rem_(value);
+                }
+            }
+            return name;
         }
         else if (_node->type_ == VReturn)
         {
-            return this->visit(_node->U.Return.expr_);
+            return this->visit_expr(_node->U.Return.expr_);
         }
     }
 
