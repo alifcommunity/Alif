@@ -326,6 +326,10 @@ public:
     STR fileName;
     STR input_;
 
+    // flags
+
+    //
+
     std::vector<AlifObj*>* names_ = new std::vector<AlifObj*>;
 
     unsigned int level = 5500;
@@ -1106,9 +1110,22 @@ public:
     //}
 
 
-    StmtsNode* else_if(int _elseIfFlag) {
+    StmtsNode* else_if() 
+    {
+        StmtsNode* body_{};
+        ExprNode* condetion_ = this->expression();
 
-        return this->if_statement(_elseIfFlag);
+        if (this->currentToken.type_ == TTcolon)
+        {
+            this->advance();
+            body_ = this->body_();
+        }
+
+        level--;
+        (stmtsNode + level)->type_ = VElseIf;
+        (stmtsNode + level)->U.If.condetion_ = condetion_;
+        (stmtsNode + level)->U.If.body_ = body_;
+        return (stmtsNode + level);
     }
 
     StmtsNode* else_() {
@@ -1125,8 +1142,9 @@ public:
         }
     }
 
-    StmtsNode* if_statement(int _elseIfFlag) 
+    StmtsNode* if_statement() 
     {
+
         StmtsNode* body_{};
         StmtsNode* elseIf{};
         StmtsNode* else_{};
@@ -1136,17 +1154,13 @@ public:
         {
             this->advance();
             body_ = this->body_();
-
         }
-        if (this->currentToken.val.keywordType == Elseif)
+        while (this->currentToken.val.keywordType == Elseif)
         {
             this->advance();
-            _elseIfFlag++;
-            elseIf = this->else_if(_elseIfFlag);
-            _elseIfFlag--;
-
+            elseIf = this->else_if();
         }
-        if (this->currentToken.val.keywordType == Else and _elseIfFlag == 0)
+        if (this->currentToken.val.keywordType == Else)
         {
             this->advance();
             else_ = this->else_();
@@ -1211,7 +1225,7 @@ public:
         else if (this->currentToken.val.keywordType == If)
         {
             this->advance();
-            return this->if_statement(0);
+            return this->if_statement();
         }
         else if (this->currentToken.val.keywordType == For)
         {

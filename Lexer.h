@@ -15,7 +15,8 @@ public:
 
     int name = 0; // for convert names to numbers
     std::map<STR, int> namesAlter = {};
-    int lastIndentLength = 0; // for indent
+    unsigned int lastIndentLength = 0; // for indent
+    unsigned int lastSpaces_ = 0; // for dedent
 
     ////////////
 
@@ -195,13 +196,26 @@ public:
         if (spaces > lastIndentLength)
         {
             this->tokens_.push_back(Token(positionStart, this->position_, TTindent, spaces));
+            lastSpaces_ = this->lastIndentLength;
+            this->lastIndentLength = spaces;
         }
         else if (spaces < lastIndentLength)
         {
-            this->tokens_.push_back(Token(positionStart, this->position_, TTdedent, spaces));
+            while (this->lastIndentLength != spaces)
+            {
+                if (this->lastSpaces_ != 0)
+                {
+                    this->lastIndentLength -= this->lastSpaces_;
+                }
+                else
+                {
+                    this->lastIndentLength = 0;
+                }
+                this->tokens_.push_back(Token(positionStart, this->position_, TTdedent, spaces));
+
+            }
         }
 
-        this->lastIndentLength = spaces;
     }
 
     void make_newline()
