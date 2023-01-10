@@ -525,25 +525,29 @@ public:
 
     ExprNode* primary() {
 
-        ExprNode* atom_ = this->atom();
-        names_->push_back(atom_->U.Object.value_);
-
-        if (this->currentToken.type_ == TTdot)
+        if (this->currentToken.type_ == TTname)
         {
-            this->advance();
-            this->primary();
+            AlifObj* name_ = new AlifObj;
+            name_->type_ = TTname;
+            name_->A.Name.name_ = this->currentToken.val.numVal;
 
-            level--;
+            names_->push_back(name_);
 
-            (exprNode + level)->U.Call.names_ = names_;
-            (exprNode + level)->type_ = VCall;
+            if (this->currentToken.type_ == TTdot)
+            {
+                this->advance();
+                this->primary();
 
-            return (exprNode + level);
+                level--;
+
+                (exprNode + level)->U.Call.names_ = names_;
+                (exprNode + level)->type_ = VCall;
+
+                return (exprNode + level);
+            }
+
         }
-        else
-        {
-            return atom_;
-        }
+        return this->atom();
 
         //else if (this->currentToken.type == lParenthesisT)
         //{
@@ -847,21 +851,26 @@ public:
         if (this->currentToken.type_ == TTname)
         {
             std::vector<AlifObj*>* names_ = new std::vector<AlifObj*>; // يجب الاستغناء عنها لانه تم إنشاء مصفوفة اسماء عامة
+            AlifObj* name_ = new AlifObj;
 
-            ExprNode* name_ = this->atom();
+            name_->type_ = TTname;
+            name_->A.Name.name_ = this->currentToken.val.numVal;
 
             if (this->currentToken.type_ == TTequal)
             {
-                names_->push_back(name_->U.NameAccess.name_);
+                names_->push_back(name_);
                 this->advance();
 
                 while (this->currentToken.type_ == TTname)
                 {
-                    name_ = this->atom();
+                    AlifObj* name_ = new AlifObj;
+
+                    name_->type_ = TTname;
+                    name_->A.Name.name_ = this->currentToken.val.numVal;
 
                     if (this->currentToken.type_ == TTequal)
                     {
-                        names_->push_back(name_->U.NameAccess.name_);
+                        names_->push_back(name_);
                         this->advance();
 
                     }
@@ -894,7 +903,7 @@ public:
                 ExprNode* expr_ = this->expression();
                 level--;
 
-                (exprNode + level)->U.AugNameAssign.name_ = name_->U.NameAccess.name_;
+                (exprNode + level)->U.AugNameAssign.name_ = name_;
                 (exprNode + level)->U.AugNameAssign.operator_ = opToken.type_;
                 (exprNode + level)->U.AugNameAssign.value_ = expr_;
                 (exprNode + level)->type_ = VAugAssign;
