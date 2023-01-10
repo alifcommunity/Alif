@@ -304,7 +304,12 @@ struct StmtsNode {
             StmtsNode* elseIf;
             StmtsNode* else_;
         }If;
-
+        struct
+        {
+            AlifObj* name;
+            StmtsNode* body;
+            ExprNode* base;
+        }ClassDef;
         struct {
             std::vector<StmtsNode*>* stmts_;
         }Stmts;
@@ -826,6 +831,7 @@ public:
             level--;
         
             obj_->A.List.list_ = exprs_;
+            obj_->type_ = TTlist; // يجب اضافة نوع للكائن لمعرفة البيانات التي يحتويها
             (exprNode + level)->U.Object.value_ = obj_; 
             (exprNode + level)->type_ = VList;
 
@@ -925,6 +931,42 @@ public:
     //void class_defination() {
     //    expressions();
     //}
+
+
+    StmtsNode * class_def() {
+        ExprNode* bases = nullptr;
+        StmtsNode* body = nullptr;
+        AlifObj* name = new AlifObj;
+        if (this->currentToken.val.keywordType == Class) {
+            this->advance();
+            if (this->currentToken.type_ == TTname) {
+                name->type_ = TTname;
+                name->A.Name.name_ = this->currentToken.val.numVal;
+                this->advance();
+                if (this->currentToken.type_ == TTlParenthesis) {
+                    this->advance();
+                    bases = this->expressions();
+                    if (this->currentToken.type_ == TTrParenthesis)
+                    {
+                        this->advance();
+                    }
+                }
+                if (this->currentToken.type_ == TTcolon) {
+                    this->advance();
+                    body = this->block_();
+                    level--;
+                    (stmtsNode + level)->type_ = VClass;
+                    (stmtsNode + level)->U.ClassDef.name = name;
+                    (stmtsNode + level)->U.ClassDef.base = bases;
+                    (stmtsNode + level)->U.ClassDef.body = body;
+                    return (stmtsNode + level);
+                }
+            }
+        }
+        else {
+            return nullptr;
+        }
+    }
 
     //void function_defination() {
 
@@ -1226,6 +1268,10 @@ public:
         else if (this->currentToken.val.keywordType == While)
         {
             // return this->while_statement();
+        }
+        else if (this->currentToken.val.keywordType == Class)
+        {
+            return this->class_def();
         }
     }
 
