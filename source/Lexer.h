@@ -195,9 +195,16 @@ public:
 
         if (spaces > lastIndentLength)
         {
-            this->tokens_.push_back(Token(positionStart, this->position_, TTindent, spaces));
-            this->lastSpaces_ = this->lastIndentLength;
-            this->lastIndentLength = spaces;
+            if (this->currentChar != L'\n') // تحقق اذا كان السطر لا يحتوي سوى مسافات بادئة >> قم بتخطيه
+            {
+                this->tokens_.push_back(Token(positionStart, this->position_, TTindent, spaces));
+                this->lastSpaces_ = this->lastIndentLength;
+                this->lastIndentLength = spaces;
+            }
+            else
+            {
+                this->advance();
+            }
         }
         else if (spaces < lastIndentLength)
         {
