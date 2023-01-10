@@ -304,12 +304,14 @@ struct StmtsNode {
             StmtsNode* elseIf;
             StmtsNode* else_;
         }If;
+
         struct
         {
             AlifObj* name;
             StmtsNode* body;
             ExprNode* base;
         }ClassDef;
+
         struct {
             std::vector<StmtsNode*>* stmts_;
         }Stmts;
@@ -377,7 +379,7 @@ public:
             //} // for print list only
             //lst.replace(lst.length() - 2, lst.length(), L"]");
             //prnt(lst);
-            prnt(res->A.Number.value_);
+            //prnt(res->A.Number.value_);
 
         } while (currentToken.type_ != TTendOfFile);
 
@@ -933,27 +935,40 @@ public:
     //}
 
 
-    StmtsNode * class_def() {
+    StmtsNode* class_def() {
+
         ExprNode* bases = nullptr;
         StmtsNode* body = nullptr;
         AlifObj* name = new AlifObj;
+
         if (this->currentToken.val.keywordType == Class) {
+
             this->advance();
+            
             if (this->currentToken.type_ == TTname) {
+
                 name->type_ = TTname;
                 name->A.Name.name_ = this->currentToken.val.numVal;
+
                 this->advance();
+
                 if (this->currentToken.type_ == TTlParenthesis) {
+
                     this->advance();
+                    
                     bases = this->expressions();
+                    
                     if (this->currentToken.type_ == TTrParenthesis)
                     {
                         this->advance();
                     }
                 }
                 if (this->currentToken.type_ == TTcolon) {
+
                     this->advance();
+                    
                     body = this->block_();
+                    
                     level--;
                     (stmtsNode + level)->type_ = VClass;
                     (stmtsNode + level)->U.ClassDef.name = name;
@@ -1026,26 +1041,6 @@ public:
     //    //    this->simple_statement();
     //    //}
     //}
-
-    //void indentent ()
-    //{
-    //    currentBlockCount++;
-    //    while (this->currentToken.type == tabT) {
-    //        this->advance();
-    //    }
-    //    currentTabCount++; // ملاحظة: يجب التقدم بعدد المسافات وليس تقدم مرة واحدة فقط
-    //}
-
-    //void deindentent ()
-    //{
-    //    currentBlockCount--;
-    //    while (this->currentToken.type == tabT)
-    //    {
-    //        this->advance();
-    //    }
-    //    currentTabCount--;
-    //}
-
 
     //void while_statement() {
     //    Node expr;
