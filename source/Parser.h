@@ -304,7 +304,7 @@ struct StmtsNode {
 
         struct {
             ExprNode* condetion_;
-            StmtsNode* body_;
+            StmtsNode* block_;
             StmtsNode* elseIf;
             StmtsNode* else_;
         }If;
@@ -1112,19 +1112,19 @@ public:
 
     StmtsNode* else_if() 
     {
-        StmtsNode* body_{};
+        StmtsNode* block_{};
         ExprNode* condetion_ = this->expression();
 
         if (this->currentToken.type_ == TTcolon)
         {
             this->advance();
-            body_ = this->body_();
+            block_ = this->block_();
         }
 
         level--;
         (stmtsNode + level)->type_ = VElseIf;
         (stmtsNode + level)->U.If.condetion_ = condetion_;
-        (stmtsNode + level)->U.If.body_ = body_;
+        (stmtsNode + level)->U.If.block_ = block_;
         return (stmtsNode + level);
     }
 
@@ -1133,7 +1133,7 @@ public:
         if (this->currentToken.type_ == TTcolon)
         {
             this->advance();
-            return this->body_();
+            return this->block_();
         }
         else
         {
@@ -1145,7 +1145,7 @@ public:
     StmtsNode* if_statement() 
     {
 
-        StmtsNode* body_{};
+        StmtsNode* block_{};
         StmtsNode* elseIf{};
         StmtsNode* else_{};
         ExprNode* condetion_ = this->expression();
@@ -1153,7 +1153,7 @@ public:
         if (this->currentToken.type_ == TTcolon)
         {
             this->advance();
-            body_ = this->body_();
+            block_ = this->block_();
         }
         while (this->currentToken.val.keywordType == Elseif)
         {
@@ -1169,14 +1169,14 @@ public:
         level--;
         (stmtsNode + level)->type_ = VIf;
         (stmtsNode + level)->U.If.condetion_ = condetion_;
-        (stmtsNode + level)->U.If.body_ = body_;
+        (stmtsNode + level)->U.If.block_ = block_;
         (stmtsNode + level)->U.If.elseIf = elseIf;
         (stmtsNode + level)->U.If.else_ = else_;
         return (stmtsNode + level);
         
     }
 
-    StmtsNode* body_()
+    StmtsNode* block_()
     {
         if (this->currentToken.type_ == TTnewline)
         {

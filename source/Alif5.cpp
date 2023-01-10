@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
     std::wstring input_;
     std::wstring line;
 
-    std::wifstream fileContent("AlifCode.alif5");
+    std::wifstream fileContent("../source/AlifCode.alif5");
     //std::wifstream fileContent(argv[1]);
     fileContent.imbue(std::locale("ar_SA.UTF-8"));
 

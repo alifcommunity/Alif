@@ -196,7 +196,7 @@ public:
         if (spaces > lastIndentLength)
         {
             this->tokens_.push_back(Token(positionStart, this->position_, TTindent, spaces));
-            lastSpaces_ = this->lastIndentLength;
+            this->lastSpaces_ = this->lastIndentLength;
             this->lastIndentLength = spaces;
         }
         else if (spaces < lastIndentLength)
