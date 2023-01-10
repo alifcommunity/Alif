@@ -278,10 +278,6 @@ struct ExprNode
             ExprNode* elseExpr;
         }Expr;
 
-        //struct {
-        //    std::vector<ExprNode*>* exprs_;
-        //}Exprs;
-
         struct {
             ExprNode* expr_;
         }Return;
@@ -325,10 +321,6 @@ public:
     Token currentToken;
     STR fileName;
     STR input_;
-
-    // flags
-
-    //
 
     std::vector<AlifObj*>* names_ = new std::vector<AlifObj*>;
 

@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
 
     while (std::getline(fileContent, line))
     {
-        if (line != L"" and line != L"\t")
+        if (line != L"")
         {
             input_ += line;
             input_ += L"\n";
