@@ -1,5 +1,7 @@
 #pragma once
 
+#define Next_Is(t) (this->tokens->at(this->tokenIndex + 1).type_ == t ? true : false )
+
 class Parser;
 struct ExprNode;
 
@@ -329,8 +331,6 @@ public:
     STR fileName;
     STR input_;
 
-    std::vector<AlifObj*>* names_ = new std::vector<AlifObj*>;
-
     unsigned int level = 5500;
     ExprNode* exprNode = (ExprNode*)malloc(level * sizeof(struct ExprNode));
     StmtsNode* stmtsNode = (StmtsNode*)malloc(level * sizeof(struct StmtsNode));
@@ -365,7 +365,7 @@ public:
     {
         StmtsNode* result = nullptr;
         AlifObj* res = nullptr;
-                
+        
         do {
             result = this->statement();
             res = this->visit_stmts(result);
@@ -379,7 +379,8 @@ public:
             //} // for print list only
             //lst.replace(lst.length() - 2, lst.length(), L"]");
             //prnt(lst);
-            //prnt(res->A.Number.value_);
+            // 
+            prnt(res->A.Number.value_);
 
         } while (currentToken.type_ != TTendOfFile);
 
@@ -525,28 +526,33 @@ public:
 
     ExprNode* primary() {
 
-        if (this->currentToken.type_ == TTname)
-        {
-            AlifObj* name_ = new AlifObj;
-            name_->type_ = TTname;
-            name_->A.Name.name_ = this->currentToken.val.numVal;
+        //if (this->currentToken.type_ == TTname)
+        //{
+        //    std::vector<AlifObj*>* names_ = new std::vector<AlifObj*>; // not correct >> it will create repeatly so we should find other algorithm
 
-            names_->push_back(name_);
+        //    AlifObj* name_ = new AlifObj;
+        //    name_->type_ = TTname;
+        //    name_->A.Name.name_ = this->currentToken.val.numVal;
 
-            if (this->currentToken.type_ == TTdot)
-            {
-                this->advance();
-                this->primary();
+        //    names_->push_back(name_);
 
-                level--;
+        //    this->advance();
 
-                (exprNode + level)->U.Call.names_ = names_;
-                (exprNode + level)->type_ = VCall;
+        //    if (this->currentToken.type_ == TTdot)
+        //    {
+        //        this->advance();
 
-                return (exprNode + level);
-            }
+        //        this->primary();
 
-        }
+        //        level--;
+
+        //        (exprNode + level)->U.Call.names_ = names_;
+        //        (exprNode + level)->type_ = VCall;
+
+        //        return (exprNode + level);
+        //    }
+
+        //}
         return this->atom();
 
         //else if (this->currentToken.type == lParenthesisT)
@@ -837,7 +843,7 @@ public:
             level--;
         
             obj_->A.List.list_ = exprs_;
-            obj_->type_ = TTlist; // يجب اضافة نوع للكائن لمعرفة البيانات التي يحتويها
+            obj_->type_ = TTlist;
             (exprNode + level)->U.Object.value_ = obj_; 
             (exprNode + level)->type_ = VList;
 
@@ -848,37 +854,24 @@ public:
 
     ExprNode* assignment() {
 
+
         if (this->currentToken.type_ == TTname)
         {
-            std::vector<AlifObj*>* names_ = new std::vector<AlifObj*>; // يجب الاستغناء عنها لانه تم إنشاء مصفوفة اسماء عامة
-            AlifObj* name_ = new AlifObj;
-
-            name_->type_ = TTname;
-            name_->A.Name.name_ = this->currentToken.val.numVal;
-
-            if (this->currentToken.type_ == TTequal)
+            if (Next_Is(TTequal))
             {
-                names_->push_back(name_);
-                this->advance();
+                std::vector<AlifObj*>* names_ = new std::vector<AlifObj*>;
 
-                while (this->currentToken.type_ == TTname)
+                while (Next_Is(TTequal))
                 {
                     AlifObj* name_ = new AlifObj;
 
                     name_->type_ = TTname;
                     name_->A.Name.name_ = this->currentToken.val.numVal;
 
-                    if (this->currentToken.type_ == TTequal)
-                    {
-                        names_->push_back(name_);
-                        this->advance();
+                    names_->push_back(name_);
 
-                    }
-                    else
-                    {
-                        this->reverse();
-                        break;
-                    }
+                    this->advance();
+                    this->advance();
 
                 }
 
@@ -890,14 +883,22 @@ public:
                 (exprNode + level)->type_ = VAssign;
 
                 return (exprNode + level);
+
             }
-            else if (this->currentToken.type_ == TTplusEqual or this->currentToken.type_ == TTminusEqual or this->currentToken.type_ == TTmultiplyEqual or this->currentToken.type_ == TTdivideEqual or this->currentToken.type_ == TTpowerEqual or this->currentToken.type_ == TTremainEqual)
+            else if (Next_Is(TTplusEqual) or Next_Is(TTminusEqual) or Next_Is(TTmultiplyEqual) or Next_Is(TTdivideEqual) or Next_Is(TTpowerEqual) or Next_Is(TTremainEqual))
             {
                 // يجب إختصار نوع التحقق الى TTaugAssign
                 // بحيث يتم تخزين النوع في العملية بشكل مباشر دون التحقق منها
                 // if token.type == TTaugassign then operator = opToken.type 
 
+                AlifObj* name_ = new AlifObj;
+                name_->type_ = TTname;
+                name_->A.Name.name_ = this->currentToken.val.numVal;
+
+                this->advance();
+
                 Token opToken = this->currentToken;
+
 
                 this->advance();
                 ExprNode* expr_ = this->expression();
@@ -911,14 +912,8 @@ public:
                 return (exprNode + level);
 
             }
-            else
-            {
-                delete names_;
-                this->reverse();
-                return this->expressions();
-
-            }
         }
+
         return this->expressions();
     }
 
@@ -950,45 +945,37 @@ public:
         StmtsNode* body = nullptr;
         AlifObj* name = new AlifObj;
 
-        if (this->currentToken.val.keywordType == Class) {
+        if (this->currentToken.type_ == TTname) {
+
+            name->type_ = TTname;
+            name->A.Name.name_ = this->currentToken.val.numVal;
 
             this->advance();
-            
-            if (this->currentToken.type_ == TTname) {
 
-                name->type_ = TTname;
-                name->A.Name.name_ = this->currentToken.val.numVal;
+            if (this->currentToken.type_ == TTlParenthesis) {
 
                 this->advance();
-
-                if (this->currentToken.type_ == TTlParenthesis) {
-
+                    
+                bases = this->expressions();
+                    
+                if (this->currentToken.type_ == TTrParenthesis)
+                {
                     this->advance();
-                    
-                    bases = this->expressions();
-                    
-                    if (this->currentToken.type_ == TTrParenthesis)
-                    {
-                        this->advance();
-                    }
-                }
-                if (this->currentToken.type_ == TTcolon) {
-
-                    this->advance();
-                    
-                    body = this->block_();
-                    
-                    level--;
-                    (stmtsNode + level)->type_ = VClass;
-                    (stmtsNode + level)->U.ClassDef.name = name;
-                    (stmtsNode + level)->U.ClassDef.base = bases;
-                    (stmtsNode + level)->U.ClassDef.body = body;
-                    return (stmtsNode + level);
                 }
             }
-        }
-        else {
-            return nullptr;
+            if (this->currentToken.type_ == TTcolon) {
+
+                this->advance();
+                    
+                body = this->block_();
+                    
+                level--;
+                (stmtsNode + level)->type_ = VClass;
+                (stmtsNode + level)->U.ClassDef.name = name;
+                (stmtsNode + level)->U.ClassDef.base = bases;
+                (stmtsNode + level)->U.ClassDef.body = body;
+                return (stmtsNode + level);
+            }
         }
     }
 
@@ -1275,6 +1262,7 @@ public:
         }
         else if (this->currentToken.val.keywordType == Class)
         {
+            this->advance();
             return this->class_def();
         }
     }
