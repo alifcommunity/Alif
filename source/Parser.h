@@ -303,7 +303,7 @@ struct StmtsNode {
         struct {
             ExprNode* condetion_;
             StmtsNode* block_;
-            StmtsNode* elseIf;
+            std::vector<StmtsNode*>* elseIf;
             StmtsNode* else_;
         }If;
 
@@ -1171,7 +1171,7 @@ public:
     {
 
         StmtsNode* block_{};
-        StmtsNode* elseIf{};
+        std::vector<StmtsNode*>* elseIf = new std::vector<StmtsNode*>;
         StmtsNode* else_{};
         ExprNode* condetion_ = this->expression();
 
@@ -1183,7 +1183,7 @@ public:
         while (this->currentToken.val.keywordType == Elseif)
         {
             this->advance();
-            elseIf = this->else_if();
+            elseIf->push_back(this->else_if());
         }
         if (this->currentToken.val.keywordType == Else)
         {
@@ -1444,6 +1444,10 @@ public:
         {
 
         }
+        else if (_node->type_ == VClass)
+        {
+
+        }
         else if (_node->type_ == VFor)
         {
 
@@ -1454,11 +1458,37 @@ public:
         }
         else if (_node->type_ == VIf)
         {
+            AlifObj* debug = new AlifObj; // for debug only and should be deleted
+
+            if (this->visit_expr(_node->U.If.condetion_)->A.Boolean.value_)
+            {
+                return this->visit_stmts(_node->U.If.block_);
+            }
+            else if (_node->U.If.elseIf != nullptr)
+            {
+                for (StmtsNode* elseIfs : *_node->U.If.elseIf)
+                {
+                    if (this->visit_expr(elseIfs->U.If.condetion_)->A.Boolean.value_)
+                    {
+                        debug = this->visit_stmts(elseIfs->U.If.block_);
+                        return debug; // for debug
+                        break;
+                    }
+                }
+
+            }
+            if (_node->U.If.else_ != nullptr){
+                return this->visit_stmts(_node->U.If.else_);
+            }
 
         }
-        else if (_node->type_ == VClass)
+        else if (_node->type_ == VStmts)
         {
-
+            for (StmtsNode* stmt_ : *_node->U.Stmts.stmts_)
+            {
+                this->visit_stmts(stmt_);
+            }
+            return this->visit_stmts(_node->U.Stmts.stmts_->front()); // for debug only
         }
     }
 
