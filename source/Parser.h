@@ -314,6 +314,12 @@ struct StmtsNode {
             StmtsNode* else_;
         }For;
 
+        struct {
+            ExprNode* condetion_;
+            StmtsNode* block_;
+            StmtsNode* else_;
+        }While;
+
         struct
         {
             AlifObj* name;
@@ -358,15 +364,15 @@ public:
         }
     }
 
-    void reverse() {
-        this->tokenIndex--;
-        if (this->tokenIndex >= 0 and this->tokenIndex < this->tokens->size()) 
-        {
-            std::vector<Token>::iterator listIter = tokens->begin();
-            std::advance(listIter, this->tokenIndex);
-            this->currentToken = *listIter;
-        }
-    }
+    //void reverse() {
+    //    this->tokenIndex--;
+    //    if (this->tokenIndex >= 0 and this->tokenIndex < this->tokens->size()) 
+    //    {
+    //        std::vector<Token>::iterator listIter = tokens->begin();
+    //        std::advance(listIter, this->tokenIndex);
+    //        this->currentToken = *listIter;
+    //    }
+    //}
 
     void parse()
     {
@@ -387,9 +393,7 @@ public:
             //lst.replace(lst.length() - 2, lst.length(), L"]");
             //prnt(lst);
             // 
-            prnt(res->A.Number.value_);
-
-            //prnt((long int)namesTable[1]->A.Number.value_);
+            //prnt(res->A.Number.value_);
 
         } while (currentToken.type_ != TTendOfFile);
 
@@ -1047,42 +1051,32 @@ public:
     //    //}
     //}
 
-    //void while_statement() {
-    //    Node expr;
+    StmtsNode* while_statement() {
 
-    //    this->advance();
+        ExprNode* condetion_ = this->expression();
+        StmtsNode* block_ = nullptr;
+        StmtsNode* else_ = nullptr;
+        
+        if (this->currentToken.type_ == TTcolon)
+        {
+            this->advance();
+            block_ = this->block_();
+        }
+        if (this->currentToken.type_ == TTkeyword and this->currentToken.val.keywordType == Else)
+        {
+            else_ = this->else_();
+        }
 
-    //    this->expression();
-    //    expr = node;
+        level--;
 
-    //    if (this->currentToken.type == colonT)
-    //    {
-    //        this->advance();
-    //        this->while_body();
-    //        node = Node(&Parser::while_interprete, this->currentToken, std::make_shared<Node>(expr), std::make_shared<Node>(node));
-    //    }
-    //}
+        (stmtsNode + level)->type_ = VWhile;
+        (stmtsNode + level)->U.While.condetion_ = condetion_;
+        (stmtsNode + level)->U.While.block_ = block_;
+        (stmtsNode + level)->U.While.else_ = else_;
 
-    //void while_body()
-    //{
-    //    if (this->currentToken.type == newlineT)
-    //    {
-    //        // move list content to other store temporary to start store new body content
-    //        std::vector<Node> tempList = this->list;
-    //        this->list.clear();
+        return (stmtsNode + level);
 
-    //        this->advance();
-
-    //        this->indentent();
-
-    //        this->statements();
-
-    //        if (currentBlockCount != 0)
-    //        {
-    //            this->list = tempList;
-    //        }
-    //    }
-    //}
+    }
 
     StmtsNode* for_statement() 
     {
@@ -1166,34 +1160,6 @@ public:
             return (stmtsNode + level);
         }
     }
-
-    //void for_body(Node expr, Token name)
-    //{
-    //    if (this->currentToken.type == newlineT) {
-
-
-    //        // move list content to other store temporary to start store new body content
-    //        std::vector<Node> tempList = this->list;
-    //        this->list.clear();
-
-    //        this->advance();
-
-    //        this->indentent();
-
-    //        this->statements();
-
-    //        node = Node(&Parser::for_interprete, name, std::make_shared<Node>(expr), std::make_shared<Node>(node)); // node = body node
-
-    //        if (currentBlockCount != 0)
-    //        {
-    //            this->list = tempList;
-    //        }
-    //    }
-    //    //else {
-    //    //    this->simple_statement();
-    //    //}
-    //}
-
 
     StmtsNode* else_if() 
     {
@@ -1315,11 +1281,12 @@ public:
         else if (this->currentToken.val.keywordType == For)
         {
             this->advance();
-             return this->for_statement();
+            return this->for_statement();
         }
         else if (this->currentToken.val.keywordType == While)
         {
-            // return this->while_statement();
+            this->advance();
+            return this->while_statement();
         }
         else if (this->currentToken.val.keywordType == Class)
         {
@@ -1368,52 +1335,6 @@ public:
         (stmtsNode + level)->U.Stmts.stmts_ = statements_;
         return (stmtsNode + level);
 
-        //if (currentBlockCount != 0)
-        //{
-        //    this->list.push_back(node);
-        //}
-
-        //while (this->currentToken.type == tabT) // لتجاهل المسافة تاب بعد السطر
-        //{
-        //    this->advance();
-        //}
-
-        //this->advance();
-        //
-        //while (this->currentToken.type == tabT)
-        //{
-        //    this->advance();
-        //    tabCount++;
-        //}
-
-        //if (currentTabCount != tabCount)
-        //{
-        //    this->deindentent();
-        //    // for i in list : node = Node(MultiStatementNode, Token(), std::make_shared<Node>(i));
-        //    std::vector<Node>::iterator listIter;
-        //    for (listIter = this->list.begin(); listIter != this->list.end(); ++listIter)
-        //    {
-        //        node = Node(&Parser::multi_statement_interprete, Token(), std::make_shared<Node>(node), std::make_shared<Node>(*listIter));
-        //    }
-        //    this->reverse(tabCount + 1);
-        //    return;
-
-        //}
-
-        //if (currentBlockCount == 0)
-        //{
-        //    (this->*(node.func))(node); // visit_expr (node.left->func) and pass (node.left) as parameter node
-        //}
-        //
-
-        //if (this->currentToken.type != endOfFileT and error == nullptr)
-        //{
-        //    this->statements();
-        //}
-        //else if (error)
-        //{
-        //    // error;
-        //}
     }
 
     //// المفسر اللغوي
@@ -1441,48 +1362,6 @@ public:
     //    }
     //}
     //
-    //void for_interprete(Node node)
-    //{
-    //    (this->*(node.left->func))(*node.left); // visit_expr (node.left->func) and pass (node.left) as parameter node
-    //    int value = stoi(result.token.value);
-    //    Node res = Node(nullptr, Token(Position(), Position(), integerT, std::to_wstring(0)));
-    //
-    //    for (unsigned int i = 0; i < value; i++)
-    //    {
-    //        if (!return_)
-    //        {
-    //            res.token.value = std::to_wstring(i);
-    //            namesTable[node.token.value] = res;
-    //            (this->*(node.right->func))(*node.right); // visit_expr (node.left->func) and pass (node.left) as parameter node
-    //
-    //        }
-    //        else
-    //        {
-    //            break;
-    //        }
-    //    }
-    //}
-    //
-    //void while_interprete(Node node)
-    //{
-    //    (this->*(node.left->func))(*node.left); // visit_expr (node.left->func) and pass (node.left) as parameter node
-    //
-    //    while (result.token.value != L"0")
-    //    {
-    //        (this->*(node.right->func))(*node.right); // visit_expr (node.left->func) and pass (node.left) as parameter node
-    //        (this->*(node.left->func))(*node.left); // visit_expr (node.left->func) and pass (node.left) as parameter node
-    //    }
-    //}
-    //
-    //void if_interprete(Node node)
-    //{
-    //    (this->*(node.left->func))(*node.left); // visit_expr (node.left->func) and pass (node.left) as parameter node
-    //
-    //    if (result.token.value != L"0")
-    //    {
-    //        (this->*(node.right->func))(*node.right); // visit_expr (node.left->func) and pass (node.left) as parameter node
-    //    }
-    //}
     //
     //// الدوال المدمجة
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1549,11 +1428,18 @@ public:
         }
         else if (_node->type_ == VWhile)
         {
-
+            while (this->visit_expr(_node->U.While.condetion_)->A.Boolean.value_)
+            {
+                this->visit_stmts(_node->U.While.block_);
+            }
+            if (_node->U.While.else_ != nullptr)
+            {
+                this->visit_stmts(_node->U.While.else_);
+            }
+            return _node->U.While.condetion_->U.Object.value_;
         }
         else if (_node->type_ == VIf)
         {
-            AlifObj* debug = new AlifObj; // for debug only and should be deleted
 
             if (this->visit_expr(_node->U.If.condetion_)->A.Boolean.value_)
             {
@@ -1565,8 +1451,7 @@ public:
                 {
                     if (this->visit_expr(elseIfs->U.If.condetion_)->A.Boolean.value_)
                     {
-                        debug = this->visit_stmts(elseIfs->U.If.block_);
-                        return debug; // for debug
+                        this->visit_stmts(elseIfs->U.If.block_);
                         break;
                     }
                 }
@@ -1589,7 +1474,7 @@ public:
 
 
 
-    AlifObj* res = new AlifObj; 
+
     AlifObj* visit_expr(ExprNode* _node)
     {
 
@@ -1634,7 +1519,7 @@ public:
         {
             AlifObj* right = this->visit_expr(_node->U.BinaryOp.right_);
             AlifObj* left = this->visit_expr(_node->U.BinaryOp.left_);
-            res = new AlifObj(*left); // يجب مراجعتها لانها تقوم بإستهلاك الكثير من الذاكرة والاداء
+            AlifObj* res = new AlifObj(*left); // يجب مراجعتها لانها تقوم بإستهلاك الكثير من الذاكرة والاداء
 
             if (_node->U.BinaryOp.operator_ != TTkeyword)
             {
