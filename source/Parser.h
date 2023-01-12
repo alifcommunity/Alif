@@ -387,9 +387,9 @@ public:
             //lst.replace(lst.length() - 2, lst.length(), L"]");
             //prnt(lst);
             // 
-            //prnt(res->A.Number.value_);
+            prnt(res->A.Number.value_);
 
-            prnt(namesTable[1]->A.Number.value_);
+            //prnt((long int)namesTable[1]->A.Number.value_);
 
         } while (currentToken.type_ != TTendOfFile);
 
@@ -1589,7 +1589,7 @@ public:
 
 
 
-
+    AlifObj* res = new AlifObj; 
     AlifObj* visit_expr(ExprNode* _node)
     {
 
@@ -1634,7 +1634,7 @@ public:
         {
             AlifObj* right = this->visit_expr(_node->U.BinaryOp.right_);
             AlifObj* left = this->visit_expr(_node->U.BinaryOp.left_);
-            AlifObj* res = new AlifObj(*left);
+            res = new AlifObj(*left); // يجب مراجعتها لانها تقوم بإستهلاك الكثير من الذاكرة والاداء
 
             if (_node->U.BinaryOp.operator_ != TTkeyword)
             {
@@ -1761,9 +1761,18 @@ public:
         }
         else if (_node->type_ == VAssign)
         {
-            for (AlifObj* i : *_node->U.NameAssign.name_)
+            if (_node->U.NameAssign.name_->size() < 2)
             {
-                namesTable[i->A.Name.name_] = this->visit_expr(_node->U.NameAssign.value_);
+                namesTable[_node->U.NameAssign.name_->front()->A.Name.name_] = this->visit_expr(_node->U.NameAssign.value_);
+
+            }
+            else
+            {
+                for (AlifObj* i : *_node->U.NameAssign.name_)
+                {
+                    namesTable[i->A.Name.name_] = this->visit_expr(_node->U.NameAssign.value_);
+                }
+
             }
         }
         else if (_node->type_ == VAccess)
