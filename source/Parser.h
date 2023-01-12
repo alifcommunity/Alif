@@ -307,6 +307,13 @@ struct StmtsNode {
             StmtsNode* else_;
         }If;
 
+        struct {
+            AlifObj* itrName;
+            std::vector<AlifObj*>* args_;
+            StmtsNode* block_;
+            StmtsNode* else_;
+        }For;
+
         struct
         {
             AlifObj* name;
@@ -380,7 +387,9 @@ public:
             //lst.replace(lst.length() - 2, lst.length(), L"]");
             //prnt(lst);
             // 
-            prnt(res->A.Number.value_);
+            //prnt(res->A.Number.value_);
+
+            prnt(namesTable[1]->A.Number.value_);
 
         } while (currentToken.type_ != TTendOfFile);
 
@@ -1075,37 +1084,88 @@ public:
     //    }
     //}
 
-    //void for_statement() 
-    //{
-    //    Node expr;
-    //    Token name;
+    StmtsNode* for_statement() 
+    {
+        if (this->currentToken.type_ == TTname)
+        {
+            AlifObj* itrName = new AlifObj;
+            std::vector<AlifObj*>* args_ = new std::vector<AlifObj*>;
+            StmtsNode* block_ = nullptr;
+            StmtsNode* else_ = nullptr;
 
-    //    this->advance();
-    //    if (this->currentToken.type == nameT)
-    //    {
-    //        name = this->currentToken;
-    //        this->advance();
-    //        if (this->currentToken.value == L"في")
-    //        {
-    //            this->advance();
-    //            if (this->currentToken.type == lParenthesisT)
-    //            {
-    //                this->advance();
-    //                this->expression();
-    //                expr = node;
-    //            }
-    //            if (this->currentToken.type == rParenthesisT)
-    //            {
-    //                this->advance();
-    //            }
-    //            if (this->currentToken.type == colonT)
-    //            {
-    //                this->advance();
-    //                this->for_body(expr, name);
-    //            }
-    //        }
-    //    }
-    //}
+            if (Next_Is(TTkeyword))
+            {
+
+                itrName->type_ = TTname;
+                itrName->A.Name.name_ = this->currentToken.val.numVal;
+
+                this->advance();
+
+                if (this->currentToken.val.keywordType == In)
+                {
+                    this->advance();
+
+                    if (this->currentToken.type_ == TTlParenthesis)
+                    {
+                        this->advance();
+
+                        if (this->currentToken.type_ == TTrParenthesis)
+                        {
+                            prnt(L"for loop args is less than expexted");
+                            exit(-1);
+                        }
+
+                        while (this->currentToken.type_ == TTinteger)
+                        {
+                            args_->push_back(this->atom()->U.Object.value_);
+                            if (!Next_Is(TTinteger))
+                            {
+                                break;
+                            }
+                            this->advance();
+
+                        }
+
+                        if (args_->size() > 3)
+                        {
+                            prnt(L"for loop args is more than expected");
+                            exit(-1);
+                        }
+
+                        if (this->currentToken.type_ == TTrParenthesis)
+                        {
+                            this->advance();
+
+                            if (this->currentToken.type_ == TTcolon)
+                            {
+                                this->advance();
+
+                                block_ = this->block_();
+
+                                if (this->currentToken.type_ == TTkeyword and this->currentToken.val.keywordType == Else)
+                                {
+                                    this->advance();
+
+                                    else_ = this->else_();
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+
+            level--;
+
+            (stmtsNode + level)->type_ = VFor;
+            (stmtsNode + level)->U.For.itrName = itrName;
+            (stmtsNode + level)->U.For.args_ = args_;
+            (stmtsNode + level)->U.For.block_ = block_;
+            (stmtsNode + level)->U.For.else_ = else_;
+
+            return (stmtsNode + level);
+        }
+    }
 
     //void for_body(Node expr, Token name)
     //{
@@ -1254,7 +1314,8 @@ public:
         }
         else if (this->currentToken.val.keywordType == For)
         {
-            // return this->for_statement();
+            this->advance();
+             return this->for_statement();
         }
         else if (this->currentToken.val.keywordType == While)
         {
@@ -1450,7 +1511,41 @@ public:
         }
         else if (_node->type_ == VFor)
         {
+            NUM itrName = _node->U.For.itrName->A.Name.name_;
 
+            NUM startVal = 0;
+            NUM endVal;
+            NUM stepVal = 1;
+
+            if (_node->U.For.args_->size() == 3)
+            {
+                startVal = _node->U.For.args_->at(0)->A.Number.value_;
+                endVal = _node->U.For.args_->at(1)->A.Number.value_;
+                stepVal = _node->U.For.args_->at(2)->A.Number.value_;
+            }
+            else if (_node->U.For.args_->size() == 2)
+            {
+                startVal = _node->U.For.args_->at(0)->A.Number.value_;
+                endVal = _node->U.For.args_->at(1)->A.Number.value_;
+            }
+            else
+            {
+                endVal = _node->U.For.args_->at(0)->A.Number.value_;
+            }
+
+            namesTable[itrName] = _node->U.For.args_->at(0);
+
+            for (NUM i = startVal; i < endVal; i += stepVal)
+            {
+                namesTable[itrName]->A.Number.value_ = i;
+                this->visit_stmts(_node->U.For.block_);
+
+            }
+            if (_node->U.For.else_ != nullptr)
+            {
+                this->visit_stmts(_node->U.For.else_);
+            }
+            
         }
         else if (_node->type_ == VWhile)
         {
@@ -1488,7 +1583,6 @@ public:
             {
                 this->visit_stmts(stmt_);
             }
-            return this->visit_stmts(_node->U.Stmts.stmts_->front()); // for debug only
         }
     }
 
@@ -1720,6 +1814,8 @@ public:
                     name->A.Number.rem_(value);
                 }
             }
+
+            namesTable[_node->U.AugNameAssign.name_->A.Name.name_] = name;
             return name;
         }
         else if (_node->type_ == VReturn)
