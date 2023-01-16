@@ -17,7 +17,7 @@ struct AlifObj
 
         }None;
 
-        struct Boolean_{
+        struct Boolean_ {
 
             KeywordType Kkind_;
             NUM value_;
@@ -39,7 +39,7 @@ struct AlifObj
 
         }Boolean;
 
-        struct : Boolean_{
+        struct : Boolean_ {
 
             TokenType Tkind_;
 
@@ -225,6 +225,11 @@ struct AlifObj
 
         }List;
 
+        struct
+        {
+            BuildInFuncType buildInFunc;
+        }BuildInFunc;
+
     }A;
 };
 
@@ -271,7 +276,9 @@ struct ExprNode
         }NameAccess;
 
         struct {
-            std::vector<AlifObj*>* names_;
+            ExprNode* func;
+            ExprNode* name;
+            std::vector<ExprNode*>* args;
         }Call;
 
         struct {
@@ -327,6 +334,13 @@ struct StmtsNode {
             ExprNode* base;
         }ClassDef;
 
+        struct
+        {
+            AlifObj* name;
+            std::vector<ExprNode*>* params;
+            StmtsNode* body;
+        }FunctionDef;
+
         struct {
             std::vector<StmtsNode*>* stmts_;
         }Stmts;
@@ -344,11 +358,18 @@ public:
     STR fileName;
     STR input_;
 
+    // flage area
+
+    bool Params = false;
+
+
+    //end flage area
+
     unsigned int level = 5500;
     ExprNode* exprNode = (ExprNode*)malloc(level * sizeof(struct ExprNode));
     StmtsNode* stmtsNode = (StmtsNode*)malloc(level * sizeof(struct StmtsNode));
 
-    Parser(std::vector<Token>* tokens, STR _fileName, STR _input) : tokens(tokens) , fileName(_fileName), input_(_input)
+    Parser(std::vector<Token>* tokens, STR _fileName, STR _input) : tokens(tokens), fileName(_fileName), input_(_input)
     {
         this->advance();
     }
@@ -366,7 +387,7 @@ public:
 
     //void reverse() {
     //    this->tokenIndex--;
-    //    if (this->tokenIndex >= 0 and this->tokenIndex < this->tokens->size()) 
+    //    if (this->tokenIndex >= 0 and this->tokenIndex < this->tokens->size())
     //    {
     //        std::vector<Token>::iterator listIter = tokens->begin();
     //        std::advance(listIter, this->tokenIndex);
@@ -378,11 +399,11 @@ public:
     {
         StmtsNode* result = nullptr;
         AlifObj* res = nullptr;
-        
+
         do {
             result = this->statement();
             res = this->visit_stmts(result);
-            this->level = 5500;
+            //this->level = 5500;
 
             //STR lst = L"[";
             //for (AlifObj* obj : *namesTable[result->U.NameAccess.name_.A.Name.name_].A.List.objList)
@@ -392,7 +413,7 @@ public:
             //} // for print list only
             //lst.replace(lst.length() - 2, lst.length(), L"]");
             //prnt(lst);
-            // 
+            //
             //prnt(res->A.Number.value_);
 
         } while (currentToken.type_ != TTendOfFile);
@@ -400,6 +421,96 @@ public:
     }
 
     //////////////////////////////
+
+    std::vector<ExprNode*>* arguments() {
+
+        std::vector<ExprNode*>* args = new std::vector<ExprNode*>;
+
+        if (this->currentToken.type_ == TTname) {
+
+            if (Next_Is(TTequal)) {
+                Params = True;
+
+                std::vector<AlifObj*>* names_ = new std::vector<AlifObj*>;
+
+                AlifObj* name_ = new AlifObj;
+
+                name_->type_ = TTname;
+                name_->A.Name.name_ = this->currentToken.val.numVal;
+
+                names_->push_back(name_);
+
+                this->advance();
+                this->advance();
+
+                ExprNode* value = this->expression();
+
+                level--;
+                (exprNode + level)->U.NameAssign.name_ = names_;
+                (exprNode + level)->U.NameAssign.value_ = value;
+                (exprNode + level)->type_ = VAssign;
+
+                args->push_back((exprNode + level));
+
+            }
+            else {
+                if (Params) { prnt(L"not allow assign expression to parameter") }
+                args->push_back(this->expression());
+            }
+        }
+        else {
+            if (Params) { prnt(L"not allow assign expression to parameter") }
+            args->push_back(this->expression());
+        }
+
+        while (this->currentToken.type_ == TTcomma)
+        {
+
+            this->advance();
+
+            if (this->currentToken.type_ == TTname) {
+
+                if (Next_Is(TTequal)) {
+
+                    Params = True;
+
+                    std::vector<AlifObj*>* names_ = new std::vector<AlifObj*>;
+
+                    AlifObj* name_ = new AlifObj;
+
+                    name_->type_ = TTname;
+                    name_->A.Name.name_ = this->currentToken.val.numVal;
+
+                    names_->push_back(name_);
+
+                    this->advance();
+                    this->advance();
+
+                    ExprNode* value = this->expression();
+
+                    level--;
+                    (exprNode + level)->U.NameAssign.name_ = names_;
+                    (exprNode + level)->U.NameAssign.value_ = value;
+                    (exprNode + level)->type_ = VAssign;
+
+                    args->push_back((exprNode + level));
+
+                }
+                else {
+                    if (Params) { prnt(L"not allow assign expression to parameter") }
+                    args->push_back(this->expression());
+                }
+            }
+            else {
+                if (Params) { prnt(L"not allow assign expression to parameter") }
+                args->push_back(this->expression());
+            }
+
+        }
+        return args;
+
+    }
+
 
     ExprNode* atom() {
 
@@ -409,9 +520,20 @@ public:
 
         if (token.type_ == TTname)
         {
-            
+
             this->advance();
+            obj_->type_ = TTname;
             obj_->A.Name.name_ = token.val.numVal;
+            (exprNode + level)->U.NameAccess.name_ = obj_;
+            (exprNode + level)->type_ = VAccess;
+            return (exprNode + level);
+        }
+        else if (token.type_ == TTbuildInFunc)
+        {
+
+            this->advance();
+            obj_->type_ = TTbuildInFunc;
+            obj_->A.BuildInFunc.buildInFunc = token.val.buildInFunc;
             (exprNode + level)->U.NameAccess.name_ = obj_;
             (exprNode + level)->type_ = VAccess;
             return (exprNode + level);
@@ -420,6 +542,7 @@ public:
             if (token.val.keywordType == True)
             {
                 this->advance();
+                obj_->type_ = TTkeyword;
                 obj_->A.Boolean.Kkind_ = True;
                 obj_->A.Boolean.value_ = 1;
                 (exprNode + level)->U.Object.value_ = obj_;
@@ -430,6 +553,7 @@ public:
             else if (token.val.keywordType == False)
             {
                 this->advance();
+                obj_->type_ = TTkeyword;
                 obj_->A.Boolean.Kkind_ = False;
                 obj_->A.Boolean.value_ = 0;
                 (exprNode + level)->U.Object.value_ = obj_;
@@ -539,91 +663,49 @@ public:
 
     ExprNode* primary() {
 
-        //if (this->currentToken.type_ == TTname)
-        //{
-        //    std::vector<AlifObj*>* names_ = new std::vector<AlifObj*>; // not correct >> it will create repeatly so we should find other algorithm
+        ExprNode* atom = this->atom();
+        if (this->currentToken.type_ == TTdot) {
 
-        //    AlifObj* name_ = new AlifObj;
-        //    name_->type_ = TTname;
-        //    name_->A.Name.name_ = this->currentToken.val.numVal;
+            this->advance();
+            ExprNode* primary = this->primary();
 
-        //    names_->push_back(name_);
+            level--;
+            (exprNode + level)->type_ = VCall;
+            (exprNode + level)->U.Call.func = atom;
+            (exprNode + level)->U.Call.name = primary;
+            return (exprNode + level);
+        }
+        else if (this->currentToken.type_ == TTlParenthesis) {
 
-        //    this->advance();
+            ExprNode* primary = atom;
 
-        //    if (this->currentToken.type_ == TTdot)
-        //    {
-        //        this->advance();
+            this->advance();
 
-        //        this->primary();
+            if (this->currentToken.type_ == TTrParenthesis) {
 
-        //        level--;
+                this->advance();
 
-        //        (exprNode + level)->U.Call.names_ = names_;
-        //        (exprNode + level)->type_ = VCall;
+                level--;
+                (exprNode + level)->type_ = VCall;
+                (exprNode + level)->U.Call.name = primary;
+                (exprNode + level)->U.Call.args = nullptr;
+                return (exprNode + level);
 
-        //        return (exprNode + level);
-        //    }
+            }
 
-        //}
-        return this->atom();
+            std::vector<ExprNode*>* args = this->arguments();
 
-        //else if (this->currentToken.type == lParenthesisT)
-        //{
-        //    this->advance();
-        //    if (this->currentToken.type != rParenthesisT)
-        //    {
-        //        //this->advance();
-        //        this->parameters();
-        //        params = node;
-        //        if (this->currentToken.type == rParenthesisT)
-        //        {
-        //            this->advance();
-        //            node = Node(&Parser::name_call_interpreter, name, std::make_shared<Node>(node), std::make_shared<Node>(params));
-        //        }
-        //        else
-        //        {
-        //            // error
-        //        }
-        //    }
-        //    else if (this->currentToken.type == rParenthesisT)
-        //    {
-        //        this->advance();
-        //        node = Node(&Parser::name_call_interpreter, name, std::make_shared<Node>(node), std::make_shared<Node>(params));
-        //
-        //    }
-        //    else
-        //    {
-        //        // error
-        //    }
-        //}
-        //else if (this->currentToken.type == lSquareT)
-        //{
-        //    this->advance();
-        //    if (this->currentToken.type != rSquareT)
-        //    {
-        //        //this->slices();
-        //        if (this->currentToken.type == rSquareT)
-        //        {
-        //            this->advance();
-        //        }
-        //        else
-        //        {
-        //            // error
-        //        }
-        //    }
-        //    else if (this->currentToken.type == rSquareT)
-        //    {
-        //        this->advance();
-        //        node = Node(&Parser::name_call_interpreter, name, std::make_shared<Node>(node));
-        //
-        //    }
-        //    else
-        //    {
-        //        // error
-        //    }
-        //}
-        
+            level--;
+            (exprNode + level)->type_ = VCall;
+            (exprNode + level)->U.Call.name = primary;
+            (exprNode + level)->U.Call.args = args;
+            return (exprNode + level);
+
+        }
+        else {
+            return atom;
+        }
+
     }
 
     ExprNode* power()
@@ -714,10 +796,10 @@ public:
 
     ExprNode* comparesion() {
         ExprNode* left = this->sum();
-    
+
         while (this->currentToken.type_ == TTequalEqual or this->currentToken.type_ == TTnotEqual or this->currentToken.type_ == TTlessThan or this->currentToken.type_ == TTgreaterThan or this->currentToken.type_ == TTlessThanEqual or this->currentToken.type_ == TTgreaterThanEqual) {
             Token opToken = this->currentToken;
-    
+
             this->advance();
             ExprNode* right = this->sum();
             level--;
@@ -730,12 +812,12 @@ public:
             left = (exprNode + level);
             return left;
         }
-        
+
         return left;
     }
 
     ExprNode* inversion() {
-    
+
         if (this->currentToken.type_ == TTkeyword and this->currentToken.val.keywordType == Not)
         {
             Token opToken = this->currentToken;
@@ -749,7 +831,7 @@ public:
             (exprNode + level)->U.UnaryOp.keyword_ = opToken.val.keywordType;
             (exprNode + level)->type_ = VUnaryOp;
 
-            return (exprNode + level);    
+            return (exprNode + level);
         }
 
         return this->comparesion();
@@ -758,10 +840,10 @@ public:
     ExprNode* conjuction() {
 
         ExprNode* left = this->inversion();
-    
+
         while (this->currentToken.type_ == TTkeyword and this->currentToken.val.keywordType == And) {
             Token opToken = this->currentToken;
-    
+
             this->advance();
             ExprNode* right = this->inversion();
             level--;
@@ -811,7 +893,7 @@ public:
         {
             this->advance();
             ExprNode* condetion = this->disjuction();
-            
+
             if (this->currentToken.type_ == TTkeyword and this->currentToken.val.keywordType == Else)
             {
                 this->advance();
@@ -854,10 +936,10 @@ public:
             } while (this->currentToken.type_ == TTcomma);
 
             level--;
-        
+
             obj_->A.List.list_ = exprs_;
             obj_->type_ = TTlist;
-            (exprNode + level)->U.Object.value_ = obj_; 
+            (exprNode + level)->U.Object.value_ = obj_;
             (exprNode + level)->type_ = VList;
 
             return (exprNode + level);
@@ -902,7 +984,7 @@ public:
             {
                 // يجب إختصار نوع التحقق الى TTaugAssign
                 // بحيث يتم تخزين النوع في العملية بشكل مباشر دون التحقق منها
-                // if token.type == TTaugassign then operator = opToken.type 
+                // if token.type == TTaugassign then operator = opToken.type
 
                 AlifObj* name_ = new AlifObj;
                 name_->type_ = TTname;
@@ -942,15 +1024,124 @@ public:
         return (exprNode + level);
     }
 
-    //void parameters()
-    //{
-    //    this->expression();
-    //}
+    std::vector<ExprNode*>* parameters() {
 
-    //void class_defination() {
-    //    expressions();
-    //}
+        std::vector<ExprNode*>* args = new std::vector<ExprNode*>;
 
+        if (this->currentToken.type_ == TTname) {
+
+            if (Next_Is(TTequal)) {
+                Params = True;
+
+                std::vector<AlifObj*>* names_ = new std::vector<AlifObj*>;
+                AlifObj* name_ = new AlifObj;
+
+                name_->type_ = TTname;
+                name_->A.Name.name_ = this->currentToken.val.numVal;
+
+                names_->push_back(name_);
+
+                this->advance();
+                this->advance();
+
+                ExprNode* value = this->expression();
+
+                level--;
+                (exprNode + level)->U.NameAssign.name_ = names_;
+                (exprNode + level)->U.NameAssign.value_ = value;
+                (exprNode + level)->type_ = VAssign;
+
+                args->push_back((exprNode + level));
+
+            }
+            else {
+                if (Params) { prnt(L"not allow assign expression to parameter") }
+                args->push_back(this->atom());
+            }
+        }
+
+        while (this->currentToken.type_ == TTcomma)
+        {
+
+            this->advance();
+
+            if (this->currentToken.type_ == TTname) {
+
+                if (Next_Is(TTequal)) {
+
+                    Params = True;
+
+                    std::vector<AlifObj*>* names_ = new std::vector<AlifObj*>;
+
+                    AlifObj* name_ = new AlifObj;
+
+                    name_->type_ = TTname;
+                    name_->A.Name.name_ = this->currentToken.val.numVal;
+
+                    names_->push_back(name_);
+
+                    this->advance();
+                    this->advance();
+
+                    ExprNode* value = this->expression();
+
+                    level--;
+                    (exprNode + level)->U.NameAssign.name_ = names_;
+                    (exprNode + level)->U.NameAssign.value_ = value;
+                    (exprNode + level)->type_ = VAssign;
+
+                    args->push_back((exprNode + level));
+
+                }
+                else {
+                    if (Params) { prnt(L"not allow assign expression to parameter") }
+                    args->push_back(this->atom());
+                }
+            }
+
+        }
+        return args;
+
+    }
+
+    StmtsNode* function_def() {
+
+        AlifObj* name = new AlifObj;
+        StmtsNode* body = nullptr;
+        std::vector<ExprNode*>* params = nullptr;
+
+        if (this->currentToken.type_ == TTname or this->currentToken.type_ == TTbuildInFunc) {
+
+            name->type_ = this->currentToken.type_;
+            if (this->currentToken.type_ == TTname) { name->A.Name.name_ = this->currentToken.val.numVal; }
+            else { name->A.BuildInFunc.buildInFunc = this->currentToken.val.buildInFunc; }
+
+            this->advance();
+
+            if (this->currentToken.type_ == TTlParenthesis) {
+
+                this->advance();
+
+                if (this->currentToken.type_ == TTrParenthesis) { this->advance(); }
+                else { params = this->parameters(); this->advance(); }
+            }
+
+            if (this->currentToken.type_ == TTcolon) {
+
+                this->advance();
+
+                body = this->block_();
+
+                level--;
+                (stmtsNode + level)->type_ = VFunction;
+                (stmtsNode + level)->U.FunctionDef.name = name;
+                (stmtsNode + level)->U.FunctionDef.params = params;
+                (stmtsNode + level)->U.FunctionDef.body = body;
+                return (stmtsNode + level);
+            }
+        }
+
+    }
 
     StmtsNode* class_def() {
 
@@ -968,9 +1159,9 @@ public:
             if (this->currentToken.type_ == TTlParenthesis) {
 
                 this->advance();
-                    
+
                 bases = this->expressions();
-                    
+
                 if (this->currentToken.type_ == TTrParenthesis)
                 {
                     this->advance();
@@ -979,9 +1170,9 @@ public:
             if (this->currentToken.type_ == TTcolon) {
 
                 this->advance();
-                    
+
                 body = this->block_();
-                    
+
                 level--;
                 (stmtsNode + level)->type_ = VClass;
                 (stmtsNode + level)->U.ClassDef.name = name;
@@ -992,71 +1183,12 @@ public:
         }
     }
 
-    //void function_defination() {
-
-    //    if (this->currentToken.value == L"دالة")
-    //    {
-    //        this->advance();
-    //        if (this->currentToken.type == nameT)
-    //        {
-    //            Token name = this->currentToken;
-
-    //            this->advance();
-    //            if (this->currentToken.type == lParenthesisT)
-    //            {
-    //                this->advance();
-    //                if (this->currentToken.type != rParenthesisT)
-    //                {
-    //                    this->advance();
-    //                    //this->parameter();
-    //                }
-    //                else if (this->currentToken.type == rParenthesisT)
-    //                {
-    //                    this->advance();
-    //                }
-
-    //                if (this->currentToken.type == colonT)
-    //                {
-    //                    this->advance();
-    //                    this->func_body(name);
-    //                }
-    //            }
-    //        }
-    //    }
-    //}
-
-    //void func_body(Token name)
-    //{
-    //    if (this->currentToken.type == newlineT) {
-
-
-    //        // move list content to other store temporary to start store new body content
-    //        std::vector<Node> tempList = this->list;
-    //        this->list.clear();
-
-    //        this->advance();
-
-    //        this->indentent();
-    //        
-    //        this->statements();
-
-    //        node = Node(&Parser::function_define_interprete, name, std::make_shared<Node>(node)); // node = body node
-    //        if (currentBlockCount != 0)
-    //        {
-    //            this->list = tempList;
-    //        }
-    //    }
-    //    //else {
-    //    //    this->simple_statement();
-    //    //}
-    //}
-
     StmtsNode* while_statement() {
 
         ExprNode* condetion_ = this->expression();
         StmtsNode* block_ = nullptr;
         StmtsNode* else_ = nullptr;
-        
+
         if (this->currentToken.type_ == TTcolon)
         {
             this->advance();
@@ -1078,7 +1210,7 @@ public:
 
     }
 
-    StmtsNode* for_statement() 
+    StmtsNode* for_statement()
     {
         if (this->currentToken.type_ == TTname)
         {
@@ -1161,7 +1293,7 @@ public:
         }
     }
 
-    StmtsNode* else_if() 
+    StmtsNode* else_if()
     {
         StmtsNode* block_{};
         ExprNode* condetion_ = this->expression();
@@ -1180,7 +1312,7 @@ public:
     }
 
     StmtsNode* else_() {
-        
+
         if (this->currentToken.type_ == TTcolon)
         {
             this->advance();
@@ -1193,7 +1325,7 @@ public:
         }
     }
 
-    StmtsNode* if_statement() 
+    StmtsNode* if_statement()
     {
 
         StmtsNode* block_{};
@@ -1224,7 +1356,7 @@ public:
         (stmtsNode + level)->U.If.elseIf = elseIf;
         (stmtsNode + level)->U.If.else_ = else_;
         return (stmtsNode + level);
-        
+
     }
 
     StmtsNode* block_()
@@ -1239,7 +1371,7 @@ public:
 
                 StmtsNode* stmts_ = this->statements();
 
-                if (this->currentToken.type_ == TTdedent)
+                if (this->currentToken.type_ == TTdedent or this->currentToken.type_ == TTendOfFile)
                 {
                     this->advance();
                     return stmts_;
@@ -1267,11 +1399,12 @@ public:
     ////}
 
 
-    StmtsNode* compound_statement() 
+    StmtsNode* compound_statement()
     {
         if (this->currentToken.val.keywordType == Function)
         {
-            // return this->function_defination();
+            this->advance();
+            return this->function_def();
         }
         else if (this->currentToken.val.keywordType == If)
         {
@@ -1373,7 +1506,9 @@ public:
     //}
 
     std::map<NUM, AlifObj*> namesTable;
-    
+    std::map<BuildInFuncType, void(Parser::*)()> buildInFuncsTable{ {Print, &Parser::print} };
+    std::map<NUM, StmtsNode*> functionsTable;
+
     AlifObj* visit_stmts(StmtsNode* _node)
     {
         if (_node->type_ == VExpr)
@@ -1382,7 +1517,10 @@ public:
         }
         else if (_node->type_ == VFunction)
         {
-
+            if (_node->U.FunctionDef.name->type_ != TTbuildInFunc) { functionsTable[_node->U.FunctionDef.name->A.Name.name_] = _node; }
+            else {
+                buildInFuncsTable.erase(_node->U.FunctionDef.name->A.BuildInFunc.buildInFunc); functionsTable[_node->U.FunctionDef.name->A.BuildInFunc.buildInFunc] = _node;
+            }
         }
         else if (_node->type_ == VClass)
         {
@@ -1424,7 +1562,7 @@ public:
             {
                 this->visit_stmts(_node->U.For.else_);
             }
-            
+
         }
         else if (_node->type_ == VWhile)
         {
@@ -1457,7 +1595,7 @@ public:
                 }
 
             }
-            if (_node->U.If.else_ != nullptr){
+            if (_node->U.If.else_ != nullptr) {
                 return this->visit_stmts(_node->U.If.else_);
             }
 
@@ -1509,13 +1647,13 @@ public:
             else
             {
                 if (_node->U.UnaryOp.keyword_ == Not)
-                { 
+                {
                     right->A.Boolean.not_();
                 }
             }
             return right;
         }
-        else if (_node->type_ == VBinOp) 
+        else if (_node->type_ == VBinOp)
         {
             AlifObj* right = this->visit_expr(_node->U.BinaryOp.right_);
             AlifObj* left = this->visit_expr(_node->U.BinaryOp.left_);
@@ -1664,6 +1802,55 @@ public:
         {
             return namesTable[_node->U.NameAccess.name_->A.Name.name_];
         }
+        else if (_node->type_ == VCall) {
+
+            // متبقي فقط اضافة وسيطات بقيم مسبقة والتحقق من وجودها في الدالة ام لا
+
+            if (_node->U.Call.name->U.NameAccess.name_->type_ == TTbuildInFunc)
+            {
+                if (buildInFuncsTable.count(_node->U.Call.name->U.NameAccess.name_->A.BuildInFunc.buildInFunc))
+                {
+                    buildInFuncsTable[_node->U.Call.name->U.NameAccess.name_->A.BuildInFunc.buildInFunc];
+                }
+                else {
+                    StmtsNode* func = functionsTable[_node->U.Call.name->U.NameAccess.name_->A.Name.name_];
+
+                    int lenParm = func->U.FunctionDef.params->size();
+                    int lenArg = _node->U.Call.args->size();
+                    if (lenParm == lenArg) {
+
+                        int i = 0;
+                        for (ExprNode* param : *func->U.FunctionDef.params)
+                        {
+                            if (param->type_ == VAccess) {
+                                namesTable[param->U.NameAccess.name_->A.Name.name_] = this->visit_expr(_node->U.Call.args->at(lenArg));
+                            }
+                            lenArg--;
+                        }
+                    }
+                    return visit_stmts(func->U.FunctionDef.body);
+                }
+            }
+            else {
+                StmtsNode* func = functionsTable[_node->U.Call.name->U.NameAccess.name_->A.Name.name_];
+
+                int lenParm = func->U.FunctionDef.params->size();
+                int lenArg = _node->U.Call.args->size();
+                if (lenParm == lenArg) {
+
+                    int i = 0;
+                    for (ExprNode* param : *func->U.FunctionDef.params)
+                    {
+                        if (param->type_ == VAccess) {
+                            namesTable[param->U.NameAccess.name_->A.Name.name_] = this->visit_expr(_node->U.Call.args->at(i));
+                        }
+                        i++;
+                    }
+                }
+                return visit_stmts(func->U.FunctionDef.body);
+            }
+
+        }
         else if (_node->type_ == VAugAssign)
         {
             AlifObj* value = this->visit_expr(_node->U.AugNameAssign.value_);
@@ -1717,5 +1904,7 @@ public:
             return this->visit_expr(_node->U.Return.expr_);
         }
     }
-
+    void print() {
+        prnt(1);
+    }
 };
