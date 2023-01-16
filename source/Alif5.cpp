@@ -13,6 +13,7 @@
 #include<algorithm> // لعمل تتالي على المصفوفات
 #include<fcntl.h> //لقبول ادخال الاحرف العربية من الكونسل
 #include<io.h> //لقبول ادخال الاحرف العربية من الكونسل
+#include "MemoryBlock.h"
 #include "Constants.h"
 #include "Position.h"
 #include "Tokens.h"
@@ -27,7 +28,7 @@ int main(int argc, char* argv[])
     bool outWText = _setmode(_fileno(stdout), _O_WTEXT);
     bool inWText = _setmode(_fileno(stdin), _O_WTEXT);
 
-    if (not outWText and not inWText)
+    if (!outWText and !inWText)
     {
         std::wcout << L"error" << std::endl;
     } 

@@ -8,6 +8,7 @@ struct ExprNode;
 struct AlifObj
 {
     TokenType type_;
+    unsigned int refCount;
 
     union UObj
     {
@@ -358,16 +359,17 @@ public:
     STR fileName;
     STR input_;
 
-    // flage area
-
+    /// <flags>
+    
     bool Params = false;
-
-
-    //end flage area
+    
+    /// </flags>
 
     unsigned int level = 5500;
     ExprNode* exprNode = (ExprNode*)malloc(level * sizeof(struct ExprNode));
     StmtsNode* stmtsNode = (StmtsNode*)malloc(level * sizeof(struct StmtsNode));
+
+    MemoryBLock memBlock;
 
     Parser(std::vector<Token>* tokens, STR _fileName, STR _input) : tokens(tokens), fileName(_fileName), input_(_input)
     {
@@ -385,24 +387,14 @@ public:
         }
     }
 
-    //void reverse() {
-    //    this->tokenIndex--;
-    //    if (this->tokenIndex >= 0 and this->tokenIndex < this->tokens->size())
-    //    {
-    //        std::vector<Token>::iterator listIter = tokens->begin();
-    //        std::advance(listIter, this->tokenIndex);
-    //        this->currentToken = *listIter;
-    //    }
-    //}
-
     void parse()
     {
-        StmtsNode* result = nullptr;
-        AlifObj* res = nullptr;
+        StmtsNode* stmtsRes = nullptr;
+        AlifObj* intrRes = nullptr;
 
         do {
-            result = this->statement();
-            res = this->visit_stmts(result);
+            stmtsRes = this->statement();
+            intrRes = this->visit_stmts(stmtsRes);
             //this->level = 5500;
 
             //STR lst = L"[";
@@ -414,7 +406,6 @@ public:
             //lst.replace(lst.length() - 2, lst.length(), L"]");
             //prnt(lst);
             //
-            //prnt(res->A.Number.value_);
 
         } while (currentToken.type_ != TTendOfFile);
 
@@ -1395,7 +1386,6 @@ public:
     ////}
 
     ////void delete_statement() {
-    ////    import_statement();
     ////}
 
 
@@ -1472,38 +1462,6 @@ public:
 
     //// المفسر اللغوي
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    //bool return_ = false;
-    //
-    //void function_define_interprete(Node node)
-    //{
-    //    namesTable[node.token.value] = *node.left;
-    //}
-    //
-    //
-    //void name_call_interpreter(Node node)
-    //{
-    //    if (buildinFunction[node.token.value])
-    //    {
-    //        (this->*(buildinFunction[node.token.value]))(*node.right);
-    //
-    //    }
-    //    else
-    //    {
-    //        (this->*(namesTable[node.token.value].func))(namesTable[node.token.value]); // visit_expr (node.left->func) and pass (node.left) as parameter node
-    //        return_ = false;
-    //    }
-    //}
-    //
-    //
-    //// الدوال المدمجة
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //void print(Node node)
-    //{
-    //    (this->*(node.func))(node); // visit_expr (node.left->func) and pass (node.left) as parameter node
-    //    std::wcout << result.token.value << std::endl;
-    //}
 
     std::map<NUM, AlifObj*> namesTable;
     std::map<BuildInFuncType, void(Parser::*)()> buildInFuncsTable{ {Print, &Parser::print} };
@@ -1610,8 +1568,10 @@ public:
     }
 
 
-
-
+    // <متغيرات عامة>
+    AlifObj* res = (AlifObj*)memBlock.alif_alloc(2, sizeof(AlifObj));
+    unsigned int count = 1;
+    // </متغيرات عامة>
 
     AlifObj* visit_expr(ExprNode* _node)
     {
@@ -1657,7 +1617,9 @@ public:
         {
             AlifObj* right = this->visit_expr(_node->U.BinaryOp.right_);
             AlifObj* left = this->visit_expr(_node->U.BinaryOp.left_);
-            AlifObj* res = new AlifObj(*left); // يجب مراجعتها لانها تقوم بإستهلاك الكثير من الذاكرة والاداء
+            count = 0 ? count = 1 : count;
+            *(res + count) = *left;
+
 
             if (_node->U.BinaryOp.operator_ != TTkeyword)
             {
@@ -1665,46 +1627,46 @@ public:
                 {
                     if (left->type_ == TTnumber)
                     {
-                        res->A.Number.add_(right);
+                        (res + count)->A.Number.add_(right);
                     }
                     else if (left->type_ == TTstring)
                     {
-                        res->A.String.add_(right);
+                        (res + count)->A.String.add_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTminus)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        res->A.Number.sub_(right);
+                        (res + count)->A.Number.sub_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTmultiply)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        res->A.Number.mul_(right);
+                        (res + count)->A.Number.mul_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTdivide)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        res->A.Number.div_(right);
+                        (res + count)->A.Number.div_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTremain)
                 {
                     if (left->type_ == TTnumber and left->A.Number.Tkind_ == TTinteger)
                     {
-                        res->A.Number.rem_(right);
+                        (res + count)->A.Number.rem_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTpower)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        res->A.Number.pow_(right);
+                        (res + count)->A.Number.pow_(right);
                     }
                 }
 
@@ -1712,42 +1674,42 @@ public:
                 {
                     if (left->type_ == TTnumber)
                     {
-                        res->A.Number.equalE_(right);
+                        (res + count)->A.Number.equalE_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTnotEqual)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        res->A.Number.notE_(right);
+                        (res + count)->A.Number.notE_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTgreaterThan)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        res->A.Number.greaterT_(right);
+                        (res + count)->A.Number.greaterT_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTlessThan)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        res->A.Number.lessT_(right);
+                        (res + count)->A.Number.lessT_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTgreaterThanEqual)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        res->A.Number.greaterTE_(right);
+                        (res + count)->A.Number.greaterTE_(right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTlessThanEqual)
                 {
                     if (left->type_ == TTnumber)
                     {
-                        res->A.Number.lessTE_(right);
+                        (res + count)->A.Number.lessTE_(right);
                     }
                 }
             }
@@ -1755,15 +1717,15 @@ public:
             {
                 if (_node->U.BinaryOp.keyword_ == Or)
                 {
-                    res->A.Boolean.or_(right);
+                    (res + count)->A.Boolean.or_(right);
                 }
                 else if (_node->U.BinaryOp.keyword_ == And)
                 {
-                    res->A.Boolean.and_(right);
+                    (res + count)->A.Boolean.and_(right);
                 }
             }
 
-            return res;
+            return (res + count);
         }
         else if (_node->type_ == VExpr)
         {
@@ -1800,6 +1762,7 @@ public:
         }
         else if (_node->type_ == VAccess)
         {
+            //prnt(namesTable[_node->U.NameAccess.name_->A.Name.name_]->A.Number.value_); //  هذا السطر مخصص للإختبارات فقط ويجب حذفه
             return namesTable[_node->U.NameAccess.name_->A.Name.name_];
         }
         else if (_node->type_ == VCall) {
@@ -1834,19 +1797,20 @@ public:
             else {
                 StmtsNode* func = functionsTable[_node->U.Call.name->U.NameAccess.name_->A.Name.name_];
 
-                int lenParm = func->U.FunctionDef.params->size();
-                int lenArg = _node->U.Call.args->size();
-                if (lenParm == lenArg) {
+                // النظام المعلق هذا لا يعمل إلا في حال تمرير معاملات في الدالة
+                //int lenParm = func->U.FunctionDef.params->size();
+                //int lenArg = _node->U.Call.args->size();
+                //if (lenParm == lenArg) {
 
-                    int i = 0;
-                    for (ExprNode* param : *func->U.FunctionDef.params)
-                    {
-                        if (param->type_ == VAccess) {
-                            namesTable[param->U.NameAccess.name_->A.Name.name_] = this->visit_expr(_node->U.Call.args->at(i));
-                        }
-                        i++;
-                    }
-                }
+                //    int i = 0;
+                //    for (ExprNode* param : *func->U.FunctionDef.params)
+                //    {
+                //        if (param->type_ == VAccess) {
+                //            namesTable[param->U.NameAccess.name_->A.Name.name_] = this->visit_expr(_node->U.Call.args->at(i));
+                //        }
+                //        i++;
+                //    }
+                //}
                 return visit_stmts(func->U.FunctionDef.body);
             }
 
@@ -1904,6 +1868,10 @@ public:
             return this->visit_expr(_node->U.Return.expr_);
         }
     }
+
+
+
+
     void print() {
         prnt(1);
     }
