@@ -102,8 +102,8 @@ enum KeywordType {
 };
 
 enum BuildInFuncType {
-    Print,
-    Push,
+    Print = -1,
+    Push = -2,
 };
 
 
