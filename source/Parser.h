@@ -285,7 +285,7 @@ public:
             }
             scope = scope->parent;
         }
-        return AlifObj();
+        return globalScope->symbols[type];
     }
 
 };
@@ -349,8 +349,8 @@ struct ExprNode
 
     }U;
 
-    Position posStart;
-    Position posEnd;
+    //Position posStart;
+    //Position posEnd;
 };
 
 struct StmtsNode {
@@ -442,7 +442,7 @@ public:
         }
     }
 
-    void parse()
+    void parse_file()
     {
         StmtsNode* stmtsRes = nullptr;
         AlifObj intrRes;
@@ -452,18 +452,19 @@ public:
             intrRes = this->visit_stmts(stmtsRes);
             //this->level = 5500;
 
-            //STR lst = L"[";
-            //for (AlifObj* obj : *namesTable[result->U.NameAccess.name_.A.Name.name_].A.List.objList)
-            //{
-            //    lst.append(std::to_wstring((int)obj->A.Number.value_));
-            //    lst.append(L", ");
-            //} // for print list only
-            //lst.replace(lst.length() - 2, lst.length(), L"]");
-            //prnt(lst);
-            //
-
         } while (currentToken.type_ != TTendOfFile);
 
+    }
+
+    void parse_terminal()
+    {
+        ExprNode* stmtsRes = this->expression();
+        AlifObj intrRes = this->visit_expr(stmtsRes);
+
+        if (intrRes.type_ == TTstring) { prnt(intrRes.A.String.value_); }
+        else if (intrRes.type_ == TTnumber) { prnt((long int)intrRes.A.Number.value_); }
+        else if (intrRes.type_ == TTkeyword) { if (intrRes.A.Boolean.Kkind_ == True) { prnt(L"صح"); } else { prnt(L"خطا"); } }
+        else if (intrRes.type_ == TTlist) { STR lst = L"["; for (AlifObj obj : *intrRes.A.List.objList) { lst.append(std::to_wstring((int)obj.A.Number.value_)); lst.append(L", "); } lst.replace(lst.length() - 2, lst.length(), L"]"); prnt(lst); }
     }
 
     //////////////////////////////
@@ -500,6 +501,7 @@ public:
             }
             else {
                 args->push_back(this->expression());
+                this->advance();
             }
         }
         else if (Next_Is(TTrParenthesis)){
@@ -1866,20 +1868,8 @@ public:
             else {
                 StmtsNode* func = functionsTable[_node->U.Call.name->U.NameAccess.name_.A.Name.name_];
 
-                // النظام المعلق هذا لا يعمل إلا في حال تمرير معاملات في الدالة
-                //int lenParm = func->U.FunctionDef.params->size();
-                //int lenArg = _node->U.Call.args->size();
-                //if (lenParm == lenArg) {
+                symTable.enter_scope(_node->U.Call.name->U.NameAccess.name_.A.Name.name_);
 
-                //    int i = 0;
-                //    for (ExprNode* param : *func->U.FunctionDef.params)
-                //    {
-                //        if (param->type_ == VAccess) {
-                //            namesTable[param->U.NameAccess.name_->A.Name.name_] = this->visit_expr(_node->U.Call.args->at(i));
-                //        }
-                //        i++;
-                //    }
-                //}
                 if (func->U.FunctionDef.params != nullptr)
                 {
 
@@ -1898,7 +1888,6 @@ public:
 
                             //namesTable[param->U.NameAssign.name_->at(0)->A.Name.name_] = this->visit_expr(_node->U.Call.args->at((lenArg - 1)));
                             symTable.add_symbol(param->U.NameAssign.name_->at(0).A.Name.name_, this->visit_expr(_node->U.Call.args->at((lenArg - 1))));
-
 
                         }
                         else {

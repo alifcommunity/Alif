@@ -1,7 +1,14 @@
 #pragma once
 
 
-class MemoryBLock {
+class MemContainer{
+
+    MemContainer* lHead;
+
+     
+};
+
+class MemBlock {
 
     void* block_[128] = {};
     unsigned int offset_ = 0;
