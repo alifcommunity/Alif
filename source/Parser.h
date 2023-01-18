@@ -234,6 +234,58 @@ struct AlifObj
 };
 
 
+struct Scope
+{
+    std::map<NUM, AlifObj> symbols;
+    std::map<NUM, Scope*> scopes;
+    Scope* parent;
+};
+
+class SymbolTable {
+
+private:
+    Scope* currentScope;
+    Scope* globalScope;
+public:
+    SymbolTable() {
+        globalScope = new Scope();
+        globalScope->parent = nullptr;
+        currentScope = globalScope;
+    }
+
+    void add_symbol(NUM type, AlifObj value) {
+        currentScope->symbols[type] = value;
+    }
+
+    void enter_scope(NUM type) {
+        if (currentScope->scopes.count(type) == 0) {
+            Scope* newScope = new Scope();
+            newScope->parent = currentScope;
+            currentScope->scopes[type] = newScope;
+        }
+        currentScope = currentScope->scopes[type];
+    }
+
+    void exit_scope() {
+        currentScope = currentScope->parent;
+    }
+
+    AlifObj get_data(NUM type) {
+        Scope* scope = currentScope;
+        while (scope != nullptr)
+        {
+            if (scope->symbols.count(type) != 0)
+            {
+                return scope->symbols[type];
+
+            }
+            scope = scope->parent;
+        }
+        return AlifObj();
+    }
+
+};
+
 // العقدة
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -368,6 +420,8 @@ public:
     ExprNode* exprNode = (ExprNode*)malloc(level * sizeof(struct ExprNode));
     StmtsNode* stmtsNode = (StmtsNode*)malloc(level * sizeof(struct StmtsNode));
 
+    SymbolTable st;
+
     MemoryBLock memBlock;
 
     Parser(std::vector<Token>* tokens, STR _fileName, STR _input) : tokens(tokens), fileName(_fileName), input_(_input)
@@ -419,7 +473,6 @@ public:
         if (this->currentToken.type_ == TTname) {
 
             if (Next_Is(TTequal)) {
-                Params = True;
 
                 std::vector<AlifObj>* names_ = new std::vector<AlifObj>;
 
@@ -444,12 +497,10 @@ public:
 
             }
             else {
-                if (Params) { prnt(L"not allow assign expression to parameter") }
                 args->push_back(this->expression());
             }
         }
-        else {
-            if (Params) { prnt(L"not allow assign expression to parameter") }
+        else if (!Next_Is(TTrParenthesis)){
             args->push_back(this->expression());
         }
 
@@ -461,8 +512,6 @@ public:
             if (this->currentToken.type_ == TTname) {
 
                 if (Next_Is(TTequal)) {
-
-                    Params = True;
 
                     std::vector<AlifObj>* names_ = new std::vector<AlifObj>;
 
@@ -487,12 +536,10 @@ public:
 
                 }
                 else {
-                    if (Params) { prnt(L"not allow assign expression to parameter") }
                     args->push_back(this->expression());
                 }
             }
-            else {
-                if (Params) { prnt(L"not allow assign expression to parameter") }
+            else if (!Next_Is(TTrParenthesis)){
                 args->push_back(this->expression());
             }
 
@@ -1451,7 +1498,7 @@ public:
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     std::map<NUM, AlifObj> namesTable;
-    std::map<BuildInFuncType, void(Parser::*)()> buildInFuncsTable{ {Print, &Parser::print} };
+    std::map<BuildInFuncType, void(Parser::*)(ExprNode*)> buildInFuncsTable{ {Print, &Parser::print} };
     std::map<NUM, StmtsNode*> functionsTable;
 
     AlifObj visit_stmts(StmtsNode* _node)
@@ -1495,11 +1542,13 @@ public:
                 endVal = _node->U.For.args_->at(0).A.Number.value_;
             }
 
-            namesTable[itrName] = _node->U.For.args_->at(0);
+            //namesTable[itrName] = _node->U.For.args_->at(0);
+            st.add_symbol(itrName, _node->U.For.args_->at(0));
 
             for (NUM i = startVal; i < endVal; i += stepVal)
             {
-                namesTable[itrName].A.Number.value_ = i;
+                st.add_symbol(st.get_data(itrName).A.Number.value_, _node->U.For.args_->at(0));
+                //namesTable[itrName].A.Number.value_ = i;
                 this->visit_stmts(_node->U.For.block_);
 
             }
@@ -1727,14 +1776,15 @@ public:
         {
             if (_node->U.NameAssign.name_->size() < 2)
             {
-                namesTable[_node->U.NameAssign.name_->front().A.Name.name_] = this->visit_expr(_node->U.NameAssign.value_);
-
+                //namesTable[_node->U.NameAssign.name_->front().A.Name.name_] = this->visit_expr(_node->U.NameAssign.value_);
+                st.add_symbol(_node->U.NameAssign.name_->front().A.Name.name_, this->visit_expr(_node->U.NameAssign.value_));
             }
             else
             {
                 for (AlifObj i : *_node->U.NameAssign.name_)
                 {
-                    namesTable[i.A.Name.name_] = this->visit_expr(_node->U.NameAssign.value_);
+                    //namesTable[i.A.Name.name_] = this->visit_expr(_node->U.NameAssign.value_);
+                    st.add_symbol(_node->U.NameAssign.name_->front().A.Name.name_, this->visit_expr(_node->U.NameAssign.value_));
                 }
 
             }
@@ -1742,7 +1792,8 @@ public:
         else if (_node->type_ == VAccess)
         {
             //prnt(namesTable[_node->U.NameAccess.name_.A.Name.name_].A.Number.value_); //  هذا السطر مخصص للإختبارات فقط ويجب حذفه
-            return namesTable[_node->U.NameAccess.name_.A.Name.name_];
+            //return namesTable[_node->U.NameAccess.name_.A.Name.name_];
+            return st.get_data(_node->U.NameAccess.name_.A.Name.name_);
         }
         else if (_node->type_ == VCall) {
 
@@ -1752,25 +1803,45 @@ public:
             {
                 if (buildInFuncsTable.count(_node->U.Call.name->U.NameAccess.name_.A.BuildInFunc.buildInFunc))
                 {
-                    buildInFuncsTable[_node->U.Call.name->U.NameAccess.name_.A.BuildInFunc.buildInFunc];
+                    (this->*buildInFuncsTable[Print])(_node);
                 }
                 else {
                     StmtsNode* func = functionsTable[_node->U.Call.name->U.NameAccess.name_.A.Name.name_];
 
-                    int lenParm = func->U.FunctionDef.params->size();
-                    int lenArg = _node->U.Call.args->size();
-                    if (lenParm == lenArg) {
+                    st.enter_scope(_node->U.Call.name->U.NameAccess.name_.A.Name.name_);
+
+                    if (func->U.FunctionDef.params != nullptr)
+                    {
+
+                        int lenArg = _node->U.Call.args->size();
 
                         int i = 0;
                         for (ExprNode* param : *func->U.FunctionDef.params)
                         {
                             if (param->type_ == VAccess) {
-                                namesTable[param->U.NameAccess.name_.A.Name.name_] = this->visit_expr(_node->U.Call.args->at(lenArg));
+                                //namesTable[param->U.NameAccess.name_.A.Name.name_] = this->visit_expr(_node->U.Call.args->at(lenArg));
+                                //namesTable[param->U.NameAccess.name_->A.Name.name_] = this->visit_expr(_node->U.Call.args->at(i));
+                                st.add_symbol(param->U.NameAccess.name_.A.Name.name_, this->visit_expr(_node->U.Call.args->at(i)));
                             }
-                            lenArg--;
+                            else
+                            {
+                                if (_node->U.Call.args->at(lenArg) != nullptr) {
+
+                                    //namesTable[param->U.NameAssign.name_->at(0)->A.Name.name_] = this->visit_expr(_node->U.Call.args->at((lenArg - 1)));
+                                    st.add_symbol(param->U.NameAssign.name_->at(0).A.Name.name_, this->visit_expr(_node->U.Call.args->at((lenArg - 1))));
+                                }
+                                else {
+
+                                    //namesTable[param->U.NameAssign.name_->at(0)->A.Name.name_] = this->visit_expr(param->U.NameAssign.value_);
+                                    st.add_symbol(param->U.NameAssign.name_->at(0).A.Name.name_, this->visit_expr(param->U.NameAssign.value_));
+                                }
+                            }
+                            i++;
                         }
                     }
-                    return visit_stmts(func->U.FunctionDef.body);
+                    AlifObj res = visit_stmts(func->U.FunctionDef.body);
+                    st.exit_scope();
+                    return res;
                 }
             }
             else {
@@ -1790,7 +1861,39 @@ public:
                 //        i++;
                 //    }
                 //}
-                return visit_stmts(func->U.FunctionDef.body);
+                if (func->U.FunctionDef.params != nullptr)
+                {
+
+                    int lenArg = _node->U.Call.args->size();
+
+                    int i = 0;
+                    for (ExprNode* param : *func->U.FunctionDef.params)
+                    {
+                        if (param->type_ == VAccess) {
+
+                            //namesTable[param->U.NameAccess.name_->A.Name.name_] = this->visit_expr(_node->U.Call.args->at(i));
+                            st.add_symbol(param->U.NameAccess.name_.A.Name.name_, this->visit_expr(_node->U.Call.args->at(i)));
+
+                        }
+                        else if (lenArg == (i + 1)) {
+
+                            //namesTable[param->U.NameAssign.name_->at(0)->A.Name.name_] = this->visit_expr(_node->U.Call.args->at((lenArg - 1)));
+                            st.add_symbol(param->U.NameAssign.name_->at(0).A.Name.name_, this->visit_expr(_node->U.Call.args->at((lenArg - 1))));
+
+
+                        }
+                        else {
+
+                            //namesTable[param->U.NameAssign.name_->at(0)->A.Name.name_] = this->visit_expr(param->U.NameAssign.value_);
+                            st.add_symbol(param->U.NameAssign.name_->at(0).A.Name.name_, this->visit_expr(param->U.NameAssign.value_));
+
+                        }
+                        i++;
+                    }
+                }
+                AlifObj res = visit_stmts(func->U.FunctionDef.body);
+                st.exit_scope();
+                return res;
             }
 
         }
@@ -1851,7 +1954,14 @@ public:
 
 
 
-    void print() {
-        prnt(1);
+    void print(ExprNode* node) {
+        AlifObj val;
+        for (ExprNode* arg : *node->U.Call.args) {
+            val = this->visit_expr(arg);
+            if (val.type_ == TTstring) { prnt(val.A.String.value_); }
+            else if (val.type_ == TTnumber) { prnt(val.A.Number.value_); }
+            else if (val.type_ == TTkeyword) { if (val.A.Boolean.Kkind_ == True) { prnt(L"صح"); } else { prnt(L"خطا"); } }
+            else if (val.type_ == TTlist) { STR lst = L"["; for (AlifObj obj : *val.A.List.objList) { lst.append(std::to_wstring((int)obj.A.Number.value_)); lst.append(L", "); } lst.replace(lst.length() - 2, lst.length(), L"]"); prnt(lst); }
+        }
     }
 };
