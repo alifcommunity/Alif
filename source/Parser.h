@@ -8,7 +8,6 @@ struct ExprNode;
 struct AlifObj
 {
     TokenType type_;
-    unsigned int refCount;
 
     union UObj
     {
@@ -218,9 +217,9 @@ struct AlifObj
 
         struct {
             std::vector<ExprNode*>* list_;
-            std::vector<AlifObj*>* objList;
+            std::vector<AlifObj>* objList;
 
-            std::vector<ExprNode*>* add_element(AlifObj* _obj) {
+            std::vector<ExprNode*>* add_element(AlifObj _obj) {
                 objList->push_back(_obj);
             }
 
@@ -245,7 +244,7 @@ struct ExprNode
     union UExprNode
     {
         struct {
-            AlifObj* value_;
+            AlifObj value_;
         }Object;
 
         struct {
@@ -262,18 +261,18 @@ struct ExprNode
         }UnaryOp;
 
         struct {
-            std::vector<AlifObj*>* name_;
+            std::vector<AlifObj>* name_;
             ExprNode* value_;
         }NameAssign;
 
         struct {
-            AlifObj* name_;
+            AlifObj name_;
             TokenType operator_;
             ExprNode* value_;
         }AugNameAssign;
 
         struct {
-            AlifObj* name_;
+            AlifObj name_;
         }NameAccess;
 
         struct {
@@ -316,8 +315,8 @@ struct StmtsNode {
         }If;
 
         struct {
-            AlifObj* itrName;
-            std::vector<AlifObj*>* args_;
+            AlifObj itrName;
+            std::vector<AlifObj>* args_;
             StmtsNode* block_;
             StmtsNode* else_;
         }For;
@@ -330,14 +329,14 @@ struct StmtsNode {
 
         struct
         {
-            AlifObj* name;
+            AlifObj name;
             StmtsNode* body;
             ExprNode* base;
         }ClassDef;
 
         struct
         {
-            AlifObj* name;
+            AlifObj name;
             std::vector<ExprNode*>* params;
             StmtsNode* body;
         }FunctionDef;
@@ -390,7 +389,7 @@ public:
     void parse()
     {
         StmtsNode* stmtsRes = nullptr;
-        AlifObj* intrRes = nullptr;
+        AlifObj intrRes;
 
         do {
             stmtsRes = this->statement();
@@ -422,12 +421,12 @@ public:
             if (Next_Is(TTequal)) {
                 Params = True;
 
-                std::vector<AlifObj*>* names_ = new std::vector<AlifObj*>;
+                std::vector<AlifObj>* names_ = new std::vector<AlifObj>;
 
-                AlifObj* name_ = new AlifObj;
+                AlifObj name_;
 
-                name_->type_ = TTname;
-                name_->A.Name.name_ = this->currentToken.val.numVal;
+                name_.type_ = TTname;
+                name_.A.Name.name_ = this->currentToken.val.numVal;
 
                 names_->push_back(name_);
 
@@ -465,12 +464,12 @@ public:
 
                     Params = True;
 
-                    std::vector<AlifObj*>* names_ = new std::vector<AlifObj*>;
+                    std::vector<AlifObj>* names_ = new std::vector<AlifObj>;
 
-                    AlifObj* name_ = new AlifObj;
+                    AlifObj name_;
 
-                    name_->type_ = TTname;
-                    name_->A.Name.name_ = this->currentToken.val.numVal;
+                    name_.type_ = TTname;
+                    name_.A.Name.name_ = this->currentToken.val.numVal;
 
                     names_->push_back(name_);
 
@@ -506,16 +505,14 @@ public:
     ExprNode* atom() {
 
         Token token = this->currentToken;
-        AlifObj* obj_ = new AlifObj;
         level--;
 
         if (token.type_ == TTname)
         {
 
             this->advance();
-            obj_->type_ = TTname;
-            obj_->A.Name.name_ = token.val.numVal;
-            (exprNode + level)->U.NameAccess.name_ = obj_;
+            (exprNode + level)->U.NameAccess.name_.type_ = TTname;
+            (exprNode + level)->U.NameAccess.name_.A.Name.name_ = token.val.numVal;
             (exprNode + level)->type_ = VAccess;
             return (exprNode + level);
         }
@@ -523,9 +520,8 @@ public:
         {
 
             this->advance();
-            obj_->type_ = TTbuildInFunc;
-            obj_->A.BuildInFunc.buildInFunc = token.val.buildInFunc;
-            (exprNode + level)->U.NameAccess.name_ = obj_;
+            (exprNode + level)->U.NameAccess.name_.type_ = TTbuildInFunc;
+            (exprNode + level)->U.NameAccess.name_.A.BuildInFunc.buildInFunc = token.val.buildInFunc;
             (exprNode + level)->type_ = VAccess;
             return (exprNode + level);
         }
@@ -533,10 +529,9 @@ public:
             if (token.val.keywordType == True)
             {
                 this->advance();
-                obj_->type_ = TTkeyword;
-                obj_->A.Boolean.Kkind_ = True;
-                obj_->A.Boolean.value_ = 1;
-                (exprNode + level)->U.Object.value_ = obj_;
+                (exprNode + level)->U.Object.value_.type_ = TTkeyword;
+                (exprNode + level)->U.Object.value_.A.Boolean.Kkind_ = True;
+                (exprNode + level)->U.Object.value_.A.Boolean.value_ = 1;
                 (exprNode + level)->type_ = VObject;
 
                 return (exprNode + level);
@@ -544,10 +539,9 @@ public:
             else if (token.val.keywordType == False)
             {
                 this->advance();
-                obj_->type_ = TTkeyword;
-                obj_->A.Boolean.Kkind_ = False;
-                obj_->A.Boolean.value_ = 0;
-                (exprNode + level)->U.Object.value_ = obj_;
+                (exprNode + level)->U.Object.value_.type_ = TTkeyword;
+                (exprNode + level)->U.Object.value_.A.Boolean.Kkind_ = False;
+                (exprNode + level)->U.Object.value_.A.Boolean.value_ = 0;
                 (exprNode + level)->type_ = VObject;
 
                 return (exprNode + level);
@@ -555,9 +549,8 @@ public:
             else if (token.val.keywordType == None)
             {
                 this->advance();
-                obj_->type_ = TTnone;
-                obj_->A.None.kind_ = None;
-                (exprNode + level)->U.Object.value_ = obj_;
+                (exprNode + level)->U.Object.value_.type_ = TTnone;
+                (exprNode + level)->U.Object.value_.A.None.kind_ = None;
                 (exprNode + level)->type_ = VObject;
 
                 return (exprNode + level);
@@ -566,35 +559,32 @@ public:
         else if (token.type_ == TTinteger)
         {
             this->advance();
-            obj_->type_ = TTnumber;
-            obj_->A.Number.Tkind_ = token.type_;
-            obj_->A.Number.value_ = token.val.numVal;
-            (exprNode + level)->U.Object.value_ = obj_;
+            (exprNode + level)->U.Object.value_.type_ = TTnumber;
+            (exprNode + level)->U.Object.value_.A.Number.Tkind_ = token.type_;
+            (exprNode + level)->U.Object.value_.A.Number.value_ = token.val.numVal;
             (exprNode + level)->type_ = VObject;
             return (exprNode + level);
         }
         else if (token.type_ == TTfloat)
         {
             this->advance();
-            obj_->type_ = TTnumber;
-            obj_->A.Number.Tkind_ = token.type_;
-            obj_->A.Number.value_ = token.val.numVal;
-            (exprNode + level)->U.Object.value_ = obj_;
+            (exprNode + level)->U.Object.value_.type_ = TTnumber;
+            (exprNode + level)->U.Object.value_.A.Number.Tkind_ = token.type_;
+            (exprNode + level)->U.Object.value_.A.Number.value_ = token.val.numVal;
             (exprNode + level)->type_ = VObject;
             return (exprNode + level);
         }
         else if (token.type_ == TTstring)
         {
             this->advance();
-            obj_->type_ = token.type_;
-            obj_->A.String.value_ = token.val.strVal;
-            (exprNode + level)->U.Object.value_ = obj_;
+            (exprNode + level)->U.Object.value_.type_ = token.type_;
+            (exprNode + level)->U.Object.value_.A.String.value_ = token.val.strVal;
             (exprNode + level)->type_ = VObject;
             return (exprNode + level);
         }
         else if (token.type_ == TTlSquare)
         {
-            return this->list_expr(obj_);
+            return this->list_expr();
         }
         else if (this->currentToken.type_ == TTlParenthesis)
         {
@@ -617,7 +607,7 @@ public:
         }
     }
 
-    ExprNode* list_expr(AlifObj* _obj)
+    ExprNode* list_expr()
     {
         std::vector<ExprNode*>* nodeElement = new std::vector<ExprNode*>;
 
@@ -643,9 +633,8 @@ public:
 
         level--;
 
-        _obj->type_ = TTlist;
-        _obj->A.List.list_ = nodeElement;
-        (exprNode + level)->U.Object.value_ = _obj;
+        (exprNode + level)->U.Object.value_.type_ = TTlist;
+        (exprNode + level)->U.Object.value_.A.List.list_ = nodeElement;
         (exprNode + level)->type_ = VList;
 
         return (exprNode + level);
@@ -916,7 +905,6 @@ public:
         if (this->currentToken.type_ == TTcomma)
         {
             std::vector<ExprNode*>* exprs_ = new std::vector<ExprNode*>;
-            AlifObj* obj_ = new AlifObj;
 
             exprs_->push_back(expr_);
             do
@@ -928,9 +916,8 @@ public:
 
             level--;
 
-            obj_->A.List.list_ = exprs_;
-            obj_->type_ = TTlist;
-            (exprNode + level)->U.Object.value_ = obj_;
+            (exprNode + level)->U.Object.value_.type_ = TTlist;
+            (exprNode + level)->U.Object.value_.A.List.list_ = exprs_;
             (exprNode + level)->type_ = VList;
 
             return (exprNode + level);
@@ -945,14 +932,14 @@ public:
         {
             if (Next_Is(TTequal))
             {
-                std::vector<AlifObj*>* names_ = new std::vector<AlifObj*>;
+                std::vector<AlifObj>* names_ = new std::vector<AlifObj>;
 
                 while (Next_Is(TTequal))
                 {
-                    AlifObj* name_ = new AlifObj;
+                    AlifObj name_;
 
-                    name_->type_ = TTname;
-                    name_->A.Name.name_ = this->currentToken.val.numVal;
+                    name_.type_ = TTname;
+                    name_.A.Name.name_ = this->currentToken.val.numVal;
 
                     names_->push_back(name_);
 
@@ -977,9 +964,9 @@ public:
                 // بحيث يتم تخزين النوع في العملية بشكل مباشر دون التحقق منها
                 // if token.type == TTaugassign then operator = opToken.type
 
-                AlifObj* name_ = new AlifObj;
-                name_->type_ = TTname;
-                name_->A.Name.name_ = this->currentToken.val.numVal;
+                AlifObj name_;
+                name_.type_ = TTname;
+                name_.A.Name.name_ = this->currentToken.val.numVal;
 
                 this->advance();
 
@@ -1024,11 +1011,11 @@ public:
             if (Next_Is(TTequal)) {
                 Params = True;
 
-                std::vector<AlifObj*>* names_ = new std::vector<AlifObj*>;
-                AlifObj* name_ = new AlifObj;
+                std::vector<AlifObj>* names_ = new std::vector<AlifObj>;
+                AlifObj name_;
 
-                name_->type_ = TTname;
-                name_->A.Name.name_ = this->currentToken.val.numVal;
+                name_.type_ = TTname;
+                name_.A.Name.name_ = this->currentToken.val.numVal;
 
                 names_->push_back(name_);
 
@@ -1062,12 +1049,12 @@ public:
 
                     Params = True;
 
-                    std::vector<AlifObj*>* names_ = new std::vector<AlifObj*>;
+                    std::vector<AlifObj>* names_ = new std::vector<AlifObj>;
 
-                    AlifObj* name_ = new AlifObj;
+                    AlifObj name_;
 
-                    name_->type_ = TTname;
-                    name_->A.Name.name_ = this->currentToken.val.numVal;
+                    name_.type_ = TTname;
+                    name_.A.Name.name_ = this->currentToken.val.numVal;
 
                     names_->push_back(name_);
 
@@ -1097,15 +1084,15 @@ public:
 
     StmtsNode* function_def() {
 
-        AlifObj* name = new AlifObj;
+        AlifObj name;
         StmtsNode* body = nullptr;
         std::vector<ExprNode*>* params = nullptr;
 
         if (this->currentToken.type_ == TTname or this->currentToken.type_ == TTbuildInFunc) {
 
-            name->type_ = this->currentToken.type_;
-            if (this->currentToken.type_ == TTname) { name->A.Name.name_ = this->currentToken.val.numVal; }
-            else { name->A.BuildInFunc.buildInFunc = this->currentToken.val.buildInFunc; }
+            name.type_ = this->currentToken.type_;
+            if (this->currentToken.type_ == TTname) { name.A.Name.name_ = this->currentToken.val.numVal; }
+            else { name.A.BuildInFunc.buildInFunc = this->currentToken.val.buildInFunc; }
 
             this->advance();
 
@@ -1138,12 +1125,12 @@ public:
 
         ExprNode* bases = nullptr;
         StmtsNode* body = nullptr;
-        AlifObj* name = new AlifObj;
+        AlifObj name;
 
         if (this->currentToken.type_ == TTname) {
 
-            name->type_ = TTname;
-            name->A.Name.name_ = this->currentToken.val.numVal;
+            name.type_ = TTname;
+            name.A.Name.name_ = this->currentToken.val.numVal;
 
             this->advance();
 
@@ -1205,16 +1192,16 @@ public:
     {
         if (this->currentToken.type_ == TTname)
         {
-            AlifObj* itrName = new AlifObj;
-            std::vector<AlifObj*>* args_ = new std::vector<AlifObj*>;
+            AlifObj itrName;
+            std::vector<AlifObj>* args_ = new std::vector<AlifObj>;
             StmtsNode* block_ = nullptr;
             StmtsNode* else_ = nullptr;
 
             if (Next_Is(TTkeyword))
             {
 
-                itrName->type_ = TTname;
-                itrName->A.Name.name_ = this->currentToken.val.numVal;
+                itrName.type_ = TTname;
+                itrName.A.Name.name_ = this->currentToken.val.numVal;
 
                 this->advance();
 
@@ -1463,11 +1450,11 @@ public:
     //// المفسر اللغوي
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    std::map<NUM, AlifObj*> namesTable;
+    std::map<NUM, AlifObj> namesTable;
     std::map<BuildInFuncType, void(Parser::*)()> buildInFuncsTable{ {Print, &Parser::print} };
     std::map<NUM, StmtsNode*> functionsTable;
 
-    AlifObj* visit_stmts(StmtsNode* _node)
+    AlifObj visit_stmts(StmtsNode* _node)
     {
         if (_node->type_ == VExpr)
         {
@@ -1475,9 +1462,9 @@ public:
         }
         else if (_node->type_ == VFunction)
         {
-            if (_node->U.FunctionDef.name->type_ != TTbuildInFunc) { functionsTable[_node->U.FunctionDef.name->A.Name.name_] = _node; }
+            if (_node->U.FunctionDef.name.type_ != TTbuildInFunc) { functionsTable[_node->U.FunctionDef.name.A.Name.name_] = _node; }
             else {
-                buildInFuncsTable.erase(_node->U.FunctionDef.name->A.BuildInFunc.buildInFunc); functionsTable[_node->U.FunctionDef.name->A.BuildInFunc.buildInFunc] = _node;
+                buildInFuncsTable.erase(_node->U.FunctionDef.name.A.BuildInFunc.buildInFunc); functionsTable[_node->U.FunctionDef.name.A.BuildInFunc.buildInFunc] = _node;
             }
         }
         else if (_node->type_ == VClass)
@@ -1486,7 +1473,7 @@ public:
         }
         else if (_node->type_ == VFor)
         {
-            NUM itrName = _node->U.For.itrName->A.Name.name_;
+            NUM itrName = _node->U.For.itrName.A.Name.name_;
 
             NUM startVal = 0;
             NUM endVal;
@@ -1494,25 +1481,25 @@ public:
 
             if (_node->U.For.args_->size() == 3)
             {
-                startVal = _node->U.For.args_->at(0)->A.Number.value_;
-                endVal = _node->U.For.args_->at(1)->A.Number.value_;
-                stepVal = _node->U.For.args_->at(2)->A.Number.value_;
+                startVal = _node->U.For.args_->at(0).A.Number.value_;
+                endVal = _node->U.For.args_->at(1).A.Number.value_;
+                stepVal = _node->U.For.args_->at(2).A.Number.value_;
             }
             else if (_node->U.For.args_->size() == 2)
             {
-                startVal = _node->U.For.args_->at(0)->A.Number.value_;
-                endVal = _node->U.For.args_->at(1)->A.Number.value_;
+                startVal = _node->U.For.args_->at(0).A.Number.value_;
+                endVal = _node->U.For.args_->at(1).A.Number.value_;
             }
             else
             {
-                endVal = _node->U.For.args_->at(0)->A.Number.value_;
+                endVal = _node->U.For.args_->at(0).A.Number.value_;
             }
 
             namesTable[itrName] = _node->U.For.args_->at(0);
 
             for (NUM i = startVal; i < endVal; i += stepVal)
             {
-                namesTable[itrName]->A.Number.value_ = i;
+                namesTable[itrName].A.Number.value_ = i;
                 this->visit_stmts(_node->U.For.block_);
 
             }
@@ -1524,7 +1511,7 @@ public:
         }
         else if (_node->type_ == VWhile)
         {
-            while (this->visit_expr(_node->U.While.condetion_)->A.Boolean.value_)
+            while (this->visit_expr(_node->U.While.condetion_).A.Boolean.value_)
             {
                 this->visit_stmts(_node->U.While.block_);
             }
@@ -1537,7 +1524,7 @@ public:
         else if (_node->type_ == VIf)
         {
 
-            if (this->visit_expr(_node->U.If.condetion_)->A.Boolean.value_)
+            if (this->visit_expr(_node->U.If.condetion_).A.Boolean.value_)
             {
                 return this->visit_stmts(_node->U.If.block_);
             }
@@ -1545,7 +1532,7 @@ public:
             {
                 for (StmtsNode* elseIfs : *_node->U.If.elseIf)
                 {
-                    if (this->visit_expr(elseIfs->U.If.condetion_)->A.Boolean.value_)
+                    if (this->visit_expr(elseIfs->U.If.condetion_).A.Boolean.value_)
                     {
                         this->visit_stmts(elseIfs->U.If.block_);
                         break;
@@ -1568,12 +1555,7 @@ public:
     }
 
 
-    // <متغيرات عامة>
-    AlifObj* res = (AlifObj*)memBlock.alif_alloc(2, sizeof(AlifObj));
-    unsigned int count = 1;
-    // </متغيرات عامة>
-
-    AlifObj* visit_expr(ExprNode* _node)
+    AlifObj visit_expr(ExprNode* _node)
     {
 
         if (_node->type_ == VObject)
@@ -1582,16 +1564,16 @@ public:
         }
         else if (_node->type_ == VList)
         {
-            _node->U.Object.value_->A.List.objList = new std::vector<AlifObj*>;
-            for (ExprNode* obj : *_node->U.Object.value_->A.List.list_)
+            _node->U.Object.value_.A.List.objList = new std::vector<AlifObj>;
+            for (ExprNode* obj : *_node->U.Object.value_.A.List.list_)
             {
-                _node->U.Object.value_->A.List.objList->push_back(this->visit_expr(obj));
+                _node->U.Object.value_.A.List.objList->push_back(this->visit_expr(obj));
             };
             return _node->U.Object.value_;
         }
         else if (_node->type_ == VUnaryOp)
         {
-            AlifObj* right = this->visit_expr(_node->U.UnaryOp.right_);
+            AlifObj right = this->visit_expr(_node->U.UnaryOp.right_);
 
             if (_node->U.UnaryOp.operator_ != TTkeyword)
             {
@@ -1601,115 +1583,112 @@ public:
                 }
                 else if (_node->U.UnaryOp.operator_ == TTminus)
                 {
-                    right->A.Number.value_ = -right->A.Number.value_;
+                    right.A.Number.value_ = -right.A.Number.value_;
                 }
             }
             else
             {
                 if (_node->U.UnaryOp.keyword_ == Not)
                 {
-                    right->A.Boolean.not_();
+                    right.A.Boolean.not_();
                 }
             }
             return right;
         }
         else if (_node->type_ == VBinOp)
         {
-            AlifObj* right = this->visit_expr(_node->U.BinaryOp.right_);
-            AlifObj* left = this->visit_expr(_node->U.BinaryOp.left_);
-            count = 0 ? count = 1 : count;
-            *(res + count) = *left;
-
+            AlifObj right = this->visit_expr(_node->U.BinaryOp.right_);
+            AlifObj left = this->visit_expr(_node->U.BinaryOp.left_);
 
             if (_node->U.BinaryOp.operator_ != TTkeyword)
             {
                 if (_node->U.BinaryOp.operator_ == TTplus)
                 {
-                    if (left->type_ == TTnumber)
+                    if (left.type_ == TTnumber)
                     {
-                        (res + count)->A.Number.add_(right);
+                        left.A.Number.add_(&right);
                     }
-                    else if (left->type_ == TTstring)
+                    else if (left.type_ == TTstring)
                     {
-                        (res + count)->A.String.add_(right);
+                        left.A.String.add_(&right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTminus)
                 {
-                    if (left->type_ == TTnumber)
+                    if (left.type_ == TTnumber)
                     {
-                        (res + count)->A.Number.sub_(right);
+                        left.A.Number.sub_(&right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTmultiply)
                 {
-                    if (left->type_ == TTnumber)
+                    if (left.type_ == TTnumber)
                     {
-                        (res + count)->A.Number.mul_(right);
+                        left.A.Number.mul_(&right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTdivide)
                 {
-                    if (left->type_ == TTnumber)
+                    if (left.type_ == TTnumber)
                     {
-                        (res + count)->A.Number.div_(right);
+                        left.A.Number.div_(&right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTremain)
                 {
-                    if (left->type_ == TTnumber and left->A.Number.Tkind_ == TTinteger)
+                    if (left.type_ == TTnumber and left.A.Number.Tkind_ == TTinteger)
                     {
-                        (res + count)->A.Number.rem_(right);
+                        left.A.Number.rem_(&right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTpower)
                 {
-                    if (left->type_ == TTnumber)
+                    if (left.type_ == TTnumber)
                     {
-                        (res + count)->A.Number.pow_(right);
+                        left.A.Number.pow_(&right);
                     }
                 }
 
                 else if (_node->U.BinaryOp.operator_ == TTequalEqual)
                 {
-                    if (left->type_ == TTnumber)
+                    if (left.type_ == TTnumber)
                     {
-                        (res + count)->A.Number.equalE_(right);
+                        left.A.Number.equalE_(&right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTnotEqual)
                 {
-                    if (left->type_ == TTnumber)
+                    if (left.type_ == TTnumber)
                     {
-                        (res + count)->A.Number.notE_(right);
+                        left.A.Number.notE_(&right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTgreaterThan)
                 {
-                    if (left->type_ == TTnumber)
+                    if (left.type_ == TTnumber)
                     {
-                        (res + count)->A.Number.greaterT_(right);
+                        left.A.Number.greaterT_(&right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTlessThan)
                 {
-                    if (left->type_ == TTnumber)
+                    if (left.type_ == TTnumber)
                     {
-                        (res + count)->A.Number.lessT_(right);
+                        left.A.Number.lessT_(&right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTgreaterThanEqual)
                 {
-                    if (left->type_ == TTnumber)
+                    if (left.type_ == TTnumber)
                     {
-                        (res + count)->A.Number.greaterTE_(right);
+                        left.A.Number.greaterTE_(&right);
                     }
                 }
                 else if (_node->U.BinaryOp.operator_ == TTlessThanEqual)
                 {
-                    if (left->type_ == TTnumber)
+                    if (left.type_ == TTnumber)
                     {
-                        (res + count)->A.Number.lessTE_(right);
+                        left.A.Number.lessTE_(&right);
                     }
                 }
             }
@@ -1717,23 +1696,23 @@ public:
             {
                 if (_node->U.BinaryOp.keyword_ == Or)
                 {
-                    (res + count)->A.Boolean.or_(right);
+                    left.A.Boolean.or_(&right);
                 }
                 else if (_node->U.BinaryOp.keyword_ == And)
                 {
-                    (res + count)->A.Boolean.and_(right);
+                    left.A.Boolean.and_(&right);
                 }
             }
 
-            return (res + count);
+            return left;
         }
         else if (_node->type_ == VExpr)
         {
-            AlifObj* expr_ = this->visit_expr(_node->U.Expr.expr_);
+            AlifObj expr_ = this->visit_expr(_node->U.Expr.expr_);
             if (_node->U.Expr.condetion_ != nullptr)
             {
-                AlifObj* condetion_ = this->visit_expr(_node->U.Expr.condetion_);
-                if (condetion_->A.Boolean.value_ != 0)
+                AlifObj condetion_ = this->visit_expr(_node->U.Expr.condetion_);
+                if (condetion_.A.Boolean.value_ != 0)
                 {
                     return expr_;
                 }
@@ -1748,35 +1727,35 @@ public:
         {
             if (_node->U.NameAssign.name_->size() < 2)
             {
-                namesTable[_node->U.NameAssign.name_->front()->A.Name.name_] = this->visit_expr(_node->U.NameAssign.value_);
+                namesTable[_node->U.NameAssign.name_->front().A.Name.name_] = this->visit_expr(_node->U.NameAssign.value_);
 
             }
             else
             {
-                for (AlifObj* i : *_node->U.NameAssign.name_)
+                for (AlifObj i : *_node->U.NameAssign.name_)
                 {
-                    namesTable[i->A.Name.name_] = this->visit_expr(_node->U.NameAssign.value_);
+                    namesTable[i.A.Name.name_] = this->visit_expr(_node->U.NameAssign.value_);
                 }
 
             }
         }
         else if (_node->type_ == VAccess)
         {
-            //prnt(namesTable[_node->U.NameAccess.name_->A.Name.name_]->A.Number.value_); //  هذا السطر مخصص للإختبارات فقط ويجب حذفه
-            return namesTable[_node->U.NameAccess.name_->A.Name.name_];
+            //prnt(namesTable[_node->U.NameAccess.name_.A.Name.name_].A.Number.value_); //  هذا السطر مخصص للإختبارات فقط ويجب حذفه
+            return namesTable[_node->U.NameAccess.name_.A.Name.name_];
         }
         else if (_node->type_ == VCall) {
 
             // متبقي فقط اضافة وسيطات بقيم مسبقة والتحقق من وجودها في الدالة ام لا
 
-            if (_node->U.Call.name->U.NameAccess.name_->type_ == TTbuildInFunc)
+            if (_node->U.Call.name->U.NameAccess.name_.type_ == TTbuildInFunc)
             {
-                if (buildInFuncsTable.count(_node->U.Call.name->U.NameAccess.name_->A.BuildInFunc.buildInFunc))
+                if (buildInFuncsTable.count(_node->U.Call.name->U.NameAccess.name_.A.BuildInFunc.buildInFunc))
                 {
-                    buildInFuncsTable[_node->U.Call.name->U.NameAccess.name_->A.BuildInFunc.buildInFunc];
+                    buildInFuncsTable[_node->U.Call.name->U.NameAccess.name_.A.BuildInFunc.buildInFunc];
                 }
                 else {
-                    StmtsNode* func = functionsTable[_node->U.Call.name->U.NameAccess.name_->A.Name.name_];
+                    StmtsNode* func = functionsTable[_node->U.Call.name->U.NameAccess.name_.A.Name.name_];
 
                     int lenParm = func->U.FunctionDef.params->size();
                     int lenArg = _node->U.Call.args->size();
@@ -1786,7 +1765,7 @@ public:
                         for (ExprNode* param : *func->U.FunctionDef.params)
                         {
                             if (param->type_ == VAccess) {
-                                namesTable[param->U.NameAccess.name_->A.Name.name_] = this->visit_expr(_node->U.Call.args->at(lenArg));
+                                namesTable[param->U.NameAccess.name_.A.Name.name_] = this->visit_expr(_node->U.Call.args->at(lenArg));
                             }
                             lenArg--;
                         }
@@ -1795,7 +1774,7 @@ public:
                 }
             }
             else {
-                StmtsNode* func = functionsTable[_node->U.Call.name->U.NameAccess.name_->A.Name.name_];
+                StmtsNode* func = functionsTable[_node->U.Call.name->U.NameAccess.name_.A.Name.name_];
 
                 // النظام المعلق هذا لا يعمل إلا في حال تمرير معاملات في الدالة
                 //int lenParm = func->U.FunctionDef.params->size();
@@ -1817,50 +1796,50 @@ public:
         }
         else if (_node->type_ == VAugAssign)
         {
-            AlifObj* value = this->visit_expr(_node->U.AugNameAssign.value_);
-            AlifObj* name = namesTable[_node->U.AugNameAssign.name_->A.Name.name_];
+            AlifObj value = this->visit_expr(_node->U.AugNameAssign.value_);
+            AlifObj name = namesTable[_node->U.AugNameAssign.name_.A.Name.name_];
 
             if (_node->U.AugNameAssign.operator_ == TTplusEqual)
             {
-                if (name->type_ == TTnumber)
+                if (name.type_ == TTnumber)
                 {
-                    name->A.Number.add_(value);
+                    name.A.Number.add_(&value);
                 }
-                else if (name->type_ == TTstring)
+                else if (name.type_ == TTstring)
                 {
-                    name->A.String.add_(value);
+                    name.A.String.add_(&value);
                 }
             }
             else if (_node->U.AugNameAssign.operator_ == TTminusEqual)
             {
-                if (name->type_ == TTnumber)
+                if (name.type_ == TTnumber)
                 {
-                    name->A.Number.sub_(value);
+                    name.A.Number.sub_(&value);
                 }
             }
             else if (_node->U.AugNameAssign.operator_ == TTmultiplyEqual)
             {
-                if (name->type_ == TTnumber)
+                if (name.type_ == TTnumber)
                 {
-                    name->A.Number.mul_(value);
+                    name.A.Number.mul_(&value);
                 }
             }
             else if (_node->U.AugNameAssign.operator_ == TTdivideEqual)
             {
-                if (name->type_ == TTnumber)
+                if (name.type_ == TTnumber)
                 {
-                    name->A.Number.div_(value);
+                    name.A.Number.div_(&value);
                 }
             }
             else if (_node->U.AugNameAssign.operator_ == TTremainEqual)
             {
-                if (name->type_ == TTnumber)
+                if (name.type_ == TTnumber)
                 {
-                    name->A.Number.rem_(value);
+                    name.A.Number.rem_(&value);
                 }
             }
 
-            namesTable[_node->U.AugNameAssign.name_->A.Name.name_] = name;
+            namesTable[_node->U.AugNameAssign.name_.A.Name.name_] = name;
             return name;
         }
         else if (_node->type_ == VReturn)
