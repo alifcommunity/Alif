@@ -47,5 +47,11 @@
     <ClInclude Include="..\source\Tokens.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\MemoryBlock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifRun.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -28,6 +28,7 @@
     <None Include="..\source\AlifCode.alif5" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\source\AlifRun.h" />
     <ClInclude Include="..\source\constants.h" />
     <ClInclude Include="..\source\Errors.h" />
     <ClInclude Include="..\source\Interpreter.h" />
