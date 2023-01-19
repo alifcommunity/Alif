@@ -1502,6 +1502,11 @@ public:
 
         while (this->currentToken.type_ != TTdedent and this->currentToken.type_ != TTendOfFile)
         {
+            if (this->currentToken.type_ == TTindent)
+            {
+                prnt(L"خطأ في المسافات البادئة - لقد خرجت عن النطاق الحالي");
+                exit(-1);
+            }
             statements_->push_back(this->statement());
 
         }
