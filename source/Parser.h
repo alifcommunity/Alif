@@ -1617,8 +1617,7 @@ public:
                 {
                     if (this->visit_expr(elseIfs->U.If.condetion_).A.Boolean.value_)
                     {
-                        this->visit_stmts(elseIfs->U.If.block_);
-                        break;
+                        return this->visit_stmts(elseIfs->U.If.block_);
                     }
                 }
 
