@@ -1,7 +1,12 @@
 #pragma once
 
-// المعرب اللغوي
+// المعرب اللغويdedentSpecifier
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+struct DedentSpecifier { // صنف يقوم بتحديد المسافة البادئة الحالية والاخيرة
+    unsigned int spaceCount = 0;
+    DedentSpecifier* prevSpacesCount = nullptr;
+};
 
 class Lexer {
 public:
@@ -15,8 +20,7 @@ public:
 
     int name = 0; // for convert names to numbers
     std::map<STR, int> namesAlter = {};
-    unsigned int lastIndentLength = 0; // for indent
-    unsigned int lastSpaces_ = 0; // for dedent
+    DedentSpecifier* dedentSpec = new DedentSpecifier; // حساب المسافات البادئة والنهائية
 
     ////////////
 
@@ -193,36 +197,35 @@ public:
             spaces += 4;
         }
 
-        if (spaces > lastIndentLength)
+        if (spaces > dedentSpec->spaceCount)
         {
             if (this->currentChar != L'\n') // تحقق اذا كان السطر لا يحتوي سوى مسافات بادئة >> قم بتخطيه
             {
                 this->tokens_.push_back(Token(positionStart, this->position_, TTindent, spaces));
-                this->lastSpaces_ = this->lastIndentLength;
-                this->lastIndentLength = spaces;
+                DedentSpecifier* newIndent = new DedentSpecifier(*dedentSpec);
+                dedentSpec->spaceCount = spaces;
+                dedentSpec->prevSpacesCount = newIndent;
+
             }
             else
             {
                 this->advance();
             }
         }
-        else if (spaces < lastIndentLength)
+        else if (spaces < dedentSpec->spaceCount)
         {
-            while (this->lastIndentLength != spaces)
-            {
-                if (this->lastSpaces_ != 0)
-                {
-                    this->lastIndentLength -= this->lastSpaces_;
+            DedentSpecifier* lastDedent = this->dedentSpec;
+            while (this->dedentSpec->spaceCount != spaces) {
+
+                while (lastDedent->prevSpacesCount != nullptr and lastDedent->prevSpacesCount->spaceCount != 0) {
+                    lastDedent = lastDedent->prevSpacesCount;
                 }
-                else
-                {
-                    this->lastIndentLength = 0;
-                }
+
+                this->dedentSpec->spaceCount -= lastDedent->spaceCount;
                 this->tokens_.push_back(Token(positionStart, this->position_, TTdedent, spaces));
-
             }
-        }
 
+        }
     }
 
     void make_newline()
