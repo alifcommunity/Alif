@@ -1475,12 +1475,17 @@ public:
             this->advance();
             return this->class_def();
         }
-        if (returnFlag)
+        if (this->currentToken.val.keywordType == Return)
         {
-            if (this->currentToken.val.keywordType == Return)
+            if (returnFlag)
             {
                 this->advance();
                 return this->return_statement();
+            }
+            else
+            {
+                prnt(L"لا يمكن إستدعاء حالة ارجع من خارج دالة");
+                exit(-1);
             }
         }
     }
