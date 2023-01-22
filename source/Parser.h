@@ -1601,11 +1601,18 @@ public:
             //namesTable[itrName] = _node->U.For.args_->at(0);
             symTable.add_symbol(itrName, this->visit_expr(_node->U.For.args_->at(0)));
 
+            
+            AlifObj result{};
             for (NUM i = startVal; i < endVal; i += stepVal)
             {
-                symTable.add_value(itrName, i);
+                if (returnFlag)
+                {
+                    return result;
+                }
+
                 //namesTable[itrName].A.Number.value_ = i;
-                this->visit_stmts(_node->U.For.block_);
+                symTable.add_value(itrName, i);
+                result = this->visit_stmts(_node->U.For.block_);
 
             }
             if (_node->U.For.else_ != nullptr)
@@ -1651,14 +1658,15 @@ public:
         }
         else if (_node->type_ == VStmts)
         {
-            AlifObj res;
+            AlifObj result{};
             for (StmtsNode* stmt_ : *_node->U.Stmts.stmts_)
             {
-                res = this->visit_stmts(stmt_);
+                result = this->visit_stmts(stmt_);
                 if (returnFlag) {
-                    return res;
+                    return result;
                 }
             }
+
         }
         else if (_node->type_ == VReturn) {
 
@@ -1673,7 +1681,6 @@ public:
                 nullObj.A.None.kind_ == None;
                 return nullObj;
             }
-
         }
     }
 
@@ -1952,7 +1959,6 @@ public:
                     }
                 }
                 AlifObj res = visit_stmts(func->U.FunctionDef.body);
-                //if (returnFlag) { returnFlag = false; }
                 returnFlag = false;
                 symTable.exit_scope();
                 return res;
