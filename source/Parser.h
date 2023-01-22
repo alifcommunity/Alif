@@ -1475,10 +1475,13 @@ public:
             this->advance();
             return this->class_def();
         }
-        else if (this->currentToken.val.keywordType == Return)
+        if (returnFlag)
         {
-            this->advance();
-            return this->return_statement();
+            if (this->currentToken.val.keywordType == Return)
+            {
+                this->advance();
+                return this->return_statement();
+            }
         }
     }
 
@@ -1513,7 +1516,11 @@ public:
 
         while (this->currentToken.type_ != TTdedent and this->currentToken.type_ != TTendOfFile)
         {
-            
+            if (this->currentToken.type_ == TTindent)
+            {
+                prnt(L"خطأ في المسافات البادئة - لقد خرجت عن النطاق الحالي");
+                exit(-1);
+            }
             statements_->push_back(this->statement());
 
         }
@@ -1635,10 +1642,9 @@ public:
                 res = this->visit_stmts(stmt_);
                 if (returnFlag) {
                     returnFlag = false;
-                    break;
+                    return res;
                 }
             }
-            return res;
         }
         else if (_node->type_ == VReturn) {
 
