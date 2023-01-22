@@ -1051,7 +1051,17 @@ public:
 
     StmtsNode* return_statement() {
 
-        ExprNode* expr_ = this->expression();
+        ExprNode* expr_;
+
+        if (this->currentToken.type_ != TTnewline)
+        {
+            expr_ = this->expression();
+        }
+        else
+        {
+            expr_ = nullptr;
+        }
+        this->advance();
 
         level--;
         (stmtsNode + level)->U.Return.returnExpr = expr_;
@@ -1294,7 +1304,7 @@ public:
                         while (this->currentToken.type_ == TTinteger or this->currentToken.type_ == TTname) // يجب تعديل الخوارزمية لانه يمكن إحتواء تعبير داخل معاملات حالة لاجل
                         {
                             args_->push_back(this->atom());
-                            if (!Next_Is(TTinteger) or !Next_Is(TTname))
+                            if (!Next_Is(TTinteger) and !Next_Is(TTname))
                             {
                                 break;
                             }
@@ -1646,7 +1656,6 @@ public:
             {
                 res = this->visit_stmts(stmt_);
                 if (returnFlag) {
-                    returnFlag = false;
                     return res;
                 }
             }
@@ -1654,7 +1663,16 @@ public:
         else if (_node->type_ == VReturn) {
 
             returnFlag = true;
-            return visit_expr(_node->U.Return.returnExpr);
+            if (_node->U.Return.returnExpr != nullptr)
+            {
+                return visit_expr(_node->U.Return.returnExpr);
+            }
+            else {
+                AlifObj nullObj{};
+                nullObj.type_ == TTnone;
+                nullObj.A.None.kind_ == None;
+                return nullObj;
+            }
 
         }
     }
@@ -1934,6 +1952,8 @@ public:
                     }
                 }
                 AlifObj res = visit_stmts(func->U.FunctionDef.body);
+                //if (returnFlag) { returnFlag = false; }
+                returnFlag = false;
                 symTable.exit_scope();
                 return res;
             }
@@ -1998,7 +2018,7 @@ public:
         AlifObj val;
         for (ExprNode* arg : *node->U.Call.args) {
             val = this->visit_expr(arg);
-            if (val.type_ == TTstring) { prnt(val.A.String.value_); }
+            if (val.type_ == TTstring) { prnt(*val.A.String.value_); }
             else if (val.type_ == TTnumber) { prnt((long int)val.A.Number.value_); }
             else if (val.type_ == TTkeyword) { if (val.A.Boolean.Kkind_ == True) { prnt(L"صح"); } else { prnt(L"خطا"); } }
             else if (val.type_ == TTlist) { STR lst = L"["; for (AlifObj obj : *val.A.List.objList) { lst.append(std::to_wstring((int)obj.A.Number.value_)); lst.append(L", "); } lst.replace(lst.length() - 2, lst.length(), L"]"); prnt(lst); }
