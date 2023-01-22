@@ -276,16 +276,21 @@ public:
 
     AlifObj get_data(NUM type) {
         Scope* scope = currentScope;
+        int level = 1;
         while (scope != nullptr)
         {
             if (scope->symbols.count(type) != 0)
             {
                 return scope->symbols[type];
-
+            }
+            if (level == 0) {
+                break;
             }
             scope = scope->parent;
+            level--;
         }
-        return globalScope->symbols[type];
+        prnt(L"المتغير المستدعى غير معرف");
+        exit(-1);
     }
 
 };
@@ -343,10 +348,6 @@ struct ExprNode
             ExprNode* elseExpr;
         }Expr;
 
-        struct {
-            ExprNode* expr_;
-        }Return;
-
     }U;
 
     //Position posStart;
@@ -397,6 +398,11 @@ struct StmtsNode {
             StmtsNode* body;
         }FunctionDef;
 
+        struct
+        {
+            ExprNode* returnExpr;
+        }Return;
+
         struct {
             std::vector<StmtsNode*>* stmts_;
         }Stmts;
@@ -415,9 +421,10 @@ public:
     STR input_;
 
     /// <flags>
-    
-    bool Params = false;
-    
+
+    bool lastParam = false;
+    bool returnFlag = false;
+
     /// </flags>
 
     unsigned int level = 5500;
@@ -499,14 +506,12 @@ public:
                 args->push_back((exprNode + level));
 
             }
-            else {
+            else if (this->currentToken.type_ != TTrParenthesis or this->currentToken.type_ != TTcomma) {
                 args->push_back(this->expression());
-                this->advance();
             }
         }
-        else if (Next_Is(TTrParenthesis)){
+        else if (this->currentToken.type_ != TTrParenthesis or this->currentToken.type_ != TTcomma) {
             args->push_back(this->expression());
-            this->advance();
         }
 
         while (this->currentToken.type_ == TTcomma)
@@ -540,11 +545,11 @@ public:
                     args->push_back((exprNode + level));
 
                 }
-                else {
+                else if (this->currentToken.type_ != TTrParenthesis or this->currentToken.type_ != TTcomma) {
                     args->push_back(this->expression());
                 }
             }
-            else if (!Next_Is(TTrParenthesis)){
+            else if (this->currentToken.type_ != TTrParenthesis or this->currentToken.type_ != TTcomma) {
                 args->push_back(this->expression());
             }
 
@@ -726,6 +731,8 @@ public:
             }
 
             std::vector<ExprNode*>* args = this->arguments();
+
+            this->advance();
 
             level--;
             (exprNode + level)->type_ = VCall;
@@ -1042,26 +1049,25 @@ public:
         return this->expressions();
     }
 
-    ExprNode* return_statement() {
+    StmtsNode* return_statement() {
 
-        this->advance();
         ExprNode* expr_ = this->expression();
+
         level--;
+        (stmtsNode + level)->U.Return.returnExpr = expr_;
+        (stmtsNode + level)->type_ = VReturn;
 
-        (exprNode + level)->U.Return.expr_ = expr_;
-        (exprNode + level)->type_ = VReturn;
-
-        return (exprNode + level);
+        return (stmtsNode + level);
     }
 
     std::vector<ExprNode*>* parameters() {
 
-        std::vector<ExprNode*>* args = new std::vector<ExprNode*>;
+        std::vector<ExprNode*>* params = new std::vector<ExprNode*>;
 
         if (this->currentToken.type_ == TTname) {
 
             if (Next_Is(TTequal)) {
-                Params = True;
+                lastParam = True;
 
                 std::vector<AlifObj>* names_ = new std::vector<AlifObj>;
                 AlifObj name_;
@@ -1081,16 +1087,14 @@ public:
                 (exprNode + level)->U.NameAssign.value_ = value;
                 (exprNode + level)->type_ = VAssign;
 
-                args->push_back((exprNode + level));
+                params->push_back((exprNode + level));
 
             }
-            else {
-                if (Params) {
-                    prnt(L"not allow assign expression to parameter");
-                    exit(-1);
-                }
-                args->push_back(this->atom());
+            if (lastParam) {
+                prnt(L"not allow assign expression to parameter");
+                exit(-1);
             }
+            params->push_back(this->atom());
         }
 
         while (this->currentToken.type_ == TTcomma)
@@ -1102,7 +1106,7 @@ public:
 
                 if (Next_Is(TTequal)) {
 
-                    Params = True;
+                    lastParam = True;
 
                     std::vector<AlifObj>* names_ = new std::vector<AlifObj>;
 
@@ -1123,17 +1127,18 @@ public:
                     (exprNode + level)->U.NameAssign.value_ = value;
                     (exprNode + level)->type_ = VAssign;
 
-                    args->push_back((exprNode + level));
+                    params->push_back((exprNode + level));
 
                 }
-                else {
-                    if (Params) { prnt(L"not allow assign expression to parameter") }
-                    args->push_back(this->atom());
+                if (lastParam) {
+                    prnt(L"not allow assign expression to parameter");
+                    exit(-1);
                 }
+                params->push_back(this->atom());
             }
 
         }
-        return args;
+        return params;
 
     }
 
@@ -1147,12 +1152,12 @@ public:
 
             name.type_ = this->currentToken.type_;
 
-            if (this->currentToken.type_ == TTname) 
+            if (this->currentToken.type_ == TTname)
             {
                 name.A.Name.name_ = this->currentToken.val.numVal;
             }
-            else { 
-                name.A.BuildInFunc.buildInFunc = this->currentToken.val.buildInFunc; 
+            else {
+                name.A.BuildInFunc.buildInFunc = this->currentToken.val.buildInFunc;
             }
 
             this->advance();
@@ -1164,17 +1169,18 @@ public:
                 if (this->currentToken.type_ == TTrParenthesis) {
                     this->advance();
                 }
-                else { 
+                else {
                     params = this->parameters();
-                    this->advance(); 
+                    this->advance();
                 }
             }
 
             if (this->currentToken.type_ == TTcolon) {
 
                 this->advance();
-
+                returnFlag = true;
                 body = this->block_();
+                returnFlag = false;
 
                 level--;
                 (stmtsNode + level)->type_ = VFunction;
@@ -1469,6 +1475,11 @@ public:
             this->advance();
             return this->class_def();
         }
+        else if (this->currentToken.val.keywordType == Return)
+        {
+            this->advance();
+            return this->return_statement();
+        }
     }
 
     ExprNode* simple_statement()
@@ -1479,7 +1490,7 @@ public:
     StmtsNode* statement() {
         if (this->currentToken.type_ == TTkeyword)
         {
-            if (this->currentToken.val.keywordType == Function or this->currentToken.val.keywordType == If or this->currentToken.val.keywordType == Class or this->currentToken.val.keywordType == For or this->currentToken.val.keywordType == While)
+            if (this->currentToken.val.keywordType == Function or this->currentToken.val.keywordType == If or this->currentToken.val.keywordType == Class or this->currentToken.val.keywordType == For or this->currentToken.val.keywordType == While or this->currentToken.val.keywordType == Return)
             {
                 return this->compound_statement();
             }
@@ -1502,11 +1513,7 @@ public:
 
         while (this->currentToken.type_ != TTdedent and this->currentToken.type_ != TTendOfFile)
         {
-            if (this->currentToken.type_ == TTindent)
-            {
-                prnt(L"خطأ في المسافات البادئة - لقد خرجت عن النطاق الحالي");
-                exit(-1);
-            }
+            
             statements_->push_back(this->statement());
 
         }
@@ -1533,8 +1540,8 @@ public:
         }
         else if (_node->type_ == VFunction)
         {
-            if (_node->U.FunctionDef.name.type_ != TTbuildInFunc) { 
-                functionsTable[_node->U.FunctionDef.name.A.Name.name_] = _node; 
+            if (_node->U.FunctionDef.name.type_ != TTbuildInFunc) {
+                functionsTable[_node->U.FunctionDef.name.A.Name.name_] = _node;
             }
             else {
                 buildInFuncsTable.erase(_node->U.FunctionDef.name.A.BuildInFunc.buildInFunc);
@@ -1610,8 +1617,7 @@ public:
                 {
                     if (this->visit_expr(elseIfs->U.If.condetion_).A.Boolean.value_)
                     {
-                        this->visit_stmts(elseIfs->U.If.block_);
-                        break;
+                        return this->visit_stmts(elseIfs->U.If.block_);
                     }
                 }
 
@@ -1623,10 +1629,22 @@ public:
         }
         else if (_node->type_ == VStmts)
         {
+            AlifObj res;
             for (StmtsNode* stmt_ : *_node->U.Stmts.stmts_)
             {
-                this->visit_stmts(stmt_);
+                res = this->visit_stmts(stmt_);
+                if (returnFlag) {
+                    returnFlag = false;
+                    break;
+                }
             }
+            return res;
+        }
+        else if (_node->type_ == VReturn) {
+
+            returnFlag = true;
+            return visit_expr(_node->U.Return.returnExpr);
+
         }
     }
 
@@ -1959,10 +1977,7 @@ public:
             //namesTable[_node->U.AugNameAssign.name_.A.Name.name_] = name;
             return name;
         }
-        else if (_node->type_ == VReturn)
-        {
-            return this->visit_expr(_node->U.Return.expr_);
-        }
+
     }
 
 
