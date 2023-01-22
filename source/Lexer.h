@@ -4,8 +4,8 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 struct DedentSpecifier { // صنف يقوم بتحديد المسافة البادئة الحالية والاخيرة
-    unsigned int spaceCount = 0;
-    DedentSpecifier* prevSpacesCount = nullptr;
+    int spaces = 0;
+    DedentSpecifier* previous = nullptr;
 };
 
 class Lexer {
@@ -185,46 +185,57 @@ public:
         Position positionStart = this->position_;
         int spaces = 0;
 
-        while (this->currentChar == L' ')
+        while (this->currentChar == L'\t' or this->currentChar == L' ')
         {
-            this->advance();
-            spaces++;
+            if (this->currentChar == L'\t')
+            {
+                this->advance();
+                spaces += 4;
+            }
+            else
+            {
+                this->advance();
+                spaces++;
+            }
         }
 
-        while (this->currentChar == L'\t')
-        {
-            this->advance();
-            spaces += 4;
-        }
-
-        if (spaces > dedentSpec->spaceCount)
+        if (spaces > dedentSpec->spaces)
         {
             if (this->currentChar != L'\n') // تحقق اذا كان السطر لا يحتوي سوى مسافات بادئة >> قم بتخطيه
             {
                 this->tokens_.push_back(Token(positionStart, this->position_, TTindent, spaces));
                 DedentSpecifier* newIndent = new DedentSpecifier(*dedentSpec);
-                dedentSpec->spaceCount = spaces;
-                dedentSpec->prevSpacesCount = newIndent;
-
+                dedentSpec->spaces = spaces;
+                dedentSpec->previous = newIndent;
             }
             else
             {
                 this->advance();
             }
         }
-        else if (spaces < dedentSpec->spaceCount)
+        else if (spaces < dedentSpec->spaces)
         {
-            DedentSpecifier* lastDedent = this->dedentSpec;
-            while (this->dedentSpec->spaceCount != spaces) {
+            while (this->dedentSpec->spaces != spaces) {
 
-                while (lastDedent->prevSpacesCount != nullptr and lastDedent->prevSpacesCount->spaceCount != 0) {
-                    lastDedent = lastDedent->prevSpacesCount;
+                if (this->dedentSpec->spaces < spaces)
+                {
+                    prnt(L"خطأ في المسافات البادئة - لقد خرجت عن النطاق الحالي");
+                    exit(-1);
                 }
 
-                this->dedentSpec->spaceCount -= lastDedent->spaceCount;
+                if (this->dedentSpec->previous != nullptr)
+                {
+                    this->dedentSpec = this->dedentSpec->previous;
+
+                }
+                else {
+                    prnt(L"خطأ في المسافات البادئة - لقد خرجت عن النطاق الحالي");
+                    exit(-1);
+                }
+
+
                 this->tokens_.push_back(Token(positionStart, this->position_, TTdedent, spaces));
             }
-
         }
     }
 
