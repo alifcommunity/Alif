@@ -525,7 +525,7 @@ public:
 
                     std::vector<AlifObj>* names_ = new std::vector<AlifObj>;
 
-                    AlifObj name_;
+                    AlifObj name_{};
 
                     name_.type_ = TTname;
                     name_.A.Name.name_ = this->currentToken.val.numVal;
@@ -995,7 +995,7 @@ public:
 
                 while (Next_Is(TTequal))
                 {
-                    AlifObj name_;
+                    AlifObj name_{};
 
                     name_.type_ = TTname;
                     name_.A.Name.name_ = this->currentToken.val.numVal;
@@ -1023,7 +1023,7 @@ public:
                 // بحيث يتم تخزين النوع في العملية بشكل مباشر دون التحقق منها
                 // if token.type == TTaugassign then operator = opToken.type
 
-                AlifObj name_;
+                AlifObj name_{};
                 name_.type_ = TTname;
                 name_.A.Name.name_ = this->currentToken.val.numVal;
 
@@ -1080,7 +1080,7 @@ public:
                 lastParam = True;
 
                 std::vector<AlifObj>* names_ = new std::vector<AlifObj>;
-                AlifObj name_;
+                AlifObj name_{};
 
                 name_.type_ = TTname;
                 name_.A.Name.name_ = this->currentToken.val.numVal;
@@ -1120,7 +1120,7 @@ public:
 
                     std::vector<AlifObj>* names_ = new std::vector<AlifObj>;
 
-                    AlifObj name_;
+                    AlifObj name_{};
 
                     name_.type_ = TTname;
                     name_.A.Name.name_ = this->currentToken.val.numVal;
@@ -1154,7 +1154,7 @@ public:
 
     StmtsNode* function_def() {
 
-        AlifObj name;
+        AlifObj name{};
         StmtsNode* body = nullptr;
         std::vector<ExprNode*>* params = nullptr;
 
@@ -1207,7 +1207,7 @@ public:
 
         ExprNode* bases = nullptr;
         StmtsNode* body = nullptr;
-        AlifObj name;
+        AlifObj name{};
 
         if (this->currentToken.type_ == TTname) {
 
@@ -1274,7 +1274,7 @@ public:
     {
         if (this->currentToken.type_ == TTname)
         {
-            AlifObj itrName;
+            AlifObj itrName{};
             std::vector<ExprNode*>* args_ = new std::vector<ExprNode*>;
             StmtsNode* block_ = nullptr;
             StmtsNode* else_ = nullptr;
@@ -1623,9 +1623,14 @@ public:
         }
         else if (_node->type_ == VWhile)
         {
+            AlifObj result{};
             while (this->visit_expr(_node->U.While.condetion_).A.Boolean.value_)
             {
-                this->visit_stmts(_node->U.While.block_);
+                if (returnFlag) 
+                {
+                    return result;
+                }
+                result = this->visit_stmts(_node->U.While.block_);
             }
             if (_node->U.While.else_ != nullptr)
             {
