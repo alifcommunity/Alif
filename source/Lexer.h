@@ -348,78 +348,107 @@ public:
         Position positionStart = this->position_;
         this->advance();
 
-        if ((lettersDigits + L' ').find(this->currentChar) != STR::npos) {
-            this->tokens_.push_back(Token(positionStart, this->position_, TTplus));
-        }
-        else if (this->currentChar == L'=') {
+        if (this->currentChar == L'=') {
             this->advance();
             this->tokens_.push_back(Token(positionStart, this->position_, TTplusEqual));
         }
         else {
-            prnt(SyntaxError(positionStart ,this->position_, L"< هل تقصد += ؟ >", fileName, input_).print_());
-            exit(0);
+            this->tokens_.push_back(Token(positionStart, this->position_, TTplus));
         }
+
+        //if ((lettersDigits + L' ').find(this->currentChar) != STR::npos) {
+        //    this->tokens_.push_back(Token(positionStart, this->position_, TTplus));
+        //}
+        //else if (this->currentChar == L'=') {
+        //    this->advance();
+        //    this->tokens_.push_back(Token(positionStart, this->position_, TTplusEqual));
+        //}
+        //else {
+        //    prnt(SyntaxError(positionStart ,this->position_, L"< هل تقصد += ؟ >", fileName, input_).print_());
+        //    exit(0);
+        //}
     }
 
     void make_minus_equal() {
         Position positionStart = this->position_;
         this->advance();
 
-        if ((lettersDigits + L' ').find(this->currentChar) != STR::npos) {
-            this->tokens_.push_back(Token(positionStart, this->position_, TTminus));
-        }
-        else if (this->currentChar == L'=') {
+        if (this->currentChar == L'=') {
             this->advance();
             this->tokens_.push_back(Token(positionStart, this->position_, TTminusEqual));
         }
         else {
-            prnt(SyntaxError(positionStart, this->position_, L"< هل تقصد -= ؟ >", fileName, input_).print_());
-            exit(0);
+            this->tokens_.push_back(Token(positionStart, this->position_, TTminus));
         }
+
+        //if ((lettersDigits + L' ').find(this->currentChar) != STR::npos) {
+        //    this->tokens_.push_back(Token(positionStart, this->position_, TTminus));
+        //}
+        //else if (this->currentChar == L'=') {
+        //    this->advance();
+        //    this->tokens_.push_back(Token(positionStart, this->position_, TTminusEqual));
+        //}
+        //else {
+        //    prnt(SyntaxError(positionStart, this->position_, L"< هل تقصد -= ؟ >", fileName, input_).print_());
+        //    exit(0);
+        //}
     }
 
     void make_multiply_equal() {
         Position positionStart = this->position_;
         this->advance();
 
-        if ((lettersDigits + L' ').find(this->currentChar) != std::wstring::npos) {
-            this->tokens_.push_back(Token(positionStart, this->position_, TTmultiply));
-        }
-        else if (this->currentChar == L'=') {
+        if (this->currentChar == L'=') {
             this->advance();
             this->tokens_.push_back(Token(positionStart, this->position_, TTmultiplyEqual));
         }
         else {
-            prnt(SyntaxError(positionStart, this->position_, L"< هل تقصد *= ؟ >", fileName, input_).print_());
-            exit(0);
+            this->tokens_.push_back(Token(positionStart, this->position_, TTmultiply));
         }
+
+        //if ((lettersDigits + L' ').find(this->currentChar) != std::wstring::npos) {
+        //    this->tokens_.push_back(Token(positionStart, this->position_, TTmultiply));
+        //}
+        //else if (this->currentChar == L'=') {
+        //    this->advance();
+        //    this->tokens_.push_back(Token(positionStart, this->position_, TTmultiplyEqual));
+        //}
+        //else {
+        //    prnt(SyntaxError(positionStart, this->position_, L"< هل تقصد *= ؟ >", fileName, input_).print_());
+        //    exit(0);
+        //}
     }
 
     void make_power_equal() {
         Position positionStart = this->position_;
         this->advance();
 
-        if ((lettersDigits + L' ').find(this->currentChar) != std::wstring::npos) {
-            this->tokens_.push_back(Token(positionStart, this->position_, TTpower));
-        }
-        else if (this->currentChar == L'=') {
+        if (this->currentChar == L'=') {
             this->advance();
             this->tokens_.push_back(Token(positionStart, this->position_, TTpowerEqual));
         }
         else {
-            prnt(SyntaxError(positionStart, this->position_, L"< هل تقصد ^= ؟ >", fileName, input_).print_());
-            exit(0);
+            this->tokens_.push_back(Token(positionStart, this->position_, TTpower));
         }
+
+        //if ((lettersDigits + L' ').find(this->currentChar) != std::wstring::npos) {
+        //    this->tokens_.push_back(Token(positionStart, this->position_, TTpower));
+        //}
+        //else if (this->currentChar == L'=') {
+        //    this->advance();
+        //    this->tokens_.push_back(Token(positionStart, this->position_, TTpowerEqual));
+        //}
+        //else {
+        //    prnt(SyntaxError(positionStart, this->position_, L"< هل تقصد ^= ؟ >", fileName, input_).print_());
+        //    exit(0);
+        //}
     }
 
     void make_divide() {
         Position positionStart = this->position_;
         this->advance();
 
-        if ((lettersDigits + L' ').find(this->currentChar) != std::wstring::npos) {
-            this->tokens_.push_back(Token(positionStart, this->position_, TTdivide));
-        }
-        else if (this->currentChar == L'=') {
+        if (this->currentChar == L'=') {
             this->advance();
             this->tokens_.push_back(Token(positionStart, this->position_, TTdivideEqual));
         }
@@ -428,10 +457,26 @@ public:
             this->tokens_.push_back(Token(positionStart, this->position_, TTremain));
         }
         else {
-            prnt(SyntaxError(positionStart, this->position_, L"< هل تقصد \\= ؟ >", fileName, input_).print_());
-            exit(0);
+            this->tokens_.push_back(Token(positionStart, this->position_, TTdivide));
         }
     }
+
+    //    if ((lettersDigits + L' ').find(this->currentChar) != std::wstring::npos) {
+    //        this->tokens_.push_back(Token(positionStart, this->position_, TTdivide));
+    //    }
+    //    else if (this->currentChar == L'=') {
+    //        this->advance();
+    //        this->tokens_.push_back(Token(positionStart, this->position_, TTdivideEqual));
+    //    }
+    //    else if (this->currentChar == L'\\') {
+    //        this->advance();
+    //        this->tokens_.push_back(Token(positionStart, this->position_, TTremain));
+    //    }
+    //    else {
+    //        prnt(SyntaxError(positionStart, this->position_, L"< هل تقصد \\= ؟ >", fileName, input_).print_());
+    //        exit(0);
+    //    }
+    //}
 
     void make_not_equals() {
         Position positionStart = this->position_;

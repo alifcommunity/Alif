@@ -469,7 +469,7 @@ public:
         AlifObj intrRes = this->visit_expr(stmtsRes);
 
         if (intrRes.type_ == TTstring) { prnt(intrRes.A.String.value_); }
-        else if (intrRes.type_ == TTnumber) { prnt((long int)intrRes.A.Number.value_); }
+        else if (intrRes.type_ == TTnumber) { prnt(intrRes.A.Number.value_); }
         else if (intrRes.type_ == TTkeyword) { if (intrRes.A.Boolean.Kkind_ == True) { prnt(L"صح"); } else { prnt(L"خطا"); } }
         else if (intrRes.type_ == TTlist) { STR lst = L"["; for (AlifObj obj : *intrRes.A.List.objList) { lst.append(std::to_wstring((int)obj.A.Number.value_)); lst.append(L", "); } lst.replace(lst.length() - 2, lst.length(), L"]"); prnt(lst); }
     }
@@ -650,6 +650,7 @@ public:
 
             if (this->currentToken.type_ == TTrParenthesis)
             {
+                this->advance();
                 return priorExpr;
             }
             else
@@ -764,7 +765,6 @@ public:
             (exprNode + level)->type_ = VBinOp;
 
             left = (exprNode + level);
-            return left;
         }
 
         return left;
@@ -776,11 +776,11 @@ public:
             Token opToken = this->currentToken;
 
             this->advance();
-            ExprNode* right = this->factor();
+            ExprNode* right = this->power();
             level--;
 
+            (exprNode + level)->U.UnaryOp.right_ = right;
             (exprNode + level)->U.UnaryOp.operator_ = opToken.type_;
-            (exprNode + level)->U.UnaryOp.right_ = this->factor();
             (exprNode + level)->type_ = VUnaryOp;
 
             return (exprNode + level);
@@ -796,7 +796,7 @@ public:
             Token opToken = this->currentToken;
 
             this->advance();
-            ExprNode* right = this->term();
+            ExprNode* right = this->factor();
             level--;
 
             (exprNode + level)->U.BinaryOp.right_ = right;
@@ -805,7 +805,6 @@ public:
             (exprNode + level)->type_ = VBinOp;
 
             left = (exprNode + level);
-            return left;
         }
 
         return left;
@@ -818,7 +817,7 @@ public:
             Token opToken = this->currentToken;
 
             this->advance();
-            ExprNode* right = this->sum();
+            ExprNode* right = this->term();
             level--;
 
             (exprNode + level)->U.BinaryOp.right_ = right;
@@ -827,7 +826,6 @@ public:
             (exprNode + level)->type_ = VBinOp;
 
             left = (exprNode + level);
-            return left;
         }
 
         return left;
@@ -849,7 +847,6 @@ public:
             (exprNode + level)->type_ = VBinOp;
 
             left = (exprNode + level);
-            return left;
         }
 
         return left;
@@ -857,12 +854,12 @@ public:
 
     ExprNode* inversion() {
 
-        if (this->currentToken.type_ == TTkeyword and this->currentToken.val.keywordType == Not)
+        while (this->currentToken.type_ == TTkeyword and this->currentToken.val.keywordType == Not)
         {
             Token opToken = this->currentToken;
 
             this->advance();
-            ExprNode* right = this->inversion();
+            ExprNode* right = this->comparesion();
             level--;
 
             (exprNode + level)->U.UnaryOp.right_ = right;
@@ -894,7 +891,6 @@ public:
             (exprNode + level)->type_ = VBinOp;
 
             left = (exprNode + level);
-            return left;
         }
 
         return left;
@@ -918,7 +914,6 @@ public:
             (exprNode + level)->type_ = VBinOp;
 
             left = (exprNode + level);
-            return left;
         }
 
         return left;
