@@ -470,7 +470,7 @@ public:
 
         if (intrRes.type_ == TTstring) { prnt(intrRes.A.String.value_); }
         else if (intrRes.type_ == TTnumber) { prnt(intrRes.A.Number.value_); }
-        else if (intrRes.type_ == TTkeyword) { if (intrRes.A.Boolean.Kkind_ == True) { prnt(L"صح"); } else { prnt(L"خطا"); } }
+        else if (intrRes.type_ == TTkeyword) { if (intrRes.A.Boolean.value_ == 1) { prnt(L"صح"); } else { prnt(L"خطا"); } }
         else if (intrRes.type_ == TTlist) { STR lst = L"["; for (AlifObj obj : *intrRes.A.List.objList) { lst.append(std::to_wstring((int)obj.A.Number.value_)); lst.append(L", "); } lst.replace(lst.length() - 2, lst.length(), L"]"); prnt(lst); }
     }
 
@@ -2030,8 +2030,8 @@ public:
         for (ExprNode* arg : *node->U.Call.args) {
             val = this->visit_expr(arg);
             if (val.type_ == TTstring) { prnt(*val.A.String.value_); }
-            else if (val.type_ == TTnumber) { prnt((long int)val.A.Number.value_); }
-            else if (val.type_ == TTkeyword) { if (val.A.Boolean.Kkind_ == True) { prnt(L"صح"); } else { prnt(L"خطا"); } }
+            else if (val.type_ == TTnumber) { prnt(val.A.Number.value_); }
+            else if (val.type_ == TTkeyword) { if (val.A.Boolean.value_ == 1) { prnt(L"صح"); } else { prnt(L"خطا"); } }
             else if (val.type_ == TTlist) { STR lst = L"["; for (AlifObj obj : *val.A.List.objList) { lst.append(std::to_wstring((int)obj.A.Number.value_)); lst.append(L", "); } lst.replace(lst.length() - 2, lst.length(), L"]"); prnt(lst); }
         }
         return val;
