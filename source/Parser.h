@@ -1721,6 +1721,7 @@ public:
                 if (_node->U.UnaryOp.keyword_ == Not)
                 {
                     right.A.Boolean.not_();
+                    right.type_ = TTnumber;
                 }
             }
             return right;
@@ -1827,10 +1828,12 @@ public:
                 if (_node->U.BinaryOp.keyword_ == Or)
                 {
                     left.A.Boolean.or_(&right);
+                    left.type_ = TTnumber;
                 }
                 else if (_node->U.BinaryOp.keyword_ == And)
                 {
                     left.A.Boolean.and_(&right);
+                    left.type_ = TTnumber;
                 }
             }
 

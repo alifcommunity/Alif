@@ -78,6 +78,8 @@ enum VisitType {
 //};
 
 enum KeywordType {
+    False,
+    True,
     Pass,
     Stop,
     Continue,
@@ -96,8 +98,6 @@ enum KeywordType {
     Or,
     And,
     Not,
-    True,
-    False,
     None,
 };
 
