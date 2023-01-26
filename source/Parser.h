@@ -219,7 +219,7 @@ struct AlifObj
             std::vector<ExprNode*>* list_;
             std::vector<AlifObj>* objList;
 
-            std::vector<ExprNode*>* add_element(AlifObj _obj) {
+            void add_element(AlifObj _obj) {
                 objList->push_back(_obj);
             }
 
@@ -1546,7 +1546,7 @@ public:
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     std::map<NUM, AlifObj> namesTable;
-    std::map<BuildInFuncType, void(Parser::*)(ExprNode*)> buildInFuncsTable{ {Print, &Parser::print} };
+    std::map<BuildInFuncType, AlifObj(Parser::*)(ExprNode*)> buildInFuncsTable{ {Print, &Parser::print} , {Input, &Parser::input} };
     std::map<NUM, StmtsNode*> functionsTable;
 
     AlifObj visit_stmts(StmtsNode* _node)
@@ -1883,7 +1883,7 @@ public:
             {
                 if (buildInFuncsTable.count(_node->U.Call.name->U.NameAccess.name_.A.BuildInFunc.buildInFunc))
                 {
-                    (this->*buildInFuncsTable[Print])(_node);
+                    return (this->*buildInFuncsTable[_node->U.Call.name->U.NameAccess.name_.A.BuildInFunc.buildInFunc])(_node);
                 }
                 else {
                     StmtsNode* func = functionsTable[_node->U.Call.name->U.NameAccess.name_.A.Name.name_];
@@ -2017,10 +2017,15 @@ public:
 
     }
 
+    AlifObj str{};
+    AlifObj input(ExprNode* node) {
+        str.type_ = TTstring;
+        str.A.String.value_ = new std::wstring();
+        std::wcin >> *str.A.String.value_;
+        return str;
+    }
 
-
-
-    void print(ExprNode* node) {
+    AlifObj print(ExprNode* node) {
         AlifObj val;
         for (ExprNode* arg : *node->U.Call.args) {
             val = this->visit_expr(arg);
@@ -2029,5 +2034,6 @@ public:
             else if (val.type_ == TTkeyword) { if (val.A.Boolean.Kkind_ == True) { prnt(L"صح"); } else { prnt(L"خطا"); } }
             else if (val.type_ == TTlist) { STR lst = L"["; for (AlifObj obj : *val.A.List.objList) { lst.append(std::to_wstring((int)obj.A.Number.value_)); lst.append(L", "); } lst.replace(lst.length() - 2, lst.length(), L"]"); prnt(lst); }
         }
+        return val;
     }
 };
