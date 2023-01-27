@@ -412,6 +412,7 @@ struct StmtsNode {
 // المحلل اللغوي
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+SymbolTable symTable; // تم تعريفه ك متغير عام لمنع حذف المتغيرات عند استخدام الطرفية بعد الانتقال الى سطر جديد
 class Parser {
 public:
     std::vector<Token>* tokens;
@@ -431,7 +432,6 @@ public:
     ExprNode* exprNode = (ExprNode*)malloc(level * sizeof(struct ExprNode));
     StmtsNode* stmtsNode = (StmtsNode*)malloc(level * sizeof(struct StmtsNode));
 
-    SymbolTable symTable;
 
     Parser(std::vector<Token>* tokens, STR _fileName, STR _input) : tokens(tokens), fileName(_fileName), input_(_input)
     {
