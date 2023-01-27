@@ -465,13 +465,46 @@ public:
 
     void parse_terminal()
     {
-        ExprNode* stmtsRes = this->expression();
+        ExprNode* stmtsRes = this->assignment();
         AlifObj intrRes = this->visit_expr(stmtsRes);
 
         if (intrRes.type_ == TTstring) { prnt(intrRes.A.String.value_); }
         else if (intrRes.type_ == TTnumber) { prnt(intrRes.A.Number.value_); }
         else if (intrRes.type_ == TTkeyword) { if (intrRes.A.Boolean.value_ == 1) { prnt(L"صح"); } else { prnt(L"خطا"); } }
-        else if (intrRes.type_ == TTlist) { STR lst = L"["; for (AlifObj obj : *intrRes.A.List.objList) { lst.append(std::to_wstring((int)obj.A.Number.value_)); lst.append(L", "); } lst.replace(lst.length() - 2, lst.length(), L"]"); prnt(lst); }
+        else if (intrRes.type_ == TTlist) { 
+            this->list_print(intrRes);
+            prnt(lst);
+        }
+    }
+
+
+    STR lst;
+    void list_print(AlifObj _obj) {
+        lst.append(L"[");
+        if (_obj.type_ == TTlist) { 
+            for (AlifObj obj : *_obj.A.List.objList) {
+                if (obj.type_ == TTnumber)
+                {
+                    lst.append(std::to_wstring(obj.A.Number.value_));
+
+                }
+                else if (obj.type_ == TTstring)
+                {
+                    lst.append(*obj.A.String.value_);
+
+                }
+                else if (obj.type_ == TTkeyword)
+                {
+                    lst.append(std::to_wstring(obj.A.Boolean.value_));
+
+                }
+                else if (obj.type_ == TTlist) {
+                    this->list_print(obj);
+                }
+                lst.append(L", ");
+            } 
+            lst.replace(lst.length() - 2, lst.length(), L"]");
+        }
     }
 
     //////////////////////////////
@@ -944,7 +977,8 @@ public:
             }
             else
             {
-                prnt(L"Expression error");
+                prnt(L"خطأ في حالة تعبير - لم يتم إضافة \"والا\" للحالة");
+                exit(-1);
             }
         }
 
@@ -1698,7 +1732,7 @@ public:
             for (ExprNode* obj : *_node->U.Object.value_.A.List.list_)
             {
                 _node->U.Object.value_.A.List.objList->push_back(this->visit_expr(obj));
-            };
+            }
             return _node->U.Object.value_;
         }
         else if (_node->type_ == VUnaryOp)
@@ -2035,7 +2069,10 @@ public:
             if (val.type_ == TTstring) { prnt(*val.A.String.value_); }
             else if (val.type_ == TTnumber) { prnt(val.A.Number.value_); }
             else if (val.type_ == TTkeyword) { if (val.A.Boolean.value_ == 1) { prnt(L"صح"); } else { prnt(L"خطا"); } }
-            else if (val.type_ == TTlist) { STR lst = L"["; for (AlifObj obj : *val.A.List.objList) { lst.append(std::to_wstring((int)obj.A.Number.value_)); lst.append(L", "); } lst.replace(lst.length() - 2, lst.length(), L"]"); prnt(lst); }
+            else if (val.type_ == TTlist) {
+                this->list_print(val);
+                prnt(lst);
+            }
         }
         return val;
     }
