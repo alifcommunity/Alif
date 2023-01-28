@@ -468,8 +468,9 @@ public:
         ExprNode* stmtsRes = this->assignment();
         AlifObj intrRes = this->visit_expr(stmtsRes);
 
-        if (intrRes.type_ == TTstring) { prnt(intrRes.A.String.value_); }
-        else if (intrRes.type_ == TTnumber) { prnt(intrRes.A.Number.value_); }
+        if (intrRes.type_ == TTnumber) { prnt(intrRes.A.Number.value_); }
+        else if (intrRes.type_ == TTstring) { prnt(intrRes.A.String.value_); }
+        else if (intrRes.type_ == TTnone) { prnt(L"عدم"); }
         else if (intrRes.type_ == TTkeyword) { if (intrRes.A.Boolean.value_ == 1) { prnt(L"صح"); } else { prnt(L"خطا"); } }
         else if (intrRes.type_ == TTlist) { 
             this->list_print(intrRes);
@@ -1711,8 +1712,8 @@ public:
             }
             else {
                 AlifObj nullObj{};
-                nullObj.type_ == TTnone;
-                nullObj.A.None.kind_ == None;
+                nullObj.type_ = TTnone;
+                nullObj.A.None.kind_ = None;
                 return nullObj;
             }
         }
@@ -2066,8 +2067,9 @@ public:
         AlifObj val;
         for (ExprNode* arg : *node->U.Call.args) {
             val = this->visit_expr(arg);
-            if (val.type_ == TTstring) { prnt(*val.A.String.value_); }
-            else if (val.type_ == TTnumber) { prnt(val.A.Number.value_); }
+            if (val.type_ == TTnumber) { prnt(val.A.Number.value_); }
+            else if (val.type_ == TTstring) { prnt(*val.A.String.value_); }
+            else if (val.type_ == TTnone) { prnt(L"عدم"); }
             else if (val.type_ == TTkeyword) { if (val.A.Boolean.value_ == 1) { prnt(L"صح"); } else { prnt(L"خطا"); } }
             else if (val.type_ == TTlist) {
                 this->list_print(val);
