@@ -515,80 +515,16 @@ public:
 
         std::vector<ExprNode*>* args = new std::vector<ExprNode*>;
 
-        if (this->currentToken.type_ == TTname) {
-
-            if (Next_Is(TTequal)) {
-
-                std::vector<AlifObj>* names_ = new std::vector<AlifObj>;
-
-                AlifObj name_;
-
-                name_.type_ = TTname;
-                name_.A.Name.name_ = this->currentToken.val.numVal;
-
-                names_->push_back(name_);
-
-                this->advance();
-                this->advance();
-
-                ExprNode* value = this->expression();
-
-                level--;
-                (exprNode + level)->U.NameAssign.name_ = names_;
-                (exprNode + level)->U.NameAssign.value_ = value;
-                (exprNode + level)->type_ = VAssign;
-
-                args->push_back((exprNode + level));
-
-            }
-            else if (this->currentToken.type_ != TTrParenthesis or this->currentToken.type_ != TTcomma) {
-                args->push_back(this->expression());
-            }
-        }
-        else if (this->currentToken.type_ != TTrParenthesis or this->currentToken.type_ != TTcomma) {
+        do {
+        
             args->push_back(this->expression());
-        }
-
-        while (this->currentToken.type_ == TTcomma)
-        {
-
-            this->advance();
-
-            if (this->currentToken.type_ == TTname) {
-
-                if (Next_Is(TTequal)) {
-
-                    std::vector<AlifObj>* names_ = new std::vector<AlifObj>;
-
-                    AlifObj name_{};
-
-                    name_.type_ = TTname;
-                    name_.A.Name.name_ = this->currentToken.val.numVal;
-
-                    names_->push_back(name_);
-
-                    this->advance();
-                    this->advance();
-
-                    ExprNode* value = this->expression();
-
-                    level--;
-                    (exprNode + level)->U.NameAssign.name_ = names_;
-                    (exprNode + level)->U.NameAssign.value_ = value;
-                    (exprNode + level)->type_ = VAssign;
-
-                    args->push_back((exprNode + level));
-
-                }
-                else if (this->currentToken.type_ != TTrParenthesis or this->currentToken.type_ != TTcomma) {
-                    args->push_back(this->expression());
-                }
-            }
-            else if (this->currentToken.type_ != TTrParenthesis or this->currentToken.type_ != TTcomma) {
-                args->push_back(this->expression());
+            
+            if (this->currentToken.type_ == TTcomma) {
+                this->advance();
             }
 
-        }
+        }while(this->currentToken.type_ != TTrParenthesis);
+
         return args;
 
     }
