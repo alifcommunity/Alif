@@ -46,11 +46,13 @@ void terminal_run() {
 
     if (!outWText and !inWText)
     {
-        prnt(L"لم يتمكن من تحميل قراءة الملفات عريضة الاحرف - السطر 39 - الملف Alif5.cpp");
+        prnt(L"لم يتمكن من تحميل قراءة الملفات عريضة الاحرف - السطر 49 - الملف Alif5.cpp");
     }
 
+    STR fileName = L"<طرفية>";
+    STR input_;
+
     while (true) {
-        STR input_;
 
         std::wcout << L"alif -> ";
         std::getline(std::wcin, input_);
@@ -63,7 +65,6 @@ void terminal_run() {
         // المعرب اللغوي
         /////////////////////////////////////////////////////////////////
 
-        STR fileName = L"<طرفية>";
         Lexer lexer(fileName, input_);
         lexer.make_token();
 

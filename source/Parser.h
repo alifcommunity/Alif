@@ -412,6 +412,7 @@ struct StmtsNode {
 // المحلل اللغوي
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+SymbolTable symTable; // تم تعريفه ك متغير عام لمنع حذف المتغيرات عند استخدام الطرفية بعد الانتقال الى سطر جديد
 class Parser {
 public:
     std::vector<Token>* tokens;
@@ -431,7 +432,6 @@ public:
     ExprNode* exprNode = (ExprNode*)malloc(level * sizeof(struct ExprNode));
     StmtsNode* stmtsNode = (StmtsNode*)malloc(level * sizeof(struct StmtsNode));
 
-    SymbolTable symTable;
 
     Parser(std::vector<Token>* tokens, STR _fileName, STR _input) : tokens(tokens), fileName(_fileName), input_(_input)
     {
@@ -465,13 +465,47 @@ public:
 
     void parse_terminal()
     {
-        ExprNode* stmtsRes = this->expression();
+        ExprNode* stmtsRes = this->assignment();
         AlifObj intrRes = this->visit_expr(stmtsRes);
 
-        if (intrRes.type_ == TTstring) { prnt(intrRes.A.String.value_); }
-        else if (intrRes.type_ == TTnumber) { prnt(intrRes.A.Number.value_); }
-        else if (intrRes.type_ == TTkeyword) { if (intrRes.A.Boolean.Kkind_ == True) { prnt(L"صح"); } else { prnt(L"خطا"); } }
-        else if (intrRes.type_ == TTlist) { STR lst = L"["; for (AlifObj obj : *intrRes.A.List.objList) { lst.append(std::to_wstring((int)obj.A.Number.value_)); lst.append(L", "); } lst.replace(lst.length() - 2, lst.length(), L"]"); prnt(lst); }
+        if (intrRes.type_ == TTnumber) { prnt(intrRes.A.Number.value_); }
+        else if (intrRes.type_ == TTstring) { prnt(intrRes.A.String.value_); }
+        else if (intrRes.type_ == TTnone) { prnt(L"عدم"); }
+        else if (intrRes.type_ == TTkeyword) { if (intrRes.A.Boolean.value_ == 1) { prnt(L"صح"); } else { prnt(L"خطا"); } }
+        else if (intrRes.type_ == TTlist) { 
+            this->list_print(intrRes);
+            prnt(lst);
+        }
+    }
+
+
+    STR lst;
+    void list_print(AlifObj _obj) {
+        lst.append(L"[");
+        if (_obj.type_ == TTlist) { 
+            for (AlifObj obj : *_obj.A.List.objList) {
+                if (obj.type_ == TTnumber)
+                {
+                    lst.append(std::to_wstring(obj.A.Number.value_));
+
+                }
+                else if (obj.type_ == TTstring)
+                {
+                    lst.append(*obj.A.String.value_);
+
+                }
+                else if (obj.type_ == TTkeyword)
+                {
+                    lst.append(std::to_wstring(obj.A.Boolean.value_));
+
+                }
+                else if (obj.type_ == TTlist) {
+                    this->list_print(obj);
+                }
+                lst.append(L", ");
+            } 
+            lst.replace(lst.length() - 2, lst.length(), L"]");
+        }
     }
 
     //////////////////////////////
@@ -944,7 +978,8 @@ public:
             }
             else
             {
-                prnt(L"Expression error");
+                prnt(L"خطأ في حالة تعبير - لم يتم إضافة \"والا\" للحالة");
+                exit(-1);
             }
         }
 
@@ -1677,8 +1712,8 @@ public:
             }
             else {
                 AlifObj nullObj{};
-                nullObj.type_ == TTnone;
-                nullObj.A.None.kind_ == None;
+                nullObj.type_ = TTnone;
+                nullObj.A.None.kind_ = None;
                 return nullObj;
             }
         }
@@ -1698,7 +1733,7 @@ public:
             for (ExprNode* obj : *_node->U.Object.value_.A.List.list_)
             {
                 _node->U.Object.value_.A.List.objList->push_back(this->visit_expr(obj));
-            };
+            }
             return _node->U.Object.value_;
         }
         else if (_node->type_ == VUnaryOp)
@@ -1721,6 +1756,7 @@ public:
                 if (_node->U.UnaryOp.keyword_ == Not)
                 {
                     right.A.Boolean.not_();
+                    right.type_ = TTnumber;
                 }
             }
             return right;
@@ -1827,10 +1863,12 @@ public:
                 if (_node->U.BinaryOp.keyword_ == Or)
                 {
                     left.A.Boolean.or_(&right);
+                    left.type_ = TTnumber;
                 }
                 else if (_node->U.BinaryOp.keyword_ == And)
                 {
                     left.A.Boolean.and_(&right);
+                    left.type_ = TTnumber;
                 }
             }
 
@@ -2029,10 +2067,14 @@ public:
         AlifObj val;
         for (ExprNode* arg : *node->U.Call.args) {
             val = this->visit_expr(arg);
-            if (val.type_ == TTstring) { prnt(*val.A.String.value_); }
-            else if (val.type_ == TTnumber) { prnt((long int)val.A.Number.value_); }
-            else if (val.type_ == TTkeyword) { if (val.A.Boolean.Kkind_ == True) { prnt(L"صح"); } else { prnt(L"خطا"); } }
-            else if (val.type_ == TTlist) { STR lst = L"["; for (AlifObj obj : *val.A.List.objList) { lst.append(std::to_wstring((int)obj.A.Number.value_)); lst.append(L", "); } lst.replace(lst.length() - 2, lst.length(), L"]"); prnt(lst); }
+            if (val.type_ == TTnumber) { prnt(val.A.Number.value_); }
+            else if (val.type_ == TTstring) { prnt(*val.A.String.value_); }
+            else if (val.type_ == TTnone) { prnt(L"عدم"); }
+            else if (val.type_ == TTkeyword) { if (val.A.Boolean.value_ == 1) { prnt(L"صح"); } else { prnt(L"خطا"); } }
+            else if (val.type_ == TTlist) {
+                this->list_print(val);
+                prnt(lst);
+            }
         }
         return val;
     }
