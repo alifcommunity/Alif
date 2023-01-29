@@ -322,6 +322,7 @@ struct ExprNode
         }UnaryOp;
 
         struct {
+            AlifObj paramName; // متغير خاص بدالة parameters()
             std::vector<AlifObj>* name_;
             ExprNode* value_;
         }NameAssign;
@@ -689,13 +690,14 @@ public:
             }
             else
             {
-                prnt(L"priorExpr Error");
-                exit(0);
+                prnt(L"لم يتم إغلاق قوس القوس");
+                exit(-1);
             }
         }
         else
         {
-            prnt("atom error");
+            prnt("لم يتم العثور على حالة");
+            exit(-1);
         }
     }
 
@@ -1102,83 +1104,66 @@ public:
 
     std::vector<ExprNode*>* parameters() {
 
-        std::vector<ExprNode*>* params = new std::vector<ExprNode*>;
 
-        if (this->currentToken.type_ == TTname) {
+        std::vector<ExprNode*>* params_ = new std::vector<ExprNode*>;
+        lastParam = false;
 
-            if (Next_Is(TTequal)) {
-                lastParam = True;
-
-                std::vector<AlifObj>* names_ = new std::vector<AlifObj>;
-                AlifObj name_{};
-
-                name_.type_ = TTname;
-                name_.A.Name.name_ = this->currentToken.val.numVal;
-
-                names_->push_back(name_);
-
-                this->advance();
-                this->advance();
-
-                ExprNode* value = this->expression();
-
-                level--;
-                (exprNode + level)->U.NameAssign.name_ = names_;
-                (exprNode + level)->U.NameAssign.value_ = value;
-                (exprNode + level)->type_ = VAssign;
-
-                params->push_back((exprNode + level));
-
-            }
-            if (lastParam) {
-                prnt(L"not allow assign expression to parameter");
-                exit(-1);
-            }
-            params->push_back(this->atom());
-        }
-
-        while (this->currentToken.type_ == TTcomma)
-        {
-
+        do {
+            
             this->advance();
 
-            if (this->currentToken.type_ == TTname) {
-
-                if (Next_Is(TTequal)) {
-
-                    lastParam = True;
-
-                    std::vector<AlifObj>* names_ = new std::vector<AlifObj>;
+            if (this->currentToken.type_ != TTrParenthesis)
+            {
+                if (Next_Is(TTequal))
+                {
+                    lastParam = true;
 
                     AlifObj name_{};
 
                     name_.type_ = TTname;
                     name_.A.Name.name_ = this->currentToken.val.numVal;
 
-                    names_->push_back(name_);
-
                     this->advance();
                     this->advance();
 
-                    ExprNode* value = this->expression();
+                    ExprNode* expr_ = this->expression();
 
                     level--;
-                    (exprNode + level)->U.NameAssign.name_ = names_;
-                    (exprNode + level)->U.NameAssign.value_ = value;
+
                     (exprNode + level)->type_ = VAssign;
+                    (exprNode + level)->U.NameAssign.paramName = name_;
+                    (exprNode + level)->U.NameAssign.value_ = expr_;
 
-                    params->push_back((exprNode + level));
+                    params_->push_back((exprNode + level));
 
                 }
-                if (lastParam) {
-                    prnt(L"not allow assign expression to parameter");
-                    exit(-1);
+                else {
+                    if (!lastParam)
+                    {
+                        params_->push_back(this->atom());
+                    }
+                    else {
+                        prnt(L"لا يمكن تمرير متغير بدون قيمة افتراضية بعد متغير ذو قيمة افتراضية");
+                        exit(-1);
+                    }
                 }
-                params->push_back(this->atom());
+
+            }
+            else
+            {
+                return params_;
             }
 
+        } while (this->currentToken.type_ == TTcomma);
+
+        if (this->currentToken.type_ == TTrParenthesis)
+        {
+            return params_;
         }
-        return params;
+        else {
+            prnt(L"لم يتم إغلاق القوس");
+            exit(-1);
+        }
 
     }
 
@@ -1202,17 +1187,14 @@ public:
 
             this->advance();
 
-            if (this->currentToken.type_ == TTlParenthesis) {
+            if (this->currentToken.type_ == TTlParenthesis and Next_Is(TTrParenthesis)) {
 
                 this->advance();
-
-                if (this->currentToken.type_ == TTrParenthesis) {
-                    this->advance();
-                }
-                else {
-                    params = this->parameters();
-                    this->advance();
-                }
+                this->advance();
+            }
+            else {
+                params = this->parameters();
+                this->advance();
             }
 
             if (this->currentToken.type_ == TTcolon) {
@@ -1228,6 +1210,10 @@ public:
                 (stmtsNode + level)->U.FunctionDef.params = params;
                 (stmtsNode + level)->U.FunctionDef.body = body;
                 return (stmtsNode + level);
+            }
+            else {
+                prnt(L"لم يتم إنهاء الدالة ب نقطتين \:");
+                exit(-1);
             }
         }
 
@@ -1969,28 +1955,38 @@ public:
 
                 if (func->U.FunctionDef.params != nullptr)
                 {
+                    int argLength = 0;
+                    if (_node->U.Call.args)
+                    {
+                        argLength = _node->U.Call.args->size();
 
-                    int lenArg = _node->U.Call.args->size();
+                    }
 
                     int i = 0;
                     for (ExprNode* param : *func->U.FunctionDef.params)
                     {
                         if (param->type_ == VAccess) {
-
+                            if (argLength > i) // التحقق ما إذا كان عدد الوسيطات الممررة يكفي لعدد المعاملات في الدالة ام لا
+                            {
+                                symTable.add_symbol(param->U.NameAccess.name_.A.Name.name_, this->visit_expr(_node->U.Call.args->at(i)));
+                            }
+                            else {
+                                prnt(L"لم يتم تمرير عدد كاف من القيم في الدالة");
+                                exit(-1);
+                            }
                             //namesTable[param->U.NameAccess.name_->A.Name.name_] = this->visit_expr(_node->U.Call.args->at(i));
-                            symTable.add_symbol(param->U.NameAccess.name_.A.Name.name_, this->visit_expr(_node->U.Call.args->at(i)));
 
                         }
-                        else if (lenArg == (i + 1)) {
+                        else if (argLength == (i + 1)) {
 
-                            //namesTable[param->U.NameAssign.name_->at(0)->A.Name.name_] = this->visit_expr(_node->U.Call.args->at((lenArg - 1)));
-                            symTable.add_symbol(param->U.NameAssign.name_->at(0).A.Name.name_, this->visit_expr(_node->U.Call.args->at((lenArg - 1))));
+                            //namesTable[param->U.NameAssign.name_->at(0)->A.Name.name_] = this->visit_expr(_node->U.Call.args->at((argLength - 1)));
+                            symTable.add_symbol(param->U.NameAssign.paramName.A.Name.name_, this->visit_expr(_node->U.Call.args->at((argLength - 1))));
 
                         }
                         else {
 
                             //namesTable[param->U.NameAssign.name_->at(0)->A.Name.name_] = this->visit_expr(param->U.NameAssign.value_);
-                            symTable.add_symbol(param->U.NameAssign.name_->at(0).A.Name.name_, this->visit_expr(param->U.NameAssign.value_));
+                            symTable.add_symbol(param->U.NameAssign.paramName.A.Name.name_, this->visit_expr(param->U.NameAssign.value_));
 
                         }
                         i++;
