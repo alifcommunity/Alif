@@ -1156,7 +1156,7 @@ public:
                 return (stmtsNode + level);
             }
             else {
-                prnt(L"لم يتم إنهاء حالة دالة ب نقطتين \:");
+                prnt(L"لم يتم إنهاء دالة بنقطتين \:");
                 exit(-1);
             }
         }
@@ -1215,7 +1215,7 @@ public:
             block_ = this->block_();
         }
         else {
-            prnt(L"لم يتم إنهاء حالة بينما ب نقطتين \:");
+            prnt(L"لم يتم إنهاء بينما بنقطتين \:");
             exit(-1);
         }
         if (this->currentToken.type_ == TTkeyword and this->currentToken.val.keywordType == Else)
@@ -1302,7 +1302,7 @@ public:
                                 }
                             }
                             else {
-                                prnt(L"لم يتم إنهاء حالة لاجل ب نقطتين \:");
+                                prnt(L"لم يتم إنهاء لاجل بنقطتين \:");
                                 exit(-1);
                             }
                         }
@@ -1350,7 +1350,7 @@ public:
             block_ = this->block_();
         }
         else {
-            prnt(L"لم يتم إنهاء حالة واذا ب نقطتين \:");
+            prnt(L"لم يتم إنهاء واذا بنقطتين \:");
             exit(-1);
         }
 
@@ -1369,7 +1369,7 @@ public:
             return this->block_();
         }
         else {
-            prnt(L"لم يتم إنهاء حالة والا ب نقطتين \:");
+            prnt(L"لم يتم إنهاء والا بنقطتين \:");
             exit(-1);
         }
     }
@@ -1388,7 +1388,7 @@ public:
             block_ = this->block_();
         }
         else {
-            prnt(L"لم يتم إنهاء حالة اذا ب نقطتين \:");
+            prnt(L"لم يتم إنهاء اذا بنقطتين \:");
             exit(-1);
         }
         while (this->currentToken.val.keywordType == Elseif)
@@ -1430,12 +1430,12 @@ public:
                     return stmts_;
                 }
                 else {
-                    prnt(L"يتوقع وجود مسافة راجعة");
+                    prnt(L"يتوقع وجود مسافة راجعة في نهاية الحالة المركبة");
                     exit(-1);
                 }
             }
             else {
-                prnt(L"يتوقع وجود مسافة بادئة");
+                prnt(L"يتوقع وجود مسافة بادئة في بداية جسم الحالة المركبة");
                 exit(-1);
             }
 
@@ -1491,7 +1491,7 @@ public:
             }
             else
             {
-                prnt(L"لا يمكن إستدعاء حالة ارجع من خارج دالة");
+                prnt(L"لا يمكن إستدعاء ارجع من خارج دالة");
                 exit(-1);
             }
         }
@@ -1515,7 +1515,7 @@ public:
             ExprNode* exprNode = this->simple_statement();
 
             if(this->currentToken.type_ != TTnewline) {
-                prnt(L"لا يمكن وجود اكثر من حالة بسيطة في نفس السطر");
+                prnt(L"لا يمكن وجود اكثر من حالة في نفس السطر");
                 exit(-1);
             }
             this->advance();
