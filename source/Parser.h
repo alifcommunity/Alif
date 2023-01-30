@@ -473,7 +473,7 @@ public:
         else if (intrRes.type_ == TTstring) { prnt(intrRes.A.String.value_); }
         else if (intrRes.type_ == TTnone) { prnt(L"عدم"); }
         else if (intrRes.type_ == TTkeyword) { if (intrRes.A.Boolean.value_ == 1) { prnt(L"صح"); } else { prnt(L"خطا"); } }
-        else if (intrRes.type_ == TTlist) { 
+        else if (intrRes.type_ == TTlist) {
             this->list_print(intrRes);
             prnt(lst);
         }
@@ -483,7 +483,7 @@ public:
     STR lst;
     void list_print(AlifObj _obj) {
         lst.append(L"[");
-        if (_obj.type_ == TTlist) { 
+        if (_obj.type_ == TTlist) {
             for (AlifObj obj : *_obj.A.List.objList) {
                 if (obj.type_ == TTnumber)
                 {
@@ -504,7 +504,7 @@ public:
                     this->list_print(obj);
                 }
                 lst.append(L", ");
-            } 
+            }
             lst.replace(lst.length() - 2, lst.length(), L"]");
         }
     }
@@ -516,14 +516,14 @@ public:
         std::vector<ExprNode*>* args = new std::vector<ExprNode*>;
 
         do {
-        
+
             args->push_back(this->expression());
-            
+
             if (this->currentToken.type_ == TTcomma) {
                 this->advance();
             }
 
-        }while(this->currentToken.type_ != TTrParenthesis);
+        } while (this->currentToken.type_ != TTrParenthesis);
 
         return args;
 
@@ -583,6 +583,10 @@ public:
 
                 return (exprNode + level);
             }
+            else {
+                prnt(L"يوجد كلمة مفتاحية في غير سياقها");
+                exit(-1);
+            }
         }
         else if (token.type_ == TTinteger)
         {
@@ -632,7 +636,7 @@ public:
         }
         else
         {
-            prnt("لم يتم العثور على حالة");
+            prnt(L"لم يتم العثور على حالة");
             exit(-1);
         }
     }
@@ -1045,7 +1049,7 @@ public:
         lastParam = false;
 
         do {
-            
+
             this->advance();
 
             if (this->currentToken.type_ != TTrParenthesis)
@@ -1117,8 +1121,12 @@ public:
             {
                 name.A.Name.name_ = this->currentToken.val.numVal;
             }
-            else {
+            else if (this->currentToken.type_ == TTbuildInFunc) {
                 name.A.BuildInFunc.buildInFunc = this->currentToken.val.buildInFunc;
+            }
+            else
+            {
+                prnt(L"يتوقع وجود اسم للدالة");
             }
 
             this->advance();
@@ -1148,7 +1156,7 @@ public:
                 return (stmtsNode + level);
             }
             else {
-                prnt(L"لم يتم إنهاء الدالة ب نقطتين \:");
+                prnt(L"لم يتم إنهاء دالة بنقطتين \:");
                 exit(-1);
             }
         }
@@ -1206,6 +1214,10 @@ public:
             this->advance();
             block_ = this->block_();
         }
+        else {
+            prnt(L"لم يتم إنهاء بينما بنقطتين \:");
+            exit(-1);
+        }
         if (this->currentToken.type_ == TTkeyword and this->currentToken.val.keywordType == Else)
         {
             else_ = this->else_();
@@ -1249,7 +1261,8 @@ public:
 
                         if (this->currentToken.type_ == TTrParenthesis)
                         {
-                            prnt(L"for loop args is less than expexted");
+                            //prnt(L"for loop args is less than expexted");
+                            prnt(L"المعاملات المسندة اقل من المتوقع");
                             exit(-1);
                         }
 
@@ -1266,7 +1279,8 @@ public:
 
                         if (args_->size() > 3)
                         {
-                            prnt(L"for loop args is more than expected");
+                            //prnt(L"for loop args is more than expected");
+                            prnt(L"المعاملات المسندة اكثر من المتوقع");
                             exit(-1);
                         }
 
@@ -1287,10 +1301,26 @@ public:
                                     else_ = this->else_();
                                 }
                             }
+                            else {
+                                prnt(L"لم يتم إنهاء لاجل بنقطتين \:");
+                                exit(-1);
+                            }
+                        }
+                        else {
+                            prnt(L"يتوقع وجود قوس ')'");
+                            exit(-1);
                         }
 
                     }
+                    else {
+                        prnt(L"يتوقع وجود قوس '('");
+                        exit(-1);
+                    }
                 }
+            }
+            else {
+                prnt(L"يتوقع وجود كلمة مفتاحية 'في'");
+                exit(-1);
             }
 
             level--;
@@ -1303,6 +1333,10 @@ public:
 
             return (stmtsNode + level);
         }
+        else {
+            prnt(L"يتوقع وجود اسم لاسناد قيمة له");
+            exit(-1);
+        }
     }
 
     StmtsNode* else_if()
@@ -1314,6 +1348,10 @@ public:
         {
             this->advance();
             block_ = this->block_();
+        }
+        else {
+            prnt(L"لم يتم إنهاء واذا بنقطتين \:");
+            exit(-1);
         }
 
         level--;
@@ -1330,9 +1368,8 @@ public:
             this->advance();
             return this->block_();
         }
-        else
-        {
-            prnt(L"else of if statement error");
+        else {
+            prnt(L"لم يتم إنهاء والا بنقطتين \:");
             exit(-1);
         }
     }
@@ -1349,6 +1386,10 @@ public:
         {
             this->advance();
             block_ = this->block_();
+        }
+        else {
+            prnt(L"لم يتم إنهاء اذا بنقطتين \:");
+            exit(-1);
         }
         while (this->currentToken.val.keywordType == Elseif)
         {
@@ -1388,10 +1429,14 @@ public:
                     this->advance();
                     return stmts_;
                 }
-                else if (this->currentToken.type_ == TTindent)
-                {
-                    prnt(L"indent error in if body");
+                else if (this->currentToken.type_ == TTindent) {
+                    prnt(L"يتوقع وجود مسافة راجعة في نهاية الحالة المركبة");
+                    exit(-1);
                 }
+            }
+            else {
+                prnt(L"يتوقع وجود مسافة بادئة في بداية جسم الحالة المركبة");
+                exit(-1);
             }
 
         }
@@ -1446,7 +1491,7 @@ public:
             }
             else
             {
-                prnt(L"لا يمكن إستدعاء حالة ارجع من خارج دالة");
+                prnt(L"لا يمكن إستدعاء ارجع من خارج دالة");
                 exit(-1);
             }
         }
@@ -1468,6 +1513,11 @@ public:
         else
         {
             ExprNode* exprNode = this->simple_statement();
+
+            if(this->currentToken.type_ != TTnewline) {
+                prnt(L"لا يمكن وجود اكثر من حالة في نفس السطر");
+                exit(-1);
+            }
             this->advance();
 
             level--;
@@ -1553,7 +1603,7 @@ public:
             //namesTable[itrName] = _node->U.For.args_->at(0);
             symTable.add_symbol(itrName, this->visit_expr(_node->U.For.args_->at(0)));
 
-            
+
             AlifObj result{};
             for (NUM i = startVal; i < endVal; i += stepVal)
             {
@@ -1578,7 +1628,7 @@ public:
             AlifObj result{};
             while (this->visit_expr(_node->U.While.condetion_).A.Boolean.value_)
             {
-                if (returnFlag) 
+                if (returnFlag)
                 {
                     return result;
                 }
@@ -1837,8 +1887,6 @@ public:
         }
         else if (_node->type_ == VCall) {
 
-            // متبقي فقط اضافة وسيطات بقيم مسبقة والتحقق من وجودها في الدالة ام لا
-
             if (_node->U.Call.name->U.NameAccess.name_.type_ == TTbuildInFunc)
             {
                 if (buildInFuncsTable.count(_node->U.Call.name->U.NameAccess.name_.A.BuildInFunc.buildInFunc))
@@ -1852,29 +1900,39 @@ public:
 
                     if (func->U.FunctionDef.params != nullptr)
                     {
+                        int argLength = 0;
+                        if (_node->U.Call.args)
+                        {
+                            argLength = _node->U.Call.args->size();
 
-                        int lenArg = _node->U.Call.args->size();
+                        }
 
                         int i = 0;
                         for (ExprNode* param : *func->U.FunctionDef.params)
                         {
                             if (param->type_ == VAccess) {
-                                //namesTable[param->U.NameAccess.name_.A.Name.name_] = this->visit_expr(_node->U.Call.args->at(lenArg));
-                                //namesTable[param->U.NameAccess.name_->A.Name.name_] = this->visit_expr(_node->U.Call.args->at(i));
-                                symTable.add_symbol(param->U.NameAccess.name_.A.Name.name_, this->visit_expr(_node->U.Call.args->at(i)));
-                            }
-                            else
-                            {
-                                if (_node->U.Call.args->at(lenArg) != nullptr) {
-
-                                    //namesTable[param->U.NameAssign.name_->at(0)->A.Name.name_] = this->visit_expr(_node->U.Call.args->at((lenArg - 1)));
-                                    symTable.add_symbol(param->U.NameAssign.name_->at(0).A.Name.name_, this->visit_expr(_node->U.Call.args->at((lenArg - 1))));
+                                if (argLength > i) // التحقق ما إذا كان عدد الوسيطات الممررة يكفي لعدد المعاملات في الدالة ام لا
+                                {
+                                    symTable.add_symbol(param->U.NameAccess.name_.A.Name.name_, this->visit_expr(_node->U.Call.args->at(i)));
                                 }
                                 else {
-
-                                    //namesTable[param->U.NameAssign.name_->at(0)->A.Name.name_] = this->visit_expr(param->U.NameAssign.value_);
-                                    symTable.add_symbol(param->U.NameAssign.name_->at(0).A.Name.name_, this->visit_expr(param->U.NameAssign.value_));
+                                    prnt(L"لم يتم تمرير عدد كاف من القيم في الدالة");
+                                    exit(-1);
                                 }
+                                //namesTable[param->U.NameAccess.name_->A.Name.name_] = this->visit_expr(_node->U.Call.args->at(i));
+
+                            }
+                            else if (argLength == (i + 1)) {
+
+                                //namesTable[param->U.NameAssign.name_->at(0)->A.Name.name_] = this->visit_expr(_node->U.Call.args->at((argLength - 1)));
+                                symTable.add_symbol(param->U.NameAssign.paramName.A.Name.name_, this->visit_expr(_node->U.Call.args->at((argLength - 1))));
+
+                            }
+                            else {
+
+                                //namesTable[param->U.NameAssign.name_->at(0)->A.Name.name_] = this->visit_expr(param->U.NameAssign.value_);
+                                symTable.add_symbol(param->U.NameAssign.paramName.A.Name.name_, this->visit_expr(param->U.NameAssign.value_));
+
                             }
                             i++;
                         }
@@ -1991,7 +2049,7 @@ public:
     AlifObj input(ExprNode* node) {
         str.type_ = TTstring;
         str.A.String.value_ = new std::wstring();
-        std::wcin >> *str.A.String.value_;
+        std::getline(std::wcin, *str.A.String.value_);
         return str;
     }
 
