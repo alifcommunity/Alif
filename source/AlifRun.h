@@ -1,7 +1,9 @@
 void file_run(char* _fileName) {
 
     bool outWText = _setmode(_fileno(stdout), _O_WTEXT);
-    if (!outWText)
+    bool inWText = _setmode(_fileno(stdin), _O_WTEXT);
+
+    if (!outWText and !inWText)
     {
         prnt(L"لم يتمكن من تحميل طباعة الملفات عريضة الاحرف - السطر 6 - الملف Alif5.cpp");
     }
@@ -10,6 +12,7 @@ void file_run(char* _fileName) {
     STR line;
 
     std::wifstream fileContent(_fileName);
+    //std::wifstream fileContent(L"../source/AlifCode.alif5"); // للتجربة فقط
     fileContent.imbue(std::locale("ar_SA.UTF-8"));
 
     while (std::getline(fileContent, line))
@@ -25,6 +28,7 @@ void file_run(char* _fileName) {
     int fileNameLength = sizeof(_fileName) / sizeof(char) + 6; // حساب طول اسم الملف لنتمكن من تحويله الى نص ذو احرف عريضة الترميز
     std::wstring fileName__(&_fileName[0], &_fileName[fileNameLength]); // تحويل اسم الملف الى نص ذو احرف عريضة الترميز
     STR fileName = fileName__;
+    //STR fileName = L"fileName__"; // للتجربة فقط
 
     // المعرب اللغوي
     /////////////////////////////////////////////////////////////////
@@ -56,6 +60,7 @@ void terminal_run() {
 
         std::wcout << L"alif -> ";
         std::getline(std::wcin, input_);
+        //std::wcin >> input_;
 
         if (input_ == L"خروج")
         {
