@@ -470,7 +470,7 @@ public:
         AlifObj intrRes = this->visit_expr(stmtsRes);
 
         if (intrRes.type_ == TTnumber) { prnt(intrRes.A.Number.value_); }
-        else if (intrRes.type_ == TTstring) { prnt(intrRes.A.String.value_); }
+        else if (intrRes.type_ == TTstring) { prnt(*intrRes.A.String.value_); }
         else if (intrRes.type_ == TTnone) { prnt(L"عدم"); }
         else if (intrRes.type_ == TTkeyword) { if (intrRes.A.Boolean.value_ == 1) { prnt(L"صح"); } else { prnt(L"خطا"); } }
         else if (intrRes.type_ == TTlist) {
