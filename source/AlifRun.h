@@ -5,7 +5,7 @@ void file_run(char* _fileName) {
 
     if (!outWText and !inWText)
     {
-        prnt(L"لم يتمكن من تحميل طباعة الملفات عريضة الاحرف - السطر 6 - الملف Alif5.cpp");
+        prnt(L"لم يتمكن من تحميل طباعة الملفات عريضة الاحرف - الملف Alif5.cpp");
     }
 
     STR input_;
@@ -50,17 +50,21 @@ void terminal_run() {
 
     if (!outWText and !inWText)
     {
-        prnt(L"لم يتمكن من تحميل قراءة الملفات عريضة الاحرف - السطر 49 - الملف Alif5.cpp");
+        prnt(L"لم يتمكن من تحميل قراءة الملفات عريضة الاحرف - الملف Alif5.cpp");
     }
 
     STR fileName = L"<طرفية>";
     STR input_;
+    const STR about_ = L"ألف نـ5.0.0";
+    prnt(about_);
+
+    int names_ = 0; // تم إضافة هذا السطر ك حل مؤقت لان الاسماء تحذف بعد تكرار حلقة while
+    std::map<STR, int> namesAlters = {}; // تم إضافة هذا السطر ك حل مؤقت لان الاسماء تحذف بعد تكرار حلقة while
 
     while (true) {
 
-        std::wcout << L"alif -> ";
+        std::wcout << L"ألف -> ";
         std::getline(std::wcin, input_);
-        //std::wcin >> input_;
 
         if (input_ == L"خروج")
         {
@@ -71,6 +75,8 @@ void terminal_run() {
         /////////////////////////////////////////////////////////////////
 
         Lexer lexer(fileName, input_);
+        lexer.name = names_; // تم إضافة هذا السطر ك حل مؤقت لان الاسماء تحذف بعد تكرار حلقة while
+        lexer.namesAlter = namesAlters; // تم إضافة هذا السطر ك حل مؤقت لان الاسماء تحذف بعد تكرار حلقة while
         lexer.make_token();
 
         // المحلل اللغوي
@@ -78,5 +84,9 @@ void terminal_run() {
 
         Parser parser = Parser(&lexer.tokens_, fileName, input_);
         parser.parse_terminal();
+
+
+        names_ = lexer.name; // تم إضافة هذا السطر ك حل مؤقت لان الاسماء تحذف بعد تكرار حلقة while
+        namesAlters = lexer.namesAlter; // تم إضافة هذا السطر ك حل مؤقت لان الاسماء تحذف بعد تكرار حلقة while
     }
 }
