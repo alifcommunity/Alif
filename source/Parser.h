@@ -1429,7 +1429,7 @@ public:
                     this->advance();
                     return stmts_;
                 }
-                else {
+                else if (this->currentToken.type_ == TTindent) {
                     prnt(L"يتوقع وجود مسافة راجعة في نهاية الحالة المركبة");
                     exit(-1);
                 }
