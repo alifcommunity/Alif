@@ -5,7 +5,7 @@ void file_run(char* _fileName) {
 
     if (!outWText and !inWText)
     {
-        prnt(L"لم يتمكن من تحميل طباعة الملفات عريضة الاحرف - السطر 6 - الملف Alif5.cpp");
+        prnt(L"لم يتمكن من تحميل طباعة الملفات عريضة الاحرف - الملف Alif5.cpp");
     }
 
     STR input_;
@@ -50,17 +50,18 @@ void terminal_run() {
 
     if (!outWText and !inWText)
     {
-        prnt(L"لم يتمكن من تحميل قراءة الملفات عريضة الاحرف - السطر 49 - الملف Alif5.cpp");
+        prnt(L"لم يتمكن من تحميل قراءة الملفات عريضة الاحرف - الملف Alif5.cpp");
     }
 
     STR fileName = L"<طرفية>";
     STR input_;
+    const STR about_ = L"ألف نـ5.0.0";
+    prnt(about_);
 
     while (true) {
 
-        std::wcout << L"alif -> ";
+        std::wcout << L"ألف -> ";
         std::getline(std::wcin, input_);
-        //std::wcin >> input_;
 
         if (input_ == L"خروج")
         {
@@ -78,5 +79,6 @@ void terminal_run() {
 
         Parser parser = Parser(&lexer.tokens_, fileName, input_);
         parser.parse_terminal();
+
     }
 }

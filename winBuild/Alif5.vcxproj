@@ -37,6 +37,13 @@
     <ClInclude Include="..\source\Parser.h" />
     <ClInclude Include="..\source\position.h" />
     <ClInclude Include="..\source\Tokens.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Alif5.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\resources\Alif5.ico" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
