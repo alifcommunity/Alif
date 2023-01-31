@@ -50,7 +50,7 @@ struct AlifObj
                     this->value_ = this->value_ + _other->A.Number.value_;
                 }
                 else {
-                    prnt(L"int add_ error");
+                    prnt(L"خطأ في عملية الجمع");
                 }
             }
 
@@ -61,7 +61,7 @@ struct AlifObj
                     this->value_ = this->value_ - _other->A.Number.value_;
                 }
                 else {
-                    prnt(L"int sub_ error");
+                    prnt(L"خطأ في عملية الطرح");
                 }
             }
 
@@ -72,7 +72,7 @@ struct AlifObj
                     this->value_ = this->value_ * _other->A.Number.value_;
                 }
                 else {
-                    prnt(L"int mul_ error");
+                    prnt(L"خطأ في عملية الضرب");
                 }
             }
 
@@ -86,11 +86,11 @@ struct AlifObj
                     }
                     else
                     {
-                        prnt(L"cant divide by zero error");
+                        prnt(L"لا يمكن التقسيم على صفر");
                     }
                 }
                 else {
-                    prnt(L"int div_ error");
+                    prnt(L"خطأ في عملية التقسيم");
                 }
             }
 
@@ -101,7 +101,7 @@ struct AlifObj
                     this->value_ = (int)this->value_ % (int)_other->A.Number.value_;
                 }
                 else {
-                    prnt(L"int rem_ error");
+                    prnt(L"خطأ في عملية باقي القسمة");
                 }
             }
 
@@ -113,7 +113,7 @@ struct AlifObj
                 }
                 else
                 {
-                    prnt(L"int pow_ error");
+                    prnt(L"خطأ في عملية الاس");
                 }
             }
 
@@ -125,7 +125,7 @@ struct AlifObj
                 }
                 else
                 {
-                    prnt(L"int equalE_ error");
+                    prnt(L"خطأ في عملية المقارنة التساوي");
                 }
             }
 
@@ -137,7 +137,7 @@ struct AlifObj
                 }
                 else
                 {
-                    prnt(L"int notE_ error");
+                    prnt(L"خطأ في عملية المقارنة لا يساوي");
                 }
             }
 
@@ -149,7 +149,7 @@ struct AlifObj
                 }
                 else
                 {
-                    prnt(L"int greaterT_ error");
+                    prnt(L"خطأ في عملية المقارنة اكبر من");
                 }
             }
 
@@ -161,7 +161,7 @@ struct AlifObj
                 }
                 else
                 {
-                    prnt(L"int lessT_ error");
+                    prnt(L"خطأ في عملية المقارنة اصغر من");
                 }
             }
 
@@ -173,7 +173,7 @@ struct AlifObj
                 }
                 else
                 {
-                    prnt(L"int greaterTE_ error");
+                    prnt(L"خطأ في عملية المقارنة اكبر من او يساوي");
                 }
             }
 
