@@ -1,5 +1,9 @@
 #pragma once
 
+// تم تعريف المتغيرات خارج الصنف لكي لا يتم إعادة ضبطها عند استخدام الطرفية في تنفيذ الشفرة
+int name = 0; // متغير اسماء ولكن على شكل ارقام
+std::map<STR, int> namesAlter = {};
+
 // المعرب اللغويdedentSpecifier
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -18,8 +22,6 @@ public:
     // vars
     ////////////
 
-    int name = 0; // for convert names to numbers
-    std::map<STR, int> namesAlter = {};
     DedentSpecifier* dedentSpec = new DedentSpecifier; // حساب المسافات البادئة والنهائية
 
     ////////////
@@ -302,15 +304,15 @@ public:
         {
             this->tokens_.push_back(Token(positionStart, this->position_, TTbuildInFunc, buildInFunctions[nameString]));
         }
-        else if (this->namesAlter.find(nameString) != namesAlter.end())
+        else if (namesAlter.find(nameString) != namesAlter.end())
         {
-            this->tokens_.push_back(Token(positionStart, this->position_, TTname, this->namesAlter[nameString]));
+            this->tokens_.push_back(Token(positionStart, this->position_, TTname, namesAlter[nameString]));
         }
         else
         {
             name++;
-            this->namesAlter[nameString] = name;
-            this->tokens_.push_back(Token(positionStart, this->position_, TTname, this->name));
+            namesAlter[nameString] = name;
+            this->tokens_.push_back(Token(positionStart, this->position_, TTname, name));
         }
     }
 

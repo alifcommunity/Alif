@@ -58,9 +58,6 @@ void terminal_run() {
     const STR about_ = L"ألف نـ5.0.0";
     prnt(about_);
 
-    int names_ = 0; // تم إضافة هذا السطر ك حل مؤقت لان الاسماء تحذف بعد تكرار حلقة while
-    std::map<STR, int> namesAlters = {}; // تم إضافة هذا السطر ك حل مؤقت لان الاسماء تحذف بعد تكرار حلقة while
-
     while (true) {
 
         std::wcout << L"ألف -> ";
@@ -75,8 +72,6 @@ void terminal_run() {
         /////////////////////////////////////////////////////////////////
 
         Lexer lexer(fileName, input_);
-        lexer.name = names_; // تم إضافة هذا السطر ك حل مؤقت لان الاسماء تحذف بعد تكرار حلقة while
-        lexer.namesAlter = namesAlters; // تم إضافة هذا السطر ك حل مؤقت لان الاسماء تحذف بعد تكرار حلقة while
         lexer.make_token();
 
         // المحلل اللغوي
@@ -85,8 +80,5 @@ void terminal_run() {
         Parser parser = Parser(&lexer.tokens_, fileName, input_);
         parser.parse_terminal();
 
-
-        names_ = lexer.name; // تم إضافة هذا السطر ك حل مؤقت لان الاسماء تحذف بعد تكرار حلقة while
-        namesAlters = lexer.namesAlter; // تم إضافة هذا السطر ك حل مؤقت لان الاسماء تحذف بعد تكرار حلقة while
     }
 }
