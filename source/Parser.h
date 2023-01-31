@@ -185,7 +185,7 @@ struct AlifObj
                 }
                 else
                 {
-                    prnt(L"int lessTE_ error");
+                    prnt(L"خطأ في عملية المقارنة اصغر من او يساوي");
                 }
             }
 
@@ -201,7 +201,7 @@ struct AlifObj
                     *this->value_ = *this->value_ + *_other->A.String.value_;
                 }
                 else {
-                    prnt(L"str add_ error");
+                    prnt(L"خطأ في عملية جمع نص");
                 }
             }
         }String;
