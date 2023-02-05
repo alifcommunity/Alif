@@ -80,5 +80,7 @@ void terminal_run() {
         Parser parser = Parser(&lexer.tokens_, fileName, input_);
         parser.parse_terminal();
 
+        std::wcin.ignore(); // لمنع ارسال قيمة فارغة في المتغير input_
+
     }
 }
