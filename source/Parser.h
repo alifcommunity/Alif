@@ -350,9 +350,6 @@ struct ExprNode
         }Expr;
 
     }U;
-
-    //Position posStart;
-    //Position posEnd;
 };
 
 struct StmtsNode {
@@ -422,12 +419,12 @@ public:
     STR fileName;
     STR input_;
 
-    /// <flags>
+    /// <اعلام>
 
     bool lastParam = false;
     bool returnFlag = false;
 
-    /// </flags>
+    /// </اعلام>
 
     unsigned int level = 5500;
     ExprNode* exprNode = (ExprNode*)malloc(level * sizeof(struct ExprNode));
@@ -1261,7 +1258,6 @@ public:
 
                         if (this->currentToken.type_ == TTrParenthesis)
                         {
-                            //prnt(L"for loop args is less than expexted");
                             prnt(L"المعاملات المسندة اقل من المتوقع");
                             exit(-1);
                         }
@@ -1279,7 +1275,6 @@ public:
 
                         if (args_->size() > 3)
                         {
-                            //prnt(L"for loop args is more than expected");
                             prnt(L"المعاملات المسندة اكثر من المتوقع");
                             exit(-1);
                         }

@@ -4,7 +4,7 @@
 int name = 0; // متغير اسماء ولكن على شكل ارقام
 std::map<STR, int> namesAlter = {};
 
-// المعرب اللغويdedentSpecifier
+// المعرب اللغوي
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 struct DedentSpecifier { // صنف يقوم بتحديد المسافة البادئة الحالية والاخيرة
@@ -51,7 +51,7 @@ public:
 
         while (this->currentChar != L'\0')
         {
-            if (this->currentChar == L'\n') // most be call before space and tab for indent
+            if (this->currentChar == L'\n') // يجب ان يتم التحقق من السطر الجديد قبل المسافة او المسافة البادئة
             {
                 this->make_newline();
             }
@@ -357,18 +357,6 @@ public:
         else {
             this->tokens_.push_back(Token(positionStart, this->position_, TTplus));
         }
-
-        //if ((lettersDigits + L' ').find(this->currentChar) != STR::npos) {
-        //    this->tokens_.push_back(Token(positionStart, this->position_, TTplus));
-        //}
-        //else if (this->currentChar == L'=') {
-        //    this->advance();
-        //    this->tokens_.push_back(Token(positionStart, this->position_, TTplusEqual));
-        //}
-        //else {
-        //    prnt(SyntaxError(positionStart ,this->position_, L"< هل تقصد += ؟ >", fileName, input_).print_());
-        //    exit(0);
-        //}
     }
 
     void make_minus_equal() {
@@ -382,18 +370,6 @@ public:
         else {
             this->tokens_.push_back(Token(positionStart, this->position_, TTminus));
         }
-
-        //if ((lettersDigits + L' ').find(this->currentChar) != STR::npos) {
-        //    this->tokens_.push_back(Token(positionStart, this->position_, TTminus));
-        //}
-        //else if (this->currentChar == L'=') {
-        //    this->advance();
-        //    this->tokens_.push_back(Token(positionStart, this->position_, TTminusEqual));
-        //}
-        //else {
-        //    prnt(SyntaxError(positionStart, this->position_, L"< هل تقصد -= ؟ >", fileName, input_).print_());
-        //    exit(0);
-        //}
     }
 
     void make_multiply_equal() {
@@ -407,18 +383,6 @@ public:
         else {
             this->tokens_.push_back(Token(positionStart, this->position_, TTmultiply));
         }
-
-        //if ((lettersDigits + L' ').find(this->currentChar) != std::wstring::npos) {
-        //    this->tokens_.push_back(Token(positionStart, this->position_, TTmultiply));
-        //}
-        //else if (this->currentChar == L'=') {
-        //    this->advance();
-        //    this->tokens_.push_back(Token(positionStart, this->position_, TTmultiplyEqual));
-        //}
-        //else {
-        //    prnt(SyntaxError(positionStart, this->position_, L"< هل تقصد *= ؟ >", fileName, input_).print_());
-        //    exit(0);
-        //}
     }
 
     void make_power_equal() {
@@ -432,18 +396,6 @@ public:
         else {
             this->tokens_.push_back(Token(positionStart, this->position_, TTpower));
         }
-
-        //if ((lettersDigits + L' ').find(this->currentChar) != std::wstring::npos) {
-        //    this->tokens_.push_back(Token(positionStart, this->position_, TTpower));
-        //}
-        //else if (this->currentChar == L'=') {
-        //    this->advance();
-        //    this->tokens_.push_back(Token(positionStart, this->position_, TTpowerEqual));
-        //}
-        //else {
-        //    prnt(SyntaxError(positionStart, this->position_, L"< هل تقصد ^= ؟ >", fileName, input_).print_());
-        //    exit(0);
-        //}
     }
 
     void make_divide() {
@@ -462,23 +414,6 @@ public:
             this->tokens_.push_back(Token(positionStart, this->position_, TTdivide));
         }
     }
-
-    //    if ((lettersDigits + L' ').find(this->currentChar) != std::wstring::npos) {
-    //        this->tokens_.push_back(Token(positionStart, this->position_, TTdivide));
-    //    }
-    //    else if (this->currentChar == L'=') {
-    //        this->advance();
-    //        this->tokens_.push_back(Token(positionStart, this->position_, TTdivideEqual));
-    //    }
-    //    else if (this->currentChar == L'\\') {
-    //        this->advance();
-    //        this->tokens_.push_back(Token(positionStart, this->position_, TTremain));
-    //    }
-    //    else {
-    //        prnt(SyntaxError(positionStart, this->position_, L"< هل تقصد \\= ؟ >", fileName, input_).print_());
-    //        exit(0);
-    //    }
-    //}
 
     void make_not_equals() {
         Position positionStart = this->position_;
@@ -541,15 +476,5 @@ public:
         while (this->currentChar != L'\n' and this->currentChar != L'\0') {
             this->advance();
         }
-    }
-
-    void print() {
-        STR result;
-
-        for (const Token i : tokens_)
-        {
-            result += L"[" + std::to_wstring(i.positionStart.index_) + L", " + std::to_wstring(i.positionEnd.index_) + L"]  ->  " + std::to_wstring(i.type_) + L" : " + std::to_wstring(i.val.numVal) + L", \n";
-        }
-        std::wcout << L"نتائج المعرب اللغوي : \n" << result << std::endl;
     }
 };
