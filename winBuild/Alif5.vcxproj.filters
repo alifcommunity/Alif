@@ -26,7 +26,7 @@
     <None Include="..\documents\README.md" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\source\constants.h">
+    <ClInclude Include="..\source\Constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\source\Errors.h">
@@ -41,7 +41,7 @@
     <ClInclude Include="..\source\Parser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\position.h">
+    <ClInclude Include="..\source\Position.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\source\Tokens.h">
