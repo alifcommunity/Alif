@@ -1,4 +1,4 @@
-void file_run(char* _fileName) {
+void file_run(wchar_t* _fileName) {
 
     bool outWText = _setmode(_fileno(stdout), _O_WTEXT);
     bool inWText = _setmode(_fileno(stdin), _O_WTEXT);
@@ -17,7 +17,8 @@ void file_run(char* _fileName) {
         exit(-1);
     }
     //std::wifstream fileContent(L"../source/AlifCode.alif5"); // للتجربة فقط
-    fileContent.imbue(std::locale(std::locale(""), new std::codecvt_utf8<wchar_t>));
+    fileContent.imbue(std::locale("ar_SA.UTF-8"));
+    //fileContent.imbue(std::locale(std::locale(""), new std::codecvt_utf8<wchar_t>));
 
     while (std::getline(fileContent, line))
     {
@@ -29,21 +30,16 @@ void file_run(char* _fileName) {
     }
     fileContent.close();
 
-    int fileNameLength = sizeof(_fileName) / sizeof(char) + 6; // حساب طول اسم الملف لنتمكن من تحويله الى نص ذو احرف عريضة الترميز
-    std::wstring fileName__(&_fileName[0], &_fileName[fileNameLength]); // تحويل اسم الملف الى نص ذو احرف عريضة الترميز
-    STR fileName = fileName__;
-    //STR fileName = L"fileName__"; // للتجربة فقط
-
     // المعرب اللغوي
     /////////////////////////////////////////////////////////////////
 
-    Lexer lexer(fileName, input_);
+    Lexer lexer(_fileName, input_);
     lexer.make_token();
 
     // المحلل اللغوي
     /////////////////////////////////////////////////////////////////
 
-    Parser parser = Parser(&lexer.tokens_, fileName, input_);
+    Parser parser = Parser(&lexer.tokens_, _fileName, input_);
     parser.parse_file();
 }
 
