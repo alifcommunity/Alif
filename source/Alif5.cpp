@@ -7,7 +7,7 @@
 
 #include<iostream>
 #include<fstream>
-#include<codecvt>
+#include<codecvt> //
 #include<string>
 #include<vector>
 #include<map>
@@ -24,7 +24,7 @@
 #include "Parser.h"
 #include "AlifRun.h"
 
-int main(int argc, char* argv[])
+int wmain(int argc, wchar_t* argv[])
 {
     if (argc > 1)
     {
