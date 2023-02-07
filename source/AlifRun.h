@@ -12,8 +12,12 @@ void file_run(char* _fileName) {
     STR line;
 
     std::wifstream fileContent(_fileName);
+    if (!fileContent.is_open()) {
+        prnt(L"لا يمكن فتح الملف او انه غير موجود - تاكد من اسم الملف -");
+        exit(-1);
+    }
     //std::wifstream fileContent(L"../source/AlifCode.alif5"); // للتجربة فقط
-    fileContent.imbue(std::locale("ar_SA.UTF-8"));
+    fileContent.imbue(std::locale(std::locale(""), new std::codecvt_utf8<wchar_t>));
 
     while (std::getline(fileContent, line))
     {
@@ -79,6 +83,8 @@ void terminal_run() {
 
         Parser parser = Parser(&lexer.tokens_, fileName, input_);
         parser.parse_terminal();
+
+        std::wcin.ignore(); // لمنع ارسال قيمة فارغة في المتغير input_
 
     }
 }

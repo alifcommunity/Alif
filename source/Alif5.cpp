@@ -7,9 +7,11 @@
 
 #include<iostream>
 #include<fstream>
+#include<codecvt>
 #include<string>
 #include<vector>
 #include<map>
+#include<math.h>
 #include<algorithm> // لعمل تتالي على المصفوفات
 #include<fcntl.h> //لقبول ادخال الاحرف العربية من الكونسل
 #include<io.h> //لقبول ادخال الاحرف العربية من الكونسل

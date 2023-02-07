@@ -29,13 +29,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifRun.h" />
-    <ClInclude Include="..\source\constants.h" />
+    <ClInclude Include="..\source\Constants.h" />
     <ClInclude Include="..\source\Errors.h" />
     <ClInclude Include="..\source\Interpreter.h" />
     <ClInclude Include="..\source\Lexer.h" />
     <ClInclude Include="..\source\MemoryBlock.h" />
     <ClInclude Include="..\source\Parser.h" />
-    <ClInclude Include="..\source\position.h" />
+    <ClInclude Include="..\source\Position.h" />
     <ClInclude Include="..\source\Tokens.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
