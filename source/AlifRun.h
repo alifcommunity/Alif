@@ -1,3 +1,11 @@
+std::wstring utf8_decode(const std::string& str)
+{
+    int size_ = MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), NULL, 0);
+    std::wstring strToWstr(size_, 0);
+    MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), &strToWstr[0], size_);
+    return strToWstr;
+}
+
 void file_run(wchar_t* _fileName) {
 
     bool outWText = _setmode(_fileno(stdout), _O_WTEXT);
@@ -9,26 +17,28 @@ void file_run(wchar_t* _fileName) {
     }
 
     STR input_;
-    STR line;
+    std::string u8input;
+    std::string line;
 
-    std::wifstream fileContent(_fileName);
+    std::ifstream fileContent(_fileName);
+    //std::ifstream fileContent(L"../source/AlifCode.alif5"); // للتجربة فقط
+    //_fileName = new wchar_t(L'test'); // للتجربة فقط
     if (!fileContent.is_open()) {
         prnt(L"لا يمكن فتح الملف او انه غير موجود - تاكد من اسم الملف -");
         exit(-1);
     }
-    //std::wifstream fileContent(L"../source/AlifCode.alif5"); // للتجربة فقط
-    fileContent.imbue(std::locale("ar_SA.UTF-8"));
-    //fileContent.imbue(std::locale(std::locale(""), new std::codecvt_utf8<wchar_t>));
 
     while (std::getline(fileContent, line))
     {
-        if (line != L"")
+        if (line != "")
         {
-            input_ += line;
-            input_ += L"\n";
+            u8input += line;
+            u8input += "\n";
         }
     }
     fileContent.close();
+
+    input_ = utf8_decode(u8input);
 
     // المعرب اللغوي
     /////////////////////////////////////////////////////////////////
@@ -54,8 +64,8 @@ void terminal_run() {
     }
 
     STR fileName = L"<طرفية>";
-    STR input_;
     const STR about_ = L"ألف نـ5.0.0";
+    STR input_;
     prnt(about_);
 
     while (true) {
@@ -80,7 +90,10 @@ void terminal_run() {
         Parser parser = Parser(&lexer.tokens_, fileName, input_);
         parser.parse_terminal();
 
+#ifndef _WIN64
         std::wcin.ignore(); // لمنع ارسال قيمة فارغة في المتغير input_
+#endif // !_WIN64
+
 
     }
 }
