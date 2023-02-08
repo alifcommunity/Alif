@@ -7,7 +7,7 @@
 
 #include<iostream>
 #include<fstream>
-#include<codecvt> //
+#include<Windows.h>
 #include<string>
 #include<vector>
 #include<map>
@@ -15,7 +15,7 @@
 #include<algorithm> // لعمل تتالي على المصفوفات
 #include<fcntl.h> //لقبول ادخال الاحرف العربية من الكونسل
 #include<io.h> //لقبول ادخال الاحرف العربية من الكونسل
-#include "MemoryBlock.h"
+
 #include "Constants.h"
 #include "Position.h"
 #include "Tokens.h"

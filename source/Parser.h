@@ -7,7 +7,7 @@ struct ExprNode;
 
 struct AlifObj
 {
-    TokenType type_;
+    TokType type_;
 
     union UObj
     {
@@ -41,7 +41,7 @@ struct AlifObj
 
         struct : Boolean_ {
 
-            TokenType Tkind_;
+            TokType Tkind_;
 
             void add_(AlifObj* _other)
             {
@@ -310,14 +310,14 @@ struct ExprNode
 
         struct {
             ExprNode* left_;
-            TokenType operator_;
+            TokType operator_;
             KeywordType keyword_;
             ExprNode* right_;
         }BinaryOp;
 
         struct {
             ExprNode* right_;
-            TokenType operator_;
+            TokType operator_;
             KeywordType keyword_;
         }UnaryOp;
 
@@ -329,7 +329,7 @@ struct ExprNode
 
         struct {
             AlifObj name_;
-            TokenType operator_;
+            TokType operator_;
             ExprNode* value_;
         }AugNameAssign;
 
