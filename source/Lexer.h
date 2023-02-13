@@ -51,7 +51,11 @@ public:
 
         while (this->currentChar != L'\0')
         {
-            if (this->currentChar == L'\n') // يجب ان يتم التحقق من السطر الجديد قبل المسافة او المسافة البادئة
+            if (this->currentChar == L'\r')
+            {
+                this->advance();
+            }
+            else if (this->currentChar == L'\n') // يجب ان يتم التحقق من السطر الجديد قبل المسافة او المسافة البادئة
             {
                 this->make_newline();
             }
