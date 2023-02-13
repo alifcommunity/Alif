@@ -23,9 +23,16 @@ void file_run(char* _fileName) {
     fileContent.close();
 
     int fnLength = sizeof(_fileName) / sizeof(char) + 6;
-    STR fileName(&_fileName[0], &_fileName[fnLength]);
+    STR fileName(&_fileName[0], &_fileName[fnLength]); // تحويل من char الى wchar_t
 
     std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> convert;
+    /*
+    تحويل utf-8
+    الى utf-16
+    لكي يقوم بحساب الحرف الواحد على انه 2 بايت وليس 1 بايت
+    حيث نظام utf-8 يأخذ اول بايت من الحرف فقط ويترك البايت الثاني
+    ** يجب مراجعة جدول بايتات نظام utf-8
+    */
     input_ = convert.from_bytes(u8input);
 
     // المعرب اللغوي
@@ -80,6 +87,13 @@ void terminal_run() {
 
 std::wstring utf8_decode(const std::string& str)
 {
+/*
+    تحويل utf-8 
+    الى utf-16
+    لكي يقوم بحساب الحرف الواحد على انه 2 بايت وليس 1 بايت
+    حيث نظام utf-8 يأخذ اول بايت من الحرف فقط ويترك البايت الثاني
+    ** يجب مراجعة جدول بايتات نظام utf-8
+*/
     int size_ = MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), NULL, 0);
     std::wstring strToWstr(size_, 0);
     MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), &strToWstr[0], size_);
