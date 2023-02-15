@@ -1217,6 +1217,7 @@ public:
         }
         if (this->currentToken.type_ == TTkeyword and this->currentToken.val.keywordType == Else)
         {
+            this->advance();
             else_ = this->else_();
         }
 
