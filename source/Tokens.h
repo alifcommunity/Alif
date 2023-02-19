@@ -3,51 +3,51 @@
 // الرموز
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-enum TokenType {
-    TTinteger, // Integer
-    TTfloat, // Float
+enum TokType {
+    TTinteger,
+    TTfloat,
     
-    TTnumber, // Number
-    TTlist, // List
+    TTnumber,
+    TTlist,
     
-    TTstring, // String
-    TTname, // Name
-    TTplus, // Plus
-    TTplusEqual, // Plus_equal
-    TTminus, // Minus
-    TTminusEqual, // Minus_equal
-    TTmultiply, // Multiply
-    TTmultiplyEqual, // Multiply_equal
-    TTdivide, // Divide
-    TTdivideEqual, // Divide_equal
-    TTpower, // Power
-    TTpowerEqual, // Power_equal
-    TTremain, // Remain
-    TTremainEqual, // Remain_equal
-    TTequal, // Equal
-    TTlParenthesis, // L_Parenthesis
-    TTrParenthesis, // R_Parenthesis
-    TTlSquare, // L_Square
-    TTrSquare, // R_Square
-    TTlCurlyBrace, // L_curly_brace
-    TTrCurlyBrace, // R_curly_brace
-    TTequalEqual, // Equal_equal 
-    TTnotEqual, // Not_equal
-    TTlessThan, // Less_than
-    TTgreaterThan, // Greater_than
-    TTlessThanEqual, // Less_than_equal
-    TTgreaterThanEqual, // Greater_than_equal
-    TTcomma, // Comma
-    TTcolon, // Colon
-    TTarrow, // Arrow
-    TTnewline, // NewLine
-    TTindent, // INDENT
-    TTdedent, // DEDENT
-    TTdot, // Dot
-    TTendOfFile, // End_Of_File
-    TTbuildInFunc, // BuildInFunction
-    TTkeyword, // Keyword
-    TTnone, // None
+    TTstring, 
+    TTname, 
+    TTplus, 
+    TTplusEqual, 
+    TTminus, 
+    TTminusEqual, 
+    TTmultiply, 
+    TTmultiplyEqual, 
+    TTdivide, 
+    TTdivideEqual, 
+    TTpower, 
+    TTpowerEqual, 
+    TTremain, 
+    TTremainEqual, 
+    TTequal, 
+    TTlParenthesis, 
+    TTrParenthesis, 
+    TTlSquare, 
+    TTrSquare, 
+    TTlCurlyBrace, 
+    TTrCurlyBrace, 
+    TTequalEqual, 
+    TTnotEqual, 
+    TTlessThan, 
+    TTgreaterThan, 
+    TTlessThanEqual, 
+    TTgreaterThanEqual, 
+    TTcomma, 
+    TTcolon, 
+    TTarrow, 
+    TTnewline, 
+    TTindent, 
+    TTdedent, 
+    TTdot, 
+    TTendOfFile, 
+    TTbuildInFunc, 
+    TTkeyword, 
+    TTnone, 
 };
 
 enum VisitType {
@@ -71,11 +71,11 @@ enum VisitType {
     VStmts,
 };
 
-//enum Context {
-//    Set,
-//    Get,
-//    Del,
-//};
+enum Context {
+    Set,
+    Get,
+    Del,
+};
 
 enum KeywordType {
     False,
@@ -102,18 +102,19 @@ enum KeywordType {
 };
 
 enum BuildInFuncType {
-    Print = -1,
-    Push = -2,
-    Input = -3
+    Print,
+    Push,
+    Input,
 };
 
 
 std::map<STR, BuildInFuncType> buildInFunctions = { {L"اطبع", Print} , {L"اضف", Push} , {L"ادخل", Input} };
 std::map<STR, KeywordType> keywords_ = { {L"مرر", Pass}, {L"توقف", Stop}, {L"استمر", Continue}, {L"حذف", Delete}, {L"من", From}, {L"استورد", Import} , {L"اذا", If}, {L"واذا", Elseif}, {L"والا", Else}, {L"بينما", While}, {L"لاجل", For}, {L"في", In}, {L"ارجع", Return}, {L"دالة", Function}, {L"صنف", Class}, {L"او", Or}, {L"و", And}, {L"ليس", Not}, {L"صح", True}, {L"خطا", False}, {L"عدم", None} };
+const KeywordType keywordsArray[21] = { None, False, True, Not, And, Or, Class, Function, Return, In, For, While, If, Else, Elseif, Import, From, Delete, Continue, Stop, Pass }; // مصفوفة تحتوي على الكلمات المفتاحية مخصصة للتحقق ما إذا كان الاسم كلمة مفتاحية ام لا
 
 class Token {
 public:
-    TokenType type_{};
+    TokType type_{};
     Position positionStart{}, positionEnd{};
 
     union Values
@@ -126,34 +127,34 @@ public:
 
     Token(){}
 
-    Token(Position _positionStart, Position _positionEnd, TokenType _type) {
+    Token(Position _positionStart, Position _positionEnd, TokType _type) {
         this->positionStart = _positionStart;
         this->positionEnd = _positionEnd;
         this->type_ = _type;
     }
 
-    Token(Position _positionStart, Position _positionEnd, TokenType _type, STR* _strVal) {
+    Token(Position _positionStart, Position _positionEnd, TokType _type, STR* _strVal) {
         this->positionStart = _positionStart;
         this->positionEnd = _positionEnd;
         this->type_ = _type;
         this->val.strVal = _strVal;
     }
 
-    Token(Position _positionStart, Position _positionEnd, TokenType _type, NUM _numVal) {
+    Token(Position _positionStart, Position _positionEnd, TokType _type, NUM _numVal) {
         this->positionStart = _positionStart;
         this->positionEnd = _positionEnd;
         this->type_ = _type;
         this->val.numVal = _numVal;
     }
 
-    Token(Position _positionStart, Position _positionEnd, TokenType _type, KeywordType _keywordType) {
+    Token(Position _positionStart, Position _positionEnd, TokType _type, KeywordType _keywordType) {
         this->positionStart = _positionStart;
         this->positionEnd = _positionEnd;
         this->type_ = _type;
         this->val.keywordType = _keywordType;
     }
 
-    Token(Position _positionStart, Position _positionEnd, TokenType _type, BuildInFuncType _buildInFunc) {
+    Token(Position _positionStart, Position _positionEnd, TokType _type, BuildInFuncType _buildInFunc) {
         this->positionStart = _positionStart;
         this->positionEnd = _positionEnd;
         this->type_ = _type;

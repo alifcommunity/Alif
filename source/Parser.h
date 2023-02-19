@@ -7,7 +7,7 @@ struct ExprNode;
 
 struct AlifObj
 {
-    TokenType type_;
+    TokType type_;
 
     union UObj
     {
@@ -41,7 +41,7 @@ struct AlifObj
 
         struct : Boolean_ {
 
-            TokenType Tkind_;
+            TokType Tkind_;
 
             void add_(AlifObj* _other)
             {
@@ -310,14 +310,14 @@ struct ExprNode
 
         struct {
             ExprNode* left_;
-            TokenType operator_;
+            TokType operator_;
             KeywordType keyword_;
             ExprNode* right_;
         }BinaryOp;
 
         struct {
             ExprNode* right_;
-            TokenType operator_;
+            TokType operator_;
             KeywordType keyword_;
         }UnaryOp;
 
@@ -329,7 +329,7 @@ struct ExprNode
 
         struct {
             AlifObj name_;
-            TokenType operator_;
+            TokType operator_;
             ExprNode* value_;
         }AugNameAssign;
 
@@ -350,9 +350,6 @@ struct ExprNode
         }Expr;
 
     }U;
-
-    //Position posStart;
-    //Position posEnd;
 };
 
 struct StmtsNode {
@@ -422,12 +419,12 @@ public:
     STR fileName;
     STR input_;
 
-    /// <flags>
+    /// <اعلام>
 
     bool lastParam = false;
     bool returnFlag = false;
 
-    /// </flags>
+    /// </اعلام>
 
     unsigned int level = 5500;
     ExprNode* exprNode = (ExprNode*)malloc(level * sizeof(struct ExprNode));
@@ -1220,6 +1217,7 @@ public:
         }
         if (this->currentToken.type_ == TTkeyword and this->currentToken.val.keywordType == Else)
         {
+            this->advance();
             else_ = this->else_();
         }
 
@@ -1261,7 +1259,6 @@ public:
 
                         if (this->currentToken.type_ == TTrParenthesis)
                         {
-                            //prnt(L"for loop args is less than expexted");
                             prnt(L"المعاملات المسندة اقل من المتوقع");
                             exit(-1);
                         }
@@ -1279,7 +1276,6 @@ public:
 
                         if (args_->size() > 3)
                         {
-                            //prnt(L"for loop args is more than expected");
                             prnt(L"المعاملات المسندة اكثر من المتوقع");
                             exit(-1);
                         }
