@@ -38,7 +38,7 @@ int main(int argc, char** argv)
     {
         if (argc > 2)
         {
-            std::cout << "يجب ان يتم تمرير اسم الملف فقط" << std::endl;
+            prnt(L"يجب ان يتم تمرير اسم الملف فقط");
             exit(-1);
         }
 
@@ -53,11 +53,19 @@ int main(int argc, char** argv)
 
 int wmain(int argc, wchar_t** argv)
 {
+    bool outWText = _setmode(_fileno(stdout), _O_WTEXT);
+    bool inWText = _setmode(_fileno(stdin), _O_WTEXT);
+
+    if (!outWText and !inWText)
+    {
+        prnt(L"لم يتمكن من تحميل طباعة الملفات عريضة الاحرف - الملف Alif5.cpp");
+    }
+
     if (argc > 1)
     {
         if (argc > 2)
         {
-            prnt("يجب ان يتم تمرير اسم الملف فقط");
+            prnt(L"يجب ان يتم تمرير اسم الملف فقط");
             exit(-1);
         }
 
