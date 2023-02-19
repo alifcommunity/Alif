@@ -38,7 +38,7 @@ int main(int argc, char** argv)
     {
         if (argc > 2)
         {
-            prnt("يجب ان يتم تمرير اسم الملف فقط");
+            std::cout << "يجب ان يتم تمرير اسم الملف فقط" << std::endl;
             exit(-1);
         }
 
