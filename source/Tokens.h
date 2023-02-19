@@ -7,11 +7,13 @@ enum TokType {
     TTinteger,
     TTfloat,
     
-    TTnumber,
+    TTnumber, // لا يلزم
     TTlist,
     
     TTstring, 
-    TTname, 
+
+    TTname,
+
     TTplus, 
     TTplusEqual, 
     TTminus, 
@@ -23,8 +25,8 @@ enum TokType {
     TTpower, 
     TTpowerEqual, 
     TTremain, 
-    TTremainEqual, 
-    TTequal, 
+    TTremainEqual,
+
     TTlParenthesis, 
     TTrParenthesis, 
     TTlSquare, 
@@ -37,14 +39,20 @@ enum TokType {
     TTgreaterThan, 
     TTlessThanEqual, 
     TTgreaterThanEqual, 
+
+    TTequal,
     TTcomma, 
     TTcolon, 
     TTarrow, 
+    TTdot, 
+
     TTnewline, 
+
     TTindent, 
     TTdedent, 
-    TTdot, 
+
     TTendOfFile, 
+
     TTbuildInFunc, 
     TTkeyword, 
     TTnone, 
@@ -114,50 +122,17 @@ const KeywordType keywordsArray[21] = { None, False, True, Not, And, Or, Class, 
 
 class Token {
 public:
-    TokType type_{};
-    Position positionStart{}, positionEnd{};
-
-    union Values
-    {
-        KeywordType keywordType;
-        BuildInFuncType buildInFunc;
-        STR* strVal;
-        NUM numVal;
-    }val{};
+    union Values{}val{};
 
     Token(){}
 
-    Token(Position _positionStart, Position _positionEnd, TokType _type) {
-        this->positionStart = _positionStart;
-        this->positionEnd = _positionEnd;
-        this->type_ = _type;
-    }
+    Token(Position _positionStart, Position _positionEnd, TokType _type) {}
 
-    Token(Position _positionStart, Position _positionEnd, TokType _type, STR* _strVal) {
-        this->positionStart = _positionStart;
-        this->positionEnd = _positionEnd;
-        this->type_ = _type;
-        this->val.strVal = _strVal;
-    }
+    Token(Position _positionStart, Position _positionEnd, TokType _type, STR* _strVal) {}
 
-    Token(Position _positionStart, Position _positionEnd, TokType _type, NUM _numVal) {
-        this->positionStart = _positionStart;
-        this->positionEnd = _positionEnd;
-        this->type_ = _type;
-        this->val.numVal = _numVal;
-    }
+    Token(Position _positionStart, Position _positionEnd, TokType _type, NUM _numVal) {}
 
-    Token(Position _positionStart, Position _positionEnd, TokType _type, KeywordType _keywordType) {
-        this->positionStart = _positionStart;
-        this->positionEnd = _positionEnd;
-        this->type_ = _type;
-        this->val.keywordType = _keywordType;
-    }
+    Token(Position _positionStart, Position _positionEnd, TokType _type, KeywordType _keywordType) {}
 
-    Token(Position _positionStart, Position _positionEnd, TokType _type, BuildInFuncType _buildInFunc) {
-        this->positionStart = _positionStart;
-        this->positionEnd = _positionEnd;
-        this->type_ = _type;
-        this->val.buildInFunc = _buildInFunc;
-    }
+    Token(Position _positionStart, Position _positionEnd, TokType _type, BuildInFuncType _buildInFunc) {}
 };
