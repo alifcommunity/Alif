@@ -79,7 +79,6 @@ void terminal_run() {
 
         // std::wcin.ignore(); // لمنع ارسال قيمة فارغة في المتغير input_
 
-
     }
 }
 
@@ -101,14 +100,6 @@ std::wstring utf8_decode(const std::string& str)
 }
 
 void file_run(wchar_t* _fileName) {
-
-    bool outWText = _setmode(_fileno(stdout), _O_WTEXT);
-    bool inWText = _setmode(_fileno(stdin), _O_WTEXT);
-
-    if (!outWText and !inWText)
-    {
-        prnt(L"لم يتمكن من تحميل طباعة الملفات عريضة الاحرف - الملف Alif5.cpp");
-    }
 
     STR input_;
     std::string u8input;
@@ -146,14 +137,6 @@ void file_run(wchar_t* _fileName) {
 }
 
 void terminal_run() {
-
-    bool outWText = _setmode(_fileno(stdout), _O_WTEXT);
-    bool inWText = _setmode(_fileno(stdin), _O_WTEXT);
-
-    if (!outWText and !inWText)
-    {
-        prnt(L"لم يتمكن من تحميل قراءة الملفات عريضة الاحرف - الملف Alif5.cpp");
-    }
 
     STR fileName = L"<طرفية>";
     const STR about_ = L"ألف نـ5.0.0";
