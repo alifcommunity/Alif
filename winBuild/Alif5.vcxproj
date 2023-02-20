@@ -20,11 +20,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\Alif5.cpp" />
+    <ClCompile Include="..\source\Tokens.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\documents\Grammar.md" />
     <None Include="..\documents\LICENSE" />
     <None Include="..\documents\README.md" />
+    <None Include="..\documents\تنظيم المساهمة في لغة ألف.md" />
     <None Include="..\source\AlifCode.alif5" />
   </ItemGroup>
   <ItemGroup>

@@ -3,11 +3,10 @@
 // الرموز
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-enum TokType {
+enum TokType : uint16_t { // انواع الرموز
     TTinteger,
     TTfloat,
     
-    TTnumber, // لا يلزم
     TTlist,
     
     TTstring, 
@@ -55,10 +54,11 @@ enum TokType {
 
     TTbuildInFunc, 
     TTkeyword, 
+
     TTnone, 
 };
 
-enum VisitType {
+enum VisitType : uint8_t {
     VObject,
     VList,
     VCall,
@@ -79,13 +79,13 @@ enum VisitType {
     VStmts,
 };
 
-enum Context {
+enum Context : uint8_t {
     Set,
     Get,
     Del,
 };
 
-enum KeywordType {
+enum KeywordType : uint8_t {
     False,
     True,
     Pass,
@@ -109,30 +109,40 @@ enum KeywordType {
     None,
 };
 
-enum BuildInFuncType {
+enum BuildInFuncType : uint8_t {
     Print,
     Push,
     Input,
 };
 
 
-std::map<STR, BuildInFuncType> buildInFunctions = { {L"اطبع", Print} , {L"اضف", Push} , {L"ادخل", Input} };
-std::map<STR, KeywordType> keywords_ = { {L"مرر", Pass}, {L"توقف", Stop}, {L"استمر", Continue}, {L"حذف", Delete}, {L"من", From}, {L"استورد", Import} , {L"اذا", If}, {L"واذا", Elseif}, {L"والا", Else}, {L"بينما", While}, {L"لاجل", For}, {L"في", In}, {L"ارجع", Return}, {L"دالة", Function}, {L"صنف", Class}, {L"او", Or}, {L"و", And}, {L"ليس", Not}, {L"صح", True}, {L"خطا", False}, {L"عدم", None} };
+const std::map<STR, BuildInFuncType> buildInFunctions = { {L"اطبع", Print} , {L"اضف", Push} , {L"ادخل", Input} };
+const std::map<STR, KeywordType> keywords_ = { {L"مرر", Pass}, {L"توقف", Stop}, {L"استمر", Continue}, {L"حذف", Delete}, {L"من", From}, {L"استورد", Import} , {L"اذا", If}, {L"واذا", Elseif}, {L"والا", Else}, {L"بينما", While}, {L"لاجل", For}, {L"في", In}, {L"ارجع", Return}, {L"دالة", Function}, {L"صنف", Class}, {L"او", Or}, {L"و", And}, {L"ليس", Not}, {L"صح", True}, {L"خطا", False}, {L"عدم", None} };
 const KeywordType keywordsArray[21] = { None, False, True, Not, And, Or, Class, Function, Return, In, For, While, If, Else, Elseif, Import, From, Delete, Continue, Stop, Pass }; // مصفوفة تحتوي على الكلمات المفتاحية مخصصة للتحقق ما إذا كان الاسم كلمة مفتاحية ام لا
 
 class Token {
 public:
-    union Values{}val{};
+    TokType type_{};
+    unsigned int tokLine{}, tokStart{}, tokEnd{}, tokIndex{};
 
-    Token(){}
+    union Values
+    {
+        KeywordType keywordType;
+        BuildInFuncType buildInFunc;
+        STR* strVal;
+        NUM numVal;
+    }V{};
 
-    Token(Position _positionStart, Position _positionEnd, TokType _type) {}
+    inline Token() {}
 
-    Token(Position _positionStart, Position _positionEnd, TokType _type, STR* _strVal) {}
+    inline Token(unsigned int _tokLine, unsigned int _tokStart, unsigned int _tokEnd, unsigned int _tokIndex, TokType _type) :
+        tokLine(_tokLine), tokStart(_tokStart), tokEnd(_tokEnd), tokIndex(_tokIndex), type_(_type) {}
 
-    Token(Position _positionStart, Position _positionEnd, TokType _type, NUM _numVal) {}
+    inline Token(Position _positionStart, Position _positionEnd, TokType _type, STR* _strVal) {}
 
-    Token(Position _positionStart, Position _positionEnd, TokType _type, KeywordType _keywordType) {}
+    inline Token(Position _positionStart, Position _positionEnd, TokType _type, NUM _numVal) {}
 
-    Token(Position _positionStart, Position _positionEnd, TokType _type, BuildInFuncType _buildInFunc) {}
+    inline Token(Position _positionStart, Position _positionEnd, TokType _type, KeywordType _keywordType) {}
+
+    inline Token(Position _positionStart, Position _positionEnd, TokType _type, BuildInFuncType _buildInFunc) {}
 };

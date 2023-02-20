@@ -18,12 +18,16 @@
     <ClCompile Include="..\source\Alif5.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\Tokens.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\source\AlifCode.alif5" />
     <None Include="..\documents\Grammar.md" />
     <None Include="..\documents\LICENSE" />
     <None Include="..\documents\README.md" />
+    <None Include="..\documents\تنظيم المساهمة في لغة ألف.md" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\Constants.h">
