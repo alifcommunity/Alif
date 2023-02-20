@@ -3,15 +3,16 @@
 // الرموز
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-enum TokType {
+enum TokType : uint16_t { // انواع الرموز
     TTinteger,
     TTfloat,
     
-    TTnumber,
     TTlist,
     
     TTstring, 
-    TTname, 
+
+    TTname,
+
     TTplus, 
     TTplusEqual, 
     TTminus, 
@@ -23,8 +24,8 @@ enum TokType {
     TTpower, 
     TTpowerEqual, 
     TTremain, 
-    TTremainEqual, 
-    TTequal, 
+    TTremainEqual,
+
     TTlParenthesis, 
     TTrParenthesis, 
     TTlSquare, 
@@ -37,20 +38,27 @@ enum TokType {
     TTgreaterThan, 
     TTlessThanEqual, 
     TTgreaterThanEqual, 
+
+    TTequal,
     TTcomma, 
     TTcolon, 
     TTarrow, 
+    TTdot, 
+
     TTnewline, 
+
     TTindent, 
     TTdedent, 
-    TTdot, 
+
     TTendOfFile, 
+
     TTbuildInFunc, 
     TTkeyword, 
+
     TTnone, 
 };
 
-enum VisitType {
+enum VisitType : uint8_t {
     VObject,
     VList,
     VCall,
@@ -71,13 +79,13 @@ enum VisitType {
     VStmts,
 };
 
-enum Context {
+enum Context : uint8_t {
     Set,
     Get,
     Del,
 };
 
-enum KeywordType {
+enum KeywordType : uint8_t {
     False,
     True,
     Pass,
@@ -101,21 +109,21 @@ enum KeywordType {
     None,
 };
 
-enum BuildInFuncType {
+enum BuildInFuncType : uint8_t {
     Print,
     Push,
     Input,
 };
 
 
-std::map<STR, BuildInFuncType> buildInFunctions = { {L"اطبع", Print} , {L"اضف", Push} , {L"ادخل", Input} };
-std::map<STR, KeywordType> keywords_ = { {L"مرر", Pass}, {L"توقف", Stop}, {L"استمر", Continue}, {L"حذف", Delete}, {L"من", From}, {L"استورد", Import} , {L"اذا", If}, {L"واذا", Elseif}, {L"والا", Else}, {L"بينما", While}, {L"لاجل", For}, {L"في", In}, {L"ارجع", Return}, {L"دالة", Function}, {L"صنف", Class}, {L"او", Or}, {L"و", And}, {L"ليس", Not}, {L"صح", True}, {L"خطا", False}, {L"عدم", None} };
+const std::map<STR, BuildInFuncType> buildInFunctions = { {L"اطبع", Print} , {L"اضف", Push} , {L"ادخل", Input} };
+const std::map<STR, KeywordType> keywords_ = { {L"مرر", Pass}, {L"توقف", Stop}, {L"استمر", Continue}, {L"حذف", Delete}, {L"من", From}, {L"استورد", Import} , {L"اذا", If}, {L"واذا", Elseif}, {L"والا", Else}, {L"بينما", While}, {L"لاجل", For}, {L"في", In}, {L"ارجع", Return}, {L"دالة", Function}, {L"صنف", Class}, {L"او", Or}, {L"و", And}, {L"ليس", Not}, {L"صح", True}, {L"خطا", False}, {L"عدم", None} };
 const KeywordType keywordsArray[21] = { None, False, True, Not, And, Or, Class, Function, Return, In, For, While, If, Else, Elseif, Import, From, Delete, Continue, Stop, Pass }; // مصفوفة تحتوي على الكلمات المفتاحية مخصصة للتحقق ما إذا كان الاسم كلمة مفتاحية ام لا
 
 class Token {
 public:
     TokType type_{};
-    Position positionStart{}, positionEnd{};
+    unsigned int tokLine{}, tokStart{}, tokEnd{}, tokIndex{};
 
     union Values
     {
@@ -123,41 +131,18 @@ public:
         BuildInFuncType buildInFunc;
         STR* strVal;
         NUM numVal;
-    }val{};
+    }V{};
 
-    Token(){}
+    inline Token() {}
 
-    Token(Position _positionStart, Position _positionEnd, TokType _type) {
-        this->positionStart = _positionStart;
-        this->positionEnd = _positionEnd;
-        this->type_ = _type;
-    }
+    inline Token(unsigned int _tokLine, unsigned int _tokStart, unsigned int _tokEnd, unsigned int _tokIndex, TokType _type) :
+        tokLine(_tokLine), tokStart(_tokStart), tokEnd(_tokEnd), tokIndex(_tokIndex), type_(_type) {}
 
-    Token(Position _positionStart, Position _positionEnd, TokType _type, STR* _strVal) {
-        this->positionStart = _positionStart;
-        this->positionEnd = _positionEnd;
-        this->type_ = _type;
-        this->val.strVal = _strVal;
-    }
+    inline Token(Position _positionStart, Position _positionEnd, TokType _type, STR* _strVal) {}
 
-    Token(Position _positionStart, Position _positionEnd, TokType _type, NUM _numVal) {
-        this->positionStart = _positionStart;
-        this->positionEnd = _positionEnd;
-        this->type_ = _type;
-        this->val.numVal = _numVal;
-    }
+    inline Token(Position _positionStart, Position _positionEnd, TokType _type, NUM _numVal) {}
 
-    Token(Position _positionStart, Position _positionEnd, TokType _type, KeywordType _keywordType) {
-        this->positionStart = _positionStart;
-        this->positionEnd = _positionEnd;
-        this->type_ = _type;
-        this->val.keywordType = _keywordType;
-    }
+    inline Token(Position _positionStart, Position _positionEnd, TokType _type, KeywordType _keywordType) {}
 
-    Token(Position _positionStart, Position _positionEnd, TokType _type, BuildInFuncType _buildInFunc) {
-        this->positionStart = _positionStart;
-        this->positionEnd = _positionEnd;
-        this->type_ = _type;
-        this->val.buildInFunc = _buildInFunc;
-    }
+    inline Token(Position _positionStart, Position _positionEnd, TokType _type, BuildInFuncType _buildInFunc) {}
 };
