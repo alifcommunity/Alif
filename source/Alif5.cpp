@@ -1,6 +1,4 @@
-#define NUM long double
-#define STR std::wstring
-#define prnt(a){std::wcout << a << std::endl;}
+#define PRINT_(a){std::wcout << a << std::endl;}
 
 // استيراد
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -10,7 +8,7 @@
 #include<string>
 #include<vector>
 #include<map>
-#include<math.h>
+#include<cmath>
 #include<algorithm> // لعمل تتالي على المصفوفات
 
 #ifndef _WIN64
@@ -23,12 +21,11 @@
 #endif
 
 #include "Constants.h"
-#include "Position.h"
 #include "Tokens.h"
-#include "Errors.h"
-#include "Lexer.h"
-#include "Parser.h"
-#include "AlifRun.h"
+//#include "Errors.h"
+//#include "Lexer.h"
+//#include "Parser.h"
+//#include "AlifRun.h"
 
 #ifndef _WIN64
 int main(int argc, char** argv)
@@ -38,7 +35,7 @@ int main(int argc, char** argv)
     {
         if (argc > 2)
         {
-            prnt(L"يجب ان يتم تمرير اسم الملف فقط");
+            PRINT_(L"يجب ان يتم تمرير اسم الملف فقط");
             exit(-1);
         }
 
@@ -58,22 +55,22 @@ int wmain(int argc, wchar_t** argv)
 
     if (!outWText and !inWText)
     {
-        prnt(L"لم يتمكن من تحميل طباعة الملفات عريضة الاحرف - الملف Alif5.cpp");
+        PRINT_(L"لم يتمكن من تحميل طباعة الملفات عريضة الاحرف - الملف Alif5.cpp");
     }
 
     if (argc > 1)
     {
         if (argc > 2)
         {
-            prnt(L"يجب ان يتم تمرير اسم الملف فقط");
+            PRINT_(L"يجب ان يتم تمرير اسم الملف فقط");
             exit(-1);
         }
 
-        file_run(argv[1]);
+        //file_run(argv[1]);
     }
     else
     {
-        terminal_run();
+        //terminal_run();
     }
 }
 
