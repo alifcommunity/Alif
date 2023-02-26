@@ -18,9 +18,6 @@
     <ClCompile Include="..\source\Alif5.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Tokens.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\source\AlifCode.alif5" />
@@ -36,9 +33,6 @@
     <ClInclude Include="..\source\Errors.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\Interpreter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\Lexer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -51,13 +45,13 @@
     <ClInclude Include="..\source\Tokens.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\MemoryBlock.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\AlifRun.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
