@@ -10,7 +10,7 @@
 #include<string>
 #include<vector>
 #include<map>
-#include<math.h>
+#include<cmath>
 #include<algorithm> // لعمل تتالي على المصفوفات
 
 #ifndef _WIN64
