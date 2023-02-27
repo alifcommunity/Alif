@@ -5,7 +5,7 @@
 <center style=font-family 'Tajawal'; font-size = 130px>
 
 
-<img src="\resources\AlifIcon.png"  width="150" height="150" >
+<img src="resources/AlifIcon.png"  width="150" height="150" >
 
 </center>
 
