@@ -126,7 +126,7 @@ void file_run(wchar_t* _fileName) {
     // المعرب اللغوي
     /////////////////////////////////////////////////////////////////
 
-    //Lexer lexer(_fileName, input_);
+    Lexer lexer(_fileName, input_);
     //lexer.make_token();
 
     // المحلل اللغوي
