@@ -20,12 +20,10 @@
 #include<io.h> //لقبول ادخال الاحرف العربية من الكونسل
 #endif
 
-#include "Constants.h"
-#include "Tokens.h"
+#include "Lexer.h"
 //#include "Errors.h"
-//#include "Lexer.h"
 //#include "Parser.h"
-//#include "AlifRun.h"
+#include "AlifRun.h"
 
 #ifndef _WIN64
 int main(int argc, char** argv)
@@ -66,11 +64,11 @@ int wmain(int argc, wchar_t** argv)
             exit(-1);
         }
 
-        //file_run(argv[1]);
+        file_run(argv[1]);
     }
     else
     {
-        //terminal_run();
+        terminal_run();
     }
 }
 

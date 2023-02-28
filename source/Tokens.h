@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Types.h";
+#include "Types.h"
 
 // الرموز
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -11,7 +11,8 @@ const std::map<wstr, BuildInFuncType> buildInFunctions = { {L"اطبع", BTPrint
 const std::map<wstr, KeywordType> keywords_ = { {L"مرر", KTPass}, {L"توقف", KTStop}, {L"استمر", KTContinue}, {L"حذف", KTDelete}, {L"من", KTFrom}, {L"استورد", KTImport} , {L"اذا", KTIf}, {L"واذا", KTElseif}, {L"والا", KTElse}, {L"بينما", KTWhile},
                                                 {L"لاجل", KTFor}, {L"في", KTIn}, {L"ارجع", KTReturn}, {L"دالة", KTFunction}, {L"صنف", KTClass}, {L"او", KTOr}, {L"و", KTAnd}, {L"ليس", KTNot}, {L"صح", KTTrue}, {L"خطا", KTFalse}, {L"عدم", KTNone} };
 
-class Token {
+class Token 
+{
 public:
     TokensType type_{};
     uint32_t tokLine{}, tokStart{}, tokEnd{}, tokIndex{};
