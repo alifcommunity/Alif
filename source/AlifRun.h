@@ -2,13 +2,13 @@
 
 void file_run(char* _fileName) {
 
-    STR input_;
+    wstr input_;
     std::string u8input;
     std::string line;
 
     std::ifstream fileContent(_fileName);
     if (!fileContent.is_open()) {
-        prnt(L"لا يمكن فتح الملف او انه غير موجود - تاكد من اسم الملف -");
+        PRINT_(L"لا يمكن فتح الملف او انه غير موجود - تاكد من اسم الملف -");
         exit(-1);
     }
 
@@ -23,7 +23,7 @@ void file_run(char* _fileName) {
     fileContent.close();
 
     int fnLength = sizeof(_fileName) / sizeof(char) + 6;
-    STR fileName(&_fileName[0], &_fileName[fnLength]); // تحويل من char الى wchar_t
+    wstr fileName(&_fileName[0], &_fileName[fnLength]); // تحويل من char الى wchar_t
 
     std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> convert;
     /*
@@ -50,10 +50,10 @@ void file_run(char* _fileName) {
 
 void terminal_run() {
 
-    STR fileName = L"<طرفية>";
-    const STR about_ = L"ألف نـ5.0.0";
-    STR input_;
-    prnt(about_);
+    wstr fileName = L"<طرفية>";
+    const wstr about_ = L"ألف نـ5.0.0";
+    wstr input_;
+    PRINT_(about_);
 
     while (true) {
 
@@ -101,13 +101,13 @@ std::wstring utf8_decode(const std::string& str)
 
 void file_run(wchar_t* _fileName) {
 
-    STR input_;
+    wstr input_;
     std::string u8input;
     std::string line;
 
     std::ifstream fileContent(_fileName);
     if (!fileContent.is_open()) {
-        prnt(L"لا يمكن فتح الملف او انه غير موجود - تاكد من اسم الملف -");
+        PRINT_(L"لا يمكن فتح الملف او انه غير موجود - تاكد من اسم الملف -");
         exit(-1);
     }
 
@@ -126,22 +126,22 @@ void file_run(wchar_t* _fileName) {
     // المعرب اللغوي
     /////////////////////////////////////////////////////////////////
 
-    Lexer lexer(_fileName, input_);
-    lexer.make_token();
+    //Lexer lexer(_fileName, input_);
+    //lexer.make_token();
 
     // المحلل اللغوي
     /////////////////////////////////////////////////////////////////
 
-    Parser parser = Parser(&lexer.tokens_, _fileName, input_);
-    parser.parse_file();
+    //Parser parser = Parser(&lexer.tokens_, _fileName, input_);
+    //parser.parse_file();
 }
 
 void terminal_run() {
 
-    STR fileName = L"<طرفية>";
-    const STR about_ = L"ألف نـ5.0.0";
-    STR input_;
-    prnt(about_);
+    wstr fileName = L"<طرفية>";
+    const wstr about_ = L"ألف نـ5.0.0";
+    wstr input_;
+    PRINT_(about_);
 
     while (true) {
 
@@ -157,13 +157,13 @@ void terminal_run() {
         /////////////////////////////////////////////////////////////////
 
         Lexer lexer(fileName, input_);
-        lexer.make_token();
+        //lexer.make_token();
 
         // المحلل اللغوي
         /////////////////////////////////////////////////////////////////
 
-        Parser parser = Parser(&lexer.tokens_, fileName, input_);
-        parser.parse_terminal();
+        //Parser parser = Parser(&lexer.tokens_, fileName, input_);
+        //parser.parse_terminal();
 
     }
 }
