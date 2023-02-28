@@ -1,7 +1,12 @@
 #include "Lexer.h"
 
-// المعرب اللغوي
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*
+تم تعريف متغيرات الاسماء خارج الصنف لكي لا يتم إعادة ضبطها عند
+استخدام الطرفية في تنفيذ الشفرة او عند استيراد المكتبات
+*/
+uint32_t name = 0; // متغير اسماء على شكل ارقام
+std::map<wstr, int> namesAlter{};
+
 
 
 Lexer::Lexer(wstr _fileName, wstr _input)
@@ -14,15 +19,25 @@ Lexer::Lexer(wstr _fileName, wstr _input)
 }
 
 void Lexer::advance() {
+
+    tokIndex++;
+
+    if (this->currentChar == L'\n')
+    {
+        tokLine++;
+        tokStart = 0;
+        tokEnd = 0;
+    }
+
     //this->position_.advance(this->currentChar);
 
-    //if (this->position_.index_ < this->input_.length())
-    //{
-    //    this->currentChar = this->input_[this->position_.index_];
-    //}
-    //else {
-    //    this->currentChar = L'\0';
-    //}
+    if (this->position_.index_ < this->input_.length())
+    {
+        this->currentChar = this->input_[this->position_.index_];
+    }
+    else {
+        this->currentChar = L'\0';
+    }
 }
 
 //void Lexer::make_token() {

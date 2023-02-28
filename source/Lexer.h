@@ -1,20 +1,12 @@
 #pragma once
 
 #include <iostream>
-#include <string>
+//#include <string>
 #include <vector>
 #include <map>
 //#include <algorithm> // لعمل تتالي على المصفوفات
 
 #include "Tokens.h"
-
-/*
-تم تعريف متغيرات الاسماء خارج الصنف لكي لا يتم إعادة ضبطها عند 
-استخدام الطرفية في تنفيذ الشفرة او عند استيراد المكتبات 
-*/
-
-static uint32_t name = 0; // متغير اسماء على شكل ارقام
-static std::map<wstr, int> namesAlter{};
 
 // المعرب اللغوي
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -29,7 +21,7 @@ class Lexer {
 public:
     wstr fileName{}, input_{};
     wchar_t currentChar{};
-    //Position position_{}, positionEnd{};
+    uint32_t tokLine{}, tokStart{}, tokEnd{}, tokIndex = -1;
     std::vector<Token> tokens_{};
     DedentSpecifier* dedentSpec = new DedentSpecifier; // حساب المسافات البادئة والراجعة
 

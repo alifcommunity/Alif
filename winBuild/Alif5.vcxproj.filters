@@ -26,8 +26,8 @@
     <None Include="..\source\AlifCode.alif5" />
     <None Include="..\documents\Grammar.md" />
     <None Include="..\documents\LICENSE" />
-    <None Include="..\documents\README.md" />
     <None Include="..\documents\تنظيم المساهمة في لغة ألف.md" />
+    <None Include="..\README.md" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\Constants.h">
