@@ -61,6 +61,7 @@ alif5 filename.alif5
  قم بفتح ملف <em> source </em> الموجود في ملف <em> Alif5-main </em> 
  ومن ثم تقوم بتشغيل <em> cmd </em> في نفس مسار الملف  
  بعد ذلك تقوم بكتابة امر  :keyboard:
+ 
  ``` c++
  g++ Alif5.cpp -o alif5 
  ```
