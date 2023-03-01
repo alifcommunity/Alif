@@ -3,11 +3,11 @@
 #define PRINT_(a){std::wcout << a << std::endl;}
 
 #include <iostream>
-//#include <string>
+#include <string>
 #include <vector>
 #include <map>
-//#include <algorithm> // لعمل تتالي على المصفوفات
 
+#include "Constants.h"
 #include "Tokens.h"
 
 // المعرب اللغوي
@@ -67,7 +67,7 @@ public:
 
     void make_divide();
 
-    void make_not_equals();
+    void make_not_equal();
 
     void make_equals();
 
