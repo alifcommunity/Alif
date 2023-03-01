@@ -330,7 +330,7 @@ void Lexer::make_name()
     wstr nameString;
     uint32_t posStart = this->tokPos;
 
-    while (this->currentChar != L'\0' and (this->currentChar > MIN_ARABIC_LETTER_HEX and this->currentChar < MAX_ARABIC_LETTER_HEX or this->currentChar == L'_')) {
+    while (this->currentChar > MIN_ARABIC_LETTER_HEX and this->currentChar < MAX_ARABIC_LETTER_HEX or this->currentChar == L'_') {
         nameString += this->currentChar;
         this->advance();
     }
