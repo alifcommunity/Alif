@@ -1,3 +1,5 @@
+#include<fstream>
+
 #ifndef _WIN64
 
 void file_run(char* _fileName) {
@@ -131,7 +133,7 @@ void file_run(wchar_t* _fileName) {
     /////////////////////////////////////////////////////////////////
 
     Lexer lexer(_fileName, input_);
-    //lexer.make_token();
+    lexer.make_token();
 
     // المحلل اللغوي
     /////////////////////////////////////////////////////////////////
@@ -144,7 +146,9 @@ void terminal_run() {
 
     wstr fileName = L"<طرفية>";
     const wstr about_ = L"ألف نـ5.0.0";
+
     wstr input_;
+
     PRINT_(about_);
 
     while (true) {
@@ -161,7 +165,7 @@ void terminal_run() {
         /////////////////////////////////////////////////////////////////
 
         Lexer lexer(fileName, input_);
-        //lexer.make_token();
+        lexer.make_token();
 
         // المحلل اللغوي
         /////////////////////////////////////////////////////////////////
