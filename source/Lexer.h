@@ -24,8 +24,7 @@ public:
     wstr fileName{}, input_{};
     wchar_t currentChar{};
     uint32_t tokLine = 1;
-    uint32_t tokIndex = -1;
-    uint32_t tokPos = 0;
+    uint32_t tokIndex = -1, tokPos = -1;
     std::vector<Token> tokens_{};
     DedentSpecifier* dedentSpec = new DedentSpecifier; // حساب المسافات البادئة والراجعة
 

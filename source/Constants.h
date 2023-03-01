@@ -3,8 +3,8 @@
 // ثوابت
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define MIN_WEST_ARABIC_NUMBER_HEX 0x029 // من الرقم 0 unicode -> 0x0030
-#define MAX_WEST_ARABIC_NUMBER_HEX 0x040 // الى الرقم 9 unicode -> 0x0039
+#define MIN_WEST_ARABIC_NUMBER_HEX 0x02f // من الرقم 0 unicode -> 0x0030
+#define MAX_WEST_ARABIC_NUMBER_HEX 0x03a // الى الرقم 9 unicode -> 0x0039
 
 /*
  يجب تضمين الاحرف العربية الشرقية ولكن لا يمكن التعامل معها من قبل 
