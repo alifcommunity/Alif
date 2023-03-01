@@ -42,19 +42,13 @@ void Lexer::make_token() {
 
         while (this->currentChar != L'\0')
         {
-            if (this->word_lex())
-            {
-                continue;
-            }
-            else if (this->two_symbol_lex())
-            {
-                continue;
-            }
-            else if (this->symbol_lex()) // اذا لم ينجح في إنشاء الرمز فذلك يدل على حدوث خطأ ويجب ان يخرج من البرنامج
-            {
-                continue;
-            }
-            else
+            /*
+                يجب مراعاة ترتيب استدعاء الدوال
+                لانه في حال استدعاء symbol_lex
+                قبل two_sympol_lex
+                سيظهر خطأ عند التحقق من المسافات التي في بداية السطر
+            */
+            if (!this->word_lex())
             {
                 wstr detail = L"< حرف غير معروف \'";
                 detail.push_back(this->currentChar);
@@ -64,7 +58,7 @@ void Lexer::make_token() {
                 exit(-1);
             }
 
-            else if (digits.find(this->currentChar) != wstr::npos)
+            if (digits.find(this->currentChar) != wstr::npos)
             {
                 this->make_number();
             }
@@ -75,44 +69,24 @@ void Lexer::make_token() {
             {
                 this->make_string();
             }
-            else if (this->currentChar == L'-')
-            {
-                this->make_minus_equal();
-            }
-            else if (this->currentChar == L'*')
-            {
-                this->make_multiply_equal();
-            }
-            else if (this->currentChar == L'\\')
-            {
-                this->make_divide();
-            }
-            else if (this->currentChar == L'^')
-            {
-                this->make_power_equal();
-            }
-            else if (this->currentChar == L'!')
-            {
-                this->make_not_equals();
-            }
-            else if (this->currentChar == L'=')
-            {
-                this->make_equals();
-            }
-            else if (this->currentChar == L'<')
-            {
-                this->make_less_than();
-            }
-            else if (this->currentChar == L'>')
-            {
-                this->make_greater_than();
-            }
 
         }
 
-        tokens_.push_back(Token(this->position_, this->position_, TTendOfFile));
+        tokens_.push_back(Token(this->tokLine, this->tokPos, this->tokPos, this->tokIndex, TTEndOfFile));
 
     }
+
+bool Lexer::word_lex()
+{
+    if ()
+    {
+
+    }
+    else
+    {
+        return this->two_symbol_lex();
+    }
+}
 
 bool Lexer::two_symbol_lex()
 {
@@ -126,8 +100,40 @@ bool Lexer::two_symbol_lex()
         this->make_plus_equal();
 
         return true;
+    case L'-':
+        this->make_minus_equal();
+
+        return true;
+    case L'*':
+        this->make_multiply_equal();
+
+        return true;
+    case L'\\':
+        this->make_divide();
+
+        return true;
+    case L'^':
+        this->make_power_equal();
+
+        return true;
+    case L'!':
+        this->make_not_equal();
+
+        return true;
+    case L'=':
+        this->make_equals();
+
+        return true;
+    case L'<':
+        this->make_less_than();
+
+        return true;
+    case L'>':
+        this->make_greater_than();
+
+        return true;
     default:
-        false;
+        return this->symbol_lex();
     }
 }
 
@@ -517,128 +523,129 @@ void Lexer::make_plus_equal() {
 
     if (this->currentChar == L'=') {
         this->advance();
-        this->tokens_.push_back(Token(tokLine, posStart, this->tokPos, this->tokIndex, TTPlusEqual));
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTPlusEqual));
     }
     else {
-        this->tokens_.push_back(Token(tokLine,posStart, this->tokPos, this->tokIndex, TTPlus));
+        this->tokens_.push_back(Token(this->tokLine,posStart, this->tokPos, this->tokIndex, TTPlus));
     }
 }
 
-//void Lexer::make_minus_equal() {
-//    Position positionStart = this->position_;
-//    this->advance();
-//
-//    if (this->currentChar == L'=') {
-//        this->advance();
-//        this->tokens_.push_back(Token(positionStart, this->position_, TTminusEqual));
-//    }
-//    else {
-//        this->tokens_.push_back(Token(positionStart, this->position_, TTminus));
-//    }
-//}
-//
-//void Lexer::make_multiply_equal() {
-//    Position positionStart = this->position_;
-//    this->advance();
-//
-//    if (this->currentChar == L'=') {
-//        this->advance();
-//        this->tokens_.push_back(Token(positionStart, this->position_, TTmultiplyEqual));
-//    }
-//    else {
-//        this->tokens_.push_back(Token(positionStart, this->position_, TTmultiply));
-//    }
-//}
-//
-//void Lexer::make_power_equal() {
-//    Position positionStart = this->position_;
-//    this->advance();
-//
-//    if (this->currentChar == L'=') {
-//        this->advance();
-//        this->tokens_.push_back(Token(positionStart, this->position_, TTpowerEqual));
-//    }
-//    else {
-//        this->tokens_.push_back(Token(positionStart, this->position_, TTpower));
-//    }
-//}
-//
-//void Lexer::make_divide() {
-//    Position positionStart = this->position_;
-//    this->advance();
-//
-//    if (this->currentChar == L'=') {
-//        this->advance();
-//        this->tokens_.push_back(Token(positionStart, this->position_, TTdivideEqual));
-//    }
-//    else if (this->currentChar == L'\\') {
-//        this->advance();
-//        this->tokens_.push_back(Token(positionStart, this->position_, TTremain));
-//    }
-//    else {
-//        this->tokens_.push_back(Token(positionStart, this->position_, TTdivide));
-//    }
-//}
-//
-//void Lexer::make_not_equals() {
-//    Position positionStart = this->position_;
-//    this->advance();
-//
-//    if (this->currentChar == L'=') {
-//        this->advance();
-//        this->tokens_.push_back(Token(positionStart, this->position_, TTnotEqual));
-//    }
-//    else {
-//        prnt(SyntaxError(this->position_, this->position_, L"< يتوقع وجود \'=\' بعد إشارة \'!\' >", fileName, input_).print_());
-//        exit(0);
-//    }
-//}
-//
-//void Lexer::make_equals() {
-//    Position positionStart = this->position_;
-//    this->advance();
-//
-//    if (this->currentChar == L'=') {
-//        this->advance();
-//        this->tokens_.push_back(Token(positionStart, this->position_, TTequalEqual));
-//    }
-//    else
-//    {
-//        this->tokens_.push_back(Token(positionStart, this->position_, TTequal));
-//    }
-//}
-//
-//void Lexer::make_less_than() {
-//    Position positionStart = this->position_;
-//    this->advance();
-//
-//    if (this->currentChar == L'=') {
-//        this->advance();
-//        this->tokens_.push_back(Token(positionStart, this->position_, TTlessThanEqual));
-//    }
-//    else {
-//        this->tokens_.push_back(Token(positionStart, this->position_, TTlessThan));
-//    }
-//
-//}
-//
-//void Lexer::make_greater_than() {
-//    Position positionStart = this->position_;
-//    this->advance();
-//
-//    if (this->currentChar == L'=') {
-//        this->advance();
-//        this->tokens_.push_back(Token(positionStart, this->position_, TTgreaterThanEqual));
-//    }
-//    else
-//    {
-//        this->tokens_.push_back(Token(positionStart, this->position_, TTgreaterThan));
-//    }
-//}
+void Lexer::make_minus_equal() {
+    uint32_t posStart = this->tokPos;
+    this->advance();
+
+    if (this->currentChar == L'=') {
+        this->advance();
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTMinusEqual));
+    }
+    else {
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTMinus));
+    }
+}
+
+void Lexer::make_multiply_equal() {
+    uint32_t posStart = this->tokPos;
+    this->advance();
+
+    if (this->currentChar == L'=') {
+        this->advance();
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTMultiplyEqual));
+    }
+    else {
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTMultiply));
+    }
+}
+
+void Lexer::make_power_equal() {
+    uint32_t posStart = this->tokPos;
+    this->advance();
+
+    if (this->currentChar == L'=') {
+        this->advance();
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTPowerEqual));
+    }
+    else {
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTPower));
+    }
+}
+
+void Lexer::make_divide() {
+    uint32_t posStart = this->tokPos;
+    this->advance();
+
+    if (this->currentChar == L'=') {
+        this->advance();
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTDivideEqual));
+    }
+    else if (this->currentChar == L'\\') {
+        this->advance();
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTRemain));
+    }
+    else {
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTDivide));
+    }
+}
+
+void Lexer::make_not_equal() {
+    uint32_t posStart = this->tokPos;
+    this->advance();
+
+    if (this->currentChar == L'=') {
+        this->advance();
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTNotEqual));
+    }
+    else {
+        //PRINT_(SyntaxError(this->position_, this->position_, L"< يتوقع وجود \'=\' بعد إشارة \'!\' >", fileName, input_).print_());
+        exit(-1);
+    }
+}
+
+void Lexer::make_equals() {
+    uint32_t posStart = this->tokPos;
+    this->advance();
+
+    if (this->currentChar == L'=') {
+        this->advance();
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTEqualEqual));
+    }
+    else
+    {
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTEqual));
+    }
+}
+
+void Lexer::make_less_than() {
+    uint32_t posStart = this->tokPos;
+    this->advance();
+
+    if (this->currentChar == L'=') {
+        this->advance();
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTLessThanEqual));
+    }
+    else {
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTLessThan));
+    }
+
+}
+
+void Lexer::make_greater_than() {
+    uint32_t posStart = this->tokPos;
+    this->advance();
+
+    if (this->currentChar == L'=') {
+        this->advance();
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTGreaterThanEqual));
+    }
+    else
+    {
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTGreaterThan));
+    }
+}
 
 void Lexer::skip_comment() 
 {
     this->advance();
     while (this->currentChar != L'\n' and this->currentChar != L'\0') {
         this->advance();
+    }
 }
