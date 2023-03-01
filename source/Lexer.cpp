@@ -8,7 +8,6 @@ uint32_t name = 0; // متغير اسماء على شكل ارقام
 std::map<wstr, int> namesAlter{};
 
 
-
 Lexer::Lexer(wstr _fileName, wstr _input)
 {
     this->fileName = _fileName;
@@ -58,18 +57,6 @@ void Lexer::make_token() {
                 exit(-1);
             }
 
-            if (digits.find(this->currentChar) != wstr::npos)
-            {
-                this->make_number();
-            }
-            else if (letters.find(this->currentChar) != std::wstring::npos) {
-                this->make_name();
-            }
-            else if (this->currentChar == L'\"')
-            {
-                this->make_string();
-            }
-
         }
 
         tokens_.push_back(Token(this->tokLine, this->tokPos, this->tokPos, this->tokIndex, TTEndOfFile));
@@ -78,9 +65,23 @@ void Lexer::make_token() {
 
 bool Lexer::word_lex()
 {
-    if ()
+    if (this->currentChar > MIN_WEST_ARABIC_NUMBER_HEX and this->currentChar < MAX_WEST_ARABIC_NUMBER_HEX)
     {
+        this->make_number();
 
+        return true;
+    }
+    else if (this->currentChar > MIN_ARABIC_LETTER_HEX and this->currentChar < MAX_ARABIC_LETTER_HEX)
+    {
+        this->make_name();
+
+        return true;
+    }
+    else if (this->currentChar == L'\"')
+    {
+        this->make_string();
+
+        return true;
     }
     else
     {
@@ -421,101 +422,101 @@ void Lexer::make_newline()
     this->make_indent();
 }
 
-//void Lexer::make_number() {
-//    wstr numberString = L"";
-//    unsigned int dotCount = 0;
-//    Position positionStart = this->position_;
-//
-//    while (this->currentChar != L'\0' and (digits + L".").find(this->currentChar) != wstr::npos) {
-//        if (this->currentChar == L'.') {
-//            if (dotCount == 1) {
-//                dotCount++;
-//                break;
-//            }
-//            dotCount++;
-//        }
-//        numberString += this->currentChar;
-//        this->advance();
-//    }
-//
-//    if (dotCount == 0)
-//    {
-//        this->tokens_.push_back(Token(positionStart, this->position_, TTinteger, std::stoi(numberString)));
-//
-//    }
-//    else if (dotCount == 1) {
-//        this->tokens_.push_back(Token(positionStart, this->position_, TTfloat, std::stod(numberString)));
-//    }
-//    else
-//    {
-//        wstr detail = L"< ";
-//        detail.push_back(this->currentChar);
-//        detail += L" >";
-//
-//        prnt(SyntaxError(this->position_, this->position_, detail, fileName, input_).print_());
-//        exit(0);
-//    }
-//}
-//
-//void Lexer::make_name()
-//{
-//    wstr nameString;
-//    Position positionStart = this->position_;
-//
-//    while (this->currentChar != L'\0' and (lettersDigits + L'_').find(this->currentChar) != wstr::npos) {
-//        nameString += this->currentChar;
-//        this->advance();
-//    }
-//
-//    if (keywords_.find(nameString) != keywords_.end())
-//    {
-//        this->tokens_.push_back(Token(positionStart, this->position_, TTkeyword, keywords_[nameString]));
-//    }
-//    else if (buildInFunctions.find(nameString) != buildInFunctions.end())
-//    {
-//        this->tokens_.push_back(Token(positionStart, this->position_, TTbuildInFunc, buildInFunctions[nameString]));
-//    }
-//    else if (namesAlter.find(nameString) != namesAlter.end())
-//    {
-//        this->tokens_.push_back(Token(positionStart, this->position_, TTname, namesAlter[nameString]));
-//    }
-//    else
-//    {
-//        name++;
-//        namesAlter[nameString] = name;
-//        this->tokens_.push_back(Token(positionStart, this->position_, TTname, name));
-//    }
-//}
-//
-//void Lexer::make_string()
-//{
-//    wstr string_ = L"";
-//    Position positionStart = this->position_;
-//    bool ClosedString = true;
-//    this->advance();
-//
-//    while (this->currentChar != L'\"') {
-//        if (this->currentChar == L'\0' or this->currentChar == L'\n') {
-//            ClosedString = false;
-//            break;
-//        }
-//        else {
-//            string_ += this->currentChar;
-//            this->advance();
-//        }
-//    }
-//
-//    if (ClosedString)
-//    {
-//        this->advance();
-//        wstr* newString = new wstr(string_);
-//        this->tokens_.push_back(Token(positionStart, this->position_, TTstring, newString));
-//    }
-//    else {
-//        prnt(SyntaxError(positionStart, this->position_, L"< لم يتم إغلاق النص >", fileName, input_).print_());
-//        exit(0);
-//    }
-//}
+void Lexer::make_number() {
+    wstr numberString = L"";
+    uint8_t dotCount = 0;
+    uint32_t posStart = this->tokPos;
+
+    while (this->currentChar != L'\0' and (this->currentChar > MIN_WEST_ARABIC_NUMBER_HEX and this->currentChar < MAX_WEST_ARABIC_NUMBER_HEX or this->currentChar == L'.')) {
+        if (this->currentChar == L'.') {
+            if (dotCount == 1) {
+                dotCount++;
+                break;
+            }
+            dotCount++;
+        }
+        numberString += this->currentChar;
+        this->advance();
+    }
+
+    if (dotCount == 0)
+    {
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTInteger, std::stoi(numberString)));
+
+    }
+    else if (dotCount == 1) {
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTFloat, std::stod(numberString)));
+    }
+    else
+    {
+        wstr detail = L"< ";
+        detail.push_back(this->currentChar);
+        detail += L" >";
+
+        //PRINT_(SyntaxError(this->position_, this->position_, detail, fileName, input_).print_());
+        exit(0);
+    }
+}
+
+void Lexer::make_name()
+{
+    wstr nameString;
+    uint32_t posStart = this->tokPos;
+
+    while (this->currentChar != L'\0' and (this->currentChar > MIN_ARABIC_LETTER_HEX and this->currentChar < MAX_ARABIC_LETTER_HEX or this->currentChar == L'_')) {
+        nameString += this->currentChar;
+        this->advance();
+    }
+
+    if (keywords_.find(nameString) != keywords_.end())
+    {
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTKeyword, keywords_.at(nameString)));
+    }
+    else if (buildInFunctions.find(nameString) != buildInFunctions.end())
+    {
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTBuildInFunc, buildInFunctions.at(nameString)));
+    }
+    else if (namesAlter.find(nameString) != namesAlter.end())
+    {
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTName, namesAlter[nameString]));
+    }
+    else
+    {
+        name++;
+        namesAlter[nameString] = name;
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTName, name));
+    }
+}
+
+void Lexer::make_string()
+{
+    wstr string_ = L"";
+    uint32_t posStart = this->tokPos;
+    bool ClosedString = true;
+    this->advance();
+
+    while (this->currentChar != L'\"') {
+        if (this->currentChar == L'\0' or this->currentChar == L'\n') {
+            ClosedString = false;
+            break;
+        }
+        else {
+            string_ += this->currentChar;
+            this->advance();
+        }
+    }
+
+    if (ClosedString)
+    {
+        this->advance();
+        wstr* newString = new wstr(string_);
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTString, newString));
+    }
+    else {
+        //PRINT_(SyntaxError(positionStart, this->position_, L"< لم يتم إغلاق النص >", fileName, input_).print_());
+        exit(0);
+    }
+}
 
 void Lexer::make_plus_equal() {
     uint32_t posStart = this->tokPos;
