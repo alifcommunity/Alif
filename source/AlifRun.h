@@ -35,6 +35,8 @@ void file_run(char* _fileName) {
     */
     input_ = convert.from_bytes(u8input);
 
+    input_.shrink_to_fit();
+
     // المعرب اللغوي
     /////////////////////////////////////////////////////////////////
 
@@ -122,6 +124,8 @@ void file_run(wchar_t* _fileName) {
     fileContent.close();
 
     input_ = utf8_decode(u8input);
+
+    input_.shrink_to_fit();
 
     // المعرب اللغوي
     /////////////////////////////////////////////////////////////////

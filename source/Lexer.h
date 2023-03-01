@@ -1,5 +1,7 @@
 #pragma once
 
+#define PRINT_(a){std::wcout << a << std::endl;}
+
 #include <iostream>
 //#include <string>
 #include <vector>
@@ -21,7 +23,9 @@ class Lexer {
 public:
     wstr fileName{}, input_{};
     wchar_t currentChar{};
-    uint32_t tokLine{}, tokStart{}, tokEnd{}, tokIndex = -1;
+    uint32_t tokLine = 1;
+    uint32_t tokIndex = -1;
+    uint32_t tokPos = 0;
     std::vector<Token> tokens_{};
     DedentSpecifier* dedentSpec = new DedentSpecifier; // حساب المسافات البادئة والراجعة
 
@@ -32,6 +36,14 @@ public:
     void advance();
 
     void make_token();
+
+
+    bool symbol_lex();
+    
+    bool two_symbol_lex();
+
+    bool word_lex();
+
 
     void skip_space();
 
