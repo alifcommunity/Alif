@@ -16,7 +16,8 @@ Lexer::Lexer(wstr _fileName, wstr _input)
     this->advance();
 }
 
-void Lexer::advance() {
+void Lexer::advance()
+{
 
     tokIndex++;
     tokPos++;
@@ -37,7 +38,8 @@ void Lexer::advance() {
     }
 }
 
-void Lexer::make_token() {
+void Lexer::make_token() 
+{
 
         while (this->currentChar != L'\0')
         {

@@ -4,6 +4,14 @@
 
 void file_run(char* _fileName) {
 
+    /*
+    تم تعريف متغيرين للمدخلات
+    الاول يستقبل الشفرة بترميز utf8
+    وهو u8input
+    والثاني يستقبل الشفرة بترميز utf16
+    وهو input
+    ولك بعد عملية تحويل ترميز الشفرة عبر دالة convert.from_bytes()
+    */
     wstr input_;
     std::string u8input;
     std::string line;
@@ -24,6 +32,11 @@ void file_run(char* _fileName) {
     }
     fileContent.close();
 
+    /*
+        هنا يجري تحويل fileName
+        من char
+        الى wchar_t
+    */
     int fnLength = sizeof(_fileName) / sizeof(char) + 6;
     wstr fileName(&_fileName[0], &_fileName[fnLength]); // تحويل من char الى wchar_t
 
@@ -37,7 +50,7 @@ void file_run(char* _fileName) {
     */
     input_ = convert.from_bytes(u8input);
 
-    input_.shrink_to_fit();
+    input_.shrink_to_fit(); // بعد التأكد ان المدخلات لم تعد قابلة للتغيير يتم عمل تحجيم لها لتصبح كأنها ثابته فيسهل التعامل معها من قبل البرنامج
 
     // المعرب اللغوي
     /////////////////////////////////////////////////////////////////
@@ -55,8 +68,10 @@ void file_run(char* _fileName) {
 void terminal_run() {
 
     wstr fileName = L"<طرفية>";
+
     const wstr about_ = L"ألف نـ5.0.0";
     wstr input_;
+    
     PRINT_(about_);
 
     while (true) {
@@ -81,7 +96,7 @@ void terminal_run() {
         Parser parser = Parser(&lexer.tokens_, fileName, input_);
         parser.parse_terminal();
 
-        // std::wcin.ignore(); // لمنع ارسال قيمة فارغة في المتغير input_
+        // std::wcin.ignore(); // لمنع ارسال قيمة فارغة في المتغير input_ ** يجب إضافة شرط في حال كان المدخل غير فارغ يجب ان يقوم بعمل تجاهل له
 
     }
 }
@@ -90,13 +105,14 @@ void terminal_run() {
 
 std::wstring utf8_decode(const std::string& str)
 {
-/*
-    تحويل utf-8 
-    الى utf-16
-    لكي يقوم بحساب الحرف الواحد على انه 2 بايت وليس 1 بايت
-    حيث نظام utf-8 يأخذ اول بايت من الحرف فقط ويترك البايت الثاني
-    ** يجب مراجعة جدول بايتات نظام utf-8
-*/
+    /*
+        تحويل utf-8 
+        الى utf-16
+        لكي يقوم بحساب الحرف الواحد على انه 2 بايت وليس 1 بايت
+        حيث نظام utf-8
+        يأخذ اول بايت من الحرف فقط ويترك البايت الثاني
+        -> يجب مراجعة جدول بايتات نظام utf-8
+    */
     int size_ = MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), NULL, 0);
     std::wstring strToWstr(size_, 0);
     MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), &strToWstr[0], size_);
@@ -105,6 +121,14 @@ std::wstring utf8_decode(const std::string& str)
 
 void file_run(wchar_t* _fileName) {
 
+    /*
+        تم تعريف متغيرين للمدخلات 
+        الاول يستقبل الشفرة بترميز utf8
+        وهو u8input
+        والثاني يستقبل الشفرة بترميز utf16
+        وهو input
+        ولك بعد عملية تحويل ترميز الشفرة عبر دالة utf8_decode()
+    */
     wstr input_;
     std::string u8input;
     std::string line;
@@ -173,6 +197,7 @@ void terminal_run() {
         //Parser parser = Parser(&lexer.tokens_, fileName, input_);
         //parser.parse_terminal();
 
+        // std::wcin.ignore(); // لمنع ارسال قيمة فارغة في المتغير input_ ** يجب إضافة شرط في حال كان المدخل غير فارغ يجب ان يقوم بعمل تجاهل له
     }
 }
 #endif // !_WIN64
