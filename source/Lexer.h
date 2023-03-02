@@ -20,13 +20,14 @@ public:
 };
 
 class Lexer {
-public:
     wstr fileName{}, input_{};
     wchar_t currentChar{};
     uint32_t tokLine = 1;
     uint32_t tokIndex = -1, tokPos = -1;
-    std::vector<Token> tokens_{};
     DedentSpecifier* dedentSpec = new DedentSpecifier; // حساب المسافات البادئة والراجعة
+
+public:
+    std::vector<Token> tokens_{};
 
     ////////////
 
@@ -37,11 +38,11 @@ public:
     void make_token();
 
 
-    bool symbol_lex();
+    bool word_lex();
     
     bool two_symbol_lex();
 
-    bool word_lex();
+    bool symbol_lex();
 
 
     void skip_space();

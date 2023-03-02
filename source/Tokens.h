@@ -1,15 +1,16 @@
 #pragma once
 
 #include "Types.h"
+#include "Values.h"
 
 // الرموز
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using wstr = std::wstring;
 
-const std::map<wstr, BuildInFuncType> buildInFunctions = { {L"اطبع", BTPrint} , {L"اضف", BTPush} , {L"ادخل", BTInput} };
-const std::map<wstr, KeywordType> keywords_ = { {L"مرر", KTPass}, {L"توقف", KTStop}, {L"استمر", KTContinue}, {L"حذف", KTDelete}, {L"من", KTFrom}, {L"استورد", KTImport} , {L"اذا", KTIf}, {L"واذا", KTElseif}, {L"والا", KTElse}, {L"بينما", KTWhile},
-                                                {L"لاجل", KTFor}, {L"في", KTIn}, {L"ارجع", KTReturn}, {L"دالة", KTFunction}, {L"صنف", KTClass}, {L"او", KTOr}, {L"و", KTAnd}, {L"ليس", KTNot}, {L"صح", KTTrue}, {L"خطا", KTFalse}, {L"عدم", KTNone} };
+const std::map<wstr, BuildInFuncValue> buildInFunctions = { {L"اطبع", BVPrint} , {L"اضف", BVPush} , {L"ادخل", BVInput} };
+const std::map<wstr, KeywordValue> keywords_ = { {L"مرر", KVPass}, {L"توقف", KVStop}, {L"استمر", KVContinue}, {L"حذف", KVDelete}, {L"من", KVFrom}, {L"استورد", KVImport} , {L"اذا", KVIf}, {L"واذا", KVElseif}, {L"والا", KVElse}, {L"بينما", KVWhile},
+                                                {L"لاجل", KVFor}, {L"في", KVIn}, {L"ارجع", KVReturn}, {L"دالة", KVFunction}, {L"صنف", KVClass}, {L"او", KVOr}, {L"و", KVAnd}, {L"ليس", KVNot}, {L"صح", KVTrue}, {L"خطا", KVFalse}, {L"عدم", KVNone} };
 
 class Token 
 {
@@ -19,8 +20,8 @@ public:
 
     union
     {
-        KeywordType keywordType;
-        BuildInFuncType buildInFunc;
+        KeywordValue keywordType;
+        BuildInFuncValue buildInFunc;
         wstr* strVal;
         int64_t numVal;
     }V{};
@@ -40,12 +41,12 @@ public:
         this->V.numVal = _numVal;
     }
 
-    inline Token(uint32_t _tokLine, uint32_t _tokStart, uint32_t _tokEnd, uint32_t _tokIndex, TokensType _type, KeywordType _keywordType) :
+    inline Token(uint32_t _tokLine, uint32_t _tokStart, uint32_t _tokEnd, uint32_t _tokIndex, TokensType _type, KeywordValue _keywordType) :
         tokLine(_tokLine), tokStart(_tokStart), tokEnd(_tokEnd), tokIndex(_tokIndex), type_(_type) {
         this->V.keywordType = _keywordType;
     }
 
-    inline Token(uint32_t _tokLine, uint32_t _tokStart, uint32_t _tokEnd, uint32_t _tokIndex, TokensType _type, BuildInFuncType _buildInFunc) :
+    inline Token(uint32_t _tokLine, uint32_t _tokStart, uint32_t _tokEnd, uint32_t _tokIndex, TokensType _type, BuildInFuncValue _buildInFunc) :
         tokLine(_tokLine), tokStart(_tokStart), tokEnd(_tokEnd), tokIndex(_tokIndex), type_(_type) {
         this->V.buildInFunc = _buildInFunc;
     }
