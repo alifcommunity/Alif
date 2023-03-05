@@ -37,9 +37,6 @@
     <ClInclude Include="..\source\Constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\Errors.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\Lexer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -65,6 +62,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\source\ErrorIndicator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Error.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

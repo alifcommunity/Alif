@@ -34,8 +34,8 @@
   <ItemGroup>
     <ClInclude Include="..\source\AlifRun.h" />
     <ClInclude Include="..\source\Constants.h" />
+    <ClInclude Include="..\source\Error.h" />
     <ClInclude Include="..\source\ErrorIndicator.h" />
-    <ClInclude Include="..\source\Errors.h" />
     <ClInclude Include="..\source\Lexer.h" />
     <ClInclude Include="..\source\Parser.h" />
     <ClInclude Include="..\source\Position.h" />

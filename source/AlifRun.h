@@ -78,6 +78,7 @@ void terminal_run() {
 
         std::wcout << L"ألف -> ";
         std::getline(std::wcin, input_);
+        input_ += L'\n';
 
         if (input_ == L"خروج")
         {
@@ -178,7 +179,9 @@ void terminal_run() {
     while (true) {
 
         std::wcout << L"ألف -> ";
+
         std::getline(std::wcin, input_);
+        input_ += L'\n';
 
         if (input_ == L"خروج")
         {
