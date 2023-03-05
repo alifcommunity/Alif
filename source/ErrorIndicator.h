@@ -1,21 +1,30 @@
 #pragma once
 
-class ErrorArrow {
+using wstr = std::wstring;
+
+class ErrorIndicator {
 public:
-    std::wstring error_arrow(std::wstring input_, Position positionStart, Position positionEnd) {
-        std::wstring line, result;
-        int indexStart, indexEnd, columnEnd;
+    wstr error_arrow(wstr* _input, uint32_t _posStart, uint32_t _posEnd, uint32_t _posIndex, uint32_t _line) {
+        wstr line_, result_;
+        uint32_t indexStart, indexEnd, columnEnd;
 
-        indexStart = input_.rfind(L"\n", positionStart.index_);
-        indexEnd = input_.find(L"\n", positionEnd.index_);
-        columnEnd = positionEnd.column_;
 
-        line = input_.substr(indexStart + 1, indexEnd - indexStart);
+        if (_line == 1)
+        {
+            indexStart = 0;
+        }
+        else
+        {
+            indexStart = _input->rfind(L"\n", _posIndex); // يقوم بالبحث عن سطر جديد من _posIndex وما قبل
+        }
 
-        result += line;
-        result += std::wstring(columnEnd, ' ') + std::wstring(1, '^');
+        indexEnd = _input->find(L"\n", _posIndex); // يقوم بالبحث عن سطر جديد من _posIndex وما بعد
 
-        replace(result.begin(), result.end(), '\t', ' ');
-        return result;
+        line_ = _input->substr(indexStart, indexEnd - indexStart + 1);
+
+        result_ += line_;
+        result_ += wstr(_posEnd, ' ') + wstr(1, '^');
+
+        return result_;
     }
 };

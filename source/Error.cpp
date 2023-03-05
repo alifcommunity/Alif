@@ -1,23 +1,16 @@
 #include "Error.h"
 
-class Error {
-public:
-    Position positionStart, positionEnd;
-    std::wstring errorName, details, fileName, input;
-    Error() {}
-    Error(Position positionStart, Position positionEnd, std::wstring errorName, std::wstring details, std::wstring fileName, std::wstring input) : positionStart(positionStart), positionEnd(positionEnd), errorName(errorName), details(details), fileName(fileName), input(input) {}
 
-    std::wstring print_() {
-        std::wstring result = this->errorName + L": " + this->details + L"\n";
-        result += L"الملف " + fileName + L", السطر " + std::to_wstring(this->positionStart.line_ + 1);
-        result += L"\n\n" + ErrorArrow().error_arrow(input, this->positionStart, this->positionEnd);
+Error::Error(uint32_t _posStart, uint32_t _posEnd, uint32_t _posIndex, uint32_t _line, wstr errorName, wstr details, wstr fileName, wstr* input) :
+    posStart(_posStart), posEnd(_posEnd), posIndex(_posIndex), line_(_line), errorName(errorName), details(details), fileName(fileName), input_(input) {}
 
-        return result;
-    }
-};
+wstr Error::print_() {
+    wstr result = this->errorName + L": " + this->details + L"\n";
+    result += L"الملف " + fileName + L", السطر " + std::to_wstring(line_);
+    result += L"\n\n" + ErrorIndicator().error_arrow(input_, posStart, posEnd, posIndex, line_);
 
-class SyntaxError : public Error {
-public:
-    SyntaxError(Position positionStart, Position positionEnd, std::wstring details, std::wstring fileName, std::wstring input) : Error(positionStart, positionEnd, L"خطأ في النسق", details, fileName, input) {
-    }
-};
+    return result;
+}
+
+SyntaxError::SyntaxError(uint32_t _posStart, uint32_t _posEnd, uint32_t _posIndex, uint32_t _line, wstr details, wstr fileName, wstr* input) :
+        Error(_posStart, _posEnd, _posIndex, _line, L"خطأ في النسق", details, fileName, input) {}

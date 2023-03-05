@@ -8,7 +8,7 @@ uint32_t name = 0; // متغير اسماء على شكل ارقام
 std::map<wstr, int> namesAlter{};
 
 
-Lexer::Lexer(wstr _fileName, wstr _input)
+Lexer::Lexer(wstr _fileName, wstr* _input)
 {
     this->fileName = _fileName;
     this->input_ = _input;
@@ -28,9 +28,9 @@ void Lexer::advance()
         tokPos = 0;
     }
 
-    if (this->tokIndex < this->input_.length())
+    if (this->tokIndex < this->input_->length())
     {
-        this->currentChar = this->input_[this->tokIndex];
+        this->currentChar = (*this->input_)[this->tokIndex];
     }
     else
     {
@@ -51,11 +51,11 @@ void Lexer::make_token()
             */
             if (!this->word_lex())
             {
-                wstr detail = L"< حرف غير معروف \'";
+                wstr detail = L" حرف غير معروف \'";
                 detail.push_back(this->currentChar);
-                detail += L"\' >";
+                detail += L"\' ";
 
-                //PRINT_(SyntaxError(this->position_, this->position_, detail, fileName, input_).print_());
+                PRINT_(SyntaxError(tokPos, tokPos, tokIndex, tokLine, detail, fileName, input_).print_());
                 exit(-1);
             }
 

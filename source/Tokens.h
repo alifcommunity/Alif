@@ -16,7 +16,7 @@ class Token
 {
 public:
     TokensType type_{};
-    uint32_t tokLine{}, tokStart{}, tokEnd{}, tokIndex{};
+    uint32_t tokLine{}, posStart{}, posEnd{}, posIndex{};
 
     union
     {
@@ -28,26 +28,26 @@ public:
 
     inline Token() {}
 
-    inline Token(uint32_t _tokLine, uint32_t _tokStart, uint32_t _tokEnd, uint32_t _tokIndex, TokensType _type) :
-        tokLine(_tokLine), tokStart(_tokStart), tokEnd(_tokEnd), tokIndex(_tokIndex), type_(_type) {}
+    inline Token(uint32_t _tokLine, uint32_t _posStart, uint32_t _posEnd, uint32_t _posIndex, TokensType _type) :
+        tokLine(_tokLine), posStart(_posStart), posEnd(_posEnd), posIndex(_posIndex), type_(_type) {}
     
-    inline Token(uint32_t _tokLine, uint32_t _tokStart, uint32_t _tokEnd, uint32_t _tokIndex, TokensType _type, wstr* _strVal) :
-        tokLine(_tokLine), tokStart(_tokStart), tokEnd(_tokEnd), tokIndex(_tokIndex), type_(_type) { 
+    inline Token(uint32_t _tokLine, uint32_t _posStart, uint32_t _posEnd, uint32_t _posIndex, TokensType _type, wstr* _strVal) :
+        tokLine(_tokLine), posStart(_posStart), posEnd(_posEnd), posIndex(_posIndex), type_(_type) { 
         this->V.strVal = _strVal;
     }
 
-    inline Token(uint32_t _tokLine, uint32_t _tokStart, uint32_t _tokEnd, uint32_t _tokIndex, TokensType _type, int64_t _numVal) :
-        tokLine(_tokLine), tokStart(_tokStart), tokEnd(_tokEnd), tokIndex(_tokIndex), type_(_type) {
+    inline Token(uint32_t _tokLine, uint32_t _posStart, uint32_t _posEnd, uint32_t _posIndex, TokensType _type, int64_t _numVal) :
+        tokLine(_tokLine), posStart(_posStart), posEnd(_posEnd), posIndex(_posIndex), type_(_type) {
         this->V.numVal = _numVal;
     }
 
-    inline Token(uint32_t _tokLine, uint32_t _tokStart, uint32_t _tokEnd, uint32_t _tokIndex, TokensType _type, KeywordValue _keywordType) :
-        tokLine(_tokLine), tokStart(_tokStart), tokEnd(_tokEnd), tokIndex(_tokIndex), type_(_type) {
+    inline Token(uint32_t _tokLine, uint32_t _posStart, uint32_t _posEnd, uint32_t _posIndex, TokensType _type, KeywordValue _keywordType) :
+        tokLine(_tokLine), posStart(_posStart), posEnd(_posEnd), posIndex(_posIndex), type_(_type) {
         this->V.keywordType = _keywordType;
     }
 
-    inline Token(uint32_t _tokLine, uint32_t _tokStart, uint32_t _tokEnd, uint32_t _tokIndex, TokensType _type, BuildInFuncValue _buildInFunc) :
-        tokLine(_tokLine), tokStart(_tokStart), tokEnd(_tokEnd), tokIndex(_tokIndex), type_(_type) {
+    inline Token(uint32_t _tokLine, uint32_t _posStart, uint32_t _posEnd, uint32_t _posIndex, TokensType _type, BuildInFuncValue _buildInFunc) :
+        tokLine(_tokLine), posStart(_posStart), posEnd(_posEnd), posIndex(_posIndex), type_(_type) {
         this->V.buildInFunc = _buildInFunc;
     }
 };
