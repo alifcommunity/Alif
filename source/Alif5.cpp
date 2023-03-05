@@ -5,8 +5,6 @@
 
 #include<iostream>
 #include<string>
-//#include<vector>
-//#include<map>
 //#include<cmath>
 //#include<algorithm> // لعمل تتالي على المصفوفات
 
@@ -20,14 +18,13 @@
 #endif
 
 #include "Lexer.h"
-//#include "Errors.h"
-//#include "Parser.h"
 #include "AlifRun.h"
 
 #ifndef _WIN64
 int main(int argc, char** argv)
 {
     setlocale(LC_ALL, "en_US.UTF-8");
+
     if (argc > 1)
     {
         if (argc > 2)
@@ -47,6 +44,10 @@ int main(int argc, char** argv)
 
 int wmain(int argc, wchar_t** argv)
 {
+    /*
+        _setmode
+        تسمح للطرفية في نظام ويندوز بقراءة وكتابة الاحرف عريضة الترميز
+    */
     bool outWText = _setmode(_fileno(stdout), _O_WTEXT);
     bool inWText = _setmode(_fileno(stdin), _O_WTEXT);
 

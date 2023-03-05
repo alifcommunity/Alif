@@ -90,32 +90,3 @@ enum StateType : uint8_t { // انواع الحالات للاسماء
     STDel,
 };
 
-enum KeywordType : uint8_t { // انواع الكلمات المفتاحية
-    KTFalse,
-    KTTrue,
-    KTPass,
-    KTStop,
-    KTContinue,
-    KTDelete,
-    KTFrom,
-    KTImport,
-    KTIf,
-    KTElseif,
-    KTElse,
-    KTWhile,
-    KTFor,
-    KTIn,
-    KTReturn,
-    KTFunction,
-    KTClass,
-    KTOr,
-    KTAnd,
-    KTNot,
-    KTNone,
-};
-
-enum BuildInFuncType : uint8_t { // انواع الدوال المضمنة
-    BTPrint,
-    BTPush,
-    BTInput,
-};
