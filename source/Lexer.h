@@ -10,6 +10,7 @@
 #include "Constants.h"
 #include "Tokens.h"
 
+
 // المعرب اللغوي
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -31,7 +32,7 @@ public:
 
     ////////////
 
-    Lexer(wstr _fileName, wstr _input);
+    Lexer(wstr _fileName, wstr &_input);
 
     void advance();
 

@@ -55,13 +55,13 @@ void file_run(char* _fileName) {
     // المعرب اللغوي
     /////////////////////////////////////////////////////////////////
 
-    Lexer lexer(fileName, input_);
+    Lexer lexer(fileName, &input_);
     lexer.make_token();
 
     // المحلل اللغوي
     /////////////////////////////////////////////////////////////////
 
-    Parser parser = Parser(&lexer.tokens_, fileName, input_);
+    Parser parser = Parser(&lexer.tokens_, fileName, &input_);
     parser.parse_file();
 }
 
@@ -87,13 +87,13 @@ void terminal_run() {
         // المعرب اللغوي
         /////////////////////////////////////////////////////////////////
 
-        Lexer lexer(fileName, input_);
+        Lexer lexer(fileName, &input_);
         lexer.make_token();
 
         // المحلل اللغوي
         /////////////////////////////////////////////////////////////////
 
-        Parser parser = Parser(&lexer.tokens_, fileName, input_);
+        Parser parser = Parser(&lexer.tokens_, fileName, &input_);
         parser.parse_terminal();
 
         // std::wcin.ignore(); // لمنع ارسال قيمة فارغة في المتغير input_ ** يجب إضافة شرط في حال كان المدخل غير فارغ يجب ان يقوم بعمل تجاهل له
@@ -156,13 +156,13 @@ void file_run(wchar_t* _fileName) {
     // المعرب اللغوي
     /////////////////////////////////////////////////////////////////
 
-    Lexer lexer(_fileName, input_);
+    Lexer lexer(_fileName, &input_);
     lexer.make_token();
 
     // المحلل اللغوي
     /////////////////////////////////////////////////////////////////
 
-    //Parser parser = Parser(&lexer.tokens_, _fileName, input_);
+    //Parser parser = Parser(&lexer.tokens_, _fileName, &input_);
     //parser.parse_file();
 }
 
@@ -188,13 +188,13 @@ void terminal_run() {
         // المعرب اللغوي
         /////////////////////////////////////////////////////////////////
 
-        Lexer lexer(fileName, input_);
+        Lexer lexer(fileName, &input_);
         lexer.make_token();
 
         // المحلل اللغوي
         /////////////////////////////////////////////////////////////////
 
-        //Parser parser = Parser(&lexer.tokens_, fileName, input_);
+        //Parser parser = Parser(&lexer.tokens_, fileName, &input_);
         //parser.parse_terminal();
 
         // std::wcin.ignore(); // لمنع ارسال قيمة فارغة في المتغير input_ ** يجب إضافة شرط في حال كان المدخل غير فارغ يجب ان يقوم بعمل تجاهل له
