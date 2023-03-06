@@ -29,7 +29,8 @@ public:
         line_ = _input->substr(indexStart, indexEnd - indexStart + 1); // يقوم بإقتطاع النص بين موقعين
 
         result_ += line_;
-        result_ += wstr(_posEnd, L' ') + wstr(1, L'^');
+        //result_ += wstr(_posEnd, L' ') + wstr(indexEnd - _posEnd, L'^'); // تقوم بتحديد الخطأ لكلمة
+        result_ += wstr(_posEnd, L' ') + wstr(1, L'^'); // يقوم بتحديد الخطأ لحرف
         replace(result_.begin(), result_.end(), L'\t', L' '); // يجب استبدال كل مسافة طويلة بمسافة لان المركب اللغوي يعتبر المسافة الطويلة مسافة فقط
 
         return result_;
