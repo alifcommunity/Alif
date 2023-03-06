@@ -41,8 +41,6 @@ public:
 
     bool word_lex();
     
-    bool two_symbol_lex();
-
     bool symbol_lex();
 
 

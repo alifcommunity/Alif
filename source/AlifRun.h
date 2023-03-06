@@ -29,6 +29,10 @@ void file_run(char* _fileName) {
             u8input += line;
             u8input += "\n";
         }
+        else
+        {
+            u8input += '\n';
+        }
     }
     fileContent.close();
 
@@ -146,6 +150,10 @@ void file_run(wchar_t* _fileName) {
         {
             u8input += line;
             u8input += "\n";
+        }
+        else
+        {
+            u8input += '\n';
         }
     }
     fileContent.close();
