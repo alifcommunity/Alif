@@ -9,6 +9,7 @@
 
 #include "Constants.h"
 #include "Tokens.h"
+#include "Error.h"
 
 // المعرب اللغوي
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -20,7 +21,7 @@ public:
 };
 
 class Lexer {
-    wstr fileName{}, input_{};
+    wstr fileName{}, *input_{};
     wchar_t currentChar{};
     uint32_t tokLine = 1;
     uint32_t tokIndex = -1, tokPos = -1;
@@ -31,7 +32,7 @@ public:
 
     ////////////
 
-    Lexer(wstr _fileName, wstr _input);
+    Lexer(wstr _fileName, wstr* _input);
 
     void advance();
 
@@ -40,8 +41,6 @@ public:
 
     bool word_lex();
     
-    bool two_symbol_lex();
-
     bool symbol_lex();
 
 

@@ -20,11 +20,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\Alif5.cpp" />
+    <ClCompile Include="..\source\Error.cpp" />
     <ClCompile Include="..\source\Lexer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\documents\Grammar.md" />
     <None Include="..\documents\LICENSE" />
+    <None Include="..\documents\إرشادات إستعمال اللغة.md" />
     <None Include="..\documents\تنظيم المساهمة في لغة ألف.md" />
     <None Include="..\README.md" />
     <None Include="..\source\AlifCode.alif5" />
@@ -32,12 +34,14 @@
   <ItemGroup>
     <ClInclude Include="..\source\AlifRun.h" />
     <ClInclude Include="..\source\Constants.h" />
-    <ClInclude Include="..\source\Errors.h" />
+    <ClInclude Include="..\source\Error.h" />
+    <ClInclude Include="..\source\ErrorIndicator.h" />
     <ClInclude Include="..\source\Lexer.h" />
     <ClInclude Include="..\source\Parser.h" />
     <ClInclude Include="..\source\Position.h" />
     <ClInclude Include="..\source\Tokens.h" />
     <ClInclude Include="..\source\Types.h" />
+    <ClInclude Include="..\source\Values.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>

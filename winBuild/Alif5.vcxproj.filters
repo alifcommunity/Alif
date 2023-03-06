@@ -21,6 +21,9 @@
     <ClCompile Include="..\source\Lexer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\Error.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\source\AlifCode.alif5" />
@@ -28,12 +31,10 @@
     <None Include="..\documents\LICENSE" />
     <None Include="..\documents\تنظيم المساهمة في لغة ألف.md" />
     <None Include="..\README.md" />
+    <None Include="..\documents\إرشادات إستعمال اللغة.md" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\Constants.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\Errors.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\source\Lexer.h">
@@ -55,6 +56,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\source\Types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Values.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\ErrorIndicator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Error.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
