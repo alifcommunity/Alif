@@ -8,11 +8,9 @@ uint32_t name = 0; // متغير اسماء على شكل ارقام
 std::map<wstr, int> namesAlter{};
 
 
-Lexer::Lexer(wstr _fileName, wstr* _input)
+Lexer::Lexer(wstr _fileName, wstr* _input) :
+    fileName(_fileName), input_(_input), currentChar(L'\0')
 {
-    this->fileName = _fileName;
-    this->input_ = _input;
-    this->currentChar = L'\0';
     this->advance();
 }
 
@@ -87,12 +85,14 @@ bool Lexer::word_lex()
     }
     else
     {
-        return this->two_symbol_lex();
+        return this->symbol_lex();
     }
 }
 
-bool Lexer::two_symbol_lex()
+bool Lexer::symbol_lex()
 {
+    uint32_t posStart{};
+    
     switch (this->currentChar)
     {
     case L'\n':
@@ -135,19 +135,9 @@ bool Lexer::two_symbol_lex()
         this->make_greater_than();
 
         return true;
-    default:
-        return this->symbol_lex();
-    }
-}
-
-bool Lexer::symbol_lex()
-{
-    uint32_t posStart = this->tokPos;
-    
-    switch (this->currentChar)
-    {
     case L'\r':
         this->advance();
+
         return true;
     case L' ':
         this->skip_space();
@@ -158,12 +148,16 @@ bool Lexer::symbol_lex()
 
         return true;
     case L'.':
+        posStart = this->tokPos;
+
         this->advance();
 
         this->tokens_.push_back(Token(this->tokLine ,posStart, this->tokPos ,this->tokIndex ,TTDot));
 
         return true;
     case L')':
+        posStart = this->tokPos;
+
         this->advance();
 
         this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTRrightParenthesis));
@@ -176,24 +170,32 @@ bool Lexer::symbol_lex()
 
         return true;
     case L']':
+        posStart = this->tokPos;
+
         this->advance();
 
         this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTRightSquare));
 
         return true;
     case L'[':
+        posStart = this->tokPos;
+
         this->advance();
 
         this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTLeftSquare));
 
         return true;
     case L':':
+        posStart = this->tokPos;
+        
         this->advance();
 
         this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTColon));
 
         return true;
     case L',':
+        posStart = this->tokPos;
+        
         this->advance();
 
         this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTComma));
