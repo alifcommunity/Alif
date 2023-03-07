@@ -37,6 +37,7 @@
     <ClInclude Include="..\source\Error.h" />
     <ClInclude Include="..\source\ErrorIndicator.h" />
     <ClInclude Include="..\source\Lexer.h" />
+    <ClInclude Include="..\source\Object.h" />
     <ClInclude Include="..\source\Parser.h" />
     <ClInclude Include="..\source\Tokens.h" />
     <ClInclude Include="..\source\Types.h" />

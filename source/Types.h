@@ -1,7 +1,7 @@
 #pragma once
 
 
-enum TokensType : uint16_t { // انواع الرموز
+enum TokensType : uint8_t { // انواع الرموز
     TTInteger,
     TTFloat,
 
