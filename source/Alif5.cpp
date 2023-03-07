@@ -17,7 +17,6 @@
 #include<io.h> //لقبول ادخال الاحرف العربية من الكونسل
 #endif
 
-#include "Lexer.h"
 #include "AlifRun.h"
 
 #ifndef _WIN64
