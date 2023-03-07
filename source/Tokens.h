@@ -7,6 +7,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using wstr = std::wstring;
+using double64_t = long double;
 
 const std::map<wstr, BuildInFuncValue> buildInFunctions = { {L"اطبع", BVPrint} , {L"اضف", BVPush} , {L"ادخل", BVInput} };
 const std::map<wstr, KeywordValue> keywords_ = { {L"مرر", KVPass}, {L"توقف", KVStop}, {L"استمر", KVContinue}, {L"حذف", KVDelete}, {L"من", KVFrom}, {L"استورد", KVImport} , {L"اذا", KVIf}, {L"واذا", KVElseif}, {L"والا", KVElse}, {L"بينما", KVWhile},
@@ -23,7 +24,7 @@ public:
         KeywordValue keywordType;
         BuildInFuncValue buildInFunc;
         wstr* strVal;
-        int64_t numVal;
+        double64_t numVal;
     }V{};
 
     inline Token() {}
