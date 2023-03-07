@@ -43,9 +43,6 @@
     <ClInclude Include="..\source\Parser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\Position.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\Tokens.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -65,6 +62,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\source\Error.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Object.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
