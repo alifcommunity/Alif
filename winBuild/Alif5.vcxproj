@@ -22,6 +22,7 @@
     <ClCompile Include="..\source\Alif5.cpp" />
     <ClCompile Include="..\source\Error.cpp" />
     <ClCompile Include="..\source\Lexer.cpp" />
+    <ClCompile Include="..\source\Parser.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\documents\Grammar.md" />
@@ -33,12 +34,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifRun.h" />
+    <ClInclude Include="..\source\Compiler.h" />
     <ClInclude Include="..\source\Constants.h" />
     <ClInclude Include="..\source\Error.h" />
     <ClInclude Include="..\source\ErrorIndicator.h" />
     <ClInclude Include="..\source\Lexer.h" />
+    <ClInclude Include="..\source\Node.h" />
     <ClInclude Include="..\source\Object.h" />
     <ClInclude Include="..\source\Parser.h" />
+    <ClInclude Include="..\source\SymbolTable.h" />
     <ClInclude Include="..\source\Tokens.h" />
     <ClInclude Include="..\source\Types.h" />
     <ClInclude Include="..\source\Values.h" />
