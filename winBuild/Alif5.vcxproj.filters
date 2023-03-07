@@ -24,6 +24,9 @@
     <ClCompile Include="..\source\Error.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\Parser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\source\AlifCode.alif5" />
@@ -65,6 +68,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\source\Object.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\SymbolTable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Compiler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

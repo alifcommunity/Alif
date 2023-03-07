@@ -1,5 +1,7 @@
 #include<fstream>
 
+#include "Lexer.h"
+
 #ifndef _WIN64
 
 void file_run(char* _fileName) {
