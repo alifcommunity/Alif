@@ -48,16 +48,15 @@ public:
             std::vector<AlifObject>* objList;
         }ListObj;
 
-        class {
-        public:
-            ExprNode* nodeValue;
-        }ExprNodeObj;
+        //class {
+        //public:
+        //    ExprNode* nodeValue;
+        //}ExprNodeObj;
 
-        class
-        {
-        public:
-            BuildInFuncValue buildInFunc;
-        }BuildInFuncObj;
+        //class {
+        //public:
+        //    BuildInFuncValue buildInFunc;
+        //}BuildInFuncObj;
 
     }V;
 
