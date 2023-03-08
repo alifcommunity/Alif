@@ -12,9 +12,6 @@
 
 
 
-
-SymbolTable symTable; // تم تعريفه ك متغير عام لمنع حذف المتغيرات عند استخدام الطرفية بعد الانتقال الى سطر جديد
-
 class Parser {
 public:
     std::vector<Token>* tokens;

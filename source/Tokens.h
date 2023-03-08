@@ -1,5 +1,7 @@
 #pragma once
 
+#include <map>
+
 #include "Types.h"
 #include "Values.h"
 
@@ -37,7 +39,7 @@ public:
         this->V.strVal = _strVal;
     }
 
-    inline Token(uint32_t _tokLine, uint32_t _posStart, uint32_t _posEnd, uint32_t _posIndex, TokensType _type, int64_t _numVal) :
+    inline Token(uint32_t _tokLine, uint32_t _posStart, uint32_t _posEnd, uint32_t _posIndex, TokensType _type, double64_t _numVal) :
         tokLine(_tokLine), posStart(_posStart), posEnd(_posEnd), posIndex(_posIndex), type_(_type) {
         this->V.numVal = _numVal;
     }
