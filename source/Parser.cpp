@@ -1,93 +1,71 @@
 #include "Parser.h"
 
-SymbolTable symTable; // تم تعريفه ك متغير عام لمنع حذف المتغيرات عند استخدام الطرفية بعد الانتقال الى سطر جديد
 
-class Parser {
-public:
-    std::vector<Token>* tokens;
-    int tokenIndex = -1;
-    Token currentToken;
-    STR fileName;
-    STR input_;
+Parser::Parser(std::vector<Token>* tokens, wstr _fileName, wstr* _input) : 
+    tokens(tokens), fileName(_fileName), input_(_input)
+{
+    this->advance();
+}
 
-    /// <اعلام>
-
-    bool lastParam = false;
-    bool returnFlag = false;
-
-    /// </اعلام>
-
-    uint16_t exprlevel = 4000;
-    uint16_t stmtslevel = 1000;
-
-    ExprNode* exprNode = (ExprNode*)malloc(exprlevel * sizeof(struct ExprNode));
-    StmtsNode* stmtsNode = (StmtsNode*)malloc(stmtslevel * sizeof(struct StmtsNode));
-
-
-    Parser(std::vector<Token>* tokens, STR _fileName, STR _input) : tokens(tokens), fileName(_fileName), input_(_input)
+void Parser::advance()
+{
+    this->tokenIndex++;
+    if (this->tokenIndex >= 0 and this->tokenIndex < this->tokens->size())
     {
-        this->advance();
+        std::vector<Token>::iterator listIter = tokens->begin();
+        std::advance(listIter, this->tokenIndex);
+        this->currentToken = *listIter;
     }
+}
 
-    void advance()
-    {
-        this->tokenIndex++;
-        if (this->tokenIndex >= 0 and this->tokenIndex < this->tokens->size())
-        {
-            std::vector<Token>::iterator listIter = tokens->begin();
-            std::advance(listIter, this->tokenIndex);
-            this->currentToken = *listIter;
-        }
+void Parser::parse_file()
+{
+    StmtsNode* stmtsRes = nullptr;
+    AlifObject intrRes;
+
+    do {
+        stmtsRes = this->statement();
+        intrRes = this->visit_stmts(stmtsRes);
+        this->exprlevel = 4000;
+
+    } while (currentToken.type_ != TTEndOfFile);
+
+}
+
+void Parser::parse_terminal()
+{
+    ExprNode* stmtsRes = this->assignment();
+    AlifObject intrRes = this->visit_expr(stmtsRes);
+
+    if (intrRes.objType == OTNumber) { PRINT_(intrRes.V.NumberObj.numberValue); }
+    else if (intrRes.objType == OTString) { PRINT_(*intrRes.V.StringObj.strValue); }
+    else if (intrRes.objType == OTNone) { PRINT_(L"عدم"); }
+    else if (intrRes.objType == OTKeyword) { if (intrRes.V.Boolean.value_ == 1) { PRINT_(L"صح"); } else { PRINT_(L"خطا"); } }
+    else if (intrRes.objType == OTList) {
+        this->list_print(intrRes);
+        PRINT_(lst);
     }
-
-    void parse_file()
-    {
-        StmtsNode* stmtsRes = nullptr;
-        AlifObj intrRes;
-
-        do {
-            stmtsRes = this->statement();
-            intrRes = this->visit_stmts(stmtsRes);
-            //this->level = 5500;
-
-        } while (currentToken.type_ != TTendOfFile);
-
-    }
-
-    void parse_terminal()
-    {
-        ExprNode* stmtsRes = this->assignment();
-        AlifObj intrRes = this->visit_expr(stmtsRes);
-
-        if (intrRes.type_ == TTnumber) { prnt(intrRes.A.Number.value_); }
-        else if (intrRes.type_ == TTstring) { prnt(*intrRes.A.String.value_); }
-        else if (intrRes.type_ == TTnone) { prnt(L"عدم"); }
-        else if (intrRes.type_ == TTkeyword) { if (intrRes.A.Boolean.value_ == 1) { prnt(L"صح"); } else { prnt(L"خطا"); } }
-        else if (intrRes.type_ == TTlist) {
-            this->list_print(intrRes);
-            prnt(lst);
-        }
-    }
+}
 
 
-    STR lst;
-    void list_print(AlifObj _obj) {
+    wstr lst;
+    void list_print(AlifObject _obj) {
         lst.append(L"[");
         if (_obj.type_ == TTlist) {
-            for (AlifObj obj : *_obj.A.List.objList) {
+            for (AlifObject obj : *_obj.V.List.objList) {
                 if (obj.type_ == TTnumber)
                 {
-                    lst.append(std::to_wstring(obj.A.Number.value_));
+                    lst.append(std::to_wstring(obj.V.Number.value_));
 
                 }
                 else if (obj.type_ == TTstring)
                 {
-                    lst.append(*obj.A.String.value_);
+                    lst.append(*obj.V.String.value_);
 
                 }
                 else if (obj.type_ == TTkeyword)
                 {
-                    lst.append(std::to_wstring(obj.A.Boolean.value_));
+                    lst.append(std::to_wstring(obj.V.Boolean.value_));
 
                 }
                 else if (obj.type_ == TTlist) {
@@ -130,7 +108,7 @@ public:
 
             this->advance();
             (exprNode + level)->U.NameAccess.name_.type_ = TTname;
-            (exprNode + level)->U.NameAccess.name_.A.Name.name_ = token.val.numVal;
+            (exprNode + level)->U.NameAccess.name_.V.Name.name_ = token.val.numVal;
             (exprNode + level)->type_ = VAccess;
             return (exprNode + level);
         }
@@ -139,7 +117,7 @@ public:
 
             this->advance();
             (exprNode + level)->U.NameAccess.name_.type_ = TTbuildInFunc;
-            (exprNode + level)->U.NameAccess.name_.A.BuildInFunc.buildInFunc = token.val.buildInFunc;
+            (exprNode + level)->U.NameAccess.name_.V.BuildInFunc.buildInFunc = token.val.buildInFunc;
             (exprNode + level)->type_ = VAccess;
             return (exprNode + level);
         }
@@ -148,8 +126,8 @@ public:
             {
                 this->advance();
                 (exprNode + level)->U.Object.value_.type_ = TTkeyword;
-                (exprNode + level)->U.Object.value_.A.Boolean.Kkind_ = True;
-                (exprNode + level)->U.Object.value_.A.Boolean.value_ = 1;
+                (exprNode + level)->U.Object.value_.V.Boolean.Kkind_ = True;
+                (exprNode + level)->U.Object.value_.V.Boolean.value_ = 1;
                 (exprNode + level)->type_ = VObject;
 
                 return (exprNode + level);
@@ -158,8 +136,8 @@ public:
             {
                 this->advance();
                 (exprNode + level)->U.Object.value_.type_ = TTkeyword;
-                (exprNode + level)->U.Object.value_.A.Boolean.Kkind_ = False;
-                (exprNode + level)->U.Object.value_.A.Boolean.value_ = 0;
+                (exprNode + level)->U.Object.value_.V.Boolean.Kkind_ = False;
+                (exprNode + level)->U.Object.value_.V.Boolean.value_ = 0;
                 (exprNode + level)->type_ = VObject;
 
                 return (exprNode + level);
@@ -168,13 +146,13 @@ public:
             {
                 this->advance();
                 (exprNode + level)->U.Object.value_.type_ = TTnone;
-                (exprNode + level)->U.Object.value_.A.None.kind_ = None;
+                (exprNode + level)->U.Object.value_.V.None.kind_ = None;
                 (exprNode + level)->type_ = VObject;
 
                 return (exprNode + level);
             }
             else {
-                prnt(L"يوجد كلمة مفتاحية في غير سياقها");
+                PRINT_(L"يوجد كلمة مفتاحية في غير سياقها");
                 exit(-1);
             }
         }
@@ -182,8 +160,8 @@ public:
         {
             this->advance();
             (exprNode + level)->U.Object.value_.type_ = TTnumber;
-            (exprNode + level)->U.Object.value_.A.Number.Tkind_ = token.type_;
-            (exprNode + level)->U.Object.value_.A.Number.value_ = token.val.numVal;
+            (exprNode + level)->U.Object.value_.V.Number.Tkind_ = token.type_;
+            (exprNode + level)->U.Object.value_.V.Number.value_ = token.val.numVal;
             (exprNode + level)->type_ = VObject;
             return (exprNode + level);
         }
@@ -191,8 +169,8 @@ public:
         {
             this->advance();
             (exprNode + level)->U.Object.value_.type_ = TTnumber;
-            (exprNode + level)->U.Object.value_.A.Number.Tkind_ = token.type_;
-            (exprNode + level)->U.Object.value_.A.Number.value_ = token.val.numVal;
+            (exprNode + level)->U.Object.value_.V.Number.Tkind_ = token.type_;
+            (exprNode + level)->U.Object.value_.V.Number.value_ = token.val.numVal;
             (exprNode + level)->type_ = VObject;
             return (exprNode + level);
         }
@@ -200,7 +178,7 @@ public:
         {
             this->advance();
             (exprNode + level)->U.Object.value_.type_ = token.type_;
-            (exprNode + level)->U.Object.value_.A.String.value_ = token.val.strVal;
+            (exprNode + level)->U.Object.value_.V.String.value_ = token.val.strVal;
             (exprNode + level)->type_ = VObject;
             return (exprNode + level);
         }
@@ -220,13 +198,13 @@ public:
             }
             else
             {
-                prnt(L"لم يتم إغلاق قوس القوس");
+                PRINT_(L"لم يتم إغلاق قوس القوس");
                 exit(-1);
             }
         }
         else
         {
-            prnt(L"لم يتم العثور على حالة");
+            PRINT_(L"لم يتم العثور على حالة");
             exit(-1);
         }
     }
@@ -249,7 +227,7 @@ public:
 
             if (this->currentToken.type_ != TTrSquare)
             {
-                prnt(SyntaxError(this->currentToken.positionStart, this->currentToken.positionEnd, L"لم يتم إغلاق قوس المصفوفة", fileName, input_).print_());
+                PRINT_(SyntaxError(this->currentToken.positionStart, this->currentToken.positionEnd, L"لم يتم إغلاق قوس المصفوفة", fileName, input_).print_());
                 exit(0);
             }
             this->advance();
@@ -258,7 +236,7 @@ public:
         level--;
 
         (exprNode + level)->U.Object.value_.type_ = TTlist;
-        (exprNode + level)->U.Object.value_.A.List.list_ = nodeElement;
+        (exprNode + level)->U.Object.value_.V.List.list_ = nodeElement;
         (exprNode + level)->type_ = VList;
 
         return (exprNode + level);
@@ -510,7 +488,7 @@ public:
             }
             else
             {
-                prnt(L"خطأ في حالة تعبير - لم يتم إضافة \"والا\" للحالة");
+                PRINT_(L"خطأ في حالة تعبير - لم يتم إضافة \"والا\" للحالة");
                 exit(-1);
             }
         }
@@ -538,7 +516,7 @@ public:
             level--;
 
             (exprNode + level)->U.Object.value_.type_ = TTlist;
-            (exprNode + level)->U.Object.value_.A.List.list_ = exprs_;
+            (exprNode + level)->U.Object.value_.V.List.list_ = exprs_;
             (exprNode + level)->type_ = VList;
 
             return (exprNode + level);
@@ -553,14 +531,14 @@ public:
         {
             if (Next_Is(TTequal))
             {
-                std::vector<AlifObj>* names_ = new std::vector<AlifObj>;
+                std::vector<AlifObject>* names_ = new std::vector<AlifObject>;
 
                 while (Next_Is(TTequal))
                 {
-                    AlifObj name_{};
+                    AlifObject name_{};
 
                     name_.type_ = TTname;
-                    name_.A.Name.name_ = this->currentToken.val.numVal;
+                    name_.V.Name.name_ = this->currentToken.val.numVal;
 
                     names_->push_back(name_);
 
@@ -585,9 +563,9 @@ public:
                 // بحيث يتم تخزين النوع في العملية بشكل مباشر دون التحقق منها
                 // if token.type == TTaugassign then operator = opToken.type
 
-                AlifObj name_{};
+                AlifObject name_{};
                 name_.type_ = TTname;
-                name_.A.Name.name_ = this->currentToken.val.numVal;
+                name_.V.Name.name_ = this->currentToken.val.numVal;
 
                 this->advance();
 
@@ -648,10 +626,10 @@ public:
                 {
                     lastParam = true;
 
-                    AlifObj name_{};
+                    AlifObject name_{};
 
                     name_.type_ = TTname;
-                    name_.A.Name.name_ = this->currentToken.val.numVal;
+                    name_.V.Name.name_ = this->currentToken.val.numVal;
 
                     this->advance();
                     this->advance();
@@ -673,7 +651,7 @@ public:
                         params_->push_back(this->atom());
                     }
                     else {
-                        prnt(L"لا يمكن تمرير متغير بدون قيمة افتراضية بعد متغير ذو قيمة افتراضية");
+                        PRINT_(L"لا يمكن تمرير متغير بدون قيمة افتراضية بعد متغير ذو قيمة افتراضية");
                         exit(-1);
                     }
                 }
@@ -691,7 +669,7 @@ public:
             return params_;
         }
         else {
-            prnt(L"لم يتم إغلاق القوس");
+            PRINT_(L"لم يتم إغلاق القوس");
             exit(-1);
         }
 
@@ -699,7 +677,7 @@ public:
 
     StmtsNode* function_def() {
 
-        AlifObj name{};
+        AlifObject name{};
         StmtsNode* body = nullptr;
         std::vector<ExprNode*>* params = nullptr;
 
@@ -709,14 +687,14 @@ public:
 
             if (this->currentToken.type_ == TTname)
             {
-                name.A.Name.name_ = this->currentToken.val.numVal;
+                name.V.Name.name_ = this->currentToken.val.numVal;
             }
             else if (this->currentToken.type_ == TTbuildInFunc) {
-                name.A.BuildInFunc.buildInFunc = this->currentToken.val.buildInFunc;
+                name.V.BuildInFunc.buildInFunc = this->currentToken.val.buildInFunc;
             }
             else
             {
-                prnt(L"يتوقع وجود اسم للدالة");
+                PRINT_(L"يتوقع وجود اسم للدالة");
             }
 
             this->advance();
@@ -746,7 +724,7 @@ public:
                 return (stmtsNode + level);
             }
             else {
-                prnt(L"لم يتم إنهاء دالة بنقطتين \:");
+                PRINT_(L"لم يتم إنهاء دالة بنقطتين \:");
                 exit(-1);
             }
         }
@@ -757,12 +735,12 @@ public:
 
         ExprNode* bases = nullptr;
         StmtsNode* body = nullptr;
-        AlifObj name{};
+        AlifObject name{};
 
         if (this->currentToken.type_ == TTname) {
 
             name.type_ = TTname;
-            name.A.Name.name_ = this->currentToken.val.numVal;
+            name.V.Name.name_ = this->currentToken.val.numVal;
 
             this->advance();
 
@@ -805,7 +783,7 @@ public:
             block_ = this->block_();
         }
         else {
-            prnt(L"لم يتم إنهاء بينما بنقطتين \:");
+            PRINT_(L"لم يتم إنهاء بينما بنقطتين \:");
             exit(-1);
         }
         if (this->currentToken.type_ == TTkeyword and this->currentToken.val.keywordType == Else)
@@ -829,7 +807,7 @@ public:
     {
         if (this->currentToken.type_ == TTname)
         {
-            AlifObj itrName{};
+            AlifObject itrName{};
             std::vector<ExprNode*>* args_ = new std::vector<ExprNode*>;
             StmtsNode* block_ = nullptr;
             StmtsNode* else_ = nullptr;
@@ -838,7 +816,7 @@ public:
             {
 
                 itrName.type_ = TTname;
-                itrName.A.Name.name_ = this->currentToken.val.numVal;
+                itrName.V.Name.name_ = this->currentToken.val.numVal;
 
                 this->advance();
 
@@ -852,7 +830,7 @@ public:
 
                         if (this->currentToken.type_ == TTrParenthesis)
                         {
-                            prnt(L"المعاملات المسندة اقل من المتوقع");
+                            PRINT_(L"المعاملات المسندة اقل من المتوقع");
                             exit(-1);
                         }
 
@@ -869,7 +847,7 @@ public:
 
                         if (args_->size() > 3)
                         {
-                            prnt(L"المعاملات المسندة اكثر من المتوقع");
+                            PRINT_(L"المعاملات المسندة اكثر من المتوقع");
                             exit(-1);
                         }
 
@@ -891,24 +869,24 @@ public:
                                 }
                             }
                             else {
-                                prnt(L"لم يتم إنهاء لاجل بنقطتين \:");
+                                PRINT_(L"لم يتم إنهاء لاجل بنقطتين \:");
                                 exit(-1);
                             }
                         }
                         else {
-                            prnt(L"يتوقع وجود قوس ')'");
+                            PRINT_(L"يتوقع وجود قوس ')'");
                             exit(-1);
                         }
 
                     }
                     else {
-                        prnt(L"يتوقع وجود قوس '('");
+                        PRINT_(L"يتوقع وجود قوس '('");
                         exit(-1);
                     }
                 }
             }
             else {
-                prnt(L"يتوقع وجود كلمة مفتاحية 'في'");
+                PRINT_(L"يتوقع وجود كلمة مفتاحية 'في'");
                 exit(-1);
             }
 
@@ -923,7 +901,7 @@ public:
             return (stmtsNode + level);
         }
         else {
-            prnt(L"يتوقع وجود اسم لاسناد قيمة له");
+            PRINT_(L"يتوقع وجود اسم لاسناد قيمة له");
             exit(-1);
         }
     }
@@ -939,7 +917,7 @@ public:
             block_ = this->block_();
         }
         else {
-            prnt(L"لم يتم إنهاء واذا بنقطتين \:");
+            PRINT_(L"لم يتم إنهاء واذا بنقطتين \:");
             exit(-1);
         }
 
@@ -958,7 +936,7 @@ public:
             return this->block_();
         }
         else {
-            prnt(L"لم يتم إنهاء والا بنقطتين \:");
+            PRINT_(L"لم يتم إنهاء والا بنقطتين \:");
             exit(-1);
         }
     }
@@ -977,7 +955,7 @@ public:
             block_ = this->block_();
         }
         else {
-            prnt(L"لم يتم إنهاء اذا بنقطتين \:");
+            PRINT_(L"لم يتم إنهاء اذا بنقطتين \:");
             exit(-1);
         }
         while (this->currentToken.val.keywordType == Elseif)
@@ -1019,12 +997,12 @@ public:
                     return stmts_;
                 }
                 else if (this->currentToken.type_ == TTindent) {
-                    prnt(L"يتوقع وجود مسافة راجعة في نهاية الحالة المركبة");
+                    PRINT_(L"يتوقع وجود مسافة راجعة في نهاية الحالة المركبة");
                     exit(-1);
                 }
             }
             else {
-                prnt(L"يتوقع وجود مسافة بادئة في بداية جسم الحالة المركبة");
+                PRINT_(L"يتوقع وجود مسافة بادئة في بداية جسم الحالة المركبة");
                 exit(-1);
             }
 
@@ -1080,7 +1058,7 @@ public:
             }
             else
             {
-                prnt(L"لا يمكن إستدعاء ارجع من خارج دالة");
+                PRINT_(L"لا يمكن إستدعاء ارجع من خارج دالة");
                 exit(-1);
             }
         }
@@ -1104,7 +1082,7 @@ public:
             ExprNode* exprNode = this->simple_statement();
 
             if (this->currentToken.type_ != TTnewline) {
-                prnt(L"لا يمكن وجود اكثر من حالة في نفس السطر");
+                PRINT_(L"لا يمكن وجود اكثر من حالة في نفس السطر");
                 exit(-1);
             }
             this->advance();
@@ -1124,7 +1102,7 @@ public:
         {
             if (this->currentToken.type_ == TTindent)
             {
-                prnt(L"خطأ في المسافات البادئة - لقد خرجت عن النطاق الحالي");
+                PRINT_(L"خطأ في المسافات البادئة - لقد خرجت عن النطاق الحالي");
                 exit(-1);
             }
             statements_->push_back(this->statement());
