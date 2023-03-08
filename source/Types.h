@@ -61,6 +61,7 @@ enum ObjectType : uint8_t { // انواع الكائنات
     OTBoolean,
     OTNone,
     OTKeyword,
+    OTBuildInFunc,
 
 };
 
