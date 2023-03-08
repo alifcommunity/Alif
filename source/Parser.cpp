@@ -17,9 +17,11 @@ public:
 
     /// </اعلام>
 
-    unsigned int level = 5500;
-    ExprNode* exprNode = (ExprNode*)malloc(level * sizeof(struct ExprNode));
-    StmtsNode* stmtsNode = (StmtsNode*)malloc(level * sizeof(struct StmtsNode));
+    uint16_t exprlevel = 4000;
+    uint16_t stmtslevel = 1000;
+
+    ExprNode* exprNode = (ExprNode*)malloc(exprlevel * sizeof(struct ExprNode));
+    StmtsNode* stmtsNode = (StmtsNode*)malloc(stmtslevel * sizeof(struct StmtsNode));
 
 
     Parser(std::vector<Token>* tokens, STR _fileName, STR _input) : tokens(tokens), fileName(_fileName), input_(_input)
