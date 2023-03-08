@@ -2,6 +2,7 @@
 
 #define Next_Is(t) (this->tokens->at(this->tokenIndex + 1).type_ == t ? true : false )
 
+#include "Types.h"
 #include "Tokens.h"
 #include "Node.h"
 #include "SymbolTable.h"
@@ -14,7 +15,7 @@ public:
     int tokenIndex = -1;
     Token currentToken;
     wstr fileName;
-    wstr input_;
+    wstr* input_;
 
     /// <اعلام>
 
@@ -29,7 +30,7 @@ public:
     ExprNode* exprNode = (ExprNode*)malloc(exprlevel * sizeof(struct ExprNode));
     StmtsNode* stmtsNode = (StmtsNode*)malloc(stmtslevel * sizeof(struct StmtsNode));
 
-    Parser(std::vector<Token>* tokens, wstr _fileName, wstr _input);
+    Parser(std::vector<Token>* tokens, wstr _fileName, wstr* _input);
 
     void advance();
 
