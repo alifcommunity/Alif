@@ -1,5 +1,8 @@
 #include "Parser.h"
 
+SymbolTable symTable; // تم تعريفه ك متغير عام لمنع حذف المتغيرات عند استخدام الطرفية بعد الانتقال الى سطر جديد
+
+
 Parser::Parser(std::vector<Token>* tokens, wstr _fileName, wstr* _input) : 
     tokens(tokens), fileName(_fileName), input_(_input)
 {
@@ -19,13 +22,15 @@ void Parser::advance()
 
 void Parser::parse_file()
 {
-    StmtsNode* stmtsRes = nullptr;
+    //StmtsNode* stmtsRes = nullptr;
+    ExprNode* stmtsRes = nullptr;
     AlifObject intrRes;
 
     do {
-        stmtsRes = this->statement();
-        intrRes = this->visit_stmts(stmtsRes);
-        this->exprlevel = 4000;
+        //stmtsRes = this->statement();
+        stmtsRes = this->disjuction();
+        //intrRes = this->visit_stmts(stmtsRes);
+        this->exprLevel = 4000;
 
     } while (currentToken.type_ != TTEndOfFile);
 
@@ -33,17 +38,17 @@ void Parser::parse_file()
 
 void Parser::parse_terminal()
 {
-    ExprNode* stmtsRes = this->assignment();
-    AlifObject intrRes = this->visit_expr(stmtsRes);
+    ExprNode* stmtsRes = this->disjuction();
+    //AlifObject intrRes = this->visit_expr(stmtsRes);
 
-    if (intrRes.objType == OTNumber) { PRINT_(intrRes.V.NumberObj.numberValue); }
-    else if (intrRes.objType == OTString) { PRINT_(*intrRes.V.StringObj.strValue); }
-    else if (intrRes.objType == OTNone) { PRINT_(L"عدم"); }
-    else if (intrRes.objType == OTKeyword) { if (intrRes.V.BoolObj.boolValue == 1) { PRINT_(L"صح"); } else { PRINT_(L"خطا"); } }
-    else if (intrRes.objType == OTList) {
-        this->list_print(intrRes);
-        PRINT_(lst_);
-    }
+    //if (intrRes.objType == OTNumber) { PRINT_(intrRes.V.NumberObj.numberValue); }
+    //else if (intrRes.objType == OTString) { PRINT_(*intrRes.V.StringObj.strValue); }
+    //else if (intrRes.objType == OTNone) { PRINT_(L"عدم"); }
+    //else if (intrRes.objType == OTKeyword) { if (intrRes.V.BoolObj.boolValue == 1) { PRINT_(L"صح"); } else { PRINT_(L"خطا"); } }
+    //else if (intrRes.objType == OTList) {
+    //    this->list_print(intrRes);
+    //    PRINT_(lst_);
+    //}
 }
 
 void Parser::list_print(AlifObject _obj) {
@@ -206,910 +211,910 @@ ExprNode* Parser::atom() {
     }
 }
 
-    ExprNode* list_expr()
+ExprNode* Parser::list_expr()
+{
+    std::vector<ExprNode*>* nodeElement = new std::vector<ExprNode*>;
+
+    if (this->currentToken.type_ == TTRightSquare)
     {
-        std::vector<ExprNode*>* nodeElement = new std::vector<ExprNode*>;
-
-        if (this->currentToken.type_ == TTrSquare)
-        {
-            this->advance();
-        }
-        else
-        {
-            do {
-                this->advance();
-                nodeElement->push_back(this->expression());
-
-            } while (this->currentToken.type_ == TTcomma);
-
-            if (this->currentToken.type_ != TTrSquare)
-            {
-                PRINT_(SyntaxError(this->currentToken.positionStart, this->currentToken.positionEnd, L"لم يتم إغلاق قوس المصفوفة", fileName, input_).print_());
-                exit(0);
-            }
-            this->advance();
-        }
-
-        level--;
-
-        (exprNode + level)->U.Object.value_.objType = TTlist;
-        (exprNode + level)->U.Object.value_.V.List.list_ = nodeElement;
-        (exprNode + level)->type_ = VList;
-
-        return (exprNode + level);
-
+        this->advance();
     }
-
-    ExprNode* primary() {
-
-        ExprNode* atom = this->atom();
-        if (this->currentToken.type_ == TTdot) {
-
-            this->advance();
-            ExprNode* primary = this->primary();
-
-            level--;
-            (exprNode + level)->type_ = VCall;
-            (exprNode + level)->U.Call.func = atom;
-            (exprNode + level)->U.Call.name = primary;
-            return (exprNode + level);
-        }
-        else if (this->currentToken.type_ == TTlParenthesis) {
-
-            ExprNode* primary = atom;
-
-            this->advance();
-
-            if (this->currentToken.type_ == TTrParenthesis) {
-
-                this->advance();
-
-                level--;
-                (exprNode + level)->type_ = VCall;
-                (exprNode + level)->U.Call.name = primary;
-                (exprNode + level)->U.Call.args = nullptr;
-                return (exprNode + level);
-
-            }
-
-            std::vector<ExprNode*>* args = this->arguments();
-
-            this->advance();
-
-            level--;
-            (exprNode + level)->type_ = VCall;
-            (exprNode + level)->U.Call.name = primary;
-            (exprNode + level)->U.Call.args = args;
-            return (exprNode + level);
-
-        }
-        else {
-            return atom;
-        }
-
-    }
-
-    ExprNode* power()
+    else
     {
-        ExprNode* left = this->primary();
-
-        while (this->currentToken.type_ == TTpower) {
-            Token opToken = this->currentToken;
-
+        do {
             this->advance();
-            ExprNode* right = this->factor();
-            level--;
+            nodeElement->push_back(this->expression());
 
-            (exprNode + level)->U.BinaryOp.right_ = right;
-            (exprNode + level)->U.BinaryOp.operator_ = opToken.type_;
-            (exprNode + level)->U.BinaryOp.left_ = left;
-            (exprNode + level)->type_ = VBinOp;
+        } while (this->currentToken.type_ == TTComma);
 
-            left = (exprNode + level);
-        }
-
-        return left;
-    }
-
-    ExprNode* factor() {
-
-        while (this->currentToken.type_ == TTplus or this->currentToken.type_ == TTminus) {
-            Token opToken = this->currentToken;
-
-            this->advance();
-            ExprNode* right = this->power();
-            level--;
-
-            (exprNode + level)->U.UnaryOp.right_ = right;
-            (exprNode + level)->U.UnaryOp.operator_ = opToken.type_;
-            (exprNode + level)->type_ = VUnaryOp;
-
-            return (exprNode + level);
-        }
-
-        return this->power();
-    }
-
-    ExprNode* term() {
-        ExprNode* left = this->factor();
-
-        while (this->currentToken.type_ == TTmultiply or this->currentToken.type_ == TTdivide or this->currentToken.type_ == TTremain) {
-            Token opToken = this->currentToken;
-
-            this->advance();
-            ExprNode* right = this->factor();
-            level--;
-
-            (exprNode + level)->U.BinaryOp.right_ = right;
-            (exprNode + level)->U.BinaryOp.operator_ = opToken.type_;
-            (exprNode + level)->U.BinaryOp.left_ = left;
-            (exprNode + level)->type_ = VBinOp;
-
-            left = (exprNode + level);
-        }
-
-        return left;
-    }
-
-    ExprNode* sum() {
-        ExprNode* left = this->term();
-
-        while (this->currentToken.type_ == TTplus or this->currentToken.type_ == TTminus) {
-            Token opToken = this->currentToken;
-
-            this->advance();
-            ExprNode* right = this->term();
-            level--;
-
-            (exprNode + level)->U.BinaryOp.right_ = right;
-            (exprNode + level)->U.BinaryOp.operator_ = opToken.type_;
-            (exprNode + level)->U.BinaryOp.left_ = left;
-            (exprNode + level)->type_ = VBinOp;
-
-            left = (exprNode + level);
-        }
-
-        return left;
-    }
-
-    ExprNode* comparesion() {
-        ExprNode* left = this->sum();
-
-        while (this->currentToken.type_ == TTequalEqual or this->currentToken.type_ == TTnotEqual or this->currentToken.type_ == TTlessThan or this->currentToken.type_ == TTgreaterThan or this->currentToken.type_ == TTlessThanEqual or this->currentToken.type_ == TTgreaterThanEqual) {
-            Token opToken = this->currentToken;
-
-            this->advance();
-            ExprNode* right = this->sum();
-            level--;
-
-            (exprNode + level)->U.BinaryOp.right_ = right;
-            (exprNode + level)->U.BinaryOp.operator_ = opToken.type_;
-            (exprNode + level)->U.BinaryOp.left_ = left;
-            (exprNode + level)->type_ = VBinOp;
-
-            left = (exprNode + level);
-        }
-
-        return left;
-    }
-
-    ExprNode* inversion() {
-
-        while (this->currentToken.type_ == TTkeyword and this->currentToken.val.keywordType == Not)
+        if (this->currentToken.type_ != TTRightSquare)
         {
-            Token opToken = this->currentToken;
-
-            this->advance();
-            ExprNode* right = this->comparesion();
-            level--;
-
-            (exprNode + level)->U.UnaryOp.right_ = right;
-            (exprNode + level)->U.UnaryOp.operator_ = opToken.type_;
-            (exprNode + level)->U.UnaryOp.keyword_ = opToken.val.keywordType;
-            (exprNode + level)->type_ = VUnaryOp;
-
-            return (exprNode + level);
-        }
-
-        return this->comparesion();
-    }
-
-    ExprNode* conjuction() {
-
-        ExprNode* left = this->inversion();
-
-        while (this->currentToken.type_ == TTkeyword and this->currentToken.val.keywordType == And) {
-            Token opToken = this->currentToken;
-
-            this->advance();
-            ExprNode* right = this->inversion();
-            level--;
-
-            (exprNode + level)->U.BinaryOp.right_ = right;
-            (exprNode + level)->U.BinaryOp.operator_ = opToken.type_;
-            (exprNode + level)->U.BinaryOp.keyword_ = opToken.val.keywordType;
-            (exprNode + level)->U.BinaryOp.left_ = left;
-            (exprNode + level)->type_ = VBinOp;
-
-            left = (exprNode + level);
-        }
-
-        return left;
-    }
-
-    ExprNode* disjuction() {
-
-        ExprNode* left = this->conjuction();
-
-        while (this->currentToken.type_ == TTkeyword and this->currentToken.val.keywordType == Or) {
-            Token opToken = this->currentToken;
-
-            this->advance();
-            ExprNode* right = this->conjuction();
-            level--;
-
-            (exprNode + level)->U.BinaryOp.right_ = right;
-            (exprNode + level)->U.BinaryOp.operator_ = opToken.type_;
-            (exprNode + level)->U.BinaryOp.keyword_ = opToken.val.keywordType;
-            (exprNode + level)->U.BinaryOp.left_ = left;
-            (exprNode + level)->type_ = VBinOp;
-
-            left = (exprNode + level);
-        }
-
-        return left;
-    }
-
-    ExprNode* expression() {
-
-        ExprNode* expr_ = this->disjuction();
-
-        if (this->currentToken.type_ == TTkeyword and this->currentToken.val.keywordType == If)
-        {
-            this->advance();
-            ExprNode* condetion = this->disjuction();
-
-            if (this->currentToken.type_ == TTkeyword and this->currentToken.val.keywordType == Else)
-            {
-                this->advance();
-                ExprNode* elseExpr = this->expression();
-                level--;
-
-                (exprNode + level)->U.Expr.expr_ = expr_;
-                (exprNode + level)->U.Expr.condetion_ = condetion;
-                (exprNode + level)->U.Expr.elseExpr = elseExpr;
-                (exprNode + level)->type_ = VExpr;
-
-                return (exprNode + level);
-
-            }
-            else
-            {
-                PRINT_(L"خطأ في حالة تعبير - لم يتم إضافة \"والا\" للحالة");
-                exit(-1);
-            }
-        }
-
-        return expr_;
-
-    }
-
-    ExprNode* expressions() {
-
-        ExprNode* expr_ = this->expression();
-
-        if (this->currentToken.type_ == TTcomma)
-        {
-            std::vector<ExprNode*>* exprs_ = new std::vector<ExprNode*>;
-
-            exprs_->push_back(expr_);
-            do
-            {
-                this->advance();
-                exprs_->push_back(this->expression());
-
-            } while (this->currentToken.type_ == TTcomma);
-
-            level--;
-
-            (exprNode + level)->U.Object.value_.objType = TTlist;
-            (exprNode + level)->U.Object.value_.V.List.list_ = exprs_;
-            (exprNode + level)->type_ = VList;
-
-            return (exprNode + level);
-        }
-        return expr_;
-    }
-
-    ExprNode* assignment() {
-
-
-        if (this->currentToken.type_ == TTname)
-        {
-            if (Next_Is(TTequal))
-            {
-                std::vector<AlifObject>* names_ = new std::vector<AlifObject>;
-
-                while (Next_Is(TTequal))
-                {
-                    AlifObject name_{};
-
-                    name_.type_ = TTname;
-                    name_.V.Name.name_ = this->currentToken.val.numVal;
-
-                    names_->push_back(name_);
-
-                    this->advance();
-                    this->advance();
-
-                }
-
-                ExprNode* expr_ = this->expressions();
-                level--;
-
-                (exprNode + level)->U.NameAssign.name_ = names_;
-                (exprNode + level)->U.NameAssign.value_ = expr_;
-                (exprNode + level)->type_ = VAssign;
-
-                return (exprNode + level);
-
-            }
-            else if (Next_Is(TTplusEqual) or Next_Is(TTminusEqual) or Next_Is(TTmultiplyEqual) or Next_Is(TTdivideEqual) or Next_Is(TTpowerEqual) or Next_Is(TTremainEqual))
-            {
-                // يجب إختصار نوع التحقق الى TTaugAssign
-                // بحيث يتم تخزين النوع في العملية بشكل مباشر دون التحقق منها
-                // if token.type == TTaugassign then operator = opToken.type
-
-                AlifObject name_{};
-                name_.type_ = TTname;
-                name_.V.Name.name_ = this->currentToken.val.numVal;
-
-                this->advance();
-
-                Token opToken = this->currentToken;
-
-
-                this->advance();
-                ExprNode* expr_ = this->expression();
-                level--;
-
-                (exprNode + level)->U.AugNameAssign.name_ = name_;
-                (exprNode + level)->U.AugNameAssign.operator_ = opToken.type_;
-                (exprNode + level)->U.AugNameAssign.value_ = expr_;
-                (exprNode + level)->type_ = VAugAssign;
-
-                return (exprNode + level);
-
-            }
-        }
-
-        return this->expressions();
-    }
-
-    StmtsNode* return_statement() {
-
-        ExprNode* expr_;
-
-        if (this->currentToken.type_ != TTnewline)
-        {
-            expr_ = this->expression();
-        }
-        else
-        {
-            expr_ = nullptr;
+            //PRINT_(SyntaxError(this->currentToken.positionStart, this->currentToken.positionEnd, L"لم يتم إغلاق قوس المصفوفة", fileName, input_).print_());
+            exit(-1);
         }
         this->advance();
-
-        level--;
-        (stmtsNode + level)->U.Return.returnExpr = expr_;
-        (stmtsNode + level)->type_ = VReturn;
-
-        return (stmtsNode + level);
     }
 
-    std::vector<ExprNode*>* parameters() {
+    exprLevel--;
 
+    (exprNode + exprLevel)->U.Object.value_.objType = OTList;
+    //(exprNode + exprLevel)->U.Object.value_.V.ListObj.list_ = nodeElement;
+    (exprNode + exprLevel)->type_ = VTList;
 
-        std::vector<ExprNode*>* params_ = new std::vector<ExprNode*>;
-        lastParam = false;
+    return (exprNode + exprLevel);
 
-        do {
+}
+
+ExprNode* Parser::primary() {
+
+    ExprNode* atom = this->atom();
+    if (this->currentToken.type_ == TTDot) {
+
+        this->advance();
+        ExprNode* primary = this->primary();
+
+        exprLevel--;
+        (exprNode + exprLevel)->type_ = VTCall;
+        (exprNode + exprLevel)->U.Call.func_ = atom;
+        (exprNode + exprLevel)->U.Call.name_ = primary;
+        return (exprNode + exprLevel);
+    }
+    else if (this->currentToken.type_ == TTLeftParenthesis) {
+
+        ExprNode* primary = atom;
+
+        this->advance();
+
+        if (this->currentToken.type_ == TTRrightParenthesis) {
 
             this->advance();
 
-            if (this->currentToken.type_ != TTrParenthesis)
-            {
-                if (Next_Is(TTequal))
-                {
-                    lastParam = true;
+            exprLevel--;
+            (exprNode + exprLevel)->type_ = VTCall;
+            (exprNode + exprLevel)->U.Call.name_ = primary;
+            (exprNode + exprLevel)->U.Call.args_ = nullptr;
+            return (exprNode + exprLevel);
 
-                    AlifObject name_{};
-
-                    name_.type_ = TTname;
-                    name_.V.Name.name_ = this->currentToken.val.numVal;
-
-                    this->advance();
-                    this->advance();
-
-                    ExprNode* expr_ = this->expression();
-
-                    level--;
-
-                    (exprNode + level)->type_ = VAssign;
-                    (exprNode + level)->U.NameAssign.paramName = name_;
-                    (exprNode + level)->U.NameAssign.value_ = expr_;
-
-                    params_->push_back((exprNode + level));
-
-                }
-                else {
-                    if (!lastParam)
-                    {
-                        params_->push_back(this->atom());
-                    }
-                    else {
-                        PRINT_(L"لا يمكن تمرير متغير بدون قيمة افتراضية بعد متغير ذو قيمة افتراضية");
-                        exit(-1);
-                    }
-                }
-
-            }
-            else
-            {
-                return params_;
-            }
-
-        } while (this->currentToken.type_ == TTcomma);
-
-        if (this->currentToken.type_ == TTrParenthesis)
-        {
-            return params_;
         }
-        else {
-            PRINT_(L"لم يتم إغلاق القوس");
-            exit(-1);
-        }
+
+        std::vector<ExprNode*>* args = this->arguments();
+
+        this->advance();
+
+        exprLevel--;
+        (exprNode + exprLevel)->type_ = VTCall;
+        (exprNode + exprLevel)->U.Call.name_ = primary;
+        (exprNode + exprLevel)->U.Call.args_ = args;
+        return (exprNode + exprLevel);
 
     }
-
-    StmtsNode* function_def() {
-
-        AlifObject name{};
-        StmtsNode* body = nullptr;
-        std::vector<ExprNode*>* params = nullptr;
-
-        if (this->currentToken.type_ == TTname or this->currentToken.type_ == TTbuildInFunc) {
-
-            name.type_ = this->currentToken.type_;
-
-            if (this->currentToken.type_ == TTname)
-            {
-                name.V.Name.name_ = this->currentToken.val.numVal;
-            }
-            else if (this->currentToken.type_ == TTbuildInFunc) {
-                name.V.BuildInFunc.buildInFunc = this->currentToken.val.buildInFunc;
-            }
-            else
-            {
-                PRINT_(L"يتوقع وجود اسم للدالة");
-            }
-
-            this->advance();
-
-            if (this->currentToken.type_ == TTlParenthesis and Next_Is(TTrParenthesis)) {
-
-                this->advance();
-                this->advance();
-            }
-            else {
-                params = this->parameters();
-                this->advance();
-            }
-
-            if (this->currentToken.type_ == TTcolon) {
-
-                this->advance();
-                returnFlag = true;
-                body = this->block_();
-                returnFlag = false;
-
-                level--;
-                (stmtsNode + level)->type_ = VFunction;
-                (stmtsNode + level)->U.FunctionDef.name = name;
-                (stmtsNode + level)->U.FunctionDef.params = params;
-                (stmtsNode + level)->U.FunctionDef.body = body;
-                return (stmtsNode + level);
-            }
-            else {
-                PRINT_(L"لم يتم إنهاء دالة بنقطتين \:");
-                exit(-1);
-            }
-        }
-
+    else {
+        return atom;
     }
 
-    StmtsNode* class_def() {
+}
 
-        ExprNode* bases = nullptr;
-        StmtsNode* body = nullptr;
-        AlifObject name{};
+ExprNode* Parser::power()
+{
+    ExprNode* left = this->primary();
 
-        if (this->currentToken.type_ == TTname) {
+    while (this->currentToken.type_ == TTPower) {
+        Token opToken = this->currentToken;
 
-            name.type_ = TTname;
-            name.V.Name.name_ = this->currentToken.val.numVal;
+        this->advance();
+        ExprNode* right = this->factor();
+        exprLevel--;
 
-            this->advance();
+        (exprNode + exprLevel)->U.BinaryOp.right_ = right;
+        (exprNode + exprLevel)->U.BinaryOp.operator_ = opToken.type_;
+        (exprNode + exprLevel)->U.BinaryOp.left_ = left;
+        (exprNode + exprLevel)->type_ = VTBinOp;
 
-            if (this->currentToken.type_ == TTlParenthesis) {
-
-                this->advance();
-
-                bases = this->expressions();
-
-                if (this->currentToken.type_ == TTrParenthesis)
-                {
-                    this->advance();
-                }
-            }
-            if (this->currentToken.type_ == TTcolon) {
-
-                this->advance();
-
-                body = this->block_();
-
-                level--;
-                (stmtsNode + level)->type_ = VClass;
-                (stmtsNode + level)->U.ClassDef.name = name;
-                (stmtsNode + level)->U.ClassDef.base = bases;
-                (stmtsNode + level)->U.ClassDef.body = body;
-                return (stmtsNode + level);
-            }
-        }
+        left = (exprNode + exprLevel);
     }
 
-    StmtsNode* while_statement() {
+    return left;
+}
 
-        ExprNode* condetion_ = this->expression();
-        StmtsNode* block_ = nullptr;
-        StmtsNode* else_ = nullptr;
+ExprNode* Parser::factor() {
 
-        if (this->currentToken.type_ == TTcolon)
-        {
-            this->advance();
-            block_ = this->block_();
-        }
-        else {
-            PRINT_(L"لم يتم إنهاء بينما بنقطتين \:");
-            exit(-1);
-        }
-        if (this->currentToken.type_ == TTkeyword and this->currentToken.val.keywordType == Else)
-        {
-            this->advance();
-            else_ = this->else_();
-        }
+    while (this->currentToken.type_ == TTPlus or this->currentToken.type_ == TTMinus) {
+        Token opToken = this->currentToken;
 
-        level--;
+        this->advance();
+        ExprNode* right = this->power();
+        exprLevel--;
 
-        (stmtsNode + level)->type_ = VWhile;
-        (stmtsNode + level)->U.While.condetion_ = condetion_;
-        (stmtsNode + level)->U.While.block_ = block_;
-        (stmtsNode + level)->U.While.else_ = else_;
+        (exprNode + exprLevel)->U.UnaryOp.right_ = right;
+        (exprNode + exprLevel)->U.UnaryOp.operator_ = opToken.type_;
+        (exprNode + exprLevel)->type_ = VTUnaryOp;
 
-        return (stmtsNode + level);
-
+        return (exprNode + exprLevel);
     }
 
-    StmtsNode* for_statement()
+    return this->power();
+}
+
+ExprNode* Parser::term() {
+    ExprNode* left = this->factor();
+
+    while (this->currentToken.type_ == TTMultiply or this->currentToken.type_ == TTDivide or this->currentToken.type_ == TTRemain) {
+        Token opToken = this->currentToken;
+
+        this->advance();
+        ExprNode* right = this->factor();
+        exprLevel--;
+
+        (exprNode + exprLevel)->U.BinaryOp.right_ = right;
+        (exprNode + exprLevel)->U.BinaryOp.operator_ = opToken.type_;
+        (exprNode + exprLevel)->U.BinaryOp.left_ = left;
+        (exprNode + exprLevel)->type_ = VTBinOp;
+
+        left = (exprNode + exprLevel);
+    }
+
+    return left;
+}
+
+ExprNode* Parser::sum() {
+    ExprNode* left = this->term();
+
+    while (this->currentToken.type_ == TTPlus or this->currentToken.type_ == TTMinus) {
+        Token opToken = this->currentToken;
+
+        this->advance();
+        ExprNode* right = this->term();
+        exprLevel--;
+
+        (exprNode + exprLevel)->U.BinaryOp.right_ = right;
+        (exprNode + exprLevel)->U.BinaryOp.operator_ = opToken.type_;
+        (exprNode + exprLevel)->U.BinaryOp.left_ = left;
+        (exprNode + exprLevel)->type_ = VTBinOp;
+
+        left = (exprNode + exprLevel);
+    }
+
+    return left;
+}
+
+ExprNode* Parser::comparesion() {
+    ExprNode* left = this->sum();
+
+    while (this->currentToken.type_ == TTEqualEqual or this->currentToken.type_ == TTNotEqual or this->currentToken.type_ == TTLessThan or this->currentToken.type_ == TTGreaterThan or this->currentToken.type_ == TTLessThanEqual or this->currentToken.type_ == TTGreaterThanEqual) {
+        Token opToken = this->currentToken;
+
+        this->advance();
+        ExprNode* right = this->sum();
+        exprLevel--;
+
+        (exprNode + exprLevel)->U.BinaryOp.right_ = right;
+        (exprNode + exprLevel)->U.BinaryOp.operator_ = opToken.type_;
+        (exprNode + exprLevel)->U.BinaryOp.left_ = left;
+        (exprNode + exprLevel)->type_ = VTBinOp;
+
+        left = (exprNode + exprLevel);
+    }
+
+    return left;
+}
+
+ExprNode* Parser::inversion() {
+
+    while (this->currentToken.type_ == TTKeyword and this->currentToken.V.keywordType == KVNot)
     {
-        if (this->currentToken.type_ == TTname)
-        {
-            AlifObject itrName{};
-            std::vector<ExprNode*>* args_ = new std::vector<ExprNode*>;
-            StmtsNode* block_ = nullptr;
-            StmtsNode* else_ = nullptr;
+        Token opToken = this->currentToken;
 
-            if (Next_Is(TTkeyword))
-            {
+        this->advance();
+        ExprNode* right = this->comparesion();
+        exprLevel--;
 
-                itrName.type_ = TTname;
-                itrName.V.Name.name_ = this->currentToken.val.numVal;
+        (exprNode + exprLevel)->U.UnaryOp.right_ = right;
+        (exprNode + exprLevel)->U.UnaryOp.operator_ = opToken.type_;
+        (exprNode + exprLevel)->U.UnaryOp.keyword_ = opToken.V.keywordType;
+        (exprNode + exprLevel)->type_ = VTUnaryOp;
 
-                this->advance();
-
-                if (this->currentToken.val.keywordType == In)
-                {
-                    this->advance();
-
-                    if (this->currentToken.type_ == TTlParenthesis)
-                    {
-                        this->advance();
-
-                        if (this->currentToken.type_ == TTrParenthesis)
-                        {
-                            PRINT_(L"المعاملات المسندة اقل من المتوقع");
-                            exit(-1);
-                        }
-
-                        while (this->currentToken.type_ == TTinteger or this->currentToken.type_ == TTname) // يجب تعديل الخوارزمية لانه يمكن إحتواء تعبير داخل معاملات حالة لاجل
-                        {
-                            args_->push_back(this->atom());
-                            if (!Next_Is(TTinteger) and !Next_Is(TTname))
-                            {
-                                break;
-                            }
-                            this->advance();
-
-                        }
-
-                        if (args_->size() > 3)
-                        {
-                            PRINT_(L"المعاملات المسندة اكثر من المتوقع");
-                            exit(-1);
-                        }
-
-                        if (this->currentToken.type_ == TTrParenthesis)
-                        {
-                            this->advance();
-
-                            if (this->currentToken.type_ == TTcolon)
-                            {
-                                this->advance();
-
-                                block_ = this->block_();
-
-                                if (this->currentToken.type_ == TTkeyword and this->currentToken.val.keywordType == Else)
-                                {
-                                    this->advance();
-
-                                    else_ = this->else_();
-                                }
-                            }
-                            else {
-                                PRINT_(L"لم يتم إنهاء لاجل بنقطتين \:");
-                                exit(-1);
-                            }
-                        }
-                        else {
-                            PRINT_(L"يتوقع وجود قوس ')'");
-                            exit(-1);
-                        }
-
-                    }
-                    else {
-                        PRINT_(L"يتوقع وجود قوس '('");
-                        exit(-1);
-                    }
-                }
-            }
-            else {
-                PRINT_(L"يتوقع وجود كلمة مفتاحية 'في'");
-                exit(-1);
-            }
-
-            level--;
-
-            (stmtsNode + level)->type_ = VFor;
-            (stmtsNode + level)->U.For.itrName = itrName;
-            (stmtsNode + level)->U.For.args_ = args_;
-            (stmtsNode + level)->U.For.block_ = block_;
-            (stmtsNode + level)->U.For.else_ = else_;
-
-            return (stmtsNode + level);
-        }
-        else {
-            PRINT_(L"يتوقع وجود اسم لاسناد قيمة له");
-            exit(-1);
-        }
+        return (exprNode + exprLevel);
     }
 
-    StmtsNode* else_if()
+    return this->comparesion();
+}
+
+ExprNode* Parser::conjuction() {
+
+    ExprNode* left = this->inversion();
+
+    while (this->currentToken.type_ == TTKeyword and this->currentToken.V.keywordType == KVAnd) {
+        Token opToken = this->currentToken;
+
+        this->advance();
+        ExprNode* right = this->inversion();
+        exprLevel--;
+
+        (exprNode + exprLevel)->U.BinaryOp.right_ = right;
+        (exprNode + exprLevel)->U.BinaryOp.operator_ = opToken.type_;
+        (exprNode + exprLevel)->U.BinaryOp.keyword_ = opToken.V.keywordType;
+        (exprNode + exprLevel)->U.BinaryOp.left_ = left;
+        (exprNode + exprLevel)->type_ = VTBinOp;
+
+        left = (exprNode + exprLevel);
+    }
+
+    return left;
+}
+
+ExprNode* Parser::disjuction() {
+
+    ExprNode* left = this->conjuction();
+
+    while (this->currentToken.type_ == TTKeyword and this->currentToken.V.keywordType == KVOr) {
+        Token opToken = this->currentToken;
+
+        this->advance();
+        ExprNode* right = this->conjuction();
+        exprLevel--;
+
+        (exprNode + exprLevel)->U.BinaryOp.right_ = right;
+        (exprNode + exprLevel)->U.BinaryOp.operator_ = opToken.type_;
+        (exprNode + exprLevel)->U.BinaryOp.keyword_ = opToken.V.keywordType;
+        (exprNode + exprLevel)->U.BinaryOp.left_ = left;
+        (exprNode + exprLevel)->type_ = VTBinOp;
+
+        left = (exprNode + exprLevel);
+    }
+
+    return left;
+}
+
+ExprNode* Parser::expression() {
+
+    ExprNode* expr_ = this->disjuction();
+
+    if (this->currentToken.type_ == TTKeyword and this->currentToken.V.keywordType == KVIf)
     {
-        StmtsNode* block_{};
-        ExprNode* condetion_ = this->expression();
+        this->advance();
+        ExprNode* condetion = this->disjuction();
 
-        if (this->currentToken.type_ == TTcolon)
+        if (this->currentToken.type_ == TTKeyword and this->currentToken.V.keywordType == KVElse)
         {
             this->advance();
-            block_ = this->block_();
-        }
-        else {
-            PRINT_(L"لم يتم إنهاء واذا بنقطتين \:");
-            exit(-1);
-        }
+            ExprNode* elseExpr = this->expression();
+            exprLevel--;
 
-        level--;
-        (stmtsNode + level)->type_ = VElseIf;
-        (stmtsNode + level)->U.If.condetion_ = condetion_;
-        (stmtsNode + level)->U.If.block_ = block_;
-        return (stmtsNode + level);
-    }
+            (exprNode + exprLevel)->U.Expr.expr_ = expr_;
+            (exprNode + exprLevel)->U.Expr.condetion_ = condetion;
+            (exprNode + exprLevel)->U.Expr.elseExpr = elseExpr;
+            (exprNode + exprLevel)->type_ = VTExpr;
 
-    StmtsNode* else_() {
+            return (exprNode + exprLevel);
 
-        if (this->currentToken.type_ == TTcolon)
-        {
-            this->advance();
-            return this->block_();
-        }
-        else {
-            PRINT_(L"لم يتم إنهاء والا بنقطتين \:");
-            exit(-1);
-        }
-    }
-
-    StmtsNode* if_statement()
-    {
-
-        StmtsNode* block_{};
-        std::vector<StmtsNode*>* elseIf = new std::vector<StmtsNode*>;
-        StmtsNode* else_{};
-        ExprNode* condetion_ = this->expression();
-
-        if (this->currentToken.type_ == TTcolon)
-        {
-            this->advance();
-            block_ = this->block_();
-        }
-        else {
-            PRINT_(L"لم يتم إنهاء اذا بنقطتين \:");
-            exit(-1);
-        }
-        while (this->currentToken.val.keywordType == Elseif)
-        {
-            this->advance();
-            elseIf->push_back(this->else_if());
-        }
-        if (this->currentToken.val.keywordType == Else)
-        {
-            this->advance();
-            else_ = this->else_();
-        }
-
-        level--;
-        (stmtsNode + level)->type_ = VIf;
-        (stmtsNode + level)->U.If.condetion_ = condetion_;
-        (stmtsNode + level)->U.If.block_ = block_;
-        (stmtsNode + level)->U.If.elseIf = elseIf;
-        (stmtsNode + level)->U.If.else_ = else_;
-        return (stmtsNode + level);
-
-    }
-
-    StmtsNode* block_()
-    {
-        if (this->currentToken.type_ == TTnewline)
-        {
-            this->advance();
-
-            if (this->currentToken.type_ == TTindent)
-            {
-                this->advance();
-
-                StmtsNode* stmts_ = this->statements();
-
-                if (this->currentToken.type_ == TTdedent or this->currentToken.type_ == TTendOfFile)
-                {
-                    this->advance();
-                    return stmts_;
-                }
-                else if (this->currentToken.type_ == TTindent) {
-                    PRINT_(L"يتوقع وجود مسافة راجعة في نهاية الحالة المركبة");
-                    exit(-1);
-                }
-            }
-            else {
-                PRINT_(L"يتوقع وجود مسافة بادئة في بداية جسم الحالة المركبة");
-                exit(-1);
-            }
-
-        }
-    }
-
-    ////void import_from() {
-    ////}
-
-    ////void import_name() {
-    ////}
-
-    ////void import_statement() {
-    ////}
-
-    ////void delete_statement() {
-    ////}
-
-
-    StmtsNode* compound_statement()
-    {
-        if (this->currentToken.val.keywordType == Function)
-        {
-            this->advance();
-            return this->function_def();
-        }
-        else if (this->currentToken.val.keywordType == If)
-        {
-            this->advance();
-            return this->if_statement();
-        }
-        else if (this->currentToken.val.keywordType == For)
-        {
-            this->advance();
-            return this->for_statement();
-        }
-        else if (this->currentToken.val.keywordType == While)
-        {
-            this->advance();
-            return this->while_statement();
-        }
-        else if (this->currentToken.val.keywordType == Class)
-        {
-            this->advance();
-            return this->class_def();
-        }
-        if (this->currentToken.val.keywordType == Return)
-        {
-            if (returnFlag)
-            {
-                this->advance();
-                return this->return_statement();
-            }
-            else
-            {
-                PRINT_(L"لا يمكن إستدعاء ارجع من خارج دالة");
-                exit(-1);
-            }
-        }
-    }
-
-    ExprNode* simple_statement()
-    {
-        return this->assignment();
-    }
-
-    StmtsNode* statement() {
-        if (this->currentToken.type_ == TTkeyword)
-        {
-            if (this->currentToken.val.keywordType == Function or this->currentToken.val.keywordType == If or this->currentToken.val.keywordType == Class or this->currentToken.val.keywordType == For or this->currentToken.val.keywordType == While or this->currentToken.val.keywordType == Return)
-            {
-                return this->compound_statement();
-            }
         }
         else
         {
-            ExprNode* exprNode = this->simple_statement();
-
-            if (this->currentToken.type_ != TTnewline) {
-                PRINT_(L"لا يمكن وجود اكثر من حالة في نفس السطر");
-                exit(-1);
-            }
-            this->advance();
-
-            level--;
-            (stmtsNode + level)->type_ = VExpr;
-            (stmtsNode + level)->U.Expr.expr_ = exprNode;
-            return (stmtsNode + level);
+            PRINT_(L"خطأ في حالة تعبير - لم يتم إضافة \"والا\" للحالة");
+            exit(-1);
         }
     }
 
-    StmtsNode* statements() {
+    return expr_;
 
-        std::vector<StmtsNode*>* statements_ = new std::vector<StmtsNode*>;
+}
 
-        while (this->currentToken.type_ != TTdedent and this->currentToken.type_ != TTendOfFile)
-        {
-            if (this->currentToken.type_ == TTindent)
-            {
-                PRINT_(L"خطأ في المسافات البادئة - لقد خرجت عن النطاق الحالي");
-                exit(-1);
-            }
-            statements_->push_back(this->statement());
+//ExprNode* Parser::expressions() {
+//
+//    ExprNode* expr_ = this->expression();
+//
+//    if (this->currentToken.type_ == TTComma)
+//    {
+//        std::vector<ExprNode*>* exprs_ = new std::vector<ExprNode*>;
+//
+//        exprs_->push_back(expr_);
+//        do
+//        {
+//            this->advance();
+//            exprs_->push_back(this->expression());
+//
+//        } while (this->currentToken.type_ == TTComma);
+//
+//        exprLevel--;
+//
+//        (exprNode + exprLevel)->U.Object.value_.objType = OTList;
+//        (exprNode + exprLevel)->U.Object.value_.V.ListObj.list_ = exprs_;
+//        (exprNode + exprLevel)->type_ = VTList;
+//
+//        return (exprNode + exprLevel);
+//    }
+//    return expr_;
+//}
+//
+//ExprNode* Parser::assignment() {
+//
+//
+//    if (this->currentToken.type_ == TTName)
+//    {
+//        if (Next_Is(TTEqual))
+//        {
+//            std::vector<AlifObject>* names_ = new std::vector<AlifObject>;
+//
+//            while (Next_Is(TTEqual))
+//            {
+//                AlifObject name_{};
+//
+//                name_.objType = OTName;
+//                name_.V.NameObj.name_ = this->currentToken.V.numVal;
+//
+//                names_->push_back(name_);
+//
+//                this->advance();
+//                this->advance();
+//
+//            }
+//
+//            ExprNode* expr_ = this->expressions();
+//            exprLevel--;
+//
+//            (exprNode + exprLevel)->U.NameAssign.name_ = names_;
+//            (exprNode + exprLevel)->U.NameAssign.value_ = expr_;
+//            (exprNode + exprLevel)->type_ = VTAssign;
+//
+//            return (exprNode + exprLevel);
+//
+//        }
+//        else if (Next_Is(TTPlusEqual) or Next_Is(TTMinusEqual) or Next_Is(TTMultiplyEqual) or Next_Is(TTDivideEqual) or Next_Is(TTPowerEqual) or Next_Is(TTRemainEqual))
+//        {
+//            // يجب إختصار نوع التحقق الى TTaugAssign
+//            // بحيث يتم تخزين النوع في العملية بشكل مباشر دون التحقق منها
+//            // if token.type == TTaugassign then operator = opToken.type
+//
+//            AlifObject name_{};
+//            name_.objType = OTName;
+//            name_.V.NameObj.name_ = this->currentToken.V.numVal;
+//
+//            this->advance();
+//
+//            Token opToken = this->currentToken;
+//
+//
+//            this->advance();
+//            ExprNode* expr_ = this->expression();
+//            exprLevel--;
+//
+//            (exprNode + exprLevel)->U.AugNameAssign.name_ = name_;
+//            (exprNode + exprLevel)->U.AugNameAssign.operator_ = opToken.type_;
+//            (exprNode + exprLevel)->U.AugNameAssign.value_ = expr_;
+//            (exprNode + exprLevel)->type_ = VTAugAssign;
+//
+//            return (exprNode + exprLevel);
+//
+//        }
+//    }
+//
+//    return this->expressions();
+//}
+//
+//StmtsNode* Parser::return_statement() {
+//
+//    ExprNode* expr_;
+//
+//    if (this->currentToken.type_ != TTNewline)
+//    {
+//        expr_ = this->expression();
+//    }
+//    else
+//    {
+//        expr_ = nullptr;
+//    }
+//    this->advance();
+//
+//    exprLevel--;
+//    (stmtsNode + exprLevel)->U.Return.returnExpr = expr_;
+//    (stmtsNode + exprLevel)->type_ = VTReturn;
+//
+//    return (stmtsNode + exprLevel);
+//}
 
-        }
-        level--;
-
-        (stmtsNode + level)->type_ = VStmts;
-        (stmtsNode + level)->U.Stmts.stmts_ = statements_;
-        return (stmtsNode + level);
-
-    }
-};
+//    std::vector<ExprNode*>* parameters() {
+//
+//
+//        std::vector<ExprNode*>* params_ = new std::vector<ExprNode*>;
+//        lastParam = false;
+//
+//        do {
+//
+//            this->advance();
+//
+//            if (this->currentToken.type_ != TTRrightParenthesis)
+//            {
+//                if (Next_Is(TTequal))
+//                {
+//                    lastParam = true;
+//
+//                    AlifObject name_{};
+//
+//                    name_.type_ = TTname;
+//                    name_.V.Name.name_ = this->currentToken.val.numVal;
+//
+//                    this->advance();
+//                    this->advance();
+//
+//                    ExprNode* expr_ = this->expression();
+//
+//                    level--;
+//
+//                    (exprNode + level)->type_ = VAssign;
+//                    (exprNode + level)->U.NameAssign.paramName = name_;
+//                    (exprNode + level)->U.NameAssign.value_ = expr_;
+//
+//                    params_->push_back((exprNode + level));
+//
+//                }
+//                else {
+//                    if (!lastParam)
+//                    {
+//                        params_->push_back(this->atom());
+//                    }
+//                    else {
+//                        PRINT_(L"لا يمكن تمرير متغير بدون قيمة افتراضية بعد متغير ذو قيمة افتراضية");
+//                        exit(-1);
+//                    }
+//                }
+//
+//            }
+//            else
+//            {
+//                return params_;
+//            }
+//
+//        } while (this->currentToken.type_ == TTComma);
+//
+//        if (this->currentToken.type_ == TTRrightParenthesis)
+//        {
+//            return params_;
+//        }
+//        else {
+//            PRINT_(L"لم يتم إغلاق القوس");
+//            exit(-1);
+//        }
+//
+//    }
+//
+//    StmtsNode* function_def() {
+//
+//        AlifObject name{};
+//        StmtsNode* body = nullptr;
+//        std::vector<ExprNode*>* params = nullptr;
+//
+//        if (this->currentToken.type_ == TTname or this->currentToken.type_ == TTbuildInFunc) {
+//
+//            name.type_ = this->currentToken.type_;
+//
+//            if (this->currentToken.type_ == TTname)
+//            {
+//                name.V.Name.name_ = this->currentToken.val.numVal;
+//            }
+//            else if (this->currentToken.type_ == TTbuildInFunc) {
+//                name.V.BuildInFunc.buildInFunc = this->currentToken.val.buildInFunc;
+//            }
+//            else
+//            {
+//                PRINT_(L"يتوقع وجود اسم للدالة");
+//            }
+//
+//            this->advance();
+//
+//            if (this->currentToken.type_ == TTLeftParenthesis and Next_Is(TTRrightParenthesis)) {
+//
+//                this->advance();
+//                this->advance();
+//            }
+//            else {
+//                params = this->parameters();
+//                this->advance();
+//            }
+//
+//            if (this->currentToken.type_ == TTcolon) {
+//
+//                this->advance();
+//                returnFlag = true;
+//                body = this->block_();
+//                returnFlag = false;
+//
+//                level--;
+//                (stmtsNode + level)->type_ = VFunction;
+//                (stmtsNode + level)->U.FunctionDef.name = name;
+//                (stmtsNode + level)->U.FunctionDef.params = params;
+//                (stmtsNode + level)->U.FunctionDef.body = body;
+//                return (stmtsNode + level);
+//            }
+//            else {
+//                PRINT_(L"لم يتم إنهاء دالة بنقطتين \:");
+//                exit(-1);
+//            }
+//        }
+//
+//    }
+//
+//    StmtsNode* class_def() {
+//
+//        ExprNode* bases = nullptr;
+//        StmtsNode* body = nullptr;
+//        AlifObject name{};
+//
+//        if (this->currentToken.type_ == TTname) {
+//
+//            name.type_ = TTname;
+//            name.V.Name.name_ = this->currentToken.val.numVal;
+//
+//            this->advance();
+//
+//            if (this->currentToken.type_ == TTLeftParenthesis) {
+//
+//                this->advance();
+//
+//                bases = this->expressions();
+//
+//                if (this->currentToken.type_ == TTRrightParenthesis)
+//                {
+//                    this->advance();
+//                }
+//            }
+//            if (this->currentToken.type_ == TTcolon) {
+//
+//                this->advance();
+//
+//                body = this->block_();
+//
+//                level--;
+//                (stmtsNode + level)->type_ = VClass;
+//                (stmtsNode + level)->U.ClassDef.name = name;
+//                (stmtsNode + level)->U.ClassDef.base = bases;
+//                (stmtsNode + level)->U.ClassDef.body = body;
+//                return (stmtsNode + level);
+//            }
+//        }
+//    }
+//
+//    StmtsNode* while_statement() {
+//
+//        ExprNode* condetion_ = this->expression();
+//        StmtsNode* block_ = nullptr;
+//        StmtsNode* else_ = nullptr;
+//
+//        if (this->currentToken.type_ == TTcolon)
+//        {
+//            this->advance();
+//            block_ = this->block_();
+//        }
+//        else {
+//            PRINT_(L"لم يتم إنهاء بينما بنقطتين \:");
+//            exit(-1);
+//        }
+//        if (this->currentToken.type_ == TTKeyword and this->currentToken.val.keywordType == Else)
+//        {
+//            this->advance();
+//            else_ = this->else_();
+//        }
+//
+//        level--;
+//
+//        (stmtsNode + level)->type_ = VWhile;
+//        (stmtsNode + level)->U.While.condetion_ = condetion_;
+//        (stmtsNode + level)->U.While.block_ = block_;
+//        (stmtsNode + level)->U.While.else_ = else_;
+//
+//        return (stmtsNode + level);
+//
+//    }
+//
+//    StmtsNode* for_statement()
+//    {
+//        if (this->currentToken.type_ == TTname)
+//        {
+//            AlifObject itrName{};
+//            std::vector<ExprNode*>* args_ = new std::vector<ExprNode*>;
+//            StmtsNode* block_ = nullptr;
+//            StmtsNode* else_ = nullptr;
+//
+//            if (Next_Is(TTKeyword))
+//            {
+//
+//                itrName.type_ = TTname;
+//                itrName.V.Name.name_ = this->currentToken.val.numVal;
+//
+//                this->advance();
+//
+//                if (this->currentToken.val.keywordType == In)
+//                {
+//                    this->advance();
+//
+//                    if (this->currentToken.type_ == TTLeftParenthesis)
+//                    {
+//                        this->advance();
+//
+//                        if (this->currentToken.type_ == TTRrightParenthesis)
+//                        {
+//                            PRINT_(L"المعاملات المسندة اقل من المتوقع");
+//                            exit(-1);
+//                        }
+//
+//                        while (this->currentToken.type_ == TTinteger or this->currentToken.type_ == TTname) // يجب تعديل الخوارزمية لانه يمكن إحتواء تعبير داخل معاملات حالة لاجل
+//                        {
+//                            args_->push_back(this->atom());
+//                            if (!Next_Is(TTinteger) and !Next_Is(TTname))
+//                            {
+//                                break;
+//                            }
+//                            this->advance();
+//
+//                        }
+//
+//                        if (args_->size() > 3)
+//                        {
+//                            PRINT_(L"المعاملات المسندة اكثر من المتوقع");
+//                            exit(-1);
+//                        }
+//
+//                        if (this->currentToken.type_ == TTRrightParenthesis)
+//                        {
+//                            this->advance();
+//
+//                            if (this->currentToken.type_ == TTcolon)
+//                            {
+//                                this->advance();
+//
+//                                block_ = this->block_();
+//
+//                                if (this->currentToken.type_ == TTKeyword and this->currentToken.val.keywordType == Else)
+//                                {
+//                                    this->advance();
+//
+//                                    else_ = this->else_();
+//                                }
+//                            }
+//                            else {
+//                                PRINT_(L"لم يتم إنهاء لاجل بنقطتين \:");
+//                                exit(-1);
+//                            }
+//                        }
+//                        else {
+//                            PRINT_(L"يتوقع وجود قوس ')'");
+//                            exit(-1);
+//                        }
+//
+//                    }
+//                    else {
+//                        PRINT_(L"يتوقع وجود قوس '('");
+//                        exit(-1);
+//                    }
+//                }
+//            }
+//            else {
+//                PRINT_(L"يتوقع وجود كلمة مفتاحية 'في'");
+//                exit(-1);
+//            }
+//
+//            level--;
+//
+//            (stmtsNode + level)->type_ = VFor;
+//            (stmtsNode + level)->U.For.itrName = itrName;
+//            (stmtsNode + level)->U.For.args_ = args_;
+//            (stmtsNode + level)->U.For.block_ = block_;
+//            (stmtsNode + level)->U.For.else_ = else_;
+//
+//            return (stmtsNode + level);
+//        }
+//        else {
+//            PRINT_(L"يتوقع وجود اسم لاسناد قيمة له");
+//            exit(-1);
+//        }
+//    }
+//
+//    StmtsNode* else_if()
+//    {
+//        StmtsNode* block_{};
+//        ExprNode* condetion_ = this->expression();
+//
+//        if (this->currentToken.type_ == TTcolon)
+//        {
+//            this->advance();
+//            block_ = this->block_();
+//        }
+//        else {
+//            PRINT_(L"لم يتم إنهاء واذا بنقطتين \:");
+//            exit(-1);
+//        }
+//
+//        level--;
+//        (stmtsNode + level)->type_ = VElseIf;
+//        (stmtsNode + level)->U.If.condetion_ = condetion_;
+//        (stmtsNode + level)->U.If.block_ = block_;
+//        return (stmtsNode + level);
+//    }
+//
+//    StmtsNode* else_() {
+//
+//        if (this->currentToken.type_ == TTcolon)
+//        {
+//            this->advance();
+//            return this->block_();
+//        }
+//        else {
+//            PRINT_(L"لم يتم إنهاء والا بنقطتين \:");
+//            exit(-1);
+//        }
+//    }
+//
+//    StmtsNode* if_statement()
+//    {
+//
+//        StmtsNode* block_{};
+//        std::vector<StmtsNode*>* elseIf = new std::vector<StmtsNode*>;
+//        StmtsNode* else_{};
+//        ExprNode* condetion_ = this->expression();
+//
+//        if (this->currentToken.type_ == TTcolon)
+//        {
+//            this->advance();
+//            block_ = this->block_();
+//        }
+//        else {
+//            PRINT_(L"لم يتم إنهاء اذا بنقطتين \:");
+//            exit(-1);
+//        }
+//        while (this->currentToken.val.keywordType == Elseif)
+//        {
+//            this->advance();
+//            elseIf->push_back(this->else_if());
+//        }
+//        if (this->currentToken.val.keywordType == Else)
+//        {
+//            this->advance();
+//            else_ = this->else_();
+//        }
+//
+//        level--;
+//        (stmtsNode + level)->type_ = VIf;
+//        (stmtsNode + level)->U.If.condetion_ = condetion_;
+//        (stmtsNode + level)->U.If.block_ = block_;
+//        (stmtsNode + level)->U.If.elseIf = elseIf;
+//        (stmtsNode + level)->U.If.else_ = else_;
+//        return (stmtsNode + level);
+//
+//    }
+//
+//    StmtsNode* block_()
+//    {
+//        if (this->currentToken.type_ == TTnewline)
+//        {
+//            this->advance();
+//
+//            if (this->currentToken.type_ == TTindent)
+//            {
+//                this->advance();
+//
+//                StmtsNode* stmts_ = this->statements();
+//
+//                if (this->currentToken.type_ == TTdedent or this->currentToken.type_ == TTendOfFile)
+//                {
+//                    this->advance();
+//                    return stmts_;
+//                }
+//                else if (this->currentToken.type_ == TTindent) {
+//                    PRINT_(L"يتوقع وجود مسافة راجعة في نهاية الحالة المركبة");
+//                    exit(-1);
+//                }
+//            }
+//            else {
+//                PRINT_(L"يتوقع وجود مسافة بادئة في بداية جسم الحالة المركبة");
+//                exit(-1);
+//            }
+//
+//        }
+//    }
+//
+//    ////void import_from() {
+//    ////}
+//
+//    ////void import_name() {
+//    ////}
+//
+//    ////void import_statement() {
+//    ////}
+//
+//    ////void delete_statement() {
+//    ////}
+//
+//
+//    StmtsNode* compound_statement()
+//    {
+//        if (this->currentToken.val.keywordType == Function)
+//        {
+//            this->advance();
+//            return this->function_def();
+//        }
+//        else if (this->currentToken.val.keywordType == If)
+//        {
+//            this->advance();
+//            return this->if_statement();
+//        }
+//        else if (this->currentToken.val.keywordType == For)
+//        {
+//            this->advance();
+//            return this->for_statement();
+//        }
+//        else if (this->currentToken.val.keywordType == While)
+//        {
+//            this->advance();
+//            return this->while_statement();
+//        }
+//        else if (this->currentToken.val.keywordType == Class)
+//        {
+//            this->advance();
+//            return this->class_def();
+//        }
+//        if (this->currentToken.val.keywordType == Return)
+//        {
+//            if (returnFlag)
+//            {
+//                this->advance();
+//                return this->return_statement();
+//            }
+//            else
+//            {
+//                PRINT_(L"لا يمكن إستدعاء ارجع من خارج دالة");
+//                exit(-1);
+//            }
+//        }
+//    }
+//
+//    ExprNode* simple_statement()
+//    {
+//        return this->assignment();
+//    }
+//
+//    StmtsNode* statement() {
+//        if (this->currentToken.type_ == TTKeyword)
+//        {
+//            if (this->currentToken.val.keywordType == Function or this->currentToken.val.keywordType == If or this->currentToken.val.keywordType == Class or this->currentToken.val.keywordType == For or this->currentToken.val.keywordType == While or this->currentToken.val.keywordType == Return)
+//            {
+//                return this->compound_statement();
+//            }
+//        }
+//        else
+//        {
+//            ExprNode* exprNode = this->simple_statement();
+//
+//            if (this->currentToken.type_ != TTnewline) {
+//                PRINT_(L"لا يمكن وجود اكثر من حالة في نفس السطر");
+//                exit(-1);
+//            }
+//            this->advance();
+//
+//            level--;
+//            (stmtsNode + level)->type_ = VExpr;
+//            (stmtsNode + level)->U.Expr.expr_ = exprNode;
+//            return (stmtsNode + level);
+//        }
+//    }
+//
+//    StmtsNode* statements() {
+//
+//        std::vector<StmtsNode*>* statements_ = new std::vector<StmtsNode*>;
+//
+//        while (this->currentToken.type_ != TTdedent and this->currentToken.type_ != TTendOfFile)
+//        {
+//            if (this->currentToken.type_ == TTindent)
+//            {
+//                PRINT_(L"خطأ في المسافات البادئة - لقد خرجت عن النطاق الحالي");
+//                exit(-1);
+//            }
+//            statements_->push_back(this->statement());
+//
+//        }
+//        level--;
+//
+//        (stmtsNode + level)->type_ = VStmts;
+//        (stmtsNode + level)->U.Stmts.stmts_ = statements_;
+//        return (stmtsNode + level);
+//
+//    }
+//};
