@@ -3,9 +3,10 @@
 #include <iostream>
 #include <vector>
 
-#include "Node.h"
 #include "Types.h"
 #include "Values.h"
+
+class ExprNode; 
 
 using wstr = std::wstring;
 using double64_t = long double;
