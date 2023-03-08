@@ -1,6 +1,7 @@
 #include<fstream>
 
 #include "Lexer.h"
+#include "Parser.h"
 
 #ifndef _WIN64
 
@@ -173,8 +174,8 @@ void file_run(wchar_t* _fileName) {
     // المحلل اللغوي
     /////////////////////////////////////////////////////////////////
 
-    //Parser parser = Parser(&lexer.tokens_, _fileName, &input_);
-    //parser.parse_file();
+    Parser parser = Parser(&lexer.tokens_, _fileName, &input_);
+    parser.parse_file();
 }
 
 void terminal_run() {
@@ -207,8 +208,8 @@ void terminal_run() {
         // المحلل اللغوي
         /////////////////////////////////////////////////////////////////
 
-        //Parser parser = Parser(&lexer.tokens_, fileName, &input_);
-        //parser.parse_terminal();
+        Parser parser = Parser(&lexer.tokens_, fileName, &input_);
+        parser.parse_terminal();
 
         // std::wcin.ignore(); // لمنع ارسال قيمة فارغة في المتغير input_ ** يجب إضافة شرط في حال كان المدخل غير فارغ يجب ان يقوم بعمل تجاهل له
     }

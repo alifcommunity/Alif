@@ -1,6 +1,5 @@
 #include "Parser.h"
 
-
 Parser::Parser(std::vector<Token>* tokens, wstr _fileName, wstr* _input) : 
     tokens(tokens), fileName(_fileName), input_(_input)
 {
@@ -40,174 +39,172 @@ void Parser::parse_terminal()
     if (intrRes.objType == OTNumber) { PRINT_(intrRes.V.NumberObj.numberValue); }
     else if (intrRes.objType == OTString) { PRINT_(*intrRes.V.StringObj.strValue); }
     else if (intrRes.objType == OTNone) { PRINT_(L"عدم"); }
-    else if (intrRes.objType == OTKeyword) { if (intrRes.V.Boolean.value_ == 1) { PRINT_(L"صح"); } else { PRINT_(L"خطا"); } }
+    else if (intrRes.objType == OTKeyword) { if (intrRes.V.BoolObj.boolValue == 1) { PRINT_(L"صح"); } else { PRINT_(L"خطا"); } }
     else if (intrRes.objType == OTList) {
         this->list_print(intrRes);
-        PRINT_(lst);
+        PRINT_(lst_);
     }
 }
 
+void Parser::list_print(AlifObject _obj) {
+    lst_.append(L"[");
+    if (_obj.objType == OTList) {
+        for (AlifObject obj : *_obj.V.ListObj.objList) {
+            if (obj.objType == OTNumber)
+            {
+                lst_.append(std::to_wstring(obj.V.NumberObj.numberValue));
 
-    wstr lst;
-    void list_print(AlifObject _obj) {
-        lst.append(L"[");
-        if (_obj.type_ == TTlist) {
-            for (AlifObject obj : *_obj.V.List.objList) {
-                if (obj.type_ == TTnumber)
-                {
-                    lst.append(std::to_wstring(obj.V.Number.value_));
-
-                }
-                else if (obj.type_ == TTstring)
-                {
-                    lst.append(*obj.V.String.value_);
-
-                }
-                else if (obj.type_ == TTkeyword)
-                {
-                    lst.append(std::to_wstring(obj.V.Boolean.value_));
-
-                }
-                else if (obj.type_ == TTlist) {
-                    this->list_print(obj);
-                }
-                lst.append(L", ");
             }
-            lst.replace(lst.length() - 2, lst.length(), L"]");
+            else if (obj.objType == OTString)
+            {
+                lst_.append(*obj.V.StringObj.strValue);
+
+            }
+            else if (obj.objType == OTKeyword)
+            {
+                lst_.append(std::to_wstring(obj.V.BoolObj.boolValue));
+
+            }
+            else if (obj.objType == OTList) {
+                this->list_print(obj);
+            }
+            lst_.append(L", ");
         }
+        lst_.replace(lst_.length() - 2, lst_.length(), L"]");
     }
+}
 
     //////////////////////////////
 
-    std::vector<ExprNode*>* arguments() {
+std::vector<ExprNode*>* Parser::arguments() {
 
-        std::vector<ExprNode*>* args = new std::vector<ExprNode*>;
+    std::vector<ExprNode*>* args = new std::vector<ExprNode*>;
 
-        do {
+    do {
 
-            args->push_back(this->expression());
+        args->push_back(this->expression());
 
-            if (this->currentToken.type_ == TTcomma) {
-                this->advance();
-            }
+        if (this->currentToken.type_ == TTComma) {
+            this->advance();
+        }
 
-        } while (this->currentToken.type_ != TTrParenthesis);
+    } while (this->currentToken.type_ != TTRrightParenthesis);
 
-        return args;
+    return args;
 
+}
+
+
+ExprNode* Parser::atom() {
+
+    Token token = this->currentToken;
+    exprLevel--;
+
+    if (token.type_ == TTName)
+    {
+
+        this->advance();
+        (exprNode + exprLevel)->U.NameAccess.name_.objType = OTName;
+        (exprNode + exprLevel)->U.NameAccess.name_.V.NameObj.name_ = token.V.numVal;
+        (exprNode + exprLevel)->type_ = VTAccess;
+        return (exprNode + exprLevel);
     }
+    else if (token.type_ == TTBuildInFunc)
+    {
 
-
-    ExprNode* atom() {
-
-        Token token = this->currentToken;
-        level--;
-
-        if (token.type_ == TTname)
-        {
-
-            this->advance();
-            (exprNode + level)->U.NameAccess.name_.type_ = TTname;
-            (exprNode + level)->U.NameAccess.name_.V.Name.name_ = token.val.numVal;
-            (exprNode + level)->type_ = VAccess;
-            return (exprNode + level);
-        }
-        else if (token.type_ == TTbuildInFunc)
-        {
-
-            this->advance();
-            (exprNode + level)->U.NameAccess.name_.type_ = TTbuildInFunc;
-            (exprNode + level)->U.NameAccess.name_.V.BuildInFunc.buildInFunc = token.val.buildInFunc;
-            (exprNode + level)->type_ = VAccess;
-            return (exprNode + level);
-        }
-        else if (token.type_ == TTkeyword) {
-            if (token.val.keywordType == True)
-            {
-                this->advance();
-                (exprNode + level)->U.Object.value_.type_ = TTkeyword;
-                (exprNode + level)->U.Object.value_.V.Boolean.Kkind_ = True;
-                (exprNode + level)->U.Object.value_.V.Boolean.value_ = 1;
-                (exprNode + level)->type_ = VObject;
-
-                return (exprNode + level);
-            }
-            else if (token.val.keywordType == False)
-            {
-                this->advance();
-                (exprNode + level)->U.Object.value_.type_ = TTkeyword;
-                (exprNode + level)->U.Object.value_.V.Boolean.Kkind_ = False;
-                (exprNode + level)->U.Object.value_.V.Boolean.value_ = 0;
-                (exprNode + level)->type_ = VObject;
-
-                return (exprNode + level);
-            }
-            else if (token.val.keywordType == None)
-            {
-                this->advance();
-                (exprNode + level)->U.Object.value_.type_ = TTnone;
-                (exprNode + level)->U.Object.value_.V.None.kind_ = None;
-                (exprNode + level)->type_ = VObject;
-
-                return (exprNode + level);
-            }
-            else {
-                PRINT_(L"يوجد كلمة مفتاحية في غير سياقها");
-                exit(-1);
-            }
-        }
-        else if (token.type_ == TTinteger)
+        this->advance();
+        (exprNode + exprLevel)->U.NameAccess.name_.objType = OTBuildInFunc;
+        (exprNode + exprLevel)->U.NameAccess.name_.V.BuildInFuncObj.buildInFunc = token.V.buildInFunc;
+        (exprNode + exprLevel)->type_ = VTAccess;
+        return (exprNode + exprLevel);
+    }
+    else if (token.type_ == TTKeyword) {
+        if (token.V.keywordType == KVTrue)
         {
             this->advance();
-            (exprNode + level)->U.Object.value_.type_ = TTnumber;
-            (exprNode + level)->U.Object.value_.V.Number.Tkind_ = token.type_;
-            (exprNode + level)->U.Object.value_.V.Number.value_ = token.val.numVal;
-            (exprNode + level)->type_ = VObject;
-            return (exprNode + level);
-        }
-        else if (token.type_ == TTfloat)
-        {
-            this->advance();
-            (exprNode + level)->U.Object.value_.type_ = TTnumber;
-            (exprNode + level)->U.Object.value_.V.Number.Tkind_ = token.type_;
-            (exprNode + level)->U.Object.value_.V.Number.value_ = token.val.numVal;
-            (exprNode + level)->type_ = VObject;
-            return (exprNode + level);
-        }
-        else if (token.type_ == TTstring)
-        {
-            this->advance();
-            (exprNode + level)->U.Object.value_.type_ = token.type_;
-            (exprNode + level)->U.Object.value_.V.String.value_ = token.val.strVal;
-            (exprNode + level)->type_ = VObject;
-            return (exprNode + level);
-        }
-        else if (token.type_ == TTlSquare)
-        {
-            return this->list_expr();
-        }
-        else if (this->currentToken.type_ == TTlParenthesis)
-        {
-            this->advance();
-            ExprNode* priorExpr = this->expression();
+            (exprNode + exprLevel)->U.Object.value_.objType = OTKeyword;
+            (exprNode + exprLevel)->U.Object.value_.V.BoolObj.boolValue = KVTrue;
+            //(exprNode + exprLevel)->U.Object.value_.V.BoolObj.boolValue = 1;
+            (exprNode + exprLevel)->type_ = VTObject;
 
-            if (this->currentToken.type_ == TTrParenthesis)
-            {
-                this->advance();
-                return priorExpr;
-            }
-            else
-            {
-                PRINT_(L"لم يتم إغلاق قوس القوس");
-                exit(-1);
-            }
+            return (exprNode + exprLevel);
         }
-        else
+        else if (token.V.keywordType == KVFalse)
         {
-            PRINT_(L"لم يتم العثور على حالة");
+            this->advance();
+            (exprNode + exprLevel)->U.Object.value_.objType = OTKeyword;
+            (exprNode + exprLevel)->U.Object.value_.V.BoolObj.boolValue = KVFalse;
+            //(exprNode + exprLevel)->U.Object.value_.V.BoolObj.value_ = 0;
+            (exprNode + exprLevel)->type_ = VTObject;
+
+            return (exprNode + exprLevel);
+        }
+        else if (token.V.keywordType == KVNone)
+        {
+            this->advance();
+            (exprNode + exprLevel)->U.Object.value_.objType = OTNone;
+            (exprNode + exprLevel)->U.Object.value_.V.NoneObj.noneValue= KVNone;
+            (exprNode + exprLevel)->type_ = VTObject;
+
+            return (exprNode + exprLevel);
+        }
+        else {
+            PRINT_(L"يوجد كلمة مفتاحية في غير سياقها");
             exit(-1);
         }
     }
+    else if (token.type_ == TTInteger)
+    {
+        this->advance();
+        (exprNode + exprLevel)->U.Object.value_.objType = OTNumber;
+        (exprNode + exprLevel)->U.Object.value_.V.NumberObj.numberType = token.type_;
+        (exprNode + exprLevel)->U.Object.value_.V.NumberObj.numberValue = token.V.numVal;
+        (exprNode + exprLevel)->type_ = VTObject;
+        return (exprNode + exprLevel);
+    }
+    else if (token.type_ == TTFloat)
+    {
+        this->advance();
+        (exprNode + exprLevel)->U.Object.value_.objType = OTNumber;
+        (exprNode + exprLevel)->U.Object.value_.V.NumberObj.numberType = token.type_;
+        (exprNode + exprLevel)->U.Object.value_.V.NumberObj.numberValue = token.V.numVal;
+        (exprNode + exprLevel)->type_ = VTObject;
+        return (exprNode + exprLevel);
+    }
+    else if (token.type_ == TTString)
+    {
+        this->advance();
+        (exprNode + exprLevel)->U.Object.value_.objType = OTString;
+        (exprNode + exprLevel)->U.Object.value_.V.StringObj.strValue = token.V.strVal;
+        (exprNode + exprLevel)->type_ = VTObject;
+        return (exprNode + exprLevel);
+    }
+    else if (token.type_ == TTLeftSquare)
+    {
+        return this->list_expr();
+    }
+    else if (this->currentToken.type_ == TTLeftParenthesis)
+    {
+        this->advance();
+        ExprNode* priorExpr = this->expression();
+
+        if (this->currentToken.type_ == TTRrightParenthesis)
+        {
+            this->advance();
+            return priorExpr;
+        }
+        else
+        {
+            PRINT_(L"لم يتم إغلاق قوس القوس");
+            exit(-1);
+        }
+    }
+    else
+    {
+        PRINT_(L"لم يتم العثور على حالة");
+        exit(-1);
+    }
+}
 
     ExprNode* list_expr()
     {
@@ -235,7 +232,7 @@ void Parser::parse_terminal()
 
         level--;
 
-        (exprNode + level)->U.Object.value_.type_ = TTlist;
+        (exprNode + level)->U.Object.value_.objType = TTlist;
         (exprNode + level)->U.Object.value_.V.List.list_ = nodeElement;
         (exprNode + level)->type_ = VList;
 
@@ -515,7 +512,7 @@ void Parser::parse_terminal()
 
             level--;
 
-            (exprNode + level)->U.Object.value_.type_ = TTlist;
+            (exprNode + level)->U.Object.value_.objType = TTlist;
             (exprNode + level)->U.Object.value_.V.List.list_ = exprs_;
             (exprNode + level)->type_ = VList;
 

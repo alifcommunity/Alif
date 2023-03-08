@@ -1,11 +1,17 @@
 #pragma once
 
-#define Next_Is(t) (this->tokens->at(this->tokenIndex + 1).type_ == t ? true : false )
+#include <string>
 
-#include "Types.h"
 #include "Tokens.h"
 #include "Node.h"
 #include "SymbolTable.h"
+
+
+#define Next_Is(t) (this->tokens->at(this->tokenIndex + 1).type_ == t ? true : false )
+
+
+
+
 
 SymbolTable symTable; // تم تعريفه ك متغير عام لمنع حذف المتغيرات عند استخدام الطرفية بعد الانتقال الى سطر جديد
 
@@ -24,11 +30,11 @@ public:
 
     /// </اعلام>
 
-    uint16_t exprlevel = 4000;
-    uint16_t stmtslevel = 1000;
+    uint16_t exprLevel = 4000;
+    uint16_t stmtsLevel = 1000;
 
-    ExprNode* exprNode = (ExprNode*)malloc(exprlevel * sizeof(struct ExprNode));
-    StmtsNode* stmtsNode = (StmtsNode*)malloc(stmtslevel * sizeof(struct StmtsNode));
+    ExprNode* exprNode = (ExprNode*)malloc(exprLevel * sizeof(struct ExprNode));
+    StmtsNode* stmtsNode = (StmtsNode*)malloc(stmtsLevel * sizeof(struct StmtsNode));
 
     Parser(std::vector<Token>* tokens, wstr _fileName, wstr* _input);
 
@@ -38,7 +44,7 @@ public:
 
     void parse_terminal();
 
-    wstr lst;
+    wstr lst_;
     void list_print(AlifObject _obj);
 
     //////////////////////////////
