@@ -5,11 +5,8 @@
 
 #include "Types.h"
 #include "Values.h"
-#include "Node.h"
 
 class ExprNode; 
-// ^
-// | لا يجب الإفصاح عن الاصناف يدويا لذلك يجب مراجعة هذا
 
 using wstr = std::wstring;
 using double64_t = long double;

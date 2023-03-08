@@ -6,7 +6,6 @@
 #include "Node.h"
 #include "SymbolTable.h"
 
-
 #define Next_Is(t) (this->tokens->at(this->tokenIndex + 1).type_ == t ? true : false )
 
 
