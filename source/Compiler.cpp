@@ -12,22 +12,30 @@ void Compiler::compile_file()
 
 }
 
-void Compiler::expr_visit(ExprNode* _node)
+AlifObject* Compiler::expr_visit(ExprNode* _node)
 {
 	if (_node->type_ == VTObject)
 	{
-		Instructions* sendData = new Instructions();
-		sendData->instruction_ = SendObj;
-		sendData->data_ = &_node->U.Object.value_;
-		instructions_.push_back(sendData);
+		instructions_.push_back(SendObj);
+		data_.push_back(& _node->U.Object.value_);
+		return &_node->U.Object.value_;
 	}
 	else if (_node->type_ == VTBinOp)
 	{
+		ObjectType left = this->expr_visit(_node->U.BinaryOp.left_)->objType;
+		ObjectType right = this->expr_visit(_node->U.BinaryOp.right_)->objType;
 
+		if (_node->U.BinaryOp.operator_ == TTPlus)
+		{
+			if (left == OTNumber or right == OTNumber)
+			{
+				instructions_.push_back(SumNumbers);
+			}
+		}
 	}
 }
 
-void Compiler::stmts_visit(StmtsNode* _node)
+AlifObject* Compiler::stmts_visit(StmtsNode* _node)
 {
-
+	return nullptr;
 }

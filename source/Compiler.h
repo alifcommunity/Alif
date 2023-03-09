@@ -1,26 +1,22 @@
 #pragma once
 
 #include "Node.h"
-#include "Instructions.h"
+#include "Types.h"
 
-class Instructions {
-public:
-	InstructionsType instruction_;
-	AlifObject* data_;
-};
 
 class Compiler {
 public:
 	std::vector<ExprNode*>* statements_;
-	std::vector<Instructions*> instructions_;
+	std::vector<InstructionsType> instructions_;
+	std::vector<AlifObject*> data_;
 
 	Compiler(std::vector<ExprNode*>* _statements);
 
 	void compile_file();
 
-	void stmts_visit(StmtsNode* _node);
+	AlifObject* stmts_visit(StmtsNode* _node);
 
-	void expr_visit(ExprNode* _node);
+	AlifObject* expr_visit(ExprNode* _node);
 
 };
 
@@ -170,8 +166,10 @@ public:
 //        }
 //    }
 //}
-//
-//
+
+
+
+
 //AlifObject visit_expr(ExprNode* _node)
 //{
 //
