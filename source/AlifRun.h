@@ -203,13 +203,13 @@ void terminal_run() {
         std::getline(std::wcin, input_);
         input_ += L'\n';
 
-        if (input_ == L"خروج")
+        if (input_ == L"خروج\n")
         {
             exit(0);
         }
+
         // المركب اللغوي
         /////////////////////////////////////////////////////////////////
-        auto start = std::chrono::high_resolution_clock::now();
 
         Lexer lexer(fileName, &input_);
         lexer.make_token();
@@ -222,6 +222,8 @@ void terminal_run() {
 
         // المحقق اللغوي
         /////////////////////////////////////////////////////////////////
+
+        auto start = std::chrono::high_resolution_clock::now();
 
         Compiler compiler = Compiler(&parser.statements_);
         compiler.compile_file();
