@@ -3,8 +3,8 @@
 SymbolTable symTable; // تم تعريفه ك متغير عام لمنع حذف المتغيرات عند استخدام الطرفية بعد الانتقال الى سطر جديد
 
 
-Parser::Parser(std::vector<Token>* tokens, wstr _fileName, wstr* _input) : 
-    tokens(tokens), fileName(_fileName), input_(_input)
+Parser::Parser(std::vector<Token>* tokens_, wstr _fileName, wstr* _input) : 
+    tokens_(tokens_), fileName(_fileName), input_(_input)
 {
     this->advance();
 }
@@ -12,9 +12,9 @@ Parser::Parser(std::vector<Token>* tokens, wstr _fileName, wstr* _input) :
 void Parser::advance()
 {
     this->tokenIndex++;
-    if (this->tokenIndex >= 0 and this->tokenIndex < this->tokens->size())
+    if (this->tokenIndex >= 0 and this->tokenIndex < this->tokens_->size())
     {
-        std::vector<Token>::iterator listIter = tokens->begin();
+        std::vector<Token>::iterator listIter = tokens_->begin();
         std::advance(listIter, this->tokenIndex);
         this->currentToken = *listIter;
     }
@@ -28,7 +28,7 @@ void Parser::parse_file()
 
     do {
         //stmtsRes = this->statement();
-        stmtsRes = this->disjuction();
+        this->statements_.push_back(this->sum());
         //intrRes = this->visit_stmts(stmtsRes);
         this->exprLevel = 4000;
 
