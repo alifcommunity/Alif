@@ -38,7 +38,9 @@ void Parser::parse_file()
 
 void Parser::parse_terminal()
 {
-    ExprNode* stmtsRes = this->disjuction();
+    //ExprNode* stmtsRes = this->disjuction();
+        this->statements_.push_back(this->sum());
+        this->exprLevel = 4000;
     //AlifObject intrRes = this->visit_expr(stmtsRes);
 
     //if (intrRes.objType == OTNumber) { PRINT_(intrRes.V.NumberObj.numberValue); }

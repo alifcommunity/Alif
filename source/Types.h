@@ -92,3 +92,9 @@ enum StateType : uint8_t { // انواع الحالات للاسماء
     STDel,
 };
 
+enum InstructionsType : uint8_t {
+    None,
+    BringObj,
+    SendObj,
+    SumNumbers,
+};
