@@ -13,7 +13,8 @@
 
 class Parser {
 public:
-    std::vector<Token>* tokens;
+    std::vector<Token>* tokens_;
+    std::vector<ExprNode*> statements_;
     int tokenIndex = -1;
     Token currentToken;
     wstr fileName;
@@ -27,7 +28,7 @@ public:
     /// </اعلام>
 
     uint16_t exprLevel = 4000;
-    uint16_t stmtsLevel = 1000;
+    uint16_t stmtsLevel = 4000;
 
     ExprNode* exprNode = (ExprNode*)malloc(exprLevel * sizeof(struct ExprNode));
     StmtsNode* stmtsNode = (StmtsNode*)malloc(stmtsLevel * sizeof(struct StmtsNode));

@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\Alif5.cpp" />
+    <ClCompile Include="..\source\Compiler.cpp" />
     <ClCompile Include="..\source\Error.cpp" />
     <ClCompile Include="..\source\Lexer.cpp" />
     <ClCompile Include="..\source\Parser.cpp" />

@@ -1,12 +1,7 @@
 #define PRINT_(a){std::wcout << a << std::endl;}
 
-// استيراد
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 #include<iostream>
 #include<string>
-//#include<cmath>
-//#include<algorithm> // لعمل تتالي على المصفوفات
 
 #ifndef _WIN64
 #include<codecvt>
