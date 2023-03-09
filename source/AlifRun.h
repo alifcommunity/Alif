@@ -2,6 +2,7 @@
 
 #include "Lexer.h"
 #include "Parser.h"
+#include "Compiler.h"
 
 #ifndef _WIN64
 
@@ -176,6 +177,12 @@ void file_run(wchar_t* _fileName) {
 
     Parser parser = Parser(&lexer.tokens_, _fileName, &input_);
     parser.parse_file();
+
+    // المحقق اللغوي
+    /////////////////////////////////////////////////////////////////
+
+    Compiler compiler = Compiler(&parser.statements_);
+    compiler.compile_file();
 }
 
 void terminal_run() {
@@ -210,6 +217,12 @@ void terminal_run() {
 
         Parser parser = Parser(&lexer.tokens_, fileName, &input_);
         parser.parse_terminal();
+
+        // المحقق اللغوي
+        /////////////////////////////////////////////////////////////////
+
+        Compiler compiler = Compiler(&parser.statements_);
+        compiler.compile_file();
 
         // std::wcin.ignore(); // لمنع ارسال قيمة فارغة في المتغير input_ ** يجب إضافة شرط في حال كان المدخل غير فارغ يجب ان يقوم بعمل تجاهل له
     }
