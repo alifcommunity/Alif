@@ -3,6 +3,7 @@
 #include "Lexer.h"
 #include "Parser.h"
 #include "Compiler.h"
+#include "Interpreter.h"
 
 #ifndef _WIN64
 
@@ -185,6 +186,7 @@ void file_run(wchar_t* _fileName) {
     compiler.compile_file();
 }
 
+#include<chrono> /////////////////////// for test only
 void terminal_run() {
 
     wstr fileName = L"<طرفية>";
@@ -205,9 +207,9 @@ void terminal_run() {
         {
             exit(0);
         }
-
         // المركب اللغوي
         /////////////////////////////////////////////////////////////////
+        auto start = std::chrono::high_resolution_clock::now();
 
         Lexer lexer(fileName, &input_);
         lexer.make_token();
@@ -223,6 +225,17 @@ void terminal_run() {
 
         Compiler compiler = Compiler(&parser.statements_);
         compiler.compile_file();
+
+        // المنفذ اللغوي
+        /////////////////////////////////////////////////////////////////
+        
+
+        Interpreter interpreter = Interpreter(&compiler.instructions_, &compiler.data_);
+        interpreter.run_code();
+
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsed_seconds = end - start;
+        std::wcout << elapsed_seconds << std::endl;
 
         // std::wcin.ignore(); // لمنع ارسال قيمة فارغة في المتغير input_ ** يجب إضافة شرط في حال كان المدخل غير فارغ يجب ان يقوم بعمل تجاهل له
     }
