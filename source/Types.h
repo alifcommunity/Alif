@@ -93,8 +93,8 @@ enum StateType : uint8_t { // انواع الحالات للاسماء
 };
 
 enum InstructionsType : uint8_t {
-    None,
-    BringObj,
-    SendObj,
-    SumNumbers,
+    NONE,
+    BRING_MEM,
+    SEND_MEM,
+    ADD_OP,
 };
