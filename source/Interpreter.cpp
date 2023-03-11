@@ -904,7 +904,897 @@ void Interpreter::run_code()
 			}
 			else // command_ >= 128
 			{
+				if (command_ < 192)
+				{
+					if (command_ < 160)
+					{
+						if (command_ < 144)
+						{
+							if (command_ < 136)
+							{
+								if (command_ < 132)
+								{
+									if (command_ < 130)
+									{
+										if (command_ == 128)
+										{
 
+										}
+										else // command_ == 129
+										{
+
+										}
+									}
+									else // command_ >= 130
+									{
+										if (command_ == 130)
+										{
+
+										}
+										else // command_ == 131
+										{
+
+										}
+									}
+								}
+								else // command_ >= 132
+								{
+									if (command_ < 134)
+									{
+										if (command_ == 132)
+										{
+
+										}
+										else // command_ == 133
+										{
+
+										}
+									}
+									else // command_ >= 134
+									{
+										if (command_ == 134)
+										{
+
+										}
+										else // command_ == 135
+										{
+
+										}
+									}
+								}
+							}
+							else // command_ >= 136
+							{
+								if (command_ < 140)
+								{
+									if (command_ < 138)
+									{
+										if (command_ == 136)
+										{
+
+										}
+										else // command_ == 137
+										{
+
+										}
+									}
+									else // command_ >= 138
+									{
+										if (command_ == 138)
+										{
+
+										}
+										else // command_ == 139
+										{
+
+										}
+									}
+								}
+								else // command_ >= 140
+								{
+									if (command_ < 142)
+									{
+										if (command_ == 140)
+										{
+
+										}
+										else // command_ == 141
+										{
+
+										}
+									}
+									else // command_ >= 142
+									{
+										if (command_ == 142)
+										{
+
+										}
+										else // command_ == 143
+										{
+
+										}
+									}
+								}
+							}
+						}
+						else // command_ >= 144
+						{
+							if (command_ < 152)
+							{
+								if (command_ < 148)
+								{
+									if (command_ < 146)
+									{
+										if (command_ == 144)
+										{
+
+										}
+										else // command_ == 145
+										{
+
+										}
+									}
+									else // command_ >= 146
+									{
+										if (command_ == 146)
+										{
+
+										}
+										else // command_ == 147
+										{
+
+										}
+									}
+								}
+								else // command_ >= 148
+								{
+									if (command_ < 150)
+									{
+										if (command_ == 148)
+										{
+
+										}
+										else // ocmmand_ == 149
+										{
+
+										}
+									}
+									else // command_ >= 150
+									{
+										if (command_ == 150)
+										{
+
+										}
+										else // command_ == 151
+										{
+
+										}
+									}
+								}
+							}
+							else // command_ >= 152
+							{
+								if (command_ < 156)
+								{
+
+									if (command_ < 154)
+									{
+										if (command_ == 152)
+										{
+
+										}
+										else // command_ == 153
+										{
+
+										}
+									}
+									else // command_ >= 154
+									{
+										if (command_ == 154)
+										{
+
+										}
+										else // command_ == 155
+										{
+
+										}
+									}
+								}
+								else // command_ >= 156
+								{
+									if (command_ < 158)
+									{
+										if (command_ == 156)
+										{
+
+										}
+										else // command_ == 157
+										{
+
+										}
+									}
+									else // command_ >= 158
+									{
+										if (command_ == 158)
+										{
+
+										}
+										else // command_ == 159
+										{
+
+										}
+									}
+								}
+							}
+						}
+					}
+					else // command_ >= 160
+					{
+						if (command_ < 176)
+						{
+							if (command_ < 168)
+							{
+								if (command_ < 164)
+								{
+									if (command_ < 162)
+									{
+										if (command_ == 160)
+										{
+
+										}
+										else // command_ == 161
+										{
+
+										}
+									}
+									else // command_ >= 162
+									{
+										if (command_ == 162)
+										{
+
+										}
+										else // command_ == 163
+										{
+
+										}
+									}
+								}
+								else // command_ >= 164
+								{
+									if (command_ < 166)
+									{
+										if (command_ == 164)
+										{
+
+										}
+										else // command_ == 165
+										{
+
+										}
+									}
+									else // command_ >= 166
+									{
+										if (command_ == 166)
+										{
+
+										}
+										else // command_ == 167
+										{
+
+										}
+									}
+								}
+							}
+							else // command_ >= 168
+							{
+								if (command_ < 172)
+								{
+									if (command_ < 170)
+									{
+										if (command_ == 168)
+										{
+
+										}
+										else // command_ == 169
+										{
+
+										}
+									}
+									else // command_ >= 170
+									{
+										if (command_ == 170)
+										{
+
+										}
+										else // command_ == 171
+										{
+
+										}
+									}
+								}
+								else // command_ >= 172
+								{
+									if (command_ < 174)
+									{
+										if (command_ == 172)
+										{
+
+										}
+										else // command_ == 173
+										{
+
+										}
+									}
+									else // command_ >= 174
+									{
+										if (command_ == 174)
+										{
+
+										}
+										else // command_ == 175
+										{
+
+										}
+									}
+								}
+							}
+						}
+						else // command_ >= 176
+						{
+							if (command_ < 184)
+							{
+								if (command_ < 180)
+								{
+									if (command_ < 178)
+									{
+										if (command_ == 176)
+										{
+
+										}
+										else // command_ == 177
+										{
+
+										}
+									}
+									else // command_ >= 178
+									{
+										if (command_ == 178)
+										{
+
+										}
+										else // command_ == 179
+										{
+
+										}
+									}
+								}
+								else // command_ >= 180
+								{
+									if (command_ < 182)
+									{
+										if (command_ == 180)
+										{
+
+										}
+										else // command_ == 181
+										{
+
+										}
+									}
+									else // command_ >= 182
+									{
+										if (command_ == 182)
+										{
+
+										}
+										else // command_ == 183
+										{
+
+										}
+									}
+								}
+							}
+							else // command_ >= 184
+							{
+								if (command_ < 188)
+								{
+									if (command_ < 186)
+									{
+										if (command_ == 184)
+										{
+
+										}
+										else // command_ == 185
+										{
+
+										}
+									}
+									else // command_ >= 186
+									{
+										if (command_ == 186)
+										{
+
+										}
+										else // command_ == 187
+										{
+
+										}
+									}
+								}
+								else // command_ >= 188
+								{
+									if (command_ < 190)
+									{
+										if (command_ == 188)
+										{
+
+										}
+										else // command_ == 189
+										{
+
+										}
+									}
+									else // command_ >= 190
+									{
+										if (command_ == 190)
+										{
+
+										}
+										else // command_ == 191
+										{
+
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				else // command_ >= 192
+				{
+					if (command_ < 224)
+					{
+						if (command_ < 208)
+						{
+							if (command_ < 200)
+							{
+								if (command_ < 196)
+								{
+									if (command_ < 194)
+									{
+										if (command_ == 192)
+										{
+
+										}
+										else // command_ == 193
+										{
+
+										}
+									}
+									else // command_ >= 194
+									{
+										if (command_ == 194)
+										{
+
+										}
+										else // command_ == 195
+										{
+
+										}
+									}
+								}
+								else // command_ >= 196
+								{
+									if (command_ < 198)
+									{
+										if (command_ == 196)
+										{
+
+										}
+										else // command_ == 197
+										{
+
+										}
+									}
+									else // command_ >= 198
+									{
+										if (command_ == 198)
+										{
+
+										}
+										else // command_ == 199
+										{
+
+										}
+									}
+								}
+							}
+							else // command_ >= 200
+							{
+								if (command_ < 204)
+								{
+									if (command_ < 202)
+									{
+										if (command_ == 200)
+										{
+
+										}
+										else // command_ == 201
+										{
+
+										}
+									}
+									else // command_ >= 202
+									{
+										if (command_ == 202)
+										{
+
+										}
+										else // command_ == 203
+										{
+
+										}
+									}
+								}
+								else // command_ >= 204
+								{
+									if (command_ < 206)
+									{
+										if (command_ == 204)
+										{
+
+										}
+										else // command_ == 205
+										{
+
+										}
+									}
+									else // command_ >= 206
+									{
+										if (command_ == 206)
+										{
+
+										}
+										else // command_ == 207
+										{
+
+										}
+									}
+								}
+							}
+						}
+						else // command_ >= 208
+						{
+							if (command_ < 216)
+							{
+								if (command_ < 212)
+								{
+									if (command_ < 210)
+									{
+										if (command_ == 208)
+										{
+
+										}
+										else // command_ == 209
+										{
+
+										}
+									}
+									else // command_ >= 210
+									{
+										if (command_ == 210)
+										{
+
+										}
+										else // command_ == 211
+										{
+
+										}
+									}
+								}
+								else // command_ >= 212
+								{
+									if (command_ < 214)
+									{
+										if (command_ == 212)
+										{
+
+										}
+										else // command_ == 213
+										{
+
+										}
+									}
+									else // command_ >= 214
+									{
+										if (command_ == 214)
+										{
+
+										}
+										else // command_ == 215
+										{
+
+										}
+									}
+								}
+							}
+							else // command_ >= 216
+							{
+								if (command_ < 220)
+								{
+									if (command_ < 218)
+									{
+										if (command_ == 216)
+										{
+
+										}
+										else // command_ == 217
+										{
+
+										}
+									}
+									else // command_ >= 218
+									{
+										if (command_ == 218)
+										{
+
+										}
+										else // command_ == 219
+										{
+
+										}
+									}
+								}
+								else // command_ >= 220
+								{
+									if (command_ < 222)
+									{
+										if (command_ == 220)
+										{
+
+										}
+										else // command_ == 221
+										{
+
+										}
+									}
+									else // command_ >= 222
+									{
+										if (command_ == 222)
+										{
+
+										}
+										else // command_ == 223
+										{
+
+										}
+									}
+								}
+							}
+						}
+					}
+					else // command_ >= 224
+					{
+						if (command_ < 240)
+						{
+							if (command_ < 232)
+							{
+								if (command_ < 228)
+								{
+									if (command_ < 226)
+									{
+										if (command_ == 224)
+										{
+
+										}
+										else // command_ == 225
+										{
+
+										}
+									}
+									else // command_ >= 226
+									{
+										if (command_ == 226)
+										{
+
+										}
+										else// command_ == 227
+										{
+
+										}
+									}
+								}
+								else // command_ >= 228
+								{
+									if (command_ < 230)
+									{
+										if (command_ == 228)
+										{
+
+										}
+										else // command_ == 229
+										{
+
+										}
+									}
+									else // command_ >= 230
+									{
+										if (command_ == 230)
+										{
+
+										}
+										else // command_ == 231
+										{
+
+										}
+									}
+								}
+							}
+							else // command_ >= 232
+							{
+								if (command_ < 236)
+								{
+									if (command_ < 234)
+									{
+										if (command_ == 232)
+										{
+
+										}
+										else // command_ == 233
+										{
+
+										}
+									}
+									else // command_ >= 234
+									{
+										if (command_ == 234)
+										{
+
+										}
+										else // command_ == 235
+										{
+
+										}
+									}
+								}
+								else // command_ >= 236
+								{
+									if (command_ < 238)
+									{
+										if (command_ == 236)
+										{
+
+										}
+										else // command_ == 237
+										{
+
+										}
+									}
+									else // command_ >= 238
+									{
+										if (command_ == 238)
+										{
+
+										}
+										else // command_ == 239
+										{
+
+										}
+									}
+								}
+							}
+						}
+						else // command_ >= 240
+						{
+							if (command_ < 248)
+							{
+								if (command_ < 244)
+								{
+									if (command_ < 242)
+									{
+										if (command_ == 240)
+										{
+
+										}
+										else // command_ == 241
+										{
+
+										}
+									}
+									else // command_ >= 242
+									{
+										if (command_ == 242)
+										{
+
+										}
+										else // command_ == 243
+										{
+
+										}
+									}
+								}
+								else // command_ >= 244
+								{
+									if (command_ < 246)
+									{
+										if (command_ == 244)
+										{
+
+										}
+										else // command_ == 245
+										{
+
+										}
+									}
+									else // command_ >= 246
+									{
+										if (command_ == 246)
+										{
+
+										}
+										else // command_ == 247
+										{
+
+										}
+									}
+								}
+							}
+							else // command_ >= 248
+							{
+								if (command_ < 252)
+								{
+									if (command_ < 250)
+									{
+										if (command_ == 248)
+										{
+
+										}
+										else // command_ == 249
+										{
+
+										}
+									}
+									else // command_ >= 250
+									{
+										if (command_ == 250)
+										{
+
+										}
+										else // command_ 251
+										{
+
+										}
+									}
+								}
+								else // command_ >= 252
+								{
+									if (command_ < 254)
+									{
+										if (command_ == 252)
+										{
+
+										}
+										else // command_ == 253
+										{
+
+										}
+									}
+									else // command_ >= 254
+									{
+										if (command_ == 254)
+										{
+
+										}
+										else // command_ == 255
+										{
+
+										}
+									}
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 		else // command_ >= 256
@@ -914,13 +1804,13 @@ void Interpreter::run_code()
 
 		switch (command_)
 		{
-		case SendObj:
+		case SEND_MEM:
 			memory_.push_back(data_->front());
 			data_->erase(data_->begin());
-		case BringObj:
+		case BRING_MEM:
 			break;
 				
-		case SumNumbers:
+		case ADD_OP:
 			AlifObject* left = memory_.front();
 			memory_.erase(memory_.begin());
 			AlifObject* right = memory_.front();
