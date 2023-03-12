@@ -16,7 +16,7 @@ AlifObject* Compiler::expr_visit(ExprNode* _node)
 {
 	if (_node->type_ == VTObject)
 	{
-		instructions_.push_back(SendObj);
+		instructions_.push_back(SEND_MEM);
 		data_.push_back(& _node->U.Object.value_);
 		return &_node->U.Object.value_;
 	}
@@ -29,7 +29,7 @@ AlifObject* Compiler::expr_visit(ExprNode* _node)
 		{
 			if (left == OTNumber or right == OTNumber)
 			{
-				instructions_.push_back(SumNumbers);
+				instructions_.push_back(ADD_OP);
 			}
 		}
 	}

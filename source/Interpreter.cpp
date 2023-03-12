@@ -36,11 +36,21 @@ void Interpreter::run_code()
 									{
 										if (command_ == 2)
 										{
-											///////// code /////////
+											memory_.push_back(data_->front());
+											data_->erase(data_->begin());
 										}
 										else // command_ == 3
 										{
-											///////// code /////////
+											AlifObject* left = memory_.front();
+											memory_.erase(memory_.begin());
+											AlifObject* right = memory_.front();
+											memory_.erase(memory_.begin());
+
+											AlifObject* result = new AlifObject();
+											result->objType = OTNumber;
+											left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? result->V.NumberObj.numberType = TTFloat : result->V.NumberObj.numberType = TTInteger;
+											result->V.NumberObj.numberValue = left->V.NumberObj.numberValue + right->V.NumberObj.numberValue;
+											memory_.push_back(result);
 										}
 									}
 								}
@@ -1801,30 +1811,6 @@ void Interpreter::run_code()
 		{
 
 		}
-
-		switch (command_)
-		{
-		case SEND_MEM:
-			memory_.push_back(data_->front());
-			data_->erase(data_->begin());
-		case BRING_MEM:
-			break;
-				
-		case ADD_OP:
-			AlifObject* left = memory_.front();
-			memory_.erase(memory_.begin());
-			AlifObject* right = memory_.front();
-			memory_.erase(memory_.begin());
-
-			AlifObject* result = new AlifObject();
-			result->objType = OTNumber;
-			left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? result->V.NumberObj.numberType = TTFloat : result->V.NumberObj.numberType = TTInteger;
-			result->V.NumberObj.numberValue = left->V.NumberObj.numberValue + right->V.NumberObj.numberValue;
-			memory_.push_back(result);
-			break;
-		//default:
-		//	std::wcout << memory_.front()->V.NumberObj.numberValue << std::endl;
-		//	break;
-		}
 	}
+	std::wcout << memory_.front()->V.NumberObj.numberValue << std::endl;
 }
