@@ -89,7 +89,7 @@ void terminal_run() {
         std::getline(std::wcin, input_);
         input_ += L'\n';
 
-        if (input_ == L"خروج")
+        if (input_ == L"خروج\n")
         {
             exit(0);
         }
