@@ -32,6 +32,13 @@ AlifObject* Compiler::expr_visit(ExprNode* _node)
 				instructions_.push_back(ADD_OP);
 			}
 		}
+		else if (_node->U.BinaryOp.operator_ == TTMinus)
+		{
+			if (left == OTNumber or right == OTNumber)
+			{
+				instructions_.push_back(MINUS_OP);
+			}
+		}
 	}
 }
 

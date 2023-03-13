@@ -60,7 +60,16 @@ void Interpreter::run_code()
 									{
 										if (command_ == 4)
 										{
-											///////// code /////////
+											AlifObject* left = memory_.front();
+											memory_.erase(memory_.begin());
+											AlifObject* right = memory_.front();
+											memory_.erase(memory_.begin());
+
+											AlifObject* result = new AlifObject();
+											result->objType = OTNumber;
+											left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? result->V.NumberObj.numberType = TTFloat : result->V.NumberObj.numberType = TTInteger;
+											result->V.NumberObj.numberValue = left->V.NumberObj.numberValue - right->V.NumberObj.numberValue;
+											memory_.push_back(result);
 										}
 										else // command_ == 5
 										{
