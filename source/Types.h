@@ -96,4 +96,5 @@ enum InstructionsType : uint8_t {
     BRING_MEM,
     SEND_MEM,
     ADD_OP,
+    MINUS_OP,
 };

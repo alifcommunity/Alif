@@ -308,8 +308,11 @@ void Lexer::make_number() {
         this->advance();
     }
 
-    wchar_t* number_ = new wchar_t(*&numberString[0]); // تقوم بإسناد النص الى السلسلة النصية حرف حرف
-    number_[numberString.length()] = L'\0';
+    wchar_t* number_ = new wchar_t[numberString.length()];
+    for (uint16_t i = 0; i < numberString.length(); i++)
+    {
+        number_[i] = numberString[i];
+    }
 
     if (dotCount == 0)
     {
@@ -330,15 +333,18 @@ void Lexer::make_name()
         this->advance();
     }
 
-    wchar_t* name_ = new wchar_t(*&nameString[0]); // تقوم بإسناد النص الى السلسلة النصية حرف حرف
-    name_[nameString.length()] = L'\0'; // تقوم بإضافة قاطع لنهاية السلسلة النصية لضمان عدم تداخل بيانات غير صحيحة
+    wchar_t* name_ = new wchar_t[nameString.length()];
+    for (uint16_t i = 0; i < nameString.length(); i++)
+    {
+        name_[i] = nameString[i];
+    }
 
     this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTName, name_));
 }
 
 void Lexer::make_string()
 {
-    wstr string_{};
+    wstr newString{};
     uint32_t posStart = this->tokPos;
     this->advance();
 
@@ -348,16 +354,19 @@ void Lexer::make_string()
             exit(-1);
         }
         else {
-            string_ += this->currentChar;
+            newString += this->currentChar;
             this->advance();
         }
     }
 
-    wchar_t* newString = new wchar_t(*&string_[0]); // تقوم بإسناد النص الى السلسلة النصية حرف حرف
-    newString[string_.length()] = L'\0';
+    wchar_t* string_ = new wchar_t[newString.length()];
+    for (uint16_t i = 0; i < newString.length(); i++)
+    {
+        string_[i] = newString[i];
+    }
 
     this->advance();
-    this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTString, newString));
+    this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTString, string_));
 
 }
 
