@@ -9,6 +9,7 @@
 class ExprNode; 
 
 using wstr = std::wstring;
+using wcstr = const wchar_t;
 using double64_t = long double;
 
 class AlifObject {
@@ -17,10 +18,10 @@ public:
 
     union UObj
     {
-        class {
-        public:
-            KeywordValue noneValue;
-        }NoneObj;
+        //class {
+        //public:
+        //    KeywordValue noneValue;
+        //}NoneObj;
 
         class Number{
         public:
@@ -28,19 +29,19 @@ public:
             double64_t numberValue;
         }NumberObj;
 
-        class : Number{
-        public:
-            KeywordValue boolValue;
-        }BoolObj;
+        //class : Number{
+        //public:
+        //    KeywordValue boolValue;
+        //}BoolObj;
 
         class {
         public:
-            wstr* strValue;
+            wcstr* strValue;
         }StringObj;
 
         class {
         public:
-            double64_t name_;
+            wcstr* name_;
             StateType state_;
         }NameObj;
 
@@ -55,10 +56,10 @@ public:
         //    ExprNode* nodeValue;
         //}ExprNodeObj;
 
-        class {
-        public:
-            BuildInFuncValue buildInFunc;
-        }BuildInFuncObj;
+        //class {
+        //public:
+        //    BuildInFuncValue buildInFunc;
+        //}BuildInFuncObj;
 
     }V;
 

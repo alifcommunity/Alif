@@ -9,8 +9,6 @@
 #define Next_Is(t) (this->tokens->at(this->tokenIndex + 1).type_ == t ? true : false )
 
 
-
-
 class Parser {
 public:
     std::vector<Token>* tokens_;

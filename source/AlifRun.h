@@ -182,8 +182,8 @@ void file_run(wchar_t* _fileName) {
     // المحقق اللغوي
     /////////////////////////////////////////////////////////////////
 
-    Compiler compiler = Compiler(&parser.statements_);
-    compiler.compile_file();
+    //Compiler compiler = Compiler(&parser.statements_);
+    //compiler.compile_file();
 }
 
 #include<chrono> /////////////////////// for test only
@@ -219,19 +219,18 @@ void terminal_run() {
 
         Parser parser = Parser(&lexer.tokens_, fileName, &input_);
         parser.parse_terminal();
-
+        
         // المحقق اللغوي
         /////////////////////////////////////////////////////////////////
-
-        auto start = std::chrono::high_resolution_clock::now();
 
         Compiler compiler = Compiler(&parser.statements_);
         compiler.compile_file();
 
         // المنفذ اللغوي
         /////////////////////////////////////////////////////////////////
-        
 
+        auto start = std::chrono::high_resolution_clock::now();
+        
         Interpreter interpreter = Interpreter(&compiler.instructions_, &compiler.data_);
         interpreter.run_code();
 
