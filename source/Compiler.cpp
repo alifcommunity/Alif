@@ -18,26 +18,20 @@ AlifObject* Compiler::expr_visit(ExprNode* _node)
 	{
 		instructions_.push_back(SEND_MEM);
 		data_.push_back(& _node->U.Object.value_);
-		return &_node->U.Object.value_;
+		return nullptr;
 	}
 	else if (_node->type_ == VTBinOp)
 	{
-		ObjectType left = this->expr_visit(_node->U.BinaryOp.left_)->objType;
-		ObjectType right = this->expr_visit(_node->U.BinaryOp.right_)->objType;
+		this->expr_visit(_node->U.BinaryOp.left_)->objType;
+		this->expr_visit(_node->U.BinaryOp.right_)->objType;
 
 		if (_node->U.BinaryOp.operator_ == TTPlus)
 		{
-			if (left == OTNumber or right == OTNumber)
-			{
-				instructions_.push_back(ADD_OP);
-			}
+			instructions_.push_back(ADD_OP);
 		}
 		else if (_node->U.BinaryOp.operator_ == TTMinus)
 		{
-			if (left == OTNumber or right == OTNumber)
-			{
-				instructions_.push_back(MINUS_OP);
-			}
+			instructions_.push_back(MINUS_OP);
 		}
 	}
 }
