@@ -298,7 +298,7 @@ void Lexer::make_number() {
                 detail.push_back(this->currentChar);
                 detail += L" >";
 
-                //PRINT_(SyntaxError(this->position_, this->position_, detail, fileName, input_).print_());
+                PRINT_(SyntaxError(posStart, this->tokPos, this->tokIndex, this->tokLine, detail, fileName, input_).print_());
                 exit(-1);
             }
             dotCount++;
@@ -344,7 +344,7 @@ void Lexer::make_string()
 
     while (this->currentChar != L'\"') {
         if (this->currentChar == L'\0' or this->currentChar == L'\n') {
-            //PRINT_(SyntaxError(positionStart, this->position_, L"< لم يتم إغلاق النص >", fileName, input_).print_());
+            PRINT_(SyntaxError(posStart, this->tokPos, this->tokIndex, this->tokLine, L"< لم يتم إغلاق النص >", fileName, input_).print_());
             exit(-1);
         }
         else {
@@ -439,7 +439,7 @@ void Lexer::make_not_equal() {
         this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTNotEqual));
     }
     else {
-        //PRINT_(SyntaxError(this->position_, this->position_, L"< يتوقع وجود \'=\' بعد إشارة \'!\' >", fileName, input_).print_());
+        PRINT_(SyntaxError(posStart, this->tokPos, this->tokIndex, this->tokLine, L"< يتوقع وجود \'=\' بعد إشارة \'!\' >", fileName, input_).print_());
         exit(-1);
     }
 }
