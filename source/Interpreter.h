@@ -5,7 +5,8 @@
 class Interpreter {
 	std::vector<InstructionsType>* instructions_;
 	std::vector<AlifObject*>* data_;
-	std::vector<AlifObject*> memory_; // stack memory
+	int stackLevel = 256;
+	AlifObject* memory_[256]; // stack memory
 public:
 	Interpreter(std::vector<InstructionsType>* _instructions, std::vector<AlifObject*>* _data);
 

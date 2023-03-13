@@ -34,23 +34,25 @@ void Interpreter::run_code()
 									}
 									else // command_ >= 2
 									{
-										if (command_ == 2)
+										if (command_ == 2) // SEND_MEM
 										{
-											memory_.push_back(data_->front());
+											*(memory_ + stackLevel) = data_->front();
+											stackLevel--;
 											data_->erase(data_->begin());
 										}
-										else // command_ == 3
+										else // command_ == 3 --> ADD_OP
 										{
-											AlifObject* left = memory_.front();
-											memory_.erase(memory_.begin());
-											AlifObject* right = memory_.front();
-											memory_.erase(memory_.begin());
+											stackLevel++;
+											AlifObject* left = *(memory_ + stackLevel);
+											stackLevel++;
+											AlifObject* right = *(memory_ + stackLevel);
 
 											AlifObject* result = new AlifObject();
 											result->objType = OTNumber;
 											left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? result->V.NumberObj.numberType = TTFloat : result->V.NumberObj.numberType = TTInteger;
-											result->V.NumberObj.numberValue = left->V.NumberObj.numberValue + right->V.NumberObj.numberValue;
-											memory_.push_back(result);
+											result->V.NumberObj.numberValue = right->V.NumberObj.numberValue + left->V.NumberObj.numberValue;
+											*(memory_ + stackLevel) = result;
+											stackLevel--;
 										}
 									}
 								}
@@ -58,18 +60,19 @@ void Interpreter::run_code()
 								{
 									if (command_ < 6)
 									{
-										if (command_ == 4)
+										if (command_ == 4) // MINUS_OP
 										{
-											AlifObject* left = memory_.front();
-											memory_.erase(memory_.begin());
-											AlifObject* right = memory_.front();
-											memory_.erase(memory_.begin());
+											stackLevel++;
+											AlifObject* left = *(memory_ + stackLevel);
+											stackLevel++;
+											AlifObject* right = *(memory_ + stackLevel);
 
 											AlifObject* result = new AlifObject();
 											result->objType = OTNumber;
 											left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? result->V.NumberObj.numberType = TTFloat : result->V.NumberObj.numberType = TTInteger;
-											result->V.NumberObj.numberValue = left->V.NumberObj.numberValue - right->V.NumberObj.numberValue;
-											memory_.push_back(result);
+											result->V.NumberObj.numberValue = right->V.NumberObj.numberValue - left->V.NumberObj.numberValue;
+											*(memory_ + stackLevel) = result;
+											stackLevel--;
 										}
 										else // command_ == 5
 										{
@@ -1821,5 +1824,8 @@ void Interpreter::run_code()
 
 		}
 	}
-	std::wcout << memory_.front()->V.NumberObj.numberValue << std::endl;
+
+	stackLevel++;
+	AlifObject* res = *(memory_ + stackLevel);
+	std::wcout << res->V.NumberObj.numberValue << std::endl;
 }
