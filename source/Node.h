@@ -18,7 +18,7 @@ public:
         public:
             ExprNode* left_;
             TokensType operator_;
-            KeywordValue keyword_;
+            wcstr* keyword_;
             ExprNode* right_;
         }BinaryOp;
 
@@ -26,7 +26,7 @@ public:
         public:
             ExprNode* right_;
             TokensType operator_;
-            KeywordValue keyword_;
+            wcstr* keyword_;
         }UnaryOp;
 
         class {

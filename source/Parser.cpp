@@ -39,8 +39,8 @@ void Parser::parse_file()
 void Parser::parse_terminal()
 {
     //ExprNode* stmtsRes = this->disjuction();
-        this->statements_.push_back(this->sum());
-        this->exprLevel = 4000;
+    this->statements_.push_back(this->sum());
+    this->exprLevel = 4000;
     //AlifObject intrRes = this->visit_expr(stmtsRes);
 
     //if (intrRes.objType == OTNumber) { PRINT_(intrRes.V.NumberObj.numberValue); }
@@ -55,30 +55,30 @@ void Parser::parse_terminal()
 
 void Parser::list_print(AlifObject _obj) {
     lst_.append(L"[");
-    if (_obj.objType == OTList) {
-        for (AlifObject obj : *_obj.V.ListObj.objList) {
-            if (obj.objType == OTNumber)
-            {
-                lst_.append(std::to_wstring(obj.V.NumberObj.numberValue));
+    //if (_obj.objType == OTList) {
+    //    for (AlifObject obj : *_obj.V.ListObj.objList) {
+    //        if (obj.objType == OTNumber)
+    //        {
+    //            lst_.append(std::to_wstring(obj.V.NumberObj.numberValue));
 
-            }
-            else if (obj.objType == OTString)
-            {
-                lst_.append(*obj.V.StringObj.strValue);
+    //        }
+    //        else if (obj.objType == OTString)
+    //        {
+    //            lst_.append(*obj.V.StringObj.strValue);
 
-            }
-            else if (obj.objType == OTKeyword)
-            {
-                lst_.append(std::to_wstring(obj.V.BoolObj.boolValue));
+    //        }
+    //        else if (obj.objType == OTKeyword)
+    //        {
+    //            lst_.append(std::to_wstring(obj.V.BoolObj.boolValue));
 
-            }
-            else if (obj.objType == OTList) {
-                this->list_print(obj);
-            }
-            lst_.append(L", ");
-        }
-        lst_.replace(lst_.length() - 2, lst_.length(), L"]");
-    }
+    //        }
+    //        else if (obj.objType == OTList) {
+    //            this->list_print(obj);
+    //        }
+    //        lst_.append(L", ");
+    //    }
+    //    lst_.replace(lst_.length() - 2, lst_.length(), L"]");
+    //}
 }
 
     //////////////////////////////
@@ -112,69 +112,63 @@ ExprNode* Parser::atom() {
 
         this->advance();
         (exprNode + exprLevel)->U.NameAccess.name_.objType = OTName;
-        (exprNode + exprLevel)->U.NameAccess.name_.V.NameObj.name_ = token.V.numVal;
+        (exprNode + exprLevel)->U.NameAccess.name_.V.NameObj.state_ = STGet;
+        (exprNode + exprLevel)->U.NameAccess.name_.V.NameObj.name_ = token.value_;
         (exprNode + exprLevel)->type_ = VTAccess;
         return (exprNode + exprLevel);
     }
-    else if (token.type_ == TTBuildInFunc)
-    {
+    //else if (token.type_ == TTKeyword) {
+    //    if (token.V.keywordType == KVTrue)
+    //    {
+    //        this->advance();
+    //        (exprNode + exprLevel)->U.Object.value_.objType = OTKeyword;
+    //        (exprNode + exprLevel)->U.Object.value_.V.BoolObj.boolValue = KVTrue;
+    //        //(exprNode + exprLevel)->U.Object.value_.V.BoolObj.boolValue = 1;
+    //        (exprNode + exprLevel)->type_ = VTObject;
 
-        this->advance();
-        (exprNode + exprLevel)->U.NameAccess.name_.objType = OTBuildInFunc;
-        (exprNode + exprLevel)->U.NameAccess.name_.V.BuildInFuncObj.buildInFunc = token.V.buildInFunc;
-        (exprNode + exprLevel)->type_ = VTAccess;
-        return (exprNode + exprLevel);
-    }
-    else if (token.type_ == TTKeyword) {
-        if (token.V.keywordType == KVTrue)
-        {
-            this->advance();
-            (exprNode + exprLevel)->U.Object.value_.objType = OTKeyword;
-            (exprNode + exprLevel)->U.Object.value_.V.BoolObj.boolValue = KVTrue;
-            //(exprNode + exprLevel)->U.Object.value_.V.BoolObj.boolValue = 1;
-            (exprNode + exprLevel)->type_ = VTObject;
+    //        return (exprNode + exprLevel);
+    //    }
+    //    else if (token.V.keywordType == KVFalse)
+    //    {
+    //        this->advance();
+    //        (exprNode + exprLevel)->U.Object.value_.objType = OTKeyword;
+    //        (exprNode + exprLevel)->U.Object.value_.V.BoolObj.boolValue = KVFalse;
+    //        //(exprNode + exprLevel)->U.Object.value_.V.BoolObj.value_ = 0;
+    //        (exprNode + exprLevel)->type_ = VTObject;
 
-            return (exprNode + exprLevel);
-        }
-        else if (token.V.keywordType == KVFalse)
-        {
-            this->advance();
-            (exprNode + exprLevel)->U.Object.value_.objType = OTKeyword;
-            (exprNode + exprLevel)->U.Object.value_.V.BoolObj.boolValue = KVFalse;
-            //(exprNode + exprLevel)->U.Object.value_.V.BoolObj.value_ = 0;
-            (exprNode + exprLevel)->type_ = VTObject;
+    //        return (exprNode + exprLevel);
+    //    }
+    //    else if (token.V.keywordType == KVNone)
+    //    {
+    //        this->advance();
+    //        (exprNode + exprLevel)->U.Object.value_.objType = OTNone;
+    //        (exprNode + exprLevel)->U.Object.value_.V.NoneObj.noneValue= KVNone;
+    //        (exprNode + exprLevel)->type_ = VTObject;
 
-            return (exprNode + exprLevel);
-        }
-        else if (token.V.keywordType == KVNone)
-        {
-            this->advance();
-            (exprNode + exprLevel)->U.Object.value_.objType = OTNone;
-            (exprNode + exprLevel)->U.Object.value_.V.NoneObj.noneValue= KVNone;
-            (exprNode + exprLevel)->type_ = VTObject;
-
-            return (exprNode + exprLevel);
-        }
-        else {
-            PRINT_(L"يوجد كلمة مفتاحية في غير سياقها");
-            exit(-1);
-        }
-    }
+    //        return (exprNode + exprLevel);
+    //    }
+    //    else {
+    //        PRINT_(L"يوجد كلمة مفتاحية في غير سياقها");
+    //        exit(-1);
+    //    }
+    //}
     else if (token.type_ == TTInteger)
     {
+        wchar_t* pEnd{};
         this->advance();
         (exprNode + exprLevel)->U.Object.value_.objType = OTNumber;
         (exprNode + exprLevel)->U.Object.value_.V.NumberObj.numberType = token.type_;
-        (exprNode + exprLevel)->U.Object.value_.V.NumberObj.numberValue = token.V.numVal;
+        (exprNode + exprLevel)->U.Object.value_.V.NumberObj.numberValue = wcstol(token.value_, &pEnd, 10);
         (exprNode + exprLevel)->type_ = VTObject;
         return (exprNode + exprLevel);
     }
     else if (token.type_ == TTFloat)
     {
+        wchar_t* pEnd{};
         this->advance();
         (exprNode + exprLevel)->U.Object.value_.objType = OTNumber;
         (exprNode + exprLevel)->U.Object.value_.V.NumberObj.numberType = token.type_;
-        (exprNode + exprLevel)->U.Object.value_.V.NumberObj.numberValue = token.V.numVal;
+        (exprNode + exprLevel)->U.Object.value_.V.NumberObj.numberValue = wcstold(token.value_, &pEnd);
         (exprNode + exprLevel)->type_ = VTObject;
         return (exprNode + exprLevel);
     }
@@ -182,7 +176,7 @@ ExprNode* Parser::atom() {
     {
         this->advance();
         (exprNode + exprLevel)->U.Object.value_.objType = OTString;
-        (exprNode + exprLevel)->U.Object.value_.V.StringObj.strValue = token.V.strVal;
+        (exprNode + exprLevel)->U.Object.value_.V.StringObj.strValue = token.value_;
         (exprNode + exprLevel)->type_ = VTObject;
         return (exprNode + exprLevel);
     }
@@ -382,7 +376,13 @@ ExprNode* Parser::sum() {
 ExprNode* Parser::comparesion() {
     ExprNode* left = this->sum();
 
-    while (this->currentToken.type_ == TTEqualEqual or this->currentToken.type_ == TTNotEqual or this->currentToken.type_ == TTLessThan or this->currentToken.type_ == TTGreaterThan or this->currentToken.type_ == TTLessThanEqual or this->currentToken.type_ == TTGreaterThanEqual) {
+    while (this->currentToken.type_ == TTEqualEqual or
+        this->currentToken.type_ == TTNotEqual or
+        this->currentToken.type_ == TTLessThan or
+        this->currentToken.type_ == TTGreaterThan or
+        this->currentToken.type_ == TTLessThanEqual or
+        this->currentToken.type_ == TTGreaterThanEqual) 
+    {
         Token opToken = this->currentToken;
 
         this->advance();
@@ -402,7 +402,7 @@ ExprNode* Parser::comparesion() {
 
 ExprNode* Parser::inversion() {
 
-    while (this->currentToken.type_ == TTKeyword and this->currentToken.V.keywordType == KVNot)
+    while (this->currentToken.type_ == TTName and wcscmp(this->currentToken.value_, L"ليس"))
     {
         Token opToken = this->currentToken;
 
@@ -412,7 +412,7 @@ ExprNode* Parser::inversion() {
 
         (exprNode + exprLevel)->U.UnaryOp.right_ = right;
         (exprNode + exprLevel)->U.UnaryOp.operator_ = opToken.type_;
-        (exprNode + exprLevel)->U.UnaryOp.keyword_ = opToken.V.keywordType;
+        (exprNode + exprLevel)->U.UnaryOp.keyword_ = opToken.value_;
         (exprNode + exprLevel)->type_ = VTUnaryOp;
 
         return (exprNode + exprLevel);
@@ -425,7 +425,8 @@ ExprNode* Parser::conjuction() {
 
     ExprNode* left = this->inversion();
 
-    while (this->currentToken.type_ == TTKeyword and this->currentToken.V.keywordType == KVAnd) {
+    while (this->currentToken.type_ == TTName and wcscmp(this->currentToken.value_, L"و"))
+    {
         Token opToken = this->currentToken;
 
         this->advance();
@@ -434,7 +435,7 @@ ExprNode* Parser::conjuction() {
 
         (exprNode + exprLevel)->U.BinaryOp.right_ = right;
         (exprNode + exprLevel)->U.BinaryOp.operator_ = opToken.type_;
-        (exprNode + exprLevel)->U.BinaryOp.keyword_ = opToken.V.keywordType;
+        (exprNode + exprLevel)->U.BinaryOp.keyword_ = opToken.value_;
         (exprNode + exprLevel)->U.BinaryOp.left_ = left;
         (exprNode + exprLevel)->type_ = VTBinOp;
 
@@ -448,7 +449,8 @@ ExprNode* Parser::disjuction() {
 
     ExprNode* left = this->conjuction();
 
-    while (this->currentToken.type_ == TTKeyword and this->currentToken.V.keywordType == KVOr) {
+    while (this->currentToken.type_ == TTName and wcscmp(this->currentToken.value_, L"او"))
+    {
         Token opToken = this->currentToken;
 
         this->advance();
@@ -457,7 +459,7 @@ ExprNode* Parser::disjuction() {
 
         (exprNode + exprLevel)->U.BinaryOp.right_ = right;
         (exprNode + exprLevel)->U.BinaryOp.operator_ = opToken.type_;
-        (exprNode + exprLevel)->U.BinaryOp.keyword_ = opToken.V.keywordType;
+        (exprNode + exprLevel)->U.BinaryOp.keyword_ = opToken.value_;
         (exprNode + exprLevel)->U.BinaryOp.left_ = left;
         (exprNode + exprLevel)->type_ = VTBinOp;
 
@@ -471,12 +473,12 @@ ExprNode* Parser::expression() {
 
     ExprNode* expr_ = this->disjuction();
 
-    if (this->currentToken.type_ == TTKeyword and this->currentToken.V.keywordType == KVIf)
+    if (this->currentToken.type_ == TTName and wcscmp(this->currentToken.value_, L"اذا"))
     {
         this->advance();
         ExprNode* condetion = this->disjuction();
 
-        if (this->currentToken.type_ == TTKeyword and this->currentToken.V.keywordType == KVElse)
+        if (this->currentToken.type_ == TTName and wcscmp(this->currentToken.value_, L"والا"))
         {
             this->advance();
             ExprNode* elseExpr = this->expression();

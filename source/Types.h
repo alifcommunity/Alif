@@ -48,8 +48,8 @@ enum TokensType : uint8_t { // انواع الرموز
 
     TTEndOfFile,
 
-    TTBuildInFunc,
-    TTKeyword,
+    //TTBuildInFunc,
+    //TTKeyword,
 };
 
 enum ObjectType : uint8_t { // انواع الكائنات
@@ -60,9 +60,8 @@ enum ObjectType : uint8_t { // انواع الكائنات
     OTDictionary,
     OTBoolean,
     OTNone,
-    OTKeyword,
-    OTBuildInFunc,
-
+    //OTKeyword,
+    //OTBuildInFunc,
 };
 
 enum VisitType : uint8_t { // انواع الزيارة في الشجرة

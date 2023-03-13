@@ -1,12 +1,5 @@
 #include "Lexer.h"
 
-/*
-تم تعريف متغيرات الاسماء خارج الصنف لكي لا يتم إعادة ضبطها عند
-استخدام الطرفية في تنفيذ الشفرة او عند استيراد المكتبات
-*/
-uint32_t name = 0; // متغير اسماء على شكل ارقام
-std::map<wstr, int> namesAlter{};
-
 
 Lexer::Lexer(wstr _fileName, wstr* _input) :
     fileName(_fileName), input_(_input), currentChar(L'\0')
@@ -293,7 +286,7 @@ void Lexer::make_newline()
 }
 
 void Lexer::make_number() {
-    wstr numberString = L"";
+    wstr numberString{};
     uint8_t dotCount = 0;
     uint32_t posStart = this->tokPos;
 
@@ -301,37 +294,35 @@ void Lexer::make_number() {
     {
         if (this->currentChar == L'.') {
             if (dotCount == 1) {
-                dotCount++;
-                break;
+                wstr detail = L"< ";
+                detail.push_back(this->currentChar);
+                detail += L" >";
+
+                //PRINT_(SyntaxError(this->position_, this->position_, detail, fileName, input_).print_());
+                exit(-1);
             }
             dotCount++;
         }
+
         numberString += this->currentChar;
         this->advance();
     }
 
+    wchar_t* number_ = new wchar_t(*&numberString[0]); // تقوم بإسناد النص الى السلسلة النصية حرف حرف
+    number_[numberString.length()] = L'\0';
+
     if (dotCount == 0)
     {
-        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTInteger, std::stoi(numberString)));
-
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTInteger, number_));
     }
-    else if (dotCount == 1) {
-        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTFloat, std::stod(numberString)));
-    }
-    else
-    {
-        wstr detail = L"< ";
-        detail.push_back(this->currentChar);
-        detail += L" >";
-
-        //PRINT_(SyntaxError(this->position_, this->position_, detail, fileName, input_).print_());
-        exit(0);
+    else {
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTFloat, number_));
     }
 }
 
 void Lexer::make_name()
 {
-    wstr nameString;
+    wstr nameString{};
     uint32_t posStart = this->tokPos;
 
     while (this->currentChar > MIN_ARABIC_LETTER_HEX and this->currentChar < MAX_ARABIC_LETTER_HEX or this->currentChar == L'_') {
@@ -339,37 +330,22 @@ void Lexer::make_name()
         this->advance();
     }
 
-    if (keywords_.find(nameString) != keywords_.end())
-    {
-        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTKeyword, keywords_.at(nameString)));
-    }
-    else if (buildInFunctions.find(nameString) != buildInFunctions.end())
-    {
-        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTBuildInFunc, buildInFunctions.at(nameString)));
-    }
-    else if (namesAlter.find(nameString) != namesAlter.end())
-    {
-        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTName, namesAlter[nameString]));
-    }
-    else
-    {
-        name++;
-        namesAlter[nameString] = name;
-        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTName, name));
-    }
+    wchar_t* name_ = new wchar_t(*&nameString[0]); // تقوم بإسناد النص الى السلسلة النصية حرف حرف
+    name_[nameString.length()] = L'\0'; // تقوم بإضافة قاطع لنهاية السلسلة النصية لضمان عدم تداخل بيانات غير صحيحة
+
+    this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTName, name_));
 }
 
 void Lexer::make_string()
 {
-    wstr string_ = L"";
+    wstr string_{};
     uint32_t posStart = this->tokPos;
-    bool ClosedString = true;
     this->advance();
 
     while (this->currentChar != L'\"') {
         if (this->currentChar == L'\0' or this->currentChar == L'\n') {
-            ClosedString = false;
-            break;
+            //PRINT_(SyntaxError(positionStart, this->position_, L"< لم يتم إغلاق النص >", fileName, input_).print_());
+            exit(-1);
         }
         else {
             string_ += this->currentChar;
@@ -377,16 +353,12 @@ void Lexer::make_string()
         }
     }
 
-    if (ClosedString)
-    {
-        this->advance();
-        wstr* newString = new wstr(string_);
-        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTString, newString));
-    }
-    else {
-        //PRINT_(SyntaxError(positionStart, this->position_, L"< لم يتم إغلاق النص >", fileName, input_).print_());
-        exit(0);
-    }
+    wchar_t* newString = new wchar_t(*&string_[0]); // تقوم بإسناد النص الى السلسلة النصية حرف حرف
+    newString[string_.length()] = L'\0';
+
+    this->advance();
+    this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTString, newString));
+
 }
 
 void Lexer::make_plus_equal() {
