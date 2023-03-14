@@ -1,15 +1,14 @@
 #include "Lexer.h"
 
 
-Lexer::Lexer(wstr _fileName, wstr* _input) :
-    fileName(_fileName), input_(_input), currentChar(L'\0')
+Lexer::Lexer(wstr _fileName, wstr* _input) 
+    : fileName(_fileName), input_(_input), currentChar(L'\0')
 {
     this->advance();
 }
 
 void Lexer::advance()
 {
-
     tokIndex++;
     tokPos++;
 
@@ -34,19 +33,13 @@ void Lexer::make_token()
 
         while (this->currentChar != L'\0')
         {
-            /*
-                يجب مراعاة ترتيب استدعاء الدوال
-                لانه في حال استدعاء symbol_lex
-                قبل two_sympol_lex
-                سيظهر خطأ عند التحقق من المسافات التي في بداية السطر
-            */
-            if (!this->word_lex())
+            if (!this->word_lex()) // في حال عدم العثور على حرف يظهر خطأ
             {
                 wstr detail = L" حرف غير معروف \'";
                 detail.push_back(this->currentChar);
                 detail += L"\' ";
 
-                PRINT_(SyntaxError(tokPos, tokPos, tokIndex, tokLine, detail, fileName, input_).print_());
+                PRINT_(SyntaxError(this->tokPos, this->tokPos, this->tokIndex, this->tokLine, detail, this->fileName, this->input_).print_());
                 exit(-1);
             }
 
@@ -254,7 +247,9 @@ void Lexer::make_indent()
 
             if (this->dedentSpec->spaces < spaces)
             {
-                PRINT_(L"خطأ في المسافات البادئة - لقد خرجت عن النطاق الحالي");
+                // يجب عمل خطأ من نوع "خطأ في النطاق" حيث يقوم بتحديد السطر الذي تم فيه الخروج عن النطاق فقط
+                PRINT_(SyntaxError(posStart, posStart, this->tokIndex, this->tokLine, L"لقد خرجت عن النطاق الحالي", this->fileName, this->input_).print_());
+                //PRINT_(L"خطأ في المسافات البادئة - لقد خرجت عن النطاق الحالي");
                 exit(-1);
             }
 
@@ -264,7 +259,9 @@ void Lexer::make_indent()
 
             }
             else {
-                PRINT_(L"خطأ في المسافات البادئة - لقد خرجت عن النطاق الحالي");
+                // يجب عمل خطأ من نوع "خطأ في النطاق" حيث يقوم بتحديد السطر الذي تم فيه الخروج عن النطاق فقط
+                PRINT_(SyntaxError(posStart, posStart, this->tokIndex, this->tokLine, L"لقد خرجت عن النطاق الحالي", this->fileName, this->input_).print_());
+                //PRINT_(L"خطأ في المسافات البادئة - لقد خرجت عن النطاق الحالي");
                 exit(-1);
             }
 

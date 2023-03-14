@@ -129,7 +129,7 @@ std::wstring utf8_decode(const std::string& str)
     return strToWstr;
 }
 
-void file_run(wchar_t* _fileName) {
+void file_run(const wchar_t* _fileName) {
 
     /*
         تم تعريف متغيرين للمدخلات 
@@ -167,7 +167,7 @@ void file_run(wchar_t* _fileName) {
 
     input_.shrink_to_fit();
 
-    // المركب اللغوي
+    // المعرب اللغوي
     /////////////////////////////////////////////////////////////////
 
     Lexer lexer(_fileName, &input_);
@@ -176,14 +176,21 @@ void file_run(wchar_t* _fileName) {
     // المحلل اللغوي
     /////////////////////////////////////////////////////////////////
 
-    Parser parser = Parser(&lexer.tokens_, _fileName, &input_);
-    parser.parse_file();
+    //Parser parser = Parser(&lexer.tokens_, _fileName, &input_);
+    //parser.parse_terminal();
 
-    // المحقق اللغوي
-    /////////////////////////////////////////////////////////////////
+    //// المترجم اللغوي
+    ///////////////////////////////////////////////////////////////////
 
     //Compiler compiler = Compiler(&parser.statements_);
     //compiler.compile_file();
+
+    //// المفسر اللغوي
+    ///////////////////////////////////////////////////////////////////
+
+    //Interpreter interpreter = Interpreter(&compiler.instructions_, &compiler.data_);
+    //interpreter.run_code();
+
 }
 
 #include<chrono> /////////////////////// for test only
@@ -208,7 +215,7 @@ void terminal_run() {
             exit(0);
         }
 
-        // المركب اللغوي
+        // المعرب اللغوي
         /////////////////////////////////////////////////////////////////
 
         Lexer lexer(fileName, &input_);
@@ -220,13 +227,13 @@ void terminal_run() {
         Parser parser = Parser(&lexer.tokens_, fileName, &input_);
         parser.parse_terminal();
         
-        // المحقق اللغوي
+        // المترجم اللغوي
         /////////////////////////////////////////////////////////////////
 
         Compiler compiler = Compiler(&parser.statements_);
         compiler.compile_file();
 
-        // المنفذ اللغوي
+        // المفسر اللغوي
         /////////////////////////////////////////////////////////////////
 
         auto start = std::chrono::high_resolution_clock::now();

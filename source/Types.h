@@ -1,5 +1,6 @@
 #pragma once
 
+static const wchar_t* keywordsList[21] = { L"عدم", L"خطا", L"صح", L"ليس", L"و", L"او", L"صنف", L"دالة", L"ارجع", L"في", L"لاجل", L"بينما", L"اذا", L"والا", L"اواذا", L"استورد", L"من", L"حذف", L"استمر", L"توقف", L"مرر"};
 
 enum TokensType : uint8_t { // انواع الرموز
     TTInteger,
@@ -96,3 +97,4 @@ enum InstructionsType : uint8_t { // التعليمات
     NUM_MINUS,
     STR_ADD,
 };
+
