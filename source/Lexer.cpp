@@ -308,12 +308,13 @@ void Lexer::make_number() {
         this->advance();
     }
 
-    wchar_t* number_ = new wchar_t[numberString.length()];
+    wchar_t* number_ = new wchar_t[numberString.length() + 1];
     for (uint16_t i = 0; i < numberString.length(); i++)
     {
         number_[i] = numberString[i];
     }
-
+    number_[numberString.length()] = L'\0';
+    
     if (dotCount == 0)
     {
         this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTInteger, number_));
@@ -333,11 +334,12 @@ void Lexer::make_name()
         this->advance();
     }
 
-    wchar_t* name_ = new wchar_t[nameString.length()];
+    wchar_t* name_ = new wchar_t[nameString.length() + 1];
     for (uint16_t i = 0; i < nameString.length(); i++)
     {
         name_[i] = nameString[i];
     }
+    name_[nameString.length()] = L'\0';
 
     this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTName, name_));
 }
@@ -359,11 +361,12 @@ void Lexer::make_string()
         }
     }
 
-    wchar_t* string_ = new wchar_t[newString.length()];
+    wchar_t* string_ = new wchar_t[newString.length() + 1];
     for (uint16_t i = 0; i < newString.length(); i++)
     {
         string_[i] = newString[i];
     }
+    string_[newString.length()] = L'\0';
 
     this->advance();
     this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTString, string_));
