@@ -3,15 +3,17 @@
 typedef void(*Instructions_func)();
 
 void none_();
-void bring_name();
-void send_name();
-void add_op();
-void minus_op();
+void get_data();
+void set_data();
+void num_add();
+void num_minus();
+void str_add();
 
 const Instructions_func instr_funcs[] = {
 	none_,
-	bring_name,
-	send_name,
-	add_op,
-	minus_op,
+	get_data,
+	set_data,
+	num_add,
+	num_minus,
+	str_add,
 };
