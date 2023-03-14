@@ -101,7 +101,6 @@ std::vector<ExprNode*>* Parser::arguments() {
 
 }
 
-
 ExprNode* Parser::atom() {
 
     Token token = this->currentToken;
@@ -109,7 +108,10 @@ ExprNode* Parser::atom() {
 
     if (token.type_ == TTName)
     {
-
+        if (is_keyword(token.value_))
+        {
+            return nullptr;
+        }
         this->advance();
         (exprNode + exprLevel)->U.NameAccess.name_.objType = OTName;
         (exprNode + exprLevel)->U.NameAccess.name_.V.NameObj.state_ = STGet;
@@ -1122,3 +1124,19 @@ ExprNode* Parser::expression() {
 //
 //    }
 //};
+
+
+
+
+
+bool Parser::is_keyword(const wchar_t* _name)
+{
+    if (wcslen(_name) > 6) return false; // في حال كان الاسم اكبر من 6 احرف اذا هو ليس كلمة مفتاحية
+    for (const wchar_t* keyword : keywordsList)
+    {
+        if (!wcscmp(_name, keyword))
+        {
+            return true;
+        }
+    }
+}
