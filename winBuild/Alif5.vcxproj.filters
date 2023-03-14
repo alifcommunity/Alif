@@ -58,13 +58,7 @@
     <ClInclude Include="..\source\AlifRun.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\Types.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\Values.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\source\ErrorIndicator.h">
@@ -91,6 +85,9 @@
     <ClInclude Include="..\source\AddrFuncs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Alif5.rc">
@@ -98,7 +95,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\resources\Alif5.ico">
+    <Image Include="..\resources\AlifLogo.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

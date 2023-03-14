@@ -47,9 +47,6 @@ enum TokensType : uint8_t { // انواع الرموز
     TTDedent,
 
     TTEndOfFile,
-
-    //TTBuildInFunc,
-    //TTKeyword,
 };
 
 enum ObjectType : uint8_t { // انواع الكائنات
@@ -91,7 +88,7 @@ enum StateType : uint8_t { // انواع الحالات للاسماء
     STDel,
 };
 
-enum InstructionsType : uint8_t {
+enum InstructionsType : uint8_t { // التعليمات
     NONE,
     GET_DATA,
     SET_DATA,
