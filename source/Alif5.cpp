@@ -35,9 +35,19 @@ int main(int argc, char** argv)
     }
 }
 #else
-
+#include "MemoryBlock.h"
 int wmain(int argc, const wchar_t** argv)
 {
+    MemoryBlock mb(16);
+    long long* a = (long long*)mb.allocate(sizeof(long long*));
+    *a = (long long)"97"; // يتم تخزين عنوان القيم في المكان المحجوز وهو a وهو بمساحة 8 بايت
+    int* b = (int*)mb.allocate(sizeof(int));
+    *b = 7;
+    std::cout << (const char*)*a << std::endl;
+    a = nullptr;
+    b = nullptr;
+    exit(0);
+
     /*
         _setmode
         تسمح للطرفية في نظام ويندوز بقراءة وكتابة الاحرف عريضة الترميز
