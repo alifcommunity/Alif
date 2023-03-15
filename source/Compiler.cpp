@@ -27,14 +27,16 @@ AlifObject* Compiler::expr_visit(ExprNode* _node)
 
 		if (_node->U.BinaryOp.operator_ == TTPlus)
 		{
-			if (left and left->objType == OTNumber)
+			//if (left and left->objType == OTNumber)
+			if (left->objType == OTNumber)
 			{
 				if (right->objType == OTNumber)
 				{
 					instructions_.push_back(NUM_ADD);
 				}
 			}
-			else if (left and left->objType == OTString)
+			//else if (left and left->objType == OTString)
+			else if (left->objType == OTString)
 			{
 				if (right->objType == OTString)
 				{
