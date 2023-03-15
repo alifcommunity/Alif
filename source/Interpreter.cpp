@@ -24,27 +24,25 @@ void num_add()
 	stackLevel++;
 	AlifObject* right = *(memory_ + stackLevel);
 
-	AlifObject* result = new AlifObject();
-	result->objType = OTNumber;
-	left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? result->V.NumberObj.numberType = TTFloat : result->V.NumberObj.numberType = TTInteger;
-	result->V.NumberObj.numberValue = right->V.NumberObj.numberValue + left->V.NumberObj.numberValue;
-	*(memory_ + stackLevel) = result;
+	left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? right->V.NumberObj.numberType = TTFloat : right->V.NumberObj.numberType = TTInteger;
+	right->V.NumberObj.numberValue = right->V.NumberObj.numberValue + left->V.NumberObj.numberValue;
+	*(memory_ + stackLevel) = right;
 	stackLevel--;
 }
 
 void num_minus() {}
 
-void str_add()
+void str_add() // هذه الطريقة اسرع من استخدام wcsncpy_s و wcsncat_s
 {
 	stackLevel++;
 	AlifObject* left = *(memory_ + stackLevel);
 	stackLevel++;
 	AlifObject* right = *(memory_ + stackLevel);
 
-	uint16_t rightSize = wcslen(right->V.StringObj.strValue);
-	uint16_t leftSize = wcslen(left->V.StringObj.strValue);
-	wchar_t* res = new wchar_t[rightSize + leftSize + 1];
 
+	const uint16_t rightSize = wcslen(right->V.StringObj.strValue);
+	const uint16_t leftSize = wcslen(left->V.StringObj.strValue);
+	wchar_t* res = new wchar_t[rightSize + leftSize + 1];
 
 	for (uint16_t i = 0; i < rightSize; i++)
 	{
@@ -71,8 +69,8 @@ void Interpreter::run_code()
 		instr_funcs[command_]();
 	}
 
-	stackLevel++;
-	AlifObject* res = *(memory_ + stackLevel);
-	std::wcout << res->V.NumberObj.numberValue << std::endl;
+	//stackLevel++;
+	//AlifObject* res = *(memory_ + stackLevel);
+	//std::wcout << res->V.NumberObj.numberValue << std::endl;
 	//std::wcout << res->V.StringObj.strValue << std::endl;
 }

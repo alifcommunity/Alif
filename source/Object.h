@@ -14,6 +14,7 @@ using double64_t = long double;
 class AlifObject {
 public:
     ObjectType objType;
+    uint32_t posStart{}, posEnd{}, tokLine{}, posIndex{};
 
     union UObj
     {
@@ -28,10 +29,10 @@ public:
             double64_t numberValue;
         }NumberObj;
 
-        //class : Number{
-        //public:
-        //    KeywordValue boolValue;
-        //}BoolObj;
+        class : Number{
+        public:
+            wcstr* boolType;
+        }BoolObj;
 
         class {
         public:

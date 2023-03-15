@@ -156,21 +156,29 @@ ExprNode* Parser::atom() {
     //}
     else if (token.type_ == TTInteger)
     {
-        wchar_t* pEnd{};
         this->advance();
+        wchar_t* pEnd{};
         (exprNode + exprLevel)->U.Object.value_.objType = OTNumber;
         (exprNode + exprLevel)->U.Object.value_.V.NumberObj.numberType = token.type_;
         (exprNode + exprLevel)->U.Object.value_.V.NumberObj.numberValue = wcstol(token.value_, &pEnd, 10);
+        (exprNode + exprLevel)->U.Object.value_.posStart = token.posStart;
+        (exprNode + exprLevel)->U.Object.value_.posEnd = token.posEnd;
+        (exprNode + exprLevel)->U.Object.value_.tokLine = token.tokLine;
+        (exprNode + exprLevel)->U.Object.value_.posIndex = token.posIndex;
         (exprNode + exprLevel)->type_ = VTObject;
         return (exprNode + exprLevel);
     }
     else if (token.type_ == TTFloat)
     {
-        wchar_t* pEnd{};
         this->advance();
+        wchar_t* pEnd{};
         (exprNode + exprLevel)->U.Object.value_.objType = OTNumber;
         (exprNode + exprLevel)->U.Object.value_.V.NumberObj.numberType = token.type_;
         (exprNode + exprLevel)->U.Object.value_.V.NumberObj.numberValue = wcstold(token.value_, &pEnd);
+        (exprNode + exprLevel)->U.Object.value_.posStart = token.posStart;
+        (exprNode + exprLevel)->U.Object.value_.posEnd = token.posEnd;
+        (exprNode + exprLevel)->U.Object.value_.tokLine = token.tokLine;
+        (exprNode + exprLevel)->U.Object.value_.posIndex = token.posIndex;
         (exprNode + exprLevel)->type_ = VTObject;
         return (exprNode + exprLevel);
     }
@@ -179,6 +187,10 @@ ExprNode* Parser::atom() {
         this->advance();
         (exprNode + exprLevel)->U.Object.value_.objType = OTString;
         (exprNode + exprLevel)->U.Object.value_.V.StringObj.strValue = token.value_;
+        (exprNode + exprLevel)->U.Object.value_.posStart = token.posStart;
+        (exprNode + exprLevel)->U.Object.value_.posEnd = token.posEnd;
+        (exprNode + exprLevel)->U.Object.value_.tokLine = token.tokLine;
+        (exprNode + exprLevel)->U.Object.value_.posIndex = token.posIndex;
         (exprNode + exprLevel)->type_ = VTObject;
         return (exprNode + exprLevel);
     }
