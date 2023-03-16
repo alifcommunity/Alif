@@ -39,11 +39,19 @@ int main(int argc, char** argv)
 int wmain(int argc, const wchar_t** argv)
 {
     MemoryBlock mb(16);
-    long long* a = (long long*)mb.allocate(sizeof(long long*));
-    *a = (long long)"97"; // يتم تخزين عنوان القيم في المكان المحجوز وهو a وهو بمساحة 8 بايت
+    char* a = (char*)mb.allocate(sizeof(char[2]) + 1);
+
+    for (int i = 0; i < strlen("97"); i++)
+    {
+        (a)[i] = "97"[i];
+    }
+    a[strlen("97")] = '\0';
+    std::cout << (const char*)a << std::endl;
+
     int* b = (int*)mb.allocate(sizeof(int));
     *b = 7;
-    std::cout << (const char*)*a << std::endl;
+
+    std::cout << (const char*)a << std::endl;
     a = nullptr;
     b = nullptr;
     exit(0);

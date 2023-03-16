@@ -10,7 +10,7 @@ MemoryBlock::MemoryBlock(size_t _segmentSize)
 
 void* MemoryBlock::allocate(size_t _size)
 {
-    //_size = (_size + 7) & ~7;
+    _size = (_size + 7) & ~7;
     if (currentIndex + _size > segmentSize)
     {
         currentSegment = new char[segmentSize];
