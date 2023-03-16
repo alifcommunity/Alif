@@ -36,7 +36,7 @@ int main(int argc, char** argv)
 }
 #else
 
-int wmain(int argc, wchar_t** argv)
+int wmain(int argc, const wchar_t** argv)
 {
     /*
         _setmode
@@ -59,6 +59,7 @@ int wmain(int argc, wchar_t** argv)
         }
 
         file_run(argv[1]);
+        //file_run(L"C:/Users/Shadow/Desktop/GitHub/code.alif5");
     }
     else
     {

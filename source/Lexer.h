@@ -5,14 +5,13 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <map>
 
 #include "Constants.h"
 #include "Tokens.h"
 #include "Error.h"
 
-// المركب اللغوي
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+using wstr = std::wstring;
 
 class DedentSpecifier { // صنف يقوم بتحديد المسافة البادئة الحالية والاخيرة
 public:
@@ -30,7 +29,7 @@ class Lexer {
 public:
     std::vector<Token> tokens_{};
 
-    ////////////
+    /////////////////////////////////////////
 
     Lexer(wstr _fileName, wstr* _input);
 

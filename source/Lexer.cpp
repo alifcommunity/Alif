@@ -1,22 +1,14 @@
 #include "Lexer.h"
 
-/*
-تم تعريف متغيرات الاسماء خارج الصنف لكي لا يتم إعادة ضبطها عند
-استخدام الطرفية في تنفيذ الشفرة او عند استيراد المكتبات
-*/
-uint32_t name = 0; // متغير اسماء على شكل ارقام
-std::map<wstr, int> namesAlter{};
 
-
-Lexer::Lexer(wstr _fileName, wstr* _input) :
-    fileName(_fileName), input_(_input), currentChar(L'\0')
+Lexer::Lexer(wstr _fileName, wstr* _input) 
+    : fileName(_fileName), input_(_input), currentChar(L'\0')
 {
     this->advance();
 }
 
 void Lexer::advance()
 {
-
     tokIndex++;
     tokPos++;
 
@@ -41,19 +33,13 @@ void Lexer::make_token()
 
         while (this->currentChar != L'\0')
         {
-            /*
-                يجب مراعاة ترتيب استدعاء الدوال
-                لانه في حال استدعاء symbol_lex
-                قبل two_sympol_lex
-                سيظهر خطأ عند التحقق من المسافات التي في بداية السطر
-            */
-            if (!this->word_lex())
+            if (!this->word_lex()) // في حال عدم العثور على حرف يظهر خطأ
             {
                 wstr detail = L" حرف غير معروف \'";
                 detail.push_back(this->currentChar);
                 detail += L"\' ";
 
-                PRINT_(SyntaxError(tokPos, tokPos, tokIndex, tokLine, detail, fileName, input_).print_());
+                PRINT_(SyntaxError(this->tokPos, this->tokPos, this->tokIndex, this->tokLine, detail, this->fileName, this->input_).print_());
                 exit(-1);
             }
 
@@ -261,7 +247,9 @@ void Lexer::make_indent()
 
             if (this->dedentSpec->spaces < spaces)
             {
-                PRINT_(L"خطأ في المسافات البادئة - لقد خرجت عن النطاق الحالي");
+                // يجب عمل خطأ من نوع "خطأ في النطاق" حيث يقوم بتحديد السطر الذي تم فيه الخروج عن النطاق فقط
+                PRINT_(SyntaxError(posStart, posStart, this->tokIndex, this->tokLine, L"لقد خرجت عن النطاق الحالي", this->fileName, this->input_).print_());
+                //PRINT_(L"خطأ في المسافات البادئة - لقد خرجت عن النطاق الحالي");
                 exit(-1);
             }
 
@@ -271,7 +259,9 @@ void Lexer::make_indent()
 
             }
             else {
-                PRINT_(L"خطأ في المسافات البادئة - لقد خرجت عن النطاق الحالي");
+                // يجب عمل خطأ من نوع "خطأ في النطاق" حيث يقوم بتحديد السطر الذي تم فيه الخروج عن النطاق فقط
+                PRINT_(SyntaxError(posStart, posStart, this->tokIndex, this->tokLine, L"لقد خرجت عن النطاق الحالي", this->fileName, this->input_).print_());
+                //PRINT_(L"خطأ في المسافات البادئة - لقد خرجت عن النطاق الحالي");
                 exit(-1);
             }
 
@@ -293,7 +283,7 @@ void Lexer::make_newline()
 }
 
 void Lexer::make_number() {
-    wstr numberString = L"";
+    wstr numberString{};
     uint8_t dotCount = 0;
     uint32_t posStart = this->tokPos;
 
@@ -301,37 +291,39 @@ void Lexer::make_number() {
     {
         if (this->currentChar == L'.') {
             if (dotCount == 1) {
-                dotCount++;
-                break;
+                wstr detail = L"< ";
+                detail.push_back(this->currentChar);
+                detail += L" >";
+
+                PRINT_(SyntaxError(posStart, this->tokPos, this->tokIndex, this->tokLine, detail, fileName, input_).print_());
+                exit(-1);
             }
             dotCount++;
         }
+
         numberString += this->currentChar;
         this->advance();
     }
 
+    wchar_t* number_ = new wchar_t[numberString.length() + 1];
+    for (uint16_t i = 0; i < numberString.length(); i++)
+    {
+        number_[i] = numberString[i];
+    }
+    number_[numberString.length()] = L'\0';
+    
     if (dotCount == 0)
     {
-        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTInteger, std::stoi(numberString)));
-
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTInteger, number_));
     }
-    else if (dotCount == 1) {
-        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTFloat, std::stod(numberString)));
-    }
-    else
-    {
-        wstr detail = L"< ";
-        detail.push_back(this->currentChar);
-        detail += L" >";
-
-        //PRINT_(SyntaxError(this->position_, this->position_, detail, fileName, input_).print_());
-        exit(0);
+    else {
+        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTFloat, number_));
     }
 }
 
 void Lexer::make_name()
 {
-    wstr nameString;
+    wstr nameString{};
     uint32_t posStart = this->tokPos;
 
     while (this->currentChar > MIN_ARABIC_LETTER_HEX and this->currentChar < MAX_ARABIC_LETTER_HEX or this->currentChar == L'_') {
@@ -339,54 +331,43 @@ void Lexer::make_name()
         this->advance();
     }
 
-    if (keywords_.find(nameString) != keywords_.end())
+    wchar_t* name_ = new wchar_t[nameString.length() + 1];
+    for (uint16_t i = 0; i < nameString.length(); i++)
     {
-        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTKeyword, keywords_.at(nameString)));
+        name_[i] = nameString[i];
     }
-    else if (buildInFunctions.find(nameString) != buildInFunctions.end())
-    {
-        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTBuildInFunc, buildInFunctions.at(nameString)));
-    }
-    else if (namesAlter.find(nameString) != namesAlter.end())
-    {
-        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTName, namesAlter[nameString]));
-    }
-    else
-    {
-        name++;
-        namesAlter[nameString] = name;
-        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTName, name));
-    }
+    name_[nameString.length()] = L'\0';
+
+    this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTName, name_));
 }
 
 void Lexer::make_string()
 {
-    wstr string_ = L"";
+    wstr newString{};
     uint32_t posStart = this->tokPos;
-    bool ClosedString = true;
     this->advance();
 
     while (this->currentChar != L'\"') {
         if (this->currentChar == L'\0' or this->currentChar == L'\n') {
-            ClosedString = false;
-            break;
+            PRINT_(SyntaxError(posStart, this->tokPos, this->tokIndex, this->tokLine, L"< لم يتم إغلاق النص >", fileName, input_).print_());
+            exit(-1);
         }
         else {
-            string_ += this->currentChar;
+            newString += this->currentChar;
             this->advance();
         }
     }
 
-    if (ClosedString)
+    wchar_t* string_ = new wchar_t[newString.length() + 1];
+    for (uint16_t i = 0; i < newString.length(); i++)
     {
-        this->advance();
-        wstr* newString = new wstr(string_);
-        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTString, newString));
+        string_[i] = newString[i];
     }
-    else {
-        //PRINT_(SyntaxError(positionStart, this->position_, L"< لم يتم إغلاق النص >", fileName, input_).print_());
-        exit(0);
-    }
+    string_[newString.length()] = L'\0';
+
+    this->advance();
+    this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTString, string_));
+
 }
 
 void Lexer::make_plus_equal() {
@@ -467,7 +448,7 @@ void Lexer::make_not_equal() {
         this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTNotEqual));
     }
     else {
-        //PRINT_(SyntaxError(this->position_, this->position_, L"< يتوقع وجود \'=\' بعد إشارة \'!\' >", fileName, input_).print_());
+        PRINT_(SyntaxError(posStart, this->tokPos, this->tokIndex, this->tokLine, L"< يتوقع وجود \'=\' بعد إشارة \'!\' >", fileName, input_).print_());
         exit(-1);
     }
 }

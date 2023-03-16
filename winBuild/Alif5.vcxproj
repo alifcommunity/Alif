@@ -35,6 +35,7 @@
     <None Include="..\source\AlifCode.alif5" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\source\AddrFuncs.h" />
     <ClInclude Include="..\source\AlifRun.h" />
     <ClInclude Include="..\source\Compiler.h" />
     <ClInclude Include="..\source\Constants.h" />
@@ -48,14 +49,13 @@
     <ClInclude Include="..\source\SymbolTable.h" />
     <ClInclude Include="..\source\Tokens.h" />
     <ClInclude Include="..\source\Types.h" />
-    <ClInclude Include="..\source\Values.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Alif5.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\resources\Alif5.ico" />
+    <Image Include="..\resources\AlifLogo.ico" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

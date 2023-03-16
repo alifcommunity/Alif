@@ -1,5 +1,6 @@
 #pragma once
 
+static const wchar_t* keywordsList[21] = { L"عدم", L"خطا", L"صح", L"ليس", L"و", L"او", L"صنف", L"دالة", L"ارجع", L"في", L"لاجل", L"بينما", L"اذا", L"والا", L"اواذا", L"استورد", L"من", L"حذف", L"استمر", L"توقف", L"مرر"};
 
 enum TokensType : uint8_t { // انواع الرموز
     TTInteger,
@@ -47,9 +48,6 @@ enum TokensType : uint8_t { // انواع الرموز
     TTDedent,
 
     TTEndOfFile,
-
-    TTBuildInFunc,
-    TTKeyword,
 };
 
 enum ObjectType : uint8_t { // انواع الكائنات
@@ -60,9 +58,8 @@ enum ObjectType : uint8_t { // انواع الكائنات
     OTDictionary,
     OTBoolean,
     OTNone,
-    OTKeyword,
-    OTBuildInFunc,
-
+    //OTKeyword,
+    //OTBuildInFunc,
 };
 
 enum VisitType : uint8_t { // انواع الزيارة في الشجرة
@@ -92,9 +89,12 @@ enum StateType : uint8_t { // انواع الحالات للاسماء
     STDel,
 };
 
-enum InstructionsType : uint8_t {
-    None,
-    BringObj,
-    SendObj,
-    SumNumbers,
+enum InstructionsType : uint8_t { // التعليمات
+    NONE,
+    GET_DATA,
+    SET_DATA,
+    NUM_ADD,
+    NUM_MINUS,
+    STR_ADD,
 };
+

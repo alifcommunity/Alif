@@ -111,4 +111,9 @@ public:
     StmtsNode* statement();
 
     StmtsNode* statements();
+
+
+
+
+    bool is_keyword(const wchar_t*);
 };

@@ -4,23 +4,24 @@
 #include <vector>
 
 #include "Types.h"
-#include "Values.h"
 
 class ExprNode; 
 
 using wstr = std::wstring;
+using wcstr = const wchar_t;
 using double64_t = long double;
 
 class AlifObject {
 public:
     ObjectType objType;
+    uint32_t posStart{}, posEnd{}, tokLine{}, posIndex{};
 
     union UObj
     {
-        class {
-        public:
-            KeywordValue noneValue;
-        }NoneObj;
+        //class {
+        //public:
+        //    KeywordValue noneValue;
+        //}NoneObj;
 
         class Number{
         public:
@@ -30,17 +31,17 @@ public:
 
         class : Number{
         public:
-            KeywordValue boolValue;
+            wcstr* boolType;
         }BoolObj;
 
         class {
         public:
-            wstr* strValue;
+            wcstr* strValue;
         }StringObj;
 
         class {
         public:
-            double64_t name_;
+            wcstr* name_;
             StateType state_;
         }NameObj;
 
@@ -55,10 +56,10 @@ public:
         //    ExprNode* nodeValue;
         //}ExprNodeObj;
 
-        class {
-        public:
-            BuildInFuncValue buildInFunc;
-        }BuildInFuncObj;
+        //class {
+        //public:
+        //    BuildInFuncValue buildInFunc;
+        //}BuildInFuncObj;
 
     }V;
 
