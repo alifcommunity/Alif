@@ -39,27 +39,43 @@ int main(int argc, char** argv)
 int wmain(int argc, const wchar_t** argv)
 {
     MemoryBlock mb(32);
-    char* a = (char*)mb.allocate(sizeof(char[2]) + 1);
+    //char* a = (char*)mb.allocate(sizeof(char[2]) + 1);
 
-    for (int i = 0; i < strlen("97"); i++)
+    //for (int i = 0; i < strlen("97"); i++)
+    //{
+    //    (a)[i] = "97"[i];
+    //}
+    //a[strlen("97")] = '\0';
+    //std::cout << (const char*)a << std::endl;
+
+    //int* b = (int*)mb.allocate(sizeof(int));
+    //*b = 7;
+
+    //mb.deallocate(a, strlen(a) + 1);
+
+    //int* c = (int*)mb.allocate(sizeof(int));
+    //*c = 5;
+
+    //std::cout << (const char*)a << std::endl;
+
+    auto start = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < 100000000; i++)
     {
-        (a)[i] = "97"[i];
+        //int* a = new int(7);
+        //delete a;
+        //int* c = new int(5);
+
+        int* b = (int*)mb.allocate(sizeof(int));
+        *b = 7;
+
+        //mb.deallocate(b, 4);
+
+        int* c = (int*)mb.allocate(sizeof(int));
+        *c = 5;
     }
-    a[strlen("97")] = '\0';
-    std::cout << (const char*)a << std::endl;
-
-    int* b = (int*)mb.allocate(sizeof(int));
-    *b = 7;
-
-    mb.deallocate(a, strlen(a) + 1);
-
-    int* c = (int*)mb.allocate(sizeof(int));
-    *c = 5;
-
-    std::cout << (const char*)a << std::endl;
-
-    a = nullptr;
-    b = nullptr;
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<long long, std::milli> elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    std::cout << elapsed_seconds << std::endl;
     exit(0);
 
     /*

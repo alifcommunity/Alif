@@ -6,7 +6,7 @@
 
 //class MemorySegment {
 //public:
-//    void* ptr_;
+//    char* value_;
 //    uint16_t size_;
 //};
 
