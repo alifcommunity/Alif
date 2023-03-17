@@ -75,6 +75,9 @@ int wmain(int argc, const wchar_t** argv)
         *c = 5;
 
         mb.deallocate(c);
+
+        //int* d = (int*)mb.allocate(sizeof(int));
+        //*d = 77;
     }
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<long long, std::milli> elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);

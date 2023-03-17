@@ -6,8 +6,8 @@ MemoryBlock::MemoryBlock(size_t _segmentSize)
 {
     currentSegment = new char[segmentSize]; // احجز القيمة الافتراضية الممررة وهي 8192 بايت
     segments_.push_back(currentSegment);
-    segCounts = (int*)(currentSegment + currentIndex);
-    *segCounts = 0;
+    fragmentCounts = (int*)(currentSegment + currentIndex);
+    *fragmentCounts = 0;
     currentIndex = 4;
 }
 
@@ -22,71 +22,48 @@ void* MemoryBlock::allocate(size_t _size)
     //_size = (_size + 15) & ~15;
     if (currentIndex + _size > segmentSize)
     {
+        for (char* seg : segments_)
+        {
+            if (*seg <= 0)
+            {
+                currentSegment = seg;
+                fragmentCounts = (int*)currentSegment;
+                currentIndex = 4;
+                //break;
+                goto returnPtr;
+            }
+        }
         currentSegment = new char[segmentSize];
         segments_.push_back(currentSegment);
         currentIndex = 0;
-        segCounts = (int*)(currentSegment + currentIndex);
-        *segCounts = 0;
+        fragmentCounts = (int*)(currentSegment + currentIndex);
+        *fragmentCounts = 0;
         currentIndex = 4;
     }
 
-
-    void* ptr_ = currentSegment + currentIndex;
-    currentIndex += _size;
-    *segCounts += 1;
-    return ptr_;
+    returnPtr:
+        void* ptr_ = currentSegment + currentIndex;
+        currentIndex += _size;
+        *fragmentCounts += 1;
+        return ptr_;
 }
 
 void MemoryBlock::deallocate(void* _ptr) 
 {
     for (char* seg : segments_)
     {
-        if (seg <= _ptr and _ptr < seg + segmentSize)
+        //if (seg <= _ptr and _ptr < seg + segmentSize)
+        if (_ptr < seg + segmentSize)
         {
             *seg -= 1;
-            if (*seg <= 0)
-            {
-                currentSegment = seg;
-                currentIndex = 4;
-                break;
-            }
+            break;
+            //if (*seg <= 0)
+            //{
+            //    currentSegment = seg;
+            //    currentIndex = 4;
+            //    break;
+            //}
         }
-
-
-
-        //if (it->first <= _ptr)
-        //{
-        //    it++;
-        //    if (it != segments_.end())
-        //    {
-        //        if (it->first > _ptr)
-        //        { 
-        //            it--;
-        //            it->second--;
-
-        //            if (it->second == 0)
-        //            {
-        //                segments_.erase(it);
-        //                currentIndex = 0;
-        //                break;
-        //            }
-        //            break;
-        //        }
-        //    }
-        //    else
-        //    {
-        //        it--;
-        //        it->second--;
-
-        //        if (it->second == 0)
-        //        {
-        //            segments_.erase(it);
-        //            currentIndex = 0;
-        //            break;
-        //        }
-        //        break;
-        //    }
-        //}
     }
 
 }

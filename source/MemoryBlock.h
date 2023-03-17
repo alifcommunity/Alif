@@ -9,7 +9,7 @@ private:
     char* currentSegment;
     size_t segmentSize;
     size_t currentIndex;
-    int* segCounts;
+    int* fragmentCounts;
 
 public:
     MemoryBlock(size_t _segmentSize = 8192);
