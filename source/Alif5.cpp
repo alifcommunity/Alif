@@ -38,7 +38,7 @@ int main(int argc, char** argv)
 #include "MemoryBlock.h"
 int wmain(int argc, const wchar_t** argv)
 {
-    MemoryBlock mb(32);
+    MemoryBlock mb(5 + 4);
     //char* a = (char*)mb.allocate(sizeof(char[2]) + 1);
 
     //for (int i = 0; i < strlen("97"); i++)
@@ -59,19 +59,22 @@ int wmain(int argc, const wchar_t** argv)
     //std::cout << (const char*)a << std::endl;
 
     auto start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < 100000000; i++)
+    for (int i = 0; i < 20000000; i++)
     {
         //int* a = new int(7);
         //delete a;
         //int* c = new int(5);
+        //delete c;
 
         int* b = (int*)mb.allocate(sizeof(int));
         *b = 7;
 
-        //mb.deallocate(b, 4);
+        mb.deallocate(b);
 
         int* c = (int*)mb.allocate(sizeof(int));
         *c = 5;
+
+        mb.deallocate(c);
     }
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<long long, std::milli> elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
