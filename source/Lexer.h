@@ -9,7 +9,7 @@
 #include "Constants.h"
 #include "Tokens.h"
 #include "Error.h"
-
+#include "MemoryBlock.h"
 
 using wstr = std::wstring;
 
@@ -24,7 +24,8 @@ class Lexer {
     wchar_t currentChar{};
     uint32_t tokLine = 1;
     uint32_t tokIndex = -1, tokPos = -1;
-    DedentSpecifier* dedentSpec = new DedentSpecifier; // حساب المسافات البادئة والراجعة
+    MemoryBlock AlifMemory;
+    DedentSpecifier* dedentSpec = (DedentSpecifier*)AlifMemory.allocate(sizeof(DedentSpecifier)); // حساب المسافات البادئة والراجعة
 
 public:
     std::vector<Token> tokens_{};

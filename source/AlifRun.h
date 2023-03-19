@@ -1,4 +1,6 @@
 #include<fstream>
+#include<chrono> /////////////////////// for test only
+
 
 #include "Lexer.h"
 #include "Parser.h"
@@ -193,8 +195,8 @@ void file_run(const wchar_t* _fileName) {
 
 }
 
-#include<chrono> /////////////////////// for test only
-void terminal_run() {
+void terminal_run() 
+{
 
     wstr fileName = L"<طرفية>";
     const wstr about_ = L"ألف نـ5.0.0";
