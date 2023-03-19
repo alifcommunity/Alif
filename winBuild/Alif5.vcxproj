@@ -24,6 +24,7 @@
     <ClCompile Include="..\source\Error.cpp" />
     <ClCompile Include="..\source\Interpreter.cpp" />
     <ClCompile Include="..\source\Lexer.cpp" />
+    <ClCompile Include="..\source\MemoryBlock.cpp" />
     <ClCompile Include="..\source\Parser.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -43,6 +44,7 @@
     <ClInclude Include="..\source\ErrorIndicator.h" />
     <ClInclude Include="..\source\Interpreter.h" />
     <ClInclude Include="..\source\Lexer.h" />
+    <ClInclude Include="..\source\MemoryBlock.h" />
     <ClInclude Include="..\source\Node.h" />
     <ClInclude Include="..\source\Object.h" />
     <ClInclude Include="..\source\Parser.h" />
