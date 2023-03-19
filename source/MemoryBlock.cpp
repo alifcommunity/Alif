@@ -4,7 +4,7 @@
 MemoryBlock::MemoryBlock(size_t _segmentSize)
     : segmentSize(_segmentSize), currentIndex(0)
 {
-    currentSegment = new char[segmentSize]; // احجز القيمة الافتراضية الممررة وهي 8192 بايت
+    currentSegment = new char[segmentSize](0); // احجز المساحة الممررة وهي 8192 بايت مع قيمة افتراضية 0
     segments_.push_back(currentSegment); // قم بإضافة عنوان القطعة الحالية الى مصفوفة القطع
     fragmentCounts = (int*)currentSegment; // قم بحجز اول اربع بايت ك متغير عدد صحيح ليستخدم فيما بعد لعد الوحدات التي سيتم حجزها في هذه القطعة
     *fragmentCounts = 0; // تأكد ان قيمة الوحدات المحجوزة في القطع هو 0
@@ -34,7 +34,7 @@ void* MemoryBlock::allocate(size_t _size)
                 goto returnPtr; // اذهب مباشرة الى خطوات ارجاع العنوان
             }
         }
-        currentSegment = new char[segmentSize]; // قم بحجز قطعة جديدة
+        currentSegment = new char[segmentSize](0); // قم بحجز قطعة جديدة مع قيمة افتراضية 0
         segments_.push_back(currentSegment); // قم بإضافة اول عنوان من القطعة الى مصفوفة القطع
         currentIndex = 0; // تاكد ان المؤشر الحالي يؤشر الى العنوان الاول من القطعة
         fragmentCounts = (int*)currentSegment; // قم بحجز اربع بايت خاصة بعداد الوحدات

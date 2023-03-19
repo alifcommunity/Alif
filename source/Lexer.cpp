@@ -1,6 +1,5 @@
 #include "Lexer.h"
 
-
 Lexer::Lexer(wstr _fileName, wstr* _input) 
     : fileName(_fileName), input_(_input), currentChar(L'\0')
 {
@@ -232,7 +231,8 @@ void Lexer::make_indent()
         if (this->currentChar != L'\n') // تحقق اذا كان السطر لا يحتوي سوى مسافات بادئة >> قم بتخطيه
         {
             this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTIndent));
-            DedentSpecifier* newIndent = new DedentSpecifier(*dedentSpec);
+            DedentSpecifier* newIndent = (DedentSpecifier*)AlifMemory.allocate(14);
+            *newIndent = *dedentSpec;
             dedentSpec->spaces = spaces;
             dedentSpec->previous = newIndent;
         }
