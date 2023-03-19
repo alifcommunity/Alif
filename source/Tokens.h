@@ -10,7 +10,7 @@ using wcstr = const wchar_t;
 class Token 
 {
 public:
-    wcstr* value_;
+    wcstr* value_{};
     TokensType type_{};
     uint32_t tokLine{}, posStart{}, posEnd{}, posIndex{};
 
