@@ -35,55 +35,9 @@ int main(int argc, char** argv)
     }
 }
 #else
-#include "MemoryBlock.h"
+
 int wmain(int argc, const wchar_t** argv)
 {
-    MemoryBlock mb(5 + 4);
-    //char* a = (char*)mb.allocate(sizeof(char[2]) + 1);
-
-    //for (int i = 0; i < strlen("97"); i++)
-    //{
-    //    (a)[i] = "97"[i];
-    //}
-    //a[strlen("97")] = '\0';
-    //std::cout << (const char*)a << std::endl;
-
-    //int* b = (int*)mb.allocate(sizeof(int));
-    //*b = 7;
-
-    //mb.deallocate(a, strlen(a) + 1);
-
-    //int* c = (int*)mb.allocate(sizeof(int));
-    //*c = 5;
-
-    //std::cout << (const char*)a << std::endl;
-
-    auto start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < 20000000; i++)
-    {
-        //int* a = new int(7);
-        //delete a;
-        //int* c = new int(5);
-        //delete c;
-
-        int* b = (int*)mb.allocate(sizeof(int));
-        *b = 7;
-
-        mb.deallocate(b);
-
-        int* c = (int*)mb.allocate(sizeof(int));
-        *c = 5;
-
-        mb.deallocate(c);
-
-        //int* d = (int*)mb.allocate(sizeof(int));
-        //*d = 77;
-    }
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<long long, std::milli> elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout << elapsed_seconds << std::endl;
-    exit(0);
-
     /*
         _setmode
         تسمح للطرفية في نظام ويندوز بقراءة وكتابة الاحرف عريضة الترميز

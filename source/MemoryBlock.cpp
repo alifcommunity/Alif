@@ -29,7 +29,6 @@ void* MemoryBlock::allocate(size_t _size)
                 currentSegment = seg;
                 fragmentCounts = (int*)currentSegment;
                 currentIndex = 4;
-                //break;
                 goto returnPtr;
             }
         }
@@ -52,17 +51,10 @@ void MemoryBlock::deallocate(void* _ptr)
 {
     for (char* seg : segments_)
     {
-        //if (seg <= _ptr and _ptr < seg + segmentSize)
         if (_ptr < seg + segmentSize)
         {
             *seg -= 1;
             break;
-            //if (*seg <= 0)
-            //{
-            //    currentSegment = seg;
-            //    currentIndex = 4;
-            //    break;
-            //}
         }
     }
 
