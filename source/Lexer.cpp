@@ -231,7 +231,7 @@ void Lexer::make_indent()
         if (this->currentChar != L'\n') // تحقق اذا كان السطر لا يحتوي سوى مسافات بادئة >> قم بتخطيه
         {
             this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTIndent));
-            DedentSpecifier* newIndent = (DedentSpecifier*)AlifMemory.allocate(14);
+            DedentSpecifier* newIndent = (DedentSpecifier*)alifMemory.allocate(sizeof(DedentSpecifier)); 
             *newIndent = *dedentSpec;
             dedentSpec->spaces = spaces;
             dedentSpec->previous = newIndent;
@@ -305,12 +305,13 @@ void Lexer::make_number() {
         this->advance();
     }
 
-    wchar_t* number_ = new wchar_t[numberString.length() + 1];
+    //wchar_t* number_ = new wchar_t[numberString.length() + 1];
+    wchar_t* number_ = (wchar_t*)alifMemory.allocate(numberString.length() + 1); // البايت الاخير هو بايت مقاطعة النص او قطع السلسلة النصية
     for (uint16_t i = 0; i < numberString.length(); i++)
     {
         number_[i] = numberString[i];
     }
-    number_[numberString.length()] = L'\0';
+    //number_[numberString.length()] = L'\0'; // لا يوجد حاجة له لان القيمة الافتراضية لاخر بايت محجوز هي صفر
     
     if (dotCount == 0)
     {
@@ -331,12 +332,13 @@ void Lexer::make_name()
         this->advance();
     }
 
-    wchar_t* name_ = new wchar_t[nameString.length() + 1];
+    //wchar_t* name_ = new wchar_t[nameString.length() + 1];
+    wchar_t* name_ = (wchar_t*)alifMemory.allocate(nameString.length() + 1); // البايت الاخير هو بايت مقاطعة النص او قطع السلسلة النصية
     for (uint16_t i = 0; i < nameString.length(); i++)
     {
         name_[i] = nameString[i];
     }
-    name_[nameString.length()] = L'\0';
+    //name_[nameString.length()] = L'\0';
 
     this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTName, name_));
 }
@@ -358,7 +360,8 @@ void Lexer::make_string()
         }
     }
 
-    wchar_t* string_ = new wchar_t[newString.length() + 1];
+    //wchar_t* string_ = new wchar_t[newString.length() + 1];
+    wchar_t* string_ = (wchar_t*)alifMemory.allocate(newString.length() + 1); // البايت الاخير هو بايت مقاطعة النص او قطع السلسلة النصية
     for (uint16_t i = 0; i < newString.length(); i++)
     {
         string_[i] = newString[i];

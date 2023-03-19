@@ -24,8 +24,8 @@ class Lexer {
     wchar_t currentChar{};
     uint32_t tokLine = 1;
     uint32_t tokIndex = -1, tokPos = -1;
-    MemoryBlock AlifMemory;
-    DedentSpecifier* dedentSpec = (DedentSpecifier*)AlifMemory.allocate(sizeof(DedentSpecifier)); // حساب المسافات البادئة والراجعة
+    MemoryBlock alifMemory;
+    DedentSpecifier* dedentSpec = (DedentSpecifier*)alifMemory.allocate(sizeof(DedentSpecifier)); // حساب المسافات البادئة والراجعة
 
 public:
     std::vector<Token> tokens_{};
