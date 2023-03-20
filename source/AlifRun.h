@@ -210,10 +210,9 @@ void terminal_run()
         std::wcout << L"ألف -> ";
 
         std::getline(std::wcin, input_);
-        //input_ += L'\n'; // يظهر خطا في المسافة البادئة عند استخدام الطرفية
+        input_ += L'\n';
 
-        //if (input_ == L"خروج\n")
-        if (input_ == L"خروج")
+        if (input_ == L"خروج\n")
         {
             exit(0);
         }
@@ -227,26 +226,26 @@ void terminal_run()
         // المحلل اللغوي
         /////////////////////////////////////////////////////////////////
 
-        Parser parser = Parser(&lexer.tokens_, fileName, &input_, &lexer.alifMemory);
-        parser.parse_terminal();
+        //Parser parser = Parser(&lexer.tokens_, fileName, &input_, &lexer.alifMemory);
+        //parser.parse_terminal();
         
         // المترجم اللغوي
         /////////////////////////////////////////////////////////////////
 
-        Compiler compiler = Compiler(&parser.statements_);
-        compiler.compile_file();
+        //Compiler compiler = Compiler(&parser.statements_);
+        //compiler.compile_file();
 
         // المفسر اللغوي
         /////////////////////////////////////////////////////////////////
 
-        auto start = std::chrono::high_resolution_clock::now();
+        //auto start = std::chrono::high_resolution_clock::now();
         
-        Interpreter interpreter = Interpreter(&compiler.instructions_, &compiler.data_);
-        interpreter.run_code();
+        //Interpreter interpreter = Interpreter(&compiler.instructions_, &compiler.data_);
+        //interpreter.run_code();
 
-        auto end = std::chrono::high_resolution_clock::now();
-        auto elapsed_seconds = end - start;
-        std::wcout << elapsed_seconds << std::endl;
+        //auto end = std::chrono::high_resolution_clock::now();
+        //auto elapsed_seconds = end - start;
+        //std::wcout << elapsed_seconds << std::endl;
 
         // std::wcin.ignore(); // لمنع ارسال قيمة فارغة في المتغير input_ ** يجب إضافة شرط في حال كان المدخل غير فارغ يجب ان يقوم بعمل تجاهل له
     }

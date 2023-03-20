@@ -91,10 +91,22 @@ enum StateType : uint8_t { // انواع الحالات للاسماء
 
 enum InstructionsType : uint8_t { // التعليمات
     NONE,
+    
+    // تعليمات الذاكرة
     GET_DATA,
     SET_DATA,
-    NUM_ADD,
-    NUM_MINUS,
-    STR_ADD,
+
+    // تعليمات العمليات الحسابية
+    ADD_NUM,
+    MINUS_NUM,
+    MUL_NUM,
+    DIV_NUM,
+    REM_NUM,
+    POW_NUM,
+
+    // تعليمات السلاسل النصية
+    ADD_STR,
+    MUL_STR,
+
 };
 
