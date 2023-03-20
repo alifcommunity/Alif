@@ -3,8 +3,8 @@
 SymbolTable symTable; // تم تعريفه ك متغير عام لمنع حذف المتغيرات عند استخدام الطرفية بعد الانتقال الى سطر جديد
 
 
-Parser::Parser(std::vector<Token>* tokens_, wstr _fileName, wstr* _input) : 
-    tokens_(tokens_), fileName(_fileName), input_(_input)
+Parser::Parser(std::vector<Token>* tokens_, wstr _fileName, wstr* _input, MemoryBlock* _alifMemory) : 
+    tokens_(tokens_), fileName(_fileName), input_(_input), alifMemory(_alifMemory)
 {
     this->advance();
 }
@@ -104,7 +104,7 @@ std::vector<ExprNode*>* Parser::arguments() {
 ExprNode* Parser::atom() {
 
     Token token = this->currentToken;
-    exprLevel--;
+    //exprLevel--;
 
     if (token.type_ == TTName)
     {
@@ -113,11 +113,17 @@ ExprNode* Parser::atom() {
             return nullptr;
         }
         this->advance();
-        (exprNode + exprLevel)->U.NameAccess.name_.objType = OTName;
-        (exprNode + exprLevel)->U.NameAccess.name_.V.NameObj.state_ = STGet;
-        (exprNode + exprLevel)->U.NameAccess.name_.V.NameObj.name_ = token.value_;
-        (exprNode + exprLevel)->type_ = VTAccess;
-        return (exprNode + exprLevel);
+        ExprNode* name = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+        name->U.NameAccess.name_.objType = OTName;
+        name->U.NameAccess.name_.V.NameObj.state_ = STGet;
+        name->U.NameAccess.name_.V.NameObj.name_ = token.value_;
+        name->type_ = VTAccess;
+        return name;
+        //(exprNode + exprLevel)->U.NameAccess.name_.objType = OTName;
+        //(exprNode + exprLevel)->U.NameAccess.name_.V.NameObj.state_ = STGet;
+        //(exprNode + exprLevel)->U.NameAccess.name_.V.NameObj.name_ = token.value_;
+        //(exprNode + exprLevel)->type_ = VTAccess;
+        //return (exprNode + exprLevel);
     }
     //else if (token.type_ == TTKeyword) {
     //    if (token.V.keywordType == KVTrue)
@@ -158,41 +164,70 @@ ExprNode* Parser::atom() {
     {
         this->advance();
         wchar_t* pEnd{};
-        (exprNode + exprLevel)->U.Object.value_.objType = OTNumber;
-        (exprNode + exprLevel)->U.Object.value_.V.NumberObj.numberType = token.type_;
-        (exprNode + exprLevel)->U.Object.value_.V.NumberObj.numberValue = wcstol(token.value_, &pEnd, 10);
-        (exprNode + exprLevel)->U.Object.value_.posStart = token.posStart;
-        (exprNode + exprLevel)->U.Object.value_.posEnd = token.posEnd;
-        (exprNode + exprLevel)->U.Object.value_.tokLine = token.tokLine;
-        (exprNode + exprLevel)->U.Object.value_.posIndex = token.posIndex;
-        (exprNode + exprLevel)->type_ = VTObject;
-        return (exprNode + exprLevel);
+        ExprNode* integer = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+        integer->U.Object.value_.objType = OTNumber;
+        integer->U.Object.value_.V.NumberObj.numberType = token.type_;
+        integer->U.Object.value_.V.NumberObj.numberValue = wcstol(token.value_, &pEnd, 10);
+        integer->U.Object.value_.posStart = token.posStart;
+        integer->U.Object.value_.posEnd = token.posEnd;
+        integer->U.Object.value_.tokLine = token.tokLine;
+        integer->U.Object.value_.posIndex = token.posIndex;
+        integer->type_ = VTObject;
+        return integer;
+        //(exprNode + exprLevel)->U.Object.value_.objType = OTNumber;
+        //(exprNode + exprLevel)->U.Object.value_.V.NumberObj.numberType = token.type_;
+        //(exprNode + exprLevel)->U.Object.value_.V.NumberObj.numberValue = wcstol(token.value_, &pEnd, 10);
+        //(exprNode + exprLevel)->U.Object.value_.posStart = token.posStart;
+        //(exprNode + exprLevel)->U.Object.value_.posEnd = token.posEnd;
+        //(exprNode + exprLevel)->U.Object.value_.tokLine = token.tokLine;
+        //(exprNode + exprLevel)->U.Object.value_.posIndex = token.posIndex;
+        //(exprNode + exprLevel)->type_ = VTObject;
+        //return (exprNode + exprLevel);
     }
     else if (token.type_ == TTFloat)
     {
         this->advance();
         wchar_t* pEnd{};
-        (exprNode + exprLevel)->U.Object.value_.objType = OTNumber;
-        (exprNode + exprLevel)->U.Object.value_.V.NumberObj.numberType = token.type_;
-        (exprNode + exprLevel)->U.Object.value_.V.NumberObj.numberValue = wcstold(token.value_, &pEnd);
-        (exprNode + exprLevel)->U.Object.value_.posStart = token.posStart;
-        (exprNode + exprLevel)->U.Object.value_.posEnd = token.posEnd;
-        (exprNode + exprLevel)->U.Object.value_.tokLine = token.tokLine;
-        (exprNode + exprLevel)->U.Object.value_.posIndex = token.posIndex;
-        (exprNode + exprLevel)->type_ = VTObject;
-        return (exprNode + exprLevel);
+        ExprNode* float_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+        float_->U.Object.value_.objType = OTNumber;
+        float_->U.Object.value_.V.NumberObj.numberType = token.type_;
+        float_->U.Object.value_.V.NumberObj.numberValue = wcstold(token.value_, &pEnd);
+        float_->U.Object.value_.posStart = token.posStart;
+        float_->U.Object.value_.posEnd = token.posEnd;
+        float_->U.Object.value_.tokLine = token.tokLine;
+        float_->U.Object.value_.posIndex = token.posIndex;
+        float_->type_ = VTObject;
+        return float_;
+        //(exprNode + exprLevel)->U.Object.value_.objType = OTNumber;
+        //(exprNode + exprLevel)->U.Object.value_.V.NumberObj.numberType = token.type_;
+        //(exprNode + exprLevel)->U.Object.value_.V.NumberObj.numberValue = wcstold(token.value_, &pEnd);
+        //(exprNode + exprLevel)->U.Object.value_.posStart = token.posStart;
+        //(exprNode + exprLevel)->U.Object.value_.posEnd = token.posEnd;
+        //(exprNode + exprLevel)->U.Object.value_.tokLine = token.tokLine;
+        //(exprNode + exprLevel)->U.Object.value_.posIndex = token.posIndex;
+        //(exprNode + exprLevel)->type_ = VTObject;
+        //return (exprNode + exprLevel);
     }
     else if (token.type_ == TTString)
     {
         this->advance();
-        (exprNode + exprLevel)->U.Object.value_.objType = OTString;
-        (exprNode + exprLevel)->U.Object.value_.V.StringObj.strValue = token.value_;
-        (exprNode + exprLevel)->U.Object.value_.posStart = token.posStart;
-        (exprNode + exprLevel)->U.Object.value_.posEnd = token.posEnd;
-        (exprNode + exprLevel)->U.Object.value_.tokLine = token.tokLine;
-        (exprNode + exprLevel)->U.Object.value_.posIndex = token.posIndex;
-        (exprNode + exprLevel)->type_ = VTObject;
-        return (exprNode + exprLevel);
+        ExprNode* string = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+        string->U.Object.value_.objType = OTString;
+        string->U.Object.value_.V.StringObj.strValue = token.value_;
+        string->U.Object.value_.posStart = token.posStart;
+        string->U.Object.value_.posEnd = token.posEnd;
+        string->U.Object.value_.tokLine = token.tokLine;
+        string->U.Object.value_.posIndex = token.posIndex;
+        string->type_ = VTObject;
+        return string;
+        //(exprNode + exprLevel)->U.Object.value_.objType = OTString;
+        //(exprNode + exprLevel)->U.Object.value_.V.StringObj.strValue = token.value_;
+        //(exprNode + exprLevel)->U.Object.value_.posStart = token.posStart;
+        //(exprNode + exprLevel)->U.Object.value_.posEnd = token.posEnd;
+        //(exprNode + exprLevel)->U.Object.value_.tokLine = token.tokLine;
+        //(exprNode + exprLevel)->U.Object.value_.posIndex = token.posIndex;
+        //(exprNode + exprLevel)->type_ = VTObject;
+        //return (exprNode + exprLevel);
     }
     else if (token.type_ == TTLeftSquare)
     {
@@ -263,11 +298,16 @@ ExprNode* Parser::primary() {
         this->advance();
         ExprNode* primary = this->primary();
 
-        exprLevel--;
-        (exprNode + exprLevel)->type_ = VTCall;
-        (exprNode + exprLevel)->U.Call.func_ = atom;
-        (exprNode + exprLevel)->U.Call.name_ = primary;
-        return (exprNode + exprLevel);
+        ExprNode* primary_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+        primary_->type_ = VTCall;
+        primary_->U.Call.func_ = atom;
+        primary_->U.Call.name_ = primary;
+        return primary_;
+        //exprLevel--;
+        //(exprNode + exprLevel)->type_ = VTCall;
+        //(exprNode + exprLevel)->U.Call.func_ = atom;
+        //(exprNode + exprLevel)->U.Call.name_ = primary;
+        //return (exprNode + exprLevel);
     }
     else if (this->currentToken.type_ == TTLeftParenthesis) {
 
@@ -313,14 +353,23 @@ ExprNode* Parser::power()
 
         this->advance();
         ExprNode* right = this->factor();
-        exprLevel--;
 
-        (exprNode + exprLevel)->U.BinaryOp.right_ = right;
-        (exprNode + exprLevel)->U.BinaryOp.operator_ = opToken.type_;
-        (exprNode + exprLevel)->U.BinaryOp.left_ = left;
-        (exprNode + exprLevel)->type_ = VTBinOp;
+        ExprNode* power = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+        power->U.BinaryOp.right_ = right;
+        power->U.BinaryOp.operator_ = opToken.type_;
+        power->U.BinaryOp.left_ = left;
+        power->type_ = VTBinOp;
 
-        left = (exprNode + exprLevel);
+        left = power;
+
+        //exprLevel--;
+
+        //(exprNode + exprLevel)->U.BinaryOp.right_ = right;
+        //(exprNode + exprLevel)->U.BinaryOp.operator_ = opToken.type_;
+        //(exprNode + exprLevel)->U.BinaryOp.left_ = left;
+        //(exprNode + exprLevel)->type_ = VTBinOp;
+
+        //left = (exprNode + exprLevel);
     }
 
     return left;
@@ -333,13 +382,22 @@ ExprNode* Parser::factor() {
 
         this->advance();
         ExprNode* right = this->power();
-        exprLevel--;
 
-        (exprNode + exprLevel)->U.UnaryOp.right_ = right;
-        (exprNode + exprLevel)->U.UnaryOp.operator_ = opToken.type_;
-        (exprNode + exprLevel)->type_ = VTUnaryOp;
+        ExprNode* factor = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
-        return (exprNode + exprLevel);
+        factor->U.UnaryOp.right_ = right;
+        factor->U.UnaryOp.operator_ = opToken.type_;
+        factor->type_ = VTUnaryOp;
+
+        return factor;
+
+        //exprLevel--;
+
+        //(exprNode + exprLevel)->U.UnaryOp.right_ = right;
+        //(exprNode + exprLevel)->U.UnaryOp.operator_ = opToken.type_;
+        //(exprNode + exprLevel)->type_ = VTUnaryOp;
+
+        //return (exprNode + exprLevel);
     }
 
     return this->power();
@@ -353,14 +411,24 @@ ExprNode* Parser::term() {
 
         this->advance();
         ExprNode* right = this->factor();
-        exprLevel--;
 
-        (exprNode + exprLevel)->U.BinaryOp.right_ = right;
-        (exprNode + exprLevel)->U.BinaryOp.operator_ = opToken.type_;
-        (exprNode + exprLevel)->U.BinaryOp.left_ = left;
-        (exprNode + exprLevel)->type_ = VTBinOp;
+        ExprNode* term = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
-        left = (exprNode + exprLevel);
+        term->U.BinaryOp.right_ = right;
+        term->U.BinaryOp.operator_ = opToken.type_;
+        term->U.BinaryOp.left_ = left;
+        term->type_ = VTBinOp;
+
+        left = term;
+
+        //exprLevel--;
+
+        //(exprNode + exprLevel)->U.BinaryOp.right_ = right;
+        //(exprNode + exprLevel)->U.BinaryOp.operator_ = opToken.type_;
+        //(exprNode + exprLevel)->U.BinaryOp.left_ = left;
+        //(exprNode + exprLevel)->type_ = VTBinOp;
+
+        //left = (exprNode + exprLevel);
     }
 
     return left;
@@ -374,14 +442,24 @@ ExprNode* Parser::sum() {
 
         this->advance();
         ExprNode* right = this->term();
-        exprLevel--;
 
-        (exprNode + exprLevel)->U.BinaryOp.right_ = right;
-        (exprNode + exprLevel)->U.BinaryOp.operator_ = opToken.type_;
-        (exprNode + exprLevel)->U.BinaryOp.left_ = left;
-        (exprNode + exprLevel)->type_ = VTBinOp;
+        ExprNode* sum = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
-        left = (exprNode + exprLevel);
+        sum->U.BinaryOp.right_ = right;
+        sum->U.BinaryOp.operator_ = opToken.type_;
+        sum->U.BinaryOp.left_ = left;
+        sum->type_ = VTBinOp;
+
+        left = sum;
+
+        //exprLevel--;
+
+        //(exprNode + exprLevel)->U.BinaryOp.right_ = right;
+        //(exprNode + exprLevel)->U.BinaryOp.operator_ = opToken.type_;
+        //(exprNode + exprLevel)->U.BinaryOp.left_ = left;
+        //(exprNode + exprLevel)->type_ = VTBinOp;
+
+        //left = (exprNode + exprLevel);
     }
 
     return left;
@@ -401,14 +479,24 @@ ExprNode* Parser::comparesion() {
 
         this->advance();
         ExprNode* right = this->sum();
-        exprLevel--;
 
-        (exprNode + exprLevel)->U.BinaryOp.right_ = right;
-        (exprNode + exprLevel)->U.BinaryOp.operator_ = opToken.type_;
-        (exprNode + exprLevel)->U.BinaryOp.left_ = left;
-        (exprNode + exprLevel)->type_ = VTBinOp;
+        ExprNode* comparesion = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
-        left = (exprNode + exprLevel);
+        comparesion->U.BinaryOp.right_ = right;
+        comparesion->U.BinaryOp.operator_ = opToken.type_;
+        comparesion->U.BinaryOp.left_ = left;
+        comparesion->type_ = VTBinOp;
+
+        left = comparesion;
+
+        //exprLevel--;
+
+        //(exprNode + exprLevel)->U.BinaryOp.right_ = right;
+        //(exprNode + exprLevel)->U.BinaryOp.operator_ = opToken.type_;
+        //(exprNode + exprLevel)->U.BinaryOp.left_ = left;
+        //(exprNode + exprLevel)->type_ = VTBinOp;
+
+        //left = (exprNode + exprLevel);
     }
 
     return left;
@@ -422,14 +510,24 @@ ExprNode* Parser::inversion() {
 
         this->advance();
         ExprNode* right = this->comparesion();
-        exprLevel--;
 
-        (exprNode + exprLevel)->U.UnaryOp.right_ = right;
-        (exprNode + exprLevel)->U.UnaryOp.operator_ = opToken.type_;
-        (exprNode + exprLevel)->U.UnaryOp.keyword_ = opToken.value_;
-        (exprNode + exprLevel)->type_ = VTUnaryOp;
+        ExprNode* inversion = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
-        return (exprNode + exprLevel);
+        inversion->U.UnaryOp.right_ = right;
+        inversion->U.UnaryOp.operator_ = opToken.type_;
+        inversion->U.UnaryOp.keyword_ = opToken.value_;
+        inversion->type_ = VTUnaryOp;
+
+        return inversion;
+
+        //exprLevel--;
+
+        //(exprNode + exprLevel)->U.UnaryOp.right_ = right;
+        //(exprNode + exprLevel)->U.UnaryOp.operator_ = opToken.type_;
+        //(exprNode + exprLevel)->U.UnaryOp.keyword_ = opToken.value_;
+        //(exprNode + exprLevel)->type_ = VTUnaryOp;
+
+        //return (exprNode + exprLevel);
     }
 
     return this->comparesion();
@@ -445,15 +543,26 @@ ExprNode* Parser::conjuction() {
 
         this->advance();
         ExprNode* right = this->inversion();
-        exprLevel--;
 
-        (exprNode + exprLevel)->U.BinaryOp.right_ = right;
-        (exprNode + exprLevel)->U.BinaryOp.operator_ = opToken.type_;
-        (exprNode + exprLevel)->U.BinaryOp.keyword_ = opToken.value_;
-        (exprNode + exprLevel)->U.BinaryOp.left_ = left;
-        (exprNode + exprLevel)->type_ = VTBinOp;
+        ExprNode* conjuction = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
-        left = (exprNode + exprLevel);
+        conjuction->U.BinaryOp.right_ = right;
+        conjuction->U.BinaryOp.operator_ = opToken.type_;
+        conjuction->U.BinaryOp.keyword_ = opToken.value_;
+        conjuction->U.BinaryOp.left_ = left;
+        conjuction->type_ = VTBinOp;
+
+        left = conjuction;
+
+        //exprLevel--;
+
+        //(exprNode + exprLevel)->U.BinaryOp.right_ = right;
+        //(exprNode + exprLevel)->U.BinaryOp.operator_ = opToken.type_;
+        //(exprNode + exprLevel)->U.BinaryOp.keyword_ = opToken.value_;
+        //(exprNode + exprLevel)->U.BinaryOp.left_ = left;
+        //(exprNode + exprLevel)->type_ = VTBinOp;
+
+        //left = (exprNode + exprLevel);
     }
 
     return left;
@@ -1151,4 +1260,5 @@ bool Parser::is_keyword(const wchar_t* _name)
             return true;
         }
     }
+    return false;
 }
