@@ -210,9 +210,10 @@ void terminal_run()
         std::wcout << L"ألف -> ";
 
         std::getline(std::wcin, input_);
-        input_ += L'\n'; // يظهر خطا في المسافة البادئة عند استخدام الطرفية
+        //input_ += L'\n'; // يظهر خطا في المسافة البادئة عند استخدام الطرفية
 
-        if (input_ == L"خروج\n")
+        //if (input_ == L"خروج\n")
+        if (input_ == L"خروج")
         {
             exit(0);
         }
