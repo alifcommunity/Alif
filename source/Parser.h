@@ -5,6 +5,7 @@
 #include "Tokens.h"
 #include "Node.h"
 #include "SymbolTable.h"
+#include "MemoryBlock.h"
 
 #define Next_Is(t) (this->tokens->at(this->tokenIndex + 1).type_ == t ? true : false )
 
@@ -19,6 +20,7 @@ public:
     Token currentToken;
     wstr fileName;
     wstr* input_;
+    MemoryBlock* alifMemory;
 
     /// <اعلام>
 
@@ -33,7 +35,7 @@ public:
     ExprNode* exprNode = (ExprNode*)malloc(exprLevel * sizeof(struct ExprNode));
     StmtsNode* stmtsNode = (StmtsNode*)malloc(stmtsLevel * sizeof(struct StmtsNode));
 
-    Parser(std::vector<Token>* tokens, wstr _fileName, wstr* _input);
+    Parser(std::vector<Token>* tokens, wstr _fileName, wstr* _input, MemoryBlock* _alifMemory);
 
     void advance();
 

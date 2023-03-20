@@ -210,7 +210,7 @@ void terminal_run()
         std::wcout << L"ألف -> ";
 
         std::getline(std::wcin, input_);
-        input_ += L'\n';
+        input_ += L'\n'; // يظهر خطا في المسافة البادئة عند استخدام الطرفية
 
         if (input_ == L"خروج\n")
         {
@@ -226,7 +226,7 @@ void terminal_run()
         // المحلل اللغوي
         /////////////////////////////////////////////////////////////////
 
-        Parser parser = Parser(&lexer.tokens_, fileName, &input_);
+        Parser parser = Parser(&lexer.tokens_, fileName, &input_, &lexer.alifMemory);
         parser.parse_terminal();
         
         // المترجم اللغوي
