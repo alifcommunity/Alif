@@ -29,12 +29,6 @@ public:
 
     /// </اعلام>
 
-    uint16_t exprLevel = 4000;
-    uint16_t stmtsLevel = 4000;
-
-    ExprNode* exprNode = (ExprNode*)malloc(exprLevel * sizeof(struct ExprNode));
-    StmtsNode* stmtsNode = (StmtsNode*)malloc(stmtsLevel * sizeof(struct StmtsNode));
-
     Parser(std::vector<Token>* tokens, wstr _fileName, wstr* _input, MemoryBlock* _alifMemory);
 
     void advance();

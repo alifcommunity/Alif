@@ -4,6 +4,9 @@ Lexer::Lexer(wstr _fileName, wstr* _input)
     : fileName(_fileName), input_(_input), currentChar(L'\0')
 {
     this->advance();
+
+    dedentSpec->spaces = 0; // تهيئة المتغير بقيمة افتراضية صفر لضمان عدم ظهور قيم عشوائية
+    dedentSpec->previous = nullptr; // تهيئة المتغير بقيمة افتراضية فارغ لضمان عدم ظهور قيم عشوائية
 }
 
 void Lexer::advance()
@@ -306,12 +309,12 @@ void Lexer::make_number() {
     }
 
     //wchar_t* number_ = new wchar_t[numberString.length() + 1];
-    wchar_t* number_ = (wchar_t*)alifMemory.allocate(numberString.size() * 2 + 2); // size() * sizeof(wchar_t) + terminator 
+    wchar_t* number_ = (wchar_t*)alifMemory.allocate(numberString.size() * 2 + 2); // .length() * sizeof(wchar_t) + terminator 
     for (uint16_t i = 0; i < numberString.length(); i++)
     {
         number_[i] = numberString[i];
     }
-    number_[numberString.length()] = L'\0'; // لا يوجد حاجة له لان القيمة الافتراضية لاخر بايت محجوز هي صفر
+    number_[numberString.length()] = L'\0'; // لضمان قطع "مقاطعة" السلسلة النصية
     
     if (dotCount == 0)
     {
@@ -333,12 +336,12 @@ void Lexer::make_name()
     }
 
     //wchar_t* name_ = new wchar_t[nameString.length() + 1];
-    wchar_t* name_ = (wchar_t*)alifMemory.allocate((nameString.size() * 2) + 2); // size() * sizeof(wchar_t) + terminator 
+    wchar_t* name_ = (wchar_t*)alifMemory.allocate((nameString.size() * 2) + 2); // .length() * sizeof(wchar_t) + terminator 
     for (uint16_t i = 0; i < nameString.length(); i++)
     {
         name_[i] = nameString[i];
     }
-    name_[nameString.length()] = L'\0';
+    name_[nameString.length()] = L'\0'; // لضمان قطع "مقاطعة" السلسلة النصية
 
     this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTName, name_));
 }
@@ -361,12 +364,12 @@ void Lexer::make_string()
     }
 
     //wchar_t* string_ = new wchar_t[newString.length() + 1];
-    wchar_t* string_ = (wchar_t*)alifMemory.allocate((newString.size() * 2) + 2); // size() * sizeof(wchar_t) + terminator 
+    wchar_t* string_ = (wchar_t*)alifMemory.allocate((newString.size() * 2) + 2); // .length() * sizeof(wchar_t) + terminator 
     for (uint16_t i = 0; i < newString.length(); i++)
     {
         string_[i] = newString[i];
     }
-    string_[newString.length()] = L'\0';
+    string_[newString.length()] = L'\0'; // لضمان قطع "مقاطعة" السلسلة النصية
 
     this->advance();
     this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTString, string_));

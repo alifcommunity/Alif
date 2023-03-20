@@ -32,7 +32,7 @@ AlifObject* Compiler::expr_visit(ExprNode* _node)
 			{
 				if (right->objType == OTNumber)
 				{
-					instructions_.push_back(NUM_ADD);
+					instructions_.push_back(ADD_NUM);
 				}
 			}
 			//else if (left and left->objType == OTString)
@@ -40,7 +40,7 @@ AlifObject* Compiler::expr_visit(ExprNode* _node)
 			{
 				if (right->objType == OTString)
 				{
-					instructions_.push_back(STR_ADD);
+					instructions_.push_back(ADD_STR);
 				}
 			}
 			else
@@ -50,7 +50,7 @@ AlifObject* Compiler::expr_visit(ExprNode* _node)
 		}
 		else if (_node->U.BinaryOp.operator_ == TTMinus)
 		{
-			instructions_.push_back(NUM_MINUS);
+			instructions_.push_back(MINUS_NUM);
 		}
 
 		return left;

@@ -19,7 +19,8 @@ class SymbolTable {
     Scope* globalScope;
 
 public:
-    SymbolTable() {
+    SymbolTable() 
+    {
         globalScope = new Scope();
         globalScope->parent = nullptr;
         currentScope = globalScope;
@@ -28,10 +29,6 @@ public:
     void add_symbol(double64_t type, AlifObject value) {
         currentScope->symbols[type] = value;
     }
-
-    //void add_value(double64_t _key, double64_t _value) {
-    //    currentScope->symbols[_key].V.NumberObj.numberValue = _value;
-    //}
 
     void enter_scope(double64_t type) {
         if (currentScope->scopes.count(type) == 0) {
@@ -56,13 +53,11 @@ public:
                 return scope->symbols[type];
             }
             if (level == 0) {
-                break;
+                PRINT_(L"المتغير المستدعى غير معرف");
+                exit(-1);
             }
             scope = scope->parent;
             level--;
         }
-        PRINT_(L"المتغير المستدعى غير معرف");
-        exit(-1);
     }
-
 };
