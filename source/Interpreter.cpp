@@ -1,11 +1,29 @@
 #include "AddrFuncs.h"
 #include "Interpreter.h"
 
+std::vector<InstructionsType>* instructions_;
+std::vector<AlifObject*>* data_;
+int stackLevel = 512;
+AlifObject* memory_[512]; // stack memory
 
 Interpreter::Interpreter(std::vector<InstructionsType>* _instructions, std::vector<AlifObject*>* _data) {
 	data_ = _data;
 	instructions_ = _instructions;
 }
+
+void Interpreter::run_code()
+{
+	for (InstructionsType command_ : *instructions_)
+	{
+		instr_funcs[command_]();
+	}
+
+	stackLevel++;
+	AlifObject* res = *(memory_ + stackLevel);
+	std::wcout << res->V.NumberObj.numberValue << std::endl;
+	//std::wcout << res->V.StringObj.strValue << std::endl;
+}
+
 
 void none_() {}
 
@@ -35,7 +53,7 @@ void div_num() {}
 void rem_num() {}
 void pow_num() {}
 
-void str_add() // هذه الطريقة اسرع من استخدام wcsncpy_s و wcsncat_s
+void add_str() // هذه الطريقة اسرع من استخدام wcsncpy_s و wcsncat_s
 {
 	stackLevel++;
 	AlifObject* left = *(memory_ + stackLevel);
@@ -63,17 +81,3 @@ void str_add() // هذه الطريقة اسرع من استخدام wcsncpy_s �
 	stackLevel--;
 }
 
-
-
-void Interpreter::run_code()
-{
-	for (InstructionsType command_ : *instructions_)
-	{
-		instr_funcs[command_]();
-	}
-
-	stackLevel++;
-	AlifObject* res = *(memory_ + stackLevel);
-	std::wcout << res->V.NumberObj.numberValue << std::endl;
-	//std::wcout << res->V.StringObj.strValue << std::endl;
-}
