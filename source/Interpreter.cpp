@@ -8,8 +8,8 @@ Interpreter::Interpreter(std::vector<InstructionsType>* _instructions, std::vect
 }
 
 void none_() {}
-void get_data() {}
 
+void get_data() {}
 void set_data()
 {
 	*(memory_ + stackLevel) = data_->front();
@@ -17,7 +17,7 @@ void set_data()
 	data_->erase(data_->begin());
 }
 
-void num_add()
+void add_num()
 {
 	stackLevel++;
 	AlifObject* left = *(memory_ + stackLevel);
@@ -29,8 +29,11 @@ void num_add()
 	*(memory_ + stackLevel) = right;
 	stackLevel--;
 }
-
-void num_minus() {}
+void minus_num() {}
+void mul_num() {}
+void div_num() {}
+void rem_num() {}
+void pow_num() {}
 
 void str_add() // هذه الطريقة اسرع من استخدام wcsncpy_s و wcsncat_s
 {
@@ -69,8 +72,8 @@ void Interpreter::run_code()
 		instr_funcs[command_]();
 	}
 
-	//stackLevel++;
-	//AlifObject* res = *(memory_ + stackLevel);
-	//std::wcout << res->V.NumberObj.numberValue << std::endl;
+	stackLevel++;
+	AlifObject* res = *(memory_ + stackLevel);
+	std::wcout << res->V.NumberObj.numberValue << std::endl;
 	//std::wcout << res->V.StringObj.strValue << std::endl;
 }
