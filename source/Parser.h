@@ -13,13 +13,13 @@
 
 
 class Parser {
-public:
     std::vector<Token>* tokens_;
-    std::vector<ExprNode*> statements_;
     int tokenIndex = -1;
     Token currentToken;
     wstr fileName;
     wstr* input_;
+public:
+    std::vector<ExprNode*> statements_;
     MemoryBlock* alifMemory;
 
     /// <اعلام>

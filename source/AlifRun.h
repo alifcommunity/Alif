@@ -226,22 +226,22 @@ void terminal_run()
         // المحلل اللغوي
         /////////////////////////////////////////////////////////////////
 
-        //Parser parser = Parser(&lexer.tokens_, fileName, &input_, &lexer.alifMemory);
-        //parser.parse_terminal();
+        Parser parser = Parser(&lexer.tokens_, fileName, &input_, &lexer.alifMemory);
+        parser.parse_terminal();
         
         // المترجم اللغوي
         /////////////////////////////////////////////////////////////////
 
-        //Compiler compiler = Compiler(&parser.statements_);
-        //compiler.compile_file();
+        Compiler compiler = Compiler(&parser.statements_);
+        compiler.compile_file();
 
         // المفسر اللغوي
         /////////////////////////////////////////////////////////////////
 
         //auto start = std::chrono::high_resolution_clock::now();
         
-        //Interpreter interpreter = Interpreter(&compiler.instructions_, &compiler.data_);
-        //interpreter.run_code();
+        Interpreter interpreter = Interpreter(&compiler.instructions_, &compiler.data_);
+        interpreter.run_code();
 
         //auto end = std::chrono::high_resolution_clock::now();
         //auto elapsed_seconds = end - start;
