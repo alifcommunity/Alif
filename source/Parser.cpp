@@ -22,15 +22,10 @@ void Parser::advance()
 
 void Parser::parse_file()
 {
-    //StmtsNode* stmtsRes = nullptr;
-    ExprNode* stmtsRes = nullptr;
-    //AlifObject intrRes;
+    ExprNode* stmtsRes = nullptr; // convert it to StmtsNode after finish test
 
     do {
-        //stmtsRes = this->statement();
-        this->statements_.push_back(this->sum());
-        //intrRes = this->visit_stmts(stmtsRes);
-        //this->exprLevel = 4000;
+        this->statements_.push_back(this->sum()); // convert it to StmtsNode after finish test
 
     } while (currentToken.type_ != TTEndOfFile);
 
@@ -188,26 +183,26 @@ ExprNode* Parser::atom() {
         string->type_ = VTObject;
         return string;
     }
-    else if (token.type_ == TTLeftSquare)
-    {
-        return this->list_expr();
-    }
-    else if (this->currentToken.type_ == TTLeftParenthesis)
-    {
-        this->advance();
-        ExprNode* priorExpr = this->expression();
+    //else if (token.type_ == TTLeftSquare)
+    //{
+    //    return this->list_expr();
+    //}
+    //else if (this->currentToken.type_ == TTLeftParenthesis)
+    //{
+    //    this->advance();
+    //    ExprNode* priorExpr = this->expression();
 
-        if (this->currentToken.type_ == TTRrightParenthesis)
-        {
-            this->advance();
-            return priorExpr;
-        }
-        else
-        {
-            PRINT_(L"لم يتم إغلاق قوس القوس");
-            exit(-1);
-        }
-    }
+    //    if (this->currentToken.type_ == TTRrightParenthesis)
+    //    {
+    //        this->advance();
+    //        return priorExpr;
+    //    }
+    //    else
+    //    {
+    //        PRINT_(L"لم يتم إغلاق قوس القوس");
+    //        exit(-1);
+    //    }
+    //}
     else
     {
         PRINT_(L"لم يتم العثور على حالة");
@@ -252,8 +247,8 @@ ExprNode* Parser::list_expr()
 ExprNode* Parser::primary() {
 
     ExprNode* atom = this->atom();
-    if (this->currentToken.type_ == TTDot) {
-
+    if (this->currentToken.type_ == TTDot) 
+    {
         this->advance();
         ExprNode* primary = this->primary();
 
@@ -300,183 +295,197 @@ ExprNode* Parser::primary() {
 
 ExprNode* Parser::power()
 {
-    ExprNode* left = this->primary();
+    ExprNode* left_ = this->primary();
 
     while (this->currentToken.type_ == TTPower) {
         Token opToken = this->currentToken;
 
         this->advance();
-        ExprNode* right = this->factor();
+        ExprNode* right_ = this->factor();
 
-        ExprNode* power = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
-        power->U.BinaryOp.right_ = right;
-        power->U.BinaryOp.operator_ = opToken.type_;
-        power->U.BinaryOp.left_ = left;
-        power->type_ = VTBinOp;
+        ExprNode* power_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
-        left = power;
+        power_->U.BinaryOp.right_ = right_;
+        power_->U.BinaryOp.operator_ = opToken.type_;
+        power_->U.BinaryOp.left_ = left_;
+        power_->type_ = VTBinOp;
+
+        left_ = power_;
     }
 
-    return left;
+    return left_;
 }
 
-ExprNode* Parser::factor() {
-
+ExprNode* Parser::factor() 
+{
     while (this->currentToken.type_ == TTPlus or this->currentToken.type_ == TTMinus) {
         Token opToken = this->currentToken;
 
         this->advance();
-        ExprNode* right = this->power();
+        ExprNode* right_ = this->power();
 
-        ExprNode* factor = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
-        factor->U.UnaryOp.right_ = right;
-        factor->U.UnaryOp.operator_ = opToken.type_;
-        factor->type_ = VTUnaryOp;
+        ExprNode* factor_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
-        return factor;
+        factor_->U.UnaryOp.right_ = right_;
+        factor_->U.UnaryOp.operator_ = opToken.type_;
+        factor_->type_ = VTUnaryOp;
+
+        return factor_;
     }
 
     return this->power();
 }
 
-ExprNode* Parser::term() {
-    ExprNode* left = this->factor();
+ExprNode* Parser::term() 
+{
+    ExprNode* left_ = this->factor();
 
     while (this->currentToken.type_ == TTMultiply or this->currentToken.type_ == TTDivide or this->currentToken.type_ == TTRemain) {
         Token opToken = this->currentToken;
 
         this->advance();
-        ExprNode* right = this->factor();
+        ExprNode* right_ = this->factor();
 
-        ExprNode* term = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
-        term->U.BinaryOp.right_ = right;
-        term->U.BinaryOp.operator_ = opToken.type_;
-        term->U.BinaryOp.left_ = left;
-        term->type_ = VTBinOp;
+        ExprNode* term_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+        term_->U.BinaryOp.right_ = right_;
+        term_->U.BinaryOp.operator_ = opToken.type_;
+        term_->U.BinaryOp.left_ = left_;
+        term_->type_ = VTBinOp;
 
-        left = term;
+        left_ = term_;
     }
 
-    return left;
+    return left_;
 }
 
-ExprNode* Parser::sum() {
-    ExprNode* left = this->term();
+ExprNode* Parser::sum() 
+{
+    ExprNode* left_ = this->term();
 
-    while (this->currentToken.type_ == TTPlus or this->currentToken.type_ == TTMinus) {
-        Token opToken = this->currentToken;
-
-        this->advance();
-        ExprNode* right = this->term();
-
-        ExprNode* sum = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
-        sum->U.BinaryOp.right_ = right;
-        sum->U.BinaryOp.operator_ = opToken.type_;
-        sum->U.BinaryOp.left_ = left;
-        sum->type_ = VTBinOp;
-
-        left = sum;
-    }
-
-    return left;
-}
-
-ExprNode* Parser::comparesion() {
-    ExprNode* left = this->sum();
-
-    while (this->currentToken.type_ == TTEqualEqual or
-        this->currentToken.type_ == TTNotEqual or
-        this->currentToken.type_ == TTLessThan or
-        this->currentToken.type_ == TTGreaterThan or
-        this->currentToken.type_ == TTLessThanEqual or
-        this->currentToken.type_ == TTGreaterThanEqual) 
+    while (this->currentToken.type_ == TTPlus or this->currentToken.type_ == TTMinus)
     {
         Token opToken = this->currentToken;
 
         this->advance();
-        ExprNode* right = this->sum();
+        ExprNode* right_ = this->term();
 
-        ExprNode* comparesion = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
-        comparesion->U.BinaryOp.right_ = right;
-        comparesion->U.BinaryOp.operator_ = opToken.type_;
-        comparesion->U.BinaryOp.left_ = left;
-        comparesion->type_ = VTBinOp;
+        ExprNode* sum_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
-        left = comparesion;
+        sum_->U.BinaryOp.right_ = right_;
+        sum_->U.BinaryOp.operator_ = opToken.type_;
+        sum_->U.BinaryOp.left_ = left_;
+        sum_->type_ = VTBinOp;
+
+        left_ = sum_;
     }
 
-    return left;
+    return left_;
 }
 
-ExprNode* Parser::inversion() {
+ExprNode* Parser::comparesion() 
+{
+    ExprNode* left_ = this->sum();
+
+    while (
+        this->currentToken.type_ == TTEqualEqual or
+        this->currentToken.type_ == TTNotEqual or
+        this->currentToken.type_ == TTLessThan or
+        this->currentToken.type_ == TTGreaterThan or
+        this->currentToken.type_ == TTLessThanEqual or
+        this->currentToken.type_ == TTGreaterThanEqual
+         ) 
+    {
+        Token opToken = this->currentToken;
+
+        this->advance();
+        ExprNode* right_ = this->sum();
+
+        ExprNode* comparesion_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+
+        comparesion_->U.BinaryOp.right_ = right_;
+        comparesion_->U.BinaryOp.operator_ = opToken.type_;
+        comparesion_->U.BinaryOp.left_ = left_;
+        comparesion_->type_ = VTBinOp;
+
+        left_ = comparesion_;
+    }
+
+    return left_;
+}
+
+ExprNode* Parser::inversion() 
+{
 
     while (this->currentToken.type_ == TTName and wcscmp(this->currentToken.value_, L"ليس"))
     {
         Token opToken = this->currentToken;
 
         this->advance();
-        ExprNode* right = this->comparesion();
+        ExprNode* right_ = this->comparesion();
 
-        ExprNode* inversion = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+        ExprNode* inversion_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
-        inversion->U.UnaryOp.right_ = right;
-        inversion->U.UnaryOp.operator_ = opToken.type_;
-        inversion->U.UnaryOp.keyword_ = opToken.value_;
-        inversion->type_ = VTUnaryOp;
+        inversion_->U.UnaryOp.right_ = right_;
+        inversion_->U.UnaryOp.operator_ = opToken.type_;
+        inversion_->U.UnaryOp.keyword_ = opToken.value_;
+        inversion_->type_ = VTUnaryOp;
 
-        return inversion;
+        return inversion_;
     }
 
     return this->comparesion();
 }
 
-ExprNode* Parser::conjuction() {
+ExprNode* Parser::conjuction()
+{
 
-    ExprNode* left = this->inversion();
+    ExprNode* left_ = this->inversion();
 
     while (this->currentToken.type_ == TTName and wcscmp(this->currentToken.value_, L"و"))
     {
         Token opToken = this->currentToken;
 
         this->advance();
-        ExprNode* right = this->inversion();
+        ExprNode* right_ = this->inversion();
 
-        ExprNode* conjuction = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+        ExprNode* conjuction_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
-        conjuction->U.BinaryOp.right_ = right;
-        conjuction->U.BinaryOp.operator_ = opToken.type_;
-        conjuction->U.BinaryOp.keyword_ = opToken.value_;
-        conjuction->U.BinaryOp.left_ = left;
-        conjuction->type_ = VTBinOp;
+        conjuction_->U.BinaryOp.right_ = right_;
+        conjuction_->U.BinaryOp.operator_ = opToken.type_;
+        conjuction_->U.BinaryOp.keyword_ = opToken.value_;
+        conjuction_->U.BinaryOp.left_ = left_;
+        conjuction_->type_ = VTBinOp;
 
-        left = conjuction;
+        left_ = conjuction_;
     }
 
-    return left;
+    return left_;
 }
 
-ExprNode* Parser::disjuction() {
+ExprNode* Parser::disjuction() 
+{
 
-    ExprNode* left = this->conjuction();
+    ExprNode* left_ = this->conjuction();
 
     while (this->currentToken.type_ == TTName and wcscmp(this->currentToken.value_, L"او"))
     {
         Token opToken = this->currentToken;
 
         this->advance();
-        ExprNode* right = this->conjuction();
-        //exprLevel--;
+        ExprNode* right_ = this->conjuction();
 
-        //(exprNode + exprLevel)->U.BinaryOp.right_ = right;
-        //(exprNode + exprLevel)->U.BinaryOp.operator_ = opToken.type_;
-        //(exprNode + exprLevel)->U.BinaryOp.keyword_ = opToken.value_;
-        //(exprNode + exprLevel)->U.BinaryOp.left_ = left;
-        //(exprNode + exprLevel)->type_ = VTBinOp;
+        ExprNode* disjuction_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
-        //left = (exprNode + exprLevel);
+        disjuction_->U.BinaryOp.right_ = right_;
+        disjuction_->U.BinaryOp.operator_ = opToken.type_;
+        disjuction_->U.BinaryOp.keyword_ = opToken.value_;
+        disjuction_->U.BinaryOp.left_ = left_;
+        disjuction_->type_ = VTBinOp;
+
+        left_ = disjuction_;
     }
 
-    return left;
+    return left_;
 }
 
 ExprNode* Parser::expression() {
