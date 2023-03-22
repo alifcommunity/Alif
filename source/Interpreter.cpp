@@ -141,11 +141,12 @@ void mul_str() {
 		const uint16_t leftSize = left.V.NumberObj.numberValue;
 		wchar_t* res = new wchar_t[rightSize * leftSize + 1];
 
-		for (uint16_t i = 0; i < leftSize; i++)
+		int currentIndex = 0;
+		for (uint16_t i = 0; i < rightSize; i++)
 		{
-			for (uint16_t l = 0; l < rightSize; l++)
+			for (uint16_t l = 0; l < leftSize; l++)
 			{
-				res[i + l] = right.V.StringObj.strValue[l];
+				res[currentIndex++] = left.V.StringObj.strValue[l];
 			}
 		}
 
@@ -159,11 +160,12 @@ void mul_str() {
 		const uint16_t leftSize = wcslen(left.V.StringObj.strValue);
 		wchar_t* res = new wchar_t[rightSize * leftSize + 1];
 
+		int currentIndex = 0;
 		for (uint16_t i = 0; i < rightSize; i++)
 		{
 			for (uint16_t l = 0; l < leftSize; l++)
 			{
-				res[i + l] = left.V.StringObj.strValue[l];
+				res[currentIndex++] = left.V.StringObj.strValue[l];
 			}
 		}
 
