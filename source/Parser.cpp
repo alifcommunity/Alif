@@ -144,6 +144,7 @@ ExprNode* Parser::atom() {
         this->advance();
         wchar_t* pEnd{};
         ExprNode* integer = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+        //ExprNode* integer = new ExprNode();
         integer->U.Object.value_.objType = OTNumber;
         integer->U.Object.value_.V.NumberObj.numberType = token.type_;
         integer->U.Object.value_.V.NumberObj.numberValue = wcstol(token.value_, &pEnd, 10);
@@ -369,7 +370,8 @@ ExprNode* Parser::sum()
         this->advance();
         ExprNode* right_ = this->term();
 
-        ExprNode* sum_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+        //ExprNode* sum_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+        ExprNode* sum_ = new ExprNode;
 
         sum_->U.BinaryOp.right_ = right_;
         sum_->U.BinaryOp.operator_ = opToken.type_;
