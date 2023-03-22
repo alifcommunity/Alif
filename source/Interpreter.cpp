@@ -20,7 +20,7 @@ void Interpreter::run_code()
 	
 	AlifObject res = stackMemory.top();
 	stackMemory.pop();
-	std::wcout << res.V.NumberObj.numberValue << std::endl;
+	//std::wcout << res.V.NumberObj.numberValue << std::endl;
 	//std::wcout << res->V.StringObj.strValue << std::endl;
 }
 
