@@ -68,8 +68,11 @@ AlifObject* Compiler::expr_visit(ExprNode* _node)
 				{
 					instructions_.push_back(MUL_NUM);
 				}
-				else {
+				else if (right->objType == OTString) {
 					instructions_.push_back(MUL_STR);
+				}
+				else {
+					// error
 				}
 			}
 			else if (left->objType == OTString)

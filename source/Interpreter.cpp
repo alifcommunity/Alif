@@ -138,8 +138,8 @@ void mul_str() {
 
 	if (left.objType == OTNumber) {
 		const uint16_t rightSize = wcslen(right.V.StringObj.strValue);
-		const uint16_t leftSize = (int)left.V.NumberObj.numberValue;
-		wchar_t* res = new wchar_t[rightSize + leftSize + 1];
+		const uint16_t leftSize = left.V.NumberObj.numberValue;
+		wchar_t* res = new wchar_t[rightSize * leftSize + 1];
 
 		for (uint16_t i = 0; i < leftSize; i++)
 		{
@@ -155,7 +155,7 @@ void mul_str() {
 		stackMemory.push(right);
 	}
 	else {
-		const uint16_t rightSize = (int)right.V.NumberObj.numberValue;
+		const uint16_t rightSize = right.V.NumberObj.numberValue;
 		const uint16_t leftSize = wcslen(left.V.StringObj.strValue);
 		wchar_t* res = new wchar_t[rightSize * leftSize + 1];
 
