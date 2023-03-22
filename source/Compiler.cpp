@@ -52,6 +52,35 @@ AlifObject* Compiler::expr_visit(ExprNode* _node)
 		{
 			instructions_.push_back(MINUS_NUM);
 		}
+		else if (_node->U.BinaryOp.operator_ == TTPower)
+		{
+			instructions_.push_back(POW_NUM);
+		}
+		else if (_node->U.BinaryOp.operator_ == TTDivide)
+		{
+			instructions_.push_back(DIV_NUM);
+		}
+		else if (_node->U.BinaryOp.operator_ == TTMultiply)
+		{
+			if (left->objType == OTNumber)
+			{
+				if (right->objType == OTNumber)
+				{
+					instructions_.push_back(MUL_NUM);
+				}
+			}
+			else if (left->objType == OTString)
+			{
+				if (right->objType == OTString)
+				{
+					instructions_.push_back(MUL_STR);
+				}
+			}
+			else
+			{
+				// error
+			}
+		}
 
 		return left;
 

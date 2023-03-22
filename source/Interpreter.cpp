@@ -20,7 +20,7 @@ void Interpreter::run_code()
 	
 	AlifObject res = stackMemory.top();
 	stackMemory.pop();
-	//std::wcout << res.V.NumberObj.numberValue << std::endl;
+	std::wcout << res.V.NumberObj.numberValue << std::endl;
 	//std::wcout << res->V.StringObj.strValue << std::endl;
 }
 
@@ -45,11 +45,51 @@ void add_num()
 	right.V.NumberObj.numberValue = right.V.NumberObj.numberValue + left.V.NumberObj.numberValue;
 	stackMemory.push(right);
 }
-void minus_num() {}
-void mul_num() {}
-void div_num() {}
+void minus_num() 
+{
+	AlifObject left = stackMemory.top();
+	stackMemory.pop();
+	AlifObject right = stackMemory.top();
+	stackMemory.pop();
+
+	left.V.NumberObj.numberType == TTFloat or right.V.NumberObj.numberType == TTFloat ? right.V.NumberObj.numberType = TTFloat : right.V.NumberObj.numberType = TTInteger;
+	right.V.NumberObj.numberValue = right.V.NumberObj.numberValue - left.V.NumberObj.numberValue;
+	stackMemory.push(right);
+}
+void mul_num() 
+{
+	AlifObject left = stackMemory.top();
+	stackMemory.pop();
+	AlifObject right = stackMemory.top();
+	stackMemory.pop();
+
+	left.V.NumberObj.numberType == TTFloat or right.V.NumberObj.numberType == TTFloat ? right.V.NumberObj.numberType = TTFloat : right.V.NumberObj.numberType = TTInteger;
+	right.V.NumberObj.numberValue = right.V.NumberObj.numberValue * left.V.NumberObj.numberValue;
+	stackMemory.push(right);
+}
+void div_num() 
+{
+	AlifObject left = stackMemory.top();
+	stackMemory.pop();
+	AlifObject right = stackMemory.top();
+	stackMemory.pop();
+
+	left.V.NumberObj.numberType == TTFloat or right.V.NumberObj.numberType == TTFloat ? right.V.NumberObj.numberType = TTFloat : right.V.NumberObj.numberType = TTInteger;
+	right.V.NumberObj.numberValue = right.V.NumberObj.numberValue / left.V.NumberObj.numberValue;
+	stackMemory.push(right);
+}
 void rem_num() {}
-void pow_num() {}
+void pow_num() 
+{
+	AlifObject left = stackMemory.top();
+	stackMemory.pop();
+	AlifObject right = stackMemory.top();
+	stackMemory.pop();
+
+	left.V.NumberObj.numberType == TTFloat or right.V.NumberObj.numberType == TTFloat ? right.V.NumberObj.numberType = TTFloat : right.V.NumberObj.numberType = TTInteger;
+	right.V.NumberObj.numberValue = pow(right.V.NumberObj.numberValue  ,left.V.NumberObj.numberValue);
+	stackMemory.push(right);
+}
 
 void add_str() // هذه الطريقة اسرع من استخدام wcsncpy_s و wcsncat_s
 {
