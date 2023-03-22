@@ -68,10 +68,13 @@ AlifObject* Compiler::expr_visit(ExprNode* _node)
 				{
 					instructions_.push_back(MUL_NUM);
 				}
+				else {
+					instructions_.push_back(MUL_STR);
+				}
 			}
 			else if (left->objType == OTString)
 			{
-				if (right->objType == OTString)
+				if (right->objType == OTNumber)
 				{
 					instructions_.push_back(MUL_STR);
 				}
@@ -80,6 +83,10 @@ AlifObject* Compiler::expr_visit(ExprNode* _node)
 			{
 				// error
 			}
+		}
+		else if (_node->U.BinaryOp.operator_ == TTRemain)
+		{
+			instructions_.push_back(REM_NUM);
 		}
 
 		return left;

@@ -15,6 +15,7 @@ void rem_num();
 void pow_num();
 
 void add_str();
+void mul_str();
 
 const Instructions_func instr_funcs[] = {
 	none_,
@@ -30,4 +31,5 @@ const Instructions_func instr_funcs[] = {
 	pow_num,
 
 	add_str,
+	mul_str,
 };
