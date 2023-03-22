@@ -6,9 +6,9 @@
 
 class Compiler {
 public:
-	std::vector<ExprNode*>* statements_;
-	std::vector<InstructionsType> instructions_;
-	std::vector<AlifObject*> data_;
+	std::vector<ExprNode*>* statements_{};
+	std::vector<InstructionsType> instructions_{};
+	std::vector<AlifObject*> data_{};
 
 	Compiler(std::vector<ExprNode*>* _statements);
 
