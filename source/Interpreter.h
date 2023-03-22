@@ -1,11 +1,8 @@
 #pragma once
 
-#include "Compiler.h"
+#include <stack>
 
-//static std::vector<InstructionsType>* instructions_;
-//static std::vector<AlifObject*>* data_;
-//static int stackLevel = 512;
-//static AlifObject* memory_[512]; // stack memory
+#include "Compiler.h"
 
 class Interpreter {
 public:

@@ -15,8 +15,8 @@ using wstr = std::wstring;
 
 class DedentSpecifier { // صنف يقوم بتحديد المسافة البادئة الحالية والاخيرة
 public:
-    int spaces = 0;
-    DedentSpecifier* previous = nullptr;
+    int spaces{};
+    DedentSpecifier* previous{};
 };
 
 class Lexer {
@@ -24,11 +24,11 @@ class Lexer {
     wchar_t currentChar{};
     uint32_t tokLine = 1;
     uint32_t tokIndex = -1, tokPos = -1;
-    DedentSpecifier* dedentSpec = (DedentSpecifier*)alifMemory.allocate(sizeof(DedentSpecifier)); // حساب المسافات البادئة والراجعة
 
 
 public:
     MemoryBlock alifMemory;
+    DedentSpecifier* dedentSpec = (DedentSpecifier*)alifMemory.allocate(sizeof(DedentSpecifier)); // حساب المسافات البادئة والراجعة
     std::vector<Token> tokens_{};
 
     /////////////////////////////////////////

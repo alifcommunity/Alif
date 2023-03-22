@@ -13,7 +13,7 @@ using double64_t = long double;
 
 class AlifObject {
 public:
-    ObjectType objType;
+    ObjectType objType{};
     uint32_t posStart{}, posEnd{}, tokLine{}, posIndex{};
 
     union UObj
@@ -61,6 +61,6 @@ public:
         //    BuildInFuncValue buildInFunc;
         //}BuildInFuncObj;
 
-    }V;
+    }V{};
 
 };
