@@ -5,8 +5,8 @@ Lexer::Lexer(wstr _fileName, wstr* _input)
 {
     this->advance();
 
-    //dedentSpec->spaces = 0; // تهيئة المتغير بقيمة افتراضية صفر لضمان عدم ظهور قيم عشوائية
-    //dedentSpec->previous = nullptr; // تهيئة المتغير بقيمة افتراضية فارغ لضمان عدم ظهور قيم عشوائية
+    dedentSpec->spaces = 0; // تهيئة المتغير بقيمة افتراضية صفر لضمان عدم ظهور قيم عشوائية
+    dedentSpec->previous = nullptr; // تهيئة المتغير بقيمة افتراضية فارغ لضمان عدم ظهور قيم عشوائية
 }
 
 void Lexer::advance()
