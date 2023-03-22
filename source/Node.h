@@ -5,7 +5,7 @@
 class ExprNode
 {
 public:
-    VisitType type_;
+    VisitType type_{};
 
     union UExprNode
     {
@@ -62,12 +62,12 @@ public:
             ExprNode* elseExpr;
         }Expr;
 
-    }U;
+    }U{};
 };
 
 class StmtsNode {
 public:
-    VisitType type_;
+    VisitType type_{};
 
     union UStmtsNode
     {
@@ -125,5 +125,5 @@ public:
         public:
             std::vector<StmtsNode*>* stmts_;
         }Stmts;
-    }U;
+    }U{};
 };
