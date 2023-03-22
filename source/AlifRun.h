@@ -238,14 +238,14 @@ void terminal_run()
         // المفسر اللغوي
         /////////////////////////////////////////////////////////////////
 
-        //auto start = std::chrono::high_resolution_clock::now();
+        auto start = std::chrono::high_resolution_clock::now();
         
         Interpreter interpreter = Interpreter(&compiler.instructions_, &compiler.data_);
         interpreter.run_code();
 
-        //auto end = std::chrono::high_resolution_clock::now();
-        //auto elapsed_seconds = end - start;
-        //std::wcout << elapsed_seconds << std::endl;
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsed_seconds = end - start;
+        std::wcout << elapsed_seconds << std::endl;
 
         // std::wcin.ignore(); // لمنع ارسال قيمة فارغة في المتغير input_ ** يجب إضافة شرط في حال كان المدخل غير فارغ يجب ان يقوم بعمل تجاهل له
     }
