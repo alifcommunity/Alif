@@ -27,7 +27,6 @@ AlifObject* Compiler::expr_visit(ExprNode* _node)
 
 		if (_node->U.BinaryOp.operator_ == TTPlus)
 		{
-			//if (left and left->objType == OTNumber)
 			if (left->objType == OTNumber)
 			{
 				if (right->objType == OTNumber)
@@ -35,7 +34,6 @@ AlifObject* Compiler::expr_visit(ExprNode* _node)
 					instructions_.push_back(ADD_NUM);
 				}
 			}
-			//else if (left and left->objType == OTString)
 			else if (left->objType == OTString)
 			{
 				if (right->objType == OTString)
@@ -68,7 +66,8 @@ AlifObject* Compiler::expr_visit(ExprNode* _node)
 				{
 					instructions_.push_back(MUL_NUM);
 				}
-				else if (right->objType == OTString) {
+				else if (right->objType == OTString) 
+				{
 					instructions_.push_back(MUL_STR);
 				}
 				else {
@@ -89,7 +88,73 @@ AlifObject* Compiler::expr_visit(ExprNode* _node)
 		}
 		else if (_node->U.BinaryOp.operator_ == TTRemain)
 		{
-			instructions_.push_back(REM_NUM);
+			if (left->objType == OTNumber)
+			{
+				if (right->objType == OTNumber)
+				{
+					instructions_.push_back(REM_NUM);
+				}
+			}
+		}
+		else if (_node->U.BinaryOp.operator_ == TTEqualEqual)
+		{
+			if (left->objType == OTNumber)
+			{
+				if (right->objType == OTNumber)
+				{
+					instructions_.push_back(EQEQ_NUM);
+				}
+		    }
+		}
+		else if (_node->U.BinaryOp.operator_ == TTNotEqual)
+		{
+			if (left->objType == OTNumber)
+			{
+				if (right->objType == OTNumber)
+				{
+					instructions_.push_back(NOTEQ_NUM);
+				}
+			}
+		}
+		else if (_node->U.BinaryOp.operator_ == TTGreaterThan)
+		{
+			if (left->objType == OTNumber)
+			{
+				if (right->objType == OTNumber)
+				{
+					instructions_.push_back(GRTHAN_NUM);
+				}
+			}
+		}
+		else if (_node->U.BinaryOp.operator_ == TTLessThan)
+		{
+			if (left->objType == OTNumber)
+			{
+				if (right->objType == OTNumber)
+				{
+					instructions_.push_back(LSTHAN_NUM);
+				}
+			}
+		}
+		else if (_node->U.BinaryOp.operator_ == TTGreaterThanEqual)
+		{
+			if (left->objType == OTNumber)
+			{
+				if (right->objType == OTNumber)
+				{
+					instructions_.push_back(GRTHANEQ_NUM);
+				}
+			}
+		}
+		else if (_node->U.BinaryOp.operator_ == TTLessThanEqual)
+		{
+			if (left->objType == OTNumber)
+			{
+				if (right->objType == OTNumber)
+				{
+					instructions_.push_back(LSTHANEQ_NUM);
+				}
+			}
 		}
 
 		return left;

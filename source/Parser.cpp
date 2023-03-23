@@ -25,7 +25,7 @@ void Parser::parse_file()
     ExprNode* stmtsRes = nullptr; // convert it to StmtsNode after finish test
 
     do {
-        this->statements_.push_back(this->sum()); // convert it to StmtsNode after finish test
+        this->statements_.push_back(this->comparesion()); // convert it to StmtsNode after finish test
 
     } while (currentToken.type_ != TTEndOfFile);
 
@@ -33,7 +33,7 @@ void Parser::parse_file()
 
 void Parser::parse_terminal()
 {
-    this->statements_.push_back(this->sum()); // convert it to StmtsNode after finish test
+    this->statements_.push_back(this->comparesion()); // convert it to StmtsNode after finish test
 }
 
 void Parser::list_print(AlifObject _obj) {
@@ -370,8 +370,7 @@ ExprNode* Parser::sum()
         this->advance();
         ExprNode* right_ = this->term();
 
-        //ExprNode* sum_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
-        ExprNode* sum_ = new ExprNode;
+        ExprNode* sum_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
         sum_->U.BinaryOp.right_ = right_;
         sum_->U.BinaryOp.operator_ = opToken.type_;
