@@ -104,9 +104,19 @@ enum InstructionsType : uint8_t { // التعليمات
     REM_NUM,
     POW_NUM,
 
+    // تعليمات عمليات المقارنة
+    EQEQ_NUM,
+    NOTEQ_NUM,
+    GRTHAN_NUM,
+    GRTHANEQ_NUM,
+    LSTHAN_NUM,
+    LSTHANEQ_NUM,
+
     // تعليمات السلاسل النصية
     ADD_STR,
     MUL_STR,
+
+
 
 };
 

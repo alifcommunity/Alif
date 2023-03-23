@@ -101,6 +101,44 @@ void pow_num()
 	stackMemory.push(right);
 }
 
+void equal_equal()
+{
+	AlifObject left = stackMemory.top();
+	stackMemory.pop();
+	AlifObject right = stackMemory.top();
+	stackMemory.pop();
+
+	if (right.objType == left.objType)
+	{
+		AlifObject* res = new AlifObject();
+
+		res->objType = OTBoolean;
+		res->tokLine = right.tokLine;
+
+		if (right.V.NumberObj.numberValue == left.V.NumberObj.numberValue)
+		{
+			res->V.BoolObj.boolType = L"صح";
+			res->V.NumberObj.numberValue = 1;
+		}
+		else
+		{
+			res->V.BoolObj.boolType = L"خطا";
+			res->V.NumberObj.numberValue = 0;
+		}
+		stackMemory.push(*res);
+	}
+	else
+	{
+		// error
+	}
+
+}
+void not_equal() {};
+void gr_than_num(){};
+void gr_than_eq_num(){};
+void ls_than_num(){};
+void ls_than_eq_num(){};
+
 void add_str() // هذه الطريقة اسرع من استخدام wcsncpy_s و wcsncat_s
 {
 	AlifObject left = stackMemory.top();
