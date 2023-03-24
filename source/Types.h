@@ -112,6 +112,10 @@ enum InstructionsType : uint8_t { // التعليمات
     LSTHAN_NUM,
     LSTHANEQ_NUM,
 
+    NOT_LOGIC,
+    AND_LOGIC,
+    OR_LOGIC,
+
     // تعليمات السلاسل النصية
     ADD_STR,
     MUL_STR,
