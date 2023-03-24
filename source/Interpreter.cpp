@@ -20,8 +20,9 @@ void Interpreter::run_code()
 	
 	AlifObject res = stackMemory.top();
 	stackMemory.pop();
-	//std::wcout << res.V.NumberObj.numberValue << std::endl;
-	std::wcout << res.V.StringObj.strValue << std::endl;
+	std::wcout << res.V.NumberObj.numberValue << std::endl;
+	std::wcout << res.V.BoolObj.boolType << std::endl;
+	//std::wcout << res.V.StringObj.strValue << std::endl;
 }
 
 
@@ -133,11 +134,248 @@ void equal_equal()
 	}
 
 }
-void not_equal() {};
-void gr_than_num(){};
-void gr_than_eq_num(){};
-void ls_than_num(){};
-void ls_than_eq_num(){};
+void not_equal() 
+{
+	AlifObject left = stackMemory.top();
+	stackMemory.pop();
+	AlifObject right = stackMemory.top();
+	stackMemory.pop();
+
+	if (right.objType == left.objType)
+	{
+		AlifObject* res = new AlifObject();
+
+		res->objType = OTBoolean;
+		res->tokLine = right.tokLine;
+
+		if (right.V.NumberObj.numberValue != left.V.NumberObj.numberValue)
+		{
+			res->V.BoolObj.boolType = L"صح";
+			res->V.NumberObj.numberValue = 1;
+		}
+		else
+		{
+			res->V.BoolObj.boolType = L"خطا";
+			res->V.NumberObj.numberValue = 0;
+		}
+		stackMemory.push(*res);
+	}
+	else
+	{
+		// error
+	}
+}
+
+void gr_than_num()
+{
+	AlifObject left = stackMemory.top();
+	stackMemory.pop();
+	AlifObject right = stackMemory.top();
+	stackMemory.pop();
+
+	if (right.objType == left.objType)
+	{
+		AlifObject* res = new AlifObject();
+
+		res->objType = OTBoolean;
+		res->tokLine = right.tokLine;
+
+		if (right.V.NumberObj.numberValue > left.V.NumberObj.numberValue)
+		{
+			res->V.BoolObj.boolType = L"صح";
+			res->V.NumberObj.numberValue = 1;
+		}
+		else
+		{
+			res->V.BoolObj.boolType = L"خطا";
+			res->V.NumberObj.numberValue = 0;
+		}
+		stackMemory.push(*res);
+	}
+	else
+	{
+		// error
+	}
+}
+void gr_than_eq_num()
+{
+	AlifObject left = stackMemory.top();
+	stackMemory.pop();
+	AlifObject right = stackMemory.top();
+	stackMemory.pop();
+
+	if (right.objType == left.objType)
+	{
+		AlifObject* res = new AlifObject();
+
+		res->objType = OTBoolean;
+		res->tokLine = right.tokLine;
+
+		if (right.V.NumberObj.numberValue >= left.V.NumberObj.numberValue)
+		{
+			res->V.BoolObj.boolType = L"صح";
+			res->V.NumberObj.numberValue = 1;
+		}
+		else
+		{
+			res->V.BoolObj.boolType = L"خطا";
+			res->V.NumberObj.numberValue = 0;
+		}
+		stackMemory.push(*res);
+	}
+	else
+	{
+		// error
+	}
+}
+void ls_than_num()
+{
+	AlifObject left = stackMemory.top();
+	stackMemory.pop();
+	AlifObject right = stackMemory.top();
+	stackMemory.pop();
+
+	if (right.objType == left.objType)
+	{
+		AlifObject* res = new AlifObject();
+
+		res->objType = OTBoolean;
+		res->tokLine = right.tokLine;
+
+		if (right.V.NumberObj.numberValue < left.V.NumberObj.numberValue)
+		{
+			res->V.BoolObj.boolType = L"صح";
+			res->V.NumberObj.numberValue = 1;
+		}
+		else
+		{
+			res->V.BoolObj.boolType = L"خطا";
+			res->V.NumberObj.numberValue = 0;
+		}
+		stackMemory.push(*res);
+	}
+	else
+	{
+		// error
+	}
+}
+void ls_than_eq_num()
+{
+	AlifObject left = stackMemory.top();
+	stackMemory.pop();
+	AlifObject right = stackMemory.top();
+	stackMemory.pop();
+
+	if (right.objType == left.objType)
+	{
+		AlifObject* res = new AlifObject();
+
+		res->objType = OTBoolean;
+		res->tokLine = right.tokLine;
+
+		if (right.V.NumberObj.numberValue <= left.V.NumberObj.numberValue)
+		{
+			res->V.BoolObj.boolType = L"صح";
+			res->V.NumberObj.numberValue = 1;
+		}
+		else
+		{
+			res->V.BoolObj.boolType = L"خطا";
+			res->V.NumberObj.numberValue = 0;
+		}
+		stackMemory.push(*res);
+	}
+	else
+	{
+		// error
+	}
+}
+
+void not_logic() 
+{
+	AlifObject right = stackMemory.top();
+	stackMemory.pop();
+
+	AlifObject* res = new AlifObject();
+
+	res->objType = OTBoolean;
+	res->tokLine = right.tokLine;
+
+	if (right.V.NumberObj.numberValue == 0)
+	{
+		res->V.BoolObj.boolType = L"صح";
+		res->V.NumberObj.numberValue = 1;
+	}
+	else
+	{
+		res->V.BoolObj.boolType = L"خطا";
+		res->V.NumberObj.numberValue = 0;
+	}
+	stackMemory.push(*res);
+
+}
+void and_logic()
+{
+	AlifObject left = stackMemory.top();
+	stackMemory.pop();
+	AlifObject right = stackMemory.top();
+	stackMemory.pop();
+
+	if (right.objType == left.objType)
+	{
+		AlifObject* res = new AlifObject();
+
+		res->objType = OTBoolean;
+		res->tokLine = right.tokLine;
+
+		if (right.V.NumberObj.numberValue and left.V.NumberObj.numberValue)
+		{
+			res->V.BoolObj.boolType = L"صح";
+			res->V.NumberObj.numberValue = 1;
+		}
+		else
+		{
+			res->V.BoolObj.boolType = L"خطا";
+			res->V.NumberObj.numberValue = 0;
+		}
+		stackMemory.push(*res);
+	}
+	else
+	{
+		// error
+	}
+}
+void or_logic() 
+{
+	AlifObject left = stackMemory.top();
+	stackMemory.pop();
+	AlifObject right = stackMemory.top();
+	stackMemory.pop();
+
+	if (right.objType == left.objType)
+	{
+		AlifObject* res = new AlifObject();
+
+		res->objType = OTBoolean;
+		res->tokLine = right.tokLine;
+
+		if (right.V.NumberObj.numberValue or left.V.NumberObj.numberValue)
+		{
+			res->V.BoolObj.boolType = L"صح";
+			res->V.NumberObj.numberValue = 1;
+		}
+		else
+		{
+			res->V.BoolObj.boolType = L"خطا";
+			res->V.NumberObj.numberValue = 0;
+		}
+		stackMemory.push(*res);
+	}
+	else
+	{
+		// error
+	}
+}
 
 void add_str() // هذه الطريقة اسرع من استخدام wcsncpy_s و wcsncat_s
 {

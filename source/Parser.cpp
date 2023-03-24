@@ -25,7 +25,7 @@ void Parser::parse_file()
     ExprNode* stmtsRes = nullptr; // convert it to StmtsNode after finish test
 
     do {
-        this->statements_.push_back(this->comparesion()); // convert it to StmtsNode after finish test
+        this->statements_.push_back(this->disjuction()); // convert it to StmtsNode after finish test
 
     } while (currentToken.type_ != TTEndOfFile);
 
@@ -33,7 +33,7 @@ void Parser::parse_file()
 
 void Parser::parse_terminal()
 {
-    this->statements_.push_back(this->comparesion()); // convert it to StmtsNode after finish test
+    this->statements_.push_back(this->disjuction()); // convert it to StmtsNode after finish test
 }
 
 void Parser::list_print(AlifObject _obj) {
@@ -144,7 +144,6 @@ ExprNode* Parser::atom() {
         this->advance();
         wchar_t* pEnd{};
         ExprNode* integer = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
-        //ExprNode* integer = new ExprNode();
         integer->U.Object.value_.objType = OTNumber;
         integer->U.Object.value_.V.NumberObj.numberType = token.type_;
         integer->U.Object.value_.V.NumberObj.numberValue = wcstol(token.value_, &pEnd, 10);
@@ -417,7 +416,7 @@ ExprNode* Parser::comparesion()
 ExprNode* Parser::inversion() 
 {
 
-    while (this->currentToken.type_ == TTName and wcscmp(this->currentToken.value_, L"ليس"))
+    while (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"ليس"))
     {
         Token opToken = this->currentToken;
 
@@ -442,7 +441,7 @@ ExprNode* Parser::conjuction()
 
     ExprNode* left_ = this->inversion();
 
-    while (this->currentToken.type_ == TTName and wcscmp(this->currentToken.value_, L"و"))
+    while (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"و"))
     {
         Token opToken = this->currentToken;
 
@@ -468,7 +467,7 @@ ExprNode* Parser::disjuction()
 
     ExprNode* left_ = this->conjuction();
 
-    while (this->currentToken.type_ == TTName and wcscmp(this->currentToken.value_, L"او"))
+    while (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"او"))
     {
         Token opToken = this->currentToken;
 
