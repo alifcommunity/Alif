@@ -156,9 +156,26 @@ AlifObject* Compiler::expr_visit(ExprNode* _node)
 				}
 			}
 		}
+		else if (!wcscmp(_node->U.UnaryOp.keyword_, L"و"))
+		{
+			instructions_.push_back(AND_LOGIC);
+			}
+		else if (!wcscmp(_node->U.UnaryOp.keyword_, L"او"))
+		{
+			instructions_.push_back(OR_LOGIC);
+		}
 
 		return left;
 
+	}
+	else if (_node->type_ == VTUnaryOp)
+	{
+		AlifObject* right = this->expr_visit(_node->U.UnaryOp.right_);
+
+		if (!wcscmp(_node->U.UnaryOp.keyword_, L"ليس"))
+		{
+			instructions_.push_back(NOT_LOGIC);
+		}
 	}
 }
 

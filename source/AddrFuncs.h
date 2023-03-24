@@ -21,6 +21,10 @@ void gr_than_eq_num();
 void ls_than_num();
 void ls_than_eq_num();
 
+void not_logic();
+void and_logic();
+void or_logic();
+
 void add_str();
 void mul_str();
 
@@ -43,6 +47,10 @@ const Instructions_func instr_funcs[] = {
 	gr_than_eq_num,
 	ls_than_num,
 	ls_than_eq_num,
+
+	not_logic,
+	and_logic,
+	or_logic,
 
 	add_str,
 	mul_str,
