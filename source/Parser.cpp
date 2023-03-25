@@ -25,7 +25,7 @@ void Parser::parse_file()
     ExprNode* stmtsRes = nullptr; // convert it to StmtsNode after finish test
 
     do {
-        this->statements_.push_back(this->disjuction()); // convert it to StmtsNode after finish test
+        this->statements_.push_back(this->expression()); // convert it to StmtsNode after finish test
 
     } while (currentToken.type_ != TTEndOfFile);
 
@@ -33,7 +33,7 @@ void Parser::parse_file()
 
 void Parser::parse_terminal()
 {
-    this->statements_.push_back(this->disjuction()); // convert it to StmtsNode after finish test
+    this->statements_.push_back(this->expression()); // convert it to StmtsNode after finish test
 }
 
 void Parser::list_print(AlifObject _obj) {
@@ -492,24 +492,24 @@ ExprNode* Parser::expression() {
 
     ExprNode* expr_ = this->disjuction();
 
-    if (this->currentToken.type_ == TTName and wcscmp(this->currentToken.value_, L"اذا"))
+    if (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"اذا"))
     {
         this->advance();
         ExprNode* condetion = this->disjuction();
 
-        if (this->currentToken.type_ == TTName and wcscmp(this->currentToken.value_, L"والا"))
+        if (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"والا"))
         {
             this->advance();
             ExprNode* elseExpr = this->expression();
-            //exprLevel--;
 
-            //(exprNode + exprLevel)->U.Expr.expr_ = expr_;
-            //(exprNode + exprLevel)->U.Expr.condetion_ = condetion;
-            //(exprNode + exprLevel)->U.Expr.elseExpr = elseExpr;
-            //(exprNode + exprLevel)->type_ = VTExpr;
+            ExprNode* expression_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
-            //return (exprNode + exprLevel);
+            expression_->U.Expr.expr_ = expr_;
+            expression_->U.Expr.condetion_ = condetion;
+            expression_->U.Expr.elseExpr = elseExpr;
+            expression_->type_ = VTExpr;
 
+            return expression_;
         }
         else
         {

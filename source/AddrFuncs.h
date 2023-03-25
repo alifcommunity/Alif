@@ -28,6 +28,8 @@ void or_logic();
 void add_str();
 void mul_str();
 
+void expr_op();
+
 const Instructions_func instr_funcs[] = {
 	none_,
 
@@ -54,4 +56,6 @@ const Instructions_func instr_funcs[] = {
 
 	add_str,
 	mul_str,
+
+	expr_op,
 };

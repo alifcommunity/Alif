@@ -177,6 +177,14 @@ AlifObject* Compiler::expr_visit(ExprNode* _node)
 			instructions_.push_back(NOT_LOGIC);
 		}
 	}
+	else if (_node->type_ == VTExpr)
+    {
+        this->expr_visit(_node->U.Expr.expr_);
+		this->expr_visit(_node->U.Expr.elseExpr);
+        this->expr_visit(_node->U.Expr.condetion_);
+
+		instructions_.push_back(EXPR_OP);
+    }
 }
 
 AlifObject* Compiler::stmts_visit(StmtsNode* _node)
