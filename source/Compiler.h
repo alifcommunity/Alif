@@ -2,6 +2,9 @@
 
 #include "Node.h"
 #include "Types.h"
+#include "SymbolTable.h"
+
+static SymbolTable symTable; // تم تعريفه ك متغير عام لمنع حذف المتغيرات عند استخدام الطرفية بعد الانتقال الى سطر جديد
 
 
 class Compiler {

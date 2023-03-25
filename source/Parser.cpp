@@ -1,6 +1,5 @@
 #include "Parser.h"
 
-SymbolTable symTable; // تم تعريفه ك متغير عام لمنع حذف المتغيرات عند استخدام الطرفية بعد الانتقال الى سطر جديد
 
 
 Parser::Parser(std::vector<Token>* tokens_, wstr _fileName, wstr* _input, MemoryBlock* _alifMemory) : 
@@ -25,7 +24,7 @@ void Parser::parse_file()
     ExprNode* stmtsRes = nullptr; // convert it to StmtsNode after finish test
 
     do {
-        this->statements_.push_back(this->expression()); // convert it to StmtsNode after finish test
+        this->statements_.push_back(this->assignment()); // convert it to StmtsNode after finish test
 
     } while (currentToken.type_ != TTEndOfFile);
 
@@ -33,7 +32,7 @@ void Parser::parse_file()
 
 void Parser::parse_terminal()
 {
-    this->statements_.push_back(this->expression()); // convert it to StmtsNode after finish test
+    this->statements_.push_back(this->assignment()); // convert it to StmtsNode after finish test
 }
 
 void Parser::list_print(AlifObject _obj) {
@@ -522,98 +521,100 @@ ExprNode* Parser::expression() {
 
 }
 
-//ExprNode* Parser::expressions() {
-//
-//    ExprNode* expr_ = this->expression();
-//
-//    if (this->currentToken.type_ == TTComma)
-//    {
-//        std::vector<ExprNode*>* exprs_ = new std::vector<ExprNode*>;
-//
-//        exprs_->push_back(expr_);
-//        do
-//        {
-//            this->advance();
-//            exprs_->push_back(this->expression());
-//
-//        } while (this->currentToken.type_ == TTComma);
-//
-//        exprLevel--;
-//
-//        (exprNode + exprLevel)->U.Object.value_.objType = OTList;
-//        (exprNode + exprLevel)->U.Object.value_.V.ListObj.list_ = exprs_;
-//        (exprNode + exprLevel)->type_ = VTList;
-//
-//        return (exprNode + exprLevel);
-//    }
-//    return expr_;
-//}
-//
-//ExprNode* Parser::assignment() {
-//
-//
-//    if (this->currentToken.type_ == TTName)
-//    {
-//        if (Next_Is(TTEqual))
-//        {
-//            std::vector<AlifObject>* names_ = new std::vector<AlifObject>;
-//
-//            while (Next_Is(TTEqual))
-//            {
-//                AlifObject name_{};
-//
-//                name_.objType = OTName;
-//                name_.V.NameObj.name_ = this->currentToken.V.numVal;
-//
-//                names_->push_back(name_);
-//
-//                this->advance();
-//                this->advance();
-//
-//            }
-//
-//            ExprNode* expr_ = this->expressions();
-//            exprLevel--;
-//
-//            (exprNode + exprLevel)->U.NameAssign.name_ = names_;
-//            (exprNode + exprLevel)->U.NameAssign.value_ = expr_;
-//            (exprNode + exprLevel)->type_ = VTAssign;
-//
-//            return (exprNode + exprLevel);
-//
-//        }
-//        else if (Next_Is(TTPlusEqual) or Next_Is(TTMinusEqual) or Next_Is(TTMultiplyEqual) or Next_Is(TTDivideEqual) or Next_Is(TTPowerEqual) or Next_Is(TTRemainEqual))
-//        {
-//            // يجب إختصار نوع التحقق الى TTaugAssign
-//            // بحيث يتم تخزين النوع في العملية بشكل مباشر دون التحقق منها
-//            // if token.type == TTaugassign then operator = opToken.type
-//
-//            AlifObject name_{};
-//            name_.objType = OTName;
-//            name_.V.NameObj.name_ = this->currentToken.V.numVal;
-//
-//            this->advance();
-//
-//            Token opToken = this->currentToken;
-//
-//
-//            this->advance();
-//            ExprNode* expr_ = this->expression();
-//            exprLevel--;
-//
-//            (exprNode + exprLevel)->U.AugNameAssign.name_ = name_;
-//            (exprNode + exprLevel)->U.AugNameAssign.operator_ = opToken.type_;
-//            (exprNode + exprLevel)->U.AugNameAssign.value_ = expr_;
-//            (exprNode + exprLevel)->type_ = VTAugAssign;
-//
-//            return (exprNode + exprLevel);
-//
-//        }
-//    }
-//
-//    return this->expressions();
-//}
-//
+ExprNode* Parser::expressions() {
+
+    ExprNode* expr_ = this->expression();
+
+    if (this->currentToken.type_ == TTComma)
+    {
+        std::vector<ExprNode*>* exprs_ = new std::vector<ExprNode*>;
+
+        exprs_->push_back(expr_);
+        do
+        {
+            this->advance();
+            exprs_->push_back(this->expression());
+
+        } while (this->currentToken.type_ == TTComma);
+
+        ExprNode* list_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+
+        list_->U.Object.value_.objType = OTList;
+        list_->U.Object.value_.V.ListObj.list_ = exprs_;
+        list_->type_ = VTList;
+
+        return list_;
+    }
+    return expr_;
+}
+
+ExprNode* Parser::assignment() {
+
+
+    if (this->currentToken.type_ == TTName)
+    {
+        if (Next_Is(TTEqual)) // كيف سيتم إسناد قيمة الى اكثر من اسم مثال: ب,س = 9 *يوجد خطأ
+        {
+            std::vector<AlifObject*>* names_ = new std::vector<AlifObject*>;
+
+            while (Next_Is(TTEqual))
+            {
+                AlifObject* name_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+
+                name_->objType = OTName;
+                name_->V.NameObj.name_ = this->currentToken.value_;
+
+                names_->push_back(name_);
+
+                this->advance();
+                this->advance();
+
+            }
+
+            ExprNode* expr_ = this->expressions();
+
+            ExprNode* assignment_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+
+            assignment_->U.NameAssign.name_ = names_;
+            assignment_->U.NameAssign.value_ = expr_;
+            assignment_->type_ = VTAssign;
+
+            return assignment_;
+
+        }
+        else if (Next_Is(TTPlusEqual) or Next_Is(TTMinusEqual) or Next_Is(TTMultiplyEqual) or Next_Is(TTDivideEqual) or Next_Is(TTPowerEqual) or Next_Is(TTRemainEqual))
+        {
+            // يجب إختصار نوع التحقق الى TTaugAssign
+            // بحيث يتم تخزين النوع في العملية بشكل مباشر دون التحقق منها
+            // if token.type == TTaugassign then operator = opToken.type
+
+            AlifObject* name_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+            name_->objType = OTName;
+            name_->V.NameObj.name_ = this->currentToken.value_;
+
+            this->advance();
+
+            Token opToken = this->currentToken;
+
+
+            this->advance();
+            ExprNode* expr_ = this->expression();
+
+            ExprNode* augAssignment = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+
+            augAssignment->U.AugNameAssign.name_ = name_;
+            augAssignment->U.AugNameAssign.operator_ = opToken.type_;
+            augAssignment->U.AugNameAssign.value_ = expr_;
+            augAssignment->type_ = VTAugAssign;
+
+            return augAssignment;
+
+        }
+    }
+
+    return this->expressions();
+}
+
 //StmtsNode* Parser::return_statement() {
 //
 //    ExprNode* expr_;

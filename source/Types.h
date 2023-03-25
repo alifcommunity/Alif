@@ -124,6 +124,9 @@ enum InstructionsType : uint8_t { // التعليمات
     // تعليمات التعبيرات
     EXPR_OP,
 
+    // تعليمات الإسناد
+    STORE_NAME,
+
 
 };
 
