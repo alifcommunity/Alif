@@ -8,7 +8,7 @@ class Compiler {
 public:
 	std::vector<ExprNode*>* statements_{};
 	std::vector<InstructionsType> instructions_{};
-	std::vector<AlifObject*> data_{};
+	std::vector<AlifObject*> data_{}; // لماذا لا تكون البيانات هي ذاكرة المكدس ويتم إرسال عنوانها بدل نقل البيانات مرة اخرى؟
 
 	Compiler(std::vector<ExprNode*>* _statements);
 

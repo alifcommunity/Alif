@@ -21,7 +21,7 @@ void Interpreter::run_code()
 	AlifObject res = stackMemory.top();
 	stackMemory.pop();
 	std::wcout << res.V.NumberObj.numberValue << std::endl;
-	std::wcout << res.V.BoolObj.boolType << std::endl;
+	//std::wcout << res.V.BoolObj.boolType << std::endl;
 	//std::wcout << res.V.StringObj.strValue << std::endl;
 }
 
@@ -451,4 +451,16 @@ void mul_str() {
 		stackMemory.push(right);
 	}
 
+}
+
+
+void expr_op() 
+{
+	AlifObject compRes = stackMemory.top();
+	stackMemory.pop();
+
+	if (compRes.V.NumberObj.numberValue != 0)
+	{
+		stackMemory.pop();
+	}
 }
