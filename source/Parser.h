@@ -4,10 +4,10 @@
 
 #include "Tokens.h"
 #include "Node.h"
-#include "SymbolTable.h"
 #include "MemoryBlock.h"
 
-#define Next_Is(t) (this->tokens->at(this->tokenIndex + 1).type_ == t ? true : false )
+#define Next_Is(t) (this->tokens_->at(this->tokenIndex + 1).type_ == t ? true : false )
+#define PRINT_(a){std::wcout << a << std::endl;}
 
 
 
@@ -30,7 +30,7 @@ public:
     /// </اعلام>
 
     Parser(std::vector<Token>* tokens, wstr _fileName, wstr* _input, MemoryBlock* _alifMemory);
-
+    
     void advance();
 
     void parse_file();

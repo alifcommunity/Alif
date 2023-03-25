@@ -32,13 +32,13 @@ public:
         class {
         public:
             AlifObject paramName; // متغير خاص بدالة parameters()
-            std::vector<AlifObject>* name_;
+            std::vector<AlifObject*>* name_;
             ExprNode* value_;
         }NameAssign;
 
         class {
         public:
-            AlifObject name_;
+            AlifObject* name_;
             TokensType operator_;
             ExprNode* value_;
         }AugNameAssign;

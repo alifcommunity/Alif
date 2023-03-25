@@ -3,13 +3,13 @@
 #include <map>
 
 #define PRINT_(a){std::wcout << a << std::endl;}
-using double64_t = long double;
+using wcstr = const wchar_t;
 
 class Scope
 {
 public:
-    std::map<double64_t, AlifObject> symbols;
-    std::map<double64_t, Scope*> scopes;
+    std::map<wcstr*, AlifObject*> symbols;
+    std::map<wcstr*, Scope*> scopes;
     Scope* parent;
 };
 
@@ -26,11 +26,11 @@ public:
         currentScope = globalScope;
     }
 
-    void add_symbol(double64_t type, AlifObject value) {
-        currentScope->symbols[type] = value;
+    void add_symbol(wcstr* _type, AlifObject* _value) {
+        currentScope->symbols[_type] = _value;
     }
 
-    void enter_scope(double64_t type) {
+    void enter_scope(wcstr* type) {
         if (currentScope->scopes.count(type) == 0) {
             Scope* newScope = new Scope();
             newScope->parent = currentScope;
@@ -43,7 +43,7 @@ public:
         currentScope = currentScope->parent;
     }
 
-    AlifObject get_data(double64_t type) {
+    AlifObject* get_data(wcstr* type) {
         Scope* scope = currentScope;
         int level = 1;
         while (scope != nullptr)
