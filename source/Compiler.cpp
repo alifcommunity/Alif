@@ -1,5 +1,6 @@
 #include "Compiler.h"
 
+
 Compiler::Compiler(std::vector<ExprNode*>* _statements) :
 	statements_(_statements) {}
 
@@ -184,6 +185,18 @@ AlifObject* Compiler::expr_visit(ExprNode* _node)
         this->expr_visit(_node->U.Expr.condetion_);
 
 		instructions_.push_back(EXPR_OP);
+    }
+	else if (_node->type_ == VTAssign)
+    {
+        for (AlifObject* i : *_node->U.NameAssign.name_)
+        {
+			this->expr_visit(_node->U.NameAssign.value_);
+
+			data_.push_back(i);
+			instructions_.push_back(SET_DATA);
+
+			instructions_.push_back(STORE_NAME);
+        }
     }
 }
 

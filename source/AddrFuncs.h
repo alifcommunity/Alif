@@ -30,6 +30,8 @@ void mul_str();
 
 void expr_op();
 
+void store_name();
+
 const Instructions_func instr_funcs[] = {
 	none_,
 
@@ -58,4 +60,6 @@ const Instructions_func instr_funcs[] = {
 	mul_str,
 
 	expr_op,
+
+	store_name,
 };
