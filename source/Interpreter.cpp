@@ -18,9 +18,9 @@ void Interpreter::run_code()
 	}
 
 	
-	//AlifObject res = stackMemory.top();
+	//AlifObject* res = stackMemory.top();
 	//stackMemory.pop();
-	//std::wcout << res.V.NumberObj.numberValue << std::endl;
+	//std::wcout << res->V.NumberObj.numberValue << std::endl;
 	//std::wcout << symTable.get_data(name_->V.NameObj.name_)->V.NumberObj.numberValue << std::endl;
 	//std::wcout << res.V.BoolObj.boolType << std::endl;
 	//std::wcout << res.V.StringObj.strValue << std::endl;
@@ -29,7 +29,16 @@ void Interpreter::run_code()
 
 void none_() {}
 
-void get_data() {}
+void get_data() 
+{
+	AlifObject* name_ = stackMemory.top();
+	stackMemory.pop();
+	stackMemory.push(symTable.get_data(*name_->V.NameObj.name_));
+
+	AlifObject* res = stackMemory.top();
+	stackMemory.pop();
+	std::wcout << res->V.NumberObj.numberValue << std::endl;
+}
 void set_data()
 {
 	stackMemory.push(data_->front());
@@ -474,6 +483,6 @@ void store_name()
 	AlifObject* value_ = stackMemory.top();
 	stackMemory.pop();
 
-	symTable.add_symbol(name_->V.NameObj.name_, value_);
+	symTable.add_symbol(*name_->V.NameObj.name_, value_);
 
 }
