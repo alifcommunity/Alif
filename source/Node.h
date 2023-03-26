@@ -45,7 +45,7 @@ public:
 
         class {
         public:
-            AlifObject name_;
+            AlifObject* name_;
         }NameAccess;
 
         class {
