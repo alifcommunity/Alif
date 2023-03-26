@@ -96,12 +96,16 @@ ExprNode* Parser::atom() {
         
         this->advance();
 
-        ExprNode* name = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
-        name->U.NameAccess.name_.objType = OTName;
-        name->U.NameAccess.name_.V.NameObj.state_ = STGet;
-        name->U.NameAccess.name_.V.NameObj.name_ = token.value_;
-        name->type_ = VTAccess;
-        return name;
+        AlifObject* nameObj = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+        nameObj->objType = OTName;
+        nameObj->V.NameObj.state_ = STGet;
+        nameObj->V.NameObj.name_ = token.value_;
+
+        ExprNode* nameNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+        nameNode->U.NameAccess.name_ = nameObj;
+        nameNode->type_ = VTAccess;
+
+        return nameNode;
     }
     //else if (token.type_ == TTKeyword) {
     //    if (token.V.keywordType == KVTrue)

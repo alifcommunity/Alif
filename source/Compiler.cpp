@@ -198,6 +198,13 @@ AlifObject* Compiler::expr_visit(ExprNode* _node)
 			instructions_.push_back(STORE_NAME);
         }
     }
+	else if (_node->type_ == VTAccess)
+	{
+		data_.push_back(_node->U.NameAccess.name_);
+		instructions_.push_back(SET_DATA);
+
+		instructions_.push_back(GET_DATA);
+	}
 }
 
 AlifObject* Compiler::stmts_visit(StmtsNode* _node)

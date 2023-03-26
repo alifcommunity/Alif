@@ -8,8 +8,8 @@ using wcstr = const wchar_t;
 class Scope
 {
 public:
-    std::map<wcstr*, AlifObject*> symbols;
-    std::map<wcstr*, Scope*> scopes;
+    std::map<wcstr, AlifObject*> symbols;
+    std::map<wcstr, Scope*> scopes;
     Scope* parent;
 };
 
@@ -26,11 +26,11 @@ public:
         currentScope = globalScope;
     }
 
-    void add_symbol(wcstr* _type, AlifObject* _value) {
+    void add_symbol(wcstr& _type, AlifObject* _value) {
         currentScope->symbols[_type] = _value;
     }
 
-    void enter_scope(wcstr* type) {
+    void enter_scope(wcstr& type) {
         if (currentScope->scopes.count(type) == 0) {
             Scope* newScope = new Scope();
             newScope->parent = currentScope;
@@ -43,7 +43,7 @@ public:
         currentScope = currentScope->parent;
     }
 
-    AlifObject* get_data(wcstr* type) {
+    AlifObject* get_data(wcstr& type) {
         Scope* scope = currentScope;
         int level = 1;
         while (scope != nullptr)
