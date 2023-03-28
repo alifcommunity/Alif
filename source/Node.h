@@ -11,7 +11,7 @@ public:
     {
         class {
         public:
-            AlifObject value_;
+            AlifObject* value_;
         }Object;
 
         class {
@@ -86,7 +86,7 @@ public:
 
         class {
         public:
-            AlifObject itrName;
+            AlifObject* itrName;
             std::vector<ExprNode*>* args_;
             StmtsNode* block_;
             StmtsNode* else_;
@@ -102,7 +102,7 @@ public:
         class
         {
         public:
-            AlifObject name_;
+            AlifObject* name_;
             StmtsNode* body_;
             ExprNode* base_;
         }ClassDef;
@@ -110,7 +110,7 @@ public:
         class
         {
         public:
-            AlifObject name_;
+            AlifObject* name_;
             std::vector<ExprNode*>* params_;
             StmtsNode* body_;
         }FunctionDef;

@@ -146,45 +146,62 @@ ExprNode* Parser::atom() {
     {
         this->advance();
         wchar_t* pEnd{};
-        ExprNode* integer = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
-        integer->U.Object.value_.objType = OTNumber;
-        integer->U.Object.value_.V.NumberObj.numberType = token.type_;
-        integer->U.Object.value_.V.NumberObj.numberValue = wcstol(token.value_, &pEnd, 10);
-        integer->U.Object.value_.posStart = token.posStart;
-        integer->U.Object.value_.posEnd = token.posEnd;
-        integer->U.Object.value_.tokLine = token.tokLine;
-        integer->U.Object.value_.posIndex = token.posIndex;
-        integer->type_ = VTObject;
-        return integer;
+
+        AlifObject* intObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+        intObject->objType = OTNumber;
+        intObject->V.NumberObj.numberType = token.type_;
+        intObject->V.NumberObj.numberValue = wcstol(token.value_, &pEnd, 10);
+        intObject->posStart = token.posStart;
+        intObject->posEnd = token.posEnd;
+        intObject->tokLine = token.tokLine;
+        intObject->posIndex = token.posIndex;
+
+        ExprNode* intNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+        intNode->U.Object.value_ = intObject;
+        intNode->type_ = VTObject;
+
+        return intNode;
     }
     else if (token.type_ == TTFloat)
     {
         this->advance();
         wchar_t* pEnd{};
-        ExprNode* float_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
-        float_->U.Object.value_.objType = OTNumber;
-        float_->U.Object.value_.V.NumberObj.numberType = token.type_;
-        float_->U.Object.value_.V.NumberObj.numberValue = wcstold(token.value_, &pEnd);
-        float_->U.Object.value_.posStart = token.posStart;
-        float_->U.Object.value_.posEnd = token.posEnd;
-        float_->U.Object.value_.tokLine = token.tokLine;
-        float_->U.Object.value_.posIndex = token.posIndex;
-        float_->type_ = VTObject;
-        return float_;
+
+        AlifObject* floatObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+        floatObject->objType = OTNumber;
+        floatObject->V.NumberObj.numberType = token.type_;
+        floatObject->V.NumberObj.numberValue = wcstold(token.value_, &pEnd);
+        floatObject->posStart = token.posStart;
+        floatObject->posEnd = token.posEnd;
+        floatObject->tokLine = token.tokLine;
+        floatObject->posIndex = token.posIndex;
+
+        ExprNode* floatNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+        floatNode->U.Object.value_ = floatObject;
+        floatNode->type_ = VTObject;
+
+        return floatNode;
 
     }
     else if (token.type_ == TTString)
     {
         this->advance();
-        ExprNode* string = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
-        string->U.Object.value_.objType = OTString;
-        string->U.Object.value_.V.StringObj.strValue = token.value_;
-        string->U.Object.value_.posStart = token.posStart;
-        string->U.Object.value_.posEnd = token.posEnd;
-        string->U.Object.value_.tokLine = token.tokLine;
-        string->U.Object.value_.posIndex = token.posIndex;
-        string->type_ = VTObject;
-        return string;
+
+        AlifObject* stringObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+
+        stringObject->objType = OTString;
+        stringObject->V.StringObj.strValue = token.value_;
+        stringObject->posStart = token.posStart;
+        stringObject->posEnd = token.posEnd;
+        stringObject->tokLine = token.tokLine;
+        stringObject->posIndex = token.posIndex;
+
+        ExprNode* stringNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+
+        stringNode->U.Object.value_ = stringObject;
+        stringNode->type_ = VTObject;
+
+        return stringNode;
     }
     //else if (token.type_ == TTLeftSquare)
     //{
@@ -541,13 +558,17 @@ ExprNode* Parser::expressions() {
 
         } while (this->currentToken.type_ == TTComma);
 
-        ExprNode* list_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+        AlifObject* exprObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 
-        list_->U.Object.value_.objType = OTList;
-        list_->U.Object.value_.V.ListObj.list_ = exprs_;
-        list_->type_ = VTList;
+        exprObject->objType = OTList;
+        exprObject->V.ListObj.list_ = exprs_;
 
-        return list_;
+        ExprNode* listNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+
+        listNode->U.Object.value_ = exprObject;
+        listNode->type_ = VTList;
+
+        return listNode;
     }
     return expr_;
 }

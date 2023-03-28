@@ -4,6 +4,13 @@
 #include "Types.h"
 #include "SymbolTable.h"
 
+#define VISIT_(func,node) (visit_ ## func(node)) // -> visit_func(arg) <<-->> VISIT_(func, node)
+												 //			^                        ^
+												 //			|                        |
+												 //			|                        |
+												 //    طريقة الاستدعاء           شكل الاستدعاء
+
+
 static SymbolTable symTable; // تم تعريفه ك متغير عام لمنع حذف المتغيرات عند استخدام الطرفية بعد الانتقال الى سطر جديد
 
 
@@ -17,10 +24,15 @@ public:
 
 	void compile_file();
 
-	AlifObject* stmts_visit(StmtsNode* _node);
+	AlifObject* visit_object(ExprNode*);
+	void visit_unaryOp(ExprNode*);
+	AlifObject* visit_binOp(ExprNode*);
+	void visit_assign(ExprNode*);
+	void visit_access(ExprNode*);
+	void visit_expr(ExprNode*);
 
-	AlifObject* expr_visit(ExprNode* _node);
-
+	AlifObject* visit_exprs(ExprNode* _node);
+	AlifObject* visit_stmts(StmtsNode* _node);
 };
 
 /*

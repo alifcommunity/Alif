@@ -36,7 +36,7 @@ void get_data()
 	stackMemory.push(symTable.get_data(*name_->V.NameObj.name_));
 
 	AlifObject* res = stackMemory.top();
-	stackMemory.pop();
+	//stackMemory.pop();
 	std::wcout << res->V.NumberObj.numberValue << std::endl;
 }
 void set_data()

@@ -48,7 +48,7 @@ public:
         class {
         public:
             std::vector<ExprNode*>* list_;
-            std::vector<AlifObject>* objList;
+            std::vector<AlifObject*>* objList;
         }ListObj;
 
         //class {
