@@ -8,10 +8,10 @@ void Compiler::compile_file()
 {
 	for (ExprNode* node_ : *statements_)
 	{
-		VISIT_(exprs, node_);
+		VISIT_(exprs, node_); // تم شرح طريقة الاستدعاء في ملف compiler.h
 	}
-
 }
+
 
 AlifObject* Compiler::visit_object(ExprNode* _node)
 {
@@ -212,6 +212,7 @@ void Compiler::visit_expr(ExprNode* _node)
 
 	instructions_.push_back(EXPR_OP);
 }
+
 
 AlifObject* Compiler::visit_exprs(ExprNode* _node)
 {

@@ -4,7 +4,12 @@
 #include "Types.h"
 #include "SymbolTable.h"
 
-#define VISIT_(visit,node) (visit_ ## visit(node))
+#define VISIT_(func,node) (visit_ ## func(node)) // -> visit_func(arg) <<-->> VISIT_(func, node)
+												 //			^                        ^
+												 //			|                        |
+												 //			|                        |
+												 //    طريقة الاستدعاء           شكل الاستدعاء
+
 
 static SymbolTable symTable; // تم تعريفه ك متغير عام لمنع حذف المتغيرات عند استخدام الطرفية بعد الانتقال الى سطر جديد
 
