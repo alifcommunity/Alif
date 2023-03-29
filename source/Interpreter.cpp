@@ -63,6 +63,8 @@ void add_num()
 	stackMemory.pop();
 	AlifObject* left = stackMemory.top();
 	stackMemory.pop();
+	// يجب حذف المتغير left
+	// لانه لم يتم حذفه بعد وقد تم العمل عليه ولم يعد له حاجة
 
 	left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? right->V.NumberObj.numberType = TTFloat : right->V.NumberObj.numberType = TTInteger;
 	right->V.NumberObj.numberValue += left->V.NumberObj.numberValue;
