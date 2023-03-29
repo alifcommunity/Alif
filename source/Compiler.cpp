@@ -45,6 +45,10 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 			{
 				instructions_.push_back(ADD_NUM);
 			}
+			else
+			{
+				// TypeError: int and other
+			}
 		}
 		else if (left->objType == OTString)
 		{
@@ -52,10 +56,10 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 			{
 				instructions_.push_back(ADD_STR);
 			}
-		}
-		else
-		{
-			// error
+			else
+			{
+				// TypeError: str and other
+			}
 		}
 	}
 	else if (_node->U.BinaryOp.operator_ == TTMinus)
