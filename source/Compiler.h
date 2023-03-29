@@ -25,7 +25,7 @@ public:
 	void compile_file();
 
 	AlifObject* visit_object(ExprNode*);
-	void visit_unaryOp(ExprNode*);
+	AlifObject* visit_unaryOp(ExprNode*);
 	AlifObject* visit_binOp(ExprNode*);
 	void visit_assign(ExprNode*);
 	void visit_access(ExprNode*);

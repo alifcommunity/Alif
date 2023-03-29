@@ -21,14 +21,24 @@ AlifObject* Compiler::visit_object(ExprNode* _node)
 }
 
 
-void Compiler::visit_unaryOp(ExprNode* _node)
+AlifObject* Compiler::visit_unaryOp(ExprNode* _node)
 {
 	AlifObject* right = VISIT_(exprs, _node->U.UnaryOp.right_);
 
-	if (!wcscmp(_node->U.UnaryOp.keyword_, L"ليس"))
+	if (_node->U.UnaryOp.operator_ == TTMinus)
+	{
+		instructions_.push_back(NUM_MINUS);
+	}
+	else if (_node->U.UnaryOp.operator_ == TTPlus)
+	{
+		instructions_.push_back(NUM_PLUS);
+	}
+	else if (!wcscmp(_node->U.UnaryOp.keyword_, L"ليس"))
 	{
 		instructions_.push_back(NOT_LOGIC);
 	}
+
+	return right;
 }
 
 
@@ -45,6 +55,10 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 			{
 				instructions_.push_back(ADD_NUM);
 			}
+			else
+			{
+				// TypeError: int and other
+			}
 		}
 		else if (left->objType == OTString)
 		{
@@ -52,23 +66,69 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 			{
 				instructions_.push_back(ADD_STR);
 			}
+			else
+			{
+				// TypeError: str and other
+			}
 		}
 		else
 		{
-			// error
+			// TypeError: this and other
 		}
 	}
 	else if (_node->U.BinaryOp.operator_ == TTMinus)
 	{
-		instructions_.push_back(MINUS_NUM);
+		if (left->objType == OTNumber)
+		{
+			if (right->objType == OTNumber)
+			{
+				instructions_.push_back(MINUS_NUM);
+			}
+			else
+			{
+				// TypeError: this and other
+			}
+		}
+		else
+		{
+			// TypeError: this and other
+		}
 	}
 	else if (_node->U.BinaryOp.operator_ == TTPower)
 	{
-		instructions_.push_back(POW_NUM);
+		if (left->objType == OTNumber)
+		{
+			if (right->objType == OTNumber)
+			{
+				instructions_.push_back(POW_NUM);
+			}
+			else
+			{
+				// TypeError: this and other
+			}
+		}
+		else
+		{
+			// TypeError: this and other
+		}
 	}
 	else if (_node->U.BinaryOp.operator_ == TTDivide)
 	{
-		instructions_.push_back(DIV_NUM);
+		if (left->objType == OTNumber)
+		{
+			if (right->objType == OTNumber)
+			{
+				instructions_.push_back(DIV_NUM);
+			}
+			else
+			{
+				// TypeError: this and other
+			}
+		}
+		else
+		{
+			// TypeError: this and other
+		}
 	}
 	else if (_node->U.BinaryOp.operator_ == TTMultiply)
 	{
@@ -82,8 +142,9 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 			{
 				instructions_.push_back(MUL_STR);
 			}
-			else {
-				// error
+			else
+			{
+				// TypeError: this and other
 			}
 		}
 		else if (left->objType == OTString)
@@ -92,10 +153,14 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 			{
 				instructions_.push_back(MUL_STR);
 			}
+			else
+			{
+				// TypeError: this and other
+			}
 		}
 		else
 		{
-			// error
+			// TypeError: this and other
 		}
 	}
 	else if (_node->U.BinaryOp.operator_ == TTRemain)
@@ -106,6 +171,14 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 			{
 				instructions_.push_back(REM_NUM);
 			}
+			else
+			{
+				// TypeError: this and other
+			}
+		}
+		else
+		{
+			// TypeError: this and other
 		}
 	}
 	else if (_node->U.BinaryOp.operator_ == TTEqualEqual)
@@ -116,6 +189,14 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 			{
 				instructions_.push_back(EQEQ_NUM);
 			}
+			else
+			{
+				// TypeError: this and other
+			}
+		}
+		else
+		{
+			// TypeError: this and other
 		}
 	}
 	else if (_node->U.BinaryOp.operator_ == TTNotEqual)
@@ -126,6 +207,14 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 			{
 				instructions_.push_back(NOTEQ_NUM);
 			}
+			else
+			{
+				// TypeError: this and other
+			}
+		}
+		else
+		{
+			// TypeError: this and other
 		}
 	}
 	else if (_node->U.BinaryOp.operator_ == TTGreaterThan)
@@ -136,6 +225,14 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 			{
 				instructions_.push_back(GRTHAN_NUM);
 			}
+			else
+			{
+				// TypeError: this and other
+			}
+		}
+		else
+		{
+			// TypeError: this and other
 		}
 	}
 	else if (_node->U.BinaryOp.operator_ == TTLessThan)
@@ -146,6 +243,14 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 			{
 				instructions_.push_back(LSTHAN_NUM);
 			}
+			else
+			{
+				// TypeError: this and other
+			}
+		}
+		else
+		{
+			// TypeError: this and other
 		}
 	}
 	else if (_node->U.BinaryOp.operator_ == TTGreaterThanEqual)
@@ -156,6 +261,14 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 			{
 				instructions_.push_back(GRTHANEQ_NUM);
 			}
+			else
+			{
+				// TypeError: this and other
+			}
+		}
+		else
+		{
+			// TypeError: this and other
 		}
 	}
 	else if (_node->U.BinaryOp.operator_ == TTLessThanEqual)
@@ -166,6 +279,14 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 			{
 				instructions_.push_back(LSTHANEQ_NUM);
 			}
+			else
+			{
+				// TypeError: this and other
+			}
+		}
+		else
+		{
+			// TypeError: this and other
 		}
 	}
 	else if (!wcscmp(_node->U.UnaryOp.keyword_, L"و"))

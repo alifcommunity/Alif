@@ -7,6 +7,8 @@ void none_();
 void get_data();
 void set_data();
 
+void num_plus();
+void num_minus();
 void add_num();
 void minus_num();
 void mul_num();
@@ -38,6 +40,8 @@ const Instructions_func instr_funcs[] = {
 	get_data,
 	set_data,
 	
+	num_plus,
+	num_minus,
 	add_num,
 	minus_num,
 	mul_num,

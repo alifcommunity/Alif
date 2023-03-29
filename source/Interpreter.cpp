@@ -18,9 +18,9 @@ void Interpreter::run_code()
 	}
 
 	
-	//AlifObject* res = stackMemory.top();
+	AlifObject* res = stackMemory.top();
 	//stackMemory.pop();
-	//std::wcout << res->V.NumberObj.numberValue << std::endl;
+	std::wcout << res->V.NumberObj.numberValue << std::endl;
 	//std::wcout << symTable.get_data(name_->V.NameObj.name_)->V.NumberObj.numberValue << std::endl;
 	//std::wcout << res.V.BoolObj.boolType << std::endl;
 	//std::wcout << res.V.StringObj.strValue << std::endl;
@@ -45,55 +45,69 @@ void set_data()
 	data_->erase(data_->begin());
 }
 
+void num_plus() 
+{
+	
+}
+
+void num_minus() 
+{
+	AlifObject* number_ = stackMemory.top();
+
+	number_->V.NumberObj.numberValue = - number_->V.NumberObj.numberValue;
+}
+
 void add_num()
 {
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
 	AlifObject* right = stackMemory.top();
 	stackMemory.pop();
+	AlifObject* left = stackMemory.top();
+	stackMemory.pop();
+	// يجب حذف المتغير left
+	// لانه لم يتم حذفه بعد وقد تم العمل عليه ولم يعد له حاجة
 
 	left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? right->V.NumberObj.numberType = TTFloat : right->V.NumberObj.numberType = TTInteger;
-	right->V.NumberObj.numberValue = right->V.NumberObj.numberValue + left->V.NumberObj.numberValue;
+	right->V.NumberObj.numberValue += left->V.NumberObj.numberValue;
 	stackMemory.push(right);
 }
 void minus_num() 
 {
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
 	AlifObject* right = stackMemory.top();
+	stackMemory.pop();
+	AlifObject* left = stackMemory.top();
 	stackMemory.pop();
 
 	left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? right->V.NumberObj.numberType = TTFloat : right->V.NumberObj.numberType = TTInteger;
-	right->V.NumberObj.numberValue = right->V.NumberObj.numberValue - left->V.NumberObj.numberValue;
+	right->V.NumberObj.numberValue -= left->V.NumberObj.numberValue;
 	stackMemory.push(right);
 }
 void mul_num() 
 {
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
 	AlifObject* right = stackMemory.top();
+	stackMemory.pop();
+	AlifObject* left = stackMemory.top();
 	stackMemory.pop();
 
 	left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? right->V.NumberObj.numberType = TTFloat : right->V.NumberObj.numberType = TTInteger;
-	right->V.NumberObj.numberValue = right->V.NumberObj.numberValue * left->V.NumberObj.numberValue;
+	right->V.NumberObj.numberValue *= left->V.NumberObj.numberValue;
 	stackMemory.push(right);
 }
 void div_num() 
 {
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
 	AlifObject* right = stackMemory.top();
+	stackMemory.pop();
+	AlifObject* left = stackMemory.top();
 	stackMemory.pop();
 
 	left->V.NumberObj.numberType == TTFloat;
-	right->V.NumberObj.numberValue = right->V.NumberObj.numberValue / left->V.NumberObj.numberValue;
+	right->V.NumberObj.numberValue /= left->V.NumberObj.numberValue;
 	stackMemory.push(right);
 }
 void rem_num() 
 {
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
 	AlifObject* right = stackMemory.top();
+	stackMemory.pop();
+	AlifObject* left = stackMemory.top();
 	stackMemory.pop();
 
 	left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? right->V.NumberObj.numberType = TTFloat : right->V.NumberObj.numberType = TTInteger;
@@ -102,9 +116,9 @@ void rem_num()
 }
 void pow_num() 
 {
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
 	AlifObject* right = stackMemory.top();
+	stackMemory.pop();
+	AlifObject* left = stackMemory.top();
 	stackMemory.pop();
 
 	left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? right->V.NumberObj.numberType = TTFloat : right->V.NumberObj.numberType = TTInteger;
@@ -114,9 +128,9 @@ void pow_num()
 
 void equal_equal()
 {
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
 	AlifObject* right = stackMemory.top();
+	stackMemory.pop();
+	AlifObject* left = stackMemory.top();
 	stackMemory.pop();
 
 	if (right->objType == left->objType)
@@ -146,9 +160,9 @@ void equal_equal()
 }
 void not_equal() 
 {
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
 	AlifObject* right = stackMemory.top();
+	stackMemory.pop();
+	AlifObject* left = stackMemory.top();
 	stackMemory.pop();
 
 	if (right->objType == left->objType)
@@ -178,9 +192,9 @@ void not_equal()
 
 void gr_than_num()
 {
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
 	AlifObject* right = stackMemory.top();
+	stackMemory.pop();
+	AlifObject* left = stackMemory.top();
 	stackMemory.pop();
 
 	if (right->objType == left->objType)
@@ -209,9 +223,9 @@ void gr_than_num()
 }
 void gr_than_eq_num()
 {
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
 	AlifObject* right = stackMemory.top();
+	stackMemory.pop();
+	AlifObject* left = stackMemory.top();
 	stackMemory.pop();
 
 	if (right->objType == left->objType)
@@ -240,9 +254,9 @@ void gr_than_eq_num()
 }
 void ls_than_num()
 {
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
 	AlifObject* right = stackMemory.top();
+	stackMemory.pop();
+	AlifObject* left = stackMemory.top();
 	stackMemory.pop();
 
 	if (right->objType == left->objType)
@@ -271,9 +285,9 @@ void ls_than_num()
 }
 void ls_than_eq_num()
 {
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
 	AlifObject* right = stackMemory.top();
+	stackMemory.pop();
+	AlifObject* left = stackMemory.top();
 	stackMemory.pop();
 
 	if (right->objType == left->objType)
@@ -326,9 +340,9 @@ void not_logic()
 }
 void and_logic()
 {
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
 	AlifObject* right = stackMemory.top();
+	stackMemory.pop();
+	AlifObject* left = stackMemory.top();
 	stackMemory.pop();
 
 	if (right->objType == left->objType)
@@ -357,9 +371,9 @@ void and_logic()
 }
 void or_logic() 
 {
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
 	AlifObject* right = stackMemory.top();
+	stackMemory.pop();
+	AlifObject* left = stackMemory.top();
 	stackMemory.pop();
 
 	if (right->objType == left->objType)
@@ -389,9 +403,9 @@ void or_logic()
 
 void add_str() // هذه الطريقة اسرع من استخدام wcsncpy_s و wcsncat_s
 {
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
 	AlifObject* right = stackMemory.top();
+	stackMemory.pop();
+	AlifObject* left = stackMemory.top();
 	stackMemory.pop();
 
 
@@ -417,9 +431,9 @@ void add_str() // هذه الطريقة اسرع من استخدام wcsncpy_s �
 
 void mul_str() {
 	
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
 	AlifObject* right = stackMemory.top();
+	stackMemory.pop();
+	AlifObject* left = stackMemory.top();
 	stackMemory.pop();
 
 	if (left->objType == OTNumber) {

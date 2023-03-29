@@ -160,6 +160,8 @@ ExprNode* Parser::atom() {
         intNode->U.Object.value_ = intObject;
         intNode->type_ = VTObject;
 
+        alifMemory->deallocate(&token.value_); // لانه تم تحويل القيمة ولم يعد للقيمة النصية استخدام
+
         return intNode;
     }
     else if (token.type_ == TTFloat)
@@ -179,6 +181,8 @@ ExprNode* Parser::atom() {
         ExprNode* floatNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
         floatNode->U.Object.value_ = floatObject;
         floatNode->type_ = VTObject;
+
+        alifMemory->deallocate(&token.value_);
 
         return floatNode;
 
