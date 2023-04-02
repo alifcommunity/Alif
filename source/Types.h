@@ -97,10 +97,10 @@ enum InstructionsType : uint8_t { // التعليمات
     SET_DATA,
 
     // تعليمات العمليات الحسابية
-    NUM_PLUS,
-    NUM_MINUS,
-    ADD_NUM,
+    PLUS_NUM,
     MINUS_NUM,
+    ADD_NUM,
+    SUB_NUM,
     MUL_NUM,
     DIV_NUM,
     REM_NUM,

@@ -240,7 +240,7 @@ void terminal_run()
 
         auto start = std::chrono::high_resolution_clock::now();
         
-        Interpreter interpreter = Interpreter(&compiler.instructions_, &compiler.data_);
+        Interpreter interpreter = Interpreter(&compiler.instructions_, &compiler.data_, &lexer.alifMemory);
         interpreter.run_code();
 
         auto end = std::chrono::high_resolution_clock::now();

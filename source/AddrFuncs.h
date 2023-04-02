@@ -7,10 +7,10 @@ void none_();
 void get_data();
 void set_data();
 
-void num_plus();
-void num_minus();
-void add_num();
+void plus_num();
 void minus_num();
+void add_num();
+void sub_num();
 void mul_num();
 void div_num();
 void rem_num();
@@ -40,10 +40,10 @@ const Instructions_func instr_funcs[] = {
 	get_data,
 	set_data,
 	
-	num_plus,
-	num_minus,
-	add_num,
+	plus_num,
 	minus_num,
+	add_num,
+	sub_num,
 	mul_num,
 	div_num,
 	rem_num,

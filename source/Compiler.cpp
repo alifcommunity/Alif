@@ -27,11 +27,11 @@ AlifObject* Compiler::visit_unaryOp(ExprNode* _node)
 
 	if (_node->U.UnaryOp.operator_ == TTMinus)
 	{
-		instructions_.push_back(NUM_MINUS);
+		instructions_.push_back(MINUS_NUM);
 	}
 	else if (_node->U.UnaryOp.operator_ == TTPlus)
 	{
-		instructions_.push_back(NUM_PLUS);
+		instructions_.push_back(PLUS_NUM);
 	}
 	else if (!wcscmp(_node->U.UnaryOp.keyword_, L"ليس"))
 	{
