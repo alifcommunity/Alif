@@ -4,7 +4,7 @@
 MemoryBlock::MemoryBlock(size_t _segmentSize)
     : segmentSize(_segmentSize), currentIndex(0)
 {
-    currentSegment = new char[segmentSize]; // احجز المساحة الممررة وهي 8192 بايت مع قيمة افتراضية 0
+    currentSegment = new wchar_t[segmentSize]; // احجز المساحة الممررة وهي 8192 بايت مع قيمة افتراضية 0
     segments_.push_back(currentSegment); // قم بإضافة عنوان القطعة الحالية الى مصفوفة القطع
     fragmentCounts = (int*)(currentSegment); // قم بحجز اربع بايت خاصة بعداد الوحدات
     *fragmentCounts = 0;
@@ -24,7 +24,7 @@ void* MemoryBlock::allocate(size_t _size)
 
     if (currentIndex + _size > segmentSize) // هل يوجد مساحة كافية في القطعة؟
     {
-        for (char* seg : segments_) // لاجل كل عنوان من عناوين القطع في مصفوفة القطع
+        for (wchar_t* seg : segments_) // لاجل كل عنوان من عناوين القطع في مصفوفة القطع
         {
             if (*seg <= 0) // *seg هي قيمة العنوان الاول وهو عدد الوحدات في هذه القطعة
             {
@@ -36,7 +36,7 @@ void* MemoryBlock::allocate(size_t _size)
         }
         if (segmentSize != 0)
         {
-            currentSegment = new char[segmentSize]; // قم بحجز قطعة جديدة مع قيمة افتراضية 
+            currentSegment = new wchar_t[segmentSize]; // قم بحجز قطعة جديدة مع قيمة افتراضية 
         }
         else
         {
@@ -59,7 +59,7 @@ void* MemoryBlock::allocate(size_t _size)
 
 void MemoryBlock::deallocate(void* _ptr) 
 {
-    for (char* seg : segments_) // لاجل كل عنوان من عناوين القطع في مصفوفة القطع
+    for (wchar_t* seg : segments_) // لاجل كل عنوان من عناوين القطع في مصفوفة القطع
     {
         if (_ptr < seg + segmentSize) // اذا كان العنوان الممرر ضمن القطعة الحالية
         {
