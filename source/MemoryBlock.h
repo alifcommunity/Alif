@@ -13,8 +13,8 @@
 
 class MemoryBlock {
 private:
-    std::vector<char*> segments_;
-    char* currentSegment;
+    std::vector<wchar_t*> segments_;
+    wchar_t* currentSegment;
     size_t segmentSize;
     size_t currentIndex;
     int* fragmentCounts;
