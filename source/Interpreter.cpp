@@ -322,7 +322,7 @@ void not_logic()
 	AlifObject* right = stackMemory.top();
 	stackMemory.pop();
 
-	AlifObject* res = new AlifObject();
+	AlifObject* res = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 
 	res->objType = OTBoolean;
 	res->tokLine = right->tokLine;
@@ -349,7 +349,7 @@ void and_logic()
 
 	if (right->objType == left->objType)
 	{
-		AlifObject* res = new AlifObject();
+		AlifObject* res = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 
 		res->objType = OTBoolean;
 		res->tokLine = right->tokLine;
@@ -380,7 +380,7 @@ void or_logic()
 
 	if (right->objType == left->objType)
 	{
-		AlifObject* res = new AlifObject();
+		AlifObject* res = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 
 		res->objType = OTBoolean;
 		res->tokLine = right->tokLine;
