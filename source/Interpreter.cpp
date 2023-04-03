@@ -4,10 +4,12 @@
 std::vector<InstructionsType>* instructions_;
 std::vector<AlifObject*>* data_;
 std::stack<AlifObject*> stackMemory;
+MemoryBlock* alifMemory;
 
-Interpreter::Interpreter(std::vector<InstructionsType>* _instructions, std::vector<AlifObject*>* _data) {
+Interpreter::Interpreter(std::vector<InstructionsType>* _instructions, std::vector<AlifObject*>* _data, MemoryBlock* _alifMemory) {
 	data_ = _data;
 	instructions_ = _instructions;
+	alifMemory = _alifMemory;
 }
 
 void Interpreter::run_code()
@@ -45,12 +47,12 @@ void set_data()
 	data_->erase(data_->begin());
 }
 
-void num_plus() 
+void plus_num() 
 {
 	
 }
 
-void num_minus() 
+void minus_num() 
 {
 	AlifObject* number_ = stackMemory.top();
 
@@ -70,7 +72,7 @@ void add_num()
 	right->V.NumberObj.numberValue += left->V.NumberObj.numberValue;
 	stackMemory.push(right);
 }
-void minus_num() 
+void sub_num() 
 {
 	AlifObject* right = stackMemory.top();
 	stackMemory.pop();
@@ -135,7 +137,7 @@ void equal_equal()
 
 	if (right->objType == left->objType)
 	{
-		AlifObject* res = new AlifObject();
+		AlifObject* res = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 
 		res->objType = OTBoolean;
 		res->tokLine = right->tokLine;
@@ -167,7 +169,7 @@ void not_equal()
 
 	if (right->objType == left->objType)
 	{
-		AlifObject* res = new AlifObject();
+		AlifObject* res = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 
 		res->objType = OTBoolean;
 		res->tokLine = right->tokLine;
@@ -199,7 +201,7 @@ void gr_than_num()
 
 	if (right->objType == left->objType)
 	{
-		AlifObject* res = new AlifObject();
+		AlifObject* res = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 
 		res->objType = OTBoolean;
 		res->tokLine = right->tokLine;
@@ -230,7 +232,7 @@ void gr_than_eq_num()
 
 	if (right->objType == left->objType)
 	{
-		AlifObject* res = new AlifObject();
+		AlifObject* res = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 
 		res->objType = OTBoolean;
 		res->tokLine = right->tokLine;
@@ -261,7 +263,7 @@ void ls_than_num()
 
 	if (right->objType == left->objType)
 	{
-		AlifObject* res = new AlifObject();
+		AlifObject* res = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 
 		res->objType = OTBoolean;
 		res->tokLine = right->tokLine;
@@ -292,7 +294,7 @@ void ls_than_eq_num()
 
 	if (right->objType == left->objType)
 	{
-		AlifObject* res = new AlifObject();
+		AlifObject* res = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 
 		res->objType = OTBoolean;
 		res->tokLine = right->tokLine;
@@ -320,7 +322,7 @@ void not_logic()
 	AlifObject* right = stackMemory.top();
 	stackMemory.pop();
 
-	AlifObject* res = new AlifObject();
+	AlifObject* res = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 
 	res->objType = OTBoolean;
 	res->tokLine = right->tokLine;
@@ -347,7 +349,7 @@ void and_logic()
 
 	if (right->objType == left->objType)
 	{
-		AlifObject* res = new AlifObject();
+		AlifObject* res = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 
 		res->objType = OTBoolean;
 		res->tokLine = right->tokLine;
@@ -378,7 +380,7 @@ void or_logic()
 
 	if (right->objType == left->objType)
 	{
-		AlifObject* res = new AlifObject();
+		AlifObject* res = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 
 		res->objType = OTBoolean;
 		res->tokLine = right->tokLine;
