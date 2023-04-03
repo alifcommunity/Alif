@@ -532,3 +532,19 @@ void store_name()
 	symTable.add_symbol(*name_->V.NameObj.name_, value_);
 
 }
+
+void list_make()
+{
+	AlifObject* list_ = stackMemory.top();
+	stackMemory.pop();
+
+	AlifObject* element_ = stackMemory.top();
+
+	while (element_->objType != OTNone) // يجب تعديل التحقق لان عدم يعتبر نوع ويمكن إسناده في مصفوفة
+	{
+		list_->V.ListObj.objList->push_back(element_);
+		stackMemory.pop();
+
+		element_ = stackMemory.top();
+	}
+}

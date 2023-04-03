@@ -611,13 +611,12 @@ ExprNode* Parser::assignment() // يجب إيجاد خوارزمية افضل ب
             return assignment_;
 
         }
-        else if (   Next_Is(TTPlusEqual) or 
-                    Next_Is(TTMinusEqual) or 
-                    Next_Is(TTMultiplyEqual) or 
-                    Next_Is(TTDivideEqual) or 
-                    Next_Is(TTPowerEqual) or 
-                    Next_Is(TTRemainEqual)
-                )
+        else if (Next_Is(TTPlusEqual) or 
+                 Next_Is(TTMinusEqual) or 
+                 Next_Is(TTMultiplyEqual) or 
+                 Next_Is(TTDivideEqual) or 
+                 Next_Is(TTPowerEqual) or 
+                 Next_Is(TTRemainEqual)) 
         {
             AlifObject* name_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
             name_->objType = OTName;
