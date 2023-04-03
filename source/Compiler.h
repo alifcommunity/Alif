@@ -28,6 +28,7 @@ public:
 	AlifObject* visit_unaryOp(ExprNode*);
 	AlifObject* visit_binOp(ExprNode*);
 	void visit_assign(ExprNode*);
+	void visit_augAssign(ExprNode*);
 	void visit_access(ExprNode*);
 	void visit_expr(ExprNode*);
 

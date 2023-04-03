@@ -309,12 +309,43 @@ void Compiler::visit_assign(ExprNode* _node)
 		VISIT_(exprs,_node->U.NameAssign.value_);
 
 		data_.push_back(i);
-		instructions_.push_back(SET_DATA);
+		instructions_.push_back(SET_DATA); // خزن الاسم في المكدس
 
 		instructions_.push_back(STORE_NAME);
 	}
 }
 
+void Compiler::visit_augAssign(ExprNode* _node)
+{
+	VISIT_(exprs, _node->U.AugNameAssign.value_);
+
+	data_.push_back(_node->U.AugNameAssign.name_);
+	instructions_.push_back(SET_DATA);
+
+	switch (_node->U.AugNameAssign.operator_)
+	{
+	case TTPlusEqual:
+		instructions_.push_back(AUGADD_NUM);
+		break;
+	case TTMinusEqual:
+		instructions_.push_back(AUGSUB_NUM);
+		break;
+	case TTMultiplyEqual:
+		instructions_.push_back(AUGMUL_NUM);
+		break;
+	case TTDivideEqual:
+		instructions_.push_back(AUGDIV_NUM);
+		break;
+	case TTRemainEqual:
+		instructions_.push_back(AUGREM_NUM);
+		break;
+	case TTPowerEqual:
+		instructions_.push_back(AUGPOW_NUM);
+		break;
+	default:
+		break;
+	}
+}
 
 void Compiler::visit_access(ExprNode* _node)
 {
@@ -353,6 +384,10 @@ AlifObject* Compiler::visit_exprs(ExprNode* _node)
     {
 		VISIT_(assign,_node);
     }
+	else if (_node->type_ == VTAugAssign)
+	{
+		VISIT_(augAssign, _node);
+	}
 	else if (_node->type_ == VTAccess)
 	{
 		VISIT_(access, _node);

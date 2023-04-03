@@ -15,6 +15,12 @@ void mul_num();
 void div_num();
 void rem_num();
 void pow_num();
+void augAdd_num();
+void augSub_num();
+void augMul_num();
+void augDiv_num();
+void augRem_num();
+void augPow_num();
 
 void equal_equal();
 void not_equal();
@@ -48,6 +54,12 @@ const Instructions_func instr_funcs[] = {
 	div_num,
 	rem_num,
 	pow_num,
+	augAdd_num,
+	augSub_num,
+	augMul_num,
+	augDiv_num,
+	augRem_num,
+	augPow_num,
 
 	equal_equal,
 	not_equal,

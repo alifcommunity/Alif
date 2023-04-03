@@ -20,9 +20,9 @@ void Interpreter::run_code()
 	}
 
 	
-	AlifObject* res = stackMemory.top();
+	//AlifObject* res = stackMemory.top();
 	//stackMemory.pop();
-	std::wcout << res->V.NumberObj.numberValue << std::endl;
+	//std::wcout << res->V.NumberObj.numberValue << std::endl;
 	//std::wcout << symTable.get_data(name_->V.NameObj.name_)->V.NumberObj.numberValue << std::endl;
 	//std::wcout << res.V.BoolObj.boolType << std::endl;
 	//std::wcout << res.V.StringObj.strValue << std::endl;
@@ -38,7 +38,6 @@ void get_data()
 	stackMemory.push(symTable.get_data(*name_->V.NameObj.name_));
 
 	AlifObject* res = stackMemory.top();
-	//stackMemory.pop();
 	std::wcout << res->V.NumberObj.numberValue << std::endl;
 }
 void set_data()
@@ -127,6 +126,37 @@ void pow_num()
 	right->V.NumberObj.numberValue = pow(right->V.NumberObj.numberValue  ,left->V.NumberObj.numberValue);
 	stackMemory.push(right);
 }
+void augAdd_num()
+{
+	AlifObject* name_ = stackMemory.top();
+	stackMemory.pop();
+	AlifObject* value_ = stackMemory.top();
+	stackMemory.pop();
+
+	symTable.get_data(*name_->V.NameObj.name_)->V.NumberObj.numberValue += value_->V.NumberObj.numberValue;
+
+}
+void augSub_num()
+{
+	
+}
+void augMul_num()
+{
+	
+}
+void augDiv_num()
+{
+	
+}
+void augRem_num()
+{
+	
+}
+void augPow_num()
+{
+	
+}
+
 
 void equal_equal()
 {
