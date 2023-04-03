@@ -1,8 +1,8 @@
 #include "Compiler.h"
 
 
-Compiler::Compiler(std::vector<ExprNode*>* _statements) :
-	statements_(_statements) {}
+Compiler::Compiler(std::vector<ExprNode*>* _statements, MemoryBlock* _alifMemory) :
+	statements_(_statements), alifMemory(_alifMemory) {}
 
 void Compiler::compile_file() 
 {
@@ -365,6 +365,38 @@ void Compiler::visit_expr(ExprNode* _node)
 	instructions_.push_back(EXPR_OP);
 }
 
+void Compiler::visit_list(ExprNode* _node)
+{
+	// لتحديد نهاية المصفوفة في المفسر
+	AlifObject* listEnd = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	listEnd->objType = OTNone;
+
+	data_.push_back(listEnd);
+	instructions_.push_back(SET_DATA);
+
+
+	// إسناد العناصر التي سيتم إعدادها
+	for (ExprNode* element : *_node->U.Object.value_->V.ListObj.list_)
+	{
+		VISIT_(exprs, element);
+	}
+
+
+	// تعريف المصفوفة التي ستحتوي على العناصر التي تم إعداداها
+	AlifObject* listObj = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	std::vector<AlifObject*>* elements_ = new std::vector<AlifObject*>;
+
+	listObj->objType = OTList;
+	listObj->V.ListObj.objList = elements_;
+
+	data_.push_back(listObj);
+
+	instructions_.push_back(SET_DATA);
+
+
+	instructions_.push_back(LIST_MAKE);
+}
+
 
 AlifObject* Compiler::visit_exprs(ExprNode* _node)
 {
@@ -396,6 +428,10 @@ AlifObject* Compiler::visit_exprs(ExprNode* _node)
     {
 		VISIT_(expr, _node);
     }
+	else if (_node->type_ == VTList)
+	{
+		VISIT_(list, _node);
+	}
 }
 
 AlifObject* Compiler::visit_stmts(StmtsNode* _node)

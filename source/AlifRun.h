@@ -232,7 +232,7 @@ void terminal_run()
         // المترجم اللغوي
         /////////////////////////////////////////////////////////////////
 
-        Compiler compiler = Compiler(&parser.statements_);
+        Compiler compiler = Compiler(&parser.statements_, &lexer.alifMemory);
         compiler.compile_file();
 
         // المفسر اللغوي

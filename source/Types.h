@@ -135,6 +135,8 @@ enum InstructionsType : uint8_t { // التعليمات
     // تعليمات الإسناد
     STORE_NAME,
 
+    // تعليمات المصفوفة
+    LIST_MAKE,
 
 };
 

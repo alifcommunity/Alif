@@ -40,6 +40,8 @@ void expr_op();
 
 void store_name();
 
+void list_make();
+
 const Instructions_func instr_funcs[] = {
 	none_,
 
@@ -78,4 +80,6 @@ const Instructions_func instr_funcs[] = {
 	expr_op,
 
 	store_name,
+
+	list_make,
 };
