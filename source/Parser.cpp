@@ -577,12 +577,12 @@ ExprNode* Parser::expressions() {
     return expr_;
 }
 
-ExprNode* Parser::assignment() {
 
-
+ExprNode* Parser::assignment() // يجب إيجاد خوارزمية افضل بالإضافة الى استخدام ذاكرة ألف بدل من new
+{
     if (this->currentToken.type_ == TTName)
     {
-        if (Next_Is(TTEqual)) // كيف سيتم إسناد قيمة الى اكثر من اسم مثال: ب,س = 9 *يوجد خطأ
+        if (Next_Is(TTEqual))
         {
             std::vector<AlifObject*>* names_ = new std::vector<AlifObject*>;
 
@@ -611,12 +611,14 @@ ExprNode* Parser::assignment() {
             return assignment_;
 
         }
-        else if (Next_Is(TTPlusEqual) or Next_Is(TTMinusEqual) or Next_Is(TTMultiplyEqual) or Next_Is(TTDivideEqual) or Next_Is(TTPowerEqual) or Next_Is(TTRemainEqual))
+        else if (   Next_Is(TTPlusEqual) or 
+                    Next_Is(TTMinusEqual) or 
+                    Next_Is(TTMultiplyEqual) or 
+                    Next_Is(TTDivideEqual) or 
+                    Next_Is(TTPowerEqual) or 
+                    Next_Is(TTRemainEqual)
+                )
         {
-            // يجب إختصار نوع التحقق الى TTaugAssign
-            // بحيث يتم تخزين النوع في العملية بشكل مباشر دون التحقق منها
-            // if token.type == TTaugassign then operator = opToken.type
-
             AlifObject* name_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
             name_->objType = OTName;
             name_->V.NameObj.name_ = this->currentToken.value_;
@@ -637,7 +639,6 @@ ExprNode* Parser::assignment() {
             augAssignment->type_ = VTAugAssign;
 
             return augAssignment;
-
         }
     }
 
