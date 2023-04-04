@@ -207,10 +207,10 @@ ExprNode* Parser::atom() {
 
         return stringNode;
     }
-    //else if (token.type_ == TTLeftSquare)
-    //{
-    //    return this->list_expr();
-    //}
+    else if (token.type_ == TTLeftSquare)
+    {
+        return this->list_expr();
+    }
     //else if (this->currentToken.type_ == TTLeftParenthesis)
     //{
     //    this->advance();
@@ -229,7 +229,7 @@ ExprNode* Parser::atom() {
     //}
     else
     {
-        PRINT_(L"لم يتم العثور على حالة");
+        PRINT_(SyntaxError(token.posStart, token.posEnd, token.posIndex - 1, token.tokLine - 1, L"حالة غير مكتملة", fileName, input_).print_());
         exit(-1);
     }
 }
@@ -252,19 +252,22 @@ ExprNode* Parser::list_expr()
 
         if (this->currentToken.type_ != TTRightSquare)
         {
-            //PRINT_(SyntaxError(this->currentToken.positionStart, this->currentToken.positionEnd, L"لم يتم إغلاق قوس المصفوفة", fileName, input_).print_());
+            PRINT_(SyntaxError(this->currentToken.posStart, this->currentToken.posEnd, this->currentToken.posIndex - 1, this->currentToken.tokLine - 1, L"لم يتم إغلاق قوس المصفوفة", fileName, input_).print_());
             exit(-1);
         }
         this->advance();
     }
 
-    //exprLevel--;
+    AlifObject* listObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 
-    //(exprNode + exprLevel)->U.Object.value_.objType = OTList;
-    //(exprNode + exprLevel)->U.Object.value_.V.ListObj.list_ = nodeElement;
-    //(exprNode + exprLevel)->type_ = VTList;
+    listObject->objType = OTList;
+    listObject->V.ListObj.list_ = nodeElement;
 
-    //return (exprNode + exprLevel);
+    ExprNode* listNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+    listNode->U.Object.value_ = listObject;
+    listNode->type_ = VTList;
+
+    return listNode;
 
 }
 
@@ -577,12 +580,12 @@ ExprNode* Parser::expressions() {
     return expr_;
 }
 
-ExprNode* Parser::assignment() {
 
-
+ExprNode* Parser::assignment() // يجب إيجاد خوارزمية افضل بالإضافة الى استخدام ذاكرة ألف بدل من new
+{
     if (this->currentToken.type_ == TTName)
     {
-        if (Next_Is(TTEqual)) // كيف سيتم إسناد قيمة الى اكثر من اسم مثال: ب,س = 9 *يوجد خطأ
+        if (Next_Is(TTEqual))
         {
             std::vector<AlifObject*>* names_ = new std::vector<AlifObject*>;
 
@@ -611,12 +614,13 @@ ExprNode* Parser::assignment() {
             return assignment_;
 
         }
-        else if (Next_Is(TTPlusEqual) or Next_Is(TTMinusEqual) or Next_Is(TTMultiplyEqual) or Next_Is(TTDivideEqual) or Next_Is(TTPowerEqual) or Next_Is(TTRemainEqual))
+        else if (Next_Is(TTPlusEqual) or 
+                 Next_Is(TTMinusEqual) or 
+                 Next_Is(TTMultiplyEqual) or 
+                 Next_Is(TTDivideEqual) or 
+                 Next_Is(TTPowerEqual) or 
+                 Next_Is(TTRemainEqual)) 
         {
-            // يجب إختصار نوع التحقق الى TTaugAssign
-            // بحيث يتم تخزين النوع في العملية بشكل مباشر دون التحقق منها
-            // if token.type == TTaugassign then operator = opToken.type
-
             AlifObject* name_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
             name_->objType = OTName;
             name_->V.NameObj.name_ = this->currentToken.value_;
@@ -637,7 +641,6 @@ ExprNode* Parser::assignment() {
             augAssignment->type_ = VTAugAssign;
 
             return augAssignment;
-
         }
     }
 

@@ -1,8 +1,8 @@
 #include "Compiler.h"
 
 
-Compiler::Compiler(std::vector<ExprNode*>* _statements) :
-	statements_(_statements) {}
+Compiler::Compiler(std::vector<ExprNode*>* _statements, MemoryBlock* _alifMemory) :
+	statements_(_statements), alifMemory(_alifMemory) {}
 
 void Compiler::compile_file() 
 {
@@ -309,12 +309,43 @@ void Compiler::visit_assign(ExprNode* _node)
 		VISIT_(exprs,_node->U.NameAssign.value_);
 
 		data_.push_back(i);
-		instructions_.push_back(SET_DATA);
+		instructions_.push_back(SET_DATA); // خزن الاسم في المكدس
 
 		instructions_.push_back(STORE_NAME);
 	}
 }
 
+void Compiler::visit_augAssign(ExprNode* _node)
+{
+	VISIT_(exprs, _node->U.AugNameAssign.value_);
+
+	data_.push_back(_node->U.AugNameAssign.name_);
+	instructions_.push_back(SET_DATA);
+
+	switch (_node->U.AugNameAssign.operator_)
+	{
+	case TTPlusEqual:
+		instructions_.push_back(AUGADD_NUM);
+		break;
+	case TTMinusEqual:
+		instructions_.push_back(AUGSUB_NUM);
+		break;
+	case TTMultiplyEqual:
+		instructions_.push_back(AUGMUL_NUM);
+		break;
+	case TTDivideEqual:
+		instructions_.push_back(AUGDIV_NUM);
+		break;
+	case TTRemainEqual:
+		instructions_.push_back(AUGREM_NUM);
+		break;
+	case TTPowerEqual:
+		instructions_.push_back(AUGPOW_NUM);
+		break;
+	default:
+		break;
+	}
+}
 
 void Compiler::visit_access(ExprNode* _node)
 {
@@ -332,6 +363,39 @@ void Compiler::visit_expr(ExprNode* _node)
 	VISIT_(exprs, _node->U.Expr.condetion_);
 
 	instructions_.push_back(EXPR_OP);
+}
+
+void Compiler::visit_list(ExprNode* _node)
+{
+	// إسناد العناصر التي سيتم إعدادها
+	for (ExprNode* element : *_node->U.Object.value_->V.ListObj.list_)
+	{
+		VISIT_(exprs, element);
+	}
+
+
+	// لتحديد نهاية المصفوفة في المفسر
+	AlifObject* listEnd = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	listEnd->objType = OTNumber;
+	listEnd->V.NumberObj.numberValue = _node->U.Object.value_->V.ListObj.list_->size();
+
+	data_.push_back(listEnd);
+	instructions_.push_back(SET_DATA);
+
+
+	// تعريف المصفوفة التي ستحتوي على العناصر التي تم إعداداها
+	AlifObject* listObj = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	std::vector<AlifObject*>* elements_ = new std::vector<AlifObject*>;
+
+	listObj->objType = OTList;
+	listObj->V.ListObj.objList = elements_;
+
+	data_.push_back(listObj);
+	instructions_.push_back(SET_DATA);
+
+
+
+	instructions_.push_back(LIST_MAKE);
 }
 
 
@@ -353,6 +417,10 @@ AlifObject* Compiler::visit_exprs(ExprNode* _node)
     {
 		VISIT_(assign,_node);
     }
+	else if (_node->type_ == VTAugAssign)
+	{
+		VISIT_(augAssign, _node);
+	}
 	else if (_node->type_ == VTAccess)
 	{
 		VISIT_(access, _node);
@@ -361,6 +429,10 @@ AlifObject* Compiler::visit_exprs(ExprNode* _node)
     {
 		VISIT_(expr, _node);
     }
+	else if (_node->type_ == VTList)
+	{
+		VISIT_(list, _node);
+	}
 }
 
 AlifObject* Compiler::visit_stmts(StmtsNode* _node)

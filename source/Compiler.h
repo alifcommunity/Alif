@@ -3,6 +3,7 @@
 #include "Node.h"
 #include "Types.h"
 #include "SymbolTable.h"
+#include "MemoryBlock.h"
 
 #define VISIT_(func,node) (visit_ ## func(node)) // -> visit_func(arg) <<-->> VISIT_(func, node)
 												 //			^                        ^
@@ -19,8 +20,9 @@ public:
 	std::vector<ExprNode*>* statements_{};
 	std::vector<InstructionsType> instructions_{};
 	std::vector<AlifObject*> data_{}; // لماذا لا تكون البيانات هي ذاكرة المكدس ويتم إرسال عنوانها بدل نقل البيانات مرة اخرى؟
+	MemoryBlock* alifMemory;
 
-	Compiler(std::vector<ExprNode*>* _statements);
+	Compiler(std::vector<ExprNode*>* _statements, MemoryBlock* _alifMemory);
 
 	void compile_file();
 
@@ -28,8 +30,10 @@ public:
 	AlifObject* visit_unaryOp(ExprNode*);
 	AlifObject* visit_binOp(ExprNode*);
 	void visit_assign(ExprNode*);
+	void visit_augAssign(ExprNode*);
 	void visit_access(ExprNode*);
 	void visit_expr(ExprNode*);
+	void visit_list(ExprNode*);
 
 	AlifObject* visit_exprs(ExprNode* _node);
 	AlifObject* visit_stmts(StmtsNode* _node);

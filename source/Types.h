@@ -105,6 +105,12 @@ enum InstructionsType : uint8_t { // التعليمات
     DIV_NUM,
     REM_NUM,
     POW_NUM,
+    AUGADD_NUM,
+    AUGSUB_NUM,
+    AUGMUL_NUM,
+    AUGDIV_NUM,
+    AUGREM_NUM,
+    AUGPOW_NUM,
 
     // تعليمات عمليات المقارنة
     EQEQ_NUM,
@@ -129,6 +135,8 @@ enum InstructionsType : uint8_t { // التعليمات
     // تعليمات الإسناد
     STORE_NAME,
 
+    // تعليمات المصفوفة
+    LIST_MAKE,
 
 };
 
