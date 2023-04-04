@@ -280,7 +280,7 @@ void Lexer::make_newline()
 
     this->advance();
     
-    this->tokens_.push_back(Token(tokLine, posStart, this->tokPos, tokIndex, TTNewline));
+    this->tokens_.push_back(Token(tokLine, posStart, posStart, tokIndex, TTNewline));
 
     this->make_indent();
 }
