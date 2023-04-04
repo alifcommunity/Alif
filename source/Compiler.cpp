@@ -367,19 +367,20 @@ void Compiler::visit_expr(ExprNode* _node)
 
 void Compiler::visit_list(ExprNode* _node)
 {
-	// لتحديد نهاية المصفوفة في المفسر
-	AlifObject* listEnd = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
-	listEnd->objType = OTNone;
-
-	data_.push_back(listEnd);
-	instructions_.push_back(SET_DATA);
-
-
 	// إسناد العناصر التي سيتم إعدادها
 	for (ExprNode* element : *_node->U.Object.value_->V.ListObj.list_)
 	{
 		VISIT_(exprs, element);
 	}
+
+
+	// لتحديد نهاية المصفوفة في المفسر
+	AlifObject* listEnd = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	listEnd->objType = OTNumber;
+	listEnd->V.NumberObj.numberValue = _node->U.Object.value_->V.ListObj.list_->size();
+
+	data_.push_back(listEnd);
+	instructions_.push_back(SET_DATA);
 
 
 	// تعريف المصفوفة التي ستحتوي على العناصر التي تم إعداداها
@@ -390,8 +391,8 @@ void Compiler::visit_list(ExprNode* _node)
 	listObj->V.ListObj.objList = elements_;
 
 	data_.push_back(listObj);
-
 	instructions_.push_back(SET_DATA);
+
 
 
 	instructions_.push_back(LIST_MAKE);

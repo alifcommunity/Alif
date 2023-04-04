@@ -538,13 +538,16 @@ void list_make()
 	AlifObject* list_ = stackMemory.top();
 	stackMemory.pop();
 
-	AlifObject* element_ = stackMemory.top();
+	AlifObject* elementCount = stackMemory.top();
+	stackMemory.pop();
 
-	while (element_->objType != OTNone) // يجب تعديل التحقق لان عدم يعتبر نوع ويمكن إسناده في مصفوفة
+	AlifObject* element_{};
+
+	for (int i = 0; i < elementCount->V.NumberObj.numberValue; i++) // يجب تعديل التحقق لان عدم يعتبر نوع ويمكن إسناده في مصفوفة
 	{
-		list_->V.ListObj.objList->push_back(element_);
+		element_ = stackMemory.top();
 		stackMemory.pop();
 
-		element_ = stackMemory.top();
+		list_->V.ListObj.objList->push_back(element_);
 	}
 }
