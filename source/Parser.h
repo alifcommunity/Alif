@@ -1,10 +1,11 @@
 #pragma once
 
-#include <string>
-
+#include "Error.h"
 #include "Tokens.h"
 #include "Node.h"
 #include "MemoryBlock.h"
+
+#include <string>
 
 #define Next_Is(t) (this->tokens_->at(this->tokenIndex + 1).type_ == t ? true : false )
 #define PRINT_(a){std::wcout << a << std::endl;}
