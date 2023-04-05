@@ -83,11 +83,11 @@ enum VisitType : uint8_t { // انواع الزيارة في الشجرة
     VTStmts,
 };
 
-enum StateType : uint8_t { // انواع الحالات للاسماء
-    STSet,
-    STGet,
-    STDel,
-};
+//enum StateType : uint8_t { // انواع الحالات للاسماء
+//    STSet,
+//    STGet,
+//    STDel,
+//};
 
 enum InstructionsType : uint8_t { // التعليمات
     NONE,

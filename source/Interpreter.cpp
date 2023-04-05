@@ -172,15 +172,15 @@ void equal_equal()
 		res->objType = OTBoolean;
 		res->tokLine = right->tokLine;
 
-		if (right->V.NumberObj.numberValue == left->V.NumberObj.numberValue)
+		if (right->V.BoolObj.numberValue == left->V.BoolObj.numberValue)
 		{
 			res->V.BoolObj.boolType = L"صح";
-			res->V.NumberObj.numberValue = 1;
+			res->V.BoolObj.numberValue = 1;
 		}
 		else
 		{
 			res->V.BoolObj.boolType = L"خطا";
-			res->V.NumberObj.numberValue = 0;
+			res->V.BoolObj.numberValue = 0;
 		}
 		stackMemory.push(res);
 	}
@@ -204,15 +204,15 @@ void not_equal()
 		res->objType = OTBoolean;
 		res->tokLine = right->tokLine;
 
-		if (right->V.NumberObj.numberValue != left->V.NumberObj.numberValue)
+		if (right->V.BoolObj.numberValue != left->V.BoolObj.numberValue)
 		{
 			res->V.BoolObj.boolType = L"صح";
-			res->V.NumberObj.numberValue = 1;
+			res->V.BoolObj.numberValue = 1;
 		}
 		else
 		{
 			res->V.BoolObj.boolType = L"خطا";
-			res->V.NumberObj.numberValue = 0;
+			res->V.BoolObj.numberValue = 0;
 		}
 		stackMemory.push(res);
 	}
@@ -236,15 +236,15 @@ void gr_than_num()
 		res->objType = OTBoolean;
 		res->tokLine = right->tokLine;
 
-		if (right->V.NumberObj.numberValue > left->V.NumberObj.numberValue)
+		if (right->V.BoolObj.numberValue > left->V.BoolObj.numberValue)
 		{
 			res->V.BoolObj.boolType = L"صح";
-			res->V.NumberObj.numberValue = 1;
+			res->V.BoolObj.numberValue = 1;
 		}
 		else
 		{
 			res->V.BoolObj.boolType = L"خطا";
-			res->V.NumberObj.numberValue = 0;
+			res->V.BoolObj.numberValue = 0;
 		}
 		stackMemory.push(res);
 	}
@@ -267,15 +267,15 @@ void gr_than_eq_num()
 		res->objType = OTBoolean;
 		res->tokLine = right->tokLine;
 
-		if (right->V.NumberObj.numberValue >= left->V.NumberObj.numberValue)
+		if (right->V.BoolObj.numberValue >= left->V.BoolObj.numberValue)
 		{
 			res->V.BoolObj.boolType = L"صح";
-			res->V.NumberObj.numberValue = 1;
+			res->V.BoolObj.numberValue = 1;
 		}
 		else
 		{
 			res->V.BoolObj.boolType = L"خطا";
-			res->V.NumberObj.numberValue = 0;
+			res->V.BoolObj.numberValue = 0;
 		}
 		stackMemory.push(res);
 	}
@@ -298,15 +298,15 @@ void ls_than_num()
 		res->objType = OTBoolean;
 		res->tokLine = right->tokLine;
 
-		if (right->V.NumberObj.numberValue < left->V.NumberObj.numberValue)
+		if (right->V.BoolObj.numberValue < left->V.BoolObj.numberValue)
 		{
 			res->V.BoolObj.boolType = L"صح";
-			res->V.NumberObj.numberValue = 1;
+			res->V.BoolObj.numberValue = 1;
 		}
 		else
 		{
 			res->V.BoolObj.boolType = L"خطا";
-			res->V.NumberObj.numberValue = 0;
+			res->V.BoolObj.numberValue = 0;
 		}
 		stackMemory.push(res);
 	}
@@ -329,15 +329,15 @@ void ls_than_eq_num()
 		res->objType = OTBoolean;
 		res->tokLine = right->tokLine;
 
-		if (right->V.NumberObj.numberValue <= left->V.NumberObj.numberValue)
+		if (right->V.BoolObj.numberValue <= left->V.BoolObj.numberValue)
 		{
 			res->V.BoolObj.boolType = L"صح";
-			res->V.NumberObj.numberValue = 1;
+			res->V.BoolObj.numberValue = 1;
 		}
 		else
 		{
 			res->V.BoolObj.boolType = L"خطا";
-			res->V.NumberObj.numberValue = 0;
+			res->V.BoolObj.numberValue = 0;
 		}
 		stackMemory.push(res);
 	}
@@ -357,15 +357,15 @@ void not_logic()
 	res->objType = OTBoolean;
 	res->tokLine = right->tokLine;
 
-	if (right->V.NumberObj.numberValue == 0)
+	if (right->V.BoolObj.numberValue == 0)
 	{
 		res->V.BoolObj.boolType = L"صح";
-		res->V.NumberObj.numberValue = 1;
+		res->V.BoolObj.numberValue = 1;
 	}
 	else
 	{
 		res->V.BoolObj.boolType = L"خطا";
-		res->V.NumberObj.numberValue = 0;
+		res->V.BoolObj.numberValue = 0;
 	}
 	stackMemory.push(res);
 
@@ -384,15 +384,15 @@ void and_logic()
 		res->objType = OTBoolean;
 		res->tokLine = right->tokLine;
 
-		if (right->V.NumberObj.numberValue and left->V.NumberObj.numberValue)
+		if (right->V.BoolObj.numberValue and left->V.BoolObj.numberValue)
 		{
 			res->V.BoolObj.boolType = L"صح";
-			res->V.NumberObj.numberValue = 1;
+			res->V.BoolObj.numberValue = 1;
 		}
 		else
 		{
 			res->V.BoolObj.boolType = L"خطا";
-			res->V.NumberObj.numberValue = 0;
+			res->V.BoolObj.numberValue = 0;
 		}
 		stackMemory.push(res);
 	}
@@ -415,15 +415,15 @@ void or_logic()
 		res->objType = OTBoolean;
 		res->tokLine = right->tokLine;
 
-		if (right->V.NumberObj.numberValue or left->V.NumberObj.numberValue)
+		if (right->V.BoolObj.numberValue or left->V.BoolObj.numberValue)
 		{
 			res->V.BoolObj.boolType = L"صح";
-			res->V.NumberObj.numberValue = 1;
+			res->V.BoolObj.numberValue = 1;
 		}
 		else
 		{
 			res->V.BoolObj.boolType = L"خطا";
-			res->V.NumberObj.numberValue = 0;
+			res->V.BoolObj.numberValue = 0;
 		}
 		stackMemory.push(res);
 	}
