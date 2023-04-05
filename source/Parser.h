@@ -20,7 +20,7 @@ class Parser {
     wstr fileName;
     wstr* input_;
 public:
-    std::vector<ExprNode*> statements_;
+    std::vector<StmtsNode*> statements_;
     MemoryBlock* alifMemory;
 
     /// <اعلام>
