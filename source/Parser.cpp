@@ -89,59 +89,69 @@ ExprNode* Parser::atom() {
 
     if (token.type_ == TTName)
     {
-        if (is_keyword(token.value_))
+        if (!is_keyword(token.value_))
         {
-            return nullptr;
+            this->advance();
+
+            AlifObject* nameObj = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+            nameObj->objType = OTName;
+            nameObj->V.NameObj.name_ = token.value_;
+
+            ExprNode* nameNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+            nameNode->U.NameAccess.name_ = nameObj;
+            nameNode->type_ = VTAccess;
+
+            return nameNode;
         }
-        
-        this->advance();
+        if (!wcscmp(token.value_, L"صح"))
+        {
+            this->advance();
 
-        AlifObject* nameObj = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
-        nameObj->objType = OTName;
-        nameObj->V.NameObj.state_ = STGet;
-        nameObj->V.NameObj.name_ = token.value_;
+            AlifObject* keyObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+            keyObject->objType = OTBoolean;
+            keyObject->V.BoolObj.boolType = L"صح";
+            keyObject->V.BoolObj.numberValue = 1;
 
-        ExprNode* nameNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
-        nameNode->U.NameAccess.name_ = nameObj;
-        nameNode->type_ = VTAccess;
+            ExprNode* keyNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+            keyNode->U.Object.value_ = keyObject;
+            keyNode->type_ = VTObject;
 
-        return nameNode;
+            return keyNode;
+        }
+        else if (!wcscmp(token.value_, L"خطا"))
+        {
+            this->advance();
+
+            AlifObject* keyObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+            keyObject->objType = OTBoolean;
+            keyObject->V.BoolObj.boolType = L"خطا";
+            keyObject->V.BoolObj.numberValue = 0;
+
+            ExprNode* keyNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+            keyNode->U.Object.value_ = keyObject;
+            keyNode->type_ = VTObject;
+
+            return keyNode;
+        }
+        else if (!wcscmp(token.value_, L"عدم"))
+        {
+            this->advance();
+
+            AlifObject* keyObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+            keyObject->objType = OTNone;
+
+            ExprNode* keyNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+            keyNode->U.Object.value_ = keyObject;
+            keyNode->type_ = VTObject;
+
+            return keyNode;
+        }
+        else
+        {
+            PRINT_(L"كلمة مفتاحية في غير سياقها");
+            exit(-1);
+        }
     }
-    //else if (token.type_ == TTKeyword) {
-    //    if (token.V.keywordType == KVTrue)
-    //    {
-    //        this->advance();
-    //        (exprNode + exprLevel)->U.Object.value_.objType = OTKeyword;
-    //        (exprNode + exprLevel)->U.Object.value_.V.BoolObj.boolValue = KVTrue;
-    //        //(exprNode + exprLevel)->U.Object.value_.V.BoolObj.boolValue = 1;
-    //        (exprNode + exprLevel)->type_ = VTObject;
-
-    //        return (exprNode + exprLevel);
-    //    }
-    //    else if (token.V.keywordType == KVFalse)
-    //    {
-    //        this->advance();
-    //        (exprNode + exprLevel)->U.Object.value_.objType = OTKeyword;
-    //        (exprNode + exprLevel)->U.Object.value_.V.BoolObj.boolValue = KVFalse;
-    //        //(exprNode + exprLevel)->U.Object.value_.V.BoolObj.value_ = 0;
-    //        (exprNode + exprLevel)->type_ = VTObject;
-
-    //        return (exprNode + exprLevel);
-    //    }
-    //    else if (token.V.keywordType == KVNone)
-    //    {
-    //        this->advance();
-    //        (exprNode + exprLevel)->U.Object.value_.objType = OTNone;
-    //        (exprNode + exprLevel)->U.Object.value_.V.NoneObj.noneValue= KVNone;
-    //        (exprNode + exprLevel)->type_ = VTObject;
-
-    //        return (exprNode + exprLevel);
-    //    }
-    //    else {
-    //        PRINT_(L"يوجد كلمة مفتاحية في غير سياقها");
-    //        exit(-1);
-    //    }
-    //}
     else if (token.type_ == TTInteger)
     {
         this->advance();

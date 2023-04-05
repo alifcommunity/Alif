@@ -29,7 +29,7 @@ public:
             double64_t numberValue;
         }NumberObj;
 
-        class : Number{
+        class : public Number{
         public:
             wcstr* boolType;
         }BoolObj;
@@ -42,7 +42,6 @@ public:
         class {
         public:
             wcstr* name_;
-            StateType state_;
         }NameObj;
 
         class {
