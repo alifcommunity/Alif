@@ -68,6 +68,7 @@ enum VisitType : uint8_t { // انواع الزيارة في الشجرة
     VTCall,
     VTUnaryOp,
     VTBinOp,
+    VTCondExpr,
     VTExpr,
     VTExprs,
     VTAccess,
