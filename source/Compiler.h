@@ -17,12 +17,12 @@ static SymbolTable symTable; // تم تعريفه ك متغير عام لمنع 
 
 class Compiler {
 public:
-	std::vector<ExprNode*>* statements_{};
+	std::vector<StmtsNode*>* statements_{};
 	std::vector<InstructionsType> instructions_{};
 	std::vector<AlifObject*> data_{}; // لماذا لا تكون البيانات هي ذاكرة المكدس ويتم إرسال عنوانها بدل نقل البيانات مرة اخرى؟
 	MemoryBlock* alifMemory;
 
-	Compiler(std::vector<ExprNode*>* _statements, MemoryBlock* _alifMemory);
+	Compiler(std::vector<StmtsNode*>* _statements, MemoryBlock* _alifMemory);
 
 	void compile_file();
 

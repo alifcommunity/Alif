@@ -1,14 +1,14 @@
 #include "Compiler.h"
 
 
-Compiler::Compiler(std::vector<ExprNode*>* _statements, MemoryBlock* _alifMemory) :
+Compiler::Compiler(std::vector<StmtsNode*>* _statements, MemoryBlock* _alifMemory) :
 	statements_(_statements), alifMemory(_alifMemory) {}
 
 void Compiler::compile_file() 
 {
-	for (ExprNode* node_ : *statements_)
+	for (StmtsNode* node_ : *statements_)
 	{
-		VISIT_(exprs, node_); // تم شرح طريقة الاستدعاء في ملف compiler.h
+		VISIT_(stmts, node_); // تم شرح طريقة الاستدعاء في ملف compiler.h
 	}
 }
 
@@ -358,9 +358,9 @@ void Compiler::visit_access(ExprNode* _node)
 
 void Compiler::visit_expr(ExprNode* _node)
 {
-	VISIT_(exprs, _node->U.Expr.expr_);
-	VISIT_(exprs, _node->U.Expr.elseExpr);
-	VISIT_(exprs, _node->U.Expr.condetion_);
+	VISIT_(exprs, _node->U.CondExpr.expr_);
+	VISIT_(exprs, _node->U.CondExpr.elseExpr);
+	VISIT_(exprs, _node->U.CondExpr.condetion_);
 
 	instructions_.push_back(EXPR_OP);
 }
@@ -425,7 +425,7 @@ AlifObject* Compiler::visit_exprs(ExprNode* _node)
 	{
 		VISIT_(access, _node);
 	}
-	else if (_node->type_ == VTExpr)
+	else if (_node->type_ == VTCondExpr)
     {
 		VISIT_(expr, _node);
     }
@@ -437,5 +437,8 @@ AlifObject* Compiler::visit_exprs(ExprNode* _node)
 
 AlifObject* Compiler::visit_stmts(StmtsNode* _node)
 {
-	return nullptr;
+	if (_node->type_ == VTExpr)
+	{
+		return VISIT_(exprs, _node->U.Expr.expr_);
+	}
 }

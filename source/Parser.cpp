@@ -24,7 +24,7 @@ void Parser::parse_file()
     ExprNode* stmtsRes = nullptr; // convert it to StmtsNode after finish test
 
     do {
-        this->statements_.push_back(this->assignment()); // convert it to StmtsNode after finish test
+        this->statements_.push_back(this->statement()); // convert it to StmtsNode after finish test
 
     } while (currentToken.type_ != TTEndOfFile);
 
@@ -32,7 +32,7 @@ void Parser::parse_file()
 
 void Parser::parse_terminal()
 {
-    this->statements_.push_back(this->assignment()); // convert it to StmtsNode after finish test
+    this->statements_.push_back(this->statement()); // convert it to StmtsNode after finish test
 }
 
 void Parser::list_print(AlifObject _obj) {
@@ -89,59 +89,69 @@ ExprNode* Parser::atom() {
 
     if (token.type_ == TTName)
     {
-        if (is_keyword(token.value_))
+        if (!is_keyword(token.value_))
         {
-            return nullptr;
+            this->advance();
+
+            AlifObject* nameObj = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+            nameObj->objType = OTName;
+            nameObj->V.NameObj.name_ = token.value_;
+
+            ExprNode* nameNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+            nameNode->U.NameAccess.name_ = nameObj;
+            nameNode->type_ = VTAccess;
+
+            return nameNode;
         }
-        
-        this->advance();
+        if (!wcscmp(token.value_, L"صح"))
+        {
+            this->advance();
 
-        AlifObject* nameObj = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
-        nameObj->objType = OTName;
-        nameObj->V.NameObj.state_ = STGet;
-        nameObj->V.NameObj.name_ = token.value_;
+            AlifObject* keyObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+            keyObject->objType = OTBoolean;
+            keyObject->V.BoolObj.boolType = L"صح";
+            keyObject->V.BoolObj.numberValue = 1;
 
-        ExprNode* nameNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
-        nameNode->U.NameAccess.name_ = nameObj;
-        nameNode->type_ = VTAccess;
+            ExprNode* keyNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+            keyNode->U.Object.value_ = keyObject;
+            keyNode->type_ = VTObject;
 
-        return nameNode;
+            return keyNode;
+        }
+        else if (!wcscmp(token.value_, L"خطا"))
+        {
+            this->advance();
+
+            AlifObject* keyObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+            keyObject->objType = OTBoolean;
+            keyObject->V.BoolObj.boolType = L"خطا";
+            keyObject->V.BoolObj.numberValue = 0;
+
+            ExprNode* keyNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+            keyNode->U.Object.value_ = keyObject;
+            keyNode->type_ = VTObject;
+
+            return keyNode;
+        }
+        else if (!wcscmp(token.value_, L"عدم"))
+        {
+            this->advance();
+
+            AlifObject* keyObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+            keyObject->objType = OTNone;
+
+            ExprNode* keyNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+            keyNode->U.Object.value_ = keyObject;
+            keyNode->type_ = VTObject;
+
+            return keyNode;
+        }
+        else
+        {
+            PRINT_(SyntaxError(token.posStart, token.posEnd, token.posIndex, token.tokLine, L"كلمة مفتاحية في غير سياقها", fileName, input_).print_());
+            exit(-1);
+        }
     }
-    //else if (token.type_ == TTKeyword) {
-    //    if (token.V.keywordType == KVTrue)
-    //    {
-    //        this->advance();
-    //        (exprNode + exprLevel)->U.Object.value_.objType = OTKeyword;
-    //        (exprNode + exprLevel)->U.Object.value_.V.BoolObj.boolValue = KVTrue;
-    //        //(exprNode + exprLevel)->U.Object.value_.V.BoolObj.boolValue = 1;
-    //        (exprNode + exprLevel)->type_ = VTObject;
-
-    //        return (exprNode + exprLevel);
-    //    }
-    //    else if (token.V.keywordType == KVFalse)
-    //    {
-    //        this->advance();
-    //        (exprNode + exprLevel)->U.Object.value_.objType = OTKeyword;
-    //        (exprNode + exprLevel)->U.Object.value_.V.BoolObj.boolValue = KVFalse;
-    //        //(exprNode + exprLevel)->U.Object.value_.V.BoolObj.value_ = 0;
-    //        (exprNode + exprLevel)->type_ = VTObject;
-
-    //        return (exprNode + exprLevel);
-    //    }
-    //    else if (token.V.keywordType == KVNone)
-    //    {
-    //        this->advance();
-    //        (exprNode + exprLevel)->U.Object.value_.objType = OTNone;
-    //        (exprNode + exprLevel)->U.Object.value_.V.NoneObj.noneValue= KVNone;
-    //        (exprNode + exprLevel)->type_ = VTObject;
-
-    //        return (exprNode + exprLevel);
-    //    }
-    //    else {
-    //        PRINT_(L"يوجد كلمة مفتاحية في غير سياقها");
-    //        exit(-1);
-    //    }
-    //}
     else if (token.type_ == TTInteger)
     {
         this->advance();
@@ -160,7 +170,7 @@ ExprNode* Parser::atom() {
         intNode->U.Object.value_ = intObject;
         intNode->type_ = VTObject;
 
-        alifMemory->deallocate(&token.value_); // لانه تم تحويل القيمة ولم يعد للقيمة النصية استخدام
+        //alifMemory->deallocate(&token.value_); // لانه تم تحويل القيمة ولم يعد للقيمة النصية استخدام
 
         return intNode;
     }
@@ -182,7 +192,7 @@ ExprNode* Parser::atom() {
         floatNode->U.Object.value_ = floatObject;
         floatNode->type_ = VTObject;
 
-        alifMemory->deallocate(&token.value_);
+        //alifMemory->deallocate(&token.value_);
 
         return floatNode;
 
@@ -211,22 +221,23 @@ ExprNode* Parser::atom() {
     {
         return this->list_expr();
     }
-    //else if (this->currentToken.type_ == TTLeftParenthesis)
-    //{
-    //    this->advance();
-    //    ExprNode* priorExpr = this->expression();
+    else if (this->currentToken.type_ == TTLeftParenthesis)
+    {
+        this->advance();
+        ExprNode* priorExpr = this->expression();
 
-    //    if (this->currentToken.type_ == TTRrightParenthesis)
-    //    {
-    //        this->advance();
-    //        return priorExpr;
-    //    }
-    //    else
-    //    {
-    //        PRINT_(L"لم يتم إغلاق قوس القوس");
-    //        exit(-1);
-    //    }
-    //}
+        if (this->currentToken.type_ == TTRrightParenthesis)
+        {
+            this->advance();
+            return priorExpr;
+        }
+        else
+        {
+            token = this->currentToken;
+            PRINT_(SyntaxError(token.posStart, token.posEnd, token.posIndex - 1, token.tokLine - 1, L"لم يتم إغلاق القوس", fileName, input_).print_());
+            exit(-1);
+        }
+    }
     else
     {
         PRINT_(SyntaxError(token.posStart, token.posEnd, token.posIndex - 1, token.tokLine - 1, L"حالة غير مكتملة", fileName, input_).print_());
@@ -515,7 +526,8 @@ ExprNode* Parser::disjuction()
     return left_;
 }
 
-ExprNode* Parser::expression() {
+ExprNode* Parser::expression() 
+{
 
     ExprNode* expr_ = this->disjuction();
 
@@ -531,10 +543,10 @@ ExprNode* Parser::expression() {
 
             ExprNode* expression_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
-            expression_->U.Expr.expr_ = expr_;
-            expression_->U.Expr.condetion_ = condetion;
-            expression_->U.Expr.elseExpr = elseExpr;
-            expression_->type_ = VTExpr;
+            expression_->U.CondExpr.expr_ = expr_;
+            expression_->U.CondExpr.condetion_ = condetion;
+            expression_->U.CondExpr.elseExpr = elseExpr;
+            expression_->type_ = VTCondExpr;
 
             return expression_;
         }
@@ -549,7 +561,8 @@ ExprNode* Parser::expression() {
 
 }
 
-ExprNode* Parser::expressions() {
+ExprNode* Parser::expressions() 
+{
 
     ExprNode* expr_ = this->expression();
 
@@ -860,110 +873,110 @@ ExprNode* Parser::assignment() // يجب إيجاد خوارزمية افضل ب
 //        return (stmtsNode + level);
 //
 //    }
-//
-//    StmtsNode* for_statement()
+
+//StmtsNode* Parser::for_statement()
+//{
+//    if (this->currentToken.type_ == TTname)
 //    {
-//        if (this->currentToken.type_ == TTname)
+//        AlifObject itrName{};
+//        std::vector<ExprNode*>* args_ = new std::vector<ExprNode*>;
+//        StmtsNode* block_ = nullptr;
+//        StmtsNode* else_ = nullptr;
+//
+//        if (Next_Is(TTKeyword))
 //        {
-//            AlifObject itrName{};
-//            std::vector<ExprNode*>* args_ = new std::vector<ExprNode*>;
-//            StmtsNode* block_ = nullptr;
-//            StmtsNode* else_ = nullptr;
 //
-//            if (Next_Is(TTKeyword))
+//            itrName.type_ = TTname;
+//            itrName.V.Name.name_ = this->currentToken.val.numVal;
+//
+//            this->advance();
+//
+//            if (this->currentToken.val.keywordType == In)
 //            {
-//
-//                itrName.type_ = TTname;
-//                itrName.V.Name.name_ = this->currentToken.val.numVal;
-//
 //                this->advance();
 //
-//                if (this->currentToken.val.keywordType == In)
+//                if (this->currentToken.type_ == TTLeftParenthesis)
 //                {
 //                    this->advance();
 //
-//                    if (this->currentToken.type_ == TTLeftParenthesis)
+//                    if (this->currentToken.type_ == TTRrightParenthesis)
+//                    {
+//                        PRINT_(L"المعاملات المسندة اقل من المتوقع");
+//                        exit(-1);
+//                    }
+//
+//                    while (this->currentToken.type_ == TTinteger or this->currentToken.type_ == TTname) // يجب تعديل الخوارزمية لانه يمكن إحتواء تعبير داخل معاملات حالة لاجل
+//                    {
+//                        args_->push_back(this->atom());
+//                        if (!Next_Is(TTinteger) and !Next_Is(TTname))
+//                        {
+//                            break;
+//                        }
+//                        this->advance();
+//
+//                    }
+//
+//                    if (args_->size() > 3)
+//                    {
+//                        PRINT_(L"المعاملات المسندة اكثر من المتوقع");
+//                        exit(-1);
+//                    }
+//
+//                    if (this->currentToken.type_ == TTRrightParenthesis)
 //                    {
 //                        this->advance();
 //
-//                        if (this->currentToken.type_ == TTRrightParenthesis)
-//                        {
-//                            PRINT_(L"المعاملات المسندة اقل من المتوقع");
-//                            exit(-1);
-//                        }
-//
-//                        while (this->currentToken.type_ == TTinteger or this->currentToken.type_ == TTname) // يجب تعديل الخوارزمية لانه يمكن إحتواء تعبير داخل معاملات حالة لاجل
-//                        {
-//                            args_->push_back(this->atom());
-//                            if (!Next_Is(TTinteger) and !Next_Is(TTname))
-//                            {
-//                                break;
-//                            }
-//                            this->advance();
-//
-//                        }
-//
-//                        if (args_->size() > 3)
-//                        {
-//                            PRINT_(L"المعاملات المسندة اكثر من المتوقع");
-//                            exit(-1);
-//                        }
-//
-//                        if (this->currentToken.type_ == TTRrightParenthesis)
+//                        if (this->currentToken.type_ == TTcolon)
 //                        {
 //                            this->advance();
 //
-//                            if (this->currentToken.type_ == TTcolon)
+//                            block_ = this->block_();
+//
+//                            if (this->currentToken.type_ == TTKeyword and this->currentToken.val.keywordType == Else)
 //                            {
 //                                this->advance();
 //
-//                                block_ = this->block_();
-//
-//                                if (this->currentToken.type_ == TTKeyword and this->currentToken.val.keywordType == Else)
-//                                {
-//                                    this->advance();
-//
-//                                    else_ = this->else_();
-//                                }
-//                            }
-//                            else {
-//                                PRINT_(L"لم يتم إنهاء لاجل بنقطتين \:");
-//                                exit(-1);
+//                                else_ = this->else_();
 //                            }
 //                        }
 //                        else {
-//                            PRINT_(L"يتوقع وجود قوس ')'");
+//                            PRINT_(L"لم يتم إنهاء لاجل بنقطتين \:");
 //                            exit(-1);
 //                        }
-//
 //                    }
 //                    else {
-//                        PRINT_(L"يتوقع وجود قوس '('");
+//                        PRINT_(L"يتوقع وجود قوس ')'");
 //                        exit(-1);
 //                    }
+//
+//                }
+//                else {
+//                    PRINT_(L"يتوقع وجود قوس '('");
+//                    exit(-1);
 //                }
 //            }
-//            else {
-//                PRINT_(L"يتوقع وجود كلمة مفتاحية 'في'");
-//                exit(-1);
-//            }
-//
-//            level--;
-//
-//            (stmtsNode + level)->type_ = VFor;
-//            (stmtsNode + level)->U.For.itrName = itrName;
-//            (stmtsNode + level)->U.For.args_ = args_;
-//            (stmtsNode + level)->U.For.block_ = block_;
-//            (stmtsNode + level)->U.For.else_ = else_;
-//
-//            return (stmtsNode + level);
 //        }
 //        else {
-//            PRINT_(L"يتوقع وجود اسم لاسناد قيمة له");
+//            PRINT_(L"يتوقع وجود كلمة مفتاحية 'في'");
 //            exit(-1);
 //        }
-//    }
 //
+//        level--;
+//
+//        (stmtsNode + level)->type_ = VFor;
+//        (stmtsNode + level)->U.For.itrName = itrName;
+//        (stmtsNode + level)->U.For.args_ = args_;
+//        (stmtsNode + level)->U.For.block_ = block_;
+//        (stmtsNode + level)->U.For.else_ = else_;
+//
+//        return (stmtsNode + level);
+//    }
+//    else {
+//        PRINT_(L"يتوقع وجود اسم لاسناد قيمة له");
+//        exit(-1);
+//    }
+//}
+
 //    StmtsNode* else_if()
 //    {
 //        StmtsNode* block_{};
@@ -1036,37 +1049,37 @@ ExprNode* Parser::assignment() // يجب إيجاد خوارزمية افضل ب
 //        return (stmtsNode + level);
 //
 //    }
-//
-//    StmtsNode* block_()
+
+//StmtsNode* Parser::block_()
+//{
+//    if (this->currentToken.type_ == TTnewline)
 //    {
-//        if (this->currentToken.type_ == TTnewline)
+//        this->advance();
+//
+//        if (this->currentToken.type_ == TTindent)
 //        {
 //            this->advance();
 //
-//            if (this->currentToken.type_ == TTindent)
+//            StmtsNode* stmts_ = this->statements();
+//
+//            if (this->currentToken.type_ == TTdedent or this->currentToken.type_ == TTendOfFile)
 //            {
 //                this->advance();
-//
-//                StmtsNode* stmts_ = this->statements();
-//
-//                if (this->currentToken.type_ == TTdedent or this->currentToken.type_ == TTendOfFile)
-//                {
-//                    this->advance();
-//                    return stmts_;
-//                }
-//                else if (this->currentToken.type_ == TTindent) {
-//                    PRINT_(L"يتوقع وجود مسافة راجعة في نهاية الحالة المركبة");
-//                    exit(-1);
-//                }
+//                return stmts_;
 //            }
-//            else {
-//                PRINT_(L"يتوقع وجود مسافة بادئة في بداية جسم الحالة المركبة");
+//            else if (this->currentToken.type_ == TTindent) {
+//                PRINT_(L"يتوقع وجود مسافة راجعة في نهاية الحالة المركبة");
 //                exit(-1);
 //            }
-//
 //        }
-//    }
+//        else {
+//            PRINT_(L"يتوقع وجود مسافة بادئة في بداية جسم الحالة المركبة");
+//            exit(-1);
+//        }
 //
+//    }
+//}
+
 //    ////void import_from() {
 //    ////}
 //
@@ -1121,37 +1134,44 @@ ExprNode* Parser::assignment() // يجب إيجاد خوارزمية افضل ب
 //            }
 //        }
 //    }
-//
-//    ExprNode* simple_statement()
-//    {
-//        return this->assignment();
-//    }
-//
-//    StmtsNode* statement() {
-//        if (this->currentToken.type_ == TTKeyword)
-//        {
-//            if (this->currentToken.val.keywordType == Function or this->currentToken.val.keywordType == If or this->currentToken.val.keywordType == Class or this->currentToken.val.keywordType == For or this->currentToken.val.keywordType == While or this->currentToken.val.keywordType == Return)
-//            {
-//                return this->compound_statement();
-//            }
-//        }
-//        else
-//        {
-//            ExprNode* exprNode = this->simple_statement();
-//
-//            if (this->currentToken.type_ != TTnewline) {
-//                PRINT_(L"لا يمكن وجود اكثر من حالة في نفس السطر");
-//                exit(-1);
-//            }
-//            this->advance();
-//
-//            level--;
-//            (stmtsNode + level)->type_ = VExpr;
-//            (stmtsNode + level)->U.Expr.expr_ = exprNode;
-//            return (stmtsNode + level);
-//        }
-//    }
-//
+
+ExprNode* Parser::simple_statement()
+{
+    return this->assignment();
+}
+
+StmtsNode* Parser::statement() 
+{
+    if (this->currentToken.type_ != TTName)
+    {
+        ExprNode* exprNode = this->simple_statement();
+
+        if (this->currentToken.type_ != TTNewline) {
+            PRINT_(L"لا يمكن وجود اكثر من حالة في نفس السطر");
+            exit(-1);
+        }
+        this->advance();
+
+        StmtsNode* stmtsNode = (StmtsNode*)alifMemory->allocate(sizeof(StmtsNode));
+        
+        stmtsNode->type_ = VTExpr;
+        stmtsNode->U.Expr.expr_ = exprNode;
+        return stmtsNode;
+    }
+    else
+    {
+        if (!wcscmp(this->currentToken.value_, L"دالة") or
+            !wcscmp(this->currentToken.value_, L"اذا") or
+            !wcscmp(this->currentToken.value_, L"صنف") or
+            !wcscmp(this->currentToken.value_, L"لاجل") or
+            !wcscmp(this->currentToken.value_, L"بينما") or
+            !wcscmp(this->currentToken.value_, L"ارجع"))
+            {
+             //return this->compound_statement();
+        }
+    }
+}
+
 //    StmtsNode* statements() {
 //
 //        std::vector<StmtsNode*>* statements_ = new std::vector<StmtsNode*>;
