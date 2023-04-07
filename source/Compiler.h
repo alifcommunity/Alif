@@ -4,6 +4,7 @@
 #include "Types.h"
 #include "SymbolTable.h"
 #include "MemoryBlock.h"
+#include "Container.h"
 
 #define VISIT_(func,node) (visit_ ## func(node)) // -> visit_func(arg) <<-->> VISIT_(func, node)
 												 //			^                        ^
@@ -18,8 +19,10 @@ static SymbolTable symTable; // تم تعريفه ك متغير عام لمنع 
 class Compiler {
 public:
 	std::vector<StmtsNode*>* statements_{};
-	std::vector<InstructionsType> instructions_{};
-	std::vector<AlifObject*> data_{}; // لماذا لا تكون البيانات هي ذاكرة المكدس ويتم إرسال عنوانها بدل نقل البيانات مرة اخرى؟
+	//std::vector<InstructionsType> instructions_{};
+	//std::vector<AlifObject*> data_{}; // لماذا لا تكون البيانات هي ذاكرة المكدس ويتم إرسال عنوانها بدل نقل البيانات مرة اخرى؟
+	Container* dataContainer{};
+	std::vector<Container*> containers_{};
 	MemoryBlock* alifMemory;
 
 	Compiler(std::vector<StmtsNode*>* _statements, MemoryBlock* _alifMemory);
@@ -35,6 +38,8 @@ public:
 	void visit_expr(ExprNode*);
 	void visit_list(ExprNode*);
 
+	void visit_for_(StmtsNode*);
+
 	AlifObject* visit_exprs(ExprNode* _node);
 	AlifObject* visit_stmts(StmtsNode* _node);
 };
@@ -47,9 +52,6 @@ public:
 	ويقصد بالنطاق الحالة الجديدة
 */
 
-//std::map<NUM, AlifObject> namesTable;
-//std::map<BuildInFuncType, AlifObject(Parser::*)(ExprNode*)> buildInFuncsTable{ {Print, &Parser::print} , {Input, &Parser::input} };
-//std::map<NUM, StmtsNode*> functionsTable;
 //
 //AlifObject visit_stmts(StmtsNode* _node)
 //{

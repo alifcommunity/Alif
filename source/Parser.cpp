@@ -21,7 +21,7 @@ void Parser::advance()
 
 void Parser::parse_file()
 {
-    ExprNode* stmtsRes = nullptr; // convert it to StmtsNode after finish test
+    //ExprNode* stmtsRes = nullptr; // convert it to StmtsNode after finish test
 
     do {
         this->statements_.push_back(this->statement()); // convert it to StmtsNode after finish test
@@ -909,14 +909,13 @@ StmtsNode* Parser::for_statement()
                     while (this->currentToken.type_ == TTInteger or this->currentToken.type_ == TTName) // يجب تعديل الخوارزمية لانه يمكن إحتواء تعبير داخل معاملات حالة لاجل
                     {
                         args_->push_back(this->atom());
-                        this->advance();
 
-                        //if (!Next_Is(TTinteger) and !Next_Is(TTname))
-                        if (!this->currentToken.type_ != TTInteger and this->currentToken.type_ != TTName)
+                        if (!Next_Is(TTInteger) and !Next_Is(TTName))
                         {
                             break;
                         }
 
+                        this->advance();
                     }
 
                     if (args_->size() > 3)
@@ -1145,7 +1144,17 @@ ExprNode* Parser::simple_statement()
 
 StmtsNode* Parser::statement() 
 {
-    if (this->currentToken.type_ != TTName)
+
+    if (!wcscmp(this->currentToken.value_, L"دالة") or
+        !wcscmp(this->currentToken.value_, L"اذا") or
+        !wcscmp(this->currentToken.value_, L"صنف") or
+        !wcscmp(this->currentToken.value_, L"لاجل") or
+        !wcscmp(this->currentToken.value_, L"بينما") or
+        !wcscmp(this->currentToken.value_, L"ارجع"))
+        {
+            return this->compound_statement();
+    }
+    else
     {
         ExprNode* exprNode = this->simple_statement();
 
@@ -1160,18 +1169,6 @@ StmtsNode* Parser::statement()
         stmtsNode->type_ = VTExpr;
         stmtsNode->U.Expr.expr_ = exprNode;
         return stmtsNode;
-    }
-    else
-    {
-        if (!wcscmp(this->currentToken.value_, L"دالة") or
-            !wcscmp(this->currentToken.value_, L"اذا") or
-            !wcscmp(this->currentToken.value_, L"صنف") or
-            !wcscmp(this->currentToken.value_, L"لاجل") or
-            !wcscmp(this->currentToken.value_, L"بينما") or
-            !wcscmp(this->currentToken.value_, L"ارجع"))
-            {
-             return this->compound_statement();
-        }
     }
 }
 

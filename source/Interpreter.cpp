@@ -1,31 +1,36 @@
 #include "AddrFuncs.h"
 #include "Interpreter.h"
 
-std::vector<InstructionsType>* instructions_;
+std::vector<Container*>* containers_;
 std::vector<AlifObject*>* data_;
-std::stack<AlifObject*> stackMemory;
+std::stack<AlifObject*>* stackMemory;
 MemoryBlock* alifMemory;
 
-Interpreter::Interpreter(std::vector<InstructionsType>* _instructions, std::vector<AlifObject*>* _data, MemoryBlock* _alifMemory) {
-	data_ = _data;
-	instructions_ = _instructions;
+Interpreter::Interpreter(std::vector<Container*>* _containers, MemoryBlock* _alifMemory) {
+	containers_ = _containers;
 	alifMemory = _alifMemory;
 }
 
 void Interpreter::run_code()
 {
-	for (InstructionsType command_ : *instructions_)
+	for (Container* container : *containers_)
 	{
-		instr_funcs[command_]();
+		data_ = container->data_;
+		stackMemory = new std::stack<AlifObject*>;
+		for (InstructionsType command_ : *container->instructions_)
+		{
+			instr_funcs[command_]();
+		}
+		//AlifObject* res = stackMemory->top();
+		//stackMemory->pop();
+		//std::wcout << res->V.NumberObj.numberValue << std::endl;
+		//std::wcout << symTable.get_data(name_->V.NameObj.name_)->V.NumberObj.numberValue << std::endl;
+		//std::wcout << res.V.BoolObj.boolType << std::endl;
+		//std::wcout << res.V.StringObj.strValue << std::endl;
+		delete stackMemory;
 	}
 
 	
-	//AlifObject* res = stackMemory.top();
-	//stackMemory.pop();
-	//std::wcout << res->V.NumberObj.numberValue << std::endl;
-	//std::wcout << symTable.get_data(name_->V.NameObj.name_)->V.NumberObj.numberValue << std::endl;
-	//std::wcout << res.V.BoolObj.boolType << std::endl;
-	//std::wcout << res.V.StringObj.strValue << std::endl;
 }
 
 
@@ -33,16 +38,16 @@ void none_() {}
 
 void get_data() 
 {
-	AlifObject* name_ = stackMemory.top();
-	stackMemory.pop();
-	stackMemory.push(symTable.get_data(*name_->V.NameObj.name_));
+	AlifObject* name_ = stackMemory->top();
+	stackMemory->pop();
+	stackMemory->push(symTable.get_data(*name_->V.NameObj.name_));
 
-	AlifObject* res = stackMemory.top();
+	AlifObject* res = stackMemory->top();
 	std::wcout << res->V.NumberObj.numberValue << std::endl;
 }
 void set_data()
 {
-	stackMemory.push(data_->front());
+	stackMemory->push(data_->front());
 	data_->erase(data_->begin());
 }
 
@@ -53,85 +58,85 @@ void plus_num()
 
 void minus_num() 
 {
-	AlifObject* number_ = stackMemory.top();
+	AlifObject* number_ = stackMemory->top();
 
 	number_->V.NumberObj.numberValue = - number_->V.NumberObj.numberValue;
 }
 
 void add_num()
 {
-	AlifObject* right = stackMemory.top();
-	stackMemory.pop();
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
+	AlifObject* right = stackMemory->top();
+	stackMemory->pop();
+	AlifObject* left = stackMemory->top();
+	stackMemory->pop();
 	// يجب حذف المتغير left
 	// لانه لم يتم حذفه بعد وقد تم العمل عليه ولم يعد له حاجة
 
 	left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? right->V.NumberObj.numberType = TTFloat : right->V.NumberObj.numberType = TTInteger;
 	right->V.NumberObj.numberValue += left->V.NumberObj.numberValue;
-	stackMemory.push(right);
+	stackMemory->push(right);
 }
 void sub_num() 
 {
-	AlifObject* right = stackMemory.top();
-	stackMemory.pop();
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
+	AlifObject* right = stackMemory->top();
+	stackMemory->pop();
+	AlifObject* left = stackMemory->top();
+	stackMemory->pop();
 
 	left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? right->V.NumberObj.numberType = TTFloat : right->V.NumberObj.numberType = TTInteger;
 	right->V.NumberObj.numberValue -= left->V.NumberObj.numberValue;
-	stackMemory.push(right);
+	stackMemory->push(right);
 }
 void mul_num() 
 {
-	AlifObject* right = stackMemory.top();
-	stackMemory.pop();
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
+	AlifObject* right = stackMemory->top();
+	stackMemory->pop();
+	AlifObject* left = stackMemory->top();
+	stackMemory->pop();
 
 	left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? right->V.NumberObj.numberType = TTFloat : right->V.NumberObj.numberType = TTInteger;
 	right->V.NumberObj.numberValue *= left->V.NumberObj.numberValue;
-	stackMemory.push(right);
+	stackMemory->push(right);
 }
 void div_num() 
 {
-	AlifObject* right = stackMemory.top();
-	stackMemory.pop();
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
+	AlifObject* right = stackMemory->top();
+	stackMemory->pop();
+	AlifObject* left = stackMemory->top();
+	stackMemory->pop();
 
 	left->V.NumberObj.numberType == TTFloat;
 	right->V.NumberObj.numberValue /= left->V.NumberObj.numberValue;
-	stackMemory.push(right);
+	stackMemory->push(right);
 }
 void rem_num() 
 {
-	AlifObject* right = stackMemory.top();
-	stackMemory.pop();
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
+	AlifObject* right = stackMemory->top();
+	stackMemory->pop();
+	AlifObject* left = stackMemory->top();
+	stackMemory->pop();
 
 	left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? right->V.NumberObj.numberType = TTFloat : right->V.NumberObj.numberType = TTInteger;
 	right->V.NumberObj.numberValue = (int)right->V.NumberObj.numberValue % (int)left->V.NumberObj.numberValue;
-	stackMemory.push(right);
+	stackMemory->push(right);
 }
 void pow_num() 
 {
-	AlifObject* right = stackMemory.top();
-	stackMemory.pop();
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
+	AlifObject* right = stackMemory->top();
+	stackMemory->pop();
+	AlifObject* left = stackMemory->top();
+	stackMemory->pop();
 
 	left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? right->V.NumberObj.numberType = TTFloat : right->V.NumberObj.numberType = TTInteger;
 	right->V.NumberObj.numberValue = pow(right->V.NumberObj.numberValue  ,left->V.NumberObj.numberValue);
-	stackMemory.push(right);
+	stackMemory->push(right);
 }
 void augAdd_num()
 {
-	AlifObject* name_ = stackMemory.top();
-	stackMemory.pop();
-	AlifObject* value_ = stackMemory.top();
-	stackMemory.pop();
+	AlifObject* name_ = stackMemory->top();
+	stackMemory->pop();
+	AlifObject* value_ = stackMemory->top();
+	stackMemory->pop();
 
 	symTable.get_data(*name_->V.NameObj.name_)->V.NumberObj.numberValue += value_->V.NumberObj.numberValue;
 
@@ -160,10 +165,10 @@ void augPow_num()
 
 void equal_equal()
 {
-	AlifObject* right = stackMemory.top();
-	stackMemory.pop();
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
+	AlifObject* right = stackMemory->top();
+	stackMemory->pop();
+	AlifObject* left = stackMemory->top();
+	stackMemory->pop();
 
 	if (right->objType == left->objType)
 	{
@@ -182,7 +187,7 @@ void equal_equal()
 			res->V.BoolObj.boolType = L"خطا";
 			res->V.BoolObj.numberValue = 0;
 		}
-		stackMemory.push(res);
+		stackMemory->push(res);
 	}
 	else
 	{
@@ -192,10 +197,10 @@ void equal_equal()
 }
 void not_equal() 
 {
-	AlifObject* right = stackMemory.top();
-	stackMemory.pop();
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
+	AlifObject* right = stackMemory->top();
+	stackMemory->pop();
+	AlifObject* left = stackMemory->top();
+	stackMemory->pop();
 
 	if (right->objType == left->objType)
 	{
@@ -214,7 +219,7 @@ void not_equal()
 			res->V.BoolObj.boolType = L"خطا";
 			res->V.BoolObj.numberValue = 0;
 		}
-		stackMemory.push(res);
+		stackMemory->push(res);
 	}
 	else
 	{
@@ -224,10 +229,10 @@ void not_equal()
 
 void gr_than_num()
 {
-	AlifObject* right = stackMemory.top();
-	stackMemory.pop();
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
+	AlifObject* right = stackMemory->top();
+	stackMemory->pop();
+	AlifObject* left = stackMemory->top();
+	stackMemory->pop();
 
 	if (right->objType == left->objType)
 	{
@@ -246,7 +251,7 @@ void gr_than_num()
 			res->V.BoolObj.boolType = L"خطا";
 			res->V.BoolObj.numberValue = 0;
 		}
-		stackMemory.push(res);
+		stackMemory->push(res);
 	}
 	else
 	{
@@ -255,10 +260,10 @@ void gr_than_num()
 }
 void gr_than_eq_num()
 {
-	AlifObject* right = stackMemory.top();
-	stackMemory.pop();
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
+	AlifObject* right = stackMemory->top();
+	stackMemory->pop();
+	AlifObject* left = stackMemory->top();
+	stackMemory->pop();
 
 	if (right->objType == left->objType)
 	{
@@ -277,7 +282,7 @@ void gr_than_eq_num()
 			res->V.BoolObj.boolType = L"خطا";
 			res->V.BoolObj.numberValue = 0;
 		}
-		stackMemory.push(res);
+		stackMemory->push(res);
 	}
 	else
 	{
@@ -286,10 +291,10 @@ void gr_than_eq_num()
 }
 void ls_than_num()
 {
-	AlifObject* right = stackMemory.top();
-	stackMemory.pop();
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
+	AlifObject* right = stackMemory->top();
+	stackMemory->pop();
+	AlifObject* left = stackMemory->top();
+	stackMemory->pop();
 
 	if (right->objType == left->objType)
 	{
@@ -308,7 +313,7 @@ void ls_than_num()
 			res->V.BoolObj.boolType = L"خطا";
 			res->V.BoolObj.numberValue = 0;
 		}
-		stackMemory.push(res);
+		stackMemory->push(res);
 	}
 	else
 	{
@@ -317,10 +322,10 @@ void ls_than_num()
 }
 void ls_than_eq_num()
 {
-	AlifObject* right = stackMemory.top();
-	stackMemory.pop();
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
+	AlifObject* right = stackMemory->top();
+	stackMemory->pop();
+	AlifObject* left = stackMemory->top();
+	stackMemory->pop();
 
 	if (right->objType == left->objType)
 	{
@@ -339,7 +344,7 @@ void ls_than_eq_num()
 			res->V.BoolObj.boolType = L"خطا";
 			res->V.BoolObj.numberValue = 0;
 		}
-		stackMemory.push(res);
+		stackMemory->push(res);
 	}
 	else
 	{
@@ -349,8 +354,8 @@ void ls_than_eq_num()
 
 void not_logic() 
 {
-	AlifObject* right = stackMemory.top();
-	stackMemory.pop();
+	AlifObject* right = stackMemory->top();
+	stackMemory->pop();
 
 	AlifObject* res = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 
@@ -367,15 +372,15 @@ void not_logic()
 		res->V.BoolObj.boolType = L"خطا";
 		res->V.BoolObj.numberValue = 0;
 	}
-	stackMemory.push(res);
+	stackMemory->push(res);
 
 }
 void and_logic()
 {
-	AlifObject* right = stackMemory.top();
-	stackMemory.pop();
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
+	AlifObject* right = stackMemory->top();
+	stackMemory->pop();
+	AlifObject* left = stackMemory->top();
+	stackMemory->pop();
 
 	if (right->objType == left->objType)
 	{
@@ -394,7 +399,7 @@ void and_logic()
 			res->V.BoolObj.boolType = L"خطا";
 			res->V.BoolObj.numberValue = 0;
 		}
-		stackMemory.push(res);
+		stackMemory->push(res);
 	}
 	else
 	{
@@ -403,10 +408,10 @@ void and_logic()
 }
 void or_logic() 
 {
-	AlifObject* right = stackMemory.top();
-	stackMemory.pop();
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
+	AlifObject* right = stackMemory->top();
+	stackMemory->pop();
+	AlifObject* left = stackMemory->top();
+	stackMemory->pop();
 
 	if (right->objType == left->objType)
 	{
@@ -425,7 +430,7 @@ void or_logic()
 			res->V.BoolObj.boolType = L"خطا";
 			res->V.BoolObj.numberValue = 0;
 		}
-		stackMemory.push(res);
+		stackMemory->push(res);
 	}
 	else
 	{
@@ -435,10 +440,10 @@ void or_logic()
 
 void add_str() // هذه الطريقة اسرع من استخدام wcsncpy_s و wcsncat_s
 {
-	AlifObject* right = stackMemory.top();
-	stackMemory.pop();
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
+	AlifObject* right = stackMemory->top();
+	stackMemory->pop();
+	AlifObject* left = stackMemory->top();
+	stackMemory->pop();
 
 
 	const uint16_t rightSize = wcslen(right->V.StringObj.strValue);
@@ -457,16 +462,16 @@ void add_str() // هذه الطريقة اسرع من استخدام wcsncpy_s �
 	res[rightSize + leftSize] = L'\0';
 	
 	right->V.StringObj.strValue = res;
-	stackMemory.push(right);
+	stackMemory->push(right);
 
 }
 
 void mul_str() {
 	
-	AlifObject* right = stackMemory.top();
-	stackMemory.pop();
-	AlifObject* left = stackMemory.top();
-	stackMemory.pop();
+	AlifObject* right = stackMemory->top();
+	stackMemory->pop();
+	AlifObject* left = stackMemory->top();
+	stackMemory->pop();
 
 	if (left->objType == OTNumber) {
 		const uint16_t rightSize = wcslen(right->V.StringObj.strValue);
@@ -485,7 +490,7 @@ void mul_str() {
 		res[rightSize * leftSize] = L'\0';
 
 		right->V.StringObj.strValue = res;
-		stackMemory.push(right);
+		stackMemory->push(right);
 	}
 	else {
 		const uint16_t rightSize = right->V.NumberObj.numberValue;
@@ -504,7 +509,7 @@ void mul_str() {
 		res[rightSize * leftSize] = L'\0';
 
 		right->V.StringObj.strValue = res;
-		stackMemory.push(right);
+		stackMemory->push(right);
 	}
 
 }
@@ -512,22 +517,22 @@ void mul_str() {
 
 void expr_op() 
 {
-	AlifObject* compRes = stackMemory.top();
-	stackMemory.pop();
+	AlifObject* compRes = stackMemory->top();
+	stackMemory->pop();
 
 	if (compRes->V.NumberObj.numberValue != 0)
 	{
-		stackMemory.pop();
+		stackMemory->pop();
 	}
 }
 
 
 void store_name()
 {
-	AlifObject* name_ = stackMemory.top();
-	stackMemory.pop();
-	AlifObject* value_ = stackMemory.top();
-	stackMemory.pop();
+	AlifObject* name_ = stackMemory->top();
+	stackMemory->pop();
+	AlifObject* value_ = stackMemory->top();
+	stackMemory->pop();
 
 	symTable.add_symbol(*name_->V.NameObj.name_, value_);
 
@@ -535,18 +540,18 @@ void store_name()
 
 void list_make()
 {
-	AlifObject* list_ = stackMemory.top();
-	stackMemory.pop();
+	AlifObject* list_ = stackMemory->top();
+	stackMemory->pop();
 
-	AlifObject* elementCount = stackMemory.top();
-	stackMemory.pop();
+	AlifObject* elementCount = stackMemory->top();
+	stackMemory->pop();
 
 	AlifObject* element_{};
 
 	for (int i = 0; i < elementCount->V.NumberObj.numberValue; i++) // يجب تعديل التحقق لان عدم يعتبر نوع ويمكن إسناده في مصفوفة
 	{
-		element_ = stackMemory.top();
-		stackMemory.pop();
+		element_ = stackMemory->top();
+		stackMemory->pop();
 
 		list_->V.ListObj.objList->push_back(element_);
 	}
