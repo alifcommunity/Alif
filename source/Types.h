@@ -139,5 +139,9 @@ enum InstructionsType : uint8_t { // التعليمات
     // تعليمات المصفوفة
     LIST_MAKE,
 
+    // تعليمات الحلقات التكرارية
+    JUMP_FOR,
+    FOR_ITER,
+
 };
 
