@@ -5,6 +5,8 @@ std::vector<Container*>* containers_;
 std::vector<AlifObject*>* data_;
 std::stack<AlifObject*>* stackMemory;
 MemoryBlock* alifMemory;
+size_t dataIndex = 0;
+size_t instructionsIndex = 0;
 
 Interpreter::Interpreter(std::vector<Container*>* _containers, MemoryBlock* _alifMemory) {
 	containers_ = _containers;
@@ -17,20 +19,21 @@ void Interpreter::run_code()
 	{
 		data_ = container->data_;
 		stackMemory = new std::stack<AlifObject*>;
-		for (InstructionsType command_ : *container->instructions_)
+		//for (InstructionsType command_ : *container->instructions_)
+		for (instructionsIndex = 0; instructionsIndex < container->instructions_->size(); instructionsIndex++)
 		{
-			instr_funcs[command_]();
+			//instr_funcs[command_]();
+			instr_funcs[container->instructions_->at(instructionsIndex)]();
 		}
+		//std::wcout << symTable.get_data(*L"س")->V.NumberObj.numberValue << std::endl;
 		//AlifObject* res = stackMemory->top();
-		//stackMemory->pop();
 		//std::wcout << res->V.NumberObj.numberValue << std::endl;
 		//std::wcout << symTable.get_data(name_->V.NameObj.name_)->V.NumberObj.numberValue << std::endl;
 		//std::wcout << res.V.BoolObj.boolType << std::endl;
 		//std::wcout << res.V.StringObj.strValue << std::endl;
 		delete stackMemory;
+		dataIndex = 0;
 	}
-
-	
 }
 
 
@@ -47,8 +50,8 @@ void get_data()
 }
 void set_data()
 {
-	stackMemory->push(data_->front());
-	data_->erase(data_->begin());
+	stackMemory->push(data_->at(dataIndex));
+	dataIndex++;
 }
 
 void plus_num() 
@@ -72,9 +75,14 @@ void add_num()
 	// يجب حذف المتغير left
 	// لانه لم يتم حذفه بعد وقد تم العمل عليه ولم يعد له حاجة
 
-	left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? right->V.NumberObj.numberType = TTFloat : right->V.NumberObj.numberType = TTInteger;
-	right->V.NumberObj.numberValue += left->V.NumberObj.numberValue;
-	stackMemory->push(right);
+	AlifObject* res = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+
+	left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? res->V.NumberObj.numberType = TTFloat : res->V.NumberObj.numberType = TTInteger;
+	res->objType = OTNumber;
+	res->V.NumberObj.numberValue = right->V.NumberObj.numberValue + left->V.NumberObj.numberValue;
+	
+	stackMemory->push(res);
+	alifMemory->deallocate(res);
 }
 void sub_num() 
 {
@@ -555,4 +563,27 @@ void list_make()
 
 		list_->V.ListObj.objList->push_back(element_);
 	}
+}
+
+
+size_t startFor = 0, endFor = 1, stepFor = 1;
+void jump_for()
+{
+
+	AlifObject* jumpAddress = stackMemory->top();
+	stackMemory->pop();
+	dataIndex = 3; // يجب عمل نظام لها في المترجم
+
+	if (startFor < endFor)
+	{
+		startFor += stepFor;
+		instructionsIndex = jumpAddress->V.NumberObj.numberValue;
+	}
+}
+
+void for_iter()
+{
+	AlifObject* endForObj = stackMemory->top();
+	stackMemory->pop();
+	endFor = endForObj->V.NumberObj.numberValue;
 }

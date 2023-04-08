@@ -408,7 +408,36 @@ void Compiler::visit_list(ExprNode* _node)
 
 void Compiler::visit_for_(StmtsNode* _node)
 {
+
+	AlifObject* startFor = (AlifObject*)alifMemory->allocate(sizeof(AlifObject)); // startFor
+	startFor->objType = OTNumber;
+	startFor->V.NumberObj.numberValue = 0;
+	startFor->V.NumberObj.numberType = TTInteger;
+	dataContainer->data_->push_back(startFor);
+	dataContainer->instructions_->push_back(SET_DATA);
+
+	dataContainer->data_->push_back(_node->U.For.itrName); // varName
+	dataContainer->instructions_->push_back(SET_DATA);
+
+	this->dataContainer->instructions_->push_back(STORE_NAME);
+
+
+	dataContainer->data_->push_back(_node->U.For.args_->at(0)->U.Object.value_); // endFor
+	this->dataContainer->instructions_->push_back(SET_DATA);
+
+	this->dataContainer->instructions_->push_back(FOR_ITER);
+
+
+	AlifObject* jumpAddress = (AlifObject*)alifMemory->allocate(sizeof(AlifObject)); // address
+	jumpAddress->V.NumberObj.numberValue = this->dataContainer->instructions_->size() - 1;
+
+
 	VISIT_(stmts, _node->U.For.block_);
+
+	dataContainer->data_->push_back(jumpAddress);
+	this->dataContainer->instructions_->push_back(SET_DATA); // set address after for jumb
+
+	this->dataContainer->instructions_->push_back(JUMP_FOR);
 }
 
 
@@ -457,5 +486,12 @@ AlifObject* Compiler::visit_stmts(StmtsNode* _node)
 	else if (_node->type_ == VTFor)
 	{
 		VISIT_(for_, _node);
+	}
+	else if (_node->type_ == VTStmts)
+	{
+		for (StmtsNode* stmt : *_node->U.Stmts.stmts_)
+		{
+			VISIT_(stmts, stmt);
+		}
 	}
 }
