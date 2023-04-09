@@ -8,15 +8,23 @@ void Compiler::compile_file()
 {
 	for (StmtsNode* node_ : *statements_)
 	{
+		dataContainer = (Container*)alifMemory->allocate(sizeof(Container));
+		std::vector<InstructionsType>* instr_ = new std::vector<InstructionsType>;
+		std::vector<AlifObject*>* data_ = new std::vector<AlifObject*>;
+		dataContainer->data_ = data_;
+		dataContainer->instructions_ = instr_;
+
 		VISIT_(stmts, node_); // تم شرح طريقة الاستدعاء في ملف compiler.h
+
+		containers_.push_back(dataContainer);
 	}
 }
 
 
 AlifObject* Compiler::visit_object(ExprNode* _node)
 {
-	instructions_.push_back(SET_DATA);
-	data_.push_back(_node->U.Object.value_);
+	dataContainer->instructions_->push_back(SET_DATA);
+	dataContainer->data_->push_back(_node->U.Object.value_);
 	return _node->U.Object.value_;
 }
 
@@ -27,15 +35,15 @@ AlifObject* Compiler::visit_unaryOp(ExprNode* _node)
 
 	if (_node->U.UnaryOp.operator_ == TTMinus)
 	{
-		instructions_.push_back(MINUS_NUM);
+		dataContainer->instructions_->push_back(MINUS_NUM);
 	}
 	else if (_node->U.UnaryOp.operator_ == TTPlus)
 	{
-		instructions_.push_back(PLUS_NUM);
+		dataContainer->instructions_->push_back(PLUS_NUM);
 	}
 	else if (!wcscmp(_node->U.UnaryOp.keyword_, L"ليس"))
 	{
-		instructions_.push_back(NOT_LOGIC);
+		dataContainer->instructions_->push_back(NOT_LOGIC);
 	}
 
 	return right;
@@ -53,7 +61,7 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 		{
 			if (right->objType == OTNumber)
 			{
-				instructions_.push_back(ADD_NUM);
+				dataContainer->instructions_->push_back(ADD_NUM);
 			}
 			else
 			{
@@ -64,7 +72,7 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 		{
 			if (right->objType == OTString)
 			{
-				instructions_.push_back(ADD_STR);
+				dataContainer->instructions_->push_back(ADD_STR);
 			}
 			else
 			{
@@ -82,7 +90,7 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 		{
 			if (right->objType == OTNumber)
 			{
-				instructions_.push_back(MINUS_NUM);
+				dataContainer->instructions_->push_back(MINUS_NUM);
 			}
 			else
 			{
@@ -100,7 +108,7 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 		{
 			if (right->objType == OTNumber)
 			{
-				instructions_.push_back(POW_NUM);
+				dataContainer->instructions_->push_back(POW_NUM);
 			}
 			else
 			{
@@ -118,7 +126,7 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 		{
 			if (right->objType == OTNumber)
 			{
-				instructions_.push_back(DIV_NUM);
+				dataContainer->instructions_->push_back(DIV_NUM);
 			}
 			else
 			{
@@ -136,11 +144,11 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 		{
 			if (right->objType == OTNumber)
 			{
-				instructions_.push_back(MUL_NUM);
+				dataContainer->instructions_->push_back(MUL_NUM);
 			}
 			else if (right->objType == OTString)
 			{
-				instructions_.push_back(MUL_STR);
+				dataContainer->instructions_->push_back(MUL_STR);
 			}
 			else
 			{
@@ -151,7 +159,7 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 		{
 			if (right->objType == OTNumber)
 			{
-				instructions_.push_back(MUL_STR);
+				dataContainer->instructions_->push_back(MUL_STR);
 			}
 			else
 			{
@@ -169,7 +177,7 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 		{
 			if (right->objType == OTNumber)
 			{
-				instructions_.push_back(REM_NUM);
+				dataContainer->instructions_->push_back(REM_NUM);
 			}
 			else
 			{
@@ -187,7 +195,7 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 		{
 			if (right->objType == OTNumber)
 			{
-				instructions_.push_back(EQEQ_NUM);
+				dataContainer->instructions_->push_back(EQEQ_NUM);
 			}
 			else
 			{
@@ -205,7 +213,7 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 		{
 			if (right->objType == OTNumber)
 			{
-				instructions_.push_back(NOTEQ_NUM);
+				dataContainer->instructions_->push_back(NOTEQ_NUM);
 			}
 			else
 			{
@@ -223,7 +231,7 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 		{
 			if (right->objType == OTNumber)
 			{
-				instructions_.push_back(GRTHAN_NUM);
+				dataContainer->instructions_->push_back(GRTHAN_NUM);
 			}
 			else
 			{
@@ -241,7 +249,7 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 		{
 			if (right->objType == OTNumber)
 			{
-				instructions_.push_back(LSTHAN_NUM);
+				dataContainer->instructions_->push_back(LSTHAN_NUM);
 			}
 			else
 			{
@@ -259,7 +267,7 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 		{
 			if (right->objType == OTNumber)
 			{
-				instructions_.push_back(GRTHANEQ_NUM);
+				dataContainer->instructions_->push_back(GRTHANEQ_NUM);
 			}
 			else
 			{
@@ -277,7 +285,7 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 		{
 			if (right->objType == OTNumber)
 			{
-				instructions_.push_back(LSTHANEQ_NUM);
+				dataContainer->instructions_->push_back(LSTHANEQ_NUM);
 			}
 			else
 			{
@@ -291,11 +299,11 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 	}
 	else if (!wcscmp(_node->U.UnaryOp.keyword_, L"و"))
 	{
-		instructions_.push_back(AND_LOGIC);
+		dataContainer->instructions_->push_back(AND_LOGIC);
 	}
 	else if (!wcscmp(_node->U.UnaryOp.keyword_, L"او"))
 	{
-		instructions_.push_back(OR_LOGIC);
+		dataContainer->instructions_->push_back(OR_LOGIC);
 	}
 
 	return left;
@@ -308,10 +316,10 @@ void Compiler::visit_assign(ExprNode* _node)
 	{
 		VISIT_(exprs,_node->U.NameAssign.value_);
 
-		data_.push_back(i);
-		instructions_.push_back(SET_DATA); // خزن الاسم في المكدس
+		dataContainer->data_->push_back(i);
+		dataContainer->instructions_->push_back(SET_DATA); // خزن الاسم في المكدس
 
-		instructions_.push_back(STORE_NAME);
+		dataContainer->instructions_->push_back(STORE_NAME);
 	}
 }
 
@@ -319,28 +327,28 @@ void Compiler::visit_augAssign(ExprNode* _node)
 {
 	VISIT_(exprs, _node->U.AugNameAssign.value_);
 
-	data_.push_back(_node->U.AugNameAssign.name_);
-	instructions_.push_back(SET_DATA);
+	dataContainer->data_->push_back(_node->U.AugNameAssign.name_);
+	dataContainer->instructions_->push_back(SET_DATA);
 
 	switch (_node->U.AugNameAssign.operator_)
 	{
 	case TTPlusEqual:
-		instructions_.push_back(AUGADD_NUM);
+		dataContainer->instructions_->push_back(AUGADD_NUM);
 		break;
 	case TTMinusEqual:
-		instructions_.push_back(AUGSUB_NUM);
+		dataContainer->instructions_->push_back(AUGSUB_NUM);
 		break;
 	case TTMultiplyEqual:
-		instructions_.push_back(AUGMUL_NUM);
+		dataContainer->instructions_->push_back(AUGMUL_NUM);
 		break;
 	case TTDivideEqual:
-		instructions_.push_back(AUGDIV_NUM);
+		dataContainer->instructions_->push_back(AUGDIV_NUM);
 		break;
 	case TTRemainEqual:
-		instructions_.push_back(AUGREM_NUM);
+		dataContainer->instructions_->push_back(AUGREM_NUM);
 		break;
 	case TTPowerEqual:
-		instructions_.push_back(AUGPOW_NUM);
+		dataContainer->instructions_->push_back(AUGPOW_NUM);
 		break;
 	default:
 		break;
@@ -349,10 +357,10 @@ void Compiler::visit_augAssign(ExprNode* _node)
 
 void Compiler::visit_access(ExprNode* _node)
 {
-	data_.push_back(_node->U.NameAccess.name_);
-	instructions_.push_back(SET_DATA);
+	dataContainer->data_->push_back(_node->U.NameAccess.name_);
+	dataContainer->instructions_->push_back(SET_DATA);
 
-	instructions_.push_back(GET_DATA);
+	dataContainer->instructions_->push_back(GET_DATA);
 }
 
 
@@ -362,7 +370,7 @@ void Compiler::visit_expr(ExprNode* _node)
 	VISIT_(exprs, _node->U.CondExpr.elseExpr);
 	VISIT_(exprs, _node->U.CondExpr.condetion_);
 
-	instructions_.push_back(EXPR_OP);
+	dataContainer->instructions_->push_back(EXPR_OP);
 }
 
 void Compiler::visit_list(ExprNode* _node)
@@ -379,8 +387,8 @@ void Compiler::visit_list(ExprNode* _node)
 	listEnd->objType = OTNumber;
 	listEnd->V.NumberObj.numberValue = _node->U.Object.value_->V.ListObj.list_->size();
 
-	data_.push_back(listEnd);
-	instructions_.push_back(SET_DATA);
+	dataContainer->data_->push_back(listEnd);
+	dataContainer->instructions_->push_back(SET_DATA);
 
 
 	// تعريف المصفوفة التي ستحتوي على العناصر التي تم إعداداها
@@ -390,12 +398,46 @@ void Compiler::visit_list(ExprNode* _node)
 	listObj->objType = OTList;
 	listObj->V.ListObj.objList = elements_;
 
-	data_.push_back(listObj);
-	instructions_.push_back(SET_DATA);
+	dataContainer->data_->push_back(listObj);
+	dataContainer->instructions_->push_back(SET_DATA);
 
 
 
-	instructions_.push_back(LIST_MAKE);
+	dataContainer->instructions_->push_back(LIST_MAKE);
+}
+
+void Compiler::visit_for_(StmtsNode* _node)
+{
+
+	AlifObject* startFor = (AlifObject*)alifMemory->allocate(sizeof(AlifObject)); // startFor
+	startFor->objType = OTNumber;
+	startFor->V.NumberObj.numberValue = 0;
+	startFor->V.NumberObj.numberType = TTInteger;
+	dataContainer->data_->push_back(startFor);
+	dataContainer->instructions_->push_back(SET_DATA);
+
+	dataContainer->data_->push_back(_node->U.For.itrName); // varName
+	dataContainer->instructions_->push_back(SET_DATA);
+
+	this->dataContainer->instructions_->push_back(STORE_NAME);
+
+
+	dataContainer->data_->push_back(_node->U.For.args_->at(0)->U.Object.value_); // endFor
+	this->dataContainer->instructions_->push_back(SET_DATA);
+
+	this->dataContainer->instructions_->push_back(FOR_ITER);
+
+
+	AlifObject* jumpAddress = (AlifObject*)alifMemory->allocate(sizeof(AlifObject)); // address
+	jumpAddress->V.NumberObj.numberValue = this->dataContainer->instructions_->size() - 1;
+
+
+	VISIT_(stmts, _node->U.For.block_);
+
+	dataContainer->data_->push_back(jumpAddress);
+	this->dataContainer->instructions_->push_back(SET_DATA); // set address after for jumb
+
+	this->dataContainer->instructions_->push_back(JUMP_FOR);
 }
 
 
@@ -440,5 +482,16 @@ AlifObject* Compiler::visit_stmts(StmtsNode* _node)
 	if (_node->type_ == VTExpr)
 	{
 		return VISIT_(exprs, _node->U.Expr.expr_);
+	}
+	else if (_node->type_ == VTFor)
+	{
+		VISIT_(for_, _node);
+	}
+	else if (_node->type_ == VTStmts)
+	{
+		for (StmtsNode* stmt : *_node->U.Stmts.stmts_)
+		{
+			VISIT_(stmts, stmt);
+		}
 	}
 }

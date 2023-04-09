@@ -42,6 +42,9 @@ void store_name();
 
 void list_make();
 
+void jump_for();
+void for_iter();
+
 const Instructions_func instr_funcs[] = {
 	none_,
 
@@ -82,4 +85,7 @@ const Instructions_func instr_funcs[] = {
 	store_name,
 
 	list_make,
+
+	jump_for,
+	for_iter,
 };

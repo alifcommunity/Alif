@@ -178,21 +178,26 @@ void file_run(const wchar_t* _fileName) {
     // المحلل اللغوي
     /////////////////////////////////////////////////////////////////
 
-    //Parser parser = Parser(&lexer.tokens_, _fileName, &input_);
-    //parser.parse_terminal();
+    Parser parser = Parser(&lexer.tokens_, _fileName, &input_, &lexer.alifMemory);
+    parser.parse_file();
 
     //// المترجم اللغوي
     ///////////////////////////////////////////////////////////////////
 
-    //Compiler compiler = Compiler(&parser.statements_);
-    //compiler.compile_file();
+    Compiler compiler = Compiler(&parser.statements_, &lexer.alifMemory);
+    compiler.compile_file();
 
     //// المفسر اللغوي
     ///////////////////////////////////////////////////////////////////
 
-    //Interpreter interpreter = Interpreter(&compiler.instructions_, &compiler.data_);
-    //interpreter.run_code();
+    auto start = std::chrono::high_resolution_clock::now();
 
+    Interpreter interpreter = Interpreter(&compiler.containers_, &lexer.alifMemory);
+    interpreter.run_code();
+
+    auto end = std::chrono::high_resolution_clock::now();
+    auto elapsed_seconds = end - start;
+    std::wcout << elapsed_seconds / 1000000 << std::endl;
 }
 
 void terminal_run() 
@@ -240,7 +245,7 @@ void terminal_run()
 
         auto start = std::chrono::high_resolution_clock::now();
         
-        Interpreter interpreter = Interpreter(&compiler.instructions_, &compiler.data_, &lexer.alifMemory);
+        Interpreter interpreter = Interpreter(&compiler.containers_, &lexer.alifMemory);
         interpreter.run_code();
 
         auto end = std::chrono::high_resolution_clock::now();
