@@ -1,32 +1,46 @@
 #include <iostream>
+#include <chrono>
+#include <stack>
 
 using namespace std;
 
 template <typename T>
 class AlifStack {
 public:
+    
+    AlifStack(const size_t _size = 131072) : size_(_size) {}
 
-    AlifStack(const size_t _size) : size_(_size) {}
+    //const T& operator[](size_t _index)
+    //{
+    //    return data_[_index];
+    //}
 
-    const T& operator[](size_t _index)
+    //void operator=(size_t _value)
+    //{
+    //    data_[index_] = _value;
+    //    index_++;
+    //}
+
+    void push(T _value)
     {
-        return data_[_index];
+        data_[index_++] = _value;
     }
 
-    void operator=(size_t _value)
+    T pop()
     {
-        data_[index_] = _value;
-        index_++;
+        return data_[--index_];
     }
 
-    void push()
+    void swap()
     {
-        
+        T a = data_[--index_];
+        T b = data_[--index_];
+        data_[index_++] = a;
+        data_[index_++] = b;
     }
-
 
 private:
-    size_t index_ = 0;
+    unsigned int index_ = 0;
     size_t size_;
     T* data_ = new T[size_];
 };
@@ -34,20 +48,37 @@ private:
 
 int main()
 {
-    AlifStack<int> stack_ = AlifStack<int>(10);
+    AlifStack<int> stack_ = AlifStack<int>(4);
+    stack<int> stack2_;
 
-    for (int i = 0; i < 10; i++)
-    {
-        stack_ = 10;
-        int a = stack_[i];
+    auto start = chrono::steady_clock::now();
+    
+    //for (int i = 0; i < 100000000; i++)
+    //{
+    //    stack_.push(10);
+    //    //stack2_.push(10);
+    //    //stack_ = 10;
+    //    //int a = stack_[i];
 
-    }
-    //auto start = chrono::steady_clock::now();
+    //}
 
+    stack_.push(9);
+    stack_.push(3);
+    stack_.push(7);
 
-    //auto end = chrono::steady_clock::now();
-    //chrono::duration<double> elapsed_seconds = end - start;
-    //cout << elapsed_seconds.count() << endl;
+    int c = stack_.pop();
 
+    stack_.swap();
+
+    int d = stack_.pop();
+
+    stack_.push(10);
+
+    auto end = chrono::steady_clock::now();
+    chrono::duration<double> elapsed_seconds = end - start;
+    cout << elapsed_seconds.count() << endl;
+
+    int s;
+    cin >> s;
     return 0;
 }
