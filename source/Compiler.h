@@ -5,6 +5,7 @@
 #include "SymbolTable.h"
 #include "MemoryBlock.h"
 #include "Container.h"
+#include "AlifArray.h"
 
 #define VISIT_(func,node) (visit_ ## func(node)) // -> visit_func(arg) <<-->> VISIT_(func, node)
 												 //			^                        ^
@@ -22,7 +23,7 @@ public:
 	//std::vector<InstructionsType> instructions_{};
 	//std::vector<AlifObject*> data_{}; // لماذا لا تكون البيانات هي ذاكرة المكدس ويتم إرسال عنوانها بدل نقل البيانات مرة اخرى؟
 	Container* dataContainer{};
-	std::vector<Container*> containers_{};
+	AlifArray<Container*> containers_{};
 	MemoryBlock* alifMemory;
 
 	Compiler(std::vector<StmtsNode*>* _statements, MemoryBlock* _alifMemory);

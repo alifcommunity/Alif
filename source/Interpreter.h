@@ -7,7 +7,7 @@
 class Interpreter {
 public:
 
-	Interpreter(std::vector<Container*>* _containers, MemoryBlock* _alifMemory);
+	Interpreter(AlifArray<Container*>* _containers, MemoryBlock* _alifMemory);
 
 	void run_code();
 };
