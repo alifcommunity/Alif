@@ -9,8 +9,8 @@ void Compiler::compile_file()
 	for (StmtsNode* node_ : *statements_)
 	{
 		dataContainer = (Container*)alifMemory->allocate(sizeof(Container));
-		std::vector<InstructionsType>* instr_ = new std::vector<InstructionsType>;
-		std::vector<AlifObject*>* data_ = new std::vector<AlifObject*>;
+		AlifArray<InstructionsType>* instr_ = new AlifArray<InstructionsType>;
+		AlifArray<AlifObject*>* data_ = new AlifArray<AlifObject*>;
 		dataContainer->data_ = data_;
 		dataContainer->instructions_ = instr_;
 

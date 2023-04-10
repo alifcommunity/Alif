@@ -2,12 +2,11 @@
 
 #include "Types.h"
 #include "Object.h"
-
-#include <vector>
+#include "AlifArray.h"
 
 class Container
 {
 public:
-	std::vector<InstructionsType>* instructions_{};
-	std::vector<AlifObject*>* data_{};
+	AlifArray<InstructionsType>* instructions_{};
+	AlifArray<AlifObject*>* data_{};
 };

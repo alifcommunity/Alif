@@ -1,29 +1,31 @@
 #include "AddrFuncs.h"
 #include "Interpreter.h"
 
-std::vector<Container*>* containers_;
-std::vector<AlifObject*>* data_;
+AlifArray<Container*>* containers_;
+AlifArray<AlifObject*>* data_;
 AlifStack<AlifObject*>* stackMemory;
 MemoryBlock* alifMemory;
 size_t dataIndex = 0;
 size_t instructionsIndex = 0;
 
-Interpreter::Interpreter(std::vector<Container*>* _containers, MemoryBlock* _alifMemory) {
+Interpreter::Interpreter(AlifArray<Container*>* _containers, MemoryBlock* _alifMemory) {
 	containers_ = _containers;
 	alifMemory = _alifMemory;
 }
 
 void Interpreter::run_code()
 {
-	for (Container* container : *containers_)
+	//for (Container* container : *containers_)
+	uint32_t end_ = containers_->size();
+	for (unsigned int i = 0; i < end_; i++)
 	{
-		data_ = container->data_;
+		data_ = containers_[0][i]->data_;
 		stackMemory = new AlifStack<AlifObject*>;
 		//for (InstructionsType command_ : *container->instructions_)
-		for (instructionsIndex = 0; instructionsIndex < container->instructions_->size(); instructionsIndex++)
+		for (instructionsIndex = 0; instructionsIndex < containers_[0][i]->instructions_->size(); instructionsIndex++)
 		{
 			//instr_funcs[command_]();
-			instr_funcs[container->instructions_->at(instructionsIndex)]();
+			instr_funcs[containers_[0][i]->instructions_[0][instructionsIndex]]();
 		}
 		//std::wcout << symTable.get_data(*L"س")->V.NumberObj.numberValue << std::endl;
 		//AlifObject* res = stackMemory->pop();
@@ -49,7 +51,7 @@ void get_data()
 }
 void set_data()
 {
-	stackMemory->push(data_->at(dataIndex));
+	stackMemory->push(data_[0][dataIndex]);
 	dataIndex++;
 }
 

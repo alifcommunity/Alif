@@ -37,6 +37,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AddrFuncs.h" />
+    <ClInclude Include="..\source\AlifArray.h" />
     <ClInclude Include="..\source\AlifRun.h" />
     <ClInclude Include="..\source\AlifStack.h" />
     <ClInclude Include="..\source\Compiler.h" />
