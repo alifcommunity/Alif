@@ -2,8 +2,7 @@
 
 #include "Compiler.h"
 #include "MemoryBlock.h"
-
-#include <stack>
+#include "AlifStack.h"
 
 class Interpreter {
 public:
