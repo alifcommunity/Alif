@@ -2,7 +2,8 @@
 #include "Interpreter.h"
 
 AlifArray<Container*>* containers_;
-AlifArray<AlifObject*>* data_;
+AlifArray<AlifObject*>* dataArr;
+AlifArray<InstructionsType>* instrArr;
 AlifStack<AlifObject*>* stackMemory;
 MemoryBlock* alifMemory;
 size_t dataIndex = 0;
@@ -19,20 +20,24 @@ void Interpreter::run_code()
 	uint32_t end_ = containers_->size();
 	for (unsigned int i = 0; i < end_; i++)
 	{
-		data_ = containers_[0][i]->data_;
+		dataArr = containers_[0][i]->data_;
+		instrArr = containers_[0][i]->instructions_;
 		stackMemory = new AlifStack<AlifObject*>;
+
 		//for (InstructionsType command_ : *container->instructions_)
-		for (instructionsIndex = 0; instructionsIndex < containers_[0][i]->instructions_->size(); instructionsIndex++)
+		for (instructionsIndex = 0; instructionsIndex < instrArr->size(); instructionsIndex++)
 		{
 			//instr_funcs[command_]();
-			instr_funcs[containers_[0][i]->instructions_[0][instructionsIndex]]();
+			instr_funcs[instrArr[0][instructionsIndex]]();
 		}
+
 		//std::wcout << symTable.get_data(*L"س")->V.NumberObj.numberValue << std::endl;
 		//AlifObject* res = stackMemory->pop();
 		//std::wcout << res->V.NumberObj.numberValue << std::endl;
 		//std::wcout << symTable.get_data(name_->V.NameObj.name_)->V.NumberObj.numberValue << std::endl;
 		//std::wcout << res.V.BoolObj.boolType << std::endl;
 		//std::wcout << res.V.StringObj.strValue << std::endl;
+
 		delete stackMemory;
 		dataIndex = 0;
 	}
@@ -51,7 +56,7 @@ void get_data()
 }
 void set_data()
 {
-	stackMemory->push(data_[0][dataIndex]);
+	stackMemory->push(dataArr[0][dataIndex]);
 	dataIndex++;
 }
 
