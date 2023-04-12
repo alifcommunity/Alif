@@ -13,31 +13,33 @@ public:
     //    }
     //}
 
-    // Move constructor
-    AlifArray(AlifArray&& other) noexcept : size_(other.size_), capacity_(other.capacity_), data_(other.data_) {
-        other.size_ = 0;
-        other.capacity_ = 0;
-        other.data_ = nullptr;
-    }
+    //// Move constructor
+    //AlifArray(AlifArray&& other) noexcept : size_(other.size_), capacity_(other.capacity_), data_(other.data_) {
+    //    other.size_ = 0;
+    //    other.capacity_ = 0;
+    //    other.data_ = nullptr;
+    //}
 
-    // Move assignment operator
-    AlifArray& operator=(AlifArray&& other) noexcept {
-        if (this != &other) {
-            size_ = other.size_;
-            capacity_ = other.capacity_;
-            data_ = other.data_;
-            other.size_ = 0;
-            other.capacity_ = 0;
-            other.data_ = nullptr;
-        }
-        return *this;
-    }
+    //// Move assignment operator
+    //AlifArray& operator=(AlifArray&& other) noexcept {
+    //    if (this != &other) {
+    //        size_ = other.size_;
+    //        capacity_ = other.capacity_;
+    //        data_ = other.data_;
+    //        other.size_ = 0;
+    //        other.capacity_ = 0;
+    //        other.data_ = nullptr;
+    //    }
+    //    return *this;
+    //}
 
     // Getters and setters
     size_t size() const { return size_; }
     bool empty() const { return size_ == 0; }
-    T& operator[](size_t index) { return data_[index]; }
-    const T& operator[](size_t index) const { return data_[index]; }
+    //T& operator[](size_t index) { return data_[index]; }
+    //const T& operator[](size_t index) const { return data_[index]; }
+
+    T& get(size_t _index) { return data_[_index]; }
 
     void push_back(const T& value) {
         if (size_ >= capacity_) {

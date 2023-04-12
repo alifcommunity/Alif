@@ -35,7 +35,7 @@ public:
 	AlifObject* visit_binOp(ExprNode*);
 	void visit_assign(ExprNode*);
 	void visit_augAssign(ExprNode*);
-	void visit_access(ExprNode*);
+	AlifObject* visit_access(ExprNode*);
 	void visit_expr(ExprNode*);
 	void visit_list(ExprNode*);
 

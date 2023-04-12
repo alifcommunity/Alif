@@ -10,7 +10,7 @@ public:
     {
         data_[index_++] = _value;
 
-        if (index_ >= size_)
+        if (index_ > size_)
         {
             PRINT_(L"نفدت ذاكرة المكدس");
             exit(-1);
@@ -34,6 +34,11 @@ public:
     {
         index_ = 0;
     }
+
+    //T pop1() { 
+    //    index_--;
+    //    return data_[index_++]; 
+    //} // for test only
 
 private:
     unsigned int index_ = 0;

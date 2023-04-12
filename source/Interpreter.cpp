@@ -16,22 +16,20 @@ Interpreter::Interpreter(AlifArray<Container*>* _containers, MemoryBlock* _alifM
 
 void Interpreter::run_code()
 {
-	//for (Container* container : *containers_)
-	uint32_t end_ = containers_->size();
-	for (unsigned int i = 0; i < end_; i++)
+	uint32_t endContainers = containers_->size();
+	for (unsigned int i = 0; i < endContainers; i++)
 	{
-		dataArr = containers_[0][i]->data_;
-		instrArr = containers_[0][i]->instructions_;
+		dataArr = containers_->get(i)->data_;
+		instrArr = containers_->get(i)->instructions_;
 		stackMemory = new AlifStack<AlifObject*>;
 
-		//for (InstructionsType command_ : *container->instructions_)
-		for (instructionsIndex = 0; instructionsIndex < instrArr->size(); instructionsIndex++)
+		uint32_t endContainer = instrArr->size();
+		for (instructionsIndex = 0; instructionsIndex < endContainer; instructionsIndex++)
 		{
-			//instr_funcs[command_]();
-			instr_funcs[instrArr[0][instructionsIndex]]();
+			instr_funcs[instrArr->get(instructionsIndex)]();
 		}
 
-		//std::wcout << symTable.get_data(*L"س")->V.NumberObj.numberValue << std::endl;
+		/*std::wcout << symTable.get_data(*L"س")->V.NumberObj.numberValue << std::endl;*/
 		//AlifObject* res = stackMemory->pop();
 		//std::wcout << res->V.NumberObj.numberValue << std::endl;
 		//std::wcout << symTable.get_data(name_->V.NameObj.name_)->V.NumberObj.numberValue << std::endl;
@@ -51,12 +49,12 @@ void get_data()
 	AlifObject* name_ = stackMemory->pop();
 	stackMemory->push(symTable.get_data(*name_->V.NameObj.name_));
 
-	AlifObject* res = stackMemory->pop();
-	std::wcout << res->V.NumberObj.numberValue << std::endl;
+	//AlifObject* res = stackMemory->pop1();
+	//std::wcout << res->V.NumberObj.numberValue << std::endl;
 }
 void set_data()
 {
-	stackMemory->push(dataArr[0][dataIndex]);
+	stackMemory->push(dataArr->get(dataIndex));
 	dataIndex++;
 }
 
@@ -541,11 +539,10 @@ void list_make()
 
 	AlifObject* element_{};
 
-	for (int i = 0; i < elementCount->V.NumberObj.numberValue; i++) // يجب تعديل التحقق لان عدم يعتبر نوع ويمكن إسناده في مصفوفة
+	for (int i = 0; i < elementCount->V.NumberObj.numberValue; i++)
 	{
 		element_ = stackMemory->pop();
 	
-
 		list_->V.ListObj.objList->push_back(element_);
 	}
 }
@@ -556,12 +553,18 @@ void jump_for()
 {
 
 	AlifObject* jumpAddress = stackMemory->pop();
+	AlifObject* iterName = stackMemory->pop();
+	AlifObject* iterValue = stackMemory->pop();
 
 	dataIndex = 3; // يجب عمل نظام لها في المترجم
 
+	startFor += stepFor;
 	if (startFor < endFor)
 	{
-		startFor += stepFor;
+		iterValue->V.NumberObj.numberValue = startFor;
+
+		symTable.add_symbol(*iterName->V.NameObj.name_, iterValue);
+
 		instructionsIndex = jumpAddress->V.NumberObj.numberValue;
 		stackMemory->reset();
 	}
