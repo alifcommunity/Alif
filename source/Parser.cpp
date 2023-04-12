@@ -26,6 +26,8 @@ void Parser::parse_file()
     do {
         this->statements_.push_back(this->statement()); // convert it to StmtsNode after finish test
 
+        while (this->currentToken.type_ == TTNewline) { this->advance(); }
+
     } while (currentToken.type_ != TTEndOfFile);
 
 }

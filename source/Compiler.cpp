@@ -11,8 +11,8 @@ void Compiler::compile_file()
 		dataContainer = (Container*)alifMemory->allocate(sizeof(Container));
 		AlifArray<InstructionsType>* instr_ = new AlifArray<InstructionsType>;
 		AlifArray<AlifObject*>* data_ = new AlifArray<AlifObject*>;
-		dataContainer->data_ = data_;
 		dataContainer->instructions_ = instr_;
+		dataContainer->data_ = data_;
 
 		VISIT_(stmts, node_); // تم شرح طريقة الاستدعاء في ملف compiler.h
 
@@ -57,9 +57,9 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 
 	if (_node->U.BinaryOp.operator_ == TTPlus)
 	{
-		if (left->objType == OTNumber)
+		if (left->objType == OTNumber or left->objType == OTName)
 		{
-			if (right->objType == OTNumber)
+			if (right->objType == OTNumber or right->objType == OTName)
 			{
 				dataContainer->instructions_->push_back(ADD_NUM);
 			}
@@ -355,12 +355,14 @@ void Compiler::visit_augAssign(ExprNode* _node)
 	}
 }
 
-void Compiler::visit_access(ExprNode* _node)
+AlifObject* Compiler::visit_access(ExprNode* _node)
 {
 	dataContainer->data_->push_back(_node->U.NameAccess.name_);
 	dataContainer->instructions_->push_back(SET_DATA);
 
 	dataContainer->instructions_->push_back(GET_DATA);
+
+	return _node->U.NameAccess.name_;
 }
 
 
@@ -434,8 +436,15 @@ void Compiler::visit_for_(StmtsNode* _node)
 
 	VISIT_(stmts, _node->U.For.block_);
 
+	dataContainer->data_->push_back(startFor);
+	dataContainer->instructions_->push_back(SET_DATA);
+
+	dataContainer->data_->push_back(_node->U.For.itrName); // varName
+	dataContainer->instructions_->push_back(SET_DATA);
+
 	dataContainer->data_->push_back(jumpAddress);
 	this->dataContainer->instructions_->push_back(SET_DATA); // set address after for jumb
+
 
 	this->dataContainer->instructions_->push_back(JUMP_FOR);
 }
@@ -465,7 +474,7 @@ AlifObject* Compiler::visit_exprs(ExprNode* _node)
 	}
 	else if (_node->type_ == VTAccess)
 	{
-		VISIT_(access, _node);
+		return VISIT_(access, _node);
 	}
 	else if (_node->type_ == VTCondExpr)
     {

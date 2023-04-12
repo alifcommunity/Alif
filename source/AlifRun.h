@@ -197,7 +197,7 @@ void file_run(const wchar_t* _fileName) {
 
     auto end = std::chrono::high_resolution_clock::now();
     auto elapsed_seconds = end - start;
-    std::wcout << elapsed_seconds / 1000000 << std::endl;
+    std::wcout << elapsed_seconds << std::endl;
 }
 
 void terminal_run() 
