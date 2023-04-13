@@ -843,38 +843,37 @@ ExprNode* Parser::assignment() // يجب إيجاد خوارزمية افضل ب
 //            }
 //        }
 //    }
-//
-//    StmtsNode* while_statement() {
-//
-//        ExprNode* condetion_ = this->expression();
-//        StmtsNode* block_ = nullptr;
-//        StmtsNode* else_ = nullptr;
-//
-//        if (this->currentToken.type_ == TTcolon)
-//        {
-//            this->advance();
-//            block_ = this->block_();
-//        }
-//        else {
-//            PRINT_(L"لم يتم إنهاء بينما بنقطتين \:");
-//            exit(-1);
-//        }
-//        if (this->currentToken.type_ == TTKeyword and this->currentToken.val.keywordType == Else)
-//        {
-//            this->advance();
-//            else_ = this->else_();
-//        }
-//
-//        level--;
-//
-//        (stmtsNode + level)->type_ = VWhile;
-//        (stmtsNode + level)->U.While.condetion_ = condetion_;
-//        (stmtsNode + level)->U.While.block_ = block_;
-//        (stmtsNode + level)->U.While.else_ = else_;
-//
-//        return (stmtsNode + level);
-//
-//    }
+
+StmtsNode* Parser::while_statement() {
+
+    ExprNode* condetion_ = this->expression();
+    StmtsNode* block_ = nullptr;
+    StmtsNode* else_ = nullptr;
+
+    if (this->currentToken.type_ == TTColon)
+    {
+        this->advance();
+        block_ = this->block_();
+    }
+    else {
+        PRINT_(L"لم يتم إنهاء بينما بنقطتين \:");
+        exit(-1);
+    }
+    if (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"والا"))
+    {
+        this->advance();
+        else_ = this->else_();
+    }
+
+    StmtsNode* whileNode = (StmtsNode*)alifMemory->allocate(sizeof(StmtsNode));
+    whileNode->type_ = VTWhile;
+    whileNode->U.While.condetion_ = condetion_;
+    whileNode->U.While.block_ = block_;
+    whileNode->U.While.else_ = else_;
+
+    return whileNode;
+
+}
 
 StmtsNode* Parser::for_statement()
 {
@@ -936,8 +935,7 @@ StmtsNode* Parser::for_statement()
 
                             block_ = this->block_();
 
-                            //if (this->currentToken.type_ == TTKeyword and this->currentToken.val.keywordType == Else)
-                            if (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"والا"))
+                            if (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"والا")) // يجب إكملب هذه الحالة في المترجم او إلغائها
                             {
                                 this->advance();
 
@@ -981,27 +979,27 @@ StmtsNode* Parser::for_statement()
     }
 }
 
-//    StmtsNode* else_if()
-//    {
-//        StmtsNode* block_{};
-//        ExprNode* condetion_ = this->expression();
-//
-//        if (this->currentToken.type_ == TTcolon)
-//        {
-//            this->advance();
-//            block_ = this->block_();
-//        }
-//        else {
-//            PRINT_(L"لم يتم إنهاء واذا بنقطتين \:");
-//            exit(-1);
-//        }
-//
-//        level--;
-//        (stmtsNode + level)->type_ = VElseIf;
-//        (stmtsNode + level)->U.If.condetion_ = condetion_;
-//        (stmtsNode + level)->U.If.block_ = block_;
-//        return (stmtsNode + level);
-//    }
+StmtsNode* Parser::else_if()
+{
+    StmtsNode* block_{};
+    ExprNode* condetion_ = this->expression();
+
+    if (this->currentToken.type_ == TTColon)
+    {
+        this->advance();
+        block_ = this->block_();
+    }
+    else {
+        PRINT_(L"لم يتم إنهاء واذا بنقطتين \:");
+        exit(-1);
+    }
+
+    StmtsNode* elseNode = (StmtsNode*)alifMemory->allocate(sizeof(StmtsNode));
+    elseNode->type_ = VTElseIf;
+    elseNode->U.If.condetion_ = condetion_;
+    elseNode->U.If.block_ = block_;
+    return elseNode;
+}
 
 StmtsNode* Parser::else_() {
 
@@ -1016,43 +1014,43 @@ StmtsNode* Parser::else_() {
     }
 }
 
-//    StmtsNode* if_statement()
-//    {
-//
-//        StmtsNode* block_{};
-//        std::vector<StmtsNode*>* elseIf = new std::vector<StmtsNode*>;
-//        StmtsNode* else_{};
-//        ExprNode* condetion_ = this->expression();
-//
-//        if (this->currentToken.type_ == TTcolon)
-//        {
-//            this->advance();
-//            block_ = this->block_();
-//        }
-//        else {
-//            PRINT_(L"لم يتم إنهاء اذا بنقطتين \:");
-//            exit(-1);
-//        }
-//        while (this->currentToken.val.keywordType == Elseif)
-//        {
-//            this->advance();
-//            elseIf->push_back(this->else_if());
-//        }
-//        if (this->currentToken.val.keywordType == Else)
-//        {
-//            this->advance();
-//            else_ = this->else_();
-//        }
-//
-//        level--;
-//        (stmtsNode + level)->type_ = VIf;
-//        (stmtsNode + level)->U.If.condetion_ = condetion_;
-//        (stmtsNode + level)->U.If.block_ = block_;
-//        (stmtsNode + level)->U.If.elseIf = elseIf;
-//        (stmtsNode + level)->U.If.else_ = else_;
-//        return (stmtsNode + level);
-//
-//    }
+StmtsNode* Parser::if_statement()
+{
+
+    StmtsNode* block_{};
+    std::vector<StmtsNode*>* elseIf = new std::vector<StmtsNode*>;
+    StmtsNode* else_{};
+    ExprNode* condetion_ = this->expression();
+
+    if (this->currentToken.type_ == TTColon)
+    {
+        this->advance();
+        block_ = this->block_();
+    }
+    else {
+        PRINT_(L"لم يتم إنهاء اذا بنقطتين \:");
+        exit(-1);
+    }
+    while (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"واذا"))
+    {
+        this->advance();
+        elseIf->push_back(this->else_if());
+    }
+    if (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"والا"))
+    {
+        this->advance();
+        else_ = this->else_();
+    }
+
+    StmtsNode* ifNode = (StmtsNode*)alifMemory->allocate(sizeof(StmtsNode));
+    ifNode->type_ = VTIf;
+    ifNode->U.If.condetion_ = condetion_;
+    ifNode->U.If.block_ = block_;
+    ifNode->U.If.elseIf = elseIf;
+    ifNode->U.If.else_ = else_;
+    return ifNode;
+
+}
 
 StmtsNode* Parser::block_()
 {
@@ -1109,16 +1107,16 @@ StmtsNode* Parser::compound_statement()
     //    this->advance();
     //    return this->function_def();
     //}
-    //else if (!wcscmp(this->currentToken.value_, L"اذا"))
-    //{
-    //    this->advance();
-    //    return this->if_statement();
-    //}
-    //else if (!wcscmp(this->currentToken.value_, L"بينما"))
-    //{
-    //    this->advance();
-    //    return this->while_statement();
-    //}
+    else if (!wcscmp(this->currentToken.value_, L"اذا"))
+    {
+        this->advance();
+        return this->if_statement();
+    }
+    else if (!wcscmp(this->currentToken.value_, L"بينما"))
+    {
+        this->advance();
+        return this->while_statement();
+    }
     //else if (!wcscmp(this->currentToken.value_, L"صنف"))
     //{
     //    this->advance();
