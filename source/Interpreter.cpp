@@ -555,7 +555,7 @@ void jump_for()
 	AlifObject* iterName = stackMemory->pop();
 	AlifObject* iterValue = stackMemory->pop();
 
-	dataIndex = 5; // يجب عمل نظام لها في المترجم
+	dataIndex = jumpAddress->V.NumberObj.numberValue - 1;
 
 	if (startFor < endFor)
 	{
