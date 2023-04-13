@@ -9,10 +9,8 @@ void Compiler::compile_file()
 	for (StmtsNode* node_ : *statements_)
 	{
 		dataContainer = (Container*)alifMemory->allocate(sizeof(Container));
-		AlifArray<InstructionsType>* instr_ = new AlifArray<InstructionsType>;
-		AlifArray<AlifObject*>* data_ = new AlifArray<AlifObject*>;
-		dataContainer->instructions_ = instr_;
-		dataContainer->data_ = data_;
+		dataContainer->instructions_ = new AlifArray<InstructionsType>;
+		dataContainer->data_ = new AlifArray<AlifObject*>;
 
 		VISIT_(stmts, node_); // تم شرح طريقة الاستدعاء في ملف compiler.h
 
@@ -410,11 +408,31 @@ void Compiler::visit_list(ExprNode* _node)
 
 void Compiler::visit_for_(StmtsNode* _node)
 {
-
 	AlifObject* startFor = (AlifObject*)alifMemory->allocate(sizeof(AlifObject)); // startFor
+	AlifObject* stepFor = (AlifObject*)alifMemory->allocate(sizeof(AlifObject)); // stepFor
+	AlifObject* endFor = (AlifObject*)alifMemory->allocate(sizeof(AlifObject)); // endFor
 	startFor->objType = OTNumber;
-	startFor->V.NumberObj.numberValue = 0;
-	startFor->V.NumberObj.numberType = TTInteger;
+	stepFor->objType = OTNumber;
+	endFor->objType = OTNumber;
+
+	if (_node->U.For.args_->size() == 1)
+	{
+		startFor->V.NumberObj.numberValue = 0;
+		endFor->V.NumberObj.numberValue = _node->U.For.args_->at(0)->U.Object.value_->V.NumberObj.numberValue;
+		stepFor->V.NumberObj.numberValue = 1;
+	}
+	else if (_node->U.For.args_->size() == 2)
+	{
+		startFor->V.NumberObj.numberValue = _node->U.For.args_->at(0)->U.Object.value_->V.NumberObj.numberValue;
+		endFor->V.NumberObj.numberValue = _node->U.For.args_->at(1)->U.Object.value_->V.NumberObj.numberValue;
+		stepFor->V.NumberObj.numberValue = 1;
+	}
+	else 
+	{
+		startFor->V.NumberObj.numberValue = _node->U.For.args_->at(0)->U.Object.value_->V.NumberObj.numberValue;
+		endFor->V.NumberObj.numberValue = _node->U.For.args_->at(1)->U.Object.value_->V.NumberObj.numberValue;
+		stepFor->V.NumberObj.numberValue = _node->U.For.args_->at(2)->U.Object.value_->V.NumberObj.numberValue;
+	}
 	dataContainer->data_->push_back(startFor);
 	dataContainer->instructions_->push_back(SET_DATA);
 
@@ -424,8 +442,14 @@ void Compiler::visit_for_(StmtsNode* _node)
 	this->dataContainer->instructions_->push_back(STORE_NAME);
 
 
-	dataContainer->data_->push_back(_node->U.For.args_->at(0)->U.Object.value_); // endFor
+	dataContainer->data_->push_back(startFor); // startFor
+	dataContainer->instructions_->push_back(SET_DATA);
+
+	dataContainer->data_->push_back(endFor); // endFor
 	this->dataContainer->instructions_->push_back(SET_DATA);
+
+	dataContainer->data_->push_back(stepFor); // stepFor
+	dataContainer->instructions_->push_back(SET_DATA);
 
 	this->dataContainer->instructions_->push_back(FOR_ITER);
 
@@ -436,7 +460,7 @@ void Compiler::visit_for_(StmtsNode* _node)
 
 	VISIT_(stmts, _node->U.For.block_);
 
-	dataContainer->data_->push_back(startFor);
+	dataContainer->data_->push_back(startFor); // startFor
 	dataContainer->instructions_->push_back(SET_DATA);
 
 	dataContainer->data_->push_back(_node->U.For.itrName); // varName

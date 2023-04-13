@@ -551,14 +551,12 @@ void list_make()
 size_t startFor = 0, endFor = 1, stepFor = 1;
 void jump_for()
 {
-
 	AlifObject* jumpAddress = stackMemory->pop();
 	AlifObject* iterName = stackMemory->pop();
 	AlifObject* iterValue = stackMemory->pop();
 
-	dataIndex = 3; // يجب عمل نظام لها في المترجم
+	dataIndex = 5; // يجب عمل نظام لها في المترجم
 
-	startFor += stepFor;
 	if (startFor < endFor)
 	{
 		iterValue->V.NumberObj.numberValue = startFor;
@@ -568,10 +566,15 @@ void jump_for()
 		instructionsIndex = jumpAddress->V.NumberObj.numberValue;
 		stackMemory->reset();
 	}
+	startFor += stepFor;
 }
 void for_iter()
 {
+	AlifObject* stepForObj = stackMemory->pop();
 	AlifObject* endForObj = stackMemory->pop();
+	AlifObject* startForObj = stackMemory->pop();
 
+	startFor = startForObj->V.NumberObj.numberValue;
 	endFor = endForObj->V.NumberObj.numberValue;
+	stepFor = stepForObj->V.NumberObj.numberValue;
 }
