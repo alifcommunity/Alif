@@ -89,14 +89,14 @@ public:
             AlifObject* itrName;
             std::vector<ExprNode*>* args_;
             StmtsNode* block_;
-            StmtsNode* else_;
+            //StmtsNode* else_;
         }For;
 
         class {
         public:
             ExprNode* condetion_;
             StmtsNode* block_;
-            StmtsNode* else_;
+            //StmtsNode* else_;
         }While;
 
         class

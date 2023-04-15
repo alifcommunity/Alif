@@ -140,6 +140,8 @@ enum InstructionsType : uint8_t { // التعليمات
     LIST_MAKE,
 
     // تعليمات الحلقات التكرارية
+    JUMP_TO,
+    JUMP_IF,
     JUMP_FOR,
     FOR_ITER,
 

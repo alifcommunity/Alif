@@ -42,6 +42,8 @@ void store_name();
 
 void list_make();
 
+void jump_to();
+void jump_if();
 void jump_for();
 void for_iter();
 
@@ -86,6 +88,8 @@ const Instructions_func instr_funcs[] = {
 
 	list_make,
 
+	jump_to,
+	jump_if,
 	jump_for,
 	for_iter,
 };
