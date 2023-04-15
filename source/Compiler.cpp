@@ -243,9 +243,9 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 	}
 	else if (_node->U.BinaryOp.operator_ == TTLessThan)
 	{
-		if (left->objType == OTNumber)
+		if (left->objType == OTNumber or left->objType == OTName)
 		{
-			if (right->objType == OTNumber)
+			if (right->objType == OTNumber or left->objType == OTName)
 			{
 				dataContainer->instructions_->push_back(LSTHAN_NUM);
 			}
@@ -279,9 +279,9 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 	}
 	else if (_node->U.BinaryOp.operator_ == TTLessThanEqual)
 	{
-		if (left->objType == OTNumber)
+		if (left->objType == OTNumber or left->objType == OTName)
 		{
-			if (right->objType == OTNumber)
+			if (right->objType == OTNumber or left->objType == OTName)
 			{
 				dataContainer->instructions_->push_back(LSTHANEQ_NUM);
 			}
@@ -455,13 +455,14 @@ void Compiler::visit_for_(StmtsNode* _node)
 
 
 	AlifObject* jumpAddress = (AlifObject*)alifMemory->allocate(sizeof(AlifObject)); // address
+	jumpAddress->objType = OTNumber;
 	jumpAddress->V.NumberObj.numberValue = this->dataContainer->instructions_->size() - 1;
 
 
 	VISIT_(stmts, _node->U.For.block_);
 
-	dataContainer->data_->push_back(startFor); // startFor
-	dataContainer->instructions_->push_back(SET_DATA);
+	//dataContainer->data_->push_back(startFor); // startFor
+	//dataContainer->instructions_->push_back(SET_DATA);
 
 	dataContainer->data_->push_back(_node->U.For.itrName); // varName
 	dataContainer->instructions_->push_back(SET_DATA);
@@ -471,6 +472,32 @@ void Compiler::visit_for_(StmtsNode* _node)
 
 
 	this->dataContainer->instructions_->push_back(JUMP_FOR);
+}
+
+
+void Compiler::visit_while_(StmtsNode* _node) 
+{
+	AlifObject* jumpTo = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	jumpTo->objType = OTNumber;
+	jumpTo->V.NumberObj.numberValue = this->dataContainer->instructions_->size() - 1;
+
+	VISIT_(exprs, _node->U.While.condetion_);
+
+	AlifObject* jumpAddress = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	jumpAddress->objType = OTNumber;
+	this->dataContainer->data_->push_back(jumpAddress);
+	this->dataContainer->instructions_->push_back(SET_DATA);
+
+	this->dataContainer->instructions_->push_back(JUMP_IF);
+
+	VISIT_(stmts, _node->U.While.block_);
+
+	jumpAddress->V.NumberObj.numberValue = this->dataContainer->instructions_->size() + 1; // this size most be greater than size of instructions to insure break the loop
+
+	this->dataContainer->data_->push_back(jumpTo);
+	this->dataContainer->instructions_->push_back(SET_DATA);
+
+	this->dataContainer->instructions_->push_back(JUMP_TO); // this command jump to begin of the "Container"
 }
 
 
@@ -519,6 +546,10 @@ AlifObject* Compiler::visit_stmts(StmtsNode* _node)
 	else if (_node->type_ == VTFor)
 	{
 		VISIT_(for_, _node);
+	}
+	else if (_node->type_ == VTWhile)
+	{
+		VISIT_(while_, _node);
 	}
 	else if (_node->type_ == VTStmts)
 	{

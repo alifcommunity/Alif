@@ -21,10 +21,10 @@ void Parser::advance()
 
 void Parser::parse_file()
 {
-    //ExprNode* stmtsRes = nullptr; // convert it to StmtsNode after finish test
-
     do {
-        this->statements_.push_back(this->statement()); // convert it to StmtsNode after finish test
+        while (this->currentToken.type_ == TTNewline) { this->advance(); } // يجب ايجاد حل لهذه الحالة
+
+        this->statements_.push_back(this->statement());
 
         while (this->currentToken.type_ == TTNewline) { this->advance(); }
 
@@ -34,7 +34,7 @@ void Parser::parse_file()
 
 void Parser::parse_terminal()
 {
-    this->statements_.push_back(this->statement()); // convert it to StmtsNode after finish test
+    this->statements_.push_back(this->statement());
 }
 
 void Parser::list_print(AlifObject _obj) {
@@ -844,11 +844,11 @@ ExprNode* Parser::assignment() // يجب إيجاد خوارزمية افضل ب
 //        }
 //    }
 
-StmtsNode* Parser::while_statement() {
-
+StmtsNode* Parser::while_statement() 
+{
     ExprNode* condetion_ = this->expression();
     StmtsNode* block_ = nullptr;
-    StmtsNode* else_ = nullptr;
+    //StmtsNode* else_ = nullptr;
 
     if (this->currentToken.type_ == TTColon)
     {
@@ -859,20 +859,19 @@ StmtsNode* Parser::while_statement() {
         PRINT_(L"لم يتم إنهاء بينما بنقطتين \:");
         exit(-1);
     }
-    if (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"والا"))
-    {
-        this->advance();
-        else_ = this->else_();
-    }
+    //if (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"والا"))
+    //{
+    //    this->advance();
+    //    else_ = this->else_();
+    //}
 
     StmtsNode* whileNode = (StmtsNode*)alifMemory->allocate(sizeof(StmtsNode));
     whileNode->type_ = VTWhile;
     whileNode->U.While.condetion_ = condetion_;
     whileNode->U.While.block_ = block_;
-    whileNode->U.While.else_ = else_;
+    //whileNode->U.While.else_ = else_;
 
     return whileNode;
-
 }
 
 StmtsNode* Parser::for_statement()
@@ -882,7 +881,7 @@ StmtsNode* Parser::for_statement()
         AlifObject* itrName = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
         std::vector<ExprNode*>* args_ = new std::vector<ExprNode*>;
         StmtsNode* block_ = nullptr;
-        StmtsNode* else_ = nullptr;
+        //StmtsNode* else_ = nullptr;
 
         Token name_ = this->currentToken;
         this->advance();
@@ -935,12 +934,12 @@ StmtsNode* Parser::for_statement()
 
                             block_ = this->block_();
 
-                            if (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"والا")) // يجب إكملب هذه الحالة في المترجم او إلغائها
-                            {
-                                this->advance();
+                            //if (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"والا")) // يجب إكملب هذه الحالة في المترجم او إلغائها
+                            //{
+                            //    this->advance();
 
-                                else_ = this->else_();
-                            }
+                            //    else_ = this->else_();
+                            //}
                         }
                         else {
                             PRINT_(L"لم يتم إنهاء لاجل بنقطتين \:");
@@ -969,7 +968,7 @@ StmtsNode* Parser::for_statement()
         forNode->U.For.itrName = itrName;
         forNode->U.For.args_ = args_;
         forNode->U.For.block_ = block_;
-        forNode->U.For.else_ = else_;
+        //forNode->U.For.else_ = else_;
 
         return forNode;
     }

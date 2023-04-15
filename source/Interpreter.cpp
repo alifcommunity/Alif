@@ -29,13 +29,6 @@ void Interpreter::run_code()
 			instr_funcs[instrArr->get(instructionsIndex)]();
 		}
 
-		/*std::wcout << symTable.get_data(*L"س")->V.NumberObj.numberValue << std::endl;*/
-		//AlifObject* res = stackMemory->pop();
-		//std::wcout << res->V.NumberObj.numberValue << std::endl;
-		//std::wcout << symTable.get_data(name_->V.NameObj.name_)->V.NumberObj.numberValue << std::endl;
-		//std::wcout << res.V.BoolObj.boolType << std::endl;
-		//std::wcout << res.V.StringObj.strValue << std::endl;
-
 		delete stackMemory;
 		dataIndex = 0;
 	}
@@ -137,6 +130,7 @@ void augAdd_num()
 	AlifObject* value_ = stackMemory->pop();
 
 	symTable.get_data(*name_->V.NameObj.name_)->V.NumberObj.numberValue += value_->V.NumberObj.numberValue;
+	//symTable.get_data(*name_->V.NameObj.name_)->V.NumberObj.numberValue += 1;
 
 }
 void augSub_num()
@@ -547,26 +541,51 @@ void list_make()
 	}
 }
 
+void jump_to()
+{
+	AlifObject* address_ = stackMemory->pop();
+
+	instructionsIndex = address_->V.NumberObj.numberValue;
+	dataIndex = instructionsIndex - 1;
+}
+void jump_if()
+{
+	AlifObject* address_ = stackMemory->pop();
+	AlifObject* condetion_ = stackMemory->pop();
+
+	if (!condetion_->V.BoolObj.numberValue)
+	{
+		instructionsIndex = address_->V.NumberObj.numberValue;
+		dataIndex += 1; // يجب ايجاد نظام لها
+	}
+}
 
 size_t startFor = 0, endFor = 1, stepFor = 1;
 void jump_for()
 {
 	AlifObject* jumpAddress = stackMemory->pop();
 	AlifObject* iterName = stackMemory->pop();
-	AlifObject* iterValue = stackMemory->pop();
+	//AlifObject* iterValue = stackMemory->pop(); // for delete here and in compiler
 
-	dataIndex = jumpAddress->V.NumberObj.numberValue - 1;
-
+	startFor += stepFor;
 	if (startFor < endFor)
 	{
-		iterValue->V.NumberObj.numberValue = startFor;
 
-		symTable.add_symbol(*iterName->V.NameObj.name_, iterValue);
+		//iterValue->V.NumberObj.numberValue = startFor;
+		//AlifObject* iterVal = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+		//iterVal->objType = OTNumber;
+		//iterVal->V.NumberObj.numberValue = startFor;
+		//iterVal->V.NumberObj.numberType = TTInteger;
+
+		//symTable.add_symbol(*iterName->V.NameObj.name_, iterValue);
+		//symTable.add_symbol(*iterName->V.NameObj.name_, iterVal);
+		symTable.get_data(*iterName->V.NameObj.name_)->V.NumberObj.numberValue = startFor;
 
 		instructionsIndex = jumpAddress->V.NumberObj.numberValue;
+		dataIndex = jumpAddress->V.NumberObj.numberValue - 1;
+
 		stackMemory->reset();
 	}
-	startFor += stepFor;
 }
 void for_iter()
 {
