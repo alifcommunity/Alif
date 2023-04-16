@@ -406,6 +406,13 @@ void Compiler::visit_list(ExprNode* _node)
 	dataContainer->instructions_->push_back(LIST_MAKE);
 }
 
+
+void Compiler::visit_if_(StmtsNode* _node)
+{
+
+}
+
+
 void Compiler::visit_for_(StmtsNode* _node)
 {
 	AlifObject* startFor = (AlifObject*)alifMemory->allocate(sizeof(AlifObject)); // startFor
@@ -461,8 +468,6 @@ void Compiler::visit_for_(StmtsNode* _node)
 
 	VISIT_(stmts, _node->U.For.block_);
 
-	//dataContainer->data_->push_back(startFor); // startFor
-	//dataContainer->instructions_->push_back(SET_DATA);
 
 	dataContainer->data_->push_back(_node->U.For.itrName); // varName
 	dataContainer->instructions_->push_back(SET_DATA);
@@ -479,9 +484,18 @@ void Compiler::visit_while_(StmtsNode* _node)
 {
 	AlifObject* jumpTo = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 	jumpTo->objType = OTNumber;
-	jumpTo->V.NumberObj.numberValue = this->dataContainer->instructions_->size() - 1;
+	this->dataContainer->instructions_->empty() ? jumpTo->V.NumberObj.numberValue = -1 : jumpTo->V.NumberObj.numberValue = this->dataContainer->instructions_->size() - 1;
+
+	AlifObject* dataAddressJT = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	dataAddressJT->objType = OTNumber;
+	dataAddressJT->V.NumberObj.numberValue = this->dataContainer->data_->size();
 
 	VISIT_(exprs, _node->U.While.condetion_);
+
+	AlifObject* dataAddressJ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	dataAddressJ->objType = OTNumber;
+	dataContainer->data_->push_back(dataAddressJ); // dataAddress
+	dataContainer->instructions_->push_back(SET_DATA);
 
 	AlifObject* jumpAddress = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 	jumpAddress->objType = OTNumber;
@@ -490,11 +504,17 @@ void Compiler::visit_while_(StmtsNode* _node)
 
 	this->dataContainer->instructions_->push_back(JUMP_IF);
 
+
 	VISIT_(stmts, _node->U.While.block_);
 
-	jumpAddress->V.NumberObj.numberValue = this->dataContainer->instructions_->size() + 1; // this size most be greater than size of instructions to insure break the loop
+
+	dataAddressJ->V.NumberObj.numberValue = this->dataContainer->data_->size() + 2;
+	jumpAddress->V.NumberObj.numberValue = this->dataContainer->instructions_->size() + 2; // this size most be greater than size of instructions to insure break the loop
 
 	this->dataContainer->data_->push_back(jumpTo);
+	this->dataContainer->instructions_->push_back(SET_DATA);
+
+	this->dataContainer->data_->push_back(dataAddressJT);
 	this->dataContainer->instructions_->push_back(SET_DATA);
 
 	this->dataContainer->instructions_->push_back(JUMP_TO); // this command jump to begin of the "Container"
@@ -550,6 +570,10 @@ AlifObject* Compiler::visit_stmts(StmtsNode* _node)
 	else if (_node->type_ == VTWhile)
 	{
 		VISIT_(while_, _node);
+	}
+	else if (_node->type_ == VTIf)
+	{
+		VISIT_(if_, _node);
 	}
 	else if (_node->type_ == VTStmts)
 	{

@@ -41,6 +41,7 @@ public:
 
 	void visit_for_(StmtsNode*);
 	void visit_while_(StmtsNode*);
+	void visit_if_(StmtsNode*);
 
 	AlifObject* visit_exprs(ExprNode* _node);
 	AlifObject* visit_stmts(StmtsNode* _node);
