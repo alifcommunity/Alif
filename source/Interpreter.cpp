@@ -42,8 +42,8 @@ void get_data()
 	AlifObject* name_ = stackMemory->pop();
 	stackMemory->push(symTable.get_data(*name_->V.NameObj.name_));
 
-	//AlifObject* res = stackMemory->pop1();
-	//std::wcout << res->V.NumberObj.numberValue << std::endl;
+	AlifObject* res = stackMemory->pop1();
+	std::wcout << res->V.NumberObj.numberValue << std::endl;
 }
 void set_data()
 {
@@ -543,20 +543,22 @@ void list_make()
 
 void jump_to()
 {
+	AlifObject* dataAddress = stackMemory->pop();
 	AlifObject* address_ = stackMemory->pop();
 
 	instructionsIndex = address_->V.NumberObj.numberValue;
-	dataIndex = instructionsIndex - 1;
+	dataIndex = dataAddress->V.NumberObj.numberValue;
 }
 void jump_if()
 {
 	AlifObject* address_ = stackMemory->pop();
+	AlifObject* dataAddress = stackMemory->pop();
 	AlifObject* condetion_ = stackMemory->pop();
 
 	if (!condetion_->V.BoolObj.numberValue)
 	{
-		instructionsIndex = address_->V.NumberObj.numberValue;
-		dataIndex += 1; // يجب ايجاد نظام لها
+		instructionsIndex = address_->V.NumberObj.numberValue; //يوجد خطأ
+		dataIndex = dataAddress->V.NumberObj.numberValue; // يجب ايجاد نظام لها
 	}
 }
 
