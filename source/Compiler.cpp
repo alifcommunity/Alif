@@ -1,7 +1,7 @@
 #include "Compiler.h"
 
 
-Compiler::Compiler(std::vector<StmtsNode*>* _statements, MemoryBlock* _alifMemory) :
+Compiler::Compiler(std::vector<StmtsNode*>* _statements, AlifMemory* _alifMemory) :
 	statements_(_statements), alifMemory(_alifMemory) {}
 
 void Compiler::compile_file() 
@@ -406,12 +406,66 @@ void Compiler::visit_list(ExprNode* _node)
 	dataContainer->instructions_->push_back(LIST_MAKE);
 }
 
-
+bool a = true; // for elseif recursion
+AlifObject* jTAdress = new AlifObject(); // Address of instructions
+AlifObject* jTDataAddress = new AlifObject; // Address of data
 void Compiler::visit_if_(StmtsNode* _node)
 {
+	VISIT_(exprs, _node->U.If.condetion_);
+
+	AlifObject* dataAddress = (AlifObject*)alifMemory->allocate(sizeof(AlifObject)); // Address of data
+	dataAddress->objType = OTNumber;
+	this->dataContainer->data_->push_back(dataAddress);
+	this->dataContainer->instructions_->push_back(SET_DATA);
+
+	AlifObject* jumpAddress = (AlifObject*)alifMemory->allocate(sizeof(AlifObject)); // Address of instructions
+	jumpAddress->objType = OTNumber;
+	this->dataContainer->data_->push_back(jumpAddress);
+	this->dataContainer->instructions_->push_back(SET_DATA);
+
+	this->dataContainer->instructions_->push_back(JUMP_IF);
+
+
+	VISIT_(stmts, _node->U.If.block_);
+
+	//AlifObject* jTAdress = (AlifObject*)alifMemory->allocate(sizeof(AlifObject)); // Address of instructions
+	jTAdress->objType = OTNumber;
+	this->dataContainer->data_->push_back(jTAdress);
+	this->dataContainer->instructions_->push_back(SET_DATA);
+
+	//AlifObject* jTDataAddress = (AlifObject*)alifMemory->allocate(sizeof(AlifObject)); // Address of data
+	jTDataAddress->objType = OTNumber;
+	this->dataContainer->data_->push_back(jTDataAddress);
+	this->dataContainer->instructions_->push_back(SET_DATA);
+
+	this->dataContainer->instructions_->push_back(JUMP_TO);
+
+	dataAddress->V.NumberObj.numberValue = this->dataContainer->data_->size();
+	jumpAddress->V.NumberObj.numberValue = this->dataContainer->instructions_->size() - 1;
+
+
+	if (a)
+	{
+		a = false;
+
+		if (_node->U.If.elseIf->size())
+		{
+			for (StmtsNode* node : *_node->U.If.elseIf)
+			{
+				VISIT_(stmts, node);
+			}
+		}
+
+		if (_node->U.If.else_)
+		{
+			VISIT_(stmts, _node->U.If.else_);
+		
+			jTDataAddress->V.NumberObj.numberValue = this->dataContainer->data_->size();
+			jTAdress->V.NumberObj.numberValue = this->dataContainer->instructions_->size() - 1;
+		}
+	}
 
 }
-
 
 void Compiler::visit_for_(StmtsNode* _node)
 {

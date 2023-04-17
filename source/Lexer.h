@@ -9,7 +9,7 @@
 #include "Constants.h"
 #include "Tokens.h"
 #include "Error.h"
-#include "MemoryBlock.h"
+#include "AlifMemory.h"
 
 using wstr = std::wstring;
 
@@ -27,7 +27,7 @@ class Lexer {
 
 
 public:
-    MemoryBlock alifMemory;
+    AlifMemory alifMemory;
     DedentSpecifier* dedentSpec = (DedentSpecifier*)alifMemory.allocate(sizeof(DedentSpecifier)); // حساب المسافات البادئة والراجعة
     std::vector<Token> tokens_{};
 

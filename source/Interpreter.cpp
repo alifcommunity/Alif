@@ -5,11 +5,11 @@ AlifArray<Container*>* containers_;
 AlifArray<AlifObject*>* dataArr;
 AlifArray<InstructionsType>* instrArr;
 AlifStack<AlifObject*>* stackMemory;
-MemoryBlock* alifMemory;
+AlifMemory* alifMemory;
 size_t dataIndex = 0;
 size_t instructionsIndex = 0;
 
-Interpreter::Interpreter(AlifArray<Container*>* _containers, MemoryBlock* _alifMemory) {
+Interpreter::Interpreter(AlifArray<Container*>* _containers, AlifMemory* _alifMemory) {
 	containers_ = _containers;
 	alifMemory = _alifMemory;
 }
@@ -504,10 +504,9 @@ void expr_op()
 {
 	AlifObject* compRes = stackMemory->pop();
 
-
 	if (compRes->V.NumberObj.numberValue != 0)
 	{
-	
+		stackMemory->pop();
 	}
 }
 
@@ -557,8 +556,8 @@ void jump_if()
 
 	if (!condetion_->V.BoolObj.numberValue)
 	{
-		instructionsIndex = address_->V.NumberObj.numberValue; //يوجد خطأ
-		dataIndex = dataAddress->V.NumberObj.numberValue; // يجب ايجاد نظام لها
+		instructionsIndex = address_->V.NumberObj.numberValue;
+		dataIndex = dataAddress->V.NumberObj.numberValue;
 	}
 }
 
@@ -567,20 +566,10 @@ void jump_for()
 {
 	AlifObject* jumpAddress = stackMemory->pop();
 	AlifObject* iterName = stackMemory->pop();
-	//AlifObject* iterValue = stackMemory->pop(); // for delete here and in compiler
 
 	startFor += stepFor;
 	if (startFor < endFor)
 	{
-
-		//iterValue->V.NumberObj.numberValue = startFor;
-		//AlifObject* iterVal = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
-		//iterVal->objType = OTNumber;
-		//iterVal->V.NumberObj.numberValue = startFor;
-		//iterVal->V.NumberObj.numberType = TTInteger;
-
-		//symTable.add_symbol(*iterName->V.NameObj.name_, iterValue);
-		//symTable.add_symbol(*iterName->V.NameObj.name_, iterVal);
 		symTable.get_data(*iterName->V.NameObj.name_)->V.NumberObj.numberValue = startFor;
 
 		instructionsIndex = jumpAddress->V.NumberObj.numberValue;

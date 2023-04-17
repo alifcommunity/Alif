@@ -2,7 +2,7 @@
 
 
 
-Parser::Parser(std::vector<Token>* tokens_, wstr _fileName, wstr* _input, MemoryBlock* _alifMemory) : 
+Parser::Parser(std::vector<Token>* tokens_, wstr _fileName, wstr* _input, AlifMemory* _alifMemory) :
     tokens_(tokens_), fileName(_fileName), input_(_input), alifMemory(_alifMemory)
 {
     this->advance();
@@ -993,11 +993,11 @@ StmtsNode* Parser::else_if()
         exit(-1);
     }
 
-    StmtsNode* elseNode = (StmtsNode*)alifMemory->allocate(sizeof(StmtsNode));
-    elseNode->type_ = VTElseIf;
-    elseNode->U.If.condetion_ = condetion_;
-    elseNode->U.If.block_ = block_;
-    return elseNode;
+    StmtsNode* elseIfNode = (StmtsNode*)alifMemory->allocate(sizeof(StmtsNode));
+    elseIfNode->type_ = VTIf;
+    elseIfNode->U.If.condetion_ = condetion_;
+    elseIfNode->U.If.block_ = block_;
+    return elseIfNode;
 }
 
 StmtsNode* Parser::else_() {

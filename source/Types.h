@@ -78,7 +78,6 @@ enum VisitType : uint8_t { // انواع الزيارة في الشجرة
     VTClass,
     VTFunction,
     VTIf,
-    VTElseIf,
     VTFor,
     VTWhile,
     VTStmts,

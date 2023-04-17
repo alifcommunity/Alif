@@ -33,7 +33,7 @@
     <ClCompile Include="..\source\Interpreter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\MemoryBlock.cpp">
+    <ClCompile Include="..\source\AlifMemory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -91,7 +91,7 @@
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\MemoryBlock.h">
+    <ClInclude Include="..\source\AlifMemory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\source\Container.h">
