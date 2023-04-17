@@ -11,7 +11,7 @@
 */
 
 
-class MemoryBlock {
+class AlifMemory {
 private:
     std::vector<wchar_t*> segments_;
     wchar_t* currentSegment;
@@ -20,7 +20,7 @@ private:
     int* fragmentCounts;
 
 public:
-    MemoryBlock(size_t _segmentSize = 8192);
+    AlifMemory(size_t _segmentSize = 8192);
 
     void* allocate(size_t);
     void deallocate(void*);

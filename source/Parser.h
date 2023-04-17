@@ -3,7 +3,7 @@
 #include "Error.h"
 #include "Tokens.h"
 #include "Node.h"
-#include "MemoryBlock.h"
+#include "AlifMemory.h"
 
 #include <string>
 
@@ -21,7 +21,7 @@ class Parser {
     wstr* input_;
 public:
     std::vector<StmtsNode*> statements_;
-    MemoryBlock* alifMemory;
+    AlifMemory* alifMemory;
 
     /// <اعلام>
 
@@ -30,7 +30,7 @@ public:
 
     /// </اعلام>
 
-    Parser(std::vector<Token>* tokens, wstr _fileName, wstr* _input, MemoryBlock* _alifMemory);
+    Parser(std::vector<Token>* tokens, wstr _fileName, wstr* _input, AlifMemory* _alifMemory);
     
     void advance();
 

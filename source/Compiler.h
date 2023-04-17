@@ -3,7 +3,7 @@
 #include "Node.h"
 #include "Types.h"
 #include "SymbolTable.h"
-#include "MemoryBlock.h"
+#include "AlifMemory.h"
 #include "Container.h"
 #include "AlifArray.h"
 
@@ -24,9 +24,9 @@ public:
 	//std::vector<AlifObject*> data_{}; // لماذا لا تكون البيانات هي ذاكرة المكدس ويتم إرسال عنوانها بدل نقل البيانات مرة اخرى؟
 	Container* dataContainer{};
 	AlifArray<Container*> containers_{};
-	MemoryBlock* alifMemory;
+	AlifMemory* alifMemory;
 
-	Compiler(std::vector<StmtsNode*>* _statements, MemoryBlock* _alifMemory);
+	Compiler(std::vector<StmtsNode*>* _statements, AlifMemory* _alifMemory);
 
 	void compile_file();
 

@@ -1,7 +1,7 @@
-#include "MemoryBlock.h"
+#include "AlifMemory.h"
 
 
-MemoryBlock::MemoryBlock(size_t _segmentSize)
+AlifMemory::AlifMemory(size_t _segmentSize)
     : segmentSize(_segmentSize), currentIndex(0)
 {
     currentSegment = new wchar_t[segmentSize]; // احجز المساحة الممررة وهي 8192 بايت مع قيمة افتراضية 0
@@ -11,7 +11,7 @@ MemoryBlock::MemoryBlock(size_t _segmentSize)
     currentIndex += 4; // قم بالتقدم بمقدار اربع بايت لتفادي المساحة التي حجزت للعدد الذي سيعد الوحدات في هذه القطعة
 }
 
-void* MemoryBlock::allocate(size_t _size)
+void* AlifMemory::allocate(size_t _size)
 {
     /*
         للتاكد من ان حجم _size
@@ -57,7 +57,7 @@ void* MemoryBlock::allocate(size_t _size)
         return ptr_; // ارجع عنوان المكان الذي تم حجزه
 }
 
-void MemoryBlock::deallocate(void* _ptr) 
+void AlifMemory::deallocate(void* _ptr)
 {
     for (wchar_t* seg : segments_) // لاجل كل عنوان من عناوين القطع في مصفوفة القطع
     {

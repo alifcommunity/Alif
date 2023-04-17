@@ -43,7 +43,7 @@ public:
 
     void push_back(const T& value) {
         if (size_ >= capacity_) {
-            reserve(capacity_ == 0 ? 1 : 2 * capacity_);
+            reserve(capacity_ == 0 ? 16 : 2 * capacity_);
         }
         data_[size_++] = value;
     }
