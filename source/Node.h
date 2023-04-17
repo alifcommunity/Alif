@@ -31,7 +31,7 @@ public:
 
         class {
         public:
-            AlifObject paramName; // متغير خاص بدالة parameters()
+            AlifObject* paramName; // متغير خاص بدالة parameters()
             std::vector<AlifObject*>* name_;
             ExprNode* value_;
         }NameAssign;

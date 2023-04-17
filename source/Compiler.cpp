@@ -575,6 +575,14 @@ void Compiler::visit_while_(StmtsNode* _node)
 }
 
 
+void Compiler::visit_function(StmtsNode* _node)
+{
+	this->dataContainer->data_->push_back(_node->U.FunctionDef.name_);
+
+	symTable.add_symbol(*_node->U.FunctionDef.name_->V.NameObj.name_, _node->U.FunctionDef.body_);
+}
+
+
 AlifObject* Compiler::visit_exprs(ExprNode* _node)
 {
 	if (_node->type_ == VTObject)
@@ -628,6 +636,10 @@ AlifObject* Compiler::visit_stmts(StmtsNode* _node)
 	else if (_node->type_ == VTIf)
 	{
 		VISIT_(if_, _node);
+	}
+	else if (_node->type_ == VTFunction)
+	{
+		VISIT_(function, _node);
 	}
 	else if (_node->type_ == VTStmts)
 	{
