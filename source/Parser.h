@@ -79,7 +79,7 @@ public:
 
     StmtsNode* function_def();
 
-    StmtsNode* class_def();
+    //StmtsNode* class_def();
 
     StmtsNode* while_statement();
 

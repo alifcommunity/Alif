@@ -662,148 +662,159 @@ ExprNode* Parser::assignment() // يجب إيجاد خوارزمية افضل ب
     return this->expressions();
 }
 
-//StmtsNode* Parser::return_statement() {
-//
-//    ExprNode* expr_;
-//
-//    if (this->currentToken.type_ != TTNewline)
-//    {
-//        expr_ = this->expression();
-//    }
-//    else
-//    {
-//        expr_ = nullptr;
-//    }
-//    this->advance();
-//
-//    exprLevel--;
-//    (stmtsNode + exprLevel)->U.Return.returnExpr = expr_;
-//    (stmtsNode + exprLevel)->type_ = VTReturn;
-//
-//    return (stmtsNode + exprLevel);
-//}
+StmtsNode* Parser::return_statement() {
 
-//    std::vector<ExprNode*>* parameters() {
-//
-//
-//        std::vector<ExprNode*>* params_ = new std::vector<ExprNode*>;
-//        lastParam = false;
-//
-//        do {
-//
-//            this->advance();
-//
-//            if (this->currentToken.type_ != TTRrightParenthesis)
-//            {
-//                if (Next_Is(TTequal))
-//                {
-//                    lastParam = true;
-//
-//                    AlifObject name_{};
-//
-//                    name_.type_ = TTname;
-//                    name_.V.Name.name_ = this->currentToken.val.numVal;
-//
-//                    this->advance();
-//                    this->advance();
-//
-//                    ExprNode* expr_ = this->expression();
-//
-//                    level--;
-//
-//                    (exprNode + level)->type_ = VAssign;
-//                    (exprNode + level)->U.NameAssign.paramName = name_;
-//                    (exprNode + level)->U.NameAssign.value_ = expr_;
-//
-//                    params_->push_back((exprNode + level));
-//
-//                }
-//                else {
-//                    if (!lastParam)
-//                    {
-//                        params_->push_back(this->atom());
-//                    }
-//                    else {
-//                        PRINT_(L"لا يمكن تمرير متغير بدون قيمة افتراضية بعد متغير ذو قيمة افتراضية");
-//                        exit(-1);
-//                    }
-//                }
-//
-//            }
-//            else
-//            {
-//                return params_;
-//            }
-//
-//        } while (this->currentToken.type_ == TTComma);
-//
-//        if (this->currentToken.type_ == TTRrightParenthesis)
-//        {
-//            return params_;
-//        }
-//        else {
-//            PRINT_(L"لم يتم إغلاق القوس");
-//            exit(-1);
-//        }
-//
-//    }
-//
-//    StmtsNode* function_def() {
-//
-//        AlifObject name{};
-//        StmtsNode* body = nullptr;
-//        std::vector<ExprNode*>* params = nullptr;
-//
-//        if (this->currentToken.type_ == TTname or this->currentToken.type_ == TTbuildInFunc) {
-//
-//            name.type_ = this->currentToken.type_;
-//
-//            if (this->currentToken.type_ == TTname)
-//            {
-//                name.V.Name.name_ = this->currentToken.val.numVal;
-//            }
-//            else if (this->currentToken.type_ == TTbuildInFunc) {
-//                name.V.BuildInFunc.buildInFunc = this->currentToken.val.buildInFunc;
-//            }
-//            else
-//            {
-//                PRINT_(L"يتوقع وجود اسم للدالة");
-//            }
-//
-//            this->advance();
-//
-//            if (this->currentToken.type_ == TTLeftParenthesis and Next_Is(TTRrightParenthesis)) {
-//
-//                this->advance();
-//                this->advance();
-//            }
-//            else {
-//                params = this->parameters();
-//                this->advance();
-//            }
-//
-//            if (this->currentToken.type_ == TTcolon) {
-//
-//                this->advance();
-//                returnFlag = true;
-//                body = this->block_();
-//                returnFlag = false;
-//
-//                level--;
-//                (stmtsNode + level)->type_ = VFunction;
-//                (stmtsNode + level)->U.FunctionDef.name = name;
-//                (stmtsNode + level)->U.FunctionDef.params = params;
-//                (stmtsNode + level)->U.FunctionDef.body = body;
-//                return (stmtsNode + level);
-//            }
-//            else {
-//                PRINT_(L"لم يتم إنهاء دالة بنقطتين \:");
-//                exit(-1);
-//            }
-//        }
-//
-//    }
-//
+    ExprNode* expr_;
+
+    if (this->currentToken.type_ != TTNewline)
+    {
+        expr_ = this->expression();
+    }
+    else
+    {
+        expr_ = nullptr;
+    }
+    this->advance();
+
+    StmtsNode* returnNode = (StmtsNode*)alifMemory->allocate(sizeof(StmtsNode));
+    returnNode->U.Return.returnExpr = expr_;
+    returnNode->type_ = VTReturn;
+
+    return returnNode;
+}
+
+
+std::vector<ExprNode*>* Parser::parameters() 
+{
+    std::vector<ExprNode*>* params_ = new std::vector<ExprNode*>;
+    lastParam = false;
+
+    do 
+    {
+        this->advance();
+
+        if (this->currentToken.type_ != TTRrightParenthesis)
+        {
+            if (Next_Is(TTEqual))
+            {
+                lastParam = true;
+
+                AlifObject* name_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+
+                name_->objType = OTName;
+                name_->V.NameObj.name_ = this->currentToken.value_;
+
+                this->advance();
+                this->advance();
+
+                ExprNode* expr_ = this->expression();
+
+                ExprNode* paramNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+
+                paramNode->type_ = VTAssign;
+                paramNode->U.NameAssign.paramName = name_;
+                paramNode->U.NameAssign.value_ = expr_;
+
+                params_->push_back(paramNode);
+
+            }
+            else {
+                if (!lastParam)
+                {
+                    params_->push_back(this->atom());
+                }
+                else {
+                    PRINT_(L"لا يمكن تمرير متغير بدون قيمة افتراضية بعد متغير ذو قيمة افتراضية");
+                    exit(-1);
+                }
+            }
+
+        }
+        else
+        {
+            return params_;
+        }
+
+    } while (this->currentToken.type_ == TTComma);
+
+    if (this->currentToken.type_ == TTRrightParenthesis)
+    {
+        return params_;
+    }
+    else {
+        PRINT_(L"لم يتم إغلاق القوس");
+        exit(-1);
+    }
+
+}
+
+StmtsNode* Parser::function_def() 
+{
+    AlifObject* name = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+    StmtsNode* body = nullptr;
+    std::vector<ExprNode*>* params = nullptr;
+
+    if (this->currentToken.type_ == TTName) 
+    {
+        name->objType = OTName;
+        name->V.NameObj.name_ = this->currentToken.value_;
+
+        //if (this->currentToken.type_ == TTName)
+        //{
+        //}
+        //else if (this->currentToken.type_ == TTbuildInFunc) {
+        //    name.V.BuildInFunc.buildInFunc = this->currentToken.val.buildInFunc;
+        //}
+        //else
+        //{
+        //    PRINT_(L"يتوقع وجود اسم للدالة");
+        //}
+
+        this->advance();
+
+        if (this->currentToken.type_ == TTLeftParenthesis) 
+        {
+            this->advance();
+            if (this->currentToken.type_ == TTRrightParenthesis)
+            {
+                this->advance();
+            }
+            else {
+                params = this->parameters();
+                this->advance();
+            }
+        }
+        if (this->currentToken.type_ == TTRrightParenthesis)
+        {
+            this->advance();
+        }
+        else
+        {
+            // error
+        }
+
+        if (this->currentToken.type_ == TTColon) {
+
+            this->advance();
+            returnFlag = true;
+            body = this->block_();
+            returnFlag = false;
+
+            StmtsNode* funcNode = (StmtsNode*)alifMemory->allocate(sizeof(StmtsNode));
+            funcNode->type_ = VTFunction;
+            funcNode->U.FunctionDef.name_ = name;
+            funcNode->U.FunctionDef.params_ = params;
+            funcNode->U.FunctionDef.body_ = body;
+            return funcNode;
+        }
+        else {
+            PRINT_(L"لم يتم إنهاء دالة بنقطتين \:");
+            exit(-1);
+        }
+    }
+
+}
+
 //    StmtsNode* class_def() {
 //
 //        ExprNode* bases = nullptr;
@@ -1101,11 +1112,11 @@ StmtsNode* Parser::compound_statement()
         this->advance();
         return this->for_statement();
     }
-    //else if (!wcscmp(this->currentToken.value_, L"دالة"))
-    //{
-    //    this->advance();
-    //    return this->function_def();
-    //}
+    else if (!wcscmp(this->currentToken.value_, L"دالة"))
+    {
+        this->advance();
+        return this->function_def();
+    }
     else if (!wcscmp(this->currentToken.value_, L"اذا"))
     {
         this->advance();
@@ -1121,19 +1132,19 @@ StmtsNode* Parser::compound_statement()
     //    this->advance();
     //    return this->class_def();
     //}
-    //if (!wcscmp(this->currentToken.value_, L"ارجع"))
-    //{
-    //    if (returnFlag)
-    //    {
-    //        this->advance();
-    //        return this->return_statement();
-    //    }
-    //    else
-    //    {
-    //        PRINT_(L"لا يمكن إستدعاء ارجع من خارج دالة");
-    //        exit(-1);
-    //    }
-    //}
+    if (!wcscmp(this->currentToken.value_, L"ارجع"))
+    {
+        if (returnFlag)
+        {
+            this->advance();
+            return this->return_statement();
+        }
+        else
+        {
+            PRINT_(L"لا يمكن إستدعاء ارجع من خارج دالة");
+            exit(-1);
+        }
+    }
 }
 
 ExprNode* Parser::simple_statement()
