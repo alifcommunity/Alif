@@ -40,10 +40,10 @@ void none_() {}
 void get_data() 
 {
 	AlifObject* name_ = stackMemory->pop();
-	stackMemory->push(symTable.get_data(*name_->V.NameObj.name_));
+	stackMemory->push(symTable->get_data(*name_->V.NameObj.name_));
 
-	AlifObject* res = stackMemory->pop1();
-	std::wcout << res->V.NumberObj.numberValue << std::endl;
+	//AlifObject* res = stackMemory->pop1();
+	//std::wcout << res->V.NumberObj.numberValue << std::endl;
 }
 void set_data()
 {
@@ -129,8 +129,8 @@ void augAdd_num()
 	AlifObject* name_ = stackMemory->pop();
 	AlifObject* value_ = stackMemory->pop();
 
-	symTable.get_data(*name_->V.NameObj.name_)->V.NumberObj.numberValue += value_->V.NumberObj.numberValue;
-	//symTable.get_data(*name_->V.NameObj.name_)->V.NumberObj.numberValue += 1;
+	symTable->get_data(*name_->V.NameObj.name_)->V.NumberObj.numberValue += value_->V.NumberObj.numberValue;
+	//symTable->get_data(*name_->V.NameObj.name_)->V.NumberObj.numberValue += 1;
 
 }
 void augSub_num()
@@ -514,12 +514,9 @@ void expr_op()
 void store_name()
 {
 	AlifObject* name_ = stackMemory->pop();
-
 	AlifObject* value_ = stackMemory->pop();
 
-
-	symTable.add_symbol(*name_->V.NameObj.name_, value_);
-
+	symTable->add_symbol(*name_->V.NameObj.name_, value_);
 }
 
 void list_make()
@@ -539,6 +536,7 @@ void list_make()
 		list_->V.ListObj.objList->push_back(element_);
 	}
 }
+
 
 void jump_to()
 {
@@ -570,7 +568,7 @@ void jump_for()
 	startFor += stepFor;
 	if (startFor < endFor)
 	{
-		symTable.get_data(*iterName->V.NameObj.name_)->V.NumberObj.numberValue = startFor;
+		symTable->get_data(*iterName->V.NameObj.name_)->V.NumberObj.numberValue = startFor;
 
 		instructionsIndex = jumpAddress->V.NumberObj.numberValue;
 		dataIndex = jumpAddress->V.NumberObj.numberValue - 1;
@@ -587,4 +585,32 @@ void for_iter()
 	startFor = startForObj->V.NumberObj.numberValue;
 	endFor = endForObj->V.NumberObj.numberValue;
 	stepFor = stepForObj->V.NumberObj.numberValue;
+}
+
+
+void call_name()
+{
+	AlifObject* container_ = stackMemory->pop();
+
+	//AlifArray<AlifObject*>* dataBackup = dataArr;
+	//AlifArray<InstructionsType>* instrBackup = instrArr;
+	int instrIndexBackup = instructionsIndex;
+	int dataIndexBackup = dataIndex;
+
+
+	dataArr = container_->V.ContainerObj.container_->data_;
+	instrArr = container_->V.ContainerObj.container_->instructions_;
+	instructionsIndex = 0;
+	dataIndex = 0;
+
+	uint32_t endContainer = instrArr->size();
+	for (instructionsIndex = 0; instructionsIndex < endContainer; instructionsIndex++)
+	{
+		instr_funcs[instrArr->get(instructionsIndex)]();
+	}
+
+	//dataArr = dataBackup;
+	//instrArr = instrBackup;
+	instructionsIndex = instrIndexBackup;
+	dataIndex = dataIndexBackup;
 }

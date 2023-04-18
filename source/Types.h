@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 static const wchar_t* keywordsList[21] = { L"عدم", L"خطا", L"صح", L"ليس", L"و", L"او", L"صنف", L"دالة", L"ارجع", L"في", L"لاجل", L"بينما", L"اذا", L"والا", L"اواذا", L"استورد", L"من", L"حذف", L"استمر", L"توقف", L"مرر"};
 
 enum TokensType : uint8_t { // انواع الرموز
@@ -143,6 +145,9 @@ enum InstructionsType : uint8_t { // التعليمات
     JUMP_IF,
     JUMP_FOR,
     FOR_ITER,
+
+    // تعليمات الدوال والاصناف
+    CALL_NAME,
 
 };
 

@@ -304,27 +304,29 @@ ExprNode* Parser::primary() {
 
         this->advance();
 
-        if (this->currentToken.type_ == TTRrightParenthesis) {
-
+        if (this->currentToken.type_ == TTRrightParenthesis) 
+        {
             this->advance();
 
-            //exprLevel--;
-            //(exprNode + exprLevel)->type_ = VTCall;
-            //(exprNode + exprLevel)->U.Call.name_ = primary;
-            //(exprNode + exprLevel)->U.Call.args_ = nullptr;
-            //return (exprNode + exprLevel);
-
+            ExprNode* callNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+            callNode->type_ = VTCall;
+            callNode->U.Call.name_ = primary;
+            callNode->U.Call.args_ = nullptr;
+            return callNode;
         }
 
         std::vector<ExprNode*>* args = this->arguments();
 
         this->advance();
 
-        //exprLevel--;
-        //(exprNode + exprLevel)->type_ = VTCall;
-        //(exprNode + exprLevel)->U.Call.name_ = primary;
-        //(exprNode + exprLevel)->U.Call.args_ = args;
-        //return (exprNode + exprLevel);
+        if (this->currentToken.type_ == TTRrightParenthesis)
+        {
+            ExprNode* callNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+            callNode->type_ = VTCall;
+            callNode->U.Call.name_ = primary;
+            callNode->U.Call.args_ = args;
+            return callNode;
+        }
 
     }
     else {
