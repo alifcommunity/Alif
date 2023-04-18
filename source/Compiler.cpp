@@ -1,9 +1,13 @@
 #include "Compiler.h"
 
 
+SymbolTable* symTable = new SymbolTable;
+
+
 Compiler::Compiler(std::vector<StmtsNode*>* _statements, AlifMemory* _alifMemory) :
 	statements_(_statements), alifMemory(_alifMemory) {}
 
+bool a = true;
 void Compiler::compile_file() 
 {
 	for (StmtsNode* node_ : *statements_)
@@ -14,7 +18,14 @@ void Compiler::compile_file()
 
 		VISIT_(stmts, node_); // تم شرح طريقة الاستدعاء في ملف compiler.h
 
-		containers_.push_back(dataContainer);
+		if (a) // يقوم بالتحقق في حال كان تعريف دالة لا يجب ان يتم إضافة الحاوية الى مصفوفة الحاويات
+		{
+			containers_.push_back(dataContainer);
+		}
+		else
+		{
+			a = true;
+		}
 	}
 }
 
@@ -406,7 +417,7 @@ void Compiler::visit_list(ExprNode* _node)
 	dataContainer->instructions_->push_back(LIST_MAKE);
 }
 
-bool a = true; // for elseif recursion
+bool b = true;
 AlifObject* jTAdress = new AlifObject(); // Address of instructions
 AlifObject* jTDataAddress = new AlifObject; // Address of data
 void Compiler::visit_if_(StmtsNode* _node)
@@ -444,9 +455,9 @@ void Compiler::visit_if_(StmtsNode* _node)
 	jumpAddress->V.NumberObj.numberValue = this->dataContainer->instructions_->size() - 1;
 
 
-	if (a)
+	if (b) // يتحقق هل المستدعى "اذا" ام "واذا" ففي حال الاولى يسمح بالمرور والثانية لا يسمح
 	{
-		a = false;
+		b = false;
 
 		if (_node->U.If.elseIf->size())
 		{
@@ -577,9 +588,32 @@ void Compiler::visit_while_(StmtsNode* _node)
 
 void Compiler::visit_function(StmtsNode* _node)
 {
-	this->dataContainer->data_->push_back(_node->U.FunctionDef.name_);
+	a = false;
 
-	symTable.add_symbol(*_node->U.FunctionDef.name_->V.NameObj.name_, _node->U.FunctionDef.body_);
+	dataContainer = new Container;
+	dataContainer->instructions_ = new AlifArray<InstructionsType>;
+	dataContainer->data_ = new AlifArray<AlifObject*>;
+
+	VISIT_(stmts, _node->U.FunctionDef.body_);
+
+	AlifObject* containerObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	containerObject->V.ContainerObj.container_ = dataContainer;
+
+	symTable->add_symbol(*_node->U.FunctionDef.name_->V.NameObj.name_, containerObject);
+
+	//dataContainer->data_->clear();
+	//dataContainer->instructions_->clear();
+}
+
+
+void Compiler::visit_call(ExprNode* _node)
+{
+	this->dataContainer->data_->push_back(_node->U.Call.name_->U.Object.value_);
+	this->dataContainer->instructions_->push_back(SET_DATA);
+
+	this->dataContainer->instructions_->push_back(GET_DATA);
+
+	this->dataContainer->instructions_->push_back(CALL_NAME);
 }
 
 
@@ -617,6 +651,10 @@ AlifObject* Compiler::visit_exprs(ExprNode* _node)
 	{
 		VISIT_(list, _node);
 	}
+	else if (_node->type_ == VTCall)
+	{
+		VISIT_(call, _node);
+	}
 }
 
 AlifObject* Compiler::visit_stmts(StmtsNode* _node)
@@ -645,7 +683,10 @@ AlifObject* Compiler::visit_stmts(StmtsNode* _node)
 	{
 		for (StmtsNode* stmt : *_node->U.Stmts.stmts_)
 		{
-			VISIT_(stmts, stmt);
+			//if (!a and stmt->type_ != VTFunction)
+			//{
+				VISIT_(stmts, stmt);
+			//}
 		}
 	}
 }

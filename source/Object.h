@@ -1,10 +1,11 @@
 #pragma once
 
+#include "Types.h"
+
 #include <iostream>
 #include <vector>
 
-#include "Types.h"
-
+class Container;
 class ExprNode; 
 
 using wstr = std::wstring;
@@ -23,32 +24,43 @@ public:
         //    KeywordValue noneValue;
         //}NoneObj;
 
-        class Number{
+        class Number 
+        {
         public:
             TokensType numberType;
             double64_t numberValue;
         }NumberObj;
 
-        class : public Number{
+        class : public Number
+        {
         public:
             wcstr* boolType;
         }BoolObj;
 
-        class {
+        class 
+        {
         public:
             wcstr* strValue;
         }StringObj;
 
-        class {
+        class 
+        {
         public:
             wcstr* name_;
         }NameObj;
 
-        class {
+        class 
+        {
         public:
             std::vector<ExprNode*>* list_;
             std::vector<AlifObject*>* objList;
         }ListObj;
+
+        class
+        {
+        public:
+            Container* container_;
+        }ContainerObj;
 
         //class {
         //public:

@@ -14,14 +14,11 @@
 												 //    طريقة الاستدعاء           شكل الاستدعاء
 
 
-static SymbolTable symTable; // تم تعريفه ك متغير عام لمنع حذف المتغيرات عند استخدام الطرفية بعد الانتقال الى سطر جديد
-
+extern SymbolTable* symTable; // تم تعريفه ك متغير عام لمنع حذف المتغيرات عند استخدام الطرفية بعد الانتقال الى سطر جديد
 
 class Compiler {
 public:
 	std::vector<StmtsNode*>* statements_{};
-	//std::vector<InstructionsType> instructions_{};
-	//std::vector<AlifObject*> data_{}; // لماذا لا تكون البيانات هي ذاكرة المكدس ويتم إرسال عنوانها بدل نقل البيانات مرة اخرى؟
 	Container* dataContainer{};
 	AlifArray<Container*> containers_{};
 	AlifMemory* alifMemory;
@@ -38,6 +35,7 @@ public:
 	AlifObject* visit_access(ExprNode*);
 	void visit_expr(ExprNode*);
 	void visit_list(ExprNode*);
+	void visit_call(ExprNode*);
 
 	void visit_for_(StmtsNode*);
 	void visit_while_(StmtsNode*);
