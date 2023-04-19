@@ -7,7 +7,7 @@ SymbolTable* symTable = new SymbolTable;
 Compiler::Compiler(std::vector<StmtsNode*>* _statements, AlifMemory* _alifMemory) :
 	statements_(_statements), alifMemory(_alifMemory) {}
 
-bool a = true;
+
 void Compiler::compile_file() 
 {
 	for (StmtsNode* node_ : *statements_)
@@ -18,14 +18,7 @@ void Compiler::compile_file()
 
 		VISIT_(stmts, node_); // تم شرح طريقة الاستدعاء في ملف compiler.h
 
-		if (a) // يقوم بالتحقق في حال كان تعريف دالة لا يجب ان يتم إضافة الحاوية الى مصفوفة الحاويات
-		{
-			containers_.push_back(dataContainer);
-		}
-		else
-		{
-			a = true;
-		}
+		containers_.push_back(dataContainer);
 	}
 }
 
@@ -588,30 +581,37 @@ void Compiler::visit_while_(StmtsNode* _node)
 
 void Compiler::visit_function(StmtsNode* _node)
 {
-	a = false;
+	Container* dataBackup = dataContainer;
 
-	dataContainer = new Container;
+	dataContainer = (Container*)alifMemory->allocate(sizeof(Container));
 	dataContainer->instructions_ = new AlifArray<InstructionsType>;
 	dataContainer->data_ = new AlifArray<AlifObject*>;
 
+	symTable->enter_scope(*_node->U.FunctionDef.name_->V.NameObj.name_);
+
+
 	VISIT_(stmts, _node->U.FunctionDef.body_);
+
 
 	AlifObject* containerObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 	containerObject->V.ContainerObj.container_ = dataContainer;
 
 	symTable->add_symbol(*_node->U.FunctionDef.name_->V.NameObj.name_, containerObject);
 
-	//dataContainer->data_->clear();
-	//dataContainer->instructions_->clear();
-}
+	symTable->exit_scope();
 
+
+	dataContainer = dataBackup;
+	dataContainer->data_ = dataBackup->data_;
+	dataContainer->instructions_ = dataBackup->instructions_;
+}
 
 void Compiler::visit_call(ExprNode* _node)
 {
 	this->dataContainer->data_->push_back(_node->U.Call.name_->U.Object.value_);
 	this->dataContainer->instructions_->push_back(SET_DATA);
 
-	this->dataContainer->instructions_->push_back(GET_DATA);
+	this->dataContainer->instructions_->push_back(GET_SCOPE);
 
 	this->dataContainer->instructions_->push_back(CALL_NAME);
 }
@@ -683,10 +683,7 @@ AlifObject* Compiler::visit_stmts(StmtsNode* _node)
 	{
 		for (StmtsNode* stmt : *_node->U.Stmts.stmts_)
 		{
-			//if (!a and stmt->type_ != VTFunction)
-			//{
-				VISIT_(stmts, stmt);
-			//}
+			VISIT_(stmts, stmt);
 		}
 	}
 }

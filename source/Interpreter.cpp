@@ -40,10 +40,11 @@ void none_() {}
 void get_data() 
 {
 	AlifObject* name_ = stackMemory->pop();
+
 	stackMemory->push(symTable->get_data(*name_->V.NameObj.name_));
 
-	//AlifObject* res = stackMemory->pop1();
-	//std::wcout << res->V.NumberObj.numberValue << std::endl;
+	AlifObject* res = stackMemory->pop1();
+	std::wcout << res->V.NumberObj.numberValue << std::endl;
 }
 void set_data()
 {
@@ -587,6 +588,14 @@ void for_iter()
 	stepFor = stepForObj->V.NumberObj.numberValue;
 }
 
+void get_scope()
+{
+	AlifObject* name_ = stackMemory->pop();
+
+	symTable->enter_scope(*name_->V.NameObj.name_);
+
+	stackMemory->push(symTable->get_data(*name_->V.NameObj.name_));
+}
 
 void call_name()
 {
