@@ -147,6 +147,7 @@ enum InstructionsType : uint8_t { // التعليمات
     FOR_ITER,
 
     // تعليمات الدوال والاصناف
+    GET_SCOPE,
     CALL_NAME,
 
 };
