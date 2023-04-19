@@ -317,10 +317,11 @@ ExprNode* Parser::primary() {
 
         std::vector<ExprNode*>* args = this->arguments();
 
-        this->advance();
 
         if (this->currentToken.type_ == TTRrightParenthesis)
         {
+            this->advance();
+
             ExprNode* callNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
             callNode->type_ = VTCall;
             callNode->U.Call.name_ = primary;
@@ -693,8 +694,6 @@ std::vector<ExprNode*>* Parser::parameters()
 
     do 
     {
-        this->advance();
-
         if (this->currentToken.type_ != TTRrightParenthesis)
         {
             if (Next_Is(TTEqual))
@@ -736,7 +735,6 @@ std::vector<ExprNode*>* Parser::parameters()
         {
             return params_;
         }
-
     } while (this->currentToken.type_ == TTComma);
 
     if (this->currentToken.type_ == TTRrightParenthesis)
@@ -785,10 +783,6 @@ StmtsNode* Parser::function_def()
                 params = this->parameters();
                 this->advance();
             }
-        }
-        if (this->currentToken.type_ == TTRrightParenthesis)
-        {
-            this->advance();
         }
         else
         {

@@ -599,10 +599,19 @@ void get_scope()
 
 void call_name()
 {
+	AlifArray<AlifObject*> args_;
+
+	AlifObject* size_ = stackMemory->pop();
+	if (size_->V.NumberObj.numberValue)
+	{
+		for (int i = 0; i < size_->V.NumberObj.numberValue; i++)
+		{
+			args_.push_back(stackMemory->pop());
+		}
+	}
+
 	AlifObject* container_ = stackMemory->pop();
 
-	//AlifArray<AlifObject*>* dataBackup = dataArr;
-	//AlifArray<InstructionsType>* instrBackup = instrArr;
 	int instrIndexBackup = instructionsIndex;
 	int dataIndexBackup = dataIndex;
 
@@ -618,8 +627,6 @@ void call_name()
 		instr_funcs[instrArr->get(instructionsIndex)]();
 	}
 
-	//dataArr = dataBackup;
-	//instrArr = instrBackup;
 	instructionsIndex = instrIndexBackup;
 	dataIndex = dataIndexBackup;
 }
