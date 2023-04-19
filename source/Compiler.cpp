@@ -589,6 +589,20 @@ void Compiler::visit_function(StmtsNode* _node)
 
 	symTable->enter_scope(*_node->U.FunctionDef.name_->V.NameObj.name_);
 
+	if (_node->U.FunctionDef.params_->size())
+	{
+		AlifObject* size_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+		size_->V.NumberObj.numberValue = _node->U.FunctionDef.params_->size();
+		dataContainer->data_->push_back(size_);
+
+		for (ExprNode* node : *_node->U.FunctionDef.params_)
+		{
+			AlifObject* object_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+			object_ = VISIT_(exprs, node);
+			dataContainer->data_->push_back(object_);
+		}
+	}	
+
 
 	VISIT_(stmts, _node->U.FunctionDef.body_);
 
@@ -602,12 +616,24 @@ void Compiler::visit_function(StmtsNode* _node)
 
 
 	dataContainer = dataBackup;
-	dataContainer->data_ = dataBackup->data_;
-	dataContainer->instructions_ = dataBackup->instructions_;
 }
 
 void Compiler::visit_call(ExprNode* _node)
 {
+	if (_node->U.Call.args_->size())
+	{
+		AlifObject* size_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+		size_->V.NumberObj.numberValue = _node->U.Call.args_->size();
+		dataContainer->data_->push_back(size_);
+
+		for (ExprNode* node : *_node->U.Call.args_)
+		{
+			AlifObject* object_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+			object_ = VISIT_(exprs, node);
+			dataContainer->data_->push_back(object_);
+		}
+	}
+
 	this->dataContainer->data_->push_back(_node->U.Call.name_->U.Object.value_);
 	this->dataContainer->instructions_->push_back(SET_DATA);
 
