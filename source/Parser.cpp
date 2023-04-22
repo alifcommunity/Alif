@@ -696,6 +696,7 @@ std::vector<ExprNode*>* Parser::parameters()
     {
         if (this->currentToken.type_ != TTRrightParenthesis)
         {
+            this->advance();
             if (Next_Is(TTEqual))
             {
                 lastParam = true;
@@ -713,7 +714,9 @@ std::vector<ExprNode*>* Parser::parameters()
                 ExprNode* paramNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
                 paramNode->type_ = VTAssign;
-                paramNode->U.NameAssign.paramName = name_;
+                //paramNode->U.NameAssign.paramName = name_;
+                paramNode->U.NameAssign.name_ = new std::vector<AlifObject*>;
+                paramNode->U.NameAssign.name_->push_back(name_);
                 paramNode->U.NameAssign.value_ = expr_;
 
                 params_->push_back(paramNode);
@@ -729,7 +732,6 @@ std::vector<ExprNode*>* Parser::parameters()
                     exit(-1);
                 }
             }
-
         }
         else
         {
@@ -774,9 +776,9 @@ StmtsNode* Parser::function_def()
 
         if (this->currentToken.type_ == TTLeftParenthesis) 
         {
-            this->advance();
-            if (this->currentToken.type_ == TTRrightParenthesis)
+            if (Next_Is(TTRrightParenthesis))
             {
+                this->advance();
                 this->advance();
             }
             else {
