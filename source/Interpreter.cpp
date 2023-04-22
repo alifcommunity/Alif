@@ -130,9 +130,16 @@ void augAdd_num()
 	AlifObject* name_ = stackMemory->pop();
 	AlifObject* value_ = stackMemory->pop();
 
-	symTable->get_data(*name_->V.NameObj.name_)->V.NumberObj.numberValue += value_->V.NumberObj.numberValue;
-	//symTable->get_data(*name_->V.NameObj.name_)->V.NumberObj.numberValue += 1;
+	AlifObject* nameValue = symTable->get_data(*name_->V.NameObj.name_);
 
+	// نسخ الرقم الثابت لكي لا يتم تعديله
+	AlifObject* nameCopy = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	nameCopy->objType = nameValue->objType;
+	nameCopy->V = nameValue->V; 
+
+	nameCopy->V.NumberObj.numberValue += value_->V.NumberObj.numberValue;
+
+	symTable->add_symbol(*name_->V.NameObj.name_, nameCopy);
 }
 void augSub_num()
 {
