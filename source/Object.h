@@ -19,10 +19,10 @@ public:
 
     union UObj
     {
-        //class {
-        //public:
-        //    KeywordValue noneValue;
-        //}NoneObj;
+        class {
+        public:
+            wcstr* noneValue;
+        }NoneObj;
 
         class Number 
         {

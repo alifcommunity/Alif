@@ -50,6 +50,7 @@ void for_iter();
 
 void get_scope();
 void call_name();
+void return_expr();
 
 
 const Instructions_func instr_funcs[] = {
@@ -100,5 +101,6 @@ const Instructions_func instr_funcs[] = {
 
 	get_scope,
 	call_name,
+	return_expr,
 
 };

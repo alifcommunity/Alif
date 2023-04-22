@@ -604,6 +604,8 @@ void get_scope()
 	stackMemory->push(symTable->get_data(*name_->V.NameObj.name_));
 }
 
+
+bool returnFlag = false;
 void call_name()
 {
 	AlifObject* container_ = stackMemory->pop();
@@ -682,6 +684,11 @@ void call_name()
 	uint32_t endContainer = instrArr->size();
 	for (instructionsIndex; instructionsIndex < endContainer; instructionsIndex++)
 	{
+		if (returnFlag)
+		{
+			returnFlag = false;
+			break;
+		}
 		instr_funcs[instrArr->get(instructionsIndex)]();
 	}
 
@@ -690,4 +697,9 @@ void call_name()
 	dataIndex = dataIndexBackup;
 
 	symTable->exit_scope();
+}
+
+void return_expr()
+{
+	returnFlag = true;
 }

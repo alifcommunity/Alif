@@ -15,6 +15,7 @@
 
 
 extern SymbolTable* symTable; // تم تعريفه ك متغير عام لمنع حذف المتغيرات عند استخدام الطرفية بعد الانتقال الى سطر جديد
+//static bool returnFlag = false;
 
 class Compiler {
 public:
@@ -36,6 +37,7 @@ public:
 	void visit_expr(ExprNode*);
 	void visit_list(ExprNode*);
 	void visit_call(ExprNode*);
+	AlifObject* visit_return_(ExprNode*);
 
 	void visit_for_(StmtsNode*);
 	void visit_while_(StmtsNode*);
