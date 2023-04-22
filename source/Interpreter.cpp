@@ -77,7 +77,6 @@ void add_num()
 	res->V.NumberObj.numberValue = right->V.NumberObj.numberValue + left->V.NumberObj.numberValue;
 	
 	stackMemory->push(res);
-	alifMemory->deallocate(res);
 }
 void sub_num() 
 {
@@ -673,11 +672,7 @@ void call_name()
 	}
 
 
-
 	// هذا القسم يقوم بتنفيذ الدالة المستدعاة
-
-	//instrIndexBackup = instructionsIndex;
-	//dataIndexBackup = dataIndex;
 
 	dataArr = container_->V.ContainerObj.container_->data_;
 	instrArr = container_->V.ContainerObj.container_->instructions_;
