@@ -35,10 +35,10 @@ public:
         index_ = 0;
     }
 
-    //T pop1() { 
-    //    index_--;
-    //    return data_[index_++]; 
-    //} // for test only
+    T get() { 
+        index_--;
+        return data_[index_++]; 
+    } // للمراجعة**
 
 private:
     unsigned int index_ = 0;

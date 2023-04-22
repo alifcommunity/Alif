@@ -483,45 +483,75 @@ void Compiler::visit_for_(StmtsNode* _node)
 	if (_node->U.For.args_->size() == 1)
 	{
 		startFor->V.NumberObj.numberValue = 0;
-		endFor->V.NumberObj.numberValue = _node->U.For.args_->at(0)->U.Object.value_->V.NumberObj.numberValue;
+
+		dataContainer->data_->push_back(startFor);
+		dataContainer->instructions_->push_back(SET_DATA);
+
+		dataContainer->data_->push_back(_node->U.For.itrName); // varName
+		dataContainer->instructions_->push_back(SET_DATA);
+
+		this->dataContainer->instructions_->push_back(STORE_NAME);
+
 		stepFor->V.NumberObj.numberValue = 1;
+
+
+		dataContainer->data_->push_back(startFor); // startFor
+		dataContainer->instructions_->push_back(SET_DATA);
+		
+
+		VISIT_(exprs, _node->U.For.args_->at(0)); // endFor
+
+
+		dataContainer->data_->push_back(stepFor); // stepFor
+		dataContainer->instructions_->push_back(SET_DATA);
 	}
 	else if (_node->U.For.args_->size() == 2)
 	{
-		startFor->V.NumberObj.numberValue = _node->U.For.args_->at(0)->U.Object.value_->V.NumberObj.numberValue;
-		endFor->V.NumberObj.numberValue = _node->U.For.args_->at(1)->U.Object.value_->V.NumberObj.numberValue;
-		stepFor->V.NumberObj.numberValue = 1;
+		VISIT_(exprs, _node->U.For.args_->at(0)); // startFor
+
+		dataContainer->data_->push_back(_node->U.For.itrName); // varName
+		dataContainer->instructions_->push_back(SET_DATA);
+
+		this->dataContainer->instructions_->push_back(STORE_NAME);
+
+
+		VISIT_(exprs, _node->U.For.args_->at(0)); // startFor
+		VISIT_(exprs, _node->U.For.args_->at(1)); // endFor
+		stepFor->V.NumberObj.numberValue = 1; // stepFor
+
+
+		dataContainer->data_->push_back(stepFor); // stepFor
+		dataContainer->instructions_->push_back(SET_DATA);
 	}
-	else 
+	else if (_node->U.For.args_->size() == 3)
 	{
-		startFor->V.NumberObj.numberValue = _node->U.For.args_->at(0)->U.Object.value_->V.NumberObj.numberValue;
-		endFor->V.NumberObj.numberValue = _node->U.For.args_->at(1)->U.Object.value_->V.NumberObj.numberValue;
-		stepFor->V.NumberObj.numberValue = _node->U.For.args_->at(2)->U.Object.value_->V.NumberObj.numberValue;
+		VISIT_(exprs, _node->U.For.args_->at(0)); // startFor
+
+		dataContainer->data_->push_back(_node->U.For.itrName); // varName
+		dataContainer->instructions_->push_back(SET_DATA);
+
+		this->dataContainer->instructions_->push_back(STORE_NAME);
+
+
+		VISIT_(exprs, _node->U.For.args_->at(0)); // startFor
+		VISIT_(exprs, _node->U.For.args_->at(1)); // endFor
+		VISIT_(exprs, _node->U.For.args_->at(2)); // stepFor
 	}
-	dataContainer->data_->push_back(startFor);
-	dataContainer->instructions_->push_back(SET_DATA);
-
-	dataContainer->data_->push_back(_node->U.For.itrName); // varName
-	dataContainer->instructions_->push_back(SET_DATA);
-
-	this->dataContainer->instructions_->push_back(STORE_NAME);
-
-
-	dataContainer->data_->push_back(startFor); // startFor
-	dataContainer->instructions_->push_back(SET_DATA);
-
-	dataContainer->data_->push_back(endFor); // endFor
-	this->dataContainer->instructions_->push_back(SET_DATA);
-
-	dataContainer->data_->push_back(stepFor); // stepFor
-	dataContainer->instructions_->push_back(SET_DATA);
+	else
+	{ 
+		//error
+	}
 
 	this->dataContainer->instructions_->push_back(FOR_ITER);
 
 
-	AlifObject* jumpAddress = (AlifObject*)alifMemory->allocate(sizeof(AlifObject)); // address
+	AlifObject* jumpAddress = (AlifObject*)alifMemory->allocate(sizeof(AlifObject)); // Instructions address
 	jumpAddress->objType = OTNumber;
 	jumpAddress->V.NumberObj.numberValue = this->dataContainer->instructions_->size() - 1;
+
+	AlifObject* dataAddress = (AlifObject*)alifMemory->allocate(sizeof(AlifObject)); // Data address
+	dataAddress->objType = OTNumber;
+	dataAddress->V.NumberObj.numberValue = this->dataContainer->data_->size();
 
 
 	VISIT_(stmts, _node->U.For.block_);
@@ -530,8 +560,11 @@ void Compiler::visit_for_(StmtsNode* _node)
 	dataContainer->data_->push_back(_node->U.For.itrName); // varName
 	dataContainer->instructions_->push_back(SET_DATA);
 
+	dataContainer->data_->push_back(dataAddress);
+	this->dataContainer->instructions_->push_back(SET_DATA); // set data address after for jumb
+
 	dataContainer->data_->push_back(jumpAddress);
-	this->dataContainer->instructions_->push_back(SET_DATA); // set address after for jumb
+	this->dataContainer->instructions_->push_back(SET_DATA); // set instructions address after for jumb
 
 
 	this->dataContainer->instructions_->push_back(JUMP_FOR);
@@ -581,27 +614,41 @@ void Compiler::visit_while_(StmtsNode* _node)
 
 void Compiler::visit_function(StmtsNode* _node)
 {
-	Container* dataBackup = dataContainer;
+	Container* dataBackup = dataContainer; // في حال تم تعريف دالة داخل دالة
+
+	symTable->enter_scope(*_node->U.FunctionDef.name_->V.NameObj.name_);
+
+	AlifObject* paramContainer = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	if (_node->U.FunctionDef.params_)
+	{
+		dataContainer = (Container*)alifMemory->allocate(sizeof(Container));
+		dataContainer->instructions_ = new AlifArray<InstructionsType>;
+		dataContainer->data_ = new AlifArray<AlifObject*>;
+
+		for (ExprNode* node : *_node->U.FunctionDef.params_)
+		{
+			VISIT_(exprs, node);
+		}
+
+		paramContainer->V.ContainerObj.container_ = dataContainer;
+		paramContainer->objType = OTContainer;
+	}
 
 	dataContainer = (Container*)alifMemory->allocate(sizeof(Container));
 	dataContainer->instructions_ = new AlifArray<InstructionsType>;
 	dataContainer->data_ = new AlifArray<AlifObject*>;
 
-	symTable->enter_scope(*_node->U.FunctionDef.name_->V.NameObj.name_);
-
-	if (_node->U.FunctionDef.params_->size())
+	if (_node->U.FunctionDef.params_)
 	{
-		AlifObject* size_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
-		size_->V.NumberObj.numberValue = _node->U.FunctionDef.params_->size();
-		dataContainer->data_->push_back(size_);
+		AlifObject* paramSize = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+		paramSize->V.NumberObj.numberValue = _node->U.FunctionDef.params_->size();
 
-		for (ExprNode* node : *_node->U.FunctionDef.params_)
-		{
-			AlifObject* object_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
-			object_ = VISIT_(exprs, node);
-			dataContainer->data_->push_back(object_);
-		}
-	}	
+		dataContainer->data_->push_back(paramSize);
+		//dataContainer->instructions_->push_back(SET_DATA);
+	}
+
+	dataContainer->data_->push_back(paramContainer);
+	//dataContainer->instructions_->push_back(SET_DATA);
 
 
 	VISIT_(stmts, _node->U.FunctionDef.body_);
@@ -620,18 +667,17 @@ void Compiler::visit_function(StmtsNode* _node)
 
 void Compiler::visit_call(ExprNode* _node)
 {
-	if (_node->U.Call.args_->size())
+	if (_node->U.Call.args_)
 	{
+		for (ExprNode* node : *_node->U.Call.args_)
+		{
+			VISIT_(exprs, node);
+		}
+
 		AlifObject* size_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 		size_->V.NumberObj.numberValue = _node->U.Call.args_->size();
 		dataContainer->data_->push_back(size_);
-
-		for (ExprNode* node : *_node->U.Call.args_)
-		{
-			AlifObject* object_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
-			object_ = VISIT_(exprs, node);
-			dataContainer->data_->push_back(object_);
-		}
+		dataContainer->instructions_->push_back(SET_DATA);
 	}
 
 	this->dataContainer->data_->push_back(_node->U.Call.name_->U.Object.value_);
@@ -640,6 +686,7 @@ void Compiler::visit_call(ExprNode* _node)
 	this->dataContainer->instructions_->push_back(GET_SCOPE);
 
 	this->dataContainer->instructions_->push_back(CALL_NAME);
+
 }
 
 

@@ -4,6 +4,7 @@
 #include "Tokens.h"
 #include "Node.h"
 #include "AlifMemory.h"
+#include "AlifArray.h"
 
 #include <string>
 

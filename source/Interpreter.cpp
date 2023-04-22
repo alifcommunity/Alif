@@ -43,7 +43,7 @@ void get_data()
 
 	stackMemory->push(symTable->get_data(*name_->V.NameObj.name_));
 
-	AlifObject* res = stackMemory->pop1();
+	AlifObject* res = stackMemory->get();
 	std::wcout << res->V.NumberObj.numberValue << std::endl;
 }
 void set_data()
@@ -564,6 +564,7 @@ size_t startFor = 0, endFor = 1, stepFor = 1;
 void jump_for()
 {
 	AlifObject* jumpAddress = stackMemory->pop();
+	AlifObject* dataAddress = stackMemory->pop();
 	AlifObject* iterName = stackMemory->pop();
 
 	startFor += stepFor;
@@ -572,7 +573,7 @@ void jump_for()
 		symTable->get_data(*iterName->V.NameObj.name_)->V.NumberObj.numberValue = startFor;
 
 		instructionsIndex = jumpAddress->V.NumberObj.numberValue;
-		dataIndex = jumpAddress->V.NumberObj.numberValue - 1;
+		dataIndex = dataAddress->V.NumberObj.numberValue;
 
 		stackMemory->reset();
 	}
@@ -599,34 +600,92 @@ void get_scope()
 
 void call_name()
 {
+	AlifObject* container_ = stackMemory->pop();
+	int instrIndexBackup;
+	int dataIndexBackup;
+
+	instrIndexBackup = instructionsIndex;
+	dataIndexBackup = dataIndex;
+
+	// هذا القسم يقوم بإسناد الوسيطات الممررة الى المعاملات في حال وجودها
 	AlifArray<AlifObject*> args_;
 
-	AlifObject* size_ = stackMemory->pop();
-	if (size_->V.NumberObj.numberValue)
+	AlifObject* argSize = stackMemory->pop();
+	if (argSize->V.NumberObj.numberValue)
 	{
-		for (int i = 0; i < size_->V.NumberObj.numberValue; i++)
+		for (int i = 0; i < argSize->V.NumberObj.numberValue; i++)
 		{
 			args_.push_back(stackMemory->pop());
 		}
 	}
 
-	AlifObject* container_ = stackMemory->pop();
+	size_t paramSize = container_->V.ContainerObj.container_->data_->get(0)->V.NumberObj.numberValue;
+	if (paramSize)
+	{
+		if (argSize->V.NumberObj.numberValue > paramSize)
+		{
+			PRINT_(L"عدد المعاملات الممرر اكبر من المطلوب");
+			exit(-1);
+		}
 
-	int instrIndexBackup = instructionsIndex;
-	int dataIndexBackup = dataIndex;
+		AlifObject* params_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+		params_ = container_->V.ContainerObj.container_->data_->get(1);
 
+
+		dataArr = params_->V.ContainerObj.container_->data_;
+		instrArr = params_->V.ContainerObj.container_->instructions_;
+		instructionsIndex = 0;
+		dataIndex = 0;
+
+
+		uint32_t endContainer = instrArr->size();
+		int arg = argSize->V.NumberObj.numberValue - 1;
+		for (; instructionsIndex < endContainer;)
+		{
+			instr_funcs[instrArr->get(instructionsIndex)]();
+			instructionsIndex++;
+			if (instrArr->get(instructionsIndex) == GET_DATA)
+			{
+				symTable->add_symbol(*stackMemory->pop()->V.NameObj.name_, args_.get(arg));
+				instructionsIndex++;
+				arg--;
+			}
+			else if (instrArr->get(instructionsIndex) == STORE_NAME)
+			{
+				AlifObject* nameBackup = stackMemory->get();
+				instr_funcs[instrArr->get(instructionsIndex)]();
+				instructionsIndex++;
+
+				if (arg > -1)
+				{
+					symTable->add_symbol(*nameBackup->V.NameObj.name_, args_.get(arg));
+					arg--;
+				}
+			}
+		}
+	}
+
+
+
+	// هذا القسم يقوم بتنفيذ الدالة المستدعاة
+
+	//instrIndexBackup = instructionsIndex;
+	//dataIndexBackup = dataIndex;
 
 	dataArr = container_->V.ContainerObj.container_->data_;
 	instrArr = container_->V.ContainerObj.container_->instructions_;
 	instructionsIndex = 0;
-	dataIndex = 0;
+	dataIndex = 2;
 
 	uint32_t endContainer = instrArr->size();
-	for (instructionsIndex = 0; instructionsIndex < endContainer; instructionsIndex++)
+	for (instructionsIndex; instructionsIndex < endContainer; instructionsIndex++)
 	{
 		instr_funcs[instrArr->get(instructionsIndex)]();
 	}
 
+
 	instructionsIndex = instrIndexBackup;
 	dataIndex = dataIndexBackup;
+
+	symTable->exit_scope();
 }
