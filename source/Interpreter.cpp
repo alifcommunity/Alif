@@ -35,7 +35,7 @@ void Interpreter::run_code()
 }
 
 
-void none_() {}
+void none_() {} // لا يقوم بعمل شيء
 
 void get_data() 
 {
@@ -142,23 +142,83 @@ void augAdd_num()
 }
 void augSub_num()
 {
-	
+	AlifObject* name_ = stackMemory->pop();
+	AlifObject* value_ = stackMemory->pop();
+
+	AlifObject* nameValue = symTable->get_data(*name_->V.NameObj.name_);
+
+	// نسخ الرقم الثابت لكي لا يتم تعديله
+	AlifObject* nameCopy = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	nameCopy->objType = nameValue->objType;
+	nameCopy->V = nameValue->V;
+
+	nameCopy->V.NumberObj.numberValue -= value_->V.NumberObj.numberValue;
+
+	symTable->add_symbol(*name_->V.NameObj.name_, nameCopy);
 }
 void augMul_num()
 {
-	
+	AlifObject* name_ = stackMemory->pop();
+	AlifObject* value_ = stackMemory->pop();
+
+	AlifObject* nameValue = symTable->get_data(*name_->V.NameObj.name_);
+
+	// نسخ الرقم الثابت لكي لا يتم تعديله
+	AlifObject* nameCopy = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	nameCopy->objType = nameValue->objType;
+	nameCopy->V = nameValue->V;
+
+	nameCopy->V.NumberObj.numberValue *= value_->V.NumberObj.numberValue;
+
+	symTable->add_symbol(*name_->V.NameObj.name_, nameCopy);
 }
 void augDiv_num()
 {
-	
+	AlifObject* name_ = stackMemory->pop();
+	AlifObject* value_ = stackMemory->pop();
+
+	AlifObject* nameValue = symTable->get_data(*name_->V.NameObj.name_);
+
+	// نسخ الرقم الثابت لكي لا يتم تعديله
+	AlifObject* nameCopy = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	nameCopy->objType = nameValue->objType;
+	nameCopy->V = nameValue->V;
+
+	nameCopy->V.NumberObj.numberValue /= value_->V.NumberObj.numberValue;
+
+	symTable->add_symbol(*name_->V.NameObj.name_, nameCopy);
 }
 void augRem_num()
 {
-	
+	AlifObject* name_ = stackMemory->pop();
+	AlifObject* value_ = stackMemory->pop();
+
+	AlifObject* nameValue = symTable->get_data(*name_->V.NameObj.name_);
+
+	// نسخ الرقم الثابت لكي لا يتم تعديله
+	AlifObject* nameCopy = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	nameCopy->objType = nameValue->objType;
+	nameCopy->V = nameValue->V;
+
+	nameCopy->V.NumberObj.numberValue = (size_t)(nameCopy->V.NumberObj.numberValue) % (size_t)(value_->V.NumberObj.numberValue);
+
+	symTable->add_symbol(*name_->V.NameObj.name_, nameCopy);
 }
 void augPow_num()
 {
-	
+	AlifObject* name_ = stackMemory->pop();
+	AlifObject* value_ = stackMemory->pop();
+
+	AlifObject* nameValue = symTable->get_data(*name_->V.NameObj.name_);
+
+	// نسخ الرقم الثابت لكي لا يتم تعديله
+	AlifObject* nameCopy = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	nameCopy->objType = nameValue->objType;
+	nameCopy->V = nameValue->V;
+
+	nameCopy->V.NumberObj.numberValue = pow(nameCopy->V.NumberObj.numberValue, value_->V.NumberObj.numberValue);
+
+	symTable->add_symbol(*name_->V.NameObj.name_, nameCopy);
 }
 
 

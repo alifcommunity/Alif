@@ -644,11 +644,9 @@ void Compiler::visit_function(StmtsNode* _node)
 		paramSize->V.NumberObj.numberValue = _node->U.FunctionDef.params_->size();
 
 		dataContainer->data_->push_back(paramSize);
-		//dataContainer->instructions_->push_back(SET_DATA);
 	}
 
 	dataContainer->data_->push_back(paramContainer);
-	//dataContainer->instructions_->push_back(SET_DATA);
 
 
 	VISIT_(stmts, _node->U.FunctionDef.body_);
@@ -775,10 +773,14 @@ AlifObject* Compiler::visit_stmts(StmtsNode* _node)
 			return a;
 		}
 		else {
-			//AlifObject* nullObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
-			//nullObject->objType = OTNone;
-			//nullObject->V.NoneObj.noneValue = L"عدم";
-			//return nullObject;
+			AlifObject* nullObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+			nullObject->objType = OTNone;
+			nullObject->V.NoneObj.noneValue = L"عدم";
+
+			dataContainer->data_->push_back(nullObject);
+			dataContainer->instructions_->push_back(SET_DATA);
+			
+			return nullObject;
 		}
 	}
 }
