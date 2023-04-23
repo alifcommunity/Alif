@@ -77,7 +77,6 @@ void add_num()
 	res->V.NumberObj.numberValue = right->V.NumberObj.numberValue + left->V.NumberObj.numberValue;
 	
 	stackMemory->push(res);
-	alifMemory->deallocate(res);
 }
 void sub_num() 
 {
@@ -605,14 +604,18 @@ void get_scope()
 	stackMemory->push(symTable->get_data(*name_->V.NameObj.name_));
 }
 
+
+bool returnFlag = false;
 void call_name()
 {
 	AlifObject* container_ = stackMemory->pop();
-	int instrIndexBackup;
-	int dataIndexBackup;
 
-	instrIndexBackup = instructionsIndex;
-	dataIndexBackup = dataIndex;
+	// عمل نسخة احتياطية للبرنامج الاصلي
+	AlifArray<AlifObject*>* dataArrBackup = dataArr;
+	AlifArray<InstructionsType>* instrArrBackup = instrArr;
+	int instrIndexBackup = instructionsIndex;
+	int dataIndexBackup = dataIndex;
+
 
 	// هذا القسم يقوم بإسناد الوسيطات الممررة الى المعاملات في حال وجودها
 	AlifArray<AlifObject*> args_;
@@ -673,26 +676,34 @@ void call_name()
 	}
 
 
-
 	// هذا القسم يقوم بتنفيذ الدالة المستدعاة
-
-	//instrIndexBackup = instructionsIndex;
-	//dataIndexBackup = dataIndex;
 
 	dataArr = container_->V.ContainerObj.container_->data_;
 	instrArr = container_->V.ContainerObj.container_->instructions_;
 	instructionsIndex = 0;
-	dataIndex = 2;
+	dataIndex = 2; // تم تخطي متغير حاوية المعاملات ومتغير عدد المعاملات
 
 	uint32_t endContainer = instrArr->size();
 	for (instructionsIndex; instructionsIndex < endContainer; instructionsIndex++)
 	{
+		if (returnFlag)
+		{
+			returnFlag = false;
+			break;
+		}
 		instr_funcs[instrArr->get(instructionsIndex)]();
 	}
 
 
+	dataArr = dataArrBackup;
+	instrArr = instrArrBackup;
 	instructionsIndex = instrIndexBackup;
 	dataIndex = dataIndexBackup;
 
 	symTable->exit_scope();
+}
+
+void return_expr()
+{
+	returnFlag = true;
 }

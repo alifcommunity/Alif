@@ -150,6 +150,7 @@ enum InstructionsType : uint8_t { // التعليمات
     // تعليمات الدوال والاصناف
     GET_SCOPE,
     CALL_NAME,
+    RETURN_EXPR,
 
 };
 

@@ -689,6 +689,14 @@ void Compiler::visit_call(ExprNode* _node)
 
 }
 
+AlifObject* Compiler::visit_return_(ExprNode* _node)
+{
+	AlifObject* a = VISIT_(exprs, _node);
+
+	dataContainer->instructions_->push_back(RETURN_EXPR);
+
+	return a;
+}
 
 AlifObject* Compiler::visit_exprs(ExprNode* _node)
 {
@@ -757,6 +765,20 @@ AlifObject* Compiler::visit_stmts(StmtsNode* _node)
 		for (StmtsNode* stmt : *_node->U.Stmts.stmts_)
 		{
 			VISIT_(stmts, stmt);
+		}
+	}
+	else if (_node->type_ == VTReturn) 
+	{
+		if (_node->U.Return.returnExpr != nullptr)
+		{
+			AlifObject* a = VISIT_(return_, _node->U.Return.returnExpr);
+			return a;
+		}
+		else {
+			//AlifObject* nullObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+			//nullObject->objType = OTNone;
+			//nullObject->V.NoneObj.noneValue = L"عدم";
+			//return nullObject;
 		}
 	}
 }
