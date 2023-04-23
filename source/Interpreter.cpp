@@ -609,11 +609,13 @@ bool returnFlag = false;
 void call_name()
 {
 	AlifObject* container_ = stackMemory->pop();
-	int instrIndexBackup;
-	int dataIndexBackup;
 
-	instrIndexBackup = instructionsIndex;
-	dataIndexBackup = dataIndex;
+	// عمل نسخة احتياطية للبرنامج الاصلي
+	AlifArray<AlifObject*>* dataArrBackup = dataArr;
+	AlifArray<InstructionsType>* instrArrBackup = instrArr;
+	int instrIndexBackup = instructionsIndex;
+	int dataIndexBackup = dataIndex;
+
 
 	// هذا القسم يقوم بإسناد الوسيطات الممررة الى المعاملات في حال وجودها
 	AlifArray<AlifObject*> args_;
@@ -679,7 +681,7 @@ void call_name()
 	dataArr = container_->V.ContainerObj.container_->data_;
 	instrArr = container_->V.ContainerObj.container_->instructions_;
 	instructionsIndex = 0;
-	dataIndex = 2;
+	dataIndex = 2; // تم تخطي متغير حاوية المعاملات ومتغير عدد المعاملات
 
 	uint32_t endContainer = instrArr->size();
 	for (instructionsIndex; instructionsIndex < endContainer; instructionsIndex++)
@@ -693,6 +695,8 @@ void call_name()
 	}
 
 
+	dataArr = dataArrBackup;
+	instrArr = instrArrBackup;
 	instructionsIndex = instrIndexBackup;
 	dataIndex = dataIndexBackup;
 
