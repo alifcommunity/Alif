@@ -152,5 +152,9 @@ enum InstructionsType : uint8_t { // التعليمات
     CALL_NAME,
     RETURN_EXPR,
 
+
+    // الدوال الضمنية
+    PRINT_FUNC,
+
 };
 

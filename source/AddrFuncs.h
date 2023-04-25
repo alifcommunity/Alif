@@ -53,6 +53,10 @@ void call_name();
 void return_expr();
 
 
+
+
+void print_func();
+
 const Instructions_func instr_funcs[] = {
 	none_,
 
@@ -102,5 +106,27 @@ const Instructions_func instr_funcs[] = {
 	get_scope,
 	call_name,
 	return_expr,
+
+
+
+
+	// الدوال الضمنية
+	print_func,
+
+};
+
+
+
+
+
+
+
+// دوال الطباعة
+typedef void(*print_funcs)();
+
+void num_print();
+
+const print_funcs print_types[] = {
+	num_print,
 
 };

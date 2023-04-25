@@ -185,6 +185,7 @@ void file_run(const wchar_t* _fileName) {
     ///////////////////////////////////////////////////////////////////
 
     Compiler compiler = Compiler(&parser.statements_, &lexer.alifMemory);
+    compiler.visit_print(); // يجب إيجلد نظام لها
     compiler.compile_file();
 
     //// المفسر اللغوي

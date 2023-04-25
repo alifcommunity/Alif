@@ -3,6 +3,7 @@
 #include "Compiler.h"
 #include "AlifMemory.h"
 #include "AlifStack.h"
+#include "AddrFuncs.h"
 
 class Interpreter {
 public:
