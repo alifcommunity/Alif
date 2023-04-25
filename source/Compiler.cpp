@@ -88,9 +88,9 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 	}
 	else if (_node->U.BinaryOp.operator_ == TTMinus)
 	{
-		if (left->objType == OTNumber)
+		if (left->objType == OTNumber or left->objType == OTName)
 		{
-			if (right->objType == OTNumber)
+			if (right->objType == OTNumber or right->objType == OTName)
 			{
 				dataContainer->instructions_->push_back(MINUS_NUM);
 			}
@@ -106,9 +106,9 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 	}
 	else if (_node->U.BinaryOp.operator_ == TTPower)
 	{
-		if (left->objType == OTNumber)
+		if (left->objType == OTNumber or left->objType == OTName)
 		{
-			if (right->objType == OTNumber)
+			if (right->objType == OTNumber or right->objType == OTName)
 			{
 				dataContainer->instructions_->push_back(POW_NUM);
 			}
@@ -124,9 +124,9 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 	}
 	else if (_node->U.BinaryOp.operator_ == TTDivide)
 	{
-		if (left->objType == OTNumber)
+		if (left->objType == OTNumber or left->objType == OTName)
 		{
-			if (right->objType == OTNumber)
+			if (right->objType == OTNumber or right->objType == OTName)
 			{
 				dataContainer->instructions_->push_back(DIV_NUM);
 			}
@@ -142,9 +142,9 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 	}
 	else if (_node->U.BinaryOp.operator_ == TTMultiply)
 	{
-		if (left->objType == OTNumber)
+		if (left->objType == OTNumber or left->objType == OTName)
 		{
-			if (right->objType == OTNumber)
+			if (right->objType == OTNumber or right->objType == OTName)
 			{
 				dataContainer->instructions_->push_back(MUL_NUM);
 			}
@@ -175,9 +175,9 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 	}
 	else if (_node->U.BinaryOp.operator_ == TTRemain)
 	{
-		if (left->objType == OTNumber)
+		if (left->objType == OTNumber or left->objType == OTName)
 		{
-			if (right->objType == OTNumber)
+			if (right->objType == OTNumber or right->objType == OTName)
 			{
 				dataContainer->instructions_->push_back(REM_NUM);
 			}
@@ -193,9 +193,9 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 	}
 	else if (_node->U.BinaryOp.operator_ == TTEqualEqual)
 	{
-		if (left->objType == OTNumber)
+		if (left->objType == OTNumber or left->objType == OTName)
 		{
-			if (right->objType == OTNumber)
+			if (right->objType == OTNumber or right->objType == OTName)
 			{
 				dataContainer->instructions_->push_back(EQEQ_NUM);
 			}
@@ -211,9 +211,9 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 	}
 	else if (_node->U.BinaryOp.operator_ == TTNotEqual)
 	{
-		if (left->objType == OTNumber)
+		if (left->objType == OTNumber or left->objType == OTName)
 		{
-			if (right->objType == OTNumber)
+			if (right->objType == OTNumber or right->objType == OTName)
 			{
 				dataContainer->instructions_->push_back(NOTEQ_NUM);
 			}
@@ -229,9 +229,9 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 	}
 	else if (_node->U.BinaryOp.operator_ == TTGreaterThan)
 	{
-		if (left->objType == OTNumber)
+		if (left->objType == OTNumber or left->objType == OTName)
 		{
-			if (right->objType == OTNumber)
+			if (right->objType == OTNumber or right->objType == OTName)
 			{
 				dataContainer->instructions_->push_back(GRTHAN_NUM);
 			}
@@ -265,9 +265,9 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 	}
 	else if (_node->U.BinaryOp.operator_ == TTGreaterThanEqual)
 	{
-		if (left->objType == OTNumber)
+		if (left->objType == OTNumber or left->objType == OTName)
 		{
-			if (right->objType == OTNumber)
+			if (right->objType == OTNumber or right->objType == OTName)
 			{
 				dataContainer->instructions_->push_back(GRTHANEQ_NUM);
 			}
@@ -432,12 +432,10 @@ void Compiler::visit_if_(StmtsNode* _node)
 
 	VISIT_(stmts, _node->U.If.block_);
 
-	//AlifObject* jTAdress = (AlifObject*)alifMemory->allocate(sizeof(AlifObject)); // Address of instructions
 	jTAdress->objType = OTNumber;
 	this->dataContainer->data_->push_back(jTAdress);
 	this->dataContainer->instructions_->push_back(SET_DATA);
 
-	//AlifObject* jTDataAddress = (AlifObject*)alifMemory->allocate(sizeof(AlifObject)); // Address of data
 	jTDataAddress->objType = OTNumber;
 	this->dataContainer->data_->push_back(jTDataAddress);
 	this->dataContainer->instructions_->push_back(SET_DATA);
@@ -491,58 +489,89 @@ void Compiler::visit_for_(StmtsNode* _node)
 		dataContainer->instructions_->push_back(SET_DATA);
 
 		this->dataContainer->instructions_->push_back(STORE_NAME);
-
-		stepFor->V.NumberObj.numberValue = 1;
-
-
-		dataContainer->data_->push_back(startFor); // startFor
-		dataContainer->instructions_->push_back(SET_DATA);
-		
-
-		VISIT_(exprs, _node->U.For.args_->at(0)); // endFor
-
-
-		dataContainer->data_->push_back(stepFor); // stepFor
-		dataContainer->instructions_->push_back(SET_DATA);
 	}
 	else if (_node->U.For.args_->size() == 2)
 	{
-		VISIT_(exprs, _node->U.For.args_->at(0)); // startFor
+		//startFor = VISIT_(exprs, _node->U.For.args_->at(0)); // startFor
 
 		dataContainer->data_->push_back(_node->U.For.itrName); // varName
 		dataContainer->instructions_->push_back(SET_DATA);
 
 		this->dataContainer->instructions_->push_back(STORE_NAME);
-
-
-		VISIT_(exprs, _node->U.For.args_->at(0)); // startFor
-		VISIT_(exprs, _node->U.For.args_->at(1)); // endFor
-		stepFor->V.NumberObj.numberValue = 1; // stepFor
-
-
-		dataContainer->data_->push_back(stepFor); // stepFor
-		dataContainer->instructions_->push_back(SET_DATA);
 	}
 	else if (_node->U.For.args_->size() == 3)
 	{
-		VISIT_(exprs, _node->U.For.args_->at(0)); // startFor
+		startFor = VISIT_(exprs, _node->U.For.args_->at(0)); // startFor
 
 		dataContainer->data_->push_back(_node->U.For.itrName); // varName
 		dataContainer->instructions_->push_back(SET_DATA);
 
 		this->dataContainer->instructions_->push_back(STORE_NAME);
-
-
-		VISIT_(exprs, _node->U.For.args_->at(0)); // startFor
-		VISIT_(exprs, _node->U.For.args_->at(1)); // endFor
-		VISIT_(exprs, _node->U.For.args_->at(2)); // stepFor
-	}
-	else
-	{ 
-		//error
 	}
 
-	this->dataContainer->instructions_->push_back(FOR_ITER);
+	//if (_node->U.For.args_->size() == 1)
+	//{
+	//	startFor->V.NumberObj.numberValue = 0;
+
+	//	dataContainer->data_->push_back(startFor);
+	//	dataContainer->instructions_->push_back(SET_DATA);
+
+	//	dataContainer->data_->push_back(_node->U.For.itrName); // varName
+	//	dataContainer->instructions_->push_back(SET_DATA);
+
+	//	this->dataContainer->instructions_->push_back(STORE_NAME);
+
+	//	stepFor->V.NumberObj.numberValue = 1;
+
+
+	//	dataContainer->data_->push_back(startFor); // startFor
+	//	dataContainer->instructions_->push_back(SET_DATA);
+	//	
+
+	//	VISIT_(exprs, _node->U.For.args_->at(0)); // endFor
+
+
+	//	dataContainer->data_->push_back(stepFor); // stepFor
+	//	dataContainer->instructions_->push_back(SET_DATA);
+	//}
+	//else if (_node->U.For.args_->size() == 2)
+	//{
+	//	VISIT_(exprs, _node->U.For.args_->at(0)); // startFor
+
+	//	dataContainer->data_->push_back(_node->U.For.itrName); // varName
+	//	dataContainer->instructions_->push_back(SET_DATA);
+
+	//	this->dataContainer->instructions_->push_back(STORE_NAME);
+
+
+	//	VISIT_(exprs, _node->U.For.args_->at(0)); // startFor
+	//	VISIT_(exprs, _node->U.For.args_->at(1)); // endFor
+	//	stepFor->V.NumberObj.numberValue = 1; // stepFor
+
+
+	//	dataContainer->data_->push_back(stepFor); // stepFor
+	//	dataContainer->instructions_->push_back(SET_DATA);
+	//}
+	//else if (_node->U.For.args_->size() == 3)
+	//{
+	//	VISIT_(exprs, _node->U.For.args_->at(0)); // startFor
+
+	//	dataContainer->data_->push_back(_node->U.For.itrName); // varName
+	//	dataContainer->instructions_->push_back(SET_DATA);
+
+	//	this->dataContainer->instructions_->push_back(STORE_NAME);
+
+
+	//	VISIT_(exprs, _node->U.For.args_->at(0)); // startFor
+	//	VISIT_(exprs, _node->U.For.args_->at(1)); // endFor
+	//	VISIT_(exprs, _node->U.For.args_->at(2)); // stepFor
+	//}
+	//else
+	//{ 
+	//	//error
+	//}
+
+	//this->dataContainer->instructions_->push_back(FOR_ITER);
 
 
 	AlifObject* jumpAddress = (AlifObject*)alifMemory->allocate(sizeof(AlifObject)); // Instructions address
@@ -566,6 +595,57 @@ void Compiler::visit_for_(StmtsNode* _node)
 	dataContainer->data_->push_back(jumpAddress);
 	this->dataContainer->instructions_->push_back(SET_DATA); // set instructions address after for jumb
 
+
+
+
+	if (_node->U.For.args_->size() == 1)
+	{
+		stepFor->V.NumberObj.numberValue = 1;
+
+		AlifObject* startForBackup = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+		startForBackup->V.NumberObj.numberValue = 0;
+		startForBackup->objType = OTNumber;
+		startForBackup->V.NumberObj.numberType = TTInteger;
+		dataContainer->data_->push_back(startForBackup); // startForBackup
+		dataContainer->instructions_->push_back(SET_DATA);
+
+		VISIT_(exprs, _node->U.For.args_->at(0)); // endFor
+
+		dataContainer->data_->push_back(stepFor); // stepFor
+		dataContainer->instructions_->push_back(SET_DATA);
+	}
+	else if (_node->U.For.args_->size() == 2)
+	{
+		AlifObject* startForBackup = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+		startForBackup->V.NumberObj.numberValue = startFor->V.NumberObj.numberValue;
+		startForBackup->objType = OTNumber;
+		startForBackup->V.NumberObj.numberType = TTInteger;
+		dataContainer->data_->push_back(startForBackup); // startForBackup
+		dataContainer->instructions_->push_back(SET_DATA);
+
+
+		VISIT_(exprs, _node->U.For.args_->at(1)); // endFor
+		stepFor->V.NumberObj.numberValue = 1; // stepFor
+
+
+		dataContainer->data_->push_back(stepFor); // stepFor
+		dataContainer->instructions_->push_back(SET_DATA);
+	}
+	else if (_node->U.For.args_->size() == 3)
+	{
+		AlifObject* startForBackup = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+		startForBackup->V.NumberObj.numberValue = startFor->V.NumberObj.numberValue;
+		dataContainer->data_->push_back(startForBackup); // startForBackup
+		dataContainer->instructions_->push_back(SET_DATA);
+
+
+		VISIT_(exprs, _node->U.For.args_->at(1)); // endFor
+		VISIT_(exprs, _node->U.For.args_->at(2)); // stepFor
+	}
+	else
+	{
+		//error
+	}
 
 	this->dataContainer->instructions_->push_back(JUMP_FOR);
 }
@@ -616,7 +696,7 @@ void Compiler::visit_function(StmtsNode* _node)
 {
 	Container* dataBackup = dataContainer; // في حال تم تعريف دالة داخل دالة
 
-	symTable->enter_scope(*_node->U.FunctionDef.name_->V.NameObj.name_);
+	symTable->enter_scope(_node->U.FunctionDef.name_->V.NameObj.name_);
 
 	AlifObject* paramContainer = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 	if (_node->U.FunctionDef.params_)
@@ -655,7 +735,7 @@ void Compiler::visit_function(StmtsNode* _node)
 	AlifObject* containerObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 	containerObject->V.ContainerObj.container_ = dataContainer;
 
-	symTable->add_symbol(*_node->U.FunctionDef.name_->V.NameObj.name_, containerObject);
+	symTable->add_symbol(_node->U.FunctionDef.name_->V.NameObj.name_, containerObject);
 
 	symTable->exit_scope();
 
@@ -779,8 +859,64 @@ AlifObject* Compiler::visit_stmts(StmtsNode* _node)
 
 			dataContainer->data_->push_back(nullObject);
 			dataContainer->instructions_->push_back(SET_DATA);
+
+			dataContainer->instructions_->push_back(RETURN_EXPR);
 			
 			return nullObject;
 		}
 	}
+}
+
+
+
+
+
+
+
+
+
+
+// تجهيز الدوال الضمنية
+
+void Compiler::visit_print()
+{
+	symTable->enter_scope(L"اطبع");
+
+	AlifObject* paramContainer = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+
+	Container* paramCont = (Container*)alifMemory->allocate(sizeof(Container));
+	paramCont->instructions_ = new AlifArray<InstructionsType>;
+	paramCont->data_ = new AlifArray<AlifObject*>;
+
+
+	AlifObject* name_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	name_->V.NameObj.name_ = L"ع";
+	paramCont->data_->push_back(name_);
+	paramCont->instructions_->push_back(SET_DATA);
+	paramCont->instructions_->push_back(GET_DATA);
+
+	paramContainer->V.ContainerObj.container_ = paramCont;
+	paramContainer->objType = OTContainer;
+
+
+	Container* dataCont = (Container*)alifMemory->allocate(sizeof(Container));
+	dataCont->instructions_ = new AlifArray<InstructionsType>;
+	dataCont->data_ = new AlifArray<AlifObject*>;
+
+	AlifObject* paramSize = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	paramSize->V.NumberObj.numberValue = 1;
+
+	dataCont->data_->push_back(paramSize);
+	dataCont->data_->push_back(paramContainer);
+
+
+	dataCont->instructions_->push_back(PRINT_FUNC);
+
+
+	AlifObject* containerObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	containerObject->V.ContainerObj.container_ = dataCont;
+
+	symTable->add_symbol(L"اطبع", containerObject);
+
+	symTable->exit_scope();
 }

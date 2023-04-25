@@ -46,6 +46,12 @@ public:
 
 	AlifObject* visit_exprs(ExprNode* _node);
 	AlifObject* visit_stmts(StmtsNode* _node);
+
+
+
+
+
+	void visit_print();
 };
 
 
