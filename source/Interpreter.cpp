@@ -639,6 +639,7 @@ void jump_for()
 	AlifObject* stepForObj = stackMemory->pop();
 	AlifObject* endForObj = stackMemory->pop();
 	AlifObject* startForObj = stackMemory->pop();
+	AlifObject* startForBackupObj = stackMemory->pop();
 
 	AlifObject* jumpAddress = stackMemory->pop();
 	AlifObject* dataAddress = stackMemory->pop();
@@ -657,17 +658,15 @@ void jump_for()
 
 		stackMemory->reset();
 	}
-}
-void for_iter()
-{
-	//AlifObject* stepForObj = stackMemory->pop();
-	//AlifObject* endForObj = stackMemory->pop();
-	//AlifObject* startForObj = stackMemory->pop();
+	else // هذه الحالة تقوم بإعادة ضبط قيمة البداية الى القيمة الافتراضية بعد الانتهاء من تنفيذ الحلقة
+	{
+		AlifObject* name_ = symTable->get_data(iterName->V.NameObj.name_);
+		name_->V.NumberObj.numberValue = startForBackupObj->V.NumberObj.numberValue;
 
-	//startFor = startForObj->V.NumberObj.numberValue;
-	//endFor = endForObj->V.NumberObj.numberValue;
-	//stepFor = stepForObj->V.NumberObj.numberValue;
+		startForObj->V.NumberObj.numberValue = startForBackupObj->V.NumberObj.numberValue;
+	}
 }
+
 
 void get_scope()
 {

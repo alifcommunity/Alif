@@ -145,7 +145,6 @@ enum InstructionsType : uint8_t { // التعليمات
     JUMP_TO,
     JUMP_IF,
     JUMP_FOR,
-    FOR_ITER,
 
     // تعليمات الدوال والاصناف
     GET_SCOPE,
