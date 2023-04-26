@@ -20,7 +20,7 @@ private:
     int* fragmentCounts;
 
 public:
-    AlifMemory(size_t _segmentSize = 8192);
+    AlifMemory(size_t _segmentSize = 128); // تتبع التعقيد الزمني لوغارتم(ت) ا
 
     void* allocate(size_t);
     void deallocate(void*);

@@ -291,7 +291,6 @@ void not_equal()
 void gr_than_num()
 {
 	AlifObject* right = stackMemory->pop();
-
 	AlifObject* left = stackMemory->pop();
 
 
@@ -322,7 +321,6 @@ void gr_than_num()
 void gr_than_eq_num()
 {
 	AlifObject* right = stackMemory->pop();
-
 	AlifObject* left = stackMemory->pop();
 
 
@@ -353,7 +351,6 @@ void gr_than_eq_num()
 void ls_than_num()
 {
 	AlifObject* right = stackMemory->pop();
-
 	AlifObject* left = stackMemory->pop();
 
 
@@ -384,11 +381,10 @@ void ls_than_num()
 void ls_than_eq_num()
 {
 	AlifObject* right = stackMemory->pop();
-
 	AlifObject* left = stackMemory->pop();
 
 
-	//if (right->objType == left->objType)
+	if (right->objType == left->objType)
 	{
 		AlifObject* res = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 
@@ -407,7 +403,7 @@ void ls_than_eq_num()
 		}
 		stackMemory->push(res);
 	}
-	//else
+	else
 	{
 		// error
 	}
@@ -438,7 +434,6 @@ void not_logic()
 void and_logic()
 {
 	AlifObject* right = stackMemory->pop();
-
 	AlifObject* left = stackMemory->pop();
 
 
@@ -469,11 +464,10 @@ void and_logic()
 void or_logic() 
 {
 	AlifObject* right = stackMemory->pop();
-
 	AlifObject* left = stackMemory->pop();
 
 
-	//if (right->objType == left->objType)
+	if (right->objType == left->objType)
 	{
 		AlifObject* res = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 
@@ -492,7 +486,7 @@ void or_logic()
 		}
 		stackMemory->push(res);
 	}
-	//else
+	else
 	{
 		// error
 	}
@@ -501,10 +495,7 @@ void or_logic()
 void add_str() // هذه الطريقة اسرع من استخدام wcsncpy_s و wcsncat_s
 {
 	AlifObject* right = stackMemory->pop();
-
 	AlifObject* left = stackMemory->pop();
-
-
 
 	const uint16_t rightSize = wcslen(right->V.StringObj.strValue);
 	const uint16_t leftSize = wcslen(left->V.StringObj.strValue);
@@ -633,7 +624,6 @@ void jump_if()
 	}
 }
 
-//size_t startFor = 0, endFor = 1, stepFor = 1;
 void jump_for()
 {
 	AlifObject* stepForObj = stackMemory->pop();
@@ -645,10 +635,8 @@ void jump_for()
 	AlifObject* dataAddress = stackMemory->pop();
 	AlifObject* iterName = stackMemory->pop();
 
-	//startFor += stepFor;
 	startForObj->V.NumberObj.numberValue += stepForObj->V.NumberObj.numberValue;
 	if (startForObj->V.NumberObj.numberValue < endForObj->V.NumberObj.numberValue)
-	//if (startFor < endFor)
 	{
 		AlifObject* name_ = symTable->get_data(iterName->V.NameObj.name_);
 		name_->V.NumberObj.numberValue = startForObj->V.NumberObj.numberValue;
