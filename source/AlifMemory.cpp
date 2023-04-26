@@ -34,15 +34,17 @@ void* AlifMemory::allocate(size_t _size)
                 goto returnPtr; // اذهب مباشرة الى خطوات ارجاع العنوان
             }
         }
-        if (segmentSize != 0)
-        {
-            currentSegment = new wchar_t[segmentSize]; // قم بحجز قطعة جديدة مع قيمة افتراضية 
+
+        segmentSize = segmentSize * 1.1; // تتبع التعقيد الزمني لوغارتم(ت) ولكن لتفادي حجز كميات كبيرة من الذاكرة بلا حاجة تم تقليل نسبة المضاعفة الى 1.1
+        try {
+            currentSegment = new wchar_t[segmentSize];  // قم بحجز قطعة جديدة مع قيمة افتراضية
         }
-        else
+        catch (const std::bad_alloc& e)
         {
-            std::wcout << L"خطأ في ذاكرة ألف, يجب تعريف متغير من نوع MemoryBlock اولا ومن ثم استخدامه - الحجم المطلوب للحجز يساوي صفر -" << std::endl; // هذا الخطأ يمكن الاستغناء عنه في حال تم إيجاد حل لإمكانية استخدام الذاكرة قبل تعريف متغير من نوعها
-            exit(-2);
+            std::wcout << L"لا يوجد ذاكرة كافية" << std::endl;
+            exit(-2);                
         }
+
         segments_.push_back(currentSegment); // قم بإضافة اول عنوان من القطعة الى مصفوفة القطع
         currentIndex = 0; // تاكد ان المؤشر الحالي يؤشر الى العنوان الاول من القطعة
         fragmentCounts = (int*)(currentSegment); // قم بحجز اربع بايت خاصة بعداد الوحدات
