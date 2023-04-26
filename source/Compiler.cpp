@@ -492,7 +492,7 @@ void Compiler::visit_for_(StmtsNode* _node)
 	}
 	else if (_node->U.For.args_->size() == 2)
 	{
-		//startFor = VISIT_(exprs, _node->U.For.args_->at(0)); // startFor
+		startFor = VISIT_(exprs, _node->U.For.args_->at(0)); // startFor
 
 		dataContainer->data_->push_back(_node->U.For.itrName); // varName
 		dataContainer->instructions_->push_back(SET_DATA);
@@ -508,70 +508,6 @@ void Compiler::visit_for_(StmtsNode* _node)
 
 		this->dataContainer->instructions_->push_back(STORE_NAME);
 	}
-
-	//if (_node->U.For.args_->size() == 1)
-	//{
-	//	startFor->V.NumberObj.numberValue = 0;
-
-	//	dataContainer->data_->push_back(startFor);
-	//	dataContainer->instructions_->push_back(SET_DATA);
-
-	//	dataContainer->data_->push_back(_node->U.For.itrName); // varName
-	//	dataContainer->instructions_->push_back(SET_DATA);
-
-	//	this->dataContainer->instructions_->push_back(STORE_NAME);
-
-	//	stepFor->V.NumberObj.numberValue = 1;
-
-
-	//	dataContainer->data_->push_back(startFor); // startFor
-	//	dataContainer->instructions_->push_back(SET_DATA);
-	//	
-
-	//	VISIT_(exprs, _node->U.For.args_->at(0)); // endFor
-
-
-	//	dataContainer->data_->push_back(stepFor); // stepFor
-	//	dataContainer->instructions_->push_back(SET_DATA);
-	//}
-	//else if (_node->U.For.args_->size() == 2)
-	//{
-	//	VISIT_(exprs, _node->U.For.args_->at(0)); // startFor
-
-	//	dataContainer->data_->push_back(_node->U.For.itrName); // varName
-	//	dataContainer->instructions_->push_back(SET_DATA);
-
-	//	this->dataContainer->instructions_->push_back(STORE_NAME);
-
-
-	//	VISIT_(exprs, _node->U.For.args_->at(0)); // startFor
-	//	VISIT_(exprs, _node->U.For.args_->at(1)); // endFor
-	//	stepFor->V.NumberObj.numberValue = 1; // stepFor
-
-
-	//	dataContainer->data_->push_back(stepFor); // stepFor
-	//	dataContainer->instructions_->push_back(SET_DATA);
-	//}
-	//else if (_node->U.For.args_->size() == 3)
-	//{
-	//	VISIT_(exprs, _node->U.For.args_->at(0)); // startFor
-
-	//	dataContainer->data_->push_back(_node->U.For.itrName); // varName
-	//	dataContainer->instructions_->push_back(SET_DATA);
-
-	//	this->dataContainer->instructions_->push_back(STORE_NAME);
-
-
-	//	VISIT_(exprs, _node->U.For.args_->at(0)); // startFor
-	//	VISIT_(exprs, _node->U.For.args_->at(1)); // endFor
-	//	VISIT_(exprs, _node->U.For.args_->at(2)); // stepFor
-	//}
-	//else
-	//{ 
-	//	//error
-	//}
-
-	//this->dataContainer->instructions_->push_back(FOR_ITER);
 
 
 	AlifObject* jumpAddress = (AlifObject*)alifMemory->allocate(sizeof(AlifObject)); // Instructions address
@@ -602,6 +538,13 @@ void Compiler::visit_for_(StmtsNode* _node)
 	{
 		stepFor->V.NumberObj.numberValue = 1;
 
+		AlifObject* startForMain = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+		startForMain->V.NumberObj.numberValue = 0;
+		startForMain->objType = OTNumber;
+		startForMain->V.NumberObj.numberType = TTInteger;
+		dataContainer->data_->push_back(startForMain); // startForMain
+		dataContainer->instructions_->push_back(SET_DATA);
+
 		AlifObject* startForBackup = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 		startForBackup->V.NumberObj.numberValue = 0;
 		startForBackup->objType = OTNumber;
@@ -616,6 +559,13 @@ void Compiler::visit_for_(StmtsNode* _node)
 	}
 	else if (_node->U.For.args_->size() == 2)
 	{
+		AlifObject* startForMain = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+		startForMain->V.NumberObj.numberValue = startFor->V.NumberObj.numberValue;
+		startForMain->objType = OTNumber;
+		startForMain->V.NumberObj.numberType = TTInteger;
+		dataContainer->data_->push_back(startForMain); // startForMain
+		dataContainer->instructions_->push_back(SET_DATA);
+
 		AlifObject* startForBackup = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 		startForBackup->V.NumberObj.numberValue = startFor->V.NumberObj.numberValue;
 		startForBackup->objType = OTNumber;
@@ -633,6 +583,13 @@ void Compiler::visit_for_(StmtsNode* _node)
 	}
 	else if (_node->U.For.args_->size() == 3)
 	{
+		AlifObject* startForMain = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+		startForMain->V.NumberObj.numberValue = startFor->V.NumberObj.numberValue;
+		startForMain->objType = OTNumber;
+		startForMain->V.NumberObj.numberType = TTInteger;
+		dataContainer->data_->push_back(startForMain); // startForMain
+		dataContainer->instructions_->push_back(SET_DATA);
+
 		AlifObject* startForBackup = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 		startForBackup->V.NumberObj.numberValue = startFor->V.NumberObj.numberValue;
 		dataContainer->data_->push_back(startForBackup); // startForBackup
