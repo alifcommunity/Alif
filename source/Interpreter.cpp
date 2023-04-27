@@ -578,7 +578,11 @@ void store_name()
 	AlifObject* name_ = stackMemory->pop();
 	AlifObject* value_ = stackMemory->pop();
 
-	symTable->add_symbol(name_->V.NameObj.name_, value_);
+	AlifObject* valCopy = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	valCopy->objType = value_->objType;
+	valCopy->V = value_->V;
+
+	symTable->add_symbol(name_->V.NameObj.name_, valCopy);
 }
 
 void list_make()
@@ -641,7 +645,7 @@ void jump_for()
 		instructionsIndex = jumpAddress->V.NumberObj.numberValue;
 		dataIndex = dataAddress->V.NumberObj.numberValue;
 
-		stackMemory->reset();
+		stackMemory->reset();													 
 	}
 	else // هذه الحالة تقوم بإعادة ضبط قيمة البداية الى القيمة الافتراضية بعد الانتهاء من تنفيذ الحلقة
 	{
