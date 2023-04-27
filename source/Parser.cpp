@@ -2,9 +2,31 @@
 
 
 
-Parser::Parser(std::vector<Token>* tokens_, wstr _fileName, wstr* _input, AlifMemory* _alifMemory) :
-    tokens_(tokens_), fileName(_fileName), input_(_input), alifMemory(_alifMemory)
+Parser::Parser(std::vector<Token>* _tokens, wstr _fileName, wstr* _input, AlifMemory* _alifMemory) :
+    tokens_(_tokens), fileName(_fileName), input_(_input), alifMemory(_alifMemory)
 {
+    // تنقية الرموز من رمز السطر الجديد غير الضروري
+    size_t size_ = tokens_->size();
+    for (size_t a = 0; a < size_;)
+    {
+        if (tokens_->at(a).type_ == TTNewline or tokens_->at(a).type_ == TTDedent)
+        {
+            a++;
+            while (a < size_ and tokens_->at(a).type_ == TTNewline)
+            {
+                tokens_->erase(tokens_->begin() + a);
+                size_--;
+            }
+        }
+        else
+        {
+            a++;
+        }
+    }
+    if (tokens_->begin()->type_ == TTNewline) { tokens_->erase(tokens_->begin()); }
+    tokens_->shrink_to_fit();
+    ///////////////////////
+    
     this->advance();
 }
 
@@ -22,14 +44,8 @@ void Parser::advance()
 void Parser::parse_file()
 {
     do {
-        while (this->currentToken.type_ == TTNewline) { this->advance(); } // يجب ايجاد حل لهذه الحالة
-
         this->statements_.push_back(this->statement());
-
-        while (this->currentToken.type_ == TTNewline) { this->advance(); }
-
     } while (currentToken.type_ != TTEndOfFile);
-
 }
 
 void Parser::parse_terminal()
@@ -38,31 +54,7 @@ void Parser::parse_terminal()
 }
 
 void Parser::list_print(AlifObject _obj) {
-    lst_.append(L"[");
-    //if (_obj.objType == OTList) {
-    //    for (AlifObject obj : *_obj.V.ListObj.objList) {
-    //        if (obj.objType == OTNumber)
-    //        {
-    //            lst_.append(std::to_wstring(obj.V.NumberObj.numberValue));
-
-    //        }
-    //        else if (obj.objType == OTString)
-    //        {
-    //            lst_.append(*obj.V.StringObj.strValue);
-
-    //        }
-    //        else if (obj.objType == OTKeyword)
-    //        {
-    //            lst_.append(std::to_wstring(obj.V.BoolObj.boolValue));
-
-    //        }
-    //        else if (obj.objType == OTList) {
-    //            this->list_print(obj);
-    //        }
-    //        lst_.append(L", ");
-    //    }
-    //    lst_.replace(lst_.length() - 2, lst_.length(), L"]");
-    //}
+    
 }
 
     //////////////////////////////
@@ -1152,7 +1144,6 @@ ExprNode* Parser::simple_statement()
 
 StmtsNode* Parser::statement() 
 {
-
     if (!wcscmp(this->currentToken.value_, L"دالة") or
         !wcscmp(this->currentToken.value_, L"اذا") or
         !wcscmp(this->currentToken.value_, L"صنف") or
