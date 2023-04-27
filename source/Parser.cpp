@@ -53,32 +53,26 @@ void Parser::parse_terminal()
     this->statements_.push_back(this->statement());
 }
 
-void Parser::list_print(AlifObject _obj) {
-    
-}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    //////////////////////////////
-
-std::vector<ExprNode*>* Parser::arguments() {
-
+std::vector<ExprNode*>* Parser::arguments() 
+{
     std::vector<ExprNode*>* args = new std::vector<ExprNode*>;
 
     do {
-
         args->push_back(this->expression());
 
-        if (this->currentToken.type_ == TTComma) {
+        if (this->currentToken.type_ == TTComma) 
+        {
             this->advance();
         }
-
     } while (this->currentToken.type_ != TTRrightParenthesis);
 
     return args;
-
 }
 
-ExprNode* Parser::atom() {
-
+ExprNode* Parser::atom()
+{
     Token token = this->currentToken;
 
     if (token.type_ == TTName)
@@ -1139,6 +1133,16 @@ StmtsNode* Parser::compound_statement()
 
 ExprNode* Parser::simple_statement()
 {
+    if (!wcscmp(this->currentToken.value_, L"توقف"))
+    {
+        ExprNode* stopNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+        stopNode->type_ = VTStop;
+
+        this->advance();
+
+        return stopNode;
+    }
+
     return this->assignment();
 }
 

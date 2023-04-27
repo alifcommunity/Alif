@@ -38,6 +38,7 @@ public:
 	void visit_list(ExprNode*);
 	void visit_call(ExprNode*);
 	AlifObject* visit_return_(ExprNode*);
+	void visit_stop(ExprNode*);
 
 	void visit_for_(StmtsNode*);
 	void visit_while_(StmtsNode*);
