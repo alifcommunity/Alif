@@ -410,6 +410,25 @@ void Compiler::visit_list(ExprNode* _node)
 	dataContainer->instructions_->push_back(LIST_MAKE);
 }
 
+
+AlifObject* instrAddressForStop;
+AlifObject* dataAddressForStop;
+void Compiler::visit_stop(ExprNode* _node)
+{
+	instrAddressForStop = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	dataAddressForStop = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+
+	dataContainer->data_->push_back(instrAddressForStop);
+	this->dataContainer->instructions_->push_back(SET_DATA);
+
+	dataContainer->data_->push_back(dataAddressForStop);
+	this->dataContainer->instructions_->push_back(SET_DATA);
+
+	this->dataContainer->instructions_->push_back(JUMP_TO);
+}
+
+
+
 bool b = true;
 AlifObject* jTAdress = new AlifObject(); // Address of instructions
 AlifObject* jTDataAddress = new AlifObject; // Address of data
@@ -532,8 +551,6 @@ void Compiler::visit_for_(StmtsNode* _node)
 	this->dataContainer->instructions_->push_back(SET_DATA); // set instructions address after for jumb
 
 
-
-
 	if (_node->U.For.args_->size() == 1)
 	{
 		stepFor->V.NumberObj.numberValue = 1;
@@ -605,6 +622,15 @@ void Compiler::visit_for_(StmtsNode* _node)
 	}
 
 	this->dataContainer->instructions_->push_back(JUMP_FOR);
+
+
+	/// هذا القسم خاص ب حالة توقف فقط
+	instrAddressForStop->objType = OTNumber;
+	instrAddressForStop->V.NumberObj.numberValue = this->dataContainer->instructions_->size() - 1;
+
+	dataAddressForStop->objType = OTNumber;
+	dataAddressForStop->V.NumberObj.numberValue = this->dataContainer->data_->size();
+	//////////////////////////////
 }
 
 
@@ -770,6 +796,14 @@ AlifObject* Compiler::visit_exprs(ExprNode* _node)
 	else if (_node->type_ == VTCall)
 	{
 		VISIT_(call, _node);
+	}
+	else if (_node->type_ == VTStop)
+	{
+		//if (inLoop)
+		//{
+			// التحقق اذا كان داخل حلقة ام لا
+		//}
+		VISIT_(stop, _node);
 	}
 }
 

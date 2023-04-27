@@ -28,8 +28,19 @@ public:
         currentScope = globalScope;
     }
 
-    void add_symbol(wcstr* _type, AlifObject* _value) {
-        currentScope->symbols[_type] = _value;
+    void add_symbol(wcstr* _type, AlifObject* _value)
+    {
+        auto itr = currentScope->symbols.begin();
+        for (; itr != currentScope->symbols.end(); itr++)
+        {
+            if (!wcscmp(itr->first, _type))
+            {
+                itr->second = _value;
+                return;
+            }
+        }
+
+        currentScope->symbols.insert({ _type,_value });
     }
 
     void enter_scope(wcstr* type) 

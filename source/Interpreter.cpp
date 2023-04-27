@@ -41,9 +41,6 @@ void get_data()
 	AlifObject* name_ = stackMemory->pop();
 
 	stackMemory->push(symTable->get_data(name_->V.NameObj.name_));
-
-	//AlifObject* res = stackMemory->get();
-	//std::wcout << res->V.NumberObj.numberValue << std::endl;
 }
 void set_data()
 {
@@ -606,10 +603,10 @@ void list_make()
 void jump_to()
 {
 	AlifObject* dataAddress = stackMemory->pop();
-	AlifObject* address_ = stackMemory->pop();
+	AlifObject* instrAddress = stackMemory->pop();
 
-	instructionsIndex = address_->V.NumberObj.numberValue;
 	dataIndex = dataAddress->V.NumberObj.numberValue;
+	instructionsIndex = instrAddress->V.NumberObj.numberValue;
 }
 void jump_if()
 {

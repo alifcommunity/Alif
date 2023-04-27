@@ -39,9 +39,6 @@ public:
 
     void parse_terminal();
 
-    wstr lst_;
-    void list_print(AlifObject _obj);
-
     //////////////////////////////
 
     std::vector<ExprNode*>* arguments();
