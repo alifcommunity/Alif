@@ -242,6 +242,14 @@ void Lexer::make_indent()
         else
         {
             this->advance();
+            if (this->currentChar == L'\t') // تحقق اذا كان السطر يحتوي مسافة بادئة بعد سطر فارغ >> قم بإنشاء رمز مسافة بادئة
+            {
+                this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTIndent));
+                DedentSpecifier* newIndent = (DedentSpecifier*)alifMemory.allocate(sizeof(DedentSpecifier));
+                *newIndent = *dedentSpec;
+                dedentSpec->spaces = spaces;
+                dedentSpec->previous = newIndent;
+            }
         }
     }
     else if (spaces < dedentSpec->spaces)
