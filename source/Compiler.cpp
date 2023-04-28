@@ -410,18 +410,19 @@ void Compiler::visit_list(ExprNode* _node)
 	dataContainer->instructions_->push_back(LIST_MAKE);
 }
 
-
-AlifObject* instrAddressForStop;
-AlifObject* dataAddressForStop;
+// نظام لتخزين العناوين لحالة "توقف" في حال كان هنالك تداخل في الحلقات
+AlifObject* instrAddressForStop = new AlifObject[18];
+AlifObject* dataAddressForStop = new AlifObject[18];
+size_t stopLevel = 0;
 void Compiler::visit_stop(ExprNode* _node)
 {
-	instrAddressForStop = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
-	dataAddressForStop = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	AlifObject* instrAFS = (instrAddressForStop + stopLevel);
+	AlifObject* dataAFS = (dataAddressForStop + stopLevel);
 
-	dataContainer->data_->push_back(instrAddressForStop);
+	dataContainer->data_->push_back(instrAFS);
 	this->dataContainer->instructions_->push_back(SET_DATA);
 
-	dataContainer->data_->push_back(dataAddressForStop);
+	dataContainer->data_->push_back(dataAFS);
 	this->dataContainer->instructions_->push_back(SET_DATA);
 
 	this->dataContainer->instructions_->push_back(JUMP_TO);
@@ -430,7 +431,7 @@ void Compiler::visit_stop(ExprNode* _node)
 
 
 bool b = true;
-AlifObject* jTAdress = new AlifObject(); // Address of instructions
+AlifObject* jTAdress = new AlifObject; // Address of instructions
 AlifObject* jTDataAddress = new AlifObject; // Address of data
 void Compiler::visit_if_(StmtsNode* _node)
 {
@@ -625,11 +626,13 @@ void Compiler::visit_for_(StmtsNode* _node)
 
 
 	/// هذا القسم خاص ب حالة توقف فقط
-	instrAddressForStop->objType = OTNumber;
-	instrAddressForStop->V.NumberObj.numberValue = this->dataContainer->instructions_->size() - 1;
+	(instrAddressForStop + stopLevel)->objType = OTNumber;
+	(instrAddressForStop + stopLevel)->V.NumberObj.numberValue = this->dataContainer->instructions_->size() - 1;
 
-	dataAddressForStop->objType = OTNumber;
-	dataAddressForStop->V.NumberObj.numberValue = this->dataContainer->data_->size();
+	(dataAddressForStop + stopLevel)->objType = OTNumber;
+	(dataAddressForStop + stopLevel)->V.NumberObj.numberValue = this->dataContainer->data_->size();
+
+	if (stopLevel < 18) stopLevel++;
 	//////////////////////////////
 }
 
@@ -662,9 +665,6 @@ void Compiler::visit_while_(StmtsNode* _node)
 	VISIT_(stmts, _node->U.While.block_);
 
 
-	dataAddressJ->V.NumberObj.numberValue = this->dataContainer->data_->size() + 2;
-	jumpAddress->V.NumberObj.numberValue = this->dataContainer->instructions_->size() + 2; // this size most be greater than size of instructions to insure break the loop
-
 	this->dataContainer->data_->push_back(jumpTo);
 	this->dataContainer->instructions_->push_back(SET_DATA);
 
@@ -672,6 +672,20 @@ void Compiler::visit_while_(StmtsNode* _node)
 	this->dataContainer->instructions_->push_back(SET_DATA);
 
 	this->dataContainer->instructions_->push_back(JUMP_TO); // this command jump to begin of the "Container"
+	
+	dataAddressJ->V.NumberObj.numberValue = this->dataContainer->data_->size();  // تم إضافة اثنين لتخطي التعليمتين التاليات jumpTo و dataAddressJT
+	jumpAddress->V.NumberObj.numberValue = this->dataContainer->instructions_->size() - 1;
+
+
+	/// هذا القسم خاص ب حالة توقف فقط
+	(instrAddressForStop + stopLevel)->objType = OTNumber;
+	(instrAddressForStop + stopLevel)->V.NumberObj.numberValue = this->dataContainer->instructions_->size() - 1;
+
+	(dataAddressForStop + stopLevel)->objType = OTNumber;
+	(dataAddressForStop + stopLevel)->V.NumberObj.numberValue = this->dataContainer->data_->size();
+
+	if (stopLevel < 18) stopLevel++;
+	//////////////////////////////
 }
 
 
