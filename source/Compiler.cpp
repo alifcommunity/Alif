@@ -414,7 +414,7 @@ void Compiler::visit_list(ExprNode* _node)
 AlifObject* instrAddressForStop = new AlifObject[18];
 AlifObject* dataAddressForStop = new AlifObject[18];
 size_t stopLevel = 0;
-void Compiler::visit_stop(ExprNode* _node)
+void Compiler::visit_stop()
 {
 	AlifObject* instrAFS = (instrAddressForStop + stopLevel);
 	AlifObject* dataAFS = (dataAddressForStop + stopLevel);
@@ -428,6 +428,24 @@ void Compiler::visit_stop(ExprNode* _node)
 	this->dataContainer->instructions_->push_back(JUMP_TO);
 }
 
+AlifObject* instrAddressForContinue = new AlifObject[18];
+AlifObject* dataAddressForContinue = new AlifObject[18];
+size_t continueLevel = 0;
+void Compiler::visit_continue_()
+{
+	// يجب القفز الى عنوان بداية الحلقة أي إعادة تكرارها من جديد
+
+	AlifObject* instrAFS = (instrAddressForContinue + continueLevel);
+	AlifObject* dataAFS = (dataAddressForContinue + continueLevel);
+
+	dataContainer->data_->push_back(instrAFS);
+	this->dataContainer->instructions_->push_back(SET_DATA);
+
+	dataContainer->data_->push_back(dataAFS);
+	this->dataContainer->instructions_->push_back(SET_DATA);
+
+	this->dataContainer->instructions_->push_back(JUMP_TO);
+}
 
 
 bool b = true;
@@ -486,7 +504,6 @@ void Compiler::visit_if_(StmtsNode* _node)
 			jTAdress->V.NumberObj.numberValue = this->dataContainer->instructions_->size() - 1;
 		}
 	}
-
 }
 
 void Compiler::visit_for_(StmtsNode* _node)
@@ -541,6 +558,15 @@ void Compiler::visit_for_(StmtsNode* _node)
 
 	VISIT_(stmts, _node->U.For.block_);
 
+	/// هذا القسم خاص ب حالة استمر فقط
+	(instrAddressForContinue + continueLevel)->objType = OTNumber;
+	(instrAddressForContinue + continueLevel)->V.NumberObj.numberValue = this->dataContainer->instructions_->size() - 1;
+
+	(dataAddressForContinue + continueLevel)->objType = OTNumber;
+	(dataAddressForContinue + continueLevel)->V.NumberObj.numberValue = this->dataContainer->data_->size();
+
+	if (continueLevel < 18) continueLevel++;
+	//////////////////////////////
 
 	dataContainer->data_->push_back(_node->U.For.itrName); // varName
 	dataContainer->instructions_->push_back(SET_DATA);
@@ -647,7 +673,9 @@ void Compiler::visit_while_(StmtsNode* _node)
 	dataAddressJT->objType = OTNumber;
 	dataAddressJT->V.NumberObj.numberValue = this->dataContainer->data_->size();
 
+
 	VISIT_(exprs, _node->U.While.condetion_);
+
 
 	AlifObject* dataAddressJ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 	dataAddressJ->objType = OTNumber;
@@ -664,6 +692,16 @@ void Compiler::visit_while_(StmtsNode* _node)
 
 	VISIT_(stmts, _node->U.While.block_);
 
+
+	/// هذا القسم خاص ب حالة استمر فقط
+	(instrAddressForContinue + continueLevel)->objType = OTNumber;
+	(instrAddressForContinue + continueLevel)->V.NumberObj.numberValue = this->dataContainer->instructions_->size() - 1;
+
+	(dataAddressForContinue + continueLevel)->objType = OTNumber;
+	(dataAddressForContinue + continueLevel)->V.NumberObj.numberValue = this->dataContainer->data_->size();
+
+	if (continueLevel < 18) continueLevel++;
+	//////////////////////////////
 
 	this->dataContainer->data_->push_back(jumpTo);
 	this->dataContainer->instructions_->push_back(SET_DATA);
@@ -817,7 +855,15 @@ AlifObject* Compiler::visit_exprs(ExprNode* _node)
 		//{
 			// التحقق اذا كان داخل حلقة ام لا
 		//}
-		VISIT_(stop, _node);
+		VISIT_(stop);
+	}
+	else if (_node->type_ == VTContinue)
+	{
+		//if (inLoop)
+		//{
+			// التحقق اذا كان داخل حلقة ام لا
+		//}
+		VISIT_(continue_);
 	}
 }
 
