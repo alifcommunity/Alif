@@ -1142,6 +1142,15 @@ ExprNode* Parser::simple_statement()
 
         return stopNode;
     }
+    if (!wcscmp(this->currentToken.value_, L"استمر"))
+    {
+        ExprNode* continueNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+        continueNode->type_ = VTContinue;
+
+        this->advance();
+
+        return continueNode;
+    }
 
     return this->assignment();
 }
