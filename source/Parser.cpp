@@ -284,7 +284,8 @@ ExprNode* Parser::primary() {
         primary_->U.Call.name_ = primary;
         return primary_;
     }
-    else if (this->currentToken.type_ == TTLeftParenthesis) {
+    else if (this->currentToken.type_ == TTLeftParenthesis) 
+    {
 
         ExprNode* primary = atom;
 
@@ -303,7 +304,6 @@ ExprNode* Parser::primary() {
 
         std::vector<ExprNode*>* args = this->arguments();
 
-
         if (this->currentToken.type_ == TTRrightParenthesis)
         {
             this->advance();
@@ -314,9 +314,9 @@ ExprNode* Parser::primary() {
             callNode->U.Call.args_ = args;
             return callNode;
         }
-
     }
-    else {
+    else
+    {
         return atom;
     }
 
@@ -649,6 +649,11 @@ ExprNode* Parser::assignment() // يجب إيجاد خوارزمية افضل ب
     }
 
     return this->expressions();
+}
+
+ExprNode* Parser::import_statement()
+{
+
 }
 
 StmtsNode* Parser::return_statement() {
@@ -1076,14 +1081,6 @@ StmtsNode* Parser::block_()
     }
 }
 
-//    ////void import_from() {
-//    ////}
-//
-//    ////void import_name() {
-//    ////}
-//
-//    ////void import_statement() {
-//    ////}
 //
 //    ////void delete_statement() {
 //    ////}
@@ -1150,6 +1147,15 @@ ExprNode* Parser::simple_statement()
         this->advance();
 
         return continueNode;
+    }
+    if (!wcscmp(this->currentToken.value_, L"استورد"))
+    {
+        ExprNode* continueNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+        continueNode->type_ = VTImport;
+
+        this->advance();
+
+        return this->import_statement();
     }
 
     return this->assignment();
