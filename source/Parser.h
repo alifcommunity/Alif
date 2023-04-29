@@ -45,7 +45,7 @@ public:
 
     std::vector<ExprNode*>* parameters();
 
-    ExprNode* atom();
+    ExprNode* atom(); // يجب جعل جميع اسماء الحالات تنتهي ب statement
 
     ExprNode* list_expr();
 
@@ -73,6 +73,8 @@ public:
 
     ExprNode* assignment();
 
+    ExprNode* import_statement();
+
     StmtsNode* return_statement();
 
     StmtsNode* function_def();
@@ -90,12 +92,6 @@ public:
     StmtsNode* if_statement();
 
     StmtsNode* block_();
-
-    //void import_from();
-
-    //void import_name();
-
-    //void import_statement();
 
     //void delete_statement();
 
