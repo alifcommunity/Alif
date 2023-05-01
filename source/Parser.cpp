@@ -60,7 +60,7 @@ std::vector<ExprNode*>* Parser::arguments()
     std::vector<ExprNode*>* args = new std::vector<ExprNode*>;
 
     do {
-        args->push_back(this->expression());
+        args->push_back(this->expression_statement());
 
         if (this->currentToken.type_ == TTComma) 
         {
@@ -71,7 +71,7 @@ std::vector<ExprNode*>* Parser::arguments()
     return args;
 }
 
-ExprNode* Parser::atom()
+ExprNode* Parser::atom_statement()
 {
     Token token = this->currentToken;
 
@@ -207,12 +207,12 @@ ExprNode* Parser::atom()
     }
     else if (token.type_ == TTLeftSquare)
     {
-        return this->list_expr();
+        return this->list_statement();
     }
     else if (this->currentToken.type_ == TTLeftParenthesis)
     {
         this->advance();
-        ExprNode* priorExpr = this->expression();
+        ExprNode* priorExpr = this->expression_statement();
 
         if (this->currentToken.type_ == TTRrightParenthesis)
         {
@@ -233,7 +233,7 @@ ExprNode* Parser::atom()
     }
 }
 
-ExprNode* Parser::list_expr()
+ExprNode* Parser::list_statement()
 {
     std::vector<ExprNode*>* nodeElement = new std::vector<ExprNode*>;
 
@@ -245,7 +245,7 @@ ExprNode* Parser::list_expr()
     {
         do {
             this->advance();
-            nodeElement->push_back(this->expression());
+            nodeElement->push_back(this->expression_statement());
 
         } while (this->currentToken.type_ == TTComma);
 
@@ -270,13 +270,13 @@ ExprNode* Parser::list_expr()
 
 }
 
-ExprNode* Parser::primary() {
+ExprNode* Parser::primary_statement() {
 
-    ExprNode* atom = this->atom();
+    ExprNode* atom = this->atom_statement();
     if (this->currentToken.type_ == TTDot) 
     {
         this->advance();
-        ExprNode* primary = this->primary();
+        ExprNode* primary = this->primary_statement();
 
         ExprNode* primary_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
         primary_->type_ = VTCall;
@@ -322,15 +322,15 @@ ExprNode* Parser::primary() {
 
 }
 
-ExprNode* Parser::power()
+ExprNode* Parser::power_statement()
 {
-    ExprNode* left_ = this->primary();
+    ExprNode* left_ = this->primary_statement();
 
     while (this->currentToken.type_ == TTPower) {
         Token opToken = this->currentToken;
 
         this->advance();
-        ExprNode* right_ = this->factor();
+        ExprNode* right_ = this->factor_statement();
 
         ExprNode* power_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
@@ -345,13 +345,13 @@ ExprNode* Parser::power()
     return left_;
 }
 
-ExprNode* Parser::factor() 
+ExprNode* Parser::factor_statement()
 {
     while (this->currentToken.type_ == TTPlus or this->currentToken.type_ == TTMinus) {
         Token opToken = this->currentToken;
 
         this->advance();
-        ExprNode* right_ = this->power();
+        ExprNode* right_ = this->power_statement();
 
         ExprNode* factor_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
@@ -362,18 +362,18 @@ ExprNode* Parser::factor()
         return factor_;
     }
 
-    return this->power();
+    return this->power_statement();
 }
 
-ExprNode* Parser::term() 
+ExprNode* Parser::term_statement()
 {
-    ExprNode* left_ = this->factor();
+    ExprNode* left_ = this->factor_statement();
 
     while (this->currentToken.type_ == TTMultiply or this->currentToken.type_ == TTDivide or this->currentToken.type_ == TTRemain) {
         Token opToken = this->currentToken;
 
         this->advance();
-        ExprNode* right_ = this->factor();
+        ExprNode* right_ = this->factor_statement();
 
         ExprNode* term_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
         term_->U.BinaryOp.right_ = right_;
@@ -387,16 +387,16 @@ ExprNode* Parser::term()
     return left_;
 }
 
-ExprNode* Parser::sum() 
+ExprNode* Parser::sum_statement()
 {
-    ExprNode* left_ = this->term();
+    ExprNode* left_ = this->term_statement();
 
     while (this->currentToken.type_ == TTPlus or this->currentToken.type_ == TTMinus)
     {
         Token opToken = this->currentToken;
 
         this->advance();
-        ExprNode* right_ = this->term();
+        ExprNode* right_ = this->term_statement();
 
         ExprNode* sum_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
@@ -411,9 +411,9 @@ ExprNode* Parser::sum()
     return left_;
 }
 
-ExprNode* Parser::comparesion() 
+ExprNode* Parser::comparesion_statement()
 {
-    ExprNode* left_ = this->sum();
+    ExprNode* left_ = this->sum_statement();
 
     while (
         this->currentToken.type_ == TTEqualEqual or
@@ -427,7 +427,7 @@ ExprNode* Parser::comparesion()
         Token opToken = this->currentToken;
 
         this->advance();
-        ExprNode* right_ = this->sum();
+        ExprNode* right_ = this->sum_statement();
 
         ExprNode* comparesion_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
@@ -442,7 +442,7 @@ ExprNode* Parser::comparesion()
     return left_;
 }
 
-ExprNode* Parser::inversion() 
+ExprNode* Parser::inversion_statement()
 {
 
     while (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"ليس"))
@@ -450,7 +450,7 @@ ExprNode* Parser::inversion()
         Token opToken = this->currentToken;
 
         this->advance();
-        ExprNode* right_ = this->comparesion();
+        ExprNode* right_ = this->comparesion_statement();
 
         ExprNode* inversion_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
@@ -462,20 +462,20 @@ ExprNode* Parser::inversion()
         return inversion_;
     }
 
-    return this->comparesion();
+    return this->comparesion_statement();
 }
 
-ExprNode* Parser::conjuction()
+ExprNode* Parser::conjuction_statement()
 {
 
-    ExprNode* left_ = this->inversion();
+    ExprNode* left_ = this->inversion_statement();
 
     while (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"و"))
     {
         Token opToken = this->currentToken;
 
         this->advance();
-        ExprNode* right_ = this->inversion();
+        ExprNode* right_ = this->inversion_statement();
 
         ExprNode* conjuction_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
@@ -491,17 +491,17 @@ ExprNode* Parser::conjuction()
     return left_;
 }
 
-ExprNode* Parser::disjuction() 
+ExprNode* Parser::disjuction_statement()
 {
 
-    ExprNode* left_ = this->conjuction();
+    ExprNode* left_ = this->conjuction_statement();
 
     while (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"او"))
     {
         Token opToken = this->currentToken;
 
         this->advance();
-        ExprNode* right_ = this->conjuction();
+        ExprNode* right_ = this->conjuction_statement();
 
         ExprNode* disjuction_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
@@ -517,20 +517,20 @@ ExprNode* Parser::disjuction()
     return left_;
 }
 
-ExprNode* Parser::expression() 
+ExprNode* Parser::expression_statement()
 {
 
-    ExprNode* expr_ = this->disjuction();
+    ExprNode* expr_ = this->disjuction_statement();
 
     if (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"اذا"))
     {
         this->advance();
-        ExprNode* condetion = this->disjuction();
+        ExprNode* condetion = this->disjuction_statement();
 
         if (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"والا"))
         {
             this->advance();
-            ExprNode* elseExpr = this->expression();
+            ExprNode* elseExpr = this->expression_statement();
 
             ExprNode* expression_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
@@ -552,10 +552,10 @@ ExprNode* Parser::expression()
 
 }
 
-ExprNode* Parser::expressions() 
+ExprNode* Parser::expressions_statement()
 {
 
-    ExprNode* expr_ = this->expression();
+    ExprNode* expr_ = this->expression_statement();
 
     if (this->currentToken.type_ == TTComma)
     {
@@ -565,7 +565,7 @@ ExprNode* Parser::expressions()
         do
         {
             this->advance();
-            exprs_->push_back(this->expression());
+            exprs_->push_back(this->expression_statement());
 
         } while (this->currentToken.type_ == TTComma);
 
@@ -585,7 +585,7 @@ ExprNode* Parser::expressions()
 }
 
 
-ExprNode* Parser::assignment() // يجب إيجاد خوارزمية افضل بالإضافة الى استخدام ذاكرة ألف بدل من new
+ExprNode* Parser::assignment_statement() // يجب إيجاد خوارزمية افضل بالإضافة الى استخدام ذاكرة ألف بدل من new
 {
     if (this->currentToken.type_ == TTName)
     {
@@ -607,7 +607,7 @@ ExprNode* Parser::assignment() // يجب إيجاد خوارزمية افضل ب
 
             }
 
-            ExprNode* expr_ = this->expressions();
+            ExprNode* expr_ = this->expressions_statement();
 
             ExprNode* assignment_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
@@ -635,7 +635,7 @@ ExprNode* Parser::assignment() // يجب إيجاد خوارزمية افضل ب
 
 
                     this->advance();
-                    ExprNode* expr_ = this->expression();
+                    ExprNode* expr_ = this->expression_statement();
 
                     ExprNode* augAssignment = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
@@ -648,12 +648,12 @@ ExprNode* Parser::assignment() // يجب إيجاد خوارزمية افضل ب
              }
     }
 
-    return this->expressions();
+    return this->expressions_statement();
 }
 
 ExprNode* Parser::import_statement()
 {
-
+    return nullptr;
 }
 
 StmtsNode* Parser::return_statement() {
@@ -662,7 +662,7 @@ StmtsNode* Parser::return_statement() {
 
     if (this->currentToken.type_ != TTNewline)
     {
-        expr_ = this->expression();
+        expr_ = this->expression_statement();
     }
     else
     {
@@ -700,7 +700,7 @@ std::vector<ExprNode*>* Parser::parameters()
                 this->advance();
                 this->advance();
 
-                ExprNode* expr_ = this->expression();
+                ExprNode* expr_ = this->expression_statement();
 
                 ExprNode* paramNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
@@ -716,7 +716,7 @@ std::vector<ExprNode*>* Parser::parameters()
             else {
                 if (!lastParam)
                 {
-                    params_->push_back(this->atom());
+                    params_->push_back(this->atom_statement());
                 }
                 else {
                     PRINT_(L"لا يمكن تمرير متغير بدون قيمة افتراضية بعد متغير ذو قيمة افتراضية");
@@ -741,7 +741,7 @@ std::vector<ExprNode*>* Parser::parameters()
 
 }
 
-StmtsNode* Parser::function_def() 
+StmtsNode* Parser::function_statement() 
 {
     AlifObject* name = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
     StmtsNode* body = nullptr;
@@ -786,7 +786,7 @@ StmtsNode* Parser::function_def()
 
             this->advance();
             returnFlag = true;
-            body = this->block_();
+            body = this->block_statement();
             returnFlag = false;
 
             StmtsNode* funcNode = (StmtsNode*)alifMemory->allocate(sizeof(StmtsNode));
@@ -804,56 +804,56 @@ StmtsNode* Parser::function_def()
 
 }
 
-//    StmtsNode* class_def() {
-//
-//        ExprNode* bases = nullptr;
-//        StmtsNode* body = nullptr;
-//        AlifObject name{};
-//
-//        if (this->currentToken.type_ == TTname) {
-//
-//            name.type_ = TTname;
-//            name.V.Name.name_ = this->currentToken.val.numVal;
-//
-//            this->advance();
-//
-//            if (this->currentToken.type_ == TTLeftParenthesis) {
-//
-//                this->advance();
-//
-//                bases = this->expressions();
-//
-//                if (this->currentToken.type_ == TTRrightParenthesis)
-//                {
-//                    this->advance();
-//                }
-//            }
-//            if (this->currentToken.type_ == TTcolon) {
-//
-//                this->advance();
-//
-//                body = this->block_();
-//
-//                level--;
-//                (stmtsNode + level)->type_ = VClass;
-//                (stmtsNode + level)->U.ClassDef.name = name;
-//                (stmtsNode + level)->U.ClassDef.base = bases;
-//                (stmtsNode + level)->U.ClassDef.body = body;
-//                return (stmtsNode + level);
-//            }
-//        }
-//    }
+StmtsNode* Parser::class_statement() {
+
+    ExprNode* bases = nullptr;
+    StmtsNode* body = nullptr;
+    AlifObject* name = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+
+    if (this->currentToken.type_ == TTName) {
+
+        name->objType = OTName;
+        name->V.NameObj.name_ = this->currentToken.value_;
+
+        this->advance();
+
+        if (this->currentToken.type_ == TTLeftParenthesis) {
+
+            this->advance();
+
+            bases = this->expressions_statement();
+
+            if (this->currentToken.type_ == TTRrightParenthesis)
+            {
+                this->advance();
+            }
+        }
+        if (this->currentToken.type_ == TTColon) {
+
+            this->advance();
+
+            body = this->block_statement();
+
+            StmtsNode* classNode = (StmtsNode*)alifMemory->allocate(sizeof(StmtsNode));
+            classNode->type_ = VTClass;
+            classNode->U.ClassDef.name_ = name;
+            classNode->U.ClassDef.base_ = bases;
+            classNode->U.ClassDef.body_ = body;
+            return classNode;
+        }
+    }
+}
 
 StmtsNode* Parser::while_statement() 
 {
-    ExprNode* condetion_ = this->expression();
+    ExprNode* condetion_ = this->expression_statement();
     StmtsNode* block_ = nullptr;
     //StmtsNode* else_ = nullptr;
 
     if (this->currentToken.type_ == TTColon)
     {
         this->advance();
-        block_ = this->block_();
+        block_ = this->block_statement();
     }
     else {
         PRINT_(L"لم يتم إنهاء بينما بنقطتين \:");
@@ -908,7 +908,7 @@ StmtsNode* Parser::for_statement()
 
                     while (this->currentToken.type_ == TTInteger or this->currentToken.type_ == TTName) // يجب تعديل الخوارزمية لانه يمكن إحتواء تعبير داخل معاملات حالة لاجل
                     {
-                        args_->push_back(this->atom());
+                        args_->push_back(this->atom_statement());
 
                         if (!Next_Is(TTInteger) and !Next_Is(TTName))
                         {
@@ -932,7 +932,7 @@ StmtsNode* Parser::for_statement()
                         {
                             this->advance();
 
-                            block_ = this->block_();
+                            block_ = this->block_statement();
 
                             //if (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"والا")) // يجب إكملب هذه الحالة في المترجم او إلغائها
                             //{
@@ -978,15 +978,15 @@ StmtsNode* Parser::for_statement()
     }
 }
 
-StmtsNode* Parser::else_if()
+StmtsNode* Parser::else_if_statement()
 {
     StmtsNode* block_{};
-    ExprNode* condetion_ = this->expression();
+    ExprNode* condetion_ = this->expression_statement();
 
     if (this->currentToken.type_ == TTColon)
     {
         this->advance();
-        block_ = this->block_();
+        block_ = this->block_statement();
     }
     else {
         PRINT_(L"لم يتم إنهاء واذا بنقطتين \:");
@@ -1000,12 +1000,12 @@ StmtsNode* Parser::else_if()
     return elseIfNode;
 }
 
-StmtsNode* Parser::else_() {
+StmtsNode* Parser::else_statement() {
 
     if (this->currentToken.type_ == TTColon)
     {
         this->advance();
-        return this->block_();
+        return this->block_statement();
     }
     else {
         PRINT_(L"لم يتم إنهاء والا بنقطتين \:");
@@ -1019,12 +1019,12 @@ StmtsNode* Parser::if_statement()
     StmtsNode* block_{};
     std::vector<StmtsNode*>* elseIf = new std::vector<StmtsNode*>;
     StmtsNode* else_{};
-    ExprNode* condetion_ = this->expression();
+    ExprNode* condetion_ = this->expression_statement();
 
     if (this->currentToken.type_ == TTColon)
     {
         this->advance();
-        block_ = this->block_();
+        block_ = this->block_statement();
     }
     else {
         PRINT_(L"لم يتم إنهاء اذا بنقطتين \:");
@@ -1033,12 +1033,12 @@ StmtsNode* Parser::if_statement()
     while (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"واذا"))
     {
         this->advance();
-        elseIf->push_back(this->else_if());
+        elseIf->push_back(this->else_if_statement());
     }
     if (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"والا"))
     {
         this->advance();
-        else_ = this->else_();
+        else_ = this->else_statement();
     }
 
     StmtsNode* ifNode = (StmtsNode*)alifMemory->allocate(sizeof(StmtsNode));
@@ -1051,7 +1051,7 @@ StmtsNode* Parser::if_statement()
 
 }
 
-StmtsNode* Parser::block_()
+StmtsNode* Parser::block_statement()
 {
     if (this->currentToken.type_ == TTNewline)
     {
@@ -1096,7 +1096,7 @@ StmtsNode* Parser::compound_statement()
     else if (!wcscmp(this->currentToken.value_, L"دالة"))
     {
         this->advance();
-        return this->function_def();
+        return this->function_statement();
     }
     else if (!wcscmp(this->currentToken.value_, L"اذا"))
     {
@@ -1158,7 +1158,7 @@ ExprNode* Parser::simple_statement()
         return this->import_statement();
     }
 
-    return this->assignment();
+    return this->assignment_statement();
 }
 
 StmtsNode* Parser::statement() 

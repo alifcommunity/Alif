@@ -45,53 +45,53 @@ public:
 
     std::vector<ExprNode*>* parameters();
 
-    ExprNode* atom(); // يجب جعل جميع اسماء الحالات تنتهي ب statement
+    ExprNode* atom_statement(); // يجب جعل جميع اسماء الحالات تنتهي ب statement
 
-    ExprNode* list_expr();
+    ExprNode* list_statement();
 
-    ExprNode* primary();
+    ExprNode* primary_statement();
 
-    ExprNode* power();
+    ExprNode* power_statement();
 
-    ExprNode* factor();
+    ExprNode* factor_statement();
 
-    ExprNode* term();
+    ExprNode* term_statement();
 
-    ExprNode* sum();
+    ExprNode* sum_statement();
 
-    ExprNode* comparesion();
+    ExprNode* comparesion_statement();
 
-    ExprNode* inversion();
+    ExprNode* inversion_statement();
 
-    ExprNode* conjuction();
+    ExprNode* conjuction_statement();
 
-    ExprNode* disjuction();
+    ExprNode* disjuction_statement();
 
-    ExprNode* expression();
+    ExprNode* expression_statement();
 
-    ExprNode* expressions();
+    ExprNode* expressions_statement();
 
-    ExprNode* assignment();
+    ExprNode* assignment_statement();
 
     ExprNode* import_statement();
 
     StmtsNode* return_statement();
 
-    StmtsNode* function_def();
+    StmtsNode* function_statement();
 
-    //StmtsNode* class_def();
+    StmtsNode* class_statement();
 
     StmtsNode* while_statement();
 
     StmtsNode* for_statement();
 
-    StmtsNode* else_if();
+    StmtsNode* else_if_statement();
 
-    StmtsNode* else_();
+    StmtsNode* else_statement();
 
     StmtsNode* if_statement();
 
-    StmtsNode* block_();
+    StmtsNode* block_statement();
 
     //void delete_statement();
 
