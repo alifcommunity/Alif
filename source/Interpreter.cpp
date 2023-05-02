@@ -786,7 +786,7 @@ void call_name()
 	instructionsIndex = instrIndexBackup;
 	dataIndex = dataIndexBackup;
 
-	symTable->restore_scope(); // يجب المراجعة وتصحيح النظام
+	//symTable->restore_scope(); // يجب المراجعة وتصحيح النظام
 	returnFlag = false;
 }
 
