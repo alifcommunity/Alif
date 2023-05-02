@@ -47,10 +47,16 @@ void jump_to();
 void jump_if();
 void jump_for();
 
+
+void create_scope();
+void copy_scope();
+void enter_scope();
 void get_scope();
+void exit_scope();
+//void restore_scope();
+
 void call_name();
 void return_expr();
-
 
 
 
@@ -101,7 +107,13 @@ const Instructions_func instr_funcs[] = {
 	jump_if,
 	jump_for,
 
+	create_scope,
+	copy_scope,
+	enter_scope,
 	get_scope,
+	exit_scope,
+	//restore_scope,
+
 	call_name,
 	return_expr,
 

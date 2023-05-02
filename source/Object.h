@@ -8,7 +8,7 @@
 class Container;
 class ExprNode; 
 
-using wstr = std::wstring;
+//using wstr = std::wstring;
 using wcstr = const wchar_t;
 using double64_t = long double;
 
@@ -61,16 +61,6 @@ public:
         public:
             Container* container_;
         }ContainerObj;
-
-        //class {
-        //public:
-        //    ExprNode* nodeValue;
-        //}ExprNodeObj;
-
-        //class {
-        //public:
-        //    BuildInFuncValue buildInFunc;
-        //}BuildInFuncObj;
 
     }V{};
 

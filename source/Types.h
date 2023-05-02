@@ -149,8 +149,16 @@ enum InstructionsType : uint8_t { // التعليمات
     JUMP_IF,
     JUMP_FOR,
 
-    // تعليمات الدوال والاصناف
+    // تعليمات جدول الاسماء
+    CREATE_SCOPE,
+    COPY_SCOPE,
+    ENTER_SCOPE,
     GET_SCOPE,
+    EXIT_SCOPE,
+    //RESTORE_SCOPE,
+
+
+    // تعليمات الدوال والاصناف
     CALL_NAME,
     RETURN_EXPR,
 
