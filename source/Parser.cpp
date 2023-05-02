@@ -280,14 +280,14 @@ ExprNode* Parser::primary_statement() {
 
         ExprNode* primary_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
         primary_->type_ = VTCall;
-        primary_->U.Call.func_ = atom;
-        primary_->U.Call.name_ = primary;
+        primary_->U.Call.func_ = primary;
+        primary_->U.Call.name_ = atom;
+        primary_->U.Call.args_ = nullptr;
         return primary_;
     }
     else if (this->currentToken.type_ == TTLeftParenthesis) 
     {
-
-        ExprNode* primary = atom;
+        //ExprNode* primary = atom;
 
         this->advance();
 
@@ -295,9 +295,15 @@ ExprNode* Parser::primary_statement() {
         {
             this->advance();
 
+            if (this->currentToken.type_ == TTDot)
+            {
+                ExprNode* primary = this->primary_statement();
+            }
+            
             ExprNode* callNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
             callNode->type_ = VTCall;
-            callNode->U.Call.name_ = primary;
+            callNode->U.Call.func_ = nullptr;
+            callNode->U.Call.name_ = atom;
             callNode->U.Call.args_ = nullptr;
             return callNode;
         }
@@ -308,9 +314,15 @@ ExprNode* Parser::primary_statement() {
         {
             this->advance();
 
+            if (this->currentToken.type_ == TTDot)
+            {
+                ExprNode* primary = this->primary_statement();
+            }
+
             ExprNode* callNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
             callNode->type_ = VTCall;
-            callNode->U.Call.name_ = primary;
+            callNode->U.Call.func_ = nullptr;
+            callNode->U.Call.name_ = atom;
             callNode->U.Call.args_ = args;
             return callNode;
         }
@@ -804,16 +816,16 @@ StmtsNode* Parser::function_statement()
 
 }
 
-StmtsNode* Parser::class_statement() {
-
-    ExprNode* bases = nullptr;
-    StmtsNode* body = nullptr;
-    AlifObject* name = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+StmtsNode* Parser::class_statement()
+{
+    ExprNode* bases_ = nullptr;
+    StmtsNode* body_ = nullptr;
+    AlifObject* name_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 
     if (this->currentToken.type_ == TTName) {
 
-        name->objType = OTName;
-        name->V.NameObj.name_ = this->currentToken.value_;
+        name_->objType = OTName;
+        name_->V.NameObj.name_ = this->currentToken.value_;
 
         this->advance();
 
@@ -821,7 +833,7 @@ StmtsNode* Parser::class_statement() {
 
             this->advance();
 
-            bases = this->expressions_statement();
+            bases_ = this->expressions_statement();
 
             if (this->currentToken.type_ == TTRrightParenthesis)
             {
@@ -832,13 +844,13 @@ StmtsNode* Parser::class_statement() {
 
             this->advance();
 
-            body = this->block_statement();
+            body_ = this->block_statement();
 
             StmtsNode* classNode = (StmtsNode*)alifMemory->allocate(sizeof(StmtsNode));
             classNode->type_ = VTClass;
-            classNode->U.ClassDef.name_ = name;
-            classNode->U.ClassDef.base_ = bases;
-            classNode->U.ClassDef.body_ = body;
+            classNode->U.ClassDef.name_ = name_;
+            classNode->U.ClassDef.base_ = bases_;
+            classNode->U.ClassDef.body_ = body_;
             return classNode;
         }
     }
@@ -1108,11 +1120,11 @@ StmtsNode* Parser::compound_statement()
         this->advance();
         return this->while_statement();
     }
-    //else if (!wcscmp(this->currentToken.value_, L"صنف"))
-    //{
-    //    this->advance();
-    //    return this->class_def();
-    //}
+    else if (!wcscmp(this->currentToken.value_, L"صنف"))
+    {
+        this->advance();
+        return this->class_statement();
+    }
     if (!wcscmp(this->currentToken.value_, L"ارجع"))
     {
         if (returnFlag)

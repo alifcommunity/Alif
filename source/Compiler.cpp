@@ -316,12 +316,35 @@ void Compiler::visit_assign(ExprNode* _node)
 {
 	for (AlifObject* i : *_node->U.NameAssign.name_)
 	{
-		VISIT_(exprs,_node->U.NameAssign.value_);
+		AlifObject* isScope = VISIT_(exprs,_node->U.NameAssign.value_);
+		bool a = symTable->is_scope(isScope->V.NameObj.name_);
+		if (a)
+		{
+			dataContainer->data_->push_back(i);
+			dataContainer->instructions_->push_back(SET_DATA);
+			dataContainer->instructions_->push_back(CREATE_SCOPE);
+
+			dataContainer->data_->push_back(i);
+			dataContainer->instructions_->push_back(SET_DATA);
+
+			dataContainer->data_->push_back(isScope);
+			dataContainer->instructions_->push_back(SET_DATA);
+			
+			dataContainer->instructions_->push_back(COPY_SCOPE);
+
+			//dataContainer->data_->push_back(i);
+			//dataContainer->instructions_->push_back(ENTER_SCOPE);
+		}
 
 		dataContainer->data_->push_back(i);
 		dataContainer->instructions_->push_back(SET_DATA); // خزن الاسم في المكدس
 
 		dataContainer->instructions_->push_back(STORE_NAME);
+
+		//if (a)
+		//{
+		//	dataContainer->instructions_->push_back(EXIT_SCOPE);
+		//}
 	}
 }
 
@@ -361,6 +384,12 @@ AlifObject* Compiler::visit_access(ExprNode* _node)
 {
 	dataContainer->data_->push_back(_node->U.NameAccess.name_);
 	dataContainer->instructions_->push_back(SET_DATA);
+
+	if (symTable->is_scope(_node->U.NameAccess.name_->V.NameObj.name_))
+	{
+		dataContainer->instructions_->push_back(GET_SCOPE);
+		return _node->U.NameAccess.name_;
+	}
 
 	dataContainer->instructions_->push_back(GET_DATA);
 
@@ -726,11 +755,14 @@ void Compiler::visit_while_(StmtsNode* _node)
 	//////////////////////////////
 }
 
-
+Container* containersDepth = new Container[18];
+size_t containerLevel = 0;
 void Compiler::visit_function(StmtsNode* _node)
 {
-	Container* dataBackup = dataContainer; // في حال تم تعريف دالة داخل دالة
+	*(containersDepth + containerLevel) = *dataContainer; // في حال تم تعريف دالة داخل دالة
+	containerLevel++;
 
+	symTable->create_scope(_node->U.FunctionDef.name_->V.NameObj.name_);
 	symTable->enter_scope(_node->U.FunctionDef.name_->V.NameObj.name_);
 
 	AlifObject* paramContainer = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
@@ -760,6 +792,13 @@ void Compiler::visit_function(StmtsNode* _node)
 
 		dataContainer->data_->push_back(paramSize);
 	}
+	else
+	{
+		AlifObject* paramSize = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+		paramSize->V.NumberObj.numberValue = 0;
+
+		dataContainer->data_->push_back(paramSize);
+	}
 
 	dataContainer->data_->push_back(paramContainer);
 
@@ -768,14 +807,15 @@ void Compiler::visit_function(StmtsNode* _node)
 
 
 	AlifObject* containerObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	containerObject->objType = OTContainer;
 	containerObject->V.ContainerObj.container_ = dataContainer;
-
-	symTable->add_symbol(_node->U.FunctionDef.name_->V.NameObj.name_, containerObject);
 
 	symTable->exit_scope();
 
+	symTable->add_symbol(_node->U.FunctionDef.name_->V.NameObj.name_, containerObject);
 
-	dataContainer = dataBackup;
+	dataContainer = (containersDepth + containerLevel);
+	containerLevel--;
 }
 
 void Compiler::visit_call(ExprNode* _node)
@@ -792,14 +832,36 @@ void Compiler::visit_call(ExprNode* _node)
 		dataContainer->data_->push_back(size_);
 		dataContainer->instructions_->push_back(SET_DATA);
 	}
+	else
+	{
+		AlifObject* size_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+		size_->V.NumberObj.numberValue = 0;
+		dataContainer->data_->push_back(size_);
+		dataContainer->instructions_->push_back(SET_DATA);
+	}
 
-	this->dataContainer->data_->push_back(_node->U.Call.name_->U.Object.value_);
-	this->dataContainer->instructions_->push_back(SET_DATA);
+	//ExprNode* nodeCopy = new ExprNode(*_node);
+	do {
+			this->dataContainer->data_->push_back(_node->U.Call.name_->U.Object.value_);
+			this->dataContainer->instructions_->push_back(SET_DATA);
+		
+			_node = _node->U.Call.func_;
+		
+			if (_node)
+			{
+				this->dataContainer->instructions_->push_back(ENTER_SCOPE);
+			}
+	} while (_node);
+
+
+	//this->dataContainer->data_->push_back(a->U.Call.name_->U.Object.value_);
+	//this->dataContainer->instructions_->push_back(SET_DATA);
 
 	this->dataContainer->instructions_->push_back(GET_SCOPE);
 
 	this->dataContainer->instructions_->push_back(CALL_NAME);
 
+	//_node = nodeCopy;
 }
 
 AlifObject* Compiler::visit_return_(ExprNode* _node)
@@ -810,6 +872,73 @@ AlifObject* Compiler::visit_return_(ExprNode* _node)
 
 	return a;
 }
+
+
+void Compiler::visit_class_(StmtsNode* _node)
+{
+	*(containersDepth + containerLevel) = *dataContainer; // في حال تم تعريف دالة داخل دالة
+	containerLevel++;
+
+	symTable->create_scope(_node->U.ClassDef.name_->V.NameObj.name_);
+	symTable->enter_scope(_node->U.ClassDef.name_->V.NameObj.name_);
+
+	//AlifObject* paramContainer = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	//if (_node->U.FunctionDef.params_)
+	//{
+	//	dataContainer = (Container*)alifMemory->allocate(sizeof(Container));
+	//	dataContainer->instructions_ = new AlifArray<InstructionsType>;
+	//	dataContainer->data_ = new AlifArray<AlifObject*>;
+
+	//	for (ExprNode* node : *_node->U.FunctionDef.params_)
+	//	{
+	//		VISIT_(exprs, node);
+	//	}
+
+	//	paramContainer->V.ContainerObj.container_ = dataContainer;
+	//	paramContainer->objType = OTContainer;
+	//}
+
+	dataContainer = (Container*)alifMemory->allocate(sizeof(Container));
+	dataContainer->instructions_ = new AlifArray<InstructionsType>;
+	dataContainer->data_ = new AlifArray<AlifObject*>;
+
+	//if (_node->U.ClassDef.base_)
+	//{
+	//	AlifObject* paramSize = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	//	paramSize->V.NumberObj.numberValue = _node->U.FunctionDef.params_->size();
+
+	//	dataContainer->data_->push_back(paramSize);
+	//}
+
+	//dataContainer->data_->push_back(paramContainer);
+
+
+	VISIT_(stmts, _node->U.ClassDef.body_);
+
+
+	AlifObject* containerObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	containerObject->objType = OTContainer;
+	containerObject->V.ContainerObj.container_ = dataContainer;
+
+	symTable->exit_scope();
+
+	symTable->add_symbol(_node->U.FunctionDef.name_->V.NameObj.name_, containerObject);
+
+	dataContainer = (containersDepth + containerLevel);
+	containerLevel--;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 AlifObject* Compiler::visit_exprs(ExprNode* _node)
 {
@@ -889,6 +1018,10 @@ AlifObject* Compiler::visit_stmts(StmtsNode* _node)
 	{
 		VISIT_(function, _node);
 	}
+	else if (_node->type_ == VTClass)
+	{
+		VISIT_(class_, _node);
+	}
 	else if (_node->type_ == VTStmts)
 	{
 		for (StmtsNode* stmt : *_node->U.Stmts.stmts_)
@@ -931,6 +1064,7 @@ AlifObject* Compiler::visit_stmts(StmtsNode* _node)
 
 void Compiler::visit_print()
 {
+	symTable->create_scope(L"اطبع");
 	symTable->enter_scope(L"اطبع");
 
 	AlifObject* paramContainer = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
@@ -941,7 +1075,7 @@ void Compiler::visit_print()
 
 
 	AlifObject* name_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
-	name_->V.NameObj.name_ = L"ع";
+	name_->V.NameObj.name_ = L"أ";
 	paramCont->data_->push_back(name_);
 	paramCont->instructions_->push_back(SET_DATA);
 	paramCont->instructions_->push_back(GET_DATA);
@@ -967,7 +1101,7 @@ void Compiler::visit_print()
 	AlifObject* containerObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 	containerObject->V.ContainerObj.container_ = dataCont;
 
-	symTable->add_symbol(L"اطبع", containerObject);
-
 	symTable->exit_scope();
+
+	symTable->add_symbol(L"اطبع", containerObject);
 }

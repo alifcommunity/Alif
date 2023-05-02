@@ -43,47 +43,69 @@ public:
         currentScope->symbols.insert({ _type,_value });
     }
 
+    void create_scope(wcstr* _type)
+    {
+        Scope* newScope = new Scope();
+        newScope->parent = currentScope;
+        currentScope->scopes[_type] = newScope;
+    }
+
     void enter_scope(wcstr* type) 
     {
-        if (!currentScope->scopes.size())
-        {
-            Scope* newScope = new Scope();
-            newScope->parent = currentScope;
-            currentScope->scopes[type] = newScope;
-            goto enter;
-        }
-        else
-        {
-            auto it = currentScope->scopes.begin();
-            for (it; it != currentScope->scopes.end(); it++)
-            {
-                if (!wcscmp(it->first, type)) 
-                {
-                    goto enter;
-                }
-            }
-        }
-
-        {
-            Scope* newScope = new Scope();
-            newScope->parent = currentScope;
-            currentScope->scopes[type] = newScope;
-        }
-        //if (currentScope->scopes.count(type) == 0) {
-        //    Scope* newScope = new Scope();
-        //    newScope->parent = currentScope;
-        //    currentScope->scopes[type] = newScope;
-        //}
-    enter:
         auto it = currentScope->scopes.begin();
         for (it; it != currentScope->scopes.end(); it++)
         {
-            if (!wcscmp(it->first, type))
+            if (!wcscmp(it->first, type)) 
             {
-                currentScope = it->second; // يعتبر الاسم الممرر ك عنوان وليس نص **يجب إصلاح المشكلة
+                currentScope = it->second;
                 break;
             }
         }
+
+        //if (currentScope->scopes.count(type) == 0) {
+        //    Scope* newScope = new Scope();
+        //    newScope->parent = currentScope;
+        //    currentScope->scopes[type] = newScope; // يعتبر الاسم الممرر ك عنوان وليس نص **يجب إصلاح المشكلة
+        //}
+    }
+
+    void copy_scope(wcstr* a, wcstr* b)
+    {
+        std::map<wcstr*, AlifObject*>* symbols_{};
+        std::map<wcstr*, Scope*>* scopes_{};
+        auto it = currentScope->scopes.begin();
+        for (it; it != currentScope->scopes.end(); it++)
+        {
+            if (!wcscmp(it->first, a))
+            {
+                symbols_ = &it->second->symbols;
+                scopes_ = &it->second->scopes;
+                break;
+            }
+        }
+        it = currentScope->scopes.begin();
+        for (it; it != currentScope->scopes.end(); it++)
+        {
+            if (!wcscmp(it->first, b))
+            {
+                it->second->symbols = *symbols_;
+                it->second->scopes = *scopes_;
+                break;
+            }
+        }
+    }
+
+    bool is_scope(wcstr* _type)
+    {
+        auto it = currentScope->scopes.begin();
+        for (it; it != currentScope->scopes.end(); it++)
+        {
+            if (!wcscmp(it->first, _type))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     void exit_scope() {
@@ -112,22 +134,7 @@ public:
 
         }
     }
-    //void exit_scope_if() // تستخدم في استدعاء دالة في المفسر فقط
-    //{ 
-    //    if (currentScope->parent and !backupScope)
-    //    {
-    //        currentScope = currentScope->parent;
-    //    }
-    //    else if (backupScope)
-    //    {
-    //        currentScope = backupScope;
-    //        backupScope = nullptr;
-    //    }
-    //    else
-    //    {
-    //        backupScope = currentScope;
-    //    }
-    //}
+
 
     AlifObject* get_data(wcstr* type) {
         Scope* scope = currentScope;

@@ -656,17 +656,40 @@ void jump_for()
 	}
 }
 
-
-void get_scope()
+void create_scope()
 {
 	AlifObject* name_ = stackMemory->pop();
 
-	symTable->backup_scope();
-	symTable->enter_scope(name_->V.NameObj.name_);
-
-	stackMemory->push(symTable->get_data(name_->V.NameObj.name_));
+	symTable->create_scope(name_->V.NameObj.name_);
 }
+void copy_scope()
+{
+	AlifObject* a = stackMemory->pop();
+	AlifObject* b = stackMemory->pop();
 
+	symTable->copy_scope(a->V.NameObj.name_, b->V.NameObj.name_);
+}
+void enter_scope()
+{
+	AlifObject* name_ = stackMemory->pop();
+
+	symTable->enter_scope(name_->V.NameObj.name_);
+}
+void get_scope()
+{
+	AlifObject* name_ = stackMemory->pop();
+	AlifObject* data_ = symTable->get_data(name_->V.NameObj.name_);
+
+	stackMemory->push(data_);
+}
+void exit_scope()
+{
+	symTable->exit_scope();
+}
+void restore_scope()
+{
+	symTable->restore_scope();
+}
 
 bool returnFlag = false;
 void call_name()
@@ -763,7 +786,7 @@ void call_name()
 	instructionsIndex = instrIndexBackup;
 	dataIndex = dataIndexBackup;
 
-	symTable->restore_scope();
+	symTable->restore_scope(); // يجب المراجعة وتصحيح النظام
 	returnFlag = false;
 }
 
@@ -785,7 +808,7 @@ void return_expr()
 
 void print_func() // سيتم اعتماد خوارزمية البحث الثنائي الى حين إيجاد حل لاستدعاء الطباعة بتعقيد زمني يساوي 1
 {
-	AlifObject* object = symTable->get_data(L"ع");
+	AlifObject* object = symTable->get_data(L"أ");
 
     if (object->objType == OTNumber) { PRINT_(object->V.NumberObj.numberValue); }
     else if (object->objType == OTString) { PRINT_(object->V.StringObj.strValue); }
