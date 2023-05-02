@@ -155,7 +155,7 @@ enum InstructionsType : uint8_t { // التعليمات
     ENTER_SCOPE,
     GET_SCOPE,
     EXIT_SCOPE,
-    RESTORE_SCOPE,
+    //RESTORE_SCOPE,
 
 
     // تعليمات الدوال والاصناف

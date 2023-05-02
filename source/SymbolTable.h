@@ -112,28 +112,28 @@ public:
         currentScope = currentScope->parent;
     }
 
-    void backup_scope()
-    {
-        if (currentScope and currentScope->parent)
-        {
-            backupScope.push(currentScope);
-            currentScope = currentScope->parent;
-        }
-    }
+    //void backup_scope()
+    //{
+    //    if (currentScope and currentScope->parent)
+    //    {
+    //        backupScope.push(currentScope);
+    //        currentScope = currentScope->parent;
+    //    }
+    //}
 
-    void restore_scope()
-    {
-        if (!backupScope.empty())
-        {
-            currentScope = backupScope.top();
-            backupScope.pop();
-        }
-        else
-        {
-            currentScope = currentScope->parent;
+    //void restore_scope()
+    //{
+    //    if (!backupScope.empty())
+    //    {
+    //        currentScope = backupScope.top();
+    //        backupScope.pop();
+    //    }
+    //    else
+    //    {
+    //        currentScope = currentScope->parent;
 
-        }
-    }
+    //    }
+    //}
 
 
     AlifObject* get_data(wcstr* type) {

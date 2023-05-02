@@ -267,11 +267,10 @@ ExprNode* Parser::list_statement()
     listNode->type_ = VTList;
 
     return listNode;
-
 }
 
-ExprNode* Parser::primary_statement() {
-
+ExprNode* Parser::primary_statement() 
+{
     ExprNode* atom = this->atom_statement();
     if (this->currentToken.type_ == TTDot) 
     {
@@ -280,8 +279,8 @@ ExprNode* Parser::primary_statement() {
 
         ExprNode* primary_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
         primary_->type_ = VTCall;
-        primary_->U.Call.func_ = primary;
         primary_->U.Call.name_ = atom;
+        primary_->U.Call.func_ = primary;
         primary_->U.Call.args_ = nullptr;
         return primary_;
     }
@@ -302,8 +301,8 @@ ExprNode* Parser::primary_statement() {
             
             ExprNode* callNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
             callNode->type_ = VTCall;
-            callNode->U.Call.func_ = nullptr;
             callNode->U.Call.name_ = atom;
+            callNode->U.Call.func_ = nullptr;
             callNode->U.Call.args_ = nullptr;
             return callNode;
         }
@@ -321,8 +320,8 @@ ExprNode* Parser::primary_statement() {
 
             ExprNode* callNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
             callNode->type_ = VTCall;
-            callNode->U.Call.func_ = nullptr;
             callNode->U.Call.name_ = atom;
+            callNode->U.Call.func_ = nullptr;
             callNode->U.Call.args_ = args;
             return callNode;
         }

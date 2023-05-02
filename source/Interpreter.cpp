@@ -686,10 +686,10 @@ void exit_scope()
 {
 	symTable->exit_scope();
 }
-void restore_scope()
-{
-	symTable->restore_scope();
-}
+//void restore_scope()
+//{
+//	symTable->restore_scope();
+//}
 
 bool returnFlag = false;
 void call_name()
