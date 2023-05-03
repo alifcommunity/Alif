@@ -18,7 +18,7 @@ class SymbolTable {
 
     Scope* currentScope;
     Scope* globalScope;
-    std::stack<Scope*> backupScope;
+    //std::stack<Scope*> backupScope;
 
 public:
     SymbolTable() 
@@ -71,15 +71,15 @@ public:
 
     void copy_scope(wcstr* a, wcstr* b)
     {
-        std::map<wcstr*, AlifObject*>* symbols_{};
-        std::map<wcstr*, Scope*>* scopes_{};
+        std::map<wcstr*, AlifObject*> symbols_{};
+        std::map<wcstr*, Scope*> scopes_{};
         auto it = currentScope->scopes.begin();
         for (it; it != currentScope->scopes.end(); it++)
         {
             if (!wcscmp(it->first, a))
             {
-                symbols_ = &it->second->symbols;
-                scopes_ = &it->second->scopes;
+                symbols_ = it->second->symbols;
+                scopes_ = it->second->scopes;
                 break;
             }
         }
@@ -88,8 +88,12 @@ public:
         {
             if (!wcscmp(it->first, b))
             {
-                it->second->symbols = *symbols_;
-                it->second->scopes = *scopes_;
+                it->second->symbols = symbols_;
+                it->second->scopes = scopes_;
+                for (std::pair<wcstr*, Scope*> a : it->second->scopes)
+                {
+                    a.second->parent = it->second;
+                }
                 break;
             }
         }
@@ -154,7 +158,8 @@ public:
             //    return scope->symbols[type];
             //}
             if (level == 0) {
-                PRINT_(L"المتغير المستدعى غير معرف");
+                PRINT_(L" المتغير المستدعى غير معرف");
+                PRINT_((const wchar_t*)type);
                 exit(-1);
             }
             scope = scope->parent;
