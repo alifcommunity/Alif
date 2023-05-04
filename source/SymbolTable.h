@@ -157,7 +157,18 @@ public:
             //{
             //    return scope->symbols[type];
             //}
-            if (level == 0) {
+            if (level == 0) // والا إبحث في النطاق العام
+            {
+                scope = globalScope;
+                it = scope->symbols.begin();
+                for (it; it != scope->symbols.end(); it++)
+                {
+                    if (!wcscmp(it->first, type))
+                    {
+                        return it->second;
+                    }
+                }
+
                 PRINT_(L" المتغير المستدعى غير معرف");
                 PRINT_((const wchar_t*)type);
                 exit(-1);
@@ -165,5 +176,6 @@ public:
             scope = scope->parent;
             level--;
         }
+
     }
 };
