@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\Alif5.cpp" />
+    <ClCompile Include="..\source\AlifNamesTable.cpp" />
     <ClCompile Include="..\source\Compiler.cpp" />
     <ClCompile Include="..\source\Error.cpp" />
     <ClCompile Include="..\source\Interpreter.cpp" />
@@ -49,9 +50,9 @@
     <ClInclude Include="..\source\Lexer.h" />
     <ClInclude Include="..\source\AlifMemory.h" />
     <ClInclude Include="..\source\Node.h" />
-    <ClInclude Include="..\source\Object.h" />
+    <ClInclude Include="..\source\AlifObject.h" />
     <ClInclude Include="..\source\Parser.h" />
-    <ClInclude Include="..\source\SymbolTable.h" />
+    <ClInclude Include="..\source\AlifNamesTable.h" />
     <ClInclude Include="..\source\Tokens.h" />
     <ClInclude Include="..\source\Types.h" />
     <ClInclude Include="resource.h" />

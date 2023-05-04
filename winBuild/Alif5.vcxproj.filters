@@ -36,6 +36,9 @@
     <ClCompile Include="..\source\AlifMemory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifNamesTable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\source\AlifCode.alif5" />
@@ -70,13 +73,13 @@
     <ClInclude Include="..\source\Error.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\Object.h">
+    <ClInclude Include="..\source\AlifObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\source\Node.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\SymbolTable.h">
+    <ClInclude Include="..\source\AlifNamesTable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\source\Compiler.h">
