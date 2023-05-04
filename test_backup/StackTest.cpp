@@ -1,196 +1,134 @@
 #include <iostream>
+#include <fcntl.h>
+#include <io.h>
+#include <map>
 #include <chrono>
-#include <stack>
 
-using namespace std;
+//using namespace std;
+using wcstr = const wchar_t;
 
-template <typename T>
-class AlifStack {
+
+#define PRINT_(a){std::wcout << a << std::endl;}
+#define Is_Scope_Exist(name) (currentScope->scopes.count(name) != 0)
+#define Is_Name_Exist(name) (currentScope->names.count(name) != 0)
+#define Is_Global_Scope(scope) (scope->parent == nullptr)
+#define Get_Value(scope,name) ((scope)->names.at(name))
+#define Get_Scope(name) (currentScope->scopes.at(name))
+
+
+
+
+class Scope
+{
 public:
-    
-    AlifStack(const size_t _size = 131072) : size_(_size) {}
-
-    //const T& operator[](size_t _index)
-    //{
-    //    return data_[_index];
-    //}
-
-    //void operator=(size_t _value)
-    //{
-    //    data_[index_] = _value;
-    //    index_++;
-    //}
-
-    void push(T _value)
-    {
-        data_[index_++] = _value;
-    }
-
-    T pop()
-    {
-        return data_[--index_];
-    }
-
-    void swap()
-    {
-        T a = data_[--index_];
-        T b = data_[--index_];
-        data_[index_++] = a;
-        data_[index_++] = b;
-    }
-
-private:
-    unsigned int index_ = 0;
-    size_t size_;
-    T* data_ = new T[size_];
+    std::map<wcstr*, int*> names;
+    std::map<wcstr*, Scope*> scopes;
+    Scope* parent{ nullptr };
 };
 
+class AlifNamesTable {
 
+    Scope* currentScope;
+    Scope* globalScope;
 
-
-template<typename T>
-class AlifArray {
 public:
-
-    AlifArray() : size_(0), capacity_(0), data_(nullptr) {}
-
-    // Destructor
-    //~AlifArray() {
-    //    if (data_ != nullptr) {
-    //        delete[] data_;
-    //    }
-    //}
-
-    // Move constructor
-    AlifArray(AlifArray&& other) noexcept : size_(other.size_), capacity_(other.capacity_), data_(other.data_) {
-        other.size_ = 0;
-        other.capacity_ = 0;
-        other.data_ = nullptr;
+    AlifNamesTable() {
+        globalScope = new Scope();
+        globalScope->parent = nullptr;
+        currentScope = globalScope;
     }
 
-    // Move assignment operator
-    AlifArray& operator=(AlifArray&& other) noexcept {
-        if (this != &other) {
-            size_ = other.size_;
-            capacity_ = other.capacity_;
-            data_ = other.data_;
-            other.size_ = 0;
-            other.capacity_ = 0;
-            other.data_ = nullptr;
-        }
-        return *this;
+    void create_name(wcstr* _name, int* _value)
+    {
+        currentScope->names.insert({ _name,_value });
     }
 
-    // Getters and setters
-    size_t size() const { return size_; }
-    bool empty() const { return size_ == 0; }
-    T& operator[](size_t index) { return data_[index]; }
-    const T& operator[](size_t index) const { return data_[index]; }
-
-    void push_back(const T& value) {
-        if (size_ >= capacity_) {
-            reserve(capacity_ == 0 ? 1 : 2 * capacity_);
-        }
-        data_[size_++] = value;
+    bool assign_name(wcstr* _name, int* _value)
+    {
+        if (Is_Name_Exist(_name)) { Get_Value(currentScope, _name) = _value; return true; }
+        else { return false; }
     }
 
-    //void pop_back() {
-    //    if (!empty()) {
-    //        size_--;
-    //    }
-    //}
+    void create_scope(wcstr* _name)
+    {
+        Scope* newScope = new Scope();
+        newScope->parent = currentScope;
+        currentScope->scopes.insert({ _name,newScope });
+    }
 
-    void reserve(size_t new_capacity) {
-        if (new_capacity > capacity_) {
-            T* new_data = new T[new_capacity];
-            for (size_t i = 0; i < size_; i++) {
-                new_data[i] = data_[i];
+    bool enter_scope(wcstr* _name)
+    {
+        if (Is_Scope_Exist(_name)) { currentScope = Get_Scope(_name); return true; } // اذا كان الاسم موجود -> قم بالدخول في نطاق الاسم
+        else { return false; }
+    }
+
+    bool exit_scope() {
+        if (!Is_Global_Scope(currentScope)) { currentScope = currentScope->parent; return true; } // اذا كان النطاق الاب فارغ إذاً نحن في النطاق العام ولا يمكن الخروج منه
+        else { return false; }
+    }
+
+    int* get_object(wcstr* _name) {
+        Scope* scope = currentScope;
+        int level = 1;
+        while (scope)
+        {
+            if (Is_Name_Exist(_name))
+            {
+                return Get_Value(scope, _name);
             }
-            delete[] data_;
-            data_ = new_data;
-            capacity_ = new_capacity;
+            if (level == 0) // والا إبحث في النطاق العام
+            {
+                scope = globalScope;
+                if (Is_Name_Exist(_name))
+                {
+                    return Get_Value(scope, _name);
+                }
+
+                PRINT_(L" المتغير المستدعى غير معرف");
+                PRINT_((const wchar_t*)_name);
+                exit(-1);
+            }
+            scope = scope->parent;
+            level--;
         }
+        return nullptr;
     }
-
-    //void resize(size_t new_size, const T& value = T()) {
-    //    if (new_size > size_) {
-    //        reserve(new_size);
-    //        for (size_t i = size_; i < new_size; i++) {
-    //            data_[i] = value;
-    //        }
-    //    }
-    //    size_ = new_size;
-    //}
-
-    void clear() {
-        size_ = 0;
-    }
-
-    // Iterator support
-    //T* begin() { return data_; }
-    //const T* begin() const { return data_; }
-    //T* end() { return data_ + size_; }
-    //const T* end() const { return data_ + size_; }
-
-    // Swap function for copy and move operations
-    //void swap(Vector& other) {
-    //    std::swap(size_, other.size_);
-    //    std::swap(capacity_, other.capacity_);
-    //    std::swap(data_, other.data_);
-    //}
-
-private:
-    T* data_;
-    size_t size_;
-    size_t capacity_;
 };
-
 
 
 int main()
 {
-    //AlifStack<int> stack_ = AlifStack<int>(4);
-    //stack<int> stack2_;
-
-    AlifArray<int> alifArr;
-
-    
-    for (int i = 0; i < 1000; i++)
-    {
-        alifArr.push_back(9);
-    //    stack_.push(10);
-    //    //stack2_.push(10);
-    //    //stack_ = 10;
-    //    //int a = stack_[i];
-
-    }
-
-    auto start = chrono::steady_clock::now();
+    bool outWText = _setmode(_fileno(stdout), _O_WTEXT);
+    bool inWText = _setmode(_fileno(stdin), _O_WTEXT);
 
 
-    for (int i = 0; i < 1000000000; i++)
-    {
-        int a = alifArr[999];
 
-    }
+    AlifNamesTable* ant = new AlifNamesTable();
 
-    //stack_.push(9);
-    //stack_.push(3);
-    //stack_.push(7);
+    wcstr* a = new wcstr(*L"اسم");
 
-    //int c = stack_.pop();
+    int* b[9] = {new int(1),new int(2),new int(3),new int(4),new int(5),new int(6),new int(7),new int(8),new int(9) };
+    ant->create_name(a, b[0]);
+    ant->assign_name(a, b[1]);
 
-    //stack_.swap();
+    ant->exit_scope();
 
-    //int d = stack_.pop();
+    ant->create_scope(L"هلا");
+    ant->enter_scope(L"هلا");
 
-    //stack_.push(10);
+    ant->create_name(L"اسم", nullptr);
+    ant->assign_name(L"اسم", b[3]);
 
-    auto end = chrono::steady_clock::now();
-    chrono::duration<double> elapsed_seconds = end - start;
-    cout << elapsed_seconds.count() << endl;
+    int* c = ant->get_object(L"اسم");
 
-    int s;
-    cin >> s;
+
+    PRINT_(*c);
+
+
+
+
+
+    int d;
+    std::wcin >> d;
     return 0;
 }
