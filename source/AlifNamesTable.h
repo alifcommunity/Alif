@@ -1,7 +1,8 @@
 #pragma once
 
-#include <map>
 #include "AlifObject.h"
+#include "AlifArray.h"
+#include <map>
 
 //#define PRINT_(a){std::wcout << a << std::endl;}
 //using wcstr = const wchar_t;
@@ -136,81 +137,35 @@ using wcstr = const wchar_t;
 #define Get_Scope(name) (currentScope->scopes.at(name))
 
 
-
-
 class Scope
 {
 public:
-    std::map<wcstr*, AlifObject*> names;
-    std::map<wcstr*, Scope*> scopes;
-    Scope* parent{ nullptr };
+    std::map<wcstr*, AlifObject*> names; // فهرس يحتوي على الاسماء وقيمها
+    std::map<wcstr*, Scope*> scopes; // فهرس يحتوي على الاسماء ونطاقاتها
+    Scope* parent{ nullptr }; // كـ مصفوفة متصلة - حيث parent يشير الى النطاق التالي -
 };
 
-class AlifNamesTable {
-
+class AlifNamesTable 
+{
     Scope* currentScope;
     Scope* globalScope;
 
+    uint16_t depth_recursion = 0;
+    uint16_t max_recursion = 4000;
+
 public:
-    AlifNamesTable() {
-        globalScope = new Scope();
-        globalScope->parent = nullptr;
-        currentScope = globalScope;
-    }
+    AlifNamesTable(); // يقوم بتهيئة النطاق العام
 
-    void create_name(wcstr* _name, AlifObject* _value)
-    {
-        currentScope->names.insert({ _name,_value });
-    }
-
-    bool assign_name(wcstr* _name, AlifObject* _value)
-    {
-        if (Is_Name_Exist(_name)) { Get_Value(currentScope, _name) = _value; return true; }
-        else { return false; }
-    }
-
-    void create_scope(wcstr* _name)
-    {
-        Scope* newScope = new Scope();
-        newScope->parent = currentScope;
-        currentScope->scopes.insert({ _name,newScope });
-    }
-
-    bool enter_scope(wcstr* _name)
-    {
-        if (Is_Scope_Exist(_name)) { currentScope = Get_Scope(_name); return true; } // اذا كان الاسم موجود -> قم بالدخول في نطاق الاسم
-        else { return false; }
-    }
-
-    bool exit_scope() {
-        if (!Is_Global_Scope(currentScope)) { currentScope = currentScope->parent; return true; } // اذا كان النطاق الاب فارغ إذاً نحن في النطاق العام ولا يمكن الخروج منه
-        else { return false; }
-    }
-
-    AlifObject* get_object(wcstr* _name) {
-        Scope* scope = currentScope;
-        int level = 1;
-        while (scope)
-        {
-            if (Is_Name_Exist(_name))
-            {
-                return Get_Value(scope, _name);
-            }
-            if (level == 0) // والا إبحث في النطاق العام
-            {
-                scope = globalScope;
-                if (Is_Name_Exist(_name))
-                {
-                    return Get_Value(scope, _name);
-                }
-
-                PRINT_(L" المتغير المستدعى غير معرف");
-                PRINT_((const wchar_t*)_name);
-                exit(-1);
-            }
-            scope = scope->parent;
-            level--;
-        }
-        return nullptr;
-    }
+    void create_name(wcstr* _name, AlifObject* _value); // يقوم بإنشاء اسم جديد ويسند له قيمة
+    bool assign_name(wcstr* _name, AlifObject* _value); // إذا كان الاسم موجود يقوم بإسناده
+    void create_scope(wcstr* _name); // يقوم بإنشاء نطاق جديد
+    bool enter_scope(wcstr* _name); // إذا كان الاسم موجود يدخل في نطاقه
+    bool exit_scope(); // يرجع خطوة الى الوراء في مجال النطاقات
+    AlifObject* get_object(wcstr* _name); // إذا كان الاسم موجود يقوم بإرجاع قيمته
 };
+
+
+
+
+AlifArray<wcstr*> names_;
+wcstr* is_repeated(wcstr*);

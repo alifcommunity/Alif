@@ -2,7 +2,7 @@
 
 #include "Node.h"
 #include "Types.h"
-#include "SymbolTable.h"
+#include "AlifNamesTable.h"
 #include "AlifMemory.h"
 #include "Container.h"
 #include "AlifArray.h"
@@ -14,7 +14,7 @@
 												 //    طريقة الاستدعاء           شكل الاستدعاء
 
 
-extern SymbolTable* symTable; // تم تعريفه ك متغير عام لمنع حذف المتغيرات عند استخدام الطرفية بعد الانتقال الى سطر جديد
+extern AlifNamesTable* symTable; // تم تعريفه ك متغير عام لمنع حذف المتغيرات عند استخدام الطرفية بعد الانتقال الى سطر جديد
 //static bool returnFlag = false;
 
 class Compiler {
