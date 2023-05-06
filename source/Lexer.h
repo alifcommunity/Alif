@@ -2,14 +2,15 @@
 
 #define PRINT_(a){std::wcout << a << std::endl;}
 
-#include <iostream>
-#include <string>
-#include <vector>
-
 #include "Constants.h"
 #include "Tokens.h"
 #include "Error.h"
 #include "AlifMemory.h"
+#include "AlifNamesTable.h"
+
+#include <iostream>
+#include <string>
+#include <vector>
 
 using wstr = std::wstring;
 
@@ -23,12 +24,12 @@ class Lexer {
     wstr fileName{}, *input_{};
     wchar_t currentChar{};
     uint32_t tokLine = 1;
-    uint32_t tokIndex = -1, tokPos = -1;
+    long int tokIndex = -1, tokPos = -1;
 
 
 public:
     AlifMemory alifMemory;
-    DedentSpecifier* dedentSpec = (DedentSpecifier*)alifMemory.allocate(sizeof(DedentSpecifier)); // حساب المسافات البادئة والراجعة
+    DedentSpecifier* dedentSpec = new DedentSpecifier(); // حساب المسافات البادئة والراجعة
     std::vector<Token> tokens_{};
 
     /////////////////////////////////////////
@@ -39,12 +40,12 @@ public:
 
     void make_token();
 
-
+    //
     bool word_lex();
     
     bool symbol_lex();
-
-
+    //
+    
     void skip_space();
 
     void make_indent();

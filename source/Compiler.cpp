@@ -1,7 +1,7 @@
 #include "Compiler.h"
 
 
-SymbolTable* symTable = new SymbolTable;
+AlifNamesTable* symTable = new AlifNamesTable;
 
 
 Compiler::Compiler(std::vector<StmtsNode*>* _statements, AlifMemory* _alifMemory) :
@@ -317,7 +317,7 @@ void Compiler::visit_assign(ExprNode* _node)
 	for (AlifObject* i : *_node->U.NameAssign.name_)
 	{
 		AlifObject* isScope = VISIT_(exprs,_node->U.NameAssign.value_);
-		bool a = symTable->is_scope(isScope->V.NameObj.name_);
+		//bool a = symTable->is_scope(isScope->V.NameObj.name_);
 		if (a)
 		{
 			dataContainer->data_->push_back(i);
@@ -385,11 +385,11 @@ AlifObject* Compiler::visit_access(ExprNode* _node)
 	dataContainer->data_->push_back(_node->U.NameAccess.name_);
 	dataContainer->instructions_->push_back(SET_DATA);
 
-	if (symTable->is_scope(_node->U.NameAccess.name_->V.NameObj.name_))
-	{
-		dataContainer->instructions_->push_back(GET_SCOPE);
-		return _node->U.NameAccess.name_;
-	}
+	//if (symTable->is_scope(_node->U.NameAccess.name_->V.NameObj.name_))
+	//{
+	//	dataContainer->instructions_->push_back(GET_SCOPE);
+	//	return _node->U.NameAccess.name_;
+	//}
 
 	dataContainer->instructions_->push_back(GET_DATA);
 	return _node->U.NameAccess.name_;

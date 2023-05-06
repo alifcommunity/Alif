@@ -351,7 +351,7 @@ void Lexer::make_name()
     }
     name_[nameString.length()] = L'\0'; // لضمان قطع "مقاطعة" السلسلة النصية
 
-    this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTName, name_));
+    this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTName, is_repeated(name_)));
 }
 
 void Lexer::make_string()

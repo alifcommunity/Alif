@@ -1088,8 +1088,9 @@ StmtsNode* Parser::block_statement()
             PRINT_(L"يتوقع وجود مسافة بادئة في بداية جسم الحالة المركبة");
             exit(-1);
         }
-
     }
+
+    return nullptr;
 }
 
 //
@@ -1137,6 +1138,7 @@ StmtsNode* Parser::compound_statement()
             exit(-1);
         }
     }
+    return nullptr;
 }
 
 ExprNode* Parser::simple_statement()

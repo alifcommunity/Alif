@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Types.h"
-#include "Object.h"
+#include "AlifObject.h"
 #include "AlifArray.h"
 
 class Container
