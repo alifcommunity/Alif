@@ -2,6 +2,7 @@
 
 #include "AlifObject.h"
 #include "AlifArray.h"
+#include "Node.h"
 #include <map>
 
 //#define PRINT_(a){std::wcout << a << std::endl;}
@@ -136,6 +137,8 @@ using wcstr = const wchar_t;
 #define Get_Value(scope,name) ((scope)->names.at(name))
 #define Get_Scope(name) (currentScope->scopes.at(name))
 
+#define VISIT_(func,node,nT) (visit_ ## func(node, nT)) // -> visit_func(arg) <<-->> VISIT_(func, node)
+
 
 class Scope
 {
@@ -151,7 +154,7 @@ class AlifNamesTable
     Scope* globalScope;
 
     uint16_t depth_recursion = 0;
-    uint16_t max_recursion = 4000;
+    uint16_t max_recursion = 9;
 
 public:
     AlifNamesTable(); // يقوم بتهيئة النطاق العام
@@ -166,6 +169,21 @@ public:
 
 
 
+void table_prepare(std::vector<StmtsNode*>*, AlifNamesTable* );
 
-AlifArray<wcstr*> names_;
+void visit_assign(ExprNode*, AlifNamesTable*);
+void visit_expr(ExprNode*, AlifNamesTable*);
+
+void visit_for_(StmtsNode*, AlifNamesTable*);
+void visit_while_(StmtsNode*, AlifNamesTable*);
+void visit_if_(StmtsNode*, AlifNamesTable*);
+void visit_function(StmtsNode*, AlifNamesTable*);
+void visit_class_(StmtsNode*, AlifNamesTable*);
+
+void visit_exprs(ExprNode* _node, AlifNamesTable*);
+void visit_stmts(StmtsNode* _node, AlifNamesTable*);
+
+
+
+static AlifArray<wcstr*> names_{};
 wcstr* is_repeated(wcstr*);

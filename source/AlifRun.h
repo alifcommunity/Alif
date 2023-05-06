@@ -1,7 +1,7 @@
 #include<fstream>
 #include<chrono> /////////////////////// for test only
 
-
+#include "AlifNamesTable.h"
 #include "Lexer.h"
 #include "Parser.h"
 #include "Compiler.h"
@@ -169,22 +169,28 @@ void file_run(const wchar_t* _fileName) {
 
     input_.shrink_to_fit();
 
-    // المعرب اللغوي
+    //// المعرب اللغوي
     /////////////////////////////////////////////////////////////////
 
     Lexer lexer(_fileName, &input_);
     lexer.make_token();
 
-    // المحلل اللغوي
+    //// المحلل اللغوي
     /////////////////////////////////////////////////////////////////
 
     Parser parser = Parser(&lexer.tokens_, _fileName, &input_, &lexer.alifMemory);
     parser.parse_file();
 
+    //// تهيئة جدول الاسماء
+    ///////////////////////////////////////////////////////////////////
+
+    AlifNamesTable* namesTable = new AlifNamesTable();
+    table_prepare(&parser.statements_, namesTable);
+
     //// المترجم اللغوي
     ///////////////////////////////////////////////////////////////////
 
-    Compiler compiler = Compiler(&parser.statements_, &lexer.alifMemory);
+    Compiler compiler = Compiler(&parser.statements_, &lexer.alifMemory, namesTable);
     compiler.visit_print(); // يجب إيجلد نظام لها
     compiler.compile_file();
 
@@ -193,7 +199,7 @@ void file_run(const wchar_t* _fileName) {
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    Interpreter interpreter = Interpreter(&compiler.containers_, &lexer.alifMemory);
+    Interpreter interpreter = Interpreter(&compiler.containers_, &lexer.alifMemory, namesTable);
     interpreter.run_code();
 
     auto end = std::chrono::high_resolution_clock::now();
@@ -204,56 +210,56 @@ void file_run(const wchar_t* _fileName) {
 void terminal_run() 
 {
 
-    wstr fileName = L"<طرفية>";
-    const wstr about_ = L"ألف نـ5.0.0";
-
-    wstr input_;
-
-    PRINT_(about_);
-
-    while (true) {
-
-        std::wcout << L"ألف -> ";
-
-        std::getline(std::wcin, input_);
-        input_ += L'\n';
-
-        if (input_ == L"خروج\n")
-        {
-            exit(0);
-        }
-
-        // المعرب اللغوي
-        /////////////////////////////////////////////////////////////////
-
-        Lexer lexer(fileName, &input_);
-        lexer.make_token();
-
-        // المحلل اللغوي
-        /////////////////////////////////////////////////////////////////
-
-        Parser parser = Parser(&lexer.tokens_, fileName, &input_, &lexer.alifMemory);
-        parser.parse_terminal();
-        
-        // المترجم اللغوي
-        /////////////////////////////////////////////////////////////////
-
-        Compiler compiler = Compiler(&parser.statements_, &lexer.alifMemory);
-        compiler.compile_file();
-
-        // المفسر اللغوي
-        /////////////////////////////////////////////////////////////////
-
-        auto start = std::chrono::high_resolution_clock::now();
-        
-        Interpreter interpreter = Interpreter(&compiler.containers_, &lexer.alifMemory);
-        interpreter.run_code();
-
-        auto end = std::chrono::high_resolution_clock::now();
-        auto elapsed_seconds = end - start;
-        std::wcout << elapsed_seconds << std::endl;
-
-        // std::wcin.ignore(); // لمنع ارسال قيمة فارغة في المتغير input_ ** يجب إضافة شرط في حال كان المدخل غير فارغ يجب ان يقوم بعمل تجاهل له
-    }
+//    wstr fileName = L"<طرفية>";
+//    const wstr about_ = L"ألف نـ5.0.0";
+//
+//    wstr input_;
+//
+//    PRINT_(about_);
+//
+//    while (true) {
+//
+//        std::wcout << L"ألف -> ";
+//
+//        std::getline(std::wcin, input_);
+//        input_ += L'\n';
+//
+//        if (input_ == L"خروج\n")
+//        {
+//            exit(0);
+//        }
+//
+//        // المعرب اللغوي
+//        /////////////////////////////////////////////////////////////////
+//
+//        Lexer lexer(fileName, &input_);
+//        lexer.make_token();
+//
+//        // المحلل اللغوي
+//        /////////////////////////////////////////////////////////////////
+//
+//        Parser parser = Parser(&lexer.tokens_, fileName, &input_, &lexer.alifMemory);
+//        parser.parse_terminal();
+//        
+//        // المترجم اللغوي
+//        /////////////////////////////////////////////////////////////////
+//
+//        Compiler compiler = Compiler(&parser.statements_, &lexer.alifMemory);
+//        compiler.compile_file();
+//
+//        // المفسر اللغوي
+//        /////////////////////////////////////////////////////////////////
+//
+//        auto start = std::chrono::high_resolution_clock::now();
+//        
+//        Interpreter interpreter = Interpreter(&compiler.containers_, &lexer.alifMemory);
+//        interpreter.run_code();
+//
+//        auto end = std::chrono::high_resolution_clock::now();
+//        auto elapsed_seconds = end - start;
+//        std::wcout << elapsed_seconds << std::endl;
+//
+//        // std::wcin.ignore(); // لمنع ارسال قيمة فارغة في المتغير input_ ** يجب إضافة شرط في حال كان المدخل غير فارغ يجب ان يقوم بعمل تجاهل له
+//    }
 }
 #endif

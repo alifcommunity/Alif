@@ -5,12 +5,14 @@ AlifArray<AlifObject*>* dataArr;
 AlifArray<InstructionsType>* instrArr;
 AlifStack<AlifObject*>* stackMemory;
 AlifMemory* alifMemory;
+AlifNamesTable* namesTable;
 size_t dataIndex = 0;
 size_t instructionsIndex = 0;
 
-Interpreter::Interpreter(AlifArray<Container*>* _containers, AlifMemory* _alifMemory) {
+Interpreter::Interpreter(AlifArray<Container*>* _containers, AlifMemory* _alifMemory, AlifNamesTable* _namesTable) {
 	containers_ = _containers;
 	alifMemory = _alifMemory;
+	namesTable = _namesTable;
 }
 
 void Interpreter::run_code()
@@ -36,11 +38,11 @@ void Interpreter::run_code()
 
 void none_() {} // لا يقوم بعمل شيء
 
-void get_object() 
+void get_data() 
 {
 	AlifObject* name_ = stackMemory->pop();
 
-	stackMemory->push(symTable->get_object(name_->V.NameObj.name_));
+	stackMemory->push(namesTable->get_object(name_->V.NameObj.name_));
 }
 void set_data()
 {
@@ -133,7 +135,7 @@ void augAdd_num()
 	AlifObject* name_ = stackMemory->pop();
 	AlifObject* value_ = stackMemory->pop();
 
-	AlifObject* nameValue = symTable->get_object(name_->V.NameObj.name_);
+	AlifObject* nameValue = namesTable->get_object(name_->V.NameObj.name_);
 
 	// نسخ الرقم الثابت لكي لا يتم تعديله
 	AlifObject* nameCopy = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
@@ -142,14 +144,14 @@ void augAdd_num()
 
 	nameCopy->V.NumberObj.numberValue += value_->V.NumberObj.numberValue;
 
-	symTable->assign_name(name_->V.NameObj.name_, nameCopy);
+	namesTable->assign_name(name_->V.NameObj.name_, nameCopy);
 }
 void augSub_num()
 {
 	AlifObject* name_ = stackMemory->pop();
 	AlifObject* value_ = stackMemory->pop();
 
-	AlifObject* nameValue = symTable->get_object(name_->V.NameObj.name_);
+	AlifObject* nameValue = namesTable->get_object(name_->V.NameObj.name_);
 
 	// نسخ الرقم الثابت لكي لا يتم تعديله
 	AlifObject* nameCopy = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
@@ -158,14 +160,14 @@ void augSub_num()
 
 	nameCopy->V.NumberObj.numberValue -= value_->V.NumberObj.numberValue;
 
-	symTable->assign_name(name_->V.NameObj.name_, nameCopy);
+	namesTable->assign_name(name_->V.NameObj.name_, nameCopy);
 }
 void augMul_num()
 {
 	AlifObject* name_ = stackMemory->pop();
 	AlifObject* value_ = stackMemory->pop();
 
-	AlifObject* nameValue = symTable->get_object(name_->V.NameObj.name_);
+	AlifObject* nameValue = namesTable->get_object(name_->V.NameObj.name_);
 
 	// نسخ الرقم الثابت لكي لا يتم تعديله
 	AlifObject* nameCopy = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
@@ -174,14 +176,14 @@ void augMul_num()
 
 	nameCopy->V.NumberObj.numberValue *= value_->V.NumberObj.numberValue;
 
-	symTable->assign_name(name_->V.NameObj.name_, nameCopy);
+	namesTable->assign_name(name_->V.NameObj.name_, nameCopy);
 }
 void augDiv_num()
 {
 	AlifObject* name_ = stackMemory->pop();
 	AlifObject* value_ = stackMemory->pop();
 
-	AlifObject* nameValue = symTable->get_object(name_->V.NameObj.name_);
+	AlifObject* nameValue = namesTable->get_object(name_->V.NameObj.name_);
 
 	// نسخ الرقم الثابت لكي لا يتم تعديله
 	AlifObject* nameCopy = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
@@ -190,14 +192,14 @@ void augDiv_num()
 
 	nameCopy->V.NumberObj.numberValue /= value_->V.NumberObj.numberValue;
 
-	symTable->assign_name(name_->V.NameObj.name_, nameCopy);
+	namesTable->assign_name(name_->V.NameObj.name_, nameCopy);
 }
 void augRem_num()
 {
 	AlifObject* name_ = stackMemory->pop();
 	AlifObject* value_ = stackMemory->pop();
 
-	AlifObject* nameValue = symTable->get_object(name_->V.NameObj.name_);
+	AlifObject* nameValue = namesTable->get_object(name_->V.NameObj.name_);
 
 	// نسخ الرقم الثابت لكي لا يتم تعديله
 	AlifObject* nameCopy = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
@@ -206,14 +208,14 @@ void augRem_num()
 
 	nameCopy->V.NumberObj.numberValue = (size_t)(nameCopy->V.NumberObj.numberValue) % (size_t)(value_->V.NumberObj.numberValue);
 
-	symTable->assign_name(name_->V.NameObj.name_, nameCopy);
+	namesTable->assign_name(name_->V.NameObj.name_, nameCopy);
 }
 void augPow_num()
 {
 	AlifObject* name_ = stackMemory->pop();
 	AlifObject* value_ = stackMemory->pop();
 
-	AlifObject* nameValue = symTable->get_object(name_->V.NameObj.name_);
+	AlifObject* nameValue = namesTable->get_object(name_->V.NameObj.name_);
 
 	// نسخ الرقم الثابت لكي لا يتم تعديله
 	AlifObject* nameCopy = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
@@ -222,7 +224,7 @@ void augPow_num()
 
 	nameCopy->V.NumberObj.numberValue = pow(nameCopy->V.NumberObj.numberValue, value_->V.NumberObj.numberValue);
 
-	symTable->assign_name(name_->V.NameObj.name_, nameCopy);
+	namesTable->assign_name(name_->V.NameObj.name_, nameCopy);
 }
 
 
@@ -582,7 +584,7 @@ void store_name()
 	valCopy->objType = value_->objType;
 	valCopy->V = value_->V;
 
-	symTable->assign_name(name_->V.NameObj.name_, valCopy);
+	namesTable->assign_name(name_->V.NameObj.name_, valCopy);
 }
 
 void list_make()
@@ -639,7 +641,7 @@ void jump_for()
 	startForObj->V.NumberObj.numberValue += stepForObj->V.NumberObj.numberValue;
 	if (startForObj->V.NumberObj.numberValue < endForObj->V.NumberObj.numberValue)
 	{
-		AlifObject* name_ = symTable->get_object(iterName->V.NameObj.name_);
+		AlifObject* name_ = namesTable->get_object(iterName->V.NameObj.name_);
 		name_->V.NumberObj.numberValue = startForObj->V.NumberObj.numberValue;
 
 		instructionsIndex = jumpAddress->V.NumberObj.numberValue;
@@ -649,7 +651,7 @@ void jump_for()
 	}
 	else // هذه الحالة تقوم بإعادة ضبط قيمة البداية الى القيمة الافتراضية بعد الانتهاء من تنفيذ الحلقة
 	{
-		AlifObject* name_ = symTable->get_object(iterName->V.NameObj.name_);
+		AlifObject* name_ = namesTable->get_object(iterName->V.NameObj.name_);
 		name_->V.NumberObj.numberValue = startForBackupObj->V.NumberObj.numberValue;
 
 		startForObj->V.NumberObj.numberValue = startForBackupObj->V.NumberObj.numberValue;
@@ -660,35 +662,35 @@ void create_scope()
 {
 	AlifObject* name_ = stackMemory->pop();
 
-	symTable->create_scope(name_->V.NameObj.name_);
+	namesTable->create_scope(name_->V.NameObj.name_);
 }
 void copy_scope()
 {
 	AlifObject* a = stackMemory->pop();
 	AlifObject* b = stackMemory->pop();
 
-	//symTable->copy_scope(a->V.NameObj.name_, b->V.NameObj.name_);
+	//namesTable->copy_scope(a->V.NameObj.name_, b->V.NameObj.name_);
 }
 void enter_scope()
 {
 	AlifObject* name_ = stackMemory->pop();
 
-	symTable->enter_scope(name_->V.NameObj.name_);
+	namesTable->enter_scope(name_->V.NameObj.name_);
 }
 void get_scope()
 {
 	AlifObject* name_ = stackMemory->pop();
-	AlifObject* data_ = symTable->get_object(name_->V.NameObj.name_);
+	AlifObject* data_ = namesTable->get_object(name_->V.NameObj.name_);
 
 	stackMemory->push(data_);
 }
 void exit_scope()
 {
-	symTable->exit_scope();
+	namesTable->exit_scope();
 }
 //void restore_scope()
 //{
-//	symTable->restore_scope();
+//	namesTable->restore_scope();
 //}
 
 bool returnFlag = false;
@@ -742,7 +744,7 @@ void call_name()
 			instructionsIndex++;
 			if (instrArr->get(instructionsIndex) == GET_DATA)
 			{
-				symTable->assign_name(stackMemory->pop()->V.NameObj.name_, args_.get(arg));
+				namesTable->assign_name(stackMemory->pop()->V.NameObj.name_, args_.get(arg));
 				instructionsIndex++;
 				arg--;
 			}
@@ -754,7 +756,7 @@ void call_name()
 
 				if (arg > -1)
 				{
-					symTable->assign_name(nameBackup->V.NameObj.name_, args_.get(arg));
+					namesTable->assign_name(nameBackup->V.NameObj.name_, args_.get(arg));
 					arg--;
 				}
 			}
@@ -786,7 +788,7 @@ void call_name()
 	instructionsIndex = instrIndexBackup;
 	dataIndex = dataIndexBackup;
 
-	//symTable->restore_scope(); // يجب المراجعة وتصحيح النظام
+	//namesTable->restore_scope(); // يجب المراجعة وتصحيح النظام
 	returnFlag = false;
 }
 
@@ -808,7 +810,7 @@ void return_expr()
 
 void print_func() // سيتم اعتماد خوارزمية البحث الثنائي الى حين إيجاد حل لاستدعاء الطباعة بتعقيد زمني يساوي 1
 {
-	AlifObject* object = symTable->get_object(L"أ");
+	AlifObject* object = namesTable->get_object(L"أ");
 
     if (object->objType == OTNumber) { PRINT_(object->V.NumberObj.numberValue); }
     else if (object->objType == OTString) { PRINT_(object->V.StringObj.strValue); }
@@ -827,7 +829,7 @@ void print_func() // سيتم اعتماد خوارزمية البحث الثن�
 //// دوال الطباعة
 //void num_print()
 //{
-//	AlifObject* object = symTable->get_object(*L"ع");
+//	AlifObject* object = namesTable->get_object(*L"ع");
 //
 //	std::wcout << object->V.NumberObj.numberValue << std::endl;
 //}

@@ -1,6 +1,6 @@
 #include "Parser.h"
 
-
+//AlifNamesTable* symTable = new AlifNamesTable;
 
 Parser::Parser(std::vector<Token>* _tokens, wstr _fileName, wstr* _input, AlifMemory* _alifMemory) :
     tokens_(_tokens), fileName(_fileName), input_(_input), alifMemory(_alifMemory)

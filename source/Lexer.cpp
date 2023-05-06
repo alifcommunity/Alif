@@ -343,8 +343,8 @@ void Lexer::make_name()
         this->advance();
     }
 
-    //wchar_t* name_ = new wchar_t[nameString.length() + 1];
-    wchar_t* name_ = (wchar_t*)alifMemory.allocate((nameString.size() * 2) + 2); // .length() * sizeof(wchar_t) + terminator 
+    wchar_t* name_ = new wchar_t[nameString.length() + 1];
+    //wchar_t* name_ = (wchar_t*)alifMemory.allocate((nameString.size() * 2) + 2); // .length() * sizeof(wchar_t) + terminator 
     for (uint16_t i = 0; i < nameString.length(); i++)
     {
         name_[i] = nameString[i];

@@ -5,6 +5,7 @@
 #include "Node.h"
 #include "AlifMemory.h"
 #include "AlifArray.h"
+//#include "AlifNamesTable.h"
 
 #include <string>
 
@@ -12,6 +13,7 @@
 #define PRINT_(a){std::wcout << a << std::endl;}
 
 
+//extern AlifNamesTable* symTable; // تم تعريفه ك متغير عام لمنع حذف المتغيرات عند استخدام الطرفية بعد الانتقال الى سطر جديد
 
 
 class Parser {
