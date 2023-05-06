@@ -153,10 +153,12 @@ class AlifNamesTable
     Scope* currentScope;
     Scope* globalScope;
 
+
+public:
     uint16_t depth_recursion = 0;
     uint16_t max_recursion = 9;
 
-public:
+
     AlifNamesTable(); // يقوم بتهيئة النطاق العام
 
     void create_name(wcstr* _name, AlifObject* _value); // يقوم بإنشاء اسم جديد ويسند له قيمة
@@ -172,7 +174,6 @@ public:
 void table_prepare(std::vector<StmtsNode*>*, AlifNamesTable* );
 
 void visit_assign(ExprNode*, AlifNamesTable*);
-void visit_expr(ExprNode*, AlifNamesTable*);
 
 void visit_for_(StmtsNode*, AlifNamesTable*);
 void visit_while_(StmtsNode*, AlifNamesTable*);
