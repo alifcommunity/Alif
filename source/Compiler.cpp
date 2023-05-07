@@ -1,11 +1,11 @@
 #include "Compiler.h"
 
 
-AlifNamesTable* symTable = new AlifNamesTable;
+//AlifNamesTable* namesTable = new AlifNamesTable;
 
 
-Compiler::Compiler(std::vector<StmtsNode*>* _statements, AlifMemory* _alifMemory) :
-	statements_(_statements), alifMemory(_alifMemory) {}
+Compiler::Compiler(std::vector<StmtsNode*>* _statements, AlifMemory* _alifMemory, AlifNamesTable* _namesTable) :
+	statements_(_statements), alifMemory(_alifMemory), namesTable(_namesTable) {}
 
 
 void Compiler::compile_file() 
@@ -317,9 +317,9 @@ void Compiler::visit_assign(ExprNode* _node)
 	for (AlifObject* i : *_node->U.NameAssign.name_)
 	{
 		AlifObject* isScope = VISIT_(exprs,_node->U.NameAssign.value_);
-		//bool a = symTable->is_scope(isScope->V.NameObj.name_);
-		if (a)
-		{
+		//bool a = namesTable->is_scope(isScope->V.NameObj.name_);
+		//if (a)
+		//{
 			dataContainer->data_->push_back(i);
 			dataContainer->instructions_->push_back(SET_DATA);
 			dataContainer->instructions_->push_back(CREATE_SCOPE);
@@ -334,7 +334,7 @@ void Compiler::visit_assign(ExprNode* _node)
 
 			//dataContainer->data_->push_back(i);
 			//dataContainer->instructions_->push_back(ENTER_SCOPE);
-		}
+		//}
 
 		dataContainer->data_->push_back(i);
 		dataContainer->instructions_->push_back(SET_DATA); // خزن الاسم في المكدس
@@ -385,7 +385,7 @@ AlifObject* Compiler::visit_access(ExprNode* _node)
 	dataContainer->data_->push_back(_node->U.NameAccess.name_);
 	dataContainer->instructions_->push_back(SET_DATA);
 
-	//if (symTable->is_scope(_node->U.NameAccess.name_->V.NameObj.name_))
+	//if (namesTable->is_scope(_node->U.NameAccess.name_->V.NameObj.name_))
 	//{
 	//	dataContainer->instructions_->push_back(GET_SCOPE);
 	//	return _node->U.NameAccess.name_;
@@ -761,8 +761,8 @@ void Compiler::visit_function(StmtsNode* _node)
 	*(containersDepth + containerLevel) = *dataContainer; // في حال تم تعريف دالة داخل دالة
 	containerLevel++;
 
-	symTable->create_scope(_node->U.FunctionDef.name_->V.NameObj.name_);
-	symTable->enter_scope(_node->U.FunctionDef.name_->V.NameObj.name_);
+	namesTable->create_scope(_node->U.FunctionDef.name_->V.NameObj.name_);
+	namesTable->enter_scope(_node->U.FunctionDef.name_->V.NameObj.name_);
 
 	AlifObject* paramContainer = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 	if (_node->U.FunctionDef.params_)
@@ -809,9 +809,9 @@ void Compiler::visit_function(StmtsNode* _node)
 	containerObject->objType = OTContainer;
 	containerObject->V.ContainerObj.container_ = dataContainer;
 
-	symTable->exit_scope();
+	namesTable->exit_scope();
 
-	symTable->add_symbol(_node->U.FunctionDef.name_->V.NameObj.name_, containerObject);
+	//namesTable->add_symbol(_node->U.FunctionDef.name_->V.NameObj.name_, containerObject);
 
 	containerLevel--;
 	dataContainer = (containersDepth + containerLevel);
@@ -894,8 +894,8 @@ void Compiler::visit_class_(StmtsNode* _node)
 	*(containersDepth + containerLevel) = *dataContainer; // في حال تم تعريف دالة داخل دالة
 	containerLevel++;
 
-	symTable->create_scope(_node->U.ClassDef.name_->V.NameObj.name_);
-	symTable->enter_scope(_node->U.ClassDef.name_->V.NameObj.name_);
+	namesTable->create_scope(_node->U.ClassDef.name_->V.NameObj.name_);
+	namesTable->enter_scope(_node->U.ClassDef.name_->V.NameObj.name_);
 
 	AlifObject* paramContainer = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 	//if (_node->U.FunctionDef.params_) // يجب استبداله بدالة التهيئة
@@ -942,9 +942,9 @@ void Compiler::visit_class_(StmtsNode* _node)
 	containerObject->objType = OTContainer;
 	containerObject->V.ContainerObj.container_ = dataContainer;
 
-	symTable->exit_scope();
+	namesTable->exit_scope();
 
-	symTable->add_symbol(_node->U.FunctionDef.name_->V.NameObj.name_, containerObject);
+	//namesTable->add_symbol(_node->U.FunctionDef.name_->V.NameObj.name_, containerObject);
 
 	containerLevel--;
 	dataContainer = (containersDepth + containerLevel);
@@ -1086,8 +1086,8 @@ AlifObject* Compiler::visit_stmts(StmtsNode* _node)
 
 void Compiler::visit_print()
 {
-	symTable->create_scope(L"اطبع");
-	symTable->enter_scope(L"اطبع");
+	namesTable->create_scope(L"اطبع");
+	namesTable->enter_scope(L"اطبع");
 
 	AlifObject* paramContainer = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 
@@ -1123,7 +1123,7 @@ void Compiler::visit_print()
 	AlifObject* containerObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 	containerObject->V.ContainerObj.container_ = dataCont;
 
-	symTable->exit_scope();
+	namesTable->exit_scope();
 
-	symTable->add_symbol(L"اطبع", containerObject);
+	//namesTable->add_symbol(L"اطبع", containerObject);
 }
