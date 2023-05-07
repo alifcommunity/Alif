@@ -131,11 +131,11 @@ using wcstr = const wchar_t;
 
 
 #define PRINT_(a){std::wcout << a << std::endl;}
-#define Is_Scope_Exist(name) (currentScope->scopes.count(name) != 0)
+#define Is_Scope_Exist(scope, name) ((scope)->scopes.count(name) != 0)
 #define Is_Name_Exist(name) (currentScope->names.count(name) != 0)
 #define Is_Global_Scope(scope) (scope->parent == nullptr)
 #define Get_Value(scope,name) ((scope)->names.at(name))
-#define Get_Scope(name) (currentScope->scopes.at(name))
+#define Get_Scope(scope,name) ((scope)->scopes.at(name))
 
 #define VISIT_(func,node,nT) (visit_ ## func(node, nT)) // -> visit_func(arg) <<-->> VISIT_(func, node)
 
@@ -165,6 +165,7 @@ public:
     bool assign_name(wcstr* _name, AlifObject* _value); // إذا كان الاسم موجود يقوم بإسناده
     void create_scope(wcstr* _name); // يقوم بإنشاء نطاق جديد
     bool enter_scope(wcstr* _name); // إذا كان الاسم موجود يدخل في نطاقه
+    void copy_scope(wcstr* _name1, wcstr* _name2);
     bool exit_scope(); // يرجع خطوة الى الوراء في مجال النطاقات
     AlifObject* get_object(wcstr* _name); // إذا كان الاسم موجود يقوم بإرجاع قيمته
 };

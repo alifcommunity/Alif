@@ -1,9 +1,6 @@
 #include "Compiler.h"
 
 
-//AlifNamesTable* namesTable = new AlifNamesTable;
-
-
 Compiler::Compiler(std::vector<StmtsNode*>* _statements, AlifMemory* _alifMemory, AlifNamesTable* _namesTable) :
 	statements_(_statements), alifMemory(_alifMemory), namesTable(_namesTable) {}
 
@@ -25,8 +22,8 @@ void Compiler::compile_file()
 
 AlifObject* Compiler::visit_object(ExprNode* _node)
 {
-	dataContainer->instructions_->push_back(SET_DATA);
 	dataContainer->data_->push_back(_node->U.Object.value_);
+	dataContainer->instructions_->push_back(SET_DATA);
 	return _node->U.Object.value_;
 }
 
@@ -311,41 +308,31 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 	return left;
 }
 
-
+bool isAssign = false; // flag
+bool isCall = false; // flag
 void Compiler::visit_assign(ExprNode* _node)
 {
-	for (AlifObject* i : *_node->U.NameAssign.name_)
+	isAssign = true; // علم خاص بعملية الاستدعاء
+	
+	for (AlifObject* n : *_node->U.NameAssign.name_)
 	{
-		AlifObject* isScope = VISIT_(exprs,_node->U.NameAssign.value_);
-		//bool a = namesTable->is_scope(isScope->V.NameObj.name_);
-		//if (a)
-		//{
-			dataContainer->data_->push_back(i);
-			dataContainer->instructions_->push_back(SET_DATA);
-			dataContainer->instructions_->push_back(CREATE_SCOPE);
+		VISIT_(exprs,_node->U.NameAssign.value_);
 
-			dataContainer->data_->push_back(i);
-			dataContainer->instructions_->push_back(SET_DATA);
+		if (isCall)
+		{
+			isCall = false;
+			dataContainer->data_->push_back(n);
+			dataContainer->instructions_->push_back(SET_DATA); // خزن الاسم في المكدس
 
-			dataContainer->data_->push_back(isScope);
-			dataContainer->instructions_->push_back(SET_DATA);
-			
-			dataContainer->instructions_->push_back(COPY_SCOPE);
-
-			//dataContainer->data_->push_back(i);
-			//dataContainer->instructions_->push_back(ENTER_SCOPE);
-		//}
-
-		dataContainer->data_->push_back(i);
+			this->dataContainer->instructions_->push_back(COPY_SCOPE);
+		}
+		dataContainer->data_->push_back(n);
 		dataContainer->instructions_->push_back(SET_DATA); // خزن الاسم في المكدس
 
 		dataContainer->instructions_->push_back(STORE_NAME);
-
-		//if (a)
-		//{
-		//	dataContainer->instructions_->push_back(EXIT_SCOPE);
-		//}
 	}
+
+	isAssign = false;
 }
 
 void Compiler::visit_augAssign(ExprNode* _node)
@@ -384,14 +371,8 @@ AlifObject* Compiler::visit_access(ExprNode* _node)
 {
 	dataContainer->data_->push_back(_node->U.NameAccess.name_);
 	dataContainer->instructions_->push_back(SET_DATA);
-
-	//if (namesTable->is_scope(_node->U.NameAccess.name_->V.NameObj.name_))
-	//{
-	//	dataContainer->instructions_->push_back(GET_SCOPE);
-	//	return _node->U.NameAccess.name_;
-	//}
-
 	dataContainer->instructions_->push_back(GET_DATA);
+
 	return _node->U.NameAccess.name_;
 }
 
@@ -761,7 +742,6 @@ void Compiler::visit_function(StmtsNode* _node)
 	*(containersDepth + containerLevel) = *dataContainer; // في حال تم تعريف دالة داخل دالة
 	containerLevel++;
 
-	namesTable->create_scope(_node->U.FunctionDef.name_->V.NameObj.name_);
 	namesTable->enter_scope(_node->U.FunctionDef.name_->V.NameObj.name_);
 
 	AlifObject* paramContainer = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
@@ -809,9 +789,9 @@ void Compiler::visit_function(StmtsNode* _node)
 	containerObject->objType = OTContainer;
 	containerObject->V.ContainerObj.container_ = dataContainer;
 
-	namesTable->exit_scope();
 
-	//namesTable->add_symbol(_node->U.FunctionDef.name_->V.NameObj.name_, containerObject);
+	namesTable->assign_name(_node->U.FunctionDef.name_->V.NameObj.name_, containerObject);
+	namesTable->exit_scope();
 
 	containerLevel--;
 	dataContainer = (containersDepth + containerLevel);
@@ -819,63 +799,65 @@ void Compiler::visit_function(StmtsNode* _node)
 
 void Compiler::visit_call(ExprNode* _node)
 {
-	if (_node->U.Call.args_)
+	if (isAssign)
 	{
-		for (ExprNode* node : *_node->U.Call.args_)
-		{
-			VISIT_(exprs, node);
-		}
+		isCall = true;
+		this->dataContainer->data_->push_back(_node->U.Call.name_->U.Object.value_);
+		this->dataContainer->instructions_->push_back(SET_DATA);
+		//this->dataContainer->instructions_->push_back(COPY_SCOPE);
 
-		AlifObject* size_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
-		size_->V.NumberObj.numberValue = _node->U.Call.args_->size();
-		dataContainer->data_->push_back(size_);
-		dataContainer->instructions_->push_back(SET_DATA);
+		this->dataContainer->data_->push_back(_node->U.Call.name_->U.Object.value_);
+		this->dataContainer->instructions_->push_back(SET_DATA);
+		this->dataContainer->instructions_->push_back(GET_SCOPE);
 	}
 	else
 	{
-		AlifObject* size_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
-		size_->V.NumberObj.numberValue = 0;
-		dataContainer->data_->push_back(size_);
-		dataContainer->instructions_->push_back(SET_DATA);
+		if (_node->U.Call.args_)
+		{
+			for (ExprNode* node : *_node->U.Call.args_)
+			{
+				VISIT_(exprs, node);
+			}
+
+			AlifObject* size_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+			size_->V.NumberObj.numberValue = _node->U.Call.args_->size();
+			dataContainer->data_->push_back(size_);
+			dataContainer->instructions_->push_back(SET_DATA);
+		}
+		else
+		{
+			AlifObject* size_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+			size_->V.NumberObj.numberValue = 0;
+			dataContainer->data_->push_back(size_);
+			dataContainer->instructions_->push_back(SET_DATA);
+		}
+
+		this->dataContainer->data_->push_back(_node->U.Call.name_->U.Object.value_);
+		this->dataContainer->instructions_->push_back(SET_DATA);
+		this->dataContainer->data_->push_back(_node->U.Call.name_->U.Object.value_);
+		this->dataContainer->instructions_->push_back(SET_DATA); // نسخ نفس الاسم
+		this->dataContainer->instructions_->push_back(COPY_SCOPE);
+	
+		this->dataContainer->data_->push_back(_node->U.Call.name_->U.Object.value_);
+		this->dataContainer->instructions_->push_back(SET_DATA);
+		this->dataContainer->instructions_->push_back(ENTER_SCOPE);
+
+		this->dataContainer->data_->push_back(_node->U.Call.name_->U.Object.value_);
+		this->dataContainer->instructions_->push_back(SET_DATA);
+		this->dataContainer->instructions_->push_back(GET_DATA);
+
+		this->dataContainer->instructions_->push_back(CALL_NAME);
+
+
+		_node = _node->U.Call.func_;
+
+		if (_node)
+		{
+			VISIT_(exprs, _node);
+		}
+
+		this->dataContainer->instructions_->push_back(EXIT_SCOPE);
 	}
-
-	//ExprNode* nodeCopy = new ExprNode(*_node);
-	//do {
-		//this->dataContainer->data_->push_back(_node->U.Call.name_->U.Object.value_);
-		//this->dataContainer->instructions_->push_back(SET_DATA);
-	
-		//_node = _node->U.Call.func_;
-	
-		//if (_node)
-		//{
-		//	this->dataContainer->instructions_->push_back(ENTER_SCOPE);
-		//}
-	//} while (_node);
-	
-	
-	this->dataContainer->data_->push_back(_node->U.Call.name_->U.Object.value_);
-	this->dataContainer->instructions_->push_back(SET_DATA);
-	this->dataContainer->instructions_->push_back(GET_SCOPE);
-
-	this->dataContainer->data_->push_back(_node->U.Call.name_->U.Object.value_);
-	this->dataContainer->instructions_->push_back(SET_DATA);
-	this->dataContainer->instructions_->push_back(ENTER_SCOPE);
-
-	this->dataContainer->instructions_->push_back(CALL_NAME);
-
-
-	_node = _node->U.Call.func_;
-
-	if (_node)
-	{
-		VISIT_(exprs, _node);
-		
-		//_node = _node->U.Call.func_;
-	}
-
-	this->dataContainer->instructions_->push_back(EXIT_SCOPE);
-	//this->dataContainer->instructions_->push_back(GET_SCOPE);
-	//this->dataContainer->instructions_->push_back(CALL_NAME);
 
 }
 
@@ -894,7 +876,6 @@ void Compiler::visit_class_(StmtsNode* _node)
 	*(containersDepth + containerLevel) = *dataContainer; // في حال تم تعريف دالة داخل دالة
 	containerLevel++;
 
-	namesTable->create_scope(_node->U.ClassDef.name_->V.NameObj.name_);
 	namesTable->enter_scope(_node->U.ClassDef.name_->V.NameObj.name_);
 
 	AlifObject* paramContainer = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
@@ -942,9 +923,9 @@ void Compiler::visit_class_(StmtsNode* _node)
 	containerObject->objType = OTContainer;
 	containerObject->V.ContainerObj.container_ = dataContainer;
 
-	namesTable->exit_scope();
 
-	//namesTable->add_symbol(_node->U.FunctionDef.name_->V.NameObj.name_, containerObject);
+	namesTable->assign_name(_node->U.ClassDef.name_->V.NameObj.name_, containerObject);
+	namesTable->exit_scope();
 
 	containerLevel--;
 	dataContainer = (containersDepth + containerLevel);
@@ -1086,8 +1067,17 @@ AlifObject* Compiler::visit_stmts(StmtsNode* _node)
 
 void Compiler::visit_print()
 {
-	namesTable->create_scope(L"اطبع");
-	namesTable->enter_scope(L"اطبع");
+	wchar_t* name = new wchar_t[5];
+	int i = 0;
+	for (wchar_t a : L"اطبع") // تم استخدام هذه الطريقة لانه سيتم عمل حذف لاحقا delete[]
+	{
+		name[i] = a;
+		i++;
+	}
+
+	wcstr* pName = is_repeated(name);
+	namesTable->create_scope(pName);
+	namesTable->enter_scope(pName);
 
 	AlifObject* paramContainer = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 
@@ -1097,7 +1087,7 @@ void Compiler::visit_print()
 
 
 	AlifObject* name_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
-	name_->V.NameObj.name_ = L"أ";
+	name_->V.NameObj.name_ = (wcstr*)0x01; // يجب مراجعة النظام
 	paramCont->data_->push_back(name_);
 	paramCont->instructions_->push_back(SET_DATA);
 	paramCont->instructions_->push_back(GET_DATA);
@@ -1121,9 +1111,9 @@ void Compiler::visit_print()
 
 
 	AlifObject* containerObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	containerObject->objType = OTContainer;
 	containerObject->V.ContainerObj.container_ = dataCont;
 
+	namesTable->create_name(pName, containerObject);
 	namesTable->exit_scope();
-
-	//namesTable->add_symbol(L"اطبع", containerObject);
 }

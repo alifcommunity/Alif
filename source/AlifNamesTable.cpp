@@ -27,13 +27,34 @@ void AlifNamesTable::create_scope(wcstr* _name)
 
 bool AlifNamesTable::enter_scope(wcstr* _name)
 {
-    if (Is_Scope_Exist(_name)) // اذا كان الاسم موجود -> قم بالدخول في نطاق الاسم
+    if (Is_Scope_Exist(currentScope, _name)) // اذا كان الاسم موجود -> قم بالدخول في نطاق الاسم
     { 
-        currentScope = Get_Scope(_name);
+        currentScope = Get_Scope(currentScope, _name);
         depth_recursion++; 
         return true; 
     } 
     else { return false; }
+}
+
+void AlifNamesTable::copy_scope(wcstr* a, wcstr* b)
+{
+    std::map<wcstr*, AlifObject*> names_{};
+    std::map<wcstr*, Scope*> scopes_{};
+
+    Scope* aScope = currentScope->scopes[a];
+    if (!aScope)
+    {
+        aScope = globalScope->scopes[a];
+    }
+    names_ = aScope->names;
+    scopes_ = aScope->scopes;
+
+    create_scope(a);
+    currentScope->scopes[b] = new Scope(*aScope);
+    Scope* bScope = currentScope->scopes[b];
+    bScope->names = names_;
+    bScope->scopes = scopes_;
+    bScope->parent = currentScope;
 }
 
 bool AlifNamesTable::exit_scope() 
@@ -93,6 +114,11 @@ void visit_assign(ExprNode* _node, AlifNamesTable* _namesTable)
         _namesTable->create_name(name->V.NameObj.name_, nullptr);
     }
 }
+void visit_call(ExprNode* _node, AlifNamesTable* _namesTable)
+{
+    wcstr* callName = _node->U.Call.name_->U.Object.value_->V.NameObj.name_;
+    _namesTable->create_name(callName, nullptr);
+}
 
 void visit_for_(StmtsNode* _node, AlifNamesTable* _namesTable)
 {
@@ -124,9 +150,9 @@ void visit_if_(StmtsNode* _node, AlifNamesTable* _namesTable)
 void visit_function(StmtsNode* _node, AlifNamesTable* _namesTable)
 {
     wcstr* scopeName = _node->U.FunctionDef.name_->V.NameObj.name_;
-    _namesTable->create_name(scopeName, nullptr);
     _namesTable->create_scope(scopeName);
     _namesTable->enter_scope(scopeName);
+    _namesTable->create_name(scopeName, nullptr);
 
     _namesTable->depth_recursion++;
 
@@ -153,9 +179,9 @@ void visit_function(StmtsNode* _node, AlifNamesTable* _namesTable)
 void visit_class_(StmtsNode* _node, AlifNamesTable* _namesTable)
 {
     wcstr* scopeName = _node->U.ClassDef.name_->V.NameObj.name_;
-    _namesTable->create_name(scopeName, nullptr);
     _namesTable->create_scope(scopeName);
     _namesTable->enter_scope(scopeName);
+    _namesTable->create_name(scopeName, nullptr);
 
     _namesTable->depth_recursion++;
 
@@ -171,6 +197,10 @@ void visit_exprs(ExprNode* _node, AlifNamesTable* _namesTable)
     if (_node->type_ == VTAssign)
     {
         VISIT_(assign, _node, _namesTable);
+    }
+    if (_node->type_ == VTCall)
+    {
+        VISIT_(call, _node, _namesTable);
     }
     //else if (_node->type_ == VTAccess) // يمكن ان تستخدم لمعرفة ما إذا كان الاسم تم استخدامه ام انه لم يستخدم وبالتالي يتم حذفه في النهاية لانه لا فائدة منه
 }
