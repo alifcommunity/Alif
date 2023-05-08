@@ -132,9 +132,9 @@ using wcstr = const wchar_t;
 
 #define PRINT_(a){std::wcout << a << std::endl;}
 #define Is_Scope_Exist(scope, name) ((scope)->scopes.count(name) != 0)
-#define Is_Name_Exist(name) (currentScope->names.count(name) != 0)
+#define Is_Name_Exist(scope, name) (scope->names->count(name) != 0)
 #define Is_Global_Scope(scope) (scope->parent == nullptr)
-#define Get_Value(scope,name) ((scope)->names.at(name))
+#define Get_Value(scope,name) ((scope)->names->at(name))
 #define Get_Scope(scope,name) ((scope)->scopes.at(name))
 
 #define VISIT_(func,node,nT) (visit_ ## func(node, nT)) // -> visit_func(arg) <<-->> VISIT_(func, node)
@@ -143,7 +143,7 @@ using wcstr = const wchar_t;
 class Scope
 {
 public:
-    std::map<wcstr*, AlifObject*> names; // فهرس يحتوي على الاسماء وقيمها
+    std::map<wcstr*, AlifObject*>* names; // فهرس يحتوي على الاسماء وقيمها
     std::map<wcstr*, Scope*> scopes; // فهرس يحتوي على الاسماء ونطاقاتها
     Scope* parent{ nullptr }; // كـ مصفوفة متصلة - حيث parent يشير الى النطاق التالي -
 };
@@ -165,14 +165,15 @@ public:
     bool assign_name(wcstr* _name, AlifObject* _value); // إذا كان الاسم موجود يقوم بإسناده
     void create_scope(wcstr* _name); // يقوم بإنشاء نطاق جديد
     bool enter_scope(wcstr* _name); // إذا كان الاسم موجود يدخل في نطاقه
-    void copy_scope(wcstr* _name1, wcstr* _name2);
+    void copy_scope(wcstr* _name);
     bool exit_scope(); // يرجع خطوة الى الوراء في مجال النطاقات
     AlifObject* get_object(wcstr* _name); // إذا كان الاسم موجود يقوم بإرجاع قيمته
 };
 
 
 
-void table_prepare(std::vector<StmtsNode*>*, AlifNamesTable* );
+void table_names_prepare(std::vector<StmtsNode*>*, AlifNamesTable*);
+void table_call_prepare(std::vector<StmtsNode*>*, AlifNamesTable*);
 
 void visit_assign(ExprNode*, AlifNamesTable*);
 
@@ -184,6 +185,15 @@ void visit_class_(StmtsNode*, AlifNamesTable*);
 
 void visit_exprs(ExprNode* _node, AlifNamesTable*);
 void visit_stmts(StmtsNode* _node, AlifNamesTable*);
+
+
+
+void visit_call(ExprNode*, AlifNamesTable*);
+void visit_function_call(StmtsNode*, AlifNamesTable*);
+void visit_class_call(StmtsNode*, AlifNamesTable*);
+
+void visit_exprs_call(ExprNode* _node, AlifNamesTable*);
+void visit_stmts_call(StmtsNode* _node, AlifNamesTable*);
 
 
 

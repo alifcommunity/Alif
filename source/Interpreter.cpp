@@ -667,11 +667,11 @@ void create_scope()
 }
 void copy_scope()
 {
-	AlifObject* b = stackMemory->pop();
-	stackMemory->swap();
 	AlifObject* a = stackMemory->pop();
+	//stackMemory->swap();
+	//AlifObject* b = stackMemory->pop();
 
-	namesTable->copy_scope(a->V.NameObj.name_, b->V.NameObj.name_);
+	namesTable->copy_scope(a->V.NameObj.name_);
 }
 void enter_scope()
 {
@@ -679,6 +679,7 @@ void enter_scope()
 
 	if (!namesTable->enter_scope(name_->V.NameObj.name_)) 
 	{
+
 		PRINT_(L"لم يتمكن من الدخول الى النطاق"); exit(-1);
 	}
 }

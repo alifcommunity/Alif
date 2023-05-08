@@ -4,24 +4,40 @@ AlifNamesTable::AlifNamesTable()
 {
     globalScope = new Scope();
     globalScope->parent = nullptr;
+    globalScope->names = new std::map<wcstr*, AlifObject*>();
     currentScope = globalScope;
 }
 
 void AlifNamesTable::create_name(wcstr* _name, AlifObject* _value)
 {
-    currentScope->names.insert({ _name,_value });
+    currentScope->names->insert({ _name,_value });
 }
 
 bool AlifNamesTable::assign_name(wcstr* _name, AlifObject* _value)
 {
-    if (Is_Name_Exist(_name)) { Get_Value(currentScope, _name) = _value; return true; }
-    else { return false; }
+    Scope* scope = currentScope;
+    int level = 1;
+    while (scope)
+    {
+        if (Is_Name_Exist(scope, _name))
+        { Get_Value(scope, _name) = _value; return true; }
+        if (level == 0) // والا إبحث في النطاق العام
+        {
+            scope = globalScope;
+            if (Is_Name_Exist(scope, _name))
+            { Get_Value(scope, _name) = _value; return true; }
+        }
+        scope = scope->parent;
+        level--;
+    }
+    return false;
 }
 
 void AlifNamesTable::create_scope(wcstr* _name)
 {
     Scope* newScope = new Scope();
     newScope->parent = currentScope;
+    newScope->names = new std::map<wcstr*, AlifObject*>();
     currentScope->scopes.insert({ _name,newScope });
 }
 
@@ -30,32 +46,12 @@ bool AlifNamesTable::enter_scope(wcstr* _name)
     if (Is_Scope_Exist(currentScope, _name)) // اذا كان الاسم موجود -> قم بالدخول في نطاق الاسم
     { 
         currentScope = Get_Scope(currentScope, _name);
-        depth_recursion++; 
+        depth_recursion++;
         return true; 
     } 
     else { return false; }
 }
 
-void AlifNamesTable::copy_scope(wcstr* a, wcstr* b)
-{
-    std::map<wcstr*, AlifObject*> names_{};
-    std::map<wcstr*, Scope*> scopes_{};
-
-    Scope* aScope = currentScope->scopes[a];
-    if (!aScope)
-    {
-        aScope = globalScope->scopes[a];
-    }
-    names_ = aScope->names;
-    scopes_ = aScope->scopes;
-
-    create_scope(a);
-    currentScope->scopes[b] = new Scope(*aScope);
-    Scope* bScope = currentScope->scopes[b];
-    bScope->names = names_;
-    bScope->scopes = scopes_;
-    bScope->parent = currentScope;
-}
 
 bool AlifNamesTable::exit_scope() 
 {
@@ -73,14 +69,14 @@ AlifObject* AlifNamesTable::get_object(wcstr* _name) {
     int level = 1;
     while (scope)
     {
-        if (Is_Name_Exist(_name))
+        if (Is_Name_Exist(scope, _name))
         {
             return Get_Value(scope, _name);
         }
         if (level == 0) // والا إبحث في النطاق العام
         {
             scope = globalScope;
-            if (Is_Name_Exist(_name))
+            if (Is_Name_Exist(scope, _name))
             {
                 return Get_Value(scope, _name);
             }
@@ -95,10 +91,32 @@ AlifObject* AlifNamesTable::get_object(wcstr* _name) {
     return nullptr;
 }
 
+void AlifNamesTable::copy_scope(wcstr* a)
+{
+    Scope* scope_ = currentScope;
+    std::map<wcstr*, AlifObject*>* names_{};
+    std::map<wcstr*, Scope*> scopes_{};
+    Scope* parent_{};
+
+    Scope* aScope = scope_->scopes[a];
+    while (!aScope)
+    {
+        scope_ = scope_->parent;
+        aScope = scope_->scopes[a];
+    }
+    if (aScope)
+    {
+        Scope* bScope = currentScope->scopes[a] = new Scope();
+        bScope->names = aScope->names;
+        bScope->scopes = aScope->scopes;
+        bScope->parent = new Scope(*currentScope);
+    }
+}
 
 
 
-void table_prepare(std::vector<StmtsNode*>* _statements, AlifNamesTable* _namesTable)
+
+void table_names_prepare(std::vector<StmtsNode*>* _statements, AlifNamesTable* _namesTable)
 {
     for (StmtsNode* node : *_statements)
     {
@@ -114,11 +132,7 @@ void visit_assign(ExprNode* _node, AlifNamesTable* _namesTable)
         _namesTable->create_name(name->V.NameObj.name_, nullptr);
     }
 }
-void visit_call(ExprNode* _node, AlifNamesTable* _namesTable)
-{
-    wcstr* callName = _node->U.Call.name_->U.Object.value_->V.NameObj.name_;
-    _namesTable->create_name(callName, nullptr);
-}
+
 
 void visit_for_(StmtsNode* _node, AlifNamesTable* _namesTable)
 {
@@ -198,10 +212,10 @@ void visit_exprs(ExprNode* _node, AlifNamesTable* _namesTable)
     {
         VISIT_(assign, _node, _namesTable);
     }
-    if (_node->type_ == VTCall)
-    {
-        VISIT_(call, _node, _namesTable);
-    }
+    //if (_node->type_ == VTCall)
+    //{
+    //    VISIT_(call, _node, _namesTable);
+    //}
     //else if (_node->type_ == VTAccess) // يمكن ان تستخدم لمعرفة ما إذا كان الاسم تم استخدامه ام انه لم يستخدم وبالتالي يتم حذفه في النهاية لانه لا فائدة منه
 }
 
@@ -246,6 +260,86 @@ void visit_stmts(StmtsNode* _node, AlifNamesTable* _namesTable)
 }
 
 
+
+
+
+
+void table_call_prepare(std::vector<StmtsNode*>* _statements, AlifNamesTable* _namesTable)
+{
+    for (StmtsNode* node : *_statements)
+    {
+        VISIT_(stmts_call, node, _namesTable);
+    }
+}
+
+void visit_call(ExprNode* _node, AlifNamesTable* _namesTable)
+{
+    wcstr* callName = _node->U.Call.name_->U.Object.value_->V.NameObj.name_;
+    //_namesTable->create_name(callName, nullptr);
+    _namesTable->copy_scope(callName);
+}
+
+void visit_function_call(StmtsNode* _node, AlifNamesTable* _namesTable)
+{
+    wcstr* scopeName = _node->U.FunctionDef.name_->V.NameObj.name_;
+    _namesTable->enter_scope(scopeName);
+
+    _namesTable->depth_recursion++;
+
+    VISIT_(stmts_call, _node->U.FunctionDef.body_, _namesTable);
+
+    _namesTable->exit_scope();
+    _namesTable->depth_recursion--;
+}
+void visit_class_call(StmtsNode* _node, AlifNamesTable* _namesTable)
+{
+    wcstr* scopeName = _node->U.ClassDef.name_->V.NameObj.name_;
+    _namesTable->enter_scope(scopeName);
+
+    _namesTable->depth_recursion++;
+
+    VISIT_(stmts_call, _node->U.ClassDef.body_, _namesTable);
+
+    _namesTable->exit_scope();
+    _namesTable->depth_recursion--;
+}
+
+
+void visit_exprs_call(ExprNode* _node, AlifNamesTable* _namesTable)
+{
+    if (_node->type_ == VTCall)
+    {
+        VISIT_(call, _node, _namesTable);
+    }
+}
+
+void visit_stmts_call(StmtsNode* _node, AlifNamesTable* _namesTable)
+{
+    if (_namesTable->depth_recursion > _namesTable->max_recursion)
+    {
+        PRINT_(L"لقد تجاوزت حد الاستدعاء التداخلي");
+        exit(-3);
+    }
+    if (_node->type_ == VTExpr)
+    {
+        VISIT_(exprs_call, _node->U.Expr.expr_, _namesTable);
+    }
+    else if (_node->type_ == VTFunction)
+    {
+        VISIT_(function_call, _node, _namesTable);
+    }
+    else if (_node->type_ == VTClass)
+    {
+        VISIT_(class_call, _node, _namesTable);
+    }
+    else if (_node->type_ == VTStmts)
+    {
+        for (StmtsNode* stmt : *_node->U.Stmts.stmts_)
+        {
+            VISIT_(stmts_call, stmt, _namesTable);
+        }
+    }
+}
 
 
 
