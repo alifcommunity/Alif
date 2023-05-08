@@ -41,8 +41,9 @@ void none_() {} // لا يقوم بعمل شيء
 void get_data() 
 {
 	AlifObject* name_ = stackMemory->pop();
+	AlifObject* data_ = namesTable->get_object(name_->V.NameObj.name_);
 
-	stackMemory->push(namesTable->get_object(name_->V.NameObj.name_));
+	stackMemory->push(data_);
 }
 void set_data()
 {
@@ -666,21 +667,31 @@ void create_scope()
 }
 void copy_scope()
 {
-	AlifObject* a = stackMemory->pop();
 	AlifObject* b = stackMemory->pop();
+	stackMemory->swap();
+	AlifObject* a = stackMemory->pop();
 
-	//namesTable->copy_scope(a->V.NameObj.name_, b->V.NameObj.name_);
+	namesTable->copy_scope(a->V.NameObj.name_, b->V.NameObj.name_);
 }
 void enter_scope()
 {
 	AlifObject* name_ = stackMemory->pop();
 
-	namesTable->enter_scope(name_->V.NameObj.name_);
+	if (!namesTable->enter_scope(name_->V.NameObj.name_)) 
+	{
+		PRINT_(L"لم يتمكن من الدخول الى النطاق"); exit(-1);
+	}
 }
 void get_scope()
 {
 	AlifObject* name_ = stackMemory->pop();
-	AlifObject* data_ = namesTable->get_object(name_->V.NameObj.name_);
+	AlifObject* data_{};
+
+	if (namesTable->enter_scope(name_->V.NameObj.name_))
+	{
+		data_ = namesTable->get_object(name_->V.NameObj.name_);
+		namesTable->exit_scope();
+	}
 
 	stackMemory->push(data_);
 }
@@ -744,7 +755,11 @@ void call_name()
 			instructionsIndex++;
 			if (instrArr->get(instructionsIndex) == GET_DATA)
 			{
-				namesTable->assign_name(stackMemory->pop()->V.NameObj.name_, args_.get(arg));
+				wcstr* name = stackMemory->pop()->V.NameObj.name_;
+				if (!namesTable->assign_name(name, args_.get(arg)))
+				{
+					namesTable->create_name(name, args_.get(arg));
+				}
 				instructionsIndex++;
 				arg--;
 			}
@@ -756,7 +771,11 @@ void call_name()
 
 				if (arg > -1)
 				{
-					namesTable->assign_name(nameBackup->V.NameObj.name_, args_.get(arg));
+					wcstr* name = nameBackup->V.NameObj.name_;
+					if (!namesTable->assign_name(name, args_.get(arg)))
+					{
+						namesTable->create_name(name, args_.get(arg));
+					}
 					arg--;
 				}
 			}
@@ -776,7 +795,6 @@ void call_name()
 	{
 		if (returnFlag)
 		{
-			//returnFlag = false;
 			break;
 		}
 		instr_funcs[instrArr->get(instructionsIndex)]();
@@ -810,7 +828,7 @@ void return_expr()
 
 void print_func() // سيتم اعتماد خوارزمية البحث الثنائي الى حين إيجاد حل لاستدعاء الطباعة بتعقيد زمني يساوي 1
 {
-	AlifObject* object = namesTable->get_object(L"أ");
+	AlifObject* object = namesTable->get_object((wcstr*)0x01); // يجب مراجعة النظام
 
     if (object->objType == OTNumber) { PRINT_(object->V.NumberObj.numberValue); }
     else if (object->objType == OTString) { PRINT_(object->V.StringObj.strValue); }

@@ -15,9 +15,6 @@
 												 //    طريقة الاستدعاء           شكل الاستدعاء
 
 
-//extern AlifNamesTable* symTable; // تم تعريفه ك متغير عام لمنع حذف المتغيرات عند استخدام الطرفية بعد الانتقال الى سطر جديد
-//static bool returnFlag = false;
-
 class Compiler {
 public:
 	std::vector<StmtsNode*>* statements_{};
