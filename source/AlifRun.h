@@ -190,7 +190,7 @@ void file_run(const wchar_t* _fileName) {
     ///////////////////////////////////////////////////////////////////
 
     Compiler compiler = Compiler(&parser.statements_, &lexer.alifMemory, namesTable);
-    compiler.visit_print(); // يجب إيجلد نظام لها
+    compiler.visit_print(); // يجب إيجاد نظام لها
     table_names_prepare(&parser.statements_, namesTable); // تم نقله هنا ليتم تهيئة اسماء الدوال الضمنية من ثم نسخ النطاقات
     compiler.compile_file();
     table_call_prepare(&parser.statements_, namesTable); // لاعداد اسناد قيم الاستدعاء بعد تهيئة الدوال

@@ -804,6 +804,8 @@ StmtsNode* Parser::function_statement()
             funcNode->U.FunctionDef.name_ = name;
             funcNode->U.FunctionDef.params_ = params;
             funcNode->U.FunctionDef.body_ = body;
+            //funcNode->U.FunctionDef.return_ = return with default value "None";
+            // يجب تخزين "ارجع" في متغير منفصل بحيث يتم إسناد قيمة افتراضية لها في حال لم يتم استخدامها ضمن الدالة
             return funcNode;
         }
         else {

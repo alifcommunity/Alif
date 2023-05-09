@@ -308,8 +308,7 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 	return left;
 }
 
-bool isAssign = false; // flag
-bool isCall = false; // flag
+
 void Compiler::visit_assign(ExprNode* _node)
 {
 	isAssign = true; // علم خاص بعملية الاستدعاء
@@ -463,7 +462,6 @@ void Compiler::visit_continue_()
 }
 
 
-bool b = true;
 AlifObject* jTAdress = new AlifObject; // Address of instructions
 AlifObject* jTDataAddress = new AlifObject; // Address of data
 void Compiler::visit_if_(StmtsNode* _node)
@@ -499,9 +497,9 @@ void Compiler::visit_if_(StmtsNode* _node)
 	jumpAddress->V.NumberObj.numberValue = this->dataContainer->instructions_->size() - 1;
 
 
-	if (b) // يتحقق هل المستدعى "اذا" ام "واذا" ففي حال الاولى يسمح بالمرور والثانية لا يسمح
+	if (elseIfFlag) // يتحقق هل المستدعى "اذا" ام "واذا" ففي حال الاولى يسمح بالمرور والثانية لا يسمح
 	{
-		b = false;
+		elseIfFlag = false;
 
 		if (_node->U.If.elseIf->size())
 		{
@@ -741,12 +739,10 @@ void Compiler::visit_while_(StmtsNode* _node)
 	//////////////////////////////
 }
 
-Container* containersDepth = new Container[18];
-size_t containerLevel = 0;
+AlifStack<Container*> funcDepth = AlifStack<Container*>(1024);
 void Compiler::visit_function(StmtsNode* _node)
 {
-	*(containersDepth + containerLevel) = *dataContainer; // في حال تم تعريف دالة داخل دالة
-	containerLevel++;
+	funcDepth.push(dataContainer); // نسخ احتياطي في حال تم تعريف دالة داخل دالة
 
 	namesTable->enter_scope(_node->U.FunctionDef.name_->V.NameObj.name_);
 
@@ -799,14 +795,12 @@ void Compiler::visit_function(StmtsNode* _node)
 	namesTable->assign_name(_node->U.FunctionDef.name_->V.NameObj.name_, containerObject);
 	namesTable->exit_scope();
 
-	containerLevel--;
-	dataContainer = (containersDepth + containerLevel);
+	dataContainer = funcDepth.pop(); // اعد تخزين الحالة السابقة لمتابعة العمل عليها
 }
 
 void Compiler::visit_class_(StmtsNode* _node)
 {
-	*(containersDepth + containerLevel) = *dataContainer; // في حال تم تعريف دالة داخل دالة
-	containerLevel++;
+	funcDepth.push(dataContainer); // نسخ احتياطي في حال تم تعريف صنف داخل صنف
 
 	namesTable->enter_scope(_node->U.ClassDef.name_->V.NameObj.name_);
 
@@ -859,8 +853,7 @@ void Compiler::visit_class_(StmtsNode* _node)
 	namesTable->assign_name(_node->U.ClassDef.name_->V.NameObj.name_, containerObject);
 	namesTable->exit_scope();
 
-	containerLevel--;
-	dataContainer = (containersDepth + containerLevel);
+	dataContainer = funcDepth.pop();
 }
 
 

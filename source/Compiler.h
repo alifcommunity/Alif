@@ -6,6 +6,7 @@
 #include "AlifMemory.h"
 #include "Container.h"
 #include "AlifArray.h"
+#include "AlifStack.h"
 #include "Parser.h"
 
 #define VISIT_(func,node) (visit_ ## func(node)) // -> visit_func(arg) <<-->> VISIT_(func, node)
@@ -14,6 +15,12 @@
 												 //			|                        |
 												 //    طريقة الاستدعاء           شكل الاستدعاء
 
+
+// اعلام
+static bool isAssign = false;
+static bool elseIfFlag = true;
+static bool isCall = false;
+//
 
 class Compiler {
 public:
