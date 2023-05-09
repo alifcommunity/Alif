@@ -308,8 +308,7 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 	return left;
 }
 
-bool isAssign = false; // flag
-bool isCall = false; // flag
+
 void Compiler::visit_assign(ExprNode* _node)
 {
 	isAssign = true; // علم خاص بعملية الاستدعاء
@@ -376,6 +375,12 @@ AlifObject* Compiler::visit_access(ExprNode* _node)
 	return _node->U.NameAccess.name_;
 }
 
+void Compiler::visit_attr(ExprNode* _node)
+{
+	dataContainer->data_->push_back(_node->U.NameAccess.name_);
+	dataContainer->instructions_->push_back(SET_DATA);
+	dataContainer->instructions_->push_back(ENTER_SCOPE);
+}
 
 void Compiler::visit_expr(ExprNode* _node)
 {
@@ -457,7 +462,6 @@ void Compiler::visit_continue_()
 }
 
 
-bool b = true;
 AlifObject* jTAdress = new AlifObject; // Address of instructions
 AlifObject* jTDataAddress = new AlifObject; // Address of data
 void Compiler::visit_if_(StmtsNode* _node)
@@ -493,9 +497,9 @@ void Compiler::visit_if_(StmtsNode* _node)
 	jumpAddress->V.NumberObj.numberValue = this->dataContainer->instructions_->size() - 1;
 
 
-	if (b) // يتحقق هل المستدعى "اذا" ام "واذا" ففي حال الاولى يسمح بالمرور والثانية لا يسمح
+	if (elseIfFlag) // يتحقق هل المستدعى "اذا" ام "واذا" ففي حال الاولى يسمح بالمرور والثانية لا يسمح
 	{
-		b = false;
+		elseIfFlag = false;
 
 		if (_node->U.If.elseIf->size())
 		{
@@ -735,12 +739,10 @@ void Compiler::visit_while_(StmtsNode* _node)
 	//////////////////////////////
 }
 
-Container* containersDepth = new Container[18];
-size_t containerLevel = 0;
+AlifStack<Container*> funcDepth = AlifStack<Container*>(1024);
 void Compiler::visit_function(StmtsNode* _node)
 {
-	*(containersDepth + containerLevel) = *dataContainer; // في حال تم تعريف دالة داخل دالة
-	containerLevel++;
+	funcDepth.push(dataContainer); // نسخ احتياطي في حال تم تعريف دالة داخل دالة
 
 	namesTable->enter_scope(_node->U.FunctionDef.name_->V.NameObj.name_);
 
@@ -793,9 +795,67 @@ void Compiler::visit_function(StmtsNode* _node)
 	namesTable->assign_name(_node->U.FunctionDef.name_->V.NameObj.name_, containerObject);
 	namesTable->exit_scope();
 
-	containerLevel--;
-	dataContainer = (containersDepth + containerLevel);
+	dataContainer = funcDepth.pop(); // اعد تخزين الحالة السابقة لمتابعة العمل عليها
 }
+
+void Compiler::visit_class_(StmtsNode* _node)
+{
+	funcDepth.push(dataContainer); // نسخ احتياطي في حال تم تعريف صنف داخل صنف
+
+	namesTable->enter_scope(_node->U.ClassDef.name_->V.NameObj.name_);
+
+	AlifObject* paramContainer = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	//if (_node->U.FunctionDef.params_) // يجب استبداله بدالة التهيئة
+	//{
+	//	dataContainer = (Container*)alifMemory->allocate(sizeof(Container));
+	//	dataContainer->instructions_ = new AlifArray<InstructionsType>;
+	//	dataContainer->data_ = new AlifArray<AlifObject*>;
+
+	//	for (ExprNode* node : *_node->U.FunctionDef.params_)
+	//	{
+	//		VISIT_(exprs, node);
+	//	}
+
+	//	paramContainer->V.ContainerObj.container_ = dataContainer;
+	//	paramContainer->objType = OTContainer;
+	//}
+
+	dataContainer = (Container*)alifMemory->allocate(sizeof(Container));
+	dataContainer->instructions_ = new AlifArray<InstructionsType>;
+	dataContainer->data_ = new AlifArray<AlifObject*>;
+
+	//if (_node->U.FunctionDef.params_)
+	//{
+	//	AlifObject* paramSize = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	//	paramSize->V.NumberObj.numberValue = _node->U.FunctionDef.params_->size();
+
+	//	dataContainer->data_->push_back(paramSize);
+	//}
+	//else
+	//{
+	AlifObject* paramSize = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	paramSize->V.NumberObj.numberValue = 0;
+
+	dataContainer->data_->push_back(paramSize);
+	//}
+
+	dataContainer->data_->push_back(paramContainer);
+
+
+	VISIT_(stmts, _node->U.ClassDef.body_);
+
+
+	AlifObject* containerObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	containerObject->objType = OTContainer;
+	containerObject->V.ContainerObj.container_ = dataContainer;
+
+
+	namesTable->assign_name(_node->U.ClassDef.name_->V.NameObj.name_, containerObject);
+	namesTable->exit_scope();
+
+	dataContainer = funcDepth.pop();
+}
+
 
 void Compiler::visit_call(ExprNode* _node)
 {
@@ -831,12 +891,6 @@ void Compiler::visit_call(ExprNode* _node)
 			dataContainer->data_->push_back(size_);
 			dataContainer->instructions_->push_back(SET_DATA);
 		}
-
-		this->dataContainer->data_->push_back(_node->U.Call.name_->U.Object.value_);
-		this->dataContainer->instructions_->push_back(SET_DATA);
-		this->dataContainer->data_->push_back(_node->U.Call.name_->U.Object.value_);
-		this->dataContainer->instructions_->push_back(SET_DATA); // نسخ نفس الاسم
-		this->dataContainer->instructions_->push_back(COPY_SCOPE);
 	
 		this->dataContainer->data_->push_back(_node->U.Call.name_->U.Object.value_);
 		this->dataContainer->instructions_->push_back(SET_DATA);
@@ -848,12 +902,9 @@ void Compiler::visit_call(ExprNode* _node)
 
 		this->dataContainer->instructions_->push_back(CALL_NAME);
 
-
-		_node = _node->U.Call.func_;
-
-		if (_node)
+		if (_node->U.Call.func_)
 		{
-			VISIT_(exprs, _node);
+			VISIT_(exprs, _node->U.Call.func_);
 		}
 
 		this->dataContainer->instructions_->push_back(EXIT_SCOPE);
@@ -868,67 +919,6 @@ AlifObject* Compiler::visit_return_(ExprNode* _node)
 	dataContainer->instructions_->push_back(RETURN_EXPR);
 
 	return a;
-}
-
-
-void Compiler::visit_class_(StmtsNode* _node)
-{
-	*(containersDepth + containerLevel) = *dataContainer; // في حال تم تعريف دالة داخل دالة
-	containerLevel++;
-
-	namesTable->enter_scope(_node->U.ClassDef.name_->V.NameObj.name_);
-
-	AlifObject* paramContainer = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
-	//if (_node->U.FunctionDef.params_) // يجب استبداله بدالة التهيئة
-	//{
-	//	dataContainer = (Container*)alifMemory->allocate(sizeof(Container));
-	//	dataContainer->instructions_ = new AlifArray<InstructionsType>;
-	//	dataContainer->data_ = new AlifArray<AlifObject*>;
-
-	//	for (ExprNode* node : *_node->U.FunctionDef.params_)
-	//	{
-	//		VISIT_(exprs, node);
-	//	}
-
-	//	paramContainer->V.ContainerObj.container_ = dataContainer;
-	//	paramContainer->objType = OTContainer;
-	//}
-
-	dataContainer = (Container*)alifMemory->allocate(sizeof(Container));
-	dataContainer->instructions_ = new AlifArray<InstructionsType>;
-	dataContainer->data_ = new AlifArray<AlifObject*>;
-
-	//if (_node->U.FunctionDef.params_)
-	//{
-	//	AlifObject* paramSize = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
-	//	paramSize->V.NumberObj.numberValue = _node->U.FunctionDef.params_->size();
-
-	//	dataContainer->data_->push_back(paramSize);
-	//}
-	//else
-	//{
-		AlifObject* paramSize = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
-		paramSize->V.NumberObj.numberValue = 0;
-
-		dataContainer->data_->push_back(paramSize);
-	//}
-
-	dataContainer->data_->push_back(paramContainer);
-
-
-	VISIT_(stmts, _node->U.ClassDef.body_);
-
-
-	AlifObject* containerObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
-	containerObject->objType = OTContainer;
-	containerObject->V.ContainerObj.container_ = dataContainer;
-
-
-	namesTable->assign_name(_node->U.ClassDef.name_->V.NameObj.name_, containerObject);
-	namesTable->exit_scope();
-
-	containerLevel--;
-	dataContainer = (containersDepth + containerLevel);
 }
 
 
@@ -968,6 +958,10 @@ AlifObject* Compiler::visit_exprs(ExprNode* _node)
 	else if (_node->type_ == VTAccess)
 	{
 		return VISIT_(access, _node);
+	}
+	else if (_node->type_ == VTAttr)
+	{
+		VISIT_(attr, _node);
 	}
 	else if (_node->type_ == VTCondExpr)
     {

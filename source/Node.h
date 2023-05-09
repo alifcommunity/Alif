@@ -50,10 +50,16 @@ public:
 
         class {
         public:
-            ExprNode* func_;
-            ExprNode* name_;
+            ExprNode* func_ = nullptr;
+            ExprNode* name_ = nullptr;
             std::vector<ExprNode*>* args_;
         }Call;
+
+        class {
+        public:
+            ExprNode* next_ = nullptr;
+            ExprNode* name_ = nullptr;
+        }Attr;
 
         class {
         public:

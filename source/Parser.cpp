@@ -275,34 +275,33 @@ ExprNode* Parser::primary_statement()
     if (this->currentToken.type_ == TTDot) 
     {
         this->advance();
-        ExprNode* primary = this->primary_statement();
+        ExprNode* primary_ = this->primary_statement();
 
-        ExprNode* primary_ = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
-        primary_->type_ = VTCall;
-        primary_->U.Call.name_ = atom;
-        primary_->U.Call.func_ = primary;
-        primary_->U.Call.args_ = nullptr;
-        return primary_;
+        ExprNode* attrNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
+        //primary_->type_ = VTCall;
+        attrNode->type_ = VTAttr;
+        attrNode->U.Attr.name_ = atom;
+        attrNode->U.Attr.next_ = primary_;
+        //primary_->U.Call.args_ = nullptr;
+        return attrNode;
     }
     else if (this->currentToken.type_ == TTLeftParenthesis) 
     {
-        //ExprNode* primary = atom;
-
         this->advance();
 
         if (this->currentToken.type_ == TTRrightParenthesis) 
         {
             this->advance();
-
+            ExprNode* primary_ = nullptr;
             if (this->currentToken.type_ == TTDot)
             {
-                ExprNode* primary = this->primary_statement();
+                primary_ = this->primary_statement();
             }
             
             ExprNode* callNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
             callNode->type_ = VTCall;
             callNode->U.Call.name_ = atom;
-            callNode->U.Call.func_ = nullptr;
+            callNode->U.Call.func_ = primary_;
             callNode->U.Call.args_ = nullptr;
             return callNode;
         }
@@ -312,16 +311,16 @@ ExprNode* Parser::primary_statement()
         if (this->currentToken.type_ == TTRrightParenthesis)
         {
             this->advance();
-
+            ExprNode* primary_ = nullptr;
             if (this->currentToken.type_ == TTDot)
             {
-                ExprNode* primary = this->primary_statement();
+                primary_ = this->primary_statement();
             }
 
             ExprNode* callNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
             callNode->type_ = VTCall;
             callNode->U.Call.name_ = atom;
-            callNode->U.Call.func_ = nullptr;
+            callNode->U.Call.func_ = primary_;
             callNode->U.Call.args_ = args;
             return callNode;
         }
@@ -805,6 +804,8 @@ StmtsNode* Parser::function_statement()
             funcNode->U.FunctionDef.name_ = name;
             funcNode->U.FunctionDef.params_ = params;
             funcNode->U.FunctionDef.body_ = body;
+            //funcNode->U.FunctionDef.return_ = return with default value "None";
+            // يجب تخزين "ارجع" في متغير منفصل بحيث يتم إسناد قيمة افتراضية لها في حال لم يتم استخدامها ضمن الدالة
             return funcNode;
         }
         else {
