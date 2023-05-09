@@ -91,19 +91,26 @@ void mul_num()
 	AlifObject* right = stackMemory->pop();
 	AlifObject* left = stackMemory->pop();
 
+	AlifObject* res = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 
-	left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? right->V.NumberObj.numberType = TTFloat : right->V.NumberObj.numberType = TTInteger;
-	right->V.NumberObj.numberValue *= left->V.NumberObj.numberValue;
-	stackMemory->push(right);
+	left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? res->V.NumberObj.numberType = TTFloat : res->V.NumberObj.numberType = TTInteger;
+	res->objType = OTNumber;
+	res->V.NumberObj.numberValue = right->V.NumberObj.numberValue * left->V.NumberObj.numberValue;
+
+	stackMemory->push(res);
 }
 void div_num() 
 {
 	AlifObject* right = stackMemory->pop();
 	AlifObject* left = stackMemory->pop();
 
-	left->V.NumberObj.numberType == TTFloat;
-	right->V.NumberObj.numberValue /= left->V.NumberObj.numberValue;
-	stackMemory->push(right);
+	AlifObject* res = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+
+	res->V.NumberObj.numberType = TTFloat;
+	res->objType = OTNumber;
+	res->V.NumberObj.numberValue = right->V.NumberObj.numberValue / left->V.NumberObj.numberValue;
+
+	stackMemory->push(res);
 }
 void rem_num() 
 {
@@ -665,7 +672,9 @@ void enter_scope()
 
 	if (!namesTable->enter_scope(name_->V.NameObj.name_)) 
 	{
-		PRINT_(L"لم يتمكن من الدخول الى النطاق"); exit(-1);
+		PRINT_(L"لم يتمكن من الدخول الى النطاق"); 
+		PRINT_(name_->V.NameObj.name_);
+		exit(-1);
 	}
 }
 

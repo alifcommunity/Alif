@@ -189,6 +189,8 @@ void visit_stmts(StmtsNode* _node, AlifNamesTable*);
 
 
 void visit_call(ExprNode*, AlifNamesTable*);
+void visit_assign_call(ExprNode*, AlifNamesTable*);
+void visit_attr_call(ExprNode*, AlifNamesTable*);
 void visit_function_call(StmtsNode*, AlifNamesTable*);
 void visit_class_call(StmtsNode*, AlifNamesTable*);
 
