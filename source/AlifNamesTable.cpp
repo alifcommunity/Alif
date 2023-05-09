@@ -45,12 +45,24 @@ void AlifNamesTable::create_scope(wcstr* _name)
 
 bool AlifNamesTable::enter_scope(wcstr* _name)
 {
-    if (Is_Scope_Exist(currentScope, _name)) // اذا كان الاسم موجود -> قم بالدخول في نطاق الاسم
-    { 
-        currentScope = Get_Scope(currentScope, _name);
+    //if (Is_Scope_Exist(currentScope, _name)) // اذا كان الاسم موجود -> قم بالدخول في نطاق الاسم
+    //{ 
+    //    currentScope = Get_Scope(currentScope, _name);
+    //    depth_recursion++;
+    //    return true;
+    //} 
+    //else { return false; }
+    Scope* scope_ = currentScope;
+    while (!Is_Scope_Exist(scope_, _name)) // اذا كان الاسم موجود -> قم بالدخول في نطاق الاسم
+    {
+        scope_ = scope_->parent;
+    }
+    if (Is_Scope_Exist(scope_, _name))
+    {
+        currentScope = Get_Scope(scope_, _name);
         depth_recursion++;
-        return true; 
-    } 
+        return true;
+    }
     else { return false; }
 }
 
@@ -62,7 +74,7 @@ bool AlifNamesTable::exit_scope()
         currentScope = currentScope->parent;
         depth_recursion--;
         return true; 
-    } 
+    }
     else { return false; }
 }
 
@@ -92,6 +104,7 @@ AlifObject* AlifNamesTable::get_object(wcstr* _name) {
     }
     return nullptr;
 }
+
 
 void AlifNamesTable::copy_scope(wcstr* a, wcstr* b)
 {

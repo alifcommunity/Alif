@@ -312,13 +312,14 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 	return left;
 }
 
-
+AlifObject* assignName{};
 void Compiler::visit_assign(ExprNode* _node)
 {
 	isAssignFlag = true; // علم خاص بعملية الاستدعاء
 	
 	for (AlifObject* n : *_node->U.NameAssign.name_)
 	{
+		assignName = n;
 		VISIT_(exprs,_node->U.NameAssign.value_);
 
 		dataContainer->data_->push_back(n);
@@ -880,13 +881,28 @@ void Compiler::visit_call(ExprNode* _node)
 	}
 	
 	AlifObject* nameObject = _node->U.Call.name_->U.Object.value_;
-	this->dataContainer->data_->push_back(nameObject);
-	this->dataContainer->instructions_->push_back(SET_DATA);
-	this->dataContainer->instructions_->push_back(ENTER_SCOPE);
 
-	this->dataContainer->data_->push_back(nameObject);
-	this->dataContainer->instructions_->push_back(SET_DATA);
-	this->dataContainer->instructions_->push_back(GET_DATA);
+	if (isAssignFlag)
+	{
+		this->dataContainer->data_->push_back(assignName);
+		this->dataContainer->instructions_->push_back(SET_DATA);
+		this->dataContainer->instructions_->push_back(ENTER_SCOPE);
+
+		this->dataContainer->data_->push_back(nameObject);
+		this->dataContainer->instructions_->push_back(SET_DATA);
+		this->dataContainer->instructions_->push_back(GET_DATA);
+	}
+	else
+	{
+		this->dataContainer->data_->push_back(nameObject);
+		this->dataContainer->instructions_->push_back(SET_DATA);
+		this->dataContainer->instructions_->push_back(ENTER_SCOPE);
+
+		this->dataContainer->data_->push_back(nameObject);
+		this->dataContainer->instructions_->push_back(SET_DATA);
+		this->dataContainer->instructions_->push_back(GET_DATA);
+	}
+
 
 	this->dataContainer->instructions_->push_back(CALL_NAME);
 

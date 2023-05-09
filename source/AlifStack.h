@@ -1,5 +1,8 @@
 #pragma once
 
+#include<iostream>
+#define PRINT_(a){std::wcout << a << std::endl;}
+
 template <typename T>
 class AlifStack {
 public:

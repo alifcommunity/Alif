@@ -156,7 +156,7 @@ class AlifNamesTable
 
 public:
     uint16_t depth_recursion = 0;
-    uint16_t max_recursion = 9;
+    uint16_t max_recursion = 12;
 
 
     AlifNamesTable(); // يقوم بتهيئة النطاق العام

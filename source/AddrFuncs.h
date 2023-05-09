@@ -106,10 +106,7 @@ const Instructions_func instr_funcs[] = {
 	jump_if,
 	jump_for,
 
-	create_scope,
-	copy_scope,
 	enter_scope,
-	get_scope,
 	exit_scope,
 
 	call_name,
