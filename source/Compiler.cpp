@@ -1,6 +1,10 @@
 #include "Compiler.h"
 
-
+/*
+	يجب عمل أمر مماثل ل GET_DATA
+	ولكن لا يقوم بعمل pop()
+	من ذاكرة المكدس في المفسر لكي لا يتم إسناد القيمة او الكائن اكثر من مرة ليتم استخدامه
+*/
 Compiler::Compiler(std::vector<StmtsNode*>* _statements, AlifMemory* _alifMemory, AlifNamesTable* _namesTable) :
 	statements_(_statements), alifMemory(_alifMemory), namesTable(_namesTable) {}
 
@@ -311,27 +315,19 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 
 void Compiler::visit_assign(ExprNode* _node)
 {
-	isAssign = true; // علم خاص بعملية الاستدعاء
+	isAssignFlag = true; // علم خاص بعملية الاستدعاء
 	
 	for (AlifObject* n : *_node->U.NameAssign.name_)
 	{
 		VISIT_(exprs,_node->U.NameAssign.value_);
 
-		if (isCall)
-		{
-			isCall = false;
-			dataContainer->data_->push_back(n);
-			dataContainer->instructions_->push_back(SET_DATA); // خزن الاسم في المكدس
-
-			this->dataContainer->instructions_->push_back(COPY_SCOPE);
-		}
 		dataContainer->data_->push_back(n);
 		dataContainer->instructions_->push_back(SET_DATA); // خزن الاسم في المكدس
 
 		dataContainer->instructions_->push_back(STORE_NAME);
 	}
 
-	isAssign = false;
+	isAssignFlag = false;
 }
 
 void Compiler::visit_augAssign(ExprNode* _node)
@@ -370,16 +366,20 @@ AlifObject* Compiler::visit_access(ExprNode* _node)
 {
 	dataContainer->data_->push_back(_node->U.NameAccess.name_);
 	dataContainer->instructions_->push_back(SET_DATA);
-	dataContainer->instructions_->push_back(GET_DATA);
+	if (attrFlag)
+	{ dataContainer->instructions_->push_back(ENTER_SCOPE); }
+	else { dataContainer->instructions_->push_back(GET_DATA); }
 
 	return _node->U.NameAccess.name_;
 }
 
 void Compiler::visit_attr(ExprNode* _node)
 {
-	dataContainer->data_->push_back(_node->U.NameAccess.name_);
-	dataContainer->instructions_->push_back(SET_DATA);
-	dataContainer->instructions_->push_back(ENTER_SCOPE);
+	attrFlag = true;
+	VISIT_(exprs, _node->U.Attr.name_);
+	if (_node->U.Attr.next_->type_ == VTAccess) attrFlag = false;
+	VISIT_(exprs, _node->U.Attr.next_);
+	dataContainer->instructions_->push_back(EXIT_SCOPE);
 }
 
 void Compiler::visit_expr(ExprNode* _node)
@@ -859,57 +859,50 @@ void Compiler::visit_class_(StmtsNode* _node)
 
 void Compiler::visit_call(ExprNode* _node)
 {
-	if (isAssign)
+	if (_node->U.Call.args_)
 	{
-		isCall = true;
-		this->dataContainer->data_->push_back(_node->U.Call.name_->U.Object.value_);
-		this->dataContainer->instructions_->push_back(SET_DATA);
-		//this->dataContainer->instructions_->push_back(COPY_SCOPE);
+		for (ExprNode* node : *_node->U.Call.args_)
+		{
+			VISIT_(exprs, node);
+		}
 
-		this->dataContainer->data_->push_back(_node->U.Call.name_->U.Object.value_);
-		this->dataContainer->instructions_->push_back(SET_DATA);
-		this->dataContainer->instructions_->push_back(GET_SCOPE);
+		AlifObject* size_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+		size_->V.NumberObj.numberValue = _node->U.Call.args_->size();
+		dataContainer->data_->push_back(size_);
+		dataContainer->instructions_->push_back(SET_DATA);
 	}
 	else
 	{
-		if (_node->U.Call.args_)
-		{
-			for (ExprNode* node : *_node->U.Call.args_)
-			{
-				VISIT_(exprs, node);
-			}
-
-			AlifObject* size_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
-			size_->V.NumberObj.numberValue = _node->U.Call.args_->size();
-			dataContainer->data_->push_back(size_);
-			dataContainer->instructions_->push_back(SET_DATA);
-		}
-		else
-		{
-			AlifObject* size_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
-			size_->V.NumberObj.numberValue = 0;
-			dataContainer->data_->push_back(size_);
-			dataContainer->instructions_->push_back(SET_DATA);
-		}
+		AlifObject* size_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+		size_->V.NumberObj.numberValue = 0;
+		dataContainer->data_->push_back(size_);
+		dataContainer->instructions_->push_back(SET_DATA);
+	}
 	
-		this->dataContainer->data_->push_back(_node->U.Call.name_->U.Object.value_);
-		this->dataContainer->instructions_->push_back(SET_DATA);
-		this->dataContainer->instructions_->push_back(ENTER_SCOPE);
+	AlifObject* nameObject = _node->U.Call.name_->U.Object.value_;
+	this->dataContainer->data_->push_back(nameObject);
+	this->dataContainer->instructions_->push_back(SET_DATA);
+	this->dataContainer->instructions_->push_back(ENTER_SCOPE);
 
-		this->dataContainer->data_->push_back(_node->U.Call.name_->U.Object.value_);
-		this->dataContainer->instructions_->push_back(SET_DATA);
-		this->dataContainer->instructions_->push_back(GET_DATA);
+	this->dataContainer->data_->push_back(nameObject);
+	this->dataContainer->instructions_->push_back(SET_DATA);
+	this->dataContainer->instructions_->push_back(GET_DATA);
 
-		this->dataContainer->instructions_->push_back(CALL_NAME);
+	this->dataContainer->instructions_->push_back(CALL_NAME);
 
-		if (_node->U.Call.func_)
-		{
-			VISIT_(exprs, _node->U.Call.func_);
-		}
-
-		this->dataContainer->instructions_->push_back(EXIT_SCOPE);
+	if (_node->U.Call.func_)
+	{
+		VISIT_(exprs, _node->U.Call.func_);
 	}
 
+	if (isAssignFlag)
+	{
+		this->dataContainer->data_->push_back(nameObject);
+		this->dataContainer->instructions_->push_back(SET_DATA);
+		this->dataContainer->instructions_->push_back(GET_DATA);
+	}
+
+	this->dataContainer->instructions_->push_back(EXIT_SCOPE);
 }
 
 AlifObject* Compiler::visit_return_(ExprNode* _node)

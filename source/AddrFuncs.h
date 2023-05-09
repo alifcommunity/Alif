@@ -53,7 +53,6 @@ void copy_scope();
 void enter_scope();
 void get_scope();
 void exit_scope();
-//void restore_scope();
 
 void call_name();
 void return_expr();
@@ -112,7 +111,6 @@ const Instructions_func instr_funcs[] = {
 	enter_scope,
 	get_scope,
 	exit_scope,
-	//restore_scope,
 
 	call_name,
 	return_expr,

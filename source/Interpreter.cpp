@@ -667,11 +667,11 @@ void create_scope()
 }
 void copy_scope()
 {
-	AlifObject* a = stackMemory->pop();
+	//AlifObject* a = stackMemory->pop();
 	//stackMemory->swap();
 	//AlifObject* b = stackMemory->pop();
 
-	namesTable->copy_scope(a->V.NameObj.name_);
+	//namesTable->copy_scope(a->V.NameObj.name_);
 }
 void enter_scope()
 {
@@ -679,7 +679,6 @@ void enter_scope()
 
 	if (!namesTable->enter_scope(name_->V.NameObj.name_)) 
 	{
-
 		PRINT_(L"لم يتمكن من الدخول الى النطاق"); exit(-1);
 	}
 }
@@ -700,10 +699,6 @@ void exit_scope()
 {
 	namesTable->exit_scope();
 }
-//void restore_scope()
-//{
-//	namesTable->restore_scope();
-//}
 
 bool returnFlag = false;
 void call_name()
