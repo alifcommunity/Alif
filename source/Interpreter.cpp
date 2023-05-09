@@ -659,51 +659,20 @@ void jump_for()
 	}
 }
 
-void create_scope()
-{
-	AlifObject* name_ = stackMemory->pop();
-
-	namesTable->create_scope(name_->V.NameObj.name_);
-}
-void copy_scope()
-{
-	AlifObject* a = stackMemory->pop();
-	//stackMemory->swap();
-	//AlifObject* b = stackMemory->pop();
-
-	namesTable->copy_scope(a->V.NameObj.name_);
-}
 void enter_scope()
 {
 	AlifObject* name_ = stackMemory->pop();
 
 	if (!namesTable->enter_scope(name_->V.NameObj.name_)) 
 	{
-
 		PRINT_(L"لم يتمكن من الدخول الى النطاق"); exit(-1);
 	}
 }
-void get_scope()
-{
-	AlifObject* name_ = stackMemory->pop();
-	AlifObject* data_{};
 
-	if (namesTable->enter_scope(name_->V.NameObj.name_))
-	{
-		data_ = namesTable->get_object(name_->V.NameObj.name_);
-		namesTable->exit_scope();
-	}
-
-	stackMemory->push(data_);
-}
 void exit_scope()
 {
 	namesTable->exit_scope();
 }
-//void restore_scope()
-//{
-//	namesTable->restore_scope();
-//}
 
 bool returnFlag = false;
 void call_name()

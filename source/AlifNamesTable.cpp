@@ -5,6 +5,7 @@ AlifNamesTable::AlifNamesTable()
     globalScope = new Scope();
     globalScope->parent = nullptr;
     globalScope->names = new std::map<wcstr*, AlifObject*>();
+    globalScope->scopes = new std::map<wcstr*, Scope*>();
     currentScope = globalScope;
 }
 
@@ -38,17 +39,30 @@ void AlifNamesTable::create_scope(wcstr* _name)
     Scope* newScope = new Scope();
     newScope->parent = currentScope;
     newScope->names = new std::map<wcstr*, AlifObject*>();
-    currentScope->scopes.insert({ _name,newScope });
+    newScope->scopes = new std::map<wcstr*, Scope*>();
+    currentScope->scopes->insert({ _name,newScope });
 }
 
 bool AlifNamesTable::enter_scope(wcstr* _name)
 {
-    if (Is_Scope_Exist(currentScope, _name)) // اذا كان الاسم موجود -> قم بالدخول في نطاق الاسم
-    { 
-        currentScope = Get_Scope(currentScope, _name);
+    //if (Is_Scope_Exist(currentScope, _name)) // اذا كان الاسم موجود -> قم بالدخول في نطاق الاسم
+    //{ 
+    //    currentScope = Get_Scope(currentScope, _name);
+    //    depth_recursion++;
+    //    return true;
+    //} 
+    //else { return false; }
+    Scope* scope_ = currentScope;
+    while (!Is_Scope_Exist(scope_, _name)) // اذا كان الاسم موجود -> قم بالدخول في نطاق الاسم
+    {
+        scope_ = scope_->parent;
+    }
+    if (Is_Scope_Exist(scope_, _name))
+    {
+        currentScope = Get_Scope(scope_, _name);
         depth_recursion++;
-        return true; 
-    } 
+        return true;
+    }
     else { return false; }
 }
 
@@ -60,7 +74,7 @@ bool AlifNamesTable::exit_scope()
         currentScope = currentScope->parent;
         depth_recursion--;
         return true; 
-    } 
+    }
     else { return false; }
 }
 
@@ -91,25 +105,38 @@ AlifObject* AlifNamesTable::get_object(wcstr* _name) {
     return nullptr;
 }
 
-void AlifNamesTable::copy_scope(wcstr* a)
+
+void AlifNamesTable::copy_scope(wcstr* a, wcstr* b)
 {
     Scope* scope_ = currentScope;
     std::map<wcstr*, AlifObject*>* names_{};
-    std::map<wcstr*, Scope*> scopes_{};
+    std::map<wcstr*, Scope*>* scopes_{};
     Scope* parent_{};
 
-    Scope* aScope = scope_->scopes[a];
+    bool aScope = scope_->scopes->count(a) != 0;
     while (!aScope)
     {
         scope_ = scope_->parent;
-        aScope = scope_->scopes[a];
+        aScope = scope_->scopes->count(a) != 0;
     }
     if (aScope)
     {
-        Scope* bScope = currentScope->scopes[a] = new Scope();
-        bScope->names = aScope->names;
-        bScope->scopes = aScope->scopes;
-        bScope->parent = new Scope(*currentScope);
+        if (!b)
+        {
+            Scope* bScope = new Scope();
+            bScope->names = scope_->scopes->at(a)->names;
+            bScope->scopes = scope_->scopes->at(a)->scopes;
+            bScope->parent = new Scope(*currentScope);
+            currentScope->scopes->insert({a,bScope});
+        }
+        else
+        {
+            Scope* bScope = new Scope();
+            bScope->names = scope_->scopes->at(a)->names;
+            bScope->scopes = scope_->scopes->at(a)->scopes;
+            bScope->parent = new Scope(*currentScope);
+            currentScope->scopes->insert({b,bScope});
+        }
     }
 }
 
@@ -272,11 +299,24 @@ void table_call_prepare(std::vector<StmtsNode*>* _statements, AlifNamesTable* _n
     }
 }
 
+bool assignFlag = false;
+wcstr* assignName;
+void visit_assign_call(ExprNode* _node, AlifNamesTable* _namesTable)
+{
+    assignFlag = true;
+    for (AlifObject* name : *_node->U.NameAssign.name_)
+    {
+        assignName = name->V.NameObj.name_;
+        VISIT_(exprs_call ,_node->U.NameAssign.value_, _namesTable);
+    }
+    assignFlag = false;
+}
 void visit_call(ExprNode* _node, AlifNamesTable* _namesTable)
 {
     wcstr* callName = _node->U.Call.name_->U.Object.value_->V.NameObj.name_;
-    //_namesTable->create_name(callName, nullptr);
-    _namesTable->copy_scope(callName);
+    if (!assignFlag)
+    { _namesTable->copy_scope(callName, nullptr); }
+    else { _namesTable->copy_scope(callName, assignName); }
 }
 
 void visit_function_call(StmtsNode* _node, AlifNamesTable* _namesTable)
@@ -307,7 +347,11 @@ void visit_class_call(StmtsNode* _node, AlifNamesTable* _namesTable)
 
 void visit_exprs_call(ExprNode* _node, AlifNamesTable* _namesTable)
 {
-    if (_node->type_ == VTCall)
+    if (_node->type_ == VTAssign)
+    {
+        VISIT_(assign_call, _node, _namesTable);
+    }
+    else if (_node->type_ == VTCall)
     {
         VISIT_(call, _node, _namesTable);
     }
