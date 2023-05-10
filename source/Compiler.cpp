@@ -312,14 +312,14 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 	return left;
 }
 
-AlifObject* assignName{};
+AlifStack<AlifObject*> assignName = AlifStack<AlifObject*>(1024);
 void Compiler::visit_assign(ExprNode* _node)
 {
 	isAssignFlag = true; // علم خاص بعملية الاستدعاء
 	
 	for (AlifObject* n : *_node->U.NameAssign.name_)
 	{
-		assignName = n;
+		assignName.push(n);
 		VISIT_(exprs,_node->U.NameAssign.value_);
 
 		dataContainer->data_->push_back(n);
@@ -884,7 +884,7 @@ void Compiler::visit_call(ExprNode* _node)
 
 	if (isAssignFlag)
 	{
-		this->dataContainer->data_->push_back(assignName);
+		this->dataContainer->data_->push_back(assignName.pop());
 		this->dataContainer->instructions_->push_back(SET_DATA);
 		this->dataContainer->instructions_->push_back(ENTER_SCOPE);
 
