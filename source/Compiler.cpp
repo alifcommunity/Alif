@@ -374,13 +374,15 @@ AlifObject* Compiler::visit_access(ExprNode* _node)
 	return _node->U.NameAccess.name_;
 }
 
-void Compiler::visit_attr(ExprNode* _node)
+AlifObject* Compiler::visit_attr(ExprNode* _node)
 {
 	attrFlag = true;
-	VISIT_(exprs, _node->U.Attr.name_);
+	AlifObject* name = VISIT_(exprs, _node->U.Attr.name_);
 	if (_node->U.Attr.next_->type_ == VTAccess) attrFlag = false;
 	VISIT_(exprs, _node->U.Attr.next_);
 	dataContainer->instructions_->push_back(EXIT_SCOPE);
+
+	return name;
 }
 
 void Compiler::visit_expr(ExprNode* _node)
