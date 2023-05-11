@@ -43,7 +43,7 @@ public:
 	void visit_expr(ExprNode*);
 	void visit_list(ExprNode*);
 	void visit_call(ExprNode*);
-	void visit_attr(ExprNode*);
+	AlifObject* visit_attr(ExprNode*);
 	AlifObject* visit_return_(ExprNode*);
 	void visit_stop();
 	void visit_continue_();
