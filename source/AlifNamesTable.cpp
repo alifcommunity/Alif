@@ -43,6 +43,7 @@ void AlifNamesTable::create_scope(wcstr* _name)
     currentScope->scopes->insert({ _name,newScope });
 }
 
+AlifStack<Scope*> scopeStack = AlifStack<Scope*>(256);
 bool AlifNamesTable::enter_scope(wcstr* _name)
 {
     //if (Is_Scope_Exist(currentScope, _name)) // اذا كان الاسم موجود -> قم بالدخول في نطاق الاسم
@@ -52,34 +53,41 @@ bool AlifNamesTable::enter_scope(wcstr* _name)
     //    return true;
     //} 
     //else { return false; }
-    Scope* scope_ = currentScope;
-    while (!Is_Scope_Exist(scope_, _name)) // اذا كان الاسم موجود -> قم بالدخول في نطاق الاسم
+
+    scopeStack.push(currentScope);
+    while (!Is_Scope_Exist(currentScope, _name)) // اذا كان الاسم موجود -> قم بالدخول في نطاق الاسم
     {
-        if(Is_Global_Scope(scope_))
+        if(Is_Global_Scope(currentScope))
         {
             break;
         }
-        scope_ = scope_->parent;
+        currentScope = currentScope->parent;
     }
-    if (Is_Scope_Exist(scope_, _name))
+    if (Is_Scope_Exist(currentScope, _name))
     {
-        currentScope = Get_Scope(scope_, _name);
+        currentScope = Get_Scope(currentScope, _name);
         depth_recursion++;
         return true;
     }
-    else { return false; }
+    return false;
 }
 
 
 bool AlifNamesTable::exit_scope() 
 {
-    if (!Is_Global_Scope(currentScope)) // اذا كان النطاق الاب فارغ إذاً نحن في النطاق العام ولا يمكن الخروج منه
+    //if (!Is_Global_Scope(currentScope)) // اذا كان النطاق الاب فارغ إذاً نحن في النطاق العام ولا يمكن الخروج منه
+    //{
+    //    currentScope = currentScope->parent;
+    //    depth_recursion--;
+    //    return true; 
+    //}
+    //else { return false; }
+    if (scopeStack.index_)
     {
-        currentScope = currentScope->parent;
-        depth_recursion--;
-        return true; 
+        currentScope = scopeStack.pop();
+        return true;
     }
-    else { return false; }
+    return false;
 }
 
 AlifObject* AlifNamesTable::get_object(wcstr* _name) {
@@ -112,36 +120,52 @@ AlifObject* AlifNamesTable::get_object(wcstr* _name) {
 
 void AlifNamesTable::copy_scope(wcstr* a, wcstr* b)
 {
-    Scope* scope_ = currentScope;
-    std::map<wcstr*, AlifObject*>* names_{};
-    std::map<wcstr*, Scope*>* scopes_{};
-    Scope* parent_{};
+    Scope* tmp = currentScope;
+    this->enter_scope(a);
 
-    bool aScope = scope_->scopes->count(a) != 0;
-    while (!aScope)
-    {
-        scope_ = scope_->parent;
-        aScope = scope_->scopes->count(a) != 0;
-    }
-    if (aScope)
-    {
+    //bool aScope = currentScope->scopes->count(a) != 0;
+    //while (!aScope)
+    //{
+    //    currentScope = currentScope->parent;
+    //    aScope = currentScope->scopes->count(a) != 0;
+    //}
+    //if (aScope)
+    //{
         if (!b)
         {
-            Scope* bScope = new Scope();
-            bScope->names = scope_->scopes->at(a)->names;
-            bScope->scopes = scope_->scopes->at(a)->scopes;
-            bScope->parent = new Scope(*currentScope);
-            currentScope->scopes->insert({a,bScope});
+            //Scope* bScope = new Scope();
+            //bScope->names = scope_->scopes->at(a)->names;
+            //bScope->scopes = scope_->scopes->at(a)->scopes;
+            //bScope->parent = new Scope(*currentScope);
+            //currentScope->scopes->insert({a,bScope});
         }
         else
         {
             Scope* bScope = new Scope();
-            bScope->names = scope_->scopes->at(a)->names;
-            bScope->scopes = scope_->scopes->at(a)->scopes;
-            bScope->parent = new Scope(*currentScope);
-            currentScope->scopes->insert({b,bScope});
+            bScope->names = new std::map<wcstr*, AlifObject*>(*currentScope->names);
+            bScope->scopes = new std::map<wcstr*, Scope*>(*currentScope->scopes);
+            bScope->parent = new Scope(*tmp);
+
+            for (std::pair<wcstr*, Scope*> s : *bScope->scopes)
+            {
+                s.second->parent = new Scope(*bScope);
+            }
+
+            tmp->scopes->insert({b,bScope});
+
+            currentScope = tmp;
+
+            AlifObject* aValue = currentScope->names->at(a);
+
+            for (int i = 0; i < attrBackCount; i++)
+            {
+                this->exit_scope();
+            }
+            currentScope->names->at(b) = aValue;
+
+            attrBackCount = 0;
         }
-    }
+    //}
 }
 
 
@@ -196,8 +220,8 @@ void visit_function(StmtsNode* _node, AlifNamesTable* _namesTable)
 {
     wcstr* scopeName = _node->U.FunctionDef.name_->V.NameObj.name_;
     _namesTable->create_scope(scopeName);
-    _namesTable->enter_scope(scopeName);
     _namesTable->create_name(scopeName, nullptr);
+    _namesTable->enter_scope(scopeName);
 
     _namesTable->depth_recursion++;
 
@@ -225,8 +249,8 @@ void visit_class_(StmtsNode* _node, AlifNamesTable* _namesTable)
 {
     wcstr* scopeName = _node->U.ClassDef.name_->V.NameObj.name_;
     _namesTable->create_scope(scopeName);
-    _namesTable->enter_scope(scopeName);
     _namesTable->create_name(scopeName, nullptr);
+    _namesTable->enter_scope(scopeName);
 
     _namesTable->depth_recursion++;
 
@@ -243,10 +267,6 @@ void visit_exprs(ExprNode* _node, AlifNamesTable* _namesTable)
     {
         VISIT_(assign, _node, _namesTable);
     }
-    //if (_node->type_ == VTCall)
-    //{
-    //    VISIT_(call, _node, _namesTable);
-    //}
     //else if (_node->type_ == VTAccess) // يمكن ان تستخدم لمعرفة ما إذا كان الاسم تم استخدامه ام انه لم يستخدم وبالتالي يتم حذفه في النهاية لانه لا فائدة منه
 }
 
@@ -317,13 +337,14 @@ void visit_assign_call(ExprNode* _node, AlifNamesTable* _namesTable)
 }
 void visit_attr_call(ExprNode* _node, AlifNamesTable* _namesTable)
 {
+    attrBackCount++;
     //VISIT_(exprs_call, _node->U.Attr.name_, _namesTable);
-    _namesTable->enter_scope(_node->U.Attr.name_->U.NameAccess.name_->V.NameObj.name_);
-    if (_node->U.Attr.next_->type_ == VTAccess)
-    {
+    //_namesTable->enter_scope(_node->U.Attr.name_->U.NameAccess.name_->V.NameObj.name_);
+    //if (_node->U.Attr.next_->type_ == VTAccess)
+    //{
 
-    }
-    VISIT_(exprs_call, _node->U.Attr.next_, _namesTable);
+    //}
+    //VISIT_(exprs_call, _node->U.Attr.next_, _namesTable);
 
     //_namesTable->exit_scope();
 }
@@ -331,7 +352,9 @@ void visit_call(ExprNode* _node, AlifNamesTable* _namesTable)
 {
     wcstr* callName = _node->U.Call.name_->U.Object.value_->V.NameObj.name_;
     if (!assignFlag)
-    { _namesTable->copy_scope(callName, nullptr); }
+    { 
+        //_namesTable->copy_scope(callName, nullptr); 
+    }
     else { _namesTable->copy_scope(callName, assignN); }
 }
 
