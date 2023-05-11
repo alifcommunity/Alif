@@ -146,6 +146,17 @@ void AlifNamesTable::copy_scope(wcstr* a, wcstr* b)
             bScope->scopes = new std::map<wcstr*, Scope*>(*currentScope->scopes);
             bScope->parent = new Scope(*tmp);
 
+            // قسم نسخ النطاقات الداخلية لمنع حدوث تداخل في القيم
+            auto itr1 = bScope->scopes->begin();
+            auto itr2 = currentScope->scopes->begin();
+            for (;itr1 != bScope->scopes->end();)
+            {
+                itr1->second = new Scope(*itr2->second);
+                itr1++;
+                itr2++;
+            }
+            ///////////////////////////////////////
+
             for (std::pair<wcstr*, Scope*> s : *bScope->scopes)
             {
                 s.second->parent = new Scope(*bScope);
@@ -337,14 +348,16 @@ void visit_assign_call(ExprNode* _node, AlifNamesTable* _namesTable)
 }
 void visit_attr_call(ExprNode* _node, AlifNamesTable* _namesTable)
 {
-    attrBackCount++;
-    //VISIT_(exprs_call, _node->U.Attr.name_, _namesTable);
-    //_namesTable->enter_scope(_node->U.Attr.name_->U.NameAccess.name_->V.NameObj.name_);
+    if (_namesTable->enter_scope(_node->U.Attr.name_->U.NameAccess.name_->V.NameObj.name_))
+    {
+        attrBackCount++;
+    }
+    VISIT_(exprs_call, _node->U.Attr.name_, _namesTable);
     //if (_node->U.Attr.next_->type_ == VTAccess)
     //{
 
     //}
-    //VISIT_(exprs_call, _node->U.Attr.next_, _namesTable);
+    VISIT_(exprs_call, _node->U.Attr.next_, _namesTable);
 
     //_namesTable->exit_scope();
 }
