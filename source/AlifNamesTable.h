@@ -2,6 +2,7 @@
 
 #include "AlifObject.h"
 #include "AlifArray.h"
+#include "AlifStack.h"
 #include "Node.h"
 #include <map>
 
@@ -150,14 +151,11 @@ public:
 
 class AlifNamesTable 
 {
+public:
     Scope* currentScope;
     Scope* globalScope;
-
-
-public:
     uint16_t depth_recursion = 0;
-    uint16_t max_recursion = 12;
-
+    uint16_t max_recursion = 50;
 
     AlifNamesTable(); // يقوم بتهيئة النطاق العام
 
@@ -183,6 +181,7 @@ void visit_if_(StmtsNode*, AlifNamesTable*);
 void visit_function(StmtsNode*, AlifNamesTable*);
 void visit_class_(StmtsNode*, AlifNamesTable*);
 
+static uint16_t attrBackCount = 0; // عداد مرات الدخول في صفة
 void visit_exprs(ExprNode* _node, AlifNamesTable*);
 void visit_stmts(StmtsNode* _node, AlifNamesTable*);
 

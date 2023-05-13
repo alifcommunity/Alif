@@ -6,6 +6,7 @@
 template <typename T>
 class AlifStack {
 public:
+    unsigned int index_ = 0;
 
     AlifStack(const size_t _size = 131072) : size_(_size) {}
 
@@ -44,7 +45,6 @@ public:
     } // للمراجعة**
 
 private:
-    unsigned int index_ = 0;
     size_t size_;
     T* data_ = new T[size_];
 };

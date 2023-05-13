@@ -680,7 +680,10 @@ void enter_scope()
 
 void exit_scope()
 {
-	namesTable->exit_scope();
+	if (!namesTable->exit_scope())
+	{
+		PRINT_(L"لم يتمكن من الخروج من النطاق"); 
+	}
 }
 
 bool returnFlag = false;
