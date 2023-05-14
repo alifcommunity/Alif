@@ -1,9 +1,10 @@
 #define PRINT_(a){std::wcout << a << std::endl;}
+#define MS_WINDOWS
 
 #include<iostream>
 #include<string>
 
-#ifndef _WIN64
+#ifndef MS_WINDOWS
 #include<codecvt>
 #include<locale>
 #else
@@ -13,8 +14,9 @@
 #endif
 
 #include "AlifRun.h"
+#include "initConfig.h"
 
-#ifndef _WIN64
+#ifndef MS_WINDOWS
 int main(int argc, char** argv)
 {
     setlocale(LC_ALL, "en_US.UTF-8");
@@ -36,12 +38,20 @@ int main(int argc, char** argv)
 }
 #else
 
-int wmain(int argc, const wchar_t** argv)
+int wmain(int argc, wchar_t** argv)
 {
     /*
         _setmode
         تسمح للطرفية في نظام ويندوز بقراءة وكتابة الاحرف عريضة الترميز
     */
+
+    ArgvArgc args = {
+        .argc = argc,
+        .useBytesArgv = 0,
+        .bytesArgv = nullptr,
+        .argv = argv,
+    };
+
     bool outWText = _setmode(_fileno(stdout), _O_WTEXT);
     bool inWText = _setmode(_fileno(stdin), _O_WTEXT);
 
@@ -59,7 +69,7 @@ int wmain(int argc, const wchar_t** argv)
         }
 
         //file_run(argv[1]);
-        file_run(L"C:/Users/Shadow/Desktop/GitHub/Alif5/code.alif5");
+        file_run(L"C:/Users/Smoke/Documents/GitHub/Alif5/code.alif5");
     }
     else
     {
