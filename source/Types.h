@@ -96,6 +96,12 @@ enum VisitType : uint8_t { // انواع الزيارة في الشجرة
 //    STDel,
 //};
 
+enum ScopeType {
+    STNone,
+    STFunction,
+    STClass,
+};
+
 enum InstructionsType : uint8_t { // التعليمات
     NONE,
     

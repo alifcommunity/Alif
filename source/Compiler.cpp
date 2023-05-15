@@ -312,20 +312,25 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 	return left;
 }
 
-AlifStack<AlifObject*> assignName = AlifStack<AlifObject*>(1024);
+AlifObject* assignName;
 void Compiler::visit_assign(ExprNode* _node)
 {
 	isAssignFlag = true; // علم خاص بعملية الاستدعاء
 	
 	for (AlifObject* n : *_node->U.NameAssign.name_)
 	{
-		assignName.push(n);
+		assignName = n;
 		VISIT_(exprs,_node->U.NameAssign.value_);
 
-		dataContainer->data_->push_back(n);
-		dataContainer->instructions_->push_back(SET_DATA); // خزن الاسم في المكدس
-
-		dataContainer->instructions_->push_back(STORE_NAME);
+		if (!isCallFlag)
+		{
+			dataContainer->data_->push_back(n);
+			dataContainer->instructions_->push_back(SET_DATA); // خزن الاسم في المكدس
+			dataContainer->instructions_->push_back(STORE_NAME);
+		}
+		else {
+			isCallFlag = false;
+		}
 	}
 
 	isAssignFlag = false;
@@ -374,13 +379,17 @@ AlifObject* Compiler::visit_access(ExprNode* _node)
 	return _node->U.NameAccess.name_;
 }
 
-void Compiler::visit_attr(ExprNode* _node)
+AlifObject* Compiler::visit_attr(ExprNode* _node)
 {
 	attrFlag = true;
-	VISIT_(exprs, _node->U.Attr.name_);
-	if (_node->U.Attr.next_->type_ == VTAccess) attrFlag = false;
+	AlifObject* name = VISIT_(exprs, _node->U.Attr.name_);
+	if (_node->U.Attr.next_->type_ == VTAccess or _node->U.Attr.next_->type_ == VTCall)
+	{ attrFlag = false; }
 	VISIT_(exprs, _node->U.Attr.next_);
+
 	dataContainer->instructions_->push_back(EXIT_SCOPE);
+
+	return name;
 }
 
 void Compiler::visit_expr(ExprNode* _node)
@@ -429,7 +438,7 @@ void Compiler::visit_list(ExprNode* _node)
 AlifObject* instrAddressForStop = new AlifObject[18];
 AlifObject* dataAddressForStop = new AlifObject[18];
 size_t stopLevel = 0;
-void Compiler::visit_stop()
+void Compiler::visit_stop(ExprNode* _node)
 {
 	AlifObject* instrAFS = (instrAddressForStop + stopLevel);
 	AlifObject* dataAFS = (dataAddressForStop + stopLevel);
@@ -446,7 +455,7 @@ void Compiler::visit_stop()
 AlifObject* instrAddressForContinue = new AlifObject[18];
 AlifObject* dataAddressForContinue = new AlifObject[18];
 size_t continueLevel = 0;
-void Compiler::visit_continue_()
+void Compiler::visit_continue_(ExprNode* _node)
 {
 	// يجب القفز الى عنوان بداية الحلقة أي إعادة تكرارها من جديد
 
@@ -740,7 +749,7 @@ void Compiler::visit_while_(StmtsNode* _node)
 	//////////////////////////////
 }
 
-AlifStack<Container*> funcDepth = AlifStack<Container*>(1024);
+AlifStack<Container*> funcDepth = AlifStack<Container*>(512);
 void Compiler::visit_function(StmtsNode* _node)
 {
 	funcDepth.push(dataContainer); // نسخ احتياطي في حال تم تعريف دالة داخل دالة
@@ -788,13 +797,12 @@ void Compiler::visit_function(StmtsNode* _node)
 	VISIT_(stmts, _node->U.FunctionDef.body_);
 
 
+	namesTable->exit_scope();
+
 	AlifObject* containerObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 	containerObject->objType = OTContainer;
 	containerObject->V.ContainerObj.container_ = dataContainer;
-
-
 	namesTable->assign_name(_node->U.FunctionDef.name_->V.NameObj.name_, containerObject);
-	namesTable->exit_scope();
 
 	dataContainer = funcDepth.pop(); // اعد تخزين الحالة السابقة لمتابعة العمل عليها
 }
@@ -846,13 +854,12 @@ void Compiler::visit_class_(StmtsNode* _node)
 	VISIT_(stmts, _node->U.ClassDef.body_);
 
 
+	namesTable->exit_scope();
+
 	AlifObject* containerObject = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 	containerObject->objType = OTContainer;
 	containerObject->V.ContainerObj.container_ = dataContainer;
-
-
 	namesTable->assign_name(_node->U.ClassDef.name_->V.NameObj.name_, containerObject);
-	namesTable->exit_scope();
 
 	dataContainer = funcDepth.pop();
 }
@@ -860,6 +867,7 @@ void Compiler::visit_class_(StmtsNode* _node)
 
 void Compiler::visit_call(ExprNode* _node)
 {
+	isCallFlag = true;
 	if (_node->U.Call.args_)
 	{
 		for (ExprNode* node : *_node->U.Call.args_)
@@ -884,25 +892,16 @@ void Compiler::visit_call(ExprNode* _node)
 
 	if (isAssignFlag)
 	{
-		this->dataContainer->data_->push_back(assignName.pop());
-		this->dataContainer->instructions_->push_back(SET_DATA);
-		this->dataContainer->instructions_->push_back(ENTER_SCOPE);
-
-		this->dataContainer->data_->push_back(nameObject);
-		this->dataContainer->instructions_->push_back(SET_DATA);
-		this->dataContainer->instructions_->push_back(GET_DATA);
-	}
-	else
-	{
-		this->dataContainer->data_->push_back(nameObject);
-		this->dataContainer->instructions_->push_back(SET_DATA);
-		this->dataContainer->instructions_->push_back(ENTER_SCOPE);
-
-		this->dataContainer->data_->push_back(nameObject);
-		this->dataContainer->instructions_->push_back(SET_DATA);
-		this->dataContainer->instructions_->push_back(GET_DATA);
+		nameObject = assignName;
 	}
 
+	this->dataContainer->data_->push_back(nameObject);
+	this->dataContainer->instructions_->push_back(SET_DATA);
+	this->dataContainer->instructions_->push_back(GET_DATA); // اجلب قيمة النطاق
+
+	this->dataContainer->data_->push_back(nameObject);
+	this->dataContainer->instructions_->push_back(SET_DATA);
+	this->dataContainer->instructions_->push_back(ENTER_SCOPE);
 
 	this->dataContainer->instructions_->push_back(CALL_NAME);
 
@@ -911,14 +910,14 @@ void Compiler::visit_call(ExprNode* _node)
 		VISIT_(exprs, _node->U.Call.func_);
 	}
 
-	if (isAssignFlag)
+	this->dataContainer->instructions_->push_back(EXIT_SCOPE);
+
+	if (namesTable->scope_type(_node->U.Call.name_->U.Object.value_->V.NameObj.name_) == STFunction)
 	{
 		this->dataContainer->data_->push_back(nameObject);
 		this->dataContainer->instructions_->push_back(SET_DATA);
-		this->dataContainer->instructions_->push_back(GET_DATA);
+		this->dataContainer->instructions_->push_back(STORE_NAME);
 	}
-
-	this->dataContainer->instructions_->push_back(EXIT_SCOPE);
 }
 
 AlifObject* Compiler::visit_return_(ExprNode* _node)
@@ -990,7 +989,7 @@ AlifObject* Compiler::visit_exprs(ExprNode* _node)
 		//{
 			// التحقق اذا كان داخل حلقة ام لا
 		//}
-		VISIT_(stop);
+		VISIT_(stop, _node);
 	}
 	else if (_node->type_ == VTContinue)
 	{
@@ -998,7 +997,7 @@ AlifObject* Compiler::visit_exprs(ExprNode* _node)
 		//{
 			// التحقق اذا كان داخل حلقة ام لا
 		//}
-		VISIT_(continue_);
+		VISIT_(continue_, _node);
 	}
 }
 
@@ -1117,6 +1116,6 @@ void Compiler::visit_print()
 	containerObject->objType = OTContainer;
 	containerObject->V.ContainerObj.container_ = dataCont;
 
-	namesTable->create_name(pName, containerObject);
 	namesTable->exit_scope();
+	namesTable->create_name(pName, containerObject);
 }

@@ -18,6 +18,7 @@
 
 // اعلام
 static bool isAssignFlag = false;
+static bool isCallFlag = false;
 static bool attrFlag = false;
 static bool elseIfFlag = true;
 //
@@ -43,10 +44,10 @@ public:
 	void visit_expr(ExprNode*);
 	void visit_list(ExprNode*);
 	void visit_call(ExprNode*);
-	void visit_attr(ExprNode*);
+	AlifObject* visit_attr(ExprNode*);
 	AlifObject* visit_return_(ExprNode*);
-	void visit_stop();
-	void visit_continue_();
+	void visit_stop(ExprNode*);
+	void visit_continue_(ExprNode*);
 
 	void visit_for_(StmtsNode*);
 	void visit_while_(StmtsNode*);

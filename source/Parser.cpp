@@ -1,32 +1,10 @@
 #include "Parser.h"
 
-//AlifNamesTable* symTable = new AlifNamesTable;
 
 Parser::Parser(std::vector<Token>* _tokens, wstr _fileName, wstr* _input, AlifMemory* _alifMemory) :
     tokens_(_tokens), fileName(_fileName), input_(_input), alifMemory(_alifMemory)
 {
-    // تنقية الرموز من رمز السطر الجديد غير الضروري
-    size_t size_ = tokens_->size();
-    for (size_t a = 0; a < size_;)
-    {
-        if (tokens_->at(a).type_ == TTNewline or tokens_->at(a).type_ == TTDedent)
-        {
-            a++;
-            while (a < size_ and tokens_->at(a).type_ == TTNewline)
-            {
-                tokens_->erase(tokens_->begin() + a);
-                size_--;
-            }
-        }
-        else
-        {
-            a++;
-        }
-    }
-    if (tokens_->begin()->type_ == TTNewline) { tokens_->erase(tokens_->begin()); }
-    tokens_->shrink_to_fit();
-    ///////////////////////
-    
+    tokens_->shrink_to_fit();    
     this->advance();
 }
 

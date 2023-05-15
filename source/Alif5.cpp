@@ -53,6 +53,7 @@ int wmain(int argc, wchar_t** argv)
         PRINT_(L"لم يتمكن من تحميل طباعة الملفات عريضة الاحرف - الملف Alif5.cpp");
     }
 
+    //if (argc > 1)
     if (argc > 0)
     {
         if (argc > 2)
@@ -60,9 +61,10 @@ int wmain(int argc, wchar_t** argv)
             PRINT_(L"يجب ان يتم تمرير اسم الملف فقط");
             exit(-1);
         }
-
+      
         //file_run(argv[1]);
         file_run(L"../code.alif5");
+
     }
     else
     {

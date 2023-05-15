@@ -5,6 +5,7 @@
 #include "AlifStack.h"
 #include "AddrFuncs.h"
 #include "AlifNamesTable.h"
+#include <cmath>
 
 class Interpreter {
 public:

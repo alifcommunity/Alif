@@ -2,6 +2,7 @@
 
 #include "AlifObject.h"
 #include "AlifArray.h"
+#include "AlifStack.h"
 #include "Node.h"
 #include <map>
 
@@ -146,18 +147,17 @@ public:
     std::map<wcstr*, AlifObject*>* names; // فهرس يحتوي على الاسماء وقيمها
     std::map<wcstr*, Scope*>* scopes; // فهرس يحتوي على الاسماء ونطاقاتها
     Scope* parent{ nullptr }; // كـ مصفوفة متصلة - حيث parent يشير الى النطاق التالي -
+    ScopeType scopeType = STNone;
 };
 
 class AlifNamesTable 
 {
+public:
     Scope* currentScope;
     Scope* globalScope;
-
-
-public:
-    uint16_t depth_recursion = 0;
-    uint16_t max_recursion = 12;
-
+    int depth_recursion = 0;
+    uint16_t max_recursion = 20;
+    std::map<wcstr*, Scope*> scopeNames;
 
     AlifNamesTable(); // يقوم بتهيئة النطاق العام
 
@@ -168,6 +168,7 @@ public:
     void copy_scope(wcstr* _name1, wcstr* _name2);
     bool exit_scope(); // يرجع خطوة الى الوراء في مجال النطاقات
     AlifObject* get_object(wcstr* _name); // إذا كان الاسم موجود يقوم بإرجاع قيمته
+    ScopeType scope_type(wcstr* _name); // إذا كان الاسم موجود يقوم بإرجاع قيمته
 };
 
 
@@ -183,6 +184,7 @@ void visit_if_(StmtsNode*, AlifNamesTable*);
 void visit_function(StmtsNode*, AlifNamesTable*);
 void visit_class_(StmtsNode*, AlifNamesTable*);
 
+static uint16_t attrBackCount = 0; // عداد مرات الدخول في صفة
 void visit_exprs(ExprNode* _node, AlifNamesTable*);
 void visit_stmts(StmtsNode* _node, AlifNamesTable*);
 

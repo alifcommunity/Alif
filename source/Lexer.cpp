@@ -288,6 +288,25 @@ void Lexer::make_newline()
 
     this->advance();
     
+    // نظام اكتشاف السطر الفارغ
+    int idx = 0;
+    wchar_t a = this->currentChar;
+    if (a == L'\n') // اذا كان الحرف الذي يلي حرف سطر جديد هو سطر جديد يقوم بتخطيه
+    {
+        return;
+    }
+    while (a == L'\t' or a == L' ') // بينما الحرف الذي يلي حرف سطر جديد هو مسافة او بادئة يتقدم حتى يصل إما لسطر جديد فيخرج او لحرف اخر فيكمل عمله
+    {
+        idx++;
+        a = (*this->input_)[this->tokIndex + idx];
+
+        if (a == L'\n')
+        {
+            return;
+        }
+    }
+    /////////////////////////////////////////
+
     this->tokens_.push_back(Token(tokLine, posStart, posStart, tokIndex, TTNewline));
 
     this->make_indent();
