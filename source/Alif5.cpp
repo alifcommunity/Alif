@@ -45,13 +45,6 @@ int wmain(int argc, wchar_t** argv)
         تسمح للطرفية في نظام ويندوز بقراءة وكتابة الاحرف عريضة الترميز
     */
 
-    ArgvArgc args = {
-        .argc = argc,
-        .useBytesArgv = 0,
-        .bytesArgv = nullptr,
-        .argv = argv,
-    };
-
     bool outWText = _setmode(_fileno(stdout), _O_WTEXT);
     bool inWText = _setmode(_fileno(stdin), _O_WTEXT);
 
@@ -69,7 +62,7 @@ int wmain(int argc, wchar_t** argv)
         }
 
         //file_run(argv[1]);
-        file_run(L"C:/Users/Smoke/Documents/GitHub/Alif5/code.alif5");
+        file_run(L"../code.alif5");
     }
     else
     {
