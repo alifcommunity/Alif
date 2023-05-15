@@ -41,19 +41,13 @@ void AlifNamesTable::create_scope(wcstr* _name)
     newScope->names = new std::map<wcstr*, AlifObject*>();
     newScope->scopes = new std::map<wcstr*, Scope*>();
     currentScope->scopes->insert({ _name,newScope });
+
+    scopeNames.insert({ _name,newScope }); // من اجل البحث في اسماء وانواع النطاقات
 }
 
 AlifStack<Scope*> scopeStack = AlifStack<Scope*>(256);
 bool AlifNamesTable::enter_scope(wcstr* _name)
 {
-    //if (Is_Scope_Exist(currentScope, _name)) // اذا كان الاسم موجود -> قم بالدخول في نطاق الاسم
-    //{ 
-    //    currentScope = Get_Scope(currentScope, _name);
-    //    depth_recursion++;
-    //    return true;
-    //} 
-    //else { return false; }
-
     scopeStack.push(currentScope);
     while (!Is_Scope_Exist(currentScope, _name)) // اذا كان الاسم موجود -> قم بالدخول في نطاق الاسم
     {
@@ -75,17 +69,18 @@ bool AlifNamesTable::enter_scope(wcstr* _name)
 
 bool AlifNamesTable::exit_scope() 
 {
-    //if (!Is_Global_Scope(currentScope)) // اذا كان النطاق الاب فارغ إذاً نحن في النطاق العام ولا يمكن الخروج منه
-    //{
-    //    currentScope = currentScope->parent;
-    //    depth_recursion--;
-    //    return true; 
-    //}
-    //else { return false; }
+
     if (scopeStack.index_)
     {
         currentScope = scopeStack.pop();
+        depth_recursion--;
         return true;
+    }
+    if (!Is_Global_Scope(currentScope)) // اذا كان النطاق الاب فارغ إذاً نحن في النطاق العام ولا يمكن الخروج منه
+    {
+        currentScope = currentScope->parent;
+        depth_recursion--;
+        return true; 
     }
     return false;
 }
@@ -145,6 +140,7 @@ void AlifNamesTable::copy_scope(wcstr* a, wcstr* b)
             bScope->names = new std::map<wcstr*, AlifObject*>(*currentScope->names);
             bScope->scopes = new std::map<wcstr*, Scope*>(*currentScope->scopes);
             bScope->parent = new Scope(*tmp);
+            bScope->scopeType = currentScope->scopeType;
 
             // قسم نسخ النطاقات الداخلية لمنع حدوث تداخل في القيم
             auto itr1 = bScope->scopes->begin();
@@ -166,9 +162,9 @@ void AlifNamesTable::copy_scope(wcstr* a, wcstr* b)
 
             currentScope = tmp;
 
-            AlifObject* aValue = currentScope->names->at(a);
+            AlifObject* aValue = this->get_object(a);
 
-            for (int i = 0; i < attrBackCount; i++)
+            for (int i = 0; i < attrBackCount + 1; i++)
             {
                 this->exit_scope();
             }
@@ -177,6 +173,19 @@ void AlifNamesTable::copy_scope(wcstr* a, wcstr* b)
             attrBackCount = 0;
         }
     //}
+}
+
+
+ScopeType AlifNamesTable::scope_type(wcstr* _name)
+{
+    for (std::pair<wcstr*, Scope*> s : scopeNames)
+    {
+        if (s.first == _name)
+        {
+            return s.second->scopeType;
+        }
+    }
+
 }
 
 
@@ -233,8 +242,7 @@ void visit_function(StmtsNode* _node, AlifNamesTable* _namesTable)
     _namesTable->create_scope(scopeName);
     _namesTable->create_name(scopeName, nullptr);
     _namesTable->enter_scope(scopeName);
-
-    _namesTable->depth_recursion++;
+    _namesTable->currentScope->scopeType = STFunction;
 
     if (_node->U.FunctionDef.params_)
     {
@@ -254,7 +262,6 @@ void visit_function(StmtsNode* _node, AlifNamesTable* _namesTable)
     VISIT_(stmts, _node->U.FunctionDef.body_ , _namesTable);
 
     _namesTable->exit_scope();
-    _namesTable->depth_recursion--;
 }
 void visit_class_(StmtsNode* _node, AlifNamesTable* _namesTable)
 {
@@ -262,13 +269,11 @@ void visit_class_(StmtsNode* _node, AlifNamesTable* _namesTable)
     _namesTable->create_scope(scopeName);
     _namesTable->create_name(scopeName, nullptr);
     _namesTable->enter_scope(scopeName);
-
-    _namesTable->depth_recursion++;
+    _namesTable->currentScope->scopeType = STClass;
 
     VISIT_(stmts, _node->U.ClassDef.body_, _namesTable);
 
     _namesTable->exit_scope();
-    _namesTable->depth_recursion--;
 }
 
 
@@ -359,7 +364,7 @@ void visit_attr_call(ExprNode* _node, AlifNamesTable* _namesTable)
     //}
     VISIT_(exprs_call, _node->U.Attr.next_, _namesTable);
 
-    //_namesTable->exit_scope();
+    _namesTable->exit_scope();
 }
 void visit_call(ExprNode* _node, AlifNamesTable* _namesTable)
 {
@@ -376,24 +381,18 @@ void visit_function_call(StmtsNode* _node, AlifNamesTable* _namesTable)
     wcstr* scopeName = _node->U.FunctionDef.name_->V.NameObj.name_;
     _namesTable->enter_scope(scopeName);
 
-    _namesTable->depth_recursion++;
-
     VISIT_(stmts_call, _node->U.FunctionDef.body_, _namesTable);
 
     _namesTable->exit_scope();
-    _namesTable->depth_recursion--;
 }
 void visit_class_call(StmtsNode* _node, AlifNamesTable* _namesTable)
 {
     wcstr* scopeName = _node->U.ClassDef.name_->V.NameObj.name_;
     _namesTable->enter_scope(scopeName);
 
-    _namesTable->depth_recursion++;
-
     VISIT_(stmts_call, _node->U.ClassDef.body_, _namesTable);
 
     _namesTable->exit_scope();
-    _namesTable->depth_recursion--;
 }
 
 

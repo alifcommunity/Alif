@@ -63,17 +63,38 @@ void file_run(char* _fileName) {
 
     input_.shrink_to_fit(); // بعد التأكد ان المدخلات لم تعد قابلة للتغيير يتم عمل تحجيم لها لتصبح كأنها ثابته فيسهل التعامل معها من قبل البرنامج
 
-    // المركب اللغوي
+    //// المعرب اللغوي
     /////////////////////////////////////////////////////////////////
 
     Lexer lexer(fileName, &input_);
     lexer.make_token();
 
-    // المحلل اللغوي
+    //// المحلل اللغوي
     /////////////////////////////////////////////////////////////////
 
-    Parser parser = Parser(&lexer.tokens_, fileName, &input_);
+    Parser parser = Parser(&lexer.tokens_, fileName, &input_, &lexer.alifMemory);
     parser.parse_file();
+
+    //// تهيئة جدول الاسماء
+    ///////////////////////////////////////////////////////////////////
+
+    AlifNamesTable* namesTable = new AlifNamesTable();
+
+    //// المترجم اللغوي
+    ///////////////////////////////////////////////////////////////////
+
+    Compiler compiler = Compiler(&parser.statements_, &lexer.alifMemory, namesTable);
+    compiler.visit_print(); // يجب إيجاد نظام لها
+    table_names_prepare(&parser.statements_, namesTable); // تم نقله هنا ليتم تهيئة اسماء الدوال الضمنية من ثم نسخ النطاقات
+    compiler.compile_file();
+    table_call_prepare(&parser.statements_, namesTable); // لاعداد اسناد قيم الاستدعاء بعد تهيئة الدوال
+    
+    //// المفسر اللغوي
+    ///////////////////////////////////////////////////////////////////
+
+    Interpreter interpreter = Interpreter(&compiler.containers_, &lexer.alifMemory, namesTable);
+    interpreter.run_code();
+
 }
 
 void terminal_run() {
@@ -84,6 +105,8 @@ void terminal_run() {
     wstr input_;
     
     PRINT_(about_);
+
+    AlifNamesTable* namesTable = new AlifNamesTable();
 
     while (true) {
 
@@ -96,20 +119,34 @@ void terminal_run() {
             exit(0);
         }
 
-        // المركب اللغوي
+        //// المعرب اللغوي
         /////////////////////////////////////////////////////////////////
 
         Lexer lexer(fileName, &input_);
         lexer.make_token();
 
-        // المحلل اللغوي
+        //// المحلل اللغوي
         /////////////////////////////////////////////////////////////////
 
-        Parser parser = Parser(&lexer.tokens_, fileName, &input_);
-        parser.parse_terminal();
+        Parser parser = Parser(&lexer.tokens_, fileName, &input_, &lexer.alifMemory);
+        parser.parse_file();
+
+        //// المترجم اللغوي
+        ///////////////////////////////////////////////////////////////////
+
+        Compiler compiler = Compiler(&parser.statements_, &lexer.alifMemory, namesTable);
+        compiler.visit_print(); // يجب إيجاد نظام لها
+        table_names_prepare(&parser.statements_, namesTable); // تم نقله هنا ليتم تهيئة اسماء الدوال الضمنية من ثم نسخ النطاقات
+        compiler.compile_file();
+        table_call_prepare(&parser.statements_, namesTable); // لاعداد اسناد قيم الاستدعاء بعد تهيئة الدوال
+        
+        //// المفسر اللغوي
+        ///////////////////////////////////////////////////////////////////
+
+        Interpreter interpreter = Interpreter(&compiler.containers_, &lexer.alifMemory, namesTable);
+        interpreter.run_code();
 
         // std::wcin.ignore(); // لمنع ارسال قيمة فارغة في المتغير input_ ** يجب إضافة شرط في حال كان المدخل غير فارغ يجب ان يقوم بعمل تجاهل له
-
     }
 }
 
@@ -210,56 +247,60 @@ void file_run(const wchar_t* _fileName) {
 void terminal_run() 
 {
 
-//    wstr fileName = L"<طرفية>";
-//    const wstr about_ = L"ألف نـ5.0.0";
-//
-//    wstr input_;
-//
-//    PRINT_(about_);
-//
-//    while (true) {
-//
-//        std::wcout << L"ألف -> ";
-//
-//        std::getline(std::wcin, input_);
-//        input_ += L'\n';
-//
-//        if (input_ == L"خروج\n")
-//        {
-//            exit(0);
-//        }
-//
-//        // المعرب اللغوي
-//        /////////////////////////////////////////////////////////////////
-//
-//        Lexer lexer(fileName, &input_);
-//        lexer.make_token();
-//
-//        // المحلل اللغوي
-//        /////////////////////////////////////////////////////////////////
-//
-//        Parser parser = Parser(&lexer.tokens_, fileName, &input_, &lexer.alifMemory);
-//        parser.parse_terminal();
-//        
-//        // المترجم اللغوي
-//        /////////////////////////////////////////////////////////////////
-//
-//        Compiler compiler = Compiler(&parser.statements_, &lexer.alifMemory);
-//        compiler.compile_file();
-//
-//        // المفسر اللغوي
-//        /////////////////////////////////////////////////////////////////
-//
-//        auto start = std::chrono::high_resolution_clock::now();
-//        
-//        Interpreter interpreter = Interpreter(&compiler.containers_, &lexer.alifMemory);
-//        interpreter.run_code();
-//
-//        auto end = std::chrono::high_resolution_clock::now();
-//        auto elapsed_seconds = end - start;
-//        std::wcout << elapsed_seconds << std::endl;
-//
-//        // std::wcin.ignore(); // لمنع ارسال قيمة فارغة في المتغير input_ ** يجب إضافة شرط في حال كان المدخل غير فارغ يجب ان يقوم بعمل تجاهل له
-//    }
+    wstr fileName = L"<طرفية>";
+    const wstr about_ = L"ألف نـ5.0.0";
+
+    wstr input_;
+
+    PRINT_(about_);
+
+    AlifNamesTable* namesTable = new AlifNamesTable(); // لمنع حذف المتغيرات المعرفة عند تكرار الحلقة
+
+    while (true) {
+
+        std::wcout << L"ألف -> ";
+
+        std::getline(std::wcin, input_);
+        input_ += L'\n';
+
+        if (input_ == L"خروج\n")
+        {
+            exit(0);
+        }
+
+        //// المعرب اللغوي
+        /////////////////////////////////////////////////////////////////
+
+        Lexer lexer(fileName, &input_);
+        lexer.make_token();
+
+        //// المحلل اللغوي
+        /////////////////////////////////////////////////////////////////
+
+        Parser parser = Parser(&lexer.tokens_, fileName, &input_, &lexer.alifMemory);
+        parser.parse_file();
+
+        //// المترجم اللغوي
+        ///////////////////////////////////////////////////////////////////
+
+        Compiler compiler = Compiler(&parser.statements_, &lexer.alifMemory, namesTable);
+        compiler.visit_print(); // يجب إيجاد نظام لها
+        table_names_prepare(&parser.statements_, namesTable); // تم نقله هنا ليتم تهيئة اسماء الدوال الضمنية من ثم نسخ النطاقات
+        compiler.compile_file();
+        table_call_prepare(&parser.statements_, namesTable); // لاعداد اسناد قيم الاستدعاء بعد تهيئة الدوال
+        //// المفسر اللغوي
+        ///////////////////////////////////////////////////////////////////
+
+        auto start = std::chrono::high_resolution_clock::now();
+
+        Interpreter interpreter = Interpreter(&compiler.containers_, &lexer.alifMemory, namesTable);
+        interpreter.run_code();
+
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsed_seconds = end - start;
+        std::wcout << elapsed_seconds << std::endl;
+
+        // std::wcin.ignore(); // لمنع ارسال قيمة فارغة في المتغير input_ ** يجب إضافة شرط في حال كان المدخل غير فارغ يجب ان يقوم بعمل تجاهل له
+    }
 }
 #endif

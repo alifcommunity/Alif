@@ -312,14 +312,14 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 	return left;
 }
 
-AlifStack<AlifObject*> assignName = AlifStack<AlifObject*>(256);
+AlifObject* assignName;
 void Compiler::visit_assign(ExprNode* _node)
 {
 	isAssignFlag = true; // علم خاص بعملية الاستدعاء
 	
 	for (AlifObject* n : *_node->U.NameAssign.name_)
 	{
-		assignName.push(n);
+		assignName = n;
 		VISIT_(exprs,_node->U.NameAssign.value_);
 
 		if (!isCallFlag)
@@ -378,15 +378,16 @@ AlifObject* Compiler::visit_access(ExprNode* _node)
 
 	return _node->U.NameAccess.name_;
 }
-int exitScopeAttr = 0;
+
 AlifObject* Compiler::visit_attr(ExprNode* _node)
 {
 	attrFlag = true;
 	AlifObject* name = VISIT_(exprs, _node->U.Attr.name_);
-	exitScopeAttr++;
 	if (_node->U.Attr.next_->type_ == VTAccess or _node->U.Attr.next_->type_ == VTCall)
 	{ attrFlag = false; }
 	VISIT_(exprs, _node->U.Attr.next_);
+
+	dataContainer->instructions_->push_back(EXIT_SCOPE);
 
 	return name;
 }
@@ -437,7 +438,7 @@ void Compiler::visit_list(ExprNode* _node)
 AlifObject* instrAddressForStop = new AlifObject[18];
 AlifObject* dataAddressForStop = new AlifObject[18];
 size_t stopLevel = 0;
-void Compiler::visit_stop()
+void Compiler::visit_stop(ExprNode* _node)
 {
 	AlifObject* instrAFS = (instrAddressForStop + stopLevel);
 	AlifObject* dataAFS = (dataAddressForStop + stopLevel);
@@ -454,7 +455,7 @@ void Compiler::visit_stop()
 AlifObject* instrAddressForContinue = new AlifObject[18];
 AlifObject* dataAddressForContinue = new AlifObject[18];
 size_t continueLevel = 0;
-void Compiler::visit_continue_()
+void Compiler::visit_continue_(ExprNode* _node)
 {
 	// يجب القفز الى عنوان بداية الحلقة أي إعادة تكرارها من جديد
 
@@ -889,9 +890,9 @@ void Compiler::visit_call(ExprNode* _node)
 	
 	AlifObject* nameObject = _node->U.Call.name_->U.Object.value_;
 
-	if (isAssignFlag and assignName.index_)
+	if (isAssignFlag)
 	{
-		nameObject = assignName.pop();
+		nameObject = assignName;
 	}
 
 	this->dataContainer->data_->push_back(nameObject);
@@ -909,23 +910,14 @@ void Compiler::visit_call(ExprNode* _node)
 		VISIT_(exprs, _node->U.Call.func_);
 	}
 
-	//if (isAssignFlag)
-	//{
-	//	this->dataContainer->data_->push_back(nameObject);
-	//	this->dataContainer->instructions_->push_back(SET_DATA);
-	//	this->dataContainer->instructions_->push_back(GET_DATA);
-	//}
-
 	this->dataContainer->instructions_->push_back(EXIT_SCOPE);
 
-	//if (isAssignFlag)
-	//{
-	for (int i = 0; i < exitScopeAttr; i++)
+	if (namesTable->scope_type(_node->U.Call.name_->U.Object.value_->V.NameObj.name_) == STFunction)
 	{
-		this->dataContainer->instructions_->push_back(EXIT_SCOPE);
+		this->dataContainer->data_->push_back(nameObject);
+		this->dataContainer->instructions_->push_back(SET_DATA);
+		this->dataContainer->instructions_->push_back(STORE_NAME);
 	}
-	exitScopeAttr = 0;
-	//}
 }
 
 AlifObject* Compiler::visit_return_(ExprNode* _node)
@@ -997,7 +989,7 @@ AlifObject* Compiler::visit_exprs(ExprNode* _node)
 		//{
 			// التحقق اذا كان داخل حلقة ام لا
 		//}
-		VISIT_(stop);
+		VISIT_(stop, _node);
 	}
 	else if (_node->type_ == VTContinue)
 	{
@@ -1005,7 +997,7 @@ AlifObject* Compiler::visit_exprs(ExprNode* _node)
 		//{
 			// التحقق اذا كان داخل حلقة ام لا
 		//}
-		VISIT_(continue_);
+		VISIT_(continue_, _node);
 	}
 }
 
