@@ -48,10 +48,10 @@ void jump_if();
 void jump_for();
 
 
-void create_scope();
-void copy_scope();
+//void create_scope();
+//void copy_scope();
 void enter_scope();
-void get_scope();
+//void get_scope();
 void exit_scope();
 
 void call_name();
@@ -129,9 +129,9 @@ const Instructions_func instr_funcs[] = {
 // دوال الطباعة
 typedef void(*print_funcs)();
 
-void num_print();
+//void num_print();
 
-const print_funcs print_types[] = {
-	num_print,
-
-};
+//const print_funcs print_types[] = {
+//	num_print,
+//
+//};

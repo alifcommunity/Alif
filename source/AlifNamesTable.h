@@ -147,6 +147,7 @@ public:
     std::map<wcstr*, AlifObject*>* names; // فهرس يحتوي على الاسماء وقيمها
     std::map<wcstr*, Scope*>* scopes; // فهرس يحتوي على الاسماء ونطاقاتها
     Scope* parent{ nullptr }; // كـ مصفوفة متصلة - حيث parent يشير الى النطاق التالي -
+    ScopeType scopeType = STNone;
 };
 
 class AlifNamesTable 
@@ -154,8 +155,9 @@ class AlifNamesTable
 public:
     Scope* currentScope;
     Scope* globalScope;
-    uint16_t depth_recursion = 0;
-    uint16_t max_recursion = 50;
+    int depth_recursion = 0;
+    uint16_t max_recursion = 20;
+    std::map<wcstr*, Scope*> scopeNames;
 
     AlifNamesTable(); // يقوم بتهيئة النطاق العام
 
@@ -166,6 +168,7 @@ public:
     void copy_scope(wcstr* _name1, wcstr* _name2);
     bool exit_scope(); // يرجع خطوة الى الوراء في مجال النطاقات
     AlifObject* get_object(wcstr* _name); // إذا كان الاسم موجود يقوم بإرجاع قيمته
+    ScopeType scope_type(wcstr* _name); // إذا كان الاسم موجود يقوم بإرجاع قيمته
 };
 
 
