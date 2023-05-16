@@ -320,7 +320,7 @@ void Compiler::visit_assign(ExprNode* _node)
 	for (AlifObject* n : *_node->U.NameAssign.name_)
 	{
 		assignName = n;
-		VISIT_(exprs,_node->U.NameAssign.value_);
+		VISIT_(exprs, _node->U.NameAssign.value_);
 
 		if (!isCallFlag)
 		{
@@ -332,7 +332,6 @@ void Compiler::visit_assign(ExprNode* _node)
 			isCallFlag = false;
 		}
 	}
-
 	isAssignFlag = false;
 }
 
@@ -382,14 +381,40 @@ AlifObject* Compiler::visit_access(ExprNode* _node)
 AlifObject* Compiler::visit_attr(ExprNode* _node)
 {
 	attrFlag = true;
-	AlifObject* name = VISIT_(exprs, _node->U.Attr.name_);
-	if (_node->U.Attr.next_->type_ == VTAccess or _node->U.Attr.next_->type_ == VTCall)
-	{ attrFlag = false; }
-	VISIT_(exprs, _node->U.Attr.next_);
+	if (_node->U.Attr.next_->type_ == VTAssign)
+	{
+		AlifObject* a;
+		for (AlifObject* n : *_node->U.Attr.next_->U.NameAssign.name_)
+		{
+			a = n;
+			attrFlag = false;
+			VISIT_(exprs, _node->U.Attr.next_->U.NameAssign.value_);
+			attrFlag = true;
+		}
 
-	dataContainer->instructions_->push_back(EXIT_SCOPE);
+		AlifObject* name = VISIT_(exprs, _node->U.Attr.name_);
+		attrFlag = false;
 
-	return name;
+		dataContainer->data_->push_back(a);
+		dataContainer->instructions_->push_back(SET_DATA); // خزن الاسم في المكدس
+		dataContainer->instructions_->push_back(STORE_NAME);
+
+		dataContainer->instructions_->push_back(EXIT_SCOPE);
+
+		return name;
+	}
+	else
+	{
+		AlifObject* name = VISIT_(exprs, _node->U.Attr.name_);
+		if (_node->U.Attr.next_->type_ == VTAccess or _node->U.Attr.next_->type_ == VTCall or _node->U.Attr.next_->type_ == VTAssign or _node->U.Attr.next_->type_ == VTBinOp)
+		{ attrFlag = false; }
+		VISIT_(exprs, _node->U.Attr.next_);
+
+		dataContainer->instructions_->push_back(EXIT_SCOPE);
+		
+		return name;
+	}
+	attrFlag = false;
 }
 
 void Compiler::visit_expr(ExprNode* _node)
@@ -912,20 +937,26 @@ void Compiler::visit_call(ExprNode* _node)
 
 	this->dataContainer->instructions_->push_back(EXIT_SCOPE);
 
-	if (namesTable->scope_type(_node->U.Call.name_->U.Object.value_->V.NameObj.name_) == STFunction)
+	if (isAssignFlag and namesTable->scope_type(_node->U.Call.name_->U.Object.value_->V.NameObj.name_) == STFunction)
 	{
-		this->dataContainer->data_->push_back(nameObject);
-		this->dataContainer->instructions_->push_back(SET_DATA);
-		this->dataContainer->instructions_->push_back(STORE_NAME);
+		if (isReturnFlag)
+		{
+			this->dataContainer->data_->push_back(nameObject);
+			this->dataContainer->instructions_->push_back(SET_DATA);
+			this->dataContainer->instructions_->push_back(STORE_NAME);
+			isReturnFlag = false;
+		}
 	}
 }
 
 AlifObject* Compiler::visit_return_(ExprNode* _node)
 {
+	isReturnFlag = true;
 	AlifObject* a = VISIT_(exprs, _node);
 
 	dataContainer->instructions_->push_back(RETURN_EXPR);
 
+	isReturnFlag = false;
 	return a;
 }
 
@@ -1080,6 +1111,7 @@ void Compiler::visit_print()
 	wcstr* pName = is_repeated(name);
 	namesTable->create_scope(pName);
 	namesTable->enter_scope(pName);
+	namesTable->currentScope->scopeType = STFunction;
 
 	AlifObject* paramContainer = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 
