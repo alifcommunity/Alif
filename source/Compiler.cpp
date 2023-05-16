@@ -391,7 +391,6 @@ AlifObject* Compiler::visit_attr(ExprNode* _node)
 			VISIT_(exprs, _node->U.Attr.next_->U.NameAssign.value_);
 			attrFlag = true;
 		}
-
 		AlifObject* name = VISIT_(exprs, _node->U.Attr.name_);
 		attrFlag = false;
 
@@ -409,6 +408,8 @@ AlifObject* Compiler::visit_attr(ExprNode* _node)
 		if (_node->U.Attr.next_->type_ == VTAccess or _node->U.Attr.next_->type_ == VTCall or _node->U.Attr.next_->type_ == VTAssign or _node->U.Attr.next_->type_ == VTBinOp)
 		{ attrFlag = false; }
 		VISIT_(exprs, _node->U.Attr.next_);
+
+		isCallFlag = false; // تستخدم للسماح بإسناد القيمة المرجعة في حال الوصول الى صفة صنف : ش = مخروط_أ.حجم_المخروط()
 
 		dataContainer->instructions_->push_back(EXIT_SCOPE);
 		
