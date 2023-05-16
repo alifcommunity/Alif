@@ -51,10 +51,10 @@
  ``` c++
  g++ Alif5.cpp AlifMemory.cpp AlifNamesTable.cpp Compiler.cpp Error.cpp Interpereter.cpp Lexer.cpp Parser.cpp -o alif5 
  ```
-سيتم إنشاء ملف تنفيذي في نفس المسار باسم alif5.exe   
+سيتم إنشاء ملف تنفيذي في نفس المسار باسم alif5   
 لتشغيل اللغة التفاعلية قم بكتابة امر 
  ``` c++
- alif5  
+ ./alif5  
  ```
  سيتم تشغيل اللغة على وضع التفاعلي يمكنك كتابة الشفرة من خلاله   :man_technologist:
  
