@@ -1,10 +1,9 @@
 #define PRINT_(a){std::wcout << a << std::endl;}
-#define MS_WINDOWS
 
 #include<iostream>
 #include<string>
 
-#ifndef MS_WINDOWS
+#ifndef _WIN32
 #include<codecvt>
 #include<locale>
 #else
@@ -16,7 +15,7 @@
 #include "AlifRun.h"
 #include "initConfig.h"
 
-#ifndef MS_WINDOWS
+#ifndef _WIN32
 int main(int argc, char** argv)
 {
     setlocale(LC_ALL, "en_US.UTF-8");
@@ -72,4 +71,4 @@ int wmain(int argc, wchar_t** argv)
     }
 }
 
-#endif // !_WIN64
+#endif
