@@ -49,7 +49,7 @@
  بعد ذلك تقوم بكتابة امر  :keyboard:
  
  ``` c++
- g++ Alif5.cpp AlifMemory.cpp AlifNamesTable.cpp Compiler.cpp Error.cpp Interpereter.cpp Lexer.cpp Parser.cpp -o alif5 
+ g++ Alif5.cpp AlifMemory.cpp AlifNamesTable.cpp Compiler.cpp Error.cpp Interpreter.cpp Lexer.cpp Parser.cpp -o alif5
  ```
 سيتم إنشاء ملف تنفيذي في نفس المسار باسم alif5   
 لتشغيل اللغة التفاعلية قم بكتابة امر 
