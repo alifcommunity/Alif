@@ -1,10 +1,9 @@
 #define PRINT_(a){std::wcout << a << std::endl;}
-#define MS_WINDOWS
 
 #include<iostream>
 #include<string>
 
-#ifndef MS_WINDOWS
+#ifndef _WIN32
 #include<codecvt>
 #include<locale>
 #else
@@ -16,7 +15,7 @@
 #include "AlifRun.h"
 #include "initConfig.h"
 
-#ifndef MS_WINDOWS
+#ifndef _WIN32
 int main(int argc, char** argv)
 {
     setlocale(LC_ALL, "en_US.UTF-8");
@@ -53,8 +52,8 @@ int wmain(int argc, wchar_t** argv)
         PRINT_(L"لم يتمكن من تحميل طباعة الملفات عريضة الاحرف - الملف Alif5.cpp");
     }
 
-    //if (argc > 1)
-    if (argc > 0)
+    if (argc > 1)
+    //if (argc > 0)
     {
         if (argc > 2)
         {
@@ -62,8 +61,8 @@ int wmain(int argc, wchar_t** argv)
             exit(-1);
         }
       
-        //file_run(argv[1]);
-        file_run(L"../code.alif5");
+        file_run(argv[1]);
+        //file_run(L"../code.alif5");
 
     }
     else
@@ -72,4 +71,4 @@ int wmain(int argc, wchar_t** argv)
     }
 }
 
-#endif // !_WIN64
+#endif

@@ -775,10 +775,7 @@ void call_name()
 	uint32_t endContainer = instrArr->size();
 	for (instructionsIndex; instructionsIndex < endContainer; instructionsIndex++)
 	{
-		if (returnFlag)
-		{
-			break;
-		}
+		if (returnFlag) { break; }
 		instr_funcs[instrArr->get(instructionsIndex)]();
 	}
 
@@ -788,7 +785,6 @@ void call_name()
 	instructionsIndex = instrIndexBackup;
 	dataIndex = dataIndexBackup;
 
-	//namesTable->restore_scope(); // يجب المراجعة وتصحيح النظام
 	returnFlag = false;
 }
 

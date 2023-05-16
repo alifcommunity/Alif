@@ -253,14 +253,12 @@ ExprNode* Parser::primary_statement()
     if (this->currentToken.type_ == TTDot) 
     {
         this->advance();
-        ExprNode* primary_ = this->primary_statement();
+        ExprNode* primary_ = this->assignment_statement(); // تم التصحيح ليتمكن من عمل إسناد لقيمة داخل صنف
 
         ExprNode* attrNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
-        //primary_->type_ = VTCall;
         attrNode->type_ = VTAttr;
         attrNode->U.Attr.name_ = atom;
         attrNode->U.Attr.next_ = primary_;
-        //primary_->U.Call.args_ = nullptr;
         return attrNode;
     }
     else if (this->currentToken.type_ == TTLeftParenthesis) 
