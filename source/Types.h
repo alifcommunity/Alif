@@ -61,8 +61,6 @@ enum ObjectType : uint8_t { // انواع الكائنات
     OTBoolean,
     OTNone,
     OTContainer,
-    //OTKeyword,
-    //OTBuildInFunc,
 };
 
 enum VisitType : uint8_t { // انواع الزيارة في الشجرة
@@ -89,12 +87,6 @@ enum VisitType : uint8_t { // انواع الزيارة في الشجرة
     VTContinue,
     VTStmts,
 };
-
-//enum StateType : uint8_t { // انواع الحالات للاسماء
-//    STSet,
-//    STGet,
-//    STDel,
-//};
 
 enum ScopeType {
     STNone,

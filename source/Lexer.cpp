@@ -260,7 +260,6 @@ void Lexer::make_indent()
             {
                 // يجب عمل خطأ من نوع "خطأ في النطاق" حيث يقوم بتحديد السطر الذي تم فيه الخروج عن النطاق فقط
                 PRINT_(SyntaxError(posStart, posStart, this->tokIndex, this->tokLine, L"لقد خرجت عن النطاق الحالي", this->fileName, this->input_).print_());
-                //PRINT_(L"خطأ في المسافات البادئة - لقد خرجت عن النطاق الحالي");
                 exit(-1);
             }
 
@@ -272,7 +271,6 @@ void Lexer::make_indent()
             else {
                 // يجب عمل خطأ من نوع "خطأ في النطاق" حيث يقوم بتحديد السطر الذي تم فيه الخروج عن النطاق فقط
                 PRINT_(SyntaxError(posStart, posStart, this->tokIndex, this->tokLine, L"لقد خرجت عن النطاق الحالي", this->fileName, this->input_).print_());
-                //PRINT_(L"خطأ في المسافات البادئة - لقد خرجت عن النطاق الحالي");
                 exit(-1);
             }
 
@@ -335,8 +333,8 @@ void Lexer::make_number() {
         this->advance();
     }
 
-    //wchar_t* number_ = new wchar_t[numberString.length() + 1];
-    wchar_t* number_ = (wchar_t*)alifMemory.allocate(numberString.size() * 2 + 2); // .length() * sizeof(wchar_t) + terminator 
+    wchar_t* number_ = new wchar_t[numberString.length() + 1];
+    //wchar_t* number_ = (wchar_t*)alifMemory.allocate(numberString.size() * 2 + 2); // .length() * sizeof(wchar_t) + terminator 
     for (uint16_t i = 0; i < numberString.length(); i++)
     {
         number_[i] = numberString[i];
@@ -390,8 +388,8 @@ void Lexer::make_string()
         }
     }
 
-    //wchar_t* string_ = new wchar_t[newString.length() + 1];
-    wchar_t* string_ = (wchar_t*)alifMemory.allocate((newString.size() * 2) + 2); // .length() * sizeof(wchar_t) + terminator 
+    wchar_t* string_ = new wchar_t[newString.length() + 1];
+    //wchar_t* string_ = (wchar_t*)alifMemory.allocate((newString.size() * 2) + 2); // .length() * sizeof(wchar_t) + terminator 
     for (uint16_t i = 0; i < newString.length(); i++)
     {
         string_[i] = newString[i];
