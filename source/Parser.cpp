@@ -136,8 +136,6 @@ ExprNode* Parser::atom_statement()
         intNode->U.Object.value_ = intObject;
         intNode->type_ = VTObject;
 
-        //alifMemory->deallocate(&token.value_); // لانه تم تحويل القيمة ولم يعد للقيمة النصية استخدام
-
         return intNode;
     }
     else if (token.type_ == TTFloat)
@@ -691,7 +689,6 @@ std::vector<ExprNode*>* Parser::parameters()
                 ExprNode* paramNode = (ExprNode*)alifMemory->allocate(sizeof(ExprNode));
 
                 paramNode->type_ = VTAssign;
-                //paramNode->U.NameAssign.paramName = name_;
                 paramNode->U.NameAssign.name_ = new std::vector<AlifObject*>;
                 paramNode->U.NameAssign.name_->push_back(name_);
                 paramNode->U.NameAssign.value_ = expr_;
@@ -737,17 +734,6 @@ StmtsNode* Parser::function_statement()
     {
         name->objType = OTName;
         name->V.NameObj.name_ = this->currentToken.value_;
-
-        //if (this->currentToken.type_ == TTName)
-        //{
-        //}
-        //else if (this->currentToken.type_ == TTbuildInFunc) {
-        //    name.V.BuildInFunc.buildInFunc = this->currentToken.val.buildInFunc;
-        //}
-        //else
-        //{
-        //    PRINT_(L"يتوقع وجود اسم للدالة");
-        //}
 
         this->advance();
 
@@ -836,7 +822,6 @@ StmtsNode* Parser::while_statement()
 {
     ExprNode* condetion_ = this->expression_statement();
     StmtsNode* block_ = nullptr;
-    //StmtsNode* else_ = nullptr;
 
     if (this->currentToken.type_ == TTColon)
     {
@@ -847,17 +832,11 @@ StmtsNode* Parser::while_statement()
         PRINT_(L"لم يتم إنهاء بينما بنقطتين \:");
         exit(-1);
     }
-    //if (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"والا"))
-    //{
-    //    this->advance();
-    //    else_ = this->else_();
-    //}
 
     StmtsNode* whileNode = (StmtsNode*)alifMemory->allocate(sizeof(StmtsNode));
     whileNode->type_ = VTWhile;
     whileNode->U.While.condetion_ = condetion_;
     whileNode->U.While.block_ = block_;
-    //whileNode->U.While.else_ = else_;
 
     return whileNode;
 }
@@ -869,7 +848,6 @@ StmtsNode* Parser::for_statement()
         AlifObject* itrName = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
         std::vector<ExprNode*>* args_ = new std::vector<ExprNode*>;
         StmtsNode* block_ = nullptr;
-        //StmtsNode* else_ = nullptr;
 
         Token name_ = this->currentToken;
         this->advance();
@@ -879,7 +857,6 @@ StmtsNode* Parser::for_statement()
             itrName->objType = OTName;
             itrName->V.NameObj.name_ = name_.value_;
 
-            //this->advance();
             if (!wcscmp(this->currentToken.value_, L"في"))
             {
                 this->advance();
@@ -922,12 +899,6 @@ StmtsNode* Parser::for_statement()
 
                             block_ = this->block_statement();
 
-                            //if (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"والا")) // يجب إكملب هذه الحالة في المترجم او إلغائها
-                            //{
-                            //    this->advance();
-
-                            //    else_ = this->else_();
-                            //}
                         }
                         else {
                             PRINT_(L"لم يتم إنهاء لاجل بنقطتين \:");
@@ -956,7 +927,6 @@ StmtsNode* Parser::for_statement()
         forNode->U.For.itrName = itrName;
         forNode->U.For.args_ = args_;
         forNode->U.For.block_ = block_;
-        //forNode->U.For.else_ = else_;
 
         return forNode;
     }
@@ -1069,10 +1039,6 @@ StmtsNode* Parser::block_statement()
 
     return nullptr;
 }
-
-//
-//    ////void delete_statement() {
-//    ////}
 
 
 StmtsNode* Parser::compound_statement()

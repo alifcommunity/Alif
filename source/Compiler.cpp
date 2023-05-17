@@ -868,10 +868,10 @@ void Compiler::visit_class_(StmtsNode* _node)
 	//}
 	//else
 	//{
-	AlifObject* paramSize = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
-	paramSize->V.NumberObj.numberValue = 0;
+		AlifObject* paramSize = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+		paramSize->V.NumberObj.numberValue = 0;
 
-	dataContainer->data_->push_back(paramSize);
+		dataContainer->data_->push_back(paramSize);
 	//}
 
 	dataContainer->data_->push_back(paramContainer);

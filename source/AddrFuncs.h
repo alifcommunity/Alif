@@ -48,10 +48,7 @@ void jump_if();
 void jump_for();
 
 
-//void create_scope();
-//void copy_scope();
 void enter_scope();
-//void get_scope();
 void exit_scope();
 
 void call_name();

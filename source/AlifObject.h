@@ -8,7 +8,6 @@
 class Container;
 class ExprNode; 
 
-//using wstr = std::wstring;
 using wcstr = const wchar_t;
 using double64_t = long double;
 
