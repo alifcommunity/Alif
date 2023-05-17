@@ -146,6 +146,9 @@ void AlifNamesTable::copy_scope(wcstr* a, wcstr* b)
 
     AlifObject* aValue = this->get_object(a);
 
+    AlifObject* bValue = this->get_object(b);
+    if (bValue) bValue = aValue;
+
     for (int i = 0; i < attrBackCount + 1; i++)
     {
         this->exit_scope();
