@@ -153,7 +153,6 @@ void AlifNamesTable::copy_scope(wcstr* a, wcstr* b)
     {
         this->exit_scope();
     }
-    currentScope->names->at(b) = aValue;
 
     attrBackCount = 0;
 
