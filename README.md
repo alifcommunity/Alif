@@ -44,22 +44,22 @@
 يجب توفر <em> g++ </em> إصدار 8.0.0 فما فوق  
 	يمكنك تحميله من خلال هذا الرابط : https://github.com/niXman/mingw-builds-binaries/releases  
  قم بتحميل الشفرة المصدرية من مجتمع ألف على <em> github </em> : https://github.com/alifcommunity/Alif5  
- قم بفتح ملف <em> source </em> الموجود في ملف <em> Alif5 </em> 
+ قم بفتح ملف <em> Alif5 </em> 
  ومن ثم تقوم بتشغيل <em> cmd </em> في نفس مسار الملف  
  بعد ذلك تقوم بكتابة امر  :keyboard:
  
- ``` c++
- g++ Alif5.cpp AlifMemory.cpp AlifNamesTable.cpp Compiler.cpp Error.cpp Interpreter.cpp Lexer.cpp Parser.cpp -o alif5
+ ```sh
+ make
  ```
 سيتم إنشاء ملف تنفيذي في نفس المسار باسم alif5   
 لتشغيل اللغة التفاعلية قم بكتابة امر 
- ``` c++
+ ```sh
  ./alif5  
  ```
  سيتم تشغيل اللغة على وضع التفاعلي يمكنك كتابة الشفرة من خلاله   :man_technologist:
  
  وفي حال تنفيذ ملف خارجي قم بتمرير اسم الملف  
 
-``` c++ 
+```sh
 alif5 filename.alif5  
 ```
