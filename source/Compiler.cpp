@@ -891,7 +891,7 @@ void Compiler::visit_class_(StmtsNode* _node)
 }
 
 
-void Compiler::visit_call(ExprNode* _node)
+AlifObject* Compiler::visit_call(ExprNode* _node)
 {
 	isCallFlag = true;
 	if (_node->U.Call.args_)
@@ -948,6 +948,8 @@ void Compiler::visit_call(ExprNode* _node)
 			isReturnFlag = false;
 		}
 	}
+
+	return nameObject;
 }
 
 AlifObject* Compiler::visit_return_(ExprNode* _node)
