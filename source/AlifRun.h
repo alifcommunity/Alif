@@ -7,7 +7,7 @@
 #include "Compiler.h"
 #include "Interpreter.h"
 
-#ifndef _WIN64
+#ifndef _WIN32
 
 void file_run(char* _fileName) {
 
@@ -231,6 +231,7 @@ void file_run(const wchar_t* _fileName) {
     table_names_prepare(&parser.statements_, namesTable); // تم نقله هنا ليتم تهيئة اسماء الدوال الضمنية من ثم نسخ النطاقات
     compiler.compile_file();
     table_call_prepare(&parser.statements_, namesTable); // لاعداد اسناد قيم الاستدعاء بعد تهيئة الدوال
+
     //// المفسر اللغوي
     ///////////////////////////////////////////////////////////////////
 
