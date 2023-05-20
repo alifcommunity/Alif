@@ -118,43 +118,56 @@ void AlifNamesTable::copy_scope(wcstr* a, wcstr* b)
     Scope* tmp = currentScope;
     this->enter_scope(a);
 
-    Scope* bScope = new Scope();
-    bScope->names = new std::map<wcstr*, AlifObject*>(*currentScope->names);
-    bScope->scopes = new std::map<wcstr*, Scope*>(*currentScope->scopes);
-    bScope->parent = new Scope(*tmp);
-    bScope->scopeType = currentScope->scopeType;
-
-    // قسم نسخ النطاقات الداخلية لمنع حدوث تداخل في القيم
-    auto itr1 = bScope->scopes->begin();
-    auto itr2 = currentScope->scopes->begin();
-    for (;itr1 != bScope->scopes->end();)
+    if (b)
     {
-        itr1->second = new Scope(*itr2->second);
-        itr1++;
-        itr2++;
+        Scope* bScope = new Scope();
+        bScope->names = new std::map<wcstr*, AlifObject*>(*currentScope->names);
+        bScope->scopes = new std::map<wcstr*, Scope*>(*currentScope->scopes);
+        bScope->parent = new Scope(*tmp);
+        bScope->scopeType = currentScope->scopeType;
+
+        // قسم نسخ النطاقات الداخلية لمنع حدوث تداخل في القيم
+        auto itr1 = bScope->scopes->begin();
+        auto itr2 = currentScope->scopes->begin();
+        for (;itr1 != bScope->scopes->end();)
+        {
+            itr1->second = new Scope(*itr2->second);
+            itr1++;
+            itr2++;
+        }
+        ///////////////////////////////////////
+
+        for (std::pair<wcstr*, Scope*> s : *bScope->scopes)
+        {
+            s.second->parent = new Scope(*bScope);
+        }
+
+        tmp->scopes->insert({b,bScope});
+
+        currentScope = tmp;
+
+        AlifObject* aValue = this->get_object(a);
+
+        for (int i = 0; i < attrBackCount + 1; i++)
+        {
+            this->exit_scope();
+        }
+
+        while (tmp)
+        {
+            for (std::pair<wcstr*, AlifObject*> a : *tmp->names)
+            {
+                if (!wcscmp(a.first, b))
+                {
+                    tmp->names->at(b) = aValue;
+                    break;
+                }
+            }
+            tmp = tmp->parent;
+        }
+
+        attrBackCount = 0;
     }
-    ///////////////////////////////////////
-
-    for (std::pair<wcstr*, Scope*> s : *bScope->scopes)
-    {
-        s.second->parent = new Scope(*bScope);
-    }
-
-    tmp->scopes->insert({b,bScope});
-
-    currentScope = tmp;
-
-    AlifObject* aValue = this->get_object(a);
-
-    AlifObject* bValue = this->get_object(b);
-    if (bValue) bValue = aValue;
-
-    for (int i = 0; i < attrBackCount + 1; i++)
-    {
-        this->exit_scope();
-    }
-
-    attrBackCount = 0;
 
 }
 
@@ -348,7 +361,10 @@ void visit_attr_call(ExprNode* _node, AlifNamesTable* _namesTable)
 void visit_call(ExprNode* _node, AlifNamesTable* _namesTable)
 {
     wcstr* callName = _node->U.Call.name_->U.Object.value_->V.NameObj.name_;
-    _namesTable->copy_scope(callName, assignN);
+    if (assignFlag)
+    {
+        _namesTable->copy_scope(callName, assignN);
+    }
 }
 
 void visit_function_call(StmtsNode* _node, AlifNamesTable* _namesTable)
