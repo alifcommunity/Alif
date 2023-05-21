@@ -17,7 +17,7 @@
 #ifndef _WIN32
 int main(int argc, char** argv)
 {
-    setlocale(LC_ALL, "C.UTF-8");
+    setlocale(LC_ALL, "");
 
     if (argc > 1)
     {
