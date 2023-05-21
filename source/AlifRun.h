@@ -1,5 +1,5 @@
 #include<fstream>
-#include<chrono> /////////////////////// for test only
+//#include<chrono> /////////////////////// for test only
 
 #include "AlifNamesTable.h"
 #include "Lexer.h"
@@ -235,14 +235,14 @@ void file_run(const wchar_t* _fileName) {
     //// المفسر اللغوي
     ///////////////////////////////////////////////////////////////////
 
-    auto start = std::chrono::high_resolution_clock::now();
+    //auto start = std::chrono::high_resolution_clock::now();
 
     Interpreter interpreter = Interpreter(&compiler.containers_, &lexer.alifMemory, namesTable);
     interpreter.run_code();
 
-    auto end = std::chrono::high_resolution_clock::now();
-    auto elapsed_seconds = end - start;
-    std::wcout << elapsed_seconds << std::endl;
+    //auto end = std::chrono::high_resolution_clock::now();
+    //auto elapsed_seconds = end - start;
+    //std::wcout << elapsed_seconds << std::endl;
 }
 
 void terminal_run() 
@@ -292,14 +292,14 @@ void terminal_run()
         //// المفسر اللغوي
         ///////////////////////////////////////////////////////////////////
 
-        auto start = std::chrono::high_resolution_clock::now();
+        //auto start = std::chrono::high_resolution_clock::now();
 
         Interpreter interpreter = Interpreter(&compiler.containers_, &lexer.alifMemory, namesTable);
         interpreter.run_code();
 
-        auto end = std::chrono::high_resolution_clock::now();
-        auto elapsed_seconds = end - start;
-        std::wcout << elapsed_seconds << std::endl;
+        //auto end = std::chrono::high_resolution_clock::now();
+        //auto elapsed_seconds = end - start;
+        //std::wcout << elapsed_seconds << std::endl;
 
         // std::wcin.ignore(); // لمنع ارسال قيمة فارغة في المتغير input_ ** يجب إضافة شرط في حال كان المدخل غير فارغ يجب ان يقوم بعمل تجاهل له
     }
