@@ -950,6 +950,7 @@ AlifObject* Compiler::visit_call(ExprNode* _node)
 		}
 	}
 
+	isCallFlag = false;
 	return nameObject;
 }
 
