@@ -13,7 +13,6 @@
 #endif
 
 #include "AlifRun.h"
-#include "initConfig.h"
 
 #ifndef _WIN32
 int main(int argc, char** argv)

@@ -405,7 +405,8 @@ AlifObject* Compiler::visit_attr(ExprNode* _node)
 	else
 	{
 		AlifObject* name = VISIT_(exprs, _node->U.Attr.name_);
-		if (_node->U.Attr.next_->type_ == VTAccess or _node->U.Attr.next_->type_ == VTCall or _node->U.Attr.next_->type_ == VTAssign or _node->U.Attr.next_->type_ == VTBinOp)
+		//if (_node->U.Attr.next_->type_ == VTAccess or _node->U.Attr.next_->type_ == VTCall or _node->U.Attr.next_->type_ == VTAssign or _node->U.Attr.next_->type_ == VTBinOp)
+		if (_node->U.Attr.next_->type_ != VTAttr) // تحت التجربة
 		{ attrFlag = false; }
 		VISIT_(exprs, _node->U.Attr.next_);
 
