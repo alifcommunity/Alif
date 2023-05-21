@@ -463,7 +463,15 @@ void Lexer::make_divide() {
     }
     else if (this->currentChar == L'\\') {
         this->advance();
-        this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTRemain));
+        if (this->currentChar == L'=')
+        {
+            this->advance();
+            this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTRemainEqual));
+        }
+        else
+        {
+            this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTRemain));
+        }
     }
     else {
         this->tokens_.push_back(Token(this->tokLine, posStart, this->tokPos, this->tokIndex, TTDivide));

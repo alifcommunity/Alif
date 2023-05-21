@@ -93,7 +93,7 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 		{
 			if (right->objType == OTNumber or right->objType == OTName)
 			{
-				dataContainer->instructions_->push_back(MINUS_NUM);
+				dataContainer->instructions_->push_back(SUB_NUM);
 			}
 			else
 			{

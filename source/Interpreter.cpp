@@ -51,15 +51,17 @@ void set_data()
 	dataIndex++;
 }
 
-void plus_num() 
+void plus_num()
 {
-	
+	// لا شيء هنا
 }
 void minus_num() 
 {
 	AlifObject* number_ = stackMemory->pop();
 
 	number_->V.NumberObj.numberValue = - number_->V.NumberObj.numberValue;
+
+	stackMemory->push(number_);
 }
 
 void add_num()
@@ -141,7 +143,7 @@ void pow_num()
 
 	AlifObject* res = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 
-	left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? right->V.NumberObj.numberType = TTFloat : right->V.NumberObj.numberType = TTInteger;
+	left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? res->V.NumberObj.numberType = TTFloat : res->V.NumberObj.numberType = TTInteger;
 	res->V.NumberObj.numberValue = pow(right->V.NumberObj.numberValue  ,left->V.NumberObj.numberValue);
 	stackMemory->push(res);
 }
@@ -526,54 +528,58 @@ void add_str() // هذه الطريقة اسرع من استخدام wcsncpy_s �
 
 	res[rightSize + leftSize] = L'\0';
 	
-	right->V.StringObj.strValue = res;
-	stackMemory->push(right);
+	AlifObject* res_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	res_->objType = OTString;
+	res_->V.StringObj.strValue = res;
+	stackMemory->push(res_);
 
 }
 void mul_str() {
 	
 	AlifObject* right = stackMemory->pop();
-
 	AlifObject* left = stackMemory->pop();
-
 
 	if (left->objType == OTNumber) {
 		const uint16_t rightSize = wcslen(right->V.StringObj.strValue);
 		const uint16_t leftSize = left->V.NumberObj.numberValue;
-		wchar_t* res = new wchar_t[rightSize * leftSize + 1];
+		wchar_t* res_ = new wchar_t[rightSize * leftSize + 1];
 
 		int currentIndex = 0;
-		for (uint16_t i = 0; i < rightSize; i++)
+		for (uint16_t i = 0; i < leftSize; i++)
 		{
-			for (uint16_t l = 0; l < leftSize; l++)
+			for (uint16_t l = 0; l < rightSize; l++)
 			{
-				res[currentIndex++] = left->V.StringObj.strValue[l];
+				res_[currentIndex++] = right->V.StringObj.strValue[l];
 			}
 		}
 
-		res[rightSize * leftSize] = L'\0';
+		res_[rightSize * leftSize] = L'\0';
 
-		right->V.StringObj.strValue = res;
-		stackMemory->push(right);
+		AlifObject* res = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+		res->objType = OTString;
+		res->V.StringObj.strValue = res_;
+		stackMemory->push(res);
 	}
 	else {
 		const uint16_t rightSize = right->V.NumberObj.numberValue;
 		const uint16_t leftSize = wcslen(left->V.StringObj.strValue);
-		wchar_t* res = new wchar_t[rightSize * leftSize + 1];
+		wchar_t* res_ = new wchar_t[rightSize * leftSize + 1];
 
 		int currentIndex = 0;
-		for (uint16_t i = 0; i < rightSize; i++)
+		for (uint16_t i = 0; i < leftSize; i++)
 		{
-			for (uint16_t l = 0; l < leftSize; l++)
+			for (uint16_t l = 0; l < rightSize; l++)
 			{
-				res[currentIndex++] = left->V.StringObj.strValue[l];
+				res_[currentIndex++] = right->V.StringObj.strValue[l];
 			}
 		}
 
-		res[rightSize * leftSize] = L'\0';
+		res_[rightSize * leftSize] = L'\0';
 
-		right->V.StringObj.strValue = res;
-		stackMemory->push(right);
+		AlifObject* res = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+		res->objType = OTString;
+		res->V.StringObj.strValue = res_;
+		stackMemory->push(res);
 	}
 
 }
