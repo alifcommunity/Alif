@@ -222,10 +222,7 @@ void visit_if_(StmtsNode* _node, AlifNamesTable* _namesTable)
 
     if (_node->U.If.elseIf)
     {
-        for (StmtsNode* a : *_node->U.If.elseIf)
-        {
-            VISIT_(stmts, a, _namesTable);
-        }
+        VISIT_(stmts, _node->U.If.elseIf, _namesTable);
     }
     if (_node->U.If.else_)
     {

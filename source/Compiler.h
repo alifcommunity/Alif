@@ -21,7 +21,6 @@ static bool isReturnFlag = false;
 static bool isAssignFlag = false;
 static bool isCallFlag = false;
 static bool attrFlag = false;
-static bool elseIfFlag = true;
 //
 
 class Compiler {

@@ -498,19 +498,18 @@ void Compiler::visit_continue_(ExprNode* _node)
 	this->dataContainer->instructions_->push_back(JUMP_TO);
 }
 
-
-AlifObject* jTAdress = new AlifObject; // Address of instructions
-AlifObject* jTDataAddress = new AlifObject; // Address of data
+AlifObject* jTAdress = new AlifObject;
+AlifObject* jTDataAddress = new AlifObject;
 void Compiler::visit_if_(StmtsNode* _node)
 {
 	VISIT_(exprs, _node->U.If.condetion_);
 
-	AlifObject* dataAddress = (AlifObject*)alifMemory->allocate(sizeof(AlifObject)); // Address of data
+	AlifObject* dataAddress = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 	dataAddress->objType = OTNumber;
 	this->dataContainer->data_->push_back(dataAddress);
 	this->dataContainer->instructions_->push_back(SET_DATA);
 
-	AlifObject* jumpAddress = (AlifObject*)alifMemory->allocate(sizeof(AlifObject)); // Address of instructions
+	AlifObject* jumpAddress = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 	jumpAddress->objType = OTNumber;
 	this->dataContainer->data_->push_back(jumpAddress);
 	this->dataContainer->instructions_->push_back(SET_DATA);
@@ -533,27 +532,17 @@ void Compiler::visit_if_(StmtsNode* _node)
 	dataAddress->V.NumberObj.numberValue = this->dataContainer->data_->size();
 	jumpAddress->V.NumberObj.numberValue = this->dataContainer->instructions_->size() - 1;
 
-
-	if (elseIfFlag) // يتحقق هل المستدعى "اذا" ام "واذا" ففي حال الاولى يسمح بالمرور والثانية لا يسمح
+	if (_node->U.If.elseIf)
 	{
-		elseIfFlag = false;
-
-		if (_node->U.If.elseIf->size())
-		{
-			for (StmtsNode* node : *_node->U.If.elseIf)
-			{
-				VISIT_(stmts, node);
-			}
-		}
-
-		if (_node->U.If.else_)
-		{
-			VISIT_(stmts, _node->U.If.else_);
-		
-			jTDataAddress->V.NumberObj.numberValue = this->dataContainer->data_->size();
-			jTAdress->V.NumberObj.numberValue = this->dataContainer->instructions_->size() - 1;
-		}
+		VISIT_(stmts, _node->U.If.elseIf);
 	}
+	if (_node->U.If.else_)
+	{
+		VISIT_(stmts, _node->U.If.else_);
+	}
+
+	jTDataAddress->V.NumberObj.numberValue = this->dataContainer->data_->size();
+	jTAdress->V.NumberObj.numberValue = this->dataContainer->instructions_->size() - 1;
 }
 
 void Compiler::visit_for_(StmtsNode* _node)

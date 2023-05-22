@@ -82,7 +82,7 @@ public:
 
     StmtsNode* for_statement();
 
-    StmtsNode* else_if_statement();
+    //StmtsNode* else_if_statement();
 
     StmtsNode* else_statement();
 
