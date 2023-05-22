@@ -51,15 +51,17 @@ void set_data()
 	dataIndex++;
 }
 
-void plus_num() 
+void plus_num()
 {
-	
+	// لا شيء هنا
 }
 void minus_num() 
 {
 	AlifObject* number_ = stackMemory->pop();
 
 	number_->V.NumberObj.numberValue = - number_->V.NumberObj.numberValue;
+
+	stackMemory->push(number_);
 }
 
 void add_num()
@@ -82,9 +84,13 @@ void sub_num()
 	AlifObject* right = stackMemory->pop();
 	AlifObject* left = stackMemory->pop();
 
-	left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? right->V.NumberObj.numberType = TTFloat : right->V.NumberObj.numberType = TTInteger;
-	right->V.NumberObj.numberValue -= left->V.NumberObj.numberValue;
-	stackMemory->push(right);
+	AlifObject* res = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+
+	left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? res->V.NumberObj.numberType = TTFloat : res->V.NumberObj.numberType = TTInteger;
+	res->objType = OTNumber;
+	res->V.NumberObj.numberValue = right->V.NumberObj.numberValue - left->V.NumberObj.numberValue;
+
+	stackMemory->push(res);
 }
 void mul_num() 
 {
@@ -121,7 +127,8 @@ void rem_num()
 
 	if (left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat)
 	{
-		// error
+		PRINT_(L"لا يمكن استخدام عدد من نوع عدد_عشري في عملية باقي_القسمة");
+		exit(-1);
 	}
 
 	res->objType = OTNumber;
@@ -134,9 +141,11 @@ void pow_num()
 	AlifObject* right = stackMemory->pop();
 	AlifObject* left = stackMemory->pop();
 
-	left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? right->V.NumberObj.numberType = TTFloat : right->V.NumberObj.numberType = TTInteger;
-	right->V.NumberObj.numberValue = pow(right->V.NumberObj.numberValue  ,left->V.NumberObj.numberValue);
-	stackMemory->push(right);
+	AlifObject* res = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+
+	left->V.NumberObj.numberType == TTFloat or right->V.NumberObj.numberType == TTFloat ? res->V.NumberObj.numberType = TTFloat : res->V.NumberObj.numberType = TTInteger;
+	res->V.NumberObj.numberValue = pow(right->V.NumberObj.numberValue  ,left->V.NumberObj.numberValue);
+	stackMemory->push(res);
 }
 void augAdd_num()
 {
@@ -214,7 +223,7 @@ void augRem_num()
 	nameCopy->objType = nameValue->objType;
 	nameCopy->V = nameValue->V;
 
-	nameCopy->V.NumberObj.numberValue = (size_t)(nameCopy->V.NumberObj.numberValue) % (size_t)(value_->V.NumberObj.numberValue);
+	nameCopy->V.NumberObj.numberValue = (int)(nameCopy->V.NumberObj.numberValue) % (int)(value_->V.NumberObj.numberValue);
 
 	namesTable->assign_name(name_->V.NameObj.name_, nameCopy);
 }
@@ -519,54 +528,58 @@ void add_str() // هذه الطريقة اسرع من استخدام wcsncpy_s �
 
 	res[rightSize + leftSize] = L'\0';
 	
-	right->V.StringObj.strValue = res;
-	stackMemory->push(right);
+	AlifObject* res_ = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+	res_->objType = OTString;
+	res_->V.StringObj.strValue = res;
+	stackMemory->push(res_);
 
 }
 void mul_str() {
 	
 	AlifObject* right = stackMemory->pop();
-
 	AlifObject* left = stackMemory->pop();
-
 
 	if (left->objType == OTNumber) {
 		const uint16_t rightSize = wcslen(right->V.StringObj.strValue);
 		const uint16_t leftSize = left->V.NumberObj.numberValue;
-		wchar_t* res = new wchar_t[rightSize * leftSize + 1];
+		wchar_t* res_ = new wchar_t[rightSize * leftSize + 1];
 
 		int currentIndex = 0;
-		for (uint16_t i = 0; i < rightSize; i++)
+		for (uint16_t i = 0; i < leftSize; i++)
 		{
-			for (uint16_t l = 0; l < leftSize; l++)
+			for (uint16_t l = 0; l < rightSize; l++)
 			{
-				res[currentIndex++] = left->V.StringObj.strValue[l];
+				res_[currentIndex++] = right->V.StringObj.strValue[l];
 			}
 		}
 
-		res[rightSize * leftSize] = L'\0';
+		res_[rightSize * leftSize] = L'\0';
 
-		right->V.StringObj.strValue = res;
-		stackMemory->push(right);
+		AlifObject* res = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+		res->objType = OTString;
+		res->V.StringObj.strValue = res_;
+		stackMemory->push(res);
 	}
 	else {
 		const uint16_t rightSize = right->V.NumberObj.numberValue;
 		const uint16_t leftSize = wcslen(left->V.StringObj.strValue);
-		wchar_t* res = new wchar_t[rightSize * leftSize + 1];
+		wchar_t* res_ = new wchar_t[rightSize * leftSize + 1];
 
 		int currentIndex = 0;
-		for (uint16_t i = 0; i < rightSize; i++)
+		for (uint16_t i = 0; i < leftSize; i++)
 		{
-			for (uint16_t l = 0; l < leftSize; l++)
+			for (uint16_t l = 0; l < rightSize; l++)
 			{
-				res[currentIndex++] = left->V.StringObj.strValue[l];
+				res_[currentIndex++] = right->V.StringObj.strValue[l];
 			}
 		}
 
-		res[rightSize * leftSize] = L'\0';
+		res_[rightSize * leftSize] = L'\0';
 
-		right->V.StringObj.strValue = res;
-		stackMemory->push(right);
+		AlifObject* res = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
+		res->objType = OTString;
+		res->V.StringObj.strValue = res_;
+		stackMemory->push(res);
 	}
 
 }
@@ -598,8 +611,6 @@ void store_name()
 void list_make()
 {
 	AlifObject* list_ = stackMemory->pop();
-
-
 	AlifObject* elementCount = stackMemory->pop();
 
 
@@ -611,6 +622,8 @@ void list_make()
 	
 		list_->V.ListObj.objList->push_back(element_);
 	}
+
+	stackMemory->push(list_);
 }
 
 
@@ -800,6 +813,30 @@ void return_expr()
 
 
 
+void list_print(AlifObject* _obj, std::wstring* _lst)
+{
+	_lst->append(L"[");
+	if (_obj->objType == OTList) {
+		for (AlifObject* obj : *_obj->V.ListObj.objList) {
+			if (obj->objType == OTNumber)
+			{
+				_lst->append(std::to_wstring(obj->V.NumberObj.numberValue));
+
+			}
+			else if (obj->objType == OTString)
+			{
+				_lst->append(obj->V.StringObj.strValue);
+
+			}
+			else if (obj->objType == OTList) {
+				list_print(obj, _lst);
+			}
+			_lst->append(L", ");
+		}
+		_lst->replace(_lst->length() - 2, _lst->length(), L"]");
+	}
+}
+
 
 
 // الدوال الضمنية
@@ -813,14 +850,18 @@ void print_func() // سيتم اعتماد خوارزمية البحث الثن�
     else if (object->objType == OTNone) { PRINT_(L"عدم"); }
     else if (object->objType == OTBoolean) { if (object->V.BoolObj.numberValue == 1) { PRINT_(L"صح"); } else { PRINT_(L"خطا"); } }
     else if (object->objType == OTList) {
-        //this->list_print(object);
-        //prnt(lst);
+		std::wstring lst_;
+		list_print(object, &lst_);
+		PRINT_(lst_);
     }
  
  
  
 	//print_types[0]();
 }
+
+
+
 
 //// دوال الطباعة
 //void num_print()

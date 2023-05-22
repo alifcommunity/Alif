@@ -18,8 +18,8 @@ void Compiler::compile_file()
 		dataContainer->data_ = new AlifArray<AlifObject*>;
 
 		VISIT_(stmts, node_); // تم شرح طريقة الاستدعاء في ملف compiler.h
-
-		containers_.push_back(dataContainer);
+		 
+		if (!dataContainer->data_->empty()) { containers_.push_back(dataContainer); }
 	}
 }
 
@@ -71,9 +71,9 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 				// TypeError: int and other
 			}
 		}
-		else if (left->objType == OTString)
+		else if (left->objType == OTString or left->objType == OTName)
 		{
-			if (right->objType == OTString)
+			if (right->objType == OTString or right->objType == OTName)
 			{
 				dataContainer->instructions_->push_back(ADD_STR);
 			}
@@ -93,7 +93,7 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 		{
 			if (right->objType == OTNumber or right->objType == OTName)
 			{
-				dataContainer->instructions_->push_back(MINUS_NUM);
+				dataContainer->instructions_->push_back(SUB_NUM);
 			}
 			else
 			{
@@ -160,7 +160,7 @@ AlifObject* Compiler::visit_binOp(ExprNode* _node)
 		}
 		else if (left->objType == OTString)
 		{
-			if (right->objType == OTNumber)
+			if (right->objType == OTNumber or right->objType == OTName)
 			{
 				dataContainer->instructions_->push_back(MUL_STR);
 			}
@@ -950,6 +950,7 @@ AlifObject* Compiler::visit_call(ExprNode* _node)
 		}
 	}
 
+	isCallFlag = false;
 	return nameObject;
 }
 

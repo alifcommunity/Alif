@@ -17,7 +17,7 @@
 #ifndef _WIN32
 int main(int argc, char** argv)
 {
-    setlocale(LC_ALL, "en_US.UTF-8");
+    setlocale(LC_ALL, "");
 
     if (argc > 1)
     {
@@ -59,9 +59,9 @@ int wmain(int argc, wchar_t** argv)
             PRINT_(L"يجب ان يتم تمرير اسم الملف فقط");
             exit(-1);
         }
-      
+        
         file_run(argv[1]);
-        //file_run(L"../code.alif5");
+        //file_run(L"../examples/class_example.alif5");
 
     }
     else

@@ -22,6 +22,8 @@ void Parser::advance()
 void Parser::parse_file()
 {
     do {
+        while (this->currentToken.type_ == TTNewline) this->advance(); // في حال كانت السطور الأولى فارغة
+
         this->statements_.push_back(this->statement());
     } while (currentToken.type_ != TTEndOfFile);
 }
