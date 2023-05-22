@@ -85,7 +85,8 @@ public:
         public:
             ExprNode* condetion_;
             StmtsNode* block_;
-            std::vector<StmtsNode*>* elseIf;
+            //std::vector<StmtsNode*>* elseIf;
+            StmtsNode* elseIf;
             StmtsNode* else_;
         }If;
 

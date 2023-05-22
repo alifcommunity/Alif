@@ -938,27 +938,41 @@ StmtsNode* Parser::for_statement()
     }
 }
 
-StmtsNode* Parser::else_if_statement()
-{
-    StmtsNode* block_{};
-    ExprNode* condetion_ = this->expression_statement();
-
-    if (this->currentToken.type_ == TTColon)
-    {
-        this->advance();
-        block_ = this->block_statement();
-    }
-    else {
-        PRINT_(L"لم يتم إنهاء واذا بنقطتين \:");
-        exit(-1);
-    }
-
-    StmtsNode* elseIfNode = (StmtsNode*)alifMemory->allocate(sizeof(StmtsNode));
-    elseIfNode->type_ = VTIf;
-    elseIfNode->U.If.condetion_ = condetion_;
-    elseIfNode->U.If.block_ = block_;
-    return elseIfNode;
-}
+//StmtsNode* Parser::else_if_statement()
+//{
+//    StmtsNode* block_{};
+//    ExprNode* condetion_ = this->expression_statement();
+//
+//    if (this->currentToken.type_ == TTColon)
+//    {
+//        this->advance();
+//        block_ = this->block_statement();
+//    }
+//    else {
+//        PRINT_(L"لم يتم إنهاء واذا بنقطتين \:");
+//        exit(-1);
+//    }
+//    if (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"واذا"))
+//    {
+//        //!elseIf ? elseIf = new std::vector<StmtsNode*> : elseIf; // لكي لا يتم تعريف متغير جديد في كل تكرار
+//        this->advance();
+//        elseIf = this->else_if_statement();
+//        //elseIf->push_back(this->else_if_statement());
+//    }
+//    if (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"والا"))
+//    {
+//        this->advance();
+//        else_ = this->else_statement();
+//    }
+//
+//    StmtsNode* elseIfNode = (StmtsNode*)alifMemory->allocate(sizeof(StmtsNode));
+//    elseIfNode->type_ = VTIf;
+//    elseIfNode->U.If.condetion_ = condetion_;
+//    elseIfNode->U.If.block_ = block_;
+//    elseIfNode->U.If.elseIf = nullptr;
+//    elseIfNode->U.If.else_ = nullptr;
+//    return elseIfNode;
+//}
 
 StmtsNode* Parser::else_statement() {
 
@@ -975,10 +989,10 @@ StmtsNode* Parser::else_statement() {
 
 StmtsNode* Parser::if_statement()
 {
-
-    StmtsNode* block_{};
-    std::vector<StmtsNode*>* elseIf = new std::vector<StmtsNode*>;
-    StmtsNode* else_{};
+    StmtsNode* block_ = nullptr;
+    //std::vector<StmtsNode*>* elseIf = nullptr;
+    StmtsNode* elseIf = nullptr;
+    StmtsNode* else_ = nullptr;
     ExprNode* condetion_ = this->expression_statement();
 
     if (this->currentToken.type_ == TTColon)
@@ -990,10 +1004,12 @@ StmtsNode* Parser::if_statement()
         PRINT_(L"لم يتم إنهاء اذا بنقطتين \:");
         exit(-1);
     }
-    while (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"واذا"))
+    if (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"واذا"))
     {
+        //!elseIf ? elseIf = new std::vector<StmtsNode*> : elseIf; // لكي لا يتم تعريف متغير جديد في كل تكرار
         this->advance();
-        elseIf->push_back(this->else_if_statement());
+        elseIf = this->if_statement();
+        //elseIf->push_back(this->else_if_statement());
     }
     if (this->currentToken.type_ == TTName and !wcscmp(this->currentToken.value_, L"والا"))
     {
