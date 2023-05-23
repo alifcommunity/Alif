@@ -20,6 +20,13 @@ void Compiler::compile_file()
 		VISIT_(stmts, node_); // تم شرح طريقة الاستدعاء في ملف compiler.h
 		 
 		if (!dataContainer->data_->empty()) { containers_.push_back(dataContainer); }
+		
+		// إعادة ضبط قيم الاعلام
+		isReturnFlag = false;
+		isAssignFlag = false;
+		isCallFlag = false;
+		attrFlag = false;
+		isLoopFlag = false;
 	}
 }
 
@@ -436,7 +443,6 @@ void Compiler::visit_list(ExprNode* _node)
 		VISIT_(exprs, element);
 	}
 
-
 	// لتحديد نهاية المصفوفة في المفسر
 	AlifObject* listEnd = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 	listEnd->objType = OTNumber;
@@ -455,8 +461,6 @@ void Compiler::visit_list(ExprNode* _node)
 
 	dataContainer->data_->push_back(listObj);
 	dataContainer->instructions_->push_back(SET_DATA);
-
-
 
 	dataContainer->instructions_->push_back(LIST_MAKE);
 }
@@ -906,6 +910,7 @@ AlifObject* Compiler::visit_call(ExprNode* _node)
 	{
 		for (ExprNode* node : *_node->U.Call.args_)
 		{
+
 			VISIT_(exprs, node);
 		}
 
@@ -955,9 +960,9 @@ AlifObject* Compiler::visit_call(ExprNode* _node)
 			this->dataContainer->instructions_->push_back(STORE_NAME);
 			isReturnFlag = false;
 		}
+		isCallFlag = false; // يجب التأكد من صحة نظام إلغاء علم الإستدعاء
 	}
 
-	isCallFlag = false;
 	return nameObject;
 }
 
