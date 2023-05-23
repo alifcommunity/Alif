@@ -390,6 +390,11 @@ void visit_exprs_call(ExprNode* _node, AlifNamesTable* _namesTable)
     {
         VISIT_(assign_call, _node, _namesTable);
     }
+    if (_node->type_ == VTBinOp)
+    {
+        VISIT_(exprs_call, _node->U.BinaryOp.left_, _namesTable);
+        VISIT_(exprs_call, _node->U.BinaryOp.right_, _namesTable);
+    }
     if (_node->type_ == VTAttr)
     {
         VISIT_(attr_call, _node, _namesTable);

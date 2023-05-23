@@ -498,12 +498,16 @@ void Compiler::visit_continue_(ExprNode* _node)
 	this->dataContainer->instructions_->push_back(JUMP_TO);
 }
 
-AlifObject* jTAdress = new AlifObject;
-AlifObject* jTDataAddress = new AlifObject;
 void Compiler::visit_if_(StmtsNode* _node)
 {
+	AlifObject* jTAdress = nullptr;
+	AlifObject* jTDataAddress = nullptr;
+	jTAdress ? jTAdress : jTAdress = new AlifObject;
+	jTDataAddress ? jTDataAddress : jTDataAddress = new AlifObject;
+
 	VISIT_(exprs, _node->U.If.condetion_);
 
+	// في حال عدم تحقق الشرط اقفز الى الشرط التالي
 	AlifObject* dataAddress = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 	dataAddress->objType = OTNumber;
 	this->dataContainer->data_->push_back(dataAddress);
@@ -519,6 +523,8 @@ void Compiler::visit_if_(StmtsNode* _node)
 
 	VISIT_(stmts, _node->U.If.block_);
 
+
+	// في حال تحقق الشرط والدخول الى جسم الحالة يتم القفز الى نهاية الحالة بعد التنفيذ
 	jTAdress->objType = OTNumber;
 	this->dataContainer->data_->push_back(jTAdress);
 	this->dataContainer->instructions_->push_back(SET_DATA);
@@ -529,6 +535,7 @@ void Compiler::visit_if_(StmtsNode* _node)
 
 	this->dataContainer->instructions_->push_back(JUMP_TO);
 
+	// في حال عدم تحقق الشرط اقفز الى الشرط التالي
 	dataAddress->V.NumberObj.numberValue = this->dataContainer->data_->size();
 	jumpAddress->V.NumberObj.numberValue = this->dataContainer->instructions_->size() - 1;
 
@@ -541,12 +548,16 @@ void Compiler::visit_if_(StmtsNode* _node)
 		VISIT_(stmts, _node->U.If.else_);
 	}
 
+	// في حال تحقق الشرط والدخول الى جسم الحالة يتم القفز الى نهاية الحالة بعد التنفيذ
 	jTDataAddress->V.NumberObj.numberValue = this->dataContainer->data_->size();
 	jTAdress->V.NumberObj.numberValue = this->dataContainer->instructions_->size() - 1;
+
 }
 
 void Compiler::visit_for_(StmtsNode* _node)
 {
+	isLoopFlag = true;
+
 	AlifObject* startFor = (AlifObject*)alifMemory->allocate(sizeof(AlifObject)); // startFor
 	AlifObject* stepFor = (AlifObject*)alifMemory->allocate(sizeof(AlifObject)); // stepFor
 	AlifObject* endFor = (AlifObject*)alifMemory->allocate(sizeof(AlifObject)); // endFor
@@ -583,6 +594,11 @@ void Compiler::visit_for_(StmtsNode* _node)
 		dataContainer->instructions_->push_back(SET_DATA);
 
 		this->dataContainer->instructions_->push_back(STORE_NAME);
+	}
+	else
+	{
+		PRINT_(L"لا يمكن تمرير اكثر من ثلاث معاملات في حالة \"لاجل\"");
+		exit(-1);
 	}
 
 
@@ -682,10 +698,6 @@ void Compiler::visit_for_(StmtsNode* _node)
 		VISIT_(exprs, _node->U.For.args_->at(1)); // endFor
 		VISIT_(exprs, _node->U.For.args_->at(2)); // stepFor
 	}
-	else
-	{
-		//error
-	}
 
 	this->dataContainer->instructions_->push_back(JUMP_FOR);
 
@@ -699,11 +711,15 @@ void Compiler::visit_for_(StmtsNode* _node)
 
 	if (stopLevel < 18) stopLevel++;
 	//////////////////////////////
+
+	isLoopFlag = false;
 }
 
 
 void Compiler::visit_while_(StmtsNode* _node) 
 {
+	isLoopFlag = true;
+
 	AlifObject* jumpTo = (AlifObject*)alifMemory->allocate(sizeof(AlifObject));
 	jumpTo->objType = OTNumber;
 	this->dataContainer->instructions_->empty() ? jumpTo->V.NumberObj.numberValue = -1 : jumpTo->V.NumberObj.numberValue = this->dataContainer->instructions_->size() - 1;
@@ -763,6 +779,8 @@ void Compiler::visit_while_(StmtsNode* _node)
 
 	if (stopLevel < 18) stopLevel++;
 	//////////////////////////////
+
+	isLoopFlag = false;
 }
 
 AlifStack<Container*> funcDepth = AlifStack<Container*>(512);
@@ -1010,18 +1028,20 @@ AlifObject* Compiler::visit_exprs(ExprNode* _node)
 	}
 	else if (_node->type_ == VTStop)
 	{
-		//if (inLoop)
-		//{
-			// التحقق اذا كان داخل حلقة ام لا
-		//}
+		if (!isLoopFlag)
+		{
+			PRINT_(L"لا يمكن استدعاء \"توقف\" من خارج حلقة");
+			exit(-1);
+		}
 		VISIT_(stop, _node);
 	}
 	else if (_node->type_ == VTContinue)
 	{
-		//if (inLoop)
-		//{
-			// التحقق اذا كان داخل حلقة ام لا
-		//}
+		if (!isLoopFlag)
+		{
+			PRINT_(L"لا يمكن استدعاء \"استمر\" من خارج حلقة");
+			exit(-1);
+		}
 		VISIT_(continue_, _node);
 	}
 }
@@ -1061,7 +1081,7 @@ AlifObject* Compiler::visit_stmts(StmtsNode* _node)
 	}
 	else if (_node->type_ == VTReturn) 
 	{
-		if (_node->U.Return.returnExpr != nullptr)
+		if (_node->U.Return.returnExpr)
 		{
 			AlifObject* a = VISIT_(return_, _node->U.Return.returnExpr);
 			return a;
