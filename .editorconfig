@@ -1,0 +1,15 @@
+# يُساعد هذا الملف على توحيد إعدادات مطوري المشروع
+# حيث يفرض هذه الإعدادات لدى المحررات وبيئات التطوير المتكاملة
+# لمعرفة المزيد: https://editorconfig.org
+
+root = true
+
+[*]
+charset = utf-8
+indent_style = tab
+indent_size = 4
+
+# سيتم إضافتهم لاحقًا بعد مناقشتهم مع المطورين
+# end_of_line = lf
+# insert_final_newline = true
+# trim_trailing_whitespace = true
