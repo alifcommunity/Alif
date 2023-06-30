@@ -81,8 +81,6 @@
 
 
 
-
-
 /*
 
     هناك نوعان من الذاكرة الاول المسمى raw والثاني المسممى mem
@@ -98,6 +96,7 @@
 ////////////////////flags/////////////////////
 
 bool rawOrMem = false;
+bool objectOrMemDelete = false; // false for mem , true for object
 
 /////////////////////////////////////////////
 
@@ -108,8 +107,8 @@ void* mem_debug_raw_realloc(MemoryState* _state, void* ptr, size_t nByte);
 void mem_debug_raw_free(MemoryState* _state, void* ptr);
 
 
-void* object_calloc(MemoryState* _state, size_t nElement, size_t elSize);
 void* object_malloc(MemoryState* _state, size_t numberByte);
+void* object_calloc(MemoryState* _state, size_t nElement, size_t elSize);
 
 void
 write_size_t(void* p, size_t n)
@@ -201,6 +200,8 @@ void* raw_realloc(MemoryState* _state, void* ptr, size_t newSize) {
 
 void raw_free(MemoryState* _state, void* ptr) {
 
+    objectOrMemDelete = false;
+
     mem_debug_raw_free(_state, ptr);
 
 }
@@ -230,208 +231,218 @@ void* mem_realloc(MemoryState* _state, void* ptr, size_t newSize) {
 }
 
 void mem_free(MemoryState* _state, void* ptr) {
+
+    objectOrMemDelete = false;
+
     mem_debug_raw_free(_state, ptr);
 }
 
-
-
-
-inline ArenaMapBot* arena_map_get(MemoryState* _state, uint8_t* ptr, int create) {
+inline SegmentMapDown* Segment_map_get(MemoryState* _state, uint8_t* ptr, int create) {
 
     int i1 = (((uint8_t)(ptr)) >> ((((64 - 0) - 20 + 2) / 3) + (((64 - 0) - 20 + 2 + 20))) & ((1 << (((64 - 0) - 20 + 2) / 3)) - 1));
 
-    if (_state->usage.arenaMapRoot.ptrs[i1] == NULL) {
+    if (_state->usage.SegmentMapRoot.ptrs[i1] == NULL) {
 
         if (!create) {
             return NULL;
         }
-        ArenaMapMid* mid = (ArenaMapMid*)mem_debug_raw_alloc(_state, 1, sizeof(ArenaMapMid));
+        SegmentMapMid* mid = (SegmentMapMid*)mem_debug_raw_alloc(_state, 1, sizeof(SegmentMapMid));
 
-        _state->usage.arenaMapRoot.ptrs[i1] = mid;
-        _state->usage.arenaMapMidCount++;
+        _state->usage.SegmentMapRoot.ptrs[i1] = mid;
+        _state->usage.SegmentMapMidCount++;
 
     }
     int i2 = ((((uintptr_t)(ptr)) >> (((64 - 0) - 20 - 2 * (((64 - 0) - 20 + 2) / 3)) + 20)) & ((1 << (((64 - 0) - 20 + 2) / 3)) - 1));
 
-    if (_state->usage.arenaMapRoot.ptrs[i1]->ptrs[i2] == NULL) {
+    if (_state->usage.SegmentMapRoot.ptrs[i1]->ptrs[i2] == NULL) {
 
         if (!create) {
             return NULL;
         }
-        ArenaMapBot* bot = (ArenaMapBot*)mem_debug_raw_alloc(_state, 1, sizeof(ArenaMapBot));
+        SegmentMapDown* bot = (SegmentMapDown*)mem_debug_raw_alloc(_state, 1, sizeof(SegmentMapDown));
 
-        _state->usage.arenaMapRoot.ptrs[i1]->ptrs[i2] = bot;
-        _state->usage.arenaMapMidCount++;
+        _state->usage.SegmentMapRoot.ptrs[i1]->ptrs[i2] = bot;
+        _state->usage.SegmentMapMidCount++;
     }
-    return _state->usage.arenaMapRoot.ptrs[i1]->ptrs[i2];
+    return _state->usage.SegmentMapRoot.ptrs[i1]->ptrs[i2];
 
 }
 
-void arena_map_mark_used(MemoryState* _state, uintptr_t arenaBase, int isUsed) {
+void Segment_map_mark_used(MemoryState* _state, uintptr_t SegmentBase, int isUsed) {
 
 
-    ArenaMapBot* bot = arena_map_get(_state, (uint8_t*)arenaBase, isUsed);
+    SegmentMapDown* bot = Segment_map_get(_state, (uint8_t*)SegmentBase, isUsed);
 
-    int i3 = ((((uintptr_t)((uint8_t*)arenaBase)) >> 20) & ((1 << ((64 - 0) - 20 - 2 * (((64 - 0) - 20 + 2) / 3))) - 1));
-    int32_t tail = (int32_t)(arenaBase & ((1 << 20) - 1));
+    int i3 = ((((uintptr_t)((uint8_t*)SegmentBase)) >> 20) & ((1 << ((64 - 0) - 20 - 2 * (((64 - 0) - 20 + 2) / 3))) - 1));
+    int32_t tail = (int32_t)(SegmentBase & ((1 << 20) - 1));
     if (tail == 0) {
-        bot->arena[i3].tailHi = isUsed ? -1 : 0;
+        bot->Segment[i3].tailHi = isUsed ? -1 : 0;
     }
     else {
-        bot->arena[i3].tailHi = isUsed ? tail : 0;
-        uintptr_t arenaBaseNext = arenaBase + (1 << 20);
-        ArenaMapBot* botLo = arena_map_get(_state, (uint8_t*)arenaBaseNext, isUsed);
+        bot->Segment[i3].tailHi = isUsed ? tail : 0;
+        uintptr_t SegmentBaseNext = SegmentBase + (1 << 20);
+        SegmentMapDown* botLo = Segment_map_get(_state, (uint8_t*)SegmentBaseNext, isUsed);
         if (botLo == NULL) {
-            bot->arena[i3].tailHi = 0;
+            bot->Segment[i3].tailHi = 0;
             return;
         }
-        int i3Next = ((((uintptr_t)(arenaBaseNext)) >> 20) & ((1 << ((64 - 0) - 20 - 2 * (((64 - 0) - 20 + 2) / 3))) - 1));
-        botLo->arena[i3Next].tailLo = isUsed ? tail : 0;
+        int i3Next = ((((uintptr_t)(SegmentBaseNext)) >> 20) & ((1 << ((64 - 0) - 20 - 2 * (((64 - 0) - 20 + 2) / 3))) - 1));
+        botLo->Segment[i3Next].tailLo = isUsed ? tail : 0;
     }
 
 }
 
-int arena_map_is_used(MemoryState* _state, uint8_t* ptr) {
+int Segment_map_is_used(MemoryState* _state, uint8_t* ptr) {
 
-    ArenaMapBot* mid = arena_map_get(_state, ptr, 0);
+    SegmentMapDown* mid = Segment_map_get(_state, ptr, 0);
 
     int i3 = ((((uintptr_t)((uint8_t*)ptr)) >> 20) & ((1 << ((64 - 0) - 20 - 2 * (((64 - 0) - 20 + 2) / 3))) - 1));
 
-    int32_t hi = mid->arena[i3].tailHi;
-    int32_t lo = mid->arena[i3].tailLo;
+    int32_t hi = mid->Segment[i3].tailHi;
+    int32_t lo = mid->Segment[i3].tailLo;
     int32_t tail = (int32_t)((uintptr_t)(ptr) & ((1 << 20) - 1));
     return (tail < lo) || (tail >= hi && hi != 0);
 
 }
 
-void insert_to_used_pool(MemoryState* _state, PoolHeader* pool) {
+void insert_to_used_Alignment(MemoryState* _state, AlignmentHeader* Alignment) {
 
-    unsigned int size = pool->sizeIndex;
-    PoolHeader* next = _state->pools.used[size * 2];
-    PoolHeader* prev = next->prevPool;
+    unsigned int size = Alignment->sizeIndex;
+    AlignmentHeader* next = _state->alignments.used[size * 2];
+    AlignmentHeader* prev = next->prevAlignment;
 
-    pool->nextPool = next;
-    pool->prevPool = prev;
-    next->prevPool = pool;
-    prev->nextPool = pool;
+    Alignment->nextAlignment = next;
+    Alignment->prevAlignment = prev;
+    next->prevAlignment = Alignment;
+    prev->nextAlignment = Alignment;
 
 }
 
-void insert_to_free_pool(MemoryState* _state, PoolHeader* pool) {
+void insert_to_free_Alignment(MemoryState* _state, AlignmentHeader* Alignment) {
 
-    PoolHeader* next = pool->nextPool;
-    PoolHeader* prev = pool->prevPool;
-    next->prevPool = prev;
-    prev->nextPool = next;
+    AlignmentHeader* next = Alignment->nextAlignment;
+    AlignmentHeader* prev = Alignment->prevAlignment;
+    next->prevAlignment = prev;
+    prev->nextAlignment = next;
 
-    ArenaObject* arenaObj = _state->mGmt.arenas;
+    SegmentObject* SegmentObj = _state->mGmt.Segments;
 
-    pool->nextPool = arenaObj->freePools;
-    arenaObj->freePools = pool;
-    unsigned int numberFree = arenaObj->numberFreePools;
+    Alignment->nextAlignment = SegmentObj->freeAlignments;
+    SegmentObj->freeAlignments = Alignment;
+    unsigned int numberFree = SegmentObj->numberFreeAlignments;
 
-    ArenaObject* lastNumberFree = state.mGmt.numberfreePool[numberFree];
-    if (lastNumberFree == arenaObj) {
-        ArenaObject* arena = arenaObj->prevArena;
-        state.mGmt.numberfreePool[numberFree] = (arena != NULL && arena->numberFreePools == numberFree) ? arena : NULL;
+    SegmentObject* lastNumberFree = state.mGmt.numberfreeAlignment[numberFree];
+    if (lastNumberFree == SegmentObj) {
+        SegmentObject* Segment = SegmentObj->prevSegment;
+        state.mGmt.numberfreeAlignment[numberFree] = (Segment != NULL && Segment->numberFreeAlignments == numberFree) ? Segment : NULL;
     }
-    arenaObj->numberFreePools = ++numberFree;
+    SegmentObj->numberFreeAlignments = ++numberFree;
 
-    if (numberFree == arenaObj->numberTotalPools && arenaObj->nextArena != NULL) {
-        if (arenaObj->prevArena == NULL) {
-            _state->mGmt.usableArena = arenaObj->nextArena;
+    if (numberFree == SegmentObj->numberTotalAlignments && SegmentObj->nextSegment != NULL) {
+        if (SegmentObj->prevSegment == NULL) {
+            _state->mGmt.usableSegment = SegmentObj->nextSegment;
         }
         else {
-            arenaObj->prevArena->nextArena = arenaObj->nextArena;
+            SegmentObj->prevSegment->nextSegment = SegmentObj->nextSegment;
         }
 
-        if (arenaObj->nextArena != NULL) {
-            arenaObj->nextArena->prevArena = arenaObj->prevArena;
+        if (SegmentObj->nextSegment != NULL) {
+            SegmentObj->nextSegment->prevSegment = SegmentObj->prevSegment;
         }
 
-        arenaObj->nextArena = _state->mGmt.unusedArena;
-        _state->mGmt.unusedArena = arenaObj;
+        SegmentObj->nextSegment = _state->mGmt.unusedSegment;
+        _state->mGmt.unusedSegment = SegmentObj;
 
 
-        arena_map_mark_used(_state, arenaObj->address, 0);
+        Segment_map_mark_used(_state, SegmentObj->address, 0);
 
-        arenaObj->address = 0;
-        --_state->mGmt.numberArenaCurrentlyAllocate;
+        SegmentObj->address = 0;
+        --_state->mGmt.numberSegmentCurrentlyAllocate;
 
         return;
     }
 
     if (numberFree == 1) {
-        arenaObj->nextArena = _state->mGmt.usableArena;
-        arenaObj->prevArena = NULL;
-        if (_state->mGmt.usableArena) {
-            _state->mGmt.usableArena->prevArena = arenaObj;
+        SegmentObj->nextSegment = _state->mGmt.usableSegment;
+        SegmentObj->prevSegment = NULL;
+        if (_state->mGmt.usableSegment) {
+            _state->mGmt.usableSegment->prevSegment = SegmentObj;
         }
-        _state->mGmt.usableArena = arenaObj;
-        if (_state->mGmt.numberfreePool[1] == NULL) {
-            _state->mGmt.numberfreePool[1] = arenaObj;
+        _state->mGmt.usableSegment = SegmentObj;
+        if (_state->mGmt.numberfreeAlignment[1] == NULL) {
+            _state->mGmt.numberfreeAlignment[1] = SegmentObj;
         }
         return;
     }
 
 
-    if (_state->mGmt.numberfreePool[numberFree] == NULL) {
-        _state->mGmt.numberfreePool[numberFree] = arenaObj;
+    if (_state->mGmt.numberfreeAlignment[numberFree] == NULL) {
+        _state->mGmt.numberfreeAlignment[numberFree] = SegmentObj;
     }
 
-    if (arenaObj == lastNumberFree) {
+    if (SegmentObj == lastNumberFree) {
         return;
     }
 
-    if (arenaObj->prevArena != NULL) {
-        arenaObj->prevArena->nextArena = arenaObj->nextArena;
+    if (SegmentObj->prevSegment != NULL) {
+        SegmentObj->prevSegment->nextSegment = SegmentObj->nextSegment;
     }
     else {
-        _state->mGmt.usableArena = arenaObj->nextArena;
+        _state->mGmt.usableSegment = SegmentObj->nextSegment;
     }
 
-    arenaObj->nextArena->prevArena = arenaObj->prevArena;
+    SegmentObj->nextSegment->prevSegment = SegmentObj->prevSegment;
 
-    arenaObj->prevArena = lastNumberFree;
-    arenaObj->nextArena = lastNumberFree->nextArena;
-    if (arenaObj->nextArena != NULL) {
-        arenaObj->nextArena->prevArena = arenaObj;
+    SegmentObj->prevSegment = lastNumberFree;
+    SegmentObj->nextSegment = lastNumberFree->nextSegment;
+    if (SegmentObj->nextSegment != NULL) {
+        SegmentObj->nextSegment->prevSegment = SegmentObj;
     }
-    lastNumberFree->nextArena = arenaObj;
+    lastNumberFree->nextSegment = SegmentObj;
 
 }
 
 bool address_in_range(MemoryState* _state, void* ptr) {
-    return arena_map_is_used(_state, (uint8_t*)ptr);
+    return Segment_map_is_used(_state, (uint8_t*)ptr);
 }
 
 int malloc_free(MemoryState* _state, void* ptr) {
 
-    PoolHeader* pool = ((PoolHeader*)((void*)((uintptr_t)((ptr)) & ~(uintptr_t)(((1 << 14)) - 1))));
+    AlignmentHeader* Alignment = ((AlignmentHeader*)((void*)((uintptr_t)((ptr)) & ~(uintptr_t)(((1 << 14)) - 1))));
 
     if (!address_in_range(_state, ptr)) {
         return 0;
     }
 
-    uint8_t* lastFree = pool->freeBlock;
+    uint8_t* lastFree = Alignment->freeBlock;
     *(uint8_t**)ptr = lastFree;
-    pool->freeBlock = (uint8_t*)ptr;
-    pool->ref.count--;
+    Alignment->freeBlock = (uint8_t*)ptr;
+    Alignment->ref.count--;
 
     if (lastFree == NULL) {
-        insert_to_used_pool(_state, pool);
+        insert_to_used_Alignment(_state, Alignment);
         return 1;
     }
 
-    if (pool->ref.count != 0) {
+    if (Alignment->ref.count != 0) {
         return 1;
     }
 
-    insert_to_free_pool(_state, pool);
+    insert_to_free_Alignment(_state, Alignment);
     return 1;
 
 }
+
+void object_raw_free(MemoryState* _state, void* ptr) {
+
+    objectOrMemDelete = true;
+
+    mem_debug_raw_free(_state, ptr);
+}
+
 void object_free(MemoryState* _state, void* ptr) {
+
+
 
     if (ptr == NULL) {
         return;
@@ -499,12 +510,15 @@ void mem_debug_raw_free(MemoryState* _state, void* ptr) {
 
     uint8_t* q = (uint8_t*)ptr - 2 * 8;
     size_t numberByte;
-
     numberByte = read_size_t(q);
     numberByte += 24;
     memset(q, 0xDD, numberByte);
-    mem_raw_free(q);
-
+    if (objectOrMemDelete) {
+        object_free(_state, q);
+    }
+    else {
+        mem_raw_free(q);
+    }
 }
 
 void* mem_debug_raw_realloc(MemoryState* _state, void* ptr, size_t nByte) {
@@ -573,153 +587,153 @@ void* mem_debug_raw_realloc(MemoryState* _state, void* ptr, size_t nByte) {
 
 }
 
-ArenaObject* new_arena(MemoryState* _state) {
+SegmentObject* new_Segment(MemoryState* _state) {
 
 
-    ArenaObject* arenaObj = NULL;
+    SegmentObject* SegmentObj = NULL;
     unsigned int excess;
     void* address = nullptr;
 
-    if ((_state)->mGmt.unusedArena == NULL) {
+    if ((_state)->mGmt.unusedSegment == NULL) {
 
         unsigned int i;
-        unsigned int numberArena;
+        unsigned int numberSegment;
         size_t nByte;
 
-        numberArena = (_state)->mGmt.maxArena ? (_state)->mGmt.maxArena << 1 : 16;
+        numberSegment = (_state)->mGmt.maxSegment ? (_state)->mGmt.maxSegment << 1 : 16;
 
-        nByte = numberArena * sizeof(*(_state)->mGmt.arenas);
-        arenaObj = (ArenaObject*)raw_realloc(_state, _state->mGmt.arenas, nByte);
-        (_state)->mGmt.arenas = arenaObj;
+        nByte = numberSegment * sizeof(*(_state)->mGmt.Segments);
+        SegmentObj = (SegmentObject*)raw_realloc(_state, _state->mGmt.Segments, nByte);
+        (_state)->mGmt.Segments = SegmentObj;
 
-        for (i = (_state)->mGmt.maxArena; i < numberArena; ++i)
+        for (i = (_state)->mGmt.maxSegment; i < numberSegment; ++i)
         {
-            (_state)->mGmt.arenas[i].address = 0;
-            (_state)->mGmt.arenas[i].nextArena = i < numberArena - 1 ? &(_state)->mGmt.arenas[i + 1] : NULL;
+            (_state)->mGmt.Segments[i].address = 0;
+            (_state)->mGmt.Segments[i].nextSegment = i < numberSegment - 1 ? &(_state)->mGmt.Segments[i + 1] : NULL;
 
         }
 
-        (_state)->mGmt.unusedArena = &(_state)->mGmt.arenas[(_state)->mGmt.maxArena];
-        (_state)->mGmt.maxArena = numberArena;
+        (_state)->mGmt.unusedSegment = &(_state)->mGmt.Segments[(_state)->mGmt.maxSegment];
+        (_state)->mGmt.maxSegment = numberSegment;
     }
 
-    arenaObj = _state->mGmt.unusedArena;
+    SegmentObj = _state->mGmt.unusedSegment;
     address = (void*)VirtualAlloc(NULL, (1 << 20), 0x00001000 | 0x00002000, 0x04);
 
     if (address != nullptr) {
-        arena_map_mark_used(_state, (uintptr_t)address, 1);
+        Segment_map_mark_used(_state, (uintptr_t)address, 1);
     }
 
     if (address == NULL) {
-        arenaObj->nextArena = (_state)->mGmt.unusedArena;
-        (_state)->mGmt.unusedArena = arenaObj;
+        SegmentObj->nextSegment = (_state)->mGmt.unusedSegment;
+        (_state)->mGmt.unusedSegment = SegmentObj;
         return NULL;
     }
 
-    arenaObj->address = (uintptr_t)address;
+    SegmentObj->address = (uintptr_t)address;
 
-    ++(_state)->mGmt.numberArenaCurrentlyAllocate;
-    ++(_state)->mGmt.numberArenaAllocated;
-    if ((_state)->mGmt.numberArenaCurrentlyAllocate > (_state)->mGmt.numberArenaHighWater) {
-        (_state)->mGmt.numberArenaHighWater = (_state)->mGmt.numberArenaCurrentlyAllocate;
+    ++(_state)->mGmt.numberSegmentCurrentlyAllocate;
+    ++(_state)->mGmt.numberSegmentAllocated;
+    if ((_state)->mGmt.numberSegmentCurrentlyAllocate > (_state)->mGmt.numberSegmentHighWater) {
+        (_state)->mGmt.numberSegmentHighWater = (_state)->mGmt.numberSegmentCurrentlyAllocate;
     }
-    arenaObj->freePools = NULL;
+    SegmentObj->freeAlignments = NULL;
 
 
-    arenaObj->poolAddress = (uint8_t*)arenaObj->address;
-    arenaObj->numberFreePools = ((1 << 20) / (1 << 14));
-    excess = (unsigned int)(arenaObj->address & ((1 << 14) - 1));
+    SegmentObj->alignmentAddress = (uint8_t*)SegmentObj->address;
+    SegmentObj->numberFreeAlignments = ((1 << 20) / (1 << 14));
+    excess = (unsigned int)(SegmentObj->address & ((1 << 14) - 1));
     if (excess != 0) {
-        --arenaObj->numberFreePools;
-        arenaObj->poolAddress += ((1 << 14) - excess);
+        --SegmentObj->numberFreeAlignments;
+        SegmentObj->alignmentAddress += ((1 << 14) - excess);
     }
-    arenaObj->numberTotalPools = arenaObj->numberFreePools;
-    return arenaObj;
+    SegmentObj->numberTotalAlignments = SegmentObj->numberFreeAlignments;
+    return SegmentObj;
 
 }
 
-void malloc_pool_extend(PoolHeader* pool, unsigned int size) {
+void malloc_Alignment_extend(AlignmentHeader* Alignment, unsigned int size) {
 
-    if (pool->nextOffset <= pool->maxNextOffset) {
+    if (Alignment->nextOffset <= Alignment->maxNextOffset) {
 
-        pool->freeBlock = (uint8_t*)pool + pool->nextOffset;
-        pool->nextOffset += (((unsigned int)(size)+1) << 4);
-        *(uint8_t**)(pool->freeBlock) = NULL;
+        Alignment->freeBlock = (uint8_t*)Alignment + Alignment->nextOffset;
+        Alignment->nextOffset += (((unsigned int)(size)+1) << 4);
+        *(uint8_t**)(Alignment->freeBlock) = NULL;
         return;
     }
 
-    PoolHeader* next;
-    next = pool->nextPool;
-    pool = pool->prevPool;
-    next->prevPool = pool;
-    pool->nextPool = next;
+    AlignmentHeader* next;
+    next = Alignment->nextAlignment;
+    Alignment = Alignment->prevAlignment;
+    next->prevAlignment = Alignment;
+    Alignment->nextAlignment = next;
 
 }
 
-void* allocate_from_new_pool(MemoryState* _state, unsigned int size) {
+void* allocate_from_new_Alignment(MemoryState* _state, unsigned int size) {
 
-    if ((_state)->mGmt.usableArena == NULL) {
+    if ((_state)->mGmt.usableSegment == NULL) {
 
-        (_state)->mGmt.usableArena = new_arena(_state);
-        if ((_state)->mGmt.usableArena == NULL) {
+        (_state)->mGmt.usableSegment = new_Segment(_state);
+        if ((_state)->mGmt.usableSegment == NULL) {
             return NULL;
         }
-        (_state)->mGmt.usableArena->nextArena = (_state)->mGmt.usableArena->prevArena = NULL;
-        (_state)->mGmt.numberfreePool[(_state)->mGmt.usableArena->numberFreePools] = (_state)->mGmt.usableArena;
+        (_state)->mGmt.usableSegment->nextSegment = (_state)->mGmt.usableSegment->prevSegment = NULL;
+        (_state)->mGmt.numberfreeAlignment[(_state)->mGmt.usableSegment->numberFreeAlignments] = (_state)->mGmt.usableSegment;
     }
-    if ((_state)->mGmt.numberfreePool[(_state)->mGmt.usableArena->numberFreePools] == (_state)->mGmt.usableArena) {
-        (_state)->mGmt.numberfreePool[(_state)->mGmt.usableArena->numberFreePools] = NULL;
+    if ((_state)->mGmt.numberfreeAlignment[(_state)->mGmt.usableSegment->numberFreeAlignments] == (_state)->mGmt.usableSegment) {
+        (_state)->mGmt.numberfreeAlignment[(_state)->mGmt.usableSegment->numberFreeAlignments] = NULL;
     }
-    if ((_state)->mGmt.usableArena->numberFreePools > 1) {
-        (_state)->mGmt.numberfreePool[(_state)->mGmt.usableArena->numberFreePools - 1] = (_state)->mGmt.usableArena;
+    if ((_state)->mGmt.usableSegment->numberFreeAlignments > 1) {
+        (_state)->mGmt.numberfreeAlignment[(_state)->mGmt.usableSegment->numberFreeAlignments - 1] = (_state)->mGmt.usableSegment;
     }
 
-    PoolHeader* pool = (_state)->mGmt.usableArena->freePools;
-    if (pool != NULL) {
-        (_state)->mGmt.usableArena->freePools = pool->nextPool;
-        (_state)->mGmt.usableArena->numberFreePools--;
-        if ((_state)->mGmt.usableArena->numberFreePools == 0) {
-            (_state)->mGmt.usableArena = (_state)->mGmt.usableArena->nextArena;
-            if ((_state)->mGmt.usableArena != NULL) {
-                (_state)->mGmt.usableArena->prevArena = NULL;
+    AlignmentHeader* Alignment = (_state)->mGmt.usableSegment->freeAlignments;
+    if (Alignment != NULL) {
+        (_state)->mGmt.usableSegment->freeAlignments = Alignment->nextAlignment;
+        (_state)->mGmt.usableSegment->numberFreeAlignments--;
+        if ((_state)->mGmt.usableSegment->numberFreeAlignments == 0) {
+            (_state)->mGmt.usableSegment = (_state)->mGmt.usableSegment->nextSegment;
+            if ((_state)->mGmt.usableSegment != NULL) {
+                (_state)->mGmt.usableSegment->prevSegment = NULL;
             }
         }
     }
     else {
-        pool = (PoolHeader*)_state->mGmt.usableArena->poolAddress;
-        pool->arenaIndex = (unsigned int)(_state->mGmt.usableArena - _state->mGmt.arenas);
-        pool->sizeIndex = 0xffff;
-        (_state)->mGmt.usableArena->poolAddress += (1 << 14);
-        --(_state)->mGmt.usableArena->numberFreePools;
+        Alignment = (AlignmentHeader*)_state->mGmt.usableSegment->alignmentAddress;
+        Alignment->SegmentIndex = (unsigned int)(_state->mGmt.usableSegment - _state->mGmt.Segments);
+        Alignment->sizeIndex = 0xffff;
+        (_state)->mGmt.usableSegment->alignmentAddress += (1 << 14);
+        --(_state)->mGmt.usableSegment->numberFreeAlignments;
 
-        if ((_state)->mGmt.usableArena->numberFreePools == 0) {
-            (_state)->mGmt.usableArena = (_state)->mGmt.usableArena->nextArena;
-            if ((_state)->mGmt.usableArena != NULL) {
-                (_state)->mGmt.usableArena->prevArena = NULL;
+        if ((_state)->mGmt.usableSegment->numberFreeAlignments == 0) {
+            (_state)->mGmt.usableSegment = (_state)->mGmt.usableSegment->nextSegment;
+            if ((_state)->mGmt.usableSegment != NULL) {
+                (_state)->mGmt.usableSegment->prevSegment = NULL;
             }
         }
     }
 
     uint8_t* bp;
-    PoolHeader* next = (_state)->pools.used[size + size];
-    pool->nextPool = next;
-    pool->prevPool = next;
-    next->nextPool = pool;
-    next->prevPool = pool;
-    pool->ref.count = 1;
-    if (pool->sizeIndex == size) {
-        bp = pool->freeBlock;
-        pool->freeBlock = *(uint8_t**)bp;
+    AlignmentHeader* next = (_state)->alignments.used[size + size];
+    Alignment->nextAlignment = next;
+    Alignment->prevAlignment = next;
+    next->nextAlignment = Alignment;
+    next->prevAlignment = Alignment;
+    Alignment->ref.count = 1;
+    if (Alignment->sizeIndex == size) {
+        bp = Alignment->freeBlock;
+        Alignment->freeBlock = *(uint8_t**)bp;
         return bp;
     }
 
-    pool->sizeIndex = size;
+    Alignment->sizeIndex = size;
     size = (((unsigned int)(size)+1) << 4);
-    bp = (uint8_t*)pool + SIZE_ROUND_UP(sizeof(PoolHeader), 16));
-    pool->nextOffset = SIZE_ROUND_UP(sizeof(PoolHeader), 16)) + (size << 1);
-    pool->maxNextOffset = (1 << 14) - size;
-    pool->freeBlock = bp + size;
-    *(uint8_t**)(pool->freeBlock) = NULL;
+    bp = (uint8_t*)Alignment + SIZE_ROUND_UP(sizeof(AlignmentHeader), 16));
+    Alignment->nextOffset = SIZE_ROUND_UP(sizeof(AlignmentHeader), 16)) + (size << 1);
+    Alignment->maxNextOffset = (1 << 14) - size;
+    Alignment->freeBlock = bp + size;
+    *(uint8_t**)(Alignment->freeBlock) = NULL;
     return bp;
 
 }
@@ -727,21 +741,21 @@ void* allocate_from_new_pool(MemoryState* _state, unsigned int size) {
 void* malloc_alloc(MemoryState* _state, size_t nByte) {
 
     unsigned int size = (nByte - 1) >> 4;
-    PoolHeader* pool = _state->pools.used[size + size];
+    AlignmentHeader* Alignment = _state->alignments.used[size + size];
     uint8_t* bp;
 
-    if (pool != pool->nextPool) {
+    if (Alignment != Alignment->nextAlignment) {
 
-        ++pool->ref.count;
-        bp = pool->freeBlock;
+        ++Alignment->ref.count;
+        bp = Alignment->freeBlock;
 
-        if ((pool->freeBlock = *(uint8_t**)bp) == NULL) {
-            malloc_pool_extend(pool, size);
+        if ((Alignment->freeBlock = *(uint8_t**)bp) == NULL) {
+            malloc_Alignment_extend(Alignment, size);
         }
 
     }
     else {
-        bp = (uint8_t*)allocate_from_new_pool(_state, size);
+        bp = (uint8_t*)allocate_from_new_Alignment(_state, size);
     }
     return (void*)bp;
 }
@@ -781,16 +795,16 @@ void* object_calloc(MemoryState* _state, size_t nElement, size_t elSize) {
 int malloc_realloc(MemoryState* _state, void** newPtr, void* ptr, size_t numberByte) {
 
     void* bp;
-    PoolHeader* pool;
+    AlignmentHeader* Alignment;
     size_t size;
 
-    pool = ((PoolHeader*)((void*)((uintptr_t)((ptr)) & ~(uintptr_t)(((1 << 14)) - 1))));
+    Alignment = ((AlignmentHeader*)((void*)((uintptr_t)((ptr)) & ~(uintptr_t)(((1 << 14)) - 1))));
 
     if (!address_in_range(_state, ptr)) {
         return 0;
     }
 
-    size = (((unsigned int)(pool->sizeIndex) + 1) << 4);
+    size = (((unsigned int)(Alignment->sizeIndex) + 1) << 4);
 
     if (numberByte <= size) {
         if (4 * numberByte > 3 * size) {
