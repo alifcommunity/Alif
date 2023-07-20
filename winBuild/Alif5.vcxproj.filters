@@ -106,6 +106,9 @@
     <ClInclude Include="..\source\AlifStack.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Tokens_and_Parser_Definations.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Alif5.rc">
