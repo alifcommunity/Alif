@@ -1,5 +1,8 @@
 #pragma once
 
+
+// تعريفات الكلمات المحجوزة
+
 #define ENDMARKER         0   // " "
 #define NUMBER            1   // 123...
 #define STRING            2   // "أ ب ت ..."
@@ -44,15 +47,26 @@
 #define DOUBLESLASHEQUAL  42  // \\=
 #define RARROW            43  // >
 #define EXCLAMATION       44  // !
-#define OP                45  
+#define OP                45  // <~~~~~~~ مراجعة
 #define AWAIT             46  
 #define ASYNC             47  
-#define TYPE_IGNORE       48
-#define FSTRING_START     49
-#define FSTRING_MIDDLE    50
-#define FSTRING_END       51
-#define COMMENT           52  // #
-#define NL                53  // سطر
-#define ERRORTOKEN        54  // خطأ
-#define N_TOKENS          55 
+#define FSTRING_START     48
+#define FSTRING_MIDDLE    49
+#define FSTRING_END       50
+#define COMMENT           51  // #
+#define NL                52  // <~~~~~~~ مراجعة
+#define ERRORTOKEN        53  // <~~~~~~~ مراجعة
+#define N_TOKENS          54  // <~~~~~~~ مراجعة
 #define NT_OFFSET         256
+
+
+
+#define ISTERMINAL(x)           ((x) < NT_OFFSET)
+#define ISNONTERMINAL(x)        ((x) >= NT_OFFSET)
+#define ISEOF(x)                ((x) == ENDMARKER)
+#define ISWHITESPACE(x)         ((x) == ENDMARKER || \
+                                 (x) == NEWLINE   || \
+                                 (x) == INDENT    || \
+                                 (x) == DEDENT)
+#define ISSTRINGLIT(x)          ((x) == STRING           || \
+                                 (x) == FSTRING_MIDDLE)
