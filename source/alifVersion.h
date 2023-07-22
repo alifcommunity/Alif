@@ -22,7 +22,7 @@
 	نسخة ألف ك 4-بايت رقم ست عشري, مثال: 5.1.0 أ.
 	تستخدم هذه للمقارنات العددية, مثال if ALIF_VERSION_HEX >= ...: 
 */
-#define ALIF_VERSION_HEX ((ALIF_MAJOR_VERSION << 16)  |  \
+#define ALIF_VERSION_HEX ((ALIF_MAJOR_VERSION << 16)   |  \
                            (ALIF_MINOR_VERSION << 8)   |  \
                            (ALIF_MICRO_VERSION << 4)   |  \
                            (ALIF_RELEASE_LEVEL << 0))
