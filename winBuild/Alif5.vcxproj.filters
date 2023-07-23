@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\Alif5.cpp">
+    <ClCompile Include="..\source\Alif.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\source\Lexer.cpp">
@@ -106,7 +106,13 @@
     <ClInclude Include="..\source\AlifStack.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Tokens_and_Parser_Definations.h">
+    <ClInclude Include="..\source\alifConfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Alif.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\alifDefinations.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
