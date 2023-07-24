@@ -1,6 +1,5 @@
 #include "Alif.h"
 
-
 typedef class _AlifArgv { // تحت المراجعة
 public:
 	int argc;
@@ -12,36 +11,37 @@ public:
 
 int Alif_RunMain(void)
 {
-	int exitcode = 0;
+	//int exitcode = 0;
 
-	alifmain_run_alif(&exitcode);
+	//alifmain_run_alif(&exitcode);
 
-	if (Alif_FinalizeEx() < 0) {
-		/* Value unlikely to be confused with a non-error exit status or
-		   other special meaning */
-		exitcode = 120;
-	}
+	//if (Alif_FinalizeEx() < 0) {
+	//	/* Value unlikely to be confused with a non-error exit status or
+	//	   other special meaning */
+	//	exitcode = 120;
+	//}
 
-	alifmain_free();
+	//alifmain_free();
 
-	if (_ALifRuntime.signals.unhandled_keyboard_interrupt) {
-		exitcode = exit_sigint();
-	}
+	//if (_ALifRuntime.signals.unhandled_keyboard_interrupt) {
+	//	exitcode = exit_sigint();
+	//}
 
-	return exitcode;
+	//return exitcode;
+	return 1;
 }
 
 
 static int alif_main(_AlifArgv* args)
 {
-	AlifStatus status = alifmain_init(args);
-	if (_AlifStatus_IS_EXIT(status)) {
-		alifmain_free();
-		return status.exitcode;
-	}
-	if (_ALifStatus_EXCEPTION(status)) {
-		alifmain_exit_error(status);
-	}
+	//AlifStatus status = alifmain_init(args);
+	//if (_AlifStatus_IS_EXIT(status)) {
+	//	alifmain_free();
+	//	return status.exitcode;
+	//}
+	//if (_ALifStatus_EXCEPTION(status)) {
+	//	alifmain_exit_error(status);
+	//}
 
 	return Alif_RunMain();
 }
@@ -71,7 +71,6 @@ int Alif_MainByte(int argc, char** argv)
 
 	return alif_main(&args);
 }
-
 
 #ifdef MS_WINDOWS
 int wmain(int argc, wchar_t** argv)
