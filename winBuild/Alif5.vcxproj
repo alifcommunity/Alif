@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\Alif5.cpp" />
+    <ClCompile Include="..\source\Alif.cpp" />
     <ClCompile Include="..\source\AlifNamesTable.cpp" />
     <ClCompile Include="..\source\Compiler.cpp" />
     <ClCompile Include="..\source\Error.cpp" />
@@ -38,7 +38,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AddrFuncs.h" />
+    <ClInclude Include="..\source\Alif.h" />
     <ClInclude Include="..\source\AlifArray.h" />
+    <ClInclude Include="..\source\alifConfig.h" />
+    <ClInclude Include="..\source\alifDefinations.h" />
     <ClInclude Include="..\source\AlifRun.h" />
     <ClInclude Include="..\source\AlifStack.h" />
     <ClInclude Include="..\source\Compiler.h" />
