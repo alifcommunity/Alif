@@ -86,21 +86,13 @@ static void alifmain_run(int* exitcode)
 }
 
 
-static int Alif_RunMain()
+static int Alif_RunMain(_AlifArgv* args)
 {
 	int exitcode = 0;
 
 	alifmain_run(&exitcode);
 
 	return exitcode;
-}
-
-
-static int alifmain_main(_AlifArgv* args)
-{
-	AlifStatus status = alifmain_init(args);
-
-	return Alif_RunMain();
 }
 
 
@@ -113,7 +105,7 @@ int Alif_MainWchar(int argc, wchar_t** argv)
 		.wchar_argv = argv
 	};
 
-	return alifmain_main(&args);
+	return Alif_RunMain(&args);
 }
 
 
@@ -126,7 +118,7 @@ int Alif_MainChar(int argc, char** argv)
 		.wchar_argv = NULL
 	};
 
-	return alifmain_main(&args);
+	return Alif_RunMain(&args);
 }
 
 #ifdef MS_WINDOWS
