@@ -51,10 +51,21 @@
 
 
 
+// status
+
+class AlifStatus
+{
+public:
+
+	int type; // 0 -> typeOk , 1 -> typeError ,  2 -> typeExit
+	const wchar_t* func;
+	const wchar_t* mesError;
+	int exitCode;
+};
 
 
-
-
+#define _AlifStatus_OK() \
+    (AlifStatus){.type = 0,}
 
 /* Compiler specific defines */
 

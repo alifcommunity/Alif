@@ -95,6 +95,30 @@ static int Alif_RunMain()
 	return exitcode;
 }
 
+static int runtimeInitialized = 0;
+
+static AlifStatus _alifruntime_initialize(void) {
+
+	if (runtimeInitialized) {
+		return _AlifStatus_OK;
+	}
+
+	runtimeInitialized = 1;
+
+	return _AlifRuncTimeState_init();
+}
+
+static AlifStatus alifmain_init(const _AlifArgv* args) {
+
+	AlifStatus status;
+
+	status = _alifruntime_initialize();
+	if (status.type != 0) {
+		return status;
+	}
+
+
+}
 
 static int alifmain_main(_AlifArgv* args)
 {
