@@ -1,12 +1,43 @@
 #include "Alif.h"
+#include "alifcore_initConfig.h"    // _AlifArgv
 
-typedef class _AlifArgv { // تحت المراجعة
-public:
-	int argc;
-	int use_bytes_argv;
-	char* const* bytes_argv;
-	wchar_t* const* wchar_argv;
-} _AlifArgv;
+
+
+//static int runtimeInitialized = 0;
+
+//AlifStatus _alifruntime_initialize()
+//{
+//	if (runtimeInitialized) {
+//		return _AlifStatus_OK();
+//	}
+//
+//	runtimeInitialized = 1;
+//
+//	return _AlifRuncTimeState_init();
+//}
+
+
+static AlifStatus alifmain_init(const _AlifArgv* args) {
+
+	AlifStatus status{};
+	//AlifStatus status = _alifruntime_initialize();
+
+	//if (status.type != 0) {
+	//	return status;
+	//}
+
+	AlifConfig config;
+
+
+	if (args->use_bytes_argv) {
+		//status = PyConfig_SetBytesArgv(&config, args->argc, args->bytes_argv);
+	}
+	else {
+		status = alifConfig_setArgv(&config, args->argc, args->wchar_argv);
+	}
+
+	return status;
+}
 
 
 static void alifmain_run(int* exitcode)
@@ -95,30 +126,6 @@ static int Alif_RunMain()
 	return exitcode;
 }
 
-static int runtimeInitialized = 0;
-
-static AlifStatus _alifruntime_initialize(void) {
-
-	if (runtimeInitialized) {
-		return _AlifStatus_OK;
-	}
-
-	runtimeInitialized = 1;
-
-	return _AlifRuncTimeState_init();
-}
-
-static AlifStatus alifmain_init(const _AlifArgv* args) {
-
-	AlifStatus status;
-
-	status = _alifruntime_initialize();
-	if (status.type != 0) {
-		return status;
-	}
-
-
-}
 
 static int alifmain_main(_AlifArgv* args)
 {
@@ -133,7 +140,7 @@ int Alif_MainWchar(int argc, wchar_t** argv)
 	_AlifArgv args = {
 		.argc = argc,
 		.use_bytes_argv = 0,
-		.bytes_argv = NULL,
+		.bytes_argv = nullptr,
 		.wchar_argv = argv
 	};
 
@@ -147,7 +154,7 @@ int Alif_MainChar(int argc, char** argv)
 		.argc = argc,
 		.use_bytes_argv = 1,
 		.bytes_argv = argv,
-		.wchar_argv = NULL
+		.wchar_argv = nullptr
 	};
 
 	return alifmain_main(&args);
@@ -162,7 +169,7 @@ int wmain(int argc, wchar_t** argv)
 #else
 int main(int argc, char** argv)
 {
-	char* argsv[] = { "alif5", "example.alif5" };
+	char* argsv[] = { "alif", "example.alif" };
 	return Alif_MainChar(2, argsv);
 }
 #endif
