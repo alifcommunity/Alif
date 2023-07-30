@@ -1,0 +1,19 @@
+Synchronization: Make sure to use proper synchronization mechanisms to avoid data races. Data races occur when multiple threads access shared data simultaneously, leading to unpredictable behavior and data corruption. Use mutexes, semaphores, or other synchronization primitives to protect shared data from simultaneous access.
+
+Immutable Data: Whenever possible, use immutable data structures. Immutable data cannot be modified after creation, making them inherently thread-safe. If you need to update data, create a new copy rather than modifying the existing data.
+
+Thread-local Data: Minimize shared data between threads by using thread-local data wherever applicable. Thread-local data is data that is unique to each thread and doesn't need to be shared. This reduces contention and the chances of data leaks.
+
+Message Passing: If you're using parallelism across multiple processes or threads, prefer message passing over shared memory for communication between processes. Libraries like MPI (Message Passing Interface) or language-specific inter-process communication mechanisms can help you achieve this.
+
+Atomic Operations: When you have shared data that needs to be updated by multiple threads, consider using atomic operations or atomic data types. Atomic operations provide a way to perform read-modify-write operations on shared data in an atomic and thread-safe manner.
+
+Thread Pools: Use thread pools or task queues to manage the creation and reuse of threads. Creating and destroying threads can be costly, and using a pool of pre-allocated threads helps minimize this overhead.
+
+Avoid Global Variables: Minimize the use of global variables, especially when working with parallelism. Global variables can lead to hidden data dependencies and make it difficult to reason about the flow of data.
+
+Thread Safety in Libraries: If you are using external libraries in your parallel code, ensure that they are thread-safe or use appropriate synchronization to avoid potential data leaks.
+
+Testing and Debugging: Thoroughly test your parallel code and use debugging tools that can help identify potential data leaks, race conditions, and other threading issues.
+
+Understand Memory Management: Be mindful of memory allocation and deallocation in a multithreaded environment. Improper memory management can lead to memory leaks or data corruption.
