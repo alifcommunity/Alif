@@ -7,9 +7,9 @@
 class _AlifArgv {
 public:
 	Alif_ssize_t argc;
-	int use_bytes_argv;
-	char* const* bytes_argv;
-	wchar_t* const* wchar_argv;
+	int useCharArgv;
+	char* const* charArgv;
+	wchar_t* const* wcharArgv;
 };
 
 AlifStatus _alifArgv_asWstrList(const _AlifArgv* args, AlifWideStringList* list);

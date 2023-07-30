@@ -4,9 +4,5 @@
 #include "alifConfig.h"
 
 #include <iostream>
-#include <string>
-#include <Windows.h>
-
-#include <wchar.h>
 
 #include "initConfig.h"
