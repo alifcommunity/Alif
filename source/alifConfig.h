@@ -50,23 +50,6 @@
 #endif /* Alif_BUILD_CORE || Alif_BUILD_CORE_BUILTIN || Alif_BUILD_CORE_MODULE */
 
 
-
-// status
-
-class AlifStatus
-{
-public:
-
-	int type; // 0 -> typeOk , 1 -> typeError ,  2 -> typeExit
-	const wchar_t* func;
-	const wchar_t* mesError;
-	int exitCode;
-};
-
-
-#define _AlifStatus_OK() \
-    (AlifStatus){.type = 0,}
-
 /* Compiler specific defines */
 
 /* ------------------------------------------------------------------------*/
@@ -157,7 +140,7 @@ public:
 
 /* Define like size_t, omitting the "unsigned" */
 #ifdef MS_WIN64
-typedef __int64 Py_ssize_t;
+typedef __int64 Alif_ssize_t;
 #   define PY_SSIZE_T_MAX LLONG_MAX
 #else
 typedef _W64 int Py_ssize_t;
@@ -197,3 +180,4 @@ typedef int pid_t;
 #endif
 
 #endif /* _MSC_VER */
+

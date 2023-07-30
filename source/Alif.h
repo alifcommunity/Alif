@@ -8,3 +8,5 @@
 #include <Windows.h>
 
 #include <wchar.h>
+
+#include "initConfig.h"

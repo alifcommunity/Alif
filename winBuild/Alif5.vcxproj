@@ -23,10 +23,12 @@
     <ClCompile Include="..\source\AlifNamesTable.cpp" />
     <ClCompile Include="..\source\Compiler.cpp" />
     <ClCompile Include="..\source\Error.cpp" />
+    <ClCompile Include="..\source\initConfig.cpp" />
     <ClCompile Include="..\source\Interpreter.cpp" />
     <ClCompile Include="..\source\Lexer.cpp" />
     <ClCompile Include="..\source\AlifMemory.cpp" />
     <ClCompile Include="..\source\Parser.cpp" />
+    <ClCompile Include="..\source\preConfig.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\documents\Grammar.md" />
@@ -41,6 +43,7 @@
     <ClInclude Include="..\source\Alif.h" />
     <ClInclude Include="..\source\AlifArray.h" />
     <ClInclude Include="..\source\alifConfig.h" />
+    <ClInclude Include="..\source\alifcore_initConfig.h" />
     <ClInclude Include="..\source\alifDefinations.h" />
     <ClInclude Include="..\source\AlifRun.h" />
     <ClInclude Include="..\source\AlifStack.h" />
@@ -49,6 +52,7 @@
     <ClInclude Include="..\source\Container.h" />
     <ClInclude Include="..\source\Error.h" />
     <ClInclude Include="..\source\ErrorIndicator.h" />
+    <ClInclude Include="..\source\initConfig.h" />
     <ClInclude Include="..\source\Interpreter.h" />
     <ClInclude Include="..\source\Lexer.h" />
     <ClInclude Include="..\source\AlifMemory.h" />
@@ -119,6 +123,12 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <PublicIncludeDirectories>
+    </PublicIncludeDirectories>
+    <PublicModuleDirectories>
+    </PublicModuleDirectories>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
