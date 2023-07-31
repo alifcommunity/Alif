@@ -1,9 +1,9 @@
 #include "Alif.h"
-#include "alifcore_initConfig.h"    // _AlifArgv
+#include "alifcore_initConfig.h"    // AlifArgv
 
 
 
-static AlifStatus alifMain_init(const _AlifArgv* args) {
+static AlifStatus alifMain_init(const AlifArgv* args) {
 
 	AlifStatus status{};
 
@@ -37,7 +37,7 @@ static int alif_runMain()
 }
 
 
-static int alifmain_main(_AlifArgv* args)
+static int alifMain_main(AlifArgv* args)
 {
 	AlifStatus status = alifMain_init(args);
 
@@ -47,28 +47,29 @@ static int alifmain_main(_AlifArgv* args)
 
 int alif_mainWchar(int argc, wchar_t** argv)
 {
-	_AlifArgv args = {
+	AlifArgv args = {
 		.argc = argc,
 		.useCharArgv = 0,
 		.charArgv = nullptr,
 		.wcharArgv = argv
 	};
 
-	return alifmain_main(&args);
+	return alifMain_main(&args);
 }
 
 
 int alif_mainChar(int argc, char** argv)
 {
-	_AlifArgv args = {
+	AlifArgv args = {
 		.argc = argc,
 		.useCharArgv = 1,
 		.charArgv = argv,
 		.wcharArgv = nullptr
 	};
 
-	return alifmain_main(&args);
+	return alifMain_main(&args);
 }
+
 
 #ifdef MS_WINDOWS
 int wmain(int _argc, wchar_t** _argv)

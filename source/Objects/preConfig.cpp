@@ -3,7 +3,7 @@
 
 
 
-AlifStatus _alifArgv_asWstrList(const _AlifArgv* args, AlifWideStringList* list)
+AlifStatus _alifArgv_asWstrList(const AlifArgv* args, AlifWideStringList* list)
 {
 	AlifWideStringList wArgv = { .length = 0, .items = nullptr };
 	if (args->useCharArgv) {
