@@ -11,17 +11,14 @@
 /* Get run_filename absolute path */
 static AlifStatus configRun_filenameAbspath(AlifConfig* config)
 {
-	wchar_t* absFilename;
 	std::error_code error;
-	std::filesystem::absolute(config->runFilename, error);
+	std::filesystem::path absPath = std::filesystem::absolute(config->runFilename, error);
 	if(error) {
 	//if (_Py_abspath(config->run_filename, &abs_filename) < 0) {
 		/* failed to get the absolute path of the command line filename:
 		   ignore the error, keep the relative path */
 		return _AlifStatus_OK();
 	}
-
-	config->runFilename = absFilename;
 
 	return _AlifStatus_OK();
 }
@@ -34,7 +31,6 @@ static AlifStatus configRead_cmdLine(AlifConfig* config)
 
 	status = _AlifStatus_OK();
 
-done:
 	return status;
 }
 
@@ -46,7 +42,7 @@ AlifStatus alifConfig_read(AlifConfig* config)
 
 	status = _AlifStatus_OK();
 
-done:
+
 	return status;
 }
 
