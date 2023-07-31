@@ -7,7 +7,8 @@ static AlifStatus alifInit_core(const AlifConfig* _srcConfig)
 	AlifStatus status;
 	AlifConfig config;
 
-	status = alifConfig_read(&config);
+	//status = alifConfig_read(&config);
+	status = alifConfig_read((AlifConfig*)_srcConfig);
 
 
 	return status;

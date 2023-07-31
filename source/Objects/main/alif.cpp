@@ -13,7 +13,8 @@ static AlifStatus alifMain_init(const AlifArgv* args) {
 		//status = alifConfig_setCharArgv(&config, args->argc, args->char_argv);
 	}
 	else {
-		status = alifConfig_setArgv(&config, args->argc, args->wcharArgv);
+		//status = alifConfig_setArgv(&config, args->argc, args->wcharArgv);
+		config.runFilename = (wchar_t*)L"example.alif";
 	}
 
 	status = alifInit_fromConfig(&config);
