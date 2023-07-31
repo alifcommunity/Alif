@@ -25,13 +25,13 @@ public:
 
 class AlifConfig {
 public:
-	AlifWideStringList orig_argv;
+	AlifWideStringList origArgv;
 	AlifWideStringList argv;
 
-	int skip_source_first_line;
-	wchar_t* run_command;
-	wchar_t* run_module;
-	wchar_t* run_filename;
+	int skipSourceFirstLine;
+	wchar_t* runCommand;
+	wchar_t* runModule;
+	wchar_t* runFilename;
 };
 
 

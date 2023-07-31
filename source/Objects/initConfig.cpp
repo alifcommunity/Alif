@@ -1,16 +1,16 @@
 #include "Alif.h"
 #include "alifcore_initConfig.h" // _AlifStatus_OK()
 
-AlifStatus _alifConfig_setAlifArgv(AlifConfig* config, const _AlifArgv* args)
+AlifStatus alifConfig_setAlifArgv(AlifConfig* config, const AlifArgv* args)
 {
 
-	return _alifArgv_asWstrList(args, &config->argv);
+	return alifArgv_asWstrList(args, &config->argv);
 }
 
 
 AlifStatus alifConfig_setCharArgv(AlifConfig* config, Alif_ssize_t argc, char* const* argv)
 {
-	_AlifArgv args = {
+	AlifArgv args = {
 		.argc = argc,
 		.useCharArgv = 1,
 		.charArgv = argv,
@@ -23,12 +23,12 @@ AlifStatus alifConfig_setCharArgv(AlifConfig* config, Alif_ssize_t argc, char* c
 
 AlifStatus alifConfig_setArgv(AlifConfig* config, Alif_ssize_t argc, wchar_t* const* argv)
 {
-	_AlifArgv args = {
+	AlifArgv args = {
 		.argc = argc,
 		.useCharArgv = 0,
 		.charArgv = nullptr,
 		.wcharArgv = argv
 	};
 
-	return _alifConfig_setAlifArgv(config, &args);
+	return alifConfig_setAlifArgv(config, &args);
 }
