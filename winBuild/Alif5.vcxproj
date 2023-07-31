@@ -47,6 +47,7 @@
     <ClInclude Include="..\source\alifDefinations.h" />
     <ClInclude Include="..\source\AlifRun.h" />
     <ClInclude Include="..\source\AlifStack.h" />
+    <ClInclude Include="..\source\alifVersion.h" />
     <ClInclude Include="..\source\Compiler.h" />
     <ClInclude Include="..\source\Constants.h" />
     <ClInclude Include="..\source\Container.h" />
