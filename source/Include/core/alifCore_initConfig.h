@@ -4,7 +4,7 @@
 
 /* ___________ AlifArgv ___________ */
 
-class _AlifArgv {
+class AlifArgv {
 public:
 	Alif_ssize_t argc;
 	int useCharArgv;
@@ -12,9 +12,9 @@ public:
 	wchar_t* const* wcharArgv;
 };
 
-AlifStatus _alifArgv_asWstrList(const _AlifArgv* args, AlifWideStringList* list);
+AlifStatus _alifArgv_asWstrList(const AlifArgv* args, AlifWideStringList* list);
 
 
 /* ___________ AlifConfig ___________ */
 
-extern AlifStatus _alifConfig_setAlifArgv(AlifConfig* config, const _AlifArgv* args);
+extern AlifStatus _alifConfig_setAlifArgv(AlifConfig* config, const AlifArgv* args);

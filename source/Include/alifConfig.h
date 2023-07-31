@@ -1,6 +1,6 @@
 #pragma once
 
-#define Alif_BUILD_CORE
+#define ALIF_BUILD_CORE
 
 #define HAVE_IO_H
 //#define HAVE_SYS_UTIME_H
@@ -60,19 +60,19 @@
  * This is horridly tricky, because the stringization operator only works
  * on macro arguments, and doesn't evaluate macros passed *as* arguments.
  */
-#define _Py_PASTE_VERSION(SUFFIX) \
-        ("[MSC v." _Py_STRINGIZE(_MSC_VER) " " SUFFIX "]")
+#define _ALIF_PASTE_VERSION(SUFFIX) \
+        ("[MSC v." _ALIF_STRINGIZE(_MSC_VER) " " SUFFIX "]")
  /* e.g., this produces, after compile-time string catenation,
   *      ("[MSC v.1900 64 bit (Intel)]")
   *
-  * _Py_STRINGIZE(_MSC_VER) expands to
-  * _Py_STRINGIZE1(_MSC_VER) and this second macro call is scanned
+  * _ALIF_STRINGIZE(_MSC_VER) expands to
+  * _ALIF_STRINGIZE1(_MSC_VER) and this second macro call is scanned
   *      again for macros and so further expands to
-  * _Py_STRINGIZE1(1900) which then expands to
+  * _ALIF_STRINGIZE1(1900) which then expands to
   * "1900"
   */
-#define _Py_STRINGIZE(X) _Py_STRINGIZE1(X)
-#define _Py_STRINGIZE1(X) #X // يقوم بإرجاع قيمة X كقيمة نصية
+#define _ALIF_STRINGIZE(X) _ALIF_STRINGIZE1(X)
+#define _ALIF_STRINGIZE1(X) #X // يقوم بإرجاع قيمة X كقيمة نصية
 
 
 #ifdef _WIN64
@@ -89,47 +89,47 @@
 #ifdef MS_WIN64
 #if defined(_M_X64) || defined(_M_AMD64)
 #if defined(__clang__)
-#define COMPILER ("[Clang " __clang_version__ "] 64 bit (AMD64) with MSC v." _Py_STRINGIZE(_MSC_VER) " CRT]")
-#define PY_SUPPORT_TIER 0
+#define COMPILER ("[Clang " __clang_version__ "] 64 bit (AMD64) with MSC v." _ALIF_STRINGIZE(_MSC_VER) " CRT]")
+#define ALIF_SUPPORT_TIER 0
 #elif defined(__INTEL_COMPILER)
-#define COMPILER ("[ICC v." _Py_STRINGIZE(__INTEL_COMPILER) " 64 bit (amd64) with MSC v." _Py_STRINGIZE(_MSC_VER) " CRT]")
-#define PY_SUPPORT_TIER 0
+#define COMPILER ("[ICC v." _ALIF_STRINGIZE(__INTEL_COMPILER) " 64 bit (amd64) with MSC v." _ALIF_STRINGIZE(_MSC_VER) " CRT]")
+#define ALIF_SUPPORT_TIER 0
 #else
-#define COMPILER _Py_PASTE_VERSION("64 bit (AMD64)")
-#define PY_SUPPORT_TIER 1
+#define COMPILER _ALIF_PASTE_VERSION("64 bit (AMD64)")
+#define ALIF_SUPPORT_TIER 1
 #endif /* __clang__ */
-#define PYD_PLATFORM_TAG "win_amd64"
+#define ALIFD_PLATFORM_TAG "win_amd64"
 #elif defined(_M_ARM64)
-#define COMPILER _Py_PASTE_VERSION("64 bit (ARM64)")
-#define PY_SUPPORT_TIER 3
-#define PYD_PLATFORM_TAG "win_arm64"
+#define COMPILER _ALIF_PASTE_VERSION("64 bit (ARM64)")
+#define ALIF_SUPPORT_TIER 3
+#define ALIFD_PLATFORM_TAG "win_arm64"
 #else
-#define COMPILER _Py_PASTE_VERSION("64 bit (Unknown)")
-#define PY_SUPPORT_TIER 0
+#define COMPILER _ALIF_PASTE_VERSION("64 bit (Unknown)")
+#define ALIF_SUPPORT_TIER 0
 #endif
 #endif /* MS_WIN64 */
 
 /* set the version macros for the windows headers */
-/* Python 3.9+ requires Windows 8 or greater */
-#define Py_WINVER 0x0602 /* _WIN32_WINNT_WIN8 */
-#define Py_NTDDI NTDDI_WIN8
+/* Alif 5.0+ requires Windows 8 or greater */
+#define ALIF_WINVER 0x0602 /* _WIN32_WINNT_WIN8 */
+#define ALIF_NTDDI NTDDI_WIN8
 
-/* We only set these values when building Python - we don't want to force
+/* We only set these values when building Alif - we don't want to force
    these values on extensions, as that will affect the prototypes and
-   structures exposed in the Windows headers. Even when building Python, we
+   structures exposed in the Windows headers. Even when building Alif, we
    allow a single source file to override this - they may need access to
    structures etc so it can optionally use new Windows features if it
    determines at runtime they are available.
 */
-#if defined(Py_BUILD_CORE) || defined(Py_BUILD_CORE_BUILTIN) || defined(Py_BUILD_CORE_MODULE)
+#if defined(ALIF_BUILD_CORE) || defined(ALIF_BUILD_CORE_BUILTIN) || defined(ALIF_BUILD_CORE_MODULE)
 #ifndef NTDDI_VERSION
-#define NTDDI_VERSION Py_NTDDI
+#define NTDDI_VERSION ALIF_NTDDI
 #endif
 #ifndef WINVER
-#define WINVER Py_WINVER
+#define WINVER ALIF_WINVER
 #endif
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT Py_WINVER
+#define _WIN32_WINNT ALIF_WINVER
 #endif
 #endif
 
@@ -141,33 +141,33 @@
 /* Define like size_t, omitting the "unsigned" */
 #ifdef MS_WIN64
 typedef __int64 Alif_ssize_t;
-#   define PY_SSIZE_T_MAX LLONG_MAX
+#   define ALIF_SSIZE_T_MAX LLONG_MAX
 #else
-typedef _W64 int Py_ssize_t;
-#   define PY_SSIZE_T_MAX INT_MAX
+typedef _W64 int Alif_ssize_t;
+#   define ALIF_SSIZE_T_MAX INT_MAX
 #endif
-#define HAVE_PY_SSIZE_T 1
+#define HAVE_ALIF_SSIZE_T 1
 
 #if defined(MS_WIN32) && !defined(MS_WIN64)
 #if defined(_M_IX86)
 #if defined(__clang__)
 #define COMPILER ("[Clang " __clang_version__ "] 32 bit (Intel) with MSC v." _Py_STRINGIZE(_MSC_VER) " CRT]")
-#define PY_SUPPORT_TIER 0
+#define ALIF_SUPPORT_TIER 0
 #elif defined(__INTEL_COMPILER)
-#define COMPILER ("[ICC v." _Py_STRINGIZE(__INTEL_COMPILER) " 32 bit (Intel) with MSC v." _Py_STRINGIZE(_MSC_VER) " CRT]")
-#define PY_SUPPORT_TIER 0
+#define COMPILER ("[ICC v." _ALIF_STRINGIZE(__INTEL_COMPILER) " 32 bit (Intel) with MSC v." _Py_STRINGIZE(_MSC_VER) " CRT]")
+#define ALIF_SUPPORT_TIER 0
 #else
-#define COMPILER _Py_PASTE_VERSION("32 bit (Intel)")
-#define PY_SUPPORT_TIER 1
+#define COMPILER _ALIF_PASTE_VERSION("32 bit (Intel)")
+#define ALIF_SUPPORT_TIER 1
 #endif /* __clang__ */
-#define PYD_PLATFORM_TAG "win32"
+#define ALIFD_PLATFORM_TAG "win32"
 #elif defined(_M_ARM)
-#define COMPILER _Py_PASTE_VERSION("32 bit (ARM)")
-#define PYD_PLATFORM_TAG "win_arm32"
-#define PY_SUPPORT_TIER 0
+#define COMPILER _ALIF_PASTE_VERSION("32 bit (ARM)")
+#define ALIFD_PLATFORM_TAG "win_arm32"
+#define ALIF_SUPPORT_TIER 0
 #else
-#define COMPILER _Py_PASTE_VERSION("32 bit (Unknown)")
-#define PY_SUPPORT_TIER 0
+#define COMPILER _ALIF_PASTE_VERSION("32 bit (Unknown)")
+#define ALIF_SUPPORT_TIER 0
 #endif
 #endif /* MS_WIN32 && !MS_WIN64 */
 
