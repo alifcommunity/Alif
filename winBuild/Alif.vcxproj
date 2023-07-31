@@ -19,11 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\documents\إرشادات إستعمال اللغة.md" />
-    <None Include="..\documents\تنظيم المساهمة في لغة ألف.md" />
-    <None Include="..\README.md" />
-  </ItemGroup>
-  <ItemGroup>
+    <ClInclude Include="..\source\Include\alif.h" />
     <ClInclude Include="..\source\resources\resource.h" />
   </ItemGroup>
   <ItemGroup>
@@ -33,7 +29,7 @@
     <Image Include="..\source\resources\AlifLogo.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\Objects\main\Alif.cpp" />
+    <ClCompile Include="..\source\Objects\main\alif.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -130,6 +126,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>..\source\Include\alif;..\source\Include\core;..\source\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -149,6 +146,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <LanguageStandard_C>Default</LanguageStandard_C>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalIncludeDirectories>..\source\Include\alif;..\source\Include\core;..\source\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

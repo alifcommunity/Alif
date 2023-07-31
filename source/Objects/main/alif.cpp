@@ -2,10 +2,9 @@
 #include "alifcore_initConfig.h"    // AlifArgv
 
 
-
 static AlifStatus alifMain_init(const AlifArgv* args) {
 
-	AlifStatus status{};
+	AlifStatus status;
 
 	AlifConfig config;
 
@@ -16,6 +15,8 @@ static AlifStatus alifMain_init(const AlifArgv* args) {
 	else {
 		status = alifConfig_setArgv(&config, args->argc, args->wcharArgv);
 	}
+
+	status = alifInit_fromConfig(&config);
 
 	return status;
 }

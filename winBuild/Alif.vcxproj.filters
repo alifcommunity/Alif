@@ -15,12 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\documents\تنظيم المساهمة في لغة ألف.md" />
-    <None Include="..\README.md" />
-    <None Include="..\documents\إرشادات إستعمال اللغة.md" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\source\resources\resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\alif.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -35,7 +33,7 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\Objects\main\Alif.cpp">
+    <ClCompile Include="..\source\Objects\main\alif.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
