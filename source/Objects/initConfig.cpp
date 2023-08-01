@@ -14,10 +14,10 @@ static AlifStatus configRun_filenameAbspath(AlifConfig* config)
 	std::error_code error;
 	std::filesystem::path absPath = std::filesystem::absolute(config->runFilename, error);
 	if(error) {
-		return AlifStatus_OK();
+		return ALIFSTATUS_OK();
 	}
 
-	return AlifStatus_OK();
+	return ALIFSTATUS_OK();
 }
 
 static AlifStatus configRead_cmdLine(AlifConfig* config)
@@ -29,7 +29,7 @@ static AlifStatus configRead_cmdLine(AlifConfig* config)
 
 	status = configRun_filenameAbspath(config);
 
-	status = AlifStatus_OK();
+	status = ALIFSTATUS_OK();
 
 	return status;
 }
@@ -40,7 +40,7 @@ AlifStatus alifConfig_read(AlifConfig* config)
 
 	status = configRead_cmdLine(config);
 
-	status = AlifStatus_OK();
+	status = ALIFSTATUS_OK();
 
 
 	return status;
