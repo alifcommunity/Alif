@@ -19,5 +19,5 @@ AlifStatus alifInit_fromConfig(const AlifConfig* config)
 
 	status = alifInit_core(config);
 
-	return AlifStatus_OK();
+	return ALIFSTATUS_OK();
 }

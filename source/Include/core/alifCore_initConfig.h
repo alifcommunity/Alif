@@ -5,28 +5,28 @@
 
 /* تستخدم هذه الحالات للتحقق تقريباً من معظم أخطاء تهيئة لغة ألف */
 
-#  define AlifStatus_GET_FUNC() __func__
+#  define ALIFSTATUS_GET_FUNC() __func__
 
 // تستخدم هذه الحالة للتحقق في كل دالة ما إذا تمت بشكل صحيح أم لا
-#define AlifStatus_OK() {.type = 0,} // 0 -> Ok , 1 -> Error ,  2 -> Exit
+#define ALIFSTATUS_OK() {.type = 0,} // 0 -> Ok , 1 -> Error ,  2 -> Exit
 
-#define AlifStatus_ERR(ERR_MSG) (AlifStatus) {		\
+#define ALIFSTATUS_ERR(_errMsg) (AlifStatus) {		\
 			.type = 1,								\
-			.func = AlifStatus_GET_FUNC(),			\
-			.mesError = (ERR_MSG)					\
+			.func = ALIFSTATUS_GET_FUNC(),			\
+			.mesError = (_errMsg)					\
 		}
 
-#define AlifStatus_NO_MEMORY() AlifStatus_ERR(L"الحجز من الذاكرة فشل")
+#define ALIFSTATUS_NO_MEMORY() ALIFSTATUS_ERR(L"فشل الحجز من الذاكرة")
 
-#define AlifStatus_EXIT(EXITCODE) (AlifStatus) {	\
+#define ALIFSTATUS_EXIT(_exitCode) (AlifStatus) {	\
 			.type = 2,								\
-			.exitCode = (EXITCODE)					\
+			.exitCode = (_exitCode)					\
 		}
 
-#define AlifStatus_IS_ERROR(err) ((err).type == 1)
-#define AlifStatus_IS_EXIT(err) ((err).type == 2)
-#define AlifStatus_EXCEPTION(err) ((err).type != 0)
-#define AlifStatus_UPDATE_FUNC(err) do { (err).func = AlifStatus_GET_FUNC(); } while (0)
+#define ALIFSTATUS_IS_ERROR(_error) ((_error).type == 1)
+#define ALIFSTATUS_IS_EXIT(_error) ((_error).type == 2)
+#define ALIFSTATUS_EXCEPTION(_error) ((_error).type != 0)
+#define ALIFSTATUS_UPDATE_FUNC(_error) do { (_error).func = ALIFSTATUS_GET_FUNC(); } while (0)
 
 
 /* ___________ AlifArgv ___________ */

@@ -99,4 +99,3 @@ public:
 	class Use usage;
 };
 
-MemoryState state;
