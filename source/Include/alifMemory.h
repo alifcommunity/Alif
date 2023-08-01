@@ -98,3 +98,5 @@ public:
 	class MemoryManager mGmt;
 	class Use usage;
 };
+
+MemoryState state;
