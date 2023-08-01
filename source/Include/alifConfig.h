@@ -140,7 +140,7 @@
 
 /* Define like size_t, omitting the "unsigned" */
 #ifdef MS_WIN64
-typedef __int64 Alif_ssize_t;
+typedef __int64 alif_size_t;
 #   define ALIF_SSIZE_T_MAX LLONG_MAX
 #else
 typedef _W64 int Alif_ssize_t;

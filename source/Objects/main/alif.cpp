@@ -81,7 +81,7 @@ int wmain(int _argc, wchar_t** _argv)
 #else
 int main(int _argc, char** _argv)
 {
-	char* argsv[] = { "alif", "example.alif" };
+	char* argsv[] = { (char*)"alif", (char*)"example.alif" };
 	return Alif_MainChar(2, argsv);
 }
 #endif
