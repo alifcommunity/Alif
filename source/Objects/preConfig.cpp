@@ -17,5 +17,5 @@ AlifStatus alifArgv_asWstrList(const AlifArgv* args, AlifWideStringList* list)
 	}
 
 
-	return _AlifStatus_OK();
+	return AlifStatus_OK();
 }
