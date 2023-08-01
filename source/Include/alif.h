@@ -5,6 +5,10 @@
 
 #include <iostream>
 
+#ifdef MS_WINDOWS
+#include <windows.h>
+#endif // MS_WINDOWS
+
 #include "initConfig.h"
 #include "alifCycle.h"
 #include "alifMemory.h"

@@ -1,5 +1,4 @@
 #include "alif.h"
-#include <windows.h> //   VirtualAlloc()
 
 /*
 
@@ -31,6 +30,10 @@ void* object_realloc(MemoryState* _state, void* ptr, size_t numberByte);
 
 int malloc_free(MemoryState* _state, void* ptr);
 
+
+static MemoryState state;
+
+
 void
 write_size_t(void* p, size_t n)
 {
@@ -53,14 +56,6 @@ read_size_t(const void* p)
 	for (i = 8; --i > 0; ++q)
 		result = (result << 8) | *q;
 	return result;
-}
-
-void* AlifMem_raw_malloc(size_t size) {
-
-	if (size == 0) {
-		size = 1;
-	}
-	return malloc(size);
 }
 
 // raw memory ///////////////////////////////////////////////////////////////////////////////
