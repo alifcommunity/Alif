@@ -12,6 +12,10 @@ AlifStatus alifArgv_asWstrList(const AlifArgv* args, AlifWideStringList* list)
 	else {
 		wArgv.length = args->argc;
 		wArgv.items = (wchar_t**)args->wcharArgv;
+
+		*list = wArgv;
 	}
+
+
 	return _AlifStatus_OK();
 }
