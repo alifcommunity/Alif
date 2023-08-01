@@ -7,3 +7,4 @@
 
 #include "initConfig.h"
 #include "alifCycle.h"
+#include "alifMemory.h"
