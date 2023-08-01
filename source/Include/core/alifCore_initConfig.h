@@ -12,9 +12,10 @@ public:
 	wchar_t* const* wcharArgv;
 };
 
-AlifStatus _alifArgv_asWstrList(const AlifArgv* args, AlifWideStringList* list);
+AlifStatus alifArgv_asWstrList(const AlifArgv* args, AlifWideStringList* list);
 
 
 /* ___________ AlifConfig ___________ */
 
-extern AlifStatus _alifConfig_setAlifArgv(AlifConfig* config, const AlifArgv* args);
+extern AlifStatus alifConfig_read(AlifConfig*);
+extern AlifStatus alifConfig_setAlifArgv(AlifConfig* config, const AlifArgv* args);

@@ -36,4 +36,4 @@ public:
 
 
 AlifStatus alifConfig_setCharArgv(AlifConfig* config, Alif_ssize_t argc, char* const* argv);
-AlifStatus alifConfig_setArgv(AlifConfig* config, Alif_ssize_t argc, wchar_t* const* argv);
+AlifStatus alifConfig_setArgv(AlifConfig*, Alif_ssize_t, wchar_t* const*);

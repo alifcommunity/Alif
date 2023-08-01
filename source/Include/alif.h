@@ -6,3 +6,4 @@
 #include <iostream>
 
 #include "initConfig.h"
+#include "alifCycle.h"
