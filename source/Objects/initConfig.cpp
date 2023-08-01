@@ -14,10 +14,10 @@ static AlifStatus configRun_filenameAbspath(AlifConfig* config)
 	std::error_code error;
 	std::filesystem::path absPath = std::filesystem::absolute(config->runFilename, error);
 	if(error) {
-		return _AlifStatus_OK();
+		return AlifStatus_OK();
 	}
 
-	return _AlifStatus_OK();
+	return AlifStatus_OK();
 }
 
 static AlifStatus configRead_cmdLine(AlifConfig* config)
@@ -29,7 +29,7 @@ static AlifStatus configRead_cmdLine(AlifConfig* config)
 
 	status = configRun_filenameAbspath(config);
 
-	status = _AlifStatus_OK();
+	status = AlifStatus_OK();
 
 	return status;
 }
@@ -40,7 +40,7 @@ AlifStatus alifConfig_read(AlifConfig* config)
 
 	status = configRead_cmdLine(config);
 
-	status = _AlifStatus_OK();
+	status = AlifStatus_OK();
 
 
 	return status;
@@ -54,7 +54,7 @@ AlifStatus alifConfig_setAlifArgv(AlifConfig* config, const AlifArgv* args)
 }
 
 
-AlifStatus alifConfig_setCharArgv(AlifConfig* config, Alif_ssize_t argc, char* const* argv)
+AlifStatus alifConfig_setCharArgv(AlifConfig* config, alif_size_t argc, char* const* argv)
 {
 	AlifArgv args = {
 		.argc = argc,
@@ -67,7 +67,7 @@ AlifStatus alifConfig_setCharArgv(AlifConfig* config, Alif_ssize_t argc, char* c
 }
 
 
-AlifStatus alifConfig_setArgv(AlifConfig* config, Alif_ssize_t argc, wchar_t* const* argv)
+AlifStatus alifConfig_setArgv(AlifConfig* config, alif_size_t argc, wchar_t* const* argv)
 {
 	AlifArgv args = {
 		.argc = argc,

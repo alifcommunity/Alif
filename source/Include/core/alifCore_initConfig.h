@@ -1,12 +1,13 @@
 #pragma once
 
-#define _AlifStatus_OK() {.type = 0,} // 0 -> Ok , 1 -> Error ,  2 -> Exit
+// تستخدم هذه الحالة للتحقق في كل دالة ما إذا تمت بشكل صحيح أم لا
+#define AlifStatus_OK() {.type = 0,} // 0 -> Ok , 1 -> Error ,  2 -> Exit
 
 /* ___________ AlifArgv ___________ */
 
-class AlifArgv {
+class AlifArgv { // صنف يحتوي عدد المعاملات الممررة من الطرفية وقيمها
 public:
-	Alif_ssize_t argc;
+	alif_size_t argc;
 	int useCharArgv;
 	char* const* charArgv;
 	wchar_t* const* wcharArgv;

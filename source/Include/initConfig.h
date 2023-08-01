@@ -16,7 +16,7 @@ public:
 
 class AlifWideStringList {
 public:
-	Alif_ssize_t length;
+	alif_size_t length;
 	wchar_t** items;
 };
 
@@ -35,5 +35,5 @@ public:
 };
 
 
-AlifStatus alifConfig_setCharArgv(AlifConfig* config, Alif_ssize_t argc, char* const* argv);
-AlifStatus alifConfig_setArgv(AlifConfig*, Alif_ssize_t, wchar_t* const*);
+AlifStatus alifConfig_setCharArgv(AlifConfig* config, alif_size_t argc, char* const* argv);
+AlifStatus alifConfig_setArgv(AlifConfig*, alif_size_t, wchar_t* const*);
