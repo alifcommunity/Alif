@@ -1,6 +1,19 @@
 #include "alif.h"
 #include "alifCore_initConfig.h"
 
+static int runtimeInitialized = 0;
+
+AlifStatus AlifRuntime_initialize(void) {
+
+
+	if (runtimeInitialized) {
+		return ALIFSTATUS_OK();
+	}
+	runtimeInitialized = 1;
+
+
+
+}
 
 static AlifStatus alifInit_core(const AlifConfig* _srcConfig)
 {
