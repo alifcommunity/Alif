@@ -18,15 +18,6 @@ bool objectOrMemDelete = false; // false for mem , true for object
 
 /////////////////////////////////////////////
 
-void* AlifMem_debug_raw_alloc(MemoryState* _state, size_t useCalloc, size_t nByte);
-void* AlifMem_debug_raw_realloc(MemoryState* _state, void* ptr, size_t nByte);
-void  AlifMem_debug_raw_free(MemoryState* _state, void* ptr);
-void* AlifMem_debug_raw_calloc(MemoryState* _state, size_t nElement, size_t elSize);
-
-void* object_malloc(MemoryState* _state, size_t numberByte);
-void* object_calloc(MemoryState* _state, size_t nElement, size_t elSize);
-void  object_free(MemoryState* _state, void* ptr);
-void* object_realloc(MemoryState* _state, void* ptr, size_t numberByte);
 
 int malloc_free(MemoryState* _state, void* ptr);
 
@@ -95,6 +86,50 @@ void* AlifMem_raw_realloc(void* ptr, size_t size) {
 void AlifMem_raw_free(void* ptr) {
 	free(ptr);
 }
+
+#define MALLOC_ALLOC {NULL, AlifMem_raw_malloc, AlifMem_raw_calloc, AlifMem_raw_realloc, AlifMem_raw_free}
+#define ALIFRAW_ALLOC MALLOC_ALLOC
+
+#ifdef WITH_ALIFMALLOC
+void* object_malloc(MemoryState* _state, size_t numberByte);
+void* object_calloc(MemoryState* _state, size_t nElement, size_t elSize);
+void* object_realloc(MemoryState* _state, void* ptr, size_t numberByte);
+void  object_free(MemoryState* _state, void* ptr);
+#define ALIFMALLOC_ALLOC {NULL, object_malloc, object_calloc, object_realloc, object_free}
+#define ALIFOBJ_ALLOC ALIFMALLO_ALLOC
+#else
+#define ALIFOBJ_ALLOC MALLOC_ALLOC
+#endif
+
+#define ALIFMEMALLOC_ALLOC ALIFOBJ_ALLOC
+
+void* AlifMem_debug_raw_alloc(MemoryState* _state, size_t useCalloc, size_t nByte);
+void* AlifMem_debug_raw_calloc(MemoryState* _state, size_t nElement, size_t elSize);
+void* AlifMem_debug_raw_realloc(MemoryState* _state, void* ptr, size_t nByte);
+void  AlifMem_debug_raw_free(MemoryState* _state, void* ptr);
+
+void* AlifMem_malloc(MemoryState* _state, size_t size);
+void* AlifMem_calloc(MemoryState* _state, size_t nElement, size_t elSize);
+void* AlifMem_realloc(MemoryState* _state, void* ptr, size_t newSize);
+void AlifMem_free(MemoryState* _state, void* ptr);
+
+#define ALIFDEBUGRAW_ALLOC {&runtime.allocators.debug.raw, AlifMem_debug_raw_alloc,  AlifMem_debug_raw_calloc, AlifMem_debug_raw_realloc, AlifMem_debug_raw_free}
+
+#define ALIFDEBUGMEM_ALLOC {&runtime.allocators.debug.mem, AlifMem_malloc, AlifMem_calloc, AlifMem_realloc, AlifMem_free}
+
+#define ALIFDEBUGOBJ_ALLOC {&runtime.allocators.debug.obj, AlifMem_malloc, AlifMem_calloc, AlifMem_realloc, AlifMem_free}
+
+
+#ifdef WITH_ALIFMALLOC
+#  ifdef MS_WINDOWS
+#    include <windows.h>
+#  elif defined(HAVE_MMAP)
+#    include <sys/mman.h>
+#    ifdef MAP_ANONYMOUS
+#      define ARENAS_USE_MMAP
+#    endif
+#  endif
+#endif
 
 void* raw_malloc(size_t size) {
 
@@ -299,80 +334,81 @@ void insert_to_free_Alignment(MemoryState* _state, AlignmentHeader* Alignment) {
 	next->prevAlignment = prev;
 	prev->nextAlignment = next;
 
-	BlockObject* BlockObj = _state->mGmt.Blocks;
+	BlockObject* blockObj{};
+	blockObj = _state->mGmt.Blocks;
 
-	Alignment->nextAlignment = BlockObj->freeAlignments;
-	BlockObj->freeAlignments = Alignment;
-	unsigned int numberFree = BlockObj->numberFreeAlignments;
+	Alignment->nextAlignment = blockObj->freeAlignments;
+	blockObj->freeAlignments = Alignment;
+	unsigned int numberFree = blockObj->numberFreeAlignments;
 
 	BlockObject* lastNumberFree = state.mGmt.numberfreeAlignment[numberFree];
-	if (lastNumberFree == BlockObj) {
-		BlockObject* Block = BlockObj->prevBlock;
+	if (lastNumberFree == blockObj) {
+		BlockObject* Block = blockObj->prevBlock;
 		state.mGmt.numberfreeAlignment[numberFree] = (Block != NULL && Block->numberFreeAlignments == numberFree) ? Block : NULL;
 	}
-	BlockObj->numberFreeAlignments = ++numberFree;
+	blockObj->numberFreeAlignments = ++numberFree;
 
-	if (numberFree == BlockObj->numberTotalAlignments && BlockObj->nextBlock != NULL) {
-		if (BlockObj->prevBlock == NULL) {
-			_state->mGmt.usableBlock = BlockObj->nextBlock;
+	if (numberFree == blockObj->numberTotalAlignments && blockObj->nextBlock != NULL) {
+		if (blockObj->prevBlock == NULL) {
+			_state->mGmt.usableBlock = blockObj->nextBlock;
 		}
 		else {
-			BlockObj->prevBlock->nextBlock = BlockObj->nextBlock;
+			blockObj->prevBlock->nextBlock = blockObj->nextBlock;
 		}
 
-		if (BlockObj->nextBlock != NULL) {
-			BlockObj->nextBlock->prevBlock = BlockObj->prevBlock;
+		if (blockObj->nextBlock != NULL) {
+			blockObj->nextBlock->prevBlock = blockObj->prevBlock;
 		}
 
-		BlockObj->nextBlock = _state->mGmt.unusedBlock;
-		_state->mGmt.unusedBlock = BlockObj;
+		blockObj->nextBlock = _state->mGmt.unusedBlock;
+		_state->mGmt.unusedBlock = blockObj;
 
 
-		Block_map_mark_used(_state, BlockObj->address, 0);
+		Block_map_mark_used(_state, blockObj->address, 0);
 
-		BlockObj->address = 0;
-		--_state->mGmt.numberBlockCurrentlyAllocate;
+		blockObj->address = 0;
+		_state->mGmt.numberBlockCurrentlyAllocate;
 
 		return;
 	}
 
 	if (numberFree == 1) {
-		BlockObj->nextBlock = _state->mGmt.usableBlock;
-		BlockObj->prevBlock = NULL;
+		blockObj->nextBlock = _state->mGmt.usableBlock;
+		blockObj->prevBlock = NULL;
 		if (_state->mGmt.usableBlock) {
-			_state->mGmt.usableBlock->prevBlock = BlockObj;
+			_state->mGmt.usableBlock->prevBlock = blockObj;
 		}
-		_state->mGmt.usableBlock = BlockObj;
+		_state->mGmt.usableBlock = blockObj;
 		if (_state->mGmt.numberfreeAlignment[1] == NULL) {
-			_state->mGmt.numberfreeAlignment[1] = BlockObj;
+			_state->mGmt.numberfreeAlignment[1] = blockObj;
 		}
 		return;
 	}
 
 
 	if (_state->mGmt.numberfreeAlignment[numberFree] == NULL) {
-		_state->mGmt.numberfreeAlignment[numberFree] = BlockObj;
+		_state->mGmt.numberfreeAlignment[numberFree] = blockObj;
 	}
 
-	if (BlockObj == lastNumberFree) {
+	if (blockObj == lastNumberFree) {
 		return;
 	}
 
-	if (BlockObj->prevBlock != NULL) {
-		BlockObj->prevBlock->nextBlock = BlockObj->nextBlock;
+	if (blockObj->prevBlock != NULL) {
+		blockObj->prevBlock->nextBlock = blockObj->nextBlock;
 	}
 	else {
-		_state->mGmt.usableBlock = BlockObj->nextBlock;
+		_state->mGmt.usableBlock = blockObj->nextBlock;
 	}
 
-	BlockObj->nextBlock->prevBlock = BlockObj->prevBlock;
+	blockObj->nextBlock->prevBlock = blockObj->prevBlock;
 
-	BlockObj->prevBlock = lastNumberFree;
-	BlockObj->nextBlock = lastNumberFree->nextBlock;
-	if (BlockObj->nextBlock != NULL) {
-		BlockObj->nextBlock->prevBlock = BlockObj;
+	blockObj->prevBlock = lastNumberFree;
+	blockObj->nextBlock = lastNumberFree->nextBlock;
+	if (blockObj->nextBlock != NULL) {
+		blockObj->nextBlock->prevBlock = blockObj;
 	}
-	lastNumberFree->nextBlock = BlockObj;
+	lastNumberFree->nextBlock = blockObj;
 
 }
 

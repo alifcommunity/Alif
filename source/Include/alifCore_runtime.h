@@ -32,7 +32,15 @@ public:
 
 	unsigned long main_thread;
 
+	AlifMemAllocators allocators;
+	MemoryGlobalState memory;
+	AlifThreadRuntimeState threads;
+
 	AlifTSST autoTSSKey;
+
+	AlifTSST trashTSSKey;
+
+
 
 };
 

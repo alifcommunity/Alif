@@ -41,3 +41,7 @@ public:
 	} debug;
 	AlifMemAllocatorExternal obj_arena;
 };
+
+#define ALIFMEM_CLEANBYTE      0xCD
+#define ALIFMEM_DEADBYTE       0xDD
+#define ALIFMEM_FORBIDDENBYTE  0xFD

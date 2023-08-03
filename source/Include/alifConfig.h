@@ -150,3 +150,4 @@ typedef _W64 int Alif_ssize_t;
 
 #endif /* _MSC_VER */
 
+#define WITH_ALIFMALLOC 1
