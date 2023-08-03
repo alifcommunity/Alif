@@ -1,33 +1,13 @@
 #pragma once
 
-#define ALIF_BUILD_CORE
-
 #define HAVE_IO_H
-//#define HAVE_SYS_UTIME_H
-//#define HAVE_TEMPNAM
-//#define HAVE_TMPFILE
-//#define HAVE_TMPNAM
-//#define HAVE_CLOCK
-//#define HAVE_STRERROR
 
 #include <io.h>
 
-//#define HAVE_STRFTIME
-//#define DONT_HAVE_SIG_ALARM
-//#define DONT_HAVE_SIG_PAUSE
-//#define LONG_BIT 32
-//#define WORD_BIT 32
-
 #define MS_WIN32
 #define MS_WINDOWS
-//#define NT_THREADS
-//#define WITH_THREAD
-//#ifndef NETSCAPE_PI
-//#define USE_SOCKET
-//#endif
 
 
-#if defined(Alif_BUILD_CORE) || defined(Alif_BUILD_CORE_BUILTIN) || defined(Alif_BUILD_CORE_MODULE)
 #include <winapifamily.h>
 
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
@@ -47,7 +27,6 @@
 #if defined(MS_WINDOWS_DESKTOP) || defined(MS_WINDOWS_APP) || defined(MS_WINDOWS_SYSTEM)
 #define HAVE_WINDOWS_CONSOLE_IO 1
 #endif
-#endif /* Alif_BUILD_CORE || Alif_BUILD_CORE_BUILTIN || Alif_BUILD_CORE_MODULE */
 
 
 /* Compiler specific defines */
@@ -121,7 +100,6 @@
    structures etc so it can optionally use new Windows features if it
    determines at runtime they are available.
 */
-#if defined(ALIF_BUILD_CORE) || defined(ALIF_BUILD_CORE_BUILTIN) || defined(ALIF_BUILD_CORE_MODULE)
 #ifndef NTDDI_VERSION
 #define NTDDI_VERSION ALIF_NTDDI
 #endif
@@ -130,7 +108,6 @@
 #endif
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT ALIF_WINVER
-#endif
 #endif
 
 /* _W64 is not defined for VC6 or eVC4 */
@@ -170,14 +147,6 @@ typedef _W64 int Alif_ssize_t;
 #define ALIF_SUPPORT_TIER 0
 #endif
 #endif /* MS_WIN32 && !MS_WIN64 */
-
-typedef int pid_t;
-
-/* define some ANSI types that are not defined in earlier Win headers */
-#if _MSC_VER >= 1200
-/* This file only exists in VC 6.0 or higher */
-#include <basetsd.h>
-#endif
 
 #endif /* _MSC_VER */
 
