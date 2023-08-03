@@ -142,9 +142,14 @@
     <ClInclude Include="..\source\Include\alifCycle.h" />
     <ClInclude Include="..\source\Include\alifDefinations.h" />
     <ClInclude Include="..\source\Include\alifMemory.h" />
+    <ClInclude Include="..\source\Include\alifThread.h" />
+    <ClInclude Include="..\source\Include\alifThread_Stubs.h" />
     <ClInclude Include="..\source\Include\alifVersion.h" />
+    <ClInclude Include="..\source\Include\core\alifCore_alifThread.h" />
     <ClInclude Include="..\source\Include\core\alifCore_initConfig.h" />
     <ClInclude Include="..\source\Include\initConfig.h" />
+    <ClInclude Include="alifCore_alifMem.h" />
+    <ClInclude Include="alifCore_runtime.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\Objects\alifCycle.cpp" />

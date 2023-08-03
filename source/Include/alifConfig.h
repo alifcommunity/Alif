@@ -6,7 +6,7 @@
 
 #define MS_WIN32
 #define MS_WINDOWS
-
+#define NT_THREADS
 
 #include <winapifamily.h>
 

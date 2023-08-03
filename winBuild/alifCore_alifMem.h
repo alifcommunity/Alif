@@ -24,7 +24,7 @@ public:
 	/* We tag each block with an API ID in order to tag API violations */
 	char api_id;
 	AlifMemAllocatorExternal alloc;
-} ;
+};
 
 class AlifMemAllocators {
 public:

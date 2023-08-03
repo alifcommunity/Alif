@@ -1,6 +1,17 @@
 #pragma once
 #include "alif.h"
 
+// سيتم نقلها الى ملف alifThread عند الانتهاء من runtime كامل
+
+#define NATIVE_TSS_KEY_T unsigned long
+
+struct AlifTSST {
+	int _is_initialized;
+	NATIVE_TSS_KEY_T _key;
+};
+
+///////////////////////////////////////////////////////////////////////////
+
 class AlifRuntimeState
 {
 public:
@@ -32,6 +43,12 @@ public:
 	};
 
 	unsigned long main_thread;
+
+	/* Used for the thread state bound to the current thread. */
+	AlifTSST autoTSSkey;
+
+	/* Used instead of PyThreadState.trash when there is not current tstate. */
+	AlifTSST trashTSSkey;
 
 };
 
