@@ -21,6 +21,29 @@ public:
 };
 
 
+/* --- PyPreConfig ----------------------------------------------- */
+
+class AlifPreConfig {
+public:
+	int _config_init;
+	int parse_argv;
+	int isolated;
+	int use_environment;
+	int configure_locale;
+	int cpp_locale;
+
+#ifdef MS_WINDOWS
+	int legacy_windows_fs_encoding;
+#endif
+
+	int utf8_mode;
+	int allocator;
+};
+
+void alifPreConfig_initConfig(AlifPreConfig* config);
+void AlifPreConfig_initIsolatedConfig(AlifPreConfig* config);
+
+
 /* ___________ AlifConfig ___________ */
 
 class AlifConfig {

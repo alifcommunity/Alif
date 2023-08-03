@@ -4,9 +4,14 @@
 
 static AlifStatus alifMain_init(const AlifArgv* args) {
 
-	AlifStatus status;
+	AlifStatus status{};
 
-	AlifConfig config;
+	AlifPreConfig preConfig{};
+	AlifPreConfig_InitConfig(&preConfig);
+
+
+
+	AlifConfig config{};
 
 
 	if (args->useCharArgv) {
@@ -40,8 +45,11 @@ static int alif_runMain()
 
 static int alifMain_main(AlifArgv* args)
 {
+	// مرحلة تهيئة البرنامج قبل تشغيله
 	AlifStatus status = alifMain_init(args);
 
+
+	// مرحلة تشغيل البرنامج
 	return alif_runMain();
 }
 
