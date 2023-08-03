@@ -141,9 +141,13 @@
     <ClInclude Include="..\source\Include\alifConfig.h" />
     <ClInclude Include="..\source\Include\alifCycle.h" />
     <ClInclude Include="..\source\Include\alifDefinations.h" />
+    <ClInclude Include="..\source\Include\alifMem.h" />
     <ClInclude Include="..\source\Include\alifMemory.h" />
+    <ClInclude Include="..\source\Include\alifPort.h" />
     <ClInclude Include="..\source\Include\alifVersion.h" />
+    <ClInclude Include="..\source\Include\core\alifCore_alifCycle.h" />
     <ClInclude Include="..\source\Include\core\alifCore_initConfig.h" />
+    <ClInclude Include="..\source\Include\exports.h" />
     <ClInclude Include="..\source\Include\initConfig.h" />
   </ItemGroup>
   <ItemGroup>

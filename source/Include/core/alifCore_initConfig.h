@@ -42,6 +42,17 @@ public:
 AlifStatus alifArgv_asWstrList(const AlifArgv* args, AlifWideStringList* list);
 
 
+/* ___________ ALifPreConfig ___________ */
+
+void alifPreConfig_initCompatConfig(AlifPreConfig*);
+extern void alifPreConfig_initFromConfig(AlifPreConfig*, const AlifConfig*);
+extern AlifStatus alifPreConfig_initFromPreConfig(AlifPreConfig*);
+//extern AlifObject* alifPreConfig_asDict(const AlifPreConfig*);
+//extern void alifPreConfig_getConfig(AlifPreConfig*, const AlifConfig*);
+//extern AlifStatus alifPreConfig_read(AlifPreConfig*, const AlifArgv*);
+//extern AlifStatus alifPreConfig_write(const AlifPreConfig*);
+
+
 /* ___________ AlifConfig ___________ */
 
 extern AlifStatus alifConfig_read(AlifConfig*);

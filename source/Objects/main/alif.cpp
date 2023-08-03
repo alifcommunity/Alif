@@ -1,24 +1,25 @@
 #include "Alif.h"
 #include "alifcore_initConfig.h"    // AlifArgv
+#include "alifCore_alifCycle.h"
 
 
-static AlifStatus alifMain_init(const AlifArgv* args) {
+static AlifStatus alifMain_init(const AlifArgv* _args) {
 
 	AlifStatus status{};
 
 	AlifPreConfig preConfig{};
-	AlifPreConfig_InitConfig(&preConfig);
+	alifPreConfig_initConfig(&preConfig);
 
-
+	status = alif_preInitializeFromAlifArgv(&preConfig, _args);
 
 	AlifConfig config{};
 
 
-	if (args->useCharArgv) {
+	if (_args->useCharArgv) {
 		//status = alifConfig_setCharArgv(&config, args->argc, args->char_argv);
 	}
 	else {
-		status = alifConfig_setArgv(&config, args->argc, args->wcharArgv);
+		status = alifConfig_setArgv(&config, _args->argc, _args->wcharArgv);
 	}
 
 	status = alifInit_fromConfig(&config);
@@ -27,7 +28,7 @@ static AlifStatus alifMain_init(const AlifArgv* args) {
 }
 
 
-static void alifMain_run(int* exitcode)
+static void alifMain_run(int* _exitcode)
 {
 
 }
@@ -43,10 +44,10 @@ static int alif_runMain()
 }
 
 
-static int alifMain_main(AlifArgv* args)
+static int alifMain_main(AlifArgv* _args)
 {
 	// مرحلة تهيئة البرنامج قبل تشغيله
-	AlifStatus status = alifMain_init(args);
+	AlifStatus status = alifMain_init(_args);
 
 
 	// مرحلة تشغيل البرنامج
@@ -54,25 +55,25 @@ static int alifMain_main(AlifArgv* args)
 }
 
 
-int alif_mainWchar(int argc, wchar_t** argv)
+int alif_mainWchar(int _argc, wchar_t** _argv)
 {
 	AlifArgv args = {
-		.argc = argc,
+		.argc = _argc,
 		.useCharArgv = 0,
 		.charArgv = nullptr,
-		.wcharArgv = argv
+		.wcharArgv = _argv
 	};
 
 	return alifMain_main(&args);
 }
 
 
-int alif_mainChar(int argc, char** argv)
+int alif_mainChar(int _argc, char** _argv)
 {
 	AlifArgv args = {
-		.argc = argc,
+		.argc = _argc,
 		.useCharArgv = 1,
-		.charArgv = argv,
+		.charArgv = _argv,
 		.wcharArgv = nullptr
 	};
 

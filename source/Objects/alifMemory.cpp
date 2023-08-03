@@ -11,12 +11,12 @@
 
 */
 
-////////////////////flags/////////////////////
+/* ______________ flags ______________ */
 
 bool rawOrMem = false;
 bool objectOrMemDelete = false; // false for mem , true for object
 
-/////////////////////////////////////////////
+/* ______________ /flags ______________ */
 
 void* AlifMem_debug_raw_alloc(MemoryState* _state, size_t useCalloc, size_t nByte);
 void* AlifMem_debug_raw_realloc(MemoryState* _state, void* ptr, size_t nByte);

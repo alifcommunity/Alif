@@ -21,27 +21,26 @@ public:
 };
 
 
-/* --- PyPreConfig ----------------------------------------------- */
+/* ___________ AlifPreConfig ___________ */
 
 class AlifPreConfig {
 public:
-	int _config_init;
-	int parse_argv;
+	int configInit;
+	int parseArgv;
 	int isolated;
-	int use_environment;
-	int configure_locale;
-	int cpp_locale;
+	int useEnvironment;
+	int configureLocale;
+	int cppLocale;
 
 #ifdef MS_WINDOWS
-	int legacy_windows_fs_encoding;
+	int EncodingLegacyWindowsFS;
 #endif
 
-	int utf8_mode;
+	int utf8Mode;
 	int allocator;
 };
 
 void alifPreConfig_initConfig(AlifPreConfig* config);
-void AlifPreConfig_initIsolatedConfig(AlifPreConfig* config);
 
 
 /* ___________ AlifConfig ___________ */
@@ -58,5 +57,5 @@ public:
 };
 
 
-AlifStatus alifConfig_setCharArgv(AlifConfig* config, alif_size_t argc, char* const* argv);
-AlifStatus alifConfig_setArgv(AlifConfig*, alif_size_t, wchar_t* const*);
+ALIFAPI_FUNC(AlifStatus) alifConfig_setCharArgv(AlifConfig* config, alif_size_t argc, char* const* argv);
+ALIFAPI_FUNC(AlifStatus) alifConfig_setArgv(AlifConfig*, alif_size_t, wchar_t* const*);

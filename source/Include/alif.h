@@ -9,6 +9,8 @@
 #include <windows.h>
 #endif // MS_WINDOWS
 
+#include "alifPort.h"
+#include "alifMem.h"
 #include "initConfig.h"
 #include "alifCycle.h"
 #include "alifMemory.h"

@@ -1,4 +1,4 @@
 #pragma once
 
 
-AlifStatus alifInit_fromConfig(const AlifConfig* config);
+AlifStatus alifInit_fromConfig(const AlifConfig*);
