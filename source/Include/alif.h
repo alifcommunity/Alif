@@ -12,3 +12,7 @@
 #include "initConfig.h"
 #include "alifCycle.h"
 #include "alifMemory.h"
+#include "alifCore_alifMem.h"
+#include "alifThread.h"
+#include "alifCore_alifThread.h"
+#include "alifCore_runtime.h"

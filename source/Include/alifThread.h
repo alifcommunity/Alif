@@ -52,3 +52,5 @@ struct AlifTSST {
 	int isInitialized;
 	NATIVE_TSS_KEY_T key;
 };
+
+

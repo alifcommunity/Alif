@@ -35,12 +35,6 @@
     <ClInclude Include="..\source\Include\alifCycle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="alifCore_runtime.h">
-      <Filter>Core Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="alifCore_alifMem.h">
-      <Filter>Core Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\Include\alifThread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -49,6 +43,12 @@
     </ClInclude>
     <ClInclude Include="..\source\Include\alifThread_Stubs.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\alifCore_runtime.h">
+      <Filter>Core Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\core\alifCore_alifMem.h">
+      <Filter>Core Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -32,5 +32,7 @@ public:
 
 	unsigned long main_thread;
 
+	AlifTSST autoTSSKey;
+
 };
 
