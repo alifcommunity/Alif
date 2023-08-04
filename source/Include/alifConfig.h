@@ -6,7 +6,7 @@
 
 #define MS_WIN32
 #define MS_WINDOWS
-
+#define NT_THREADS
 
 #include <winapifamily.h>
 
@@ -150,3 +150,4 @@ typedef _W64 int Alif_ssize_t;
 
 #endif /* _MSC_VER */
 
+#define WITH_ALIFMALLOC 1

@@ -91,6 +91,13 @@ public:
 	int BlockMapDownCount;
 };
 
+class MemoryGlobalState
+{
+public:
+	int dumpDebugStats;
+	alif_size_t interpreterLeaks;
+};
+
 class MemoryState
 {
 public:
