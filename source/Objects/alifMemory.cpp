@@ -11,12 +11,12 @@
 
 */
 
-////////////////////flags/////////////////////
+/* ______________ flags ______________ */
 
 bool rawOrMem = false;
 bool objectOrMemDelete = false; // false for mem , true for object
 
-/////////////////////////////////////////////
+/* ______________ /flags ______________ */
 
 
 int malloc_free(MemoryState* _state, void* ptr);

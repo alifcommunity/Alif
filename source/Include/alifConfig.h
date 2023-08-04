@@ -1,5 +1,7 @@
 #pragma once
 
+//#define ALIF_BUILD_CORE
+
 #define HAVE_IO_H
 
 #include <io.h>
@@ -150,4 +152,10 @@ typedef _W64 int Alif_ssize_t;
 
 #endif /* _MSC_VER */
 
+
+#if !defined(ALIF_NO_ENABLE_SHARED)
+#       define ALIF_ENABLE_SHARED 1 
+#endif 
+
 #define WITH_ALIFMALLOC 1
+

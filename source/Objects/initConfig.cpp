@@ -9,10 +9,10 @@
 
 
 /* Get run_filename absolute path */
-static AlifStatus configRun_filenameAbspath(AlifConfig* config)
+static AlifStatus configRun_filenameAbspath(AlifConfig* _config)
 {
 	std::error_code error;
-	std::filesystem::path absPath = std::filesystem::absolute(config->runFilename, error);
+	std::filesystem::path absPath = std::filesystem::absolute(_config->runFilename, error);
 	if(error) {
 		return ALIFSTATUS_OK();
 	}
@@ -20,25 +20,25 @@ static AlifStatus configRun_filenameAbspath(AlifConfig* config)
 	return ALIFSTATUS_OK();
 }
 
-static AlifStatus configRead_cmdLine(AlifConfig* config)
+static AlifStatus configRead_cmdLine(AlifConfig* _config)
 {
 	AlifStatus status;
 
 	//status = configParse_cmdLine(config, &cmdline_warnoptions, &opt_index);
-	config->runFilename = config->argv.items[1]; // temp
+	_config->runFilename = _config->argv.items[1]; // temp
 
-	status = configRun_filenameAbspath(config);
+	status = configRun_filenameAbspath(_config);
 
 	status = ALIFSTATUS_OK();
 
 	return status;
 }
 
-AlifStatus alifConfig_read(AlifConfig* config)
+AlifStatus alifConfig_read(AlifConfig* _config)
 {
 	AlifStatus status;
 
-	status = configRead_cmdLine(config);
+	status = configRead_cmdLine(_config);
 
 	status = ALIFSTATUS_OK();
 
@@ -47,19 +47,19 @@ AlifStatus alifConfig_read(AlifConfig* config)
 }
 
 
-AlifStatus alifConfig_setAlifArgv(AlifConfig* config, const AlifArgv* args)
+AlifStatus alifConfig_setAlifArgv(AlifConfig* _config, const AlifArgv* _args)
 {
 
-	return alifArgv_asWstrList(args, &config->argv);
+	return alifArgv_asWstrList(_args, &_config->argv);
 }
 
 
-AlifStatus alifConfig_setCharArgv(AlifConfig* config, alif_size_t argc, char* const* argv)
+AlifStatus alifConfig_setCharArgv(AlifConfig* _config, alif_size_t _argc, char* const* _argv)
 {
 	AlifArgv args = {
-		.argc = argc,
+		.argc = _argc,
 		.useCharArgv = 1,
-		.charArgv = argv,
+		.charArgv = _argv,
 		.wcharArgv = nullptr
 	};
 	//return _alifConfig_setAlifArgv(config, &args);
@@ -67,16 +67,16 @@ AlifStatus alifConfig_setCharArgv(AlifConfig* config, alif_size_t argc, char* co
 }
 
 
-AlifStatus alifConfig_setArgv(AlifConfig* config, alif_size_t argc, wchar_t* const* argv)
+AlifStatus alifConfig_setArgv(AlifConfig* _config, alif_size_t _argc, wchar_t* const* _argv)
 {
 	AlifArgv args = {
-		.argc = argc,
+		.argc = _argc,
 		.useCharArgv = 0,
 		.charArgv = nullptr,
-		.wcharArgv = argv
+		.wcharArgv = _argv
 	};
 
-	return alifConfig_setAlifArgv(config, &args);
+	return alifConfig_setAlifArgv(_config, &args);
 }
 
 

@@ -35,6 +35,17 @@
     <ClInclude Include="..\source\Include\alifCycle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\Include\alifMem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\core\alifCore_alifCycle.h">
+      <Filter>Core Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\exports.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\alifPort.h">
+      <Filter>Header Files</Filter>
     <ClInclude Include="..\source\Include\alifThread.h">
       <Filter>Header Files</Filter>
     </ClInclude>

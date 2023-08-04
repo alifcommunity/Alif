@@ -1,37 +1,64 @@
 #include "Alif.h"
-#include "alifcore_initConfig.h"    // _AlifArgv
+#include "alifcore_initConfig.h"    // AlifArgv
 
 
 
-AlifStatus alifArgv_asWstrList(const AlifArgv* args, AlifWideStringList* list)
+AlifStatus alifArgv_asWstrList(const AlifArgv* _args, AlifWideStringList* _list)
 {
 	AlifWideStringList wArgv = { .length = 0, .items = nullptr };
-	if (args->useCharArgv) {
+	if (_args->useCharArgv) {
 
 	}
 	else {
-		wArgv.length = args->argc;
-		wArgv.items = (wchar_t**)args->wcharArgv;
+		wArgv.length = _args->argc;
+		wArgv.items = (wchar_t**)_args->wcharArgv;
 
-		*list = wArgv;
+		*_list = wArgv;
 	}
 
 
 	return ALIFSTATUS_OK();
 }
 
+/* ___________ AlifPreConfig ___________ */
 
-void alifPreConfig_initConfig(AlifPreConfig* config)
+/* يجب مراجعة الدالتين التاليتين
+	وذلك بسبب أنه قد تكوم استخدمت للتوافقية بين النسخ
+	القديمة والجديدة فقط وهذا ما لا نحتاجه */
+
+void alifPreConfig_initCompatConfig(AlifPreConfig* _config)
 {
-	alifPreConfig_initCompatConfig(config);
-
-	config->_config_init = 2; // INIT_COMPAT = 1, INIT_ALIF = 2, INIT_ISOLATED = 3
-	config->isolated = 0;
-	config->parse_argv = 1;
-	config->use_environment = 1;
-	config->cpp_locale = -1;
-	config->utf8_mode = -1;
+	_config->configInit = 1; // INIT_COMPAT = 1, INIT_ALIF = 2, INIT_ISOLATED = 3
+	_config->parseArgv = 0;
+	_config->isolated = -1;
+	_config->useEnvironment = -1;
+	_config->configureLocale = 1;
+	_config->utf8Mode = 0;
+	_config->cppLocale = 0;
+	_config->allocator = ALIFMEM_ALLOCATOR_NOT_SET;
 #ifdef MS_WINDOWS
-	config->legacy_windows_fs_encoding = 0;
+	_config->EncodingLegacyWindowsFS = -1;
 #endif
+}
+
+void alifPreConfig_initConfig(AlifPreConfig* _config)
+{
+	alifPreConfig_initCompatConfig(_config);
+
+	_config->configInit = 2; // INIT_COMPAT = 1, INIT_ALIF = 2, INIT_ISOLATED = 3
+	_config->isolated = 0;
+	_config->parseArgv = 1;
+	_config->useEnvironment = 1;
+	_config->cppLocale = -1;
+	_config->utf8Mode = -1;
+#ifdef MS_WINDOWS
+	_config->EncodingLegacyWindowsFS = 0;
+#endif
+}
+
+
+AlifStatus alifPreConfig_initFromPreConfig(AlifPreConfig* _config)
+{
+	alifPreConfig_initConfig(_config);
+	return ALIFSTATUS_OK();
 }
