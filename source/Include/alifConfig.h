@@ -8,7 +8,7 @@
 
 #define MS_WIN32
 #define MS_WINDOWS
-
+#define NT_THREADS
 
 #include <winapifamily.h>
 
@@ -156,3 +156,6 @@ typedef _W64 int Alif_ssize_t;
 #if !defined(ALIF_NO_ENABLE_SHARED)
 #       define ALIF_ENABLE_SHARED 1 
 #endif 
+
+#define WITH_ALIFMALLOC 1
+
