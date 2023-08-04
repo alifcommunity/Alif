@@ -13,6 +13,7 @@ static AlifStatus alifMain_init(const AlifArgv* _args) {
 	status = alif_preInitializeFromAlifArgv(&preConfig, _args);
 
 	AlifConfig config{};
+	alifConfig_initAlifConfig(&config);
 
 
 	if (_args->useCharArgv) {
