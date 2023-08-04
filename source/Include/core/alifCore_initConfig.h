@@ -44,7 +44,7 @@ AlifStatus alifArgv_asWstrList(const AlifArgv* args, AlifWideStringList* list);
 
 /* ___________ ALifPreConfig ___________ */
 
-void alifPreConfig_initCompatConfig(AlifPreConfig*);
+ALIFAPI_FUNC(void) alifPreConfig_initCompatConfig(AlifPreConfig*);
 extern void alifPreConfig_initFromConfig(AlifPreConfig*, const AlifConfig*);
 extern AlifStatus alifPreConfig_initFromPreConfig(AlifPreConfig*);
 //extern AlifObject* alifPreConfig_asDict(const AlifPreConfig*);

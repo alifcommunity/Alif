@@ -1,11 +1,40 @@
 #include "Alif.h"
-#include "alifcore_initConfig.h" // _AlifStatus_OK()
+#include "alifcore_initConfig.h" // ALIFSTATUS_OK()
 
 #include <filesystem>
 
 
+static void config_initDefaults(AlifConfig* _config)
+{
+	//alifConfig_initCompatConfig(_config);
 
+	_config->isolated = 0;
+	_config->useEnvironment = 1;
+	_config->siteImport = 1;
+	_config->bytesWarning = 0;
+	_config->inspect = 0;
+	_config->interactive = 0;
+	_config->optimizationLevel = 0;
+	_config->parserDebug = 0;
+	_config->writeBytecode = 1;
+	_config->verbose = 0;
+	_config->quiet = 0;
+	_config->userSiteDirectory = 1;
+	//_config->bufferedStdio = 1;
+	_config->pathConfigWarnings = 1;
+#ifdef MS_WINDOWS
+	//_config->legacyWindowsStdio = 0;
+#endif
+}
 
+void alifConfig_initAlifConfig(AlifConfig* _config)
+{
+	config_initDefaults(_config);
+
+	_config->configInit = 2; // CCONFIG_INIT_COMPAT = 1, CCONFIG_INIT_ALIF = 2, CCONFIG_INIT_ISOLATED = 3
+	//_config->configure_c_stdio = 1;
+	_config->parseArgv = 1;
+}
 
 
 /* Get run_filename absolute path */
