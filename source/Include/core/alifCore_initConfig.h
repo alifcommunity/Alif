@@ -55,5 +55,6 @@ extern AlifStatus alifPreConfig_initFromPreConfig(AlifPreConfig*);
 
 /* ___________ AlifConfig ___________ */
 
+ALIFAPI_FUNC(void) _alifConfig_initCompatConfig(AlifConfig*);
 extern AlifStatus alifConfig_read(AlifConfig*);
-extern AlifStatus alifConfig_setAlifArgv(AlifConfig* config, const AlifArgv* args);
+extern AlifStatus alifConfig_setAlifArgv(AlifConfig*, const AlifArgv*);

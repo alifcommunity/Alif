@@ -1,12 +1,57 @@
 #include "Alif.h"
 #include "alifcore_initConfig.h" // ALIFSTATUS_OK()
+#include "alifCore_alifCycle.h"
 
 #include <filesystem>
 
 
+void alifConfig_initCompatConfig(AlifConfig* _config)
+{
+	_config->configInit = 1;
+	_config->isolated = -1;
+	_config->useEnvironment = -1;
+	//_config->dev_mode = -1;
+	//_config->install_signal_handlers = 1;
+	//_config->use_hash_seed = -1;
+	//_config->faulthandler = -1;
+	_config->traceMalloc = -1;
+	_config->perfProfiling = -1;
+	_config->moduleSearchPathsSet = 0;
+	_config->parseArgv = 0;
+	_config->siteImport = -1;
+	_config->bytesWarning = -1;
+	_config->warnDefaultEncoding = 0;
+	_config->inspect = -1;
+	_config->interactive = -1;
+	_config->optimizationLevel = -1;
+	_config->parserDebug = -1;
+	_config->writeByteCode = -1;
+	_config->verbose = -1;
+	_config->quiet = -1;
+	_config->userSiteDirectory = -1;
+	//_config->configure_c_stdio = 0;
+	//_config->buffered_stdio = -1;
+	//_config->_install_importlib = 1;
+	//_config->checkHashAlifcsMode = nullptr;
+	_config->pathConfigWarnings = -1;
+	_config->initMain = 1;
+//#ifdef MS_WINDOWS
+//	_config->legacy_windows_stdio = -1;
+//#endif
+#ifdef Py_DEBUG
+	_config->useFrozenModules = 0;
+#else
+	_config->useFrozenModules = 1;
+#endif
+	_config->safePath = 0;
+	_config->intMaxStrDigits = -1;
+	_config->isAlifBuild = 0;
+	_config->codeDebugRanges = 1;
+}
+
 static void config_initDefaults(AlifConfig* _config)
 {
-	//alifConfig_initCompatConfig(_config);
+	alifConfig_initCompatConfig(_config);
 
 	_config->isolated = 0;
 	_config->useEnvironment = 1;
@@ -16,7 +61,7 @@ static void config_initDefaults(AlifConfig* _config)
 	_config->interactive = 0;
 	_config->optimizationLevel = 0;
 	_config->parserDebug = 0;
-	_config->writeBytecode = 1;
+	_config->writeByteCode = 1;
 	_config->verbose = 0;
 	_config->quiet = 0;
 	_config->userSiteDirectory = 1;
@@ -78,6 +123,10 @@ AlifStatus alifConfig_read(AlifConfig* _config)
 
 AlifStatus alifConfig_setAlifArgv(AlifConfig* _config, const AlifArgv* _args)
 {
+	AlifStatus status = alif_preInitializeFromConfig(_config, _args);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
 	return alifArgv_asWstrList(_args, &_config->argv);
 }
@@ -91,7 +140,7 @@ AlifStatus alifConfig_setCharArgv(AlifConfig* _config, alif_size_t _argc, char* 
 		.charArgv = _argv,
 		.wcharArgv = nullptr
 	};
-	//return _alifConfig_setAlifArgv(config, &args);
+	//return _alifConfig_setAlifArgv(_config, &args);
 	return (AlifStatus)0;
 }
 

@@ -2,6 +2,63 @@
 #include "alifCore_initConfig.h"
 #include "alifCore_alifCycle.h"
 
+
+#if defined(MS_WINDOWS)
+
+#pragma section("alifRuntime", read, write)
+__declspec(allocate("alifRuntime"))
+
+#elif defined(__APPLE__)
+
+__attribute__((
+	section(SEG_DATA ",alifRuntime")
+	))
+
+#endif
+
+	AlifRuntimeState runtime {};
+#if defined(__linux__) && (defined(__GNUC__) || defined(__clang__))
+__attribute__((section(".alifRuntime")))
+#endif
+
+
+AlifStatus alif_preInitializeFromConfig(const AlifConfig* _config, const AlifArgv* _args)
+{
+	//assert(_config != nullptr);
+
+	//AlifStatus status = alifRuntime_initialize();
+	//if (ALIFSTATUS_EXCEPTION(status)) {
+	//	return status;
+	//}
+	//AlifRuntimeState* runtime = &alifRuntime;
+
+	//if (runtime->preinitialized) {
+	//	/* Already initialized: do nothing */
+	//	return ALIFSTATUS_OK();
+	//}
+
+	AlifPreConfig preconfig;
+
+	alifPreConfig_initFromConfig(&preconfig, _config);
+
+	if (!_config->parseArgv) {
+		//return alif_preInitialize(&preconfig);
+	}
+	else if (_args == nullptr) {
+		AlifArgv configArgs = {
+			.argc = _config->argv.length,
+			.useCharArgv = 0,
+			.charArgv = nullptr,
+			.wcharArgv = _config->argv.items
+		};
+		return alif_preInitializeFromAlifArgv(&preconfig, &configArgs);
+	}
+	else {
+		return alif_preInitializeFromAlifArgv(&preconfig, _args);
+	}
+}
+
+
 AlifStatus alif_preInitializeFromAlifArgv(const AlifPreConfig* _srcConfig, const AlifArgv* _args)
 {
 	AlifStatus status{};
@@ -43,23 +100,7 @@ AlifStatus alif_preInitializeFromAlifArgv(const AlifPreConfig* _srcConfig, const
 	return ALIFSTATUS_OK();
 }
 
-#if defined(MS_WINDOWS)
 
-#pragma section("alifRuntime", read, write)
-__declspec(allocate("alifRuntime"))
-
-#elif defined(__APPLE__)
-
-__attribute__((
-	section(SEG_DATA ",alifRuntime")
-	))
-
-#endif
-
-AlifRuntimeState runtime{};
-#if defined(__linux__) && (defined(__GNUC__) || defined(__clang__))
-__attribute__((section(".alifRuntime")))
-#endif
 
 // هنا تم عمل متغير يتم القراءة منه والكتابة يسمى alifRuntime 
 // ومن ثم التحقق من النظام لوضع بيانات كائن AlifRuntimeState 
