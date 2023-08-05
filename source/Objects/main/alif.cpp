@@ -15,9 +15,10 @@ static AlifStatus alifMain_init(const AlifArgv* _args) {
 	AlifConfig config{};
 	alifConfig_initAlifConfig(&config);
 
-
+	/* pass nullptr as the config: config is read from command line arguments,
+   environment variables, configuration files */
 	if (_args->useCharArgv) {
-		//status = alifConfig_setCharArgv(&config, args->argc, args->char_argv);
+		status = alifConfig_setCharArgv(&config, _args->argc, _args->charArgv);
 	}
 	else {
 		status = alifConfig_setArgv(&config, _args->argc, _args->wcharArgv);
