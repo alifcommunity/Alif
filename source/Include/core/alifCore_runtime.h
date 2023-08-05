@@ -1,6 +1,9 @@
 #pragma once
 
 #include "alif.h"
+#include "alifCore_alifThread.h"
+#include "alifCore_alifMem.h"
+#include "alifMemory.h"
 
 ///////////////////////////////////////////////////////////////////////////
 

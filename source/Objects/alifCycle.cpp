@@ -2,6 +2,7 @@
 #include "alifCore_initConfig.h"
 #include "alifCore_alifCycle.h"
 
+
 AlifStatus alif_preInitializeFromAlifArgv(const AlifPreConfig* _srcConfig, const AlifArgv* _args)
 {
 	AlifStatus status{};
@@ -43,29 +44,7 @@ AlifStatus alif_preInitializeFromAlifArgv(const AlifPreConfig* _srcConfig, const
 	return ALIFSTATUS_OK();
 }
 
-#if defined(MS_WINDOWS)
-
-#pragma section("alifRuntime", read, write)
-__declspec(allocate("alifRuntime"))
-
-#elif defined(__APPLE__)
-
-__attribute__((
-	section(SEG_DATA ",alifRuntime")
-	))
-
-#endif
-
-AlifRuntimeState runtime{};
-#if defined(__linux__) && (defined(__GNUC__) || defined(__clang__))
-__attribute__((section(".alifRuntime")))
-#endif
-
-// هنا تم عمل متغير يتم القراءة منه والكتابة يسمى alifRuntime 
-// ومن ثم التحقق من النظام لوضع بيانات كائن AlifRuntimeState 
-// ثم يتم استخراجه في ملف compiler لاحقا مع بيانات النظام كاملة
-
-static int runtimeInitialized = 0;
+#include "alifCycle.h"
 
 AlifStatus AlifRuntime_initialize(void) {
 
@@ -75,8 +54,8 @@ AlifStatus AlifRuntime_initialize(void) {
 	}
 	runtimeInitialized = 1;
 
-
-
+	
+	
 }
 
 static AlifStatus alifInit_core(const AlifConfig* _srcConfig)

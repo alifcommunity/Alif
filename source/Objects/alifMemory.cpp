@@ -1,4 +1,5 @@
 #include "alif.h"
+#include "alifCore_runtime.h"
 
 /*
 
@@ -20,10 +21,16 @@ bool objectOrMemDelete = false; // false for mem , true for object
 
 
 int malloc_free(MemoryState* _state, void* ptr);
-
+void get_allocator_unlocked(AlifMemAllocateDomain domain, AlifMemAllocatorExternal* allocator);
+void set_allocator_unlocked(AlifMemAllocateDomain domain, AlifMemAllocatorExternal* allocator);
 
 static MemoryState state;
 
+inline MemoryState* get_state(void) {
+
+	return &state;
+
+}
 
 void
 write_size_t(void* p, size_t n)
@@ -55,7 +62,7 @@ read_size_t(const void* p)
 /* low-level allocator implementations */
 /***************************************/
 
-void* AlifMem_raw_malloc(size_t size) {
+void* AlifMem_raw_malloc(void* ctx, size_t size) {
 
 	if (size == 0) {
 		size = 1;
@@ -63,7 +70,7 @@ void* AlifMem_raw_malloc(size_t size) {
 	return malloc(size);
 }
 
-void* AlifMem_raw_calloc(size_t nElement, size_t elSize) {
+void* AlifMem_raw_calloc(void* ctx, size_t nElement, size_t elSize) {
 
 
 	if (nElement == 0 || elSize == 0) {
@@ -72,10 +79,10 @@ void* AlifMem_raw_calloc(size_t nElement, size_t elSize) {
 	}
 
 	return calloc(nElement, elSize);
-
+	
 }
 
-void* AlifMem_raw_realloc(void* ptr, size_t size) {
+void* AlifMem_raw_realloc(void* ctx, void* ptr, size_t size) {
 
 	if (size == 0) {
 		size = 1;
@@ -83,7 +90,7 @@ void* AlifMem_raw_realloc(void* ptr, size_t size) {
 	return realloc(ptr, size);
 }
 
-void AlifMem_raw_free(void* ptr) {
+void AlifMem_raw_free(void* ctx, void* ptr) {
 	free(ptr);
 }
 
@@ -91,17 +98,14 @@ void AlifMem_raw_free(void* ptr) {
 #define ALIFRAW_ALLOC MALLOC_ALLOC
 
 #ifdef WITH_ALIFMALLOC
-void* object_malloc(MemoryState* _state, size_t numberByte);
-void* object_calloc(MemoryState* _state, size_t nElement, size_t elSize);
-void* object_realloc(MemoryState* _state, void* ptr, size_t numberByte);
-void  object_free(MemoryState* _state, void* ptr);
-#define ALIFMALLOC_ALLOC {nullptr, object_malloc, object_calloc, object_realloc, object_free}
-#define ALIFOBJ_ALLOC ALIFMALLO_ALLOC
+void* object_malloc(void* ctx, size_t numberByte);
+void* object_calloc(void* ctx, size_t nElement, size_t elSize);
+void* object_realloc(void* ctx, void* ptr, size_t numberByte);
+void  object_free(void* ctx, void* ptr);
+#  define ALIFMALLOC_ALLOC {nullptr, object_malloc, object_calloc, object_realloc, object_free}
 #else
-#define ALIFOBJ_ALLOC MALLOC_ALLOC
+  #define ALIFOBJ_ALLOC MALLOC_ALLOC
 #endif
-
-#define ALIFMEMALLOC_ALLOC ALIFOBJ_ALLOC
 
 void* AlifMem_debug_raw_alloc(MemoryState* _state, size_t useCalloc, size_t nByte);
 void* AlifMem_debug_raw_calloc(MemoryState* _state, size_t nElement, size_t elSize);
@@ -131,13 +135,159 @@ void AlifMem_free(MemoryState* _state, void* ptr);
 #  endif
 #endif
 
+#if defined(__has_feature)  /* Clang */
+#  if __has_feature(address_sanitizer) /* is ASAN enabled? */
+#    define _ALIF_NO_SANITIZE_ADDRESS \
+        __attribute__((no_sanitize("address")))
+#  endif
+#  if __has_feature(thread_sanitizer)  /* is TSAN enabled? */
+#    define _ALIF_NO_SANITIZE_THREAD __attribute__((no_sanitize_thread))
+#  endif
+#  if __has_feature(memory_sanitizer)  /* is MSAN enabled? */
+#    define _ALIF_NO_SANITIZE_MEMORY __attribute__((no_sanitize_memory))
+#  endif
+#elif defined(__GNUC__)
+#  if defined(__SANITIZE_ADDRESS__)    /* GCC 4.8+, is ASAN enabled? */
+#    define _ALIF_NO_SANITIZE_ADDRESS \
+        __attribute__((no_sanitize_address))
+#  endif
+// TSAN is supported since GCC 5.1, but __SANITIZE_THREAD__ macro
+// is provided only since GCC 7.
+#  if __GNUC__ > 5 || (__GNUC__ == 5 && __GNUC_MINOR__ >= 1)
+#    define _ALIF_NO_SANITIZE_THREAD __attribute__((no_sanitize_thread))
+#  endif
+#endif
+
+// هذه تعاريف خاصة ب مكتشف الاخطاء في الذاكرة يسمى النظام ب sanitizers memory
+// يعمل هذال النظام على اكتشاف اخطاء مثل كتابة عنوان فوق عنوان مكتوب مسبقا خاص بنظام الجهاز 
+
+#ifndef _ALIF_NO_SANITIZE_ADDRESS
+#  define _ALIF_NO_SANITIZE_ADDRESS
+#endif
+#ifndef _ALIF_NO_SANITIZE_THREAD
+#  define _ALIF_NO_SANITIZE_THREAD
+#endif
+#ifndef _ALIF_NO_SANITIZE_MEMORY
+#  define _ALIF_NO_SANITIZE_MEMORY
+#endif
+
+#define ALIFMEM_RAW (runtime.allocators.standard.raw)
+#define ALIFMEM (runtime.allocators.standard.mem)
+#define ALIFOBJECT (runtime.allocators.standard.obj)
+#define ALIFMEM_DEBUG (runtime.allocators.debug)
+int set_default_alloator_unlocked(AlifMemAllocateDomain domain, int debug, AlifMemAllocatorExternal* oldAlloc) {
+
+	if(oldAlloc != nullptr) {
+		get_allocator_unlocked(domain, oldAlloc);
+	}
+
+	AlifMemAllocatorExternal newAlloc;
+	switch (domain)
+	{
+	case PYMEM_DOMAIN_RAW: newAlloc = ALIFRAW_ALLOC;
+		break;
+	case PYMEM_DOMAIN_MEM: newAlloc = ALIFMALLOC_ALLOC;
+		break;
+	case PYMEM_DOMAIN_OBJ: newAlloc = ALIFMALLOC_ALLOC;
+		break;
+	default:
+		return -1;
+	}
+
+	get_allocator_unlocked(domain, &newAlloc);
+
+	if (debug) {
+		
+	}
+	return 0;
+}
+
+
+#ifdef Py_DEBUG
+static const int pydebug = 1;
+#else
+static const int pydebug = 0;
+#endif
+
+void get_allocator_unlocked(AlifMemAllocateDomain domain, AlifMemAllocatorExternal* allocator) {
+	
+	switch (domain)
+	{
+	case PYMEM_DOMAIN_RAW: *allocator = ALIFMEM_RAW; break;
+	case PYMEM_DOMAIN_MEM: *allocator = ALIFMEM; break;
+	case PYMEM_DOMAIN_OBJ: *allocator = ALIFOBJECT; break;
+	default:
+		break;
+	}
+
+}
+
+
+void set_allocator_unlocked(AlifMemAllocateDomain domain, AlifMemAllocatorExternal* allocator) {
+
+	switch (domain)
+	{
+	case PYMEM_DOMAIN_RAW: ALIFMEM_RAW = *allocator; break;
+	case PYMEM_DOMAIN_MEM: ALIFMEM = *allocator; break;
+	case PYMEM_DOMAIN_OBJ: ALIFOBJECT = *allocator; break;
+	default:
+		break;
+	}
+
+}
+
+void set_up_debug_hooks_domain_unlocked(AlifMemAllocateDomain domain)
+{
+	AlifMemAllocatorExternal alloc;
+
+	if (domain == PYMEM_DOMAIN_RAW) {
+		//if (ALIFMEM_RAW.malloc == AlifMem_debug_raw_alloc) {
+		//	return;
+		//}
+
+		get_allocator_unlocked(domain, &ALIFMEM_DEBUG.raw.alloc);
+		alloc.ctx = &ALIFMEM_DEBUG.raw;
+		alloc.malloc = AlifMem_debug_raw_alloc;
+		alloc.calloc = _PyMem_DebugRawCalloc;
+		alloc.realloc = _PyMem_DebugRawRealloc;
+		alloc.free = _PyMem_DebugRawFree;
+		set_allocator_unlocked(domain, &alloc);
+	}
+	else if (domain == PYMEM_DOMAIN_MEM) {
+		if (ALIFMEM.malloc == _PyMem_DebugMalloc) {
+			return;
+		}
+
+		get_allocator_unlocked(domain, &ALIFMEM_DEBUG.mem.alloc);
+		alloc.ctx = &ALIFMEM_DEBUG.mem;
+		alloc.malloc = _PyMem_DebugMalloc;
+		alloc.calloc = _PyMem_DebugCalloc;
+		alloc.realloc = _PyMem_DebugRealloc;
+		alloc.free = _PyMem_DebugFree;
+		set_allocator_unlocked(domain, &alloc);
+	}
+	else if (domain == PYMEM_DOMAIN_OBJ) {
+		if (ALIFOBJECT.malloc == _PyMem_DebugMalloc) {
+			return;
+		}
+
+		get_allocator_unlocked(domain, &ALIFMEM_DEBUG.obj.alloc);
+		alloc.ctx = &ALIFMEM_DEBUG.obj;
+		alloc.malloc = _PyMem_DebugMalloc;
+		alloc.calloc = _PyMem_DebugCalloc;
+		alloc.realloc = _PyMem_DebugRealloc;
+		alloc.free = _PyMem_DebugFree;
+		set_allocator_unlocked(domain, &alloc);
+	}
+}
+
 void* raw_malloc(size_t size) {
 
 	if (size > 9223372036854775807i64) {
 		return nullptr;
 	}
 
-	return AlifMem_raw_malloc(size);
+	return AlifMem_raw_malloc(nullptr, size);
 }
 
 void* raw_calloc(MemoryState* _state, size_t nElement, size_t elSize) {
@@ -210,22 +360,6 @@ void* AlifObject_malloc(MemoryState* _state, size_t size) {
 
 }
 
-void AlifObject_free(MemoryState* _state, void* ptr) {
-
-	if (ptr == nullptr) {
-		return;
-	}
-
-	objectOrMemDelete = true;
-
-	if (!malloc_free(_state, ptr)) {
-
-		AlifMem_debug_raw_free(_state, ptr);
-
-	}
-
-}
-
 void* AlifObject_calloc(MemoryState* _state, size_t nElement, size_t elSize) {
 
 	rawOrMem = false;
@@ -242,13 +376,29 @@ void* AlifObject_realloc(MemoryState* _state, void* ptr, size_t numberByte) {
 
 }
 
+void AlifObject_free(MemoryState* _state, void* ptr) {
+
+	if (ptr == nullptr) {
+		return;
+	}
+
+	objectOrMemDelete = true;
+
+	if (!malloc_free(_state, ptr)) {
+
+		AlifMem_debug_raw_free(_state, ptr);
+
+	}
+
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
 
 inline BlockMapDown* Block_map_get(MemoryState* _state, uint8_t* ptr, int create) {
 
-	int i1 = (((uint8_t)(ptr)) >> ((((64 - 0) - 20 + 2) / 3) + (((64 - 0) - 20 + 2 + 20))) & ((1 << (((64 - 0) - 20 + 2) / 3)) - 1));
+	int i1 = (((uintptr_t)(ptr)) >> ((((64 - 0) - 20 + 2) / 3) + (((64 - 0) - 20 + 2 + 20))) & ((1 << (((64 - 0) - 20 + 2) / 3)) - 1));
 
 	if (_state->usage.BlockMapRoot.ptrs[i1] == nullptr) {
 
@@ -401,6 +551,7 @@ void insert_to_free_Alignment(MemoryState* _state, AlignmentHeader* Alignment) {
 		_state->mGmt.usableBlock = blockObj->nextBlock;
 	}
 
+
 	blockObj->nextBlock->prevBlock = blockObj->prevBlock;
 
 	blockObj->prevBlock = lastNumberFree;
@@ -443,17 +594,17 @@ int malloc_free(MemoryState* _state, void* ptr) {
 
 }
 
-void object_free(MemoryState* _state, void* ptr) {
-
-
+void object_free(void* ctx, void* ptr) {
 
 	if (ptr == nullptr) {
 		return;
 	}
 
-	if (!malloc_free(_state, ptr)) {
-		AlifMem_debug_raw_free(_state, ptr);
-		_state->mGmt.rawAllocatedBlocks--;
+	MemoryState* state = get_state();
+
+	if (!malloc_free(state, ptr)) {
+		AlifMem_debug_raw_free(state, ptr);
+		state->mGmt.rawAllocatedBlocks--;
 	}
 
 }
@@ -472,17 +623,17 @@ void* AlifMem_debug_raw_alloc(MemoryState* _state, size_t useCalloc, size_t nByt
 			p = (uint8_t*)object_calloc(_state, 1, total);
 		}
 		else {
-			p = (uint8_t*)AlifMem_raw_calloc(1, total);
+			p = (uint8_t*)AlifMem_raw_calloc(nullptr, 1, total);
 		}
 
 	}
 	else {
 
 		if (rawOrMem) {
-			p = (uint8_t*)object_malloc(_state, total);
+			p = (uint8_t*)object_malloc(nullptr, total);
 		}
 		else {
-			p = (uint8_t*)AlifMem_raw_malloc(total);
+			p = (uint8_t*)AlifMem_raw_malloc(nullptr, total);
 		}
 
 	}
@@ -520,7 +671,7 @@ void AlifMem_debug_raw_free(MemoryState* _state, void* ptr) {
 		object_free(_state, q);
 	}
 	else {
-		AlifMem_raw_free(q);
+		AlifMem_raw_free(nullptr, q);
 	}
 }
 
@@ -562,7 +713,7 @@ void* AlifMem_debug_raw_realloc(MemoryState* _state, void* ptr, size_t nByte) {
 		memcpy(&save[2 * 64], tail - 2 * 64, 2 * 64);
 		memset(tail - 64, 0xDD, 64 + 24 - 2 * 8);
 	}
-	r = (uint8_t*)AlifMem_raw_realloc(head, total);
+	r = (uint8_t*)AlifMem_raw_realloc(nullptr, head, total);
 
 	if (r == nullptr) {
 		nByte = originalNByte;
@@ -755,7 +906,7 @@ void* malloc_alloc(MemoryState* _state, size_t nByte) {
 		return nullptr;
 	}
 
-	unsigned int size = (nByte - 1) >> 4;
+	unsigned int size = (unsigned int)(nByte - 1) >> 4;
 	AlignmentHeader* Alignment = _state->alignments.used[size + size];
 	uint8_t* bp;
 
@@ -775,34 +926,38 @@ void* malloc_alloc(MemoryState* _state, size_t nByte) {
 	return (void*)bp;
 }
 
-void* object_malloc(MemoryState* _state, size_t numberByte) {
+void* object_malloc(void* ctx, size_t numberByte) {
 
-	void* ptr = malloc_alloc(_state, numberByte);
+	MemoryState* state = get_state();
+
+	void* ptr = malloc_alloc(state, numberByte);
 	if (ptr != nullptr) {
 		memset(ptr, 0, numberByte);
 		return ptr;
 	}
-	ptr = AlifMem_raw_realloc(ptr, numberByte);
+	ptr = AlifMem_raw_realloc(nullptr, ptr, numberByte);
 	if (ptr != nullptr) {
-		(_state)->mGmt.rawAllocatedBlocks++;
+		(state)->mGmt.rawAllocatedBlocks++;
 	}
 	return ptr;
 
 }
 
-void* object_calloc(MemoryState* _state, size_t nElement, size_t elSize) {
+void* object_calloc(void* ctx, size_t nElement, size_t elSize) {
+
+	MemoryState* state = get_state();
 
 	size_t numberByte = nElement * elSize;
 
-	void* ptr = malloc_alloc(_state, numberByte);
+	void* ptr = malloc_alloc(state, numberByte);
 	if (ptr != nullptr) {
 		memset(ptr, 0, numberByte);
 		return ptr;
 	}
 
-	ptr = AlifMem_debug_raw_alloc(_state, 1, nElement * elSize);
+	ptr = AlifMem_debug_raw_alloc(state, 1, nElement * elSize);
 	if (ptr != nullptr) {
-		_state->mGmt.rawAllocatedBlocks++;
+		state->mGmt.rawAllocatedBlocks++;
 	}
 	return ptr;
 
@@ -830,7 +985,7 @@ int malloc_realloc(MemoryState* _state, void** newPtr, void* ptr, size_t numberB
 		size = numberByte;
 	}
 
-	bp = object_malloc(_state, numberByte);
+	bp = object_malloc(nullptr, numberByte);
 
 	if (bp != nullptr) {
 		memcpy(bp, ptr, size);
@@ -840,16 +995,18 @@ int malloc_realloc(MemoryState* _state, void** newPtr, void* ptr, size_t numberB
 	return 1;
 }
 
-void* object_realloc(MemoryState* _state, void* ptr, size_t numberByte) {
+void* object_realloc(void* ctx, void* ptr, size_t size) {
 
 	void* ptr2;
 	if (ptr == nullptr) {
-		object_malloc(_state, numberByte);
+		return object_malloc(nullptr, size);
 	}
 
-	if (malloc_realloc(_state, &ptr2, ptr, numberByte)) {
+	MemoryState* state = get_state();
+
+	if (malloc_realloc(state, &ptr2, ptr, size)) {
 		return ptr2;
 	}
-	return AlifMem_debug_raw_realloc(_state, ptr, numberByte);
+	return AlifMem_debug_raw_realloc(state, ptr, size);
 
 }

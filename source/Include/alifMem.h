@@ -1,5 +1,16 @@
 #pragma once
 
+enum AlifMemAllocateDomain{
+	/* AlifMem_RawMalloc(), AlifMem_RawRealloc() and AlifMem_RawFree() */
+	PYMEM_DOMAIN_RAW,
+
+	/* AlifMem_Malloc(), AlifMem_Realloc() and AlifMem_Free() */
+	PYMEM_DOMAIN_MEM,
+
+	/* AlifObject_Malloc(), AlifObject_Realloc() and AlifObject_Free() */
+	PYMEM_DOMAIN_OBJ
+};
+
 enum AlifMemAllocatorName {
 	ALIFMEM_ALLOCATOR_NOT_SET = 0,
 	ALIFMEM_ALLOCATOR_DEFAULT = 1,
@@ -10,4 +21,23 @@ enum AlifMemAllocatorName {
 	PYMEM_ALLOCATOR_PYMALLOC = 5,
 	PYMEM_ALLOCATOR_PYMALLOC_DEBUG = 6,
 #endif
+};
+
+class AlifMemAllocatorExternal {
+
+public:
+	/* user context passed as the first argument to the 4 functions */
+	void* ctx;
+
+	/* allocate a memory block */
+	void* (*malloc) (void* ctx, size_t size);
+
+	/* allocate a memory block initialized by zeros */
+	void* (*calloc) (void* ctx, size_t nElement, size_t elSize);
+
+	/* allocate or resize a memory block */
+	void* (*realloc) (void* ctx, void* ptr, size_t newSize);
+
+	/* release a memory block */
+	void (*free) (void* ctx, void* ptr);
 };
