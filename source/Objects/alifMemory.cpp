@@ -175,6 +175,7 @@ void AlifMem_free(MemoryState* _state, void* ptr);
 #define ALIFMEM (runtime.allocators.standard.mem)
 #define ALIFOBJECT (runtime.allocators.standard.obj)
 #define ALIFMEM_DEBUG (runtime.allocators.debug)
+
 int set_default_alloator_unlocked(AlifMemAllocateDomain domain, int debug, AlifMemAllocatorExternal* oldAlloc) {
 
 	if(oldAlloc != nullptr) {
@@ -209,76 +210,69 @@ static const int pydebug = 1;
 static const int pydebug = 0;
 #endif
 
-void get_allocator_unlocked(AlifMemAllocateDomain domain, AlifMemAllocatorExternal* allocator) {
-	
-	switch (domain)
-	{
-	case PYMEM_DOMAIN_RAW: *allocator = ALIFMEM_RAW; break;
-	case PYMEM_DOMAIN_MEM: *allocator = ALIFMEM; break;
-	case PYMEM_DOMAIN_OBJ: *allocator = ALIFOBJECT; break;
-	default:
-		break;
-	}
+void get_allocator_unlocked(AlifMemAllocateDomain domain, AlifMemAllocatorExternal* allocator)
+{
+	//switch (domain)
+	//{
+	//case PYMEM_DOMAIN_RAW: *allocator = ALIFMEM_RAW; break;
+	//case PYMEM_DOMAIN_MEM: *allocator = ALIFMEM; break;
+	//case PYMEM_DOMAIN_OBJ: *allocator = ALIFOBJECT; break;
+	//default:
+	//	break;
+	//}
 
 }
 
 
 void set_allocator_unlocked(AlifMemAllocateDomain domain, AlifMemAllocatorExternal* allocator) {
 
-	switch (domain)
-	{
-	case PYMEM_DOMAIN_RAW: ALIFMEM_RAW = *allocator; break;
-	case PYMEM_DOMAIN_MEM: ALIFMEM = *allocator; break;
-	case PYMEM_DOMAIN_OBJ: ALIFOBJECT = *allocator; break;
-	default:
-		break;
-	}
+	//switch (domain)
+	//{
+	//case PYMEM_DOMAIN_RAW: ALIFMEM_RAW = *allocator; break;
+	//case PYMEM_DOMAIN_MEM: ALIFMEM = *allocator; break;
+	//case PYMEM_DOMAIN_OBJ: ALIFOBJECT = *allocator; break;
+	//default:
+	//	break;
+	//}
 
 }
 
+// لم يتم اكمل funtion بعد 
+
 void set_up_debug_hooks_domain_unlocked(AlifMemAllocateDomain domain)
 {
-	AlifMemAllocatorExternal alloc;
+	//AlifMemAllocatorExternal alloc;
 
-	if (domain == PYMEM_DOMAIN_RAW) {
-		//if (ALIFMEM_RAW.malloc == AlifMem_debug_raw_alloc) {
-		//	return;
-		//}
+	//if (domain == PYMEM_DOMAIN_RAW) {
+	//	if (ALIFMEM_RAW.malloc == AlifMem_debug_raw_alloc) {
+	//		return;
+	//	}
 
-		get_allocator_unlocked(domain, &ALIFMEM_DEBUG.raw.alloc);
-		alloc.ctx = &ALIFMEM_DEBUG.raw;
-		alloc.malloc = AlifMem_debug_raw_alloc;
-		alloc.calloc = _PyMem_DebugRawCalloc;
-		alloc.realloc = _PyMem_DebugRawRealloc;
-		alloc.free = _PyMem_DebugRawFree;
-		set_allocator_unlocked(domain, &alloc);
-	}
-	else if (domain == PYMEM_DOMAIN_MEM) {
-		if (ALIFMEM.malloc == _PyMem_DebugMalloc) {
-			return;
-		}
+	//	get_allocator_unlocked(domain, &ALIFMEM_DEBUG.raw.alloc);
+	//	alloc.ctx = &ALIFMEM_DEBUG.raw;
 
-		get_allocator_unlocked(domain, &ALIFMEM_DEBUG.mem.alloc);
-		alloc.ctx = &ALIFMEM_DEBUG.mem;
-		alloc.malloc = _PyMem_DebugMalloc;
-		alloc.calloc = _PyMem_DebugCalloc;
-		alloc.realloc = _PyMem_DebugRealloc;
-		alloc.free = _PyMem_DebugFree;
-		set_allocator_unlocked(domain, &alloc);
-	}
-	else if (domain == PYMEM_DOMAIN_OBJ) {
-		if (ALIFOBJECT.malloc == _PyMem_DebugMalloc) {
-			return;
-		}
+	//	set_allocator_unlocked(domain, &alloc);
+	//}
+	//else if (domain == PYMEM_DOMAIN_MEM) {
+	//	if (ALIFMEM.malloc == AlifMem_debug_raw_alloc) {
+	//		return;
+	//	}
 
-		get_allocator_unlocked(domain, &ALIFMEM_DEBUG.obj.alloc);
-		alloc.ctx = &ALIFMEM_DEBUG.obj;
-		alloc.malloc = _PyMem_DebugMalloc;
-		alloc.calloc = _PyMem_DebugCalloc;
-		alloc.realloc = _PyMem_DebugRealloc;
-		alloc.free = _PyMem_DebugFree;
-		set_allocator_unlocked(domain, &alloc);
-	}
+	//	get_allocator_unlocked(domain, &ALIFMEM_DEBUG.mem.alloc);
+	//	alloc.ctx = &ALIFMEM_DEBUG.mem;
+
+	//	set_allocator_unlocked(domain, &alloc);
+	//}
+	//else if (domain == PYMEM_DOMAIN_OBJ) {
+	//	if (ALIFOBJECT.malloc == AlifMem_debug_raw_alloc) {
+	//		return;
+	//	}
+
+	//	get_allocator_unlocked(domain, &ALIFMEM_DEBUG.obj.alloc);
+	//	alloc.ctx = &ALIFMEM_DEBUG.obj;
+
+	//	set_allocator_unlocked(domain, &alloc);
+	//}
 }
 
 void* raw_malloc(size_t size) {
