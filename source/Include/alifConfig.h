@@ -157,5 +157,7 @@ typedef _W64 int Alif_ssize_t;
 #       define ALIF_ENABLE_SHARED 1 
 #endif 
 
-#define WITH_ALIFMALLOC 1
+/*  All windows compilers that use this header support __declspec */
+#define HAVE_DECLSPEC_DLL
 
+#define WITH_ALIFMALLOC 1

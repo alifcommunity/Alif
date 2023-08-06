@@ -22,10 +22,10 @@ public:
 	union { uint8_t* padding; unsigned int count; }ref;
 	class AlignmentHeader* nextAlignment;
 	class AlignmentHeader* prevAlignment;
-	unsigned int BlockIndex;
-	unsigned int sizeIndex;
-	unsigned int nextOffset;
-	unsigned int maxNextOffset;
+	size_t BlockIndex;
+	size_t sizeIndex;
+	size_t nextOffset;
+	size_t maxNextOffset;
 	uint8_t* freeBlock;
 };
 
@@ -36,9 +36,9 @@ public:
 	uint8_t* alignmentAddress;
 	unsigned int numberFreeAlignments;
 	unsigned int numberTotalAlignments;
-	class AlignmentHeader* freeAlignments;
-	class BlockObject* nextBlock;
-	class BlockObject* prevBlock;
+	AlignmentHeader* freeAlignments;
+	BlockObject* nextBlock;
+	BlockObject* prevBlock;
 };
 
 class AlignmentsUsed

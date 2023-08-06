@@ -10,8 +10,8 @@
 #include "exports.h"
 
 /* only get special linkage if built as shared or platform is Cygwin */
-//#if defined(ALIF_ENABLE_SHARED) || defined(__CYGWIN__)
-//#       if defined(HAVE_DECLSPEC_DLL)
+#if defined(ALIF_ENABLE_SHARED) || defined(__CYGWIN__)
+#       if defined(HAVE_DECLSPEC_DLL)
 #               if defined(ALIF_BUILD_CORE) && !defined(ALIF_BUILD_CORE_MODULE)
 #                       define ALIFAPI_FUNC(RTYPE) ALIF_EXPORTED_SYMBOL RTYPE
 #                       define ALIFAPI_DATA(RTYPE) extern ALIF_EXPORTED_SYMBOL RTYPE
@@ -30,5 +30,5 @@
 		/* module init functions outside the core must be exported */
 #                       define ALIFMODINIT_FUNC /* extern "C" */ ALIF_EXPORTED_SYMBOL AlifObject*
 #               endif /* ALIF_BUILD_CORE */
-//#       endif /* HAVE_DECLSPEC_DLL */
-//#endif /* ALIF_ENABLE_SHARED */
+#       endif /* HAVE_DECLSPEC_DLL */
+#endif /* ALIF_ENABLE_SHARED */

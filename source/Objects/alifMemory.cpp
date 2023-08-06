@@ -390,9 +390,9 @@ void AlifObject_free(MemoryState* _state, void* ptr) {
 ////////////////////////////////////////////////////////////////////////////////////////
 
 
-inline BlockMapDown* Block_map_get(MemoryState* _state, uint8_t* ptr, int create) {
-
-	int i1 = (((uintptr_t)(ptr)) >> ((((64 - 0) - 20 + 2) / 3) + (((64 - 0) - 20 + 2 + 20))) & ((1 << (((64 - 0) - 20 + 2) / 3)) - 1));
+inline BlockMapDown* Block_map_get(MemoryState* _state, uint8_t* ptr, int create)
+{
+	int i1 = ((((uintptr_t)(ptr)) >> ((((64 - 0) - 20 + 2) / 3) + (((64 - 0) - 20 + 2 + 20))) & ((1 << (((64 - 0) - 20 + 2) / 3)) - 1)));
 
 	if (_state->usage.BlockMapRoot.ptrs[i1] == nullptr) {
 
@@ -460,7 +460,7 @@ int Block_map_is_used(MemoryState* _state, uint8_t* ptr) {
 
 void insert_to_used_Alignment(MemoryState* _state, AlignmentHeader* Alignment) {
 
-	unsigned int size = Alignment->sizeIndex;
+	size_t size = Alignment->sizeIndex;
 	AlignmentHeader* next = _state->alignments.used[size * 2];
 	AlignmentHeader* prev = next->prevAlignment;
 
@@ -808,12 +808,12 @@ BlockObject* new_Block(MemoryState* _state) {
 
 }
 
-void malloc_Alignment_extend(AlignmentHeader* Alignment, unsigned int size) {
+void malloc_Alignment_extend(AlignmentHeader* Alignment, size_t _size) {
 
 	if (Alignment->nextOffset <= Alignment->maxNextOffset) {
 
 		Alignment->freeBlock = (uint8_t*)Alignment + Alignment->nextOffset;
-		Alignment->nextOffset += (((unsigned int)(size)+1) << 4);
+		Alignment->nextOffset += (((_size)+1) << 4);
 		*(uint8_t**)(Alignment->freeBlock) = nullptr;
 		return;
 	}
@@ -826,7 +826,7 @@ void malloc_Alignment_extend(AlignmentHeader* Alignment, unsigned int size) {
 
 }
 
-void* allocate_from_new_Alignment(MemoryState* _state, unsigned int size) {
+void* allocateFrom_newAlignment(MemoryState* _state, size_t _size) {
 
 	if ((_state)->mGmt.usableBlock == nullptr) {
 
@@ -871,24 +871,24 @@ void* allocate_from_new_Alignment(MemoryState* _state, unsigned int size) {
 	}
 
 	uint8_t* bp;
-	AlignmentHeader* next = (_state)->alignments.used[size + size];
+	AlignmentHeader* next = (_state)->alignments.used[_size + _size];
 	Alignment->nextAlignment = next;
 	Alignment->prevAlignment = next;
 	next->nextAlignment = Alignment;
 	next->prevAlignment = Alignment;
 	Alignment->ref.count = 1;
-	if (Alignment->sizeIndex == size) {
+	if (Alignment->sizeIndex == _size) {
 		bp = Alignment->freeBlock;
 		Alignment->freeBlock = *(uint8_t**)bp;
 		return bp;
 	}
 
-	Alignment->sizeIndex = size;
-	size = (((unsigned int)(size)+1) << 4);
+	Alignment->sizeIndex = _size;
+	_size = (((_size)+1) << 4);
 	bp = (uint8_t*)Alignment + SIZE_ROUND_UP(sizeof(AlignmentHeader), 16));
-	Alignment->nextOffset = SIZE_ROUND_UP(sizeof(AlignmentHeader), 16)) + (size << 1);
-	Alignment->maxNextOffset = (1 << 14) - size;
-	Alignment->freeBlock = bp + size;
+	Alignment->nextOffset = SIZE_ROUND_UP(sizeof(AlignmentHeader), 16)) + (_size << 1);
+	Alignment->maxNextOffset = (1 << 14) - _size;
+	Alignment->freeBlock = bp + _size;
 	*(uint8_t**)(Alignment->freeBlock) = nullptr;
 	return bp;
 
@@ -915,7 +915,7 @@ void* malloc_alloc(MemoryState* _state, size_t nByte) {
 
 	}
 	else {
-		bp = (uint8_t*)allocate_from_new_Alignment(_state, size);
+		bp = (uint8_t*)allocateFrom_newAlignment(_state, size);
 	}
 	return (void*)bp;
 }
@@ -969,7 +969,7 @@ int malloc_realloc(MemoryState* _state, void** newPtr, void* ptr, size_t numberB
 		return 0;
 	}
 
-	size = (((unsigned int)(Alignment->sizeIndex) + 1) << 4);
+	size = ((((size_t)Alignment->sizeIndex) + 1) << 4);
 
 	if (numberByte <= size) {
 		if (4 * numberByte > 3 * size) {

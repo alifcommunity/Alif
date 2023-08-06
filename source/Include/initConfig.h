@@ -40,7 +40,7 @@ public:
 	int allocator;
 };
 
-ALIFAPI_FUNC(void) alifPreConfig_initConfig(AlifPreConfig* config);
+ALIFAPI_FUNC(void) alifPreConfig_initAlifConfig(AlifPreConfig*);
 
 
 /* ___________ AlifConfig ___________ */
