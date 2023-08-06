@@ -41,7 +41,7 @@ void alifPreConfig_initCompatConfig(AlifPreConfig* _config)
 #endif
 }
 
-void alifPreConfig_initConfig(AlifPreConfig* _config)
+void alifPreConfig_initAlifConfig(AlifPreConfig* _config)
 {
 	alifPreConfig_initCompatConfig(_config);
 
@@ -59,6 +59,6 @@ void alifPreConfig_initConfig(AlifPreConfig* _config)
 
 AlifStatus alifPreConfig_initFromPreConfig(AlifPreConfig* _config)
 {
-	alifPreConfig_initConfig(_config);
+	alifPreConfig_initAlifConfig(_config);
 	return ALIFSTATUS_OK();
 }

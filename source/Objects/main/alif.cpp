@@ -8,7 +8,7 @@ static AlifStatus alifMain_init(const AlifArgv* _args) {
 	AlifStatus status{};
 
 	AlifPreConfig preConfig{};
-	alifPreConfig_initConfig(&preConfig);
+	alifPreConfig_initAlifConfig(&preConfig);
 
 	status = alif_preInitializeFromAlifArgv(&preConfig, _args);
 
@@ -24,7 +24,7 @@ static AlifStatus alifMain_init(const AlifArgv* _args) {
 		status = alifConfig_setArgv(&config, _args->argc, _args->wcharArgv);
 	}
 
-	status = alifInit_fromConfig(&config);
+	//status = alifInit_fromConfig(&config);
 
 	return status;
 }

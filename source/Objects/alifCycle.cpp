@@ -23,18 +23,17 @@ __attribute__((
 
 #endif
 
-	AlifRuntimeState runtime {};
-#if defined(__linux__) && (defined(__GNUC__) || defined(__clang__))
-__attribute__((section(".alifRuntime")))
-#endif
+//AlifRuntimeState runtime
+//#if defined(__linux__) && (defined(__GNUC__) || defined(__clang__))
+//__attribute__((section(".alifRuntime")))
+//#endif
   
 
 static int runtimeInitialized = 0;
 
 
-AlifStatus AlifRuntime_initialize(void) {
-
-
+AlifStatus alifRuntime_initialize()
+{
 	if (runtimeInitialized) {
 		return ALIFSTATUS_OK();
 	}
@@ -57,9 +56,9 @@ AlifStatus alif_preInitializeFromConfig(const AlifConfig* _config, const AlifArg
 	//	return ALIFSTATUS_OK();
 	//}
 
-	AlifPreConfig preconfig;
+	AlifPreConfig preconfig{};
 
-	alifPreConfig_initFromConfig(&preconfig, _config);
+	//alifPreConfig_initFromConfig(&preconfig, _config);
 
 	if (!_config->parseArgv) {
 		//return alif_preInitialize(&preconfig);
