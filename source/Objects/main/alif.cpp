@@ -7,22 +7,25 @@ static AlifStatus alifMain_init(const AlifArgv* _args) {
 
 	AlifStatus status{};
 
+
+
 	AlifPreConfig preConfig{};
 	alifPreConfig_initAlifConfig(&preConfig);
 
 	status = alif_preInitializeFromAlifArgv(&preConfig, _args);
-
-	AlifConfig config{};
-	alifConfig_initAlifConfig(&config);
-
-	/* pass nullptr as the config: config is read from command line arguments,
-   environment variables, configuration files */
-	if (_args->useCharArgv) {
-		status = alifConfig_setCharArgv(&config, _args->argc, _args->charArgv);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
 	}
-	else {
-		status = alifConfig_setArgv(&config, _args->argc, _args->wcharArgv);
-	}
+
+	//AlifConfig config{};
+	//alifConfig_initAlifConfig(&config);
+
+	//if (_args->useCharArgv) {
+	//	status = alifConfig_setCharArgv(&config, _args->argc, _args->charArgv);
+	//}
+	//else {
+	//	status = alifConfig_setArgv(&config, _args->argc, _args->wcharArgv);
+	//}
 
 	//status = alifInit_fromConfig(&config);
 

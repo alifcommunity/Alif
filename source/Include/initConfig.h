@@ -7,8 +7,8 @@ class AlifStatus
 {
 public:
 	int type; // 0 -> Ok , 1 -> Error ,  2 -> Exit
-	const wchar_t* func;
-	const wchar_t* mesError;
+	const char* func;
+	const char* mesError;
 	int exitCode;
 };
 

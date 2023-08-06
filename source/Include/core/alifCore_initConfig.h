@@ -10,17 +10,17 @@
 // تستخدم هذه الحالة للتحقق في كل دالة ما إذا تمت بشكل صحيح أم لا
 #define ALIFSTATUS_OK() {.type = 0,} // 0 -> Ok , 1 -> Error ,  2 -> Exit
 
-#define ALIFSTATUS_ERR(_errMsg) (AlifStatus) {		\
+#define ALIFSTATUS_ERR(_errMsg) {					\
 			.type = 1,								\
 			.func = ALIFSTATUS_GET_FUNC(),			\
-			.mesError = (_errMsg)					\
+			.mesError = (_errMsg),					\
 		}
 
 #define ALIFSTATUS_NO_MEMORY() ALIFSTATUS_ERR(L"فشل الحجز من الذاكرة")
 
-#define ALIFSTATUS_EXIT(_exitCode) (AlifStatus) {	\
+#define ALIFSTATUS_EXIT(_exitCode) {				\
 			.type = 2,								\
-			.exitCode = (_exitCode)					\
+			.exitCode = (_exitCode),				\
 		}
 
 #define ALIFSTATUS_IS_ERROR(_error) ((_error).type == 1)
@@ -42,14 +42,14 @@ public:
 AlifStatus alifArgv_asWstrList(const AlifArgv* args, AlifWideStringList* list);
 
 
-/* ___________ ALifPreConfig ___________ */
+/* ___________ AlifPreConfig ___________ */
 
 ALIFAPI_FUNC(void) alifPreConfig_initCompatConfig(AlifPreConfig*);
 extern void alifPreConfig_initFromConfig(AlifPreConfig*, const AlifConfig*);
 extern AlifStatus alifPreConfig_initFromPreConfig(AlifPreConfig*);
 //extern AlifObject* alifPreConfig_asDict(const AlifPreConfig*);
 //extern void alifPreConfig_getConfig(AlifPreConfig*, const AlifConfig*);
-//extern AlifStatus alifPreConfig_read(AlifPreConfig*, const AlifArgv*);
+extern AlifStatus alifPreConfig_read(AlifPreConfig*, const AlifArgv*);
 //extern AlifStatus alifPreConfig_write(const AlifPreConfig*);
 
 

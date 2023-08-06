@@ -104,10 +104,10 @@ AlifStatus alif_preInitializeFromAlifArgv(const AlifPreConfig* _srcConfig, const
 		return status;
 	}
 
-	//status = alifPreConfig_read(&config, _args);
-	//if (ALIFSTATUS_EXCEPTION(status)) {
-	//	return status;
-	//}
+	status = alifPreConfig_read(&config, _args);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
 	//status = alifPreConfig_write(&config);
 	//if (ALIFSTATUS_EXCEPTION(status)) {
