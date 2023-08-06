@@ -55,7 +55,7 @@ public:
 	//int use_hash_seed;
 	//unsigned long hash_seed;
 	//int faultHandler;
-	//int traceMalloc;
+	int traceMalloc;
 	int perfProfiling;
 	int importTime;
 	int codeDebugRanges;
@@ -78,7 +78,7 @@ public:
 	int interactive;
 	int optimizationLevel;
 	int parserDebug;
-	int writeBytecode;
+	int writeByteCode;
 	int verbose;
 	int quiet;
 	int userSiteDirectory;
