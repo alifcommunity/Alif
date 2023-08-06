@@ -5,6 +5,30 @@
 #include <filesystem>
 
 
+/* ___________ Global Configuration Variables ___________ */
+
+int alifUTF8Mode = 0;
+int alifDebugFlag = 0; /* Needed by parser.cpp */
+int alifVerboseFlag = 0; /* Needed by import.cpp */
+int alifQuietFlag = 0; /* Needed by sysmodule.cpp */
+int alifInteractiveFlag = 0; /* Previously, was used by Py_FdIsInteractive() */
+int alifInspectFlag = 0; /* Needed to determine whether to exit at SystemExit */
+int alifOptimizeFlag = 0; /* Needed by compile.cpp */
+int alifNoSiteFlag = 0; /* Suppress 'import site' */
+int alifBytesWarningFlag = 0; /* Warn on str(bytes) and str(buffer) */
+int alifFrozenFlag = 0; /* Needed by getpath.cpp */
+int alifIgnoreEnvironmentFlag = 0; /* e.g. ALIFPATH, ALIFHOME */
+int alifDontWriteBytecodeFlag = 0; /* Suppress writing bytecode files (*.alc) */
+int alifNoUserSiteDirectory = 0; /* for -s and site.alif */
+int alifUnbufferedStdioFlag = 0; /* Unbuffered binary std{in,out,err} */
+int alifHashRandomizationFlag = 0; /* for -R and ALIFHASHSEED */
+int alifIsolatedFlag = 0; /* for -I, isolate from user's env */
+#ifdef MS_WINDOWS
+int alifLegacyWindowsFSEncodingFlag = 0; /* Uses mbcs instead of utf-8 */
+int alifLegacyWindowsStdioFlag = 0; /* Uses FileIO instead of WindowsConsoleIO */
+#endif
+
+
 void alifConfig_initCompatConfig(AlifConfig* _config)
 {
 	_config->configInit = 1;
