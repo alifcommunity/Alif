@@ -154,6 +154,7 @@
     <ClInclude Include="..\source\Include\core\alifCore_initConfig.h" />
     <ClInclude Include="..\source\Include\core\alifCore_runtime.h" />
     <ClInclude Include="..\source\Include\exports.h" />
+    <ClInclude Include="..\source\Include\fileObject.h" />
     <ClInclude Include="..\source\Include\initConfig.h" />
   </ItemGroup>
   <ItemGroup>

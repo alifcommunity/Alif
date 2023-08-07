@@ -1,6 +1,7 @@
 #include "Alif.h"
-#include "alifcore_initConfig.h"    // AlifArgv
-
+#include "alifCore_initConfig.h"    // AlifArgv
+#include "alifCore_alifCycle.h"
+#include "alifCore_alifMem.h"
 
 
 AlifStatus alifArgv_asWstrList(const AlifArgv* _args, AlifWideStringList* _list)
@@ -89,7 +90,7 @@ static void preConfig_getGlobalVars(AlifPreConfig* _config)
 		_config->utf8Mode = alifUTF8Mode;
 	}
 #ifdef MS_WINDOWS
-	COPY_FLAG(legacyWindowsFsEncoding, alifLegacyWindowsFSEncodingFlag);
+	//COPY_FLAG(legacyWindowsFsEncoding, alifLegacyWindowsFSEncodingFlag);
 #endif
 	ALIF_COMP_DIAG_POP
 
@@ -103,7 +104,7 @@ static void preConfig_getGlobalVars(AlifPreConfig* _config)
    - command line arguments
    - environment variables
    - Alif_xxx global configuration variables
-   - the LC_ALL locale
+   - the LC_CTYPE locale
 */
 AlifStatus alifPreConfig_read(AlifPreConfig* _config, const AlifArgv* _args)
 {
@@ -117,27 +118,27 @@ AlifStatus alifPreConfig_read(AlifPreConfig* _config, const AlifArgv* _args)
 	preConfig_getGlobalVars(_config);
 
 	/* Copy LC_CTYPE locale, since it's modified later */
-	//const char* loc = std::setlocale(LC_ALL, nullptr);
-	//if (loc == nullptr) {
-	//	return ALIFSTATUS_ERR(L"فشلت عملية تهيئة LC_ALL");
-	//}
-	//char* initCtypeLocale = alifMem_rawStrdup(loc);
-	//if (initCtypeLocale == nullptr) {
-	//	return ALIFSTATUS_NO_MEMORY();
-	//}
+	const char* loc = std::setlocale(LC_CTYPE, nullptr);
+	if (loc == nullptr) {
+		return ALIFSTATUS_ERR("فشلت عملية تهيئة LC_CTYPE");
+	}
+	char* initCtypeLocale = alifMem_rawStrDup(loc); // يوجد مشكلة في الذاكرة ويجب التحقق ما إذا تم حلها
+	if (initCtypeLocale == nullptr) {
+		return ALIFSTATUS_NO_MEMORY();
+	}
 
 	/* Save the config to be able to restore it if encodings change */
 	AlifPreConfig saveConfig{};
 
-	//status = alifPreConfig_initFromPreConfig(&saveConfig, _config);
-	//if (ALIFSTATUS_EXCEPTION(status)) {
-	//	return status;
-	//}
+	status = alifPreConfig_initFromPreConfig(&saveConfig);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
 	/* Set LC_CTYPE to the user preferred locale */
-	//if (_config->configureLocale) {
-	//	alif_setLocaleFromEnv(LC_ALL);
-	//}
+	if (_config->configureLocale) {
+		alif_setLocaleFromEnv(LC_CTYPE);
+	}
 
 	AlifPreConfig saveRuntimeConfig{};
 	//preConfig_copy(&saveRuntimeConfig, &alifRuntime.preconfig);
@@ -212,7 +213,7 @@ AlifStatus alifPreConfig_read(AlifPreConfig* _config, const AlifArgv* _args)
 
 done:
 	// Revert side effects
-	//setlocale(LC_ALL, initCtypeLocale);
+	//setlocale(LC_CTYPE, initCtypeLocale);
 	//alifMem_rawFree(initCtypeLocale);
 	//prConfig_copy(&alifRuntime.preconfig, &saveRuntimeConfig);
 	//alifPreCmdLine_clear(&cmdLine);

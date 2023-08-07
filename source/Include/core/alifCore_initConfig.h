@@ -16,7 +16,7 @@
 			.mesError = (_errMsg),					\
 		}
 
-#define ALIFSTATUS_NO_MEMORY() ALIFSTATUS_ERR(L"فشل الحجز من الذاكرة")
+#define ALIFSTATUS_NO_MEMORY() ALIFSTATUS_ERR("فشل الحجز من الذاكرة")
 
 #define ALIFSTATUS_EXIT(_exitCode) {				\
 			.type = 2,								\

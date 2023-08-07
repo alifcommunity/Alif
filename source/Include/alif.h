@@ -12,6 +12,7 @@
 #include "alifPort.h"
 #include "alifMem.h"
 #include "alifDebug.h"
+#include "fileObject.h"
 #include "initConfig.h"
 #include "alifThread.h"
 #include "alifCycle.h"
