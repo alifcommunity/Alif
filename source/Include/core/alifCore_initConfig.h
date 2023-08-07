@@ -57,7 +57,7 @@ public:
 #define ALIFPRECMDLINE_INIT {  .isolated = -1, .useEnvironment = -1, }
 
 extern AlifStatus alifPreCmdLine_setArgv(AlifPreCmdLine*, const AlifArgv*);
-
+extern AlifStatus alifPreCmdLine_read(AlifPreCmdLine*, const AlifPreConfig*);
 
 /* ___________ AlifPreConfig ___________ */
 

@@ -4,7 +4,7 @@
 #include "alifCore_alifMem.h"
 
 
-/* ___________ _PyArgv ___________ */
+/* ___________ AlifArgv ___________ */
 
 AlifStatus alifArgv_asWstrList(const AlifArgv* _args, AlifWideStringList* _list)
 {
@@ -24,13 +24,71 @@ AlifStatus alifArgv_asWstrList(const AlifArgv* _args, AlifWideStringList* _list)
 }
 
 
-/* ___________ _PyPreCmdline ___________ */
+/* ___________ AlifPreCmdline ___________ */
 
 AlifStatus alifPreCmdLine_setArgv(AlifPreCmdLine* _cmdline, const AlifArgv* _args)
 {
 	return alifArgv_asWstrList(_args, &_cmdline->argv);
 }
 
+
+static void preCmdLine_getPreConfig(AlifPreCmdLine* _cmdLine, const AlifPreConfig* _config)
+{
+#define COPY_ATTR(ATTR) \
+    if (_config->ATTR != -1) { _cmdLine->ATTR = _config->ATTR;}
+
+	COPY_ATTR(isolated);
+	COPY_ATTR(useEnvironment);
+	//COPY_ATTR(devMode);
+
+#undef COPY_ATTR
+}
+
+
+AlifStatus alifPreCmdLine_read(AlifPreCmdLine* _cmdLine, const AlifPreConfig* _preConfig)
+{
+	preCmdLine_getPreConfig(_cmdLine, _preConfig);
+
+	if (_preConfig->parseArgv) {
+		AlifStatus status = preCmdLine_parseCmdLine(_cmdLine);
+		if (ALIFSTATUS_EXCEPTION(status)) {
+			return status;
+		}
+	}
+
+	/* isolated, use_environment */
+	if (_cmdLine->isolated < 0) {
+		_cmdLine->isolated = 0;
+	}
+	if (_cmdLine->isolated > 0) {
+		_cmdLine->useEnvironment = 0;
+	}
+	if (_cmdLine->useEnvironment < 0) {
+		_cmdLine->useEnvironment = 0;
+	}
+
+	/* dev_mode */
+	//if ((_cmdline->devMode < 0) && (alif_getXoption(&_cmdline->xoptions, L"تطوير") || alif_getEnv(_cmdline->use_environment, "ALIFDEVMODE")))
+	//{
+	//	_cmdline->devMode = 1;
+	//}
+	//if (_cmdline->devMode < 0) {
+	//	_cmdline->devMode = 0;
+	//}
+
+	// warn_default_encoding
+	if (alif_getXoption(&_cmdLine->xoptions, L"warn_default_encoding")
+		|| alif_getEnv(_cmdLine->useEnvironment, "PYTHONWARNDEFAULTENCODING"))
+	{
+		_cmdLine->warnDefaultEncoding = 1;
+	}
+
+	//assert(cmdline->useEnvironment >= 0);
+	//assert(cmdline->isolated >= 0);
+	//assert(cmdline->warnDefaultEncoding >= 0);
+
+	return ALIFSTATUS_OK();
+}
 
 /* ___________ AlifPreConfig ___________ */
 
@@ -107,6 +165,49 @@ static void preConfig_getGlobalVars(AlifPreConfig* _config)
 
 #undef COPY_FLAG
 #undef COPY_NOT_FLAG
+}
+
+
+static AlifStatus preConfig_read(AlifPreConfig* _config, AlifPreCmdLine* _cmdLine)
+{
+	AlifStatus status{};
+
+	status = alifPreCmdLine_read(_cmdLine, _config);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+
+	preCmdLine_setPreConfig(_cmdLine, _config);
+
+	/* legacy_windows_fs_encoding, coerce_c_locale, utf8_mode */
+#ifdef MS_WINDOWS
+	//alif_getEnvFlag(_config->useEnvironment, &_config->legacy_windows_fs_encoding, "ALIFLEGACYWINDOWSFSENCODING");
+#endif
+
+	//preConfig_init_coerce_c_locale(config);
+
+	status = preConfig_initUtf8Mode(_config, _cmdLine);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+
+	/* allocator */
+	status = preConfig_initAllocator(_config);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+
+	//assert(config->coerce_c_locale >= 0);
+	//assert(config->coerce_c_locale_warn >= 0);
+//#ifdef MS_WINDOWS
+//	assert(config->legacy_windows_fs_encoding >= 0);
+//#endif
+//	assert(config->utf8_mode >= 0);
+//	assert(config->isolated >= 0);
+//	assert(config->use_environment >= 0);
+//	assert(config->dev_mode >= 0);
+
+	return ALIFSTATUS_OK();
 }
 
 
