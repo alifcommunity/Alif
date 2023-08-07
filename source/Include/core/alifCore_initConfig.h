@@ -42,6 +42,23 @@ public:
 AlifStatus alifArgv_asWstrList(const AlifArgv* args, AlifWideStringList* list);
 
 
+/* ___________ AlifPreCmdline ___________ */
+
+class AlifPreCmdLine
+{
+public:
+	AlifWideStringList argv;
+	AlifWideStringList xoptions;     /* "-X value" option */
+	int isolated;					 /* -I option */
+	int useEnvironment;			 /* -E option */
+	int warnDefaultEncoding;       /* -X warn_default_encoding and ALIFWARNDEFAULTENCODING */
+};
+
+#define ALIFPRECMDLINE_INIT {  .isolated = -1, .useEnvironment = -1, }
+
+extern AlifStatus alifPreCmdLine_setArgv(AlifPreCmdLine*, const AlifArgv*);
+extern AlifStatus alifPreCmdLine_read(AlifPreCmdLine*, const AlifPreConfig*);
+
 /* ___________ AlifPreConfig ___________ */
 
 ALIFAPI_FUNC(void) alifPreConfig_initCompatConfig(AlifPreConfig*);
