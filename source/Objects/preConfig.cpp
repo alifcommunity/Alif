@@ -64,12 +64,46 @@ AlifStatus alifPreConfig_initFromPreConfig(AlifPreConfig* _config)
 }
 
 
+static void preConfig_getGlobalVars(AlifPreConfig* _config)
+{
+	if (_config->configInit != 1) // AlifConfig_INIT_COMPAT = 1
+	{
+		/* Alif and Isolated configuration ignore global variables */
+		return;
+	}
+
+#define COPY_FLAG(ATTR, VALUE) \
+    if (_config->ATTR < 0) { \
+        _config->ATTR = VALUE; \
+    }
+#define COPY_NOT_FLAG(ATTR, VALUE) \
+    if (_config->ATTR < 0) { \
+        _config->ATTR = !(VALUE); \
+    }
+
+	ALIF_COMP_DIAG_PUSH
+	ALIF_COMP_DIAG_IGNORE_DEPR_DECLS
+	COPY_FLAG(isolated, alifIsolatedFlag);
+	COPY_NOT_FLAG(useEnvironment, alifIgnoreEnvironmentFlag);
+	if (alifUTF8Mode > 0) {
+		_config->utf8Mode = alifUTF8Mode;
+	}
+#ifdef MS_WINDOWS
+	COPY_FLAG(legacyWindowsFsEncoding, alifLegacyWindowsFSEncodingFlag);
+#endif
+	ALIF_COMP_DIAG_POP
+
+#undef COPY_FLAG
+#undef COPY_NOT_FLAG
+}
+
+
 /* Read the configuration from:
 
    - command line arguments
    - environment variables
    - Alif_xxx global configuration variables
-   - the LC_CTYPE locale
+   - the LC_ALL locale
 */
 AlifStatus alifPreConfig_read(AlifPreConfig* _config, const AlifArgv* _args)
 {
@@ -80,7 +114,7 @@ AlifStatus alifPreConfig_read(AlifPreConfig* _config, const AlifArgv* _args)
 	//	return status;
 	//}
 
-	//preconfig_getGlobalVars(_config);
+	preConfig_getGlobalVars(_config);
 
 	/* Copy LC_CTYPE locale, since it's modified later */
 	//const char* loc = std::setlocale(LC_ALL, nullptr);
