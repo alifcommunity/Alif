@@ -160,4 +160,8 @@ typedef _W64 int Alif_ssize_t;
 /*  All windows compilers that use this header support __declspec */
 #define HAVE_DECLSPEC_DLL
 
+#ifdef _DEBUG
+#define ALIF_DEBUG
+#endif
+
 #define WITH_ALIFMALLOC 1
