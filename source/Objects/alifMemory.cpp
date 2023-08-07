@@ -32,8 +32,7 @@ inline MemoryState* get_state(void) {
 
 }
 
-void
-write_size_t(void* p, size_t n)
+void write_size_t(void* p, size_t n)
 {
 	uint8_t* q = (uint8_t*)p + 8 - 1;
 	int i;
@@ -44,8 +43,7 @@ write_size_t(void* p, size_t n)
 	}
 }
 
-size_t
-read_size_t(const void* p)
+size_t read_size_t(const void* p)
 {
 	const uint8_t* q = (const uint8_t*)p;
 	size_t result = *q++;
@@ -341,6 +339,20 @@ void AlifMem_free(MemoryState* _state, void* ptr) {
 	objectOrMemDelete = false;
 
 	AlifMem_debug_raw_free(_state, ptr);
+}
+
+/* ___________ alifMem functions ___________ */
+
+// يجب مراجعة هذه الدالة لانه تم تعديلها تعديلات كبيرة
+char* alifMem_rawStrDup(const char* str)
+{
+	size_t size = strlen(str) + 1;
+	char* copy = (char*)AlifMem_malloc(nullptr, size);
+	if (copy == nullptr) {
+		return nullptr;
+	}
+	memcpy(copy, str, size);
+	return copy;
 }
 
 

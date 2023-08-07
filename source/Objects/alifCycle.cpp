@@ -39,7 +39,64 @@ AlifStatus alifRuntime_initialize()
 	}
 	runtimeInitialized = 1;
 }
- 
+
+
+/* alif_setLocaleFromEnv() is a wrapper around setlocale(category, "") to
+ * isolate the idiosyncrasies of different libc implementations. It reads the
+ * appropriate environment variable and uses its value to select the locale for
+ * 'category'. */
+char* alif_setLocaleFromEnv(int category)
+{
+	char* res;
+#ifdef __ANDROID__
+	const char* locale;
+	const char** pVar;
+//#ifdef ALIF_COERCE_C_LOCALE
+//	const char* coerce_c_locale;
+//#endif
+	const char* utf8Locale = "C.UTF-8";
+	const char* envVarSet[] = { "LC_ALL", "LC_CTYPE", "LANG", nullptr };
+
+	/* Android setlocale(category, "") doesn't check the environment variables
+	 * and incorrectly sets the "C" locale at API 24 and older APIs. We only
+	 * check the environment variables listed in envVarSet. */
+	for (pVar = envVarSet; *pVar; pVar++) {
+		locale = getenv(*pVar);
+		if (locale != nullptr && *locale != '\0') {
+			if (strcmp(locale, utf8Locale) == 0 ||
+				strcmp(locale, "en_US.UTF-8") == 0) {
+				return setlocale(category, utf8Locale);
+			}
+			return setlocale(category, "C");
+		}
+	}
+
+	/* Android uses UTF-8, so explicitly set the locale to C.UTF-8 if none of
+	 * LC_ALL, LC_CTYPE, or LANG is set to a non-empty string.
+	 * Quote from POSIX section "8.2 Internationalization Variables":
+	 * "4. If the LANG environment variable is not set or is set to the empty
+	 * string, the implementation-defined default locale shall be used." */
+
+#ifdef ALIF_COERCE_C_LOCALE
+	coerce_c_locale = getenv("ALIFCOERCECLOCALE");
+	if (coerce_c_locale == nullptr || strcmp(coerce_c_locale, "0") != 0) {
+		/* Some other ported code may check the environment variables (e.g. in
+		 * extension modules), so we make sure that they match the locale
+		 * configuration */
+		if (setenv("LC_CTYPE", utf8Locale, 1)) {
+			fprintf(stderr, "تحذير: فشل ضبط LC_CTYPE "
+				"متغير البيئة %s\n", utf8Locale);
+		}
+	}
+#endif
+	res = setlocale(category, utf8Locale);
+#else /* !defined(__ANDROID__) */
+	res = setlocale(category, "");
+#endif
+	//alif_resetForceASCII();
+	return res;
+}
+
  
 AlifStatus alif_preInitializeFromConfig(const AlifConfig* _config, const AlifArgv* _args)
 {

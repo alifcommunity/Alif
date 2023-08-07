@@ -9,6 +9,31 @@
 
 #include "exports.h"
 
+
+
+
+#if defined(__clang__)
+#define ALIF_COMP_DIAG_PUSH _Pragma("clang دفع تشخيص")
+#define ALIF_COMP_DIAG_IGNORE_DEPR_DECLS \
+    _Pragma("clang تجاهل التشخيص \"-Wdeprecated-declarations\"")
+#define ALIF_COMP_DIAG_POP _Pragma("clang سحب تشخيص")
+#elif defined(__GNUC__) \
+    && ((__GNUC__ >= 5) || (__GNUC__ == 4) && (__GNUC_MINOR__ >= 6))
+#define ALIF_COMP_DIAG_PUSH _Pragma("GCC دفع تشخيص")
+#define ALIF_COMP_DIAG_IGNORE_DEPR_DECLS \
+    _Pragma("GCC تجاهل التشخيص \"-Wdeprecated-declarations\"")
+#define ALIF_COMP_DIAG_POP _Pragma("GCC سحب تشخيص")
+#elif defined(_MSC_VER)
+#define ALIF_COMP_DIAG_PUSH __pragma(warning(push))
+#define ALIF_COMP_DIAG_IGNORE_DEPR_DECLS __pragma(warning(disable: 4996))
+#define ALIF_COMP_DIAG_POP __pragma(warning(pop))
+#else
+#define ALIF_COMP_DIAG_PUSH
+#define ALIF_COMP_DIAG_IGNORE_DEPR_DECLS
+#define ALIF_COMP_DIAG_POP
+#endif
+
+
 /* only get special linkage if built as shared or platform is Cygwin */
 #if defined(ALIF_ENABLE_SHARED) || defined(__CYGWIN__)
 #       if defined(HAVE_DECLSPEC_DLL)
