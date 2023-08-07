@@ -1,8 +1,10 @@
 #include "Alif.h"
-#include "alifCore_initConfig.h"    // AlifArgv
+#include "alifCore_initConfig.h"
 #include "alifCore_alifCycle.h"
 #include "alifCore_alifMem.h"
 
+
+/* ___________ _PyArgv ___________ */
 
 AlifStatus alifArgv_asWstrList(const AlifArgv* _args, AlifWideStringList* _list)
 {
@@ -20,6 +22,15 @@ AlifStatus alifArgv_asWstrList(const AlifArgv* _args, AlifWideStringList* _list)
 
 	return ALIFSTATUS_OK();
 }
+
+
+/* ___________ _PyPreCmdline ___________ */
+
+AlifStatus alifPreCmdLine_setArgv(AlifPreCmdLine* _cmdline, const AlifArgv* _args)
+{
+	return alifArgv_asWstrList(_args, &_cmdline->argv);
+}
+
 
 /* ___________ AlifPreConfig ___________ */
 
@@ -143,35 +154,35 @@ AlifStatus alifPreConfig_read(AlifPreConfig* _config, const AlifArgv* _args)
 	AlifPreConfig saveRuntimeConfig{};
 	//preConfig_copy(&saveRuntimeConfig, &alifRuntime.preconfig);
 
-	//AlifPreCmdline cmdLine = ALIFPRECMDLINE_INIT;
+	AlifPreCmdLine cmdLine = ALIFPRECMDLINE_INIT;
 	//int locale_coerced = 0;
 	int loops = 0;
 
 	while (1) {
 		int utf8Mode = _config->utf8Mode;
 
-		/* Watchdog to prevent an infinite loop */
+		/* to prevent an infinite loop */
 		loops++;
 		if (loops == 3) {
 			status = ALIFSTATUS_ERR("تم تغيير الترميز مرتين اثناء تهيئة الملف");
 			goto done;
 		}
 
-		/* bpo-34207: Py_DecodeLocale() and Py_EncodeLocale() depend
-		   on the utf8_mode and legacy_windows_fs_encoding members
-		   of _PyRuntime.preconfig. */
+		/* bpo-34207: alif_decodeLocale() and alif_encodeLocale() depend
+		   on the utf8Mode and legacyWindowsFSEncoding members
+		   of alifRuntime.preConfig. */
 		//preConfig_copy(&alifRuntime.preConfig, _config);
 
 		if (_args) {
 			// Set command line arguments at each iteration. If they are bytes
 			// strings, they are decoded from the new encoding.
-			//status = alifPreCmdLine_setArgv(&cmdLine, _args);
+			status = alifPreCmdLine_setArgv(&cmdLine, _args);
 			if (ALIFSTATUS_EXCEPTION(status)) {
 				goto done;
 			}
 		}
 
-		//status = preConfig_read(_config, &cmdLine);
+		status = preConfig_read(_config, &cmdLine);
 		if (ALIFSTATUS_EXCEPTION(status)) {
 			goto done;
 		}
