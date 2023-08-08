@@ -41,3 +41,15 @@ public:
 	/* release a memory block */
 	void (*free) (void* ctx, void* ptr);
 };
+
+class AlifObjectArenaAllocator {
+public:
+	/* user context passed as the first argument to the 2 functions */
+	void* ctx;
+
+	/* allocate an arena of size bytes */
+	void* (*alloc) (void* ctx, size_t size);
+
+	/* free an arena */
+	void (*free) (void* ctx, void* ptr, size_t size);
+} ;

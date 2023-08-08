@@ -26,7 +26,7 @@ public:
 		DebugAllocateAPI mem;
 		DebugAllocateAPI obj;
 	}debug;
-	AlifMemAllocatorExternal ObjArena;
+	AlifObjectArenaAllocator objArena;
 };
 
 #define ALIFMEM_CLEANBYTE      0xCD

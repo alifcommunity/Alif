@@ -63,6 +63,14 @@
     <ClInclude Include="..\source\Include\core\alifCore_runtime.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\Include\core\alifCore_alifMem_init.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\core\alifCore_runtime_init.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\core\alifCore_alifMemory_init.h">
+      <Filter>Header Core Files</Filter>
     <ClInclude Include="..\source\Include\alifDebug.h">
       <Filter>Header Files</Filter>
     </ClInclude>

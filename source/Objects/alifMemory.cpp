@@ -1,5 +1,6 @@
 #include "alif.h"
 #include "alifCore_runtime.h"
+#include "alifCore_alifMem.h"
 
 /*
 
@@ -12,24 +13,19 @@
 
 */
 
-/* ______________ flags ______________ */
 
-bool rawOrMem = false;
-bool objectOrMemDelete = false; // false for mem , true for object
+void* alifMem_raw_malloc(void* ctx, size_t size);
+void* alifMem_raw_calloc(void* ctx, size_t nElement, size_t elSize);
+void* alifMem_raw_realloc(void* ctx, void* ptr, size_t size);
+void alifMem_raw_free(void* ctx, void* ptr);
 
-/* ______________ /flags ______________ */
-
-
-int malloc_free(MemoryState* _state, void* ptr);
 void get_allocator_unlocked(AlifMemAllocateDomain domain, AlifMemAllocatorExternal* allocator);
 void set_allocator_unlocked(AlifMemAllocateDomain domain, AlifMemAllocatorExternal* allocator);
 
-static MemoryState state;
+static MemoryState _state;
 
 inline MemoryState* get_state(void) {
-
 	return &state;
-
 }
 
 void write_size_t(void* p, size_t n)
@@ -48,10 +44,6 @@ size_t read_size_t(const void* p)
 	const uint8_t* q = (const uint8_t*)p;
 	size_t result = *q++;
 	size_t i;
-
-	for (i = 8; --i > 0; ++q)
-		result = (result << 8) | *q;
-	return result;
 }
 
 // raw memory ///////////////////////////////////////////////////////////////////////////////
@@ -60,7 +52,7 @@ size_t read_size_t(const void* p)
 /* low-level allocator implementations */
 /***************************************/
 
-void* AlifMem_raw_malloc(void* ctx, size_t size) {
+void* alifMem_raw_malloc(void* ctx, size_t size) {
 
 	if (size == 0) {
 		size = 1;
@@ -68,7 +60,7 @@ void* AlifMem_raw_malloc(void* ctx, size_t size) {
 	return malloc(size);
 }
 
-void* AlifMem_raw_calloc(void* ctx, size_t nElement, size_t elSize) {
+void* alifMem_raw_calloc(void* ctx, size_t nElement, size_t elSize) {
 
 
 	if (nElement == 0 || elSize == 0) {
@@ -80,7 +72,7 @@ void* AlifMem_raw_calloc(void* ctx, size_t nElement, size_t elSize) {
 	
 }
 
-void* AlifMem_raw_realloc(void* ctx, void* ptr, size_t size) {
+void* alifMem_raw_realloc(void* ctx, void* ptr, size_t size) {
 
 	if (size == 0) {
 		size = 1;
@@ -88,11 +80,11 @@ void* AlifMem_raw_realloc(void* ctx, void* ptr, size_t size) {
 	return realloc(ptr, size);
 }
 
-void AlifMem_raw_free(void* ctx, void* ptr) {
+void alifMem_raw_free(void* ctx, void* ptr) {
 	free(ptr);
 }
 
-#define MALLOC_ALLOC {nullptr, AlifMem_raw_malloc, AlifMem_raw_calloc, AlifMem_raw_realloc, AlifMem_raw_free}
+#define MALLOC_ALLOC {nullptr, alifMem_raw_malloc, alifMem_raw_calloc, alifMem_raw_realloc, alifMem_raw_free}
 #define ALIFRAW_ALLOC MALLOC_ALLOC
 
 #ifdef WITH_ALIFMALLOC
@@ -105,21 +97,21 @@ void  object_free(void* ctx, void* ptr);
   #define ALIFOBJ_ALLOC MALLOC_ALLOC
 #endif
 
-void* AlifMem_debug_raw_alloc(MemoryState* _state, size_t useCalloc, size_t nByte);
-void* AlifMem_debug_raw_calloc(MemoryState* _state, size_t nElement, size_t elSize);
-void* AlifMem_debug_raw_realloc(MemoryState* _state, void* ptr, size_t nByte);
-void  AlifMem_debug_raw_free(MemoryState* _state, void* ptr);
+void* alifMem_debug_raw_malloc(void* ctx, size_t numberByte);
+void* alifMem_debug_raw_calloc(void* ctx, size_t nElement, size_t elSize);
+void* alifMem_debug_raw_realloc(void* ctx, void* ptr, size_t nByte);
+void  alifMem_debug_raw_free(void* ctx, void* ptr);
 
-void* AlifMem_malloc(MemoryState* _state, size_t size);
-void* AlifMem_calloc(MemoryState* _state, size_t nElement, size_t elSize);
-void* AlifMem_realloc(MemoryState* _state, void* ptr, size_t newSize);
-void AlifMem_free(MemoryState* _state, void* ptr);
+void* alifMem_malloc(void* ctx, size_t size);
+void* alifMem_calloc(void* ctx, size_t nElement, size_t elSize);
+void* alifMem_realloc(void* ctx, void* ptr, size_t newSize);
+void alifMem_free(void* ctx, void* ptr);
 
-#define ALIFDEBUGRAW_ALLOC {&runtime.allocators.debug.raw, AlifMem_debug_raw_alloc,  AlifMem_debug_raw_calloc, AlifMem_debug_raw_realloc, AlifMem_debug_raw_free}
+#define ALIFDEBUGRAW_ALLOC {&runtime.allocators.debug.raw, alifMem_debug_raw_alloc,  alifMem_debug_raw_calloc, alifMem_debug_raw_realloc, alifMem_debug_raw_free}
 
-#define ALIFDEBUGMEM_ALLOC {&runtime.allocators.debug.mem, AlifMem_malloc, AlifMem_calloc, AlifMem_realloc, AlifMem_free}
+#define ALIFDEBUGMEM_ALLOC {&runtime.allocators.debug.mem, alifMem_malloc, alifMem_calloc, alifMem_realloc, alifMem_free}
 
-#define ALIFDEBUGOBJ_ALLOC {&runtime.allocators.debug.obj, AlifMem_malloc, AlifMem_calloc, AlifMem_realloc, AlifMem_free}
+#define ALIFDEBUGOBJ_ALLOC {&runtime.allocators.debug.obj, alifMem_malloc, alifMem_calloc, alifMem_realloc, alifMem_free}
 
 
 #ifdef WITH_ALIFMALLOC
@@ -132,6 +124,33 @@ void AlifMem_free(MemoryState* _state, void* ptr);
 #    endif
 #  endif
 #endif
+
+void* alifMem_arenaAlloc(void* ctx, size_t size) {
+
+#ifdef MS_WINDOWS
+	return VirtualAlloc(nullptr, size, 0x00001000 | 0x00002000, 0x04);
+#elif defined(ARENA_USE_MMAP)
+	void* ptr;
+	ptr = mmap(nullptr, size, PORT_READ | PORT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	if (ptr == MAP_FAILED) {
+		return nullptr;
+	}
+	return ptr;
+#else
+	return malloc(size);
+#endif
+}
+
+void alifMem_arenaFree(void* ctx, void* ptr, size_t size)
+{
+#ifdef MS_WINDOWS
+	VirtualFree(ptr, 0, 0x00008000);
+#elif defined(ARENA_USE_MMAP)
+	munmap(ptr, size);
+#else
+	free(ptr);
+#endif
+}
 
 #if defined(__has_feature)  /* Clang */
 #  if __has_feature(address_sanitizer) /* is ASAN enabled? */
@@ -242,7 +261,7 @@ void set_up_debug_hooks_domain_unlocked(AlifMemAllocateDomain domain)
 	//AlifMemAllocatorExternal alloc;
 
 	//if (domain == PYMEM_DOMAIN_RAW) {
-	//	if (ALIFMEM_RAW.malloc == AlifMem_debug_raw_alloc) {
+	//	if (ALIFMEM_RAW.malloc == alifMem_debug_raw_alloc) {
 	//		return;
 	//	}
 
@@ -252,7 +271,7 @@ void set_up_debug_hooks_domain_unlocked(AlifMemAllocateDomain domain)
 	//	set_allocator_unlocked(domain, &alloc);
 	//}
 	//else if (domain == PYMEM_DOMAIN_MEM) {
-	//	if (ALIFMEM.malloc == AlifMem_debug_raw_alloc) {
+	//	if (ALIFMEM.malloc == alifMem_debug_raw_alloc) {
 	//		return;
 	//	}
 
@@ -262,7 +281,7 @@ void set_up_debug_hooks_domain_unlocked(AlifMemAllocateDomain domain)
 	//	set_allocator_unlocked(domain, &alloc);
 	//}
 	//else if (domain == PYMEM_DOMAIN_OBJ) {
-	//	if (ALIFOBJECT.malloc == AlifMem_debug_raw_alloc) {
+	//	if (ALIFOBJECT.malloc == alifMem_debug_raw_alloc) {
 	//		return;
 	//	}
 
@@ -278,67 +297,53 @@ void* raw_malloc(size_t size) {
 	if (size > 9223372036854775807i64) {
 		return nullptr;
 	}
-
-	return AlifMem_raw_malloc(nullptr, size);
+	
+	return ALIFMEM_RAW.malloc(ALIFMEM_RAW.ctx, size);
 }
 
-void* raw_calloc(MemoryState* _state, size_t nElement, size_t elSize) {
+void* raw_calloc( size_t nElement, size_t elSize) {
 
-	rawOrMem = false;
-
-	return AlifMem_debug_raw_alloc(_state, 1, nElement * elSize);
+	return ALIFMEM_RAW.calloc(ALIFMEM_RAW.ctx, nElement, elSize);
 
 }
 
-void* raw_realloc(MemoryState* _state, void* ptr, size_t newSize) {
-
-	rawOrMem = false;
+void* raw_realloc(void* ptr, size_t newSize) {
 
 	if (newSize > 9223372036854775807i64) {
 		return nullptr;
 	}
 
-	return AlifMem_debug_raw_realloc(_state, ptr, newSize);
+	return ALIFMEM_RAW.realloc(ALIFMEM_RAW.ctx, ptr, newSize);
 
 }
 
-void raw_free(MemoryState* _state, void* ptr) {
+void raw_free(void* ptr) {
 
-	objectOrMemDelete = false;
-
-	AlifMem_debug_raw_free(_state, ptr);
+	ALIFMEM_RAW.free(ALIFMEM_RAW.ctx, ptr);
 
 }
 
 
 // mem memory ///////////////////////////////////////////////////////////////////////////////
 
-void* AlifMem_malloc(MemoryState* _state, size_t size) {
+void* alifMem_malloc(void* ctx, size_t size) {
 
-	rawOrMem = true;
-
-	return AlifMem_debug_raw_alloc(_state, 0, size);
+	return ALIFMEM.malloc(ALIFMEM.ctx, size);
 }
 
-void* AlifMem_calloc(MemoryState* _state, size_t nElement, size_t elSize) {
+void* alifMem_calloc(void* ctx, size_t nElement, size_t elSize) {
 
-	rawOrMem = true;
-
-	return AlifMem_debug_raw_calloc(_state, nElement, elSize);
+	return ALIFMEM.calloc(ALIFMEM.ctx, nElement, elSize);
 }
 
-void* AlifMem_realloc(MemoryState* _state, void* ptr, size_t newSize) {
+void* alifMem_realloc(void* ctx, void* ptr, size_t newSize) {
 
-	rawOrMem = true;
-
-	return AlifMem_debug_raw_realloc(_state, ptr, newSize);
+	return ALIFMEM.realloc(ALIFMEM.ctx, ptr, newSize);
 }
 
-void AlifMem_free(MemoryState* _state, void* ptr) {
+void alifMem_free(void* ctx, void* ptr) {
 
-	objectOrMemDelete = false;
-
-	AlifMem_debug_raw_free(_state, ptr);
+	ALIFMEM.free(ALIFMEM.ctx, ptr);
 }
 
 /* ___________ alifMem functions ___________ */
@@ -358,85 +363,67 @@ char* alifMem_rawStrDup(const char* str)
 
 // object memory ///////////////////////////////////////////////////////////////////////////////
 
-void* AlifObject_malloc(MemoryState* _state, size_t size) {
+void* AlifObject_malloc(void* ctx, size_t size) {
 
-	rawOrMem = true;
-
-	return AlifMem_debug_raw_alloc(_state, 0, size);
+	return ALIFOBJECT.malloc(ALIFOBJECT.ctx, size);
 
 }
 
-void* AlifObject_calloc(MemoryState* _state, size_t nElement, size_t elSize) {
+void* AlifObject_calloc(void* ctx, size_t nElement, size_t elSize) {
 
-	rawOrMem = false;
-
-	return object_calloc(_state, nElement, elSize);
+	return ALIFOBJECT.calloc(ALIFOBJECT.ctx, nElement, elSize);
 
 }
 
-void* AlifObject_realloc(MemoryState* _state, void* ptr, size_t numberByte) {
+void* AlifObject_realloc(void* ctx, void* ptr, size_t newSize) {
 
-	rawOrMem = false;
-
-	return object_realloc(_state, ptr, numberByte);
+	return ALIFOBJECT.realloc(ALIFOBJECT.ctx, ptr, newSize);
 
 }
 
-void AlifObject_free(MemoryState* _state, void* ptr) {
+void AlifObject_free(void* ctx, void* ptr) {
 
-	if (ptr == nullptr) {
-		return;
-	}
-
-	objectOrMemDelete = true;
-
-	if (!malloc_free(_state, ptr)) {
-
-		AlifMem_debug_raw_free(_state, ptr);
-
-	}
+	ALIFOBJECT.free(ALIFOBJECT.ctx, ptr);
 
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
 
-inline BlockMapDown* Block_map_get(MemoryState* _state, uint8_t* ptr, int create)
+inline BlockMapDown* Block_map_get(MemoryState* state, uint8_t* ptr, int create)
 {
 	int i1 = ((((uintptr_t)(ptr)) >> ((((64 - 0) - 20 + 2) / 3) + (((64 - 0) - 20 + 2 + 20))) & ((1 << (((64 - 0) - 20 + 2) / 3)) - 1)));
 
-	if (_state->usage.BlockMapRoot.ptrs[i1] == nullptr) {
+	if (state->usage.BlockMapRoot.ptrs[i1] == nullptr) {
 
 		if (!create) {
 			return nullptr;
 		}
-		BlockMapMid* mid = (BlockMapMid*)AlifMem_debug_raw_alloc(_state, 1, sizeof(BlockMapMid));
+		BlockMapMid* mid = (BlockMapMid*)raw_calloc( 1, sizeof(BlockMapMid));
 
-		_state->usage.BlockMapRoot.ptrs[i1] = mid;
-		_state->usage.BlockMapMidCount++;
+		state->usage.BlockMapRoot.ptrs[i1] = mid;
+		state->usage.BlockMapMidCount++;
 
 	}
 	int i2 = ((((uintptr_t)(ptr)) >> (((64 - 0) - 20 - 2 * (((64 - 0) - 20 + 2) / 3)) + 20)) & ((1 << (((64 - 0) - 20 + 2) / 3)) - 1));
 
-	if (_state->usage.BlockMapRoot.ptrs[i1]->ptrs[i2] == nullptr) {
+	if (state->usage.BlockMapRoot.ptrs[i1]->ptrs[i2] == nullptr) {
 
 		if (!create) {
 			return nullptr;
 		}
-		BlockMapDown* bot = (BlockMapDown*)AlifMem_debug_raw_alloc(_state, 1, sizeof(BlockMapDown));
+		BlockMapDown* bot = (BlockMapDown*)raw_calloc(1, sizeof(BlockMapDown));
 
-		_state->usage.BlockMapRoot.ptrs[i1]->ptrs[i2] = bot;
-		_state->usage.BlockMapMidCount++;
+		state->usage.BlockMapRoot.ptrs[i1]->ptrs[i2] = bot;
+		state->usage.BlockMapMidCount++;
 	}
-	return _state->usage.BlockMapRoot.ptrs[i1]->ptrs[i2];
+	return state->usage.BlockMapRoot.ptrs[i1]->ptrs[i2];
 
 }
 
-void Block_map_mark_used(MemoryState* _state, uintptr_t BlockBase, int isUsed) {
+void Block_map_mark_used(MemoryState* state, uintptr_t BlockBase, int isUsed) {
 
-
-	BlockMapDown* bot = Block_map_get(_state, (uint8_t*)BlockBase, isUsed);
+	BlockMapDown* bot = Block_map_get(state, (uint8_t*)BlockBase, isUsed);
 
 	int i3 = ((((uintptr_t)((uint8_t*)BlockBase)) >> 20) & ((1 << ((64 - 0) - 20 - 2 * (((64 - 0) - 20 + 2) / 3))) - 1));
 	int32_t tail = (int32_t)(BlockBase & ((1 << 20) - 1));
@@ -446,7 +433,7 @@ void Block_map_mark_used(MemoryState* _state, uintptr_t BlockBase, int isUsed) {
 	else {
 		bot->Block[i3].tailHi = isUsed ? tail : 0;
 		uintptr_t BlockBaseNext = BlockBase + (1 << 20);
-		BlockMapDown* botLo = Block_map_get(_state, (uint8_t*)BlockBaseNext, isUsed);
+		BlockMapDown* botLo = Block_map_get(state, (uint8_t*)BlockBaseNext, isUsed);
 		if (botLo == nullptr) {
 			bot->Block[i3].tailHi = 0;
 			return;
@@ -457,9 +444,9 @@ void Block_map_mark_used(MemoryState* _state, uintptr_t BlockBase, int isUsed) {
 
 }
 
-int Block_map_is_used(MemoryState* _state, uint8_t* ptr) {
+int Block_map_is_used(MemoryState* state, uint8_t* ptr) {
 
-	BlockMapDown* mid = Block_map_get(_state, ptr, 0);
+	BlockMapDown* mid = Block_map_get(state, ptr, 0);
 
 	int i3 = ((((uintptr_t)((uint8_t*)ptr)) >> 20) & ((1 << ((64 - 0) - 20 - 2 * (((64 - 0) - 20 + 2) / 3))) - 1));
 
@@ -470,7 +457,7 @@ int Block_map_is_used(MemoryState* _state, uint8_t* ptr) {
 
 }
 
-void insert_to_used_Alignment(MemoryState* _state, AlignmentHeader* Alignment) {
+void insert_to_usedAlignment(MemoryState* _state, AlignmentHeader* Alignment) {
 
 	size_t size = Alignment->sizeIndex;
 	AlignmentHeader* next = _state->alignments.used[size * 2];
@@ -483,7 +470,7 @@ void insert_to_used_Alignment(MemoryState* _state, AlignmentHeader* Alignment) {
 
 }
 
-void insert_to_free_Alignment(MemoryState* _state, AlignmentHeader* Alignment) {
+void insert_to_freeAlignment(MemoryState* state, AlignmentHeader* Alignment) {
 
 	AlignmentHeader* next = Alignment->nextAlignment;
 	AlignmentHeader* prev = Alignment->prevAlignment;
@@ -491,22 +478,22 @@ void insert_to_free_Alignment(MemoryState* _state, AlignmentHeader* Alignment) {
 	prev->nextAlignment = next;
 
 	BlockObject* blockObj{};
-	blockObj = _state->mGmt.Blocks;
+	blockObj = state->mGmt.Blocks;
 
 	Alignment->nextAlignment = blockObj->freeAlignments;
 	blockObj->freeAlignments = Alignment;
 	unsigned int numberFree = blockObj->numberFreeAlignments;
 
-	BlockObject* lastNumberFree = state.mGmt.numberfreeAlignment[numberFree];
+	BlockObject* lastNumberFree = state->mGmt.numberfreeAlignment[numberFree];
 	if (lastNumberFree == blockObj) {
 		BlockObject* Block = blockObj->prevBlock;
-		state.mGmt.numberfreeAlignment[numberFree] = (Block != nullptr && Block->numberFreeAlignments == numberFree) ? Block : nullptr;
+		state->mGmt.numberfreeAlignment[numberFree] = (Block != nullptr && Block->numberFreeAlignments == numberFree) ? Block : nullptr;
 	}
 	blockObj->numberFreeAlignments = ++numberFree;
 
 	if (numberFree == blockObj->numberTotalAlignments && blockObj->nextBlock != nullptr) {
 		if (blockObj->prevBlock == nullptr) {
-			_state->mGmt.usableBlock = blockObj->nextBlock;
+			state->mGmt.usableBlock = blockObj->nextBlock;
 		}
 		else {
 			blockObj->prevBlock->nextBlock = blockObj->nextBlock;
@@ -516,34 +503,34 @@ void insert_to_free_Alignment(MemoryState* _state, AlignmentHeader* Alignment) {
 			blockObj->nextBlock->prevBlock = blockObj->prevBlock;
 		}
 
-		blockObj->nextBlock = _state->mGmt.unusedBlock;
-		_state->mGmt.unusedBlock = blockObj;
+		blockObj->nextBlock = state->mGmt.unusedBlock;
+		state->mGmt.unusedBlock = blockObj;
 
 
-		Block_map_mark_used(_state, blockObj->address, 0);
+		Block_map_mark_used(state, blockObj->address, 0);
 
 		blockObj->address = 0;
-		_state->mGmt.numberBlockCurrentlyAllocate;
+		state->mGmt.numberBlockCurrentlyAllocate;
 
 		return;
 	}
 
 	if (numberFree == 1) {
-		blockObj->nextBlock = _state->mGmt.usableBlock;
+		blockObj->nextBlock = state->mGmt.usableBlock;
 		blockObj->prevBlock = nullptr;
-		if (_state->mGmt.usableBlock) {
-			_state->mGmt.usableBlock->prevBlock = blockObj;
+		if (state->mGmt.usableBlock) {
+			state->mGmt.usableBlock->prevBlock = blockObj;
 		}
-		_state->mGmt.usableBlock = blockObj;
-		if (_state->mGmt.numberfreeAlignment[1] == nullptr) {
-			_state->mGmt.numberfreeAlignment[1] = blockObj;
+		state->mGmt.usableBlock = blockObj;
+		if (state->mGmt.numberfreeAlignment[1] == nullptr) {
+			state->mGmt.numberfreeAlignment[1] = blockObj;
 		}
 		return;
 	}
 
 
-	if (_state->mGmt.numberfreeAlignment[numberFree] == nullptr) {
-		_state->mGmt.numberfreeAlignment[numberFree] = blockObj;
+	if (state->mGmt.numberfreeAlignment[numberFree] == nullptr) {
+		state->mGmt.numberfreeAlignment[numberFree] = blockObj;
 	}
 
 	if (blockObj == lastNumberFree) {
@@ -554,7 +541,7 @@ void insert_to_free_Alignment(MemoryState* _state, AlignmentHeader* Alignment) {
 		blockObj->prevBlock->nextBlock = blockObj->nextBlock;
 	}
 	else {
-		_state->mGmt.usableBlock = blockObj->nextBlock;
+		state->mGmt.usableBlock = blockObj->nextBlock;
 	}
 
 
@@ -569,15 +556,15 @@ void insert_to_free_Alignment(MemoryState* _state, AlignmentHeader* Alignment) {
 
 }
 
-bool address_in_range(MemoryState* _state, void* ptr) {
-	return Block_map_is_used(_state, (uint8_t*)ptr);
+bool address_in_range(MemoryState* state, void* ptr) {
+	return Block_map_is_used(state, (uint8_t*)ptr);
 }
 
-int malloc_free(MemoryState* _state, void* ptr) {
+int malloc_free(MemoryState* state, void* ptr) {
 
 	AlignmentHeader* Alignment = ((AlignmentHeader*)((void*)((uintptr_t)((ptr)) & ~(uintptr_t)(((1 << 14)) - 1))));
 
-	if (!address_in_range(_state, ptr)) {
+	if (!address_in_range(state, ptr)) {
 		return 0;
 	}
 
@@ -587,7 +574,7 @@ int malloc_free(MemoryState* _state, void* ptr) {
 	Alignment->ref.count--;
 
 	if (lastFree == nullptr) {
-		insert_to_used_Alignment(_state, Alignment);
+		insert_to_usedAlignment(state, Alignment);
 		return 1;
 	}
 
@@ -595,7 +582,7 @@ int malloc_free(MemoryState* _state, void* ptr) {
 		return 1;
 	}
 
-	insert_to_free_Alignment(_state, Alignment);
+	insert_to_freeAlignment(state, Alignment);
 	return 1;
 
 }
@@ -609,201 +596,61 @@ void object_free(void* ctx, void* ptr) {
 	MemoryState* state = get_state();
 
 	if (!malloc_free(state, ptr)) {
-		AlifMem_debug_raw_free(state, ptr);
+		raw_free( ptr);
 		state->mGmt.rawAllocatedBlocks--;
 	}
 
 }
 
-void* AlifMem_debug_raw_alloc(MemoryState* _state, size_t useCalloc, size_t nByte) {
-
-	uint8_t* p;
-	uint8_t* data;
-	uint8_t* tail;
-	size_t total;
-
-	total = nByte + 24;
-
-	if (useCalloc) {
-		if (rawOrMem) {
-			p = (uint8_t*)object_calloc(_state, 1, total);
-		}
-		else {
-			p = (uint8_t*)AlifMem_raw_calloc(nullptr, 1, total);
-		}
-
-	}
-	else {
-
-		if (rawOrMem) {
-			p = (uint8_t*)object_malloc(nullptr, total);
-		}
-		else {
-			p = (uint8_t*)AlifMem_raw_malloc(nullptr, total);
-		}
-
-	}
-	if (p == nullptr) {
-		return nullptr;
-	}
-	data = p + 2 * 8;
-
-	write_size_t(p, nByte);
-
-	memset(p + 8 + 1, 0xFD, 8 - 1);
-
-	if (nByte > 0 && !useCalloc) {
-		memset(data, 0xCD, nByte);
-	}
-
-	tail = data + nByte;
-	memset(tail, 0xFD, 8);
-
-	return data;
-}
-
-void AlifMem_debug_raw_free(MemoryState* _state, void* ptr) {
-
-	if (ptr == nullptr) {
-		return;
-	}
-
-	uint8_t* q = (uint8_t*)ptr - 2 * 8;
-	size_t numberByte;
-	numberByte = read_size_t(q);
-	numberByte += 24;
-	memset(q, 0xDD, numberByte);
-	if (objectOrMemDelete) {
-		object_free(_state, q);
-	}
-	else {
-		AlifMem_raw_free(nullptr, q);
-	}
-}
-
-void* AlifMem_debug_raw_calloc(MemoryState* _state, size_t nElement, size_t elSize) {
-
-	size_t numberByte = nElement * elSize;
-
-	return AlifMem_debug_raw_alloc(_state, 1, numberByte);
-
-}
-
-void* AlifMem_debug_raw_realloc(MemoryState* _state, void* ptr, size_t nByte) {
-
-	if (ptr == nullptr) {
-		return AlifMem_debug_raw_alloc(_state, 0, nByte);
-	}
-
-	uint8_t* head;
-	uint8_t* data;
-	uint8_t* r;
-	uint8_t* tail;
-	size_t total;
-	size_t originalNByte;
-	uint8_t save[2 * 64];
-
-	data = (uint8_t*)ptr;
-	head = data - 2 * 8;
-	originalNByte = read_size_t(head);
-	total = nByte + 24;
-
-	tail = data + originalNByte;
-	if (originalNByte <= sizeof(save)) {
-		memcpy(save, data, originalNByte);
-		memset(data - 2 * 8, 0xDD, originalNByte + 24);
-	}
-	else {
-		memcpy(save, data, 64);
-		memset(head, 0xDD, 64 + 2 * 8);
-		memcpy(&save[2 * 64], tail - 2 * 64, 2 * 64);
-		memset(tail - 64, 0xDD, 64 + 24 - 2 * 8);
-	}
-	r = (uint8_t*)AlifMem_raw_realloc(nullptr, head, total);
-
-	if (r == nullptr) {
-		nByte = originalNByte;
-	}
-	else {
-		head = r;
-	}
-
-	data = head + 2 * 8;
-
-	write_size_t(head, nByte);
-	memset(head + 8 + 1, 0xFD, 8 - 1);
-
-	if (originalNByte <= sizeof(save)) {
-		memcpy(data, save, nByte > originalNByte ? originalNByte : nByte);
-	}
-	else {
-		size_t i = originalNByte - 64;
-		memcpy(data, save, nByte > 64 ? 64 : nByte);
-		if (nByte > i) {
-			memcpy(data + i, &save[64], nByte - i > 64 ? 64 : nByte);
-		}
-	}
-
-	if (r == nullptr) {
-		return nullptr;
-	}
-	if (nByte > originalNByte) {
-		memset(data + originalNByte, 0xCD, nByte - originalNByte);
-	}
-
-	return data;
-
-}
-
-BlockObject* new_Block(MemoryState* _state) {
+BlockObject* new_Block(MemoryState* state) {
 
 
 	BlockObject* BlockObj = nullptr;
 	unsigned int excess;
 	void* address = nullptr;
 
-	if ((_state)->mGmt.unusedBlock == nullptr) {
+	if ((state)->mGmt.unusedBlock == nullptr) {
 
 		unsigned int i;
 		unsigned int numberBlock;
 		size_t nByte;
 
-		numberBlock = (_state)->mGmt.maxBlock ? (_state)->mGmt.maxBlock << 1 : 16;
+		numberBlock = (state)->mGmt.maxBlock ? (state)->mGmt.maxBlock << 1 : 16;
 
-		nByte = numberBlock * sizeof(*(_state)->mGmt.Blocks);
-		BlockObj = (BlockObject*)raw_realloc(_state, _state->mGmt.Blocks, nByte);
-		(_state)->mGmt.Blocks = BlockObj;
+		nByte = numberBlock * sizeof(*(state)->mGmt.Blocks);
+		BlockObj = (BlockObject*)raw_realloc(state->mGmt.Blocks, nByte);
+		(state)->mGmt.Blocks = BlockObj;
 
-		for (i = (_state)->mGmt.maxBlock; i < numberBlock; ++i)
+		for (i = (state)->mGmt.maxBlock; i < numberBlock; ++i)
 		{
-			(_state)->mGmt.Blocks[i].address = 0;
-			(_state)->mGmt.Blocks[i].nextBlock = i < numberBlock - 1 ? &(_state)->mGmt.Blocks[i + 1] : nullptr;
+			(state)->mGmt.Blocks[i].address = 0;
+			(state)->mGmt.Blocks[i].nextBlock = i < numberBlock - 1 ? &(state)->mGmt.Blocks[i + 1] : nullptr;
 
 		}
 
-		(_state)->mGmt.unusedBlock = &(_state)->mGmt.Blocks[(_state)->mGmt.maxBlock];
-		(_state)->mGmt.maxBlock = numberBlock;
+		(state)->mGmt.unusedBlock = &(state)->mGmt.Blocks[(state)->mGmt.maxBlock];
+		(state)->mGmt.maxBlock = numberBlock;
 	}
 
-	BlockObj = _state->mGmt.unusedBlock;
+	BlockObj = state->mGmt.unusedBlock;
 	address = (void*)VirtualAlloc(nullptr, (1 << 20), 0x00001000 | 0x00002000, 0x04);
 
 	if (address != nullptr) {
-		Block_map_mark_used(_state, (uintptr_t)address, 1);
+		Block_map_mark_used(state, (uintptr_t)address, 1);
 	}
 
 	if (address == nullptr) {
-		BlockObj->nextBlock = (_state)->mGmt.unusedBlock;
-		(_state)->mGmt.unusedBlock = BlockObj;
+		BlockObj->nextBlock = (state)->mGmt.unusedBlock;
+		(state)->mGmt.unusedBlock = BlockObj;
 		return nullptr;
 	}
 
 	BlockObj->address = (uintptr_t)address;
 
-	++(_state)->mGmt.numberBlockCurrentlyAllocate;
-	++(_state)->mGmt.numberBlockAllocated;
-	if ((_state)->mGmt.numberBlockCurrentlyAllocate > (_state)->mGmt.numberBlockHighWater) {
-		(_state)->mGmt.numberBlockHighWater = (_state)->mGmt.numberBlockCurrentlyAllocate;
+	++(state)->mGmt.numberBlockCurrentlyAllocate;
+	++(state)->mGmt.numberBlockAllocated;
+	if ((state)->mGmt.numberBlockCurrentlyAllocate > (state)->mGmt.numberBlockHighWater) {
+		(state)->mGmt.numberBlockHighWater = (state)->mGmt.numberBlockCurrentlyAllocate;
 	}
 	BlockObj->freeAlignments = nullptr;
 
@@ -838,52 +685,52 @@ void malloc_Alignment_extend(AlignmentHeader* Alignment, size_t _size) {
 
 }
 
-void* allocateFrom_newAlignment(MemoryState* _state, size_t _size) {
+void* allocate_From_newAlignment(MemoryState* state, size_t _size) {
 
-	if ((_state)->mGmt.usableBlock == nullptr) {
+	if ((state)->mGmt.usableBlock == nullptr) {
 
-		(_state)->mGmt.usableBlock = new_Block(_state);
-		if ((_state)->mGmt.usableBlock == nullptr) {
+		(state)->mGmt.usableBlock = new_Block(state);
+		if ((state)->mGmt.usableBlock == nullptr) {
 			return nullptr;
 		}
-		(_state)->mGmt.usableBlock->nextBlock = (_state)->mGmt.usableBlock->prevBlock = nullptr;
-		(_state)->mGmt.numberfreeAlignment[(_state)->mGmt.usableBlock->numberFreeAlignments] = (_state)->mGmt.usableBlock;
+		(state)->mGmt.usableBlock->nextBlock = (state)->mGmt.usableBlock->prevBlock = nullptr;
+		(state)->mGmt.numberfreeAlignment[(state)->mGmt.usableBlock->numberFreeAlignments] = (state)->mGmt.usableBlock;
 	}
-	if ((_state)->mGmt.numberfreeAlignment[(_state)->mGmt.usableBlock->numberFreeAlignments] == (_state)->mGmt.usableBlock) {
-		(_state)->mGmt.numberfreeAlignment[(_state)->mGmt.usableBlock->numberFreeAlignments] = nullptr;
+	if ((state)->mGmt.numberfreeAlignment[(state)->mGmt.usableBlock->numberFreeAlignments] == (state)->mGmt.usableBlock) {
+		(state)->mGmt.numberfreeAlignment[(state)->mGmt.usableBlock->numberFreeAlignments] = nullptr;
 	}
-	if ((_state)->mGmt.usableBlock->numberFreeAlignments > 1) {
-		(_state)->mGmt.numberfreeAlignment[(_state)->mGmt.usableBlock->numberFreeAlignments - 1] = (_state)->mGmt.usableBlock;
+	if ((state)->mGmt.usableBlock->numberFreeAlignments > 1) {
+		(state)->mGmt.numberfreeAlignment[(state)->mGmt.usableBlock->numberFreeAlignments - 1] = (state)->mGmt.usableBlock;
 	}
 
-	AlignmentHeader* Alignment = (_state)->mGmt.usableBlock->freeAlignments;
+	AlignmentHeader* Alignment = (state)->mGmt.usableBlock->freeAlignments;
 	if (Alignment != nullptr) {
-		(_state)->mGmt.usableBlock->freeAlignments = Alignment->nextAlignment;
-		(_state)->mGmt.usableBlock->numberFreeAlignments--;
-		if ((_state)->mGmt.usableBlock->numberFreeAlignments == 0) {
-			(_state)->mGmt.usableBlock = (_state)->mGmt.usableBlock->nextBlock;
-			if ((_state)->mGmt.usableBlock != nullptr) {
-				(_state)->mGmt.usableBlock->prevBlock = nullptr;
+		(state)->mGmt.usableBlock->freeAlignments = Alignment->nextAlignment;
+		(state)->mGmt.usableBlock->numberFreeAlignments--;
+		if ((state)->mGmt.usableBlock->numberFreeAlignments == 0) {
+			(state)->mGmt.usableBlock = (state)->mGmt.usableBlock->nextBlock;
+			if ((state)->mGmt.usableBlock != nullptr) {
+				(state)->mGmt.usableBlock->prevBlock = nullptr;
 			}
 		}
 	}
 	else {
-		Alignment = (AlignmentHeader*)_state->mGmt.usableBlock->alignmentAddress;
-		Alignment->BlockIndex = (unsigned int)(_state->mGmt.usableBlock - _state->mGmt.Blocks);
+		Alignment = (AlignmentHeader*)state->mGmt.usableBlock->alignmentAddress;
+		Alignment->BlockIndex = (unsigned int)(state->mGmt.usableBlock - state->mGmt.Blocks);
 		Alignment->sizeIndex = 0xffff;
-		(_state)->mGmt.usableBlock->alignmentAddress += (1 << 14);
-		--(_state)->mGmt.usableBlock->numberFreeAlignments;
+		(state)->mGmt.usableBlock->alignmentAddress += (1 << 14);
+		--(state)->mGmt.usableBlock->numberFreeAlignments;
 
-		if ((_state)->mGmt.usableBlock->numberFreeAlignments == 0) {
-			(_state)->mGmt.usableBlock = (_state)->mGmt.usableBlock->nextBlock;
-			if ((_state)->mGmt.usableBlock != nullptr) {
-				(_state)->mGmt.usableBlock->prevBlock = nullptr;
+		if ((state)->mGmt.usableBlock->numberFreeAlignments == 0) {
+			(state)->mGmt.usableBlock = (state)->mGmt.usableBlock->nextBlock;
+			if ((state)->mGmt.usableBlock != nullptr) {
+				(state)->mGmt.usableBlock->prevBlock = nullptr;
 			}
 		}
 	}
 
 	uint8_t* bp;
-	AlignmentHeader* next = (_state)->alignments.used[_size + _size];
+	AlignmentHeader* next = (state)->alignments.used[_size + _size];
 	Alignment->nextAlignment = next;
 	Alignment->prevAlignment = next;
 	next->nextAlignment = Alignment;
@@ -906,14 +753,14 @@ void* allocateFrom_newAlignment(MemoryState* _state, size_t _size) {
 
 }
 
-void* malloc_alloc(MemoryState* _state, size_t nByte) {
+void* malloc_alloc(MemoryState* state, size_t nByte) {
 
 	if (nByte > 512) {
 		return nullptr;
 	}
 
 	unsigned int size = (unsigned int)(nByte - 1) >> 4;
-	AlignmentHeader* Alignment = _state->alignments.used[size + size];
+	AlignmentHeader* Alignment = state->alignments.used[size + size];
 	uint8_t* bp;
 
 	if (Alignment != Alignment->nextAlignment) {
@@ -927,7 +774,7 @@ void* malloc_alloc(MemoryState* _state, size_t nByte) {
 
 	}
 	else {
-		bp = (uint8_t*)allocateFrom_newAlignment(_state, size);
+		bp = (uint8_t*)allocate_From_newAlignment(state, size);
 	}
 	return (void*)bp;
 }
@@ -941,7 +788,7 @@ void* object_malloc(void* ctx, size_t numberByte) {
 		memset(ptr, 0, numberByte);
 		return ptr;
 	}
-	ptr = AlifMem_raw_realloc(nullptr, ptr, numberByte);
+	ptr = alifMem_raw_realloc(nullptr, ptr, numberByte);
 	if (ptr != nullptr) {
 		(state)->mGmt.rawAllocatedBlocks++;
 	}
@@ -961,7 +808,7 @@ void* object_calloc(void* ctx, size_t nElement, size_t elSize) {
 		return ptr;
 	}
 
-	ptr = AlifMem_debug_raw_alloc(state, 1, nElement * elSize);
+	ptr = raw_calloc(1, nElement * elSize);
 	if (ptr != nullptr) {
 		state->mGmt.rawAllocatedBlocks++;
 	}
@@ -969,7 +816,7 @@ void* object_calloc(void* ctx, size_t nElement, size_t elSize) {
 
 }
 
-int malloc_realloc(MemoryState* _state, void** newPtr, void* ptr, size_t numberByte) {
+int malloc_realloc(MemoryState* state, void* ctx, void** newPtr, void* ptr, size_t numberByte) {
 
 	void* bp;
 	AlignmentHeader* Alignment;
@@ -977,7 +824,7 @@ int malloc_realloc(MemoryState* _state, void** newPtr, void* ptr, size_t numberB
 
 	Alignment = ((AlignmentHeader*)((void*)((uintptr_t)((ptr)) & ~(uintptr_t)(((1 << 14)) - 1))));
 
-	if (!address_in_range(_state, ptr)) {
+	if (!address_in_range(state, ptr)) {
 		return 0;
 	}
 
@@ -991,11 +838,11 @@ int malloc_realloc(MemoryState* _state, void** newPtr, void* ptr, size_t numberB
 		size = numberByte;
 	}
 
-	bp = object_malloc(nullptr, numberByte);
+	bp = object_malloc(ctx, numberByte);
 
 	if (bp != nullptr) {
 		memcpy(bp, ptr, size);
-		object_free(_state, ptr);
+		object_free(ctx, ptr);
 	}
 	*newPtr = bp;
 	return 1;
@@ -1005,14 +852,177 @@ void* object_realloc(void* ctx, void* ptr, size_t size) {
 
 	void* ptr2;
 	if (ptr == nullptr) {
-		return object_malloc(nullptr, size);
+		return object_malloc(ctx, size);
 	}
 
 	MemoryState* state = get_state();
 
-	if (malloc_realloc(state, &ptr2, ptr, size)) {
+	if (malloc_realloc(state, ctx, &ptr2, ptr, size)) {
 		return ptr2;
 	}
-	return AlifMem_debug_raw_realloc(state, ptr, size);
+	return raw_realloc(ptr, size);
+
+}
+
+void
+write_size_t(void* p, size_t n)
+{
+	uint8_t* q = (uint8_t*)p + 8 - 1;
+	int i;
+
+	for (i = 8; --i >= 0; --q) {
+		*q = (uint8_t)(n & 0xff);
+		n >>= 8;
+	}
+}
+
+size_t
+read_size_t(const void* p)
+{
+	const uint8_t* q = (const uint8_t*)p;
+	size_t result = *q++;
+	size_t i;
+
+	for (i = 8; --i > 0; ++q)
+		result = (result << 8) | *q;
+	return result;
+}
+
+void* alifMem_debug_raw_alloc(int useCalloc, void* ctx, size_t nByte) {
+
+	DebugAllocateAPI* api = (DebugAllocateAPI*)ctx;
+	uint8_t* p;
+	uint8_t* data;
+	uint8_t* tail;
+	size_t total;
+
+	if (nByte > (size_t)9223372036854775807i64 - 24) {
+		return nullptr;
+	}
+
+	total = nByte + 24;
+
+	if (useCalloc) {
+		p = (uint8_t*)api->alloc.calloc(api->alloc.ctx, 1, total);
+	}
+	else {
+		p = (uint8_t*)api->alloc.malloc(api->alloc.ctx, total);
+	}
+	if (p == nullptr) {
+		return nullptr;
+	}
+	data = p + 2 * 8;
+
+	write_size_t(p, nByte);
+
+	memset(p + 8 + 1, 0xFD, 8 - 1);
+
+	if (nByte > 0 && !useCalloc) {
+		memset(data, 0xCD, nByte);
+	}
+
+	tail = data + nByte;
+	memset(tail, 0xFD, 8);
+
+	return data;
+}
+
+void* alifMem_debug_raw_malloc(void* ctx, size_t numberByte) {
+	return alifMem_debug_raw_alloc(0, ctx, numberByte);
+}
+
+void* alifMem_debug_raw_calloc(void* ctx, size_t nElement, size_t elSize) {
+
+	size_t numberByte = nElement * elSize;
+
+	return alifMem_debug_raw_alloc(1, ctx, numberByte);
+
+}
+
+
+void alifMem_debug_raw_free(void* ctx, void* ptr) {
+
+	if (ptr == nullptr) {
+		return;
+	}
+
+	DebugAllocateAPI* api = (DebugAllocateAPI*)ctx;
+	uint8_t* q = (uint8_t*)ptr - 2 * 8;
+	size_t numberByte;
+
+	numberByte = read_size_t(q);
+	numberByte += 24;
+	memset(q, 0xDD, numberByte);
+	api->alloc.free(api->alloc.ctx, q);
+
+}
+
+void* alifMem_debug_raw_realloc(void* ctx, void* ptr, size_t nByte) {
+
+	if (ptr == nullptr) {
+		return alifMem_debug_raw_alloc(0, ctx, nByte);
+	}
+
+	DebugAllocateAPI* api = (DebugAllocateAPI*)ctx;
+	uint8_t* head;
+	uint8_t* data;
+	uint8_t* r;
+	uint8_t* tail;
+	size_t total;
+	size_t originalNByte;
+	uint8_t save[2 * 64];
+
+	data = (uint8_t*)ptr;
+	head = data - 2 * 8;
+	originalNByte = read_size_t(head);
+	if (nByte > (size_t)9223372036854775807i64 - 24) {
+		return nullptr;
+	}
+	total = nByte + 24;
+
+	tail = data + originalNByte;
+	if (originalNByte <= sizeof(save)) {
+		memcpy(save, data, originalNByte);
+		memset(data - 2 * 8, 0xDD, originalNByte + 24);
+	}
+	else {
+		memcpy(save, data, 64);
+		memset(head, 0xDD, 64 + 2 * 8);
+		memcpy(&save[2 * 64], tail - 2 * 64, 2 * 64);
+		memset(tail - 64, 0xDD, 64 + 24 - 2 * 8);
+	}
+	r = (uint8_t*)api->alloc.realloc(api->alloc.ctx, head, total);
+
+	if (r == nullptr) {
+		nByte = originalNByte;
+	}
+	else {
+		head = r;
+	}
+
+	data = head + 2 * 8;
+
+	write_size_t(head, nByte);
+	memset(head + 8 + 1, 0xFD, 8 - 1);
+
+	if (originalNByte <= sizeof(save)) {
+		memcpy(data, save, nByte > originalNByte ? originalNByte : nByte);
+	}
+	else {
+		size_t i = originalNByte - 64;
+		memcpy(data, save, nByte > 64 ? 64 : nByte);
+		if (nByte > i) {
+			memcpy(data + i, &save[64], nByte - i > 64 ? 64 : nByte);
+		}
+	}
+
+	if (r == nullptr) {
+		return nullptr;
+	}
+	if (nByte > originalNByte) {
+		memset(data + originalNByte, 0xCD, nByte - originalNByte);
+	}
+
+	return data;
 
 }

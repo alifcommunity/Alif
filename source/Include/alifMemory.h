@@ -50,11 +50,11 @@ public:
 class MemoryManager
 {
 public:
-	class BlockObject* Blocks;
+	BlockObject* Blocks;
 	unsigned int maxBlock;
-	class BlockObject* unusedBlock;
-	class BlockObject* usableBlock;
-	class BlockObject* numberfreeAlignment[((1 << 20) / (1 << 14)) + 1];
+	BlockObject* unusedBlock;
+	BlockObject* usableBlock;
+	BlockObject* numberfreeAlignment[((1 << 20) / (1 << 14)) + 1];
 	size_t numberBlockCurrentlyAllocate;
 	long long rawAllocatedBlocks;
 	size_t numberBlockAllocated;
@@ -94,15 +94,15 @@ public:
 class MemoryGlobalState
 {
 public:
-	int dumpDebugStats;
+	int dumpDebugState;
 	alif_size_t interpreterLeaks;
 };
 
 class MemoryState
 {
 public:
-	class AlignmentsUsed alignments;
-	class MemoryManager mGmt;
-	class Use usage;
+	AlignmentsUsed alignments;
+	MemoryManager mGmt;
+	Use usage;
 };
 

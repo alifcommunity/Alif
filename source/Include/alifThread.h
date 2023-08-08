@@ -53,4 +53,6 @@ struct AlifTSST {
 	NATIVE_TSS_KEY_T key;
 };
 
+#undef NATIVE_TSS_KEY_T
 
+#define ALIF_TSS_NEEDS_INIT   {0}

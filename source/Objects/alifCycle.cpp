@@ -2,9 +2,9 @@
 #include "alifCore_initConfig.h"
 #include "alifCore_alifCycle.h"
 #include "alifCore_runtime.h"
-
-
-
+#include "alifCore_runtime_init.h"
+#include "alifCore_alifMem_init.h"
+#include "alifCore_alifMemory_init.h"
 
 // هنا تم عمل متغير يتم القراءة منه والكتابة يسمى alifRuntime 
 // ومن ثم التحقق من النظام لوضع بيانات كائن AlifRuntimeState 
@@ -23,11 +23,26 @@ __attribute__((
 
 #endif
 
-//AlifRuntimeState runtime
-//#if defined(__linux__) && (defined(__GNUC__) || defined(__clang__))
-//__attribute__((section(".alifRuntime")))
-//#endif
-  
+AlifRuntimeState runtime
+#if defined(__linux__) && (defined(__GNUC__) || defined(__clang__))
+__attribute__ ((section(".alifRuntime")))
+#endif
+= { .allocators = {
+	.standard = {
+		{ &runtime.allocators.debug.raw, alifMem_debug_raw_malloc, alifMem_debug_raw_calloc, alifMem_debug_raw_realloc, alifMem_debug_raw_free }
+		,{ &runtime.allocators.debug.mem, alifMem_malloc, alifMem_calloc, alifMem_realloc, alifMem_free }
+		,{ &runtime.allocators.debug.obj, alifMem_malloc, alifMem_calloc, alifMem_realloc, alifMem_free },
+		},
+	.debug = {
+		{ 'r',{ nullptr, alifMem_raw_malloc, alifMem_raw_calloc, alifMem_raw_realloc, alifMem_raw_free } }
+		,{ 'm',{ nullptr, object_malloc, object_calloc, object_realloc, object_free } }
+		,{ 'o',{ nullptr, object_malloc, object_calloc, object_realloc, object_free } },
+		} ,
+	.objArena =
+		{ nullptr, alifMem_arenaAlloc, alifMem_arenaFree }
+		},
+	.memory = { .dumpDebugState = -1 }, .autoTSSKey = { 0 },
+};
 
 static int runtimeInitialized = 0;
 
