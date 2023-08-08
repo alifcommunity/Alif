@@ -25,9 +25,25 @@ void set_allocator_unlocked(AlifMemAllocateDomain domain, AlifMemAllocatorExtern
 static MemoryState _state;
 
 inline MemoryState* get_state(void) {
+	return &state;
+}
 
-	return &_state;
+void write_size_t(void* p, size_t n)
+{
+	uint8_t* q = (uint8_t*)p + 8 - 1;
+	int i;
 
+	for (i = 8; --i >= 0; --q) {
+		*q = (uint8_t)(n & 0xff);
+		n >>= 8;
+	}
+}
+
+size_t read_size_t(const void* p)
+{
+	const uint8_t* q = (const uint8_t*)p;
+	size_t result = *q++;
+	size_t i;
 }
 
 // raw memory ///////////////////////////////////////////////////////////////////////////////
@@ -328,6 +344,20 @@ void* alifMem_realloc(void* ctx, void* ptr, size_t newSize) {
 void alifMem_free(void* ctx, void* ptr) {
 
 	ALIFMEM.free(ALIFMEM.ctx, ptr);
+}
+
+/* ___________ alifMem functions ___________ */
+
+// يجب مراجعة هذه الدالة لانه تم تعديلها تعديلات كبيرة
+char* alifMem_rawStrDup(const char* str)
+{
+	size_t size = strlen(str) + 1;
+	char* copy = (char*)AlifMem_malloc(nullptr, size);
+	if (copy == nullptr) {
+		return nullptr;
+	}
+	memcpy(copy, str, size);
+	return copy;
 }
 
 

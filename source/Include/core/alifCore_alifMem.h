@@ -1,5 +1,9 @@
 #pragma once
 
+
+ALIFAPI_FUNC(char*) alifMem_rawStrDup(const char*);
+
+
 class DebugAllocateAPI {
 public:
 	/* We tag each block with an API ID in order to tag API violations */
