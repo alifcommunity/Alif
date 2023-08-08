@@ -2,6 +2,15 @@
 
 #define ALIF_BUILD_CORE
 
+// لمنع ظهور رسائل النبيه بخصوص الدوال التي تم إستبدالها في c  او cpp
+#ifndef _CRT_SECURE_NO_DEPRECATE
+#define _CRT_SECURE_NO_DEPRECATE 1
+#endif
+#ifndef _CRT_NONSTDC_NO_DEPRECATE
+#define _CRT_NONSTDC_NO_DEPRECATE 1
+#endif
+
+
 #define HAVE_IO_H
 
 #include <io.h>
@@ -119,8 +128,8 @@
 
 /* Define like size_t, omitting the "unsigned" */
 #ifdef MS_WIN64
-typedef __int64 alif_size_t;
-#   define ALIF_SSIZE_T_MAX LLONG_MAX
+typedef __int64 AlifSizeT;
+#   define ALIFSIZET_MAX LLONG_MAX
 #else
 typedef _W64 int Alif_ssize_t;
 #   define ALIF_SSIZE_T_MAX INT_MAX

@@ -95,7 +95,7 @@ class MemoryGlobalState
 {
 public:
 	int dumpDebugState;
-	alif_size_t interpreterLeaks;
+	AlifSizeT interpreterLeaks;
 };
 
 class MemoryState

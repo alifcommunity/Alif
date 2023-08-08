@@ -16,9 +16,12 @@ public:
 
 class AlifWideStringList {
 public:
-	alif_size_t length;
+	AlifSizeT length;
 	wchar_t** items;
 };
+
+ALIFAPI_FUNC(AlifStatus) alifWideStringList_append(AlifWideStringList*, const wchar_t*);
+ALIFAPI_FUNC(AlifStatus) alifWideStringList_insert(AlifWideStringList*, AlifSizeT, const wchar_t*);
 
 
 /* ___________ AlifPreConfig ___________ */
@@ -132,5 +135,5 @@ public:
 };
 
 ALIFAPI_FUNC(void) alifConfig_initAlifConfig(AlifConfig*);
-ALIFAPI_FUNC(AlifStatus) alifConfig_setCharArgv(AlifConfig* config, alif_size_t argc, char* const* argv);
-ALIFAPI_FUNC(AlifStatus) alifConfig_setArgv(AlifConfig*, alif_size_t, wchar_t* const*);
+ALIFAPI_FUNC(AlifStatus) alifConfig_setCharArgv(AlifConfig* config, AlifSizeT argc, char* const* argv);
+ALIFAPI_FUNC(AlifStatus) alifConfig_setArgv(AlifConfig*, AlifSizeT, wchar_t* const*);

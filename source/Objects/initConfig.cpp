@@ -29,6 +29,54 @@ int alifLegacyWindowsStdioFlag = 0; /* Uses FileIO instead of WindowsConsoleIO *
 #endif
 
 
+/* ___________ AlifWideStringList ___________ */
+
+AlifStatus alifWideStringList_insert(AlifWideStringList* _list, AlifSizeT _index, const wchar_t* _item)
+{
+	AlifSizeT len = _list->length;
+	if (len == ALIFSIZET_MAX) {
+		/* length+1 would overflow */
+		return ALIFSTATUS_NO_MEMORY();
+	}
+	if (_index < 0) {
+		return ALIFSTATUS_ERR("alifWideStringList_insert مؤشر يجب ان يكون >= 0");
+	}
+	if (_index > len) {
+		_index = len;
+	}
+
+	//wchar_t* item2 = alifMem_rawWcsdup(_item);
+	//if (item2 == NULL) {
+	//	return ALIFSTATUS_NO_MEMORY();
+	//}
+
+	size_t size = (len + 1) * sizeof(_list->items[0]);
+	//wchar_t** items2 = (wchar_t**)alifMem_rawRealloc(_list->items, size);
+	//if (items2 == NULL) {
+	//	alifMem_rawFree(item2);
+	//	return ALIFSTATUS_NO_MEMORY();
+	//}
+
+	//if (_index < len) {
+	//	memmove(&items2[_index + 1],
+	//		&items2[_index],
+	//		(len - _index) * sizeof(items2[0]));
+	//}
+
+	//items2[_index] = item2;
+	//_list->items = items2;
+	//_list->length++;
+	return ALIFSTATUS_OK();
+}
+
+
+AlifStatus alifWideStringList_append(AlifWideStringList* _list, const wchar_t* _item)
+{
+	return alifWideStringList_insert(_list, _list->length, _item);
+}
+
+
+
 void alifConfig_initCompatConfig(AlifConfig* _config)
 {
 	_config->configInit = 1;
@@ -156,7 +204,7 @@ AlifStatus alifConfig_setAlifArgv(AlifConfig* _config, const AlifArgv* _args)
 }
 
 
-AlifStatus alifConfig_setCharArgv(AlifConfig* _config, alif_size_t _argc, char* const* _argv)
+AlifStatus alifConfig_setCharArgv(AlifConfig* _config, AlifSizeT _argc, char* const* _argv)
 {
 	AlifArgv args = {
 		.argc = _argc,
@@ -169,7 +217,7 @@ AlifStatus alifConfig_setCharArgv(AlifConfig* _config, alif_size_t _argc, char* 
 }
 
 
-AlifStatus alifConfig_setArgv(AlifConfig* _config, alif_size_t _argc, wchar_t* const* _argv)
+AlifStatus alifConfig_setArgv(AlifConfig* _config, AlifSizeT _argc, wchar_t* const* _argv)
 {
 	AlifArgv args = {
 		.argc = _argc,
