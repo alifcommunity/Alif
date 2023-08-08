@@ -272,65 +272,85 @@ static AlifStatus preConfig_initUtf8Mode(AlifPreConfig* _config, const AlifPreCm
 //	}
 //#endif
 
-	if (_config->utf8_mode >= 0) {
+	if (_config->utf8Mode >= 0) {
 		return ALIFSTATUS_OK();
 	}
 
 	const wchar_t* xopt;
-	xopt = _Py_get_xoption(&_cmdLine->xoptions, L"utf8");
+	xopt = alifGet_xOption(&_cmdLine->xoptions, L"utf8");
 	if (xopt) {
-		wchar_t* sep = wcschr(xopt, L'=');
+		wchar_t* sep = (wchar_t*)wcschr(xopt, L'='); // تم عمل تغيير لنوع القيمة المرجعة - يجب المراجعة قبل الإعتماد
 		if (sep) {
 			xopt = sep + 1;
 			if (wcscmp(xopt, L"1") == 0) {
-				_config->utf8_mode = 1;
+				_config->utf8Mode = 1;
 			}
 			else if (wcscmp(xopt, L"0") == 0) {
-				_config->utf8_mode = 0;
+				_config->utf8Mode = 0;
 			}
 			else {
-				return _PyStatus_ERR("invalid -X utf8 option value");
+				return ALIFSTATUS_ERR("فشل -X utf8");
 			}
 		}
 		else {
-			_config->utf8_mode = 1;
+			_config->utf8Mode = 1;
 		}
 		return ALIFSTATUS_OK();
 	}
 
-	const char* opt = _Py_GetEnv(_config->use_environment, "PYTHONUTF8");
+	const char* opt = alif_getEnv(_config->useEnvironment, "ALIFUTF8");
 	if (opt) {
 		if (strcmp(opt, "1") == 0) {
-			_config->utf8_mode = 1;
+			_config->utf8Mode = 1;
 		}
 		else if (strcmp(opt, "0") == 0) {
-			_config->utf8_mode = 0;
+			_config->utf8Mode = 0;
 		}
 		else {
-			return _PyStatus_ERR("invalid PYTHONUTF8 environment "
-				"variable value");
+			return ALIFSTATUS_ERR("قيمة متغير البيئة ALIFUTF8 فشلت");
 		}
-		return ALIFSTATUS_OK()();
+		return ALIFSTATUS_OK();
 	}
 
 
 #ifndef MS_WINDOWS
-	if (config->utf8_mode < 0) {
-		/* The C locale and the POSIX locale enable the UTF-8 Mode (PEP 540) */
-		const char* ctype_loc = setlocale(LC_CTYPE, NULL);
-		if (ctype_loc != NULL
-			&& (strcmp(ctype_loc, "C") == 0
-				|| strcmp(ctype_loc, "POSIX") == 0))
-		{
-			config->utf8_mode = 1;
+	if (config->utf8Mode < 0) {
+		/* The C locale and the POSIX locale enable the UTF-8 Mode */
+		const char* ctypeLoc = setlocale(LC_CTYPE, nullptr);
+		if (ctypeLoc != nullptr && (strcmp(ctypeLoc, "C") == 0 || strcmp(ctypeLoc, "POSIX") == 0)) {
+			_config->utf8Mode = 1;
 		}
 	}
 #endif
 
-	if (_config->utf8_mode < 0) {
-		_config->utf8_mode = 0;
+	if (_config->utf8Mode < 0) {
+		_config->utf8Mode = 0;
 	}
-	return ALIFSTATUS_OK()();
+	return ALIFSTATUS_OK();
+}
+
+
+static AlifStatus preConfig_initAllocator(AlifPreConfig* _config)
+{
+	if (_config->allocator == ALIFMEM_ALLOCATOR_NOT_SET) {
+		/* bpo-34247. The PYTHONMALLOC environment variable has the priority
+		   over PYTHONDEV env var and "-X dev" command line option.
+		   For example, PYTHONMALLOC=malloc PYTHONDEVMODE=1 sets the memory
+		   allocators to "malloc" (and not to "debug"). */
+		const char* envvar = alif_getEnv(_config->useEnvironment, "ALIFMALLOC");
+		if (envvar) {
+			AlifMemAllocatorName name;
+			//if (alifMem_getAllocatorName(envvar, &name) < 0) {
+			//	return ALIFSTATUS_ERR("ALIFMALLOC: حجز ذاكرة غير محدد");
+			//}
+			_config->allocator = (int)name;
+		}
+	}
+
+	//if (_config->devMode && _config->allocator == ALIFMEM_ALLOCATOR_NOT_SET) {
+	//	_config->allocator = ALIFMEM_ALLOCATOR_DEBUG;
+	//}
+	return ALIFSTATUS_OK();
 }
 
 
@@ -345,7 +365,7 @@ static AlifStatus preConfig_read(AlifPreConfig* _config, AlifPreCmdLine* _cmdLin
 
 	preCmdLine_setPreConfig(_cmdLine, _config);
 
-	/* legacy_windows_fs_encoding, coerce_c_locale, utf8_mode */
+	/* legacy_windows_fs_encoding, coerce_c_locale, utf8Mode */
 #ifdef MS_WINDOWS
 	//alif_getEnvFlag(_config->useEnvironment, &_config->legacy_windows_fs_encoding, "ALIFLEGACYWINDOWSFSENCODING");
 #endif
@@ -358,20 +378,20 @@ static AlifStatus preConfig_read(AlifPreConfig* _config, AlifPreCmdLine* _cmdLin
 	}
 
 	/* allocator */
-	//status = preConfig_initAllocator(_config);
+	status = preConfig_initAllocator(_config);
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		return status;
 	}
 
-	//assert(config->coerce_c_locale >= 0);
-	//assert(config->coerce_c_locale_warn >= 0);
+	//assert(_config->coerce_c_locale >= 0);
+	//assert(_config->coerce_c_locale_warn >= 0);
 //#ifdef MS_WINDOWS
 //	assert(config->legacy_windows_fs_encoding >= 0);
 //#endif
-//	assert(config->utf8_mode >= 0);
-//	assert(config->isolated >= 0);
-//	assert(config->use_environment >= 0);
-//	assert(config->dev_mode >= 0);
+//	assert(_config->utf8Mode >= 0);
+//	assert(_config->isolated >= 0);
+//	assert(_config->useEnvironment >= 0);
+//	assert(_config->devMode >= 0);
 
 	return ALIFSTATUS_OK();
 }
