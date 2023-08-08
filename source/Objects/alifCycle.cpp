@@ -181,10 +181,10 @@ AlifStatus alif_preInitializeFromAlifArgv(const AlifPreConfig* _srcConfig, const
 		return status;
 	}
 
-	//status = alifPreConfig_write(&config);
-	//if (ALIFSTATUS_EXCEPTION(status)) {
-	//	return status;
-	//}
+	status = alifPreConfig_write(&config);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
 	//runtime->preinitializing = 0;
 	//runtime->preinitialized = 1;

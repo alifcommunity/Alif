@@ -17,15 +17,15 @@ static AlifStatus alifMain_init(const AlifArgv* _args) {
 		return status;
 	}
 
-	//AlifConfig config{};
-	//alifConfig_initAlifConfig(&config);
+	AlifConfig config{};
+	alifConfig_initAlifConfig(&config);
 
-	//if (_args->useCharArgv) {
-	//	status = alifConfig_setCharArgv(&config, _args->argc, _args->charArgv);
-	//}
-	//else {
-	//	status = alifConfig_setArgv(&config, _args->argc, _args->wcharArgv);
-	//}
+	if (_args->useCharArgv) {
+		status = alifConfig_setCharArgv(&config, _args->argc, _args->charArgv);
+	}
+	else {
+		status = alifConfig_setArgv(&config, _args->argc, _args->wcharArgv);
+	}
 
 	//status = alifInit_fromConfig(&config);
 

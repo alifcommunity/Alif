@@ -225,6 +225,30 @@ static void preConfig_getGlobalVars(AlifPreConfig* _config)
 #undef COPY_NOT_FLAG
 }
 
+static void preConfig_setGlobalVars(const AlifPreConfig* _config)
+{
+#define COPY_FLAG(ATTR, VAR) \
+    if (_config->ATTR >= 0) { \
+        VAR = _config->ATTR; \
+    }
+#define COPY_NOT_FLAG(ATTR, VAR) \
+    if (_config->ATTR >= 0) { \
+        VAR = !_config->ATTR; \
+    }
+
+	ALIF_COMP_DIAG_PUSH
+		ALIF_COMP_DIAG_IGNORE_DEPR_DECLS
+		COPY_FLAG(isolated, alifIsolatedFlag);
+	COPY_NOT_FLAG(useEnvironment, alifIgnoreEnvironmentFlag);
+#ifdef MS_WINDOWS
+	//COPY_FLAG(legacyWindowsFsEncoding, alifLegacyWindowsFSEncodingFlag);
+#endif
+	COPY_FLAG(utf8Mode, alifUTF8Mode);
+	ALIF_COMP_DIAG_POP
+
+#undef COPY_FLAG
+#undef COPY_NOT_FLAG
+}
 
 const char* alif_getEnv(int _useEnvironment, const char* _name)
 {
@@ -339,7 +363,7 @@ static AlifStatus preConfig_initAllocator(AlifPreConfig* _config)
 		   allocators to "malloc" (and not to "debug"). */
 		const char* envvar = alif_getEnv(_config->useEnvironment, "ALIFMALLOC");
 		if (envvar) {
-			AlifMemAllocatorName name;
+			AlifMemAllocatorName name{};
 			//if (alifMem_getAllocatorName(envvar, &name) < 0) {
 			//	return ALIFSTATUS_ERR("ALIFMALLOC: حجز ذاكرة غير محدد");
 			//}
@@ -474,7 +498,7 @@ AlifStatus alifPreConfig_read(AlifPreConfig* _config, const AlifArgv* _args)
 			goto done;
 		}
 
-		int encoding_changed = 0;
+		int encodingChanged = 0;
 		//if (_config->coerceCLocale && !localeCoerced) {
 		//	localeCoerced = 1;
 		//	alif_coerceLegacyLocale(0);
@@ -484,24 +508,25 @@ AlifStatus alifPreConfig_read(AlifPreConfig* _config, const AlifArgv* _args)
 		if (utf8Mode == -1) {
 			if (_config->utf8Mode == 1) {
 				/* UTF-8 Mode enabled */
-				encoding_changed = 1;
+				encodingChanged = 1;
 			}
 		}
 		else {
 			if (_config->utf8Mode != utf8Mode) {
-				encoding_changed = 1;
+				encodingChanged = 1;
 			}
 		}
 
-		if (!encoding_changed) {
+		if (!encodingChanged) {
 			break;
 		}
 
 
-		//int newUtf8Mode = _config->utf8Mode;
+		int newUtf8Mode = _config->utf8Mode;
 		//int newCoerceCLocale = _config->coerceCLocale;
 		//preConfig_copy(_config, &saveConfig);
-		//_config->utf8Mode = newUtf8Mode;
+		*_config = saveConfig;
+		_config->utf8Mode = newUtf8Mode;
 		//_config->coerceCLocale = newCoerceCLocale;
 
 		/* The encoding changed: read again the configuration
@@ -511,9 +536,64 @@ AlifStatus alifPreConfig_read(AlifPreConfig* _config, const AlifArgv* _args)
 
 done:
 	// Revert side effects
-	//setlocale(LC_CTYPE, initCtypeLocale);
+	setlocale(LC_CTYPE, initCtypeLocale);
 	//alifMem_rawFree(initCtypeLocale);
 	//prConfig_copy(&alifRuntime.preconfig, &saveRuntimeConfig);
 	//alifPreCmdLine_clear(&cmdLine);
 	return status;
+}
+
+
+/* Write the pre-configuration:
+
+   - set the memory allocators
+   - set alif_xxx global configuration variables
+   - set the LC_CTYPE locale (coerce C locale) and set the UTF-8 mode
+
+   The applied configuration is written into alifRuntime.preConfig.
+   If the C locale cannot be coerced, set coerce_c_locale to 0.
+
+   Do nothing if called after alif_initialize(): ignore the new
+   pre-configuration. */
+AlifStatus preConfig_write(const AlifPreConfig* _srcConfig)
+{
+	AlifPreConfig config{};
+
+	//AlifStatus status = alifPreConfig_initFromPreConfig(&config, _srcConfig);
+	AlifStatus status = alifPreConfig_initFromPreConfig(&config);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+
+	//if (alifRuntime.core_initialized) {
+	//	/* Calling this functions after alif_initialize() ignores
+	//	   the new configuration. */
+	//	return ALIFSTATUS_OK();
+	//}
+
+	AlifMemAllocatorName name = (AlifMemAllocatorName)config.allocator;
+	if (name != ALIFMEM_ALLOCATOR_NOT_SET) {
+		//if (alifMem_setupAllocators(name) < 0) {
+		//	return ALIFSTATUS_ERR("غير معروف ALIFMALLOC حجز ذاكرة");
+		//}
+	}
+
+	preConfig_setGlobalVars(&config);
+
+	if (config.configureLocale) {
+		//if (config.coerce_c_locale) {
+		//	if (!_Py_CoerceLegacyLocale(config.coerce_c_locale_warn)) {
+		//		/* C locale not coerced */
+		//		config.coerce_c_locale = 0;
+		//	}
+		//}
+
+		/* Set LC_CTYPE to the user preferred locale */
+		alif_setLocaleFromEnv(LC_CTYPE);
+	}
+
+	/* Write the new pre-configuration into alifRuntime */
+	//preConfig_copy(&alifRuntime.preConfig, &config);
+
+	return ALIFSTATUS_OK();
 }
