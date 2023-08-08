@@ -13,15 +13,21 @@
     <ClCompile Include="..\source\Objects\preConfig.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\Objects\getOpt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\source\Include\alifConfig.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\Include\core\alifCore_alifCycle.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
     <ClInclude Include="..\source\Include\core\alifCore_alifMem.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\core\alifCore_alifMem_init.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\core\alifCore_alifMemory_init.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
     <ClInclude Include="..\source\Include\core\alifCore_alifThread.h">
@@ -30,7 +36,19 @@
     <ClInclude Include="..\source\Include\core\alifCore_initConfig.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\Include\core\alifCore_runtime.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\core\alifCore_runtime_init.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\alifConfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\source\Include\alifCycle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\alifDebug.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\source\Include\alifDefinations.h">
@@ -57,39 +75,25 @@
     <ClInclude Include="..\source\Include\exports.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\Include\initConfig.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\Include\core\alifCore_runtime.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\Include\core\alifCore_alifMem_init.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\Include\core\alifCore_runtime_init.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\Include\core\alifCore_alifMemory_init.h">
-      <Filter>Header Core Files</Filter>
-    <ClInclude Include="..\source\Include\alifDebug.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\Include\fileObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\Include\initConfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\core\alifCore_getOpt.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{659d26bd-5767-448f-881e-c8cf60067067}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Core Files">
-      <UniqueIdentifier>{828a3f92-566e-451f-bd25-0a893a326893}</UniqueIdentifier>
+      <UniqueIdentifier>{31f5b69f-b502-4517-805f-459d3eeefb0d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{1467c152-995b-48ff-b582-13bb51fce86e}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files">
-      <UniqueIdentifier>{8e77421a-3dcb-4326-b34b-64a9dc830093}</UniqueIdentifier>
+      <UniqueIdentifier>{927dc9d5-04ba-46fc-9c92-43d1880e09a5}</UniqueIdentifier>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="cpp.hint" />
   </ItemGroup>
 </Project>

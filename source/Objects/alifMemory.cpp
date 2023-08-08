@@ -22,28 +22,10 @@ void alifMem_raw_free(void* ctx, void* ptr);
 void get_allocator_unlocked(AlifMemAllocateDomain domain, AlifMemAllocatorExternal* allocator);
 void set_allocator_unlocked(AlifMemAllocateDomain domain, AlifMemAllocatorExternal* allocator);
 
-static MemoryState _state;
+static MemoryState _state; // قد لا يكون لها حاجة
 
 inline MemoryState* get_state(void) {
-	return &state;
-}
-
-void write_size_t(void* p, size_t n)
-{
-	uint8_t* q = (uint8_t*)p + 8 - 1;
-	int i;
-
-	for (i = 8; --i >= 0; --q) {
-		*q = (uint8_t)(n & 0xff);
-		n >>= 8;
-	}
-}
-
-size_t read_size_t(const void* p)
-{
-	const uint8_t* q = (const uint8_t*)p;
-	size_t result = *q++;
-	size_t i;
+	return &_state;
 }
 
 // raw memory ///////////////////////////////////////////////////////////////////////////////
@@ -352,7 +334,7 @@ void alifMem_free(void* ctx, void* ptr) {
 char* alifMem_rawStrDup(const char* str)
 {
 	size_t size = strlen(str) + 1;
-	char* copy = (char*)AlifMem_malloc(nullptr, size);
+	char* copy = (char*)alifMem_malloc(nullptr, size);
 	if (copy == nullptr) {
 		return nullptr;
 	}
@@ -864,8 +846,7 @@ void* object_realloc(void* ctx, void* ptr, size_t size) {
 
 }
 
-void
-write_size_t(void* p, size_t n)
+void write_size_t(void* p, size_t n)
 {
 	uint8_t* q = (uint8_t*)p + 8 - 1;
 	int i;
@@ -876,8 +857,7 @@ write_size_t(void* p, size_t n)
 	}
 }
 
-size_t
-read_size_t(const void* p)
+size_t read_size_t(const void* p)
 {
 	const uint8_t* q = (const uint8_t*)p;
 	size_t result = *q++;

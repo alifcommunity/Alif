@@ -1,4 +1,5 @@
 #include "Alif.h"
+#include "alifCore_getOpt.h"
 #include "alifCore_initConfig.h"
 #include "alifCore_alifCycle.h"
 #include "alifCore_alifMem.h"
@@ -45,6 +46,64 @@ static void preCmdLine_getPreConfig(AlifPreCmdLine* _cmdLine, const AlifPreConfi
 }
 
 
+static void preCmdLine_setPreConfig(const AlifPreCmdLine* _cmdLine, AlifPreConfig* _config)
+{
+#define COPY_ATTR(ATTR) _config->ATTR = _cmdLine->ATTR
+
+	COPY_ATTR(isolated);
+	COPY_ATTR(useEnvironment);
+	//COPY_ATTR(devMode);
+
+#undef COPY_ATTR
+}
+
+
+/* Parse the command line arguments */
+static AlifStatus preCmdLine_parseCmdLine(AlifPreCmdLine* _cmdLine)
+{
+	const AlifWideStringList* argv = &_cmdLine->argv;
+
+	alifOS_resetGetOpt();
+	/* Don't log parsing errors into stderr here: alifConfig_read()
+	   is responsible for that */
+	alifOsOptErr = 0;
+	do {
+		int longIndex = -1;
+		int c = alifOS_getOpt(argv->length, argv->items, &longIndex);
+
+		if (c == EOF || c == 'c' || c == 'm') {
+			break;
+		}
+
+		switch (c) {
+		case 'E':
+			_cmdLine->useEnvironment = 0;
+			break;
+
+		case 'I':
+			_cmdLine->isolated = 1;
+			break;
+
+		case 'X':
+		{
+			AlifStatus status = alifWideStringList_append(&_cmdLine->xoptions, alifOsOptArg);
+			if (ALIFSTATUS_EXCEPTION(status)) {
+				return status;
+			}
+			break;
+		}
+
+		default:
+			/* ignore other argument:
+			   handled by alifConfig_read() */
+			break;
+		}
+	} while (1);
+
+	return ALIFSTATUS_OK();
+}
+
+
 AlifStatus alifPreCmdLine_read(AlifPreCmdLine* _cmdLine, const AlifPreConfig* _preConfig)
 {
 	preCmdLine_getPreConfig(_cmdLine, _preConfig);
@@ -77,8 +136,7 @@ AlifStatus alifPreCmdLine_read(AlifPreCmdLine* _cmdLine, const AlifPreConfig* _p
 	//}
 
 	// warn_default_encoding
-	if (alif_getXoption(&_cmdLine->xoptions, L"warn_default_encoding")
-		|| alif_getEnv(_cmdLine->useEnvironment, "PYTHONWARNDEFAULTENCODING"))
+	if (alifGet_xOption(&_cmdLine->xoptions, L"warnDefaultEncoding") || alif_getEnv(_cmdLine->useEnvironment, "ALIFWARNDEFAULTENCODING"))
 	{
 		_cmdLine->warnDefaultEncoding = 1;
 	}
@@ -168,6 +226,114 @@ static void preConfig_getGlobalVars(AlifPreConfig* _config)
 }
 
 
+const char* alif_getEnv(int _useEnvironment, const char* _name)
+{
+	//assert(_useEnvironment >= 0);
+
+	if (!_useEnvironment) {
+		return NULL;
+	}
+
+	const char* var = getenv(_name);
+	if (var && var[0] != '\0') {
+		return var;
+	}
+	else {
+		return NULL;
+	}
+}
+
+
+const wchar_t* alifGet_xOption(const AlifWideStringList* _xoptions, const wchar_t* _name)
+{
+	for (AlifSizeT i = 0; i < _xoptions->length; i++) {
+		const wchar_t* option = _xoptions->items[i];
+		size_t len;
+		wchar_t* sep = (wchar_t*)wcschr(option, L'='); // تم عمل تغيير للنوع المرجع - يجب المراجعة قبل الإعتماد
+		if (sep != NULL) {
+			len = (sep - option);
+		}
+		else {
+			len = wcslen(option);
+		}
+		if (wcsncmp(option, _name, len) == 0 && _name[len] == L'\0') {
+			return option;
+		}
+	}
+	return NULL;
+}
+
+
+static AlifStatus preConfig_initUtf8Mode(AlifPreConfig* _config, const AlifPreCmdLine* _cmdLine)
+{
+//#ifdef MS_WINDOWS
+//	if (_config->legacyWindowsFsEncoding) {
+//		_config->utf8Mode = 0;
+//	}
+//#endif
+
+	if (_config->utf8_mode >= 0) {
+		return ALIFSTATUS_OK();
+	}
+
+	const wchar_t* xopt;
+	xopt = _Py_get_xoption(&_cmdLine->xoptions, L"utf8");
+	if (xopt) {
+		wchar_t* sep = wcschr(xopt, L'=');
+		if (sep) {
+			xopt = sep + 1;
+			if (wcscmp(xopt, L"1") == 0) {
+				_config->utf8_mode = 1;
+			}
+			else if (wcscmp(xopt, L"0") == 0) {
+				_config->utf8_mode = 0;
+			}
+			else {
+				return _PyStatus_ERR("invalid -X utf8 option value");
+			}
+		}
+		else {
+			_config->utf8_mode = 1;
+		}
+		return ALIFSTATUS_OK();
+	}
+
+	const char* opt = _Py_GetEnv(_config->use_environment, "PYTHONUTF8");
+	if (opt) {
+		if (strcmp(opt, "1") == 0) {
+			_config->utf8_mode = 1;
+		}
+		else if (strcmp(opt, "0") == 0) {
+			_config->utf8_mode = 0;
+		}
+		else {
+			return _PyStatus_ERR("invalid PYTHONUTF8 environment "
+				"variable value");
+		}
+		return ALIFSTATUS_OK()();
+	}
+
+
+#ifndef MS_WINDOWS
+	if (config->utf8_mode < 0) {
+		/* The C locale and the POSIX locale enable the UTF-8 Mode (PEP 540) */
+		const char* ctype_loc = setlocale(LC_CTYPE, NULL);
+		if (ctype_loc != NULL
+			&& (strcmp(ctype_loc, "C") == 0
+				|| strcmp(ctype_loc, "POSIX") == 0))
+		{
+			config->utf8_mode = 1;
+		}
+	}
+#endif
+
+	if (_config->utf8_mode < 0) {
+		_config->utf8_mode = 0;
+	}
+	return ALIFSTATUS_OK()();
+}
+
+
 static AlifStatus preConfig_read(AlifPreConfig* _config, AlifPreCmdLine* _cmdLine)
 {
 	AlifStatus status{};
@@ -192,7 +358,7 @@ static AlifStatus preConfig_read(AlifPreConfig* _config, AlifPreCmdLine* _cmdLin
 	}
 
 	/* allocator */
-	status = preConfig_initAllocator(_config);
+	//status = preConfig_initAllocator(_config);
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		return status;
 	}

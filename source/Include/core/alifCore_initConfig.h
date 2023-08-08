@@ -33,14 +33,18 @@
 
 class AlifArgv { // صنف يحتوي عدد المعاملات الممررة من الطرفية وقيمها
 public:
-	alif_size_t argc;
+	AlifSizeT argc;
 	int useCharArgv;
 	char* const* charArgv;
 	wchar_t* const* wcharArgv;
 };
 
-AlifStatus alifArgv_asWstrList(const AlifArgv* args, AlifWideStringList* list);
+AlifStatus alifArgv_asWstrList(const AlifArgv*, AlifWideStringList*);
 
+/* ___________ Helper functions ___________ */
+
+extern const wchar_t* alifGet_xOption(const AlifWideStringList*,const wchar_t*);
+extern const char* alif_getEnv(int, const char*);
 
 /* ___________ AlifPreCmdline ___________ */
 
