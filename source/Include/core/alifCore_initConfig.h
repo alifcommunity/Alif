@@ -71,7 +71,7 @@ extern AlifStatus alifPreConfig_initFromPreConfig(AlifPreConfig*);
 //extern AlifObject* alifPreConfig_asDict(const AlifPreConfig*);
 //extern void alifPreConfig_getConfig(AlifPreConfig*, const AlifConfig*);
 extern AlifStatus alifPreConfig_read(AlifPreConfig*, const AlifArgv*);
-//extern AlifStatus alifPreConfig_write(const AlifPreConfig*);
+extern AlifStatus alifPreConfig_write(const AlifPreConfig*);
 
 
 /* ___________ AlifConfig ___________ */
