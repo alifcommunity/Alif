@@ -5,9 +5,10 @@
 
 // failure -> 0, success -> 1.
 enum AlifLockStatus {
-	PY_LOCK_FAILURE = 0,
-	PY_LOCK_ACQUIRED = 1,
-	PY_LOCK_INTR
+
+	alifLockFailure = 0,
+	alifLockAcquired = 1,
+	alifLockEnter
 };
 
 #if (defined(__APPLE__) || defined(__linux__) || defined(_WIN32) \

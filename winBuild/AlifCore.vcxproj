@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -146,6 +146,7 @@
     <ClInclude Include="..\source\Include\alifMemory.h" />
     <ClInclude Include="..\source\Include\alifPort.h" />
     <ClInclude Include="..\source\Include\alifVersion.h" />
+    <ClInclude Include="..\source\Include\condVar.h" />
     <ClInclude Include="..\source\Include\core\alifCore_alifCycle.h" />
     <ClInclude Include="..\source\Include\alifThread.h" />
     <ClInclude Include="..\source\Include\alifThread_stubs.h" />
@@ -153,17 +154,22 @@
     <ClInclude Include="..\source\Include\core\alifCore_alifMemory_init.h" />
     <ClInclude Include="..\source\Include\core\alifCore_alifMem_init.h" />
     <ClInclude Include="..\source\Include\core\alifCore_alifThread.h" />
+    <ClInclude Include="..\source\Include\core\alifCore_condVar.h" />
     <ClInclude Include="..\source\Include\core\alifCore_getOpt.h" />
     <ClInclude Include="..\source\Include\core\alifCore_initConfig.h" />
     <ClInclude Include="..\source\Include\core\alifCore_runtime.h" />
     <ClInclude Include="..\source\Include\core\alifCore_runtime_init.h" />
+    <ClInclude Include="..\source\Include\core\alifCore_time.h" />
     <ClInclude Include="..\source\Include\exports.h" />
     <ClInclude Include="..\source\Include\fileObject.h" />
     <ClInclude Include="..\source\Include\initConfig.h" />
+    <ClInclude Include="..\source\Include\thread_nt.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\Objects\alifCycle.cpp" />
     <ClCompile Include="..\source\Objects\alifMemory.cpp" />
+    <ClCompile Include="..\source\Objects\alifState.cpp" />
+    <ClCompile Include="..\source\Objects\alifTime.cpp" />
     <ClCompile Include="..\source\Objects\getOpt.cpp" />
     <ClCompile Include="..\source\Objects\initConfig.cpp" />
     <ClCompile Include="..\source\Objects\preConfig.cpp" />

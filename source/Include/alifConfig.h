@@ -174,3 +174,5 @@ typedef _W64 int Alif_ssize_t;
 #endif
 
 #define WITH_ALIFMALLOC 1
+
+#define HAVE_PROCESS_H 1

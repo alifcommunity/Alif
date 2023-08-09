@@ -57,3 +57,14 @@
 #               endif /* ALIF_BUILD_CORE */
 #       endif /* HAVE_DECLSPEC_DLL */
 #endif /* ALIF_ENABLE_SHARED */
+
+#if defined(_MSC_VER)
+   /* ignore warnings if the compiler decides not to inline a function */
+#  pragma warning(disable: 4710)
+   /* fastest possible local call under MSVC */
+#  define ALIF_LOCAL(type) static type __fastcall
+#  define ALIF_LOCAL_INLINE(type) static __inline type __fastcall
+#else
+#  define ALIF_LOCAL(type) static type
+#  define ALIF_LOCAL_INLINE(type) static inline type
+#endif

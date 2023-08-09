@@ -53,6 +53,9 @@ AlifStatus alifRuntime_initialize()
 		return ALIFSTATUS_OK();
 	}
 	runtimeInitialized = 1;
+
+	return alifRuntimeState_init(&runtime);
+
 }
 
 
@@ -154,7 +157,7 @@ AlifStatus alif_preInitializeFromAlifArgv(const AlifPreConfig* _srcConfig, const
 {
 	AlifStatus status{};
 
-	//status = alifRuntime_initialize();
+	status = alifRuntime_initialize();
 	//if (ALIFSTATUS_EXCEPTION(status)) {
 	//	return status;
 	//}
