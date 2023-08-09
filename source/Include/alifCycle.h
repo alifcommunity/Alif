@@ -1,6 +1,6 @@
 #pragma once
 #include "alifCore_runtime.h"
 
-extern AlifRuntimeState runtime;
+extern AlifRuntimeState alifRuntime;
 
 AlifStatus alifInit_fromConfig(const AlifConfig*);

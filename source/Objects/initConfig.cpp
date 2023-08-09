@@ -212,8 +212,7 @@ AlifStatus alifConfig_setCharArgv(AlifConfig* _config, AlifSizeT _argc, char* co
 		.charArgv = _argv,
 		.wcharArgv = nullptr
 	};
-	//return _alifConfig_setAlifArgv(_config, &args);
-	return (AlifStatus)0;
+	return alifConfig_setAlifArgv(_config, &args);
 }
 
 
