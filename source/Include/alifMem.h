@@ -2,13 +2,13 @@
 
 enum AlifMemAllocateDomain{
 	/* AlifMem_RawMalloc(), AlifMem_RawRealloc() and AlifMem_RawFree() */
-	PYMEM_DOMAIN_RAW,
+	ALIFMEM_DOMAIN_RAW,
 
 	/* AlifMem_Malloc(), AlifMem_Realloc() and AlifMem_Free() */
-	PYMEM_DOMAIN_MEM,
+	ALIFMEM_DOMAIN_MEM,
 
 	/* AlifObject_Malloc(), AlifObject_Realloc() and AlifObject_Free() */
-	PYMEM_DOMAIN_OBJ
+	ALIFMEM_DOMAIN_OBJ
 };
 
 enum AlifMemAllocatorName {

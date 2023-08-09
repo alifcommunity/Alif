@@ -21,7 +21,7 @@
 
 #if ALIF_USE_CV_LOCKS
 
-#include "condvar.h"
+#include "condVar.h"
 
 class NRMutex
 {

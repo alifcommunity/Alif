@@ -61,8 +61,8 @@ int64_t alifTime_mulDiv(int64_t ticks, int64_t mul, int64_t div) {
 }
 
 #ifdef MS_WINDOWS
-static int
-py_win_perf_counter_frequency(LONGLONG* pfrequency, int raise)
+
+int alifWin_perf_counter_frequency(LONGLONG* pfrequency, int raise)
 {
 	LONGLONG frequency;
 
@@ -87,7 +87,7 @@ int alif_get_win_perf_counter(int64_t* tp, AlifClockInfoT* info, int raiseExc)
 
 	static LONGLONG frequency = 0;
 	if (frequency == 0) {
-		if (py_win_perf_counter_frequency(&frequency, raiseExc) < 0) {
+		if (alifWin_perf_counter_frequency(&frequency, raiseExc) < 0) {
 			return -1;
 		}
 	}
@@ -137,7 +137,7 @@ int64_t alifTime_divide_round_up(const int64_t t, const int64_t k)
 
 #define ALIF_ABS(x) ((x) < 0 ? -(x) : (x))
 
-int64_t pytime_divide(const int64_t t, const int64_t k,	const AlifTimeRoundT round)
+int64_t alifTime_divide(const int64_t t, const int64_t k,	const AlifTimeRoundT round)
 {
 
 	if (round == alifTimeRoundHalfEven) {
@@ -177,7 +177,7 @@ int64_t pytime_divide(const int64_t t, const int64_t k,	const AlifTimeRoundT rou
 
 int64_t alifTime_asMicroseconds(int64_t t, AlifTimeRoundT round) {
 
-	return pytime_divide(t, 1000, round);
+	return alifTime_divide(t, 1000, round);
 
 }
 
