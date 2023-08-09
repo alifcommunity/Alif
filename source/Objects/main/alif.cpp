@@ -7,7 +7,10 @@ static AlifStatus alifMain_init(const AlifArgv* _args) {
 
 	AlifStatus status{};
 
-
+	//status = alifRuntime_initialize();
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
 	AlifPreConfig preConfig{};
 	alifPreConfig_initAlifConfig(&preConfig);
@@ -26,9 +29,18 @@ static AlifStatus alifMain_init(const AlifArgv* _args) {
 	else {
 		status = alifConfig_setArgv(&config, _args->argc, _args->wcharArgv);
 	}
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		goto done;
+	}
 
-	//status = alifInit_fromConfig(&config);
+	status = alifInit_fromConfig(&config);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		goto done;
+	}
+	status = ALIFSTATUS_OK();
 
+done:
+	//alifConfig_clear(&config);
 	return status;
 }
 

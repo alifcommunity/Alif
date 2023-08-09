@@ -555,7 +555,7 @@ done:
 
    Do nothing if called after alif_initialize(): ignore the new
    pre-configuration. */
-AlifStatus preConfig_write(const AlifPreConfig* _srcConfig)
+AlifStatus alifPreConfig_write(const AlifPreConfig* _srcConfig)
 {
 	AlifPreConfig config{};
 

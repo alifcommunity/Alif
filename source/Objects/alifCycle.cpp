@@ -23,15 +23,15 @@ __attribute__((
 
 #endif
 
-AlifRuntimeState runtime
+AlifRuntimeState alifRuntime
 #if defined(__linux__) && (defined(__GNUC__) || defined(__clang__))
 __attribute__ ((section(".alifRuntime")))
 #endif
 = { .allocators = {
 	.standard = {
-		{ &runtime.allocators.debug.raw, alifMem_debug_raw_malloc, alifMem_debug_raw_calloc, alifMem_debug_raw_realloc, alifMem_debug_raw_free }
-		,{ &runtime.allocators.debug.mem, alifMem_malloc, alifMem_calloc, alifMem_realloc, alifMem_free }
-		,{ &runtime.allocators.debug.obj, alifMem_malloc, alifMem_calloc, alifMem_realloc, alifMem_free },
+		{ &alifRuntime.allocators.debug.raw, alifMem_debug_raw_malloc, alifMem_debug_raw_calloc, alifMem_debug_raw_realloc, alifMem_debug_raw_free }
+		,{ &alifRuntime.allocators.debug.mem, alifMem_malloc, alifMem_calloc, alifMem_realloc, alifMem_free }
+		,{ &alifRuntime.allocators.debug.obj, alifMem_malloc, alifMem_calloc, alifMem_realloc, alifMem_free },
 		},
 	.debug = {
 		{ 'r',{ nullptr, alifMem_raw_malloc, alifMem_raw_calloc, alifMem_raw_realloc, alifMem_raw_free } }
@@ -54,7 +54,7 @@ AlifStatus alifRuntime_initialize()
 	}
 	runtimeInitialized = 1;
 
-	return alifRuntimeState_init(&runtime);
+	return alifRuntimeState_init(&alifRuntime);
 
 }
 
@@ -195,7 +195,7 @@ AlifStatus alif_preInitializeFromAlifArgv(const AlifPreConfig* _srcConfig, const
 }
 
 
-static AlifStatus alifInit_core(const AlifConfig* _srcConfig)
+static AlifStatus alifInit_core(AlifRuntimeState* _runtime, const AlifConfig* _srcConfig, AlifThreadState** _tStateP)
 {
 	AlifStatus status;
 	AlifConfig config = *_srcConfig;
@@ -208,9 +208,31 @@ static AlifStatus alifInit_core(const AlifConfig* _srcConfig)
 
 AlifStatus alifInit_fromConfig(const AlifConfig* _config)
 {
+	if (_config == nullptr) {
+		return ALIFSTATUS_ERR("متغير التهيئة فارغ");
+	}
+
 	AlifStatus status{};
 
-	status = alifInit_core(_config);
+	status = alifRuntime_initialize();
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+	AlifRuntimeState* runtime = &alifRuntime;
+
+	AlifThreadState* tState = nullptr;
+	status = alifInit_core(runtime, _config, &tState);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+	//_config = alifInterpreterState_getConfig(tState->interp);
+
+	if (_config->initMain) {
+		//status = alifInit_main(tState);
+		if (ALIFSTATUS_EXCEPTION(status)) {
+			return status;
+		}
+	}
 
 	return ALIFSTATUS_OK();
 }

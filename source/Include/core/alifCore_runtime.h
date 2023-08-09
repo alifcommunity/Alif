@@ -9,7 +9,6 @@
 class AlifRuntimeState
 {
 public:
-
 	int _initialized;
 
 	int preinitializing;
@@ -41,8 +40,7 @@ public:
 	AlifTSST autoTSSKey;
 
 	AlifTSST trashTSSKey;
-
-
-
 };
 
+
+extern AlifStatus alifRuntimeState_init(AlifRuntimeState*);

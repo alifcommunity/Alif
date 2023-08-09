@@ -94,11 +94,11 @@ void* alifMem_calloc(void* ctx, size_t nElement, size_t elSize);
 void* alifMem_realloc(void* ctx, void* ptr, size_t newSize);
 void alifMem_free(void* ctx, void* ptr);
 
-#define ALIFDEBUGRAW_ALLOC {&runtime.allocators.debug.raw, alifMem_debug_raw_alloc,  alifMem_debug_raw_calloc, alifMem_debug_raw_realloc, alifMem_debug_raw_free}
+#define ALIFDEBUGRAW_ALLOC {&alifRuntime.allocators.debug.raw, alifMem_debug_raw_alloc,  alifMem_debug_raw_calloc, alifMem_debug_raw_realloc, alifMem_debug_raw_free}
 
-#define ALIFDEBUGMEM_ALLOC {&runtime.allocators.debug.mem, alifMem_debug_raw_malloc, alifMem_debug_raw_calloc, alifMem_debug_raw_realloc, alifMem_debug_raw_free}
+#define ALIFDEBUGMEM_ALLOC {&alifRuntime.allocators.debug.mem, alifMem_debug_raw_malloc, alifMem_debug_raw_calloc, alifMem_debug_raw_realloc, alifMem_debug_raw_free}
 
-#define ALIFDEBUGMEM_ALLOC {&runtime.allocators.debug.obj, alifMem_debug_raw_malloc, alifMem_debug_raw_calloc, alifMem_debug_raw_realloc, alifMem_debug_raw_free}
+#define ALIFDEBUGMEM_ALLOC {&alifRuntime.allocators.debug.obj, alifMem_debug_raw_malloc, alifMem_debug_raw_calloc, alifMem_debug_raw_realloc, alifMem_debug_raw_free}
 
 
 #ifdef WITH_ALIFMALLOC
@@ -175,11 +175,11 @@ void alifMem_arenaFree(void* ctx, void* ptr, size_t size)
 #  define _ALIF_NO_SANITIZE_MEMORY
 #endif
 
-#define ALLOCATORS_MUTEX (runtime.allocators.mutex)
-#define ALIFMEM_RAW (runtime.allocators.standard.raw)
-#define ALIFMEM (runtime.allocators.standard.mem)
-#define ALIFOBJECT (runtime.allocators.standard.obj)
-#define ALIFMEM_DEBUG (runtime.allocators.debug)
+#define ALLOCATORS_MUTEX (alifRuntime.allocators.mutex)
+#define ALIFMEM_RAW (alifRuntime.allocators.standard.raw)
+#define ALIFMEM (alifRuntime.allocators.standard.mem)
+#define ALIFOBJECT (alifRuntime.allocators.standard.obj)
+#define ALIFMEM_DEBUG (alifRuntime.allocators.debug)
 
 int set_default_alloator_unlocked(AlifMemAllocateDomain domain, int debug, AlifMemAllocatorExternal* oldAlloc) {
 

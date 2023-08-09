@@ -10,6 +10,7 @@
 #endif // MS_WINDOWS
 
 #include "alifPort.h"
+#include "alifTypeDefs.h"
 #include "alifMem.h"
 #include "alifDebug.h"
 #include "fileObject.h"
