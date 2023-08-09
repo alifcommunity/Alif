@@ -190,11 +190,11 @@ int set_default_alloator_unlocked(AlifMemAllocateDomain domain, int debug, AlifM
 	AlifMemAllocatorExternal newAlloc;
 	switch (domain)
 	{
-	case PYMEM_DOMAIN_RAW: newAlloc = ALIFRAW_ALLOC;
+	case ALIFMEM_DOMAIN_RAW: newAlloc = ALIFRAW_ALLOC;
 		break;
-	case PYMEM_DOMAIN_MEM: newAlloc = ALIFMEM_ALLOC;
+	case ALIFMEM_DOMAIN_MEM: newAlloc = ALIFMEM_ALLOC;
 		break;
-	case PYMEM_DOMAIN_OBJ: newAlloc = ALIFOBJ_ALLOC;
+	case ALIFMEM_DOMAIN_OBJ: newAlloc = ALIFOBJ_ALLOC;
 		break;
 	default:
 		return -1;
@@ -231,7 +231,7 @@ void set_up_debug_hooks_domain_unlocked(AlifMemAllocateDomain domain)
 {
 	AlifMemAllocatorExternal alloc;
 
-	if (domain == PYMEM_DOMAIN_RAW) {
+	if (domain == ALIFMEM_DOMAIN_RAW) {
 		if (ALIFMEM_RAW.malloc == alifMem_debug_raw_malloc) {
 			return;
 		}
@@ -244,7 +244,7 @@ void set_up_debug_hooks_domain_unlocked(AlifMemAllocateDomain domain)
 		alloc.free = alifMem_debug_raw_free;
 		set_allocator_unlocked(domain, &alloc);
 	}
-	else if (domain == PYMEM_DOMAIN_MEM) {
+	else if (domain == ALIFMEM_DOMAIN_MEM) {
 		if (ALIFMEM.malloc == alifMem_debug_raw_malloc) {
 			return;
 		}
@@ -257,7 +257,7 @@ void set_up_debug_hooks_domain_unlocked(AlifMemAllocateDomain domain)
 		alloc.free = alifMem_debug_raw_free;
 		set_allocator_unlocked(domain, &alloc);
 	}
-	else if (domain == PYMEM_DOMAIN_OBJ) {
+	else if (domain == ALIFMEM_DOMAIN_OBJ) {
 		if (ALIFOBJECT.malloc == alifMem_debug_raw_malloc) {
 			return;
 		}
@@ -276,9 +276,9 @@ void get_allocator_unlocked(AlifMemAllocateDomain domain, AlifMemAllocatorExtern
 {
 	switch (domain)
 	{
-	case PYMEM_DOMAIN_RAW: *allocator = ALIFMEM_RAW; break;
-	case PYMEM_DOMAIN_MEM: *allocator = ALIFMEM; break;
-	case PYMEM_DOMAIN_OBJ: *allocator = ALIFOBJECT; break;
+	case ALIFMEM_DOMAIN_RAW: *allocator = ALIFMEM_RAW; break;
+	case ALIFMEM_DOMAIN_MEM: *allocator = ALIFMEM; break;
+	case ALIFMEM_DOMAIN_OBJ: *allocator = ALIFOBJECT; break;
 	default:
 		allocator->ctx = nullptr;
 		allocator->malloc = nullptr;
@@ -294,9 +294,9 @@ void set_allocator_unlocked(AlifMemAllocateDomain domain, AlifMemAllocatorExtern
 
 	switch (domain)
 	{
-	case PYMEM_DOMAIN_RAW: ALIFMEM_RAW = *allocator; break;
-	case PYMEM_DOMAIN_MEM: ALIFMEM = *allocator; break;
-	case PYMEM_DOMAIN_OBJ: ALIFOBJECT = *allocator; break;
+	case ALIFMEM_DOMAIN_RAW: ALIFMEM_RAW = *allocator; break;
+	case ALIFMEM_DOMAIN_MEM: ALIFMEM = *allocator; break;
+	case ALIFMEM_DOMAIN_OBJ: ALIFOBJECT = *allocator; break;
 	}
 
 }

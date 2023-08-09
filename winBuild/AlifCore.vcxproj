@@ -168,6 +168,7 @@
   <ItemGroup>
     <ClCompile Include="..\source\Objects\alifCycle.cpp" />
     <ClCompile Include="..\source\Objects\alifMemory.cpp" />
+    <ClCompile Include="..\source\Objects\alifState.cpp" />
     <ClCompile Include="..\source\Objects\alifTime.cpp" />
     <ClCompile Include="..\source\Objects\getOpt.cpp" />
     <ClCompile Include="..\source\Objects\initConfig.cpp" />

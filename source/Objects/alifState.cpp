@@ -18,5 +18,5 @@ AlifStatus alifRuntimeState_init(AlifRuntimeState* runtime) {
 
 
 
-
+	return 
 }
