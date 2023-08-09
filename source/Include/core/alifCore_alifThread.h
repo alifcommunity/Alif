@@ -1,5 +1,4 @@
 #pragma once
-#include "alifThread_Stubs.h"
 
 #ifndef POSIX_THREADS
 # ifdef HAVE_PTHREAD_H

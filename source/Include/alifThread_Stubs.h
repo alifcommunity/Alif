@@ -1,5 +1,4 @@
 #pragma once
-#include "alif.h"
 
 #ifndef POSIX_THREADS
 #  define POSIX_THREADS 1

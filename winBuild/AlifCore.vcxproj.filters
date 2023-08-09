@@ -84,6 +84,15 @@
     <ClInclude Include="..\source\Include\core\alifCore_getOpt.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\Include\core\alifCore_condVar.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\condVar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\thread_nt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Core Files">
