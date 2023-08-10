@@ -22,6 +22,9 @@
     <ClCompile Include="..\source\Objects\alifTime.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\Objects\thread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\Include\core\alifCore_alifCycle.h">

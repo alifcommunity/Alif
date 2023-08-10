@@ -50,7 +50,7 @@ ALIF_LOCAL_INLINE(int)alifCond_init(AlifCond_T* cv) {
 	return 0;
 }
 
-ALIF_LOCAL_INLINE(int)alifCond_fnit(AlifCond_T* cv) {
+ALIF_LOCAL_INLINE(int)alifCond_finit(AlifCond_T* cv) {
 
 	return CloseHandle(cv->sem) ? 0 : -1;
 }

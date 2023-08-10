@@ -1,5 +1,10 @@
 #pragma once
 
+ALIFAPI_FUNC(void*) raw_malloc(size_t size);
+ALIFAPI_FUNC(void*) raw_calloc(size_t nelem, size_t elsize);
+ALIFAPI_FUNC(void*) raw_realloc(void* ptr, size_t new_size);
+ALIFAPI_FUNC(void) raw_free(void* ptr);
+
 enum AlifMemAllocateDomain{
 	/* AlifMem_RawMalloc(), AlifMem_RawRealloc() and AlifMem_RawFree() */
 	ALIFMEM_DOMAIN_RAW,
@@ -41,6 +46,9 @@ public:
 	/* release a memory block */
 	void (*free) (void* ctx, void* ptr);
 };
+
+ALIFAPI_FUNC(void) alifMem_setAllocator(AlifMemAllocateDomain domain,
+	AlifMemAllocatorExternal* allocator);
 
 class AlifObjectArenaAllocator {
 public:
