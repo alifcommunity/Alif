@@ -34,7 +34,7 @@ public:
 } ;
 typedef NRMutex* PNRMutex;
 
-PNRMutex allocNonRecursiveMutex() {
+PNRMutex alloc_nonRecursiveMutex() {
 
 	PNRMutex m = (PNRMutex)raw_malloc(sizeof(NRMutex));
 	if (!m)
@@ -114,23 +114,24 @@ void alifThread__init_thread()
 	// Initialization of the C package should not be needed.
 }
 
-void* alifThread_allocate_lock() {
+AlifThreadTypeLock alifThread_allocateLock() {
 
 	PNRMutex mutex;
 
 	if (!INITIALIZED) {
-		alifThread_init_thread();
+		alifThread_initThread();
 	}
 
-	mutex = allocNonRecursiveMutex();
+	mutex = alloc_nonRecursiveMutex();
 
-	void* alock = (void*)mutex;
+	AlifThreadTypeLock alock = (AlifThreadTypeLock)mutex;
+	//assert(aLock);
 
 	return alock;
 
 }
 
-void alifThread_free_lock(void* alock) {
+void alifThread_freeLock(void* alock) {
 
 	freeNonRecursiveMutex((PNRMutex)alock);
 

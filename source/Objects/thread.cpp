@@ -13,7 +13,7 @@ void alifThread__init_thread(void); /* Forward */
 
 #define INITIALIZED alifRuntime.threads.initialized
 
-void alifThread_init_thread() {
+void alifThread_initThread() {
 
 	if (INITIALIZED) {
 		return;

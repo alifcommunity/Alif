@@ -1,5 +1,5 @@
 #include "alif.h"
-//#include "alifCore_alifCycle.h"
+#include "alifCore_alifCycle.h"
 #include "alifCore_initConfig.h"
 #include "alifCore_alifMem.h"
 #include "alifCore_runtime_init.h"
@@ -14,21 +14,24 @@
 	#endif
 #endif
 
+
+static const AlifRuntimeState initial = ALIFRUNTIMESTATE_INIT(alifRuntime);
+
 #define NUMLOCKS 9
 
 
-int alloc_for_runtime(void* locks[NUMLOCKS]) {
+static int alloc_forRuntime(AlifThreadTypeLock locks[NUMLOCKS]) {
 
 	AlifMemAllocatorExternal oldAlloc{};
 
 	alifMem_setDefaultAllocator(ALIFMEM_DOMAIN_RAW, &oldAlloc);
 
 	for (int i = 0; i < NUMLOCKS; i++) {
-		void* lock = alifThread_allocate_lock();
-		if (lock == NULL) {
+		AlifThreadTypeLock lock = alifThread_allocateLock();
+		if (lock == nullptr) {
 			for (int j = 0; j < i; j++) {
-				alifThread_free_lock(locks[j]);
-				locks[j] = NULL;
+				alifThread_freeLock(locks[j]);
+				locks[j] = nullptr;
 			}
 			break;
 		}
@@ -72,8 +75,7 @@ AlifStatus alifRuntimeState_init(AlifRuntimeState* _runtime)
 		return ALIFSTATUS_NO_MEMORY();
 	}
 
-	init_runtime(_runtime, openCodeHook, openCodeUserData, auditHookHead,
-		unicode_next_index, locks);
+	init_runtime(_runtime, openCodeHook, openCodeUserData, auditHookHead, unicode_next_index, locks);
 
 	return ALIFSTATUS_OK();
 }
