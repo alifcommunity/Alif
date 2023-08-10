@@ -289,7 +289,6 @@ void get_allocator_unlocked(AlifMemAllocateDomain domain, AlifMemAllocatorExtern
 
 }
 
-
 void set_allocator_unlocked(AlifMemAllocateDomain domain, AlifMemAllocatorExternal* allocator) {
 
 	switch (domain)
@@ -299,6 +298,17 @@ void set_allocator_unlocked(AlifMemAllocateDomain domain, AlifMemAllocatorExtern
 	case ALIFMEM_DOMAIN_OBJ: ALIFOBJECT = *allocator; break;
 	}
 
+}
+
+void alifMem_setAllocator(AlifMemAllocateDomain domain, AlifMemAllocatorExternal *allocator) {
+
+	if (ALLOCATORS_MUTEX == nullptr) {
+		set_allocator_unlocked(domain, allocator);
+		return;
+	}
+	alifThread_acquire_lock(ALLOCATORS_MUTEX, WAIT_LOCK);
+	set_allocator_unlocked(domain, allocator);
+	alifThread_release_lock(ALLOCATORS_MUTEX);
 }
 
 void* raw_malloc(size_t size) {

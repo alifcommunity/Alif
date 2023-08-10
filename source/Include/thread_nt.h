@@ -2,6 +2,7 @@
 
 #include "alifMemory.h"
 #include "alifCore_time.h"
+#include "alifThread.h"
 
 #include <windows.h>
 #include <limits.h>
@@ -22,6 +23,7 @@
 #if ALIF_USE_CV_LOCKS
 
 #include "condVar.h"
+#include <thread.cpp>
 
 class NRMutex
 {
@@ -31,6 +33,35 @@ public:
 	int locked;
 } ;
 typedef NRMutex* PNRMutex;
+
+PNRMutex allocNonRecursiveMutex() {
+
+	PNRMutex m = (PNRMutex)raw_malloc(sizeof(NRMutex));
+	if (!m)
+		return nullptr;
+	if (alifCond_init(&m->cv))
+		goto fail;
+	if (alifMutex_init(&m->cs)) {
+		alifCond_finit(&m->cv);
+		goto fail;
+	}
+	m->locked = 0;
+	return m;
+fail:
+	raw_free(m);
+	return nullptr;
+}
+
+VOID freeNonRecursiveMutex(PNRMutex mutex) {
+
+	if (mutex) {
+
+		alifCond_finit(&mutex->cv);
+		alifMutex_fini(&mutex->cs);
+		raw_free(mutex);
+	}
+
+}
 
 const DWORD TIMEOUT_MS_MAX = 0xFFFFFFFE;
 
@@ -76,6 +107,33 @@ DWORD enterNonRecursiveMutex(PNRMutex mutex, DWORD millisecodes) {
 	/* else, it is WAIT_FAILED */
 	alifMutex_unlock(&mutex->cs); /* must ignore result here */
 	return result;
+}
+
+void alifThread__init_thread()
+{
+	// Initialization of the C package should not be needed.
+}
+
+void* alifThread_allocate_lock() {
+
+	PNRMutex mutex;
+
+	if (!INITIALIZED) {
+		alifThread_init_thread();
+	}
+
+	mutex = allocNonRecursiveMutex();
+
+	void* alock = (void*)mutex;
+
+	return alock;
+
+}
+
+void alifThread_free_lock(void* alock) {
+
+	freeNonRecursiveMutex((PNRMutex)alock);
+
 }
 
 AlifLockStatus alifThread_acquire_lock_timed(void* alock, ALIF_TIMEOUT_T microseconds, int intrFloag) {
