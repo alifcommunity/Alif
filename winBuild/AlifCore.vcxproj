@@ -161,9 +161,11 @@
     <ClInclude Include="..\source\Include\core\alifCore_runtime.h" />
     <ClInclude Include="..\source\Include\core\alifCore_runtime_init.h" />
     <ClInclude Include="..\source\Include\core\alifCore_time.h" />
+    <ClInclude Include="..\source\Include\core\alifCore_unicodeObject.h" />
     <ClInclude Include="..\source\Include\exports.h" />
     <ClInclude Include="..\source\Include\fileObject.h" />
     <ClInclude Include="..\source\Include\initConfig.h" />
+    <ClInclude Include="..\source\Include\sysModule.h" />
     <ClInclude Include="..\source\Include\thread_nt.h" />
   </ItemGroup>
   <ItemGroup>

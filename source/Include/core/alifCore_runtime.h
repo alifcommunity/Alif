@@ -3,8 +3,20 @@
 #include "alifMemory.h"
 #include "alifCore_alifMem.h"
 #include "alifCore_alifThread.h"
+#include "alifCore_unicodeObject.h"
 
 ///////////////////////////////////////////////////////////////////////////
+
+
+/* Runtime audit hook state */
+
+class AlifAuditHookEntry {
+public:
+	AlifAuditHookEntry* next;
+	AlifAuditHookFunction hookCFunction;
+	void* userData;
+};
+
 
 class AlifRuntimeState
 {
@@ -49,7 +61,9 @@ public:
 	public:
 		AlifThreadTypeLock mutex;
 		AlifAuditHookEntry* head;
-	} audit_hooks;
+	} auditHooks;
+
+	struct AlifUnicodeRuntimeState unicodeState;
 };
 
 

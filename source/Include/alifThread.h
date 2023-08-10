@@ -1,15 +1,13 @@
 #pragma once
 
-//#include "alif.h"
-//#include "thread_nt.h"
-
+typedef void* AlifThreadTypeLock;
 
 // failure -> 0, success -> 1.
 enum AlifLockStatus {
 
 	alifLockFailure = 0,
 	alifLockAcquired = 1,
-	alifLockEnter
+	alifLockIntr
 };
 
 #if (defined(__APPLE__) || defined(__linux__) || defined(_WIN32) \
@@ -18,8 +16,8 @@ enum AlifLockStatus {
 #define PY_HAVE_THREAD_NATIVE_ID
 #endif
 
-ALIFAPI_FUNC(void*)alifThread_allocate_lock();
-ALIFAPI_FUNC(void)alifThread_free_lock(void*);
+ALIFAPI_FUNC(AlifThreadTypeLock)alifThread_allocateLock();
+ALIFAPI_FUNC(void)alifThread_freeLock(AlifThreadTypeLock);
 #define WAIT_LOCK       1
 #define NOWAIT_LOCK     0
 
