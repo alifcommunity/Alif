@@ -7,7 +7,7 @@ static AlifStatus alifMain_init(const AlifArgv* _args) {
 
 	AlifStatus status{};
 
-	//status = alifRuntime_initialize();
+	status = alifRuntime_initialize();
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		return status;
 	}

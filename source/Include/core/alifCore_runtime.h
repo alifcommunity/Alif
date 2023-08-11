@@ -2,8 +2,20 @@
 
 #include "alifCore_alifMem.h"
 #include "alifCore_alifThread.h"
+#include "alifCore_unicodeObject.h"
 
 ///////////////////////////////////////////////////////////////////////////
+
+
+/* Runtime audit hook state */
+
+class AlifAuditHookEntry {
+public:
+	AlifAuditHookEntry* next;
+	AlifAuditHookFunction hookCFunction;
+	void* userData;
+};
+
 
 class AlifRuntimeState
 {
@@ -39,7 +51,23 @@ public:
 	AlifTSST autoTSSKey;
 
 	AlifTSST trashTSSKey;
+
+
+
+	AlifOpenCodeHookFunction openCodeHook;
+	void* openCodeUserData;
+	class {
+	public:
+		AlifThreadTypeLock mutex;
+		AlifAuditHookEntry* head;
+	} auditHooks;
+
+	struct AlifUnicodeRuntimeState unicodeState;
 };
 
 
 extern AlifStatus alifRuntimeState_init(AlifRuntimeState*);
+
+/* Initialize alifRuntimeState.
+   Return nullptr on success, or return an error message on failure. */
+extern AlifStatus alifRuntime_initialize();

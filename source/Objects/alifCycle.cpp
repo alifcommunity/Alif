@@ -55,7 +55,6 @@ AlifStatus alifRuntime_initialize()
 	runtimeInitialized = 1;
 
 	return alifRuntimeState_init(&alifRuntime);
-
 }
 
 

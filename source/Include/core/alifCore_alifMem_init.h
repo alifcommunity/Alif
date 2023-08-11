@@ -33,22 +33,17 @@ extern void* alifMem_calloc(void* ctx, size_t nElement, size_t elSize);
 extern void* alifMem_realloc(void* ctx, void* ptr, size_t newSize);
 extern void alifMem_free(void* ctx, void* ptr);
 
-#define ALIFDEBUGRAW_ALLOC {&alifRuntime.allocators.debug.raw, alifMem_debug_raw_malloc,  alifMem_debug_raw_calloc, alifMem_debug_raw_realloc, alifMem_debug_raw_free}
+#define ALIFDEBUGRAW_ALLOC(runtime) {&(runtime).allocators.debug.raw, alifMem_debug_raw_malloc,  alifMem_debug_raw_calloc, alifMem_debug_raw_realloc, alifMem_debug_raw_free, }
 
-#define ALIFDEBUGMEM_ALLOC {&alifRuntime.allocators.debug.mem, alifMem_malloc, alifMem_calloc, alifMem_realloc, alifMem_free}
+#define ALIFDEBUGMEM_ALLOC(runtime) {&(runtime).allocators.debug.mem, alifMem_malloc, alifMem_calloc, alifMem_realloc, alifMem_free, }
 
-#define ALIFDEBUGOBJ_ALLOC {&alifRuntime.allocators.debug.obj, alifMem_malloc, alifMem_calloc, alifMem_realloc, alifMem_free}
+#define ALIFDEBUGOBJ_ALLOC(runtime) {&(runtime).allocators.debug.obj, alifMem_malloc, alifMem_calloc, alifMem_realloc, alifMem_free, }
 
 extern void* alifMem_arenaAlloc(void*, size_t);
 extern void alifMem_arenaFree(void*, void*, size_t);
 
 #ifdef ALIF_DEBUG
-#define ALIFMEM_ALLOCATORS_STANDERD_INIT(runtime) \
-	{ \
-		ALIFDEBUGRAW_ALLOC(alifRuntime), \
-		ALIFDEBUGMEM_ALLOC(alifRuntime), \
-		ALIFDEBUGOBJ_ALLOC(alifRuntime), \
-	}
+#define ALIFMEM_ALLOCATORS_STANDERD_INIT(runtime) { ALIFDEBUGRAW_ALLOC(runtime), ALIFDEBUGMEM_ALLOC(runtime), ALIFDEBUGOBJ_ALLOC(runtime), }
 #else
 #define ALIFMEM_ALLOCATORS_STANDERD_INIT(runtime)\
 { \
@@ -58,12 +53,6 @@ extern void alifMem_arenaFree(void*, void*, size_t);
 }
 #endif
 
-#define ALIFMEM_ALLOCATORS_DEBUG_INIT \
-	{ \
-		{'r', ALIFRAW_ALLOC}, \
-	    {'m', ALIFMEM_ALLOC}, \
-		{'o', ALIFOBJ_ALLOC}, \
-	}
+#define ALIFMEM_ALLOCATORS_DEBUG_INIT {	{'r', ALIFRAW_ALLOC}, {'m', ALIFMEM_ALLOC}, {'o', ALIFOBJ_ALLOC}, }
 
-#define ALIFMEM_ALLOCATORS_OBJ_ARENA_INIT \
-	{ nullptr, alifMem_arenaAlloc, alifMem_arenaFree }
+#define ALIFMEM_ALLOCATORS_OBJ_ARENA_INIT { nullptr, alifMem_arenaAlloc, alifMem_arenaFree }

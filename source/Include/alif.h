@@ -19,4 +19,5 @@
 #include "initConfig.h"
 #include "alifThread.h"
 #include "alifCycle.h"
-#include "alifMemory.h"
+#include "sysModule.h"
+//#include "alifMemory.h"
