@@ -11,6 +11,8 @@
 
 #include "alifPort.h"
 #include "alifTypeDefs.h"
+#include "object.h"
+#include "methodObject.h"
 #include "alifMem.h"
 #include "alifDebug.h"
 #include "fileObject.h"

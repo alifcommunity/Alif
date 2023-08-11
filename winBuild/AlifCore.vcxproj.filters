@@ -25,6 +25,12 @@
     <ClCompile Include="..\source\Objects\thread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\Objects\object.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Objects\methodObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\Include\core\alifCore_alifCycle.h">
@@ -104,6 +110,15 @@
     </ClInclude>
     <ClInclude Include="..\source\Include\core\alifCore_time.h" />
     <ClInclude Include="..\source\Include\alifTypeDefs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\object.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\core\alifCore_alifState.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\methodObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

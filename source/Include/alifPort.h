@@ -2,6 +2,11 @@
 
 #include "alifConfig.h"
 
+#include <inttypes.h>
+
+#include <limits.h>
+
+#define ALIF_CAST(type, expr) ((type)(expr))
 
 #if defined(__CYGWIN__)
 #       define HAVE_DECLSPEC_DLL
@@ -31,6 +36,17 @@
 #define ALIF_COMP_DIAG_PUSH
 #define ALIF_COMP_DIAG_IGNORE_DEPR_DECLS
 #define ALIF_COMP_DIAG_POP
+#endif
+
+#if defined(ALIF_DEBUG)
+
+#  define ALIF_ALWAYS_INLINE
+#elif defined(__GNUC__) || defined(__clang__) || defined(__INTEL_COMPILER)
+#  define ALIF_ALWAYS_INLINE __attribute__((always_inline))
+#elif defined(_MSC_VER)
+#  define ALIF_ALWAYS_INLINE __forceinline
+#else
+#  define ALIF_ALWAYS_INLINE
 #endif
 
 
