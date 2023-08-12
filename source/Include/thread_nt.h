@@ -192,3 +192,43 @@ void alifThread_release_lock(void* alock) {
 
 #endif 
 
+int alifThread_tss_create(_alifTSST* key)
+{
+	if (key->isInitialized) {
+		return 0;
+	}
+
+	DWORD result = TlsAlloc();
+	if (result == TLS_OUT_OF_INDEXES) {
+		return -1;
+	}
+	/* In Windows, platform-specific key type is DWORD. */
+	key->key = result;
+	key->isInitialized = 1;
+	return 0;
+}
+
+void alifThread_tss_delete(_alifTSST* key)
+{
+	if (!key->isInitialized) {
+		return;
+	}
+
+	TlsFree(key->key);
+	key->key = TLS_OUT_OF_INDEXES;
+	key->isInitialized = 0;
+}
+
+int alifThread_tss_set(_alifTSST* key, void* value)
+{
+	BOOL ok = TlsSetValue(key->key, value);
+	return ok ? 0 : -1;
+}
+
+void* alifThread_tss_get(_alifTSST* key)
+{
+	DWORD error = GetLastError();
+	void* result = TlsGetValue(key->key);
+	SetLastError(error);
+	return result;
+}

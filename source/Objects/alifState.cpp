@@ -14,11 +14,81 @@
 	#endif
 #endif
 
+inline int tState_tss_initialized(_alifTSST* key)
+{
+	return alifThread_tss_isCreated(key);
+}
+
+inline int tState_tss_init(_alifTSST* key)
+{
+	return alifThread_tss_create(key);
+}
+
+inline void tState_tss_fini(_alifTSST* key)
+{
+	alifThread_tss_delete(key);
+}
+
+inline AlifThreadState* tstate_tss_get(_alifTSST* key)
+{
+	return (AlifThreadState*)alifThread_tss_get(key);
+}
+
+inline int tState_tss_set(_alifTSST* key, AlifThreadState* tstate)
+{
+	return alifThread_tss_set(key, (void*)tstate);
+}
+
+inline int tState_tss_clear(_alifTSST* key)
+{
+	return alifThread_tss_set(key, (void*)nullptr);
+}
+
+#ifdef HAVE_FORK
+
+AlifStatus tState_tss_reinit(_alifTSST* key)
+{
+	if (!tState_tss_initialized(key)) {
+		return ALIFStatus_OK();
+	}
+	alifThreadState* tState = tState_tss_get(key);
+
+	tState_tss_fini(key);
+	if (tState_tss_init(key) != 0) {
+		return ALIFStatus_NO_MEMORY();
+	}
+
+	if (tState && tState_tss_set(key, tState) != 0) {
+		return ALIFStatus_ERR("failed to re-set autoTSSkey");
+	}
+	return ALIFStatus_OK();
+}
+#endif
+
+#define GITSTATETSS_INITIALIZEF(runtime) \
+    tState_tss_initialized(&(runtime)->autoTSSKey)
+#define GITSTATETSS_INIT(runtime) \
+    tState_tss_init(&(runtime)->autoTSSKey)
+#define GITSTATETSS_FINI(runtime) \
+    tState_tss_fini(&(runtime)->autoTSSKey)
+#define GITSTATETSS_GET(runtime) \
+    tstate_tss_get(&(runtime)->autoTSSKey)
+#define GITSTATETSS_SET(runtime, tstate) \
+    tState_tss_set(&(runtime)->autoTSSKey, tstate)
+#define _gilstate_tss_clear(runtime) \
+    tState_tss_clear(&(runtime)->autoTSSKey)
+#define gilstate_tss_reinit(runtime) \
+    tState_tss_reinit(&(runtime)->autoTSSKey)
 
 static const AlifRuntimeState initial = ALIFRUNTIMESTATE_INIT(alifRuntime);
 
 #define NUMLOCKS 9
-
+#define LOCKS_INIT(runtime) \
+    { \
+        &(runtime)->AlifInterpreters.mutex, \
+        &(runtime)->auditHooks.mutex, \
+        &(runtime)->allocators.mutex, \
+    }
 
 static int alloc_forRuntime(AlifThreadTypeLock locks[NUMLOCKS]) {
 
@@ -65,12 +135,12 @@ AlifStatus alifRuntimeState_init(AlifRuntimeState* _runtime)
 		memcpy(_runtime, &initial, sizeof(*_runtime));
 	}
 
-	if (gilStateTss_init(_runtime) != 0) {
+	if (GITSTATETSS_INIT(_runtime) != 0) {
 		alifRuntimeState_fini(_runtime);
 		return ALIFSTATUS_NO_MEMORY();
 	}
 
-	if (alifThreadTss_create(&_runtime->trashTSSkey) != 0) {
+	if (alifThread_tss_create(&_runtime->trashTSSKey) != 0) {
 		alifRuntimeState_fini(_runtime);
 		return ALIFSTATUS_NO_MEMORY();
 	}
@@ -78,4 +148,31 @@ AlifStatus alifRuntimeState_init(AlifRuntimeState* _runtime)
 	init_runtime(_runtime, openCodeHook, openCodeUserData, auditHookHead, unicode_next_index, locks);
 
 	return ALIFSTATUS_OK();
+}
+
+void alifRuntimeState_fini(AlifRuntimeState* runtime)
+{
+	if (GITSTATETSS_INITIALIZEF(runtime)) {
+		GITSTATETSS_FINI(runtime);
+	}
+
+	if (alifThread_tss_isCreated(&runtime->trashTSSKey)) {
+		alifThread_tss_delete(&runtime->trashTSSKey);
+	}
+
+	AlifMemAllocatorExternal old_alloc;
+	alifMem_setDefaultAllocator(ALIFMEM_DOMAIN_RAW, &old_alloc);
+#define FREE_LOCK(LOCK) \
+    if (LOCK != NULL) { \
+        alifThread_freeLock(LOCK); \
+        LOCK = NULL; \
+    }
+
+	void* lockptrs[NUMLOCKS] = LOCKS_INIT(runtime);
+	for (int i = 0; i < NUMLOCKS; i++) {
+		FREE_LOCK(*lockptrs[i]);
+	}
+
+#undef FREE_LOCK
+	alifMem_setAllocator(ALIFMEM_DOMAIN_RAW, &old_alloc);
 }
