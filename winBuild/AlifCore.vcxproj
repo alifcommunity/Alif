@@ -154,6 +154,7 @@
     <ClInclude Include="..\source\Include\core\alifCore_alifMem.h" />
     <ClInclude Include="..\source\Include\core\alifCore_alifMemory_init.h" />
     <ClInclude Include="..\source\Include\core\alifCore_alifMem_init.h" />
+    <ClInclude Include="..\source\Include\core\alifCore_alifState.h" />
     <ClInclude Include="..\source\Include\core\alifCore_alifThread.h" />
     <ClInclude Include="..\source\Include\core\alifCore_condVar.h" />
     <ClInclude Include="..\source\Include\core\alifCore_getOpt.h" />
@@ -165,6 +166,8 @@
     <ClInclude Include="..\source\Include\exports.h" />
     <ClInclude Include="..\source\Include\fileObject.h" />
     <ClInclude Include="..\source\Include\initConfig.h" />
+    <ClInclude Include="..\source\Include\methodObject.h" />
+    <ClInclude Include="..\source\Include\object.h" />
     <ClInclude Include="..\source\Include\sysModule.h" />
     <ClInclude Include="..\source\Include\thread_nt.h" />
   </ItemGroup>
@@ -175,6 +178,8 @@
     <ClCompile Include="..\source\Objects\alifTime.cpp" />
     <ClCompile Include="..\source\Objects\getOpt.cpp" />
     <ClCompile Include="..\source\Objects\initConfig.cpp" />
+    <ClCompile Include="..\source\Objects\methodObject.cpp" />
+    <ClCompile Include="..\source\Objects\object.cpp" />
     <ClCompile Include="..\source\Objects\preConfig.cpp" />
     <ClCompile Include="..\source\Objects\thread.cpp" />
   </ItemGroup>
