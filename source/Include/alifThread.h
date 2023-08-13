@@ -13,20 +13,20 @@ enum AlifLockStatus {
 #if (defined(__APPLE__) || defined(__linux__) || defined(_WIN32) \
      || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) \
      || defined(__DragonFly__) || defined(_AIX))
-#define PY_HAVE_THREAD_NATIVE_ID
+#define ALIF_HAVE_THREAD_NATIVE_ID
 #endif
 
 #define ALIF_TIMEOUT_T long long
 
 typedef class AlifTSST _alifTSST;
 
-ALIFAPI_FUNC(AlifThreadTypeLock)alifThread_allocateLock();
-ALIFAPI_FUNC(void)alifThread_freeLock(AlifThreadTypeLock);
+ALIFAPI_FUNC(AlifThreadTypeLock) alifThread_allocateLock();
+ALIFAPI_FUNC(void) alifThread_freeLock(AlifThreadTypeLock);
 #define WAIT_LOCK       1
 #define NOWAIT_LOCK     0
 
-ALIFAPI_FUNC(int)alifThread_tss_isCreated(_alifTSST* key);
-ALIFAPI_FUNC(int)alifThread_tss_create(_alifTSST* key);
+ALIFAPI_FUNC(int) alifThread_tss_isCreated(_alifTSST* key);
+ALIFAPI_FUNC(int) alifThread_tss_create(_alifTSST* key);
 ALIFAPI_FUNC(void) alifThread_tss_delete(_alifTSST* key);
 ALIFAPI_FUNC(int) alifThread_tss_set(_alifTSST* key, void* value);
 ALIFAPI_FUNC(void*) alifThread_tss_get(_alifTSST* key);
@@ -45,7 +45,7 @@ ALIFAPI_FUNC(void*) alifThread_tss_get(_alifTSST* key);
 #endif
 
 
-#define PYTHREAD_INVALID_THREAD_ID ((unsigned long)-1)
+#define ALIFTHREAD_INVALID_THREAD_ID ((unsigned long)-1)
 
 #ifdef HAVE_PTHREAD_H
 #   include <pthread.h>
