@@ -23,3 +23,9 @@ void alifThread_initThread() {
 	alifThread__init_thread();
 
 }
+
+int
+alifThread_tss_isCreated(_alifTSST* key)
+{
+	return key->isInitialized;
+}

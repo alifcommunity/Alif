@@ -309,9 +309,9 @@ public:
 	GetIterFunc typeIter;
 	IterNextFunc typeIterNext;
 
-	//PyMethodDef* typeMethods;
-	//PyMemberDef* tyepMembers;
-	//PyGetSetDef* typeGetSet;
+	//AlifMethodDef* typeMethods;
+	//AlifMemberDef* tyepMembers;
+	//AlifGetSetDef* typeGetSet;
 
 	TypeObject* typeBase;
 	AlifObject* typeDict;
