@@ -114,6 +114,14 @@ void alifThread__init_thread()
 	// Initialization of the C package should not be needed.
 }
 
+unsigned long alifThread_get_thread_ident(void)
+{
+	if (!INITIALIZED)
+		alifThread_init_thread();
+
+	return GetCurrentThreadId();
+}
+
 AlifThreadTypeLock alifThread_allocateLock() {
 
 	PNRMutex mutex;

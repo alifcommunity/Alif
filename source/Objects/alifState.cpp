@@ -85,7 +85,7 @@ static const AlifRuntimeState initial = ALIFRUNTIMESTATE_INIT(alifRuntime);
 #define NUMLOCKS 9
 #define LOCKS_INIT(runtime) \
     { \
-        &(runtime)->AlifInterpreters.mutex, \
+        &(runtime)->alifInterpreters.mutex, \
         &(runtime)->auditHooks.mutex, \
         &(runtime)->allocators.mutex, \
     }
@@ -110,6 +110,35 @@ static int alloc_forRuntime(AlifThreadTypeLock locks[NUMLOCKS]) {
 
 	alifMem_setAllocator(ALIFMEM_DOMAIN_RAW, &oldAlloc);
 	return 0;
+}
+
+void init_runtime(AlifRuntimeState* runtime,
+	void* openCodeHook, void* openCodeUserdata,
+	AlifAuditHookEntry* auditHookHead,
+	long long unicodeNextIndex,
+	void* locks[NUMLOCKS])
+{
+	if (runtime->_initialized) {
+		// error "تم تهيئته بالفعل"
+	}
+
+	runtime->openCodeHook = (AlifOpenCodeHookFunction)openCodeHook;
+	runtime->openCodeUserData = openCodeUserdata;
+	runtime->auditHooks.head = auditHookHead;
+
+	alifPreConfig_initAlifConfig(&runtime->preConfig);
+
+	void** lockptrs[NUMLOCKS] = LOCKS_INIT(runtime);
+	for (int i = 0; i < NUMLOCKS; i++) {
+		*lockptrs[i] = locks[i];
+	}
+
+	// Set it to the ID of the main thread of the main interpreter.
+	runtime->main_thread = alifThread_get_thread_ident();
+
+	runtime->unicodeState.ids.nextIndex = unicodeNextIndex;
+
+	runtime->_initialized = 1;
 }
 
 AlifStatus alifRuntimeState_init(AlifRuntimeState* _runtime)
@@ -168,7 +197,7 @@ void alifRuntimeState_fini(AlifRuntimeState* runtime)
         LOCK = NULL; \
     }
 
-	void* lockptrs[NUMLOCKS] = LOCKS_INIT(runtime);
+	void** lockptrs[NUMLOCKS] = LOCKS_INIT(runtime);
 	for (int i = 0; i < NUMLOCKS; i++) {
 		FREE_LOCK(*lockptrs[i]);
 	}
