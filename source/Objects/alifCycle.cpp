@@ -34,9 +34,9 @@ __attribute__ ((section(".alifRuntime")))
 		,{ &alifRuntime.allocators.debug.obj, alifMem_malloc, alifMem_calloc, alifMem_realloc, alifMem_free },
 		},
 	.debug = {
-		{ 'r',{ nullptr, alifMem_raw_malloc, alifMem_raw_calloc, alifMem_raw_realloc, alifMem_raw_free } }
-		,{ 'm',{ nullptr, object_malloc, object_calloc, object_realloc, object_free } }
-		,{ 'o',{ nullptr, object_malloc, object_calloc, object_realloc, object_free } },
+		{ 'r',{ nullptr, alifMem_rawMalloc, alifMem_rawCalloc, alifMem_rawRealloc, alifMem_rawFree } }
+		,{ 'm',{ nullptr, alifObject_malloc, alifObject_calloc, alifObject_realloc, alifObject_free } }
+		,{ 'o',{ nullptr, alifObject_malloc, alifObject_calloc, alifObject_realloc, alifObject_free } },
 		} ,
 	.objArena =
 		{ nullptr, alifMem_arenaAlloc, alifMem_arenaFree }
