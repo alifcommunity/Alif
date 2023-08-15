@@ -1,7 +1,8 @@
 #include "alif.h"
-#include "alifCore_alifCycle.h"
 #include "alifCore_initConfig.h"
+#include "alifCore_alifCycle.h"
 #include "alifCore_alifMem.h"
+#include "alifCore_alifState.h"
 #include "alifCore_runtime_init.h"
 
 
@@ -13,6 +14,88 @@
 	#define RTLD_LAZY 1
 	#endif
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#ifdef HAVE_THREAD_LOCAL
+ALIF_THREAD_LOCAL AlifThreadState* alifTssTstate = nullptr;
+#endif
+
+static inline AlifThreadState* current_fastGet(AlifRuntimeState* ALIF_UNUSED(runtime))
+{
+#ifdef HAVE_THREAD_LOCAL
+	return alifTssTstate;
+#else
+#  error "لا يوجد متغير مسار-محلي يدعم التخزين التنصيفي"
+#endif
+}
+
+
+
+
+
+
+
+
+
+AlifThreadState* alifThreadState_getCurrent()
+{
+	return current_fastGet(&alifRuntime);
+}
+
+
+
+
+
+
+
+
+
 
 inline int tState_tss_initialized(_alifTSST* key)
 {

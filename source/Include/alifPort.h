@@ -84,3 +84,107 @@
 #  define ALIF_LOCAL(type) static type
 #  define ALIF_LOCAL_INLINE(type) static inline type
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#ifndef WITH_THREAD
+#  define WITH_THREAD
+#endif
+
+#ifdef WITH_THREAD
+#  ifdef ALIF_BUILD_CORE
+#    ifdef HAVE_THREAD_LOCAL
+#      error "HAVE_THREAD_LOCAL معرف مسبقا"
+#    endif
+#    define HAVE_THREAD_LOCAL 1
+#    ifdef thread_local
+#      define ALIF_THREAD_LOCAL thread_local
+#    elif __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__)
+#      define ALIF_THREAD_LOCAL _Thread_local
+#    elif defined(_MSC_VER) 
+#      define ALIF_THREAD_LOCAL __declspec(thread)
+#    elif defined(__GNUC__)
+#      define ALIF_THREAD_LOCAL __thread
+#    else
+#      undef HAVE_THREAD_LOCAL
+#    endif
+#  endif
+#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#ifndef ALIF_NO_RETURN
+#if defined(__clang__) || \
+    (defined(__GNUC__) && \
+     ((__GNUC__ >= 3) || \
+      (__GNUC__ == 2) && (__GNUC_MINOR__ >= 5)))
+#  define _Py_NO_RETURN __attribute__((__noreturn__))
+#elif defined(_MSC_VER)
+#  define ALIF_NO_RETURN __declspec(noreturn)
+#else
+#  define ALIF_NO_RETURN
+#endif
+#endif

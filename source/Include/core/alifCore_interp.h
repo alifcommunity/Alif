@@ -12,6 +12,8 @@
 
 
 
+#include "alifCore_atomic.h"
+#include "alifCore_cevalState.h"
 
 
 
@@ -26,12 +28,10 @@
 
 
 
+#include "alifCore_alifMemory.h"
 
 
-
-
-
-
+#include "alifCore_unicodeObject.h"
 
 
 
@@ -55,106 +55,106 @@ public:
 	int64_t id;
 	int64_t id_refcount;
 	int requires_idref;
-	PyThread_type_lock id_mutex;
+	AlifThreadTypeLock idMutex;
 
-	int _initialized;
+	int initialized;
 	int finalizing;
 
-	uint64_t monitoring_version;
-	uint64_t last_restart_version;
-	struct pythreads {
-		uint64_t next_unique_id;
-		PyThreadState* head;
+	uint64_t monitoringVersion;
+	uint64_t lastRestartVersion;
+	struct AlifThreads {
+		uint64_t nextUniqueId;
+		AlifThreadState* head;
 		long count;
 
-		size_t stacksize;
+		size_t stackSize;
 	} threads;
 
-	pyruntimestate* runtime;
+	AlifRuntimeState* runtime;
 
-	_Py_atomic_address _finalizing;
+	AlifAtomicAddress finalizing;
 
-	_gc_runtime_state gc;
+	GcRuntimeState gc;
 
-	PyObject* sysdict;
+	AlifObject* sysdict;
 
-	PyObject* builtins;
+	AlifObject* builtins;
 
-	_import_state imports;
+	ImportState imports;
 
-	_gil_runtime_state _gil;
+	GilRuntimeState gil;
 
 
-	PyObject* codec_search_path;
-	PyObject* codec_search_cache;
-	PyObject* codec_error_registry;
-	int codecs_initialized;
+	AlifObject* codecSearchPath;
+	AlifObject* codecSearchCache;
+	AlifObject* codecErrorRegistry;
+	int codecsInitialized;
 
-	PyConfig config;
-	unsigned long feature_flags;
+	AlifConfig config;
+	unsigned long featureFlags;
 
-	PyObject* dict; 
+	AlifObject* dict; 
 
-	PyObject* sysdict_copy;
-	PyObject* builtins_copy;
-	_PyFrameEvalFunction eval_frame;
+	AlifObject* sysdictCopy;
+	AlifObject* builtinsCopy;
+	AlifFrameEvalFunction evalFrame;
 
-	PyFunction_WatchCallback func_watchers[FUNC_MAX_WATCHERS];
-	uint8_t active_func_watchers;
+	AlifFunctionWatchCallback funcWatchers[FUNC_MAX_WATCHERS];
+	uint8_t activeFuncWatchers;
 
-	Py_ssize_t co_extra_user_count;
-	freefunc co_extra_freefuncs[MAX_CO_EXTRA_USERS];
+	AlifSizeT coExtraUserCount;
+	FreeFunc coExtraFreeFuncs[MAX_CO_EXTRA_USERS];
 
 #ifdef HAVE_FORK
-	PyObject* before_forkers;
-	PyObject* after_forkers_parent;
-	PyObject* after_forkers_child;
+	AlifObject* beforeForkers;
+	AlifObject* afterForkersParent;
+	AlifObject* afterForkersChild;
 #endif
 
-	_warnings_runtime_state warnings;
-	atexit_state atexit;
+	WarningsRuntimeState warnings;
+	AtexitState atexit;
 
-	_obmalloc_state obmalloc;
+	ObmallocState obmalloc;
 
-	PyObject* audit_hooks;
-	PyType_WatchCallback type_watchers[TYPE_MAX_WATCHERS];
-	PyCode_WatchCallback code_watchers[CODE_MAX_WATCHERS];
+	AlifObject* auditHooks;
+	AlifTypeWatchCallback typeWatchers[TYPE_MAX_WATCHERS];
+	AlifCodeWatchCallback codeWatchers[CODE_MAX_WATCHERS];
 	uint8_t active_code_watchers;
 
-	_py_object_state object_state;
-	_Py_unicode_state unicode;
-	_Py_float_state float_state;
-	_Py_long_state long_state;
-	_dtoa_state dtoa;
-	_py_func_state func_state;
+	AlifObjectState objectState;
+	AlifUnicodeState unicode;
+	AlifFloatState floatState;
+	AlifLongState longState;
+	DtoaState dtoa;
+	AlifFuncState funcState;
 
-	PySliceObject* slice_cache;
+	AlifSliceObject* sliceCache;
 
-	_Py_tuple_state tuple;
-	_Py_list_state list;
-	_Py_dict_state dict_state;
-	_Py_async_gen_state async_gen;
-	_Py_context_state context;
-	_Py_exc_state exc_state;
+	AlifTupleState tuple;
+	AlifListState list;
+	AlifDictState dictState;
+	AlifAsyncGenState asyncGen;
+	AlifContextState context;
+	AlifExcState excState;
 
-	ast_state ast;
-	types_state types;
-	callable_cache callable_cache;
-	_PyOptimizerObject* optimizer;
-	uint16_t optimizer_resume_threshold;
-	uint16_t optimizer_backedge_threshold;
+	AstState ast;
+	TypesState types;
+	CallableCache callableCache;
+	AlifOptimizerObject* optimizer;
+	uint16_t optimizerResumeThreshold;
+	uint16_t optimizerBackedgeThreshold;
 
-	_Py_Monitors monitors;
-	bool f_opcode_trace_set;
-	bool sys_profile_initialized;
-	bool sys_trace_initialized;
-	Py_ssize_t sys_profiling_threads; 
-	Py_ssize_t sys_tracing_threads;
-	PyObject* monitoring_callables[PY_MONITORING_TOOL_IDS][_PY_MONITORING_EVENTS];
-	PyObject* monitoring_tool_names[PY_MONITORING_TOOL_IDS];
+	AlifMonitors monitors;
+	bool fOpcodeTraceSet;
+	bool sysProfileInitialized;
+	bool sysTraceInitialized;
+	AlifSizeT sysProfilingThreads; 
+	AlifSizeT sysTracingThreads;
+	AlifObject* monitoringCallables[ALIF_MONITORING_TOOL_IDS][ALIF_MONITORING_EVENTS];
+	AlifObject* monitoringToolNames[ALIF_MONITORING_TOOL_IDS];
 
-	_Py_interp_cached_objects cached_objects;
-	_Py_interp_static_objects static_objects;
+	AlifInterpCachedObjects cachedObjects;
+	AlifInterpStaticObjects staticObjects;
 
-	AlifThreadState _initial_thread;
+	AlifThreadState initialThread;
 };

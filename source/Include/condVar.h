@@ -21,27 +21,27 @@
 
 #if ALIF_EMULATED_WIN_CV
 
-ALIF_LOCAL_INLINE(int)alifMutex_init(AlifMutex_T* cs) {
+ALIF_LOCAL_INLINE(int)alifMutex_init(AlifMutexT* cs) {
 	InitializeCriticalSection(cs);
 	return 0;
 }
 
-ALIF_LOCAL_INLINE(int)alifMutex_fini(AlifMutex_T* cs) {
+ALIF_LOCAL_INLINE(int)alifMutex_fini(AlifMutexT* cs) {
 	DeleteCriticalSection(cs);
 	return 0;
 }
 
-ALIF_LOCAL_INLINE(int)alifMutex_lock(AlifMutex_T* cs) {
+ALIF_LOCAL_INLINE(int)alifMutex_lock(AlifMutexT* cs) {
 	EnterCriticalSection(cs);
 	return 0;
 }
 
-ALIF_LOCAL_INLINE(int)alifMutex_unlock(AlifMutex_T* cs) {
+ALIF_LOCAL_INLINE(int)alifMutex_unlock(AlifMutexT* cs) {
 	LeaveCriticalSection(cs);
 	return 0;
 }
 
-ALIF_LOCAL_INLINE(int)alifCond_init(AlifCond_T* cv) {
+ALIF_LOCAL_INLINE(int)alifCond_init(AlifCondT* cv) {
 
 	cv->sem = CreateSemaphore(nullptr, 0, 100000, nullptr);
 	if (cv->sem == nullptr)
@@ -50,12 +50,12 @@ ALIF_LOCAL_INLINE(int)alifCond_init(AlifCond_T* cv) {
 	return 0;
 }
 
-ALIF_LOCAL_INLINE(int)alifCond_finit(AlifCond_T* cv) {
+ALIF_LOCAL_INLINE(int)alifCond_finit(AlifCondT* cv) {
 
 	return CloseHandle(cv->sem) ? 0 : -1;
 }
 
-ALIF_LOCAL_INLINE(int)alifCond_wait_ms(AlifCond_T* cv, AlifMutex_T* cs, DWORD ms) {
+ALIF_LOCAL_INLINE(int)alifCond_wait_ms(AlifCondT* cv, AlifMutexT* cs, DWORD ms) {
 
 	DWORD wait;
 	cv->waiting++;
@@ -73,20 +73,20 @@ ALIF_LOCAL_INLINE(int)alifCond_wait_ms(AlifCond_T* cv, AlifMutex_T* cs, DWORD ms
 
 }
 
-ALIF_LOCAL_INLINE(int)alifCond_wait(AlifCond_T* cv, AlifMutex_T* cs) {
+ALIF_LOCAL_INLINE(int)alifCond_wait(AlifCondT* cv, AlifMutexT* cs) {
 
 	int result = alifCond_wait_ms(cv, cs, 0xFFFFFFFF);
 	return result >= 0 ? 0 : result;
 }
 
 
-ALIF_LOCAL_INLINE(int)alifCond_timedWait(AlifCond_T* cv, AlifMutex_T* cs, long long us) {
+ALIF_LOCAL_INLINE(int)alifCond_timedWait(AlifCondT* cv, AlifMutexT* cs, long long us) {
 
 	return alifCond_wait_ms(cv, cs, (DWORD)(us/ 1000));
 	
 }
 
-ALIF_LOCAL_INLINE(int)alifCond_signal(AlifCond_T* cv) {
+ALIF_LOCAL_INLINE(int)alifCond_signal(AlifCondT* cv) {
 
 	if (cv->waiting > 0) {
 
@@ -98,7 +98,7 @@ ALIF_LOCAL_INLINE(int)alifCond_signal(AlifCond_T* cv) {
 
 }
 
-ALIF_LOCAL_INLINE(int)alifCond_broadcast(AlifCond_T* cv) {
+ALIF_LOCAL_INLINE(int)alifCond_broadcast(AlifCondT* cv) {
 
 	int waiting = cv->waiting;
 
