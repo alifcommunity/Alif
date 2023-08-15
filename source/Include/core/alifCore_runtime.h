@@ -40,7 +40,7 @@ public:
 
 		int64_t nextID;
 
-	};
+	}alifInterpreters; // هنا اضطررت لادراج اسم له ليكون متوافق مع ال macro 
 
 	unsigned long main_thread;
 
@@ -52,7 +52,7 @@ public:
 
 	AlifTSST trashTSSKey;
 
-
+	AlifPreConfig preConfig;
 
 	AlifOpenCodeHookFunction openCodeHook;
 	void* openCodeUserData;
