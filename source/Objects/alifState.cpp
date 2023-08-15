@@ -93,7 +93,6 @@ static const AlifRuntimeState initial = ALIFRUNTIMESTATE_INIT(alifRuntime);
 static int alloc_forRuntime(AlifThreadTypeLock locks[NUMLOCKS]) {
 
 	AlifMemAllocatorExternal oldAlloc{};
-
 	alifMem_setDefaultAllocator(ALIFMEM_DOMAIN_RAW, &oldAlloc);
 
 	for (int i = 0; i < NUMLOCKS; i++) {
@@ -122,7 +121,7 @@ AlifStatus alifRuntimeState_init(AlifRuntimeState* _runtime)
 	AlifAuditHookEntry* auditHookHead = _runtime->auditHooks.head;
 	// Preserve nextIndex value if alif_initialize()/alif_finalize()
 	// is called multiple times.
-	AlifSizeT unicode_next_index = _runtime->unicodeState.ids.nextIndex;
+	AlifSizeT unicodeNextIndex = _runtime->unicodeState.ids.nextIndex;
 
 	AlifThreadTypeLock locks[NUMLOCKS];
 	if (alloc_forRuntime(locks) != 0) {
@@ -145,7 +144,7 @@ AlifStatus alifRuntimeState_init(AlifRuntimeState* _runtime)
 		return ALIFSTATUS_NO_MEMORY();
 	}
 
-	init_runtime(_runtime, openCodeHook, openCodeUserData, auditHookHead, unicode_next_index, locks);
+	init_runtime(_runtime, openCodeHook, openCodeUserData, auditHookHead, unicodeNextIndex, locks);
 
 	return ALIFSTATUS_OK();
 }

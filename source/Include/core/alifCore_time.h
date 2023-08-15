@@ -1,5 +1,6 @@
 #pragma once
-#include <cstdint>
+
+//#include <cstdint>
 
 class AlifClockInfoT {
 public:

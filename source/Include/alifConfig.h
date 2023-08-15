@@ -176,3 +176,36 @@ typedef _W64 int Alif_ssize_t;
 #define WITH_ALIFMALLOC 1
 
 #define HAVE_PROCESS_H 1
+
+
+
+
+#ifdef MS_WIN64
+#       define PLATFORM "win32"
+#       define SIZEOF_VOID_P 8
+#       define SIZEOF_TIME_T 8
+#       define SIZEOF_OFF_T 4
+#       define SIZEOF_FPOS_T 8
+#       define SIZEOF_HKEY 8
+#       define SIZEOF_SIZE_T 8
+#       define ALIGNOF_SIZE_T 8
+#       define ALIGNOF_MAX_ALIGN_T 8
+
+#       define HAVE_LARGEFILE_SUPPORT
+#elif defined(MS_WIN32)
+#       define PLATFORM "win32"
+#       define HAVE_LARGEFILE_SUPPORT
+#       define SIZEOF_VOID_P 4
+#       define SIZEOF_OFF_T 4
+#       define SIZEOF_FPOS_T 8
+#       define SIZEOF_HKEY 4
+#       define SIZEOF_SIZE_T 4
+#       define ALIGNOF_SIZE_T 4
+
+#       if defined(_MSC_VER) && _MSC_VER >= 1400
+#       define SIZEOF_TIME_T 8
+#       else
+#       define SIZEOF_TIME_T 4
+#       endif
+#       define ALIGNOF_MAX_ALIGN_T 8
+#endif

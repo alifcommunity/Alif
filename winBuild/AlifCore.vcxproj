@@ -142,6 +142,7 @@
     <ClInclude Include="..\source\Include\alifCycle.h" />
     <ClInclude Include="..\source\Include\alifDebug.h" />
     <ClInclude Include="..\source\Include\alifDefinations.h" />
+    <ClInclude Include="..\source\Include\alifMacro.h" />
     <ClInclude Include="..\source\Include\alifMem.h" />
     <ClInclude Include="..\source\Include\alifMemory.h" />
     <ClInclude Include="..\source\Include\alifPort.h" />
@@ -152,6 +153,7 @@
     <ClInclude Include="..\source\Include\alifThread.h" />
     <ClInclude Include="..\source\Include\alifThread_stubs.h" />
     <ClInclude Include="..\source\Include\core\alifCore_alifMem.h" />
+    <ClInclude Include="..\source\Include\core\alifCore_alifMemory.h" />
     <ClInclude Include="..\source\Include\core\alifCore_alifMemory_init.h" />
     <ClInclude Include="..\source\Include\core\alifCore_alifMem_init.h" />
     <ClInclude Include="..\source\Include\core\alifCore_alifState.h" />

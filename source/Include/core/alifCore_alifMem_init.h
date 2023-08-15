@@ -4,19 +4,19 @@
 #include "alifMemory.h"
 #include "alifConfig.h"
 
-void* alifMem_raw_malloc(void* ctx, size_t size);
-void* alifMem_raw_calloc(void* ctx, size_t nElement, size_t elSize);
-void* alifMem_raw_realloc(void* ctx, void* ptr, size_t size);
-void alifMem_raw_free(void* ctx, void* ptr);
-#define MALLOC_ALLOC {nullptr, alifMem_raw_malloc, alifMem_raw_calloc, alifMem_raw_realloc, alifMem_raw_free}
+void* alifMem_rawMalloc(void* ctx, size_t size);
+void* alifMem_rawCalloc(void* ctx, size_t nElement, size_t elSize);
+void* alifMem_rawRealloc(void* ctx, void* ptr, size_t size);
+void alifMem_rawFree(void* ctx, void* ptr);
+#define MALLOC_ALLOC {nullptr, alifMem_rawMalloc, alifMem_rawCalloc, alifMem_rawRealloc, alifMem_rawFree}
 #define ALIFRAW_ALLOC MALLOC_ALLOC
 
 #ifdef WITH_ALIFMALLOC
-extern void* object_malloc(void* ctx, size_t numberByte);
-extern void* object_calloc(void* ctx, size_t nElement, size_t elSize);
-extern void* object_realloc(void* ctx, void* ptr, size_t numberByte);
-extern void  object_free(void* ctx, void* ptr);
-#  define ALIFOBJ_ALLOC {nullptr, object_malloc, object_calloc, object_realloc, object_free}
+extern void* alifObject_malloc(void* ctx, size_t numberByte);
+extern void* alifObject_calloc(void* ctx, size_t nElement, size_t elSize);
+extern void* alifObject_realloc(void* ctx, void* ptr, size_t numberByte);
+extern void  alifObject_free(void* ctx, void* ptr);
+#  define ALIFOBJ_ALLOC {nullptr, alifObject_malloc, alifObject_calloc, alifObject_realloc, alifObject_free}
 #else
 #define ALIFOBJ_ALLOC ALIFRAW_ALLOC
 #endif
