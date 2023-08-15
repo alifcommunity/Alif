@@ -28,8 +28,8 @@
 class NRMutex
 {
 public:
-	AlifMutex_T cs;
-	AlifCond_T cv;
+	AlifMutexT cs;
+	AlifCondT cv;
 	int locked;
 } ;
 typedef NRMutex* PNRMutex;

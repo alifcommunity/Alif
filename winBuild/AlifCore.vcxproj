@@ -142,10 +142,12 @@
     <ClInclude Include="..\source\Include\alifCycle.h" />
     <ClInclude Include="..\source\Include\alifDebug.h" />
     <ClInclude Include="..\source\Include\alifDefinations.h" />
+    <ClInclude Include="..\source\Include\alifErrors.h" />
     <ClInclude Include="..\source\Include\alifMacro.h" />
     <ClInclude Include="..\source\Include\alifMem.h" />
     <ClInclude Include="..\source\Include\alifMemory.h" />
     <ClInclude Include="..\source\Include\alifPort.h" />
+    <ClInclude Include="..\source\Include\alifState.h" />
     <ClInclude Include="..\source\Include\alifTypeDefs.h" />
     <ClInclude Include="..\source\Include\alifVersion.h" />
     <ClInclude Include="..\source\Include\condVar.h" />
@@ -158,9 +160,13 @@
     <ClInclude Include="..\source\Include\core\alifCore_alifMem_init.h" />
     <ClInclude Include="..\source\Include\core\alifCore_alifState.h" />
     <ClInclude Include="..\source\Include\core\alifCore_alifThread.h" />
+    <ClInclude Include="..\source\Include\core\alifCore_atomic.h" />
+    <ClInclude Include="..\source\Include\core\alifCore_cevalState.h" />
     <ClInclude Include="..\source\Include\core\alifCore_condVar.h" />
     <ClInclude Include="..\source\Include\core\alifCore_getOpt.h" />
+    <ClInclude Include="..\source\Include\core\alifCore_gil.h" />
     <ClInclude Include="..\source\Include\core\alifCore_initConfig.h" />
+    <ClInclude Include="..\source\Include\core\alifCore_interp.h" />
     <ClInclude Include="..\source\Include\core\alifCore_runtime.h" />
     <ClInclude Include="..\source\Include\core\alifCore_runtime_init.h" />
     <ClInclude Include="..\source\Include\core\alifCore_time.h" />
@@ -172,6 +178,7 @@
     <ClInclude Include="..\source\Include\object.h" />
     <ClInclude Include="..\source\Include\sysModule.h" />
     <ClInclude Include="..\source\Include\thread_nt.h" />
+    <ClInclude Include="..\source\Include\vaDefs.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\Objects\alifCycle.cpp" />

@@ -1,6 +1,8 @@
 #include "Alif.h"
-#include "alifcore_initConfig.h"    // AlifArgv
+#include "alifcore_initConfig.h"
+#include "alifCore_interp.h"
 #include "alifCore_alifCycle.h"
+#include "alifCore_alifState.h"
 
 
 static AlifStatus alifMain_init(const AlifArgv* _args) {

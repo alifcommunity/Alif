@@ -1,6 +1,6 @@
 #include "alif.h"
 #include "alifCore_alifMemory.h"
-#include "alifCore_runtime.h"
+//#include "alifCore_runtime.h"
 #include "alifCore_alifMem.h"
 #include "alifCore_alifState.h"
 //#include "thread_nt.h"

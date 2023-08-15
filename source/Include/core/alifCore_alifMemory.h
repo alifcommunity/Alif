@@ -667,6 +667,6 @@ public:
 class ObmallocState {
 public:
 	ObmallocPools pools;
-	ObmallocMgmt mgmt;
+	ObmallocMgmt mGmt;
 	ObmallocUsage usage;
 };

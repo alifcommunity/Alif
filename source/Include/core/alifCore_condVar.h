@@ -45,9 +45,9 @@
 
 #if ALIF_EMULATED_WIN_CV
 
-typedef CRITICAL_SECTION AlifMutex_T;
+typedef CRITICAL_SECTION AlifMutexT;
 
-class AlifCond_T
+class AlifCondT
 {
 public:
 	HANDLE sem;
