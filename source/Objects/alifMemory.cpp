@@ -2,7 +2,8 @@
 #include "alifCore_alifMemory.h"
 #include "alifCore_runtime.h"
 #include "alifCore_alifMem.h"
-#include "thread_nt.h"
+#include "alifCore_alifState.h"
+//#include "thread_nt.h"
 
 /*
 
@@ -26,8 +27,13 @@ void set_allocator_unlocked(AlifMemAllocateDomain domain, AlifMemAllocatorExtern
 void set_up_debug_hooks_domain_unlocked(AlifMemAllocateDomain domain);
 
 
-static inline MemoryState* get_state() {
-	
+static inline MemoryState* get_state()
+{
+	AlifInterpreterState* interp = alifInterpreterState_get();
+	if (!has_ownState(interp)) {
+		interp = alifInterpreterState_main();
+	}
+	return &interp->obmalloc;
 }
 
 // raw memory ///////////////////////////////////////////////////////////////////////////////
