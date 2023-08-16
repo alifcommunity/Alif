@@ -156,8 +156,8 @@
     <ClInclude Include="..\source\Include\alifThread_stubs.h" />
     <ClInclude Include="..\source\Include\core\alifCore_alifMem.h" />
     <ClInclude Include="..\source\Include\core\alifCore_alifMemory.h" />
-    <ClInclude Include="..\source\Include\core\alifCore_alifMemory_init.h" />
-    <ClInclude Include="..\source\Include\core\alifCore_alifMem_init.h" />
+    <ClInclude Include="..\source\Include\core\alifCore_alifMemoryInit.h" />
+    <ClInclude Include="..\source\Include\core\alifCore_alifMemInit.h" />
     <ClInclude Include="..\source\Include\core\alifCore_alifState.h" />
     <ClInclude Include="..\source\Include\core\alifCore_alifThread.h" />
     <ClInclude Include="..\source\Include\core\alifCore_atomic.h" />
@@ -168,7 +168,7 @@
     <ClInclude Include="..\source\Include\core\alifCore_initConfig.h" />
     <ClInclude Include="..\source\Include\core\alifCore_interp.h" />
     <ClInclude Include="..\source\Include\core\alifCore_runtime.h" />
-    <ClInclude Include="..\source\Include\core\alifCore_runtime_init.h" />
+    <ClInclude Include="..\source\Include\core\alifCore_runtimeInit.h" />
     <ClInclude Include="..\source\Include\core\alifCore_time.h" />
     <ClInclude Include="..\source\Include\core\alifCore_unicodeObject.h" />
     <ClInclude Include="..\source\Include\exports.h" />

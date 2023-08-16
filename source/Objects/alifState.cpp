@@ -1,9 +1,29 @@
 #include "alif.h"
+
+//#include "alifCore_ceval.h"
+//#include "alifCore_code.h"        
+//#include "alifCore_dtoa.h"        
+//#include "alifCore_frame.h"
 #include "alifCore_initConfig.h"
+//#include "alifCore_object.h"
+//#include "alifCore_alifErrors.h"
 #include "alifCore_alifCycle.h"
-#include "alifCore_alifMem.h"
+#include "alifCore_alifMem.h"       
 #include "alifCore_alifState.h"
-#include "alifCore_runtime_init.h"
+#include "alifCore_runtimeInit.h"
+//#include "alifCore_sysModule.h"
+//#include "alifCore_weakRef.h"
+
+
+
+
+
+
+
+
+
+
+
 
 
 #ifdef HAVE_DLOPEN

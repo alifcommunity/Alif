@@ -39,10 +39,10 @@
     <ClInclude Include="..\source\Include\core\alifCore_alifMem.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\Include\core\alifCore_alifMem_init.h">
+    <ClInclude Include="..\source\Include\core\alifCore_alifMemInit.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\Include\core\alifCore_alifMemory_init.h">
+    <ClInclude Include="..\source\Include\core\alifCore_alifMemoryInit.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
     <ClInclude Include="..\source\Include\core\alifCore_alifThread.h">
@@ -54,7 +54,7 @@
     <ClInclude Include="..\source\Include\core\alifCore_runtime.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\Include\core\alifCore_runtime_init.h">
+    <ClInclude Include="..\source\Include\core\alifCore_runtimeInit.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
     <ClInclude Include="..\source\Include\alifConfig.h">

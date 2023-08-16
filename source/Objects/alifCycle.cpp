@@ -1,10 +1,58 @@
 #include "alif.h"
-#include "alifCore_initConfig.h"
-#include "alifCore_alifCycle.h"
-#include "alifCore_runtime.h"
-#include "alifCore_runtime_init.h"
-#include "alifCore_alifMem_init.h"
-#include "alifCore_alifMemory_init.h"
+
+/*#include "alifCore_call.h"          
+#include "alifCore_ceval.h"         
+#include "alifCore_codecs.h"        
+#include "alifCore_context.h"       
+#include "alifCore_dict.h"          
+#include "alifCore_exceptions.h"    
+#include "alifCore_fileUtils.h"     
+#include "alifCore_floatObject.h"   
+#include "alifCore_genObject.h"     
+#include "alifCore_globalObjectsFiniGenerated.h" 
+#include "alifCore_import.h"  */      
+#include "alifCore_initConfig.h"    
+//#include "alifCore_list.h"
+//#include "alifCore_long.h"
+//#include "alifCore_object.h"
+//#include "alifCore_pathConfig.h"
+//#include "alifCore_alifErrors.h"
+#include "alifCore_alifcycle.h"   
+#include "alifCore_alifMem.h"         
+#include "alifCore_alifState.h"       
+#include "alifCore_runtime.h"       
+#include "alifCore_runtimeInit.h"  
+//#include "alifCore_setObject.h"     
+//#include "alifCore_sliceObject.h"   
+//#include "alifCore_sysModule.h"     
+//#include "alifCore_traceback.h"     
+//#include "alifCore_typeObject.h"    
+//#include "alifCore_typeVarObject.h" 
+#include "alifCore_unicodeObject.h" 
+//#include "alifCore_weakRef.h"       
+//#include "opcode.h"
+
+#include <locale.h>               // setlocale()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#ifdef HAVE_FCNTL_H
+#  include <fcntl.h>
+#endif
+
 
 // هنا تم عمل متغير يتم القراءة منه والكتابة يسمى alifRuntime 
 // ومن ثم التحقق من النظام لوضع بيانات كائن AlifRuntimeState 

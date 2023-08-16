@@ -1,7 +1,7 @@
 #pragma once
 
-#include "alifCore_alifMem_init.h"
-#include "alifCore_alifMemory_init.h"
+#include "alifCore_alifMemInit.h"
+#include "alifCore_alifMemoryInit.h"
 #include "alifThread.h"
 
 #define ALLOCATORS(runtime)  { .standard = ALIFMEM_ALLOCATORS_STANDERD_INIT(runtime) , .debug = ALIFMEM_ALLOCATORS_DEBUG_INIT , .objArena = ALIFMEM_ALLOCATORS_OBJ_ARENA_INIT, }
