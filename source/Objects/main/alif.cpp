@@ -1,8 +1,24 @@
 #include "Alif.h"
+//#include "alifCore_call.h"
 #include "alifcore_initConfig.h"
 #include "alifCore_interp.h"
+//#include "alifCore_pathConfig.h"
 #include "alifCore_alifCycle.h"
 #include "alifCore_alifState.h"
+
+
+
+
+#include <iostream>
+
+
+
+
+
+
+#ifdef MS_WINDOWS
+#  include <windows.h>
+#endif
 
 
 static AlifStatus alifMain_init(const AlifArgv* _args) {
