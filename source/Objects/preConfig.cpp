@@ -5,6 +5,26 @@
 #include "alifCore_alifMem.h"
 
 
+
+
+
+
+
+
+static void preConfig_copy(AlifPreConfig*, const AlifPreConfig*);
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ___________ AlifArgv ___________ */
 
 AlifStatus alifArgv_asWstrList(const AlifArgv* _args, AlifWideStringList* _list)
@@ -257,26 +277,6 @@ AlifStatus alifPreCmdLine_read(AlifPreCmdLine* _cmdLine, const AlifPreConfig* _p
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* ___________ AlifPreConfig ___________ */
 
 
@@ -325,12 +325,77 @@ void alifPreConfig_initAlifConfig(AlifPreConfig* _config)
 }
 
 
-AlifStatus alifPreConfig_initFromPreConfig(AlifPreConfig* _config)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+AlifStatus alifPreConfig_initFromPreConfig(AlifPreConfig* _config, const AlifPreConfig* _config2)
 {
 	alifPreConfig_initAlifConfig(_config);
+	preConfig_copy(_config, _config2);
 	return ALIFSTATUS_OK();
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+static void preConfig_copy(AlifPreConfig* _config, const AlifPreConfig* _config2)
+{
+#define COPY_ATTR(ATTR) _config->ATTR = _config2->ATTR
+
+	COPY_ATTR(configInit);
+	COPY_ATTR(parseArgv);
+	COPY_ATTR(isolated);
+	COPY_ATTR(useEnvironment);
+	COPY_ATTR(configureLocale);
+	COPY_ATTR(devMode);
+	COPY_ATTR(coerceCppLocale);
+	COPY_ATTR(coerceCppLocaleWarn);
+	COPY_ATTR(utf8Mode);
+	COPY_ATTR(allocator);
+#ifdef MS_WINDOWS
+	COPY_ATTR(legacyWindowsFsEncoding);
+#endif
+
+#undef COPY_ATTR
+}
 
 static void preConfig_getGlobalVars(AlifPreConfig* _config)
 {
