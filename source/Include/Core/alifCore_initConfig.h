@@ -125,7 +125,10 @@ extern AlifStatus alifPreCmdLine_read(AlifPreCmdLine*, const AlifPreConfig*);
 
 void alifPreConfig_initCompatConfig(AlifPreConfig*);
 extern void alifPreConfig_initFromConfig(AlifPreConfig*, const AlifConfig*);
-extern AlifStatus alifPreConfig_initFromPreConfig(AlifPreConfig*);
+
+
+extern AlifStatus alifPreConfig_initFromPreConfig(AlifPreConfig*, const AlifPreConfig*);
+
 //extern AlifObject* alifPreConfig_asDict(const AlifPreConfig*);
 //extern void alifPreConfig_getConfig(AlifPreConfig*, const AlifConfig*);
 extern AlifStatus alifPreConfig_read(AlifPreConfig*, const AlifArgv*);

@@ -907,7 +907,7 @@ AlifStatus alif_preInitializeFromAlifArgv(const AlifPreConfig* _srcConfig, const
 
 	AlifPreConfig config{};
 
-	status = alifPreConfig_initFromPreConfig(&config);
+	status = alifPreConfig_initFromPreConfig(&config, _srcConfig);
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		return status;
 	}

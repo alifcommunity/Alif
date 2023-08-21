@@ -48,11 +48,17 @@ ALIFAPI_FUNC(AlifStatus) alifWideStringList_insert(AlifWideStringList*, AlifSize
 class AlifPreConfig {
 public:
 	int configInit;
+
 	int parseArgv;
+
 	int isolated;
+
 	int useEnvironment;
+
 	int configureLocale;
+
 	int coerceCppLocale;
+
 	int coerceCppLocaleWarn;
 
 #ifdef MS_WINDOWS
@@ -60,11 +66,66 @@ public:
 #endif
 
 	int utf8Mode;
+
 	int devMode;
+
 	int allocator;
 };
 
-ALIFAPI_FUNC(void) alifPreConfig_initAlifConfig(AlifPreConfig*);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void alifPreConfig_initAlifConfig(AlifPreConfig*);
 
 
 /* ___________ AlifConfig ___________ */
