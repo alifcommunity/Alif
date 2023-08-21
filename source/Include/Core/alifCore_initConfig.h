@@ -63,9 +63,67 @@ public:
 extern AlifStatus alifPreCmdLine_setArgv(AlifPreCmdLine*, const AlifArgv*);
 extern AlifStatus alifPreCmdLine_read(AlifPreCmdLine*, const AlifPreConfig*);
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ___________ AlifPreConfig ___________ */
 
-ALIFAPI_FUNC(void) alifPreConfig_initCompatConfig(AlifPreConfig*);
+
+void alifPreConfig_initCompatConfig(AlifPreConfig*);
 extern void alifPreConfig_initFromConfig(AlifPreConfig*, const AlifConfig*);
 extern AlifStatus alifPreConfig_initFromPreConfig(AlifPreConfig*);
 //extern AlifObject* alifPreConfig_asDict(const AlifPreConfig*);
@@ -74,8 +132,23 @@ extern AlifStatus alifPreConfig_read(AlifPreConfig*, const AlifArgv*);
 extern AlifStatus alifPreConfig_write(const AlifPreConfig*);
 
 
+
+
+
+
+
+
 /* ___________ AlifConfig ___________ */
 
-ALIFAPI_FUNC(void) _alifConfig_initCompatConfig(AlifConfig*);
+enum _PyConfigInitEnum {
+	AlifConfig_Init_Compat = 1,
+	AlifConfig_Init_Alif = 2,
+	AlifConfig_Init_Isolated = 3
+};
+
+
+void _alifConfig_initCompatConfig(AlifConfig*);
 extern AlifStatus alifConfig_read(AlifConfig*);
 extern AlifStatus alifConfig_setAlifArgv(AlifConfig*, const AlifArgv*);
+
+
