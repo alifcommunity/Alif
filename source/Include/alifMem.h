@@ -16,15 +16,18 @@ enum AlifMemAllocateDomain{
 	ALIFMEM_DOMAIN_OBJ
 };
 
+
+
+
 enum AlifMemAllocatorName {
-	ALIFMEM_ALLOCATOR_NOT_SET = 0,
-	ALIFMEM_ALLOCATOR_DEFAULT = 1,
-	ALIFMEM_ALLOCATOR_DEBUG = 2,
-	ALIFMEM_ALLOCATOR_MALLOC = 3,
-	ALIFMEM_ALLOCATOR_MALLOC_DEBUG = 4,
+	AlifMem_Allocator_Not_Set = 0,
+	AlifMem_Allocator_Default = 1,
+	AlifMem_Allocator_Debug = 2,
+	AlifMem_Allocator_Malloc = 3,
+	AlifMem_Allocator_Malloc_Debug = 4,
 #ifdef WITH_ALIFMALLOC
-	PYMEM_ALLOCATOR_PYMALLOC = 5,
-	PYMEM_ALLOCATOR_PYMALLOC_DEBUG = 6,
+	AlifMem_Allocator_AlifMlloc = 5,
+	AlifMem_Allocator_AlifMalloc_Debug = 6,
 #endif
 };
 

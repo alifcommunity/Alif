@@ -24,6 +24,25 @@ ALIFAPI_FUNC(AlifStatus) alifWideStringList_append(AlifWideStringList*, const wc
 ALIFAPI_FUNC(AlifStatus) alifWideStringList_insert(AlifWideStringList*, AlifSizeT, const wchar_t*);
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ___________ AlifPreConfig ___________ */
 
 class AlifPreConfig {
@@ -33,13 +52,15 @@ public:
 	int isolated;
 	int useEnvironment;
 	int configureLocale;
-	int cppLocale;
+	int coerceCppLocale;
+	int coerceCppLocaleWarn;
 
 #ifdef MS_WINDOWS
-	int EncodingLegacyWindowsFS;
+	int legacyWindowsFsEncoding;
 #endif
 
 	int utf8Mode;
+	int devMode;
 	int allocator;
 };
 
