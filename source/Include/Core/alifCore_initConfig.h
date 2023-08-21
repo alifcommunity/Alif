@@ -29,16 +29,45 @@
 #define ALIFSTATUS_UPDATE_FUNC(_error) do { (_error).func = ALIFSTATUS_GET_FUNC(); } while (0)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ___________ AlifWideStringList ___________ */
+
+#define ALIFWIDESTRINGLIST_INIT {.length = 0, .items = nullptr}
+
+
+
+
+
+
+
+
+
+
+
+
 /* ___________ AlifArgv ___________ */
 
 class AlifArgv { // صنف يحتوي عدد المعاملات الممررة من الطرفية وقيمها
 public:
 	AlifSizeT argc;
-	int useCharArgv;
-	char* const* charArgv;
+	int useBytesArgv;
+	char* const* bytesArgv;
 	wchar_t* const* wcharArgv;
 };
-
 AlifStatus alifArgv_asWstrList(const AlifArgv*, AlifWideStringList*);
 
 /* ___________ Helper functions ___________ */
@@ -58,61 +87,32 @@ public:
 	int warnDefaultEncoding;       /* -X warn_default_encoding and ALIFWARNDEFAULTENCODING */
 };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #define ALIFPRECMDLINE_INIT {  .isolated = -1, .useEnvironment = -1, }
+
+
+
+
+
+
 
 extern AlifStatus alifPreCmdLine_setArgv(AlifPreCmdLine*, const AlifArgv*);
 extern AlifStatus alifPreCmdLine_read(AlifPreCmdLine*, const AlifPreConfig*);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -131,10 +131,10 @@ extern AlifStatus alifPreConfig_initFromPreConfig(AlifPreConfig*, const AlifPreC
 
 //extern AlifObject* alifPreConfig_asDict(const AlifPreConfig*);
 //extern void alifPreConfig_getConfig(AlifPreConfig*, const AlifConfig*);
+
+
 extern AlifStatus alifPreConfig_read(AlifPreConfig*, const AlifArgv*);
 extern AlifStatus alifPreConfig_write(const AlifPreConfig*);
-
-
 
 
 

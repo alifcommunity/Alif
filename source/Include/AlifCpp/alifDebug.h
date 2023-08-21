@@ -17,6 +17,6 @@ ALIFAPI_DATA(int) alifHashRandomizationFlag;
 ALIFAPI_DATA(int) alifIsolatedFlag;
 
 #ifdef MS_WINDOWS
-ALIFAPI_DATA(int) alifLegacyWindowsFSEncodingFlag;
+ALIFAPI_DATA(int) alifLegacyWindowsFsEncodingFlag;
 ALIFAPI_DATA(int) alifLegacyWindowsStdioFlag;
 #endif

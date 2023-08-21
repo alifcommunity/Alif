@@ -106,25 +106,240 @@ AlifStatus alifRuntime_initialize()
 }
 
 
-/* alif_setLocaleFromEnv() is a wrapper around setlocale(category, "") to
- * isolate the idiosyncrasies of different libc implementations. It reads the
- * appropriate environment variable and uses its value to select the locale for
- * 'category'. */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 char* alif_setLocaleFromEnv(int category)
 {
 	char* res;
 #ifdef __ANDROID__
 	const char* locale;
 	const char** pVar;
-//#ifdef ALIF_COERCE_C_LOCALE
-//	const char* coerce_c_locale;
-//#endif
+#ifdef ALIF_COERCE_CPP_LOCALE
+	const char* coerceCppLocale;
+#endif
 	const char* utf8Locale = "C.UTF-8";
 	const char* envVarSet[] = { "LC_ALL", "LC_CTYPE", "LANG", nullptr };
 
-	/* Android setlocale(category, "") doesn't check the environment variables
-	 * and incorrectly sets the "C" locale at API 24 and older APIs. We only
-	 * check the environment variables listed in envVarSet. */
+
+
+
 	for (pVar = envVarSet; *pVar; pVar++) {
 		locale = getenv(*pVar);
 		if (locale != nullptr && *locale != '\0') {
@@ -136,18 +351,18 @@ char* alif_setLocaleFromEnv(int category)
 		}
 	}
 
-	/* Android uses UTF-8, so explicitly set the locale to C.UTF-8 if none of
-	 * LC_ALL, LC_CTYPE, or LANG is set to a non-empty string.
-	 * Quote from POSIX section "8.2 Internationalization Variables":
-	 * "4. If the LANG environment variable is not set or is set to the empty
-	 * string, the implementation-defined default locale shall be used." */
 
-#ifdef ALIF_COERCE_C_LOCALE
-	coerce_c_locale = getenv("ALIFCOERCECLOCALE");
-	if (coerce_c_locale == nullptr || strcmp(coerce_c_locale, "0") != 0) {
-		/* Some other ported code may check the environment variables (e.g. in
-		 * extension modules), so we make sure that they match the locale
-		 * configuration */
+
+
+
+
+
+#ifdef ALIF_COERCE_CPP_LOCALE
+	coerceCppLocale = getenv("ALIFCOERCECLOCALE");
+	if (coerceCppLocale == nullptr || strcmp(coerceCppLocale, "0") != 0) {
+
+
+
 		if (setenv("LC_CTYPE", utf8Locale, 1)) {
 			fprintf(stderr, "تحذير: فشل ضبط LC_CTYPE "
 				"متغير البيئة %s\n", utf8Locale);
@@ -163,266 +378,6 @@ char* alif_setLocaleFromEnv(int category)
 }
 
  
-AlifStatus alif_preInitializeFromConfig(const AlifConfig* _config, const AlifArgv* _args)
-{
-	//assert(_config != nullptr);
-
-	//AlifStatus status = alifRuntime_initialize();
-	//if (ALIFSTATUS_EXCEPTION(status)) {
-	//	return status;
-	//}
-	//AlifRuntimeState* runtime = &alifRuntime;
-
-	//if (runtime->preinitialized) {
-	//	/* Already initialized: do nothing */
-	//	return ALIFSTATUS_OK();
-	//}
-
-	AlifPreConfig preconfig{};
-
-	//alifPreConfig_initFromConfig(&preconfig, _config);
-
-	if (!_config->parseArgv) {
-		//return alif_preInitialize(&preconfig);
-	}
-	else if (_args == nullptr) {
-		AlifArgv configArgs = {
-			.argc = _config->argv.length,
-			.useCharArgv = 0,
-			.charArgv = nullptr,
-			.wcharArgv = _config->argv.items
-		};
-		return alif_preInitializeFromAlifArgv(&preconfig, &configArgs);
-	}
-	else {
-		return alif_preInitializeFromAlifArgv(&preconfig, _args);
-	}
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -977,41 +932,41 @@ AlifStatus alifInit_fromConfig(const AlifConfig* _config)
 
 
 
+AlifStatus alif_preInitializeFromConfig(const AlifConfig* _config, const AlifArgv* _args)
+{
+	//assert(_config != nullptr);
 
+	//AlifStatus status = alifRuntime_initialize();
+	//if (ALIFSTATUS_EXCEPTION(status)) {
+	//	return status;
+	//}
+	//AlifRuntimeState* runtime = &alifRuntime;
 
+	//if (runtime->preinitialized) {
+	//	/* Already initialized: do nothing */
+	//	return ALIFSTATUS_OK();
+	//}
 
+	AlifPreConfig preconfig{};
 
+	//alifPreConfig_initFromConfig(&preconfig, _config);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	if (!_config->parseArgv) {
+		//return alif_preInitialize(&preconfig);
+	}
+	else if (_args == nullptr) {
+		AlifArgv configArgs = {
+			.argc = _config->argv.length,
+			.useCharArgv = 0,
+			.charArgv = nullptr,
+			.wcharArgv = _config->argv.items
+		};
+		return alif_preInitializeFromAlifArgv(&preconfig, &configArgs);
+	}
+	else {
+		return alif_preInitializeFromAlifArgv(&preconfig, _args);
+	}
+}
 
 
 
