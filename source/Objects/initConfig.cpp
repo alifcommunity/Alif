@@ -24,7 +24,7 @@ int alifUnbufferedStdioFlag = 0; /* Unbuffered binary std{in,out,err} */
 int alifHashRandomizationFlag = 0; /* for -R and ALIFHASHSEED */
 int alifIsolatedFlag = 0; /* for -I, isolate from user's env */
 #ifdef MS_WINDOWS
-int alifLegacyWindowsFSEncodingFlag = 0; /* Uses mbcs instead of utf-8 */
+int alifLegacyWindowsFsEncodingFlag = 0; /* Uses mbcs instead of utf-8 */
 int alifLegacyWindowsStdioFlag = 0; /* Uses FileIO instead of WindowsConsoleIO */
 #endif
 

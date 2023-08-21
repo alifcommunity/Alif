@@ -76,4 +76,36 @@ extern AlifStatus alif_preInitializeFromConfig(const AlifConfig*,const AlifArgv*
 
 /* locale */
 
-ALIFAPI_FUNC(char*) alif_setLocaleFromEnv(int);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+char* alif_setLocaleFromEnv(int);

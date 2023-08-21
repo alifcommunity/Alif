@@ -25,13 +25,79 @@ static void preConfig_copy(AlifPreConfig*, const AlifPreConfig*);
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ___________ AlifArgv ___________ */
+
 
 AlifStatus alifArgv_asWstrList(const AlifArgv* _args, AlifWideStringList* _list)
 {
-	AlifWideStringList wArgv = { .length = 0, .items = nullptr };
-	if (_args->useCharArgv) {
+	AlifWideStringList wArgv = ALIFWIDESTRINGLIST_INIT;
+	if (_args->useBytesArgv) {
+		size_t size = sizeof(wchar_t*) * _args->argc;
+		//wArgv.items = (wchar_t**)alifMem_rawMalloc(size);
+		if (wArgv.items == nullptr) {
+			return ALIFSTATUS_NO_MEMORY();
+		}
 
+		for (AlifSizeT i = 0; i < _args->argc; i++) {
+			size_t len{};
+			//wchar_t* arg = alif_decodeLocale(_args->bytesArgv[i], &len);
+			//if (arg == nullptr) {
+				//alifWideStringList_clear(&wArgv);
+				//return DECODE_LOCALE_ERR("command line arguments", len);
+			//}
+			//wArgv.items[i] = arg;
+			//wArgv.length++;
+		}
+
+		//alifWideStringList_clear(_list);
+		//*_list = wArgv;
 	}
 	else {
 		wArgv.length = _args->argc;
@@ -124,6 +190,39 @@ static AlifStatus preCmdLine_parseCmdLine(AlifPreCmdLine* _cmdLine)
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 AlifStatus alifPreCmdLine_read(AlifPreCmdLine* _cmdLine, const AlifPreConfig* _preConfig)
 {
 	preCmdLine_getPreConfig(_cmdLine, _preConfig);
@@ -167,115 +266,6 @@ AlifStatus alifPreCmdLine_read(AlifPreCmdLine* _cmdLine, const AlifPreConfig* _p
 
 	return ALIFSTATUS_OK();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /* ___________ AlifPreConfig ___________ */
 
@@ -397,11 +387,76 @@ static void preConfig_copy(AlifPreConfig* _config, const AlifPreConfig* _config2
 #undef COPY_ATTR
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 static void preConfig_getGlobalVars(AlifPreConfig* _config)
 {
-	if (_config->configInit != 1) // AlifConfig_INIT_COMPAT = 1
+	if (_config->configInit != AlifConfig_Init_Compat)
 	{
-		/* Alif and Isolated configuration ignore global variables */
 		return;
 	}
 
@@ -422,7 +477,7 @@ static void preConfig_getGlobalVars(AlifPreConfig* _config)
 		_config->utf8Mode = alifUTF8Mode;
 	}
 #ifdef MS_WINDOWS
-	//COPY_FLAG(legacyWindowsFsEncoding, alifLegacyWindowsFSEncodingFlag);
+	COPY_FLAG(legacyWindowsFsEncoding, alifLegacyWindowsFsEncodingFlag);
 #endif
 	ALIF_COMP_DIAG_POP
 
@@ -561,7 +616,7 @@ static AlifStatus preConfig_initUtf8Mode(AlifPreConfig* _config, const AlifPreCm
 
 static AlifStatus preConfig_initAllocator(AlifPreConfig* _config)
 {
-	if (_config->allocator == ALIFMEM_ALLOCATOR_NOT_SET) {
+	if (_config->allocator == AlifMem_Allocator_Not_Set) {
 		/* bpo-34247. The PYTHONMALLOC environment variable has the priority
 		   over PYTHONDEV env var and "-X dev" command line option.
 		   For example, PYTHONMALLOC=malloc PYTHONDEVMODE=1 sets the memory
@@ -581,6 +636,110 @@ static AlifStatus preConfig_initAllocator(AlifPreConfig* _config)
 	//}
 	return ALIFSTATUS_OK();
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 static AlifStatus preConfig_read(AlifPreConfig* _config, AlifPreCmdLine* _cmdLine)
@@ -625,73 +784,65 @@ static AlifStatus preConfig_read(AlifPreConfig* _config, AlifPreCmdLine* _cmdLin
 	return ALIFSTATUS_OK();
 }
 
-
-/* Read the configuration from:
-
-   - command line arguments
-   - environment variables
-   - Alif_xxx global configuration variables
-   - the LC_CTYPE locale
-*/
 AlifStatus alifPreConfig_read(AlifPreConfig* _config, const AlifArgv* _args)
 {
 	AlifStatus status{};
 
-	//status = alifRuntime_initialize();
-	//if (ALIFSTATUS_EXCEPTION(status)) {
-	//	return status;
-	//}
-
-	preConfig_getGlobalVars(_config);
-
-	/* Copy LC_CTYPE locale, since it's modified later */
-	const char* loc = std::setlocale(LC_CTYPE, nullptr);
-	if (loc == nullptr) {
-		return ALIFSTATUS_ERR("فشلت عملية تهيئة LC_CTYPE");
-	}
-	char* initCtypeLocale = alifMem_rawStrDup(loc); // يوجد مشكلة في الذاكرة ويجب التحقق ما إذا تم حلها
-	if (initCtypeLocale == nullptr) {
-		return ALIFSTATUS_NO_MEMORY();
-	}
-
-	/* Save the config to be able to restore it if encodings change */
-	AlifPreConfig saveConfig{};
-
-	status = alifPreConfig_initFromPreConfig(&saveConfig);
+	status = alifRuntime_initialize();
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		return status;
 	}
 
-	/* Set LC_CTYPE to the user preferred locale */
+	preConfig_getGlobalVars(_config);
+
+
+	const char* loc = std::setlocale(LC_CTYPE, nullptr);
+	if (loc == nullptr) {
+		return ALIFSTATUS_ERR("فشلت عملية تهيئة LC_CTYPE");
+	}
+	char* initCtypeLocale = alifMem_rawStrDup(loc);
+	if (initCtypeLocale == nullptr) {
+		return ALIFSTATUS_NO_MEMORY();
+	}
+
+
+	AlifPreConfig saveConfig{};
+
+	status = alifPreConfig_initFromPreConfig(&saveConfig, _config);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+
+
 	if (_config->configureLocale) {
 		alif_setLocaleFromEnv(LC_CTYPE);
 	}
 
 	AlifPreConfig saveRuntimeConfig{};
-	//preConfig_copy(&saveRuntimeConfig, &alifRuntime.preconfig);
+	preConfig_copy(&saveRuntimeConfig, &alifRuntime.preConfig);
 
 	AlifPreCmdLine cmdLine = ALIFPRECMDLINE_INIT;
-	//int locale_coerced = 0;
+	int localeCoerced = 0;
 	int loops = 0;
 
 	while (1) {
 		int utf8Mode = _config->utf8Mode;
 
-		/* to prevent an infinite loop */
+
 		loops++;
 		if (loops == 3) {
 			status = ALIFSTATUS_ERR("تم تغيير الترميز مرتين اثناء تهيئة الملف");
 			goto done;
 		}
 
-		/* bpo-34207: alif_decodeLocale() and alif_encodeLocale() depend
-		   on the utf8Mode and legacyWindowsFSEncoding members
-		   of alifRuntime.preConfig. */
-		//preConfig_copy(&alifRuntime.preConfig, _config);
+
+
+
+		preConfig_copy(&alifRuntime.preConfig, _config);
 
 		if (_args) {
-			// Set command line arguments at each iteration. If they are bytes
-			// strings, they are decoded from the new encoding.
+
+
 			status = alifPreCmdLine_setArgv(&cmdLine, _args);
 			if (ALIFSTATUS_EXCEPTION(status)) {
 				goto done;
@@ -740,7 +891,7 @@ AlifStatus alifPreConfig_read(AlifPreConfig* _config, const AlifArgv* _args)
 	status = ALIFSTATUS_OK();
 
 done:
-	// Revert side effects
+
 	setlocale(LC_CTYPE, initCtypeLocale);
 	//alifMem_rawFree(initCtypeLocale);
 	//prConfig_copy(&alifRuntime.preconfig, &saveRuntimeConfig);
@@ -749,17 +900,17 @@ done:
 }
 
 
-/* Write the pre-configuration:
 
-   - set the memory allocators
-   - set alif_xxx global configuration variables
-   - set the LC_CTYPE locale (coerce C locale) and set the UTF-8 mode
 
-   The applied configuration is written into alifRuntime.preConfig.
-   If the C locale cannot be coerced, set coerce_c_locale to 0.
 
-   Do nothing if called after alif_initialize(): ignore the new
-   pre-configuration. */
+
+
+
+
+
+
+
+
 AlifStatus alifPreConfig_write(const AlifPreConfig* _srcConfig)
 {
 	AlifPreConfig config{};
@@ -777,7 +928,7 @@ AlifStatus alifPreConfig_write(const AlifPreConfig* _srcConfig)
 	//}
 
 	AlifMemAllocatorName name = (AlifMemAllocatorName)config.allocator;
-	if (name != ALIFMEM_ALLOCATOR_NOT_SET) {
+	if (name != AlifMem_Allocator_Not_Set) {
 		//if (alifMem_setupAllocators(name) < 0) {
 		//	return ALIFSTATUS_ERR("غير معروف ALIFMALLOC حجز ذاكرة");
 		//}

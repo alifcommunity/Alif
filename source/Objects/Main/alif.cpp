@@ -1,3 +1,5 @@
+
+
 #include "Alif.h"
 //#include "alifCore_call.h"
 #include "alifcore_initConfig.h"
@@ -9,8 +11,6 @@
 
 
 
-#include <iostream>
-
 
 
 
@@ -21,37 +21,47 @@
 #endif
 
 
+
+
+
+
+
+
+
+
+/* ___________ alifMain_init() ___________ */
+
 static AlifStatus alifMain_init(const AlifArgv* _args) {
 
 	AlifStatus status{};
 
-	status = alifRuntime_initialize();
+	//status = alifRuntime_initialize();
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		return status;
 	}
 
 	AlifPreConfig preConfig{};
-	alifPreConfig_initAlifConfig(&preConfig);
+	//alifPreConfig_initAlifConfig(&preConfig);
 
-	status = alif_preInitializeFromAlifArgv(&preConfig, _args);
+	//status = alif_preInitializeFromAlifArgv(&preConfig, _args);
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		return status;
 	}
 
 	AlifConfig config{};
-	alifConfig_initAlifConfig(&config);
+	//alifConfig_initAlifConfig(&config);
 
-	if (_args->useCharArgv) {
-		status = alifConfig_setCharArgv(&config, _args->argc, _args->charArgv);
+	if (_args->useBytesArgv) {
+		//status = alifConfig_setCharArgv(&config, _args->argc, _args->bytesArgv);
 	}
 	else {
-		status = alifConfig_setArgv(&config, _args->argc, _args->wcharArgv);
+		//status = alifConfig_setArgv(&config, _args->argc, _args->wcharArgv);
 	}
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		goto done;
 	}
 
-	status = alifInit_fromConfig(&config);
+	//status = alifInit_fromConfig(&config);
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		goto done;
 	}
@@ -63,52 +73,670 @@ done:
 }
 
 
-static void alifMain_run(int* _exitcode)
+
+
+
+/* ___________ alifmain_runAlif() ___________ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+static void alifMain_runAlif(int* _exitcode)
 {
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 static int alif_runMain()
 {
 	int exitcode = 0;
 
-	alifMain_run(&exitcode);
+	alifMain_runAlif(&exitcode);
 
 	return exitcode;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 static int alifMain_main(AlifArgv* _args)
 {
 	// مرحلة تهيئة البرنامج قبل تشغيله
 	AlifStatus status = alifMain_init(_args);
-
+	//if (ALIFSTATUS_IS_EXIT(status)) {
+	//	pyMain_free();
+	//	return status.exitCode;
+	//}
+	//if (ALIFSTATUS_EXCEPTION(status)) {
+	//	alifMain_exitError(status);
+	//}
 
 	// مرحلة تشغيل البرنامج
 	return alif_runMain();
 }
 
-
 int alif_mainWchar(int _argc, wchar_t** _argv)
 {
 	AlifArgv args = {
 		.argc = _argc,
-		.useCharArgv = 0,
-		.charArgv = nullptr,
+		.useBytesArgv = 0,
+		.bytesArgv = nullptr,
 		.wcharArgv = _argv
 	};
 
 	return alifMain_main(&args);
 }
 
-
-int alif_mainChar(int _argc, char** _argv)
+int alif_mainBytes(int _argc, char** _argv)
 {
 	AlifArgv args = {
 		.argc = _argc,
-		.useCharArgv = 1,
-		.charArgv = _argv,
+		.useBytesArgv = 1,
+		.bytesArgv = _argv,
 		.wcharArgv = nullptr
 	};
 
@@ -126,7 +754,7 @@ int wmain(int _argc, wchar_t** _argv)
 int main(int _argc, char** _argv)
 {
 	char* argsv[] = { (char*)"alif", (char*)"example.alif" };
-	return Alif_MainChar(2, argsv);
+	return Alif_MainBytes(2, argsv);
 }
 #endif
 
