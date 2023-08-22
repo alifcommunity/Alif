@@ -6,7 +6,7 @@
 #include <iostream>
 
 
-//#include "alifPort.h"
+#include "alifPort.h"
 //#include "alifMacro.h"
 //#include "alifPath.h"
 #include "alifMem.h"

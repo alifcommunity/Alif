@@ -143,7 +143,9 @@
     <ClInclude Include="..\source\Include\AlifCpp\alifMem.h" />
     <ClInclude Include="..\source\Include\AlifCpp\initConfig.h" />
     <ClInclude Include="..\source\Include\alifMem.h" />
+    <ClInclude Include="..\source\Include\alifPort.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_initConfig.h" />
+    <ClInclude Include="..\source\Include\exports.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\Objects\Main\alif.cpp" />

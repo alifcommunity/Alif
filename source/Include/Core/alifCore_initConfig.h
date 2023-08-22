@@ -123,7 +123,7 @@ public:
 /* --- AlifPreConfig ------------------------------------------- */
 
 
-void alifPreConfig_initCompatConfig(AlifPreConfig*);
+ALIFAPI_FUNC(void) alifPreConfig_initCompatConfig(AlifPreConfig*);
 
 
 
