@@ -29,7 +29,7 @@
 
 
 
-/* ___________ alifMain_init() ___________ */
+/* ----- alifMain_init() ------------------------------------------- */
 
 static AlifStatus alifMain_init(const AlifArgv* _args) {
 
@@ -40,8 +40,8 @@ static AlifStatus alifMain_init(const AlifArgv* _args) {
 	//	return status;
 	//}
 
-	//AlifPreConfig preConfig{};
-	//alifPreConfig_initAlifConfig(&preConfig);
+	AlifPreConfig preConfig{};
+	alifPreConfig_initAlifConfig(&preConfig);
 
 	//status = alif_preInitializeFromAlifArgv(&preConfig, _args);
 	//if (ALIFSTATUS_EXCEPTION(status)) {
@@ -751,7 +751,7 @@ int wmain(int _argc, wchar_t** _argv)
 	return alif_mainWchar(2, argsv);
 }
 #else
-int main(int _argc, char** _argv)
+int main(int _argc, char** _argv)	
 {
 	char* argsv[] = { (char*)"alif", (char*)"example.alif" };
 	return alif_mainBytes(2, argsv);

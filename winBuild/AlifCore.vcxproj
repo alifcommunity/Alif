@@ -140,10 +140,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\source\Include\alifConfig.h" />
+    <ClInclude Include="..\source\Include\AlifCpp\alifMem.h" />
+    <ClInclude Include="..\source\Include\AlifCpp\initConfig.h" />
+    <ClInclude Include="..\source\Include\alifMem.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_initConfig.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\Objects\Main\alif.cpp" />
+    <ClCompile Include="..\source\Objects\preConfig.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

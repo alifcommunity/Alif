@@ -68,3 +68,80 @@ public:
 	char* const* bytesArgv;
 	wchar_t* const* wcharArgv;
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* --- AlifPreConfig ------------------------------------------- */
+
+
+void alifPreConfig_initCompatConfig(AlifPreConfig*);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ----- AlifConfig ------------------------------------------- */
+
+enum AlifConfigInitEnum {
+	AlifConfig_Init_Compat = 1,
+	AlifConfig_Init_Alif = 2,
+	AlifConfig_Init_Isolated = 3
+};
