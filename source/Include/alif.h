@@ -3,13 +3,13 @@
 //#include "alifVersion.h"
 #include "alifConfig.h"
 
-//#include <iostream>
+#include <iostream>
 
 
 //#include "alifPort.h"
 //#include "alifMacro.h"
 //#include "alifPath.h"
-//#include "alifMem.h"
+#include "alifMem.h"
 //#include "alifTypeDefs.h"
 //#include "alifBuffers"
 //#include "object.h"
@@ -47,7 +47,7 @@
 //#include "AlifCpp/cellObject.h"
 //#include "iterObject.h"
 //#include "iterObject.h"
-//#include "AlifCpp/initConfig.h"
+#include "AlifCpp/initConfig.h"
 //#include "alifState.h"
 //#include "AlifCpp/genObject.h"
 //#include "descrObject.h"
