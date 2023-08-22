@@ -1,12 +1,12 @@
 
 
-#include "Alif.h"
+#include "alif.h"
 //#include "alifCore_call.h"
-#include "alifcore_initConfig.h"
-#include "alifCore_interp.h"
+#include "alifCore_initConfig.h"
+//#include "alifCore_interp.h"
 //#include "alifCore_pathConfig.h"
-#include "alifCore_alifCycle.h"
-#include "alifCore_alifState.h"
+//#include "alifCore_alifCycle.h"
+//#include "alifCore_alifState.h"
 
 
 
@@ -36,38 +36,38 @@ static AlifStatus alifMain_init(const AlifArgv* _args) {
 	AlifStatus status{};
 
 	//status = alifRuntime_initialize();
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+	//if (ALIFSTATUS_EXCEPTION(status)) {
+	//	return status;
+	//}
 
-	AlifPreConfig preConfig{};
+	//AlifPreConfig preConfig{};
 	//alifPreConfig_initAlifConfig(&preConfig);
 
 	//status = alif_preInitializeFromAlifArgv(&preConfig, _args);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+	//if (ALIFSTATUS_EXCEPTION(status)) {
+	//	return status;
+	//}
 
-	AlifConfig config{};
+	//AlifConfig config{};
 	//alifConfig_initAlifConfig(&config);
 
-	if (_args->useBytesArgv) {
-		//status = alifConfig_setCharArgv(&config, _args->argc, _args->bytesArgv);
-	}
-	else {
-		//status = alifConfig_setArgv(&config, _args->argc, _args->wcharArgv);
-	}
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		goto done;
-	}
+	//if (_args->useBytesArgv) {
+	//	status = alifConfig_setCharArgv(&config, _args->argc, _args->bytesArgv);
+	//}
+	//else {
+	//	status = alifConfig_setArgv(&config, _args->argc, _args->wcharArgv);
+	//}
+	//if (ALIFSTATUS_EXCEPTION(status)) {
+	//	goto done;
+	//}
 
 	//status = alifInit_fromConfig(&config);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		goto done;
-	}
-	status = ALIFSTATUS_OK();
+	//if (ALIFSTATUS_EXCEPTION(status)) {
+	//	goto done;
+	//}
+	//status = ALIFSTATUS_OK();
 
-done:
+//done:
 	//alifConfig_clear(&config);
 	return status;
 }
@@ -754,7 +754,7 @@ int wmain(int _argc, wchar_t** _argv)
 int main(int _argc, char** _argv)
 {
 	char* argsv[] = { (char*)"alif", (char*)"example.alif" };
-	return Alif_MainBytes(2, argsv);
+	return alif_mainBytes(2, argsv);
 }
 #endif
 
