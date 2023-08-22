@@ -31,7 +31,7 @@ public:
 
 
 
-
+#define ALIF_BUILD_CORE
 
 
 
@@ -198,3 +198,103 @@ typedef __int64 AlifSizeT;
 typedef _W64 int AlifSizeT;
 #   define ALIF_SIZE_T_MAX INT_MAX
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#if !defined(MS_NO_COREDLL) && !defined(ALIF_NO_ENABLE_SHARED)
+#       define ALIF_ENABLE_SHARED 1
+#       define MS_COREDLL
+#endif
+
+
+#define HAVE_DECLSPEC_DLL

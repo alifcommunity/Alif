@@ -125,4 +125,4 @@ public:
 
 
 
-void alifPreConfig_initAlifConfig(AlifPreConfig*);
+ALIFAPI_FUNC(void) alifPreConfig_initAlifConfig(AlifPreConfig*);
