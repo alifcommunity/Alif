@@ -2,12 +2,12 @@
 //#include "alifCore_fileUtils.h"
 //#include "alifCore_getOpt.h"
 #include "alifCore_initConfig.h"
-//#include "alifCore_alifLifeCycle.h"
+#include "alifCore_alifLifeCycle.h"
 //#include "alifCore_alifMem.h"
 //#include "alifCore_runtime.h"
 
 #include <locale.h>
-#include <stdlib.h>
+//#include <stdlib.h>
 
 
 

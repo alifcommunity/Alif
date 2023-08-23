@@ -5,7 +5,7 @@
 #include "alifCore_initConfig.h"
 //#include "alifCore_interp.h"
 //#include "alifCore_pathConfig.h"
-//#include "alifCore_alifCycle.h"
+#include "alifCore_alifLifeCycle.h"
 //#include "alifCore_alifState.h"
 
 
@@ -43,10 +43,10 @@ static AlifStatus alifMain_init(const AlifArgv* _args) {
 	AlifPreConfig preConfig{};
 	alifPreConfig_initAlifConfig(&preConfig);
 
-	//status = alif_preInitializeFromAlifArgv(&preConfig, _args);
-	//if (ALIFSTATUS_EXCEPTION(status)) {
-	//	return status;
-	//}
+	status = alif_preInitializeFromAlifArgv(&preConfig, _args);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
 	//AlifConfig config{};
 	//alifConfig_initAlifConfig(&config);
