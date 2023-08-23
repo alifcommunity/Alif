@@ -146,6 +146,7 @@
     <ClInclude Include="..\source\Include\alifPort.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_alifLifeCycle.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_initConfig.h" />
+    <ClInclude Include="..\source\Include\Core\alifCore_runtime.h" />
     <ClInclude Include="..\source\Include\exports.h" />
   </ItemGroup>
   <ItemGroup>

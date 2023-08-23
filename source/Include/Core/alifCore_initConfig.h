@@ -21,20 +21,20 @@
 #  define ALIFSTATUS_GET_FUNC() __func__
 #endif
 
-#define ALIFSTATUS_OK(status) {.type = 0,} // Ok = 0, Error = 1, Exit = 2
+#define ALIFSTATUS_OK() {.type = AlifStatus().AlifStatus_Type_Ok,} // Ok = 0, Error = 1, Exit = 2
 
-#define ALIFSTATUS_ERR(ERR_MSG) { \
-        .type = 1, \
+#define ALIFSTATUS_ERR(msg) { \
+        .type = AlifStatus().AlifStatus_Type_Error, \
         .func = ALIFSTATUS_GET_FUNC(), \
-        .errMsg = (ERR_MSG)} // Ok = 0, Error = 1, Exit = 2
+        .errMsg = (msg)}
 
 #define ALIFSTATUS_NO_MEMORY() ALIFSTATUS_ERR("memory allocation failed")
-#define ALIFSTATUS_EXIT(EXITCODE) { \
-        .type = 2, \
-        .exitcode = (EXITCODE)} // Ok = 0, Error = 1, Exit = 2
-#define ALIFSTATUS_IS_ERROR(err) (err.type == 1) // Ok = 0, Error = 1, Exit = 2
-#define ALIFSTATUS_IS_EXIT(err) (err.type == 2) // Ok = 0, Error = 1, Exit = 2
-#define ALIFSTATUS_EXCEPTION(err) (err.type != 0) // Ok = 0, Error = 1, Exit = 2
+#define ALIFSTATUS_EXIT(exit) { \
+        .type = AlifStatus().AlifStatus_Type_Exit, \
+        .exitcode = (exit)}
+#define ALIFSTATUS_IS_ERROR(err) (err.type == AlifStatus().AlifStatus_Type_Error)
+#define ALIFSTATUS_IS_EXIT(err) (err.type == AlifStatus().AlifStatus_Type_Exit)
+#define ALIFSTATUS_EXCEPTION(err) (err.type != AlifStatus().AlifStatus_Type_Ok)
 #define ALIFSTATUS_UPDATE_FUNC(err) do { err.func = ALIFSTATUS_GET_FUNC(); } while (0)
 
 
@@ -120,20 +120,20 @@ public:
 
 
 
-/* --- AlifPreConfig ------------------------------------------- */
+/* ----- AlifPreConfig ------------------------------------------- */
 
 
 ALIFAPI_FUNC(void) alifPreConfig_initCompatConfig(AlifPreConfig*);
 
 
 
+extern AlifStatus alifPreConfig_initFromPreConfig(AlifPreConfig*,const AlifPreConfig*);
 
 
 
 
 
-
-
+extern AlifStatus alifPreConfig_read(AlifPreConfig*,const AlifArgv*);
 
 
 
