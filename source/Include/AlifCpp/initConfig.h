@@ -5,6 +5,19 @@
 
 
 
+/* ----- AlifStatus ------------------------------------------- */
+
+class AlifStatus {
+public:
+	enum {
+		AlifStatus_Type_Ok = 0,
+		AlifStatus_Type_Error = 1,
+		AlifStatus_Type_Exit = 2
+	} type;
+	const char* func;
+	const char* errMsg;
+	int exitcode;
+};
 
 
 
@@ -30,20 +43,7 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* --- AlifPreConfig ----------------------------------------------- */
+/* ----- AlifPreConfig ------------------------------------------- */
 
 class AlifPreConfig {
 public:
