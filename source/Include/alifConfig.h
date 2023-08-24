@@ -48,7 +48,7 @@
 
 
 
-
+#define HAVE_IO_H
 
 
 
@@ -193,10 +193,10 @@
 
 #ifdef MS_WIN64
 typedef __int64 AlifSizeT;
-#   define ALIF_SIZE_T_MAX LLONG_MAX
+#   define ALIFSIZE_T_MAX LLONG_MAX
 #else
 typedef _W64 int AlifSizeT;
-#   define ALIF_SIZE_T_MAX INT_MAX
+#   define ALIFSIZE_T_MAX INT_MAX
 #endif
 
 

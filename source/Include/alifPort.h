@@ -344,9 +344,9 @@
 
 
 
-
-
-
+#define ALIFCOMP_DIAG_PUSH __pragma(warning(push))
+#define ALIFCOMP_DIAGIGNORE_DEPRDECLS __pragma(warning(disable: 4996))
+#define ALIFCOMP_DIAG_POP __pragma(warning(pop))
 
 
 
@@ -519,7 +519,7 @@
 #                       define ALIFAPI_DATA(RTYPE) extern ALIF_EXPORTED_SYMBOL RTYPE
 
 #                       if defined(__CYGWIN__)
-#                               define ALIFMODINIT_FUNC ALIF_EXPORTED_SYMBOL PyObject*
+#                               define ALIFMODINIT_FUNC ALIF_EXPORTED_SYMBOL AlifObject*
 #                       else /* __CYGWIN__ */
 #                               define ALIFMODINIT_FUNC AlifObject*
 #                       endif /* __CYGWIN__ */
