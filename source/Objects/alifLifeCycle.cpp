@@ -8,7 +8,7 @@
 //#include "alifCore_context.h"
 //#include "alifCore_dict.h"
 //#include "alifCore_exceptions.h"
-//#include "alifCore_fileUtils.h"
+#include "alifCore_fileUtils.h"
 //#include "alifCore_floatObject.h"
 //#include "alifCore_genObject.h"
 //#include "alifCore_globalObjectsFiniGenerated.h"
@@ -274,101 +274,101 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+int alif_coerceLegacyLocale(int warn)
+{
+	int coerced = 0;
+#ifdef ALIFCOERCE_C_LOCALE
+	char* oldloc = nullptr;
+
+	oldloc = alifMem_rawStrdup(setlocale(LC_CTYPE, nullptr));
+	if (oldloc == nullptr) {
+		return coerced;
+	}
+
+	const char* localeOverride = getenv("LC_ALL");
+	if (localeOverride == nullptr || *localeOverride == '\0') {
+		const LocaleCoercionTarget* target = nullptr;
+		for (target = TARGET_LOCALES; target->localeName; target++) {
+			const char* newLocale = setlocale(LC_CTYPE,
+				target->localeName);
+			if (newLocale != nullptr) {
+#if !defined(ALIFFORCE_UTF8_LOCALE) && defined(HAVE_LANGINFO_H) && defined(CODESET)
+				char* codeset = nL_langInfo(CODESET);
+				if (!codeset || *codeset == '\0') {
+					newLocale = nullptr;
+					alif_setLocaleFromEnv(LC_CTYPE);
+					continue;
+				}
+#endif
+				coerced = coerceDefault_localeSettings(warn, target);
+				goto done;
+			}
+		}
+	}
+
+	setlocale(LC_CTYPE, oldloc);
+
+done:
+	alifMem_rawFree(oldloc);
+#endif
+	return coerced;
+}
+
+
+
+
+
+
+
+
+
+
+
+char* alif_setLocaleFromEnv(int category)
+{
+	char* res;
+#ifdef __ANDROID__
+	const char* locale;
+	const char** pVar;
+#ifdef ALIFCOERCE_C_LOCALE
+	const char* coerceCLocale;
+#endif
+	const char* utf8Locale = "C.UTF-8";
+	const char* envVarSet[] = {
+		"LC_ALL",
+		"LC_CTYPE",
+		"LANG",
+		nullptr,
+	};
+
+	for (pVar = envVarSet; *pVar; pVar++) {
+		locale = getenv(*pVar);
+		if (locale != nullptr && *locale != '\0') {
+			if (strcmp(locale, utf8Locale) == 0 ||
+				strcmp(locale, "en_US.UTF-8") == 0) {
+				return setlocale(category, utf8Locale);
+			}
+			return setlocale(category, "C");
+		}
+	}
+
+#ifdef ALIFCOERCE_C_LOCALE
+	coerceCLocale = getenv("ALIFCOERCECLOCALE");
+	if (coerceCLocale == nullptr || strcmp(coerceCLocale, "0") != 0) {
+
+		if (setenv("LC_CTYPE", utf8Locale, 1)) {
+			fprintf(stderr, "Warning: failed setting the LC_CTYPE "
+				"environment variable to %s\n", utf8Locale);
+		}
+	}
+#endif
+	res = setlocale(category, utf8Locale);
+#else /* !defined(__ANDROID__) */
+	res = setlocale(category, "");
+#endif
+	//alif_resetForceASCII();
+	return res;
+}
 
 
 
@@ -922,7 +922,7 @@ AlifStatus alif_preInitializeFromAlifArgv(const AlifPreConfig* _srcConfig, const
 		return status;
 	}
 
-	//status = alifPreConfig_write(&config);
+	status = alifPreConfig_write(&config);
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		return status;
 	}

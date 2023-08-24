@@ -70,3 +70,42 @@ class AlifArgv;
 
 
 extern AlifStatus alif_preInitializeFromAlifArgv(const AlifPreConfig*, const AlifArgv*);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+extern int alif_coerceLegacyLocale(int);
+
+ALIFAPI_FUNC(char*) alif_setLocaleFromEnv(int);

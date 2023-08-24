@@ -4,7 +4,7 @@
 #include "alifCore_initConfig.h"
 #include "alifCore_alifLifeCycle.h"
 //#include "alifCore_alifMem.h"
-//#include "alifCore_runtime.h"
+#include "alifCore_runtime.h"
 
 #include <locale.h>
 //#include <stdlib.h>
@@ -293,7 +293,7 @@ void alifPreConfig_initCompatConfig(AlifPreConfig* _config)
 	_config->coerceCLocale = 0;
 	_config->coerceCLocaleWarn = 0;
 	_config->devMode = -1;
-	_config->allocator = AlifMem_Allocator_Not_Set;
+	_config->allocator = AlifMem_Allocator_NotSet;
 #ifdef MS_WINDOWS
 	_config->legacyWindowsFSEncoding = -1;
 #endif
@@ -462,64 +462,64 @@ static void preConfig_copy(AlifPreConfig* _config, const AlifPreConfig* _config2
 
 
 
+static void preConfig_getGlobalVars(AlifPreConfig* _config)
+{
+	if (_config->configInit != AlifConfig_Init_Compat) {
+		return;
+	}
+
+#define COPY_FLAG(ATTR, VALUE) \
+    if (_config->ATTR < 0) { \
+        _config->ATTR = VALUE; \
+    }
+#define COPY_NOT_FLAG(ATTR, VALUE) \
+    if (_config->ATTR < 0) { \
+        _config->ATTR = !(VALUE); \
+    }
+
+	ALIFCOMP_DIAG_PUSH
+		ALIFCOMP_DIAGIGNORE_DEPRDECLS
+		COPY_FLAG(isolated, alifIsolatedFlag);
+	COPY_NOT_FLAG(useEnvironment, alifIgnoreEnvironmentFlag);
+	if (alifUTF8Mode > 0) {
+		_config->utf8Mode = alifUTF8Mode;
+	}
+#ifdef MS_WINDOWS
+	COPY_FLAG(legacyWindowsFSEncoding, alifLegacyWindowsFSEncodingFlag);
+#endif
+	ALIFCOMP_DIAG_POP
+
+#undef COPY_FLAG
+#undef COPY_NOT_FLAG
+}
 
 
 
 
+static void preConfig_setGlobalVars(const AlifPreConfig* config)
+{
+#define COPY_FLAG(ATTR, VAR) \
+    if (config->ATTR >= 0) { \
+        VAR = config->ATTR; \
+    }
+#define COPY_NOT_FLAG(ATTR, VAR) \
+    if (config->ATTR >= 0) { \
+        VAR = !config->ATTR; \
+    }
 
+	ALIFCOMP_DIAG_PUSH
+		ALIFCOMP_DIAGIGNORE_DEPRDECLS
+		COPY_FLAG(isolated, alifIsolatedFlag);
+	COPY_NOT_FLAG(useEnvironment, alifIgnoreEnvironmentFlag);
+#ifdef MS_WINDOWS
+	COPY_FLAG(legacyWindowsFSEncoding, alifLegacyWindowsFSEncodingFlag);
+#endif
+	COPY_FLAG(utf8Mode, alifUTF8Mode);
+	ALIFCOMP_DIAG_POP
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#undef COPY_FLAG
+#undef COPY_NOT_FLAG
+}
 
 
 
@@ -803,7 +803,7 @@ AlifStatus alifPreConfig_read(AlifPreConfig* _config, const AlifArgv* _args)
 		return status;
 	}
 
-	//preConfigGetGlobalVars(_config);
+	preConfig_getGlobalVars(_config);
 
 	const char* loc = setlocale(LC_CTYPE, nullptr);
 	if (loc == nullptr) {
@@ -893,3 +893,120 @@ done:
 	//alifPreCmdline_clear(&cmdline);
 	return status;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+AlifStatus alifPreConfig_write(const AlifPreConfig* _srcConfig)
+{
+	AlifPreConfig config{};
+
+	AlifStatus status = alifPreConfig_initFromPreConfig(&config, _srcConfig);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+
+	//if (alifRuntime.coreInitialized) {
+	//	return ALIFSTATUS_OK();
+	//}
+
+	AlifMemAllocatorName name = (AlifMemAllocatorName)config.allocator;
+	if (name != AlifMem_Allocator_NotSet) {
+		//if (alifMem_setupAllocators(name) < 0) {
+		//	return ALIFSTATUS_ERR("Unknown ALIFMALLOC allocator");
+		//}
+	}
+
+	preConfig_setGlobalVars(&config);
+
+	if (config.configureLocale) {
+		if (config.coerceCLocale) {
+			if (!alif_coerceLegacyLocale(config.coerceCLocaleWarn)) {
+				config.coerceCLocale = 0;
+			}
+		}
+
+		alif_setLocaleFromEnv(LC_CTYPE);
+	}
+
+	//preConfig_copy(&alifRuntime.preConfig, &config);
+
+	return ALIFSTATUS_OK();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

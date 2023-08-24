@@ -140,17 +140,21 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\source\Include\alifConfig.h" />
+    <ClInclude Include="..\source\Include\AlifCpp\alifDebug.h" />
     <ClInclude Include="..\source\Include\AlifCpp\alifMem.h" />
     <ClInclude Include="..\source\Include\AlifCpp\initConfig.h" />
     <ClInclude Include="..\source\Include\alifMem.h" />
     <ClInclude Include="..\source\Include\alifPort.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_alifLifeCycle.h" />
+    <ClInclude Include="..\source\Include\Core\alifCore_fileUtils.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_initConfig.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_runtime.h" />
     <ClInclude Include="..\source\Include\exports.h" />
+    <ClInclude Include="..\source\Include\fileObject.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\Objects\alifLifeCycle.cpp" />
+    <ClCompile Include="..\source\Objects\initConfig.cpp" />
     <ClCompile Include="..\source\Objects\Main\alif.cpp" />
     <ClCompile Include="..\source\Objects\preConfig.cpp" />
   </ItemGroup>

@@ -92,7 +92,7 @@
 
 
 #ifndef ALIF_LIMITED_API
-#  define ALIF_ALIFCPP_ALIFMEM_H
+#  define ALIFCPP_ALIFMEM_H
 #  include "AlifCpp/alifMem.h"
-#  undef ALIF_ALIFCPP_ALIFMEM_H
+#  undef ALIFCPP_ALIFMEM_H
 #endif
