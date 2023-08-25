@@ -104,7 +104,7 @@ ALIFCOMP_DIAGPOP
 
 static int runtimeInitialized = 0;
 
-//AlifStatus runtime_initialize(void)
+//AlifStatus runtime_initialize()
 //{
 
 

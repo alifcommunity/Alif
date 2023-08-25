@@ -238,6 +238,6 @@ public:
 
 
 
-ALIFAPI_FUNC(AlifInterpreterState*) alifInterpreterState_main(void);
-ALIFAPI_FUNC(AlifInterpreterState*) alifInterpreterState_head(void);
+ALIFAPI_FUNC(AlifInterpreterState*) alifInterpreterState_main();
+ALIFAPI_FUNC(AlifInterpreterState*) alifInterpreterState_head();
 ALIFAPI_FUNC(AlifInterpreterState*) alifInterpreterState_next(AlifInterpreterState*);

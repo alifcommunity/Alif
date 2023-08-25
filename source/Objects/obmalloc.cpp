@@ -8,52 +8,52 @@
 #include "alifCore_alifMem.h"
 #include "alifCore_alifState.h" 
 
-//#include <stdlib.h>               // malloc()
+//#include <stdlib.h>               
 #include <stdbool.h>
 
 
 #undef  uint
 #define uint alifMemUint
 
-//extern void alifMem_dumpTraceback(int fd, const void* ptr);
+//extern void alifMem_dumpTraceback(int fd, const void* _ptr);
 
-//static void alifObject_debugDumpAddress(const void* p);
-//static void alifMem_debugCheckAddress(const char* func, char apiID, const void* p);
+//static void alifObject_debugDumpAddress(const void* _p);
+//static void alifMem_debugCheckAddress(const char* func, char apiID, const void* _p);
 
 
 
-static void setUp_debugHooksDomainUnlocked(AlifMemAllocatorDomain domain);
+static void setUp_debugHooksDomainUnlocked(AlifMemAllocatorDomain);
 static void setUp_debugHooksUnlocked(void);
 static void get_allocator_unlocked(AlifMemAllocatorDomain, AlifMemAllocatorEx*);
 static void set_allocator_unlocked(AlifMemAllocatorDomain, AlifMemAllocatorEx*);
 
 
 /***************************************/
-/* low-level allocator implementations */
+/* low-level _allocator implementations */
 /***************************************/
 
-/* the default raw allocator (wraps malloc) */
+/* the default raw _allocator (wraps malloc) */
 
 
-void* alifMem_rawMalloc(void* ALIF_UNUSED(ctx), size_t size)
+void* alifMem_rawMalloc(void* ALIF_UNUSED(_ctx), size_t _size)
 {
 
-	if (size == 0)
-		size = 1;
-	return malloc(size);
+	if (_size == 0)
+		_size = 1;
+	return malloc(_size);
 }
 
 
 
 
 
-void* alifMem_rawCalloc(void* ALIF_UNUSED(ctx), size_t nelem, size_t elsize)
+void* alifMem_rawCalloc(void* ALIF_UNUSED(_ctx), size_t _nElem, size_t _elSize)
 {
-	if (nelem == 0 || elsize == 0) {
-		nelem = 1;
-		elsize = 1;
+	if (_nElem == 0 || _elSize == 0) {
+		_nElem = 1;
+		_elSize = 1;
 	}
-	return calloc(nelem, elsize);
+	return calloc(_nElem, _elSize);
 }
 
 
@@ -61,17 +61,17 @@ void* alifMem_rawCalloc(void* ALIF_UNUSED(ctx), size_t nelem, size_t elsize)
 
 
 
-void* alifMem_rawRealloc(void* ALIF_UNUSED(ctx), void* ptr, size_t size)
+void* alifMem_rawRealloc(void* ALIF_UNUSED(_ctx), void* _ptr, size_t _size)
 {
-	if (size == 0)
-		size = 1;
-	return realloc(ptr, size);
+	if (_size == 0)
+		_size = 1;
+	return realloc(_ptr, _size);
 }
 
 
-void alifMem_rawFree(void* ALIF_UNUSED(ctx), void* ptr)
+void alifMem_rawFree(void* ALIF_UNUSED(_ctx), void* _ptr)
 {
-	free(ptr);
+	free(_ptr);
 }
 
 #define MALLOC_ALLOC {nullptr, alifMem_rawMalloc, alifMem_rawCalloc, alifMem_rawRealloc, alifMem_rawFree}
@@ -82,10 +82,10 @@ void alifMem_rawFree(void* ALIF_UNUSED(ctx), void* ptr)
 
 
 #ifdef WITH_ALIFMALLOC
-void* _alifObject_malloc(void* ctx, size_t size);
-void* _alifObject_calloc(void* ctx, size_t nElem, size_t elSize);
-void  _alifObject_free(void* ctx, void* p);
-void* _alifObject_realloc(void* ctx, void* ptr, size_t size);
+void* _alifObject_malloc(void* , size_t );
+void* _alifObject_calloc(void* , size_t , size_t );
+void  _alifObject_free(void* , void* );
+void* _alifObject_realloc(void* , void* , size_t );
 #  define ALIFMALLOC_ALLOC {nullptr, _alifObject_malloc, _alifObject_calloc, _alifObject_realloc, _alifObject_free}
 #  define ALIFOBJ_ALLOC ALIFMALLOC_ALLOC
 #else
@@ -129,39 +129,39 @@ void _alifMem_debugFree(void* ctx, void* p);
 #endif
 
 
-void* alifMem_arenaAlloc(void* ctx, size_t size) {
+void* alifMem_arenaAlloc(void* _ctx, size_t _size) {
 
 #ifdef MS_WINDOWS
-	return VirtualAlloc(nullptr, size, 0x00001000 | 0x00002000, 0x04);
+	return VirtualAlloc(nullptr, _size, 0x00001000 | 0x00002000, 0x04);
 #elif defined(ARENA_USE_MMAP)
-	void* ptr;
-	ptr = mmap(nullptr, size, PORT_READ | PORT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-	if (ptr == MAP_FAILED) {
+	void* _ptr;
+	_ptr = mmap(nullptr, _size, PORT_READ | PORT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	if (_ptr == MAP_FAILED) {
 		return nullptr;
 	}
-	return ptr;
+	return _ptr;
 #else
-	return malloc(size);
+	return malloc(_size);
 #endif
 }
 
 
 
 
-void alifMem_arenaFree(void* ctx, void* ptr, size_t size)
+void alifMem_arenaFree(void* _ctx, void* _ptr, size_t _size)
 {
 #ifdef MS_WINDOWS
-	VirtualFree(ptr, 0, 0x00008000);
+	VirtualFree(_ptr, 0, 0x00008000);
 #elif defined(ARENA_USE_MMAP)
-	munmap(ptr, size);
+	munmap(_ptr, _size);
 #else
-	free(ptr);
+	free(_ptr);
 #endif
 }
 
 
 /*******************************************/
-/* end low-level allocator implementations */
+/* end low-level _allocator implementations */
 /*******************************************/
 
 
@@ -196,14 +196,14 @@ void alifMem_arenaFree(void* ctx, void* ptr, size_t size)
 typedef class ObmallocState MemoryState;
 // هذه تعاريف خاصة ب مكتشف الاخطاء في الذاكرة يسمى النظام ب sanitizers memory
 // يعمل هذال النظام على اكتشاف اخطاء مثل كتابة عنوان فوق عنوان مكتوب مسبقا خاص بنظام الجهاز 
-#ifndef ALIF_NO_SANITIZE_ADDRESS
-#  define ALIF_NO_SANITIZE_ADDRESS
+#ifndef ALIFNO_SANITIZE_ADDRESS
+#  define ALIFNO_SANITIZE_ADDRESS
 #endif
-#ifndef ALIF_NO_SANITIZE_THREAD
-#  define ALIF_NO_SANITIZE_THREAD
+#ifndef ALIFNO_SANITIZE_THREAD
+#  define ALIFNO_SANITIZE_THREAD
 #endif
-#ifndef ALIF_NO_SANITIZE_MEMORY
-#  define ALIF_NO_SANITIZE_MEMORY
+#ifndef ALIFNO_SANITIZE_MEMORY
+#  define ALIFNO_SANITIZE_MEMORY
 #endif
 #define ALLOCATORS_MUTEX (alifRuntime.allocators.mutex)
 #define ALIFMEM_RAW (alifRuntime.allocators.standard.raw)
@@ -306,9 +306,9 @@ static const int alifDebug = 0;
 
 
 
-static int setUp_allocatorsUnlocked(AlifMemAllocatorName allocator)
+static int setUp_allocatorsUnlocked(AlifMemAllocatorName _allocator)
 {
-	switch (allocator) {
+	switch (_allocator) {
 	case AlifMem_Allocator_Not_Set:
 		/* do nothing */
 		break;
@@ -336,7 +336,7 @@ static int setUp_allocatorsUnlocked(AlifMemAllocatorName allocator)
 		set_allocator_unlocked(AlifMem_Domain_Mem, &alifMalloc);
 		set_allocator_unlocked(AlifMem_Domain_Obj, &alifMalloc);
 
-		if (allocator == AlifMem_Allocator_AlifMalloc_Debug) {
+		if (_allocator == AlifMem_Allocator_AlifMalloc_Debug) {
 			setUp_debugHooksUnlocked();
 		}
 		break;
@@ -351,14 +351,14 @@ static int setUp_allocatorsUnlocked(AlifMemAllocatorName allocator)
 		set_allocator_unlocked(AlifMem_Domain_Mem, &mallocAlloc);
 		set_allocator_unlocked(AlifMem_Domain_Obj, &mallocAlloc);
 
-		if (allocator == AlifMem_Allocator_Malloc_Debug) {
+		if (_allocator == AlifMem_Allocator_Malloc_Debug) {
 			setUp_debugHooksUnlocked();
 		}
 		break;
 	}
 
 	default:
-		/* unknown allocator */
+
 		return -1;
 	}
 
@@ -366,22 +366,22 @@ static int setUp_allocatorsUnlocked(AlifMemAllocatorName allocator)
 }
 
 
-//int alifMem_setupAllocators(AlifMemAllocatorName allocator)
+//int alifMem_setupAllocators(AlifMemAllocatorName _allocator)
 //{
 //	(void)alifThread_acquire_lock(ALLOCATORS_MUTEX, WAIT_LOCK);
-//	int res = setUp_allocatorsUnlocked(allocator);
+//	int res = setUp_allocatorsUnlocked(_allocator);
 //	alifThread_release_lock(ALLOCATORS_MUTEX);
 //	return res;
 //}
 
 
-static int alifMemAllocator_eq(AlifMemAllocatorEx* a, AlifMemAllocatorEx* b)
+static int alifMemAllocator_eq(AlifMemAllocatorEx* _a, AlifMemAllocatorEx* _b)
 {
-	return (memcmp(a, b, sizeof(AlifMemAllocatorEx)) == 0);
+	return (memcmp(_a, _b, sizeof(AlifMemAllocatorEx)) == 0);
 }
 
 
-static const char* getCurrent_allocatorName_unlocked(void)
+static const char* getCurrent_allocatorName_unlocked()
 {
 	AlifMemAllocatorEx mallocAlloc = MALLOC_ALLOC;
 #ifdef WITH_ALIFMALLOC
@@ -450,7 +450,7 @@ static int alifMem_debugEnabled()
 
 
 
-static int alifMem_alifMallocEnabled(void)
+static int alifMem_alifMallocEnabled()
 {
 	if (alifMem_debugEnabled()) {
 		return (ALIFMEM_DEBUG.obj.alloc.malloc == _alifObject_malloc);
@@ -462,48 +462,48 @@ static int alifMem_alifMallocEnabled(void)
 #endif
 
 
-void setUp_debugHooksDomainUnlocked(AlifMemAllocatorDomain domain)
+void setUp_debugHooksDomainUnlocked(AlifMemAllocatorDomain _domain)
 {
 	AlifMemAllocatorEx alloc;
 
-	if (domain == AlifMem_Domain_Raw) {
+	if (_domain == AlifMem_Domain_Raw) {
 		if (ALIFMEM_RAW.malloc == _alifMem_debugRawMalloc) {
 			return;
 		}
 
-		get_allocator_unlocked(domain, &ALIFMEM_DEBUG.raw.alloc);
+		get_allocator_unlocked(_domain, &ALIFMEM_DEBUG.raw.alloc);
 		alloc.ctx = &ALIFMEM_DEBUG.raw;
 		alloc.malloc = _alifMem_debugRawMalloc;
 		alloc.calloc = _alifMem_debugRawCalloc;
 		alloc.realloc = _alifMem_debugRawRealloc;
 		alloc.free = _alifMem_debugRawFree;
-		set_allocator_unlocked(domain, &alloc);
+		set_allocator_unlocked(_domain, &alloc);
 	}
-	else if (domain == AlifMem_Domain_Mem) {
+	else if (_domain == AlifMem_Domain_Mem) {
 		if (ALIFMEM.malloc == _alifMem_debugRawMalloc) {
 			return;
 		}
 
-		get_allocator_unlocked(domain, &ALIFMEM_DEBUG.mem.alloc);
+		get_allocator_unlocked(_domain, &ALIFMEM_DEBUG.mem.alloc);
 		alloc.ctx = &ALIFMEM_DEBUG.mem;
 		alloc.malloc = _alifMem_debugRawMalloc;
 		alloc.calloc = _alifMem_debugRawCalloc;
 		alloc.realloc = _alifMem_debugRawRealloc;
 		alloc.free = _alifMem_debugRawFree;
-		set_allocator_unlocked(domain, &alloc);
+		set_allocator_unlocked(_domain, &alloc);
 	}
-	else if (domain == AlifMem_Domain_Obj) {
+	else if (_domain == AlifMem_Domain_Obj) {
 		if (ALIFOBJECT.malloc == _alifMem_debugRawMalloc) {
 			return;
 		}
 
-		get_allocator_unlocked(domain, &ALIFMEM_DEBUG.obj.alloc);
+		get_allocator_unlocked(_domain, &ALIFMEM_DEBUG.obj.alloc);
 		alloc.ctx = &ALIFMEM_DEBUG.obj;
 		alloc.malloc = _alifMem_debugRawMalloc;
 		alloc.calloc = _alifMem_debugRawCalloc;
 		alloc.realloc = _alifMem_debugRawRealloc;
 		alloc.free = _alifMem_debugRawFree;
-		set_allocator_unlocked(domain, &alloc);
+		set_allocator_unlocked(_domain, &alloc);
 	}
 }
 
@@ -547,67 +547,67 @@ static void get_allocator_unlocked(AlifMemAllocatorDomain _domain, AlifMemAlloca
 
 }
 
-static void set_allocator_unlocked(AlifMemAllocatorDomain domain, AlifMemAllocatorEx* allocator)
+static void set_allocator_unlocked(AlifMemAllocatorDomain _domain, AlifMemAllocatorEx* _allocator)
 {
 
-	switch (domain)
+	switch (_domain)
 	{
-	case AlifMem_Domain_Raw: ALIFMEM_RAW = *allocator; break;
-	case AlifMem_Domain_Mem: ALIFMEM = *allocator; break;
-	case AlifMem_Domain_Obj: ALIFOBJECT = *allocator; break;
+	case AlifMem_Domain_Raw: ALIFMEM_RAW = *_allocator; break;
+	case AlifMem_Domain_Mem: ALIFMEM = *_allocator; break;
+	case AlifMem_Domain_Obj: ALIFOBJECT = *_allocator; break;
 	}
 
 }
 
 
-//void alifMem_getAllocator(AlifMemAllocatorDomain domain, AlifMemAllocatorEx* allocator)
+//void alifMem_getAllocator(AlifMemAllocatorDomain _domain, AlifMemAllocatorEx* _allocator)
 //{
 //	if (ALLOCATORS_MUTEX == nullptr) {
 //
-//		get_allocator_unlocked(domain, allocator);
+//		get_allocator_unlocked(_domain, _allocator);
 //		return;
 //	}
 //	(void)alifThread_acquire_lock(ALLOCATORS_MUTEX, WAIT_LOCK);
-//	get_allocator_unlocked(domain, allocator);
+//	get_allocator_unlocked(_domain, _allocator);
 //	alifThread_release_lock(ALLOCATORS_MUTEX);
 //}
 
 
-//void alifMem_setAllocator(AlifMemAllocatorDomain domain, AlifMemAllocatorEx* allocator)
+//void alifMem_setAllocator(AlifMemAllocatorDomain _domain, AlifMemAllocatorEx* _allocator)
 //{
 //
 //	if (ALLOCATORS_MUTEX == nullptr) {
-//		set_allocator_unlocked(domain, allocator);
+//		set_allocator_unlocked(_domain, _allocator);
 //		return;
 //	}
 //	(void)alifThread_acquire_lock(ALLOCATORS_MUTEX, WAIT_LOCK);
-//	set_allocator_unlocked(domain, allocator);
+//	set_allocator_unlocked(_domain, _allocator);
 //	alifThread_release_lock(ALLOCATORS_MUTEX);
 //}
 
 
-//void alifObject_getArenaAllocator(AlifObjectArenaAllocator* allocator)
+//void alifObject_getArenaAllocator(AlifObjectArenaAllocator* _allocator)
 //{
 //	if (ALLOCATORS_MUTEX == nullptr) {
 //
-//		*allocator = ALIFOBJECT_ARENA;
+//		*_allocator = ALIFOBJECT_ARENA;
 //		return;
 //	}
 //	(void)alifThread_acquire_lock(ALLOCATORS_MUTEX, WAIT_LOCK);
-//	*allocator = ALIFOBJECT_ARENA;
+//	*_allocator = ALIFOBJECT_ARENA;
 //	alifThread_release_lock(ALLOCATORS_MUTEX);
 //}
 
 
-//void alifObject_setArenaAllocator(AlifObjectArenaAllocator* allocator)
+//void alifObject_setArenaAllocator(AlifObjectArenaAllocator* _allocator)
 //{
 //	if (ALLOCATORS_MUTEX == nullptr) {
 //
-//		ALIFOBJECT_ARENA = *allocator;
+//		ALIFOBJECT_ARENA = *_allocator;
 //		return;
 //	}
 //	(void)alifThread_acquire_lock(ALLOCATORS_MUTEX, WAIT_LOCK);
-//	ALIFOBJECT_ARENA = *allocator;
+//	ALIFOBJECT_ARENA = *_allocator;
 //	alifThread_release_lock(ALLOCATORS_MUTEX);
 //}
 
@@ -631,104 +631,104 @@ static void set_allocator_unlocked(AlifMemAllocatorDomain domain, AlifMemAllocat
 
 
 
-void* alifObject_virtualAlloc(size_t size)
+void* alifObject_virtualAlloc(size_t _size)
 {
-	return ALIFOBJECT_ARENA.alloc(ALIFOBJECT_ARENA.ctx, size);
+	return ALIFOBJECT_ARENA.alloc(ALIFOBJECT_ARENA.ctx, _size);
 }
 
 
-void alifObject_virtualFree(void* obj, size_t size)
+void alifObject_virtualFree(void* _obj, size_t _size)
 {
-	ALIFOBJECT_ARENA.free(ALIFOBJECT_ARENA.ctx, obj, size);
+	ALIFOBJECT_ARENA.free(ALIFOBJECT_ARENA.ctx, _obj, _size);
 }
 
 
 
 /***********************/
-/* the "raw" allocator */
+/* the "raw" _allocator */
 /***********************/
 
 
-void* alifMem_rawMalloc(size_t size)
+void* alifMem_rawMalloc(size_t _size)
 {
 
 
 
 
 
-	if (size > (size_t)ALIFSIZE_T_MAX)
+	if (_size > (size_t)ALIFSIZE_T_MAX)
 		return nullptr;
-	return ALIFMEM_RAW.malloc(ALIFMEM_RAW.ctx, size);
+	return ALIFMEM_RAW.malloc(ALIFMEM_RAW.ctx, _size);
 }
 
 
-void* alifMem_rawCalloc(size_t nElem, size_t elSize)
+void* alifMem_rawCalloc(size_t _nElem, size_t _elSize)
 {
 
-	if (elSize != 0 && nElem > (size_t)ALIFSIZE_T_MAX / elSize)
+	if (_elSize != 0 && _nElem > (size_t)ALIFSIZE_T_MAX / _elSize)
 		return nullptr;
-	return ALIFMEM_RAW.calloc(ALIFMEM_RAW.ctx, nElem, elSize);
+	return ALIFMEM_RAW.calloc(ALIFMEM_RAW.ctx, _nElem, _elSize);
 }
 
 
-void* alifMem_rawRealloc(void* ptr, size_t newSize)
+void* alifMem_rawRealloc(void* _ptr, size_t _newSize)
 {
 
-	if (newSize > (size_t)ALIFSIZE_T_MAX)
+	if (_newSize > (size_t)ALIFSIZE_T_MAX)
 		return nullptr;
-	return ALIFMEM_RAW.realloc(ALIFMEM_RAW.ctx, ptr, newSize);
+	return ALIFMEM_RAW.realloc(ALIFMEM_RAW.ctx, _ptr, _newSize);
 }
 
 
-void alifMem_rawFree(void* ptr)
+void alifMem_rawFree(void* _ptr)
 {
-	ALIFMEM_RAW.free(ALIFMEM_RAW.ctx, ptr);
+	ALIFMEM_RAW.free(ALIFMEM_RAW.ctx, _ptr);
 }
 
 
 /***********************/
-/* the "mem" allocator */
+/* the "mem" _allocator */
 /***********************/
 // سيتم استخدام OBJECTSTAT_INCCOND لاحقا لكي يتم حساب عدد الكائنات المحجوزة داخل الذاكرة
-void* alifMem_malloc(size_t size)
+void* alifMem_malloc(size_t _size)
 {
 
-	if (size > (size_t)ALIFSIZE_T_MAX)
+	if (_size > (size_t)ALIFSIZE_T_MAX)
 		return nullptr;
-	OBJECT_STAT_INC_COND(allocations512, size < 512);
-	OBJECT_STAT_INC_COND(allocations4k, size >= 512 && size < 4094);
-	OBJECT_STAT_INC_COND(allocations_big, size >= 4094);
+	OBJECT_STAT_INC_COND(allocations512, _size < 512);
+	OBJECT_STAT_INC_COND(allocations4k, _size >= 512 && _size < 4094);
+	OBJECT_STAT_INC_COND(allocations_big, _size >= 4094);
 	OBJECT_STAT_INC(allocations);
-	return ALIFMEM.malloc(ALIFMEM.ctx, size);
+	return ALIFMEM.malloc(ALIFMEM.ctx, _size);
 }
 
 
-void* alifMem_calloc(size_t nElem, size_t elSize)
+void* alifMem_calloc(size_t _nElem, size_t _elSize)
 {
 
-	if (elSize != 0 && nElem > (size_t)ALIFSIZE_T_MAX / elSize)
+	if (_elSize != 0 && _nElem > (size_t)ALIFSIZE_T_MAX / _elSize)
 		return nullptr;
-	OBJECT_STAT_INC_COND(allocations512, elSize < 512);
-	OBJECT_STAT_INC_COND(allocations4k, elSize >= 512 && elSize < 4094);
-	OBJECT_STAT_INC_COND(allocations_big, elSize >= 4094);
+	OBJECT_STAT_INC_COND(allocations512, _elSize < 512);
+	OBJECT_STAT_INC_COND(allocations4k, _elSize >= 512 && _elSize < 4094);
+	OBJECT_STAT_INC_COND(allocations_big, _elSize >= 4094);
 	OBJECT_STAT_INC(allocations);
-	return ALIFMEM.calloc(ALIFMEM.ctx, nElem, elSize);
+	return ALIFMEM.calloc(ALIFMEM.ctx, _nElem, _elSize);
 }
 
 
-void* alifMem_realloc(void* ptr, size_t new_size)
+void* alifMem_realloc(void* _ptr, size_t _newSize)
 {
 
-	if (new_size > (size_t)ALIFSIZE_T_MAX)
+	if (_newSize > (size_t)ALIFSIZE_T_MAX)
 		return nullptr;
-	return ALIFMEM.realloc(ALIFMEM.ctx, ptr, new_size);
+	return ALIFMEM.realloc(ALIFMEM.ctx, _ptr, _newSize);
 }
 
 
-void alifMem_free(void* ptr)
+void alifMem_free(void* _ptr)
 {
-	//OBJECTSTAT_INC(frees);
-	ALIFMEM.free(ALIFMEM.ctx, ptr);
+	OBJECT_STAT_INC(frees);
+	ALIFMEM.free(ALIFMEM.ctx, _ptr);
 }
 
 
@@ -737,11 +737,11 @@ void alifMem_free(void* ptr)
 /* alifMem utility functions */
 /***************************/
 
-wchar_t* alifMem_rawWcsdup(const wchar_t* str)
+wchar_t* alifMem_rawWcsdup(const wchar_t* _str)
 {
 
 
-	size_t len = wcslen(str);
+	size_t len = wcslen(_str);
 	if (len > (size_t)ALIFSIZE_T_MAX / sizeof(wchar_t) - 1) {
 		return nullptr;
 	}
@@ -752,87 +752,87 @@ wchar_t* alifMem_rawWcsdup(const wchar_t* str)
 		return nullptr;
 	}
 
-	memcpy(str2, str, size);
+	memcpy(str2, _str, size);
 	return str2;
 }
 
 
-char* alifMem_rawStrdup(const char* str)
+char* alifMem_rawStrdup(const char* _str)
 {
 
-	size_t size = strlen(str) + 1;
+	size_t size = strlen(_str) + 1;
 	char* copy = (char*)alifMem_rawMalloc(size);
 	if (copy == nullptr) {
 		return nullptr;
 	}
-	memcpy(copy, str, size);
+	memcpy(copy, _str, size);
 	return copy;
 }
 
 
-char* alifMem_strdup(const char* str)
+char* alifMem_strdup(const char* _str)
 {
 
-	size_t size = strlen(str) + 1;
+	size_t size = strlen(_str) + 1;
 	char* copy = (char*)alifMem_malloc(size);
 	if (copy == nullptr) {
 		return nullptr;
 	}
-	memcpy(copy, str, size);
+	memcpy(copy, _str, size);
 	return copy;
 }
 
 
 
 /**************************/
-/* the "object" allocator */
+/* the "object" _allocator */
 /**************************/
 
 
-void* alifObject_malloc(size_t size)
+void* alifObject_malloc(size_t _size)
 {
 
-	if (size > (size_t)ALIFSIZE_T_MAX)
+	if (_size > (size_t)ALIFSIZE_T_MAX)
 		return nullptr;
-	OBJECT_STAT_INC_COND(allocations512, size < 512);
-	OBJECT_STAT_INC_COND(allocations4k, size >= 512 && size < 4094);
-	OBJECT_STAT_INC_COND(allocations_big, size >= 4094);
+	OBJECT_STAT_INC_COND(allocations512, _size < 512);
+	OBJECT_STAT_INC_COND(allocations4k, _size >= 512 && _size < 4094);
+	OBJECT_STAT_INC_COND(allocations_big, _size >= 4094);
 	OBJECT_STAT_INC(allocations);
-	return ALIFOBJECT.malloc(ALIFOBJECT.ctx, size);
+	return ALIFOBJECT.malloc(ALIFOBJECT.ctx, _size);
 }
 
 
-void* alifObject_calloc(size_t nelem, size_t elsize)
+void* alifObject_calloc(size_t _nElem, size_t _elSize)
 {
 
-	if (elsize != 0 && nelem > (size_t)ALIFSIZE_T_MAX / elsize)
+	if (_elSize != 0 && _nElem > (size_t)ALIFSIZE_T_MAX / _elSize)
 		return nullptr;
-	OBJECT_STAT_INC_COND(allocations512, elSize < 512);
-	OBJECT_STAT_INC_COND(allocations4k, elSize >= 512 && elSize < 4094);
-	OBJECT_STAT_INC_COND(allocations_big, elSize >= 4094);
+	OBJECT_STAT_INC_COND(allocations512, _elSize < 512);
+	OBJECT_STAT_INC_COND(allocations4k, _elSize >= 512 && _elSize < 4094);
+	OBJECT_STAT_INC_COND(allocations_big, _elSize >= 4094);
 	OBJECT_STAT_INC(allocations);
-	return ALIFOBJECT.calloc(ALIFOBJECT.ctx, nelem, elsize);
+	return ALIFOBJECT.calloc(ALIFOBJECT.ctx, _nElem, _elSize);
 }
 
 
-void* alifObject_realloc(void* ptr, size_t new_size)
+void* alifObject_realloc(void* _ptr, size_t _newSize)
 {
 
-	if (new_size > (size_t)ALIFSIZE_T_MAX)
+	if (_newSize > (size_t)ALIFSIZE_T_MAX)
 		return nullptr;
-	return ALIFOBJECT.realloc(ALIFOBJECT.ctx, ptr, new_size);
+	return ALIFOBJECT.realloc(ALIFOBJECT.ctx, _ptr, _newSize);
 }
 
 
-void alifObject_free(void* ptr)
+void alifObject_free(void* _ptr)
 {
-	//OBJECTSTAT_INC(frees);
-	ALIFOBJECT.free(ALIFOBJECT.ctx, ptr);
+	OBJECT_STAT_INC(frees);
+	ALIFOBJECT.free(ALIFOBJECT.ctx, _ptr);
 }
 
 
-/* If we're using GCC, use __builtin_expect() to reduce overhead of
-   the valgrind checks */
+
+
 #if defined(__GNUC__) && (__GNUC__ > 2) && defined(__OPTIMIZE__)
 #  define UNLIKELY(value) __builtin_expect((value), 0)
 #  define LIKELY(value) __builtin_expect((value), 1)
@@ -846,20 +846,20 @@ void alifObject_free(void* ptr)
 #ifdef WITH_VALGRIND
 #include <valgrind/valgrind.h>
 
-   /* -1 indicates that we haven't checked that we're running on valgrind yet. */
+
 static int runningOnValgrind = -1;
 #endif
 
 typedef class ObmallocState OMState;
 
-static inline int has_own_state(AlifInterpreterState* interp)
+static inline int has_own_state(AlifInterpreterState* _interp)
 {
-	return (alifIsMainInterpreter(interp) |
-		!(interp->featureFlags & ALIFRTFLAGS_USEMAIN_OBMALLOC) |
-		alifisMainInterpreterFinalizing(interp));
+	return (alifIsMainInterpreter(_interp) |
+		!(_interp->featureFlags & ALIFRTFLAGS_USEMAIN_OBMALLOC) |
+		alifisMainInterpreterFinalizing(_interp));
 }
 
-static inline OMState* get_state(void)
+static inline OMState* get_state()
 {
 	AlifInterpreterState* interp = alifInterpreterState_get();
 	if (!has_own_state(interp)) {
@@ -870,33 +870,33 @@ static inline OMState* get_state(void)
 
 
 
-// These macros all rely on a local "state" variable.
-#define USEDPOOLS (state->pools.used)
-#define ALLARENAS (state->mGmt.arenas)
-#define MAXARENAS (state->mGmt.maxArenas)
-#define UNUSED_ARENA_OBJECTS (state->mGmt.unusedArenaObjects)
-#define USABLE_ARENAS (state->mGmt.usableArenas)
-#define NFP2LASTA (state->mGmt.nFP2Lasta)
-#define NARENAS_CURRENTLY_ALLOCATED (state->mGmt.nArenasCurrentlyAllocated)
-#define NTIMES_ARENA_ALLOCATED (state->mGmt.nTimesArenaAllocated)
-#define NARENAS_HIGHWATER (state->mGmt.nArenasHighwater)
-#define RAW_ALLOCATED_BLOCKS (state->mGmt.rawAllocatedBlocks)
 
-AlifSizeT alifInterpreterState_getAllocatedBlocks(AlifInterpreterState* interp)
+#define USEDPOOLS (_state->pools.used)
+#define ALLARENAS (_state->mGmt.arenas)
+#define MAXARENAS (_state->mGmt.maxArenas)
+#define UNUSED_ARENA_OBJECTS (_state->mGmt.unusedArenaObjects)
+#define USABLE_ARENAS (_state->mGmt.usableArenas)
+#define NFP2LASTA (_state->mGmt.nFP2Lasta)
+#define NARENAS_CURRENTLY_ALLOCATED (_state->mGmt.nArenasCurrentlyAllocated)
+#define NTIMES_ARENA_ALLOCATED (_state->mGmt.nTimesArenaAllocated)
+#define NARENAS_HIGHWATER (_state->mGmt.nArenasHighwater)
+#define RAW_ALLOCATED_BLOCKS (_state->mGmt.rawAllocatedBlocks)
+
+AlifSizeT alifInterpreterState_getAllocatedBlocks(AlifInterpreterState* _interp)
 {
 #ifdef ALIF_DEBUG
 
 #else
-	if (!has_own_state(interp)) {
+	if (!has_own_state(_interp)) {
 		// error "المفسر لا يملك ذاكرة داخليه"
 	}
 #endif
-	OMState* state = &interp->obmalloc;
+	OMState* _state = &_interp->obmalloc;
 
 	AlifSizeT n = RAW_ALLOCATED_BLOCKS;
-	/* add up allocated blocks for used pools */
+
 	for (uint i = 0; i < MAXARENAS; ++i) {
-		/* Skip arenas which are not allocated. */
+
 		if (ALLARENAS[i].address == 0) {
 			continue;
 		}
@@ -915,12 +915,12 @@ AlifSizeT alifInterpreterState_getAllocatedBlocks(AlifInterpreterState* interp)
 
 
 
-void alifInterpreterState_finalizeAllocatedBlocks(AlifInterpreterState* interp)
+void alifInterpreterState_finalizeAllocatedBlocks(AlifInterpreterState* _interp)
 {
-	if (has_own_state(interp)) {
-		AlifSizeT leaked = alifInterpreterState_getAllocatedBlocks(interp);
+	if (has_own_state(_interp)) {
+		AlifSizeT leaked = alifInterpreterState_getAllocatedBlocks(_interp);
 
-		interp->runtime->obmalloc.interpreterLeaks += leaked;
+		_interp->runtime->obmalloc.interpreterLeaks += leaked;
 	}
 }
 
@@ -933,19 +933,19 @@ void alifInterpreterState_finalizeAllocatedBlocks(AlifInterpreterState* interp)
 //
 //static AlifSizeT lastFinalLeaks = 0;
 //
-//void alifFinalizeAllocatedBlocks(AlifRuntimeState* runtime)
+//void alifFinalizeAllocatedBlocks(AlifRuntimeState* _runtime)
 //{
-//	lastFinalLeaks = getNumGlobal_allocatedBlocks(runtime);
-//	runtime->obmalloc.interpreterLeaks = 0;
+//	lastFinalLeaks = getNumGlobal_allocatedBlocks(_runtime);
+//	_runtime->obmalloc.interpreterLeaks = 0;
 //}
 //
 //
-//static AlifSizeT getNumGlobal_allocatedBlocks(AlifRuntimeState* runtime)
+//static AlifSizeT getNumGlobal_allocatedBlocks(AlifRuntimeState* _runtime)
 //{
 //	AlifSizeT total = 0;
-//	if (alifRuntimeState_getFinalizing(runtime) != nullptr) {
-//		AlifInterpreterState* interp = _alifInterpreterState_main();
-//		if (interp == nullptr) {
+//	if (alifRuntimeState_getFinalizing(r_untime) != nullptr) {
+//		AlifInterpreterState* _interp = _alifInterpreterState_main();
+//		if (_interp == nullptr) {
 //
 //
 //
@@ -956,29 +956,29 @@ void alifInterpreterState_finalizeAllocatedBlocks(AlifInterpreterState* interp)
 //
 //
 //
-//			total += alifInterpreterState_getAllocatedBlocks(interp);
+//			total += alifInterpreterState_getAllocatedBlocks(_interp);
 //		}
 //	}
 //	else {
 //		HEAD_LOCK(runtime);
-//		AlifInterpreterState* interp = alifInterpreterState_head();
+//		AlifInterpreterState* _interp = alifInterpreterState_head();
 //
 //#ifdef ALIF_DEBUG
 //		int gotMain = 0;
 //#endif
-//		for (; interp != nullptr; interp = alifInterpreterState_next(interp)) {
+//		for (; _interp != nullptr; _interp = alifInterpreterState_next(_interp)) {
 //#ifdef ALIF_DEBUG
-//			if (interp == alifInterpreterState_main()) {
+//			if (_interp == alifInterpreterState_main()) {
 //
 //				gotMain = 1;
 //
 //			}
 //#endif
-//			if (has_own_state(interp)) {
-//				total += alifInterpreterState_getAllocatedBlocks(interp);
+//			if (has_own_state(_interp)) {
+//				total += alifInterpreterState_getAllocatedBlocks(_interp);
 //			}
 //		}
-//		HEAD_UNLOCK(runtime);
+//		HEAD_UNLOCK(_runtime);
 //#ifdef ALIF_DEBUG
 //
 //#endif
@@ -989,32 +989,32 @@ void alifInterpreterState_finalizeAllocatedBlocks(AlifInterpreterState* interp)
 //}
 
 
-//AlifSizeT alifGetGlobalAllocatedBlocks(void)
+//AlifSizeT alifGetGlobalAllocatedBlocks()
 //{
 //	return getNumGlobal_allocatedBlocks(&alifRuntime);
 //}
 
 #if WITH_ALIFMALLOC_RADIXTREE
 /*==========================================================================*/
-/* radix tree for tracking arena usage. */
 
-#define ARENA_MAP_ROOT (state->usage.arenaMapRoot)
+
+#define ARENA_MAP_ROOT (_state->usage.arenaMapRoot)
 #ifdef USE_INTERIOR_NODES
-#define ARENA_MAP_MIDCOUNT (state->usage.arenaMapMidCount)
-#define ARENA_MAP_BOTCOUNT (state->usage.arenaMapBotCount)
+#define ARENA_MAP_MIDCOUNT (_state->usage.arenaMapMidCount)
+#define ARENA_MAP_BOTCOUNT (_state->usage.arenaMapBotCount)
 #endif
 
 
 
 
-static inline ALIF_ALWAYS_INLINE ArenaMapBotT* arena_map_get(OMState* state, AlifMemBlock* p, int create)
+static inline ALIF_ALWAYS_INLINE ArenaMapBotT* arena_map_get(OMState* _state, AlifMemBlock* _p, int _create)
 {
 #ifdef USE_INTERIOR_NODES
-	/* sanity check that IGNORE_BITS is correct */
 
-	int i1 = MAP_TOP_INDEX(p);
+
+	int i1 = MAP_TOP_INDEX(_p);
 	if (ARENA_MAP_ROOT.ptrs[i1] == nullptr) {
-		if (!create) {
+		if (!_create) {
 			return nullptr;
 		}
 		ArenaMapMidT* n = (ArenaMapMidT*)alifMem_rawCalloc(1, sizeof(ArenaMapMidT));
@@ -1024,9 +1024,9 @@ static inline ALIF_ALWAYS_INLINE ArenaMapBotT* arena_map_get(OMState* state, Ali
 		ARENA_MAP_ROOT.ptrs[i1] = n;
 		ARENA_MAP_MIDCOUNT++;
 	}
-	int i2 = MAP_MID_INDEX(p);
+	int i2 = MAP_MID_INDEX(_p);
 	if (ARENA_MAP_ROOT.ptrs[i1]->ptrs[i2] == nullptr) {
-		if (!create) {
+		if (!_create) {
 			return nullptr;
 		}
 		ArenaMapBotT* n = (ArenaMapBotT*)alifMem_rawCalloc(1, sizeof(ArenaMapBotT));
@@ -1068,22 +1068,22 @@ static inline ALIF_ALWAYS_INLINE ArenaMapBotT* arena_map_get(OMState* state, Ali
 
 
 
-static int arena_mapMark_used(OMState* state, uintptr_t arenaBase, int isUsed)
+static int arena_mapMark_used(OMState* _state, uintptr_t _arenaBase, int _isUsed)
 {
 
 
 	ArenaMapBotT* nHi = arena_map_get(
-		state, (AlifMemBlock*)arenaBase, isUsed);
-	if (nHi == NULL) {
+		_state, (AlifMemBlock*)_arenaBase, _isUsed);
+	if (nHi == nullptr) {
 
 		return 0;
 
 	}
-	int i3 = MAP_BOT_INDEX((AlifMemBlock*)arenaBase);
-	int32_t tail = (int32_t)(arenaBase & ARENA_SIZE_MASK);
+	int i3 = MAP_BOT_INDEX((AlifMemBlock*)_arenaBase);
+	int32_t tail = (int32_t)(_arenaBase & ARENA_SIZE_MASK);
 	if (tail == 0) {
 
-		nHi->arenas[i3].tailHi = isUsed ? -1 : 0;
+		nHi->arenas[i3].tailHi = _isUsed ? -1 : 0;
 	}
 	else {
 
@@ -1093,39 +1093,39 @@ static int arena_mapMark_used(OMState* state, uintptr_t arenaBase, int isUsed)
 
 
 
-		nHi->arenas[i3].tailHi = isUsed ? tail : 0;
-		uintptr_t arenaBaseNext = arenaBase + ARENA_SIZE;
+		nHi->arenas[i3].tailHi = _isUsed ? tail : 0;
+		uintptr_t arenaBaseNext = _arenaBase + ARENA_SIZE;
 
 
 
 
 
 		ArenaMapBotT* nLo = arena_map_get(
-			state, (AlifMemBlock*)arenaBaseNext, isUsed);
-		if (nLo == NULL) {
+			_state, (AlifMemBlock*)arenaBaseNext, _isUsed);
+		if (nLo == nullptr) {
 
 			nHi->arenas[i3].tailHi = 0;
 			return 0; /* failed to allocate space for node */
 		}
 		int i3_next = MAP_BOT_INDEX(arenaBaseNext);
-		nLo->arenas[i3_next].tailLo = isUsed ? tail : 0;
+		nLo->arenas[i3_next].tailLo = _isUsed ? tail : 0;
 	}
 	return 1;
 }
 
 
 
-static int arena_mapIs_used(OMState* state, AlifMemBlock* p)
+static int arena_mapIs_used(OMState* _state, AlifMemBlock* _p)
 {
-	ArenaMapBotT* n = arena_map_get(state, p, 0);
-	if (n == NULL) {
+	ArenaMapBotT* n = arena_map_get(_state, _p, 0);
+	if (n == nullptr) {
 		return 0;
 	}
-	int i3 = MAP_BOT_INDEX(p);
+	int i3 = MAP_BOT_INDEX(_p);
 
 	int32_t hi = n->arenas[i3].tailHi;
 	int32_t lo = n->arenas[i3].tailLo;
-	int32_t tail = (int32_t)(AS_UINT(p) & ARENA_SIZE_MASK);
+	int32_t tail = (int32_t)(AS_UINT(_p) & ARENA_SIZE_MASK);
 	return (tail < lo) || (tail >= hi && hi != 0);
 }
 
@@ -1139,7 +1139,7 @@ static int arena_mapIs_used(OMState* state, AlifMemBlock* p)
 
 
 
-static ArenaObject* new_arena(OMState* state)
+static ArenaObject* new_arena(OMState* _state)
 {
 	ArenaObject* arenaObj;
 	uint excess;      
@@ -1148,14 +1148,14 @@ static ArenaObject* new_arena(OMState* state)
 	int debugStats = alifRuntime.obmalloc.dumpDebugStats;
 	if (debugStats == -1) {
 		//const char* opt = ALIF_GETENV("ALIFTHONMALLOCSTATS");
-		//debugStats = (opt != NULL && *opt != '\0');
+		//debugStats = (opt != nullptr && *opt != '\0');
 		alifRuntime.obmalloc.dumpDebugStats = debugStats;
 	}
 	if (debugStats) {
 		//alifObject_DebugMallocStats(stderr);
 	}
 
-	if (UNUSED_ARENA_OBJECTS == NULL) {
+	if (UNUSED_ARENA_OBJECTS == nullptr) {
 		uint i;
 		uint numArenas;
 		size_t nBytes;
@@ -1165,15 +1165,15 @@ static ArenaObject* new_arena(OMState* state)
 
 		numArenas = MAXARENAS ? MAXARENAS << 1 : INITIAL_ARENA_OBJECTS;
 		if (numArenas <= MAXARENAS)
-			return NULL;                /* overflow */
+			return nullptr;                /* overflow */
 #if SIZEOF_SIZE_T <= SIZEOF_INT
 		if (numArenas > SIZE_MAX / sizeof(*ALLARENAS))
-			return NULL;                /* overflow */
+			return nullptr;                /* overflow */
 #endif
 		nBytes = numArenas * sizeof(*ALLARENAS);
 		arenaObj = (class ArenaObject*)alifMem_rawRealloc(ALLARENAS, nBytes);
-		if (arenaObj == NULL)
-			return NULL;
+		if (arenaObj == nullptr)
+			return nullptr;
 		ALLARENAS = arenaObj;
 
 
@@ -1189,7 +1189,7 @@ static ArenaObject* new_arena(OMState* state)
 		for (i = MAXARENAS; i < numArenas; ++i) {
 			ALLARENAS[i].address = 0;              /* mark as unassociated */
 			ALLARENAS[i].nextArena = i < numArenas - 1 ?
-				&ALLARENAS[i + 1] : NULL;
+				&ALLARENAS[i + 1] : nullptr;
 		}
 
 		/* Update globals. */
@@ -1204,21 +1204,21 @@ static ArenaObject* new_arena(OMState* state)
 
 	address = ALIFOBJECT_ARENA.alloc(ALIFOBJECT_ARENA.ctx, ARENA_SIZE);
 #if WITH_ALIFMALLOC_RADIXTREE
-	if (address != NULL) {
-		if (!arena_mapMark_used(state, (uintptr_t)address, 1)) {
+	if (address != nullptr) {
+		if (!arena_mapMark_used(_state, (uintptr_t)address, 1)) {
 
 			ALIFOBJECT_ARENA.free(ALIFOBJECT_ARENA.ctx, address, ARENA_SIZE);
-			address = NULL;
+			address = nullptr;
 		}
 	}
 #endif
-	if (address == NULL) {
+	if (address == nullptr) {
 
 
 
 		arenaObj->nextArena = UNUSED_ARENA_OBJECTS;
 		UNUSED_ARENA_OBJECTS = arenaObj;
-		return NULL;
+		return nullptr;
 	}
 	arenaObj->address = (uintptr_t)address;
 
@@ -1226,7 +1226,7 @@ static ArenaObject* new_arena(OMState* state)
 	++NTIMES_ARENA_ALLOCATED;
 	if (NARENAS_CURRENTLY_ALLOCATED > NARENAS_HIGHWATER)
 		NARENAS_HIGHWATER = NARENAS_CURRENTLY_ALLOCATED;
-	arenaObj->freePools = NULL;
+	arenaObj->freePools = nullptr;
 
 
 	arenaObj->poolAddress = (AlifMemBlock*)arenaObj->address;
@@ -1248,7 +1248,7 @@ static ArenaObject* new_arena(OMState* state)
 
 
 
-static bool address_in_range(OMState* state, void* p, PoolP ALIF_UNUSED(pool))
+static bool address_in_range(OMState* state, void* p, PoolP ALIF_UNUSED(_pool))
 {
 	return arena_mapIs_used(state, (AlifMemBlock*)p);
 }
@@ -1332,16 +1332,16 @@ static bool address_in_range(OMState* state, void* p, PoolP ALIF_UNUSED(pool))
 static bool ALIFNO_SANITIZE_ADDRESS
 ALIFNO_SANITIZE_THREAD
 ALIFNO_SANITIZE_MEMORY
-address_in_range(OMState* state, void* p, poolp pool)
+address_in_range(OMState* _state, void* _p, poolp _pool)
 {
 
 
 
 
 
-	uint arenaIndex = *((volatile uint*)&pool->arenaIndex);
+	uint arenaIndex = *((volatile uint*)&_pool->arenaIndex);
 	return arenaindex < maxArenas &&
-		(uintptr_t)p - ALLARENAS[arenaIndex].address < ARENA_SIZE &&
+		(uintptr_t)_p - ALLARENAS[arenaIndex].address < ARENA_SIZE &&
 		ALLARENAS[arenaIndex].address != 0;
 }
 
@@ -1351,45 +1351,45 @@ address_in_range(OMState* state, void* p, poolp pool)
 
 
 
-static void alifMalloc_pool_extend(PoolP pool, uint size)
+static void alifMalloc_pool_extend(PoolP _pool, uint _size)
 {
-	if (UNLIKELY(pool->nextOffset <= pool->maxNextOffset)) {
-		/* There is room for another block. */
-		pool->freeBlock = (AlifMemBlock*)pool + pool->nextOffset;
-		pool->nextOffset += INDEX2SIZE(size);
-		*(AlifMemBlock**)(pool->freeBlock) = NULL;
+	if (UNLIKELY(_pool->nextOffset <= _pool->maxNextOffset)) {
+
+		_pool->freeBlock = (AlifMemBlock*)_pool + _pool->nextOffset;
+		_pool->nextOffset += INDEX2SIZE(_size);
+		*(AlifMemBlock**)(_pool->freeBlock) = nullptr;
 		return;
 	}
 
-	/* Pool is full, unlink from used pools. */
+
 	PoolP next;
-	next = pool->nextPool;
-	pool = pool->prevPool;
-	next->prevPool = pool;
-	pool->nextPool = next;
+	next = _pool->nextPool;
+	_pool = _pool->prevPool;
+	next->prevPool = _pool;
+	_pool->nextPool = next;
 }
 
 
 
 
 
-static void* allocate_fromNew_pool(OMState* state, uint size)
+static void* allocate_fromNew_pool(OMState* _state, uint _size)
 {
 
 
 
-	if (UNLIKELY(USABLE_ARENAS == NULL)) {
+	if (UNLIKELY(USABLE_ARENAS == nullptr)) {
 
 #ifdef WITH_MEMORY_LIMITS
 		if (NARENAS_CURRENTLY_ALLOCATED >= MAX_ARENAS) {
-			return NULL;
+			return nullptr;
 		}
 #endif
-		USABLE_ARENAS = new_arena(state);
-		if (USABLE_ARENAS == NULL) {
-			return NULL;
+		USABLE_ARENAS = new_arena(_state);
+		if (USABLE_ARENAS == nullptr) {
+			return nullptr;
 		}
-		USABLE_ARENAS->nextArena = USABLE_ARENAS->prevArena = NULL;
+		USABLE_ARENAS->nextArena = USABLE_ARENAS->prevArena = nullptr;
 
 		NFP2LASTA[USABLE_ARENAS->nFreePools] = USABLE_ARENAS;
 	}
@@ -1402,8 +1402,8 @@ static void* allocate_fromNew_pool(OMState* state, uint size)
 
 
 	if (NFP2LASTA[USABLE_ARENAS->nFreePools] == USABLE_ARENAS) {
-		/* It's the last of this size, so there won't be any. */
-		NFP2LASTA[USABLE_ARENAS->nFreePools] = NULL;
+		/* It's the last of this _size, so there won't be any. */
+		NFP2LASTA[USABLE_ARENAS->nFreePools] = nullptr;
 	}
 	/* If any free pools will remain, it will be the new smallest. */
 	if (USABLE_ARENAS->nFreePools > 1) {
@@ -1411,9 +1411,9 @@ static void* allocate_fromNew_pool(OMState* state, uint size)
 		NFP2LASTA[USABLE_ARENAS->nFreePools - 1] = USABLE_ARENAS;
 	}
 
-	/* Try to get a cached free pool. */
+	/* Try to get a cached free _pool. */
 	PoolP pool = USABLE_ARENAS->freePools;
-	if (LIKELY(pool != NULL)) {
+	if (LIKELY(pool != nullptr)) {
 		/* Unlink from cached pools. */
 		USABLE_ARENAS->freePools = pool->nextPool;
 		USABLE_ARENAS->nFreePools--;
@@ -1424,8 +1424,8 @@ static void* allocate_fromNew_pool(OMState* state, uint size)
 
 
 			USABLE_ARENAS = USABLE_ARENAS->nextArena;
-			if (USABLE_ARENAS != NULL) {
-				USABLE_ARENAS->prevArena = NULL;
+			if (USABLE_ARENAS != nullptr) {
+				USABLE_ARENAS->prevArena = nullptr;
 
 			}
 		}
@@ -1459,8 +1459,8 @@ static void* allocate_fromNew_pool(OMState* state, uint size)
 
 
 			USABLE_ARENAS = USABLE_ARENAS->nextArena;
-			if (USABLE_ARENAS != NULL) {
-				USABLE_ARENAS->prevArena = NULL;
+			if (USABLE_ARENAS != nullptr) {
+				USABLE_ARENAS->prevArena = nullptr;
 
 			}
 		}
@@ -1468,13 +1468,13 @@ static void* allocate_fromNew_pool(OMState* state, uint size)
 
 
 	AlifMemBlock* bp;
-	PoolP next = USEDPOOLS[size + size]; /* == prev */
+	PoolP next = USEDPOOLS[_size + _size]; 
 	pool->nextPool = next;
 	pool->prevPool = next;
 	next->nextPool = pool;
 	next->prevPool = pool;
 	pool->ref.count = 1;
-	if (pool->szidx == size) {
+	if (pool->szidx == _size) {
 
 
 
@@ -1489,13 +1489,13 @@ static void* allocate_fromNew_pool(OMState* state, uint size)
 
 
 
-	pool->szidx = size;
-	size = INDEX2SIZE(size);
+	pool->szidx = _size;
+	_size = INDEX2SIZE(_size);
 	bp = (AlifMemBlock*)pool + POOL_OVERHEAD;
-	pool->nextOffset = POOL_OVERHEAD + (size << 1);
-	pool->maxNextOffset = POOL_SIZE - size;
-	pool->freeBlock = bp + size;
-	*(AlifMemBlock**)(pool->freeBlock) = NULL;
+	pool->nextOffset = POOL_OVERHEAD + (_size << 1);
+	pool->maxNextOffset = POOL_SIZE - _size;
+	pool->freeBlock = bp + _size;
+	*(AlifMemBlock**)(pool->freeBlock) = nullptr;
 	return bp;
 }
 
@@ -1509,47 +1509,47 @@ static void* allocate_fromNew_pool(OMState* state, uint size)
 
 
 
-static inline void* alifMalloc_alloc(OMState* state, void* ALIF_UNUSED(ctx), size_t nBytes)
+static inline void* alifMalloc_alloc(OMState* _state, void* ALIF_UNUSED(_ctx), size_t _nBytes)
 {
 #ifdef WITH_VALGRIND
 	if (UNLIKELY(runningOnValgrind == -1)) {
 		running_on_valgrind = RUNNING_ON_VALGRIND;
 	}
 	if (UNLIKELY(running_on_valgrind)) {
-		return NULL;
+		return nullptr;
 	}
 #endif
 
-	if (UNLIKELY(nBytes == 0)) {
-		return NULL;
+	if (UNLIKELY(_nBytes == 0)) {
+		return nullptr;
 	}
-	if (UNLIKELY(nBytes > SMALL_REQUEST_THRESHOLD)) {
-		return NULL;
+	if (UNLIKELY(_nBytes > SMALL_REQUEST_THRESHOLD)) {
+		return nullptr;
 	}
 
-	uint size = (uint)(nBytes - 1) >> ALIGNMENT_SHIFT;
+	uint size = (uint)(_nBytes - 1) >> ALIGNMENT_SHIFT;
 	PoolP pool = USEDPOOLS[size + size];
 	AlifMemBlock* bp;
 
 	if (LIKELY(pool != pool->nextPool)) {
-		/*
-		 * There is a used pool for this size class.
-		 * Pick up the head block of its free list.
-		 */
+
+
+
+
 		++pool->ref.count;
 		bp = pool->freeBlock;
 
 
-		if (UNLIKELY((pool->freeBlock = *(AlifMemBlock**)bp) == NULL)) {
-			// Reached the end of the free list, try to extend it.
+		if (UNLIKELY((pool->freeBlock = *(AlifMemBlock**)bp) == nullptr)) {
+
 			alifMalloc_pool_extend(pool, size);
 		}
 	}
 	else {
-		/* There isn't a pool of the right size class immediately
-		 * available:  use a free pool.
-		 */
-		bp = (AlifMemBlock*)allocate_fromNew_pool(state, size);
+
+
+
+		bp = (AlifMemBlock*)allocate_fromNew_pool(_state, size);
 	}
 
 	return (void*)bp;
@@ -1557,16 +1557,16 @@ static inline void* alifMalloc_alloc(OMState* state, void* ALIF_UNUSED(ctx), siz
 
 
 
-void* _alifObject_malloc(void* ctx, size_t nBytes)
+void* _alifObject_malloc(void* ctx, size_t _nBytes)
 {
-	OMState* state = get_state();
-	void* ptr = alifMalloc_alloc(state, ctx, nBytes);
-	if (LIKELY(ptr != NULL)) {
+	OMState* _state = get_state(); // هنا اضطررت لوضع _ قبل اسم المتغير ليتم التعرف عليه من قبل RAW_ALLOCATED_BLOCKS لان الاسم الممرر له _state
+	void* ptr = alifMalloc_alloc(_state, ctx, _nBytes);
+	if (LIKELY(ptr != nullptr)) {
 		return ptr;
 	}
 
-	ptr = alifMem_rawMalloc(nBytes);
-	if (ptr != NULL) {
+	ptr = alifMem_rawMalloc(_nBytes);
+	if (ptr != nullptr) {
 		RAW_ALLOCATED_BLOCKS++;
 	}
 	return ptr;
@@ -1574,20 +1574,20 @@ void* _alifObject_malloc(void* ctx, size_t nBytes)
 
 
 
-void* _alifObject_calloc(void* ctx, size_t nelem, size_t elsize)
+void* _alifObject_calloc(void* _ctx, size_t _nElem, size_t _elSize)
 {
 
-	size_t nBytes = nelem * elsize;
+	size_t nBytes = _nElem * _elSize;
 
-	OMState* state = get_state();
-	void* ptr = alifMalloc_alloc(state, ctx, nBytes);
-	if (LIKELY(ptr != NULL)) {
+	OMState* _state = get_state();
+	void* ptr = alifMalloc_alloc(_state, _ctx, nBytes);
+	if (LIKELY(ptr != nullptr)) {
 		memset(ptr, 0, nBytes);
 		return ptr;
 	}
 
-	ptr = alifMem_rawCalloc(nelem, elsize);
-	if (ptr != NULL) {
+	ptr = alifMem_rawCalloc(_nElem, _elSize);
+	if (ptr != nullptr) {
 		RAW_ALLOCATED_BLOCKS++;
 	}
 	return ptr;
@@ -1595,35 +1595,35 @@ void* _alifObject_calloc(void* ctx, size_t nelem, size_t elsize)
 
 
 
-static void insert_to_usedpool(OMState* state, PoolP pool)
+static void insert_to_usedpool(OMState* _state, PoolP _pool)
 {
 
 
-	uint size = pool->szidx;
+	uint size = _pool->szidx;
 	PoolP next = USEDPOOLS[size + size];
 	PoolP prev = next->prevPool;
 
-	/* insert pool before next:   prev <-> pool <-> next */
-	pool->nextPool = next;
-	pool->prevPool = prev;
-	next->prevPool = pool;
-	prev->nextPool = pool;
+
+	_pool->nextPool = next;
+	_pool->prevPool = prev;
+	next->prevPool = _pool;
+	prev->nextPool = _pool;
 }
 
 
-static void insert_to_freepool(OMState* state, PoolP pool)
+static void insert_to_freepool(OMState* _state, PoolP _pool)
 {
-	PoolP next = pool->nextPool;
-	PoolP prev = pool->prevPool;
+	PoolP next = _pool->nextPool;
+	PoolP prev = _pool->prevPool;
 	next->prevPool = prev;
 	prev->nextPool = next;
 
 
 
 
-	ArenaObject* ao = &ALLARENAS[pool->arenaIndex];
-	pool->nextPool = ao->freePools;
-	ao->freePools = pool;
+	ArenaObject* ao = &ALLARENAS[_pool->arenaIndex];
+	_pool->nextPool = ao->freePools;
+	ao->freePools = _pool;
 	uint nf = ao->nFreePools;
 
 
@@ -1638,7 +1638,7 @@ static void insert_to_freepool(OMState* state, PoolP pool)
 
 	if (lastnf == ao) {  
 		ArenaObject* p = ao->prevArena;
-		NFP2LASTA[nf] = (p != NULL && p->nFreePools == nf) ? p : NULL;
+		NFP2LASTA[nf] = (p != nullptr && p->nFreePools == nf) ? p : nullptr;
 	}
 	ao->nFreePools = ++nf;
 
@@ -1658,7 +1658,7 @@ static void insert_to_freepool(OMState* state, PoolP pool)
 
 
 
-	if (nf == ao->nTotalPools && ao->nextArena != NULL) {
+	if (nf == ao->nTotalPools && ao->nextArena != nullptr) {
 
 
 
@@ -1669,7 +1669,7 @@ static void insert_to_freepool(OMState* state, PoolP pool)
 
 
 
-		if (ao->prevArena == NULL) {
+		if (ao->prevArena == nullptr) {
 			USABLE_ARENAS = ao->nextArena;
 
 
@@ -1693,7 +1693,7 @@ static void insert_to_freepool(OMState* state, PoolP pool)
 
 #if WITH_ALIFMALLOC_RADIXTREE
 
-		arena_mapMark_used(state, ao->address, 0);
+		arena_mapMark_used(_state, ao->address, 0);
 #endif
 
 
@@ -1712,12 +1712,12 @@ static void insert_to_freepool(OMState* state, PoolP pool)
 
 
 		ao->nextArena = USABLE_ARENAS;
-		ao->prevArena = NULL;
+		ao->prevArena = nullptr;
 		if (USABLE_ARENAS)
 			USABLE_ARENAS->prevArena = ao;
 		USABLE_ARENAS = ao;
 
-		if (NFP2LASTA[1] == NULL) {
+		if (NFP2LASTA[1] == nullptr) {
 			NFP2LASTA[1] = ao;
 		}
 
@@ -1732,7 +1732,7 @@ static void insert_to_freepool(OMState* state, PoolP pool)
 
 
 
-	if (NFP2LASTA[nf] == NULL) {
+	if (NFP2LASTA[nf] == nullptr) {
 		NFP2LASTA[nf] = ao;
 	} 
 
@@ -1750,7 +1750,7 @@ static void insert_to_freepool(OMState* state, PoolP pool)
 
 
 
-	if (ao->prevArena != NULL) {
+	if (ao->prevArena != nullptr) {
 
 
 		ao->prevArena->nextArena = ao->nextArena;
@@ -1764,7 +1764,7 @@ static void insert_to_freepool(OMState* state, PoolP pool)
 
 	ao->prevArena = lastnf;
 	ao->nextArena = lastnf->nextArena;
-	if (ao->nextArena != NULL) {
+	if (ao->nextArena != nullptr) {
 		ao->nextArena->prevArena = ao;
 	}
 	lastnf->nextArena = ao;
@@ -1781,18 +1781,18 @@ static void insert_to_freepool(OMState* state, PoolP pool)
 
 
 
-static inline int alifMalloc_free(OMState* state, void* ALIF_UNUSED(ctx), void* p)
+static inline int alifMalloc_free(OMState* _state, void* ALIF_UNUSED(_ctx), void* _p)
 {
 
 
 #ifdef WITH_VALGRIND
-	if (UNLIKELY(running_on_valgrind > 0)) {
+	if (UNLIKELY(runningOnValgrind > 0)) {
 		return 0;
 	}
 #endif
 
-	PoolP pool = POOL_ADDR(p);
-	if (UNLIKELY(!address_in_range(state, p, pool))) {
+	PoolP pool = POOL_ADDR(_p);
+	if (UNLIKELY(!address_in_range(_state, _p, pool))) {
 		return 0;
 	}
 
@@ -1805,18 +1805,18 @@ static inline int alifMalloc_free(OMState* state, void* ALIF_UNUSED(ctx), void* 
 
 
 	AlifMemBlock* lastFree = pool->freeBlock;
-	*(AlifMemBlock**)p = lastFree;
-	pool->freeBlock = (AlifMemBlock*)p;
+	*(AlifMemBlock**)_p = lastFree;
+	pool->freeBlock = (AlifMemBlock*)_p;
 	pool->ref.count--;
 
-	if (UNLIKELY(lastFree == NULL)) {
+	if (UNLIKELY(lastFree == nullptr)) {
 
 
 
 
 
 
-		insert_to_usedpool(state, pool);
+		insert_to_usedpool(_state, pool);
 		return 1;
 	}
 
@@ -1833,23 +1833,23 @@ static inline int alifMalloc_free(OMState* state, void* ALIF_UNUSED(ctx), void* 
 
 
 
-	insert_to_freepool(state, pool);
+	insert_to_freepool(_state, pool);
 	return 1;
 }
 
 
 
-void _alifObject_free(void* ctx, void* p)
+void _alifObject_free(void* _ctx, void* _p)
 {
 
-	if (p == NULL) {
+	if (_p == nullptr) {
 		return;
 	}
 
-	OMState* state = get_state();
-	if (UNLIKELY(!alifMalloc_free(state, ctx, p))) {
+	OMState* _state = get_state();
+	if (UNLIKELY(!alifMalloc_free(_state, _ctx, _p))) {
 
-		alifMem_rawFree(p);
+		alifMem_rawFree(_p);
 		RAW_ALLOCATED_BLOCKS--;
 	}
 }
@@ -1865,8 +1865,8 @@ void _alifObject_free(void* ctx, void* p)
 
 
 
-static int alifMalloc_realloc(OMState* state, void* ctx,
-	void** newptr_p, void* p, size_t nBytes)
+static int alifMalloc_realloc(OMState* _state, void* _ctx,
+	void** _newPtrP, void* _p, size_t _nBytes)
 {
 	void* bp;
 	PoolP pool;
@@ -1881,8 +1881,8 @@ static int alifMalloc_realloc(OMState* state, void* ctx,
 	}
 #endif
 
-	pool = POOL_ADDR(p);
-	if (!address_in_range(state, p, pool)) {
+	pool = POOL_ADDR(_p);
+	if (!address_in_range(_state, _p, pool)) {
 
 
 
@@ -1900,7 +1900,7 @@ static int alifMalloc_realloc(OMState* state, void* ctx,
 
 
 	size = INDEX2SIZE(pool->szidx);
-	if (nBytes <= size) {
+	if (_nBytes <= size) {
 
 
 
@@ -1908,64 +1908,64 @@ static int alifMalloc_realloc(OMState* state, void* ctx,
 
 
 
-		if (4 * nBytes > 3 * size) {
+		if (4 * _nBytes > 3 * size) {
 
-			*newptr_p = p;
+			*_newPtrP = _p;
 			return 1;
 		}
-		size = nBytes;
+		size = _nBytes;
 	}
 
-	bp = _alifObject_malloc(ctx, nBytes);
-	if (bp != NULL) {
-		memcpy(bp, p, size);
-		_alifObject_free(ctx, p);
+	bp = _alifObject_malloc(_ctx, _nBytes);
+	if (bp != nullptr) {
+		memcpy(bp, _p, size);
+		_alifObject_free(_ctx, _p);
 	}
-	*newptr_p = bp;
+	*_newPtrP = bp;
 	return 1;
 }
 
 
 
-void* _alifObject_realloc(void* ctx, void* ptr, size_t nBytes)
+void* _alifObject_realloc(void* _ctx, void* _ptr, size_t _nBytes)
 {
 	void* ptr2;
 
-	if (ptr == NULL) {
-		return _alifObject_malloc(ctx, nBytes);
+	if (_ptr == nullptr) {
+		return _alifObject_malloc(_ctx, _nBytes);
 	}
 
 	OMState* state = get_state();
-	if (alifMalloc_realloc(state, ctx, &ptr2, ptr, nBytes)) {
+	if (alifMalloc_realloc(state, _ctx, &ptr2, _ptr, _nBytes)) {
 		return ptr2;
 	}
 
-	return alifMem_rawRealloc(ptr, nBytes);
+	return alifMem_rawRealloc(_ptr, _nBytes);
 }
 
 
-#else   /* ! WITH_ALIFMALLOC */
+#else   
 
 
 
 
 
-AlifSizeT alifInterpreterState_getAllocatedBlocks(AlifInterpreterState* ALIF_UNUSED(interp))
+AlifSizeT alifInterpreterState_getAllocatedBlocks(AlifInterpreterState* ALIF_UNUSED(_interp))
 {
 	return 0;
 }
 
-//AlifSizeT alifGetGlobalAllocatedBlocks(void)
+//AlifSizeT alifGetGlobalAllocatedBlocks()
 //{
 //	return 0;
 //}
 
-void alifInterpreterState_finalizeAllocatedBlocks(AlifInterpreterState* ALIF_UNUSED(interp))
+void alifInterpreterState_finalizeAllocatedBlocks(AlifInterpreterState* ALIF_UNUSED(_interp))
 {
 	return;
 }
 
-void alifFinalizeAllocatedBlocks(AlifRuntimeState* ALIF_UNUSED(runtime))
+void alifFinalizeAllocatedBlocks(AlifRuntimeState* ALIF_UNUSED(_runtime))
 {
 	return;
 }
@@ -1991,7 +1991,7 @@ static size_t serialno = 0;
 
 
 
-static void bumpserialno(void)
+static void bumpserialno()
 {
 	++serialno;
 }
@@ -2007,9 +2007,9 @@ static void bumpserialno(void)
 
 
 
-static size_t read_size_t(const void* p)
+static size_t read_size_t(const void* _p)
 {
-	const uint8_t* q = (const uint8_t*)p;
+	const uint8_t* q = (const uint8_t*)_p;
 	size_t result = *q++;
 	int i;
 
@@ -2022,14 +2022,14 @@ static size_t read_size_t(const void* p)
 
 
 
-static void write_size_t(void* p, size_t n)
+static void write_size_t(void* _p, size_t _n)
 {
-	uint8_t* q = (uint8_t*)p + SST - 1;
+	uint8_t* q = (uint8_t*)_p + SST - 1;
 	int i;
 
 	for (i = SST; --i >= 0; --q) {
-		*q = (uint8_t)(n & 0xff);
-		n >>= 8;
+		*q = (uint8_t)(_n & 0xff);
+		_n >>= 8;
 	}
 }
 
@@ -2063,19 +2063,19 @@ static void write_size_t(void* p, size_t n)
 
 
 
-static void* alifMem_debugRawAlloc(int useCalloc, void* ctx, size_t nBytes)
+static void* alifMem_debugRawAlloc(int _useCalloc, void* _ctx, size_t _nBytes)
 {
-	DebugAllocApiT* api = (DebugAllocApiT*)ctx;
+	DebugAllocApiT* api = (DebugAllocApiT*)_ctx;
 	uint8_t* p;          
 	uint8_t* data;       
 	uint8_t* tail;       
 	size_t total;        
 
-	if (nBytes > (size_t)ALIFSIZE_T_MAX - ALIFMEM_DEBUGEXTRA_BYTES) {
+	if (_nBytes > (size_t)ALIFSIZE_T_MAX - ALIFMEM_DEBUGEXTRA_BYTES) {
 
-		return NULL;
+		return nullptr;
 	}
-	total = nBytes + ALIFMEM_DEBUGEXTRA_BYTES;
+	total = _nBytes + ALIFMEM_DEBUGEXTRA_BYTES;
 
 
 
@@ -2088,14 +2088,14 @@ static void* alifMem_debugRawAlloc(int useCalloc, void* ctx, size_t nBytes)
 
 
 
-	if (useCalloc) {
+	if (_useCalloc) {
 		p = (uint8_t*)api->alloc.calloc(api->alloc.ctx, 1, total);
 	}
 	else {
 		p = (uint8_t*)api->alloc.malloc(api->alloc.ctx, total);
 	}
-	if (p == NULL) {
-		return NULL;
+	if (p == nullptr) {
+		return nullptr;
 	}
 	data = p + 2 * SST;
 
@@ -2104,16 +2104,16 @@ static void* alifMem_debugRawAlloc(int useCalloc, void* ctx, size_t nBytes)
 #endif
 
 
-	write_size_t(p, nBytes);
+	write_size_t(p, _nBytes);
 	p[SST] = (uint8_t)api->apiID;
 	memset(p + SST + 1, ALIFMEM_FORBIDDENBYTE, SST - 1);
 
-	if (nBytes > 0 && !useCalloc) {
-		memset(data, ALIFMEM_CLEANBYTE, nBytes);
+	if (_nBytes > 0 && !_useCalloc) {
+		memset(data, ALIFMEM_CLEANBYTE, _nBytes);
 	}
 
 
-	tail = data + nBytes;
+	tail = data + _nBytes;
 	memset(tail, ALIFMEM_FORBIDDENBYTE, SST);
 #ifdef PYMEM_DEBUG_SERIALNO
 	write_size_t(tail + SST, serialno);
@@ -2123,18 +2123,18 @@ static void* alifMem_debugRawAlloc(int useCalloc, void* ctx, size_t nBytes)
 }
 
 
-void* _alifMem_debugRawMalloc(void* ctx, size_t nbytes)
+void* _alifMem_debugRawMalloc(void* _ctx, size_t _nBytes)
 {
-	return alifMem_debugRawAlloc(0, ctx, nbytes);
+	return alifMem_debugRawAlloc(0, _ctx, _nBytes);
 }
 
 
-void* _alifMem_debugRawCalloc(void* ctx, size_t nelem, size_t elsize)
+void* _alifMem_debugRawCalloc(void* _ctx, size_t _nElem, size_t _elSize)
 {
 	size_t nbytes;
 
-	nbytes = nelem * elsize;
-	return alifMem_debugRawAlloc(1, ctx, nbytes);
+	nbytes = _nElem * _elSize;
+	return alifMem_debugRawAlloc(1, _ctx, nbytes);
 }
 
 
@@ -2144,15 +2144,15 @@ void* _alifMem_debugRawCalloc(void* ctx, size_t nelem, size_t elsize)
 
 
 
-void _alifMem_debugRawFree(void* ctx, void* p)
+void _alifMem_debugRawFree(void* _ctx, void* _p)
 {
 
-	if (p == NULL) {
+	if (_p == nullptr) {
 		return;
 	}
 
-	DebugAllocApiT* api = (DebugAllocApiT*)ctx;
-	uint8_t* q = (uint8_t*)p - 2 * SST;  
+	DebugAllocApiT* api = (DebugAllocApiT*)_ctx;
+	uint8_t* q = (uint8_t*)_p - 2 * SST;  
 	size_t nbytes;
 
 
@@ -2164,13 +2164,13 @@ void _alifMem_debugRawFree(void* ctx, void* p)
 
 
 
-void* _alifMem_debugRawRealloc(void* ctx, void* p, size_t nbytes)
+void* _alifMem_debugRawRealloc(void* _ctx, void* _p, size_t _nBytes)
 {
-	if (p == NULL) {
-		return alifMem_debugRawAlloc(0, ctx, nbytes);
+	if (_p == nullptr) {
+		return alifMem_debugRawAlloc(0, _ctx, _nBytes);
 	}
 
-	DebugAllocApiT* api = (DebugAllocApiT*)ctx;
+	DebugAllocApiT* api = (DebugAllocApiT*)_ctx;
 	uint8_t* head;        
 	uint8_t* data;        
 	uint8_t* r;
@@ -2182,14 +2182,14 @@ void* _alifMem_debugRawRealloc(void* ctx, void* p, size_t nbytes)
 
 
 
-	data = (uint8_t*)p;
+	data = (uint8_t*)_p;
 	head = data - 2 * SST;
 	originalNbytes = read_size_t(head);
-	if (nbytes > (size_t)ALIFSIZE_T_MAX - ALIFMEM_DEBUGEXTRA_BYTES) {
+	if (_nBytes > (size_t)ALIFSIZE_T_MAX - ALIFMEM_DEBUGEXTRA_BYTES) {
 
-		return NULL;
+		return nullptr;
 	}
-	total = nbytes + ALIFMEM_DEBUGEXTRA_BYTES;
+	total = _nBytes + ALIFMEM_DEBUGEXTRA_BYTES;
 
 	tail = data + originalNbytes;
 #ifdef ALIFMEM_DEBUG_SERIALNO
@@ -2213,10 +2213,10 @@ void* _alifMem_debugRawRealloc(void* ctx, void* p, size_t nbytes)
 
 
 	r = (uint8_t*)api->alloc.realloc(api->alloc.ctx, head, total);
-	if (r == NULL) {
+	if (r == nullptr) {
 
 
-		nbytes = originalNbytes;
+		_nBytes = originalNbytes;
 	}
 	else {
 		head = r;
@@ -2227,11 +2227,11 @@ void* _alifMem_debugRawRealloc(void* ctx, void* p, size_t nbytes)
 	}
 	data = head + 2 * SST;
 
-	write_size_t(head, nbytes);
+	write_size_t(head, _nBytes);
 	head[SST] = (uint8_t)api->apiID;
 	memset(head + SST + 1, ALIFMEM_FORBIDDENBYTE, SST - 1);
 
-	tail = data + nbytes;
+	tail = data + _nBytes;
 	memset(tail, ALIFMEM_FORBIDDENBYTE, SST);
 #ifdef ALIFMEM_DEBUG_SERIALNO
 	write_size_t(tail + SST, blockSerialno);
@@ -2239,25 +2239,25 @@ void* _alifMem_debugRawRealloc(void* ctx, void* p, size_t nbytes)
 
 
 	if (originalNbytes <= sizeof(save)) {
-		memcpy(data, save, ALIF_MIN(nbytes, originalNbytes));
+		memcpy(data, save, ALIF_MIN(_nBytes, originalNbytes));
 	}
 	else {
 		size_t i = originalNbytes - ERASED_SIZE;
-		memcpy(data, save, ALIF_MIN(nbytes, ERASED_SIZE));
-		if (nbytes > i) {
+		memcpy(data, save, ALIF_MIN(_nBytes, ERASED_SIZE));
+		if (_nBytes > i) {
 			memcpy(data + i, &save[ERASED_SIZE],
-				ALIF_MIN(nbytes - i, ERASED_SIZE));
+				ALIF_MIN(_nBytes - i, ERASED_SIZE));
 		}
 	}
 
-	if (r == NULL) {
-		return NULL;
+	if (r == nullptr) {
+		return nullptr;
 	}
 
-	if (nbytes > originalNbytes) {
+	if (_nBytes > originalNbytes) {
 
 		memset(data + originalNbytes, ALIFMEM_CLEANBYTE,
-			nbytes - originalNbytes);
+			_nBytes - originalNbytes);
 	}
 
 	return data;
@@ -2274,31 +2274,31 @@ void* _alifMem_debugRawRealloc(void* ctx, void* p, size_t nbytes)
 
 
 
-void* _alifMem_debugMalloc(void* ctx, size_t nbytes)
+void* _alifMem_debugMalloc(void* _ctx, size_t _nBytes)
 {
 
-	return _alifMem_debugRawMalloc(ctx, nbytes);
+	return _alifMem_debugRawMalloc(_ctx, _nBytes);
 }
 
 
-void* _alifMem_debugCalloc(void* ctx, size_t nElem, size_t elSize)
+void* _alifMem_debugCalloc(void* _ctx, size_t _nElem, size_t _elSize)
 {
 
-	return _alifMem_debugRawCalloc(ctx, nElem, elSize);
-}
-
-
-
-void _alifMem_debugFree(void* ctx, void* ptr)
-{
-
-	_alifMem_debugRawFree(ctx, ptr);
+	return _alifMem_debugRawCalloc(_ctx, _nElem, _elSize);
 }
 
 
 
-void* _alifMem_debugRealloc(void* ctx, void* ptr, size_t nBytes)
+void _alifMem_debugFree(void* _ctx, void* _ptr)
 {
 
-	return _alifMem_debugRawRealloc(ctx, ptr, nBytes);
+	_alifMem_debugRawFree(_ctx, _ptr);
+}
+
+
+
+void* _alifMem_debugRealloc(void* _ctx, void* _ptr, size_t _nBytes)
+{
+
+	return _alifMem_debugRawRealloc(_ctx, _ptr, _nBytes);
 }

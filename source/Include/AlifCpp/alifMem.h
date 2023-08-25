@@ -50,7 +50,7 @@ public:
 };
 
 
-ALIFAPI_FUNC(void) alifMem_getAllocator(AlifMemAllocatorDomain domain, AlifMemAllocatorEx* allocator);
+ALIFAPI_FUNC(void) alifMem_getAllocator(AlifMemAllocatorDomain, AlifMemAllocatorEx*);
 
 
 
@@ -64,7 +64,7 @@ ALIFAPI_FUNC(void) alifMem_getAllocator(AlifMemAllocatorDomain domain, AlifMemAl
 
 
 
-ALIFAPI_FUNC(void) alifMem_setAllocator(AlifMemAllocatorDomain domain, AlifMemAllocatorEx* allocator);
+ALIFAPI_FUNC(void) alifMem_setAllocator(AlifMemAllocatorDomain, AlifMemAllocatorEx*);
 
 
 
@@ -83,4 +83,4 @@ ALIFAPI_FUNC(void) alifMem_setAllocator(AlifMemAllocatorDomain domain, AlifMemAl
 
 
 
-ALIFAPI_FUNC(void) alifMem_setupDebugHooks(void);
+ALIFAPI_FUNC(void) alifMem_setupDebugHooks();

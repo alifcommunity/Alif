@@ -21,22 +21,22 @@
 
 
 
-static inline AlifInterpreterState* _alifInterpreterState_main(void)
+static inline AlifInterpreterState* _alifInterpreterState_main()
 {
 	return alifRuntime.alifInterpreters.main;
 }
 
 
-static inline int alifIsMainInterpreter(AlifInterpreterState* interp)
+static inline int alifIsMainInterpreter(AlifInterpreterState* _interp)
 {
-	return (interp == _alifInterpreterState_main());
+	return (_interp == _alifInterpreterState_main());
 }
 
 
-static inline int alifisMainInterpreterFinalizing(AlifInterpreterState* interp)
+static inline int alifisMainInterpreterFinalizing(AlifInterpreterState* _interp)
 {
-	return (alifRuntimeState_getFinalizing(interp->runtime) != NULL &&
-		interp == &interp->runtime->mainInterpreter);
+	return (alifRuntimeState_getFinalizing(_interp->runtime) != nullptr &&
+		_interp == &_interp->runtime->mainInterpreter);
 }
 
 

@@ -289,6 +289,6 @@ ALIFAPI_DATA(AlifRuntimeState) alifRuntime;
 
 
 
-static inline AlifThreadState* alifRuntimeState_getFinalizing(AlifRuntimeState* runtime) {
-	return (AlifThreadState*)ALIFATOMIC_LOAD_RELAXED(&runtime->finalizing);
+static inline AlifThreadState* alifRuntimeState_getFinalizing(AlifRuntimeState* _runtime) {
+	return (AlifThreadState*)ALIFATOMIC_LOAD_RELAXED(&_runtime->finalizing);
 }

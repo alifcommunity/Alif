@@ -672,18 +672,5 @@ public:
 
 
 
-void* alifObject_virtualAlloc(size_t size);
-void alifObject_virtualFree(void*, size_t size);
-
-
-
-
-
-
-
-
-
-
-#ifdef WITH_ALIFMALLOC
-ALIFAPI_FUNC(int) alifObject_debugMallocStats(FILE* out);
-#endif
+void* alifObject_virtualAlloc(size_t );
+void alifObject_virtualFree(void*, size_t );

@@ -1891,18 +1891,18 @@ ALIF_THREAD_LOCAL AlifThreadState* alifTssTState = nullptr;
 
 
 
-AlifInterpreterState* alifInterpreterState_head(void)
+AlifInterpreterState* alifInterpreterState_head()
 {
 	return alifRuntime.alifInterpreters.head;
 }
 
-AlifInterpreterState* alifInterpreterState_main(void)
+AlifInterpreterState* alifInterpreterState_main()
 {
 	return _alifInterpreterState_main();
 }
 
 
 
-AlifInterpreterState* alifInterpreterState_next(AlifInterpreterState* interp) {
-	return interp->next;
+AlifInterpreterState* alifInterpreterState_next(AlifInterpreterState* _interp) {
+	return _interp->next;
 }

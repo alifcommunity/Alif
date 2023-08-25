@@ -239,157 +239,157 @@
 
 
 #if defined(_M_IX86) || defined(_M_X64)
-enum AlifMemoryOrder {
-	AlifMemory_OrderRelaxed,
-	AlifMemory_OrderAcquire,
-	AlifMemory_OrderRelease,
-	AlifMemory_OrderAcqrel,
-	AlifMemory_OrderSeqCst
+enum AlifMemory_order {
+	AlifMemory__orderRelaxed,
+	AlifMemory__orderAcquire,
+	AlifMemory__orderRelease,
+	AlifMemory__orderAcqrel,
+	AlifMemory__orderSeqCst
 };
 
 class AlifAtomicAddress {
 public:
-	volatile uintptr_t value;
+	volatile uintptr_t _value;
 };
 
 class AlifAtomicInt {
 public:
-	volatile int value;
+	volatile int _value;
 };
 #if defined(M_X64)
-#define ALIFATOMIC_STORE64BIT(atomicVal, newVal, order) \
-    switch (order) { \
-    case AlifMemory_OrderAcquire: \
-      _InterlockedExchange64_HLEAcquire((__int64 volatile*)&((atomicVal)->value), (__int64)(newVal)); \
+#define ALIFATOMIC_STORE64BIT(_atomicVal, _newVal, _order) \
+    switch (_order) { \
+    case AlifMemory__orderAcquire: \
+      _InterlockedExchange64_HLEAcquire((__int64 volatile*)&((_atomicVal)->_value), (__int64)(_newVal)); \
       break; \
-    case AlifMemory_OrderRelease: \
-      _InterlockedExchange64_HLERelease((__int64 volatile*)&((atomicVal)->value), (__int64)(newVal)); \
+    case AlifMemory__orderRelease: \
+      _InterlockedExchange64_HLERelease((__int64 volatile*)&((_atomicVal)->_value), (__int64)(_newVal)); \
       break; \
     default: \
-      _InterlockedExchange64((__int64 volatile*)&((atomicVal)->value), (__int64)(newVal)); \
+      _InterlockedExchange64((__int64 volatile*)&((_atomicVal)->_value), (__int64)(_newVal)); \
       break; \
   }
 #else
-#define ALIFATOMIC_STORE64BIT(atomicVal, newVal, order) ((void)0);
+#define ALIFATOMIC_STORE64BIT(_atomicVal, _newVal, _order) ((void)0);
 #endif
 
-#define ALIFATOMIC_STORE32BIT(atomicVal, newVal, order) \
-  switch (order) { \
-  case AlifMemory_OrderAcquire: \
-    _InterlockedExchange_HLEAcquire((volatile long*)&((atomicVal)->value), (int)(newVal)); \
+#define ALIFATOMIC_STORE32BIT(_atomicVal, _newVal, _order) \
+  switch (_order) { \
+  case AlifMemory__orderAcquire: \
+    _InterlockedExchange_HLEAcquire((volatile long*)&((_atomicVal)->_value), (int)(_newVal)); \
     break; \
-  case AlifMemory_OrderRelease: \
-    _InterlockedExchange_HLERelease((volatile long*)&((atomicVal)->value), (int)(newVal)); \
+  case AlifMemory__orderRelease: \
+    _InterlockedExchange_HLERelease((volatile long*)&((_atomicVal)->_value), (int)(_newVal)); \
     break; \
   default: \
-    _InterlockedExchange((volatile long*)&((atomicVal)->value), (int)(newVal)); \
+    _InterlockedExchange((volatile long*)&((_atomicVal)->_value), (int)(_newVal)); \
     break; \
   }
 
 #if defined(_M_X64)
 /*  This has to be an intptr_t for now.
-	gil_created() uses -1 as a sentinel value, if this returns
+	gil_created() uses -1 as a sentinel _value, if this returns
 	a uintptr_t it will do an unsigned compare and crash
 */
-inline intptr_t alifAtomic_load64bitImpl(volatile uintptr_t* value, int order) {
+inline intptr_t alifAtomic_load64bitImpl(volatile uintptr_t* _value, int _order) {
 	__int64 old;
-	switch (order) {
-	case AlifMemory_OrderAcquire:
+	switch (_order) {
+	case AlifMemory__orderAcquire:
 	{
 		do {
-			old = *value;
-		} while (_InterlockedCompareExchange64_HLEAcquire((volatile __int64*)value, old, old) != old);
+			old = *_value;
+		} while (_InterlockedCompareExchange64_HLEAcquire((volatile __int64*)_value, old, old) != old);
 		break;
 	}
-	case AlifMemory_OrderRelease:
+	case AlifMemory__orderRelease:
 	{
 		do {
-			old = *value;
-		} while (_InterlockedCompareExchange64_HLERelease((volatile __int64*)value, old, old) != old);
+			old = *_value;
+		} while (_InterlockedCompareExchange64_HLERelease((volatile __int64*)_value, old, old) != old);
 		break;
 	}
-	case AlifMemory_OrderRelaxed:
-		old = *value;
+	case AlifMemory__orderRelaxed:
+		old = *_value;
 		break;
 	default:
 	{
 		do {
-			old = *value;
-		} while (_InterlockedCompareExchange64((volatile __int64*)value, old, old) != old);
+			old = *_value;
+		} while (_InterlockedCompareExchange64((volatile __int64*)_value, old, old) != old);
 		break;
 	}
 	}
 	return old;
 }
 
-#define ALIFATOMIC_LOAD64BIT(atomicVal, order) \
-    alifAtomic_load64bitImpl((volatile uintptr_t*)&((atomicVal)->value), (order))
+#define ALIFATOMIC_LOAD64BIT(_atomicVal, _order) \
+    alifAtomic_load64bitImpl((volatile uintptr_t*)&((_atomicVal)->_value), (_order))
 
 #else
-#define ALIFATOMIC_LOAD64BIT(atomicVal, order) ((atomicVal)->value)
+#define ALIFATOMIC_LOAD64BIT(_atomicVal, _order) ((_atomicVal)->_value)
 #endif
 
-inline int alifAtomic_load32bitImpl(volatile int* value, int order) {
+inline int alifAtomic_load32bitImpl(volatile int* _value, int _order) {
 	long old;
-	switch (order) {
-	case AlifMemory_OrderAcquire:
+	switch (_order) {
+	case AlifMemory__orderAcquire:
 	{
 		do {
-			old = *value;
-		} while (_InterlockedCompareExchange_HLEAcquire((volatile long*)value, old, old) != old);
+			old = *_value;
+		} while (_InterlockedCompareExchange_HLEAcquire((volatile long*)_value, old, old) != old);
 		break;
 	}
-	case AlifMemory_OrderRelease:
+	case AlifMemory__orderRelease:
 	{
 		do {
-			old = *value;
-		} while (_InterlockedCompareExchange_HLERelease((volatile long*)value, old, old) != old);
+			old = *_value;
+		} while (_InterlockedCompareExchange_HLERelease((volatile long*)_value, old, old) != old);
 		break;
 	}
-	case AlifMemory_OrderRelaxed:
-		old = *value;
+	case AlifMemory__orderRelaxed:
+		old = *_value;
 		break;
 	default:
 	{
 		do {
-			old = *value;
-		} while (_InterlockedCompareExchange((volatile long*)value, old, old) != old);
+			old = *_value;
+		} while (_InterlockedCompareExchange((volatile long*)_value, old, old) != old);
 		break;
 	}
 	}
 	return old;
 }
 
-#define ALIFATOMIC_LOAD32BIT(atomicVal, order) \
-    alifAtomic_load32bitImpl((volatile int*)&((atomicVal)->value), (order))
+#define ALIFATOMIC_LOAD32BIT(_atomicVal, _order) \
+    alifAtomic_load32bitImpl((volatile int*)&((_atomicVal)->_value), (_order))
 
-#define ALIFATOMIC_STORE_EXPLICIT(atomicVal, newVal, order) \
-  if (sizeof((atomicVal)->value) == 8) { \
-    ALIFATOMIC_STORE64BIT((atomicVal), newVal, order) } else { \
-    ALIFATOMIC_STORE32BIT((atomicVal), newVal, order) }
+#define ALIFATOMIC_STORE_EXPLICIT(_atomicVal, _newVal, _order) \
+  if (sizeof((_atomicVal)->_value) == 8) { \
+    ALIFATOMIC_STORE64BIT((_atomicVal), _newVal, _order) } else { \
+    ALIFATOMIC_STORE32BIT((_atomicVal), _newVal, _order) }
 
-#define ALIFATOMIC_LOAD_EXPLICIT(atomicVal, order) \
+#define ALIFATOMIC_LOAD_EXPLICIT(_atomicVal, _order) \
   ( \
-    sizeof((atomicVal)->value) == 8 ? \
-    ALIFATOMIC_LOAD64BIT((atomicVal), order) : \
-    ALIFATOMIC_LOAD32BIT((atomicVal), order) \
+    sizeof((_atomicVal)->_value) == 8 ? \
+    ALIFATOMIC_LOAD64BIT((_atomicVal), _order) : \
+    ALIFATOMIC_LOAD32BIT((_atomicVal), _order) \
   )
 
 #elif defined(_M_ARM) || defined(_M_ARM64)
-enum AlifMemoryOrder {
-	AlifMemory_OrderRelaxed,
-	AlifMemory_OrderAcquire,
-	AlifMemory_OrderRelease,
-	AlifMemory_OrderAcqRel,
-	AlifMemory_OrderSeqCst
+enum AlifMemory_order {
+	AlifMemory__orderRelaxed,
+	AlifMemory__orderAcquire,
+	AlifMemory__orderRelease,
+	AlifMemory__orderAcqRel,
+	AlifMemory__orderSeqCst
 };
 class AlifAtomicAddress {
 public:
-	volatile uintptr_t value;
+	volatile uintptr_t _value;
 };
 class AlifAtomicInt{
 public:
-	volatile int value;
+	volatile int _value;
 };
 #endif
 
@@ -546,8 +546,8 @@ public:
 
 
 
-#define ALIFATOMIC_STORE_RELAXED(atomicVal, newVal) \
-    ALIFATOMIC_STORE_EXPLICIT((atomicVal), (newVal), AlifMemory_OrderRelaxed)
-#define ALIFATOMIC_LOAD_RELAXED(atomicVal) \
-    ALIFATOMIC_LOAD_EXPLICIT((atomicVal), AlifMemory_OrderRelaxed)
+#define ALIFATOMIC_STORE_RELAXED(_atomicVal, _newVal) \
+    ALIFATOMIC_STORE_EXPLICIT((_atomicVal), (_newVal), AlifMemory__orderRelaxed)
+#define ALIFATOMIC_LOAD_RELAXED(_atomicVal) \
+    ALIFATOMIC_LOAD_EXPLICIT((_atomicVal), AlifMemory__orderRelaxed)
 

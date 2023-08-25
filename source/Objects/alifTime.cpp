@@ -66,72 +66,56 @@
 
 
 
-static inline alifTimeT alifTime_from_nanoseconds(alifTimeT t)
+static inline alifTimeT alifTime_from_nanoseconds(alifTimeT _t)
 {
 
-	return t;
+	return _t;
 }
 
 
 
-static inline alifTimeT alifTime_as_nanoseconds(alifTimeT t)
+static inline alifTimeT alifTime_as_nanoseconds(alifTimeT _t)
 {
 
-	return t;
+	return _t;
 }
 
 
 
 
-static inline int alif_Time_add(alifTimeT* t1, alifTimeT t2)
+static inline int alif_Time_add(alifTimeT* _t1, alifTimeT _t2)
 {
-	if (t2 > 0 && *t1 > ALIFTIME_MAX - t2) {
-		*t1 = ALIFTIME_MAX;
+	if (_t2 > 0 && *_t1 > ALIFTIME_MAX - _t2) {
+		*_t1 = ALIFTIME_MAX;
 		return -1;
 	}
-	else if (t2 < 0 && *t1 < ALIFTIME_MIN - t2) {
-		*t1 = ALIFTIME_MIN;
+	else if (_t2 < 0 && *_t1 < ALIFTIME_MIN - _t2) {
+		*_t1 = ALIFTIME_MIN;
 		return -1;
 	}
 	else {
-		*t1 += t2;
+		*_t1 += _t2;
 		return 0;
 	}
 }
 
 
 
-alifTimeT alifTime_add(alifTimeT t1, alifTimeT t2)
+alifTimeT alifTime_add(alifTimeT _t1, alifTimeT _t2)
 {
-	(void)alif_Time_add(&t1, t2);
-	return t1;
+	(void)alif_Time_add(&_t1, _t2);
+	return _t1;
 }
 
 
 
-static inline int alifTime_mul_checkOverflow(alifTimeT a, alifTimeT b)
+static inline int alifTime_mul_checkOverflow(alifTimeT _a, alifTimeT _b)
 {
-	if (b != 0) {
+	if (_b != 0) {
 
-		return ((a < ALIFTIME_MIN / b) || (ALIFTIME_MAX / b < a));
+		return ((_a < ALIFTIME_MIN / _b) || (ALIFTIME_MAX / _b < _a));
 	}
 	else {
-		return 0;
-	}
-}
-
-
-
-
-static inline int alif_time_mul(alifTimeT* t, alifTimeT k)
-{
-
-	if (alifTime_mul_checkOverflow(*t, k)) {
-		*t = (*t >= 0) ? ALIFTIME_MAX : ALIFTIME_MIN;
-		return -1;
-	}
-	else {
-		*t *= k;
 		return 0;
 	}
 }
@@ -139,15 +123,31 @@ static inline int alif_time_mul(alifTimeT* t, alifTimeT k)
 
 
 
-static inline alifTimeT alifTime_mul(alifTimeT t, alifTimeT k)
+static inline int alif_time_mul(alifTimeT* _t, alifTimeT _k)
 {
-	(void)alif_time_mul(&t, k);
-	return t;
+
+	if (alifTime_mul_checkOverflow(*_t, _k)) {
+		*_t = (*_t >= 0) ? ALIFTIME_MAX : ALIFTIME_MIN;
+		return -1;
+	}
+	else {
+		*_t *= _k;
+		return 0;
+	}
 }
 
 
 
-alifTimeT alifTime_mulDiv(alifTimeT ticks, alifTimeT mul, alifTimeT div)
+
+static inline alifTimeT alifTime_mul(alifTimeT _t, alifTimeT _k)
+{
+	(void)alif_time_mul(&_t, _k);
+	return _t;
+}
+
+
+
+alifTimeT alifTime_mulDiv(alifTimeT _ticks, alifTimeT _mul, alifTimeT _div)
 {
 
 
@@ -155,11 +155,11 @@ alifTimeT alifTime_mulDiv(alifTimeT ticks, alifTimeT mul, alifTimeT div)
 
 
 	alifTimeT intpart, remaining;
-	intpart = ticks / div;
-	ticks %= div;
-	remaining = alifTime_mul(ticks, mul) / div;
-	// intpart * mul + remaining
-	return alifTime_add(alifTime_mul(intpart, mul), remaining);
+	intpart = _ticks / _div;
+	_ticks %= _div;
+	remaining = alifTime_mul(_ticks, _mul) / _div;
+	// intpart * _mul + remaining
+	return alifTime_add(alifTime_mul(intpart, _mul), remaining);
 }
 
 
@@ -419,9 +419,9 @@ alifTimeT alifTime_mulDiv(alifTimeT ticks, alifTimeT mul, alifTimeT div)
 
 
 
-alifTimeT alifTime_fromNanoseconds(alifTimeT ns)
+alifTimeT alifTime_fromNanoseconds(alifTimeT _ns)
 {
-	return alifTime_from_nanoseconds(ns);
+	return alifTime_from_nanoseconds(_ns);
 }
 
 
@@ -631,23 +631,23 @@ alifTimeT alifTime_fromNanoseconds(alifTimeT ns)
 
 
 
-static alifTimeT alifTime_divide_roundUp(const alifTimeT t, const alifTimeT k)
+static alifTimeT alifTime_divide_roundUp(const alifTimeT _t, const alifTimeT _k)
 {
 
-	if (t >= 0) {
-		// Don't use (t + k - 1) / k to avoid integer overflow
+	if (_t >= 0) {
 
-		alifTimeT q = t / k;
-		if (t % k) {
+
+		alifTimeT q = _t / _k;
+		if (_t % _k) {
 			q += 1;
 		}
 		return q;
 	}
 	else {
-		// Don't use (t - (k - 1)) / k to avoid integer overflow
 
-		alifTimeT q = t / k;
-		if (t % k) {
+
+		alifTimeT q = _t / _k;
+		if (_t % _k) {
 			q -= 1;
 		}
 		return q;
@@ -656,16 +656,16 @@ static alifTimeT alifTime_divide_roundUp(const alifTimeT t, const alifTimeT k)
 
 
 
-static alifTimeT alifTime_divide(const alifTimeT t, const alifTimeT k,
-	const AlifTimeRoundT round)
+static alifTimeT alifTime_divide(const alifTimeT _t, const alifTimeT _k,
+	const AlifTimeRoundT _round)
 {
 
-	if (round == AlifTime_Round_HalfEven) {
-		alifTimeT x = t / k;
-		alifTimeT r = t % k;
+	if (_round == AlifTime_Round_HalfEven) {
+		alifTimeT x = _t / _k;
+		alifTimeT r = _t % _k;
 		alifTimeT abs_r = ALIF_ABS(r);
-		if (abs_r > k / 2 || (abs_r == k / 2 && (ALIF_ABS(x) & 1))) {
-			if (t >= 0) {
+		if (abs_r > _k / 2 || (abs_r == _k / 2 && (ALIF_ABS(x) & 1))) {
+			if (_t >= 0) {
 				x++;
 			}
 			else {
@@ -674,25 +674,25 @@ static alifTimeT alifTime_divide(const alifTimeT t, const alifTimeT k,
 		}
 		return x;
 	}
-	else if (round == AlifTime_Round_Ceiling) {
-		if (t >= 0) {
-			return alifTime_divide_roundUp(t, k);
+	else if (_round == AlifTime_Round_Ceiling) {
+		if (_t >= 0) {
+			return alifTime_divide_roundUp(_t, _k);
 		}
 		else {
-			return t / k;
+			return _t / _k;
 		}
 	}
-	else if (round == AlifTime_Round_Floor) {
-		if (t >= 0) {
-			return t / k;
+	else if (_round == AlifTime_Round_Floor) {
+		if (_t >= 0) {
+			return _t / _k;
 		}
 		else {
-			return alifTime_divide_roundUp(t, k);
+			return alifTime_divide_roundUp(_t, _k);
 		}
 	}
 	else {
 
-		return alifTime_divide_roundUp(t, k);
+		return alifTime_divide_roundUp(_t, _k);
 	}
 }
 
@@ -743,10 +743,10 @@ static alifTimeT alifTime_divide(const alifTimeT t, const alifTimeT k,
 
 
 
-alifTimeT alifTime_asMicroseconds(alifTimeT t, AlifTimeRoundT round)
+alifTimeT alifTime_asMicroseconds(alifTimeT _t, AlifTimeRoundT _round)
 {
-	alifTimeT ns = alifTime_as_nanoseconds(t);
-	return alifTime_divide(ns, NS_TO_US, round);
+	alifTimeT ns = alifTime_as_nanoseconds(_t);
+	return alifTime_divide(ns, NS_TO_US, _round);
 }
 
 
@@ -1196,7 +1196,7 @@ alifTimeT alifTime_asMicroseconds(alifTimeT t, AlifTimeRoundT round)
 
 
 #ifdef MS_WINDOWS
-static int alifWin_perf_counterFrequency(LONGLONG* pfrequency, int raise)
+static int alifWin_perf_counterFrequency(LONGLONG* _pfrequency, int _raise)
 {
 	LONGLONG frequency;
 
@@ -1226,28 +1226,28 @@ static int alifWin_perf_counterFrequency(LONGLONG* pfrequency, int raise)
 		return -1;
 	}
 
-	*pfrequency = frequency;
+	*_pfrequency = frequency;
 	return 0;
 }
 
 
 
-static int alifGet_win_perfCounter(alifTimeT* tp, AlifClockInfoT* info, int raise_exc)
+static int alifGet_win_perfCounter(alifTimeT* _tp, AlifClockInfoT* _info, int _raiseExc)
 {
 
 
 	static LONGLONG frequency = 0;
 	if (frequency == 0) {
-		if (alifWin_perf_counterFrequency(&frequency, raise_exc) < 0) {
+		if (alifWin_perf_counterFrequency(&frequency, _raiseExc) < 0) {
 			return -1;
 		}
 	}
 
-	if (info) {
-		info->implementation = "QueryPerformanceCounter()";
-		info->resolution = 1.0 / (double)frequency;
-		info->monotonic = 1;
-		info->adjustable = 0;
+	if (_info) {
+		_info->implementation = "QueryPerformanceCounter()";
+		_info->resolution = 1.0 / (double)frequency;
+		_info->monotonic = 1;
+		_info->adjustable = 0;
 	}
 
 	LARGE_INTEGER now;
@@ -1262,7 +1262,7 @@ static int alifGet_win_perfCounter(alifTimeT* tp, AlifClockInfoT* info, int rais
 	ticks = (alifTimeT)ticksll;
 
 	alifTimeT ns = alifTime_mulDiv(ticks, SEC_TO_NS, (alifTimeT)frequency);
-	*tp = alifTime_from_nanoseconds(ns);
+	*_tp = alifTime_from_nanoseconds(ns);
 	return 0;
 }
 #endif
@@ -1280,14 +1280,14 @@ static int alifGet_win_perfCounter(alifTimeT* tp, AlifClockInfoT* info, int rais
 
 
 
-alifTimeT alifTime_getPerfCounter(void)
+alifTimeT alifTime_getPerfCounter()
 {
 	alifTimeT t;
 	int res;
 #ifdef MS_WINDOWS
-	res = alifGet_win_perfCounter(&t, NULL, 0);
+	res = alifGet_win_perfCounter(&t, nullptr, 0);
 #else
-	res = alifGet_monotonic_clock(&t, NULL, 0);
+	res = alifGet_monotonic_clock(&_t, nullptr, 0);
 #endif
 	if (res < 0) {
 

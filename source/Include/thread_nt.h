@@ -11,7 +11,7 @@
 #include <process.h>
 #endif
 
-/* options */
+
 #ifndef ALIFUSE_CV_LOCKS
 #define ALIFUSE_CV_LOCKS 1     
 #endif
@@ -61,27 +61,27 @@ typedef NRMutex* PNRMutex;
 
 
 
-static DWORD enterNonRecursiveMutex(PNRMutex mutex, DWORD milliseconds)
+static DWORD enterNonRecursiveMutex(PNRMutex _mutex, DWORD _milliseconds)
 {
 	DWORD result = WAIT_OBJECT_0;
-	if (alifMutex_lock(&mutex->cs))
+	if (alifMutex_lock(&_mutex->cs))
 		return WAIT_FAILED;
-	if (milliseconds == INFINITE) {
-		while (mutex->locked) {
-			if (alifCond_wait(&mutex->cv, &mutex->cs)) {
+	if (_milliseconds == INFINITE) {
+		while (_mutex->locked) {
+			if (alifCond_wait(&_mutex->cv, &_mutex->cs)) {
 				result = WAIT_FAILED;
 				break;
 			}
 		}
 	}
-	else if (milliseconds != 0) {
+	else if (_milliseconds != 0) {
 
-		alifTimeT nanoseconds = alifTime_fromNanoseconds((alifTimeT)milliseconds * 1000000);
+		alifTimeT nanoseconds = alifTime_fromNanoseconds((alifTimeT)_milliseconds * 1000000);
 		alifTimeT deadLine = alifTime_add(alifTime_getPerfCounter(), nanoseconds);
-		while (mutex->locked) {
+		while (_mutex->locked) {
 			alifTimeT microseconds = alifTime_asMicroseconds(nanoseconds,
 				AlifTime_Round_TimeOut);
-			if (alifCond_timedWait(&mutex->cv, &mutex->cs, microseconds) < 0) {
+			if (alifCond_timedWait(&_mutex->cv, &_mutex->cs, microseconds) < 0) {
 				result = WAIT_FAILED;
 				break;
 			}
@@ -91,30 +91,30 @@ static DWORD enterNonRecursiveMutex(PNRMutex mutex, DWORD milliseconds)
 			}
 		}
 	}
-	if (!mutex->locked) {
-		mutex->locked = 1;
+	if (!_mutex->locked) {
+		_mutex->locked = 1;
 		result = WAIT_OBJECT_0;
 	}
 	else if (result == WAIT_OBJECT_0)
 		result = WAIT_TIMEOUT;
-	alifMutex_unlock(&mutex->cs); /* must ignore result here */
+	alifMutex_unlock(&_mutex->cs); 
 	return result;
 }
 
-static BOOL leaveNonRecursiveMutex(PNRMutex mutex)
+static BOOL leaveNonRecursiveMutex(PNRMutex _mutex)
 {
 	BOOL result;
-	if (alifMutex_lock(&mutex->cs))
+	if (alifMutex_lock(&_mutex->cs))
 		return FALSE;
-	mutex->locked = 0;
+	_mutex->locked = 0;
 
-	result = !alifCond_signal(&mutex->cv);
-	alifMutex_unlock(&mutex->cs);
+	result = !alifCond_signal(&_mutex->cv);
+	alifMutex_unlock(&_mutex->cs);
 	return result;
 }
 
 
-#else /* if ! ALIF_USE_CVLOCKS */
+#else 
 
 
 
@@ -295,8 +295,8 @@ const DWORD TIMEOUT_MS_MAX = 0xFFFFFFFE;
 
 
 
-AlifLockStatus alifThread_acquireLockTimed(AlifThreadTypeLock aLock,
-	ALIF_TIMEOUT_T microseconds, int intrFlag)
+AlifLockStatus alifThread_acquireLockTimed(AlifThreadTypeLock _aLock,
+	ALIF_TIMEOUT_T _microseconds, int _intrFlag)
 {
 
 
@@ -306,10 +306,10 @@ AlifLockStatus alifThread_acquireLockTimed(AlifThreadTypeLock aLock,
 	AlifLockStatus success;
 	ALIF_TIMEOUT_T milliseconds;
 
-	if (microseconds >= 0) {
-		milliseconds = microseconds / 1000;
-		// Round milliseconds away from zero
-		if (microseconds % 1000 > 0) {
+	if (_microseconds >= 0) {
+		milliseconds = _microseconds / 1000;
+		// Round _milliseconds away from zero
+		if (_microseconds % 1000 > 0) {
 			milliseconds++;
 		}
 		if (milliseconds > (ALIF_TIMEOUT_T)TIMEOUT_MS_MAX) {
@@ -327,7 +327,7 @@ AlifLockStatus alifThread_acquireLockTimed(AlifThreadTypeLock aLock,
 		milliseconds = INFINITE;
 	}
 
-	if (enterNonRecursiveMutex((PNRMutex)aLock,
+	if (enterNonRecursiveMutex((PNRMutex)_aLock,
 		(DWORD)milliseconds) == WAIT_OBJECT_0) {
 		success = Alif_Lock_Acquired;
 	}
@@ -338,13 +338,13 @@ AlifLockStatus alifThread_acquireLockTimed(AlifThreadTypeLock aLock,
 	return success;
 }
 
-int alifThread_acquire_lock(AlifThreadTypeLock aLock, int waitFlag)
+int alifThread_acquire_lock(AlifThreadTypeLock _aLock, int _waitFlag)
 {
-	return alifThread_acquireLockTimed(aLock, waitFlag ? -1 : 0, 0);
+	return alifThread_acquireLockTimed(_aLock, _waitFlag ? -1 : 0, 0);
 }
 
-void alifThread_release_lock(AlifThreadTypeLock aLock)
+void alifThread_release_lock(AlifThreadTypeLock _aLock)
 {
 
-	(void)leaveNonRecursiveMutex((PNRMutex)aLock);
+	(void)leaveNonRecursiveMutex((PNRMutex)_aLock);
 }

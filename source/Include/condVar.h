@@ -51,9 +51,9 @@
 
 
 int alifThread_cond_init(AlifCondT* cond);
-void alifThread_cond_after(long long us, struct timespec* abs);
+void alifThread_cond_after(long long _us, struct timespec* abs);
 
-/* The following functions return 0 on success, nonzero on error */
+
 #define alifMutex_init(mut)       pthread_mutex_init((mut), NULL)
 #define alifMutex_fini(mut)       pthread_mutex_destroy(mut)
 #define alifMutex_lock(mut)       pthread_mutex_lock(mut)
@@ -66,11 +66,11 @@ void alifThread_cond_after(long long us, struct timespec* abs);
 #define ALIFCOND_WAIT(cond, mut)  pthread_cond_wait((cond), (mut))
 
 
-/* return 0 for success, 1 on timeout, -1 on error */
-ALIF_LOCAL_INLINE(int)alifCond_TimedWait(AlifCond_T* cond, AlifMutexT* mut, long long us)
+
+ALIF_LOCAL_INLINE(int)alifCond_TimedWait(AlifCond_T* cond, AlifMutexT* mut, long long _us)
 {
 	struct timespec absTimeout;
-	alifThread_cond_after(us, &absTimeout);
+	alifThread_cond_after(_us, &absTimeout);
 	int ret = pthread_cond_timedWait(cond, mut, &absTimeout);
 	if (ret == ETIMEDOUT) {
 		return 1;
@@ -89,7 +89,7 @@ ALIF_LOCAL_INLINE(int)alifCond_TimedWait(AlifCond_T* cond, AlifMutexT* mut, long
 
 
 
-#if ALIF_EMULATED_WINCV
+#if ALIF_EMULATED_WIN_cv
 
 
 
@@ -106,204 +106,205 @@ ALIF_LOCAL_INLINE(int)alifCond_TimedWait(AlifCond_T* cond, AlifMutexT* mut, long
 
 
 
-ALIF_LOCAL_INLINE(int)alifMutex_init(AlifMutexT* cs)
+ALIF_LOCAL_INLINE(int)alifMutex_init(AlifMutexT* _cs)
 {
-	InitializeCriticalSection(cs);
+	InitializeCriticalSection(_cs);
 	return 0;
 }
 
 
-ALIF_LOCAL_INLINE(int)alifMutex_fini(AlifMutexT* cs)
+ALIF_LOCAL_INLINE(int)alifMutex_fini(AlifMutexT* _cs)
 {
-	DeleteCriticalSection(cs);
+	DeleteCriticalSection(_cs);
 	return 0;
 }
 
 
-ALIF_LOCAL_INLINE(int)alifMutex_lock(AlifMutexT* cs)
+ALIF_LOCAL_INLINE(int)alifMutex_lock(AlifMutexT* _cs)
 {
-	EnterCriticalSection(cs);
+	EnterCriticalSection(_cs);
 	return 0;
 }
 
 
-ALIF_LOCAL_INLINE(int)alifMutex_unlock(AlifMutexT* cs)
+ALIF_LOCAL_INLINE(int)alifMutex_unlock(AlifMutexT* _cs)
 {
-	LeaveCriticalSection(cs);
+	LeaveCriticalSection(_cs);
 	return 0;
 }
 
 
 
-ALIF_LOCAL_INLINE(int)alifCond_init(AlifCondT* cv)
+ALIF_LOCAL_INLINE(int)alifCond_init(AlifCondT* _cv)
 {
-	/* A semaphore with a "large" max value,  The positive value
-	 * is only needed to catch those "lost wakeup" events and
-	 * race conditions when a timed wait elapses.
-	 */
-	cv->sem = CreateSemaphore(NULL, 0, 100000, NULL);
-	if (cv->sem == NULL)
+
+
+
+
+	_cv->sem = CreateSemaphore(NULL, 0, 100000, NULL);
+	if (_cv->sem == NULL)
 		return -1;
-	cv->waiting = 0;
+	_cv->waiting = 0;
 	return 0;
 }
 
 
-ALIF_LOCAL_INLINE(int)alifCond_fini(AlifCondT* cv)
+ALIF_LOCAL_INLINE(int)alifCond_fini(AlifCondT* _cv)
 {
-	return CloseHandle(cv->sem) ? 0 : -1;
+	return CloseHandle(_cv->sem) ? 0 : -1;
 }
 
-/* this implementation can detect a timeout.  Returns 1 on timeout,
- * 0 otherwise (and -1 on error)
- */
 
-ALIF_LOCAL_INLINE(int)alifCond_wait_ms(AlifCondT* cv, AlifMutexT* cs, DWORD ms)
+
+
+
+
+ALIF_LOCAL_INLINE(int)alifCond_wait_ms(AlifCondT* _cv, AlifMutexT* _cs, DWORD ms)
 {
 	DWORD wait;
-	cv->waiting++;
-	alifMutex_unlock(cs);
-	/* "lost wakeup bug" would occur if the caller were interrupted here,
-	 * but we are safe because we are using a semaphore which has an internal
-	 * count.
-	 */
-	wait = WaitForSingleObjectEx(cv->sem, ms, FALSE);
-	alifMutex_lock(cs);
+	_cv->waiting++;
+	alifMutex_unlock(_cs);
+
+
+
+
+	wait = WaitForSingleObjectEx(_cv->sem, ms, FALSE);
+	alifMutex_lock(_cs);
 	if (wait != WAIT_OBJECT_0)
-		--cv->waiting;
-	/* Here we have a benign race condition with alifCond_signal.
-	 * When failure occurs or timeout, it is possible that
-	 * alifCond_signal also decrements this value
-	 * and signals releases the mutex.  This is benign because it
-	 * just means an extra spurious wakeup for a waiting thread.
-	 * ('waiting' corresponds to the semaphore's "negative" count and
-	 * we may end up with e.g. (waiting == -1 && sem.count == 1).  When
-	 * a new thread comes along, it will pass right through, having
-	 * adjusted it to (waiting == 0 && sem.count == 0).
-	 */
+		--_cv->waiting;
+
+
+
+
+
+
+
+
+
+
 
 	if (wait == WAIT_FAILED)
 		return -1;
-	/* return 0 on success, 1 on timeout */
+
 	return wait != WAIT_OBJECT_0;
 }
 
 
-ALIF_LOCAL_INLINE(int)alifCond_wait(AlifCondT* cv, AlifMutexT* cs)
+ALIF_LOCAL_INLINE(int)alifCond_wait(AlifCondT* _cv, AlifMutexT* _cs)
 {
-	int result = alifCond_wait_ms(cv, cs, INFINITE);
+	int result = alifCond_wait_ms(_cv, _cs, INFINITE);
 	return result >= 0 ? 0 : result;
 }
 
 
-ALIF_LOCAL_INLINE(int)alifCond_timedWait(AlifCondT* cv, AlifMutexT* cs, long long us)
+ALIF_LOCAL_INLINE(int)alifCond_timedWait(AlifCondT* _cv, AlifMutexT* _cs, long long _us)
 {
-	return alifCond_wait_ms(cv, cs, (DWORD)(us / 1000));
+	return alifCond_wait_ms(_cv, _cs, (DWORD)(_us / 1000));
 }
 
-ALIF_LOCAL_INLINE(int)alifCond_signal(AlifCondT* cv)
+ALIF_LOCAL_INLINE(int)alifCond_signal(AlifCondT* _cv)
 {
-	/* this test allows alifCond_signal to be a no-op unless required
-	 * to wake someone up, thus preventing an unbounded increase of
-	 * the semaphore's internal counter.
-	 */
-	if (cv->waiting > 0) {
-		/* notifying thread decreases the cv->waiting count so that
-		 * a delay between notify and actual wakeup of the target thread
-		 * doesn't cause a number of extra ReleaseSemaphore calls.
-		 */
-		cv->waiting--;
-		return ReleaseSemaphore(cv->sem, 1, NULL) ? 0 : -1;
+
+
+
+
+	if (_cv->waiting > 0) {
+
+
+
+
+		_cv->waiting--;
+		return ReleaseSemaphore(_cv->sem, 1, NULL) ? 0 : -1;
 	}
 	return 0;
 }
 
 
-ALIF_LOCAL_INLINE(int)alifCond_broadcast(AlifCondT* cv)
+ALIF_LOCAL_INLINE(int)alifCond_broadcast(AlifCondT* _cv)
 {
-	int waiting = cv->waiting;
+	int waiting = _cv->waiting;
 	if (waiting > 0) {
-		cv->waiting = 0;
-		return ReleaseSemaphore(cv->sem, waiting, NULL) ? 0 : -1;
+		_cv->waiting = 0;
+		return ReleaseSemaphore(_cv->sem, waiting, NULL) ? 0 : -1;
 	}
 	return 0;
 }
 
-#else /* !ALIF_EMULATED_WINCV */
+#else 
 
-ALIF_LOCAL_INLINE(int)alifMutex_init(AlifMutexT* cs)
+ALIF_LOCAL_INLINE(int)alifMutex_init(AlifMutexT* _cs)
 {
-	InitializeSRWLock(cs);
+	InitializeSRWLock(_cs);
 	return 0;
 }
 
 
-ALIF_LOCAL_INLINE(int)alifMutex_fini(AlifMutexT* cs)
-{
-	return 0;
-}
-
-
-ALIF_LOCAL_INLINE(int)alifMutex_lock(AlifMutexT* cs)
-{
-	AcquireSRWLockExclusive(cs);
-	return 0;
-}
-
-
-ALIF_LOCAL_INLINE(int)alifMutex_unlock(AlifMutexT* cs)
-{
-	ReleaseSRWLockExclusive(cs);
-	return 0;
-}
-
-
-
-ALIF_LOCAL_INLINE(int)alifCond_init(AlifCondT* cv)
-{
-	InitializeConditionVariable(cv);
-	return 0;
-}
-
-
-ALIF_LOCAL_INLINE(int)alifCond_fini(AlifCondT* cv)
+ALIF_LOCAL_INLINE(int)alifMutex_fini(AlifMutexT* _cs)
 {
 	return 0;
 }
 
 
-ALIF_LOCAL_INLINE(int)alifCond_wait(AlifCondT* cv, AlifMutexT* cs)
+ALIF_LOCAL_INLINE(int)alifMutex_lock(AlifMutexT* _cs)
 {
-	return SleepConditionVariableSRW(cv, cs, INFINITE, 0) ? 0 : -1;
-}
-
-
-/* This implementation makes no distinction about timeouts.  Signal
- * 2 to indicate that we don't know.
- */
-ALIF_LOCAL_INLINE(int)alifCond_timedWait(AlifCondT* cv, AlifMutexT* cs, long long us)
-{
-	return SleepConditionVariableSRW(cv, cs, (DWORD)(us / 1000), 0) ? 2 : -1;
-}
-
-
-ALIF_LOCAL_INLINE(int)alifCond_signal(AlifCondT* cv)
-{
-	WakeConditionVariable(cv);
+	AcquireSRWLockExcl_usive(_cs);
 	return 0;
 }
 
 
-ALIF_LOCAL_INLINE(int)alifCond_broadcast(AlifCondT* cv)
+ALIF_LOCAL_INLINE(int)alifMutex_unlock(AlifMutexT* _cs)
 {
-	WakeAllConditionVariable(cv);
+	ReleaseSRWLockExcl_usive(_cs);
 	return 0;
 }
 
 
 
-#endif /* ALIF_EMULATED_WINCV */
+ALIF_LOCAL_INLINE(int)alifCond_init(AlifCondT* _cv)
+{
+	InitializeConditionVariable(_cv);
+	return 0;
+}
 
-#endif /* POSIX_THREADS, NT_THREADS */
 
-#endif /* CONDVAR_IMPL_H */
+ALIF_LOCAL_INLINE(int)alifCond_fini(AlifCondT* _cv)
+{
+	return 0;
+}
+
+
+ALIF_LOCAL_INLINE(int)alifCond_wait(AlifCondT* _cv, AlifMutexT* _cs)
+{
+	return SleepConditionVariableSRW(_cv, _cs, INFINITE, 0) ? 0 : -1;
+}
+
+
+
+
+
+ALIF_LOCAL_INLINE(int)alifCond_timedWait(AlifCondT* _cv, AlifMutexT* _cs, long long _us)
+{
+	return SleepConditionVariableSRW(_cv, _cs, (DWORD)(_us / 1000), 0) ? 2 : -1;
+}
+
+
+ALIF_LOCAL_INLINE(int)alifCond_signal(AlifCondT* _cv)
+{
+	WakeConditionVariable(_cv);
+	return 0;
+}
+
+
+ALIF_LOCAL_INLINE(int)alifCond_broadcast(AlifCondT* _cv)
+{
+	WakeAllConditionVariable(_cv);
+	return 0;
+}
+
+
+
+#endif 
+
+#endif 
+
+#endif

@@ -139,7 +139,7 @@ enum AlifTimeRoundT {
 
 
 
-ALIFAPI_FUNC(alifTimeT) alifTime_fromNanoseconds(alifTimeT ns);
+ALIFAPI_FUNC(alifTimeT) alifTime_fromNanoseconds(alifTimeT);
 
 
 
@@ -169,7 +169,7 @@ ALIFAPI_FUNC(alifTimeT) alifTime_fromNanoseconds(alifTimeT ns);
 
 
 
-ALIFAPI_FUNC(alifTimeT) alifTime_asMicroseconds(alifTimeT t, AlifTimeRoundT round);
+ALIFAPI_FUNC(alifTimeT) alifTime_asMicroseconds(alifTimeT , AlifTimeRoundT);
 
 
 
@@ -234,14 +234,14 @@ ALIFAPI_FUNC(alifTimeT) alifTime_asMicroseconds(alifTimeT t, AlifTimeRoundT roun
 
 
 
-extern alifTimeT alifTime_add(alifTimeT t1, alifTimeT t2);
+extern alifTimeT alifTime_add(alifTimeT, alifTimeT );
 
 
 
 
-extern alifTimeT alifTime_mulDiv(alifTimeT ticks,
-	alifTimeT mul,
-	alifTimeT div);
+extern alifTimeT alifTime_mulDiv(alifTimeT ,
+	alifTimeT ,
+	alifTimeT );
 
 
 class AlifClockInfoT {
