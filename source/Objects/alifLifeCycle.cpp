@@ -12,7 +12,7 @@
 //#include "alifCore_floatObject.h"
 //#include "alifCore_genObject.h"
 //#include "alifCore_globalObjectsFiniGenerated.h"
-//#include "alifCore_import.h"
+#include "alifCore_import.h"
 #include "alifCore_initConfig.h"
 //#include "alifCore_list.h"
 //#include "alifCore_long.h"
@@ -20,10 +20,10 @@
 //#include "alifCore_pathcConfig.h"
 //#include "alifCore_alifErrors.h"
 #include "alifCore_alifLifeCycle.h"
-//#include "alifCore_alifMem.h"
-//#include "alifCore_alifState.h"
+#include "alifCore_alifMem.h"
+#include "alifCore_alifState.h"
 #include "alifCore_runtime.h"
-//#include "alifCore_runtimeInit.h"
+#include "alifCore_runtimeInit.h"
 //#include "alifCore_setObject.h"
 //#include "alifCore_sliceObject.h"
 //#include "alifCore_sysModule.h"
@@ -95,30 +95,30 @@
 
 
 
-//AlifRuntimeState alifRuntime
-//#if defined(__linux__) && (defined(__GNUC__) || defined(__clang__))
-//__attribute__((section(".AlifRuntime")))
-//#endif
-//= ALIFRUNTIMESTATE_INIT(alifRuntime);
-//ALIF_COMP_DIAG_POP
+AlifRuntimeState alifRuntime
+#if defined(__linux__) && (defined(__GNUC__) || defined(__clang__))
+__attribute__((section(".AlifRuntime")))
+#endif
+= ALIFRUNTIMESTATE_INIT(alifRuntime);
+ALIFCOMP_DIAGPOP
+
+static int runtimeInitialized = 0;
+
+//AlifStatus runtime_initialize(void)
+//{
 
 
 
 
 
 
+	//if (runtimeInitialized) {
+		//return ALIFSTATUS_OK();
+	//}
+	//runtimeInitialized = 1;
 
-
-
-
-
-
-
-
-
-
-
-
+	//return alifRuntimeState_init(&alifRuntime);
+//}
 
 
 

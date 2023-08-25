@@ -66,8 +66,8 @@
 
 #define MS_WIN32
 #define MS_WINDOWS
-
-
+#define NT_THREADS
+#define WITH_THREAD
 
 
 
@@ -193,10 +193,10 @@
 
 #ifdef MS_WIN64
 typedef __int64 AlifSizeT;
-#   define ALIF_SIZE_T_MAX LLONG_MAX
+#   define ALIFSIZE_T_MAX LLONG_MAX
 #else
 typedef _W64 int AlifSizeT;
-#   define ALIF_SIZE_T_MAX INT_MAX
+#   define ALIFSIZE_T_MAX INT_MAX
 #endif
 
 
@@ -323,10 +323,12 @@ typedef _W64 int AlifSizeT;
 
 
 
+#define SIZEOF_VOID_P 8
 
 
 
 
+#define SIZEOF_SIZE_T 8
 
 
 
@@ -353,6 +355,9 @@ typedef _W64 int AlifSizeT;
 
 
 
+#ifdef _DEBUG
+#       define ALIF_DEBUG
+#endif
 
 
 
@@ -504,12 +509,7 @@ typedef _W64 int AlifSizeT;
 
 
 
-
-
-
-
-
-
+#define WITH_ALIFMALLOC 1
 
 
 

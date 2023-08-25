@@ -139,19 +139,45 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\source\Include\alif.h" />
     <ClInclude Include="..\source\Include\alifConfig.h" />
     <ClInclude Include="..\source\Include\AlifCpp\alifMem.h" />
     <ClInclude Include="..\source\Include\AlifCpp\initConfig.h" />
+    <ClInclude Include="..\source\Include\alifMacro.h" />
     <ClInclude Include="..\source\Include\alifMem.h" />
     <ClInclude Include="..\source\Include\alifPort.h" />
+    <ClInclude Include="..\source\Include\alifState.h" />
+    <ClInclude Include="..\source\Include\alifThread.h" />
+    <ClInclude Include="..\source\Include\alifTime.h" />
+    <ClInclude Include="..\source\Include\alifTypeDefs.h" />
+    <ClInclude Include="..\source\Include\condVar.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_alifLifeCycle.h" />
+    <ClInclude Include="..\source\Include\Core\alifCore_alifMem.h" />
+    <ClInclude Include="..\source\Include\Core\alifCore_alifMemInit.h" />
+    <ClInclude Include="..\source\Include\Core\alifCore_alifState.h" />
+    <ClInclude Include="..\source\Include\Core\alifCore_alifThread.h" />
+    <ClInclude Include="..\source\Include\Core\alifCore_atomic.h" />
+    <ClInclude Include="..\source\Include\Core\alifCore_code.h" />
+    <ClInclude Include="..\source\Include\Core\alifCore_condVar.h" />
+    <ClInclude Include="..\source\Include\Core\alifCore_import.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_initConfig.h" />
+    <ClInclude Include="..\source\Include\Core\alifCore_interp.h" />
+    <ClInclude Include="..\source\Include\Core\alifCore_obmalloc.h" />
+    <ClInclude Include="..\source\Include\Core\alifCore_obmallocInit.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_runtime.h" />
+    <ClInclude Include="..\source\Include\Core\alifCore_runtimeInit.h" />
+    <ClInclude Include="..\source\Include\Core\alifCore_time.h" />
     <ClInclude Include="..\source\Include\exports.h" />
+    <ClInclude Include="..\source\Include\objImpl.h" />
+    <ClInclude Include="..\source\Include\thread_nt.h" />
+    <ClInclude Include="..\source\Include\thread_pThread.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\Objects\alifLifeCycle.cpp" />
+    <ClCompile Include="..\source\Objects\alifState.cpp" />
+    <ClCompile Include="..\source\Objects\alifTime.cpp" />
     <ClCompile Include="..\source\Objects\Main\alif.cpp" />
+    <ClCompile Include="..\source\Objects\obmalloc.cpp" />
     <ClCompile Include="..\source\Objects\preConfig.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
