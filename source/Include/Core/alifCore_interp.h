@@ -193,8 +193,8 @@ public:
 	bool sysTraceInitialized;
 	AlifSizeT sysProfilingThreads; 
 	AlifSizeT sysTracingThreads; 
-	//AlifObject* monitoring_callables[PY_MONITORING_TOOL_IDS][_PY_MONITORING_EVENTS];
-	//AlifObject* monitoring_tool_names[PY_MONITORING_TOOL_IDS];
+	//AlifObject* monitoring_callables[ALIFMONITORING_TOOL_IDS][ALIFMONITORING_EVENTS];
+	//AlifObject* monitoring_tool_names[ALIFMONITORING_TOOL_IDS];
 
 	 //AlifInterpCachedObjects cached_objects;
 	 //AlifInterpStaticObjects static_objects;
