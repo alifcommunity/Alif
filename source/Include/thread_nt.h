@@ -32,23 +32,23 @@ public:
 };
 typedef NRMutex* PNRMutex;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+static PNRMutex allocNonRecursiveMutex()
+{
+	PNRMutex m = (PNRMutex)alifMem_rawMalloc(sizeof(NRMutex));
+	if (!m)
+		return nullptr;
+	if (alifCond_init(&m->cv))
+		goto fail;
+	if (alifMutex_init(&m->cs)) {
+		alifCond_fini(&m->cv);
+		goto fail;
+	}
+	m->locked = 0;
+	return m;
+fail:
+	alifMem_rawFree(m);
+	return nullptr;
+}
 
 
 
@@ -262,20 +262,20 @@ static BOOL leaveNonRecursiveMutex(PNRMutex _mutex)
 
 
 
+AlifThreadTypeLock alifThread_allocateLock()
+{
+	PNRMutex mutex;
+
+	if (!INITIALIZED)
+		alifThread_initThread();
+
+	mutex = allocNonRecursiveMutex();
+
+	AlifThreadTypeLock aLock = (AlifThreadTypeLock)mutex;
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+	return aLock;
+}
 
 
 

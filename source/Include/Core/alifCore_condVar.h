@@ -10,22 +10,22 @@
 
 
 # ifdef HAVE_PTHREAD_H
-#  include <pthread.h> /* POSIX_THREADS */
+#  include <pthread.h> 
 # endif
 #endif
 
 #ifdef POSIX_THREADS
-   /*
-	* POSIX support
-	*/
+
+
+
 #define ALIF_HAVE_CONDVAR
 
 #ifdef HAVE_PTHREAD_H
 #  include <pthread.h>
 #endif
 
-#define ALIFMUTEXT pthread_mutex_t
-#define ALIFCONDT pthread_cond_t
+#define ALIFMUTEXT PthreadMutexT
+#define ALIFCONDT PthreadCondT
 
 #elif defined(NT_THREADS)
 
@@ -37,7 +37,7 @@
 #define ALIF_HAVE_CONDVAR
 
 
-#define WIN32_LEAN_AND_MEAN
+#define WIN32_LEANAND_MEAN
 #include <windows.h>
 
 

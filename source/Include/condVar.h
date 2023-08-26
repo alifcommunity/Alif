@@ -45,25 +45,25 @@
 #include "alifCore_condVar.h"
 
 #ifdef POSIX_THREADS
- /*
-  * POSIX support
-  */
 
 
-int alifThread_cond_init(AlifCondT* cond);
-void alifThread_cond_after(long long _us, struct timespec* abs);
 
 
-#define alifMutex_init(mut)       pthread_mutex_init((mut), NULL)
-#define alifMutex_fini(mut)       pthread_mutex_destroy(mut)
-#define alifMutex_lock(mut)       pthread_mutex_lock(mut)
-#define ALIFMUTEX_UNLOCK(mut)     pthread_mutex_unlock(mut)
 
-#define ALIFCOND_INIT(cond)       alifThread_cond_init(cond)
-#define ALIFCOND_FINI(cond)       pthread_cond_destroy(cond)
-#define ALIFCOND_SIGNAL(cond)     pthread_cond_signal(cond)
-#define ALIFCOND_BROADCAST(cond)  pthread_cond_broadcast(cond)
-#define ALIFCOND_WAIT(cond, mut)  pthread_cond_wait((cond), (mut))
+
+
+
+
+#define alifMutex_init(mut)       pthread_mutexInit((mut), NULL)
+#define alifMutex_fini(mut)       pthread_mutexDestroy(mut)
+#define alifMutex_lock(mut)       pthread_mutexLock(mut)
+#define ALIFMUTEX_UNLOCK(mut)     pthread_mutexUnlock(mut)
+
+#define ALIFCOND_INIT(cond)       alifThread_condInit(cond)
+#define ALIFCOND_FINI(cond)       pthread_condDestroy(cond)
+#define ALIFCOND_SIGNAL(cond)     pthread_condSignal(cond)
+#define ALIFCOND_BROADCAST(cond)  pthread_condBroadcast(cond)
+#define ALIFCOND_WAIT(cond, mut)  pthread_condWait((cond), (mut))
 
 
 
@@ -89,7 +89,7 @@ ALIF_LOCAL_INLINE(int)alifCond_TimedWait(AlifCond_T* cond, AlifMutexT* mut, long
 
 
 
-#if ALIF_EMULATED_WIN_cv
+#if ALIF_EMULATED_WINCV
 
 
 

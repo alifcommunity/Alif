@@ -15,7 +15,7 @@ enum AlifLockStatus {
 	Alif_Lock_Intr
 };
 
-
+ALIFAPI_FUNC(void) alifThread_initThread(void);
 
 
 
@@ -79,3 +79,52 @@ ALIFAPI_FUNC(int) alifThread_acquire_lock(AlifThreadTypeLock, int);
 
 
 void alifThread_release_lock(AlifThreadTypeLock);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+typedef class AlifTssT AlifTssT; 
+
+
+
+
+
+
+
+
+
+
+
+
+#ifndef ALIF_LIMITED_API
+#  define ALIF_ALIFTHREAD_H
+#  include "AlifCpp/alifThread.h"
+#  undef ALIF_PYTHREAD_H
+#endif

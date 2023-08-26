@@ -8,14 +8,14 @@
 
 
 
-//#include "alifCore_long.h"
-//#include "alifCore_object.h"
-//#include "alifCore_parser.h"
+
+
+
 #include "alifCore_alifMemInit.h"
 #include "alifCore_obmallocInit.h"
 
 
-//extern AlifTypeObject alifExcMemoryError;
+
 
 
 

@@ -378,7 +378,10 @@ ALIF_THREAD_LOCAL AlifThreadState* alifTssTState = nullptr;
 
 
 
+static const AlifRuntimeState initial = ALIFRUNTIMESTATE_INIT(alifRuntime);
+ALIFCOMP_DIAGPOP
 
+#define NUMLOCKS 9
 
 
 
@@ -392,10 +395,29 @@ ALIF_THREAD_LOCAL AlifThreadState* alifTssTState = nullptr;
 
 
 
+static int
+alloc_forRuntime(AlifThreadTypeLock _locks[NUMLOCKS])
+{
 
 
+	AlifMemAllocatorEx old_alloc;
+	alifMem_setDefaultAllocator(AlifMem_Domain_Raw, &old_alloc);
 
+	for (int i = 0; i < NUMLOCKS; i++) {
+		AlifThreadTypeLock lock = alifThread_allocate_lock();
+		if (lock == NULL) {
+			for (int j = 0; j < i; j++) {
+				alifThread_free_lock(_locks[j]);
+				_locks[j] = NULL;
+			}
+			break;
+		}
+		_locks[i] = lock;
+	}
 
+	alifMem_setAllocator(AlifMem_Domain_Raw, &old_alloc);
+	return 0;
+}
 
 
 
@@ -432,66 +454,44 @@ ALIF_THREAD_LOCAL AlifThreadState* alifTssTState = nullptr;
 
 
 
+AlifStatus alifRuntimeState_Init(AlifRuntimeState* _runtime)
+{
 
 
 
+	//void* openCodeHook = _runtime->openCodeHook;
+	//void* openCodeUserData = _runtime->openCodeUserData;
+	//AlifAuditHookEntry* auditHookHead = _runtime->auditHooks.head;
 
 
+	//AlifSizeT unicode_next_index = _runtime->unicodeState.IDs.nextIndex;
 
+	AlifThreadTypeLock locks[NUMLOCKS];
+	if (alloc_forRuntime(locks) != 0) {
+		return ALIFSTATUS_NO_MEMORY();
+	}
 
+	if (_runtime->initialized) {
 
 
+		memcpy(_runtime, &initial, sizeof(*_runtime));
+	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	//if (GILSTATE_TSS_INIT(_runtime) != 0) {
+	//	alifRuntimeState_fini(_runtime);
+	//	return ALIFSTATUS_NO_MEMORY();
+	//}
+
+	//if (alifThread_tssCreate(&_runtime->trashTssKey) != 0) {
+	//	alifRuntimeState_fini(_runtime);
+	//	return ALIFSTATUS_NO_MEMORY();
+	//}
+
+	//init_runtime(_runtime, open_code_hook, open_code_userdata, audit_hook_head,
+		//unicode_next_index, _locks);
+
+	return ALIFSTATUS_OK();
+}
 
 
 
@@ -1898,7 +1898,7 @@ AlifInterpreterState* alifInterpreterState_head()
 
 AlifInterpreterState* alifInterpreterState_main()
 {
-	return _alifInterpreterState_main();
+	return alifInterpreter_state_main();
 }
 
 

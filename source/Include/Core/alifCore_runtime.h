@@ -184,13 +184,13 @@ public:
 	AlifMemAllocators allocators;
 	ObmallocGlobalState obmalloc;
 	//AlifhashRuntimeState alifHashState;
-	//TimeRuntimeState time;
+	TimeRuntimeState time;
 	AlifThreadRuntimeState threads;
 	//SignalsRuntimeState signals;
 
-	//AlifTssT autoTSSkey;
+	AlifTssT autoTssKey;
 
-	//AlifTssT trashTSSkey;
+	AlifTssT trashTssKey;
 
 	//AlifWideStringList origArgv;
 

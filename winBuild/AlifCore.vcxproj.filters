@@ -50,9 +50,6 @@
     <ClInclude Include="..\source\Include\alifThread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\Include\alifTime.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\Include\condVar.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -107,7 +104,7 @@
     <ClInclude Include="..\source\Include\Core\alifCore_obmallocInit.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\Include\thread_pThread.h">
+    <ClInclude Include="..\source\Include\AlifCpp\alifThread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -128,6 +125,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\source\Objects\alifState.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Objects\thread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

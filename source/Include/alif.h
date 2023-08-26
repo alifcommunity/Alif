@@ -1,6 +1,13 @@
 #pragma once
 
-//#include "alifVersion.h"
+
+
+
+
+
+
+
+
 #include "alifConfig.h"
 
 #include <iostream>
@@ -11,27 +18,22 @@
 
 
 
+#if !defined(ALIF_LIMITED_API) || ALIF_LIMITED_API+0 < 0x030b0000
+#  include <stdlib.h>
+
+
+#  include <string.h>             
+#endif
+#ifndef MS_WINDOWS
+#  include <unistd.h>
+#endif
+#ifdef HAVE_STDDEF_H
+#  include <stddef.h>             
+#endif
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#include <wchar.h>              
 
 #include "alifPort.h"
 #include "alifMacro.h"

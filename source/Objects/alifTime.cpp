@@ -1196,7 +1196,7 @@ alifTimeT alifTime_asMicroseconds(alifTimeT _t, AlifTimeRoundT _round)
 
 
 #ifdef MS_WINDOWS
-static int alifWin_perf_counterFrequency(LONGLONG* _pfrequency, int _raise)
+static int alifWin_perfCounterFrequency(LONGLONG* _pfrequency, int _raise)
 {
 	LONGLONG frequency;
 
@@ -1232,13 +1232,13 @@ static int alifWin_perf_counterFrequency(LONGLONG* _pfrequency, int _raise)
 
 
 
-static int alifGet_win_perfCounter(alifTimeT* _tp, AlifClockInfoT* _info, int _raiseExc)
+static int alifGet_winPerfCounter(alifTimeT* _tp, AlifClockInfoT* _info, int _raiseExc)
 {
 
 
 	static LONGLONG frequency = 0;
 	if (frequency == 0) {
-		if (alifWin_perf_counterFrequency(&frequency, _raiseExc) < 0) {
+		if (alifWin_perfCounterFrequency(&frequency, _raiseExc) < 0) {
 			return -1;
 		}
 	}
@@ -1285,7 +1285,7 @@ alifTimeT alifTime_getPerfCounter()
 	alifTimeT t;
 	int res;
 #ifdef MS_WINDOWS
-	res = alifGet_win_perfCounter(&t, nullptr, 0);
+	res = alifGet_winPerfCounter(&t, nullptr, 0);
 #else
 	res = alifGet_monotonic_clock(&_t, nullptr, 0);
 #endif

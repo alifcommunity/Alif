@@ -617,3 +617,6 @@ typedef _W64 int AlifSizeT;
 
 
 #define HAVE_SIGNAL_H 1
+
+
+#define HAVE_STDDEF_H 1

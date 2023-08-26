@@ -48,9 +48,9 @@ public:
 };
 
 
-
-
-
+extern int alifMem_setDefaultAllocator(
+	AlifMemAllocatorDomain domain,
+	AlifMemAllocatorEx* old_alloc);
 
 
 

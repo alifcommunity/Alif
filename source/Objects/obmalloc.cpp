@@ -255,18 +255,18 @@ static const int alifDebug = 1;
 static const int alifDebug = 0;
 #endif
 
-//int alifMem_setDefaultAllocator(AlifMemAllocatorDomain _domain, AlifMemAllocatorEx* _oldAlloc)
-//{
-//	if (ALLOCATORS_MUTEX == nullptr) {
-//		return set_defaultAlloatorUnlocked(_domain, alifDebug, _oldAlloc);
-//	}
-//	(void)alifThread_acquire_lock(ALLOCATORS_MUTEX, WAIT_LOCK);
-//	int res = set_defaultAlloatorUnlocked(_domain, alifDebug, _oldAlloc);
-//	alifThread_release_lock(ALLOCATORS_MUTEX);
-//	return res;
-//
-//}
 
+int alifMem_setDefaultAllocator(AlifMemAllocatorDomain _domain, AlifMemAllocatorEx* _oldAlloc)
+{
+	if (ALLOCATORS_MUTEX == nullptr) {
+		return set_defaultAlloatorUnlocked(_domain, alifDebug, _oldAlloc);
+	}
+	(void)alifThread_acquire_lock(ALLOCATORS_MUTEX, WAIT_LOCK);
+	int res = set_defaultAlloatorUnlocked(_domain, alifDebug, _oldAlloc);
+	alifThread_release_lock(ALLOCATORS_MUTEX);
+	return res;
+
+}
 
 
 
@@ -695,10 +695,10 @@ void* alifMem_malloc(size_t _size)
 
 	if (_size > (size_t)ALIFSIZE_T_MAX)
 		return nullptr;
-	OBJECT_STAT_INC_COND(allocations512, _size < 512);
-	OBJECT_STAT_INC_COND(allocations4k, _size >= 512 && _size < 4094);
-	OBJECT_STAT_INC_COND(allocations_big, _size >= 4094);
-	OBJECT_STAT_INC(allocations);
+	OBJECT_STATINC_COND(allocations512, _size < 512);
+	OBJECT_STATINC_COND(allocations4k, _size >= 512 && _size < 4094);
+	OBJECT_STATINC_COND(allocations_big, _size >= 4094);
+	OBJECT_STATINC(allocations);
 	return ALIFMEM.malloc(ALIFMEM.ctx, _size);
 }
 
@@ -708,10 +708,10 @@ void* alifMem_calloc(size_t _nElem, size_t _elSize)
 
 	if (_elSize != 0 && _nElem > (size_t)ALIFSIZE_T_MAX / _elSize)
 		return nullptr;
-	OBJECT_STAT_INC_COND(allocations512, _elSize < 512);
-	OBJECT_STAT_INC_COND(allocations4k, _elSize >= 512 && _elSize < 4094);
-	OBJECT_STAT_INC_COND(allocations_big, _elSize >= 4094);
-	OBJECT_STAT_INC(allocations);
+	OBJECT_STATINC_COND(allocations512, _elSize < 512);
+	OBJECT_STATINC_COND(allocations4k, _elSize >= 512 && _elSize < 4094);
+	OBJECT_STATINC_COND(allocations_big, _elSize >= 4094);
+	OBJECT_STATINC(allocations);
 	return ALIFMEM.calloc(ALIFMEM.ctx, _nElem, _elSize);
 }
 
@@ -727,7 +727,7 @@ void* alifMem_realloc(void* _ptr, size_t _newSize)
 
 void alifMem_free(void* _ptr)
 {
-	OBJECT_STAT_INC(frees);
+	OBJECT_STATINC(frees);
 	ALIFMEM.free(ALIFMEM.ctx, _ptr);
 }
 
@@ -794,10 +794,10 @@ void* alifObject_malloc(size_t _size)
 
 	if (_size > (size_t)ALIFSIZE_T_MAX)
 		return nullptr;
-	OBJECT_STAT_INC_COND(allocations512, _size < 512);
-	OBJECT_STAT_INC_COND(allocations4k, _size >= 512 && _size < 4094);
-	OBJECT_STAT_INC_COND(allocations_big, _size >= 4094);
-	OBJECT_STAT_INC(allocations);
+	OBJECT_STATINC_COND(allocations512, _size < 512);
+	OBJECT_STATINC_COND(allocations4k, _size >= 512 && _size < 4094);
+	OBJECT_STATINC_COND(allocations_big, _size >= 4094);
+	OBJECT_STATINC(allocations);
 	return ALIFOBJECT.malloc(ALIFOBJECT.ctx, _size);
 }
 
@@ -807,10 +807,10 @@ void* alifObject_calloc(size_t _nElem, size_t _elSize)
 
 	if (_elSize != 0 && _nElem > (size_t)ALIFSIZE_T_MAX / _elSize)
 		return nullptr;
-	OBJECT_STAT_INC_COND(allocations512, _elSize < 512);
-	OBJECT_STAT_INC_COND(allocations4k, _elSize >= 512 && _elSize < 4094);
-	OBJECT_STAT_INC_COND(allocations_big, _elSize >= 4094);
-	OBJECT_STAT_INC(allocations);
+	OBJECT_STATINC_COND(allocations512, _elSize < 512);
+	OBJECT_STATINC_COND(allocations4k, _elSize >= 512 && _elSize < 4094);
+	OBJECT_STATINC_COND(allocations_big, _elSize >= 4094);
+	OBJECT_STATINC(allocations);
 	return ALIFOBJECT.calloc(ALIFOBJECT.ctx, _nElem, _elSize);
 }
 
@@ -826,7 +826,7 @@ void* alifObject_realloc(void* _ptr, size_t _newSize)
 
 void alifObject_free(void* _ptr)
 {
-	OBJECT_STAT_INC(frees);
+	OBJECT_STATINC(frees);
 	ALIFOBJECT.free(ALIFOBJECT.ctx, _ptr);
 }
 
@@ -863,7 +863,7 @@ static inline OMState* get_state()
 {
 	AlifInterpreterState* interp = alifInterpreterState_get();
 	if (!has_own_state(interp)) {
-		interp = _alifInterpreterState_main();
+		interp = alifInterpreter_state_main();
 	}
 	return &interp->obmalloc;
 }
@@ -944,7 +944,7 @@ void alifInterpreterState_finalizeAllocatedBlocks(AlifInterpreterState* _interp)
 //{
 //	AlifSizeT total = 0;
 //	if (alifRuntimeState_getFinalizing(r_untime) != nullptr) {
-//		AlifInterpreterState* _interp = _alifInterpreterState_main();
+//		AlifInterpreterState* _interp = alifInterpreter_state_main();
 //		if (_interp == nullptr) {
 //
 //

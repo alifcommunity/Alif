@@ -3,8 +3,8 @@
 //#include "alifCore_getOpt.h"
 #include "alifCore_initConfig.h"
 #include "alifCore_alifLifeCycle.h"
-//#include "alifCore_alifMem.h"
-//#include "alifCore_runtime.h"
+#include "alifCore_alifMem.h"
+#include "alifCore_runtime.h"
 
 #include <locale.h>
 //#include <stdlib.h>
@@ -798,7 +798,7 @@ AlifStatus alifPreConfig_read(AlifPreConfig* _config, const AlifArgv* _args)
 {
 	AlifStatus status{};
 
-	//status = alifRuntime_initialize();
+	status = alifRuntime_initialize();
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		return status;
 	}

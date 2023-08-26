@@ -104,21 +104,21 @@ ALIFCOMP_DIAGPOP
 
 static int runtimeInitialized = 0;
 
-//AlifStatus runtime_initialize()
-//{
+AlifStatus alifRuntime_initialize()
+{
 
 
 
 
 
 
-	//if (runtimeInitialized) {
-		//return ALIFSTATUS_OK();
-	//}
-	//runtimeInitialized = 1;
+	if (runtimeInitialized) {
+		return ALIFSTATUS_OK();
+	}
+	runtimeInitialized = 1;
 
-	//return alifRuntimeState_init(&alifRuntime);
-//}
+	return alifRuntimeState_init(&alifRuntime);
+}
 
 
 

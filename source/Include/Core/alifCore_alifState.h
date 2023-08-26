@@ -21,7 +21,7 @@
 
 
 
-static inline AlifInterpreterState* _alifInterpreterState_main()
+static inline AlifInterpreterState* alifInterpreter_state_main()
 {
 	return alifRuntime.alifInterpreters.main;
 }
@@ -29,7 +29,7 @@ static inline AlifInterpreterState* _alifInterpreterState_main()
 
 static inline int alifIsMainInterpreter(AlifInterpreterState* _interp)
 {
-	return (_interp == _alifInterpreterState_main());
+	return (_interp == alifInterpreter_state_main());
 }
 
 
@@ -62,7 +62,8 @@ static inline int alifisMainInterpreterFinalizing(AlifInterpreterState* _interp)
 
 
 
-#ifdef HAVE_THREAD_LOCAL && !defined(ALIFBUILD_CORE_MODULE)
+
+#if defined(HAVE_THREAD_LOCAL) && !defined(ALIFBUILD_CORE_MODULE)
 extern ALIF_THREAD_LOCAL AlifThreadState* alifTssTState;
 #endif
 
@@ -75,7 +76,7 @@ extern ALIF_THREAD_LOCAL AlifThreadState* alifTssTState;
 
 
 
-static inline AlifThreadState* alifThreadState_get(void)
+static inline AlifThreadState* alifThreadState_get()
 {
 #if defined(HAVE_THREAD_LOCAL) && !defined(ALIFBUILD_CORE_MODULE)
 	return alifTssTState;

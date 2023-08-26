@@ -251,22 +251,22 @@ typedef unsigned int alifMemUint;  /* assuming >= 16 bits */
 typedef uint8_t AlifMemBlock;
 
 
-class poolHeader {
+class PoolHeader {
 public:
 	union {
 		AlifMemBlock* padding;
 		uint count;
-	} ref;          /* number of allocated blocks    */
-	AlifMemBlock* freeBlock;             /* pool's free list head         */
-	poolHeader* nextPool;       /* next pool of this size class  */
-	poolHeader* prevPool;       /* previous pool       ""        */
-	uint arenaIndex;                    /* index into arenas of base adr */
-	uint szidx;                         /* block size class index        */
-	uint nextOffset;                    /* bytes to virgin block         */
-	uint maxNextOffset;                 /* largest valid nextoffset      */
+	} ref;          
+	AlifMemBlock* freeBlock;             
+	PoolHeader* nextPool;     
+	PoolHeader* prevPool;       
+	uint arenaIndex;                    
+	uint szidx;                                 
+	uint nextOffset;                     
+	uint maxNextOffset;                 
 };
 
-typedef poolHeader* PoolP;
+typedef PoolHeader* PoolP;
 
 class ArenaObject{
 public:
@@ -288,7 +288,7 @@ public:
 	uint nTotalPools;
 
 
-	poolHeader* freePools;
+	PoolHeader* freePools;
 
 
 
@@ -306,14 +306,14 @@ public:
 	ArenaObject* prevArena;
 };
 
-#define POOL_OVERHEAD   ALIFSIZE_ROUND_UP(sizeof(poolHeader), ALIGNMENT)
+#define POOL_OVERHEAD   ALIFSIZE_ROUND_UP(sizeof(PoolHeader), ALIGNMENT)
 
-#define DUMMY_SIZE_IDX          0xffff  /* size class of newly cached pools */
+#define DUMMY_SIZE_IDX          0xffff  
 
-/* Round pointer P down to the closest pool-aligned address <= P, as a PoolP */
+
 #define POOL_ADDR(P) ((PoolP)ALIFALIGN_DOWN((P), POOL_SIZE))
 
-/* Return total number of blocks in pool of size index I, as a uint. */
+
 #define NUMBLOCKS(I) ((alifMemUint)(POOL_SIZE - POOL_OVERHEAD) / INDEX2SIZE(I))
 
 

@@ -8,7 +8,7 @@
 
 
 
-#include <stdbool.h>
+//#include <stdbool.h>
 
 
 
@@ -85,7 +85,7 @@ public:
 
 
 
-	 class AlifRuntimeState* runtime;
+	class AlifRuntimeState* runtime;
 
 
 
@@ -94,7 +94,7 @@ public:
 
 	AlifAtomicAddress alifFinalizing;
 
-	 //GCRuntimeState gc;
+	//GCRuntimeState gc;
 
 
 
@@ -114,10 +114,10 @@ public:
 
 	//AlifObject* builtins;
 
-	 //ImportState imports;
+	//ImportState imports;
 
 
-	 //GilRuntimeState gil;
+	//GilRuntimeState gil;
 
 
 
@@ -152,8 +152,8 @@ public:
 	AlifObject* afterForkersChild;
 #endif
 
-	 //WarningsRuntimeState warnings;
-	 //AtexitState atexit;
+	//WarningsRuntimeState warnings;
+	//AtexitState atexit;
 
 	ObmallocState obmalloc;
 
@@ -163,26 +163,26 @@ public:
 
 	uint8_t activeCodeWatchers;
 
-	 //AlifObjectState object_state;
-	 //AlifUnicodeState unicode;
-	 //AlifFloatState float_state;
-	 //AlifLongState long_state;
-	 //DtoaState dtoa;
-	 //AlifFuncState func_state;
+	//AlifObjectState object_state;
+	//AlifUnicodeState unicode;
+	//AlifFloatState float_state;
+	//AlifLongState long_state;
+	//DtoaState dtoa;
+	//AlifFuncState func_state;
 
 
 	//AlifSliceObject* sliceCache;
 
-	 //AlifTupleState tuple;
-	 //AlifListState list;
-	 //AlifDictState dict_state;
-	 //AlifSsyncGenState async_gen;
-	 //AlfiContextState context;
-	 //AlifExcState exc_state;
+	//AlifTupleState tuple;
+	//AlifListState list;
+	//AlifDictState dict_state;
+	//AlifSsyncGenState async_gen;
+	//AlfiContextState context;
+	//AlifExcState exc_state;
 
-	 //ASTState ast;
-	 //TypesState types;
-	 //CallableCache callableCache;
+	//ASTState ast;
+	//TypesState types;
+	//CallableCache callableCache;
 	//AlifOptimizerObject* optimizer;
 	uint16_t optimizerResumeThreshold;
 	uint16_t optimizerBackedgeThreshold;
@@ -196,8 +196,8 @@ public:
 	//AlifObject* monitoring_callables[ALIFMONITORING_TOOL_IDS][ALIFMONITORING_EVENTS];
 	//AlifObject* monitoring_tool_names[ALIFMONITORING_TOOL_IDS];
 
-	 //AlifInterpCachedObjects cached_objects;
-	 //AlifInterpStaticObjects static_objects;
+	//AlifInterpCachedObjects cached_objects;
+	//AlifInterpStaticObjects static_objects;
 
 
 	AlifThreadState initialThread;

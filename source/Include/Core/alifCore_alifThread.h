@@ -30,8 +30,8 @@
 #    define POSIX_THREADS
 #   endif
 #  endif
-# endif /* POSIX_THREADS */
-#endif /* POSIX_THREADS */
+# endif 
+#endif 
 
 #if defined(POSIX_THREADS) || defined(HAVE_PTHREAD_STUBS)
 # define USE_PTHREADS
@@ -44,7 +44,7 @@
 
 
 #if defined(HAVE_PTHREAD_STUBS)
-// pthread_key
+
 class AlifTtubTlsEntry {
 public:
 	bool inUse;
@@ -56,17 +56,17 @@ public:
 	int initialized;
 
 #ifdef USE_PTHREADS
-	// This matches when thread_pthread.h is used.
+
 	class CondAttrMonotonic{
 	public:
 		pthread_condattr_t* ptr;
 # ifdef CONDATTR_MONOTONIC
-		/* The value to which condattr_monotonic is set. */
+
 		pthread_condattr_t val;
 # endif
 	} ;
 
-#endif  // USE_PTHREADS
+#endif  
 #if defined(HAVE_PTHREAD_STUBS)
 	class {
 	public:

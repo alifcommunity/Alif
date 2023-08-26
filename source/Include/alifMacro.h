@@ -117,7 +117,7 @@
 
 
 #if defined(__GNUC__) || defined(__clang__)
-#  define Py_UNUSED(name) _unused_ ## name __attribute__((unused))
+#  define ALIF_UNUSED(name) unused ## name __attribute__((unused))
 #elif defined(_MSC_VER)
 
 
@@ -128,5 +128,5 @@
         _unused_ ## name \
         __pragma(warning(pop))
 #else
-#  define ALIF_UNUSED(name) _unused_ ## name
+#  define ALIF_UNUSED(name) unused ## name
 #endif
