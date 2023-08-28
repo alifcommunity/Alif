@@ -173,6 +173,14 @@
 
 
 
+#if defined(_MSC_VER)
+#  pragma warning(disable: 4710)
+#  define ALIF_LOCAL(type) static type __fastcall
+#  define ALIF_LOCAL_INLINE(type) static __inline type __fastcall
+#else
+#  define ALIF_LOCAL(type) static type
+#  define ALIF_LOCAL_INLINE(type) static inline type
+#endif
 
 
 
@@ -324,29 +332,26 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#define ALIFCOMP_DIAG_PUSH __pragma(warning(push))
+#if defined(__clang__)
+#define ALIFCOMP_DIAGPUSH _Pragma("clang diagnostic push")
+#define ALIFCOMP_DIAGIGNORE_DEPR_DECLS \
+    _Pragma("clang diagnostic ignored \"-Wdeprecated-declarations\"")
+#define ALIFCOMP_DIAG_POP _Pragma("clang diagnostic pop")
+#elif defined(__GNUC__) \
+    && ((__GNUC__ >= 5) || (__GNUC__ == 4) && (__GNUC_MINOR__ >= 6))
+#define ALIFCOMP_DIAGPUSH _Pragma("GCC diagnostic push")
+#define ALIFCOMP_DIAGIGNORE_DEPR_DECLS \
+    _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
+#define ALIFCOMP_DIAGPOP _Pragma("GCC diagnostic pop")
+#elif defined(_MSC_VER)
+#define ALIFCOMP_DIAGPUSH __pragma(warning(push))
 #define ALIFCOMP_DIAGIGNORE_DEPRDECLS __pragma(warning(disable: 4996))
-#define ALIFCOMP_DIAG_POP __pragma(warning(pop))
+#define ALIFCOMP_DIAGPOP __pragma(warning(pop))
+#else
+#define ALIFCOMP_DIAGPUSH
+#define ALIFCOMP_DIAGIGNORE_DEPR_DECLS
+#define ALIFCOMP_DIAGPOP
+#endif
 
 
 
@@ -386,24 +391,19 @@
 
 
 
+#if defined(ALIF_DEBUG)
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#  define ALIF_ALWAYS_INLINE
+#elif defined(__GNUC__) || defined(__clang__) || defined(__INTEL_COMPILER)
+#  define ALIF_ALWAYS_INLINE __attribute__((always_inline))
+#elif defined(_MSC_VER)
+#  define ALIF_ALWAYS_INLINE __forceinline
+#else
+#  define ALIF_ALWAYS_INLINE
+#endif
 
 
 
@@ -556,3 +556,165 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#ifdef WITH_THREAD
+#  ifdef ALIF_BUILD_CORE
+#    ifdef HAVE_THREAD_LOCAL
+#      error "HAVE_THREAD_LOCAL is already defined"
+#    endif
+#    define HAVE_THREAD_LOCAL 1
+#    ifdef thread_local
+#      define ALIF_THREAD_LOCAL thread_local
+#    elif __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__)
+#      define ALIF_THREAD_LOCAL _Thread_local
+#    elif defined(_MSC_VER)  
+#      define ALIF_THREAD_LOCAL __declspec(thread)
+#    elif defined(__GNUC__)  
+#      define ALIF_THREAD_LOCAL __thread
+#    else
+
+#      undef HAVE_THREAD_LOCAL
+#    endif
+#  endif
+#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#ifndef ALIF_NO_RETURN
+	#if defined(__clang__) || \
+		(defined(__GNUC__) && \
+		 ((__GNUC__ >= 3) || \
+		  (__GNUC__ == 2) && (__GNUC_MINOR__ >= 5)))
+	#  define ALIF_NO_RETURN __attribute__((__noreturn__))
+	#elif defined(_MSC_VER)
+	#  define ALIF_NO_RETURN __declspec(noreturn)
+	#else
+	#  define ALIF_NO_RETURN
+	#endif
+#endif
