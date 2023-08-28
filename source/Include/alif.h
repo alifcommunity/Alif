@@ -6,14 +6,43 @@
 #include <iostream>
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #include "alifPort.h"
-//#include "alifMacro.h"
+#include "alifMacro.h"
 //#include "alifPath.h"
 #include "alifMem.h"
-//#include "alifTypeDefs.h"
+#include "alifTypeDefs.h"
 //#include "alifBuffers"
 //#include "object.h"
-//#include "objImpl.h"
+#include "objImpl.h"
 //#include "typesLots.h"
 //#include "alifHash.h"
 //#include "alifHash.h"
@@ -48,7 +77,7 @@
 //#include "iterObject.h"
 //#include "iterObject.h"
 #include "AlifCpp/initConfig.h"
-//#include "alifState.h"
+#include "alifState.h"
 //#include "AlifCpp/genObject.h"
 //#include "descrObject.h"
 //#include "genericAliasObject.h"
@@ -58,7 +87,7 @@
 //#include "AlifCpp/pickleBufObject.h"
 //#include "codecs.h"
 //#include "alifErrors.h"
-//#include "alifThread.h"
+#include "alifThread.h"
 //#include "AlifCpp/context.h"
 //#include "modSupport.h"
 //#include "compile.h"

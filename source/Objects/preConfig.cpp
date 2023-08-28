@@ -3,7 +3,7 @@
 //#include "alifCore_getOpt.h"
 #include "alifCore_initConfig.h"
 #include "alifCore_alifLifeCycle.h"
-//#include "alifCore_alifMem.h"
+#include "alifCore_alifMem.h"
 #include "alifCore_runtime.h"
 
 #include <locale.h>
@@ -477,7 +477,7 @@ static void preConfig_getGlobalVars(AlifPreConfig* _config)
         _config->ATTR = !(VALUE); \
     }
 
-	ALIFCOMP_DIAG_PUSH
+	ALIFCOMP_DIAGPUSH
 		ALIFCOMP_DIAGIGNORE_DEPRDECLS
 		COPY_FLAG(isolated, alifIsolatedFlag);
 	COPY_NOT_FLAG(useEnvironment, alifIgnoreEnvironmentFlag);
@@ -487,7 +487,7 @@ static void preConfig_getGlobalVars(AlifPreConfig* _config)
 #ifdef MS_WINDOWS
 	COPY_FLAG(legacyWindowsFSEncoding, alifLegacyWindowsFSEncodingFlag);
 #endif
-	ALIFCOMP_DIAG_POP
+	ALIFCOMP_DIAGPOP
 
 #undef COPY_FLAG
 #undef COPY_NOT_FLAG
@@ -507,7 +507,7 @@ static void preConfig_setGlobalVars(const AlifPreConfig* config)
         VAR = !config->ATTR; \
     }
 
-	ALIFCOMP_DIAG_PUSH
+	ALIFCOMP_DIAGPUSH
 		ALIFCOMP_DIAGIGNORE_DEPRDECLS
 		COPY_FLAG(isolated, alifIsolatedFlag);
 	COPY_NOT_FLAG(useEnvironment, alifIgnoreEnvironmentFlag);
@@ -515,7 +515,7 @@ static void preConfig_setGlobalVars(const AlifPreConfig* config)
 	COPY_FLAG(legacyWindowsFSEncoding, alifLegacyWindowsFSEncodingFlag);
 #endif
 	COPY_FLAG(utf8Mode, alifUTF8Mode);
-	ALIFCOMP_DIAG_POP
+	ALIFCOMP_DIAGPOP
 
 #undef COPY_FLAG
 #undef COPY_NOT_FLAG

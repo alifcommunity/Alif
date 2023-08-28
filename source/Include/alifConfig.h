@@ -66,8 +66,8 @@
 
 #define MS_WIN32
 #define MS_WINDOWS
-
-
+#define NT_THREADS
+#define WITH_THREAD
 
 
 
@@ -323,10 +323,12 @@ typedef _W64 int AlifSizeT;
 
 
 
+#define SIZEOF_VOID_P 8
 
 
 
 
+#define SIZEOF_SIZE_T 8
 
 
 
@@ -353,6 +355,9 @@ typedef _W64 int AlifSizeT;
 
 
 
+#ifdef _DEBUG
+#       define ALIF_DEBUG
+#endif
 
 
 
@@ -504,12 +509,7 @@ typedef _W64 int AlifSizeT;
 
 
 
-
-
-
-
-
-
+#define WITH_ALIFMALLOC 1
 
 
 
@@ -617,3 +617,6 @@ typedef _W64 int AlifSizeT;
 
 
 #define HAVE_SIGNAL_H 1
+
+
+#define HAVE_STDDEF_H 1

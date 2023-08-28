@@ -3,10 +3,10 @@
 #include "alif.h"
 //#include "alifCore_call.h"
 #include "alifCore_initConfig.h"
-//#include "alifCore_interp.h"
+#include "alifCore_interp.h"
 //#include "alifCore_pathConfig.h"
 #include "alifCore_alifLifeCycle.h"
-//#include "alifCore_alifState.h"
+#include "alifCore_alifState.h"
 
 
 
@@ -35,10 +35,10 @@ static AlifStatus alifMain_init(const AlifArgv* _args) {
 
 	AlifStatus status{};
 
-	//status = alifRuntime_initialize();
-	//if (ALIFSTATUS_EXCEPTION(status)) {
-	//	return status;
-	//}
+	status = alifRuntime_initialize();
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
 	AlifPreConfig preConfig{};
 	alifPreConfig_initAlifConfig(&preConfig);
@@ -48,7 +48,7 @@ static AlifStatus alifMain_init(const AlifArgv* _args) {
 		return status;
 	}
 
-	//AlifConfig config{};
+	AlifConfig config{};
 	//alifConfig_initAlifConfig(&config);
 
 	//if (_args->useBytesArgv) {
@@ -76,7 +76,7 @@ static AlifStatus alifMain_init(const AlifArgv* _args) {
 
 
 
-/* ___________ alifmain_runAlif() ___________ */
+/* ___________ alifMain_runAlif() ___________ */
 
 
 

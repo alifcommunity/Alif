@@ -8,23 +8,23 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+//#include "alifCore_atExit.h"       
+#include "alifCore_atomic.h"       
+//#include "alifCore_cevalState.h"  
+//#include "alifCore_faultHandler.h" 
+//#include "alifCore_floatObject.h"  
+#include "alifCore_import.h"       
+#include "alifCore_interp.h"       
+//#include "alifCore_objectState.h"
+//#include "alifCore_parser.h"
+//#include "alifCore_alifHash.h"     
+#include "alifCore_alifMem.h"
+#include "alifCore_alifThread.h"     
+//#include "alifCore_signal.h"       
+#include "alifCore_time.h"     
+//#include "alifCore_traceMalloc.h"  
+//#include "alifCore_typeObject.h"   
+//#include "alifCore_unicodeObject.h"
 
 
 
@@ -146,34 +146,34 @@ public:
 
 	int initialized2;
 
-	//AlifAtomicAddress finalizing;
+	AlifAtomicAddress finalizing;
 
 	class AlifInterpreters {
 	public:
-		//AlifThreadTypeLock mutex;
-		//AlifInterpreterState* head;
-		//AlifInterpreterState* main;
+		AlifThreadTypeLock mutex;
+		AlifInterpreterState* head;
+		AlifInterpreterState* main;
 		int64_t next_id;
-	};
+	}alifInterpreters;
 
-	unsigned long main_thread;
+	unsigned long mainThread;
 
 	class XIDRegistry {
 	public:
-		//AlifThreadTypeLock mutex;
+		AlifThreadTypeLock mutex;
 		//XIDRegitem* head;
 	};
 
-	//AlifMemAllocators allocators;
-	//ObmallocGlobalState obmalloc;
+	AlifMemAllocators allocators;
+	ObmallocGlobalState obmalloc;
 	//AlifhashRuntimeState alifHashState;
-	//TimeRuntimeState time;
-	//AlifThreadRuntimeState threads;
+	TimeRuntimeState time;
+	AlifThreadRuntimeState threads;
 	//SignalsRuntimeState signals;
 
-	//AlifTssT autoTSSkey;
+	AlifTssT autoTSSKey;
 
-	//AlifTssT trashTSSkey;
+	AlifTssT trashTSSKey;
 
 	//AlifWideStringList origArgv;
 
@@ -189,13 +189,13 @@ public:
 	//FaultHandlerRuntimeState faultHandler;
 	//TracemallocRuntimeState tracemalloc;
 
-	//AlifPreConfig preConfig;
+	AlifPreConfig preConfig;
 
 	//AlifOpenCodeHookFunction openCodeHook;
 	void* openCodeUserdata;
 	class AuditHooks {
 	public:
-		//AlifThreadTypeLock mutex;
+		AlifThreadTypeLock mutex;
 		//AlifAuditHookEntry* head;
 	};
 
@@ -207,5 +207,88 @@ public:
 	//AlifCachedObjects cachedObjects;
 	//AlifStaticObjects staticObjects;
 
-	//AlifInterpreterState mainInterpreter;
+	AlifInterpreterState mainInterpreter;
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ALIFAPI_DATA(AlifRuntimeState) alifRuntime;
+
+extern AlifStatus alifRuntimeState_init(AlifRuntimeState*);
+extern void alifRuntimeState_fini(AlifRuntimeState*);
+
+
+
+
+
+
+
+extern AlifStatus alifRuntime_initialize();
+
+
+
+
+static inline AlifThreadState* alifRuntimeState_getFinalizing(AlifRuntimeState* _runtime) {
+	return (AlifThreadState*)ALIFATOMIC_LOAD_RELAXED(&_runtime->finalizing);
+}
