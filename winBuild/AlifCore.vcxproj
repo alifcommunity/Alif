@@ -141,9 +141,11 @@
   <ItemGroup>
     <ClInclude Include="..\source\Include\alifConfig.h" />
     <ClInclude Include="..\source\Include\AlifCpp\alifDebug.h" />
+    <ClInclude Include="..\source\Include\AlifCpp\alifLifeCycle.h" />
     <ClInclude Include="..\source\Include\AlifCpp\alifMem.h" />
     <ClInclude Include="..\source\Include\AlifCpp\alifThread.h" />
     <ClInclude Include="..\source\Include\AlifCpp\initConfig.h" />
+    <ClInclude Include="..\source\Include\alifLifeCycle.h" />
     <ClInclude Include="..\source\Include\alifMacro.h" />
     <ClInclude Include="..\source\Include\alifMem.h" />
     <ClInclude Include="..\source\Include\alifPort.h" />

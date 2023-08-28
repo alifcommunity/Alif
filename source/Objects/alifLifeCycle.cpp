@@ -931,3 +931,75 @@ AlifStatus alif_preInitializeFromAlifArgv(const AlifPreConfig* _srcConfig, const
 	//runtime->preinitialized = 1;
 	return ALIFSTATUS_OK();
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+AlifStatus alif_preInitialize(const AlifPreConfig* _srcConfig)
+{
+	return alif_preInitializeFromAlifArgv(_srcConfig, nullptr);
+}
+
+
+
+AlifStatus alif_preInitializeFromConfig(const AlifConfig* _config, const AlifArgv* _args)
+{
+	//assert(_config != nullptr);
+
+	AlifStatus status = alifRuntime_initialize();
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+	AlifRuntimeState* runtime = &alifRuntime;
+
+	if (runtime->preinitialized) {
+
+		return ALIFSTATUS_OK();
+	}
+
+	AlifPreConfig preConfig{};
+
+	alifPreConfig_initFromConfig(&preConfig, _config);
+
+	if (!_config->parseArgv) {
+		return alif_preInitialize(&preConfig);
+	}
+	else if (_args == nullptr) {
+		AlifArgv configArgs = {
+			.argc = _config->argv.length,
+			.useBytesArgv = 0,
+			.wcharArgv = _config->argv.items };
+		return alif_preInitializeFromAlifArgv(&preConfig, &configArgs);
+	}
+	else {
+		return alif_preInitializeFromAlifArgv(&preConfig, _args);
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
