@@ -1,14 +1,14 @@
 #include "alif.h"
-//#include "alifCore_fileUtils.h"
+#include "alifCore_fileUtils.h"
 //#include "alifCore_getOpt.h"
 #include "alifCore_initConfig.h"
-//#include "alifCore_interp.h"
-//#include "alifCore_long.h"   
+#include "alifCore_interp.h"
+//#include "alifCore_long.h"
 //#include "alifCore_pathConfig.h"
 //#include "alifCore_alifErrors.h"
 #include "alifCore_alifLifeCycle.h"
-//#include "alifCore_alifMem.h" 
-//#include "alifCore_alifState.h"
+#include "alifCore_alifMem.h" 
+#include "alifCore_alifState.h"
 
 //#include "osdefs.h"
 
@@ -371,51 +371,51 @@ int alifLegacyWindowsStdioFlag = 0;
 
 
 
+void alifWideStringList_clear(AlifWideStringList* _list)
+{
+	//assert(AlifWideStringList_checkConsistency(_list));
+	for (AlifSizeT i = 0; i < _list->length; i++) {
+		alifMem_rawFree(_list->items[i]);
+	}
+	alifMem_rawFree(_list->items);
+	_list->length = 0;
+	_list->items = nullptr;
+}
 
 
 
+int alifWideStringList_copy(AlifWideStringList* _list, const AlifWideStringList* _list2)
+{
+	//assert(alifWideStringList_checkConsistency(_list));
+	//assert(alifWideStringList_checkConsistency(_list2));
 
+	if (_list2->length == 0) {
+		alifWideStringList_clear(_list);
+		return 0;
+	}
 
+	AlifWideStringList copy = ALIFWIDESTRINGLIST_INIT;
 
+	size_t size = _list2->length * sizeof(_list2->items[0]);
+	copy.items = (wchar_t**)alifMem_rawMalloc(size); // تم عمل تغيير النوع بسبب وجود خطأ
+	if (copy.items == nullptr) {
+		return -1;
+	}
 
+	for (AlifSizeT i = 0; i < _list2->length; i++) {
+		wchar_t* item = alifMem_rawWcsDup(_list2->items[i]);
+		if (item == nullptr) {
+			alifWideStringList_clear(&copy);
+			return -1;
+		}
+		copy.items[i] = item;
+		copy.length = i + 1;
+	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	alifWideStringList_clear(_list);
+	*_list = copy;
+	return 0;
+}
 
 
 

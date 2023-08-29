@@ -1,5 +1,5 @@
 #include "alif.h"
-//#include "alifCore_fileUtils.h"
+#include "alifCore_fileUtils.h"
 //#include "alifCore_getOpt.h"
 #include "alifCore_initConfig.h"
 #include "alifCore_alifLifeCycle.h"
@@ -90,25 +90,25 @@ AlifStatus alifArgv_asWstrList(const AlifArgv* _args, AlifWideStringList* _list)
 			wchar_t* arg = alif_decodeLocale(_args->bytesArgv[i], &len);
 			if (arg == nullptr) {
 				alifWideStringList_clear(&wargv);
-				return DECODE_LOCALE_ERR("command line arguments", len);
+				//return DECODE_LOCALE_ERR("command line arguments", len);
+				if (len == (size_t)-2) return  ALIFSTATUS_ERR("cannot decode command line arguments"); else return ALIFSTATUS_NO_MEMORY();
 			}
 			wargv.items[i] = arg;
 			wargv.length++;
 		}
 
 		alifWideStringList_clear(_list);
-		*list = wargv;
+		*_list = wargv;
 	}
 	else {
 		wargv.length = _args->argc;
-		wargv.items = (wchar_t**)args->wchar_argv;
+		wargv.items = (wchar_t**)_args->wcharArgv;
 		if (alifWideStringList_copy(_list, &wargv) < 0) {
 			return ALIFSTATUS_NO_MEMORY();
 		}
 	}
 	return ALIFSTATUS_OK();
 }
-
 
 
 

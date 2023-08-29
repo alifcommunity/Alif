@@ -51,8 +51,8 @@
 
 
 
-
-
+extern void alifWideStringList_clear(AlifWideStringList*);
+extern int alifWideStringList_copy(AlifWideStringList*,const AlifWideStringList*);
 
 
 

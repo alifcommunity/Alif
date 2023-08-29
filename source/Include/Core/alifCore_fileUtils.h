@@ -8,7 +8,7 @@
 
 
 
-
+#include <locale.h>
 
 
 
@@ -188,17 +188,14 @@ ALIFAPI_FUNC(int) alif_decodeLocaleEx(const char*, wchar_t**, size_t*, const cha
 
 
 
+#define DECODE_LOCALE_ERR(NAME, LEN) ((LEN == (size_t)-2) ? ALIFSTATUS_ERR("cannot decode " NAME) : ALIFSTATUS_NO_MEMORY())
 
 
 
 
 
 
-
-
-
-
-
+extern int alif_decodeUTF8Ex(const char*,AlifSizeT, wchar_t**, size_t*, const char**, AlifErrorHandler);
 
 
 

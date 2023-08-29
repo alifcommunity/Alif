@@ -55,7 +55,7 @@ static AlifStatus alifMain_init(const AlifArgv* _args) {
 		status = alifConfig_setBytesArgv(&config, _args->argc, _args->bytesArgv);
 	}
 	else {
-		status = alifConfig_setArgv(&config, _args->argc, _args->wcharArgv);
+		//status = alifConfig_setArgv(&config, _args->argc, _args->wcharArgv);
 	}
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		goto done;

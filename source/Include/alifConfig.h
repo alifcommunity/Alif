@@ -41,12 +41,12 @@
 
 
 
-
-
-
-
-
-
+#ifndef _CRT_SECURE_NO_DEPRECATE
+#define _CRT_SECURE_NO_DEPRECATE 1
+#endif // لمنع ظهور الاخطاء التي تظهر بسبب استخدام دوال تم التخلي عنها - يجب الحذف
+#ifndef _CRT_NONSTDC_NO_DEPRECATE
+#define _CRT_NONSTDC_NO_DEPRECATE 1
+#endif
 
 #define HAVE_IO_H
 

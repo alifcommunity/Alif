@@ -21,7 +21,7 @@
 
 
 
-
+extern wchar_t* alifMem_rawWcsDup(const wchar_t*);
 
 class DebugAllocApiT {
 public:
