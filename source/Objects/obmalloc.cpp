@@ -737,7 +737,7 @@ void alifMem_free(void* _ptr)
 /* alifMem utility functions */
 /***************************/
 
-wchar_t* alifMem_rawWcsdup(const wchar_t* _str)
+wchar_t* alifMem_rawWcsDup(const wchar_t* _str)
 {
 
 
@@ -2115,7 +2115,7 @@ static void* alifMem_debugRawAlloc(int _useCalloc, void* _ctx, size_t _nBytes)
 
 	tail = data + _nBytes;
 	memset(tail, ALIFMEM_FORBIDDENBYTE, SST);
-#ifdef PYMEM_DEBUG_SERIALNO
+#ifdef ALIFMEM_DEBUG_SERIALNO
 	write_size_t(tail + SST, serialno);
 #endif
 

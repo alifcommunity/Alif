@@ -46,13 +46,13 @@
 
 
 
+#define ALIFWIDESTRINGLIST_INIT {.length = 0, .items = nullptr}
 
 
 
 
-
-
-
+extern void alifWideStringList_clear(AlifWideStringList*);
+extern int alifWideStringList_copy(AlifWideStringList*,const AlifWideStringList*);
 
 
 
@@ -68,7 +68,7 @@ public:
 	char* const* bytesArgv;
 	wchar_t* const* wcharArgv;
 };
-
+extern AlifStatus alifArgv_asWstrList(const AlifArgv*, AlifWideStringList*);
 
 
 
@@ -124,14 +124,14 @@ public:
 
 
 ALIFAPI_FUNC(void) alifPreConfig_initCompatConfig(AlifPreConfig*);
-
+extern void alifPreConfig_initFromConfig(AlifPreConfig*,const AlifConfig*);
 
 
 extern AlifStatus alifPreConfig_initFromPreConfig(AlifPreConfig*,const AlifPreConfig*);
 
 
 
-
+extern void alifPreConfig_getConfig(AlifPreConfig*,const AlifConfig*);
 
 extern AlifStatus alifPreConfig_read(AlifPreConfig*,const AlifArgv*);
 
@@ -145,3 +145,18 @@ enum AlifConfigInitEnum {
 	AlifConfig_Init_Alif = 2,
 	AlifConfig_Init_Isolated = 3
 };
+
+
+
+ALIFAPI_FUNC(void) alifConfig_initCompatConfig(AlifConfig*);
+
+
+
+
+
+
+
+
+
+
+extern AlifStatus alifConfig_setAlifArgv(AlifConfig*, const AlifArgv*);

@@ -126,7 +126,7 @@ public:
 
 
 ALIFAPI_FUNC(void) alifPreConfig_initAlifConfig(AlifPreConfig*);
-
+ALIFAPI_FUNC(void) alifPreConfig_initIsolatedConfig(AlifPreConfig*);
 
 
 /* ----- AlifConfig ------------------------------------------- */
@@ -213,3 +213,21 @@ public:
 
 	int isAlifBuild;
 };
+
+
+
+
+
+ALIFAPI_FUNC(void) alifConfig_initAlifConfig(AlifConfig*);
+
+
+
+
+
+
+
+
+
+
+
+ALIFAPI_FUNC(AlifStatus) alifConfig_setBytesArgv(AlifConfig*, AlifSizeT, char* const*);

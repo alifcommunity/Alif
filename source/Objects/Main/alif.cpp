@@ -49,17 +49,17 @@ static AlifStatus alifMain_init(const AlifArgv* _args) {
 	}
 
 	AlifConfig config{};
-	//alifConfig_initAlifConfig(&config);
+	alifConfig_initAlifConfig(&config);
 
-	//if (_args->useBytesArgv) {
-	//	status = alifConfig_setCharArgv(&config, _args->argc, _args->bytesArgv);
-	//}
-	//else {
-	//	status = alifConfig_setArgv(&config, _args->argc, _args->wcharArgv);
-	//}
-	//if (ALIFSTATUS_EXCEPTION(status)) {
-	//	goto done;
-	//}
+	if (_args->useBytesArgv) {
+		status = alifConfig_setBytesArgv(&config, _args->argc, _args->bytesArgv);
+	}
+	else {
+		//status = alifConfig_setArgv(&config, _args->argc, _args->wcharArgv);
+	}
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		goto done;
+	}
 
 	//status = alifInit_fromConfig(&config);
 	//if (ALIFSTATUS_EXCEPTION(status)) {
@@ -67,7 +67,7 @@ static AlifStatus alifMain_init(const AlifArgv* _args) {
 	//}
 	//status = ALIFSTATUS_OK();
 
-//done:
+done:
 	//alifConfig_clear(&config);
 	return status;
 }

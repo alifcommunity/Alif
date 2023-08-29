@@ -1,5 +1,5 @@
 #include "alif.h"
-//#include "alifCore_fileUtils.h"
+#include "alifCore_fileUtils.h"
 //#include "alifCore_getOpt.h"
 #include "alifCore_initConfig.h"
 #include "alifCore_alifLifeCycle.h"
@@ -75,40 +75,40 @@ static void preConfig_copy(AlifPreConfig*, const AlifPreConfig*);
 
 
 
+AlifStatus alifArgv_asWstrList(const AlifArgv* _args, AlifWideStringList* _list)
+{
+	AlifWideStringList wargv = ALIFWIDESTRINGLIST_INIT;
+	if (_args->useBytesArgv) {
+		size_t size = sizeof(wchar_t*)* _args->argc;
+		wargv.items = (wchar_t**)alifMem_rawMalloc(size);
+		if (wargv.items == nullptr) {
+			return ALIFSTATUS_NO_MEMORY();
+		}
 
+		for (AlifSizeT i = 0; i < _args->argc; i++) {
+			size_t len{};
+			wchar_t* arg = alif_decodeLocale(_args->bytesArgv[i], &len);
+			if (arg == nullptr) {
+				alifWideStringList_clear(&wargv);
+				//return DECODE_LOCALE_ERR("command line arguments", len);
+				if (len == (size_t)-2) return  ALIFSTATUS_ERR("cannot decode command line arguments"); else return ALIFSTATUS_NO_MEMORY();
+			}
+			wargv.items[i] = arg;
+			wargv.length++;
+		}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		alifWideStringList_clear(_list);
+		*_list = wargv;
+	}
+	else {
+		wargv.length = _args->argc;
+		wargv.items = (wchar_t**)_args->wcharArgv;
+		if (alifWideStringList_copy(_list, &wargv) < 0) {
+			return ALIFSTATUS_NO_MEMORY();
+		}
+	}
+	return ALIFSTATUS_OK();
+}
 
 
 
@@ -329,20 +329,20 @@ void alifPreConfig_initAlifConfig(AlifPreConfig* _config)
 
 
 
+void alifPreConfig_initIsolatedConfig(AlifPreConfig* _config)
+{
+	alifPreConfig_initCompatConfig(_config);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+	_config->configInit = (int)AlifConfig_Init_Isolated;
+	_config->configureLocale = 0;
+	_config->isolated = 1;
+	_config->useEnvironment = 0;
+	_config->utf8Mode = 0;
+	_config->devMode = 0;
+#ifdef MS_WINDOWS
+	_config->legacyWindowsFSEncoding = 0;
+#endif
+}
 
 
 
@@ -356,23 +356,23 @@ AlifStatus alifPreConfig_initFromPreConfig(AlifPreConfig* _config, const AlifPre
 
 
 
+void alifPreConfig_initFromConfig(AlifPreConfig* _preConfig, const AlifConfig* _config)
+{
+	AlifConfigInitEnum configInit = (AlifConfigInitEnum)_config->configInit;
+	switch (configInit) {
+	case AlifConfig_Init_Alif:
+		alifPreConfig_initAlifConfig(_preConfig);
+		break;
+	case AlifConfig_Init_Isolated:
+		alifPreConfig_initIsolatedConfig(_preConfig);
+		break;
+	case AlifConfig_Init_Compat:
+	default:
+		alifPreConfig_initCompatConfig(_preConfig);
+	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	alifPreConfig_getConfig(_preConfig, _config);
+}
 
 
 
@@ -445,20 +445,20 @@ static void preConfig_copy(AlifPreConfig* _config, const AlifPreConfig* _config2
 
 
 
+void alifPreConfig_getConfig(AlifPreConfig* _preConfig, const AlifConfig* _config)
+{
+#define COPY_ATTR(ATTR) \
+    if (_config->ATTR != -1) { \
+        _preConfig->ATTR = _config->ATTR; \
+    }
 
+	COPY_ATTR(parseArgv);
+	COPY_ATTR(isolated);
+	COPY_ATTR(useEnvironment);
+	COPY_ATTR(devMode);
 
-
-
-
-
-
-
-
-
-
-
-
-
+#undef COPY_ATTR
+}
 
 
 
