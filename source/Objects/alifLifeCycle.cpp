@@ -1003,3 +1003,268 @@ AlifStatus alif_preInitializeFromConfig(const AlifConfig* _config, const AlifArg
 
 
 
+
+
+
+
+
+
+
+
+
+
+static AlifStatus alifInit_core(AlifRuntimeState* _runtime, const AlifConfig* _srcConfig, AlifThreadState** _tstateP)
+{
+	AlifStatus status{};
+
+	status = alif_preInitializeFromConfig(_srcConfig, nullptr);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+
+	AlifConfig config{};
+	alifConfig_initAlifConfig(&config);
+
+	status = alifConfig_copy(&config, _srcConfig);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		goto done;
+	}
+
+	status = alifConfig_read(&config, 0);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		goto done;
+	}
+
+	if (!_runtime->coreInitialized) {
+		status = alifInit_config(_runtime, _tstateP, &config);
+	}
+	else {
+		status = alifInit_coreReconfigure(_runtime, _tstateP, &config);
+	}
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		goto done;
+	}
+
+done:
+	alifConfig_clear(&config);
+	return status;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+AlifStatus alif_initializeFromConfig(const AlifConfig* _config)
+{
+	if (_config == nullptr) {
+		return ALIFSTATUS_ERR("initialization config is nullptr");
+	}
+
+	AlifStatus status;
+
+	status = alifRuntime_initialize();
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+	AlifRuntimeState* runtime = &alifRuntime;
+
+	AlifThreadState* tstate = nullptr;
+	status = alifInit_core(runtime, _config, &tstate);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+	_config = alifInterpreterState_getConfig(tstate->interp);
+
+	if (_config->initMain) {
+		status = alifInit_main(tstate);
+		if (ALIFSTATUS_EXCEPTION(status)) {
+			return status;
+		}
+	}
+
+	return ALIFSTATUS_OK();
+}
