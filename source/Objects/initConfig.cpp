@@ -623,46 +623,46 @@ int alifWideStringList_copy(AlifWideStringList* _list, const AlifWideStringList*
 
 
 
+void alifConfig_clear(AlifConfig* _config)
+{
+#define CLEAR(ATTR) \
+    do { \
+        alifMem_rawFree(ATTR); \
+        ATTR = nullptr; \
+    } while (0)
 
+	CLEAR(_config->alifCachePrefix);
+	CLEAR(_config->alifPathEnv);
+	CLEAR(_config->home);
+	CLEAR(_config->programName);
 
+	alifWideStringList_clear(&_config->argv);
+	alifWideStringList_clear(&_config->warnOptions);
+	alifWideStringList_clear(&_config->xOptions);
+	alifWideStringList_clear(&_config->moduleSearchPaths);
+	_config->moduleSearchPathsSet = 0;
+	CLEAR(_config->stdlibDir);
 
+	CLEAR(_config->executable);
+	CLEAR(_config->baseExecutable);
+	CLEAR(_config->prefix);
+	CLEAR(_config->basePrefix);
+	CLEAR(_config->execPrefix);
+	CLEAR(_config->baseExecPrefix);
+	CLEAR(_config->platLibDir);
 
+	CLEAR(_config->fileSystemEncoding);
+	CLEAR(_config->fileSystemErrors);
+	CLEAR(_config->stdioEncoding);
+	CLEAR(_config->stdioErrors);
+	CLEAR(_config->runCommand);
+	CLEAR(_config->runModule);
+	CLEAR(_config->runFilename);
+	CLEAR(_config->checkHashAlifCSMode);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	alifWideStringList_clear(&_config->origArgv);
+#undef CLEAR
+}
 
 
 
@@ -775,7 +775,27 @@ void alifConfig_initAlifConfig(AlifConfig* _config)
 
 
 
+AlifStatus alifConfig_setString(AlifConfig* _config, wchar_t** _configStr, const wchar_t* _str)
+{
+	AlifStatus status = alif_preInitializeFromConfig(_config, nullptr);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
+	wchar_t* str2;
+	if (_str != nullptr) {
+		str2 = alifMem_rawWcsDup(_str);
+		if (str2 == nullptr) {
+			return ALIFSTATUS_NO_MEMORY();
+		}
+	}
+	else {
+		str2 = nullptr;
+	}
+	alifMem_rawFree(*_configStr);
+	*_configStr = str2;
+	return ALIFSTATUS_OK();
+}
 
 
 
@@ -821,128 +841,104 @@ void alifConfig_initAlifConfig(AlifConfig* _config)
 
 
 
+AlifStatus alifConfig_copy(AlifConfig* _config, const AlifConfig* _config2)
+{
+	AlifStatus status{};
 
+	alifConfig_clear(_config);
 
+#define COPY_ATTR(ATTR) _config->ATTR = _config2->ATTR
+#define COPY_WSTR_ATTR(ATTR) \
+    do { \
+        status = alifConfig_setString(_config, &_config->ATTR, _config2->ATTR); \
+        if (ALIFSTATUS_EXCEPTION(status)) { \
+            return status; \
+        } \
+    } while (0)
+#define COPY_WSTRLIST(LIST) \
+    do { \
+        if (alifWideStringList_copy(&_config->LIST, &_config2->LIST) < 0) { \
+            return ALIFSTATUS_NO_MEMORY(); \
+        } \
+    } while (0)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	COPY_ATTR(configInit);
+	COPY_ATTR(isolated);
+	COPY_ATTR(useEnvironment);
+	COPY_ATTR(devMode);
+	COPY_ATTR(installSignalHandlers);
+	COPY_ATTR(useHashSeed);
+	COPY_ATTR(hashSeed);
+	COPY_ATTR(installImportLib);
+	COPY_ATTR(faultHandler);
+	COPY_ATTR(traceMalloc);
+	COPY_ATTR(perfProfiling);
+	COPY_ATTR(importTime);
+	COPY_ATTR(codeDebugRanges);
+	COPY_ATTR(showRefCount);
+	COPY_ATTR(dumpRefs);
+	COPY_ATTR(dumpRefsFile);
+	COPY_ATTR(mallocStats);
+
+	COPY_WSTR_ATTR(alifCachePrefix);
+	COPY_WSTR_ATTR(alifPathEnv);
+	COPY_WSTR_ATTR(home);
+	COPY_WSTR_ATTR(programName);
+
+	COPY_ATTR(parseArgv);
+	COPY_WSTRLIST(argv);
+	COPY_WSTRLIST(warnOptions);
+	COPY_WSTRLIST(xOptions);
+	COPY_WSTRLIST(moduleSearchPaths);
+	COPY_ATTR(moduleSearchPathsSet);
+	COPY_WSTR_ATTR(stdlibDir);
+
+	COPY_WSTR_ATTR(executable);
+	COPY_WSTR_ATTR(baseExecutable);
+	COPY_WSTR_ATTR(prefix);
+	COPY_WSTR_ATTR(basePrefix);
+	COPY_WSTR_ATTR(execPrefix);
+	COPY_WSTR_ATTR(baseExecPrefix);
+	COPY_WSTR_ATTR(platLibDir);
+
+	COPY_ATTR(siteImport);
+	COPY_ATTR(bytesWarning);
+	COPY_ATTR(warnDefaultEncoding);
+	COPY_ATTR(inspect);
+	COPY_ATTR(interactive);
+	COPY_ATTR(optimizationLevel);
+	COPY_ATTR(parserDebug);
+	COPY_ATTR(writeBytecode);
+	COPY_ATTR(verbose);
+	COPY_ATTR(quiet);
+	COPY_ATTR(userSiteDirectory);
+	COPY_ATTR(configureCStdio);
+	COPY_ATTR(bufferedStdio);
+	COPY_WSTR_ATTR(fileSystemEncoding);
+	COPY_WSTR_ATTR(fileSystemErrors);
+	COPY_WSTR_ATTR(stdioEncoding);
+	COPY_WSTR_ATTR(stdioErrors);
+#ifdef MS_WINDOWS
+	COPY_ATTR(legacyWindowsStdio);
+#endif
+	COPY_ATTR(skipSourceFirstLine);
+	COPY_WSTR_ATTR(runCommand);
+	COPY_WSTR_ATTR(runModule);
+	COPY_WSTR_ATTR(runFilename);
+	COPY_WSTR_ATTR(checkHashAlifCSMode);
+	COPY_ATTR(pathConfigWarnings);
+	COPY_ATTR(initMain);
+	COPY_ATTR(useFrozenModules);
+	COPY_ATTR(safePath);
+	COPY_WSTRLIST(origArgv);
+	COPY_ATTR(isAlifBuild);
+	COPY_ATTR(intMaxStrDigits);
+
+#undef COPY_ATTR
+#undef COPY_WSTR_ATTR
+#undef COPY_WSTRLIST
+	return ALIFSTATUS_OK();
+}
 
 
 
@@ -2843,16 +2839,15 @@ AlifStatus alifConfig_setBytesArgv(AlifConfig* _config, AlifSizeT _argc, char* c
 
 
 
-
-
-
-
-
-
-
-
-
-
+AlifStatus alifConfig_setArgv(AlifConfig* config, AlifSizeT _argc, wchar_t* const* _argv)
+{
+	AlifArgv args = {
+		.argc = _argc,
+		.useBytesArgv = 0,
+		.bytesArgv = nullptr,
+		.wcharArgv = _argv };
+	return alifConfig_setAlifArgv(config, &args);
+}
 
 
 

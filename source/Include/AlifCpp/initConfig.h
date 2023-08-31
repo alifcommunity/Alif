@@ -220,8 +220,8 @@ public:
 
 ALIFAPI_FUNC(void) alifConfig_initAlifConfig(AlifConfig*);
 
-
-
+ALIFAPI_FUNC(void) alifConfig_clear(AlifConfig*);
+ALIFAPI_FUNC(AlifStatus) alifConfig_setString(AlifConfig*,wchar_t**,const wchar_t*);
 
 
 
@@ -231,3 +231,7 @@ ALIFAPI_FUNC(void) alifConfig_initAlifConfig(AlifConfig*);
 
 
 ALIFAPI_FUNC(AlifStatus) alifConfig_setBytesArgv(AlifConfig*, AlifSizeT, char* const*);
+
+
+
+ALIFAPI_FUNC(AlifStatus) alifConfig_setArgv(AlifConfig*,AlifSizeT, wchar_t* const*);

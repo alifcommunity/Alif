@@ -149,7 +149,7 @@ enum AlifConfigInitEnum {
 
 
 ALIFAPI_FUNC(void) alifConfig_initCompatConfig(AlifConfig*);
-
+extern AlifStatus alifConfig_copy(AlifConfig*, const AlifConfig*);
 
 
 
