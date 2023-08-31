@@ -155,6 +155,7 @@
     <ClInclude Include="..\source\Include\alifThread.h" />
     <ClInclude Include="..\source\Include\alifTime.h" />
     <ClInclude Include="..\source\Include\alifTypeDefs.h" />
+    <ClInclude Include="..\source\Include\alifVersion.h" />
     <ClInclude Include="..\source\Include\codecs.h" />
     <ClInclude Include="..\source\Include\condVar.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_alifLifeCycle.h" />
@@ -179,6 +180,7 @@
     <ClInclude Include="..\source\Include\fileObject.h" />
     <ClInclude Include="..\source\Include\fileUtils.h" />
     <ClInclude Include="..\source\Include\objImpl.h" />
+    <ClInclude Include="..\source\Include\osDefs.h" />
     <ClInclude Include="..\source\Include\thread_nt.h" />
   </ItemGroup>
   <ItemGroup>
@@ -187,9 +189,11 @@
     <ClCompile Include="..\source\Objects\alifTime.cpp" />
     <ClCompile Include="..\source\Objects\fileUtils.cpp" />
     <ClCompile Include="..\source\Objects\getOpt.cpp" />
+    <ClCompile Include="..\source\Objects\getVersion.cpp" />
     <ClCompile Include="..\source\Objects\initConfig.cpp" />
     <ClCompile Include="..\source\Objects\Main\alif.cpp" />
     <ClCompile Include="..\source\Objects\obmalloc.cpp" />
+    <ClCompile Include="..\source\Objects\posixModule.cpp" />
     <ClCompile Include="..\source\Objects\preConfig.cpp" />
     <ClCompile Include="..\source\Objects\thread.cpp" />
     <ClCompile Include="..\source\Objects\unicodeObject.cpp" />

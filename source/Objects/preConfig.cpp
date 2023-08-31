@@ -158,24 +158,24 @@ static void preCmdline_getPreConfig(AlifPreCmdline* _cmdline, const AlifPreConfi
 
 
 
+AlifStatus alifPreCmdline_setConfig(const AlifPreCmdline* cmdline, AlifConfig* config)
+{
+#define COPY_ATTR(ATTR) \
+    config->ATTR = cmdline->ATTR
 
+	AlifStatus status = alifWideStringList_extend(&config->xOptions, &cmdline->xOptions);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
+	COPY_ATTR(isolated);
+	COPY_ATTR(useEnvironment);
+	COPY_ATTR(devMode);
+	COPY_ATTR(warnDefaultEncoding);
+	return ALIFSTATUS_OK();
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#undef COPY_ATTR
+}
 
 
 
@@ -227,7 +227,7 @@ static AlifStatus preCmdline_parseCmdline(AlifPreCmdline* _cmdline)
 
 
 
-AlifStatus alifPreCmdline_Read(AlifPreCmdline* _cmdline, const AlifPreConfig* _preConfig)
+AlifStatus alifPreCmdline_read(AlifPreCmdline* _cmdline, const AlifPreConfig* _preConfig)
 {
 	preCmdline_getPreConfig(_cmdline, _preConfig);
 

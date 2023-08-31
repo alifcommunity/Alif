@@ -157,7 +157,7 @@ ALIFAPI_FUNC(int) alif_decodeLocaleEx(const char*, wchar_t**, size_t*, const cha
 
 
 
-
+extern wchar_t* alif_wGetCwd(wchar_t*,size_t);
 
 
 
@@ -224,3 +224,35 @@ extern int alif_decodeUTF8Ex(const char*,AlifSizeT, wchar_t**, size_t*, const ch
 
 
 extern void alif_resetForceASCII(void);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+extern int alif_isAbs(const wchar_t*);
+extern int alif_absPath(const wchar_t*, wchar_t**);
+#ifdef MS_WINDOWS
+extern int alifOS_getFullPathName(const wchar_t*, wchar_t**);
+#endif

@@ -1036,10 +1036,10 @@ static AlifStatus alifInit_core(AlifRuntimeState* _runtime, const AlifConfig* _s
 	}
 
 	if (!_runtime->coreInitialized) {
-		status = alifInit_config(_runtime, _tstateP, &config);
+		//status = alifInit_config(_runtime, _tstateP, &config);
 	}
 	else {
-		status = alifInit_coreReconfigure(_runtime, _tstateP, &config);
+		//status = alifInit_coreReconfigure(_runtime, _tstateP, &config);
 	}
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		goto done;

@@ -45,7 +45,7 @@
 
 
 
-
+ALIFAPI_FUNC(const char*) alif_getVersion();
 
 
 
