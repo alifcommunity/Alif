@@ -166,6 +166,7 @@
     <ClInclude Include="..\source\Include\Core\alifCore_code.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_condVar.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_fileUtils.h" />
+    <ClInclude Include="..\source\Include\Core\alifCore_getOpt.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_import.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_initConfig.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_interp.h" />
@@ -185,6 +186,7 @@
     <ClCompile Include="..\source\Objects\alifState.cpp" />
     <ClCompile Include="..\source\Objects\alifTime.cpp" />
     <ClCompile Include="..\source\Objects\fileUtils.cpp" />
+    <ClCompile Include="..\source\Objects\getOpt.cpp" />
     <ClCompile Include="..\source\Objects\initConfig.cpp" />
     <ClCompile Include="..\source\Objects\Main\alif.cpp" />
     <ClCompile Include="..\source\Objects\obmalloc.cpp" />

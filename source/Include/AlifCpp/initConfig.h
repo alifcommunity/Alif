@@ -36,9 +36,9 @@ public:
 };
 
 
+ALIFAPI_FUNC(AlifStatus) alifWideStringList_append(AlifWideStringList*, const wchar_t*);
 
-
-
+ALIFAPI_FUNC(AlifStatus) alifWideStringList_insert(AlifWideStringList*,AlifSizeT, const wchar_t*);
 
 
 

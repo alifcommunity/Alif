@@ -54,7 +54,7 @@
 extern void alifWideStringList_clear(AlifWideStringList*);
 extern int alifWideStringList_copy(AlifWideStringList*,const AlifWideStringList*);
 
-
+extern AlifStatus alifWideStringList_extend(AlifWideStringList *,const AlifWideStringList *);
 
 
 
@@ -72,6 +72,15 @@ extern AlifStatus alifArgv_asWstrList(const AlifArgv*, AlifWideStringList*);
 
 
 
+/* ----- Helper functions ----------------------------------------- */
+
+
+
+
+extern const wchar_t* alif_getXOption(const AlifWideStringList*, const wchar_t*);
+
+
+extern const char* alif_getEnv(int, const char*);
 
 
 
@@ -83,40 +92,31 @@ extern AlifStatus alifArgv_asWstrList(const AlifArgv*, AlifWideStringList*);
 
 
 
+/* ----- AlifPreCmdline ----------------------------------------------- */
+
+class AlifPreCmdline {
+public:
+	AlifWideStringList argv;
+	AlifWideStringList xOptions;
+	int isolated;
+	int useEnvironment;
+	int devMode;
+	int warnDefaultEncoding;
+};
+#define ALIFPRECMDLINE_INIT { \
+        .isolated = -1, \
+        .useEnvironment = -1, \
+        .devMode = -1}
 
 
 
 
 
 
+extern AlifStatus alifPreCmdline_setConfig(const AlifPreCmdline*,AlifConfig*);
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+extern AlifStatus alifPreCmdline_read(AlifPreCmdline*, const AlifPreConfig*);
 
 
 
@@ -156,7 +156,7 @@ extern AlifStatus alifConfig_copy(AlifConfig*, const AlifConfig*);
 
 
 
-
+extern AlifStatus alifConfig_read(AlifConfig*, int);
 
 
 extern AlifStatus alifConfig_setAlifArgv(AlifConfig*, const AlifArgv*);
