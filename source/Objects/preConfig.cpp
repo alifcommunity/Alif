@@ -1,6 +1,6 @@
 #include "alif.h"
 #include "alifCore_fileUtils.h"
-//#include "alifCore_getOpt.h"
+#include "alifCore_getOpt.h"
 #include "alifCore_initConfig.h"
 #include "alifCore_alifLifeCycle.h"
 #include "alifCore_alifMem.h"
@@ -128,8 +128,19 @@ AlifStatus alifArgv_asWstrList(const AlifArgv* _args, AlifWideStringList* _list)
 
 
 
+static void preCmdline_getPreConfig(AlifPreCmdline* _cmdline, const AlifPreConfig* _config)
+{
+#define COPY_ATTR(ATTR) \
+    if (_config->ATTR != -1) { \
+        _cmdline->ATTR = _config->ATTR; \
+    }
 
+	COPY_ATTR(isolated);
+	COPY_ATTR(useEnvironment);
+	COPY_ATTR(devMode);
 
+#undef COPY_ATTR
+}
 
 
 
@@ -169,14 +180,46 @@ AlifStatus alifArgv_asWstrList(const AlifArgv* _args, AlifWideStringList* _list)
 
 
 
+static AlifStatus preCmdline_parseCmdline(AlifPreCmdline* _cmdline)
+{
+	const AlifWideStringList* argv = &_cmdline->argv;
 
+	alifOS_resetGetOpt();
 
+	alifOSOptErr = 0;
+	do {
+		int longindex = -1;
+		int c = alifOS_getOpt(argv->length, argv->items, &longindex);
 
+		if (c == EOF || c == 'c' || c == 'm') {
+			break;
+		}
 
+		switch (c) {
+		case 'E':
+			_cmdline->useEnvironment = 0;
+			break;
 
+		case 'I':
+			_cmdline->isolated = 1;
+			break;
 
+		case 'X':
+		{
+			AlifStatus status = alifWideStringList_append(&_cmdline->xOptions, alifOSOptArg);
+			if (ALIFSTATUS_EXCEPTION(status)) {
+				return status;
+			}
+			break;
+		}
 
+		default:
+			break;
+		}
+	} while (1);
 
+	return ALIFSTATUS_OK();
+}
 
 
 
@@ -184,94 +227,51 @@ AlifStatus alifArgv_asWstrList(const AlifArgv* _args, AlifWideStringList* _list)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+AlifStatus alifPreCmdline_Read(AlifPreCmdline* _cmdline, const AlifPreConfig* _preConfig)
+{
+	preCmdline_getPreConfig(_cmdline, _preConfig);
+
+	if (_preConfig->parseArgv) {
+		AlifStatus status = preCmdline_parseCmdline(_cmdline);
+		if (ALIFSTATUS_EXCEPTION(status)) {
+			return status;
+		}
+	}
+
+	if (_cmdline->isolated < 0) {
+		_cmdline->isolated = 0;
+	}
+	if (_cmdline->isolated > 0) {
+		_cmdline->useEnvironment = 0;
+	}
+	if (_cmdline->useEnvironment < 0) {
+		_cmdline->useEnvironment = 0;
+	}
+
+	if ((_cmdline->devMode < 0)
+		&& (alif_getXOption(&_cmdline->xOptions, L"dev")
+			|| alif_getEnv(_cmdline->useEnvironment, "ALIFDEVMODE")))
+	{
+		_cmdline->devMode = 1;
+	}
+	if (_cmdline->devMode < 0) {
+		_cmdline->devMode = 0;
+	}
+
+
+	if (alif_getXOption(&_cmdline->xOptions, L"warnDefaultEncoding")
+		|| alif_getEnv(_cmdline->useEnvironment, "ALIFWARNDEFAULTENCODING"))
+	{
+		_cmdline->warnDefaultEncoding = 1;
+	}
+
+	//assert(_cmdline->useEnvironment >= 0);
+	//assert(_cmdline->isolated >= 0);
+	//assert(_cmdline->devMode >= 0);
+	//assert(_cmdline->warnDefaultEncoding >= 0);
+
+	return ALIFSTATUS_OK();
+}
 
 
 
@@ -523,8 +523,22 @@ static void preConfig_setGlobalVars(const AlifPreConfig* config)
 
 
 
+const char* alif_getEnv(int _useEnvironment, const char* name)
+{
+	//assert(_useEnvironment >= 0);
 
+	if (!_useEnvironment) {
+		return nullptr;
+	}
 
+	const char* var = getenv(name);
+	if (var && var[0] != '\0') {
+		return var;
+	}
+	else {
+		return nullptr;
+	}
+}
 
 
 
@@ -564,38 +578,24 @@ static void preConfig_setGlobalVars(const AlifPreConfig* config)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+const wchar_t* alif_getXOption(const AlifWideStringList* _xOptions, const wchar_t* _name)
+{
+	for (AlifSizeT i = 0; i < _xOptions->length; i++) {
+		const wchar_t* option = _xOptions->items[i];
+		size_t len;
+		wchar_t* sep = (wchar_t*)wcschr(option, L'='); // تم تعديل المرجع بسبب ظهور خطأ
+		if (sep != NULL) {
+			len = (sep - option);
+		}
+		else {
+			len = wcslen(option);
+		}
+		if (wcsncmp(option, _name, len) == 0 && _name[len] == L'\0') {
+			return option;
+		}
+	}
+	return NULL;
+}
 
 
 
