@@ -74,16 +74,16 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
+#if (defined(__GNUC__) && !defined(__STRICT_ANSI__) && \
+    (((__GNUC__ == 3) && (__GNUC_MINOR__ >= 1)) || (__GNUC__ >= 4)))
+#define ALIF_ARRAY_LENGTH(array) \
+    (sizeof(array) / sizeof((array)[0]) \
+     + ALIF_BUILD_ASSERT_EXPR(!__builtin_types_compatible_p(typeof(array), \
+                                                          typeof(&(array)[0]))))
+#else
+#define ALIF_ARRAY_LENGTH(array) \
+    (sizeof(array) / sizeof((array)[0]))
+#endif
 
 
 
