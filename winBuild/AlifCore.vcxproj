@@ -195,6 +195,7 @@
     <ClCompile Include="..\source\Objects\obmalloc.cpp" />
     <ClCompile Include="..\source\Objects\posixModule.cpp" />
     <ClCompile Include="..\source\Objects\preConfig.cpp" />
+    <ClCompile Include="..\source\Objects\sysModule.cpp" />
     <ClCompile Include="..\source\Objects\thread.cpp" />
     <ClCompile Include="..\source\Objects\unicodeObject.cpp" />
   </ItemGroup>

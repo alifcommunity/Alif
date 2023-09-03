@@ -585,11 +585,26 @@ void alifRuntimeState_fini(AlifRuntimeState* _runtime)
 
 
 
+AlifStatus alifInterpreterState_enable(AlifRuntimeState* _runtime)
+{
+	AlifRuntimeState::AlifInterpreters* interpreters = &_runtime->alifInterpreters;
+	interpreters->nextID = 0;
 
+	if (interpreters->mutex == nullptr) {
+		AlifMemAllocatorEx oldAlloc{};
+		alifMem_setDefaultAllocator(AlifMem_Domain_Raw, &oldAlloc);
 
+		interpreters->mutex = alifThread_allocateLock();
 
+		alifMem_setAllocator(AlifMem_Domain_Raw, &oldAlloc);
 
+		if (interpreters->mutex == nullptr) {
+			return ALIFSTATUS_ERR("Can't initialize threads for interpreter");
+		}
+	}
 
+	return ALIFSTATUS_OK();
+}
 
 
 
@@ -687,92 +702,77 @@ void alifRuntimeState_fini(AlifRuntimeState* _runtime)
 
 
 
+AlifInterpreterState* alifInterpreterState_new()
+{
+	AlifInterpreterState* interp{};
+	AlifRuntimeState* runtime = &alifRuntime;
+	AlifThreadState* tState = current_fastGet(runtime);
 
+	if (alifSys_audit(tState, "alifcpp.alifInterpreterState_new", nullptr) < 0) {
+		return nullptr;
+	}
 
+	AlifThreadTypeLock pendingLock = alifThread_allocateLock();
+	if (pendingLock == nullptr) {
+		if (tState != nullptr) {
+			//alifErr_noMemory(tState);
+		}
+		return NULL;
+	}
 
+	AlifRuntimeState::AlifInterpreters* interpreters = &runtime->alifInterpreters;
 
+	HEAD_LOCK(runtime);
 
+	int64_t id = interpreters->nextID;
+	interpreters->nextID += 1;
 
+	AlifInterpreterState* oldHead = interpreters->head;
+	if (oldHead == nullptr) {
+		//assert(interpreters->main == nullptr);
+		//assert(id == 0);
 
+		interp = &runtime->mainInterpreter;
+		//assert(interp->id == 0);
+		//assert(interp->next == nullptr);
 
+		interpreters->main = interp;
+	}
+	else {
+		//assert(interpreters->main != nullptr);
+		//assert(id != 0);
 
+		interp = alloc_interpreter();
+		if (interp == nullptr) {
+			goto error;
+		}
+		memcpy(interp, &initial.mainInterpreter,
+			sizeof(*interp));
 
+		if (id < 0) {
+			if (tState != nullptr) {
+				//alifErr_setString(tState, alifExcRuntimeError,
+				//	"failed to get an interpreter ID");
+			}
+			goto error;
+		}
+	}
+	interpreters->head = interp;
 
+	init_interpreter(interp, runtime, id, oldHead, pendingLock);
 
+	HEAD_UNLOCK(runtime);
+	return interp;
 
+error:
+	HEAD_UNLOCK(runtime);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	alifThread_freeLock(pendingLock);
+	if (interp != nullptr) {
+		free_interpreter(interp);
+	}
+	return nullptr;
+}
 
 
 
@@ -1905,4 +1905,859 @@ AlifInterpreterState* alifInterpreterState_main()
 
 AlifInterpreterState* alifInterpreterState_next(AlifInterpreterState* _interp) {
 	return _interp->next;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const AlifConfig* alifInterpreterState_getConfig(AlifInterpreterState* _interp)
+{
+	return &_interp->config;
 }

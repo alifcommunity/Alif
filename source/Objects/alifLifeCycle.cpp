@@ -460,22 +460,80 @@ char* alif_setLocaleFromEnv(int category)
 
 
 
+static AlifStatus alifInit_coreReconfigure(AlifRuntimeState* _runtime, AlifThreadState** _tStateP, const AlifConfig* _config)
+{
+	AlifStatus status{};
+	AlifThreadState* tState = alifThreadState_get();
+	if (!tState) {
+		return ALIFSTATUS_ERR("failed to read thread state");
+	}
+	*_tStateP = tState;
 
+	AlifInterpreterState* interp = tState->interp;
+	if (interp == nullptr) {
+		return ALIFSTATUS_ERR("can't make main interpreter");
+	}
 
+	status = alifConfig_write(_config, _runtime);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
+	status = alifConfig_copy(&interp->config, _config);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+	_config = alifInterpreterState_getConfig(interp);
 
+	if (_config->installImportLib) {
+		//status = alifPathConfig_updateGlobal(_config);
+		if (ALIFSTATUS_EXCEPTION(status)) {
+			return status;
+		}
+	}
+	return ALIFSTATUS_OK();
+}
 
 
 
 
 
+static AlifStatus alifCore_initRuntime(AlifRuntimeState* _runtime, const AlifConfig* _config)
+{
+	if (_runtime->initialized) {
+		return ALIFSTATUS_ERR("main interpreter already initialized");
+	}
 
+	AlifStatus status = alifConfig_write(_config, _runtime);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
+	alifRuntimeState_setFinalizing(_runtime, nullptr);
 
+	alif_initVersion();
 
+	//status = alif_hashRandomizationInit(_config);
+	//if (ALIFSTATUS_EXCEPTION(status)) {
+	//	return status;
+	//}
 
+	//status = alifTime_init();
+	//if (ALIFSTATUS_EXCEPTION(status)) {
+	//	return status;
+	//}
 
+	//status = alifImport_init();
+	//if (ALIFSTATUS_EXCEPTION(status)) {
+	//	return status;
+	//}
 
+	status = alifInterpreterState_enable(_runtime);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+	return ALIFSTATUS_OK();
+}
 
 
 
@@ -565,12 +623,47 @@ char* alif_setLocaleFromEnv(int category)
 
 
 
+static AlifStatus alifCore_createInterpreter(AlifRuntimeState* _runtime, const AlifConfig* _srcConfig, AlifThreadState** _tStateP)
+{
+	AlifStatus status{};
+	AlifInterpreterState* interp = alifInterpreterState_new();
+	if (interp == nullptr) {
+		return ALIFSTATUS_ERR("can't make main interpreter");
+	}
+	//assert(alif_isMainInterpreter(interp));
 
+	status = alifConfig_copy(&interp->config, _srcConfig);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
+	status = alifGILState_init(interp);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
+	AlifInterpreterConfig config = ALIFINTERPRETEECONFIG_LEGACY_INIT;
+	config.gil = ALIFINTERPRETERCONFIG_OWN_GIL;
+	status = init_interpSettings(interp, &config);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
+	AlifThreadState* tState = alifThreadState_new(interp);
+	if (tState == nullptr) {
+		return ALIFSTATUS_ERR("can't make first thread");
+	}
+	alifThreadState_bind(tState);
+	(void)alifThreadState_swapNoGIL(tState);
 
+	status = initInterp_createGIL(tState, config.gil);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
+	*_tStateP = tState;
+	return ALIFSTATUS_OK();
+}
 
 
 
@@ -768,121 +861,28 @@ char* alif_setLocaleFromEnv(int category)
 
 
 
+static AlifStatus alifInit_config(AlifRuntimeState* _runtime, AlifThreadState** _tStateP, const AlifConfig* _config)
+{
+	AlifStatus status = alifCore_initRuntime(_runtime, _config);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
+	AlifThreadState* tState{};
+	status = alifCore_createInterpreter(_runtime, _config, &tState);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+	*_tStateP = tState;
 
+	status = alifCore_interpInit(tState);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	_runtime->coreInitialized = 1;
+	return ALIFSTATUS_OK();
+}
 
 
 
@@ -1036,10 +1036,10 @@ static AlifStatus alifInit_core(AlifRuntimeState* _runtime, const AlifConfig* _s
 	}
 
 	if (!_runtime->coreInitialized) {
-		//status = alifInit_config(_runtime, _tstateP, &config);
+		status = alifInit_config(_runtime, _tstateP, &config);
 	}
 	else {
-		//status = alifInit_coreReconfigure(_runtime, _tstateP, &config);
+		status = alifInit_coreReconfigure(_runtime, _tstateP, &config);
 	}
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		goto done;

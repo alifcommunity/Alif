@@ -145,7 +145,7 @@ static inline AlifInterpreterState* alifInterpreterState_get() {
 
 
 
-
+extern AlifStatus alifInterpreterState_enable(AlifRuntimeState*);
 
 
 

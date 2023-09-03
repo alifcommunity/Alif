@@ -27,20 +27,20 @@ class AlifArgv;
 
 
 
+extern void alif_initVersion();
 
 
 
 
 
+extern AlifStatus alifSys_readPreInitWarnOptions(AlifWideStringList*);
+extern AlifStatus alifSys_readPreInitXOptions(AlifConfig*);
 
 
 
+//extern AlifStatus alif_hashRandomizationInit(const AlifConfig*);
 
-
-
-
-
-
+//extern AlifStatus alifTime_init();
 
 
 

@@ -153,7 +153,7 @@ public:
 		AlifThreadTypeLock mutex;
 		AlifInterpreterState* head;
 		AlifInterpreterState* main;
-		int64_t next_id;
+		int64_t nextID;
 	}alifInterpreters;
 
 	unsigned long mainThread;
@@ -175,7 +175,7 @@ public:
 
 	AlifTssT trashTSSKey;
 
-	//AlifWideStringList origArgv;
+	AlifWideStringList origArgv;
 
 	//ParserRuntimeState parser;
 
@@ -187,7 +187,7 @@ public:
 	//GetArgsRuntimeState getArgs;
 	//FileUtilsState fileUtils;
 	//FaultHandlerRuntimeState faultHandler;
-	//TracemallocRuntimeState tracemalloc;
+	//TracemallocRuntimeState traceMalloc;
 
 	AlifPreConfig preConfig;
 
@@ -291,4 +291,8 @@ extern AlifStatus alifRuntime_initialize();
 
 static inline AlifThreadState* alifRuntimeState_getFinalizing(AlifRuntimeState* _runtime) {
 	return (AlifThreadState*)ALIFATOMIC_LOAD_RELAXED(&_runtime->finalizing);
+}
+
+static inline void alifRuntimeState_setFinalizing(AlifRuntimeState* _runtime, AlifThreadState* _tState) {
+	ALIFATOMIC_STORE_RELAXED(&_runtime->finalizing, (uintptr_t)_tState);
 }

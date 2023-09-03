@@ -11,7 +11,7 @@
 
 
 
-
+ALIFAPI_FUNC(AlifInterpreterState*) alifInterpreterState_new();
 
 
 
