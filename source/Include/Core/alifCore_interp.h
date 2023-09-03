@@ -129,7 +129,7 @@ public:
 	//AlifObject* codecErrorRegistry;
 	int codecsInitialized;
 
-	//AlifConfig config;
+	AlifConfig config;
 	unsigned long featureFlags;
 
 	//AlifObject* dict;  
@@ -241,7 +241,7 @@ public:
 
 
 
-
+extern const AlifConfig* alifInterpreterState_getConfig(AlifInterpreterState*);
 
 
 

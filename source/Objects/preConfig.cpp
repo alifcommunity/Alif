@@ -111,13 +111,13 @@ AlifStatus alifArgv_asWstrList(const AlifArgv* _args, AlifWideStringList* _list)
 }
 
 
+/* ----- AlifPreCmdline ----------------------------------------------- */
 
-
-
-
-
-
-
+void alifPreCmdline_clear(AlifPreCmdline* _cmdline)
+{
+	alifWideStringList_clear(&_cmdline->argv);
+	alifWideStringList_clear(&_cmdline->xOptions);
+}
 
 
 
@@ -560,20 +560,20 @@ const char* alif_getEnv(int _useEnvironment, const char* name)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+void alifGet_envFlag(int _useEnvironment, int* _flag, const char* _name)
+{
+	const char* var = alif_getEnv(_useEnvironment, _name);
+	if (!var) {
+		return;
+	}
+	//int value;
+	//if (alifStr_toInt(var, &value) < 0 || value < 0) {
+	//	value = 1;
+	//}
+	//if (*_flag < value) {
+	//	*_flag = value;
+	//}
+}
 
 
 

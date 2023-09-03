@@ -83,7 +83,7 @@ extern const wchar_t* alif_getXOption(const AlifWideStringList*, const wchar_t*)
 extern const char* alif_getEnv(int, const char*);
 
 
-
+extern void alifGet_envFlag(int, int*, const char*);
 
 
 
@@ -110,7 +110,7 @@ public:
 
 
 
-
+extern void alifPreCmdline_clear(AlifPreCmdline*);
 
 
 extern AlifStatus alifPreCmdline_setConfig(const AlifPreCmdline*,AlifConfig*);
@@ -157,6 +157,6 @@ extern AlifStatus alifConfig_copy(AlifConfig*, const AlifConfig*);
 
 
 extern AlifStatus alifConfig_read(AlifConfig*, int);
-
+extern AlifStatus alifConfig_write(const AlifConfig*, AlifRuntimeState*);
 
 extern AlifStatus alifConfig_setAlifArgv(AlifConfig*, const AlifArgv*);

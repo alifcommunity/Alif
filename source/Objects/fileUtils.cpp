@@ -13,7 +13,7 @@
 #  if defined(MS_WINDOWS_GAMES) && !defined(MS_WINDOWS_DESKTOP)
 #    define PATHCCH_ALLOW_LONG_PATHS 0x01
 #  else
-#    include <pathcch.h>
+//#    include <pathcch.h>
 #  endif
 //extern int winerror_to_errno(int);
 #endif
