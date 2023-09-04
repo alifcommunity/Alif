@@ -157,6 +157,6 @@ extern AlifStatus alifConfig_copy(AlifConfig*, const AlifConfig*);
 
 
 extern AlifStatus alifConfig_read(AlifConfig*, int);
-extern AlifStatus alifConfig_write(const AlifConfig*, AlifRuntimeState*);
+extern AlifStatus alifConfig_write(const AlifConfig*, class AlifRuntimeState*); // تم إضافة class ليعمل البرنامج
 
 extern AlifStatus alifConfig_setAlifArgv(AlifConfig*, const AlifArgv*);

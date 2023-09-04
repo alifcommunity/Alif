@@ -383,33 +383,33 @@ char* alif_setLocaleFromEnv(int category)
 
 
 
+static int interpreter_updateConfig(AlifThreadState* _tState, int _onlyUpdatePathConfig)
+{
+	const AlifConfig* config = &_tState->interp->config;
 
+	if (!_onlyUpdatePathConfig) {
+		AlifStatus status = alifConfig_write(config, _tState->interp->runtime);
+		if (ALIFSTATUS_EXCEPTION(status)) {
+			//alifErr_setFromAlifStatus(status);
+			return -1;
+		}
+	}
 
+	//if (alif_isMainInterpreter(_tState->interp)) {
+	//	AlifStatus status = alifPathConfig_updateGlobal(config);
+	//	if (ALIFSTATUS_EXCEPTION(status)) {
+	//		alifErr_setFromAlifStatus(status);
+	//		return -1;
+	//	}
+	//}
 
+	//_tState->interp->longState.maxStrDigits = config->intMaxStrDigits;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	//if (alifSys_updateConfig(_tState) < 0) {
+	//	return -1;
+	//}
+	return 0;
+}
 
 
 
@@ -547,11 +547,38 @@ static AlifStatus alifCore_initRuntime(AlifRuntimeState* _runtime, const AlifCon
 
 
 
+static AlifStatus init_interpSettings(AlifInterpreterState* _interp, const AlifInterpreterConfig* _config)
+{
+	//assert(_interp->featureFlags == 0);
 
+	//if (_config->useMainObmalloc) {
+	//	_interp->featureFlags |= ALIF_RTFLAGS_USE_MAIN_OBMALLOC;
+	//}
+	//else if (!_config->checkMultiInterpExtensions) {
+	//	return _PyStatus_ERR("per-interpreter obmalloc does not support "
+	//		"single-phase init extension modules");
+	//}
 
+	//if (_config->allowFork) {
+	//	_interp->featureFlags |= ALIF_RTFLAGS_FORK;
+	//}
+	//if (_config->allowExec) {
+	//	_interp->featureFlags |= ALIF_RTFLAGS_EXEC;
+	//}
 
+	//if (_config->allowThreads) {
+	//	_interp->featureFlags |= ALIF_RTFLAGS_THREADS;
+	//}
+	//if (_config->allowDaemonThreads) {
+	//	_interp->featureFlags |= ALIF_RTFLAGS_DAEMON_THREADS;
+	//}
 
+	//if (_config->checkMultiInterpExtensions) {
+	//	_interp->featureFlags |= ALIF_RTFLAGS_MULTI_INTERP_EXTENSIONS;
+	//}
 
+	return ALIFSTATUS_OK();
+}
 
 
 
@@ -561,61 +588,33 @@ static AlifStatus alifCore_initRuntime(AlifRuntimeState* _runtime, const AlifCon
 
 
 
+static AlifStatus initInterp_createGIL(AlifThreadState* _tState, int _gil)
+{
+	AlifStatus status{};
 
+	//alifEval_finiGIL(_tState->interp);
 
+	//status = alifGILState_setTstate(_tState);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
+	int own_gil;
+	switch (_gil) {
+	case ALIFINTERPRETERCONFIG_DEFAULT_GIL: own_gil = 0; break;
+	case ALIFINTERPRETERCONFIG_SHARED_GIL: own_gil = 0; break;
+	case ALIFINTERPRETERCONFIG_OWN_GIL: own_gil = 1; break;
+	default:
+		return ALIFSTATUS_ERR("invalid interpreter config 'gil' value");
+	}
 
+	//status = alifEval_initGIL(_tState, own_gil);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	return ALIFSTATUS_OK();
+}
 
 
 
@@ -653,8 +652,8 @@ static AlifStatus alifCore_createInterpreter(AlifRuntimeState* _runtime, const A
 	if (tState == nullptr) {
 		return ALIFSTATUS_ERR("can't make first thread");
 	}
-	alifThreadState_bind(tState);
-	(void)alifThreadState_swapNoGIL(tState);
+	//alifThreadState_bind(tState);
+	//(void)alifThreadState_swapNoGIL(tState);
 
 	status = initInterp_createGIL(tState, config.gil);
 	if (ALIFSTATUS_EXCEPTION(status)) {
@@ -798,60 +797,60 @@ static AlifStatus alifCore_createInterpreter(AlifRuntimeState* _runtime, const A
 
 
 
+static AlifStatus alifCore_interpInit(AlifThreadState* _tState)
+{
+	AlifInterpreterState* interp = _tState->interp;
+	AlifStatus status{};
+	//AlifObject* sysMod = nullptr;
 
+	//status = alifCore_initGlobalObjects(interp);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
+	//status = alifGC_init(interp);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+	//if (alif_deepFreezeInit() < 0) {
+	//	return ALIFSTATUS_ERR("failed to initialize deep-frozen modules");
+	//}
 
+	//status = alifCore_initTypes(interp);
+	//if (ALIFSTATUS_EXCEPTION(status)) {
+	//	goto done;
+	//}
 
+	//if (alifWarnings_initState(interp) < 0) {
+	//	return ALIFSTATUS_ERR("can't initialize warnings");
+	//}
 
+	//status = alifAtExit_init(interp);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
+	//status = alifSys_create(_tState, &sysMod);
+	//if (ALIFSTATUS_EXCEPTION(status)) {
+	//	goto done;
+	//}
 
+	//status = alifCore_initBuiltins(_tState);
+	//if (ALIFSTATUS_EXCEPTION(status)) {
+	//	goto done;
+	//}
 
+	const AlifConfig* config = alifInterpreterState_getConfig(interp);
 
+	//status = alifImport_initCore(_tState, sysMod, config->installImportLib);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		goto done;
+	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+done:
+	//ALIF_XDECREF(sysMod);
+	return status;
+}
 
 
 
@@ -1060,16 +1059,142 @@ done:
 
 
 
+static AlifStatus alifInit_mainReconfigure(AlifThreadState* _tState)
+{
+	if (interpreter_updateConfig(_tState, 0) < 0) {
+		return ALIFSTATUS_ERR("fail to reconfigure ALif");
+	}
+	return ALIFSTATUS_OK();
+}
+
+
+
+static AlifStatus init_interpMain(AlifThreadState* _tState)
+{
+	//assert(!alifErr_occurred(_tState));
+
+	AlifStatus status{};
+	//int isMainInterp = alif_isMainInterpreter(_tState->interp);
+	AlifInterpreterState* interp = _tState->interp;
+	const AlifConfig* config = alifInterpreterState_getConfig(interp);
+
+	if (!config->installImportLib) {
+		//if (isMainInterp) {
+		//	interp->runtime->initialized = 1;
+		//}
+		return ALIFSTATUS_OK();
+	}
+
+	//status = alifConfig_initImportConfig(&interp->config);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+
+	if (interpreter_updateConfig(_tState, 1) < 0) {
+		return ALIFSTATUS_ERR("failed to update the Alif config");
+	}
+
+	//status = alifImport_initExternal(_tState);
+	//if (ALIFSTATUS_EXCEPTION(status)) {
+	//	return status;
+	//}
+
+	//if (isMainInterp) {
+	//	status = alifFaultHandler_init(config->faultHandler);
+	//	if (ALIFSTATUS_EXCEPTION(status)) {
+	//		return status;
+	//	}
+	//}
+
+	//status = alifUnicode_initEncodings(_tState);
+	//if (ALIFSTATUS_EXCEPTION(status)) {
+	//	return status;
+	//}
+
+//	if (isMainInterp) {
+//		if (alifSignal_init(config->installSignalHandlers) < 0) {
+//			return ALIFSTATUS_ERR("can't initialize signals");
+//		}
+//
+//		if (config->traceMalloc) {
+//			if (alifTraceMalloc_start(config->traceMalloc) < 0) {
+//				return ALIFSTATUS_ERR("can't start tracemalloc");
+//			}
+//		}
+//
+//#ifdef ALIF_HAVEPERF_TRAMPOLINE
+//		if (config->perfProfiling) {
+//			if (alifPerfTrampoline_setCallbacks(&alifPerfmapCallbacks) < 0 ||
+//				alifPerfTrampoline_init(config->perfProfiling) < 0) {
+//				return ALIFSTATUS_ERR("can't initialize the perf trampoline");
+//			}
+//		}
+//#endif
+//	}
 
+	//status = init_sysStreams(_tState);
+	//if (ALIFSTATUS_EXCEPTION(status)) {
+	//	return status;
+	//}
 
+	//status = initSet_builtinsOpen();
+	//if (ALIFSTATUS_EXCEPTION(status)) {
+	//	return status;
+	//}
 
+	//status = add_mainModule(interp);
+	//if (ALIFSTATUS_EXCEPTION(status)) {
+	//	return status;
+	//}
 
+	//if (isMainInterp) {
+	//	AlifObject* warnOptions = alifSys_getObject("warnoptions");
+	//	if (warnOptions != nullptr && alifList_size(warnOptions) > 0)
+	//	{
+	//		AlifObject* warningsModule = alifImport_importModule("warnings");
+	//		if (warningsModule == nullptr) {
+	//			fprintf(stderr, "'import warnings' failed; traceback:\n");
+	//			alifErr_print(_tState);
+	//		}
+	//		ALIF_XDECREF(warningsModule);
+	//	}
 
+	//	interp->runtime->initialized = 1;
+	//}
 
+	//if (config->siteImport) {
+	//	status = init_importSite();
+	//	if (ALIFSTATUS_EXCEPTION(status)) {
+	//		return status;
+	//	}
+	//}
 
+//	if (isMainInterp) {
+//#ifndef MS_WINDOWS
+//		emitStderrWarning_forLegacyLocale(interp->runtime);
+//#endif
+//	}
 
+	//if (isMainInterp) {
+	//	char* envVar = ALIF_GETENV("ALIFUOPS");
+	//	int enabled = envVar != nullptr && *envVar > '0';
+	//	if (alif_getXOption(&config->xOptions, L"uops") != nullptr) {
+	//		enabled = 1;
+	//	}
+	//	if (enabled) {
+	//		AlifObject* opt = alifUnstableOptimizer_newUOpOptimizer();
+	//		if (opt == nullptr) {
+	//			return ALIFSTATUS_ERR("can't initialize optimizer");
+	//		}
+	//		alifUnstable_setOptimizer((AlifOptimizerObject*)opt);
+	//		ALIF_DECREF(opt);
+	//	}
+	//}
 
+	//assert(!alifErr_occurred(_tState));
 
+	return ALIFSTATUS_OK();
+}
 
 
 
@@ -1093,149 +1218,23 @@ done:
 
 
 
+static AlifStatus alifInit_main(AlifThreadState* _tState)
+{
+	AlifInterpreterState* interp = _tState->interp;
+	if (!interp->runtime->coreInitialized) {
+		return ALIFSTATUS_ERR("runtime core not initialized");
+	}
 
+	if (interp->runtime->initialized) {
+		return alifInit_mainReconfigure(_tState);
+	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	AlifStatus status = init_interpMain(_tState);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+	return ALIFSTATUS_OK();
+}
 
 
 AlifStatus alif_initializeFromConfig(const AlifConfig* _config)

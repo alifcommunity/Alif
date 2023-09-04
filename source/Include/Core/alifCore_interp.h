@@ -85,7 +85,7 @@ public:
 
 
 
-	class AlifRuntimeState* runtime;
+	class AlifRuntimeState* runtime; // تم إضافة class ليعمل البرنامج
 
 
 
