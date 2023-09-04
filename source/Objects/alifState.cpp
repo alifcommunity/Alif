@@ -66,15 +66,14 @@
 ALIF_THREAD_LOCAL AlifThreadState* alifTssTState = nullptr;
 #endif
 
-
-
-
-
-
-
-
-
-
+static inline AlifThreadState* current_fastGet(AlifRuntimeState* ALIF_UNUSED(runtime))
+{
+#ifdef HAVE_THREAD_LOCAL
+	return alifTssTState;
+#else
+#  error "no supported thread-local variable storage classifier"
+#endif
+}
 
 
 
@@ -613,6 +612,10 @@ AlifStatus alifInterpreterState_enable(AlifRuntimeState* _runtime)
 
 
 
+static AlifInterpreterState* alloc_interpreter()
+{
+	return (AlifInterpreterState*)alifMem_rawCalloc(1, sizeof(AlifInterpreterState)); // تم تغيير النوع المرجع بسبب ظهور خطأ
+}
 
 
 
@@ -644,57 +647,52 @@ AlifStatus alifInterpreterState_enable(AlifRuntimeState* _runtime)
 
 
 
+static void init_interpreter(AlifInterpreterState* _interp, AlifRuntimeState* _runtime, int64_t _id, AlifInterpreterState* _next, AlifThreadTypeLock _pendingLock)
+{
+	//if (_interp->initialized) {
+		//alif_fatalError("interpreter already initialized");
+	//}
 
+	//assert(_runtime != nullptr);
+	//_interp->runtime = _runtime;
 
+	//assert(_id > 0 || (_id == 0 && _interp == _runtime->alifInterpreters.main));
+	//_interp->id = _id;
 
+	//assert(_runtime->alifInterpreters.head == _interp);
+	//assert(_next != NULL || (_interp == _runtime->alifInterpreters.main));
+	//_interp->next = _next;
 
+	//if (_interp != &_runtime->mainInterpreter) {
+		//PoolP temp[OBMALLOC_USEDPOOLS_SIZE] = OBMALLOC_POOLS_INIT(_interp->obmalloc.pools);
+		//memcpy(&_interp->obmalloc.pools.used, temp, sizeof(temp));
+	//}
+	//alifObject_initState(_interp);
 
+	//alifEval_initState(_interp, _pendingLock);
+	//alifGC_initState(&_interp->gc);
+	//alifConfig_initAlifConfig(&_interp->config);
+	//alifType_initCache(_interp);
+	//for (int i = 0; i < ALIF_MONITORING_UNGROUPED_EVENTS; i++) {
+		//_interp->monitors.tools[i] = 0;
+	//}
+	//for (int t = 0; t < ALIF_MONITORING_TOOL_IDS; t++) {
+	//	for (int e = 0; e < ALIF_MONITORING_EVENTS; e++) {
+	//		_interp->monitoringCallables[t][e] = nullptr;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	//	}
+	//}
+	//_interp->sysProfileInitialized = false;
+	//_interp->sysTraceInitialized = false;
+	//_interp->optimizer = &alifOptimizerDefault;
+	//_interp->optimizerBackedgeThreshold = alifOptimizerDefault.backedgeThreshold;
+	//_interp->optimizerResumeThreshold = alifOptimizerDefault.backedgeThreshold;
+	//if (_interp != &_runtime->mainInterpreter) {
+	//	_interp->dtoa = (DtoaState)DTOA_STATE_INIT(_interp);
+	//}
+	//_interp->fOpcodeTraceSet = false;
+	//_interp->initialized = 1;
+}
 
 
 
@@ -708,16 +706,16 @@ AlifInterpreterState* alifInterpreterState_new()
 	AlifRuntimeState* runtime = &alifRuntime;
 	AlifThreadState* tState = current_fastGet(runtime);
 
-	if (alifSys_audit(tState, "alifcpp.alifInterpreterState_new", nullptr) < 0) {
-		return nullptr;
-	}
+	//if (alifSys_audit(tState, "alifcpp.alifInterpreterState_new", nullptr) < 0) {
+	//	return nullptr;
+	//}
 
 	AlifThreadTypeLock pendingLock = alifThread_allocateLock();
 	if (pendingLock == nullptr) {
 		if (tState != nullptr) {
 			//alifErr_noMemory(tState);
 		}
-		return NULL;
+		return nullptr;
 	}
 
 	AlifRuntimeState::AlifInterpreters* interpreters = &runtime->alifInterpreters;
@@ -769,7 +767,7 @@ error:
 
 	alifThread_freeLock(pendingLock);
 	if (interp != nullptr) {
-		free_interpreter(interp);
+		//free_interpreter(interp);
 	}
 	return nullptr;
 }
@@ -1404,10 +1402,11 @@ error:
 
 
 
-
-
-
-
+AlifThreadState* alifThreadState_new(AlifInterpreterState* _interp)
+{
+	//return new_threadState(_interp);
+	return (AlifThreadState*)0;
+}
 
 
 
@@ -2057,17 +2056,17 @@ AlifInterpreterState* alifInterpreterState_next(AlifInterpreterState* _interp) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
+AlifStatus alifGILState_init(AlifInterpreterState* _interp)
+{
+	//if (!alif_isMainInterpreter(_interp)) {
+	//	return ALIFSTATUS_OK();
+	//}
+	AlifRuntimeState* runtime = _interp->runtime;
+	//assert(GILSTATE_TSS_GET(runtime) == nullptr);
+	//assert(runtime->gilstate.autoInterpreterState == nullptr);
+	//runtime->gilstate.autoInterpreterState = _interp;
+	return ALIFSTATUS_OK();
+}
 
 
 

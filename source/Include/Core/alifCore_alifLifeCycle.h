@@ -63,7 +63,7 @@ extern AlifStatus alifSys_readPreInitXOptions(AlifConfig*);
 
 
 
-
+extern AlifStatus alifGILState_init(AlifInterpreterState*);
 
 
 

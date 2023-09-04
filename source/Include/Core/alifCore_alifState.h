@@ -121,7 +121,7 @@ static inline AlifInterpreterState* alifInterpreterState_get() {
 
 
 
-
+extern AlifThreadState* alifThreadState_new(AlifInterpreterState*);
 
 
 
