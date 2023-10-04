@@ -104,7 +104,7 @@ ALIFCOMP_DIAGPOP
 
 static int runtimeInitialized = 0;
 
-AlifStatus alifRuntime_initialize()
+void alifRuntime_initialize()
 {
 
 
@@ -114,7 +114,7 @@ AlifStatus alifRuntime_initialize()
 
 
 	if (runtimeInitialized) {
-		return ALIFSTATUS_OK();
+		return;
 	}
 	runtimeInitialized = 1;
 
@@ -388,19 +388,18 @@ static int interpreter_updateConfig(AlifThreadState* _tState, int _onlyUpdatePat
 	const AlifConfig* config = &_tState->interp->config;
 
 	if (!_onlyUpdatePathConfig) {
-		AlifStatus status = alifConfig_write(config, _tState->interp->runtime);
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			//alifErr_setFromAlifStatus(status);
-			return -1;
-		}
+		alifConfig_write(config, _tState->interp->runtime);
+
+
+
 	}
 
 	//if (alif_isMainInterpreter(_tState->interp)) {
-	//	AlifStatus status = alifPathConfig_updateGlobal(config);
-	//	if (ALIFSTATUS_EXCEPTION(status)) {
-	//		alifErr_setFromAlifStatus(status);
-	//		return -1;
-	//	}
+	//	alifPathConfig_updateGlobal(config);
+
+
+
+
 	//}
 
 	//_tState->interp->longState.maxStrDigits = config->intMaxStrDigits;
@@ -460,79 +459,80 @@ static int interpreter_updateConfig(AlifThreadState* _tState, int _onlyUpdatePat
 
 
 
-static AlifStatus alifInit_coreReconfigure(AlifRuntimeState* _runtime, AlifThreadState** _tStateP, const AlifConfig* _config)
+static void alifInit_coreReconfigure(AlifRuntimeState* _runtime, AlifThreadState** _tStateP, const AlifConfig* _config)
 {
-	AlifStatus status{};
+
 	AlifThreadState* tState = alifThreadState_get();
-	if (!tState) {
-		return ALIFSTATUS_ERR("failed to read thread state");
-	}
+
+
+
 	*_tStateP = tState;
 
 	AlifInterpreterState* interp = tState->interp;
 	if (interp == nullptr) {
-		return ALIFSTATUS_ERR("can't make main interpreter");
+		std::cout << ("can't make main interpreter") << std::endl;
+		exit(-1);
 	}
 
-	status = alifConfig_write(_config, _runtime);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+	alifConfig_write(_config, _runtime);
 
-	status = alifConfig_copy(&interp->config, _config);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+
+
+
+	alifConfig_copy(&interp->config, _config);
+
+
+
 	_config = alifInterpreterState_getConfig(interp);
 
 	if (_config->installImportLib) {
-		//status = alifPathConfig_updateGlobal(_config);
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			return status;
-		}
+		//alifPathConfig_updateGlobal(_config);
+
+
+
 	}
-	return ALIFSTATUS_OK();
+
 }
 
 
 
 
-
-static AlifStatus alifCore_initRuntime(AlifRuntimeState* _runtime, const AlifConfig* _config)
+static void alifCore_initRuntime(AlifRuntimeState* _runtime, const AlifConfig* _config)
 {
 	if (_runtime->initialized) {
-		return ALIFSTATUS_ERR("main interpreter already initialized");
+		std::cout << ("main interpreter already initialized") << std::endl;
+		exit(-1);
 	}
 
-	AlifStatus status = alifConfig_write(_config, _runtime);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+	alifConfig_write(_config, _runtime);
+
+
+
 
 	alifRuntimeState_setFinalizing(_runtime, nullptr);
 
 	alif_initVersion();
 
-	//status = alif_hashRandomizationInit(_config);
-	//if (ALIFSTATUS_EXCEPTION(status)) {
-	//	return status;
-	//}
+	//alif_hashRandomizationInit(_config);
 
-	//status = alifTime_init();
-	//if (ALIFSTATUS_EXCEPTION(status)) {
-	//	return status;
-	//}
 
-	//status = alifImport_init();
-	//if (ALIFSTATUS_EXCEPTION(status)) {
-	//	return status;
-	//}
 
-	status = alifInterpreterState_enable(_runtime);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
-	return ALIFSTATUS_OK();
+
+	//alifTime_init();
+
+
+
+
+	//alifImport_init();
+
+
+
+
+	alifInterpreterState_enable(_runtime);
+
+
+
+
 }
 
 
@@ -546,8 +546,7 @@ static AlifStatus alifCore_initRuntime(AlifRuntimeState* _runtime, const AlifCon
 
 
 
-
-static AlifStatus init_interpSettings(AlifInterpreterState* _interp, const AlifInterpreterConfig* _config)
+static void init_interpSettings(AlifInterpreterState* _interp, const AlifInterpreterConfig* _config)
 {
 	//assert(_interp->featureFlags == 0);
 
@@ -577,7 +576,7 @@ static AlifStatus init_interpSettings(AlifInterpreterState* _interp, const AlifI
 	//	_interp->featureFlags |= ALIF_RTFLAGS_MULTI_INTERP_EXTENSIONS;
 	//}
 
-	return ALIFSTATUS_OK();
+
 }
 
 
@@ -588,16 +587,16 @@ static AlifStatus init_interpSettings(AlifInterpreterState* _interp, const AlifI
 
 
 
-static AlifStatus initInterp_createGIL(AlifThreadState* _tState, int _gil)
+static void initInterp_createGIL(AlifThreadState* _tState, int _gil)
 {
-	AlifStatus status{};
+
 
 	//alifEval_finiGIL(_tState->interp);
 
-	//status = alifGILState_setTstate(_tState);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+	//alifGILState_setTstate(_tState);
+
+
+
 
 	int own_gil;
 	switch (_gil) {
@@ -605,15 +604,16 @@ static AlifStatus initInterp_createGIL(AlifThreadState* _tState, int _gil)
 	case ALIFINTERPRETERCONFIG_SHARED_GIL: own_gil = 0; break;
 	case ALIFINTERPRETERCONFIG_OWN_GIL: own_gil = 1; break;
 	default:
-		return ALIFSTATUS_ERR("invalid interpreter config 'gil' value");
+		std::cout << ("invalid interpreter config 'gil' value") << std::endl;
+		exit(-1);
 	}
 
-	//status = alifEval_initGIL(_tState, own_gil);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+	//alifEval_initGIL(_tState, own_gil);
 
-	return ALIFSTATUS_OK();
+
+
+
+
 }
 
 
@@ -621,47 +621,48 @@ static AlifStatus initInterp_createGIL(AlifThreadState* _tState, int _gil)
 
 
 
-
-static AlifStatus alifCore_createInterpreter(AlifRuntimeState* _runtime, const AlifConfig* _srcConfig, AlifThreadState** _tStateP)
+static void alifCore_createInterpreter(AlifRuntimeState* _runtime, const AlifConfig* _srcConfig, AlifThreadState** _tStateP)
 {
-	AlifStatus status{};
+
 	AlifInterpreterState* interp = alifInterpreterState_new();
 	if (interp == nullptr) {
-		return ALIFSTATUS_ERR("can't make main interpreter");
+		std::cout << ("can't make main interpreter") << std::endl;
+		exit(-1);
 	}
 	//assert(alif_isMainInterpreter(interp));
 
-	status = alifConfig_copy(&interp->config, _srcConfig);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+	alifConfig_copy(&interp->config, _srcConfig);
 
-	status = alifGILState_init(interp);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+
+
+
+	alifGILState_init(interp);
+
+
+
 
 	AlifInterpreterConfig config = ALIFINTERPRETEECONFIG_LEGACY_INIT;
 	config.gil = ALIFINTERPRETERCONFIG_OWN_GIL;
-	status = init_interpSettings(interp, &config);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+	init_interpSettings(interp, &config);
+
+
+
 
 	AlifThreadState* tState = alifThreadState_new(interp);
 	if (tState == nullptr) {
-		return ALIFSTATUS_ERR("can't make first thread");
+		std::cout << ("can't make first thread") << std::endl;
+		exit(-1);
 	}
 	//alifThreadState_bind(tState);
 	//(void)alifThreadState_swapNoGIL(tState);
 
-	status = initInterp_createGIL(tState, config.gil);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+	initInterp_createGIL(tState, config.gil);
+
+
+
 
 	*_tStateP = tState;
-	return ALIFSTATUS_OK();
+
 }
 
 
@@ -795,61 +796,61 @@ static AlifStatus alifCore_createInterpreter(AlifRuntimeState* _runtime, const A
 
 
 
-
-
-static AlifStatus alifCore_interpInit(AlifThreadState* _tState)
+static void alifCore_interpInit(AlifThreadState* _tState)
 {
 	AlifInterpreterState* interp = _tState->interp;
-	AlifStatus status{};
+
 	//AlifObject* sysMod = nullptr;
 
-	//status = alifCore_initGlobalObjects(interp);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+	//alifCore_initGlobalObjects(interp);
 
-	//status = alifGC_init(interp);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+
+
+
+	//alifGC_init(interp);
+
+
+
 	//if (alif_deepFreezeInit() < 0) {
-	//	return ALIFSTATUS_ERR("failed to initialize deep-frozen modules");
+	//	std::cout << ("failed to initialize deep-frozen modules") << std::endl;
+	//  exit(-1);
 	//}
 
-	//status = alifCore_initTypes(interp);
-	//if (ALIFSTATUS_EXCEPTION(status)) {
-	//	goto done;
-	//}
+	//alifCore_initTypes(interp);
+
+
+
 
 	//if (alifWarnings_initState(interp) < 0) {
-	//	return ALIFSTATUS_ERR("can't initialize warnings");
+	//	std::cout << ("can't initialize warnings") << std::endl;
+	//  exit(-1);
 	//}
 
-	//status = alifAtExit_init(interp);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+	//alifAtExit_init(interp);
 
-	//status = alifSys_create(_tState, &sysMod);
-	//if (ALIFSTATUS_EXCEPTION(status)) {
-	//	goto done;
-	//}
 
-	//status = alifCore_initBuiltins(_tState);
-	//if (ALIFSTATUS_EXCEPTION(status)) {
-	//	goto done;
-	//}
+
+
+	//alifSys_create(_tState, &sysMod);
+
+
+
+
+	//alifCore_initBuiltins(_tState);
+
+
+
 
 	const AlifConfig* config = alifInterpreterState_getConfig(interp);
 
-	//status = alifImport_initCore(_tState, sysMod, config->installImportLib);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		goto done;
-	}
+	//alifImport_initCore(_tState, sysMod, config->installImportLib);
 
-done:
-	//ALIF_XDECREF(sysMod);
-	return status;
+
+
+
+
+
+
 }
 
 
@@ -858,29 +859,27 @@ done:
 
 
 
-
-
-static AlifStatus alifInit_config(AlifRuntimeState* _runtime, AlifThreadState** _tStateP, const AlifConfig* _config)
+static void alifInit_config(AlifRuntimeState* _runtime, AlifThreadState** _tStateP, const AlifConfig* _config)
 {
-	AlifStatus status = alifCore_initRuntime(_runtime, _config);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+	alifCore_initRuntime(_runtime, _config);
+
+
+
 
 	AlifThreadState* tState{};
-	status = alifCore_createInterpreter(_runtime, _config, &tState);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+	alifCore_createInterpreter(_runtime, _config, &tState);
+
+
+
 	*_tStateP = tState;
 
-	status = alifCore_interpInit(tState);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+	alifCore_interpInit(tState);
+
+
+
 
 	_runtime->coreInitialized = 1;
-	return ALIFSTATUS_OK();
+
 }
 
 
@@ -888,89 +887,89 @@ static AlifStatus alifInit_config(AlifRuntimeState* _runtime, AlifThreadState** 
 
 
 
-AlifStatus alif_preInitializeFromAlifArgv(const AlifPreConfig* _srcConfig, const AlifArgv* _args)
+void alif_preInitializeFromAlifArgv(const AlifPreConfig* _srcConfig, const AlifArgv* _args)
 {
-	AlifStatus status{};
+
 
 	if (_srcConfig == nullptr) {
-		return ALIFSTATUS_ERR("preinitialization config is null");
+		std::cout << ("preinitialization config is null") << std::endl;
+		exit(-1);
 	}
 
-	//status = alifRuntime_initialize();
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
-	//AlifRuntimeState* runtime = &alifRuntime;
-
-	//if (runtime->preinitialized) {
-
-	//	return ALIFSTATUS_OK();
-	//}
-
-	//runtime->preinitializing = 1;
-
-	AlifPreConfig config{};
-
-	status = alifPreConfig_initFromPreConfig(&config, _srcConfig);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
-
-	status = alifPreConfig_read(&config, _args);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
-
-	status = alifPreConfig_write(&config);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
-
-	//runtime->preinitializing = 0;
-	//runtime->preinitialized = 1;
-	return ALIFSTATUS_OK();
-}
+	alifRuntime_initialize();
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-AlifStatus alif_preInitialize(const AlifPreConfig* _srcConfig)
-{
-	return alif_preInitializeFromAlifArgv(_srcConfig, nullptr);
-}
-
-
-
-AlifStatus alif_preInitializeFromConfig(const AlifConfig* _config, const AlifArgv* _args)
-{
-	//assert(_config != nullptr);
-
-	AlifStatus status = alifRuntime_initialize();
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
 	AlifRuntimeState* runtime = &alifRuntime;
 
 	if (runtime->preinitialized) {
 
-		return ALIFSTATUS_OK();
+		return;
+	}
+
+	runtime->preinitializing = 1;
+
+	AlifPreConfig config{};
+
+	alifPreConfig_initFromPreConfig(&config, _srcConfig);
+
+
+
+
+	alifPreConfig_read(&config, _args);
+
+
+
+
+	alifPreConfig_write(&config);
+
+
+
+
+	runtime->preinitializing = 0;
+	runtime->preinitialized = 1;
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void alif_preInitialize(const AlifPreConfig* _srcConfig)
+{
+	alif_preInitializeFromAlifArgv(_srcConfig, nullptr);
+}
+
+
+
+void alif_preInitializeFromConfig(const AlifConfig* _config, const AlifArgv* _args)
+{
+	//assert(_config != nullptr);
+
+	alifRuntime_initialize();
+
+
+
+	AlifRuntimeState* runtime = &alifRuntime;
+
+	if (runtime->preinitialized) {
+
+		return;
 	}
 
 	AlifPreConfig preConfig{};
@@ -1012,41 +1011,41 @@ AlifStatus alif_preInitializeFromConfig(const AlifConfig* _config, const AlifArg
 
 
 
-static AlifStatus alifInit_core(AlifRuntimeState* _runtime, const AlifConfig* _srcConfig, AlifThreadState** _tstateP)
+static void alifInit_core(AlifRuntimeState* _runtime, const AlifConfig* _srcConfig, AlifThreadState** _tstateP)
 {
-	AlifStatus status{};
 
-	status = alif_preInitializeFromConfig(_srcConfig, nullptr);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+
+	alif_preInitializeFromConfig(_srcConfig, nullptr);
+
+
+
 
 	AlifConfig config{};
 	alifConfig_initAlifConfig(&config);
 
-	status = alifConfig_copy(&config, _srcConfig);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		goto done;
-	}
+	alifConfig_copy(&config, _srcConfig);
 
-	status = alifConfig_read(&config, 0);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		goto done;
-	}
+
+
+
+	alifConfig_read(&config, 0);
+
+
+
 
 	if (!_runtime->coreInitialized) {
-		status = alifInit_config(_runtime, _tstateP, &config);
+		alifInit_config(_runtime, _tstateP, &config);
 	}
 	else {
-		status = alifInit_coreReconfigure(_runtime, _tstateP, &config);
-	}
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		goto done;
+		alifInit_coreReconfigure(_runtime, _tstateP, &config);
 	}
 
-done:
-	alifConfig_clear(&config);
-	return status;
+
+
+
+
+
+
 }
 
 
@@ -1059,66 +1058,69 @@ done:
 
 
 
-static AlifStatus alifInit_mainReconfigure(AlifThreadState* _tState)
+static void alifInit_mainReconfigure(AlifThreadState* _tState)
 {
 	if (interpreter_updateConfig(_tState, 0) < 0) {
-		return ALIFSTATUS_ERR("fail to reconfigure ALif");
+		std::cout << ("fail to reconfigure ALif") << std::endl;
+		exit(-1);
 	}
-	return ALIFSTATUS_OK();
+
 }
 
 
-
-static AlifStatus init_interpMain(AlifThreadState* _tState)
+static void init_interpMain(AlifThreadState* _tState)
 {
 	//assert(!alifErr_occurred(_tState));
 
-	AlifStatus status{};
-	//int isMainInterp = alif_isMainInterpreter(_tState->interp);
+
+	int isMainInterp = alif_isMainInterpreter(_tState->interp);
 	AlifInterpreterState* interp = _tState->interp;
 	const AlifConfig* config = alifInterpreterState_getConfig(interp);
 
 	if (!config->installImportLib) {
-		//if (isMainInterp) {
-		//	interp->runtime->initialized = 1;
-		//}
-		return ALIFSTATUS_OK();
+		if (isMainInterp) {
+			interp->runtime->initialized = 1;
+		}
+		return;
 	}
 
-	//status = alifConfig_initImportConfig(&interp->config);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+	//alifConfig_initImportConfig(&interp->config);
+
+
+
 
 	if (interpreter_updateConfig(_tState, 1) < 0) {
-		return ALIFSTATUS_ERR("failed to update the Alif config");
+		std::cout << ("failed to update the Alif config") << std::endl;
+		exit(-1);
 	}
 
-	//status = alifImport_initExternal(_tState);
-	//if (ALIFSTATUS_EXCEPTION(status)) {
-	//	return status;
-	//}
+	//alifImport_initExternal(_tState);
+
+
+
 
 	//if (isMainInterp) {
-	//	status = alifFaultHandler_init(config->faultHandler);
-	//	if (ALIFSTATUS_EXCEPTION(status)) {
-	//		return status;
-	//	}
+	//	alifFaultHandler_init(config->faultHandler);
+
+
+
 	//}
 
-	//status = alifUnicode_initEncodings(_tState);
-	//if (ALIFSTATUS_EXCEPTION(status)) {
-	//	return status;
-	//}
+	//alifUnicode_initEncodings(_tState);
+
+
+
 
 //	if (isMainInterp) {
 //		if (alifSignal_init(config->installSignalHandlers) < 0) {
-//			return ALIFSTATUS_ERR("can't initialize signals");
+//			std::cout << ("can't initialize signals") << std::endl;
+//			exit(-1);
 //		}
 //
 //		if (config->traceMalloc) {
 //			if (alifTraceMalloc_start(config->traceMalloc) < 0) {
-//				return ALIFSTATUS_ERR("can't start tracemalloc");
+//				std::cout << ("can't start tracemalloc") << std::endl;
+//				exit(-1);
 //			}
 //		}
 //
@@ -1126,26 +1128,27 @@ static AlifStatus init_interpMain(AlifThreadState* _tState)
 //		if (config->perfProfiling) {
 //			if (alifPerfTrampoline_setCallbacks(&alifPerfmapCallbacks) < 0 ||
 //				alifPerfTrampoline_init(config->perfProfiling) < 0) {
-//				return ALIFSTATUS_ERR("can't initialize the perf trampoline");
+//				std::cout << ("can't initialize the perf trampoline") << std::endl;
+//				exit(-1);
 //			}
 //		}
 //#endif
 //	}
 
-	//status = init_sysStreams(_tState);
-	//if (ALIFSTATUS_EXCEPTION(status)) {
-	//	return status;
-	//}
+	//init_sysStreams(_tState);
 
-	//status = initSet_builtinsOpen();
-	//if (ALIFSTATUS_EXCEPTION(status)) {
-	//	return status;
-	//}
 
-	//status = add_mainModule(interp);
-	//if (ALIFSTATUS_EXCEPTION(status)) {
-	//	return status;
-	//}
+
+
+	//initSet_builtinsOpen();
+
+
+
+
+	//add_mainModule(interp);
+
+
+
 
 	//if (isMainInterp) {
 	//	AlifObject* warnOptions = alifSys_getObject("warnoptions");
@@ -1163,10 +1166,10 @@ static AlifStatus init_interpMain(AlifThreadState* _tState)
 	//}
 
 	//if (config->siteImport) {
-	//	status = init_importSite();
-	//	if (ALIFSTATUS_EXCEPTION(status)) {
-	//		return status;
-	//	}
+	//	init_importSite();
+
+
+
 	//}
 
 //	if (isMainInterp) {
@@ -1184,7 +1187,8 @@ static AlifStatus init_interpMain(AlifThreadState* _tState)
 	//	if (enabled) {
 	//		AlifObject* opt = alifUnstableOptimizer_newUOpOptimizer();
 	//		if (opt == nullptr) {
-	//			return ALIFSTATUS_ERR("can't initialize optimizer");
+	//			std::cout << ("can't initialize optimizer") << std::endl;
+	//			exit(-1);
 	//		}
 	//		alifUnstable_setOptimizer((AlifOptimizerObject*)opt);
 	//		ALIF_DECREF(opt);
@@ -1193,7 +1197,7 @@ static AlifStatus init_interpMain(AlifThreadState* _tState)
 
 	//assert(!alifErr_occurred(_tState));
 
-	return ALIFSTATUS_OK();
+
 }
 
 
@@ -1213,57 +1217,52 @@ static AlifStatus init_interpMain(AlifThreadState* _tState)
 
 
 
-
-
-
-
-
-static AlifStatus alifInit_main(AlifThreadState* _tState)
+static void alifInit_main(AlifThreadState* _tState)
 {
 	AlifInterpreterState* interp = _tState->interp;
 	if (!interp->runtime->coreInitialized) {
-		return ALIFSTATUS_ERR("runtime core not initialized");
+		std::cout << ("runtime core not initialized") << std::endl;
+		exit(-1);
 	}
 
 	if (interp->runtime->initialized) {
 		return alifInit_mainReconfigure(_tState);
 	}
 
-	AlifStatus status = init_interpMain(_tState);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
-	return ALIFSTATUS_OK();
+	init_interpMain(_tState);
+
+
+
+
 }
 
-
-AlifStatus alif_initializeFromConfig(const AlifConfig* _config)
+void alif_initializeFromConfig(const AlifConfig* _config)
 {
 	if (_config == nullptr) {
-		return ALIFSTATUS_ERR("initialization config is nullptr");
+		std::cout << ("initialization config is nullptr") << std::endl;
+		exit(-1);
 	}
 
-	AlifStatus status;
 
-	status = alifRuntime_initialize();
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+
+	alifRuntime_initialize();
+
+
+
 	AlifRuntimeState* runtime = &alifRuntime;
 
 	AlifThreadState* tstate = nullptr;
-	status = alifInit_core(runtime, _config, &tstate);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+	alifInit_core(runtime, _config, &tstate);
+
+
+
 	_config = alifInterpreterState_getConfig(tstate->interp);
 
 	if (_config->initMain) {
-		status = alifInit_main(tstate);
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			return status;
-		}
+		alifInit_main(tstate);
+
+
+
 	}
 
-	return ALIFSTATUS_OK();
 }

@@ -2567,36 +2567,36 @@ static void clear_preInitEntries(AlifPreInitEntry* _optionList)
 
 
 
-AlifStatus alifSys_readPreInitWarnOptions(AlifWideStringList* _options)
+void alifSys_readPreInitWarnOptions(AlifWideStringList* _options)
 {
-	AlifStatus status{};
+
 	AlifPreInitEntry entry{};
 
 	for (entry = preInitWarnOptions; entry != nullptr; entry = entry->next) {
-		status = alifWideStringList_append(_options, entry->value);
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			return status;
-		}
+		alifWideStringList_append(_options, entry->value);
+
+
+
 	}
 
 	clear_preInitEntries(&preInitWarnOptions);
-	return ALIFSTATUS_OK();
+
 }
 
 
 
-AlifStatus alifSys_readPreInitXOptions(AlifConfig* _config)
+void alifSys_readPreInitXOptions(AlifConfig* _config)
 {
-	AlifStatus status{};
+
 	AlifPreInitEntry entry{};
 
 	for (entry = preInitXOptions; entry != nullptr; entry = entry->next) {
-		status = alifWideStringList_append(&_config->xOptions, entry->value);
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			return status;
-		}
+		alifWideStringList_append(&_config->xOptions, entry->value);
+
+
+
 	}
 
 	clear_preInitEntries(&preInitXOptions);
-	return ALIFSTATUS_OK();
+
 }

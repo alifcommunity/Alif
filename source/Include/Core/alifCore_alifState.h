@@ -27,7 +27,7 @@ static inline AlifInterpreterState* alifInterpreter_state_main()
 }
 
 
-static inline int alifIsMainInterpreter(AlifInterpreterState* _interp)
+static inline int alif_isMainInterpreter(AlifInterpreterState* _interp)
 {
 	return (_interp == alifInterpreter_state_main());
 }
@@ -145,7 +145,7 @@ extern AlifThreadState* alifThreadState_new(AlifInterpreterState*);
 
 
 
-extern AlifStatus alifInterpreterState_enable(AlifRuntimeState*);
+extern void alifInterpreterState_enable(AlifRuntimeState*);
 
 
 

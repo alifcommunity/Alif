@@ -33,8 +33,8 @@ extern void alif_initVersion();
 
 
 
-extern AlifStatus alifSys_readPreInitWarnOptions(AlifWideStringList*);
-extern AlifStatus alifSys_readPreInitXOptions(AlifConfig*);
+extern void alifSys_readPreInitWarnOptions(AlifWideStringList*);
+extern void alifSys_readPreInitXOptions(AlifConfig*);
 
 
 
@@ -63,16 +63,16 @@ extern AlifStatus alifSys_readPreInitXOptions(AlifConfig*);
 
 
 
-extern AlifStatus alifGILState_init(AlifInterpreterState*);
+extern void alifGILState_init(AlifInterpreterState*);
 
 
 
 
 
-extern AlifStatus alif_preInitializeFromAlifArgv(const AlifPreConfig*, const AlifArgv*);
+extern void alif_preInitializeFromAlifArgv(const AlifPreConfig*, const AlifArgv*);
 
 
-extern AlifStatus alif_preInitializeFromConfig(const AlifConfig*,const AlifArgv*);
+extern void alif_preInitializeFromConfig(const AlifConfig*,const AlifArgv*);
 
 
 

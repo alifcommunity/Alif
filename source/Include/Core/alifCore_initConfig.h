@@ -11,7 +11,7 @@
 
 
 
-/* ----- AlifStatus ------------------------------------------- */
+/* ----- void ------------------------------------------- */
 
 
 #ifdef _MSC_VER
@@ -21,20 +21,20 @@
 #  define ALIFSTATUS_GET_FUNC() __func__
 #endif
 
-#define ALIFSTATUS_OK() {.type = AlifStatus::AlifStatus_Type_Ok,}
+#define ALIFSTATUS_OK() {.type = void::AlifStatus_Type_Ok,}
 
 #define ALIFSTATUS_ERR(msg) { \
-        .type = AlifStatus::AlifStatus_Type_Error, \
+        .type = void::AlifStatus_Type_Error, \
         .func = ALIFSTATUS_GET_FUNC(), \
         .errMsg = (msg)}
 
 #define ALIFSTATUS_NO_MEMORY() ALIFSTATUS_ERR("memory allocation failed")
 #define ALIFSTATUS_EXIT(exit) { \
-        .type = AlifStatus::AlifStatus_Type_Exit, \
+        .type = void::AlifStatus_Type_Exit, \
         .exitcode = (exit)}
-#define ALIFSTATUS_IS_ERROR(err) (err.type == AlifStatus::AlifStatus_Type_Error)
-#define ALIFSTATUS_IS_EXIT(err) (err.type == AlifStatus::AlifStatus_Type_Exit)
-#define ALIFSTATUS_EXCEPTION(err) (err.type != AlifStatus::AlifStatus_Type_Ok)
+#define ALIFSTATUS_IS_ERROR(err) (err.type == void::AlifStatus_Type_Error)
+#define ALIFSTATUS_IS_EXIT(err) (err.type == void::AlifStatus_Type_Exit)
+#define ALIFSTATUS_EXCEPTION(err) (err.type != void::AlifStatus_Type_Ok)
 #define ALIFSTATUS_UPDATE_FUNC(err) do { err.func = ALIFSTATUS_GET_FUNC(); } while (0)
 
 
@@ -54,7 +54,7 @@
 extern void alifWideStringList_clear(AlifWideStringList*);
 extern int alifWideStringList_copy(AlifWideStringList*,const AlifWideStringList*);
 
-extern AlifStatus alifWideStringList_extend(AlifWideStringList *,const AlifWideStringList *);
+extern void alifWideStringList_extend(AlifWideStringList *,const AlifWideStringList *);
 
 
 
@@ -68,7 +68,7 @@ public:
 	char* const* bytesArgv;
 	wchar_t* const* wcharArgv;
 };
-extern AlifStatus alifArgv_asWstrList(const AlifArgv*, AlifWideStringList*);
+extern void alifArgv_asWstrList(const AlifArgv*, AlifWideStringList*);
 
 
 
@@ -113,10 +113,10 @@ public:
 extern void alifPreCmdline_clear(AlifPreCmdline*);
 
 
-extern AlifStatus alifPreCmdline_setConfig(const AlifPreCmdline*,AlifConfig*);
+extern void alifPreCmdline_setConfig(const AlifPreCmdline*,AlifConfig*);
 
 
-extern AlifStatus alifPreCmdline_read(AlifPreCmdline*, const AlifPreConfig*);
+extern void alifPreCmdline_read(AlifPreCmdline*, const AlifPreConfig*);
 
 
 
@@ -127,15 +127,15 @@ ALIFAPI_FUNC(void) alifPreConfig_initCompatConfig(AlifPreConfig*);
 extern void alifPreConfig_initFromConfig(AlifPreConfig*,const AlifConfig*);
 
 
-extern AlifStatus alifPreConfig_initFromPreConfig(AlifPreConfig*,const AlifPreConfig*);
+extern void alifPreConfig_initFromPreConfig(AlifPreConfig*,const AlifPreConfig*);
 
 
 
 extern void alifPreConfig_getConfig(AlifPreConfig*,const AlifConfig*);
 
-extern AlifStatus alifPreConfig_read(AlifPreConfig*,const AlifArgv*);
+extern void alifPreConfig_read(AlifPreConfig*,const AlifArgv*);
 
-extern AlifStatus alifPreConfig_write(const AlifPreConfig*);
+extern void alifPreConfig_write(const AlifPreConfig*);
 
 
 /* ----- AlifConfig ------------------------------------------- */
@@ -149,14 +149,14 @@ enum AlifConfigInitEnum {
 
 
 ALIFAPI_FUNC(void) alifConfig_initCompatConfig(AlifConfig*);
-extern AlifStatus alifConfig_copy(AlifConfig*, const AlifConfig*);
+extern void alifConfig_copy(AlifConfig*, const AlifConfig*);
 
 
 
 
 
 
-extern AlifStatus alifConfig_read(AlifConfig*, int);
-extern AlifStatus alifConfig_write(const AlifConfig*, class AlifRuntimeState*); // تم إضافة class ليعمل البرنامج
+extern void alifConfig_read(AlifConfig*, int);
+extern void alifConfig_write(const AlifConfig*, class AlifRuntimeState*); // تم إضافة class ليعمل البرنامج
 
-extern AlifStatus alifConfig_setAlifArgv(AlifConfig*, const AlifArgv*);
+extern void alifConfig_setAlifArgv(AlifConfig*, const AlifArgv*);

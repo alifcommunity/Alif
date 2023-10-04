@@ -419,10 +419,9 @@ static int alloc_forRuntime(AlifThreadTypeLock _locks[NUMLOCKS])
 
 
 static void init_runtime(AlifRuntimeState* _runtime,
-	void* _openCodeHook, void* _openCodeUserdata,
-	void* _auditHookHead,
-	AlifSizeT _unicodeNextIndex,
-	AlifThreadTypeLock _locks[NUMLOCKS])
+	////void* _openCodeHook, void* _openCodeUserdata,
+	////void* _auditHookHead,
+	AlifSizeT _unicodeNextIndex, AlifThreadTypeLock _locks[NUMLOCKS])
 {
 	if (_runtime->initialized) {
 		// runtime already initialized
@@ -432,9 +431,9 @@ static void init_runtime(AlifRuntimeState* _runtime,
 
 
 
-	//_runtime->openCodeHook = _openCodeHook;
-	_runtime->openCodeUserdata = _openCodeUserdata;
-	//_runtime->auditHooks.head = _auditHookHead;
+	////_runtime->openCodeHook = _openCodeHook;
+	////_runtime->openCodeUserdata = _openCodeUserdata;
+	////_runtime->auditHooks.head = _auditHookHead;
 
 	alifPreConfig_initAlifConfig(&_runtime->preConfig);
 
@@ -453,22 +452,22 @@ static void init_runtime(AlifRuntimeState* _runtime,
 }
 
 
-AlifStatus alifRuntimeState_init(AlifRuntimeState* _runtime)
+void alifRuntimeState_init(AlifRuntimeState* _runtime)
 {
 
 
 
-	//void* openCodeHook = _runtime->openCodeHook;
-	void* openCodeUserdata = _runtime->openCodeUserdata;
-	//AlifAuditHookEntry* auditHookHead = _runtime->auditHooks.head;
+
+
+
 
 
 	//AlifSizeT unicodeNextIndex = _runtime->unicodeState.IDs.nextIndex;
 
 	AlifThreadTypeLock locks[NUMLOCKS];
-	if (alloc_forRuntime(locks) != 0) {
-		return ALIFSTATUS_NO_MEMORY();
-	}
+	alloc_forRuntime(locks);
+
+
 
 	if (_runtime->initialized) {
 
@@ -477,57 +476,54 @@ AlifStatus alifRuntimeState_init(AlifRuntimeState* _runtime)
 	}
 
 	if (GILSTATE_TSS_INIT(_runtime) != 0) {
-		alifRuntimeState_fini(_runtime);
-		return ALIFSTATUS_NO_MEMORY();
+		//alifRuntimeState_fini(_runtime);
+		exit(-1);
 	}
 
 	if (alifThread_tssCreate(&_runtime->trashTSSKey) != 0) {
-		alifRuntimeState_fini(_runtime);
-		return ALIFSTATUS_NO_MEMORY();
+		//alifRuntimeState_fini(_runtime);
+		exit(-1);
 	}
 
-	init_runtime(_runtime, nullptr, openCodeUserdata, nullptr,
-		0, locks);
-
-	return ALIFSTATUS_OK();
-}
+	init_runtime(_runtime, 0, locks);
 
 
-void alifRuntimeState_fini(AlifRuntimeState* _runtime)
-{
-
-
-
-
-
-	if (GILSTATE_TSS_INITIALIZED(_runtime)) {
-		GILSTATE_TSS_FINI(_runtime);
-	}
-
-	if (alifThread_tssIsCreated(&_runtime->trashTSSKey)) {
-		alifThread_tssDelete(&_runtime->trashTSSKey);
-	}
-
-
-	AlifMemAllocatorEx old_alloc;
-	alifMem_setDefaultAllocator(AlifMem_Domain_Raw, &old_alloc);
-#define FREE_LOCK(LOCK) \
-    if (LOCK != NULL) { \
-        alifThread_freeLock(LOCK); \
-        LOCK = NULL; \
-    }
-
-	AlifThreadTypeLock* lockptrs[NUMLOCKS] = LOCKS_INIT(_runtime);
-	for (int i = 0; i < NUMLOCKS; i++) {
-		FREE_LOCK(*lockptrs[i]);
-	}
-
-#undef FREE_LOCK
-	alifMem_setAllocator(AlifMem_Domain_Raw, &old_alloc);
 }
 
 
 
+//void alifRuntimeState_fini(AlifRuntimeState* _runtime)
+//{
+//
+//
+//
+//
+//
+//	if (GILSTATE_TSS_INITIALIZED(_runtime)) {
+//		GILSTATE_TSS_FINI(_runtime);
+//	}
+//
+//	if (alifThread_tssIsCreated(&_runtime->trashTSSKey)) {
+//		alifThread_tssDelete(&_runtime->trashTSSKey);
+//	}
+//
+//
+//	AlifMemAllocatorEx old_alloc;
+//	alifMem_setDefaultAllocator(AlifMem_Domain_Raw, &old_alloc);
+//#define FREE_LOCK(LOCK) \
+//    if (LOCK != NULL) { \
+//        alifThread_freeLock(LOCK); \
+//        LOCK = NULL; \
+//    }
+//
+//	AlifThreadTypeLock* lockptrs[NUMLOCKS] = LOCKS_INIT(_runtime);
+//	for (int i = 0; i < NUMLOCKS; i++) {
+//		FREE_LOCK(*lockptrs[i]);
+//	}
+//
+//#undef FREE_LOCK
+//	alifMem_setAllocator(AlifMem_Domain_Raw, &old_alloc);
+//}
 
 
 
@@ -584,7 +580,10 @@ void alifRuntimeState_fini(AlifRuntimeState* _runtime)
 
 
 
-AlifStatus alifInterpreterState_enable(AlifRuntimeState* _runtime)
+
+
+
+void alifInterpreterState_enable(AlifRuntimeState* _runtime)
 {
 	AlifRuntimeState::AlifInterpreters* interpreters = &_runtime->alifInterpreters;
 	interpreters->nextID = 0;
@@ -598,13 +597,13 @@ AlifStatus alifInterpreterState_enable(AlifRuntimeState* _runtime)
 		alifMem_setAllocator(AlifMem_Domain_Raw, &oldAlloc);
 
 		if (interpreters->mutex == nullptr) {
-			return ALIFSTATUS_ERR("Can't initialize threads for interpreter");
+			std::cout << ("Can't initialize threads for interpreter") << std::endl;
+			exit(-1);
 		}
 	}
 
-	return ALIFSTATUS_OK();
-}
 
+}
 
 
 
@@ -2056,16 +2055,16 @@ AlifInterpreterState* alifInterpreterState_next(AlifInterpreterState* _interp) {
 
 
 
-AlifStatus alifGILState_init(AlifInterpreterState* _interp)
+void alifGILState_init(AlifInterpreterState* _interp)
 {
 	//if (!alif_isMainInterpreter(_interp)) {
-	//	return ALIFSTATUS_OK();
+	//	return;
 	//}
 	AlifRuntimeState* runtime = _interp->runtime;
 	//assert(GILSTATE_TSS_GET(runtime) == nullptr);
 	//assert(runtime->gilstate.autoInterpreterState == nullptr);
 	//runtime->gilstate.autoInterpreterState = _interp;
-	return ALIFSTATUS_OK();
+
 }
 
 

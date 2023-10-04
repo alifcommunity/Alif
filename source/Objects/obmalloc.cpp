@@ -854,7 +854,7 @@ typedef class ObmallocState OMState;
 
 static inline int has_own_state(AlifInterpreterState* _interp)
 {
-	return (alifIsMainInterpreter(_interp) |
+	return (alif_isMainInterpreter(_interp) |
 		!(_interp->featureFlags & ALIFRTFLAGS_USEMAIN_OBMALLOC) |
 		alifisMainInterpreterFinalizing(_interp));
 }
