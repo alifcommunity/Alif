@@ -75,14 +75,14 @@ static void preConfig_copy(AlifPreConfig*, const AlifPreConfig*);
 
 
 
-AlifStatus alifArgv_asWstrList(const AlifArgv* _args, AlifWideStringList* _list)
+void alifArgv_asWstrList(const AlifArgv* _args, AlifWideStringList* _list)
 {
 	AlifWideStringList wargv = ALIFWIDESTRINGLIST_INIT;
 	if (_args->useBytesArgv) {
 		size_t size = sizeof(wchar_t*)* _args->argc;
 		wargv.items = (wchar_t**)alifMem_rawMalloc(size);
 		if (wargv.items == nullptr) {
-			return ALIFSTATUS_NO_MEMORY();
+			exit(-1);
 		}
 
 		for (AlifSizeT i = 0; i < _args->argc; i++) {
@@ -91,7 +91,7 @@ AlifStatus alifArgv_asWstrList(const AlifArgv* _args, AlifWideStringList* _list)
 			if (arg == nullptr) {
 				alifWideStringList_clear(&wargv);
 				//return DECODE_LOCALE_ERR("command line arguments", len);
-				if (len == (size_t)-2) return  ALIFSTATUS_ERR("cannot decode command line arguments"); else return ALIFSTATUS_NO_MEMORY();
+				if (len == (size_t)-2) std::cout << ("cannot decode command line arguments") << std::endl; else exit(-1);
 			}
 			wargv.items[i] = arg;
 			wargv.length++;
@@ -104,10 +104,10 @@ AlifStatus alifArgv_asWstrList(const AlifArgv* _args, AlifWideStringList* _list)
 		wargv.length = _args->argc;
 		wargv.items = (wchar_t**)_args->wcharArgv;
 		if (alifWideStringList_copy(_list, &wargv) < 0) {
-			return ALIFSTATUS_NO_MEMORY();
+			exit(-1);
 		}
 	}
-	return ALIFSTATUS_OK();
+
 }
 
 
@@ -158,21 +158,21 @@ static void preCmdline_getPreConfig(AlifPreCmdline* _cmdline, const AlifPreConfi
 
 
 
-AlifStatus alifPreCmdline_setConfig(const AlifPreCmdline* cmdline, AlifConfig* config)
+void alifPreCmdline_setConfig(const AlifPreCmdline* cmdline, AlifConfig* config)
 {
 #define COPY_ATTR(ATTR) \
     config->ATTR = cmdline->ATTR
 
-	AlifStatus status = alifWideStringList_extend(&config->xOptions, &cmdline->xOptions);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+	alifWideStringList_extend(&config->xOptions, &cmdline->xOptions);
+
+
+
 
 	COPY_ATTR(isolated);
 	COPY_ATTR(useEnvironment);
 	COPY_ATTR(devMode);
 	COPY_ATTR(warnDefaultEncoding);
-	return ALIFSTATUS_OK();
+
 
 #undef COPY_ATTR
 }
@@ -180,7 +180,7 @@ AlifStatus alifPreCmdline_setConfig(const AlifPreCmdline* cmdline, AlifConfig* c
 
 
 
-static AlifStatus preCmdline_parseCmdline(AlifPreCmdline* _cmdline)
+static void preCmdline_parseCmdline(AlifPreCmdline* _cmdline)
 {
 	const AlifWideStringList* argv = &_cmdline->argv;
 
@@ -206,10 +206,10 @@ static AlifStatus preCmdline_parseCmdline(AlifPreCmdline* _cmdline)
 
 		case 'X':
 		{
-			AlifStatus status = alifWideStringList_append(&_cmdline->xOptions, alifOSOptArg);
-			if (ALIFSTATUS_EXCEPTION(status)) {
-				return status;
-			}
+			alifWideStringList_append(&_cmdline->xOptions, alifOSOptArg);
+
+
+
 			break;
 		}
 
@@ -218,7 +218,7 @@ static AlifStatus preCmdline_parseCmdline(AlifPreCmdline* _cmdline)
 		}
 	} while (1);
 
-	return ALIFSTATUS_OK();
+
 }
 
 
@@ -227,15 +227,15 @@ static AlifStatus preCmdline_parseCmdline(AlifPreCmdline* _cmdline)
 
 
 
-AlifStatus alifPreCmdline_read(AlifPreCmdline* _cmdline, const AlifPreConfig* _preConfig)
+void alifPreCmdline_read(AlifPreCmdline* _cmdline, const AlifPreConfig* _preConfig)
 {
 	preCmdline_getPreConfig(_cmdline, _preConfig);
 
 	if (_preConfig->parseArgv) {
-		AlifStatus status = preCmdline_parseCmdline(_cmdline);
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			return status;
-		}
+		preCmdline_parseCmdline(_cmdline);
+
+
+
 	}
 
 	if (_cmdline->isolated < 0) {
@@ -270,7 +270,7 @@ AlifStatus alifPreCmdline_read(AlifPreCmdline* _cmdline, const AlifPreConfig* _p
 	//assert(_cmdline->devMode >= 0);
 	//assert(_cmdline->warnDefaultEncoding >= 0);
 
-	return ALIFSTATUS_OK();
+
 }
 
 
@@ -346,11 +346,11 @@ void alifPreConfig_initIsolatedConfig(AlifPreConfig* _config)
 
 
 
-AlifStatus alifPreConfig_initFromPreConfig(AlifPreConfig* _config, const AlifPreConfig* _config2)
+void alifPreConfig_initFromPreConfig(AlifPreConfig* _config, const AlifPreConfig* _config2)
 {
 	alifPreConfig_initAlifConfig(_config);
 	preConfig_copy(_config, _config2);
-	return ALIFSTATUS_OK();
+
 }
 
 
@@ -794,39 +794,39 @@ const wchar_t* alif_getXOption(const AlifWideStringList* _xOptions, const wchar_
 
 
 
-AlifStatus alifPreConfig_read(AlifPreConfig* _config, const AlifArgv* _args)
+void alifPreConfig_read(AlifPreConfig* _config, const AlifArgv* _args)
 {
-	AlifStatus status{};
 
-	//status = alifRuntime_initialize();
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+
+	alifRuntime_initialize();
+
+
+
 
 	preConfig_getGlobalVars(_config);
 
 	const char* loc = setlocale(LC_CTYPE, nullptr);
 	if (loc == nullptr) {
-		return ALIFSTATUS_ERR("failed to LC_CTYPE locale");
+		std::cout << ("failed to LC_CTYPE locale") << std::endl; exit(-1);
 	}
 	//char* initCTypeLocale = alifMem_rawStrdup(loc);
 	//if (initCTypeLocale == nullptr) {
-	//	return ALIFSTATUS_NO_MEMORY();
+	//	exit(-1);
 	//}
 
 	AlifPreConfig saveConfig{};
 
-	status = alifPreConfig_initFromPreConfig(&saveConfig, _config);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+	alifPreConfig_initFromPreConfig(&saveConfig, _config);
+
+
+
 
 	//if (_config->configureLocale) {
 	//	alif_setLocaleFromEnv(LC_CTYPE);
 	//}
 
 	AlifPreConfig saveRuntimeConfig{};
-	//preConfig_copy(&saveRuntimeConfig, &alifRuntime.preConfig);
+	preConfig_copy(&saveRuntimeConfig, &alifRuntime.preConfig);
 
 	//AlifPreCmdline cmdline = ALIFPRECMDLINE_INIT;
 	int localeCoerced = 0;
@@ -837,24 +837,24 @@ AlifStatus alifPreConfig_read(AlifPreConfig* _config, const AlifArgv* _args)
 
 		loops++;
 		if (loops == 3) {
-			status = ALIFSTATUS_ERR("Encoding changed twice while "
-				"reading the configuration");
-			goto done;
+			std::cout << ("Encoding changed twice while "
+				"reading the configuration") << std::endl; exit(-1);
+
 		}
 
-		//preConfig_copy(&alifRuntime.preConfig, _config);
+		preConfig_copy(&alifRuntime.preConfig, _config);
 
 		if (_args) {
-			//status = alifPreCmdline_setArgv(&cmdline, _args);
-			if (ALIFSTATUS_EXCEPTION(status)) {
-				goto done;
-			}
+			//alifPreCmdline_setArgv(&cmdline, _args);
+
+
+
 		}
 
-		//status = preConfig_read(_config, &cmdline);
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			goto done;
-		}
+		//preConfig_read(_config, &cmdline);
+
+
+
 
 		int encoding_changed = 0;
 		if (_config->coerceCLocale && !localeCoerced) {
@@ -884,14 +884,14 @@ AlifStatus alifPreConfig_read(AlifPreConfig* _config, const AlifArgv* _args)
 		_config->utf8Mode = newUtf8Mode;
 		_config->coerceCLocale = newCoerceCLocale;
 	}
-	status = ALIFSTATUS_OK();
 
-done:
+
+//done:
 	//setlocale(LC_CTYPE, initCTypeLocale);
 	//alifMem_rawFree(initCTypeLocale);
 	//preConfig_copy(&alifRuntime.preconfig, &saveRuntimeConfig);
 	//alifPreCmdline_clear(&cmdline);
-	return status;
+
 }
 
 
@@ -934,23 +934,23 @@ done:
 
 
 
-AlifStatus alifPreConfig_write(const AlifPreConfig* _srcConfig)
+void alifPreConfig_write(const AlifPreConfig* _srcConfig)
 {
 	AlifPreConfig config{};
 
-	AlifStatus status = alifPreConfig_initFromPreConfig(&config, _srcConfig);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+	alifPreConfig_initFromPreConfig(&config, _srcConfig);
+
+
+
 
 	//if (alifRuntime.coreInitialized) {
-	//	return ALIFSTATUS_OK();
+	//	return ;
 	//}
 
 	AlifMemAllocatorName name = (AlifMemAllocatorName)config.allocator;
 	if (name != AlifMem_Allocator_NotSet) {
 		//if (alifMem_setupAllocators(name) < 0) {
-		//	return ALIFSTATUS_ERR("Unknown ALIFMALLOC allocator");
+		//	std::cout << ("Unknown ALIFMALLOC allocator") << std::endl; exit(-1);
 		//}
 	}
 
@@ -966,9 +966,9 @@ AlifStatus alifPreConfig_write(const AlifPreConfig* _srcConfig)
 		alif_setLocaleFromEnv(LC_CTYPE);
 	}
 
-	//preConfig_copy(&alifRuntime.preConfig, &config);
+	preConfig_copy(&alifRuntime.preConfig, &config);
 
-	return ALIFSTATUS_OK();
+
 }
 
 

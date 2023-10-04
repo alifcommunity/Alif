@@ -419,15 +419,15 @@ int alifWideStringList_copy(AlifWideStringList* _list, const AlifWideStringList*
 
 
 
-AlifStatus alifWideStringList_insert(AlifWideStringList* _list, AlifSizeT _index, const wchar_t* _item)
+void alifWideStringList_insert(AlifWideStringList* _list, AlifSizeT _index, const wchar_t* _item)
 {
 	AlifSizeT len = _list->length;
 	if (len == ALIFSIZE_T_MAX) {
 		/* length+1 would overflow */
-		return ALIFSTATUS_NO_MEMORY();
+		exit(-1);
 	}
 	if (_index < 0) {
-		return ALIFSTATUS_ERR("alifWideStringList_insert index must be >= 0");
+		std::cout << ("alifWideStringList_insert index must be >= 0") << std::endl; exit(-1);
 	}
 	if (_index > len) {
 		_index = len;
@@ -435,14 +435,14 @@ AlifStatus alifWideStringList_insert(AlifWideStringList* _list, AlifSizeT _index
 
 	wchar_t* item2 = alifMem_rawWcsDup(_item);
 	if (item2 == nullptr) {
-		return ALIFSTATUS_NO_MEMORY();
+		exit(-1);
 	}
 
 	size_t size = (len + 1) * sizeof(_list->items[0]);
 	wchar_t** items2 = (wchar_t**)alifMem_rawRealloc(_list->items, size);
 	if (items2 == nullptr) {
 		alifMem_rawFree(item2);
-		return ALIFSTATUS_NO_MEMORY();
+		exit(-1);
 	}
 
 	if (_index < len) {
@@ -454,28 +454,28 @@ AlifStatus alifWideStringList_insert(AlifWideStringList* _list, AlifSizeT _index
 	items2[_index] = item2;
 	_list->items = items2;
 	_list->length++;
-	return ALIFSTATUS_OK();
+
 }
 
 
 
 
-AlifStatus alifWideStringList_append(AlifWideStringList* _list, const wchar_t* _item)
+void alifWideStringList_append(AlifWideStringList* _list, const wchar_t* _item)
 {
-	return alifWideStringList_insert(_list, _list->length, _item);
+	alifWideStringList_insert(_list, _list->length, _item);
 }
 
 
 
-AlifStatus alifWideStringList_extend(AlifWideStringList* _list, const AlifWideStringList* _list2)
+void alifWideStringList_extend(AlifWideStringList* _list, const AlifWideStringList* _list2)
 {
 	for (AlifSizeT i = 0; i < _list2->length; i++) {
-		AlifStatus status = alifWideStringList_append(_list, _list2->items[i]);
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			return status;
-		}
+		alifWideStringList_append(_list, _list2->items[i]);
+
+
+
 	}
-	return ALIFSTATUS_OK();
+
 }
 
 
@@ -775,18 +775,18 @@ void alifConfig_initAlifConfig(AlifConfig* _config)
 
 
 
-AlifStatus alifConfig_setString(AlifConfig* _config, wchar_t** _configStr, const wchar_t* _str)
+void alifConfig_setString(AlifConfig* _config, wchar_t** _configStr, const wchar_t* _str)
 {
-	AlifStatus status = alif_preInitializeFromConfig(_config, nullptr);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+	alif_preInitializeFromConfig(_config, nullptr);
+
+
+
 
 	wchar_t* str2;
 	if (_str != nullptr) {
 		str2 = alifMem_rawWcsDup(_str);
 		if (str2 == nullptr) {
-			return ALIFSTATUS_NO_MEMORY();
+			exit(-1);
 		}
 	}
 	else {
@@ -794,7 +794,7 @@ AlifStatus alifConfig_setString(AlifConfig* _config, wchar_t** _configStr, const
 	}
 	alifMem_rawFree(*_configStr);
 	*_configStr = str2;
-	return ALIFSTATUS_OK();
+
 }
 
 
@@ -841,24 +841,24 @@ AlifStatus alifConfig_setString(AlifConfig* _config, wchar_t** _configStr, const
 
 
 
-AlifStatus alifConfig_copy(AlifConfig* _config, const AlifConfig* _config2)
+void alifConfig_copy(AlifConfig* _config, const AlifConfig* _config2)
 {
-	AlifStatus status{};
+
 
 	alifConfig_clear(_config);
 
 #define COPY_ATTR(ATTR) _config->ATTR = _config2->ATTR
 #define COPY_WSTR_ATTR(ATTR) \
     do { \
-        status = alifConfig_setString(_config, &_config->ATTR, _config2->ATTR); \
-        if (ALIFSTATUS_EXCEPTION(status)) { \
-            return status; \
-        } \
-    } while (0)
+        alifConfig_setString(_config, &_config->ATTR, _config2->ATTR); \
+		\
+		\
+		\
+	} while (0)
 #define COPY_WSTRLIST(LIST) \
     do { \
         if (alifWideStringList_copy(&_config->LIST, &_config2->LIST) < 0) { \
-            return ALIFSTATUS_NO_MEMORY(); \
+            exit(-1); \
         } \
     } while (0)
 
@@ -937,7 +937,7 @@ AlifStatus alifConfig_copy(AlifConfig* _config, const AlifConfig* _config2)
 #undef COPY_ATTR
 #undef COPY_WSTR_ATTR
 #undef COPY_WSTRLIST
-	return ALIFSTATUS_OK();
+
 }
 
 
@@ -1358,32 +1358,32 @@ static const char* config_getEnv(const AlifConfig* _config, const char* _name)
 
 
 
-static AlifStatus configGet_envDup(AlifConfig* _config, wchar_t** _dest, const wchar_t* _wname, const char* _name, const char* _decodeErrMsg)
+static void configGet_envDup(AlifConfig* _config, wchar_t** _dest, const wchar_t* _wname, const char* _name, const char* _decodeErrMsg)
 { // تم تعديل الانوع الممررة بسبب تمرير نصوص ثابتة
 	//assert(*_dest == nullptr);
 	//assert(_config->useEnvironment >= 0);
 
 	if (!_config->useEnvironment) {
 		*_dest = nullptr;
-		return ALIFSTATUS_OK();
+		return;
 	}
 
 #ifdef MS_WINDOWS
 	const wchar_t* var = _wgetenv(_wname);
 	if (!var || var[0] == '\0') {
 		*_dest = nullptr;
-		return ALIFSTATUS_OK();
+		return;
 	}
 
-	return alifConfig_setString(_config, _dest, var);
+	alifConfig_setString(_config, _dest, var);
 #else
 	const char* var = getenv(_name);
 	if (!var || var[0] == '\0') {
 		*_dest = nullptr;
-		return ALIFSTATUS_OK();
+		return;
 	}
 
-	return configSet_bytesString(_config, _dest, _var, _decodeErrMsg);
+	configSet_bytesString(_config, _dest, _var, _decodeErrMsg);
 #endif
 }
 
@@ -1503,7 +1503,7 @@ static const wchar_t* config_getXOption(const AlifConfig* _config, const  wchar_
 
 
 
-static AlifStatus configInit_hashSeed(AlifConfig* _config)
+static void configInit_hashSeed(AlifConfig* _config)
 {
 	//static_assert(sizeof(AlifHashSecretT) == sizeof(AlifHashSecret.uc),
 	//	"AlifHashSecretT has wrong size");
@@ -1520,8 +1520,8 @@ static AlifStatus configInit_hashSeed(AlifConfig* _config)
 			|| seed > MAX_HASH_SEED
 			|| (errno == ERANGE && seed == ULONG_MAX))
 		{
-			return ALIFSTATUS_ERR("ALIFHASHSEED must be \"random\" "
-				"or an integer in range [0; 4294967295]");
+			std::cout << ("ALIFHASHSEED must be \"random\" "
+				"or an integer in range [0; 4294967295]") << std::endl; exit(-1);
 		}
 
 		_config->useHashSeed = 1;
@@ -1532,7 +1532,7 @@ static AlifStatus configInit_hashSeed(AlifConfig* _config)
 		_config->useHashSeed = 0;
 		_config->hashSeed = 0;
 	}
-	return ALIFSTATUS_OK();
+
 }
 
 
@@ -1556,9 +1556,9 @@ static AlifStatus configInit_hashSeed(AlifConfig* _config)
 
 
 
-static AlifStatus configRead_envVars(AlifConfig* _config)
+static void configRead_envVars(AlifConfig* _config)
 {
-	AlifStatus status{};
+
 	int useEnv = _config->useEnvironment;
 
 	/* Get environment variables */
@@ -1597,41 +1597,41 @@ static AlifStatus configRead_envVars(AlifConfig* _config)
 	}
 
 	if (_config->dumpRefsFile == nullptr) {
-		status = CONFIG_GETENV_DUP(_config, &_config->dumpRefsFile,
+		CONFIG_GETENV_DUP(_config, &_config->dumpRefsFile,
 			L"ALIFDUMPREFSFILE", "ALIFDUMPREFSFILE");
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			return status;
-		}
+
+
+
 	}
 
 	if (_config->alifPathEnv == nullptr) {
-		status = CONFIG_GETENV_DUP(_config, &_config->alifPathEnv,
+		CONFIG_GETENV_DUP(_config, &_config->alifPathEnv,
 			L"ALIFPATH", "ALIFPATH");
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			return status;
-		}
+
+
+
 	}
 
 	if (_config->platLibDir == nullptr) {
-		status = CONFIG_GETENV_DUP(_config, &_config->platLibDir,
+		CONFIG_GETENV_DUP(_config, &_config->platLibDir,
 			L"ALIFPLATLIBDIR", "ALIFPLATLIBDIR");
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			return status;
-		}
+
+
+
 	}
 
 	if (_config->useHashSeed < 0) {
-		status = configInit_hashSeed(_config);
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			return status;
-		}
+		configInit_hashSeed(_config);
+
+
+
 	}
 
 	if (config_getEnv(_config, "ALIFSAFEPATH")) {
 		_config->safePath = 1;
 	}
 
-	return ALIFSTATUS_OK();
+
 }
 
 
@@ -1775,7 +1775,7 @@ static AlifStatus configRead_envVars(AlifConfig* _config)
 
 
 
-static AlifStatus configRead_complexOptions(AlifConfig* _config)
+static void configRead_complexOptions(AlifConfig* _config)
 {
 	if (_config->faultHandler < 0) {
 		if (config_getEnv(_config, "ALIFFAULTHANDLER")
@@ -1793,35 +1793,35 @@ static AlifStatus configRead_complexOptions(AlifConfig* _config)
 		_config->codeDebugRanges = 0;
 	}
 
-	AlifStatus status{};
+
 	if (_config->traceMalloc < 0) {
-		//status = config_initTraceMalloc(_config);
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			return status;
-		}
+		//config_initTraceMalloc(_config);
+
+
+
 	}
 
 	if (_config->perfProfiling < 0) {
-		//status = config_initPerfProfiling(_config);
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			return status;
-		}
+		//config_initPerfProfiling(_config);
+
+
+
 	}
 
 	if (_config->intMaxStrDigits < 0) {
-		//status = configInit_intMaxStrDigits(_config);
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			return status;
-		}
+		//configInit_intMaxStrDigits(_config);
+
+
+
 	}
 
 	if (_config->alifCachePrefix == nullptr) {
-		//status = config_initAlifCachePrefix(_config);
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			return status;
-		}
+		//config_initAlifCachePrefix(_config);
+
+
+
 	}
-	return ALIFSTATUS_OK();
+
 }
 
 
@@ -1880,19 +1880,18 @@ static AlifStatus configRead_complexOptions(AlifConfig* _config)
 
 
 
-static AlifStatus config_initStdioEncoding(AlifConfig* _config, const AlifPreConfig* _preConfig)
+static void config_initStdioEncoding(AlifConfig* _config, const AlifPreConfig* _preConfig)
 {
-	AlifStatus status{};
 
 	if (_config->stdioEncoding != nullptr && _config->stdioErrors != nullptr) {
-		return ALIFSTATUS_OK();
+		return;
 	}
 
 	const char* opt = config_getEnv(_config, "ALIFIOENCODING");
 	if (opt) {
 		//char* alifNioEncoding = alifMem_rawStrDup(opt);
 		//if (alifNioEncoding == nullptr) {
-		//	return ALIFSTATUS_NO_MEMORY();
+		//	exit(-1);
 		//}
 
 		//char* errors = strchr(alifNioEncoding, ':');
@@ -1909,10 +1908,10 @@ static AlifStatus config_initStdioEncoding(AlifConfig* _config, const AlifPreCon
 		//		status = CONFIGSET_BYTESSTR(_config, &_config->stdioEncoding,
 		//			alifNioEncoding,
 		//			"ALIFNIOENCODING environment variable");
-		//		if (ALIFSTATUS_EXCEPTION(status)) {
-		//			alifMem_rawFree(alifNioEncoding);
-		//			return status;
-		//		}
+
+
+
+
 		//	}
 
 		//	if (!errors) {
@@ -1924,33 +1923,33 @@ static AlifStatus config_initStdioEncoding(AlifConfig* _config, const AlifPreCon
 		//	status = CONFIGSET_BYTESSTR(_config, &_config->stdioErrors,
 		//		errors,
 		//		"ALIFIOENCODING environment variable");
-		//	if (ALIFSTATUS_EXCEPTION(status)) {
-		//		alifMem_rawFree(alifNioEncoding);
-		//		return status;
-		//	}
+
+
+
+
 		//}
 
 		//alifMem_rawFree(alifNioEncoding);
 	}
 
 	//if (_config->stdioEncoding == nullptr) {
-	//	status = config_getLocaleEncoding(_config, _preConfig,
+	//	config_getLocaleEncoding(_config, _preConfig,
 	//		&_config->stdioEncoding);
-	//	if (ALIFSTATUS_EXCEPTION(status)) {
-	//		return status;
-	//	}
+
+
+
 	//}
 	//if (_config->stdioErrors == nullptr) {
 	//	const wchar_t* errors = configGet_stdioErrors(_preConfig);
 	//	assert(errors != nullptr);
 
-	//	status = alifConfig_setString(_config, &_config->stdioErrors, errors);
-	//	if (ALIFSTATUS_EXCEPTION(status)) {
-	//		return status;
-	//	}
+	//	alifConfig_setString(_config, &_config->stdioErrors, errors);
+
+
+
 	//}
 
-	return ALIFSTATUS_OK();
+
 }
 
 
@@ -1996,15 +1995,15 @@ static AlifStatus config_initStdioEncoding(AlifConfig* _config, const AlifPreCon
 
 
 
-static AlifStatus config_initFSEncoding(AlifConfig* _config, const AlifPreConfig* _preConfig)
+static void config_initFSEncoding(AlifConfig* _config, const AlifPreConfig* _preConfig)
 {
-	AlifStatus status{};
+
 
 	if (_config->fileSystemEncoding == nullptr) {
-		//status = config_getFSEncoding(_config, _preConfig, &_config->fileSystemEncoding);
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			return status;
-		}
+		//config_getFSEncoding(_config, _preConfig, &_config->fileSystemEncoding);
+
+
+
 	}
 
 	if (_config->fileSystemErrors == nullptr) {
@@ -2019,25 +2018,25 @@ static AlifStatus config_initFSEncoding(AlifConfig* _config, const AlifPreConfig
 #else
 		errors = L"surrogateEscape";
 #endif
-		status = alifConfig_setString(_config, &_config->fileSystemErrors, errors);
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			return status;
-		}
+		alifConfig_setString(_config, &_config->fileSystemErrors, errors);
+
+
+
 	}
-	return ALIFSTATUS_OK();
+
 }
 
 
 
 
-static AlifStatus config_initImport(AlifConfig* _config, int _computePathConfig)
+static void config_initImport(AlifConfig* _config, int _computePathConfig)
 {
-	AlifStatus status{};
 
-	//status = alifConfig_initPathConfig(_config, _computePathConfig);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+
+	//alifConfig_initPathConfig(_config, _computePathConfig);
+
+
+
 
 
 	//const wchar_t* value = config_getXOptionValue(_config, L"frozenModules");
@@ -2058,7 +2057,7 @@ static AlifStatus config_initImport(AlifConfig* _config, int _computePathConfig)
 	//}
 
 	//assert(_config->useFrozenModules >= 0);
-	return ALIFSTATUS_OK();
+
 }
 
 
@@ -2071,16 +2070,16 @@ static AlifStatus config_initImport(AlifConfig* _config, int _computePathConfig)
 
 
 
-static AlifStatus config_read(AlifConfig* _config, int _computePathConfig)
+static void config_read(AlifConfig* _config, int _computePathConfig)
 {
-	AlifStatus status{};
+
 	const AlifPreConfig* preConfig = &alifRuntime.preConfig;
 
 	if (_config->useEnvironment) {
-		status = configRead_envVars(_config);
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			return status;
-		}
+		configRead_envVars(_config);
+
+
+
 	}
 
 
@@ -2094,16 +2093,16 @@ static AlifStatus config_read(AlifConfig* _config, int _computePathConfig)
 	}
 #endif
 
-	status = configRead_complexOptions(_config);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+	configRead_complexOptions(_config);
+
+
+
 
 	if (_config->installImportLib) {
-		status = config_initImport(_config, _computePathConfig);
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			return status;
-		}
+		config_initImport(_config, _computePathConfig);
+
+
+
 	}
 
 	/* default values */
@@ -2127,29 +2126,29 @@ static AlifStatus config_read(AlifConfig* _config, int _computePathConfig)
 	}
 
 	if (_config->fileSystemEncoding == nullptr || _config->fileSystemErrors == nullptr) {
-		status = config_initFSEncoding(_config, preConfig);
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			return status;
-		}
+		config_initFSEncoding(_config, preConfig);
+
+
+
 	}
 
-	status = config_initStdioEncoding(_config, preConfig);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+	config_initStdioEncoding(_config, preConfig);
+
+
+
 
 	if (_config->argv.length < 1) {
-		status = alifWideStringList_append(&_config->argv, L"");
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			return status;
-		}
+		alifWideStringList_append(&_config->argv, L"");
+
+
+
 	}
 
 	if (_config->checkHashAlifCSMode == nullptr) {
-		status = alifConfig_setString(_config, &_config->checkHashAlifCSMode, L"default");
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			return status;
-		}
+		alifConfig_setString(_config, &_config->checkHashAlifCSMode, L"default");
+
+
+
 	}
 
 	if (_config->configureCStdio < 0) {
@@ -2161,7 +2160,7 @@ static AlifStatus config_read(AlifConfig* _config, int _computePathConfig)
 		_config->parseArgv = 2;
 	}
 
-	return ALIFSTATUS_OK();
+
 }
 
 
@@ -2208,7 +2207,7 @@ static void config_initStdio(const AlifConfig* _config)
 
 
 
-AlifStatus alifConfig_write(const AlifConfig* _config, AlifRuntimeState* _runtime)
+void alifConfig_write(const AlifConfig* _config, AlifRuntimeState* _runtime)
 {
 	configSet_globalVars(_config);
 
@@ -2224,9 +2223,9 @@ AlifStatus alifConfig_write(const AlifConfig* _config, AlifRuntimeState* _runtim
 	if (alif_setArgcArgv(_config->origArgv.length,
 		_config->origArgv.items) < 0)
 	{
-		return ALIFSTATUS_NO_MEMORY();
+		exit(-1);
 	}
-	return ALIFSTATUS_OK();
+
 }
 
 
@@ -2272,9 +2271,9 @@ static void config_completeUsage(const wchar_t* _program)
 
 
 
-static AlifStatus config_parseCmdline(AlifConfig* _config, AlifWideStringList* _warnOptions, AlifSizeT* _optIndex)
+static void config_parseCmdline(AlifConfig* _config, AlifWideStringList* _warnOptions, AlifSizeT* _optIndex)
 {
-	AlifStatus status{};
+
 	const AlifWideStringList* argv = &_config->argv;
 	int print_version = 0;
 	const wchar_t* program = _config->programName;
@@ -2295,7 +2294,7 @@ static AlifStatus config_parseCmdline(AlifConfig* _config, AlifWideStringList* _
 				size_t len = wcslen(alifOSOptArg) + 1 + 1;
 				wchar_t* command = (wchar_t*)alifMem_rawMalloc(sizeof(wchar_t) * len); // تم تغغير النوع المرجع بسبب ظهور خطأ
 				if (command == nullptr) {
-					return ALIFSTATUS_NO_MEMORY();
+					exit(-1);
 				}
 				memcpy(command, alifOSOptArg, (len - 2) * sizeof(wchar_t));
 				command[len - 2] = '\n';
@@ -2309,7 +2308,7 @@ static AlifStatus config_parseCmdline(AlifConfig* _config, AlifWideStringList* _
 			if (_config->runModule == nullptr) {
 				_config->runModule = alifMem_rawWcsDup(alifOSOptArg);
 				if (_config->runModule == nullptr) {
-					return ALIFSTATUS_NO_MEMORY();
+					exit(-1);
 				}
 			}
 			break;
@@ -2321,30 +2320,30 @@ static AlifStatus config_parseCmdline(AlifConfig* _config, AlifWideStringList* _
 				|| wcscmp(alifOSOptArg, L"never") == 0
 				|| wcscmp(alifOSOptArg, L"default") == 0)
 			{
-				status = alifConfig_setString(_config, &_config->checkHashAlifCSMode, alifOSOptArg);
-				if (ALIFSTATUS_EXCEPTION(status)) {
-					return status;
-				}
+				alifConfig_setString(_config, &_config->checkHashAlifCSMode, alifOSOptArg);
+
+
+
 			}
 			else {
 				fprintf(stderr, "--checkHashBasedAlifCS must be one of "
 					"'default', 'always', or 'never'\n");
 				config_usage(1, program);
-				return ALIFSTATUS_EXIT(2);
+				exit(-2);
 			}
 			break;
 
 		case 1:
 			config_completeUsage(program);
-			return ALIFSTATUS_EXIT(0);
+			exit(-2);
 
 		case 2:
 			config_envVarsUsage();
-			return ALIFSTATUS_EXIT(0);
+			return exit(-2);
 
 		case 3:
 			config_xOptionsUsage();
-			return ALIFSTATUS_EXIT(0);
+			exit(-2);
 
 		case 'b':
 			_config->bytesWarning++;
@@ -2403,17 +2402,17 @@ static AlifStatus config_parseCmdline(AlifConfig* _config, AlifWideStringList* _
 		case 'h':
 		case '?':
 			config_usage(0, program);
-			return ALIFSTATUS_EXIT(0);
+			exit(-2);
 
 		case 'V':
 			print_version++;
 			break;
 
 		case 'W':
-			status = alifWideStringList_append(_warnOptions, alifOSOptArg);
-			if (ALIFSTATUS_EXCEPTION(status)) {
-				return status;
-			}
+			alifWideStringList_append(_warnOptions, alifOSOptArg);
+
+
+
 			break;
 
 		case 'q':
@@ -2427,14 +2426,14 @@ static AlifStatus config_parseCmdline(AlifConfig* _config, AlifWideStringList* _
 
 		default:
 			config_usage(1, program);
-			return ALIFSTATUS_EXIT(2);
+			exit(-2);
 		}
 	} while (1);
 
 	if (print_version) {
 		printf("Alif %s\n",
 			(print_version >= 2) ? alif_getVersion() : ALIF_VERSION);
-		return ALIFSTATUS_EXIT(0);
+		exit(-2);
 	}
 
 	if (_config->runCommand == nullptr && _config->runModule == nullptr
@@ -2444,7 +2443,7 @@ static AlifStatus config_parseCmdline(AlifConfig* _config, AlifWideStringList* _
 	{
 		_config->runFilename = alifMem_rawWcsDup(argv->items[alifOSOptind]);
 		if (_config->runFilename == nullptr) {
-			return ALIFSTATUS_NO_MEMORY();
+			exit(-1);
 		}
 	}
 
@@ -2454,7 +2453,7 @@ static AlifStatus config_parseCmdline(AlifConfig* _config, AlifWideStringList* _
 
 	*_optIndex = alifOSOptind;
 
-	return ALIFSTATUS_OK();
+
 }
 
 
@@ -2483,32 +2482,32 @@ static AlifStatus config_parseCmdline(AlifConfig* _config, AlifWideStringList* _
 #endif
 
 
-static AlifStatus configInit_envWarnOptions(AlifConfig* _config, AlifWideStringList* _warnOptions)
+static void configInit_envWarnOptions(AlifConfig* _config, AlifWideStringList* _warnOptions)
 {
-	AlifStatus status{};
+
 	wchar_t* env = nullptr;
-	status = CONFIG_GETENV_DUP(_config, &env,
+	CONFIG_GETENV_DUP(_config, &env,
 		L"ALIFWARNINGS", "ALIFWARNINGS");
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+
+
+
 
 	if (env == nullptr) {
-		return ALIFSTATUS_OK();
+		return;
 	}
 
 
 	wchar_t* warning, * context = nullptr;
 	for (warning = WCSTOK(env, L",", &context); warning != nullptr;
 		warning = WCSTOK(nullptr, L",", &context)) {
-		status = alifWideStringList_append(_warnOptions, warning);
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			alifMem_rawFree(env);
-			return status;
-		}
+		alifWideStringList_append(_warnOptions, warning);
+
+
+
+
 	}
 	alifMem_rawFree(env);
-	return ALIFSTATUS_OK();
+
 }
 
 
@@ -2554,27 +2553,27 @@ static AlifStatus configInit_envWarnOptions(AlifConfig* _config, AlifWideStringL
 
 
 
-static AlifStatus config_initWarnOptions(AlifConfig* _config, const AlifWideStringList* _cmdlineWarnOptions, const AlifWideStringList* _envWarnOptions, const AlifWideStringList* _sysWarnOptions)
+static void config_initWarnOptions(AlifConfig* _config, const AlifWideStringList* _cmdlineWarnOptions, const AlifWideStringList* _envWarnOptions, const AlifWideStringList* _sysWarnOptions)
 {
-	AlifStatus status{};
+
 	AlifWideStringList options = ALIFWIDESTRINGLIST_INIT;
 
 	if (_config->devMode) {
-		//status = warnOptions_append(_config, &options, L"default");
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			goto error;
-		}
+		//warnOptions_append(_config, &options, L"default");
+
+
+
 	}
 
-	//status = warnOptions_extend(_config, &options, _envWarnOptions);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		goto error;
-	}
+	//warnOptions_extend(_config, &options, _envWarnOptions);
 
-	//status = warnOptions_extend(_config, &options, _cmdlineWarnOptions);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		goto error;
-	}
+
+
+
+	//warnOptions_extend(_config, &options, _cmdlineWarnOptions);
+
+
+
 
 	if (_config->bytesWarning) {
 		const wchar_t* filter;
@@ -2584,29 +2583,28 @@ static AlifStatus config_initWarnOptions(AlifConfig* _config, const AlifWideStri
 		else {
 			filter = L"default::BytesWarning";
 		}
-		//status = warnOptions_append(_config, &options, filter);
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			goto error;
-		}
+		//warnOptions_append(_config, &options, filter);
+
+
+
 	}
 
-	//status = warnOptions_extend(_config, &options, _sysWarnOptions);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		goto error;
-	}
+	//warnOptions_extend(_config, &options, _sysWarnOptions);
 
-	status = alifWideStringList_extend(&options, &_config->warnOptions);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		goto error;
-	}
+
+
+
+	alifWideStringList_extend(&options, &_config->warnOptions);
+
+
+
 
 	alifWideStringList_clear(&_config->warnOptions);
 	_config->warnOptions = options;
-	return ALIFSTATUS_OK();
 
-error:
-	alifWideStringList_clear(&options);
-	return status;
+
+//error:
+//	alifWideStringList_clear(&options);
 }
 
 
@@ -2637,23 +2635,23 @@ error:
 
 
 
-static AlifStatus config_updateArgv(AlifConfig* _config, AlifSizeT _optIndex)
+static void config_updateArgv(AlifConfig* _config, AlifSizeT _optIndex)
 {
 	const AlifWideStringList* cmdlineArgv = &_config->argv;
 	AlifWideStringList configArgv = ALIFWIDESTRINGLIST_INIT;
 
 	if (cmdlineArgv->length <= _optIndex) {
-		AlifStatus status = alifWideStringList_append(&configArgv, L"");
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			return status;
-		}
+		alifWideStringList_append(&configArgv, L"");
+
+
+
 	}
 	else {
 		AlifWideStringList slice{};
 		slice.length = cmdlineArgv->length - _optIndex;
 		slice.items = &cmdlineArgv->items[_optIndex];
 		if (alifWideStringList_copy(&configArgv, &slice) < 0) {
-			return ALIFSTATUS_NO_MEMORY();
+			exit(-1);
 		}
 	}
 	//assert(configArgv.length >= 1);
@@ -2670,7 +2668,7 @@ static AlifStatus config_updateArgv(AlifConfig* _config, AlifSizeT _optIndex)
 		arg0 = alifMem_rawWcsDup(arg0);
 		if (arg0 == nullptr) {
 			alifWideStringList_clear(&configArgv);
-			return ALIFSTATUS_NO_MEMORY();
+			exit(-1);
 		}
 
 		alifMem_rawFree(configArgv.items[0]);
@@ -2679,7 +2677,7 @@ static AlifStatus config_updateArgv(AlifConfig* _config, AlifSizeT _optIndex)
 
 	alifWideStringList_clear(&_config->argv);
 	_config->argv = configArgv;
-	return ALIFSTATUS_OK();
+
 }
 
 
@@ -2690,43 +2688,43 @@ static AlifStatus config_updateArgv(AlifConfig* _config, AlifSizeT _optIndex)
 
 
 
-static AlifStatus core_readPreCmdline(AlifConfig* _config, AlifPreCmdline* _preCmdline)
+static void core_readPreCmdline(AlifConfig* _config, AlifPreCmdline* _preCmdline)
 {
-	AlifStatus status{};
+
 
 	if (_config->parseArgv == 1) {
 		if (alifWideStringList_copy(&_preCmdline->argv, &_config->argv) < 0) {
-			return ALIFSTATUS_NO_MEMORY();
+			exit(-1);
 		}
 	}
 
 	AlifPreConfig preConfig{};
 
-	status = alifPreConfig_initFromPreConfig(&preConfig, &alifRuntime.preConfig);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+	alifPreConfig_initFromPreConfig(&preConfig, &alifRuntime.preConfig);
+
+
+
 
 	alifPreConfig_getConfig(&preConfig, _config);
 
-	status = alifPreCmdline_read(_preCmdline, &preConfig);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+	alifPreCmdline_read(_preCmdline, &preConfig);
 
-	status = alifPreCmdline_setConfig(_preCmdline, _config);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
-	return ALIFSTATUS_OK();
+
+
+
+	alifPreCmdline_setConfig(_preCmdline, _config);
+
+
+
+
 }
 
 
 
-static AlifStatus configRun_fileNameAbspath(AlifConfig* _config)
+static void configRun_fileNameAbspath(AlifConfig* _config)
 {
 	if (!_config->runFilename) {
-		return ALIFSTATUS_OK();
+		return;
 	}
 
 #ifndef MS_WINDOWS
@@ -2737,24 +2735,24 @@ static AlifStatus configRun_fileNameAbspath(AlifConfig* _config)
 
 	wchar_t* absFilename{};
 	if (alif_absPath(_config->runFilename, &absFilename) < 0) {
-		return ALIFSTATUS_OK();
+		return;
 	}
 	if (absFilename == nullptr) {
-		return ALIFSTATUS_NO_MEMORY();
+		exit(-1);
 	}
 
 	alifMem_rawFree(_config->runFilename);
 	_config->runFilename = absFilename;
-	return ALIFSTATUS_OK();
+
 }
 
 
 
 
 
-static AlifStatus config_readCmdline(AlifConfig* _config)
+static void config_readCmdline(AlifConfig* _config)
 {
-	AlifStatus status;
+
 	AlifWideStringList cmdlineWarnOptions = ALIFWIDESTRINGLIST_INIT;
 	AlifWideStringList envWarnOptions = ALIFWIDESTRINGLIST_INIT;
 	AlifWideStringList sysWarnOptions = ALIFWIDESTRINGLIST_INIT;
@@ -2765,53 +2763,52 @@ static AlifStatus config_readCmdline(AlifConfig* _config)
 
 	if (_config->parseArgv == 1) {
 		AlifSizeT opt_index;
-		status = config_parseCmdline(_config, &cmdlineWarnOptions, &opt_index);
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			goto done;
-		}
+		config_parseCmdline(_config, &cmdlineWarnOptions, &opt_index);
 
-		status = configRun_fileNameAbspath(_config);
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			goto done;
-		}
 
-		status = config_updateArgv(_config, opt_index);
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			goto done;
-		}
+
+
+		configRun_fileNameAbspath(_config);
+
+
+
+
+		config_updateArgv(_config, opt_index);
+
+
+
 	}
 	else {
-		status = configRun_fileNameAbspath(_config);
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			goto done;
-		}
+		configRun_fileNameAbspath(_config);
+
+
+
 	}
 
 	if (_config->useEnvironment) {
-		status = configInit_envWarnOptions(_config, &envWarnOptions);
-		if (ALIFSTATUS_EXCEPTION(status)) {
-			goto done;
-		}
+		configInit_envWarnOptions(_config, &envWarnOptions);
+
+
+
 	}
 
 
-	status = alifSys_readPreInitWarnOptions(&sysWarnOptions);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		goto done;
-	}
+	alifSys_readPreInitWarnOptions(&sysWarnOptions);
 
-	status = config_initWarnOptions(_config, &cmdlineWarnOptions, &envWarnOptions, &sysWarnOptions);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		goto done;
-	}
 
-	status = ALIFSTATUS_OK();
 
-done:
-	alifWideStringList_clear(&cmdlineWarnOptions);
-	alifWideStringList_clear(&envWarnOptions);
-	alifWideStringList_clear(&sysWarnOptions);
-	return status;
+
+	config_initWarnOptions(_config, &cmdlineWarnOptions, &envWarnOptions, &sysWarnOptions);
+
+
+
+
+
+
+//done:
+	//alifWideStringList_clear(&cmdlineWarnOptions);
+	//alifWideStringList_clear(&envWarnOptions);
+	//alifWideStringList_clear(&sysWarnOptions);
 }
 
 
@@ -2819,14 +2816,14 @@ done:
 
 
 
-AlifStatus alifConfig_setAlifArgv(AlifConfig* _config, const AlifArgv* _args)
+void alifConfig_setAlifArgv(AlifConfig* _config, const AlifArgv* _args)
 {
-	AlifStatus status = alif_preInitializeFromConfig(_config, _args);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+	alif_preInitializeFromConfig(_config, _args);
 
-	return alifArgv_asWstrList(_args, &_config->argv);
+
+
+
+	alifArgv_asWstrList(_args, &_config->argv);
 }
 
 
@@ -2834,7 +2831,7 @@ AlifStatus alifConfig_setAlifArgv(AlifConfig* _config, const AlifArgv* _args)
 
 
 
-AlifStatus alifConfig_setBytesArgv(AlifConfig* _config, AlifSizeT _argc, char* const* _argv)
+void alifConfig_setBytesArgv(AlifConfig* _config, AlifSizeT _argc, char* const* _argv)
 {
 	AlifArgv args = {
 		.argc = _argc,
@@ -2845,14 +2842,14 @@ AlifStatus alifConfig_setBytesArgv(AlifConfig* _config, AlifSizeT _argc, char* c
 }
 
 
-AlifStatus alifConfig_setArgv(AlifConfig* config, AlifSizeT _argc, wchar_t* const* _argv)
+void alifConfig_setArgv(AlifConfig* config, AlifSizeT _argc, wchar_t* const* _argv)
 {
 	AlifArgv args = {
 		.argc = _argc,
 		.useBytesArgv = 0,
 		.bytesArgv = nullptr,
 		.wcharArgv = _argv };
-	return alifConfig_setAlifArgv(config, &args);
+	alifConfig_setAlifArgv(config, &args);
 }
 
 
@@ -2881,14 +2878,14 @@ AlifStatus alifConfig_setArgv(AlifConfig* config, AlifSizeT _argc, wchar_t* cons
 
 
 
-AlifStatus alifConfig_read(AlifConfig* _config, int _computePathConfig)
+void alifConfig_read(AlifConfig* _config, int _computePathConfig)
 {
-	AlifStatus status{};
 
-	status = alif_preInitializeFromConfig(_config, nullptr);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+
+	alif_preInitializeFromConfig(_config, nullptr);
+
+
+
 
 	configGet_globalVars(_config);
 
@@ -2897,15 +2894,15 @@ AlifStatus alifConfig_read(AlifConfig* _config, int _computePathConfig)
 			&& wcscmp(_config->argv.items[0], L"") == 0))
 	{
 		if (alifWideStringList_copy(&_config->origArgv, &_config->argv) < 0) {
-			return ALIFSTATUS_NO_MEMORY();
+			exit(-1);
 		}
 	}
 
 	AlifPreCmdline preCmdline = ALIFPRECMDLINE_INIT;
-	status = core_readPreCmdline(_config, &preCmdline);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		goto done;
-	}
+	core_readPreCmdline(_config, &preCmdline);
+
+
+
 
 	//assert(_config->isolated >= 0);
 	if (_config->isolated) {
@@ -2914,28 +2911,28 @@ AlifStatus alifConfig_read(AlifConfig* _config, int _computePathConfig)
 		_config->userSiteDirectory = 0;
 	}
 
-	status = config_readCmdline(_config);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		goto done;
-	}
+	config_readCmdline(_config);
 
-	status = alifSys_readPreInitXOptions(_config);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		goto done;
-	}
 
-	status = config_read(_config, _computePathConfig);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		goto done;
-	}
+
+
+	alifSys_readPreInitXOptions(_config);
+
+
+
+
+	config_read(_config, _computePathConfig);
+
+
+
 
 	//assert(config_checkConsistency(_config));
 
-	status = ALIFSTATUS_OK();
+
 
 done:
 	alifPreCmdline_clear(&preCmdline);
-	return status;
+
 }
 
 

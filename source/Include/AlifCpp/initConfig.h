@@ -7,17 +7,17 @@
 
 /* ----- AlifStatus ------------------------------------------- */
 
-class AlifStatus {
-public:
-	enum {
-		AlifStatus_Type_Ok = 0,
-		AlifStatus_Type_Error = 1,
-		AlifStatus_Type_Exit = 2
-	} type;
-	const char* func;
-	const char* errMsg;
-	int exitcode;
-};
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -36,9 +36,9 @@ public:
 };
 
 
-ALIFAPI_FUNC(AlifStatus) alifWideStringList_append(AlifWideStringList*, const wchar_t*);
+ALIFAPI_FUNC(void) alifWideStringList_append(AlifWideStringList*, const wchar_t*);
 
-ALIFAPI_FUNC(AlifStatus) alifWideStringList_insert(AlifWideStringList*,AlifSizeT, const wchar_t*);
+ALIFAPI_FUNC(void) alifWideStringList_insert(AlifWideStringList*,AlifSizeT, const wchar_t*);
 
 
 
@@ -221,7 +221,7 @@ public:
 ALIFAPI_FUNC(void) alifConfig_initAlifConfig(AlifConfig*);
 
 ALIFAPI_FUNC(void) alifConfig_clear(AlifConfig*);
-ALIFAPI_FUNC(AlifStatus) alifConfig_setString(AlifConfig*,wchar_t**,const wchar_t*);
+ALIFAPI_FUNC(void) alifConfig_setString(AlifConfig*,wchar_t**,const wchar_t*);
 
 
 
@@ -230,8 +230,8 @@ ALIFAPI_FUNC(AlifStatus) alifConfig_setString(AlifConfig*,wchar_t**,const wchar_
 
 
 
-ALIFAPI_FUNC(AlifStatus) alifConfig_setBytesArgv(AlifConfig*, AlifSizeT, char* const*);
+ALIFAPI_FUNC(void) alifConfig_setBytesArgv(AlifConfig*, AlifSizeT, char* const*);
 
 
 
-ALIFAPI_FUNC(AlifStatus) alifConfig_setArgv(AlifConfig*,AlifSizeT, wchar_t* const*);
+ALIFAPI_FUNC(void) alifConfig_setArgv(AlifConfig*,AlifSizeT, wchar_t* const*);

@@ -191,13 +191,13 @@ public:
 
 	AlifPreConfig preConfig;
 
-	//AlifOpenCodeHookFunction openCodeHook;
-	void* openCodeUserdata;
-	class AuditHooks {
-	public:
-		AlifThreadTypeLock mutex;
-		//AlifAuditHookEntry* head;
-	};
+	////AlifOpenCodeHookFunction openCodeHook; // تم التخلي عن هذه الدالة بسبب عدم الحاجة لها لأن وظيفتها هي حقن برنامج داخل البرنامج
+	////void* openCodeUserdata; // تم التخلي عن هذه الدالة
+	////class AuditHooks { // تم التخلي عن هذه الدالة بسبب عدم الحاجة لها لأن وظيفتها هي مراقبة النشاطات الضارة
+	////public:
+	////	AlifThreadTypeLock mutex;
+	////	AlifAuditHookEntry* head;
+	////};
 
 	//AlifObjectRuntimeState objectState;
 	//AlifFloatRuntimeState floatState;
@@ -275,8 +275,8 @@ public:
 
 ALIFAPI_DATA(AlifRuntimeState) alifRuntime;
 
-extern AlifStatus alifRuntimeState_init(AlifRuntimeState*);
-extern void alifRuntimeState_fini(AlifRuntimeState*);
+extern void alifRuntimeState_init(AlifRuntimeState*);
+//extern void alifRuntimeState_fini(AlifRuntimeState*);
 
 
 
@@ -284,7 +284,7 @@ extern void alifRuntimeState_fini(AlifRuntimeState*);
 
 
 
-extern AlifStatus alifRuntime_initialize();
+extern void alifRuntime_initialize();
 
 
 

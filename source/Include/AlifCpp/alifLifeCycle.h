@@ -8,7 +8,7 @@
 
 
 
-ALIFAPI_FUNC(AlifStatus) alif_preInitialize(const AlifPreConfig*);
+ALIFAPI_FUNC(void) alif_preInitialize(const AlifPreConfig*);
 
 
 
@@ -22,7 +22,7 @@ ALIFAPI_FUNC(AlifStatus) alif_preInitialize(const AlifPreConfig*);
 
 /* Initialization and finalization */
 
-ALIFAPI_FUNC(AlifStatus) alif_initializeFromConfig(const AlifConfig*);
+ALIFAPI_FUNC(void) alif_initializeFromConfig(const AlifConfig*);
 
 
 

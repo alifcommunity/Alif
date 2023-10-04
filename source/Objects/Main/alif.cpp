@@ -31,45 +31,45 @@
 
 /* ----- alifMain_init() ------------------------------------------- */
 
-static AlifStatus alifMain_init(const AlifArgv* _args) {
+static void alifMain_init(const AlifArgv* _args) {
 
-	AlifStatus status{};
 
-	status = alifRuntime_initialize();
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+
+	alifRuntime_initialize();
+
+
+
 
 	AlifPreConfig preConfig{};
 	alifPreConfig_initAlifConfig(&preConfig);
 
-	status = alif_preInitializeFromAlifArgv(&preConfig, _args);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
+	alif_preInitializeFromAlifArgv(&preConfig, _args);
+
+
+
 
 	AlifConfig config{};
 	alifConfig_initAlifConfig(&config);
 
 	if (_args->useBytesArgv) {
-		status = alifConfig_setBytesArgv(&config, _args->argc, _args->bytesArgv);
+		alifConfig_setBytesArgv(&config, _args->argc, _args->bytesArgv);
 	}
 	else {
-		status = alifConfig_setArgv(&config, _args->argc, _args->wcharArgv);
-	}
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		goto done;
+		alifConfig_setArgv(&config, _args->argc, _args->wcharArgv);
 	}
 
-	status = alif_initializeFromConfig(&config);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		goto done;
-	}
-	status = ALIFSTATUS_OK();
 
-done:
-	//alifConfig_clear(&config);
-	return status;
+
+
+	alif_initializeFromConfig(&config);
+
+
+
+
+
+
+
+
 }
 
 
@@ -706,14 +706,7 @@ static int alif_runMain()
 static int alifMain_main(AlifArgv* _args)
 {
 	// مرحلة تهيئة البرنامج قبل تشغيله
-	AlifStatus status = alifMain_init(_args);
-	//if (ALIFSTATUS_IS_EXIT(status)) {
-	//	pyMain_free();
-	//	return status.exitCode;
-	//}
-	//if (ALIFSTATUS_EXCEPTION(status)) {
-	//	alifMain_exitError(status);
-	//}
+	alifMain_init(_args);
 
 	// مرحلة تشغيل البرنامج
 	return alif_runMain();
@@ -747,7 +740,7 @@ int alif_mainBytes(int _argc, char** _argv)
 #ifdef MS_WINDOWS
 int wmain(int _argc, wchar_t** _argv)
 {
-	wchar_t* argsv[] = { (wchar_t*)L"alif", (wchar_t*)L"example.alif" };
+	wchar_t* argsv[] = { (wchar_t*)L"alif", (wchar_t*)L"example.alif"};
 	return alif_mainWchar(2, argsv);
 }
 #else
