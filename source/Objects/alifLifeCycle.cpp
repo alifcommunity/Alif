@@ -100,7 +100,7 @@ AlifRuntimeState alifRuntime
 __attribute__((section(".AlifRuntime")))
 #endif
 = ALIFRUNTIMESTATE_INIT(alifRuntime);
-ALIFCOMP_DIAGPOP
+//ALIFCOMP_DIAGPOP
 
 static int runtimeInitialized = 0;
 
