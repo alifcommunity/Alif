@@ -2930,8 +2930,8 @@ void alifConfig_read(AlifConfig* _config, int _computePathConfig)
 
 
 
-done:
-	alifPreCmdline_clear(&preCmdline);
+//done:
+//	alifPreCmdline_clear(&preCmdline);
 
 }
 
