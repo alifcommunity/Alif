@@ -13,7 +13,7 @@
 
 
 #include "alifCore_atomic.h" 
-
+#include "alifCore_ceval_state.h"
 #include "alifCore_code.h"   
 
 
@@ -51,7 +51,7 @@ public:
 
 
 
-
+	class CEvalState cEval;
 
 	AlifInterpreterState* next;
 

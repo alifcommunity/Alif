@@ -15,9 +15,9 @@
 
 
 
+typedef class Object AlifObject;
 
-
-
+typedef class TypeObject AlifTypeObject;
 
 
 
