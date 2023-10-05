@@ -396,10 +396,10 @@ static int alloc_forRuntime(AlifThreadTypeLock _locks[NUMLOCKS])
 
 	for (int i = 0; i < NUMLOCKS; i++) {
 		AlifThreadTypeLock lock = alifThread_allocateLock();
-		if (lock == NULL) {
+		if (lock == nullptr) {
 			for (int j = 0; j < i; j++) {
 				alifThread_freeLock(_locks[j]);
-				_locks[j] = NULL;
+				_locks[j] = nullptr;
 			}
 			break;
 		}
@@ -511,9 +511,9 @@ void alifRuntimeState_init(AlifRuntimeState* _runtime)
 //	AlifMemAllocatorEx old_alloc;
 //	alifMem_setDefaultAllocator(AlifMem_Domain_Raw, &old_alloc);
 //#define FREE_LOCK(LOCK) \
-//    if (LOCK != NULL) { \
+//    if (LOCK != nullptr) { \
 //        alifThread_freeLock(LOCK); \
-//        LOCK = NULL; \
+//        LOCK = nullptr; \
 //    }
 //
 //	AlifThreadTypeLock* lockptrs[NUMLOCKS] = LOCKS_INIT(_runtime);
@@ -659,7 +659,7 @@ static void init_interpreter(AlifInterpreterState* _interp, AlifRuntimeState* _r
 	//_interp->id = _id;
 
 	//assert(_runtime->alifInterpreters.head == _interp);
-	//assert(_next != NULL || (_interp == _runtime->alifInterpreters.main));
+	//assert(_next != nullptr || (_interp == _runtime->alifInterpreters.main));
 	//_interp->next = _next;
 
 	//if (_interp != &_runtime->mainInterpreter) {
@@ -730,8 +730,8 @@ AlifInterpreterState* alifInterpreterState_new()
 		//assert(id == 0);
 
 		interp = &runtime->mainInterpreter;
-		//assert(interp->id == 0);
-		//assert(interp->next == nullptr);
+		//assert(_interp->id == 0);
+		//assert(_interp->next == nullptr);
 
 		interpreters->main = interp;
 	}
@@ -766,7 +766,7 @@ error:
 
 	alifThread_freeLock(pendingLock);
 	if (interp != nullptr) {
-		//free_interpreter(interp);
+		//free_interpreter(_interp);
 	}
 	return nullptr;
 }
@@ -1293,118 +1293,9 @@ error:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-AlifThreadState* alifThreadState_new(AlifInterpreterState* _interp)
+static AlifThreadState* alloc_threadState(void)
 {
-	//return new_threadState(_interp);
-	return (AlifThreadState*)0;
+	return (AlifThreadState*)alifMem_rawCalloc(1, sizeof(AlifThreadState));
 }
 
 
@@ -1426,6 +1317,43 @@ AlifThreadState* alifThreadState_new(AlifInterpreterState* _interp)
 
 
 
+static void init_threadState(AlifThreadState* _TState,
+	AlifInterpreterState* _interp, uint64_t _iD)
+{
+	if (_TState->status.initialized) {
+		std::cout << ("thread state already initialized") << std::endl; exit(-1);
+	}
+
+	//assert(_interp != nullptr);
+	_TState->interp = _interp;
+
+
+	//assert(_TState->next == nullptr);
+	//assert(_TState->prev == nullptr);
+
+	//assert(_id > 0);
+	_TState->iD = _iD;
+
+
+
+	//_TState->alifRecursionLimit = _interp->ceval.recursionLimit,
+	//	_TState->alifRecursionRemaining = _interp->ceval.recursionLimit,
+	//	_TState->cRecursionRemaining = alif_C_RECURSION_LIMIT;
+
+	//_TState->excInfo = &_TState->excState;
+
+
+
+	_TState->gilstateCounter = 1;
+
+	//_TState->currentFrame = nullptr;
+	//_TState->datastackChunk = nullptr;
+	//_TState->datastackTop = nullptr;
+	//_TState->datastackLimit = nullptr;
+	_TState->whatEvent = -1;
+
+	_TState->status.initialized = 1;
+}
 
 
 
@@ -1436,6 +1364,85 @@ AlifThreadState* alifThreadState_new(AlifInterpreterState* _interp)
 
 
 
+
+
+
+
+
+
+
+
+static AlifThreadState* new_threadState(AlifInterpreterState* _interp)
+{
+	AlifThreadState* TState;
+	AlifRuntimeState* runtime = _interp->runtime;
+
+
+
+
+	AlifThreadState* newTState = alloc_threadState();
+	int usedNewTState;
+	if (newTState == nullptr) {
+		return nullptr;
+	}
+
+	HEAD_LOCK(runtime);
+
+	_interp->thread.nextUniqueID += 1;
+	uint64_t id = _interp->thread.nextUniqueID;
+
+
+	AlifThreadState* oldHead = _interp->thread.head;
+	if (oldHead == nullptr) {
+
+		//assert(id == 1);
+		usedNewTState = 0;
+		TState = &_interp->initialThread;
+	}
+	else {
+
+		//assert(id > 1);
+		//assert(old_head->prev == nullptr);
+		usedNewTState = 1;
+		TState = newTState;
+
+		memcpy(TState,
+			&initial.mainInterpreter.initialThread,
+			sizeof(*TState));
+	}
+
+	init_threadState(TState, _interp, id);
+	//add_threadState(_interp, TState, oldHead);
+
+	HEAD_UNLOCK(runtime);
+	if (!usedNewTState) {
+
+		alifMem_rawFree(newTState);
+	}
+	return TState;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+AlifThreadState* alifThreadState_new(AlifInterpreterState* _interp)
+{
+	return new_threadState(_interp);
+}
 
 
 

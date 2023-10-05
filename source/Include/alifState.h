@@ -90,7 +90,7 @@ public:
 
 
 		unsigned int : 24;
-	};
+	}status;
 
 	int alifRecursionRemaining;
 	int alifRecursionLimit;

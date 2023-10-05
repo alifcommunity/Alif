@@ -499,7 +499,7 @@ static void alifInit_coreReconfigure(AlifRuntimeState* _runtime, AlifThreadState
 
 static void alifCore_initRuntime(AlifRuntimeState* _runtime, const AlifConfig* _config)
 {
-	if (_runtime->initialized) {
+	if (_runtime->initialized2) {
 		std::cout << ("main interpreter already initialized") << std::endl;
 		exit(-1);
 	}
