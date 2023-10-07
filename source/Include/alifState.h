@@ -11,7 +11,7 @@
 
 
 
-ALIFAPI_FUNC(AlifInterpreterState*) alifInterpreterState_new();
+ALIFAPI_FUNC(void) alifInterpreterState_new(AlifThreadState*, AlifInterpreterState**);
 
 
 
@@ -43,7 +43,7 @@ public:
 
 
 
-	//AlifObject* excValue;
+	AlifObject* excValue;
 
 	class ErrStackitem* previousItem;
 
@@ -110,22 +110,22 @@ public:
 
 	//AlifTraceFunc cProfileFunc;
 	//AlifTraceFunc cTraceFunc;
-	//AlifObject* cProfileObj;
-	//AlifObject* cTraceObj;
+	AlifObject* cProfileObj;
+	AlifObject* cTraceObj;
 
 
-	//AlifObject* currentException;
+	AlifObject* currentException;
 
 
 
 
 	AlifErrStackItem* excInfo;
 
-	//AlifObject* dict;  
+	AlifObject* dict;  
 
 	int gilstateCounter;
 
-	//AlifObject* asyncExc; 
+	AlifObject* asyncExc; 
 	unsigned long threadID; 
 
 
@@ -164,18 +164,18 @@ public:
 
 	int coroutineOriginTrackingDepth;
 
-	//AlifObject* asyncGenFirstiter;
-	//AlifObject* asyncGenFinalizer;
+	AlifObject* asyncGenFirstiter;
+	AlifObject* asyncGenFinalizer;
 
-	//AlifObject* context;
+	AlifObject* context;
 	uint64_t contextVer;
 
 
 	uint64_t iD;
 
 	//AlifStackChunk* dataStackChunk;
-	//AlifObject** dataStackTop;
-	//AlifObject** dataStackLimit;
+	AlifObject** dataStackTop;
+	AlifObject** dataStackLimit;
 
 
 

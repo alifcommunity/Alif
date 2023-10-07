@@ -158,6 +158,8 @@
     <ClInclude Include="..\source\Include\alifTime.h" />
     <ClInclude Include="..\source\Include\alifTypeDefs.h" />
     <ClInclude Include="..\source\Include\alifVersion.h" />
+    <ClInclude Include="..\source\Include\ceval_gil.cpp" />
+    <ClInclude Include="..\source\Include\code.h" />
     <ClInclude Include="..\source\Include\codecs.h" />
     <ClInclude Include="..\source\Include\condVar.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_alifLifeCycle.h" />
@@ -166,20 +168,24 @@
     <ClInclude Include="..\source\Include\Core\alifCore_alifState.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_alifThread.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_atomic.h" />
+    <ClInclude Include="..\source\Include\Core\alifCore_ceval.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_ceval_state.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_code.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_condVar.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_fileUtils.h" />
+    <ClInclude Include="..\source\Include\Core\alifCore_gc.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_getOpt.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_gil.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_import.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_initConfig.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_interp.h" />
+    <ClInclude Include="..\source\Include\Core\alifCore_object.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_obmalloc.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_obmallocInit.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_runtime.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_runtimeInit.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_time.h" />
+    <ClInclude Include="..\source\Include\Core\alifCore_typeObject.h" />
     <ClInclude Include="..\source\Include\exports.h" />
     <ClInclude Include="..\source\Include\fileObject.h" />
     <ClInclude Include="..\source\Include\fileUtils.h" />
@@ -192,7 +198,9 @@
     <ClCompile Include="..\source\Objects\alifLifeCycle.cpp" />
     <ClCompile Include="..\source\Objects\alifState.cpp" />
     <ClCompile Include="..\source\Objects\alifTime.cpp" />
+    <ClCompile Include="..\source\Objects\ceval_gil.cpp" />
     <ClCompile Include="..\source\Objects\fileUtils.cpp" />
+    <ClCompile Include="..\source\Objects\gcmodule.cpp" />
     <ClCompile Include="..\source\Objects\getOpt.cpp" />
     <ClCompile Include="..\source\Objects\getVersion.cpp" />
     <ClCompile Include="..\source\Objects\initConfig.cpp" />
@@ -202,6 +210,7 @@
     <ClCompile Include="..\source\Objects\preConfig.cpp" />
     <ClCompile Include="..\source\Objects\sysModule.cpp" />
     <ClCompile Include="..\source\Objects\thread.cpp" />
+    <ClCompile Include="..\source\Objects\typeObject.cpp" />
     <ClCompile Include="..\source\Objects\unicodeObject.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -21,16 +21,16 @@
 
 
 
-
+#include "alifCore_gc.h"          
 
 
 #include "alifCore_import.h"
-
+#include "alifCore_instruments.h"  
 
 
 #include "alifCore_obmalloc.h"  
 
-
+#include "alifCore_typeObject.h" 
 
 
 
@@ -55,7 +55,7 @@ public:
 
 	AlifInterpreterState* next;
 
-	int64_t id;
+	int64_t iD;
 	int64_t idRefcount;
 	int requiresIdref;
 	AlifThreadTypeLock IDmutex;
@@ -94,7 +94,7 @@ public:
 
 	AlifAtomicAddress alifFinalizing;
 
-	//GCRuntimeState gc;
+	GCRuntimeState gc;
 
 
 
@@ -109,33 +109,33 @@ public:
 
 
 
-	//AlifObject* sysdict;
+	AlifObject* sysdict;
 
 
-	//AlifObject* builtins;
+	AlifObject* builtins;
 
 	//ImportState imports;
 
 
-	//GilRuntimeState gil;
+	GilRuntimeState gil;
 
 
 
 
 
 
-	//AlifObject* codecSearchPath;
-	//AlifObject* codecSearchCache;
-	//AlifObject* codecErrorRegistry;
+	AlifObject* codecSearchPath;
+	AlifObject* codecSearchCache;
+	AlifObject* codecErrorRegistry;
 	int codecsInitialized;
 
 	AlifConfig config;
 	unsigned long featureFlags;
 
-	//AlifObject* dict;  
+	AlifObject* dict;  
 
-	//AlifObject* sysdictCopy;
-	//AlifObject* builtinsCopy;
+	AlifObject* sysdictCopy;
+	AlifObject* builtinsCopy;
 
 	//AlifFrameEvalFunction evalFrame;
 
@@ -157,7 +157,7 @@ public:
 
 	ObmallocState obmalloc;
 
-	//AlifObject* auditHooks;
+	AlifObject* auditHooks;
 	//AlifTypeWatchCallBack typeWatchers[TYPE_MAX_WATCHERS];
 	//AlifCodeWatchCallBack codeWatchers[CODE_MAX_WATCHERS];
 
@@ -181,20 +181,20 @@ public:
 	//AlifExcState exc_state;
 
 	//ASTState ast;
-	//TypesState types;
+	TypesState types;
 	//CallableCache callableCache;
 	//AlifOptimizerObject* optimizer;
 	uint16_t optimizerResumeThreshold;
 	uint16_t optimizerBackedgeThreshold;
 
-	//AlifMonitors monitors;
+	AlifGlobalMonitors monitors;
 	bool fOpcodeTraceSet;
 	bool sysProfileInitialized;
 	bool sysTraceInitialized;
 	AlifSizeT sysProfilingThreads; 
 	AlifSizeT sysTracingThreads; 
-	//AlifObject* monitoring_callables[ALIFMONITORING_TOOL_IDS][ALIFMONITORING_EVENTS];
-	//AlifObject* monitoring_tool_names[ALIFMONITORING_TOOL_IDS];
+	AlifObject* monitoring_callables[ALIFMONITORING_TOOL_IDS][ALIFMONITORING_EVENTS];
+	AlifObject* monitoring_tool_names[ALIFMONITORING_TOOL_IDS];
 
 	//AlifInterpCachedObjects cached_objects;
 	//AlifInterpStaticObjects static_objects;
