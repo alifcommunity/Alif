@@ -3,7 +3,7 @@
 #include "alif.h"
 
 //#include "alifCore_call.h"
-//#include "alifCore_cEval.h"
+#include "alifCore_cEval.h"
 //#include "alifCore_codeCS.h"
 //#include "alifCore_context.h"
 //#include "alifCore_dict.h"
@@ -28,7 +28,7 @@
 //#include "alifCore_sliceObject.h"
 //#include "alifCore_sysModule.h"
 //#include "alifCore_traceback.h"
-//#include "alifCore_typeObject.h"
+#include "alifCore_typeObject.h"
 //#include "alifCore_typeVarObject.h"
 //#include "alifCore_unicodeObject.h"
 //#include "alifCore_weakRef.h"
@@ -100,7 +100,7 @@ AlifRuntimeState alifRuntime
 __attribute__((section(".AlifRuntime")))
 #endif
 = ALIFRUNTIMESTATE_INIT(alifRuntime);
-//ALIFCOMP_DIAGPOP
+ALIFCOMP_DIAGPOP
 
 static int runtimeInitialized = 0;
 
@@ -621,14 +621,20 @@ static void initInterp_createGIL(AlifThreadState* _tState, int _gil)
 
 
 
-static void alifCore_createInterpreter(AlifRuntimeState* _runtime, const AlifConfig* _srcConfig, AlifThreadState** _tStateP)
+
+
+
+static void alifCore_createInterpreter(AlifRuntimeState* _runtime,
+	const AlifConfig* _srcConfig,
+	AlifThreadState** _tStateP)
 {
 
-	AlifInterpreterState* interp = alifInterpreterState_new();
-	if (interp == nullptr) {
-		std::cout << ("can't make main interpreter") << std::endl;
-		exit(-1);
-	}
+	AlifInterpreterState* interp{};
+	alifInterpreterState_new(nullptr, &interp);
+
+
+
+
 	//assert(alif_isMainInterpreter(interp));
 
 	alifConfig_copy(&interp->config, _srcConfig);
@@ -642,6 +648,7 @@ static void alifCore_createInterpreter(AlifRuntimeState* _runtime, const AlifCon
 
 
 	AlifInterpreterConfig config = ALIFINTERPRETEECONFIG_LEGACY_INIT;
+
 	config.gil = ALIFINTERPRETERCONFIG_OWN_GIL;
 	init_interpSettings(interp, &config);
 
@@ -653,8 +660,10 @@ static void alifCore_createInterpreter(AlifRuntimeState* _runtime, const AlifCon
 		std::cout << ("can't make first thread") << std::endl;
 		exit(-1);
 	}
-	//alifThreadState_bind(tState);
-	//(void)alifThreadState_swapNoGIL(tState);
+
+
+	alifThreadState_bind(tState);
+	//(void)alifThreadState_swapNoGil(tState);
 
 	initInterp_createGIL(tState, config.gil);
 
@@ -664,6 +673,13 @@ static void alifCore_createInterpreter(AlifRuntimeState* _runtime, const AlifCon
 	*_tStateP = tState;
 
 }
+
+
+
+
+
+
+
 
 
 
@@ -855,10 +871,6 @@ static void alifCore_interpInit(AlifThreadState* _tState)
 
 
 
-
-
-
-
 static void alifInit_config(AlifRuntimeState* _runtime, AlifThreadState** _tStateP, const AlifConfig* _config)
 {
 	alifCore_initRuntime(_runtime, _config);
@@ -930,6 +942,7 @@ void alif_preInitializeFromAlifArgv(const AlifPreConfig* _srcConfig, const AlifA
 	runtime->preinitialized = 1;
 
 }
+
 
 
 
@@ -1042,13 +1055,11 @@ static void alifInit_core(AlifRuntimeState* _runtime, const AlifConfig* _srcConf
 
 
 
-
+	alifConfig_clear(&config);
 
 
 
 }
-
-
 
 
 

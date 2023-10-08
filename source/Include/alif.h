@@ -75,6 +75,7 @@
 //#include "AlifCpp/cellObject.h"
 //#include "iterObject.h"
 #include "AlifCpp/initConfig.h"
+#include "AlifCpp/code.h"
 #include "alifState.h"
 //#include "AlifCpp/genObject.h"
 //#include "descrObject.h"

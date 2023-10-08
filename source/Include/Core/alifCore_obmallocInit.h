@@ -12,8 +12,8 @@
 
 
 
-#define PTA(Alignments, x) \
-    ((PoolP* )((uint8_t *)&(pools.used[2*(x)]) - 2*sizeof(AlifMemBlock *)))
+#define PTA(pools, x) \
+    ((PoolP)((uint8_t *)&(pools.used[2*(x)]) - 2*sizeof(AlifMemBlock *)))
 #define PT(p, x)   PTA(p, x), PTA(p, x)
 
 #define PT_8(p, start) \

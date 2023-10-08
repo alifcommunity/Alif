@@ -21,16 +21,16 @@
 
 
 
-
+#include "alifCore_gc.h"          
 
 
 #include "alifCore_import.h"
-
+#include "alifCore_instruments.h"  
 
 
 #include "alifCore_obmalloc.h"  
 
-
+#include "alifCore_typeObject.h" 
 
 
 
@@ -55,10 +55,10 @@ public:
 
 	AlifInterpreterState* next;
 
-	int64_t id;
+	int64_t iD;
 	int64_t idRefcount;
 	int requiresIdref;
-	AlifThreadTypeLock IDmutex;
+	AlifThreadTypeLock iDmutex;
 
 
 
@@ -94,7 +94,7 @@ public:
 
 	AlifAtomicAddress alifFinalizing;
 
-	//GCRuntimeState gc;
+	GCRuntimeState gc;
 
 
 
@@ -109,33 +109,33 @@ public:
 
 
 
-	//AlifObject* sysdict;
+	AlifObject* sysDict;
 
 
-	//AlifObject* builtins;
+	AlifObject* builtins;
 
 	//ImportState imports;
 
 
-	//GilRuntimeState gil;
+	GilRuntimeState gil;
 
 
 
 
 
 
-	//AlifObject* codecSearchPath;
-	//AlifObject* codecSearchCache;
-	//AlifObject* codecErrorRegistry;
+	AlifObject* codecSearchPath;
+	AlifObject* codecSearchCache;
+	AlifObject* codecErrorRegistry;
 	int codecsInitialized;
 
 	AlifConfig config;
 	unsigned long featureFlags;
 
-	//AlifObject* dict;  
+	AlifObject* dict;  
 
-	//AlifObject* sysdictCopy;
-	//AlifObject* builtinsCopy;
+	AlifObject* sysDictCopy;
+	AlifObject* builtinsCopy;
 
 	//AlifFrameEvalFunction evalFrame;
 
@@ -143,7 +143,7 @@ public:
 
 	uint8_t activeFuncWatchers;
 
-	AlifSizeT co_extra_user_count;
+	AlifSizeT coExtraUserCount;
 	//FreeFunc coExtraFreeFuncs[MAX_COEXTRA_USERS];
 
 #ifdef HAVE_FORK
@@ -157,47 +157,47 @@ public:
 
 	ObmallocState obmalloc;
 
-	//AlifObject* auditHooks;
+	////AlifObject* auditHooks;
 	//AlifTypeWatchCallBack typeWatchers[TYPE_MAX_WATCHERS];
 	//AlifCodeWatchCallBack codeWatchers[CODE_MAX_WATCHERS];
 
 	uint8_t activeCodeWatchers;
 
-	//AlifObjectState object_state;
+	//AlifObjectState objectState;
 	//AlifUnicodeState unicode;
-	//AlifFloatState float_state;
-	//AlifLongState long_state;
+	//AlifFloatState floatState;
+	//AlifLongState longState;
 	//DtoaState dtoa;
-	//AlifFuncState func_state;
+	//AlifFuncState funcState;
 
 
 	//AlifSliceObject* sliceCache;
 
 	//AlifTupleState tuple;
 	//AlifListState list;
-	//AlifDictState dict_state;
-	//AlifSsyncGenState async_gen;
+	//AlifDictState dictState;
+	//AlifAsyncGenState asyncGen;
 	//AlfiContextState context;
-	//AlifExcState exc_state;
+	//AlifExcState excState;
 
 	//ASTState ast;
-	//TypesState types;
+	TypesState types;
 	//CallableCache callableCache;
 	//AlifOptimizerObject* optimizer;
 	uint16_t optimizerResumeThreshold;
 	uint16_t optimizerBackedgeThreshold;
 
-	//AlifMonitors monitors;
+	AlifGlobalMonitors monitors;
 	bool fOpcodeTraceSet;
 	bool sysProfileInitialized;
 	bool sysTraceInitialized;
 	AlifSizeT sysProfilingThreads; 
 	AlifSizeT sysTracingThreads; 
-	//AlifObject* monitoring_callables[ALIFMONITORING_TOOL_IDS][ALIFMONITORING_EVENTS];
-	//AlifObject* monitoring_tool_names[ALIFMONITORING_TOOL_IDS];
+	AlifObject* monitoringCallables[ALIFMONITORING_TOOL_IDS][ALIFMONITORING_EVENTS];
+	AlifObject* monitoringToolNames[ALIFMONITORING_TOOL_IDS];
 
-	//AlifInterpCachedObjects cached_objects;
-	//AlifInterpStaticObjects static_objects;
+	//AlifInterpCachedObjects cachedObjects;
+	//AlifInterpStaticObjects staticObjects;
 
 
 	AlifThreadState initialThread;

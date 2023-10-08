@@ -20,12 +20,12 @@ ALIFAPI_FUNC(void) alifThread_initThread();
 
 ALIFAPI_FUNC(unsigned long) alifThread_getThreadIdent();
 
-
-
-
-
-
-
+#if (defined(__APPLE__) || defined(__linux__) || defined(_WIN32) \
+     || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) \
+     || defined(__DragonFly__) || defined(_AIX))
+#define ALIFHAVE_THREAD_NATIVEID
+ALIFAPI_FUNC(unsigned long) alifThread_getThread_nativeID();
+#endif
 
 ALIFAPI_FUNC(AlifThreadTypeLock) alifThread_allocateLock();
 ALIFAPI_FUNC(void) alifThread_freeLock(AlifThreadTypeLock);
@@ -120,7 +120,7 @@ ALIFAPI_FUNC(int) alifThread_tssIsCreated(AlifTssT* );
 ALIFAPI_FUNC(int) alifThread_tssCreate(AlifTssT* );
 ALIFAPI_FUNC(void) alifThread_tssDelete(AlifTssT* );
 
-
+ALIFAPI_FUNC(void*) alifThread_tssGet(AlifTssT* );
 
 
 #ifndef ALIF_LIMITED_API
