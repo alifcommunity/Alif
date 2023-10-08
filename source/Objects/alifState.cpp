@@ -467,7 +467,7 @@ void alifRuntimeState_init(AlifRuntimeState* _runtime)
 	//AlifSizeT unicodeNextIndex = _runtime->unicodeState.IDs.nextIndex;
 
 	AlifThreadTypeLock locks[NUMLOCKS];
-	alloc_forRuntime(locks);
+	if (alloc_forRuntime(locks) != 0) exit(-1);
 
 
 
@@ -1448,7 +1448,7 @@ static AlifThreadState* new_threadState(AlifInterpreterState* _interp)
 	init_threadState(TState, _interp, iD);
 	//add_threadState(_interp, TState, oldHead);
 
-	HEAD_UNLOCK(runtime);
+	//HEAD_UNLOCK(runtime);
 	if (!usedNewTState) {
 
 		alifMem_rawFree(newTState);
