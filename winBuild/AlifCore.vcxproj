@@ -178,6 +178,7 @@
     <ClInclude Include="..\source\Include\Core\alifCore_gil.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_import.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_initConfig.h" />
+    <ClInclude Include="..\source\Include\Core\alifCore_instruments.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_interp.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_object.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_obmalloc.h" />

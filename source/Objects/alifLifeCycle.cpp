@@ -3,7 +3,7 @@
 #include "alif.h"
 
 //#include "alifCore_call.h"
-//#include "alifCore_cEval.h"
+#include "alifCore_cEval.h"
 //#include "alifCore_codeCS.h"
 //#include "alifCore_context.h"
 //#include "alifCore_dict.h"
@@ -28,7 +28,7 @@
 //#include "alifCore_sliceObject.h"
 //#include "alifCore_sysModule.h"
 //#include "alifCore_traceback.h"
-//#include "alifCore_typeObject.h"
+#include "alifCore_typeObject.h"
 //#include "alifCore_typeVarObject.h"
 //#include "alifCore_unicodeObject.h"
 //#include "alifCore_weakRef.h"
@@ -100,7 +100,7 @@ AlifRuntimeState alifRuntime
 __attribute__((section(".AlifRuntime")))
 #endif
 = ALIFRUNTIMESTATE_INIT(alifRuntime);
-//ALIFCOMP_DIAGPOP
+ALIFCOMP_DIAGPOP
 
 static int runtimeInitialized = 0;
 
@@ -662,8 +662,8 @@ static void alifCore_createInterpreter(AlifRuntimeState* _runtime,
 	}
 
 
-	//alifThreadState_bind(tState);
-	//(void)alifThreadState_swapNoGIL(tState);
+	alifThreadState_bind(tState);
+	//(void)alifThreadState_swapNoGil(tState);
 
 	initInterp_createGIL(tState, config.gil);
 
@@ -1055,13 +1055,11 @@ static void alifInit_core(AlifRuntimeState* _runtime, const AlifConfig* _srcConf
 
 
 
-
+	alifConfig_clear(&config);
 
 
 
 }
-
-
 
 
 

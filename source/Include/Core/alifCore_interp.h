@@ -58,7 +58,7 @@ public:
 	int64_t iD;
 	int64_t idRefcount;
 	int requiresIdref;
-	AlifThreadTypeLock IDmutex;
+	AlifThreadTypeLock iDmutex;
 
 
 
@@ -109,7 +109,7 @@ public:
 
 
 
-	AlifObject* sysdict;
+	AlifObject* sysDict;
 
 
 	AlifObject* builtins;
@@ -134,7 +134,7 @@ public:
 
 	AlifObject* dict;  
 
-	AlifObject* sysdictCopy;
+	AlifObject* sysDictCopy;
 	AlifObject* builtinsCopy;
 
 	//AlifFrameEvalFunction evalFrame;
@@ -143,7 +143,7 @@ public:
 
 	uint8_t activeFuncWatchers;
 
-	AlifSizeT co_extra_user_count;
+	AlifSizeT coExtraUserCount;
 	//FreeFunc coExtraFreeFuncs[MAX_COEXTRA_USERS];
 
 #ifdef HAVE_FORK
@@ -157,28 +157,28 @@ public:
 
 	ObmallocState obmalloc;
 
-	AlifObject* auditHooks;
+	////AlifObject* auditHooks;
 	//AlifTypeWatchCallBack typeWatchers[TYPE_MAX_WATCHERS];
 	//AlifCodeWatchCallBack codeWatchers[CODE_MAX_WATCHERS];
 
 	uint8_t activeCodeWatchers;
 
-	//AlifObjectState object_state;
+	//AlifObjectState objectState;
 	//AlifUnicodeState unicode;
-	//AlifFloatState float_state;
-	//AlifLongState long_state;
+	//AlifFloatState floatState;
+	//AlifLongState longState;
 	//DtoaState dtoa;
-	//AlifFuncState func_state;
+	//AlifFuncState funcState;
 
 
 	//AlifSliceObject* sliceCache;
 
 	//AlifTupleState tuple;
 	//AlifListState list;
-	//AlifDictState dict_state;
-	//AlifSsyncGenState async_gen;
+	//AlifDictState dictState;
+	//AlifAsyncGenState asyncGen;
 	//AlfiContextState context;
-	//AlifExcState exc_state;
+	//AlifExcState excState;
 
 	//ASTState ast;
 	TypesState types;
@@ -193,11 +193,11 @@ public:
 	bool sysTraceInitialized;
 	AlifSizeT sysProfilingThreads; 
 	AlifSizeT sysTracingThreads; 
-	AlifObject* monitoring_callables[ALIFMONITORING_TOOL_IDS][ALIFMONITORING_EVENTS];
-	AlifObject* monitoring_tool_names[ALIFMONITORING_TOOL_IDS];
+	AlifObject* monitoringCallables[ALIFMONITORING_TOOL_IDS][ALIFMONITORING_EVENTS];
+	AlifObject* monitoringToolNames[ALIFMONITORING_TOOL_IDS];
 
-	//AlifInterpCachedObjects cached_objects;
-	//AlifInterpStaticObjects static_objects;
+	//AlifInterpCachedObjects cachedObjects;
+	//AlifInterpStaticObjects staticObjects;
 
 
 	AlifThreadState initialThread;

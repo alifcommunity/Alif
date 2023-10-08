@@ -236,17 +236,16 @@ unsigned long alifThread_getThreadIdent(void)
 
 
 
+unsigned long alifThread_getThread_nativeID()
+{
+	if (!INITIALIZED) {
+		alifThread_initThread();
+	}
 
-
-
-
-
-
-
-
-
-
-
+	DWORD native_id;
+	native_id = GetCurrentThreadId();
+	return (unsigned long)native_id;
+}
 
 
 
@@ -473,4 +472,29 @@ void alifThread_tssDelete(AlifTssT* _key)
 	TlsFree(_key->key);
 	_key->key = TLS_OUT_OF_INDEXES;
 	_key->isInitialized = 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+void* alifThread_tssGet(AlifTssT* _key)
+{
+	//assert(_key != nullptr);
+
+
+
+
+
+
+	DWORD error = GetLastError();
+	void* result = TlsGetValue(_key->key);
+	SetLastError(error);
+	return result;
 }

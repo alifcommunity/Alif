@@ -15,8 +15,8 @@
 #include "alifCore_runtimeInit.h"
 //#include "alifCore_sysModule.h"
  #include "alifCore_typeObject.h"   
-  
 //#include "alifCore_weakref.h"    
+
 
 
 
@@ -68,7 +68,7 @@
 ALIF_THREAD_LOCAL AlifThreadState* alifTssTState = nullptr;
 #endif
 
-static inline AlifThreadState* current_fastGet(AlifRuntimeState* ALIF_UNUSED(runtime))
+static inline AlifThreadState* current_fastGet(AlifRuntimeState* ALIF_UNUSED(_runtime))
 {
 #ifdef HAVE_THREAD_LOCAL
 	return alifTssTState;
@@ -78,27 +78,27 @@ static inline AlifThreadState* current_fastGet(AlifRuntimeState* ALIF_UNUSED(run
 }
 
 
+static inline void current_fastSet(AlifRuntimeState* ALIF_UNUSED(_runtime), AlifThreadState* _tState)
+{
+	//assert(_tState != NULL);
+#ifdef HAVE_THREAD_LOCAL
+	alifTssTState = _tState;
+#else
+
+#  error "no supported thread-local variable storage classifier"
+#endif
+}
 
 
+static inline void current_fastClear(AlifRuntimeState* ALIF_UNUSED(_runtime))
+{
+#ifdef HAVE_THREAD_LOCAL
+	alifTssTState = nullptr;
+#else
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#  error "no supported thread-local variable storage classifier"
+#endif
+}
 
 
 
@@ -137,11 +137,11 @@ static inline void tState_tssFini(AlifTssT* _key)
 }
 
 
-
-
-
-
-
+static inline AlifThreadState* tState_tssGet(AlifTssT* _key)
+{
+	//assert(tState_tssInitialized(_key));
+	return (AlifThreadState*)alifThread_tssGet(_key);
+}
 
 
 
@@ -198,6 +198,8 @@ static inline void tState_tssFini(AlifTssT* _key)
     tState_tssInit(&(_runtime)->autoTSSKey)
 #define GILSTATE_TSS_FINI(_runtime) \
     tState_tssFini(&(_runtime)->autoTSSKey)
+#define GILSTATE_TSS_GET(_runtime) \
+    tState_tssGet(&(_runtime)->autoTSSKey)
 
 
 
@@ -234,12 +236,30 @@ static inline void tState_tssFini(AlifTssT* _key)
 
 
 
+static void bind_gilState_tState(AlifThreadState*);
+static void unbind_gilState_tState(AlifThreadState*);
 
+static void bind_tState(AlifThreadState* _tState)
+{
+	//assert(_tState != nullptr);
+	//assert(tstate_is_alive(_tState) && !_tState->_status.bound);
+	//assert(!_tState->_status.unbound);  // just in case
+	//assert(!_tState->_status.bound_gilstate);
+	//assert(_tState != gilstate_tss_get(_tState->interp->runtime));
+	//assert(!_tState->_status.active);
+	//assert(_tState->thread_id == 0);
+	//assert(_tState->native_thread_id == 0);
 
 
 
 
+	_tState->threadID = alifThread_getThreadIdent();
+#ifdef ALIFHAVE_THREAD_NATIVEID
+	_tState->nativeThreadID = alifThread_getThread_nativeID();
+#endif
 
+	_tState->status.bound = 1;
+}
 
 
 
@@ -283,46 +303,24 @@ static inline void tState_tssFini(AlifTssT* _key)
 
 
 
+static void bind_gilState_tState(AlifThreadState* _tState)
+{
+	//assert(_tState != nullptr);
+	//assert(tState_isAlive(_tState));
+	//assert(tState_isBound(_tState));
+	// XXX assert(!_tState->_status.active);
+	//assert(!_tState->_status.boundGilState);
 
+	AlifRuntimeState* runtime = _tState->interp->runtime;
+	AlifThreadState* tCur = GILSTATE_TSS_GET(runtime);
+	//assert(_tState != tCur);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	if (tCur != nullptr) {
+		tCur->status.boundGilState = 0;
+	}
+	GILSTATE_TSS_GET(runtime, _tState);
+	_tState->status.boundGilState = 1;
+}
 
 
 
@@ -467,7 +465,7 @@ void alifRuntimeState_init(AlifRuntimeState* _runtime)
 	//AlifSizeT unicodeNextIndex = _runtime->unicodeState.IDs.nextIndex;
 
 	AlifThreadTypeLock locks[NUMLOCKS];
-	if (alloc_forRuntime(locks) != 0) exit(-1);
+	alloc_forRuntime(locks);
 
 
 
@@ -690,15 +688,15 @@ static void init_interpreter(
 	alifGC_initState(&_interp->gc);
 	alifConfig_initAlifConfig(&_interp->config);
 	alifType_initCache(_interp);
-	//for (int i = 0; i < 15; i++) {
-		//_interp->monitors.tools[i] = 0;
-	//}
-	//for (int t = 0; t < ALIF_MONITORING_TOOL_IDS; t++) {
-		//for (int e = 0; e < ALIF_MONITORING_EVENTS; e++) {
-			//_interp->monitoringCallables[t][e] = nullptr;
+	for (int i = 0; i < 15; i++) {
+		_interp->monitors.tools[i] = 0;
+	}
+	for (int t = 0; t < ALIFMONITORING_TOOL_IDS; t++) {
+		for (int e = 0; e < ALIFMONITORING_EVENTS; e++) {
+			_interp->monitoringCallables[t][e] = nullptr;
 
-		//}
-	//}
+		}
+	}
 	_interp->sysProfileInitialized = false;
 	_interp->sysTraceInitialized = false;
 	//_interp->optimizer = &alifOptimizerDefault;
@@ -726,7 +724,7 @@ void alifInterpreterState_new(AlifThreadState* _tState, AlifInterpreterState** _
 
 
 	if (_tState != nullptr) {
-		//if (AlifSys_audit(tstate, "alif.AlifInterpreterStateNew", nullptr) < 0) {
+		//if (AlifSys_audit(_tState, "alif.AlifInterpreterStateNew", nullptr) < 0) {
 		//	std::cout << "sys.audit failed" << std::endl; exit(-1);
 		//}
 	}
@@ -981,40 +979,7 @@ error:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+static inline void tState_deactivate(AlifThreadState*);
 
 
 
@@ -1378,7 +1343,7 @@ static void init_threadState(AlifThreadState* _TState,
 
 
 
-	_TState->gilstateCounter = 1;
+	_TState->gilStateCounter = 1;
 
 	//_TState->currentFrame = nullptr;
 	//_TState->datastackChunk = nullptr;
@@ -1390,25 +1355,25 @@ static void init_threadState(AlifThreadState* _TState,
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+static void add_threadState(AlifInterpreterState* _interp, AlifThreadState* _tState,
+	AlifThreadState* _next)
+{
+	//assert(_interp->thread.head != _tState);
+	//assert((_next != nullptr && _tState->id != 1) ||
+		//(_next == nullptr && _tState->id == 1));
+	if (_next != nullptr) {
+		//assert(_next->prev == nullptr || _next->prev == _tState);
+		_next->prev = _tState;
+	}
+	_tState->next = _next;
+	//assert(_tState->prev == nullptr);
+	_interp->thread.head = _tState;
+}
 
 
 static AlifThreadState* new_threadState(AlifInterpreterState* _interp)
 {
-	AlifThreadState* TState;
+	AlifThreadState* tState;
 	AlifRuntimeState* runtime = _interp->runtime;
 
 
@@ -1431,29 +1396,29 @@ static AlifThreadState* new_threadState(AlifInterpreterState* _interp)
 
 		//assert(iD == 1);
 		usedNewTState = 0;
-		TState = &_interp->initialThread;
+		tState = &_interp->initialThread;
 	}
 	else {
 
 		//assert(iD > 1);
 		//assert(old_head->prev == nullptr);
 		usedNewTState = 1;
-		TState = newTState;
+		tState = newTState;
 
-		memcpy(TState,
+		memcpy(tState,
 			&initial.mainInterpreter.initialThread,
-			sizeof(*TState));
+			sizeof(*tState));
 	}
 
-	init_threadState(TState, _interp, iD);
-	//add_threadState(_interp, TState, oldHead);
+	init_threadState(tState, _interp, iD);
+	add_threadState(_interp, tState, oldHead);
 
-	//HEAD_UNLOCK(runtime);
+	HEAD_UNLOCK(runtime);
 	if (!usedNewTState) {
 
 		alifMem_rawFree(newTState);
 	}
-	return TState;
+	return tState;
 }
 
 
@@ -1780,16 +1745,35 @@ AlifThreadState* alifThreadState_new(AlifInterpreterState* _interp)
 
 
 
+static inline void tState_activate(AlifThreadState* _tState)
+{
+	//assert(tstate != NULL);
 
+	//assert(tstate_is_bound(tstate));
+	//assert(!tstate->_status.active);
 
+	//assert(!tstate->_status.bound_gilstate ||
+		//tstate == gilstate_tss_get((tstate->interp->runtime)));
+	if (!_tState->status.boundGilState) {
+		bind_gilState_tState(_tState);
+	}
 
+	_tState->status.active = 1;
+}
 
 
+static inline void tState_deactivate(AlifThreadState* _tState)
+{
+	//assert(_tState != nullptr);
 
+	//assert(tstate_isBound(tstate));
+	//assert(tstate->status.active);
 
+	_tState->status.active = 0;
 
 
 
+}
 
 
 
@@ -1865,18 +1849,42 @@ AlifThreadState* alifThreadState_new(AlifInterpreterState* _interp)
 
 
 
+static void swap_threadStates(AlifRuntimeState* _runtime,
+	AlifThreadState* _oldTs, AlifThreadState* _newts)
+{
 
+	current_fastClear(_runtime);
 
+	if (_oldTs != nullptr) {
 
+		tState_deactivate(_oldTs);
+	}
 
+	if (_newts != nullptr) {
 
 
+		current_fastSet(_runtime, _newts);
+		tState_activate(_newts);
+	}
+}
 
+AlifThreadState* alifThreadState_swapNoGIL(AlifThreadState* _newts)
+{
+#if defined(ALIF_DEBUG)
 
 
 
+	int err = errno;
+#endif
 
+	AlifThreadState* oldts = current_fastGet(&alifRuntime);
+	swap_threadStates(&alifRuntime, oldts, _newts);
 
+#if defined(ALIF_DEBUG)
+	errno = err;
+#endif
+	return oldts;
+}
 
 
 
@@ -1897,29 +1905,19 @@ AlifThreadState* alifThreadState_new(AlifInterpreterState* _interp)
 
 
 
+void alifThreadState_bind(AlifThreadState* _tState)
+{
 
 
+	//assert(alifThreadState_checkConsistency(_tState));
 
+	bind_tState(_tState);
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	if (GILSTATE_TSS_GET(_tState->interp->runtime) == nullptr) {
+		bind_gilState_tState(_tState);
+	}
+}
 
 
 

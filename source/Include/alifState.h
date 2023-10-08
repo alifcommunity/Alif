@@ -79,7 +79,7 @@ public:
 
 		unsigned int unbound : 1;
 
-		unsigned int boundGilstate : 1;
+		unsigned int boundGilState : 1;
 
 		unsigned int active : 1;
 
@@ -123,7 +123,7 @@ public:
 
 	AlifObject* dict;  
 
-	int gilstateCounter;
+	int gilStateCounter;
 
 	AlifObject* asyncExc; 
 	unsigned long threadID; 

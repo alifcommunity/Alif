@@ -1,9 +1,9 @@
 
 #include "alif.h"
 #include "alifCore_atomic.h"        
-//#include "alifCore_ceval.h"         
-//#include "alifCore_initConfig.h"    
-//#include "alifCore_interp.h"        
+#include "alifCore_ceval.h"         
+#include "alifCore_initConfig.h"    
+#include "alifCore_interp.h"        
 //#include "alifCore_alifErrors.h"      
 #include "alifCore_alifLifeCycle.h"   
 #include "alifCore_alifMem.h"        

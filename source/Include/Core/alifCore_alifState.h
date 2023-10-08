@@ -131,7 +131,7 @@ extern AlifThreadState* alifThreadState_new(AlifInterpreterState*);
 
 
 
-
+extern void alifThreadState_bind(AlifThreadState* _tState);
 
 
 
