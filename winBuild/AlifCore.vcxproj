@@ -141,12 +141,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\source\Include\alifBuffer.h" />
     <ClInclude Include="..\source\Include\alifConfig.h" />
     <ClInclude Include="..\source\Include\AlifCpp\alifDebug.h" />
     <ClInclude Include="..\source\Include\AlifCpp\alifLifeCycle.h" />
     <ClInclude Include="..\source\Include\AlifCpp\alifMem.h" />
     <ClInclude Include="..\source\Include\AlifCpp\alifThread.h" />
     <ClInclude Include="..\source\Include\AlifCpp\initConfig.h" />
+    <ClInclude Include="..\source\Include\AlifCpp\object.h" />
     <ClInclude Include="..\source\Include\alifLifeCycle.h" />
     <ClInclude Include="..\source\Include\alifMacro.h" />
     <ClInclude Include="..\source\Include\alifMem.h" />
@@ -164,10 +166,12 @@
     <ClInclude Include="..\source\Include\Core\alifCore_alifState.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_alifThread.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_atomic.h" />
+    <ClInclude Include="..\source\Include\Core\alifCore_ceval_state.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_code.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_condVar.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_fileUtils.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_getOpt.h" />
+    <ClInclude Include="..\source\Include\Core\alifCore_gil.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_import.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_initConfig.h" />
     <ClInclude Include="..\source\Include\Core\alifCore_interp.h" />
@@ -179,6 +183,7 @@
     <ClInclude Include="..\source\Include\exports.h" />
     <ClInclude Include="..\source\Include\fileObject.h" />
     <ClInclude Include="..\source\Include\fileUtils.h" />
+    <ClInclude Include="..\source\Include\object.h" />
     <ClInclude Include="..\source\Include\objImpl.h" />
     <ClInclude Include="..\source\Include\osDefs.h" />
     <ClInclude Include="..\source\Include\thread_nt.h" />

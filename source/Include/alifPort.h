@@ -93,6 +93,12 @@
 
 
 
+#define ALIF_UINT32_T uint32_t
+#define ALIF_UINT64_T uint64_t
+
+
+#define ALIF_INT32_T int32_t
+#define ALIF_INT64_T int64_t
 
 
 
@@ -132,14 +138,7 @@
 
 
 
-
-
-
-
-
-
-
-
+typedef AlifSizeT AlifHashT;
 
 
 

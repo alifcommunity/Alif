@@ -163,6 +163,6 @@ extern void alifInterpreterState_enable(AlifRuntimeState*);
 
 
 #define HEAD_LOCK(runtime) \
-    //alifThread_acquireLock((runtime)->alifInterpreters.mutex, WAIT_LOCK)
+    alifThread_acquireLock((runtime)->alifInterpreters.mutex, WAIT_LOCK)
 #define HEAD_UNLOCK(runtime) \
     alifThread_releaseLock((runtime)->alifInterpreters.mutex)

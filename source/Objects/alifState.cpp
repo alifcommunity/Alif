@@ -8,7 +8,7 @@
 //#include "alifCore_frame.h"
 #include "alifCore_initconfig.h"
 //#include "alifCore_object.h"       
-//#include "alifEore_pyerrors.h"
+//#include "alifEore_alifErrors.h"
 #include "alifCore_alifLifeCycle.h"
 #include "alifCore_alifMem.h"      
 #include "alifCore_alifState.h"
@@ -1331,16 +1331,16 @@ static void init_threadState(AlifThreadState* _TState,
 	//assert(_TState->next == nullptr);
 	//assert(_TState->prev == nullptr);
 
-	//assert(_id > 0);
+	//assert(_iD > 0);
 	_TState->iD = _iD;
 
 
 
-	//_TState->alifRecursionLimit = _interp->ceval.recursionLimit,
-	//	_TState->alifRecursionRemaining = _interp->ceval.recursionLimit,
-	//	_TState->cRecursionRemaining = alif_C_RECURSION_LIMIT;
+	_TState->alifRecursionLimit = _interp->cEval.recursionLimit,
+	_TState->alifRecursionRemaining = _interp->cEval.recursionLimit,
+	_TState->cRecursionRemaining = ALIFC_RECURSION_LIMIT;
 
-	//_TState->excInfo = &_TState->excState;
+	_TState->excInfo = &_TState->excState;
 
 
 

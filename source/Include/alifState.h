@@ -29,6 +29,8 @@ ALIFAPI_FUNC(AlifInterpreterState*) alifInterpreterState_new();
 
 
 
+class AlifErrStackItem {
+public:
 
 
 
@@ -41,13 +43,11 @@ ALIFAPI_FUNC(AlifInterpreterState*) alifInterpreterState_new();
 
 
 
+	//AlifObject* excValue;
 
+	class ErrStackitem* previousItem;
 
-
-
-
-
-
+};
 
 
 
@@ -119,7 +119,7 @@ public:
 
 
 
-	//AlifErrStackItem* excInfo;
+	AlifErrStackItem* excInfo;
 
 	//AlifObject* dict;  
 
@@ -190,19 +190,19 @@ public:
 
 
 
-	//AlifErrStackItem excState;
+	AlifErrStackItem excState;
 
 };
 
+#ifdef __wasi__
 
 
 
+#  define ALIFC_RECURSION_LIMIT 500
+#else
 
-
-
-
-
-
+#  define ALIFC_RECURSION_LIMIT 1500
+#endif
 
 
 

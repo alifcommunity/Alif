@@ -960,7 +960,7 @@ static AlifSizeT getNumGlobal_allocatedBlocks(AlifRuntimeState* _runtime)
 		}
 	}
 	else {
-		HEAD_LOCK(runtime);
+		HEAD_LOCK(_runtime);
 		AlifInterpreterState* _interp = alifInterpreterState_head();
 
 #ifdef ALIF_DEBUG
