@@ -143,14 +143,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\source\Include\alif.h" />
     <ClInclude Include="..\source\resources\resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\source\resources\Alif5.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\source\Objects\Main\alif.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="AlifCore.vcxproj">
