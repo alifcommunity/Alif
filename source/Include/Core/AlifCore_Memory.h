@@ -16,51 +16,6 @@
 */
 
 
-/* ------ for test only ------ */
-#ifdef _WIN32
-	#define _WINDOWS
-	#ifdef _WIN64
-		#define _WINDOWS64
-		#define _OS64
-	#else 
-		#define _WINDOWS32
-		#define _OS32
-	#endif
-#elif defined(__linux__)
-	#ifdef __x86_64__
-		#define _LINUX64
-		#define _OS64
-	#else
-		#define _LINUX32
-		#define _OS32
-	#endif
-#elif defined(__APPLE__)
-	#ifdef TARGET_OS_MAC
-		#ifdef TARGET_CPU_X86
-			#define _MAC32
-			#define _OS32
-		#elif defined(TARGET_CPU_X86_64)
-			#define _MAC64
-			#define _OS64
-		#elif defined(TARGET_CPU_ARM64)
-			#define _MAC64_ARM
-			#define _OS64
-		#endif
-	#endif 
-#elif defined(__ARM_ARCH)
-	#if __ARM_ARCH >= 8
-		#define _ARM64
-		#define _OS64
-	#else
-		#define _ARM32
-		#define _OS32
-	#endif
-#else
-	#error L"منصة تشغيل غير معروفة"
-#endif
-
-
-
 #if defined(_OS64)
 	using AlifSizeT = uint64_t;
 #elif defined(_OS32)
@@ -68,18 +23,9 @@
 #endif
 
 
-class AlifObj {
-public:
-	AlifSizeT ref{};
-	const char* type{};
-};
-/* ------ !for test only ------ */
-
-
-
 #if defined(_OS64)
 	#define BLOCK_SIZE         1024
-	#define BLOCK_NUMS         512
+	#define BLOCK_NUMS         1024
 
 	#define FSEGS_SIZE         2048
 #elif defined(_OS32)
@@ -163,7 +109,7 @@ public:
 	AlifSizeT objNums{};
 };
 
-AlifMemory alifMem{};
+static AlifMemory alifMem{};
 
 
 void alif_memoryInit();
@@ -181,3 +127,5 @@ inline void alifMem_dataFree(void*);
 void* alifMem_objRealloc(void*, AlifSizeT);
 void* alifMem_dataRealloc(void*, AlifSizeT);
 
+
+const void alif_getMemState();

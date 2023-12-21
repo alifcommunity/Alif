@@ -1,13 +1,8 @@
-﻿#include <iostream>
+﻿#include "alif.h"
 #include "AlifCore_Memory.h"
-#include <chrono>
-#ifdef _WINDOWS
-#include <fcntl.h>
-#include <io.h>
-#else
-#include <cstring> // memcpy()
-#include <codecvt>
-#include <locale>
+
+#ifndef _WINDOWS
+	#include <cstring> // memcpy()
 #endif
 
 
@@ -53,6 +48,7 @@ static inline T* alif_new(AlifSizeT _count = 1) {
 		std::wcout << e.what() << std::endl;
 		alifMemError_noMemory();
 	}
+	return nullptr;
 }
 /* ----------------------------------------------------------------------------------- */
 
@@ -472,7 +468,7 @@ void* alifMem_dataRealloc(void* _ptr, AlifSizeT _size) {
 	void* distPtr{};
 	AlifSizeT distSize = size_alignment(_size + ALIGNMENT);
 
-	if (sourcePtr == nullptr) std::wcout << __FUNCTION__ << std::endl; exit(-1); // temp - need to correct
+	if (sourcePtr == nullptr) { std::wcout << __FUNCTION__ << std::endl; exit(-1); } // temp - need to correct
 
 	if (distSize == 0) alifMemError_reallocLessThan();
 
@@ -522,7 +518,7 @@ void* alifMem_objRealloc(void* _ptr, AlifSizeT _size)
 	void* distPtr{};
 	AlifSizeT distSize = size_alignment(_size + ALIGNMENT);
 
-	if (sourcePtr == nullptr) std::wcout << __FUNCTION__ << std::endl; exit(-1); // temp - need to correct
+	if (sourcePtr == nullptr) { std::wcout << __FUNCTION__ << std::endl; exit(-1); } // temp - need to correct
 
 	if (distSize == 0) alifMemError_reallocLessThan();
 
@@ -622,11 +618,15 @@ static void rawMem_sizeAllocated()
 static void alifMem_sizeAllocated() 
 {
 	AlifSizeT alifMemSize{};
+	AlifSizeT alifAllocSize{};
 	AlifSizeT wasteSize{};
 	const wchar_t* alifMemSizeUnit = L"بايت";
+	const wchar_t* alifAllocSizeUnit = L"بايت";
 	const wchar_t* wasteSizeUnit = L"بايت";
 	std::pair<AlifSizeT, const wchar_t*> alifMemPair =
 		std::pair<AlifSizeT, const wchar_t*>(alifMemSize, alifMemSizeUnit);
+	std::pair<AlifSizeT, const wchar_t*> alifAllocPair =
+		std::pair<AlifSizeT, const wchar_t*>(alifAllocSize, alifAllocSizeUnit);
 	std::pair<AlifSizeT, const wchar_t*> wastePair =
 		std::pair<AlifSizeT, const wchar_t*>(wasteSize, wasteSizeUnit);
 	
@@ -634,22 +634,26 @@ static void alifMem_sizeAllocated()
 	while (currentBlock->next) {
 		if (currentBlock->freeSize < SEGMENT) {
 			wasteSize += currentBlock->freeSize;
-			alifMemSize += BLOCK_SIZE - currentBlock->freeSize;
+			alifAllocSize += BLOCK_SIZE - currentBlock->freeSize;
 		}
-		else {
-			alifMemSize += BLOCK_SIZE;
+		else if (currentBlock->freeSize < BLOCK_SIZE) {
+			alifAllocSize += BLOCK_SIZE - currentBlock->freeSize;
 		}
+		alifMemSize += BLOCK_SIZE;
 		currentBlock = currentBlock->next;
 	}
 	if (currentBlock->freeSize < SEGMENT) {
 		wasteSize += currentBlock->freeSize;
-		alifMemSize += BLOCK_SIZE - currentBlock->freeSize;
+		alifAllocSize += BLOCK_SIZE - currentBlock->freeSize;
 	}
-	else {
-		alifMemSize += BLOCK_SIZE;
+	else if (currentBlock->freeSize < BLOCK_SIZE) {
+		alifAllocSize += BLOCK_SIZE - currentBlock->freeSize;
 	}
+	alifMemSize += BLOCK_SIZE;
+
 
 	alifMemPair = convert(alifMemSize, alifMemSizeUnit);
+	alifAllocPair = convert(alifAllocSize, alifAllocSizeUnit);
 	wastePair = convert(wasteSize, wasteSizeUnit);
 
 	wprintf(L"I| --------------------------------------------- |I\n");
@@ -658,12 +662,20 @@ static void alifMem_sizeAllocated()
 	wprintf(L"I| %9lsa %9llu                          |I\n",
 		alifMemPair.second, alifMemPair.first);
 	wprintf(L"I| --------------------------------------------- |I\n");
+	wprintf(L"I|                         : ذاكرة ألف المستخدمة |I\n");
+	wprintf(L"I| %9lsa %9llu                          |I\n",
+		alifAllocPair.second, alifAllocPair.first);
+	wprintf(L"I| --------------------------------------------- |I\n");
 	wprintf(L"I|                          : الهدر في ذاكرة ألف |I\n");
 	wprintf(L"I| %9lsa %9llu                          |I\n",
 		wastePair.second, wastePair.first);
 #elif defined(_OS32)
 	wprintf(L"I| %9lsa %9u                          |I\n",
 		alifMemPair.second, alifMemPair.first);
+	wprintf(L"I| --------------------------------------------- |I\n");
+	wprintf(L"I|                         : ذاكرة ألف المستخدمة |I\n");
+	wprintf(L"I| %9lsa %9u                          |I\n",
+		alifAllocPair.second, alifAllocPair.first);
 	wprintf(L"I| --------------------------------------------- |I\n");
 	wprintf(L"I|                          : الهدر في ذاكرة ألف |I\n");
 	wprintf(L"I| %9lsa %9u                          |I\n",
@@ -721,10 +733,10 @@ static void freeBlocks_count()
 	wprintf(L"I| --------------------------------------------- |I\n");
 	wprintf(L"I|                             : عدد الكتل الحرة |I\n");
 #if defined(_OS64)
-	wprintf(L"I| %9lsa   %3i%1ls%3llu                          |I\n",
+	wprintf(L"I| %9lsa %4i%1ls%4llu                          |I\n",
 		L"كتلة", BLOCK_NUMS, L"\\", freeBlocks);
 #elif defined(_OS32)
-	wprintf(L"I| %9lsa   %3i%1ls%3u                          |I\n",
+	wprintf(L"I| %9lsa %4i%1ls%4u                          |I\n",
 		L"كتلة", BLOCK_NUMS, L"\\", freeBlocks);
 #endif
 }
@@ -761,44 +773,3 @@ const void alif_getMemState()
 }
 
 /* ----------------------------------------------------------------------------------- */
-
-class Num { // for test
-public:
-	AlifObj obj{};
-
-	size_t num{};
-};
-
-int main()
-{
-	
-#if defined(_WINDOWS)
-	bool a = _setmode(_fileno(stdout), _O_WTEXT);
-	bool b = _setmode(_fileno(stdin), _O_WTEXT);
-	if (!a or !b) { exit(-3); }
-#else
-	setlocale(LC_ALL, "");
-#endif
-
-	alif_memoryInit();
-
-	auto start = std::chrono::high_resolution_clock::now();
-
-	for (int i = 0; i < 100000; i++)
-	{
-		wchar_t* obj1 = (wchar_t*)alifMem_objAlloc(16);
-		//memcpy(obj1, L"abcdefg", sizeof(L"abcdefg"));
-		//wchar_t* obj2 = (wchar_t*)alifMem_objRealloc(obj1, 1030);
-		//alifMem_objFree(obj1);
-
-		//wchar_t* obj1 = (wchar_t*)malloc(10);
-		//free(obj1);
-	}
-
-	auto end = std::chrono::high_resolution_clock::now() - start;
-	alif_getMemState();
-
-	std::wcout << end.count() / 1000000 << std::endl;
-
-	return 0;
-}
