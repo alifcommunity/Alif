@@ -1,59 +1,60 @@
-﻿#include "alif.h"
-#include "AlifCore_Memory.h"
+#include "alif.h"
+#include "AlifCore_InitConfig.h"
 
-#include <chrono>
+
+//#ifdef _WINDOWS
+//#include <Windows.h>
+//#include <fcntl.h>
+//#include <io.h>
+//#else
+//#include <cstring>
+//#include <codecvt>
+//#include <locale>
+//#endif
+
+
+
+
+
+int alif_mainWchar(int _argc, wchar_t** _argv)
+{
+	AlifArgv args = {
+		.argc = _argc,
+		.useBytesArgv = 0,
+		.bytesArgv = nullptr,
+		.wcharArgv = _argv
+	};
+	return alifMain_main(&args);
+}
+
+
+
+int alif_mainBytes(int _argc, char** _argv)
+{
+	AlifArgv args = {
+		.argc = _argc,
+		.useBytesArgv = 1,
+		.bytesArgv = _argv,
+		.wcharArgv = nullptr
+	};
+	return 0;
+	//return alifMain_main(&args);
+}
 
 #ifdef _WINDOWS
-#include <Windows.h>
-#include <fcntl.h>
-#include <io.h>
-#else
-#include <codecvt>
-#include <locale>
-#endif
-
-
-/* ------ !for test only ------ */
-class AlifObj {
-public:
-	AlifSizeT ref{};
-	const char* type{};
-};
-/* ------ !for test only ------ */
-
-
-int wmain()
+int wmain(int _argc, wchar_t** _argv)
 {
+	_setmode(_fileno(stdout), _O_WTEXT);
+	_setmode(_fileno(stdin), _O_WTEXT);
 
-#if defined(_WINDOWS)
-	bool a = _setmode(_fileno(stdout), _O_WTEXT);
-	bool b = _setmode(_fileno(stdin), _O_WTEXT);
-	if (!a or !b) { exit(-3); }
-#else
-	setlocale(LC_ALL, "");
-#endif
-
-	alif_memoryInit();
-
-	auto start = std::chrono::high_resolution_clock::now();
-
-	for (int i = 0; i < 20000000; i++)
-	{
-		wchar_t* data1 = (wchar_t*)alifMem_dataAlloc(16);
-		memcpy(data1, L"abcdefg", sizeof(L"abcdefg"));
-		wchar_t* data2 = (wchar_t*)alifMem_dataRealloc(data1, 64);
-		alifMem_dataFree(data2);
-
-		//wchar_t* data1 = (wchar_t*)malloc(16);
-		//memcpy(data1, L"abcdefg", sizeof(L"abcdefg"));
-		//wchar_t* data2 = (wchar_t*)realloc(data1, 64);
-		//free(data2);
-	}
-
-	auto end = std::chrono::high_resolution_clock::now() - start;
-	alif_getMemState();
-
-	std::wcout << end.count() / 1000000 << L"ms" << std::endl;
-
-	return 0;
+	std::wcout << alif_getVersion() << std::endl;
+	wchar_t* argsv[] = { (wchar_t*)L"alif", (wchar_t*)L"example.alif" };
+	return alif_mainWchar(2, argsv);
 }
+#else
+int main(int _argc, char** _argv)
+{
+	char* argsv[] = { (char*)"alif", (char*)"example.alif" };
+	return alif_mainBytes(2, argsv);
+}
+#endif

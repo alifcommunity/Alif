@@ -17,13 +17,6 @@
 
 
 #if defined(_OS64)
-	using AlifSizeT = uint64_t;
-#elif defined(_OS32)
-	using AlifSizeT = uint32_t;
-#endif
-
-
-#if defined(_OS64)
 	#define BLOCK_SIZE         1024
 	#define BLOCK_NUMS         1024
 

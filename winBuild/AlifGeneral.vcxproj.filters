@@ -9,20 +9,17 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="Header Core Files">
-      <UniqueIdentifier>{22590bc6-b02a-485c-b081-0a8c0d8dcd71}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\source\Include\Core\AlifCore_Memory.h">
-      <Filter>Header Core Files</Filter>
+    <ClInclude Include="..\source\Include\AlifConfig.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\Include\Core\AlifCore_InitConfig.h">
-      <Filter>Header Core Files</Filter>
+    <ClInclude Include="..\source\Include\AlifVersion.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\Objects\Memory.cpp">
+    <ClCompile Include="..\source\Objects\Alif\GetVersion.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
