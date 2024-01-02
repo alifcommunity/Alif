@@ -19,10 +19,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\source\Include\Core\AlifCore_Memory.h" />
+    <ClInclude Include="..\source\Include\Core\AlifCore_AlifCycle.h" />
+    <ClInclude Include="..\source\Include\Core\AlifCore_GetConsoleLine.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_InitConfig.h" />
+    <ClInclude Include="..\source\Include\Core\AlifCore_Memory.h" />
+    <ClInclude Include="..\source\Include\Core\AlifCore_Runtime.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\source\Objects\AlifCycle.cpp" />
+    <ClCompile Include="..\source\Objects\GetConsoleLine.cpp" />
+    <ClCompile Include="..\source\Objects\InitConfig.cpp" />
     <ClCompile Include="..\source\Objects\Memory.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

@@ -154,6 +154,7 @@
   <ItemGroup>
     <ClInclude Include="..\source\Include\AlifConfig.h" />
     <ClInclude Include="..\source\Include\AlifVersion.h" />
+    <ClInclude Include="..\source\Include\InitConfig.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\Objects\Alif\GetVersion.cpp" />

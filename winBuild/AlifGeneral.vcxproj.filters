@@ -17,6 +17,9 @@
     <ClInclude Include="..\source\Include\AlifVersion.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\Include\InitConfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\Objects\Alif\GetVersion.cpp">

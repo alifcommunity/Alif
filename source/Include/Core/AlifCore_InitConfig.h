@@ -9,3 +9,8 @@ public:
 	char* const* bytesArgv;
 	wchar_t* const* wcharArgv;
 };
+
+
+
+void alifArgv_asWStrList(AlifConfig*, AlifArgv*);
+void alifConfig_read(AlifConfig*);

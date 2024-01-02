@@ -14,14 +14,32 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\source\Include\Core\AlifCore_Memory.h">
+    <ClInclude Include="..\source\Include\Core\AlifCore_InitConfig.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\Include\Core\AlifCore_InitConfig.h">
+    <ClInclude Include="..\source\Include\Core\AlifCore_AlifCycle.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_Runtime.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_GetConsoleLine.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_Memory.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\source\Objects\AlifCycle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Objects\GetConsoleLine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Objects\InitConfig.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\Objects\Memory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

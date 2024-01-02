@@ -5,3 +5,7 @@
 #include "AlifVersion.h"
 #include "AlifConfig.h"
 
+
+
+
+#include "InitConfig.h"

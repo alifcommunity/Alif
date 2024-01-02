@@ -1,4 +1,4 @@
-﻿#include "alif.h"
+#include "alif.h"
 #include "AlifCore_Memory.h"
 
 #ifndef _WINDOWS
@@ -16,6 +16,7 @@
 #define ALIFMEM_RAWALLOCSIZE (alifMem.rawAllocSize)
 #define ALIFMEM_OBJNUMS (alifMem.objNums)
 
+AlifMemory alifMem{};
 
 /* forward decleration */
 static void* freeSeg_alloc();
@@ -390,7 +391,7 @@ static inline void* alifMem_alloc(AlifSizeT _size)
 
 /* --------------------------------- ذاكرة ألف --------------------------------------- */
 void* alifMem_dataAlloc(AlifSizeT _size) {
-	return alifMem_alloc(_size);;
+	return alifMem_alloc(_size);
 }
 
 void* alifMem_objAlloc(AlifSizeT _size) {
