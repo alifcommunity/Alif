@@ -1,4 +1,4 @@
-/*
+﻿/*
 يقوم بإرجاع قيمة النسخة الحالية
 بالإضافة الى المترجم المستخدم في بناء اللغة
 */
@@ -23,11 +23,11 @@ const wchar_t* alif_getCompiler()
 }
 
 
-static wchar_t version[35];
+static wchar_t version[100]{};
 
 
 const wchar_t* alif_getVersion() {
-	swprintf_s(version, sizeof(version),
+	swprintf(version, sizeof(version),
 		L"%ls %ls", ALIF_VERSION, alif_getCompiler());
 	return version;
 }

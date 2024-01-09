@@ -5,11 +5,6 @@
 */
 
 
-
-#include <io.h>
-
-
-
 #ifdef _WIN32
 	#define _WINDOWS
 	#if defined(_WIN64)
@@ -119,3 +114,11 @@
 	using UAlifSizeT = unsigned int;
 	#define ALIF_SIZET INT_MAX
 #endif
+
+
+
+#ifdef _WINDOWS
+#include <io.h>
+#else
+#include <cstring> // memcpy()
+#endif // _WINDOWS

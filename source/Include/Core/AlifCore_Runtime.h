@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 
 class AlifRuntime {
@@ -16,5 +16,3 @@ public:
 	AlifConfig config{};
 };
 
-
-void alifRuntime_init();

@@ -1,9 +1,5 @@
-#include "alif.h"
+﻿#include "alif.h"
 #include "AlifCore_Memory.h"
-
-#ifndef _WINDOWS
-	#include <cstring> // memcpy()
-#endif
 
 
 #define ALIFMEM_FRAGIDX (alifMem.fragIdx)

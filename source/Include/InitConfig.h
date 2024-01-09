@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 
 /* --------------------------------- AlifWStringList --------------------------------- */
@@ -13,20 +13,15 @@ public:
 /* ----------------------------------- AlifConfig ------------------------------------ */
 class AlifConfig {
 public:
-	short useEnvironment{};
-	short configInOutMode{};
-	short parseArgv{};
-
+	AlifWStringList origArgv{};
 	AlifWStringList argv;
 
 	wchar_t* programName{};
 
-	int skipFirstLine{};
 	wchar_t* runCommand{};
 	wchar_t* runModule{};
 	wchar_t* runFilename{};
 };
 
 
-
-void alifConfig_initAlifConfig(AlifConfig*);
+void alif_localeInit();
