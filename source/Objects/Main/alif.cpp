@@ -1,4 +1,5 @@
 ﻿#include "alif.h"
+
 #include "AlifCore_Memory.h"
 #include "AlifCore_InitConfig.h"
 #include "AlifCore_AlifCycle.h"
@@ -24,6 +25,7 @@ static void alifMain_init(AlifArgv* _args) {
 }
 
 
+/* ----------------------------------- تشغيل اللغة ----------------------------------- */
 static void alifMain_runAlif(int* exitcode)
 {
 	AlifConfig config = tempConfig;
@@ -51,20 +53,19 @@ int alif_runMain()
 	return exitcode;
 }
 
-
+/* ----------------------------------- بداية اللغة ----------------------------------- */
 static int alifMain_main(AlifArgv* args) {
+	// هذه الدالة مسؤلة عن تهيئة اللغة للبدأ بالتنفيذ
 	alifMain_init(args);
 
+	// هذه الدالة مسؤلة عن تشغيل البرنامج
 	return alif_runMain();
 }
-
 
 int alif_mainWchar(int _argc, wchar_t** _argv) {
 	AlifArgv args = { _argc, 0, nullptr, _argv };
 	return alifMain_main(&args);
 }
-
-
 
 int alif_mainBytes(int _argc, char** _argv) {
 	AlifArgv args = { _argc, 1, _argv, nullptr };
@@ -74,12 +75,8 @@ int alif_mainBytes(int _argc, char** _argv) {
 #ifdef _WINDOWS
 int wmain(int _argc, wchar_t** _argv)
 {
-	wchar_t* argsv[] = { (wchar_t*)L"alif", (wchar_t*)L"example.alif" };
+	wchar_t* argsv[] = { (wchar_t*)L"alif", (wchar_t*)L"-v" };
 	alif_mainWchar(2, argsv);
-	std::wcout << tempConfig.argv.items[0] << std::endl;
-	std::wcout << tempConfig.origArgv.items[1] << std::endl;
-	std::wcout << tempConfig.programName << std::endl;
-	std::wcout << tempConfig.runFilename << std::endl;
 	return 0;
 }
 #else

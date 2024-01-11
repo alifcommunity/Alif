@@ -1,6 +1,6 @@
-﻿#pragma once
+#pragma once
 
-extern AlifSizeT optInd;
+extern AlifSizeT optIdx;
 extern const wchar_t* optArg;
 
 void alif_resetConsoleLine();

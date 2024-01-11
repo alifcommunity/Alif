@@ -13,18 +13,13 @@
 #elif defined(__cplusplus)
 #define COMPILER L"[C++]"
 #else
-#define COMPILER L"Unknown"
+#define COMPILER L"غير معرف"
 #endif
 #endif
 
-const wchar_t* alif_getCompiler()
-{
-	return COMPILER;
-}
-
+const wchar_t* alif_getCompiler() { return COMPILER; }
 
 static wchar_t version[100]{};
-
 
 const wchar_t* alif_getVersion() {
 	swprintf(version, sizeof(version),
@@ -32,5 +27,5 @@ const wchar_t* alif_getVersion() {
 	return version;
 }
 
-
-const unsigned long alifVersion = ALIF_VERSION_HEX; // يستخرج ك بيانات تستعمل في ملفات خارج اللغة
+// يستخرج ك بيانات تستعمل في ملفات خارج اللغة
+const unsigned long alifVersion = ALIF_VERSION_HEX;

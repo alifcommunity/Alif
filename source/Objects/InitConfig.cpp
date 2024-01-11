@@ -16,7 +16,7 @@ typedef uint32_t DWORD;
 
 #pragma warning(disable : 4996) // for disable unsafe functions error
 
-#define ALIF_ARRAY_LENGTH(arr) (sizeof(arr) / sizeof((arr)[0]))
+#define ALIF_ARRAY_LENGTH(arr) (sizeof(arr) / sizeof(arr[0]))
 
 static const wchar_t usageLine[] =
 L"usage: %ls [option] ... [-c cmd | -m mod | file | - ] [arg] ...\n";
@@ -64,13 +64,11 @@ void alifArgv_asWStrList(AlifConfig* _config, AlifArgv* _args) {
 	if (_args->useBytesArgv)
 	{
 		AlifWStringList wArgv = { 0, nullptr };
-		//wArgv.items = new wchar_t* [_args->argc] {};
-		wArgv.items = (wchar_t**)alifMem_dataAlloc(_args->argc * sizeof(wchar_t*));
+		wArgv.items = (wchar_t**)alifMem_dataAlloc(_args->argc * sizeof(wchar_t*) + 2);
 
 		for (int i = 0; i < _args->argc; i++) {
 			size_t len = mbstowcs(nullptr, (const char*)_args->bytesArgv[i], 0);
-			//wchar_t* arg = new wchar_t[len];
-			wchar_t* arg = (wchar_t*)alifMem_dataAlloc(len * sizeof(wchar_t));
+			wchar_t* arg = (wchar_t*)alifMem_dataAlloc(len * sizeof(wchar_t) + 2);
 			mbstowcs(arg, (const char*)_args->bytesArgv[i], len);
 			wArgv.items[i] = arg;
 			wArgv.length++;
@@ -158,24 +156,25 @@ static void parse_consoleLine(AlifConfig* _config, size_t* _index) {
 
 	if (printVer) {
 		wprintf(L"alif %ls\n", alif_getVersion());
+		exit(1);
 	}
 
 	if (_config->runModule == nullptr and _config->runCommand == nullptr
-		and optInd < argv->length and wcscmp(argv->items[optInd], L"-") != 0
+		and optIdx < argv->length and wcscmp(argv->items[optIdx], L"-") != 0
 		and _config->runFilename == nullptr) {
-		//_config->runFilename = new wchar_t[wcslen(argv->items[optInd]) + 1] {0};
-		_config->runFilename = (wchar_t*)alifMem_dataAlloc(wcslen(argv->items[optInd]) * sizeof(wchar_t) + 2);
-		memcpy(_config->runFilename, argv->items[optInd], wcslen(argv->items[optInd]) * sizeof(wchar_t));
+		AlifSizeT size = wcslen(argv->items[optIdx]) * sizeof(wchar_t);
+		_config->runFilename = (wchar_t*)alifMem_dataAlloc(size + 2);
+		memcpy(_config->runFilename, argv->items[optIdx], size);
 	}
 
 	if (_config->runCommand != nullptr or
 		_config->runModule != nullptr) {
-		optInd--;
+		optIdx--;
 	}
 
 	_config->programName = (wchar_t*)program;
 
-	*_index = optInd;
+	*_index = optIdx;
 }
 
 static void update_argv(AlifConfig* _config, AlifSizeT _index) {
@@ -209,10 +208,25 @@ static void update_argv(AlifConfig* _config, AlifSizeT _index) {
 	_config->argv = configArgv;
 }
 
+static int alif_extension(wchar_t* _filename) {
+	const wchar_t* dotPos = wcschr(_filename, L'.');
+	if (!dotPos) { return 0; }
+
+	const wchar_t* suffix = wcsstr(_filename, dotPos + 1);
+	if (suffix) { return wcscmp(suffix, L"alif") == 0; }
+	else { return 0; }
+}
+
 static void run_absPathFilename(AlifConfig* _config) {
 
-	if (!_config->runFilename) {
-		return;
+	wchar_t* filename = _config->runFilename;
+	// في حال عدم وجود ملف يجب تشغيله، لا تقم بجلب المسار
+	if (!filename) { return; }
+
+	// يتم التحقق من لاحقة الملف والتي يجب ان تكون .alif
+	if (!alif_extension(filename)) {
+		wprintf(L"%ls", L"تأكد من لاحقة الملف \n يجب ان ينتهي اسم الملف بـ .alif");
+		exit(-1);
 	}
 
 	wchar_t* absFilename{};
@@ -220,9 +234,8 @@ static void run_absPathFilename(AlifConfig* _config) {
 #ifdef _WINDOWS
 	wchar_t wOutBuf[MAX_PATH]{}, * wOutBufP = wOutBuf;
 	DWORD result{};
-	result = GetFullPathNameW(_config->runFilename, ALIF_ARRAY_LENGTH(wOutBuf), wOutBuf, nullptr);
+	result = GetFullPathNameW(filename, ALIF_ARRAY_LENGTH(wOutBuf), wOutBuf, nullptr);
 
-	//absFilename = new wchar_t[result + 1] {};
 	absFilename = (wchar_t*)alifMem_dataAlloc(result * sizeof(wchar_t) + 2);
 	memcpy(absFilename, wOutBuf, result * sizeof(wchar_t));
 #else
@@ -230,15 +243,13 @@ static void run_absPathFilename(AlifConfig* _config) {
 
 	char* cwd = getcwd(buf, sizeof(buf));
 	size_t len = mbstowcs(nullptr, cwd, 0);
-	//wchar_t* wCwd = new wchar_t[len] {};
-	wchar_t* wCwd = (wchar_t*)alifMem_dataAlloc(len * sizeof(wchar_t));
+	wchar_t* wCwd = (wchar_t*)alifMem_dataAlloc(len * sizeof(wchar_t) + 2);
 	mbstowcs(wCwd, cwd, len);
 
 	size_t cwdLen = wcslen(wCwd);
-	size_t pathLen = wcslen(_config->runFilename);
+	size_t pathLen = wcslen(filename);
 	size_t length = cwdLen + 1 + pathLen + 1;
 
-	//absFilename = new wchar_t[length] {};
 	absFilename = (wchar_t*)alifMem_dataAlloc(length * sizeof(wchar_t));
 
 	wchar_t* absPath = absFilename;
@@ -248,7 +259,7 @@ static void run_absPathFilename(AlifConfig* _config) {
 	*absPath = (wchar_t)L'/';
 	absPath++;
 
-	memcpy(absPath, _config->runFilename, pathLen * sizeof(wchar_t));
+	memcpy(absPath, filename, pathLen * sizeof(wchar_t));
 	absPath += pathLen;
 
 	*absPath = 0;
@@ -259,10 +270,13 @@ static void run_absPathFilename(AlifConfig* _config) {
 
 static void config_readConsole(AlifConfig* _config) {
 	size_t index{};
+	// تقوم هذه الدالة بتحليل سطر الطرفية
 	parse_consoleLine(_config, &index);
 
+	// تقوم هذه الدالة بجلب المسار الخاص بتنفيذ الملف فقط
 	run_absPathFilename(_config);
 
+	// تقوم هذه الدالة بتحديث المعطيات الممررة عبر الطرفية
 	update_argv(_config, index);
 }
 

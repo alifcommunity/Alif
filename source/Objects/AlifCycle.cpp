@@ -11,7 +11,9 @@
 AlifRuntime alifRuntime{};
 
 
-
+/*
+	هذا الملف ليس له عمل في الوقت الحالي ولكن سيتم إستخدامه في المستقبل
+*/
 
 
 void alif_initFromConfig(AlifConfig* _config) {

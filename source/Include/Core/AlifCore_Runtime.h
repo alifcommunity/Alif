@@ -10,9 +10,5 @@ public:
 	short configInitialized{};
 
 	uint32_t mainThread{};
-
-	AlifWStringList origArgv{};
-
-	AlifConfig config{};
 };
 
