@@ -3,14 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34009.444
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Alif", "Alif.vcxproj", "{2090DBF5-9749-4CF1-94DC-1495DF2226E3}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AlifCore", "AlifCore.vcxproj", "{374B810E-2C2F-4512-AED8-A5A115B6DC09}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{776C81C7-34B9-4940-85F8-EC256AF6567A}"
-	ProjectSection(SolutionItems) = preProject
-		..\source\Include\AlifCpp\code.h = ..\source\Include\AlifCpp\code.h
-	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "alif", "Alif.vcxproj", "{6F25B086-E62D-482D-832F-C548413D585C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AlifGeneral", "AlifGeneral.vcxproj", "{8604DB0E-C2A6-49F6-BE9B-755878FDA8F8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,14 +19,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{2090DBF5-9749-4CF1-94DC-1495DF2226E3}.Debug|x64.ActiveCfg = Debug|x64
-		{2090DBF5-9749-4CF1-94DC-1495DF2226E3}.Debug|x64.Build.0 = Debug|x64
-		{2090DBF5-9749-4CF1-94DC-1495DF2226E3}.Debug|x86.ActiveCfg = Debug|Win32
-		{2090DBF5-9749-4CF1-94DC-1495DF2226E3}.Debug|x86.Build.0 = Debug|Win32
-		{2090DBF5-9749-4CF1-94DC-1495DF2226E3}.Release|x64.ActiveCfg = Release|x64
-		{2090DBF5-9749-4CF1-94DC-1495DF2226E3}.Release|x64.Build.0 = Release|x64
-		{2090DBF5-9749-4CF1-94DC-1495DF2226E3}.Release|x86.ActiveCfg = Release|Win32
-		{2090DBF5-9749-4CF1-94DC-1495DF2226E3}.Release|x86.Build.0 = Release|Win32
 		{374B810E-2C2F-4512-AED8-A5A115B6DC09}.Debug|x64.ActiveCfg = Debug|x64
 		{374B810E-2C2F-4512-AED8-A5A115B6DC09}.Debug|x64.Build.0 = Debug|x64
 		{374B810E-2C2F-4512-AED8-A5A115B6DC09}.Debug|x86.ActiveCfg = Debug|Win32
@@ -36,6 +27,22 @@ Global
 		{374B810E-2C2F-4512-AED8-A5A115B6DC09}.Release|x64.Build.0 = Release|x64
 		{374B810E-2C2F-4512-AED8-A5A115B6DC09}.Release|x86.ActiveCfg = Release|Win32
 		{374B810E-2C2F-4512-AED8-A5A115B6DC09}.Release|x86.Build.0 = Release|Win32
+		{6F25B086-E62D-482D-832F-C548413D585C}.Debug|x64.ActiveCfg = Debug|x64
+		{6F25B086-E62D-482D-832F-C548413D585C}.Debug|x64.Build.0 = Debug|x64
+		{6F25B086-E62D-482D-832F-C548413D585C}.Debug|x86.ActiveCfg = Debug|Win32
+		{6F25B086-E62D-482D-832F-C548413D585C}.Debug|x86.Build.0 = Debug|Win32
+		{6F25B086-E62D-482D-832F-C548413D585C}.Release|x64.ActiveCfg = Release|x64
+		{6F25B086-E62D-482D-832F-C548413D585C}.Release|x64.Build.0 = Release|x64
+		{6F25B086-E62D-482D-832F-C548413D585C}.Release|x86.ActiveCfg = Release|Win32
+		{6F25B086-E62D-482D-832F-C548413D585C}.Release|x86.Build.0 = Release|Win32
+		{8604DB0E-C2A6-49F6-BE9B-755878FDA8F8}.Debug|x64.ActiveCfg = Debug|x64
+		{8604DB0E-C2A6-49F6-BE9B-755878FDA8F8}.Debug|x64.Build.0 = Debug|x64
+		{8604DB0E-C2A6-49F6-BE9B-755878FDA8F8}.Debug|x86.ActiveCfg = Debug|Win32
+		{8604DB0E-C2A6-49F6-BE9B-755878FDA8F8}.Debug|x86.Build.0 = Debug|Win32
+		{8604DB0E-C2A6-49F6-BE9B-755878FDA8F8}.Release|x64.ActiveCfg = Release|x64
+		{8604DB0E-C2A6-49F6-BE9B-755878FDA8F8}.Release|x64.Build.0 = Release|x64
+		{8604DB0E-C2A6-49F6-BE9B-755878FDA8F8}.Release|x86.ActiveCfg = Release|Win32
+		{8604DB0E-C2A6-49F6-BE9B-755878FDA8F8}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

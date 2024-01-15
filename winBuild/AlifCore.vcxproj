@@ -18,6 +18,19 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\source\Include\Core\AlifCore_AlifCycle.h" />
+    <ClInclude Include="..\source\Include\Core\AlifCore_GetConsoleLine.h" />
+    <ClInclude Include="..\source\Include\Core\AlifCore_InitConfig.h" />
+    <ClInclude Include="..\source\Include\Core\AlifCore_Memory.h" />
+    <ClInclude Include="..\source\Include\Core\AlifCore_Runtime.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\source\Objects\AlifCycle.cpp" />
+    <ClCompile Include="..\source\Objects\GetConsoleLine.cpp" />
+    <ClCompile Include="..\source\Objects\InitConfig.cpp" />
+    <ClCompile Include="..\source\Objects\Memory.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -27,13 +40,13 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -76,6 +89,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IntDir>$(Platform)\$(Configuration)\$(TargetName)\</IntDir>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IntDir>$(Platform)\$(Configuration)\$(TargetName)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IntDir>$(Platform)\$(Configuration)\$(TargetName)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -83,6 +104,8 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>..\source\Include\Core;..\source\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -98,6 +121,8 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
+      <AdditionalIncludeDirectories>..\source\Include\Core;..\source\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -112,7 +137,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpp14</LanguageStandard>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
       <AdditionalIncludeDirectories>..\source\Include\Core;..\source\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
@@ -129,7 +154,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpp14</LanguageStandard>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
       <AdditionalIncludeDirectories>..\source\Include\Core;..\source\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
@@ -140,80 +165,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClInclude Include="..\source\Include\alifBuffer.h" />
-    <ClInclude Include="..\source\Include\alifConfig.h" />
-    <ClInclude Include="..\source\Include\AlifCpp\alifDebug.h" />
-    <ClInclude Include="..\source\Include\AlifCpp\alifLifeCycle.h" />
-    <ClInclude Include="..\source\Include\AlifCpp\alifMem.h" />
-    <ClInclude Include="..\source\Include\AlifCpp\alifThread.h" />
-    <ClInclude Include="..\source\Include\AlifCpp\initConfig.h" />
-    <ClInclude Include="..\source\Include\AlifCpp\object.h" />
-    <ClInclude Include="..\source\Include\alifLifeCycle.h" />
-    <ClInclude Include="..\source\Include\alifMacro.h" />
-    <ClInclude Include="..\source\Include\alifMem.h" />
-    <ClInclude Include="..\source\Include\alifPort.h" />
-    <ClInclude Include="..\source\Include\alifState.h" />
-    <ClInclude Include="..\source\Include\alifThread.h" />
-    <ClInclude Include="..\source\Include\alifTime.h" />
-    <ClInclude Include="..\source\Include\alifTypeDefs.h" />
-    <ClInclude Include="..\source\Include\alifVersion.h" />
-    <ClInclude Include="..\source\Include\ceval_gil.cpp" />
-    <ClInclude Include="..\source\Include\code.h" />
-    <ClInclude Include="..\source\Include\codecs.h" />
-    <ClInclude Include="..\source\Include\condVar.h" />
-    <ClInclude Include="..\source\Include\Core\alifCore_alifLifeCycle.h" />
-    <ClInclude Include="..\source\Include\Core\alifCore_alifMem.h" />
-    <ClInclude Include="..\source\Include\Core\alifCore_alifMemInit.h" />
-    <ClInclude Include="..\source\Include\Core\alifCore_alifState.h" />
-    <ClInclude Include="..\source\Include\Core\alifCore_alifThread.h" />
-    <ClInclude Include="..\source\Include\Core\alifCore_atomic.h" />
-    <ClInclude Include="..\source\Include\Core\alifCore_ceval.h" />
-    <ClInclude Include="..\source\Include\Core\alifCore_ceval_state.h" />
-    <ClInclude Include="..\source\Include\Core\alifCore_code.h" />
-    <ClInclude Include="..\source\Include\Core\alifCore_condVar.h" />
-    <ClInclude Include="..\source\Include\Core\alifCore_fileUtils.h" />
-    <ClInclude Include="..\source\Include\Core\alifCore_gc.h" />
-    <ClInclude Include="..\source\Include\Core\alifCore_getOpt.h" />
-    <ClInclude Include="..\source\Include\Core\alifCore_gil.h" />
-    <ClInclude Include="..\source\Include\Core\alifCore_import.h" />
-    <ClInclude Include="..\source\Include\Core\alifCore_initConfig.h" />
-    <ClInclude Include="..\source\Include\Core\alifCore_instruments.h" />
-    <ClInclude Include="..\source\Include\Core\alifCore_interp.h" />
-    <ClInclude Include="..\source\Include\Core\alifCore_object.h" />
-    <ClInclude Include="..\source\Include\Core\alifCore_obmalloc.h" />
-    <ClInclude Include="..\source\Include\Core\alifCore_obmallocInit.h" />
-    <ClInclude Include="..\source\Include\Core\alifCore_runtime.h" />
-    <ClInclude Include="..\source\Include\Core\alifCore_runtimeInit.h" />
-    <ClInclude Include="..\source\Include\Core\alifCore_time.h" />
-    <ClInclude Include="..\source\Include\Core\alifCore_typeObject.h" />
-    <ClInclude Include="..\source\Include\exports.h" />
-    <ClInclude Include="..\source\Include\fileObject.h" />
-    <ClInclude Include="..\source\Include\fileUtils.h" />
-    <ClInclude Include="..\source\Include\object.h" />
-    <ClInclude Include="..\source\Include\objImpl.h" />
-    <ClInclude Include="..\source\Include\osDefs.h" />
-    <ClInclude Include="..\source\Include\thread_nt.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\source\Objects\alifLifeCycle.cpp" />
-    <ClCompile Include="..\source\Objects\alifState.cpp" />
-    <ClCompile Include="..\source\Objects\alifTime.cpp" />
-    <ClCompile Include="..\source\Objects\ceval_gil.cpp" />
-    <ClCompile Include="..\source\Objects\fileUtils.cpp" />
-    <ClCompile Include="..\source\Objects\gcmodule.cpp" />
-    <ClCompile Include="..\source\Objects\getOpt.cpp" />
-    <ClCompile Include="..\source\Objects\getVersion.cpp" />
-    <ClCompile Include="..\source\Objects\initConfig.cpp" />
-    <ClCompile Include="..\source\Objects\Main\alif.cpp" />
-    <ClCompile Include="..\source\Objects\obmalloc.cpp" />
-    <ClCompile Include="..\source\Objects\posixModule.cpp" />
-    <ClCompile Include="..\source\Objects\preConfig.cpp" />
-    <ClCompile Include="..\source\Objects\sysModule.cpp" />
-    <ClCompile Include="..\source\Objects\thread.cpp" />
-    <ClCompile Include="..\source\Objects\typeObject.cpp" />
-    <ClCompile Include="..\source\Objects\unicodeObject.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
