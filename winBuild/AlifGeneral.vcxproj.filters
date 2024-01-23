@@ -11,18 +11,30 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\source\Include\AlifConfig.h">
+    <ClInclude Include="..\source\Include\Main\AlifConfig.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\Include\AlifVersion.h">
+    <ClInclude Include="..\source\Include\Main\Object.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\Include\InitConfig.h">
+    <ClInclude Include="..\source\Include\Main\AlifVersion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Main\FileManip.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Main\InitConfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Main\UStrObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Main\AlifRun.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\Objects\Alif\GetVersion.cpp">
+    <ClCompile Include="..\source\Objects\Main\GetVersion.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

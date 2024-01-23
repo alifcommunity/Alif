@@ -3,7 +3,9 @@
 #include "AlifCore_Memory.h"
 #include "AlifCore_InitConfig.h"
 #include "AlifCore_AlifCycle.h"
+#include "AlifCore_AlifRun.h"
 
+#pragma warning(disable : 4996) // for disable unsafe functions error
 
 #define ALIF_COPYRIGHT L"للمزيد من المعلومات اكتب \"help\", \"copyright\", \"license\" "
 
@@ -26,29 +28,47 @@ static void alifMain_init(AlifArgv* _args) {
 
 
 /* ----------------------------------- تشغيل اللغة ----------------------------------- */
-static void alifMain_runAlif(int* exitcode)
-{
-	AlifConfig config = tempConfig;
+static int alifMain_runFileObj(AlifObj* _pn, AlifObj* _fn) {
+	FILE* fp = alif_fOpenObj(_fn, "rb");
 
-	if (config.runCommand) {
-		//*exitcode = alifMain_runCommand(config->runCommand);
+	if (fp == nullptr) {
+		wprintf(L"%ls: لا يمك فتح الملف %ls: [Errno %d] %ls\n",
+			(const wchar_t*)((AlifUStrObject*)_pn)->UTF,
+			(const wchar_t*)((AlifUStrObject*)_fn)->UTF,
+			errno, _wcserror(errno));
+		return 2;
 	}
-	else if (config.runModule) {
-		//*exitcode = alifMain_runModule(config->runModule, 1);
-	}
-	else if (config.runFilename != NULL) {
-		//*exitcode = alifMain_runFile(config);
-	}
-	else {
-		//*exitcode = alifMain_runStdin(config);
-	}
+
+	int run = alifRun_fileObj(fp, _fn, 1);
+}
+
+static int alifMain_runFile(AlifConfig* _config) {
+	AlifObj* fileName = alifUStr_ObjFromWChar(_config->runFilename);
+	AlifObj* programName = alifUStr_ObjFromWChar(_config->programName);
+
+	int res = alifMain_runFileObj(programName, fileName);
+
+	return res;
 }
 
 int alif_runMain()
 {
 	int exitcode = 0;
 
-	alifMain_runAlif(&exitcode);
+	AlifConfig config = tempConfig;
+
+	if (config.runCommand) {
+		//exitcode = alifMain_runCommand(config->runCommand);
+	}
+	else if (config.runModule) {
+		//exitcode = alifMain_runModule(config->runModule, 1);
+	}
+	else if (config.runFilename != nullptr) {
+		exitcode = alifMain_runFile(&config);
+	}
+	else {	
+		//exitcode = alifMain_runStdin(config);
+	}
 
 	return exitcode;
 }
@@ -75,7 +95,7 @@ int alif_mainBytes(int _argc, char** _argv) {
 #ifdef _WINDOWS
 int wmain(int _argc, wchar_t** _argv)
 {
-	wchar_t* argsv[] = { (wchar_t*)L"alif", (wchar_t*)L"-v" };
+	wchar_t* argsv[] = { (wchar_t*)L"alif", (wchar_t*)L"examle.alif" };
 	alif_mainWchar(2, argsv);
 	return 0;
 }

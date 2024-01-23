@@ -118,7 +118,9 @@
 
 
 #ifdef _WINDOWS
-#include <io.h>
+	#include <io.h>
+	#define SIZEOF_WCHART 2
+
 #else
 #include <cstring> // memcpy()
 #endif // _WINDOWS

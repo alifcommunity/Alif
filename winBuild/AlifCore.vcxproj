@@ -20,16 +20,21 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\Include\Core\AlifCore_AlifCycle.h" />
+    <ClInclude Include="..\source\Include\Core\AlifCore_AlifRun.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_GetConsoleLine.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_InitConfig.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_Memory.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_Runtime.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\Objects\AlifCycle.cpp" />
-    <ClCompile Include="..\source\Objects\GetConsoleLine.cpp" />
-    <ClCompile Include="..\source\Objects\InitConfig.cpp" />
-    <ClCompile Include="..\source\Objects\Memory.cpp" />
+    <ClCompile Include="..\source\Objects\Core\AlifCycle.cpp" />
+    <ClCompile Include="..\source\Objects\Core\AlifRun.cpp" />
+    <ClCompile Include="..\source\Objects\Core\FileManip.cpp" />
+    <ClCompile Include="..\source\Objects\Core\GetConsoleLine.cpp" />
+    <ClCompile Include="..\source\Objects\Core\InitConfig.cpp" />
+    <ClCompile Include="..\source\Objects\Core\Memory.cpp" />
+    <ClCompile Include="..\source\Objects\Core\Object.cpp" />
+    <ClCompile Include="..\source\Objects\Core\UStrObject.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -104,7 +109,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>..\source\Include\Core;..\source\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\source\Include\Main;..\source\Include\Core;..\source\Include\Alif;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
@@ -122,7 +127,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
-      <AdditionalIncludeDirectories>..\source\Include\Core;..\source\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\source\Include\Main;..\source\Include\Core;..\source\Include\Alif;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -139,7 +144,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp14</LanguageStandard>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
-      <AdditionalIncludeDirectories>..\source\Include\Core;..\source\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\source\Include\Main;..\source\Include\Core;..\source\Include\Alif;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -156,7 +161,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp14</LanguageStandard>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
-      <AdditionalIncludeDirectories>..\source\Include\Core;..\source\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\source\Include\Main;..\source\Include\Core;..\source\Include\Alif;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
