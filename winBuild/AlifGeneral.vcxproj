@@ -21,14 +21,19 @@
   <ItemGroup>
     <ClInclude Include="..\source\Include\Main\AlifConfig.h" />
     <ClInclude Include="..\source\Include\Main\AlifRun.h" />
+    <ClInclude Include="..\source\Include\Main\AlifToken.h" />
     <ClInclude Include="..\source\Include\Main\Object.h" />
     <ClInclude Include="..\source\Include\Main\AlifVersion.h" />
     <ClInclude Include="..\source\Include\Main\FileManip.h" />
     <ClInclude Include="..\source\Include\Main\InitConfig.h" />
+    <ClInclude Include="..\source\Include\Main\ParserEngine.h" />
+    <ClInclude Include="..\source\Include\Main\Tokenizer.h" />
     <ClInclude Include="..\source\Include\Main\UStrObject.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\source\Objects\Main\FileTokenizer.cpp" />
     <ClCompile Include="..\source\Objects\Main\GetVersion.cpp" />
+    <ClCompile Include="..\source\Objects\Main\ParserEngine.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

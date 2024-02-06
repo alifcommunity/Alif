@@ -21,12 +21,14 @@
   <ItemGroup>
     <ClInclude Include="..\source\Include\Core\AlifCore_AlifCycle.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_AlifRun.h" />
+    <ClInclude Include="..\source\Include\Core\AlifCore_AST.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_GetConsoleLine.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_InitConfig.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_Memory.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_Runtime.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\source\Objects\Core\AlifAST.cpp" />
     <ClCompile Include="..\source\Objects\Core\AlifCycle.cpp" />
     <ClCompile Include="..\source\Objects\Core\AlifRun.cpp" />
     <ClCompile Include="..\source\Objects\Core\FileManip.cpp" />

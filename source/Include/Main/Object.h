@@ -1,5 +1,6 @@
 #pragma once
 
+
 typedef class AlifInitObject;
 typedef class AlifMethodDef;
 
@@ -20,7 +21,6 @@ typedef class AlifMethodDef;
 class AlifObj {
 public:
 	uint32_t ref{};
-	uint64_t size{};
 	AlifInitObject* type{};
 };
 
@@ -31,7 +31,10 @@ public:
 	size_t size;
 };
 
+extern AlifObj alifNone;
+
 #define ALIF_NONE &alifNone
+
 
 // سيتم تغيير مكان هذا الماكرو في وقت لاحق الى مكان مناسب
 #define POINTER_SIZE 8

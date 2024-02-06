@@ -23,9 +23,9 @@ FILE* alif_fOpenObj(AlifObj* _path, const char* _mode) {
 	FILE* f{};
 #ifdef _WINDOWS
 	wchar_t wmode[10];
-	int usize;
+	int uSize;
 
-	usize = MultiByteToWideChar(CP_ACP, 0, _mode, -1,
+	uSize = MultiByteToWideChar(CP_ACP, 0, _mode, -1,
 		wmode, ALIF_ARRAY_LENGTH(wmode));
 
 	f = _wfopen((wchar_t*)((AlifUStrObject*)_path)->UTF, wmode);
