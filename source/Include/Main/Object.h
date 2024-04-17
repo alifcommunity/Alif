@@ -39,7 +39,7 @@ extern AlifObj alifNone;
 // سيتم تغيير مكان هذا الماكرو في وقت لاحق الى مكان مناسب
 #define POINTER_SIZE 8
 #define ALIF_SIZE_ROUND_UP(n, a) (((size_t)(n) + \
-        (size_t)((a) - 1)) & ~(size_t)((a) - 1))
+        (size_t)((a) - 1)) & ~(size_t)((a) - 1)) // هذا الماكرو متوفر له دالة بديلة size_alignUp
 
 void alif_dealloc(AlifObj* object);
 

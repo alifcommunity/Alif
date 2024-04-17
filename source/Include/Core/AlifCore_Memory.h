@@ -16,6 +16,8 @@
 */
 
 
+/* ------------------------------------ ذاكرة ألف ------------------------------------ */
+
 #if defined(_OS64)
 	#define BLOCK_SIZE         1024
 	#define BLOCK_NUMS         1024
@@ -32,11 +34,11 @@
 #define FRAGS_NUM              (BLOCK_SIZE / ALIGNMENT - 1)
 
 
-/* ----------------------------------- ذاكرة القطع ----------------------------------- */
+/* -------------------------------------- القطع -------------------------------------- */
 class Frag {
 public:
-	void* ptr{};
-	Frag* next{};
+	void* ptr_{};
+	Frag* next_{};
 };
 
 class FragsBlock {
@@ -47,40 +49,40 @@ public:
 /* ----------------------------------------------------------------------------------- */
 
 class AlifArray {
-	Frag* arr{};
+	Frag* arr_{};
 
 public:
-	void push(void*);
+	void push_(void*);
 	const inline Frag* not_empty() const;
-	inline void* get();
+	inline void* get_();
 	Frag* get_arr();
 };
 
 class FreeSegments
 {
 	AlifArray freeSegs[FRAGS_NUM]{};
-	Frag* fSegs{};
+	Frag* fSegs_{};
 
 public:
 	void* try_alloc(AlifSizeT);
 	void* try_allocFreeSeg();
-	void dealloc(void*);
+	void dealloc_(void*);
 	void freeSeg_dealloc(Frag*);
 
 	AlifArray return_freeSegs(AlifSizeT);
 };
 
-/* --------------------------------- كتلة من الذاكرة --------------------------------- */
+/* -------------------------------------- الكتلة ------------------------------------- */
 
 class AlifMemBlock {
 public:
 	AlifSizeT freeSize{};
-	AlifMemBlock* next{};
+	AlifMemBlock* next_{};
 
-	char* segments{};
+	char* segments_{};
 };
 
-/* ------------------------------------ ذاكرة ألف ------------------------------------ */
+/* ---------------------------------- إدارة الذاكرة --------------------------------- */
 
 class AlifMemory
 {
@@ -102,7 +104,11 @@ public:
 	AlifSizeT objNums{};
 };
 
-extern AlifMemory alifMem;
+/*
+	يجب نقل الذاكرة الى المفسر وعدم تركها ذاكرة عامة
+	لأنه سيتم عمل ذاكرة خاصة بكل مسار او "ثريد" لمنع تداهل البيانات
+*/ 
+extern AlifMemory _alifMem_;
 
 
 void alif_memoryInit();
@@ -122,3 +128,40 @@ void* alifMem_dataRealloc(void*, AlifSizeT);
 
 
 const void alif_getMemState();
+
+
+
+
+
+
+
+
+/* -------------------------------- ذاكرة شجرة المحلل -------------------------------- */
+
+/*
+	ذاكرة الشجرة يتم إنشاؤها في مرحلة المحلل وتمريرها مع كل دالة
+	لانه سيتم تفريغها وحذفها بعد الإنتهاء من مرحلة التحليل اللغوي
+*/
+
+#define ASTMEM_BLOCKSIZE 8192
+
+class AlifASTBlock {
+public:
+	AlifSizeT size_{};
+	AlifSizeT offset_{};
+	AlifASTBlock* next_{};
+	void* mem_{};
+};
+
+class AlifASTMem {
+public:
+	AlifASTBlock* head_{};
+	AlifASTBlock* current_{};
+	AlifObj* objects_{};
+};
+
+
+AlifASTBlock* block_new(AlifSizeT _size);
+AlifASTMem* alifASTMem_new();
+void* alifArena_malloc(AlifASTMem* _arena, AlifSizeT _size);
+int alifArena_listAddAlifObj(AlifASTMem* _arena, AlifObj* _obj);

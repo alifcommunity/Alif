@@ -187,7 +187,7 @@ static void uStrConvert_wCharToUCS4(const wchar_t* _begin, const wchar_t* _end, 
             *_to1++ = (_toType) *_iter1++;						\
     } while (0)
 
-AlifObj* alifUStr_ObjFromWChar(wchar_t* _buffer) { /// M
+AlifObj* alifUStr_objFromWChar(wchar_t* _buffer) { /// M
 	AlifObj* strObj{};
 	AlifSizeT size = wcslen(_buffer);
 	uint8_t maxChar = find_MaxChar(_buffer);

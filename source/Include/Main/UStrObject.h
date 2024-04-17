@@ -55,4 +55,4 @@ size_t hash_unicode(AlifObj* unicode);
 
 
 
-AlifObj* alifUStr_ObjFromWChar(wchar_t*);
+AlifObj* alifUStr_objFromWChar(wchar_t*);

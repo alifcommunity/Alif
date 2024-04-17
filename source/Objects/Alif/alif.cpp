@@ -11,27 +11,27 @@
 
 
 /* ----------------------------------- تهيئة اللغة ----------------------------------- */
-AlifConfig tempConfig{};
+AlifConfig _tempConfig_{};
 static void alifMain_init(AlifArgv* _args) {
 
-	AlifConfig config{};
+	AlifConfig config_{};
 
 	alif_localeInit();
 
 	alif_memoryInit();
 
-	alifArgv_asWStrList(&config, _args);
+	alifArgv_asWStrList(&config_, _args);
 
-	alif_initFromConfig(&config);
-	tempConfig = config;
+	alif_initFromConfig(&config_);
+	_tempConfig_ = config_;
 }
 
 
 /* ----------------------------------- تشغيل اللغة ----------------------------------- */
 static int alifMain_runFileObj(AlifObj* _pn, AlifObj* _fn) {
-	FILE* fp = alif_fOpenObj(_fn, "rb");
+	FILE* fp_ = alif_fOpenObj(_fn, "rb");
 
-	if (fp == nullptr) {
+	if (fp_ == nullptr) {
 		wprintf(L"%ls: لا يمك فتح الملف %ls: [Errno %d] %ls\n",
 			(const wchar_t*)((AlifUStrObject*)_pn)->UTF,
 			(const wchar_t*)((AlifUStrObject*)_fn)->UTF,
@@ -39,57 +39,57 @@ static int alifMain_runFileObj(AlifObj* _pn, AlifObj* _fn) {
 		return 2;
 	}
 
-	int run = alifRun_fileObj(fp, _fn, 1);
+	int run = alifRun_fileObj(fp_, _fn, 1);
 }
 
 static int alifMain_runFile(AlifConfig* _config) {
-	AlifObj* fileName = alifUStr_ObjFromWChar(_config->runFilename);
-	AlifObj* programName = alifUStr_ObjFromWChar(_config->programName);
+	AlifObj* fileName = alifUStr_objFromWChar(_config->runFilename);
+	AlifObj* programName = alifUStr_objFromWChar(_config->programName);
 
-	int res = alifMain_runFileObj(programName, fileName);
+	int res_ = alifMain_runFileObj(programName, fileName);
 
-	return res;
+	return res_;
 }
 
 int alif_runMain()
 {
-	int exitcode = 0;
+	int exitCode = 0;
 
-	AlifConfig config = tempConfig;
+	AlifConfig config_ = _tempConfig_;
 
-	if (config.runCommand) {
-		//exitcode = alifMain_runCommand(config->runCommand);
+	if (config_.runCommand) {
+		//exitcode = alifMain_runCommand(config_->runCommand);
 	}
-	else if (config.runModule) {
-		//exitcode = alifMain_runModule(config->runModule, 1);
+	else if (config_.runModule) {
+		//exitcode = alifMain_runModule(config_->runModule, 1);
 	}
-	else if (config.runFilename != nullptr) {
-		exitcode = alifMain_runFile(&config);
+	else if (config_.runFilename != nullptr) {
+		exitCode = alifMain_runFile(&config_);
 	}
 	else {	
-		//exitcode = alifMain_runStdin(config);
+		//exitcode = alifMain_runStdin(config_);
 	}
 
-	return exitcode;
+	return exitCode;
 }
 
 /* ----------------------------------- بداية اللغة ----------------------------------- */
-static int alifMain_main(AlifArgv* args) {
+static int alifMain_main(AlifArgv* _args) {
 	// هذه الدالة مسؤلة عن تهيئة اللغة للبدأ بالتنفيذ
-	alifMain_init(args);
+	alifMain_init(_args);
 
 	// هذه الدالة مسؤلة عن تشغيل البرنامج
 	return alif_runMain();
 }
 
 int alif_mainWchar(int _argc, wchar_t** _argv) {
-	AlifArgv args = { _argc, 0, nullptr, _argv };
-	return alifMain_main(&args);
+	AlifArgv args_ = { _argc, 0, nullptr, _argv };
+	return alifMain_main(&args_);
 }
 
 int alif_mainBytes(int _argc, char** _argv) {
-	AlifArgv args = { _argc, 1, _argv, nullptr };
-	return alifMain_main(&args);
+	AlifArgv args_ = { _argc, 1, _argv, nullptr };
+	return alifMain_main(&args_);
 }
 
 #ifdef _WINDOWS
