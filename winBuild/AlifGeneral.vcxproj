@@ -22,6 +22,7 @@
     <ClInclude Include="..\source\Include\Main\AlifConfig.h" />
     <ClInclude Include="..\source\Include\Main\AlifRun.h" />
     <ClInclude Include="..\source\Include\Main\AlifToken.h" />
+    <ClInclude Include="..\source\Include\Main\Compile.h" />
     <ClInclude Include="..\source\Include\Main\Object.h" />
     <ClInclude Include="..\source\Include\Main\AlifVersion.h" />
     <ClInclude Include="..\source\Include\Main\FileManip.h" />

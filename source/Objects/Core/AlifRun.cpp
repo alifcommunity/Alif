@@ -11,11 +11,6 @@
 #endif // _WINDOWS
 
 
-#define ALIFSINGLE_INPUT 256
-#define ALIFFILE_INPUT 257
-#define ALIFEVAL_INPUT 258
-#define ALIFFUNCTYPE_INPUT 345
-
 // Forward Declaration
 static AlifObj* alifRun_file(FILE*, AlifObj*, int, int);
 
