@@ -42,7 +42,6 @@
     <ClInclude Include="..\source\Include\Core\AlifCore_UString.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\Objects\Core\AlifAST.cpp" />
     <ClCompile Include="..\source\Objects\Core\AlifCycle.cpp" />
     <ClCompile Include="..\source\Objects\Core\AlifObject.cpp" />
     <ClCompile Include="..\source\Objects\Core\AlifRun.cpp" />

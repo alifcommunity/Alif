@@ -97,13 +97,10 @@
     <ClCompile Include="..\source\Objects\Core\UStrObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Core\AlifRun.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\Objects\Core\AlifAST.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\Objects\Core\AlifObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Objects\Core\AlifRun.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -11,7 +11,7 @@
 
 typedef AlifToken AlifToken; // temp
 
-int alifParserEngine_insertMemo(AlifParser* _p, int _mark, int _type, void* _node) { // 51
+int alifParserEngine_insertMemo(AlifParser* _p, int _mark, int _type, void* _node) { 
 	Memo* m = (Memo*)alifASTMem_malloc(_p->astMem, sizeof(Memo));
 	if (m == nullptr) return -1;
 	m->type = _type;
@@ -22,7 +22,7 @@ int alifParserEngine_insertMemo(AlifParser* _p, int _mark, int _type, void* _nod
 	return 0;
 }
 
-int alifParserEngine_updateMemo(AlifParser* _p, int _mark, int _type, void* _node) { // 67
+int alifParserEngine_updateMemo(AlifParser* _p, int _mark, int _type, void* _node) { 
 	for (Memo* m = _p->tokens[_mark]->memo; m != nullptr; m = m->next) {
 		if (m->type == _type) {
 			m->node = _node;
@@ -33,13 +33,13 @@ int alifParserEngine_updateMemo(AlifParser* _p, int _mark, int _type, void* _nod
 	return alifParserEngine_insertMemo(_p, _mark, _type, _node);
 }
 
-static void growableCommentArr_init(GrowableCommentArr* _arr, AlifSizeT _initSize) { // 96
+static void growableCommentArr_init(GrowableCommentArr* _arr, AlifSizeT _initSize) { 
 	_arr->items = (GrowableCommentArr::Items*)malloc(_initSize * sizeof(*_arr->items));
 	_arr->size = _initSize;
 	_arr->numItems = 0;
 }
 
-static int get_keywordOrName(AlifParser* _p, AlifToken* _token) { // 132
+static int get_keywordOrName(AlifParser* _p, AlifToken* _token) { 
 	int nameLen = _token->endColOffset - _token->colOffset;
 
 	if (nameLen >= _p->nKeywordList or _p->keywords[nameLen] == nullptr
@@ -54,7 +54,7 @@ static int get_keywordOrName(AlifParser* _p, AlifToken* _token) { // 132
 }
 
 
-static int initialize_token(AlifParser* _p, AlifPToken* _pToken, AlifToken* _token, int _tokType) { // 151
+static int initialize_token(AlifParser* _p, AlifPToken* _pToken, AlifToken* _token, int _tokType) { 
 	_pToken->type = (_tokType == NAME) ? get_keywordOrName(_p, _token) : _tokType;
 	_pToken->bytes = alifBytes_fromStringAndSize(_token->start, (_token->end - _token->start) * sizeof(wchar_t));
 
@@ -91,7 +91,7 @@ static int initialize_token(AlifParser* _p, AlifPToken* _pToken, AlifToken* _tok
 	return 0;//
 }
 
-static int resize_tokensArr(AlifParser* _p) { // 192
+static int resize_tokensArr(AlifParser* _p) { 
 	int newSize = _p->size_ * 2;
 	AlifPToken** newTokens = (AlifPToken**)alifMem_dataRealloc(_p->tokens, newSize * sizeof(AlifPToken*)); // error when using realloc, need to review
 
@@ -104,7 +104,7 @@ static int resize_tokensArr(AlifParser* _p) { // 192
 	return 0;
 }
 
-int alifParserEngine_fillToken(AlifParser* _p) { // 214
+int alifParserEngine_fillToken(AlifParser* _p) { 
 	AlifToken newToken{};
 	int type = alifTokenizer_get(_p->tok, &newToken);
 
@@ -144,7 +144,7 @@ error:
 	return -1;
 }
 
-int alifParserEngine_isMemorized(AlifParser* _p, int _type, void* _pres) { // 304
+int alifParserEngine_isMemorized(AlifParser* _p, int _type, void* _pres) { 
 	if (_p->mark_ == _p->fill_) {
 		if (alifParserEngine_fillToken(_p) < 0) {
 			_p->errorIndicator = 1;
@@ -164,21 +164,21 @@ int alifParserEngine_isMemorized(AlifParser* _p, int _type, void* _pres) { // 30
 	return 0;
 }
 
-int alifParserEngine_lookaheadWithInt(int _positive, AlifPToken* (_func)(AlifParser*, int), AlifParser* _p, int _arg) { // 354
+int alifParserEngine_lookaheadWithInt(int _positive, AlifPToken* (_func)(AlifParser*, int), AlifParser* _p, int _arg) { 
 	AlifIntT mark_ = _p->mark_;
 	void* res = _func(_p, _arg);
 	_p->mark_ = mark_;
 	return (res != nullptr) == _positive;
 }
 
-int alifParserEngine_lookahead(int _positive, void* (_func)(AlifParser*), AlifParser* _p) { // 363
+int alifParserEngine_lookahead(int _positive, void* (_func)(AlifParser*), AlifParser* _p) { 
 	AlifIntT mark_ = _p->mark_;
 	void* res = _func(_p);
 	_p->mark_ = mark_;
 	return (res != nullptr) == _positive;
 }
 
-AlifPToken* alifParserEngine_expectToken(AlifParser* _p, int _type) { // 372
+AlifPToken* alifParserEngine_expectToken(AlifParser* _p, int _type) { 
 	if (_p->mark_ == _p->fill_) {
 		if (alifParserEngine_fillToken(_p) < 0) {
 			_p->errorIndicator = 1;
@@ -193,7 +193,7 @@ AlifPToken* alifParserEngine_expectToken(AlifParser* _p, int _type) { // 372
 	return t;
 }
 
-AlifPToken* alifParserEngine_expectTokenForced(AlifParser* _p, int _type, const wchar_t* _expected) { // 402
+AlifPToken* alifParserEngine_expectTokenForced(AlifParser* _p, int _type, const wchar_t* _expected) { 
 	if (_p->errorIndicator == 1) return nullptr;
 
 	if (_p->mark_ == _p->fill_) {
@@ -212,7 +212,7 @@ AlifPToken* alifParserEngine_expectTokenForced(AlifParser* _p, int _type, const 
 	return t_;
 }
 
-AlifPToken* alifParserEngine_getLastNonWhitespaceToken(AlifParser* _p) { // 448
+AlifPToken* alifParserEngine_getLastNonWhitespaceToken(AlifParser* _p) { 
 	AlifPToken* token = nullptr;
 	for (int i = _p->mark_ - 1; i >= 0; i--) {
 		token = _p->tokens[i];
@@ -224,7 +224,7 @@ AlifPToken* alifParserEngine_getLastNonWhitespaceToken(AlifParser* _p) { // 448
 	return token;
 }
 
-AlifObject* alifParserEngine_newIdentifier(AlifParser* _p, const wchar_t* _s) { // 462
+AlifObject* alifParserEngine_newIdentifier(AlifParser* _p, const wchar_t* _s) { 
 	AlifObject* id = alifUnicode_decodeStringToUTF8(_s);
 
 	if (alifASTMem_listAddAlifObj(_p->astMem, id) < 0) {
@@ -233,7 +233,7 @@ AlifObject* alifParserEngine_newIdentifier(AlifParser* _p, const wchar_t* _s) { 
 	return id;
 }
 
-static Expression* alifParserEngine_nameFromToken(AlifParser* _p, AlifPToken* _t) { // 518
+static Expression* alifParserEngine_nameFromToken(AlifParser* _p, AlifPToken* _t) { 
 	if (_t == nullptr) {
 		return nullptr;
 	}
@@ -249,16 +249,16 @@ static Expression* alifParserEngine_nameFromToken(AlifParser* _p, AlifPToken* _t
 	return alifAST_name(id, Load, _t->lineNo, _t->colOffset, _t->endLineNo, _t->endColOffset, _p->astMem);
 }
 
-Expression* alifParserEngine_nameToken(AlifParser* _p) { // 538
+Expression* alifParserEngine_nameToken(AlifParser* _p) { 
 	AlifPToken* tok = alifParserEngine_expectToken(_p, NAME);
 	return alifParserEngine_nameFromToken(_p, tok);
 }
 
-void* alifParserEngine_stringToken(AlifParser* _p) { // 545
+void* alifParserEngine_stringToken(AlifParser* _p) { 
 	return alifParserEngine_expectToken(_p, STRING);
 }
 
-static AlifObject* parseNumber_raw(const wchar_t* _s) { // 567
+static AlifObject* parseNumber_raw(const wchar_t* _s) { 
 	const wchar_t* end{};
 	int64_t x{};
 	double dx{};
@@ -283,7 +283,7 @@ static AlifObject* parseNumber_raw(const wchar_t* _s) { // 567
 	return nullptr; //
 }
 
-static AlifObject* parse_number(const wchar_t* _s) { // 611
+static AlifObject* parse_number(const wchar_t* _s) { 
 	wchar_t* dup{};
 	wchar_t* end{};
 	AlifObject* res{};
@@ -305,7 +305,7 @@ static AlifObject* parse_number(const wchar_t* _s) { // 611
 	return res;
 }
 
-Expression* alifParserEngine_numberToken(AlifParser* _p) { // 640
+Expression* alifParserEngine_numberToken(AlifParser* _p) { 
 	AlifPToken* tok = alifParserEngine_expectToken(_p, NUMBER);
 	if (tok == nullptr) return nullptr;
 
@@ -322,7 +322,7 @@ Expression* alifParserEngine_numberToken(AlifParser* _p) { // 640
 }
 
 
-AlifParser* alifParserEngine_newParser(TokenInfo* _tokInfo, int _startRule, AlifASTMem* _astMem) { // 752
+AlifParser* alifParserEngine_newParser(TokenInfo* _tokInfo, int _startRule, AlifASTMem* _astMem) { 
 	AlifParser* p = (AlifParser*)alifMem_dataAlloc(sizeof(AlifParser));
 
 	p->tok = _tokInfo;
@@ -347,7 +347,7 @@ AlifParser* alifParserEngine_newParser(TokenInfo* _tokInfo, int _startRule, Alif
 }
 
 
-void alifParserEngine_parserFree(AlifParser* _p) { // 808
+void alifParserEngine_parserFree(AlifParser* _p) { 
 	ALIF_XDECREF(_p->normalize);
 	for (int i = 0; i < _p->size_; i++) {
 		alifMem_dataFree(_p->tokens[i]);
@@ -358,7 +358,7 @@ void alifParserEngine_parserFree(AlifParser* _p) { // 808
 }
 
 
-void* alifParserEngine_runParser(AlifParser* _p) { // 839
+void* alifParserEngine_runParser(AlifParser* _p) { 
 
 	void* res = alifParserEngine_parse(_p);
 
@@ -372,7 +372,7 @@ void* alifParserEngine_runParser(AlifParser* _p) { // 839
 	return res;
 }
 
-Module* alifParser_astFromFile(FILE* _fp, AlifObject* _fn, int _startRule, AlifASTMem* _astMem) { // _PyPegen_run_parser_from_file_pointer() // 884
+Module* alifParser_astFromFile(FILE* _fp, AlifObject* _fn, int _startRule, AlifASTMem* _astMem) { // _PyPegen_run_parser_from_file_pointer() 
 
 	TokenInfo* tokInfo = alifTokenizerInfo_fromFile(_fp);
 	if (tokInfo == nullptr) {
