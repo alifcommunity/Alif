@@ -5,14 +5,14 @@
 
 /* ASDL: Abstract Syntax Description Language */
 
-#define SEQ_HEAD AlifSizeT size{}; void** elements{} // 24
+#define SEQ_HEAD AlifSizeT size{}; void** elements{} 
 
-class Seq { // 28
+class Seq { 
 public:
 	SEQ_HEAD;
 };
 
-class GenericSeq { // 32
+class GenericSeq { 
 public:
 	SEQ_HEAD;
 	void* typedElements[1];
@@ -30,12 +30,12 @@ public:
 	int typedElements[1];
 };
 
-GenericSeq* alifNew_genericSeq(AlifUSizeT, AlifASTMem*); // 47
-IdentifierSeq* alifNew_identifierSeq(AlifUSizeT, AlifASTMem*); // 48
-IntSeq* alifNew_intSeq(AlifUSizeT, AlifASTMem*); // 49
+GenericSeq* alifNew_genericSeq(AlifUSizeT, AlifASTMem*); 
+IdentifierSeq* alifNew_identifierSeq(AlifUSizeT, AlifASTMem*); 
+IntSeq* alifNew_intSeq(AlifUSizeT, AlifASTMem*); 
 
 
-// 52
+
 #define GENERATE_SEQ_CONSTRUCTOR(typeName, name, type) typeName ## Seq* alifNew_ ## name ## Seq(AlifUSizeT _size, AlifASTMem* _astMem) { \
 	typeName ## Seq* seq_ = nullptr; \
 	size_t n_{}; \
@@ -61,11 +61,11 @@ IntSeq* alifNew_intSeq(AlifUSizeT, AlifASTMem*); // 49
 }
 
 
-#define SEQ_GETUNTYPED(s,i) ALIF_RVALUE((s)->elements[i]) // 81
-#define SEQ_GET(s,i) ALIF_RVALUE((s)->typedElements[i]) // 82
-#define SEQ_LEN(s) ALIF_RVALUE((s) == nullptr ? 0 : (s)->size) // 83
+#define SEQ_GETUNTYPED(s,i) ALIF_RVALUE((s)->elements[i]) 
+#define SEQ_GET(s,i) ALIF_RVALUE((s)->typedElements[i]) 
+#define SEQ_LEN(s) ALIF_RVALUE((s) == nullptr ? 0 : (s)->size) 
 
-#define SEQ_SET(s, i, v) ALIF_RVALUE((s)->typedElements[(i)] = (v)) // 94
+#define SEQ_SET(s, i, v) ALIF_RVALUE((s)->typedElements[(i)] = (v)) 
 
-#define SEQ_SETUNTYPED(s, i, v) ALIF_RVALUE((s)->elements[(i)] = (v)) // 106
+#define SEQ_SETUNTYPED(s, i, v) ALIF_RVALUE((s)->elements[(i)] = (v)) 
 

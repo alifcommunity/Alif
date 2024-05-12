@@ -199,9 +199,6 @@
     <ClCompile Include="..\source\Objects\Main\AlifParserEngineErrors.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\AlifRun.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\Objects\Main\AlifToken.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

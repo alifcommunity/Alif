@@ -66,7 +66,6 @@
     <ClCompile Include="..\source\Objects\Main\AlifParser.cpp" />
     <ClCompile Include="..\source\Objects\Main\AlifParserEngine.cpp" />
     <ClCompile Include="..\source\Objects\Main\AlifParserEngineErrors.cpp" />
-    <ClCompile Include="..\source\Objects\Main\AlifRun.cpp" />
     <ClCompile Include="..\source\Objects\Main\AlifToken.cpp" />
     <ClCompile Include="..\source\Objects\Main\AlifTokenState.cpp" />
     <ClCompile Include="..\source\Objects\Main\ASDL.cpp" />
