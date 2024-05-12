@@ -29,7 +29,7 @@
 #define MAKE_TOKEN(TT) alifLexer_setupToken(_tokInfo, _token, TT, pStart, pEnd)
 
 
-static void tok_backup(TokenInfo* _tokInfo, int _wc) { // 96
+static void tok_backup(TokenInfo* _tokInfo, int _wc) {
 	if (_wc != WEOF) {
 		if (--_tokInfo->cur < _tokInfo->buf) {
 			// error
@@ -42,7 +42,7 @@ static void tok_backup(TokenInfo* _tokInfo, int _wc) { // 96
 }
 
 
-static int tok_nextChar(TokenInfo* _tokInfo) { // 56
+static int tok_nextChar(TokenInfo* _tokInfo) {
 	int rc{};
 	for (;;) {
 		if (_tokInfo->cur != _tokInfo->inp) {
@@ -69,7 +69,7 @@ static int tok_nextChar(TokenInfo* _tokInfo) { // 56
 }
 
 
-static AlifIntT set_fStringExpr(TokenInfo* _tokInfo, AlifToken* _token, wchar_t _wcs) { // 110
+static AlifIntT set_fStringExpr(TokenInfo* _tokInfo, AlifToken* _token, wchar_t _wcs) {
 
 	TokenizerMode* tokMode = TOK_GETMODE(_tokInfo);
 
@@ -124,7 +124,7 @@ static AlifIntT set_fStringExpr(TokenInfo* _tokInfo, AlifToken* _token, wchar_t 
 }
 
 
-AlifIntT alifLexer_updateFStringExpr(TokenInfo* _tokInfo, wchar_t _cur) { // 175
+AlifIntT alifLexer_updateFStringExpr(TokenInfo* _tokInfo, wchar_t _cur) {
 
 	AlifUSizeT size = wcslen(_tokInfo->cur);
 	TokenizerMode* tokMode = TOK_GETMODE(_tokInfo);
@@ -178,7 +178,7 @@ error:
 }
 
 
-static int tok_decimalTail(TokenInfo* _tokInfo) { // 365
+static int tok_decimalTail(TokenInfo* _tokInfo) {
 	int wcs{};
 
 	while (1) {
@@ -198,7 +198,7 @@ static int tok_decimalTail(TokenInfo* _tokInfo) { // 365
 	return wcs;
 }
 
-static inline AlifIntT tok_continuationLine(TokenInfo* _tokInfo) { // 387
+static inline AlifIntT tok_continuationLine(TokenInfo* _tokInfo) {
 
 	AlifIntT wcs = tok_nextChar(_tokInfo);
 	if (wcs == L'\r') wcs = tok_nextChar(_tokInfo);
@@ -217,7 +217,7 @@ static inline AlifIntT tok_continuationLine(TokenInfo* _tokInfo) { // 387
 	return wcs;
 }
 
-static int tokGet_normalMode(TokenInfo* _tokInfo, TokenizerMode* _currentTok, AlifToken* _token) { // 408
+static int tokGet_normalMode(TokenInfo* _tokInfo, TokenizerMode* _currentTok, AlifToken* _token) {
 	int wcs{};
 	int blankLine{};
 
@@ -1029,7 +1029,7 @@ fStringMiddle:
 }
 
 
-static int token_get(TokenInfo* _tokInfo, AlifToken* _token) { // 1460
+static int token_get(TokenInfo* _tokInfo, AlifToken* _token) {
 	TokenizerMode* currentTok = TOK_GETMODE(_tokInfo);
 	if (currentTok->type == Token_RegularMode) {
 		return tokGet_normalMode(_tokInfo, currentTok, _token);
@@ -1039,7 +1039,7 @@ static int token_get(TokenInfo* _tokInfo, AlifToken* _token) { // 1460
 	}
 }
 
-int alifTokenizer_get(TokenInfo* _tokInfo, AlifToken* _token) { // 1471
+int alifTokenizer_get(TokenInfo* _tokInfo, AlifToken* _token) {
 	int result = token_get(_tokInfo, _token);
 	return result;
 }

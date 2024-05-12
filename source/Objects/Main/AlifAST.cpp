@@ -10,7 +10,7 @@ GENERATE_SEQ_CONSTRUCTOR(Expr, expr, Expression*); // هذه الماكرو تق
 GENERATE_SEQ_CONSTRUCTOR(Arg, arg, Arg*); // هذه الماكرو تقوم بإنشاء جسم دالة عن طريق تمرير المعاملات ك نصوص لإستخدامها ضمن مولد الدالة
 GENERATE_SEQ_CONSTRUCTOR(Keyword, keyword, Keyword*); // هذه الماكرو تقوم بإنشاء جسم دالة عن طريق تمرير المعاملات ك نصوص لإستخدامها ضمن مولد الدالة
 
-Module* alifAST_module(StmtSeq* _body, AlifASTMem* _astMem) { // 1961
+Module* alifAST_module(StmtSeq* _body, AlifASTMem* _astMem) {
 	Module* p{};
 	p = (Module*)alifASTMem_malloc(_astMem, sizeof(*p));
 	if (!p) return nullptr;
@@ -20,7 +20,7 @@ Module* alifAST_module(StmtSeq* _body, AlifASTMem* _astMem) { // 1961
 }
 
 Statement* alifAST_assign(ExprSeq* _targets, Expression* _val,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 2157
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 	Statement* p{};
 	if (!_val) {
 		// error
@@ -39,7 +39,7 @@ Statement* alifAST_assign(ExprSeq* _targets, Expression* _val,
 }
 
 Statement* alifAST_expr(Expression* _val,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 2609
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 	Statement* p{};
 	if (!_val) {
 		//error
@@ -57,7 +57,7 @@ Statement* alifAST_expr(Expression* _val,
 }
 
 Expression* alifAST_constant(AlifObject* _val, AlifObject* _type,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 3144
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Expression* p{};
 	p = (Expression*)alifASTMem_malloc(_astMem, sizeof(*p));
@@ -73,7 +73,7 @@ Expression* alifAST_constant(AlifObject* _val, AlifObject* _type,
 }
 
 Statement* alifAST_asyncFunctionDef(AlifObject* _name, Arguments* _args, StmtSeq* _body,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 6375
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Statement* p_{};
 	if (!_name) {
@@ -100,7 +100,7 @@ Statement* alifAST_asyncFunctionDef(AlifObject* _name, Arguments* _args, StmtSeq
 }
 
 Statement* alifAST_functionDef(AlifObject* _name, Arguments* _args, StmtSeq* _body,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 6401
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Statement* p_{};
 	if (!_name) {
@@ -127,7 +127,7 @@ Statement* alifAST_functionDef(AlifObject* _name, Arguments* _args, StmtSeq* _bo
 }
 
 Statement* alifAST_return(Expression* _val,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 6476
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Statement* p_{};
 	p_ = (Statement*)alifASTMem_malloc(_astMem, sizeof(*p_));
@@ -145,7 +145,7 @@ Statement* alifAST_return(Expression* _val,
 }
 
 Statement* alifAST_delete(ExprSeq* _targets,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 6493
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Statement* p_{};
 	p_ = (Statement*)alifASTMem_malloc(_astMem, sizeof(*p_));
@@ -163,7 +163,7 @@ Statement* alifAST_delete(ExprSeq* _targets,
 }
 
 Statement* alifAST_classDef(AlifObject* _name, ExprSeq* _bases, KeywordSeq* _keywords, StmtSeq* _body,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 6447
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Statement* p_{};
 	if (!_name) {
@@ -187,7 +187,7 @@ Statement* alifAST_classDef(AlifObject* _name, ExprSeq* _bases, KeywordSeq* _key
 }
 
 Statement* alifAST_augAssign(Expression* _target, Operator _op, Expression* _val,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 6565
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Statement* p_{};
 	if (!_target) {
@@ -218,7 +218,7 @@ Statement* alifAST_augAssign(Expression* _target, Operator _op, Expression* _val
 }
 
 Statement* alifAST_for(Expression* _target, Expression* _iter, StmtSeq* _body,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 6619
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Statement* p_{};
 	if (!_target) {
@@ -245,7 +245,7 @@ Statement* alifAST_for(Expression* _target, Expression* _iter, StmtSeq* _body,
 }
 
 Statement* alifAST_asyncFor(Expression* _target, Expression* _iter, StmtSeq* _body,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 6651
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Statement* p_{};
 	if (!_target) {
@@ -272,7 +272,7 @@ Statement* alifAST_asyncFor(Expression* _target, Expression* _iter, StmtSeq* _bo
 }
 
 Statement* alifAST_while(Expression* _condetion, StmtSeq* _body,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 6683
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Statement* p_{};
 	if (!_condetion) {
@@ -294,7 +294,7 @@ Statement* alifAST_while(Expression* _condetion, StmtSeq* _body,
 }
 
 Statement* alifAST_if(Expression* _condition, StmtSeq* _body, StmtSeq* _else,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 6719
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Statement* p_{};
 	if (!_condition) {
@@ -317,7 +317,7 @@ Statement* alifAST_if(Expression* _condition, StmtSeq* _body, StmtSeq* _else,
 }
 
 Statement* alifAST_with(WithItemSeq* _items, StmtSeq* _body,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 6734
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Statement* p_{};
 	p_ = (Statement*)alifASTMem_malloc(_astMem, sizeof(*p_));
@@ -336,7 +336,7 @@ Statement* alifAST_with(WithItemSeq* _items, StmtSeq* _body,
 }
 
 Statement* alifAST_asyncWith(WithItemSeq* _items, StmtSeq* _body,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 6753
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Statement* p_{};
 	p_ = (Statement*)alifASTMem_malloc(_astMem, sizeof(*p_));
@@ -355,7 +355,7 @@ Statement* alifAST_asyncWith(WithItemSeq* _items, StmtSeq* _body,
 }
 
 Statement* alifAST_import(AliasSeq* _names,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 6880
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Statement* p_{};
 	p_ = (Statement*)alifASTMem_malloc(_astMem, sizeof(*p_));
@@ -373,7 +373,7 @@ Statement* alifAST_import(AliasSeq* _names,
 }
 
 Statement* alifAST_importFrom(AlifObject* _module, AliasSeq* _names,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 6880
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Statement* p_{};
 	p_ = (Statement*)alifASTMem_malloc(_astMem, sizeof(*p_));
@@ -392,7 +392,7 @@ Statement* alifAST_importFrom(AlifObject* _module, AliasSeq* _names,
 }
 
 Statement* alifAST_global(IdentifierSeq* _names,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 6928
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Statement* p_{};
 	p_ = (Statement*)alifASTMem_malloc(_astMem, sizeof(*p_));
@@ -409,7 +409,7 @@ Statement* alifAST_global(IdentifierSeq* _names,
 }
 
 Statement* alifAST_nonlocal(IdentifierSeq* _names,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 6945
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Statement* p_{};
 	p_ = (Statement*)alifASTMem_malloc(_astMem, sizeof(*p_));
@@ -425,7 +425,7 @@ Statement* alifAST_nonlocal(IdentifierSeq* _names,
 	return p_;
 }
 
-Statement* alifAST_pass(int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 6984
+Statement* alifAST_pass(int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 	Statement* p_{};
 	p_ = (Statement*)alifASTMem_malloc(_astMem, sizeof(*p_));
 	if (!p_)
@@ -440,7 +440,7 @@ Statement* alifAST_pass(int _lineNo, int _colOffset, int _endLineNo, int _endCol
 	return p_;
 }
 
-Statement* alifAST_break(int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 6984
+Statement* alifAST_break(int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 	Statement* p_{};
 	p_ = (Statement*)alifASTMem_malloc(_astMem, sizeof(*p_));
 	if (!p_)
@@ -455,7 +455,7 @@ Statement* alifAST_break(int _lineNo, int _colOffset, int _endLineNo, int _endCo
 	return p_;
 }
 
-Statement* alifAST_continue(int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 7016
+Statement* alifAST_continue(int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 	Statement* p_{};
 	p_ = (Statement*)alifASTMem_malloc(_astMem, sizeof(*p_));
 	if (!p_)
@@ -471,7 +471,7 @@ Statement* alifAST_continue(int _lineNo, int _colOffset, int _endLineNo, int _en
 }
 
 Expression* alifAST_boolOp(BoolOp _op, ExprSeq* _vals,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 7032
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Expression* p_{};
 	if (!_op) {
@@ -494,7 +494,7 @@ Expression* alifAST_boolOp(BoolOp _op, ExprSeq* _vals,
 }
 
 Expression* alifAST_binOp(Expression* _left, Operator _op, Expression* _right, int _lineNo,
-	int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 7072
+	int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 	Expression* p_{};
 	if (!_left) {
 		// error
@@ -525,7 +525,7 @@ Expression* alifAST_binOp(Expression* _left, Operator _op, Expression* _right, i
 }
 
 Expression* alifAST_unaryOp(UnaryOp _op, Expression* _operand,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 7117
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 	Expression* p{};
 	if (!_op) {
 		// error
@@ -550,7 +550,7 @@ Expression* alifAST_unaryOp(UnaryOp _op, Expression* _operand,
 }
 
 Expression* alifAST_ifExpr(Expression* _condition, Expression* _body, Expression* _else,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 7173
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 	Expression* p{};
 	if (!_condition) {
 		// error
@@ -580,7 +580,7 @@ Expression* alifAST_ifExpr(Expression* _condition, Expression* _body, Expression
 }
 
 Expression* alifAST_dict(ExprSeq* _keys, ExprSeq* _vals,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 7196
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Expression* p{};
 	p = (Expression*)alifASTMem_malloc(_astMem, sizeof(*p));
@@ -598,7 +598,7 @@ Expression* alifAST_dict(ExprSeq* _keys, ExprSeq* _vals,
 }
 
 Expression* alifAST_listComp(Expression* _elt, CompSeq* _generators,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 7242
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Expression* p{};
 	if (!_elt) {
@@ -620,7 +620,7 @@ Expression* alifAST_listComp(Expression* _elt, CompSeq* _generators,
 }
 
 Expression* alifAST_dictComp(Expression* _key, Expression* _val, CompSeq* _generators,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 7280
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Expression* p{};
 	if (!_key) {
@@ -647,7 +647,7 @@ Expression* alifAST_dictComp(Expression* _key, Expression* _val, CompSeq* _gener
 }
 
 Expression* alifAST_await(Expression* _val,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 7344
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Expression* p{};
 	if (!_val) {
@@ -668,7 +668,7 @@ Expression* alifAST_await(Expression* _val,
 }
 
 Expression* alifAST_yield(Expression* _val,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 7355
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Expression* p{};
 	p = (Expression*)alifASTMem_malloc(_astMem, sizeof(*p));
@@ -685,7 +685,7 @@ Expression* alifAST_yield(Expression* _val,
 }
 
 Expression* alifAST_yieldFrom(Expression* _val,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 7372
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Expression* p{};
 	if (!_val) {
@@ -706,7 +706,7 @@ Expression* alifAST_yieldFrom(Expression* _val,
 }
 
 Expression* alifAST_compare(Expression* _left, IntSeq* _ops, ExprSeq* _comparators,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 7405
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 	Expression* p{};
 	if (!_left) {
 		// error
@@ -726,7 +726,7 @@ Expression* alifAST_compare(Expression* _left, IntSeq* _ops, ExprSeq* _comparato
 }
 
 Expression* alifAST_call(Expression* _func, ExprSeq* _args, KeywordSeq* _keywords,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 7430
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Expression* p{};
 	if (!_func) {
@@ -747,7 +747,7 @@ Expression* alifAST_call(Expression* _func, ExprSeq* _args, KeywordSeq* _keyword
 }
 
 Expression* alifAST_formattedValue(Expression* _val, AlifIntT _conversion, Expression* _formatSpec,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 7444
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Expression* p{};
 	if (!_val) {
@@ -770,7 +770,7 @@ Expression* alifAST_formattedValue(Expression* _val, AlifIntT _conversion, Expre
 }
 
 Expression* alifAST_joinedStr(ExprSeq* _vals,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 7469
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Expression* p{};
 
@@ -788,7 +788,7 @@ Expression* alifAST_joinedStr(ExprSeq* _vals,
 }
 
 Expression* alifAST_attribute(Expression* _val, AlifObject* _attr, ExprCTX _ctx,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 7520
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 	Expression* p{};
 	if (!_val) {
 		// error
@@ -818,7 +818,7 @@ Expression* alifAST_attribute(Expression* _val, AlifObject* _attr, ExprCTX _ctx,
 }
 
 Expression* alifAST_subScript(Expression* _val, Expression* _slice, ExprCTX _ctx,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 7555
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 	Expression* p{};
 	if (!_val) {
 		// error
@@ -848,7 +848,7 @@ Expression* alifAST_subScript(Expression* _val, Expression* _slice, ExprCTX _ctx
 }
 
 Expression* alifAST_star(Expression* _val, ExprCTX _ctx,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 7590
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 	Expression* p{};
 	if (!_val) {
 		// error
@@ -871,7 +871,7 @@ Expression* alifAST_star(Expression* _val, ExprCTX _ctx,
 }
 
 Expression* alifAST_name(AlifObject* _id, ExprCTX _ctx,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 7607
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 	Expression* p{};
 	p = (Expression*)alifASTMem_malloc(_astMem, sizeof(*p));
 	if (!p) return nullptr;
@@ -886,7 +886,7 @@ Expression* alifAST_name(AlifObject* _id, ExprCTX _ctx,
 }
 
 Expression* alifAST_list(ExprSeq* _elts, ExprCTX _ctx,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 7646
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Expression* p{};
 	if (!_ctx) {
@@ -906,7 +906,7 @@ Expression* alifAST_list(ExprSeq* _elts, ExprCTX _ctx,
 }
 
 Expression* alifAST_tuple(ExprSeq* _elts, ExprCTX _ctx,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 7658
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Expression* p{};
 	if (!_ctx) {
@@ -926,7 +926,7 @@ Expression* alifAST_tuple(ExprSeq* _elts, ExprCTX _ctx,
 }
 
 Expression* alifAST_slice(Expression* _lower, Expression* _upper, Expression* _step,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 7681
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Expression* p{};
 	p = (Expression*)alifASTMem_malloc(_astMem, sizeof(*p));
@@ -945,7 +945,7 @@ Expression* alifAST_slice(Expression* _lower, Expression* _upper, Expression* _s
 }
 
 Comprehension* alifAST_comprehension(Expression* _target, Expression* _iter, ExprSeq* _ifs,
-	int _isAsync, AlifASTMem* _astMem) { // 7711
+	int _isAsync, AlifASTMem* _astMem) {
 
 	Comprehension* p{};
 	if (!_target) {
@@ -967,7 +967,7 @@ Comprehension* alifAST_comprehension(Expression* _target, Expression* _iter, Exp
 }
 
 Arguments* alifAST_arguments(ArgSeq* _posOnlyArgs, ArgSeq* _args, Arg* _varArg, ArgSeq* _kwOnlyArgs,
-	ExprSeq* _kwDefaults, Arg* _kwArg, ExprSeq* _defaults, AlifASTMem* _astMem) { // 7756
+	ExprSeq* _kwDefaults, Arg* _kwArg, ExprSeq* _defaults, AlifASTMem* _astMem) {
 
 	Arguments* p{};
 	p = (Arguments*)alifASTMem_malloc(_astMem, sizeof(*p));
@@ -985,7 +985,7 @@ Arguments* alifAST_arguments(ArgSeq* _posOnlyArgs, ArgSeq* _args, Arg* _varArg, 
 }
 
 Arg* alifAST_arg(AlifObject* _arg,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 7766
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Arg* p{};
 
@@ -1002,7 +1002,7 @@ Arg* alifAST_arg(AlifObject* _arg,
 }
 
 Keyword* alifAST_keyword(AlifObject* _arg, Expression* _val,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 7789
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Keyword* p{};
 	if (!_val) {
@@ -1023,7 +1023,7 @@ Keyword* alifAST_keyword(AlifObject* _arg, Expression* _val,
 }
 
 Alias* alifAST_alias(AlifObject* _name, AlifObject* _asName,
-	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) { // 7810
+	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
 	Alias* p{};
 	p = (Alias*)alifASTMem_malloc(_astMem, sizeof(*p));
@@ -1039,7 +1039,7 @@ Alias* alifAST_alias(AlifObject* _name, AlifObject* _asName,
 	return p;
 }
 
-WithItem* alifAST_withItem(Expression* _exprCTX, Expression* _optVars, AlifASTMem* _astMem) { // 7832
+WithItem* alifAST_withItem(Expression* _exprCTX, Expression* _optVars, AlifASTMem* _astMem) {
 
 	WithItem* p_{};
 	if (!_exprCTX) {

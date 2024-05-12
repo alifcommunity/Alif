@@ -21,10 +21,10 @@ AlifObject* alifNew_type(AlifInitObject* metatype, AlifObject* args, AlifObject*
 {
 
     AlifObject* name, * bases, * origDict;
-    //if (!PyArg_ParseTuple(args, "UO!O!:type_.__new__",
+    //if (!alifArg_ParseTuple(args, "UO!O!:type_.__new__",
     //    &name,
-    //    &PyTuple_Type, &bases,
-    //    &PyDict_Type, &orig_dict))
+    //    &alifTuple_Type, &bases,
+    //    &alifDict_Type, &orig_dict))
     //{
     //    return NULL;
     //}
@@ -75,7 +75,7 @@ AlifInitObject typeType = {
     0,                                          /* tp_hash */
     0, //(ternaryfunc)type_call,                   
     0,                                          /* tp_str */
-    0,//(getattrofunc)_Py_type_getattro,           
+    0,//(getattrofunc)_alif_type_getattro,           
     0,//(setattrofunc)type_setattro,               
     0,                    /* tp_flags */
     0,                                   /* tp_doc */

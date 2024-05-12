@@ -427,8 +427,8 @@ AlifObject* alifUnicode_fromWideChar(const wchar_t* _u, int64_t _size)
 
 	switch (ALIFUNICODE_KIND(unicode_)) {
 	case UNICODE_2BYTE:
-#if Py_UNICODE_SIZE == 2
-		memcpy(PyUnicode_2BYTE_DATA(unicode), u, size * 2);
+#if ALIF_UNICODE_SIZE == 2
+		memcpy(AlifUnicode_2BYTE_DATA(unicode), u, size * 2);
 #else
 		ALIFUNICODE_CONVERT_BYTES(wchar_t, AlifUCS2,
 			_u, _u + _size, ALIFUNICODE_CAST(unicode_)->UTF);

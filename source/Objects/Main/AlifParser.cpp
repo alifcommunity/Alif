@@ -1,6 +1,4 @@
-﻿
-
-#include "AlifParserEngine.h"
+﻿#include "AlifParserEngine.h"
 
 
 /*
@@ -18,18 +16,18 @@
 
 
 
-#define MAXSTACK 6000 // 17
+#define MAXSTACK 6000
 
 
-static const int nKeywordList = 7; // 19
-static KeywordToken* reservedKeywords[7] = { // 20
-	new (KeywordToken[1]) { {nullptr, -1} }, // 0 char
-	new (KeywordToken[3]) { {L"ك", 501}, {L"و", 502}, {nullptr, -1} }, // 1 char
-	new (KeywordToken[7]) { {L"في", 511}, {L"او", 512}, {L"من", 513},  {L"مع", 514}, {L"صح", 515}, {L"هل", 516}, {nullptr, -1} }, // 2 chars
-	new (KeywordToken[9]) { {L"إذا", 521}, {L"ليس", 522}, {L"مرر", 523}, {L"عدم", 524}, {L"ولد", 525},  {L"صنف", 526},  {L"خطا", 527},  {L"عام", 528}, {nullptr, -1} }, // 3 chars
-	new (KeywordToken[8]) { {L"احذف", 531}, {L"دالة", 532}, {L"لاجل", 533},  {L"والا", 534}, {L"توقف", 535}, {L"نطاق", 536}, {L"ارجع", 537}, {nullptr, -1}}, // 4 chars
-	new (KeywordToken[5]) { {L"اواذا", 541}, {L"بينما", 542},  {L"انتظر", 543}, {L"استمر", 544}, {nullptr, -1}}, // 5 chars
-	new (KeywordToken[3]) { {L"مزامنة", 551}, {L"استورد", 552}, {nullptr, -1}} // 6 chars
+static const int nKeywordList = 7;
+static KeywordToken* reservedKeywords[7] = {
+	new (KeywordToken[1]) { {nullptr, -1} },  // 0 char
+	new (KeywordToken[3]) { {L"ك", 501}, {L"و", 502}, {nullptr, -1} },  // 1 char
+	new (KeywordToken[7]) { {L"في", 511}, {L"او", 512}, {L"من", 513},  {L"مع", 514}, {L"صح", 515}, {L"هل", 516}, {nullptr, -1} },  // 2 chars
+	new (KeywordToken[9]) { {L"إذا", 521}, {L"ليس", 522}, {L"مرر", 523}, {L"عدم", 524}, {L"ولد", 525},  {L"صنف", 526},  {L"خطا", 527},  {L"عام", 528}, {nullptr, -1} },  // 3 chars
+	new (KeywordToken[8]) { {L"احذف", 531}, {L"دالة", 532}, {L"لاجل", 533},  {L"والا", 534}, {L"توقف", 535}, {L"نطاق", 536}, {L"ارجع", 537}, {nullptr, -1}},  // 4 chars
+	new (KeywordToken[5]) { {L"اواذا", 541}, {L"بينما", 542},  {L"انتظر", 543}, {L"استمر", 544}, {nullptr, -1}},  // 5 chars
+	new (KeywordToken[3]) { {L"مزامنة", 551}, {L"استورد", 552}, {nullptr, -1}}  // 6 chars
 };
 // ^
 // |
@@ -66,57 +64,46 @@ static KeywordToken* reservedKeywords[7] = { // 20
 
 
 // الكلمات المفتاحية السياقية: هي الكلمة المفتاحية التي يمكن إستخدامها كاسم متغير
-static wchar_t* softKeywords[] = { // 80
+static wchar_t* softKeywords[] = { 
 	(wchar_t*)L"_", (wchar_t*)L"نوع", nullptr,
 };
 
 
-#define SIMPLE_STMTS_TYPE 1001 // 94
-#define SIMPLE_STMT_TYPE 1002 // 95
-#define DOTTED_NAME_TYPE 1003 // 115
-#define BLOCK_TYPE 1004 // 116
-#define EXPRESSIONS_TYPE 1005 // 189
-#define EXPRESSION_TYPE 1006 // 190
-#define STAR_EXPRESSION_TYPE 1007 // 192
-#define START_EXPRESSIONS_TYPE 1008 // 193
-#define DISJUCTION_TYPE 1009 // 198
-#define CONJUCTION_TYPE 1010 // 199
-#define INVERSION_TYPE 1011 // 200
-#define COMPARISON_TYPE 1012 // 201
-#define BITWISE_OR_TYPE 1013 // 213
-#define BITWISE_XOR_TYPE 1014 // 214
-#define BITWISE_AND_TYPE 1015 // 215
-#define SHIFT_EXPR_TYPE 1016 // 216
-#define SUM_TYPE 1017 // 217
-#define TERM_TYPE 1018 // 218
-#define FACTOR_TYPE 1019 // 219
-#define POWER_TYPE 1020 // 220
-#define AWAIT_PRIMARY_TYPE 1021 // 221
-#define PRIMARY_TYPE 1022 // 222
-#define SLICES_TYPE 1023 // 223
-#define SLICE_TYPE 1024 // 224
-#define ATOM_TYPE 1025 // 225
-#define STRING_TYPE 1026 // 244
-#define STRINGS_TYPE 1027 // 245
-#define ARGUMENTS_TYPE 1028 // 259
-#define STAR_TARGET_TYPE 1029 // 268
-#define TARGETWITH_STARATOM_TYPE 1030 // 269
-#define T_PRIMARY_TYPE 1031 // 273
-#define DEL_TARGET_TYPE 1032 // 276
+#define SIMPLE_STMTS_TYPE 1001
+#define SIMPLE_STMT_TYPE 1002
+#define DOTTED_NAME_TYPE 1003
+#define BLOCK_TYPE 1004
+#define EXPRESSIONS_TYPE 1005
+#define EXPRESSION_TYPE 1006
+#define STAR_EXPRESSION_TYPE 1007
+#define START_EXPRESSIONS_TYPE 1008
+#define DISJUCTION_TYPE 1009
+#define CONJUCTION_TYPE 1010
+#define INVERSION_TYPE 1011
+#define COMPARISON_TYPE 1012
+#define BITWISE_OR_TYPE 1013
+#define BITWISE_XOR_TYPE 1014
+#define BITWISE_AND_TYPE 1015
+#define SHIFT_EXPR_TYPE 1016
+#define SUM_TYPE 1017
+#define TERM_TYPE 1018
+#define FACTOR_TYPE 1019
+#define POWER_TYPE 1020
+#define AWAIT_PRIMARY_TYPE 1021
+#define PRIMARY_TYPE 1022
+#define SLICES_TYPE 1023
+#define SLICE_TYPE 1024
+#define ATOM_TYPE 1025
+#define STRING_TYPE 1026
+#define STRINGS_TYPE 1027
+#define ARGUMENTS_TYPE 1028
+#define STAR_TARGET_TYPE 1029
+#define TARGETWITH_STARATOM_TYPE 1030
+#define T_PRIMARY_TYPE 1031
+#define DEL_TARGET_TYPE 1032
 
 
 
-
-//class AlifParser;
-//class AlifASTMem;
-//class Expression;
-//class AlifPToken;
-//class StmtSeq;
-//class Seq;
-//class ExprSeq;
-//class CompSeq;
-//class Comprehension;
-//class KeyValuePair;
 int alifParserEngine_fillToken(AlifParser*);
 Expression* alifParserEngine_nameToken(AlifParser*);
 AlifObject* alifParserEngine_newIdentifier(AlifParser*, const wchar_t*);
@@ -144,7 +131,7 @@ static Expression* targetWithStarAtom_rule(AlifParser*);
 static Expression* arguments_rule(AlifParser*);
 static Expression* tPrimary_rule(AlifParser*);
 static Expression* starTarget_rule(AlifParser*);
-static Expression* alif28(AlifParser*);
+static Expression* alif7(AlifParser*);
 static Expression* dottedName_rule(AlifParser*);
 static StmtSeq* simpleStmts_rule(AlifParser*);
 static StmtSeq* statements_rule(AlifParser*);
@@ -158,7 +145,7 @@ static Expression* starExpressions_rule(AlifParser*);
 static Expression* yieldExpr_rule(AlifParser*);
 static Expression* fStringReplacementField_rule(AlifParser*);
 static KeyValuePair* kvPair_rule(AlifParser*);
-static void* alif262(AlifParser*);
+static void* alif23(AlifParser*);
 static void* tLookahead_rule(AlifParser*);
 static ExprSeq* delTargets_rule(AlifParser*);
 static Expression* delTarget_rule(AlifParser*);
@@ -207,7 +194,7 @@ static Expression* alifParserEngine_dummyName() {
 
 
 // del_t_atom: NAME > "(" del_target ")" > "(" del_targets? ")" > "[" del_targets? "]"
-static Expression* delTAtom_rule(AlifParser* _p) { // 19372
+static Expression* delTAtom_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -350,7 +337,7 @@ done:
 		> t_primary "[" slices "]" !t_lookahead
 		> del_t_atom
 */
-static Expression* delTarget_rule(AlifParser* _p) { // 19236
+static Expression* delTarget_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -464,8 +451,8 @@ done:
 }
 
 
-// alif141_loop0: "," del_target
-static Seq* alif141_loop0(AlifParser* _p) { // 33905
+// alif31_loop0: "," del_target
+static Seq* alif31_loop0(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -538,8 +525,8 @@ static Seq* alif141_loop0(AlifParser* _p) { // 33905
 // ^
 // |
 // |
-// alif140_gather: del_target alif141_loop0
-static Seq* alif140_gather(AlifParser* _p) {
+// alif12_gather: del_target alif31_loop0
+static Seq* alif12_gather(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -547,13 +534,13 @@ static Seq* alif140_gather(AlifParser* _p) {
 	Seq* res_{};
 	AlifIntT mark_ = _p->mark_;
 
-	{ // del_target alif141_loop0
+	{ // del_target alif31_loop0
 		Expression* element_{};
 		Seq* seq_{};
 		if (
 			(element_ = delTarget_rule(_p)) // del_target
 			and
-			(seq_ = alif141_loop0(_p)) // alif141_loop0
+			(seq_ = alif31_loop0(_p)) // alif31_loop0
 			)
 		{
 			res_ = alifParserEngine_seqInsertInFront(_p, element_, seq_);
@@ -586,7 +573,7 @@ static ExprSeq* delTargets_rule(AlifParser* _p) {
 		void* literal_{};
 		ExprSeq* a_{};
 		if (
-			(a_ = (ExprSeq*)alif140_gather(_p)) // ",".del_target+
+			(a_ = (ExprSeq*)alif12_gather(_p)) // ",".del_target+
 			and
 			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","?
 			)
@@ -614,7 +601,7 @@ done:
 
 
 // t_lookahead: "(" > "[" > "."
-static void* tLookahead_rule(AlifParser* _p) { // 19110
+static void* tLookahead_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -664,7 +651,7 @@ done:
 }
 
 
-static Expression* tPrimary_raw(AlifParser* _p) { // 18889
+static Expression* tPrimary_raw(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -828,7 +815,7 @@ done:
 		> t_primary "(" arguments? ")" &t_lookahead
 		> atom &t_lookahead
 */
-static Expression* tPrimary_rule(AlifParser* _p) { // 18855
+static Expression* tPrimary_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 
@@ -866,7 +853,7 @@ static Expression* tPrimary_rule(AlifParser* _p) { // 18855
 		> t_primary "." NAME !t_lookahead
 		> t_primary "[" slices "]" !t_lookahead
 */
-static Expression* singleSubScriptAttributeTarget_rule(AlifParser* _p) { // 18658
+static Expression* singleSubScriptAttributeTarget_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -965,7 +952,7 @@ done:
 
 
 // single_target: single_subscript_attribute_target > NAME > "(" single_target ")"
-static Expression* singleTarget_rule(AlifParser* _p) { // 18564
+static Expression* singleTarget_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -1039,8 +1026,8 @@ done:
 }
 
 
-// alif139: !"*" star_target
-static Expression* alif139(AlifParser* _p) { // 33687
+// alif27: !"*" star_target
+static Expression* alif27(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -1074,7 +1061,7 @@ done:
 // |
 // |
 // star_target: "*" (!"*" star_target) > target_with_star_atom
-static Expression* starTarget_rule(AlifParser* _p) { // 18172
+static Expression* starTarget_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -1105,7 +1092,7 @@ static Expression* starTarget_rule(AlifParser* _p) { // 18172
 		if (
 			(literal_ = alifParserEngine_expectToken(_p, STAR)) // "*"
 			and
-			(a_ = alif139(_p)) // !"*" star_target
+			(a_ = alif27(_p)) // !"*" star_target
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -1147,8 +1134,8 @@ done:
 }
 
 
-// alif137_loop0: "," star_target
-static Seq* alif137_loop0(AlifParser* _p) { // 33498
+// alif30_loop0: "," star_target
+static Seq* alif30_loop0(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -1221,8 +1208,8 @@ static Seq* alif137_loop0(AlifParser* _p) { // 33498
 // ^
 // |
 // |
-// alif136_gather: star_target alif137_loop0
-static Seq* alif136_gather(AlifParser* _p) { // 33574
+// alif11_gather: star_target alif30_loop0
+static Seq* alif11_gather(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -1230,7 +1217,7 @@ static Seq* alif136_gather(AlifParser* _p) { // 33574
 	Seq* res_{};
 	AlifIntT mark_ = _p->mark_;
 
-	{ // star_target alif137_loop0
+	{ // star_target alif30_loop0
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		Expression* element_{};
@@ -1238,7 +1225,7 @@ static Seq* alif136_gather(AlifParser* _p) { // 33574
 		if (
 			(element_ = starTarget_rule(_p)) // star_target
 			and
-			(seq_ = alif137_loop0(_p)) // alif137_loop0
+			(seq_ = alif30_loop0(_p)) // alif30_loop0
 			)
 		{
 			res_ = alifParserEngine_seqInsertInFront(_p, element_, seq_);
@@ -1257,7 +1244,7 @@ done:
 // |
 // |
 // star_targets_list_seq: ",".star_target+ ","?
-static ExprSeq* starTargetsListSeq_rule(AlifParser* _p) { // 18048
+static ExprSeq* starTargetsListSeq_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -1271,7 +1258,7 @@ static ExprSeq* starTargetsListSeq_rule(AlifParser* _p) { // 18048
 		void* literal_{};
 		ExprSeq* a_{};
 		if (
-			(a_ = (ExprSeq*)alif136_gather(_p)) // ",".star_target+
+			(a_ = (ExprSeq*)alif11_gather(_p)) // ",".star_target+
 			and
 			(literal_ = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
 			)
@@ -1298,8 +1285,8 @@ done:
 }
 
 
-// alif264: "," star_target
-static void* alif264(AlifParser* _p) { // 41404
+// alif26: "," star_target
+static void* alif26(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -1341,8 +1328,8 @@ done:
 // ^
 // |
 // |
-// alif138_loop1: ("," star_target)
-static Seq* alif138_loop1(AlifParser* _p) { // 33615
+// alif29_loop1: ("," star_target)
+static Seq* alif29_loop1(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -1363,7 +1350,7 @@ static Seq* alif138_loop1(AlifParser* _p) { // 33615
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		void* var_{};
-		while (var_ = alif264(_p))
+		while (var_ = alif26(_p))
 		{
 			res_ = var_;
 			if (n_ == capacity_) {
@@ -1407,7 +1394,7 @@ static Seq* alif138_loop1(AlifParser* _p) { // 33615
 // |
 // |
 // star_targets_tuple_seq: star_target ("," star_target)+ ","? > star_target ","
-static ExprSeq* starTargetsTupleSeq_rule(AlifParser* _p) { // 18095
+static ExprSeq* starTargetsTupleSeq_rule(AlifParser* _p) {
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
@@ -1423,7 +1410,7 @@ static ExprSeq* starTargetsTupleSeq_rule(AlifParser* _p) { // 18095
 		if (
 			(a_ = starTarget_rule(_p)) // star_target
 			and
-			(b_ = alif138_loop1(_p)) // ("," star_target)+
+			(b_ = alif29_loop1(_p)) // ("," star_target)+
 			and
 			(literal_ = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
 			)
@@ -1481,7 +1468,7 @@ done:
 		> "(" star_targets_tuple_seq? ")"
 		> "[" star_targets_list_seq? "]"
 */
-static Expression* starAtom_rule(AlifParser* _p) { // 18404
+static Expression* starAtom_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -1623,7 +1610,7 @@ done:
 		> t_primary "[" slices "]" !t_lookahead
 		> star_atom
 */
-static Expression* targetWithStarAtom_rule(AlifParser* _p) { // 18263
+static Expression* targetWithStarAtom_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -1738,8 +1725,8 @@ done:
 }
 
 
-// alif263: "," star_target
-static void* alif263(AlifParser* _p) { // 40981
+// alif25: "," star_target
+static void* alif25(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -1781,8 +1768,8 @@ done:
 // ^
 // |
 // |
-// alif135_loop0: ("," star_target)
-static Seq* alif135_loop0(AlifParser* _p) { // 33430
+// alif28_loop0: ("," star_target)
+static Seq* alif28_loop0(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -1803,7 +1790,7 @@ static Seq* alif135_loop0(AlifParser* _p) { // 33430
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		void* var_{};
-		while ((var_ = alif263(_p)))
+		while ((var_ = alif25(_p)))
 		{
 			res_ = var_;
 			if (n_ == capacity_) {
@@ -1841,7 +1828,7 @@ static Seq* alif135_loop0(AlifParser* _p) { // 33430
 // |
 // |
 // star_targets: star_target !"," > star_target ("," star_target)* ","?
-static Expression* starTargets_rule(AlifParser* _p) { // 17954
+static Expression* starTargets_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -1891,7 +1878,7 @@ static Expression* starTargets_rule(AlifParser* _p) { // 17954
 		if (
 			(a_ = starTarget_rule(_p)) // star_target
 			and
-			(b_ = alif135_loop0(_p)) // ("," star_target)*
+			(b_ = alif28_loop0(_p)) // ("," star_target)*
 			and
 			(literal_ = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
 			)
@@ -1926,7 +1913,7 @@ done:
 
 
 // kwarg_or_double_starred: NAME "=" expression > "**" expression
-static KeywordOrStar* kwArgOrDoubleStar_rule(AlifParser* _p) { // 17722
+static KeywordOrStar* kwArgOrDoubleStar_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -2016,7 +2003,7 @@ done:
 
 
 // kwarg_or_starred: NAME "=" expression > starred_expression
-static KeywordOrStar* kwArgOrStar_rule(AlifParser* _p) { // 17722
+static KeywordOrStar* kwArgOrStar_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -2104,8 +2091,8 @@ done:
 }
 
 
-// alif130_loop0: "," kwarg_or_double_star
-static Seq* alif130_loop0(AlifParser* _p) { // 33080
+// alif27_loop0: "," kwarg_or_double_star
+static Seq* alif27_loop0(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -2178,8 +2165,8 @@ static Seq* alif130_loop0(AlifParser* _p) { // 33080
 // ^
 // |
 // |
-// alif129_gather: kwarg_or_double_star alif130_loop0
-static Seq* alif129_gather(AlifParser* _p) { // 33156
+// alif10_gather: kwarg_or_double_star alif27_loop0
+static Seq* alif10_gather(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -2187,7 +2174,7 @@ static Seq* alif129_gather(AlifParser* _p) { // 33156
 	Seq* res_{};
 	AlifIntT mark_ = _p->mark_;
 
-	{ // kwarg_or_double_star alif130_loop0
+	{ // kwarg_or_double_star alif27_loop0
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		KeywordOrStar* element_{};
@@ -2195,7 +2182,7 @@ static Seq* alif129_gather(AlifParser* _p) { // 33156
 		if (
 			(element_ = kwArgOrDoubleStar_rule(_p)) // kwarg_or_double_star
 			and
-			(seq_ = alif130_loop0(_p)) // alif130_loop0
+			(seq_ = alif27_loop0(_p)) // alif27_loop0
 			)
 		{
 			res_ = alifParserEngine_seqInsertInFront(_p, element_, seq_);
@@ -2213,8 +2200,8 @@ done:
 // ^
 // |
 // |
-// alif128_loop0: "," kwarg_or_star
-static Seq* alif128_loop0(AlifParser* _p) { // 32964
+// alif26_loop0: "," kwarg_or_star
+static Seq* alif26_loop0(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -2287,8 +2274,8 @@ static Seq* alif128_loop0(AlifParser* _p) { // 32964
 // ^
 // |
 // |
-// alif127_gather: kwarg_or_star alif128_loop0
-static Seq* alif127_gather(AlifParser* _p) { // 33039
+// alif9_gather: kwarg_or_star alif26_loop0
+static Seq* alif9_gather(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -2296,7 +2283,7 @@ static Seq* alif127_gather(AlifParser* _p) { // 33039
 	Seq* res_{};
 	AlifIntT mark_ = _p->mark_;
 
-	{ // kwarg_or_starred alif128_loop0
+	{ // kwarg_or_starred alif26_loop0
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		KeywordOrStar* element_{};
@@ -2304,7 +2291,7 @@ static Seq* alif127_gather(AlifParser* _p) { // 33039
 		if (
 			(element_ = kwArgOrStar_rule(_p)) // kwarg_or_star
 			and
-			(seq_ = alif128_loop0(_p)) // alif128_loop0
+			(seq_ = alif26_loop0(_p)) // alif26_loop0
 			)
 		{
 			res_ = alifParserEngine_seqInsertInFront(_p, element_, seq_);
@@ -2328,7 +2315,7 @@ done:
 		> ",".kwarg_or_starred+
 		> ",".kwarg_or_double_starred+
 */
-static Seq* kwArgs_rule(AlifParser* _p) { // 17552
+static Seq* kwArgs_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -2343,11 +2330,11 @@ static Seq* kwArgs_rule(AlifParser* _p) { // 17552
 		Seq* a_{};
 		Seq* b_{};
 		if (
-			(a_ = alif127_gather(_p)) // ",".kwarg_or_starred+
+			(a_ = alif9_gather(_p)) // ",".kwarg_or_starred+
 			and
 			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
 			and
-			(b_ = alif129_gather(_p)) // ",".kwarg_or_double_starred+
+			(b_ = alif10_gather(_p)) // ",".kwarg_or_double_starred+
 			)
 		{
 			res_ = alifParserEngine_joinSequences(_p, a_, b_);
@@ -2367,7 +2354,7 @@ static Seq* kwArgs_rule(AlifParser* _p) { // 17552
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		Seq* a_{};
-		if ((a_ = alif127_gather(_p)))
+		if ((a_ = alif9_gather(_p)))
 		{
 			res_ = a_;
 			goto done;
@@ -2378,7 +2365,7 @@ static Seq* kwArgs_rule(AlifParser* _p) { // 17552
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		Seq* a_{};
-		if ((a_ = alif129_gather(_p)))
+		if ((a_ = alif10_gather(_p)))
 		{
 			res_ = a_;
 			goto done;
@@ -2394,8 +2381,8 @@ done:
 }
 
 
-// slif126: "," kwargs
-static void* alif126(AlifParser* _p) { // 32917
+// alif24: "," kwargs
+static void* alif24(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -2437,8 +2424,8 @@ done:
 // ^
 // |
 // |
-// alif125_loop0: "," (starred_expression > expression !"=")
-static Seq* alif125_loop0(AlifParser* _p) { // 32799
+// alif25_loop0: "," (starred_expression > expression !"=")
+static Seq* alif25_loop0(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -2463,7 +2450,7 @@ static Seq* alif125_loop0(AlifParser* _p) { // 32799
 		while (
 			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
 			and
-			(element_ = alif262(_p)) // (starred_expression > expression !"=")
+			(element_ = alif23(_p)) // (starred_expression > expression !"=")
 			)
 		{
 			res_ = element_;
@@ -2511,8 +2498,8 @@ static Seq* alif125_loop0(AlifParser* _p) { // 32799
 // ^
 // |
 // |
-// alif262: starred_expression > expression !"="
-static void* alif262(AlifParser* _p) { // 40922
+// alif23: starred_expression > expression !"="
+static void* alif23(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -2556,8 +2543,8 @@ done:
 // ^
 // |
 // |
-// alif124_gather: (starred_expression > expression !"=") alif125_loop0
-static Seq* alif124_gather(AlifParser* _p) { // 32876
+// alif8_gather: (starred_expression > expression !"=") alif25_loop0
+static Seq* alif8_gather(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -2565,15 +2552,15 @@ static Seq* alif124_gather(AlifParser* _p) { // 32876
 	Seq* res_{};
 	AlifIntT mark_ = _p->mark_;
 
-	{ // (starred_expression > expression !"=") alif125_loop0
+	{ // (starred_expression > expression !"=") alif25_loop0
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		void* element_{};
 		Seq* seq_{};
 		if (
-			(element_ = alif262(_p)) // (starred_expression > expression !"=")
+			(element_ = alif23(_p)) // (starred_expression > expression !"=")
 			and
-			(seq_ = alif125_loop0(_p)) // alif125_loop0
+			(seq_ = alif25_loop0(_p)) // alif25_loop0
 			)
 		{
 			res_ = alifParserEngine_seqInsertInFront(_p, element_, seq_);
@@ -2596,7 +2583,7 @@ done:
 		> ",".(star_expression > expression !"=")+ ["," kwargs]
 		> kwargs
 */
-static Expression* args_rule(AlifParser* _p) { // 17452
+static Expression* args_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -2621,9 +2608,9 @@ static Expression* args_rule(AlifParser* _p) { // 17452
 		ExprSeq* a_{};
 		void* b_{};
 		if (
-			(a_ = (ExprSeq*)alif124_gather(_p)) // ",".(star_expression > expression !"=")+
+			(a_ = (ExprSeq*)alif8_gather(_p)) // ",".(star_expression > expression !"=")+
 			and
-			(b_ = alif126(_p), !_p->errorIndicator) // ["," kwargs]
+			(b_ = alif24(_p), !_p->errorIndicator) // ["," kwargs]
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -2678,7 +2665,7 @@ done:
 
 
 // arguments: args ","? &")"
-static Expression* arguments_rule(AlifParser* _p) { // 17376
+static Expression* arguments_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -2727,8 +2714,8 @@ done:
 }
 
 
-// alif259: "if" disjuction
-static void* alif259(AlifParser* _p) { // 41287
+// alif22: "if" disjuction
+static void* alif22(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -2770,8 +2757,8 @@ done:
 // ^
 // |
 // |
-// alif120_loop0: ("if" disjunction)
-static Seq* alif120_loop0(AlifParser* _p) { // 32561
+// alif24_loop0: ("if" disjunction)
+static Seq* alif24_loop0(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -2791,7 +2778,7 @@ static Seq* alif120_loop0(AlifParser* _p) { // 32561
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		void* var_{};
-		while ((var_ = alif259(_p)))
+		while ((var_ = alif22(_p)))
 		{
 			res_ = var_;
 			if (n_ == capacity_) {
@@ -2835,7 +2822,7 @@ static Seq* alif120_loop0(AlifParser* _p) { // 32561
 		> "for" star_targets "in" ~ disjunction ("if" disjunction)*
 		> "async"? "for" (bitwise_or ("," bitwise_or)* ","?) !"in"
 */
-static Comprehension* forIfClause_rule(AlifParser* _p) { // 16906
+static Comprehension* forIfClause_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -2866,7 +2853,7 @@ static Comprehension* forIfClause_rule(AlifParser* _p) { // 16906
 			and
 			(b_ = disjunction_rule(_p)) // disjunction
 			and
-			(c_ = (ExprSeq*)alif120_loop0(_p)) // ("if" disjunction)*
+			(c_ = (ExprSeq*)alif24_loop0(_p)) // ("if" disjunction)*
 			)
 		{
 			//res_ = CHECK_VERSION(Comprehension*, 6, L"المزامنة الضمنية", alifAST_comprehension(a_, b_, c, 1, _p->astMem));
@@ -2904,7 +2891,7 @@ static Comprehension* forIfClause_rule(AlifParser* _p) { // 16906
 			and
 			(b_ = disjunction_rule(_p)) // disjunction
 			and
-			(c_ = (ExprSeq*)alif120_loop0(_p)) // ("if" disjunction)*
+			(c_ = (ExprSeq*)alif24_loop0(_p)) // ("if" disjunction)*
 			)
 		{
 			//res_ = CHECK_VERSION(Comprehension*, 6, L"المزامنة الضمنية", alifAST_comprehension(a_, b_, c, 1, _p->astMem));
@@ -2965,8 +2952,8 @@ done:
 }
 
 
-// alif119_loop1: for_if_clause
-static Seq* alif119_loop1(AlifParser* _p) { // 32489
+// alif23_loop1: for_if_clause
+static Seq* alif23_loop1(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -3030,7 +3017,7 @@ static Seq* alif119_loop1(AlifParser* _p) { // 32489
 // |
 // |
 // for_if_clauses: for_if_clause+
-static CompSeq* forIfClauses_rule(AlifParser* _p) { // 16812
+static CompSeq* forIfClauses_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -3040,7 +3027,7 @@ static CompSeq* forIfClauses_rule(AlifParser* _p) { // 16812
 
 	{ // for_if_clause+
 		CompSeq* a_{};
-		if ((a_ = (CompSeq*)alif119_loop1(_p)))
+		if ((a_ = (CompSeq*)alif23_loop1(_p)))
 		{
 			res_ = a_;
 			if (res_ == nullptr
@@ -3065,7 +3052,7 @@ done:
 
 
 // dictcomp: "{" kvpair for_if_clauses "}"
-static Expression* dictComp_rule(AlifParser* _p) { // 17288
+static Expression* dictComp_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -3129,7 +3116,7 @@ done:
 
 
 // listcomp: "[" expression for_if_clauses "]"
-static Expression* listComp_rule(AlifParser* _p) { // 17019
+static Expression* listComp_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -3193,7 +3180,7 @@ done:
 
 
 // kvpair: expression ":" expression
-static KeyValuePair* kvPair_rule(AlifParser* _p) { // 16763
+static KeyValuePair* kvPair_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -3238,7 +3225,7 @@ done:
 
 
 // double_starred_kvpair: "**" bitwise_or > kvpair
-static KeyValuePair* doubleStarKVPair_rule(AlifParser* _p) { // 16698
+static KeyValuePair* doubleStarKVPair_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -3291,8 +3278,8 @@ done:
 }
 
 
-// alif118_loop0: "," double_starred_kvpair
-static Seq* alif118_loop0(AlifParser* _p) { // 32372
+// alif22_loop0: "," double_starred_kvpair
+static Seq* alif22_loop0(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -3363,8 +3350,8 @@ static Seq* alif118_loop0(AlifParser* _p) { // 32372
 // ^
 // |
 // |
-// alif117_gather: double_starred_kvpair alif118_loop0
-static Seq* alif117_gather(AlifParser* _p) { // 32448
+// alif7_gather: double_starred_kvpair alif22_loop0
+static Seq* alif7_gather(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -3372,7 +3359,7 @@ static Seq* alif117_gather(AlifParser* _p) { // 32448
 	Seq* res_{};
 	AlifIntT mark_ = _p->mark_;
 
-	{ // double_starred_kvpair alif118_loop0
+	{ // double_starred_kvpair alif22_loop0
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		KeyValuePair* element_{};
@@ -3380,7 +3367,7 @@ static Seq* alif117_gather(AlifParser* _p) { // 32448
 		if (
 			(element_ = doubleStarKVPair_rule(_p)) // double_starred_kvpair
 			and
-			(seq_ = alif118_loop0(_p)) // alif118_loop0
+			(seq_ = alif22_loop0(_p)) // alif22_loop0
 			)
 		{
 			res_ = alifParserEngine_seqInsertInFront(_p, element_, seq_);
@@ -3399,7 +3386,7 @@ done:
 // |
 // |
 // double_starred_kvpairs: ",".double_starred_kvpair+ ","?
-static Seq* doubleStarKVPairs_rule(AlifParser* _p) { // 16651
+static Seq* doubleStarKVPairs_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -3413,7 +3400,7 @@ static Seq* doubleStarKVPairs_rule(AlifParser* _p) { // 16651
 		void* literal_{};
 		Seq* a_{};
 		if (
-			(a_ = alif117_gather(_p)) // ",".double_starred_kvpair+
+			(a_ = alif7_gather(_p)) // ",".double_starred_kvpair+
 			and
 			(literal_ = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
 			)
@@ -3441,7 +3428,7 @@ done:
 
 
 // dict: "{" double_starred_kvpairs? "}"
-static Expression* dict_rule(AlifParser* _p) { // 16559
+static Expression* dict_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -3501,8 +3488,8 @@ done:
 }
 
 
-// alif116: star_sub_expression "," star_sub_expressions?
-static ExprSeq* alif116(AlifParser* _p) { // 32323
+// alif21: star_sub_expression "," star_sub_expressions?
+static ExprSeq* alif21(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -3548,7 +3535,7 @@ done:
 // |
 // |
 // tuple: "(" [star_sub_expression "," star_sub_expressions?] ")"
-static Expression* tuple_rule(AlifParser* _p) { // 16425
+static Expression* tuple_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -3574,7 +3561,7 @@ static Expression* tuple_rule(AlifParser* _p) { // 16425
 		if (
 			(literal_ = alifParserEngine_expectToken(_p, LPAR)) // "("
 			and
-			(a_ = alif116(_p), !_p->errorIndicator) // [starSubExpression ',' starSubExpressions?] // casted to ExpreSeq* from void*
+			(a_ = alif21(_p), !_p->errorIndicator) // [starSubExpression ',' starSubExpressions?] // casted to ExpreSeq* from void*
 			and
 			(literal_1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
 			)
@@ -3607,7 +3594,7 @@ done:
 
 
 // list: "[" star_sub_expressions? "]"
-static Expression* list_rule(AlifParser* _p) { // 16358
+static Expression* list_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -3714,8 +3701,8 @@ done:
 }
 
 
-// alif113_loop0: fstring_format_spec
-static Seq* alif113_loop0(AlifParser* _p) { // 32117
+// alif21_loop0: fstring_format_spec
+static Seq* alif21_loop0(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -3776,7 +3763,7 @@ static Seq* alif113_loop0(AlifParser* _p) { // 32117
 // |
 // |
 // fstring_full_format_spec: ":" fstring_format_spec*
-static ResultTokenWithMetadata* fStringFullFormatSpec_rule(AlifParser* _p) { // 16074
+static ResultTokenWithMetadata* fStringFullFormatSpec_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -3802,7 +3789,7 @@ static ResultTokenWithMetadata* fStringFullFormatSpec_rule(AlifParser* _p) { // 
 		if (
 			(literal_ = alifParserEngine_expectToken(_p, COLON)) // ":"
 			and
-			(a_ = alif113_loop0(_p)) // // fstring_format_spec*
+			(a_ = alif21_loop0(_p)) // // fstring_format_spec*
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -3833,7 +3820,7 @@ done:
 
 
 // fstring_conversion: "!" NAME
-static ResultTokenWithMetadata* fStringConversion_rule(AlifParser* _p) { // 16028
+static ResultTokenWithMetadata* fStringConversion_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -3873,8 +3860,8 @@ done:
 }
 
 
-// alif112: yield_expr > star_expressions
-static Expression* alif112(AlifParser* _p) { // 32060
+// alif20: yield_expr > star_expressions
+static Expression* alif20(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -3915,7 +3902,7 @@ done:
 // |
 // |
 // fstring_replacement_field: "{" (yield_expr > star_expressions) "="? fstring_conversion? fstring_full_format_spec? "}"
-static Expression* fStringReplacementField_rule(AlifParser* _p) { // 15933
+static Expression* fStringReplacementField_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -3945,7 +3932,7 @@ static Expression* fStringReplacementField_rule(AlifParser* _p) { // 15933
 		if (
 			(literal_ = alifParserEngine_expectToken(_p, LBRACE)) // "{"
 			and
-			(a_ = alif112(_p)) // yield_expr > star_expression
+			(a_ = alif20(_p)) // yield_expr > star_expression
 			and
 			(d_ = alifParserEngine_expectToken(_p, EQUAL), !_p->errorIndicator) // "="?
 			and
@@ -3984,7 +3971,7 @@ done:
 
 
 // fstring_middle: fstring_replacement_field > FSTRING_MIDDLE
-static Expression* fStringMiddle_rule(AlifParser* _p) { // 15869
+static Expression* fStringMiddle_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -4031,8 +4018,8 @@ done:
 }
 
 
-// alif114_loop0: fstring_middle
-static Seq* alif114_loop0(AlifParser* _p) { // 32184
+// alif20_loop0: fstring_middle
+static Seq* alif20_loop0(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -4093,7 +4080,7 @@ static Seq* alif114_loop0(AlifParser* _p) { // 32184
 // |
 // |
 // fstring: FSTRING_START fstring_middle* FSTRING_END
-static Expression* fString_rule(AlifParser* _p) { // 16200
+static Expression* fString_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -4110,7 +4097,7 @@ static Expression* fString_rule(AlifParser* _p) { // 16200
 		if (
 			(a_ = alifParserEngine_expectToken(_p, FSTRINGSTART)) // "FSTRING_START"
 			and
-			(b_ = alif114_loop0(_p)) // fstring_middle*
+			(b_ = alif20_loop0(_p)) // fstring_middle*
 			and
 			(c_ = alifParserEngine_expectToken(_p, FSTRINGEND)) // "FSTRING_END"
 			)
@@ -4138,7 +4125,7 @@ done:
 
 
 // string: STRING
-static Expression* string_rule(AlifParser* _p) { // 16249
+static Expression* string_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -4174,8 +4161,8 @@ done:
 }
 
 
-// alif258: fstring > string
-static void* alif258(AlifParser* _p) { // 40706
+// alif19: fstring > string
+static void* alif19(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -4215,8 +4202,8 @@ done:
 // ^
 // |
 // |
-// alif115_loop1: (fstring > string)
-static Seq* alif115_loop1(AlifParser* _p) { // 32251
+// alif19_loop1: (fstring > string)
+static Seq* alif19_loop1(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -4238,7 +4225,7 @@ static Seq* alif115_loop1(AlifParser* _p) { // 32251
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		void* var_1{};
-		while ((var_1 = alif258(_p)))
+		while ((var_1 = alif19(_p)))
 		{
 			res_ = var_1;
 			if (n_ == capacity_) {
@@ -4282,7 +4269,7 @@ static Seq* alif115_loop1(AlifParser* _p) { // 32251
 // |
 // |
 // strings: (fstring > string)+
-static Expression* strings_rule(AlifParser* _p) { // 16292
+static Expression* strings_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -4310,7 +4297,7 @@ static Expression* strings_rule(AlifParser* _p) { // 16292
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		ExprSeq* a_{};
-		if ((a_ = (ExprSeq*)alif115_loop1(_p)))
+		if ((a_ = (ExprSeq*)alif19_loop1(_p)))
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
 			if (token_ == nullptr) { _p->level--; return nullptr; }
@@ -4340,8 +4327,8 @@ done:
 }
 
 
-// alif96: dict > dictcomp
-static Expression* alif96(AlifParser* _p) { // 30935
+// alif18: dict > dictcomp
+static Expression* alif18(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -4380,8 +4367,8 @@ done:
 // ^
 // |
 // |
-// alif95: list > listcomp
-static Expression* alif95(AlifParser* _p) { // 30878
+// alif17: list > listcomp
+static Expression* alif17(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -4420,8 +4407,8 @@ done:
 // ^
 // |
 // |
-// alif93 : STRING > FSTRING_START
-static void* alif93(AlifParser* _p) { // 30745
+// alif16 : STRING > FSTRING_START
+static void* alif16(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -4473,7 +4460,7 @@ done:
 		> &"[" (list > listcomp)
 		> &"{" (dict > dictcomp)
 */
-static Expression* atom_rule(AlifParser* _p) { // 14572
+static Expression* atom_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -4581,7 +4568,7 @@ static Expression* atom_rule(AlifParser* _p) { // 14572
 
 		Expression* stringsVar{};
 		if (
-			alifParserEngine_lookahead(1, alif93, _p)
+			alifParserEngine_lookahead(1, alif16, _p)
 			and
 			(stringsVar = strings_rule(_p)) // strings
 			)
@@ -4609,7 +4596,7 @@ static Expression* atom_rule(AlifParser* _p) { // 14572
 		if (
 			alifParserEngine_lookaheadWithInt(1, alifParserEngine_expectToken, _p, LPAR) // "("
 			and
-			(tupleVar = tuple_rule(_p)) // tuple -- from alif94()
+			(tupleVar = tuple_rule(_p)) // tuple
 			)
 		{
 			res_ = tupleVar;
@@ -4624,7 +4611,7 @@ static Expression* atom_rule(AlifParser* _p) { // 14572
 		if (
 			alifParserEngine_lookaheadWithInt(1, alifParserEngine_expectToken, _p, LSQR) // "["
 			and
-			(listVar = alif95(_p)) // list > listcomp
+			(listVar = alif17(_p)) // list > listcomp
 			)
 		{
 			res_ = listVar;
@@ -4639,7 +4626,7 @@ static Expression* atom_rule(AlifParser* _p) { // 14572
 		if (
 			alifParserEngine_lookaheadWithInt(1, alifParserEngine_expectToken, _p, LBRACE) // "{"
 			and
-			(dictVar = alif96(_p)) // dict > dictcomp
+			(dictVar = alif18(_p)) // dict > dictcomp
 			)
 		{
 			res_ = dictVar;
@@ -4657,8 +4644,8 @@ done:
 }
 
 
-// alif92: ":" expression?
-static Expression* alif92(AlifParser* _p) { // 30698
+// alif15: ":" expression?
+static Expression* alif15(AlifParser* _p) { 
 	// return type is changed to Expression from void*
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
@@ -4701,7 +4688,7 @@ done:
 // |
 // |
 // slice: expression? ":" expression? [":" expression?] > expression
-static Expression* slice_rule(AlifParser* _p) { // 14468
+static Expression* slice_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -4735,7 +4722,7 @@ static Expression* slice_rule(AlifParser* _p) { // 14468
 			and
 			(b_ = expression_rule(_p), !_p->errorIndicator) // expression?
 			and
-			(c_ = alif92(_p), !_p->errorIndicator) // [":" expression?]
+			(c_ = alif15(_p), !_p->errorIndicator) // [":" expression?]
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -4784,8 +4771,8 @@ done:
 }
 
 
-// alif252: slice > starred_expression
-static void* alif252(AlifParser* _p) { // 40649
+// alif14: slice > starred_expression
+static void* alif14(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -4825,8 +4812,8 @@ done:
 // ^
 // |
 // |
-// alif91_loop0: "," (slice > starred_expression)
-static Seq* alif91_loop0(AlifParser* _p) { // 30582
+// alif18_loop0: "," (slice > starred_expression)
+static Seq* alif18_loop0(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -4850,7 +4837,7 @@ static Seq* alif91_loop0(AlifParser* _p) { // 30582
 		while (
 			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
 			and
-			(element_ = alif252(_p)) // slice > star_expression
+			(element_ = alif14(_p)) // slice > star_expression
 			)
 		{
 			res_ = element_;
@@ -4895,23 +4882,23 @@ static Seq* alif91_loop0(AlifParser* _p) { // 30582
 // ^
 // |
 // |
-// alif90_gather: (slice > starred_expression) alif91_loop0
-static Seq* alif90_gather(AlifParser* _p) { // 30658
+// alif6_gather: (slice > starred_expression) alif18_loop0
+static Seq* alif6_gather(AlifParser* _p) { 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 	Seq* res_{};
 	AlifIntT mark_ = _p->mark_;
 
-	{ // (slice > starred_expression) alif91_loop0
+	{ // (slice > starred_expression) alif18_loop0
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		void* element_{};
 		Seq* seq_{};
 		if (
-			(element_ = alif252(_p)) // slice > star_expression
+			(element_ = alif14(_p)) // slice > star_expression
 			and
-			(seq_ = alif91_loop0(_p)) // alif91_loop0
+			(seq_ = alif18_loop0(_p)) // alif18_loop0
 			)
 		{
 			res_ = alifParserEngine_seqInsertInFront(_p, element_, seq_);
@@ -4930,7 +4917,7 @@ done:
 // |
 // |
 // slices: slice !"," > ",".(slice > starred_expression)+ ","?
-static Expression* slices_rule(AlifParser* _p) { // 14377
+static Expression* slices_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -4978,7 +4965,7 @@ static Expression* slices_rule(AlifParser* _p) { // 14377
 		void* optVar{};
 		ExprSeq* a_{};
 		if (
-			(a_ = (ExprSeq*)alif90_gather(_p)) // ",".(slice > starred_expression)+
+			(a_ = (ExprSeq*)alif6_gather(_p)) // ",".(slice > starred_expression)+
 			and
 			(optVar = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
 			)
@@ -5011,7 +4998,7 @@ done:
 }
 
 
-static Expression* primary_raw(AlifParser* _p) { // 14171
+static Expression* primary_raw(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -5158,7 +5145,7 @@ done:
 		> primary "[" slices "]"
 		> atom
 */
-static Expression* primary_rule(AlifParser* _p) { // 14137
+static Expression* primary_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 
@@ -5202,7 +5189,7 @@ static Expression* primary_rule(AlifParser* _p) { // 14137
 
 
 // await_primary: "await" primary > primary
-static Expression* awaitPrimary_rule(AlifParser* _p) { // 14042
+static Expression* awaitPrimary_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -5345,7 +5332,7 @@ done:
 
 
 // power: sqrt "^" factor > sqrt
-static Expression* power_rule(AlifParser* _p) { // 13956
+static Expression* power_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -5415,7 +5402,7 @@ done:
 
 
 // factor: "+" factor > "-" factor > power
-static Expression* factor_rule(AlifParser* _p) { // 13796
+static Expression* factor_rule(AlifParser* _p) { 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
@@ -5514,7 +5501,7 @@ done:
 }
 
 
-static Expression* term_raw(AlifParser* _p) { // 13554
+static Expression* term_raw(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -5686,7 +5673,7 @@ done:
 		> term "//" factor
 		> factor
 */
-static Expression* term_rule(AlifParser* _p) { // 13520
+static Expression* term_rule(AlifParser* _p) { 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 
 	Expression* res_{};
@@ -5727,7 +5714,7 @@ static Expression* term_rule(AlifParser* _p) { // 13520
 }
 
 
-static Expression* sum_raw(AlifParser* _p) { // 13387
+static Expression* sum_raw(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -5831,7 +5818,7 @@ done:
 }
 // Left-recursive
 // sum: sum "+" term > sum "-" term > term
-static Expression* sum_rule(AlifParser* _p) { // 13353
+static Expression* sum_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 
@@ -5873,7 +5860,7 @@ static Expression* sum_rule(AlifParser* _p) { // 13353
 }
 
 
-static Expression* shiftExpr_raw(AlifParser* _p) { // 13226
+static Expression* shiftExpr_raw(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -5975,7 +5962,7 @@ done:
 }
 // Left-recursive
 // shift_expr: shift_expr "<<" sum > shift_expr ">>" sum > sum
-static Expression* shiftExpr_rule(AlifParser* _p) { // 13192
+static Expression* shiftExpr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 
@@ -6017,7 +6004,7 @@ static Expression* shiftExpr_rule(AlifParser* _p) { // 13192
 }
 
 
-static Expression* bitwiseAnd_raw(AlifParser* _p) { // 13104
+static Expression* bitwiseAnd_raw(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -6087,7 +6074,7 @@ done:
 }
 // Left-recursive
 // bitwise_and: bitwise_and "&" shift_expr > shift_expr
-static Expression* bitwiseAnd_rule(AlifParser* _p) { // 13070
+static Expression* bitwiseAnd_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 
@@ -6129,7 +6116,7 @@ static Expression* bitwiseAnd_rule(AlifParser* _p) { // 13070
 }
 
 
-static Expression* bitwiseXOr_raw(AlifParser* _p) { // 12982
+static Expression* bitwiseXOr_raw(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -6199,7 +6186,7 @@ done:
 }
 // Left-recursive
 // bitwise_xor: bitwise_xor "*|" bitwise_and > bitwise_and
-static Expression* bitwiseXOr_rule(AlifParser* _p) { // 12948
+static Expression* bitwiseXOr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 
@@ -6241,7 +6228,7 @@ static Expression* bitwiseXOr_rule(AlifParser* _p) { // 12948
 }
 
 
-static Expression* bitwiseOr_raw(AlifParser* _p) { // 12874
+static Expression* bitwiseOr_raw(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -6310,7 +6297,7 @@ done:
 }
 // Left-recursive
 // bitwise_or: bitwise_or "|" bitwise_xor > bitwise_xor
-static Expression* bitwiseOr_rule(AlifParser* _p) { // 12826
+static Expression* bitwiseOr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 
@@ -6353,7 +6340,7 @@ static Expression* bitwiseOr_rule(AlifParser* _p) { // 12826
 
 
 // is_bitwise_or: "is" bitwise_or
-static CompExprPair* isBitwiseOr_rule(AlifParser* _p) { // 12778
+static CompExprPair* isBitwiseOr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -6395,7 +6382,7 @@ done:
 
 
 // is_bitwise_or: "is" "not" bitwise_or
-static CompExprPair* isNotBitwiseOr_rule(AlifParser* _p) { // 12743
+static CompExprPair* isNotBitwiseOr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -6440,7 +6427,7 @@ done:
 
 
 // in_bitwise_or: "in" bitwise_or
-static CompExprPair* inBitwiseOr_rule(AlifParser* _p) { // 12683
+static CompExprPair* inBitwiseOr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -6482,7 +6469,7 @@ done:
 
 
 // notin_bitwise_or: "not" "in" bitwise_or
-static CompExprPair* notInBitwiseOr_rule(AlifParser* _p) { // 12634
+static CompExprPair* notInBitwiseOr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -6527,7 +6514,7 @@ done:
 
 
 // gt_bitwise_or: ">" bitwise_or
-static CompExprPair* greaterThanBitwiseOr_rule(AlifParser* _p) { // 12588
+static CompExprPair* greaterThanBitwiseOr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -6569,7 +6556,7 @@ done:
 
 
 // gte_bitwise_or: ">=" bitwise_or
-static CompExprPair* greaterThanEqBitwiseOr_rule(AlifParser* _p) { // 12542
+static CompExprPair* greaterThanEqBitwiseOr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -6611,7 +6598,7 @@ done:
 
 
 // lt_bitwise_or: "<" bitwise_or
-static CompExprPair* lessThanBitwiseOr_rule(AlifParser* _p) { // 12496
+static CompExprPair* lessThanBitwiseOr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -6653,7 +6640,7 @@ done:
 
 
 // lte_bitwise_or: "<=" bitwise_or
-static CompExprPair* lessThanEqBitwiseOr_rule(AlifParser* _p) { // 12450
+static CompExprPair* lessThanEqBitwiseOr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -6695,7 +6682,7 @@ done:
 
 
 // noteq_bitwise_or: "!=" bitwise_or
-static CompExprPair* notEqBitwiseOr_rule(AlifParser* _p) { // 12404
+static CompExprPair* notEqBitwiseOr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -6737,7 +6724,7 @@ done:
 
 
 // eq_bitwise_or: "==" bitwise_or
-static CompExprPair* eqBitwiseOr_rule(AlifParser* _p) { // 12358
+static CompExprPair* eqBitwiseOr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -6791,7 +6778,7 @@ done:
 		> isnot_bitwise_or
 		> is_bitwise_or
 */
-static CompExprPair* compareOpBitwiseOrPair_rule(AlifParser* _p) { // 12150
+static CompExprPair* compareOpBitwiseOrPair_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -6928,8 +6915,8 @@ done:
 }
 
 
-// alif88_loop1: compare_op_bitwise_or_pair
-static Seq* alif88_loop1(AlifParser* _p) { // 30467
+// alif17_loop1: compare_op_bitwise_or_pair
+static Seq* alif17_loop1(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -6995,7 +6982,7 @@ static Seq* alif88_loop1(AlifParser* _p) { // 30467
 //	|
 //	|
 // comparison: bitwise_or compare_op_bitwise_or_pair+ > bitwise_or
-static Expression* comparison_rule(AlifParser* _p) { // 12056
+static Expression* comparison_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -7021,7 +7008,7 @@ static Expression* comparison_rule(AlifParser* _p) { // 12056
 		if (
 			(a_ = bitwiseOr_rule(_p)) // bitwise_or
 			and
-			(b_ = alif88_loop1(_p)) // bitwise_or compare_op_bitwise_or_pair+
+			(b_ = alif17_loop1(_p)) // bitwise_or compare_op_bitwise_or_pair+
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -7064,7 +7051,7 @@ done:
 
 
 // inversion: "not" inversion > comparison
-static Expression* inversion_rule(AlifParser* _p) { // 11968
+static Expression* inversion_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -7137,8 +7124,8 @@ done:
 }
 
 
-// alif256: "and" inversion
-static void* alif256(AlifParser* _p) { // 40603
+// alif13: "and" inversion
+static void* alif13(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -7180,8 +7167,8 @@ done:
 //	^
 //	|
 //	|
-// alif87_loop1: ("and" inversion)
-static Seq* alif87_loop1(AlifParser* _p) { // 30395
+// alif16_loop1: ("and" inversion)
+static Seq* alif16_loop1(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -7203,7 +7190,7 @@ static Seq* alif87_loop1(AlifParser* _p) { // 30395
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		void* var_1{};
-		while ((var_1 = alif256(_p)))
+		while ((var_1 = alif13(_p)))
 		{
 			res_ = var_1;
 			if (n_ == capacity_) {
@@ -7247,7 +7234,7 @@ static Seq* alif87_loop1(AlifParser* _p) { // 30395
 //	|
 //	|
 // conjunction: inversion ("and" inversion)+ > inversion
-static Expression* conjuction_rule(AlifParser* _p) { // 11880
+static Expression* conjuction_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -7278,7 +7265,7 @@ static Expression* conjuction_rule(AlifParser* _p) { // 11880
 		if (
 			(a_ = inversion_rule(_p)) // inversion
 			and
-			(b_ = alif87_loop1(_p)) // ("and" inversion)+
+			(b_ = alif16_loop1(_p)) // ("and" inversion)+
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -7320,8 +7307,8 @@ done:
 }
 
 
-// alif255: "or" conjuction
-static void* alif255(AlifParser* _p) { // 40558
+// alif12: "or" conjuction
+static void* alif12(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -7363,8 +7350,8 @@ done:
 //	^
 //	|
 //	|
-// alif86_loop1: ("or" conjuction)
-static Seq* alif86_loop1(AlifParser* _p) { // 30323
+// alif15_loop1: ("or" conjuction)
+static Seq* alif15_loop1(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -7386,7 +7373,7 @@ static Seq* alif86_loop1(AlifParser* _p) { // 30323
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		void* var_1{};
-		while ((var_1 = alif255(_p)))
+		while ((var_1 = alif12(_p)))
 		{
 			res_ = var_1;
 			if (n_ == capacity_) {
@@ -7430,7 +7417,7 @@ static Seq* alif86_loop1(AlifParser* _p) { // 30323
 //	|
 //	|
 // disjunction: conjunction ("or" conjunction)+ > conjunction
-static Expression* disjunction_rule(AlifParser* _p) { // 11792
+static Expression* disjunction_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -7461,7 +7448,7 @@ static Expression* disjunction_rule(AlifParser* _p) { // 11792
 		if (
 			(a_ = conjuction_rule(_p)) // conjuction
 			and
-			(b_ = alif86_loop1(_p)) // ("or" conjuction)+
+			(b_ = alif15_loop1(_p)) // ("or" conjuction)+
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -7508,7 +7495,7 @@ done:
 		> disjunction "if" disjunction "else" expression
 		> disjunction
 */
-static Expression* expression_rule(AlifParser* _p) { // 11039
+static Expression* expression_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -7589,8 +7576,8 @@ done:
 }
 
 
-// alif257: "," expression
-static void* alif257(AlifParser* _p) { // 40988
+// alif11: "," expression
+static void* alif11(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -7633,8 +7620,8 @@ done:
 //	^
 //	|
 //	|
-// alif82_loop1: ("," expression)
-static Seq* alif82_loop1(AlifParser* _p) { // 30240
+// alif14_loop1: ("," expression)
+static Seq* alif14_loop1(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -7656,7 +7643,7 @@ static Seq* alif82_loop1(AlifParser* _p) { // 30240
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		void* var_1{};
-		while ((var_1 = alif257(_p)))
+		while ((var_1 = alif11(_p)))
 		{
 			res_ = var_1;
 			if (n_ == capacity_) {
@@ -7700,7 +7687,7 @@ static Seq* alif82_loop1(AlifParser* _p) { // 30240
 //	|
 //	|
 // expressions: expression ("," expression)+ ","? > expression "," > expression
-static Expression* expressions_rule(AlifParser* _p) { // 10925
+static Expression* expressions_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -7727,7 +7714,7 @@ static Expression* expressions_rule(AlifParser* _p) { // 10925
 		if (
 			(a_ = expression_rule(_p)) // expression
 			and
-			(b_ = alif82_loop1(_p)) // ("," expression)+
+			(b_ = alif14_loop1(_p)) // ("," expression)+
 			and
 			(optVar = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
 			)
@@ -7802,7 +7789,7 @@ done:
 
 
 // star_sub_expression: "*" bitwise_or > expression
-static Expression* starSubExpression_rule(AlifParser* _p) { // 11557
+static Expression* starSubExpression_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -7869,8 +7856,8 @@ done:
 }
 
 
-// alif85_loop0: "," star_sub_expression
-static Seq* alif85_loop0(AlifParser* _p) { // 30207
+// alif13_loop0: "," star_sub_expression
+static Seq* alif13_loop0(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -7944,8 +7931,8 @@ static Seq* alif85_loop0(AlifParser* _p) { // 30207
 //	^
 //	|
 //	|
-// alif84_gather: star_sub_expression alif85_loop0
-static Seq* alif84_gather(AlifParser* _p) { // 30282
+// alif5_gather: star_sub_expression alif13_loop0
+static Seq* alif5_gather(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -7953,7 +7940,7 @@ static Seq* alif84_gather(AlifParser* _p) { // 30282
 	Seq* res_{};
 	AlifIntT mark_ = _p->mark_;
 
-	{ // star_sub_expression alif85_loop0
+	{ // star_sub_expression alif13_loop0
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		Expression* element_{};
@@ -7961,7 +7948,7 @@ static Seq* alif84_gather(AlifParser* _p) { // 30282
 		if (
 			(element_ = starSubExpression_rule(_p)) // star_sub_expression
 			and
-			(seq_ = alif85_loop0(_p)) // alif85_loop0
+			(seq_ = alif13_loop0(_p)) // alif13_loop0
 			)
 		{
 			res_ = alifParserEngine_seqInsertInFront(_p, element_, seq_);
@@ -7980,7 +7967,7 @@ done:
 //	|
 //	|
 // star_sub_expressions: ",".star_sub_expression+ ","?
-static ExprSeq* starSubExpressions_rule(AlifParser* _p) { // 11510
+static ExprSeq* starSubExpressions_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -7994,7 +7981,7 @@ static ExprSeq* starSubExpressions_rule(AlifParser* _p) { // 11510
 		void* optVar{};
 		ExprSeq* a_{};
 		if (
-			(a_ = (ExprSeq*)alif84_gather(_p)) // ",".starSubExpression+
+			(a_ = (ExprSeq*)alif5_gather(_p)) // ",".starSubExpression+
 			and
 			(optVar = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
 			)
@@ -8022,7 +8009,7 @@ done:
 
 
 // star_expression: "*" bitwise_or > expression
-static Expression* starExpression_rule(AlifParser* _p) { // 11422
+static Expression* starExpression_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -8095,8 +8082,8 @@ done:
 }
 
 
-// alif254: "," star_expression
-static void* alif254(AlifParser* _p) { // 40511
+// alif10: "," star_expression
+static void* alif10(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -8139,8 +8126,8 @@ done:
 //	^
 //	|
 //	|
-// alif83_loop1: ("," star_expression)
-static Seq* alif83_loop1(AlifParser* _p) { // 30312
+// alif12_loop1: ("," star_expression)
+static Seq* alif12_loop1(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -8162,7 +8149,7 @@ static Seq* alif83_loop1(AlifParser* _p) { // 30312
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		void* var_1{};
-		while ((var_1 = alif254(_p)))
+		while ((var_1 = alif10(_p)))
 		{
 			res_ = var_1;
 			if (n_ == capacity_) {
@@ -8211,7 +8198,7 @@ static Seq* alif83_loop1(AlifParser* _p) { // 30312
 		> star_expression ","
 		> star_expression
 */
-static Expression* starExpressions_rule(AlifParser* _p) { // 11299
+static Expression* starExpressions_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -8238,7 +8225,7 @@ static Expression* starExpressions_rule(AlifParser* _p) { // 11299
 		if (
 			(a_ = starExpression_rule(_p)) // star_expression
 			and
-			(b_ = alif83_loop1(_p)) // ("," star_expression)+
+			(b_ = alif12_loop1(_p)) // ("," star_expression)+
 			and
 			(optVar = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
 			)
@@ -8311,7 +8298,7 @@ done:
 
 
 // yield_expr: "yield" "from" expression > "yield" star_expressions?
-static Expression* yieldExpr_rule(AlifParser* _p) { // 11193
+static Expression* yieldExpr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -8399,8 +8386,8 @@ done:
 }
 
 
-// alif59: "," > ")" > ":"
-static void* alif59(AlifParser* _p) { // 28653
+// alif9: "," > ")" > ":"
+static void* alif9(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -8456,7 +8443,7 @@ done:
 		> expression "as" star_target &("," > ")" > ":")
 		> expression
 */
-static WithItem* withItem_rule(AlifParser* _p) { // 6795
+static WithItem* withItem_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -8477,7 +8464,7 @@ static WithItem* withItem_rule(AlifParser* _p) { // 6795
 			and
 			(b_ = starTarget_rule(_p)) // star_target
 			and
-			alifParserEngine_lookahead(1, alif59, _p)
+			alifParserEngine_lookahead(1, alif9, _p)
 			)
 		{
 			res_ = alifAST_withItem(a_, b_, _p->astMem);
@@ -8521,8 +8508,8 @@ done:
 }
 
 
-// alif52_loop0: "," with_item
-static Seq* alif52_loop0(AlifParser* _p) { // 28185
+// alif11_loop0: "," with_item
+static Seq* alif11_loop0(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -8596,8 +8583,8 @@ static Seq* alif52_loop0(AlifParser* _p) { // 28185
 //	^
 //	|
 //	|
-// alif51_gather: with_item alif52_loop0
-static Seq* alif51_gather(AlifParser* _p) { // 28261
+// alif4_gather: with_item alif11_loop0
+static Seq* alif4_gather(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -8605,7 +8592,7 @@ static Seq* alif51_gather(AlifParser* _p) { // 28261
 	Seq* res_{};
 	AlifIntT mark_ = _p->mark_;
 
-	{ // with_item alif52_loop0
+	{ // with_item alif11_loop0
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		WithItem* element_{};
@@ -8613,7 +8600,7 @@ static Seq* alif51_gather(AlifParser* _p) { // 28261
 		if (
 			(element_ = withItem_rule(_p)) // with_item
 			and
-			(seq_ = alif52_loop0(_p))
+			(seq_ = alif11_loop0(_p))
 			)
 		{
 			res_ = alifParserEngine_seqInsertInFront(_p, element_, seq_);
@@ -8638,7 +8625,7 @@ done:
 		> "async" "with" "(" ",".with_item+ ","? ")" ":" block
 		> "async" "with" ",".with_item+ ":" block
 */
-static Statement* withStmt_rule(AlifParser* _p) { // 6523
+static Statement* withStmt_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -8671,7 +8658,7 @@ static Statement* withStmt_rule(AlifParser* _p) { // 6523
 			and
 			(literal_ = alifParserEngine_expectToken(_p, LPAR)) // "("
 			and
-			(a_ = (WithItemSeq*)alif51_gather(_p)) // ",".with_item+
+			(a_ = (WithItemSeq*)alif4_gather(_p)) // ",".with_item+
 			and
 			(optVar = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
 			and
@@ -8710,7 +8697,7 @@ static Statement* withStmt_rule(AlifParser* _p) { // 6523
 		if (
 			(keyword_ = alifParserEngine_expectToken(_p, WITH_KW)) // "with"
 			and
-			(a_ = (WithItemSeq*)alif51_gather(_p)) // ",".with_item+
+			(a_ = (WithItemSeq*)alif4_gather(_p)) // ",".with_item+
 			and
 			(literal_ = alifParserEngine_expectToken(_p, COLON)) // ":"
 			and
@@ -8753,7 +8740,7 @@ static Statement* withStmt_rule(AlifParser* _p) { // 6523
 			and
 			(literal_ = alifParserEngine_expectToken(_p, LPAR)) // "("
 			and
-			(a_ = (WithItemSeq*)alif51_gather(_p)) // ",".with_item+
+			(a_ = (WithItemSeq*)alif4_gather(_p)) // ",".with_item+
 			and
 			(optVar = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
 			and
@@ -8795,7 +8782,7 @@ static Statement* withStmt_rule(AlifParser* _p) { // 6523
 			and
 			(keyword_1 = alifParserEngine_expectToken(_p, WITH_KW)) // "with"
 			and
-			(a_ = (WithItemSeq*)alif51_gather(_p)) // ",".with_item+
+			(a_ = (WithItemSeq*)alif4_gather(_p)) // ",".with_item+
 			and
 			(literal_ = alifParserEngine_expectToken(_p, COLON)) // ":"
 			and
@@ -8834,7 +8821,7 @@ done:
 		> "for" star_targets "in" ~ star_expressions ":" block
 		> "async" "for" star_targets "in" ~ star_expressions ":" block
 */
-static Statement* forStmt_rule(AlifParser* _p) { // 6326
+static Statement* forStmt_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -8955,7 +8942,7 @@ done:
 
 
 // while_stmt: "while" expression ":" block
-static Statement* whileStmt_rule(AlifParser* _p) { // 6230
+static Statement* whileStmt_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -9018,7 +9005,7 @@ done:
 
 
 // else_block: "else" &&":" block
-static StmtSeq* elseBlock_rule(AlifParser* _p) { // 6162
+static StmtSeq* elseBlock_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -9067,7 +9054,7 @@ done:
 		> "elif" expression ":" block elif_stmt
 		> "elif" expression ":" block else_block?
 */
-static Statement* elifStmt_rule(AlifParser* _p) { // 6025
+static Statement* elifStmt_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -9175,7 +9162,7 @@ done:
 		> "if" expression ":" block elif_stmt
 		> "if" expression ":" block else_block?
 */
-static Statement* ifStmt_rule(AlifParser* _p) { // 5899 
+static Statement* ifStmt_rule(AlifParser* _p) {  
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -9281,7 +9268,7 @@ done:
 
 
 // default: "=" expression
-static Expression* default_rule(AlifParser* _p) { // 5817
+static Expression* default_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -9323,7 +9310,7 @@ done:
 
 
 // param: NAME
-static Arg* param_rule(AlifParser* _p) { // 5597
+static Arg* param_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -9379,7 +9366,7 @@ done:
 		> param default? ","
 		> param default? &")"
 */
-static NameDefaultPair* paramMaybeDefault_rule(AlifParser* _p) { // 5513
+static NameDefaultPair* paramMaybeDefault_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -9450,7 +9437,7 @@ done:
 
 
 // param_with_default: param default "," > param default &")"
-static NameDefaultPair* paramWithDefault_rule(AlifParser* _p) { // 5427
+static NameDefaultPair* paramWithDefault_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -9521,7 +9508,7 @@ done:
 
 
 // param_no_default: param "," > param &")"
-static Arg* paramNoDefault_rule(AlifParser* _p) { // 5269
+static Arg* paramNoDefault_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -9607,7 +9594,7 @@ done:
 
 
 // kwds: "**" param_no_default
-static Arg* kwds_rule(AlifParser* _p) { // 5204
+static Arg* kwds_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -9649,8 +9636,8 @@ done:
 }
 
 
-// alif50_loop1: param_maybe_default
-static Seq* alif50_loop1(AlifParser* _p) { // 28113
+// alif10_loop1: param_maybe_default
+static Seq* alif10_loop1(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -9715,8 +9702,8 @@ static Seq* alif50_loop1(AlifParser* _p) { // 28113
 // ^
 // |
 // |
-// alif48_loop0: param_maybe_default
-static Seq* alif48_loop0(AlifParser* _p) { // 27979
+// alif9_loop0: param_maybe_default
+static Seq* alif9_loop0(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -9782,7 +9769,7 @@ static Seq* alif48_loop0(AlifParser* _p) { // 27979
 		> "*" "," param_maybe_default+ kwds?
 		> kwds
 */
-static StarEtc* starEtc_rule(AlifParser* _p) { // 5043
+static StarEtc* starEtc_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -9802,7 +9789,7 @@ static StarEtc* starEtc_rule(AlifParser* _p) { // 5043
 			and
 			(a_ = paramNoDefault_rule(_p)) // param_no_default
 			and
-			(b_ = alif48_loop0(_p)) // param_maybe_default*
+			(b_ = alif9_loop0(_p)) // param_maybe_default*
 			and
 			(c_ = kwds_rule(_p), !_p->errorIndicator) // kwds?
 			)
@@ -9832,7 +9819,7 @@ static StarEtc* starEtc_rule(AlifParser* _p) { // 5043
 			and
 			(literal_1 = alifParserEngine_expectToken(_p, COMMA)) // ","
 			and
-			(a_ = alif50_loop1(_p)) // param_maybe_default+
+			(a_ = alif10_loop1(_p)) // param_maybe_default+
 			and
 			(b_ = kwds_rule(_p), !_p->errorIndicator) // kwds?
 			)
@@ -9878,8 +9865,8 @@ done:
 }
 
 
-// alif41_loop1: param_with_default
-static Seq* alif41_loop1(AlifParser* _p) { // 27346
+// alif8_loop1: param_with_default
+static Seq* alif8_loop1(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -9944,8 +9931,8 @@ static Seq* alif41_loop1(AlifParser* _p) { // 27346
 // ^
 // |
 // |
-// alif40_loop0: param_with_default
-static Seq* alif40_loop0(AlifParser* _p) { // 27419
+// alif7_loop0: param_with_default
+static Seq* alif7_loop0(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -10005,8 +9992,8 @@ static Seq* alif40_loop0(AlifParser* _p) { // 27419
 // ^
 // |
 // |
-// alif39_loop1: param_no_default
-static Seq* alif39_loop1(AlifParser* _p) { // 27346
+// alif6_loop1: param_no_default
+static Seq* alif6_loop1(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -10077,7 +10064,7 @@ parameters:
 	> param_with_default+ star_etc?
 	> star_etc
 */
-static Arguments* parameters_rule(AlifParser* _p) { // 4649
+static Arguments* parameters_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -10092,9 +10079,9 @@ static Arguments* parameters_rule(AlifParser* _p) { // 4649
 		Seq* b_{};
 		StarEtc* c_{};
 		if (
-			(a_ = (ArgSeq*)alif39_loop1(_p)) // param_no_default+
+			(a_ = (ArgSeq*)alif6_loop1(_p)) // param_no_default+
 			and
-			(b_ = alif40_loop0(_p)) // param_with_default*
+			(b_ = alif7_loop0(_p)) // param_with_default*
 			and
 			(c_ = starEtc_rule(_p), !_p->errorIndicator) // star_etc? 
 			)
@@ -10118,7 +10105,7 @@ static Arguments* parameters_rule(AlifParser* _p) { // 4649
 		Seq* a_{};
 		StarEtc* b_{};
 		if (
-			(a_ = alif41_loop1(_p)) // param_with_default+
+			(a_ = alif8_loop1(_p)) // param_with_default+
 			and
 			(b_ = starEtc_rule(_p), !_p->errorIndicator) // star_etc? 
 			)
@@ -10164,8 +10151,8 @@ done:
 }
 
 
-// alif6: "import" > "from"
-static void* alif6(AlifParser* _p) { // 25612
+// alif8: "import" > "from"
+static void* alif8(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -10205,7 +10192,7 @@ done:
 
 
 // block: NEWLINE INDENT statements DEDENT > simple_stmts
-static StmtSeq* block_rule(AlifParser* _p) { // 4111
+static StmtSeq* block_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -10269,7 +10256,7 @@ done:
 }
 
 
-static Expression* dottedName_raw(AlifParser* _p) { // 4043
+static Expression* dottedName_raw(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -10327,7 +10314,7 @@ done:
 
 // Left-recursive
 // dotted_name: dotted_name "." NAME > NAME
-static Expression* dottedName_rule(AlifParser* _p) { // 4009
+static Expression* dottedName_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -10361,7 +10348,7 @@ static Expression* dottedName_rule(AlifParser* _p) { // 4009
 
 
 // dotted_as_name: dotted_name ["as" NAME]
-static Alias* dottedAsName_rule(AlifParser* _p) { // 3943
+static Alias* dottedAsName_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -10387,7 +10374,7 @@ static Alias* dottedAsName_rule(AlifParser* _p) { // 3943
 		if (
 			(a_ = dottedName_rule(_p)) // dotted_name
 			and
-			(b_ = alif28(_p), !_p->errorIndicator) // ["as" NAME] // _tmp_31_rule same _tmp_28_rule!
+			(b_ = alif7(_p), !_p->errorIndicator) // ["as" NAME] // _tmp_31_rule same _tmp_28_rule!
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -10417,8 +10404,8 @@ done:
 }
 
 
-// alif30_loop0: "," dotted_as_name
-static Seq* alif30_loop0(AlifParser* _p) { // 26769
+// alif5_loop0: "," dotted_as_name
+static Seq* alif5_loop0(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -10492,8 +10479,8 @@ static Seq* alif30_loop0(AlifParser* _p) { // 26769
 //	^
 //	|
 //	|
-// alif29_gather: dotted_as_name alif30_loop0
-static Seq* alif29_gather(AlifParser* _p) { // 26845
+// alif3_gather: dotted_as_name alif5_loop0
+static Seq* alif3_gather(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -10501,7 +10488,7 @@ static Seq* alif29_gather(AlifParser* _p) { // 26845
 	Seq* res_{};
 	AlifIntT mark_ = _p->mark_;
 
-	{ // dotted_as_name alif30_loop0
+	{ // dotted_as_name alif5_loop0
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		Alias* element_{};
@@ -10509,7 +10496,7 @@ static Seq* alif29_gather(AlifParser* _p) { // 26845
 		if (
 			(element_ = dottedAsName_rule(_p)) // dotted_as_name
 			and
-			(seq_ = alif30_loop0(_p)) // alif30_loop0
+			(seq_ = alif5_loop0(_p)) // alif5_loop0
 			)
 		{
 			res_ = alifParserEngine_seqInsertInFront(_p, element_, seq_);
@@ -10528,7 +10515,7 @@ done:
 //	|
 //	|
 // dotted_as_names: ",".dotted_as_name+
-static AliasSeq* dottedAsNames_rule(AlifParser* _p) { // 3900
+static AliasSeq* dottedAsNames_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -10540,7 +10527,7 @@ static AliasSeq* dottedAsNames_rule(AlifParser* _p) { // 3900
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AliasSeq* a_{};
-		if ((a_ = (AliasSeq*)alif29_gather(_p)))
+		if ((a_ = (AliasSeq*)alif3_gather(_p)))
 		{
 			res_ = a_;
 			if (res_ == nullptr
@@ -10564,8 +10551,8 @@ done:
 }
 
 
-// alif28: "as" NAME
-static Expression* alif28(AlifParser* _p) { // 26723
+// alif7: "as" NAME
+static Expression* alif7(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -10608,7 +10595,7 @@ done:
 //	|
 //	|
 // import_from_as_name: NAME ["as" NAME]
-static Alias* importFromAsName_rule(AlifParser* _p) { // 3836
+static Alias* importFromAsName_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -10634,7 +10621,7 @@ static Alias* importFromAsName_rule(AlifParser* _p) { // 3836
 		if (
 			(a_ = alifParserEngine_nameToken(_p)) // NAME
 			and
-			(b_ = alif28(_p), !_p->errorIndicator) // ["as" NAME]
+			(b_ = alif7(_p), !_p->errorIndicator) // ["as" NAME]
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -10665,8 +10652,8 @@ done:
 }
 
 
-// alif27_loop0: "," import_from_as_name
-static Seq* alif27_loop0(AlifParser* _p) { // 26607
+// alif4_loop0: "," import_from_as_name
+static Seq* alif4_loop0(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -10740,8 +10727,8 @@ static Seq* alif27_loop0(AlifParser* _p) { // 26607
 //	^
 //	|
 //	|
-// alif26_gather: import_from_as_name alif27_loop0
-static Seq* alif26_gather(AlifParser* _p) { // 26682
+// alif2_gather: import_from_as_name alif4_loop0
+static Seq* alif2_gather(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -10749,7 +10736,7 @@ static Seq* alif26_gather(AlifParser* _p) { // 26682
 	Seq* res_{};
 	AlifIntT mark_ = _p->mark_;
 
-	{ // import_from_as_name alif27_loop0
+	{ // import_from_as_name alif4_loop0
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		Alias* element_{};
@@ -10758,7 +10745,7 @@ static Seq* alif26_gather(AlifParser* _p) { // 26682
 		if (
 			(element_ = importFromAsName_rule(_p)) // import_from_as_name
 			and
-			(seq_ = alif27_loop0(_p)) // alif27_loop0
+			(seq_ = alif4_loop0(_p)) // alif4_loop0
 			)
 		{
 			res_ = alifParserEngine_seqInsertInFront(_p, element_, seq_);
@@ -10777,7 +10764,7 @@ done:
 //	|
 //	|
 // import_from_as_names: ",".import_from_as_name+
-static AliasSeq* importFromAsNames_rule(AlifParser* _p) { // 3793
+static AliasSeq* importFromAsNames_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -10789,7 +10776,7 @@ static AliasSeq* importFromAsNames_rule(AlifParser* _p) { // 3793
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AliasSeq* a_{};
-		if ((a_ = (AliasSeq*)alif26_gather(_p)))
+		if ((a_ = (AliasSeq*)alif2_gather(_p)))
 		{
 			res_ = a_;
 			if (res_ == nullptr
@@ -10819,7 +10806,7 @@ done:
 		> import_from_as_names !","
 		> "*"
 */
-static AliasSeq* importFromTargets_rule(AlifParser* _p) { // 3658
+static AliasSeq* importFromTargets_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -10925,7 +10912,7 @@ done:
 
 
 // import_from: "from" dotted_name "import" import_from_targets
-static Statement* importFrom_rule(AlifParser* _p) { // 3539
+static Statement* importFrom_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -10988,7 +10975,7 @@ done:
 
 
 // import_name: "import" dotted_as_names
-static Statement* importName_rule(AlifParser* _p) { // 3473
+static Statement* importName_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -11045,7 +11032,7 @@ done:
 
 
 // import_stmt: > import_name > import_from
-static Statement* importStmt_rule(AlifParser* _p) { // 3411
+static Statement* importStmt_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -11084,7 +11071,7 @@ done:
 
 
 // yield_stmt: yield_expr
-static Statement* yieldStmt_rule(AlifParser* _p) { // 3283
+static Statement* yieldStmt_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -11136,7 +11123,7 @@ done:
 
 
 // del_stmt: "del" del_targets &(NEWLINE)
-static Statement* delStmt_rule(AlifParser* _p) { // 3198
+static Statement* delStmt_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -11194,8 +11181,8 @@ done:
 }
 
 
-// alif19_loop0: "," NAME
-static Seq* alif19_loop0(AlifParser* _p) { // 26308
+// alif3_loop0: "," NAME
+static Seq* alif3_loop0(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -11269,7 +11256,7 @@ static Seq* alif19_loop0(AlifParser* _p) { // 26308
 //	^
 //	|
 //	|
-static Seq* alif18_gather(AlifParser* _p) { // 26384
+static Seq* alif1_gather(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -11277,14 +11264,14 @@ static Seq* alif18_gather(AlifParser* _p) { // 26384
 	Seq* res_{};
 	AlifIntT mark_ = _p->mark_;
 
-	{ // NAME alif19_loop0
+	{ // NAME alif3_loop0
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 		Expression* element_{};
 		Seq* seq_{};
 		if (
 			(element_ = alifParserEngine_nameToken(_p)) // NAME
 			and
-			(seq_ = alif19_loop0(_p)) // alif19_loop0
+			(seq_ = alif3_loop0(_p)) // alif3_loop0
 			)
 		{
 			res_ = alifParserEngine_seqInsertInFront(_p, element_, seq_);
@@ -11303,7 +11290,7 @@ done:
 //	|
 //	|
 // global_stmt: "global" ",".NAME+
-static Statement* globalStmt_rule(AlifParser* _p) { // 3070
+static Statement* globalStmt_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -11329,7 +11316,7 @@ static Statement* globalStmt_rule(AlifParser* _p) { // 3070
 		if (
 			(keyword_ = alifParserEngine_expectToken(_p, GLOBAL_KW)) // "global"
 			and
-			(a_ = (ExprSeq*)alif18_gather(_p)) // ",".NAME+
+			(a_ = (ExprSeq*)alif1_gather(_p)) // ",".NAME+
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -11359,7 +11346,7 @@ done:
 }
 
 // nonlocal_stmt: "nonlocal" ",".NAME+
-static Statement* nonlocalStmt_rule(AlifParser* _p) { // 3134
+static Statement* nonlocalStmt_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -11385,7 +11372,7 @@ static Statement* nonlocalStmt_rule(AlifParser* _p) { // 3134
 		if (
 			(keyword_ = alifParserEngine_expectToken(_p, NONLOCALE_KW)) // "nonlocal"
 			and
-			(a_ = (ExprSeq*)alif18_gather(_p)) // ",".NAME+ // _gather_20_rule same _gather_18_rule !?
+			(a_ = (ExprSeq*)alif1_gather(_p)) // ",".NAME+
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -11415,7 +11402,7 @@ done:
 }
 
 // return_stmt: "return" star_expressions?
-static Statement* returnStmt_rule(AlifParser* _p) { // 2906
+static Statement* returnStmt_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -11484,7 +11471,7 @@ done:
 		> "<<="
 		> ">>="
 */
-static AugOperator* augAssign_rule(AlifParser* _p) { // 2561
+static AugOperator* augAssign_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -11729,8 +11716,8 @@ done:
 }
 
 
-// alif253: star_targets "="
-static void* alif253(AlifParser* _p) { // 40779
+// alif6: star_targets "="
+static void* alif6(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -11772,8 +11759,8 @@ done:
 //	^
 //	|
 //	|
-// alif14_loop1: (star_targets "=")
-static Seq* alif14_loop1(AlifParser* _p) { // 26076
+// alif2_loop1: (star_targets "=")
+static Seq* alif2_loop1(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -11795,7 +11782,7 @@ static Seq* alif14_loop1(AlifParser* _p) { // 26076
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		void* var_1{};
-		while ((var_1 = alif253(_p))) // star_targets "="
+		while ((var_1 = alif6(_p))) // star_targets "="
 		{
 			res_ = var_1;
 			if (n_ == capacity_) {
@@ -11838,8 +11825,8 @@ static Seq* alif14_loop1(AlifParser* _p) { // 26076
 //	^
 //	|
 //	|
-// alif15: yield_expr > star_expressions
-static Expression* alif15(AlifParser* _p) { // 26148
+// alif5: yield_expr > star_expressions
+static Expression* alif5(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -11884,7 +11871,7 @@ assignment:
 	> (star_targets "=")+ (yield_expr > star_expressions) !"="
 	> single_target augassign ~ (yield_expr > star_expressions)
 */
-static Statement* assignment_rule(AlifParser* _p) { // 2287
+static Statement* assignment_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -11908,9 +11895,9 @@ static Statement* assignment_rule(AlifParser* _p) { // 2287
 		ExprSeq* a_{};
 		Expression* b_{}; // casted to Expression*
 		if (
-			(a_ = (ExprSeq*)alif14_loop1(_p)) // (star_targets "=")+ // casted to ExprSeq*
+			(a_ = (ExprSeq*)alif2_loop1(_p)) // (star_targets "=")+ // casted to ExprSeq*
 			and
-			(b_ = alif15(_p)) // // yield_expr > star_expressions
+			(b_ = alif5(_p)) // // yield_expr > star_expressions
 			and
 			alifParserEngine_lookaheadWithInt(0, alifParserEngine_expectToken, _p, EQUAL) // "="
 			)
@@ -11947,7 +11934,7 @@ static Statement* assignment_rule(AlifParser* _p) { // 2287
 			and
 			(cutVar = 1)
 			and
-			(c_ = alif15(_p)) // yield_expr > star_expression // _tmp_16_rule same _tmp_15_rule !?
+			(c_ = alif5(_p)) // yield_expr > star_expression // _tmp_16_rule same _tmp_15_rule !?
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -11982,7 +11969,7 @@ done:
 		> "def" NAME "(" params? ")" ":" block
 		> "async" "def" NAME "(" params? ")" ":" block
 */
-static Statement* functionDef_rule(AlifParser* _p) { // 4425
+static Statement* functionDef_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -12102,8 +12089,8 @@ done:
 }
 
 
-// alif33: "(" arguments? ")"
-static Expression* alif33(AlifParser* _p) { // 27182
+// alif4: "(" arguments? ")"
+static Expression* alif4(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -12152,7 +12139,7 @@ done:
 	class_def_raw:
 		> "class" NAME ["(" arguments? ")"] ":" block
 */
-static Statement* classDef_rule(AlifParser* _p) { // 4263
+static Statement* classDef_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -12184,7 +12171,7 @@ static Statement* classDef_rule(AlifParser* _p) { // 4263
 			and
 			(a_ = alifParserEngine_nameToken(_p)) // NAME
 			and
-			(b_ = alif33(_p), !_p->errorIndicator) // ["(" arguments? ")"]
+			(b_ = alif4(_p), !_p->errorIndicator) // ["(" arguments? ")"]
 			and
 			(literal_ = alifParserEngine_expectToken(_p, COLON)) // ":"
 			and
@@ -12232,7 +12219,7 @@ done:
 		> &"global" global_stmt
 		> &"nonlocal" nonlocal_stmt
 */
-static Statement* simpleStmt_rule(AlifParser* _p) { // 1696
+static Statement* simpleStmt_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -12310,7 +12297,7 @@ static Statement* simpleStmt_rule(AlifParser* _p) { // 1696
 
 		Statement* a_{};
 		if (
-			alifParserEngine_lookahead(1, alif6, _p)
+			alifParserEngine_lookahead(1, alif8, _p)
 			and
 			(a_ = importStmt_rule(_p)) // import_stmt
 			)
@@ -12463,7 +12450,7 @@ done:
 
 
 // simple_stmts: simple_stmt NEWLINE
-static StmtSeq* simpleStmts_rule(AlifParser* _p) { // 1603
+static StmtSeq* simpleStmts_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -12504,8 +12491,8 @@ done:
 }
 
 
-// alif7: "def" > "async"
-static void* alif7(AlifParser* _p) { // 25491
+// alif3: "def" > "async"
+static void* alif3(AlifParser* _p) { 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
@@ -12542,8 +12529,8 @@ done:
 	return res_;
 }
 
-// alif9: "with" > "async"
-static void* alif9(AlifParser* _p) { // 25624
+// alif2: "with" > "async"
+static void* alif2(AlifParser* _p) { 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
@@ -12580,8 +12567,8 @@ done:
 	return res_;
 }
 
-// alif10: "for" > "async"
-static void* alif10(AlifParser* _p) { // 25681
+// alif1: "for" > "async"
+static void* alif1(AlifParser* _p) { 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
@@ -12628,7 +12615,7 @@ done:
 		> &("for" > "async") for_stmt
 		> &'while' while_stmt
 */
-static Statement* compoundStmt_rule(AlifParser* _p) { // 2078
+static Statement* compoundStmt_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -12641,7 +12628,7 @@ static Statement* compoundStmt_rule(AlifParser* _p) { // 2078
 
 		Statement* a_{};
 		if (
-			alifParserEngine_lookahead(1, alif7, _p)
+			alifParserEngine_lookahead(1, alif3, _p)
 			and
 			(a_ = functionDef_rule(_p)) // function_def
 			)
@@ -12686,7 +12673,7 @@ static Statement* compoundStmt_rule(AlifParser* _p) { // 2078
 
 		Statement* a_{};
 		if (
-			alifParserEngine_lookahead(1, alif9, _p)
+			alifParserEngine_lookahead(1, alif2, _p)
 			and
 			(a_ = withStmt_rule(_p)) // with_stmt
 			)
@@ -12701,7 +12688,7 @@ static Statement* compoundStmt_rule(AlifParser* _p) { // 2078
 
 		Statement* a_{};
 		if (
-			alifParserEngine_lookahead(1, alif10, _p)
+			alifParserEngine_lookahead(1, alif1, _p)
 			and
 			(a_ = forStmt_rule(_p)) // for_stmt
 			)
@@ -12736,7 +12723,7 @@ done:
 
 
 // statement: compound_stmt > simple_stmts
-static StmtSeq* statement_rule(AlifParser* _p) { // 1405
+static StmtSeq* statement_rule(AlifParser* _p) { 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
@@ -12790,8 +12777,8 @@ done:
 }
 
 
-// alif3_loop1: statement
-static Seq* alif3_loop1(AlifParser* _p) { // 25423
+// alif1_loop1: statement
+static Seq* alif1_loop1(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -12860,7 +12847,7 @@ static Seq* alif3_loop1(AlifParser* _p) { // 25423
 //	|
 //	|
 // statements: statement+
-static StmtSeq* statements_rule(AlifParser* _p) { // 1362
+static StmtSeq* statements_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -12870,7 +12857,7 @@ static StmtSeq* statements_rule(AlifParser* _p) { // 1362
 
 	{
 		Seq* a_{};
-		if (a_ = alif3_loop1(_p)) // statement+
+		if (a_ = alif1_loop1(_p)) // statement+
 		{
 			res_ = (StmtSeq*)alifParserEngine_seqFlatten(_p, a_);
 			if (res_ == nullptr
@@ -12894,7 +12881,7 @@ done:
 }
 
 
-static Module* interactiveRun_rule(AlifParser* _p) { // 1190
+static Module* interactiveRun_rule(AlifParser* _p) { 
 	return nullptr;//
 }
 static Module* evalRun_rule(AlifParser* _p) {
@@ -12906,7 +12893,7 @@ static Module* funcRun_rule(AlifParser* _p) {
 
 
 // file: statements? $
-static Module* fileRun_rule(AlifParser* _p) { // 1163
+static Module* fileRun_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -12946,7 +12933,7 @@ done:
 }
 
 
-void* alifParserEngine_parse(AlifParser* _p) { // 41829
+void* alifParserEngine_parse(AlifParser* _p) { 
 	// تهيئة الكلمات المفتاحية
 	_p->keywords = reservedKeywords;
 	_p->nKeywordList = nKeywordList;

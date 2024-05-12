@@ -12,7 +12,7 @@
 //static AlifObject* alifRun_file(FILE*, AlifObject*, int, int);
 Module* alifParser_astFromFile(FILE*, AlifObject*, int, AlifASTMem*); // temp
 
-static AlifObject* alifRun_file(FILE* _fp, AlifObject* _fn, int _start, int _fClose) { // 1196
+static AlifObject* alifRun_file(FILE* _fp, AlifObject* _fn, int _start, int _fClose) { 
 
 	AlifASTMem* astMem = alifASTMem_new();
 
@@ -35,7 +35,7 @@ static AlifObject* alifRun_file(FILE* _fp, AlifObject* _fn, int _start, int _fCl
 	return res;
 }
 
-int alifRun_simpleFileObj(FILE* _fp, AlifObject* _fn, int _fClose) { // 404
+int alifRun_simpleFileObj(FILE* _fp, AlifObject* _fn, int _fClose) { 
 	int exitcode = -1;
 
 	AlifObject* mod{};
@@ -52,7 +52,7 @@ done:
 	return exitcode;
 }
 
-int alifRun_fileObj(FILE* _fp, AlifObject* _fn, int _fClose) { // 55
+int alifRun_fileObj(FILE* _fp, AlifObject* _fn, int _fClose) { 
 
 	int res{};
 	if (_isatty(_fileno(_fp))) { // هذا يعني انه تفاعلي

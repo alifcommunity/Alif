@@ -1,7 +1,5 @@
 ﻿#include "alif.h"
 
-/* Our own locale-independent ctype.h-like macros */
-
 
 // هذا الجدول مكرر ويجب إعتماد واحد من الإثنين
 //const unsigned int alifCppTypeTable[256] = {
