@@ -14,33 +14,96 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\source\Include\Core\AlifCore_InitConfig.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\Include\Core\AlifCore_AlifCycle.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\Include\Core\AlifCore_Runtime.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
     <ClInclude Include="..\source\Include\Core\AlifCore_GetConsoleLine.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_InitConfig.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\source\Include\Core\AlifCore_Memory.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_Runtime.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_AlifRun.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_AST.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_ASDL.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_BytesMethods.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_BytesObject.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_Call.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_Dict.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_Integer.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_List.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_ModSupport.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_Object.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_Tuple.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_TypeObject.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_UString.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_AlifToken.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_FileUtils.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\Objects\AlifCycle.cpp">
+    <ClCompile Include="..\source\Objects\Core\AlifCycle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\GetConsoleLine.cpp">
+    <ClCompile Include="..\source\Objects\Core\FileManip.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\InitConfig.cpp">
+    <ClCompile Include="..\source\Objects\Core\GetConsoleLine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Memory.cpp">
+    <ClCompile Include="..\source\Objects\Core\InitConfig.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Objects\Core\Memory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Objects\Core\UStrObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Objects\Core\AlifRun.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Objects\Core\AlifAST.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Objects\Core\AlifObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

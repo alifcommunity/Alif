@@ -92,7 +92,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>..\source\Include\Core;..\source\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\source\Include\Main;..\source\Include\Alif;..\source\Include\Core</AdditionalIncludeDirectories>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
@@ -108,7 +108,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\source\Include\Core;..\source\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\source\Include\Main;..\source\Include\Alif;..\source\Include\Core</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
@@ -125,7 +125,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\source\Include\Core;..\source\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\source\Include\Main;..\source\Include\Alif;..\source\Include\Core</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp14</LanguageStandard>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
@@ -142,7 +142,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\source\Include\Core;..\source\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\source\Include\Main;..\source\Include\Alif;..\source\Include\Core</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp14</LanguageStandard>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
@@ -154,7 +154,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\source\Include\alif.h" />
+    <ClInclude Include="..\source\Include\Alif\alif.h" />
     <ClInclude Include="..\source\resources\resource.h" />
   </ItemGroup>
   <ItemGroup>
@@ -169,7 +169,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\Objects\Main\alif.cpp" />
+    <ClCompile Include="..\source\Objects\Alif\alif.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
