@@ -1,4 +1,4 @@
 #pragma once
 
 
-FILE* alif_fOpenObj(AlifObj*, const char*);
+FILE* alif_fOpenObj(AlifObject*, const char*);

@@ -1,15 +1,14 @@
-#pragma once
+﻿#pragma once
 
-#define SEQ_HEAD AlifSizeT size{}; void** element{}
+#include "AlifCore_ASDL.h"
 
 // Forward Declaration
-class TypeParam;
 class WithItem;
 class Alias;
 class Keyword;
 class Arg;
 class Arguments;
-class ExceptHandler;
+//class ExceptHandler;
 class Comprehension;
 class Expression;
 class Statement;
@@ -18,71 +17,56 @@ class Module;
 class ModSeq {
 public:
 	SEQ_HEAD;
-	Module* elements[1]{};
+	Module* typedElements[1]{};
 };
 
 class StmtSeq {
 public:
 	SEQ_HEAD;
-	Statement* elements[1];
+	Statement* typedElements[1];
 };
 
 class ExprSeq {
 public:
 	SEQ_HEAD;
-	Expression* elements[1];
+	Expression* typedElements[1];
 };
+ExprSeq* alifNew_exprSeq(AlifUSizeT, AlifASTMem*); // جسم هذه الدالة تم إنشاؤه من قبل GENERATE_SEQ_CONSTRUCTOR(Expr, expr, Expression*)
 
 class CompSeq {
 public:
 	SEQ_HEAD;
-	Comprehension* elements[1];
+	Comprehension* typedElements[1];
 };
 
 class ArgSeq {
 public:
 	SEQ_HEAD;
-	Arg* elements[1];
+	Arg* typedElements[1];
 };
+ArgSeq* alifNew_argSeq(AlifUSizeT, AlifASTMem*); // جسم هذه الدالة تم إنشاؤه من قبل GENERATE_SEQ_CONSTRUCTOR(Arg, arg, Arg*)
 
-class KeywordsSeq {
+class KeywordSeq {
 public:
 	SEQ_HEAD;
-	Keyword* elements[1];
+	Keyword* typedElements[1];
 };
+KeywordSeq* alifNew_keywordSeq(AlifUSizeT, AlifASTMem*); // جسم هذه الدالة تم إنشاؤه من قبل GENERATE_SEQ_CONSTRUCTOR(Keyword, keyword, Keyword*)
 
 class AliasSeq {
 public:
 	SEQ_HEAD;
-	Alias* elements[1];
+	Alias* typedElements[1];
 };
 
 class WithItemSeq {
 public:
 	SEQ_HEAD;
-	WithItem* elements[1];
-};
-
-class ExceptHandlerSeq {
-public:
-	SEQ_HEAD;
-	ExceptHandler* elements[1];
-};
-
-class TypeParamSeq {
-public:
-	SEQ_HEAD;
-	TypeParamSeq* elements[1];
-};
-
-class IntSeq {
-public:
-	SEQ_HEAD;
-	AlifSizeT elements[1];
+	WithItem* typedElements[1];
 };
 
 
-enum ModType {ModuleK=1, InteractiveK=2, ExpressionK=3, FunctionK=4};
+enum ModType { ModuleK = 1, InteractiveK, ExpressionK, FunctionK }; // يجب تحديد رقم البداية 1 لكي لا يبدأ من 0 حيث يتم التحقق فيما بعد ولا يجب أن تكون الحالة 0
 class Module {
 public:
 	enum ModType type {};
@@ -109,15 +93,19 @@ public:
 			Expression* returns{};
 		} function;
 
-	} val;
+	} V;
 };
 
-enum StmtType {ClassDefK=1, FunctionDefK=2, AsyncFunctionDefK=3, ReturnK=4,
-				DeleteK=5, AssignK=6, AugAssignK=7, ForK=8, AsyncForK=9, WhileK=10,
-				IfK=11, WithK=12, AsyncWithK=13, TryK=14, ImportK=15, ImportFromK=16,
-				ExprK=17, PassK=18, BreakK=19, CountinueK=20 };
-enum Operator {Add=1, Sub=2, Mult=3, MatMult=4, Div=5, FloorDiv = 6, Mod=7, Pow=8, LShift=9,
-			   RShift=10, BitOr=11, BitXor=12, BitAnd=13 };
+enum StmtType {
+	ClassDefK = 1, FunctionDefK, AsyncFunctionDefK, ReturnK,
+	DeleteK, AssignK, AugAssignK, ForK, AsyncForK, WhileK,
+	IfK, WithK, AsyncWithK, TryK, ImportK, ImportFromK,
+	ExprK, PassK, BreakK, CountinueK, GlobalK, NonlocalK,
+}; // يجب تحديد رقم البداية 1 لكي لا يبدأ من 0 حيث يتم التحقق فيما بعد ولا يجب أن تكون الحالة 0
+enum Operator {
+	Add = 1, Sub, Mult, MatMult, Div, FloorDiv, Mod, Pow, LShift,
+	RShift, BitOr, BitXor, BitAnd
+}; // يجب تحديد رقم البداية 1 لكي لا يبدأ من 0 حيث يتم التحقق فيما بعد ولا يجب أن تكون الحالة 0
 class Statement {
 public:
 	enum StmtType type {};
@@ -125,31 +113,24 @@ public:
 	{
 		class {
 		public:
-			AlifObj* name{};
+			AlifObject* name{};
 			ExprSeq* bases{};
-			KeywordsSeq* keywords{};
+			KeywordSeq* keywords{};
 			StmtSeq* body{};
-			TypeParamSeq* typeParams{};
 		}classDef;
 
 		class {
 		public:
-			AlifObj* name{};
+			AlifObject* name{};
 			Arguments* args{};
 			StmtSeq* body{};
-			Expression* returns{};
-			AlifObj* comment{};
-			TypeParamSeq typeParams{};
 		}functionDef;
 
 		class {
 		public:
-			AlifObj* name{};
+			AlifObject* name{};
 			Arguments* args{};
 			StmtSeq* body{};
-			Expression* returns{};
-			AlifObj* comment{};
-			TypeParamSeq typeParams{};
 		}asyncFunctionDef;
 
 		class {
@@ -166,7 +147,6 @@ public:
 		public:
 			ExprSeq* targets{};
 			Expression* val{};
-			AlifObj* comment{};
 		}assign;
 
 		class {
@@ -181,7 +161,6 @@ public:
 			Expression* target{};
 			Expression* iter{};
 			StmtSeq* body{};
-			AlifObj* comment{};
 		}for_;
 
 		class {
@@ -189,7 +168,6 @@ public:
 			Expression* target{};
 			Expression* iter{};
 			StmtSeq* body{};
-			AlifObj* comment{};
 		}asyncFor;
 
 		class {
@@ -207,25 +185,16 @@ public:
 
 		class {
 		public:
-			WithItemSeq items{};
+			WithItemSeq* items{};
 			StmtSeq* body{};
-			AlifObj* comment{};
 		}with_;
 
 		class {
 		public:
 			WithItemSeq items{};
 			StmtSeq* body{};
-			AlifObj* comment{};
+			AlifObject* comment{};
 		}asyncWith;
-
-		class {
-		public:
-			StmtSeq* body{};
-			ExceptHandlerSeq* handler{};
-			StmtSeq* else_{};
-			StmtSeq* finalBody{};
-		}try_;
 
 		class {
 		public:
@@ -234,9 +203,9 @@ public:
 
 		class {
 		public:
-			AlifObj* module{};
+			AlifObject* module{};
 			AliasSeq* names{};
-			int level{};
+			//int level{};
 		}importFrom;
 
 		class {
@@ -244,7 +213,7 @@ public:
 			Expression* val{};
 		}expression;
 
-	} val;
+	} V;
 
 	AlifSizeT lineNo{};
 	AlifSizeT colOffset{};
@@ -252,16 +221,19 @@ public:
 	AlifSizeT endColOffset{};
 };
 
-enum ExprType {BoolOpK=1, NamedExprK=2, BinOpK=3, UnaryOpK=4, LambdaK=5, IfExprK=6,
-			   DictK=7, SetK=8, ListK=9, DictComp=10, SetComp=11, ListComp=12,
-			   GeneratorExprK=13, AwaitK=14, YieldK=15, CompareK=16, CallK=17,
-			   FormattedValK=18, JoinStrK=19, ConstantK=20, AttributeK=21,
-			   SubScriptK=22, NameK=23, TupleK=24, SliceK=25 };
-enum BoolOp {And=1, Or=2};
-enum Unary {UAdd=1, USub=2, Not=3, Invert=4};
-enum ExprCTX {Store=1, Load=2, Del=3};
+enum ExprType {
+	BoolOpK = 1, NamedExprK, BinOpK, UnaryOpK, IfExprK, DictK, SetK, ListK,
+	DictCompK, SetCompK, ListCompK, GeneratorExprK, AwaitK, YieldK,
+	YieldFromK, CompareK, CallK, FormattedValK, JoinStrK, ConstantK,
+	AttributeK, SubScriptK, StarK, NameK, TupleK, SliceK
+}; // يجب تحديد رقم البداية 1 لكي لا يبدأ من 0 حيث يتم التحقق فيما بعد ولا يجب أن تكون الحالة 0
+enum BoolOp { And = 1, Or }; // يجب تحديد رقم البداية 1 لكي لا يبدأ من 0 حيث يتم التحقق فيما بعد ولا يجب أن تكون الحالة 0
+enum UnaryOp { UAdd = 1, USub, Not, Invert, Sqrt }; // يجب تحديد رقم البداية 1 لكي لا يبدأ من 0 حيث يتم التحقق فيما بعد ولا يجب أن تكون الحالة 0
+enum CmpOp { Equal = 1, NotEq, LessThan, LessThanEq, GreaterThan, GreaterThanEq, Is, IsNot, In, NotIn }; // يجب تحديد رقم البداية 1 لكي لا يبدأ من 0 حيث يتم التحقق فيما بعد ولا يجب أن تكون الحالة 0
+enum ExprCTX { Store = 1, Load, Del }; // يجب تحديد رقم البداية 1 لكي لا يبدأ من 0 حيث يتم التحقق فيما بعد ولا يجب أن تكون الحالة 0
 class Expression {
 public:
+	enum ExprType type {};
 	union
 	{
 		class {
@@ -279,28 +251,22 @@ public:
 		class {
 		public:
 			Expression* left{};
-			Operator* op{};
+			Operator op{};
 			Expression* right{};
 		}binOp;
 
 		class {
 		public:
-			Unary op{};
+			UnaryOp op{};
 			Expression* operand{};
 		}unaryOp;
 
 		class {
 		public:
-			Arguments* args{};
-			Expression* body{};
-		}lambda;
-
-		class {
-		public:
-			Expression* condetion{};
-			Expression* body{};
+			Expression* condition_{};
+			Expression* body_{};
 			Expression* else_{};
-		}if_;
+		}ifExpr;
 
 		class {
 		public:
@@ -316,13 +282,13 @@ public:
 		class {
 		public:
 			ExprSeq* elts{};
-			ExprCTX* ctx{};
+			ExprCTX ctx{};
 		}list;
 
 		class {
 		public:
-			Expression* keys{};
-			Expression* vals{};
+			Expression* key{};
+			Expression* val{};
 			CompSeq* generetors{};
 		}dictComp;
 
@@ -334,7 +300,7 @@ public:
 
 		class {
 		public:
-			Expression* elts{};
+			Expression* elt{};
 			CompSeq* generetors{};
 		}listComp;
 
@@ -350,6 +316,11 @@ public:
 
 		class {
 		public:
+			Expression* val{};
+		}yieldFrom;
+
+		class {
+		public:
 			Expression* left{};
 			IntSeq* ops{};
 			ExprSeq* comparators{};
@@ -359,13 +330,13 @@ public:
 		public:
 			Expression* func{};
 			ExprSeq* args{};
-			KeywordsSeq* keywords{};
+			KeywordSeq* keywords{};
 		}call;
 
 		class {
 		public:
 			Expression* val{};
-			AlifSizeT* conversion{};
+			AlifIntT conversion{};
 			Expression* formatSpec{};
 		}fromattedValue;
 
@@ -376,14 +347,14 @@ public:
 
 		class {
 		public:
-			AlifObj* val{};
-			AlifObj* type{};
-		}constat;
+			AlifObject* val{};
+			AlifObject* type{};
+		}constant;
 
 		class {
 		public:
 			Expression* val{};
-			AlifObj* attr{};
+			AlifObject* attr{};
 			ExprCTX ctx{};
 		}attribute;
 
@@ -391,12 +362,18 @@ public:
 		public:
 			Expression* val{};
 			Expression* slice{};
-			ExprCTX* ctx{};
+			ExprCTX ctx{};
 		}subScript;
 
 		class {
 		public:
-			AlifObj* name{};
+			Expression* val{};
+			ExprCTX ctx{};
+		}star;
+
+		class {
+		public:
+			AlifObject* name{};
 			ExprCTX ctx{};
 		}name;
 
@@ -413,7 +390,7 @@ public:
 			Expression* step{};
 		}slice;
 
-	} val;
+	} V;
 
 	AlifSizeT lineNo{};
 	AlifSizeT colOffset{};
@@ -429,27 +406,6 @@ public:
 	AlifSizeT isAsync{};
 };
 
-enum ExceptHandlerType {ExeptHandlerK=1};
-class ExceptHandler {
-public:
-	ExceptHandlerType type{};
-
-	union
-	{
-		class {
-		public:
-			Expression* type{};
-			AlifObj* name{};
-			StmtSeq* body{};
-		}exceptHandler;
-	} val;
-
-	AlifSizeT lineNo{};
-	AlifSizeT colOffset{};
-	AlifSizeT endLineNo{};
-	AlifSizeT endColOffset{};
-};
-
 class Arguments {
 public:
 	ArgSeq* posOnlyArgs{};
@@ -463,9 +419,8 @@ public:
 
 class Arg {
 public:
-	AlifObj* arg{};
-	//Expression* annotation{};
-	AlifObj* comment{};
+	AlifObject* arg{};
+	AlifObject* comment{};
 
 	AlifSizeT lineNo{};
 	AlifSizeT colOffset{};
@@ -475,7 +430,7 @@ public:
 
 class Keyword {
 public:
-	AlifObj* arg{};
+	AlifObject* arg{};
 	Expression* val{};
 
 	AlifSizeT lineNo{};
@@ -486,8 +441,8 @@ public:
 
 class Alias {
 public:
-	AlifObj* name{};
-	AlifObj* asName{};
+	AlifObject* name{};
+	AlifObject* asName{};
 
 	AlifSizeT lineNo{};
 	AlifSizeT colOffset{};
@@ -496,30 +451,31 @@ public:
 };
 
 class WithItem {
+public:
 	Expression* contextExpr{};
 	Expression* optionalVars{};
 };
 
-enum TypeParamType {TypeVarK=1, ParamSpec=2, TypeVarTupleK=3};
+enum TypeParamType { TypeVarK = 1, ParamSpec, TypeVarTupleK }; // يجب تحديد رقم البداية 1 لكي لا يبدأ من 0 حيث يتم التحقق فيما بعد ولا يجب أن تكون الحالة 0
 class TypeParam {
 public:
 	enum TypeParamType type {};
 	union
 	{
 		class {
-			AlifObj* name{};
+			AlifObject* name{};
 			Expression* bound{};
 		}typeVar;
 
 		class {
-			AlifObj* name{};
+			AlifObject* name{};
 		}paramSpec;
 
 		class {
-			AlifObj* name{};
+			AlifObject* name{};
 		}typeVarTuple;
 
-	} val;
+	} V;
 
 	AlifSizeT lineNo{};
 	AlifSizeT colOffset{};
@@ -527,3 +483,54 @@ public:
 	AlifSizeT endColOffset{};
 };
 
+
+Module* alifAST_module(StmtSeq*, AlifASTMem*);
+Statement* alifAST_assign(ExprSeq*, Expression*, int, int, int, int, AlifASTMem*);
+Statement* alifAST_expr(Expression*, int, int, int, int, AlifASTMem*);
+Expression* alifAST_constant(AlifObject*, AlifObject*, int, int, int, int, AlifASTMem*);
+Statement* alifAST_asyncFunctionDef(AlifObject*, Arguments*, StmtSeq*, int, int, int, int, AlifASTMem*);
+Statement* alifAST_functionDef(AlifObject*, Arguments*, StmtSeq*, int, int, int, int, AlifASTMem*);
+Statement* alifAST_return(Expression*, int, int, int, int, AlifASTMem*);
+Statement* alifAST_delete(ExprSeq*, int, int, int, int, AlifASTMem*);
+Statement* alifAST_classDef(AlifObject*, ExprSeq*, KeywordSeq*, StmtSeq*, int, int, int, int, AlifASTMem*);
+Statement* alifAST_augAssign(Expression*, Operator, Expression*, int, int, int, int, AlifASTMem*);
+Statement* alifAST_for(Expression*, Expression*, StmtSeq*, int, int, int, int, AlifASTMem*);
+Statement* alifAST_asyncFor(Expression*, Expression*, StmtSeq*, int, int, int, int, AlifASTMem*);
+Statement* alifAST_while(Expression*, StmtSeq*, int, int, int, int, AlifASTMem*);
+Statement* alifAST_if(Expression*, StmtSeq*, StmtSeq*, int, int, int, int, AlifASTMem*);
+Statement* alifAST_with(WithItemSeq*, StmtSeq*, int, int, int, int, AlifASTMem*);
+Statement* alifAST_asyncWith(WithItemSeq*, StmtSeq*, int, int, int, int, AlifASTMem*);
+Statement* alifAST_import(AliasSeq*, int, int, int, int, AlifASTMem*);
+Statement* alifAST_importFrom(AlifObject*, AliasSeq*, int, int, int, int, AlifASTMem*);
+Statement* alifAST_global(IdentifierSeq*, int, int, int, int, AlifASTMem*);
+Statement* alifAST_nonlocal(IdentifierSeq*, int, int, int, int, AlifASTMem*);
+Statement* alifAST_pass(int, int, int, int, AlifASTMem*);
+Statement* alifAST_break(int, int, int, int, AlifASTMem*);
+Statement* alifAST_continue(int, int, int, int, AlifASTMem*);
+Expression* alifAST_boolOp(BoolOp, ExprSeq*, int, int, int, int, AlifASTMem*);
+Expression* alifAST_binOp(Expression*, Operator, Expression*, int, int, int, int, AlifASTMem*);
+Expression* alifAST_unaryOp(UnaryOp, Expression*, int, int, int, int, AlifASTMem*);
+Expression* alifAST_ifExpr(Expression*, Expression*, Expression*, int, int, int, int, AlifASTMem*);
+Expression* alifAST_dict(ExprSeq*, ExprSeq*, int, int, int, int, AlifASTMem*);
+Expression* alifAST_listComp(Expression*, CompSeq*, int, int, int, int, AlifASTMem*);
+Expression* alifAST_dictComp(Expression*, Expression*, CompSeq*, int, int, int, int, AlifASTMem*);
+Expression* alifAST_await(Expression*, int, int, int, int, AlifASTMem*);
+Expression* alifAST_yield(Expression*, int, int, int, int, AlifASTMem*);
+Expression* alifAST_yieldFrom(Expression*, int, int, int, int, AlifASTMem*);
+Expression* alifAST_compare(Expression*, IntSeq*, ExprSeq*, int, int, int, int, AlifASTMem*);
+Expression* alifAST_call(Expression*, ExprSeq*, KeywordSeq*, int, int, int, int, AlifASTMem*);
+Expression* alifAST_formattedValue(Expression*, AlifIntT, Expression*, int, int, int, int, AlifASTMem*);
+Expression* alifAST_joinedStr(ExprSeq*, int, int, int, int, AlifASTMem*);
+Expression* alifAST_attribute(Expression*, AlifObject*, ExprCTX, int, int, int, int, AlifASTMem*);
+Expression* alifAST_subScript(Expression*, Expression*, ExprCTX, int, int, int, int, AlifASTMem*);
+Expression* alifAST_star(Expression*, ExprCTX, int, int, int, int, AlifASTMem*);
+Expression* alifAST_name(AlifObject*, ExprCTX, int, int, int, int, AlifASTMem*);
+Expression* alifAST_list(ExprSeq*, ExprCTX, int, int, int, int, AlifASTMem*);
+Expression* alifAST_tuple(ExprSeq*, ExprCTX, int, int, int, int, AlifASTMem*);
+Expression* alifAST_slice(Expression*, Expression*, Expression*, int, int, int, int, AlifASTMem*);
+Comprehension* alifAST_comprehension(Expression*, Expression*, ExprSeq*, int, AlifASTMem*);
+Arguments* alifAST_arguments(ArgSeq*, ArgSeq*, Arg*, ArgSeq*, ExprSeq*, Arg*, ExprSeq*, AlifASTMem*);
+Arg* alifAST_arg(AlifObject*, int, int, int, int, AlifASTMem*);
+Keyword* alifAST_keyword(AlifObject*, Expression*, int, int, int, int, AlifASTMem*);
+Alias* alifAST_alias(AlifObject*, AlifObject*, int, int, int, int, AlifASTMem*);
+WithItem* alifAST_withItem(Expression*, Expression*, AlifASTMem*);

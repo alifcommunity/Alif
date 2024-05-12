@@ -21,21 +21,35 @@
   <ItemGroup>
     <ClInclude Include="..\source\Include\Core\AlifCore_AlifCycle.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_AlifRun.h" />
+    <ClInclude Include="..\source\Include\Core\AlifCore_AlifToken.h" />
+    <ClInclude Include="..\source\Include\Core\AlifCore_ASDL.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_AST.h" />
+    <ClInclude Include="..\source\Include\Core\AlifCore_BytesMethods.h" />
+    <ClInclude Include="..\source\Include\Core\AlifCore_BytesObject.h" />
+    <ClInclude Include="..\source\Include\Core\AlifCore_Call.h" />
+    <ClInclude Include="..\source\Include\Core\AlifCore_Dict.h" />
+    <ClInclude Include="..\source\Include\Core\AlifCore_FileUtils.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_GetConsoleLine.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_InitConfig.h" />
+    <ClInclude Include="..\source\Include\Core\AlifCore_Integer.h" />
+    <ClInclude Include="..\source\Include\Core\AlifCore_List.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_Memory.h" />
+    <ClInclude Include="..\source\Include\Core\AlifCore_ModSupport.h" />
+    <ClInclude Include="..\source\Include\Core\AlifCore_Object.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_Runtime.h" />
+    <ClInclude Include="..\source\Include\Core\AlifCore_Tuple.h" />
+    <ClInclude Include="..\source\Include\Core\AlifCore_TypeObject.h" />
+    <ClInclude Include="..\source\Include\Core\AlifCore_UString.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\Objects\Core\AlifAST.cpp" />
     <ClCompile Include="..\source\Objects\Core\AlifCycle.cpp" />
+    <ClCompile Include="..\source\Objects\Core\AlifObject.cpp" />
     <ClCompile Include="..\source\Objects\Core\AlifRun.cpp" />
     <ClCompile Include="..\source\Objects\Core\FileManip.cpp" />
     <ClCompile Include="..\source\Objects\Core\GetConsoleLine.cpp" />
     <ClCompile Include="..\source\Objects\Core\InitConfig.cpp" />
     <ClCompile Include="..\source\Objects\Core\Memory.cpp" />
-    <ClCompile Include="..\source\Objects\Core\Object.cpp" />
     <ClCompile Include="..\source\Objects\Core\UStrObject.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

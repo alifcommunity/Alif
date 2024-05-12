@@ -3,4 +3,4 @@
 #include "alif.h"
 
 
-class TokenInfo* alifTokenizerInfo_fromFile(FILE*);
+TokenInfo* alifTokenizerInfo_fromFile(FILE*);

@@ -1,6 +1,5 @@
 #pragma once
 
 
-
-int alifRun_simpleFileObj(FILE*, AlifObj*, int);
-int alifRun_fileObj(FILE*, AlifObj*, int);
+extern int alifRun_simpleFileObj(FILE*, AlifObject*, int);
+extern int alifRun_fileObj(FILE*, AlifObject*, int);

@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-/* 
+/*
 	ذاكرة ألف، هي ذاكرة خاصة بلغة ألف النسخة الخامسة 5،
 	تم إنشاؤها من قبل مجتمع ألف
 	https://www.aliflang.org
@@ -16,21 +16,27 @@
 */
 
 
+/* ------------------------------------ التعريفات ------------------------------------ */
+
+
+#define ALIGNMENT		sizeof(AlifUSizeT)
+#define ALIGN_UP(_size) ((_size + (ALIGNMENT - 1)) & ~(ALIGNMENT - 1))
+
+
 /* ------------------------------------ ذاكرة ألف ------------------------------------ */
 
 #if defined(_OS64)
-	#define BLOCK_SIZE         1024
-	#define BLOCK_NUMS         1024
+#define BLOCK_SIZE         1024
+#define BLOCK_NUMS         1024
 
-	#define FSEGS_SIZE         2048
+#define FSEGS_SIZE         2048
 #elif defined(_OS32)
-	#define BLOCK_SIZE         512
-	#define BLOCK_NUMS         64
+#define BLOCK_SIZE         512
+#define BLOCK_NUMS         64
 
-	#define FSEGS_SIZE         512
+#define FSEGS_SIZE         512
 #endif
 
-#define ALIGNMENT              sizeof(AlifSizeT)
 #define FRAGS_NUM              (BLOCK_SIZE / ALIGNMENT - 1)
 
 
@@ -43,7 +49,7 @@ public:
 
 class FragsBlock {
 public:
-	AlifSizeT freeSize{};
+	AlifUSizeT freeSize{};
 	char* fSegs{};
 };
 /* ----------------------------------------------------------------------------------- */
@@ -64,19 +70,19 @@ class FreeSegments
 	Frag* fSegs_{};
 
 public:
-	void* try_alloc(AlifSizeT);
+	void* try_alloc(AlifUSizeT);
 	void* try_allocFreeSeg();
 	void dealloc_(void*);
 	void freeSeg_dealloc(Frag*);
 
-	AlifArray return_freeSegs(AlifSizeT);
+	AlifArray return_freeSegs(AlifUSizeT);
 };
 
 /* -------------------------------------- الكتلة ------------------------------------- */
 
 class AlifMemBlock {
 public:
-	AlifSizeT freeSize{};
+	AlifUSizeT freeSize{};
 	AlifMemBlock* next_{};
 
 	char* segments_{};
@@ -87,50 +93,52 @@ public:
 class AlifMemory
 {
 public:
-	AlifSizeT fragIdx{};
+	AlifUSizeT fragIdx{};
 	FragsBlock fragMem{};
 
 
-	AlifSizeT curSegIdx{};
+	AlifUSizeT curSegIdx{};
 
 	FreeSegments* freedSegms{};
 
-	AlifSizeT freeBlocksNum{};
+	AlifUSizeT freeBlocksNum{};
 
 	AlifMemBlock* headBlock{};
 	AlifMemBlock* currentBlock{};
 
-	AlifSizeT rawAllocSize{};
-	AlifSizeT objNums{};
+	AlifUSizeT rawAllocSize{};
+	AlifUSizeT objNums{};
 };
 
 /*
 	يجب نقل الذاكرة الى المفسر وعدم تركها ذاكرة عامة
 	لأنه سيتم عمل ذاكرة خاصة بكل مسار او "ثريد" لمنع تداهل البيانات
-*/ 
+*/
 extern AlifMemory _alifMem_;
 
 
-void alif_memoryInit();
+void* alif_memoryInit();
 
-inline void* alif_rawAlloc(AlifSizeT);
+
+
+inline void* alif_rawAlloc(AlifUSizeT);
 inline void alif_rawDelete(void*);
-inline void* alif_rawRealloc(void*, AlifSizeT);
+inline void* alif_rawRealloc(void*, AlifUSizeT);
 
-void* alifMem_objAlloc(AlifSizeT);
-void* alifMem_dataAlloc(AlifSizeT);
+void* alifMem_objAlloc(AlifUSizeT);
+void* alifMem_dataAlloc(AlifUSizeT);
 
 inline void alifMem_objFree(void*);
 inline void alifMem_dataFree(void*);
 
-void* alifMem_objRealloc(void*, AlifSizeT);
-void* alifMem_dataRealloc(void*, AlifSizeT);
+void* alifMem_objRealloc(void*, AlifUSizeT);
+void* alifMem_dataRealloc(void*, AlifUSizeT);
+
+
+
 
 
 const void alif_getMemState();
-
-
-
 
 
 
@@ -147,8 +155,8 @@ const void alif_getMemState();
 
 class AlifASTBlock {
 public:
-	AlifSizeT size_{};
-	AlifSizeT offset_{};
+	AlifUSizeT size_{};
+	AlifUSizeT offset_{};
 	AlifASTBlock* next_{};
 	void* mem_{};
 };
@@ -157,11 +165,11 @@ class AlifASTMem {
 public:
 	AlifASTBlock* head_{};
 	AlifASTBlock* current_{};
-	AlifObj* objects_{};
+	AlifObject* objects_{};
 };
 
 
-AlifASTBlock* block_new(AlifSizeT _size);
+AlifASTBlock* block_new(AlifUSizeT);
 AlifASTMem* alifASTMem_new();
-void* alifArena_malloc(AlifASTMem* _arena, AlifSizeT _size);
-int alifArena_listAddAlifObj(AlifASTMem* _arena, AlifObj* _obj);
+void* alifASTMem_malloc(AlifASTMem*, AlifUSizeT);
+int alifASTMem_listAddAlifObj(AlifASTMem*, AlifObject*);

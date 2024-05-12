@@ -19,7 +19,7 @@
 
 
 
-FILE* alif_fOpenObj(AlifObj* _path, const char* _mode) {
+FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) {
 	FILE* f{};
 #ifdef _WINDOWS
 	wchar_t wmode[10];

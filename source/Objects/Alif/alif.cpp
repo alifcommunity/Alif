@@ -28,7 +28,7 @@ static void alifMain_init(AlifArgv* _args) {
 
 
 /* ----------------------------------- تشغيل اللغة ----------------------------------- */
-static int alifMain_runFileObj(AlifObj* _pn, AlifObj* _fn) {
+static int alifMain_runFileObj(AlifObject* _pn, AlifObject* _fn) {
 	FILE* fp_ = alif_fOpenObj(_fn, "rb");
 
 	if (fp_ == nullptr) {
@@ -43,8 +43,8 @@ static int alifMain_runFileObj(AlifObj* _pn, AlifObj* _fn) {
 }
 
 static int alifMain_runFile(AlifConfig* _config) {
-	AlifObj* fileName = alifUStr_objFromWChar(_config->runFilename);
-	AlifObj* programName = alifUStr_objFromWChar(_config->programName);
+	AlifObject* fileName = alifUStr_objFromWChar(_config->runFilename);
+	AlifObject* programName = alifUStr_objFromWChar(_config->programName);
 
 	int res_ = alifMain_runFileObj(programName, fileName);
 

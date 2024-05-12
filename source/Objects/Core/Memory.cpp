@@ -1,7 +1,6 @@
 ﻿#include "alif.h"
 #include "AlifCore_Memory.h"
 
-
 #define ALIFMEM_FRAGIDX (_alifMem_.fragIdx)
 #define ALIFMEM_FRAGMEM (_alifMem_.fragMem)
 #define ALIFMEM_CURRENTSEG_INDEX (_alifMem_.curSegIdx)
@@ -16,7 +15,7 @@ AlifMemory _alifMem_{};
 
 /* forward decleration */
 static void* freeSeg_alloc();
-static inline AlifSizeT size_alignUp(AlifSizeT);
+//static inline AlifUSizeT size_alignUp(AlifUSizeT);
 
 
 /* ----------------------------------------------------------------------------------- */
@@ -35,7 +34,7 @@ static void alifMemError_reallocLessThan() {
 
 
 template<typename T>
-static inline T* alif_new(AlifSizeT _count = 1) {
+static inline T* alif_new(AlifUSizeT _count = 1) {
 	try
 	{
 		return new T[_count]{};
@@ -54,15 +53,23 @@ static inline T* alif_new(AlifSizeT _count = 1) {
 /* ----------------------------------------------------------------------------------- */
 void AlifArray::push_(void* _element) {
 	/* ------------------------------------
-		قم بحجز شظية وقم بتهيئتها 
-		ومن ثم إسنادها الى مصفوفة القطع المفرغة 
+		قم بحجز شظية وقم بتهيئتها
+		ومن ثم إسنادها الى مصفوفة القطع المفرغة
 	------------------------------------ */
 	Frag* s_ = (Frag*)freeSeg_alloc();
-	s_->ptr_ = _element;
-	s_->next_ = nullptr;
 
-	s_->next_ = arr_;
-	arr_ = s_;
+	/* ------------------------------------
+		في حال لم يتمكن من حجز شظية
+		بسبب عدم توفر ذاكرة
+		لا تقم بتفريغ القطعة حالية
+	------------------------------------ */
+	if (s_) {
+		s_->ptr_ = _element;
+		s_->next_ = nullptr;
+
+		s_->next_ = arr_;
+		arr_ = s_;
+	}
 }
 const inline Frag* AlifArray::not_empty() const {
 	return arr_;
@@ -86,11 +93,11 @@ inline void* AlifArray::get_() {
 
 
 /* ----------------------------------------------------------------------------------- */
-void* FreeSegments::try_alloc(AlifSizeT _size) {
+void* FreeSegments::try_alloc(AlifUSizeT _size) {
 	/* ------------------------------------
 		حاول جلب قطعة مفرغة بنفس الحجم وذلك بحسب المؤشر
 	------------------------------------ */
-	AlifSizeT index_ = (_size / ALIGNMENT) - 2;
+	AlifUSizeT index_ = (_size / ALIGNMENT) - 2;
 	if (freeSegs[index_].not_empty()) {
 		void* ptr_ = freeSegs[index_].get_();
 		return ptr_;
@@ -101,11 +108,11 @@ void* FreeSegments::try_allocFreeSeg() {
 	/* ------------------------------------
 		حاول قطع شظية
 	------------------------------------ */
-	if (fSegs_) 
+	if (fSegs_)
 	{
 		Frag* arr_ = fSegs_;
 
-		fSegs_ = fSegs_->next_;	
+		fSegs_ = fSegs_->next_;
 
 		return arr_;
 	}
@@ -117,16 +124,16 @@ void FreeSegments::dealloc_(void* _ptr) {
 		قم بتصفيرها وارسالها الى مصفوفة القطع بحسب المؤشر،
 		وإلا فقم بخذفها بإستخدام حذف النظام
 	------------------------------------ */
-	AlifSizeT size_ = *((AlifSizeT*)_ptr - 1);
+	AlifUSizeT size_ = *((AlifUSizeT*)_ptr - 1);
 
 	if (size_ <= BLOCK_SIZE) {
-		AlifSizeT index_ = (size_ / ALIGNMENT) - 2;
+		AlifUSizeT index_ = (size_ / ALIGNMENT) - 2;
 		memset(_ptr, 0, (size_ - ALIGNMENT));
 		freeSegs[index_].push_(_ptr);
 	}
 	else {
 		ALIFMEM_RAWALLOC_SIZE -= size_;
-		delete[] ((AlifSizeT*)_ptr - 1);
+		delete[]((AlifUSizeT*)_ptr - 1);
 	}
 }
 void FreeSegments::freeSeg_dealloc(Frag* _seg) {
@@ -149,14 +156,14 @@ void FreeSegments::freeSeg_dealloc(Frag* _seg) {
 
 /* ------------------------------------ ذاكرة ألف ------------------------------------ */
 
-void alif_memoryInit()
+void* alif_memoryInit()
 {
 	/* --- تهيئة ذاكرة الشظايا --- */
 	ALIFMEM_FRAGMEM = FragsBlock();
 	char* fSegs = alif_new<char>(FSEGS_SIZE);
 	if (fSegs == nullptr) {
-		std::wcout << L"لا يمكن إكمال تهيئة الذاكرة \n" << std::endl;
-		exit(-1);
+		std::wcout << L"لا يمكن إكمال تهيئة الذاكرة \n لم ينجح في حجز قطعة شظايا جديدة" << std::endl;
+		return nullptr;
 	}
 	ALIFMEM_FRAGMEM.fSegs = fSegs;
 	ALIFMEM_FRAGMEM.freeSize = FSEGS_SIZE;
@@ -170,8 +177,8 @@ void alif_memoryInit()
 
 	char* s_ = alif_new<char>(BLOCK_SIZE);
 	if (s_ == nullptr) {
-		std::wcout << L"لا يمكن إكمال تهيئة الذاكرة \n" << std::endl;
-		exit(-1);
+		std::wcout << L"لا يمكن إكمال تهيئة الذاكرة \n لم ينجح في حجز قطعة جديدة" << std::endl;
+		return nullptr;
 	}
 
 	ALIFMEM_CURRENTBLOCK->segments_ = s_;
@@ -182,11 +189,11 @@ void alif_memoryInit()
 		b_ = new AlifMemBlock();
 		prev_->next_ = b_;
 		b_->freeSize = BLOCK_SIZE;
-		
+
 		s_ = alif_new<char>(BLOCK_SIZE);
 		if (s_ == nullptr) {
-			std::wcout << L"لا يمكن إكمال تهيئة الذاكرة \n" << std::endl;
-			exit(-1);
+			std::wcout << L"لا يمكن إكمال تهيئة الذاكرة \n لم ينجح في حجز قطعة جديدة" << std::endl;
+			return nullptr;
 		}
 
 		b_->segments_ = s_;
@@ -198,32 +205,32 @@ void alif_memoryInit()
 
 /* ---------------------------------- ذاكرة النظام ----------------------------------- */
 
-inline void* alif_rawAlloc(AlifSizeT _size) {
+inline void* alif_rawAlloc(AlifUSizeT _size) {
 	/* ------------------------------------
 		قم بحجز من النظام
 		من ثم اضف الحجم المحجوز للذاكرة
 	------------------------------------ */
-	AlifSizeT size_ = size_alignUp(_size + ALIGNMENT);
+	AlifUSizeT size_ = ALIGN_UP(_size + ALIGNMENT);
 	void* ptr_ = alif_new<char>(size_);
 	if (ptr_ == nullptr) return nullptr;
 
 	ALIFMEM_RAWALLOC_SIZE += size_;
 
-	*(AlifSizeT*)ptr_ = size_;
+	*(AlifUSizeT*)ptr_ = size_;
 
-	return ((AlifSizeT*)ptr_ + 1);
+	return ((AlifUSizeT*)ptr_ + 1);
 }
 
 inline void alif_rawDelete(void* _ptr) {
-	AlifSizeT* ptr_ = ((AlifSizeT*)_ptr - 1);
-	ALIFMEM_RAWALLOC_SIZE -= *(AlifSizeT*)ptr_;
+	AlifUSizeT* ptr_ = ((AlifUSizeT*)_ptr - 1);
+	ALIFMEM_RAWALLOC_SIZE -= *(AlifUSizeT*)ptr_;
 	delete[] ptr_;
 }
 
-inline void* alif_rawRealloc(void* _sourcePtr, AlifSizeT _distSize) {
-	AlifSizeT sourceSize = *((AlifSizeT*)_sourcePtr - 1);
-	AlifSizeT distSize = size_alignUp(_distSize + ALIGNMENT);
-	
+inline void* alif_rawRealloc(void* _sourcePtr, AlifUSizeT _distSize) {
+	AlifUSizeT sourceSize = *((AlifUSizeT*)_sourcePtr - 1);
+	AlifUSizeT distSize = ALIGN_UP(_distSize + ALIGNMENT);
+
 	// إذا كان حجم المصدر مساوي لحجم الخدف ارجع المصدر
 	if (sourceSize == distSize) {
 		return _sourcePtr;
@@ -231,7 +238,7 @@ inline void* alif_rawRealloc(void* _sourcePtr, AlifSizeT _distSize) {
 
 	/* ------------------------------------
 		في حال كان حجم المصدر اقل من حجم الهدف
-		قم بحجز متغير جديد 
+		قم بحجز متغير جديد
 		وانقل البيانات من المصدر اليه واحذف المصدر
 		وإلا اظهر خطأ منع حجز قيمة اقل من قيمة المصدر
 	------------------------------------ */
@@ -239,14 +246,14 @@ inline void* alif_rawRealloc(void* _sourcePtr, AlifSizeT _distSize) {
 		void* newPtr = alif_new<char>(distSize);
 		if (newPtr == nullptr) return nullptr;
 
-		*(AlifSizeT*)newPtr = distSize;
+		*(AlifUSizeT*)newPtr = distSize;
 
-		memcpy(((AlifSizeT*)newPtr + 1), _sourcePtr, (sourceSize - ALIGNMENT));
-		delete[] ((AlifSizeT*)_sourcePtr - 1);
+		memcpy(((AlifUSizeT*)newPtr + 1), _sourcePtr, (sourceSize - ALIGNMENT));
+		delete[]((AlifUSizeT*)_sourcePtr - 1);
 
 		ALIFMEM_RAWALLOC_SIZE += distSize - sourceSize;
 
-		return ((AlifSizeT*)newPtr + 1);
+		return ((AlifUSizeT*)newPtr + 1);
 	}
 	else {
 		alifMemError_reallocLessThan();
@@ -258,7 +265,7 @@ inline void* alif_rawRealloc(void* _sourcePtr, AlifSizeT _distSize) {
 
 /* ----------------------------------------------------------------------------------- */
 	/* ------------------------------------
-		هذه المنطقة خاصة بحجز 
+		هذه المنطقة خاصة بحجز
 		شظية جديدة من ذاكرة الشظايا
 	------------------------------------ */
 static inline void* fSeg_alloc() {
@@ -277,8 +284,9 @@ static inline void* fSeg_newBlock() {
 
 #define SEGMENT (ALIGNMENT + ALIGNMENT)
 static void* freeSeg_alloc() {
-	
-	if (void* a = ALIFMEM_FREEDSEGMS->try_allocFreeSeg()) { return a; }
+
+	if (void* a = ALIFMEM_FREEDSEGMS->try_allocFreeSeg())
+		return a;
 
 	if (ALIFMEM_FRAGMEM.freeSize >= sizeof(Frag)) {
 		return fSeg_alloc();
@@ -314,7 +322,7 @@ static inline void* alifMem_newBlock() {
 				break;
 			} 	/* ------------------------------------
 					في حال تم حجز اكثر من كتلة واحدة
-					ولم يعد هناك ذاكرة، 
+					ولم يعد هناك ذاكرة،
 					قم بإرجاع ما تم حجزه بدون إظهار خطأ
 				------------------------------------ */
 			alifMemError_noMemory();
@@ -331,36 +339,38 @@ static inline void* alifMem_newBlock() {
 	}
 }
 
-#define ALIGN (ALIGNMENT - 1)
-static inline AlifSizeT size_alignUp(AlifSizeT _size) {
-	/* -- align _size to ALIGNMENT -- */
-	return (_size + ALIGN) & ~ALIGN;
-}
+// not needed
+//#define ALIGN (ALIGNMENT - 1)
+//static inline AlifUSizeT size_alignUp(AlifUSizeT _size) {
+//	/* -- align _size to ALIGNMENT -- */
+//	return (_size + ALIGN) & ~ALIGN;
+//}
+//
 
-static inline void* alif_allocSeg(AlifSizeT _size) {
+static inline void* alif_allocSeg(AlifUSizeT _size) {
 	ALIFMEM_CURRENTBLOCK->freeSize -= _size;
 	void* ptr_ = ALIFMEM_CURRENTBLOCK->segments_ + ALIFMEM_CURRENTSEG_INDEX;
-	*(AlifSizeT*)ptr_ = _size;
+	*(AlifUSizeT*)ptr_ = _size;
 	ALIFMEM_CURRENTSEG_INDEX += _size;
-	return ((AlifSizeT*)ptr_ + 1);
+	return ((AlifUSizeT*)ptr_ + 1);
 }
 
 static inline void alif_freeLast() {
-	*(AlifSizeT*)((char*)ALIFMEM_CURRENTBLOCK->segments_ + ALIFMEM_CURRENTSEG_INDEX)
+	*(AlifUSizeT*)((char*)ALIFMEM_CURRENTBLOCK->segments_ + ALIFMEM_CURRENTSEG_INDEX)
 		= ALIFMEM_CURRENTBLOCK->freeSize;
 	ALIFMEM_CURRENTBLOCK->freeSize = 0;
 	void* s = ALIFMEM_CURRENTBLOCK->segments_ + ALIFMEM_CURRENTSEG_INDEX + ALIGNMENT;
 	ALIFMEM_FREEDSEGMS->dealloc_(s);
 }
 
-static inline void* alifMem_alloc(AlifSizeT _size)
+static inline void* alifMem_alloc(AlifUSizeT _size)
 {
 	if (_size == 0) {
 		alifMemError_tryAllocZero();
 		return nullptr;
 	}
 
-	AlifSizeT size_ = size_alignUp(_size + ALIGNMENT);
+	AlifUSizeT size_ = ALIGN_UP(_size + ALIGNMENT);
 
 	/* ------------------------------------
 		إذا كان الحجم اكبر من حجم الكتلة
@@ -374,7 +384,7 @@ static inline void* alifMem_alloc(AlifSizeT _size)
 		حاول حجز قطعة محررة
 	------------------------------------ */
 	if (void* a_ = ALIFMEM_FREEDSEGMS->try_alloc(size_))
-	{ return a_; }
+		return a_;
 
 	/* ------------------------------------
 		في حال توفر مساحة في الكتلة
@@ -383,7 +393,7 @@ static inline void* alifMem_alloc(AlifSizeT _size)
 	if (ALIFMEM_CURRENTBLOCK->freeSize >= size_) {
 		return alif_allocSeg(size_);
 	}
-	
+
 	/* ------------------------------------
 		قم بتحرير اخر قطعة من الكتلة في حال وجودها
 	------------------------------------ */
@@ -408,11 +418,11 @@ static inline void* alifMem_alloc(AlifSizeT _size)
 
 
 /* --------------------------------- ذاكرة ألف --------------------------------------- */
-void* alifMem_dataAlloc(AlifSizeT _size) {
+void* alifMem_dataAlloc(AlifUSizeT _size) {
 	return alifMem_alloc(_size);
 }
 
-void* alifMem_objAlloc(AlifSizeT _size) {
+void* alifMem_objAlloc(AlifUSizeT _size) {
 	ALIFMEM_OBJNUMS++;
 
 	return alifMem_alloc(_size);;
@@ -434,8 +444,8 @@ inline void alifMem_objFree(void* _ptr) {
 		هذه المنطقة خاصة بالدوال الفرعية
 		الخاصة بإعادة الحجز
 	------------------------------------ */
-static inline void* alif_dataToAlifMemAlloc(void* _sourcePtr, AlifSizeT _distSize) {
-	AlifSizeT sourceSize = *((AlifSizeT*)_sourcePtr - 1);
+static inline void* alif_dataToAlifMemAlloc(void* _sourcePtr, AlifUSizeT _distSize) {
+	AlifUSizeT sourceSize = *((AlifUSizeT*)_sourcePtr - 1);
 
 	void* s_ = alifMem_alloc(_distSize);
 	if (s_ == nullptr) return nullptr;
@@ -445,8 +455,8 @@ static inline void* alif_dataToAlifMemAlloc(void* _sourcePtr, AlifSizeT _distSiz
 
 	return s_;
 }
-static inline void* alif_dataToSysAlloc(void* _sourcePtr, AlifSizeT _distSize) {
-	AlifSizeT sourceSize = *((AlifSizeT*)_sourcePtr - 1);
+static inline void* alif_dataToSysAlloc(void* _sourcePtr, AlifUSizeT _distSize) {
+	AlifUSizeT sourceSize = *((AlifUSizeT*)_sourcePtr - 1);
 
 	void* r_ = alif_rawAlloc(_distSize);
 	if (r_ == nullptr) return nullptr;
@@ -457,8 +467,8 @@ static inline void* alif_dataToSysAlloc(void* _sourcePtr, AlifSizeT _distSize) {
 	return r_;
 }
 
-static inline void* alif_objToAlifMemAlloc(void* _sourcePtr, AlifSizeT _distSize) {
-	AlifSizeT sourceSize = *((AlifSizeT*)_sourcePtr - 1);
+static inline void* alif_objToAlifMemAlloc(void* _sourcePtr, AlifUSizeT _distSize) {
+	AlifUSizeT sourceSize = *((AlifUSizeT*)_sourcePtr - 1);
 
 	void* s_ = alifMem_alloc(_distSize);
 	if (s_ == nullptr) return nullptr;
@@ -470,8 +480,8 @@ static inline void* alif_objToAlifMemAlloc(void* _sourcePtr, AlifSizeT _distSize
 
 	return s_;
 }
-static inline void* alif_objToSysAlloc(void* _sourcePtr, AlifSizeT _distSize) {
-	AlifSizeT sourceSize = *((AlifSizeT*)_sourcePtr - 1);
+static inline void* alif_objToSysAlloc(void* _sourcePtr, AlifUSizeT _distSize) {
+	AlifUSizeT sourceSize = *((AlifUSizeT*)_sourcePtr - 1);
 
 	void* r_ = alif_rawAlloc(_distSize);
 	if (r_ == nullptr) return nullptr;
@@ -485,13 +495,20 @@ static inline void* alif_objToSysAlloc(void* _sourcePtr, AlifSizeT _distSize) {
 }
 /* ----------------------------------------------------------------------------------- */
 
-void* alifMem_dataRealloc(void* _ptr, AlifSizeT _size) {
+void* alifMem_dataRealloc(void* _ptr, AlifUSizeT _size) {
 	void* sourcePtr = _ptr;
-	AlifSizeT sourceSize = *((AlifSizeT*)_ptr - 1);
+	AlifUSizeT sourceSize = *((AlifUSizeT*)_ptr - 1);
 	void* distPtr{};
-	AlifSizeT distSize = size_alignUp(_size + ALIGNMENT);
+	AlifUSizeT distSize = ALIGN_UP(_size + ALIGNMENT);
 
-	if (sourcePtr == nullptr) { std::wcout << __FUNCTION__ << std::endl; exit(-1); } // temp - need to correct
+	/*
+		في حال كان مؤشر المصدر فارغ
+		قم بحجز متغير جديد
+	*/
+	if (sourcePtr == nullptr)
+	{
+		return alifMem_alloc(_size);
+	}
 
 	if (distSize == 0) alifMemError_reallocLessThan();
 
@@ -520,7 +537,7 @@ void* alifMem_dataRealloc(void* _ptr, AlifSizeT _size) {
 
 		distPtr = alif_dataToSysAlloc(sourcePtr, _size);
 
-		delete[] ((AlifSizeT*)sourcePtr - 1);
+		delete[]((AlifUSizeT*)sourcePtr - 1);
 		ALIFMEM_RAWALLOC_SIZE -= sourceSize;
 
 		return distPtr;
@@ -535,14 +552,21 @@ void* alifMem_dataRealloc(void* _ptr, AlifSizeT _size) {
 	return sourcePtr;
 }
 
-void* alifMem_objRealloc(void* _ptr, AlifSizeT _size)
+void* alifMem_objRealloc(void* _ptr, AlifUSizeT _size)
 {
 	void* sourcePtr = _ptr;
-	AlifSizeT sourceSize = *((AlifSizeT*)_ptr - 1);
+	AlifUSizeT sourceSize = *((AlifUSizeT*)_ptr - 1);
 	void* distPtr{};
-	AlifSizeT distSize = size_alignUp(_size + ALIGNMENT);
+	AlifUSizeT distSize = ALIGN_UP(_size + ALIGNMENT);
 
-	if (sourcePtr == nullptr) { std::wcout << __FUNCTION__ << std::endl; exit(-1); } // temp - need to correct
+	/*
+		في حال كان مؤشر المصدر فارغ
+		قم بحجز متغير جديد
+	*/
+	if (sourcePtr == nullptr)
+	{
+		return alifMem_alloc(_size);
+	}
 
 	if (distSize == 0) alifMemError_reallocLessThan();
 
@@ -571,7 +595,7 @@ void* alifMem_objRealloc(void* _ptr, AlifSizeT _size)
 
 		distPtr = alif_objToSysAlloc(sourcePtr, _size);
 
-		delete[]((AlifSizeT*)sourcePtr - 1);
+		delete[]((AlifUSizeT*)sourcePtr - 1);
 		ALIFMEM_RAWALLOC_SIZE -= sourceSize;
 		ALIFMEM_OBJNUMS--;
 
@@ -590,18 +614,108 @@ void* alifMem_objRealloc(void* _ptr, AlifSizeT _size)
 
 
 
+
+
+
+
+
+
+
+
+/* -------------------------------- ذاكرة شجرة المحلل -------------------------------- */
+
+AlifASTBlock* block_new(AlifUSizeT _size) {
+	AlifASTBlock* b_ = (AlifASTBlock*)alifMem_dataAlloc(sizeof(AlifASTBlock) + _size);
+	if (b_ == nullptr) return nullptr;
+	b_->size_ = _size;
+	b_->mem_ = (void*)(b_ + 1);
+	b_->next_ = nullptr;
+	b_->offset_ = (char*)ALIGN_UP((AlifUSizeT)b_->mem_) - (char*)(b_->mem_);
+
+	return b_;
+}
+
+
+static void* block_alloc(AlifASTBlock* _b, AlifUSizeT _size) {
+	void* p_{};
+	_size = ALIGN_UP(_size);
+	if (_b->offset_ + _size > _b->size_) {
+		AlifASTBlock* newBlock = block_new(_size < ASTMEM_BLOCKSIZE ? ASTMEM_BLOCKSIZE : _size);
+		if (newBlock == nullptr) return nullptr;
+		_b->next_ = newBlock;
+		_b = newBlock;
+	}
+
+	p_ = (void*)(((char*)_b->mem_) + _b->offset_);
+	_b->offset_ += _size;
+	return p_;
+}
+
+
+AlifASTMem* alifASTMem_new() {
+	AlifASTMem* astMem = (AlifASTMem*)alifMem_dataAlloc(sizeof(AlifASTMem));
+	if (astMem == nullptr) return nullptr;
+
+	astMem->head_ = block_new(ASTMEM_BLOCKSIZE);
+	if (astMem->head_ == nullptr) return nullptr;
+
+	astMem->current_ = astMem->head_;
+
+	astMem->objects_ = alifNew_list(0);
+
+	return astMem;
+}
+
+void* alifASTMem_malloc(AlifASTMem* _arena, AlifUSizeT _size) {
+	void* p_ = block_alloc(_arena->current_, _size);
+	if (p_ == nullptr) return nullptr;
+
+	if (_arena->current_->next_) {
+		_arena->current_ = _arena->current_->next_;
+	}
+
+	return p_;
+}
+
+int alifASTMem_listAddAlifObj(AlifASTMem* _arena, AlifObject* _obj) {
+	int r_ = alifList_append(_arena->objects_, _obj);
+	if (r_ >= 0) {
+		ALIF_DECREF(_obj);
+	}
+	return r_;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* -------------------------------- Memory API --------------------------------------- */
 Frag* AlifArray::get_arr()
 {
 	return arr_;
 }
 
-AlifArray FreeSegments::return_freeSegs(AlifSizeT i)
+AlifArray FreeSegments::return_freeSegs(AlifUSizeT i)
 {
 	return freeSegs[i];
 }
 
-static std::pair<AlifSizeT, const wchar_t*> convert_(AlifSizeT _size, const wchar_t* _unit) {
+static std::pair<AlifUSizeT, const wchar_t*> convert_(AlifUSizeT _size, const wchar_t* _unit) {
 	if (_size > 1073741823) {
 		_size /= 1000000000;
 		_unit = L"غيغابايت";
@@ -617,15 +731,15 @@ static std::pair<AlifSizeT, const wchar_t*> convert_(AlifSizeT _size, const wcha
 		_unit = L"كيلوبايت";
 	}
 
-	return std::pair<AlifSizeT, const wchar_t*>(_size, _unit);
+	return std::pair<AlifUSizeT, const wchar_t*>(_size, _unit);
 }
 
-static void rawMem_sizeAllocated() 
+static void rawMem_sizeAllocated()
 {
-	AlifSizeT sysMemSize = ALIFMEM_RAWALLOC_SIZE;
+	AlifUSizeT sysMemSize = ALIFMEM_RAWALLOC_SIZE;
 	const wchar_t* sysMemSizeUnit = L"بايت";
-	std::pair<AlifSizeT, const wchar_t*> sysMemPair = 
-		std::pair<AlifSizeT, const wchar_t*>(sysMemSize, sysMemSizeUnit);
+	std::pair<AlifUSizeT, const wchar_t*> sysMemPair =
+		std::pair<AlifUSizeT, const wchar_t*>(sysMemSize, sysMemSizeUnit);
 
 	sysMemPair = convert_(sysMemSize, sysMemSizeUnit);
 
@@ -640,21 +754,21 @@ static void rawMem_sizeAllocated()
 #endif
 }
 
-static void alifMem_sizeAllocated() 
+static void alifMem_sizeAllocated()
 {
-	AlifSizeT alifMemSize{};
-	AlifSizeT alifAllocSize{};
-	AlifSizeT wasteSize{};
+	AlifUSizeT alifMemSize{};
+	AlifUSizeT alifAllocSize{};
+	AlifUSizeT wasteSize{};
 	const wchar_t* alifMemSizeUnit = L"بايت";
 	const wchar_t* alifAllocSizeUnit = L"بايت";
 	const wchar_t* wasteSizeUnit = L"بايت";
-	std::pair<AlifSizeT, const wchar_t*> alifMemPair =
-		std::pair<AlifSizeT, const wchar_t*>(alifMemSize, alifMemSizeUnit);
-	std::pair<AlifSizeT, const wchar_t*> alifAllocPair =
-		std::pair<AlifSizeT, const wchar_t*>(alifAllocSize, alifAllocSizeUnit);
-	std::pair<AlifSizeT, const wchar_t*> wastePair =
-		std::pair<AlifSizeT, const wchar_t*>(wasteSize, wasteSizeUnit);
-	
+	std::pair<AlifUSizeT, const wchar_t*> alifMemPair =
+		std::pair<AlifUSizeT, const wchar_t*>(alifMemSize, alifMemSizeUnit);
+	std::pair<AlifUSizeT, const wchar_t*> alifAllocPair =
+		std::pair<AlifUSizeT, const wchar_t*>(alifAllocSize, alifAllocSizeUnit);
+	std::pair<AlifUSizeT, const wchar_t*> wastePair =
+		std::pair<AlifUSizeT, const wchar_t*>(wasteSize, wasteSizeUnit);
+
 	AlifMemBlock* currentBlock = ALIFMEM_HEADBLOCK;
 	while (currentBlock->next_) {
 		if (currentBlock->freeSize < SEGMENT) {
@@ -708,21 +822,21 @@ static void alifMem_sizeAllocated()
 #endif
 }
 
-static void fragment_sizeAllocated() 
+static void fragment_sizeAllocated()
 {
-	AlifSizeT freedMemSize{};
+	AlifUSizeT freedMemSize{};
 	const wchar_t* freedMemSizeUnit = L"بايت";
-	std::pair<AlifSizeT, const wchar_t*> freedMemPair = 
-		std::pair<AlifSizeT, const wchar_t*>(freedMemSize, freedMemSizeUnit);
+	std::pair<AlifUSizeT, const wchar_t*> freedMemPair =
+		std::pair<AlifUSizeT, const wchar_t*>(freedMemSize, freedMemSizeUnit);
 
 	for (int i_ = 0; i_ < FRAGS_NUM; i_++) {
 		Frag* f_ = ALIFMEM_FREEDSEGMS->return_freeSegs(i_).get_arr();
 		if (f_) {
 			while (f_->next_) {
-				freedMemSize += *((AlifSizeT*)f_->ptr_ - 1);
+				freedMemSize += *((AlifUSizeT*)f_->ptr_ - 1);
 				f_ = f_->next_;
 			}
-			freedMemSize += *((AlifSizeT*)f_->ptr_ - 1);
+			freedMemSize += *((AlifUSizeT*)f_->ptr_ - 1);
 		}
 	}
 	freedMemPair = convert_(freedMemSize, freedMemSizeUnit);
@@ -738,9 +852,9 @@ static void fragment_sizeAllocated()
 #endif
 }
 
-static void objects_count() 
+static void objects_count()
 {
-	AlifSizeT objsNum = ALIFMEM_OBJNUMS;
+	AlifUSizeT objsNum = ALIFMEM_OBJNUMS;
 
 	wprintf(L"I| --------------------------------------------- |I\n");
 	wprintf(L"I|                                : عدد الكائنات |I\n");
@@ -751,9 +865,9 @@ static void objects_count()
 #endif
 }
 
-static void freeBlocks_count() 
+static void freeBlocks_count()
 {
-	AlifSizeT freeBlocks = ALIFMEM_FREEBLOCKS_NUM;
+	AlifUSizeT freeBlocks = ALIFMEM_FREEBLOCKS_NUM;
 
 	wprintf(L"I| --------------------------------------------- |I\n");
 	wprintf(L"I|                             : عدد الكتل الحرة |I\n");
@@ -766,9 +880,9 @@ static void freeBlocks_count()
 #endif
 }
 
-static void currentSeg_size() 
+static void currentSeg_size()
 {
-	AlifSizeT currSegSize = ALIFMEM_CURRENTBLOCK->freeSize;
+	AlifUSizeT currSegSize = ALIFMEM_CURRENTBLOCK->freeSize;
 
 	wprintf(L"I| --------------------------------------------- |I\n");
 	wprintf(L"I|                    : حجم القطعة الحرة الحالية |I\n");
@@ -781,7 +895,7 @@ static void currentSeg_size()
 #endif
 }
 
-const void alif_getMemState() 
+const void alif_getMemState()
 {
 	/* --- sysMemSize --- */
 	rawMem_sizeAllocated();
@@ -800,82 +914,4 @@ const void alif_getMemState()
 /* ----------------------------------------------------------------------------------- */
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* -------------------------------- ذاكرة شجرة المحلل -------------------------------- */
-
-AlifASTBlock* block_new(AlifSizeT _size) {
-	AlifASTBlock* b_ = (AlifASTBlock*)alifMem_dataAlloc(sizeof(AlifASTBlock) + _size);
-	if (b_ == nullptr) return nullptr;
-	b_->size_ = _size;
-	b_->mem_ = (void*)(b_ + 1);
-	b_->next_ = nullptr;
-	//#define ALIF_ALIGNUP(p, a) ((void*)(((uintptr_t)(p) + (uintptr_t)((a) - 1)) & ~(uintptr_t)((a) - 1))) // for delete
-		//b->offset_ = (char*)ALIF_ALIGNUP(b->mem_, ALIGNMENT) - (char*)(b->mem_); // for delete
-	b_->offset_ = (char*)size_alignUp((AlifSizeT)b_->mem_) - (char*)(b_->mem_);
-
-	return b_;
-}
-
-
-static void* block_alloc(AlifASTBlock* _b, AlifSizeT _size) {
-	void* p_{};
-	_size = size_alignUp(_size);
-	if (_b->offset_ + _size > _b->size_) {
-		AlifASTBlock* newBlock = block_new(_size < ASTMEM_BLOCKSIZE ? ASTMEM_BLOCKSIZE : _size);
-		if (newBlock == nullptr) return nullptr;
-		_b->next_ = newBlock;
-		_b = newBlock;
-	}
-
-	p_ = (void*)(((char*)_b->mem_) + _b->offset_);
-	_b->offset_ += _size;
-	return p_;
-}
-
-
-AlifASTMem* alifASTMem_new() {
-	AlifASTMem* astMem = (AlifASTMem*)alifMem_dataAlloc(sizeof(AlifASTMem));
-	if (astMem == nullptr) return nullptr;
-
-	astMem->head_ = block_new(ASTMEM_BLOCKSIZE);
-	if (astMem->head_ == nullptr) return nullptr;
-
-	astMem->current_ = astMem->head_;
-
-	astMem->objects_ = alifNew_list(0);
-
-	return astMem;
-}
-
-void* alifArena_malloc(AlifASTMem* _arena, AlifSizeT _size) {
-	void* p_ = block_alloc(_arena->current_, _size);
-	if (p_ == nullptr) return nullptr;
-
-	if (_arena->current_->next_) {
-		_arena->current_ = _arena->current_->next_;
-	}
-
-	return p_;
-}
-
-int alifArena_listAddAlifObj(AlifASTMem* _arena, AlifObj* _obj) {
-	int r_ = list_append(_arena->objects_, _obj);
-	if (r_ >= 0) {
-		//ALIF_DECREF(_obj);
-	}
-	return r_;
-}
 

@@ -1,6 +1,5 @@
 #pragma once
 
-
 #define ALIFSINGLE_INPUT 256
 #define ALIFFILE_INPUT 257
 #define ALIFEVAL_INPUT 258
