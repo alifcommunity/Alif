@@ -16,7 +16,7 @@ AlifObject* alifParserEngine_decodeString(AlifParser* _p, int _raw, const wchar_
 	return nullptr; // temp
 }
 
-AlifObject* alifParserEngine_parseString(AlifParser* _p, AlifPToken* _t) { // 196
+AlifObject* alifParserEngine_parseString(AlifParser* _p, AlifPToken* _t) {
 	const wchar_t* s = alifWBytes_asString(_t->bytes);
 	if (s == nullptr) return nullptr;
 

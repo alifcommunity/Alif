@@ -1,7 +1,7 @@
 #pragma once
 
 
-#define ALIF_WCHARMASK(wc) ((wchar_t)((wc) & 0xffff)) // 47
+#define ALIF_WCHARMASK(wc) ((wchar_t)((wc) & 0xffff)) 
 
 #define ALIFSIZE_ROUND_UP(_n, _a) (((size_t)(_n) + (size_t)((_a) - 1)) & ~(size_t)((_a) - 1))
 
@@ -25,4 +25,4 @@
 
 
 
-#define ALIF_RVALUE(expr) ((void)0, (expr)) // 165
+#define ALIF_RVALUE(expr) ((void)0, (expr))

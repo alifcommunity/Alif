@@ -1,4 +1,5 @@
 ﻿#include "alif.h"
+
 #include "AlifCore_GetConsoleLine.h"
 #include "AlifCore_Memory.h"
 #include "AlifCore_InitConfig.h"
