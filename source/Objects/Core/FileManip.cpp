@@ -21,6 +21,7 @@
 
 FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) {
 	FILE* f{};
+
 #ifdef _WINDOWS
 	wchar_t wmode[10];
 	int uSize;
@@ -31,30 +32,29 @@ FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) {
 	f = _wfopen((wchar_t*)((AlifUStrObject*)_path)->UTF, wmode);
 
 #else
-	PyObject* bytes;
+	AlifObject* bytes;
 	const char* path_bytes;
 
-	assert(PyGILState_Check());
+	assert(alifGILState_Check());
 
-	if (!PyUnicode_FSConverter(path, &bytes))
-		return NULL;
-	path_bytes = PyBytes_AS_STRING(bytes);
+	if (!alifUnicode_FSConverter(path, &bytes))
+		return nullptr;
+	path_bytes = alifBytes_asString(bytes);
 
-	if (PySys_Audit("open", "Osi", path, mode, 0) < 0) {
-		Py_DECREF(bytes);
-		return NULL;
+	if (alifSys_audit("open", "Osi", path, mode, 0) < 0) {
+		ALIF_DECREF(bytes);
+		return nullptr;
 	}
 
 	do {
-		Py_BEGIN_ALLOW_THREADS
-			f = fopen(path_bytes, mode);
-		Py_END_ALLOW_THREADS
-	} while (f == NULL
-		&& errno == EINTR && !(async_err = PyErr_CheckSignals()));
-		int saved_errno = errno;
-		Py_DECREF(bytes);
+		ALIF_BEGIN_ALLOW_THREADS
+			f = fopen(pathBytes, mode);
+		ALIF_END_ALLOW_THREADS
+	} while (f == nullptr
+		and errno == EINTR and !(async_err = alifErr_checkSignals()));
+		int savedErrno = errno;
+		Alif_DECREF(bytes);
 #endif
 
 	return f;
-
 }
