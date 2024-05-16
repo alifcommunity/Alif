@@ -29,7 +29,7 @@ file   : program read from script file\n\
 -      : program read from stdin (default; interactive mode if a tty)\n\
 arg ...: arguments passed to program in sys.argv[1:]\n\
 -h     : print this help message and exit (--help)\n\
--v     : print the Python version number and exit (also --version)\n\
+-v     : print the Alif version number and exit (also --version)\n\
 ";
 
 static void config_usage(const wchar_t* program)
