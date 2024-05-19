@@ -483,7 +483,7 @@ AugOperator* alifParserEngine_augOperator(AlifParser* _p, Operator _type) {
 	return a_;
 }
 
-static AlifIntT seqNumber_ofStarExprs(Seq* _seq) { // 767
+static AlifIntT seqNumber_ofStarExprs(Seq* _seq) {
 	AlifIntT n_ = 0;
 	for (AlifUSizeT i = 0, l = SEQ_LEN(_seq); i < l; i++) {
 		KeywordOrStar* k_ = (KeywordOrStar*)SEQ_GETUNTYPED(_seq, i);

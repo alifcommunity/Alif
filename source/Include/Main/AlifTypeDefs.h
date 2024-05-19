@@ -9,3 +9,6 @@ typedef class AlifMemberDef AlifMemberDef;
 
 typedef class AlifObject AlifObject;
 typedef class AlifInitObject AlifTypeObject;
+
+typedef class AlifInterpreter AlifInterpreter;
+typedef class AlifThread AlifThread;

@@ -3,6 +3,10 @@
 #include "AlifCore_GetConsoleLine.h"
 #include "AlifCore_Memory.h"
 #include "AlifCore_InitConfig.h"
+#include "AlifCore_Interpreter.h"
+#include "AlifCore_AlifCycle.h"
+#include "AlifCore_AlifState.h"
+#include "AlifCore_DureRun.h"
 
 #ifdef _WINDOWS
 #include <windows.h>
@@ -29,7 +33,7 @@ file   : program read from script file\n\
 -      : program read from stdin (default; interactive mode if a tty)\n\
 arg ...: arguments passed to program in sys.argv[1:]\n\
 -h     : print this help message and exit (--help)\n\
--v     : print the Alif version number and exit (also --version)\n\
+-v     : print Alif version number and exit (also --version)\n\
 ";
 
 static void config_usage(const wchar_t* program)
@@ -42,26 +46,26 @@ static void config_usage(const wchar_t* program)
 }
 
 
-void alif_localeInit() {
+AlifIntT alif_setLocaleAndWChar() {
 #ifdef _WINDOWS
 	bool modeIn = _setmode(_fileno(stdin), _O_WTEXT);
 	bool modeOut = _setmode(_fileno(stdout), _O_WTEXT);
 	if (!modeIn or !modeOut) {
 		std::wcout << L"لم يستطع تهيئة الطرفية لقراءة الأحرف العربية" << std::endl;
-		exit(-1);
+		return -1;
 	}
 #endif // _WINDOWS
 
 	const char* locale = setlocale(LC_CTYPE, nullptr);
 	if (locale == nullptr) {
-		std::wcout << L"لم يستطع تهيئة الطرفية لقراءة الأحرف العربية" << std::endl;
-		exit(-1);
+		std::wcout << L"لم يستطع تهيئة الموقع" << std::endl;
+		return -1;
 	}
 
 	setlocale(LC_CTYPE, locale);
 }
 
-void alifArgv_asWStrList(AlifConfig* _config, AlifArgv* _args) {
+AlifIntT alifArgv_asWStrList(AlifConfig* _config, AlifArgv* _args) {
 	if (_args->useBytesArgv)
 	{
 		AlifWStringList wArgv = { 0, nullptr };
@@ -85,11 +89,27 @@ void alifArgv_asWStrList(AlifConfig* _config, AlifArgv* _args) {
 		_config->origArgv.length = _args->argc;
 		_config->origArgv.items = (wchar_t**)_args->wcharArgv;
 	}
+
+	return 1;
 }
 
 
-static void parse_consoleLine(AlifConfig* _config, size_t* _index) {
-	int printVer{};
+void alifConfig_initAlifConfig(AlifConfig* _config) {
+
+	_config->configInit = ConfigInitEnum::AlifConfig_Init_Alif;
+	_config->tracemalloc = -1;
+	_config->parseArgv = 1;
+	_config->interactive = 0;
+	_config->optimizationLevel = 0;
+	_config->quite = 0;
+}
+
+
+static AlifIntT parse_consoleLine(AlifConfig* _config, AlifSizeT* _index) {
+
+	AlifIntT status{};
+
+	AlifIntT printVer{};
 	const AlifWStringList* argv = &_config->argv;
 	const wchar_t* program = _config->programName;
 	if (!program and argv->length >= 1) {
@@ -98,33 +118,34 @@ static void parse_consoleLine(AlifConfig* _config, size_t* _index) {
 
 	alif_resetConsoleLine();
 	do {
-		int c = alif_getConsoleLine(argv->length, argv->items);
+		AlifIntT c = alif_getConsoleLine(argv->length, argv->items);
 
 		if (c == EOF) {
 			break;
 		}
 
-		if (c == 'c') {
+		if (c == L'c') {
 			if (_config->runCommand == nullptr) {
-				size_t len = wcslen(optArg) + 2;
+				AlifUSizeT len = wcslen(optArg) + 2 + 2;
 				wchar_t* command = (wchar_t*)alifMem_dataAlloc(len * sizeof(wchar_t));
 				if (command == nullptr) {
-					exit(-1);
+					return -1;
 				}
 				memcpy(command, optArg, (len - 2) * sizeof(wchar_t));
-				command[len - 2] = '\n';
+				command[len - 2] = L'\n';
 				command[len - 1] = 0;
 				_config->runCommand = command;
 			}
 			break;
 		}
 
-		if (c == 'm') {
+		if (c == L'm') {
 			if (_config->runModule == nullptr) {
-				size_t len = wcslen(optArg) * sizeof(wchar_t) + 2;
+				AlifUSizeT len = wcslen(optArg) * sizeof(wchar_t) + 2 + 2;
 				_config->runModule = (wchar_t*)alifMem_dataAlloc(len);
-				if (_config->runModule) {
-					memcpy(_config->runModule, optArg, len);
+				memcpy(_config->runModule, optArg, len);
+				if (_config->runModule == nullptr) {
+					return -1;
 				}
 			}
 			break;
@@ -138,11 +159,11 @@ static void parse_consoleLine(AlifConfig* _config, size_t* _index) {
 			//config_envvars_usage();
 			exit(1);
 		}
-		else if (c == 'h') {
+		else if (c == L'h') {
 			config_usage(program);
 			exit(1);
 		}
-		else if (c == 'v') {
+		else if (c == L'v') {
 			printVer++;
 			break;
 		}
@@ -178,7 +199,7 @@ static void parse_consoleLine(AlifConfig* _config, size_t* _index) {
 	*_index = optIdx;
 }
 
-static void update_argv(AlifConfig* _config, AlifSizeT _index) {
+static AlifIntT update_argv(AlifConfig* _config, AlifSizeT _index) {
 	const AlifWStringList* cmdlineArgv = &_config->argv;
 	AlifWStringList configArgv = { 0, nullptr };
 	if (cmdlineArgv->length <= _index) {
@@ -207,6 +228,8 @@ static void update_argv(AlifConfig* _config, AlifSizeT _index) {
 	}
 
 	_config->argv = configArgv;
+
+	return 1;
 }
 
 static int alif_extension(wchar_t* _filename) {
@@ -218,11 +241,11 @@ static int alif_extension(wchar_t* _filename) {
 	else { return 0; }
 }
 
-static void run_absPathFilename(AlifConfig* _config) {
+static AlifIntT run_absPathFilename(AlifConfig* _config) {
 
 	wchar_t* filename = _config->runFilename;
 	// في حال عدم وجود ملف يجب تشغيله، لا تقم بجلب المسار
-	if (!filename) { return; }
+	if (!filename) { return -1; }
 
 	// يتم التحقق من لاحقة الملف والتي يجب ان تكون .alif
 	if (!alif_extension(filename)) {
@@ -267,21 +290,82 @@ static void run_absPathFilename(AlifConfig* _config) {
 #endif // _WINDOWS
 
 	_config->runFilename = absFilename;
+
+	return 1;
 }
 
-static void config_readConsole(AlifConfig* _config) {
-	size_t index{};
-	// تقوم هذه الدالة بتحليل سطر الطرفية
-	parse_consoleLine(_config, &index);
+static AlifIntT config_readConsole(AlifConfig* _config) {
 
-	// تقوم هذه الدالة بجلب المسار الخاص بتنفيذ الملف فقط
-	run_absPathFilename(_config);
+	AlifIntT status{};
 
-	// تقوم هذه الدالة بتحديث المعطيات الممررة عبر الطرفية
-	update_argv(_config, index);
+	if (_config->parseArgv < 0) _config->parseArgv = 1;
+
+	if (_config->parseArgv == 1) {
+
+		AlifSizeT index{};
+
+		// تقوم هذه الدالة بتحليل سطر الطرفية
+		status = parse_consoleLine(_config, &index);
+		if (status < 1) return status;
+
+		// تقوم هذه الدالة بجلب المسار الخاص بتنفيذ الملف فقط
+		status = run_absPathFilename(_config);
+		if (status < 1) return status;
+
+		// تقوم هذه الدالة بتحديث المعطيات الممررة عبر الطرفية
+		status = update_argv(_config, index);
+		if (status < 1) return status;
+
+	}
+	else {
+		// تقوم هذه الدالة بجلب المسار الخاص بتنفيذ الملف فقط
+		status = run_absPathFilename(_config);
+		if (status < 1) return status;
+	}
+
+	return 1;
 }
 
 
-void alifConfig_read(AlifConfig* _config) {
-	config_readConsole(_config);
+
+
+
+
+AlifIntT alifConfig_write(const AlifConfig* _config, AlifDureRun* _dureRun) {
+
+	//config_initStdio(_config); // for set arabic char reading in console
+
+	memcpy(&_alifDureRun_.origArgv, &_config->argv, sizeof(AlifWStringList)); // يجب مراجعتها
+
+	return 1;
+}
+
+
+
+AlifIntT alifConfig_read(AlifConfig* _config) {
+
+	AlifIntT status{};
+
+	if (_config->origArgv.length == 0 and !(_config->argv.length == 1
+		and wcscmp(_config->argv.items[0], L"") == 0))
+	{
+		//if (alifWideStringList_copy(&_config->origArgv, &_config->argv) < 0) {
+			//return ALIFSTATUS_NO_MEMORY();
+		//}
+		return -1; // temp
+	}
+
+	status = config_readConsole(_config);
+	if (status < 1) return status;
+
+	if (_config->tracemalloc < 0) _config->tracemalloc = 0;
+
+	if (_config->argv.length < 1) {
+		// error
+	}
+
+
+	if (_config->parseArgv == 1) _config->parseArgv = 2;
+
+	return 1;
 }

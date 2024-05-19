@@ -9,19 +9,31 @@ public:
 };
 
 
-
 /* ----------------------------------- AlifConfig ------------------------------------ */
 class AlifConfig {
 public:
+	AlifIntT configInit{};
+
+	AlifIntT tracemalloc{};
+	AlifIntT parseArgv{};
+
 	AlifWStringList origArgv{};
 	AlifWStringList argv;
+
+	AlifIntT interactive{};
+	AlifIntT optimizationLevel{};
+
+	AlifIntT quite{};
 
 	wchar_t* programName{};
 
 	wchar_t* runCommand{};
 	wchar_t* runModule{};
 	wchar_t* runFilename{};
+
+	AlifIntT initMain{};
 };
 
 
-void alif_localeInit();
+AlifIntT alif_setLocaleAndWChar();
+void alifConfig_initAlifConfig(AlifConfig*);
