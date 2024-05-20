@@ -1,6 +1,7 @@
 ﻿#include "alif.h"
 
 #include "AlifCore_AST.h"
+#include "AlifParserEngine.h"
 //#include "AlifCore_AlifRun.h"
 
 #ifdef _WINDOWS
@@ -10,7 +11,20 @@
 
 // Forward Declaration
 //static AlifObject* alifRun_file(FILE*, AlifObject*, int, int);
-Module* alifParser_astFromFile(FILE*, AlifObject*, int, AlifASTMem*); // temp
+//Module* alifParser_astFromFile(FILE*, AlifObject*, int, AlifASTMem*); // temp
+
+
+static AlifObject* alifRun_module(Module* _module, AlifObject* _fn, AlifASTMem* _astMem) { // 1299
+
+	AlifCodeObject* codeObj = alifAST_compile(_module, _astMem);
+
+
+
+	//AlifObject* exec = run_evalCodeObj(thread_, codeObj, globals, locals);
+	//return exec;
+	return nullptr; // temp
+}
+
 
 static AlifObject* alifRun_file(FILE* _fp, AlifObject* _fn, int _start, int _fClose) { 
 
@@ -23,16 +37,16 @@ static AlifObject* alifRun_file(FILE* _fp, AlifObject* _fn, int _start, int _fCl
 		fclose(_fp);
 	}
 
-	AlifObject* res{};
+	AlifObject* res_{};
 	if (module_) {
-		//res_ = alifRun_module(module_, _fn, alifMem);
+		res_ = alifRun_module(module_, _fn, astMem);
 	}
 	else {
-		res = nullptr;
+		res_ = nullptr;
 	}
 
 
-	return res;
+	return res_;
 }
 
 int alifRun_simpleFileObj(FILE* _fp, AlifObject* _fn, int _fClose) { 
