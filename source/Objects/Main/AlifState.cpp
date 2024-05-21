@@ -10,7 +10,8 @@
 
 
 #ifdef HAVE_LOCAL_THREAD
-	ALIF_LOCAL_THREAD AlifThread* _alifTSSThread_ = nullptr;
+	//ALIF_LOCAL_THREAD AlifThread* _alifTSSThread_ = nullptr;
+	ALIF_LOCAL_THREAD AlifThread* _alifTSSThread_;
 #endif
 
 static const AlifDureRun initial = ALIF_DURERUNSTATE_INIT(_dureRun_);
@@ -118,4 +119,12 @@ error:
 		// clear
 	}
 	return status;
+}
+
+
+
+
+const AlifConfig* alifConfig_get() {
+	AlifThread* thread_ = _alifTSSThread_;
+	return &thread_->interpreter->config;
 }

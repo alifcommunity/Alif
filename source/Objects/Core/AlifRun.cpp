@@ -16,8 +16,11 @@
 
 static AlifObject* alifRun_module(Module* _module, AlifObject* _fn, AlifASTMem* _astMem) { // 1299
 
-	AlifCodeObject* codeObj = alifAST_compile(_module, _astMem);
-
+	AlifCodeObject* codeObj = alifAST_compile(_module, -1, _astMem);
+	if (codeObj == nullptr) {
+		// error
+		return nullptr;
+	}
 
 
 	//AlifObject* exec = run_evalCodeObj(thread_, codeObj, globals, locals);

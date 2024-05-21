@@ -12,7 +12,7 @@ enum AlifLockStatus {
 typedef class AlifTSST AlifTSST;
 
 
-#   define NATIVE_TSS_KEY_T     unsigned long
+#define NATIVE_TSS_KEY_T     unsigned long
 
 class AlifTSST {
 public:

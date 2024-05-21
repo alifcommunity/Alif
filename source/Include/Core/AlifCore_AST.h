@@ -534,3 +534,8 @@ Arg* alifAST_arg(AlifObject*, int, int, int, int, AlifASTMem*);
 Keyword* alifAST_keyword(AlifObject*, Expression*, int, int, int, int, AlifASTMem*);
 Alias* alifAST_alias(AlifObject*, AlifObject*, int, int, int, int, AlifASTMem*);
 WithItem* alifAST_withItem(Expression*, Expression*, AlifASTMem*);
+
+
+
+
+extern AlifObject* alifAST_getDocString(StmtSeq*);

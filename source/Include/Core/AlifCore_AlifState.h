@@ -25,3 +25,6 @@ static inline AlifInterpreter* alifInterpreter_get() {
 
 
 extern AlifIntT alifInterpreter_enable(AlifDureRun*);
+
+
+const AlifConfig* alifConfig_get();
