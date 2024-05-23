@@ -656,6 +656,11 @@ Error:
 #undef b
 }
 
+int list_setSlice(AlifObject* a, int64_t ilow, int64_t ihigh, AlifObject* v)
+{
+	return list_ass_slice((AlifListObject*)a, ilow, ihigh, v);
+}
+
 static int list_ass_item(AlifListObject* a, int64_t i, AlifObject* v)
 {
     if (!valid_index(i, ((AlifVarObject*)a)->size_)) {

@@ -4,6 +4,7 @@
 
 #include "AlifCore_Compile.h"
 #include "AlifCore_AlifState.h"
+#include "AlifCore_SymTable.h"
 
 
 

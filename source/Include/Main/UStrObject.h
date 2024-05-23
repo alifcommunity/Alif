@@ -53,7 +53,7 @@ static inline uint32_t alifUnicode_read_wchar(AlifObject* _unicode, int64_t _ind
 	}
 	return ((((uint32_t*)((AlifUStrObject*)_unicode)->UTF)[_index]));
 }
-#define ALIFUNICODE_READ_WCHAR(_unicode, _index) alifUnicode_read_wchar(_unicode, (_index));
+#define ALIFUNICODE_READ_WCHAR(_unicode, _index) alifUnicode_read_wchar(_unicode, (_index))
 
 // هنا يتم تحويل من utf16 الى utf32 والعكس 
 #define ALIFUNICODE_CONVERT_BYTES(fromType, toType, begin, end, to) {   \
@@ -74,6 +74,7 @@ static inline uint32_t alifUnicode_read_wchar(AlifObject* _unicode, int64_t _ind
 
 AlifObject* alifNew_uStr(size_t, uint8_t);
 AlifObject* alifUnicode_decodeStringToUTF8(const wchar_t*);
+AlifSizeT alifUnicode_copyCharacters(AlifObject*, AlifSizeT, AlifObject*, AlifSizeT, AlifSizeT);
 uint8_t find_maxChar(const wchar_t* str);
 size_t hash_unicode(AlifObject*);
 static AlifObject* alifUnicode_fromUint16(const uint16_t*, int64_t);
