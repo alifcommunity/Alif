@@ -1,5 +1,26 @@
 #pragma once
 
+
+
+AlifObject* alifNumber_add(AlifObject*, AlifObject*);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 AlifObject* alifObject_getIter(AlifObject*);
 
 AlifObject* alifInteger_float(AlifObject* );

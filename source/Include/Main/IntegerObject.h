@@ -15,13 +15,13 @@ public:
 extern AlifInitObject _typeInteger_;
 
 
-AlifObject* alifInteger_fromSize_t(size_t, bool );
+AlifObject* alifInteger_fromSizeT(size_t, bool );
 AlifObject* alifInteger_fromDouble(long double );
 AlifObject* alifInteger_fromLongLong(int64_t );
 
 long double alifInteger_asDouble(AlifObject*);
 long alifInteger_asLong(AlifObject* );
-size_t alifInteger_asSize_t(AlifObject* );
+size_t alifInteger_asSizeT(AlifObject* );
 bool alifInteger_asSign(AlifObject* );
 int64_t alifInteger_asLongLong(AlifObject* );
 AlifObject* alifInteger_fromString(const wchar_t* );

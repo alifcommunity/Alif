@@ -779,7 +779,7 @@ static AlifObject* list___sizeof___impl(AlifListObject* self)
 {
     size_t res = self->_base_._base_.type_->basicSize;
     res += (size_t)self->allocate * sizeof(void*);
-    return alifInteger_fromSize_t(res , true);
+    return alifInteger_fromSizeT(res , true);
 }
 
 static AlifObject* list___sizeof__(AlifListObject* self)
@@ -819,7 +819,7 @@ static AlifObject* list_subscript(AlifListObject* self, AlifObject* item)
 {
     if (item->type_->asNumber != nullptr) {
         int64_t i;
-        i = alifInteger_asSize_t(item);
+        i = alifInteger_asSizeT(item);
         if (i < 0)
             i += ((AlifVarObject*)self)->size_;
         return list_item(self, i);
@@ -866,7 +866,7 @@ static AlifObject* list_subscript(AlifListObject* self, AlifObject* item)
 static int list_ass_subscript(AlifListObject* self, AlifObject* item, AlifObject* value)
 {
     if ((item)->type_->asNumber != nullptr) {
-        int64_t i = alifInteger_asSize_t(item);
+        int64_t i = alifInteger_asSizeT(item);
 
         if (i < 0)
             i += ((AlifVarObject*)self)->size_;

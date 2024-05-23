@@ -295,6 +295,53 @@ size_t none_hash(AlifObject* v)
 	return 3;
 }
 
+
+AlifTypeObject _alifNotImplementedType_ = { // need review
+
+	0,// for var obj
+	0,// for var obj
+	0,// fro var obj
+	L"NotImplemented",
+	0,
+	0,
+	none_dealloc, //
+	0,
+	0,
+	0,
+	0,
+	& _noneAsNumber_, // 
+	0,
+	0,
+	(HashFunc)none_hash, // 
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	none_new, // 
+};
+
+AlifObject _alifNotImplemented_ = ALIFOBJECT_HEAD_INIT(&_alifNotImplementedType_); // need review
+
+
 AlifNumberMethods _noneAsNumber_ = {
 	0,                   
 	0,                        
