@@ -3,7 +3,7 @@
 class AlifListObject {
 public:
 
-	ALIFObject_VAR_HEAD
+	ALIFOBJECT_VAR_HEAD
 
 	AlifObject** items{};
 

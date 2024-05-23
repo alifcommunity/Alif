@@ -3,6 +3,7 @@
 #include "AlifCore_AST.h"
 #include "AlifParserEngine.h"
 //#include "AlifCore_AlifRun.h"
+#include "AlifCore_Compile.h"
 
 #ifdef _WINDOWS
 #include "windows.h"
@@ -16,7 +17,7 @@
 
 static AlifObject* alifRun_module(Module* _module, AlifObject* _fn, AlifASTMem* _astMem) { // 1299
 
-	AlifCodeObject* codeObj = alifAST_compile(_module, -1, _astMem);
+	AlifCodeObject* codeObj = alifAST_compile(_module, _fn, -1, _astMem);
 	if (codeObj == nullptr) {
 		// error
 		return nullptr;

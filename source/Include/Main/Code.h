@@ -7,7 +7,7 @@
 
 
 class AlifCodeObject {  // 192
-	ALIFObject_VAR_HEAD;
+	ALIFOBJECT_VAR_HEAD;
 	AlifObject* consts{};
 	AlifObject* names{};
 

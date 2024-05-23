@@ -1,7 +1,7 @@
 #include "alif.h"
 
-#include "AlifCore_AST.h"
 
+#include "AlifCore_AST.h"
 #include "AlifCore_Compile.h"
 #include "AlifCore_AlifState.h"
 #include "AlifCore_SymTable.h"
@@ -12,7 +12,7 @@
 class AlifCompiler { // 275
 public:
 	AlifObject* fileName{};
-	AlifSymTable symTable{};
+	AlifSymTable* symTable{};
 
 	AlifIntT optimize{};
 	AlifIntT nestLevel{};
@@ -62,9 +62,10 @@ AlifCodeObject* alifAST_compile(Module* _module, AlifObject* _fn, AlifIntT _opti
 	AlifCompiler* compiler_ = compiler_new(_module, _fn, _optimize, _astMem);
 	if (compiler_ == nullptr) return nullptr;
 
-	AlifCodeObject* codeObject = compiler_module(compiler_, _module);
+	//AlifCodeObject* codeObject = compiler_module(compiler_, _module);
 	//compiler_free(compiler_);
 
-	return codeObject;
+	//return codeObject;
+	return nullptr; // temp
 }
 

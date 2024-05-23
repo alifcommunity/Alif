@@ -23,6 +23,8 @@ AlifObject* alifNumber_add(AlifObject*, AlifObject*);
 
 AlifObject* alifObject_getIter(AlifObject*);
 
+AlifObject* alifIter_next(AlifObject*);
+
 AlifObject* alifInteger_float(AlifObject* );
 
 #define ALIF_VECTORCALL_ARGUMENTS_OFFSET ((size_t)1 << (8 * sizeof(size_t) - 1))

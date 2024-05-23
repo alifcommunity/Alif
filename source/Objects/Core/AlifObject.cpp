@@ -295,6 +295,18 @@ size_t none_hash(AlifObject* v)
 	return 3;
 }
 
+AlifNumberMethods _noneAsNumber_ = {
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	(Inquiry)none_bool,
+};
 
 AlifTypeObject _alifNotImplementedType_ = { // need review
 
@@ -309,7 +321,7 @@ AlifTypeObject _alifNotImplementedType_ = { // need review
 	0,
 	0,
 	0,
-	& _noneAsNumber_, // 
+	&_noneAsNumber_, // 
 	0,
 	0,
 	(HashFunc)none_hash, // 
@@ -341,19 +353,6 @@ AlifTypeObject _alifNotImplementedType_ = { // need review
 
 AlifObject _alifNotImplemented_ = ALIFOBJECT_HEAD_INIT(&_alifNotImplementedType_); // need review
 
-
-AlifNumberMethods _noneAsNumber_ = {
-	0,                   
-	0,                        
-	0,                        
-	0,                         
-	0,                      
-	0,                     
-	0,                        
-	0,                        
-	0,                        
-	(Inquiry)none_bool,         
-};
 
 AlifTypeObject _typeNone_ = {
 	
