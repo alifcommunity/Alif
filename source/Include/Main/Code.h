@@ -21,3 +21,7 @@ class AlifCodeObject {  // 192
 	AlifObject* fileName{};
 	AlifObject* name{};
 };
+
+
+
+#define CO_MAXBLOCKS 21 /* Max static block nesting within a function */ // 229

@@ -25,6 +25,7 @@ extern AlifInitObject typeDict;
 AlifObject* alifNew_dict();
 AlifDictObject* deleteItem_fromIndex(AlifDictObject*, int64_t);
 AlifDictObject* dict_deleteItem(AlifDictObject*, AlifObject*);
+int alifDict_getItemRef(AlifObject*, AlifObject*, AlifObject**);
 bool dict_next(AlifObject*, int64_t*, AlifObject**, AlifObject**, size_t*);
 AlifDictObject* dict_setItem(AlifDictObject* , AlifObject*, AlifObject* );
 AlifDictObject* dict_ass_sub(AlifDictObject*, AlifObject*, AlifObject*);
