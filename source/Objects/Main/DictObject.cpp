@@ -583,6 +583,40 @@ AlifDictObject* dict_ass_sub(AlifDictObject* dict, AlifObject* key, AlifObject* 
 
 }
 
+static AlifObject* keys_lock_held(AlifObject* _dict)
+{
+
+	if (_dict == NULL || !(_dict->type_ == &typeDict)) {
+		return NULL;
+	}
+	AlifDictObject* mp_ = (AlifDictObject*)_dict;
+	AlifObject* v_;
+	int64_t n_;
+
+again:
+	v_ = alifNew_list(n_);
+	if (v_ == NULL)
+		return NULL;
+
+	int64_t j_ = 0, pos_ = 0;
+	AlifObject* key_;
+	while (dict_next((AlifObject*)mp_, &pos_, &key_, nullptr, nullptr)) {
+		((AlifListObject*)v_)->items[j_] = ALIF_NEWREF(key_);
+		j_++;
+	}
+	return v_;
+}
+
+AlifObject* alifDict_keys(AlifObject* _dict)
+{
+	AlifObject* res;
+	//ALIF_BEGIN_CRITICAL_SECTION(dict);
+	res = keys_lock_held(_dict);
+	//ALIF_END_CRITICAL_SECTION();
+
+	return res;
+}
+
 AlifObject* dict_subscript(AlifDictObject* dict, AlifObject* key) {
 
     size_t hash;
