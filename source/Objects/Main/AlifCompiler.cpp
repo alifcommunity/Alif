@@ -65,6 +65,103 @@ public:
 	AlifASTMem* astMem{};
 };
 
+static AlifObject* list_toDict(AlifObject* _list) { // 485
+
+	AlifObject* v{};
+	AlifObject* k{};
+	AlifObject* dict = alifNew_dict();
+	if (!dict) return nullptr;
+
+	AlifSizeT n = alifList_size(_list);
+	for (AlifSizeT i = 0; i < n; i++) {
+		v = alifInteger_fromLongLong(i);
+		if (!v) {
+			ALIF_DECREF(dict);
+			return nullptr;
+		}
+		k = ALIFLIST_GET_ITEM(_list, i);
+		if (alifDict_setItem(dict, k, v) < 0) {
+			ALIF_DECREF(v);
+			ALIF_DECREF(dict);
+			return nullptr;
+		}
+		ALIF_DECREF(v);
+	}
+	return dict;
+}
+
+static AlifObject* dict_byType(AlifObject* _src, AlifIntT _scopeType, AlifIntT _flag, AlifSizeT _offset) { // 519
+
+	AlifSizeT i = _offset;
+	AlifSizeT scope{};
+
+	AlifObject* k{}, v{};
+	AlifObject* dest = alifNew_dict();
+	if (dest == nullptr) return nullptr;
+
+	AlifObject* sortedKeys = alifDict_keys(_src);
+	if (sortedKeys == nullptr) return nullptr;
+
+	if (alifList_sort(sortedKeys) != 0) {
+		ALIF_DECREF(sortedKeys);
+		return nullptr;
+	}
+	AlifSizeT numKeys = ALIFLIST_GET_SIZE(sortedKeys);
+
+	for (AlifSizeT keyIdx = 0; keyIdx < numKeys; keyIdx++) {
+		long vi{};
+		k = ALIFLIST_GET_ITEM(sortedKeys, keyIdx);
+		v = alifDict_getItemWithError(_src, k);
+		vi = ALIFLONG_AS_LONG(v);
+		scope = (vi >> SCOPE_OFFSET) & SCOPE_MASK;
+
+		if (scope == _scopeType or vi & _flag) {
+			AlifObject* item = alifInteger_fromLongLong(i);
+			if (item == nullptr) {
+				ALIF_DECREF(sortedKeys);
+				ALIF_DECREF(dest);
+				return nullptr;
+			}
+			i++;
+			if (alifDict_setItem(dest, k, item) < 0) {
+				ALIF_DECREF(sortedKeys);
+				ALIF_DECREF(item);
+				ALIF_DECREF(dest);
+				return nullptr;
+			}
+			ALIF_DECREF(item);
+		}
+	}
+	ALIF_DECREF(sortedKeys);
+	return dest;
+}
+
+static AlifSizeT dict_addObject(AlifObject* _dict, AlifObject* _obj) { // 830
+
+	AlifObject* v{};
+	AlifSizeT arg{};
+
+	if (alifDict_getItemRef(_dict, _obj, &v) < 0) {
+		return -1;
+	}
+
+	if (!v) {
+		arg = ALIFDICT_GET_SIZE(_dict);
+		v = alifInteger_fromLongLong(arg);
+		if (!v) return -1;
+
+		if (alifDict_setItem(_dict, _obj, v) < 0) {
+			ALIF_DECREF(v);
+			return -1;
+		}
+	}
+	else {
+		arg = alifLong_asLong(v);
+	}
+	ALIF_DECREF(v);
+	return arg;
+}
+
 static AlifIntT compiler_setup(AlifCompiler* _compiler, Module* _module,
 	AlifObject* _fn, AlifIntT _optimize, AlifASTMem* _astMem) { // 380
 

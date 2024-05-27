@@ -7,13 +7,16 @@ public:
 
 	AlifObject** items{};
 
-	size_t allocate;
+	AlifSizeT allocate;
 };
 
 extern AlifInitObject typeList;
 
 AlifObject* alifNew_list(size_t size_);
 size_t alifList_size(AlifObject* list);
+
+#define ALIFLIST_GET_SIZE(_lst) (((AlifVarObject*)_lst)->size_)
+#define ALIFLIST_GET_ITEM(_op, _i) (((AlifListObject*)_op)->items[_i])
 
 AlifObject* alifList_getItem(AlifObject*, size_t);
 bool alifList_setItem(AlifObject*, size_t, AlifObject*);
