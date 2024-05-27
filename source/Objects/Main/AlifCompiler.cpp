@@ -65,6 +65,8 @@ public:
 	AlifASTMem* astMem{};
 };
 
+#define CAPSULE_NAME "AlifCompile.cpp AlifCompiler Unit" // 377
+
 static AlifObject* list_toDict(AlifObject* _list) { // 485
 
 	AlifObject* v{};
