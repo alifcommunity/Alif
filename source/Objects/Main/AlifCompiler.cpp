@@ -82,7 +82,7 @@ static AlifObject* list_toDict(AlifObject* _list) { // 485
 			return nullptr;
 		}
 		k = ALIFLIST_GET_ITEM(_list, i);
-		if (alifDict_setItem(dict, k, v) < 0) {
+		if (dict_setItem((AlifDictObject*)dict, k, v) < 0) {
 			ALIF_DECREF(v);
 			ALIF_DECREF(dict);
 			return nullptr;
