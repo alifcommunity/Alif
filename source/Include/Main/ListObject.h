@@ -26,3 +26,5 @@ bool alifList_append(AlifObject*, AlifObject*);
 AlifObject* list_getSlice(AlifObject*, size_t , size_t);
 int list_setSlice(AlifObject*, int64_t, int64_t, AlifObject*);
 
+int alifList_sort(AlifObject* );
+

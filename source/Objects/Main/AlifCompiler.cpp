@@ -125,7 +125,7 @@ static AlifObject* dict_byType(AlifObject* _src, AlifIntT _scopeType, AlifIntT _
 				return nullptr;
 			}
 			i++;
-			if (alifDict_setItem(dest, k, item) < 0) {
+			if (dict_setItem((AlifDictObject*)dest, k, item) < 0) {
 				ALIF_DECREF(sortedKeys);
 				ALIF_DECREF(item);
 				ALIF_DECREF(dest);
@@ -152,7 +152,7 @@ static AlifSizeT dict_addObject(AlifObject* _dict, AlifObject* _obj) { // 830
 		v = alifInteger_fromLongLong(arg);
 		if (!v) return -1;
 
-		if (dict_setItem(_dict, _obj, v) < 0) {
+		if (dict_setItem((AlifDictObject*)_dict, _obj, v) < 0) {
 			ALIF_DECREF(v);
 			return -1;
 		}
