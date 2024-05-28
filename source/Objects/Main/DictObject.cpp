@@ -310,7 +310,7 @@ bool dict_next(AlifObject* dict, int64_t * posPos, AlifObject** posKey, AlifObje
 
 }
 
-AlifObject* _alifDict_pop_knownHash(AlifObject* dict, AlifObject* key, size_t hash, AlifObject* deflt)
+AlifObject* alifDict_popKnownHash(AlifObject* dict, AlifObject* key, size_t hash, AlifObject* deflt)
 {
     int64_t ix;
     AlifObject* old_value;
@@ -353,7 +353,7 @@ AlifObject* _alifDict_pop(AlifObject* dict, AlifObject* key, AlifObject* deflt)
         if (hash == -1)
             return NULL;
     }
-    return _alifDict_pop_knownHash(dict, key, hash, deflt);
+    return alifDict_popKnownHash(dict, key, hash, deflt);
 }
 
 
