@@ -2029,7 +2029,7 @@ AlifObject* alifUStr_concat(AlifObject* _left, AlifObject* _right)
 	return result_;
 }
 
-void alifUstr_append(AlifObject** _pLeft, AlifObject* _right)
+void alifUStr_append(AlifObject** _pLeft, AlifObject* _right)
 {
 	AlifObject* left_, * res;
 	AlifUCS4 maxChar, maxChar2;
