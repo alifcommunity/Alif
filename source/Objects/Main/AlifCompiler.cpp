@@ -10,6 +10,12 @@
 
 
 
+// Forward
+class AlifCompiler;
+static AlifCodeObject* compiler_module(AlifCompiler*, Module*);
+
+
+
 enum FBlockType {
 	WHILE_LOOP, FOR_LOOP, WITH, ASYNC_WITH, HANDLER_CLEANUP,
 	POP_VALUE, ASYNC_COMPREHENSION_GENERATOR, STOP_ITERATION
@@ -117,8 +123,8 @@ static AlifObject* dict_byType(AlifObject* _src, AlifIntT _scopeType, AlifIntT _
 	for (AlifSizeT keyIdx = 0; keyIdx < numKeys; keyIdx++) {
 		long vi{};
 		k = ALIFLIST_GET_ITEM(sortedKeys, keyIdx);
-		v = dict_getItem(_src, k);
-		vi = alifInteger_asLong(v);
+		v = dict_getItem(_src, k); // alifDict_getItemWithError
+		vi = alifInteger_asLong(v); // ALIFLONG_AS_LONG
 		scope = (vi >> SCOPE_OFFSET) & SCOPE_MASK;
 
 		if (scope == _scopeType or vi & _flag) {
@@ -250,7 +256,7 @@ static AlifIntT compiler_setup(AlifCompiler* _compiler, Module* _module,
 	AlifObject* _fn, AlifIntT _optimize, AlifASTMem* _astMem) { // 380
 
 	_compiler->stack = alifNew_list(0);
-	if (_compiler->stack) return -1;
+	if (!_compiler->stack) return -1;
 
 	_compiler->fileName = alif_newRef(_fn); // need Change to MACRO
 	_compiler->astMem = _astMem;

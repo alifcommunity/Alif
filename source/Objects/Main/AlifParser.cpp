@@ -1853,7 +1853,7 @@ static Expression* starTargets_rule(AlifParser* _p) {
 		if (
 			(a_ = starTarget_rule(_p)) // star_target
 			and
-			alifParserEngine_lookaheadWithInt(0, alifParserEngine_expectToken, _p, COMMA) // ","
+			alifParserEngine_lookaheadWithInt(0, alifParserEngine_expectToken, _p, COMMA) // !","
 			)
 		{
 			res_ = a_;
@@ -11899,7 +11899,7 @@ static Statement* assignment_rule(AlifParser* _p) {
 			and
 			(b_ = alif5(_p)) // // yield_expr > star_expressions
 			and
-			alifParserEngine_lookaheadWithInt(0, alifParserEngine_expectToken, _p, EQUAL) // "="
+			alifParserEngine_lookaheadWithInt(0, alifParserEngine_expectToken, _p, EQUAL) // !"="
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);

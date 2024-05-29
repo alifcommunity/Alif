@@ -36,12 +36,12 @@ int alifObject_getBuffer(AlifObject* _obj, AlifBuffer* _view, int _flags)
 }
 
 #define NB_SLOT(_x) offsetof(AlifNumberMethods, _x)
-#define NB_BINOP(_method, _slot) (*(BinaryFunc)(&((wchar_t*)_method)[_slot])) // 911
+#define NB_BINOP(_method, _slot) (*(BinaryFunc*)(&((wchar_t*)_method)[_slot])) // 911
 
 
 static AlifObject* binary_op1(AlifObject* _x, AlifObject* _y, const AlifIntT _opSlot, const wchar_t* _opName) { // 926
 
-	BinaryFunc slotX{};
+	BinaryFunc slotX;
 	if (ALIF_TYPE(_x)->asNumber != nullptr) {
 		slotX = NB_BINOP(ALIF_TYPE(_x)->asNumber, _opSlot);
 	}

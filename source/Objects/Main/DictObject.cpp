@@ -96,39 +96,37 @@ int dict_lookupItem(AlifDictObject* dict, AlifObject* key, size_t hash, AlifObje
     return index;
 }
 
-AlifDictObject* dict_setItem(AlifDictObject* dict, AlifObject* key, AlifObject* value) {
+AlifIntT dict_setItem(AlifDictObject* _dict, AlifObject* _key, AlifObject* _value) {
 
     AlifObject* oldValue;
     size_t hash;
 
-    if (key->type_ == &_typeUnicode_) {
-             hash = ((AlifUStrObject*)key)->hash;
+    if (_key->type_ == &_typeUnicode_) {
+        hash = ((AlifUStrObject*)_key)->hash;
     }
     else {
-        hash = alifObject_hash(key);
+        hash = alifObject_hash(_key);
     }
 
-    int64_t index = dict_lookupItem(dict, key, hash, &oldValue);
+    int64_t index = dict_lookupItem(_dict, _key, hash, &oldValue);
 
     if (index == -1) {
 
-        int64_t size_ = dict->size_;
-        if ((dict = dict_resize(dict)) == nullptr) {
-            return nullptr;
+        int64_t size_ = _dict->size_;
+        if ((_dict = dict_resize(_dict)) == nullptr) {
+            return -1;
         }
-        dict->items_[size_].hash = hash;
-        dict->items_[size_].key = key;
-        dict->items_[size_].value = value;
-        dict->size_++;
-        return dict;
+        _dict->items_[size_].hash = hash;
+        _dict->items_[size_].key = _key;
+        _dict->items_[size_].value = _value;
+        _dict->size_++;
     }
     else {
         
-        dict->items_[index].value = value;
-        return dict;
-
+        _dict->items_[index].value = _value;
     }
 
+	return 1;
 }
 
 //AlifObject* newDict_fromItems() {}
@@ -255,7 +253,7 @@ AlifDictObject* deletItem_common(AlifDictObject* dict, size_t hash,
     return dict;
 }
 
-AlifDictObject* dict_deleteItem(AlifDictObject* dict, AlifObject* key) {
+AlifIntT dict_deleteItem(AlifDictObject* dict, AlifObject* key) {
 
     size_t hash;
     if (key->type_ == &_typeUnicode_) {
@@ -268,12 +266,12 @@ AlifDictObject* dict_deleteItem(AlifDictObject* dict, AlifObject* key) {
     AlifObject* oldValue;
     int64_t index = dict_lookupItem(dict, key, hash, &oldValue);
     if (index == -1 || oldValue == nullptr) {
-        return nullptr;
+        return -1;
     }
 
     deletItem_common(dict, hash, index);
     
-    return dict;
+    return 1;
 }
 
 bool dict_next(AlifObject* dict, int64_t * posPos, AlifObject** posKey, AlifObject** posValue, size_t *posHash) {
@@ -571,7 +569,7 @@ size_t dict_length(AlifDictObject* dict) {
     return dict->size_;
 }
 
-AlifDictObject* dict_ass_sub(AlifDictObject* dict, AlifObject* key, AlifObject* value) {
+AlifIntT dict_ass_sub(AlifDictObject* dict, AlifObject* key, AlifObject* value) {
 
 
     if (value == nullptr) {
@@ -590,8 +588,8 @@ static AlifObject* keys_lock_held(AlifObject* _dict)
 		return NULL;
 	}
 	AlifDictObject* mp_ = (AlifDictObject*)_dict;
-	AlifObject* v_;
-	int64_t n_;
+	AlifObject* v_{};
+	int64_t n_{};
 
 again:
 	v_ = alifNew_list(n_);
