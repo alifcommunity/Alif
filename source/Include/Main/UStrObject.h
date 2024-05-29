@@ -80,6 +80,8 @@ size_t hash_unicode(AlifObject*);
 static AlifObject* alifUnicode_fromUint16(const uint16_t*, int64_t);
 static AlifObject* alifUnicode_fromUint32(const uint32_t*, int64_t);
 AlifObject* alifUStr_decodeUTF8Stateful(const wchar_t*, size_t, const wchar_t*, size_t*);
+AlifObject* alifUStr_concat(AlifObject* , AlifObject* );
+void alifUStr_append(AlifObject** , AlifObject* );
 // in file eq.h
 int unicode_eq(AlifObject*, AlifObject*);
 
