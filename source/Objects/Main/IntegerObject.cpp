@@ -227,7 +227,7 @@ void flipSign(AlifIntegerObject* _num)
 	_num->sign_ = !_num->sign_;
 }
 
-AlifIntegerObject* add(AlifIntegerObject* _a, AlifIntegerObject* _b)
+static AlifIntegerObject* add(AlifIntegerObject* _a, AlifIntegerObject* _b)
 {
 	AlifIntegerObject* result_ = (AlifIntegerObject*)alifMem_objAlloc(sizeof(AlifIntegerObject));
 	result_->sign_ = false;

@@ -1063,7 +1063,7 @@ AlifObject* alifAST_getDocString(StmtSeq* _body) {
 	if (!SEQ_LEN(_body)) return nullptr;
 
 	Statement* stmt = SEQ_GET(_body ,0);
-	if (stmt->type != ModType::ExpressionK) return nullptr;
+	if (stmt->type != StmtType::ExprK) return nullptr;
 
 	Expression* expr = stmt->V.expression.val;
 	if (expr->type == ExprType::ConstantK and ALIFUNICODE_CHECK_TYPE(expr->V.constant.val)) {
