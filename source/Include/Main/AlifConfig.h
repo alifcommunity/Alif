@@ -4,6 +4,8 @@
 	هذا الملف يعمل على تحديد بعض المعلوامات الخاصة بنظام التشغيل
 */
 
+#define NT_THREADS
+#define WITH_THREAD
 
 #ifdef _WIN32
 	#define _WINDOWS

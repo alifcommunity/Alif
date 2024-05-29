@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "AlifCore_Runtime.h"
+#include "AlifCore_DureRun.h"
 
 
 
@@ -12,4 +12,4 @@
 
 
 
-void alif_initFromConfig(AlifConfig*);
+AlifIntT alif_initFromConfig(AlifConfig*);

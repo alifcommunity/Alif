@@ -1,5 +1,6 @@
 ﻿#include "alif.h"
 #include "AlifCore_Memory.h"
+#include "AlifCore_AlifState.h"
 
 #define ALIFMEM_FRAGIDX (_alifMem_.fragIdx)
 #define ALIFMEM_FRAGMEM (_alifMem_.fragMem)
@@ -156,7 +157,8 @@ void FreeSegments::freeSeg_dealloc(Frag* _seg) {
 
 /* ------------------------------------ ذاكرة ألف ------------------------------------ */
 
-void* alif_memoryInit()
+/* --- ذاكرة المفسر الرئيسي --- */
+void* alif_mainMemoryInit()
 {
 	/* --- تهيئة ذاكرة الشظايا --- */
 	ALIFMEM_FRAGMEM = FragsBlock();
@@ -199,6 +201,57 @@ void* alif_memoryInit()
 		b_->segments_ = s_;
 		prev_ = b_;
 	}
+}
+
+/* --- ذاكرة المفسرات الفرعية --- */
+AlifMemory* alif_memoryInit()
+{
+
+	AlifMemory* memory_{};
+
+	/* --- تهيئة ذاكرة الشظايا --- */
+	memory_->fragMem = FragsBlock();
+	char* fSegs = alif_new<char>(FSEGS_SIZE);
+	if (fSegs == nullptr) {
+		std::wcout << L"لا يمكن إكمال تهيئة الذاكرة \n لم ينجح في حجز قطعة شظايا جديدة" << std::endl;
+		return nullptr;
+	}
+	memory_->fragMem.fSegs = fSegs;
+	memory_->fragMem.freeSize = FSEGS_SIZE;
+
+	/* --- تهيئة الذاكرة --- */
+	memory_->headBlock = new AlifMemBlock();
+	memory_->currentBlock = ALIFMEM_HEADBLOCK;
+	memory_->currentBlock->freeSize = BLOCK_SIZE;
+	memory_->freeBlocksNum = BLOCK_NUMS;
+	memory_->freedSegms = new FreeSegments();
+
+	char* s_ = alif_new<char>(BLOCK_SIZE);
+	if (s_ == nullptr) {
+		std::wcout << L"لا يمكن إكمال تهيئة الذاكرة \n لم ينجح في حجز قطعة جديدة" << std::endl;
+		return nullptr;
+	}
+
+	memory_->currentBlock->segments_ = s_;
+
+	AlifMemBlock* b_{};
+	AlifMemBlock* prev_ = memory_->currentBlock;
+	for (int i_ = 1; i_ <= BLOCK_NUMS; i_++) {
+		b_ = new AlifMemBlock();
+		prev_->next_ = b_;
+		b_->freeSize = BLOCK_SIZE;
+
+		s_ = alif_new<char>(BLOCK_SIZE);
+		if (s_ == nullptr) {
+			std::wcout << L"لا يمكن إكمال تهيئة الذاكرة \n لم ينجح في حجز قطعة جديدة" << std::endl;
+			return nullptr;
+		}
+
+		b_->segments_ = s_;
+		prev_ = b_;
+	}
+
+	return memory_;
 }
 
 
@@ -690,7 +743,21 @@ int alifASTMem_listAddAlifObj(AlifASTMem* _arena, AlifObject* _obj) {
 
 
 
+/* ------------------------------- إسناد ذاكرة المفسر ------------------------------- */
+AlifIntT alifInterpreterMem_init(AlifInterpreter* _interpreter) {
 
+	if (_interpreter == _alifDureRun_.interpreters.main) {
+		_interpreter->memory_ = &_alifMem_;
+	}
+	else {
+		_interpreter->memory_ = alif_memoryInit();
+		if (_interpreter->memory_ == nullptr) {
+			return -1;
+		}
+	}
+
+	return 1;
+}
 
 
 

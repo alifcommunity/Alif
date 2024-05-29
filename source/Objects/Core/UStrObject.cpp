@@ -385,6 +385,29 @@ static int alifSubUnicode_fastCopyCharacters(AlifObject* to, int64_t toStart,
 	return 0;
 }
 
+AlifSizeT alifUnicode_copyCharacters(AlifObject* _to, AlifSizeT _toStart,
+	AlifObject* _from, AlifSizeT _fromStart, AlifSizeT _howMany)
+{
+	int err{};
+
+	_howMany = min(ALIFUNICODE_GET_LENGTH(_from) - _fromStart, _howMany);
+	if (_toStart + _howMany > ALIFUNICODE_GET_LENGTH(_to)) {
+		return -1;
+	}
+
+	if (_howMany == 0)
+		return 0;
+
+	if (unicode_check_modifiable(_to))
+		return -1;
+
+	err = alifSubUnicode_fastCopyCharacters(_to, _toStart, _from, _fromStart, _howMany, 1);
+	if (err) {
+		return -1;
+	}
+	return _howMany;
+}
+
 // هنا يتم ايجاد اعلى ترميز في النص لتحديد نوع ترميز النص
 uint8_t find_maxChar(const wchar_t* str) {
 

@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-/* ----- AlifArgv ------------------------------------------- */
+/* ------------------------------------------- AlifArgv ------------------------------------------- */
 
 class AlifArgv {
 public:
@@ -12,5 +12,14 @@ public:
 
 
 
-void alifArgv_asWStrList(AlifConfig*, AlifArgv*);
-void alifConfig_read(AlifConfig*);
+/* ------------------------------------------ AlifConfig ------------------------------------------- */
+
+enum ConfigInitEnum {
+	AlifConfig_Init_Alif = 1,
+};
+
+
+
+AlifIntT alifArgv_asWStrList(AlifConfig*, AlifArgv*);
+AlifIntT alifConfig_read(AlifConfig*);
+AlifIntT alifConfig_write(const AlifConfig*, class AlifDureRun*);

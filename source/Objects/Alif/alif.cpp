@@ -3,6 +3,7 @@
 #include "AlifCore_Memory.h"
 #include "AlifCore_InitConfig.h"
 #include "AlifCore_AlifCycle.h"
+#include "AlifCore_AlifState.h"
 #include "AlifCore_AlifRun.h"
 
 #pragma warning(disable : 4996) // for disable unsafe functions error
@@ -11,19 +12,42 @@
 
 
 /* ----------------------------------- تهيئة اللغة ----------------------------------- */
-AlifConfig _tempConfig_{};
-static void alifMain_init(AlifArgv* _args) {
+
+static AlifIntT alifMain_init(AlifArgv* _args) {
+
+	AlifIntT status = 1;
+
+	status = alifDureRun_initialize();
+	if (status < 1) {
+		// error
+	}
+
+	status = alif_setLocaleAndWChar();
+	if (status < 1) {
+		// error
+	}
+
+	if (alif_mainMemoryInit() == nullptr) {
+		// error
+	}
 
 	AlifConfig config_{};
+	alifConfig_initAlifConfig(&config_);
 
-	alif_localeInit();
+	status = alifArgv_asWStrList(&config_, _args);
+	if (status < 1) {
+		goto done;
+	}
 
-	alif_memoryInit();
+	status = alif_initFromConfig(&config_);
+	if (status < 1) {
+		goto done;
+	}
 
-	alifArgv_asWStrList(&config_, _args);
+	status = 1;
 
-	alif_initFromConfig(&config_);
-	_tempConfig_ = config_;
+done:
+	return status;
 }
 
 
@@ -55,7 +79,9 @@ int alif_runMain()
 {
 	int exitCode = 0;
 
-	AlifConfig config_ = _tempConfig_;
+	AlifInterpreter* interpreter = alifInterpreter_get();
+
+	AlifConfig config_ = interpreter->config;
 
 	if (config_.runCommand) {
 		//exitcode = alifMain_runCommand(config_->runCommand);
@@ -66,7 +92,7 @@ int alif_runMain()
 	else if (config_.runFilename != nullptr) {
 		exitCode = alifMain_runFile(&config_);
 	}
-	else {	
+	else {
 		//exitcode = alifMain_runStdin(config_);
 	}
 
@@ -95,7 +121,7 @@ int alif_mainBytes(int _argc, char** _argv) {
 #ifdef _WINDOWS
 int wmain(int _argc, wchar_t** _argv)
 {
-	wchar_t* argsv[] = { (wchar_t*)L"alif", (wchar_t*)L"examle.alif" };
+	wchar_t* argsv[] = { (wchar_t*)L"alif", (wchar_t*)L"example.alif" };
 	alif_mainWchar(2, argsv);
 	return 0;
 }
@@ -106,3 +132,4 @@ int main(int _argc, char** _argv)
 	return alif_mainBytes(2, argsv);
 }
 #endif
+

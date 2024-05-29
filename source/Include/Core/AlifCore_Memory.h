@@ -117,8 +117,8 @@ public:
 extern AlifMemory _alifMem_;
 
 
-void* alif_memoryInit();
-
+void* alif_mainMemoryInit();
+AlifMemory* alif_memoryInit();
 
 
 inline void* alif_rawAlloc(AlifUSizeT);
@@ -135,8 +135,7 @@ void* alifMem_objRealloc(void*, AlifUSizeT);
 void* alifMem_dataRealloc(void*, AlifUSizeT);
 
 
-
-
+AlifIntT alifInterpreterMem_init(AlifInterpreter*);
 
 const void alif_getMemState();
 

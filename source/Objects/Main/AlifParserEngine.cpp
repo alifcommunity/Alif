@@ -1,4 +1,4 @@
-#include "alif.h"
+﻿#include "alif.h"
 
 //#include "AlifCore_AST.h"
 //#include "AlifCore_AlifTokenState.h"
@@ -388,7 +388,7 @@ Module* alifParser_astFromFile(FILE* _fp, AlifObject* _fn, int _startRule, AlifA
 	if (p == nullptr) goto end;
 
 	result = (Module*)alifParserEngine_runParser(p);
-	alifParserEngine_parserFree(p);
+	//alifParserEngine_parserFree(p); // يحتاج إختبار وتصحيح
 
 end:
 	//alifTokenizer_Free(tokInfo);

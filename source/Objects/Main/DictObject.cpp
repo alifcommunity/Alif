@@ -153,6 +153,46 @@ AlifObject* dict_getItem(AlifObject* dict, AlifObject* key) {
 
 }
 
+int alifDict_getItemRefKnownHash(AlifObject* op, AlifObject* key, size_t hash, AlifObject** result)
+{
+	AlifDictObject* mp = (AlifDictObject*)op;
+
+	AlifObject* value;
+#ifdef ALIF_GIL_DISABLED
+	size_t ix = alifSub_dict_lookup_threadsafe(mp, key, hash, &value);
+#else
+	size_t ix = dict_lookupItem(mp, key, hash, &value);
+#endif
+	if (value == NULL) {
+		*result = NULL;
+		return 0;  // missing key
+	}
+#ifdef ALIF_GIL_DISABLED
+	* result = value;
+#else
+	* result = ALIF_NEWREF(value);
+#endif
+	return 1;  // key is present
+}
+
+int alifDict_getItemRef(AlifObject* op, AlifObject* key, AlifObject** result)
+{
+	if (!(op->type_ == &typeDict)) {
+		*result = NULL;
+		return -1;
+	}
+
+	size_t hash;
+	if (key->type_ == &_typeUnicode_) {
+		hash = ((AlifUStrObject*)key)->hash;
+	}
+	else {
+		hash = alifObject_hash(key);
+	}
+
+	return alifDict_getItemRefKnownHash(op, key, hash, result);
+}
+
 bool dict_contain(AlifObject* dict, AlifObject* key) {
 
     AlifDictObject* dictObj = (AlifDictObject*)dict;
@@ -270,7 +310,7 @@ bool dict_next(AlifObject* dict, int64_t * posPos, AlifObject** posKey, AlifObje
 
 }
 
-AlifObject* _alifDict_pop_knownHash(AlifObject* dict, AlifObject* key, size_t hash, AlifObject* deflt)
+AlifObject* alifDict_popKnownHash(AlifObject* dict, AlifObject* key, size_t hash, AlifObject* deflt)
 {
     int64_t ix;
     AlifObject* old_value;
@@ -313,7 +353,7 @@ AlifObject* _alifDict_pop(AlifObject* dict, AlifObject* key, AlifObject* deflt)
         if (hash == -1)
             return NULL;
     }
-    return _alifDict_pop_knownHash(dict, key, hash, deflt);
+    return alifDict_popKnownHash(dict, key, hash, deflt);
 }
 
 

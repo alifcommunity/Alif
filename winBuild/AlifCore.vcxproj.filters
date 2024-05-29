@@ -26,9 +26,6 @@
     <ClInclude Include="..\source\Include\Core\AlifCore_Memory.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\Include\Core\AlifCore_Runtime.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\Include\Core\AlifCore_AlifRun.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
@@ -75,6 +72,39 @@
       <Filter>Header Core Files</Filter>
     </ClInclude>
     <ClInclude Include="..\source\Include\Core\AlifCore_FileUtils.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_AlifThread.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_LList.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_Time.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_DureRun.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_DureRunInit.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_CondVar.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_GlobalLock.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_Lock.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_AlifState.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_Interpreter.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_Import.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -13,18 +13,24 @@ public:
 class AlifDictObject{
 public:
 
-	ALIFOBJECT_HEAD
+	ALIFOBJECT_HEAD;
 
-	int64_t size_;
-	int64_t capacity_;
-	AlifDictValues* items_;
+	AlifSizeT size_{};
+	AlifSizeT capacity_{};
+	AlifDictValues* items_{};
 };
+
+
+
+#define ALIFDICT_GET_SIZE(_op) (((AlifDictObject*)_op)->size_)
+
 
 extern AlifInitObject typeDict;
 
 AlifObject* alifNew_dict();
 AlifDictObject* deleteItem_fromIndex(AlifDictObject*, int64_t);
 AlifDictObject* dict_deleteItem(AlifDictObject*, AlifObject*);
+int alifDict_getItemRef(AlifObject*, AlifObject*, AlifObject**);
 bool dict_next(AlifObject*, int64_t*, AlifObject**, AlifObject**, size_t*);
 AlifDictObject* dict_setItem(AlifDictObject* , AlifObject*, AlifObject* );
 AlifDictObject* dict_ass_sub(AlifDictObject*, AlifObject*, AlifObject*);

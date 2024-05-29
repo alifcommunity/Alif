@@ -25,7 +25,7 @@
         (_size)                         \
     } \
 
-#define ALIFObject_VAR_HEAD		AlifVarObject _base_;
+#define ALIFOBJECT_VAR_HEAD		AlifVarObject _base_;
 #define Alif_INVALID_SIZE (int64_t) - 1
 
 class AlifObject {
@@ -225,13 +225,15 @@ static inline AlifObject* alifSub_xNewRef(AlifObject* _obj)
 #define ALIF_XNEWREF(_obj) alifSub_xNewRef(ALIFSUBOBJECT_CAST(_obj))
 
 extern AlifObject _alifNoneStruct_;
-
 #define ALIF_NONE (&_alifNoneStruct_)
 
 int alif_isNone(AlifObject*);
 #define ALIF_ISNONE(_x) ALIF_IS((_x), ALIF_NONE)
 
 #define ALIF_RETURN_NONE return ALIF_NONE
+
+extern AlifObject _alifNotImplemented_;
+#define ALIF_NOTIMPLEMENTED (&_alifNotImplemented_)
 
 /* comparison opcodes */
 #define ALIF_LT 0
@@ -341,7 +343,7 @@ typedef AlifObject* (*AlifCFunction)(AlifObject*, AlifObject*);
 class AlifInitObject {
 public:
 
-	ALIFObject_VAR_HEAD;
+	ALIFOBJECT_VAR_HEAD;
 	const wchar_t* name_;
 	size_t basicSize, itemsSize;
 

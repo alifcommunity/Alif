@@ -29,6 +29,9 @@
     <ClInclude Include="..\source\Include\Main\AlifParserEngine.h" />
     <ClInclude Include="..\source\Include\Main\AlifPort.h" />
     <ClInclude Include="..\source\Include\Main\AlifRun.h" />
+    <ClInclude Include="..\source\Include\Main\AlifState.h" />
+    <ClInclude Include="..\source\Include\Main\AlifThread.h" />
+    <ClInclude Include="..\source\Include\Main\AlifTime.h" />
     <ClInclude Include="..\source\Include\Main\AlifTokenState.h" />
     <ClInclude Include="..\source\Include\Main\AlifTypeDefs.h" />
     <ClInclude Include="..\source\Include\Main\BoolObject.h" />
@@ -43,6 +46,7 @@
     <ClInclude Include="..\source\Include\Main\FloatObject.h" />
     <ClInclude Include="..\source\Include\Main\FunctionObject.h" />
     <ClInclude Include="..\source\Include\Main\Helpers.h" />
+    <ClInclude Include="..\source\Include\Main\Import.h" />
     <ClInclude Include="..\source\Include\Main\InitConfig.h" />
     <ClInclude Include="..\source\Include\Main\IntegerObject.h" />
     <ClInclude Include="..\source\Include\Main\IterObject.h" />
@@ -53,6 +57,7 @@
     <ClInclude Include="..\source\Include\Main\SliceObject.h" />
     <ClInclude Include="..\source\Include\Main\Split.h" />
     <ClInclude Include="..\source\Include\Main\StringParser.h" />
+    <ClInclude Include="..\source\Include\Main\Thread_nt.h" />
     <ClInclude Include="..\source\Include\Main\Tokenizer.h" />
     <ClInclude Include="..\source\Include\Main\TupleObject.h" />
     <ClInclude Include="..\source\Include\Main\UStrObject.h" />
@@ -66,6 +71,8 @@
     <ClCompile Include="..\source\Objects\Main\AlifParser.cpp" />
     <ClCompile Include="..\source\Objects\Main\AlifParserEngine.cpp" />
     <ClCompile Include="..\source\Objects\Main\AlifParserEngineErrors.cpp" />
+    <ClCompile Include="..\source\Objects\Main\AlifState.cpp" />
+    <ClCompile Include="..\source\Objects\Main\AlifTime.cpp" />
     <ClCompile Include="..\source\Objects\Main\AlifToken.cpp" />
     <ClCompile Include="..\source\Objects\Main\AlifTokenState.cpp" />
     <ClCompile Include="..\source\Objects\Main\ASDL.cpp" />
@@ -73,6 +80,7 @@
     <ClCompile Include="..\source\Objects\Main\BytesMethods.cpp" />
     <ClCompile Include="..\source\Objects\Main\BytesObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\Call.cpp" />
+    <ClCompile Include="..\source\Objects\Main\ConfigMinimal.cpp" />
     <ClCompile Include="..\source\Objects\Main\DictObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\FileObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\FileTokenizer.cpp" />
@@ -80,12 +88,14 @@
     <ClCompile Include="..\source\Objects\Main\FunctionObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\GetArgs.cpp" />
     <ClCompile Include="..\source\Objects\Main\GetVersion.cpp" />
+    <ClCompile Include="..\source\Objects\Main\Import.cpp" />
     <ClCompile Include="..\source\Objects\Main\IntegerObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\IterObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\ListObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\MethodObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\SliceObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\StringParser.cpp" />
+    <ClCompile Include="..\source\Objects\Main\Thread.cpp" />
     <ClCompile Include="..\source\Objects\Main\TupleObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\TypeObject.cpp" />
   </ItemGroup>

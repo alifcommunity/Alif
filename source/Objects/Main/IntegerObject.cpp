@@ -137,7 +137,7 @@ int64_t alifOS_strToLong(const wchar_t* _str) {
 
 }
 
-AlifObject* alifInteger_fromSize_t(size_t _value, bool _sign) {
+AlifObject* alifInteger_fromSizeT(size_t _value, bool _sign) {
 
 	return (AlifObject*)alifNew_integer(_value, _sign);
 
@@ -171,7 +171,7 @@ AlifObject* alifInteger_fromDouble(long double _value) {
 	return (AlifObject*)alifNew_integer(digits_, sign_);
 }
 
-size_t alifInteger_asSize_t(AlifObject* _object) {
+size_t alifInteger_asSizeT(AlifObject* _object) {
 
 	if (_object == nullptr) {
 		std::wcout << L"لا يوحد كائن رقم لارجاع قيمة\n" << std::endl;
@@ -234,7 +234,7 @@ AlifIntegerObject* add(AlifIntegerObject* _a, AlifIntegerObject* _b)
 
 	result_->digits_ = _a->digits_ + _b->digits_;
 
-	if (result_->digits_ < _a->digits_ || result_->digits_ < _b->digits_) {
+	if (result_->digits_ < _a->digits_ or result_->digits_ < _b->digits_) {
 
 		std::wcout << L"ناتج جمع رقمين اكبر من المتوقع\n" << std::endl;
 		exit(-1);
@@ -523,7 +523,7 @@ static AlifObject* int___sizeof__(AlifObject* _self) {
 
 	size_ = sizeof(AlifIntegerObject);
 
-	return alifInteger_fromSize_t(size_, true);
+	return alifInteger_fromSizeT(size_, true);
 
 }
 

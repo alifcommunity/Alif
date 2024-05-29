@@ -1,5 +1,6 @@
 #pragma once
 
+#define ALIF_ABS(x) ((x) < 0 ? -(x) : (x))
 
 #define ALIF_WCHARMASK(wc) ((wchar_t)((wc) & 0xffff)) 
 
@@ -23,6 +24,7 @@
 #endif
 
 
-
+#define ALIFSUB_CONTAINER_OF(_ptr, _type, _member) \
+    (_type*)((char*)_ptr - offsetof(_type, _member))
 
 #define ALIF_RVALUE(expr) ((void)0, (expr))
