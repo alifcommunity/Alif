@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AlifCore_Memory.h"
-
+#include "AlifCore_GC.h"
 
 
 
@@ -46,6 +46,8 @@ public:
 
 	class AlifDureRun* dureRun{};
 	AlifConfig config{};
+
+	AlifGCDureRun gc{};
 
 
 	AlifMemory* memory_{};

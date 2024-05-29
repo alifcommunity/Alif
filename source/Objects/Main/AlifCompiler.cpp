@@ -2,6 +2,7 @@
 
 
 #include "AlifCore_AST.h"
+#include "AlifCore_OpCodeUtils.h"
 #include "AlifCore_Compile.h"
 #include "AlifCore_InstructionSeq.h"
 #include "AlifCore_AlifState.h"
@@ -65,7 +66,10 @@ public:
 	AlifASTMem* astMem{};
 };
 
-#define CAPSULE_NAME "AlifCompile.cpp AlifCompiler Unit" // 377
+#define INSTR_SEQUANCE(_c) (_c->unit->uInstrSequence)
+
+
+#define CAPSULE_NAME L"AlifCompile.cpp AlifCompiler Unit" // 377
 
 static AlifObject* list_toDict(AlifObject* _list) { // 485
 
@@ -163,6 +167,84 @@ static AlifSizeT dict_addObject(AlifObject* _dict, AlifObject* _obj) { // 830
 	ALIF_DECREF(v);
 	return arg;
 }
+
+static AlifIntT compiler_setQualName(AlifCompiler* _compiler) { // 608
+
+	AlifSizeT stackSize = ALIFLIST_GET_SIZE(_compiler->stack);
+	CompilerUnit* cu = _compiler->unit;
+	AlifObject* name{}, * base = nullptr;
+
+	if (stackSize > 1) {
+		AlifIntT scope{};
+		AlifIntT forceGlobal = 0;
+		AlifObject* mangled{};
+
+		AlifObject* capsule = ALIFLIST_GET_ITEM(_compiler->stack, stackSize - 1);
+		CompilerUnit* parent = (CompilerUnit*)alifCapsule_getPointer(capsule, CAPSULE_NAME);
+
+		if (cu->uScopeType == Compiler_Scope_Function
+			or cu->uScopeType == Compiler_Scope_AsyncFunction
+			or cu->uScopeType == Compiler_Scope_Class) {
+			mangled = alif_mangle(parent->uPrivate, cu->uData.name);
+			if (!mangled) return -1;
+
+			scope = alifST_getScope(parent->uSTE, mangled);
+			ALIF_DECREF(mangled);
+			if (scope == GLOBAL_EXPLICIT) forceGlobal = 1;
+		}
+
+		if (!forceGlobal) {
+			if (parent->uScopeType == Compiler_Scope_Function
+				or parent->uScopeType == Compiler_Scope_AsyncFunction)
+			{
+				//ALIF_DECLARE_STR(dotLocal, L".<locals>");
+				AlifObject* name1 = alifUnicode_decodeStringToUTF8(L"dotLocals");
+				base = alifUStr_concat(parent->uData.qualName, name1);
+				if (base == nullptr) return -1;
+			}
+			else {
+				base = ALIF_NEWREF(parent->uData.qualName);
+			}
+		}
+
+	}
+
+	if (base != nullptr) {
+		//ALIF_DECLARE_STR(dot, L".");
+		AlifObject* name2 = alifUnicode_decodeStringToUTF8(L"dot");
+		name = alifUStr_concat(base, name2);
+		ALIF_DECREF(base);
+		if (name == nullptr) return -1;
+		alifUStr_append(&name, cu->uData.name);
+		if (name == nullptr) return -1;
+	}
+	else {
+		name = ALIF_NEWREF(cu->uData.name);
+	}
+	cu->uData.qualName = name;
+
+	return 1;
+}
+
+
+
+static AlifIntT codeGen_addOpI(InstructionSequance* _seq,
+	AlifIntT _opCode, AlifSizeT _opArg, SourceLocation _loc) { // 1047
+
+	AlifIntT opArg = (AlifIntT)_opArg;
+	return alifInstructionSequance_addOp(_seq, _opCode, opArg, _loc);
+}
+
+
+#define ADDOP_I(_c, _loc, _op, _o)	\
+	do {	\
+		if (codeGen_addOpI(INSTR_SEQUANCE(_c), _op, _o, _loc) == -1) {		\
+			return -1;		\
+		}	\
+	} while (0);		
+
+
+
 
 static AlifIntT compiler_setup(AlifCompiler* _compiler, Module* _module,
 	AlifObject* _fn, AlifIntT _optimize, AlifASTMem* _astMem) { // 380
