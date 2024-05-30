@@ -356,11 +356,45 @@ static int set_update_local(AlifSetObject* _so, AlifObject* _other)
     return set_update_iterable_lock_held(_so, _other);
 }
 
+//AlifObject* alifSubType_AllocNoTrack(AlifTypeObject* type, int64_t nitems)
+//{
+//	AlifObject* obj;
+//
+//	size_t size = alifSubObject_varSize(type, nitems + 1);
+//
+//	const size_t presize = _Type_PreHeaderSize(type);
+//	if (type->flags_ & ALIF_TPFLAGS_INLINE_VALUES) {
+//		size += _InlineValuesSize(type);
+//	}
+//	char* alloc = _Object_MallocWithType(type, size + presize);
+//	if (alloc == NULL) {
+//		return nullptr;
+//	}
+//	obj = (AlifObject*)(alloc + presize);
+//	if (presize) {
+//		((AlifObject**)alloc)[0] = NULL;
+//		((AlifObject**)alloc)[1] = NULL;
+//	}
+//	memset(obj, '\0', size);
+//
+//	if (type->itemsSize == 0) {
+//		alifSubObject_init(obj, type);
+//	}
+//	else {
+//		alifSubObject_initVar((AlifVarObject*)obj, type, nitems);
+//	}
+//	if (type->flags_ & ALIF_TPFLAGS_INLINE_VALUES) {
+//		alifSubObject_initInlineValues(obj, type);
+//	}
+//	return obj;
+//}
+
 static AlifObject* make_new_set(AlifTypeObject* _type, AlifObject* _iterable)
 {
 	AlifSetObject* so_{};
 
-	so_ = (AlifSetObject*)(_type->alloc_(_type, 0));
+	//so_ = (AlifSetObject*)(_type->alloc_(_type, 0));
+	so_ = (AlifSetObject*)alifMem_objAlloc(alifSubObject_varSize(&_alifSetType_, 1));
     if (so_ == nullptr)
         return nullptr;
 
