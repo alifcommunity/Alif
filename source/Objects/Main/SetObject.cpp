@@ -393,11 +393,12 @@ static AlifObject* make_new_set(AlifTypeObject* _type, AlifObject* _iterable)
 {
 	AlifSetObject* so_{};
 
-	//so_ = (AlifSetObject*)(_type->alloc_(_type, 0));
+	//so_ = (AlifSetObject*)(_type->alloc_(_type, 0)); // need fix
 	so_ = (AlifSetObject*)alifMem_objAlloc(alifSubObject_varSize(&_alifSetType_, 1));
     if (so_ == nullptr)
         return nullptr;
 
+	so_->_base_.type_ = &_alifSetType_; // need review
     so_->fill_ = 0;
     so_->used_ = 0;
     so_->mask_ = ALIFSET_MINSIZE - 1;
