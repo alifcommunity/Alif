@@ -58,14 +58,14 @@ int slice_getIndices(AlifSliceObject* object, int64_t length,
         *step_ = 1;
     }
     else {
-        if (!(object->step_->type_ == &_typeInteger_)) return -1;
+        if (!(object->step_->type_ == &_alifIntegerType_)) return -1;
         *step_ = alifInteger_asLongLong(object->step_);
     }
     if (object->start_ == ALIF_NONE) {
         *start_ = *step_ < 0 ? length - 1 : 0;
     }
     else {
-        if (!(object->start_->type_ == &_typeInteger_)) return -1;
+        if (!(object->start_->type_ == &_alifIntegerType_)) return -1;
         *start_ = alifInteger_asLongLong(object->start_);
         if (*start_ < 0) *start_ += length;
     }
@@ -73,7 +73,7 @@ int slice_getIndices(AlifSliceObject* object, int64_t length,
         *stop_ = *step_ < 0 ? -1 : length;
     }
     else {
-        if (!(object->stop_->type_ == &_typeInteger_)) return -1;
+        if (!(object->stop_->type_ == &_alifIntegerType_)) return -1;
         *stop_ = alifInteger_asLongLong(object->stop_);
         if (*stop_ < 0) *stop_ += length;
     }

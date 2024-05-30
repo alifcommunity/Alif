@@ -29,9 +29,9 @@ public:
 	void* UTF;
 };
 
-extern AlifInitObject _typeUnicode_;
+extern AlifInitObject _alifUStrType_;
 
-#define ALIFUNICODE_CHECK_TYPE(_op) ALIF_IS_TYPE((_op), &_typeUnicode_)
+#define ALIFUNICODE_CHECK_TYPE(_op) ALIF_IS_TYPE((_op), &_alifUStrType_)
 
 #define ALIFUNICODE_CAST(unicode) ((AlifUStrObject*)(unicode))
 

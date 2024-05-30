@@ -101,7 +101,7 @@ AlifIntT dict_setItem(AlifDictObject* _dict, AlifObject* _key, AlifObject* _valu
     AlifObject* oldValue;
     size_t hash;
 
-    if (_key->type_ == &_typeUnicode_) {
+    if (_key->type_ == &_alifUStrType_) {
         hash = ((AlifUStrObject*)_key)->hash;
     }
     else {
@@ -138,7 +138,7 @@ AlifObject* dict_getItem(AlifObject* dict, AlifObject* key) {
     AlifObject* value;
 
     size_t hash;
-    if (key->type_ == &_typeUnicode_) {
+    if (key->type_ == &_alifUStrType_) {
         hash = ((AlifUStrObject*)key)->hash;
     }
     else {
@@ -181,7 +181,7 @@ int alifDict_getItemRef(AlifObject* op, AlifObject* key, AlifObject** result)
 	}
 
 	size_t hash;
-	if (key->type_ == &_typeUnicode_) {
+	if (key->type_ == &_alifUStrType_) {
 		hash = ((AlifUStrObject*)key)->hash;
 	}
 	else {
@@ -197,7 +197,7 @@ bool dict_contain(AlifObject* dict, AlifObject* key) {
 
     AlifObject* value;
     size_t hash;
-    if (key->type_ == &_typeUnicode_) {
+    if (key->type_ == &_alifUStrType_) {
         hash = ((AlifUStrObject*)key)->hash;
     }
     else {
@@ -256,7 +256,7 @@ AlifDictObject* deletItem_common(AlifDictObject* dict, size_t hash,
 AlifIntT dict_deleteItem(AlifDictObject* dict, AlifObject* key) {
 
     size_t hash;
-    if (key->type_ == &_typeUnicode_) {
+    if (key->type_ == &_alifUStrType_) {
         hash = ((AlifUStrObject*)key)->hash;
     }
     else {
@@ -297,7 +297,7 @@ bool dict_next(AlifObject* dict, int64_t * posPos, AlifObject** posKey, AlifObje
         *posValue = value.value;
     }
     if (posHash) {
-        if (value.key->type_ == &_typeUnicode_) {
+        if (value.key->type_ == &_alifUStrType_) {
             *posHash = ((AlifUStrObject*)value.key)->hash;
         }
         else {
@@ -346,7 +346,7 @@ AlifObject* _alifDict_pop(AlifObject* dict, AlifObject* key, AlifObject* deflt)
         }
         return NULL;
     }
-    if (!(key->type_ == &_typeUnicode_) || (hash = ((AlifUStrObject*)key)->hash) == 0) {
+    if (!(key->type_ == &_alifUStrType_) || (hash = ((AlifUStrObject*)key)->hash) == 0) {
         hash = alifObject_hash(key);
         if (hash == -1)
             return NULL;
@@ -362,7 +362,7 @@ static AlifObject* dict___contains__(AlifDictObject* self, AlifObject* key)
     int64_t ix;
     AlifObject* value;
 
-    if (!(key->type_ == &_typeUnicode_) || (hash = ((AlifUStrObject*)key)->hash) == 0) {
+    if (!(key->type_ == &_alifUStrType_) || (hash = ((AlifUStrObject*)key)->hash) == 0) {
         hash = alifObject_hash(key);
         if (hash == -1)
             return NULL;
@@ -402,7 +402,7 @@ static AlifObject* dict_get_impl(AlifDictObject* self, AlifObject* key, AlifObje
     size_t hash;
     int64_t ix;
 
-    if (!(key->type_ == &_typeUnicode_) || (hash = ((AlifUStrObject*)key)->hash) == 0) {
+    if (!(key->type_ == &_alifUStrType_) || (hash = ((AlifUStrObject*)key)->hash) == 0) {
         hash = alifObject_hash(key);
         if (hash == -1)
             return NULL;
@@ -618,7 +618,7 @@ AlifObject* alifDict_keys(AlifObject* _dict)
 AlifObject* dict_subscript(AlifDictObject* dict, AlifObject* key) {
 
     size_t hash;
-    if (key->type_ == &_typeUnicode_) {
+    if (key->type_ == &_alifUStrType_) {
         hash = ((AlifUStrObject*)key)->hash;
     }
     else {

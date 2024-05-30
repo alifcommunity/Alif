@@ -2,10 +2,20 @@
 
 #include "alifCore_UString.h"
 #include "AlifCore_Memory.h"
+#include "AlifCore_GlobalString.h"
 
 #ifdef _WINDOWS
 #include "windows.h"
 #endif // _WINDOWS
+
+
+//// Return a reference to the immortal empty string singleton.
+//static inline AlifObject* unicode_get_empty(void)
+//{
+//	_Py_DECLARE_STR(empty, "");
+//	return &ALIFSUB_STR(empty);
+//}
+
 
 static inline int alifSubUnicodeWriter_writeWcharInline(AlifSubUnicodeWriter*, uint32_t);
 
@@ -34,7 +44,6 @@ static inline void unicode_fill(int _kind, void* _data, uint32_t _value,
 
 static AlifObject* unicode_result(AlifObject* _unicode)
 {
-
 	int64_t length_ = ALIFUNICODE_GET_LENGTH(_unicode);
 	if (length_ == 0) {
 		//AlifObject* empty = unicode_get_empty();
@@ -49,7 +58,7 @@ static AlifObject* unicode_result(AlifObject* _unicode)
 
 static AlifObject* unicode_result_unchanged(AlifObject* _unicode)
 {
-	if ((_unicode->type_ == &_typeUnicode_)) {
+	if ((_unicode->type_ == &_alifUStrType_)) {
 		return ALIF_NEWREF(_unicode);
 	}
 	else
@@ -302,7 +311,7 @@ AlifObject* alifNew_uStr(size_t _size, uint8_t _maxChar) { /// M
 	}
 
 	obj = (AlifObject*)alifMem_objAlloc(structSize + (_size + 1) * charSize);
-	obj->type_ = &_typeUnicode_;
+	obj->type_ = &_alifUStrType_;
 
 	uStr = (AlifUStrObject*)obj;
 
@@ -344,7 +353,7 @@ AlifObject* alifNew_unicode(size_t size_, uint8_t maxChar) {
 	}
 
 	object = (AlifUStrObject*)alifMem_objAlloc(structSize + (size_ + 1) * kind);
-	((AlifObject*)object)->type_ = &_typeUnicode_;
+	((AlifObject*)object)->type_ = &_alifUStrType_;
 
 	object->hash = 0;
 	object->length = size_;
@@ -363,7 +372,7 @@ unicode_modifiable(AlifObject* _unicode)
 		return 0;
 	//if (UNICODE_CHECK_INTERNED(_unicode)) // من الممكن ان يضاف
 	//	return 0;
-	if (!(_unicode->type_ == &_typeUnicode_))
+	if (!(_unicode->type_ == &_alifUStrType_))
 		return 0;
 	return 1;
 }
@@ -582,7 +591,7 @@ AlifObject* alifSubUnicode_copy(AlifObject* _unicode)
 	int64_t length_;
 	AlifObject* copy_;
 
-	if (!(_unicode->type_ == &_typeUnicode_)) {
+	if (!(_unicode->type_ == &_alifUStrType_)) {
 		return NULL;
 	}
 
@@ -1568,7 +1577,7 @@ static const wchar_t* unicode_fromFormat_arg(AlifSubUnicodeWriter* _writer,
 
 const wchar_t* alifUnicode_asUTF8AndSize(AlifObject* _unicode, int64_t* _pSize)
 {
-	if (!(_unicode->type_ == &_typeUnicode_)) {
+	if (!(_unicode->type_ == &_alifUStrType_)) {
 		if (_pSize) {
 			*_pSize = -1;
 		}
@@ -1794,8 +1803,8 @@ int unicode_compare_eq(AlifObject* str1, AlifObject* str2)
 
 AlifObject* unicode_compare(AlifObject* left, AlifObject* right, int op) {
 
-	if (left->type_ != &_typeUnicode_ || 
-		right->type_ != &_typeUnicode_) {
+	if (left->type_ != &_alifUStrType_ || 
+		right->type_ != &_alifUStrType_) {
 		std::wcout << L"عمليه مقارنة النص غير صحيحة\n" << std::endl;
 		exit(-1);
 	}
@@ -1995,10 +2004,10 @@ AlifObject* alifUStr_concat(AlifObject* _left, AlifObject* _right)
 	AlifUCS4 maxChar, maxChar2;
 	int64_t leftLen, rightLen, newLen;
 
-	if (!(_left->type_ == &_typeUnicode_) )
+	if (!(_left->type_ == &_alifUStrType_) )
 		return NULL;
 
-	if (!(_right->type_ == &_typeUnicode_)) {
+	if (!(_right->type_ == &_alifUStrType_)) {
 		return NULL;
 	}
 
@@ -2040,7 +2049,7 @@ void alifUStr_append(AlifObject** _pLeft, AlifObject* _right)
 	}
 	left_ = *_pLeft;
 	if (_right == NULL || left_ == NULL
-		|| !(left_->type_ == &_typeUnicode_) || !(_right->type_ == &_typeUnicode_)) {
+		|| !(left_->type_ == &_alifUStrType_) || !(_right->type_ == &_alifUStrType_)) {
 		goto error;
 	}
 
@@ -2062,7 +2071,7 @@ void alifUStr_append(AlifObject** _pLeft, AlifObject* _right)
 	newLen = leftLen + rightLen;
 
 	if (unicode_modifiable(left_)
-		&& (_right->type_ == &_typeUnicode_)
+		&& (_right->type_ == &_alifUStrType_)
 		&& ALIFUNICODE_KIND(_right) <= ALIFUNICODE_KIND(left_))
 	{
 		if (unicode_resize(_pLeft, newLen) != 0)
@@ -2207,12 +2216,12 @@ static AlifObject* unicode_replace(AlifObject* self, AlifObject* const* args, in
 	if (!args) {
 		goto exit;
 	}
-	if (!(args[0]->type_ == &_typeUnicode_)) {
+	if (!(args[0]->type_ == &_alifUStrType_)) {
 		//_Arg_BadArgument("replace", "argument 1", "str", args[0]);
 		goto exit;
 	}
 	old = args[0];
-	if (!(args[1]->type_ == &_typeUnicode_)) {
+	if (!(args[1]->type_ == &_alifUStrType_)) {
 		//_Arg_BadArgument("replace", "argument 2", "str", args[1]);
 		goto exit;
 	}
@@ -2535,7 +2544,7 @@ static AlifObject* getItem_unicode(AlifObject* self, int64_t index)
 	int kind;
 	uint32_t ch;
 
-	if (!(self->type_ == &_typeUnicode_)) {
+	if (!(self->type_ == &_alifUStrType_)) {
 		//Err_BadArgument();
 		return nullptr;
 	}
@@ -2588,7 +2597,7 @@ AlifObject* alifUnicode_joinArray(AlifObject* separator, AlifObject* const* item
 	/* If singleton sequence with an exact Unicode, return that. */
 	last_obj = nullptr;
 	if (seqlen == 1) {
-		if (items[0]->type_ == &_typeUnicode_) {
+		if (items[0]->type_ == &_alifUStrType_) {
 			res = items[0];
 			return res;
 		}
@@ -2637,7 +2646,7 @@ AlifObject* alifUnicode_joinArray(AlifObject* separator, AlifObject* const* item
 	for (i = 0; i < seqlen; i++) {
 		size_t add_sz;
 		item = items[i];
-		if (!(item->type_ == &_typeUnicode_)) {
+		if (!(item->type_ == &_alifUStrType_)) {
 			//Err_Format(Exc_TypeError,
 				//"sequence item %zd: expected str instance,"
 				//" %.80s found",
@@ -2744,7 +2753,7 @@ int64_t alifUnicode_fill(AlifObject* _unicode, int64_t _start, int64_t _length,
 {
 	int64_t maxLen;
 
-	if (!(_unicode->type_ == &_typeUnicode_)) {
+	if (!(_unicode->type_ == &_alifUStrType_)) {
 		return -1;
 	}
 	if (unicode_check_modifiable(_unicode))
@@ -2910,7 +2919,7 @@ static AlifObject* unicode_splitImpl(AlifObject* self, AlifObject* sep, int64_t 
 {
 	if (sep == ALIF_NONE)
 		return split(self, nullptr, maxsplit);
-	if (sep->type_ == &_typeUnicode_)
+	if (sep->type_ == &_alifUStrType_)
 		return split(self, sep, maxsplit);
 	return nullptr;
 }
@@ -3130,7 +3139,7 @@ static AlifMappingMethods _unicodeAsMapping_ = {
 	(ObjObjArgProc)0, 
 };
 
-AlifTypeObject _typeUnicode_ = {
+AlifTypeObject _alifUStrType_ = {
 	0,
 	0,
 	0,

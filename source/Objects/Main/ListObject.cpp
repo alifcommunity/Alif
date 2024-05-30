@@ -1605,7 +1605,7 @@ static AlifObject* list_sort_impl(AlifListObject* _self, AlifObject* _keyFunc, i
 			}
 
 			if (keysAreAllSameType) {
-				if (keyType == &_typeInteger_ &&
+				if (keyType == &_alifIntegerType_ &&
 					intsAreBounded ) {
 					intsAreBounded = 0;
 				}
@@ -1614,7 +1614,7 @@ static AlifObject* list_sort_impl(AlifListObject* _self, AlifObject* _keyFunc, i
 
 		if (keysAreAllSameType) {
 
-			if (keyType == &_typeInteger_ && intsAreBounded) {
+			if (keyType == &_alifIntegerType_ && intsAreBounded) {
 				ms_.KeyCompare = unsafe_long_compare;
 			}
 			else if (keyType == &_typeFloat_) {

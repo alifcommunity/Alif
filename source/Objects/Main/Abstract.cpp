@@ -103,7 +103,7 @@ AlifObject* alifSubNumber_index(AlifObject* _item)
     //    return null_error();
     //}
 
-    if (_item->type_ == &_typeInteger_) {
+    if (_item->type_ == &_alifIntegerType_) {
         return ALIF_NEWREF(_item);
     }
     if (!(_item->type_->asNumber != nullptr && _item->type_->asNumber->index_)) {
@@ -114,11 +114,11 @@ AlifObject* alifSubNumber_index(AlifObject* _item)
     }
 
     AlifObject* result_ = ALIF_TYPE(_item)->asNumber->index_(_item);
-    if (!result_ || (result_->type_ == & _typeInteger_)) {
+    if (!result_ || (result_->type_ == & _alifIntegerType_)) {
         return result_;
     }
 
-    if (!(result_->type_ == &_typeInteger_)) {
+    if (!(result_->type_ == &_alifIntegerType_)) {
         //Err_Format(Exc_TypeError,
         //    "__index__ returned non-int (type %.200s)",
         //    _TYPE(result)->tp_name);
