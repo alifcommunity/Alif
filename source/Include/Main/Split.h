@@ -108,7 +108,7 @@ AlifObject* split_char(AlifObject* str_obj,
         }
     }
 #if !STRINGLIB_MUTABLE
-    if (count == 0 && (str_obj->type_ == &_typeUnicode_)) {
+    if (count == 0 && (str_obj->type_ == &_alifUStrType_)) {
         /* ch not in str_obj, so just use str_obj as list[0] */
         //_INCREF(str_obj);
         alifList_setItem(list, 0, (AlifObject*)str_obj);
@@ -157,7 +157,7 @@ AlifObject* split(AlifObject* str_obj,
         i = j + sep_len;
     }
 #if !STRINGLIB_MUTABLE
-    if (count == 0 && (str_obj->type_ == &_typeUnicode_)) {
+    if (count == 0 && (str_obj->type_ == &_alifUStrType_)) {
         /* No match in str_obj, so just use it as list[0] */
         //_INCREF(str_obj);
         alifList_setItem(list, 0, (AlifObject*)str_obj);

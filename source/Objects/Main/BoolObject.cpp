@@ -102,7 +102,7 @@ AlifInitObject typeBool = {
     0,                                         
     0,                                        
     0,                                        
-    &_typeInteger_,                           
+    &_alifIntegerType_,                           
     0,                                      
     0,                                         
     0,                                         

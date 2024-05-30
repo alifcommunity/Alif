@@ -25,8 +25,8 @@ static SetEntry* set_lookKey(AlifSetObject* _so, AlifObject* _key, size_t _hash)
                 AlifObject* startKey = entry_->key_;
                 if (startKey == _key)
                     return entry_;
-                if ((startKey->type_ == &_typeUnicode_)
-                    && (_key->type_ == &_typeUnicode_)
+                if ((startKey->type_ == &_alifUStrType_)
+                    && (_key->type_ == &_alifUStrType_)
                     && unicode_eq(startKey, _key))
                     return entry_;
                 table_ = _so->table_;
@@ -82,8 +82,8 @@ restart:
                 AlifObject* startkey = entry->key_;
                 if (startkey == _key)
                     goto found_active;
-                if ((startkey->type_ == &_typeUnicode_)
-                    && (_key->type_ == &_typeUnicode_)
+                if ((startkey->type_ == &_alifUStrType_)
+                    && (_key->type_ == &_alifUStrType_)
                     && unicode_eq(startkey, _key))
                     goto found_active;
                 table = _so->table_;
@@ -255,7 +255,7 @@ static int set_add_key(AlifSetObject* _so, AlifObject* _key)
 {
     size_t hash;
 
-    if (!(_key->type_ == &_typeUnicode_)) {
+    if (!(_key->type_ == &_alifUStrType_)) {
         hash = alifObject_hash(_key);
         if (hash == -1)
             return -1;
@@ -267,7 +267,7 @@ static int set_contains_key(AlifSetObject* _so, AlifObject* _key)
 {
     size_t hash_;
 
-    if (!(_key->type_ == &_typeUnicode_) 
+    if (!(_key->type_ == &_alifUStrType_) 
         //|| (hash_ = ALIFUNICODE_CAST(key)->hash) == -1
         ) {
         hash_ = alifObject_hash(_key);
@@ -281,7 +281,7 @@ static int set_discard_key(AlifSetObject* _so, AlifObject* _key)
 {
     size_t hash_;
 
-    if (!(_key->type_ == &_typeUnicode_)
+    if (!(_key->type_ == &_alifUStrType_)
         //||
         //(hash_ = ALIFUNICODE_CAST(_key)->hash_) == -1) 
         )     

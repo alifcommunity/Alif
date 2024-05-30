@@ -20,7 +20,7 @@ AlifIntegerObject* alifNew_integer(size_t _value, bool _sign) {
 
 	AlifIntegerObject* object_ = (AlifIntegerObject*)alifMem_objAlloc(sizeof(AlifIntegerObject));
 
-	alifSubObject_init((AlifObject*)object_,&_typeInteger_);
+	alifSubObject_init((AlifObject*)object_,&_alifIntegerType_);
 
 	object_->digits_ = _value;
 	object_->sign_ = _sign;
@@ -229,7 +229,7 @@ void flipSign(AlifIntegerObject* _num)
 
 static AlifIntegerObject* add(AlifIntegerObject* _a, AlifIntegerObject* _b)
 {
-	AlifIntegerObject* result_ = (AlifIntegerObject*)alifMem_objAlloc(sizeof(AlifIntegerObject));
+	AlifIntegerObject* result_ = alifNew_integer(0, true);
 	result_->sign_ = false;
 
 	result_->digits_ = _a->digits_ + _b->digits_;
@@ -245,7 +245,7 @@ static AlifIntegerObject* add(AlifIntegerObject* _a, AlifIntegerObject* _b)
 
 AlifIntegerObject* sub(AlifIntegerObject* _a, AlifIntegerObject* _b)
 {
-	AlifIntegerObject* result_ = (AlifIntegerObject*)alifMem_objAlloc(sizeof(AlifIntegerObject));
+	AlifIntegerObject* result_ = alifNew_integer(0, true);
 	result_->sign_ = false;
 
 	if (_a->digits_ >= _b->digits_) {
@@ -264,7 +264,7 @@ static AlifIntegerObject* number_add(AlifIntegerObject* _a, AlifIntegerObject* _
 {
 	if (_a->sign_ && _b->sign_) {
 
-		AlifIntegerObject* z_ = (AlifIntegerObject*)alifMem_objAlloc(sizeof(AlifIntegerObject));
+		AlifIntegerObject* z_ = alifNew_integer(0, true);
 
 		z_ = add(_a, _b);
 
@@ -294,7 +294,7 @@ static AlifIntegerObject* number_sub(AlifIntegerObject* _a, AlifIntegerObject* _
 
 static AlifIntegerObject* number_mul(AlifIntegerObject* _a, AlifIntegerObject* _b) {
 
-	AlifIntegerObject* z_ = (AlifIntegerObject*)alifMem_objAlloc(sizeof(AlifIntegerObject));
+	AlifIntegerObject* z_ = alifNew_integer(0, true);
 
 	if (_a->digits_ > 0 && _b->digits_ > UINT64_MAX / _a->digits_) {
 		std::wcout << L"ناتج ضرب رقمين اكبر من المتوقع\n" << std::endl;
@@ -316,7 +316,7 @@ static AlifIntegerObject* number_mul(AlifIntegerObject* _a, AlifIntegerObject* _
 
 static AlifIntegerObject* number_mod(AlifIntegerObject* _a, AlifIntegerObject* _b) {
 
-	AlifIntegerObject* z_ = (AlifIntegerObject*)alifMem_objAlloc(sizeof(AlifIntegerObject));
+	AlifIntegerObject* z_ = alifNew_integer(0, true);
 	z_->sign_ = true;
 
 	if (_a->digits_ > 0 && _b->digits_ > UINT64_MAX / _a->digits_) {
@@ -345,7 +345,7 @@ static AlifIntegerObject* number_pow(AlifIntegerObject* _a, AlifIntegerObject* _
 		exit(-1);
 	}
 
-	AlifIntegerObject* z_ = (AlifIntegerObject*)alifMem_objAlloc(sizeof(AlifIntegerObject));
+	AlifIntegerObject* z_ = alifNew_integer(0, true);
 
 	if (_b->digits_ == 0) {
 		z_->digits_ = 1;
@@ -373,7 +373,7 @@ static AlifIntegerObject* number_pow(AlifIntegerObject* _a, AlifIntegerObject* _
 
 static AlifIntegerObject* number_neg(AlifIntegerObject* _a) {
 
-	AlifIntegerObject* z_ = (AlifIntegerObject*)alifMem_objAlloc(sizeof(AlifIntegerObject));
+	AlifIntegerObject* z_ = alifNew_integer(0, true);
 
 	z_->_base_ = _a->_base_;
 	z_->digits_ = _a->digits_;
@@ -388,7 +388,7 @@ static AlifIntegerObject* number_abs(AlifIntegerObject* _a) {
 		return number_neg(_a);
 	}
 	else {
-		AlifIntegerObject* z_ = (AlifIntegerObject*)alifMem_objAlloc(sizeof(AlifIntegerObject));
+		AlifIntegerObject* z_ = alifNew_integer(0, true);
 
 		z_->_base_ = _a->_base_;
 		z_->digits_ = _a->digits_;
@@ -410,7 +410,7 @@ static bool number_bool(AlifIntegerObject* _a) {
 
 static AlifObject* integer_integer(AlifObject* _v)
 {
-	if (_v->type_ == &_typeInteger_) {
+	if (_v->type_ == &_alifIntegerType_) {
 		return ALIF_NEWREF(_v);
 	}
 	else {
@@ -602,7 +602,7 @@ static AlifNumberMethods _integerAsNumber_ = {
 	integer_integer,
 };
 
-AlifTypeObject _typeInteger_ = {
+AlifTypeObject _alifIntegerType_ = {
 	0,
 	0,
 	0,
