@@ -1,10 +1,11 @@
 #include "alif.h"
-
+#include "OpCode.h"
 
 #include "AlifCore_AST.h"
 #include "AlifCore_OpCodeUtils.h"
 #include "AlifCore_Compile.h"
 #include "AlifCore_InstructionSeq.h"
+#include "AlifCore_Intrinsics.h"
 #include "AlifCore_AlifState.h"
 #include "AlifCore_SymTable.h"
 
@@ -13,8 +14,11 @@
 // Forward
 class AlifCompiler;
 static AlifCodeObject* compiler_module(AlifCompiler*, Module*);
+static AlifIntT compiler_body(AlifCompiler*, SourceLocation, StmtSeq*);
 
+#define LOC(_a) {_a->lineNo, _a->endLineNo, _a->colOffset, _a->endColOffset}
 
+static const SourceLocation noLocation = {-1, -1, -1, -1};
 
 enum FBlockType {
 	WHILE_LOOP, FOR_LOOP, WITH, ASYNC_WITH, HANDLER_CLEANUP,
@@ -64,6 +68,7 @@ public:
 	AlifSymTable* symTable{};
 
 	AlifIntT optimize{};
+	AlifIntT interactive{};
 	AlifIntT nestLevel{};
 
 	CompilerUnit* unit{};
@@ -76,6 +81,37 @@ public:
 
 
 #define CAPSULE_NAME L"AlifCompile.cpp AlifCompiler Unit" // 377
+
+
+
+#define ADDOP(_c, _loc, _op) {if (codeGen_addOpNoArg(INSTR_SEQUANCE(_c), _op, _loc) == -1) return -1;}
+#define ADDOP_I(_c, _loc, _op, _o) { if (codeGen_addOpI(INSTR_SEQUANCE(_c), _op, _o, _loc) == -1) return -1;}
+#define ADDOP_BINARY(_c, _loc, _binOp) { if (addOp_binary(_c, _loc, _binOp, TRUE) == -1) return -1;}
+
+
+
+
+
+#define VISIT(_c, _type, _v) {if (compiler_visit ## _type(_c, _v) == -1) return -1;}
+
+
+static AlifIntT codeGen_addOpNoArg(InstructionSequance* _seq, AlifIntT _opCode, SourceLocation _loc) { // 822
+	return alifInstructionSequance_addOp(_seq, _opCode, 0, _loc);
+}
+
+
+static AlifIntT codeGen_addOpI(InstructionSequance* _seq,
+	AlifIntT _opCode, AlifSizeT _opArg, SourceLocation _loc) { // 1047
+
+	AlifIntT opArg = (AlifIntT)_opArg;
+	return alifInstructionSequance_addOp(_seq, _opCode, opArg, _loc);
+}
+
+
+
+
+
+
 
 static AlifObject* list_toDict(AlifObject* _list) { // 485
 
@@ -231,24 +267,6 @@ static AlifIntT compiler_setQualName(AlifCompiler* _compiler) { // 608
 
 	return 1;
 }
-
-
-
-static AlifIntT codeGen_addOpI(InstructionSequance* _seq,
-	AlifIntT _opCode, AlifSizeT _opArg, SourceLocation _loc) { // 1047
-
-	AlifIntT opArg = (AlifIntT)_opArg;
-	return alifInstructionSequance_addOp(_seq, _opCode, opArg, _loc);
-}
-
-
-#define ADDOP_I(_c, _loc, _op, _o)	\
-	do {	\
-		if (codeGen_addOpI(INSTR_SEQUANCE(_c), _op, _o, _loc) == -1) {		\
-			return -1;		\
-		}	\
-	} while (0);		
-
 
 
 
@@ -429,6 +447,25 @@ static AlifIntT compiler_enterAnonymousScope(AlifCompiler* _compiler, Module* _m
 	return 1;
 }
 
+static AlifIntT compiler_codeGenerate(AlifCompiler* _compiler, Module* _module) { // 1671
+
+	SourceLocation loc = {1, 1, 0, 0};
+	if (_module->type == ModType::ModuleK) {
+		if (compiler_body(_compiler, loc, _module->V.module.body) < 0) {
+			return -1;
+		}
+	}
+	else if (_module->type == ModType::InteractiveK) {
+
+	}
+	else {
+		// error
+		return -1;
+	}
+
+	return 1;
+}
+
 static AlifCodeObject* compiler_module(AlifCompiler* _compiler, Module* _module) { // 1710
 
 	AlifCodeObject* codeObject = nullptr;
@@ -439,9 +476,101 @@ static AlifCodeObject* compiler_module(AlifCompiler* _compiler, Module* _module)
 	if (compiler_codeGenerate(_compiler, _module) < 0) {
 		goto done;
 	}
-	codeObject = optimize_assemble(_compiler, addNone);
+	//codeObject = optimize_assemble(_compiler, addNone);
 
 done:
-	compiler_exitScope(_compiler);
+	//compiler_exitScope(_compiler);
 	return codeObject;
+}
+
+
+
+static AlifIntT addOp_binary(AlifCompiler* _compiler, SourceLocation _loc, Operator _binOp, BOOL _inPlace) { // 4122
+
+	AlifIntT opArg{};
+
+	if (_binOp == Operator::Add) {
+		opArg = _inPlace ? NB_INPLACE_ADD : NB_ADD;
+	}
+
+	ADDOP_I(_compiler, _loc, BINARY_OP, opArg);
+
+	return 1;
+}
+
+
+static AlifIntT compiler_visitExpression(AlifCompiler* _compiler, Expression* _expr) { // 6341
+
+	SourceLocation loc = LOC(_expr);
+	if (_expr->type == ExprType::BinOpK) {
+		VISIT(_compiler, Expression, _expr->V.binOp.left);
+		VISIT(_compiler, Expression, _expr->V.binOp.right);
+		ADDOP_BINARY(_compiler, loc, _expr->V.binOp.op);
+	}
+
+
+	return 1;
+}
+
+
+static AlifIntT compiler_stmtExpr(AlifCompiler* _compiler, SourceLocation _loc, Expression* _val) { // 3988
+
+	if (_compiler->interactive and _compiler->nestLevel <= 1) {
+		VISIT(_compiler, Expression, _val);
+		ADDOP_I(_compiler, _loc, CALL_INTRINSIC_1, INTRINSIC_PRINT);
+		ADDOP(_compiler, noLocation, POP_TOP);
+		return 1;
+	}
+
+	if (_val->type == ExprType::ConstantK) {
+		ADDOP(_compiler, _loc, NOP);
+		return 1;
+	}
+
+	VISIT(_compiler, Expression, _val);
+	ADDOP(_compiler, noLocation, POP_TOP);
+
+	return 1;
+}
+
+static AlifIntT compiler_visitStatement(AlifCompiler* _compiler, Statement* _stmt) { // 4009
+
+	if (_stmt->type == StmtType::ExprK) {
+		return compiler_stmtExpr(_compiler, LOC(_stmt), _stmt->V.expression.val);
+	}
+
+
+	return 1;
+}
+
+static AlifIntT compiler_body(AlifCompiler* _compiler, SourceLocation _loc, StmtSeq* _stmts) { // 1628
+
+	if (_compiler->unit->uScopeType == ScopeType::Compiler_Scope_Module and SEQ_LEN(_stmts)) {
+		Statement* stmt = (Statement*)SEQ_GET(_stmts, 0);
+		_loc = LOC(stmt);
+	}
+
+	if (!SEQ_LEN(_stmts)) return 1;
+
+	AlifSizeT firstInstr = 0;
+	AlifObject* docString = alifAST_getDocString(_stmts);
+	if (docString) {
+		firstInstr = 1;
+		//if (_compiler->optimize < 2) {
+		//	AlifObject* cleanDoc = alifCompile_cleanDoc(docString);
+		//	if (cleanDoc == nullptr) return -1;
+
+		//	Statement* stmt = (Statement*)SEQ_GET(_stmts, 0);
+		//	SourceLocation loc = LOC(stmt->V.expression.val);
+		//	ADDOP_LOAD_CONST(_compiler, loc, cleanDoc);
+		//	ALIF_DECREF(cleanDoc);
+		//	AlifObject* name = alifUnicode_decodeStringToUTF8(L"__doc__");
+		//	if (compiler_nameOp(_compiler, noLocation, name, ExprCTX::Store) == -1) return -1;
+		//}
+	}
+	for (AlifSizeT i = firstInstr; i < SEQ_LEN(_stmts); i++) {
+		VISIT(_compiler, Statement, (Statement*)SEQ_GET(_stmts, i));
+	}
+
+	return 1;
 }

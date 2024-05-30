@@ -339,7 +339,7 @@ static int set_update_iterable_lock_held(AlifSetObject* _so, AlifObject* _other)
 
 static int set_update_local(AlifSetObject* _so, AlifObject* _other)
 {
-    if ((_other->type_ == &_TypeSet_)) {
+    if ((_other->type_ == &_alifSetType_)) {
         int rv{};
         //ALIF_BEGIN_CRITICAL_SECTION(other);
         //rv = set_merge_lock_held(_so, _other);
@@ -358,9 +358,9 @@ static int set_update_local(AlifSetObject* _so, AlifObject* _other)
 
 static AlifObject* make_new_set(AlifTypeObject* _type, AlifObject* _iterable)
 {
-    AlifSetObject* so_;
+	AlifSetObject* so_{};
 
-    so_ = (AlifSetObject*)_type->alloc_(_type, 0);
+	so_ = (AlifSetObject*)(_type->alloc_(_type, 0));
     if (so_ == nullptr)
         return nullptr;
 
@@ -384,7 +384,7 @@ static AlifObject* make_new_set(AlifTypeObject* _type, AlifObject* _iterable)
 
 
 
-AlifTypeObject _TypeSet_ = {
+AlifTypeObject _alifSetType_ = {
     0,
     0,
     0,
@@ -432,12 +432,12 @@ AlifTypeObject _TypeSet_ = {
 
 AlifObject* alifNew_set(AlifObject* _iterable)
 {
-    return make_new_set(&_TypeSet_, _iterable);
+    return make_new_set(&_alifSetType_, _iterable);
 }
 
 int alifSet_discard(AlifObject* _set, AlifObject* _key)
 {
-    if (!(_set->type_ == &_TypeSet_)) {
+    if (!(_set->type_ == &_alifSetType_)) {
         return -1;
     }
 
@@ -450,7 +450,7 @@ int alifSet_discard(AlifObject* _set, AlifObject* _key)
 
 int alifSet_contains(AlifObject* _anySet, AlifObject* _key)
 {
-    if (!(_anySet->type_ == &_TypeSet_)) {
+    if (!(_anySet->type_ == &_alifSetType_)) {
         return -1;
     }
 
@@ -463,7 +463,7 @@ int alifSet_contains(AlifObject* _anySet, AlifObject* _key)
 
 int alifSet_add(AlifObject* _anySet, AlifObject* _key)
 {
-    if (!(_anySet->type_ == &_TypeSet_) &&
+    if (!(_anySet->type_ == &_alifSetType_) &&
         ( ALIF_REFCNT(_anySet) != 1)) {
         return -1;
     }

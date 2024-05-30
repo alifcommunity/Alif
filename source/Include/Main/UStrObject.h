@@ -73,6 +73,7 @@ static inline uint32_t alifUnicode_read_wchar(AlifObject* _unicode, int64_t _ind
 } 
 
 AlifObject* alifNew_uStr(size_t, uint8_t);
+AlifObject* alifNew_unicode(size_t, uint8_t);
 AlifObject* alifUnicode_decodeStringToUTF8(const wchar_t*);
 AlifSizeT alifUnicode_copyCharacters(AlifObject*, AlifSizeT, AlifObject*, AlifSizeT, AlifSizeT);
 uint8_t find_maxChar(const wchar_t* str);
@@ -80,7 +81,7 @@ size_t hash_unicode(AlifObject*);
 static AlifObject* alifUnicode_fromUint16(const uint16_t*, int64_t);
 static AlifObject* alifUnicode_fromUint32(const uint32_t*, int64_t);
 AlifObject* alifUStr_decodeUTF8Stateful(const wchar_t*, size_t, const wchar_t*, size_t*);
-AlifObject* alifUStr_concat(AlifObject* , AlifObject* );
+AlifObject* alifUStr_concat(AlifObject*, AlifObject*);
 void alifUStr_append(AlifObject** , AlifObject* );
 // in file eq.h
 int unicode_eq(AlifObject*, AlifObject*);

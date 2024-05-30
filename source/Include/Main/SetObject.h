@@ -1,7 +1,7 @@
 #pragma once
 
 
-extern AlifTypeObject _TypeSet_;
+extern AlifTypeObject _alifSetType_;
 
 AlifObject* alifNew_set(AlifObject*);
 

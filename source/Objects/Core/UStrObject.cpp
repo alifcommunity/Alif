@@ -16,8 +16,10 @@
 //	return &ALIFSUB_STR(empty);
 //}
 
-
+// Forward
 static inline int alifSubUnicodeWriter_writeWcharInline(AlifSubUnicodeWriter*, uint32_t);
+static int alifSubUnicode_fastCopyCharacters(AlifObject* to, int64_t toStart, AlifObject* from, int64_t fromStart, int64_t howMany, int checkMaxChar);
+
 
 static inline void unicode_fill(int _kind, void* _data, uint32_t _value,
 	int64_t _start, int64_t _length)
