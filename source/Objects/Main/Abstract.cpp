@@ -96,6 +96,55 @@ AlifObject* alifNumber_add(AlifObject* _x, AlifObject* _y) { // 1138
 	return nullptr; // temp
 }
 
+static AlifObject* binary_iop1(AlifObject* _v, AlifObject* _w, const int _iOpSlot, const int _opSlot
+#ifndef NDEBUG
+	, const wchar_t* _opName
+#endif
+)
+{
+	AlifNumberMethods* mv_ = ALIF_TYPE(_v)->asNumber;
+	if (mv_ != NULL) {
+		BinaryFunc slot_ = NB_BINOP(mv_, _iOpSlot);
+		if (slot_) {
+			AlifObject* x = (slot_)(_v, _w);
+			if (x != ALIF_NOTIMPLEMENTED) {
+				return x;
+			}
+			ALIF_DECREF(x);
+		}
+	}
+#ifdef NDEBUG
+	return binary_op1(_v, _w, _opSlot);
+#else
+	return binary_op1(_v, _w, _opSlot, _opName);
+#endif
+}
+
+#ifdef NDEBUG
+#  define BINARY_IOP1(v, w, iop_slot, op_slot, op_name) binary_iop1(v, w, iop_slot, op_slot)
+#else
+#  define BINARY_IOP1(v, w, iop_slot, op_slot, op_name) binary_iop1(v, w, iop_slot, op_slot, op_name)
+#endif
+
+static AlifObject* binary_iop(AlifObject* _v, AlifObject* _w, const int _iOpSlot, const int _opSlot,
+	const wchar_t* _opName)
+{
+	AlifObject* result_ = BINARY_IOP1(_v, _w, _iOpSlot, _opSlot, _opName);
+	if (result_ == ALIF_NOTIMPLEMENTED) {
+		ALIF_DECREF(result_);
+		return nullptr; // سيتم تعجديلها لاحقا عندما يتم اضافة تحقق من الاخطاء
+		//return binop_type_error(_v, _w, _opName);
+	}
+	return result_;
+}
+
+#define INPLACE_BINOP(func, iop, op, op_name) \
+    AlifObject * \
+    func(AlifObject *v, AlifObject *w) { \
+        return binary_iop(v, w, NB_SLOT(iop), NB_SLOT(op), op_name); \
+    }
+
+INPLACE_BINOP(alifInteger_inPlaceOr, inplaceOr, orLogic, L"|=")
 
 AlifObject* alifSubNumber_index(AlifObject* _item)
 {
