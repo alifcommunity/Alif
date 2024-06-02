@@ -5,6 +5,14 @@
 #define LINEAR_PROBES 9
 #define PERTURB_SHIFT 5
 
+
+
+// Forward
+static int set_table_resize(AlifSetObject*, int64_t);
+static AlifObject* set_copy(AlifSetObject*, AlifObject*);
+
+
+
 static SetEntry* set_lookKey(AlifSetObject* _so, AlifObject* _key, size_t _hash)
 {
 	SetEntry* table_;
@@ -48,7 +56,6 @@ static SetEntry* set_lookKey(AlifSetObject* _so, AlifObject* _key, size_t _hash)
 	}
 }
 
-static int set_table_resize(AlifSetObject*, int64_t);
 
 static int set_add_entry(AlifSetObject* _so, AlifObject* _key, size_t _hash)
 {
