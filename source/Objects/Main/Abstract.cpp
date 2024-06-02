@@ -104,7 +104,7 @@ static AlifObject* binary_iop1(AlifObject* _v, AlifObject* _w, const int _iOpSlo
 {
 	AlifNumberMethods* mv_ = ALIF_TYPE(_v)->asNumber;
 	if (mv_ != NULL) {
-		BinaryFunc slot_ = NB_BINOP(mv_, _iOpSlot);
+		BinaryFunc slot_ = NB_BINOP(mv_, (_iOpSlot / 2));
 		if (slot_) {
 			AlifObject* x = (slot_)(_v, _w);
 			if (x != ALIF_NOTIMPLEMENTED) {
