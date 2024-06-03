@@ -3,6 +3,10 @@
 #include "AlifCore_Memory.h"
 
 
+//static AlifObject _dummyStruct_;
+
+//#define dummy (&_dummyStruct_)
+
 #define SET_COPY_METHODDEF    \
     {L"copy", (AlifCFunction)set_copy, METHOD_NOARGS},
 
@@ -231,7 +235,7 @@ static int set_table_resize(AlifSetObject* _so, int64_t _minUsed)
 		_so->fill_ = _so->used_;
 		for (entry_ = oldTable; entry_ <= oldTable + oldMask; entry_++) {
 			if (entry_->key_ != nullptr
-				//&& entry_->key_ != dummy
+				&& entry_->key_ != dummy
 				) {
 				set_insert_clean(newTable, newMask, entry_->key_, entry_->hash_);
 			}
@@ -267,7 +271,7 @@ static int set_discard_entry(AlifSetObject* _so, AlifObject* _key, size_t _hash)
 	if (entry_->key_ == nullptr)
 		return DISCARD_NOTFOUND;
 	oldKey = entry_->key_;
-	//entry_->key_ = dummy;
+	entry_->key_ = dummy;
 	entry_->hash_ = -1;
 	_so->used_--;
 	ALIF_DECREF(oldKey);
@@ -282,13 +286,13 @@ static void set_dealloc(AlifSetObject* _so)
 	//alifObject_GC_UnTrack(_so);
 	//ALIF_TRASHCAN_BEGIN(_so, set_dealloc)
 		//if (_so->weakRefList != NULL)
-			//PyObject_ClearWeakRefs((AlifObject*)_so);
+			//Object_ClearWeakRefs((AlifObject*)_so);
 
 	for (entry_ = _so->table_; used_ > 0; entry_++) {
-		//if (entry_->key_ && entry_->key_ != dummy) {
-			//used_--;
-			//ALIF_DECREF(entry_->key_);
-		//}
+		if (entry_->key_ && entry_->key_ != dummy) {
+			used_--;
+			ALIF_DECREF(entry_->key_);
+		}
 	}
 	if (_so->table_ != _so->smallTable)
 		alifMem_objFree(_so->table_);
@@ -337,7 +341,7 @@ static int set_merge_lock_held(AlifSetObject* _so, AlifObject* _otherSet)
 		for (i_ = other_->mask_ + 1; i_ > 0; i_--, otherEntry++) {
 			key_ = otherEntry->key_;
 			if (key_ != NULL
-				//&& key_ != dummy
+				&& key_ != dummy
 				) {
 				set_insert_clean(newTable, newMask, ALIF_NEWREF(key_),
 					otherEntry->hash_);
@@ -350,7 +354,7 @@ static int set_merge_lock_held(AlifSetObject* _so, AlifObject* _otherSet)
 		otherEntry = &other_->table_[i_];
 		key_ = otherEntry->key_;
 		if (key_ != NULL
-			//&& key_ != dummy
+			&& key_ != dummy
 			) {
 			if (set_add_entry(_so, key_, otherEntry->hash_))
 				return -1;
@@ -359,6 +363,109 @@ static int set_merge_lock_held(AlifSetObject* _so, AlifObject* _otherSet)
 	return 0;
 }
 
+class AlifSetIterObject {
+public:
+	ALIFOBJECT_HEAD
+	AlifSetObject* sISet; /* Set to NULL when iterator is exhausted */
+	int64_t sIUsed;
+	int64_t sIPos;
+	int64_t len_;
+} ;
+
+static void setIter_dealloc(AlifSetIterObject* _si)
+{
+	ALIF_XDECREF(_si->sISet);
+	alifMem_objFree(_si);
+}
+
+static AlifObject* setIter_iterNext(AlifSetIterObject* _si)
+{
+	AlifObject* key;
+	int64_t i, mask;
+	SetEntry* entry;
+	AlifSetObject* so = _si->sISet;
+
+	if (so == NULL)
+		return NULL;
+
+	if (_si->sIUsed != so->used_) {
+		//Err_SetString(PyExc_RuntimeError,
+			//"Set changed size during iteration");
+		_si->sIUsed = -1; /* Make this state sticky */
+		return NULL;
+	}
+
+	i = _si->sIPos;
+	entry = so->table_;
+	mask = so->mask_;
+	while (i <= mask
+		&&
+		(entry[i].key_ == NULL || entry[i].key_ == dummy)
+		 )
+		i++;
+	_si->sIPos = i + 1;
+	if (i > mask)
+		goto fail;
+	_si->len_--;
+	key = entry[i].key_;
+	return ALIF_NEWREF(key);
+
+fail:
+	_si->sISet = NULL;
+	ALIF_DECREF(so);
+	return NULL;
+}
+
+AlifTypeObject _alifSetIterType_ = {
+	0,
+	0,
+	0,
+	L"set_iterator",                             /* tp_name */
+	sizeof(AlifSetIterObject),                      /* tp_basicsize */
+	0,                                          /* tp_itemsize */
+	(Destructor)setIter_dealloc,                /* tp_dealloc */
+	0,                                          /* tp_vectorcall_offset */
+	0,                                          /* tp_getattr */
+	0,                                          /* tp_setattr */
+	0,                                          /* tp_as_async */
+	0,                                          /* tp_repr */
+	0,                                          /* tp_as_number */
+	0,                                          /* tp_as_sequence */
+	0,                                          /* tp_as_mapping */
+	0,                                          /* tp_call */
+	0,                                          /* tp_str */
+	0, //Object_GenericGetAttr,                    /* tp_getattro */
+	0,                                          /* tp_setattro */
+	0,                                          /* tp_as_buffer */
+	0, //ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,    /* tp_flags */
+	0,                                          /* tp_doc */
+	0, //(traverseproc)setiter_traverse,             /* tp_traverse */
+	0,                                          /* tp_clear */
+	0,                                          /* tp_richcompare */
+	0,                                          /* tp_weaklistoffset */
+	0,//ALIFObject_SelfIter,                          /* tp_iter */
+	(IterNextFunc)setIter_iterNext,             /* tp_iternext */
+	0, //setiter_methods,                            /* tp_methods */
+	0,
+};
+
+static AlifObject* set_iter(AlifSetObject* _so)
+{
+	//int64_t size = set_len(_so);
+	int64_t size = _so->used_; // هنا يتم عمل نفس الامر 
+	//SetIterObject* si_ = ALIFObject_GC_New(setiterobject, &_alifSetIterType_);
+	AlifSetIterObject* si_{};
+	si_ = (AlifSetIterObject*)alifMem_objAlloc(alifSubObject_varSize(&_alifSetIterType_, 1));
+	alifSubObject_initVar((AlifVarObject*)si_, &_alifSetIterType_, alifSubObject_varSize(&_alifSetIterType_, 1));
+	if (si_ == NULL)
+		return NULL;
+	si_->sISet = (AlifSetObject*)ALIF_NEWREF(_so);
+	si_->sIUsed = size;
+	si_->sIPos = 0;
+	si_->len_ = size;
+	//ALIFSUBObject_GC_TRACK(si_);
+	return (AlifObject*)si_;
+}
 
 static int set_add_key(AlifSetObject* _so, AlifObject* _key)
 {
@@ -629,8 +736,8 @@ AlifTypeObject _alifSetType_ = {
 	0, //(traverseproc)set_traverse,         /* tp_traverse */
 	0, //(inquiry)set_clear_internal,        /* tp_clear */
 	0, //(richcmpfunc)set_richcompare,       /* tp_richcompare */
-	0, //offsetof(SetObject, weakreflist), /* tp_weaklistoffset */
-	0, //(getiterfunc)set_iter,              /* tp_iter */
+	offsetof(AlifSetObject, weakRefList), /* tp_weaklistoffset */
+	(GetIterFunc)set_iter,              /* tp_iter */
 	0,                                  /* tp_iternext */
 	_alifSetMethods_,                        /* tp_methods */
 	0,                                  /* tp_members */
@@ -704,3 +811,30 @@ int alifSet_add(AlifObject* _anySet, AlifObject* _key)
 	//ALIF_END_CRITICAL_SECTION();
 	return rv;
 }
+
+static AlifTypeObject _alifSetDummyType_ = {
+	0,
+	0,
+	0,
+	L"<dummy key> type",
+	0,
+	0,
+	0, //dummy_dealloc,      /*tp_dealloc*/ /*never called*/
+	0,                  /*tp_vectorcall_offset*/
+	0,                  /*tp_getattr*/
+	0,                  /*tp_setattr*/
+	0,                  /*tp_as_async*/
+	0, //dummy_repr,         /*tp_repr*/
+	0,                  /*tp_as_number*/
+	0,                  /*tp_as_sequence*/
+	0,                  /*tp_as_mapping*/
+	0,                  /*tp_hash */
+	0,                  /*tp_call */
+	0,                  /*tp_str */
+	0,                  /*tp_getattro */
+	0,                  /*tp_setattro */
+	0,                  /*tp_as_buffer */
+	0, //ALIF_TPFLAGS_DEFAULT, /*tp_flags */
+};
+
+static AlifObject _dummyStruct_ = ALIFSUBOBJECT_HEAD_INIT(&_alifSetDummyType_);

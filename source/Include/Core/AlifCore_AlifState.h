@@ -21,6 +21,7 @@ static inline AlifInterpreter* alifInterpreter_get() {
 	AlifThread* thread_ = alifThread_get();
 
 	return thread_->interpreter;
+	//return nullptr;
 }
 
 

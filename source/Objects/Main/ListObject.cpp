@@ -205,6 +205,8 @@ bool alifList_append(AlifObject* list, AlifObject* newItem)
         exit(-1);
     }
 
+	ALIF_NEWREF(newItem);
+
     if (!list_resize(listObj, len + 1)) {
         return false;
     }

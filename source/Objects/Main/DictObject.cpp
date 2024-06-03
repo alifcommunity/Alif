@@ -20,6 +20,8 @@ AlifObject* new_dict(int64_t used){
     
     object->_base_.type_ = &typeDict;
 
+	ALIF_INCREF(object);
+
     if(used > 0) {
         object = dict_presize(object, used);
     }
@@ -100,6 +102,9 @@ AlifIntT dict_setItem(AlifDictObject* _dict, AlifObject* _key, AlifObject* _valu
 
     AlifObject* oldValue;
     size_t hash;
+
+	ALIF_NEWREF(_key);
+	ALIF_NEWREF(_value);
 
     if (_key->type_ == &_alifUStrType_) {
         hash = ((AlifUStrObject*)_key)->hash;
