@@ -256,6 +256,8 @@ extern AlifObject _alifNotImplemented_;
     } while (0)                                                      \
 
 
+void alifSub_newReference(AlifObject*);
+
 class AlifIdentifier {
 public:
 	const wchar_t* string_;

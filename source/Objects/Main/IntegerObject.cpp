@@ -499,6 +499,12 @@ static AlifObject* integer_compare(AlifObject* _a, AlifObject* _b, int _op) {
 	ALIF_RETURN_RICHCOMPARE(result_, 0 , _op);
 }
 
+static void long_dealloc(AlifObject* _self)
+{
+	AlifIntegerObject* integer_ = (AlifIntegerObject*)_self;
+	ALIF_TYPE(_self)->free_(_self);
+}
+
 static AlifObject* integer_float(AlifObject* _v)
 {
 	long double result_;
@@ -609,7 +615,7 @@ AlifTypeObject _alifIntegerType_ = {
 	L"int",
 	offsetof(AlifIntegerObject, digits_),
 	sizeof(size_t),
-	0,
+	long_dealloc,
 	0,
 	0,
 	0,

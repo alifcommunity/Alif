@@ -14,6 +14,8 @@ static AlifObject* alifSubBytes_fromSize(int64_t size_) {
 
 	alifSubObject_initVar((AlifVarObject*)object, &_typeBytes_,size_);
 
+	ALIF_INCREF(object);
+
     object->value[size_] = '\0';
 
     return (AlifObject*)object;
@@ -77,6 +79,7 @@ AlifObject* alifBytes_fromString(const wchar_t* str){
     AlifWBytesObject* object = (AlifWBytesObject*)alifMem_objAlloc(ALIFBYTESOBJECT_SIZE + size_);
 
     alifSubObject_initVar((AlifVarObject*)object, &_typeBytes_, size_);
+	ALIF_INCREF(object);
     memcpy(object->value, str, size_ + 1);
     return (AlifObject*)object;
 }
