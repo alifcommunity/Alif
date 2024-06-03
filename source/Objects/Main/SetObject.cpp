@@ -1,6 +1,24 @@
 #include "alif.h"
+#include "AlifCore_Object.h"
 #include "AlifCore_Memory.h"
 
+
+#define SET_COPY_METHODDEF    \
+    {L"copy", (AlifCFunction)set_copy, METHOD_NOARGS},
+
+static AlifObject*
+set_copy_impl(AlifSetObject*);
+
+static AlifObject* set_copy(AlifSetObject* _so, AlifObject* ALIF_UNUSED(ignored))
+{
+	AlifObject* return_value = NULL;
+
+	//ALIF_BEGIN_CRITICAL_SECTION(_so);
+	return_value = set_copy_impl(_so);
+	//ALIF_END_CRITICAL_SECTION();
+
+	return return_value;
+}
 
 #define LINEAR_PROBES 9
 #define PERTURB_SHIFT 5
@@ -256,6 +274,29 @@ static int set_discard_entry(AlifSetObject* _so, AlifObject* _key, size_t _hash)
 	return DISCARD_FOUND;
 }
 
+static void set_dealloc(AlifSetObject* _so)
+{
+	SetEntry* entry_;
+	int64_t used_ = _so->used_;
+
+	//alifObject_GC_UnTrack(_so);
+	//ALIF_TRASHCAN_BEGIN(_so, set_dealloc)
+		//if (_so->weakRefList != NULL)
+			//PyObject_ClearWeakRefs((AlifObject*)_so);
+
+	for (entry_ = _so->table_; used_ > 0; entry_++) {
+		//if (entry_->key_ && entry_->key_ != dummy) {
+			//used_--;
+			//ALIF_DECREF(entry_->key_);
+		//}
+	}
+	if (_so->table_ != _so->smallTable)
+		alifMem_objFree(_so->table_);
+	//ALIF_TYPE(_so)->free_(_so);
+	//ALIF_TRASHCAN_END
+	alifMem_objFree(_so);
+}
+
 static int set_merge_lock_held(AlifSetObject* _so, AlifObject* _otherSet)
 {
 	AlifSetObject* other_;
@@ -423,12 +464,43 @@ static int set_update_local(AlifSetObject* _so, AlifObject* _other)
 	return set_update_iterable_lock_held(_so, _other);
 }
 
+static int set_update_internal(AlifSetObject* _so, AlifObject* _other)
+{
+	if ((_other->type_ == &_alifSetType_)) {
+		if (ALIF_IS((AlifObject*)_so, _other)) {
+			return 0;
+		}
+		int rv;
+		//ALIF_BEGIN_CRITICAL_SECTION2(_so, _other);
+		rv = set_merge_lock_held(_so, _other);
+		//ALIF_END_CRITICAL_SECTION2();
+		return rv;
+	}
+	else if ((_other->type_ == &typeDict)) {
+		int rv;
+		//ALIF_BEGIN_CRITICAL_SECTION2(_so, _other);
+		rv = set_update_dict_lock_held(_so, _other);
+		//ALIF_END_CRITICAL_SECTION2();
+		return rv;
+	}
+	else {
+		int rv;
+		//ALIF_BEGIN_CRITICAL_SECTION(_so);
+		rv = set_update_iterable_lock_held(_so, _other);
+		//ALIF_END_CRITICAL_SECTION();
+		return rv;
+	}
+}
+
+
 static AlifObject* make_new_set(AlifTypeObject* _type, AlifObject* _iterable)
 {
 	AlifSetObject* so_{};
 
 	//so_ = (AlifSetObject*)(_type->alloc_(_type, 0));
 	so_ = (AlifSetObject*)alifMem_objAlloc(alifSubObject_varSize(&_alifSetType_, 1));
+	alifSubObject_initVar((AlifVarObject*)so_ , &_alifSetType_, alifSubObject_varSize(&_alifSetType_, 1));
+
 	if (so_ == nullptr)
 		return nullptr;
 
@@ -438,7 +510,7 @@ static AlifObject* make_new_set(AlifTypeObject* _type, AlifObject* _iterable)
 	so_->table_ = so_->smallTable;
 	so_->hash_ = -1;
 	so_->finger_ = 0;
-	so_->weakreFlist = nullptr;
+	so_->weakRefList = nullptr;
 
 	if (_iterable != nullptr) {
 		if (set_update_local(so_, _iterable)) {
@@ -482,6 +554,54 @@ static AlifObject* set_or(AlifSetObject* _so, AlifObject* _other)
 	return (AlifObject*)result_;
 }
 
+static AlifObject* set_ior(AlifSetObject* _so, AlifObject* _other)
+{
+	if (!(_other->type_ == &_alifSetType_))
+		return ALIF_NOTIMPLEMENTED;
+
+	if (set_update_internal(_so, _other)) {
+		return NULL;
+	}
+	return ALIF_NEWREF(_so);
+}
+
+static AlifMethodDef _alifSetMethods_[] = {
+	SET_COPY_METHODDEF
+	{NULL,              NULL}   /* sentinel */
+};
+
+static AlifNumberMethods _alifSetAsNumber_ = {
+	0,                                  /*nb_add*/
+	0, //(binaryfunc)set_sub,                /*nb_subtract*/
+	0,                                  /*nb_multiply*/
+	0,                                  /*nb_remainder*/
+	0,                                  /*nb_divmod*/
+	0,                                  /*nb_power*/
+	0,                                  /*nb_negative*/
+	0,                                  /*nb_positive*/
+	0,                                  /*nb_absolute*/
+	0,                                  /*nb_bool*/
+	0,                                  /*nb_invert*/
+	0,                                  /*nb_lshift*/
+	0,                                  /*nb_rshift*/
+	0, //(binaryfunc)set_and,                /*nb_and*/
+	0, //(binaryfunc)set_xor,                /*nb_xor*/
+	(BinaryFunc)set_or,                 /*nb_or*/
+	0,                                  /*nb_int*/
+	0,                                  /*nb_reserved*/
+	0,                                  /*nb_float*/
+	0,                                  /*nb_inplace_add*/
+	0, //(binaryfunc)set_isub,               /*nb_inplace_subtract*/
+	0,                                  /*nb_inplace_multiply*/
+	0,                                  /*nb_inplace_remainder*/
+	0,                                  /*nb_inplace_power*/
+	0,                                  /*nb_inplace_lshift*/
+	0,                                  /*nb_inplace_rshift*/
+	0, // (binaryfunc)set_iand,               /*nb_inplace_and*/
+	0, //(binaryfunc)set_ixor,               /*nb_inplace_xor*/
+	(BinaryFunc)set_ior,                /*nb_inplace_or*/
+};
+
 AlifTypeObject _alifSetType_ = {
 	0,
 	0,
@@ -490,13 +610,12 @@ AlifTypeObject _alifSetType_ = {
 	sizeof(AlifSetObject),                /* tp_basicsize */
 	0,                                  /* tp_itemsize */
 	/* methods */
-	0, // (destructor)set_dealloc,            /* tp_dealloc */
+	(Destructor)set_dealloc,            /* tp_dealloc */
 	0,                                  /* tp_vectorcall_offset */
 	0,                                  /* tp_getattr */
 	0,                                  /* tp_setattr */
-	0,                                  /* tp_as_async */
 	0, // (reprfunc)set_repr,                 /* tp_repr */
-	0, //&set_as_number,                     /* tp_as_number */
+	&_alifSetAsNumber_,                     /* tp_as_number */
 	0, //&set_as_sequence,                   /* tp_as_sequence */
 	0,                                  /* tp_as_mapping */
 	0, // Object_HashNotImplemented,        /* tp_hash */
@@ -513,7 +632,7 @@ AlifTypeObject _alifSetType_ = {
 	0, //offsetof(SetObject, weakreflist), /* tp_weaklistoffset */
 	0, //(getiterfunc)set_iter,              /* tp_iter */
 	0,                                  /* tp_iternext */
-	0, //set_methods,                        /* tp_methods */
+	_alifSetMethods_,                        /* tp_methods */
 	0,                                  /* tp_members */
 	0,                                  /* tp_getset */
 	0,                                  /* tp_base */
@@ -531,23 +650,6 @@ AlifTypeObject _alifSetType_ = {
 AlifObject* alifNew_set(AlifObject* _iterable)
 {
 	return make_new_set(&_alifSetType_, _iterable);
-}
-
-#define SET_COPY_METHODDEF    \
-    {"copy", (PyCFunction)set_copy, METH_NOARGS, set_copy__doc__},
-
-static AlifObject*
-set_copy_impl(AlifSetObject*);
-
-static AlifObject* set_copy(AlifSetObject* _so, AlifObject* ALIF_UNUSED(ignored))
-{
-	AlifObject* return_value = NULL;
-
-	//ALIF_BEGIN_CRITICAL_SECTION(_so);
-	return_value = set_copy_impl(_so);
-	//ALIF_END_CRITICAL_SECTION();
-
-	return return_value;
 }
 
 static AlifObject* set_copy_impl(AlifSetObject* _so)

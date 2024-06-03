@@ -28,5 +28,5 @@ public:
     size_t hash_;             
     int64_t finger_;         
     SetEntry smallTable[ALIFSET_MINSIZE];
-    AlifObject* weakreFlist;     
+    AlifObject* weakRefList;     
 } ;
