@@ -5,10 +5,17 @@
 
 AlifDictObject* dict_presize(AlifDictObject* dict, int64_t used) {
 
-    dict = (AlifDictObject*)alifMem_objRealloc(dict,
-        sizeof(AlifDictValues) * used + sizeof(AlifDictObject));
 
-    dict->items_ = (AlifDictValues*)((char*)&dict->items_ + 8);
+	if (dict->capacity_ > 1) {
+		dict->items_ = (AlifDictValues*)alifMem_objRealloc(dict->items_,
+			sizeof(AlifDictValues) * used + sizeof(AlifDictObject));
+	}
+	else {
+
+		dict->items_ = (AlifDictValues*)alifMem_objAlloc(sizeof(AlifDictValues) * used);
+
+		//dict->items_ = (AlifDictValues*)((char*)&dict->items_ + 8);
+	}
 
     return dict;
 }
@@ -118,17 +125,18 @@ AlifIntT dict_setItem(AlifDictObject* _dict, AlifObject* _key, AlifObject* _valu
     if (index == -1) {
 
         int64_t size_ = _dict->size_;
-        if ((_dict = dict_resize(_dict)) == nullptr) {
+		_dict = dict_resize(_dict);
+        if (_dict == nullptr) {
             return -1;
         }
-        _dict->items_[size_].hash = hash;
-        _dict->items_[size_].key = _key;
-        _dict->items_[size_].value = _value;
-        _dict->size_++;
+		_dict->items_[size_].hash = hash;
+		_dict->items_[size_].key = _key;
+		_dict->items_[size_].value = _value;
+		_dict->size_++;
     }
     else {
         
-        _dict->items_[index].value = _value;
+		_dict->items_[index].value = _value;
     }
 
 	return 1;
