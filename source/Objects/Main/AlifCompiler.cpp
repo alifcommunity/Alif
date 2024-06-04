@@ -1,4 +1,4 @@
-#include "alif.h"
+﻿#include "alif.h"
 #include "OpCode.h"
 
 #include "AlifCore_AST.h"
@@ -12,9 +12,11 @@
 
 
 // Forward
-class AlifCompiler;
+class AlifCompiler; // temp
 static AlifCodeObject* compiler_module(AlifCompiler*, Module*);
 static AlifIntT compiler_body(AlifCompiler*, SourceLocation, StmtSeq*);
+
+typedef AlifFlowGraph AlifFlowGraph;
 
 #define LOC(_a) {_a->lineNo, _a->endLineNo, _a->colOffset, _a->endColOffset}
 
@@ -52,7 +54,7 @@ public:
 	AlifObject* uPrivate;
 	AlifObject* uStaticAttributes; 
 
-	InstructionSequance* uInstrSequence;
+	InstructionSequence* uInstrSequence;
 
 	AlifIntT uNFBlocks;
 	AlifIntT uInInlinedComp;
@@ -95,7 +97,7 @@ public:
 #define VISIT(_c, _type, _v) {if (compiler_visit ## _type(_c, _v) == -1) return -1;}
 
 
-static AlifIntT codeGen_addOpNoArg(InstructionSequance* _seq, AlifIntT _opCode, SourceLocation _loc) { // 822
+static AlifIntT codeGen_addOpNoArg(InstructionSequence* _seq, AlifIntT _opCode, SourceLocation _loc) { // 822
 	return alifInstructionSequance_addOp(_seq, _opCode, 0, _loc);
 }
 
@@ -125,7 +127,7 @@ static AlifIntT compilerAddOp_loadConst(CompilerUnit* _cu, SourceLocation _loc, 
 	return codeGen_addOpI(_cu->uInstrSequence, LOAD_CONST, arg, _loc);
 }
 
-static AlifIntT codeGen_addOpI(InstructionSequance* _seq,
+static AlifIntT codeGen_addOpI(InstructionSequence* _seq,
 	AlifIntT _opCode, AlifSizeT _opArg, SourceLocation _loc) { // 1047
 
 	AlifIntT opArg = (AlifIntT)_opArg;
@@ -468,7 +470,7 @@ static AlifIntT compiler_enterScope(AlifCompiler* _compiler,
 		cu->uStaticAttributes = nullptr;
 	}
 
-	cu->uInstrSequence = (InstructionSequance*)alifInstructionSequance_new();
+	cu->uInstrSequence = (InstructionSequence*)alifInstructionSequance_new();
 
 	if (_compiler->unit) {
 		AlifObject* capsule = alifCapsule_new(_compiler->unit, CAPSULE_NAME, nullptr);
@@ -648,10 +650,66 @@ static AlifIntT addReturn_atEnd(AlifCompiler* _compiler, AlifIntT _addNone) { //
 	return 1;
 }
 
+static AlifObject* constsDict_keysInorder(AlifObject* _dict) { // 7515
+	AlifObject* consts{};
+	AlifObject* k{};
+	AlifObject* v{};
+	AlifSizeT i{};
+	AlifSizeT pos = 0;
+	AlifSizeT size = ALIFDICT_GET_SIZE(_dict);
+
+	consts = alifNew_list(size);
+	if (consts == nullptr) return nullptr;
+
+	while (alifDict_next(_dict, &pos, &k, &v)) {
+		i = alifInteger_asLongLong(v);
+		if (ALIFTUPLE_CHECK(k)) {
+			k = ALIFTUPLE_GET_ITEM(k, 1);
+		}
+		ALIFLIST_SET_ITEM(consts, i, ALIF_NEWREF(k));
+	}
+	return consts;
+}
+
 static AlifCodeObject* optimize_andAssembleCodeUnit(CompilerUnit* _cu, AlifObject* _fn) { // 7619
 
+	AlifFlowGraph* cfg = nullptr;
+	InstructionSequence optimizedInstrs{};
+	memset(&optimizedInstrs, 0, sizeof(InstructionSequence));
 
+	AlifIntT nLocals{};
+	AlifIntT nParams{};
+	AlifIntT stackDepth{};
+	AlifIntT nLocalsPlus{};
 
+	AlifCodeObject* co = nullptr;
+	AlifObject* consts = constsDict_keysInorder(_cu->uData.consts);
+	if (consts == nullptr) goto error;
+
+	cfg = instr_sequenceToCFG(_cu->uInstrSequence);
+	if (cfg == nullptr) goto error;
+
+	nLocals = (AlifIntT)ALIFDICT_GET_SIZE(_cu->uData.varNames);
+	nParams = (AlifIntT)ALIFDICT_GET_SIZE(_cu->uSTE->steVarNames);
+
+	if (alifCFG_optimizeCodeUnit(cfg, consts, nLocals, nParams, _cu->uData.firstLineNo) < 0) {
+		goto error;
+	}
+
+	if (alifCFG_optimizedCFGToInstructionSeq(cfg, &_cu->uData,
+		&stackDepth, &nLocalsPlus, &optimizedInstrs) < 0) {
+		goto error;
+	}
+
+	/* المجمع */
+	co = alifAssemble_makeCodeObject(&_cu->uData, consts,
+		stackDepth, &optimizedInstrs, nLocalsPlus, _fn);
+
+error:
+	ALIF_XDECREF(consts);
+	//alifInstructionsSeq_fini(&optimizedInstrs);
+	//alifCFGBuilder_free(cfg);
+	return co;
 }
 
 static AlifCodeObject* optimize_andAssemble(AlifCompiler* _compiler, AlifIntT _addNone) { // 7666
