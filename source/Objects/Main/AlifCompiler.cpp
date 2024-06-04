@@ -87,7 +87,7 @@ public:
 #define ADDOP(_c, _loc, _op) {if (codeGen_addOpNoArg(INSTR_SEQUANCE(_c), _op, _loc) == -1) return -1;}
 #define ADDOP_I(_c, _loc, _op, _o) { if (codeGen_addOpI(INSTR_SEQUANCE(_c), _op, _o, _loc) == -1) return -1;}
 #define ADDOP_BINARY(_c, _loc, _binOp) { if (addOp_binary(_c, _loc, _binOp, TRUE) == -1) return -1;}
-
+#define ADDOP_LOAD_CONST(_c, _loc, _o) { if (compilerAddOp_loadConst(_c->unit, _loc, _o) == -1) return -1;}
 
 
 
@@ -99,6 +99,31 @@ static AlifIntT codeGen_addOpNoArg(InstructionSequance* _seq, AlifIntT _opCode, 
 	return alifInstructionSequance_addOp(_seq, _opCode, 0, _loc);
 }
 
+static AlifObject* marge_constsRecursive(AlifObject* _obj) { // 857
+	if (_obj == ALIF_NONE) return _obj;
+
+
+	/*
+		long code here
+	*/
+
+}
+
+static AlifSizeT compiler_addConst(CompilerUnit* _cu, AlifObject* _obj) { // 965
+	AlifObject* key = marge_constsRecursive(_obj);
+	if (key == nullptr) return -1;
+
+	AlifSizeT arg = dict_addObject(_cu->uData.consts, key);
+	ALIF_DECREF(key);
+	return arg;
+}
+
+static AlifIntT compilerAddOp_loadConst(CompilerUnit* _cu, SourceLocation _loc, AlifObject* _obj) { // 979
+	AlifSizeT arg = compiler_addConst(_cu, _obj);
+	if (arg < 0) return -1;
+
+	return codeGen_addOpI(_cu->uInstrSequence, LOAD_CONST, arg, _loc);
+}
 
 static AlifIntT codeGen_addOpI(InstructionSequance* _seq,
 	AlifIntT _opCode, AlifSizeT _opArg, SourceLocation _loc) { // 1047
@@ -515,10 +540,10 @@ static AlifCodeObject* compiler_module(AlifCompiler* _compiler, Module* _module)
 	if (compiler_codeGenerate(_compiler, _module) < 0) {
 		goto done;
 	}
-	codeObject = optimize_assemble(_compiler, addNone);
+	codeObject = optimize_andAssemble(_compiler, addNone);
 
 done:
-	//compiler_exitScope(_compiler);
+	compiler_exitScope(_compiler);
 	return codeObject;
 }
 
@@ -612,4 +637,32 @@ static AlifIntT compiler_body(AlifCompiler* _compiler, SourceLocation _loc, Stmt
 	}
 
 	return 1;
+}
+
+
+static AlifIntT addReturn_atEnd(AlifCompiler* _compiler, AlifIntT _addNone) { // 7606
+	if (_addNone) {
+		ADDOP_LOAD_CONST(_compiler, noLocation, ALIF_NONE);
+	}
+	ADDOP(_compiler, noLocation, RETURN_VALUE);
+	return 1;
+}
+
+static AlifCodeObject* optimize_andAssembleCodeUnit(CompilerUnit* _cu, AlifObject* _fn) { // 7619
+
+
+
+}
+
+static AlifCodeObject* optimize_andAssemble(AlifCompiler* _compiler, AlifIntT _addNone) { // 7666
+	CompilerUnit* cu = _compiler->unit;
+	AlifObject* fn = _compiler->fileName;
+
+	// flags of code here
+
+	if (addReturn_atEnd(_compiler, _addNone) < 1) {
+		return nullptr;
+	}
+
+	return optimize_andAssembleCodeUnit(cu, fn);
 }
