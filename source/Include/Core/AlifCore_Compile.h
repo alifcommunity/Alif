@@ -1,5 +1,8 @@
 #pragma once
 
+#include "AlifCore_Memory.h"
+#include "AlifCore_SymTable.h"
+#include "AlifCore_InstructionSeq.h"
 
 AlifCodeObject* alifAST_compile(Module*, AlifObject*, AlifIntT, AlifASTMem*);
 
@@ -28,3 +31,6 @@ public:
 
 	AlifIntT firstLineNo{};
 };
+
+
+AlifIntT alifCompile_ensureArraySpace(AlifIntT, void**, AlifIntT*, AlifIntT, AlifUSizeT);

@@ -124,11 +124,11 @@ AlifIntT dict_setItem(AlifDictObject* _dict, AlifObject* _key, AlifObject* _valu
 
     if (index == -1) {
 
-        int64_t size_ = _dict->size_;
+		int64_t size_ = _dict->size_;
 		_dict = dict_resize(_dict);
-        if (_dict == nullptr) {
-            return -1;
-        }
+		if (_dict == nullptr) {
+			return -1;
+		}
 		_dict->items_[size_].hash = hash;
 		_dict->items_[size_].key = _key;
 		_dict->items_[size_].value = _value;

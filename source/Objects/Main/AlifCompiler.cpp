@@ -109,7 +109,46 @@ static AlifIntT codeGen_addOpI(InstructionSequance* _seq,
 
 
 
+AlifIntT alifCompile_ensureArraySpace(AlifIntT _idx, void** _array, AlifIntT* _alloc, AlifIntT _defaultAlloc, AlifUSizeT _itemSize) { // 155
 
+	void* arr = *_array;
+	if (arr == nullptr) {
+		AlifIntT newAlloc = _defaultAlloc;
+		if (_idx >= newAlloc) {
+			newAlloc = _idx + _defaultAlloc;
+		}
+		arr = alifMem_dataAlloc(_itemSize * newAlloc);
+		if (arr == nullptr) {
+			// memory error
+			return -1;
+		}
+		*_alloc = newAlloc;
+	}
+	else if (_idx >= *_alloc) {
+		AlifUSizeT oldSize = *_alloc * _itemSize;
+		AlifIntT newAlloc = *_alloc << 1;
+		if (_idx >= newAlloc) {
+			newAlloc = _idx + _defaultAlloc;
+		}
+		AlifUSizeT newSize = newAlloc * _itemSize;
+
+		if (oldSize > (SIZE_MAX >> 1)) {
+			// memory error
+			return -1;
+		}
+
+		void* tmp = alifMem_dataRealloc(arr, newSize);
+		if (tmp == nullptr) {
+			// memory error
+			return -1;
+		}
+		*_alloc = newAlloc;
+		arr = tmp;
+	}
+
+	*_array = arr;
+	return 1;
+}
 
 
 
@@ -372,7 +411,7 @@ static AlifIntT compiler_enterScope(AlifCompiler* _compiler,
 	}
 
 	cu->uData.freeVars = dict_byType(cu->uSTE->steSymbols, FREE, DEF_FREE_CLASS, ALIFDICT_GET_SIZE(cu->uData.cellVars));
-	if (cu->uData.freeVars) {
+	if (!cu->uData.freeVars) {
 		//compilerUnit_free(cu);
 		return -1;
 	}
@@ -476,7 +515,7 @@ static AlifCodeObject* compiler_module(AlifCompiler* _compiler, Module* _module)
 	if (compiler_codeGenerate(_compiler, _module) < 0) {
 		goto done;
 	}
-	//codeObject = optimize_assemble(_compiler, addNone);
+	codeObject = optimize_assemble(_compiler, addNone);
 
 done:
 	//compiler_exitScope(_compiler);
