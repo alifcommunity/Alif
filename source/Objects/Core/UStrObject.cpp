@@ -1,5 +1,5 @@
 #include "alif.h"
-
+#include "AlifCore_Object.h"
 #include "alifCore_UString.h"
 #include "AlifCore_Memory.h"
 #include "AlifCore_GlobalString.h"
@@ -9,19 +9,36 @@
 #endif // _WINDOWS
 
 
+// هنا يتم تحويل من utf16 الى utf32 والعكس 
+#define ALIFSUBUSTR_CONVERT_BYTES(_fromType, _toType, _begin, _end, _to) {   \
+    _toType *to_ = (_toType *)(_to);                                      \
+    const _fromType *iter_ = (const _fromType *)(_begin);                 \
+    const _fromType *end_ = (const _fromType *)(_end);                    \
+    SSIZE_T n_ = (end_) - (iter_);                                      \
+    const _fromType *unrolledEnd = iter_ + ALIF_SIZE_ROUND_DOWN(n_, 4); \
+    while (iter_ < (unrolledEnd)) {                                   \
+        to_[0] = (_toType) iter_[0];                                    \
+        to_[1] = (_toType) iter_[1];                                    \
+        to_[2] = (_toType) iter_[2];                                    \
+        to_[3] = (_toType) iter_[3];                                    \
+        iter_ += 4; to_ += 4;                                          \
+    }                                                                  \
+    while (iter_ < (end_)) { *to_++ = (_toType) *iter_++; }             \
+} 
+
+// Forward
+static inline int alifSubUStrWriter_writeWcharInline(AlifSubUnicodeWriter*, uint32_t);
+static int alifSubUStr_fastCopyCharacters(AlifObject*, int64_t , AlifObject* , int64_t , int64_t , int );
+
+
 //// Return a reference to the immortal empty string singleton.
 //static inline AlifObject* unicode_get_empty(void)
 //{
-//	_Py_DECLARE_STR(empty, "");
+//	ALIFSUB_DECLARE_STR(empty, "");
 //	return &ALIFSUB_STR(empty);
 //}
 
-// Forward
-static inline int alifSubUnicodeWriter_writeWcharInline(AlifSubUnicodeWriter*, uint32_t);
-static int alifSubUnicode_fastCopyCharacters(AlifObject* to, int64_t toStart, AlifObject* from, int64_t fromStart, int64_t howMany, int checkMaxChar);
-
-
-static inline void unicode_fill(int _kind, void* _data, uint32_t _value,
+static inline void alifUStr_fill(int _kind, void* _data, uint32_t _value,
 	int64_t _start, int64_t _length)
 {
 	switch (_kind) {
@@ -72,149 +89,46 @@ static AlifObject* unicode_result_unchanged(AlifObject* _unicode)
 
 #include "fastSearch.h"
 #include "split.h"
-
-// in file find.h in 8
-template <typename STRINGLIB_CHAR>
-int64_t find(const STRINGLIB_CHAR* str, int64_t strLen,
-	const STRINGLIB_CHAR* sub, int64_t subLen,
-	int64_t offset)
-{
-	int64_t pos;
-
-	if (subLen == 0)
-		return offset;
-
-	pos = fastSearch(str, strLen, sub, subLen, -1, FAST_SEARCH);
-
-	if (pos >= 0)
-		pos += offset;
-
-	return pos;
-}
-
-template <typename STRINGLIB_CHAR>
-int64_t rfind(const STRINGLIB_CHAR* str, int64_t str_len,
-	const STRINGLIB_CHAR* sub, int64_t sub_len,
-	int64_t offset)
-{
-	int64_t pos;
-
-	if (sub_len == 0)
-		return str_len + offset;
-
-	pos = fastSearch(str, str_len, sub, sub_len, -1, FAST_RSEARCH);
-
-	if (pos >= 0)
-		pos += offset;
-
-	return pos;
-}
-
-template <typename STRINGLIB_CHAR>
-int64_t find_slice(const STRINGLIB_CHAR* str, int64_t str_len,
-	const STRINGLIB_CHAR* sub, int64_t sub_len,
-	int64_t start_, int64_t end)
-{
-	return find(str + start_, end - start_, sub, sub_len, start_);
-}
-
-template <typename STRINGLIB_CHAR>
-int64_t rfind_slice(const STRINGLIB_CHAR* str, int64_t str_len,
-	const STRINGLIB_CHAR* sub, int64_t sub_len,
-	int64_t start_, int64_t end)
-{
-	return rfind(str + start_, end - start_, sub, sub_len, start_);
-}
-
-#define FORMAT_BUFFER_SIZE 50
-
-// in file ceval.c in 2369
-int alifEval_sliceIndex(AlifObject * _v, int64_t * _pi)
-{
-	if (!ALIF_ISNONE(_v)) {
-		int64_t x;
-		if ((_v->type_->asNumber != nullptr)) {
-			x = alifInteger_asLongLong(_v);
-		}
-		else {
-			return 0;
-		}
-		*_pi = x;
-	}
-	return 1;
-}
-
-int parse_args_finds(const wchar_t* function_name, AlifObject* args,
-	AlifObject** subobj,
-	int64_t* start_, int64_t* end)
-{
-	AlifObject* tmp_subobj;
-	int64_t tmp_start = 0;
-	int64_t tmp_end = LLONG_MAX;
-	AlifObject* obj_start = ALIF_NONE, * obj_end = ALIF_NONE;
-	wchar_t format[FORMAT_BUFFER_SIZE] = L"O|OO:";
-	size_t len = wcslen(format);
-
-	wcsncpy_s(format + len, FORMAT_BUFFER_SIZE - len, function_name, _TRUNCATE);
-	format[FORMAT_BUFFER_SIZE - 1] = '\0';
-
-	if (!alifArg_parseTuple(args, format, &tmp_subobj, &obj_start, &obj_end))
-		return 0;
-
-	/* To support None in "start_" and "end" arguments, meaning
-	   the same as if they were not passed.
-	*/
-	if (obj_start != ALIF_NONE)
-		if (!alifEval_sliceIndex(obj_start, &tmp_start))
-			return 0;
-	if (obj_end != ALIF_NONE)
-		if (!alifEval_sliceIndex(obj_end, &tmp_end))
-			return 0;
-
-	*start_ = tmp_start;
-	*end = tmp_end;
-	*subobj = tmp_subobj;
-	return 1;
-}
+#include "find.h"
 
 // in file count.h 
 template <typename STRINGLIB_CHAR>
-int64_t count(const STRINGLIB_CHAR* str, int64_t strLen,
-	const STRINGLIB_CHAR* sub, int64_t subLen,
-	int64_t maxCount)
+int64_t count(const STRINGLIB_CHAR* _str, int64_t _strLen,
+	const STRINGLIB_CHAR* _sub, int64_t _subLen,
+	int64_t _maxCount)
 {
-	int64_t count;
+	int64_t count_;
 
-	if (strLen < 0)
+	if (_strLen < 0)
 		return 0; /* start_ > len(str) */
-	if (subLen == 0)
-		return (strLen < maxCount) ? strLen + 1 : maxCount;
+	if (_subLen == 0)
+		return (_strLen < _maxCount) ? _strLen + 1 : _maxCount;
 
-	count = fastSearch(str, strLen, sub, subLen, maxCount, FAST_COUNT);
+	count_ = fastSearch(_str, _strLen, _sub, _subLen, _maxCount, FAST_COUNT);
 
-	if (count < 0)
-		return 0; /* no match */
+	if (count_ < 0)
+		return 0; 
 
-	return count;
+	return count_;
 }
 
-static inline int64_t findChar(const void* s, int kind,
-	int64_t size_, uint32_t ch,
-	int direction)
+static inline int64_t findChar(const void* _s, int _kind,
+	int64_t _size, uint32_t _ch,
+	int _direction)
 {
-	switch (kind) {
+	switch (_kind) {
 	case UNICODE_2BYTE:
-		if ((uint16_t)ch != ch)
+		if ((uint16_t)_ch != _ch)
 			return -1;
-		if (direction > 0)
-			return find_char((const uint16_t*)s, size_, (uint16_t)ch);
+		if (_direction > 0)
+			return find_char((const uint16_t*)_s, _size, (uint16_t)_ch);
 		else
-			return rfind_char((const uint16_t*)s, size_, (uint16_t)ch);
+			return rfind_char((const uint16_t*)_s, _size, (uint16_t)_ch);
 	case UNICODE_4BYTE:
-		if (direction > 0)
-			return find_char((const uint32_t*)s, size_, ch);
+		if (_direction > 0)
+			return find_char((const uint32_t*)_s, _size, _ch);
 		else
-			return rfind_char((const uint32_t*)s, size_, ch);
+			return rfind_char((const uint32_t*)_s, _size, _ch);
 	//default:
 		//UNREACHABLE();
 	}
@@ -234,8 +148,6 @@ static int resize_inplace(AlifObject* _unicode, int64_t _length)
 	data_ = ALIFUNICODE_CAST(_unicode)->UTF;
 	charSize = ALIFUNICODE_KIND(_unicode);
 
-	//(ALIFUNICODE_UTF8(op) == ALIFUNICODE_DATA(op)) : This is the main functionality of the macro.It checks if the UTF - 8 representation of the Unicode object op is the same as the raw data of op.
-	// If they are the same, it means that op is a UTF - 8 encoded Unicode object and its data can be directly used as a UTF - 8 string.
 	shareUTF8 = 1;
 
 	if (_length > (LLONG_MAX / charSize - 1)) {
@@ -285,26 +197,26 @@ resize_copy(AlifObject* _unicode, int64_t _length)
 		return NULL;
 
 	copyLength = min(_length, ALIFUNICODE_GET_LENGTH(_unicode));
-	alifSubUnicode_fastCopyCharacters(copy_, 0, _unicode, 0, copyLength, 0);
+	alifSubUStr_fastCopyCharacters(copy_, 0, _unicode, 0, copyLength, 0);
 	return copy_;
 }
 
 // من هنا يتم انشاء كائن نصي
 AlifObject* alifNew_uStr(size_t _size, uint8_t _maxChar) { /// M
-	AlifObject* obj{};
+	AlifObject* obj_{};
 	AlifUStrObject* uStr{};
-	void* data{};
-	uint8_t kind{};
+	void* data_{};
+	uint8_t kind_{};
 	uint8_t charSize{};
 	size_t structSize = sizeof(AlifUStrObject);
 
 
 	if (_maxChar == 2) {
-		kind = UNICODE_2BYTE;
+		kind_ = UNICODE_2BYTE;
 		charSize = 2;
 	}
 	else if (_maxChar == 4) {
-		kind = UNICODE_4BYTE;
+		kind_ = UNICODE_4BYTE;
 		charSize = 4;
 	}
 	else {
@@ -312,41 +224,42 @@ AlifObject* alifNew_uStr(size_t _size, uint8_t _maxChar) { /// M
 		exit(-1);
 	}
 
-	obj = (AlifObject*)alifMem_objAlloc(structSize + (_size + 1) * charSize);
-	obj->type_ = &_alifUStrType_;
+	obj_ = (AlifObject*)alifMem_objAlloc(structSize + (_size + 1) * charSize);
 
-	uStr = (AlifUStrObject*)obj;
+	alifSubObject_init(obj_, &_alifUStrType_);
 
-	data = uStr + 1;
+	uStr = (AlifUStrObject*)obj_;
+
+	data_ = uStr + 1;
 
 	uStr->length = _size;
-	uStr->kind = kind;
+	uStr->kind = kind_;
 	uStr->hash = 0;
-	uStr->UTF = data;
+	uStr->UTF = data_;
 
-	if (kind == UNICODE_2BYTE) {
-		((uint16_t*)data)[_size] = 0;
+	if (kind_ == UNICODE_2BYTE) {
+		((uint16_t*)data_)[_size] = 0;
 	}
-	else if (kind == UNICODE_4BYTE) {
-		((uint32_t*)data)[_size] = 0;
+	else if (kind_ == UNICODE_4BYTE) {
+		((uint32_t*)data_)[_size] = 0;
 	}
 
-	return obj;
+	return obj_;
 }
 
-AlifObject* alifNew_unicode(size_t size_, uint8_t maxChar) {
+AlifObject* alifNew_unicode(size_t size_, uint8_t _maxChar) {
 
-	uint8_t kind;
+	uint8_t kind_;
 	size_t structSize;
-	AlifUStrObject* object;
+	AlifUStrObject* object_;
 
-	if (maxChar == 2) {
-		kind = UNICODE_2BYTE;
+	if (_maxChar == 2) {
+		kind_ = UNICODE_2BYTE;
 		structSize = sizeof(AlifUStrObject);
 	}
-	else if(maxChar == 4)
+	else if(_maxChar == 4)
 	{
-		kind = UNICODE_4BYTE;
+		kind_ = UNICODE_4BYTE;
 		structSize = sizeof(AlifUStrObject);
 	}
 	else {
@@ -354,15 +267,15 @@ AlifObject* alifNew_unicode(size_t size_, uint8_t maxChar) {
 		exit(-1);
 	}
 
-	object = (AlifUStrObject*)alifMem_objAlloc(structSize + (size_ + 1) * kind);
-	((AlifObject*)object)->type_ = &_alifUStrType_;
+	object_ = (AlifUStrObject*)alifMem_objAlloc(structSize + (size_ + 1) * kind_);
+	((AlifObject*)object_)->type_ = &_alifUStrType_;
 
-	object->hash = 0;
-	object->length = size_;
-	object->kind = kind;
-	object->UTF = &object->UTF + 1;
+	object_->hash = 0;
+	object_->length = size_;
+	object_->kind = kind_;
+	object_->UTF = &object_->UTF + 1;
 
-	return (AlifObject*)object;
+	return (AlifObject*)object_;
 }
 
 static int
@@ -387,7 +300,7 @@ static int unicode_check_modifiable(AlifObject* _unicode)
 	return 0;
 }
 
-static int alifSubUnicode_fastCopyCharacters(AlifObject* to, int64_t toStart,
+static int alifSubUStr_fastCopyCharacters(AlifObject* to, int64_t toStart,
 	AlifObject* from, int64_t fromStart,
 	int64_t howMany, int checkMaxChar)
 {
@@ -425,7 +338,7 @@ static int alifSubUnicode_fastCopyCharacters(AlifObject* to, int64_t toStart,
 	else if (fromKind == UNICODE_2BYTE
 		&& toKind == UNICODE_4BYTE)
 	{
-		ALIFUNICODE_CONVERT_BYTES(
+		ALIFSUBUSTR_CONVERT_BYTES(
 			uint16_t, uint32_t,
 			((uint16_t*)(ALIFUNICODE_CAST(from))->UTF) + fromStart,
 			((uint16_t*)(ALIFUNICODE_CAST(from))->UTF) + fromStart + howMany,
@@ -438,7 +351,7 @@ static int alifSubUnicode_fastCopyCharacters(AlifObject* to, int64_t toStart,
 			 if (fromKind == UNICODE_4BYTE
 				&& toKind == UNICODE_2BYTE)
 			{
-				 ALIFUNICODE_CONVERT_BYTES(
+				 ALIFSUBUSTR_CONVERT_BYTES(
 					 uint32_t, uint16_t,
 					 ((uint32_t*)(ALIFUNICODE_CAST(from))->UTF) + fromStart,
 					 ((uint32_t*)(ALIFUNICODE_CAST(from))->UTF) + fromStart + howMany,
@@ -481,7 +394,7 @@ AlifSizeT alifUnicode_copyCharacters(AlifObject* _to, AlifSizeT _toStart,
 	if (unicode_check_modifiable(_to))
 		return -1;
 
-	err = alifSubUnicode_fastCopyCharacters(_to, _toStart, _from, _fromStart, _howMany, 1);
+	err = alifSubUStr_fastCopyCharacters(_to, _toStart, _from, _fromStart, _howMany, 1);
 	if (err) {
 		return -1;
 	}
@@ -567,7 +480,7 @@ AlifObject* alifUnicode_fromWideChar(const wchar_t* _u, int64_t _size)
 #if ALIF_UNICODE_SIZE == 2
 		memcpy(AlifUnicode_2BYTE_DATA(unicode), u, size * 2);
 #else
-		ALIFUNICODE_CONVERT_BYTES(wchar_t, AlifUCS2,
+		ALIFSUBUSTR_CONVERT_BYTES(wchar_t, AlifUCS2,
 			_u, _u + _size, ALIFUNICODE_CAST(unicode_)->UTF);
 #endif
 		break;
@@ -821,7 +734,7 @@ alifUnicode_fromUint32(const uint32_t* u, int64_t size_)
 		//return nullptr;
 	 if (max_char < 0x10000)
 	 {
-		 ALIFUNICODE_CONVERT_BYTES(uint32_t, uint16_t, u, u + size_,
+		 ALIFSUBUSTR_CONVERT_BYTES(uint32_t, uint16_t, u, u + size_,
 			 ((uint16_t*)((AlifUStrObject*)res)->UTF));
 	 }
 	else
@@ -848,7 +761,7 @@ void combine_string(AlifObject* result, SSIZE_T start_, AlifObject* from, SSIZE_
 		uint16_t* fromData = ((uint16_t*)(ALIFUNICODE_CAST(from))->UTF);
 		uint32_t* toData = ((uint32_t*)(ALIFUNICODE_CAST(result))->UTF);
 
-		ALIFUNICODE_CONVERT_BYTES(uint16_t, uint32_t,
+		ALIFSUBUSTR_CONVERT_BYTES(uint16_t, uint32_t,
 			fromData + fromStart,
 			fromData + fromStart + length, 
 			toData + start_);
@@ -859,7 +772,7 @@ void combine_string(AlifObject* result, SSIZE_T start_, AlifObject* from, SSIZE_
 		uint32_t* fromData = ((uint32_t*)(ALIFUNICODE_CAST(from))->UTF);
 		uint16_t* toData = ((uint16_t*)(ALIFUNICODE_CAST(result))->UTF);
 
-		ALIFUNICODE_CONVERT_BYTES(uint32_t, uint16_t,
+		ALIFSUBUSTR_CONVERT_BYTES(uint32_t, uint16_t,
 			fromData + fromStart,
 			fromData + fromStart + length,
 			toData + start_);
@@ -1050,7 +963,7 @@ static void* unicode_asKind(int skind, void const* data, int64_t len, int kind)
 		//if (!result)
 			//return Err_NoMemory();
 		if (skind == UNICODE_2BYTE) {
-			ALIFUNICODE_CONVERT_BYTES(
+			ALIFSUBUSTR_CONVERT_BYTES(
 				uint16_t, uint32_t,
 				(const uint16_t*)data,
 				((const uint16_t*)data) + len,
@@ -1104,7 +1017,7 @@ unicode_fromFormat_write_str(AlifSubUnicodeWriter* _writer, AlifObject* _str, in
 		_writer->pos_ += fill_;
 	}
 
-	alifSubUnicode_fastCopyCharacters(_writer->buffer_, _writer->pos_,
+	alifSubUStr_fastCopyCharacters(_writer->buffer_, _writer->pos_,
 		_str, 0, length_, 0);
 	_writer->pos_ += length_;
 
@@ -1194,7 +1107,7 @@ static const wchar_t* unicode_fromFormat_arg(AlifSubUnicodeWriter* _writer,
 	p_ = _f;
 	_f++;
 	if (*_f == '%') {
-		if (alifSubUnicodeWriter_writeWcharInline(_writer, '%') < 0)
+		if (alifSubUStrWriter_writeWcharInline(_writer, '%') < 0)
 			return NULL;
 		_f++;
 		return _f;
@@ -1307,7 +1220,7 @@ static const wchar_t* unicode_fromFormat_arg(AlifSubUnicodeWriter* _writer,
 		if (ordinal_ < 0 || ordinal_ > 0x10ffff) {
 			return NULL;
 		}
-		if (alifSubUnicodeWriter_writeWcharInline(_writer, ordinal_) < 0)
+		if (alifSubUStrWriter_writeWcharInline(_writer, ordinal_) < 0)
 			return NULL;
 		break;
 	}
@@ -1707,7 +1620,7 @@ bool contain_unicode(AlifObject* unicode, AlifObject* str) {
 	utf2 = (ALIFUNICODE_CAST(str))->UTF;
 	if (kind1 != kind2) {
 		void* result = (uint32_t*)alifMem_dataAlloc(len2 * 4);
-		ALIFUNICODE_CONVERT_BYTES(
+		ALIFSUBUSTR_CONVERT_BYTES(
 			uint16_t, uint32_t,
 			(const uint16_t*)utf2,
 			((const uint16_t*)utf2) + len2,
@@ -1930,25 +1843,16 @@ void ucsLib_replace_1char_inplace(STRINGLIB_CHAR* s, STRINGLIB_CHAR* end,
 {
 	*s = u2;
 	while (--maxCount && ++s != end) {
-		/* Find the next character to be replaced.
 
-		   If it occurs often, it is faster to scan for it using an inline
-		   loop.  If it occurs seldom, it is faster to scan for it using a
-		   function call; the overhead of the function call is amortized
-		   across the many characters that call covers.  We start_ with an
-		   inline loop and use a heuristic to determine whether to fall back
-		   to a function call. */
 		if (*s != u1) {
 			int attempts = 10;
-			/* search u1 in a dummy loop */
 			while (1) {
 				if (++s == end)
 					return;
 				if (*s == u1)
 					break;
 				if (!--attempts) {
-					/* if u1 was not found for attempts iterations,
-					   use FASTSEARCH() or memchr() */
+
 #ifdef STRINGLIB_FAST_MEMCHR
 					s++;
 					s = (STRINGLIB_CHAR*)STRINGLIB_FAST_MEMCHR(s, u1, end - s);
@@ -1963,7 +1867,6 @@ void ucsLib_replace_1char_inplace(STRINGLIB_CHAR* s, STRINGLIB_CHAR* end,
 						return;
 					s += i;
 #endif
-					/* restart the dummy loop */
 					break;
 				}
 			}
@@ -2035,8 +1938,8 @@ AlifObject* alifUStr_concat(AlifObject* _left, AlifObject* _right)
 	result_ = alifNew_unicode(newLen, maxChar);
 	if (result_ == NULL)
 		return NULL;
-	alifSubUnicode_fastCopyCharacters(result_, 0, _left, 0, leftLen, 0);
-	alifSubUnicode_fastCopyCharacters(result_, leftLen, _right, 0, rightLen, 0);
+	alifSubUStr_fastCopyCharacters(result_, 0, _left, 0, leftLen, 0);
+	alifSubUStr_fastCopyCharacters(result_, leftLen, _right, 0, rightLen, 0);
 	return result_;
 }
 
@@ -2079,7 +1982,7 @@ void alifUStr_append(AlifObject** _pLeft, AlifObject* _right)
 		if (unicode_resize(_pLeft, newLen) != 0)
 			goto error;
 
-		alifSubUnicode_fastCopyCharacters(*_pLeft, leftLen, _right, 0, rightLen, 0);
+		alifSubUStr_fastCopyCharacters(*_pLeft, leftLen, _right, 0, rightLen, 0);
 	}
 	else {
 		maxChar = ALIFUNICODE_MAX_CHAR_VALUE(left_);
@@ -2089,8 +1992,8 @@ void alifUStr_append(AlifObject** _pLeft, AlifObject* _right)
 		res = alifNew_unicode(newLen, maxChar);
 		if (res == NULL)
 			goto error;
-		alifSubUnicode_fastCopyCharacters(res, 0, left_, 0, leftLen ,0 );
-		alifSubUnicode_fastCopyCharacters(res, leftLen, _right, 0, rightLen,0);
+		alifSubUStr_fastCopyCharacters(res, 0, left_, 0, leftLen ,0 );
+		alifSubUStr_fastCopyCharacters(res, leftLen, _right, 0, rightLen,0);
 		ALIF_DECREF(left_);
 		*_pLeft = res;
 	}
@@ -2131,7 +2034,6 @@ static int64_t unicode_countImpl(AlifObject* str,
 			goto onError;
 	}
 
-	// We don't reuse `anylib_count` here because of the explicit casts.
 	switch (kind1) {
 	case UNICODE_2BYTE:
 		result = count(
@@ -2161,7 +2063,7 @@ onError:
 
 static AlifObject* unicode_count(AlifObject* self, AlifObject* args)
 {
-	AlifObject* substring = nullptr;   /* initialize to fix a compiler warning */
+	AlifObject* substring = nullptr;  
 	int64_t start_ = 0;
 	int64_t end = LLONG_MAX;
 	int64_t result;
@@ -2305,7 +2207,7 @@ static AlifObject* replace(AlifObject* self, AlifObject* str1,
 			if (!u)
 				goto error;
 
-			alifSubUnicode_fastCopyCharacters(u, 0, self, 0, sLen,0);
+			alifSubUStr_fastCopyCharacters(u, 0, self, 0, sLen,0);
 			replace_1char_inplace(u, pos, u1, u2, maxCount);
 		}
 		else {
@@ -2719,13 +2621,13 @@ AlifObject* alifUnicode_joinArray(AlifObject* separator, AlifObject* const* item
 
 			/* Copy item, and maybe the separator. */
 			if (i && seplen != 0) {
-				alifSubUnicode_fastCopyCharacters(res, res_offset, sep, 0, seplen, 0);
+				alifSubUStr_fastCopyCharacters(res, res_offset, sep, 0, seplen, 0);
 				res_offset += seplen;
 			}
 
 			itemlen = ((AlifUStrObject*)item)->length;
 			if (itemlen != 0) {
-				alifSubUnicode_fastCopyCharacters(res, res_offset, item, 0, itemlen, 0);
+				alifSubUStr_fastCopyCharacters(res, res_offset, item, 0, itemlen, 0);
 				res_offset += itemlen;
 			}
 		}
@@ -2747,7 +2649,7 @@ void alifSubUnicode_fastFill(AlifObject* _unicode,int64_t _start, int64_t _lengt
 {
 	const int kind = ALIFUNICODE_CAST(_unicode)->kind;
 	void* data = ALIFUNICODE_CAST(_unicode)->UTF;
-	unicode_fill(kind, data, _fillChar, _start, _length);
+	alifUStr_fill(kind, data, _fillChar, _start, _length);
 }
 
 int64_t alifUnicode_fill(AlifObject* _unicode, int64_t _start, int64_t _length,
@@ -3028,13 +2930,13 @@ int alifSubUnicodeWriter_writeStr(AlifSubUnicodeWriter* _writer, AlifObject* _st
 		if (alifSubUnicodeWriter_prepareInternal(_writer, len_, maxChar) == -1)
 			return -1;
 	}
-	alifSubUnicode_fastCopyCharacters(_writer->buffer_, _writer->pos_,
+	alifSubUStr_fastCopyCharacters(_writer->buffer_, _writer->pos_,
 		_str, 0, len_, 0);
 	_writer->pos_ += len_;
 	return 0;
 }
 
-static inline int alifSubUnicodeWriter_writeWcharInline(AlifSubUnicodeWriter* _writer, uint32_t _ch)
+static inline int alifSubUStrWriter_writeWcharInline(AlifSubUnicodeWriter* _writer, uint32_t _ch)
 {
 	if (ALIFSUBUNICODEWRITER_PREPARE(_writer, 1, _ch) < 0)
 		return -1;
@@ -3045,7 +2947,7 @@ static inline int alifSubUnicodeWriter_writeWcharInline(AlifSubUnicodeWriter* _w
 
 int alifSubUnicodeWriter_writeChar(AlifSubUnicodeWriter* _writer, uint32_t _ch)
 {
-	return alifSubUnicodeWriter_writeWcharInline(_writer, _ch);
+	return alifSubUStrWriter_writeWcharInline(_writer, _ch);
 }
 
 static AlifMethodDef _unicodeMethods_[] = {

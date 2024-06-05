@@ -55,22 +55,7 @@ static inline uint32_t alifUnicode_read_wchar(AlifObject* _unicode, int64_t _ind
 }
 #define ALIFUNICODE_READ_WCHAR(_unicode, _index) alifUnicode_read_wchar(_unicode, (_index))
 
-// هنا يتم تحويل من utf16 الى utf32 والعكس 
-#define ALIFUNICODE_CONVERT_BYTES(fromType, toType, begin, end, to) {   \
-    toType *_to = (toType *)(to);                                      \
-    const fromType *_iter = (const fromType *)(begin);                 \
-    const fromType *_end = (const fromType *)(end);                    \
-    SSIZE_T n = (_end) - (_iter);                                      \
-    const fromType *_unrolledEnd = _iter + ALIF_SIZE_ROUND_DOWN(n, 4); \
-    while (_iter < (_unrolledEnd)) {                                   \
-        _to[0] = (toType) _iter[0];                                    \
-        _to[1] = (toType) _iter[1];                                    \
-        _to[2] = (toType) _iter[2];                                    \
-        _to[3] = (toType) _iter[3];                                    \
-        _iter += 4; _to += 4;                                          \
-    }                                                                  \
-    while (_iter < (_end)) { *_to++ = (toType) *_iter++; }             \
-} 
+
 
 AlifObject* alifNew_uStr(size_t, uint8_t);
 AlifObject* alifNew_unicode(size_t, uint8_t);
