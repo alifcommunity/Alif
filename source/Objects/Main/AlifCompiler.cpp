@@ -4,12 +4,15 @@
 #include "AlifCore_AST.h"
 #include "AlifCore_OpCodeUtils.h"
 #include "AlifCore_Compile.h"
+#include "AlifCore_FlowGraph.h"
 #include "AlifCore_InstructionSeq.h"
 #include "AlifCore_Intrinsics.h"
 #include "AlifCore_AlifState.h"
 #include "AlifCore_SymTable.h"
 
-
+#define NEED_OPCODE_DATA
+#include "AlifCore_OpCodeData.h"
+#undef NEED_OPCODE_DATA
 
 // Forward
 class AlifCompiler; // temp
@@ -662,13 +665,56 @@ static AlifObject* constsDict_keysInorder(AlifObject* _dict) { // 7515
 	if (consts == nullptr) return nullptr;
 
 	while (alifDict_next(_dict, &pos, &k, &v, 0)) {
-		i = alifInteger_asLongLong(v);
+		i = alifInteger_asLong(v);
 		if (ALIFTUPLE_CHECK(k)) {
 			k = ALIFTUPLE_GET_ITEM(k, 1);
 		}
 		ALIFLIST_SET_ITEM(consts, i, ALIF_NEWREF(k));
 	}
 	return consts;
+}
+
+static AlifFlowGraph* instrSequence_toCFG(InstructionSequence* _seq) { // 200
+
+	if (alifInstructionSeq_applyLableMap(_seq) < 0) {
+		return nullptr;
+	}
+
+	AlifFlowGraph* cfg = alifFlowGraph_new();
+	if (cfg == nullptr) return nullptr;
+
+	for (AlifIntT i = 0; i < _seq->used; i++) {
+		_seq->instructions[i].target = 0;
+	}
+	for (AlifIntT i = 0; i < _seq->used; i++) {
+		AlifInstruction* instr = &_seq->instructions[i];
+		if (HAS_TARGET(instr->opCode)) {
+			_seq->instructions[instr->opArg].target = 1;
+		}
+	}
+	for (AlifIntT i = 0; i < _seq->used; i++) {
+		AlifInstruction* instr = &_seq->instructions[i];
+		if (instr->target) {
+			JumpTargetLable lable = { i };
+			if (alifFlowGraph_useLable(cfg, lable) < 0) {
+				goto error;
+			}
+		}
+		AlifIntT opCode = instr->opCode;
+		AlifIntT opArg = instr->opArg;
+		if (alifFlowGraph_addOp(cfg, opCode, opArg, instr->loc) < 0) {
+			goto error;
+		}
+	}
+	if (alifFlowGraph_checkSize(cfg) < 0) {
+		goto error;
+	}
+
+	return cfg;
+
+error:
+	//alifFlowGraph_free(cfg);
+	return nullptr;
 }
 
 static AlifCodeObject* optimize_andAssembleCodeUnit(CompilerUnit* _cu, AlifObject* _fn) { // 7619
@@ -686,7 +732,7 @@ static AlifCodeObject* optimize_andAssembleCodeUnit(CompilerUnit* _cu, AlifObjec
 	AlifObject* consts = constsDict_keysInorder(_cu->uData.consts);
 	if (consts == nullptr) goto error;
 
-	cfg = instr_sequenceToCFG(_cu->uInstrSequence);
+	cfg = instrSequence_toCFG(_cu->uInstrSequence);
 	if (cfg == nullptr) goto error;
 
 	nLocals = (AlifIntT)ALIFDICT_GET_SIZE(_cu->uData.varNames);

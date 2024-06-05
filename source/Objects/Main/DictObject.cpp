@@ -287,13 +287,13 @@ AlifIntT dict_deleteItem(AlifDictObject* dict, AlifObject* key) {
     return 1;
 }
 
-bool alifDict_next(AlifObject* dict, int64_t * posPos, AlifObject** posKey, AlifObject** posValue, size_t *posHash) {
+bool alifDict_next(AlifObject* _dict, AlifSizeT * _popPos, AlifObject** _posKey, AlifObject** _posValue, AlifUSizeT *_posHash) {
 
     int64_t index{};
     AlifDictObject* map{};
 
-    map = (AlifDictObject*)dict;
-    index = *posPos;
+    map = (AlifDictObject*)_dict;
+    index = *_popPos;
 
     if (map->size_ <= index || index < 0) {
         return false;
@@ -301,20 +301,20 @@ bool alifDict_next(AlifObject* dict, int64_t * posPos, AlifObject** posKey, Alif
 
     AlifDictValues value = map->items_[index];
 
-    *posPos = index + 1;
+    *_popPos = index + 1;
 
-    if (posKey) {
-        *posKey = value.key;
+    if (_posKey) {
+        *_posKey = value.key;
     }
-    if (posValue) {
-        *posValue = value.value;
+    if (_posValue) {
+        *_posValue = value.value;
     }
-    if (posHash) {
+    if (_posHash) {
         if (value.key->type_ == &_alifUStrType_) {
-            *posHash = ((AlifUStrObject*)value.key)->hash;
+            *_posHash = ((AlifUStrObject*)value.key)->hash;
         }
         else {
-            *posHash = alifObject_hash(value.key);
+            *_posHash = alifObject_hash(value.key);
         }
     }
     return true;
