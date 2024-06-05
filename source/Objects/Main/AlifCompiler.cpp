@@ -661,7 +661,7 @@ static AlifObject* constsDict_keysInorder(AlifObject* _dict) { // 7515
 	consts = alifNew_list(size);
 	if (consts == nullptr) return nullptr;
 
-	while (alifDict_next(_dict, &pos, &k, &v)) {
+	while (alifDict_next(_dict, &pos, &k, &v, 0)) {
 		i = alifInteger_asLongLong(v);
 		if (ALIFTUPLE_CHECK(k)) {
 			k = ALIFTUPLE_GET_ITEM(k, 1);

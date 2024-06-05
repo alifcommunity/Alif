@@ -287,7 +287,7 @@ AlifIntT dict_deleteItem(AlifDictObject* dict, AlifObject* key) {
     return 1;
 }
 
-bool dict_next(AlifObject* dict, int64_t * posPos, AlifObject** posKey, AlifObject** posValue, size_t *posHash) {
+bool alifDict_next(AlifObject* dict, int64_t * posPos, AlifObject** posKey, AlifObject** posValue, size_t *posHash) {
 
     int64_t index{};
     AlifDictObject* map{};
@@ -611,7 +611,7 @@ again:
 
 	int64_t j_ = 0, pos_ = 0;
 	AlifObject* key_;
-	while (dict_next((AlifObject*)mp_, &pos_, &key_, nullptr, nullptr)) {
+	while (alifDict_next((AlifObject*)mp_, &pos_, &key_, nullptr, nullptr)) {
 		((AlifListObject*)v_)->items[j_] = ALIF_NEWREF(key_);
 		j_++;
 	}

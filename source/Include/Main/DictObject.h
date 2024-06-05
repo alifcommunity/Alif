@@ -30,7 +30,7 @@ AlifObject* alifNew_dict();
 AlifDictObject* deleteItem_fromIndex(AlifDictObject*, int64_t);
 AlifIntT dict_deleteItem(AlifDictObject*, AlifObject*);
 int alifDict_getItemRef(AlifObject*, AlifObject*, AlifObject**);
-bool dict_next(AlifObject*, int64_t*, AlifObject**, AlifObject**, size_t*);
+bool alifDict_next(AlifObject*, int64_t*, AlifObject**, AlifObject**, size_t*);
 AlifObject* alifDict_keys(AlifObject*);
 AlifIntT dict_setItem(AlifDictObject* , AlifObject*, AlifObject* );
 AlifIntT dict_ass_sub(AlifDictObject*, AlifObject*, AlifObject*);

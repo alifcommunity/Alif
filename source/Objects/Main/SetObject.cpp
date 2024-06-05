@@ -523,7 +523,7 @@ static int set_update_dict_lock_held(AlifSetObject* _so, AlifObject* _other)
 	AlifObject* key_;
 	AlifObject* value_;
 	size_t hash_;
-	while (dict_next(_other, &pos_, &key_, &value_, &hash_)) {
+	while (alifDict_next(_other, &pos_, &key_, &value_, &hash_)) {
 		if (set_add_entry(_so, key_, hash_)) {
 			return -1;
 		}
