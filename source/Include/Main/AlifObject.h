@@ -149,6 +149,71 @@ int alifObject_richCompareBool(AlifObject*, AlifObject*, int);
 
 int64_t alifObject_hash(AlifObject*);
 
+#define ALIFSUBTPFLAGS_STATIC_BUILTIN (1 << 1)
+
+#define ALIFTPFLAGS_INLINE_VALUES (1 << 2)
+
+#define ALIFTPFLAGS_MANAGED_WEAKREF (1 << 3)
+
+#define ALIFTPFLAGS_MANAGED_DICT (1 << 4)
+
+#define ALIFTPFLAGS_PREHEADER (ALIFTPFLAGS_MANAGED_WEAKREF | ALIFTPFLAGS_MANAGED_DICT)
+
+#define ALIFTPFLAGS_SEQUENCE (1 << 5)
+
+#define ALIFTPFLAGS_MAPPING (1 << 6)
+
+#define ALIFTPFLAGS_DISALLOW_INSTANTIATION (1UL << 7)
+
+#define ALIFTPFLAGS_IMMUTABLETYPE (1UL << 8)
+
+#define ALIFTPFLAGS_HEAPTYPE (1UL << 9)
+
+#define ALIFTPFLAGS_BASETYPE (1UL << 10)
+
+#if !defined(ALIF_LIMITED_API) || ALIF_LIMITED_API+0 >= 0x030C0000
+#define ALIFTPFLAGS_HAVE_VECTORCALL (1UL << 11)
+#ifndef ALIF_LIMITED_API
+#define ALIFSUBTPFLAGS_HAVE_VECTORCALL ALIFTPFLAGS_HAVE_VECTORCALL
+#endif
+#endif
+
+#define ALIFTPFLAGS_READY (1UL << 12)
+
+#define ALIFTPFLAGS_READYING (1UL << 13)
+
+#define ALIFTPFLAGS_HAVE_GC (1UL << 14)
+
+#ifdef STACKLESS
+#define ALIFTPFLAGS_HAVE_STACKLESS_EXTENSION (3UL << 15)
+#else
+#define ALIFTPFLAGS_HAVE_STACKLESS_EXTENSION 0
+#endif
+
+#define ALIFTPFLAGS_METHOD_DESCRIPTOR (1UL << 17)
+
+#define ALIFTPFLAGS_VALID_VERSION_TAG  (1UL << 19)
+
+#define ALIFTPFLAGS_IS_ABSTRACT (1UL << 20)
+
+#define ALIFSUBTPFLAGS_MATCH_SELF (1UL << 22)
+
+#define ALIFTPFLAGS_ITEMS_AT_END (1UL << 23)
+
+#define ALIFTPFLAGS_LONG_SUBCLASS        (1UL << 24)
+#define ALIFTPFLAGS_LIST_SUBCLASS        (1UL << 25)
+#define ALIFTPFLAGS_TUPLE_SUBCLASS       (1UL << 26)
+#define ALIFTPFLAGS_BYTES_SUBCLASS       (1UL << 27)
+#define ALIFTPFLAGS_UNICODE_SUBCLASS     (1UL << 28)
+#define ALIFTPFLAGS_DICT_SUBCLASS        (1UL << 29)
+#define ALIFTPFLAGS_BASE_EXC_SUBCLASS    (1UL << 30)
+#define ALIFTPFLAGS_TYPE_SUBCLASS        (1UL << 31)
+
+#define ALIFTPFLAGS_DEFAULT  ( \
+                 ALIFTPFLAGS_HAVE_STACKLESS_EXTENSION | \
+                0)
+
+
 void alifSub_dealloc(AlifObject*);
 
 AlifObject* alif_newRef(AlifObject*);
@@ -255,6 +320,20 @@ extern AlifObject _alifNotImplemented_;
         }                                                                   \
     } while (0)                                                      \
 
+
+
+static inline int alifType_hasFeature(AlifTypeObject* _type, unsigned long _feature)
+{
+	unsigned long flags_;
+#ifdef ALIF_LIMITED_API
+	flags_ = alifType_getFlags(type);
+#else
+	flags_ = _type->flags_;
+#endif
+	return ((flags_ & _feature) != 0);
+}
+
+#define ALIFTYPE_FASTSUBCLASS(_type, _flag) alifType_hasFeature((_type), (_flag))
 
 void alifSub_newReference(AlifObject*);
 

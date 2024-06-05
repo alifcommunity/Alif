@@ -90,7 +90,7 @@ AlifObject* const* alifStack_unpackDict(AlifObject* const* args, int64_t nArgs,
     int64_t pos = 0, i = 0;
     AlifObject* key{}, * value{};
     unsigned long keys_are_strings = ALIFTPFLAGS_UNICODE_SUBCLASS;
-    while (dict_next(kwArgs, &pos, &key, &value, nullptr)) {
+    while (alifDict_next(kwArgs, &pos, &key, &value, nullptr)) {
         keys_are_strings &= key->type_->flags_;
         ((AlifTupleObject*)kwNames)->items[i] = key;
         kwStack[i] = value;
