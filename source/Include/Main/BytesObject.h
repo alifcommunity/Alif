@@ -35,4 +35,4 @@ static inline int64_t alifBytes_get_size(AlifObject* _op) {
 	AlifWBytesObject* self_ = (AlifWBytesObject*)(_op);
 	return ALIF_SIZE(self_);
 }
-#define PyBytes_GET_SIZE(_self) alifBytes_get_size(ALIFSUBOBJECT_CAST(_self))
+#define ALIFWBYTES_GET_SIZE(_self) alifBytes_get_size(ALIFSUBOBJECT_CAST(_self))
