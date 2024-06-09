@@ -1,9 +1,9 @@
 #pragma once
 
-AlifObject* alifSubUnicode_copy(AlifObject* );
+AlifObject* alifSubUStr_copy(AlifObject* );
 
-AlifObject* alifSubUnicode_transformDecimalAndSpaceToASCII(AlifObject* );
+AlifObject* alifSubUStr_transformDecimalAndSpaceToASCII(AlifObject* );
 
 size_t count_characters(const wchar_t* );
 
-AlifObject* alifUnicode_joinArray(AlifObject* , AlifObject* const*, int64_t );
+AlifObject* alifUStr_joinArray(AlifObject* , AlifObject* const*, int64_t );

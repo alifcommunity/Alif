@@ -431,7 +431,7 @@ static AlifObject* new_kWTuple(const wchar_t* const* keywords, int total, int po
     }
     keywords += pos;
     for (int i = 0; i < nKW; i++) {
-        AlifObject* str = alifUnicode_decodeStringToUTF8(keywords[i]);
+        AlifObject* str = alifUStr_decodeStringToUTF8(keywords[i]);
         if (str == nullptr) {
             //ALIF_DECREF(kwTuple);
             return nullptr;
@@ -516,7 +516,7 @@ static AlifObject* find_keyword(AlifObject* kwNames, AlifObject* const* kwStack,
 
     for (i = 0; i < nKwArgs; i++) {
         AlifObject* kwname = ((AlifTupleObject*)kwNames)->items[i];
-        if (unicode_eq(kwname, key)) {
+        if (uStr_eq(kwname, key)) {
             return kwStack[i];
         }
     }

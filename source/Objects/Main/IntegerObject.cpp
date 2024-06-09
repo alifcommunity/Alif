@@ -87,7 +87,7 @@ AlifObject* alifinteger_fromUnicodeObject(AlifObject* _u, int _base)
 	const wchar_t* buffer_;
 	int64_t buflen;
 
-	asciidig_ = alifSubUnicode_transformDecimalAndSpaceToASCII(_u);
+	asciidig_ = alifSubUStr_transformDecimalAndSpaceToASCII(_u);
 	if (asciidig_ == nullptr)
 		return nullptr;
 
@@ -453,7 +453,7 @@ AlifObject* integer_to_string(AlifObject* _a) {
 	}
 	str_[20] = L'\0';
 
-	AlifObject* result = alifUnicode_decodeStringToUTF8(str_);
+	AlifObject* result = alifUStr_decodeStringToUTF8(str_);
 
 	return result;
 }

@@ -15,10 +15,10 @@ static void split_add(STRINGLIB_CHAR* data, int64_t left, int64_t right,
     AlifObject* sub{};
     if (sizeof(STRINGLIB_CHAR) > sizeof(uint32_t))
     {
-        sub = alifUnicode_fromUint32(((uint32_t*)data)+(left), (right)-(left));
+        sub = alifUStr_fromUint32(((uint32_t*)data)+(left), (right)-(left));
     }
     else {
-        sub = alifUnicode_fromUint16(((uint16_t*)data)+(left), (right)-(left));
+        sub = alifUStr_fromUint16(((uint16_t*)data)+(left), (right)-(left));
     }
 
     if (count < MAX_PREALLOC) {
