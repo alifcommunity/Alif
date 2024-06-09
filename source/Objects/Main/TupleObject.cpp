@@ -105,7 +105,7 @@ int tuple_contain(AlifTupleObject* object, AlifObject* item) {
 
 }
 
-AlifObject* tuple_fromArray(AlifObject *const *object, size_t size_) {
+AlifObject* alifSubTuple_fromArray(AlifObject *const *object, size_t size_) {
 
     if (size_ == 0) {
         // return empty tuple
@@ -113,10 +113,15 @@ AlifObject* tuple_fromArray(AlifObject *const *object, size_t size_) {
 
     AlifTupleObject* tuple = (AlifTupleObject*)alifNew_tuple(size_);
 
-    for (size_t i = 0; i < size_; i++)
-    {
-        tuple->items[i] = object[i];
-    }
+	if (tuple == nullptr) {
+		return nullptr;
+	}
+	AlifObject** dst_= tuple->items;
+	for (int64_t i = 0; i < size_; i++) {
+		AlifObject* item = object[i];
+		dst_[i] = ALIF_NEWREF(item);
+	}
+
     return (AlifObject*)tuple;
 
 }
@@ -134,7 +139,7 @@ AlifObject* tupleslice(AlifTupleObject* tuple, size_t iLow,
         tuple->object._base_.type_ == &typeTuple) {
         return (AlifObject*)tuple;
     }
-    return tuple_fromArray(tuple->items + iLow, iHigh - iLow);
+    return alifSubTuple_fromArray(tuple->items + iLow, iHigh - iLow);
 }
 
 AlifObject* tuple_getSlice(AlifObject* tuple, size_t index, size_t index2)

@@ -53,7 +53,7 @@ AlifVarObject* alifObject_InitVar(AlifVarObject* _op, AlifTypeObject* _tp, int64
 	return _op;
 }
 
-AlifObject* alifObject_new(AlifTypeObject* _tp)
+AlifObject* alifSubObject_new(AlifTypeObject* _tp)
 {
 	AlifObject* op_ = (AlifObject*)alifMem_objAlloc(_tp->basicSize);
 	if (op_ == nullptr) {

@@ -31,6 +31,7 @@ AlifObject* list_getSlice(AlifObject*, size_t , size_t);
 int list_setSlice(AlifObject*, int64_t, int64_t, AlifObject*);
 
 int alifList_sort(AlifObject*);
+AlifObject* alifList_asTuple(AlifObject*);
 
 #define ALIFSUBLIST_CAST(op) \
     (ALIFLIST_CHECK(op)), ALIF_CAST(AlifListObject*, (op))
