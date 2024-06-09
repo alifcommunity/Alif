@@ -27,6 +27,7 @@ union AlifCodeUnit {
 
 
 class AlifCodeObject {  // 192
+public:
 	ALIFOBJECT_VAR_HEAD;
 	AlifObject* consts{};
 	AlifObject* names{};
@@ -40,6 +41,8 @@ class AlifCodeObject {  // 192
 
 	AlifObject* fileName{};
 	AlifObject* name{};
+	AlifObject* qualName{};
+	AlifObject* lineTable{};
 };
 
 
