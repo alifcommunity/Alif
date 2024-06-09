@@ -322,18 +322,18 @@ extern AlifObject _alifNotImplemented_;
 
 
 
-static inline int alifType_hasFeature(AlifTypeObject* _type, unsigned long _feature)
-{
-	unsigned long flags_;
-#ifdef ALIF_LIMITED_API
-	flags_ = alifType_getFlags(type);
-#else
-	flags_ = _type->flags_;
-#endif
-	return ((flags_ & _feature) != 0);
-}
+//static inline int alifType_hasFeature(AlifTypeObject* _type, unsigned long _feature)
+//{
+//	unsigned long flags_ = _type->flags_;
+////#ifdef ALIF_LIMITED_API
+////	flags_ = alifType_getFlags(type);
+////#else
+////	flags_ = _type->flags_;
+////#endif
+//	return ((flags_ & _feature) != 0);
+//}
 
-#define ALIFTYPE_FASTSUBCLASS(_type, _flag) alifType_hasFeature((_type), (_flag))
+//#define ALIFTYPE_FASTSUBCLASS(_type, _flag) alifType_hasFeature((_type), (_flag))
 
 void alifSub_newReference(AlifObject*);
 

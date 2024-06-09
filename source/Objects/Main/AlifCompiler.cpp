@@ -309,7 +309,7 @@ static AlifIntT compiler_setQualName(AlifCompiler* _compiler) { // 608
 				or parent->uScopeType == Compiler_Scope_AsyncFunction)
 			{
 				//ALIF_DECLARE_STR(dotLocal, L".<locals>");
-				AlifObject* name1 = alifUnicode_decodeStringToUTF8(L"dotLocals");
+				AlifObject* name1 = alifUStr_decodeStringToUTF8(L"dotLocals");
 				base = alifUStr_concat(parent->uData.qualName, name1);
 				if (base == nullptr) return -1;
 			}
@@ -322,7 +322,7 @@ static AlifIntT compiler_setQualName(AlifCompiler* _compiler) { // 608
 
 	if (base != nullptr) {
 		//ALIF_DECLARE_STR(dot, L".");
-		AlifObject* name2 = alifUnicode_decodeStringToUTF8(L"dot");
+		AlifObject* name2 = alifUStr_decodeStringToUTF8(L"dot");
 		name = alifUStr_concat(base, name2);
 		ALIF_DECREF(base);
 		if (name == nullptr) return -1;
@@ -422,7 +422,7 @@ static AlifIntT compiler_enterScope(AlifCompiler* _compiler,
 
 	if (cu->uSTE->steNeedsClassClosure) {
 		AlifSizeT res{};
-		AlifObject* name = alifUnicode_decodeStringToUTF8(L"__class__");
+		AlifObject* name = alifUStr_decodeStringToUTF8(L"__class__");
 		res = dict_addObject(cu->uData.cellVars, name);
 		if (res < 0) {
 			//compilerUnit_free(cu);
@@ -432,7 +432,7 @@ static AlifIntT compiler_enterScope(AlifCompiler* _compiler,
 
 	if (cu->uSTE->steNeedsClassDict) {
 		AlifSizeT res{};
-		AlifObject* name = alifUnicode_decodeStringToUTF8(L"__classdict__");
+		AlifObject* name = alifUStr_decodeStringToUTF8(L"__classdict__");
 		res = dict_addObject(cu->uData.cellVars, name);
 		if (res < 0) {
 			//compilerUnit_free(cu);
@@ -508,7 +508,7 @@ static AlifIntT compiler_enterScope(AlifCompiler* _compiler,
 
 static AlifIntT compiler_enterAnonymousScope(AlifCompiler* _compiler, Module* _module) { // 1700
 
-	AlifObject* name = alifUnicode_decodeStringToUTF8(L"<module>");
+	AlifObject* name = alifUStr_decodeStringToUTF8(L"<module>");
 	if (compiler_enterScope(_compiler, name, ScopeType::Compiler_Scope_Module, _module, 1) == -1) {
 		return -1;
 	}

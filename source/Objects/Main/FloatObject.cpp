@@ -120,7 +120,7 @@ AlifObject* alifFloat_fromString(AlifObject* _str) {
 	}
 
 	AlifUStrObject* string_ = (AlifUStrObject*)_str;
-	if (string_->kind == 4) {
+	if (string_->kind_ == 4) {
 		std::wcout << L"نوع الترميز غير صحيح في النص للتحويل الى عدد عشري\n" << std::endl;
 		exit(-1);
 	}

@@ -57,7 +57,7 @@ static SetEntry* set_lookKey(AlifSetObject* _so, AlifObject* _key, size_t _hash)
 					return entry_;
 				if ((startKey->type_ == &_alifUStrType_)
 					&& (_key->type_ == &_alifUStrType_)
-					&& unicode_eq(startKey, _key))
+					&& uStr_eq(startKey, _key))
 					return entry_;
 				table_ = _so->table_;
 				ALIF_INCREF(startKey);
@@ -111,7 +111,7 @@ restart:
 					goto foundActive;
 				if ((startKey->type_ == &_alifUStrType_)
 					&& (_key->type_ == &_alifUStrType_)
-					&& unicode_eq(startKey, _key))
+					&& uStr_eq(startKey, _key))
 					goto foundActive;
 				table_ = _so->table_;
 				ALIF_INCREF(startKey);

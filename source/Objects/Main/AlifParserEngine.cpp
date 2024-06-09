@@ -225,7 +225,7 @@ AlifPToken* alifParserEngine_getLastNonWhitespaceToken(AlifParser* _p) {
 }
 
 AlifObject* alifParserEngine_newIdentifier(AlifParser* _p, const wchar_t* _s) { 
-	AlifObject* id = alifUnicode_decodeStringToUTF8(_s);
+	AlifObject* id = alifUStr_decodeStringToUTF8(_s);
 
 	if (alifASTMem_listAddAlifObj(_p->astMem, id) < 0) {
 		// error
