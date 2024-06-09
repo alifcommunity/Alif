@@ -1,8 +1,10 @@
 #include "alif.h"
 
 #include "alifCore_List.h"
+#include "AlifCore_Tuple.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_Memory.h"
+
 
 bool list_resize(AlifListObject* list, size_t newSize) {
 
@@ -1736,6 +1738,20 @@ int alifList_sort(AlifObject* _v)
 		return -1;
 	ALIF_DECREF(_v);
 	return 0;
+}
+
+AlifObject* alifList_asTuple(AlifObject* _v)
+{
+	if (_v == NULL || !(_v->type_ == &typeList)) {
+		//Err_BadInternalCall();
+		return NULL;
+	}
+	AlifObject* ret_;
+	AlifListObject* self_ = (AlifListObject*)_v;
+	//ALIF_BEGIN_CRITICAL_SECTION(self);
+	ret_ = alifSubTuple_fromArray(self_->items, ALIF_SIZE(_v));
+	//ALIF_END_CRITICAL_SECTION();
+	return ret_;
 }
 
 static AlifObject* list_count(AlifListObject* self, AlifObject* value)

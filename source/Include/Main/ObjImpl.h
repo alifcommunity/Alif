@@ -1,9 +1,16 @@
 #pragma once
 
 
-AlifObject* alifObject_new(AlifTypeObject*);
+AlifObject* alifSubObject_new(AlifTypeObject*);
+AlifVarObject* alifSubObject_newVar(AlifTypeObject*, int64_t);
 
-#define ALIFOBJECT_NEW(_type, _typeObj) ((_type *)alifObject_new(_typeObj))
+
+#define ALIFOBJECT_NEW(_type, _typeObj) ((_type *)alifSubObject_new(_typeObj))
+
+#define ALIFOBJECT_NEWVAR(_type, _typeObj, _n) \
+                ( (_type *) alifSubObject_newVar((_typeObj), (_n)) )
+
+#define ALIFOBJECT_NEW_VAR(_type, _typeObj, _n) ALIFOBJECT_NEWVAR(_type, (_typeObj), (_n))
 
 
 
