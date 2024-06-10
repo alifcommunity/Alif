@@ -48,3 +48,5 @@ public:
 
 
 #define CO_MAXBLOCKS 21 /* Max static block nesting within a function */ // 229
+
+extern AlifTypeObject _alifCodeType_;

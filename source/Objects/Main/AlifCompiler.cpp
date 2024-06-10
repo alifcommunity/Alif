@@ -18,6 +18,10 @@
 class AlifCompiler; // temp
 static AlifCodeObject* compiler_module(AlifCompiler*, Module*);
 static AlifIntT compiler_body(AlifCompiler*, SourceLocation, StmtSeq*);
+static AlifSizeT dict_addObject(AlifObject*, AlifObject*);
+static AlifIntT codeGen_addOpI(InstructionSequence*, AlifIntT, AlifSizeT, SourceLocation);
+static AlifCodeObject* optimize_andAssemble(AlifCompiler*, AlifIntT);
+
 
 typedef AlifFlowGraph AlifFlowGraph;
 
@@ -548,7 +552,7 @@ static AlifCodeObject* compiler_module(AlifCompiler* _compiler, Module* _module)
 	codeObject = optimize_andAssemble(_compiler, addNone);
 
 done:
-	compiler_exitScope(_compiler);
+	//compiler_exitScope(_compiler);
 	return codeObject;
 }
 

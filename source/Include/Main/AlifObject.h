@@ -109,6 +109,13 @@ static inline void alif_set_size(AlifVarObject* _ob, int64_t _size) {
 }
 #define ALIFSET_SIZE(_ob, _size) alif_set_size(ALIFVAROBJECT_CAST(_ob), (_size))
 
+
+
+extern AlifTypeObject _alifTypeType_;
+
+
+
+
 typedef AlifObject* (*UnaryFunc)(AlifObject*);
 typedef AlifObject* (*BinaryFunc)(AlifObject*, AlifObject*);
 typedef AlifObject* (*TernaryFunc)(AlifObject*, AlifObject*, AlifObject*);
