@@ -670,7 +670,7 @@ static AlifObject* constsDict_keysInorder(AlifObject* _dict) { // 7515
 
 	while (alifDict_next(_dict, &pos, &k, &v, 0)) {
 		i = alifInteger_asLong(v);
-		if (ALIFTUPLE_CHECK(k)) {
+		if (ALIFTUPLE_CHECKEXACT(k)) {
 			k = ALIFTUPLE_GET_ITEM(k, 1);
 		}
 		ALIFLIST_SET_ITEM(consts, i, ALIF_NEWREF(k));
