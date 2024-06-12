@@ -7,12 +7,12 @@ public:
      AlifObject* items[1];
 };
 
-extern AlifInitObject typeTuple;
+extern AlifInitObject _alifTupleType_;
 
 #define ALIFTUPLE_CHECK(_op) \
 					 ALIF_TYPE(_op)
                  //ALIFTYPE_FASTSUBCLASS(ALIF_TYPE(_op), ALIFTPFLAGS_TUPLE_SUBCLASS)
-#define ALIFTUPLE_CHECKEXACT(_op) ALIF_IS_TYPE((_op), &typeTuple)
+#define ALIFTUPLE_CHECKEXACT(_op) ALIF_IS_TYPE((_op), &_alifTupleType_)
 
 AlifObject* alifNew_tuple(SSIZE_T );
 AlifObject* tuple_pack(size_t, ...);

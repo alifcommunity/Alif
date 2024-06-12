@@ -43,6 +43,10 @@ public:
 	AlifObject* name{};
 	AlifObject* qualName{};
 	AlifObject* lineTable{};
+
+
+
+	char codeAdaptive[1];
 };
 
 

@@ -260,7 +260,7 @@ static int vGetArgs1(AlifObject* args, const wchar_t* format, va_list* pVa, int 
     if (!(flags & 1)) {
         
 
-        if (!(args->type_ == &typeTuple)) {
+        if (!(args->type_ == &_alifTupleType_)) {
             //Err_SetString(Exc_SystemError,
                 //"new style getargs format but argument is not a tuple");
             return 0;
@@ -541,7 +541,7 @@ AlifObject* const* alifArg_unpackKeywords(AlifObject* const* args, int64_t nArgs
         return nullptr;
     }
 
-    if (kwNames != nullptr && !(kwNames->type_ == &typeTuple)) {
+    if (kwNames != nullptr && !(kwNames->type_ == &_alifTupleType_)) {
         //Err_BadInternalCall();
         return nullptr;
     }

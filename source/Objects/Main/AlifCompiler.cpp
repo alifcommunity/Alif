@@ -105,7 +105,7 @@ public:
 
 
 static AlifIntT codeGen_addOpNoArg(InstructionSequence* _seq, AlifIntT _opCode, SourceLocation _loc) { // 822
-	return alifInstructionSequance_addOp(_seq, _opCode, 0, _loc);
+	return alifInstructionSequence_addOp(_seq, _opCode, 0, _loc);
 }
 
 static AlifObject* marge_constsRecursive(AlifObject* _obj) { // 857
@@ -138,7 +138,7 @@ static AlifIntT codeGen_addOpI(InstructionSequence* _seq,
 	AlifIntT _opCode, AlifSizeT _opArg, SourceLocation _loc) { // 1047
 
 	AlifIntT opArg = (AlifIntT)_opArg;
-	return alifInstructionSequance_addOp(_seq, _opCode, opArg, _loc);
+	return alifInstructionSequence_addOp(_seq, _opCode, opArg, _loc);
 }
 
 

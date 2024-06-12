@@ -6,7 +6,17 @@
 #include "alifCore_UString.h"
 
 
-
+class {
+public:
+	uint64_t filename;
+	uint64_t name;
+	uint64_t lineTable;
+	uint64_t firstLineNo;
+	uint64_t argCount;
+	uint64_t localsPlusNames;
+	uint64_t localsPlusKinds;
+	uint64_t codeAdaptive;
+} codeObject;
 
 class AlifDureRun {
 public:

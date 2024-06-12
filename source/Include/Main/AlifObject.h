@@ -39,8 +39,8 @@ public:
 
 class AlifVarObject {
 public:
-	ALIFOBJECT_HEAD
-		int64_t size_{};
+	ALIFOBJECT_HEAD;
+	int64_t size_{};
 };
 
 #define ALIFVAROBJECT_CAST(_op) ALIF_CAST(AlifVarObject*, (_op))
