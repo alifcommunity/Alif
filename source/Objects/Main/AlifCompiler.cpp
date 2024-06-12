@@ -54,21 +54,21 @@ enum ScopeType{
 
 class CompilerUnit { // 245
 public:
-	AlifSTEntryObject* uSTE;
+	AlifSTEntryObject* symTableEntry{};
 
-	AlifIntT uScopeType;
+	AlifIntT scopeType{};
 
-	AlifObject* uPrivate;
-	AlifObject* uStaticAttributes; 
+	AlifObject* private_{};
+	AlifObject* staticAttributes{};
 
-	InstructionSequence* uInstrSequence;
+	InstructionSequence* instrSequence{};
 
-	AlifIntT uNFBlocks;
-	AlifIntT uInInlinedComp;
+	AlifIntT nfBlocks{};
+	AlifIntT inInlinedComp{};
 
-	FBlockInfo uFBlock[CO_MAXBLOCKS];
+	FBlockInfo ufBlock[CO_MAXBLOCKS]{};
 
-	AlifCompileCodeUnitData uData;
+	AlifCompileCodeUnitData data{};
 };
 
 class AlifCompiler { // 275
@@ -84,9 +84,11 @@ public:
 
 	AlifObject* stack{};
 	AlifASTMem* astMem{};
+
+	bool saveNestedSeqs{};
 };
 
-#define INSTR_SEQUANCE(_c) (_c->unit->uInstrSequence)
+#define INSTR_SEQUANCE(_c) (_c->unit->instrSequence)
 
 
 #define CAPSULE_NAME L"AlifCompile.cpp AlifCompiler Unit" // 377
@@ -122,7 +124,7 @@ static AlifSizeT compiler_addConst(CompilerUnit* _cu, AlifObject* _obj) { // 965
 	AlifObject* key = marge_constsRecursive(_obj);
 	if (key == nullptr) return -1;
 
-	AlifSizeT arg = dict_addObject(_cu->uData.consts, key);
+	AlifSizeT arg = dict_addObject(_cu->data.consts, key);
 	ALIF_DECREF(key);
 	return arg;
 }
@@ -131,7 +133,7 @@ static AlifIntT compilerAddOp_loadConst(CompilerUnit* _cu, SourceLocation _loc, 
 	AlifSizeT arg = compiler_addConst(_cu, _obj);
 	if (arg < 0) return -1;
 
-	return codeGen_addOpI(_cu->uInstrSequence, LOAD_CONST, arg, _loc);
+	return codeGen_addOpI(_cu->instrSequence, LOAD_CONST, arg, _loc);
 }
 
 static AlifIntT codeGen_addOpI(InstructionSequence* _seq,
@@ -297,28 +299,28 @@ static AlifIntT compiler_setQualName(AlifCompiler* _compiler) { // 608
 		AlifObject* capsule = ALIFLIST_GET_ITEM(_compiler->stack, stackSize - 1);
 		CompilerUnit* parent = (CompilerUnit*)alifCapsule_getPointer(capsule, CAPSULE_NAME);
 
-		if (cu->uScopeType == Compiler_Scope_Function
-			or cu->uScopeType == Compiler_Scope_AsyncFunction
-			or cu->uScopeType == Compiler_Scope_Class) {
-			mangled = alif_mangle(parent->uPrivate, cu->uData.name);
+		if (cu->scopeType == Compiler_Scope_Function
+			or cu->scopeType == Compiler_Scope_AsyncFunction
+			or cu->scopeType == Compiler_Scope_Class) {
+			mangled = alif_mangle(parent->private_, cu->data.name);
 			if (!mangled) return -1;
 
-			scope = alifST_getScope(parent->uSTE, mangled);
+			scope = alifST_getScope(parent->symTableEntry, mangled);
 			ALIF_DECREF(mangled);
 			if (scope == GLOBAL_EXPLICIT) forceGlobal = 1;
 		}
 
 		if (!forceGlobal) {
-			if (parent->uScopeType == Compiler_Scope_Function
-				or parent->uScopeType == Compiler_Scope_AsyncFunction)
+			if (parent->scopeType == Compiler_Scope_Function
+				or parent->scopeType == Compiler_Scope_AsyncFunction)
 			{
 				//ALIF_DECLARE_STR(dotLocal, L".<locals>");
 				AlifObject* name1 = alifUStr_decodeStringToUTF8(L"dotLocals");
-				base = alifUStr_concat(parent->uData.qualName, name1);
+				base = alifUStr_concat(parent->data.qualName, name1);
 				if (base == nullptr) return -1;
 			}
 			else {
-				base = ALIF_NEWREF(parent->uData.qualName);
+				base = ALIF_NEWREF(parent->data.qualName);
 			}
 		}
 
@@ -330,13 +332,13 @@ static AlifIntT compiler_setQualName(AlifCompiler* _compiler) { // 608
 		name = alifUStr_concat(base, name2);
 		ALIF_DECREF(base);
 		if (name == nullptr) return -1;
-		alifUStr_append(&name, cu->uData.name);
+		alifUStr_append(&name, cu->data.name);
 		if (name == nullptr) return -1;
 	}
 	else {
-		name = ALIF_NEWREF(cu->uData.name);
+		name = ALIF_NEWREF(cu->data.name);
 	}
-	cu->uData.qualName = name;
+	cu->data.qualName = name;
 
 	return 1;
 }
@@ -401,83 +403,83 @@ static AlifIntT compiler_enterScope(AlifCompiler* _compiler,
 		return -1;
 	}
 
-	cu->uScopeType = _scopeType;
-	cu->uData.argCount = 0;
-	cu->uData.posOnlyArgCount = 0;
-	cu->uData.kwOnlyArgCount = 0;
-	cu->uSTE = alifSymTable_lookup(_compiler->symTable, _key);
-	if (!cu->uSTE) {
+	cu->scopeType = _scopeType;
+	cu->data.argCount = 0;
+	cu->data.posOnlyArgCount = 0;
+	cu->data.kwOnlyArgCount = 0;
+	cu->symTableEntry = alifSymTable_lookup(_compiler->symTable, _key);
+	if (!cu->symTableEntry) {
 		// error
 		return -1;
 	}
 
-	cu->uData.name = ALIF_NEWREF(_name);
-	cu->uData.varNames = list_toDict(cu->uSTE->steVarNames);
-	if (!cu->uData.varNames) {
+	cu->data.name = ALIF_NEWREF(_name);
+	cu->data.varNames = list_toDict(cu->symTableEntry->steVarNames);
+	if (!cu->data.varNames) {
 		//compilerUnit_free(cu);
 		return -1;
 	}
 
-	cu->uData.cellVars = dict_byType(cu->uSTE->steSymbols, CELL, DEF_COMP_CELL, 0);
-	if (!cu->uData.cellVars) {
+	cu->data.cellVars = dict_byType(cu->symTableEntry->steSymbols, CELL, DEF_COMP_CELL, 0);
+	if (!cu->data.cellVars) {
 		//compilerUnit_free(cu);
 		return -1;
 	}
 
-	if (cu->uSTE->steNeedsClassClosure) {
+	if (cu->symTableEntry->steNeedsClassClosure) {
 		AlifSizeT res{};
 		AlifObject* name = alifUStr_decodeStringToUTF8(L"__class__");
-		res = dict_addObject(cu->uData.cellVars, name);
+		res = dict_addObject(cu->data.cellVars, name);
 		if (res < 0) {
 			//compilerUnit_free(cu);
 			return -1;
 		}
 	}
 
-	if (cu->uSTE->steNeedsClassDict) {
+	if (cu->symTableEntry->steNeedsClassDict) {
 		AlifSizeT res{};
 		AlifObject* name = alifUStr_decodeStringToUTF8(L"__classdict__");
-		res = dict_addObject(cu->uData.cellVars, name);
+		res = dict_addObject(cu->data.cellVars, name);
 		if (res < 0) {
 			//compilerUnit_free(cu);
 			return -1;
 		}
 	}
 
-	cu->uData.freeVars = dict_byType(cu->uSTE->steSymbols, FREE, DEF_FREE_CLASS, ALIFDICT_GET_SIZE(cu->uData.cellVars));
-	if (!cu->uData.freeVars) {
+	cu->data.freeVars = dict_byType(cu->symTableEntry->steSymbols, FREE, DEF_FREE_CLASS, ALIFDICT_GET_SIZE(cu->data.cellVars));
+	if (!cu->data.freeVars) {
 		//compilerUnit_free(cu);
 		return -1;
 	}
 
-	cu->uNFBlocks = 0;
-	cu->uInInlinedComp = 0;
-	cu->uData.firstLineNo = _lineNo;
-	cu->uData.consts = alifNew_dict();
-	if (!cu->uData.consts) {
+	cu->nfBlocks = 0;
+	cu->inInlinedComp = 0;
+	cu->data.firstLineNo = _lineNo;
+	cu->data.consts = alifNew_dict();
+	if (!cu->data.consts) {
 		//compilerUnit_free(cu);
 		return -1;
 	}
 
-	cu->uData.names = alifNew_dict();
-	if (!cu->uData.names) {
+	cu->data.names = alifNew_dict();
+	if (!cu->data.names) {
 		//compilerUnit_free(cu);
 		return -1;
 	}
 
-	cu->uPrivate = nullptr;
+	cu->private_ = nullptr;
 	if (_scopeType == ScopeType::Compiler_Scope_Class) {
-		cu->uStaticAttributes = alifNew_set(0);
-		if (!cu->uStaticAttributes) {
+		cu->staticAttributes = alifNew_set(0);
+		if (!cu->staticAttributes) {
 			//compilerUnit_free(cu);
 			return -1;
 		}
 	}
 	else {
-		cu->uStaticAttributes = nullptr;
+		cu->staticAttributes = nullptr;
 	}
 
-	cu->uInstrSequence = (InstructionSequence*)alifInstructionSequance_new();
+	cu->instrSequence = (InstructionSequence*)alifInstructionSequance_new();
 
 	if (_compiler->unit) {
 		AlifObject* capsule = alifCapsule_new(_compiler->unit, CAPSULE_NAME, nullptr);
@@ -487,13 +489,13 @@ static AlifIntT compiler_enterScope(AlifCompiler* _compiler,
 			return -1;
 		}
 		ALIF_DECREF(capsule);
-		cu->uPrivate = ALIF_XNEWREF(_compiler->unit->uPrivate);
+		cu->private_ = ALIF_XNEWREF(_compiler->unit->private_);
 	}
 	_compiler->unit = cu;
 
 	_compiler->nestLevel++;
 
-	if (cu->uScopeType == ScopeType::Compiler_Scope_Module) {
+	if (cu->scopeType == ScopeType::Compiler_Scope_Module) {
 		location.lineNo = 0;
 	}
 	else {
@@ -503,11 +505,44 @@ static AlifIntT compiler_enterScope(AlifCompiler* _compiler,
 	}
 	ADDOP_I(_compiler, location, RESUME, RESUME_ATFUNC_START);
 
-	if (cu->uScopeType == ScopeType::Compiler_Scope_Module) {
+	if (cu->scopeType == ScopeType::Compiler_Scope_Module) {
 		location.lineNo = -1;
 	}
 
 	return 1;
+}
+
+static void compiler_exitScope(AlifCompiler* _compiler) { // 1293
+	//AlifObject* exc = alifErr_getRaisedException();
+
+	InstructionSequence* nestedSeq = nullptr;
+	if (_compiler->saveNestedSeqs) {
+		nestedSeq = _compiler->unit->instrSequence;
+		ALIF_INCREF(nestedSeq);
+	}
+	_compiler->nestLevel--;
+	//compiler_unitFree(_compiler->unit);
+	/* Restore c->u to the parent unit. */
+	AlifSizeT n = ALIFLIST_GET_SIZE(_compiler->stack) - 1;
+	if (n >= 0) {
+		AlifObject* capsule = ALIFLIST_GET_ITEM(_compiler->stack, n);
+		_compiler->unit = (CompilerUnit*)alifCapsule_getPointer(capsule, CAPSULE_NAME);
+
+		if (alifSequence_delItem(_compiler->stack, n) < 0) {
+			// error
+		}
+		if (nestedSeq != nullptr) {
+			if (alifInstructionSequence_addNested(_compiler->unit->instrSequence, nestedSeq) < 0) {
+				// error
+			}
+		}
+	}
+	else {
+		_compiler->unit = nullptr;
+	}
+	ALIF_XDECREF(nestedSeq);
+
+	//alifErr_setRaisedException(exc);
 }
 
 static AlifIntT compiler_enterAnonymousScope(AlifCompiler* _compiler, Module* _module) { // 1700
@@ -552,7 +587,7 @@ static AlifCodeObject* compiler_module(AlifCompiler* _compiler, Module* _module)
 	codeObject = optimize_andAssemble(_compiler, addNone);
 
 done:
-	//compiler_exitScope(_compiler);
+	compiler_exitScope(_compiler);
 	return codeObject;
 }
 
@@ -618,7 +653,7 @@ static AlifIntT compiler_visitStatement(AlifCompiler* _compiler, Statement* _stm
 
 static AlifIntT compiler_body(AlifCompiler* _compiler, SourceLocation _loc, StmtSeq* _stmts) { // 1628
 
-	if (_compiler->unit->uScopeType == ScopeType::Compiler_Scope_Module and SEQ_LEN(_stmts)) {
+	if (_compiler->unit->scopeType == ScopeType::Compiler_Scope_Module and SEQ_LEN(_stmts)) {
 		Statement* stmt = (Statement*)SEQ_GET(_stmts, 0);
 		_loc = LOC(stmt);
 	}
@@ -733,26 +768,26 @@ static AlifCodeObject* optimize_andAssembleCodeUnit(CompilerUnit* _cu, AlifObjec
 	AlifIntT nLocalsPlus{};
 
 	AlifCodeObject* co = nullptr;
-	AlifObject* consts = constsDict_keysInorder(_cu->uData.consts);
+	AlifObject* consts = constsDict_keysInorder(_cu->data.consts);
 	if (consts == nullptr) goto error;
 
-	cfg = instrSequence_toCFG(_cu->uInstrSequence);
+	cfg = instrSequence_toCFG(_cu->instrSequence);
 	if (cfg == nullptr) goto error;
 
-	nLocals = (AlifIntT)ALIFDICT_GET_SIZE(_cu->uData.varNames);
-	nParams = (AlifIntT)ALIFDICT_GET_SIZE(_cu->uSTE->steVarNames);
+	nLocals = (AlifIntT)ALIFDICT_GET_SIZE(_cu->data.varNames);
+	nParams = (AlifIntT)ALIFDICT_GET_SIZE(_cu->symTableEntry->steVarNames);
 
-	if (alifCFG_optimizeCodeUnit(cfg, consts, nLocals, nParams, _cu->uData.firstLineNo) < 0) {
+	if (alifCFG_optimizeCodeUnit(cfg, consts, nLocals, nParams, _cu->data.firstLineNo) < 0) {
 		goto error;
 	}
 
-	if (alifCFG_optimizedCFGToInstructionSeq(cfg, &_cu->uData,
+	if (alifCFG_optimizedCFGToInstructionSeq(cfg, &_cu->data,
 		&stackDepth, &nLocalsPlus, &optimizedInstrs) < 0) {
 		goto error;
 	}
 
 	/* المجمع */
-	co = alifAssemble_makeCodeObject(&_cu->uData, consts,
+	co = alifAssemble_makeCodeObject(&_cu->data, consts,
 		stackDepth, &optimizedInstrs, nLocalsPlus, _fn);
 
 error:

@@ -1,9 +1,13 @@
 ﻿#include "alif.h"
 
 #include "AlifCore_AST.h"
+#include "AlifCore_Compile.h"
+#include "AlifCore_Interpreter.h"
+#include "AlifCore_Object.h"
+#include "AlifCore_AlifCycle.h"
+#include "AlifCore_AlifState.h"
 #include "AlifParserEngine.h"
 //#include "AlifCore_AlifRun.h"
-#include "AlifCore_Compile.h"
 
 #ifdef _WINDOWS
 #include "windows.h"
@@ -17,6 +21,8 @@
 
 static AlifObject* alifRun_module(Module* _module, AlifObject* _fn, AlifASTMem* _astMem) { // 1299
 
+	AlifThread* thread_ = alifThread_get();
+
 	AlifCodeObject* codeObj = alifAST_compile(_module, _fn, -1, _astMem);
 	if (codeObj == nullptr) {
 		// error
@@ -24,9 +30,8 @@ static AlifObject* alifRun_module(Module* _module, AlifObject* _fn, AlifASTMem* 
 	}
 
 
-	//AlifObject* exec = run_evalCodeObj(thread_, codeObj, globals, locals);
+	//AlifObject* exec = run_evalCodeObject(thread_, codeObj);
 	//return exec;
-	return nullptr; // temp
 }
 
 

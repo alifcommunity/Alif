@@ -258,6 +258,33 @@ int alifIter_check(AlifObject* obj)
     return (tp->iterNext != nullptr);
 }
 
+AlifIntT alifSequence_delItem(AlifObject* _s, AlifSizeT _i) { // 1959
+	if (_s == nullptr) {
+		//null_error();
+		return -1;
+	}
+
+	AlifSequenceMethods* m = ALIF_TYPE(_s)->asSequence;
+	if (m and m->assItem) {
+		if (_i < 0) {
+			if (m->length_) {
+				AlifSizeT l = (*m->length_)(_s);
+				if (l < 0) return -1;
+				_i += l;
+			}
+		}
+		int res = m->assItem(_s, _i, (AlifObject*)nullptr);
+		return res;
+	}
+
+	if (ALIF_TYPE(_s)->asMapping and ALIF_TYPE(_s)->asMapping->assSubScript) {
+		// error
+		return -1;
+	}
+	// error
+	return -1;
+}
+
 AlifObject* alifSequence_list(AlifObject* v)
 {
     AlifObject* result;  
@@ -304,8 +331,7 @@ AlifObject* alifSequence_fast(AlifObject* v, const wchar_t* m)
     return v;
 }
 
-AlifObject* alifObject_getIter(AlifObject* o)
-{
+AlifObject* alifObject_getIter(AlifObject* o) {
     AlifInitObject* t = o->type_;
     GetIterFunc f;
 

@@ -417,7 +417,7 @@ class AlifMappingMethods {
 public:
 	LenFunc length_;
 	BinaryFunc subscript_;
-	ObjObjArgProc assSubscript;
+	ObjObjArgProc assSubScript;
 };
 
 class AlifBufferProcs {
