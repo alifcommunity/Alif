@@ -68,7 +68,7 @@ int alifRun_simpleFileObj(FILE* _fp, AlifObject* _fn, int _fClose) {
 		goto done;
 	}
 
-	ALIF_DECREF(mod);
+	//ALIF_DECREF(mod); // يجب إصلاح دالة الحذف داخل هذا المتغير الاسمي
 	exitcode = 0;
 
 done:
