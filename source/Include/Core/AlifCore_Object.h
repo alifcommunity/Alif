@@ -3,8 +3,8 @@
 
 #define ALIFSUBOBJECT_HEAD_INIT(_type)       \
     {                                        \
-        .ref_ = ALIF_IMMORTAL_REFCENT,    \
-        .type_ = (_type),                 \
+         ALIF_IMMORTAL_REFCENT,    \
+         (_type),                 \
     } \
 
 #define ALIFSUBVAROBJECT_HEAD_INIT(_type, _size)    \
@@ -54,16 +54,16 @@ alifSubType_hasFeature(AlifTypeObject* _type, unsigned long _feature) {
     return ((_type->flags_ & _feature) != 0);
 }
 
-static inline void alifObject_init(AlifObject* _op, AlifTypeObject* _typeObj)
+static inline void alifSubObject_init(AlifObject* _op, AlifTypeObject* _typeObj)
 {
     ALIFSET_TYPE(_op, _typeObj);
     ALIF_INCREF(_typeObj);
-    //alifSub_newReference(_op);
+    alifSub_newReference(_op);
 }
 
 static inline void alifSubObject_initVar(AlifVarObject* _op, AlifTypeObject* _typeObj, int64_t _size)
 {
-    alifObject_init((AlifObject*)_op, _typeObj);
+    alifSubObject_init((AlifObject*)_op, _typeObj);
     ALIFSET_SIZE(_op, _size);
 }
 

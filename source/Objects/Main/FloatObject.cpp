@@ -114,13 +114,13 @@ long double digit_strToDouble(const wchar_t* _str) {
 
 AlifObject* alifFloat_fromString(AlifObject* _str) {
 
-	if (_str->type_ != &_typeUnicode_) {
+	if (_str->type_ != &_alifUStrType_) {
 		std::wcout << L"يجب ان يكون نوع المدخل نص للتحويل الى عدد عشري\n" << std::endl;
 		exit(-1);
 	}
 
 	AlifUStrObject* string_ = (AlifUStrObject*)_str;
-	if (string_->kind == 4) {
+	if (string_->kind_ == 4) {
 		std::wcout << L"نوع الترميز غير صحيح في النص للتحويل الى عدد عشري\n" << std::endl;
 		exit(-1);
 	}
@@ -322,7 +322,7 @@ static AlifObject* float_compare(AlifObject* _v, AlifObject* _w, int _op)
 		j_ = ((AlifFloatObject*)_w)->digits_;
 
 	else if (!isfinite(i_)) {
-		if (((AlifIntegerObject*)_w)->_base_.type_ == &_typeInteger_)
+		if (((AlifIntegerObject*)_w)->_base_.type_ == &_alifIntegerType_)
 			/* If i is an infinity, its magnitude exceeds any
 			 * finite integer, so it doesn't matter which int we
 			 * compare i with.  If i is a NaN, similarly.
@@ -332,7 +332,7 @@ static AlifObject* float_compare(AlifObject* _v, AlifObject* _w, int _op)
 			//goto Unimplemented;
 	}
 
-	else if (((AlifIntegerObject*)_w)->_base_.type_ == &_typeInteger_) {
+	else if (((AlifIntegerObject*)_w)->_base_.type_ == &_alifIntegerType_) {
 		int vSign = i_ == 0.0 ? 0 : i_ < 0.0 ? -1 : 1;
 		int wSign = ((AlifIntegerObject*)_w)->sign_;
 		size_t nBits{};
@@ -535,7 +535,7 @@ static AlifObject* float_new_impl(AlifTypeObject* _type, AlifObject* _x)
 		return alifFloat_fromDouble(0.0);
 	}
 
-	if (_x->type_ == &_typeUnicode_)
+	if (_x->type_ == &_alifUStrType_)
 		return alifFloat_fromString(_x);
 	return alifInteger_float(_x);
 }

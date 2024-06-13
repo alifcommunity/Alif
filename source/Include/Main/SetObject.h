@@ -1,7 +1,14 @@
 #pragma once
 
 
-extern AlifTypeObject _TypeSet_;
+extern AlifTypeObject _alifSetType_;
+extern AlifTypeObject _alifSetIterType_;
+
+
+extern AlifObject _dummyStruct_;
+
+#define dummy (&_dummyStruct_)
+
 
 AlifObject* alifNew_set(AlifObject*);
 
@@ -28,5 +35,5 @@ public:
     size_t hash_;             
     int64_t finger_;         
     SetEntry smallTable[ALIFSET_MINSIZE];
-    AlifObject* weakreFlist;     
+    AlifObject* weakRefList;     
 } ;

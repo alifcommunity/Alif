@@ -53,7 +53,7 @@ AlifVarObject* alifObject_InitVar(AlifVarObject* _op, AlifTypeObject* _tp, int64
 	return _op;
 }
 
-AlifObject* alifObject_new(AlifTypeObject* _tp)
+AlifObject* alifSubObject_new(AlifTypeObject* _tp)
 {
 	AlifObject* op_ = (AlifObject*)alifMem_objAlloc(_tp->basicSize);
 	if (op_ == nullptr) {
@@ -67,7 +67,7 @@ AlifObject* alifObject_new(AlifTypeObject* _tp)
 AlifVarObject* alifSubObject_newVar(AlifTypeObject* _tp, int64_t _nItems)
 {
 	AlifVarObject* op_;
-	const size_t size_ = alifObject_varSize(_tp, _nItems);
+	const size_t size_ = alifSubObject_varSize(_tp, _nItems);
 	op_ = (AlifVarObject*)alifMem_objAlloc(size_);
 	if (op_ == nullptr) {
 		std::wcout << L"لا يمكن تهيئة كائن غير موجود\n" << std::endl;
@@ -213,7 +213,7 @@ AlifObject** alifSubObject_computedDictPointer(AlifObject* _obj)
 		if (tsize_ < 0) {
 			tsize_ = -tsize_;
 		}
-		size_t size_ = alifObject_varSize(tp_, tsize_);
+		size_t size_ = alifSubObject_varSize(tp_, tsize_);
 		dictOffset += (int64_t)size_;
 
 	}

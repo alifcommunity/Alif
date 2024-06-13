@@ -68,7 +68,7 @@ AlifObject* alif_chars_makeTrans(AlifBuffer* from, AlifBuffer* to)
     AlifObject *res = alifBytes_fromStringAndSize(nullptr, 256);
     if (!res)
         return nullptr;
-    p = ((AlifWBytesObject*)res)->value;
+    p = ((AlifWBytesObject*)res)->value_;
     for (i = 0; i < 256; i++)
         p[i] = (char)i;
     for (i = 0; i < from->len; i++) {

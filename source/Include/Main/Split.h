@@ -15,10 +15,10 @@ static void split_add(STRINGLIB_CHAR* data, int64_t left, int64_t right,
     AlifObject* sub{};
     if (sizeof(STRINGLIB_CHAR) > sizeof(uint32_t))
     {
-        sub = alifUnicode_fromUint32(((uint32_t*)data)+(left), (right)-(left));
+        sub = alifUStr_fromUint32(((uint32_t*)data)+(left), (right)-(left));
     }
     else {
-        sub = alifUnicode_fromUint16(((uint16_t*)data)+(left), (right)-(left));
+        sub = alifUStr_fromUint16(((uint16_t*)data)+(left), (right)-(left));
     }
 
     if (count < MAX_PREALLOC) {
@@ -108,7 +108,7 @@ AlifObject* split_char(AlifObject* str_obj,
         }
     }
 #if !STRINGLIB_MUTABLE
-    if (count == 0 && (str_obj->type_ == &_typeUnicode_)) {
+    if (count == 0 && (str_obj->type_ == &_alifUStrType_)) {
         /* ch not in str_obj, so just use str_obj as list[0] */
         //_INCREF(str_obj);
         alifList_setItem(list, 0, (AlifObject*)str_obj);
@@ -157,7 +157,7 @@ AlifObject* split(AlifObject* str_obj,
         i = j + sep_len;
     }
 #if !STRINGLIB_MUTABLE
-    if (count == 0 && (str_obj->type_ == &_typeUnicode_)) {
+    if (count == 0 && (str_obj->type_ == &_alifUStrType_)) {
         /* No match in str_obj, so just use it as list[0] */
         //_INCREF(str_obj);
         alifList_setItem(list, 0, (AlifObject*)str_obj);

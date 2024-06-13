@@ -12,6 +12,10 @@ public:
 
 extern AlifInitObject typeList;
 
+#define ALIFLIST_CHECK(_op) \
+    ALIFTYPE_FASTSUBCLASS(ALIF_TYPE(_op), ALIFTPFLAGS_LIST_SUBCLASS)
+#define ALIFLIST_CHECKEXACT(_op) ALIF_IS_TYPE((_op), &typeList)
+
 AlifObject* alifNew_list(size_t size_);
 size_t alifList_size(AlifObject* list);
 
@@ -25,4 +29,19 @@ bool alifList_append(AlifObject*, AlifObject*);
 
 AlifObject* list_getSlice(AlifObject*, size_t , size_t);
 int list_setSlice(AlifObject*, int64_t, int64_t, AlifObject*);
+
+int alifList_sort(AlifObject*);
+AlifObject* alifList_asTuple(AlifObject*);
+
+#define ALIFSUBLIST_CAST(op) \
+    (ALIFLIST_CHECK(op)), ALIF_CAST(AlifListObject*, (op))
+
+
+static inline void alifList_set_item(AlifObject* _op, int64_t _index, AlifObject* _value) {
+	AlifListObject* list_ = (AlifListObject*)_op;
+	list_->items[_index] = _value;
+}
+#define ALIFLIST_SET_ITEM(_op, _index, _value) \
+    alifList_set_item(ALIFSUBOBJECT_CAST(_op), (_index), ALIFSUBOBJECT_CAST(_value))
+
 

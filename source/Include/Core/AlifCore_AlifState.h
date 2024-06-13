@@ -1,13 +1,11 @@
-#pragma once
+﻿#pragma once
 
 #include "AlifCore_DureRun.h"
-
 
 
 #if defined(HAVE_LOCAL_THREAD)
 extern ALIF_LOCAL_THREAD AlifThread* _alifTSSThread_;
 #endif
-
 
 static inline AlifThread* alifThread_get() {
 #ifdef HAVE_LOCAL_THREAD

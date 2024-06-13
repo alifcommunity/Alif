@@ -3,3 +3,5 @@
 #define ALIF_RVALUE(EXPR) ((void)0, (EXPR))
 
 #define ALIFTUPLE_ITEMS(object) ALIF_RVALUE(((AlifTupleObject*)(object))->items)
+
+AlifObject* alifSubTuple_fromArray(AlifObject* const* , size_t );

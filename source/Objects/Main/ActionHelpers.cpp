@@ -104,7 +104,7 @@ Expression* alifParserEngine_joinNamesWithDot(AlifParser* _p, Expression* _first
 Alias* alifParserEngine_aliasForStar(AlifParser* _p,
 	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 
-	AlifObject* str_ = alifUnicode_internFromString(L"*");
+	AlifObject* str_ = alifUStr_internFromString(L"*");
 	if (!str_) return nullptr;
 
 	if (alifASTMem_listAddAlifObj(_p->astMem, str_) < 0) {
@@ -626,7 +626,7 @@ Expression* alifParserEngine_collectCallSeqs(AlifParser* _p, ExprSeq* _a, Seq* _
 
 static Expression* alifParserEngine_decodeFStringPart(AlifParser* _p, AlifIntT _isRaw, Expression* _const, AlifPToken* _token) {
 
-	const wchar_t* bStr = alifUnicode_asUTF8(_const->V.constant.val);
+	const wchar_t* bStr = alifUStr_asUTF8(_const->V.constant.val);
 	if (bStr == nullptr) return nullptr;
 
 	AlifUSizeT len_;
@@ -714,8 +714,8 @@ Expression* alifParserEngine_joinedStr(AlifParser* _p, AlifPToken* _a, ExprSeq* 
 			/* Tokenizer emits string parts even when the underlying string
 			might become an empty value (e.g. FSTRING_MIDDLE with the value \\n)
 			so we need to check for them and simplify it here. */
-			if (ALIFUNICODE_CHECK_TYPE(item_->V.constant.val) and
-				ALIFUNICODE_GET_LENGTH(item_->V.constant.val) == 0)
+			if (ALIFUSTR_CHECK_TYPE(item_->V.constant.val) and
+				ALIFUSTR_GET_LENGTH(item_->V.constant.val) == 0)
 				continue;
 		}
 		SEQ_SET(seq_, index_++, item_);
@@ -795,7 +795,7 @@ Expression* alifParserEngine_formattedValue(AlifParser* _p, Expression* _expr, A
 	AlifIntT conversionVal = -1;
 	if (_c != nullptr) {
 		Expression* conversionExpr = (Expression*)_c->result;
-		AlifUCS4 first = ALIFUNICODE_READ_WCHAR(conversionExpr->V.name.name, 0);
+		AlifUCS4 first = ALIFUSTR_READ_WCHAR(conversionExpr->V.name.name, 0);
 
 		/*
 		.
@@ -904,8 +904,8 @@ Expression* alifParserEngine_combineStrings(AlifParser* _p, ExprSeq* _strings,
 		Expression* element_ = SEQ_GET(flattened_, i);
 
 		if (fStringFound and element_->type == ConstantK and
-			ALIFUNICODE_CHECK_TYPE(element_->V.constant.val) and
-			ALIFUNICODE_GET_LENGTH(element_->V.constant.val) == 0)
+			ALIFUSTR_CHECK_TYPE(element_->V.constant.val) and
+			ALIFUSTR_GET_LENGTH(element_->V.constant.val) == 0)
 			continue;
 
 		if (!prevIsConstant or element_->type != ConstantK) nElements++;

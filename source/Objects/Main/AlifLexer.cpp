@@ -111,11 +111,11 @@ static AlifIntT set_fStringExpr(TokenInfo* _tokInfo, AlifToken* _token, wchar_t 
 		}
 
 		result[j] = L'\0';  // Null-terminate the result string
-		res = alifUnicode_decodeUTF8(result, j, nullptr);
+		res = alifUStr_decodeUTF8(result, j, nullptr);
 		alifMem_dataFree(result);
 	}
 	else {
-		res = alifUnicode_decodeUTF8(tokMode->lastExprBuff, tokMode->lastExprSize - tokMode->lastExprEnd, nullptr);
+		res = alifUStr_decodeUTF8(tokMode->lastExprBuff, tokMode->lastExprSize - tokMode->lastExprEnd, nullptr);
 	}
 
 	if (!res) return -1;

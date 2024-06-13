@@ -3,9 +3,9 @@
 #define STRINGLIB_FASTSEARCH_H
 
 #ifdef DEBUG
-#  define ALIF_SAFE_DOWNCAST(VALUE, WIDE, NARROW) 
+#  define ALIF_SAFE_DOWNCAST(_VALUE, _WIDE, _NARROW) 
 #else
-#  define ALIF_SAFE_DOWNCAST(VALUE, WIDE, NARROW) ((NARROW)VALUE)
+#  define ALIF_SAFE_DOWNCAST(_VALUE, _WIDE, _NARROW) ((_NARROW)_VALUE)
 #endif
 
 // in file alifConfig.h in 64
@@ -23,10 +23,10 @@
 #define STRINGLIB_BLOOM_WIDTH 32
 #endif
 
-#define STRINGLIB_BLOOM_ADD(mask, ch) \
-    ((mask |= (1UL << ((ch) & (STRINGLIB_BLOOM_WIDTH -1)))))
-#define STRINGLIB_BLOOM(mask, ch)     \
-    ((mask &  (1UL << ((ch) & (STRINGLIB_BLOOM_WIDTH -1)))))
+#define STRINGLIB_BLOOM_ADD(_mask, _ch) \
+    ((_mask |= (1UL << ((_ch) & (STRINGLIB_BLOOM_WIDTH -1)))))
+#define STRINGLIB_BLOOM(_mask, _ch)     \
+    ((_mask &  (1UL << ((_ch) & (STRINGLIB_BLOOM_WIDTH -1)))))
 
 #ifdef STRINGLIB_FAST_MEMCHR
 #  define MEMCHR_CUT_OFF 15
@@ -41,57 +41,53 @@
 // تم استخدام template بدل التعريفات في ملف ucs2lib.h and ucs4lib.h
 // لن يتم حذف ملفين ucs2lib.h and ucs4lib.h الى ان يتم اخذ منها جميع البيانات ويستغنى عنها كليا
 template <typename STRINGLIB_CHAR>
-static __inline int64_t __fastcall find_char(const STRINGLIB_CHAR* s, int64_t n, STRINGLIB_CHAR ch)
+static __inline int64_t __fastcall find_char(const STRINGLIB_CHAR* _s, int64_t _n, STRINGLIB_CHAR _ch)
 {
-    const STRINGLIB_CHAR* p, * e;
+    const STRINGLIB_CHAR* p_, * e_;
 
-    p = s;
-    e = s + n;
-    if (n > MEMCHR_CUT_OFF) {
+    p_ = _s;
+    e_ = _s + _n;
+    if (_n > MEMCHR_CUT_OFF) {
 #ifdef STRINGLIB_FAST_MEMCHR
-        p = (const STRINGLIB_CHAR*)STRINGLIB_FAST_MEMCHR(s, ch, n);
-        if (p != NULL)
-            return (p - s);
+        p_ = (const STRINGLIB_CHAR*)STRINGLIB_FAST_MEMCHR(_s, _ch, _n);
+        if (p_ != NULL)
+            return (p_ - _s);
         return -1;
 #else
-        /* use memchr if we can choose a needle without too many likely
-           false positives */
-        const STRINGLIB_CHAR* s1, * e1;
-        unsigned char needle = ch & 0xff;
-        /* If looking for a multiple of 256, we'd have too
-           many false positives looking for the '\0' byte in UCS2
-           and UCS4 representations. */
-        if (needle != 0) {
+
+        const STRINGLIB_CHAR* s1_, * e1_;
+        unsigned char needle = _ch & 0xff;
+
+        if (needle_ != 0) {
             do {
-                void* candidate = memchr(p, needle,
-                    (e - p) * sizeof(STRINGLIB_CHAR));
-                if (candidate == NULL)
+                void* candidate_ = memchr(p_, needle_,
+                    (e_ - p_) * sizeof(STRINGLIB_CHAR));
+                if (candidate_ == NULL)
                     return -1;
-                s1 = p;
-                p = (const STRINGLIB_CHAR*)
-                    ALIF_ALIGN_DOWN(candidate, sizeof(STRINGLIB_CHAR));
-                if (*p == ch)
-                    return (p - s);
-                /* False positive */
-                p++;
-                if (p - s1 > MEMCHR_CUT_OFF)
+                s1_ = p_;
+                p_ = (const STRINGLIB_CHAR*)
+                    ALIF_ALIGN_DOWN(candidate_, sizeof(STRINGLIB_CHAR));
+                if (*p_ == _ch)
+                    return (p_ - _s);
+                p_++;
+                if (p_ - s1_ > MEMCHR_CUT_OFF)
                     continue;
-                if (e - p <= MEMCHR_CUT_OFF)
+                if (e_ - p_ <= MEMCHR_CUT_OFF)
                     break;
-                e1 = p + MEMCHR_CUT_OFF;
-                while (p != e1) {
-                    if (*p == ch)
-                        return (p - s);
-                    p++;
+                e1_ = p_ + MEMCHR_CUT_OFF;
+                while (p_ != e1_) {
+                    if (*p_ == _ch)
+                        return (p_ - _s);
+                    p_++;
                 }
-            } while (e - p > MEMCHR_CUT_OFF);
+            } while (e_ - p_ > MEMCHR_CUT_OFF);
         }
 #endif
     }
-    while (p < e) {
-        if (*p == ch)
-            return (p - s);
-        p++;
+    while (p_ < e_) {
+        if (*p_ == _ch)
+            return (p_ - _s);
+        p_++;
     }
     return -1;
 }
@@ -105,193 +101,138 @@ static __inline int64_t __fastcall find_char(const STRINGLIB_CHAR* s, int64_t n,
 #endif
 
 template <typename STRINGLIB_CHAR>
-static __inline int64_t __fastcall rfind_char(const STRINGLIB_CHAR* s, int64_t n, STRINGLIB_CHAR ch)
+static __inline int64_t __fastcall rfind_char(const STRINGLIB_CHAR* _s, int64_t _n, STRINGLIB_CHAR _ch)
 {
-    const STRINGLIB_CHAR* p;
+    const STRINGLIB_CHAR* p_;
 #ifdef HAVE_MEMRCHR
-    /* memrchr() is a GNU extension, available since glibc 2.1.91.  it
-       doesn't seem as optimized as memchr(), but is still quite
-       faster than our hand-written loop below. There is no wmemrchr
-       for 4-byte chars. */
 
-    if (n > MEMRCHR_CUT_OFF) {
+    if (_n > MEMRCHR_CUT_OFF) {
 #if STRINGLIB_SIZEOF_CHAR == 1
-        p = memrchr(s, ch, n);
-        if (p != NULL)
-            return (p - s);
+        p_ = memrchr(_s, _ch, _n);
+        if (p_ != NULL)
+            return (p_ - _s);
         return -1;
 #else
-        /* use memrchr if we can choose a needle without too many likely
-           false positives */
-        const STRINGLIB_CHAR* s1;
-        int64_t n1;
-        unsigned char needle = ch & 0xff;
-        /* If looking for a multiple of 256, we'd have too
-           many false positives looking for the '\0' byte in UCS2
-           and UCS4 representations. */
-        if (needle != 0) {
+        const STRINGLIB_CHAR* s1_;
+        int64_t n1_;
+        unsigned char needle_ = _ch & 0xff;
+
+        if (needle_ != 0) {
             do {
-                void* candidate = memrchr(s, needle,
-                    n * sizeof(STRINGLIB_CHAR));
-                if (candidate == NULL)
+                void* candidate_ = memrchr(_s, needle_,
+                    _n * sizeof(STRINGLIB_CHAR));
+                if (candidate_ == NULL)
                     return -1;
-                n1 = n;
-                p = (const STRINGLIB_CHAR*)
-                    ALIF_ALIGN_DOWN(candidate, sizeof(STRINGLIB_CHAR));
-                n = p - s;
-                if (*p == ch)
-                    return n;
-                /* False positive */
-                if (n1 - n > MEMRCHR_CUT_OFF)
+                n1_ = _n;
+                p_ = (const STRINGLIB_CHAR*)
+                    ALIF_ALIGN_DOWN(candidate_, sizeof(STRINGLIB_CHAR));
+                _n = p_ - _s;
+                if (*p_ == _ch)
+                    return _n;
+                if (n1_ - _n > MEMRCHR_CUT_OFF)
                     continue;
-                if (n <= MEMRCHR_CUT_OFF)
+                if (_n <= MEMRCHR_CUT_OFF)
                     break;
-                s1 = p - MEMRCHR_CUT_OFF;
-                while (p > s1) {
-                    p--;
-                    if (*p == ch)
-                        return (p - s);
+                s1_ = p_ - MEMRCHR_CUT_OFF;
+                while (p_ > s1_) {
+                    p_--;
+                    if (*p_ == _ch)
+                        return (p_ - _s);
                 }
-                n = p - s;
-            } while (n > MEMRCHR_CUT_OFF);
+                _n = p_ - _s;
+            } while (_n > MEMRCHR_CUT_OFF);
         }
 #endif
     }
-#endif  /* HAVE_MEMRCHR */
-    p = s + n;
-    while (p > s) {
-        p--;
-        if (*p == ch)
-            return (p - s);
+#endif
+    p_ = _s + _n;
+    while (p_ > _s) {
+        p_--;
+        if (*p_ == _ch)
+            return (p_ - _s);
     }
     return -1;
 }
 
 #undef MEMRCHR_CUT_OFF
 
-/* Change to a 1 to see logging comments walk through the algorithm. */
 #if 0 && STRINGLIB_SIZEOF_CHAR == 1
 # define LOG(...) printf(__VA_ARGS__)
-# define LOG_STRING(s, n) printf("\"%.*s\"", (int)(n), s)
+# define LOG_STRING(_s, _n) printf("\"%.*s\"", (int)(_n), _s)
 # define LOG_LINEUP() do {                                         \
-    LOG("> "); LOG_STRING(haystack, len_haystack); LOG("\n> ");    \
-    LOG("%*s",(int)(window_last - haystack + 1 - len_needle), ""); \
-    LOG_STRING(needle, len_needle); LOG("\n");                     \
+    LOG("> "); LOG_STRING(_hayStack, _lenHayStack); LOG("\n> ");    \
+    LOG("%*s",(int)(windowLast - _hayStack + 1 - lenNeedle), ""); \
+    LOG_STRING(needle_, lenNeedle); LOG("\n");                     \
 } while(0)
 #else
 # define LOG(...)
-# define LOG_STRING(s, n)
+# define LOG_STRING(_s, _n)
 # define LOG_LINEUP()
 #endif
 
 template <typename STRINGLIB_CHAR>
-int64_t lex_search(const STRINGLIB_CHAR* needle, int64_t len_needle,
-    int64_t* return_period, int invert_alphabet)
+int64_t lex_search(const STRINGLIB_CHAR* _needle, int64_t _lenNeedle,
+    int64_t* _returnPeriod, int _invertAlphabet)
 {
-    /* Do a lexicographic search. Essentially this:
-           >>> max(needle[i:] for i in range(len(needle)+1))
-       Also find the period of the right half.   */
-    int64_t max_suffix = 0;
-    int64_t candidate = 1;
-    int64_t k = 0;
-    // The period of the right half.
-    int64_t period = 1;
+    int64_t maxSuffix = 0;
+    int64_t candidate_ = 1;
+    int64_t k_ = 0;
+    int64_t period_ = 1;
 
-    while (candidate + k < len_needle) {
-        // each loop increases candidate + k + max_suffix
-        STRINGLIB_CHAR a = needle[candidate + k];
-        STRINGLIB_CHAR b = needle[max_suffix + k];
-        // check if the suffix at candidate is better than max_suffix
-        if (invert_alphabet ? (b < a) : (a < b)) {
-            // Fell short of max_suffix.
-            // The next k + 1 characters are non-increasing
-            // from candidate, so they won't start_ a maximal suffix.
-            candidate += k + 1;
-            k = 0;
-            // We've ruled out any period smaller than what's
-            // been scanned since max_suffix.
-            period = candidate - max_suffix;
+    while (candidate_ + k_ < _lenNeedle) {
+        STRINGLIB_CHAR a_ = _needle[candidate_ + k_];
+        STRINGLIB_CHAR b_ = _needle[maxSuffix + k_];
+        if (_invertAlphabet ? (b_ < a_) : (a_ < b_)) {
+
+            candidate_ += k_ + 1;
+            k_ = 0;
+
+            period_ = candidate_ - maxSuffix;
         }
-        else if (a == b) {
-            if (k + 1 != period) {
-                // Keep scanning the equal strings
-                k++;
+        else if (a_ == b_) {
+            if (k_ + 1 != period_) {
+                k_++;
             }
             else {
-                // Matched a whole period.
-                // Start matching the next period.
-                candidate += period;
-                k = 0;
+
+                candidate_ += period_;
+                k_ = 0;
             }
         }
         else {
-            // Did better than max_suffix, so replace it.
-            max_suffix = candidate;
-            candidate++;
-            k = 0;
-            period = 1;
+            maxSuffix = candidate_;
+            candidate_++;
+            k_ = 0;
+            period_ = 1;
         }
     }
-    *return_period = period;
-    return max_suffix;
+    *_returnPeriod = period_;
+    return maxSuffix;
 }
 
-template <typename STRINGLIB_CHAR> int64_t factorize(const STRINGLIB_CHAR* needle,
-    int64_t len_needle,
-    int64_t* return_period)
+template <typename STRINGLIB_CHAR> int64_t factorize(const STRINGLIB_CHAR* _needle,
+    int64_t _lenNeedle,
+    int64_t* _returnPeriod)
 {
-    /* Do a "critical factorization", making it so that:
-       >>> needle = (left := needle[:cut]) + (right := needle[cut:])
-       where the "local period" of the cut is maximal.
+    int64_t cut1_, period1_, cut2_, period2_, cut_, period_;
+    cut1_ = lex_search(_needle, _lenNeedle, &period1_, 0);
+    cut2_ = lex_search(_needle, _lenNeedle, &period2_, 1);
 
-       The local period of the cut is the minimal length of a string w
-       such that (left endswith w or w endswith left)
-       and (right startswith w or w startswith left).
-
-       The Critical Factorization Theorem says that this maximal local
-       period is the global period of the string.
-
-       Crochemore and Perrin (1991) show that this cut can be computed
-       as the later of two cuts: one that gives a lexicographically
-       maximal right half, and one that gives the same with the
-       with respect to a reversed alphabet-ordering.
-
-       This is what we want to happen:
-           >>> x = "GCAGAGAG"
-           >>> cut, period = factorize(x)
-           >>> x[:cut], (right := x[cut:])
-           ('GC', 'AGAGAG')
-           >>> period  # right half period
-           2
-           >>> right[period:] == right[:-period]
-           True
-
-       This is how the local period lines up in the above example:
-                GC | AGAGAG
-           AGAGAGC = AGAGAGC
-       The length of this minimal repetition is 7, which is indeed the
-       period of the original string. */
-
-    int64_t cut1, period1, cut2, period2, cut, period;
-    cut1 = lex_search(needle, len_needle, &period1, 0);
-    cut2 = lex_search(needle, len_needle, &period2, 1);
-
-    // Take the later cut.
-    if (cut1 > cut2) {
-        period = period1;
-        cut = cut1;
+    if (cut1_ > cut2_) {
+        period_ = period1_;
+        cut_ = cut1_;
     }
     else {
-        period = period2;
-        cut = cut2;
+        period_ = period2_;
+        cut_ = cut2_;
     }
 
-    LOG("split: "); LOG_STRING(needle, cut);
-    LOG(" + "); LOG_STRING(needle + cut, len_needle - cut);
+    LOG("split: "); LOG_STRING(_needle, cut_);
+    LOG(" + "); LOG_STRING(_needle + cut_, _lenNeedle - cut_);
     LOG("\n");
 
-    *return_period = period;
-    return cut;
+    *_returnPeriod = period_;
+    return cut_;
 }
 
 
@@ -305,169 +246,163 @@ template <typename STRINGLIB_CHAR> int64_t factorize(const STRINGLIB_CHAR* needl
 template <typename STRINGLIB_CHAR>
 class PreWork{
 public:
-    const STRINGLIB_CHAR* needle;
-    int64_t len_needle;
-    int64_t cut;
-    int64_t period;
-    int64_t gap;
+    const STRINGLIB_CHAR* needle_;
+    int64_t lenNeedle;
+    int64_t cut_;
+    int64_t period_;
+    int64_t gap_;
     int isPeriodic;
-    SHIFT_TYPE table[TABLE_SIZE];
+    SHIFT_TYPE table_[TABLE_SIZE];
 } ;
 
 template <typename STRINGLIB_CHAR>
-static void preprocess(const STRINGLIB_CHAR* needle, int64_t len_needle,
-    PreWork<STRINGLIB_CHAR>* p)
+static void preprocess(const STRINGLIB_CHAR* _needle, int64_t _lenNeedle,
+    PreWork<STRINGLIB_CHAR>* _p)
 {
-    p->needle = needle;
-    p->len_needle = len_needle;
-    p->cut = factorize(needle, len_needle, &(p->period));
-    p->isPeriodic = (0 == memcmp(needle,
-        needle + p->period,
-        p->cut * STRINGLIB_SIZEOF_CHAR));
-    if (p->isPeriodic) {
-        p->gap = 0; // unused
+    _p->needle_ = _needle;
+    _p->lenNeedle = _lenNeedle;
+    _p->cut_ = factorize(_needle, _lenNeedle, &(_p->period_));
+    _p->isPeriodic = (0 == memcmp(_needle,
+        _needle + _p->period_,
+        _p->cut_ * STRINGLIB_SIZEOF_CHAR));
+    if (_p->isPeriodic) {
+        _p->gap_ = 0; // unused
     }
     else {
-        // A lower bound on the period
-        p->period = max(p->cut, len_needle - p->cut) + 1;
-        // The gap between the last character and the previous
-        // occurrence of an equivalent character (modulo TABLE_SIZE)
-        p->gap = len_needle;
-        STRINGLIB_CHAR last = needle[len_needle - 1] & TABLE_MASK;
-        for (int64_t i = len_needle - 2; i >= 0; i--) {
-            STRINGLIB_CHAR x = needle[i] & TABLE_MASK;
-            if (x == last) {
-                p->gap = len_needle - 1 - i;
+        _p->period_ = max(_p->cut_, _lenNeedle - _p->cut_) + 1;
+
+        _p->gap_ = _lenNeedle;
+        STRINGLIB_CHAR last_ = _needle[_lenNeedle - 1] & TABLE_MASK;
+        for (int64_t i_ = _lenNeedle - 2; i_ >= 0; i_--) {
+            STRINGLIB_CHAR x_ = _needle[i_] & TABLE_MASK;
+            if (x_ == last_) {
+                _p->gap_ = _lenNeedle - 1 - i_;
                 break;
             }
         }
     }
-    // Fill up a compressed Boyer-Moore "Bad Character" table
-    int64_t not_found_shift = min(len_needle, MAX_SHIFT);
-    for (int64_t i = 0; i < (int64_t)TABLE_SIZE; i++) {
-        p->table[i] = ALIF_SAFE_DOWNCAST(not_found_shift, int64_t, SHIFT_TYPE);
+    int64_t notFoundShift = min(_lenNeedle, MAX_SHIFT);
+    for (int64_t i_ = 0; i_ < (int64_t)TABLE_SIZE; i_++) {
+        _p->table_[i_] = ALIF_SAFE_DOWNCAST(notFoundShift, int64_t, SHIFT_TYPE);
     }
-    for (int64_t i = len_needle - not_found_shift; i < len_needle; i++) {
-        SHIFT_TYPE shift = ALIF_SAFE_DOWNCAST(len_needle - 1 - i,
+    for (int64_t i_ = _lenNeedle - notFoundShift; i_ < _lenNeedle; i_++) {
+        SHIFT_TYPE shift_ = ALIF_SAFE_DOWNCAST(_lenNeedle - 1 - i_,
             int64_t, SHIFT_TYPE);
-        p->table[needle[i] & TABLE_MASK] = shift;
+        _p->table_[_needle[i_] & TABLE_MASK] = shift_;
     }
 }
 
 template <typename STRINGLIB_CHAR>
-static int64_t two_way(const STRINGLIB_CHAR* haystack, int64_t len_haystack,
-    PreWork<STRINGLIB_CHAR>* p)
+static int64_t two_way(const STRINGLIB_CHAR* _hayStack, int64_t _lenHayStack,
+    PreWork<STRINGLIB_CHAR>* _p)
 {
-    const int64_t len_needle = p->len_needle;
-    const int64_t cut = p->cut;
-    int64_t period = p->period;
-    const STRINGLIB_CHAR* const needle = p->needle;
-    const STRINGLIB_CHAR* window_last = haystack + len_needle - 1;
-    const STRINGLIB_CHAR* const haystack_end = haystack + len_haystack;
-    SHIFT_TYPE* table = p->table;
-    const STRINGLIB_CHAR* window;
-    LOG("===== Two-way: \"%s\" in \"%s\". =====\n", needle, haystack);
+    const int64_t lenNeedle = _p->lenNeedle;
+    const int64_t cut_ = _p->cut_;
+    int64_t period_ = _p->period_;
+    const STRINGLIB_CHAR* const needle_ = _p->needle_;
+    const STRINGLIB_CHAR* windowLast = _hayStack + lenNeedle - 1;
+    const STRINGLIB_CHAR* const haystackEnd = _hayStack + _lenHayStack;
+    SHIFT_TYPE* table_ = _p->table_;
+    const STRINGLIB_CHAR* window_;
+    LOG("===== Two-way: \"%s\" in \"%s\". =====\n", needle_, _hayStack);
 
-    if (p->isPeriodic) {
+    if (_p->isPeriodic) {
         LOG("Needle is periodic.\n");
-        int64_t memory = 0;
+        int64_t memory_ = 0;
     periodicwindowloop:
-        while (window_last < haystack_end) {
+        while (windowLast < haystackEnd) {
             for (;;) {
                 LOG_LINEUP();
-                int64_t shift = table[(*window_last) & TABLE_MASK];
-                window_last += shift;
-                if (shift == 0) {
+                int64_t shift_ = table_[(*windowLast) & TABLE_MASK];
+                windowLast += shift_;
+                if (shift_ == 0) {
                     break;
                 }
-                if (window_last >= haystack_end) {
+                if (windowLast >= haystackEnd) {
                     return -1;
                 }
-                LOG("Horspool skip\n");
+                LOG("Horspool skip_\n");
             }
         no_shift:
-            window = window_last - len_needle + 1;
+            window_ = windowLast - lenNeedle + 1;
            
-            int64_t i = max(cut, memory);
-            for (; i < len_needle; i++) {
-                if (needle[i] != window[i]) {
+            int64_t i_ = max(cut_, memory_);
+            for (; i_ < lenNeedle; i_++) {
+                if (needle_[i_] != window_[i_]) {
                     LOG("Right half does not match.\n");
-                    window_last += i - cut + 1;
-                    memory = 0;
+                    windowLast += i_ - cut_ + 1;
+                    memory_ = 0;
                     goto periodicwindowloop;
                 }
             }
-            for (i = memory; i < cut; i++) {
-                if (needle[i] != window[i]) {
+            for (i_ = memory_; i_ < cut_; i_++) {
+                if (needle_[i_] != window_[i_]) {
                     LOG("Left half does not match.\n");
-                    window_last += period;
-                    memory = len_needle - period;
-                    if (window_last >= haystack_end) {
+                    windowLast += period_;
+                    memory_ = lenNeedle - period_;
+                    if (windowLast >= haystackEnd) {
                         return -1;
                     }
-                    int64_t shift = table[(*window_last) & TABLE_MASK];
-                    if (shift) {
-                        // A mismatch has been identified to the right
-                        // of where i will next start_, so we can jump
-                        // at least as far as if the mismatch occurred
-                        // on the first comparison.
-                        int64_t mem_jump = max(cut, memory) - cut + 1;
+                    int64_t shift_ = table_[(*windowLast) & TABLE_MASK];
+                    if (shift_) {
+
+                        int64_t mem_jump = max(cut_, memory_) - cut_ + 1;
                         LOG("Skip with Memory.\n");
-                        memory = 0;
-                        window_last += max(shift, mem_jump);
+                        memory_ = 0;
+                        windowLast += max(shift_, mem_jump);
                         goto periodicwindowloop;
                     }
                     goto no_shift;
                 }
             }
             LOG("Found a match!\n");
-            return window - haystack;
+            return window_ - _hayStack;
         }
     }
     else {
-        int64_t gap = p->gap;
-        period = max(gap, period);
+        int64_t gap_ = _p->gap_;
+        period_ = max(gap_, period_);
         LOG("Needle is not periodic.\n");
-        int64_t gap_jump_end = min(len_needle, cut + gap);
+        int64_t gapJumpEnd = min(lenNeedle, cut_ + gap_);
     windowloop:
-        while (window_last < haystack_end) {
+        while (windowLast < haystackEnd) {
             for (;;) {
                 LOG_LINEUP();
-                int64_t shift = table[(*window_last) & TABLE_MASK];
-                window_last += shift;
-                if (shift == 0) {
+                int64_t shift_ = table_[(*windowLast) & TABLE_MASK];
+                windowLast += shift_;
+                if (shift_ == 0) {
                     break;
                 }
-                if (window_last >= haystack_end) {
+                if (windowLast >= haystackEnd) {
                     return -1;
                 }
-                LOG("Horspool skip\n");
+                LOG("Horspool skip_\n");
             }
-            window = window_last - len_needle + 1;
+            window_ = windowLast - lenNeedle + 1;
 
-            for (int64_t i = cut; i < gap_jump_end; i++) {
-                if (needle[i] != window[i]) {
-                    LOG("Early right half mismatch: jump by gap.\n");
-                    window_last += gap;
+            for (int64_t i_ = cut_; i_ < gapJumpEnd; i_++) {
+                if (needle_[i_] != window_[i_]) {
+                    LOG("Early right half mismatch: jump by gap_.\n");
+                    windowLast += gap_;
                     goto windowloop;
                 }
             }
-            for (int64_t i = gap_jump_end; i < len_needle; i++) {
-                if (needle[i] != window[i]) {
+            for (int64_t i_ = gapJumpEnd; i_ < lenNeedle; i_++) {
+                if (needle_[i_] != window_[i_]) {lenNeedle
                     LOG("Late right half mismatch.\n");
-                    window_last += i - cut + 1;
+                    windowLast += i_ - cut_ + 1;
                     goto windowloop;
                 }
             }
-            for (int64_t i = 0; i < cut; i++) {
-                if (needle[i] != window[i]) {
+            for (int64_t i_ = 0; i_ < cut_; i_++) {
+                if (needle_[i_] != window_[i_]) {
                     LOG("Left half does not match.\n");
-                    window_last += period;
+                    windowLast += period_;
                     goto windowloop;
                 }
             }
             LOG("Found a match!\n");
-            return window - haystack;
+            return window_ - _hayStack;
         }
     }
     LOG("Not found. Returning -1.\n");
@@ -475,218 +410,204 @@ static int64_t two_way(const STRINGLIB_CHAR* haystack, int64_t len_haystack,
 }
 
 template <typename STRINGLIB_CHAR>
-static int64_t two_way_find(const STRINGLIB_CHAR* haystack,
-    int64_t len_haystack,
-    const STRINGLIB_CHAR* needle,
-    int64_t len_needle)
+static int64_t two_way_find(const STRINGLIB_CHAR* _hayStack,
+    int64_t _lenHayStack,
+    const STRINGLIB_CHAR* _needle,
+    int64_t _lenNeedle)
 {
-    LOG("###### Finding \"%s\" in \"%s\".\n", needle, haystack);
+    LOG("###### Finding \"%s\" in \"%s\".\n", _needle, _hayStack);
     PreWork<STRINGLIB_CHAR> p{};
-    preprocess(needle, len_needle, &p);
-    return two_way(haystack, len_haystack, &p);
+    preprocess(_needle, _lenNeedle, &p);
+    return two_way(_hayStack, _lenHayStack, &p);
 }
 
 template <typename STRINGLIB_CHAR>
-static int64_t two_way_count(const STRINGLIB_CHAR* haystack,
-    int64_t len_haystack,
-    const STRINGLIB_CHAR* needle,
-    int64_t len_needle,
-    int64_t maxcount)
+static int64_t two_way_count(const STRINGLIB_CHAR* _hayStack,
+    int64_t _lenHayStack,
+    const STRINGLIB_CHAR* _needle,
+    int64_t _lenNeedle,
+    int64_t _maxCount)
 {
-    LOG("###### Counting \"%s\" in \"%s\".\n", needle, haystack);
-    PreWork<STRINGLIB_CHAR> p{};
-    preprocess(needle, len_needle, &p);
-    int64_t index = 0, count = 0;
+    LOG("###### Counting \"%s\" in \"%s\".\n", _needle, _hayStack);
+    PreWork<STRINGLIB_CHAR> p_{};
+    preprocess(_needle, _lenNeedle, &p_);
+    int64_t index_ = 0, count_ = 0;
     while (1) {
-        int64_t result;
-        result = two_way(haystack + index,
-            len_haystack - index, &p);
-        if (result == -1) {
-            return count;
+        int64_t result_;
+        result_ = two_way(_hayStack + index_,
+            _lenHayStack - index_, &p_);
+        if (result_ == -1) {
+            return count_;
         }
-        count++;
-        if (count == maxcount) {
-            return maxcount;
+		count_++;
+        if (count_ == _maxCount) {
+            return _maxCount;
         }
-        index += result + len_needle;
+        index_ += result_ + _lenNeedle;
     }
-    return count;
+    return count_;
 }
 
 template <typename STRINGLIB_CHAR>
-static inline int64_t default_find(const STRINGLIB_CHAR* s, int64_t n,
-    const STRINGLIB_CHAR* p, int64_t m,
-    int64_t maxcount, int mode)
+static inline int64_t default_find(const STRINGLIB_CHAR* _s, int64_t _n,
+    const STRINGLIB_CHAR* _p, int64_t _m,
+    int64_t _maxCount, int _mode)
 {
-    const int64_t w = n - m;
-    int64_t mlast = m - 1, count = 0;
-    int64_t gap = mlast;
-    const STRINGLIB_CHAR last = p[mlast];
-    const STRINGLIB_CHAR* const ss = &s[mlast];
+    const int64_t w_ = _n - _m;
+    int64_t mLast = _m - 1, count_ = 0;
+    int64_t gap_ = mLast;
+    const STRINGLIB_CHAR last_ = _p[mLast];
+    const STRINGLIB_CHAR* const ss_ = &_s[mLast];
 
-    unsigned long mask = 0;
-    for (int64_t i = 0; i < mlast; i++) {
-        STRINGLIB_BLOOM_ADD(mask, p[i]);
-        if (p[i] == last) {
-            gap = mlast - i - 1;
+    unsigned long mask_ = 0;
+    for (int64_t i_ = 0; i_ < mLast; i_++) {
+        STRINGLIB_BLOOM_ADD(mask_, _p[i_]);
+        if (_p[i_] == last_) {
+            gap_ = mLast - i_ - 1;
         }
     }
-    STRINGLIB_BLOOM_ADD(mask, last);
+    STRINGLIB_BLOOM_ADD(mask_, last_);
 
-    for (int64_t i = 0; i <= w; i++) {
-        if (ss[i] == last) {
-            /* candidate match */
-            int64_t j;
-            for (j = 0; j < mlast; j++) {
-                if (s[i + j] != p[j]) {
+    for (int64_t i_ = 0; i_ <= w_; i_++) {
+        if (ss_[i_] == last_) {
+            int64_t j_;
+            for (j_ = 0; j_ < mLast; j_++) {
+                if (_s[i_ + j_] != _p[j_]) {
                     break;
                 }
             }
-            if (j == mlast) {
-                /* got a match! */
-                if (mode != FAST_COUNT) {
-                    return i;
+            if (j_ == mLast) {
+                
+                if (_mode != FAST_COUNT) {
+                    return i_;
                 }
-                count++;
-                if (count == maxcount) {
-                    return maxcount;
+                count_++;
+                if (count_ == _maxCount) {
+                    return _maxCount;
                 }
-                i = i + mlast;
+                i_ = i_ + mLast;
                 continue;
             }
-            /* miss: check if next character is part of pattern */
-            if (!STRINGLIB_BLOOM(mask, ss[i + 1])) {
-                i = i + m;
+            if (!STRINGLIB_BLOOM(mask_, ss_[i_ + 1])) {
+                i_ = i_ + _m;
             }
             else {
-                i = i + gap;
+                i_ = i_ + gap_;
             }
         }
         else {
-            /* skip: check if next character is part of pattern */
-            if (!STRINGLIB_BLOOM(mask, ss[i + 1])) {
-                i = i + m;
+            if (!STRINGLIB_BLOOM(mask_, ss_[i_ + 1])) {
+                i_ = i_ + _m;
             }
         }
     }
-    return mode == FAST_COUNT ? count : -1;
+    return _mode == FAST_COUNT ? count_ : -1;
 }
 
 template <typename STRINGLIB_CHAR>
-static int64_t adaptive_find(const STRINGLIB_CHAR* s, int64_t n,
-    const STRINGLIB_CHAR* p, int64_t m,
-    int64_t maxcount, int mode)
+static int64_t adaptive_find(const STRINGLIB_CHAR* _s, int64_t n,
+    const STRINGLIB_CHAR* _p, int64_t _m,
+    int64_t _maxCount, int _mode)
 {
-    const int64_t w = n - m;
-    int64_t mlast = m - 1, count = 0;
-    int64_t gap = mlast;
-    int64_t hits = 0, res;
-    const STRINGLIB_CHAR last = p[mlast];
-    const STRINGLIB_CHAR* const ss = &s[mlast];
+    const int64_t w = n - _m;
+    int64_t mLast = _m - 1, count_ = 0;
+    int64_t gap_ = mLast;
+    int64_t hits_ = 0, res_;
+    const STRINGLIB_CHAR last_ = _p[mLast];
+    const STRINGLIB_CHAR* const ss_ = &_s[mLast];
 
-    unsigned long mask = 0;
-    for (int64_t i = 0; i < mlast; i++) {
-        STRINGLIB_BLOOM_ADD(mask, p[i]);
-        if (p[i] == last) {
-            gap = mlast - i - 1;
+    unsigned long mask_ = 0;
+    for (int64_t i_ = 0; i_ < mLast; i_++) {
+        STRINGLIB_BLOOM_ADD(mask_, _p[i_]);
+        if (_p[i_] == last_) {
+            gap_ = mLast - i_ - 1;
         }
     }
-    STRINGLIB_BLOOM_ADD(mask, last);
+    STRINGLIB_BLOOM_ADD(mask_, last_);
 
-    for (int64_t i = 0; i <= w; i++) {
-        if (ss[i] == last) {
-            /* candidate match */
-            int64_t j;
-            for (j = 0; j < mlast; j++) {
-                if (s[i + j] != p[j]) {
+    for (int64_t i_ = 0; i_ <= w; i_++) {
+        if (ss_[i_] == last_) {
+            int64_t j_;
+            for (j_ = 0; j_ < mLast; j_++) {
+                if (_s[i_ + j_] != _p[j_]) {
                     break;
                 }
             }
-            if (j == mlast) {
-                /* got a match! */
-                if (mode != FAST_COUNT) {
-                    return i;
+            if (j_ == mLast) {
+                if (_mode != FAST_COUNT) {
+                    return i_;
                 }
-                count++;
-                if (count == maxcount) {
-                    return maxcount;
+                count_++;
+                if (count_ == _maxCount) {
+                    return _maxCount;
                 }
-                i = i + mlast;
+                i_ = i_ + mLast;
                 continue;
             }
-            hits += j + 1;
-            if (hits > m / 4 && w - i > 2000) {
-                if (mode == FAST_SEARCH) {
-                    res = two_way_find(s + i, n - i, p, m);
-                    return res == -1 ? -1 : res + i;
+            hits_ += j_ + 1;
+            if (hits_ > _m / 4 && w - i_ > 2000) {
+                if (_mode == FAST_SEARCH) {
+                    res_ = two_way_find(_s + i_, n - i_, _p, _m);
+                    return res_ == -1 ? -1 : res_ + i_;
                 }
                 else {
-                    res = two_way_count(s + i, n - i, p, m,
-                        maxcount - count);
-                    return res + count;
+                    res_ = two_way_count(_s + i_, n - i_, _p, _m,
+                        _maxCount - count_);
+                    return res_ + count_;
                 }
             }
-            /* miss: check if next character is part of pattern */
-            if (!STRINGLIB_BLOOM(mask, ss[i + 1])) {
-                i = i + m;
+            if (!STRINGLIB_BLOOM(mask_, ss_[i_ + 1])) {
+                i_ = i_ + _m;
             }
             else {
-                i = i + gap;
+                i_ = i_ + gap_;
             }
         }
         else {
-            /* skip: check if next character is part of pattern */
-            if (!STRINGLIB_BLOOM(mask, ss[i + 1])) {
-                i = i + m;
+            if (!STRINGLIB_BLOOM(mask_, ss_[i_ + 1])) {
+                i_ = i_ + _m;
             }
         }
     }
-    return mode == FAST_COUNT ? count : -1;
+    return _mode == FAST_COUNT ? count_ : -1;
 }
 
 template <typename STRINGLIB_CHAR>
-static int64_t default_rfind(const STRINGLIB_CHAR* s, int64_t n,
-    const STRINGLIB_CHAR* p, int64_t m,
-    int64_t maxcount, int mode)
+static int64_t default_rfind(const STRINGLIB_CHAR* _s, int64_t n,
+    const STRINGLIB_CHAR* _p, int64_t _m,
+    int64_t _maxCount, int _mode)
 {
-    /* create compressed boyer-moore delta 1 table */
-    unsigned long mask = 0;
-    int64_t i, j, mlast = m - 1, skip = m - 1, w = n - m;
+    unsigned long mask_ = 0;
+    int64_t i_, j_, mLast = _m - 1, skip_ = _m - 1, w = n - _m;
 
-    /* process pattern[0] outside the loop */
-    STRINGLIB_BLOOM_ADD(mask, p[0]);
-    /* process pattern[:0:-1] */
-    for (i = mlast; i > 0; i--) {
-        STRINGLIB_BLOOM_ADD(mask, p[i]);
-        if (p[i] == p[0]) {
-            skip = i - 1;
+    STRINGLIB_BLOOM_ADD(mask_, _p[0]);
+    for (i_ = mLast; i_ > 0; i_--) {
+        STRINGLIB_BLOOM_ADD(mask_, _p[i_]);
+        if (_p[i_] == _p[0]) {
+            skip_ = i_ - 1;
         }
     }
 
-    for (i = w; i >= 0; i--) {
-        if (s[i] == p[0]) {
-            /* candidate match */
-            for (j = mlast; j > 0; j--) {
-                if (s[i + j] != p[j]) {
+    for (i_ = w; i_ >= 0; i_--) {
+        if (_s[i_] == _p[0]) {
+            for (j_ = mLast; j_ > 0; j_--) {
+                if (_s[i_ + j_] != _p[j_]) {
                     break;
                 }
             }
-            if (j == 0) {
-                /* got a match! */
-                return i;
+            if (j_ == 0) {
+                return i_;
             }
-            /* miss: check if previous character is part of pattern */
-            if (i > 0 && !STRINGLIB_BLOOM(mask, s[i - 1])) {
-                i = i - m;
+            if (i_ > 0 && !STRINGLIB_BLOOM(mask_, _s[i_ - 1])) {
+                i_ = i_ - _m;
             }
             else {
-                i = i - skip;
+                i_ = i_ - skip_;
             }
         }
         else {
-            /* skip: check if previous character is part of pattern */
-            if (i > 0 && !STRINGLIB_BLOOM(mask, s[i - 1])) {
-                i = i - m;
+            if (i_ > 0 && !STRINGLIB_BLOOM(mask_, _s[i_ - 1])) {
+                i_ = i_ - _m;
             }
         }
     }
@@ -694,73 +615,61 @@ static int64_t default_rfind(const STRINGLIB_CHAR* s, int64_t n,
 }
 
 template <typename STRINGLIB_CHAR>
-static inline int64_t count_char(const STRINGLIB_CHAR* s, int64_t n,
-    const STRINGLIB_CHAR p0, int64_t maxcount)
+static inline int64_t count_char(const STRINGLIB_CHAR* _s, int64_t n,
+    const STRINGLIB_CHAR p0, int64_t _maxCount)
 {
-    int64_t i, count = 0;
-    for (i = 0; i < n; i++) {
-        if (s[i] == p0) {
-            count++;
-            if (count == maxcount) {
-                return maxcount;
+    int64_t i_, count_ = 0;
+    for (i_ = 0; i_ < n; i_++) {
+        if (_s[i_] == p0) {
+            count_++;
+            if (count_ == _maxCount) {
+                return _maxCount;
             }
         }
     }
-    return count;
+    return count_;
 }
 
 template <typename STRINGLIB_CHAR>
-int64_t fastSearch(const STRINGLIB_CHAR* s, int64_t n,
-    const STRINGLIB_CHAR* p, int64_t m,
-    int64_t maxcount, int mode)
+int64_t fastSearch(const STRINGLIB_CHAR* _s, int64_t n,
+    const STRINGLIB_CHAR* _p, int64_t _m,
+    int64_t _maxCount, int _mode)
 {
-    if (n < m || (mode == FAST_COUNT && maxcount == 0)) {
+    if (n < _m || (_mode == FAST_COUNT && _maxCount == 0)) {
         return -1;
     }
 
-    /* look for special cases */
-    if (m <= 1) {
-        if (m <= 0) {
+    if (_m <= 1) {
+        if (_m <= 0) {
             return -1;
         }
-        /* use special case for 1-character strings */
-        if (mode == FAST_SEARCH)
-            return find_char(s, n, p[0]);
-        else if (mode == FAST_RSEARCH)
-            return rfind_char(s, n, p[0]);
+        if (_mode == FAST_SEARCH)
+            return find_char(_s, n, _p[0]);
+        else if (_mode == FAST_RSEARCH)
+            return rfind_char(_s, n, _p[0]);
         else {
-            return count_char(s, n, p[0], maxcount);
+            return count_char(_s, n, _p[0], _maxCount);
         }
     }
 
-    if (mode != FAST_RSEARCH) {
-        if (n < 2500 || (m < 100 && n < 30000) || m < 6) {
-            return default_find(s, n, p, m, maxcount, mode);
+    if (_mode != FAST_RSEARCH) {
+        if (n < 2500 || (_m < 100 && n < 30000) || _m < 6) {
+            return default_find(_s, n, _p, _m, _maxCount, _mode);
         }
-        else if ((m >> 2) * 3 < (n >> 2)) {
-            /* 33% threshold, but don't overflow. */
-            /* For larger problems where the needle isn't a huge
-               percentage of the size_ of the haystack, the relatively
-               expensive O(m) startup cost of the two-way algorithm
-               will surely pay off. */
-            if (mode == FAST_SEARCH) {
-                return two_way_find(s, n, p, m);
+        else if ((_m >> 2) * 3 < (n >> 2)) {
+
+            if (_mode == FAST_SEARCH) {
+                return two_way_find(_s, n, _p, _m);
             }
             else {
-                return two_way_count(s, n, p, m, maxcount);
+                return two_way_count(_s, n, _p, _m, _maxCount);
             }
         }
         else {
-            /* To ensure that we have good worst-case behavior,
-               here's an adaptive version of the algorithm, where if
-               we match O(m) characters without any matches of the
-               entire needle, then we predict that the startup cost of
-               the two-way algorithm will probably be worth it. */
-            return adaptive_find(s, n, p, m, maxcount, mode);
+            return adaptive_find(_s, n, _p, _m, _maxCount, _mode);
         }
     }
     else {
-        /* FAST_RSEARCH */
-        return default_rfind(s, n, p, m, maxcount, mode);
+        return default_rfind(_s, n, _p, _m, _maxCount, _mode);
     }
 }

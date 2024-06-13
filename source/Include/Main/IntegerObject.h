@@ -12,7 +12,7 @@ public:
 
 };
 
-extern AlifInitObject _typeInteger_;
+extern AlifInitObject _alifIntegerType_;
 
 
 AlifObject* alifInteger_fromSizeT(size_t, bool );

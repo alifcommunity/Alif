@@ -2,16 +2,17 @@
 
 #include "AlifCore_Memory.h"
 
-AlifObject* alifNew_tuple(SSIZE_T size_) {
+AlifObject* alifNew_tuple(SSIZE_T _size) {
 
-	if (size_ == 0) {
+	if (_size == 0) {
 		// return empty tuple
+		
 	}
 
-    AlifTupleObject* object{};
-	//AlifTupleObject* object = (AlifTupleObject*)a(&typeTuple, size_);
+    //AlifTupleObject* object{};
+	AlifTupleObject* object = (AlifTupleObject*)alifMem_objAlloc(_size + 1); // temp and need review
 
-    for (size_t i = 0; i < size_; i++) {
+    for (size_t i = 0; i < _size; i++) {
         object->items[i] = nullptr;
     }
 
@@ -105,7 +106,7 @@ int tuple_contain(AlifTupleObject* object, AlifObject* item) {
 
 }
 
-AlifObject* tuple_fromArray(AlifObject *const *object, size_t size_) {
+AlifObject* alifSubTuple_fromArray(AlifObject *const *object, size_t size_) {
 
     if (size_ == 0) {
         // return empty tuple
@@ -113,10 +114,15 @@ AlifObject* tuple_fromArray(AlifObject *const *object, size_t size_) {
 
     AlifTupleObject* tuple = (AlifTupleObject*)alifNew_tuple(size_);
 
-    for (size_t i = 0; i < size_; i++)
-    {
-        tuple->items[i] = object[i];
-    }
+	if (tuple == nullptr) {
+		return nullptr;
+	}
+	AlifObject** dst_= tuple->items;
+	for (int64_t i = 0; i < size_; i++) {
+		AlifObject* item = object[i];
+		dst_[i] = ALIF_NEWREF(item);
+	}
+
     return (AlifObject*)tuple;
 
 }
@@ -131,15 +137,15 @@ AlifObject* tupleslice(AlifTupleObject* tuple, size_t iLow,
     if (iHigh < iLow)
         iHigh = iLow;
     if (iLow == 0 && iHigh == tuple->object.size_ && 
-        tuple->object._base_.type_ == &typeTuple) {
+        tuple->object._base_.type_ == &_alifTupleType_) {
         return (AlifObject*)tuple;
     }
-    return tuple_fromArray(tuple->items + iLow, iHigh - iLow);
+    return alifSubTuple_fromArray(tuple->items + iLow, iHigh - iLow);
 }
 
 AlifObject* tuple_getSlice(AlifObject* tuple, size_t index, size_t index2)
 {
-    if (tuple == nullptr || tuple->type_ != &typeTuple) {
+    if (tuple == nullptr || tuple->type_ != &_alifTupleType_) {
         std::wcout << L"نوع فارغ او انه غير صحيح في عملية احضار جزء من مترابطة\n"  << std::endl;
         exit(-1);
     }
@@ -148,7 +154,7 @@ AlifObject* tuple_getSlice(AlifObject* tuple, size_t index, size_t index2)
 
 AlifObject* tuple_compare(AlifObject* v, AlifObject* w, int op) {
 
-    if (v->type_ != &typeTuple || w->type_ != &typeTuple) {
+    if (v->type_ != &_alifTupleType_ || w->type_ != &_alifTupleType_) {
         // not implement
     }
 
@@ -194,7 +200,7 @@ AlifSequenceMethods seqTuple = {
     (ObjObjProc)tuple_contain,                  /* sq_contains */
 };
 
-AlifInitObject typeTuple = {
+AlifInitObject _alifTupleType_ = {
     0,
     0,
     0,

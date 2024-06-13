@@ -105,7 +105,7 @@ static AlifIntT astFold_body(StmtSeq* _stmts, AlifASTMem* _ctx, AlifASTOptimize*
 	AlifIntT docString = alifAST_getDocString(_stmts) != nullptr;
 
 	CALL_SEQ(astFold_stmt, Stmt, Statement, _stmts);
-	if (!docString) {
+	if (!docString and alifAST_getDocString(_stmts) != nullptr) {
 		Statement* stmt = (Statement*)SEQ_GET(_stmts, 0);
 		ExprSeq* vals = alifNew_exprSeq(1, _ctx);
 		if (!vals) return 0;
@@ -144,6 +144,10 @@ AlifIntT alifAST_optimize(Module* _module, AlifASTMem* _astMem, AlifIntT _optimi
 
 	thread_ = alifThread_get();
 	if (!thread_) return 0;
+
+	// this section is temp and need fix later
+	thread_->cppRecursionRemaining = ALIFCPP_RECURSION_LIMIT;
+	//////////////////////////////////////////
 
 	AlifIntT recursionDepth = ALIFCPP_RECURSION_LIMIT - thread_->cppRecursionRemaining;
 	startRecursionDepth = recursionDepth;

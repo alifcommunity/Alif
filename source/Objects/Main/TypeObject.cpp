@@ -58,7 +58,7 @@ AlifObject* alifNew_type(AlifInitObject* metatype, AlifObject* args, AlifObject*
 }
 
 
-AlifInitObject typeType = {
+AlifInitObject _alifTypeType_ = {
     0,0,0,
     //ALIFVAROBJECT_HEAD_INIT(&typeType, 0)
     L"type",                                     

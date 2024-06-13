@@ -14,7 +14,9 @@ static AlifObject* alifSubBytes_fromSize(int64_t size_) {
 
 	alifSubObject_initVar((AlifVarObject*)object, &_typeBytes_,size_);
 
-    object->value[size_] = '\0';
+	ALIF_INCREF(object);
+
+    object->value_[size_] = '\0';
 
     return (AlifObject*)object;
 
@@ -40,31 +42,9 @@ AlifObject* alifBytes_fromStringAndSize(const wchar_t* _str, int64_t _size)
     if (_str == NULL)
         return (AlifObject*)op_;
 
-    memcpy(op_->value, _str, _size);
+    memcpy(op_->value_, _str, _size);
     return (AlifObject*)op_;
 }
-
-//AlifObject* alifBytes_fromStringAndSize(const wchar_t* str, int64_t size_) {
-//
-//	if (size_ < 0) {
-//        std::wcout << L"تم تمرير قيمة سالبة الى كائن بايت\n" << std::endl;
-//        exit(-1);
-//	}
-//
-//	if (size_ == 0) {
-//		// return empty object
-//	}
-//
-//    AlifWBytesObject* object = (AlifWBytesObject*)alifSubBytes_fromSize(size_);
-//
-//    if (str == nullptr) {
-//        return (AlifObject*)object;
-//    }
-//
-//    memcpy(object->value, str, size_);
-//    return (AlifObject*)object;
-//
-//}
 
 AlifObject* alifBytes_fromString(const wchar_t* str){
 
@@ -77,7 +57,8 @@ AlifObject* alifBytes_fromString(const wchar_t* str){
     AlifWBytesObject* object = (AlifWBytesObject*)alifMem_objAlloc(ALIFBYTESOBJECT_SIZE + size_);
 
     alifSubObject_initVar((AlifVarObject*)object, &_typeBytes_, size_);
-    memcpy(object->value, str, size_ + 1);
+	ALIF_INCREF(object);
+    memcpy(object->value_, str, size_ + 1);
     return (AlifObject*)object;
 }
 
@@ -89,16 +70,6 @@ int64_t alifBytes_size(AlifObject* object) {
     }
     return ((AlifVarObject*)object)->size_;
 }
-
-//wchar_t* alifWBytes_asString(AlifObject* object) {
-//
-//    if (object->type_ != &_typeBytes_) {
-//        std::wcout << L"متوقع تمرير كائن بايت\n" << std::endl;
-//        exit(-1);
-//    }
-//    return ((AlifWBytesObject*)object)->value;
-//
-//}
 
 int alifWBytes_asStringAndSize(AlifObject* _obj, wchar_t** _s, int64_t* _len)
 {
@@ -143,8 +114,8 @@ static AlifObject* bytes_concat(AlifObject* _a, AlifObject* _b)
 
     result_ = alifBytes_fromStringAndSize(NULL, va_.len + vb_.len);
     if (result_ != NULL) {
-        //memcpy(ALIFWBYTES_AS_STRING(result_), va_.buf, va_.len);
-        //memcpy(ALIFWBYTES_AS_STRING(result_) + va_.len, vb_.buf, vb_.len);
+        memcpy(ALIFWBYTES_AS_STRING(result_), va_.buf, va_.len);
+        memcpy(ALIFWBYTES_AS_STRING(result_) + va_.len, vb_.buf, vb_.len);
     }
 
 done:
@@ -171,7 +142,7 @@ AlifObject* alifBytes_repr(AlifObject* obj, int smartQuotes)
     /* Compute size_ of output string */
     squotes = dquotes = 0;
     newSize = 3;
-    s = (const unsigned char*)op->value;
+    s = (const unsigned char*)op->value_;
     for (i = 0; i < length; i++) {
         int64_t incr = 1;
         switch (s[i]) {
@@ -204,7 +175,7 @@ AlifObject* alifBytes_repr(AlifObject* obj, int smartQuotes)
 
     *p++ = 'b', *p++ = quote;
     for (i = 0; i < length; i++) {
-        unsigned char c = op->value[i];
+        unsigned char c = op->value_[i];
         if (c == quote || c == '\\')
             *p++ = '\\', *p++ = c;
         else if (c == '\t')
@@ -258,9 +229,9 @@ static AlifObject* bytes_repeat(AlifWBytesObject* object, int64_t repeat) {
     AlifWBytesObject* bytesObject = (AlifWBytesObject*)alifMem_objAlloc(ALIFBYTESOBJECT_SIZE + numberBytes);
 
     alifSubObject_initVar((AlifVarObject*)bytesObject, &_typeBytes_, size_);
-    bytesObject->value[size_] = '\0';
+    bytesObject->value_[size_] = '\0';
 
-    bytes_subRepeat(bytesObject->value, size_, object->value, ((AlifVarObject*)object)->size_);
+    bytes_subRepeat(bytesObject->value_, size_, object->value_, ((AlifVarObject*)object)->size_);
 
     return (AlifObject*)bytesObject;
 
@@ -273,7 +244,7 @@ static AlifObject* bytes_item(AlifWBytesObject* object, int64_t index) {
         exit(-1);
     }
 
-    return alifInteger_fromLongLong((unsigned char)object->value[index]);
+    return alifInteger_fromLongLong((unsigned char)object->value_[index]);
 
 }
 
@@ -286,10 +257,10 @@ static int bytes_compare_eq(AlifWBytesObject* a, AlifWBytesObject* b)
     if (((AlifVarObject*)b)->size_ != len)
         return 0;
 
-    if (a->value[0] != b->value[0])
+    if (a->value_[0] != b->value_[0])
         return 0;
 
-    cmp = memcmp(a->value, b->value, len);
+    cmp = memcmp(a->value_, b->value_, len);
     return (cmp == 0);
 }
 
@@ -338,9 +309,9 @@ static AlifObject* bytes_richcompare(AlifWBytesObject* a, AlifWBytesObject* b, i
         lenB = ((AlifVarObject*)b)->size_;
         min_len = min(lenA, lenB);
         if (min_len > 0) {
-            c = ALIF_WCHARMASK(*a->value) - ALIF_WCHARMASK(*b->value);
+            c = ALIF_WCHARMASK(*a->value_) - ALIF_WCHARMASK(*b->value_);
             if (c == 0)
-                c = memcmp(a->value, b->value, min_len);
+                c = memcmp(a->value_, b->value_, min_len);
         }
         else
             c = 0;
@@ -365,7 +336,7 @@ int alif_bytes_contain(const wchar_t *str, int64_t length, AlifObject* arg) {
 
 static int bytes_contains(AlifObject* self, AlifObject *arg) {
 
-    return alif_bytes_contain(((AlifWBytesObject*)self)->value, ((AlifVarObject*)self)->size_, arg);
+    return alif_bytes_contain(((AlifWBytesObject*)self)->value_, ((AlifVarObject*)self)->size_, arg);
 }
 
 void alifBytes_dealloc(AlifObject* object) {
@@ -457,7 +428,7 @@ void alifBytes_concat(AlifObject** _pv, AlifObject* _w)
        
             goto error;
         }
-        if (alidSubBytes_resize(_pv, oldSize + wb_.len) < 0)
+        if (alifSubBytes_resize(_pv, oldSize + wb_.len) < 0)
             goto error;
 
         //memcpy(ALIFWBYTES_AS_STRING(*_pv) + oldSize, wb_.buf, wb_.len);
@@ -478,7 +449,7 @@ void alifBytes_concat(AlifObject** _pv, AlifObject* _w)
     }
 }
 
-int alidSubBytes_resize(AlifObject** _pv, int64_t _newSize)
+int alifSubBytes_resize(AlifObject** _pv, int64_t _newSize)
 {
     AlifObject* v_;
     AlifWBytesObject* sv_;
@@ -507,11 +478,11 @@ int alidSubBytes_resize(AlifObject** _pv, int64_t _newSize)
         if (oldSize < _newSize) {
             *_pv = alifSubBytes_fromSize(_newSize);
             if (*_pv) {
-                //memcpy(ALIFWBYTES_AS_STRING(*_pv), ALIFWBYTES_AS_STRING(v_), oldSize);
+                memcpy(ALIFWBYTES_AS_STRING(*_pv), ALIFWBYTES_AS_STRING(v_), oldSize);
             }
         }
         else {
-            //*_pv = alifBytes_fromStringAndSize(ALIFWBYTES_AS_STRING(v_), _newSize);
+            *_pv = alifBytes_fromStringAndSize(ALIFWBYTES_AS_STRING(v_), _newSize);
         }
         ALIF_DECREF(v_);
         return (*_pv == NULL) ? -1 : 0;
@@ -526,7 +497,7 @@ int alidSubBytes_resize(AlifObject** _pv, int64_t _newSize)
     }
     sv_ = (AlifWBytesObject*)*_pv;
     ALIFSET_SIZE(sv_, _newSize);
-    sv_->value[_newSize] = '\0';
+    sv_->value_[_newSize] = '\0';
     return 0;
 }
 
