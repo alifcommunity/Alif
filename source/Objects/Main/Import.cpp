@@ -3,6 +3,7 @@
 //#include "AlifCore_Import.h"
 #include "AlifCore_InitConfig.h"
 #include "AlifCore_Interpreter.h"
+#include "AlifCore_AlifLifeCycle.h"
 #include "AlifCore_AlifCycle.h"
 #include "AlifCore_AlifState.h"
 #include "AlifCore_Memory.h"

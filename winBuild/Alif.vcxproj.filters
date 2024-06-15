@@ -21,6 +21,9 @@
     <ClInclude Include="..\source\Include\Alif\alif.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_AlifLifeCycle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\source\resources\Alif5.rc">

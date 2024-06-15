@@ -648,7 +648,7 @@ static int analyze_block(AlifSTEntryObject* _ste, AlifObject* _bound, AlifObject
 
     for (i = 0; i < ((AlifVarObject*)_ste->steChildren)->size_; ++i) {
         AlifObject* child_free = nullptr;
-        AlifObject* c = ((AlifListObject*)_ste->steChildren)->items[i];
+        AlifObject* c = ((AlifListObject*)_ste->steChildren)->items_[i];
         AlifSTEntryObject* entry;
         entry = (AlifSTEntryObject*)c;
 
@@ -688,7 +688,7 @@ static int analyze_block(AlifSTEntryObject* _ste, AlifObject* _bound, AlifObject
     }
 
     for (i = ((AlifVarObject*)_ste->steChildren)->size_ - 1; i >= 0; --i) {
-        AlifObject* c = ((AlifListObject*)_ste->steChildren)->items[i];
+        AlifObject* c = ((AlifListObject*)_ste->steChildren)->items_[i];
         AlifSTEntryObject* entry;
         entry = (AlifSTEntryObject*)c;
         if (entry->steCompInlined and
@@ -756,7 +756,7 @@ static AlifIntT symTable_exitBlock(AlifSymTable* _st) { // 1303
     if (size) {
         if (list_setSlice(_st->stStack, size - 1, size, nullptr) < 0) return 0;
         if (--size)
-            _st->stCur = (AlifSTEntryObject*)((AlifListObject*)_st->stStack)->items[size - 1];
+            _st->stCur = (AlifSTEntryObject*)((AlifListObject*)_st->stStack)->items_[size - 1];
     }
     return 1;
 }

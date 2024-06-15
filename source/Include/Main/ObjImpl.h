@@ -5,6 +5,10 @@ AlifObject* alifSubObject_new(AlifTypeObject*);
 AlifVarObject* alifSubObject_newVar(AlifTypeObject*, int64_t);
 
 
+void alifObject_gc_unTrack(void* );
+void alifObject_gc_del(void*);
+
+
 #define ALIFOBJECT_NEW(_type, _typeObj) ((_type *)alifSubObject_new(_typeObj))
 
 #define ALIFOBJECT_NEWVAR(_type, _typeObj, _n) \
@@ -13,6 +17,9 @@ AlifVarObject* alifSubObject_newVar(AlifTypeObject*, int64_t);
 #define ALIFOBJECT_NEW_VAR(_type, _typeObj, _n) ALIFOBJECT_NEWVAR(_type, (_typeObj), (_n))
 
 
+static inline size_t alifSubObject_size(AlifTypeObject* _type) {
+	return (size_t)_type->basicSize;
+}
 
 static inline size_t alifSubObject_varSize(AlifTypeObject* _type, int64_t _nItems) {
     size_t size_ =  _type->basicSize;

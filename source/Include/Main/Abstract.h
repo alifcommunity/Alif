@@ -21,7 +21,7 @@ AlifIntT alifSequence_delItem(AlifObject*, AlifSizeT);
 
 #define ALIFSEQUENCE_FAST_GETSIZE(o) (((AlifVarObject*)(o))->size_ ? ((AlifVarObject*)(o))->size_ : ((AlifVarObject*)(o))->size_)
 
-#define ALIFSEQUENCE_FAST_ITEMS(sf) ((((AlifObject*)(sf))->type_ == &typeList) ? ((AlifListObject *)(sf))->items : ((AlifTupleObject *)(sf))->items)
+#define ALIFSEQUENCE_FAST_ITEMS(sf) ((((AlifObject*)(sf))->type_ == &_alifListType_) ? ((AlifListObject *)(sf))->items_ : ((AlifTupleObject *)(sf))->items_)
 
 static inline int64_t alifSubVectorcall_nArgs(size_t _n)
 {

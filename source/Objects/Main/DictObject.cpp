@@ -612,7 +612,7 @@ again:
 	int64_t j_ = 0, pos_ = 0;
 	AlifObject* key_;
 	while (alifDict_next((AlifObject*)mp_, &pos_, &key_, nullptr, nullptr)) {
-		((AlifListObject*)v_)->items[j_] = ALIF_NEWREF(key_);
+		((AlifListObject*)v_)->items_[j_] = ALIF_NEWREF(key_);
 		j_++;
 	}
 	return v_;

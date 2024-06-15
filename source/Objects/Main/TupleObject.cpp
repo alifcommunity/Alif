@@ -13,7 +13,7 @@ AlifObject* alifNew_tuple(SSIZE_T _size) {
 	AlifTupleObject* object = (AlifTupleObject*)alifMem_objAlloc(_size + 1); // temp and need review
 
     for (size_t i = 0; i < _size; i++) {
-        object->items[i] = nullptr;
+        object->items_[i] = nullptr;
     }
 
 	return (AlifObject*)object;
@@ -27,23 +27,23 @@ size_t tuple_length(AlifObject* object) {
 
 AlifObject* tuple_getItem(AlifTupleObject* tuple, size_t index) {
 
-    if (tuple->object.size_ <= index) {
+    if (tuple->_base_.size_ <= index) {
         std::wcout << L"مؤشر المترابطة في عمليه احضار كائن خارج النطاق\n" << std::endl;
         exit(-1);
     }
 
-    return tuple->items[index];
+    return tuple->items_[index];
 
 }
 
 bool tuple_setItem(AlifTupleObject* tuple, size_t index, AlifObject* newItem) {
 
-    if (tuple->object.size_ <= index) {
+    if (tuple->_base_.size_ <= index) {
         std::wcout << L"مؤشر المترابطة في عمليه اسناد كائن خارج النطاق\n" << std::endl;
         exit(-1);
     }
 
-    AlifObject** pointer = ((AlifTupleObject*)tuple)->items + index;
+    AlifObject** pointer = ((AlifTupleObject*)tuple)->items_ + index;
     ALIF_XSETREF(*pointer, newItem);
     return true;
 }
@@ -58,10 +58,10 @@ AlifObject* tuple_pack(size_t size_, ...) {
     va_start(vArgs, size_);
     AlifTupleObject* result = (AlifTupleObject*)alifNew_tuple(size_);
 
-    AlifObject** items = result->items;
+    AlifObject** items_ = result->items_;
     for (size_t i = 0; i < size_; i++)
     {
-        items[i] = va_arg(vArgs, AlifObject*);
+        items_[i] = va_arg(vArgs, AlifObject*);
     }
     va_end(vArgs);
     return (AlifObject*)result;
@@ -79,13 +79,13 @@ void tuple_dealloc(AlifTupleObject* object) {
 size_t tupel_hash(AlifTupleObject* object) {
 
     size_t length = ((AlifVarObject*)(object))->size_;
-    AlifObject** items = object->items;
+    AlifObject** items_ = object->items_;
 
 
     size_t hash = 2870177450012600261ULL;
     for (size_t i = 0; i < length; i++)
     {
-        size_t hashItem = alifObject_hash(items[i]);
+        size_t hashItem = alifObject_hash(items_[i]);
 
         hash += hashItem;
         hash *= 11400714785074694791ULL;
@@ -100,7 +100,7 @@ int tuple_contain(AlifTupleObject* object, AlifObject* item) {
 
     for (size_t i = 0; i < ((AlifVarObject*)(object))->size_ && compare == 0; i++)
     {
-        compare = alifObject_richCompareBool(object->items[i], item, ALIF_EQ);
+        compare = alifObject_richCompareBool(object->items_[i], item, ALIF_EQ);
     }
     return compare;
 
@@ -117,7 +117,7 @@ AlifObject* alifSubTuple_fromArray(AlifObject *const *object, size_t size_) {
 	if (tuple == nullptr) {
 		return nullptr;
 	}
-	AlifObject** dst_= tuple->items;
+	AlifObject** dst_= tuple->items_;
 	for (int64_t i = 0; i < size_; i++) {
 		AlifObject* item = object[i];
 		dst_[i] = ALIF_NEWREF(item);
@@ -132,15 +132,15 @@ AlifObject* tupleslice(AlifTupleObject* tuple, size_t iLow,
 {
     if (iLow < 0)
         iLow = 0;
-    if (iHigh > tuple->object.size_)
-        iHigh = tuple->object.size_;
+    if (iHigh > tuple->_base_.size_)
+        iHigh = tuple->_base_.size_;
     if (iHigh < iLow)
         iHigh = iLow;
-    if (iLow == 0 && iHigh == tuple->object.size_ && 
-        tuple->object._base_.type_ == &_alifTupleType_) {
+    if (iLow == 0 && iHigh == tuple->_base_.size_ && 
+        tuple->_base_._base_.type_ == &_alifTupleType_) {
         return (AlifObject*)tuple;
     }
-    return alifSubTuple_fromArray(tuple->items + iLow, iHigh - iLow);
+    return alifSubTuple_fromArray(tuple->items_ + iLow, iHigh - iLow);
 }
 
 AlifObject* tuple_getSlice(AlifObject* tuple, size_t index, size_t index2)
@@ -161,14 +161,14 @@ AlifObject* tuple_compare(AlifObject* v, AlifObject* w, int op) {
     AlifTupleObject* vTuple = (AlifTupleObject*)v;
     AlifTupleObject* wTuple = (AlifTupleObject*)w;
 
-    size_t vLen = vTuple->object.size_,
-        wLen = wTuple->object.size_,
+    size_t vLen = vTuple->_base_.size_,
+        wLen = wTuple->_base_.size_,
         i;
 
     for (i = 0; i < vLen && i < wLen; i++)
     {
-        int compare = alifObject_richCompareBool(vTuple->items[i],
-            wTuple->items[i], ALIF_EQ);
+        int compare = alifObject_richCompareBool(vTuple->items_[i],
+            wTuple->items_[i], ALIF_EQ);
     
         if (compare < 0) {
             return nullptr;
@@ -185,7 +185,7 @@ AlifObject* tuple_compare(AlifObject* v, AlifObject* w, int op) {
         return ALIF_TRUE;
     }
     
-    return alifObject_richCompare(vTuple->items[i], wTuple->items[i], op);
+    return alifObject_richCompare(vTuple->items_[i], wTuple->items_[i], op);
 
 }
 

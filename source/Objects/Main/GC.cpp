@@ -4,18 +4,90 @@
 #include "AlifCore_Interpreter.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_AlifState.h"
-
+#include "AlifCore_Memory.h"
 
 typedef class AlifGCDureRun AlifGC;
 
+#define GC_NEXT alifSubGCHead_next
+#define GC_PREV alifSubGCHead_prev
+
+#define AS_GC(_gc) alifSub_asGC(_gc) // 50
+
+static AlifGC* get_gc_state(void)
+{
+	AlifInterpreter* interp = alifInterpreter_get();
+	return &interp->gc;
+}
+
+void alifSubGC_initState(AlifGC* _gcState)
+{
+#define INIT_HEAD(_GEN) \
+    do { \
+        _GEN.head.gcNext = (uintptr_t)&_GEN.head; \
+        _GEN.head.gcPrev = (uintptr_t)&_GEN.head; \
+    } while (0)
+
+	INIT_HEAD(_gcState->young);
+	INIT_HEAD(_gcState->old[0]);
+	INIT_HEAD(_gcState->old[1]);
+	INIT_HEAD(_gcState->permanentGeneration);
+
+#undef INIT_HEAD
+}
+
+AlifIntT alifSubGC_init(AlifInterpreter* _interp)
+{
+	AlifGC* gcState = &_interp->gc;
+
+	gcState->garbage = alifNew_list(0);
+	if (gcState->garbage == nullptr) {
+		return -1;
+	}
+
+	gcState->callbacks = alifNew_list(0);
+	if (gcState->callbacks == nullptr) {
+		return -1;
+	}
+	gcState->heapSize = 0;
+
+	return 0;
+}
+
+static inline void gc_list_remove(AlifGCHead* _node)
+{
+	AlifGCHead* prev = GC_PREV(_node);
+	AlifGCHead* next = GC_NEXT(_node);
+
+	alifSubGCHead_set_next(prev, next);
+	alifSubGCHead_set_prev(next, prev);
+
+	_node->gcNext = 0; /* object is not currently tracked */
+}
+
+void alifObject_gc_track(void* _opRaw)
+{
+	AlifObject* op_ = ALIFSUBOBJECT_CAST(_opRaw);
+	//if (ALIFSUBOBJECT_GC_ISTRACKED(op)) {
+	//}
+	ALIFSUBObject_GC_TRACK(op_);
+
+#ifdef ALIF_DEBUG
+	traverseproc traverse = ALIF_TYPE(op_)->traverse_;
+	(void)traverse(op, visitValidate, op_);
+#endif
+}
+
+void alifObject_gc_unTrack(void* _opRaw)
+{
+	AlifObject* op_ = ALIFSUBOBJECT_CAST(_opRaw);
+
+	if (ALIFSUBOBJECT_GC_ISTRACKED(op_)) {
+		ALIFSUBObject_GC_UNTRACK(op_);
+	}
+}
 
 
-#define AS_GC(_gc) alif_asGC(_gc) // 50
-
-
-
-
-void alifObjectGC_link(AlifObject* _gc) { // 1983
+void alifSubObjectGC_link(AlifObject* _gc) { // 1983
 	AlifGCHead* gc = AS_GC(_gc);
 
 	AlifThread* thread = alifThread_get();
@@ -57,7 +129,7 @@ static AlifObject* gc_alloc(AlifTypeObject* _tp, AlifSizeT _size, AlifSizeT _pre
 	((AlifObject**)mem)[1] = nullptr;
 	AlifObject* gc = (AlifObject*)(mem + _preSize);
 
-	alifObjectGC_link(gc);
+	alifSubObjectGC_link(gc);
 
 	return gc;
 }
@@ -65,15 +137,30 @@ static AlifObject* gc_alloc(AlifTypeObject* _tp, AlifSizeT _size, AlifSizeT _pre
 
 
 AlifObject* alifObjectGC_new(AlifTypeObject* _tp) { // 2034
-	//AlifSizeT preSize = alifType_preHeaderSize(_tp);
-	//AlifSizeT size = alifObject_size(_tp);
-	
-	AlifSizeT preSize = 1 * 2 * sizeof(AlifObject*);
-	AlifSizeT size = (AlifSizeT)_tp->basicSize;
+	AlifSizeT preSize = alifSubType_preHeaderSize(_tp);
+	AlifSizeT size = alifSubObject_size(_tp);
+	if (alifSubType_hasFeature(_tp, ALIFTPFLAGS_INLINE_VALUES)) {
+		//size += alifSubInlineValuesSize(_tp);
+	}
 
 	AlifObject* gc = gc_alloc(_tp, size, preSize);
 	if (gc == nullptr) return nullptr;
 
 	alifSubObject_init(gc, _tp);
 	return gc;
+}
+
+void alifObject_gc_del(void* op)
+{
+	size_t presize = alifSubType_preHeaderSize(((AlifObject*)op)->type_);
+	AlifGCHead* g = AS_GC((AlifObject*)op);
+	if (ALIFSUBOBJECT_GC_ISTRACKED(op)) {
+		gc_list_remove(g);
+	}
+	AlifGC* gcState = get_gc_state();
+	if (gcState->young.count > 0) {
+		gcState->young.count--;
+	}
+	gcState->heapSize--;
+	alifMem_objFree(((char*)op) );
 }

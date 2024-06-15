@@ -3,6 +3,7 @@
 #include "AlifCore_InitConfig.h"
 #include "AlifCore_Memory.h"
 #include "AlifCore_AlifCycle.h"
+#include "AlifCore_AlifLifeCycle.h"
 #include "AlifCore_AlifState.h"
 #include "AlifCore_DureRun.h"
 #include "AlifCore_DureRunInit.h"
@@ -110,7 +111,7 @@ static AlifIntT alifCore_interpreterInit(AlifThread* _thread) {
 	AlifIntT status = 1;
 	const AlifConfig* config_;
 
-	//status = alifGarbegCollector_init(interpreter);
+	status = alifSubGC_init(interpreter);
 	if (status < 1) return status;
 
 	//status = alifCore_initTypes(interpreter);

@@ -11,18 +11,18 @@ static AlifObject* alifVectorCall_callSub(VectorCallFunc func,
     AlifObject* callable, AlifObject* tuple, AlifObject* kwArgs)
 {
 
-    int64_t nargs = ((AlifTupleObject*)tuple)->object.size_;
+    int64_t nargs = ((AlifTupleObject*)tuple)->_base_.size_;
 
     /* Fast path for no keywords */
     if (kwArgs == nullptr || ((AlifDictObject*)kwArgs)->size_ == 0) {
-        return func(callable, ((AlifTupleObject*)tuple)->items, nargs, nullptr);
+        return func(callable, ((AlifTupleObject*)tuple)->items_, nargs, nullptr);
     }
 
     /* Convert arguments & call */
     AlifObject* const* args{};
     AlifObject* kwNames{};
     args = alifStack_unpackDict(
-        ((AlifTupleObject*)tuple)->items, nargs,
+        ((AlifTupleObject*)tuple)->items_, nargs,
         kwArgs, &kwNames);
     if (args == nullptr) {
         return nullptr;
@@ -92,7 +92,7 @@ AlifObject* const* alifStack_unpackDict(AlifObject* const* args, int64_t nArgs,
     unsigned long keys_are_strings = ALIFTPFLAGS_UNICODE_SUBCLASS;
     while (alifDict_next(kwArgs, &pos, &key, &value, nullptr)) {
         keys_are_strings &= key->type_->flags_;
-        ((AlifTupleObject*)kwNames)->items[i] = key;
+        ((AlifTupleObject*)kwNames)->items_[i] = key;
         kwStack[i] = value;
         i++;
     }
@@ -111,7 +111,7 @@ AlifObject* const* alifStack_unpackDict(AlifObject* const* args, int64_t nArgs,
 void alifStack_unpackDict_free(AlifObject* const* stack, int64_t nArgs,
     AlifObject* kwNames)
 {
-    int64_t n = ((AlifTupleObject*)kwNames)->object.size_ +nArgs;
+    int64_t n = ((AlifTupleObject*)kwNames)->_base_.size_ +nArgs;
     //for (int64_t i = 0; i < n; i++) {
     //    ALIF_DECREF(stack[i]);
     //}
