@@ -136,7 +136,7 @@ static AlifObject* gc_alloc(AlifTypeObject* _tp, AlifSizeT _size, AlifSizeT _pre
 
 
 
-AlifObject* alifObjectGC_new(AlifTypeObject* _tp) { // 2034
+AlifObject* alifSubObjectGC_new(AlifTypeObject* _tp) { // 2034
 	AlifSizeT preSize = alifSubType_preHeaderSize(_tp);
 	AlifSizeT size = alifSubObject_size(_tp);
 	if (alifSubType_hasFeature(_tp, ALIFTPFLAGS_INLINE_VALUES)) {
@@ -148,6 +148,24 @@ AlifObject* alifObjectGC_new(AlifTypeObject* _tp) { // 2034
 
 	alifSubObject_init(gc, _tp);
 	return gc;
+}
+
+
+AlifVarObject* alifSubObjectGC_newVar(AlifTypeObject* _tp, int64_t _nItems)
+{
+	AlifVarObject* op_;
+
+	if (_nItems < 0) {
+		return NULL;
+	}
+	size_t preSize = alifSubType_preHeaderSize(_tp);
+	size_t size_ = alifSubObject_varSize(_tp, _nItems);
+	op_ = (AlifVarObject*)gc_alloc(_tp, size_, preSize);
+	if (op_ == NULL) {
+		return NULL;
+	}
+	alifSubObject_initVar(op_, _tp, _nItems);
+	return op_;
 }
 
 void alifObject_gc_del(void* op)

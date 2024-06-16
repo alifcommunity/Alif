@@ -38,6 +38,11 @@ static inline size_t alifSubObject_varSize(AlifTypeObject* _type, int64_t _nItem
  * Garbage Collection
  * ==================
  */
-AlifObject* alifObjectGC_new(AlifTypeObject*);
+AlifObject* alifSubObjectGC_new(AlifTypeObject*);
+AlifVarObject* alifSubObjectGC_newVar(AlifTypeObject*, int64_t);
 
-#define ALIFOBJECT_GC_NEW(_type, _typeObj) (_type*)(alifObjectGC_new(_typeObj))
+
+#define ALIFOBJECT_GC_NEW(_type, _typeObj) (_type*)(alifSubObjectGC_new(_typeObj))
+
+#define ALIFOBJECT_GC_NEWVAR(_type, _typeObj, _n) \
+    ALIF_CAST(_type*, alifSubObjectGC_newVar((_typeObj), (_n)))
