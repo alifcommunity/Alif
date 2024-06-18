@@ -63,21 +63,21 @@ AlifObject* alifTuple_getItem(AlifObject* _op, int64_t _i)
 	return ((AlifTupleObject*)_op)->items_[_i];
 }
 
-int alifTuple_setItem(AlifObject* _op, int64_t _i, AlifObject* _newItem)
-{
-	AlifObject** p_;
-	if (!(_op->type_ == &_alifTupleType_) || ALIF_REFCNT(_op) != 1) {
-		ALIF_XDECREF(_newItem);
-		return -1;
-	}
-	if (_i < 0 || _i >= ALIF_SIZE(_op)) {
-		ALIF_XDECREF(_newItem);
-		return -1;
-	}
-	p_ = ((AlifTupleObject*)_op)->items_ + _i;
-	ALIF_XSETREF(*p_, _newItem);
-	return 0;
-}
+//int alifTuple_setItem(AlifObject* _op, int64_t _i, AlifObject* _newItem)
+//{
+//	AlifObject** p_;
+//	if (!(_op->type_ == &_alifTupleType_) || ALIF_REFCNT(_op) != 1) {
+//		ALIF_XDECREF(_newItem);
+//		return -1;
+//	}
+//	if (_i < 0 || _i >= ALIF_SIZE(_op)) {
+//		ALIF_XDECREF(_newItem);
+//		return -1;
+//	}
+//	p_ = ((AlifTupleObject*)_op)->items_ + _i;
+//	ALIF_XSETREF(*p_, _newItem);
+//	return 0;
+//}
 
 AlifObject* tuple_pack(size_t _size, ...) {
 
@@ -105,7 +105,7 @@ AlifObject* tuple_pack(size_t _size, ...) {
 
 static void tuple_dealloc(AlifTupleObject* _op)
 {
-	alifObject_gc_unTrack(_op);
+	alifObject_gcUnTrack(_op);
 	//ALIF_TRASHCAN_BEGIN(_op, tuple_dealloc)
 
 	int64_t i = ALIF_SIZE(_op);

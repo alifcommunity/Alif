@@ -55,7 +55,6 @@
     <ClInclude Include="..\source\Include\Core\AlifCore_Object.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_OpCodeData.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_OpCodeUtils.h" />
-    <ClInclude Include="..\source\Include\Core\AlifCore_Runtime.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_SymTable.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_Time.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_Tuple.h" />

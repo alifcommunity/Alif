@@ -1,6 +1,6 @@
 #include "alif.h"
 #include "AlifCore_Object.h"
-#include "AlifCore_AlifLifeCycle.h"
+#include "AlifCore_AlifCycle.h"
 #include "alifCore_UString.h"
 #include "AlifCore_Memory.h"
 #include "AlifCore_GlobalString.h"

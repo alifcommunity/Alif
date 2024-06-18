@@ -16,7 +16,7 @@ static inline int alifSubList_appendTakeRef(AlifListObject* _self, AlifObject* _
 	return alifSubList_appendTakeRefListResize(_self, _newItem);
 }
 
-static inline void alifSub_memory_repeat(char* _dest, int64_t _lenDest, int64_t _lenSrc)
+static inline void alifSub_memoryRepeat(char* _dest, int64_t _lenDest, int64_t _lenSrc)
 {
 	int64_t copied_ = _lenSrc;
 	while (copied_ < _lenDest) {

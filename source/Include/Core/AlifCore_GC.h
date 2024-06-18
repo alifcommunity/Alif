@@ -12,7 +12,7 @@ static inline AlifGCHead* alifSub_asGC(AlifObject* _gc) {
 	return (AlifGCHead*)gc;
 }
 
-static inline int alifSubObject_gc_isTracked(AlifObject* _op) {
+static inline int alifSubObject_gcIsTracked(AlifObject* _op) {
 #ifdef ALIF_GIL_DISABLED
 	return (op->gcBits & ALIFSUBGC_BITS_TRACKED) != 0;
 #else
@@ -21,7 +21,7 @@ static inline int alifSubObject_gc_isTracked(AlifObject* _op) {
 #endif
 }
 
-#define ALIFSUBOBJECT_GC_ISTRACKED(_op) alifSubObject_gc_isTracked(ALIF_CAST(AlifObject*, _op))
+#define ALIFSUBOBJECT_GC_ISTRACKED(_op) alifSubObject_gcIsTracked(ALIF_CAST(AlifObject*, _op))
 
 
 #define ALIFSUBGC_PREV_MASK_FINALIZED  1

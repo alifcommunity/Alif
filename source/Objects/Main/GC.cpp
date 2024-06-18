@@ -77,7 +77,7 @@ void alifObject_gc_track(void* _opRaw)
 #endif
 }
 
-void alifObject_gc_unTrack(void* _opRaw)
+void alifObject_gcUnTrack(void* _opRaw)
 {
 	AlifObject* op_ = ALIFSUBOBJECT_CAST(_opRaw);
 
@@ -168,7 +168,7 @@ AlifVarObject* alifSubObjectGC_newVar(AlifTypeObject* _tp, int64_t _nItems)
 	return op_;
 }
 
-void alifObject_gc_del(void* op)
+void alifObject_gcDel(void* op)
 {
 	size_t presize = alifSubType_preHeaderSize(((AlifObject*)op)->type_);
 	AlifGCHead* g = AS_GC((AlifObject*)op);

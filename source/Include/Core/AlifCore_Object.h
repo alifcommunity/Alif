@@ -1,7 +1,6 @@
 #pragma once
 
-#include <stdbool.h>
-#include "AlifCore_gc.h"     
+#include "AlifCore_GC.h"     
 #include "AlifCore_AlifState.h"
 
 #define ALIFSUBOBJECT_HEAD_INIT(_type)       \
@@ -17,7 +16,7 @@
     } \                                              
 
 
-static inline void alifSub_refcntAdd(AlifObject* op, int64_t n)
+static inline void alifSub_refAdd(AlifObject* op, int64_t n)
 {
 	if (ALIFSUB_ISIMMORTAL(op)) {
 		return;
@@ -28,24 +27,22 @@ static inline void alifSub_refcntAdd(AlifObject* op, int64_t n)
 #if !defined(ALIF_GIL_DISABLED)
 	op->ref_ += n;
 #else
-	if (alifSub_IsOwnedByCurrentThread(op)) {
-		uint32_t local = op->ob_ref_local;
-		int64_t refcnt = (int64_t)local + n;
+	if (alifSub_isOwnedByCurrentThread(op)) {
+		uint32_t local_ = op->RefLocal;
+		int64_t ref_ = (int64_t)local + n;
 #  if LLONG_MAX > UINT32_MAX
 		if (refcnt > (int64_t)UINT32_MAX) {
-			// Make the object immortal if the 32-bit local reference count
-			// would overflow.
 			refcnt = ALIFSUB_IMMORTAL_REFCNT_LOCAL;
 		}
 #  endif
-		alifSub_atomic_store_uint32_relaxed(&op->ob_ref_local, (uint32_t)refcnt);
+		alifSub_atomic_store_uint32_relaxed(&op->RefLocal, (uint32_t)refcnt);
 	}
 	else {
 		alifSub_atomic_add_ssize(&op->oref_shared, (n << alifSub_REF_SHARED_SHIFT));
 	}
 #endif
 }
-#define ALIFSUB_REFCNTADD(op, n) alifSub_refcntAdd(ALIFSUBOBJECT_CAST(op), n)
+#define ALIFSUB_REFCNTADD(op, n) alifSub_refAdd(ALIFSUBOBJECT_CAST(op), n)
 
 extern void alifSub_setImmortal(AlifObject*);
 extern void alifSub_setImmortalUntracked(AlifObject*);
@@ -65,7 +62,7 @@ static inline void alifSub_clearImmortal(AlifObject* _op)
 }
 #define ALIFSUB_CLEARIMMORTAL(_op) \
     do { \
-        alifSub_clearImmortal(ALIFSUBOBJECT_CAST(op)); \
+        alifSub_clearImmortal(ALIFSUBOBJECT_CAST(_op)); \
         op = nullptr; \
     } while (0); \
 
@@ -100,8 +97,7 @@ static inline void alifSubObject_initVar(AlifVarObject* _op, AlifTypeObject* _ty
     ALIFSET_SIZE(_op, _size);
 }
 
-
-static inline void alifSubObject_gc_track(
+static inline void alifSubObject_gcTrack(
 #ifndef NDEBUG
 	const char* _filename, int _lineno,
 #endif
@@ -122,7 +118,7 @@ static inline void alifSubObject_gc_track(
 #endif
 }
 
-static inline void alifSubObject_gc_unTrack(
+static inline void alifSubObject_gcUnTrack(
 #ifndef NDEBUG
 	const char* _filename, int _lineno,
 #endif
@@ -148,9 +144,9 @@ static inline void alifSubObject_gc_unTrack(
         alifSubObject_gc_unTrack(ALIFSUBOBJECT_CAST(op))
 #else
 #  define ALIFSUBObject_GC_TRACK(op) \
-        alifSubObject_gc_track(__FILE__, __LINE__, ALIFSUBOBJECT_CAST(op))
+        alifSubObject_gcTrack(__FILE__, __LINE__, ALIFSUBOBJECT_CAST(op))
 #  define ALIFSUBObject_GC_UNTRACK(op) \
-        alifSubObject_gc_unTrack(__FILE__, __LINE__, ALIFSUBOBJECT_CAST(op))
+        alifSubObject_gcUnTrack(__FILE__, __LINE__, ALIFSUBOBJECT_CAST(op))
 #endif
 
 #define ALIFSUBType_IS_GC(t) alifSubType_hasFeature((t), ALIFTPFLAGS_HAVE_GC)

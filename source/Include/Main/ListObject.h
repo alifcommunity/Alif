@@ -33,9 +33,9 @@ AlifObject* alifList_asTuple(AlifObject*);
 class AlifListObject {
 public:
 
-	ALIFOBJECT_VAR_HEAD
+	ALIFOBJECT_VAR_HEAD;
 
-		AlifObject** items_{};
+	AlifObject** items_{};
 
 	AlifSizeT allocate_;
 };

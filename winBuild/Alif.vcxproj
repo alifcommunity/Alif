@@ -155,7 +155,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\source\Include\Alif\alif.h" />
-    <ClInclude Include="..\source\Include\Core\AlifCore_AlifLifeCycle.h" />
     <ClInclude Include="..\source\resources\resource.h" />
   </ItemGroup>
   <ItemGroup>

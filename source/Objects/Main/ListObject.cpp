@@ -227,7 +227,7 @@ static void list_dealloc(AlifObject* _self)
 {
 	AlifListObject* op_ = (AlifListObject*)_self;
 	int64_t i_;
-    alifObject_gc_unTrack(op_);
+    alifObject_gcUnTrack(op_);
 	//ALIF_TRASHCAN_BEGIN(op_, list_dealloc);
 	if (op_->items_ != nullptr) {
 
@@ -497,7 +497,7 @@ static AlifObject* listRepeat_lockHeld(AlifListObject* _a, int64_t _n)
 			*dest_++ = *src_++;
 		}
 
-		alifSub_memory_repeat((char*)np_->items_, sizeof(AlifObject*) * outputSize,
+		alifSub_memoryRepeat((char*)np_->items_, sizeof(AlifObject*) * outputSize,
 			sizeof(AlifObject*) * inputSize);
 	}
 
@@ -2228,6 +2228,6 @@ AlifTypeObject _alifListType_ = {
 	0,
 	0,
 	0,
-	alifObject_gc_del,
+	alifObject_gcDel,
 	0,
 };
