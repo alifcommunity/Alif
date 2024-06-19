@@ -23,10 +23,10 @@ int slice_getIndicesEx(AlifObject* , int64_t , int64_t* , int64_t* , int64_t* ,i
 
 #define ALIFSLICE_GETINDICESEX(slice, length, start_, stop_, step_, sliceLen) (  \
     slice_unpack((slice), (start_), (stop_), (step_)) < 0 ? ((*(sliceLen) = 0), -1) :     \
-    ((*(sliceLen) = slice_adjustIndices((length), (start_), (stop_), *(step_))), 0))
+    ((*(sliceLen) = alifSlice_adjustIndices((length), (start_), (stop_), *(step_))), 0))
 
 
 
 int slice_unpack(AlifSliceObject* ,int64_t* , int64_t* , int64_t* );
 
-int64_t slice_adjustIndices(int64_t , int64_t* , int64_t* , int64_t );
+int64_t alifSlice_adjustIndices(int64_t , int64_t* , int64_t* , int64_t );

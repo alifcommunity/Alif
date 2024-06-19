@@ -118,7 +118,7 @@ int slice_unpack(AlifSliceObject* object,
     return 0;
 }
 
-int64_t slice_adjustIndices(int64_t length,
+int64_t alifSlice_adjustIndices(int64_t length,
     int64_t* start_, int64_t* stop_, int64_t step_)
 {
 
@@ -161,7 +161,7 @@ int slice_getIndicesEx(AlifObject* object, int64_t length,
 {
     if (slice_unpack((AlifSliceObject*)object, start_, stop_, step_) < 0)
         return -1;
-    *sliceLength = slice_adjustIndices(length, start_, stop_, *step_);
+    *sliceLength = alifSlice_adjustIndices(length, start_, stop_, *step_);
     return 0;
 }
 

@@ -6,6 +6,7 @@
 #include "AlifCore_Memory.h"
 #include "AlifCore_AlifState.h"
 #include "AlifCore_DureRunInit.h"
+#include "AlifCore_LList.h"
 
 
 
@@ -58,7 +59,7 @@ static AlifIntT init_interpreter(AlifInterpreter* _interpreter,
 	_interpreter->dureRun = _dureRun;
 	_interpreter->id_ = _id;
 	_interpreter->next = _next;
-
+	alifSubGC_initState(&_interpreter->gc);
 	alifConfig_initAlifConfig(&_interpreter->config);
 
 	_interpreter->initialized = 1;

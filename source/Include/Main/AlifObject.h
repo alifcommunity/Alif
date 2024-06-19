@@ -155,6 +155,7 @@ AlifObject* alifObject_richCompare(AlifObject*, AlifObject*, int);
 int alifObject_richCompareBool(AlifObject*, AlifObject*, int);
 
 int64_t alifObject_hash(AlifObject*);
+int64_t alifObject_hashNotImplemented(AlifObject*);
 
 #define ALIFSUBTPFLAGS_STATIC_BUILTIN (1 << 1)
 

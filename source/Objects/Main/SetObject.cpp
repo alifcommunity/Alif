@@ -389,8 +389,7 @@ static AlifObject* setIter_iterNext(AlifSetIterObject* _si)
 		return NULL;
 
 	if (_si->sIUsed != so->used_) {
-		//Err_SetString(PyExc_RuntimeError,
-			//"Set changed size during iteration");
+		// error
 		_si->sIUsed = -1; /* Make this state sticky */
 		return NULL;
 	}

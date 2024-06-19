@@ -313,7 +313,7 @@ AlifObject* alifSequence_fast(AlifObject* v, const wchar_t* m)
         //return null_error();
     //}
 
-    if ((v->type_ == &typeList) || (v->type_ == & _alifTupleType_)) {
+    if ((v->type_ == &_alifListType_) || (v->type_ == & _alifTupleType_)) {
         return v;
     }
 

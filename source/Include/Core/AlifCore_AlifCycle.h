@@ -5,6 +5,7 @@
 
 
 
+AlifIntT alifSubGC_init(AlifInterpreter*);
 
 
 

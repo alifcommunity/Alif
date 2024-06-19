@@ -134,9 +134,6 @@
     <ClInclude Include="..\source\Include\Core\AlifCore_OpCodeUtils.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\Include\Core\AlifCore_Runtime.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\Include\Core\AlifCore_SymTable.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
