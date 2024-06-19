@@ -6,9 +6,14 @@
     AlifObject *PREFIX ## name; \
     AlifObject *PREFIX ## qualname; \
     AlifObject *PREFIX ## code;        /* A code object, the __code__ attribute */ \
-    AlifObject *PREFIX ## defaults;    /* NULL or a tuple */ \
-    AlifObject *PREFIX ## kwdefaults;  /* NULL or a dict */ \
-    AlifObject *PREFIX ## closure;     /* NULL or a tuple of cell objects */
+    AlifObject *PREFIX ## defaults;    /* nullptr or a tuple */ \
+    AlifObject *PREFIX ## kwdefaults;  /* nullptr or a dict */ \
+    AlifObject *PREFIX ## closure;     /* nullptr or a tuple of cell objects */
+
+class AlifFrameConstructor {
+public:
+	COMMON_FIELDS(fc)
+};
 
 
 class AlifFunctionObject {

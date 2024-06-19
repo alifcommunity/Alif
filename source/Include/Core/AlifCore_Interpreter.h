@@ -49,6 +49,7 @@ public:
 
 	AlifGCDureRun gc{};
 
+	AlifObject* builtins{};
 
 	AlifMemory* memory_{};
 };

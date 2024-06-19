@@ -137,6 +137,12 @@
     <ClInclude Include="..\source\Include\Core\AlifCore_SymTable.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_Frame.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_AlifEval.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\Objects\Core\AlifCycle.cpp">

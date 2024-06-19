@@ -24,6 +24,7 @@
     <ClInclude Include="..\source\Include\Main\AlifCapsule.h" />
     <ClInclude Include="..\source\Include\Main\AlifConfig.h" />
     <ClInclude Include="..\source\Include\Main\AlifCppType.h" />
+    <ClInclude Include="..\source\Include\Main\AlifEval.h" />
     <ClInclude Include="..\source\Include\Main\AlifLexer.h" />
     <ClInclude Include="..\source\Include\Main\AlifMacro.h" />
     <ClInclude Include="..\source\Include\Main\AlifObject.h" />
@@ -75,6 +76,7 @@
     <ClCompile Include="..\source\Objects\Main\AlifAST.cpp" />
     <ClCompile Include="..\source\Objects\Main\AlifCompiler.cpp" />
     <ClCompile Include="..\source\Objects\Main\AlifCppType.cpp" />
+    <ClCompile Include="..\source\Objects\Main\AlifEval.cpp" />
     <ClCompile Include="..\source\Objects\Main\AlifFlowGraph.cpp" />
     <ClCompile Include="..\source\Objects\Main\AlifLexer.cpp" />
     <ClCompile Include="..\source\Objects\Main\AlifParser.cpp" />

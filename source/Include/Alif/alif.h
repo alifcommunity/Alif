@@ -42,5 +42,6 @@
 #include "AlifCppType.h"
 #include "Compile.h"
 #include "AlifRun.h"
+#include "AlifEval.h"
 #include "AlifState.h"
 #include "Import.h"
