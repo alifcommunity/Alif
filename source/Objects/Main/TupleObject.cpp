@@ -296,7 +296,9 @@ AlifInitObject _alifTupleType_ = {
     0,                    
     0,                                         
     0,
-    0,       
+	ALIFTPFLAGS_DEFAULT | ALIFTPFLAGS_HAVE_GC |
+	ALIFTPFLAGS_BASETYPE | ALIFTPFLAGS_TUPLE_SUBCLASS |
+	ALIFSUBTPFLAGS_MATCH_SELF | ALIFTPFLAGS_SEQUENCE,  
     0,
     0,         
     0,                                
@@ -315,7 +317,7 @@ AlifInitObject _alifTupleType_ = {
     0,                                 
     0,                                  
     0,                             
-    0,                          
+	alifObject_gcDel,
     //.tp_vectorcall = tuple_vectorcall,
 };
 
