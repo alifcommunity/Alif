@@ -30,7 +30,7 @@ static int list_resize(AlifListObject* _list, size_t _newSize) {
 
 	AlifObject** items_{};
 	if (_list->items_ == nullptr) {
-		items_ = (AlifObject**)alifMem_dataAlloc(sizeof(AlifObject*));
+		items_ = (AlifObject**)alifMem_dataAlloc(sizeof(AlifObject*) * newAllocated);
 	}
 	else if (newAllocated <= (size_t)LLONG_MAX / sizeof(AlifObject*)) {
 		targetBytes = newAllocated * sizeof(AlifObject*);
@@ -2207,7 +2207,9 @@ AlifTypeObject _alifListType_ = {
 	0,
 	0,
 	0,
-	0,
+	ALIFTPFLAGS_DEFAULT | ALIFTPFLAGS_HAVE_GC |
+	ALIFTPFLAGS_BASETYPE | ALIFTPFLAGS_LIST_SUBCLASS |
+	ALIFSUBTPFLAGS_MATCH_SELF | ALIFTPFLAGS_SEQUENCE, 
 	0,
 	0,
 	list_clear_slot,
