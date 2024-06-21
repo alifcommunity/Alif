@@ -85,7 +85,7 @@ AlifObject* alifNew_list(size_t _size) {
 	}
 	ALIFSET_SIZE(object, _size);
 	object->allocate_ = _size;
-	ALIFSUBObject_GC_TRACK(object);
+	ALIFOBJECT_GC_TRACK(object);
 	return (AlifObject*)object;
 }
 
@@ -213,7 +213,7 @@ int alifSubList_appendTakeRefListResize(AlifListObject* _self, AlifObject* _newI
 
 int alifList_append(AlifObject* _list, AlifObject* _newItem)
 {
-	if ((_list->type_ == &_alifListType_) && (_newItem != nullptr)) {
+	if ((_list->type_ == &_alifListType_) and (_newItem != nullptr)) {
 		int ret_;
 		//ALIF_BEGIN_CRITICAL_SECTION(_op);
 		ret_ = alifSubList_appendTakeRef((AlifListObject*)_list, ALIF_NEWREF(_newItem));
@@ -2189,9 +2189,7 @@ AlifMappingMethods _listAsMap_ = {
 };
 
 AlifTypeObject _alifListType_ = {
-	0,
-	0,
-	0,
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	L"list",
 	sizeof(AlifListObject),
 	0,

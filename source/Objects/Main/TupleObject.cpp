@@ -26,6 +26,10 @@ static AlifTupleObject* tuple_alloc(int64_t _size)
 	return op;
 }
 
+static inline AlifObject* tuple_getEmpty() {
+	return (AlifObject*)&ALIF_SINGLETON(tupleEmpty);
+}
+
 AlifObject* alifNew_tuple(int64_t _size)
 {
 	AlifTupleObject* op_{};
@@ -39,7 +43,7 @@ AlifObject* alifNew_tuple(int64_t _size)
 	for (int64_t i = 0; i < _size; i++) {
 		op_->items_[i] = NULL;
 	}
-	ALIFSUBObject_GC_TRACK(op_);
+	ALIFOBJECT_GC_TRACK(op_);
 	return (AlifObject*)op_;
 }
 
@@ -98,7 +102,7 @@ AlifObject* tuple_pack(size_t _size, ...) {
 		items_[i_] = ALIF_NEWREF(o_);
 	}
 	va_end(vArgs);
-	ALIFSUBObject_GC_TRACK(result);
+	ALIFOBJECT_GC_TRACK(result);
 	return (AlifObject*)result;
 
 }
@@ -177,6 +181,26 @@ AlifObject* alifSubTuple_fromArray(AlifObject *const *_object, size_t _size) {
 
     return (AlifObject*)tuple_;
 
+}
+
+AlifObject* alifTuple_fromArraySteal(AlifObject* const* _src, AlifSizeT _n) {
+	if (_n == 0) {
+		return tuple_getEmpty();
+	}
+	AlifTupleObject* tuple = tuple_alloc(_n);
+	if (tuple == nullptr) {
+		for (AlifSizeT i = 0; i < _n; i++) {
+			ALIF_DECREF(_src[i]);
+		}
+		return nullptr;
+	}
+	AlifObject** dst = tuple->items_;
+	for (AlifSizeT i = 0; i < _n; i++) {
+		AlifObject* item = _src[i];
+		dst[i] = item;
+	}
+	ALIFOBJECT_GC_TRACK(tuple);
+	return (AlifObject*)tuple;
 }
 
 AlifObject* tupleslice(AlifTupleObject* _tuple, size_t _iLow,

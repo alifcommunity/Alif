@@ -47,6 +47,8 @@ public:
 	ImportDureRun imports;
 
 
+	AlifStaticObjects staticObjects{};
+
 	AlifInterpreter mainInterpreter{};
 };
 

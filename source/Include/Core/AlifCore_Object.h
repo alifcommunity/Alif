@@ -42,7 +42,7 @@ static inline void alifSub_refAdd(AlifObject* op, int64_t n)
 	}
 #endif
 }
-#define ALIFSUB_REFCNTADD(op, n) alifSub_refAdd(ALIFSUBOBJECT_CAST(op), n)
+#define ALIFSUB_REFCNTADD(op, n) alifSub_refAdd(ALIFOBJECT_CAST(op), n)
 
 extern void alifSub_setImmortal(AlifObject*);
 extern void alifSub_setImmortalUntracked(AlifObject*);
@@ -62,7 +62,7 @@ static inline void alifSub_clearImmortal(AlifObject* _op)
 }
 #define ALIFSUB_CLEARIMMORTAL(_op) \
     do { \
-        alifSub_clearImmortal(ALIFSUBOBJECT_CAST(_op)); \
+        alifSub_clearImmortal(ALIFOBJECT_CAST(_op)); \
         op = nullptr; \
     } while (0); \
 
@@ -143,19 +143,19 @@ static inline void alifSubObject_gcUnTrack(
 #  define ALIFSUBObject_GC_UNTRACK(op) \
         alifSubObject_gc_unTrack(ALIFSUBOBJECT_CAST(op))
 #else
-#  define ALIFSUBObject_GC_TRACK(op) \
-        alifSubObject_gcTrack(__FILE__, __LINE__, ALIFSUBOBJECT_CAST(op))
-#  define ALIFSUBObject_GC_UNTRACK(op) \
-        alifSubObject_gcUnTrack(__FILE__, __LINE__, ALIFSUBOBJECT_CAST(op))
+#  define ALIFOBJECT_GC_TRACK(op) \
+        alifSubObject_gcTrack(__FILE__, __LINE__, ALIFOBJECT_CAST(op))
+#  define ALIFOBJECT_GC_UNTRACK(op) \
+        alifSubObject_gcUnTrack(__FILE__, __LINE__, ALIFOBJECT_CAST(op))
 #endif
 
-#define ALIFSUBType_IS_GC(t) alifSubType_hasFeature((t), ALIFTPFLAGS_HAVE_GC)
+#define ALIFTYPE_IS_GC(t) alifSubType_hasFeature((t), ALIFTPFLAGS_HAVE_GC)
 
 static inline size_t  alifSubType_preHeaderSize(AlifTypeObject* _tp)
 {
 	return (
 #ifndef ALIF_GIL_DISABLED
-		ALIFSUBType_IS_GC(_tp) * sizeof(AlifGCHead) +
+		ALIFTYPE_IS_GC(_tp) * sizeof(AlifGCHead) +
 #endif
 		alifSubType_hasFeature(_tp, ALIFTPFLAGS_PREHEADER) * 2 * sizeof(AlifObject*)
 		);

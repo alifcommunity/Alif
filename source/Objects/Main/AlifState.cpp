@@ -1,5 +1,8 @@
 #include "alif.h"
 
+#include "AlifCore_AlifEval.h"
+#include "AlifCore_Code.h"
+#include "AlifCore_Frame.h"
 #include "AlifCore_InitConfig.h"
 #include "AlifObject.h"
 #include "AlifCore_AlifCycle.h"
@@ -127,4 +130,52 @@ error:
 const AlifConfig* alifConfig_get() {
 	AlifThread* thread_ = _alifTSSThread_;
 	return &thread_->interpreter->config;
+}
+
+
+
+
+#define DATA_STACK_CHUNK_SIZE (16*1024)
+
+static AlifStackChunk* allocate_chunk(AlifIntT _sizeInBytes, AlifStackChunk* _previous) { // 1414
+	//AlifStackChunk* res = alifObject_virtualAlloc(_sizeInBytes);
+	AlifStackChunk* res = (AlifStackChunk*)alifMem_dataAlloc(_sizeInBytes);
+	if (res == nullptr) return nullptr;
+
+	res->previous = _previous;
+	res->size = _sizeInBytes;
+	res->top = 0;
+	return res;
+}
+
+
+#define MINIMUM_OVERHEAD 1000
+
+static AlifObject** push_chunk(AlifThread* _thread, AlifIntT _size) { // 2902
+	AlifIntT allocateSize = DATA_STACK_CHUNK_SIZE;
+	while (allocateSize < (int)sizeof(AlifObject*) * (_size + MINIMUM_OVERHEAD)) {
+		allocateSize *= 2;
+	}
+	AlifStackChunk* newChunck = allocate_chunk(allocateSize, _thread->dataStackChunk);
+	if (newChunck == nullptr) {
+		return nullptr;
+	}
+	if (_thread->dataStackChunk) {
+		_thread->dataStackChunk->top = _thread->dataStackTop -
+			&_thread->dataStackChunk->data[0];
+	}
+	_thread->dataStackChunk = newChunck;
+	_thread->dataStackLimit = (AlifObject**)(((char*)newChunck) + allocateSize);
+	AlifObject** res = &newChunck->data[newChunck->previous == nullptr];
+	_thread->dataStackTop = res + _size;
+	return res;
+}
+
+AlifInterpreterFrame* alifThread_pushFrame(AlifThread* _thread, AlifUSizeT _size) { // 2929
+	if (alifThread_hasStackSpace(_thread, (int)_size)) {
+		AlifInterpreterFrame* res = (AlifInterpreterFrame*)_thread->dataStackTop;
+		_thread->dataStackTop += _size;
+		return res;
+	}
+	return (AlifInterpreterFrame*)push_chunk(_thread, (int)_size);
 }

@@ -1,6 +1,15 @@
 #pragma once
 
 
+class AlifStackChunk {
+public:
+	AlifStackChunk* previous;
+	AlifUSizeT size;
+	AlifUSizeT top;
+	AlifObject* data[1]; /* Variable sized */
+};
+
+
 class AlifThread {
 public:
 	AlifThread* prev{};
@@ -10,7 +19,11 @@ public:
 
 
 
-	AlifIntT cppRecursionRemaining{};
+	AlifIntT recursionRemaining{};
+
+	AlifStackChunk* dataStackChunk{};
+	AlifObject** dataStackTop;
+	AlifObject** dataStackLimit;
 };
 
 

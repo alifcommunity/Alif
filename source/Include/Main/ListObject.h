@@ -33,11 +33,11 @@ AlifObject* alifList_asTuple(AlifObject*);
 class AlifListObject {
 public:
 
-	ALIFOBJECT_VAR_HEAD;
+	ALIFOBJECT_VAR_HEAD
 
 	AlifObject** items_{};
 
-	AlifSizeT allocate_;
+	AlifSizeT allocate_{};
 };
 
 
@@ -45,8 +45,8 @@ static inline void alifList_set_item(AlifObject* _op, int64_t _index, AlifObject
 	AlifListObject* list_ = (AlifListObject*)_op;
 	list_->items_[_index] = _value;
 }
-#define ALIFLIST_SET_ITEM(_op, _index, _value) \
-    alifList_set_item(ALIFSUBOBJECT_CAST(_op), (_index), ALIFSUBOBJECT_CAST(_value))
+#define ALIFLIST_SETITEM(_op, _index, _value) \
+    alifList_set_item(ALIFOBJECT_CAST(_op), (_index), ALIFOBJECT_CAST(_value))
 
 
 AlifObject* alifList_extend(AlifListObject*, AlifObject*);

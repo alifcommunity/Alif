@@ -835,7 +835,7 @@ class AlifSymTable* alifSymTable_build(Module* _module, AlifObject* _fn) { // 39
         //symTable_free(symTable);
         return nullptr;
     }
-    AlifIntT recursionDepth = ALIFCPP_RECURSION_LIMIT - thread_->cppRecursionRemaining;
+    AlifIntT recursionDepth = ALIFCPP_RECURSION_LIMIT - thread_->recursionRemaining;
     startingRecursionDepth = recursionDepth;
     symTable->recursionDepth = startingRecursionDepth;
     symTable->recursionLimit = ALIFCPP_RECURSION_LIMIT;
