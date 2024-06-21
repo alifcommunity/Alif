@@ -146,10 +146,10 @@ AlifIntT alifAST_optimize(Module* _module, AlifASTMem* _astMem, AlifIntT _optimi
 	if (!thread_) return 0;
 
 	// this section is temp and need fix later
-	thread_->cppRecursionRemaining = ALIFCPP_RECURSION_LIMIT;
+	thread_->recursionRemaining = ALIFCPP_RECURSION_LIMIT;
 	//////////////////////////////////////////
 
-	AlifIntT recursionDepth = ALIFCPP_RECURSION_LIMIT - thread_->cppRecursionRemaining;
+	AlifIntT recursionDepth = ALIFCPP_RECURSION_LIMIT - thread_->recursionRemaining;
 	startRecursionDepth = recursionDepth;
 	astState.recursionDepth = startRecursionDepth;
 	astState.recursionLimit = ALIFCPP_RECURSION_LIMIT;

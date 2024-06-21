@@ -66,10 +66,10 @@ static inline void gc_list_remove(AlifGCHead* _node)
 
 void alifObject_gc_track(void* _opRaw)
 {
-	AlifObject* op_ = ALIFSUBOBJECT_CAST(_opRaw);
+	AlifObject* op_ = ALIFOBJECT_CAST(_opRaw);
 	//if (ALIFSUBOBJECT_GC_ISTRACKED(op)) {
 	//}
-	ALIFSUBObject_GC_TRACK(op_);
+	ALIFOBJECT_GC_TRACK(op_);
 
 #ifdef ALIF_DEBUG
 	traverseproc traverse = ALIF_TYPE(op_)->traverse_;
@@ -79,10 +79,10 @@ void alifObject_gc_track(void* _opRaw)
 
 void alifObject_gcUnTrack(void* _opRaw)
 {
-	AlifObject* op_ = ALIFSUBOBJECT_CAST(_opRaw);
+	AlifObject* op_ = ALIFOBJECT_CAST(_opRaw);
 
 	if (ALIFSUBOBJECT_GC_ISTRACKED(op_)) {
-		ALIFSUBObject_GC_UNTRACK(op_);
+		ALIFOBJECT_GC_UNTRACK(op_);
 	}
 }
 

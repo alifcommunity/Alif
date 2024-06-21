@@ -32,12 +32,20 @@ public:
 	AlifObject* consts{};
 	AlifObject* names{};
 
+	AlifIntT flags;
+
 	AlifIntT args{};
+	AlifIntT posOnlyArgCount;
+	AlifIntT kwOnlyArgCount;
 	AlifIntT stackSize{};
 	AlifIntT firstLineNo{};
+	AlifIntT nLocalsPlus{};
 	AlifIntT frameSize{};
 	AlifIntT nLocals{};
 	AlifIntT version{};
+
+	AlifObject* localsPlusNames{};
+	AlifObject* localsPlusKinds{};
 
 	AlifObject* fileName{};
 	AlifObject* name{};
@@ -49,8 +57,17 @@ public:
 	char codeAdaptive[1];
 };
 
-
+/* Masks for flags above */
+#define CO_OPTIMIZED    0x0001
+#define CO_NEWLOCALS    0x0002
+#define CO_VARARGS      0x0004
+#define CO_VARKEYWORDS  0x0008
+#define CO_NESTED       0x0010
+#define CO_GENERATOR    0x0020
 
 #define CO_MAXBLOCKS 21 /* Max static block nesting within a function */ // 229
 
 extern AlifTypeObject _alifCodeType_;
+
+
+#define ALIFCODE_CODE(_co) ALIF_RVALUE((AlifCodeUnit*)(_co)->codeAdaptive)

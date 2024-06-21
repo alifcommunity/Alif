@@ -708,7 +708,7 @@ static AlifObject* constsDict_keysInorder(AlifObject* _dict) { // 7515
 		if (ALIFTUPLE_CHECKEXACT(k)) {
 			k = ALIFTUPLE_GET_ITEM(k, 1);
 		}
-		ALIFLIST_SET_ITEM(consts, i, ALIF_NEWREF(k));
+		ALIFLIST_SETITEM(consts, i, ALIF_NEWREF(k));
 	}
 	return consts;
 }

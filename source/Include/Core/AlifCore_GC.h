@@ -6,6 +6,7 @@ public:
 	AlifUSizeT gcPrev{};
 };
 
+#define ALIFGC_HEAD_UNUSED AlifGCHead
 
 static inline AlifGCHead* alifSub_asGC(AlifObject* _gc) {
 	char* gc = ((char*)_gc) - sizeof(AlifGCHead);

@@ -36,3 +36,41 @@ public:
 	/* Locals and stack */
 	AlifObject* localsPlus[1];
 };
+
+enum FrameOwner {
+	FRAME_OWNED_BY_THREAD = 0,
+	FRAME_OWNED_BY_GENERATOR ,
+	FRAME_OWNED_BY_FRAME_OBJECT,
+	FRAME_OWNED_BY_CSTACK,
+};
+
+static inline void alifFrame_initialize(AlifInterpreterFrame* _frame, AlifFunctionObject* _func,
+	AlifObject* _locals, AlifCodeObject* _code, AlifIntT _nullLocalsFrom) { // 129
+	_frame->funcobj = (AlifObject*)_func;
+	_frame->executable = ALIF_NEWREF(_code);
+	_frame->builtins = _func->funcBuiltins;
+	_frame->globals = _func->funcGlobals;
+	_frame->locals = _locals;
+	_frame->stacktop = _code->nLocalsPlus;
+	_frame->frameObj = nullptr;
+	_frame->instrPtr = ALIFCODE_CODE(_code);
+	_frame->returnOffset = 0;
+	_frame->owner = FrameOwner::FRAME_OWNED_BY_THREAD;
+
+	for (int i = _nullLocalsFrom; i < _code->nLocalsPlus; i++) {
+		_frame->localsPlus[i] = NULL;
+	}
+}
+
+
+static inline bool alifThread_hasStackSpace(AlifThread* _thread, AlifIntT _size) { // 254
+	return _thread->dataStackTop != nullptr and _size < _thread->dataStackLimit - _thread->dataStackTop;
+}
+
+
+
+extern AlifInterpreterFrame* alifThread_pushFrame(AlifThread*, AlifUSizeT);
+
+
+AlifInterpreterFrame* alifEvalFrame_initAndPush(AlifThread*, AlifFunctionObject*,
+	AlifObject*, AlifObject* const*, AlifUSizeT, AlifObject*);
