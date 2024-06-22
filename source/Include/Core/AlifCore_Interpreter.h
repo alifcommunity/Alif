@@ -3,6 +3,7 @@
 #include "AlifCore_Memory.h"
 #include "AlifCore_GC.h"
 #include "AlifCore_GlobalObjects.h"
+#include "AlifCore_ObjectState.h"
 
 
 
@@ -53,6 +54,8 @@ public:
 	AlifObject* builtins{};
 
 	AlifMemory* memory_{};
+
+	AlifObjectState objectState{};
 };
 
 

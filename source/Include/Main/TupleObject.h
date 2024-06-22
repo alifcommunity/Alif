@@ -2,10 +2,9 @@
 
 class AlifTupleObject {
 public:
-
 	ALIFOBJECT_VAR_HEAD;
 
-     AlifObject* items_[1];
+	AlifObject* items_[1]{};
 };
 
 extern AlifInitObject _alifTupleType_;
@@ -17,7 +16,7 @@ extern AlifInitObject _alifTupleType_;
                  //ALIFTYPE_FASTSUBCLASS(ALIF_TYPE(_op), ALIFTPFLAGS_TUPLE_SUBCLASS)
 #define ALIFTUPLE_CHECKEXACT(_op) ALIF_IS_TYPE((_op), &_alifTupleType_)
 
-AlifObject* alifNew_tuple(SSIZE_T );
+AlifObject* alifNew_tuple(AlifSizeT);
 AlifObject* tuple_pack(size_t, ...);
 
 static inline AlifSizeT alifTuple_getSize(AlifObject* _op) {

@@ -138,10 +138,10 @@ static inline void alifSubObject_gcUnTrack(
 }
 
 #ifdef NDEBUG
-#  define ALIFSUBObject_GC_TRACK(op) \
-        alifSubObject_gc_track(ALIFSUBOBJECT_CAST(op))
-#  define ALIFSUBObject_GC_UNTRACK(op) \
-        alifSubObject_gc_unTrack(ALIFSUBOBJECT_CAST(op))
+#  define ALIFOBJECT_GC_TRACK(op) \
+        alifSubObject_gcTrack(ALIFOBJECT_CAST(op))
+#  define ALIFOBJECT_GC_UNTRACK(op) \
+        alifSubObject_gcUnTrack(ALIFOBJECT_CAST(op))
 #else
 #  define ALIFOBJECT_GC_TRACK(op) \
         alifSubObject_gcTrack(__FILE__, __LINE__, ALIFOBJECT_CAST(op))

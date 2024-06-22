@@ -30,18 +30,18 @@ static inline AlifObject* tuple_getEmpty() {
 	return (AlifObject*)&ALIF_SINGLETON(tupleEmpty);
 }
 
-AlifObject* alifNew_tuple(int64_t _size)
+AlifObject* alifNew_tuple(AlifSizeT _size)
 {
 	AlifTupleObject* op_{};
-	//if (_size == 0) {
-		//return tuple_get_empty();
-	//}
-	op_ = tuple_alloc(_size);
-	if (op_ == NULL) {
-		return NULL;
+	if (_size == 0) {
+		return tuple_getEmpty();
 	}
-	for (int64_t i = 0; i < _size; i++) {
-		op_->items_[i] = NULL;
+	op_ = tuple_alloc(_size);
+	if (op_ == nullptr) {
+		return nullptr;
+	}
+	for (AlifSizeT i = 0; i < _size; i++) {
+		op_->items_[i] = nullptr;
 	}
 	ALIFOBJECT_GC_TRACK(op_);
 	return (AlifObject*)op_;
@@ -276,11 +276,9 @@ AlifSequenceMethods _seqAsTuple_ = {
 };
 
 AlifInitObject _alifTupleType_ = {
-    0,
-    0,
-    0,
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
     L"tuple",
-    sizeof(AlifTupleObject),
+    sizeof(AlifTupleObject) - sizeof(AlifObject*),
     sizeof(AlifObject*),
     (Destructor)tuple_dealloc,         
     0,                                          
@@ -295,9 +293,10 @@ AlifInitObject _alifTupleType_ = {
     0,                                     
     0,                    
     0,                                         
-    0,
-    0,       
-    0,
+    0,    
+	ALIFTPFLAGS_DEFAULT | ALIFTPFLAGS_HAVE_GC | ALIFTPFLAGS_BASETYPE |
+	ALIFTPFLAGS_LIST_SUBCLASS | ALIFSUBTPFLAGS_MATCH_SELF | ALIFTPFLAGS_SEQUENCE,
+	0,
     0,         
     0,                                
     tuple_compare,                          

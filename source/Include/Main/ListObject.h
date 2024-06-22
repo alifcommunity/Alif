@@ -9,7 +9,7 @@ extern AlifTypeObject _alifListType_;
     ALIFTYPE_FASTSUBCLASS(ALIF_TYPE(_op), ALIFTPFLAGS_LIST_SUBCLASS)
 #define ALIFLIST_CHECKEXACT(_op) ALIF_IS_TYPE((_op), &_alifListType_)
 
-AlifObject* alifNew_list(size_t size_);
+AlifObject* alifNew_list(AlifSizeT size_);
 size_t alifList_size(AlifObject* list);
 
 #define ALIFLIST_GET_SIZE(_lst) (((AlifVarObject*)_lst)->size_)

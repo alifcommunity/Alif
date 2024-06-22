@@ -22,8 +22,8 @@ public:
 	AlifIntT recursionRemaining{};
 
 	AlifStackChunk* dataStackChunk{};
-	AlifObject** dataStackTop;
-	AlifObject** dataStackLimit;
+	AlifObject** dataStackTop{};
+	AlifObject** dataStackLimit{};
 };
 
 

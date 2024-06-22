@@ -1,7 +1,7 @@
 #pragma once
 
 
-#define ALIFOBJECT_HEAD		AlifObject _base_;
+#define ALIFOBJECT_HEAD		AlifObject _base_{};
 
 
 //#if SIZEOF_VOID_P > 4
@@ -25,7 +25,7 @@
         (_size)                         \
     } \
 
-#define ALIFOBJECT_VAR_HEAD		AlifVarObject _base_;
+#define ALIFOBJECT_VAR_HEAD		AlifVarObject _base_{};
 #define Alif_INVALID_SIZE (int64_t) - 1
 
 class AlifObject {
@@ -39,7 +39,7 @@ public:
 
 class AlifVarObject {
 public:
-	ALIFOBJECT_HEAD;
+	ALIFOBJECT_HEAD
 	AlifSizeT size_{};
 };
 
@@ -241,7 +241,6 @@ static inline void alif_incref(AlifObject* _op)
 
 static inline void alif_decref(AlifObject* _op)
 {
-
 	if (ALIFSUB_ISIMMORTAL(_op)) {
 		return;
 	}
@@ -496,6 +495,18 @@ public:
 	AlifObject* init_;
 };
 
+class AlifDictKeysObject {
+public:
+	AlifSizeT refCnt{};
+	uint8_t log2Size{};
+	uint8_t log2IndexBytes{};
+	uint8_t kind{};
+	uint32_t version{};
+	AlifSizeT usable{};
+	AlifSizeT nentries{};
+	char indices[];
+};
+
 class AlifHeapTypeObject {
 public:
 	AlifInitObject type_;
@@ -504,6 +515,7 @@ public:
 	AlifSequenceMethods sequence_;
 	AlifBufferProcs buffer_;
 	AlifObject* name_, * slots_, * qualname_;
+	AlifDictKeysObject* cachedKeys{};
 	AlifObject* module_;
 	char* typeName;
 	SpecializationCache specCache;

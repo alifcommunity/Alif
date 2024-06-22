@@ -42,7 +42,8 @@ AlifObject* alifSubObjectGC_new(AlifTypeObject*);
 AlifVarObject* alifSubObjectGC_newVar(AlifTypeObject*, int64_t);
 
 
-#define ALIFOBJECT_GC_NEW(_type, _typeObj) (_type*)(alifSubObjectGC_new(_typeObj))
+#define ALIFOBJECT_GC_NEW(_type, _typeObj) \
+	ALIF_CAST(_type*, alifSubObjectGC_new(_typeObj))
 
 #define ALIFOBJECT_GC_NEWVAR(_type, _typeObj, _n) \
     ALIF_CAST(_type*, alifSubObjectGC_newVar((_typeObj), (_n)))

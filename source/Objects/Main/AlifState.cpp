@@ -17,7 +17,7 @@
 	ALIF_LOCAL_THREAD AlifThread* _alifTSSThread_ = nullptr;
 #endif
 
-static const AlifDureRun initial = ALIF_DURERUNSTATE_INIT(_dureRun_);
+static const AlifDureRun initial = ALIF_DURERUNSTATE_INIT(_alifDureRun_);
 
 
 

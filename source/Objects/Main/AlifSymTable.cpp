@@ -269,7 +269,7 @@ static AlifIntT symTable_visitStmt(class AlifSymTable* _symTable, Statement* _st
 
 static void ste_dealloc(AlifSTEntryObject* _ste)
 {
-    _ste->stETable = NULL;
+    _ste->steTable = NULL;
     ALIF_XDECREF(_ste->steID);
     ALIF_XDECREF(_ste->steName);
     ALIF_XDECREF(_ste->steSymbols);
@@ -338,7 +338,7 @@ static AlifSTEntryObject* symTableEntry_new(AlifSymTable* _symTable, AlifObject*
         ALIF_DECREF(k_);
         goto fail;
     }
-    symTableEntry->stETable = _symTable;
+    symTableEntry->steTable = _symTable;
     symTableEntry->steID = k_;
 
     symTableEntry->steName = ALIF_NEWREF(_name);
