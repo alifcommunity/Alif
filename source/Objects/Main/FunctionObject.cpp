@@ -9,24 +9,24 @@
 AlifFunctionObject* alifFunction_fromConstructor(AlifFrameConstructor* _constr) { // 101
 
 	AlifObject* module{};
-	AlifObject* name = alifUStr_decodeStringToUTF8(L"__name__"); // temp
-	if (alifDict_getItemRef(_constr->fcGlobals, name, &module) < 0) {
-		return nullptr;
-	}
+	//AlifObject* name = alifUStr_decodeStringToUTF8(L"__name__"); // temp
+	//if (alifDict_getItemRef(_constr->fcGlobals, name, &module) < 0) {
+	//	return nullptr;
+	//}
 
 	AlifFunctionObject* op = ALIFOBJECT_GC_NEW(AlifFunctionObject, &_alifFunctionType_);
 	if (op == nullptr) {
 		ALIF_XDECREF(module);
 		return nullptr;
 	}
-	op->funcGlobals = ALIF_NEWREF(_constr->fcGlobals);
-	op->funcBuiltins = ALIF_NEWREF(_constr->fcBuiltins);
+	//op->funcGlobals = ALIF_NEWREF(_constr->fcGlobals);
+	//op->funcBuiltins = ALIF_NEWREF(_constr->fcBuiltins);
 	op->funcName = ALIF_NEWREF(_constr->fcName);
 	op->funcQualname = ALIF_NEWREF(_constr->fcQualname);
 	op->funcCode = ALIF_NEWREF(_constr->fcCode);
-	op->funcDefaults = ALIF_XNEWREF(_constr->fcDefaults);
-	op->funcKwdefaults = ALIF_XNEWREF(_constr->fcKwdefaults);
-	op->funcClosure = ALIF_XNEWREF(_constr->fcClosure);
+	//op->funcDefaults = ALIF_XNEWREF(_constr->fcDefaults);
+	//op->funcKwdefaults = ALIF_XNEWREF(_constr->fcKwdefaults);
+	//op->funcClosure = ALIF_XNEWREF(_constr->fcClosure);
 	op->funcDoc = ALIF_NEWREF(ALIF_NONE);
 	op->funcDict = nullptr;
 	op->funcWeakRefList = nullptr;

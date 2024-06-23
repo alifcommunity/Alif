@@ -25,6 +25,7 @@
     <ClInclude Include="..\source\Include\Main\AlifConfig.h" />
     <ClInclude Include="..\source\Include\Main\AlifCppType.h" />
     <ClInclude Include="..\source\Include\Main\AlifEval.h" />
+    <ClInclude Include="..\source\Include\Main\AlifEvalMacros.h" />
     <ClInclude Include="..\source\Include\Main\AlifLexer.h" />
     <ClInclude Include="..\source\Include\Main\AlifMacro.h" />
     <ClInclude Include="..\source\Include\Main\AlifObject.h" />
@@ -59,6 +60,7 @@
     <ClInclude Include="..\source\Include\Main\ModSupport.h" />
     <ClInclude Include="..\source\Include\Main\ObjImpl.h" />
     <ClInclude Include="..\source\Include\Main\OpCode.h" />
+    <ClInclude Include="..\source\Include\Main\OpCodeCases.h" />
     <ClInclude Include="..\source\Include\Main\OpCodeIDs.h" />
     <ClInclude Include="..\source\Include\Main\SetObject.h" />
     <ClInclude Include="..\source\Include\Main\SliceObject.h" />
@@ -107,12 +109,14 @@
     <ClCompile Include="..\source\Objects\Main\GetVersion.cpp" />
     <ClCompile Include="..\source\Objects\Main\Import.cpp" />
     <ClCompile Include="..\source\Objects\Main\InstructionSeq.cpp" />
+    <ClCompile Include="..\source\Objects\Main\Instrumentation.cpp" />
     <ClCompile Include="..\source\Objects\Main\IntegerObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\IterObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\ListObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\MethodObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\SetObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\SliceObject.cpp" />
+    <ClCompile Include="..\source\Objects\Main\Specialize.cpp" />
     <ClCompile Include="..\source\Objects\Main\StringParser.cpp" />
     <ClCompile Include="..\source\Objects\Main\Thread.cpp" />
     <ClCompile Include="..\source\Objects\Main\TupleObject.cpp" />

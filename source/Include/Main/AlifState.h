@@ -16,8 +16,9 @@ public:
 	AlifThread* next{};
 	class AlifInterpreter* interpreter{};
 
+	AlifIntT tracing{};
 
-
+	class AlifInterpreterFrame* currentFrame{};
 
 	AlifIntT recursionRemaining{};
 
@@ -30,3 +31,7 @@ public:
 
 
 #define ALIFCPP_RECURSION_LIMIT 10000
+
+
+
+typedef AlifObject* (*AlifFrameEvalFunction)(AlifThread*, AlifInterpreterFrame*, AlifIntT);

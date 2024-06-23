@@ -44,6 +44,17 @@ enum FrameOwner {
 	FRAME_OWNED_BY_CSTACK,
 };
 
+static inline AlifCodeObject* alifFrame_getCode(AlifInterpreterFrame* _f) { // 76
+	return (AlifCodeObject*)_f->executable;
+}
+
+static inline void alifFrame_stackPush(AlifInterpreterFrame* _f, AlifObject* _value) { // 97
+	_f->localsPlus[_f->stacktop] = _value;
+	_f->stacktop++;
+}
+
+#define FRAME_SPECIALS_SIZE ((AlifIntT)((sizeof(AlifInterpreterFrame)-1)/sizeof(AlifObject *)))
+
 static inline void alifFrame_initialize(AlifInterpreterFrame* _frame, AlifFunctionObject* _func,
 	AlifObject* _locals, AlifCodeObject* _code, AlifIntT _nullLocalsFrom) { // 129
 	_frame->funcobj = (AlifObject*)_func;
@@ -62,6 +73,12 @@ static inline void alifFrame_initialize(AlifInterpreterFrame* _frame, AlifFuncti
 	}
 }
 
+static inline AlifObject** alifFrame_getStackPointer(AlifInterpreterFrame* _frame)
+{
+	AlifObject** sp = _frame->localsPlus + _frame->stacktop;
+	_frame->stacktop = -1;
+	return sp;
+}
 
 static inline bool alifThread_hasStackSpace(AlifThread* _thread, AlifIntT _size) { // 254
 	return _thread->dataStackTop != nullptr and _size < _thread->dataStackLimit - _thread->dataStackTop;

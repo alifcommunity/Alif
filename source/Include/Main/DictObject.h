@@ -24,7 +24,7 @@ public:
 #define ALIFDICT_GET_SIZE(_op) (((AlifDictObject*)_op)->size_)
 
 
-extern AlifInitObject typeDict;
+extern AlifInitObject _alifDictType_;
 
 AlifObject* alifNew_dict();
 AlifDictObject* deleteItem_fromIndex(AlifDictObject*, int64_t);

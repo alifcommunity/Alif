@@ -49,6 +49,8 @@ public:
 	class AlifDureRun* dureRun{};
 	AlifConfig config{};
 
+	AlifFrameEvalFunction evalFrame{};
+
 	AlifGCDureRun gc{};
 
 	AlifObject* builtins{};
