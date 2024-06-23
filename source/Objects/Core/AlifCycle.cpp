@@ -110,7 +110,7 @@ static AlifIntT alifCore_interpreterInit(AlifThread* _thread) {
 	AlifIntT status = 1;
 	const AlifConfig* config_;
 
-	//status = alifGarbegCollector_init(interpreter);
+	status = alifSubGC_init(interpreter);
 	if (status < 1) return status;
 
 	//status = alifCore_initTypes(interpreter);

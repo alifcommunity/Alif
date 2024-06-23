@@ -131,3 +131,7 @@
 #else
 #include <cstring> // memcpy()
 #endif // _WINDOWS
+
+
+
+#define WITH_FREELISTS 1

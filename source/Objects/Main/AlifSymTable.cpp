@@ -269,7 +269,7 @@ static AlifIntT symTable_visitStmt(class AlifSymTable* _symTable, Statement* _st
 
 static void ste_dealloc(AlifSTEntryObject* _ste)
 {
-    _ste->stETable = NULL;
+    _ste->steTable = NULL;
     ALIF_XDECREF(_ste->steID);
     ALIF_XDECREF(_ste->steName);
     ALIF_XDECREF(_ste->steSymbols);
@@ -338,7 +338,7 @@ static AlifSTEntryObject* symTableEntry_new(AlifSymTable* _symTable, AlifObject*
         ALIF_DECREF(k_);
         goto fail;
     }
-    symTableEntry->stETable = _symTable;
+    symTableEntry->steTable = _symTable;
     symTableEntry->steID = k_;
 
     symTableEntry->steName = ALIF_NEWREF(_name);
@@ -648,7 +648,7 @@ static int analyze_block(AlifSTEntryObject* _ste, AlifObject* _bound, AlifObject
 
     for (i = 0; i < ((AlifVarObject*)_ste->steChildren)->size_; ++i) {
         AlifObject* child_free = nullptr;
-        AlifObject* c = ((AlifListObject*)_ste->steChildren)->items[i];
+        AlifObject* c = ((AlifListObject*)_ste->steChildren)->items_[i];
         AlifSTEntryObject* entry;
         entry = (AlifSTEntryObject*)c;
 
@@ -688,7 +688,7 @@ static int analyze_block(AlifSTEntryObject* _ste, AlifObject* _bound, AlifObject
     }
 
     for (i = ((AlifVarObject*)_ste->steChildren)->size_ - 1; i >= 0; --i) {
-        AlifObject* c = ((AlifListObject*)_ste->steChildren)->items[i];
+        AlifObject* c = ((AlifListObject*)_ste->steChildren)->items_[i];
         AlifSTEntryObject* entry;
         entry = (AlifSTEntryObject*)c;
         if (entry->steCompInlined and
@@ -756,7 +756,7 @@ static AlifIntT symTable_exitBlock(AlifSymTable* _st) { // 1303
     if (size) {
         if (list_setSlice(_st->stStack, size - 1, size, nullptr) < 0) return 0;
         if (--size)
-            _st->stCur = (AlifSTEntryObject*)((AlifListObject*)_st->stStack)->items[size - 1];
+            _st->stCur = (AlifSTEntryObject*)((AlifListObject*)_st->stStack)->items_[size - 1];
     }
     return 1;
 }
@@ -835,7 +835,7 @@ class AlifSymTable* alifSymTable_build(Module* _module, AlifObject* _fn) { // 39
         //symTable_free(symTable);
         return nullptr;
     }
-    AlifIntT recursionDepth = ALIFCPP_RECURSION_LIMIT - thread_->cppRecursionRemaining;
+    AlifIntT recursionDepth = ALIFCPP_RECURSION_LIMIT - thread_->recursionRemaining;
     startingRecursionDepth = recursionDepth;
     symTable->recursionDepth = startingRecursionDepth;
     symTable->recursionLimit = ALIFCPP_RECURSION_LIMIT;

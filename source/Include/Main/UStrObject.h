@@ -31,6 +31,7 @@ public:
 
 extern AlifInitObject _alifUStrType_;
 
+#define ALIFUSTR_CHECK(_op) ALIFTYPE_FASTSUBCLASS(ALIF_TYPE(_op), ALIFTPFLAGS_USTR_SUBCLASS)
 #define ALIFUSTR_CHECK_TYPE(_op) ALIF_IS_TYPE((_op), &_alifUStrType_)
 
 #define ALIFUSTR_CAST(_uStr) ((AlifUStrObject*)(_uStr))
@@ -148,3 +149,4 @@ int alifSubUStrWriter_writeChar(AlifSubUStrWriter*, uint32_t);
 int alifSubUStrWriter_writeStr(AlifSubUStrWriter*, AlifObject*);
 
 const wchar_t* alifUStr_asUTF8(AlifObject*);
+AlifObject* alifUStr_join(AlifObject*, AlifObject*);

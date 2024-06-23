@@ -2,6 +2,7 @@
 
 #include "AlifCore_Memory.h"
 #include "AlifCore_BytesObject.h"
+#include "AlifCore_GlobalObjects.h"
 #include "AlifCore_Object.h"
 
 static AlifObject* alifSubBytes_fromSize(int64_t size_) {

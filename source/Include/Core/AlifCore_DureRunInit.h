@@ -15,6 +15,7 @@
         0,             \
         {0, nullptr},        \
         {nullptr},              \
+		{},	\
         ALIF_INTERPRETERSTATE_INIT(_dureRun_.mainInterpreter), \
 	} \
 
@@ -29,4 +30,4 @@
         },                               \
         nullptr,                        \
         0,              \
-    }
+    } \

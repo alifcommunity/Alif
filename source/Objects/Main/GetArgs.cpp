@@ -437,7 +437,7 @@ static AlifObject* new_kWTuple(const wchar_t* const* keywords, int total, int po
             return nullptr;
         }
         //Unicode_InternInPlace(&str);
-        ((AlifTupleObject*)kwTuple)->items[i] = str;
+        ((AlifTupleObject*)kwTuple)->items_[i] = str;
     }
     return kwTuple;
 }
@@ -505,7 +505,7 @@ static AlifObject* find_keyword(AlifObject* kwNames, AlifObject* const* kwStack,
 
     nKwArgs = ((AlifVarObject*)kwNames)->size_;
     for (i = 0; i < nKwArgs; i++) {
-        AlifObject* kwName = ((AlifTupleObject*)kwNames)->items[i];
+        AlifObject* kwName = ((AlifTupleObject*)kwNames)->items_[i];
 
         /* kwname == key will normally find a match in since keyword keys
            should be interned strings; if not retry below in a new loop. */
@@ -515,7 +515,7 @@ static AlifObject* find_keyword(AlifObject* kwNames, AlifObject* const* kwStack,
     }
 
     for (i = 0; i < nKwArgs; i++) {
-        AlifObject* kwname = ((AlifTupleObject*)kwNames)->items[i];
+        AlifObject* kwname = ((AlifTupleObject*)kwNames)->items_[i];
         if (uStr_eq(kwname, key)) {
             return kwStack[i];
         }
@@ -627,7 +627,7 @@ AlifObject* const* alifArg_unpackKeywords(AlifObject* const* args, int64_t nArgs
     for (i = max((int)nArgs, posonly); i < maxArgs; i++) {
         AlifObject* currentArg;
         if (nKwArgs) {
-            keyword = ((AlifTupleObject*)kwTuple)->items[i - posonly];
+            keyword = ((AlifTupleObject*)kwTuple)->items_[i - posonly];
             if (kwArgs != nullptr) {
                 currentArg = dict_getItem(kwArgs, keyword);
                 if (currentArg == nullptr) {
@@ -653,7 +653,7 @@ AlifObject* const* alifArg_unpackKeywords(AlifObject* const* args, int64_t nArgs
         }
         else if (i < minPos || (maxPos <= i && i < reqLimit)) {
             /* Less arguments than required */
-            keyword = ((AlifTupleObject*)kwTuple)->items[i - posonly];
+            keyword = ((AlifTupleObject*)kwTuple)->items_[i - posonly];
             //Err_Format(Exc_TypeError, "%.200s%s missing required "
             //    "argument '%U' (pos %d)",
             //    (parser->fname == nullptr) ? "function" : parser->fname,
@@ -667,7 +667,7 @@ AlifObject* const* alifArg_unpackKeywords(AlifObject* const* args, int64_t nArgs
         /* make sure there are no arguments given by name and position */
         for (i = posonly; i < nArgs; i++) {
             AlifObject* currentArg;
-            keyword = ((AlifTupleObject*)kwTuple)->items[i - posonly];
+            keyword = ((AlifTupleObject*)kwTuple)->items_[i - posonly];
             if (kwArgs != nullptr) {
                 currentArg = dict_getItem(kwArgs, keyword);
                 if (currentArg == nullptr) {

@@ -503,7 +503,7 @@ static AlifIntT compiler_enterScope(AlifCompiler* _compiler,
 			return -1;
 		}
 	}
-	ADDOP_I(_compiler, location, RESUME, RESUME_ATFUNC_START);
+	ADDOP_I(_compiler, location, RESUME, RESUME_AT_FUNC_START);
 
 	if (cu->scopeType == ScopeType::Compiler_Scope_Module) {
 		location.lineNo = -1;
@@ -708,7 +708,7 @@ static AlifObject* constsDict_keysInorder(AlifObject* _dict) { // 7515
 		if (ALIFTUPLE_CHECKEXACT(k)) {
 			k = ALIFTUPLE_GET_ITEM(k, 1);
 		}
-		ALIFLIST_SET_ITEM(consts, i, ALIF_NEWREF(k));
+		ALIFLIST_SETITEM(consts, i, ALIF_NEWREF(k));
 	}
 	return consts;
 }

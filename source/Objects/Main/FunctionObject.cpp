@@ -1,8 +1,48 @@
 #include "alif.h"
 
+#include "AlifCore_AlifEval.h"
+#include "AlifCore_ModSupport.h"
+#include "AlifCore_Object.h"
 
 
-AlifTypeObject typeFunction = {
+
+AlifFunctionObject* alifFunction_fromConstructor(AlifFrameConstructor* _constr) { // 101
+
+	AlifObject* module{};
+	//AlifObject* name = alifUStr_decodeStringToUTF8(L"__name__"); // temp
+	//if (alifDict_getItemRef(_constr->fcGlobals, name, &module) < 0) {
+	//	return nullptr;
+	//}
+
+	AlifFunctionObject* op = ALIFOBJECT_GC_NEW(AlifFunctionObject, &_alifFunctionType_);
+	if (op == nullptr) {
+		ALIF_XDECREF(module);
+		return nullptr;
+	}
+	//op->funcGlobals = ALIF_NEWREF(_constr->fcGlobals);
+	//op->funcBuiltins = ALIF_NEWREF(_constr->fcBuiltins);
+	op->funcName = ALIF_NEWREF(_constr->fcName);
+	op->funcQualname = ALIF_NEWREF(_constr->fcQualname);
+	op->funcCode = ALIF_NEWREF(_constr->fcCode);
+	//op->funcDefaults = ALIF_XNEWREF(_constr->fcDefaults);
+	//op->funcKwdefaults = ALIF_XNEWREF(_constr->fcKwdefaults);
+	//op->funcClosure = ALIF_XNEWREF(_constr->fcClosure);
+	op->funcDoc = ALIF_NEWREF(ALIF_NONE);
+	op->funcDict = nullptr;
+	op->funcWeakRefList = nullptr;
+	op->funcModule = module;
+	op->funcTypeParams = nullptr;
+	//op->vectorCall = alifFunction_vectorCall;
+	op->funcVersion = 0;
+
+	ALIFOBJECT_GC_TRACK(op);
+	//handle_funcEvent(AlifFunction_Event_Create, op, nullptr);
+	return op;
+}
+
+
+
+AlifTypeObject _alifFunctionType_ = {
     //ALIFVarObject_HEAD_INIT(&PyType_Type, 0)
     0,
     0,
