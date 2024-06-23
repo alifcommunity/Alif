@@ -181,5 +181,5 @@ void alifObject_gcDel(void* op)
 		gcState->young.count--;
 	}
 	gcState->heapSize--;
-	alifMem_objFree(((char*)op) );
+	alifMem_objFree(((char*)op)-presize);
 }

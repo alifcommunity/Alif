@@ -314,7 +314,7 @@ AlifInitObject _alifTupleType_ = {
     0,                                 
     0,                                  
     0,                             
-    0,                          
+	alifObject_gcDel,
     //.tp_vectorcall = tuple_vectorcall,
 };
 
