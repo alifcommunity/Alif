@@ -8,12 +8,20 @@
 #include "AlifCore_Memory.h"
 
 
+#ifdef WITH_FREELISTS
+static AlifListFreeList* getList_freeList() {
+	AlifObjectFreeLists* freelists = alifObject_freeListsGet();
+	return &freelists->lists;
+}
+#endif
+
+
 static int list_resize(AlifListObject* _list, size_t _newSize) {
 
 	size_t newAllocated{}, targetBytes{};
 	uint64_t allocated_ = _list->allocate_;
 
-	if (allocated_ >= _newSize && _newSize >= (allocated_ >> 1)) {
+	if (allocated_ >= _newSize and _newSize >= (allocated_ >> 1)) {
 		ALIFSET_SIZE(_list, _newSize);
 		return 0;
 	}
@@ -21,7 +29,7 @@ static int list_resize(AlifListObject* _list, size_t _newSize) {
 	//The growth pattern is : 0, 4, 8, 16, 24, 32, 40, 52, 64, ...
 	newAllocated = ((size_t)_newSize + (_newSize >> 3) + 6) & ~(size_t)3;
 
-	if (_newSize - ALIF_SIZE(_list) > (int64_t)(newAllocated - _newSize))
+	if (_newSize - ALIF_SIZE(_list) > (AlifSizeT)(newAllocated - _newSize))
 		newAllocated = ((size_t)_newSize + 3) & ~(size_t)3;
 
 	if (_newSize == 0) {
@@ -40,12 +48,14 @@ static int list_resize(AlifListObject* _list, size_t _newSize) {
 		items_ = nullptr;
 	}
 	if (items_ == nullptr) {
+		// memory error
 		return -1;
 	}
 	_list->items_ = items_;
 	ALIFSET_SIZE(_list, _newSize);
 	_list->allocate_ = newAllocated;
-	return true;
+
+	return 1;
 }
 
 static int list_preallocate_exact(AlifListObject* _self, int64_t _size)
@@ -61,15 +71,27 @@ static int list_preallocate_exact(AlifListObject* _self, int64_t _size)
 	return 0;
 }
 
-AlifObject* alifNew_list(size_t _size) {
+AlifObject* alifNew_list(AlifSizeT _size) {
+
+	AlifListObject* object{};
 
 	if (_size < 0) {
+		// error
 		return nullptr;
 	}
 
-	AlifListObject* object = ALIFOBJECT_GC_NEW(AlifListObject, &_alifListType_);
-	if (object == nullptr) {
-		return nullptr;
+#ifdef WITH_FREELISTS
+	AlifListFreeList* listFreeList = getList_freeList();
+	if (ALIFLIST_MAXFREELIST and listFreeList->numfree > 0) {
+		listFreeList->numfree--;
+		object = listFreeList->items[listFreeList->numfree];
+		alif_newRef((AlifObject*)object);
+	}
+	else
+#endif // WITH_FREELISTS
+	{
+		object = ALIFOBJECT_GC_NEW(AlifListObject, &_alifListType_);
+		if (object == nullptr) return nullptr;
 	}
 
 	if (_size <= 0) {
@@ -79,6 +101,7 @@ AlifObject* alifNew_list(size_t _size) {
 		object->items_ = (AlifObject**)alifMem_objAlloc(_size * sizeof(AlifObject*));
 		if (object == nullptr) {
 			ALIF_DECREF(object);
+			// memory error
 			return nullptr;
 		}
 
@@ -207,7 +230,8 @@ int alifSubList_appendTakeRefListResize(AlifListObject* _self, AlifObject* _newI
 		ALIF_DECREF(_newItem);
 		return -1;
 	}
-	alifList_setItem((AlifObject*)_self, len_, _newItem);
+	//alifList_setItem((AlifObject*)_self, len_, _newItem);
+	_self->items_[len_] = _newItem;
 	return 0;
 }
 
@@ -226,7 +250,7 @@ int alifList_append(AlifObject* _list, AlifObject* _newItem)
 static void list_dealloc(AlifObject* _self)
 {
 	AlifListObject* op_ = (AlifListObject*)_self;
-	int64_t i_;
+	AlifSizeT i_;
     alifObject_gcUnTrack(op_);
 	//ALIF_TRASHCAN_BEGIN(op_, list_dealloc);
 	if (op_->items_ != nullptr) {
@@ -236,9 +260,16 @@ static void list_dealloc(AlifObject* _self)
 			ALIF_XDECREF(op_->items_[i_]);
 		}
 	}
-
-	ALIF_TYPE(op_)->free_((AlifObject*)op_);
-
+#ifdef WITH_FREELISTS
+	AlifListFreeList* listFreeList = getList_freeList();
+	if (listFreeList->numfree < ALIFLIST_MAXFREELIST && listFreeList->numfree >= 0 && ALIFLIST_CHECKEXACT(op_)) {
+		listFreeList->items[listFreeList->numfree++] = op_;
+	}
+	else
+#endif
+	{
+		ALIF_TYPE(op_)->free_((AlifObject*)op_);
+	}
 	//ALIF_TRASHCAN_END;
 }
 
@@ -2207,9 +2238,8 @@ AlifTypeObject _alifListType_ = {
 	0,
 	0,
 	0,
-	ALIFTPFLAGS_DEFAULT | ALIFTPFLAGS_HAVE_GC |
-	ALIFTPFLAGS_BASETYPE | ALIFTPFLAGS_LIST_SUBCLASS |
-	ALIFSUBTPFLAGS_MATCH_SELF | ALIFTPFLAGS_SEQUENCE, 
+	ALIFTPFLAGS_DEFAULT | ALIFTPFLAGS_HAVE_GC | ALIFTPFLAGS_BASETYPE |
+	ALIFTPFLAGS_LIST_SUBCLASS | ALIFSUBTPFLAGS_MATCH_SELF | ALIFTPFLAGS_SEQUENCE,
 	0,
 	0,
 	list_clear_slot,

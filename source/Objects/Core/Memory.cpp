@@ -730,8 +730,8 @@ void* alifASTMem_malloc(AlifASTMem* _arena, AlifUSizeT _size) {
 	return p_;
 }
 
-int alifASTMem_listAddAlifObj(AlifASTMem* _arena, AlifObject* _obj) {
-	int r_ = alifList_append(_arena->objects_, _obj);
+int alifASTMem_listAddAlifObj(AlifASTMem* _astMem, AlifObject* _obj) {
+	int r_ = alifList_append(_astMem->objects_, _obj);
 	if (r_ >= 0) {
 		ALIF_DECREF(_obj);
 	}

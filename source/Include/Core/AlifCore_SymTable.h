@@ -63,7 +63,7 @@ public:
     int steEndColOffset;  /* end offset of first line of block */
     int steOptLineNo;      /* lineno of last exec or import * */
     int steOptColOffset;  /* offset of last exec or import * */
-    class AlifSymTable* stETable;
+    class AlifSymTable* steTable;
 };
 
 

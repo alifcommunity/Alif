@@ -15,6 +15,7 @@
 
 #include "OpCode.h"
 
+#include "AlifEvalMacros.h"
 
 AlifObject* alifEval_evalCode(AlifObject* _co) { // 572
 	AlifThread* thread = alifThread_get();
@@ -34,13 +35,130 @@ AlifObject* alifEval_evalCode(AlifObject* _co) { // 572
 		nullptr,
 		nullptr
 	};
-	AlifFunctionObject* func = alifFunction_fromConstructor(&desc);
+	AlifFunctionObject* func = alifFunction_fromConstructor(&desc); // need review
 	if (func == nullptr) return nullptr;
 
 	AlifObject* res = alifEval_vector(thread, func, nullptr, nullptr, 0, nullptr);
 	ALIF_DECREF(func);
 	return res;
 }
+
+
+static const AlifCodeUnit alifInterpreterTrampolineInstructions[] = {
+	{NOP, 0 },
+	{INTERPRETER_EXIT, 0 },
+	{NOP, 0 },
+	{INTERPRETER_EXIT, 0 },
+	{RESUME, RESUME_OPARG_DEPTH1_MASK | RESUME_AT_FUNC_START }
+};
+
+#define ALIFEVAL_CSTACK_UNITS 2
+
+AlifObject* alifEval_evalFrameDefault(AlifThread* _thread,
+	AlifInterpreterFrame* _frame, AlifIntT _throwFlag) { // 687
+
+	uint16_t opCode{};
+	AlifIntT opArg{};
+
+	AlifInterpreterFrame entryFrame{};
+
+	entryFrame.executable = ALIF_NONE;
+	entryFrame.instrPtr = (AlifCodeUnit*)alifInterpreterTrampolineInstructions + 1;
+	entryFrame.stacktop = 0;
+	entryFrame.owner = FrameOwner::FRAME_OWNED_BY_CSTACK;
+	entryFrame.returnOffset = 0;
+	entryFrame.previous = _thread->currentFrame;
+	_frame->previous = &entryFrame;
+	_thread->currentFrame = _frame;
+
+	_thread->recursionRemaining -= (ALIFEVAL_CSTACK_UNITS - 1);
+
+
+	AlifCodeUnit* nextInstr{};
+	AlifObject** stackPtr{};
+
+startFrame:
+
+	nextInstr = _frame->instrPtr;
+
+resumeFrame:
+	stackPtr = alifFrame_getStackPointer(_frame);
+
+
+
+	DISPATCH();
+
+dispatchOpCode:
+	switch (opCode)
+	{
+//#include "OpCodeCases.h"
+	TARGET(RESUME) {
+		_frame->instrPtr = nextInstr;
+		nextInstr += 1;
+		AlifCodeUnit* thisInstr = nextInstr - 1;
+		if (_thread->tracing == 0) {
+			AlifCodeObject* code = alifFrame_getCode(_frame);
+			if (thisInstr->op.code == RESUME) {
+#if ENABLE_SPECIALIZATION
+				thisInstr->op.code = RESUME_CHECK;
+#endif  /* ENABLE_SPECIALIZATION */
+			}
+		}
+		DISPATCH();
+	}
+	TARGET(LOAD_CONST) {
+		_frame->instrPtr = nextInstr;
+		nextInstr += 1;
+		AlifObject* value;
+		value = GETITEM(FRAME_CO_CONSTS, opArg);
+		ALIF_INCREF(value);
+		stackPtr[0] = value;
+		stackPtr += 1;
+		DISPATCH();
+	}
+	TARGET(RETURN_CONST) {
+		_frame->instrPtr = nextInstr;
+		nextInstr += 1;
+		AlifObject* value;
+		AlifObject* retval;
+		// _LOAD_CONST
+		{
+			value = GETITEM(FRAME_CO_CONSTS, opArg);
+			ALIF_INCREF(value);
+		}
+		// _POP_FRAME
+		retval = value;
+		{
+			//alifFrame_setStackPointer(_frame, stackPtr);
+			//_Py_LeaveRecursiveCallPy(_thread);
+			AlifInterpreterFrame* dying = _frame;
+			_frame = _thread->currentFrame = dying->previous;
+			//alifEval_frameClearAndPop(tstate, dying);
+			alifFrame_stackPush(_frame, retval);
+			LOAD_SP();
+			LOAD_IP(_frame->returnOffset);
+			//LLTRACE_RESUME_FRAME();
+		}
+		DISPATCH();
+	}
+	TARGET(INTERPRETER_EXIT) {
+		_frame->instrPtr = nextInstr;
+		nextInstr += 1;
+		AlifObject* retval;
+		retval = stackPtr[-1];
+		/* Restore previous frame and return. */
+		_thread->currentFrame = _frame->previous;
+		_thread->recursionRemaining += ALIFEVAL_CSTACK_UNITS;
+		return retval;
+	}
+	default:
+		break;
+	}
+
+
+	return nullptr; // temp
+}
+
 
 
 static AlifIntT positionalOnly_passedAsKeyword(AlifThread* _thread, AlifCodeObject* _co,
@@ -379,5 +497,5 @@ AlifObject* alifEval_vector(AlifThread* _thread, AlifFunctionObject* _func, Alif
 		_thread, _func, _locals, _args, _argcount, _kwnames);
 	if (frame == nullptr) return nullptr;
 
-	//return alifEval_evalFrame(_thread, frame, 0);
+	return alifEval_evalFrame(_thread, frame, 0);
 }

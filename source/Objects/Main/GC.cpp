@@ -1,5 +1,6 @@
 #include "alif.h"
 
+#include "AlifCore_Dict.h"
 #include "AlifCore_InitConfig.h"
 #include "AlifCore_Interpreter.h"
 #include "AlifCore_Object.h"
@@ -140,7 +141,7 @@ AlifObject* alifSubObjectGC_new(AlifTypeObject* _tp) { // 2034
 	AlifSizeT preSize = alifSubType_preHeaderSize(_tp);
 	AlifSizeT size = alifSubObject_size(_tp);
 	if (alifSubType_hasFeature(_tp, ALIFTPFLAGS_INLINE_VALUES)) {
-		//size += alifSubInlineValuesSize(_tp);
+		size += alifInline_valuesSize(_tp);
 	}
 
 	AlifObject* gc = gc_alloc(_tp, size, preSize);

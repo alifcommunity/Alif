@@ -16,17 +16,22 @@ public:
 	AlifThread* next{};
 	class AlifInterpreter* interpreter{};
 
+	AlifIntT tracing{};
 
-
+	class AlifInterpreterFrame* currentFrame{};
 
 	AlifIntT recursionRemaining{};
 
 	AlifStackChunk* dataStackChunk{};
-	AlifObject** dataStackTop;
-	AlifObject** dataStackLimit;
+	AlifObject** dataStackTop{};
+	AlifObject** dataStackLimit{};
 };
 
 
 
 
 #define ALIFCPP_RECURSION_LIMIT 10000
+
+
+
+typedef AlifObject* (*AlifFrameEvalFunction)(AlifThread*, AlifInterpreterFrame*, AlifIntT);

@@ -560,7 +560,7 @@ static int set_update_local(AlifSetObject* _so, AlifObject* _other)
 		//ALIF_END_CRITICAL_SECTION();
 		return rv;
 	}
-	else if ((_other->type_ == &typeDict)) {
+	else if ((_other->type_ == &_alifDictType_)) {
 		int rv;
 		//ALIF_BEGIN_CRITICAL_SECTION(_other);
 		rv = set_update_dict_lock_held(_so, _other);
@@ -582,7 +582,7 @@ static int set_update_internal(AlifSetObject* _so, AlifObject* _other)
 		//ALIF_END_CRITICAL_SECTION2();
 		return rv;
 	}
-	else if ((_other->type_ == &typeDict)) {
+	else if ((_other->type_ == &_alifDictType_)) {
 		int rv;
 		//ALIF_BEGIN_CRITICAL_SECTION2(_so, _other);
 		rv = set_update_dict_lock_held(_so, _other);

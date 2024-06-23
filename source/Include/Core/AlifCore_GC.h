@@ -2,8 +2,8 @@
 
 class AlifGCHead {
 public:
-	AlifUSizeT gcNext{};
-	AlifUSizeT gcPrev{};
+	uintptr_t gcNext{};
+	uintptr_t gcPrev{};
 };
 
 #define ALIFGC_HEAD_UNUSED AlifGCHead

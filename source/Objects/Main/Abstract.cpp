@@ -246,7 +246,7 @@ AlifObject* alifInteger_float(AlifObject* _o)
 
 int alifSequence_check(AlifObject* s)
 {
-    if (s->type_ == &typeDict)
+    if (s->type_ == &_alifDictType_)
         return 0;
     return s->type_->asSequence &&
         s->type_->asSequence->item_ != nullptr;

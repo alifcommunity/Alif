@@ -53,7 +53,7 @@ done:
 
 /* ----------------------------------- تشغيل اللغة ----------------------------------- */
 static int alifMain_runFileObj(AlifObject* _pn, AlifObject* _fn) {
-	FILE* fp_ = alif_fOpenObj(_fn, "rb");
+	FILE* fp_ = alif_fOpenObj(_fn, "r"); // لا تستخدم "rb"
 
 	if (fp_ == nullptr) {
 		wprintf(L"%ls: لا يمك فتح الملف %ls: [Errno %d] %ls\n",
@@ -121,7 +121,7 @@ int alif_mainBytes(int _argc, char** _argv) {
 #ifdef _WINDOWS
 int wmain(int _argc, wchar_t** _argv)
 {
-	wchar_t* argsv[] = { (wchar_t*)L"alif", (wchar_t*)L"example.alif" };
+	wchar_t* argsv[] = { (wchar_t*)L"alif", (wchar_t*)L"exmpl.alif" };
 	alif_mainWchar(2, argsv);
 	return 0;
 }

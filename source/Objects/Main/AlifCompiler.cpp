@@ -503,7 +503,7 @@ static AlifIntT compiler_enterScope(AlifCompiler* _compiler,
 			return -1;
 		}
 	}
-	ADDOP_I(_compiler, location, RESUME, RESUME_ATFUNC_START);
+	ADDOP_I(_compiler, location, RESUME, RESUME_AT_FUNC_START);
 
 	if (cu->scopeType == ScopeType::Compiler_Scope_Module) {
 		location.lineNo = -1;

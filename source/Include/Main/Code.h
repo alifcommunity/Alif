@@ -52,9 +52,9 @@ public:
 	AlifObject* qualName{};
 	AlifObject* lineTable{};
 
+	AlifIntT firstTraceable{};
 
-
-	char codeAdaptive[1];
+	wchar_t codeAdaptive[1]; // changed to wchar_t
 };
 
 /* Masks for flags above */

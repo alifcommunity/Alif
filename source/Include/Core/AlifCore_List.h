@@ -1,5 +1,7 @@
 #pragma once
 
+#include "AlifCore_FreeList.h"
+
 AlifObject* alifList_extend(AlifListObject*, AlifObject*);
 
 extern int alifSubList_appendTakeRefListResize(AlifListObject*, AlifObject*);

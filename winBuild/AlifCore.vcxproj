@@ -40,6 +40,7 @@
     <ClInclude Include="..\source\Include\Core\AlifCore_FileUtils.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_FlowGraph.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_Frame.h" />
+    <ClInclude Include="..\source\Include\Core\AlifCore_FreeList.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_Function.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_GC.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_GetConsoleLine.h" />
@@ -59,6 +60,7 @@
     <ClInclude Include="..\source\Include\Core\AlifCore_Memory.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_ModSupport.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_Object.h" />
+    <ClInclude Include="..\source\Include\Core\AlifCore_ObjectState.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_OpCodeData.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_OpCodeUtils.h" />
     <ClInclude Include="..\source\Include\Core\AlifCore_SymTable.h" />
@@ -149,7 +151,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpp14</LanguageStandard>
       <AdditionalIncludeDirectories>..\source\Include\Main;..\source\Include\Core;..\source\Include\Alif;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
@@ -166,7 +168,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpp14</LanguageStandard>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
       <AdditionalIncludeDirectories>..\source\Include\Main;..\source\Include\Core;..\source\Include\Alif;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>

@@ -31,10 +31,10 @@ public:
 			char eos{};
 		} bytesCharacters[256];
 
-		//AlifGlobalStrings strings {};
+		//AlifGlobalStrings strings{};
 
 		ALIFGC_HEAD_UNUSED tupleEmptyGCNotUsed{};
-		AlifTupleObject tupleEmpty;
+		AlifTupleObject tupleEmpty{LONG_MAX, &_alifTupleType_}; // فكرة خرافية ولكن يجب مراجعتها
 
 		ALIFGC_HEAD_UNUSED hamtBitmapNodeEmptyGCNotUsed{};
 		AlifHamtNodeBitmap hamtBitmapNodeEmpty{};

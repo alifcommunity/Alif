@@ -25,7 +25,7 @@ AlifObject* new_dict(int64_t used){
     AlifDictObject* object = (AlifDictObject*)alifMem_objAlloc(
         sizeof(AlifDictObject));
     
-    object->_base_.type_ = &typeDict;
+    object->_base_.type_ = &_alifDictType_;
 
 	ALIF_INCREF(object);
 
@@ -188,7 +188,7 @@ int alifDict_getItemRefKnownHash(AlifObject* op, AlifObject* key, size_t hash, A
 
 int alifDict_getItemRef(AlifObject* op, AlifObject* key, AlifObject** result)
 {
-	if (!(op->type_ == &typeDict)) {
+	if (!(op->type_ == &_alifDictType_)) {
 		*result = NULL;
 		return -1;
 	}
@@ -562,7 +562,7 @@ AlifObject* dict_compare(AlifObject* v, AlifObject* w, int op) {
     int compare;
     AlifObject* res = nullptr;
 
-    if ((v->type_ !=& typeDict) || (w->type_ != &typeDict)) {
+    if ((v->type_ !=& _alifDictType_) || (w->type_ != &_alifDictType_)) {
         // error
     }
     if (op == ALIF_EQ || op == ALIF_NE) {
@@ -597,7 +597,7 @@ AlifIntT dict_ass_sub(AlifDictObject* dict, AlifObject* key, AlifObject* value) 
 static AlifObject* keys_lock_held(AlifObject* _dict)
 {
 
-	if (_dict == NULL || !(_dict->type_ == &typeDict)) {
+	if (_dict == NULL || !(_dict->type_ == &_alifDictType_)) {
 		return NULL;
 	}
 	AlifDictObject* mp_ = (AlifDictObject*)_dict;
@@ -680,10 +680,8 @@ AlifMappingMethods dictAsMapping = {
     (ObjObjArgProc)dict_ass_sub, 
 };
 
-AlifInitObject typeDict = {
-    0,
-    0,
-    0,
+AlifInitObject _alifDictType_ = {
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
     L"dict",
     sizeof(AlifDictObject),
     0,
@@ -702,7 +700,8 @@ AlifInitObject typeDict = {
     0,
     0,
     0,                                          
-    0,                                          
+	ALIFTPFLAGS_DEFAULT | ALIFTPFLAGS_HAVE_GC | ALIFTPFLAGS_BASETYPE |
+	ALIFTPFLAGS_LIST_SUBCLASS | ALIFSUBTPFLAGS_MATCH_SELF | ALIFTPFLAGS_SEQUENCE,
     0,  
     0,                            
     0,                              
