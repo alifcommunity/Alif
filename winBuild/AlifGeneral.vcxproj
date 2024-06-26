@@ -24,6 +24,7 @@
     <ClInclude Include="..\source\Include\Main\AlifCapsule.h" />
     <ClInclude Include="..\source\Include\Main\AlifConfig.h" />
     <ClInclude Include="..\source\Include\Main\AlifCppType.h" />
+    <ClInclude Include="..\source\Include\Main\AlifErrors.h" />
     <ClInclude Include="..\source\Include\Main\AlifEval.h" />
     <ClInclude Include="..\source\Include\Main\AlifEvalMacros.h" />
     <ClInclude Include="..\source\Include\Main\AlifLexer.h" />
@@ -50,6 +51,7 @@
     <ClInclude Include="..\source\Include\Main\find.h" />
     <ClInclude Include="..\source\Include\Main\FloatObject.h" />
     <ClInclude Include="..\source\Include\Main\FunctionObject.h" />
+    <ClInclude Include="..\source\Include\Main\GenericAliasObject.h" />
     <ClInclude Include="..\source\Include\Main\Helpers.h" />
     <ClInclude Include="..\source\Include\Main\Import.h" />
     <ClInclude Include="..\source\Include\Main\InitConfig.h" />
@@ -58,6 +60,7 @@
     <ClInclude Include="..\source\Include\Main\ListObject.h" />
     <ClInclude Include="..\source\Include\Main\MethodObject.h" />
     <ClInclude Include="..\source\Include\Main\ModSupport.h" />
+    <ClInclude Include="..\source\Include\Main\ModuleObject.h" />
     <ClInclude Include="..\source\Include\Main\ObjImpl.h" />
     <ClInclude Include="..\source\Include\Main\OpCode.h" />
     <ClInclude Include="..\source\Include\Main\OpCodeCases.h" />
@@ -99,12 +102,14 @@
     <ClCompile Include="..\source\Objects\Main\CodeObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\CompilerMain.cpp" />
     <ClCompile Include="..\source\Objects\Main\ConfigMinimal.cpp" />
+    <ClCompile Include="..\source\Objects\Main\DescrObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\DictObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\FileObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\FileTokenizer.cpp" />
     <ClCompile Include="..\source\Objects\Main\FloatObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\FunctionObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\GC.cpp" />
+    <ClCompile Include="..\source\Objects\Main\GenericAliasObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\GetArgs.cpp" />
     <ClCompile Include="..\source\Objects\Main\GetVersion.cpp" />
     <ClCompile Include="..\source\Objects\Main\Import.cpp" />
@@ -114,6 +119,7 @@
     <ClCompile Include="..\source\Objects\Main\IterObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\ListObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\MethodObject.cpp" />
+    <ClCompile Include="..\source\Objects\Main\ModuleObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\SetObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\SliceObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\Specialize.cpp" />

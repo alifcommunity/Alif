@@ -19,7 +19,7 @@
 //                //STRUCT_FOR_STR(anon_lambda, "<lambda>")
 //                //STRUCT_FOR_STR(anon_listcomp, "<listcomp>")
 //                //STRUCT_FOR_STR(anon_module, "<module>")
-//                //STRUCT_FOR_STR(anon_null, "<NULL>")
+//                //STRUCT_FOR_STR(anon_null, "<nullptr>")
 //                //STRUCT_FOR_STR(anon_setcomp, "<setcomp>")
 //                //STRUCT_FOR_STR(anon_string, "<string>")
 //                //STRUCT_FOR_STR(anon_unknown, "<unknown>")

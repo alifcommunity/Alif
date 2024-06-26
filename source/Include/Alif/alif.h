@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <iostream>
 
@@ -23,10 +23,12 @@
 #include "BoolObject.h"
 #include "FloatObject.h"
 #include "UStrObject.h"
+#include "AlifErrors.h"
 #include "ListObject.h"
 #include "TupleObject.h"
 #include "DictObject.h"
 #include "MethodObject.h"
+#include "ModuleObject.h"
 #include "FunctionObject.h"
 #include "BytesObject.h"
 #include "SliceObject.h"
@@ -44,4 +46,5 @@
 #include "AlifRun.h"
 #include "AlifEval.h"
 #include "AlifState.h"
+#include "GenericAliasObject.h"
 #include "Import.h"

@@ -44,8 +44,8 @@ AlifSTEntryObject* alifSymTable_lookup(AlifSymTable* _st, void* _key) { // 487
     AlifObject* k, * v;
 
     k = alifInteger_fromSizeT((unsigned long long)(uintptr_t)_key, true);
-    if (k == NULL)
-        return NULL;
+    if (k == nullptr)
+        return nullptr;
     if (alifDict_getItemRef(_st->stBlocks, k, &v) == 0) {
         return nullptr; // should be show error 
     }
@@ -269,7 +269,7 @@ static AlifIntT symTable_visitStmt(class AlifSymTable* _symTable, Statement* _st
 
 static void ste_dealloc(AlifSTEntryObject* _ste)
 {
-    _ste->steTable = NULL;
+    _ste->steTable = nullptr;
     ALIF_XDECREF(_ste->steID);
     ALIF_XDECREF(_ste->steName);
     ALIF_XDECREF(_ste->steSymbols);

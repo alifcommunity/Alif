@@ -55,7 +55,7 @@ void alifThread_init_thread(void)
 
 int alifThread_parseTimeoutArg(AlifObject* _arg, int _blocking, AlifTimeT* _timeoutP)
 {
-    if (_arg == NULL || _arg == ALIF_NONE) {
+    if (_arg == nullptr || _arg == ALIF_NONE) {
         *_timeoutP = _blocking ? ALIFTHREAD_UNSET_TIMEOUT : 0;
         return 0;
     }

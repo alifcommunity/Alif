@@ -1,4 +1,4 @@
-﻿#include "alif.h"
+#include "alif.h"
 
 #include "AlifCore_Memory.h"
 #include "AlifCore_InitConfig.h"
@@ -121,7 +121,7 @@ int alif_mainBytes(int _argc, char** _argv) {
 #ifdef _WINDOWS
 int wmain(int _argc, wchar_t** _argv)
 {
-	wchar_t* argsv[] = { (wchar_t*)L"alif", (wchar_t*)L"exmpl.alif" };
+	wchar_t* argsv[] = { (wchar_t*)L"alif", (wchar_t*)L"example.alif" };
 	alif_mainWchar(2, argsv);
 	return 0;
 }

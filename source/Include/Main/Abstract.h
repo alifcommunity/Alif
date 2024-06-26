@@ -1,6 +1,17 @@
 #pragma once
 
 
+
+AlifObject* alifStack_asDict(AlifObject* const*, AlifObject* );
+
+VectorCallFunc alifVectorCall_function(AlifObject*);
+
+
+AlifObject* alifObject_callOneArg(AlifObject*, AlifObject*);
+
+
+AlifIntT alifMapping_getOptionalItem(AlifObject*, AlifObject*, AlifObject**);
+
 AlifObject* alifObject_getIter(AlifObject*);
 
 AlifObject* alifNumber_add(AlifObject*, AlifObject*);
@@ -10,6 +21,10 @@ AlifObject* alifInteger_inPlaceOr(AlifObject*, AlifObject*);
 AlifObject* alifIter_next(AlifObject*);
 
 AlifObject* alifInteger_float(AlifObject* );
+
+AlifSizeT alifNumber_asSizeT(AlifObject*, AlifObject*);
+
+AlifObject* alifSequence_getItem(AlifObject*, AlifSizeT);
 
 #define ALIF_VECTORCALL_ARGUMENTS_OFFSET ((size_t)1 << (8 * sizeof(size_t) - 1))
 

@@ -262,7 +262,7 @@ AlifIntegerObject* sub(AlifIntegerObject* _a, AlifIntegerObject* _b)
 
 static AlifIntegerObject* number_add(AlifIntegerObject* _a, AlifIntegerObject* _b)
 {
-	if (_a->sign_ && _b->sign_) {
+	if (_a->sign_ and _b->sign_) {
 
 		AlifIntegerObject* z_ = alifNew_integer(0, true);
 
@@ -273,8 +273,8 @@ static AlifIntegerObject* number_add(AlifIntegerObject* _a, AlifIntegerObject* _
 		}
 		return z_;
 	}
-	else if (!_a->sign_ && !_b->sign_) {
-
+	else if (!_a->sign_ and !_b->sign_)
+	{
 		return add(_a, _b);
 	}
 	else if (_a->sign_) {
@@ -296,7 +296,7 @@ static AlifIntegerObject* number_mul(AlifIntegerObject* _a, AlifIntegerObject* _
 
 	AlifIntegerObject* z_ = alifNew_integer(0, true);
 
-	if (_a->digits_ > 0 && _b->digits_ > UINT64_MAX / _a->digits_) {
+	if (_a->digits_ > 0 and _b->digits_ > UINT64_MAX / _a->digits_) {
 		std::wcout << L"ناتج ضرب رقمين اكبر من المتوقع\n" << std::endl;
 		exit(-1);
 	}
@@ -304,7 +304,10 @@ static AlifIntegerObject* number_mul(AlifIntegerObject* _a, AlifIntegerObject* _
 		z_->digits_ = _a->digits_ * _b->digits_;
 	}
 
-	if (!_a->sign_ && !_b->sign_ || _a->sign_ && _b->sign_) {
+	if ((!_a->sign_ and !_b->sign_)
+		or
+		(_a->sign_ and _b->sign_))
+	{
 		z_->sign_ = true;
 	}
 	else {

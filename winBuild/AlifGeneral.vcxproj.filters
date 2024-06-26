@@ -164,6 +164,15 @@
     <ClInclude Include="..\source\Include\Main\OpCodeCases.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\Include\Main\AlifErrors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Main\GenericAliasObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Main\ModuleObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\Objects\Main\GetVersion.cpp">
@@ -311,6 +320,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\source\Objects\Main\Instrumentation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Objects\Main\GenericAliasObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Objects\Main\DescrObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Objects\Main\ModuleObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

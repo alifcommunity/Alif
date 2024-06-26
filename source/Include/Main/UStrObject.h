@@ -10,6 +10,8 @@ AlifObject* alifUStr_fromString(const wchar_t*);
 
 AlifObject* alifUStr_internFromString(const wchar_t*);
 
+void alifUStr_internInPlace(AlifObject**);
+
 enum UStrKind {
 	USTR_2BYTE = 2,
 	USTR_4BYTE = 4,
@@ -32,7 +34,7 @@ public:
 extern AlifInitObject _alifUStrType_;
 
 #define ALIFUSTR_CHECK(_op) ALIFTYPE_FASTSUBCLASS(ALIF_TYPE(_op), ALIFTPFLAGS_USTR_SUBCLASS)
-#define ALIFUSTR_CHECK_TYPE(_op) ALIF_IS_TYPE((_op), &_alifUStrType_)
+#define ALIFUSTR_CHECKEXACT(_op) ALIF_IS_TYPE((_op), &_alifUStrType_)
 
 #define ALIFUSTR_CAST(_uStr) ((AlifUStrObject*)(_uStr))
 
@@ -42,6 +44,24 @@ extern AlifInitObject _alifUStrType_;
 
 
 #define ALIF_SIZE_ROUND_DOWN(_n, _a) ((size_t)(_n) & ~(size_t)((_a) - 1))
+
+
+
+
+
+//#define ALIFASCIIOBJECT_CAST(op) \
+//     ALIF_CAST(AlifASCIIObject*, (op)))
+//
+//
+//static inline AlifUIntT alifUSgtr_checkInterned(AlifObject* op) {
+//	return alifAsciiObject_cast(op)->state.interned;
+//}
+//#define ALIFUSTR_CHECK_INTERNED(op) alifUSgtr_checkInterned(ALIFOBJECT_CAST(op))
+
+
+
+
+
 
 static inline uint32_t alifUStr_read_wchar(AlifObject* _uStr, int64_t _index)
 {

@@ -13,7 +13,7 @@ public:
     int flags{};
 };
 
-extern AlifInitObject _alifTypeCMethod_;
+extern AlifInitObject _alifCppMethodType_;
 extern AlifInitObject typeCFunction;
 
 AlifObject* alifNew_cMethod(AlifMethodDef*, AlifObject*, AlifObject*, AlifInitObject*);

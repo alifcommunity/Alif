@@ -141,7 +141,7 @@ static inline int valid_index(size_t index, size_t limit)
 static inline AlifObject* listGet_itemRef(AlifListObject* _op, int64_t _i)
 {
 	if (!valid_index(_i, ALIF_SIZE(_op))) {
-		return NULL;
+		return nullptr;
 	}
 	return ALIF_NEWREF(ALIFLIST_GET_ITEM(_op, _i));
 }
@@ -281,7 +281,7 @@ static int list_contains(AlifListObject* _aa, AlifObject* _el) {
 
 	for (int64_t i = 0; ; i++) {
 		AlifObject* item_ = listGet_itemRef((AlifListObject*)_aa, i);
-		if (item_ == NULL) {
+		if (item_ == nullptr) {
 			return 0;
 		}
 		int cmp = alifObject_richCompareBool(item_, _el, ALIF_EQ);
@@ -416,8 +416,8 @@ static AlifObject* listSlice_lockHeld(AlifListObject* _a, int64_t _iLow, int64_t
 		return alifNew_list(0);
 	}
 	np_ = (AlifListObject*)list_new_prealloc(len_);
-	if (np_ == NULL)
-		return NULL;
+	if (np_ == nullptr)
+		return nullptr;
 
 	src_ = _a->items_ + _iLow;
 	dest_ = np_->items_;
@@ -432,7 +432,7 @@ static AlifObject* listSlice_lockHeld(AlifListObject* _a, int64_t _iLow, int64_t
 AlifObject* alifList_getSlice(AlifObject* _a, int64_t _iLow, int64_t _iHigh)
 {
 	if (!(_a->type_ == &_alifListType_)) {
-		return NULL;
+		return nullptr;
 	}
 	AlifObject* ret_;
 	//ALIF_BEGIN_CRITICAL_SECTION(_a);
@@ -464,8 +464,8 @@ static AlifObject* listConcat_lockHeld(AlifListObject* _a, AlifListObject* _b)
 		return alifNew_list(0);
 	}
 	np_ = (AlifListObject*)list_new_prealloc(size_);
-	if (np_ == NULL) {
-		return NULL;
+	if (np_ == nullptr) {
+		return nullptr;
 	}
 	src_ = _a->items_;
 	dest_ = np_->items_;
@@ -486,7 +486,7 @@ static AlifObject* listConcat_lockHeld(AlifListObject* _a, AlifListObject* _b)
 static AlifObject* list_concat(AlifObject* _aa, AlifObject* _bb)
 {
 	if (!(_bb->type_ == &_alifListType_)) {
-		return NULL;
+		return nullptr;
 	}
 	AlifListObject* a_ = (AlifListObject*)_aa;
 	AlifListObject* b_ = (AlifListObject*)_bb;
@@ -508,8 +508,8 @@ static AlifObject* listRepeat_lockHeld(AlifListObject* _a, int64_t _n)
 	int64_t outputSize = inputSize * _n;
 
 	AlifListObject* np_ = (AlifListObject*)list_new_prealloc(outputSize);
-	if (np_ == NULL)
-		return NULL;
+	if (np_ == nullptr)
+		return nullptr;
 
 	AlifObject** dest_ = np_->items_;
 	if (inputSize == 1) {
@@ -549,7 +549,7 @@ static AlifObject* list_repeat(AlifObject* _aa, int64_t _n)
 static void list_clear_impl(AlifListObject* _a, bool _isResize)
 {
 	AlifObject** items_ = _a->items_;
-	if (items_ == NULL) {
+	if (items_ == nullptr) {
 		return;
 	}
 
@@ -583,8 +583,8 @@ static int listAss_slice_lockHeld(AlifListObject* _a, int64_t _iLow, int64_t _iH
 	AlifObject* recycleOnStack[8];
 	AlifObject** recycle_ = recycleOnStack; /* will allocate_ more if needed */
 	AlifObject** item_;
-	AlifObject** vItem = NULL;
-	AlifObject* vAsSF = NULL; /* ALIFSequence_Fast(_v) */
+	AlifObject** vItem = nullptr;
+	AlifObject* vAsSF = nullptr; /* ALIFSequence_Fast(_v) */
 	int64_t n_; /* # of elements in replacement list */
 	int64_t norig_; /* # of elements in list getting replaced */
 	int64_t d_; /* Change in size */
@@ -592,11 +592,11 @@ static int listAss_slice_lockHeld(AlifListObject* _a, int64_t _iLow, int64_t _iH
 	size_t s_;
 	int result_ = -1;            /* guilty until proved innocent */
 #define b ((AlifListObject *)_v)
-	if (_v == NULL)
+	if (_v == nullptr)
 		n_ = 0;
 	else {
 		vAsSF = alifSequence_fast(_v, L"can only assign an iterable");
-		if (vAsSF == NULL)
+		if (vAsSF == nullptr)
 			goto Error;
 		n_ = ALIFSEQUENCE_FAST_GETSIZE(vAsSF);
 		vItem = ALIFSEQUENCE_FAST_ITEMS(vAsSF);
@@ -623,7 +623,7 @@ static int listAss_slice_lockHeld(AlifListObject* _a, int64_t _iLow, int64_t _iH
 	if (s_) {
 		if (s_ > sizeof(recycleOnStack)) {
 			recycle_ = (AlifObject**)alifMem_objAlloc(s_);
-			if (recycle_ == NULL) {
+			if (recycle_ == nullptr) {
 				goto Error;
 			}
 		}
@@ -671,14 +671,14 @@ static int list_ass_slice(AlifListObject* _a, int64_t _iLow, int64_t _iHigh, Ali
 		//ALIF_BEGIN_CRITICAL_SECTION(_a);
 		int64_t n_ = ALIFLIST_GET_SIZE(_a);
 		AlifObject* copy = listSlice_lockHeld(_a, 0, n_);
-		if (copy == NULL) {
+		if (copy == nullptr) {
 			return -1;
 		}
 		ret_ = listAss_slice_lockHeld(_a, _iLow, _iHigh, copy);
 		ALIF_DECREF(copy);
 		//ALIF_END_CRITICAL_SECTION();
 	}
-	else if (_v != NULL && (_v->type_ == &_alifListType_)) {
+	else if (_v != nullptr && (_v->type_ == &_alifListType_)) {
 		//ALIF_BEGIN_CRITICAL_SECTION2(_a, _v);
 		ret_ = listAss_slice_lockHeld(_a, _iLow, _iHigh, _v);
 		//ALIF_END_CRITICAL_SECTION2();
@@ -705,7 +705,7 @@ static int listAss_item_lockHeld(AlifListObject* a, int64_t i, AlifObject* v)
 		return -1;
 	}
 	AlifObject* tmp = a->items_[i];
-	if (v == NULL) {
+	if (v == nullptr) {
 		int64_t size = ALIF_SIZE(a);
 		for (int64_t idx = i; idx < size - 1; idx++) {
 			a->items_[idx] = a->items_[idx + 1];
@@ -2019,8 +2019,8 @@ AlifSequenceMethods _listAsSeq_ = {
 static inline AlifObject* list_slice_step_lock_held(AlifListObject* a, int64_t start, int64_t step, int64_t len)
 {
 	AlifListObject* np_ = (AlifListObject*)list_new_prealloc(len);
-	if (np_ == NULL) {
-		return NULL;
+	if (np_ == nullptr) {
+		return nullptr;
 	}
 	size_t cur_;
 	int64_t i_;
@@ -2038,7 +2038,7 @@ static inline AlifObject* list_slice_step_lock_held(AlifListObject* a, int64_t s
 static AlifObject*
 list_slice_wrap(AlifListObject* aa, int64_t start, int64_t stop, int64_t step)
 {
-	AlifObject* res_ = NULL;
+	AlifObject* res_ = nullptr;
 	//ALIF_BEGIN_CRITICAL_SECTION(aa);
 	int64_t len = alifSlice_adjustIndices(ALIF_SIZE(aa), &start, &stop, step);
 	if (len <= 0) {
@@ -2062,7 +2062,7 @@ list_subscript(AlifObject* _self, AlifObject* _item)
 		int64_t i_;
 		i_ = alifInteger_asSizeT(_item);
 		if (i_ == -1)
-			return NULL;
+			return nullptr;
 		if (i_ < 0)
 			i_ += ALIFLIST_GET_SIZE(self);
 		return list_item((AlifObject*)self, i_);
@@ -2070,12 +2070,12 @@ list_subscript(AlifObject* _self, AlifObject* _item)
 	else if (ALIFSLICE_CHECK(_item)) {
 		int64_t start, stop, step;
 		if (slice_unpack((AlifSliceObject*)_item, &start, &stop, &step) < 0) {
-			return NULL;
+			return nullptr;
 		}
 		return list_slice_wrap(self, start, stop, step);
 	}
 	else {
-		return NULL;
+		return nullptr;
 	}
 }
 

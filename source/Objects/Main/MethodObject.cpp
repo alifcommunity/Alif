@@ -60,7 +60,7 @@ AlifObject* alifNew_cMethod(AlifMethodDef* _method, AlifObject* _self, AlifObjec
             return nullptr;
         }
         AlifCMethodObject* objectMethod = (AlifCMethodObject*)alifMem_objAlloc(sizeof(AlifCMethodObject));
-        alifSubObject_init((AlifObject*)objectMethod, &_alifTypeCMethod_);
+        alifSubObject_init((AlifObject*)objectMethod, &_alifCppMethodType_);
         if (objectMethod == nullptr) {
             return nullptr;
         }
@@ -184,7 +184,7 @@ AlifTypeObject _alifTypeCFunction_ = {
     0,                                          /* tp_dict */
 };
 
-AlifInitObject _alifTypeCMethod_ = {
+AlifInitObject _alifCppMethodType_ = {
     0,
 	0,
 	0,
@@ -232,7 +232,7 @@ static AlifObject* cFunction_vectorCallFastCall(
     AlifObject* _object, AlifObject* const* _args, size_t _nArgsF, AlifObject* _kwNames)
 {
     //if (cfunction_check_kwargs(object, kwnames)) {
-        //return NULL;
+        //return nullptr;
     //}
     int64_t nArgs = _nArgsF & ~((size_t)1 << (8 * sizeof(size_t) - 1));
     AlifCFunctionFast method_ = (AlifCFunctionFast)
@@ -274,7 +274,7 @@ static AlifObject* cFunctionVectorCallNoArg(
     AlifObject* _object, AlifObject* const* _args, size_t _nArgsF, AlifObject* _kwNames)
 {
     //if (cfunction_check_kwargs(object, kwnames)) {
-        //return NULL;
+        //return nullptr;
     //}
     int64_t nArgs = _nArgsF & ~((size_t)1 << (8 * sizeof(size_t) - 1));
     if (nArgs != 0) {
@@ -297,12 +297,12 @@ static AlifObject* cFunction_vectorCall(
 {
     
     //if (cfunction_check_kwargs(func, kwnames)) {
-        //return NULL;
+        //return nullptr;
     //}
     int64_t nArgs = _nArgsF & ~((size_t)1 << (8 * sizeof(size_t) - 1));
     if (nArgs != 1) {
         //AlifObject* funcstr = AlifObj_FunctionStr(func);
-        //if (funcstr != NULL) {
+        //if (funcstr != nullptr) {
             // error 
         //}
         return nullptr;
@@ -331,8 +331,8 @@ static AlifObject* cFunction_call(AlifObject* _func, AlifObject* _args, AlifObje
 
     }
     else {
-        if (_kwArgs != NULL && ((AlifDictObject*)_kwArgs)->size_ != 0) {
-            return NULL;
+        if (_kwArgs != nullptr && ((AlifDictObject*)_kwArgs)->size_ != 0) {
+            return nullptr;
         }
 		result_ = (method_)(self_, _args);
     }

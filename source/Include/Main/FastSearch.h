@@ -50,7 +50,7 @@ static __inline int64_t __fastcall find_char(const STRINGLIB_CHAR* _s, int64_t _
     if (_n > MEMCHR_CUT_OFF) {
 #ifdef STRINGLIB_FAST_MEMCHR
         p_ = (const STRINGLIB_CHAR*)STRINGLIB_FAST_MEMCHR(_s, _ch, _n);
-        if (p_ != NULL)
+        if (p_ != nullptr)
             return (p_ - _s);
         return -1;
 #else
@@ -62,7 +62,7 @@ static __inline int64_t __fastcall find_char(const STRINGLIB_CHAR* _s, int64_t _
             do {
                 void* candidate_ = memchr(p_, needle_,
                     (e_ - p_) * sizeof(STRINGLIB_CHAR));
-                if (candidate_ == NULL)
+                if (candidate_ == nullptr)
                     return -1;
                 s1_ = p_;
                 p_ = (const STRINGLIB_CHAR*)
@@ -109,7 +109,7 @@ static __inline int64_t __fastcall rfind_char(const STRINGLIB_CHAR* _s, int64_t 
     if (_n > MEMRCHR_CUT_OFF) {
 #if STRINGLIB_SIZEOF_CHAR == 1
         p_ = memrchr(_s, _ch, _n);
-        if (p_ != NULL)
+        if (p_ != nullptr)
             return (p_ - _s);
         return -1;
 #else
@@ -121,7 +121,7 @@ static __inline int64_t __fastcall rfind_char(const STRINGLIB_CHAR* _s, int64_t 
             do {
                 void* candidate_ = memrchr(_s, needle_,
                     _n * sizeof(STRINGLIB_CHAR));
-                if (candidate_ == NULL)
+                if (candidate_ == nullptr)
                     return -1;
                 n1_ = _n;
                 p_ = (const STRINGLIB_CHAR*)
