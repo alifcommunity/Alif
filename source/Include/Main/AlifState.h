@@ -21,6 +21,7 @@ public:
 	class AlifInterpreterFrame* currentFrame{};
 
 	AlifIntT recursionRemaining{};
+	AlifIntT recursionHeadroom{};
 
 	AlifStackChunk* dataStackChunk{};
 	AlifObject** dataStackTop{};

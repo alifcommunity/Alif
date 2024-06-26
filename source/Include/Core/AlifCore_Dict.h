@@ -8,7 +8,7 @@
 
 
 
-
+AlifObject* alifDict_fromItems(AlifObject* const*, AlifSizeT, AlifObject* const*, AlifSizeT, AlifSizeT);
 
 
 static inline AlifUSizeT shared_keys_usable_size(AlifDictKeysObject* keys) { // 297

@@ -8,7 +8,7 @@ public:
 
 	size_t digits_{};
 
-	bool sign_{};
+	bool sign_{}; // true == Negative Sign
 
 };
 

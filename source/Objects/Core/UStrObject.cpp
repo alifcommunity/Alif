@@ -2958,11 +2958,67 @@ AlifTypeObject _alifUStrType_ = {
 	0,               
 };
 
+void alifSubUStr_internInPlace(AlifInterpreter* interp, AlifObject** p) { // 14901
+	AlifObject* s = *p;
+	if (s == nullptr or !ALIFUSTR_CHECK(s)) {
+		return;
+	}
+
+	if (!ALIFUSTR_CHECKEXACT(s)) {
+		return;
+	}
+
+	//if (ALIFUSTR_CHECK_INTERNED(s)) {
+	//	return;
+	//}
+
+	//AlifObject* r = (AlifObject*)alifHashTable_get(INTERNED_STRINGS, s);
+	//if (r != nullptr and r != s) {
+	//	ALIF_SETREF(*p, ALIF_NEWREF(r));
+	//	return;
+	//}
+
+	//if (ALIFUSTR_STATE(s).staticallyAllocated) {
+	//	if (alifHashTable_set(INTERNED_STRINGS, s, s) == 0) {
+	//		ALIFUSTR_STATE(*p).interned = SSTATE_INTERNED_IMMORTAL_STATIC;
+	//	}
+	//	return;
+	//}
+
+	//AlifObject* interned = get_internedDict(interp);
+
+	//AlifObject* t;
+	//int res = alifDict_setDefaultRef(interned, s, s, &t);
+	//if (res < 0) {
+	//	//alifErr_clear();
+	//	return;
+	//}
+	//else if (res == 1) {
+	//	ALIF_SETREF(*p, t);
+	//	return;
+	//}
+	//ALIF_DECREF(t);
+
+	//if (alif_isImmortal(s)) {
+	//	ALIFUSTR_STATE(*p).interned = SSTATE_INTERNED_IMMORTAL_STATIC;
+	//	return;
+	//}
+
+	alifSub_setImmortal(s);
+	//ALIFUSTR_STATE(*p).interned = SSTATE_INTERNED_IMMORTAL;
+}
+
+void alifUStr_internInPlace(AlifObject** p) { // 14976
+	AlifInterpreter* interp = alifInterpreter_get();
+	alifSubUStr_internInPlace(interp, p);
+}
+
+
 AlifObject* alifUStr_internFromString(const wchar_t* _cp)
 {
 	AlifObject* s_ = alifUStr_decodeStringToUTF8(_cp);
 	if (s_ == nullptr)
 		return nullptr;
-	//alifUStr_internInPlace(&s_);
+	alifUStr_internInPlace(&s_);
 	return s_;
 }

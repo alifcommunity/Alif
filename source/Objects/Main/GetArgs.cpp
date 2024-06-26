@@ -216,7 +216,7 @@ int _alifArg_checkPositional(const wchar_t* name, int64_t nargs, int64_t min, in
 {
 
     if (nargs < min) {
-        if (name != NULL)
+        if (name != nullptr)
             //Err_Format(
                 //Exc_TypeError,
                 //"%.200s expected %s%zd argument%s, got %zd",
@@ -235,7 +235,7 @@ int _alifArg_checkPositional(const wchar_t* name, int64_t nargs, int64_t min, in
     }
 
     if (nargs > max) {
-        if (name != NULL)
+        if (name != nullptr)
             //Err_Format(
                 //Exc_TypeError,
                 //"%.200s expected %s%zd argument%s, got %zd",
@@ -831,7 +831,7 @@ int alifSubArg_checkPositional(const wchar_t* _name, int64_t _nArgs,
     int64_t _min, int64_t _max)
 {
     if (_nArgs < _min) {
-        //if (_name != NULL)
+        //if (_name != nullptr)
         //    Err_Format(
         //        Exc_TypeError,
         //        "%.200s expected %s%zd argument%s, got %zd",
@@ -850,7 +850,7 @@ int alifSubArg_checkPositional(const wchar_t* _name, int64_t _nArgs,
     }
 
     if (_nArgs > _max) {
-        //if (_name != NULL)
+        //if (_name != nullptr)
         //    Err_Format(
         //        Exc_TypeError,
         //        "%.200s expected %s%zd argument%s, got %zd",
@@ -869,7 +869,7 @@ int alifSubArg_checkPositional(const wchar_t* _name, int64_t _nArgs,
 
 int alifSubArg_noKwnames(const wchar_t* _funcname, AlifObject* _kwnames)
 {
-    if (_kwnames == NULL) {
+    if (_kwnames == nullptr) {
         return 1;
     }
 

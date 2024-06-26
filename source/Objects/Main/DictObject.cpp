@@ -2,6 +2,22 @@
 
 #include "AlifCore_Memory.h"
 #include "AlifCore_Dict.h"
+#include "AlifCore_AlifState.h"
+#include "AlifCore_Interpreter.h"
+
+
+#define ALIFDICT_LOG_MINSIZE 3
+#define ALIFDICT_MINSIZE 8
+
+#define USABLE_FRACTION(n) ((n << 1)/3)
+
+
+
+// Forwards
+static AlifIntT setItem_lockHeld(AlifDictObject*, AlifObject*, AlifObject*);
+
+
+
 
 AlifDictObject* dict_presize(AlifDictObject* dict, int64_t used) {
 
@@ -174,8 +190,8 @@ int alifDict_getItemRefKnownHash(AlifObject* op, AlifObject* key, size_t hash, A
 #else
 	size_t ix = dict_lookupItem(mp, key, hash, &value);
 #endif
-	if (value == NULL) {
-		*result = NULL;
+	if (value == nullptr) {
+		*result = nullptr;
 		return 0;  // missing key
 	}
 #ifdef ALIF_GIL_DISABLED
@@ -189,7 +205,7 @@ int alifDict_getItemRefKnownHash(AlifObject* op, AlifObject* key, size_t hash, A
 int alifDict_getItemRef(AlifObject* op, AlifObject* key, AlifObject** result)
 {
 	if (!(op->type_ == &_alifDictType_)) {
-		*result = NULL;
+		*result = nullptr;
 		return -1;
 	}
 
@@ -333,16 +349,16 @@ AlifObject* alifDict_popKnownHash(AlifObject* dict, AlifObject* key, size_t hash
         if (deflt) {
             return deflt;
         }
-        return NULL;
+        return nullptr;
     }
     ix = dict_lookupItem(mp, key, hash, &old_value);
     if (ix == -1)
-        return NULL;
-    if ( old_value == NULL) {
+        return nullptr;
+    if ( old_value == nullptr) {
         if (deflt) {
             return deflt;
         }
-        return NULL;
+        return nullptr;
     }
     deletItem_common(mp, hash, ix);
 
@@ -357,12 +373,12 @@ AlifObject* _alifDict_pop(AlifObject* dict, AlifObject* key, AlifObject* deflt)
         if (deflt) {
             return (deflt);
         }
-        return NULL;
+        return nullptr;
     }
     if (!(key->type_ == &_alifUStrType_) || (hash = ((AlifUStrObject*)key)->hash_) == 0) {
         hash = alifObject_hash(key);
         if (hash == -1)
-            return NULL;
+            return nullptr;
     }
     return alifDict_popKnownHash(dict, key, hash, deflt);
 }
@@ -378,7 +394,7 @@ static AlifObject* dict___contains__(AlifDictObject* self, AlifObject* key)
     if (!(key->type_ == &_alifUStrType_) || (hash = ((AlifUStrObject*)key)->hash_) == 0) {
         hash = alifObject_hash(key);
         if (hash == -1)
-            return NULL;
+            return nullptr;
     }
     ix = dict_lookupItem(mp, key, hash, &value);
     if ( value == nullptr)
@@ -390,7 +406,7 @@ static AlifObject* dict_get_impl(AlifDictObject* self, AlifObject* key, AlifObje
 
 static AlifObject* dict_get(AlifDictObject* self, AlifObject* const* args, int64_t nargs)
 {
-    AlifObject* return_value = NULL;
+    AlifObject* return_value = nullptr;
     AlifObject* key;
     AlifObject* default_value = ALIF_NONE;
 
@@ -411,19 +427,19 @@ exit:
 
 static AlifObject* dict_get_impl(AlifDictObject* self, AlifObject* key, AlifObject* default_value)
 {
-    AlifObject* val = NULL;
+    AlifObject* val = nullptr;
     size_t hash;
     int64_t ix;
 
     if (!(key->type_ == &_alifUStrType_) || (hash = ((AlifUStrObject*)key)->hash_) == 0) {
         hash = alifObject_hash(key);
         if (hash == -1)
-            return NULL;
+            return nullptr;
     }
     ix = dict_lookupItem(self, key, hash, &val);
     if (ix == -1)
-        return NULL;
-    if ( val == NULL) {
+        return nullptr;
+    if ( val == nullptr) {
         val = default_value;
     }
     return val;
@@ -433,9 +449,9 @@ static AlifObject* dict_popImpl(AlifDictObject* self, AlifObject* key, AlifObjec
 
 static AlifObject* dict_pop(AlifDictObject* self, AlifObject* const* args, int64_t nargs)
 {
-    AlifObject* return_value = NULL;
+    AlifObject* return_value = nullptr;
     AlifObject* key;
-    AlifObject* default_value = NULL;
+    AlifObject* default_value = nullptr;
 
     if (!_alifArg_checkPositional(L"pop", nargs, 1, 2)) {
         goto exit;
@@ -465,15 +481,15 @@ static AlifObject* dict_popImpl(AlifDictObject* self, AlifObject* key, AlifObjec
 //    uint64_t new_version;
 //
 //    res = alifNew_tuple(2);
-//    if (res == NULL)
-//        return NULL;
+//    if (res == nullptr)
+//        return nullptr;
 //    if (self->size_ == 0) {
-//        return NULL;
+//        return nullptr;
 //    }
 //    ///* Convert split table to combined table */
 //    //if (self->ma_keys->dk_kind == DICT_KEYS_SPLIT) {
 //    //    if (dictResize( self, DK_LOG_SIZE(self->ma_keys), 1)) {
-//    //        return NULL;
+//    //        return nullptr;
 //    //    }
 //    //}
 //    /* Pop last item */
@@ -482,33 +498,33 @@ static AlifObject* dict_popImpl(AlifDictObject* self, AlifObject* key, AlifObjec
 //    if (DK_IS_UNICODE(self->ma_keys)) {
 //        PyDictUnicodeEntry* ep0 = DK_UNICODE_ENTRIES(self->ma_keys);
 //        i = self->ma_keys->dk_nentries - 1;
-//        while (i >= 0 && ep0[i].me_value == NULL) {
+//        while (i >= 0 && ep0[i].me_value == nullptr) {
 //            i--;
 //        }
 //
 //        key = ep0[i].me_key;
 //        new_version = _PyDict_NotifyEvent(
-//            interp, PyDict_EVENT_DELETED, self, key, NULL);
+//            interp, PyDict_EVENT_DELETED, self, key, nullptr);
 //        hash = unicode_get_hash(key);
 //        value = ep0[i].me_value;
-//        ep0[i].me_key = NULL;
-//        ep0[i].me_value = NULL;
+//        ep0[i].me_key = nullptr;
+//        ep0[i].me_value = nullptr;
 //    }
 //    else {
 //        PyDictKeyEntry* ep0 = DK_ENTRIES(self->ma_keys);
 //        i = self->ma_keys->dk_nentries - 1;
-//        while (i >= 0 && ep0[i].me_value == NULL) {
+//        while (i >= 0 && ep0[i].me_value == nullptr) {
 //            i--;
 //        }
 //
 //        key = ep0[i].me_key;
 //        new_version = _PyDict_NotifyEvent(
-//            interp, PyDict_EVENT_DELETED, self, key, NULL);
+//            interp, PyDict_EVENT_DELETED, self, key, nullptr);
 //        hash = ep0[i].me_hash;
 //        value = ep0[i].me_value;
-//        ep0[i].me_key = NULL;
+//        ep0[i].me_key = nullptr;
 //        ep0[i].me_hash = -1;
-//        ep0[i].me_value = NULL;
+//        ep0[i].me_value = nullptr;
 //    }
 //
 //    j = lookdict_index(self->ma_keys, hash, i);
@@ -597,8 +613,8 @@ AlifIntT dict_ass_sub(AlifDictObject* dict, AlifObject* key, AlifObject* value) 
 static AlifObject* keys_lock_held(AlifObject* _dict)
 {
 
-	if (_dict == NULL || !(_dict->type_ == &_alifDictType_)) {
-		return NULL;
+	if (_dict == nullptr || !(_dict->type_ == &_alifDictType_)) {
+		return nullptr;
 	}
 	AlifDictObject* mp_ = (AlifDictObject*)_dict;
 	AlifObject* v_{};
@@ -606,8 +622,8 @@ static AlifObject* keys_lock_held(AlifObject* _dict)
 
 again:
 	v_ = alifNew_list(n_);
-	if (v_ == NULL)
-		return NULL;
+	if (v_ == nullptr)
+		return nullptr;
 
 	int64_t j_ = 0, pos_ = 0;
 	AlifObject* key_;
@@ -652,7 +668,95 @@ AlifObject* dict_subscript(AlifDictObject* dict, AlifObject* key) {
 void dict_dealloc(AlifDictObject* dict) {
 
     alifMem_objFree(dict);
+}
 
+// للمراجعة
+static AlifObject* dictNew_presized(AlifInterpreter* _interp, AlifSizeT _minUsed, bool _unicode) { // 2081
+	const uint8_t log2MaxPresize = 17;
+	const AlifSizeT maxPresize = ((AlifSizeT)1) << log2MaxPresize;
+	uint8_t log2NewSize{};
+	AlifDictKeysObject* newKeys{};
+
+	if (_minUsed <= USABLE_FRACTION(ALIFDICT_MINSIZE)) {
+		return alifNew_dict();
+	}
+
+	if (_minUsed > USABLE_FRACTION(maxPresize)) {
+		log2NewSize = log2MaxPresize;
+	}
+	else {
+		//log2NewSize = estimateLog2_keySize(_minUsed);
+	}
+
+	//newKeys = new_keys_object(_interp, log2NewSize, _unicode);
+	//if (newKeys == nullptr) return nullptr;
+
+	//return new_dict(_interp, newKeys, nullptr, 0, 0);
+	return nullptr; // 
+}
+
+AlifObject* alifDict_fromItems(AlifObject* const* _keys, AlifSizeT _keysOffset,
+	AlifObject* const* _values, AlifSizeT _valuesOffset, AlifSizeT _length) { // 2116
+
+	bool unicode = true;
+	AlifObject* const* ks = _keys;
+	AlifInterpreter* interp = alifInterpreter_get();
+
+	for (AlifSizeT i = 0; i < _length; i++) {
+		if (!ALIFUSTR_CHECKEXACT(*ks)) {
+			unicode = false;
+			break;
+		}
+		ks += _keysOffset;
+	}
+
+	AlifObject* dict = dictNew_presized(interp, _length, unicode);
+	if (dict == nullptr) {
+		return nullptr;
+	}
+
+	ks = _keys;
+	AlifObject* const* vs = _values;
+
+	for (AlifSizeT i = 0; i < _length; i++) {
+		AlifObject* key = *ks;
+		AlifObject* value = *vs;
+		if (setItem_lockHeld((AlifDictObject*)dict, key, value) < 0) {
+			ALIF_DECREF(dict);
+			return nullptr;
+		}
+		ks += _keysOffset;
+		vs += _valuesOffset;
+	}
+
+	return dict;
+}
+
+// للمراجعة
+static AlifIntT setItemTake2_lockHeld(AlifDictObject* mp, AlifObject* key, AlifObject* value) { // 2456
+
+	AlifSizeT hash{};
+	if (!ALIFUSTR_CHECKEXACT(key) /* or (hash = uStr_getHash(key)) == -1*/) {
+		hash = alifObject_hash(key);
+		if (hash == -1) {
+			ALIF_DECREF(key);
+			ALIF_DECREF(value);
+			return -1;
+		}
+	}
+
+	AlifInterpreter* interp = alifInterpreter_get();
+
+	//if (mp->keys == ALIF_EMPTY_KEYS) {
+	//	return insert_toEmptyDict(interp, mp, key, hash, value);
+	//}
+
+	//return insert_dict(interp, mp, key, hash, value);
+	return 0; //
+}
+
+static AlifIntT setItem_lockHeld(AlifDictObject* mp, AlifObject* key, AlifObject* value) { // 2512
+	return setItemTake2_lockHeld(mp, ALIF_NEWREF(key), ALIF_NEWREF(value));
 }
 
 static AlifMethodDef mappMethods[] = {
@@ -660,7 +764,7 @@ static AlifMethodDef mappMethods[] = {
     {L"__getitem__", ALIFCFunction_CAST(dict_subscript), METHOD_O | METHOD_COEXIST},
     {L"get", ALIFCFunction_CAST(dict_get), METHOD_FASTCALL},
     {L"pop", ALIFCFunction_CAST(dict_pop), METHOD_FASTCALL},
-    {NULL,              NULL}   /* sentinel */
+    {nullptr,              nullptr}   /* sentinel */
 };
 
 AlifSequenceMethods dictAsSequence = {

@@ -1066,7 +1066,7 @@ AlifObject* alifAST_getDocString(StmtSeq* _body) {
 	if (stmt->type != StmtType::ExprK) return nullptr;
 
 	Expression* expr = stmt->V.expression.val;
-	if (expr->type == ExprType::ConstantK and ALIFUSTR_CHECK_TYPE(expr->V.constant.val)) {
+	if (expr->type == ExprType::ConstantK and ALIFUSTR_CHECKEXACT(expr->V.constant.val)) {
 		return expr->V.constant.val;
 	}
 

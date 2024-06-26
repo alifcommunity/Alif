@@ -2,6 +2,13 @@
 
 #include "AlifCore_Object.h"
 #include "AlifCore_Memory.h"
+#include "AlifCore_UString.h"
+#include "AlifCore_TypeObject.h"
+#include "AlifCore_ModuleObject.h"
+
+
+
+
 
 void alif_incRef(AlifObject* _o)
 {
@@ -192,7 +199,7 @@ AlifObject* alifObject_getAttrString(AlifObject* _v, const wchar_t* _name)
 		return (*ALIF_TYPE(_v)->getAttr)(_v, (wchar_t*)_name);
 	w_ = alifUStr_decodeUTF8Stateful(_name, wcslen(_name), nullptr, nullptr);
 	if (w_ == nullptr)
-		return NULL;
+		return nullptr;
 	//res_ = alifObject_getAttr(_v, w_);
 	ALIF_DECREF(w_);
 	return res_;
@@ -258,10 +265,8 @@ int alifObject_not(AlifObject* _v)
 	return res_ == 0;
 }
 
-int alifCallable_check(AlifObject* _x)
-{
-	if (_x == nullptr)
-		return 0;
+AlifIntT alifCallable_check(AlifObject* _x) { // 1842 
+	if (_x == nullptr) return 0;
 	return ALIF_TYPE(_x)->call_ != nullptr;
 }
 
@@ -279,7 +284,7 @@ static void none_dealloc(AlifObject* _none)
 static AlifObject* none_new(AlifTypeObject* _type, AlifObject* _args, AlifObject* _kwargs)
 {
 	if (((AlifVarObject*)_args)->size_ || (_kwargs && ((AlifDictObject*)_kwargs)->size_)) {
-		return NULL;
+		return nullptr;
 	}
 	ALIF_RETURN_NONE;
 }
@@ -466,3 +471,239 @@ void alifSub_setRefcnt(AlifObject* _ob, int64_t _ref)
 {
 	ALIF_SETREF(_ob, _ref);
 }
+
+
+
+
+
+
+
+AlifIntT alifObject_getOptionalAttr(AlifObject* v, AlifObject* name, AlifObject** result) { // 1196
+	AlifTypeObject* tp = ALIF_TYPE(v);
+
+	if (!ALIFUSTR_CHECK(name)) {
+		//alifErr_format(alifExcTypeError,
+		//	"attribute name must be string, not '%.200s'",
+		//	ALIF_TYPE(name)->name_);
+		*result = nullptr;
+		return -1;
+	}
+
+	if (tp->getAttro == alifObject_genericGetAttr) {
+		*result = alifSubObject_genericGetAttrWithDict(v, name, nullptr, 1);
+		if (*result != nullptr) {
+			return 1;
+		}
+		//if (alifErr_occurred()) {
+		//	return -1;
+		//}
+		return 0;
+	}
+	if (tp->getAttro == alifType_getAttro) {
+		int supress_missing_attribute_exception = 0;
+		*result = alifType_getAttroImpl((AlifTypeObject*)v, name, &supress_missing_attribute_exception);
+		if (supress_missing_attribute_exception) {
+			return 0;
+		}
+	}
+	else if (tp->getAttro == (GetAttroFunc)alifModule_getAttro) {
+		*result = alifModule_getAttroImpl((AlifModuleObject*)v, name, 1);
+		if (*result != nullptr) {
+			return 1;
+		}
+		//if (alifErr_occurred()) {
+		//	return -1;
+		//}
+		return 0;
+	}
+	else if (tp->getAttro != nullptr) {
+		*result = (*tp->getAttro)(v, name);
+	}
+	else if (tp->getAttr != nullptr) {
+		const wchar_t* nameStr = alifUStr_asUTF8(name);
+		if (nameStr == nullptr) {
+			*result = nullptr;
+			return -1;
+		}
+		*result = (*tp->getAttr)(v, (wchar_t*)nameStr);
+	}
+	else {
+		*result = nullptr;
+		return 0;
+	}
+
+	if (*result != nullptr) {
+		return 1;
+	}
+	//if (!alifErr_exceptionMatches(alifExcAttributeError)) {
+	//	return -1;
+	//}
+	//alifErr_clear();
+	return 0;
+}
+
+
+AlifIntT alifObject_setAttr(AlifObject* v, AlifObject* name, AlifObject* value) { // 1312
+	AlifTypeObject* tp = ALIF_TYPE(v);
+	int err;
+
+	if (!ALIFUSTR_CHECK(name)) {
+		//alifErr_format(alifExcTypeError,
+		//	"attribute name must be string, not '%.200s'",
+		//	ALIF_TYPE(name)->name_);
+		return -1;
+	}
+	ALIF_INCREF(name);
+
+	alifUStr_internInPlace(&name);
+	if (tp->setAttro != nullptr) {
+		err = (*tp->setAttro)(v, name, value);
+		ALIF_DECREF(name);
+		return err;
+	}
+	if (tp->setAttr != nullptr) {
+		const wchar_t* nameStr = alifUStr_asUTF8(name);
+		if (nameStr == nullptr) {
+			ALIF_DECREF(name);
+			return -1;
+		}
+		err = (*tp->setAttr)(v, (wchar_t*)nameStr, value);
+		ALIF_DECREF(name);
+		return err;
+	}
+	ALIF_DECREF(name);
+	//ALIFOBJECT_ASSERT(name, ALIF_REFCNT(name) >= 1);
+	//if (tp->getAttr == nullptr and tp->getAttro == nullptr) {
+	//	alifErr_format(alifExcTypeError,
+	//		"'%.100s' object has no attributes "
+	//		"(%s .%U)",
+	//		tp->name_,
+	//		value == nullptr ? "del" : "assign to",
+	//		name);
+	//}
+	//else {
+	//	alifErr_format(alifExcTypeError,
+	//		"'%.100s' object has only read-only attributes "
+	//		"(%s .%U)",
+	//		tp->name_,
+	//		value == nullptr ? "del" : "assign to",
+	//		name);
+	//}
+	return -1;
+}
+
+
+
+AlifObject* alifSubObject_genericGetAttrWithDict(AlifObject* obj, AlifObject* name,
+	AlifObject* dict, AlifIntT suppress) { // 1544
+
+	AlifTypeObject* tp = ALIF_TYPE(obj);
+	AlifObject* descr = nullptr;
+	AlifObject* res = nullptr;
+	DescrGetFunc f{};
+
+	if (!ALIFUSTR_CHECK(name)) {
+		//alifErr_format(alifExcTypeError,
+		//	"attribute name must be string, not '%.200s'",
+		//	ALIF_TYPE(name)->name_);
+		return nullptr;
+	}
+	ALIF_INCREF(name);
+
+	//if (!alifType_isReady(tp)) {
+	//	if (alifType_ready(tp) < 0)
+	//		goto done;
+	//}
+
+	//descr = alifType_lookupRef(tp, name);
+
+	f = nullptr;
+	if (descr != nullptr) {
+		f = ALIF_TYPE(descr)->descrGet;
+		//if (f != nullptr and alifDescr_isData(descr)) {
+		//	res = f(descr, obj, (AlifObject*)ALIF_TYPE(obj));
+		//	if (res == nullptr and suppress and
+		//		alifErr_exceptionMatches(alifExcAttributeError)) {
+		//		alifErr_clear();
+		//	}
+		//	goto done;
+		//}
+	}
+	if (dict == nullptr) {
+		if ((tp->flags_ & ALIFTPFLAGS_INLINE_VALUES)) {
+			//if (ALIFUSTR_CHECK_EXACT(name) and alifObject_tryGetInstanceAttribute(obj, name, &res)) {
+			//	if (res != nullptr) {
+			//		goto done;
+			//	}
+			//}
+			//else {
+			//	dict = (AlifObject*)alifObject_materializeManagedDict(obj);
+			//	if (dict == nullptr) {
+			//		res = nullptr;
+			//		goto done;
+			//	}
+			//}
+		}
+		else if ((tp->flags_ & ALIFTPFLAGS_MANAGED_DICT)) {
+			//dict = (AlifObject*)alifObject_getManagedDict(obj);
+		}
+		else {
+			//AlifObject** dictptr = alifObject_computedDictPointer(obj);
+			//if (dictptr) {
+			//	dict = *dictptr;
+			//}
+		}
+	}
+	if (dict != nullptr) {
+		ALIF_INCREF(dict);
+		int rc = alifDict_getItemRef(dict, name, &res);
+		ALIF_DECREF(dict);
+		if (res != nullptr) {
+			goto done;
+		}
+		else if (rc < 0) {
+			//if (suppress and alifErr_exceptionMatches(alifExcAttributeError)) {
+			//	alifErr_clear();
+			//}
+			//else {
+				goto done;
+			//}
+		}
+	}
+
+	if (f != nullptr) {
+		res = f(descr, obj, (AlifObject*)ALIF_TYPE(obj));
+		//if (res == nullptr and suppress and
+		//	alifErr_exceptionMatches(alifExcAttributeError)) {
+		//	alifErr_clear();
+		//}
+		goto done;
+	}
+
+	if (descr != nullptr) {
+		res = descr;
+		descr = nullptr;
+		goto done;
+	}
+
+	if (!suppress) {
+		//alifErr_format(alifExcAttributeError,
+		//	"'%.100s' object has no attribute '%U'",
+		//	tp->name_, name);
+
+		//alifObject_setAttributeErrorContext(obj, name);
+	}
+done:
+	ALIF_XDECREF(descr);
+	ALIF_DECREF(name);
+	return res;
+}
+
+AlifObject* alifObject_genericGetAttr(AlifObject* obj, AlifObject* name) { // 1657
+	return alifSubObject_genericGetAttrWithDict(obj, name, nullptr, 0);
+}
+
+
+
+
+

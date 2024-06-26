@@ -1,20 +1,104 @@
 #include "alif.h"
 
+#include "AlifCore_Abstract.h"
 #include "AlifCore_Memory.h" // temp
+#include "AlifCore_Integer.h"
 #include "AlifCore_AlifState.h"
 #include "AlifCore_list.h"
+
+
+
+
+AlifObject* alifObject_getItem(AlifObject* _o, AlifObject* _key) { // 149
+	if (_o == nullptr or _key == nullptr) {
+		//return null_error();
+	}
+
+	AlifMappingMethods* m = ALIF_TYPE(_o)->asMapping;
+	if (m and m->subScript) {
+		AlifObject* item = m->subScript(_o, _key);
+		return item;
+	}
+
+	AlifSequenceMethods* ms = ALIF_TYPE(_o)->asSequence;
+	if (ms && ms->item_) {
+		if (alifIndex_check(_key)) {
+			AlifSizeT keyValue{};
+			keyValue = alifNumber_asSizeT(_key, nullptr/*alifExcIndexError*/); // need review
+			if (keyValue == -1
+				//and alifErr_occurred()
+				)
+				return nullptr;
+			return alifSequence_getItem(_o, keyValue);
+		}
+		else {
+			//return type_error("sequence index must "
+			//	"be integer, not '%.200s'", key);
+			return nullptr; // 
+		}
+	}
+
+	if (ALIFTYPE_CHECK(_o)) {
+		AlifObject* meth{}, * result{};
+
+		if ((AlifTypeObject*)_o == &_alifTypeType_) {
+			return alif_genericAlias(_o, _key);
+		}
+
+		AlifObject* name = alifUStr_decodeStringToUTF8(L"__class_getitem__");
+		if (alifObject_getOptionalAttr(_o, name, &meth) < 0) {
+			return nullptr;
+		}
+		if (meth && meth != ALIF_NONE) {
+			result = alifObject_callOneArg(meth, _key);
+			ALIF_DECREF(meth);
+			return result;
+		}
+		ALIF_XDECREF(meth);
+		//alifErr_format(alifExcTypeError, "type '%.200s' is not subscriptable", ((AlifTypeObject*)o)->name_);
+		return nullptr;
+	}
+
+	//return type_error("'%.200s' object is not subscriptable", o);
+	return nullptr;//
+}
+
+AlifIntT alifMapping_getOptionalItem(AlifObject* _obj, AlifObject* _key, AlifObject** _result) { // 203
+	if (ALIFDICT_CHECKEXACT(_obj)) {
+		return alifDict_getItemRef(_obj, _key, _result);
+	}
+
+	*_result = alifObject_getItem(_obj, _key);
+	if (*_result) {
+		return 1;
+	}
+	//if (!alifErr_exceptionMatches(alifExcKeyError)) {
+	//	return -1;
+	//}
+	//alifErr_clear();
+	return 0;
+}
+
+
+
+
+
+
+
+
+
 
 void alifBuffer_release(AlifBuffer* _view)
 {
     AlifObject* obj_ = _view->obj;
     AlifBufferProcs* pb_;
-    if (obj_ == NULL)
+    if (obj_ == nullptr)
         return;
     pb_ = ALIF_TYPE(obj_)->asBuffer;
     if (pb_ && pb_->releaseBuffer) {
         pb_->releaseBuffer(obj_, _view);
     }
-    _view->obj = NULL;
+    _view->obj = nullptr;
     ALIF_DECREF(obj_);
 }
 
@@ -96,6 +180,36 @@ AlifObject* alifNumber_add(AlifObject* _x, AlifObject* _y) { // 1138
 	return nullptr; // temp
 }
 
+
+AlifObject* alifSequence_getItem(AlifObject* s, AlifSizeT i) { // 1874
+	if (s == nullptr) {
+		//return null_error();
+		return nullptr; // 
+	}
+
+	AlifSequenceMethods* m = ALIF_TYPE(s)->asSequence;
+	if (m and m->item_) {
+		if (i < 0) {
+			if (m->length_) {
+				AlifSizeT l = (*m->length_)(s);
+				if (l < 0) return nullptr;
+
+				i += l;
+			}
+		}
+		AlifObject* res = m->item_(s, i);
+		return res;
+	}
+
+	if (ALIF_TYPE(s)->asMapping and ALIF_TYPE(s)->asMapping->subScript) {
+		//return type_error("%.200s is not a sequence", s);
+		return nullptr; //
+	}
+	//return type_error("'%.200s' object does not support indexing", s);
+	return nullptr; //
+}
+
+
 static AlifObject* binary_iop1(AlifObject* _v, AlifObject* _w, const int _iOpSlot, const int _opSlot
 #ifndef NDEBUG
 	, const wchar_t* _opName
@@ -103,7 +217,7 @@ static AlifObject* binary_iop1(AlifObject* _v, AlifObject* _w, const int _iOpSlo
 )
 {
 	AlifNumberMethods* mv_ = ALIF_TYPE(_v)->asNumber;
-	if (mv_ != NULL) {
+	if (mv_ != nullptr) {
 		BinaryFunc slot_ = NB_BINOP(mv_, (_iOpSlot / 2));
 		if (slot_) {
 			AlifObject* x = (slot_)(_v, _w);
@@ -185,6 +299,44 @@ AlifObject* alifSubNumber_index(AlifObject* _item)
     //}
     return result_;
 }
+
+
+AlifSizeT alifNumber_asSizeT(AlifObject* _item, AlifObject* _err)
+{
+	AlifSizeT result{};
+	AlifObject* runerr{};
+	AlifObject* value = alifSubNumber_index(_item);
+	AlifThread* thread_{};
+	if (value == nullptr) return -1;
+
+	result = alifInteger_asSizeT(value);
+	if (result != -1) goto finish;
+
+	thread_ = alifThread_get();
+	//runerr = alifErr_occurred(thread_);
+	if (!runerr) goto finish;
+
+	//if (!alifErr_givenExceptionMatches(runerr, alifExcOverflowError)) {
+	//	goto finish;
+	//}
+	//alifErr_clear(thread_);
+
+	if (!_err) {
+		if (alifInteger_isNegative((AlifIntegerObject*)value))
+			result = ALIF_SIZET_MIN;
+		else
+			result = ALIF_SIZET_MAX;
+	}
+	else {
+		//alifErr_format(tstate, err, "cannot fit '%.200s' into an index-sized integer", ALIF_TYPE(item)->name_);
+		return -1; //
+	}
+
+finish:
+	ALIF_DECREF(value);
+	return result;
+}
+
 
 AlifObject* alifInteger_float(AlifObject* _o)
 {

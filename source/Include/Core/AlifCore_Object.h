@@ -162,3 +162,13 @@ static inline size_t  alifSubType_preHeaderSize(AlifTypeObject* _tp)
 }
 
 void alifSubObjectGC_link(AlifObject*); // 642
+
+
+
+extern AlifObject* alifType_allocNoTrack(AlifTypeObject*, AlifSizeT);
+
+
+
+
+#define ALIFCFUNCTION_TRAMPOLINECALL(_meth, _self, _args)	(_meth)((_self), (_args))
+#define ALIFCFUNCTIONWITHKEYWORDS_TRAMPOLINECALL(_meth, _self, _args, _kw) (_meth)((_self), (_args), (_kw))

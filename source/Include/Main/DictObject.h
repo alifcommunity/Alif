@@ -1,5 +1,12 @@
 #pragma once
 
+extern AlifInitObject _alifDictType_;
+
+
+#define ALIFDICT_CHECK(op) ALIFTYPE_FASTSUBCLASS(ALIF_TYPE(op), ALIFTPFLAGS_DICT_SUBCLASS)
+#define ALIFDICT_CHECKEXACT(_op) ALIF_IS_TYPE((_op), &_alifDictType_)
+
+
 class AlifDictValues {
 public:
 	size_t hash{};
@@ -24,7 +31,6 @@ public:
 #define ALIFDICT_GET_SIZE(_op) (((AlifDictObject*)_op)->size_)
 
 
-extern AlifInitObject _alifDictType_;
 
 AlifObject* alifNew_dict();
 AlifDictObject* deleteItem_fromIndex(AlifDictObject*, int64_t);

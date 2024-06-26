@@ -9,7 +9,7 @@
 static AlifTupleObject* tuple_alloc(int64_t _size)
 {
 	if (_size < 0) {
-		return NULL;
+		return nullptr;
 	}
 
 	AlifTupleObject* op = nullptr;
@@ -59,10 +59,10 @@ int64_t alifTuple_size(AlifObject* _op)
 AlifObject* alifTuple_getItem(AlifObject* _op, int64_t _i)
 {
 	if (!(_op->type_ == &_alifTupleType_)) {
-		return NULL;
+		return nullptr;
 	}
 	if (_i < 0 || _i >= ALIF_SIZE(_op)) {
-		return NULL;
+		return nullptr;
 	}
 	return ((AlifTupleObject*)_op)->items_[_i];
 }
@@ -92,9 +92,9 @@ AlifObject* tuple_pack(size_t _size, ...) {
 
 	va_start(vArgs, _size);
 	AlifTupleObject* result = tuple_alloc(_size);
-	if (result == NULL) {
+	if (result == nullptr) {
 		va_end(vArgs);
-		return NULL;
+		return nullptr;
 	}
 	items_ = result->items_;
 	for (i_ = 0; i_ < _size; i_++) {
@@ -161,7 +161,7 @@ int tuple_contain(AlifTupleObject* _object, AlifObject* _item) {
 static AlifObject* tuple_item(AlifTupleObject* _a, int64_t _i)
 {
 	if (_i < 0 || _i >= ALIF_SIZE(_a)) {
-		return NULL;
+		return nullptr;
 	}
 	return ALIF_NEWREF(_a->items_[_i]);
 }

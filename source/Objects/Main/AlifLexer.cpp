@@ -874,7 +874,7 @@ static AlifIntT tokGet_fStringMode(TokenInfo* _tokInfo, TokenizerMode* _currentT
 
 	if (_currentTok->lastExprBuff != nullptr) {
 		alifMem_dataFree(_currentTok->lastExprBuff);
-		_currentTok->lastExprBuff = NULL;
+		_currentTok->lastExprBuff = nullptr;
 		_currentTok->lastExprSize = 0;
 		_currentTok->lastExprEnd = -1;
 	}

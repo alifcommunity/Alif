@@ -17,6 +17,36 @@
 
 #include "AlifEvalMacros.h"
 
+
+AlifIntT alif_checkRecursiveCall(AlifThread* _thread, const wchar_t* _where)
+{
+#ifdef USE_STACKCHECK
+	if (alifOS_checkStack()) {
+		++_thread->recursionRemaining;
+		alifErr_setString(_thread, alifExcMemoryError, "Stack overflow");
+		return -1;
+	}
+#endif
+	if (_thread->recursionHeadroom) {
+		if (_thread->recursionRemaining < -50) {
+			//alif_fatalError("Cannot recover from stack overflow.");
+			return -1; // 
+		}
+	}
+	else {
+		if (_thread->recursionRemaining <= 0) {
+			_thread->recursionHeadroom++;
+			//alifErr_format(_thread, alifExcRecursionError,
+			//	"maximum recursion depth exceeded%s", _where);
+			_thread->recursionHeadroom--;
+			++_thread->recursionRemaining;
+			return -1;
+		}
+	}
+	return 0;
+}
+
+
 AlifObject* alifEval_evalCode(AlifObject* _co) { // 572
 	AlifThread* thread = alifThread_get();
 	//if (_locals == nullptr) {
@@ -113,6 +143,37 @@ dispatchOpCode:
 		value = GETITEM(FRAME_CO_CONSTS, opArg);
 		ALIF_INCREF(value);
 		stackPtr[0] = value;
+		stackPtr += 1;
+		DISPATCH();
+	}
+	TARGET(LOAD_NAME) {
+		_frame->instrPtr = nextInstr;
+		nextInstr += 1;
+		AlifObject* v;
+		AlifObject* mod_or_class_dict = LOCALS();
+		if (mod_or_class_dict == nullptr) {
+			// error
+			//goto error;
+		}
+		AlifObject* name = GETITEM(FRAME_CO_NAMES, opArg);
+		if (alifMapping_getOptionalItem(mod_or_class_dict, name, &v) < 0) {
+			//goto error;
+		}
+		if (v == nullptr) {
+			if (alifDict_getItemRef(GLOBALS(), name, &v) < 0) {
+				//goto error;
+			}
+			if (v == nullptr) {
+				if (alifMapping_getOptionalItem(BUILTINS(), name, &v) < 0) {
+					//goto error;
+				}
+				//if (v == nullptr) {
+				//	alifEval_formatExcCheckArg(_thread, alifExcNameError, NAME_ERROR_MSG, name);
+				//	goto error;
+				//}
+			}
+		}
+		stackPtr[0] = v;
 		stackPtr += 1;
 		DISPATCH();
 	}

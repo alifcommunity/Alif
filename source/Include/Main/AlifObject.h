@@ -157,6 +157,22 @@ int alifObject_richCompareBool(AlifObject*, AlifObject*, int);
 int64_t alifObject_hash(AlifObject*);
 int64_t alifObject_hashNotImplemented(AlifObject*);
 
+
+
+
+
+/* Generic type check */
+AlifIntT alifType_isSubType(AlifTypeObject*, AlifTypeObject*);
+
+static inline AlifIntT alifObject_typeCheck(AlifObject* ob, AlifTypeObject* type) {
+	return ALIF_IS_TYPE(ob, type) or alifType_isSubType(ALIF_TYPE(ob), type);
+}
+#  define ALIFOBJECT_TYPECHECK(ob, type) alifObject_typeCheck(ALIFOBJECT_CAST(ob), (type))
+
+
+extern AlifTypeObject _alifBaseObjectType_; /* built-in 'object' */
+
+
 #define ALIFSUBTPFLAGS_STATIC_BUILTIN (1 << 1)
 
 #define ALIFTPFLAGS_INLINE_VALUES (1 << 2)
@@ -212,15 +228,15 @@ int64_t alifObject_hashNotImplemented(AlifObject*);
 #define ALIFTPFLAGS_LIST_SUBCLASS        (1UL << 25)
 #define ALIFTPFLAGS_TUPLE_SUBCLASS       (1UL << 26)
 #define ALIFTPFLAGS_BYTES_SUBCLASS       (1UL << 27)
-#define ALIFTPFLAGS_USTR_SUBCLASS     (1UL << 28)
+#define ALIFTPFLAGS_USTR_SUBCLASS		 (1UL << 28)
 #define ALIFTPFLAGS_DICT_SUBCLASS        (1UL << 29)
 #define ALIFTPFLAGS_BASE_EXC_SUBCLASS    (1UL << 30)
 #define ALIFTPFLAGS_TYPE_SUBCLASS        (1UL << 31)
 
-#define ALIFTPFLAGS_DEFAULT  ( \
-                 ALIFTPFLAGS_HAVE_STACKLESS_EXTENSION | \
-                0)
+#define ALIFTPFLAGS_DEFAULT  (ALIFTPFLAGS_HAVE_STACKLESS_EXTENSION | 0)
 
+
+AlifIntT alifCallable_check(AlifObject*);
 
 void alifSub_dealloc(AlifObject*);
 
@@ -328,7 +344,6 @@ extern AlifObject _alifNotImplemented_;
     } while (0)                                                      \
 
 
-#define ALIFTYPE_FASTSUBCLASS(_type, _flag) alifType_hasFeature((_type), (_flag))
 
 void alifSub_newReference(AlifObject*);
 
@@ -404,7 +419,7 @@ public:
 class AlifMappingMethods {
 public:
 	LenFunc length_;
-	BinaryFunc subscript_;
+	BinaryFunc subScript;
 	ObjObjArgProc assSubScript;
 };
 
@@ -421,7 +436,7 @@ public:
 
 	ALIFOBJECT_VAR_HEAD;
 	const wchar_t* name_;
-	size_t basicSize, itemsSize;
+	size_t basicSize, itemSize;
 
 	Destructor dealloc_;
 	size_t vectorCallOffset;
@@ -537,6 +552,13 @@ public:
         memcpy(tmpDstPtr, &tmpSrc, sizeof(AlifObject*)); \
     } while (0) \
 
+
+
+AlifObject* alifType_genericAlloc(AlifTypeObject*, AlifSizeT);
+
+
+
+
 #define ALIFTPFLAGS_USTR_SUBCLASS (1UL << 28)
 
 
@@ -550,3 +572,22 @@ static inline int alifType_hasFeature(AlifTypeObject* _type, unsigned long _feat
 	//#endif
 	return ((flags_ & _feature) != 0);
 }
+
+
+
+#define ALIFTYPE_FASTSUBCLASS(_type, _flag) alifType_hasFeature((_type), (_flag))
+
+static inline int alifType_check(AlifObject* op) {
+	return ALIFTYPE_FASTSUBCLASS(ALIF_TYPE(op), ALIFTPFLAGS_TYPE_SUBCLASS);
+}
+#define ALIFTYPE_CHECK(op) alifType_check(ALIFOBJECT_CAST(op))
+
+
+
+AlifIntT alifObject_getOptionalAttr(AlifObject*, AlifObject*, AlifObject**);
+
+AlifIntT alifObject_setAttr(AlifObject*, AlifObject*, AlifObject*);
+
+
+AlifObject* alifObject_genericGetAttr(AlifObject*, AlifObject*);
+AlifObject* alifSubObject_genericGetAttrWithDict(AlifObject*, AlifObject*, AlifObject*, AlifIntT);

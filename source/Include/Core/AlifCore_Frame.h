@@ -11,7 +11,7 @@ public:
 	int lineNo;               /* Current line number. Only valid if non-zero */
 	char traceLines;         /* Emit per-line trace events? */
 	char traceOpCodes;       /* Emit per-opcode trace events? */
-	AlifObject* extraLocals;   /* Dict for locals set by users using f_locals, could be NULL */
+	AlifObject* extraLocals;   /* Dict for locals set by users using f_locals, could be nullptr */
 	/* The frame data, if this frame object owns the frame */
 	AlifObject* frameData[1];
 };
@@ -69,7 +69,7 @@ static inline void alifFrame_initialize(AlifInterpreterFrame* _frame, AlifFuncti
 	_frame->owner = FrameOwner::FRAME_OWNED_BY_THREAD;
 
 	for (int i = _nullLocalsFrom; i < _code->nLocalsPlus; i++) {
-		_frame->localsPlus[i] = NULL;
+		_frame->localsPlus[i] = nullptr;
 	}
 }
 

@@ -113,6 +113,7 @@
 	using AlifIntT = __int32;
 	using AlifUIntT = unsigned __int32;
 	#define ALIF_SIZET_MAX LLONG_MAX
+	#define ALIF_SIZET_MIN (-ALIF_SIZET_MAX-1)
 #else
 	using AlifSizeT = __int32;
 	using AlifUSizeT = unsigned __int32;

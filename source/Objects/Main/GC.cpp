@@ -157,13 +157,13 @@ AlifVarObject* alifSubObjectGC_newVar(AlifTypeObject* _tp, int64_t _nItems)
 	AlifVarObject* op_;
 
 	if (_nItems < 0) {
-		return NULL;
+		return nullptr;
 	}
 	size_t preSize = alifSubType_preHeaderSize(_tp);
 	size_t size_ = alifSubObject_varSize(_tp, _nItems);
 	op_ = (AlifVarObject*)gc_alloc(_tp, size_, preSize);
-	if (op_ == NULL) {
-		return NULL;
+	if (op_ == nullptr) {
+		return nullptr;
 	}
 	alifSubObject_initVar(op_, _tp, _nItems);
 	return op_;

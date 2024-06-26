@@ -31,6 +31,12 @@
 #define FRAME_CO_CONSTS (alifFrame_getCode(_frame)->consts)
 #define FRAME_CO_NAMES  (alifFrame_getCode(_frame)->names)
 
+//294
+#define GLOBALS() _frame->globals
+#define BUILTINS() _frame->builtins
+#define LOCALS() _frame->locals
+#define CONSTS() alifFrame_getCode(_frame)->consts
+#define NAMES() alifFrame_getCode(_frame)->names
 
 
 // 396
