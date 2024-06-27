@@ -1,4 +1,4 @@
-﻿#include "alif.h"
+#include "alif.h"
 
 #include "AlifCore_AST.h"
 #include "AlifCore_Compile.h"

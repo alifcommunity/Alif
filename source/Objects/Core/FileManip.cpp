@@ -38,7 +38,7 @@ FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) {
 
 	if (!alifUnicode_FSConverter(path, &bytes))
 		return nullptr;
-	path_bytes = alifBytes_asString(bytes);
+	pathBytes = alifBytes_asString(bytes);
 
 	if (alifSys_audit("open", "Osi", path, mode, 0) < 0) {
 		ALIF_DECREF(bytes);

@@ -18,7 +18,7 @@
 #define MINUS					14	// -
 #define STAR					15	// *
 #define DOT						16	// .
-#define SLASHCIRCUMFLEX					17	// /^
+#define SLASHCIRCUMFLEX			17	// /^
 #define EQUAL					18	// =
 #define AMPER					19	// &
 #define LSHIFTEQUAL				20	// <<=
