@@ -1,4 +1,4 @@
-﻿#include "alif.h"
+#include "alif.h"
 #include "OpCode.h"
 
 #include "AlifCore_AST.h"
@@ -21,6 +21,7 @@ static AlifIntT compiler_body(AlifCompiler*, SourceLocation, StmtSeq*);
 static AlifSizeT dict_addObject(AlifObject*, AlifObject*);
 static AlifIntT codeGen_addOpI(InstructionSequence*, AlifIntT, AlifSizeT, SourceLocation);
 static AlifCodeObject* optimize_andAssemble(AlifCompiler*, AlifIntT);
+static AlifIntT compiler_visitExpression(AlifCompiler*, Expression*);
 
 
 typedef AlifFlowGraph AlifFlowGraph;
@@ -606,6 +607,114 @@ static AlifIntT addOp_binary(AlifCompiler* _compiler, SourceLocation _loc, Opera
 	return 1;
 }
 
+static AlifIntT compiler_nameOp(AlifCompiler* _compiler, SourceLocation _loc, AlifObject* _name, ExprCTX _ctx) { // 4187
+
+	enum { FastOp, GlobalOp, DeRefOp, NameOp } opType;
+
+	AlifObject* dict = _compiler->unit->data.names;
+
+	AlifObject* mangled = alif_mangle(_compiler->unit->private_, _name);
+	if (!mangled) return -1;
+
+	AlifIntT op = 0;
+	opType = NameOp;
+	AlifIntT scope = alifST_getScope(_compiler->unit->symTableEntry, mangled);
+	switch (scope) {
+		// code here
+	default:
+		break;
+	}
+
+	switch (opType)
+	{
+	case NameOp:
+		switch (_ctx)
+		{
+		case Load:
+			op = (_compiler->unit->symTableEntry->steType == AlifBlockType::ClassBlock
+				and _compiler->unit->inInlinedComp) ? LOAD_GLOBAL : LOAD_NAME;
+			break;
+		case Store:
+			op = STORE_NAME;
+			break;
+		case Del:
+			op = DELETE_NAME;
+			break;
+		}
+		break;
+	}
+
+	AlifSizeT arg = dict_addObject(dict, mangled);
+	ALIF_DECREF(mangled);
+	if (arg < 0) return -1;
+
+	return codeGen_addOpI(INSTR_SEQUANCE(_compiler), op, arg, _loc);
+}
+
+static AlifIntT maybeOptimize_methodCall(AlifCompiler* _compiler, Expression* _expr) { // 4931
+	AlifSizeT argsl{}, i{}, kwdsl{};
+	Expression* meth = _expr->V.call.func;
+	ExprSeq* args = _expr->V.call.args;
+	KeywordSeq* kwds = _expr->V.call.keywords;
+
+	/* Check that the call node is an attribute access */
+	if (meth->type != ExprType::AttributeK or meth->V.attribute.ctx != ExprCTX::Load) {
+		return 0;
+	}
+
+	/*
+	// code here
+	*/
+}
+
+static AlifIntT compiler_callHelper(AlifCompiler* _compiler, SourceLocation _loc, AlifIntT _n,
+	ExprSeq* _args, KeywordSeq* _keywords) { // 5189
+
+	//if(validate_keywords(_compiler, _keywords) == -1) return -1;
+
+	AlifSizeT nElts = SEQ_LEN(_args);
+	AlifSizeT nKwElts = SEQ_LEN(_keywords);
+
+	// code here
+
+
+	for (AlifSizeT i = 0; i < nElts; i++) {
+		Expression* elt = SEQ_GET(_args, i);
+		VISIT(_compiler, Expression, elt);
+	}
+	if (nKwElts) {
+		// code here
+	}
+	else {
+		ADDOP_I(_compiler, _loc, CALL, _n + nElts);
+	}
+
+	return 1;
+
+exCall:
+
+	return 0; // temp
+}
+
+static AlifIntT compiler_call(AlifCompiler* _compiler, Expression* _expr) { // 5026
+
+	//if(validate_keywords(_compiler, _expr->V.call.keywords) == -1) return -1;
+	AlifIntT ret = maybeOptimize_methodCall(_compiler, _expr);
+	if (ret < 0) {
+		return -1;
+	}
+	if (ret == 1) {
+		return 1;
+	}
+
+	//if(check_caller(_compiler, _expr->V.call.func) == -1) return -1;
+
+	VISIT(_compiler, Expression, _expr->V.call.func);
+	SourceLocation loc = LOC(_expr->V.call.func);
+	ADDOP(_compiler, loc, PUSH_NULL);
+	loc = LOC(_expr);
+	return compiler_callHelper(_compiler, loc, 0, _expr->V.call.args, _expr->V.call.keywords);
+}
 
 static AlifIntT compiler_visitExpression(AlifCompiler* _compiler, Expression* _expr) { // 6341
 
@@ -614,6 +723,15 @@ static AlifIntT compiler_visitExpression(AlifCompiler* _compiler, Expression* _e
 		VISIT(_compiler, Expression, _expr->V.binOp.left);
 		VISIT(_compiler, Expression, _expr->V.binOp.right);
 		ADDOP_BINARY(_compiler, loc, _expr->V.binOp.op);
+	}
+	else if (_expr->type == ExprType::CallK) {
+		return compiler_call(_compiler, _expr);
+	}
+	else if (_expr->type == ExprType::ConstantK) {
+		ADDOP_LOAD_CONST(_compiler, loc, _expr->V.constant.val);
+	}
+	else if (_expr->type == ExprType::NameK) {
+		return compiler_nameOp(_compiler, loc, _expr->V.name.name, _expr->V.name.ctx);
 	}
 
 
