@@ -1,4 +1,4 @@
-﻿#include "alif.h"
+#include "alif.h"
 
 #include "AlifCore_GetConsoleLine.h"
 #include "AlifCore_Memory.h"
@@ -56,13 +56,13 @@ AlifIntT alif_setLocaleAndWChar() {
 	}
 #endif // _WINDOWS
 
-	const char* locale = setlocale(LC_CTYPE, nullptr);
+	const char* locale = setlocale(LC_ALL, "ar.utf-8");
 	if (locale == nullptr) {
-		std::wcout << L"لم يستطع تهيئة الموقع" << std::endl;
+		std::wcout << L"لم يستطع تهيئة الموقع، تأكد من تثبيت ar.utf-8 على نظامك" << std::endl;
 		return -1;
 	}
 
-	setlocale(LC_CTYPE, locale);
+	setlocale(LC_ALL, locale);
 }
 
 AlifIntT alifArgv_asWStrList(AlifConfig* _config, AlifArgv* _args) {

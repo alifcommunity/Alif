@@ -1,4 +1,4 @@
-﻿#include "alif.h"
+#include "alif.h"
 
 #include "AlifCore_AlifToken.h"
 #include "ErrorCode.h"
@@ -680,7 +680,7 @@ letterQuote:
 			}
 			if (_tokInfo->done == E_DECODE) break;
 
-			if (wcs == EOF or (quoteSize == 1 and wcs == L'\n')) {
+			if (wcs == WEOF or (quoteSize == 1 and wcs == L'\n')) {
 				_tokInfo->cur = (wchar_t*)_tokInfo->start;
 				_tokInfo->cur++;
 				_tokInfo->lineStart = _tokInfo->multiLineStart;
@@ -806,9 +806,20 @@ letterQuote:
 		// code here
 
 
-
-
-
+		if (_tokInfo->level > 0) {
+			_tokInfo->level--;
+			AlifIntT opening = _tokInfo->parenStack[_tokInfo->level];
+			if (!_tokInfo->tokExtraTokens
+				and
+				((opening == L'(' and wcs == L')')
+				or
+				(opening == L'[' and wcs == L']')
+				or
+				(opening == L'{' and wcs == L'}')))
+			{
+				// code here
+			}
+		}
 
 		if (INSIDE_FSTRING(_tokInfo)) {
 			_currentTok->curlyBracDepth--;
