@@ -1,5 +1,14 @@
 #pragma once
 
+extern AlifInitObject _alifTupleType_;
+
+AlifObject* alifNew_tuple(AlifSizeT );
+AlifObject* alifTuple_getItem(AlifObject* , int64_t);
+AlifObject* alifTuple_setItem(AlifObject* , int64_t);
+AlifObject* alifTuple_getSlice(AlifObject*, int64_t, int64_t);
+AlifObject* tuple_pack(size_t, ...);
+
+
 class AlifTupleObject {
 public:
 	ALIFOBJECT_VAR_HEAD;
@@ -7,7 +16,6 @@ public:
 	AlifObject* items_[1]{};
 };
 
-extern AlifInitObject _alifTupleType_;
 
 #define ALIFTUPLE_CAST(_op) ALIF_CAST(AlifTupleObject*, (_op))
 
@@ -16,8 +24,6 @@ extern AlifInitObject _alifTupleType_;
                  //ALIFTYPE_FASTSUBCLASS(ALIF_TYPE(_op), ALIFTPFLAGS_TUPLE_SUBCLASS)
 #define ALIFTUPLE_CHECKEXACT(_op) ALIF_IS_TYPE((_op), &_alifTupleType_)
 
-AlifObject* alifNew_tuple(AlifSizeT);
-AlifObject* tuple_pack(size_t, ...);
 
 static inline AlifSizeT alifTuple_getSize(AlifObject* _op) {
 	AlifTupleObject* tuple = ALIFTUPLE_CAST(_op);

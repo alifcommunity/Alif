@@ -511,7 +511,7 @@ static int set_discard_key(AlifSetObject* _so, AlifObject* _key)
 static int set_update_dict_lock_held(AlifSetObject* _so, AlifObject* _other)
 {
 
-	int64_t dictSize = ((AlifDictObject*)_other)->size_;
+	int64_t dictSize = ((AlifDictObject*)_other)->used;
 	if ((_so->fill_ + dictSize) * 5 >= _so->mask_ * 3) {
 		if (set_table_resize(_so, (_so->used_ + dictSize) * 2) != 0) {
 			return -1;
@@ -521,8 +521,8 @@ static int set_update_dict_lock_held(AlifSetObject* _so, AlifObject* _other)
 	int64_t pos_ = 0;
 	AlifObject* key_;
 	AlifObject* value_;
-	size_t hash_;
-	while (alifDict_next(_other, &pos_, &key_, &value_, &hash_)) {
+	size_t hash_{};
+	while (alifDict_next(_other, &pos_, &key_, &value_)) {
 		if (set_add_entry(_so, key_, hash_)) {
 			return -1;
 		}

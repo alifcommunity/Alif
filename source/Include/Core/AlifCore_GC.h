@@ -24,6 +24,15 @@ static inline int alifSubObject_gcIsTracked(AlifObject* _op) {
 
 #define ALIFSUBOBJECT_GC_ISTRACKED(_op) alifSubObject_gcIsTracked(ALIF_CAST(AlifObject*, _op))
 
+static inline int alifObjectGC_mayBeTracked(AlifObject* _obj) {
+	if (!alifObject_isGC(_obj)) {
+		return 0;
+	}
+	if (ALIFTUPLE_CHECKEXACT(_obj)) {
+		return ALIFSUBOBJECT_GC_ISTRACKED(_obj);
+	}
+	return 1;
+}
 
 #define ALIFSUBGC_PREV_MASK_FINALIZED  1
 #define ALIFSUBGC_PREV_MASK_COLLECTING 2

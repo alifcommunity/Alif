@@ -331,7 +331,7 @@ static AlifObject* cFunction_call(AlifObject* _func, AlifObject* _args, AlifObje
 
     }
     else {
-        if (_kwArgs != nullptr && ((AlifDictObject*)_kwArgs)->size_ != 0) {
+        if (_kwArgs != nullptr && ((AlifDictObject*)_kwArgs)->used != 0) {
             return nullptr;
         }
 		result_ = (method_)(self_, _args);

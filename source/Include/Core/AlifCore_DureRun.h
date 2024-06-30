@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "AlifCore_Interpreter.h"
 #include "AlifCore_AlifThread.h"
@@ -46,6 +46,7 @@ public:
 
 	ImportDureRun imports;
 
+	class TypesRuntimeState types;
 
 	AlifStaticObjects staticObjects{};
 

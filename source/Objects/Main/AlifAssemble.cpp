@@ -132,7 +132,7 @@ static AlifObject* dictKeys_inorder(AlifObject* _dict, AlifSizeT _offset) { // 4
 	tuple = alifNew_tuple(size);
 	if (tuple == nullptr) return nullptr;
 
-	while (alifDict_next(_dict, &pos, &k, &v, nullptr)) {
+	while (alifDict_next(_dict, &pos, &k, &v)) {
 		AlifSizeT i = alifInteger_asSizeT(v);
 		if (i == -1
 			//and

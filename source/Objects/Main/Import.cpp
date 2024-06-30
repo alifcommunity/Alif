@@ -46,7 +46,31 @@ static AlifIntT initBuildin_modulesTable() {
 
 
 
+static AlifObject* importAdd_module(AlifThread* tstate, AlifObject* name)
+{
+	AlifObject* modules = tstate->interpreter->imports.modules_;
+	if (modules == NULL) {
+		return NULL;
+	}
 
+	AlifObject* m;
+	if (alifMapping_getOptionalItem(modules, name, &m) < 0) {
+		return NULL;
+	}
+	if (m != NULL && (m)) {
+		return m;
+	}
+	ALIF_XDECREF(m);
+	m = alifModule_newObject(name);
+	if (m == NULL)
+		return NULL;
+	//if (alifObject_setItem(modules, name, m) != 0) {
+		//ALIF_DECREF(m);
+		//return NULL;
+	//}
+
+	return m;
+}
 
 
 

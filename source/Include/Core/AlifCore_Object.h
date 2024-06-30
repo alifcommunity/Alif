@@ -5,7 +5,7 @@
 
 #define ALIFSUBOBJECT_HEAD_INIT(_type)       \
     {                                        \
-         ALIF_IMMORTAL_REFCENT,    \
+         ALIF_IMMORTAL_REFCNT,    \
          (_type),                 \
     } \
 
@@ -150,6 +150,13 @@ static inline void alifSubObject_gcUnTrack(
 #endif
 
 #define ALIFTYPE_IS_GC(t) alifSubType_hasFeature((t), ALIFTPFLAGS_HAVE_GC)
+
+static inline int alifSubObject_isGC(AlifObject* _obj)
+{
+	AlifTypeObject* type_ = ALIF_TYPE(_obj);
+	return (ALIFTYPE_IS_GC(type_)
+		&& (type_->isGC == NULL || type_->isGC(_obj)));
+}
 
 static inline size_t  alifSubType_preHeaderSize(AlifTypeObject* _tp)
 {
