@@ -27,21 +27,42 @@ public:
 	//int dlopenflags;
 //#endif
 	AlifObject* importFunc;
-	struct {
+	class {
+	public:
 		void* mutex_;
 		unsigned long thread_;
 		int level_;
 	} lock_;
-	struct {
+	class {
+	public:
 		int importLevel;
 		AlifTimeT accumulated_;
 		int header_;
 	} findAndLoad;
 };
 
+#  define ALIF_DLOPEN_FLAGS 0
+#  define DLOPENFLAGS_INIT
 
+#define IMPORTS_INIT \
+    { \
+        nullptr, \
+        nullptr, \
+        nullptr, \
+        0, \
+        0, \
+        nullptr, \
+        { \
+            NULL, \
+            -1, \
+            0, \
+        }, \
+        { \
+            1, \
+        }, \
+    }
 
-
+AlifObject* alifImport_initModules(AlifInterpreter* );
 
 
 extern AlifIntT alifImport_init();

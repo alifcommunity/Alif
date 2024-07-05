@@ -46,6 +46,16 @@ public:
 	uint8_t mutex;
 };
 
+AlifObject* alifSubType_getDict(AlifTypeObject* );
+
+static inline int alifType_isReady(AlifTypeObject* _type)
+{
+	return alifSubType_getDict(_type) != NULL;
+}
+
+AlifObject* alifType_getAttroImpl(AlifTypeObject*, AlifObject* , AlifIntT* );
+AlifObject* alifType_getAttro(AlifObject* , AlifObject*);
+
 
 extern AlifObject* alifType_getAttroImpl(AlifTypeObject*, AlifObject*, AlifIntT*);
 extern AlifObject* alifType_getAttro(AlifObject*, AlifObject*); // 179

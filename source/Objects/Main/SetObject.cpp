@@ -433,7 +433,7 @@ AlifTypeObject _alifSetIterType_ = {
 	0,                                          /* tp_as_mapping */
 	0,                                          /* tp_call */
 	0,                                          /* tp_str */
-	0, //Object_GenericGetAttr,                    /* tp_getattro */
+	alifObject_genericGetAttr,                    /* tp_getattro */
 	0,                                          /* tp_setattro */
 	0,                                          /* tp_as_buffer */
 	0, //ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,    /* tp_flags */

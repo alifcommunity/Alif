@@ -37,7 +37,7 @@ AlifTypeObject _alifGenericAliasType_ = {
 	0,
 	0,
 	0,
-	0,
+	alifObject_genericGetAttr,
 	0,
 	0,
 	ALIFTPFLAGS_DEFAULT | ALIFTPFLAGS_HAVE_GC | ALIFTPFLAGS_BASETYPE | ALIFTPFLAGS_HAVE_VECTORCALL,
@@ -75,10 +75,10 @@ AlifTypeObject _alifGenericAliasType_ = {
 
 
 
-static inline AlifObject* set_origClass(AlifObject* obj, AlifObject* self) { // 590
-	if (obj != nullptr) {
-		AlifObject* name = alifUStr_decodeStringToUTF8(L"__orig_class__");
-		if (alifObject_setAttr(obj, name, self) < 0) {
+static inline AlifObject* set_origClass(AlifObject* _obj, AlifObject* _self) { // 590
+	if (_obj != nullptr) {
+		AlifObject* name_ = alifUStr_decodeStringToUTF8(L"__orig_class__");
+		if (alifObject_setAttr(_obj, name_, _self) < 0) {
 			//if (!alifErr_exceptionMatches(alifExcAttributeError) and
 			//	!alifErr_exceptionMatches(alifExcTypeError))
 			//{
@@ -88,46 +88,46 @@ static inline AlifObject* set_origClass(AlifObject* obj, AlifObject* self) { // 
 			//alifErr_clear();
 		}
 	}
-	return obj;
+	return _obj;
 }
 
-static AlifObject* genericAlias_vectorCall(AlifObject* self,
-	AlifObject* const* args, AlifUSizeT nargsf, AlifObject* kwnames) { // 615
+static AlifObject* genericAlias_vectorCall(AlifObject* _self,
+	AlifObject* const* _args, AlifUSizeT _nargsf, AlifObject* _kwnames) { // 615
 
-	GenericAliasObject* alias = (GenericAliasObject*)self;
-	AlifObject* obj = alifVectorCall_function(alias->origin_)(alias->origin_, args, nargsf, kwnames);
-	return set_origClass(obj, self);
+	GenericAliasObject* alias_ = (GenericAliasObject*)_self;
+	AlifObject* obj_ = alifVectorCall_function(alias_->origin_)(alias_->origin_, _args, _nargsf, _kwnames);
+	return set_origClass(obj_, _self);
 }
 
-static inline AlifIntT setup_genericAlias(GenericAliasObject* alias, AlifObject* origin, AlifObject* args) { // 821
-	if (!ALIFTUPLE_CHECK(args)) {
-		args = tuple_pack(1, args);
-		if (args == nullptr) return 0;
+static inline AlifIntT setup_genericAlias(GenericAliasObject* _alias, AlifObject* _origin, AlifObject* _args) { // 821
+	if (!ALIFTUPLE_CHECK(_args)) {
+		_args = tuple_pack(1, _args);
+		if (_args == nullptr) return 0;
 	} else {
-		ALIF_INCREF(args);
+		ALIF_INCREF(_args);
 	}
 
-	alias->origin_ = ALIF_NEWREF(origin);
-	alias->args_ = args;
-	alias->parameters_ = nullptr;
-	alias->weakRefList = nullptr;
+	_alias->origin_ = ALIF_NEWREF(_origin);
+	_alias->args_ = _args;
+	_alias->parameters_ = nullptr;
+	_alias->weakRefList = nullptr;
 
-	if (alifVectorCall_function(origin) != nullptr) {
-		alias->vectorCall = genericAlias_vectorCall;
+	if (alifVectorCall_function(_origin) != nullptr) {
+		_alias->vectorCall = genericAlias_vectorCall;
 	} else {
-		alias->vectorCall = nullptr;
+		_alias->vectorCall = nullptr;
 	}
 
 	return 1;
 }
 
 AlifObject* alif_genericAlias(AlifObject* _origin, AlifObject* _args) { // 987
-	GenericAliasObject* alias = (GenericAliasObject*)alifType_genericAlloc((AlifTypeObject*)&_alifGenericAliasType_, 0);
-	if (alias == nullptr) return nullptr;
+	GenericAliasObject* _alias = (GenericAliasObject*)alifType_genericAlloc((AlifTypeObject*)&_alifGenericAliasType_, 0);
+	if (_alias == nullptr) return nullptr;
 
-	if (!setup_genericAlias(alias, _origin, _args)) {
-		ALIF_DECREF(alias);
+	if (!setup_genericAlias(_alias, _origin, _args)) {
+		ALIF_DECREF(_alias);
 		return nullptr;
 	}
-	return (AlifObject*)alias;
+	return (AlifObject*)_alias;
 }

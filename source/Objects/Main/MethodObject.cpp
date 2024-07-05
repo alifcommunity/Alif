@@ -164,7 +164,7 @@ AlifTypeObject _alifTypeCFunction_ = {
     (HashFunc)method_hash,                        /* tp_hash */
     cFunction_call,                             /* tp_call */
     0,
-    0,
+	alifObject_genericGetAttr,
     0,                                          /* tp_str */
     0,                    /* tp_getattro */
     0,                                          /* tp_setattro */
@@ -202,7 +202,7 @@ AlifInitObject _alifCppMethodType_ = {
     0,
     0,                                          
     0,                    
-    0,                                         
+	alifObject_genericGetAttr,
     0,                                          
     0,                 
     0,                                          

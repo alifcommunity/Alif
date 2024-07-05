@@ -269,7 +269,7 @@ AlifTypeObject _typeSlice_ = {
     (HashFunc)sliceHash,                 
     0,                                   
     0,                                  
-    0, //alifObject_genericGetAttr,               
+    alifObject_genericGetAttr,               
     0,                                     
     0,  
     0,              

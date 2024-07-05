@@ -294,7 +294,7 @@ AlifObject* alifModule_getDict(AlifObject* _m)
 AlifTypeObject _alifModuleType_ = {
 	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	L"module",                                   /* tp_name */
-	0, //sizeof(AlifModuleObject),                     /* tp_basicsize */
+	sizeof(AlifModuleObject),                     /* tp_basicsize */
 	0,                                          /* tp_itemsize */
 	0, //(destructor)module_dealloc,                 /* tp_dealloc */
 	0,                                          /* tp_vectorcall_offset */
@@ -307,8 +307,8 @@ AlifTypeObject _alifModuleType_ = {
 	0,                                          /* tp_hash */
 	0,                                          /* tp_call */
 	0,                                          /* tp_str */
+	alifObject_genericGetAttr,                    /* tp_setattro */
 	0, //(getattrofunc)alif_module_getattro,          /* tp_getattro */
-	0, //alifObject_GenericSetAttr,                    /* tp_setattro */
 	0,                                          /* tp_as_buffer */
 	ALIFTPFLAGS_DEFAULT | ALIFTPFLAGS_HAVE_GC |
 		ALIFTPFLAGS_BASETYPE,                    /* tp_flags */

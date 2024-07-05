@@ -629,7 +629,7 @@ AlifTypeObject _alifIntegerType_ = {
 	(HashFunc)integer_hash,
 	0,
 	0,
-	0,
+	alifObject_genericGetAttr,
 	0,
 	0,
 	0,

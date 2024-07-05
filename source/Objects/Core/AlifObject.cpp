@@ -99,20 +99,20 @@ static AlifObject* do_richCompare(AlifObject* _v, AlifObject* _w, int _op)
 		(f_ = ALIF_TYPE(_w)->richCompare) != nullptr) {
 		checkedReverseOp = 1;
 		res_ = (*f_)(_w, _v, _alifSwappedOp_[_op]);
-		//if (res_ != ALIF_NOTIMPLEMENT)
-			//return res_;
+		if (res_ != ALIF_NOTIMPLEMENTED)
+			return res_;
 		ALIF_DECREF(res_);
 	}
 	if ((f_ = ALIF_TYPE(_v)->richCompare) != nullptr) {
 		res_ = (*f_)(_v, _w, _op);
-		//if (res_ != ALIF_NOTIMPLEMENT)
-			//return res_;
+		if (res_ != ALIF_NOTIMPLEMENTED)
+			return res_;
 		ALIF_DECREF(res_);
 	}
 	if (!checkedReverseOp && (f_ = ALIF_TYPE(_w)->richCompare) != nullptr) {
 		res_ = (*f_)(_w, _v, _alifSwappedOp_[_op]);
-		//if (res_ != ALIF_NOTIMPLEMENT)
-			//return res_;
+		if (res_ != ALIF_NOTIMPLEMENTED)
+			return res_;
 		ALIF_DECREF(res_);
 	}
 	/* If neither object implements it, provide a sensible default
@@ -182,67 +182,15 @@ int64_t alifObject_hash(AlifObject* _v)
 	if (tp_->hash_ != nullptr)
 		return (*tp_->hash_)(_v);
 
-	//if (!alifType_isReady(tp)) {
-		//if (alifType_ready(tp) < 0)
-			//return -1;
-		//if (tp_->hash_ != nullptr)
-			//return (*tp_->hash_)(_v);
-	//}
+	if (!alifType_isReady(tp_)) {
+		if (alifType_ready(tp_) < 0)
+			return -1;
+		if (tp_->hash_ != nullptr)
+			return (*tp_->hash_)(_v);
+	}
 	return alifObject_hashNotImplemented(_v);
 }
 
-//int alifObject_getOptionalAttr(AlifObject* v, AlifObject* name, AlifObject** result)
-//{
-//	AlifTypeObject* tp = ALIF_TYPE(v);
-//
-//	if (!ALIFUSTR_CHECK(name)) {
-//		*result = NULL;
-//		return -1;
-//	}
-//
-//	if (tp->getAttro == AlifObject_GenericGetAttr) {
-//		*result = alifObject_genericGetAttrWithDict(v, name, NULL, 1);
-//		if (*result != NULL) {
-//			return 1;
-//		}
-//		return 0;
-//	}
-//	if (tp->getAttro == _Py_type_getattro) {
-//		int supress_missing_attribute_exception = 0;
-//		*result = _Py_type_getattro_impl((AlifTypeObject*)v, name, &supress_missing_attribute_exception);
-//		if (supress_missing_attribute_exception) {
-//			return 0;
-//		}
-//	}
-//	else if (tp->getAttro == (GetAttroFunc)_Py_module_getattro) {
-//		*result = _Py_module_getattro_impl((AlifModuleObject*)v, name, 1);
-//		if (*result != NULL) {
-//			return 1;
-//		}
-//		return 0;
-//	}
-//	else if (tp->getAttro != NULL) {
-//		*result = (*tp->getAttro)(v, name);
-//	}
-//	else if (tp->getAttr != NULL) {
-//		const wchar_t* name_str = alifUStr_asUTF8(name);
-//		if (name_str == NULL) {
-//			*result = NULL;
-//			return -1;
-//		}
-//		*result = (*tp->getAttr)(v, (wchar_t*)name_str);
-//	}
-//	else {
-//		*result = NULL;
-//		return 0;
-//	}
-//
-//	if (*result != NULL) {
-//		return 1;
-//	}
-//	// error
-//	return 0;
-//}
 
 AlifObject* alifObject_getAttrString(AlifObject* _v, const wchar_t* _name)
 {
@@ -284,119 +232,6 @@ AlifObject* alifObject_selfIter(AlifObject* _obj)
 {
 	return ALIF_NEWREF(_obj);
 }
-
-//AlifObject* alifObject_genericGetAttrWithDict(AlifObject* obj, AlifObject* name,
-//	AlifObject* dict, int suppress)
-//{
-//
-//	AlifTypeObject* tp = ALIF_TYPE(obj);
-//	AlifObject* descr = NULL;
-//	AlifObject* res = NULL;
-//	DescrGetFunc f;
-//
-//	if (!ALIFUSTR_CHECK(name)) {
-//		return NULL;
-//	}
-//	ALIF_INCREF(name);
-//
-//	//if (!alifType_isRea(tp)) {
-//		//if (alifType_ready(tp) < 0)
-//			//goto done;
-//	//}
-//
-//	descr = _PyType_Lookup(tp, name);
-//
-//	f = NULL;
-//	if (descr != NULL) {
-//		Py_INCREF(descr);
-//		f = Py_TYPE(descr)->tp_descr_get;
-//		if (f != NULL && PyDescr_IsData(descr)) {
-//			res = f(descr, obj, (AlifObject*)Py_TYPE(obj));
-//			if (res == NULL && suppress &&
-//				PyErr_ExceptionMatches(PyExc_AttributeError)) {
-//				PyErr_Clear();
-//			}
-//			goto done;
-//		}
-//	}
-//	if (dict == NULL) {
-//		if ((tp->tp_flags & Py_TPFLAGS_INLINE_VALUES) && _AlifObject_InlineValues(obj)->valid) {
-//			PyDictValues* values = _AlifObject_InlineValues(obj);
-//			if (PyUnicode_CheckExact(name)) {
-//				res = _AlifObject_GetInstanceAttribute(obj, values, name);
-//				if (res != NULL) {
-//					goto done;
-//				}
-//			}
-//			else {
-//				dict = (AlifObject*)_AlifObject_MakeDictFromInstanceAttributes(obj);
-//				if (dict == NULL) {
-//					res = NULL;
-//					goto done;
-//				}
-//				_AlifObject_ManagedDictPointer(obj)->dict = (PyDictObject*)dict;
-//			}
-//		}
-//		else if ((tp->tp_flags & Py_TPFLAGS_MANAGED_DICT)) {
-//			PyManagedDictPointer* managed_dict = _AlifObject_ManagedDictPointer(obj);
-//			dict = (AlifObject*)managed_dict->dict;
-//		}
-//		else {
-//			AlifObject** dictptr = _AlifObject_ComputedDictPointer(obj);
-//			if (dictptr) {
-//				dict = *dictptr;
-//			}
-//		}
-//	}
-//	if (dict != NULL) {
-//		Py_INCREF(dict);
-//		int rc = PyDict_GetItemRef(dict, name, &res);
-//		Py_DECREF(dict);
-//		if (res != NULL) {
-//			goto done;
-//		}
-//		else if (rc < 0) {
-//			if (suppress && PyErr_ExceptionMatches(PyExc_AttributeError)) {
-//				PyErr_Clear();
-//			}
-//			else {
-//				goto done;
-//			}
-//		}
-//	}
-//
-//	if (f != NULL) {
-//		res = f(descr, obj, (AlifObject*)Py_TYPE(obj));
-//		if (res == NULL && suppress &&
-//			PyErr_ExceptionMatches(PyExc_AttributeError)) {
-//			PyErr_Clear();
-//		}
-//		goto done;
-//	}
-//
-//	if (descr != NULL) {
-//		res = descr;
-//		descr = NULL;
-//		goto done;
-//	}
-//
-//	if (!suppress) {
-//		PyErr_Format(PyExc_AttributeError,
-//			"'%.100s' object has no attribute '%U'",
-//			tp->tp_name, name);
-//
-//		set_attribute_error_context(obj, name);
-//	}
-//done:
-//	ALIF_XDECREF(descr);
-//	ALIF_DECREF(name);
-//	return res;
-//}
-
-//AlifObject* AlifObject_GenericGetAttr(AlifObject* obj, AlifObject* name)
-//{
-	//return alifObject_genericGetAttrWithDict(obj, name, NULL, 0);
-//}
 
 int alifObject_isTrue(AlifObject* _v)
 {
@@ -639,11 +474,6 @@ void alifSub_setRefcnt(AlifObject* _ob, int64_t _ref)
 }
 
 
-
-
-
-
-
 AlifIntT alifObject_getOptionalAttr(AlifObject* v, AlifObject* name, AlifObject** result) { // 1196
 	AlifTypeObject* tp = ALIF_TYPE(v);
 
@@ -665,7 +495,7 @@ AlifIntT alifObject_getOptionalAttr(AlifObject* v, AlifObject* name, AlifObject*
 		//}
 		return 0;
 	}
-	if (tp->getAttro == alifType_getAttro) {
+	else if (tp->getAttro == alifType_getAttro) {
 		int supress_missing_attribute_exception = 0;
 		*result = alifType_getAttroImpl((AlifTypeObject*)v, name, &supress_missing_attribute_exception);
 		if (supress_missing_attribute_exception) {
@@ -776,24 +606,24 @@ AlifObject* alifSubObject_genericGetAttrWithDict(AlifObject* obj, AlifObject* na
 	}
 	ALIF_INCREF(name);
 
-	//if (!alifType_isReady(tp)) {
-	//	if (alifType_ready(tp) < 0)
-	//		goto done;
-	//}
+	if (!alifType_isReady(tp)) {
+		if (alifType_ready(tp) < 0)
+			goto done;
+	} 
 
-	//descr = alifType_lookupRef(tp, name);
+	descr = alifType_lookup(tp, name);
 
 	f = nullptr;
 	if (descr != nullptr) {
 		f = ALIF_TYPE(descr)->descrGet;
-		//if (f != nullptr and alifDescr_isData(descr)) {
-		//	res = f(descr, obj, (AlifObject*)ALIF_TYPE(obj));
+		if (f != nullptr and alifDescr_isData(descr)) {
+			res = f(descr, obj, (AlifObject*)ALIF_TYPE(obj));
 		//	if (res == nullptr and suppress and
 		//		alifErr_exceptionMatches(alifExcAttributeError)) {
 		//		alifErr_clear();
 		//	}
-		//	goto done;
-		//}
+			goto done;
+		}
 	}
 	if (dict == nullptr) {
 		if ((tp->flags_ & ALIFTPFLAGS_INLINE_VALUES)) {
@@ -814,10 +644,10 @@ AlifObject* alifSubObject_genericGetAttrWithDict(AlifObject* obj, AlifObject* na
 			//dict = (AlifObject*)alifObject_getManagedDict(obj);
 		}
 		else {
-			//AlifObject** dictptr = alifObject_computedDictPointer(obj);
-			//if (dictptr) {
-			//	dict = *dictptr;
-			//}
+			AlifObject** dictptr = alifSubObject_computedDictPointer(obj);
+			if (dictptr) {
+				dict = *dictptr;
+			}
 		}
 	}
 	if (dict != nullptr) {

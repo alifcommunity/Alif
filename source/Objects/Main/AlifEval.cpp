@@ -47,7 +47,7 @@ AlifIntT alif_checkRecursiveCall(AlifThread* _thread, const wchar_t* _where)
 }
 
 
-AlifObject* alifEval_evalCode(AlifObject* _co) { // 572
+AlifObject* alifEval_evalCode(AlifObject* _co, AlifObject* globals, AlifObject* locals) { // 572
 	AlifThread* thread = alifThread_get();
 	//if (_locals == nullptr) {
 	//	_locals = _globals;
@@ -56,7 +56,7 @@ AlifObject* alifEval_evalCode(AlifObject* _co) { // 572
 	//if (builtins == nullptr) return nullptr;
 
 	AlifFrameConstructor desc = {
-		nullptr,
+		globals,
 		nullptr,
 		((AlifCodeObject*)_co)->name,
 		((AlifCodeObject*)_co)->name,
@@ -525,7 +525,7 @@ AlifInterpreterFrame* alifEvalFrame_initAndPush(AlifThread* _thread, AlifFunctio
 	return frame;
 fail:
 	ALIF_DECREF(_func);
-	//ALIF_XDECREF(_locals);
+	ALIF_XDECREF(_locals);
 	for (size_t i = 0; i < _argCount; i++) {
 		ALIF_DECREF(_args[i]);
 	}

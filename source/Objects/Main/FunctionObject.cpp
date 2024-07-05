@@ -10,9 +10,9 @@ AlifFunctionObject* alifFunction_fromConstructor(AlifFrameConstructor* _constr) 
 
 	AlifObject* module{};
 	AlifObject* name = alifUStr_decodeStringToUTF8(L"__name__"); // temp
-	//if (alifDict_getItemRef(_constr->fcGlobals, name, &module) < 0) {
-	//	return nullptr;
-	//}
+	if (alifDict_getItemRef(_constr->fcGlobals, name, &module) < 0) {
+		return nullptr;
+	}
 
 	AlifFunctionObject* op = ALIFOBJECT_GC_NEW(AlifFunctionObject, &_alifFunctionType_);
 	if (op == nullptr) {
@@ -136,7 +136,7 @@ AlifTypeObject _alifFunctionType_ = {
     0,                                          /* tp_hash */
     0, //Vectorcall_Call,                          /* tp_call */
     0,                                          /* tp_str */
-    0,                                          /* tp_getattro */
+	alifObject_genericGetAttr,                                          /* tp_getattro */
     0,                                          /* tp_setattro */
     0,
 	ALIFTPFLAGS_DEFAULT | ALIFTPFLAGS_HAVE_GC |

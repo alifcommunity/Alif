@@ -1,5 +1,9 @@
 #pragma once
 
+int alifDictDelItem_knownHash(AlifObject* , AlifObject* , size_t );
+
+int alifDictContains_knownHash(AlifObject* , AlifObject* , size_t);
+
 #define ALIFDICT_HASSPLITTABLE(d) ((d)->values != NULL)
 
 

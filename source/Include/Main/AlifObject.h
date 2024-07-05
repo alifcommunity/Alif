@@ -528,6 +528,9 @@ public:
 	SpecializationCache specCache;
 };
 
+
+AlifObject* alifType_lookup(AlifTypeObject* , AlifObject* );
+
 #define ALIF_SETREF(_dst, _src) \
     do { \
         AlifObject **tmpDstPtr = ((AlifObject**)(&_dst)); \

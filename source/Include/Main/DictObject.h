@@ -34,6 +34,8 @@ AlifObject* alifDictGetItem_knownHash(AlifObject* , AlifObject* , size_t );
 
 #define ALIFDICT_GET_SIZE(_op) (((AlifDictObject*)_op)->used)
 
+int alifDict_containsString(AlifObject*, const wchar_t*);
+
 #define ALIF_FOREACH_DICT_EVENT(V) \
     V(ADDED)                     \
     V(MODIFIED)                  \

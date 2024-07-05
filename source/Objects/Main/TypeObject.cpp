@@ -68,6 +68,17 @@ static inline AlifObject* lookupType_dict(AlifTypeObject* _self)
 	return _self->dict_;
 }
 
+AlifObject* alifSubType_getDict(AlifTypeObject* _self)
+{
+	return lookupType_dict(_self);
+}
+
+AlifObject* alifType_getDict(AlifTypeObject* _self)
+{
+	AlifObject* dict_ = lookupType_dict(_self);
+	return alifSub_xNewRef(dict_);
+}
+
 static inline AlifObject* lookupType_bases(AlifTypeObject* _self)
 {
 	return _self->bases_;
@@ -373,7 +384,7 @@ AlifInitObject _alifTypeType_ = {
     0,
     0,
     0,
-    0,
+	alifObject_genericGetAttr,
     0,
     0,
     0,
@@ -409,27 +420,27 @@ AlifInitObject _alifTypeType_ = {
 
 
 
-AlifObject* alifType_getAttroImpl(AlifTypeObject* type, AlifObject* name, AlifIntT* suppress_missing_attribute) { // 5289
+AlifObject* alifType_getAttroImpl(AlifTypeObject* type, AlifObject* _name, AlifIntT* _suppressMissingAttribute) { // 5289
 	AlifTypeObject* metatype = ALIF_TYPE(type);
 	AlifObject* metaAttribute{}, * attribute{};
 	DescrGetFunc metaGet{};
 	AlifObject* res{};
 
-	if (!ALIFUSTR_CHECK(name)) {
+	if (!ALIFUSTR_CHECK(_name)) {
 		//alifErr_format(alifExcTypeError,
-		//	"attribute name must be string, not '%.200s'",
-		//	ALIF_TYPE(name)->name_);
+		//	"attribute _name must be string, not '%.200s'",
+		//	ALIF_TYPE(_name)->name_);
 		return nullptr;
 	}
 
-	//if (!alifType_isReady(type)) {
-	//	if (alifType_ready(type) < 0)
-	//		return nullptr;
-	//}
+	if (!alifType_isReady(type)) {
+		if (alifType_ready(type) < 0)
+			return nullptr;
+	}
 
 	metaGet = nullptr;
 
-	//meta_attribute = alifType_lookupRef(metatype, name);
+	//meta_attribute = alifType_lookupRef(metatype, _name);
 
 	if (metaAttribute != nullptr) {
 		metaGet = ALIF_TYPE(metaAttribute)->descrGet;
@@ -443,7 +454,7 @@ AlifObject* alifType_getAttroImpl(AlifTypeObject* type, AlifObject* name, AlifIn
 		}
 	}
 
-	//attribute = alifType_lookupRef(type, name);
+	attribute = alifType_lookup(type, _name);
 	if (attribute != nullptr) {
 		DescrGetFunc local_get = ALIF_TYPE(attribute)->descrGet;
 
@@ -472,20 +483,20 @@ AlifObject* alifType_getAttroImpl(AlifTypeObject* type, AlifObject* name, AlifIn
 	}
 
 	/* Give up */
-	if (suppress_missing_attribute == nullptr) {
+	if (_suppressMissingAttribute == nullptr) {
 		//alifErr_format(alifExcAttributeError,
 		//	"type object '%.100s' has no attribute '%U'",
-		//	type->name_, name);
+		//	type->name_, _name);
 	}
 	else {
-		*suppress_missing_attribute = 1;
+		*_suppressMissingAttribute = 1;
 	}
 	return nullptr;
 }
 
 
-AlifObject* alifType_getAttro(AlifObject* type, AlifObject* name) { // 5381
-	return alifType_getAttroImpl((AlifTypeObject*)type, name, nullptr);
+AlifObject* alifType_getAttro(AlifObject* type, AlifObject* _name) { // 5381
+	return alifType_getAttroImpl((AlifTypeObject*)type, _name, nullptr);
 }
 
 int alifType_ready(AlifTypeObject* _type) // 7906
@@ -533,7 +544,7 @@ AlifTypeObject _alifBaseObjectType_ = {
 	0,                      
 	0,                      
 	0,                      
-	0,                      
+	alifObject_genericGetAttr,
 	0,                    
 	0,                    
 	ALIFTPFLAGS_DEFAULT | ALIFTPFLAGS_BASETYPE,  

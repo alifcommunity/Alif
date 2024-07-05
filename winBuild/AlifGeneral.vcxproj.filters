@@ -328,8 +328,10 @@
     <ClCompile Include="..\source\Objects\Main\DescrObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-
     <ClCompile Include="..\source\Objects\Main\ModuleObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Objects\Main\SysModule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
