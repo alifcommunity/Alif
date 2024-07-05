@@ -222,6 +222,12 @@ int64_t alifInteger_asLongLong(AlifObject* _object) {
 
 }
 
+#define CHECK_BINOP(v,w)                                \
+    do {                                                \
+        if (!(ALIFINTEGER_CHECK(v)) || !ALIFINTEGER_CHECK(w))       \
+            return ALIF_NOTIMPLEMENTED;                   \
+    } while(0)
+
 void flipSign(AlifIntegerObject* _num)
 {
 	_num->sign_ = !_num->sign_;
@@ -491,12 +497,30 @@ static AlifObject* integer_compare(AlifObject* _a, AlifObject* _b, int _op) {
 	long result_;
 	AlifIntegerObject* v_ = (AlifIntegerObject*)_a;
 	AlifIntegerObject* w_ = (AlifIntegerObject*)_b;
-
+	CHECK_BINOP(_a,_b);
 	if (_a == _b) {
 		result_ = 0;
 	}
 	else {
-		result_ = 1;
+
+		// Compare the sign first
+		if (v_->sign_ != w_->sign_) {
+			result_ = v_->sign_ ? -1 : 1; // v_ is negative and w_ is positive, or vice versa
+		}
+		else {
+			// Both have the same sign, compare the digits
+			if (v_->digits_ == w_->digits_) {
+				result_ = 0;
+			}
+			else if (v_->digits_ < w_->digits_) {
+				result_ = v_->sign_ ? 1 : -1; // If both are negative, larger digits mean smaller value
+			}
+			else {
+				result_ = v_->sign_ ? -1 : 1; // If both are negative, smaller digits mean larger value
+			}
+		}
+
+		//result_ = 1;
 	}
 
 	ALIF_RETURN_RICHCOMPARE(result_, 0 , _op);
@@ -632,24 +656,26 @@ AlifTypeObject _alifIntegerType_ = {
 	alifObject_genericGetAttr,
 	0,
 	0,
-	0,
+	ALIFTPFLAGS_DEFAULT | ALIFTPFLAGS_BASETYPE |
+	ALIFTPFLAGS_LONG_SUBCLASS |
+	ALIFSUBTPFLAGS_MATCH_SELF, 
 	0,
 	0,
 	0,
 	integer_compare,
-	0,                                    
 	0,                          
 	0,                              
-	_integerMethods_,                             
 	0,                             
-	_integerGetSet_,                            
+	_integerMethods_,                             
 	0,                          
+	_integerGetSet_,                            
 	0,                          
 	0,                               
 	0,                               
 	0,                                
 	0,                          
 	0,                           
+	0,
 	0,
 	alifMem_objFree,
 };
