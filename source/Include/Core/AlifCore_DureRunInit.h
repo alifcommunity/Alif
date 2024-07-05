@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AlifCore_Import.h"
 
 #define ALIF_DURERUNSTATE_INIT(dureRun) \
 	{		                            \
@@ -16,18 +17,23 @@
         {0, nullptr},        \
         {nullptr},              \
 		{},	\
+		{}, \
         ALIF_INTERPRETERSTATE_INIT(_dureRun_.mainInterpreter), \
 	} \
 
 #define ALIF_INTERPRETERSTATE_INIT(interpreter) \
     { \
-         nullptr,                       \
+         0,                       \
          0,                             \
          0,                             \
          0, 0,                       \
         {                               \
             0, nullptr, nullptr, 0, 0,   \
         },                               \
-        nullptr,                        \
-        0,              \
+        {},              \
+        {},              \
+        {},              \
+        {},              \
+        {},              \
+        IMPORTS_INIT,    \
     } \

@@ -2235,7 +2235,7 @@ AlifTypeObject _alifListType_ = {
 	(HashFunc)alifObject_hashNotImplemented,
 	0,
 	0,
-	0,
+	alifObject_genericGetAttr,
 	0,
 	0,
 	ALIFTPFLAGS_DEFAULT | ALIFTPFLAGS_HAVE_GC | ALIFTPFLAGS_BASETYPE |

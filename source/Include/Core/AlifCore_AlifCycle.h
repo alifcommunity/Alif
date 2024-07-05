@@ -1,9 +1,9 @@
-﻿#pragma once
+#pragma once
 
 #include "AlifCore_DureRun.h"
 
 
-
+int alifSys_create(AlifThread* , AlifObject** );
 
 AlifIntT alifSubGC_init(AlifInterpreter*);
 

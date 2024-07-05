@@ -2935,7 +2935,9 @@ AlifTypeObject _alifUStrType_ = {
 	0,      
 	0,                            
 	0,                             
-	0,
+		ALIFTPFLAGS_DEFAULT | ALIFTPFLAGS_BASETYPE |
+		ALIFTPFLAGS_USTR_SUBCLASS |
+		ALIFSUBTPFLAGS_MATCH_SELF,
 	0,               
 	0, 
 	0,

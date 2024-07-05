@@ -87,6 +87,10 @@ void alifObject_gcUnTrack(void* _opRaw)
 	}
 }
 
+int alifObject_isGC(AlifObject* _obj)
+{
+	return alifSubObject_isGC(_obj);
+}
 
 void alifSubObjectGC_link(AlifObject* _gc) { // 1983
 	AlifGCHead* gc = AS_GC(_gc);

@@ -204,7 +204,7 @@ static AlifObject* list_toDict(AlifObject* _list) { // 485
 			return nullptr;
 		}
 		k = ALIFLIST_GET_ITEM(_list, i);
-		if (dict_setItem((AlifDictObject*)dict, k, v) < 0) {
+		if (alifDict_setItem(dict, k, v) < 0) {
 			ALIF_DECREF(v);
 			ALIF_DECREF(dict);
 			return nullptr;
@@ -235,7 +235,7 @@ static AlifObject* dict_byType(AlifObject* _src, AlifIntT _scopeType, AlifIntT _
 	for (AlifSizeT keyIdx = 0; keyIdx < numKeys; keyIdx++) {
 		long vi{};
 		k = ALIFLIST_GET_ITEM(sortedKeys, keyIdx);
-		v = dict_getItem(_src, k); // alifDict_getItemWithError
+		v = alifDict_getItem(_src, k); // alifDict_getItemWithError
 		vi = alifInteger_asLong(v); // ALIFLONG_AS_LONG
 		scope = (vi >> SCOPE_OFFSET) & SCOPE_MASK;
 
@@ -247,7 +247,7 @@ static AlifObject* dict_byType(AlifObject* _src, AlifIntT _scopeType, AlifIntT _
 				return nullptr;
 			}
 			i++;
-			if (dict_setItem((AlifDictObject*)dest, k, item) < 0) {
+			if (alifDict_setItem(dest, k, item) < 0) {
 				ALIF_DECREF(sortedKeys);
 				ALIF_DECREF(item);
 				ALIF_DECREF(dest);
@@ -274,7 +274,7 @@ static AlifSizeT dict_addObject(AlifObject* _dict, AlifObject* _obj) { // 830
 		v = alifInteger_fromLongLong(arg);
 		if (!v) return -1;
 
-		if (dict_setItem((AlifDictObject*)_dict, _obj, v) < 0) {
+		if (alifDict_setItem(_dict, _obj, v) < 0) {
 			ALIF_DECREF(v);
 			return -1;
 		}
@@ -821,7 +821,7 @@ static AlifObject* constsDict_keysInorder(AlifObject* _dict) { // 7515
 	consts = alifNew_list(size);
 	if (consts == nullptr) return nullptr;
 
-	while (alifDict_next(_dict, &pos, &k, &v, 0)) {
+	while (alifDict_next(_dict, &pos, &k, &v)) {
 		i = alifInteger_asLong(v);
 		if (ALIFTUPLE_CHECKEXACT(k)) {
 			k = ALIFTUPLE_GET_ITEM(k, 1);

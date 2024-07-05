@@ -6,7 +6,7 @@
 
 //#if SIZEOF_VOID_P > 4
 
-#define ALIF_IMMORTAL_REFCENT ALIF_CAST(int64_t, UINT_MAX)
+#define ALIF_IMMORTAL_REFCNT ALIF_CAST(int64_t, UINT_MAX)
 
 //#else
 //#define ALIF_IMMORTAL_REFCNT ALIF_CAST(int64_t, UINT_MAX >> 2)
@@ -15,7 +15,7 @@
 
 #define ALIFOBJECT_HEAD_INIT(_type)			\
     {										\
-        ALIF_IMMORTAL_REFCENT ,		\
+        ALIF_IMMORTAL_REFCNT ,		\
         (_type)                    \
     } \
 
@@ -345,6 +345,10 @@ extern AlifObject _alifNotImplemented_;
 
 
 
+//static inline int alifType_check(AlifObject* _op) {
+//	return ALIFTYPE_FASTSUBCLASS(ALIF_TYPE(_op), ALIFTPFLAGS_TYPE_SUBCLASS);
+//}
+
 void alifSub_newReference(AlifObject*);
 
 class AlifIdentifier {
@@ -500,7 +504,7 @@ public:
 	VectorCallFunc vectorCall;
 
 	unsigned char watched_;
-
+	uint16_t versionsUsed;
 };
 
 class SpecializationCache {
@@ -508,18 +512,6 @@ public:
 	AlifObject* getItem;
 	uint32_t getItemVersion;
 	AlifObject* init_;
-};
-
-class AlifDictKeysObject {
-public:
-	AlifSizeT refCnt{};
-	uint8_t log2Size{};
-	uint8_t log2IndexBytes{};
-	uint8_t kind{};
-	uint32_t version{};
-	AlifSizeT usable{};
-	AlifSizeT nentries{};
-	char indices[];
 };
 
 class AlifHeapTypeObject {
@@ -530,11 +522,14 @@ public:
 	AlifSequenceMethods sequence_;
 	AlifBufferProcs buffer_;
 	AlifObject* name_, * slots_, * qualname_;
-	AlifDictKeysObject* cachedKeys{};
+	class DictKeysObject* cachedKeys{};
 	AlifObject* module_;
 	char* typeName;
 	SpecializationCache specCache;
 };
+
+
+AlifObject* alifType_lookup(AlifTypeObject* , AlifObject* );
 
 #define ALIF_SETREF(_dst, _src) \
     do { \
@@ -582,7 +577,7 @@ static inline int alifType_check(AlifObject* op) {
 }
 #define ALIFTYPE_CHECK(op) alifType_check(ALIFOBJECT_CAST(op))
 
-
+int alifType_ready(AlifTypeObject* );
 
 AlifIntT alifObject_getOptionalAttr(AlifObject*, AlifObject*, AlifObject**);
 

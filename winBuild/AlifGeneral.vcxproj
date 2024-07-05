@@ -124,6 +124,7 @@
     <ClCompile Include="..\source\Objects\Main\SliceObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\Specialize.cpp" />
     <ClCompile Include="..\source\Objects\Main\StringParser.cpp" />
+    <ClCompile Include="..\source\Objects\Main\SysModule.cpp" />
     <ClCompile Include="..\source\Objects\Main\Thread.cpp" />
     <ClCompile Include="..\source\Objects\Main\TupleObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\TypeObject.cpp" />

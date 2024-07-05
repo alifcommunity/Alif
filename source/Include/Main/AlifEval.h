@@ -3,7 +3,7 @@
 
 
 
-AlifObject* alifEval_evalCode(AlifObject*);
+AlifObject* alifEval_evalCode(AlifObject*, AlifObject* , AlifObject*);
 
 
 

@@ -560,7 +560,7 @@ AlifObject* const* alifArg_unpackKeywords(AlifObject* const* args, int64_t nArgs
     maxArgs = posonly + (int)((AlifVarObject*)kwTuple)->size_;
 
     if (kwArgs != nullptr) {
-        nKwArgs = ((AlifDictObject*)kwArgs)->size_;
+        nKwArgs = ((AlifDictObject*)kwArgs)->used;
     }
     else if (kwNames != nullptr) {
         nKwArgs = ((AlifVarObject*)kwNames)->size_;
@@ -629,7 +629,7 @@ AlifObject* const* alifArg_unpackKeywords(AlifObject* const* args, int64_t nArgs
         if (nKwArgs) {
             keyword = ((AlifTupleObject*)kwTuple)->items_[i - posonly];
             if (kwArgs != nullptr) {
-                currentArg = dict_getItem(kwArgs, keyword);
+                currentArg = alifDict_getItem(kwArgs, keyword);
                 if (currentArg == nullptr) {
                     return nullptr;
                 }
@@ -669,7 +669,7 @@ AlifObject* const* alifArg_unpackKeywords(AlifObject* const* args, int64_t nArgs
             AlifObject* currentArg;
             keyword = ((AlifTupleObject*)kwTuple)->items_[i - posonly];
             if (kwArgs != nullptr) {
-                currentArg = dict_getItem(kwArgs, keyword);
+                currentArg = alifDict_getItem(kwArgs, keyword);
                 if (currentArg == nullptr) {
                     return nullptr;
                 }

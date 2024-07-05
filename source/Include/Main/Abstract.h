@@ -14,6 +14,8 @@ AlifIntT alifMapping_getOptionalItem(AlifObject*, AlifObject*, AlifObject**);
 
 AlifObject* alifObject_getIter(AlifObject*);
 
+int alifObject_setItem(AlifObject*, AlifObject*, AlifObject* );
+
 AlifObject* alifNumber_add(AlifObject*, AlifObject*);
 
 AlifObject* alifInteger_inPlaceOr(AlifObject*, AlifObject*);
@@ -25,6 +27,8 @@ AlifObject* alifInteger_float(AlifObject* );
 AlifSizeT alifNumber_asSizeT(AlifObject*, AlifObject*);
 
 AlifObject* alifSequence_getItem(AlifObject*, AlifSizeT);
+
+int alifSequence_setItem(AlifObject*, int64_t , AlifObject*);
 
 #define ALIF_VECTORCALL_ARGUMENTS_OFFSET ((size_t)1 << (8 * sizeof(size_t) - 1))
 

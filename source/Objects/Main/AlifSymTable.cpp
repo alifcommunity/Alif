@@ -55,7 +55,7 @@ AlifSTEntryObject* alifSymTable_lookup(AlifSymTable* _st, void* _key) { // 487
 }
 
 AlifIntT alifST_getSymbol(AlifSTEntryObject* _ste, AlifObject* _name) { // 505
-    AlifObject* v = dict_getItem(_ste->steSymbols, _name); // alifDict_getItemWithError
+    AlifObject* v = alifDict_getItem(_ste->steSymbols, _name); // alifDict_getItemWithError
     if (!v) return 0;
 
     return alifInteger_asLong(v); // ALIFLONG_AS_LONG
@@ -138,7 +138,7 @@ static AlifIntT symTable_addDefHelper(AlifSymTable* _st, AlifObject* _name, Alif
     if (!mangled) return 0;
 
     dict_ = _ste->steSymbols;
-    if ((obj_ = dict_getItem(dict_, mangled))) {
+    if ((obj_ = alifDict_getItem(dict_, mangled))) {
         val_ = alifInteger_asLong(obj_);
         if ((_flag & DEF_PARAM) and (val_ & DEF_PARAM)) goto error;
         if ((_flag & DEF_TYPE_PARAM) and (val_ & DEF_TYPE_PARAM)) goto error;
@@ -156,7 +156,7 @@ static AlifIntT symTable_addDefHelper(AlifSymTable* _st, AlifObject* _name, Alif
     obj_ = alifInteger_fromLongLong(val_);
     if (obj_ == nullptr) goto error;
 
-    if (dict_setItem((AlifDictObject*)dict_, mangled, obj_) < 0) {
+    if (alifDict_setItem(dict_, mangled, obj_) < 0) {
         ALIF_DECREF(obj_);
         goto error;
     }
@@ -167,13 +167,13 @@ static AlifIntT symTable_addDefHelper(AlifSymTable* _st, AlifObject* _name, Alif
     }
     else if (_flag & DEF_GLOBAL) {
         val_ = _flag;
-        if ((obj_ = dict_getItem(_st->stGlobal, mangled))) {
+        if ((obj_ = alifDict_getItem(_st->stGlobal, mangled))) {
             val_ |= alifInteger_asLong(obj_);
         }
         obj_ = alifInteger_fromLongLong(val_);
         if (obj_ == nullptr) goto error;
 
-        if (dict_setItem((AlifDictObject*)_st->stGlobal, mangled, obj_) < 0) {
+        if (alifDict_setItem(_st->stGlobal, mangled, obj_) < 0) {
             ALIF_DECREF(obj_);
             goto error;
         }
@@ -386,7 +386,7 @@ static AlifSTEntryObject* symTableEntry_new(AlifSymTable* _symTable, AlifObject*
         or symTableEntry->steVarNames == nullptr
         or symTableEntry->steChildren == nullptr) goto fail;
 
-    if (dict_setItem((AlifDictObject*)_symTable->stBlocks, symTableEntry->steID, (AlifObject*)symTableEntry) < 0)
+    if (alifDict_setItem(_symTable->stBlocks, symTableEntry->steID, (AlifObject*)symTableEntry) < 0)
         goto fail;
 
     return symTableEntry;
@@ -401,7 +401,7 @@ static int update_symbols(AlifObject* _symbols, AlifObject* _scopes,
     AlifObject* v = nullptr, * v_scope = nullptr, * v_new = nullptr, * v_free = nullptr;
     int64_t pos = 0;
 
-    while (alifDict_next(_symbols, &pos, &name, &v, nullptr)) {
+    while (alifDict_next(_symbols, &pos, &name, &v)) {
         long scope, flags;
         flags = alifInteger_asLong(v);
         int contains = alifSet_contains(_inlinedCells, name);
@@ -411,13 +411,13 @@ static int update_symbols(AlifObject* _symbols, AlifObject* _scopes,
         if (contains) {
             flags |= DEF_COMP_CELL;
         }
-        v_scope = dict_getItem(_scopes, name);
+        v_scope = alifDict_getItem(_scopes, name);
         scope = alifInteger_asLong(v_scope);
         flags |= (scope << SCOPE_OFFSET);
         v_new = alifInteger_fromLongLong(flags);
         if (!v_new)
             return 0;
-        _symbols = (AlifObject*)dict_setItem((AlifDictObject*)_symbols, name, v_new);
+        _symbols = (AlifObject*)alifDict_setItem(_symbols, name, v_new);
         if ((_symbols) == nullptr) {
             ALIF_DECREF(v_new);
             return 0;
@@ -436,7 +436,7 @@ static int update_symbols(AlifObject* _symbols, AlifObject* _scopes,
     }
 
     while ((name = alifIter_next(itr))) {
-        v = dict_getItem(_symbols, name);
+        v = alifDict_getItem(_symbols, name);
 
         if (v) {
 
@@ -446,7 +446,7 @@ static int update_symbols(AlifObject* _symbols, AlifObject* _scopes,
                 if (!v_new) {
                     goto error;
                 }
-                _symbols = (AlifObject*)dict_setItem((AlifDictObject*)_symbols, name, v_new);
+                _symbols = (AlifObject*)alifDict_setItem(_symbols, name, v_new);
                 if ((_symbols) == nullptr) {
                     ALIF_DECREF(v_new);
                     goto error;
@@ -466,7 +466,7 @@ static int update_symbols(AlifObject* _symbols, AlifObject* _scopes,
                 continue;
             }
         }
-        _symbols = (AlifObject*)dict_setItem((AlifDictObject*)_symbols, name, v_free);
+        _symbols = (AlifObject*)alifDict_setItem(_symbols, name, v_free);
         if ((_symbols) == nullptr) {
             goto error;
         }
@@ -506,7 +506,7 @@ static AlifIntT analyze_cells(AlifObject* _scopes, AlifObject* _free, AlifObject
     v_cell = alifInteger_fromLongLong(CELL);
     if (!v_cell) return 0;
 
-    while (alifDict_next(_scopes, &pos, &name, &v, nullptr)) {
+    while (alifDict_next(_scopes, &pos, &name, &v)) {
         long scope;
         scope = alifInteger_asLong(v);
         if (scope != LOCAL)
@@ -524,7 +524,7 @@ static AlifIntT analyze_cells(AlifObject* _scopes, AlifObject* _free, AlifObject
                 continue;
             }
         }
-        _scopes = (AlifObject*)dict_setItem((AlifDictObject*)_scopes, name, v_cell);
+        _scopes = (AlifObject*)alifDict_setItem(_scopes, name, v_cell);
         if (_scopes == nullptr)
             goto error;
         if (alifSet_discard(_free, name) < 0)
@@ -611,7 +611,7 @@ static int analyze_block(AlifSTEntryObject* _ste, AlifObject* _bound, AlifObject
         }
     }
 
-    while (alifDict_next(_ste->steSymbols, &pos, &name, &v, nullptr)) {
+    while (alifDict_next(_ste->steSymbols, &pos, &name, &v)) {
         long flags = alifInteger_asLong(v);
         //if (!analyze_name(ste, scopes, name, flags,
             //bound, local, free, global, type_params, class_entry))
@@ -772,7 +772,7 @@ static AlifIntT symTable_enterBlock(AlifSymTable* _symTable, AlifObject* _name,
     if (symTableEntry_new == nullptr) return 0;
 
     if (alifList_append(_symTable->stStack, (AlifObject*)symTableEnter) < 0) {
-        ALIF_DECREF(symTableEntry_new);
+        ALIF_DECREF(symTableEnter);
         return 0;
     }
     prev_ = _symTable->stCur;

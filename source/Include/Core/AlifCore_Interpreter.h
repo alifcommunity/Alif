@@ -3,8 +3,9 @@
 #include "AlifCore_Memory.h"
 #include "AlifCore_GC.h"
 #include "AlifCore_GlobalObjects.h"
+#include "AlifCore_Import.h"
 #include "AlifCore_ObjectState.h"
-
+#include "AlifCore_TypeObject.h"
 
 
 
@@ -55,9 +56,14 @@ public:
 
 	AlifObject* builtins{};
 
+	class ImportState imports;
+
 	AlifMemory* memory_{};
 
 	AlifObjectState objectState{};
+
+	class TypesState types;
+
 };
 
 

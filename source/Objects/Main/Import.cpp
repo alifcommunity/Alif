@@ -19,10 +19,18 @@ InitTable* alifImportInitTable = alifImportInitTab;
 #define INITTABLE _alifDureRun_.imports.initTable
 
 
+#define MODULES(interp) \
+    (interp)->imports.modules_
 
 
-
-
+AlifObject* alifImport_initModules(AlifInterpreter* _interp)
+{
+	MODULES(_interp) = alifNew_dict();
+	if (MODULES(_interp) == nullptr) {
+		return nullptr;
+	}
+	return MODULES(_interp);
+}
 
 
 
@@ -30,24 +38,59 @@ InitTable* alifImportInitTable = alifImportInitTab;
 
 static AlifIntT initBuildin_modulesTable() {
 
-	AlifUSizeT size{};
+	AlifUSizeT size_{};
 
-	for (size = 0; alifImportInitTable[size].name != nullptr; size++)
+	for (size_ = 0; alifImportInitTable[size_].name != nullptr; size_++)
 		;
-	size++;
+	size_++;
 
-	InitTable* tableCopy = (InitTable*)alifMem_dataAlloc(size * sizeof(InitTable));
+	InitTable* tableCopy = (InitTable*)alifMem_dataAlloc(size_ * sizeof(InitTable));
 	if (tableCopy == nullptr) return -1;
 
-	memcpy(tableCopy, alifImportInitTable, size * sizeof(InitTable));
+	memcpy(tableCopy, alifImportInitTable, size_ * sizeof(InitTable));
 	INITTABLE = tableCopy;
 	return 0;
 }
 
 
 
+static AlifObject* importAdd_module(AlifThread* _tstate, AlifObject* _name)
+{
+	AlifObject* modules_ = _tstate->interpreter->imports.modules_;
+	if (modules_ == nullptr) {
+		return nullptr;
+	}
 
+	AlifObject* m_;
+	if (alifMapping_getOptionalItem(modules_, _name, &m_) < 0) {
+		return nullptr;
+	}
+	if (m_ != nullptr && (m_)) {
+		return m_;
+	}
+	ALIF_XDECREF(m_);
+	m_ = alifModule_newObject(_name);
+	if (m_ == nullptr)
+		return nullptr;
+	if (alifObject_setItem(modules_, _name, m_) != 0) {
+		ALIF_DECREF(m_);
+		return nullptr;
+	}
 
+	return m_;
+}
+
+AlifObject* alifImport_addModuleRef(const wchar_t* _name)
+{
+	AlifObject* nameObj = alifUStr_fromString(_name);
+	if (nameObj == nullptr) {
+		return nullptr;
+	}
+	AlifThread* tstate = alifThread_get();
+	AlifObject* module_ = importAdd_module(tstate, nameObj);
+	ALIF_DECREF(nameObj);
+	return module_;
+}
 
 
 AlifIntT alifImport_init() {

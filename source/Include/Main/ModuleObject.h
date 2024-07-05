@@ -1,8 +1,6 @@
 #pragma once
 
 
-
-
 extern AlifTypeObject _alifModuleType_;
 
 #define ALIFMODULE_CHECK(op) ALIFOBJECT_TYPECHECK((op), &_alifModuleType_)
@@ -42,3 +40,8 @@ public:
 	Inquiry clear{};
 	FreeFunc free{};
 };
+
+AlifObject* alifModule_newObject(AlifObject*);
+AlifObject* alifNew_module(const wchar_t* );
+
+AlifObject* alifModule_getDict(AlifObject*);

@@ -8,15 +8,14 @@
 
 
 
-
 AlifObject* alifObject_getItem(AlifObject* _o, AlifObject* _key) { // 149
 	if (_o == nullptr or _key == nullptr) {
 		//return null_error();
 	}
 
-	AlifMappingMethods* m = ALIF_TYPE(_o)->asMapping;
-	if (m and m->subScript) {
-		AlifObject* item = m->subScript(_o, _key);
+	AlifMappingMethods* m_ = ALIF_TYPE(_o)->asMapping;
+	if (m_ and m_->subScript) {
+		AlifObject* item = m_->subScript(_o, _key);
 		return item;
 	}
 
@@ -33,7 +32,7 @@ AlifObject* alifObject_getItem(AlifObject* _o, AlifObject* _key) { // 149
 		}
 		else {
 			//return type_error("sequence index must "
-			//	"be integer, not '%.200s'", key);
+			//	"be integer, not '%.200s'", _key);
 			return nullptr; // 
 		}
 	}
@@ -51,16 +50,9 @@ AlifObject* alifObject_getItem(AlifObject* _o, AlifObject* _key) { // 149
 		}
 		if (meth && meth != ALIF_NONE) {
 			result = alifObject_callOneArg(meth, _key);
-			ALIF_DECREF(meth);
-			return result;
-		}
-		ALIF_XDECREF(meth);
-		//alifErr_format(alifExcTypeError, "type '%.200s' is not subscriptable", ((AlifTypeObject*)o)->name_);
-		return nullptr;
-	}
 
-	//return type_error("'%.200s' object is not subscriptable", o);
-	return nullptr;//
+		}
+	}
 }
 
 AlifIntT alifMapping_getOptionalItem(AlifObject* _obj, AlifObject* _key, AlifObject** _result) { // 203
@@ -77,16 +69,34 @@ AlifIntT alifMapping_getOptionalItem(AlifObject* _obj, AlifObject* _key, AlifObj
 	//}
 	//alifErr_clear();
 	return 0;
+
 }
 
+int alifObject_setItem(AlifObject* _o, AlifObject* _key, AlifObject* _value)
+{
+	if (_o == NULL || _key == NULL || _value == NULL) {
+		return -1;
+	}
 
+	AlifMappingMethods* m_ = ALIF_TYPE(_o)->asMapping;
+	if (m_ && m_->assSubScript) {
+		int res_ = m_->assSubScript(_o, _key, _value);
+		return res_;
+	}
 
+	if (ALIF_TYPE(_o)->asSequence) {
+		if ((_key->type_->asNumber != nullptr && _key->type_->asNumber->index_ != nullptr)) {
+			int64_t keyValue;
+			keyValue = alifInteger_asSizeT(_key);
+			return alifSequence_setItem(_o, keyValue, _value);
+		}
+		else if (ALIF_TYPE(_o)->asSequence->assItem) {
+			return -1;
+		}
+	}
 
-
-
-
-
-
+	return -1;
+}
 
 void alifBuffer_release(AlifBuffer* _view)
 {
@@ -180,36 +190,6 @@ AlifObject* alifNumber_add(AlifObject* _x, AlifObject* _y) { // 1138
 	return nullptr; // temp
 }
 
-
-AlifObject* alifSequence_getItem(AlifObject* s, AlifSizeT i) { // 1874
-	if (s == nullptr) {
-		//return null_error();
-		return nullptr; // 
-	}
-
-	AlifSequenceMethods* m = ALIF_TYPE(s)->asSequence;
-	if (m and m->item_) {
-		if (i < 0) {
-			if (m->length_) {
-				AlifSizeT l = (*m->length_)(s);
-				if (l < 0) return nullptr;
-
-				i += l;
-			}
-		}
-		AlifObject* res = m->item_(s, i);
-		return res;
-	}
-
-	if (ALIF_TYPE(s)->asMapping and ALIF_TYPE(s)->asMapping->subScript) {
-		//return type_error("%.200s is not a sequence", s);
-		return nullptr; //
-	}
-	//return type_error("'%.200s' object does not support indexing", s);
-	return nullptr; //
-}
-
-
 static AlifObject* binary_iop1(AlifObject* _v, AlifObject* _w, const int _iOpSlot, const int _opSlot
 #ifndef NDEBUG
 	, const wchar_t* _opName
@@ -235,9 +215,9 @@ static AlifObject* binary_iop1(AlifObject* _v, AlifObject* _w, const int _iOpSlo
 }
 
 #ifdef NDEBUG
-#  define BINARY_IOP1(v, w, iop_slot, op_slot, op_name) binary_iop1(v, w, iop_slot, op_slot)
+#  define BINARY_IOP1(_v, w, iop_slot, op_slot, op_name) binary_iop1(_v, w, iop_slot, op_slot)
 #else
-#  define BINARY_IOP1(v, w, iop_slot, op_slot, op_name) binary_iop1(v, w, iop_slot, op_slot, op_name)
+#  define BINARY_IOP1(_v, w, iop_slot, op_slot, op_name) binary_iop1(_v, w, iop_slot, op_slot, op_name)
 #endif
 
 static AlifObject* binary_iop(AlifObject* _v, AlifObject* _w, const int _iOpSlot, const int _opSlot,
@@ -254,8 +234,8 @@ static AlifObject* binary_iop(AlifObject* _v, AlifObject* _w, const int _iOpSlot
 
 #define INPLACE_BINOP(func, iop, op, op_name) \
     AlifObject * \
-    func(AlifObject *v, AlifObject *w) { \
-        return binary_iop(v, w, NB_SLOT(iop), NB_SLOT(op), op_name); \
+    func(AlifObject *_v, AlifObject *w) { \
+        return binary_iop(_v, w, NB_SLOT(iop), NB_SLOT(op), op_name); \
     }
 
 INPLACE_BINOP(alifInteger_inPlaceOr, inplaceOr, orLogic, L"|=")
@@ -305,11 +285,11 @@ AlifSizeT alifNumber_asSizeT(AlifObject* _item, AlifObject* _err)
 {
 	AlifSizeT result{};
 	AlifObject* runerr{};
-	AlifObject* value = alifSubNumber_index(_item);
+	AlifObject* _value = alifSubNumber_index(_item);
 	AlifThread* thread_{};
-	if (value == nullptr) return -1;
+	if (_value == nullptr) return -1;
 
-	result = alifInteger_asSizeT(value);
+	result = alifInteger_asSizeT(_value);
 	if (result != -1) goto finish;
 
 	thread_ = alifThread_get();
@@ -322,7 +302,7 @@ AlifSizeT alifNumber_asSizeT(AlifObject* _item, AlifObject* _err)
 	//alifErr_clear(thread_);
 
 	if (!_err) {
-		if (alifInteger_isNegative((AlifIntegerObject*)value))
+		if (alifInteger_isNegative((AlifIntegerObject*)_value))
 			result = ALIF_SIZET_MIN;
 		else
 			result = ALIF_SIZET_MAX;
@@ -333,7 +313,7 @@ AlifSizeT alifNumber_asSizeT(AlifObject* _item, AlifObject* _err)
 	}
 
 finish:
-	ALIF_DECREF(value);
+	ALIF_DECREF(_value);
 	return result;
 }
 
@@ -396,12 +376,68 @@ AlifObject* alifInteger_float(AlifObject* _o)
     return alifFloat_fromString(_o);
 }
 
-int alifSequence_check(AlifObject* s)
+int alifSequence_check(AlifObject* _s)
 {
-    if (s->type_ == &_alifDictType_)
+    if (_s->type_ == &_alifDictType_)
         return 0;
-    return s->type_->asSequence &&
-        s->type_->asSequence->item_ != nullptr;
+    return _s->type_->asSequence &&
+        _s->type_->asSequence->item_ != nullptr;
+}
+
+AlifObject* alifSequence_getItem(AlifObject* _s, int64_t _i)
+{
+	if (_s == NULL) {
+		return nullptr;
+	}
+
+	AlifSequenceMethods* m_ = ALIF_TYPE(_s)->asSequence;
+	if (m_ && m_->item_) {
+		if (_i < 0) {
+			if (m_->length_) {
+				int64_t l_ = (*m_->length_)(_s);
+				if (l_ < 0) {
+					return NULL;
+				}
+				_i += l_;
+			}
+		}
+		AlifObject* res_ = m_->item_(_s, _i);
+		return res_;
+	}
+
+	if (ALIF_TYPE(_s)->asMapping && ALIF_TYPE(_s)->asMapping->subScript) {
+		return nullptr;// error
+	}
+	return nullptr; // error
+}
+
+int alifSequence_setItem(AlifObject* _s, int64_t _i, AlifObject* _o)
+{
+	if (_s == NULL) {
+		return -1;
+	}
+
+	AlifSequenceMethods* m_ = ALIF_TYPE(_s)->asSequence;
+	if (m_ && m_->assItem) {
+		if (_i < 0) {
+			if (m_->length_) {
+				int64_t l_ = (*m_->length_)(_s);
+				if (l_ < 0) {
+					return -1;
+				}
+				_i += l_;
+			}
+		}
+		int res_ = m_->assItem(_s, _i, _o);
+		return res_;
+	}
+
+	if (ALIF_TYPE(_s)->asMapping && ALIF_TYPE(_s)->asMapping->assSubScript) {
+		// error
+		return -1;
+	}
+	// error
+	return -1;
 }
 
 int alifIter_check(AlifObject* obj)
@@ -416,16 +452,16 @@ AlifIntT alifSequence_delItem(AlifObject* _s, AlifSizeT _i) { // 1959
 		return -1;
 	}
 
-	AlifSequenceMethods* m = ALIF_TYPE(_s)->asSequence;
-	if (m and m->assItem) {
+	AlifSequenceMethods* m_ = ALIF_TYPE(_s)->asSequence;
+	if (m_ and m_->assItem) {
 		if (_i < 0) {
-			if (m->length_) {
-				AlifSizeT l = (*m->length_)(_s);
+			if (m_->length_) {
+				AlifSizeT l = (*m_->length_)(_s);
 				if (l < 0) return -1;
 				_i += l;
 			}
 		}
-		int res = m->assItem(_s, _i, (AlifObject*)nullptr);
+		int res = m_->assItem(_s, _i, (AlifObject*)nullptr);
 		return res;
 	}
 
@@ -437,12 +473,12 @@ AlifIntT alifSequence_delItem(AlifObject* _s, AlifSizeT _i) { // 1959
 	return -1;
 }
 
-AlifObject* alifSequence_list(AlifObject* v)
+AlifObject* alifSequence_list(AlifObject* _v)
 {
     AlifObject* result;  
     AlifObject* rv;          
 
-    //if (v == nullptr) {
+    //if (_v == nullptr) {
         //return null_error();
     //}
 
@@ -450,52 +486,52 @@ AlifObject* alifSequence_list(AlifObject* v)
     if (result == nullptr)
         return nullptr;
 
-    rv = alifList_extend((AlifListObject*)result, v);
+    rv = alifList_extend((AlifListObject*)result, _v);
     if (rv == nullptr) {
         return nullptr;
     }
     return result;
 }
 
-AlifObject* alifSequence_fast(AlifObject* v, const wchar_t* m)
+AlifObject* alifSequence_fast(AlifObject* _v, const wchar_t* _m)
 {
     AlifObject* it;
 
-    //if (v == nullptr) {
+    //if (_v == nullptr) {
         //return null_error();
     //}
 
-    if ((v->type_ == &_alifListType_) || (v->type_ == & _alifTupleType_)) {
-        return v;
+    if ((_v->type_ == &_alifListType_) || (_v->type_ == & _alifTupleType_)) {
+        return _v;
     }
 
-    it = alifObject_getIter(v);
+    it = alifObject_getIter(_v);
     if (it == nullptr) {
         //if (_Err_ExceptionMatches(tstate, Exc_TypeError)) {
-            //_Err_SetString(tstate, Exc_TypeError, m);
+            //_Err_SetString(tstate, Exc_TypeError, m_);
         //}
         return nullptr;
     }
 
-    v = alifSequence_list(it);
+    _v = alifSequence_list(it);
     //_DECREF(it);
 
-    return v;
+    return _v;
 }
 
-AlifObject* alifObject_getIter(AlifObject* o) {
-    AlifInitObject* t = o->type_;
+AlifObject* alifObject_getIter(AlifObject* _o) {
+    AlifInitObject* t = _o->type_;
     GetIterFunc f;
 
     f = t->iter_;
     if (f == nullptr) {
-        if (alifSequence_check(o))
-            return alifNew_seqIter(o);
-        //return type_error("'%.200s' object is not iterable", o);
+        if (alifSequence_check(_o))
+            return alifNew_seqIter(_o);
+        //return type_error("'%.200s' object is not iterable", _o);
         return nullptr;
     }
     else {
-        AlifObject* res = (*f)(o);
+        AlifObject* res = (*f)(_o);
         if (res != nullptr && !alifIter_check(res)) {
             //Err_Format(Exc_TypeError,
                 //"iter() returned non-iterator "
@@ -506,7 +542,6 @@ AlifObject* alifObject_getIter(AlifObject* o) {
         return res;
     }
 }
-
 
 
 

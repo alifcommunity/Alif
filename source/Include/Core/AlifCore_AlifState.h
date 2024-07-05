@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "AlifCore_FreeList.h"
 #include "AlifCore_DureRun.h"

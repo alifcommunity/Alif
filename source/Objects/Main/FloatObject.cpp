@@ -654,10 +654,11 @@ AlifTypeObject _typeFloat_ = {
 	(HashFunc)float_hash,                       
 	0,                                         
 	0,                                  
-	0,                    
+	alifObject_genericGetAttr,
 	0,                                       
 	0,              
-	0,                         
+	ALIFTPFLAGS_DEFAULT | ALIFTPFLAGS_BASETYPE |
+	ALIFSUBTPFLAGS_MATCH_SELF,
 	0,                                         
 	0,
 	0,                                         

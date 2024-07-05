@@ -1,4 +1,4 @@
-﻿#include "alif.h"
+#include "alif.h"
 
 #include "AlifCore_InitConfig.h"
 #include "AlifCore_Memory.h"
@@ -109,26 +109,27 @@ static AlifIntT alifCore_interpreterInit(AlifThread* _thread) {
 	AlifInterpreter* interpreter = _thread->interpreter;
 	AlifIntT status = 1;
 	const AlifConfig* config_;
+	AlifObject* sysMod = nullptr;
 
 	status = alifSubGC_init(interpreter);
-	if (status < 1) return status;
+	if (status < 0) return status;
 
 	//status = alifCore_initTypes(interpreter);
-	if (status < 1) goto done;
+	if (status < 0) goto done;
 
 	//status = alifAtExit_init(interpreter);
-	if (status < 1) return status;
+	if (status < 0) return status;
 
-	//status = alifSys_create(thread_, &sysMod);
-	if (status < 1) goto done;
+	status = alifSys_create(_thread, &sysMod);
+	if (status < 0) goto done;
 
 	//status = alifCore_builtinsInit(thread);
-	if (status < 1) goto done;
+	if (status < 0) goto done;
 
 	config_ = &interpreter->config;
 
 	//status = alifImport_initCore(thread, sysMod, config_->installImportLib);
-	if (status < 1) goto done;
+	if (status < 0) goto done;
 
 done:
 	//Py_XDECREF(sysmod);

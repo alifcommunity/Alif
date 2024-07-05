@@ -1,21 +1,21 @@
 #include "alif.h"
 #include "AlifCore_Memory.h"
 
-AlifObject* alifNew_seqIter(AlifObject* seq)
+AlifObject* alifNew_seqIter(AlifObject* _seq)
 {
-    SeqIterObject* it;
+    SeqIterObject* it_;
 
-    if (!alifSequence_check(seq)) {
+    if (!alifSequence_check(_seq)) {
         return nullptr;
     }
 
-    it = (SeqIterObject*)alifMem_objAlloc(sizeof(SeqIterObject));
-    if (it == nullptr)
+	it_ = (SeqIterObject*)alifMem_objAlloc(sizeof(SeqIterObject));
+    if (it_ == nullptr)
         return nullptr;
-    it->object->type_ = &typeSeqIter;
-    it->index = 0;
-    it->iterSeq = seq;
-    return (AlifObject*)it;
+	it_->object->type_ = &typeSeqIter;
+	it_->index = 0;
+	it_->iterSeq = _seq;
+    return (AlifObject*)it_;
 }
 
 AlifTypeObject typeSeqIter = {

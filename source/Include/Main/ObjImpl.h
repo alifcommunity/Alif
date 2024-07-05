@@ -4,7 +4,7 @@
 AlifObject* alifSubObject_new(AlifTypeObject*);
 AlifVarObject* alifSubObject_newVar(AlifTypeObject*, int64_t);
 
-
+void alifObject_gc_track(void*);
 void alifObject_gcUnTrack(void* );
 void alifObject_gcDel(void*);
 
@@ -17,6 +17,8 @@ void alifObject_gcDel(void*);
 #define ALIFOBJECT_NEW_VAR(_type, _typeObj, _n) ALIFOBJECT_NEWVAR(_type, (_typeObj), (_n))
 
 
+#define ALIFTYPE_IS_GC(_t) alifType_hasFeature((_t), ALIFTPFLAGS_HAVE_GC)
+
 static inline size_t alifSubObject_size(AlifTypeObject* _type) {
 	return (size_t)_type->basicSize;
 }
@@ -28,6 +30,8 @@ static inline size_t alifSubObject_varSize(AlifTypeObject* _type, int64_t _nItem
 }
 
 
+
+int alifObject_isGC(AlifObject* );
 
 
 

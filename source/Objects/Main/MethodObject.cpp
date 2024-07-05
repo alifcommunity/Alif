@@ -164,7 +164,7 @@ AlifTypeObject _alifTypeCFunction_ = {
     (HashFunc)method_hash,                        /* tp_hash */
     cFunction_call,                             /* tp_call */
     0,
-    0,
+	alifObject_genericGetAttr,
     0,                                          /* tp_str */
     0,                    /* tp_getattro */
     0,                                          /* tp_setattro */
@@ -202,7 +202,7 @@ AlifInitObject _alifCppMethodType_ = {
     0,
     0,                                          
     0,                    
-    0,                                         
+	alifObject_genericGetAttr,
     0,                                          
     0,                 
     0,                                          
@@ -331,7 +331,7 @@ static AlifObject* cFunction_call(AlifObject* _func, AlifObject* _args, AlifObje
 
     }
     else {
-        if (_kwArgs != nullptr && ((AlifDictObject*)_kwArgs)->size_ != 0) {
+        if (_kwArgs != nullptr && ((AlifDictObject*)_kwArgs)->used != 0) {
             return nullptr;
         }
 		result_ = (method_)(self_, _args);
