@@ -1,5 +1,11 @@
 #pragma once
 
+
+#define ALIFINTEGER_CHECK(op) \
+        alifType_hasFeature(ALIF_TYPE(op), ALIFTPFLAGS_LONG_SUBCLASS)
+#define ALIFINTEGER_CHECKEXACT(op) ALIFIS_TYPE((op), &_alifIntegerType_)
+
+
 class AlifIntegerObject
 {
 public:
