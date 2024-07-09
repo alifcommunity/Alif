@@ -13,23 +13,23 @@ int alifSys_create(AlifThread* _tstate, AlifObject** _sysModP)
 	AlifInterpreter* interp = _tstate->interpreter;
 
 	AlifObject* modules = alifImport_initModules(interp);
-	if (modules == NULL) {
+	if (modules == nullptr) {
 		goto error;
 	}
 
-	//PyObject* sysmod = _PyModule_CreateInitialized(&sysmodule, PYTHON_API_VERSION);
-	//if (sysmod == NULL) {
+	//AlifObject* sysmod = _PyModule_CreateInitialized(&sysmodule, PYTHON_API_VERSION);
+	//if (sysmod == nullptr) {
 	//	return _PyStatus_ERR("failed to create a module object");
 	//}
 
-	//PyObject* sysdict = PyModule_GetDict(sysmod);
-	//if (sysdict == NULL) {
+	//AlifObject* sysdict = PyModule_GetDict(sysmod);
+	//if (sysdict == nullptr) {
 	//	goto error;
 	//}
 	//interp->sysdict = Py_NewRef(sysdict);
 
 	//interp->sysdict_copy = PyDict_Copy(sysdict);
-	//if (interp->sysdict_copy == NULL) {
+	//if (interp->sysdict_copy == nullptr) {
 	//	goto error;
 	//}
 
@@ -51,12 +51,12 @@ int alifSys_create(AlifThread* _tstate, AlifObject** _sysModP)
 	//	goto error;
 	//}
 
-	//PyObject* monitoring = _Py_CreateMonitoringObject();
-	//if (monitoring == NULL) {
+	//AlifObject* monitoring = _Py_CreateMonitoringObject();
+	//if (monitoring == nullptr) {
 	//	goto error;
 	//}
 	//int err = PyDict_SetItemString(sysdict, "monitoring", monitoring);
-	//Py_DECREF(monitoring);
+	//ALIF_DECREF(monitoring);
 	//if (err < 0) {
 	//	goto error;
 	//}

@@ -2,6 +2,7 @@
 
 #include "AlifCore_Tuple.h"
 #include "AlifCore_Memory.h"
+#include "AlifCore_ModSupport.h"
 
 static const wchar_t* skipItem(const wchar_t** , va_list* , int );
 
@@ -210,46 +211,6 @@ static int vGetArgs1_impl(AlifObject* compatArgs, AlifObject* const* stack, int6
     }
 
     return cleanReturn(1, &freeList);
-}
-
-int _alifArg_checkPositional(const wchar_t* name, int64_t nargs, int64_t min, int64_t max)
-{
-
-    if (nargs < min) {
-        if (name != nullptr)
-            //Err_Format(
-                //Exc_TypeError,
-                //"%.200s expected %s%zd argument%s, got %zd",
-                //name, (min == max ? "" : "at least "), min, min == 1 ? "" : "s", nargs);
-        //else
-            //Err_Format(
-                //Exc_TypeError,
-                //"unpacked tuple should have %s%zd element%s,"
-                //" but has %zd",
-                //(min == max ? "" : "at least "), min, min == 1 ? "" : "s", nargs);
-        return 0;
-    }
-
-    if (nargs == 0) {
-        return 1;
-    }
-
-    if (nargs > max) {
-        if (name != nullptr)
-            //Err_Format(
-                //Exc_TypeError,
-                //"%.200s expected %s%zd argument%s, got %zd",
-                //name, (min == max ? "" : "at most "), max, max == 1 ? "" : "s", nargs);
-        //else
-            //Err_Format(
-                //Exc_TypeError,
-                //"unpacked tuple should have %s%zd element%s,"
-                //" but has %zd",
-                //(min == max ? "" : "at most "), max, max == 1 ? "" : "s", nargs);
-        return 0;
-    }
-
-    return 1;
 }
 
 static int vGetArgs1(AlifObject* args, const wchar_t* format, va_list* pVa, int flags)
@@ -827,9 +788,7 @@ static const wchar_t* skipItem(const wchar_t** pFormat, va_list* pVa, int flags)
     return nullptr;
 }
 
-int alifSubArg_checkPositional(const wchar_t* _name, int64_t _nArgs,
-    int64_t _min, int64_t _max)
-{
+int _alifArg_checkPositional(const wchar_t* _name, int64_t _nArgs, int64_t _min, int64_t _max) { // 2720
     if (_nArgs < _min) {
         //if (_name != nullptr)
         //    Err_Format(

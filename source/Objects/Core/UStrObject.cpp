@@ -3,7 +3,14 @@
 #include "AlifCore_AlifCycle.h"
 #include "alifCore_UString.h"
 #include "AlifCore_Memory.h"
+#include "AlifCore_AlifState.h"
+#include "AlifCore_Interpreter.h"
+#include "AlifCore_Abstract.h"
+#include "AlifCore_AlifEval.h"
 #include "AlifCore_GlobalString.h"
+
+// make this include comment to know the error
+#include "AlifCore_ModSupport.h" // this is temp and should transfer to UStrObject.c.h or .h
 
 #ifdef _WINDOWS
 #include "windows.h"
@@ -1996,7 +2003,7 @@ static AlifObject* replace(AlifObject*, AlifObject* ,
 	AlifObject*, int64_t );
 
 static AlifObject* uStr_replace(AlifObject* _self, AlifObject* const* _args, int64_t _nArgs, AlifObject* _kWNames)
-{
+{ // this should transfer to UStrObject.c.h or .h
 	AlifObject* returnValue = nullptr;
 
 #define NUM_KEYWORDS 1
@@ -2004,13 +2011,13 @@ static AlifObject* uStr_replace(AlifObject* _self, AlifObject* const* _args, int
 	public:
 		AlifVarObject base{};
 		AlifObject* item_[NUM_KEYWORDS];
-	} kwTuple = {
+	}
+	kwTuple = {
 		//ALIFVAROBJECT_HEAD_INIT(&typeTuple, 1)
 		//nullptr
 	};
 #undef NUM_KEYWORDS
 #define KWTUPLE (&kwTuple.base.object)
-//#  define KWTUPLE nullptr
 
 	static const wchar_t* const keywords_[] = { L"", L"", L"count", nullptr };
 	static AlifArgParser parser_ = {
@@ -2564,7 +2571,7 @@ int64_t alifUStr_fill(AlifObject* _uStr, int64_t _start, int64_t _length,
 static AlifObject* uStr_splitImpl(AlifObject* , AlifObject* , int64_t );
 
 static AlifObject* uStr_split(AlifObject* _self, AlifObject* const* _args, int64_t _nArgs, AlifObject* _kWNames)
-{
+{ // this should transfer to UStrObject.c.h or .h
 	AlifObject* returnValue = nullptr;
 #define NUM_KEYWORDS 2
 	static class KwTuple {
@@ -2825,8 +2832,8 @@ int alifSubUStrWriter_writeChar(AlifSubUStrWriter* _writer, uint32_t _ch)
 }
 
 static AlifMethodDef _uStrMethods_[] = {
-	{L"replace", ALIFCFunction_CAST(uStr_replace), METHOD_FASTCALL | METHOD_KEYWORDS},
-	{L"split", ALIFCFunction_CAST(uStr_split), METHOD_FASTCALL | METHOD_KEYWORDS},
+	{L"replace", ALIF_CPPFUNCTION_CAST(uStr_replace), METHOD_FASTCALL | METHOD_KEYWORDS}, // this in UStrObject.c.h or .h
+	{L"split", ALIF_CPPFUNCTION_CAST(uStr_split), METHOD_FASTCALL | METHOD_KEYWORDS},
 	{L"join", (AlifCFunction)uStr_join, METHOD_O,},
 	{L"count", (AlifCFunction)uStr_count, METHOD_VARARGS},
 	{L"find", (AlifCFunction)uStr_find, METHOD_VARARGS},
@@ -2915,29 +2922,27 @@ static AlifMappingMethods _uStrAsMapping_ = {
 };
 
 AlifTypeObject _alifUStrType_ = {
-	0,
-	0,
-	0,
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	L"string",                        
 	sizeof(AlifUStrObject),      
 	0,                            
-	uStr_dealloc,
+	(Destructor)uStr_dealloc,
 	0,                            
 	0,                         
 	0,                         
 	0,           
 	0,          
-	& _uStrAsSequence_,
-	& _uStrAsMapping_,
+	&_uStrAsSequence_,
+	&_uStrAsMapping_,
 	(HashFunc)hash_uStr,
 	0,                     
 	0,
 	0,      
 	0,                            
 	0,                             
-		ALIFTPFLAGS_DEFAULT | ALIFTPFLAGS_BASETYPE |
-		ALIFTPFLAGS_USTR_SUBCLASS |
-		ALIFSUBTPFLAGS_MATCH_SELF,
+	ALIFTPFLAGS_DEFAULT | ALIFTPFLAGS_BASETYPE |
+	ALIFTPFLAGS_USTR_SUBCLASS |
+	ALIFSUBTPFLAGS_MATCH_SELF,
 	0,               
 	0, 
 	0,

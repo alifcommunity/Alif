@@ -6,6 +6,7 @@ AlifObject* alifStack_asDict(AlifObject* const*, AlifObject* );
 
 VectorCallFunc alifVectorCall_function(AlifObject*);
 
+AlifObject* alifObject_vectorCall(AlifObject*, AlifObject* const*, AlifUSizeT, AlifObject*);
 
 AlifObject* alifObject_callOneArg(AlifObject*, AlifObject*);
 

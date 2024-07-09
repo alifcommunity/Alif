@@ -74,7 +74,7 @@ AlifIntT alifMapping_getOptionalItem(AlifObject* _obj, AlifObject* _key, AlifObj
 
 int alifObject_setItem(AlifObject* _o, AlifObject* _key, AlifObject* _value)
 {
-	if (_o == NULL || _key == NULL || _value == NULL) {
+	if (_o == nullptr || _key == nullptr || _value == nullptr) {
 		return -1;
 	}
 
@@ -386,7 +386,7 @@ int alifSequence_check(AlifObject* _s)
 
 AlifObject* alifSequence_getItem(AlifObject* _s, int64_t _i)
 {
-	if (_s == NULL) {
+	if (_s == nullptr) {
 		return nullptr;
 	}
 
@@ -396,7 +396,7 @@ AlifObject* alifSequence_getItem(AlifObject* _s, int64_t _i)
 			if (m_->length_) {
 				int64_t l_ = (*m_->length_)(_s);
 				if (l_ < 0) {
-					return NULL;
+					return nullptr;
 				}
 				_i += l_;
 			}
@@ -413,7 +413,7 @@ AlifObject* alifSequence_getItem(AlifObject* _s, int64_t _i)
 
 int alifSequence_setItem(AlifObject* _s, int64_t _i, AlifObject* _o)
 {
-	if (_s == NULL) {
+	if (_s == nullptr) {
 		return -1;
 	}
 

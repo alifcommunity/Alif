@@ -199,26 +199,26 @@ static AlifObject* findName_inMro(AlifTypeObject* _type, AlifObject* _name, int*
 		hash_ = alifObject_hash(_name);
 		if (hash_ == -1) {
 			*_error = -1;
-			return NULL;
+			return nullptr;
 		}
 	}
 
 	AlifObject* mro_ = lookupType_mro(_type);
-	if (mro_ == NULL) {
+	if (mro_ == nullptr) {
 		if (!is_readying(_type)) {
 			if (alifType_ready(_type) < 0) {
 				*_error = -1;
-				return NULL;
+				return nullptr;
 			}
 			mro_ = lookupType_mro(_type);
 		}
-		if (mro_ == NULL) {
+		if (mro_ == nullptr) {
 			*_error = 1;
-			return NULL;
+			return nullptr;
 		}
 	}
 
-	AlifObject* res_ = NULL;
+	AlifObject* res_ = nullptr;
 
 	ALIF_INCREF(mro_);
 	int64_t n_ = ALIFTUPLE_GET_SIZE(mro_);
@@ -226,7 +226,7 @@ static AlifObject* findName_inMro(AlifTypeObject* _type, AlifObject* _name, int*
 		AlifObject* base_ = ALIFTUPLE_GET_ITEM(mro_, i_);
 		AlifObject* dict_ = lookupType_dict(((AlifTypeObject*)base_));
 		res_ = alifDictGetItem_knownHash(dict_, _name, hash_);
-		if (res_ != NULL) {
+		if (res_ != nullptr) {
 			break;
 		}
 
@@ -278,7 +278,7 @@ AlifObject* alifType_lookup(AlifTypeObject* _type, AlifObject* _name)
 		if (error_ == -1) {
 			return nullptr;
 		}
-		return NULL;
+		return nullptr;
 	}
 
 	if (hasVersion) {
@@ -510,16 +510,16 @@ int alifType_ready(AlifTypeObject* _type) // 7906
 		alifSub_setImmortalUntracked((AlifObject*)_type);
 	}
 
-	int res;
+	int res{};
 	//BEGIN_TYPE_LOCK()
-		if (!(_type->flags_ & ALIFTPFLAGS_READY)) {
-			//res = type_ready(_type, 0);
-		}
-		else {
-			res = 0;
-		}
+	if (!(_type->flags_ & ALIFTPFLAGS_READY)) {
+		//res = type_ready(_type, 0);
+	}
+	else {
+		res = 0;
+	}
 	//END_TYPE_LOCK()
-		return res;
+	return res;
 }
 
 

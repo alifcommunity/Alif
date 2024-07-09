@@ -104,6 +104,33 @@ static AlifIntT alifCore_createInterpreter(AlifDureRun* _dureRun, const AlifConf
 	return 1;
 }
 
+static AlifIntT alifCore_builtinsInit(AlifThread* _thread) { // 774
+
+	AlifObject* modules{};
+	AlifObject* builtinsDict{};
+
+	AlifInterpreter* interp = _thread->interpreter;
+
+	AlifObject* biMod = alifBuiltin_init(interp);
+	if (biMod == nullptr) goto error;
+
+	//modules = interp->imports.modules_; // alifImport_getModule
+	//if (alifImport_fixupBuiltin(_thread, biMod, "builtins", modules) < 0) {
+	//	goto error;
+	//}
+
+	builtinsDict = alifModule_getDict(biMod);
+	if (builtinsDict == nullptr) goto error;
+
+	interp->builtins = ALIF_NEWREF(builtinsDict);
+
+	return 1;
+
+error:
+	ALIF_XDECREF(biMod);
+	return -1;
+}
+
 static AlifIntT alifCore_interpreterInit(AlifThread* _thread) {
 
 	AlifInterpreter* interpreter = _thread->interpreter;
@@ -123,7 +150,7 @@ static AlifIntT alifCore_interpreterInit(AlifThread* _thread) {
 	status = alifSys_create(_thread, &sysMod);
 	if (status < 0) goto done;
 
-	//status = alifCore_builtinsInit(thread);
+	status = alifCore_builtinsInit(_thread);
 	if (status < 0) goto done;
 
 	config_ = &interpreter->config;

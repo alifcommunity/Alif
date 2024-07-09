@@ -8,6 +8,7 @@ extern AlifInitObject _alifDictType_;
 
 AlifObject* alifNew_dict();
 AlifObject* alifDict_getItem(AlifObject* , AlifObject* );
+int alifDict_delItem(AlifObject*, AlifObject*);
 int alifDict_getItemRef(AlifObject* , AlifObject* , AlifObject** );
 int alifDict_setItem(AlifObject*, AlifObject*, AlifObject* );
 int alifDict_next(AlifObject* , int64_t* , AlifObject** , AlifObject** );

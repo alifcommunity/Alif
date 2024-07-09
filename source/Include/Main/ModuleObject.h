@@ -19,6 +19,13 @@ public:
 };
 
 
+#define ALIFMODULEDEF_HEAD_INIT {  \
+    ALIFOBJECT_HEAD_INIT(nullptr), \
+    nullptr, /* m_init */       \
+    0,        /* m_index */      \
+    nullptr, /* m_copy */       \
+  }
+
 
 class AlifModuleDefSlot { // 69
 public:
@@ -45,3 +52,6 @@ AlifObject* alifModule_newObject(AlifObject*);
 AlifObject* alifNew_module(const wchar_t* );
 
 AlifObject* alifModule_getDict(AlifObject*);
+
+
+AlifObject* alifModuleDef_init(AlifModuleDef*);

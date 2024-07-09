@@ -69,20 +69,20 @@ AlifObject* alifNew_functionWithQualName(AlifObject* code, AlifObject* globals, 
 	ALIF_INCREF(doc);
 
 	AlifObject* module;
-	AlifObject* builtins = NULL;
+	AlifObject* builtins = nullptr;
 	AlifObject* nameTemp = alifUStr_decodeStringToUTF8(L"__name__"); // temp
 	if (alifDict_getItemRef(globals, nameTemp, &module) < 0) {
 		//goto error;
 	}
 
 	//builtins = alifEval_builtinsFromGlobals(tstate, globals); // borrowed ref
-	//if (builtins == NULL) {
+	//if (builtins == nullptr) {
 		//goto error;
 	//}
 	//ALIF_INCREF(builtins);
 
 	AlifFunctionObject* op = ALIFOBJECT_GC_NEW(AlifFunctionObject, &_alifFunctionType_);
-	if (op == NULL) {
+	if (op == nullptr) {
 		goto error;
 	}
 
@@ -91,18 +91,18 @@ AlifObject* alifNew_functionWithQualName(AlifObject* code, AlifObject* globals, 
 	op->funcName = name;
 	op->funcQualname = qualname;
 	op->funcCode = (AlifObject*)codeObj;
-	op->funcDefaults = NULL;    // No default positional arguments
-	op->funcKwdefaults = NULL;  // No default keyword arguments
-	op->funcClosure = NULL;
+	op->funcDefaults = nullptr;    // No default positional arguments
+	op->funcKwdefaults = nullptr;  // No default keyword arguments
+	op->funcClosure = nullptr;
 	op->funcDoc = doc;
-	op->funcDict = NULL;
-	op->funcWeakRefList = NULL;
+	op->funcDict = nullptr;
+	op->funcWeakRefList = nullptr;
 	op->funcModule = module;
-	op->funcTypeParams = NULL;
+	op->funcTypeParams = nullptr;
 	//op->vectorcall = alifFunction_vectorCall;
 	op->funcVersion = 0;
 	ALIFOBJECT_GC_TRACK(op);
-	//handle_func_event(AlifFunction_EVENT_CREATE, op, NULL);
+	//handle_func_event(AlifFunction_EVENT_CREATE, op, nullptr);
 	return (AlifObject*)op;
 
 error:
@@ -113,7 +113,7 @@ error:
 	ALIF_DECREF(doc);
 	ALIF_XDECREF(module);
 	ALIF_XDECREF(builtins);
-	return NULL;
+	return nullptr;
 }
 
 

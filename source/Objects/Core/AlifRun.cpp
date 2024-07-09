@@ -36,7 +36,8 @@ static AlifObject* run_evalCodeObject(AlifThread* _thread, AlifCodeObject* _co, 
 	return val;
 }
 
-static AlifObject* alifRun_module(Module* _module, AlifObject* _fn, AlifObject* _globals, AlifObject* _locals,  AlifASTMem* _astMem) { // 1299
+static AlifObject* alifRun_module(Module* _module, AlifObject* _fn,
+	AlifObject* _globals, AlifObject* _locals,  AlifASTMem* _astMem) { // 1299
 
 	AlifThread* thread_ = alifThread_get();
 
@@ -53,7 +54,7 @@ static AlifObject* alifRun_module(Module* _module, AlifObject* _fn, AlifObject* 
 }
 
 
-static AlifObject* alifRun_file(FILE* _fp, AlifObject* _fn, int _start,AlifObject* _globals, AlifObject* _locals,  int _fClose) { 
+static AlifObject* alifRun_file(FILE* _fp, AlifObject* _fn, AlifIntT _start, AlifObject* _globals, AlifObject* _locals,  int _fClose) { 
 
 	AlifASTMem* astMem = alifASTMem_new();
 
@@ -79,7 +80,7 @@ static AlifObject* alifRun_file(FILE* _fp, AlifObject* _fn, int _start,AlifObjec
 int alifRun_simpleFileObj(FILE* _fp, AlifObject* _fn, int _fClose) {
 
 	AlifObject* mainModule = alifImport_addModuleRef(L"__main__");
-	if (mainModule == NULL)
+	if (mainModule == nullptr)
 		return -1;
 	AlifObject* dict_ = alifModule_getDict(mainModule);  // borrowed ref
 
@@ -93,7 +94,7 @@ int alifRun_simpleFileObj(FILE* _fp, AlifObject* _fn, int _fClose) {
 
 	AlifObject* mod{};
 
-	mod = alifRun_file(_fp, _fn, ALIFFILE_INPUT,dict_, dict_, _fClose);
+	mod = alifRun_file(_fp, _fn, ALIFFILE_INPUT, dict_, dict_, _fClose);
 	if (mod == nullptr) {
 		goto done;
 	}

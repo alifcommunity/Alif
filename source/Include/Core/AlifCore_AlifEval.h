@@ -21,6 +21,9 @@ extern AlifObject* alifEval_vector(AlifThread*, AlifFunctionObject*,
 
 
 
+extern AlifObject* alifEval_getBuiltins(AlifThread*);
+extern AlifObject* alifEval_builtinsFromGlobals(AlifThread*, AlifObject*);
+
 
 
 

@@ -39,7 +39,9 @@
     <ClInclude Include="..\source\Include\Main\AlifTokenState.h" />
     <ClInclude Include="..\source\Include\Main\AlifTypeDefs.h" />
     <ClInclude Include="..\source\Include\Main\BoolObject.h" />
+    <ClInclude Include="..\source\Include\Main\BuiltinsModule.h" />
     <ClInclude Include="..\source\Include\Main\BytesObject.h" />
+    <ClInclude Include="..\source\Include\Main\ClassObject.h" />
     <ClInclude Include="..\source\Include\Main\Code.h" />
     <ClInclude Include="..\source\Include\Main\Compile.h" />
     <ClInclude Include="..\source\Include\Main\AlifVersion.h" />
@@ -95,10 +97,12 @@
     <ClCompile Include="..\source\Objects\Main\ASDL.cpp" />
     <ClCompile Include="..\source\Objects\Main\ASTOptimize.cpp" />
     <ClCompile Include="..\source\Objects\Main\BoolObject.cpp" />
+    <ClCompile Include="..\source\Objects\Main\BuiltinsModule.cpp" />
     <ClCompile Include="..\source\Objects\Main\BytesMethods.cpp" />
     <ClCompile Include="..\source\Objects\Main\BytesObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\Call.cpp" />
     <ClCompile Include="..\source\Objects\Main\Capsule.cpp" />
+    <ClCompile Include="..\source\Objects\Main\ClassObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\CodeObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\CompilerMain.cpp" />
     <ClCompile Include="..\source\Objects\Main\ConfigMinimal.cpp" />
@@ -107,6 +111,7 @@
     <ClCompile Include="..\source\Objects\Main\FileObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\FileTokenizer.cpp" />
     <ClCompile Include="..\source\Objects\Main\FloatObject.cpp" />
+    <ClCompile Include="..\source\Objects\Main\FrameObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\FunctionObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\GC.cpp" />
     <ClCompile Include="..\source\Objects\Main\GenericAliasObject.cpp" />

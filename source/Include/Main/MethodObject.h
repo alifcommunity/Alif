@@ -14,8 +14,9 @@ public:
 };
 
 extern AlifInitObject _alifCppMethodType_;
-extern AlifInitObject typeCFunction;
+extern AlifInitObject _alifCppFunctionType_;
 
+#define ALIFCFUNCTION_NEWEX(_ml, _self, _mod) alifNew_cMethod((_ml), (_self), (_mod), nullptr)
 AlifObject* alifNew_cMethod(AlifMethodDef*, AlifObject*, AlifObject*, AlifInitObject*);
 AlifObject* alifNew_cFunction(AlifMethodDef*, AlifObject*);
 
@@ -35,7 +36,7 @@ AlifObject* alifNew_cFunction(AlifMethodDef*, AlifObject*);
 #endif
 #define METHOD_METHOD 0x0200
 
-#define ALIFCFunction_CAST(func) ((AlifCFunction)((void(*)(void))(func)))
+#define ALIF_CPPFUNCTION_CAST(func) ((AlifCFunction)((void(*)(void))(func)))
 
 
 class AlifCFunctionObject {

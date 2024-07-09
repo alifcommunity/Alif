@@ -73,7 +73,7 @@ AlifObject* alifNew_cMethod(AlifMethodDef* _method, AlifObject* _self, AlifObjec
             return nullptr;
         }
         objectFunc = (AlifCFunctionObject*)alifMem_objAlloc(sizeof(AlifCFunctionObject));
-        alifSubObject_init((AlifObject*)objectFunc, &typeCFunction);
+        alifSubObject_init((AlifObject*)objectFunc, &_alifCppFunctionType_);
         if (objectFunc == nullptr) {
             return nullptr;
         }
@@ -118,8 +118,8 @@ AlifObject* method_compare(AlifObject* _self, AlifObject* _other, int _op)
     AlifObject* res_ = nullptr;
 
     if ((_op != ALIF_EQ && _op != ALIF_NE) ||
-        !(_self->type_ == &typeCFunction) ||
-        !(_other->type_ == &typeCFunction))
+        !(_self->type_ == &_alifCppFunctionType_) ||
+        !(_other->type_ == &_alifCppFunctionType_))
     {
         // error not Implemented;
     }
@@ -146,7 +146,7 @@ void method_dealloc(AlifCFunctionObject* _object) {
     alifMem_objFree(_object);
 }
 
-AlifTypeObject _alifTypeCFunction_ = {
+AlifTypeObject _alifCppFunctionType_ = {
     0,
 	0,
 	0,
@@ -216,7 +216,7 @@ AlifInitObject _alifCppMethodType_ = {
     0,                              
     0,                               
     0,                                     
-    &typeCFunction,
+    &_alifCppFunctionType_,
 };
 
 

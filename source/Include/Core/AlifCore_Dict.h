@@ -4,7 +4,7 @@ int alifDictDelItem_knownHash(AlifObject* , AlifObject* , size_t );
 
 int alifDictContains_knownHash(AlifObject* , AlifObject* , size_t);
 
-#define ALIFDICT_HASSPLITTABLE(d) ((d)->values != NULL)
+#define ALIFDICT_HASSPLITTABLE(d) ((d)->values != nullptr)
 
 
 class AlifDictKeyEntry {
@@ -96,11 +96,9 @@ class AlifDictState {
 
 
 
-void alifDict_sendEvent(int ,
-	AlifDictWatchEvent ,
-	AlifDictObject* ,
-	AlifObject* ,
-	AlifObject* );
+void alifDict_sendEvent(int, AlifDictWatchEvent , AlifDictObject* , AlifObject* , AlifObject* );
+extern AlifIntT alifObjectDict_setItem(AlifTypeObject*, AlifObject*, AlifObject**, AlifObject*, AlifObject*);
+extern AlifIntT alifDict_setItemLockHeld(AlifDictObject*, AlifObject*, AlifObject*);
 
 static inline uint64_t alifDict_notifyEvent(AlifInterpreter* _interp,
 	AlifDictWatchEvent _event,

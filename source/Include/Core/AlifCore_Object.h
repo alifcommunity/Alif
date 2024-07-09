@@ -155,7 +155,7 @@ static inline int alifSubObject_isGC(AlifObject* _obj)
 {
 	AlifTypeObject* type_ = ALIF_TYPE(_obj);
 	return (ALIFTYPE_IS_GC(type_)
-		&& (type_->isGC == NULL || type_->isGC(_obj)));
+		&& (type_->isGC == nullptr || type_->isGC(_obj)));
 }
 
 static inline size_t  alifSubType_preHeaderSize(AlifTypeObject* _tp)
@@ -174,6 +174,8 @@ void alifSubObjectGC_link(AlifObject*); // 642
 
 extern AlifObject* alifType_allocNoTrack(AlifTypeObject*, AlifSizeT);
 
+
+extern AlifObject** alifObject_computedDictPointer(AlifObject*);
 
 
 

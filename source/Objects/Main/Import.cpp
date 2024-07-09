@@ -54,7 +54,7 @@ static AlifIntT initBuildin_modulesTable() {
 
 
 
-static AlifObject* importAdd_module(AlifThread* _tstate, AlifObject* _name)
+static AlifObject* import_addModule(AlifThread* _tstate, AlifObject* _name)
 {
 	AlifObject* modules_ = _tstate->interpreter->imports.modules_;
 	if (modules_ == nullptr) {
@@ -65,7 +65,7 @@ static AlifObject* importAdd_module(AlifThread* _tstate, AlifObject* _name)
 	if (alifMapping_getOptionalItem(modules_, _name, &m_) < 0) {
 		return nullptr;
 	}
-	if (m_ != nullptr && (m_)) {
+	if (m_ != nullptr and ALIFMODULE_CHECK(m_)) {
 		return m_;
 	}
 	ALIF_XDECREF(m_);
@@ -87,7 +87,7 @@ AlifObject* alifImport_addModuleRef(const wchar_t* _name)
 		return nullptr;
 	}
 	AlifThread* tstate = alifThread_get();
-	AlifObject* module_ = importAdd_module(tstate, nameObj);
+	AlifObject* module_ = import_addModule(tstate, nameObj);
 	ALIF_DECREF(nameObj);
 	return module_;
 }

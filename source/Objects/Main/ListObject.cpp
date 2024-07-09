@@ -813,7 +813,7 @@ static AlifObject* list_insert(AlifListObject* _self, AlifObject* const* _args, 
 	int64_t index_;
 	AlifObject* object_;
 
-	if (!alifSubArg_checkPositional(L"insert", _nArgs, 2, 2)) {
+	if (!_alifArg_checkPositional(L"insert", _nArgs, 2, 2)) {
 		goto exit;
 	}
 	{
@@ -1995,7 +1995,7 @@ static AlifMethodDef _listMethods_[] = {
 	{L"__sizeof__", (AlifCFunction)list___sizeof__, METHOD_NOARGS},
 	{L"clear", (AlifCFunction)list_clear, METHOD_NOARGS},
 	{L"append", (AlifCFunction)list_append, METHOD_O},
-	{L"insert", ALIFCFunction_CAST(list_insert), METHOD_FASTCALL,},
+	{L"insert", ALIF_CPPFUNCTION_CAST(list_insert), METHOD_FASTCALL,},
 	//{L"extend", (AlifCFunction)list_extend, METHOD_O},
 	//{L"pop", ALIFCFunction_CAST(list_pop), METHOD_FASTCALL},
 	//{L"remove", (AlifCFunction)list_remove, METHOD_O},

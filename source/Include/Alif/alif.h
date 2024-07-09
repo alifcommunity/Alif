@@ -29,6 +29,7 @@
 #include "DictObject.h"
 #include "MethodObject.h"
 #include "ModuleObject.h"
+#include "ClassObject.h"
 #include "FunctionObject.h"
 #include "BytesObject.h"
 #include "SliceObject.h"

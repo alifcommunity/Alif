@@ -1,8 +1,10 @@
 #include "alif.h"
 
+#include "AlifCore_Abstract.h"
 #include "AlifCore_Call.h"
 #include "AlifCore_AlifEval.h"
 #include "AlifCore_Code.h"
+#include "AlifCore_ModuleObject.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_OpCodeData.h"
 #include "AlifCore_OpCodeUtils.h"
@@ -10,9 +12,11 @@
 #include "AlifCore_Function.h"
 #include "AlifCore_Integer.h"
 #include "AlifCore_Tuple.h"
-
 #include "AlifCore_Frame.h"
+#include "AlifCore_Dict.h"
 
+
+#include "DictObject.h"
 #include "OpCode.h"
 
 #include "AlifEvalMacros.h"
@@ -47,17 +51,17 @@ AlifIntT alif_checkRecursiveCall(AlifThread* _thread, const wchar_t* _where)
 }
 
 
-AlifObject* alifEval_evalCode(AlifObject* _co, AlifObject* globals, AlifObject* locals) { // 572
+AlifObject* alifEval_evalCode(AlifObject* _co, AlifObject* _globals, AlifObject* _locals) { // 572
 	AlifThread* thread = alifThread_get();
-	//if (_locals == nullptr) {
-	//	_locals = _globals;
-	//}
-	//AlifObject* builtins = alifEval_builtinsFromGlobals(thread, _globals);
-	//if (builtins == nullptr) return nullptr;
+	if (_locals == nullptr) {
+		_locals = _globals;
+	}
+	AlifObject* builtins = alifEval_builtinsFromGlobals(thread, _globals);
+	if (builtins == nullptr) return nullptr;
 
 	AlifFrameConstructor desc = {
-		globals,
-		nullptr,
+		_globals,
+		builtins,
 		((AlifCodeObject*)_co)->name,
 		((AlifCodeObject*)_co)->name,
 		_co,
@@ -68,7 +72,7 @@ AlifObject* alifEval_evalCode(AlifObject* _co, AlifObject* globals, AlifObject* 
 	AlifFunctionObject* func = alifFunction_fromConstructor(&desc); // need review
 	if (func == nullptr) return nullptr;
 
-	AlifObject* res = alifEval_vector(thread, func, nullptr, nullptr, 0, nullptr);
+	AlifObject* res = alifEval_vector(thread, func, _locals, nullptr, 0, nullptr);
 	ALIF_DECREF(func);
 	return res;
 }
@@ -149,20 +153,20 @@ dispatchOpCode:
 	TARGET(LOAD_NAME) {
 		_frame->instrPtr = nextInstr;
 		nextInstr += 1;
-		AlifObject* v;
-		AlifObject* mod_or_class_dict = LOCALS();
-		if (mod_or_class_dict == nullptr) {
+		AlifObject* v{};
+		AlifObject* modOrClassDict = LOCALS();
+		if (modOrClassDict == nullptr) {
 			// error
 			//goto error;
 		}
 		AlifObject* name = GETITEM(FRAME_CO_NAMES, opArg);
-		if (alifMapping_getOptionalItem(mod_or_class_dict, name, &v) < 0) {
-			//goto error;
-		}
+		//if (alifMapping_getOptionalItem(modOrClassDict, name, &v) < 0) {
+		//	//goto error;
+		//}
 		if (v == nullptr) {
-			if (alifDict_getItemRef(GLOBALS(), name, &v) < 0) {
-				//goto error;
-			}
+			//if (alifDict_getItemRef(GLOBALS(), name, &v) < 0) {
+			//	//goto error;
+			//}
 			if (v == nullptr) {
 				if (alifMapping_getOptionalItem(BUILTINS(), name, &v) < 0) {
 					//goto error;
@@ -175,6 +179,121 @@ dispatchOpCode:
 		}
 		stackPtr[0] = v;
 		stackPtr += 1;
+		DISPATCH();
+	}
+
+	TARGET(PUSH_NULL) {
+		_frame->instrPtr = nextInstr;
+		nextInstr += 1;
+		AlifObject* res{};
+		stackPtr[0] = res;
+		stackPtr += 1;
+		DISPATCH();
+	}
+	TARGET(POP_TOP) {
+		_frame->instrPtr = nextInstr;
+		nextInstr += 1;
+		AlifObject* value;
+		value = stackPtr[-1];
+		ALIF_DECREF(value);
+		stackPtr += -1;
+		DISPATCH();
+	}
+	TARGET(CALL) {
+		_frame->instrPtr = nextInstr;
+		nextInstr += 4;
+		AlifCodeUnit* thisInstr = nextInstr - 4;
+		(void)thisInstr;
+		AlifObject** args{};
+		AlifObject* selfOrNull{};
+		AlifObject* callable{};
+		AlifObject* res{};
+		// _SPECIALIZE_CALL
+		args = &stackPtr[-opArg];
+		selfOrNull = stackPtr[-1 - opArg];
+		callable = stackPtr[-2 - opArg];
+//		{
+//			uint16_t counter = read_u16(&thisInstr[1].cache);
+//			(void)counter;
+//#if ENABLE_SPECIALIZATION
+//			if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
+//				nextInstr = thisInstr;
+//				alifSpecialize_call(callable, nextInstr, opArg + (selfOrNull != nullptr));
+//				DISPATCH_SAME_OPARG();
+//			}
+//			STAT_INC(CALL, deferred);
+//			ADVANCE_ADAPTIVE_COUNTER(thisInstr[1].counter);
+//#endif  /* ENABLE_SPECIALIZATION */
+//		}
+		/* Skip 2 cache entries */
+		// _CALL
+		{
+			// oparg counts all of the args, but *not* self:
+			int totalArgs = opArg;
+			if (selfOrNull != nullptr) {
+				args--;
+				totalArgs++;
+			}
+			else if (ALIF_TYPE(callable) == &_alifMethodType_) {
+				args--;
+				totalArgs++;
+				AlifObject* self = ((AlifMethodObject*)callable)->self;
+				args[0] = ALIF_NEWREF(self);
+				AlifObject* method = ((AlifMethodObject*)callable)->func;
+				args[-1] = ALIF_NEWREF(method);
+				ALIF_DECREF(callable);
+				callable = method;
+			}
+			// Check if the call can be inlined or not
+			//if (ALIF_TYPE(callable) == &_alifFunctionType_ and
+			//	_thread->interpreter->evalFrame == nullptr
+			//	//and
+			//	((AlifFunctionObject*)callable)->vectorCall == alifFunction_vectorCall)
+			//{
+				//int code_flags = ((AlifCodeObject*)ALIFFUNCTION_GET_CODE(callable))->flags;
+				//AlifObject* locals = code_flags & CO_OPTIMIZED ? nullptr : ALIF_NEWREF(ALIFFUNCTION_GET_GLOBALS(callable));
+				//AlifInterpreterFrame* newFrame = alifEval_framePushAndInit(
+				//	_thread, (AlifFunctionObject*)callable, locals,
+				//	args, total_args, nullptr
+				//);
+				//// Manipulate stack directly since we leave using DISPATCH_INLINED().
+				//STACK_SHRINK(opArg + 2);
+				//// The frame has stolen all the arguments from the stack,
+				//// so there is no need to clean them up.
+				//if (newFrame == nullptr) {
+				//	goto error;
+				//}
+				//_frame->returnOffset = (uint16_t)(nextInstr - thisInstr);
+				//DISPATCH_INLINED(newFrame);
+			//}
+			/* Callable is not a normal Python function */
+			res = alifObject_vectorCall(callable, args, totalArgs | ALIF_VECTORCALL_ARGUMENTS_OFFSET, nullptr);
+			if (opCode == INSTRUMENTED_CALL) {
+				//AlifObject* arg = total_args == 0 ?
+				//	&_alifInstrumentationMissing : args[0];
+				//if (res == nullptr) {
+				//	alifCall_instrumentationExc2(
+				//		_thread, ALIF_MONITORING_EVENT_C_RAISE,
+				//		_frame, thisInstr, callable, arg);
+				//}
+				//else {
+				//	int err = alifCall_instrumentation2Args(
+				//		_thread, ALIF_MONITORING_EVENT_C_RETURN,
+				//		_frame, thisInstr, callable, arg);
+				//	if (err < 0) {
+				//		ALIF_CLEAR(res);
+				//	}
+				//}
+			}
+			ALIF_DECREF(callable);
+			for (int i = 0; i < totalArgs; i++) {
+				ALIF_DECREF(args[i]);
+			}
+			if (res == nullptr) { stackPtr += -2 - opArg; /*goto error*/; }
+		}
+		stackPtr[-2 - opArg] = res;
+		stackPtr += -1 - opArg;
+		//CHECK_EVAL_BREAKER();
 		DISPATCH();
 	}
 	TARGET(RETURN_CONST) {
@@ -559,4 +678,15 @@ AlifObject* alifEval_vector(AlifThread* _thread, AlifFunctionObject* _func, Alif
 	if (frame == nullptr) return nullptr;
 
 	return alifEval_evalFrame(_thread, frame, 0);
+}
+
+
+
+
+AlifObject* alifEval_getBuiltins(AlifThread* _thread) { // 2434
+	//AlifInterpreterFrame* frame = alifThread_getFrame(_thread);
+	//if (frame != nullptr) {
+	//	return frame->builtins;
+	//}
+	return _thread->interpreter->builtins;
 }

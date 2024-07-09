@@ -79,7 +79,7 @@ static void split_add(STRINGLIB_CHAR* data, int64_t left, int64_t right,
 //    return list;
 //
 //onError:
-//    //Py_DECREF(list);
+//    //ALIF_DECREF(list);
 //    return nullptr;
 //}
 

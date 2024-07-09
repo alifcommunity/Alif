@@ -5,6 +5,7 @@
 #include "AlifCore_UString.h"
 #include "AlifCore_TypeObject.h"
 #include "AlifCore_ModuleObject.h"
+#include "AlifCore_Dict.h"
 
 
 
@@ -538,6 +539,40 @@ AlifIntT alifObject_getOptionalAttr(AlifObject* v, AlifObject* name, AlifObject*
 	return 0;
 }
 
+AlifIntT alifObject_setAttrString(AlifObject* _v, const wchar_t* _name, AlifObject* _w) { // 1074
+	AlifObject* s{};
+	AlifIntT res{};
+
+	if (ALIF_TYPE(_v)->setAttr != nullptr)
+		return (*ALIF_TYPE(_v)->setAttr)(_v, (wchar_t*)_name, _w);
+	s = alifUStr_internFromString(_name);
+	if (s == nullptr)	return -1;
+
+	res = alifObject_setAttr(_v, s, _w);
+	ALIF_XDECREF(s);
+	return res;
+}
+
+AlifObject** alifObject_computedDictPointer(AlifObject* obj) { // 1367
+	AlifTypeObject* tp = ALIF_TYPE(obj);
+
+	AlifSizeT dictoffset = tp->dictOffset;
+	if (dictoffset == 0) {
+		return nullptr;
+	}
+
+	if (dictoffset < 0) {
+
+		AlifSizeT tsize = ALIF_SIZE(obj);
+		if (tsize < 0) {
+			tsize = -tsize;
+		}
+		size_t size = alifSubObject_varSize(tp, tsize);
+		dictoffset += (AlifSizeT)size;
+
+	}
+	return (AlifObject**)((char*)obj + dictoffset);
+}
 
 AlifIntT alifObject_setAttr(AlifObject* v, AlifObject* name, AlifObject* value) { // 1312
 	AlifTypeObject* tp = ALIF_TYPE(v);
@@ -699,6 +734,96 @@ AlifObject* alifObject_genericGetAttr(AlifObject* obj, AlifObject* name) { // 16
 	return alifSubObject_genericGetAttrWithDict(obj, name, nullptr, 0);
 }
 
+
+
+AlifIntT alifObject_genericSetAttrWithDict(AlifObject* obj, AlifObject* name, AlifObject* value, AlifObject* dict)
+{ // 1663
+	AlifTypeObject* tp = ALIF_TYPE(obj);
+	AlifObject* descr{};
+	DescrSetFunc f{};
+	int res = -1;
+
+	if (!ALIFUSTR_CHECK(name)) {
+		// error
+		return -1;
+	}
+
+	if (!alifType_isReady(tp) and alifType_ready(tp) < 0) {
+		return -1;
+	}
+
+	ALIF_INCREF(name);
+	ALIF_INCREF(tp);
+	//descr = alifType_lookupRef(tp, name);
+
+	if (descr != nullptr) {
+		f = ALIF_TYPE(descr)->descrSet;
+		if (f != nullptr) {
+			res = f(descr, obj, value);
+			goto done;
+		}
+	}
+
+	if (dict == nullptr) {
+		AlifObject** dictptr{};
+
+		if ((tp->flags_ & ALIFTPFLAGS_INLINE_VALUES)) {
+			//res = alifObject_storeInstanceAttribute(obj, name, value);
+			goto error_check;
+		}
+
+		if ((tp->flags_ & ALIFTPFLAGS_MANAGED_DICT)) {
+			//AlifManagedDictPointer* managedDict = alifObject_managedDictPointer(obj);
+			//dictptr = (AlifObject**)&managedDict->dict;
+		}
+		else {
+			dictptr = alifObject_computedDictPointer(obj);
+		}
+		if (dictptr == nullptr) {
+			if (descr == nullptr) {
+				if (tp->setAttro == alifObject_genericSetAttr) {
+					// error
+				}
+				else {
+					// error
+				}
+				//alifObject_setAttributeErrorContext(obj, name);
+			}
+			else {
+				// error
+			}
+			goto done;
+		}
+		else {
+			res = alifObjectDict_setItem(tp, obj, dictptr, name, value);
+		}
+	}
+	else {
+		ALIF_INCREF(dict);
+		if (value == nullptr)
+			res = alifDict_delItem(dict, name);
+		else
+			res = alifDict_setItem(dict, name, value);
+		ALIF_DECREF(dict);
+	}
+error_check:
+	if (res < 0
+		//and
+		//alifErr_exceptionMatches(alifExcKeyError)
+		) {
+		// error
+		//alifObject_setAttributeErrorContext(obj, name);
+	}
+done:
+	ALIF_XDECREF(descr);
+	ALIF_DECREF(tp);
+	ALIF_DECREF(name);
+	return res;
+}
+
+AlifIntT alifObject_genericSetAttr(AlifObject* obj, AlifObject* name, AlifObject* value) { // 1759
+	return alifObject_genericSetAttrWithDict(obj, name, value, nullptr);
+}
 
 
 

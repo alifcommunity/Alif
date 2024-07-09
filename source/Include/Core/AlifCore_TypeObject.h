@@ -50,7 +50,7 @@ AlifObject* alifSubType_getDict(AlifTypeObject* );
 
 static inline int alifType_isReady(AlifTypeObject* _type)
 {
-	return alifSubType_getDict(_type) != NULL;
+	return alifSubType_getDict(_type) != nullptr;
 }
 
 AlifObject* alifType_getAttroImpl(AlifTypeObject*, AlifObject* , AlifIntT* );

@@ -582,7 +582,12 @@ int alifType_ready(AlifTypeObject* );
 AlifIntT alifObject_getOptionalAttr(AlifObject*, AlifObject*, AlifObject**);
 
 AlifIntT alifObject_setAttr(AlifObject*, AlifObject*, AlifObject*);
+AlifIntT alifObject_setAttrString(AlifObject*, const wchar_t*, AlifObject*);
 
 
 AlifObject* alifObject_genericGetAttr(AlifObject*, AlifObject*);
 AlifObject* alifSubObject_genericGetAttrWithDict(AlifObject*, AlifObject*, AlifObject*, AlifIntT);
+
+
+AlifIntT alifObject_genericSetAttrWithDict(AlifObject*, AlifObject*, AlifObject*, AlifObject*);
+AlifIntT alifObject_genericSetAttr(AlifObject*, AlifObject*, AlifObject*);

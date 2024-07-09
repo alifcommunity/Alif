@@ -4,6 +4,7 @@
 #include "AlifCore_Call.h"
 #include "AlifCore_Dict.h"
 #include "AlifCore_AlifState.h"
+#include "AlifCore_ModSupport.h"
 #include "AlifCore_Tuple.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_AlifEval.h"
@@ -124,6 +125,14 @@ AlifObject* alifObject_makeTpCall(AlifThread* _thread, AlifObject* _callable,
 
 VectorCallFunc alifVectorCall_function(AlifObject* callable) { // 256
 	return alifVectorCall_functionInline(callable);
+}
+
+AlifObject* alifObject_vectorCall(AlifObject* callable, AlifObject* const* args,
+	AlifUSizeT nargsf, AlifObject* kwnames)
+{
+	AlifThread* thread = alifThread_get();
+	return alifObject_vectorCallThread(thread, callable,
+		args, nargsf, kwnames);
 }
 
 AlifObject* alifObject_callOneArg(AlifObject* func, AlifObject* arg) { // 385

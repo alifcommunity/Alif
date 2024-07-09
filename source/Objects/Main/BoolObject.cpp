@@ -1,5 +1,6 @@
 #include "alif.h"
 
+#include "AlifCore_ModSupport.h"
 
 static AlifObject* bool_repr(AlifObject* self) {
 

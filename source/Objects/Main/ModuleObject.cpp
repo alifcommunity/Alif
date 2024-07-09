@@ -1,6 +1,7 @@
 #include "alif.h"
 
 #include "AlifCore_Call.h"
+#include "AlifCore_FileUtils.h"
 #include "AlifCore_Interpreter.h"
 #include "AlifCore_ModSupport.h"
 #include "AlifCore_ModuleObject.h"
@@ -8,6 +9,102 @@
 #include "AlifCore_AlifState.h"
 
 
+AlifTypeObject _alifModuleDefType_ = {
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	L"moduledef",                       
+	sizeof(AlifModuleDef),
+	0,
+};
+
+
+
+AlifObject* alifModuleDef_init(AlifModuleDef* def) { // 44
+	if (def->base.index == 0) {
+		ALIFSET_REFCNT(def, 1);
+		ALIFSET_TYPE(def, &_alifModuleDefType_);
+		//def->base.index = alifImport_getNextModuleIndex();
+		def->base.index = 1; // temp
+	}
+	return (AlifObject*)def;
+}
+
+static AlifIntT addMethods_toObject(AlifObject* _module, AlifObject* _name, AlifMethodDef* _functions)
+{
+	AlifObject* func{};
+	AlifMethodDef* fdef{};
+
+	for (fdef = _functions; fdef->name != nullptr; fdef++) {
+		if ((fdef->flags & METHOD_CLASS) or
+			(fdef->flags & METHOD_STATIC)) {
+			// error
+			return -1;
+		}
+		func = ALIFCFUNCTION_NEWEX(fdef, (AlifObject*)_module, _name);
+		if (func == nullptr) return -1;
+
+		//alifObject_setDeferredRefCount(func); // need review
+		if (alifObject_setAttrString(_module, fdef->name, func) != 0) {
+			ALIF_DECREF(func);
+			return -1;
+		}
+		ALIF_DECREF(func);
+	}
+
+	return 0;
+}
+
+AlifObject* alifModule_createInitialized(AlifModuleDef* _module) { // 208
+
+	const wchar_t* name{};
+	AlifModuleObject* m{};
+
+	if (!alifModuleDef_init(_module)) return nullptr;
+
+	name = _module->name;
+	if (_module->slots) {
+		// error
+		return nullptr;
+	}
+	//name = alifImport_resolveNameWithPackageContext(name);
+	if ((m = (AlifModuleObject*)alifNew_module(name)) == nullptr) return nullptr;
+
+	if (_module->size > 0) {
+		m->state = alifMem_dataAlloc(_module->size);
+		if (!m->state) {
+			// memory error
+			ALIF_DECREF(m);
+			return nullptr;
+		}
+		//memset(m->state, 0, _module->size);
+	}
+
+	if (_module->methods != nullptr) {
+		if (alifModule_addFunctions((AlifObject*)m, _module->methods) != 0) {
+			ALIF_DECREF(m);
+			return nullptr;
+		}
+	}
+	if (_module->doc != nullptr) {
+		//if (alifModule_setDocString((AlifObject*)m, _module->doc) != 0) {
+		//	ALIF_DECREF(m);
+		//	return nullptr;
+		//}
+	}
+	m->def = _module;
+
+	return (AlifObject*)m;
+}
+
+
+AlifIntT alifModule_addFunctions(AlifObject* m, AlifMethodDef* functions) { // 522
+	AlifIntT res{};
+	AlifObject* name = alifModule_getNameObject(m);
+	if (name == nullptr) return -1;
+
+	res = addMethods_toObject(m, name, functions);
+	ALIF_DECREF(name);
+	return res;
+}
 
 
 AlifObject* alifModule_getNameObject(AlifObject* mod) { // 560
@@ -203,24 +300,23 @@ AlifObject* alifModule_getAttro(AlifModuleObject* m, AlifObject* name) { // 1063
 
 
 
-static int moduleInit_dict(AlifModuleObject* _mod, AlifObject* _dict,
-	AlifObject* _name, AlifObject* _doc)
+static int moduleInit_dict(AlifModuleObject* _mod, AlifObject* _dict, AlifObject* _name, AlifObject* _doc)
 {
 	if (_doc == nullptr)
 		_doc = ALIF_NONE;
-	AlifObject* nameName = alifUStr_fromString(L"name");
+	AlifObject* nameName = alifUStr_fromString(L"__name__");
 	if (alifDict_setItem(_dict, nameName, _name) != 0)
 		return -1;
-	AlifObject* nameDoc = alifUStr_fromString(L"doc");
+	AlifObject* nameDoc = alifUStr_fromString(L"__doc__");
 	if (alifDict_setItem(_dict, nameDoc, _doc) != 0)
 		return -1;
-	AlifObject* namePackage = alifUStr_fromString(L"package");
+	AlifObject* namePackage = alifUStr_fromString(L"__package__");
 	if (alifDict_setItem(_dict, namePackage, ALIF_NONE) != 0)
 		return -1;
-	AlifObject* nameLoader = alifUStr_fromString(L"loader");
+	AlifObject* nameLoader = alifUStr_fromString(L"__loader__");
 	if (alifDict_setItem(_dict, nameLoader, ALIF_NONE) != 0)
 		return -1;
-	AlifObject* nameSpac = alifUStr_fromString(L"spac");
+	AlifObject* nameSpac = alifUStr_fromString(L"__spac__");
 	if (alifDict_setItem(_dict, nameSpac, ALIF_NONE) != 0)
 		return -1;
 	if (ALIFUSTR_CHECK(_name)) {
@@ -286,49 +382,49 @@ AlifObject* alifNew_module(const wchar_t* _name)
 AlifObject* alifModule_getDict(AlifObject* _m)
 {
 	if (!(_m->type_ == &_alifModuleType_)) {
-		return NULL;
+		return nullptr;
 	}
 	return alifSubModule_getDict(_m);  // borrowed reference
 }
 
 AlifTypeObject _alifModuleType_ = {
 	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
-	L"module",                                   /* tp_name */
-	sizeof(AlifModuleObject),                     /* tp_basicsize */
-	0,                                          /* tp_itemsize */
-	0, //(destructor)module_dealloc,                 /* tp_dealloc */
-	0,                                          /* tp_vectorcall_offset */
-	0,                                          /* tp_getattr */
-	0,                                          /* tp_setattr */
-	0, //(reprfunc)module_repr,                      /* tp_repr */
-	0,                                          /* tp_as_number */
-	0,                                          /* tp_as_sequence */
-	0,                                          /* tp_as_mapping */
-	0,                                          /* tp_hash */
-	0,                                          /* tp_call */
-	0,                                          /* tp_str */
-	alifObject_genericGetAttr,                    /* tp_setattro */
-	0, //(getattrofunc)alif_module_getattro,          /* tp_getattro */
-	0,                                          /* tp_as_buffer */
+	L"module",                                 
+	sizeof(AlifModuleObject),                  
+	0,                                         
+	0, //(destructor)module_dealloc,           
+	0,                                         
+	0,                                         
+	0,                                         
+	0, //(reprfunc)module_repr,                
+	0,                                         
+	0,                                         
+	0,                                         
+	0,                                         
+	0,                                         
+	0,                                         
+	(GetAttroFunc)alifObject_genericGetAttr, // worng and need fix                 
+	alifObject_genericSetAttr,
+	0,                                         
 	ALIFTPFLAGS_DEFAULT | ALIFTPFLAGS_HAVE_GC |
-		ALIFTPFLAGS_BASETYPE,                    /* tp_flags */
-	0, //(traverseproc)module_traverse,              /* tp_traverse */
-	0, //(inquiry)module_clear,                      /* tp_clear */
-	0,                                          /* tp_richcompare */
-	0,                                          /* tp_iter */
-	offsetof(AlifModuleObject, weakList),      /* tp_weaklistoffset */
-	0,                                          /* tp_iternext */
-	0, //module_methods,                             /* tp_methods */
-	0, //module_members,                             /* tp_members */
-	0,//module_getsets,                             /* tp_getset */
-	0,                                          /* tp_base */
-	0,                                          /* tp_dict */
-	0,                                          /* tp_descr_get */
-	0,                                          /* tp_descr_set */
-	0, //offsetof(alifModuleObject, md_dict),          /* tp_dictoffset */
-	0, //module___init__,                            /* tp_init */
-	0,                                          /* tp_alloc */
+		ALIFTPFLAGS_BASETYPE,                  
+	0, //(traverseproc)module_traverse,        
+	0, //(inquiry)module_clear,                
+	0,                                         
+	0,                                         
+	offsetof(AlifModuleObject, weakList),      
+	0,                                         
+	0, //module_methods,                       
+	0, //module_members,                       
+	0,//module_getsets,                        
+	0,                                         
+	0,                                         
+	0,                                         
 	0,
-	new_module,                                 /* tp_new */
-	alifObject_gcDel,                            /* tp_free */
+	0,
+	offsetof(AlifModuleObject, dict),                      
+	0,                                         
+	0,
+	new_module,                                
+	alifObject_gcDel,                          
 };

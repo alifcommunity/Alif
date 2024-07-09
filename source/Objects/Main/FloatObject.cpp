@@ -565,7 +565,7 @@ static AlifObject* float_vectorcall(AlifObject* _type, AlifObject* const* _args,
 	}
 	
 	int64_t nArgs = ALIFVECTORCALL_NARGS(_nargsf);
-	if (!ALIFSUBARG_CHECKPOSITIONAL(L"float", nArgs, 0, 1)) {
+	if (!ALIFARG_CHECKPOSITIONAL(L"float", nArgs, 0, 1)) {
 		return nullptr;
 	}
 

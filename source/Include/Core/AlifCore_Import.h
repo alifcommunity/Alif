@@ -53,7 +53,7 @@ public:
         0, \
         nullptr, \
         { \
-            NULL, \
+            nullptr, \
             -1, \
             0, \
         }, \

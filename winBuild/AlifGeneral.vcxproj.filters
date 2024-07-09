@@ -173,6 +173,12 @@
     <ClInclude Include="..\source\Include\Main\ModuleObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\Include\Main\BuiltinsModule.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Main\ClassObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\Objects\Main\GetVersion.cpp">
@@ -332,6 +338,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\source\Objects\Main\SysModule.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Objects\Main\BuiltinsModule.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Objects\Main\FrameObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Objects\Main\ClassObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

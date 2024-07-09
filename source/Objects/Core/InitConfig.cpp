@@ -63,6 +63,7 @@ AlifIntT alif_setLocaleAndWChar() {
 	}
 
 	setlocale(LC_ALL, locale);
+	return 1;
 }
 
 AlifIntT alifArgv_asWStrList(AlifConfig* _config, AlifArgv* _args) {

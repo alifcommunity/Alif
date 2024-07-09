@@ -73,6 +73,25 @@ static inline void alifFrame_initialize(AlifInterpreterFrame* _frame, AlifFuncti
 	}
 }
 
+static inline bool alifFrame_isIncomplete(AlifInterpreterFrame* _frame) { // 185
+	if (_frame->owner == FRAME_OWNED_BY_CSTACK) {
+		return true;
+	}
+	return _frame->owner != FRAME_OWNED_BY_GENERATOR and
+		_frame->instrPtr < ALIFCODE_CODE(alifFrame_getCode(_frame)) + alifFrame_getCode(_frame)->firstTraceable;
+}
+
+static inline AlifInterpreterFrame* alifFrame_getFirstComplete(AlifInterpreterFrame* _frame) { // 195
+	while (_frame and alifFrame_isIncomplete(_frame)) {
+		_frame = _frame->previous;
+	}
+	return _frame;
+}
+
+static inline AlifInterpreterFrame* alifThread_getFrame(AlifThread* _thread) { // 204
+	return alifFrame_getFirstComplete(_thread->currentFrame);
+}
+
 static inline AlifObject** alifFrame_getStackPointer(AlifInterpreterFrame* _frame)
 {
 	AlifObject** sp = _frame->localsPlus + _frame->stacktop;
