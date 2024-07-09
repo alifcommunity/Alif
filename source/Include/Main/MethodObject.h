@@ -41,11 +41,12 @@ AlifObject* alifNew_cFunction(AlifMethodDef*, AlifObject*);
 
 class AlifCFunctionObject {
 public:
-    AlifObject* object;
-    AlifMethodDef* method; 
-    AlifObject* self; 
-    AlifObject* module; 
-    VectorCallFunc vectorCall;
+	ALIFOBJECT_HEAD;
+	AlifMethodDef* method{};
+	AlifObject* self{};
+	AlifObject* module{};
+	AlifObject* weakRefList{};
+	VectorCallFunc vectorCall{};
 };
 
 class AlifCMethodObject {

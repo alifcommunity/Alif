@@ -19,7 +19,7 @@ static AlifListFreeList* getList_freeList() {
 static int list_resize(AlifListObject* _list, size_t _newSize) {
 
 	size_t newAllocated{}, targetBytes{};
-	uint64_t allocated_ = _list->allocate_;
+	uint64_t allocated_ = _list->allocated_;
 
 	if (allocated_ >= _newSize and _newSize >= (allocated_ >> 1)) {
 		ALIFSET_SIZE(_list, _newSize);
@@ -53,7 +53,7 @@ static int list_resize(AlifListObject* _list, size_t _newSize) {
 	}
 	_list->items_ = items_;
 	ALIFSET_SIZE(_list, _newSize);
-	_list->allocate_ = newAllocated;
+	_list->allocated_ = newAllocated;
 
 	return 1;
 }
@@ -67,7 +67,7 @@ static int list_preallocate_exact(AlifListObject* _self, int64_t _size)
 		return -1;
 	}
 	_self->items_ = items_;
-	_self->allocate_ = _size;
+	_self->allocated_ = _size;
 	return 0;
 }
 
@@ -107,7 +107,7 @@ AlifObject* alifNew_list(AlifSizeT _size) {
 
 	}
 	ALIFSET_SIZE(object, _size);
-	object->allocate_ = _size;
+	object->allocated_ = _size;
 	ALIFOBJECT_GC_TRACK(object);
 	return (AlifObject*)object;
 }
@@ -123,7 +123,7 @@ static AlifObject* list_new_prealloc(int64_t _size)
 		ALIF_DECREF(op_);
 		return nullptr;
 	}
-	op_->allocate_ = _size;
+	op_->allocated_ = _size;
 	return (AlifObject*)op_;
 }
 
@@ -360,7 +360,7 @@ static AlifObject* list_extend(AlifListObject* _self, AlifObject* _iterable)
 		{
 			break;
 		}
-		if (ALIF_SIZE(_self) < _self->allocate_) {
+		if (ALIF_SIZE(_self) < _self->allocated_) {
 			int64_t len_ = ALIF_SIZE(_self);
 			ALIFSET_SIZE(_self, len_ + 1);
 			alifList_setItem((AlifObject*)_self, len_, (AlifObject*)item_);
@@ -371,7 +371,7 @@ static AlifObject* list_extend(AlifListObject* _self, AlifObject* _iterable)
 		}
 	}
 
-	if (ALIF_SIZE(_self) < _self->allocate_) {
+	if (ALIF_SIZE(_self) < _self->allocated_) {
 		if (list_resize(_self, ALIF_SIZE(_self)) < 0)
 			goto error;
 	}
@@ -555,7 +555,7 @@ static void list_clear_impl(AlifListObject* _a, bool _isResize)
 
 	int64_t i_ = ALIF_SIZE(_a);
 	ALIFSET_SIZE(_a, 0);
-	_a->allocate_ = 0;
+	_a->allocated_ = 0;
 	while (--i_ >= 0) {
 		ALIF_XDECREF(items_[i_]);
 	}
@@ -1680,10 +1680,10 @@ static AlifObject* list_sort_impl(AlifListObject* _self, AlifObject* _keyFunc, i
 
 	savedObSize = ALIF_SIZE(_self);
 	savedObItem = _self->items_;
-	savedAllocated = _self->allocate_;
+	savedAllocated = _self->allocated_;
 	ALIF_SIZE(_self, 0);
 	_self->items_ = nullptr;
-	_self->allocate_ = -1;
+	_self->allocated_ = -1;
 
 	if (_keyFunc == nullptr) {
 		keys_ = nullptr;
@@ -1833,7 +1833,7 @@ fail:
 			alifMem_objFree(keys_);
 	}
 
-	if (_self->allocate_ != -1 && result_ != nullptr) {
+	if (_self->allocated_ != -1 && result_ != nullptr) {
 		result_ = nullptr;
 	}
 
@@ -1847,7 +1847,7 @@ keyfunc_fail:
 	i_ = ALIF_SIZE(_self);
 	ALIF_SIZE(_self, savedObSize);
 	_self->items_ = savedObItem;
-	_self->allocate_ = savedAllocated;
+	_self->allocated_ = savedAllocated;
 	if (finalObItem != nullptr) {
 		while (--i_ >= 0) {
 			ALIF_XDECREF(finalObItem[i_]);
@@ -1879,7 +1879,7 @@ int alifList_sort(AlifObject* _v)
 
 AlifObject* alifList_asTuple(AlifObject* _v) {
 
-	if (_v == nullptr || !(_v->type_ == &_alifListType_)) {
+	if (_v == nullptr or !(_v->type_ == &_alifListType_)) {
 		//Err_BadInternalCall();
 		return nullptr;
 	}
@@ -1979,7 +1979,7 @@ static AlifObject* list_compare(AlifObject* _v, AlifObject* w_, int _op)
 static AlifObject* list___sizeof___impl(AlifListObject* _self)
 {
 	size_t res_ = _self->_base_._base_.type_->basicSize;
-	res_ += (size_t)_self->allocate_ * sizeof(void*);
+	res_ += (size_t)_self->allocated_ * sizeof(void*);
 	return alifInteger_fromSizeT(res_, true);
 }
 

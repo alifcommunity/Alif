@@ -32,7 +32,7 @@ AlifFunctionObject* alifFunction_fromConstructor(AlifFrameConstructor* _constr) 
 	op->funcWeakRefList = nullptr;
 	op->funcModule = module;
 	op->funcTypeParams = nullptr;
-	//op->vectorCall = alifFunction_vectorCall;
+	op->vectorCall = alifFunction_vectorCall;
 	op->funcVersion = 0;
 
 	ALIFOBJECT_GC_TRACK(op);

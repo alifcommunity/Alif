@@ -664,8 +664,39 @@ static AlifIntT remove_unusedConsts(AlifCFGBasicBlock* _entryBlock, AlifObject* 
 		goto end;
 	}
 
-	/* code here */
+	for (AlifSizeT i = 0; i < nUsedConsts; i++) {
+		AlifSizeT oldIndex = indexMap[i];
+		if (i != oldIndex) {
+			AlifObject* value = ALIFLIST_GET_ITEM(_consts, indexMap[i]);
+			alifList_setItem(_consts, i, ALIF_NEWREF(value));
+		}
+	}
 
+	//if (alifList_setSlice(_consts, nUsedConsts, nConsts, nullptr) < 0) {
+	//	goto end;
+	//}
+
+	revIndexMap = (AlifSizeT*)alifMem_dataAlloc(nConsts * sizeof(AlifSizeT));
+	if (revIndexMap == nullptr) {
+		goto end;
+	}
+	for (AlifSizeT i = 0; i < nConsts; i++) {
+		revIndexMap[i] = -1;
+	}
+	for (AlifSizeT i = 0; i < nUsedConsts; i++) {
+		revIndexMap[indexMap[i]] = i;
+	}
+
+	for (AlifCFGBasicBlock* b = _entryBlock; b != nullptr; b = b->next) {
+		for (int i = 0; i < b->iUsed; i++) {
+			if (OPCODE_HAS_CONST(b->instr[i].opCode)) {
+				int index = b->instr[i].opArg;
+				b->instr[i].opArg = (int)revIndexMap[index];
+			}
+		}
+	}
+
+	ret = 1;
 
 end:
 	alifMem_dataFree(indexMap);

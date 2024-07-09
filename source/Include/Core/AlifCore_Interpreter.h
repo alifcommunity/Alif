@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AlifCore_Memory.h"
+#include "AlifCore_Function.h"
 #include "AlifCore_GC.h"
 #include "AlifCore_GlobalObjects.h"
 #include "AlifCore_Import.h"

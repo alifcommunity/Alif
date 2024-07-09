@@ -37,7 +37,7 @@ public:
 
 	AlifObject** items_{};
 
-	AlifSizeT allocate_{};
+	AlifSizeT allocated_{};
 };
 
 

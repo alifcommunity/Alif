@@ -168,6 +168,8 @@ static AlifObject* tuple_item(AlifTupleObject* _a, int64_t _i)
 
 AlifObject* alifSubTuple_fromArray(AlifObject *const *_object, size_t _size) {
 
+	if (_size == 0) return tuple_getEmpty();
+
 	AlifTupleObject* tuple_ = tuple_alloc(_size);
 
 	if (tuple_ == nullptr) {
@@ -179,6 +181,7 @@ AlifObject* alifSubTuple_fromArray(AlifObject *const *_object, size_t _size) {
 		dst_[i_] = ALIF_NEWREF(item_);
 	}
 
+	//ALIFOBJECT_GC_TRACK(tuple_);
     return (AlifObject*)tuple_;
 
 }
@@ -315,7 +318,7 @@ AlifInitObject _alifTupleType_ = {
     0,                                  
     0,                             
 	alifObject_gcDel,
-    //.tp_vectorcall = tuple_vectorcall,
+    //tuple_vectorCall,
 };
 
 //static inline int maybe_freeList_push(AlifTupleObject* _op)

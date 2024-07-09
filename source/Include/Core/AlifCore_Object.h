@@ -158,7 +158,7 @@ static inline int alifSubObject_isGC(AlifObject* _obj)
 		&& (type_->isGC == nullptr || type_->isGC(_obj)));
 }
 
-static inline size_t  alifSubType_preHeaderSize(AlifTypeObject* _tp)
+static inline size_t alifSubType_preHeaderSize(AlifTypeObject* _tp)
 {
 	return (
 #ifndef ALIF_GIL_DISABLED

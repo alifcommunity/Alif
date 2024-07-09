@@ -1,6 +1,9 @@
 #include "alif.h"
 
 #include "AlifCore_Object.h"
+#include "AlifCore_AlifEval.h"
+#include "AlifCore_Call.h"
+#include "AlifCore_AlifState.h"
 #include "AlifCore_Memory.h"
 
 static AlifObject* cFunction_vectorCallFastCall(
@@ -72,17 +75,18 @@ AlifObject* alifNew_cMethod(AlifMethodDef* _method, AlifObject* _self, AlifObjec
             // error
             return nullptr;
         }
-        objectFunc = (AlifCFunctionObject*)alifMem_objAlloc(sizeof(AlifCFunctionObject));
-        alifSubObject_init((AlifObject*)objectFunc, &_alifCppFunctionType_);
+        objectFunc = ALIFOBJECT_GC_NEW(AlifCFunctionObject, &_alifCppFunctionType_);
         if (objectFunc == nullptr) {
             return nullptr;
         }
     }
 
     objectFunc->method = _method;
-    objectFunc->self = _self;
-    objectFunc->module = _module;
+    objectFunc->self = ALIF_XNEWREF(_self);
+    objectFunc->module = ALIF_XNEWREF(_module);
     objectFunc->vectorCall = vectorCall;
+	objectFunc->weakRefList = nullptr;
+	ALIFOBJECT_GC_TRACK(objectFunc);
     return (AlifObject*)objectFunc;
 }
 
@@ -147,9 +151,7 @@ void method_dealloc(AlifCFunctionObject* _object) {
 }
 
 AlifTypeObject _alifCppFunctionType_ = {
-    0,
-	0,
-	0,
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_,0),
     L"builtin_function_or_method",
     sizeof(AlifCFunctionObject),
     0,
@@ -165,29 +167,28 @@ AlifTypeObject _alifCppFunctionType_ = {
     cFunction_call,                             /* tp_call */
     0,
 	alifObject_genericGetAttr,
-    0,                                          /* tp_str */
-    0,                    /* tp_getattro */
-    0,                                          /* tp_setattro */
-    0,                                          /* tp_as_buffer */
-    0,                 /* tp_flags */
-    0,                                          /* tp_doc */
-    0,                /* tp_traverse */
-    0,                                          /* tp_clear */
-    0,                           /* tp_richcompare */
-    0, /* tp_weaklistoffset */
-    0,                                          /* tp_iter */
-    0,                                          /* tp_iternext */
-    0,                               /* tp_methods */
-    0,                               /* tp_members */
-    0,                               /* tp_getset */
-    0,                                          /* tp_base */
-    0,                                          /* tp_dict */
+    0,                                    
+    0,                   
+	ALIFTPFLAGS_DEFAULT | ALIFTPFLAGS_HAVE_GC |
+	ALIFTPFLAGS_HAVE_VECTORCALL,                                       
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
 };
 
 AlifInitObject _alifCppMethodType_ = {
-    0,
-	0,
-	0,
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
     L"builtin_method",
     sizeof(AlifCMethodObject),
     0,                                    
@@ -202,7 +203,7 @@ AlifInitObject _alifCppMethodType_ = {
     0,
     0,                                          
     0,                    
-	alifObject_genericGetAttr,
+	0,
     0,                                          
     0,                 
     0,                                          

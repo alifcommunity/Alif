@@ -111,18 +111,95 @@ static AlifIntT codeGen_addOpNoArg(InstructionSequence* _seq, AlifIntT _opCode, 
 	return alifInstructionSequence_addOp(_seq, _opCode, 0, _loc);
 }
 
-static AlifObject* marge_constsRecursive(AlifObject* _obj) { // 857
+static AlifObject* merge_constsRecursive(AlifObject* _obj) { // 857
+
 	if (_obj == ALIF_NONE) return _obj;
 
+	//AlifObject* key = alifCode_constantKey(_obj);
+	//if (key == nullptr) return nullptr;
 
-	/*
-		long code here
-	*/
+	//AlifObject* t{};
+	//int res = alifDict_setDefaultRef(key, key, &t);
+	//if (res != 0) {
+	//	ALIF_DECREF(key);
+	//	return t;
+	//}
+	//ALIF_DECREF(t);
 
+	//if (ALIFTUPLE_CHECKEXACT(_obj)) {
+	//	AlifSizeT len = ALIFTUPLE_GET_SIZE(_obj);
+	//	for (AlifSizeT i = 0; i < len; i++) {
+	//		AlifObject* item = ALIFTUPLE_GET_ITEM(_obj, i);
+	//		AlifObject* u = merge_constsRecursive(item);
+	//		if (u == nullptr) {
+	//			ALIF_DECREF(key);
+	//			return nullptr;
+	//		}
+
+	//		AlifObject* v{};  // borrowed
+	//		if (ALIFTUPLE_CHECKEXACT(u)) {
+	//			v = ALIFTUPLE_GET_ITEM(u, 1);
+	//		}
+	//		else {
+	//			v = u;
+	//		}
+	//		if (v != item) {
+	//			ALIFTUPLE_SET_ITEM(_obj, i, ALIF_NEWREF(v));
+	//			ALIF_DECREF(item);
+	//		}
+
+	//		ALIF_DECREF(u);
+	//	}
+	//}
+	//else if (ALIFFROZENSET_CHECKEXACT(_obj)) {
+
+	//	AlifSizeT len = ALIFSET_GET_SIZE(_obj);
+	//	if (len == 0) { 
+	//		return key;
+	//	}
+	//	AlifObject* tuple = alifNew_tuple(len);
+	//	if (tuple == nullptr) {
+	//		ALIF_DECREF(key);
+	//		return nullptr;
+	//	}
+	//	AlifSizeT i = 0, pos = 0;
+	//	AlifObject* item;
+	//	AlifSizeT hash;
+	//	while (alifSet_nextEntry(_obj, &pos, &item, &hash)) {
+	//		AlifObject* k = merge_constsRecursive(item);
+	//		if (k == nullptr) {
+	//			ALIF_DECREF(tuple);
+	//			ALIF_DECREF(key);
+	//			return nullptr;
+	//		}
+	//		AlifObject* u;
+	//		if (ALIFTUPLE_CHECKEXACT(k)) {
+	//			u = ALIF_NEWREF(ALIFTUPLE_GET_ITEM(k, 1));
+	//			ALIF_DECREF(k);
+	//		}
+	//		else {
+	//			u = k;
+	//		}
+	//		ALIFTUPLE_SET_ITEM(tuple, i, u);  // Steals reference of u.
+	//		i++;
+	//	}
+
+	//	AlifObject* new_ = alifNew_frozenSet(tuple);
+	//	ALIF_DECREF(tuple);
+	//	if (new_ == nullptr) {
+	//		ALIF_DECREF(key);
+	//		return nullptr;
+	//	}
+	//	ALIF_DECREF(o);
+	//	ALIFTUPLE_SET_ITEM(key, 1, new_);
+	//}
+
+	//return key;
+	return _obj;
 }
 
 static AlifSizeT compiler_addConst(CompilerUnit* _cu, AlifObject* _obj) { // 965
-	AlifObject* key = marge_constsRecursive(_obj);
+	AlifObject* key = merge_constsRecursive(_obj);
 	if (key == nullptr) return -1;
 
 	AlifSizeT arg = dict_addObject(_cu->data.consts, key);

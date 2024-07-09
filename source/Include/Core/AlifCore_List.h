@@ -9,7 +9,7 @@ extern int alifSubList_appendTakeRefListResize(AlifListObject*, AlifObject*);
 static inline int alifSubList_appendTakeRef(AlifListObject* _self, AlifObject* _newItem)
 {
 	int64_t len_ = ALIF_SIZE(_self);
-	int64_t allocated_ = _self->allocate_;
+	int64_t allocated_ = _self->allocated_;
 	if (allocated_ > len_) {
 		ALIFLIST_SETITEM(_self, len_, _newItem);
 		ALIFSET_SIZE(_self, len_ + 1);

@@ -145,6 +145,20 @@ AlifObject* alifObject_callOneArg(AlifObject* func, AlifObject* arg) { // 385
 	return alifObject_vectorCallThread(thread, func, args, nargsf, nullptr);
 }
 
+AlifObject* alifFunction_vectorCall(AlifObject* func, AlifObject* const* stack,
+	AlifUSizeT nargsf, AlifObject* kwnames) { // 401
+
+	AlifFunctionObject* f = (AlifFunctionObject*)func;
+	AlifSizeT nargs = ALIFVECTORCALL_NARGS(nargsf);
+	AlifThread* tstate = alifThread_get();
+	if (((AlifCodeObject*)f->funcCode)->flags & CO_OPTIMIZED) {
+		return alifEval_vector(tstate, f, NULL, stack, nargs, kwnames);
+	}
+	else {
+		return alifEval_vector(tstate, f, f->funcGlobals, stack, nargs, kwnames);
+	}
+}
+
 AlifObject* alifStack_asDict(AlifObject* const* _values, AlifObject* _kwNames) { // 935
 	AlifSizeT nkwargs;
 
