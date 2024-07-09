@@ -699,8 +699,9 @@ static inline int insert_combined_dict(AlifInterpreter* _interp, AlifDictObject*
 		ep_->value = _value;
 		ep_->hash = _hash;
 	}
-	_mp->keys, _mp->keys->usable - 1;
-	_mp->keys, _mp->keys->nentries + 1;
+
+	_mp->keys->usable = _mp->keys->usable - 1;
+	_mp->keys->nentries = _mp->keys->nentries + 1;
 
 	return 0;
 }
@@ -1136,7 +1137,7 @@ int alifSubDict_next(AlifObject* _op, int64_t* _ppos, AlifObject** _pkey,
 	}
 	else {
 		int64_t n_ = mp_->keys->nentries;
-		if (i_ < 0 || i_ >= n_)
+		if (i_ < 0 or i_ >= n_)
 			return 0;
 		if ((mp_->keys->kind != Dict_Keys_General)) {
 			AlifDictUnicodeEntry* entryPtr = &dk_uStr_entries(mp_->keys)[i_];
@@ -1152,7 +1153,7 @@ int alifSubDict_next(AlifObject* _op, int64_t* _ppos, AlifObject** _pkey,
 		}
 		else {
 			AlifDictKeyEntry* entryPtr = &dk_entries(mp_->keys)[i_];
-			while (i_ < n_ && entryPtr->value == nullptr) {
+			while (i_ < n_ and entryPtr->value == nullptr) {
 				entryPtr++;
 				i_++;
 			}
