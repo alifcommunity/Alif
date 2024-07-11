@@ -16,6 +16,9 @@ public:
 extern AlifInitObject _alifCppMethodType_;
 extern AlifInitObject _alifCppFunctionType_;
 
+#define ALIFCPPFUNCTION_CHECKEXACT(op) ALIF_IS_TYPE((op), &_alifCppFunctionType_)
+#define ALIFCPPFUNCTION_CHECK(op) ALIFOBJECT_TYPECHECK((op), &_alifCppFunctionType_)
+
 #define ALIFCFUNCTION_NEWEX(_ml, _self, _mod) alifNew_cMethod((_ml), (_self), (_mod), nullptr)
 AlifObject* alifNew_cMethod(AlifMethodDef*, AlifObject*, AlifObject*, AlifInitObject*);
 AlifObject* alifNew_cFunction(AlifMethodDef*, AlifObject*);

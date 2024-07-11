@@ -363,12 +363,12 @@ public:
 
 class AlifNumberMethods {
 public:
-	BinaryFunc add_;
-	BinaryFunc subtract_;
-	BinaryFunc multiply_;
-	BinaryFunc remainder_;
-	BinaryFunc divmod_;
-	BinaryFunc power_;
+	BinaryFunc add_{};
+	BinaryFunc subtract_{};
+	BinaryFunc multiply_{};
+	BinaryFunc remainder_{};
+	BinaryFunc divmod_{};
+	BinaryFunc power_{};
 	UnaryFunc negative_;
 	UnaryFunc positive_;
 	UnaryFunc absolute_;

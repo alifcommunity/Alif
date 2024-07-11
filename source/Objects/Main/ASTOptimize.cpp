@@ -63,6 +63,7 @@ static AlifIntT fold_binOp(Expression* _node, AlifASTMem* _astMem, AlifASTOptimi
 	AlifObject* newVal = nullptr;
 
 	if (_node->V.binOp.op == Operator::Add) newVal = alifNumber_add(leftVal, rightVal);
+	else if (_node->V.binOp.op == Operator::Sub) newVal = alifNumber_subtract(leftVal, rightVal);
 
 
 	return make_const(_node, newVal, _astMem);

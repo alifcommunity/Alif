@@ -678,6 +678,9 @@ static AlifIntT addOp_binary(AlifCompiler* _compiler, SourceLocation _loc, Opera
 	if (_binOp == Operator::Add) {
 		opArg = _inPlace ? NB_INPLACE_ADD : NB_ADD;
 	}
+	else if (_binOp == Operator::Sub) {
+		opArg = _inPlace ? NB_INPLACE_SUBTRACT : NB_SUBTRACT;
+	}
 
 	ADDOP_I(_compiler, _loc, BINARY_OP, opArg);
 

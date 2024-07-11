@@ -249,8 +249,7 @@ static AlifObject* cFunctionVectorCall_fastCallKeywords(
     AlifObject* _object, AlifObject* const* _args, size_t _nArgsF, AlifObject* _kwNames)
 {
     int64_t nArgs = _nArgsF & ~((size_t)1 << (8 * sizeof(size_t) - 1));
-    AlifCFunctionFastWithKeywords method_ = (AlifCFunctionFastWithKeywords)
-        cFunction_enterCall(_object);
+    AlifCFunctionFastWithKeywords method_ = (AlifCFunctionFastWithKeywords)cFunction_enterCall(_object);
     if (method_ == nullptr) {
         return nullptr;
     }

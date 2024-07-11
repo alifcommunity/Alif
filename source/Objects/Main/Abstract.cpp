@@ -130,7 +130,7 @@ int alifObject_getBuffer(AlifObject* _obj, AlifBuffer* _view, int _flags)
 }
 
 #define NB_SLOT(_x) offsetof(AlifNumberMethods, _x)
-#define NB_BINOP(_method, _slot) (*(BinaryFunc*)(&((wchar_t*)_method)[_slot])) // 911
+#define NB_BINOP(_method, _slot) (*(BinaryFunc*)(&((char*)_method)[_slot])) // 911
 
 
 static AlifObject* binary_op1(AlifObject* _x, AlifObject* _y, const AlifIntT _opSlot, const wchar_t* _opName) { // 926
@@ -150,12 +150,12 @@ static AlifObject* binary_op1(AlifObject* _x, AlifObject* _y, const AlifIntT _op
 
 	if (slotX) {
 		AlifObject* x_{};
-		//if (slotY and alifType_isSubType(ALIF_TYPE(_y), ALIF_TYPE(_x))) {
-		//	x_ = slotY(_x, _y);
-		//	if (x_ != ALIF_NOTIMPLEMENTED) return x_;
-		//	ALIF_DECREF(x_);
-		//	slotY = nullptr;
-		//}
+		if (slotY and alifType_isSubType(ALIF_TYPE(_y), ALIF_TYPE(_x))) {
+			x_ = slotY(_x, _y);
+			if (x_ != ALIF_NOTIMPLEMENTED) return x_;
+			ALIF_DECREF(x_);
+			slotY = nullptr;
+		}
 		x_ = slotX(_x, _y);
 		if (x_ != ALIF_NOTIMPLEMENTED) return x_;
 		ALIF_DECREF(x_);
@@ -171,6 +171,29 @@ static AlifObject* binary_op1(AlifObject* _x, AlifObject* _y, const AlifIntT _op
 
 
 #define BINARY_OP1(_x, _y, _opSlot, _opName) binary_op1(_x, _y, _opSlot, _opName) // 982
+
+
+static AlifObject* binary_op(AlifObject* _x, AlifObject* _y, const AlifIntT _opSlot, const wchar_t* _opName) { // 997
+	AlifObject* result = BINARY_OP1(_x, _y, _opSlot, _opName);
+	if (result == ALIF_NOTIMPLEMENTED) {
+		ALIF_DECREF(result);
+
+		if (_opSlot == NB_SLOT(rshift_) and ALIFCPPFUNCTION_CHECKEXACT(_x) and
+			wcscmp(((AlifCFunctionObject*)_x)->method->name, L"اطبع") == 0)
+		{
+			// error
+			return nullptr;
+		}
+		//return binOp_typeError(_v, _w, _opName);
+	}
+	return result;
+}
+
+#define BINARY_FUNC(_func, _op, _opName) \
+    AlifObject* _func(AlifObject* _x, AlifObject* _y) { \
+        return binary_op(_x, _y, NB_SLOT(_op), _opName); \
+    }	
+BINARY_FUNC(alifNumber_subtract, subtract_, L"-")
 
 
 AlifObject* alifNumber_add(AlifObject* _x, AlifObject* _y) { // 1138

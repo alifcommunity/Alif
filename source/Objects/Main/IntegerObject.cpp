@@ -270,13 +270,14 @@ static AlifIntegerObject* number_add(AlifIntegerObject* _a, AlifIntegerObject* _
 {
 	if (_a->sign_ and _b->sign_) {
 
-		AlifIntegerObject* z_ = alifNew_integer(0, true);
+		//AlifIntegerObject* z_ = alifNew_integer(0, true);
+		AlifIntegerObject* z_{};
 
 		z_ = add(_a, _b);
 
-		if (z_->digits_ != 0) {
-			flipSign(z_);
-		}
+		//if (z_->digits_ != 0) { // need review
+		//	flipSign(z_);
+		//} 
 		return z_;
 	}
 	else if (!_a->sign_ and !_b->sign_)
@@ -598,7 +599,6 @@ static AlifGetSetDef _integerGetSet_[] = {
 };
 
 static AlifNumberMethods _integerAsNumber_ = {
-
 	(BinaryFunc)number_add,
 	(BinaryFunc)number_sub,
 	(BinaryFunc)number_mul,
@@ -636,9 +636,7 @@ static AlifNumberMethods _integerAsNumber_ = {
 };
 
 AlifTypeObject _alifIntegerType_ = {
-	0,
-	0,
-	0,
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	L"int",
 	offsetof(AlifIntegerObject, digits_),
 	sizeof(size_t),

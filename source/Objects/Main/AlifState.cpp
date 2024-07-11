@@ -153,7 +153,7 @@ static AlifStackChunk* allocate_chunk(AlifIntT _sizeInBytes, AlifStackChunk* _pr
 
 static AlifObject** push_chunk(AlifThread* _thread, AlifIntT _size) { // 2902
 	AlifIntT allocateSize = DATA_STACK_CHUNK_SIZE;
-	while (allocateSize < (int)sizeof(AlifObject*) * (_size + MINIMUM_OVERHEAD)) {
+	while (allocateSize < (int)sizeof(AlifObject*)*(_size + MINIMUM_OVERHEAD)) {
 		allocateSize *= 2;
 	}
 	AlifStackChunk* newChunck = allocate_chunk(allocateSize, _thread->dataStackChunk);
@@ -161,8 +161,7 @@ static AlifObject** push_chunk(AlifThread* _thread, AlifIntT _size) { // 2902
 		return nullptr;
 	}
 	if (_thread->dataStackChunk) {
-		_thread->dataStackChunk->top = _thread->dataStackTop -
-			&_thread->dataStackChunk->data[0];
+		_thread->dataStackChunk->top = _thread->dataStackTop - &_thread->dataStackChunk->data[0];
 	}
 	_thread->dataStackChunk = newChunck;
 	_thread->dataStackLimit = (AlifObject**)(((char*)newChunck) + allocateSize);

@@ -209,9 +209,12 @@ dispatchOpCode:
 		AlifObject* callable{};
 		AlifObject* res{};
 		// _SPECIALIZE_CALL
-		args = &stackPtr[-opArg];
-		selfOrNull = stackPtr[-1 - opArg];
-		callable = stackPtr[-2 - opArg];
+		//args = &stackPtr[-opArg];
+		//selfOrNull = stackPtr[-1 - opArg];
+		//callable = stackPtr[-2 - opArg];
+		args = &stackPtr[-opArg - 1];
+		selfOrNull = stackPtr[-1 - opArg - 1];
+		callable = stackPtr[-2 - opArg - 1];
 //		{
 //			uint16_t counter = read_u16(&thisInstr[1].cache);
 //			(void)counter;
