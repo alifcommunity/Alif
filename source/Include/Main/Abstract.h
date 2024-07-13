@@ -19,6 +19,8 @@ int alifObject_setItem(AlifObject*, AlifObject*, AlifObject* );
 
 AlifObject* alifNumber_add(AlifObject*, AlifObject*);
 AlifObject* alifNumber_subtract(AlifObject*, AlifObject*);
+AlifObject* alifNumber_inPlaceAdd(AlifObject* _x, AlifObject* _y);
+AlifObject* alifNumber_inPlaceSubtract(AlifObject* _x, AlifObject* _y);
 
 AlifObject* alifInteger_inPlaceOr(AlifObject*, AlifObject*);
 

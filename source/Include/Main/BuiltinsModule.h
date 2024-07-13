@@ -19,6 +19,7 @@ static AlifObject* builtin_print(AlifObject* module, AlifObject** args, AlifSize
 
 	std::wcout << res << std::endl;
 
+
 exit:
-	return nullptr;
+	return ALIF_NONE;
 }

@@ -6,6 +6,7 @@
 
 
 class AlifBackoffCounter {
+public:
 	union {
 		class {
 		public:
@@ -17,12 +18,13 @@ class AlifBackoffCounter {
 };
 
 union AlifCodeUnit {
+	uint16_t cache{};
 	class {
 	public:
 		uint8_t code{};
 		uint8_t arg{};
 	}op;
-	AlifBackoffCounter counter{};
+	AlifBackoffCounter counter;
 };
 
 

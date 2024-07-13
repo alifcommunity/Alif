@@ -69,7 +69,10 @@ extern AlifCodeObject* alifCode_new(AlifCodeConstructor*);
 
 
 
-
+static inline uint16_t read_u16(uint16_t* p)
+{
+	return *p;
+}
 
 
 

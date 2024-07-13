@@ -8,7 +8,8 @@
 
 // Forward Declaration
 static int analyze_block(AlifSTEntryObject*, AlifObject*, AlifObject*, AlifObject*, AlifObject*, AlifSTEntryObject*);
-
+static AlifIntT symTable_visitExpr(AlifSymTable*, Expression*);
+static AlifIntT symTable_visitKeyword(class AlifSymTable*, Keyword*);
 
 #define LOCATION(_x) \
  (_x)->lineNo, (_x)->colOffset, (_x)->endLineNo, (_x)->endColOffset
@@ -193,6 +194,10 @@ static AlifIntT symTable_addDef(class AlifSymTable* _st, AlifObject* _name, Alif
     return symTable_addDefHelper(_st, _name, _flag, _st->stCur, lineno, col_offset, end_lineno, end_col_offset);
 }
 
+static AlifIntT symTable_visitKeyword(class AlifSymTable* _st, Keyword* _k) { // 2610
+	VISIT(_st, Expr, _k->val);
+	return 1;
+}
 
 static AlifIntT symTable_visitExpr(AlifSymTable* _symTable, Expression* _expr) { // 2118
     if (++_symTable->recursionDepth > _symTable->recursionLimit) {
@@ -221,7 +226,7 @@ static AlifIntT symTable_visitExpr(AlifSymTable* _symTable, Expression* _expr) {
     else if (_expr->type == ExprType::CallK) {
         VISIT(_symTable, Expr, _expr->V.call.func);
         VISIT_SEQ(_symTable, Expr, Expression, _expr->V.call.args);
-        //VISIT_SEQ_WITH_NULLPTR(_symTable, Keyword, Keyword, _expr->V.call.keywords);
+        VISIT_SEQ_WITH_NULLPTR(_symTable, Keyword, Keyword, _expr->V.call.keywords);
     }
     else if (_expr->type == ExprType::AttributeK) {
         VISIT(_symTable, Expr, _expr->V.attribute.val);
@@ -238,7 +243,7 @@ static AlifIntT symTable_visitExpr(AlifSymTable* _symTable, Expression* _expr) {
                 if (_expr->V.slice.step)
                     VISIT(_symTable, Expr, _expr->V.slice.step)
     }
-    else if (_expr->type == ExprType::NamedExprK) {
+    else if (_expr->type == ExprType::NameK) {
         if (!symTable_addDef(_symTable, _expr->V.name.name, _expr->V.name.ctx == Load ? USE : DEF_LOCAL, LOCATION(_expr)))
             VISIT_QUIT(_symTable, 0);
         if (_expr->V.name.ctx == ExprCTX::Load 
@@ -253,6 +258,7 @@ static AlifIntT symTable_visitExpr(AlifSymTable* _symTable, Expression* _expr) {
         }
     }
 
+
     VISIT_QUIT(_symTable, 1);
 }
 
@@ -264,6 +270,10 @@ static AlifIntT symTable_visitStmt(class AlifSymTable* _symTable, Statement* _st
     if (_stmt->type == ExprK) {
         VISIT(_symTable, Expr, _stmt->V.expression.val);
     }
+	else if (_stmt->type == AssignK) {
+		VISIT_SEQ(_symTable, Expr, Expression, _stmt->V.assign.targets);
+		VISIT(_symTable, Expr, _stmt->V.assign.val);
+	}
     VISIT_QUIT(_symTable, 1);
 }
 
@@ -395,6 +405,114 @@ fail:
     return nullptr;
 }
 
+#define SET_SCOPE(_dict, _name, _i) { \
+    AlifObject *o = alifInteger_fromLongLong(_i); \
+    if (!o) \
+        return 0; \
+    if (alifDict_setItem(_dict, _name, o) < 0) { \
+        ALIF_DECREF(o); \
+        return 0; \
+    } \
+    ALIF_DECREF(o); \
+}
+
+static AlifIntT analyze_name(AlifSTEntryObject* ste, AlifObject* scopes, AlifObject* name, long flags, AlifObject* bound,
+	AlifObject* local, AlifObject* _free, AlifObject* global, AlifObject* type_params, AlifSTEntryObject* class_entry)
+{
+	int contains;
+	if (flags & DEF_GLOBAL) {
+		if (flags & DEF_NONLOCAL) {
+			// error
+			//return error_atDirective(ste, name);
+		}
+		SET_SCOPE(scopes, name, GLOBAL_EXPLICIT);
+		if (alifSet_add(global, name) < 0)
+			return 0;
+		if (bound && (alifSet_discard(bound, name) < 0))
+			return 0;
+		return 1;
+	}
+	if (flags & DEF_NONLOCAL) {
+		if (!bound) {
+			// error
+			//return error_atDirective(ste, name);
+		}
+		contains = alifSet_contains(bound, name);
+		if (contains < 0) {
+			return 0;
+		}
+		if (!contains) {
+			// error
+			//return error_atDirective(ste, name);
+		}
+		contains = alifSet_contains(type_params, name);
+		if (contains < 0) {
+			return 0;
+		}
+		if (contains) {
+			// error
+			//return error_atDirective(ste, name);
+		}
+		SET_SCOPE(scopes, name, FREE);
+		ste->steFree = 1;
+		return alifSet_add(_free, name) >= 0;
+	}
+	if (flags & DEF_BOUND) {
+		SET_SCOPE(scopes, name, LOCAL);
+		if (alifSet_add(local, name) < 0)
+			return 0;
+		if (alifSet_discard(global, name) < 0)
+			return 0;
+		if (flags & DEF_TYPE_PARAM) {
+			if (alifSet_add(type_params, name) < 0)
+				return 0;
+		}
+		else {
+			if (alifSet_discard(type_params, name) < 0)
+				return 0;
+		}
+		return 1;
+	}
+	if (class_entry != nullptr) {
+		long class_flags = alifST_getSymbol(class_entry, name);
+		if (class_flags & DEF_GLOBAL) {
+			SET_SCOPE(scopes, name, GLOBAL_EXPLICIT);
+			return 1;
+		}
+		else if (class_flags & DEF_BOUND && !(class_flags & DEF_NONLOCAL)) {
+			SET_SCOPE(scopes, name, GLOBAL_IMPLICIT);
+			return 1;
+		}
+	}
+
+	if (bound) {
+		contains = alifSet_contains(bound, name);
+		if (contains < 0) {
+			return 0;
+		}
+		if (contains) {
+			SET_SCOPE(scopes, name, FREE);
+			ste->steFree = 1;
+			return alifSet_add(_free, name) >= 0;
+		}
+	}
+	
+	if (global) {
+		contains = alifSet_contains(global, name);
+		if (contains < 0) {
+			return 0;
+		}
+		if (contains) {
+			SET_SCOPE(scopes, name, GLOBAL_IMPLICIT);
+			return 1;
+		}
+	}
+	if (ste->steNested)
+		ste->steFree = 1;
+	SET_SCOPE(scopes, name, GLOBAL_IMPLICIT);
+	return 1;
+}
+
 static int update_symbols(AlifObject* _symbols, AlifObject* _scopes,
     AlifObject* _bound, AlifObject* _free, AlifObject* _inlinedCells, int _classflag) { // 903
     AlifObject* name = nullptr, * itr = nullptr;
@@ -417,8 +535,7 @@ static int update_symbols(AlifObject* _symbols, AlifObject* _scopes,
         v_new = alifInteger_fromLongLong(flags);
         if (!v_new)
             return 0;
-        _symbols = (AlifObject*)alifDict_setItem(_symbols, name, v_new);
-        if ((_symbols) == nullptr) {
+        if (alifDict_setItem(_symbols, name, v_new)) {
             ALIF_DECREF(v_new);
             return 0;
         }
@@ -498,7 +615,7 @@ static AlifIntT drop_classFree(AlifSTEntryObject* _ste, AlifObject* _free) { // 
     return 1;
 }
 
-static AlifIntT analyze_cells(AlifObject* _scopes, AlifObject* _free, AlifObject* _inlinedCells) { // 83/
+static AlifIntT analyze_cells(AlifObject* _scopes, AlifObject* _free, AlifObject* _inlinedCells) { // 83
     AlifObject* name, * v, * v_cell;
     AlifIntT success = 0;
     AlifSizeT pos = 0;
@@ -574,7 +691,7 @@ static int analyze_block(AlifSTEntryObject* _ste, AlifObject* _bound, AlifObject
     AlifObject* _global, AlifObject* _typeParams, AlifSTEntryObject* _classEntry) { // 1035
 
     AlifObject* name, * v, * local = nullptr, * scopes = nullptr, * newbound = nullptr;
-    AlifObject* newglobal = nullptr, * newfree = nullptr, * inlined_cells = nullptr;
+    AlifObject* newglobal = nullptr, * newfree = nullptr, * inlinedCells = nullptr;
     AlifObject* temp{};
     int success = 0;
     AlifSizeT i, pos = 0;
@@ -594,8 +711,8 @@ static int analyze_block(AlifSTEntryObject* _ste, AlifObject* _bound, AlifObject
     newbound = alifNew_set(nullptr);
     if (!newbound)
         goto error;
-    inlined_cells = alifNew_set(nullptr);
-    if (!inlined_cells)
+    inlinedCells = alifNew_set(nullptr);
+    if (!inlinedCells)
         goto error;
 
     if (_ste->steType == ClassBlock) {
@@ -613,9 +730,9 @@ static int analyze_block(AlifSTEntryObject* _ste, AlifObject* _bound, AlifObject
 
     while (alifDict_next(_ste->steSymbols, &pos, &name, &v)) {
         long flags = alifInteger_asLong(v);
-        //if (!analyze_name(ste, scopes, name, flags,
-            //bound, local, free, global, type_params, class_entry))
-            //goto error;
+        if (!analyze_name(_ste, scopes, name, flags,
+            _bound, local, _free, _global, _typeParams, _classEntry))
+            goto error;
     }
 
     if (_ste->steType != ClassBlock) {
@@ -699,12 +816,12 @@ static int analyze_block(AlifSTEntryObject* _ste, AlifObject* _bound, AlifObject
         }
     }
 
-    if (alifST_isFunctionLike(_ste) and !analyze_cells(scopes, newfree, inlined_cells))
+    if (alifST_isFunctionLike(_ste) and !analyze_cells(scopes, newfree, inlinedCells))
         goto error;
     else if (_ste->steType == ClassBlock and !drop_classFree(_ste, newfree))
         goto error;
-    if (!update_symbols(_ste->steSymbols, scopes, _bound, newfree, inlined_cells,
-        (_ste->steType == ClassBlock) || _ste->steCanSeeClassScope))
+    if (!update_symbols(_ste->steSymbols, scopes, _bound, newfree, inlinedCells,
+        (_ste->steType == ClassBlock) or _ste->steCanSeeClassScope))
         goto error;
 
     temp = alifInteger_inPlaceOr(_free, newfree);
@@ -718,31 +835,31 @@ error:
     ALIF_XDECREF(newbound);
     ALIF_XDECREF(newglobal);
     ALIF_XDECREF(newfree);
-    ALIF_XDECREF(inlined_cells);
+    ALIF_XDECREF(inlinedCells);
     return success;
 }
 
 static AlifIntT symTable_analyze(class AlifSymTable* st) { // 1271
-    AlifObject* free, * global, * typeParams;
+    AlifObject* free_, * global, * typeParams;
     int r{};
 
-    free = alifNew_set(nullptr);
-    if (!free)
+    free_ = alifNew_set(nullptr);
+    if (!free_)
         return 0;
     global = alifNew_set(nullptr);
     if (!global) {
-        ALIF_DECREF(free);
+        ALIF_DECREF(free_);
         return 0;
     }
     typeParams = alifNew_set(nullptr);
     if (!typeParams) {
-        ALIF_DECREF(free);
+        ALIF_DECREF(free_);
         ALIF_DECREF(global);
         return 0;
     }
 
-    r = analyze_block(st->stTop, nullptr, free, global, typeParams, nullptr);
-    ALIF_DECREF(free);
+    r = analyze_block(st->stTop, nullptr, free_, global, typeParams, nullptr);
+    ALIF_DECREF(free_);
     ALIF_DECREF(global);
     ALIF_DECREF(typeParams);
     return r;

@@ -1,6 +1,7 @@
 #include "alif.h"
 
 #include "AlifCore_Abstract.h"
+#include "AlifCore_Backoff.h"
 #include "AlifCore_Call.h"
 #include "AlifCore_AlifEval.h"
 #include "AlifCore_Code.h"
@@ -50,6 +51,32 @@ AlifIntT alif_checkRecursiveCall(AlifThread* _thread, const wchar_t* _where)
 	return 0;
 }
 
+const BinaryFunc alifEvalBinaryOps[] = { // 310
+	alifNumber_add, // [NB_ADD]
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	alifNumber_subtract, // [NB_SUBTRACT]
+	0,
+	0,
+	alifNumber_inPlaceAdd, // [NB_INPLACE_ADD]
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	alifNumber_inPlaceSubtract, // [NB_INPLACE_SUBTRACT]
+};
 
 AlifObject* alifEval_evalCode(AlifObject* _co, AlifObject* _globals, AlifObject* _locals) { // 572
 	AlifThread* thread = alifThread_get();
@@ -77,13 +104,19 @@ AlifObject* alifEval_evalCode(AlifObject* _co, AlifObject* _globals, AlifObject*
 	return res;
 }
 
-
+/*
+	تحتاج إلا مراجعة
+	فقد تم إسناد قيم ثنائية نظرا الى
+	أن المصفوفة في cpp
+	لا تقبل تهيئة العناصر بشكل مفرد
+	وبالاخص اذا كان العنصر الذي يتم تهيئته هو union
+*/
 static const AlifCodeUnit alifInterpreterTrampolineInstructions[] = {
-	{NOP, 0 },
-	{INTERPRETER_EXIT, 0 },
-	{NOP, 0 },
-	{INTERPRETER_EXIT, 0 },
-	{RESUME, RESUME_OPARG_DEPTH1_MASK | RESUME_AT_FUNC_START }
+	0b0001111000000000, // { NOP, 0},
+	0b0001011000000000, // {INTERPRETER_EXIT, 0 },
+	0b0001111000000000, // {NOP, 0 },
+	0b0001011000000000, // {INTERPRETER_EXIT, 0 },
+	0b1001010100000100 // {RESUME, RESUME_OPARG_DEPTH1_MASK | RESUME_AT_FUNC_START }
 };
 
 #define ALIFEVAL_CSTACK_UNITS 2
@@ -117,7 +150,6 @@ startFrame:
 
 resumeFrame:
 	stackPtr = alifFrame_getStackPointer(_frame);
-
 
 
 	DISPATCH();
@@ -160,13 +192,13 @@ dispatchOpCode:
 			//goto error;
 		}
 		AlifObject* name = GETITEM(FRAME_CO_NAMES, opArg);
-		//if (alifMapping_getOptionalItem(modOrClassDict, name, &v) < 0) {
-		//	//goto error;
-		//}
+		if (alifMapping_getOptionalItem(modOrClassDict, name, &v) < 0) {
+			//goto error;
+		}
 		if (v == nullptr) {
-			//if (alifDict_getItemRef(GLOBALS(), name, &v) < 0) {
-			//	//goto error;
-			//}
+			if (alifDict_getItemRef(GLOBALS(), name, &v) < 0) {
+				//goto error;
+			}
 			if (v == nullptr) {
 				if (alifMapping_getOptionalItem(BUILTINS(), name, &v) < 0) {
 					//goto error;
@@ -181,7 +213,62 @@ dispatchOpCode:
 		stackPtr += 1;
 		DISPATCH();
 	}
-
+	TARGET(STORE_NAME) {
+		_frame->instrPtr = nextInstr;
+		nextInstr += 1;
+		AlifObject* v{};
+		v = stackPtr[-1];
+		AlifObject* name = GETITEM(FRAME_CO_NAMES, opArg);
+		AlifObject* ns = LOCALS();
+		int err;
+		if (ns == nullptr) {
+			// error
+			ALIF_DECREF(v);
+			//if (true) goto pop_1_error;
+		}
+		if (ALIFDICT_CHECKEXACT(ns))
+			err = alifDict_setItem(ns, name, v);
+		else
+			err = alifObject_setItem(ns, name, v);
+		ALIF_DECREF(v);
+		if (err) /*goto pop_1_error*/return nullptr;
+		stackPtr -= 1;
+		DISPATCH();
+	}
+	TARGET(BINARY_OP) {
+		_frame->instrPtr = nextInstr;
+		//nextInstr += 2; // need review !important
+		//AlifCodeUnit* thisInstr = nextInstr - 2; // need review !important
+		nextInstr += 1;
+		AlifCodeUnit* thisInstr = nextInstr - 1;
+		AlifObject* rhs{};
+		AlifObject* lhs{};
+		AlifObject* res{};
+		// _SPECIALIZE_BINARY_OP
+		rhs = stackPtr[-1];
+		lhs = stackPtr[-2];
+//		{
+//			uint16_t counter = read_u16(&thisInstr[1].cache);
+//#if ENABLE_SPECIALIZATION
+//			if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
+//				//nextInstr = thisInstr;
+//				//alifSpecialize_binaryOp(lhs, rhs, nextInstr, opArg, LOCALS_ARRAY);
+//				//DISPATCH_SAME_OPARG();
+//			}
+//			ADVANCE_ADAPTIVE_COUNTER(thisInstr[1].counter);
+//#endif  /* ENABLE_SPECIALIZATION */
+//		}
+		// _BINARY_OP
+		{
+			res = alifEvalBinaryOps[opArg](lhs, rhs);
+			ALIF_DECREF(lhs);
+			ALIF_DECREF(rhs);
+			if (res == nullptr) return nullptr /*goto pop_2_error*/;
+		}
+		stackPtr[-2] = res;
+		stackPtr -= 1;
+		DISPATCH();
+	}
 	TARGET(PUSH_NULL) {
 		_frame->instrPtr = nextInstr;
 		nextInstr += 1;
@@ -201,32 +288,29 @@ dispatchOpCode:
 	}
 	TARGET(CALL) {
 		_frame->instrPtr = nextInstr;
-		nextInstr += 4;
-		AlifCodeUnit* thisInstr = nextInstr - 4;
-		(void)thisInstr;
+		//nextInstr += 4;
+		//AlifCodeUnit* thisInstr = nextInstr - 4;
+		nextInstr += 1;
+		AlifCodeUnit* thisInstr = nextInstr - 1;
 		AlifObject** args{};
 		AlifObject* selfOrNull{};
 		AlifObject* callable{};
 		AlifObject* res{};
 		// _SPECIALIZE_CALL
-		//args = &stackPtr[-opArg];
-		//selfOrNull = stackPtr[-1 - opArg];
-		//callable = stackPtr[-2 - opArg];
-		args = &stackPtr[-opArg - 1];
-		selfOrNull = stackPtr[-1 - opArg - 1];
-		callable = stackPtr[-2 - opArg - 1];
+		args = &stackPtr[-opArg];
+		selfOrNull = stackPtr[-1 - opArg];
+		callable = stackPtr[-2 - opArg];
 //		{
 //			uint16_t counter = read_u16(&thisInstr[1].cache);
 //			(void)counter;
 //#if ENABLE_SPECIALIZATION
 //			if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
-//				nextInstr = thisInstr;
-//				alifSpecialize_call(callable, nextInstr, opArg + (selfOrNull != nullptr));
-//				DISPATCH_SAME_OPARG();
+//			//	nextInstr = thisInstr;
+//			//	alifSpecialize_call(callable, nextInstr, opArg + (selfOrNull != nullptr));
+//			//	DISPATCH_SAME_OPARG();
 //			}
-//			STAT_INC(CALL, deferred);
 //			ADVANCE_ADAPTIVE_COUNTER(thisInstr[1].counter);
-//#endif  /* ENABLE_SPECIALIZATION */
+//#endif	/* ENABLE_SPECIALIZATION */
 //		}
 		/* Skip 2 cache entries */
 		// _CALL

@@ -468,7 +468,7 @@ static AlifObject* set_iter(AlifSetObject* _so)
 
 static int set_add_key(AlifSetObject* _so, AlifObject* _key)
 {
-	size_t hash_;
+	size_t hash_{};
 
 	if (!(_key->type_ == &_alifUStrType_)) {
 		hash_ = alifObject_hash(_key);
@@ -480,7 +480,7 @@ static int set_add_key(AlifSetObject* _so, AlifObject* _key)
 
 static int set_contains_key(AlifSetObject* _so, AlifObject* _key)
 {
-	size_t hash_;
+	size_t hash_{};
 
 	if (!(_key->type_ == &_alifUStrType_)
 		//|| (hash_ = ALIFUNICODE_CAST(key)->hash) == -1
@@ -494,7 +494,7 @@ static int set_contains_key(AlifSetObject* _so, AlifObject* _key)
 
 static int set_discard_key(AlifSetObject* _so, AlifObject* _key)
 {
-	size_t hash_;
+	size_t hash_{};
 
 	if (!(_key->type_ == &_alifUStrType_)
 		//||

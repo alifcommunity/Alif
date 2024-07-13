@@ -98,7 +98,7 @@ public:
 
 #define ADDOP(_c, _loc, _op) {if (codeGen_addOpNoArg(INSTR_SEQUANCE(_c), _op, _loc) == -1) return -1;}
 #define ADDOP_I(_c, _loc, _op, _o) { if (codeGen_addOpI(INSTR_SEQUANCE(_c), _op, _o, _loc) == -1) return -1;}
-#define ADDOP_BINARY(_c, _loc, _binOp) { if (addOp_binary(_c, _loc, _binOp, TRUE) == -1) return -1;}
+#define ADDOP_BINARY(_c, _loc, _binOp) { if (addOp_binary(_c, _loc, _binOp, false) == -1) return -1;}
 #define ADDOP_LOAD_CONST(_c, _loc, _o) { if (compilerAddOp_loadConst(_c->unit, _loc, _o) == -1) return -1;}
 
 
@@ -333,7 +333,7 @@ static AlifObject* dict_byType(AlifObject* _src, AlifIntT _scopeType, AlifIntT _
 			ALIF_DECREF(item);
 		}
 	}
-	ALIF_DECREF(sortedKeys);
+	//ALIF_DECREF(sortedKeys); // need review because it's delete names when ref count reach 0
 	return dest;
 }
 
@@ -429,7 +429,7 @@ static AlifIntT compiler_setup(AlifCompiler* _compiler, Module* _module,
 	_compiler->stack = alifNew_list(0);
 	if (!_compiler->stack) return -1;
 
-	_compiler->fileName = alif_newRef(_fn); // need Change to MACRO
+	_compiler->fileName = ALIF_NEWREF(_fn); // need Change to MACRO
 	_compiler->astMem = _astMem;
 
 	_compiler->optimize = (_optimize == -1) ? alifConfig_get()->optimizationLevel : _optimize;
@@ -671,7 +671,7 @@ done:
 
 
 
-static AlifIntT addOp_binary(AlifCompiler* _compiler, SourceLocation _loc, Operator _binOp, BOOL _inPlace) { // 4122
+static AlifIntT addOp_binary(AlifCompiler* _compiler, SourceLocation _loc, Operator _binOp, bool _inPlace) { // 4122
 
 	AlifIntT opArg{};
 
@@ -843,6 +843,16 @@ static AlifIntT compiler_visitStatement(AlifCompiler* _compiler, Statement* _stm
 
 	if (_stmt->type == StmtType::ExprK) {
 		return compiler_stmtExpr(_compiler, LOC(_stmt), _stmt->V.expression.val);
+	}
+	else if (_stmt->type == StmtType::AssignK) {
+		AlifSizeT n = SEQ_LEN(_stmt->V.assign.targets);
+		VISIT(_compiler, Expression, _stmt->V.assign.val);
+		for (AlifSizeT i = 0; i < n; i++) {
+			if (i < n - 1) {
+				ADDOP_I(_compiler, LOC(_stmt), COPY, 1);
+			}
+			VISIT(_compiler, Expression,(Expression*)SEQ_GET(_stmt->V.assign.targets, i));
+		}
 	}
 
 

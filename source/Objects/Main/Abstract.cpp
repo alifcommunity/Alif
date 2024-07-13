@@ -221,7 +221,7 @@ static AlifObject* binary_iop1(AlifObject* _v, AlifObject* _w, const int _iOpSlo
 {
 	AlifNumberMethods* mv_ = ALIF_TYPE(_v)->asNumber;
 	if (mv_ != nullptr) {
-		BinaryFunc slot_ = NB_BINOP(mv_, (_iOpSlot / 2));
+		BinaryFunc slot_ = NB_BINOP(mv_, (_iOpSlot));
 		if (slot_) {
 			AlifObject* x = (slot_)(_v, _w);
 			if (x != ALIF_NOTIMPLEMENTED) {
@@ -257,11 +257,32 @@ static AlifObject* binary_iop(AlifObject* _v, AlifObject* _w, const int _iOpSlot
 
 #define INPLACE_BINOP(func, iop, op, op_name) \
     AlifObject * \
-    func(AlifObject *_v, AlifObject *w) { \
-        return binary_iop(_v, w, NB_SLOT(iop), NB_SLOT(op), op_name); \
+    func(AlifObject *_x, AlifObject *_y) { \
+        return binary_iop(_x, _y, NB_SLOT(iop), NB_SLOT(op), op_name); \
     }
 
+INPLACE_BINOP(alifNumber_inPlaceSubtract, inplaceSubtract, subtract_, L"-=")
 INPLACE_BINOP(alifInteger_inPlaceOr, inplaceOr, orLogic, L"|=")
+
+AlifObject* alifNumber_inPlaceAdd(AlifObject* _x, AlifObject* _y)
+{
+	AlifObject* result = BINARY_IOP1(_x, _y, NB_SLOT(inplaceAdd), NB_SLOT(add_), L"+=");
+	if (result == ALIF_NOTIMPLEMENTED) {
+		AlifSequenceMethods* m = ALIF_TYPE(_x)->asSequence;
+		ALIF_DECREF(result);
+		if (m != nullptr) {
+			BinaryFunc func = m->inplaceConcat;
+			if (func == nullptr)
+				func = m->concat_;
+			if (func != nullptr) {
+				result = func(_x, _y);
+				return result;
+			}
+		}
+		//result = binOp_typeError(_x, _y, L"+=");
+	}
+	return result;
+}
 
 AlifObject* alifSubNumber_index(AlifObject* _item)
 {

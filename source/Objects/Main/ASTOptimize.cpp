@@ -86,6 +86,9 @@ static AlifIntT astFold_expr(Expression* _node, AlifASTMem* _ctx, AlifASTOptimiz
 		CALL_SEQ(astFold_expr, Expr, Expression, _node->V.call.args);
 		CALL_SEQ(astFold_keyword, Keyword, Keyword, _node->V.call.keywords);
 	}
+	else if (_node->type == ExprType::NameK) {
+		// لا شيء
+	}
 
 	_astState->recursionDepth--;
 	return 1;
@@ -104,6 +107,10 @@ static AlifIntT astFold_stmt(Statement* _node, AlifASTMem* _ctx, AlifASTOptimize
 
 	if (_node->type == StmtType::FunctionDefK) {
 
+	}
+	else if (_node->type == StmtType::AssignK) {
+		CALL_SEQ(astFold_expr, Expr, Expression, _node->V.assign.targets);
+		CALL(astFold_expr, _node->V.assign.val);
 	}
 	else if (_node->type == StmtType::ExprK) {
 		CALL(astFold_expr, _node->V.expression.val);

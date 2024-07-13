@@ -3,17 +3,6 @@
 #  define TARGET(_op) case _op: TARGET_##_op:
 #  define DISPATCH_GOTO() goto dispatchOpCode // 78
 
-// 109
-#define DISPATCH() \
-    { \
-        NEXTOPARG(); \
-        DISPATCH_GOTO(); \
-    }
-
-
-// 149
-#define GETITEM(_v, _i) ALIFTUPLE_GET_ITEM((_v), (_i))
-
 
 
 // 164
@@ -22,6 +11,16 @@
         opCode = word.op.code; \
         opArg = word.op.arg; \
     } while (0)
+
+
+// 109
+#define DISPATCH() { NEXTOPARG(); DISPATCH_GOTO(); }
+
+
+// 149
+#define GETITEM(_v, _i) ALIFTUPLE_GET_ITEM((_v), (_i))
+
+
 
 
 
@@ -38,6 +37,14 @@
 #define CONSTS() alifFrame_getCode(_frame)->consts
 #define NAMES() alifFrame_getCode(_frame)->names
 
+
+#define ADAPTIVE_COUNTER_TRIGGERS(_counter) \
+    backoff_counterTriggers(forge_backoffCounter((_counter)))
+
+#define ADVANCE_ADAPTIVE_COUNTER(_counter) \
+    do { \
+        _counter = advance_backoffCounter(_counter); \
+    } while (0);
 
 // 396
 #define LOAD_IP(_offset) do { \

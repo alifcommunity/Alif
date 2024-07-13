@@ -167,6 +167,9 @@
     <ClInclude Include="..\source\Include\Core\AlifCore_ModuleObject.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\Include\Core\AlifCore_Backoff.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\Objects\Core\AlifCycle.cpp">
