@@ -19,7 +19,7 @@
 #define ALIF_HAVE_CONDVAR
 
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>             
+#include <windows.h>
 
 #ifndef ALIFSUB_EMULATED_WIN_CV
 #define ALIFSUB_EMULATED_WIN_CV 0 

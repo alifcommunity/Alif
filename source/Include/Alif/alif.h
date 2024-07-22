@@ -10,6 +10,7 @@
 #endif
 
 #include <algorithm>
+#include <climits>
 
 #include "AlifPort.h"
 #include "AlifMacro.h"

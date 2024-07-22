@@ -79,7 +79,7 @@ static inline int alif_isImmortal(AlifObject* _op)
 #if SIZEOF_VOID_P > 4
 	return (ALIF_CAST(int32_t, _op->ref_) < 0);
 #else
-	return (_op->ref_ == ALIF_IMMORTAL_REFCENT);
+	return (_op->ref_ == ALIF_IMMORTAL_REFCNT);
 #endif
 }
 #define ALIFSUB_ISIMMORTAL(_op) alif_isImmortal(ALIFOBJECT_CAST(_op))

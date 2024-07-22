@@ -3,7 +3,7 @@
 #include "AlifCore_Interpreter.h"
 #include "AlifCore_AlifThread.h"
 #include "AlifCore_Import.h"
-#include "alifCore_UString.h"
+#include "AlifCore_UString.h"
 
 
 class {

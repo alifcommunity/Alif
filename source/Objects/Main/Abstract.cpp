@@ -1,10 +1,10 @@
 #include "alif.h"
 
 #include "AlifCore_Abstract.h"
-#include "AlifCore_Memory.h" // temp
+#include "AlifCore_Memory.h"
 #include "AlifCore_Integer.h"
 #include "AlifCore_AlifState.h"
-#include "AlifCore_list.h"
+#include "AlifCore_List.h"
 
 
 

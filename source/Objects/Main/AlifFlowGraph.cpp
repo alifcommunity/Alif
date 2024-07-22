@@ -7,6 +7,7 @@
 #include "AlifCore_OpCodeUtils.h"
 #include "AlifCore_OpCodeData.h"
 
+#define ERROR -1
 
 // Forward
 static AlifIntT resolve_lineNumbers(AlifFlowGraph*, AlifIntT);
