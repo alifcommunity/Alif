@@ -633,7 +633,7 @@ static AlifNumberMethods _integerAsNumber_ = {
 };
 
 AlifTypeObject _alifIntegerType_ = {
-	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0)
 	L"int",
 	offsetof(AlifIntegerObject, digits_),
 	sizeof(size_t),

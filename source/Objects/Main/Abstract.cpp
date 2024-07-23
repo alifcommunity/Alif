@@ -214,9 +214,9 @@ AlifObject* alifNumber_add(AlifObject* _x, AlifObject* _y) { // 1138
 }
 
 static AlifObject* binary_iop1(AlifObject* _v, AlifObject* _w, const int _iOpSlot, const int _opSlot
-#ifndef NDEBUG
+//#ifndef NDEBUG
 	, const wchar_t* _opName
-#endif
+//#endif
 )
 {
 	AlifNumberMethods* mv_ = ALIF_TYPE(_v)->asNumber;
@@ -230,18 +230,18 @@ static AlifObject* binary_iop1(AlifObject* _v, AlifObject* _w, const int _iOpSlo
 			ALIF_DECREF(x);
 		}
 	}
-#ifdef NDEBUG
-	return binary_op1(_v, _w, _opSlot);
-#else
+//#ifdef NDEBUG
+//	return binary_op1(_v, _w, _opSlot);
+//#else
 	return binary_op1(_v, _w, _opSlot, _opName);
-#endif
+//#endif
 }
 
-#ifdef NDEBUG
-#  define BINARY_IOP1(_v, w, iop_slot, op_slot, op_name) binary_iop1(_v, w, iop_slot, op_slot)
-#else
+//#ifdef NDEBUG
+//#  define BINARY_IOP1(_v, w, iop_slot, op_slot, op_name) binary_iop1(_v, w, iop_slot, op_slot)
+//#else
 #  define BINARY_IOP1(_v, w, iop_slot, op_slot, op_name) binary_iop1(_v, w, iop_slot, op_slot, op_name)
-#endif
+//#endif
 
 static AlifObject* binary_iop(AlifObject* _v, AlifObject* _w, const int _iOpSlot, const int _opSlot,
 	const wchar_t* _opName)

@@ -279,7 +279,7 @@ AlifSequenceMethods _seqAsTuple_ = {
 };
 
 AlifInitObject _alifTupleType_ = {
-	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0)
     L"tuple",
     sizeof(AlifTupleObject) - sizeof(AlifObject*),
     sizeof(AlifObject*),

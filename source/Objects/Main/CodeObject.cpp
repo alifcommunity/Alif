@@ -1,4 +1,4 @@
-﻿#include "alif.h"
+#include "alif.h"
 #include "OpCode.h"
 
 #include "AlifCore_Code.h"
@@ -157,7 +157,7 @@ AlifCodeObject* alifCode_new(AlifCodeConstructor* _cons) { // 645
 
 
 AlifTypeObject _alifCodeType_ = {
-	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0)
 	L"شفرة",
 	offsetof(AlifCodeObject, codeAdaptive),
 	sizeof(AlifCodeUnit),

@@ -2922,7 +2922,7 @@ static AlifMappingMethods _uStrAsMapping_ = {
 };
 
 AlifTypeObject _alifUStrType_ = {
-	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0)
 	L"string",                        
 	sizeof(AlifUStrObject),      
 	0,                            

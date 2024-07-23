@@ -6,7 +6,7 @@
 #define ALIFSUBOBJECT_HEAD_INIT(_type)       \
     {                                        \
          ALIF_IMMORTAL_REFCNT,    \
-         (_type),                 \
+         (_type)                 \
     } \
 
 #define ALIFSUBVAROBJECT_HEAD_INIT(_type, _size)    \

@@ -22,7 +22,7 @@ public:
 
 
 AlifTypeObject _alifGenericAliasType_ = {
-	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0)
 	L"types.GenericAlias",
 	0,
 	sizeof(GenericAliasObject),

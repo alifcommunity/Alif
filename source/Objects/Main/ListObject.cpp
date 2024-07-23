@@ -2220,7 +2220,7 @@ AlifMappingMethods _listAsMap_ = {
 };
 
 AlifTypeObject _alifListType_ = {
-	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0)
 	L"list",
 	sizeof(AlifListObject),
 	0,

@@ -20,7 +20,7 @@ public:
 
 
 #define ALIFMODULEDEF_HEAD_INIT {  \
-    ALIFOBJECT_HEAD_INIT(nullptr), \
+    ALIFOBJECT_HEAD_INIT(nullptr) \
     nullptr, /* m_init */       \
     0,        /* m_index */      \
     nullptr, /* m_copy */       \

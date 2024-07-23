@@ -151,7 +151,7 @@ void method_dealloc(AlifCFunctionObject* _object) {
 }
 
 AlifTypeObject _alifCppFunctionType_ = {
-	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_,0),
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_,0)
     L"builtin_function_or_method",
     sizeof(AlifCFunctionObject),
     0,
@@ -188,7 +188,7 @@ AlifTypeObject _alifCppFunctionType_ = {
 };
 
 AlifInitObject _alifCppMethodType_ = {
-	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0)
     L"builtin_method",
     sizeof(AlifCMethodObject),
     0,                                    

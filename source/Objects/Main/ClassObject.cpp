@@ -13,7 +13,7 @@
 
 
 AlifTypeObject _alifMethodType_ = {
-	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0)
 	L"method",
 	sizeof(AlifMethodObject),
 	0,

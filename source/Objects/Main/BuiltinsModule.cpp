@@ -15,7 +15,7 @@ static AlifMethodDef builtinMethods[] = {
 };
 
 
-static AlifModuleDef _alifBuiltinsModule_ = {
+static class AlifModuleDef _alifBuiltinsModule_ = {
 	ALIFMODULEDEF_HEAD_INIT,
 	L"builtins",
 	nullptr,

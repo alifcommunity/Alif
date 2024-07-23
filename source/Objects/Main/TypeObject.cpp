@@ -369,7 +369,7 @@ AlifIntT alifType_isSubType(AlifTypeObject* a, AlifTypeObject* b) { // 2392
 }
 
 AlifInitObject _alifTypeType_ = {
-    ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+    ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0)
     L"type",                                     
     sizeof(AlifHeapTypeObject),                  
     sizeof(AlifMemberDef),                        
@@ -529,7 +529,7 @@ int alifType_ready(AlifTypeObject* _type) // 7906
 
 
 AlifTypeObject _alifBaseObjectType_ = {
-	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0)
 	L"object",              
 	sizeof(AlifObject),     
 	0,                      

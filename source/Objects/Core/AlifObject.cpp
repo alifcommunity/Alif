@@ -358,7 +358,7 @@ AlifTypeObject _alifNotImplementedType_ = { // need review
 	none_new, // 
 };
 
-AlifObject _alifNotImplemented_ = ALIFOBJECT_HEAD_INIT(&_alifNotImplementedType_); // need review
+AlifObject _alifNotImplemented_ = ALIFSUBOBJECT_HEAD_INIT(&_alifNotImplementedType_); // need review
 
 
 AlifTypeObject _typeNone_ = {
@@ -404,7 +404,7 @@ AlifTypeObject _typeNone_ = {
 	none_new,
 };
 
-AlifObject _alifNoneStruct_ = ALIFOBJECT_HEAD_INIT(&_typeNone_);
+AlifObject _alifNoneStruct_ = ALIFSUBOBJECT_HEAD_INIT(&_typeNone_);
 
 static inline void new_reference(AlifObject* _op)
 {

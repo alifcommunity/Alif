@@ -10,7 +10,7 @@
 
 
 AlifTypeObject _alifModuleDefType_ = {
-	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0)
 	L"moduledef",                       
 	sizeof(AlifModuleDef),
 	0,
@@ -31,19 +31,19 @@ AlifObject* alifModuleDef_init(AlifModuleDef* def) { // 44
 static AlifIntT addMethods_toObject(AlifObject* _module, AlifObject* _name, AlifMethodDef* _functions)
 {
 	AlifObject* func{};
-	AlifMethodDef* fdef{};
+	AlifMethodDef* fDef{};
 
-	for (fdef = _functions; fdef->name != nullptr; fdef++) {
-		if ((fdef->flags & METHOD_CLASS) or
-			(fdef->flags & METHOD_STATIC)) {
+	for (fDef = _functions; fDef->name != nullptr; fDef++) {
+		if ((fDef->flags & METHOD_CLASS) or
+			(fDef->flags & METHOD_STATIC)) {
 			// error
 			return -1;
 		}
-		func = ALIFCFUNCTION_NEWEX(fdef, (AlifObject*)_module, _name);
+		func = ALIFCFUNCTION_NEWEX(fDef, (AlifObject*)_module, _name);
 		if (func == nullptr) return -1;
 
 		//alifObject_setDeferredRefCount(func); // need review
-		if (alifObject_setAttrString(_module, fdef->name, func) != 0) {
+		if (alifObject_setAttrString(_module, fDef->name, func) != 0) {
 			ALIF_DECREF(func);
 			return -1;
 		}
@@ -388,7 +388,7 @@ AlifObject* alifModule_getDict(AlifObject* _m)
 }
 
 AlifTypeObject _alifModuleType_ = {
-	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0)
 	L"module",                                 
 	sizeof(AlifModuleObject),                  
 	0,                                         

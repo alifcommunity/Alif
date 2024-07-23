@@ -6,7 +6,7 @@
 
 //#if SIZEOF_VOID_P > 4
 
-#define ALIF_IMMORTAL_REFCNT ALIF_CAST(int64_t, UINT_MAX)
+#define ALIF_IMMORTAL_REFCNT ALIF_CAST(AlifSizeT, UINT_MAX)
 
 //#else
 //#define ALIF_IMMORTAL_REFCNT ALIF_CAST(int64_t, UINT_MAX >> 2)
@@ -15,18 +15,18 @@
 
 #define ALIFOBJECT_HEAD_INIT(_type)			\
     {										\
-        ALIF_IMMORTAL_REFCNT ,		\
+        {ALIF_IMMORTAL_REFCNT} ,		\
         (_type)                    \
-    } \
+    }, \
 
 #define ALIFVAROBJECT_HEAD_INIT(_type, _size)	 \
     {											 \
-        ALIFOBJECT_HEAD_INIT(_type),   \
+        ALIFOBJECT_HEAD_INIT(_type)   \
         (_size)                         \
-    } \
+    }, \
 
 #define ALIFOBJECT_VAR_HEAD		AlifVarObject _base_{};
-#define Alif_INVALID_SIZE (int64_t) - 1
+#define Alif_INVALID_SIZE (AlifSizeT) - 1
 
 class AlifObject {
 public:

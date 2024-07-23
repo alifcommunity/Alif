@@ -117,7 +117,7 @@ AlifObject* alifInstructionSequance_new() { // 197
 // need fix
 AlifTypeObject _alifInstructionSeqType_ = {
     //ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
-    ALIFVAROBJECT_HEAD_INIT(&_alifInstructionSeqType_, 0), // temp
+    ALIFVAROBJECT_HEAD_INIT(&_alifInstructionSeqType_, 0) // temp
     L"InstructionSequence",
     sizeof(InstructionSequence),
     0,
