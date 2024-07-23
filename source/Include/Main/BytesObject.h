@@ -22,14 +22,14 @@ AlifObject* alifBytes_fromStringAndSize(const wchar_t*, int64_t);
 AlifObject* alifBytes_fromString(const wchar_t*);
 
 int64_t alifBytes_size(AlifObject*);
-wchar_t* alifWBytes_asString(AlifObject*);
+//wchar_t* alifWBytes_asString(AlifObject*);
 void alifBytes_concat(AlifObject** , AlifObject*);
 
-static inline wchar_t* alifWBytes_asString(AlifObject* _op)
+static inline wchar_t* _alifWBytes_asString(AlifObject* _op)
 {
     return ((AlifWBytesObject*)_op)->value_;
 }
-#define ALIFWBYTES_AS_STRING(_op) alifWBytes_asString(_op)
+#define ALIFWBYTES_AS_STRING(_op) _alifWBytes_asString(_op)
 
 static inline int64_t alifBytes_get_size(AlifObject* _op) {
 	AlifWBytesObject* self_ = (AlifWBytesObject*)(_op);

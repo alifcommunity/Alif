@@ -15,7 +15,7 @@ static AlifObject* builtin_print(AlifObject* module, AlifObject** args, AlifSize
 		goto exit;
 	}
 
-	swprintf_s(res, L"%d", ((AlifIntegerObject*)*args)->digits_);
+	swprintf(res, 10, L"%d", ((AlifIntegerObject*)*args)->digits_);
 
 	std::wcout << res << std::endl;
 

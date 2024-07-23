@@ -84,16 +84,14 @@ static inline int alif_isImmortal(AlifObject* _op)
 }
 #define ALIFSUB_ISIMMORTAL(_op) alif_isImmortal(ALIFOBJECT_CAST(_op))
 
-void alif_set_ref(AlifObject*, int64_t);
 
-static inline void alif_set_ref(AlifObject* _ob, int64_t _refcnt) {
+static inline void alif_set_ref(AlifObject* _ob, AlifSizeT _refcnt) {
 
 	if (ALIFSUB_ISIMMORTAL(_ob)) {
 		return;
 	}
 
 	_ob->ref_ = _refcnt;
-
 }
 #define ALIFSET_REFCNT(_ob, _refcnt) alif_set_ref(ALIFOBJECT_CAST(_ob), (_refcnt))
 

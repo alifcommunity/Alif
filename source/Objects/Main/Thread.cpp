@@ -50,7 +50,7 @@ void alifThread_init_thread(void)
 #   include "thread_pthread.h"
 #elif defined(NT_THREADS)
 #   define ALIFTHREAD_NAME "nt"
-#   include "thread_nt.h"
+#   include "Thread_nt.h"
 #endif
 
 int alifThread_parseTimeoutArg(AlifObject* _arg, int _blocking, AlifTimeT* _timeoutP)

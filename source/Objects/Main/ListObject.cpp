@@ -1,7 +1,7 @@
 #include "alif.h"
 
 #include "AlifCore_Dict.h"
-#include "alifCore_List.h"
+#include "AlifCore_List.h"
 #include "AlifCore_ModSupport.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_Tuple.h"
@@ -1681,7 +1681,7 @@ static AlifObject* list_sort_impl(AlifListObject* _self, AlifObject* _keyFunc, i
 	savedObSize = ALIF_SIZE(_self);
 	savedObItem = _self->items_;
 	savedAllocated = _self->allocated_;
-	ALIF_SIZE(_self, 0);
+	ALIFSET_SIZE(_self, 0);
 	_self->items_ = nullptr;
 	_self->allocated_ = -1;
 
@@ -1758,7 +1758,7 @@ static AlifObject* list_sort_impl(AlifListObject* _self, AlifObject* _keyFunc, i
 			if (keyType == &_alifIntegerType_ && intsAreBounded) {
 				ms_.KeyCompare = unsafe_long_compare;
 			}
-			else if (keyType == &_typeFloat_) {
+			else if (keyType == &_alifFloatType) {
 				ms_.KeyCompare = unsafe_float_compare;
 			}
 			else if ((ms_.KeyRichcompare = keyType->richCompare) != nullptr) {
@@ -1845,7 +1845,7 @@ fail:
 keyfunc_fail:
 	finalObItem = _self->items_;
 	i_ = ALIF_SIZE(_self);
-	ALIF_SIZE(_self, savedObSize);
+	ALIFSET_SIZE(_self, savedObSize);
 	_self->items_ = savedObItem;
 	_self->allocated_ = savedAllocated;
 	if (finalObItem != nullptr) {
@@ -2153,7 +2153,7 @@ static int list_ass_subscript(AlifObject* _self, AlifObject* _item, AlifObject* 
 					sizeof(AlifObject*));
 			}
 
-			ALIF_SIZE(self_, ALIF_SIZE(self_) - slicelength);
+			ALIFSET_SIZE(self_, ALIF_SIZE(self_) - slicelength);
 			res_ = list_resize(self_, ALIF_SIZE(self_));
 
 			alifMem_dataFree(garbage_);

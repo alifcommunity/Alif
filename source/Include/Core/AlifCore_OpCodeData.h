@@ -129,7 +129,7 @@ extern const OpCodeData alifOpCodeData[256] = {
     {0, 0, 0},
     {0, 0, 0},
     {0, 0, 0},
-    {TRUE, InstructionFormat::INSTR_FMT_IB, HAS_ARG_FLAG | HAS_JUMP_FLAG}, // JUMB_FORWARD -79-
+    {true, InstructionFormat::INSTR_FMT_IB, HAS_ARG_FLAG | HAS_JUMP_FLAG}, // JUMB_FORWARD -79-
     {0, 0, 0},
     {0, 0, 0},
     {0, 0, 0},
@@ -153,7 +153,7 @@ extern const OpCodeData alifOpCodeData[256] = {
     {0, 0, 0},
     {0, 0, 0},
     {0, 0, 0},
-    {TRUE, InstructionFormat::INSTR_FMT_IB, HAS_ARG_FLAG | HAS_CONST_FLAG}, // RETURN_CONST -103-
+    {true, InstructionFormat::INSTR_FMT_IB, HAS_ARG_FLAG | HAS_CONST_FLAG}, // RETURN_CONST -103-
 
 
 

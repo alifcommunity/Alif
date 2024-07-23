@@ -128,9 +128,10 @@
 	#include <io.h>
 	#define SIZEOF_WCHART 2
 	#define SIZEOF_VOID_P 8
-
 #else
-#include <cstring> // memcpy()
+	#include <cstring>
+	#define SIZEOF_WCHART 2
+	#define SIZEOF_VOID_P 8
 #endif // _WINDOWS
 
 

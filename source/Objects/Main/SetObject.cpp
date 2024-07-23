@@ -3,9 +3,9 @@
 #include "AlifCore_Memory.h"
 
 
-//static AlifObject _dummyStruct_;
+extern AlifObject _dummyStruct_; // need review يجب ان تكون static وليس extern
 
-//#define dummy (&_dummyStruct_)
+#define dummy (&_dummyStruct_)
 
 #define SET_COPY_METHODDEF    \
     {L"copy", (AlifCFunction)set_copy, METHOD_NOARGS},

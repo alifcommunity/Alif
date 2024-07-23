@@ -1,7 +1,10 @@
 #include "alif.h"
+
 #include "AlifCore_ModSupport.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_Memory.h"
+
+#include <math.h> // need review
 
 long double alifFloat_getMax(void)
 {
@@ -17,7 +20,7 @@ AlifObject* alifNew_float(long double _value) {
 
 	AlifFloatObject* object_ = (AlifFloatObject*)alifMem_objAlloc(sizeof(AlifFloatObject));
 
-	alifSubObject_init((AlifObject*)object_, &_typeFloat_);
+	alifSubObject_init((AlifObject*)object_, &_alifFloatType);
 
 	object_->digits_ = _value;
 
@@ -28,7 +31,7 @@ AlifObject* alifFloat_fromDouble(long double _floatValue) {
 
 	AlifFloatObject* object_ = (AlifFloatObject*)alifMem_objAlloc(sizeof(AlifFloatObject));
 	
-	alifSubObject_init((AlifObject*)object_, &_typeFloat_);
+	alifSubObject_init((AlifObject*)object_, &_alifFloatType);
 	object_->digits_ = _floatValue;
 	return (AlifObject*)object_;
 
@@ -44,20 +47,20 @@ long double digit_strToDouble(const wchar_t* _str) {
 	// Skip leading whitespace
 	while (std::isspace(*_str)) ++_str;
 
-	if (*_str == '-') {
+	if (*_str == L'-') {
 		negative_ = true;
 		++_str;
 	}
-	else if (*_str == '+') {
+	else if (*_str == L'+') {
 		++_str;
 	}
 
-	if (*_str == '0') {
+	if (*_str == L'0') {
 		return negative_ ? -0.0 : 0.0;
 	}
 
-	while (std::isdigit(*_str) && *_str != '0') {
-		whole_ = whole_ * _base_ + (*_str - '0');
+	while (std::isdigit(*_str) && *_str != L'0') {
+		whole_ = whole_ * _base_ + (*_str - L'0');
 		++_str;
 	}
 
@@ -68,33 +71,33 @@ long double digit_strToDouble(const wchar_t* _str) {
 		// Read fractional part
 		while (std::isdigit(*_str)) {
 			// fraction type_ long double to get high res precition
-			fraction_ = fraction_ + (*_str - '0') / (long double)divisor;
+			fraction_ = fraction_ + (*_str - L'0') / (long double)divisor;
 			divisor *= _base_;
 			++_str;
 		}
 	}
 
 	// Handle exponent
-	if (*_str == 'e' || *_str == 'E') {
+	if (*_str == L'e' or *_str == L'E') {
 		++_str;
 		isE_ = true;
 		bool expNegative = false;
-		if (*_str == '-') {
+		if (*_str == L'-') {
 			expNegative = true;
 			++_str;
 		}
-		else if (*_str == '+') {
+		else if (*_str == L'+') {
 			++_str;
 		}
 
 		// Read exponent value
 		while (std::isdigit(*_str)) {
-			exponent_ = exponent_ * 10 + (*_str - '0');
+			exponent_ = exponent_ * 10 + (*_str - L'0');
 			++_str;
 		}
 
 		exponent_ = expNegative ? -exponent_ : exponent_;
-		_base_ = std::pow(10.0, exponent_);
+		_base_ = pow(10.0, exponent_);
 	}
 
 	long double result_ = whole_ + (long double)fraction_;
@@ -140,7 +143,7 @@ long double alifFloat_asLongDouble(AlifObject* _object) {
 		exit(-1);
 	}
 
-	if (_object->type_ == &_typeFloat_) {
+	if (_object->type_ == &_alifFloatType) {
 		return ((AlifFloatObject*)_object)->digits_;
 	}
 
@@ -318,7 +321,7 @@ static AlifObject* float_compare(AlifObject* _v, AlifObject* _w, int _op)
 	/* Switch on the type of w.  Set i and j to doubles to be compared,
 	 * and op to the richcomp to use.
 	 */
-	if (((AlifFloatObject*)_w)->_base_.type_ == &_typeFloat_)
+	if (((AlifFloatObject*)_w)->_base_.type_ == &_alifFloatType)
 		j_ = ((AlifFloatObject*)_w)->digits_;
 
 	else if (!isfinite(i_)) {
@@ -512,7 +515,7 @@ static AlifObject* float__floor__(AlifObject* self) {
 
 static AlifObject* float_float(AlifObject* _v)
 {
-	if (_v->type_ == &_typeFloat_) {
+	if (_v->type_ == &_alifFloatType) {
 		return ALIF_NEWREF(_v);
 	}
 	else {
@@ -524,7 +527,7 @@ static AlifObject* float_subtype_new(AlifTypeObject* , AlifObject*);
 
 static AlifObject* float_new_impl(AlifTypeObject* _type, AlifObject* _x)
 {
-	if (_type != &_typeFloat_) {
+	if (_type != &_alifFloatType) {
 		//if (_x == nullptr) {
 		//	_x = alifSubLong_GetZero();
 		//}
@@ -544,7 +547,7 @@ static AlifObject* float_subtype_new(AlifTypeObject* _type, AlifObject* _x)
 {
 	AlifObject* tmp_{}, * newObj{};
 
-	tmp_ = float_new_impl(&_typeFloat_, _x);
+	tmp_ = float_new_impl(&_alifFloatType, _x);
 	if (tmp_ == nullptr)
 		return nullptr;
 	newObj = _type->alloc_(_type, 0);
@@ -636,7 +639,7 @@ static AlifNumberMethods _floatAsNumber_ = {
 	(BinaryFunc)float_div,                
 };
 
-AlifTypeObject _typeFloat_ = {
+AlifTypeObject _alifFloatType = {
 	0,
 	0,
 	0,

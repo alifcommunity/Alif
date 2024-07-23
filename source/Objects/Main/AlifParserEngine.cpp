@@ -1,4 +1,4 @@
-﻿#include "alif.h"
+#include "alif.h"
 
 //#include "AlifCore_AST.h"
 //#include "AlifCore_AlifTokenState.h"
@@ -238,7 +238,7 @@ static Expression* alifParserEngine_nameFromToken(AlifParser* _p, AlifPToken* _t
 		return nullptr;
 	}
 
-	const wchar_t* s = alifWBytes_asString(_t->bytes);
+	const wchar_t* s = _alifWBytes_asString(_t->bytes);
 
 	if (!s) {
 		_p->errorIndicator = 1;
@@ -309,7 +309,7 @@ Expression* alifParserEngine_numberToken(AlifParser* _p) {
 	AlifPToken* tok = alifParserEngine_expectToken(_p, NUMBER);
 	if (tok == nullptr) return nullptr;
 
-	const wchar_t* rawNum = alifWBytes_asString(tok->bytes);
+	const wchar_t* rawNum = _alifWBytes_asString(tok->bytes);
 
 	AlifObject* num = parse_number(rawNum);
 

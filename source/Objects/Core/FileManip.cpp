@@ -32,29 +32,23 @@ FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) {
 
 #else
 	AlifObject* bytes;
-	const char* path_bytes;
+	const char* pathBytes;
 
-	assert(alifGILState_Check());
-
-	if (!alifUnicode_FSConverter(path, &bytes))
+	if (!alifUnicode_FSConverter(_path, &bytes))
 		return nullptr;
-	pathBytes = alifBytes_asString(bytes);
+	pathBytes = (const char*)_alifWBytes_asString(bytes); // need review
 
-	if (alifSys_audit("open", "Osi", path, mode, 0) < 0) {
+	if (alifSys_audit("open", "Osi", _path, _mode, 0) < 0) {
 		ALIF_DECREF(bytes);
 		return nullptr;
 	}
 
 	do {
-		ALIF_BEGIN_ALLOW_THREADS
-			f = fopen(pathBytes, mode);
-		ALIF_END_ALLOW_THREADS
-	} while (f == nullptr
-		and errno == EINTR and !(async_err = alifErr_checkSignals()));
-		int savedErrno = errno;
-		Alif_DECREF(bytes);
+		f = fopen(pathBytes, _mode);
+	} while (f == nullptr and errno == EINTR and !(async_err = alifErr_checkSignals()));
+	int savedErrno = errno;
+	ALIF_DECREF(bytes);
 #endif
 
-		return f;
-
+	return f;
 }

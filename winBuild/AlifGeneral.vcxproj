@@ -50,7 +50,7 @@
     <ClInclude Include="..\source\Include\Main\ErrorCode.h" />
     <ClInclude Include="..\source\Include\Main\FastSearch.h" />
     <ClInclude Include="..\source\Include\Main\FileManip.h" />
-    <ClInclude Include="..\source\Include\Main\find.h" />
+    <ClInclude Include="..\source\Include\Main\Find.h" />
     <ClInclude Include="..\source\Include\Main\FloatObject.h" />
     <ClInclude Include="..\source\Include\Main\FunctionObject.h" />
     <ClInclude Include="..\source\Include\Main\GenericAliasObject.h" />
@@ -104,7 +104,6 @@
     <ClCompile Include="..\source\Objects\Main\Capsule.cpp" />
     <ClCompile Include="..\source\Objects\Main\ClassObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\CodeObject.cpp" />
-    <ClCompile Include="..\source\Objects\Main\CompilerMain.cpp" />
     <ClCompile Include="..\source\Objects\Main\ConfigMinimal.cpp" />
     <ClCompile Include="..\source\Objects\Main\DescrObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\DictObject.cpp" />

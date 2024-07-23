@@ -1,7 +1,8 @@
-#include "Alif.h"
+#include "alif.h"
 
 #include "AlifCore_Call.h"
 #include "AlifCore_FileUtils.h"
+#include "AlifCore_Memory.h"
 #include "ErrorCode.h"
 
 #include "Helpers.h"
@@ -9,7 +10,6 @@
 #include "AlifLexer.h"
 #include "AlifBuffer.h"
 
-#include "AlifCore_Memory.h" // temp
 
 
 static int tokInfo_readlineRaw(TokenInfo* _tokInfo) {

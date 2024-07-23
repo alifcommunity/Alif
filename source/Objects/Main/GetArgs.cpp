@@ -36,9 +36,9 @@ int alifArg_parseTuple(AlifObject* args, const wchar_t* format, ...)
     int retval;
     va_list va;
 
-    va_start(va, format);
+    //va_start(va, format);
     retval = vGetArgs1(args, format, &va, 1);
-    va_end(va);
+    //va_end(va);
     return retval;
 }
 

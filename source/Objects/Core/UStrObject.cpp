@@ -1,7 +1,8 @@
 #include "alif.h"
+
 #include "AlifCore_Object.h"
 #include "AlifCore_AlifCycle.h"
-#include "alifCore_UString.h"
+#include "AlifCore_UString.h"
 #include "AlifCore_Memory.h"
 #include "AlifCore_AlifState.h"
 #include "AlifCore_Interpreter.h"
@@ -94,9 +95,9 @@ static AlifObject* uStr_result_unchanged(AlifObject* _uStr)
 // in file bytearrayobject.c in 1111 and should call _from there only 
 #define STRINGLIB_FAST_MEMCHR memchr
 
-#include "fastSearch.h"
-#include "split.h"
-#include "find.h"
+#include "FastSearch.h"
+#include "Split.h"
+#include "Find.h"
 
 // in file count.h 
 template <typename STRINGLIB_CHAR>

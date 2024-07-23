@@ -42,7 +42,7 @@
 // لن يتم حذف ملفين ucs2lib.h and ucs4lib.h الى ان يتم اخذ منها جميع البيانات ويستغنى عنها كليا
 template <typename STRINGLIB_CHAR>
 static __inline int64_t __fastcall find_char(const STRINGLIB_CHAR* _s, int64_t _n, STRINGLIB_CHAR _ch)
-{
+{ // __fastcall لا تعمل على انظمة لينكس
     const STRINGLIB_CHAR* p_, * e_;
 
     p_ = _s;

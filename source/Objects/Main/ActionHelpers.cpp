@@ -1,4 +1,4 @@
-﻿#include "alif.h"
+#include "alif.h"
 
 
 //#include "AlifParserEngine.h"
@@ -695,7 +695,7 @@ Expression* alifParserEngine_joinedStr(AlifParser* _p, AlifPToken* _a, ExprSeq* 
 	ExprSeq* expr_ = unpackTopLevel_joinedStrs(_p, _rawExprs);
 	AlifUSizeT nItems = SEQ_LEN(expr_);
 
-	const wchar_t* quoteStr = alifWBytes_asString(_a->bytes);
+	const wchar_t* quoteStr = _alifWBytes_asString(_a->bytes);
 	if (quoteStr == nullptr) return nullptr;
 
 	AlifIntT isRaw = wcspbrk(quoteStr, L"خ") != nullptr;
@@ -756,7 +756,7 @@ Expression* alifParserEngine_decodeConstantFromToken(AlifParser* _p, AlifPToken*
 }
 
 Expression* alifParserEngine_constantFromToken(AlifParser* _p, AlifPToken* _t) {
-	wchar_t* bStr = (wchar_t*)alifWBytes_asString(_t->bytes);
+	wchar_t* bStr = (wchar_t*)_alifWBytes_asString(_t->bytes);
 	if (bStr == nullptr) return nullptr;
 
 	AlifObject* str_ = alifUStr_fromString(bStr);
@@ -771,7 +771,7 @@ Expression* alifParserEngine_constantFromToken(AlifParser* _p, AlifPToken* _t) {
 }
 
 Expression* alifParserEngine_constantFromString(AlifParser* _p, AlifPToken* _tok) {
-	wchar_t* str = alifWBytes_asString(_tok->bytes);
+	wchar_t* str = _alifWBytes_asString(_tok->bytes);
 	if (str == nullptr) return nullptr;
 
 	AlifObject* s = alifParserEngine_parseString(_p, _tok);

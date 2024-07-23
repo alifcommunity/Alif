@@ -368,18 +368,18 @@ AlifObject* alifInteger_float(AlifObject* _o)
         //return null_error();
     }
 
-    if (_o->type_ == &_typeFloat_) {
+    if (_o->type_ == &_alifFloatType) {
         return ALIF_NEWREF(_o);
     }
 
     AlifNumberMethods* m_ = ALIF_TYPE(_o)->asNumber;
     if (m_ && m_->float_) { /* This should include subclasses of float */
         AlifObject* res_ = m_->float_(_o);
-        if (!res_ || (res_->type_ == &_typeFloat_)) {
+        if (!res_ || (res_->type_ == &_alifFloatType)) {
             return res_;
         }
 
-        if (!(res_->type_ == &_typeFloat_)) {
+        if (!(res_->type_ == &_alifFloatType)) {
             //Err_Format(Exc_TypeError,
             //    "%.50s.__float__ returned non-float (type %.50s)",
             //    ALIF_TYPE(_o)->name_, ALIF_TYPE(res_)->name_);
@@ -414,7 +414,7 @@ AlifObject* alifInteger_float(AlifObject* _o)
     }
 
     /* A float subclass with nb_float == nullptr */
-    if (_o->type_ == &_typeFloat_) {
+    if (_o->type_ == &_alifFloatType) {
         return alifFloat_fromDouble(((AlifFloatObject*)_o)->digits_);
     }
     return alifFloat_fromString(_o);
