@@ -14,7 +14,7 @@
 
 AlifDureRun _alifDureRun_
 #if defined(__linux__) && (defined(__GNUC__) || defined(__clang__))
-__attribute__((section(L"._alifDureRun_")))
+__attribute__((section("._alifDureRun_")))
 #endif
 = ALIF_DURERUNSTATE_INIT(_alifDureRun_);
 
@@ -93,6 +93,7 @@ static AlifIntT alifCore_createInterpreter(AlifDureRun* _dureRun, const AlifConf
 
 	if (thread_ == nullptr) {
 		// cant make thread // temp
+		std::wcout << L"لا يمكن إنشاء ممر" << std::endl;
 	}
 
 	_dureRun->mainThread = thread_;
@@ -307,7 +308,7 @@ AlifIntT alif_initFromConfig(AlifConfig* _config) {
 }
 
 
-void alifThread_attach(AlifThread* _thread) {
-
+void alifThread_attach(AlifThread* _thread)
+{
 	current_fastSet(&_alifDureRun_, _thread);
 }

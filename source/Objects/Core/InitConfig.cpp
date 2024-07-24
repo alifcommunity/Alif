@@ -56,7 +56,7 @@ AlifIntT alif_setLocaleAndWChar() {
 	}
 #endif // _WINDOWS
 
-	const char* locale = setlocale(LC_ALL, "ar.utf-8");
+	const char* locale = setlocale(LC_ALL, "en_US.UTF-8");
 	if (locale == nullptr) {
 		std::wcout << L"لم يستطع تهيئة الموقع، تأكد من تثبيت ar.utf-8 على نظامك" << std::endl;
 		return -1;

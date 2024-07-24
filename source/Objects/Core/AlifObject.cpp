@@ -162,7 +162,7 @@ int alifObject_richCompareBool(AlifObject* _v, AlifObject* _w, int _op)
 	res_ = alifObject_richCompare(_v, _w, _op);
 	if (res_ == nullptr)
 		return -1;
-	if (res_->type_ == &typeBool)
+	if (res_->type_ == &_alifBoolType_)
 		ok_ = (res_ == ALIF_TRUE);
 	else
 		ok_ = alifObject_isTrue(res_);

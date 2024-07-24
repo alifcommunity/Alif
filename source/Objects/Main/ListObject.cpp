@@ -901,8 +901,7 @@ static __inline void __fastcall sortSlice_advance(SortSlice* _slice, int64_t _n)
 
 #define ISLT(_X, _Y) (*(_ms->KeyCompare))(_X, _Y, _ms)
 
-#define IFLT(_X, _Y) if ((k_ = ISLT(_X, _Y)) < 0) goto fail;  \
-           if (k_)
+#define IFLT(_X, _Y) if ((k_ = ISLT(_X, _Y)) < 0) goto fail; if (k_)
 
 #define MAX_MERGE_PENDING (sizeof(size_t) * 8)
 
@@ -1049,8 +1048,8 @@ static int64_t count_run(MergeState* _ms, SortSlice* _sLo, int64_t _nRemaining)
 #define IF_NEXT_SMALLER IFLT(lo_[n_], lo_[n_-1])
 
 	for (n_ = 1; n_ < _nRemaining; ++n_) {
-		IF_NEXT_SMALLER
-			break;
+		IF_NEXT_SMALLER;
+		break;
 	}
 	if (n_ == _nRemaining)
 		return n_;
@@ -1599,10 +1598,9 @@ static int unsafe_object_compare(AlifObject* _v, AlifObject* _w, MergeState* _ms
 		ALIF_DECREF(resObj);
 		return alifObject_richCompareBool(_v, _w, ALIF_LT);
 	}
-	if (resObj == nullptr)
-		return -1;
+	if (resObj == nullptr) return -1;
 
-	if ((resObj->type_ == &typeBool)) {
+	if (ALIFBOOL_CHECK(resObj)) {
 		res_ = (resObj == ALIF_TRUE);
 	}
 	else {
@@ -1664,16 +1662,16 @@ static int unsafe_tuple_compare(AlifObject* _v, AlifObject* _w, MergeState* _ms)
 
 static AlifObject* list_sort_impl(AlifListObject* _self, AlifObject* _keyFunc, int _reverse)
 {
-	MergeState ms_;
-	int64_t nRemaining;
-	int64_t minRun;
-	SortSlice lo_;
-	int64_t savedObSize, savedAllocated;
-	AlifObject** savedObItem;
-	AlifObject** finalObItem;
+	MergeState ms_{};
+	int64_t nRemaining{};
+	int64_t minRun{};
+	SortSlice lo_{};
+	int64_t savedObSize{}, savedAllocated{};
+	AlifObject** savedObItem{};
+	AlifObject** finalObItem{};
 	AlifObject* result_ = nullptr;
-	int64_t i_;
-	AlifObject** keys_;
+	int64_t i_{};
+	AlifObject** keys_{};
 
 	if (_keyFunc == ALIF_NONE)
 		_keyFunc = nullptr;
@@ -1701,7 +1699,7 @@ static AlifObject* list_sort_impl(AlifListObject* _self, AlifObject* _keyFunc, i
 		}
 
 		for (i_ = 0; i_ < savedObSize; i_++) {
-			//keys_[i_] = AlifObject_CallOneArg(_keyFunc, savedObItem[i_]);
+			keys_[i_] = alifObject_callOneArg(_keyFunc, savedObItem[i_]);
 			if (keys_[i_] == nullptr) {
 				for (i_ = i_ - 1; i_ >= 0; i_--)
 					ALIF_DECREF(keys_[i_]);
@@ -1715,11 +1713,11 @@ static AlifObject* list_sort_impl(AlifListObject* _self, AlifObject* _keyFunc, i
 		lo_.values_ = savedObItem;
 	}
 	if (savedObSize > 1) {
-		int keysAreInTuples = (ALIF_IS_TYPE(lo_.keys_[0], &_alifTupleType_) &&
-			((AlifVarObject*)lo_.keys_[0])->size_ > 0);
+		int keysAreInTuples = (ALIF_IS_TYPE(lo_.keys_[0], &_alifTupleType_) and
+			ALIF_SIZE(lo_.keys_[0]) > 0);
 
 		AlifTypeObject* keyType = (keysAreInTuples ?
-			ALIF_TYPE(((AlifTupleObject*)lo_.keys_[0])->items_[0]) :
+			ALIF_TYPE(ALIFTUPLE_GET_ITEM(lo_.keys_[0], 0)) :
 			ALIF_TYPE(lo_.keys_[0]));
 
 		int keysAreAllSameType = 1;
@@ -1728,14 +1726,14 @@ static AlifObject* list_sort_impl(AlifListObject* _self, AlifObject* _keyFunc, i
 		for (i_ = 0; i_ < savedObSize; i_++) {
 
 			if (keysAreInTuples &&
-				!(ALIF_IS_TYPE(lo_.keys_[i_], &_alifTupleType_) && ((AlifVarObject*)lo_.keys_[i_])->size_ != 0)) {
+				!(ALIF_IS_TYPE(lo_.keys_[i_], &_alifTupleType_) && ALIF_SIZE(lo_.keys_[i_]) != 0)) {
 				keysAreInTuples = 0;
 				keysAreAllSameType = 0;
 				break;
 			}
 
 			AlifObject* key = (keysAreInTuples ?
-				((AlifTupleObject*)lo_.keys_[i_])->items_[0] :
+				ALIFTUPLE_GET_ITEM(lo_.keys_[i_], 0) :
 				lo_.keys_[i_]);
 
 			if (!ALIF_IS_TYPE(key, keyType)) {

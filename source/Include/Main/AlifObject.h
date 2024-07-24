@@ -15,15 +15,15 @@
 
 #define ALIFOBJECT_HEAD_INIT(_type)			\
     {										\
-        {ALIF_IMMORTAL_REFCNT} ,		\
-        (_type)                    \
-    }, \
+        {ALIF_IMMORTAL_REFCNT},				\
+        (_type)							\
+    },
 
 #define ALIFVAROBJECT_HEAD_INIT(_type, _size)	 \
     {											 \
         ALIFOBJECT_HEAD_INIT(_type)   \
         (_size)                         \
-    }, \
+    },
 
 #define ALIFOBJECT_VAR_HEAD		AlifVarObject _base_{};
 #define Alif_INVALID_SIZE (AlifSizeT) - 1

@@ -71,10 +71,8 @@ static AlifNumberMethods boolAsNumber = {
     0,                          
 };
 
-AlifInitObject typeBool = {
-    0,
-    0,
-    0,
+AlifInitObject _alifBoolType_ = {
+    ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0)
     L"bool",
     sizeof(size_t),
     sizeof(size_t),
@@ -116,14 +114,14 @@ AlifInitObject typeBool = {
 
 class AlifIntegerObject alifFalse = {
     0, // ref of object
-    &typeBool,
+    &_alifBoolType_,
     0,
     1
 };
 
 class AlifIntegerObject alifTrue = {
     0, // ref of object
-    &typeBool,
+    &_alifBoolType_,
     1,
     1
 };

@@ -17,7 +17,7 @@ static AlifObject* alifSubBytes_fromSize(int64_t _size) {
 
 	ALIF_INCREF(_object);
 
-    _object->value_[_size] = '\0';
+    //_object->value_[_size] = '\0'; // alifMem_objAlloc reset all bytes of allocated var
 
     return (AlifObject*)_object;
 

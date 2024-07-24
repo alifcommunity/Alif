@@ -53,7 +53,7 @@ done:
 
 /* ----------------------------------- تشغيل اللغة ----------------------------------- */
 static int alifMain_runFileObj(AlifObject* _pn, AlifObject* _fn) {
-	FILE* fp_ = alif_fOpenObj(_fn, "r"); // لا تستخدم "rb"
+	FILE* fp_ = alif_fOpenObj(_fn, "r");
 
 	if (fp_ == nullptr) {
 		wprintf(L"%ls: لا يمكن فتح الملف %ls: [Errno %d] %ls\n",
