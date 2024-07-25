@@ -63,8 +63,24 @@ static AlifThread* alifThread_new(AlifInterpreter* _interpreter) {
 	// يحتاج الى عمل فيما بعد
 
 	AlifThread* thread_ = (AlifThread*)alifMem_dataAlloc(sizeof(AlifThread));
-	thread_->interpreter = _interpreter;
 
+	AlifSizeT id = _interpreter->threads.nextUniquID;
+	_interpreter->threads.nextUniquID += 1;
+
+	AlifThread* oldHead = _interpreter->threads.head;
+
+	/* init thread func */
+	thread_->interpreter = _interpreter;
+	thread_->id = id;
+	/* init thread func */
+
+	/* add thread func */
+	if (oldHead != nullptr) {
+		oldHead->prev = thread_;
+	}
+	thread_->next = oldHead;
+	_interpreter->threads.head = thread_;
+	/* add thread func */
 
 	return thread_; // temp
 }

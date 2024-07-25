@@ -95,6 +95,27 @@ int uStr_eq(AlifObject*, AlifObject*);
 
 AlifObject* alifUStr_objFromWChar(wchar_t*);
 
+
+//static inline unsigned int alifUStr_isCompact(AlifObject* op) {
+//	return ((AlifUStrObject*)op)->state.compact;
+//}
+//#define ALIFUSTR_IS_COMPACT(op) alifUStr_isCompact(ALIFOBJECT_CAST(op))
+
+static inline void* _alifUStr_nonCompactData(AlifObject* op) {
+	void* data;
+	data = ((AlifUStrObject*)op)->UTF;
+	return data;
+}
+
+static inline void* alifUStr_data(AlifObject* op) {
+	//if (ALIFUSTR_IS_COMPACT(op)) {
+	//	return _ALIFUSTR_COMPACT_DATA(op);
+	//}
+	return _alifUStr_nonCompactData(op);
+}
+#define ALIFUSTR_DATA(op) alifUStr_data(ALIFOBJECT_CAST(op))
+
+
 static inline void alifUStr_write(int kind, void* data,
 	int64_t index, uint32_t value)
 {

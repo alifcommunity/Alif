@@ -23,6 +23,8 @@ public:
 	AlifIntT recursionRemaining{};
 	AlifIntT recursionHeadroom{};
 
+	AlifSizeT id{};
+
 	AlifStackChunk* dataStackChunk{};
 	AlifObject** dataStackTop{};
 	AlifObject** dataStackLimit{};

@@ -1619,7 +1619,7 @@ static int unsafe_string_compare(AlifObject* v, AlifObject* w, MergeState* ms)
 	AlifSizeT len{};
 	int res{};
 
-	len = ALIF_MIN(ALIFUSTR_GET_LENGTH(v), ALIFUSTR_GET_LENGTH(w));
+	len = ((ALIFUSTR_GET_LENGTH(v) < ALIFUSTR_GET_LENGTH(w)) ? ALIFUSTR_GET_LENGTH(v) : ALIFUSTR_GET_LENGTH(v));
 	res = memcmp(ALIFUSTR_DATA(v), ALIFUSTR_DATA(w), len);
 
 	res = (res != 0 ? res < 0 :
