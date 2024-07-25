@@ -1614,6 +1614,20 @@ static int unsafe_object_compare(AlifObject* _v, AlifObject* _w, MergeState* _ms
 	return res_;
 }
 
+static int unsafe_string_compare(AlifObject* v, AlifObject* w, MergeState* ms)
+{
+	AlifSizeT len{};
+	int res{};
+
+	len = ALIF_MIN(ALIFUSTR_GET_LENGTH(v), ALIFUSTR_GET_LENGTH(w));
+	res = memcmp(ALIFUSTR_DATA(v), ALIFUSTR_DATA(w), len);
+
+	res = (res != 0 ? res < 0 :
+		ALIFUSTR_GET_LENGTH(v) < ALIFUSTR_GET_LENGTH(w));
+
+	return res;
+}
+
 static int unsafe_long_compare(AlifObject* _v, AlifObject* _w, MergeState* _ms)
 {
 	AlifIntegerObject* vl_, * wl_;
@@ -1755,8 +1769,10 @@ static AlifObject* list_sort_impl(AlifListObject* _self, AlifObject* _keyFunc, i
 		}
 
 		if (keysAreAllSameType) {
-
-			if (keyType == &_alifIntegerType_ && intsAreBounded) {
+			if (keyType == &_alifUStrType_) {
+				ms_.KeyCompare = unsafe_string_compare;
+			}
+			else if (keyType == &_alifIntegerType_ and intsAreBounded) {
 				ms_.KeyCompare = unsafe_long_compare;
 			}
 			else if (keyType == &_alifFloatType) {
