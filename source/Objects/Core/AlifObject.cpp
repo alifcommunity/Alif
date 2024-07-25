@@ -149,8 +149,8 @@ AlifObject* alifObject_richCompare(AlifObject* _v, AlifObject* _w, int _op)
 
 int alifObject_richCompareBool(AlifObject* _v, AlifObject* _w, int _op)
 {
-	AlifObject* res_;
-	int ok_;
+	AlifObject* res_{};
+	int ok_{};
 
 	if (_v == _w) {
 		if (_op == ALIF_EQ)
@@ -315,11 +315,18 @@ AlifNumberMethods _noneAsNumber_ = {
 	(Inquiry)none_bool,
 };
 
-AlifTypeObject _alifNotImplementedType_ = { // need review
+static AlifObject*
+notImplemented_new(AlifTypeObject* type, AlifObject* args, AlifObject* kwargs)
+{
+	if (ALIFTUPLE_GET_SIZE(args) or (kwargs && ALIFDICT_GET_SIZE(kwargs))) {
+		// error
+		return nullptr;
+	}
+	return &_alifNotImplementedStruct_;
+}
 
-	0,// for var obj
-	0,// for var obj
-	0,// fro var obj
+AlifTypeObject _alifNotImplementedType_ = { // need review
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_,0)
 	L"NotImplemented",
 	0,
 	0,
@@ -328,13 +335,10 @@ AlifTypeObject _alifNotImplementedType_ = { // need review
 	0,
 	0,
 	0,
-	&_noneAsNumber_, // 
+	0, // 
 	0,
 	0,
-	(HashFunc)none_hash, // 
-	0,
-	0,
-	0,
+	0, // 
 	0,
 	0,
 	0,
@@ -355,17 +359,17 @@ AlifTypeObject _alifNotImplementedType_ = { // need review
 	0,
 	0,
 	0,
-	none_new, // 
+	0,
+	0,
+	0,
+	notImplemented_new, // 
 };
 
-AlifObject _alifNotImplemented_ = ALIFSUBOBJECT_HEAD_INIT(&_alifNotImplementedType_); // need review
+AlifObject _alifNotImplementedStruct_ = ALIFSUBOBJECT_HEAD_INIT(&_alifNotImplementedType_); // need review
 
 
 AlifTypeObject _typeNone_ = {
-	
-	0,// for var obj
-	0,// for var obj
-	0,// fro var obj
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_,0)
 	L"NoneType",
 	0,
 	0,
@@ -383,10 +387,10 @@ AlifTypeObject _typeNone_ = {
 	0,                 
 	0,                  
 	0,
-	0,       
+	ALIFTPFLAGS_DEFAULT,
+	0,
 	0,            
 	0,         
-	0,               
 	0,                
 	0,
 	0,        

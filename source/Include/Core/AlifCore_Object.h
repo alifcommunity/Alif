@@ -7,13 +7,13 @@
     {                                        \
          ALIF_IMMORTAL_REFCNT,    \
          (_type)                 \
-    } \
+    }
 
 #define ALIFSUBVAROBJECT_HEAD_INIT(_type, _size)    \
     {                                               \
         ._base_ = ALIFSUBOBJECT_HEAD_INIT(_type),   \
         .size_ = _size                              \
-    } \                                              
+    }                                         
 
 
 static inline void alifSub_refAdd(AlifObject* op, int64_t n)

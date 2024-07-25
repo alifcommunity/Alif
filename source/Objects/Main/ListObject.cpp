@@ -1587,7 +1587,8 @@ static int safe_object_compare(AlifObject* _v, AlifObject* w_, MergeState* _ms)
 
 static int unsafe_object_compare(AlifObject* _v, AlifObject* _w, MergeState* _ms)
 {
-	AlifObject* resObj; int res_;
+	AlifObject* resObj{};
+	int res_{};
 
 	if (ALIF_TYPE(_v)->richCompare != _ms->KeyRichcompare)
 		return alifObject_richCompareBool(_v, _w, ALIF_LT);
@@ -1599,6 +1600,8 @@ static int unsafe_object_compare(AlifObject* _v, AlifObject* _w, MergeState* _ms
 		return alifObject_richCompareBool(_v, _w, ALIF_LT);
 	}
 	if (resObj == nullptr) return -1;
+
+	std::wcout << resObj->type_->name_ << std::endl << std::endl;
 
 	if (ALIFBOOL_CHECK(resObj)) {
 		res_ = (resObj == ALIF_TRUE);
@@ -1863,7 +1866,7 @@ keyfunc_fail:
 
 int alifList_sort(AlifObject* _v)
 {
-	if (_v == nullptr || !(_v->type_ == &_alifListType_)) {
+	if (_v == nullptr or !ALIFLIST_CHECK(_v)) {
 		return -1;
 	}
 	//ALIF_BEGIN_CRITICAL_SECTION(_v);

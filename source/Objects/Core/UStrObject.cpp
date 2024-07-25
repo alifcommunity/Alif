@@ -1646,6 +1646,7 @@ int uStr_compare_eq(AlifObject* _str1, AlifObject* _str2)
 }
 
 AlifObject* uStr_compare(AlifObject* _left, AlifObject* _right, int _op) {
+	// this function need review
 
 	if (_left->type_ != &_alifUStrType_ || 
 		_right->type_ != &_alifUStrType_) {
@@ -1661,6 +1662,7 @@ AlifObject* uStr_compare(AlifObject* _left, AlifObject* _right, int _op) {
 		return result_ ? ALIF_TRUE : ALIF_FALSE;
 	}
 
+	//return ALIF_NOTIMPLEMENTED; // need review
 }
 
 // in file eq.h

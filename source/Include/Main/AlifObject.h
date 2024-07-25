@@ -318,8 +318,8 @@ int alif_isNone(AlifObject*);
 
 #define ALIF_RETURN_NONE return ALIF_NONE
 
-extern AlifObject _alifNotImplemented_;
-#define ALIF_NOTIMPLEMENTED (&_alifNotImplemented_)
+extern AlifObject _alifNotImplementedStruct_;
+#define ALIF_NOTIMPLEMENTED (&_alifNotImplementedStruct_)
 
 /* comparison opcodes */
 #define ALIF_LT 0
