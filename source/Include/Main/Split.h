@@ -44,8 +44,8 @@ static void split_add(STRINGLIB_CHAR* data, int64_t left, int64_t right,
 //    AlifObject* list = alifNew_list(PREALLOC_SIZE(maxcount));
 //    AlifObject* sub;
 //
-//    if (list == NULL)
-//        return NULL;
+//    if (list == nullptr)
+//        return nullptr;
 //
 //    i = j = 0;
 //    while (maxcount-- > 0) {
@@ -79,8 +79,8 @@ static void split_add(STRINGLIB_CHAR* data, int64_t left, int64_t right,
 //    return list;
 //
 //onError:
-//    //Py_DECREF(list);
-//    return NULL;
+//    //ALIF_DECREF(list);
+//    return nullptr;
 //}
 
 template <typename STRINGLIB_CHAR>
@@ -93,8 +93,8 @@ AlifObject* split_char(AlifObject* str_obj,
     AlifObject* list = alifNew_list(PREALLOC_SIZE(maxcount));
     AlifObject* sub;
 
-    if (list == NULL)
-        return NULL;
+    if (list == nullptr)
+        return nullptr;
 
     i = j = 0;
     while ((j < str_len) && (maxcount-- > 0)) {
@@ -124,7 +124,7 @@ AlifObject* split_char(AlifObject* str_obj,
 
 onError:
     list;
-    return NULL;
+    return nullptr;
 }
 
 template <typename STRINGLIB_CHAR>
@@ -138,14 +138,14 @@ AlifObject* split(AlifObject* str_obj,
 
     if (sep_len == 0) {
         //Err_SetString(Exc_ValueError, "empty separator");
-        return NULL;
+        return nullptr;
     }
     else if (sep_len == 1)
         return split_char(str_obj, str, str_len, sep[0], maxcount);
 
     list = alifNew_list(PREALLOC_SIZE(maxcount));
-    if (list == NULL)
-        return NULL;
+    if (list == nullptr)
+        return nullptr;
 
     i = j = 0;
     while (maxcount-- > 0) {
@@ -173,5 +173,5 @@ AlifObject* split(AlifObject* str_obj,
 
 onError:
     list;
-    return NULL;
+    return nullptr;
 }

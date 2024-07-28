@@ -24,6 +24,9 @@
     <ClInclude Include="..\source\Include\Main\AlifCapsule.h" />
     <ClInclude Include="..\source\Include\Main\AlifConfig.h" />
     <ClInclude Include="..\source\Include\Main\AlifCppType.h" />
+    <ClInclude Include="..\source\Include\Main\AlifErrors.h" />
+    <ClInclude Include="..\source\Include\Main\AlifEval.h" />
+    <ClInclude Include="..\source\Include\Main\AlifEvalMacros.h" />
     <ClInclude Include="..\source\Include\Main\AlifLexer.h" />
     <ClInclude Include="..\source\Include\Main\AlifMacro.h" />
     <ClInclude Include="..\source\Include\Main\AlifObject.h" />
@@ -36,7 +39,9 @@
     <ClInclude Include="..\source\Include\Main\AlifTokenState.h" />
     <ClInclude Include="..\source\Include\Main\AlifTypeDefs.h" />
     <ClInclude Include="..\source\Include\Main\BoolObject.h" />
+    <ClInclude Include="..\source\Include\Main\BuiltinsModule.h" />
     <ClInclude Include="..\source\Include\Main\BytesObject.h" />
+    <ClInclude Include="..\source\Include\Main\ClassObject.h" />
     <ClInclude Include="..\source\Include\Main\Code.h" />
     <ClInclude Include="..\source\Include\Main\Compile.h" />
     <ClInclude Include="..\source\Include\Main\AlifVersion.h" />
@@ -45,9 +50,10 @@
     <ClInclude Include="..\source\Include\Main\ErrorCode.h" />
     <ClInclude Include="..\source\Include\Main\FastSearch.h" />
     <ClInclude Include="..\source\Include\Main\FileManip.h" />
-    <ClInclude Include="..\source\Include\Main\find.h" />
+    <ClInclude Include="..\source\Include\Main\Find.h" />
     <ClInclude Include="..\source\Include\Main\FloatObject.h" />
     <ClInclude Include="..\source\Include\Main\FunctionObject.h" />
+    <ClInclude Include="..\source\Include\Main\GenericAliasObject.h" />
     <ClInclude Include="..\source\Include\Main\Helpers.h" />
     <ClInclude Include="..\source\Include\Main\Import.h" />
     <ClInclude Include="..\source\Include\Main\InitConfig.h" />
@@ -56,8 +62,10 @@
     <ClInclude Include="..\source\Include\Main\ListObject.h" />
     <ClInclude Include="..\source\Include\Main\MethodObject.h" />
     <ClInclude Include="..\source\Include\Main\ModSupport.h" />
+    <ClInclude Include="..\source\Include\Main\ModuleObject.h" />
     <ClInclude Include="..\source\Include\Main\ObjImpl.h" />
     <ClInclude Include="..\source\Include\Main\OpCode.h" />
+    <ClInclude Include="..\source\Include\Main\OpCodeCases.h" />
     <ClInclude Include="..\source\Include\Main\OpCodeIDs.h" />
     <ClInclude Include="..\source\Include\Main\SetObject.h" />
     <ClInclude Include="..\source\Include\Main\SliceObject.h" />
@@ -75,6 +83,7 @@
     <ClCompile Include="..\source\Objects\Main\AlifAST.cpp" />
     <ClCompile Include="..\source\Objects\Main\AlifCompiler.cpp" />
     <ClCompile Include="..\source\Objects\Main\AlifCppType.cpp" />
+    <ClCompile Include="..\source\Objects\Main\AlifEval.cpp" />
     <ClCompile Include="..\source\Objects\Main\AlifFlowGraph.cpp" />
     <ClCompile Include="..\source\Objects\Main\AlifLexer.cpp" />
     <ClCompile Include="..\source\Objects\Main\AlifParser.cpp" />
@@ -88,30 +97,38 @@
     <ClCompile Include="..\source\Objects\Main\ASDL.cpp" />
     <ClCompile Include="..\source\Objects\Main\ASTOptimize.cpp" />
     <ClCompile Include="..\source\Objects\Main\BoolObject.cpp" />
+    <ClCompile Include="..\source\Objects\Main\BuiltinsModule.cpp" />
     <ClCompile Include="..\source\Objects\Main\BytesMethods.cpp" />
     <ClCompile Include="..\source\Objects\Main\BytesObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\Call.cpp" />
     <ClCompile Include="..\source\Objects\Main\Capsule.cpp" />
+    <ClCompile Include="..\source\Objects\Main\ClassObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\CodeObject.cpp" />
-    <ClCompile Include="..\source\Objects\Main\CompilerMain.cpp" />
     <ClCompile Include="..\source\Objects\Main\ConfigMinimal.cpp" />
+    <ClCompile Include="..\source\Objects\Main\DescrObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\DictObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\FileObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\FileTokenizer.cpp" />
     <ClCompile Include="..\source\Objects\Main\FloatObject.cpp" />
+    <ClCompile Include="..\source\Objects\Main\FrameObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\FunctionObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\GC.cpp" />
+    <ClCompile Include="..\source\Objects\Main\GenericAliasObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\GetArgs.cpp" />
     <ClCompile Include="..\source\Objects\Main\GetVersion.cpp" />
     <ClCompile Include="..\source\Objects\Main\Import.cpp" />
     <ClCompile Include="..\source\Objects\Main\InstructionSeq.cpp" />
+    <ClCompile Include="..\source\Objects\Main\Instrumentation.cpp" />
     <ClCompile Include="..\source\Objects\Main\IntegerObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\IterObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\ListObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\MethodObject.cpp" />
+    <ClCompile Include="..\source\Objects\Main\ModuleObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\SetObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\SliceObject.cpp" />
+    <ClCompile Include="..\source\Objects\Main\Specialize.cpp" />
     <ClCompile Include="..\source\Objects\Main\StringParser.cpp" />
+    <ClCompile Include="..\source\Objects\Main\SysModule.cpp" />
     <ClCompile Include="..\source\Objects\Main\Thread.cpp" />
     <ClCompile Include="..\source\Objects\Main\TupleObject.cpp" />
     <ClCompile Include="..\source\Objects\Main\TypeObject.cpp" />
@@ -130,6 +147,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
+    <EnableASAN>true</EnableASAN>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
@@ -137,12 +155,14 @@
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+    <EnableASAN>true</EnableASAN>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
+    <EnableASAN>true</EnableASAN>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
@@ -150,6 +170,7 @@
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+    <EnableASAN>true</EnableASAN>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -191,6 +212,7 @@
       <ConformanceMode>true</ConformanceMode>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
       <AdditionalIncludeDirectories>..\source\Include\Core;..\source\Include\Main;..\source\Include\Alif;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -207,6 +229,7 @@
       <ConformanceMode>true</ConformanceMode>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
       <AdditionalIncludeDirectories>..\source\Include\Core;..\source\Include\Main;..\source\Include\Alif;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

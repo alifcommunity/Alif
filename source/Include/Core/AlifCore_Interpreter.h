@@ -1,8 +1,12 @@
 #pragma once
 
 #include "AlifCore_Memory.h"
+#include "AlifCore_Function.h"
 #include "AlifCore_GC.h"
-
+#include "AlifCore_GlobalObjects.h"
+#include "AlifCore_Import.h"
+#include "AlifCore_ObjectState.h"
+#include "AlifCore_TypeObject.h"
 
 
 
@@ -47,10 +51,20 @@ public:
 	class AlifDureRun* dureRun{};
 	AlifConfig config{};
 
+	AlifFrameEvalFunction evalFrame{};
+
 	AlifGCDureRun gc{};
 
+	AlifObject* builtins{};
+
+	class ImportState imports;
 
 	AlifMemory* memory_{};
+
+	AlifObjectState objectState{};
+
+	class TypesState types;
+
 };
 
 

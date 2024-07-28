@@ -110,7 +110,7 @@ void* alifCapsule_getPointer(AlifObject* _op, const wchar_t* _name) { // 96
 // 349 // need fix
 AlifTypeObject _alifCapsuleType_ = {
 	//ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0)
-	ALIFVAROBJECT_HEAD_INIT(&_alifCapsuleType_, 0),
+	ALIFVAROBJECT_HEAD_INIT(&_alifCapsuleType_, 0)
 	L"AlifCapsule",
 	16,
 	0,

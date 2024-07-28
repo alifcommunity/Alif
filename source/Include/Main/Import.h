@@ -5,7 +5,7 @@
 
 
 
-
+AlifObject* alifImport_addModuleRef(const wchar_t* );
 
 class InitTable {
 public:

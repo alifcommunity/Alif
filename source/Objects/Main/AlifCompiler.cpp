@@ -1,4 +1,4 @@
-﻿#include "alif.h"
+#include "alif.h"
 #include "OpCode.h"
 
 #include "AlifCore_AST.h"
@@ -21,6 +21,7 @@ static AlifIntT compiler_body(AlifCompiler*, SourceLocation, StmtSeq*);
 static AlifSizeT dict_addObject(AlifObject*, AlifObject*);
 static AlifIntT codeGen_addOpI(InstructionSequence*, AlifIntT, AlifSizeT, SourceLocation);
 static AlifCodeObject* optimize_andAssemble(AlifCompiler*, AlifIntT);
+static AlifIntT compiler_visitExpression(AlifCompiler*, Expression*);
 
 
 typedef AlifFlowGraph AlifFlowGraph;
@@ -97,7 +98,7 @@ public:
 
 #define ADDOP(_c, _loc, _op) {if (codeGen_addOpNoArg(INSTR_SEQUANCE(_c), _op, _loc) == -1) return -1;}
 #define ADDOP_I(_c, _loc, _op, _o) { if (codeGen_addOpI(INSTR_SEQUANCE(_c), _op, _o, _loc) == -1) return -1;}
-#define ADDOP_BINARY(_c, _loc, _binOp) { if (addOp_binary(_c, _loc, _binOp, TRUE) == -1) return -1;}
+#define ADDOP_BINARY(_c, _loc, _binOp) { if (addOp_binary(_c, _loc, _binOp, false) == -1) return -1;}
 #define ADDOP_LOAD_CONST(_c, _loc, _o) { if (compilerAddOp_loadConst(_c->unit, _loc, _o) == -1) return -1;}
 
 
@@ -110,18 +111,95 @@ static AlifIntT codeGen_addOpNoArg(InstructionSequence* _seq, AlifIntT _opCode, 
 	return alifInstructionSequence_addOp(_seq, _opCode, 0, _loc);
 }
 
-static AlifObject* marge_constsRecursive(AlifObject* _obj) { // 857
+static AlifObject* merge_constsRecursive(AlifObject* _obj) { // 857
+
 	if (_obj == ALIF_NONE) return _obj;
 
+	//AlifObject* key = alifCode_constantKey(_obj);
+	//if (key == nullptr) return nullptr;
 
-	/*
-		long code here
-	*/
+	//AlifObject* t{};
+	//int res = alifDict_setDefaultRef(key, key, &t);
+	//if (res != 0) {
+	//	ALIF_DECREF(key);
+	//	return t;
+	//}
+	//ALIF_DECREF(t);
 
+	//if (ALIFTUPLE_CHECKEXACT(_obj)) {
+	//	AlifSizeT len = ALIFTUPLE_GET_SIZE(_obj);
+	//	for (AlifSizeT i = 0; i < len; i++) {
+	//		AlifObject* item = ALIFTUPLE_GET_ITEM(_obj, i);
+	//		AlifObject* u = merge_constsRecursive(item);
+	//		if (u == nullptr) {
+	//			ALIF_DECREF(key);
+	//			return nullptr;
+	//		}
+
+	//		AlifObject* v{};  // borrowed
+	//		if (ALIFTUPLE_CHECKEXACT(u)) {
+	//			v = ALIFTUPLE_GET_ITEM(u, 1);
+	//		}
+	//		else {
+	//			v = u;
+	//		}
+	//		if (v != item) {
+	//			ALIFTUPLE_SET_ITEM(_obj, i, ALIF_NEWREF(v));
+	//			ALIF_DECREF(item);
+	//		}
+
+	//		ALIF_DECREF(u);
+	//	}
+	//}
+	//else if (ALIFFROZENSET_CHECKEXACT(_obj)) {
+
+	//	AlifSizeT len = ALIFSET_GET_SIZE(_obj);
+	//	if (len == 0) { 
+	//		return key;
+	//	}
+	//	AlifObject* tuple = alifNew_tuple(len);
+	//	if (tuple == nullptr) {
+	//		ALIF_DECREF(key);
+	//		return nullptr;
+	//	}
+	//	AlifSizeT i = 0, pos = 0;
+	//	AlifObject* item;
+	//	AlifSizeT hash;
+	//	while (alifSet_nextEntry(_obj, &pos, &item, &hash)) {
+	//		AlifObject* k = merge_constsRecursive(item);
+	//		if (k == nullptr) {
+	//			ALIF_DECREF(tuple);
+	//			ALIF_DECREF(key);
+	//			return nullptr;
+	//		}
+	//		AlifObject* u;
+	//		if (ALIFTUPLE_CHECKEXACT(k)) {
+	//			u = ALIF_NEWREF(ALIFTUPLE_GET_ITEM(k, 1));
+	//			ALIF_DECREF(k);
+	//		}
+	//		else {
+	//			u = k;
+	//		}
+	//		ALIFTUPLE_SET_ITEM(tuple, i, u);  // Steals reference of u.
+	//		i++;
+	//	}
+
+	//	AlifObject* new_ = alifNew_frozenSet(tuple);
+	//	ALIF_DECREF(tuple);
+	//	if (new_ == nullptr) {
+	//		ALIF_DECREF(key);
+	//		return nullptr;
+	//	}
+	//	ALIF_DECREF(o);
+	//	ALIFTUPLE_SET_ITEM(key, 1, new_);
+	//}
+
+	//return key;
+	return _obj;
 }
 
 static AlifSizeT compiler_addConst(CompilerUnit* _cu, AlifObject* _obj) { // 965
-	AlifObject* key = marge_constsRecursive(_obj);
+	AlifObject* key = merge_constsRecursive(_obj);
 	if (key == nullptr) return -1;
 
 	AlifSizeT arg = dict_addObject(_cu->data.consts, key);
@@ -203,7 +281,7 @@ static AlifObject* list_toDict(AlifObject* _list) { // 485
 			return nullptr;
 		}
 		k = ALIFLIST_GET_ITEM(_list, i);
-		if (dict_setItem((AlifDictObject*)dict, k, v) < 0) {
+		if (alifDict_setItem(dict, k, v) < 0) {
 			ALIF_DECREF(v);
 			ALIF_DECREF(dict);
 			return nullptr;
@@ -234,7 +312,7 @@ static AlifObject* dict_byType(AlifObject* _src, AlifIntT _scopeType, AlifIntT _
 	for (AlifSizeT keyIdx = 0; keyIdx < numKeys; keyIdx++) {
 		long vi{};
 		k = ALIFLIST_GET_ITEM(sortedKeys, keyIdx);
-		v = dict_getItem(_src, k); // alifDict_getItemWithError
+		v = alifDict_getItem(_src, k); // alifDict_getItemWithError
 		vi = alifInteger_asLong(v); // ALIFLONG_AS_LONG
 		scope = (vi >> SCOPE_OFFSET) & SCOPE_MASK;
 
@@ -246,7 +324,7 @@ static AlifObject* dict_byType(AlifObject* _src, AlifIntT _scopeType, AlifIntT _
 				return nullptr;
 			}
 			i++;
-			if (dict_setItem((AlifDictObject*)dest, k, item) < 0) {
+			if (alifDict_setItem(dest, k, item) < 0) {
 				ALIF_DECREF(sortedKeys);
 				ALIF_DECREF(item);
 				ALIF_DECREF(dest);
@@ -255,7 +333,7 @@ static AlifObject* dict_byType(AlifObject* _src, AlifIntT _scopeType, AlifIntT _
 			ALIF_DECREF(item);
 		}
 	}
-	ALIF_DECREF(sortedKeys);
+	//ALIF_DECREF(sortedKeys); // need review because it's delete names when ref count reach 0
 	return dest;
 }
 
@@ -273,7 +351,7 @@ static AlifSizeT dict_addObject(AlifObject* _dict, AlifObject* _obj) { // 830
 		v = alifInteger_fromLongLong(arg);
 		if (!v) return -1;
 
-		if (dict_setItem((AlifDictObject*)_dict, _obj, v) < 0) {
+		if (alifDict_setItem(_dict, _obj, v) < 0) {
 			ALIF_DECREF(v);
 			return -1;
 		}
@@ -351,7 +429,7 @@ static AlifIntT compiler_setup(AlifCompiler* _compiler, Module* _module,
 	_compiler->stack = alifNew_list(0);
 	if (!_compiler->stack) return -1;
 
-	_compiler->fileName = alif_newRef(_fn); // need Change to MACRO
+	_compiler->fileName = ALIF_NEWREF(_fn); // need Change to MACRO
 	_compiler->astMem = _astMem;
 
 	_compiler->optimize = (_optimize == -1) ? alifConfig_get()->optimizationLevel : _optimize;
@@ -503,7 +581,7 @@ static AlifIntT compiler_enterScope(AlifCompiler* _compiler,
 			return -1;
 		}
 	}
-	ADDOP_I(_compiler, location, RESUME, RESUME_ATFUNC_START);
+	ADDOP_I(_compiler, location, RESUME, RESUME_AT_FUNC_START);
 
 	if (cu->scopeType == ScopeType::Compiler_Scope_Module) {
 		location.lineNo = -1;
@@ -593,12 +671,15 @@ done:
 
 
 
-static AlifIntT addOp_binary(AlifCompiler* _compiler, SourceLocation _loc, Operator _binOp, BOOL _inPlace) { // 4122
+static AlifIntT addOp_binary(AlifCompiler* _compiler, SourceLocation _loc, Operator _binOp, bool _inPlace) { // 4122
 
 	AlifIntT opArg{};
 
 	if (_binOp == Operator::Add) {
 		opArg = _inPlace ? NB_INPLACE_ADD : NB_ADD;
+	}
+	else if (_binOp == Operator::Sub) {
+		opArg = _inPlace ? NB_INPLACE_SUBTRACT : NB_SUBTRACT;
 	}
 
 	ADDOP_I(_compiler, _loc, BINARY_OP, opArg);
@@ -606,6 +687,114 @@ static AlifIntT addOp_binary(AlifCompiler* _compiler, SourceLocation _loc, Opera
 	return 1;
 }
 
+static AlifIntT compiler_nameOp(AlifCompiler* _compiler, SourceLocation _loc, AlifObject* _name, ExprCTX _ctx) { // 4187
+
+	enum { FastOp, GlobalOp, DeRefOp, NameOp } opType;
+
+	AlifObject* dict = _compiler->unit->data.names;
+
+	AlifObject* mangled = alif_mangle(_compiler->unit->private_, _name);
+	if (!mangled) return -1;
+
+	AlifIntT op = 0;
+	opType = NameOp;
+	AlifIntT scope = alifST_getScope(_compiler->unit->symTableEntry, mangled);
+	switch (scope) {
+		// code here
+	default:
+		break;
+	}
+
+	switch (opType)
+	{
+	case NameOp:
+		switch (_ctx)
+		{
+		case Load:
+			op = (_compiler->unit->symTableEntry->steType == AlifBlockType::ClassBlock
+				and _compiler->unit->inInlinedComp) ? LOAD_GLOBAL : LOAD_NAME;
+			break;
+		case Store:
+			op = STORE_NAME;
+			break;
+		case Del:
+			op = DELETE_NAME;
+			break;
+		}
+		break;
+	}
+
+	AlifSizeT arg = dict_addObject(dict, mangled);
+	ALIF_DECREF(mangled);
+	if (arg < 0) return -1;
+
+	return codeGen_addOpI(INSTR_SEQUANCE(_compiler), op, arg, _loc);
+}
+
+static AlifIntT maybeOptimize_methodCall(AlifCompiler* _compiler, Expression* _expr) { // 4931
+	AlifSizeT argsl{}, i{}, kwdsl{};
+	Expression* meth = _expr->V.call.func;
+	ExprSeq* args = _expr->V.call.args;
+	KeywordSeq* kwds = _expr->V.call.keywords;
+
+	/* Check that the call node is an attribute access */
+	if (meth->type != ExprType::AttributeK or meth->V.attribute.ctx != ExprCTX::Load) {
+		return 0;
+	}
+
+	/*
+	// code here
+	*/
+}
+
+static AlifIntT compiler_callHelper(AlifCompiler* _compiler, SourceLocation _loc, AlifIntT _n,
+	ExprSeq* _args, KeywordSeq* _keywords) { // 5189
+
+	//if(validate_keywords(_compiler, _keywords) == -1) return -1;
+
+	AlifSizeT nElts = SEQ_LEN(_args);
+	AlifSizeT nKwElts = SEQ_LEN(_keywords);
+
+	// code here
+
+
+	for (AlifSizeT i = 0; i < nElts; i++) {
+		Expression* elt = SEQ_GET(_args, i);
+		VISIT(_compiler, Expression, elt);
+	}
+	if (nKwElts) {
+		// code here
+	}
+	else {
+		ADDOP_I(_compiler, _loc, CALL, _n + nElts);
+	}
+
+	return 1;
+
+exCall:
+
+	return 0; // temp
+}
+
+static AlifIntT compiler_call(AlifCompiler* _compiler, Expression* _expr) { // 5026
+
+	//if(validate_keywords(_compiler, _expr->V.call.keywords) == -1) return -1;
+	AlifIntT ret = maybeOptimize_methodCall(_compiler, _expr);
+	if (ret < 0) {
+		return -1;
+	}
+	if (ret == 1) {
+		return 1;
+	}
+
+	//if(check_caller(_compiler, _expr->V.call.func) == -1) return -1;
+
+	VISIT(_compiler, Expression, _expr->V.call.func);
+	SourceLocation loc = LOC(_expr->V.call.func);
+	ADDOP(_compiler, loc, PUSH_NULL);
+	loc = LOC(_expr);
+	return compiler_callHelper(_compiler, loc, 0, _expr->V.call.args, _expr->V.call.keywords);
+}
 
 static AlifIntT compiler_visitExpression(AlifCompiler* _compiler, Expression* _expr) { // 6341
 
@@ -614,6 +803,15 @@ static AlifIntT compiler_visitExpression(AlifCompiler* _compiler, Expression* _e
 		VISIT(_compiler, Expression, _expr->V.binOp.left);
 		VISIT(_compiler, Expression, _expr->V.binOp.right);
 		ADDOP_BINARY(_compiler, loc, _expr->V.binOp.op);
+	}
+	else if (_expr->type == ExprType::CallK) {
+		return compiler_call(_compiler, _expr);
+	}
+	else if (_expr->type == ExprType::ConstantK) {
+		ADDOP_LOAD_CONST(_compiler, loc, _expr->V.constant.val);
+	}
+	else if (_expr->type == ExprType::NameK) {
+		return compiler_nameOp(_compiler, loc, _expr->V.name.name, _expr->V.name.ctx);
 	}
 
 
@@ -645,6 +843,16 @@ static AlifIntT compiler_visitStatement(AlifCompiler* _compiler, Statement* _stm
 
 	if (_stmt->type == StmtType::ExprK) {
 		return compiler_stmtExpr(_compiler, LOC(_stmt), _stmt->V.expression.val);
+	}
+	else if (_stmt->type == StmtType::AssignK) {
+		AlifSizeT n = SEQ_LEN(_stmt->V.assign.targets);
+		VISIT(_compiler, Expression, _stmt->V.assign.val);
+		for (AlifSizeT i = 0; i < n; i++) {
+			if (i < n - 1) {
+				ADDOP_I(_compiler, LOC(_stmt), COPY, 1);
+			}
+			VISIT(_compiler, Expression,(Expression*)SEQ_GET(_stmt->V.assign.targets, i));
+		}
 	}
 
 
@@ -703,12 +911,12 @@ static AlifObject* constsDict_keysInorder(AlifObject* _dict) { // 7515
 	consts = alifNew_list(size);
 	if (consts == nullptr) return nullptr;
 
-	while (alifDict_next(_dict, &pos, &k, &v, 0)) {
+	while (alifDict_next(_dict, &pos, &k, &v)) {
 		i = alifInteger_asLong(v);
 		if (ALIFTUPLE_CHECKEXACT(k)) {
 			k = ALIFTUPLE_GET_ITEM(k, 1);
 		}
-		ALIFLIST_SET_ITEM(consts, i, ALIF_NEWREF(k));
+		ALIFLIST_SETITEM(consts, i, ALIF_NEWREF(k));
 	}
 	return consts;
 }

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "AlifCore_ASDL.h"
 
@@ -93,7 +93,7 @@ public:
 			Expression* returns{};
 		} function;
 
-	} V;
+	} V{};
 };
 
 enum StmtType {
@@ -213,7 +213,7 @@ public:
 			Expression* val{};
 		}expression;
 
-	} V;
+	} V{};
 
 	AlifSizeT lineNo{};
 	AlifSizeT colOffset{};
@@ -390,7 +390,7 @@ public:
 			Expression* step{};
 		}slice;
 
-	} V;
+	} V{};
 
 	AlifSizeT lineNo{};
 	AlifSizeT colOffset{};
@@ -475,7 +475,7 @@ public:
 			AlifObject* name{};
 		}typeVarTuple;
 
-	} V;
+	} V{};
 
 	AlifSizeT lineNo{};
 	AlifSizeT colOffset{};

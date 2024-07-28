@@ -4,6 +4,10 @@
 AlifObject* alifSubObject_new(AlifTypeObject*);
 AlifVarObject* alifSubObject_newVar(AlifTypeObject*, int64_t);
 
+void alifObject_gc_track(void*);
+void alifObject_gcUnTrack(void* );
+void alifObject_gcDel(void*);
+
 
 #define ALIFOBJECT_NEW(_type, _typeObj) ((_type *)alifSubObject_new(_typeObj))
 
@@ -13,14 +17,21 @@ AlifVarObject* alifSubObject_newVar(AlifTypeObject*, int64_t);
 #define ALIFOBJECT_NEW_VAR(_type, _typeObj, _n) ALIFOBJECT_NEWVAR(_type, (_typeObj), (_n))
 
 
+#define ALIFTYPE_IS_GC(_t) alifType_hasFeature((_t), ALIFTPFLAGS_HAVE_GC)
+
+static inline size_t alifSubObject_size(AlifTypeObject* _type) {
+	return (size_t)_type->basicSize;
+}
 
 static inline size_t alifSubObject_varSize(AlifTypeObject* _type, int64_t _nItems) {
     size_t size_ =  _type->basicSize;
-    size_ +=  _nItems * _type->itemsSize;
+    size_ +=  _nItems * _type->itemSize;
     return ALIFSIZE_ROUND_UP(size_, SIZEOF_VOID_P);
 }
 
 
+
+int alifObject_isGC(AlifObject* );
 
 
 
@@ -31,6 +42,12 @@ static inline size_t alifSubObject_varSize(AlifTypeObject* _type, int64_t _nItem
  * Garbage Collection
  * ==================
  */
-AlifObject* alifObjectGC_new(AlifTypeObject*);
+AlifObject* alifSubObjectGC_new(AlifTypeObject*);
+AlifVarObject* alifSubObjectGC_newVar(AlifTypeObject*, int64_t);
 
-#define ALIFOBJECT_GC_NEW(_type, _typeObj) (_type*)(alifObjectGC_new(_typeObj))
+
+#define ALIFOBJECT_GC_NEW(_type, _typeObj) \
+	ALIF_CAST(_type*, alifSubObjectGC_new(_typeObj))
+
+#define ALIFOBJECT_GC_NEWVAR(_type, _typeObj, _n) \
+    ALIF_CAST(_type*, alifSubObjectGC_newVar((_typeObj), (_n)))

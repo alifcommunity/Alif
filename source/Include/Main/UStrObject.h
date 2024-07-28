@@ -10,6 +10,8 @@ AlifObject* alifUStr_fromString(const wchar_t*);
 
 AlifObject* alifUStr_internFromString(const wchar_t*);
 
+void alifUStr_internInPlace(AlifObject**);
+
 enum UStrKind {
 	USTR_2BYTE = 2,
 	USTR_4BYTE = 4,
@@ -31,7 +33,8 @@ public:
 
 extern AlifInitObject _alifUStrType_;
 
-#define ALIFUSTR_CHECK_TYPE(_op) ALIF_IS_TYPE((_op), &_alifUStrType_)
+#define ALIFUSTR_CHECK(_op) ALIFTYPE_FASTSUBCLASS(ALIF_TYPE(_op), ALIFTPFLAGS_USTR_SUBCLASS)
+#define ALIFUSTR_CHECKEXACT(_op) ALIF_IS_TYPE((_op), &_alifUStrType_)
 
 #define ALIFUSTR_CAST(_uStr) ((AlifUStrObject*)(_uStr))
 
@@ -41,6 +44,24 @@ extern AlifInitObject _alifUStrType_;
 
 
 #define ALIF_SIZE_ROUND_DOWN(_n, _a) ((size_t)(_n) & ~(size_t)((_a) - 1))
+
+
+
+
+
+//#define ALIFASCIIOBJECT_CAST(op) \
+//     ALIF_CAST(AlifASCIIObject*, (op)))
+//
+//
+//static inline AlifUIntT alifUSgtr_checkInterned(AlifObject* op) {
+//	return alifAsciiObject_cast(op)->state.interned;
+//}
+//#define ALIFUSTR_CHECK_INTERNED(op) alifUSgtr_checkInterned(ALIFOBJECT_CAST(op))
+
+
+
+
+
 
 static inline uint32_t alifUStr_read_wchar(AlifObject* _uStr, int64_t _index)
 {
@@ -73,6 +94,27 @@ int uStr_eq(AlifObject*, AlifObject*);
 
 
 AlifObject* alifUStr_objFromWChar(wchar_t*);
+
+
+//static inline unsigned int alifUStr_isCompact(AlifObject* op) {
+//	return ((AlifUStrObject*)op)->state.compact;
+//}
+//#define ALIFUSTR_IS_COMPACT(op) alifUStr_isCompact(ALIFOBJECT_CAST(op))
+
+static inline void* _alifUStr_nonCompactData(AlifObject* op) {
+	void* data;
+	data = ((AlifUStrObject*)op)->UTF;
+	return data;
+}
+
+static inline void* alifUStr_data(AlifObject* op) {
+	//if (ALIFUSTR_IS_COMPACT(op)) {
+	//	return _ALIFUSTR_COMPACT_DATA(op);
+	//}
+	return _alifUStr_nonCompactData(op);
+}
+#define ALIFUSTR_DATA(op) alifUStr_data(ALIFOBJECT_CAST(op))
+
 
 static inline void alifUStr_write(int kind, void* data,
 	int64_t index, uint32_t value)
@@ -148,3 +190,4 @@ int alifSubUStrWriter_writeChar(AlifSubUStrWriter*, uint32_t);
 int alifSubUStrWriter_writeStr(AlifSubUStrWriter*, AlifObject*);
 
 const wchar_t* alifUStr_asUTF8(AlifObject*);
+AlifObject* alifUStr_join(AlifObject*, AlifObject*);

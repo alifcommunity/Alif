@@ -1,8 +1,17 @@
 #include "alif.h"
+
 #include "AlifCore_Object.h"
-#include "alifCore_UString.h"
+#include "AlifCore_AlifCycle.h"
+#include "AlifCore_UString.h"
 #include "AlifCore_Memory.h"
+#include "AlifCore_AlifState.h"
+#include "AlifCore_Interpreter.h"
+#include "AlifCore_Abstract.h"
+#include "AlifCore_AlifEval.h"
 #include "AlifCore_GlobalString.h"
+
+// make this include comment to know the error
+#include "AlifCore_ModSupport.h" // this is temp and should transfer to UStrObject.c.h or .h
 
 #ifdef _WINDOWS
 #include "windows.h"
@@ -86,9 +95,9 @@ static AlifObject* uStr_result_unchanged(AlifObject* _uStr)
 // in file bytearrayobject.c in 1111 and should call _from there only 
 #define STRINGLIB_FAST_MEMCHR memchr
 
-#include "fastSearch.h"
-#include "split.h"
-#include "find.h"
+#include "FastSearch.h"
+#include "Split.h"
+#include "Find.h"
 
 // in file count.h 
 template <typename STRINGLIB_CHAR>
@@ -1637,6 +1646,7 @@ int uStr_compare_eq(AlifObject* _str1, AlifObject* _str2)
 }
 
 AlifObject* uStr_compare(AlifObject* _left, AlifObject* _right, int _op) {
+	// this function need review
 
 	if (_left->type_ != &_alifUStrType_ || 
 		_right->type_ != &_alifUStrType_) {
@@ -1652,6 +1662,7 @@ AlifObject* uStr_compare(AlifObject* _left, AlifObject* _right, int _op) {
 		return result_ ? ALIF_TRUE : ALIF_FALSE;
 	}
 
+	//return ALIF_NOTIMPLEMENTED; // need review
 }
 
 // in file eq.h
@@ -1995,7 +2006,7 @@ static AlifObject* replace(AlifObject*, AlifObject* ,
 	AlifObject*, int64_t );
 
 static AlifObject* uStr_replace(AlifObject* _self, AlifObject* const* _args, int64_t _nArgs, AlifObject* _kWNames)
-{
+{ // this should transfer to UStrObject.c.h or .h
 	AlifObject* returnValue = nullptr;
 
 #define NUM_KEYWORDS 1
@@ -2003,13 +2014,13 @@ static AlifObject* uStr_replace(AlifObject* _self, AlifObject* const* _args, int
 	public:
 		AlifVarObject base{};
 		AlifObject* item_[NUM_KEYWORDS];
-	} kwTuple = {
+	}
+	kwTuple = {
 		//ALIFVAROBJECT_HEAD_INIT(&typeTuple, 1)
 		//nullptr
 	};
 #undef NUM_KEYWORDS
 #define KWTUPLE (&kwTuple.base.object)
-//#  define KWTUPLE nullptr
 
 	static const wchar_t* const keywords_[] = { L"", L"", L"count", nullptr };
 	static AlifArgParser parser_ = {
@@ -2563,7 +2574,7 @@ int64_t alifUStr_fill(AlifObject* _uStr, int64_t _start, int64_t _length,
 static AlifObject* uStr_splitImpl(AlifObject* , AlifObject* , int64_t );
 
 static AlifObject* uStr_split(AlifObject* _self, AlifObject* const* _args, int64_t _nArgs, AlifObject* _kWNames)
-{
+{ // this should transfer to UStrObject.c.h or .h
 	AlifObject* returnValue = nullptr;
 #define NUM_KEYWORDS 2
 	static class KwTuple {
@@ -2666,7 +2677,7 @@ static AlifObject* split(AlifObject* _self, AlifObject* _substring, int64_t _max
 		out = alifNew_list(1);
 		if (out == nullptr)
 			return nullptr;
-		((AlifListObject*)out)->items[0] = _self;
+		((AlifListObject*)out)->items_[0] = _self;
 		return out;
 	}
 	buf1_ = ALIFUSTR_CAST(_self)->UTF;
@@ -2824,8 +2835,8 @@ int alifSubUStrWriter_writeChar(AlifSubUStrWriter* _writer, uint32_t _ch)
 }
 
 static AlifMethodDef _uStrMethods_[] = {
-	{L"replace", ALIFCFunction_CAST(uStr_replace), METHOD_FASTCALL | METHOD_KEYWORDS},
-	{L"split", ALIFCFunction_CAST(uStr_split), METHOD_FASTCALL | METHOD_KEYWORDS},
+	{L"replace", ALIF_CPPFUNCTION_CAST(uStr_replace), METHOD_FASTCALL | METHOD_KEYWORDS}, // this in UStrObject.c.h or .h
+	{L"split", ALIF_CPPFUNCTION_CAST(uStr_split), METHOD_FASTCALL | METHOD_KEYWORDS},
 	{L"join", (AlifCFunction)uStr_join, METHOD_O,},
 	{L"count", (AlifCFunction)uStr_count, METHOD_VARARGS},
 	{L"find", (AlifCFunction)uStr_find, METHOD_VARARGS},
@@ -2863,7 +2874,7 @@ static AlifObject* uStr_subscript(AlifObject* _self, AlifObject* _item)
 		if (slice_unpack((AlifSliceObject*)_item, &start_, &stop_, &step_) < 0) {
 			return nullptr;
 		}
-		sliceLength = slice_adjustIndices(ALIFUSTR_CAST(_self)->length_,
+		sliceLength = alifSlice_adjustIndices(ALIFUSTR_CAST(_self)->length_,
 			&start_, &stop_, step_);
 
 		if (sliceLength <= 0) {
@@ -2914,27 +2925,27 @@ static AlifMappingMethods _uStrAsMapping_ = {
 };
 
 AlifTypeObject _alifUStrType_ = {
-	0,
-	0,
-	0,
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0)
 	L"string",                        
 	sizeof(AlifUStrObject),      
 	0,                            
-	uStr_dealloc,
+	(Destructor)uStr_dealloc,
 	0,                            
 	0,                         
 	0,                         
 	0,           
 	0,          
-	& _uStrAsSequence_,
-	& _uStrAsMapping_,
+	&_uStrAsSequence_,
+	&_uStrAsMapping_,
 	(HashFunc)hash_uStr,
 	0,                     
 	0,
 	0,      
 	0,                            
 	0,                             
-	0,
+	ALIFTPFLAGS_DEFAULT | ALIFTPFLAGS_BASETYPE |
+	ALIFTPFLAGS_USTR_SUBCLASS |
+	ALIFSUBTPFLAGS_MATCH_SELF,
 	0,               
 	0, 
 	0,
@@ -2957,11 +2968,67 @@ AlifTypeObject _alifUStrType_ = {
 	0,               
 };
 
+void alifSubUStr_internInPlace(AlifInterpreter* interp, AlifObject** p) { // 14901
+	AlifObject* s = *p;
+	if (s == nullptr or !ALIFUSTR_CHECK(s)) {
+		return;
+	}
+
+	if (!ALIFUSTR_CHECKEXACT(s)) {
+		return;
+	}
+
+	//if (ALIFUSTR_CHECK_INTERNED(s)) {
+	//	return;
+	//}
+
+	//AlifObject* r = (AlifObject*)alifHashTable_get(INTERNED_STRINGS, s);
+	//if (r != nullptr and r != s) {
+	//	ALIF_SETREF(*p, ALIF_NEWREF(r));
+	//	return;
+	//}
+
+	//if (ALIFUSTR_STATE(s).staticallyAllocated) {
+	//	if (alifHashTable_set(INTERNED_STRINGS, s, s) == 0) {
+	//		ALIFUSTR_STATE(*p).interned = SSTATE_INTERNED_IMMORTAL_STATIC;
+	//	}
+	//	return;
+	//}
+
+	//AlifObject* interned = get_internedDict(interp);
+
+	//AlifObject* t;
+	//int res = alifDict_setDefaultRef(interned, s, s, &t);
+	//if (res < 0) {
+	//	//alifErr_clear();
+	//	return;
+	//}
+	//else if (res == 1) {
+	//	ALIF_SETREF(*p, t);
+	//	return;
+	//}
+	//ALIF_DECREF(t);
+
+	//if (alif_isImmortal(s)) {
+	//	ALIFUSTR_STATE(*p).interned = SSTATE_INTERNED_IMMORTAL_STATIC;
+	//	return;
+	//}
+
+	alifSub_setImmortal(s);
+	//ALIFUSTR_STATE(*p).interned = SSTATE_INTERNED_IMMORTAL;
+}
+
+void alifUStr_internInPlace(AlifObject** p) { // 14976
+	AlifInterpreter* interp = alifInterpreter_get();
+	alifSubUStr_internInPlace(interp, p);
+}
+
+
 AlifObject* alifUStr_internFromString(const wchar_t* _cp)
 {
 	AlifObject* s_ = alifUStr_decodeStringToUTF8(_cp);
 	if (s_ == nullptr)
 		return nullptr;
-	//alifUStr_internInPlace(&s_);
+	alifUStr_internInPlace(&s_);
 	return s_;
 }

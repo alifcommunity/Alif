@@ -32,6 +32,7 @@ static AlifIntT make_const(Expression* _node, AlifObject* _val, AlifASTMem* _ast
 
 // Forward
 //static AlifIntT astFold_stmt(Statement*, AlifASTMem*, AlifASTOptimize*);
+static AlifIntT astFold_keyword(Keyword*, AlifASTMem*, AlifASTOptimize*);
 
 #define CALL(_func, _arg) if (!_func((_arg), _ctx, _astState)) return 0 // 645
 
@@ -62,6 +63,7 @@ static AlifIntT fold_binOp(Expression* _node, AlifASTMem* _astMem, AlifASTOptimi
 	AlifObject* newVal = nullptr;
 
 	if (_node->V.binOp.op == Operator::Add) newVal = alifNumber_add(leftVal, rightVal);
+	else if (_node->V.binOp.op == Operator::Sub) newVal = alifNumber_subtract(leftVal, rightVal);
 
 
 	return make_const(_node, newVal, _astMem);
@@ -79,8 +81,21 @@ static AlifIntT astFold_expr(Expression* _node, AlifASTMem* _ctx, AlifASTOptimiz
 		CALL(astFold_expr, _node->V.binOp.right);
 		CALL(fold_binOp, _node);
 	}
+	else if (_node->type == ExprType::CallK) {
+		CALL(astFold_expr, _node->V.call.func);
+		CALL_SEQ(astFold_expr, Expr, Expression, _node->V.call.args);
+		CALL_SEQ(astFold_keyword, Keyword, Keyword, _node->V.call.keywords);
+	}
+	else if (_node->type == ExprType::NameK) {
+		// لا شيء
+	}
 
 	_astState->recursionDepth--;
+	return 1;
+}
+
+static AlifIntT astFold_keyword(Keyword* _node, AlifASTMem* _ctx, AlifASTOptimize* _astState) { // 832
+	CALL(astFold_expr, _node->val);
 	return 1;
 }
 
@@ -92,6 +107,10 @@ static AlifIntT astFold_stmt(Statement* _node, AlifASTMem* _ctx, AlifASTOptimize
 
 	if (_node->type == StmtType::FunctionDefK) {
 
+	}
+	else if (_node->type == StmtType::AssignK) {
+		CALL_SEQ(astFold_expr, Expr, Expression, _node->V.assign.targets);
+		CALL(astFold_expr, _node->V.assign.val);
 	}
 	else if (_node->type == StmtType::ExprK) {
 		CALL(astFold_expr, _node->V.expression.val);
@@ -146,10 +165,10 @@ AlifIntT alifAST_optimize(Module* _module, AlifASTMem* _astMem, AlifIntT _optimi
 	if (!thread_) return 0;
 
 	// this section is temp and need fix later
-	thread_->cppRecursionRemaining = ALIFCPP_RECURSION_LIMIT;
+	thread_->recursionRemaining = ALIFCPP_RECURSION_LIMIT;
 	//////////////////////////////////////////
 
-	AlifIntT recursionDepth = ALIFCPP_RECURSION_LIMIT - thread_->cppRecursionRemaining;
+	AlifIntT recursionDepth = ALIFCPP_RECURSION_LIMIT - thread_->recursionRemaining;
 	startRecursionDepth = recursionDepth;
 	astState.recursionDepth = startRecursionDepth;
 	astState.recursionLimit = ALIFCPP_RECURSION_LIMIT;

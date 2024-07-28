@@ -5,9 +5,9 @@ extern AlifTypeObject _alifSetType_;
 extern AlifTypeObject _alifSetIterType_;
 
 
-extern AlifObject _dummyStruct_;
-
-#define dummy (&_dummyStruct_)
+//extern AlifObject _dummyStruct_;
+//
+//#define dummy (&_dummyStruct_)
 
 
 AlifObject* alifNew_set(AlifObject*);

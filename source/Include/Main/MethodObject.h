@@ -13,9 +13,13 @@ public:
     int flags{};
 };
 
-extern AlifInitObject typeCMethod;
-extern AlifInitObject typeCFunction;
+extern AlifInitObject _alifCppMethodType_;
+extern AlifInitObject _alifCppFunctionType_;
 
+#define ALIFCPPFUNCTION_CHECKEXACT(op) ALIF_IS_TYPE((op), &_alifCppFunctionType_)
+#define ALIFCPPFUNCTION_CHECK(op) ALIFOBJECT_TYPECHECK((op), &_alifCppFunctionType_)
+
+#define ALIFCFUNCTION_NEWEX(_ml, _self, _mod) alifNew_cMethod((_ml), (_self), (_mod), nullptr)
 AlifObject* alifNew_cMethod(AlifMethodDef*, AlifObject*, AlifObject*, AlifInitObject*);
 AlifObject* alifNew_cFunction(AlifMethodDef*, AlifObject*);
 
@@ -35,16 +39,17 @@ AlifObject* alifNew_cFunction(AlifMethodDef*, AlifObject*);
 #endif
 #define METHOD_METHOD 0x0200
 
-#define ALIFCFunction_CAST(func) ((AlifCFunction)((void(*)(void))(func)))
+#define ALIF_CPPFUNCTION_CAST(func) ((AlifCFunction)((void(*)(void))(func)))
 
 
 class AlifCFunctionObject {
 public:
-    AlifObject* object;
-    AlifMethodDef* method; 
-    AlifObject* self; 
-    AlifObject* module; 
-    VectorCallFunc vectorCall;
+	ALIFOBJECT_HEAD;
+	AlifMethodDef* method{};
+	AlifObject* self{};
+	AlifObject* module{};
+	AlifObject* weakRefList{};
+	VectorCallFunc vectorCall{};
 };
 
 class AlifCMethodObject {

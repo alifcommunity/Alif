@@ -1,31 +1,34 @@
 #include "alif.h"
 
 #include "AlifCore_Object.h"
+#include "AlifCore_AlifEval.h"
+#include "AlifCore_Call.h"
+#include "AlifCore_AlifState.h"
 #include "AlifCore_Memory.h"
 
-static AlifObject* cFunction_vectorCall_fastCall(
-    AlifObject* func, AlifObject* const* args, size_t nargsf, AlifObject* kwnames);
-static AlifObject* cFunction_vectorCall_fastCall_keywords(
-    AlifObject* func, AlifObject* const* args, size_t nargsf, AlifObject* kwnames);
-static AlifObject* cFunction_vectorCall_fastCall_keywords_method(
-    AlifObject* func, AlifObject* const* args, size_t nargsf, AlifObject* kwnames);
-static AlifObject* cFunction_vectorCall_noArg(
-    AlifObject* func, AlifObject* const* args, size_t nargsf, AlifObject* kwnames);
+static AlifObject* cFunction_vectorCallFastCall(
+    AlifObject* , AlifObject* const* , size_t , AlifObject* );
+static AlifObject* cFunctionVectorCall_fastCallKeywords(
+    AlifObject* , AlifObject* const* , size_t , AlifObject* );
+static AlifObject* cFunctionVectorCallFastCallKeywordsMethod(
+    AlifObject* , AlifObject* const* , size_t , AlifObject* );
+static AlifObject* cFunctionVectorCallNoArg(
+    AlifObject* , AlifObject* const* , size_t , AlifObject* );
 static AlifObject* cFunction_vectorCall(
-    AlifObject* func, AlifObject* const* args, size_t nargsf, AlifObject* kwnames);
+    AlifObject* , AlifObject* const* , size_t , AlifObject* );
 static AlifObject* cFunction_call(
-    AlifObject* func, AlifObject* args, AlifObject* kwargs);
+    AlifObject* , AlifObject* , AlifObject* );
 
-AlifObject* alifNew_cFunction(AlifMethodDef* method, AlifObject* self) {
+AlifObject* alifNew_cFunction(AlifMethodDef* _method, AlifObject* _self) {
 
-	return alifNew_cMethod(method, self, nullptr, nullptr);
+	return alifNew_cMethod(_method, _self, nullptr, nullptr);
 
 }
 
-AlifObject* alifNew_cMethod(AlifMethodDef* method, AlifObject* self, AlifObject* module, AlifInitObject* cls)
+AlifObject* alifNew_cMethod(AlifMethodDef* _method, AlifObject* _self, AlifObject* _module, AlifInitObject* _cls)
 {
     VectorCallFunc vectorCall;
-    switch (method->flags & (METHOD_VARARGS | METHOD_FASTCALL | METHOD_NOARGS |
+    switch (_method->flags & (METHOD_VARARGS | METHOD_FASTCALL | METHOD_NOARGS |
         METHOD_O | METHOD_KEYWORDS | METHOD_METHOD))
     {
     case METHOD_VARARGS:
@@ -33,19 +36,19 @@ AlifObject* alifNew_cMethod(AlifMethodDef* method, AlifObject* self, AlifObject*
         vectorCall = nullptr;
         break;
     case METHOD_FASTCALL:
-        vectorCall = cFunction_vectorCall_fastCall;
+        vectorCall = cFunction_vectorCallFastCall;
         break;
     case METHOD_FASTCALL | METHOD_KEYWORDS:
-        vectorCall = cFunction_vectorCall_fastCall_keywords;
+        vectorCall = cFunctionVectorCall_fastCallKeywords;
         break;
     case METHOD_NOARGS:
-        vectorCall = cFunction_vectorCall_noArg;
+        vectorCall = cFunctionVectorCallNoArg;
         break;
     case METHOD_O:
         vectorCall = cFunction_vectorCall;
         break;
     case METHOD_METHOD | METHOD_FASTCALL | METHOD_KEYWORDS:
-        vectorCall = cFunction_vectorCall_fastCall_keywords_method;
+        vectorCall = cFunctionVectorCallFastCallKeywordsMethod;
         break;
     default:
         // error
@@ -54,101 +57,101 @@ AlifObject* alifNew_cMethod(AlifMethodDef* method, AlifObject* self, AlifObject*
 
     AlifCFunctionObject* objectFunc = nullptr;
 
-    if (method->flags & METHOD_METHOD) {
-        if (!cls) {
+    if (_method->flags & METHOD_METHOD) {
+        if (!_cls) {
             // error
             return nullptr;
         }
         AlifCMethodObject* objectMethod = (AlifCMethodObject*)alifMem_objAlloc(sizeof(AlifCMethodObject));
-        alifSubObject_init((AlifObject*)objectMethod, &typeCMethod);
+        alifSubObject_init((AlifObject*)objectMethod, &_alifCppMethodType_);
         if (objectMethod == nullptr) {
             return nullptr;
         }
-        objectMethod->mMClass = (AlifInitObject*)cls;
+        objectMethod->mMClass = (AlifInitObject*)_cls;
         objectFunc = (AlifCFunctionObject*)objectMethod;
     }
     else {
-        if (cls) {
+        if (_cls) {
             // error
             return nullptr;
         }
-        objectFunc = (AlifCFunctionObject*)alifMem_objAlloc(sizeof(AlifCFunctionObject));
-        alifSubObject_init((AlifObject*)objectFunc, &typeCFunction);
+        objectFunc = ALIFOBJECT_GC_NEW(AlifCFunctionObject, &_alifCppFunctionType_);
         if (objectFunc == nullptr) {
             return nullptr;
         }
     }
 
-    objectFunc->method = method;
-    objectFunc->self = self;
-    objectFunc->module = module;
+    objectFunc->method = _method;
+    objectFunc->self = ALIF_XNEWREF(_self);
+    objectFunc->module = ALIF_XNEWREF(_module);
     objectFunc->vectorCall = vectorCall;
+	objectFunc->weakRefList = nullptr;
+	ALIFOBJECT_GC_TRACK(objectFunc);
     return (AlifObject*)objectFunc;
 }
 
-AlifCFunction alifCFunction_getFunction(AlifObject* object) {
-    return ((AlifCFunctionObject*)(object))->method->method;
+AlifCFunction alifCFunction_getFunction(AlifObject* _object) {
+    return ((AlifCFunctionObject*)(_object))->method->method;
 }
 
-AlifObject* alifCFunction_getSelf(AlifObject* object) {
+AlifObject* alifCFunction_getSelf(AlifObject* _object) {
 
-    AlifCFunctionObject* func = (AlifCFunctionObject*)object;
-    if (func->method->flags & METHOD_STATIC) {
+    AlifCFunctionObject* func_ = (AlifCFunctionObject*)_object;
+    if (func_->method->flags & METHOD_STATIC) {
         return nullptr;
     }
     
-    return func->self;
+    return func_->self;
 }
 
-int alifCFunction_getFlags(AlifObject* object) {
-    return ((AlifCFunctionObject*)(object))->method->flags;
+int alifCFunction_getFlags(AlifObject* _object) {
+    return ((AlifCFunctionObject*)(_object))->method->flags;
 }
 
-AlifInitObject* alifCFunction_getClass(AlifObject* object) {
-    AlifCFunctionObject* func = (AlifCFunctionObject*)(object);
-    if (func->method->flags & METHOD_METHOD) {
-        return ((AlifCMethodObject *)func)->mMClass;
+AlifInitObject* alifCFunction_getClass(AlifObject* _object) {
+    AlifCFunctionObject* func_ = (AlifCFunctionObject*)(_object);
+    if (func_->method->flags & METHOD_METHOD) {
+        return ((AlifCMethodObject *)func_)->mMClass;
     }
     return nullptr;
 }
 
-AlifObject* method_compare(AlifObject* self, AlifObject* other, int op)
+AlifObject* method_compare(AlifObject* _self, AlifObject* _other, int _op)
 {
-    AlifCFunctionObject* a, * b;
-    AlifObject* res = nullptr;
+    AlifCFunctionObject* a_, * b_;
+    AlifObject* res_ = nullptr;
 
-    if ((op != ALIF_EQ && op != ALIF_NE) ||
-        !(self->type_ == &typeCFunction) ||
-        !(other->type_ == &typeCFunction))
+    if ((_op != ALIF_EQ && _op != ALIF_NE) ||
+        !(_self->type_ == &_alifCppFunctionType_) ||
+        !(_other->type_ == &_alifCppFunctionType_))
     {
         // error not Implemented;
     }
-    a = (AlifCFunctionObject*)self;
-    b = (AlifCFunctionObject*)other;
-    int eq = a->self == b->self;
-    if (eq)
-        eq = a->method->method == b->method->method;
-    if (op == ALIF_EQ)
-        res = eq ? ALIF_TRUE : ALIF_FALSE;
+    a_ = (AlifCFunctionObject*)_self;
+    b_ = (AlifCFunctionObject*)_other;
+    int eq_ = a_->self == b_->self;
+    if (eq_)
+        eq_ = a_->method->method == b_->method->method;
+    if (_op == ALIF_EQ)
+        res_ = eq_ ? ALIF_TRUE : ALIF_FALSE;
     else
-        res = eq ? ALIF_FALSE : ALIF_TRUE;
-    return res;
+        res_ = eq_ ? ALIF_FALSE : ALIF_TRUE;
+    return res_;
 }
 
-size_t method_hash(AlifCFunctionObject* object) {
+size_t method_hash(AlifCFunctionObject* _object) {
 
-    size_t hashPointer = (uintptr_t)object->self ^ 1073741827ull;
+    size_t hashPointer = (uintptr_t)_object->self ^ 1073741827ull;
     
     return hashPointer;
 }
 
-void method_dealloc(AlifCFunctionObject* object) {
-    alifMem_objFree(object);
+void method_dealloc(AlifCFunctionObject* _object) {
+    alifMem_objFree(_object);
 }
 
-AlifTypeObject typeCFunction = {
-    0,0,0,
-    //PyVarObject_HEAD_INIT(&PyType_Type, 0)
+AlifTypeObject _alifCppFunctionType_ = {
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_,0)
     L"builtin_function_or_method",
     sizeof(AlifCFunctionObject),
     0,
@@ -156,36 +159,36 @@ AlifTypeObject typeCFunction = {
     offsetof(AlifCFunctionObject, vectorCall),    /* tp_vectorcall_offset */
     0,                                          /* tp_getattr */
     0,                                          /* tp_setattr */
-    0,                                          /* tp_as_async */
     0,                        /* tp_repr */
     0,                                          /* tp_as_number */
     0,                                          /* tp_as_sequence */
     0,                                          /* tp_as_mapping */
-    //(hashfunc)meth_hash,                        /* tp_hash */
+    (HashFunc)method_hash,                        /* tp_hash */
+    cFunction_call,                             /* tp_call */
     0,
-    //cfunction_call,                             /* tp_call */
+	alifObject_genericGetAttr,
+    0,                                    
+    0,                   
+	ALIFTPFLAGS_DEFAULT | ALIFTPFLAGS_HAVE_GC |
+	ALIFTPFLAGS_HAVE_VECTORCALL,                                       
     0,
-    0,                                          /* tp_str */
-    0,                    /* tp_getattro */
-    0,                                          /* tp_setattro */
-    0,                                          /* tp_as_buffer */
-    0,                 /* tp_flags */
-    0,                                          /* tp_doc */
-    0,                /* tp_traverse */
-    0,                                          /* tp_clear */
-    0,                           /* tp_richcompare */
-    0, /* tp_weaklistoffset */
-    0,                                          /* tp_iter */
-    0,                                          /* tp_iternext */
-    0,                               /* tp_methods */
-    0,                               /* tp_members */
-    0,                               /* tp_getset */
-    0,                                          /* tp_base */
-    0,                                          /* tp_dict */
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
 };
 
-AlifInitObject typeCMethod = {
-    0,0,0,
+AlifInitObject _alifCppMethodType_ = {
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0)
     L"builtin_method",
     sizeof(AlifCMethodObject),
     0,                                    
@@ -200,7 +203,7 @@ AlifInitObject typeCMethod = {
     0,
     0,                                          
     0,                    
-    0,                                         
+	0,
     0,                                          
     0,                 
     0,                                          
@@ -214,67 +217,66 @@ AlifInitObject typeCMethod = {
     0,                              
     0,                               
     0,                                     
-    &typeCFunction,
+    &_alifCppFunctionType_,
 };
 
 
 typedef void (*FuncPtr)(void);
 
-FuncPtr cFunction_enterCall(AlifObject* object) {
+FuncPtr cFunction_enterCall(AlifObject* _object) {
 
-    return (FuncPtr)alifCFunction_getFunction(object);
+    return (FuncPtr)alifCFunction_getFunction(_object);
 
 }
 
-static AlifObject* cFunction_vectorCall_fastCall(
-    AlifObject* object, AlifObject* const* args, size_t nargsf, AlifObject* kwnames)
+static AlifObject* cFunction_vectorCallFastCall(
+    AlifObject* _object, AlifObject* const* _args, size_t _nArgsF, AlifObject* _kwNames)
 {
     //if (cfunction_check_kwargs(object, kwnames)) {
-        //return NULL;
+        //return nullptr;
     //}
-    int64_t nargs = nargsf & ~((size_t)1 << (8 * sizeof(size_t) - 1));
-    AlifCFunctionFast method = (AlifCFunctionFast)
-        cFunction_enterCall(object);
-    if (method == nullptr) {
+    int64_t nArgs = _nArgsF & ~((size_t)1 << (8 * sizeof(size_t) - 1));
+    AlifCFunctionFast method_ = (AlifCFunctionFast)
+        cFunction_enterCall(_object);
+    if (method_ == nullptr) {
         return nullptr;
     }
-    AlifObject* result = method(alifCFunction_getSelf(object), args, nargs);
-    return result;
+    AlifObject* result_ = method_(alifCFunction_getSelf(_object), _args, nArgs);
+    return result_;
 }
 
-static AlifObject* cFunction_vectorCall_fastCall_keywords(
-    AlifObject* object, AlifObject* const* args, size_t nArgsF, AlifObject* kWNames)
+static AlifObject* cFunctionVectorCall_fastCallKeywords(
+    AlifObject* _object, AlifObject* const* _args, size_t _nArgsF, AlifObject* _kwNames)
 {
-    int64_t nArgs = nArgsF & ~((size_t)1 << (8 * sizeof(size_t) - 1));
-    AlifCFunctionFastWithKeywords method = (AlifCFunctionFastWithKeywords)
-        cFunction_enterCall(object);
-    if (method == nullptr) {
+    int64_t nArgs = _nArgsF & ~((size_t)1 << (8 * sizeof(size_t) - 1));
+    AlifCFunctionFastWithKeywords method_ = (AlifCFunctionFastWithKeywords)cFunction_enterCall(_object);
+    if (method_ == nullptr) {
         return nullptr;
     }
-    AlifObject* result = method(alifCFunction_getSelf(object), args, nArgs, kWNames);
-    return result;
+    AlifObject* result_ = method_(alifCFunction_getSelf(_object), _args, nArgs, _kwNames);
+    return result_;
 }
 
-static AlifObject* cFunction_vectorCall_fastCall_keywords_method(
-    AlifObject* object, AlifObject* const* args, size_t nArgsF, AlifObject* kWNames)
+static AlifObject* cFunctionVectorCallFastCallKeywordsMethod(
+    AlifObject* _object, AlifObject* const* _args, size_t _nArgsF, AlifObject* _kwNames)
 {
-    AlifInitObject* cls = alifCFunction_getClass(object);
-    int64_t nArgs = nArgsF & ~((size_t)1 << (8 * sizeof(size_t) - 1));
-    AlifCMethod method = (AlifCMethod)cFunction_enterCall(object);
-    if (method == nullptr) {
+    AlifInitObject* cls_ = alifCFunction_getClass(_object);
+    int64_t nArgs = _nArgsF & ~((size_t)1 << (8 * sizeof(size_t) - 1));
+    AlifCMethod method_ = (AlifCMethod)cFunction_enterCall(_object);
+    if (method_ == nullptr) {
         return nullptr;
     }
-    AlifObject* result = method(alifCFunction_getSelf(object), cls, args, nArgs, kWNames);
-    return result;
+    AlifObject* result_ = method_(alifCFunction_getSelf(_object), cls_, _args, nArgs, _kwNames);
+    return result_;
 }
 
-static AlifObject* cFunction_vectorCall_noArg(
-    AlifObject* object, AlifObject* const* args, size_t nargsf, AlifObject* kwnames)
+static AlifObject* cFunctionVectorCallNoArg(
+    AlifObject* _object, AlifObject* const* _args, size_t _nArgsF, AlifObject* _kwNames)
 {
     //if (cfunction_check_kwargs(object, kwnames)) {
-        //return NULL;
+        //return nullptr;
     //}
-    int64_t nArgs = nargsf & ~((size_t)1 << (8 * sizeof(size_t) - 1));
+    int64_t nArgs = _nArgsF & ~((size_t)1 << (8 * sizeof(size_t) - 1));
     if (nArgs != 0) {
         //AlifObject* funcStr = AlifObj_FunctionStr(object);
         //if (funcStr != nullptr) {
@@ -282,61 +284,58 @@ static AlifObject* cFunction_vectorCall_noArg(
         //}
         return nullptr;
     }
-    AlifCFunction method = (AlifCFunction)cFunction_enterCall(object);
-    if (method == nullptr) {
+    AlifCFunction method_ = (AlifCFunction)cFunction_enterCall(_object);
+    if (method_ == nullptr) {
         return nullptr;
     }
-    AlifObject* result = method(alifCFunction_getSelf(object), nullptr);
-    return result;
+    AlifObject* result_ = method_(alifCFunction_getSelf(_object), nullptr);
+    return result_;
 }
 
 static AlifObject* cFunction_vectorCall(
-    AlifObject* object, AlifObject* const* args, size_t nArgsF, AlifObject* kWNames)
+    AlifObject* _object, AlifObject* const* _args, size_t _nArgsF, AlifObject* _kwNames)
 {
     
     //if (cfunction_check_kwargs(func, kwnames)) {
-        //return NULL;
+        //return nullptr;
     //}
-    int64_t nArgs = nArgsF & ~((size_t)1 << (8 * sizeof(size_t) - 1));
+    int64_t nArgs = _nArgsF & ~((size_t)1 << (8 * sizeof(size_t) - 1));
     if (nArgs != 1) {
         //AlifObject* funcstr = AlifObj_FunctionStr(func);
-        //if (funcstr != NULL) {
+        //if (funcstr != nullptr) {
             // error 
         //}
         return nullptr;
     }
-    AlifCFunction method = (AlifCFunction)cFunction_enterCall(object);
-    if (method == nullptr) {
+    AlifCFunction method_ = (AlifCFunction)cFunction_enterCall(_object);
+    if (method_ == nullptr) {
         return nullptr;
     }
-    AlifObject* result = method(alifCFunction_getSelf(object), args[0]);
+    AlifObject* result = method_(alifCFunction_getSelf(_object), _args[0]);
     return result;
 }
 
-static AlifObject* cFunction_call(AlifObject* func, AlifObject* args, AlifObject* kwArgs) {
+static AlifObject* cFunction_call(AlifObject* _func, AlifObject* _args, AlifObject* _kwArgs) {
 
-    int flags = alifCFunction_getFlags(func);
-    if (!(flags & METHOD_VARARGS)) {
-        return alifVectorCall_call(func, args, kwArgs);
+    int flags_ = alifCFunction_getFlags(_func);
+    if (!(flags_ & METHOD_VARARGS)) {
+        return alifVectorCall_call(_func, _args, _kwArgs);
     }
 
-    AlifCFunction method = alifCFunction_getFunction(func);
-    AlifObject* self = alifCFunction_getSelf(func);
-    AlifObject* result{};
-    if (flags & METHOD_KEYWORDS) {
-        result = (*(AlifCFunctionWithKeywords)(void(*)(void))method)
-            (self, args, kwArgs);
+    AlifCFunction method_ = alifCFunction_getFunction(_func);
+    AlifObject* self_ = alifCFunction_getSelf(_func);
+    AlifObject* result_{};
+    if (flags_ & METHOD_KEYWORDS) {
+		result_ = (*(AlifCFunctionWithKeywords)(void(*)(void))method_)
+            (self_, _args, _kwArgs);
 
     }
     else {
-        //if (kwargs != NULL && Dict_GET_SIZE(kwargs) != 0) {
-        //    Err_Format(tstate, Exc_TypeError,
-        //        "%.200s() takes no keyword arguments",
-        //        ((AlifCFunctionObject*)func)->m_ml->ml_name);
-        //    return NULL;
-        //}
-        result = (method)(self, args);
+        if (_kwArgs != nullptr && ((AlifDictObject*)_kwArgs)->used != 0) {
+            return nullptr;
+        }
+		result_ = (method_)(self_, _args);
     }
 
-    return result;
+    return result_;
 }

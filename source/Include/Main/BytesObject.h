@@ -3,7 +3,7 @@
 class AlifWBytesObject {
 public:
 
-	ALIFOBJECT_VAR_HEAD
+	ALIFOBJECT_VAR_HEAD;
 
     wchar_t value_[1];
 };
@@ -22,17 +22,17 @@ AlifObject* alifBytes_fromStringAndSize(const wchar_t*, int64_t);
 AlifObject* alifBytes_fromString(const wchar_t*);
 
 int64_t alifBytes_size(AlifObject*);
-wchar_t* alifWBytes_asString(AlifObject*);
+//wchar_t* alifWBytes_asString(AlifObject*);
 void alifBytes_concat(AlifObject** , AlifObject*);
 
-static inline wchar_t* alifWBytes_asString(AlifObject* _op)
+static inline wchar_t* _alifWBytes_asString(AlifObject* _op)
 {
     return ((AlifWBytesObject*)_op)->value_;
 }
-#define ALIFWBYTES_AS_STRING(_op) alifWBytes_asString(_op)
+#define ALIFWBYTES_AS_STRING(_op) _alifWBytes_asString(_op)
 
 static inline int64_t alifBytes_get_size(AlifObject* _op) {
 	AlifWBytesObject* self_ = (AlifWBytesObject*)(_op);
 	return ALIF_SIZE(self_);
 }
-#define ALIFWBYTES_GET_SIZE(_self) alifBytes_get_size(ALIFSUBOBJECT_CAST(_self))
+#define ALIFWBYTES_GET_SIZE(_self) alifBytes_get_size(ALIFOBJECT_CAST(_self))

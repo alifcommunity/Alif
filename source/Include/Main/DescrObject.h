@@ -20,3 +20,10 @@ class AlifMemberDef {
 	int flags_{};
 	const wchar_t* doc_{};
 };
+
+
+
+
+
+
+AlifIntT alifDescr_isData(AlifObject*);

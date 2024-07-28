@@ -35,11 +35,11 @@ AlifObject* alifSubInteger_copy(AlifIntegerObject* _src) {
 
 AlifObject* alifInteger_fromLongLong(int64_t _value) {
 
-	bool sign_ = true;
+	bool sign_ = false;
 	int64_t finalValue = _value;
 
 	if (_value < 0) {
-		sign_ = false;
+		sign_ = true;
 		finalValue = -_value;
 	}
 
@@ -51,10 +51,10 @@ AlifObject* alifInteger_fromLongLong(int64_t _value) {
 AlifObject* alifInteger_fromString(const wchar_t* _str) {
 
 	size_t value_ = 0;
-	bool sign_ = true;
+	bool sign_ = false;
 
 	if (*_str == L'-') {
-		sign_ = false;
+		sign_ = true;
 		_str++;
 	}
 	else if (*_str == L'+') {
@@ -106,10 +106,10 @@ AlifObject* alifinteger_fromUnicodeObject(AlifObject* _u, int _base)
 int64_t alifOS_strToLong(const wchar_t* _str) {
 
 	int64_t value_ = 0;
-	bool sign_ = true;
+	bool sign_ = false;
 
 	if (*_str == L'-') {
-		sign_ = false;
+		sign_ = true;
 		_str++;
 	}
 	else if (*_str == L'+') {
@@ -131,7 +131,7 @@ int64_t alifOS_strToLong(const wchar_t* _str) {
 		}
 	}
 
-	value_ = sign_ ? value_ : -value_;
+	value_ = sign_ ? -value_ : value_;
 
 	return value_;
 
@@ -145,13 +145,13 @@ AlifObject* alifInteger_fromSizeT(size_t _value, bool _sign) {
 
 AlifObject* alifInteger_fromDouble(long double _value) {
 
-	bool sign_ = true;
+	bool sign_ = false;
 	size_t digits_ = 0;
 
 	long double fractional_ = fmod(_value, 1.0);
 
 	if (_value < 0) {
-		sign_ = false;
+		sign_ = true;
 		if (fractional_ >= 0.5) {
 			digits_ = (_value + 1) * -1;
 		}
@@ -222,6 +222,12 @@ int64_t alifInteger_asLongLong(AlifObject* _object) {
 
 }
 
+#define CHECK_BINOP(v,w)                                \
+    do {                                                \
+        if (!(ALIFINTEGER_CHECK(v)) || !ALIFINTEGER_CHECK(w))       \
+            return ALIF_NOTIMPLEMENTED;                   \
+    } while(0)
+
 void flipSign(AlifIntegerObject* _num)
 {
 	_num->sign_ = !_num->sign_;
@@ -229,8 +235,8 @@ void flipSign(AlifIntegerObject* _num)
 
 static AlifIntegerObject* add(AlifIntegerObject* _a, AlifIntegerObject* _b)
 {
-	AlifIntegerObject* result_ = alifNew_integer(0, true);
-	result_->sign_ = false;
+	AlifIntegerObject* result_ = alifNew_integer(0, false);
+	//result_->sign_ = false;
 
 	result_->digits_ = _a->digits_ + _b->digits_;
 
@@ -245,58 +251,57 @@ static AlifIntegerObject* add(AlifIntegerObject* _a, AlifIntegerObject* _b)
 
 AlifIntegerObject* sub(AlifIntegerObject* _a, AlifIntegerObject* _b)
 {
-	AlifIntegerObject* result_ = alifNew_integer(0, true);
-	result_->sign_ = false;
+	AlifIntegerObject* result_ = alifNew_integer(0, false);
 
 	if (_a->digits_ >= _b->digits_) {
 		result_->digits_ = _a->digits_ - _b->digits_;
 	}
 	else {
-
-		result_->sign_ = true;
 		result_->digits_ = _b->digits_ - _a->digits_;
+		result_->sign_ = true;
 	}
 
 	return result_;
 }
 
+
 static AlifIntegerObject* number_add(AlifIntegerObject* _a, AlifIntegerObject* _b)
 {
-	if (_a->sign_ && _b->sign_) {
+	if (_a->sign_ and _b->sign_) { // "-x" "-x"
 
-		AlifIntegerObject* z_ = alifNew_integer(0, true);
+		//AlifIntegerObject* z_ = alifNew_integer(0, true);
+		AlifIntegerObject* z_{};
 
 		z_ = add(_a, _b);
-
-		if (z_->digits_ != 0) {
-			flipSign(z_);
-		}
+		z_->sign_ = true;
+		//if (z_->digits_ != 0) {
+		//	flipSign(z_);
+		//} 
 		return z_;
 	}
-	else if (!_a->sign_ && !_b->sign_) {
-
+	else if (!_a->sign_ and !_b->sign_)
+	{
 		return add(_a, _b);
 	}
-	else if (_a->sign_) {
-
-		return sub(_b, _a);
-	}
+	//else if (_a->sign_) {
+	//	return sub(_b, _a);
+	//}
 	else {
-
 		return sub(_a, _b);
 	}
 }
 
 static AlifIntegerObject* number_sub(AlifIntegerObject* _a, AlifIntegerObject* _b) {
 	
-	return number_add(_a,_b);
+	//return number_add(_a,_b);
+	return sub(_a,_b);
 }
 
 static AlifIntegerObject* number_mul(AlifIntegerObject* _a, AlifIntegerObject* _b) {
 
 	AlifIntegerObject* z_ = alifNew_integer(0, true);
 
-	if (_a->digits_ > 0 && _b->digits_ > UINT64_MAX / _a->digits_) {
+	if (_a->digits_ > 0 and _b->digits_ > UINT64_MAX / _a->digits_) {
 		std::wcout << L"ناتج ضرب رقمين اكبر من المتوقع\n" << std::endl;
 		exit(-1);
 	}
@@ -304,7 +309,10 @@ static AlifIntegerObject* number_mul(AlifIntegerObject* _a, AlifIntegerObject* _
 		z_->digits_ = _a->digits_ * _b->digits_;
 	}
 
-	if (!_a->sign_ && !_b->sign_ || _a->sign_ && _b->sign_) {
+	if ((!_a->sign_ and !_b->sign_)
+		or
+		(_a->sign_ and _b->sign_))
+	{
 		z_->sign_ = true;
 	}
 	else {
@@ -388,11 +396,10 @@ static AlifIntegerObject* number_abs(AlifIntegerObject* _a) {
 		return number_neg(_a);
 	}
 	else {
-		AlifIntegerObject* z_ = alifNew_integer(0, true);
+		AlifIntegerObject* z_ = alifNew_integer(0, false);
 
 		z_->_base_ = _a->_base_;
 		z_->digits_ = _a->digits_;
-		z_->sign_ = true;
 		return z_;
 	}
 
@@ -442,7 +449,7 @@ AlifObject* integer_to_string(AlifObject* _a) {
 
 	wchar_t str_[22]{};
 
-	if (sign_ == false) {
+	if (sign_ == true) {
 		str_[0] = L'-';
 	}
 
@@ -477,7 +484,7 @@ long double alifInteger_asDouble(AlifObject* _v) {
 	bool sign_ = ((AlifIntegerObject*)_v)->sign_;
 	long double digits_ = ((AlifIntegerObject*)_v)->digits_;
 
-	long double result_ = sign_ ? digits_ : - digits_;
+	long double result_ = sign_ ? -digits_ : digits_;
 
 	return result_;
 
@@ -488,12 +495,30 @@ static AlifObject* integer_compare(AlifObject* _a, AlifObject* _b, int _op) {
 	long result_;
 	AlifIntegerObject* v_ = (AlifIntegerObject*)_a;
 	AlifIntegerObject* w_ = (AlifIntegerObject*)_b;
-
+	CHECK_BINOP(_a,_b);
 	if (_a == _b) {
 		result_ = 0;
 	}
 	else {
-		result_ = 1;
+
+		// Compare the sign first
+		if (v_->sign_ != w_->sign_) {
+			result_ = v_->sign_ ? -1 : 1; // v_ is negative and w_ is positive, or vice versa
+		}
+		else {
+			// Both have the same sign, compare the digits
+			if (v_->digits_ == w_->digits_) {
+				result_ = 0;
+			}
+			else if (v_->digits_ < w_->digits_) {
+				result_ = v_->sign_ ? 1 : -1; // If both are negative, larger digits mean smaller value
+			}
+			else {
+				result_ = v_->sign_ ? -1 : 1; // If both are negative, smaller digits mean larger value
+			}
+		}
+
+		//result_ = 1;
 	}
 
 	ALIF_RETURN_RICHCOMPARE(result_, 0 , _op);
@@ -571,7 +596,6 @@ static AlifGetSetDef _integerGetSet_[] = {
 };
 
 static AlifNumberMethods _integerAsNumber_ = {
-
 	(BinaryFunc)number_add,
 	(BinaryFunc)number_sub,
 	(BinaryFunc)number_mul,
@@ -609,9 +633,7 @@ static AlifNumberMethods _integerAsNumber_ = {
 };
 
 AlifTypeObject _alifIntegerType_ = {
-	0,
-	0,
-	0,
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0)
 	L"int",
 	offsetof(AlifIntegerObject, digits_),
 	sizeof(size_t),
@@ -626,27 +648,29 @@ AlifTypeObject _alifIntegerType_ = {
 	(HashFunc)integer_hash,
 	0,
 	0,
+	alifObject_genericGetAttr,
 	0,
 	0,
-	0,
-	0,
+	ALIFTPFLAGS_DEFAULT | ALIFTPFLAGS_BASETYPE |
+	ALIFTPFLAGS_LONG_SUBCLASS |
+	ALIFSUBTPFLAGS_MATCH_SELF, 
 	0,
 	0,
 	0,
 	integer_compare,
-	0,                                    
 	0,                          
 	0,                              
-	_integerMethods_,                             
 	0,                             
-	_integerGetSet_,                            
+	_integerMethods_,                             
 	0,                          
+	_integerGetSet_,                            
 	0,                          
 	0,                               
 	0,                               
 	0,                                
 	0,                          
 	0,                           
+	0,
 	0,
 	alifMem_objFree,
 };

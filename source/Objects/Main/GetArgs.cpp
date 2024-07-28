@@ -2,6 +2,7 @@
 
 #include "AlifCore_Tuple.h"
 #include "AlifCore_Memory.h"
+#include "AlifCore_ModSupport.h"
 
 static const wchar_t* skipItem(const wchar_t** , va_list* , int );
 
@@ -35,9 +36,9 @@ int alifArg_parseTuple(AlifObject* args, const wchar_t* format, ...)
     int retval;
     va_list va;
 
-    va_start(va, format);
+    //va_start(va, format);
     retval = vGetArgs1(args, format, &va, 1);
-    va_end(va);
+    //va_end(va);
     return retval;
 }
 
@@ -210,46 +211,6 @@ static int vGetArgs1_impl(AlifObject* compatArgs, AlifObject* const* stack, int6
     }
 
     return cleanReturn(1, &freeList);
-}
-
-int _alifArg_checkPositional(const wchar_t* name, int64_t nargs, int64_t min, int64_t max)
-{
-
-    if (nargs < min) {
-        if (name != NULL)
-            //Err_Format(
-                //Exc_TypeError,
-                //"%.200s expected %s%zd argument%s, got %zd",
-                //name, (min == max ? "" : "at least "), min, min == 1 ? "" : "s", nargs);
-        //else
-            //Err_Format(
-                //Exc_TypeError,
-                //"unpacked tuple should have %s%zd element%s,"
-                //" but has %zd",
-                //(min == max ? "" : "at least "), min, min == 1 ? "" : "s", nargs);
-        return 0;
-    }
-
-    if (nargs == 0) {
-        return 1;
-    }
-
-    if (nargs > max) {
-        if (name != NULL)
-            //Err_Format(
-                //Exc_TypeError,
-                //"%.200s expected %s%zd argument%s, got %zd",
-                //name, (min == max ? "" : "at most "), max, max == 1 ? "" : "s", nargs);
-        //else
-            //Err_Format(
-                //Exc_TypeError,
-                //"unpacked tuple should have %s%zd element%s,"
-                //" but has %zd",
-                //(min == max ? "" : "at most "), max, max == 1 ? "" : "s", nargs);
-        return 0;
-    }
-
-    return 1;
 }
 
 static int vGetArgs1(AlifObject* args, const wchar_t* format, va_list* pVa, int flags)
@@ -437,7 +398,7 @@ static AlifObject* new_kWTuple(const wchar_t* const* keywords, int total, int po
             return nullptr;
         }
         //Unicode_InternInPlace(&str);
-        ((AlifTupleObject*)kwTuple)->items[i] = str;
+        ((AlifTupleObject*)kwTuple)->items_[i] = str;
     }
     return kwTuple;
 }
@@ -505,7 +466,7 @@ static AlifObject* find_keyword(AlifObject* kwNames, AlifObject* const* kwStack,
 
     nKwArgs = ((AlifVarObject*)kwNames)->size_;
     for (i = 0; i < nKwArgs; i++) {
-        AlifObject* kwName = ((AlifTupleObject*)kwNames)->items[i];
+        AlifObject* kwName = ((AlifTupleObject*)kwNames)->items_[i];
 
         /* kwname == key will normally find a match in since keyword keys
            should be interned strings; if not retry below in a new loop. */
@@ -515,7 +476,7 @@ static AlifObject* find_keyword(AlifObject* kwNames, AlifObject* const* kwStack,
     }
 
     for (i = 0; i < nKwArgs; i++) {
-        AlifObject* kwname = ((AlifTupleObject*)kwNames)->items[i];
+        AlifObject* kwname = ((AlifTupleObject*)kwNames)->items_[i];
         if (uStr_eq(kwname, key)) {
             return kwStack[i];
         }
@@ -560,7 +521,7 @@ AlifObject* const* alifArg_unpackKeywords(AlifObject* const* args, int64_t nArgs
     maxArgs = posonly + (int)((AlifVarObject*)kwTuple)->size_;
 
     if (kwArgs != nullptr) {
-        nKwArgs = ((AlifDictObject*)kwArgs)->size_;
+        nKwArgs = ((AlifDictObject*)kwArgs)->used;
     }
     else if (kwNames != nullptr) {
         nKwArgs = ((AlifVarObject*)kwNames)->size_;
@@ -627,9 +588,9 @@ AlifObject* const* alifArg_unpackKeywords(AlifObject* const* args, int64_t nArgs
     for (i = max((int)nArgs, posonly); i < maxArgs; i++) {
         AlifObject* currentArg;
         if (nKwArgs) {
-            keyword = ((AlifTupleObject*)kwTuple)->items[i - posonly];
+            keyword = ((AlifTupleObject*)kwTuple)->items_[i - posonly];
             if (kwArgs != nullptr) {
-                currentArg = dict_getItem(kwArgs, keyword);
+                currentArg = alifDict_getItem(kwArgs, keyword);
                 if (currentArg == nullptr) {
                     return nullptr;
                 }
@@ -653,7 +614,7 @@ AlifObject* const* alifArg_unpackKeywords(AlifObject* const* args, int64_t nArgs
         }
         else if (i < minPos || (maxPos <= i && i < reqLimit)) {
             /* Less arguments than required */
-            keyword = ((AlifTupleObject*)kwTuple)->items[i - posonly];
+            keyword = ((AlifTupleObject*)kwTuple)->items_[i - posonly];
             //Err_Format(Exc_TypeError, "%.200s%s missing required "
             //    "argument '%U' (pos %d)",
             //    (parser->fname == nullptr) ? "function" : parser->fname,
@@ -667,9 +628,9 @@ AlifObject* const* alifArg_unpackKeywords(AlifObject* const* args, int64_t nArgs
         /* make sure there are no arguments given by name and position */
         for (i = posonly; i < nArgs; i++) {
             AlifObject* currentArg;
-            keyword = ((AlifTupleObject*)kwTuple)->items[i - posonly];
+            keyword = ((AlifTupleObject*)kwTuple)->items_[i - posonly];
             if (kwArgs != nullptr) {
-                currentArg = dict_getItem(kwArgs, keyword);
+                currentArg = alifDict_getItem(kwArgs, keyword);
                 if (currentArg == nullptr) {
                     return nullptr;
                 }
@@ -827,11 +788,9 @@ static const wchar_t* skipItem(const wchar_t** pFormat, va_list* pVa, int flags)
     return nullptr;
 }
 
-int alifSubArg_checkPositional(const wchar_t* _name, int64_t _nArgs,
-    int64_t _min, int64_t _max)
-{
+int _alifArg_checkPositional(const wchar_t* _name, int64_t _nArgs, int64_t _min, int64_t _max) { // 2720
     if (_nArgs < _min) {
-        //if (_name != NULL)
+        //if (_name != nullptr)
         //    Err_Format(
         //        Exc_TypeError,
         //        "%.200s expected %s%zd argument%s, got %zd",
@@ -850,7 +809,7 @@ int alifSubArg_checkPositional(const wchar_t* _name, int64_t _nArgs,
     }
 
     if (_nArgs > _max) {
-        //if (_name != NULL)
+        //if (_name != nullptr)
         //    Err_Format(
         //        Exc_TypeError,
         //        "%.200s expected %s%zd argument%s, got %zd",
@@ -869,7 +828,7 @@ int alifSubArg_checkPositional(const wchar_t* _name, int64_t _nArgs,
 
 int alifSubArg_noKwnames(const wchar_t* _funcname, AlifObject* _kwnames)
 {
-    if (_kwnames == NULL) {
+    if (_kwnames == nullptr) {
         return 1;
     }
 

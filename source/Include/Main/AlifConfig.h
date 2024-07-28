@@ -108,16 +108,17 @@
 
 
 #if defined(_OS64)
-	using AlifSizeT = __int64;
-	using AlifUSizeT = unsigned __int64;
-	using AlifIntT = __int32;
-	using AlifUIntT = unsigned __int32;
+	using AlifSizeT = int64_t;
+	using AlifUSizeT = uint64_t;
+	using AlifIntT = int32_t;
+	using AlifUIntT = uint32_t;
 	#define ALIF_SIZET_MAX LLONG_MAX
+	#define ALIF_SIZET_MIN (-ALIF_SIZET_MAX-1)
 #else
-	using AlifSizeT = __int32;
-	using AlifUSizeT = unsigned __int32;
-	using AlifIntT = __int16;
-	using AlifUIntT = unsigned __int16;
+	using AlifSizeT = int32_t;
+	using AlifUSizeT = uint32_t;
+	using AlifIntT = int16_t;
+	using AlifUIntT = uint16_t;
 	#define ALIF_SIZET INT_MAX
 #endif
 
@@ -127,7 +128,12 @@
 	#include <io.h>
 	#define SIZEOF_WCHART 2
 	#define SIZEOF_VOID_P 8
-
 #else
-#include <cstring> // memcpy()
+	#include <cstring>
+	#define SIZEOF_WCHART 2
+	#define SIZEOF_VOID_P 8
 #endif // _WINDOWS
+
+
+
+#define WITH_FREELISTS 1

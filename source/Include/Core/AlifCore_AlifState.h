@@ -1,5 +1,6 @@
-﻿#pragma once
+#pragma once
 
+#include "AlifCore_FreeList.h"
 #include "AlifCore_DureRun.h"
 
 
@@ -26,3 +27,14 @@ extern AlifIntT alifInterpreter_enable(AlifDureRun*);
 
 
 const AlifConfig* alifConfig_get();
+
+
+static inline AlifObjectFreeLists* alifObject_freeListsGet() {
+	AlifThread* thread = alifThread_get();
+
+#ifdef ALIF_GIL_DISABLED
+	return &((AlifThreadImpl*)tstate)->freelists;
+#else
+	return &thread->interpreter->objectState.freelists;
+#endif
+}

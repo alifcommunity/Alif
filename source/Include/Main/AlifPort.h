@@ -2,6 +2,12 @@
 
 #define ALIF_CAST(type_, expr) ((type_)(expr))
 
+#if defined(ALIF_BUILD_CORE_BUILTIN) && !defined(ALIF_BUILD_CORE)
+#  define ALIF_BUILD_CORE
+#endif
+#if defined(ALIF_BUILD_CORE_MODULE) && !defined(ALIF_BUILD_CORE)
+#  define ALIF_BUILD_CORE
+#endif
 
 
 #ifdef WITH_THREAD

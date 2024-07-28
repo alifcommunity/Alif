@@ -116,7 +116,7 @@ static int alifTime_from_double(AlifTimeT* _tp, double _value, AlifSubTimeRoundT
 static int alifTime_from_object(AlifTimeT* _tp, AlifObject* _obj, AlifSubTimeRoundT _round,
     long _unitToNs)
 {
-    if ((_obj->type_ == &_typeFloat_)) {
+    if ((_obj->type_ == &_alifFloatType)) {
         double d_;
         d_ = alifFloat_asLongDouble(_obj);
         if (ALIF_IS_NAN(d_)) {

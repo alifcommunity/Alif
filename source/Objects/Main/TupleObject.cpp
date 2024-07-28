@@ -1,91 +1,138 @@
 #include "alif.h"
 
 #include "AlifCore_Memory.h"
+#include "AlifCore_GC.h"
+#include "AlifCore_InitConfig.h"
+#include "AlifCore_ModSupport.h"
+#include "AlifCore_Object.h"
 
-AlifObject* alifNew_tuple(SSIZE_T _size) {
-
-	if (_size == 0) {
-		// return empty tuple
-		
+static AlifTupleObject* tuple_alloc(int64_t _size)
+{
+	if (_size < 0) {
+		return nullptr;
 	}
 
-    //AlifTupleObject* object{};
-	AlifTupleObject* object = (AlifTupleObject*)alifMem_objAlloc(_size + 1); // temp and need review
-
-    for (size_t i = 0; i < _size; i++) {
-        object->items[i] = nullptr;
-    }
-
-	return (AlifObject*)object;
+	AlifTupleObject* op = nullptr;
+	if (op == nullptr) {
+		/* Check for overflow */
+		if ((size_t)_size > ((size_t)LLONG_MAX - (sizeof(AlifTupleObject) -
+			sizeof(AlifObject*))) / sizeof(AlifObject*)) {
+			return nullptr;
+		}
+		op = ALIFOBJECT_GC_NEWVAR(AlifTupleObject, &_alifTupleType_, _size);
+		if (op == nullptr)
+			return nullptr;
+	}
+	return op;
 }
 
-size_t tuple_length(AlifObject* object) {
+static inline AlifObject* tuple_getEmpty() {
+	return (AlifObject*)&ALIF_SINGLETON(tupleEmpty);
+}
 
-    return ((AlifVarObject*)(object))->size_;
+AlifObject* alifNew_tuple(AlifSizeT _size)
+{
+	AlifTupleObject* op_{};
+	if (_size == 0) {
+		return tuple_getEmpty();
+	}
+	op_ = tuple_alloc(_size);
+	if (op_ == nullptr) {
+		return nullptr;
+	}
+	for (AlifSizeT i = 0; i < _size; i++) {
+		op_->items_[i] = nullptr;
+	}
+	ALIFOBJECT_GC_TRACK(op_);
+	return (AlifObject*)op_;
+}
+
+int64_t alifTuple_size(AlifObject* _op)
+{
+	if (!(_op->type_ == &_alifTupleType_)) {
+		return -1;
+	}
+	else
+		return ALIF_SIZE(_op);
+}
+
+AlifObject* alifTuple_getItem(AlifObject* _op, int64_t _i)
+{
+	if (!(_op->type_ == &_alifTupleType_)) {
+		return nullptr;
+	}
+	if (_i < 0 || _i >= ALIF_SIZE(_op)) {
+		return nullptr;
+	}
+	return ((AlifTupleObject*)_op)->items_[_i];
+}
+
+//int alifTuple_setItem(AlifObject* _op, int64_t _i, AlifObject* _newItem)
+//{
+//	AlifObject** p_;
+//	if (!(_op->type_ == &_alifTupleType_) || ALIF_REFCNT(_op) != 1) {
+//		ALIF_XDECREF(_newItem);
+//		return -1;
+//	}
+//	if (_i < 0 || _i >= ALIF_SIZE(_op)) {
+//		ALIF_XDECREF(_newItem);
+//		return -1;
+//	}
+//	p_ = ((AlifTupleObject*)_op)->items_ + _i;
+//	ALIF_XSETREF(*p_, _newItem);
+//	return 0;
+//}
+
+AlifObject* tuple_pack(size_t _size, ...) {
+
+	int64_t i_;
+	AlifObject* o_;
+	AlifObject** items_;
+	va_list vArgs;
+
+	va_start(vArgs, _size);
+	AlifTupleObject* result = tuple_alloc(_size);
+	if (result == nullptr) {
+		va_end(vArgs);
+		return nullptr;
+	}
+	items_ = result->items_;
+	for (i_ = 0; i_ < _size; i_++) {
+		o_ = va_arg(vArgs, AlifObject*);
+		items_[i_] = ALIF_NEWREF(o_);
+	}
+	va_end(vArgs);
+	ALIFOBJECT_GC_TRACK(result);
+	return (AlifObject*)result;
 
 }
 
-AlifObject* tuple_getItem(AlifTupleObject* tuple, size_t index) {
+static void tuple_dealloc(AlifTupleObject* _op)
+{
+	alifObject_gcUnTrack(_op);
+	//ALIF_TRASHCAN_BEGIN(_op, tuple_dealloc)
 
-    if (tuple->object.size_ <= index) {
-        std::wcout << L"مؤشر المترابطة في عمليه احضار كائن خارج النطاق\n" << std::endl;
-        exit(-1);
-    }
+	int64_t i = ALIF_SIZE(_op);
+	while (--i >= 0) {
+		ALIF_XDECREF(_op->items_[i]);
+	}
+	//if (!maybe_freeList_push(_op)) {
+		ALIF_TYPE(_op)->free_((AlifObject*)_op);
+	//}
 
-    return tuple->items[index];
-
-}
-
-bool tuple_setItem(AlifTupleObject* tuple, size_t index, AlifObject* newItem) {
-
-    if (tuple->object.size_ <= index) {
-        std::wcout << L"مؤشر المترابطة في عمليه اسناد كائن خارج النطاق\n" << std::endl;
-        exit(-1);
-    }
-
-    AlifObject** pointer = ((AlifTupleObject*)tuple)->items + index;
-    ALIF_XSETREF(*pointer, newItem);
-    return true;
-}
-
-AlifObject* tuple_pack(size_t size_, ...) {
-
-    if (size_ == 0) {
-        // return empty
-    }
-
-    va_list vArgs;
-    va_start(vArgs, size_);
-    AlifTupleObject* result = (AlifTupleObject*)alifNew_tuple(size_);
-
-    AlifObject** items = result->items;
-    for (size_t i = 0; i < size_; i++)
-    {
-        items[i] = va_arg(vArgs, AlifObject*);
-    }
-    va_end(vArgs);
-    return (AlifObject*)result;
-
-}
-
-void tuple_dealloc(AlifTupleObject* object) {
-    
-
-
-    alifMem_objFree(object);
-
+	//ALIF_TRASHCAN_END
 }
 
 size_t tupel_hash(AlifTupleObject* object) {
 
     size_t length = ((AlifVarObject*)(object))->size_;
-    AlifObject** items = object->items;
+    AlifObject** items_ = object->items_;
 
 
     size_t hash = 2870177450012600261ULL;
     for (size_t i = 0; i < length; i++)
     {
-        size_t hashItem = alifObject_hash(items[i]);
+        size_t hashItem = alifObject_hash(items_[i]);
 
         hash += hashItem;
         hash *= 11400714785074694791ULL;
@@ -94,81 +141,112 @@ size_t tupel_hash(AlifTupleObject* object) {
     return hash;
 }
 
-int tuple_contain(AlifTupleObject* object, AlifObject* item) {
+static size_t tuple_length(AlifTupleObject* _a)
+{
+	return ALIF_SIZE(_a);
+}
 
-    int compare = 0;
+int tuple_contain(AlifTupleObject* _object, AlifObject* _item) {
 
-    for (size_t i = 0; i < ((AlifVarObject*)(object))->size_ && compare == 0; i++)
+    int compare_ = 0;
+
+    for (size_t i = 0; i < ((AlifVarObject*)(_object))->size_ && compare_ == 0; i++)
     {
-        compare = alifObject_richCompareBool(object->items[i], item, ALIF_EQ);
+		compare_ = alifObject_richCompareBool(_object->items_[i], _item, ALIF_EQ);
     }
-    return compare;
+    return compare_;
 
 }
 
-AlifObject* alifSubTuple_fromArray(AlifObject *const *object, size_t size_) {
-
-    if (size_ == 0) {
-        // return empty tuple
-    }
-
-    AlifTupleObject* tuple = (AlifTupleObject*)alifNew_tuple(size_);
-
-	if (tuple == nullptr) {
+static AlifObject* tuple_item(AlifTupleObject* _a, int64_t _i)
+{
+	if (_i < 0 || _i >= ALIF_SIZE(_a)) {
 		return nullptr;
 	}
-	AlifObject** dst_= tuple->items;
-	for (int64_t i = 0; i < size_; i++) {
-		AlifObject* item = object[i];
-		dst_[i] = ALIF_NEWREF(item);
+	return ALIF_NEWREF(_a->items_[_i]);
+}
+
+AlifObject* alifSubTuple_fromArray(AlifObject *const *_object, size_t _size) {
+
+	if (_size == 0) return tuple_getEmpty();
+
+	AlifTupleObject* tuple_ = tuple_alloc(_size);
+
+	if (tuple_ == nullptr) {
+		return nullptr;
+	}
+	AlifObject** dst_= tuple_->items_;
+	for (int64_t i_ = 0; i_ < _size; i_++) {
+		AlifObject* item_ = _object[i_];
+		dst_[i_] = ALIF_NEWREF(item_);
 	}
 
-    return (AlifObject*)tuple;
+	//ALIFOBJECT_GC_TRACK(tuple_);
+    return (AlifObject*)tuple_;
 
 }
 
-AlifObject* tupleslice(AlifTupleObject* tuple, size_t iLow,
-    size_t iHigh)
-{
-    if (iLow < 0)
-        iLow = 0;
-    if (iHigh > tuple->object.size_)
-        iHigh = tuple->object.size_;
-    if (iHigh < iLow)
-        iHigh = iLow;
-    if (iLow == 0 && iHigh == tuple->object.size_ && 
-        tuple->object._base_.type_ == &_alifTupleType_) {
-        return (AlifObject*)tuple;
-    }
-    return alifSubTuple_fromArray(tuple->items + iLow, iHigh - iLow);
+AlifObject* alifTuple_fromArraySteal(AlifObject* const* _src, AlifSizeT _n) {
+	if (_n == 0) {
+		return tuple_getEmpty();
+	}
+	AlifTupleObject* tuple = tuple_alloc(_n);
+	if (tuple == nullptr) {
+		for (AlifSizeT i = 0; i < _n; i++) {
+			ALIF_DECREF(_src[i]);
+		}
+		return nullptr;
+	}
+	AlifObject** dst = tuple->items_;
+	for (AlifSizeT i = 0; i < _n; i++) {
+		AlifObject* item = _src[i];
+		dst[i] = item;
+	}
+	ALIFOBJECT_GC_TRACK(tuple);
+	return (AlifObject*)tuple;
 }
 
-AlifObject* tuple_getSlice(AlifObject* tuple, size_t index, size_t index2)
+AlifObject* tupleslice(AlifTupleObject* _tuple, size_t _iLow,
+    size_t _iHigh)
 {
-    if (tuple == nullptr || tuple->type_ != &_alifTupleType_) {
-        std::wcout << L"نوع فارغ او انه غير صحيح في عملية احضار جزء من مترابطة\n"  << std::endl;
-        exit(-1);
+    if (_iLow < 0)
+        _iLow = 0;
+    if (_iHigh > _tuple->_base_.size_)
+        _iHigh = _tuple->_base_.size_;
+    if (_iHigh < _iLow)
+        _iHigh = _iLow;
+    if (_iLow == 0 && _iHigh == _tuple->_base_.size_ && 
+        _tuple->_base_._base_.type_ == &_alifTupleType_) {
+        return (AlifObject*)_tuple;
     }
-    return tupleslice((AlifTupleObject*)tuple, index, index2);
+    return alifSubTuple_fromArray(_tuple->items_ + _iLow, _iHigh - _iLow);
+}
+
+AlifObject* tuple_getSlice(AlifObject* _tuple, size_t _index, size_t _index2)
+{
+    if (_tuple == nullptr || _tuple->type_ != &_alifTupleType_) {
+		return nullptr;
+    }
+    return tupleslice((AlifTupleObject*)_tuple, _index, _index2);
 }
 
 AlifObject* tuple_compare(AlifObject* v, AlifObject* w, int op) {
 
     if (v->type_ != &_alifTupleType_ || w->type_ != &_alifTupleType_) {
-        // not implement
+		return ALIF_NOTIMPLEMENTED;
     }
 
     AlifTupleObject* vTuple = (AlifTupleObject*)v;
     AlifTupleObject* wTuple = (AlifTupleObject*)w;
 
-    size_t vLen = vTuple->object.size_,
-        wLen = wTuple->object.size_,
+    size_t vLen = vTuple->_base_.size_,
+        wLen = wTuple->_base_.size_,
         i;
 
     for (i = 0; i < vLen && i < wLen; i++)
     {
-        int compare = alifObject_richCompareBool(vTuple->items[i],
-            wTuple->items[i], ALIF_EQ);
+        int compare = alifObject_richCompareBool(vTuple->items_[i],
+            wTuple->items_[i], ALIF_EQ);
     
         if (compare < 0) {
             return nullptr;
@@ -185,15 +263,15 @@ AlifObject* tuple_compare(AlifObject* v, AlifObject* w, int op) {
         return ALIF_TRUE;
     }
     
-    return alifObject_richCompare(vTuple->items[i], wTuple->items[i], op);
+    return alifObject_richCompare(vTuple->items_[i], wTuple->items_[i], op);
 
 }
 
-AlifSequenceMethods seqTuple = {
+AlifSequenceMethods _seqAsTuple_ = {
     (LenFunc)tuple_length,                       /* sq_length */
     0,                    /* sq_concat */
     0,                  /* sq_repeat */
-    (SSizeArgFunc)tuple_getItem,                    /* sq_item */
+    (SSizeArgFunc)tuple_item,                    /* sq_item */
     0,                                          /* sq_slice */
     0,                                          /* sq_ass_item */
     0,                                          /* sq_ass_slice */
@@ -201,11 +279,9 @@ AlifSequenceMethods seqTuple = {
 };
 
 AlifInitObject _alifTupleType_ = {
-    0,
-    0,
-    0,
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0)
     L"tuple",
-    sizeof(AlifTupleObject),
+    sizeof(AlifTupleObject) - sizeof(AlifObject*),
     sizeof(AlifObject*),
     (Destructor)tuple_dealloc,         
     0,                                          
@@ -213,16 +289,17 @@ AlifInitObject _alifTupleType_ = {
     0,                                
     0,           
     0,                                  
-    &seqTuple,                   
+    &_seqAsTuple_,                   
     0,                   
     (HashFunc)tupel_hash,                    
     0,                                      
     0,                                     
-    0,                    
+	alifObject_genericGetAttr,
     0,                                         
-    0,
-    0,       
-    0,
+    0,    
+	ALIFTPFLAGS_DEFAULT | ALIFTPFLAGS_HAVE_GC | ALIFTPFLAGS_BASETYPE |
+	ALIFTPFLAGS_LIST_SUBCLASS | ALIFSUBTPFLAGS_MATCH_SELF | ALIFTPFLAGS_SEQUENCE,
+	0,
     0,         
     0,                                
     tuple_compare,                          
@@ -240,6 +317,31 @@ AlifInitObject _alifTupleType_ = {
     0,                                 
     0,                                  
     0,                             
-    0,                          
-    //.tp_vectorcall = tuple_vectorcall,
+	alifObject_gcDel,
+    //tuple_vectorCall,
 };
+
+//static inline int maybe_freeList_push(AlifTupleObject* _op)
+//{
+//#ifdef WITH_FREELISTS
+//	struct alifSub_object_freelists* freelists = alifSub_object_freelists_GET();
+//	if (ALIF_SIZE(op) == 0) {
+//		return 0;
+//	}
+//	int64_t index = ALIF_SIZE(op) - 1;
+//	if (index < alifTuple_NFREELISTS
+//		&& TUPLE_FREELIST.numfree[index] < ALIFTuple_MAXFREELIST
+//		&& TUPLE_FREELIST.numfree[index] >= 0
+//		&& ALIF_IS_TYPE(op, &_alifTupleType_))
+//	{
+//		/* op is the head of a linked list, with the first item
+//		   pointing to the next node.  Here we set op as the new head. */
+//		op->ob_item[0] = (AlifObject*)TUPLE_FREELIST.items[index];
+//		TUPLE_FREELIST.items[index] = op;
+//		TUPLE_FREELIST.numfree[index]++;
+//		OBJECT_STAT_INC(to_freelist);
+//		return 1;
+//	}
+//#endif
+//	return 0;
+//}

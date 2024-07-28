@@ -1,4 +1,4 @@
-﻿#include "alif.h"
+#include "alif.h"
 
 #include "AlifCore_InitConfig.h"
 #include "AlifCore_Memory.h"
@@ -14,7 +14,7 @@
 
 AlifDureRun _alifDureRun_
 #if defined(__linux__) && (defined(__GNUC__) || defined(__clang__))
-__attribute__((section(L"._alifDureRun_")))
+__attribute__((section("._alifDureRun_")))
 #endif
 = ALIF_DURERUNSTATE_INIT(_alifDureRun_);
 
@@ -63,8 +63,24 @@ static AlifThread* alifThread_new(AlifInterpreter* _interpreter) {
 	// يحتاج الى عمل فيما بعد
 
 	AlifThread* thread_ = (AlifThread*)alifMem_dataAlloc(sizeof(AlifThread));
-	thread_->interpreter = _interpreter;
 
+	AlifSizeT id = _interpreter->threads.nextUniquID;
+	_interpreter->threads.nextUniquID += 1;
+
+	AlifThread* oldHead = _interpreter->threads.head;
+
+	/* init thread func */
+	thread_->interpreter = _interpreter;
+	thread_->id = id;
+	/* init thread func */
+
+	/* add thread func */
+	if (oldHead != nullptr) {
+		oldHead->prev = thread_;
+	}
+	thread_->next = oldHead;
+	_interpreter->threads.head = thread_;
+	/* add thread func */
 
 	return thread_; // temp
 }
@@ -93,6 +109,7 @@ static AlifIntT alifCore_createInterpreter(AlifDureRun* _dureRun, const AlifConf
 
 	if (thread_ == nullptr) {
 		// cant make thread // temp
+		std::wcout << L"لا يمكن إنشاء ممر" << std::endl;
 	}
 
 	_dureRun->mainThread = thread_;
@@ -104,31 +121,59 @@ static AlifIntT alifCore_createInterpreter(AlifDureRun* _dureRun, const AlifConf
 	return 1;
 }
 
+static AlifIntT alifCore_builtinsInit(AlifThread* _thread) { // 774
+
+	AlifObject* modules{};
+	AlifObject* builtinsDict{};
+
+	AlifInterpreter* interp = _thread->interpreter;
+
+	AlifObject* biMod = alifBuiltin_init(interp);
+	if (biMod == nullptr) goto error;
+
+	//modules = interp->imports.modules_; // alifImport_getModule
+	//if (alifImport_fixupBuiltin(_thread, biMod, "builtins", modules) < 0) {
+	//	goto error;
+	//}
+
+	builtinsDict = alifModule_getDict(biMod);
+	if (builtinsDict == nullptr) goto error;
+
+	interp->builtins = ALIF_NEWREF(builtinsDict);
+
+	return 1;
+
+error:
+	ALIF_XDECREF(biMod);
+	return -1;
+}
+
 static AlifIntT alifCore_interpreterInit(AlifThread* _thread) {
 
 	AlifInterpreter* interpreter = _thread->interpreter;
 	AlifIntT status = 1;
 	const AlifConfig* config_;
+	AlifObject* sysMod = nullptr;
 
-	//status = alifGarbegCollector_init(interpreter);
-	if (status < 1) return status;
+	status = alifSubGC_init(interpreter);
+	if (status < 0) return status;
 
 	//status = alifCore_initTypes(interpreter);
-	if (status < 1) goto done;
+	if (status < 0) goto done;
 
 	//status = alifAtExit_init(interpreter);
-	if (status < 1) return status;
+	if (status < 0) return status;
 
-	//status = alifSys_create(thread_, &sysMod);
-	if (status < 1) goto done;
+	status = alifSys_create(_thread, &sysMod);
+	if (status < 0) goto done;
 
-	//status = alifCore_builtinsInit(thread);
-	if (status < 1) goto done;
+	status = alifCore_builtinsInit(_thread);
+	if (status < 0) goto done;
 
 	config_ = &interpreter->config;
 
 	//status = alifImport_initCore(thread, sysMod, config_->installImportLib);
-	if (status < 1) goto done;
+	if (status < 0) goto done;
 
 done:
 	//Py_XDECREF(sysmod);
@@ -279,7 +324,7 @@ AlifIntT alif_initFromConfig(AlifConfig* _config) {
 }
 
 
-void alifThread_attach(AlifThread* _thread) {
-
+void alifThread_attach(AlifThread* _thread)
+{
 	current_fastSet(&_alifDureRun_, _thread);
 }

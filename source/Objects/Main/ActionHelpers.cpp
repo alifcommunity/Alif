@@ -1,4 +1,4 @@
-﻿#include "alif.h"
+#include "alif.h"
 
 
 //#include "AlifParserEngine.h"
@@ -695,7 +695,7 @@ Expression* alifParserEngine_joinedStr(AlifParser* _p, AlifPToken* _a, ExprSeq* 
 	ExprSeq* expr_ = unpackTopLevel_joinedStrs(_p, _rawExprs);
 	AlifUSizeT nItems = SEQ_LEN(expr_);
 
-	const wchar_t* quoteStr = alifWBytes_asString(_a->bytes);
+	const wchar_t* quoteStr = _alifWBytes_asString(_a->bytes);
 	if (quoteStr == nullptr) return nullptr;
 
 	AlifIntT isRaw = wcspbrk(quoteStr, L"خ") != nullptr;
@@ -714,7 +714,7 @@ Expression* alifParserEngine_joinedStr(AlifParser* _p, AlifPToken* _a, ExprSeq* 
 			/* Tokenizer emits string parts even when the underlying string
 			might become an empty value (e.g. FSTRING_MIDDLE with the value \\n)
 			so we need to check for them and simplify it here. */
-			if (ALIFUSTR_CHECK_TYPE(item_->V.constant.val) and
+			if (ALIFUSTR_CHECKEXACT(item_->V.constant.val) and
 				ALIFUSTR_GET_LENGTH(item_->V.constant.val) == 0)
 				continue;
 		}
@@ -756,7 +756,7 @@ Expression* alifParserEngine_decodeConstantFromToken(AlifParser* _p, AlifPToken*
 }
 
 Expression* alifParserEngine_constantFromToken(AlifParser* _p, AlifPToken* _t) {
-	wchar_t* bStr = (wchar_t*)alifWBytes_asString(_t->bytes);
+	wchar_t* bStr = (wchar_t*)_alifWBytes_asString(_t->bytes);
 	if (bStr == nullptr) return nullptr;
 
 	AlifObject* str_ = alifUStr_fromString(bStr);
@@ -771,7 +771,7 @@ Expression* alifParserEngine_constantFromToken(AlifParser* _p, AlifPToken* _t) {
 }
 
 Expression* alifParserEngine_constantFromString(AlifParser* _p, AlifPToken* _tok) {
-	wchar_t* str = alifWBytes_asString(_tok->bytes);
+	wchar_t* str = _alifWBytes_asString(_tok->bytes);
 	if (str == nullptr) return nullptr;
 
 	AlifObject* s = alifParserEngine_parseString(_p, _tok);
@@ -904,7 +904,7 @@ Expression* alifParserEngine_combineStrings(AlifParser* _p, ExprSeq* _strings,
 		Expression* element_ = SEQ_GET(flattened_, i);
 
 		if (fStringFound and element_->type == ConstantK and
-			ALIFUSTR_CHECK_TYPE(element_->V.constant.val) and
+			ALIFUSTR_CHECKEXACT(element_->V.constant.val) and
 			ALIFUSTR_GET_LENGTH(element_->V.constant.val) == 0)
 			continue;
 

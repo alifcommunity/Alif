@@ -3,9 +3,9 @@
 #include "AlifCore_Memory.h"
 
 
-//static AlifObject _dummyStruct_;
+extern AlifObject _dummyStruct_; // need review يجب ان تكون static وليس extern
 
-//#define dummy (&_dummyStruct_)
+#define dummy (&_dummyStruct_)
 
 #define SET_COPY_METHODDEF    \
     {L"copy", (AlifCFunction)set_copy, METHOD_NOARGS},
@@ -15,7 +15,7 @@ set_copy_impl(AlifSetObject*);
 
 static AlifObject* set_copy(AlifSetObject* _so, AlifObject* ALIF_UNUSED(ignored))
 {
-	AlifObject* return_value = NULL;
+	AlifObject* return_value = nullptr;
 
 	//ALIF_BEGIN_CRITICAL_SECTION(_so);
 	return_value = set_copy_impl(_so);
@@ -285,7 +285,7 @@ static void set_dealloc(AlifSetObject* _so)
 
 	//alifObject_GC_UnTrack(_so);
 	//ALIF_TRASHCAN_BEGIN(_so, set_dealloc)
-		//if (_so->weakRefList != NULL)
+		//if (_so->weakRefList != nullptr)
 			//Object_ClearWeakRefs((AlifObject*)_so);
 
 	for (entry_ = _so->table_; used_ > 0; entry_++) {
@@ -323,7 +323,7 @@ static int set_merge_lock_held(AlifSetObject* _so, AlifObject* _otherSet)
 	if (_so->fill_ == 0 && _so->mask_ == other_->mask_ && other_->fill_ == other_->used_) {
 		for (i_ = 0; i_ <= other_->mask_; i_++, soEntry++, otherEntry++) {
 			key_ = otherEntry->key_;
-			if (key_ != NULL) {
+			if (key_ != nullptr) {
 				soEntry->key_ = ALIF_NEWREF(key_);
 				soEntry->hash_ = otherEntry->hash_;
 			}
@@ -340,7 +340,7 @@ static int set_merge_lock_held(AlifSetObject* _so, AlifObject* _otherSet)
 		_so->used_ = other_->used_;
 		for (i_ = other_->mask_ + 1; i_ > 0; i_--, otherEntry++) {
 			key_ = otherEntry->key_;
-			if (key_ != NULL
+			if (key_ != nullptr
 				&& key_ != dummy
 				) {
 				set_insert_clean(newTable, newMask, ALIF_NEWREF(key_),
@@ -353,7 +353,7 @@ static int set_merge_lock_held(AlifSetObject* _so, AlifObject* _otherSet)
 	for (i_ = 0; i_ <= other_->mask_; i_++) {
 		otherEntry = &other_->table_[i_];
 		key_ = otherEntry->key_;
-		if (key_ != NULL
+		if (key_ != nullptr
 			&& key_ != dummy
 			) {
 			if (set_add_entry(_so, key_, otherEntry->hash_))
@@ -366,7 +366,7 @@ static int set_merge_lock_held(AlifSetObject* _so, AlifObject* _otherSet)
 class AlifSetIterObject {
 public:
 	ALIFOBJECT_HEAD
-	AlifSetObject* sISet; /* Set to NULL when iterator is exhausted */
+	AlifSetObject* sISet; /* Set to nullptr when iterator is exhausted */
 	int64_t sIUsed;
 	int64_t sIPos;
 	int64_t len_;
@@ -385,14 +385,13 @@ static AlifObject* setIter_iterNext(AlifSetIterObject* _si)
 	SetEntry* entry;
 	AlifSetObject* so = _si->sISet;
 
-	if (so == NULL)
-		return NULL;
+	if (so == nullptr)
+		return nullptr;
 
 	if (_si->sIUsed != so->used_) {
-		//Err_SetString(PyExc_RuntimeError,
-			//"Set changed size during iteration");
+		// error
 		_si->sIUsed = -1; /* Make this state sticky */
-		return NULL;
+		return nullptr;
 	}
 
 	i = _si->sIPos;
@@ -400,7 +399,7 @@ static AlifObject* setIter_iterNext(AlifSetIterObject* _si)
 	mask = so->mask_;
 	while (i <= mask
 		&&
-		(entry[i].key_ == NULL || entry[i].key_ == dummy)
+		(entry[i].key_ == nullptr || entry[i].key_ == dummy)
 		 )
 		i++;
 	_si->sIPos = i + 1;
@@ -411,9 +410,9 @@ static AlifObject* setIter_iterNext(AlifSetIterObject* _si)
 	return ALIF_NEWREF(key);
 
 fail:
-	_si->sISet = NULL;
+	_si->sISet = nullptr;
 	ALIF_DECREF(so);
-	return NULL;
+	return nullptr;
 }
 
 AlifTypeObject _alifSetIterType_ = {
@@ -434,7 +433,7 @@ AlifTypeObject _alifSetIterType_ = {
 	0,                                          /* tp_as_mapping */
 	0,                                          /* tp_call */
 	0,                                          /* tp_str */
-	0, //Object_GenericGetAttr,                    /* tp_getattro */
+	alifObject_genericGetAttr,                    /* tp_getattro */
 	0,                                          /* tp_setattro */
 	0,                                          /* tp_as_buffer */
 	0, //ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,    /* tp_flags */
@@ -457,8 +456,8 @@ static AlifObject* set_iter(AlifSetObject* _so)
 	AlifSetIterObject* si_{};
 	si_ = (AlifSetIterObject*)alifMem_objAlloc(alifSubObject_varSize(&_alifSetIterType_, 1));
 	alifSubObject_initVar((AlifVarObject*)si_, &_alifSetIterType_, alifSubObject_varSize(&_alifSetIterType_, 1));
-	if (si_ == NULL)
-		return NULL;
+	if (si_ == nullptr)
+		return nullptr;
 	si_->sISet = (AlifSetObject*)ALIF_NEWREF(_so);
 	si_->sIUsed = size;
 	si_->sIPos = 0;
@@ -469,7 +468,7 @@ static AlifObject* set_iter(AlifSetObject* _so)
 
 static int set_add_key(AlifSetObject* _so, AlifObject* _key)
 {
-	size_t hash_;
+	size_t hash_{};
 
 	if (!(_key->type_ == &_alifUStrType_)) {
 		hash_ = alifObject_hash(_key);
@@ -481,7 +480,7 @@ static int set_add_key(AlifSetObject* _so, AlifObject* _key)
 
 static int set_contains_key(AlifSetObject* _so, AlifObject* _key)
 {
-	size_t hash_;
+	size_t hash_{};
 
 	if (!(_key->type_ == &_alifUStrType_)
 		//|| (hash_ = ALIFUNICODE_CAST(key)->hash) == -1
@@ -495,7 +494,7 @@ static int set_contains_key(AlifSetObject* _so, AlifObject* _key)
 
 static int set_discard_key(AlifSetObject* _so, AlifObject* _key)
 {
-	size_t hash_;
+	size_t hash_{};
 
 	if (!(_key->type_ == &_alifUStrType_)
 		//||
@@ -512,7 +511,7 @@ static int set_discard_key(AlifSetObject* _so, AlifObject* _key)
 static int set_update_dict_lock_held(AlifSetObject* _so, AlifObject* _other)
 {
 
-	int64_t dictSize = ((AlifDictObject*)_other)->size_;
+	int64_t dictSize = ((AlifDictObject*)_other)->used;
 	if ((_so->fill_ + dictSize) * 5 >= _so->mask_ * 3) {
 		if (set_table_resize(_so, (_so->used_ + dictSize) * 2) != 0) {
 			return -1;
@@ -522,8 +521,8 @@ static int set_update_dict_lock_held(AlifSetObject* _so, AlifObject* _other)
 	int64_t pos_ = 0;
 	AlifObject* key_;
 	AlifObject* value_;
-	size_t hash_;
-	while (alifDict_next(_other, &pos_, &key_, &value_, &hash_)) {
+	size_t hash_{};
+	while (alifDict_next(_other, &pos_, &key_, &value_)) {
 		if (set_add_entry(_so, key_, hash_)) {
 			return -1;
 		}
@@ -561,7 +560,7 @@ static int set_update_local(AlifSetObject* _so, AlifObject* _other)
 		//ALIF_END_CRITICAL_SECTION();
 		return rv;
 	}
-	else if ((_other->type_ == &typeDict)) {
+	else if ((_other->type_ == &_alifDictType_)) {
 		int rv;
 		//ALIF_BEGIN_CRITICAL_SECTION(_other);
 		rv = set_update_dict_lock_held(_so, _other);
@@ -583,7 +582,7 @@ static int set_update_internal(AlifSetObject* _so, AlifObject* _other)
 		//ALIF_END_CRITICAL_SECTION2();
 		return rv;
 	}
-	else if ((_other->type_ == &typeDict)) {
+	else if ((_other->type_ == &_alifDictType_)) {
 		int rv;
 		//ALIF_BEGIN_CRITICAL_SECTION2(_so, _other);
 		rv = set_update_dict_lock_held(_so, _other);
@@ -647,16 +646,16 @@ static AlifObject* set_or(AlifSetObject* _so, AlifObject* _other)
 	if (!(((AlifObject*)_so)->type_ == &_alifSetType_) || !(_other->type_ == &_alifSetType_))
 		return ALIF_NOTIMPLEMENTED;
 
-	result_ = (AlifSetObject*)set_copy(_so, NULL);
-	if (result_ == NULL) {
-		return NULL;
+	result_ = (AlifSetObject*)set_copy(_so, nullptr);
+	if (result_ == nullptr) {
+		return nullptr;
 	}
 	if (ALIF_IS((AlifObject*)_so, _other)) {
 		return (AlifObject*)result_;
 	}
 	if (set_update_local(result_, _other)) {
 		ALIF_DECREF(result_);
-		return NULL;
+		return nullptr;
 	}
 	return (AlifObject*)result_;
 }
@@ -667,14 +666,14 @@ static AlifObject* set_ior(AlifSetObject* _so, AlifObject* _other)
 		return ALIF_NOTIMPLEMENTED;
 
 	if (set_update_internal(_so, _other)) {
-		return NULL;
+		return nullptr;
 	}
 	return ALIF_NEWREF(_so);
 }
 
 static AlifMethodDef _alifSetMethods_[] = {
 	SET_COPY_METHODDEF
-	{NULL,              NULL}   /* sentinel */
+	{nullptr,              nullptr}   /* sentinel */
 };
 
 static AlifNumberMethods _alifSetAsNumber_ = {
@@ -761,13 +760,13 @@ AlifObject* alifNew_set(AlifObject* _iterable)
 
 static AlifObject* set_copy_impl(AlifSetObject* _so)
 {
-	AlifObject* copy_ = make_new_set_baseType(ALIF_TYPE(_so), NULL);
-	if (copy_ == NULL) {
-		return NULL;
+	AlifObject* copy_ = make_new_set_baseType(ALIF_TYPE(_so), nullptr);
+	if (copy_ == nullptr) {
+		return nullptr;
 	}
 	if (set_merge_lock_held((AlifSetObject*)copy_, (AlifObject*)_so) < 0) {
 		ALIF_DECREF(copy_);
-		return NULL;
+		return nullptr;
 	}
 	return copy_;
 }

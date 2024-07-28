@@ -1,6 +1,6 @@
-﻿#include "alif.h"
+#include "alif.h"
 
-#include "alifCore_bytesObject.h"
+#include "AlifCore_BytesObject.h"
 //#include "AlifCore_UStrObject.h"
 
 #include "AlifTokenState.h"
@@ -17,7 +17,7 @@ AlifObject* alifParserEngine_decodeString(AlifParser* _p, int _raw, const wchar_
 }
 
 AlifObject* alifParserEngine_parseString(AlifParser* _p, AlifPToken* _t) {
-	const wchar_t* s = alifWBytes_asString(_t->bytes);
+	const wchar_t* s = _alifWBytes_asString(_t->bytes);
 	if (s == nullptr) return nullptr;
 
 	AlifUSizeT len{};
