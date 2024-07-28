@@ -53,57 +53,57 @@ void alifThread_init_thread(void)
 #   include "Thread_nt.h"
 #endif
 
-int alifThread_parseTimeoutArg(AlifObject* _arg, int _blocking, AlifTimeT* _timeoutP)
-{
-    if (_arg == nullptr || _arg == ALIF_NONE) {
-        *_timeoutP = _blocking ? ALIFTHREAD_UNSET_TIMEOUT : 0;
-        return 0;
-    }
-    if (!_blocking) {
-
-        return -1;
-    }
-
-    AlifTimeT timeout_;
-    if (alifSubTime_fromSecondsObject(&timeout_, _arg, AlifSubTime_Round_Timeout) < 0) {
-        return -1;
-    }
-    if (timeout_ < 0) {
-        return -1;
-    }
-
-    if (alifSubTime_asMicroseconds(timeout_,
-        AlifSubTime_Round_Timeout) > ALIF_TIMEOUT_MAX) {
-        return -1;
-    }
-    *_timeoutP = timeout_;
-    return 0;
-}
+//int alifThread_parseTimeoutArg(AlifObject* _arg, int _blocking, AlifTimeT* _timeoutP)
+//{
+//    if (_arg == nullptr || _arg == ALIF_NONE) {
+//        *_timeoutP = _blocking ? ALIFTHREAD_UNSET_TIMEOUT : 0;
+//        return 0;
+//    }
+//    if (!_blocking) {
+//
+//        return -1;
+//    }
+//
+//    AlifTimeT timeout_;
+//    if (alifSubTime_fromSecondsObject(&timeout_, _arg, AlifSubTime_Round_Timeout) < 0) {
+//        return -1;
+//    }
+//    if (timeout_ < 0) {
+//        return -1;
+//    }
+//
+//    if (alifSubTime_asMicroseconds(timeout_,
+//        AlifSubTime_Round_Timeout) > ALIF_TIMEOUT_MAX) {
+//        return -1;
+//    }
+//    *_timeoutP = timeout_;
+//    return 0;
+//}
 
 /* Thread Specific Storage (TSS) API
 
    Cross-platform components of TSS API implementation.
 */
 
-AlifTSST* alifThread_tss_alloc()
-{
-    AlifTSST* newKey = (AlifTSST*)alifMem_dataAlloc(sizeof(AlifTSST));
-    if (newKey == nullptr) {
-        return nullptr;
-    }
-    newKey->isInitialized = 0;
-    return newKey;
-}
-
-void alifThread_tss_free(AlifTSST* _key)
-{
-    if (_key != nullptr) {
-        alifThread_tss_delete(_key);
-        alifMem_dataFree((void*)_key);
-    }
-}
-
-int alifThread_tss_is_created(AlifTSST* _key)
-{
-    return _key->isInitialized;
-}
+//AlifTSST* alifThread_tss_alloc()
+//{
+//    AlifTSST* newKey = (AlifTSST*)alifMem_dataAlloc(sizeof(AlifTSST));
+//    if (newKey == nullptr) {
+//        return nullptr;
+//    }
+//    newKey->isInitialized = 0;
+//    return newKey;
+//}
+//
+//void alifThread_tss_free(AlifTSST* _key)
+//{
+//    if (_key != nullptr) {
+//        alifThread_tss_delete(_key);
+//        alifMem_dataFree((void*)_key);
+//    }
+//}
+//
+//int alifThread_tss_is_created(AlifTSST* _key)
+//{
+//    return _key->isInitialized;
+//}

@@ -34,18 +34,18 @@ FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) {
 	AlifObject* bytes;
 	const char* pathBytes;
 
-	if (!alifUnicode_FSConverter(_path, &bytes))
-		return nullptr;
+	//if (!alifUnicode_FSConverter(_path, &bytes))
+	//	return nullptr;
 	pathBytes = (const char*)_alifWBytes_asString(bytes); // need review
 
-	if (alifSys_audit("open", "Osi", _path, _mode, 0) < 0) {
-		ALIF_DECREF(bytes);
-		return nullptr;
-	}
+	//if (alifSys_audit("open", "Osi", _path, _mode, 0) < 0) {
+	//	ALIF_DECREF(bytes);
+	//	return nullptr;
+	//}
 
 	do {
 		f = fopen(pathBytes, _mode);
-	} while (f == nullptr and errno == EINTR and !(async_err = alifErr_checkSignals()));
+	} while (f == nullptr and errno == EINTR);
 	int savedErrno = errno;
 	ALIF_DECREF(bytes);
 #endif

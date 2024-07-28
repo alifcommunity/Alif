@@ -812,9 +812,7 @@ int alifSet_add(AlifObject* _anySet, AlifObject* _key)
 }
 
 static AlifTypeObject _alifSetDummyType_ = {
-	0,
-	0,
-	0,
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0)
 	L"<dummy key> type",
 	0,
 	0,
@@ -836,4 +834,4 @@ static AlifTypeObject _alifSetDummyType_ = {
 	0, //ALIF_TPFLAGS_DEFAULT, /*tp_flags */
 };
 
-static AlifObject _dummyStruct_ = ALIFSUBOBJECT_HEAD_INIT(&_alifSetDummyType_);
+AlifObject _dummyStruct_ = ALIFSUBOBJECT_HEAD_INIT(&_alifSetDummyType_);

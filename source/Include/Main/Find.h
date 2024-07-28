@@ -81,7 +81,7 @@ int parse_args_finds(const wchar_t* _functionName, AlifObject* _args,
 	wchar_t format_[FORMAT_BUFFER_SIZE] = L"O|OO:";
 	size_t len_ = wcslen(format_);
 
-	wcsncpy_s(format_ + len_, FORMAT_BUFFER_SIZE - len_, _functionName, _TRUNCATE);
+	wcsncpy(format_ + len_, _functionName, FORMAT_BUFFER_SIZE - len_);
 	format_[FORMAT_BUFFER_SIZE - 1] = '\0';
 
 	if (!alifArg_parseTuple(_args, format_, &tmpSubObj, &objStart, &objEnd))

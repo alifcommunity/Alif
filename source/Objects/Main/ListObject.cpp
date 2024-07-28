@@ -855,36 +855,55 @@ public:
 	AlifObject** values_;
 };
 
-static __inline void __fastcall sortSlice_copy(SortSlice* _s1, int64_t _i, SortSlice* _s2, int64_t _j)
+static __inline void
+#ifdef _WINDOWS64
+__fastcall
+#endif
+sortSlice_copy(SortSlice* _s1, int64_t _i, SortSlice* _s2, int64_t _j)
 {
 	_s1->keys_[_i] = _s2->keys_[_j];
 	if (_s1->values_ != nullptr)
 		_s1->values_[_i] = _s2->values_[_j];
 }
 
-static __inline void __fastcall sortSlice_copy_incr(SortSlice* _dst, SortSlice* _src)
+static __inline void
+#ifdef _WINDOWS64
+__fastcall
+#endif
+sortSlice_copy_incr(SortSlice* _dst, SortSlice* _src)
 {
 	*_dst->keys_++ = *_src->keys_++;
 	if (_dst->values_ != nullptr)
 		*_dst->values_++ = *_src->values_++;
 }
 
-static __inline void __fastcall sortSlice_copy_decr(SortSlice* _dst, SortSlice* _src)
+static __inline void
+#ifdef _WINDOWS64
+__fastcall
+#endif
+sortSlice_copy_decr(SortSlice* _dst, SortSlice* _src)
 {
 	*_dst->keys_-- = *_src->keys_--;
 	if (_dst->values_ != nullptr)
 		*_dst->values_-- = *_src->values_--;
 }
 
-static __inline void __fastcall sortSlice_memcpy(SortSlice* _s1, int64_t _i, SortSlice* _s2, int64_t _j,
-	int64_t _n)
+static __inline void
+#ifdef _WINDOWS64
+__fastcall
+#endif
+sortSlice_memcpy(SortSlice* _s1, int64_t _i, SortSlice* _s2, int64_t _j, int64_t _n)
 {
 	memcpy(&_s1->keys_[_i], &_s2->keys_[_j], sizeof(AlifObject*) * _n);
 	if (_s1->values_ != nullptr)
 		memcpy(&_s1->values_[_i], &_s2->values_[_j], sizeof(AlifObject*) * _n);
 }
 
-static __inline void __fastcall sortSlice_memmove(SortSlice* _s1, int64_t _i, SortSlice* _s2, int64_t _j,
+static __inline void
+#ifdef _WINDOWS64
+__fastcall
+#endif
+sortSlice_memmove(SortSlice* _s1, int64_t _i, SortSlice* _s2, int64_t _j,
 	int64_t _n)
 {
 	memmove(&_s1->keys_[_i], &_s2->keys_[_j], sizeof(AlifObject*) * _n);
@@ -892,7 +911,11 @@ static __inline void __fastcall sortSlice_memmove(SortSlice* _s1, int64_t _i, So
 		memmove(&_s1->values_[_i], &_s2->values_[_j], sizeof(AlifObject*) * _n);
 }
 
-static __inline void __fastcall sortSlice_advance(SortSlice* _slice, int64_t _n)
+static __inline void
+#ifdef _WINDOWS64
+__fastcall
+#endif
+sortSlice_advance(SortSlice* _slice, int64_t _n)
 {
 	_slice->keys_ += _n;
 	if (_slice->values_ != nullptr)

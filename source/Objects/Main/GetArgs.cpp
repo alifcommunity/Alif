@@ -18,16 +18,18 @@ typedef int (*DestrT)(AlifObject*, void*);
    which will need to be deallocated or cleaned up somehow if overall
    parsing fails.
 */
-typedef struct {
+class FreeListEntryT {
+public:
     void* item;
     DestrT destructor;
-} FreeListEntryT;
+};
 
-typedef struct {
+class FreeListT {
+public:
     FreeListEntryT* entries;
     int firstAvailable;
     int entriesMalloced;
-} FreeListT;
+};
 
 static int vGetArgs1(AlifObject*, const wchar_t* , va_list*, int );
 
@@ -64,8 +66,8 @@ static int vGetArgs1_impl(AlifObject* compatArgs, AlifObject* const* stack, int6
     int levels[32];
     const wchar_t* fName = nullptr;
     const wchar_t* message = nullptr;
-    int min = -1;
-    int max = 0;
+    int min_ = -1;
+    int max_ = 0;
     int level = 0;
     int endfmt = 0;
     const wchar_t* formatSave = format;
@@ -87,7 +89,7 @@ static int vGetArgs1_impl(AlifObject* compatArgs, AlifObject* const* stack, int6
         switch (c) {
         case '(':
             if (level == 0)
-                max++;
+                max_++;
             level++;
             if (level >= 30)
                 //_FatalError("too many tuple nesting levels "
@@ -113,13 +115,13 @@ static int vGetArgs1_impl(AlifObject* compatArgs, AlifObject* const* stack, int6
             break;
         case '|':
             if (level == 0)
-                min = max;
+                min_ = max_;
             break;
         default:
             if (level == 0) {
                 if (ALIF_ISALPHA(c))
                     if (c != 'e') /* skip encoded */
-                        max++;
+                        max_++;
             }
             break;
         }
@@ -128,13 +130,13 @@ static int vGetArgs1_impl(AlifObject* compatArgs, AlifObject* const* stack, int6
     if (level != 0)
         //_FatalError(/* '(' */ "missing ')' in getargs format");
 
-    if (min < 0)
-        min = max;
+    if (min_ < 0)
+        min_ = max_;
 
     format = formatSave;
 
-    if (max > 8) {
-        freeList.entries = ALIFMEM_NEW(FreeListEntryT, max);
+    if (max_ > 8) {
+        freeList.entries = ALIFMEM_NEW(FreeListEntryT, max_);
         if (freeList.entries == nullptr) {
             //Err_NoMemory();
             return 0;
@@ -143,7 +145,7 @@ static int vGetArgs1_impl(AlifObject* compatArgs, AlifObject* const* stack, int6
     }
 
     if (compat) {
-        if (max == 0) {
+        if (max_ == 0) {
             if (compatArgs == nullptr)
                 return 1;
             //Err_Format(Exc_TypeError,
@@ -152,7 +154,7 @@ static int vGetArgs1_impl(AlifObject* compatArgs, AlifObject* const* stack, int6
                 //fName == nullptrptr ? "" : "()");
             return cleanReturn(0, &freeList);
         }
-        else if (min == 1 && max == 1) {
+        else if (min_ == 1 && max_ == 1) {
             if (compatArgs == nullptr) {
                 //Err_Format(Exc_TypeError,
                     //"%.200s%s takes at least one argument",
@@ -174,16 +176,16 @@ static int vGetArgs1_impl(AlifObject* compatArgs, AlifObject* const* stack, int6
         }
     }
 
-    if (nArgs < min || max < nArgs) {
+    if (nArgs < min_ || max_ < nArgs) {
         //if (message == nullptrptr)
             //Err_Format(Exc_TypeError,
             //    "%.150s%s takes %s %d argument%s (%zd given)",
             //    fName == nullptrptr ? "function" : fName,
             //    fName == nullptrptr ? "" : "()",
-            //    min == max ? "exactly"
-            //    : nArgs < min ? "at least" : "at most",
-            //    nArgs < min ? min : max,
-            //    (nArgs < min ? min : max) == 1 ? "" : "s",
+            //    min_ == max_ ? "exactly"
+            //    : nArgs < min_ ? "at least" : "at most",
+            //    nArgs < min_ ? min_ : max_,
+            //    (nArgs < min_ ? min_ : max_) == 1 ? "" : "s",
             //    nArgs);
         //else
             //Err_SetString(Exc_TypeError, message);
@@ -320,26 +322,26 @@ static int parse_format(const wchar_t* format, int total, int npos,
         }
     }
 
-    int min = INT_MAX;
-    int max = INT_MAX;
+    int min_ = INT_MAX;
+    int max_ = INT_MAX;
     for (int i = 0; i < total; i++) {
         if (*format == '|') {
-            if (min != INT_MAX) {
+            if (min_ != INT_MAX) {
 
                 //Err_SetString(Exc_SystemError,
                 //    "Invalid format string (| specified twice)");
                 return -1;
             }
-            if (max != INT_MAX) {
+            if (max_ != INT_MAX) {
                 //Err_SetString(Exc_SystemError,
                 //    "Invalid format string ($ before |)");
                 return -1;
             }
-            min = i;
+            min_ = i;
             format++;
         }
         if (*format == '$') {
-            if (max != INT_MAX) {
+            if (max_ != INT_MAX) {
                 //Err_SetString(Exc_SystemError,
                 //    "Invalid format string ($ specified twice)");
                 return -1;
@@ -349,7 +351,7 @@ static int parse_format(const wchar_t* format, int total, int npos,
                 //    "Empty parameter name after $");
                 return -1;
             }
-            max = i;
+            max_ = i;
             format++;
         }
         if (IS_END_OF_FORMAT(*format)) {
@@ -366,8 +368,8 @@ static int parse_format(const wchar_t* format, int total, int npos,
             return -1;
         }
     }
-    min = min(min, total);
-    max = min(max, total);
+    min_ = ALIF_MIN(min_, total);
+    max_ = ALIF_MIN(max_, total);
 
     if (!IS_END_OF_FORMAT(*format) && (*format != '|') && (*format != '$')) {
         //Err_Format(Exc_SystemError,
@@ -378,8 +380,8 @@ static int parse_format(const wchar_t* format, int total, int npos,
 
     *pfname = fname;
     *pCustomMsg = customMsg;
-    *pMin = min;
-    *pMax = max;
+    *pMin = min_;
+    *pMax = max_;
     return 0;
 }
 
@@ -413,10 +415,10 @@ static int _parser_init(AlifArgParser* parser)
     }
 
     const wchar_t* fname, * customMsg = nullptr;
-    int min = 0, max = 0;
+    int min_ = 0, max_ = 0;
     if (parser->format) {
         if (parse_format(parser->format, len, pos,
-            &fname, &customMsg, &min, &max) < 0) {
+            &fname, &customMsg, &min_, &max_) < 0) {
             return 0;
         }
     }
@@ -440,8 +442,8 @@ static int _parser_init(AlifArgParser* parser)
     parser->pos = pos;
     parser->fname = fname;
     parser->customMsg = customMsg;
-    parser->min = min;
-    parser->max = max;
+    parser->min = min_;
+    parser->max = max_;
     parser->kwTuple = kwTuple;
     parser->initialized = owned ? 1 : -1;
 
@@ -517,7 +519,7 @@ AlifObject* const* alifArg_unpackKeywords(AlifObject* const* args, int64_t nArgs
 
     kwTuple = parser->kwTuple;
     posonly = parser->pos;
-    minPosOnly = min(posonly, minPos);
+    minPosOnly = ALIF_MIN(posonly, minPos);
     maxArgs = posonly + (int)((AlifVarObject*)kwTuple)->size_;
 
     if (kwArgs != nullptr) {
@@ -585,7 +587,7 @@ AlifObject* const* alifArg_unpackKeywords(AlifObject* const* args, int64_t nArgs
     }
 
     /* copy keyword args using kwTuple to drive process */
-    for (i = max((int)nArgs, posonly); i < maxArgs; i++) {
+    for (i = ALIF_MAX((int)nArgs, posonly); i < maxArgs; i++) {
         AlifObject* currentArg;
         if (nKwArgs) {
             keyword = ((AlifTupleObject*)kwTuple)->items_[i - posonly];

@@ -30,7 +30,7 @@ public:
 	class {
 	public:
 		void* mutex_;
-		unsigned long thread_;
+		long thread_;
 		int level_;
 	} lock_;
 	class {

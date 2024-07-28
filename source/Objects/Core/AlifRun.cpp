@@ -11,6 +11,8 @@
 
 #ifdef _WINDOWS
 #include "windows.h"
+#else
+#include <unistd.h>
 #endif // _WINDOWS
 
 
@@ -111,8 +113,11 @@ int alifRun_fileObj(FILE* _fp, AlifObject* _fn, int _fClose) {
 	int res{};
 
 
-
+#ifdef _WINDOWS
 	if (_isatty(_fileno(_fp))) { // هذا يعني انه تفاعلي
+#else
+	if (isatty(fileno(_fp))) { // هذا يعني انه تفاعلي
+#endif
 		//res_ = alifRun_interactiveLoop(_fp, _fn);
 		if (_fClose) {
 			fclose(_fp);

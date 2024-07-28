@@ -41,7 +41,11 @@
 // تم استخدام template بدل التعريفات في ملف ucs2lib.h and ucs4lib.h
 // لن يتم حذف ملفين ucs2lib.h and ucs4lib.h الى ان يتم اخذ منها جميع البيانات ويستغنى عنها كليا
 template <typename STRINGLIB_CHAR>
-static __inline int64_t __fastcall find_char(const STRINGLIB_CHAR* _s, int64_t _n, STRINGLIB_CHAR _ch)
+static __inline int64_t
+#ifdef _WINDOWS64
+	__fastcall
+#endif
+find_char(const STRINGLIB_CHAR* _s, int64_t _n, STRINGLIB_CHAR _ch)
 { // __fastcall لا تعمل على انظمة لينكس
     const STRINGLIB_CHAR* p_, * e_;
 
@@ -101,7 +105,11 @@ static __inline int64_t __fastcall find_char(const STRINGLIB_CHAR* _s, int64_t _
 #endif
 
 template <typename STRINGLIB_CHAR>
-static __inline int64_t __fastcall rfind_char(const STRINGLIB_CHAR* _s, int64_t _n, STRINGLIB_CHAR _ch)
+static __inline int64_t
+#ifdef _WINDOWS64
+__fastcall
+#endif
+rfind_char(const STRINGLIB_CHAR* _s, int64_t _n, STRINGLIB_CHAR _ch)
 {
     const STRINGLIB_CHAR* p_;
 #ifdef HAVE_MEMRCHR
@@ -269,7 +277,7 @@ static void preprocess(const STRINGLIB_CHAR* _needle, int64_t _lenNeedle,
         _p->gap_ = 0; // unused
     }
     else {
-        _p->period_ = max(_p->cut_, _lenNeedle - _p->cut_) + 1;
+        _p->period_ = ALIF_MAX(_p->cut_, _lenNeedle - _p->cut_) + 1;
 
         _p->gap_ = _lenNeedle;
         STRINGLIB_CHAR last_ = _needle[_lenNeedle - 1] & TABLE_MASK;
@@ -281,7 +289,7 @@ static void preprocess(const STRINGLIB_CHAR* _needle, int64_t _lenNeedle,
             }
         }
     }
-    int64_t notFoundShift = min(_lenNeedle, MAX_SHIFT);
+    int64_t notFoundShift = ALIF_MIN(_lenNeedle, MAX_SHIFT);
     for (int64_t i_ = 0; i_ < (int64_t)TABLE_SIZE; i_++) {
         _p->table_[i_] = ALIF_SAFE_DOWNCAST(notFoundShift, int64_t, SHIFT_TYPE);
     }
@@ -326,7 +334,7 @@ static int64_t two_way(const STRINGLIB_CHAR* _hayStack, int64_t _lenHayStack,
         no_shift:
             window_ = windowLast - lenNeedle + 1;
            
-            int64_t i_ = max(cut_, memory_);
+            int64_t i_ = ALIF_MAX(cut_, memory_);
             for (; i_ < lenNeedle; i_++) {
                 if (needle_[i_] != window_[i_]) {
                     LOG("Right half does not match.\n");
@@ -346,10 +354,10 @@ static int64_t two_way(const STRINGLIB_CHAR* _hayStack, int64_t _lenHayStack,
                     int64_t shift_ = table_[(*windowLast) & TABLE_MASK];
                     if (shift_) {
 
-                        int64_t mem_jump = max(cut_, memory_) - cut_ + 1;
+                        int64_t mem_jump = ALIF_MAX(cut_, memory_) - cut_ + 1;
                         LOG("Skip with Memory.\n");
                         memory_ = 0;
-                        windowLast += max(shift_, mem_jump);
+                        windowLast += ALIF_MAX(shift_, mem_jump);
                         goto periodicwindowloop;
                     }
                     goto no_shift;
@@ -361,9 +369,9 @@ static int64_t two_way(const STRINGLIB_CHAR* _hayStack, int64_t _lenHayStack,
     }
     else {
         int64_t gap_ = _p->gap_;
-        period_ = max(gap_, period_);
+        period_ = ALIF_MAX(gap_, period_);
         LOG("Needle is not periodic.\n");
-        int64_t gapJumpEnd = min(lenNeedle, cut_ + gap_);
+        int64_t gapJumpEnd = ALIF_MIN(lenNeedle, cut_ + gap_);
     windowloop:
         while (windowLast < haystackEnd) {
             for (;;) {

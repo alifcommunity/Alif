@@ -22,7 +22,7 @@ static inline void alifSub_memoryRepeat(char* _dest, int64_t _lenDest, int64_t _
 {
 	int64_t copied_ = _lenSrc;
 	while (copied_ < _lenDest) {
-		int64_t bytesToCopy = min(copied_, _lenDest - copied_);
+		int64_t bytesToCopy = ALIF_MIN(copied_, _lenDest - copied_);
 		memcpy(_dest + copied_, _dest, bytesToCopy);
 		copied_ += bytesToCopy;
 	}

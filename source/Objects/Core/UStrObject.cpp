@@ -23,7 +23,7 @@
     _toType *to_ = (_toType *)(_to);                                      \
     const _fromType *iter_ = (const _fromType *)(_begin);                 \
     const _fromType *end_ = (const _fromType *)(_end);                    \
-    SSIZE_T n_ = (end_) - (iter_);                                      \
+    AlifSizeT n_ = (end_) - (iter_);                                      \
     const _fromType *unrolledEnd = iter_ + ALIF_SIZE_ROUND_DOWN(n_, 4); \
     while (iter_ < (unrolledEnd)) {                                   \
         to_[0] = (_toType) iter_[0];                                    \
@@ -204,7 +204,7 @@ resize_copy(AlifObject* _uStr, int64_t _length)
 	if (copy_ == nullptr)
 		return nullptr;
 
-	copyLength = min(_length, ALIFUSTR_GET_LENGTH(_uStr));
+	copyLength = ALIF_MIN(_length, ALIFUSTR_GET_LENGTH(_uStr));
 	alifSubUStr_fastCopyCharacters(copy_, 0, _uStr, 0, copyLength, 0);
 	return copy_;
 }
@@ -360,7 +360,7 @@ AlifSizeT alifUStr_copyCharacters(AlifObject* _to, AlifSizeT _toStart,
 {
 	int err_{};
 
-	_howMany = min(ALIFUSTR_GET_LENGTH(_from) - _fromStart, _howMany);
+	_howMany = ALIF_MIN(ALIFUSTR_GET_LENGTH(_from) - _fromStart, _howMany);
 	if (_toStart + _howMany > ALIFUSTR_GET_LENGTH(_to)) {
 		return -1;
 	}
@@ -576,7 +576,7 @@ AlifObject* alifUStr_objFromWChar(wchar_t* _buffer) { /// M
 	return strObj;
 }
 
-void copy_string(AlifObject* _object, const wchar_t* _uStr, SSIZE_T _length, SSIZE_T _maxChar) {
+void copy_string(AlifObject* _object, const wchar_t* _uStr, AlifSizeT _length, AlifSizeT _maxChar) {
 
 	if (_maxChar == 2) {
 
@@ -684,10 +684,10 @@ static AlifObject* alifUStr_fromUint32(const uint32_t* _u, int64_t _size)
 	return res_;
 }
 
-void combine_string(AlifObject* _result, SSIZE_T start_, AlifObject* _from, SSIZE_T _fromStart, SSIZE_T _length, uint8_t _maxChar) {
+void combine_string(AlifObject* _result, AlifSizeT start_, AlifObject* _from, AlifSizeT _fromStart, AlifSizeT _length, uint8_t _maxChar) {
 
-	SSIZE_T fromKind = (ALIFUSTR_CAST(_from))->kind_;
-	SSIZE_T toKind = (ALIFUSTR_CAST(_result))->kind_;
+	AlifSizeT fromKind = (ALIFUSTR_CAST(_from))->kind_;
+	AlifSizeT toKind = (ALIFUSTR_CAST(_result))->kind_;
 	if (fromKind == toKind) {
 
 		void* fromData = ((wchar_t*)(ALIFUSTR_CAST(_from))->UTF + (_fromStart * fromKind));
@@ -740,13 +740,13 @@ static AlifObject* uStr_wChar(uint32_t _ch)
 }
 
 
-AlifObject* uStr_decode_utf8(const wchar_t* _uStr, SSIZE_T _length) {
+AlifObject* uStr_decode_utf8(const wchar_t* _uStr, AlifSizeT _length) {
 
 	if (_length == 0) {
 		// return empty _object string
 	}
 
-	SSIZE_T maxChar = find_maxChar(_uStr);
+	AlifSizeT maxChar = find_maxChar(_uStr);
 
 	AlifObject* object_ = alifNew_uStr(_length, maxChar);
 
@@ -864,7 +864,7 @@ AlifObject* alifSubUStr_transformDecimalAndSpaceToASCII(AlifObject* _uStr)
 	return result_;
 }
 
-SSIZE_T length_uStr(AlifObject* _uStr) {
+AlifSizeT length_uStr(AlifObject* _uStr) {
 	return ALIFUSTR_CAST(_uStr)->length_;
 }
 
@@ -936,9 +936,9 @@ static int uStr_fromFormat_write_str(AlifSubUStrWriter* _writer, AlifObject* _st
 		return alifSubUStrWriter_writeStr(_writer, _str);
 
 	if (_precision != -1)
-		length_ = min(_precision, length_);
+		length_ = ALIF_MIN(_precision, length_);
 
-	argLen = max(length_, _width);
+	argLen = ALIF_MAX(length_, _width);
 	if (ALIFUSTR_MAX_CHAR_VALUE(_str) > _writer->maxChar)
 		maxChar = alifUStr_maxCharValue(_str);
 	else
@@ -947,7 +947,7 @@ static int uStr_fromFormat_write_str(AlifSubUStrWriter* _writer, AlifObject* _st
 	//if (alifSubUStrWriter_prepare(_writer, argLen, maxChar) == -1)
 		//return -1;
 
-	fill_ = max(_width - length_, 0);
+	fill_ = ALIF_MAX(_width - length_, 0);
 	if (fill_ && !(_flags & F_LJUST)) {
 		if (alifUStr_fill(_writer->buffer_, _writer->pos_, fill_, ' ') == -1)
 			return -1;
@@ -1042,8 +1042,8 @@ static const wchar_t* uStr_fromFormat_arg(AlifSubUStrWriter* _writer,
 
 	p_ = _f;
 	_f++;
-	if (*_f == '%') {
-		if (alifSubUStrWriter_writeWcharInline(_writer, '%') < 0)
+	if (*_f == L'%') {
+		if (alifSubUStrWriter_writeWcharInline(_writer, L'%') < 0)
 			return nullptr;
 		_f++;
 		return _f;
@@ -1051,15 +1051,15 @@ static const wchar_t* uStr_fromFormat_arg(AlifSubUStrWriter* _writer,
 
 	while (1) {
 		switch (*_f++) {
-		case '-': flags_ |= F_LJUST; continue;
-		case '0': flags_ |= F_ZERO; continue;
+		case L'-': flags_ |= F_LJUST; continue;
+		case L'0': flags_ |= F_ZERO; continue;
 		}
 		_f--;
 		break;
 	}
 
 	width_ = -1;
-	if (*_f == '*') {
+	if (*_f == L'*') {
 		width_ = va_arg(*_vArgs, int);
 		if (width_ < 0) {
 			flags_ |= F_LJUST;
@@ -1068,20 +1068,20 @@ static const wchar_t* uStr_fromFormat_arg(AlifSubUStrWriter* _writer,
 		_f++;
 	}
 	else if (ALIF_ISDIGIT((unsigned)*_f)) {
-		width_ = *_f - '0';
+		width_ = *_f - L'0';
 		_f++;
 		while (ALIF_ISDIGIT((unsigned)*_f)) {
-			if (width_ > (LLONG_MAX - ((int)*_f - '0')) / 10) {
+			if (width_ > (LLONG_MAX - ((int)*_f - L'0')) / 10) {
 				return nullptr;
 			}
-			width_ = (width_ * 10) + (*_f - '0');
+			width_ = (width_ * 10) + (*_f - L'0');
 			_f++;
 		}
 	}
 	precision_ = -1;
-	if (*_f == '.') {
+	if (*_f == L'.') {
 		_f++;
-		if (*_f == '*') {
+		if (*_f == L'*') {
 			precision_ = va_arg(*_vArgs, int);
 			if (precision_ < 0) {
 				precision_ = -2;
@@ -1089,22 +1089,22 @@ static const wchar_t* uStr_fromFormat_arg(AlifSubUStrWriter* _writer,
 			_f++;
 		}
 		else if (ALIF_ISDIGIT((unsigned)*_f)) {
-			precision_ = (*_f - '0');
+			precision_ = (*_f - L'0');
 			_f++;
 			while (ALIF_ISDIGIT((unsigned)*_f)) {
-				if (precision_ > (LLONG_MAX - ((int)*_f - '0')) / 10) {
+				if (precision_ > (LLONG_MAX - ((int)*_f - L'0')) / 10) {
 
 					return nullptr;
 				}
-				precision_ = (precision_ * 10) + (*_f - '0');
+				precision_ = (precision_ * 10) + (*_f - L'0');
 				_f++;
 			}
 		}
 	}
 
 	int sizeMod = 0;
-	if (*_f == 'l') {
-		if (_f[1] == 'l') {
+	if (*_f == L'l') {
+		if (_f[1] == L'l') {
 			sizeMod = F_LONGLONG;
 			_f += 2;
 		}
@@ -1113,29 +1113,29 @@ static const wchar_t* uStr_fromFormat_arg(AlifSubUStrWriter* _writer,
 			++_f;
 		}
 	}
-	else if (*_f == 'z') {
+	else if (*_f == L'z') {
 		sizeMod = F_SIZE;
 		++_f;
 	}
-	else if (*_f == 't') {
+	else if (*_f == L't') {
 		sizeMod = F_PTRDIFF;
 		++_f;
 	}
-	else if (*_f == 'j') {
+	else if (*_f == L'j') {
 		sizeMod = F_INTMAX;
 		++_f;
 	}
-	if (_f[0] != '\0' && _f[1] == '\0')
+	if (_f[0] != L'\0' && _f[1] == L'\0')
 		_writer->overAllocate = 0;
 
 	switch (*_f) {
-	case 'd': case 'i': case 'o': case 'u': case 'x': case 'X':
+	case L'd': case L'i': case L'o': case L'u': case L'x': case L'X':
 		break;
-	case 'c': case 'p':
+	case L'c': case L'p':
 		if (sizeMod || width_ >= 0 || precision_ >= 0) goto invalidFormat;
 		break;
-	case 's':
-	case 'V':
+	case L's':
+	case L'V':
 		if (sizeMod && sizeMod != F_LONG) goto invalidFormat;
 		break;
 	default:
@@ -1144,7 +1144,7 @@ static const wchar_t* uStr_fromFormat_arg(AlifSubUStrWriter* _writer,
 	}
 
 	switch (*_f) {
-	case 'c':
+	case L'c':
 	{
 		int ordinal_ = va_arg(*_vArgs, int);
 		if (ordinal_ < 0 || ordinal_ > 0x10ffff) {
@@ -1155,61 +1155,61 @@ static const wchar_t* uStr_fromFormat_arg(AlifSubUStrWriter* _writer,
 		break;
 	}
 
-	case 'd': case 'i':
-	case 'o': case 'u': case 'x': case 'X':
+	case L'd': case L'i':
+	case L'o': case L'u': case L'x': case L'X':
 	{
 		wchar_t buffer_[MAX_INTMAX_CHARS];
 		const wchar_t* fmt_ = nullptr;
 		switch (*_f) {
-		case 'o': fmt_ = _formatsO_[sizeMod]; break;
-		case 'u': fmt_ = _formatsU_[sizeMod]; break;
-		case 'x': fmt_ = _formatsX_[sizeMod]; break;
-		case 'X': fmt_ = _formatsXC_[sizeMod]; break;
+		case L'o': fmt_ = _formatsO_[sizeMod]; break;
+		case L'u': fmt_ = _formatsU_[sizeMod]; break;
+		case L'x': fmt_ = _formatsX_[sizeMod]; break;
+		case L'X': fmt_ = _formatsXC_[sizeMod]; break;
 		default: fmt_ = _formats_[sizeMod]; break;
 		}
-		int isSigned = (*_f == 'd' || *_f == 'i');
+		int isSigned = (*_f == L'd' or *_f == L'i');
 		switch (sizeMod) {
 		case F_LONG:
 			len_ = isSigned ?
-				swprintf_s(buffer_, fmt_, va_arg(*_vArgs, long)) :
-				swprintf_s(buffer_, fmt_, va_arg(*_vArgs, unsigned long));
+				swprintf(buffer_, sizeof(long), fmt_, va_arg(*_vArgs, long)) :
+				swprintf(buffer_, sizeof(unsigned long), fmt_, va_arg(*_vArgs, unsigned long));
 			break;
 		case F_LONGLONG:
 			len_ = isSigned ?
-				swprintf_s(buffer_, fmt_, va_arg(*_vArgs, long long)) :
-				swprintf_s(buffer_, fmt_, va_arg(*_vArgs, unsigned long long));
+				swprintf(buffer_, sizeof(long long), fmt_, va_arg(*_vArgs, long long)) :
+				swprintf(buffer_, sizeof(unsigned long long), fmt_, va_arg(*_vArgs, unsigned long long));
 			break;
 		case F_SIZE:
 			len_ = isSigned ?
-				swprintf_s(buffer_, fmt_, va_arg(*_vArgs, int64_t)) :
-				swprintf_s(buffer_, fmt_, va_arg(*_vArgs, size_t));
+				swprintf(buffer_, sizeof(int64_t), fmt_, va_arg(*_vArgs, int64_t)) :
+				swprintf(buffer_, sizeof(size_t), fmt_, va_arg(*_vArgs, size_t));
 			break;
 		case F_PTRDIFF:
-			len_ = swprintf_s(buffer_, fmt_, va_arg(*_vArgs, ptrdiff_t));
+			len_ = swprintf(buffer_, sizeof(ptrdiff_t), fmt_, va_arg(*_vArgs, ptrdiff_t));
 			break;
 		case F_INTMAX:
 			len_ = isSigned ?
-				swprintf_s(buffer_, fmt_, va_arg(*_vArgs, intmax_t)) :
-				swprintf_s(buffer_, fmt_, va_arg(*_vArgs, uintmax_t));
+				swprintf(buffer_, sizeof(intmax_t), fmt_, va_arg(*_vArgs, intmax_t)) :
+				swprintf(buffer_, sizeof(uintmax_t), fmt_, va_arg(*_vArgs, uintmax_t));
 			break;
 		default:
 			len_ = isSigned ?
-				swprintf_s(buffer_, fmt_, va_arg(*_vArgs, int)) :
-				swprintf_s(buffer_, fmt_, va_arg(*_vArgs, unsigned int));
+				swprintf(buffer_, sizeof(int), fmt_, va_arg(*_vArgs, int)) :
+				swprintf(buffer_, sizeof(unsigned int), fmt_, va_arg(*_vArgs, unsigned int));
 			break;
 		}
 
 		int sign_ = (buffer_[0] == '-');
 		len_ -= sign_;
 
-		precision_ = max(precision_, len_);
-		width_ = max(width_, precision_ + sign_);
+		precision_ = ALIF_MAX(precision_, len_);
+		width_ = ALIF_MAX(width_, precision_ + sign_);
 		if ((flags_ & F_ZERO) && !(flags_ & F_LJUST)) {
 			precision_ = width_ - sign_;
 		}
 
-		int64_t spacePad = max(width_ - precision_ - sign_, 0);
-		int64_t zeroPad = max(precision_ - len_, 0);
+		int64_t spacePad = ALIF_MAX(width_ - precision_ - sign_, 0);
+		int64_t zeroPad = ALIF_MAX(precision_ - len_, 0);
 
 		if (ALIFSUBUSTRWRITER_PREPARE(_writer, width_, 127) == -1)
 			return nullptr;
@@ -1226,39 +1226,39 @@ static const wchar_t* uStr_fromFormat_arg(AlifSubUStrWriter* _writer,
 		}
 
 		if (zeroPad) {
-			if (alifUStr_fill(_writer->buffer_, _writer->pos_, zeroPad, '0') == -1)
+			if (alifUStr_fill(_writer->buffer_, _writer->pos_, zeroPad, L'0') == -1)
 				return nullptr;
 			_writer->pos_ += zeroPad;
 		}
 
 		if (spacePad && (flags_ & F_LJUST)) {
-			if (alifUStr_fill(_writer->buffer_, _writer->pos_, spacePad, ' ') == -1)
+			if (alifUStr_fill(_writer->buffer_, _writer->pos_, spacePad, L' ') == -1)
 				return nullptr;
 			_writer->pos_ += spacePad;
 		}
 		break;
 	}
 
-	case 'p':
+	case L'p':
 	{
 		wchar_t number_[MAX_INTMAX_CHARS];
 
-		len_ = swprintf_s(number_, L"%p", va_arg(*_vArgs, void*));
+		len_ = swprintf(number_, MAX_INTMAX_CHARS, L"%p", va_arg(*_vArgs, void*));
 
-		if (number_[1] == 'X')
-			number_[1] = 'x';
-		else if (number_[1] != 'x') {
+		if (number_[1] == L'X')
+			number_[1] = L'x';
+		else if (number_[1] != L'x') {
 			memmove(number_ + 2, number_,
 				wcslen(number_) + 1);
-			number_[0] = '0';
-			number_[1] = 'x';
+			number_[0] = L'0';
+			number_[1] = L'x';
 			len_ += 2;
 		}
 
 		break;
 	}
 
-	case 's':
+	case L's':
 	{
 		if (sizeMod) {
 			const wchar_t* s = va_arg(*_vArgs, const wchar_t*);
@@ -1274,7 +1274,7 @@ static const wchar_t* uStr_fromFormat_arg(AlifSubUStrWriter* _writer,
 		break;
 	}
 
-	case 'U':
+	case L'U':
 	{
 		AlifObject* obj = va_arg(*_vArgs, AlifObject*);
 
@@ -1283,7 +1283,7 @@ static const wchar_t* uStr_fromFormat_arg(AlifSubUStrWriter* _writer,
 		break;
 	}
 
-	case 'V':
+	case L'V':
 	{
 		AlifObject* obj_ = va_arg(*_vArgs, AlifObject*);
 		const wchar_t* str_;
@@ -1309,7 +1309,7 @@ static const wchar_t* uStr_fromFormat_arg(AlifSubUStrWriter* _writer,
 		break;
 	}
 
-	case 'S':
+	case L'S':
 	{
 		AlifObject* obj_ = va_arg(*_vArgs, AlifObject*);
 		AlifObject* str_;
@@ -1324,7 +1324,7 @@ static const wchar_t* uStr_fromFormat_arg(AlifSubUStrWriter* _writer,
 		break;
 	}
 
-	case 'R':
+	case L'R':
 	{
 		AlifObject* obj_ = va_arg(*_vArgs, AlifObject*);
 		AlifObject* repr;
@@ -1339,7 +1339,7 @@ static const wchar_t* uStr_fromFormat_arg(AlifSubUStrWriter* _writer,
 		break;
 	}
 
-	case 'A':
+	case L'A':
 	{
 		AlifObject* obj_ = va_arg(*_vArgs, AlifObject*);
 		AlifObject* ascii;
@@ -1354,13 +1354,13 @@ static const wchar_t* uStr_fromFormat_arg(AlifSubUStrWriter* _writer,
 		break;
 	}
 
-	case 'T':
+	case L'T':
 	{
 		AlifObject* obj_ = va_arg(*_vArgs, AlifObject*);
 		AlifTypeObject* type = (AlifTypeObject*)ALIF_NEWREF(ALIF_TYPE(obj_));
 
 		AlifObject* type_name;
-		if (_f[1] == '#') {
+		if (_f[1] == L'#') {
 			//type_name = Type_GetFullyQualifiedName(type, ':');
 			_f++;
 		}
@@ -1381,7 +1381,7 @@ static const wchar_t* uStr_fromFormat_arg(AlifSubUStrWriter* _writer,
 		break;
 	}
 
-	case 'N':
+	case L'N':
 	{
 		AlifObject* typeRaw = va_arg(*_vArgs, AlifObject*);
 
@@ -1391,7 +1391,7 @@ static const wchar_t* uStr_fromFormat_arg(AlifSubUStrWriter* _writer,
 		AlifTypeObject* type_ = (AlifTypeObject*)typeRaw;
 		
 		AlifObject* typeName;
-		if (_f[1] == '#') {
+		if (_f[1] == L'#') {
 			//typeName = Type_GetFullyQualifiedName(type_, ':');
 			_f++;
 		}
@@ -1456,7 +1456,7 @@ AlifObject* combine_uStr(AlifObject* _left, AlifObject* _right) {
 
 	AlifObject* result_;
 	uint16_t maxChar;
-	SSIZE_T leftLen = (ALIFUSTR_CAST(_left))->length_
+	AlifSizeT leftLen = (ALIFUSTR_CAST(_left))->length_
 		, rightLen = (ALIFUSTR_CAST(_right))->length_,
 		newLen;
 
@@ -1469,7 +1469,7 @@ AlifObject* combine_uStr(AlifObject* _left, AlifObject* _right) {
 
 	newLen = leftLen + rightLen;
 
-	maxChar = max((ALIFUSTR_CAST(_left))->kind_, (ALIFUSTR_CAST(_right))->kind_);
+	maxChar = ALIF_MAX((ALIFUSTR_CAST(_left))->kind_, (ALIFUSTR_CAST(_right))->kind_);
 
 	result_ = (AlifObject*)alifNew_uStr(newLen, maxChar);
 	if (result_ == nullptr) {
@@ -1483,7 +1483,7 @@ AlifObject* combine_uStr(AlifObject* _left, AlifObject* _right) {
 
 }
 
-AlifObject* repeat_uStr(AlifObject* _uStr, SSIZE_T _repeat) {
+AlifObject* repeat_uStr(AlifObject* _uStr, AlifSizeT _repeat) {
 
 	if (_repeat == 0) {
 		// return empty string
@@ -1493,8 +1493,8 @@ AlifObject* repeat_uStr(AlifObject* _uStr, SSIZE_T _repeat) {
 		return _uStr;
 	}
 
-	SSIZE_T lenUStr = (ALIFUSTR_CAST(_uStr))->length_;
-	SSIZE_T len_ = lenUStr * _repeat;
+	AlifSizeT lenUStr = (ALIFUSTR_CAST(_uStr))->length_;
+	AlifSizeT len_ = lenUStr * _repeat;
 	uint8_t kind_ = (ALIFUSTR_CAST(_uStr))->kind_;
 
 	AlifObject* object_ = (AlifObject*)alifNew_uStr(len_, kind_);
@@ -1506,7 +1506,7 @@ AlifObject* repeat_uStr(AlifObject* _uStr, SSIZE_T _repeat) {
 	if (kind_ == 2) {
 		uint16_t* str = (uint16_t*)(ALIFUSTR_CAST(_uStr))->UTF;
 		uint16_t* UTF = (uint16_t*)(ALIFUSTR_CAST(object_))->UTF;
-		for (SSIZE_T n = 0; n < _repeat; ++n)
+		for (AlifSizeT n = 0; n < _repeat; ++n)
 		{
 			memcpy(UTF + (lenUStr * n), str, lenUStr * 2);
 		}
@@ -1514,7 +1514,7 @@ AlifObject* repeat_uStr(AlifObject* _uStr, SSIZE_T _repeat) {
 	else {
 		uint32_t* str = (uint32_t*)(ALIFUSTR_CAST(_uStr))->UTF;
 		uint32_t* UTF = (uint32_t*)(ALIFUSTR_CAST(object_))->UTF;
-		for (SSIZE_T n = 0; n < _repeat; ++n)
+		for (AlifSizeT n = 0; n < _repeat; ++n)
 		{
 			memcpy(UTF + (lenUStr * n), str, lenUStr * 4);
 		}
@@ -1528,7 +1528,7 @@ bool contain_uStr(AlifObject* _uStr, AlifObject* _uStr2) {
 
     uint8_t kind1_, kind2_;
 	const void* utf1_, * utf2_;
-	SSIZE_T len1_, len2_;
+	AlifSizeT len1_, len2_;
 
 
 	kind1_ = (ALIFUSTR_CAST(_uStr))->kind_;
@@ -1860,7 +1860,7 @@ AlifObject* alifUStr_concat(AlifObject* _left, AlifObject* _right)
 
 	maxChar = ALIFUSTR_MAX_CHAR_VALUE(_left);
 	maxChar2 = ALIFUSTR_MAX_CHAR_VALUE(_right);
-	maxChar = max(maxChar, maxChar2);
+	maxChar = ALIF_MAX(maxChar, maxChar2);
 
 	result_ = alifNew_uStr(newLen, maxChar);
 	if (result_ == nullptr)
@@ -1914,7 +1914,7 @@ void alifUStr_append(AlifObject** _pLeft, AlifObject* _right)
 	else {
 		maxChar = ALIFUSTR_MAX_CHAR_VALUE(left_);
 		maxChar2 = ALIFUSTR_MAX_CHAR_VALUE(_right);
-		maxChar = max(maxChar, maxChar2);
+		maxChar = ALIF_MAX(maxChar, maxChar2);
 
 		res_ = alifNew_uStr(newLen, maxChar);
 		if (res_ == nullptr)
@@ -2110,7 +2110,7 @@ static AlifObject* replace(AlifObject* _self, AlifObject* _str1,
 	maxCharStr2 = ALIFUSTR_MAX_CHAR_VALUE(_str2);
 
 	mayShrink = (maxCharStr2 < maxCharStr1) && (maxChar == maxCharStr1);
-	maxChar = max(maxChar, maxCharStr2);
+	maxChar = ALIF_MAX(maxChar, maxCharStr2);
 
 	if (len1_ == len2_) {
 		if (len1_ == 0)
@@ -2465,7 +2465,7 @@ AlifObject* alifUStr_joinArray(AlifObject* _separator, AlifObject* const* _items
 		}
 		add_sz = ALIFUSTR_CAST(item_)->length_;
 		itemMaxChar = ALIFUSTR_MAX_CHAR_VALUE(item_);
-		maxChar = max(maxChar, itemMaxChar);
+		maxChar = ALIF_MAX(maxChar, itemMaxChar);
 		if (i_ != 0) {
 			add_sz += sepLen;
 		}
@@ -2563,7 +2563,7 @@ int64_t alifUStr_fill(AlifObject* _uStr, int64_t _start, int64_t _length,
 	}
 
 	maxLen = ALIFUSTR_GET_LENGTH(_uStr) - _start;
-	_length = min(maxLen, _length);
+	_length = ALIF_MIN(maxLen, _length);
 	if (_length <= 0)
 		return 0;
 
@@ -2740,7 +2740,7 @@ int alifSubUStrWriter_prepareInternal(AlifSubUStrWriter* _writer,
 	}
 	newLen = _writer->pos_ + _length;
 
-	_maxChar = max(_maxChar, _writer->minChar);
+	_maxChar = ALIF_MAX(_maxChar, _writer->minChar);
 
 	if (_writer->buffer_ == nullptr) {
 		if (_writer->overAllocate
@@ -2764,7 +2764,7 @@ int alifSubUStrWriter_prepareInternal(AlifSubUStrWriter* _writer,
 
 		if (_maxChar > _writer->maxChar || _writer->readonly_) {
 			/* resize + widen */
-			_maxChar = max(_maxChar, _writer->maxChar);
+			_maxChar = ALIF_MAX(_maxChar, _writer->maxChar);
 			newBuffer = alifNew_uStr(newLen, _maxChar);
 			if (newBuffer == nullptr)
 				return -1;
