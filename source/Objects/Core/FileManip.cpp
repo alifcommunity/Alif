@@ -34,8 +34,8 @@ FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) {
 	AlifObject* bytes;
 	const char* pathBytes;
 
-	//if (!alifUnicode_FSConverter(_path, &bytes))
-	//	return nullptr;
+	if (!alifUStr_fsConverter(_path, &bytes))
+		return nullptr;
 	pathBytes = (const char*)_alifWBytes_asString(bytes); // need review
 
 	//if (alifSys_audit("open", "Osi", _path, _mode, 0) < 0) {

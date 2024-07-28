@@ -27,7 +27,7 @@ static AlifIntT alifMain_init(AlifArgv* _args) {
 		// error
 	}
 
-	if (alif_mainMemoryInit() == nullptr) {
+	if (alif_mainMemoryInit() < 0) {
 		// error
 	}
 

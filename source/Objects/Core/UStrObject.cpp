@@ -121,8 +121,7 @@ int64_t count(const STRINGLIB_CHAR* _str, int64_t _strLen,
 }
 
 static inline int64_t findChar(const void* _s, int _kind,
-	int64_t _size, uint32_t _ch,
-	int _direction)
+	int64_t _size, uint32_t _ch, int _direction)
 {
 	switch (_kind) {
 	case USTR_2BYTE:
@@ -2827,6 +2826,43 @@ static inline int alifSubUStrWriter_writeWcharInline(AlifSubUStrWriter* _writer,
 	ALIFUSTR_WRITE(_writer->kind_, _writer->data_, _writer->pos_, _ch);
 	_writer->pos_++;
 	return 0;
+}
+
+int alifUStr_fsConverter(AlifObject* arg, void* addr)
+{
+	AlifObject* path = nullptr;
+	AlifObject* output = nullptr;
+	AlifSizeT size;
+	const char* data;
+	if (arg == nullptr) {
+		ALIF_DECREF(*(AlifObject**)addr);
+		*(AlifObject**)addr = nullptr;
+		return 1;
+	}
+	//path = alifOS_fsPath(arg);
+	if (path == nullptr) {
+		return 0;
+	}
+	if (ALIFBYTES_CHECK(path)) {
+		output = path;
+	}
+	else { 
+		//output = alifUStr_encodeFSDefault(path);
+		ALIF_DECREF(path);
+		if (!output) {
+			return 0;
+		}
+	}
+
+	size = ALIFWBYTES_GET_SIZE(output);
+	data = (const char*)ALIFWBYTES_AS_STRING(output);
+	if ((size_t)size != strlen(data)) {
+		// error
+		ALIF_DECREF(output);
+		return 0;
+	}
+	*(AlifObject**)addr = output;
+	return ALIF_CLEANUP_SUPPORTED;
 }
 
 int alifSubUStrWriter_writeChar(AlifSubUStrWriter* _writer, uint32_t _ch)
