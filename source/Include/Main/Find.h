@@ -1,5 +1,8 @@
 #pragma once
 
+#pragma warning(disable : 4996) // for disable unsafe functions error
+
+
 template <typename STRINGLIB_CHAR>
 int64_t find(const STRINGLIB_CHAR* _str, int64_t _strLen,
 	const STRINGLIB_CHAR* _sub, int64_t _subLen,

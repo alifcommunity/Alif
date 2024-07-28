@@ -143,9 +143,6 @@
     <ClInclude Include="..\source\Include\Main\Code.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\Include\Main\Find.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\Include\Main\OpCode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -177,6 +174,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\source\Include\Main\ClassObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Include\Main\Find.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
