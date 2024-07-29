@@ -112,11 +112,11 @@ AlifObject* alifEval_evalCode(AlifObject* _co, AlifObject* _globals, AlifObject*
 	وبالاخص اذا كان العنصر الذي يتم تهيئته هو union
 */
 static const AlifCodeUnit alifInterpreterTrampolineInstructions[] = {
-	0b0001111000000000, // { NOP, 0},
-	0b0001011000000000, // {INTERPRETER_EXIT, 0 },
-	0b0001111000000000, // {NOP, 0 },
-	0b0001011000000000, // {INTERPRETER_EXIT, 0 },
-	0b1001010100000100 // {RESUME, RESUME_OPARG_DEPTH1_MASK | RESUME_AT_FUNC_START }
+	0b0000000000011110, // { NOP, 0},
+	0b0000000000010110, // {INTERPRETER_EXIT, 0 },
+	0b0000000000011110, // {NOP, 0 },
+	0b0000000000010110, // {INTERPRETER_EXIT, 0 },
+	0b0000010010010101 // {RESUME, RESUME_OPARG_DEPTH1_MASK | RESUME_AT_FUNC_START }
 };
 
 #define ALIFEVAL_CSTACK_UNITS 2
@@ -396,8 +396,8 @@ dispatchOpCode:
 		// _POP_FRAME
 		retval = value;
 		{
-			//alifFrame_setStackPointer(_frame, stackPtr);
-			//_Py_LeaveRecursiveCallPy(_thread);
+			_frame->stacktop = (int)(stackPtr - _frame->localsPlus); // alifFrame_setStackPointer(_frame, stackPtr);
+			_thread->recursionRemaining++; //alif_leaveRecursiveCallAlif(_thread);
 			AlifInterpreterFrame* dying = _frame;
 			_frame = _thread->currentFrame = dying->previous;
 			//alifEval_frameClearAndPop(tstate, dying);
@@ -418,8 +418,8 @@ dispatchOpCode:
 		_thread->recursionRemaining += ALIFEVAL_CSTACK_UNITS;
 		return retval;
 	}
-	default:
-		break;
+	//default:
+	//	break;
 	}
 
 

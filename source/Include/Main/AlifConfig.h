@@ -114,12 +114,14 @@
 	using AlifUIntT = uint32_t;
 	#define ALIF_SIZET_MAX LLONG_MAX
 	#define ALIF_SIZET_MIN (-ALIF_SIZET_MAX-1)
+	#define SIZEOF_VOID_P 8
 #else
 	using AlifSizeT = int32_t;
 	using AlifUSizeT = uint32_t;
 	using AlifIntT = int16_t;
 	using AlifUIntT = uint16_t;
 	#define ALIF_SIZET INT_MAX
+	#define SIZEOF_VOID_P 4
 #endif
 
 
@@ -127,13 +129,14 @@
 #ifdef _WINDOWS
 	#include <io.h>
 	#define SIZEOF_WCHART 2
-	#define SIZEOF_VOID_P 8
 #else
+	#define SIZEOF_WCHART 4
 	#include <cstring>
-	#define SIZEOF_WCHART 2
-	#define SIZEOF_VOID_P 8
 #endif // _WINDOWS
 
 
 
 #define WITH_FREELISTS 1
+
+
+

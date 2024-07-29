@@ -624,6 +624,8 @@ static AlifIntT optimize_alifFlowGraph(AlifFlowGraph* _cfg, AlifObject* _consts,
 
 	if (remove_redundantNopsAndPairs(_cfg->entryBlock) == -1) return -1;
 
+
+	return 1; // need review
 }
 
 static AlifIntT remove_unusedConsts(AlifCFGBasicBlock* _entryBlock, AlifObject* _consts) { // 2029

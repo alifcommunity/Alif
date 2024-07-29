@@ -231,7 +231,7 @@ AlifObject* alifNew_uStr(size_t _size, uint8_t _maxChar) { /// M
 		exit(-1);
 	}
 
-	obj_ = (AlifObject*)alifMem_objAlloc(structSize + (_size + 1) * charSize);
+	obj_ = (AlifObject*)alifMem_objAlloc(structSize + (_size + 1) * sizeof(wchar_t));
 
 	alifSubObject_init(obj_, &_alifUStrType_);
 
@@ -244,12 +244,23 @@ AlifObject* alifNew_uStr(size_t _size, uint8_t _maxChar) { /// M
 	uStr->hash_ = 0;
 	uStr->UTF = data_;
 
-	if (kind_ == USTR_2BYTE) {
-		((uint16_t*)data_)[_size] = 0;
-	}
-	else if (kind_ == USTR_4BYTE) {
-		((uint32_t*)data_)[_size] = 0;
-	}
+
+	// this section need review
+
+	//if (kind_ == USTR_2BYTE) {
+	//	((uint16_t*)data_)[_size] = 0;
+	//}
+	//else if (kind_ == USTR_4BYTE) {
+	//	((uint32_t*)data_)[_size] = 0;
+	//}
+
+#if SIZEOF_WCHART == 2
+	((uint16_t*)data_)[_size + 1] = 0;
+#elif SIZEOF_WCHART == 4
+	((uint32_t*)data_)[_size + 1] = 0;
+#endif
+
+	//! this section need review
 
 	return obj_;
 }
@@ -560,8 +571,7 @@ AlifObject* alifUStr_objFromWChar(wchar_t* _buffer) { /// M
 #if SIZEOF_WCHART == 2
 		memcpy(ALIFUSTR_CAST(strObj)->UTF, _buffer, size_ * 2);
 #else
-		ALIFUSTR_CONVERT_BYTES(wchar_t, uint16_t,
-			_buffer, _buffer + size_, ALIFUSTR_CAST(strObj)->UTF);
+		memcpy(ALIFUSTR_CAST(strObj)->UTF, _buffer, size_ * 4);
 #endif
 	}
 	else if (ALIFUSTR_CAST(strObj)->kind_ == USTR_4BYTE) {
