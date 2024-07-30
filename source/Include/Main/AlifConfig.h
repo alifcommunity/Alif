@@ -24,7 +24,7 @@
 		#define _LINUX32
 		#define _OS32
 	#endif
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) // يحتاج مراجعة
 	#ifdef TARGET_OS_MAC
 		#ifdef TARGET_CPU_X86
 			#define _MAC32
@@ -37,7 +37,7 @@
 			#define _OS64
 		#endif
 	#endif 
-#elif defined(__ARM_ARCH)
+#elif defined(__ARM_ARCH) // يحتاج مراجعة
 	#if __ARM_ARCH >= 8
 		#define _ARM64
 		#define _OS64
