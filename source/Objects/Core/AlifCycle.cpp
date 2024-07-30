@@ -12,6 +12,20 @@
 #endif
 
 
+#if defined(_WINDOWS)
+
+#pragma section("_alifDureRun_", read, write)
+__declspec(allocate("_alifDureRun_"))
+
+#elif defined(__APPLE__)
+
+__attribute__((
+	section(SEG_DATA ",_alifDureRun_")
+	))
+
+#endif
+
+
 AlifDureRun _alifDureRun_
 #if defined(__linux__) && (defined(__GNUC__) || defined(__clang__))
 __attribute__((section("._alifDureRun_")))
