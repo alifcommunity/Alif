@@ -31,23 +31,31 @@ FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) {
 	f = _wfopen((wchar_t*)((AlifUStrObject*)_path)->UTF, wmode);
 
 #else
-	AlifObject* bytes;
-	const char* pathBytes;
+	//AlifObject* bytes;
+	//const char* pathBytes;
 
-	if (!alifUnicode_FSConverter(_path, &bytes))
-		return nullptr;
-	pathBytes = (const char*)_alifWBytes_asString(bytes); // need review
+	//if (!alifUStr_fsConverter(_path, &bytes))
+	//	return nullptr;
+	//pathBytes = (const char*)_alifWBytes_asString(bytes); // need review
 
-	if (alifSys_audit("open", "Osi", _path, _mode, 0) < 0) {
-		ALIF_DECREF(bytes);
-		return nullptr;
-	}
+	//if (alifSys_audit("open", "Osi", _path, _mode, 0) < 0) {
+	//	ALIF_DECREF(bytes);
+	//	return nullptr;
+	//}
+
+	// temp
+	mbstate_t mbState{};
+	char dist[128];
+	::memset((void*)&mbState, 0, sizeof(mbState));
+	const wchar_t* src = (const wchar_t*)((AlifUStrObject*)_path)->UTF;
+	AlifSizeT size = wcsrtombs(dist, &src, 128, &mbState);
+	//
 
 	do {
-		f = fopen(pathBytes, _mode);
-	} while (f == nullptr and errno == EINTR and !(async_err = alifErr_checkSignals()));
-	int savedErrno = errno;
-	ALIF_DECREF(bytes);
+		f = fopen(dist, _mode);
+	} while (f == nullptr and errno == EINTR);
+	//int savedErrno = errno;
+	//ALIF_DECREF(bytes);
 #endif
 
 	return f;

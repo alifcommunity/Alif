@@ -27,7 +27,7 @@ static AlifIntT alifMain_init(AlifArgv* _args) {
 		// error
 	}
 
-	if (alif_mainMemoryInit() == nullptr) {
+	if (alif_mainMemoryInit() < 0) {
 		// error
 	}
 
@@ -64,6 +64,8 @@ static int alifMain_runFileObj(AlifObject* _pn, AlifObject* _fn) {
 	}
 
 	int run = alifRun_fileObj(fp_, _fn, 1);
+
+	return run;
 }
 
 static int alifMain_runFile(AlifConfig* _config) {

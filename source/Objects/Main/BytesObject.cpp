@@ -308,7 +308,7 @@ static AlifObject* bytes_richcompare(AlifWBytesObject* _a, AlifWBytesObject* _b,
     else {
         lenA = ((AlifVarObject*)_a)->size_;
         lenB = ((AlifVarObject*)_b)->size_;
-        minLen = min(lenA, lenB);
+        minLen = ALIF_MIN(lenA, lenB);
         if (minLen > 0) {
             c_ = ALIF_WCHARMASK(*_a->value_) - ALIF_WCHARMASK(*_b->value_);
             if (c_ == 0)
@@ -517,7 +517,7 @@ void bytes_subRepeat(wchar_t* _destinaion, int64_t _lengthDest,
         }
         int64_t copied_ = _lengthSrc;
         while (copied_ < _lengthDest) {
-            int64_t bytesToCopy = min(copied_, _lengthDest - copied_);
+            int64_t bytesToCopy = ALIF_MIN(copied_, _lengthDest - copied_);
             memcpy(_destinaion + copied_, _destinaion, bytesToCopy);
             copied_ += bytesToCopy;
         }

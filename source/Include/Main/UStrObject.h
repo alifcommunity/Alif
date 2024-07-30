@@ -189,5 +189,7 @@ int alifSubUStrWriter_writeChar(AlifSubUStrWriter*, uint32_t);
 
 int alifSubUStrWriter_writeStr(AlifSubUStrWriter*, AlifObject*);
 
+int alifUStr_fsConverter(AlifObject*, void*);
+
 const wchar_t* alifUStr_asUTF8(AlifObject*);
 AlifObject* alifUStr_join(AlifObject*, AlifObject*);

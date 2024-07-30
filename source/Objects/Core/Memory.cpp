@@ -1,4 +1,4 @@
-﻿#include "alif.h"
+#include "alif.h"
 #include "AlifCore_Memory.h"
 #include "AlifCore_AlifState.h"
 
@@ -158,14 +158,14 @@ void FreeSegments::freeSeg_dealloc(Frag* _seg) {
 /* ------------------------------------ ذاكرة ألف ------------------------------------ */
 
 /* --- ذاكرة المفسر الرئيسي --- */
-void* alif_mainMemoryInit()
+AlifIntT alif_mainMemoryInit()
 {
 	/* --- تهيئة ذاكرة الشظايا --- */
 	ALIFMEM_FRAGMEM = FragsBlock();
 	char* fSegs = alif_new<char>(FSEGS_SIZE);
 	if (fSegs == nullptr) {
 		std::wcout << L"لا يمكن إكمال تهيئة الذاكرة \n لم ينجح في حجز قطعة شظايا جديدة" << std::endl;
-		return nullptr;
+		return -1;
 	}
 	ALIFMEM_FRAGMEM.fSegs = fSegs;
 	ALIFMEM_FRAGMEM.freeSize = FSEGS_SIZE;
@@ -180,7 +180,7 @@ void* alif_mainMemoryInit()
 	char* s_ = alif_new<char>(BLOCK_SIZE);
 	if (s_ == nullptr) {
 		std::wcout << L"لا يمكن إكمال تهيئة الذاكرة \n لم ينجح في حجز قطعة جديدة" << std::endl;
-		return nullptr;
+		return -1;
 	}
 
 	ALIFMEM_CURRENTBLOCK->segments_ = s_;
@@ -195,12 +195,14 @@ void* alif_mainMemoryInit()
 		s_ = alif_new<char>(BLOCK_SIZE);
 		if (s_ == nullptr) {
 			std::wcout << L"لا يمكن إكمال تهيئة الذاكرة \n لم ينجح في حجز قطعة جديدة" << std::endl;
-			return nullptr;
+			return -1;
 		}
 
 		b_->segments_ = s_;
 		prev_ = b_;
 	}
+
+	return 1;
 }
 
 /* --- ذاكرة المفسرات الفرعية --- */

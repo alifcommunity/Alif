@@ -1,5 +1,8 @@
 #pragma once
 
+#pragma warning(disable : 4996) // for disable unsafe functions error
+
+
 template <typename STRINGLIB_CHAR>
 int64_t find(const STRINGLIB_CHAR* _str, int64_t _strLen,
 	const STRINGLIB_CHAR* _sub, int64_t _subLen,
@@ -81,7 +84,7 @@ int parse_args_finds(const wchar_t* _functionName, AlifObject* _args,
 	wchar_t format_[FORMAT_BUFFER_SIZE] = L"O|OO:";
 	size_t len_ = wcslen(format_);
 
-	wcsncpy_s(format_ + len_, FORMAT_BUFFER_SIZE - len_, _functionName, _TRUNCATE);
+	wcsncpy(format_ + len_, _functionName, FORMAT_BUFFER_SIZE - len_);
 	format_[FORMAT_BUFFER_SIZE - 1] = '\0';
 
 	if (!alifArg_parseTuple(_args, format_, &tmpSubObj, &objStart, &objEnd))

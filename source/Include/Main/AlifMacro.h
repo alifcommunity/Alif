@@ -1,6 +1,8 @@
 #pragma once
 
-#define ALIF_ABS(x) ((x) < 0 ? -(x) : (x))
+#define ALIF_ABS(x)	((x) < 0 ? -(x) : (x))
+#define ALIF_MAX(a,b)	(((a) > (b)) ? (a) : (b))
+#define ALIF_MIN(a,b)   (((a) < (b)) ? (a) : (b))
 
 #define ALIF_WCHARMASK(wc) ((wchar_t)((wc) & 0xffff)) 
 

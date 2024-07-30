@@ -14,8 +14,8 @@ extern int alifSubArg_noKwnames(const wchar_t* , AlifObject* );
 #define ALIF_ANY_VARARGS(_n) ((_n) == LLONG_MAX)
 
 int _alifArg_checkPositional(const wchar_t*, int64_t, int64_t, int64_t);
-#define ALIFARG_CHECKPOSITIONAL(funcname, nargs, min, max) \
-    ((!ALIF_ANY_VARARGS(max) && (min) <= (nargs) && (nargs) <= (max)) or _alifArg_checkPositional((funcname), (nargs), (min), (max)))
+#define ALIFARG_CHECKPOSITIONAL(funcname, nargs, _min, _max) \
+    ((!ALIF_ANY_VARARGS(_max) && (_min) <= (nargs) && (nargs) <= (_max)) or _alifArg_checkPositional((funcname), (nargs), (_min), (_max)))
 
 
 

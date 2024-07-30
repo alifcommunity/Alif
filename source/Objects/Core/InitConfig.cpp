@@ -198,6 +198,8 @@ static AlifIntT parse_consoleLine(AlifConfig* _config, AlifSizeT* _index) {
 	_config->programName = (wchar_t*)program;
 
 	*_index = optIdx;
+
+	return 1;
 }
 
 static AlifIntT update_argv(AlifConfig* _config, AlifSizeT _index) {

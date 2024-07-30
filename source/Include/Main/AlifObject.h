@@ -146,7 +146,7 @@ typedef int (*InitProc)(AlifObject*, AlifObject*, AlifObject*);
 typedef AlifObject* (*NewFunc)(AlifInitObject*, AlifObject*, AlifObject*);
 typedef AlifObject* (*AllocFunc)(AlifInitObject*, size_t);
 
-typedef AlifObject* (*VectorCallFunc)(AlifObject*, AlifObject* const*, size_t, AlifObject*);
+typedef AlifObject* (*VectorCallFunc)(AlifObject*, AlifObject* const*, AlifUSizeT, AlifObject*);
 
 
 AlifObject* alifObject_richCompare(AlifObject*, AlifObject*, int);

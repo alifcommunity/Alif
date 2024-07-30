@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 /*
 	ذاكرة ألف، هي ذاكرة خاصة بلغة ألف النسخة الخامسة 5،
@@ -117,7 +117,7 @@ public:
 extern AlifMemory _alifMem_;
 
 
-void* alif_mainMemoryInit();
+AlifIntT alif_mainMemoryInit();
 AlifMemory* alif_memoryInit();
 
 

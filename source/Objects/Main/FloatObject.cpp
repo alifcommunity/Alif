@@ -561,7 +561,7 @@ static AlifObject* float_subtype_new(AlifTypeObject* _type, AlifObject* _x)
 }
 
 static AlifObject* float_vectorcall(AlifObject* _type, AlifObject* const* _args,
-	size_t _nargsf, AlifObject* _kwnames)
+	AlifUSizeT _nargsf, AlifObject* _kwnames)
 {
 	if (!ALIFSUBARG_NOKWNAMES(L"float", _kwnames)) {
 		return nullptr;
@@ -640,9 +640,7 @@ static AlifNumberMethods _floatAsNumber_ = {
 };
 
 AlifTypeObject _alifFloatType = {
-	0,
-	0,
-	0,
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_ ,0)
 	L"float",
 	sizeof(AlifFloatObject),
 	0,
@@ -679,6 +677,11 @@ AlifTypeObject _alifFloatType = {
 	0,                                         
 	0,                                          
 	0,                                        
+	0,
+	0,
+	0,
+	0,
+	0,
 	0,
 	0,
 	0,
