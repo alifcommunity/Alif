@@ -52,10 +52,10 @@ FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) {
 	//
 
 	do {
-		f = fopen(pathBytes, _mode);
+		f = fopen(dist, _mode);
 	} while (f == nullptr and errno == EINTR);
-	int savedErrno = errno;
-	ALIF_DECREF(bytes);
+	//int savedErrno = errno;
+	//ALIF_DECREF(bytes);
 #endif
 
 	return f;
