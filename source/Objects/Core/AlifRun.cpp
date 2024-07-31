@@ -21,7 +21,7 @@
 //Module* alifParser_astFromFile(FILE*, AlifObject*, int, AlifASTMem*); // temp
 
 
-static AlifObject* run_evalCodeObject(AlifThread* _thread, AlifCodeObject* _co, AlifObject* _globals, AlifObject* _locals) { // 1258
+static AlifObject* run_evalCodeObject(AlifThread* _thread, AlifCodeObject* _co, AlifObject* _globals, AlifObject* _locals) { 
 	AlifObject* val{};
 
 	AlifIntT hasBuiltins = alifDict_containsString(_globals, L"__builtins__");
@@ -39,7 +39,7 @@ static AlifObject* run_evalCodeObject(AlifThread* _thread, AlifCodeObject* _co, 
 }
 
 static AlifObject* alifRun_module(Module* _module, AlifObject* _fn,
-	AlifObject* _globals, AlifObject* _locals,  AlifASTMem* _astMem) { // 1299
+	AlifObject* _globals, AlifObject* _locals,  AlifASTMem* _astMem) { 
 
 	AlifThread* thread_ = alifThread_get();
 

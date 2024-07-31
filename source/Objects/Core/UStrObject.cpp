@@ -3014,7 +3014,7 @@ AlifTypeObject _alifUStrType_ = {
 	0,               
 };
 
-void alifSubUStr_internInPlace(AlifInterpreter* interp, AlifObject** p) { // 14901
+void alifSubUStr_internInPlace(AlifInterpreter* interp, AlifObject** p) { 
 	AlifObject* s = *p;
 	if (s == nullptr or !ALIFUSTR_CHECK(s)) {
 		return;
@@ -3064,7 +3064,7 @@ void alifSubUStr_internInPlace(AlifInterpreter* interp, AlifObject** p) { // 149
 	//ALIFUSTR_STATE(*p).interned = SSTATE_INTERNED_IMMORTAL;
 }
 
-void alifUStr_internInPlace(AlifObject** p) { // 14976
+void alifUStr_internInPlace(AlifObject** p) { 
 	AlifInterpreter* interp = alifInterpreter_get();
 	alifSubUStr_internInPlace(interp, p);
 }

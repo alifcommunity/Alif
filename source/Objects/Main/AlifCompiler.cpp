@@ -53,7 +53,7 @@ enum ScopeType{
 };
 
 
-class CompilerUnit { // 245
+class CompilerUnit { 
 public:
 	AlifSTEntryObject* symTableEntry{};
 
@@ -72,7 +72,7 @@ public:
 	AlifCompileCodeUnitData data{};
 };
 
-class AlifCompiler { // 275
+class AlifCompiler { 
 public:
 	AlifObject* fileName{};
 	AlifSymTable* symTable{};
@@ -92,7 +92,7 @@ public:
 #define INSTR_SEQUANCE(_c) (_c->unit->instrSequence)
 
 
-#define CAPSULE_NAME L"AlifCompile.cpp AlifCompiler Unit" // 377
+#define CAPSULE_NAME L"AlifCompile.cpp AlifCompiler Unit" 
 
 
 
@@ -107,11 +107,11 @@ public:
 #define VISIT(_c, _type, _v) {if (compiler_visit ## _type(_c, _v) == -1) return -1;}
 
 
-static AlifIntT codeGen_addOpNoArg(InstructionSequence* _seq, AlifIntT _opCode, SourceLocation _loc) { // 822
+static AlifIntT codeGen_addOpNoArg(InstructionSequence* _seq, AlifIntT _opCode, SourceLocation _loc) { 
 	return alifInstructionSequence_addOp(_seq, _opCode, 0, _loc);
 }
 
-static AlifObject* merge_constsRecursive(AlifObject* _obj) { // 857
+static AlifObject* merge_constsRecursive(AlifObject* _obj) { 
 
 	if (_obj == ALIF_NONE) return _obj;
 
@@ -198,7 +198,7 @@ static AlifObject* merge_constsRecursive(AlifObject* _obj) { // 857
 	return _obj;
 }
 
-static AlifSizeT compiler_addConst(CompilerUnit* _cu, AlifObject* _obj) { // 965
+static AlifSizeT compiler_addConst(CompilerUnit* _cu, AlifObject* _obj) { 
 	AlifObject* key = merge_constsRecursive(_obj);
 	if (key == nullptr) return -1;
 
@@ -207,7 +207,7 @@ static AlifSizeT compiler_addConst(CompilerUnit* _cu, AlifObject* _obj) { // 965
 	return arg;
 }
 
-static AlifIntT compilerAddOp_loadConst(CompilerUnit* _cu, SourceLocation _loc, AlifObject* _obj) { // 979
+static AlifIntT compilerAddOp_loadConst(CompilerUnit* _cu, SourceLocation _loc, AlifObject* _obj) { 
 	AlifSizeT arg = compiler_addConst(_cu, _obj);
 	if (arg < 0) return -1;
 
@@ -215,7 +215,7 @@ static AlifIntT compilerAddOp_loadConst(CompilerUnit* _cu, SourceLocation _loc, 
 }
 
 static AlifIntT codeGen_addOpI(InstructionSequence* _seq,
-	AlifIntT _opCode, AlifSizeT _opArg, SourceLocation _loc) { // 1047
+	AlifIntT _opCode, AlifSizeT _opArg, SourceLocation _loc) { 
 
 	AlifIntT opArg = (AlifIntT)_opArg;
 	return alifInstructionSequence_addOp(_seq, _opCode, opArg, _loc);
@@ -223,7 +223,7 @@ static AlifIntT codeGen_addOpI(InstructionSequence* _seq,
 
 
 
-AlifIntT alifCompile_ensureArraySpace(AlifIntT _idx, void** _array, AlifIntT* _alloc, AlifIntT _defaultAlloc, AlifUSizeT _itemSize) { // 155
+AlifIntT alifCompile_ensureArraySpace(AlifIntT _idx, void** _array, AlifIntT* _alloc, AlifIntT _defaultAlloc, AlifUSizeT _itemSize) { 
 
 	void* arr = *_array;
 	if (arr == nullptr) {
@@ -266,7 +266,7 @@ AlifIntT alifCompile_ensureArraySpace(AlifIntT _idx, void** _array, AlifIntT* _a
 
 
 
-static AlifObject* list_toDict(AlifObject* _list) { // 485
+static AlifObject* list_toDict(AlifObject* _list) { 
 
 	AlifObject* v{};
 	AlifObject* k{};
@@ -291,7 +291,7 @@ static AlifObject* list_toDict(AlifObject* _list) { // 485
 	return dict;
 }
 
-static AlifObject* dict_byType(AlifObject* _src, AlifIntT _scopeType, AlifIntT _flag, AlifSizeT _offset) { // 519
+static AlifObject* dict_byType(AlifObject* _src, AlifIntT _scopeType, AlifIntT _flag, AlifSizeT _offset) { 
 
 	AlifSizeT i = _offset;
 	AlifSizeT scope{};
@@ -337,7 +337,7 @@ static AlifObject* dict_byType(AlifObject* _src, AlifIntT _scopeType, AlifIntT _
 	return dest;
 }
 
-static AlifSizeT dict_addObject(AlifObject* _dict, AlifObject* _obj) { // 830
+static AlifSizeT dict_addObject(AlifObject* _dict, AlifObject* _obj) { 
 
 	AlifObject* v{};
 	AlifSizeT arg{};
@@ -363,7 +363,7 @@ static AlifSizeT dict_addObject(AlifObject* _dict, AlifObject* _obj) { // 830
 	return arg;
 }
 
-static AlifIntT compiler_setQualName(AlifCompiler* _compiler) { // 608
+static AlifIntT compiler_setQualName(AlifCompiler* _compiler) { 
 
 	AlifSizeT stackSize = ALIFLIST_GET_SIZE(_compiler->stack);
 	CompilerUnit* cu = _compiler->unit;
@@ -424,7 +424,7 @@ static AlifIntT compiler_setQualName(AlifCompiler* _compiler) { // 608
 
 
 static AlifIntT compiler_setup(AlifCompiler* _compiler, Module* _module,
-	AlifObject* _fn, AlifIntT _optimize, AlifASTMem* _astMem) { // 380
+	AlifObject* _fn, AlifIntT _optimize, AlifASTMem* _astMem) { 
 
 	_compiler->stack = alifNew_list(0);
 	if (!_compiler->stack) return -1;
@@ -446,7 +446,7 @@ static AlifIntT compiler_setup(AlifCompiler* _compiler, Module* _module,
 	return 1;
 }
 
-static AlifCompiler* compiler_new(Module* _module, AlifObject* _fn, AlifIntT _optimize, AlifASTMem* _astMem) { // 425
+static AlifCompiler* compiler_new(Module* _module, AlifObject* _fn, AlifIntT _optimize, AlifASTMem* _astMem) { 
 
 	AlifCompiler* compiler_ = (AlifCompiler*)alifMem_dataAlloc(sizeof(AlifCompiler));
 	if (compiler_ == nullptr) return nullptr;
@@ -459,7 +459,7 @@ static AlifCompiler* compiler_new(Module* _module, AlifObject* _fn, AlifIntT _op
 	return compiler_;
 }
 
-AlifCodeObject* alifAST_compile(Module* _module, AlifObject* _fn, AlifIntT _optimize, AlifASTMem* _astMem) { // 440
+AlifCodeObject* alifAST_compile(Module* _module, AlifObject* _fn, AlifIntT _optimize, AlifASTMem* _astMem) { 
 
 	AlifCompiler* compiler_ = compiler_new(_module, _fn, _optimize, _astMem);
 	if (compiler_ == nullptr) return nullptr;
@@ -471,7 +471,7 @@ AlifCodeObject* alifAST_compile(Module* _module, AlifObject* _fn, AlifIntT _opti
 }
 
 static AlifIntT compiler_enterScope(AlifCompiler* _compiler,
-	AlifObject* _name, AlifIntT _scopeType, void* _key, AlifIntT _lineNo) { // 1169
+	AlifObject* _name, AlifIntT _scopeType, void* _key, AlifIntT _lineNo) { 
 
 	SourceLocation location = {_lineNo, _lineNo, 0, 0 };
 
@@ -590,7 +590,7 @@ static AlifIntT compiler_enterScope(AlifCompiler* _compiler,
 	return 1;
 }
 
-static void compiler_exitScope(AlifCompiler* _compiler) { // 1293
+static void compiler_exitScope(AlifCompiler* _compiler) { 
 	//AlifObject* exc = alifErr_getRaisedException();
 
 	InstructionSequence* nestedSeq = nullptr;
@@ -623,7 +623,7 @@ static void compiler_exitScope(AlifCompiler* _compiler) { // 1293
 	//alifErr_setRaisedException(exc);
 }
 
-static AlifIntT compiler_enterAnonymousScope(AlifCompiler* _compiler, Module* _module) { // 1700
+static AlifIntT compiler_enterAnonymousScope(AlifCompiler* _compiler, Module* _module) { 
 
 	AlifObject* name = alifUStr_decodeStringToUTF8(L"<module>");
 	if (compiler_enterScope(_compiler, name, ScopeType::Compiler_Scope_Module, _module, 1) == -1) {
@@ -633,7 +633,7 @@ static AlifIntT compiler_enterAnonymousScope(AlifCompiler* _compiler, Module* _m
 	return 1;
 }
 
-static AlifIntT compiler_codeGenerate(AlifCompiler* _compiler, Module* _module) { // 1671
+static AlifIntT compiler_codeGenerate(AlifCompiler* _compiler, Module* _module) { 
 
 	SourceLocation loc = {1, 1, 0, 0};
 	if (_module->type == ModType::ModuleK) {
@@ -652,7 +652,7 @@ static AlifIntT compiler_codeGenerate(AlifCompiler* _compiler, Module* _module) 
 	return 1;
 }
 
-static AlifCodeObject* compiler_module(AlifCompiler* _compiler, Module* _module) { // 1710
+static AlifCodeObject* compiler_module(AlifCompiler* _compiler, Module* _module) { 
 
 	AlifCodeObject* codeObject = nullptr;
 	AlifIntT addNone = _module->type != ExpressionK;
@@ -671,7 +671,7 @@ done:
 
 
 
-static AlifIntT addOp_binary(AlifCompiler* _compiler, SourceLocation _loc, Operator _binOp, bool _inPlace) { // 4122
+static AlifIntT addOp_binary(AlifCompiler* _compiler, SourceLocation _loc, Operator _binOp, bool _inPlace) { 
 
 	AlifIntT opArg{};
 
@@ -687,7 +687,7 @@ static AlifIntT addOp_binary(AlifCompiler* _compiler, SourceLocation _loc, Opera
 	return 1;
 }
 
-static AlifIntT compiler_nameOp(AlifCompiler* _compiler, SourceLocation _loc, AlifObject* _name, ExprCTX _ctx) { // 4187
+static AlifIntT compiler_nameOp(AlifCompiler* _compiler, SourceLocation _loc, AlifObject* _name, ExprCTX _ctx) { 
 
 	enum { FastOp, GlobalOp, DeRefOp, NameOp } opType;
 
@@ -731,7 +731,7 @@ static AlifIntT compiler_nameOp(AlifCompiler* _compiler, SourceLocation _loc, Al
 	return codeGen_addOpI(INSTR_SEQUANCE(_compiler), op, arg, _loc);
 }
 
-static AlifIntT maybeOptimize_methodCall(AlifCompiler* _compiler, Expression* _expr) { // 4931
+static AlifIntT maybeOptimize_methodCall(AlifCompiler* _compiler, Expression* _expr) { 
 	AlifSizeT argsl{}, i{}, kwdsl{};
 	Expression* meth = _expr->V.call.func;
 	ExprSeq* args = _expr->V.call.args;
@@ -748,7 +748,7 @@ static AlifIntT maybeOptimize_methodCall(AlifCompiler* _compiler, Expression* _e
 }
 
 static AlifIntT compiler_callHelper(AlifCompiler* _compiler, SourceLocation _loc, AlifIntT _n,
-	ExprSeq* _args, KeywordSeq* _keywords) { // 5189
+	ExprSeq* _args, KeywordSeq* _keywords) { 
 
 	//if(validate_keywords(_compiler, _keywords) == -1) return -1;
 
@@ -776,7 +776,7 @@ exCall:
 	return 0; // temp
 }
 
-static AlifIntT compiler_call(AlifCompiler* _compiler, Expression* _expr) { // 5026
+static AlifIntT compiler_call(AlifCompiler* _compiler, Expression* _expr) { 
 
 	//if(validate_keywords(_compiler, _expr->V.call.keywords) == -1) return -1;
 	AlifIntT ret = maybeOptimize_methodCall(_compiler, _expr);
@@ -796,7 +796,7 @@ static AlifIntT compiler_call(AlifCompiler* _compiler, Expression* _expr) { // 5
 	return compiler_callHelper(_compiler, loc, 0, _expr->V.call.args, _expr->V.call.keywords);
 }
 
-static AlifIntT compiler_visitExpression(AlifCompiler* _compiler, Expression* _expr) { // 6341
+static AlifIntT compiler_visitExpression(AlifCompiler* _compiler, Expression* _expr) { 
 
 	SourceLocation loc = LOC(_expr);
 	if (_expr->type == ExprType::BinOpK) {
@@ -819,7 +819,7 @@ static AlifIntT compiler_visitExpression(AlifCompiler* _compiler, Expression* _e
 }
 
 
-static AlifIntT compiler_stmtExpr(AlifCompiler* _compiler, SourceLocation _loc, Expression* _val) { // 3988
+static AlifIntT compiler_stmtExpr(AlifCompiler* _compiler, SourceLocation _loc, Expression* _val) { 
 
 	if (_compiler->interactive and _compiler->nestLevel <= 1) {
 		VISIT(_compiler, Expression, _val);
@@ -839,7 +839,7 @@ static AlifIntT compiler_stmtExpr(AlifCompiler* _compiler, SourceLocation _loc, 
 	return 1;
 }
 
-static AlifIntT compiler_visitStatement(AlifCompiler* _compiler, Statement* _stmt) { // 4009
+static AlifIntT compiler_visitStatement(AlifCompiler* _compiler, Statement* _stmt) { 
 
 	if (_stmt->type == StmtType::ExprK) {
 		return compiler_stmtExpr(_compiler, LOC(_stmt), _stmt->V.expression.val);
@@ -859,7 +859,7 @@ static AlifIntT compiler_visitStatement(AlifCompiler* _compiler, Statement* _stm
 	return 1;
 }
 
-static AlifIntT compiler_body(AlifCompiler* _compiler, SourceLocation _loc, StmtSeq* _stmts) { // 1628
+static AlifIntT compiler_body(AlifCompiler* _compiler, SourceLocation _loc, StmtSeq* _stmts) { 
 
 	if (_compiler->unit->scopeType == ScopeType::Compiler_Scope_Module and SEQ_LEN(_stmts)) {
 		Statement* stmt = (Statement*)SEQ_GET(_stmts, 0);
@@ -892,7 +892,7 @@ static AlifIntT compiler_body(AlifCompiler* _compiler, SourceLocation _loc, Stmt
 }
 
 
-static AlifIntT addReturn_atEnd(AlifCompiler* _compiler, AlifIntT _addNone) { // 7606
+static AlifIntT addReturn_atEnd(AlifCompiler* _compiler, AlifIntT _addNone) { 
 	if (_addNone) {
 		ADDOP_LOAD_CONST(_compiler, noLocation, ALIF_NONE);
 	}
@@ -900,7 +900,7 @@ static AlifIntT addReturn_atEnd(AlifCompiler* _compiler, AlifIntT _addNone) { //
 	return 1;
 }
 
-static AlifObject* constsDict_keysInorder(AlifObject* _dict) { // 7515
+static AlifObject* constsDict_keysInorder(AlifObject* _dict) { 
 	AlifObject* consts{};
 	AlifObject* k{};
 	AlifObject* v{};
@@ -921,7 +921,7 @@ static AlifObject* constsDict_keysInorder(AlifObject* _dict) { // 7515
 	return consts;
 }
 
-static AlifFlowGraph* instrSequence_toCFG(InstructionSequence* _seq) { // 200
+static AlifFlowGraph* instrSequence_toCFG(InstructionSequence* _seq) { 
 
 	if (alifInstructionSeq_applyLableMap(_seq) < 0) {
 		return nullptr;
@@ -964,7 +964,7 @@ error:
 	return nullptr;
 }
 
-static AlifCodeObject* optimize_andAssembleCodeUnit(CompilerUnit* _cu, AlifObject* _fn) { // 7619
+static AlifCodeObject* optimize_andAssembleCodeUnit(CompilerUnit* _cu, AlifObject* _fn) { 
 
 	AlifFlowGraph* cfg = nullptr;
 	InstructionSequence optimizedInstrs{};
@@ -1005,7 +1005,7 @@ error:
 	return co;
 }
 
-static AlifCodeObject* optimize_andAssemble(AlifCompiler* _compiler, AlifIntT _addNone) { // 7666
+static AlifCodeObject* optimize_andAssemble(AlifCompiler* _compiler, AlifIntT _addNone) { 
 	CompilerUnit* cu = _compiler->unit;
 	AlifObject* fn = _compiler->fileName;
 

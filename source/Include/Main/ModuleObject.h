@@ -7,10 +7,10 @@ extern AlifTypeObject _alifModuleType_;
 #define ALIFMODULE_CHECKEXACT(op) ALIF_IS_TYPE((op), &_alifModuleType_)
 
 
-AlifObject* alifModule_getNameObject(AlifObject*); // 25
+AlifObject* alifModule_getNameObject(AlifObject*); 
 
 
-class AlifModuleDefBase { // 39
+class AlifModuleDefBase { 
 public:
 	ALIFOBJECT_HEAD;
 	AlifObject* (*init)(void);
@@ -27,7 +27,7 @@ public:
   }
 
 
-class AlifModuleDefSlot { // 69
+class AlifModuleDefSlot { 
 public:
 	AlifIntT slot{};
 	void* value{};
@@ -35,7 +35,7 @@ public:
 
 
 
-class AlifModuleDef { // 107
+class AlifModuleDef { 
 public:
 	AlifModuleDefBase base{};
 	const wchar_t* name{};

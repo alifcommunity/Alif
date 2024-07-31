@@ -135,7 +135,7 @@ static AlifIntT alifCore_createInterpreter(AlifDureRun* _dureRun, const AlifConf
 	return 1;
 }
 
-static AlifIntT alifCore_builtinsInit(AlifThread* _thread) { // 774
+static AlifIntT alifCore_builtinsInit(AlifThread* _thread) { 
 
 	AlifObject* modules{};
 	AlifObject* builtinsDict{};

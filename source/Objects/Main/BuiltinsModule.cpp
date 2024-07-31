@@ -29,7 +29,7 @@ static AlifModuleDef _alifBuiltinsModule_ = {
 };
 
 
-AlifObject* alifBuiltin_init(AlifInterpreter* _interp) { // 3130
+AlifObject* alifBuiltin_init(AlifInterpreter* _interp) { 
 	AlifObject* mod{}, * dict{};
 
 	const AlifConfig* config = &_interp->config;

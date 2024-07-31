@@ -22,7 +22,7 @@ public:
 
 
 AlifObject* alifModule_getAttroImpl(AlifModuleObject*, AlifObject*, AlifIntT);
-AlifObject* alifModule_getAttro(AlifModuleObject*, AlifObject*); // 49
+AlifObject* alifModule_getAttro(AlifModuleObject*, AlifObject*); 
 
 
 static inline AlifObject* alifSubModule_getDict(AlifObject* _mod) {

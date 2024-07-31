@@ -6,7 +6,7 @@
 
 
 
-AlifFunctionObject* alifFunction_fromConstructor(AlifFrameConstructor* _constr) { // 101
+AlifFunctionObject* alifFunction_fromConstructor(AlifFrameConstructor* _constr) { 
 
 	AlifObject* module{};
 	AlifObject* name = alifUStr_decodeStringToUTF8(L"__name__"); // temp

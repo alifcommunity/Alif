@@ -11,7 +11,7 @@
 
 
 
-void alifCode_quicken(AlifCodeObject* _code) { // 421
+void alifCode_quicken(AlifCodeObject* _code) { 
 #if ENABLE_SPECIALIZATION
     int opcode = 0;
     AlifCodeUnit* instructions = ALIFCODE_CODE(_code);

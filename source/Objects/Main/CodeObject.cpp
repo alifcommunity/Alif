@@ -31,7 +31,7 @@
 
 
 static void get_localsPlusCounts(AlifObject* _names, AlifObject* _kinds,
-	AlifIntT* _pnLocals, AlifIntT* _pnCellVars, AlifIntT* _pnFreeVars) { // 333
+	AlifIntT* _pnLocals, AlifIntT* _pnCellVars, AlifIntT* _pnFreeVars) { 
 	AlifIntT nlocals = 0;
 	AlifIntT ncellvars = 0;
 	AlifIntT nfreevars = 0;
@@ -66,9 +66,9 @@ static void get_localsPlusCounts(AlifObject* _names, AlifObject* _kinds,
 
 
 
-extern void alifCode_quicken(AlifCodeObject*); // 448
+extern void alifCode_quicken(AlifCodeObject*); 
 
-static void init_code(AlifCodeObject* _co, AlifCodeConstructor* _cons) { // 450
+static void init_code(AlifCodeObject* _co, AlifCodeConstructor* _cons) { 
 
 	AlifIntT nLocalsPlus = ALIFTUPLE_GET_SIZE(_cons->localsPlusNames);
 	AlifIntT nLocals{}, nCellVars{}, nFreeVars{};
@@ -114,7 +114,7 @@ static void init_code(AlifCodeObject* _co, AlifCodeConstructor* _cons) { // 450
 	alifCode_quicken(_co);
 }
 
-static AlifIntT internCode_constants(AlifCodeConstructor* _cons) { // 614
+static AlifIntT internCode_constants(AlifCodeConstructor* _cons) { 
 	
 	//if (intern_string(_cons->names) < 0) goto error;
 	//if (intern_constants(_cons->consts, nullptr) < 0) goto error;
@@ -127,7 +127,7 @@ error:
 }
 
 
-AlifCodeObject* alifCode_new(AlifCodeConstructor* _cons) { // 645
+AlifCodeObject* alifCode_new(AlifCodeConstructor* _cons) { 
 
 	if (internCode_constants(_cons) < 0) return nullptr;
 

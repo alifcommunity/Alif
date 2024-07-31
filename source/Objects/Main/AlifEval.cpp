@@ -51,7 +51,7 @@ AlifIntT alif_checkRecursiveCall(AlifThread* _thread, const wchar_t* _where)
 	return 0;
 }
 
-const BinaryFunc alifEvalBinaryOps[] = { // 310
+const BinaryFunc alifEvalBinaryOps[] = { 
 	alifNumber_add, // [NB_ADD]
 	0,
 	0,
@@ -78,7 +78,7 @@ const BinaryFunc alifEvalBinaryOps[] = { // 310
 	alifNumber_inPlaceSubtract, // [NB_INPLACE_SUBTRACT]
 };
 
-AlifObject* alifEval_evalCode(AlifObject* _co, AlifObject* _globals, AlifObject* _locals) { // 572
+AlifObject* alifEval_evalCode(AlifObject* _co, AlifObject* _globals, AlifObject* _locals) { 
 	AlifThread* thread = alifThread_get();
 	if (_locals == nullptr) {
 		_locals = _globals;
@@ -122,7 +122,7 @@ static const AlifCodeUnit alifInterpreterTrampolineInstructions[] = {
 #define ALIFEVAL_CSTACK_UNITS 2
 
 AlifObject* alifEval_evalFrameDefault(AlifThread* _thread,
-	AlifInterpreterFrame* _frame, AlifIntT _throwFlag) { // 687
+	AlifInterpreterFrame* _frame, AlifIntT _throwFlag) { 
 
 	uint16_t opCode{};
 	AlifIntT opArg{};
@@ -429,7 +429,7 @@ dispatchOpCode:
 
 
 static AlifIntT positionalOnly_passedAsKeyword(AlifThread* _thread, AlifCodeObject* _co,
-	AlifSizeT _kwCount, AlifObject* _kwNames, AlifObject* qualname) { // 1290
+	AlifSizeT _kwCount, AlifObject* _kwNames, AlifObject* qualname) { 
 
 	int posOnlyConflicts = 0;
 	AlifObject* posOnlyNames = alifNew_list(0);
@@ -488,7 +488,7 @@ fail:
 
 
 static AlifIntT initialize_locals(AlifThread* _thread, AlifFunctionObject* _func,
-	AlifObject** _localsPlus, AlifObject* const* _args, AlifSizeT _argCount, AlifObject* _kwNames) { // 1422
+	AlifObject** _localsPlus, AlifObject* const* _args, AlifSizeT _argCount, AlifObject* _kwNames) { 
 
 	AlifCodeObject* co = (AlifCodeObject*)_func->funcCode;
 	const AlifSizeT totalArgs = co->args + co->kwOnlyArgCount;
@@ -717,7 +717,7 @@ static void clear_threadFrame(AlifThread* _thread, AlifInterpreterFrame* _frame)
 }
 
 AlifInterpreterFrame* alifEvalFrame_initAndPush(AlifThread* _thread, AlifFunctionObject* _func,
-	AlifObject* _locals, AlifObject* const* _args, AlifUSizeT _argCount, AlifObject* _kwNames) { // 1715
+	AlifObject* _locals, AlifObject* const* _args, AlifUSizeT _argCount, AlifObject* _kwNames) { 
 
 	AlifCodeObject* code = (AlifCodeObject*)_func->funcCode;
 	AlifInterpreterFrame* frame = alifThread_pushFrame(_thread, code->frameSize);
@@ -747,7 +747,7 @@ fail:
 
 
 AlifObject* alifEval_vector(AlifThread* _thread, AlifFunctionObject* _func, AlifObject* _locals,
-	AlifObject* const* _args, AlifUSizeT _argcount, AlifObject* _kwnames) { // 1793
+	AlifObject* const* _args, AlifUSizeT _argcount, AlifObject* _kwnames) { 
 
 	ALIF_INCREF(_func);
 	//ALIF_XINCREF(_locals);
@@ -770,7 +770,7 @@ AlifObject* alifEval_vector(AlifThread* _thread, AlifFunctionObject* _func, Alif
 
 
 
-AlifObject* alifEval_getBuiltins(AlifThread* _thread) { // 2434
+AlifObject* alifEval_getBuiltins(AlifThread* _thread) { 
 	//AlifInterpreterFrame* frame = alifThread_getFrame(_thread);
 	//if (frame != nullptr) {
 	//	return frame->builtins;

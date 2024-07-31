@@ -790,7 +790,7 @@ static const wchar_t* skipItem(const wchar_t** pFormat, va_list* pVa, int flags)
     return nullptr;
 }
 
-int _alifArg_checkPositional(const wchar_t* _name, int64_t _nArgs, int64_t _min, int64_t _max) { // 2720
+int _alifArg_checkPositional(const wchar_t* _name, int64_t _nArgs, int64_t _min, int64_t _max) { 
     if (_nArgs < _min) {
         //if (_name != nullptr)
         //    Err_Format(

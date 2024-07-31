@@ -77,7 +77,7 @@ static int alifMain_runFile(AlifConfig* _config) {
 	return res_;
 }
 
-int alif_runMain()
+int alif_runMain() 
 {
 	int exitCode = 0;
 

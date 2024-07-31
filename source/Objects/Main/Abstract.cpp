@@ -8,7 +8,7 @@
 
 
 
-AlifObject* alifObject_getItem(AlifObject* _o, AlifObject* _key) { // 149
+AlifObject* alifObject_getItem(AlifObject* _o, AlifObject* _key) { 
 	if (_o == nullptr or _key == nullptr) {
 		//return null_error();
 	}
@@ -55,7 +55,7 @@ AlifObject* alifObject_getItem(AlifObject* _o, AlifObject* _key) { // 149
 	}
 }
 
-AlifIntT alifMapping_getOptionalItem(AlifObject* _obj, AlifObject* _key, AlifObject** _result) { // 203
+AlifIntT alifMapping_getOptionalItem(AlifObject* _obj, AlifObject* _key, AlifObject** _result) { 
 	if (ALIFDICT_CHECKEXACT(_obj)) {
 		return alifDict_getItemRef(_obj, _key, _result);
 	}
@@ -130,10 +130,10 @@ int alifObject_getBuffer(AlifObject* _obj, AlifBuffer* _view, int _flags)
 }
 
 #define NB_SLOT(_x) offsetof(AlifNumberMethods, _x)
-#define NB_BINOP(_method, _slot) (*(BinaryFunc*)(&((char*)_method)[_slot])) // 911
+#define NB_BINOP(_method, _slot) (*(BinaryFunc*)(&((char*)_method)[_slot])) 
 
 
-static AlifObject* binary_op1(AlifObject* _x, AlifObject* _y, const AlifIntT _opSlot, const wchar_t* _opName) { // 926
+static AlifObject* binary_op1(AlifObject* _x, AlifObject* _y, const AlifIntT _opSlot, const wchar_t* _opName) { 
 
 	BinaryFunc slotX;
 	if (ALIF_TYPE(_x)->asNumber != nullptr) {
@@ -170,10 +170,10 @@ static AlifObject* binary_op1(AlifObject* _x, AlifObject* _y, const AlifIntT _op
 }
 
 
-#define BINARY_OP1(_x, _y, _opSlot, _opName) binary_op1(_x, _y, _opSlot, _opName) // 982
+#define BINARY_OP1(_x, _y, _opSlot, _opName) binary_op1(_x, _y, _opSlot, _opName) 
 
 
-static AlifObject* binary_op(AlifObject* _x, AlifObject* _y, const AlifIntT _opSlot, const wchar_t* _opName) { // 997
+static AlifObject* binary_op(AlifObject* _x, AlifObject* _y, const AlifIntT _opSlot, const wchar_t* _opName) { 
 	AlifObject* result = BINARY_OP1(_x, _y, _opSlot, _opName);
 	if (result == ALIF_NOTIMPLEMENTED) {
 		ALIF_DECREF(result);
@@ -196,7 +196,7 @@ static AlifObject* binary_op(AlifObject* _x, AlifObject* _y, const AlifIntT _opS
 BINARY_FUNC(alifNumber_subtract, subtract_, L"-")
 
 
-AlifObject* alifNumber_add(AlifObject* _x, AlifObject* _y) { // 1138
+AlifObject* alifNumber_add(AlifObject* _x, AlifObject* _y) { 
 
 	AlifObject* res_ = BINARY_OP1(_x, _y, NB_SLOT(add_), L"+");
 	if (res_ != ALIF_NOTIMPLEMENTED) return res_;
@@ -490,7 +490,7 @@ int alifIter_check(AlifObject* obj)
     return (tp->iterNext != nullptr);
 }
 
-AlifIntT alifSequence_delItem(AlifObject* _s, AlifSizeT _i) { // 1959
+AlifIntT alifSequence_delItem(AlifObject* _s, AlifSizeT _i) { 
 	if (_s == nullptr) {
 		//null_error();
 		return -1;

@@ -5,7 +5,7 @@
 
 
 
-class AlifASTOptimize { // 10
+class AlifASTOptimize { 
 public:
 	AlifIntT optimize{};
 	AlifIntT recursionDepth{};
@@ -13,7 +13,7 @@ public:
 };
 
 
-static AlifIntT make_const(Expression* _node, AlifObject* _val, AlifASTMem* _astMem) { // 19
+static AlifIntT make_const(Expression* _node, AlifObject* _val, AlifASTMem* _astMem) { 
 	if (_val == nullptr) {
 		// error
 		return 1;
@@ -34,7 +34,7 @@ static AlifIntT make_const(Expression* _node, AlifObject* _val, AlifASTMem* _ast
 //static AlifIntT astFold_stmt(Statement*, AlifASTMem*, AlifASTOptimize*);
 static AlifIntT astFold_keyword(Keyword*, AlifASTMem*, AlifASTOptimize*);
 
-#define CALL(_func, _arg) if (!_func((_arg), _ctx, _astState)) return 0 // 645
+#define CALL(_func, _arg) if (!_func((_arg), _ctx, _astState)) return 0 
 
 
 #define CALL_SEQ(_func, _type, _fullType, _arg) {\
@@ -46,7 +46,7 @@ static AlifIntT astFold_keyword(Keyword*, AlifASTMem*, AlifASTOptimize*);
 	}		\
 }
 
-static AlifIntT fold_binOp(Expression* _node, AlifASTMem* _astMem, AlifASTOptimize* _astState) { // 449
+static AlifIntT fold_binOp(Expression* _node, AlifASTMem* _astMem, AlifASTOptimize* _astState) { 
 
 	Expression* left, *right;
 
@@ -70,7 +70,7 @@ static AlifIntT fold_binOp(Expression* _node, AlifASTMem* _astMem, AlifASTOptimi
 
 }
 
-static AlifIntT astFold_expr(Expression* _node, AlifASTMem* _ctx, AlifASTOptimize* _astState) { // 709
+static AlifIntT astFold_expr(Expression* _node, AlifASTMem* _ctx, AlifASTOptimize* _astState) { 
 	if (++_astState->recursionDepth > _astState->recursionLimit) {
 		// error
 		return 0;
@@ -94,12 +94,12 @@ static AlifIntT astFold_expr(Expression* _node, AlifASTMem* _ctx, AlifASTOptimiz
 	return 1;
 }
 
-static AlifIntT astFold_keyword(Keyword* _node, AlifASTMem* _ctx, AlifASTOptimize* _astState) { // 832
+static AlifIntT astFold_keyword(Keyword* _node, AlifASTMem* _ctx, AlifASTOptimize* _astState) { 
 	CALL(astFold_expr, _node->val);
 	return 1;
 }
 
-static AlifIntT astFold_stmt(Statement* _node, AlifASTMem* _ctx, AlifASTOptimize* _astState) { // 872
+static AlifIntT astFold_stmt(Statement* _node, AlifASTMem* _ctx, AlifASTOptimize* _astState) { 
 	if (++_astState->recursionDepth > _astState->recursionLimit) {
 		// error
 		return 0;
@@ -120,7 +120,7 @@ static AlifIntT astFold_stmt(Statement* _node, AlifASTMem* _ctx, AlifASTOptimize
 	return 1;
 }
 
-static AlifIntT astFold_body(StmtSeq* _stmts, AlifASTMem* _ctx, AlifASTOptimize* _astState) { // 664
+static AlifIntT astFold_body(StmtSeq* _stmts, AlifASTMem* _ctx, AlifASTOptimize* _astState) { 
 	AlifIntT docString = alifAST_getDocString(_stmts) != nullptr;
 
 	CALL_SEQ(astFold_stmt, Stmt, Statement, _stmts);
@@ -138,7 +138,7 @@ static AlifIntT astFold_body(StmtSeq* _stmts, AlifASTMem* _ctx, AlifASTOptimize*
 	return 1;
 }
 
-static AlifIntT astFold_module(Module* _node, AlifASTMem* _ctx, AlifASTOptimize* _astState) { // 687
+static AlifIntT astFold_module(Module* _node, AlifASTMem* _ctx, AlifASTOptimize* _astState) { 
 
 	if (_node->type == ModType::ModuleK) {
 		CALL(astFold_body, _node->V.module.body);
@@ -154,7 +154,7 @@ static AlifIntT astFold_module(Module* _node, AlifASTMem* _ctx, AlifASTOptimize*
 }
 
 
-AlifIntT alifAST_optimize(Module* _module, AlifASTMem* _astMem, AlifIntT _optimize) { // 1103
+AlifIntT alifAST_optimize(Module* _module, AlifASTMem* _astMem, AlifIntT _optimize) { 
 	AlifThread* thread_{};
 	AlifIntT startRecursionDepth{};
 

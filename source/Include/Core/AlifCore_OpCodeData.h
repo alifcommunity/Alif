@@ -6,7 +6,7 @@
 
 
 
-enum InstructionFormat { // 902
+enum InstructionFormat { 
     INSTR_FMT_IB = 1,
     INSTR_FMT_IBC = 2,
     INSTR_FMT_IBC00 = 3,
@@ -20,16 +20,16 @@ enum InstructionFormat { // 902
 
 
 
-#define HAS_ARG_FLAG (1) // 918
-#define HAS_CONST_FLAG (2) // 919
+#define HAS_ARG_FLAG (1) 
+#define HAS_CONST_FLAG (2) 
 
 #define HAS_JUMP_FLAG (8)
 
 #define HAS_EVAL_BREAK_FLAG (64)
 
-#define OPCODE_HAS_CONST(_op) (alifOpCodeData[_op].flags & (HAS_CONST_FLAG)) // 934
+#define OPCODE_HAS_CONST(_op) (alifOpCodeData[_op].flags & (HAS_CONST_FLAG)) 
 
-#define OPCODE_HAS_JUMP(_op) (alifOpCodeData[_op].flags & (HAS_JUMP_FLAG)) // 936
+#define OPCODE_HAS_JUMP(_op) (alifOpCodeData[_op].flags & (HAS_JUMP_FLAG)) 
 
 #define OPCODE_HAS_EVAL_BREAK(_op) (alifOpCodeData[_op].flags & (HAS_EVAL_BREAK_FLAG))
 
@@ -40,7 +40,7 @@ enum InstructionFormat { // 902
 
 
 
-class OpCodeData { // 958
+class OpCodeData { 
 public:
     uint8_t validEntry;
     int8_t instrFormat;
@@ -163,7 +163,7 @@ extern const OpCodeData alifOpCodeData[256] = {
 
 
 
-extern const uint8_t alifOpCode_deOpt[256]; // 1622
+extern const uint8_t alifOpCode_deOpt[256]; 
 #ifdef NEED_OPCODE_DATA
 const uint8_t alifOpCode_deOpt[256] = {
     /* [BEFORE_ASYNC_WITH] = */BEFORE_ASYNC_WITH,
