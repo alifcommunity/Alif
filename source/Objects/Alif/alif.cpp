@@ -52,7 +52,7 @@ done:
 
 
 /* ----------------------------------- تشغيل اللغة ----------------------------------- */
-static int alifMain_runFileObj(AlifObject* _pn, AlifObject* _fn) {
+static AlifIntT alifMain_runFileObj(AlifObject* _pn, AlifObject* _fn, AlifIntT _skipFirstLine) {
 	FILE* fp_ = alif_fOpenObj(_fn, "r");
 
 	if (fp_ == nullptr) {
@@ -60,20 +60,40 @@ static int alifMain_runFileObj(AlifObject* _pn, AlifObject* _fn) {
 			(const wchar_t*)((AlifUStrObject*)_pn)->UTF,
 			(const wchar_t*)((AlifUStrObject*)_fn)->UTF,
 			errno, L"لا يوجد ملف او مسار بهذا الاسم");
-		return 2;
+		return -2;
 	}
 
-	int run = alifRun_fileObj(fp_, _fn, 1);
+	if (_skipFirstLine) {
+		AlifIntT ch{};
+		while ((ch = getwc(fp_)) != WEOF) {
+			if (ch == L'\n') {
+				(void)ungetwc(ch, fp_);
+				break;
+			}
+		}
+	}
+
+	AlifIntT run = alifRun_fileObj(fp_, _fn, 1);
 
 	return run;
 }
 
 static int alifMain_runFile(AlifConfig* _config) {
 	AlifObject* fileName = alifUStr_objFromWChar(_config->runFilename);
+	if (fileName == nullptr) {
+		// error
+		return -1;
+	}
 	AlifObject* programName = alifUStr_objFromWChar(_config->programName);
+	if (programName == nullptr) {
+		// error
+		return -1;
+	}
 
-	int res_ = alifMain_runFileObj(programName, fileName);
+	int res_ = alifMain_runFileObj(programName, fileName, _config->skipFirstLine);
 
+	ALIF_DECREF(fileName);
+	ALIF_DECREF(programName);
 	return res_;
 }
 

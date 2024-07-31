@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 
 /* --------------------------------- AlifWStringList --------------------------------- */
@@ -27,6 +27,7 @@ public:
 
 	wchar_t* programName{};
 
+	AlifIntT skipFirstLine{};
 	wchar_t* runCommand{};
 	wchar_t* runModule{};
 	wchar_t* runFilename{};

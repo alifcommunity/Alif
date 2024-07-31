@@ -65,20 +65,23 @@ static int tokInfo_underflowFile(TokenInfo* _tokInfo) {
 
 TokenInfo* alifTokenizerInfo_fromFile(FILE* _fp) {
 	TokenInfo* tokInfo = alifTokenizer_newTokenInfo();
+	if (tokInfo == nullptr) return nullptr;
 
 	tokInfo->buf = (wchar_t*)alifMem_dataAlloc(BUFSIZ * sizeof(wchar_t));
-
+	if (tokInfo->buf == nullptr) {
+		// free tokInfo
+		return nullptr;
+	}
 	tokInfo->cur = tokInfo->inp = tokInfo->buf;
 	tokInfo->end = tokInfo->buf + BUFSIZ;
 	tokInfo->fp = _fp;
 	tokInfo->prompt = nullptr;
 	tokInfo->nextPrompt = nullptr;
-
 	//if (pos1 or pos2) {
 	//	tokInfo->underflow = &tokInfo_underflowInteractive;
 	//}
 	//else {
-	tokInfo->underflow = &tokInfo_underflowFile;
+		tokInfo->underflow = &tokInfo_underflowFile;
 	//}
 
 	return tokInfo;

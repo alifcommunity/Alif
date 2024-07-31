@@ -13,6 +13,7 @@
 
 TokenInfo* alifTokenizer_newTokenInfo() {
 	TokenInfo* tokInfo = (TokenInfo*)alifMem_dataAlloc(sizeof(TokenInfo));
+	if (tokInfo == nullptr) return nullptr;
 
 	tokInfo->buf = tokInfo->cur = tokInfo->inp = nullptr;
 	tokInfo->start = nullptr;
@@ -33,7 +34,7 @@ TokenInfo* alifTokenizer_newTokenInfo() {
 	tokInfo->alterIndStack[0] = 0;
 	tokInfo->countLine = 0;
 	tokInfo->fn = nullptr;
-	tokInfo->comment = 0;
+	//tokInfo->comment = 0;
 	tokInfo->underflow = nullptr;
 	tokInfo->string = nullptr;
 	tokInfo->tokExtraTokens = 0;
