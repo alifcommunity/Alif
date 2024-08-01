@@ -33,14 +33,6 @@ int alifParserEngine_updateMemo(AlifParser* _p, int _mark, int _type, void* _nod
 	return alifParserEngine_insertMemo(_p, _mark, _type, _node);
 }
 
-static AlifIntT growableCommentArr_init(GrowableCommentArr* _arr, AlifSizeT _initSize) { 
-	_arr->items = (GrowableCommentArr::Items*)alifMem_dataAlloc(_initSize * sizeof(*_arr->items));
-	_arr->size = _initSize;
-	_arr->numItems = 0;
-
-	return _arr->items != nullptr;
-}
-
 static int get_keywordOrName(AlifParser* _p, AlifToken* _token) { 
 	int nameLen = _token->endColOffset - _token->colOffset;
 
@@ -180,7 +172,15 @@ int alifParserEngine_lookahead(int _positive, void* (_func)(AlifParser*), AlifPa
 	return (res != nullptr) == _positive;
 }
 
-AlifPToken* alifParserEngine_expectToken(AlifParser* _p, int _type) { 
+AlifPToken* alifParserEngine_expectToken(AlifParser* _p, AlifIntT _type) {
+	/*
+		إذا وصل المؤشر mark
+		الى مؤشر الملء fill
+		هذا يعني أنه لم يعد هنالك رموز المأخوذة tokens
+		قابلة للإستخدام وبالتالي يجب جلب رمز جديد
+		-------------------------------------------
+		الفرق بين المؤشر الحالي ومؤشر الملء يدل على عدد الرموز المأخوذة tokens
+	*/
 	if (_p->mark_ == _p->fill_) {
 		if (alifParserEngine_fillToken(_p) < 0) {
 			_p->errorIndicator = 1;
@@ -343,10 +343,6 @@ AlifParser* alifParserEngine_newParser(TokenInfo* _tokInfo, int _startRule, Alif
 	}
 	p->tokens[0] = (AlifPToken*)alifMem_dataAlloc(sizeof(AlifPToken));
 	if (p->tokens[0] == nullptr) {
-		// error
-		return nullptr;
-	}
-	if (!growableCommentArr_init(&p->typeIgnoreComments, 10)) {
 		// error
 		return nullptr;
 	}

@@ -485,6 +485,7 @@ public:
 
 
 Module* alifAST_module(StmtSeq*, AlifASTMem*);
+Module* alifAST_interactive(StmtSeq*, AlifASTMem*);
 Statement* alifAST_assign(ExprSeq*, Expression*, int, int, int, int, AlifASTMem*);
 Statement* alifAST_expr(Expression*, int, int, int, int, AlifASTMem*);
 Expression* alifAST_constant(AlifObject*, AlifObject*, int, int, int, int, AlifASTMem*);

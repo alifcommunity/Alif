@@ -1,4 +1,4 @@
-﻿#include "alif.h"
+#include "alif.h"
 
 #include "AlifCore_AST.h"
 #include "AlifCore_Memory.h" // temp
@@ -16,6 +16,15 @@ Module* alifAST_module(StmtSeq* _body, AlifASTMem* _astMem) {
 	if (!p) return nullptr;
 	p->type = ModuleK;
 	p->V.module.body = _body;
+	return p;
+}
+
+Module* alifAST_interactive(StmtSeq* _body, AlifASTMem* _astMem) {
+	Module* p{};
+	p = (Module*)alifASTMem_malloc(_astMem, sizeof(*p));
+	if (!p) return nullptr;
+	p->type = InteractiveK;
+	p->V.interactive.body = _body;
 	return p;
 }
 

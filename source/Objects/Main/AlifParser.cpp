@@ -107,7 +107,7 @@ static wchar_t* softKeywords[] = {
 int alifParserEngine_fillToken(AlifParser*);
 Expression* alifParserEngine_nameToken(AlifParser*);
 AlifObject* alifParserEngine_newIdentifier(AlifParser*, const wchar_t*);
-AlifPToken* alifParserEngine_expectToken(AlifParser*, int);
+AlifPToken* alifParserEngine_expectToken(AlifParser*, AlifIntT);
 AlifPToken* alifParserEngine_getLastNonWhitespaceToken(AlifParser*);
 Expression* alifParserEngine_numberToken(AlifParser*);
 int alifParserEngine_insertMemo(AlifParser*, int, int, void*);
@@ -12777,7 +12777,7 @@ done:
 }
 
 
-// alif1_loop1: statement
+// ألف1_حلقة1: حالة
 static Seq* alif1_loop1(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
@@ -12785,68 +12785,55 @@ static Seq* alif1_loop1(AlifParser* _p) {
 
 	void* res_{};
 	AlifIntT mark_ = _p->mark_;
-	//AlifVector<void*>* children = (AlifVector<void*>*)alifMem_dataAlloc(sizeof(AlifVector<void*>));
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	AlifPArray children_{};
+	if (!children_.data_) {
 		_p->errorIndicator = 1;
 		// Memory Error - No Memory alifError_noMemory
 		_p->level--;
 		return nullptr;
 	}
-	AlifSizeT capacity_ = 1;
-	AlifSizeT n_ = 0;
-	{ // statement
+
+	{ // حالة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		StmtSeq* statementVar{};
-		while ((statementVar = statement_rule(_p))) // statement
+		while ((statementVar = statement_rule(_p))) // حالة
 		{
 			res_ = statementVar;
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+			children_.push_back(res_);
+
+			if (!children_.data_) {
+				_p->errorIndicator = 1;
+				// Memory Error - No Memory alifError_noMemory
+				_p->level--;
+				return nullptr;
 			}
-			//children->push_back(res_);
-			children_[n_++] = res_;
 			mark_ = _p->mark_;
 		}
 		_p->mark_ = mark_;
 	}
-	//AlifUSizeT size_ = children->get_size();
-	//if (size_ == 0 or _p->errorIndicator) {
-	if (n_ == 0 or _p->errorIndicator) {
-		alifMem_dataFree(children_);
+
+	AlifUSizeT size_ = children_.size_;
+	if (size_ == 0 or _p->errorIndicator) {
 		_p->level--;
 		return nullptr;
 	}
-	//Seq* seq_ = (Seq*)alifNew_genericSeq(size_, _p->astMem);
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
+	Seq* seq_ = (Seq*)alifNew_genericSeq(size_, _p->astMem);
 	if (!seq_) {
-		alifMem_dataFree(children_);
 		_p->errorIndicator = 1;
 		// Memory Error - No Memory alifError_noMemory
 		_p->level--;
 		return nullptr;
 	}
-	//for (int i = 0; i < size_; i++) SEQ_SETUNTYPED(seq_, i, children->get_element(i));
-	for (AlifIntT i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (int i = 0; i < size_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
 	return seq_;
 }
 //	^
 //	|
 //	|
-// statements: statement+
+// حالات: حالة+ـ
 static StmtSeq* statements_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
@@ -12854,15 +12841,14 @@ static StmtSeq* statements_rule(AlifParser* _p) {
 
 	StmtSeq* res_{};
 	AlifIntT mark_ = _p->mark_;
-
-	{
+	{ // حالات: حالة+ـ
 		Seq* a_{};
-		if (a_ = alif1_loop1(_p)) // statement+
+		if (a_ = alif1_loop1(_p)) // حالة+ـ
 		{
 			res_ = (StmtSeq*)alifParserEngine_seqFlatten(_p, a_);
 			if (res_ == nullptr
 				/* and
-				error occurred and stored in ThreadState->currentException */)
+				error occurred */)
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -12874,16 +12860,47 @@ static StmtSeq* statements_rule(AlifParser* _p) {
 	}
 
 	res_ = nullptr;
-
 done:
 	_p->level--;
 	return res_;
 }
 
-
+// طرفية: حالة_سطر
 static Module* interactiveRun_rule(AlifParser* _p) { 
-	return nullptr;//
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	Module* res_ = nullptr;
+	AlifIntT mark_ = _p->mark_;
+	{ // طرفية: حالة_سطر
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		StmtSeq* a_;
+		//if (
+		//	(a_ = statementNewline_rule(_p))  // طرفية: حالة_سطر
+		//	)
+		//{
+		//	res_ = alifAST_interactive(a_, _p->astMem);
+		//	if (res_ == nullptr
+		//		/* and
+		//		error occurred and stored in Thread->currentException */)
+		//	{
+		//		_p->errorIndicator = 1;
+		//		_p->level--;
+		//		return nullptr;
+		//	}
+		//	goto done;
+		//}
+		_p->mark_ = mark_;
+	}
+
+	res_ = nullptr;
+done:
+	_p->level--;
+	return res_;
 }
+
 static Module* evalRun_rule(AlifParser* _p) {
 	return nullptr;//
 }
@@ -12892,7 +12909,7 @@ static Module* funcRun_rule(AlifParser* _p) {
 }
 
 
-// file: statements? $
+// ملف: حالات؟ $ـ
 static Module* fileRun_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
@@ -12900,21 +12917,21 @@ static Module* fileRun_rule(AlifParser* _p) {
 
 	Module* res_{};
 	AlifIntT mark_ = _p->mark_;
-	{
+	{ // ملف: حالات؟ $ـ
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		StmtSeq* a_{}; // changed from void* to StmtSeq*
+		StmtSeq* a_{};
 		AlifPToken* endMarkerVar{};
 		if (
-			(a_ = statements_rule(_p), !_p->errorIndicator)  // statements?
+			(a_ = statements_rule(_p), !_p->errorIndicator)  // حالات؟
 			and
 			(endMarkerVar = alifParserEngine_expectToken(_p, ENDMARKER)) // ENDMARKER
 			)
 		{
-			res_ = alifParserEngine_makeModule(_p, a_);
+			res_ = alifAST_module(a_, _p->astMem);
 			if (res_ == nullptr
 				/* and
-				error occurred and stored in ThreadState->currentException */)
+				error occurred and stored in Thread->currentException */)
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -12926,7 +12943,6 @@ static Module* fileRun_rule(AlifParser* _p) {
 	}
 
 	res_ = nullptr;
-
 done:
 	_p->level--;
 	return res_;
