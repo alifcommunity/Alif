@@ -72,6 +72,7 @@
     <ClInclude Include="..\source\Include\Main\Split.h" />
     <ClInclude Include="..\source\Include\Main\StringParser.h" />
     <ClInclude Include="..\source\Include\Main\Thread_nt.h" />
+    <ClInclude Include="..\source\Include\Main\Thread_PThread.h" />
     <ClInclude Include="..\source\Include\Main\Tokenizer.h" />
     <ClInclude Include="..\source\Include\Main\TupleObject.h" />
     <ClInclude Include="..\source\Include\Main\UStrObject.h" />

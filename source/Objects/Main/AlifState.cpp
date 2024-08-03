@@ -22,13 +22,8 @@ static const AlifDureRun initial = ALIF_DURERUNSTATE_INIT(_alifDureRun_);
 
 
 static void init_dureRun(AlifDureRun* _dureRun) {
-	
-	//_dureRun->mainThread = alifThread_getThreadIdent();
-#ifdef _WINDOWS
-	_dureRun->mainThreadID = GetCurrentThreadId();
-#else
-	_dureRun->mainThreadID = pthread_self();
-#endif
+
+	_dureRun->mainThreadID = alifThread_getThreadID();
 
 	_dureRun->selfInitialized = 1;	
 }
