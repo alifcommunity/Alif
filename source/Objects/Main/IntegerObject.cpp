@@ -522,6 +522,8 @@ static AlifObject* integer_compare(AlifObject* _a, AlifObject* _b, int _op) {
 	}
 
 	ALIF_RETURN_RICHCOMPARE(result_, 0 , _op);
+
+	return nullptr; // يحتاج مراجعة
 }
 
 static void long_dealloc(AlifObject* _self)
@@ -634,7 +636,7 @@ static AlifNumberMethods _integerAsNumber_ = {
 
 AlifTypeObject _alifIntegerType_ = {
 	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0)
-	L"int",
+	L"صحيح",
 	offsetof(AlifIntegerObject, digits_),
 	sizeof(size_t),
 	long_dealloc,

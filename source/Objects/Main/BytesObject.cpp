@@ -320,6 +320,8 @@ static AlifObject* bytes_richcompare(AlifWBytesObject* _a, AlifWBytesObject* _b,
             ALIF_RETURN_RICHCOMPARE(c_, 0, _op);
         ALIF_RETURN_RICHCOMPARE(lenA, lenB, _op);
     }
+
+	return nullptr;
 }
 
 // in file bytes_methods.c_

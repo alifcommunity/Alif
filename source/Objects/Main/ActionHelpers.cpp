@@ -806,6 +806,8 @@ Expression* alifParserEngine_formattedValue(AlifParser* _p, Expression* _expr, A
 	else {
 		return formattedValue;
 	}
+
+	return nullptr;
 }
 
 Expression* alifParserEngine_combineStrings(AlifParser* _p, ExprSeq* _strings,

@@ -53,6 +53,8 @@ AlifObject* alifObject_getItem(AlifObject* _o, AlifObject* _key) {
 
 		}
 	}
+
+	return nullptr;
 }
 
 AlifIntT alifMapping_getOptionalItem(AlifObject* _obj, AlifObject* _key, AlifObject** _result) { 

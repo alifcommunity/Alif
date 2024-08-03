@@ -745,6 +745,8 @@ static AlifIntT maybeOptimize_methodCall(AlifCompiler* _compiler, Expression* _e
 	/*
 	// code here
 	*/
+
+	return 1;
 }
 
 static AlifIntT compiler_callHelper(AlifCompiler* _compiler, SourceLocation _loc, AlifIntT _n,

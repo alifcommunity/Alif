@@ -1351,6 +1351,8 @@ AlifIntT alifDict_setItemLockHeld(AlifDictObject* dict, AlifObject* name, AlifOb
 	else {
 		return setItem_lockHeld(dict, name, value);
 	}
+
+	return -1;
 }
 
 static inline AlifObject* ensure_nonManagedDict(AlifObject* obj, AlifObject** dictptr) { 
