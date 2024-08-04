@@ -91,8 +91,9 @@ char* alif_setLocale(AlifIntT category) {
 	return res;
 }
 
-static AlifIntT alif_setWinFileMode(AlifConfig* _config) {
+static AlifIntT alif_setFileMode(AlifConfig* _config) {
 
+#if defined(_WINDOWS) or defined(__CYGWIN__)
 	/* don't translate newlines (\r\n <=> \n) */
 	bool modeIn = _setmode(fileno(stdin), O_BINARY);
 	bool modeOut = _setmode(fileno(stdout), O_BINARY);
@@ -102,6 +103,7 @@ static AlifIntT alif_setWinFileMode(AlifConfig* _config) {
 		std::cout << "لم يستطع تهيئة الطرفية لقراءة الأحرف العربية في نظام ويندوز" << std::endl;
 		return -1;
 	}
+#endif
 
 	bool buffIn{1}, buffOut{1}, buffErr{1};
 	if (!_config->bufferedStdio) {
@@ -138,9 +140,7 @@ static AlifIntT alif_setWinFileMode(AlifConfig* _config) {
 
 AlifIntT alif_setStdioLocale(AlifConfig* _config) {
 
-#if defined(_WINDOWS) or defined(__CYGWIN__)
-	AlifIntT mode = alif_setWinFileMode(_config);
-#endif
+	AlifIntT mode = alif_setFileMode(_config);
 	if (!mode) return -1;
 
 	const char* locale = alif_setLocale(LC_CTYPE);

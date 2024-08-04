@@ -4,7 +4,6 @@
 	هذا الملف يعمل على تحديد بعض المعلوامات الخاصة بنظام التشغيل
 */
 
-#define NT_THREADS
 #define WITH_THREAD
 
 #ifdef _WIN32
@@ -128,9 +127,11 @@
 #ifdef _WINDOWS
 	#include <io.h>
 	#define SIZEOF_WCHART 2
+	#define NT_THREADS
 #else
-	#define SIZEOF_WCHART 4
 	#include <cstring>
+	#define SIZEOF_WCHART 4
+	#define _USE_PTHREADS
 #endif // _WINDOWS
 
 
