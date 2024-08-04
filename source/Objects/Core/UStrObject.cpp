@@ -254,11 +254,11 @@ AlifObject* alifNew_uStr(size_t _size, uint8_t _maxChar) { /// M
 	//	((uint32_t*)data_)[_size] = 0;
 	//}
 
-#if SIZEOF_WCHART == 2
-	((uint16_t*)data_)[_size + 1] = 0;
-#elif SIZEOF_WCHART == 4
-	((uint32_t*)data_)[_size + 1] = 0;
-#endif
+//#if SIZEOF_WCHART == 2
+//	((uint16_t*)data_)[_size + 1] = 0;
+//#elif SIZEOF_WCHART == 4
+//	((uint32_t*)data_)[_size + 1] = 0;
+//#endif
 
 	//! this section need review
 

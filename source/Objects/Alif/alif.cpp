@@ -24,17 +24,12 @@ static AlifIntT alifMain_init(AlifArgv* _args) {
 
 	alifConfig_initAlifConfig(&config_);
 
-	status = alifArgv_asWStrList(&config_, _args);
+	status = alif_mainMemoryInit();
 	if (status < 1) {
 		goto done;
 	}
 
-	//status = alif_setStdioLocale(&config_);
-	//if (status < 1) {
-	//	goto done;
-	//}
-
-	status = alif_mainMemoryInit();
+	status = alifArgv_asWStrList(&config_, _args);
 	if (status < 1) {
 		goto done;
 	}
