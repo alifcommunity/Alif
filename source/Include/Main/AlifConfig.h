@@ -139,3 +139,4 @@
 
 
 
+#define HAVE_SETVBUF

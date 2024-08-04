@@ -22,6 +22,7 @@ public:
 
 	AlifIntT interactive{};
 	AlifIntT optimizationLevel{};
+	AlifIntT bufferedStdio{};
 
 	AlifIntT quite{};
 
@@ -36,5 +37,5 @@ public:
 };
 
 
-AlifIntT alif_setLocaleAndWChar();
+AlifIntT alif_setStdioLocale(AlifConfig*);
 void alifConfig_initAlifConfig(AlifConfig*);

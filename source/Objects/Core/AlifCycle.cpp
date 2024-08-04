@@ -315,7 +315,7 @@ AlifIntT alif_initFromConfig(AlifConfig* _config) {
 		return -1;
 	}
 
-	AlifIntT status{};
+	AlifIntT status{-1};
 
 	status = alifDureRun_initialize();
 	if (status < 1) return status;
