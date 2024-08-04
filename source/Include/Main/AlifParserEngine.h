@@ -146,7 +146,7 @@ int alifParserEngine_insertMemo(AlifParser*, int, int, void*);
 int alifParserEngine_updateMemo(AlifParser*, int, int, void*);
 int alifParserEngine_isMemorized(AlifParser*, int, void*);
 
-int alifParserEngine_lookaheadWithInt(int, AlifPToken* (_func)(AlifParser*, int), AlifParser*, int);
+int alifParserEngine_lookaheadWithInt(int, AlifPToken* (_func)(AlifParser*, AlifIntT), AlifParser*, int);
 int alifParserEngine_lookahead(int, void* (_func)(AlifParser*), AlifParser*);
 
 AlifPToken* alifParserEngine_expectToken(AlifParser*, AlifIntT);

@@ -34,7 +34,7 @@ public:
 		//AlifGlobalStrings strings{};
 
 		ALIFGC_HEAD_UNUSED tupleEmptyGCNotUsed{};
-		AlifTupleObject tupleEmpty{LLONG_MAX, &_alifTupleType_}; // فكرة خرافية ولكن يجب مراجعتها
+		AlifTupleObject tupleEmpty{LONG_MAX, &_alifTupleType_}; // فكرة خرافية ولكن يجب مراجعتها
 
 		ALIFGC_HEAD_UNUSED hamtBitmapNodeEmptyGCNotUsed{};
 		AlifHamtNodeBitmap hamtBitmapNodeEmpty{};

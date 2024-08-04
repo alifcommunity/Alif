@@ -72,7 +72,7 @@ int64_t alifBytes_size(AlifObject* _object) {
     return ALIF_SIZE(_object);
 }
 
-int alifWBytes_asStringAndSize(AlifObject* _obj, wchar_t** _s, int64_t* _len)
+int alifWBytes_asStringAndSize(AlifObject* _obj, wchar_t** _s, AlifSizeT* _len)
 {
     if (_s == nullptr) return -1;
 

@@ -517,7 +517,7 @@ static int update_symbols(AlifObject* _symbols, AlifObject* _scopes,
     AlifObject* _bound, AlifObject* _free, AlifObject* _inlinedCells, int _classflag) { 
     AlifObject* name = nullptr, * itr = nullptr;
     AlifObject* v = nullptr, * v_scope = nullptr, * v_new = nullptr, * v_free = nullptr;
-    int64_t pos = 0;
+	AlifSizeT pos = 0;
 
     while (alifDict_next(_symbols, &pos, &name, &v)) {
         long scope, flags;

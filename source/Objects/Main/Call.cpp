@@ -246,7 +246,7 @@ AlifObject* const* alifStack_unpackDict(AlifObject* const* args, int64_t nArgs,
 
     AlifObject** kwStack = stack + nArgs;
 
-    int64_t pos = 0, i = 0;
+	AlifSizeT pos = 0, i = 0;
     AlifObject* key{}, * value{};
     unsigned long keys_are_strings = ALIFTPFLAGS_USTR_SUBCLASS;
     while (alifDict_next(kwArgs, &pos, &key, &value)) {

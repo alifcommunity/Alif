@@ -430,7 +430,7 @@ int alifSequence_check(AlifObject* _s)
         _s->type_->asSequence->item_ != nullptr;
 }
 
-AlifObject* alifSequence_getItem(AlifObject* _s, int64_t _i)
+AlifObject* alifSequence_getItem(AlifObject* _s, AlifSizeT _i)
 {
 	if (_s == nullptr) {
 		return nullptr;

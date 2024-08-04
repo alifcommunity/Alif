@@ -25,7 +25,7 @@ static void init_dureRun(AlifDureRun* _dureRun) {
 
 	_dureRun->mainThreadID = alifThread_getThreadID();
 
-	_dureRun->selfInitialized = 1;	
+	_dureRun->selfInitialized = 1;
 }
 
 AlifIntT alifDureRunState_init(AlifDureRun* _dureRun) {

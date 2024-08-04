@@ -129,7 +129,7 @@ static inline uint8_t calculate_log2_keySize(int64_t _minSize)
 	// On 64bit Windows, sizeof(long) == 4.
 	_minSize = (_minSize | ALIFDICT_MINSIZE) - 1;
 	unsigned long msb_;
-	_BitScanReverse64(&msb_, (uint64_t)_minSize);
+	_BitScanReverse(&msb_, (uint64_t)_minSize);
 	return (uint8_t)(msb_ + 1);
 #else
 	uint8_t log2Size;
@@ -1114,7 +1114,7 @@ int alifDictDelItem_knownHash(AlifObject* _op, AlifObject* _key, size_t _hash)
 	return res;
 }
 
-int alifSubDict_next(AlifObject* _op, int64_t* _ppos, AlifObject** _pkey,
+int alifSubDict_next(AlifObject* _op, AlifSizeT* _ppos, AlifObject** _pkey,
 	AlifObject** _pvalue, size_t* _phash) 
 {
 	int64_t i_;
@@ -1174,7 +1174,7 @@ int alifSubDict_next(AlifObject* _op, int64_t* _ppos, AlifObject** _pkey,
 	return 1;
 }
 
-int alifDict_next(AlifObject* _op, int64_t* _ppos, AlifObject** _pkey, AlifObject** _pvalue) 
+int alifDict_next(AlifObject* _op, AlifSizeT* _ppos, AlifObject** _pkey, AlifObject** _pvalue)
 {
 	int res;
 	//ALIF_BEGIN_CRITICAL_SECTION(op);
@@ -1279,7 +1279,7 @@ again:
 		goto again;
 	}
 
-	int64_t j_ = 0, pos_ = 0;
+	AlifSizeT j_ = 0, pos_ = 0;
 	AlifObject* key_;
 	while (alifSubDict_next((AlifObject*)mp_, &pos_, &key_, nullptr, nullptr)) {
 		ALIFLIST_SETITEM(v_, j_, ALIF_NEWREF(key_));

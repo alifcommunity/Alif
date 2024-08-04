@@ -501,7 +501,7 @@ AlifIntT alifObject_getOptionalAttr(AlifObject* v, AlifObject* name, AlifObject*
 		return 0;
 	}
 	else if (tp->getAttro == alifType_getAttro) {
-		int supress_missing_attribute_exception = 0;
+		AlifIntT supress_missing_attribute_exception = 0;
 		*result = alifType_getAttroImpl((AlifTypeObject*)v, name, &supress_missing_attribute_exception);
 		if (supress_missing_attribute_exception) {
 			return 0;

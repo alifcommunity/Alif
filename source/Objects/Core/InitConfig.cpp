@@ -157,11 +157,11 @@ AlifIntT alifArgv_asWStrList(AlifConfig* _config, AlifArgv* _args) {
 	if (_args->useBytesArgv)
 	{
 		AlifWStringList wArgv = { 0, nullptr };
-		wArgv.items = new wchar_t*[_args->argc];
+		wArgv.items = new wchar_t*[_args->argc + 1];
 
 		for (AlifIntT i = 0; i < _args->argc; i++) {
 			AlifSizeT len = mbstowcs(nullptr, (const char*)_args->bytesArgv[i], 0);
-			wchar_t* arg = new wchar_t[len];
+			wchar_t* arg = new wchar_t[len + 1];
 			mbstowcs(arg, (const char*)_args->bytesArgv[i], len);
 			wArgv.items[i] = arg;
 			wArgv.length++;
@@ -189,6 +189,7 @@ void alifConfig_initAlifConfig(AlifConfig* _config) {
 	_config->parseArgv = 1;
 	_config->interactive = 0;
 	_config->optimizationLevel = 0;
+	_config->bufferedStdio = 0;
 	_config->quite = 0;
 	_config->initMain = 1;
 }

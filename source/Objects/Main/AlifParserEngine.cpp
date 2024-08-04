@@ -158,7 +158,7 @@ int alifParserEngine_isMemorized(AlifParser* _p, int _type, void* _pres) {
 	return 0;
 }
 
-int alifParserEngine_lookaheadWithInt(int _positive, AlifPToken* (_func)(AlifParser*, int), AlifParser* _p, int _arg) { 
+int alifParserEngine_lookaheadWithInt(int _positive, AlifPToken* (_func)(AlifParser*, AlifIntT), AlifParser* _p, int _arg) { 
 	AlifIntT mark_ = _p->mark_;
 	void* res = _func(_p, _arg);
 	_p->mark_ = mark_;

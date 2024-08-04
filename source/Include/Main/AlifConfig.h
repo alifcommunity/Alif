@@ -119,6 +119,8 @@
 	using AlifIntT = int16_t;
 	using AlifUIntT = uint16_t;
 	#define ALIF_SIZET INT_MAX
+	#define ALIF_SIZET_MAX LLONG_MAX
+	#define ALIF_SIZET_MIN (-ALIF_SIZET_MAX-1)
 	#define SIZEOF_VOID_P 4
 #endif
 

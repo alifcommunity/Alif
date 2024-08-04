@@ -107,7 +107,6 @@ static wchar_t* softKeywords[] = {
 int alifParserEngine_fillToken(AlifParser*);
 Expression* alifParserEngine_nameToken(AlifParser*);
 AlifObject* alifParserEngine_newIdentifier(AlifParser*, const wchar_t*);
-AlifPToken* alifParserEngine_expectToken(AlifParser*, AlifIntT);
 AlifPToken* alifParserEngine_getLastNonWhitespaceToken(AlifParser*);
 Expression* alifParserEngine_numberToken(AlifParser*);
 int alifParserEngine_insertMemo(AlifParser*, int, int, void*);
@@ -115,7 +114,6 @@ void* alifParserEngine_stringToken(AlifParser*);
 int alifParserEngine_isMemorized(AlifParser*, int, void*);
 int alifParserEngine_lookahead(int, void* (_func)(AlifParser*), AlifParser*);
 int alifParserEngine_updateMemo(AlifParser*, int, int, void*);
-int alifParserEngine_lookaheadWithInt(int, AlifPToken* (_func)(AlifParser*, int), AlifParser*, int);
 AlifPToken* alifParserEngine_expectTokenForced(AlifParser*, int, const wchar_t*);
 
 static Expression* expression_rule(AlifParser*);
