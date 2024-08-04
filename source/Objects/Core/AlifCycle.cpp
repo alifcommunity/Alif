@@ -49,7 +49,7 @@ static inline void current_fastSet(AlifDureRun* _dureRun, AlifThread* _thread) {
 #ifdef HAVE_LOCAL_THREAD
 	_alifTSSThread_ = _thread;
 #else
-	error L"خطأ ممر" // need fix
+	error "خطأ ممر" // need fix
 #endif
 }
 
@@ -62,8 +62,6 @@ static AlifIntT alifCore_initDureRun(AlifDureRun* _dureRun, const AlifConfig* _c
 
 	AlifIntT status = alifConfig_write(_config, _dureRun);
 	if (status < 1) return status;
-
-	alif_getVersion();
 
 	status = alifImport_init();
 
@@ -123,7 +121,8 @@ static AlifIntT alifCore_createInterpreter(AlifDureRun* _dureRun, const AlifConf
 
 	if (thread_ == nullptr) {
 		// cant make thread // temp
-		std::wcout << L"لا يمكن إنشاء ممر" << std::endl;
+		printf("%s \n", "لا يمكن إنشاء ممر");
+		return -1;
 	}
 
 	_dureRun->mainThread = thread_;

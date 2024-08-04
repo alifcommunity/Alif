@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 /*
 	نسخة ألف
@@ -16,7 +16,7 @@
 #define ALIF_RELEASE_LEVEL        ALIF_RELEASE_LEVEL_FINAL
 
 /* النسخة كقيمة نصية */
-#define ALIF_VERSION              L"5.0.0"
+#define ALIF_VERSION              "5.0.0"
 
 /*
 	نسخة ألف ك 4-بايت رقم ست عشري, مثال: 5.1.0 أ.
@@ -29,4 +29,4 @@
 
 
 
-const wchar_t* alif_getVersion();
+const char* alif_getVersion();

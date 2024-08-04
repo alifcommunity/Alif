@@ -23,10 +23,10 @@ typedef uint32_t DWORD;
 
 #define ALIF_ARRAY_LENGTH(arr) (sizeof(arr) / sizeof(arr[0]))
 
-static const wchar_t usageLine[] =
-L"usage: %ls [option] ... [-c cmd | -m mod | file | - ] [arg] ...\n";
+static const char usageLine[] =
+"usage: %ls [option] ... [-c cmd | -m mod | file | - ] [arg] ...\n";
 
-static const wchar_t usageHelp[] = L"\
+static const char usageHelp[] = "\
 -c cmd : program passed in as string (terminates option list)\n\
 -m mod : run library module as a script (terminates option list)\n\
 file   : program read from script file\n\
@@ -40,9 +40,9 @@ static void config_usage(const wchar_t* program)
 {
 	FILE* f = stdout;
 
-	fwprintf(f, usageLine, program);
+	fprintf(f, usageLine, program);
 
-	fputws(usageHelp, f);
+	fputs(usageHelp, f);
 }
 
 
@@ -91,7 +91,7 @@ char* alif_setLocale(AlifIntT category) {
 	return res;
 }
 
-static AlifIntT alif_setFileMode(AlifConfig* _config) {
+static AlifIntT alif_setFileMode(const AlifConfig* _config) {
 
 #if defined(_WINDOWS) or defined(__CYGWIN__)
 	/* don't translate newlines (\r\n <=> \n) */
@@ -116,29 +116,37 @@ static AlifIntT alif_setFileMode(AlifConfig* _config) {
 		buffOut = setbuf(stdout, (char*)nullptr);
 		buffErr = setbuf(stderr, (char*)nullptr);
 #endif /* !HAVE_SETVBUF */
+
+		if (buffIn or buffOut or buffErr) {
+			std::cout << "لم يستطع تهيئة مخزن النصوص الإفتراضي في نظام ويندوز" << std::endl;
+			return -1;
+		}
 	}
 	else if (_config->interactive) {
 #ifdef _WINDOWS
 		/* Doesn't have to have line-buffered -- use unbuffered */
 		buffOut = setvbuf(stdout, (char*)NULL, _IONBF, BUFSIZ);
+		if (buffOut) {
+			std::cout << "لم يستطع تهيئة مخزن النصوص الإفتراضي في نظام ويندوز" << std::endl;
+			return -1;
+		}
 #else /* !_WINDOWS */
 #ifdef HAVE_SETVBUF
 		buffIn  = setvbuf(stdin, (char*)NULL, _IOLBF, BUFSIZ);
 		buffOut = setvbuf(stdout, (char*)NULL, _IOLBF, BUFSIZ);
+		if (buffIn or buffOut) {
+			std::cout << "لم يستطع تهيئة مخزن النصوص الإفتراضي في نظام ويندوز" << std::endl;
+			return -1;
+		}
 #endif /* HAVE_SETVBUF */
 #endif /* !_WINDOWS */
 	/* Leave stderr alone - it should be unbuffered. */
 	}
 
-	if (buffIn or buffOut or buffErr) {
-		std::cout << "لم يستطع تهيئة مخزن النصوص الإفتراضي في نظام ويندوز" << std::endl;
-		return -1;
-	}
-
 	return 1;
 }
 
-AlifIntT alif_setStdioLocale(AlifConfig* _config) {
+AlifIntT alif_setStdioLocale(const AlifConfig* _config) {
 
 	AlifIntT mode = alif_setFileMode(_config);
 	if (!mode) return -1;
@@ -154,14 +162,14 @@ AlifIntT alif_setStdioLocale(AlifConfig* _config) {
 
 AlifIntT alifArgv_asWStrList(AlifConfig* _config, AlifArgv* _args) {
 
-	if (_args->useBytesArgv)
-	{
+	if (_args->useBytesArgv) {
+
 		AlifWStringList wArgv = { 0, nullptr };
-		wArgv.items = new wchar_t*[_args->argc + 1];
+		wArgv.items = new wchar_t*[_args->argc]{};
 
 		for (AlifIntT i = 0; i < _args->argc; i++) {
 			AlifSizeT len = mbstowcs(nullptr, (const char*)_args->bytesArgv[i], 0);
-			wchar_t* arg = new wchar_t[len + 1];
+			wchar_t* arg = new wchar_t[len + 1] {};
 			mbstowcs(arg, (const char*)_args->bytesArgv[i], len);
 			wArgv.items[i] = arg;
 			wArgv.length++;
@@ -189,9 +197,10 @@ void alifConfig_initAlifConfig(AlifConfig* _config) {
 	_config->parseArgv = 1;
 	_config->interactive = 0;
 	_config->optimizationLevel = 0;
-	_config->bufferedStdio = 0;
+	_config->bufferedStdio = 1;
 	_config->quite = 0;
 	_config->initMain = 1;
+	_config->configStdio = 1;
 }
 
 
@@ -214,29 +223,31 @@ static AlifIntT parse_consoleLine(AlifConfig* _config, AlifSizeT* _index) {
 			break;
 		}
 
-		if (c == L'c') {
+		if (c == 'c') {
 			if (_config->runCommand == nullptr) {
-				AlifUSizeT len = wcslen(optArg) + 2 + 2;
+				AlifUSizeT len = wcslen(optArg) + 1 + 1;
 				wchar_t* command = (wchar_t*)alifMem_dataAlloc(len * sizeof(wchar_t));
 				if (command == nullptr) {
+					// memory error
 					return -1;
 				}
 				memcpy(command, optArg, (len - 2) * sizeof(wchar_t));
-				command[len - 2] = L'\n';
+				command[len - 2] = '\n';
 				command[len - 1] = 0;
 				_config->runCommand = command;
 			}
 			break;
 		}
 
-		if (c == L'm') {
+		if (c == 'm') {
 			if (_config->runModule == nullptr) {
-				AlifUSizeT len = wcslen(optArg) * sizeof(wchar_t) + 2 + 2;
+				AlifUSizeT len = (wcslen(optArg)) * sizeof(wchar_t);
 				_config->runModule = (wchar_t*)alifMem_dataAlloc(len);
-				memcpy(_config->runModule, optArg, len);
 				if (_config->runModule == nullptr) {
+					// memory error
 					return -1;
 				}
+				memcpy(_config->runModule, optArg, len);
 			}
 			break;
 		}
@@ -249,11 +260,11 @@ static AlifIntT parse_consoleLine(AlifConfig* _config, AlifSizeT* _index) {
 			//config_envvars_usage();
 			exit(1);
 		}
-		else if (c == L'h') {
+		else if (c == 'h') {
 			config_usage(program);
 			exit(1);
 		}
-		else if (c == L'v') {
+		else if (c == 'v') {
 			printVer++;
 			break;
 		}
@@ -267,7 +278,7 @@ static AlifIntT parse_consoleLine(AlifConfig* _config, AlifSizeT* _index) {
 
 
 	if (printVer) {
-		wprintf(L"alif %ls\n", alif_getVersion());
+		printf("alif %s\n", alif_getVersion());
 		exit(1);
 	}
 
@@ -275,7 +286,7 @@ static AlifIntT parse_consoleLine(AlifConfig* _config, AlifSizeT* _index) {
 		and optIdx < argv->length and wcscmp(argv->items[optIdx], L"-") != 0
 		and _config->runFilename == nullptr) {
 		AlifSizeT size = wcslen(argv->items[optIdx]) * sizeof(wchar_t);
-		_config->runFilename = (wchar_t*)alifMem_dataAlloc(size + 2);
+		_config->runFilename = (wchar_t*)alifMem_dataAlloc(size);
 		memcpy(_config->runFilename, argv->items[optIdx], size);
 	}
 
@@ -284,7 +295,7 @@ static AlifIntT parse_consoleLine(AlifConfig* _config, AlifSizeT* _index) {
 		optIdx--;
 	}
 
-	_config->programName = (wchar_t*)program;
+	_config->programName = (wchar_t*)program; // يحتاج مراجعة - لا يتم إسناده هنا
 
 	*_index = optIdx;
 
@@ -341,7 +352,7 @@ static AlifIntT run_absPathFilename(AlifConfig* _config) {
 
 	// يتم التحقق من لاحقة الملف والتي يجب ان تكون .alif
 	if (!alif_extension(filename)) {
-		wprintf(L"%ls", L"تأكد من لاحقة الملف \n يجب ان ينتهي اسم الملف بـ .alif");
+		printf("%s", "تأكد من لاحقة الملف \n يجب ان ينتهي اسم الملف بـ .alif");
 		exit(-1);
 	}
 
@@ -351,6 +362,7 @@ static AlifIntT run_absPathFilename(AlifConfig* _config) {
 	wchar_t wOutBuf[MAX_PATH]{}, * wOutBufP = wOutBuf;
 	DWORD result{};
 	result = GetFullPathNameW(filename, ALIF_ARRAY_LENGTH(wOutBuf), wOutBuf, nullptr);
+	if (!result) return -1;
 
 	absFilename = (wchar_t*)alifMem_dataAlloc(result * sizeof(wchar_t) + 2);
 	memcpy(absFilename, wOutBuf, result * sizeof(wchar_t));
@@ -425,7 +437,11 @@ static AlifIntT config_readConsole(AlifConfig* _config) {
 
 AlifIntT alifConfig_write(const AlifConfig* _config, AlifDureRun* _dureRun) {
 
-	//config_initStdio(_config); // for set arabic char reading in console
+	if (_config->configStdio) { // for set arabic char reading in console
+		if (alif_setStdioLocale(_config) < 1) {
+			return -1;
+		}
+	}
 
 	memcpy(&_alifDureRun_.origArgv, &_config->argv, sizeof(AlifWStringList)); // يجب مراجعتها
 

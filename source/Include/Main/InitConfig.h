@@ -18,10 +18,11 @@ public:
 	AlifIntT parseArgv{};
 
 	AlifWStringList origArgv{};
-	AlifWStringList argv;
+	AlifWStringList argv{};
 
 	AlifIntT interactive{};
 	AlifIntT optimizationLevel{};
+	AlifIntT configStdio{};
 	AlifIntT bufferedStdio{};
 
 	AlifIntT quite{};
@@ -37,5 +38,5 @@ public:
 };
 
 
-AlifIntT alif_setStdioLocale(AlifConfig*);
+AlifIntT alif_setStdioLocale(const AlifConfig*);
 void alifConfig_initAlifConfig(AlifConfig*);

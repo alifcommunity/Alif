@@ -1,4 +1,4 @@
-﻿#include "alif.h"
+#include "alif.h"
 #include "AlifCore_GetConsoleLine.h"
 
 // هذا المتغير يحتوي الاحرف التي قد يتم إستخدامها في سطر الطرفية

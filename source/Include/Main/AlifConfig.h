@@ -53,27 +53,27 @@
 #ifdef _MSC_VER
 
 	#define ALIF_COMPILER_VERSION(SUFFIX) \
-			(L"[MSC v." ALIF_STRINGIZE(_MSC_VER) L" " SUFFIX L"]")
+			("[MSC v." ALIF_STRINGIZE(_MSC_VER) " " SUFFIX "]")
 
 
 	#define ALIF_STRINGIZE(X) ALIF_STRINGIZE1(X)
 	#define ALIF_STRINGIZE1(X) #X
 
 	#ifdef _WINDOWS64
-		#if defined(_M_X64) || defined(_M_AMD64)
+		#if defined(_M_X64) or defined(_M_AMD64)
 			#if defined(__clang__)
-				#define COMPILER (L"[Clang " __clang_version__ L"] 64 bit (AMD64) with MSC v." ALIF_STRINGIZE(_MSC_VER) L" CRT]")
+				#define COMPILER ("[Clang " __clang_version__ "] 64 bit (AMD64) with MSC v." ALIF_STRINGIZE(_MSC_VER) " CRT]")
 			#elif defined(__INTEL_COMPILER)
-				#define COMPILER (L"[ICC v." ALIF_STRINGIZE(__INTEL_COMPILER) L" 64 bit (amd64) with MSC v." ALIF_STRINGIZE(_MSC_VER) L" CRT]")
+				#define COMPILER ("[ICC v." ALIF_STRINGIZE(__INTEL_COMPILER) " 64 bit (amd64) with MSC v." ALIF_STRINGIZE(_MSC_VER) " CRT]")
 			#else
-				#define COMPILER ALIF_COMPILER_VERSION(L"64 bit (AMD64)")
+				#define COMPILER ALIF_COMPILER_VERSION("64 bit (AMD64)")
 			#endif
-				#define ALIFD_PLATFORM_TAG L"win_amd64"
+				#define ALIFD_PLATFORM_TAG "win_amd64"
 		#elif defined(_M_ARM64)
-			#define COMPILER ALIF_COMPILER_VERSION(L"64 bit (ARM64)")
-			#define ALIFD_PLATFORM_TAG L"win_arm64"
+			#define COMPILER ALIF_COMPILER_VERSION("64 bit (ARM64)")
+			#define ALIFD_PLATFORM_TAG "win_arm64"
 		#else
-			#define COMPILER ALIF_COMPILER_VERSION(L"64 bit (Unknown)")
+			#define COMPILER ALIF_COMPILER_VERSION("64 bit (Unknown)")
 		#endif
 	#endif
 
@@ -81,18 +81,18 @@
 	#if defined(_WINDOWS32) && !defined(_WINDOWS64)
 		#if defined(_M_IX86)
 			#if defined(__clang__)
-				#define COMPILER (L"[Clang " __clang_version__ L"] 32 bit (Intel) with MSC v." ALIF_STRINGIZE(_MSC_VER) L" CRT]")
+				#define COMPILER ("[Clang " __clang_version__ "] 32 bit (Intel) with MSC v." ALIF_STRINGIZE(_MSC_VER) " CRT]")
 			#elif defined(__INTEL_COMPILER)
-				#define COMPILER (L"[ICC v." ALIF_STRINGIZE(__INTEL_COMPILER) L" 32 bit (Intel) with MSC v." ALIF_STRINGIZE(_MSC_VER) L" CRT]")
+				#define COMPILER ("[ICC v." ALIF_STRINGIZE(__INTEL_COMPILER) " 32 bit (Intel) with MSC v." ALIF_STRINGIZE(_MSC_VER) " CRT]")
 			#else
-				#define COMPILER ALIF_COMPILER_VERSION(L"32 bit (Intel)")
+				#define COMPILER ALIF_COMPILER_VERSION("32 bit (Intel)")
 			#endif
-				#define ALIFD_PLATFORM_TAG L"win32"
+				#define ALIFD_PLATFORM_TAG "win32"
 		#elif defined(_M_ARM)
-			#define COMPILER ALIF_COMPILER_VERSION(L"32 bit (ARM)")
-			#define ALIFD_PLATFORM_TAG L"win_arm32"
+			#define COMPILER ALIF_COMPILER_VERSION("32 bit (ARM)")
+			#define ALIFD_PLATFORM_TAG "win_arm32"
 		#else
-			#define COMPILER ALIF_COMPILER_VERSION(L"32 bit (Unknown)")
+			#define COMPILER ALIF_COMPILER_VERSION("32 bit (Unknown)")
 		#endif
 	#endif
 
