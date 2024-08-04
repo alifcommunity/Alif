@@ -6,9 +6,8 @@
 #include "AlifCore_AlifState.h"
 #include "AlifCore_AlifRun.h"
 
-#pragma warning(disable : 4996) // for disable unsafe functions error
 
-#define ALIF_COPYRIGHT L"للمزيد من المعلومات اكتب \"help\", \"copyright\", \"license\" "
+#define ALIF_COPYRIGHT "للمزيد من المعلومات اكتب \"help\", \"copyright\", \"license\" "
 
 
 /* ----------------------------------- تهيئة اللغة ----------------------------------- */
@@ -30,12 +29,12 @@ static AlifIntT alifMain_init(AlifArgv* _args) {
 		goto done;
 	}
 
+	//status = alif_setStdioLocale(&config_);
+	//if (status < 1) {
+	//	goto done;
+	//}
 
-	if (alif_mainMemoryInit() < 0) {
-		goto done;
-	}
-
-	status = alif_setStdioLocale(&config_);
+	status = alif_mainMemoryInit();
 	if (status < 1) {
 		goto done;
 	}

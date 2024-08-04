@@ -1,5 +1,7 @@
 #pragma once
 
+#pragma warning(disable : 4996) // for disable unsafe functions error
+
 #include <iostream>
 #include <algorithm>
 #include <limits.h>
