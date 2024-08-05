@@ -165,11 +165,11 @@ AlifIntT alifArgv_asWStrList(AlifConfig* _config, AlifArgv* _args) {
 	if (_args->useBytesArgv) {
 
 		AlifWStringList wArgv = { 0, nullptr };
-		wArgv.items = new wchar_t*[_args->argc]{};
+		wArgv.items = (wchar_t**)alifMem_dataAlloc(_args->argc * sizeof(wchar_t*));
 
 		for (AlifIntT i = 0; i < _args->argc; i++) {
 			AlifSizeT len = mbstowcs(nullptr, (const char*)_args->bytesArgv[i], 0);
-			wchar_t* arg = new wchar_t[len + 1] {};
+			wchar_t* arg = (wchar_t*)alifMem_dataAlloc((len + 1) * sizeof(wchar_t));
 			mbstowcs(arg, (const char*)_args->bytesArgv[i], len);
 			wArgv.items[i] = arg;
 			wArgv.length++;
@@ -364,19 +364,19 @@ static AlifIntT run_absPathFilename(AlifConfig* _config) {
 	result = GetFullPathNameW(filename, ALIF_ARRAY_LENGTH(wOutBuf), wOutBuf, nullptr);
 	if (!result) return -1;
 
-	absFilename = (wchar_t*)alifMem_dataAlloc(result * sizeof(wchar_t) + 2);
+	absFilename = (wchar_t*)alifMem_dataAlloc(result * sizeof(wchar_t));
 	memcpy(absFilename, wOutBuf, result * sizeof(wchar_t));
 #else
-	char buf[MAXPATHLEN + 1]{};
+	char buf[MAXPATHLEN]{};
 
 	char* cwd = getcwd(buf, sizeof(buf));
 	size_t len = mbstowcs(nullptr, cwd, 0);
-	wchar_t* wCwd = (wchar_t*)alifMem_dataAlloc(len * sizeof(wchar_t) + 2);
+	wchar_t* wCwd = (wchar_t*)alifMem_dataAlloc(len * sizeof(wchar_t));
 	mbstowcs(wCwd, cwd, len);
 
 	size_t cwdLen = wcslen(wCwd);
 	size_t pathLen = wcslen(filename);
-	size_t length = cwdLen + 1 + pathLen + 1;
+	size_t length = cwdLen + pathLen;
 
 	absFilename = (wchar_t*)alifMem_dataAlloc(length * sizeof(wchar_t));
 
@@ -388,9 +388,10 @@ static AlifIntT run_absPathFilename(AlifConfig* _config) {
 	absPath++;
 
 	memcpy(absPath, filename, pathLen * sizeof(wchar_t));
-	absPath += pathLen;
 
+	absPath += pathLen - 1;
 	*absPath = 0;
+
 #endif // _WINDOWS
 
 	_config->runFilename = absFilename;

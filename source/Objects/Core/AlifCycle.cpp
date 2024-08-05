@@ -7,30 +7,9 @@
 #include "AlifCore_DureRun.h"
 #include "AlifCore_DureRunInit.h"
 
-#ifdef _WINDOWS
-#include <windows.h>
-#endif
 
 
-#if defined(_WINDOWS)
-
-#pragma section("_alifDureRun_", read, write)
-__declspec(allocate("_alifDureRun_"))
-
-#elif defined(__APPLE__)
-
-__attribute__((
-	section(SEG_DATA ",_alifDureRun_")
-	))
-
-#endif
-
-
-AlifDureRun _alifDureRun_
-#if defined(__linux__) && (defined(__GNUC__) || defined(__clang__))
-__attribute__((section("._alifDureRun_")))
-#endif
-= ALIF_DURERUNSTATE_INIT(_alifDureRun_);
+AlifDureRun _alifDureRun_ = ALIF_DURERUNSTATE_INIT(_alifDureRun_);
 
 static AlifIntT dureRunInitialized = 0;
 
