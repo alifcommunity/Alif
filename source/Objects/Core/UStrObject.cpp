@@ -139,6 +139,7 @@ static inline int64_t findChar(const void* _s, int _kind,
 	//default:
 		//UNREACHABLE();
 	}
+    return -1;
 }
 
 static int resize_inplace(AlifObject* _uStr, int64_t _length)
@@ -302,20 +303,6 @@ static int alifSubUStr_fastCopyCharacters(AlifObject* _to, int64_t _toStart,
 	fromData = ALIFUSTR_CAST(_from)->UTF;
 	toKind = ALIFUSTR_CAST(_to)->kind_;
 	toData = ALIFUSTR_CAST(_to)->UTF;
-
-#ifdef DEBUG
-	if (!_checkMaxChar
-		&& ALIFUSTR_MAX_CHAR_VALUE(_from) > ALIFUSTR_MAX_CHAR_VALUE(_to))
-	{
-		uint32_t toMaxChar = ALIFUSTR_MAX_CHAR_VALUE(_to);
-		uint32_t ch_;
-		int64_t i_;
-		for (i_ = 0; i_ < _howMany; i_++) {
-			ch_ = USTR_READ(fromKind, fromData, _fromStart + i_);
-			assert(ch_ <= toMaxChar);
-		}
-	}
-#endif
 
 	if (fromKind == toKind) {
 		memcpy((wchar_t*)toData + toKind * _toStart,
@@ -645,6 +632,7 @@ static uint32_t kind_maxChar_limit(int _kind)
 	//default:
 		//UNREACHABLE();
 	}
+    return -1;
 }
 
 static AlifObject*
@@ -812,6 +800,8 @@ uint32_t utf8StringToCodePoint(const wchar_t* _utf8String) {
 	//else {
 		//return nullptr
 	//}
+    
+    return -1;
 }
 
 bool isDecimalDigit(uint32_t _ch) {
@@ -831,6 +821,8 @@ int toDecimalValue(uint32_t _ch) {
 	case 0x0038: return 8;
 	case 0x0039: return 9;
 	}
+    
+    return -1;
 }
 
 AlifObject* alifSubUStr_transformDecimalAndSpaceToASCII(AlifObject* _uStr)
@@ -887,6 +879,8 @@ static int64_t anyLib_find(int _kind, AlifObject* _str1, const void* _buf1, int6
 		return find((uint32_t*)_buf1, _len1, (uint32_t*)_buf2, _len2, _offset);
 	}
 	//UNREACHABLE();
+    
+    return -1;
 }
 
 static int64_t anyLib_count(int _kind, AlifObject* _str1, const void* _buf1, int64_t _len1,
@@ -899,6 +893,7 @@ static int64_t anyLib_count(int _kind, AlifObject* _str1, const void* _buf1, int
 		return count((uint32_t*)_buf1, _len1, (uint32_t*)_buf2, _len2, _offset);
 	}
 	//UNREACHABLE();
+    return -1;
 }
 
 static void* uStr_asKind(int _sKind, void const* _data, int64_t _len, int _kind)
@@ -1592,7 +1587,7 @@ bool contain_uStr(AlifObject* _uStr, AlifObject* _uStr2) {
 		return false;
 
 	}
-
+    return false;
 }
 
 /*
@@ -1671,7 +1666,7 @@ AlifObject* uStr_compare(AlifObject* _left, AlifObject* _right, int _op) {
 		return result_ ? ALIF_TRUE : ALIF_FALSE;
 	}
 
-	//return ALIF_NOTIMPLEMENTED; // need review
+	return ALIF_NOTIMPLEMENTED; // need review
 }
 
 // in file eq.h

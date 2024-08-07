@@ -84,8 +84,10 @@ char* alif_setLocale(AlifIntT category) {
 	}
 #endif
 	res = setlocale(category, utf8_locale);
-#else /* !defined(__ANDROID__) */
-	res = setlocale(category, "");
+#elif defined(_MAC)
+	res = setlocale(category, "utf-8");
+#else
+    res = setlocale(category, "");
 #endif
 
 	return res;
