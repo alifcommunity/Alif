@@ -7,15 +7,15 @@
 #include "AlifCore_Memory.h"
 
 static AlifObject* cFunction_vectorCallFastCall(
-    AlifObject* , AlifObject* const* , size_t , AlifObject* );
+    AlifObject* , AlifObject* const* , AlifUSizeT , AlifObject* );
 static AlifObject* cFunctionVectorCall_fastCallKeywords(
-    AlifObject* , AlifObject* const* , size_t , AlifObject* );
+    AlifObject* , AlifObject* const* , AlifUSizeT , AlifObject* );
 static AlifObject* cFunctionVectorCallFastCallKeywordsMethod(
-    AlifObject* , AlifObject* const* , size_t , AlifObject* );
+    AlifObject* , AlifObject* const* , AlifUSizeT , AlifObject* );
 static AlifObject* cFunctionVectorCallNoArg(
-    AlifObject* , AlifObject* const* , size_t , AlifObject* );
+    AlifObject* , AlifObject* const* , AlifUSizeT , AlifObject* );
 static AlifObject* cFunction_vectorCall(
-    AlifObject* , AlifObject* const* , size_t , AlifObject* );
+    AlifObject* , AlifObject* const* , AlifUSizeT , AlifObject* );
 static AlifObject* cFunction_call(
     AlifObject* , AlifObject* , AlifObject* );
 
@@ -230,7 +230,7 @@ FuncPtr cFunction_enterCall(AlifObject* _object) {
 }
 
 static AlifObject* cFunction_vectorCallFastCall(
-    AlifObject* _object, AlifObject* const* _args, size_t _nArgsF, AlifObject* _kwNames)
+    AlifObject* _object, AlifObject* const* _args, AlifUSizeT _nArgsF, AlifObject* _kwNames)
 {
     //if (cfunction_check_kwargs(object, kwnames)) {
         //return nullptr;
@@ -246,7 +246,7 @@ static AlifObject* cFunction_vectorCallFastCall(
 }
 
 static AlifObject* cFunctionVectorCall_fastCallKeywords(
-    AlifObject* _object, AlifObject* const* _args, size_t _nArgsF, AlifObject* _kwNames)
+    AlifObject* _object, AlifObject* const* _args, AlifUSizeT _nArgsF, AlifObject* _kwNames)
 {
     int64_t nArgs = _nArgsF & ~((size_t)1 << (8 * sizeof(size_t) - 1));
     AlifCFunctionFastWithKeywords method_ = (AlifCFunctionFastWithKeywords)cFunction_enterCall(_object);
@@ -258,7 +258,7 @@ static AlifObject* cFunctionVectorCall_fastCallKeywords(
 }
 
 static AlifObject* cFunctionVectorCallFastCallKeywordsMethod(
-    AlifObject* _object, AlifObject* const* _args, size_t _nArgsF, AlifObject* _kwNames)
+    AlifObject* _object, AlifObject* const* _args, AlifUSizeT _nArgsF, AlifObject* _kwNames)
 {
     AlifInitObject* cls_ = alifCFunction_getClass(_object);
     int64_t nArgs = _nArgsF & ~((size_t)1 << (8 * sizeof(size_t) - 1));
@@ -271,7 +271,7 @@ static AlifObject* cFunctionVectorCallFastCallKeywordsMethod(
 }
 
 static AlifObject* cFunctionVectorCallNoArg(
-    AlifObject* _object, AlifObject* const* _args, size_t _nArgsF, AlifObject* _kwNames)
+    AlifObject* _object, AlifObject* const* _args, AlifUSizeT _nArgsF, AlifObject* _kwNames)
 {
     //if (cfunction_check_kwargs(object, kwnames)) {
         //return nullptr;
@@ -293,8 +293,7 @@ static AlifObject* cFunctionVectorCallNoArg(
 }
 
 static AlifObject* cFunction_vectorCall(
-    AlifObject* _object, AlifObject* const* _args, size_t _nArgsF, AlifObject* _kwNames)
-{
+    AlifObject* _object, AlifObject* const* _args, AlifUSizeT _nArgsF, AlifObject* _kwNames) {
     
     //if (cfunction_check_kwargs(func, kwnames)) {
         //return nullptr;

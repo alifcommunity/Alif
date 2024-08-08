@@ -24,7 +24,7 @@
 #  define ALIFOBJECTSTACKCHUNK_MAXFREELIST 0
 #endif
 
-class AlifListFreeList { // 36
+class AlifListFreeList { 
 public:
 #ifdef WITH_FREELISTS
 	AlifListObject* items[ALIFLIST_MAXFREELIST];

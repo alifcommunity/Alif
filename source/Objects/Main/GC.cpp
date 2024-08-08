@@ -12,7 +12,7 @@ typedef class AlifGCDureRun AlifGC;
 #define GC_NEXT alifSubGCHead_next
 #define GC_PREV alifSubGCHead_prev
 
-#define AS_GC(_gc) alifSub_asGC(_gc) // 50
+#define AS_GC(_gc) alifSub_asGC(_gc) 
 
 static AlifGC* get_gc_state(void)
 {
@@ -92,7 +92,7 @@ int alifObject_isGC(AlifObject* _obj)
 	return alifSubObject_isGC(_obj);
 }
 
-void alifSubObjectGC_link(AlifObject* _gc) { // 1983
+void alifSubObjectGC_link(AlifObject* _gc) { 
 	AlifGCHead* gc = AS_GC(_gc);
 
 	AlifThread* thread = alifThread_get();
@@ -115,7 +115,7 @@ void alifSubObjectGC_link(AlifObject* _gc) { // 1983
 }
 
 
-static AlifObject* gc_alloc(AlifTypeObject* _tp, AlifSizeT _size, AlifSizeT _preSize) { // 2014
+static AlifObject* gc_alloc(AlifTypeObject* _tp, AlifSizeT _size, AlifSizeT _preSize) { 
 
 	AlifThread* thread = alifThread_get();
 	if (_size > ALIF_SIZET_MAX - _preSize) {
@@ -141,7 +141,7 @@ static AlifObject* gc_alloc(AlifTypeObject* _tp, AlifSizeT _size, AlifSizeT _pre
 
 
 
-AlifObject* alifSubObjectGC_new(AlifTypeObject* _tp) { // 2034
+AlifObject* alifSubObjectGC_new(AlifTypeObject* _tp) { 
 	AlifSizeT preSize = alifSubType_preHeaderSize(_tp);
 	AlifSizeT size = alifSubObject_size(_tp);
 	if (alifSubType_hasFeature(_tp, ALIFTPFLAGS_INLINE_VALUES)) {

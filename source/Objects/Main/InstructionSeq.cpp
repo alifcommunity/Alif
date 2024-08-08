@@ -15,7 +15,7 @@
 #define INITIAL_INSTRSEQUENCE_LABELS_MAPSIZE 10
 
 
-static AlifIntT instrSequance_nextInst(InstructionSequence* _seq) { // 35
+static AlifIntT instrSequance_nextInst(InstructionSequence* _seq) { 
 
 	if (alifCompile_ensureArraySpace(
         _seq->used + 1,
@@ -27,7 +27,7 @@ static AlifIntT instrSequance_nextInst(InstructionSequence* _seq) { // 35
 	return _seq->used++;
 }
 
-AlifIntT alifInstructionSequence_useLabel(InstructionSequence* _seq, AlifIntT _label) { // 57
+AlifIntT alifInstructionSequence_useLabel(InstructionSequence* _seq, AlifIntT _label) { 
     int old_size = _seq->labelMapSize;
     if(alifCompile_ensureArraySpace(_label,
             (void**)&_seq->labelMap,
@@ -42,7 +42,7 @@ AlifIntT alifInstructionSequence_useLabel(InstructionSequence* _seq, AlifIntT _l
     return 1;
 }
 
-AlifIntT alifInstructionSeq_applyLableMap(InstructionSequence* _instr) { // 75
+AlifIntT alifInstructionSeq_applyLableMap(InstructionSequence* _instr) { 
 
     if (_instr->labelMap == nullptr) return 1;
 
@@ -63,7 +63,7 @@ AlifIntT alifInstructionSeq_applyLableMap(InstructionSequence* _instr) { // 75
 #define MAX_OPCODE 511
 
 AlifIntT alifInstructionSequence_addOp(InstructionSequence* _seq,
-	AlifIntT _opCode, AlifIntT _opArg, SourceLocation _loc) { // 104
+	AlifIntT _opCode, AlifIntT _opArg, SourceLocation _loc) { 
 
 	AlifIntT idx = instrSequance_nextInst(_seq);
 	if (idx == -1) return -1;
@@ -77,7 +77,7 @@ AlifIntT alifInstructionSequence_addOp(InstructionSequence* _seq,
 }
 
 AlifIntT alifInstructionSequence_addNested(InstructionSequence* _seq,
-    InstructionSequence* _nested) { // 146
+    InstructionSequence* _nested) { 
 
     if (_seq->nested == nullptr) {
         _seq->nested = alifNew_list(0);
@@ -91,7 +91,7 @@ AlifIntT alifInstructionSequence_addNested(InstructionSequence* _seq,
     return 1;
 }
 
-AlifObject* alifInstructionSequance_new() { // 197
+AlifObject* alifInstructionSequance_new() { 
 	// short from inst_seq_create()
 
 	InstructionSequence* seq = ALIFOBJECT_GC_NEW(InstructionSequence, &_alifInstructionSeqType_);

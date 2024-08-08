@@ -16,10 +16,10 @@ public:
 
 class AlifPToken { // Token
 public:
-	int type{};
+	AlifIntT type{};
 	AlifObject* bytes{};
-	int level{};
-	int lineNo{}, colOffset{}, endLineNo{}, endColOffset{};
+	AlifIntT level{};
+	AlifIntT lineNo{}, colOffset{}, endLineNo{}, endColOffset{};
 	Memo* memo{};
 	AlifObject* data{};
 };
@@ -27,18 +27,7 @@ public:
 class KeywordToken {
 public:
 	const wchar_t* str{};
-	int type{};
-};
-
-class GrowableCommentArr {
-public:
-	class Items {
-	public:
-		AlifSizeT lineNo{};
-		char* comment{};
-	} *items;
-	AlifSizeT size{};
-	AlifSizeT numItems{};
+	AlifIntT type{};
 };
 
 class AlifParser {
@@ -60,7 +49,6 @@ public:
 	int errorIndicator{};
 	int flags{};
 	int featureVersion{};
-	GrowableCommentArr typeIgnoreComments{};
 	AlifPToken* KnownErrToken{};
 	int level{};
 	//int callInvalidRules{}; // we'll need it
@@ -117,8 +105,36 @@ public:
 
 
 
+// يجب إيجاد الملف المناسب لنقل هذا الصنف له
+class AlifPArray {
+public:
+	void** data_{};
+	AlifSizeT size_{};
+	AlifSizeT capacity_{};
 
+	AlifPArray() {
+		capacity_ = 4;
+		size_ = 0;
+		data_ = (void**)alifMem_dataAlloc(capacity_ * sizeof(void**));
+	}
 
+	~AlifPArray() {
+		alifMem_dataFree(data_);
+	}
+
+	void push_back(void*& value) {
+		if (size_ == capacity_) {
+			capacity_ *= 2;
+			data_ = (void**)alifMem_dataRealloc(data_, capacity_ * sizeof(void**));
+			if (data_ == nullptr) return;
+		}
+		data_[size_++] = value;
+	}
+
+	void* operator[](AlifUSizeT _index) const {
+		return data_[_index];
+	}
+};
 
 
 
@@ -130,10 +146,10 @@ int alifParserEngine_insertMemo(AlifParser*, int, int, void*);
 int alifParserEngine_updateMemo(AlifParser*, int, int, void*);
 int alifParserEngine_isMemorized(AlifParser*, int, void*);
 
-int alifParserEngine_lookaheadWithInt(int, AlifPToken* (_func)(AlifParser*, int), AlifParser*, int);
+int alifParserEngine_lookaheadWithInt(int, AlifPToken* (_func)(AlifParser*, AlifIntT), AlifParser*, int);
 int alifParserEngine_lookahead(int, void* (_func)(AlifParser*), AlifParser*);
 
-AlifPToken* alifParserEngine_expectToken(AlifParser*, int);
+AlifPToken* alifParserEngine_expectToken(AlifParser*, AlifIntT);
 AlifPToken* alifParserEngine_expectTokenForced(AlifParser*, int, const wchar_t*);
 AlifPToken* alifParserEngine_getLastNonWhitespaceToken(AlifParser*);
 Expression* alifParserEngine_nameToken(AlifParser*);
@@ -201,8 +217,6 @@ Expression* alifParserEngine_combineStrings(AlifParser*, ExprSeq*, int, int, int
 Seq* alifParserEngine_joinSequences(AlifParser*, Seq*, Seq*);
 ResultTokenWithMetadata* alifParserEngine_checkFStringConversion(AlifParser*, AlifPToken*, Expression*);
 ResultTokenWithMetadata* alifParserEngine_setupFullFormatSpec(AlifParser*, AlifPToken*, ExprSeq*, int, int, int, int, AlifASTMem*);
-
-Module* alifParserEngine_makeModule(AlifParser*, StmtSeq*);
 
 
 AlifParser* alifParserEngine_newParser(class TokenInfo*, int, AlifASTMem*);

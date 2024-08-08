@@ -8,7 +8,7 @@
 
 
 
-static const uint8_t deInstrument[256] = { // 94
+static const uint8_t deInstrument[256] = { 
     RESUME,
     RETURN_VALUE,
     RETURN_CONST,

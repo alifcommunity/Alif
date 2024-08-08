@@ -26,7 +26,7 @@ public:
 
 
 
-class AlifSTEntryObject { // 76
+class AlifSTEntryObject { 
 public:
     ALIFOBJECT_HEAD;
     AlifObject* steID;        /* int: key in ste_table->st_blocks */
@@ -68,7 +68,7 @@ public:
 
 
 
-class AlifSymTable { // 57
+class AlifSymTable { 
 public:
     AlifObject* stFileName;
     AlifSTEntryObject* stCur;

@@ -18,6 +18,6 @@
 
 
 
-AlifIntT alifDescr_isData(AlifObject* ob) { // 1027
+AlifIntT alifDescr_isData(AlifObject* ob) { 
 	return ALIF_TYPE(ob)->descrSet != nullptr;
 }

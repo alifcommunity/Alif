@@ -36,7 +36,7 @@
 
 
 
-AlifObject* alifEval_builtinsFromGlobals(AlifThread* _thread, AlifObject* _globals) { // 2130
+AlifObject* alifEval_builtinsFromGlobals(AlifThread* _thread, AlifObject* _globals) { 
 	//AlifObject* builtins = alifDict_getItemWithError(_globals, &ALIF_ID(__builtins__));
 	AlifObject* name = alifUStr_decodeStringToUTF8(L"__builtins__");
 	AlifObject* builtins = alifDict_getItem(_globals, name);

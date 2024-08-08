@@ -21,7 +21,7 @@
 //Module* alifParser_astFromFile(FILE*, AlifObject*, int, AlifASTMem*); // temp
 
 
-static AlifObject* run_evalCodeObject(AlifThread* _thread, AlifCodeObject* _co, AlifObject* _globals, AlifObject* _locals) { // 1258
+static AlifObject* run_evalCodeObject(AlifThread* _thread, AlifCodeObject* _co, AlifObject* _globals, AlifObject* _locals) { 
 	AlifObject* val{};
 
 	AlifIntT hasBuiltins = alifDict_containsString(_globals, L"__builtins__");
@@ -39,7 +39,7 @@ static AlifObject* run_evalCodeObject(AlifThread* _thread, AlifCodeObject* _co, 
 }
 
 static AlifObject* alifRun_module(Module* _module, AlifObject* _fn,
-	AlifObject* _globals, AlifObject* _locals,  AlifASTMem* _astMem) { // 1299
+	AlifObject* _globals, AlifObject* _locals,  AlifASTMem* _astMem) { 
 
 	AlifThread* thread_ = alifThread_get();
 
@@ -56,9 +56,13 @@ static AlifObject* alifRun_module(Module* _module, AlifObject* _fn,
 }
 
 
-static AlifObject* alifRun_file(FILE* _fp, AlifObject* _fn, AlifIntT _start, AlifObject* _globals, AlifObject* _locals,  int _fClose) { 
+static AlifObject* alifRun_file(FILE* _fp, AlifObject* _fn, AlifIntT _start,
+	AlifObject* _globals, AlifObject* _locals,  int _fClose) {
 
 	AlifASTMem* astMem = alifASTMem_new();
+	if (astMem == nullptr) {
+		return nullptr;
+	}
 
 	Module* module_{};
 	module_ = alifParser_astFromFile(_fp, _fn, _start, astMem);
@@ -68,18 +72,20 @@ static AlifObject* alifRun_file(FILE* _fp, AlifObject* _fn, AlifIntT _start, Ali
 	}
 
 	AlifObject* res_{};
-	if (module_) {
+	if (module_ != nullptr) {
 		res_ = alifRun_module(module_, _fn, _globals, _locals, astMem);
 	}
 	else {
 		res_ = nullptr;
 	}
 
-
+	//alifAstMem_free(astMem);
 	return res_;
 }
 
-int alifRun_simpleFileObj(FILE* _fp, AlifObject* _fn, int _fClose) {
+AlifIntT alifRun_simpleFileObj(FILE* _fp, AlifObject* _fn, AlifIntT _fClose) {
+
+	AlifIntT res = -1;
 
 	AlifObject* mainModule = alifImport_addModuleRef(L"__main__");
 	if (mainModule == nullptr)
@@ -92,7 +98,9 @@ int alifRun_simpleFileObj(FILE* _fp, AlifObject* _fn, int _fClose) {
 		//goto done;
 	}
 
-	int exitcode = -1;
+
+	//AlifIntT alifc = isFile_alifc(_fp, _fn, _fClose);
+	//if (alifc < 0) goto done;
 
 	AlifObject* mod{};
 
@@ -101,22 +109,21 @@ int alifRun_simpleFileObj(FILE* _fp, AlifObject* _fn, int _fClose) {
 		goto done;
 	}
 
-	ALIF_DECREF(mod); // يجب إصلاح دالة الحذف داخل هذا المتغير الاسمي
-	exitcode = 0;
+	ALIF_DECREF(mod);
+	res = 0;
 
 done:
-	return exitcode;
+	return res;
 }
 
-int alifRun_fileObj(FILE* _fp, AlifObject* _fn, int _fClose) { 
+AlifIntT alifRun_fileObj(FILE* _fp, AlifObject* _fn, AlifIntT _fClose) { 
 
-	int res{};
-
+	AlifIntT res{};
 
 #ifdef _WINDOWS
 	if (_isatty(_fileno(_fp))) { // هذا يعني انه تفاعلي
 #else
-	if (isatty(fileno(_fp))) { // هذا يعني انه تفاعلي
+	if (isatty(fileno(_fp))) {
 #endif
 		//res_ = alifRun_interactiveLoop(_fp, _fn);
 		if (_fClose) {

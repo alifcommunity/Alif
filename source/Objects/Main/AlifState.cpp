@@ -22,15 +22,10 @@ static const AlifDureRun initial = ALIF_DURERUNSTATE_INIT(_alifDureRun_);
 
 
 static void init_dureRun(AlifDureRun* _dureRun) {
-	
-	//_dureRun->mainThread = alifThread_getThreadIdent();
-#ifdef _WINDOWS
-	_dureRun->mainThreadID = GetCurrentThreadId();
-#else
-	_dureRun->mainThreadID = pthread_self();
-#endif
 
-	_dureRun->selfInitialized = 1;	
+	_dureRun->mainThreadID = alifThread_getThreadID();
+
+	_dureRun->selfInitialized = 1;
 }
 
 AlifIntT alifDureRunState_init(AlifDureRun* _dureRun) {
@@ -140,7 +135,7 @@ const AlifConfig* alifConfig_get() {
 
 #define DATA_STACK_CHUNK_SIZE (16*1024)
 
-static AlifStackChunk* allocate_chunk(AlifIntT _sizeInBytes, AlifStackChunk* _previous) { // 1414
+static AlifStackChunk* allocate_chunk(AlifIntT _sizeInBytes, AlifStackChunk* _previous) { 
 	//AlifStackChunk* res = alifObject_virtualAlloc(_sizeInBytes);
 	AlifStackChunk* res = (AlifStackChunk*)alifMem_dataAlloc(_sizeInBytes);
 	if (res == nullptr) return nullptr;
@@ -154,7 +149,7 @@ static AlifStackChunk* allocate_chunk(AlifIntT _sizeInBytes, AlifStackChunk* _pr
 
 #define MINIMUM_OVERHEAD 1000
 
-static AlifObject** push_chunk(AlifThread* _thread, AlifIntT _size) { // 2902
+static AlifObject** push_chunk(AlifThread* _thread, AlifIntT _size) { 
 	AlifIntT allocateSize = DATA_STACK_CHUNK_SIZE;
 	while (allocateSize < (int)sizeof(AlifObject*)*(_size + MINIMUM_OVERHEAD)) {
 		allocateSize *= 2;
@@ -173,7 +168,7 @@ static AlifObject** push_chunk(AlifThread* _thread, AlifIntT _size) { // 2902
 	return res;
 }
 
-AlifInterpreterFrame* alifThread_pushFrame(AlifThread* _thread, AlifUSizeT _size) { // 2929
+AlifInterpreterFrame* alifThread_pushFrame(AlifThread* _thread, AlifUSizeT _size) { 
 	if (alifThread_hasStackSpace(_thread, (int)_size)) {
 		AlifInterpreterFrame* res = (AlifInterpreterFrame*)_thread->dataStackTop;
 		_thread->dataStackTop += _size;

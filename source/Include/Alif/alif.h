@@ -1,18 +1,20 @@
 #pragma once
 
+#pragma warning(disable : 4996) // for disable unsafe functions error
+
 #include <iostream>
 #include <algorithm>
 #include <limits.h>
 #include <stdint.h> // uint64_t
 #include <stdarg.h>
 #include <math.h>
-#ifdef _WIN64
-#include <windows.h>
-#else
-#endif
 
 #include "AlifVersion.h"
 #include "AlifConfig.h"
+
+#ifdef _WINDOWS
+#include <windows.h>
+#endif
 
 #include "AlifPort.h"
 #include "AlifMacro.h"

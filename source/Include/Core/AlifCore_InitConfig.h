@@ -1,11 +1,11 @@
-﻿#pragma once
+#pragma once
 
 /* ------------------------------------------- AlifArgv ------------------------------------------- */
 
 class AlifArgv {
 public:
-	AlifSizeT argc;
-	int useBytesArgv;
+	AlifIntT argc;
+	bool useBytesArgv;
 	char* const* bytesArgv;
 	wchar_t* const* wcharArgv;
 };

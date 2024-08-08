@@ -47,7 +47,7 @@ void alifThread_init_thread(void)
 #   else
 #     define ALIFTHREAD_NAME "pthread"
 #   endif
-#   include "thread_pthread.h"
+#   include "Thread_PThread.h"
 #elif defined(NT_THREADS)
 #   define ALIFTHREAD_NAME "nt"
 #   include "Thread_nt.h"

@@ -6,9 +6,8 @@
 #include "AlifCore_AlifState.h"
 #include "AlifCore_AlifRun.h"
 
-#pragma warning(disable : 4996) // for disable unsafe functions error
 
-#define ALIF_COPYRIGHT L"للمزيد من المعلومات اكتب \"help\", \"copyright\", \"license\" "
+#define ALIF_COPYRIGHT "للمزيد من المعلومات اكتب \"help\", \"copyright\", \"license\" "
 
 
 /* ----------------------------------- تهيئة اللغة ----------------------------------- */
@@ -16,23 +15,19 @@
 static AlifIntT alifMain_init(AlifArgv* _args) {
 
 	AlifIntT status = 1;
+	AlifConfig config_{};
 
 	status = alifDureRun_initialize();
 	if (status < 1) {
-		// error
+		goto done;
 	}
 
-	status = alif_setLocaleAndWChar();
-	if (status < 1) {
-		// error
-	}
-
-	if (alif_mainMemoryInit() < 0) {
-		// error
-	}
-
-	AlifConfig config_{};
 	alifConfig_initAlifConfig(&config_);
+
+	status = alif_mainMemoryInit();
+	if (status < 1) {
+		goto done;
+	}
 
 	status = alifArgv_asWStrList(&config_, _args);
 	if (status < 1) {
@@ -52,32 +47,52 @@ done:
 
 
 /* ----------------------------------- تشغيل اللغة ----------------------------------- */
-static int alifMain_runFileObj(AlifObject* _pn, AlifObject* _fn) {
+static AlifIntT alifMain_runFileObj(AlifObject* _pn, AlifObject* _fn, AlifIntT _skipFirstLine) {
 	FILE* fp_ = alif_fOpenObj(_fn, "r");
 
 	if (fp_ == nullptr) {
-		wprintf(L"%ls: لا يمكن فتح الملف %ls: [Errno %d] %ls\n",
-			(const wchar_t*)((AlifUStrObject*)_pn)->UTF,
-			(const wchar_t*)((AlifUStrObject*)_fn)->UTF,
-			errno, L"لا يوجد ملف او مسار بهذا الاسم");
-		return 2;
+		printf("%ls: لا يمكن فتح الملف %ls: [Errno %d] %s\n",
+			(const char*)((AlifUStrObject*)_pn)->UTF,
+			(const char*)((AlifUStrObject*)_fn)->UTF,
+			errno, "لا يوجد ملف او مسار بهذا الاسم");
+		return -2;
 	}
 
-	int run = alifRun_fileObj(fp_, _fn, 1);
+	if (_skipFirstLine) {
+		AlifIntT ch{};
+		while ((ch = getwc(fp_)) != WEOF) {
+			if (ch == L'\n') {
+				(void)ungetwc(ch, fp_);
+				break;
+			}
+		}
+	}
+
+	AlifIntT run = alifRun_fileObj(fp_, _fn, 1);
 
 	return run;
 }
 
 static int alifMain_runFile(AlifConfig* _config) {
 	AlifObject* fileName = alifUStr_objFromWChar(_config->runFilename);
+	if (fileName == nullptr) {
+		// error
+		return -1;
+	}
 	AlifObject* programName = alifUStr_objFromWChar(_config->programName);
+	if (programName == nullptr) {
+		// error
+		return -1;
+	}
 
-	int res_ = alifMain_runFileObj(programName, fileName);
+	int res_ = alifMain_runFileObj(programName, fileName, _config->skipFirstLine);
 
+	ALIF_DECREF(fileName);
+	ALIF_DECREF(programName);
 	return res_;
 }
 
-int alif_runMain()
+int alif_runMain() 
 {
 	int exitCode = 0;
 

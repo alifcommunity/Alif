@@ -1,5 +1,7 @@
 .vs
 x64
+Win32
+DerivedData
 *.out
 *.bak
 *.dwg
@@ -7,3 +9,4 @@ x64
 *.json
 *.eddx
 *.xopp
+*.DS_Store

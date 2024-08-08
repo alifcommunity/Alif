@@ -44,11 +44,11 @@ enum FrameOwner {
 	FRAME_OWNED_BY_CSTACK,
 };
 
-static inline AlifCodeObject* alifFrame_getCode(AlifInterpreterFrame* _f) { // 76
+static inline AlifCodeObject* alifFrame_getCode(AlifInterpreterFrame* _f) { 
 	return (AlifCodeObject*)_f->executable;
 }
 
-static inline void alifFrame_stackPush(AlifInterpreterFrame* _f, AlifObject* _value) { // 97
+static inline void alifFrame_stackPush(AlifInterpreterFrame* _f, AlifObject* _value) { 
 	_f->localsPlus[_f->stacktop] = _value;
 	_f->stacktop++;
 }
@@ -56,7 +56,7 @@ static inline void alifFrame_stackPush(AlifInterpreterFrame* _f, AlifObject* _va
 #define FRAME_SPECIALS_SIZE ((AlifIntT)((sizeof(AlifInterpreterFrame)-1)/sizeof(AlifObject *)))
 
 static inline void alifFrame_initialize(AlifInterpreterFrame* _frame, AlifFunctionObject* _func,
-	AlifObject* _locals, AlifCodeObject* _code, AlifIntT _nullLocalsFrom) { // 129
+	AlifObject* _locals, AlifCodeObject* _code, AlifIntT _nullLocalsFrom) { 
 	_frame->funcobj = (AlifObject*)_func;
 	_frame->executable = ALIF_NEWREF(_code);
 	_frame->builtins = _func->funcBuiltins;
@@ -73,7 +73,7 @@ static inline void alifFrame_initialize(AlifInterpreterFrame* _frame, AlifFuncti
 	}
 }
 
-static inline bool alifFrame_isIncomplete(AlifInterpreterFrame* _frame) { // 185
+static inline bool alifFrame_isIncomplete(AlifInterpreterFrame* _frame) { 
 	if (_frame->owner == FRAME_OWNED_BY_CSTACK) {
 		return true;
 	}
@@ -81,14 +81,14 @@ static inline bool alifFrame_isIncomplete(AlifInterpreterFrame* _frame) { // 185
 		_frame->instrPtr < ALIFCODE_CODE(alifFrame_getCode(_frame)) + alifFrame_getCode(_frame)->firstTraceable;
 }
 
-static inline AlifInterpreterFrame* alifFrame_getFirstComplete(AlifInterpreterFrame* _frame) { // 195
+static inline AlifInterpreterFrame* alifFrame_getFirstComplete(AlifInterpreterFrame* _frame) { 
 	while (_frame and alifFrame_isIncomplete(_frame)) {
 		_frame = _frame->previous;
 	}
 	return _frame;
 }
 
-static inline AlifInterpreterFrame* alifThread_getFrame(AlifThread* _thread) { // 204
+static inline AlifInterpreterFrame* alifThread_getFrame(AlifThread* _thread) { 
 	return alifFrame_getFirstComplete(_thread->currentFrame);
 }
 
@@ -99,7 +99,7 @@ static inline AlifObject** alifFrame_getStackPointer(AlifInterpreterFrame* _fram
 	return sp;
 }
 
-static inline bool alifThread_hasStackSpace(AlifThread* _thread, AlifIntT _size) { // 254
+static inline bool alifThread_hasStackSpace(AlifThread* _thread, AlifIntT _size) { 
 	return _thread->dataStackTop != nullptr and _size < _thread->dataStackLimit - _thread->dataStackTop;
 }
 

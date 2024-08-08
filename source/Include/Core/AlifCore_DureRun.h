@@ -36,7 +36,7 @@ public:
 		AlifIntT nextID{};
 	} interpreters;
 
-	AlifIntT mainThreadID{};
+	AlifIntT mainThreadID{}; // not working in macos it's return pthread_t
 	AlifThread* mainThread{};
 
 	AlifIntT autoTSSKey{};

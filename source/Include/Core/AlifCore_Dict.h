@@ -130,13 +130,13 @@ static inline void alifDictValues_addToInsertionOrder(AlifDictValues* _values, i
 	_values->size = size_ + 1;
 }
 
-static inline AlifUSizeT shared_keys_usable_size(AlifDictKeysObject* keys) { // 297
+static inline AlifUSizeT shared_keys_usable_size(AlifDictKeysObject* keys) { 
 	AlifSizeT dk_usable = keys->usable;
 	AlifSizeT dk_nentries = keys->nentries;
 	return dk_nentries + dk_usable;
 }
 
-static inline AlifUSizeT alifInline_valuesSize(AlifTypeObject* _tp) { // 312
+static inline AlifUSizeT alifInline_valuesSize(AlifTypeObject* _tp) { 
 	AlifDictKeysObject* keys = ((AlifHeapTypeObject*)_tp)->cachedKeys;
 	size_t size = shared_keys_usable_size(keys);
 	size_t prefix_size = ALIFSIZE_ROUND_UP(size, sizeof(AlifObject*));

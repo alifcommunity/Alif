@@ -23,10 +23,10 @@ typedef uint32_t DWORD;
 
 #define ALIF_ARRAY_LENGTH(arr) (sizeof(arr) / sizeof(arr[0]))
 
-static const wchar_t usageLine[] =
-L"usage: %ls [option] ... [-c cmd | -m mod | file | - ] [arg] ...\n";
+static const char usageLine[] =
+"usage: %ls [option] ... [-c cmd | -m mod | file | - ] [arg] ...\n";
 
-static const wchar_t usageHelp[] = L"\
+static const char usageHelp[] = "\
 -c cmd : program passed in as string (terminates option list)\n\
 -m mod : run library module as a script (terminates option list)\n\
 file   : program read from script file\n\
@@ -40,41 +40,138 @@ static void config_usage(const wchar_t* program)
 {
 	FILE* f = stdout;
 
-	fwprintf(f, usageLine, program);
+	fprintf(f, usageLine, program);
 
-	fputws(usageHelp, f);
+	fputs(usageHelp, f);
 }
 
 
-AlifIntT alif_setLocaleAndWChar() {
+char* alif_setLocale(AlifIntT category) {
+
+	char* res;
+#ifdef __ANDROID__
+	const char* locale;
+	const char** pvar;
+#ifdef ALIF_COERCE_C_LOCALE
+	const char* coerce_c_locale;
+#endif
+	const char* utf8_locale = "C.UTF-8";
+	const char* env_var_set[] = {
+		"LC_ALL",
+		"LC_CTYPE",
+		"LANG",
+		NULL,
+	};
+
+	for (pvar = env_var_set; *pvar; pvar++) {
+		locale = getenv(*pvar);
+		if (locale != nullptr and *locale != '\0') {
+			if (strcmp(locale, utf8_locale) == 0 or
+				strcmp(locale, "en_US.UTF-8") == 0) {
+				return setlocale(category, utf8_locale);
+			}
+			return setlocale(category, "C");
+		}
+	}
+
+#ifdef ALIF_COERCE_C_LOCALE
+	coerce_c_locale = getenv("ALIFCOERCECLOCALE");
+	if (coerce_c_locale == nullptr or strcmp(coerce_c_locale, "0") != 0) {
+		if (setenv("LC_CTYPE", utf8_locale, 1)) {
+			fprintf(stderr, "Warning: failed setting the LC_CTYPE "
+				"environment variable to %s\n", utf8_locale);
+		}
+	}
+#endif
+	res = setlocale(category, utf8_locale);
+#elif defined(_MAC)
+	res = setlocale(category, "utf-8");
+#else
+    res = setlocale(category, "");
+#endif
+
+	return res;
+}
+
+static AlifIntT alif_setFileMode(const AlifConfig* _config) {
+
+#if defined(_WINDOWS) or defined(__CYGWIN__)
+	/* don't translate newlines (\r\n <=> \n) */
+	bool modeIn = _setmode(fileno(stdin), O_BINARY);
+	bool modeOut = _setmode(fileno(stdout), O_BINARY);
+	bool modeErr = _setmode(fileno(stderr), O_BINARY);
+
+	if (!modeIn or !modeOut or !modeErr) {
+		std::cout << "لم يستطع تهيئة الطرفية لقراءة الأحرف العربية في نظام ويندوز" << std::endl;
+		return -1;
+	}
+#endif
+
+	bool buffIn{1}, buffOut{1}, buffErr{1};
+	if (!_config->bufferedStdio) {
+#ifdef HAVE_SETVBUF
+		buffIn = setvbuf(stdin, (char*)nullptr, _IONBF, BUFSIZ);
+		buffOut = setvbuf(stdout, (char*)nullptr, _IONBF, BUFSIZ);
+		buffErr = setvbuf(stderr, (char*)nullptr, _IONBF, BUFSIZ);
+#else /* !HAVE_SETVBUF */
+		buffIn = setbuf(stdin, (char*)nullptr);
+		buffOut = setbuf(stdout, (char*)nullptr);
+		buffErr = setbuf(stderr, (char*)nullptr);
+#endif /* !HAVE_SETVBUF */
+
+		if (buffIn or buffOut or buffErr) {
+			std::cout << "لم يستطع تهيئة مخزن النصوص الإفتراضي في نظام ويندوز" << std::endl;
+			return -1;
+		}
+	}
+	else if (_config->interactive) {
 #ifdef _WINDOWS
-	bool modeIn = _setmode(_fileno(stdin), _O_WTEXT);
-	bool modeOut = _setmode(_fileno(stdout), _O_WTEXT);
-	if (!modeIn or !modeOut) {
-		std::wcout << L"لم يستطع تهيئة الطرفية لقراءة الأحرف العربية" << std::endl;
-		return -1;
+		/* Doesn't have to have line-buffered -- use unbuffered */
+		buffOut = setvbuf(stdout, (char*)NULL, _IONBF, BUFSIZ);
+		if (buffOut) {
+			std::cout << "لم يستطع تهيئة مخزن النصوص الإفتراضي في نظام ويندوز" << std::endl;
+			return -1;
+		}
+#else /* !_WINDOWS */
+#ifdef HAVE_SETVBUF
+		buffIn  = setvbuf(stdin, (char*)NULL, _IOLBF, BUFSIZ);
+		buffOut = setvbuf(stdout, (char*)NULL, _IOLBF, BUFSIZ);
+		if (buffIn or buffOut) {
+			std::cout << "لم يستطع تهيئة مخزن النصوص الإفتراضي في نظام ويندوز" << std::endl;
+			return -1;
+		}
+#endif /* HAVE_SETVBUF */
+#endif /* !_WINDOWS */
+	/* Leave stderr alone - it should be unbuffered. */
 	}
-#endif // _WINDOWS
 
-	const char* locale = setlocale(LC_ALL, "en_US.UTF-8");
+	return 1;
+}
+
+AlifIntT alif_setStdioLocale(const AlifConfig* _config) {
+
+	AlifIntT mode = alif_setFileMode(_config);
+	if (!mode) return -1;
+
+	const char* locale = alif_setLocale(LC_CTYPE);
 	if (locale == nullptr) {
-		std::wcout << L"لم يستطع تهيئة الموقع، تأكد من تثبيت ar.utf-8 على نظامك" << std::endl;
+		std::cout << "لم يستطع تهيئة الموقع" << std::endl;
 		return -1;
 	}
 
-	setlocale(LC_ALL, locale);
 	return 1;
 }
 
 AlifIntT alifArgv_asWStrList(AlifConfig* _config, AlifArgv* _args) {
-	if (_args->useBytesArgv)
-	{
-		AlifWStringList wArgv = { 0, nullptr };
-		wArgv.items = (wchar_t**)alifMem_dataAlloc(_args->argc * sizeof(wchar_t*) + 2);
 
-		for (int i = 0; i < _args->argc; i++) {
-			size_t len = mbstowcs(nullptr, (const char*)_args->bytesArgv[i], 0);
-			wchar_t* arg = (wchar_t*)alifMem_dataAlloc(len * sizeof(wchar_t) + 2);
+	if (_args->useBytesArgv) {
+
+		AlifWStringList wArgv = { 0, nullptr };
+		wArgv.items = (wchar_t**)alifMem_dataAlloc(_args->argc * sizeof(wchar_t*));
+
+		for (AlifIntT i = 0; i < _args->argc; i++) {
+			AlifSizeT len = mbstowcs(nullptr, (const char*)_args->bytesArgv[i], 0);
+			wchar_t* arg = (wchar_t*)alifMem_dataAlloc((len + 1) * sizeof(wchar_t));
 			mbstowcs(arg, (const char*)_args->bytesArgv[i], len);
 			wArgv.items[i] = arg;
 			wArgv.length++;
@@ -102,7 +199,10 @@ void alifConfig_initAlifConfig(AlifConfig* _config) {
 	_config->parseArgv = 1;
 	_config->interactive = 0;
 	_config->optimizationLevel = 0;
+	_config->bufferedStdio = 1;
 	_config->quite = 0;
+	_config->initMain = 1;
+	_config->configStdio = 1;
 }
 
 
@@ -125,29 +225,31 @@ static AlifIntT parse_consoleLine(AlifConfig* _config, AlifSizeT* _index) {
 			break;
 		}
 
-		if (c == L'c') {
+		if (c == 'c') {
 			if (_config->runCommand == nullptr) {
-				AlifUSizeT len = wcslen(optArg) + 2 + 2;
+				AlifUSizeT len = wcslen(optArg) + 1 + 1;
 				wchar_t* command = (wchar_t*)alifMem_dataAlloc(len * sizeof(wchar_t));
 				if (command == nullptr) {
+					// memory error
 					return -1;
 				}
 				memcpy(command, optArg, (len - 2) * sizeof(wchar_t));
-				command[len - 2] = L'\n';
+				command[len - 2] = '\n';
 				command[len - 1] = 0;
 				_config->runCommand = command;
 			}
 			break;
 		}
 
-		if (c == L'm') {
+		if (c == 'm') {
 			if (_config->runModule == nullptr) {
-				AlifUSizeT len = wcslen(optArg) * sizeof(wchar_t) + 2 + 2;
+				AlifUSizeT len = (wcslen(optArg)) * sizeof(wchar_t);
 				_config->runModule = (wchar_t*)alifMem_dataAlloc(len);
-				memcpy(_config->runModule, optArg, len);
 				if (_config->runModule == nullptr) {
+					// memory error
 					return -1;
 				}
+				memcpy(_config->runModule, optArg, len);
 			}
 			break;
 		}
@@ -160,11 +262,11 @@ static AlifIntT parse_consoleLine(AlifConfig* _config, AlifSizeT* _index) {
 			//config_envvars_usage();
 			exit(1);
 		}
-		else if (c == L'h') {
+		else if (c == 'h') {
 			config_usage(program);
 			exit(1);
 		}
-		else if (c == L'v') {
+		else if (c == 'v') {
 			printVer++;
 			break;
 		}
@@ -178,7 +280,7 @@ static AlifIntT parse_consoleLine(AlifConfig* _config, AlifSizeT* _index) {
 
 
 	if (printVer) {
-		wprintf(L"alif %ls\n", alif_getVersion());
+		printf("alif %s\n", alif_getVersion());
 		exit(1);
 	}
 
@@ -186,7 +288,7 @@ static AlifIntT parse_consoleLine(AlifConfig* _config, AlifSizeT* _index) {
 		and optIdx < argv->length and wcscmp(argv->items[optIdx], L"-") != 0
 		and _config->runFilename == nullptr) {
 		AlifSizeT size = wcslen(argv->items[optIdx]) * sizeof(wchar_t);
-		_config->runFilename = (wchar_t*)alifMem_dataAlloc(size + 2);
+		_config->runFilename = (wchar_t*)alifMem_dataAlloc(size);
 		memcpy(_config->runFilename, argv->items[optIdx], size);
 	}
 
@@ -195,7 +297,7 @@ static AlifIntT parse_consoleLine(AlifConfig* _config, AlifSizeT* _index) {
 		optIdx--;
 	}
 
-	_config->programName = (wchar_t*)program;
+	_config->programName = (wchar_t*)program; // يحتاج مراجعة - لا يتم إسناده هنا
 
 	*_index = optIdx;
 
@@ -252,7 +354,7 @@ static AlifIntT run_absPathFilename(AlifConfig* _config) {
 
 	// يتم التحقق من لاحقة الملف والتي يجب ان تكون .alif
 	if (!alif_extension(filename)) {
-		wprintf(L"%ls", L"تأكد من لاحقة الملف \n يجب ان ينتهي اسم الملف بـ .alif");
+		printf("%s", "تأكد من لاحقة الملف \n يجب ان ينتهي اسم الملف بـ .alif");
 		exit(-1);
 	}
 
@@ -262,20 +364,21 @@ static AlifIntT run_absPathFilename(AlifConfig* _config) {
 	wchar_t wOutBuf[MAX_PATH]{}, * wOutBufP = wOutBuf;
 	DWORD result{};
 	result = GetFullPathNameW(filename, ALIF_ARRAY_LENGTH(wOutBuf), wOutBuf, nullptr);
+	if (!result) return -1;
 
-	absFilename = (wchar_t*)alifMem_dataAlloc(result * sizeof(wchar_t) + 2);
+	absFilename = (wchar_t*)alifMem_dataAlloc(result * sizeof(wchar_t));
 	memcpy(absFilename, wOutBuf, result * sizeof(wchar_t));
 #else
-	char buf[MAXPATHLEN + 1]{};
+	char buf[MAXPATHLEN]{};
 
 	char* cwd = getcwd(buf, sizeof(buf));
 	size_t len = mbstowcs(nullptr, cwd, 0);
-	wchar_t* wCwd = (wchar_t*)alifMem_dataAlloc(len * sizeof(wchar_t) + 2);
+	wchar_t* wCwd = (wchar_t*)alifMem_dataAlloc(len * sizeof(wchar_t));
 	mbstowcs(wCwd, cwd, len);
 
 	size_t cwdLen = wcslen(wCwd);
 	size_t pathLen = wcslen(filename);
-	size_t length = cwdLen + 1 + pathLen + 1;
+	size_t length = cwdLen + pathLen;
 
 	absFilename = (wchar_t*)alifMem_dataAlloc(length * sizeof(wchar_t));
 
@@ -287,9 +390,10 @@ static AlifIntT run_absPathFilename(AlifConfig* _config) {
 	absPath++;
 
 	memcpy(absPath, filename, pathLen * sizeof(wchar_t));
-	absPath += pathLen;
 
+	absPath += pathLen - 1;
 	*absPath = 0;
+
 #endif // _WINDOWS
 
 	_config->runFilename = absFilename;
@@ -336,7 +440,11 @@ static AlifIntT config_readConsole(AlifConfig* _config) {
 
 AlifIntT alifConfig_write(const AlifConfig* _config, AlifDureRun* _dureRun) {
 
-	//config_initStdio(_config); // for set arabic char reading in console
+	if (_config->configStdio) { // for set arabic char reading in console
+		if (alif_setStdioLocale(_config) < 1) {
+			return -1;
+		}
+	}
 
 	memcpy(&_alifDureRun_.origArgv, &_config->argv, sizeof(AlifWStringList)); // يجب مراجعتها
 

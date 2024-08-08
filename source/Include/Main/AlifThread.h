@@ -22,3 +22,6 @@ public:
 
 
 #define ALIFTSS_NEEDS_INIT   {0}
+
+
+

@@ -72,10 +72,9 @@ Seq* alifParserEngine_seqFlatten(AlifParser* _p, Seq* _seqs) {
 	AlifSizeT flatSeqSize = getFlattenedSeq_size(_seqs);
 
 	Seq* flattenedSeq = (Seq*)alifNew_genericSeq(flatSeqSize, _p->astMem);
-	if (!flattenedSeq) {
-		return nullptr;
-	}
-	int flatSeqIndex = 0;
+	if (!flattenedSeq) return nullptr;
+
+	AlifIntT flatSeqIndex = 0;
 	for (AlifSizeT i = 0, l = SEQ_LEN(_seqs); i < l; i++) {
 		Seq* innerSeq = (Seq*)SEQ_GETUNTYPED(_seqs, i);
 		for (AlifSizeT j = 0, li = SEQ_LEN(innerSeq); j < li; j++) {
@@ -543,18 +542,6 @@ KeywordSeq* alifParserEngine_seqDeleteStarExprs(AlifParser* _p, Seq* _kwArgs) {
 	return newSeq;
 }
 
-Module* alifParserEngine_makeModule(AlifParser* _p, StmtSeq* _a) {
-	AlifSizeT num = _p->typeIgnoreComments.numItems;
-	if (num > 0) {
-		/*
-		..
-		..
-		..
-		*/
-	}
-
-	return alifAST_module(_a, _p->astMem);
-}
 
 static ResultTokenWithMetadata* resultToken_withMetadata(AlifParser* _p, void* _result, AlifObject* _metadata) {
 
@@ -819,6 +806,8 @@ Expression* alifParserEngine_formattedValue(AlifParser* _p, Expression* _expr, A
 	else {
 		return formattedValue;
 	}
+
+	return nullptr;
 }
 
 Expression* alifParserEngine_combineStrings(AlifParser* _p, ExprSeq* _strings,

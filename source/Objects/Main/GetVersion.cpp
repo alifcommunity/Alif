@@ -1,4 +1,4 @@
-﻿/*
+/*
 يقوم بإرجاع قيمة النسخة الحالية
 بالإضافة الى المترجم المستخدم في بناء اللغة
 */
@@ -7,23 +7,23 @@
 
 #ifndef COMPILER
 #if defined(__clang__)
-#define COMPILER L"[Clang " __clang_version__ L"]"
+#define COMPILER "[Clang " __clang_version__ "]"
 #elif defined(__GNUC__)
-#define COMPILER L"[GCC " __VERSION__ L"]"
+#define COMPILER "[GCC " __VERSION__ "]"
 #elif defined(__cplusplus)
-#define COMPILER L"[C++]"
+#define COMPILER "[C++]"
 #else
-#define COMPILER L"غير معرف"
+#define COMPILER "غير معرف"
 #endif
 #endif
 
-const wchar_t* alif_getCompiler() { return COMPILER; }
+static const char* alif_getCompiler() { return COMPILER; }
 
-static wchar_t version[100]{};
+static char version[100]{};
 
-const wchar_t* alif_getVersion() {
-	swprintf(version, sizeof(version),
-		L"%ls %ls", ALIF_VERSION, alif_getCompiler());
+const char* alif_getVersion() {
+	sprintf(version,
+		"%s %s", ALIF_VERSION, alif_getCompiler());
 	return version;
 }
 

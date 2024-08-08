@@ -18,7 +18,7 @@ AlifTypeObject _alifModuleDefType_ = {
 
 
 
-AlifObject* alifModuleDef_init(AlifModuleDef* def) { // 44
+AlifObject* alifModuleDef_init(AlifModuleDef* def) { 
 	if (def->base.index == 0) {
 		ALIFSET_REFCNT(def, 1);
 		ALIFSET_TYPE(def, &_alifModuleDefType_);
@@ -53,7 +53,7 @@ static AlifIntT addMethods_toObject(AlifObject* _module, AlifObject* _name, Alif
 	return 0;
 }
 
-AlifObject* alifModule_createInitialized(AlifModuleDef* _module) { // 208
+AlifObject* alifModule_createInitialized(AlifModuleDef* _module) { 
 
 	const wchar_t* name{};
 	AlifModuleObject* m{};
@@ -96,7 +96,7 @@ AlifObject* alifModule_createInitialized(AlifModuleDef* _module) { // 208
 }
 
 
-AlifIntT alifModule_addFunctions(AlifObject* m, AlifMethodDef* functions) { // 522
+AlifIntT alifModule_addFunctions(AlifObject* m, AlifMethodDef* functions) { 
 	AlifIntT res{};
 	AlifObject* name = alifModule_getNameObject(m);
 	if (name == nullptr) return -1;
@@ -107,7 +107,7 @@ AlifIntT alifModule_addFunctions(AlifObject* m, AlifMethodDef* functions) { // 5
 }
 
 
-AlifObject* alifModule_getNameObject(AlifObject* mod) { // 560
+AlifObject* alifModule_getNameObject(AlifObject* mod) { 
 
 	AlifObject* name{};
 	AlifObject* name1{};
@@ -146,7 +146,7 @@ error:
 
 
 
-AlifObject* alifModule_getAttroImpl(AlifModuleObject* m, AlifObject* name, AlifIntT suppress) { // 919
+AlifObject* alifModule_getAttroImpl(AlifModuleObject* m, AlifObject* name, AlifIntT suppress) { 
 	AlifObject* attr, * modName, * getattr;
 
 	AlifIntT isPossiblyShadowing{};
@@ -288,7 +288,7 @@ done:
 }
 
 
-AlifObject* alifModule_getAttro(AlifModuleObject* m, AlifObject* name) { // 1063
+AlifObject* alifModule_getAttro(AlifModuleObject* m, AlifObject* name) { 
 	return alifModule_getAttroImpl(m, name, 0);
 }
 

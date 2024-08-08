@@ -26,7 +26,7 @@ public:
 	class AlifCFGBasicBlock* target{};
 };
 
-class AlifCFGBasicBlock { // 36
+class AlifCFGBasicBlock { 
 public:
 	AlifCFGBasicBlock* list{};
 	JumpTargetLable label{};
@@ -42,7 +42,7 @@ public:
 	unsigned cold : 1;
 };
 
-class AlifFlowGraph { // 74
+class AlifFlowGraph { 
 public:
 	AlifCFGBasicBlock* entryBlock{};
 	AlifCFGBasicBlock* blockList{};
@@ -51,7 +51,7 @@ public:
 	JumpTargetLable curLabel{};
 };
 
-static const JumpTargetLable noLabel = { -1 }; // 89
+static const JumpTargetLable noLabel = { -1 }; 
 
 #define SAME_LABEL(_l1, _l2) ((_l1).id == (_l2).id)
 #define IS_LABEL(_l) (!SAME_LABEL((_l), (noLabel)))
@@ -72,11 +72,11 @@ static const JumpTargetLable noLabel = { -1 }; // 89
     } while (0);
 
 
-static inline AlifIntT is_jump(AlifCFGInstruction* _i) { // 104
+static inline AlifIntT is_jump(AlifCFGInstruction* _i) { 
 	return OPCODE_HAS_JUMP(_i->opCode);
 }
 
-static AlifIntT basicBlock_nextInstr(AlifCFGBasicBlock* _block) { // 134
+static AlifIntT basicBlock_nextInstr(AlifCFGBasicBlock* _block) { 
 	if (alifCompile_ensureArraySpace(_block->iUsed + 1,
 		(void**)&_block->instr,
 		&_block->ialloc,
@@ -87,7 +87,7 @@ static AlifIntT basicBlock_nextInstr(AlifCFGBasicBlock* _block) { // 134
 	return _block->iUsed++;
 }
 
-static AlifCFGBasicBlock* alifFlowGraph_newBlock(AlifFlowGraph* _cfg) { // 162
+static AlifCFGBasicBlock* alifFlowGraph_newBlock(AlifFlowGraph* _cfg) { 
 
 	AlifCFGBasicBlock* block = (AlifCFGBasicBlock*)alifMem_dataAlloc(sizeof(AlifCFGBasicBlock));
 	if (block == nullptr) {
@@ -103,7 +103,7 @@ static AlifCFGBasicBlock* alifFlowGraph_newBlock(AlifFlowGraph* _cfg) { // 162
 }
 
 
-static AlifCFGInstruction* basicBlock_lastInstr(const AlifCFGBasicBlock* _block) { // 148
+static AlifCFGInstruction* basicBlock_lastInstr(const AlifCFGBasicBlock* _block) { 
 	if (_block->iUsed > 0) {
 		return &_block->instr[_block->iUsed - 1];
 	}
@@ -112,7 +112,7 @@ static AlifCFGInstruction* basicBlock_lastInstr(const AlifCFGBasicBlock* _block)
 }
 
 static AlifIntT basicBlock_addOp(AlifCFGBasicBlock* _block,
-	AlifIntT _opCode, AlifIntT _opArg, SourceLocation _loc) { // 177
+	AlifIntT _opCode, AlifIntT _opArg, SourceLocation _loc) { 
 	
 	AlifIntT off = basicBlock_nextInstr(_block);
 	if (off < 0) return -1;
@@ -127,7 +127,7 @@ static AlifIntT basicBlock_addOp(AlifCFGBasicBlock* _block,
 }
 
 static AlifIntT basicBlock_addJump(AlifCFGBasicBlock* _block, AlifIntT _opCode,
-	AlifCFGBasicBlock* _target, SourceLocation _loc) { // 198
+	AlifCFGBasicBlock* _target, SourceLocation _loc) { 
 	AlifCFGInstruction* last = basicBlock_lastInstr(_block);
 	if (last and is_jump(last)) return -1;
 
@@ -137,7 +137,7 @@ static AlifIntT basicBlock_addJump(AlifCFGBasicBlock* _block, AlifIntT _opCode,
 	return 1;
 }
 
-static inline AlifIntT basicBlock_appendInstructions(AlifCFGBasicBlock* _to, AlifCFGBasicBlock* _from) { // 214
+static inline AlifIntT basicBlock_appendInstructions(AlifCFGBasicBlock* _to, AlifCFGBasicBlock* _from) { 
 	for (AlifIntT i = 0; i < _from->iUsed; i++) {
 		AlifIntT n = basicBlock_nextInstr(_to);
 		if (n < 0) {
@@ -157,7 +157,7 @@ static inline AlifIntT basicBlock_noFallThrough(const AlifCFGBasicBlock* _b) {
 #define BB_NO_FALLTHROUGH(_b) (basicBlock_noFallThrough(_b))
 #define BB_HAS_FALLTHROUGH(_b) (!basicBlock_noFallThrough(_b))
 
-static AlifCFGBasicBlock* copy_basicBlock(AlifFlowGraph* _cfg, AlifCFGBasicBlock* _block) { // 238
+static AlifCFGBasicBlock* copy_basicBlock(AlifFlowGraph* _cfg, AlifCFGBasicBlock* _block) { 
 	/* Cannot copy a block if it has a fallthrough, since
 	 * a block can only have one fallthrough predecessor.
 	 */
@@ -171,18 +171,18 @@ static AlifCFGBasicBlock* copy_basicBlock(AlifFlowGraph* _cfg, AlifCFGBasicBlock
 	return result;
 }
 
-static AlifCFGBasicBlock* alifFlowGraph_useNextBlock(AlifFlowGraph* _cfg, AlifCFGBasicBlock* _block) { // 321
+static AlifCFGBasicBlock* alifFlowGraph_useNextBlock(AlifFlowGraph* _cfg, AlifCFGBasicBlock* _block) { 
 	_cfg->curBlock->next = _block;
 	_cfg->curBlock = _block;
 	return _block;
 }
 
-static inline AlifIntT basicBlock_exitsScope(const AlifCFGBasicBlock* _b) { // 329
+static inline AlifIntT basicBlock_exitsScope(const AlifCFGBasicBlock* _b) { 
 	AlifCFGInstruction* last = basicBlock_lastInstr(_b);
 	return last and ISSCOPE_EXIT_OPCODE(last->opCode);
 }
 
-static inline AlifIntT basicBlock_hasEvalBreak(const AlifCFGBasicBlock* _b) { // 335
+static inline AlifIntT basicBlock_hasEvalBreak(const AlifCFGBasicBlock* _b) { 
 	for (AlifIntT i = 0; i < _b->iUsed; i++) {
 		if (OPCODE_HAS_EVAL_BREAK(_b->instr[i].opCode)) {
 			return true;
@@ -191,7 +191,7 @@ static inline AlifIntT basicBlock_hasEvalBreak(const AlifCFGBasicBlock* _b) { //
 	return false;
 }
 
-static bool alifFlowGraph_currentBlockIsTerminated(AlifFlowGraph* _cfg) { // 345
+static bool alifFlowGraph_currentBlockIsTerminated(AlifFlowGraph* _cfg) { 
 	AlifCFGInstruction* last = basicBlock_lastInstr(_cfg->curBlock);
 	if (last and IS_TERMINATOR_OPCODE(last->opCode)) {
 		return true;
@@ -209,7 +209,7 @@ static bool alifFlowGraph_currentBlockIsTerminated(AlifFlowGraph* _cfg) { // 345
 	return false;
 }
 
-static AlifIntT alifFlowGraph_maybeStartNewBlock(AlifFlowGraph* _cfg) { // 365
+static AlifIntT alifFlowGraph_maybeStartNewBlock(AlifFlowGraph* _cfg) { 
 
 	if (alifFlowGraph_currentBlockIsTerminated(_cfg)) {
 		AlifCFGBasicBlock* block = alifFlowGraph_newBlock(_cfg);
@@ -224,7 +224,7 @@ static AlifIntT alifFlowGraph_maybeStartNewBlock(AlifFlowGraph* _cfg) { // 365
 	return 1;
 }
 
-static AlifIntT init_alifFlowGraph(AlifFlowGraph* _cfg) { // 401
+static AlifIntT init_alifFlowGraph(AlifFlowGraph* _cfg) { 
 
 	_cfg->blockList = nullptr;
 	AlifCFGBasicBlock* block = alifFlowGraph_newBlock(_cfg);
@@ -237,7 +237,7 @@ static AlifIntT init_alifFlowGraph(AlifFlowGraph* _cfg) { // 401
 }
 
 
-AlifFlowGraph* alifFlowGraph_new() { // 414
+AlifFlowGraph* alifFlowGraph_new() { 
 	
 	AlifFlowGraph* cfg = (AlifFlowGraph*)alifMem_dataAlloc(sizeof(AlifFlowGraph));
 	if (cfg == nullptr) {
@@ -252,7 +252,7 @@ AlifFlowGraph* alifFlowGraph_new() { // 414
 	return cfg;
 }
 
-AlifIntT alifFlowGraph_checkSize(AlifFlowGraph* _cfg) { // 449
+AlifIntT alifFlowGraph_checkSize(AlifFlowGraph* _cfg) { 
 	AlifIntT nBlocks = 0;
 	for (AlifCFGBasicBlock* b = _cfg->blockList; b != nullptr; b = b->list) {
 		nBlocks++;
@@ -265,14 +265,14 @@ AlifIntT alifFlowGraph_checkSize(AlifFlowGraph* _cfg) { // 449
 	return 1;
 }
 
-AlifIntT alifFlowGraph_useLable(AlifFlowGraph* _cfg, JumpTargetLable _lable) { // 463
+AlifIntT alifFlowGraph_useLable(AlifFlowGraph* _cfg, JumpTargetLable _lable) { 
 
 	_cfg->curLabel = _lable;
 	return alifFlowGraph_maybeStartNewBlock(_cfg);
 }
 
 
-AlifIntT alifFlowGraph_addOp(AlifFlowGraph* _cfg, AlifIntT _opCode, AlifIntT _opArg, SourceLocation _loc) { // 470
+AlifIntT alifFlowGraph_addOp(AlifFlowGraph* _cfg, AlifIntT _opCode, AlifIntT _opArg, SourceLocation _loc) { 
 
 	if (alifFlowGraph_maybeStartNewBlock(_cfg) == -1) {
 		return -1;
@@ -280,14 +280,14 @@ AlifIntT alifFlowGraph_addOp(AlifFlowGraph* _cfg, AlifIntT _opCode, AlifIntT _op
 	return basicBlock_addOp(_cfg->curBlock, _opCode, _opArg, _loc);
 }
 
-static AlifCFGBasicBlock* next_nonEmptyBlock(AlifCFGBasicBlock* _block) { // 478
+static AlifCFGBasicBlock* next_nonEmptyBlock(AlifCFGBasicBlock* _block) { 
 	while (_block and _block->iUsed == 0) {
 		_block = _block->next;
 	}
 	return _block;
 }
 
-static AlifIntT normalize_jumpsInBlock(AlifFlowGraph* _cfg, AlifCFGBasicBlock* _block) { // 540
+static AlifIntT normalize_jumpsInBlock(AlifFlowGraph* _cfg, AlifCFGBasicBlock* _block) { 
 	AlifCFGInstruction* last = basicBlock_lastInstr(_block);
 	if (last == nullptr or !is_jump(last) or ISUNCONDITIONAL_JUMP_OPCODE(last->opCode)) {
 		return 1;
@@ -328,7 +328,7 @@ static AlifIntT normalize_jumpsInBlock(AlifFlowGraph* _cfg, AlifCFGBasicBlock* _
 	return 1;
 }
 
-static AlifIntT normalize_jumps(AlifFlowGraph* _cfg) { // 590
+static AlifIntT normalize_jumps(AlifFlowGraph* _cfg) { 
 	AlifCFGBasicBlock* entryblock = _cfg->entryBlock;
 	for (AlifCFGBasicBlock* b = entryblock; b != nullptr; b = b->next) {
 		b->visited = 0;
@@ -340,7 +340,7 @@ static AlifIntT normalize_jumps(AlifFlowGraph* _cfg) { // 590
 	return 1;
 }
 
-static AlifIntT get_maxLabel(AlifCFGBasicBlock* _entryBlock) { // 622
+static AlifIntT get_maxLabel(AlifCFGBasicBlock* _entryBlock) { 
 	AlifIntT label = -1;
 	for (AlifCFGBasicBlock* b = _entryBlock; b != nullptr; b = b->next) {
 		if (b->label.id > label) {
@@ -350,7 +350,7 @@ static AlifIntT get_maxLabel(AlifCFGBasicBlock* _entryBlock) { // 622
 	return label;
 }
 
-static AlifIntT basicBlock_removeRedundantNops(AlifCFGBasicBlock* _cfgb) { // 1013
+static AlifIntT basicBlock_removeRedundantNops(AlifCFGBasicBlock* _cfgb) { 
 	/* Remove NOPs when legal to do so. */
 	AlifIntT dest = 0;
 	AlifIntT prevLineNo = -1;
@@ -408,7 +408,7 @@ static AlifIntT basicBlock_removeRedundantNops(AlifCFGBasicBlock* _cfgb) { // 10
 	return numRemoved;
 }
 
-static AlifIntT remove_redundantNopsAndPairs(AlifCFGBasicBlock* _entryBlock) { // 1084
+static AlifIntT remove_redundantNopsAndPairs(AlifCFGBasicBlock* _entryBlock) { 
 	bool done = false;
 
 	while (!done) {
@@ -449,7 +449,7 @@ static AlifIntT remove_redundantNopsAndPairs(AlifCFGBasicBlock* _entryBlock) { /
 	return 1;
 }
 
-static inline bool basicBlock_hasNoLineNo(AlifCFGBasicBlock* _b) { // 1162
+static inline bool basicBlock_hasNoLineNo(AlifCFGBasicBlock* _b) { 
 	for (AlifIntT i = 0; i < _b->iUsed; i++) {
 		if (_b->instr[i].loc.lineNo >= 0) {
 			return false;
@@ -458,7 +458,7 @@ static inline bool basicBlock_hasNoLineNo(AlifCFGBasicBlock* _b) { // 1162
 	return true;
 }
 
-static AlifObject* get_constValue(AlifIntT _opCode, AlifIntT _opArg, AlifObject* _consts) { // 1256
+static AlifObject* get_constValue(AlifIntT _opCode, AlifIntT _opArg, AlifObject* _consts) { 
 	AlifObject* constant = nullptr;
 	if (_opCode == LOAD_CONST) {
 		constant = ALIFLIST_GET_ITEM(_consts, _opArg);
@@ -471,7 +471,7 @@ static AlifObject* get_constValue(AlifIntT _opCode, AlifIntT _opArg, AlifObject*
 	return ALIF_NEWREF(constant);
 }
 
-static AlifIntT add_const(AlifObject* _newConst, AlifObject* _consts) { // 1274
+static AlifIntT add_const(AlifObject* _newConst, AlifObject* _consts) { 
 	//if (alifCompile_constCacheMergeOne(const_cache, &_newConst) < 0) {
 	//	ALIF_DECREF(_newConst);
 	//	return -1;
@@ -498,7 +498,7 @@ static AlifIntT add_const(AlifObject* _newConst, AlifObject* _consts) { // 1274
 	return (AlifIntT)index;
 }
 
-static AlifIntT basicBlock_optimizeLoadConst(AlifCFGBasicBlock* _cfgb, AlifObject* _consts) { // 1542
+static AlifIntT basicBlock_optimizeLoadConst(AlifCFGBasicBlock* _cfgb, AlifObject* _consts) { 
 	AlifIntT opcode = 0;
 	AlifIntT oparg = 0;
 	for (AlifIntT i = 0; i < _cfgb->iUsed; i++) {
@@ -609,7 +609,7 @@ static AlifIntT basicBlock_optimizeLoadConst(AlifCFGBasicBlock* _cfgb, AlifObjec
 	return 1;
 }
 
-static AlifIntT optimize_loadConst(AlifFlowGraph* _cfg, AlifObject* _consts) { // 1664
+static AlifIntT optimize_loadConst(AlifFlowGraph* _cfg, AlifObject* _consts) { 
 
 	for (AlifCFGBasicBlock* b = _cfg->entryBlock; b != nullptr; b = b->next) {
 		if (basicBlock_optimizeLoadConst(b, _consts) == -1) return -1;
@@ -617,7 +617,7 @@ static AlifIntT optimize_loadConst(AlifFlowGraph* _cfg, AlifObject* _consts) { /
 	return 1;
 }
 
-static AlifIntT optimize_alifFlowGraph(AlifFlowGraph* _cfg, AlifObject* _consts, AlifIntT _firstLineNo) { // 1839
+static AlifIntT optimize_alifFlowGraph(AlifFlowGraph* _cfg, AlifObject* _consts, AlifIntT _firstLineNo) { 
 
 	if (resolve_lineNumbers(_cfg, _firstLineNo) == -1) return -1;
 	if (optimize_loadConst(_cfg, _consts) == -1) return -1;
@@ -628,7 +628,7 @@ static AlifIntT optimize_alifFlowGraph(AlifFlowGraph* _cfg, AlifObject* _consts,
 	return 1; // need review
 }
 
-static AlifIntT remove_unusedConsts(AlifCFGBasicBlock* _entryBlock, AlifObject* _consts) { // 2029
+static AlifIntT remove_unusedConsts(AlifCFGBasicBlock* _entryBlock, AlifObject* _consts) { 
 
 	AlifSizeT nConsts = ALIFLIST_GET_SIZE(_consts);
 	if (nConsts == 0) return 1;
@@ -707,7 +707,7 @@ end:
 	return ret;
 }
 
-static inline bool isExit_orEvalCheckWithoutLineNo(AlifCFGBasicBlock* _b) { // 2365
+static inline bool isExit_orEvalCheckWithoutLineNo(AlifCFGBasicBlock* _b) { 
 	if (basicBlock_exitsScope(_b) or basicBlock_hasEvalBreak(_b)) {
 		return basicBlock_hasNoLineNo(_b);
 	}
@@ -716,7 +716,7 @@ static inline bool isExit_orEvalCheckWithoutLineNo(AlifCFGBasicBlock* _b) { // 2
 	}
 }
 
-static AlifIntT duplicateExits_withoutLineNo(AlifFlowGraph* _cfg) { // 2385
+static AlifIntT duplicateExits_withoutLineNo(AlifFlowGraph* _cfg) { 
 	AlifIntT nextLabel = get_maxLabel(_cfg->entryBlock) + 1;
 
 	/* Copy all exit blocks without line number that are targets of a jump.
@@ -789,14 +789,14 @@ static void propagate_lineNumbers(AlifCFGBasicBlock* _entryBlock) {
 	}
 }
 
-static AlifIntT resolve_lineNumbers(AlifFlowGraph* _cfg, AlifIntT _firstLineNo) { // 2473
+static AlifIntT resolve_lineNumbers(AlifFlowGraph* _cfg, AlifIntT _firstLineNo) { 
 	if (duplicateExits_withoutLineNo(_cfg) == -1) return -1;
 	propagate_lineNumbers(_cfg->entryBlock);
 	return 1;
 }
 
 AlifIntT alifCFG_optimizeCodeUnit(AlifFlowGraph* _cfg, AlifObject* _consts,
-	AlifIntT _nLocals, AlifIntT _nParams, AlifIntT _firstLineNo) { // 2481
+	AlifIntT _nLocals, AlifIntT _nParams, AlifIntT _firstLineNo) { 
 
 	/* --- Preprocessing --- */
 
@@ -811,7 +811,7 @@ AlifIntT alifCFG_optimizeCodeUnit(AlifFlowGraph* _cfg, AlifObject* _consts,
 
 
 
-AlifIntT alifCFG_toInstructionSeq(AlifFlowGraph* _cfg, InstructionSequence* _seq) { // 2714
+AlifIntT alifCFG_toInstructionSeq(AlifFlowGraph* _cfg, InstructionSequence* _seq) { 
 	AlifIntT label = 0;
 	for (AlifCFGBasicBlock* b = _cfg->entryBlock; b != nullptr; b = b->next) {
 		b->label = { label };
@@ -843,7 +843,7 @@ AlifIntT alifCFG_toInstructionSeq(AlifFlowGraph* _cfg, InstructionSequence* _seq
 
 
 AlifIntT alifCFG_optimizedCFGToInstructionSeq(AlifFlowGraph* _cfg, AlifCompileCodeUnitData* _cud,
-	AlifIntT* _stackDepth, AlifIntT* _nLocalsPlus, InstructionSequence* _seq) { // 2749
+	AlifIntT* _stackDepth, AlifIntT* _nLocalsPlus, InstructionSequence* _seq) { 
 
 	//*_stackDepth = calculate_stackDepth(_cfg);
 	//if (*_stackDepth < 0) return -1;

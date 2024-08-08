@@ -15,3 +15,5 @@ AlifIntT alifSubGC_init(AlifInterpreter*);
 
 
 AlifIntT alif_initFromConfig(AlifConfig*);
+
+char* alif_setLocale(AlifIntT);

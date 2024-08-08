@@ -134,7 +134,7 @@ typedef void (*Destructor)(AlifObject*);
 typedef AlifObject* (*GetAttrFunc)(AlifObject*, wchar_t*);
 typedef AlifObject* (*GetAttroFunc)(AlifObject*, AlifObject*);
 typedef int (*SetAttrFunc)(AlifObject*, wchar_t*, AlifObject*);
-typedef int (*SetAttroFunc)(AlifObject*, AlifObject*, AlifObject*);
+typedef AlifIntT (*SetAttroFunc)(AlifObject*, AlifObject*, AlifObject*);
 typedef AlifObject* (*ReprFunc)(AlifObject*);
 typedef size_t(*HashFunc)(AlifObject*);
 typedef AlifObject* (*RichCmpFunc) (AlifObject*, AlifObject*, int);

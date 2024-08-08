@@ -41,7 +41,7 @@ static AlifIntT symTable_visitKeyword(class AlifSymTable*, Keyword*);
     } \
 }
 
-AlifSTEntryObject* alifSymTable_lookup(AlifSymTable* _st, void* _key) { // 487
+AlifSTEntryObject* alifSymTable_lookup(AlifSymTable* _st, void* _key) { 
     AlifObject* k, * v;
 
     k = alifInteger_fromSizeT((unsigned long long)(uintptr_t)_key, true);
@@ -55,19 +55,19 @@ AlifSTEntryObject* alifSymTable_lookup(AlifSymTable* _st, void* _key) { // 487
     return (AlifSTEntryObject*)v;
 }
 
-AlifIntT alifST_getSymbol(AlifSTEntryObject* _ste, AlifObject* _name) { // 505
+AlifIntT alifST_getSymbol(AlifSTEntryObject* _ste, AlifObject* _name) { 
     AlifObject* v = alifDict_getItem(_ste->steSymbols, _name); // alifDict_getItemWithError
     if (!v) return 0;
 
     return alifInteger_asLong(v); // ALIFLONG_AS_LONG
 }
 
-AlifIntT alifST_getScope(AlifSTEntryObject* _ste, AlifObject* _name) { // 515
+AlifIntT alifST_getScope(AlifSTEntryObject* _ste, AlifObject* _name) { 
     AlifIntT symbol = alifST_getSymbol(_ste, _name);
     return (symbol >> SCOPE_OFFSET) & SCOPE_MASK;
 }
 
-AlifIntT alifST_isFunctionLike(AlifSTEntryObject* _ste) { // 522
+AlifIntT alifST_isFunctionLike(AlifSTEntryObject* _ste) { 
     return _ste->steType == FunctionBlock
         or _ste->steType == TypeVarBoundBlock
         or _ste->steType == TypeAliasBlock
@@ -129,7 +129,7 @@ AlifObject* alif_mangle(AlifObject * _privateObj, AlifObject * _ident)
 
 
 static AlifIntT symTable_addDefHelper(AlifSymTable* _st, AlifObject* _name, AlifIntT _flag, class AlifSTEntryObject* _ste,
-    AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo, AlifIntT _endColOffset) { // 1381
+    AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo, AlifIntT _endColOffset) { 
     
     AlifObject* obj_{};
     AlifObject* dict_{};
@@ -189,17 +189,17 @@ error:
 }
 
 static AlifIntT symTable_addDef(class AlifSymTable* _st, AlifObject* _name, AlifIntT _flag,
-    AlifIntT lineno, AlifIntT col_offset, AlifIntT end_lineno, AlifIntT end_col_offset) { // 1474
+    AlifIntT lineno, AlifIntT col_offset, AlifIntT end_lineno, AlifIntT end_col_offset) { 
 
     return symTable_addDefHelper(_st, _name, _flag, _st->stCur, lineno, col_offset, end_lineno, end_col_offset);
 }
 
-static AlifIntT symTable_visitKeyword(class AlifSymTable* _st, Keyword* _k) { // 2610
+static AlifIntT symTable_visitKeyword(class AlifSymTable* _st, Keyword* _k) { 
 	VISIT(_st, Expr, _k->val);
 	return 1;
 }
 
-static AlifIntT symTable_visitExpr(AlifSymTable* _symTable, Expression* _expr) { // 2118
+static AlifIntT symTable_visitExpr(AlifSymTable* _symTable, Expression* _expr) { 
     if (++_symTable->recursionDepth > _symTable->recursionLimit) {
         VISIT_QUIT(_symTable, 0);
     }
@@ -263,7 +263,7 @@ static AlifIntT symTable_visitExpr(AlifSymTable* _symTable, Expression* _expr) {
 }
 
 
-static AlifIntT symTable_visitStmt(class AlifSymTable* _symTable, Statement* _stmt) { // 1623
+static AlifIntT symTable_visitStmt(class AlifSymTable* _symTable, Statement* _stmt) { 
     if (++_symTable->recursionDepth > _symTable->recursionLimit) {
         VISIT_QUIT(_symTable, 0);
     }
@@ -335,7 +335,7 @@ AlifTypeObject _alifSTEntryType_ = {
 
 static AlifSTEntryObject* symTableEntry_new(AlifSymTable* _symTable, AlifObject* _name, AlifBlockType _block,
     void* _key, AlifIntT _lineNo, AlifIntT _colOffset,
-    AlifIntT _endLineNo, AlifIntT _endColOffset) { // 80
+    AlifIntT _endLineNo, AlifIntT _endColOffset) { 
 
     AlifSTEntryObject* symTableEntry = nullptr;
     AlifObject* k_ = nullptr;
@@ -514,10 +514,10 @@ static AlifIntT analyze_name(AlifSTEntryObject* ste, AlifObject* scopes, AlifObj
 }
 
 static int update_symbols(AlifObject* _symbols, AlifObject* _scopes,
-    AlifObject* _bound, AlifObject* _free, AlifObject* _inlinedCells, int _classflag) { // 903
+    AlifObject* _bound, AlifObject* _free, AlifObject* _inlinedCells, int _classflag) { 
     AlifObject* name = nullptr, * itr = nullptr;
     AlifObject* v = nullptr, * v_scope = nullptr, * v_new = nullptr, * v_free = nullptr;
-    int64_t pos = 0;
+	AlifSizeT pos = 0;
 
     while (alifDict_next(_symbols, &pos, &name, &v)) {
         long scope, flags;
@@ -600,7 +600,7 @@ error:
     return 0;
 }
 
-static AlifIntT drop_classFree(AlifSTEntryObject* _ste, AlifObject* _free) { // 882
+static AlifIntT drop_classFree(AlifSTEntryObject* _ste, AlifObject* _free) { 
     int res;
     AlifObject* className = alifUStr_decodeStringToUTF8(L"__class__");
     res = alifSet_discard(_free, className);
@@ -615,7 +615,7 @@ static AlifIntT drop_classFree(AlifSTEntryObject* _ste, AlifObject* _free) { // 
     return 1;
 }
 
-static AlifIntT analyze_cells(AlifObject* _scopes, AlifObject* _free, AlifObject* _inlinedCells) { // 83
+static AlifIntT analyze_cells(AlifObject* _scopes, AlifObject* _free, AlifObject* _inlinedCells) { 
     AlifObject* name, * v, * v_cell;
     AlifIntT success = 0;
     AlifSizeT pos = 0;
@@ -654,7 +654,7 @@ error:
 }
 
 static AlifIntT analyze_childBlock(AlifSTEntryObject* _entry, AlifObject* _bound, AlifObject* _free,
-    AlifObject* _global, AlifObject* _typeParams, AlifSTEntryObject* _classEntry, AlifObject** _childFree) { // 1227
+    AlifObject* _global, AlifObject* _typeParams, AlifSTEntryObject* _classEntry, AlifObject** _childFree) { 
 
     AlifObject* temp_bound = nullptr, * temp_global = nullptr, * temp_free = nullptr;
     AlifObject* temp_type_params = nullptr;
@@ -688,7 +688,7 @@ error:
 }
 
 static int analyze_block(AlifSTEntryObject* _ste, AlifObject* _bound, AlifObject* _free,
-    AlifObject* _global, AlifObject* _typeParams, AlifSTEntryObject* _classEntry) { // 1035
+    AlifObject* _global, AlifObject* _typeParams, AlifSTEntryObject* _classEntry) { 
 
     AlifObject* name, * v, * local = nullptr, * scopes = nullptr, * newbound = nullptr;
     AlifObject* newglobal = nullptr, * newfree = nullptr, * inlinedCells = nullptr;
@@ -839,7 +839,7 @@ error:
     return success;
 }
 
-static AlifIntT symTable_analyze(class AlifSymTable* st) { // 1271
+static AlifIntT symTable_analyze(class AlifSymTable* st) { 
     AlifObject* free_, * global, * typeParams;
     int r{};
 
@@ -865,7 +865,7 @@ static AlifIntT symTable_analyze(class AlifSymTable* st) { // 1271
     return r;
 }
 
-static AlifIntT symTable_exitBlock(AlifSymTable* _st) { // 1303
+static AlifIntT symTable_exitBlock(AlifSymTable* _st) { 
     AlifSizeT size;
 
     _st->stCur = nullptr;
@@ -880,7 +880,7 @@ static AlifIntT symTable_exitBlock(AlifSymTable* _st) { // 1303
 
 static AlifIntT symTable_enterBlock(AlifSymTable* _symTable, AlifObject* _name,
     AlifBlockType _block, void* _ast, AlifIntT _lineNo, AlifIntT _colOffset,
-    AlifIntT _endLineNo, AlifIntT _endColOffset) { // 1320
+    AlifIntT _endLineNo, AlifIntT _endColOffset) { 
 
     AlifSTEntryObject* prev_ = nullptr;
     AlifSTEntryObject* symTableEnter;
@@ -911,7 +911,7 @@ static AlifIntT symTable_enterBlock(AlifSymTable* _symTable, AlifObject* _name,
 }
 
 
-static class AlifSymTable* symTable_new() { // 363
+static class AlifSymTable* symTable_new() { 
     class AlifSymTable* symTable;
 
     symTable = (class AlifSymTable*)alifMem_objAlloc(sizeof(class AlifSymTable));
@@ -933,7 +933,7 @@ fail:
 }
 
 
-class AlifSymTable* alifSymTable_build(Module* _module, AlifObject* _fn) { // 390
+class AlifSymTable* alifSymTable_build(Module* _module, AlifObject* _fn) { 
     AlifSymTable* symTable = symTable_new();
     StmtSeq* seq_;
     AlifIntT i_;

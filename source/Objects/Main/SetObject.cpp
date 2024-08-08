@@ -518,7 +518,7 @@ static int set_update_dict_lock_held(AlifSetObject* _so, AlifObject* _other)
 		}
 	}
 
-	int64_t pos_ = 0;
+	AlifSizeT pos_ = 0;
 	AlifObject* key_;
 	AlifObject* value_;
 	size_t hash_{};

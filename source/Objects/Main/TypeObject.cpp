@@ -287,7 +287,7 @@ AlifObject* alifType_lookup(AlifTypeObject* _type, AlifObject* _name)
 	return res_;
 }
 
-AlifObject* alifType_allocNoTrack(AlifTypeObject* _type, AlifSizeT nitems) { // 1936
+AlifObject* alifType_allocNoTrack(AlifTypeObject* _type, AlifSizeT nitems) { 
 	AlifObject* obj;
 	size_t size = alifSubObject_varSize(_type, nitems + 1);
 
@@ -322,7 +322,7 @@ AlifObject* alifType_allocNoTrack(AlifTypeObject* _type, AlifSizeT nitems) { // 
 	return obj;
 }
 
-AlifObject* alifType_genericAlloc(AlifTypeObject* _type, AlifSizeT nitems) { // 1979
+AlifObject* alifType_genericAlloc(AlifTypeObject* _type, AlifSizeT nitems) { 
 	AlifObject* obj = alifType_allocNoTrack(_type, nitems);
 	if (obj == nullptr) {
 		return nullptr;
@@ -334,7 +334,7 @@ AlifObject* alifType_genericAlloc(AlifTypeObject* _type, AlifSizeT nitems) { // 
 	return obj;
 }
 
-static AlifIntT typeIsSubType_baseChain(AlifTypeObject* _a, AlifTypeObject* _b) { // 2355
+static AlifIntT typeIsSubType_baseChain(AlifTypeObject* _a, AlifTypeObject* _b) { 
 	do {
 		if (_a == _b)
 			return 1;
@@ -344,7 +344,7 @@ static AlifIntT typeIsSubType_baseChain(AlifTypeObject* _a, AlifTypeObject* _b) 
 	return (_b == &_alifBaseObjectType_);
 }
 
-static AlifIntT isSubType_withMro(AlifObject* _mro, AlifTypeObject* _a, AlifTypeObject* _b) { // 2367
+static AlifIntT isSubType_withMro(AlifObject* _mro, AlifTypeObject* _a, AlifTypeObject* _b) { 
 	AlifIntT res{};
 	if (_mro != nullptr) {
 		AlifSizeT i, n;
@@ -364,7 +364,7 @@ static AlifIntT isSubType_withMro(AlifObject* _mro, AlifTypeObject* _a, AlifType
 	return res;
 }
 
-AlifIntT alifType_isSubType(AlifTypeObject* a, AlifTypeObject* b) { // 2392
+AlifIntT alifType_isSubType(AlifTypeObject* a, AlifTypeObject* b) { 
 	return isSubType_withMro(a->mro_, a, b);
 }
 
@@ -420,7 +420,7 @@ AlifInitObject _alifTypeType_ = {
 
 
 
-AlifObject* alifType_getAttroImpl(AlifTypeObject* type, AlifObject* _name, AlifIntT* _suppressMissingAttribute) { // 5289
+AlifObject* alifType_getAttroImpl(AlifTypeObject* type, AlifObject* _name, AlifIntT* _suppressMissingAttribute) { 
 	AlifTypeObject* metatype = ALIF_TYPE(type);
 	AlifObject* metaAttribute{}, * attribute{};
 	DescrGetFunc metaGet{};
@@ -495,11 +495,11 @@ AlifObject* alifType_getAttroImpl(AlifTypeObject* type, AlifObject* _name, AlifI
 }
 
 
-AlifObject* alifType_getAttro(AlifObject* type, AlifObject* _name) { // 5381
+AlifObject* alifType_getAttro(AlifObject* type, AlifObject* _name) { 
 	return alifType_getAttroImpl((AlifTypeObject*)type, _name, nullptr);
 }
 
-int alifType_ready(AlifTypeObject* _type) // 7906
+int alifType_ready(AlifTypeObject* _type) 
 {
 	if (_type->flags_ & ALIFTPFLAGS_READY) {
 		return 0;

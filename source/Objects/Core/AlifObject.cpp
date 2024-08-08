@@ -267,7 +267,7 @@ int alifObject_not(AlifObject* _v)
 	return res_ == 0;
 }
 
-AlifIntT alifCallable_check(AlifObject* _x) { // 1842 
+AlifIntT alifCallable_check(AlifObject* _x) {  
 	if (_x == nullptr) return 0;
 	return ALIF_TYPE(_x)->call_ != nullptr;
 }
@@ -479,7 +479,7 @@ void alifSub_setRefcnt(AlifObject* _ob, int64_t _ref)
 }
 
 
-AlifIntT alifObject_getOptionalAttr(AlifObject* v, AlifObject* name, AlifObject** result) { // 1196
+AlifIntT alifObject_getOptionalAttr(AlifObject* v, AlifObject* name, AlifObject** result) { 
 	AlifTypeObject* tp = ALIF_TYPE(v);
 
 	if (!ALIFUSTR_CHECK(name)) {
@@ -501,7 +501,7 @@ AlifIntT alifObject_getOptionalAttr(AlifObject* v, AlifObject* name, AlifObject*
 		return 0;
 	}
 	else if (tp->getAttro == alifType_getAttro) {
-		int supress_missing_attribute_exception = 0;
+		AlifIntT supress_missing_attribute_exception = 0;
 		*result = alifType_getAttroImpl((AlifTypeObject*)v, name, &supress_missing_attribute_exception);
 		if (supress_missing_attribute_exception) {
 			return 0;
@@ -543,7 +543,7 @@ AlifIntT alifObject_getOptionalAttr(AlifObject* v, AlifObject* name, AlifObject*
 	return 0;
 }
 
-AlifIntT alifObject_setAttrString(AlifObject* _v, const wchar_t* _name, AlifObject* _w) { // 1074
+AlifIntT alifObject_setAttrString(AlifObject* _v, const wchar_t* _name, AlifObject* _w) { 
 	AlifObject* s{};
 	AlifIntT res{};
 
@@ -557,7 +557,7 @@ AlifIntT alifObject_setAttrString(AlifObject* _v, const wchar_t* _name, AlifObje
 	return res;
 }
 
-AlifObject** alifObject_computedDictPointer(AlifObject* obj) { // 1367
+AlifObject** alifObject_computedDictPointer(AlifObject* obj) { 
 	AlifTypeObject* tp = ALIF_TYPE(obj);
 
 	AlifSizeT dictoffset = tp->dictOffset;
@@ -578,7 +578,7 @@ AlifObject** alifObject_computedDictPointer(AlifObject* obj) { // 1367
 	return (AlifObject**)((char*)obj + dictoffset);
 }
 
-AlifIntT alifObject_setAttr(AlifObject* v, AlifObject* name, AlifObject* value) { // 1312
+AlifIntT alifObject_setAttr(AlifObject* v, AlifObject* name, AlifObject* value) { 
 	AlifTypeObject* tp = ALIF_TYPE(v);
 	int err;
 
@@ -630,7 +630,7 @@ AlifIntT alifObject_setAttr(AlifObject* v, AlifObject* name, AlifObject* value) 
 
 
 AlifObject* alifSubObject_genericGetAttrWithDict(AlifObject* obj, AlifObject* name,
-	AlifObject* dict, AlifIntT suppress) { // 1544
+	AlifObject* dict, AlifIntT suppress) { 
 
 	AlifTypeObject* tp = ALIF_TYPE(obj);
 	AlifObject* descr = nullptr;
@@ -734,14 +734,14 @@ done:
 	return res;
 }
 
-AlifObject* alifObject_genericGetAttr(AlifObject* obj, AlifObject* name) { // 1657
+AlifObject* alifObject_genericGetAttr(AlifObject* obj, AlifObject* name) { 
 	return alifSubObject_genericGetAttrWithDict(obj, name, nullptr, 0);
 }
 
 
 
 AlifIntT alifObject_genericSetAttrWithDict(AlifObject* obj, AlifObject* name, AlifObject* value, AlifObject* dict)
-{ // 1663
+{ 
 	AlifTypeObject* tp = ALIF_TYPE(obj);
 	AlifObject* descr{};
 	DescrSetFunc f{};
@@ -825,7 +825,7 @@ done:
 	return res;
 }
 
-AlifIntT alifObject_genericSetAttr(AlifObject* obj, AlifObject* name, AlifObject* value) { // 1759
+AlifIntT alifObject_genericSetAttr(AlifObject* obj, AlifObject* name, AlifObject* value) { 
 	return alifObject_genericSetAttrWithDict(obj, name, value, nullptr);
 }
 

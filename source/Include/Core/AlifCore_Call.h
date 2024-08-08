@@ -3,13 +3,13 @@
 
 
 
-AlifObject* alif_checkFunctionResult(AlifThread*, AlifObject*, AlifObject*, const wchar_t*); // 28
+AlifObject* alif_checkFunctionResult(AlifThread*, AlifObject*, AlifObject*, const wchar_t*); 
 
 
 AlifObject* alifObject_makeTpCall(AlifThread*, AlifObject*, AlifObject* const*, AlifSizeT, AlifObject*);
 
 
-static inline VectorCallFunc alifVectorCall_functionInline(AlifObject* callable) { // 114
+static inline VectorCallFunc alifVectorCall_functionInline(AlifObject* callable) { 
 
 	AlifTypeObject* tp = ALIF_TYPE(callable);
 	if (!alifType_hasFeature(tp, ALIFTPFLAGS_HAVE_VECTORCALL)) {
@@ -27,7 +27,7 @@ static inline VectorCallFunc alifVectorCall_functionInline(AlifObject* callable)
 
 static inline AlifObject* alifObject_vectorCallThread(AlifThread* tstate, AlifObject* callable,
 	AlifObject* const* args, AlifUSizeT nargsf,
-	AlifObject* kwnames) { // 152
+	AlifObject* kwnames) { 
 	VectorCallFunc func;
 	AlifObject* res;
 

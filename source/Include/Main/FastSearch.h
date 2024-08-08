@@ -2,11 +2,11 @@
 
 #define STRINGLIB_FASTSEARCH_H
 
-#ifdef DEBUG
-#  define ALIF_SAFE_DOWNCAST(_VALUE, _WIDE, _NARROW) 
-#else
+//#ifdef DEBUG
+//#  define ALIF_SAFE_DOWNCAST(_VALUE, _WIDE, _NARROW) 
+//#else
 #  define ALIF_SAFE_DOWNCAST(_VALUE, _WIDE, _NARROW) ((_NARROW)_VALUE)
-#endif
+//#endif
 
 // in file alifConfig.h in 64
 #define LONG_BIT        32
@@ -294,8 +294,7 @@ static void preprocess(const STRINGLIB_CHAR* _needle, int64_t _lenNeedle,
         _p->table_[i_] = ALIF_SAFE_DOWNCAST(notFoundShift, int64_t, SHIFT_TYPE);
     }
     for (int64_t i_ = _lenNeedle - notFoundShift; i_ < _lenNeedle; i_++) {
-        SHIFT_TYPE shift_ = ALIF_SAFE_DOWNCAST(_lenNeedle - 1 - i_,
-            int64_t, SHIFT_TYPE);
+        SHIFT_TYPE shift_ = ALIF_SAFE_DOWNCAST(_lenNeedle - 1 - i_, AlifSizeT, SHIFT_TYPE);
         _p->table_[_needle[i_] & TABLE_MASK] = shift_;
     }
 }

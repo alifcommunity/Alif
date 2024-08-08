@@ -27,16 +27,16 @@ extern AlifObject* alifEval_builtinsFromGlobals(AlifThread*, AlifObject*);
 
 
 
-static inline AlifIntT alif_makeRecCheck(AlifThread* _thread) { // 195
+static inline AlifIntT alif_makeRecCheck(AlifThread* _thread) { 
 	return _thread->recursionRemaining-- < 0;
 }
 
 AlifIntT alif_checkRecursiveCall(AlifThread*, const wchar_t*);
 
-static inline AlifIntT alif_enterRecursiveCallThread(AlifThread* _thread, const wchar_t* _where) { // 209
+static inline AlifIntT alif_enterRecursiveCallThread(AlifThread* _thread, const wchar_t* _where) { 
 	return (alif_makeRecCheck(_thread) and alif_checkRecursiveCall(_thread, _where));
 }
 
-static inline void alif_leaveRecursiveCallThread(AlifThread* _thread) { // 224
+static inline void alif_leaveRecursiveCallThread(AlifThread* _thread) { 
 	_thread->recursionRemaining++;
 }

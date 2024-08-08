@@ -26,7 +26,7 @@ public:
 	AlifIntT locationOff{};
 };
 
-static AlifIntT instr_size(AlifInstruction* _instr) { // 39
+static AlifIntT instr_size(AlifInstruction* _instr) { 
 
 	AlifIntT opCode = _instr->opCode;
 	AlifIntT opArg = _instr->opArg;
@@ -35,7 +35,7 @@ static AlifIntT instr_size(AlifInstruction* _instr) { // 39
 	return extendedArgs + 1;
 }
 
-static AlifIntT assemble_init(AlifAssembler* _assembler, AlifIntT _firstLineNo) { // 62
+static AlifIntT assemble_init(AlifAssembler* _assembler, AlifIntT _firstLineNo) { 
 
 	_assembler->lineNo = _firstLineNo;
 	_assembler->lineTable = nullptr;
@@ -56,7 +56,7 @@ error:
 	return -1;
 }
 
-static void write_instr(AlifCodeUnit* _codeStr, AlifInstruction* _instr, AlifIntT _iLen) { // 359
+static void write_instr(AlifCodeUnit* _codeStr, AlifInstruction* _instr, AlifIntT _iLen) { 
 
 	AlifIntT opCode = _instr->opCode;
 	AlifIntT opArg = _instr->opArg;
@@ -90,7 +90,7 @@ static void write_instr(AlifCodeUnit* _codeStr, AlifInstruction* _instr, AlifInt
 
 
 
-static AlifIntT assemble_emitInstr(AlifAssembler* _assembler, AlifInstruction* _instr) { // 403
+static AlifIntT assemble_emitInstr(AlifAssembler* _assembler, AlifInstruction* _instr) { 
 
 	AlifSizeT len = ALIFWBYTES_GET_SIZE(_assembler->wByteCode);
 	AlifCodeUnit* code{};
@@ -110,7 +110,7 @@ static AlifIntT assemble_emitInstr(AlifAssembler* _assembler, AlifInstruction* _
 	return 1;
 }
 
-static AlifIntT assemble_emit(AlifAssembler* _assembler, InstructionSequence* _instrs, AlifIntT _firstLineNo) { // 422
+static AlifIntT assemble_emit(AlifAssembler* _assembler, InstructionSequence* _instrs, AlifIntT _firstLineNo) { 
 
 	if (assemble_init(_assembler, _firstLineNo) == -1) return -1;
 
@@ -124,7 +124,7 @@ static AlifIntT assemble_emit(AlifAssembler* _assembler, InstructionSequence* _i
 	return 1;
 }
 
-static AlifObject* dictKeys_inorder(AlifObject* _dict, AlifSizeT _offset) { // 448
+static AlifObject* dictKeys_inorder(AlifObject* _dict, AlifSizeT _offset) { 
 
 	AlifObject* tuple{}, * k{}, * v{};
 	AlifSizeT pos = 0, size = ALIFDICT_GET_SIZE(_dict);
@@ -148,7 +148,7 @@ static AlifObject* dictKeys_inorder(AlifObject* _dict, AlifSizeT _offset) { // 4
 }
 
 static AlifIntT compute_localsPlusInfo(AlifCompileCodeUnitData* _cud, AlifIntT nLocalsPlus,
-	AlifObject* _names, AlifObject* _kinds) { // 474
+	AlifObject* _names, AlifObject* _kinds) { 
 
 	/* code here */
 
@@ -156,7 +156,7 @@ static AlifIntT compute_localsPlusInfo(AlifCompileCodeUnitData* _cud, AlifIntT n
 }
 
 static AlifCodeObject* makeCode(AlifCompileCodeUnitData* _cud, AlifAssembler* _assembler, 
-	AlifObject* _constsList, AlifIntT _maxDepth, AlifIntT _nLocalsPlus, AlifObject* _fn) { // 542
+	AlifObject* _constsList, AlifIntT _maxDepth, AlifIntT _nLocalsPlus, AlifObject* _fn) { 
 
 	AlifCodeObject* co = nullptr;
 	AlifObject* names = nullptr;
@@ -228,7 +228,7 @@ error:
 }
 
 AlifCodeObject* alifAssemble_makeCodeObject(AlifCompileCodeUnitData* _cud, AlifObject* _consts,
-	AlifIntT _maxDepth, InstructionSequence* _instrs, AlifIntT _nLocalsPlus, AlifObject* _fn) { // 735
+	AlifIntT _maxDepth, InstructionSequence* _instrs, AlifIntT _nLocalsPlus, AlifObject* _fn) { 
 
 	if (alifInstructionSeq_applyLableMap(_instrs) < 0) {
 		return nullptr;

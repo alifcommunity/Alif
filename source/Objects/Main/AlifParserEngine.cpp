@@ -33,12 +33,6 @@ int alifParserEngine_updateMemo(AlifParser* _p, int _mark, int _type, void* _nod
 	return alifParserEngine_insertMemo(_p, _mark, _type, _node);
 }
 
-static void growableCommentArr_init(GrowableCommentArr* _arr, AlifSizeT _initSize) { 
-	_arr->items = (GrowableCommentArr::Items*)malloc(_initSize * sizeof(*_arr->items));
-	_arr->size = _initSize;
-	_arr->numItems = 0;
-}
-
 static int get_keywordOrName(AlifParser* _p, AlifToken* _token) { 
 	int nameLen = _token->endColOffset - _token->colOffset;
 
@@ -164,7 +158,7 @@ int alifParserEngine_isMemorized(AlifParser* _p, int _type, void* _pres) {
 	return 0;
 }
 
-int alifParserEngine_lookaheadWithInt(int _positive, AlifPToken* (_func)(AlifParser*, int), AlifParser* _p, int _arg) { 
+int alifParserEngine_lookaheadWithInt(int _positive, AlifPToken* (_func)(AlifParser*, AlifIntT), AlifParser* _p, int _arg) { 
 	AlifIntT mark_ = _p->mark_;
 	void* res = _func(_p, _arg);
 	_p->mark_ = mark_;
@@ -178,7 +172,15 @@ int alifParserEngine_lookahead(int _positive, void* (_func)(AlifParser*), AlifPa
 	return (res != nullptr) == _positive;
 }
 
-AlifPToken* alifParserEngine_expectToken(AlifParser* _p, int _type) { 
+AlifPToken* alifParserEngine_expectToken(AlifParser* _p, AlifIntT _type) {
+	/*
+		إذا وصل المؤشر mark
+		الى مؤشر الملء fill
+		هذا يعني أنه لم يعد هنالك رموز المأخوذة tokens
+		قابلة للإستخدام وبالتالي يجب جلب رمز جديد
+		-------------------------------------------
+		الفرق بين المؤشر الحالي ومؤشر الملء يدل على عدد الرموز المأخوذة tokens
+	*/
 	if (_p->mark_ == _p->fill_) {
 		if (alifParserEngine_fillToken(_p) < 0) {
 			_p->errorIndicator = 1;
@@ -322,16 +324,31 @@ Expression* alifParserEngine_numberToken(AlifParser* _p) {
 }
 
 
-AlifParser* alifParserEngine_newParser(TokenInfo* _tokInfo, int _startRule, AlifASTMem* _astMem) { 
+AlifParser* alifParserEngine_newParser(TokenInfo* _tokInfo, int _startRule, AlifASTMem* _astMem)
+{ 
 	AlifParser* p = (AlifParser*)alifMem_dataAlloc(sizeof(AlifParser));
+	if (p == nullptr) {
+		// error
+		return nullptr;
+	}
 
 	p->tok = _tokInfo;
+	p->keywords = nullptr;
+	p->nKeywordList = -1;
+	p->softKeyword = nullptr;
 	p->tokens = (AlifPToken**)alifMem_dataAlloc(sizeof(AlifPToken*));
+	if (p->tokens == nullptr) {
+		// error
+		return nullptr;
+	}
 	p->tokens[0] = (AlifPToken*)alifMem_dataAlloc(sizeof(AlifPToken));
-	growableCommentArr_init(&p->typeIgnoreComments, 10);
+	if (p->tokens[0] == nullptr) {
+		// error
+		return nullptr;
+	}
 
-	p->fill_ = 0;
 	p->mark_ = 0;
+	p->fill_ = 0;
 	p->size_ = 1;
 
 	p->astMem = _astMem;
@@ -372,7 +389,7 @@ void* alifParserEngine_runParser(AlifParser* _p) {
 	return res;
 }
 
-Module* alifParser_astFromFile(FILE* _fp, AlifObject* _fn, int _startRule, AlifASTMem* _astMem) { // _PyPegen_run_parser_from_file_pointer() 
+Module* alifParser_astFromFile(FILE* _fp, AlifObject* _fn, int _startRule, AlifASTMem* _astMem) { // _alifPegen_run_parser_from_file_pointer() 
 
 	TokenInfo* tokInfo = alifTokenizerInfo_fromFile(_fp);
 	if (tokInfo == nullptr) {
@@ -380,7 +397,7 @@ Module* alifParser_astFromFile(FILE* _fp, AlifObject* _fn, int _startRule, AlifA
 		return nullptr;
 	}
 
-	tokInfo->fn = ALIF_NEWREF((AlifObject*)_fn);
+	tokInfo->fn = ALIF_NEWREF(_fn);
 
 	Module* result{};
 
@@ -389,6 +406,7 @@ Module* alifParser_astFromFile(FILE* _fp, AlifObject* _fn, int _startRule, AlifA
 
 	result = (Module*)alifParserEngine_runParser(p);
 	//alifParserEngine_parserFree(p); // يحتاج إختبار وتصحيح
+
 
 end:
 	//alifTokenizer_Free(tokInfo);

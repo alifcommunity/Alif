@@ -168,7 +168,7 @@ static inline size_t alifSubType_preHeaderSize(AlifTypeObject* _tp)
 		);
 }
 
-void alifSubObjectGC_link(AlifObject*); // 642
+void alifSubObjectGC_link(AlifObject*); 
 
 
 

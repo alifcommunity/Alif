@@ -12,7 +12,7 @@ int alifSubBytes_resize(AlifObject**, int64_t );
 
 extern AlifInitObject _typeBytes_;
 
-int alifWBytes_asStringAndSize(AlifObject*, wchar_t**, int64_t*);
+int alifWBytes_asStringAndSize(AlifObject*, wchar_t**, AlifSizeT*);
 
 #define ALIFBYTES_CHECK(op) ALIF_IS_TYPE(op, &_typeBytes_)
 

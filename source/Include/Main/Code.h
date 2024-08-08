@@ -28,7 +28,7 @@ union AlifCodeUnit {
 };
 
 
-class AlifCodeObject {  // 192
+class AlifCodeObject {  
 public:
 	ALIFOBJECT_VAR_HEAD;
 	AlifObject* consts{};
@@ -67,7 +67,7 @@ public:
 #define CO_NESTED       0x0010
 #define CO_GENERATOR    0x0020
 
-#define CO_MAXBLOCKS 21 /* Max static block nesting within a function */ // 229
+#define CO_MAXBLOCKS 21 /* Max static block nesting within a function */ 
 
 extern AlifTypeObject _alifCodeType_;
 

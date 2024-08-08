@@ -1,15 +1,17 @@
 //#pragma once
 //
 //#include "AlifCore_Time.h"
-//
-//AlifThreadIdentT alifThread_get_thread_ident_ex(void)
-//{
-//    //if (!initialized)
-//        //alifThread_init_thread();
-//
-//    return GetCurrentThreadId();
-//}
-//
+
+
+AlifThreadIdentT alifThread_getThreadID() {
+
+    //if (!initialized)
+        //alifThread_init_thread();
+
+    return GetCurrentThreadId();
+}
+
+
 //unsigned long alifThread_get_thread_ident(void)
 //{
 //    return (unsigned long)alifThread_get_thread_ident_ex();

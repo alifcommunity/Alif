@@ -16,7 +16,7 @@ public:
 	Inquiry clearFunc{};
 };
 
-static AlifIntT isLegal_capsule(AlifObject* _op, const wchar_t* _invalidCapsule) { // 22
+static AlifIntT isLegal_capsule(AlifObject* _op, const wchar_t* _invalidCapsule) { 
 	
 	AlifCapsule* capsule{};
 
@@ -42,7 +42,7 @@ error:
 
 #define IS_LEGAL_CAPSULE(_cap, _name) (isLegal_capsule(_cap, _name L" called with invalid AlifCapsule object"))
 
-static AlifIntT name_matches(const wchar_t* _name1, const wchar_t* _name2) { // 45
+static AlifIntT name_matches(const wchar_t* _name1, const wchar_t* _name2) { 
 	if (!_name1 or !_name2) {
 		return _name1 == _name2;
 	}
@@ -50,7 +50,7 @@ static AlifIntT name_matches(const wchar_t* _name1, const wchar_t* _name2) { // 
 	return !wcscmp(_name1, _name2);
 }
 
-AlifObject* alifCapsule_new(void* _ptr, const wchar_t* _name, AlifCapsuleDestructor _destructor) { // 57
+AlifObject* alifCapsule_new(void* _ptr, const wchar_t* _name, AlifCapsuleDestructor _destructor) { 
 
 	AlifCapsule* capsule{};
 	if (!_ptr) {
@@ -73,7 +73,7 @@ AlifObject* alifCapsule_new(void* _ptr, const wchar_t* _name, AlifCapsuleDestruc
 
 
 
-void* alifCapsule_getPointer(AlifObject* _op, const wchar_t* _name) { // 96
+void* alifCapsule_getPointer(AlifObject* _op, const wchar_t* _name) { 
 	if (IS_LEGAL_CAPSULE(_op, L"alifCapsule_getPointer")) {
 		return nullptr;
 	}
@@ -107,7 +107,7 @@ void* alifCapsule_getPointer(AlifObject* _op, const wchar_t* _name) { // 96
 
 
 
-// 349 // need fix
+ // need fix
 AlifTypeObject _alifCapsuleType_ = {
 	//ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0)
 	ALIFVAROBJECT_HEAD_INIT(&_alifCapsuleType_, 0)

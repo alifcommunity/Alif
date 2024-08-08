@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 
 /* --------------------------------- AlifWStringList --------------------------------- */
@@ -18,15 +18,18 @@ public:
 	AlifIntT parseArgv{};
 
 	AlifWStringList origArgv{};
-	AlifWStringList argv;
+	AlifWStringList argv{};
 
 	AlifIntT interactive{};
 	AlifIntT optimizationLevel{};
+	AlifIntT configStdio{};
+	AlifIntT bufferedStdio{};
 
 	AlifIntT quite{};
 
 	wchar_t* programName{};
 
+	AlifIntT skipFirstLine{};
 	wchar_t* runCommand{};
 	wchar_t* runModule{};
 	wchar_t* runFilename{};
@@ -35,5 +38,5 @@ public:
 };
 
 
-AlifIntT alif_setLocaleAndWChar();
+AlifIntT alif_setStdioLocale(const AlifConfig*);
 void alifConfig_initAlifConfig(AlifConfig*);

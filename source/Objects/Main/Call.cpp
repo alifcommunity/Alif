@@ -13,7 +13,7 @@
     ((size_t)1 << (8 * sizeof(size_t) - 1))
 
 AlifObject* alif_checkFunctionResult(AlifThread* _thread,
-	AlifObject* _callable, AlifObject* _result, const wchar_t* _where) { // 24
+	AlifObject* _callable, AlifObject* _result, const wchar_t* _where) { 
 
 	if (_result == nullptr) {
 		//if (!alifErr_occurred(_thread)) {
@@ -76,7 +76,7 @@ basic_type_error:
 }
 
 AlifObject* alifObject_makeTpCall(AlifThread* _thread, AlifObject* _callable,
-	AlifObject* const* _args, AlifSizeT _nargs, AlifObject* _keywords) { // 199
+	AlifObject* const* _args, AlifSizeT _nargs, AlifObject* _keywords) { 
 
 	TernaryFunc call = ALIF_TYPE(_callable)->call_;
 	if (call == nullptr) {
@@ -123,7 +123,7 @@ AlifObject* alifObject_makeTpCall(AlifThread* _thread, AlifObject* _callable,
 
 
 
-VectorCallFunc alifVectorCall_function(AlifObject* callable) { // 256
+VectorCallFunc alifVectorCall_function(AlifObject* callable) { 
 	return alifVectorCall_functionInline(callable);
 }
 
@@ -135,7 +135,7 @@ AlifObject* alifObject_vectorCall(AlifObject* callable, AlifObject* const* args,
 		args, nargsf, kwnames);
 }
 
-AlifObject* alifObject_callOneArg(AlifObject* func, AlifObject* arg) { // 385
+AlifObject* alifObject_callOneArg(AlifObject* func, AlifObject* arg) { 
 
 	AlifObject* _args[2];
 	AlifObject** args = _args + 1; 
@@ -146,7 +146,7 @@ AlifObject* alifObject_callOneArg(AlifObject* func, AlifObject* arg) { // 385
 }
 
 AlifObject* alifFunction_vectorCall(AlifObject* func, AlifObject* const* stack,
-	AlifUSizeT nargsf, AlifObject* kwnames) { // 401
+	AlifUSizeT nargsf, AlifObject* kwnames) { 
 
 	AlifFunctionObject* f = (AlifFunctionObject*)func;
 	AlifSizeT nargs = ALIFVECTORCALL_NARGS(nargsf);
@@ -159,7 +159,7 @@ AlifObject* alifFunction_vectorCall(AlifObject* func, AlifObject* const* stack,
 	}
 }
 
-AlifObject* alifStack_asDict(AlifObject* const* _values, AlifObject* _kwNames) { // 935
+AlifObject* alifStack_asDict(AlifObject* const* _values, AlifObject* _kwNames) { 
 	AlifSizeT nkwargs;
 
 	nkwargs = ALIFTUPLE_GET_SIZE(_kwNames);
@@ -246,7 +246,7 @@ AlifObject* const* alifStack_unpackDict(AlifObject* const* args, int64_t nArgs,
 
     AlifObject** kwStack = stack + nArgs;
 
-    int64_t pos = 0, i = 0;
+	AlifSizeT pos = 0, i = 0;
     AlifObject* key{}, * value{};
     unsigned long keys_are_strings = ALIFTPFLAGS_USTR_SUBCLASS;
     while (alifDict_next(kwArgs, &pos, &key, &value)) {
