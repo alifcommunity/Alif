@@ -78,61 +78,69 @@
     <ClInclude Include="..\source\Include\Main\UStrObject.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\Objects\Main\Abstract.cpp" />
-    <ClCompile Include="..\source\Objects\Main\ActionHelpers.cpp" />
-    <ClCompile Include="..\source\Objects\Main\AlifAssemble.cpp" />
-    <ClCompile Include="..\source\Objects\Main\AlifAST.cpp" />
-    <ClCompile Include="..\source\Objects\Main\AlifCompiler.cpp" />
-    <ClCompile Include="..\source\Objects\Main\AlifCppType.cpp" />
-    <ClCompile Include="..\source\Objects\Main\AlifEval.cpp" />
-    <ClCompile Include="..\source\Objects\Main\AlifFlowGraph.cpp" />
-    <ClCompile Include="..\source\Objects\Main\AlifLexer.cpp" />
-    <ClCompile Include="..\source\Objects\Main\AlifParser.cpp" />
-    <ClCompile Include="..\source\Objects\Main\AlifParserEngine.cpp" />
-    <ClCompile Include="..\source\Objects\Main\AlifParserEngineErrors.cpp" />
-    <ClCompile Include="..\source\Objects\Main\AlifState.cpp" />
-    <ClCompile Include="..\source\Objects\Main\AlifSymTable.cpp" />
-    <ClCompile Include="..\source\Objects\Main\AlifTime.cpp" />
-    <ClCompile Include="..\source\Objects\Main\AlifToken.cpp" />
-    <ClCompile Include="..\source\Objects\Main\AlifTokenState.cpp" />
-    <ClCompile Include="..\source\Objects\Main\ASDL.cpp" />
-    <ClCompile Include="..\source\Objects\Main\ASTOptimize.cpp" />
-    <ClCompile Include="..\source\Objects\Main\BoolObject.cpp" />
-    <ClCompile Include="..\source\Objects\Main\BuiltinsModule.cpp" />
-    <ClCompile Include="..\source\Objects\Main\BytesMethods.cpp" />
-    <ClCompile Include="..\source\Objects\Main\BytesObject.cpp" />
-    <ClCompile Include="..\source\Objects\Main\Call.cpp" />
-    <ClCompile Include="..\source\Objects\Main\Capsule.cpp" />
-    <ClCompile Include="..\source\Objects\Main\ClassObject.cpp" />
-    <ClCompile Include="..\source\Objects\Main\CodeObject.cpp" />
-    <ClCompile Include="..\source\Objects\Main\ConfigMinimal.cpp" />
-    <ClCompile Include="..\source\Objects\Main\DescrObject.cpp" />
-    <ClCompile Include="..\source\Objects\Main\DictObject.cpp" />
-    <ClCompile Include="..\source\Objects\Main\FileObject.cpp" />
-    <ClCompile Include="..\source\Objects\Main\FileTokenizer.cpp" />
-    <ClCompile Include="..\source\Objects\Main\FloatObject.cpp" />
-    <ClCompile Include="..\source\Objects\Main\FrameObject.cpp" />
-    <ClCompile Include="..\source\Objects\Main\FunctionObject.cpp" />
-    <ClCompile Include="..\source\Objects\Main\GC.cpp" />
-    <ClCompile Include="..\source\Objects\Main\GenericAliasObject.cpp" />
-    <ClCompile Include="..\source\Objects\Main\GetArgs.cpp" />
-    <ClCompile Include="..\source\Objects\Main\GetVersion.cpp" />
-    <ClCompile Include="..\source\Objects\Main\Import.cpp" />
-    <ClCompile Include="..\source\Objects\Main\InstructionSeq.cpp" />
-    <ClCompile Include="..\source\Objects\Main\Instrumentation.cpp" />
-    <ClCompile Include="..\source\Objects\Main\IntegerObject.cpp" />
-    <ClCompile Include="..\source\Objects\Main\IterObject.cpp" />
-    <ClCompile Include="..\source\Objects\Main\ListObject.cpp" />
-    <ClCompile Include="..\source\Objects\Main\MethodObject.cpp" />
-    <ClCompile Include="..\source\Objects\Main\ModuleObject.cpp" />
-    <ClCompile Include="..\source\Objects\Main\SetObject.cpp" />
-    <ClCompile Include="..\source\Objects\Main\SliceObject.cpp" />
-    <ClCompile Include="..\source\Objects\Main\Specialize.cpp" />
-    <ClCompile Include="..\source\Objects\Main\StringParser.cpp" />
-    <ClCompile Include="..\source\Objects\Main\SysModule.cpp" />
-    <ClCompile Include="..\source\Objects\Main\Thread.cpp" />
-    <ClCompile Include="..\source\Objects\Main\TupleObject.cpp" />
-    <ClCompile Include="..\source\Objects\Main\TypeObject.cpp" />
+    <ClCompile Include="..\source\Objects\Abstract.cpp" />
+    <ClCompile Include="..\source\Objects\ActionHelpers.cpp" />
+    <ClCompile Include="..\source\Objects\AlifAssemble.cpp" />
+    <ClCompile Include="..\source\Objects\AlifAST.cpp" />
+    <ClCompile Include="..\source\Objects\AlifCompiler.cpp" />
+    <ClCompile Include="..\source\Objects\AlifCppType.cpp" />
+    <ClCompile Include="..\source\Objects\AlifCycle.cpp" />
+    <ClCompile Include="..\source\Objects\AlifEval.cpp" />
+    <ClCompile Include="..\source\Objects\AlifFlowGraph.cpp" />
+    <ClCompile Include="..\source\Objects\AlifLexer.cpp" />
+    <ClCompile Include="..\source\Objects\AlifObject.cpp" />
+    <ClCompile Include="..\source\Objects\AlifParser.cpp" />
+    <ClCompile Include="..\source\Objects\AlifParserEngine.cpp" />
+    <ClCompile Include="..\source\Objects\AlifParserEngineErrors.cpp" />
+    <ClCompile Include="..\source\Objects\AlifRun.cpp" />
+    <ClCompile Include="..\source\Objects\AlifState.cpp" />
+    <ClCompile Include="..\source\Objects\AlifSymTable.cpp" />
+    <ClCompile Include="..\source\Objects\AlifTime.cpp" />
+    <ClCompile Include="..\source\Objects\AlifToken.cpp" />
+    <ClCompile Include="..\source\Objects\AlifTokenState.cpp" />
+    <ClCompile Include="..\source\Objects\ASDL.cpp" />
+    <ClCompile Include="..\source\Objects\ASTOptimize.cpp" />
+    <ClCompile Include="..\source\Objects\BoolObject.cpp" />
+    <ClCompile Include="..\source\Objects\BuiltinsModule.cpp" />
+    <ClCompile Include="..\source\Objects\BytesMethods.cpp" />
+    <ClCompile Include="..\source\Objects\BytesObject.cpp" />
+    <ClCompile Include="..\source\Objects\Call.cpp" />
+    <ClCompile Include="..\source\Objects\Capsule.cpp" />
+    <ClCompile Include="..\source\Objects\ClassObject.cpp" />
+    <ClCompile Include="..\source\Objects\CodeObject.cpp" />
+    <ClCompile Include="..\source\Objects\ConfigMinimal.cpp" />
+    <ClCompile Include="..\source\Objects\DescrObject.cpp" />
+    <ClCompile Include="..\source\Objects\DictObject.cpp" />
+    <ClCompile Include="..\source\Objects\FileManip.cpp" />
+    <ClCompile Include="..\source\Objects\FileObject.cpp" />
+    <ClCompile Include="..\source\Objects\FileTokenizer.cpp" />
+    <ClCompile Include="..\source\Objects\FloatObject.cpp" />
+    <ClCompile Include="..\source\Objects\FrameObject.cpp" />
+    <ClCompile Include="..\source\Objects\FunctionObject.cpp" />
+    <ClCompile Include="..\source\Objects\GC.cpp" />
+    <ClCompile Include="..\source\Objects\GenericAliasObject.cpp" />
+    <ClCompile Include="..\source\Objects\GetArgs.cpp" />
+    <ClCompile Include="..\source\Objects\GetConsoleLine.cpp" />
+    <ClCompile Include="..\source\Objects\GetVersion.cpp" />
+    <ClCompile Include="..\source\Objects\Import.cpp" />
+    <ClCompile Include="..\source\Objects\InitConfig.cpp" />
+    <ClCompile Include="..\source\Objects\InstructionSeq.cpp" />
+    <ClCompile Include="..\source\Objects\Instrumentation.cpp" />
+    <ClCompile Include="..\source\Objects\IntegerObject.cpp" />
+    <ClCompile Include="..\source\Objects\IterObject.cpp" />
+    <ClCompile Include="..\source\Objects\ListObject.cpp" />
+    <ClCompile Include="..\source\Objects\Memory.cpp" />
+    <ClCompile Include="..\source\Objects\MethodObject.cpp" />
+    <ClCompile Include="..\source\Objects\ModuleObject.cpp" />
+    <ClCompile Include="..\source\Objects\SetObject.cpp" />
+    <ClCompile Include="..\source\Objects\SliceObject.cpp" />
+    <ClCompile Include="..\source\Objects\Specialize.cpp" />
+    <ClCompile Include="..\source\Objects\StringParser.cpp" />
+    <ClCompile Include="..\source\Objects\SysModule.cpp" />
+    <ClCompile Include="..\source\Objects\Thread.cpp" />
+    <ClCompile Include="..\source\Objects\TupleObject.cpp" />
+    <ClCompile Include="..\source\Objects\TypeObject.cpp" />
+    <ClCompile Include="..\source\Objects\UStrObject.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -212,13 +220,16 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
-      <AdditionalIncludeDirectories>..\source\Include\Core;..\source\Include\Main;..\source\Include\Alif;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>..\source\Include\Core;..\source\Include\Main;..\source\Alif</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Lib>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -229,8 +240,8 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
-      <AdditionalIncludeDirectories>..\source\Include\Core;..\source\Include\Main;..\source\Include\Alif;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>..\source\Include\Core;..\source\Include\Main;..\source\Alif</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -238,6 +249,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Lib>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -245,14 +259,17 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>..\source\Include\Core;..\source\Include\Main;..\source\Include\Alif;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>..\source\Include\Core;..\source\Include\Main;..\source\Alif</AdditionalIncludeDirectories>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Lib>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -262,8 +279,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>..\source\Include\Core;..\source\Include\Main;..\source\Include\Alif;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>..\source\Include\Core;..\source\Include\Main;..\source\Alif</AdditionalIncludeDirectories>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
@@ -272,6 +289,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Lib>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

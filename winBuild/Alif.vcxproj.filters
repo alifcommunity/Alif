@@ -15,20 +15,20 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\source\resources\resource.h">
-      <Filter>Resource Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\Include\Alif\alif.h">
+    <ClInclude Include="..\source\Alif\alif.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\resources\win\resource.h">
+      <Filter>Resource Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\source\resources\Alif5.rc">
+    <ResourceCompile Include="..\resources\win\Alif5.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\Objects\Alif\alif.cpp">
+    <ClCompile Include="..\source\Alif\alif.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

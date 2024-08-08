@@ -102,7 +102,9 @@ static AlifIntT alif_setFileMode(const AlifConfig* _config) {
 	bool modeErr = _setmode(fileno(stderr), O_BINARY);
 
 	if (!modeIn or !modeOut or !modeErr) {
-		std::cout << "لم يستطع تهيئة الطرفية لقراءة الأحرف العربية في نظام ويندوز" << std::endl;
+		std::cout <<
+			"can't init _setmode in windows for reading Arabic characters" // يجب أن تكون باللغة الاجنبية في حال لم يستطع تهيئة طباعة الاحرف العربية
+			<< std::endl;
 		return -1;
 	}
 #endif
@@ -155,7 +157,9 @@ AlifIntT alif_setStdioLocale(const AlifConfig* _config) {
 
 	const char* locale = alif_setLocale(LC_CTYPE);
 	if (locale == nullptr) {
-		std::cout << "لم يستطع تهيئة الموقع" << std::endl;
+		std::cout <<
+			"can't init locale for reading Arabic characters" // يجب أن تكون باللغة الاجنبية في حال لم يستطع تهيئة طباعة الاحرف العربية
+			<< std::endl;
 		return -1;
 	}
 

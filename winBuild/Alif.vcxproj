@@ -95,8 +95,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>..\source\Include\Main;..\source\Include\Alif;..\source\Include\Core</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>..\source\Alif;..\source\Include\Main;..\source\Include\Core;C:\Users\PC-1\Documents\GitHub\Alif\source\Alif</AdditionalIncludeDirectories>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
@@ -112,8 +112,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\source\Include\Main;..\source\Include\Alif;..\source\Include\Core</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>..\source\Alif;..\source\Include\Main;..\source\Include\Core;C:\Users\PC-1\Documents\GitHub\Alif\source\Alif</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
@@ -129,8 +129,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\source\Include\Main;..\source\Include\Alif;..\source\Include\Core</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>..\source\Alif;..\source\Include\Main;..\source\Include\Core;C:\Users\PC-1\Documents\GitHub\Alif\source\Alif</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
@@ -146,8 +146,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\source\Include\Main;..\source\Include\Alif;..\source\Include\Core</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>..\source\Alif;..\source\Include\Main;..\source\Include\Core;C:\Users\PC-1\Documents\GitHub\Alif\source\Alif</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
@@ -158,11 +158,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\source\Include\Alif\alif.h" />
-    <ClInclude Include="..\source\resources\resource.h" />
+    <ClInclude Include="..\resources\win\resource.h" />
+    <ClInclude Include="..\source\Alif\alif.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\source\resources\Alif5.rc" />
+    <ResourceCompile Include="..\resources\win\Alif5.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\source\Alif\alif.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="AlifCore.vcxproj">
@@ -171,9 +174,6 @@
     <ProjectReference Include="AlifGeneral.vcxproj">
       <Project>{8604db0e-c2a6-49f6-be9b-755878fda8f8}</Project>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\source\Objects\Alif\alif.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

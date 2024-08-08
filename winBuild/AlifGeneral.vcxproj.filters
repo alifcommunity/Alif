@@ -184,169 +184,193 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\Objects\Main\GetVersion.cpp">
+    <ClCompile Include="..\source\Objects\Abstract.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\FileTokenizer.cpp">
+    <ClCompile Include="..\source\Objects\ActionHelpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\Abstract.cpp">
+    <ClCompile Include="..\source\Objects\AlifAssemble.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\AlifCppType.cpp">
+    <ClCompile Include="..\source\Objects\AlifAST.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\BoolObject.cpp">
+    <ClCompile Include="..\source\Objects\AlifCompiler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\BytesMethods.cpp">
+    <ClCompile Include="..\source\Objects\AlifCppType.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\BytesObject.cpp">
+    <ClCompile Include="..\source\Objects\AlifCycle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\Call.cpp">
+    <ClCompile Include="..\source\Objects\AlifEval.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\DictObject.cpp">
+    <ClCompile Include="..\source\Objects\AlifFlowGraph.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\FloatObject.cpp">
+    <ClCompile Include="..\source\Objects\AlifLexer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\FunctionObject.cpp">
+    <ClCompile Include="..\source\Objects\AlifObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\GetArgs.cpp">
+    <ClCompile Include="..\source\Objects\AlifParser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\IntegerObject.cpp">
+    <ClCompile Include="..\source\Objects\AlifParserEngine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\IterObject.cpp">
+    <ClCompile Include="..\source\Objects\AlifParserEngineErrors.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\ListObject.cpp">
+    <ClCompile Include="..\source\Objects\AlifRun.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\MethodObject.cpp">
+    <ClCompile Include="..\source\Objects\AlifState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\SliceObject.cpp">
+    <ClCompile Include="..\source\Objects\AlifSymTable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\TupleObject.cpp">
+    <ClCompile Include="..\source\Objects\AlifTime.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\TypeObject.cpp">
+    <ClCompile Include="..\source\Objects\AlifToken.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\ActionHelpers.cpp">
+    <ClCompile Include="..\source\Objects\AlifTokenState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\AlifAST.cpp">
+    <ClCompile Include="..\source\Objects\ASDL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\AlifLexer.cpp">
+    <ClCompile Include="..\source\Objects\ASTOptimize.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\AlifParser.cpp">
+    <ClCompile Include="..\source\Objects\BoolObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\AlifParserEngine.cpp">
+    <ClCompile Include="..\source\Objects\BuiltinsModule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\AlifParserEngineErrors.cpp">
+    <ClCompile Include="..\source\Objects\BytesMethods.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\AlifToken.cpp">
+    <ClCompile Include="..\source\Objects\BytesObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\AlifTokenState.cpp">
+    <ClCompile Include="..\source\Objects\Call.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\ASDL.cpp">
+    <ClCompile Include="..\source\Objects\Capsule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\FileObject.cpp">
+    <ClCompile Include="..\source\Objects\ClassObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\StringParser.cpp">
+    <ClCompile Include="..\source\Objects\CodeObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\AlifTime.cpp">
+    <ClCompile Include="..\source\Objects\ConfigMinimal.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\Thread.cpp">
+    <ClCompile Include="..\source\Objects\DescrObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\AlifState.cpp">
+    <ClCompile Include="..\source\Objects\DictObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\ConfigMinimal.cpp">
+    <ClCompile Include="..\source\Objects\FileManip.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\Import.cpp">
+    <ClCompile Include="..\source\Objects\FileObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\AlifAssemble.cpp">
+    <ClCompile Include="..\source\Objects\FileTokenizer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\AlifCompiler.cpp">
+    <ClCompile Include="..\source\Objects\FloatObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\AlifFlowGraph.cpp">
+    <ClCompile Include="..\source\Objects\FrameObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\AlifSymTable.cpp">
+    <ClCompile Include="..\source\Objects\FunctionObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\ASTOptimize.cpp">
+    <ClCompile Include="..\source\Objects\GC.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\Capsule.cpp">
+    <ClCompile Include="..\source\Objects\GenericAliasObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\CodeObject.cpp">
+    <ClCompile Include="..\source\Objects\GetArgs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\GC.cpp">
+    <ClCompile Include="..\source\Objects\GetConsoleLine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\InstructionSeq.cpp">
+    <ClCompile Include="..\source\Objects\GetVersion.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\SetObject.cpp">
+    <ClCompile Include="..\source\Objects\Import.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\AlifEval.cpp">
+    <ClCompile Include="..\source\Objects\InitConfig.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\Specialize.cpp">
+    <ClCompile Include="..\source\Objects\InstructionSeq.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\Instrumentation.cpp">
+    <ClCompile Include="..\source\Objects\Instrumentation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\GenericAliasObject.cpp">
+    <ClCompile Include="..\source\Objects\IntegerObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\DescrObject.cpp">
+    <ClCompile Include="..\source\Objects\IterObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\ModuleObject.cpp">
+    <ClCompile Include="..\source\Objects\ListObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\SysModule.cpp">
+    <ClCompile Include="..\source\Objects\Memory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\BuiltinsModule.cpp">
+    <ClCompile Include="..\source\Objects\MethodObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\FrameObject.cpp">
+    <ClCompile Include="..\source\Objects\ModuleObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Objects\Main\ClassObject.cpp">
+    <ClCompile Include="..\source\Objects\SetObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Objects\SliceObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Objects\Specialize.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Objects\StringParser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Objects\SysModule.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Objects\Thread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Objects\TupleObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Objects\TypeObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Objects\UStrObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
