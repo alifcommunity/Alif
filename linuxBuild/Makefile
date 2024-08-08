@@ -8,7 +8,7 @@ SOURCE_FILES = $(wildcard $(SOURCE_DIR)/Alif/*.cpp) $(wildcard $(SOURCE_DIR)/Obj
 
 INCLUDES = -I$(SOURCE_DIR)/Alif -I$(SOURCE_DIR)/Include/Core -I$(SOURCE_DIR)/Include/Main
 
-OBJECTS = $(SOURCE_FILES:$(SOURCE_DIR)/Objects/%.cpp=$(BUILD_DIR)/%.o) $(SOURCE_FILES:$(SOURCE_DIR)/Alif/%.cpp=$(BUILD_DIR)/%.o)
+OBJECTS = $(SOURCE_FILES:$(SOURCE_DIR)/Objects/%/%.cpp=$(BUILD_DIR)/%.o)
 
 TARGET = $(BUILD_DIR)/alif
 
