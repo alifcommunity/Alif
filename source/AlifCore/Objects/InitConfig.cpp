@@ -370,6 +370,9 @@ static AlifIntT run_absPathFilename(AlifConfig* _config) {
 	result = GetFullPathNameW(filename, ALIF_ARRAY_LENGTH(wOutBuf), wOutBuf, nullptr);
 	if (!result) return -1;
 
+	wOutBufP = (wchar_t*)alifMem_dataAlloc(result * sizeof(wchar_t));
+	result = GetFullPathNameW(filename, result, wOutBufP, nullptr);
+
 	absFilename = (wchar_t*)alifMem_dataAlloc(result * sizeof(wchar_t));
 	memcpy(absFilename, wOutBuf, result * sizeof(wchar_t));
 #else

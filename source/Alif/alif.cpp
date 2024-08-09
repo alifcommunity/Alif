@@ -55,7 +55,7 @@ static AlifIntT alifMain_runFileObj(AlifObject* _pn, AlifObject* _fn, AlifIntT _
 			(const char*)((AlifUStrObject*)_pn)->UTF,
 			(const char*)((AlifUStrObject*)_fn)->UTF,
 			errno, "لا يوجد ملف او مسار بهذا الاسم");
-		return -2;
+		return 2;
 	}
 
 	if (_skipFirstLine) {

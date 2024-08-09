@@ -168,12 +168,9 @@
     <ClCompile Include="..\source\Alif\alif.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="AlifGeneral.vcxproj">
+    <ProjectReference Include="AlifCore.vcxproj">
       <Project>{8604db0e-c2a6-49f6-be9b-755878fda8f8}</Project>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\.editorconfig" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

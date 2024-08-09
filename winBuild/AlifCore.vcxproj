@@ -18,13 +18,189 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Abstract.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_AlifCycle.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_AlifEval.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_AlifRun.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_AlifState.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_AlifThread.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_AlifToken.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ASDL.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_AST.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Backoff.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_BytesMethods.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_BytesObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Call.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Code.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Compile.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_CondVar.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Context.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Dict.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DureRun.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DureRunInit.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FileUtils.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FlowGraph.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Frame.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FreeList.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Function.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GC.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GetConsoleLine.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GlobalLock.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GlobalObjects.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GlobalString.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_HashArrayMapTree.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Import.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_InitConfig.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_InstructionSeq.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Integer.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Interpreter.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Intrinsics.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_List.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_LList.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Lock.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Memory.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ModSupport.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ModuleObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Object.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ObjectState.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_OpCodeData.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_OpCodeUtils.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_SymTable.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Time.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Tuple.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_TypeObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_UString.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\Abstract.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifBuffer.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifCapsule.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifConfig.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifCppType.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifErrors.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifEval.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifEvalMacros.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifLexer.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifMacro.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifParserEngine.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifPort.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifRun.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifState.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifThread.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifTime.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifTokenState.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifTypeDefs.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifVersion.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\BoolObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\BuiltinsModule.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\BytesObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\ClassObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\Code.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\Compile.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\DescrObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\DictObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\ErrorCode.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\FastSearch.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\FileManip.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\Find.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\FloatObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\FunctionObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\GenericAliasObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\Helpers.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\Import.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\InitConfig.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\IntegerObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\IterObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\ListObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\MethodObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\ModSupport.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\ModuleObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\ObjImpl.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\OpCode.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\OpCodeCases.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\OpCodeIDs.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\SetObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\SliceObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\Split.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringParser.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\Thread_nt.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\Thread_PThread.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\Tokenizer.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\TupleObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\UStrObject.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\source\AlifCore\Objects\Abstract.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\ActionHelpers.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifAssemble.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifAST.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifCompiler.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifCppType.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifCycle.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifEval.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifFlowGraph.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifLexer.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifParser.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifParserEngine.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifParserEngineErrors.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifRun.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifState.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifSymTable.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifTime.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifToken.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifTokenState.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\ASDL.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\ASTOptimize.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\BoolObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\BuiltinsModule.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\BytesMethods.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\BytesObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\Call.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\Capsule.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\ClassObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\CodeObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\ConfigMinimal.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\DescrObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\DictObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\FileManip.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\FileObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\FileTokenizer.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\FloatObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\FrameObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\FunctionObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\GC.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\GenericAliasObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\GetArgs.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\GetConsoleLine.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\GetVersion.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\Import.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\InitConfig.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\InstructionSeq.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\Instrumentation.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\IntegerObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\IterObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\ListObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\Memory.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\MethodObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\ModuleObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\SetObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\SliceObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\Specialize.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\StringParser.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\SysModule.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\Thread.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\TupleObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\TypeObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\UStrObject.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{374b810e-2c2f-4512-aed8-a5a115b6dc09}</ProjectGuid>
-    <RootNamespace>AlifCore</RootNamespace>
+    <ProjectGuid>{8604DB0E-C2A6-49F6-BE9B-755878FDA8F8}</ProjectGuid>
+    <RootNamespace>Alif</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>Includes</ProjectName>
+    <ProjectName>AlifCore</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -95,17 +271,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>..\source\Include\Main;..\source\Include\Core;..\source\Include\Alif;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
+      <AdditionalIncludeDirectories>..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\Alif</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <OutputFile>
-      </OutputFile>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
@@ -117,9 +291,9 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
-      <AdditionalIncludeDirectories>..\source\Include\Main;..\source\Include\Core;..\source\Include\Alif;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\Alif</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -128,8 +302,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <OutputFile>
-      </OutputFile>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
@@ -140,16 +312,14 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\Alif</AdditionalIncludeDirectories>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
-      <AdditionalIncludeDirectories>..\source\Include\Main;..\source\Include\Core;..\source\Include\Alif;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <OutputFile>
-      </OutputFile>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
@@ -162,8 +332,8 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\Alif</AdditionalIncludeDirectories>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
-      <AdditionalIncludeDirectories>..\source\Include\Main;..\source\Include\Core;..\source\Include\Alif;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -172,8 +342,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <OutputFile>
-      </OutputFile>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
