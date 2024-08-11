@@ -1,0 +1,8 @@
+- تأكد من سماح PowerShell بتشغيل الأوامر النصية عن طريق إدخال الأمر
+Set-ExecutionPolicy RemoteSigned
+
+- ثم قم بتشغيل الملف عن طريق الأمر
+.\ConvertFilesEncodingToUTF-8UsingPowerShell.ps1
+- او يمكنك تشغيله عن طريق الضغط بالزر الأيمن للفأرة وإختيار Run With PowerShell
+
+- قم بإدخال المسار الذي سيحتوي على ملفات .cpp .h ليقوم بتحويلها جميعها الى ترميز UTF-8
