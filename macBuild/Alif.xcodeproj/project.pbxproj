@@ -70,7 +70,7 @@
 		BF5B09282C63571C004895C7 /* Thread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5B08F12C63571B004895C7 /* Thread.cpp */; };
 		BF5B09292C63571C004895C7 /* BytesMethods.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5B08F22C63571B004895C7 /* BytesMethods.cpp */; };
 		BF5B092A2C63571C004895C7 /* MethodObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5B08F32C63571B004895C7 /* MethodObject.cpp */; };
-		BF5B092E2C635840004895C7 /* alif.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF5B092D2C635840004895C7 /* alif.cpp */; };
+		BFA9B4CE2C675AED003CEB19 /* alif.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BFA9B4CD2C675AED003CEB19 /* alif.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -107,7 +107,7 @@
 /* Begin PBXFileReference section */
 		BF5B08282C635617004895C7 /* Objects */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Objects; sourceTree = BUILT_PRODUCTS_DIR; };
 		BF5B08342C635670004895C7 /* Include */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Include; sourceTree = BUILT_PRODUCTS_DIR; };
-		BF5B083B2C6356A2004895C7 /* alif.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = alif.h; path = Alif/alif.h; sourceTree = "<group>"; };
+		BF5B083B2C6356A2004895C7 /* alif.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = alif.h; path = ../../Alif/alif.h; sourceTree = "<group>"; };
 		BF5B083C2C6356B4004895C7 /* AlifCore_List.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AlifCore_List.h; path = Core/AlifCore_List.h; sourceTree = "<group>"; };
 		BF5B083D2C6356B4004895C7 /* AlifCore_Dict.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AlifCore_Dict.h; path = Core/AlifCore_Dict.h; sourceTree = "<group>"; };
 		BF5B083E2C6356B4004895C7 /* AlifCore_Backoff.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AlifCore_Backoff.h; path = Core/AlifCore_Backoff.h; sourceTree = "<group>"; };
@@ -217,70 +217,70 @@
 		BF5B08A62C6356C8004895C7 /* BytesObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BytesObject.h; path = Main/BytesObject.h; sourceTree = "<group>"; };
 		BF5B08A72C6356C8004895C7 /* AlifThread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AlifThread.h; path = Main/AlifThread.h; sourceTree = "<group>"; };
 		BF5B08A82C6356C8004895C7 /* GenericAliasObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GenericAliasObject.h; path = Main/GenericAliasObject.h; sourceTree = "<group>"; };
-		BF5B08AD2C635707004895C7 /* FileManip.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FileManip.cpp; path = Core/FileManip.cpp; sourceTree = "<group>"; };
-		BF5B08AE2C635707004895C7 /* Memory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Memory.cpp; path = Core/Memory.cpp; sourceTree = "<group>"; };
-		BF5B08AF2C635707004895C7 /* UStrObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = UStrObject.cpp; path = Core/UStrObject.cpp; sourceTree = "<group>"; };
-		BF5B08B02C635707004895C7 /* AlifRun.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AlifRun.cpp; path = Core/AlifRun.cpp; sourceTree = "<group>"; };
-		BF5B08B12C635707004895C7 /* AlifCycle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AlifCycle.cpp; path = Core/AlifCycle.cpp; sourceTree = "<group>"; };
-		BF5B08B22C635707004895C7 /* InitConfig.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = InitConfig.cpp; path = Core/InitConfig.cpp; sourceTree = "<group>"; };
-		BF5B08B32C635707004895C7 /* AlifObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AlifObject.cpp; path = Core/AlifObject.cpp; sourceTree = "<group>"; };
-		BF5B08B42C635707004895C7 /* GetConsoleLine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GetConsoleLine.cpp; path = Core/GetConsoleLine.cpp; sourceTree = "<group>"; };
-		BF5B08BD2C635719004895C7 /* BytesObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BytesObject.cpp; path = Main/BytesObject.cpp; sourceTree = "<group>"; };
-		BF5B08BE2C635719004895C7 /* BoolObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BoolObject.cpp; path = Main/BoolObject.cpp; sourceTree = "<group>"; };
-		BF5B08BF2C635719004895C7 /* AlifCompiler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AlifCompiler.cpp; path = Main/AlifCompiler.cpp; sourceTree = "<group>"; };
-		BF5B08C02C635719004895C7 /* ListObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ListObject.cpp; path = Main/ListObject.cpp; sourceTree = "<group>"; };
-		BF5B08C12C63571A004895C7 /* Specialize.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Specialize.cpp; path = Main/Specialize.cpp; sourceTree = "<group>"; };
-		BF5B08C22C63571A004895C7 /* SysModule.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SysModule.cpp; path = Main/SysModule.cpp; sourceTree = "<group>"; };
-		BF5B08C32C63571A004895C7 /* AlifState.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AlifState.cpp; path = Main/AlifState.cpp; sourceTree = "<group>"; };
-		BF5B08C42C63571A004895C7 /* DictObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DictObject.cpp; path = Main/DictObject.cpp; sourceTree = "<group>"; };
-		BF5B08C52C63571A004895C7 /* SliceObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SliceObject.cpp; path = Main/SliceObject.cpp; sourceTree = "<group>"; };
-		BF5B08C62C63571A004895C7 /* TypeObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TypeObject.cpp; path = Main/TypeObject.cpp; sourceTree = "<group>"; };
-		BF5B08C72C63571A004895C7 /* ASTOptimize.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ASTOptimize.cpp; path = Main/ASTOptimize.cpp; sourceTree = "<group>"; };
-		BF5B08C82C63571A004895C7 /* AlifLexer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AlifLexer.cpp; path = Main/AlifLexer.cpp; sourceTree = "<group>"; };
-		BF5B08C92C63571A004895C7 /* ConfigMinimal.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ConfigMinimal.cpp; path = Main/ConfigMinimal.cpp; sourceTree = "<group>"; };
-		BF5B08CA2C63571A004895C7 /* GetVersion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GetVersion.cpp; path = Main/GetVersion.cpp; sourceTree = "<group>"; };
-		BF5B08CB2C63571A004895C7 /* ClassObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ClassObject.cpp; path = Main/ClassObject.cpp; sourceTree = "<group>"; };
-		BF5B08CC2C63571A004895C7 /* FloatObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FloatObject.cpp; path = Main/FloatObject.cpp; sourceTree = "<group>"; };
-		BF5B08CD2C63571A004895C7 /* AlifCppType.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AlifCppType.cpp; path = Main/AlifCppType.cpp; sourceTree = "<group>"; };
-		BF5B08CE2C63571A004895C7 /* Instrumentation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Instrumentation.cpp; path = Main/Instrumentation.cpp; sourceTree = "<group>"; };
-		BF5B08CF2C63571A004895C7 /* Capsule.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Capsule.cpp; path = Main/Capsule.cpp; sourceTree = "<group>"; };
-		BF5B08D02C63571A004895C7 /* FrameObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FrameObject.cpp; path = Main/FrameObject.cpp; sourceTree = "<group>"; };
-		BF5B08D12C63571A004895C7 /* DescrObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DescrObject.cpp; path = Main/DescrObject.cpp; sourceTree = "<group>"; };
-		BF5B08D22C63571A004895C7 /* AlifTokenState.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AlifTokenState.cpp; path = Main/AlifTokenState.cpp; sourceTree = "<group>"; };
-		BF5B08D32C63571A004895C7 /* AlifFlowGraph.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AlifFlowGraph.cpp; path = Main/AlifFlowGraph.cpp; sourceTree = "<group>"; };
-		BF5B08D42C63571A004895C7 /* GenericAliasObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GenericAliasObject.cpp; path = Main/GenericAliasObject.cpp; sourceTree = "<group>"; };
-		BF5B08D52C63571A004895C7 /* AlifParserEngine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AlifParserEngine.cpp; path = Main/AlifParserEngine.cpp; sourceTree = "<group>"; };
-		BF5B08D62C63571A004895C7 /* AlifSymTable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AlifSymTable.cpp; path = Main/AlifSymTable.cpp; sourceTree = "<group>"; };
-		BF5B08D72C63571A004895C7 /* FileTokenizer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FileTokenizer.cpp; path = Main/FileTokenizer.cpp; sourceTree = "<group>"; };
-		BF5B08D82C63571A004895C7 /* SetObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SetObject.cpp; path = Main/SetObject.cpp; sourceTree = "<group>"; };
-		BF5B08D92C63571A004895C7 /* AlifToken.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AlifToken.cpp; path = Main/AlifToken.cpp; sourceTree = "<group>"; };
-		BF5B08DA2C63571A004895C7 /* AlifAssemble.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AlifAssemble.cpp; path = Main/AlifAssemble.cpp; sourceTree = "<group>"; };
-		BF5B08DB2C63571A004895C7 /* FileObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FileObject.cpp; path = Main/FileObject.cpp; sourceTree = "<group>"; };
-		BF5B08DC2C63571A004895C7 /* AlifTime.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AlifTime.cpp; path = Main/AlifTime.cpp; sourceTree = "<group>"; };
-		BF5B08DD2C63571A004895C7 /* ASDL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ASDL.cpp; path = Main/ASDL.cpp; sourceTree = "<group>"; };
-		BF5B08DE2C63571A004895C7 /* ModuleObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ModuleObject.cpp; path = Main/ModuleObject.cpp; sourceTree = "<group>"; };
-		BF5B08DF2C63571A004895C7 /* GetArgs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GetArgs.cpp; path = Main/GetArgs.cpp; sourceTree = "<group>"; };
-		BF5B08E02C63571B004895C7 /* TupleObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TupleObject.cpp; path = Main/TupleObject.cpp; sourceTree = "<group>"; };
-		BF5B08E12C63571B004895C7 /* GC.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GC.cpp; path = Main/GC.cpp; sourceTree = "<group>"; };
-		BF5B08E22C63571B004895C7 /* AlifEval.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AlifEval.cpp; path = Main/AlifEval.cpp; sourceTree = "<group>"; };
-		BF5B08E32C63571B004895C7 /* IntegerObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IntegerObject.cpp; path = Main/IntegerObject.cpp; sourceTree = "<group>"; };
-		BF5B08E42C63571B004895C7 /* CodeObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CodeObject.cpp; path = Main/CodeObject.cpp; sourceTree = "<group>"; };
-		BF5B08E52C63571B004895C7 /* StringParser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StringParser.cpp; path = Main/StringParser.cpp; sourceTree = "<group>"; };
-		BF5B08E62C63571B004895C7 /* ActionHelpers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ActionHelpers.cpp; path = Main/ActionHelpers.cpp; sourceTree = "<group>"; };
-		BF5B08E72C63571B004895C7 /* FunctionObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FunctionObject.cpp; path = Main/FunctionObject.cpp; sourceTree = "<group>"; };
-		BF5B08E82C63571B004895C7 /* InstructionSeq.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = InstructionSeq.cpp; path = Main/InstructionSeq.cpp; sourceTree = "<group>"; };
-		BF5B08E92C63571B004895C7 /* Abstract.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Abstract.cpp; path = ../source/Objects/Main/Abstract.cpp; sourceTree = SOURCE_ROOT; };
-		BF5B08EA2C63571B004895C7 /* AlifParserEngineErrors.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AlifParserEngineErrors.cpp; path = Main/AlifParserEngineErrors.cpp; sourceTree = "<group>"; };
-		BF5B08EB2C63571B004895C7 /* IterObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IterObject.cpp; path = Main/IterObject.cpp; sourceTree = "<group>"; };
-		BF5B08EC2C63571B004895C7 /* Call.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Call.cpp; path = Main/Call.cpp; sourceTree = "<group>"; };
-		BF5B08ED2C63571B004895C7 /* Import.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Import.cpp; path = Main/Import.cpp; sourceTree = "<group>"; };
-		BF5B08EE2C63571B004895C7 /* AlifParser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AlifParser.cpp; path = Main/AlifParser.cpp; sourceTree = "<group>"; };
-		BF5B08EF2C63571B004895C7 /* AlifAST.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AlifAST.cpp; path = Main/AlifAST.cpp; sourceTree = "<group>"; };
-		BF5B08F02C63571B004895C7 /* BuiltinsModule.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BuiltinsModule.cpp; path = Main/BuiltinsModule.cpp; sourceTree = "<group>"; };
-		BF5B08F12C63571B004895C7 /* Thread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Thread.cpp; path = Main/Thread.cpp; sourceTree = "<group>"; };
-		BF5B08F22C63571B004895C7 /* BytesMethods.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BytesMethods.cpp; path = Main/BytesMethods.cpp; sourceTree = "<group>"; };
-		BF5B08F32C63571B004895C7 /* MethodObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MethodObject.cpp; path = Main/MethodObject.cpp; sourceTree = "<group>"; };
-		BF5B092D2C635840004895C7 /* alif.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = alif.cpp; path = ../source/Objects/Alif/alif.cpp; sourceTree = SOURCE_ROOT; };
+		BF5B08AD2C635707004895C7 /* FileManip.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FileManip.cpp; sourceTree = "<group>"; };
+		BF5B08AE2C635707004895C7 /* Memory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Memory.cpp; sourceTree = "<group>"; };
+		BF5B08AF2C635707004895C7 /* UStrObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = UStrObject.cpp; sourceTree = "<group>"; };
+		BF5B08B02C635707004895C7 /* AlifRun.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AlifRun.cpp; sourceTree = "<group>"; };
+		BF5B08B12C635707004895C7 /* AlifCycle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AlifCycle.cpp; sourceTree = "<group>"; };
+		BF5B08B22C635707004895C7 /* InitConfig.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = InitConfig.cpp; sourceTree = "<group>"; };
+		BF5B08B32C635707004895C7 /* AlifObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AlifObject.cpp; sourceTree = "<group>"; };
+		BF5B08B42C635707004895C7 /* GetConsoleLine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GetConsoleLine.cpp; sourceTree = "<group>"; };
+		BF5B08BD2C635719004895C7 /* BytesObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BytesObject.cpp; sourceTree = "<group>"; };
+		BF5B08BE2C635719004895C7 /* BoolObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BoolObject.cpp; sourceTree = "<group>"; };
+		BF5B08BF2C635719004895C7 /* AlifCompiler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AlifCompiler.cpp; sourceTree = "<group>"; };
+		BF5B08C02C635719004895C7 /* ListObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ListObject.cpp; sourceTree = "<group>"; };
+		BF5B08C12C63571A004895C7 /* Specialize.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Specialize.cpp; sourceTree = "<group>"; };
+		BF5B08C22C63571A004895C7 /* SysModule.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SysModule.cpp; sourceTree = "<group>"; };
+		BF5B08C32C63571A004895C7 /* AlifState.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AlifState.cpp; sourceTree = "<group>"; };
+		BF5B08C42C63571A004895C7 /* DictObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DictObject.cpp; sourceTree = "<group>"; };
+		BF5B08C52C63571A004895C7 /* SliceObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SliceObject.cpp; sourceTree = "<group>"; };
+		BF5B08C62C63571A004895C7 /* TypeObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TypeObject.cpp; sourceTree = "<group>"; };
+		BF5B08C72C63571A004895C7 /* ASTOptimize.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ASTOptimize.cpp; sourceTree = "<group>"; };
+		BF5B08C82C63571A004895C7 /* AlifLexer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AlifLexer.cpp; sourceTree = "<group>"; };
+		BF5B08C92C63571A004895C7 /* ConfigMinimal.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ConfigMinimal.cpp; sourceTree = "<group>"; };
+		BF5B08CA2C63571A004895C7 /* GetVersion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GetVersion.cpp; sourceTree = "<group>"; };
+		BF5B08CB2C63571A004895C7 /* ClassObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ClassObject.cpp; sourceTree = "<group>"; };
+		BF5B08CC2C63571A004895C7 /* FloatObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FloatObject.cpp; sourceTree = "<group>"; };
+		BF5B08CD2C63571A004895C7 /* AlifCppType.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AlifCppType.cpp; sourceTree = "<group>"; };
+		BF5B08CE2C63571A004895C7 /* Instrumentation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Instrumentation.cpp; sourceTree = "<group>"; };
+		BF5B08CF2C63571A004895C7 /* Capsule.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Capsule.cpp; sourceTree = "<group>"; };
+		BF5B08D02C63571A004895C7 /* FrameObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FrameObject.cpp; sourceTree = "<group>"; };
+		BF5B08D12C63571A004895C7 /* DescrObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DescrObject.cpp; sourceTree = "<group>"; };
+		BF5B08D22C63571A004895C7 /* AlifTokenState.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AlifTokenState.cpp; sourceTree = "<group>"; };
+		BF5B08D32C63571A004895C7 /* AlifFlowGraph.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AlifFlowGraph.cpp; sourceTree = "<group>"; };
+		BF5B08D42C63571A004895C7 /* GenericAliasObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GenericAliasObject.cpp; sourceTree = "<group>"; };
+		BF5B08D52C63571A004895C7 /* AlifParserEngine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AlifParserEngine.cpp; sourceTree = "<group>"; };
+		BF5B08D62C63571A004895C7 /* AlifSymTable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AlifSymTable.cpp; sourceTree = "<group>"; };
+		BF5B08D72C63571A004895C7 /* FileTokenizer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FileTokenizer.cpp; sourceTree = "<group>"; };
+		BF5B08D82C63571A004895C7 /* SetObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SetObject.cpp; sourceTree = "<group>"; };
+		BF5B08D92C63571A004895C7 /* AlifToken.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AlifToken.cpp; sourceTree = "<group>"; };
+		BF5B08DA2C63571A004895C7 /* AlifAssemble.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AlifAssemble.cpp; sourceTree = "<group>"; };
+		BF5B08DB2C63571A004895C7 /* FileObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FileObject.cpp; sourceTree = "<group>"; };
+		BF5B08DC2C63571A004895C7 /* AlifTime.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AlifTime.cpp; sourceTree = "<group>"; };
+		BF5B08DD2C63571A004895C7 /* ASDL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ASDL.cpp; sourceTree = "<group>"; };
+		BF5B08DE2C63571A004895C7 /* ModuleObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ModuleObject.cpp; sourceTree = "<group>"; };
+		BF5B08DF2C63571A004895C7 /* GetArgs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GetArgs.cpp; sourceTree = "<group>"; };
+		BF5B08E02C63571B004895C7 /* TupleObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TupleObject.cpp; sourceTree = "<group>"; };
+		BF5B08E12C63571B004895C7 /* GC.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GC.cpp; sourceTree = "<group>"; };
+		BF5B08E22C63571B004895C7 /* AlifEval.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AlifEval.cpp; sourceTree = "<group>"; };
+		BF5B08E32C63571B004895C7 /* IntegerObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = IntegerObject.cpp; sourceTree = "<group>"; };
+		BF5B08E42C63571B004895C7 /* CodeObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CodeObject.cpp; sourceTree = "<group>"; };
+		BF5B08E52C63571B004895C7 /* StringParser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StringParser.cpp; sourceTree = "<group>"; };
+		BF5B08E62C63571B004895C7 /* ActionHelpers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ActionHelpers.cpp; sourceTree = "<group>"; };
+		BF5B08E72C63571B004895C7 /* FunctionObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FunctionObject.cpp; sourceTree = "<group>"; };
+		BF5B08E82C63571B004895C7 /* InstructionSeq.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = InstructionSeq.cpp; sourceTree = "<group>"; };
+		BF5B08E92C63571B004895C7 /* Abstract.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Abstract.cpp; path = ../source/AlifCore/Objects/Abstract.cpp; sourceTree = SOURCE_ROOT; };
+		BF5B08EA2C63571B004895C7 /* AlifParserEngineErrors.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AlifParserEngineErrors.cpp; sourceTree = "<group>"; };
+		BF5B08EB2C63571B004895C7 /* IterObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = IterObject.cpp; sourceTree = "<group>"; };
+		BF5B08EC2C63571B004895C7 /* Call.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Call.cpp; sourceTree = "<group>"; };
+		BF5B08ED2C63571B004895C7 /* Import.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Import.cpp; sourceTree = "<group>"; };
+		BF5B08EE2C63571B004895C7 /* AlifParser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AlifParser.cpp; sourceTree = "<group>"; };
+		BF5B08EF2C63571B004895C7 /* AlifAST.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AlifAST.cpp; sourceTree = "<group>"; };
+		BF5B08F02C63571B004895C7 /* BuiltinsModule.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BuiltinsModule.cpp; sourceTree = "<group>"; };
+		BF5B08F12C63571B004895C7 /* Thread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Thread.cpp; sourceTree = "<group>"; };
+		BF5B08F22C63571B004895C7 /* BytesMethods.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BytesMethods.cpp; sourceTree = "<group>"; };
+		BF5B08F32C63571B004895C7 /* MethodObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MethodObject.cpp; sourceTree = "<group>"; };
+		BFA9B4CD2C675AED003CEB19 /* alif.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = alif.cpp; path = ../../Alif/alif.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -322,7 +322,7 @@
 		BF5B08292C635617004895C7 /* Objects */ = {
 			isa = PBXGroup;
 			children = (
-				BF5B092D2C635840004895C7 /* alif.cpp */,
+				BFA9B4CD2C675AED003CEB19 /* alif.cpp */,
 				BF5B08E92C63571B004895C7 /* Abstract.cpp */,
 				BF5B08E62C63571B004895C7 /* ActionHelpers.cpp */,
 				BF5B08DA2C63571A004895C7 /* AlifAssemble.cpp */,
@@ -388,7 +388,7 @@
 				BF5B08AF2C635707004895C7 /* UStrObject.cpp */,
 			);
 			name = Objects;
-			path = ../source/Objects;
+			path = ../source/AlifCore/Objects;
 			sourceTree = "<group>";
 		};
 		BF5B08352C635670004895C7 /* Include */ = {
@@ -506,7 +506,7 @@
 				BF5B083B2C6356A2004895C7 /* alif.h */,
 			);
 			name = Include;
-			path = ../source/Include;
+			path = ../source/AlifCore/Include;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -609,7 +609,7 @@
 				BF5B09172C63571C004895C7 /* TupleObject.cpp in Sources */,
 				BF5B08BB2C635707004895C7 /* AlifObject.cpp in Sources */,
 				BF5B090B2C63571B004895C7 /* GenericAliasObject.cpp in Sources */,
-				BF5B092E2C635840004895C7 /* alif.cpp in Sources */,
+				BFA9B4CE2C675AED003CEB19 /* alif.cpp in Sources */,
 				BF5B09012C63571B004895C7 /* GetVersion.cpp in Sources */,
 				BF5B08F52C63571B004895C7 /* BoolObject.cpp in Sources */,
 				BF5B08FE2C63571B004895C7 /* ASTOptimize.cpp in Sources */,
