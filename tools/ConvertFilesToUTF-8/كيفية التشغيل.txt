@@ -1,3 +1,5 @@
+- افتح PowerShell كمسوؤل
+
 - تأكد من سماح PowerShell بتشغيل الأوامر النصية عن طريق إدخال الأمر
 Set-ExecutionPolicy RemoteSigned
 

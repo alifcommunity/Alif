@@ -3,8 +3,8 @@
 # كتب من قبل shadow
 
 $filePath = Read-Host -Prompt "ادخل مسار الملفات التي سيتم ترميزها "
-$files = Get-ChildItem -Path $filePath -Recurse -Include *.cpp *.h
-pause
+$files = Get-ChildItem -Path $filePath -Recurse -Include *.cpp, *.h
+
 Write-Host "تم قبول المسار، جاري تحويل الملفات ..."
 
 foreach ($file in $files) {
