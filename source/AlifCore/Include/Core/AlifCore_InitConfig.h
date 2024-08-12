@@ -20,6 +20,6 @@ enum ConfigInitEnum {
 
 
 
-AlifIntT alifArgv_asWStrList(AlifConfig*, AlifArgv*);
+AlifIntT alifArgv_asStringList(AlifConfig*, AlifArgv*);
 AlifIntT alifConfig_read(AlifConfig*);
 AlifIntT alifConfig_write(const AlifConfig*, class AlifDureRun*);

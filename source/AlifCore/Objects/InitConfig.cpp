@@ -166,12 +166,16 @@ AlifIntT alif_setStdioLocale(const AlifConfig* _config) {
 	return 1;
 }
 
-AlifIntT alifArgv_asWStrList(AlifConfig* _config, AlifArgv* _args) {
+AlifIntT alifArgv_asStringList(AlifConfig* _config, AlifArgv* _args) {
 
 	if (_args->useBytesArgv) {
 
-		AlifWStringList wArgv = { 0, nullptr };
+		AlifWStringList wArgv = { .length = 0, .items = nullptr };
 		wArgv.items = (wchar_t**)alifMem_dataAlloc(_args->argc * sizeof(wchar_t*));
+		if (wArgv.items == nullptr) {
+			// memory error
+			return -1;
+		}
 
 		for (AlifIntT i = 0; i < _args->argc; i++) {
 			AlifSizeT len = mbstowcs(nullptr, (const char*)_args->bytesArgv[i], 0);
@@ -341,7 +345,7 @@ static AlifIntT update_argv(AlifConfig* _config, AlifSizeT _index) {
 	return 1;
 }
 
-static int alif_extension(wchar_t* _filename) {
+static AlifIntT alif_extension(wchar_t* _filename) {
 	const wchar_t* dotPos = wcschr(_filename, L'.');
 	if (!dotPos) { return 0; }
 

@@ -9,9 +9,13 @@
 #include "AlifCore_Memory.h"
 #include "AlifCore_AlifState.h"
 #include "AlifCore_DureRunInit.h"
-#include "AlifCore_LList.h"
 
 
+
+
+
+
+/* ---------------------------------------- AlifCycle ---------------------------------------- */
 
 #ifdef HAVE_LOCAL_THREAD
 	ALIF_LOCAL_THREAD AlifThread* _alifTSSThread_ = nullptr;
@@ -34,7 +38,14 @@ AlifIntT alifDureRunState_init(AlifDureRun* _dureRun) {
 		memcpy(_dureRun, &initial, sizeof(*_dureRun));
 	}
 
-	// code here
+	//if (thread_tssInit(&_dureRun->autoTSSKey) != 0) {
+	//	alifDureRun_fini(_dureRun);
+	//	return -1;
+	//}
+	//if (alifThread_tssCreate(&_dureRun->trashTSSKey) != 0) {
+	//	alifDureRun_fini(_dureRun);
+	//	return -1;
+	//}
 
 	init_dureRun(_dureRun);
 

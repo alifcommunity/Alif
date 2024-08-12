@@ -41,7 +41,7 @@ void alifThread_init_thread(void)
 #if defined(HAVE_PTHREAD_STUBS)
 #   define ALIFTHREAD_NAME "pthread-stubs"
 #   include "thread_pthread_stubs.h"
-#elif defined(_USE_PTHREADS)  /* AKA _PTHREADS */
+#elif defined(USE_PTHREADS)  /* AKA _PTHREADS */
 #   if defined(__EMSCRIPTEN__) && !defined(__EMSCRIPTEN_PTHREADS__)
 #     define ALIFTHREAD_NAME "pthread-stubs"
 #   else

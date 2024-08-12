@@ -12,14 +12,25 @@ enum AlifLockStatus {
 typedef class AlifTSST AlifTSST;
 
 
-#define NATIVE_TSS_KEY_T     unsigned long
+#ifdef USE_PTHREADS
+#   include <pthread.h>
+#   define NATIVE_TSS_KEY_T     PThreadKeyT
+#elif defined(NT_THREADS)
+/* In Windows, native TSS key type is DWORD,
+   but hardcode the unsigned long to avoid errors for include directive.
+*/
+#   define NATIVE_TSS_KEY_T     unsigned long
+#else
+#   error "Require native threads."
+#endif
 
 class AlifTSST {
 public:
-    int isInitialized{};
+    AlifIntT isInitialized{};
     NATIVE_TSS_KEY_T key_{};
 };
 
+#undef NATIVE_TSS_KEY_T
 
 #define ALIFTSS_NEEDS_INIT   {0}
 

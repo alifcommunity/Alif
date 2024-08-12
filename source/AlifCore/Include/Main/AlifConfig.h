@@ -49,7 +49,11 @@
 
 
 
-/* --------------------------------- مترجم مايكروسوفت --------------------------------- */
+
+/* ------------------------------------- Windows ------------------------------------- */
+#ifdef _WINDOWS 
+
+/* ------------------------------ مترجم مايكروسوفت ------------------------------ */
 #ifdef _MSC_VER
 
 	#define ALIF_COMPILER_VERSION(SUFFIX) \
@@ -104,42 +108,50 @@
 #endif
 
 
+#define SIZEOF_WCHART 2
+#define NT_THREADS
 
+
+#else
+
+#define SIZEOF_WCHART 4
+#define USE_PTHREADS
+
+#endif
+
+
+/* ------------------------------------- X86_X64 OS ------------------------------------- */
 #if defined(_OS64)
-	using AlifSizeT = int64_t;
-	using AlifUSizeT = uint64_t;
+	using AlifShortT = short;
 	using AlifIntT = int32_t;
 	using AlifUIntT = uint32_t;
+	using AlifSizeT = int64_t;
+	using AlifUSizeT = uint64_t;
+	using AlifCharT = char;
+	using AlifWCharT = wchar_t;
 	#define ALIF_SIZET_MAX LLONG_MAX
-	#define ALIF_SIZET_MIN (-ALIF_SIZET_MAX-1)
+	#define ALIF_SIZET_MIN LLONG_MIN
 	#define SIZEOF_VOID_P 8
 #else
-	using AlifSizeT = int32_t;
-	using AlifUSizeT = uint32_t;
+	using AlifShortT = short;
 	using AlifIntT = int16_t;
 	using AlifUIntT = uint16_t;
+	using AlifSizeT = int32_t;
+	using AlifUSizeT = uint32_t;
+	using AlifCharT = char;
+	using AlifWCharT = wchar_t;
 	#define ALIF_SIZET INT_MAX
 	#define ALIF_SIZET_MAX LLONG_MAX
-	#define ALIF_SIZET_MIN (-ALIF_SIZET_MAX-1)
+	#define ALIF_SIZET_MIN LLONG_MIN
 	#define SIZEOF_VOID_P 4
 #endif
 
 
 
-#ifdef _WINDOWS
-	#include <io.h>
-	#define SIZEOF_WCHART 2
-	#define NT_THREADS
-#else
-	#include <cstring>
-	#define SIZEOF_WCHART 4
-	#define _USE_PTHREADS
-#endif // _WINDOWS
 
 
+/* ------------------------------------- Public ------------------------------------- */
 
 #define WITH_FREELISTS 1
-
-
 
 #define HAVE_SETVBUF
