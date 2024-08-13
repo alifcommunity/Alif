@@ -1,8 +1,7 @@
 #include "alif.h"
 
-#include "AlifCore_Memory.h"
 #include "AlifCore_InitConfig.h"
-#include "AlifCore_AlifCycle.h"
+#include "AlifCore_LifeCycle.h"
 //#include "AlifCore_AlifState.h"
 //#include "AlifCore_AlifRun.h"
 
@@ -22,14 +21,14 @@ static AlifIntT alifMain_init(AlifArgv* _args) {
 		return status;
 	}
 
-	alifConfig_initAlifConfig(&config);
+	//alifConfig_initAlifConfig(&config);
 
-	status = alif_mainMemoryInit();
+	//status = alif_mainMemoryInit();
 	if (status < 1) {
 		goto done;
 	}
 
-	status = alifArgv_asStringList(&config, _args);
+	//status = alifArgv_asStringList(&config, _args);
 	if (status < 1) {
 		goto done;
 	}
@@ -74,7 +73,7 @@ done:
 //	return run;
 //}
 //
-//static int alifMain_runFile(AlifConfig* _config) {
+//static AlifIntT alifMain_runFile(AlifConfig* _config) {
 //	AlifObject* fileName = alifUStr_objFromWChar(_config->runFilename);
 //	if (fileName == nullptr) {
 //		// error
@@ -86,16 +85,16 @@ done:
 //		return -1;
 //	}
 //
-//	int res_ = alifMain_runFileObj(programName, fileName, _config->skipFirstLine);
+//	AlifIntT res_ = alifMain_runFileObj(programName, fileName, _config->skipFirstLine);
 //
 //	ALIF_DECREF(fileName);
 //	ALIF_DECREF(programName);
 //	return res_;
 //}
 //
-//int alif_runMain() 
+//AlifIntT alif_runMain() 
 //{
-//	int exitCode = 0;
+//	AlifIntT exitCode = 0;
 //
 //	AlifInterpreter* interpreter = alifInterpreter_get();
 //
@@ -135,7 +134,7 @@ static AlifIntT alifMain_main(AlifArgv* _args) {
 	return 0; // temp
 }
 
-AlifIntT alif_mainWchar(int _argc, wchar_t** _argv) {
+AlifIntT alif_mainWchar(AlifIntT _argc, wchar_t** _argv) {
 	AlifArgv args_ = {
 		.argc = _argc,
 		.useBytesArgv = 0,
@@ -145,7 +144,7 @@ AlifIntT alif_mainWchar(int _argc, wchar_t** _argv) {
 	return alifMain_main(&args_);
 }
 
-AlifIntT alif_mainBytes(int _argc, char** _argv) {
+AlifIntT alif_mainBytes(AlifIntT _argc, char** _argv) {
 	AlifArgv args_ = {
 		.argc = _argc,
 		.useBytesArgv = 1,
@@ -156,13 +155,13 @@ AlifIntT alif_mainBytes(int _argc, char** _argv) {
 }
 
 #ifdef _WINDOWS
-int wmain(int _argc, wchar_t** _argv)
+AlifIntT wmain(AlifIntT _argc, wchar_t** _argv)
 {
 	wchar_t* argsv[] = { (wchar_t*)L"alif", (wchar_t*)L"example.alif" };
 	return alif_mainWchar(2, argsv);
 }
 #else
-int main(int _argc, char** _argv)
+AlifIntT main(AlifIntT _argc, char** _argv)
 {
 	char* argsv[] = { (char*)"alif", (char*)"example.alif" };
 	return alif_mainBytes(2, argsv);

@@ -27,8 +27,6 @@ public:
 
 	AlifIntT quite{};
 
-	AlifIntT cpuCount{};
-
 	wchar_t* programName{};
 
 	AlifIntT skipFirstLine{};
@@ -40,5 +38,5 @@ public:
 };
 
 
-//AlifIntT alif_setStdioLocale(const AlifConfig*);
-//void alifConfig_initAlifConfig(AlifConfig*);
+AlifIntT alif_setStdioLocale(const AlifConfig*);
+void alifConfig_initAlifConfig(AlifConfig*);

@@ -1,56 +1,41 @@
 #pragma once
 
-#include "AlifCore_Interpreter.h"
-#include "AlifCore_AlifThread.h"
-#include "AlifCore_Import.h"
-#include "AlifCore_UString.h"
+//#include "AlifCore_Interpreter.h"
+//#include "AlifCore_AlifThread.h"
+//#include "AlifCore_Import.h"
+//#include "AlifCore_UString.h"
 
-
-class {
-public:
-	uint64_t filename;
-	uint64_t name;
-	uint64_t lineTable;
-	uint64_t firstLineNo;
-	uint64_t argCount;
-	uint64_t localsPlusNames;
-	uint64_t localsPlusKinds;
-	uint64_t codeAdaptive;
-} codeObject;
 
 class AlifDureRun {
 public:
 	AlifIntT selfInitialized{};
 
-	//AlifIntT preInitializing{};
-	//AlifIntT preInitialized{};
+	//AlifIntT coreInitialized{};
 
-	AlifIntT coreInitialized{};
+	//AlifIntT initialized{};
 
-	AlifIntT initialized{};
-
-	class AlifInterpreters {
-	public:
-		AlifInterpreter* head{};
-		AlifInterpreter* main{};
-		AlifIntT nextID{};
-	} interpreters;
+	//class AlifInterpreters {
+	//public:
+	//	AlifInterpreter* head{};
+	//	AlifInterpreter* main{};
+	//	AlifIntT nextID{};
+	//} interpreters;
 
 	AlifIntT mainThreadID{}; // not working in macos it's return pthread_t
-	AlifThread* mainThread{};
+	//AlifThread* mainThread{};
 
-	AlifIntT autoTSSKey{};
-	AlifIntT trashTSSKey{};
+	//AlifIntT autoTSSKey{};
+	//AlifIntT trashTSSKey{};
 
-	AlifWStringList origArgv{};
+	//AlifWStringList origArgv{};
 
-	ImportDureRun imports;
+	//ImportDureRun imports;
 
-	class TypesRuntimeState types;
+	//class TypesRuntimeState types;
 
-	AlifStaticObjects staticObjects{};
+	//AlifStaticObjects staticObjects{};
 
-	AlifInterpreter mainInterpreter{};
+	//AlifInterpreter mainInterpreter{};
 };
 
 extern AlifDureRun _alifDureRun_;

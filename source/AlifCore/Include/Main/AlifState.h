@@ -1,13 +1,13 @@
 #pragma once
 
 
-class AlifStackChunk {
-public:
-	AlifStackChunk* previous;
-	AlifUSizeT size;
-	AlifUSizeT top;
-	AlifObject* data[1]; /* Variable sized */
-};
+//class AlifStackChunk {
+//public:
+//	AlifStackChunk* previous;
+//	AlifUSizeT size;
+//	AlifUSizeT top;
+//	AlifObject* data[1]; /* Variable sized */
+//};
 
 
 class AlifThread {
@@ -25,9 +25,9 @@ public:
 
 	AlifSizeT id{};
 
-	AlifStackChunk* dataStackChunk{};
-	AlifObject** dataStackTop{};
-	AlifObject** dataStackLimit{};
+	//AlifStackChunk* dataStackChunk{};
+	//AlifObject** dataStackTop{};
+	//AlifObject** dataStackLimit{};
 };
 
 
@@ -37,4 +37,4 @@ public:
 
 
 
-typedef AlifObject* (*AlifFrameEvalFunction)(AlifThread*, AlifInterpreterFrame*, AlifIntT);
+//typedef AlifObject* (*AlifFrameEvalFunction)(AlifThread*, AlifInterpreterFrame*, AlifIntT);

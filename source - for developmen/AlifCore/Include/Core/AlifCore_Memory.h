@@ -20,7 +20,7 @@
 
 
 #define ALIGNMENT		sizeof(AlifUSizeT)
-#define MEMORY_ALIGN_UP(_size) ((_size + (ALIGNMENT - 1)) & ~(ALIGNMENT - 1))
+#define ALIGN_UP(_size) ((_size + (ALIGNMENT - 1)) & ~(ALIGNMENT - 1))
 
 
 /* ------------------------------------ ذاكرة ألف ------------------------------------ */
@@ -110,6 +110,12 @@ public:
 	AlifUSizeT objNums{};
 };
 
+/*
+	يجب نقل الذاكرة الى المفسر وعدم تركها ذاكرة عامة
+	لأنه سيتم عمل ذاكرة خاصة بكل مسار او "ثريد" لمنع تداهل البيانات
+*/
+extern AlifMemory _alifMem_;
+
 
 AlifIntT alif_mainMemoryInit();
 AlifMemory* alif_memoryInit();
@@ -119,7 +125,17 @@ inline void* alif_rawAlloc(AlifUSizeT);
 inline void alif_rawDelete(void*);
 inline void* alif_rawRealloc(void*, AlifUSizeT);
 
-//AlifIntT alifInterpreterMem_init(AlifInterpreter*);
+void* alifMem_objAlloc(AlifUSizeT);
+void* alifMem_dataAlloc(AlifUSizeT);
+
+inline void alifMem_objFree(void*);
+inline void alifMem_dataFree(void*);
+
+void* alifMem_objRealloc(void*, AlifUSizeT);
+void* alifMem_dataRealloc(void*, AlifUSizeT);
+
+
+AlifIntT alifInterpreterMem_init(AlifInterpreter*);
 
 const void alif_getMemState();
 
@@ -144,15 +160,15 @@ public:
 	void* mem_{};
 };
 
-//class AlifASTMem {
-//public:
-//	AlifASTBlock* head_{};
-//	AlifASTBlock* current_{};
-//	AlifObject* objects_{};
-//};
+class AlifASTMem {
+public:
+	AlifASTBlock* head_{};
+	AlifASTBlock* current_{};
+	AlifObject* objects_{};
+};
 
 
 AlifASTBlock* block_new(AlifUSizeT);
-//AlifASTMem* alifASTMem_new();
-//void* alifASTMem_malloc(AlifASTMem*, AlifUSizeT);
-//int alifASTMem_listAddAlifObj(AlifASTMem*, AlifObject*);
+AlifASTMem* alifASTMem_new();
+void* alifASTMem_malloc(AlifASTMem*, AlifUSizeT);
+int alifASTMem_listAddAlifObj(AlifASTMem*, AlifObject*);

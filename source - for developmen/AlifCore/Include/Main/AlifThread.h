@@ -1,13 +1,15 @@
 #pragma once
 
 
+typedef void* AlifThreadLock;
 
+enum AlifLockStatus {
+        Alif_Lock_Failure = 0,
+        Alif_Lock_Acquired = 1,
+        Alif_Lock_Intr
+} ;
 
-
-AlifSizeT alifThread_getThreadID();
-
-
-
+typedef class AlifTSST AlifTSST;
 
 
 #ifdef USE_PTHREADS
@@ -22,6 +24,13 @@ AlifSizeT alifThread_getThreadID();
 #   error "Require native threads."
 #endif
 
+class AlifTSST {
+public:
+    AlifIntT isInitialized{};
+    NATIVE_TSS_KEY_T key_{};
+};
+
+#undef NATIVE_TSS_KEY_T
 
 #define ALIFTSS_NEEDS_INIT   {0}
 

@@ -4,6 +4,7 @@
 	هذا الملف يعمل على تحديد بعض المعلوامات الخاصة بنظام التشغيل
 */
 
+#define WITH_THREAD
 
 #ifdef _WIN32
 	#define _WINDOWS
@@ -51,10 +52,6 @@
 
 /* ------------------------------------- Windows ------------------------------------- */
 #ifdef _WINDOWS 
-
-#define WITH_THREAD
-#define SIZEOF_WCHART 2
-#define NT_THREADS
 
 /* ------------------------------ مترجم مايكروسوفت ------------------------------ */
 #ifdef _MSC_VER
@@ -111,56 +108,42 @@
 #endif
 
 
-
-/* -------------------------------------- GNUC LCC ------------------------------------*/
-/* egcs/gnu-win32 defines __GNUC__ and _WIN32 */
-#if defined(__GNUC__) and defined(_WIN32)
-#if (__GNUC__==2) and (__GNUC_MINOR__<=91)
-#warning "Please use an up-to-date version of gcc! (>2.91 recommended)"
-#endif
-
-#define COMPILER "[gcc]"
-
-/* lcc-win32 defines __LCC__ */
-#elif defined(__LCC__)
-#define COMPILER "[lcc-win32]"
-#endif
-
-
+#define SIZEOF_WCHART 2
+#define NT_THREADS
 
 
 #else
 
-
 #define SIZEOF_WCHART 4
 #define USE_PTHREADS
-
 
 #endif
 
 
 /* ------------------------------------- X86_X64 OS ------------------------------------- */
 #if defined(_OS64)
+	using AlifShortT = short;
 	using AlifIntT = int32_t;
 	using AlifUIntT = uint32_t;
 	using AlifSizeT = int64_t;
 	using AlifUSizeT = uint64_t;
+	using AlifCharT = char;
+	using AlifWCharT = wchar_t;
 	#define ALIF_SIZET_MAX LLONG_MAX
 	#define ALIF_SIZET_MIN LLONG_MIN
-	#define SIZEOF_SIZE_T 8
-	#define ALIGNOF_SIZE_T 8
 	#define SIZEOF_VOID_P 8
 #else
+	using AlifShortT = short;
 	using AlifIntT = int16_t;
 	using AlifUIntT = uint16_t;
 	using AlifSizeT = int32_t;
 	using AlifUSizeT = uint32_t;
+	using AlifCharT = char;
+	using AlifWCharT = wchar_t;
 	#define ALIF_SIZET INT_MAX
 	#define ALIF_SIZET_MAX LLONG_MAX
 	#define ALIF_SIZET_MIN LLONG_MIN
 	#define SIZEOF_VOID_P 4
-	#define ALIGNOF_SIZE_T 4
-	#define SIZEOF_SIZE_T 4
 #endif
 
 
