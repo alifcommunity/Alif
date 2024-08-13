@@ -3,7 +3,7 @@
 #include "AlifCore_DureRun.h"
 
 
-//extern AlifObject* alifBuiltin_init(AlifInterpreter*);
+//extern AlifObject* alifBuiltin_init(AlifInterpreter*); // 32
 
 
 
@@ -13,4 +13,4 @@
 
 //AlifIntT alif_initFromConfig(AlifConfig*);
 
-//char* alif_setLocale(AlifIntT);
+//char* alif_setLocale(AlifIntT); // 112

@@ -4,7 +4,22 @@
 
 
 
-AlifSizeT alifThread_getThreadID();
+AlifSizeT alifThread_getThreadID(); // 21
+
+
+
+
+
+
+
+AlifIntT alifThreadTSS_create(AlifTssT*); // 97
+
+
+/* --------------------------------------------------------------------------------------------------------- */
+
+
+
+
 
 
 
@@ -12,7 +27,7 @@ AlifSizeT alifThread_getThreadID();
 
 #ifdef USE_PTHREADS
 #   include <pthread.h>
-#   define NATIVE_TSS_KEY_T     PThreadKeyT
+#   define NATIVE_TSS_KEY_T		unsigned
 #elif defined(NT_THREADS)
 /* In Windows, native TSS key type is DWORD,
    but hardcode the unsigned long to avoid errors for include directive.
@@ -22,8 +37,8 @@ AlifSizeT alifThread_getThreadID();
 #   error "Require native threads."
 #endif
 
-
-#define ALIFTSS_NEEDS_INIT   {0}
-
-
-
+class AlifTssT { // 35
+public:
+	AlifIntT isInitialized{};
+	NATIVE_TSS_KEY_T key;
+};

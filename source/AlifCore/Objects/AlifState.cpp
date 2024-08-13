@@ -12,35 +12,47 @@
 
 
 #ifdef HAVE_LOCAL_THREAD
-	ALIF_LOCAL_THREAD AlifThread* _alifTSSThread_ = nullptr;
+	ALIF_LOCAL_THREAD AlifThread* _alifTSSThread_ = nullptr; // 68
 #endif
+
+
+
+//------------------------------------------------
+// the thread state bound to the current OS thread
+//------------------------------------------------
+
+
+static inline AlifIntT threadTSS_Init(AlifTssT* _key) { // 127
+	return alifThreadTSS_create(_key);
+}
+
 
 
 
 /* ---------------------------------------- AlifCycle ---------------------------------------- */
 
 
-static const AlifDureRun initial = ALIF_DURERUNSTATE_INIT(_alifDureRun_);
+static const AlifDureRun initial = ALIF_DURERUNSTATE_INIT(_alifDureRun_); // 393
 
 
 
-static void init_dureRun(AlifDureRun* _dureRun) {
+static void init_dureRun(AlifDureRun* _dureRun) { // 411
 
 	_dureRun->mainThreadID = alifThread_getThreadID();
 
 	_dureRun->selfInitialized = 1;
 }
 
-AlifIntT alifDureRunState_init(AlifDureRun* _dureRun) {
+AlifIntT alifDureRunState_init(AlifDureRun* _dureRun) { // 441
 
 	if (_dureRun->selfInitialized) {
 		memcpy(_dureRun, &initial, sizeof(*_dureRun));
 	}
 
-	//if (thread_tssInit(&_dureRun->autoTSSKey) != 0) {
-	//	alifDureRun_fini(_dureRun);
-	//	return -1;
-	//}
+	if (threadTSS_Init(&_dureRun->autoTSSKey) != 0) {
+		alifDureRun_fini(_dureRun);
+		return -1;
+	}
 	//if (alifThread_tssCreate(&_dureRun->trashTSSKey) != 0) {
 	//	alifDureRun_fini(_dureRun);
 	//	return -1;

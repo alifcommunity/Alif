@@ -6,14 +6,11 @@
 //#include "AlifCore_AlifRun.h"
 
 
-#define ALIF_COPYRIGHT "للمزيد من المعلومات اكتب \"help\", \"copyright\", \"license\" "
-
 
 /* ----------------------------------- تهيئة اللغة ----------------------------------- */
-
 static AlifIntT alifMain_init(AlifArgv* _args) {
 
-	AlifIntT status = 1;
+	AlifIntT status{};
 	AlifConfig config{};
 
 	status = alifDureRun_initialize();

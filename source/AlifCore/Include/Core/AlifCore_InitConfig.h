@@ -2,7 +2,7 @@
 
 /* ------------------------------------------- AlifArgv ------------------------------------------- */
 
-class AlifArgv {
+class AlifArgv { // 69
 public:
 	AlifIntT argc;
 	bool useBytesArgv;
@@ -10,16 +10,16 @@ public:
 	wchar_t* const* wcharArgv;
 };
 
+//AlifIntT alifArgv_asStringList(AlifConfig*, AlifArgv*); // 76
 
 
 /* ------------------------------------------ AlifConfig ------------------------------------------- */
 
-enum ConfigInitEnum {
+enum ConfigInitEnum_ { // 149
 	AlifConfig_Init_Alif = 1,
 };
 
 
 
-//AlifIntT alifArgv_asStringList(AlifConfig*, AlifArgv*);
-//AlifIntT alifConfig_read(AlifConfig*);
-//AlifIntT alifConfig_write(const AlifConfig*, class AlifDureRun*);
+//AlifIntT alifConfig_read(AlifConfig*); // 178
+//AlifIntT alifConfig_write(const AlifConfig*, class AlifDureRun*); // 179

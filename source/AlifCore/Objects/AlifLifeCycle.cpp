@@ -9,11 +9,11 @@
 
 
 
-AlifDureRun _alifDureRun_ = ALIF_DURERUNSTATE_INIT(_alifDureRun_);
+AlifDureRun _alifDureRun_ = ALIF_DURERUNSTATE_INIT(_alifDureRun_); // 103
 
-static AlifIntT dureRunInitialized = 0;
+static AlifIntT dureRunInitialized = 0; // 110
 
-AlifIntT alifDureRun_initialize() {
+AlifIntT alifDureRun_initialize() { // 112
 
 	if (dureRunInitialized) return 1;
 

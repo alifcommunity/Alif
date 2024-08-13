@@ -6,7 +6,7 @@
 //#include "AlifCore_UString.h"
 
 
-class AlifDureRun {
+class AlifDureRun { // 159
 public:
 	AlifIntT selfInitialized{};
 
@@ -24,8 +24,8 @@ public:
 	AlifIntT mainThreadID{}; // not working in macos it's return pthread_t
 	//AlifThread* mainThread{};
 
-	//AlifIntT autoTSSKey{};
-	//AlifIntT trashTSSKey{};
+	AlifTssT autoTSSKey{};
+	AlifTssT trashTSSKey{};
 
 	//AlifWStringList origArgv{};
 
@@ -38,8 +38,8 @@ public:
 	//AlifInterpreter mainInterpreter{};
 };
 
-extern AlifDureRun _alifDureRun_;
+extern AlifDureRun _alifDureRun_; // 318
 
-extern AlifIntT alifDureRunState_init(AlifDureRun*);
+extern AlifIntT alifDureRunState_init(AlifDureRun*); // 320
 
-extern AlifIntT alifDureRun_initialize();
+extern AlifIntT alifDureRun_initialize(); // 329

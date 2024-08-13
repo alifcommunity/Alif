@@ -2,7 +2,7 @@
 
 
 /* --------------------------------- AlifWStringList --------------------------------- */
-class AlifWStringList {
+class AlifWStringList { // 31
 public:
 	AlifSizeT length;
 	wchar_t** items;
@@ -10,7 +10,7 @@ public:
 
 
 /* ----------------------------------- AlifConfig ------------------------------------ */
-class AlifConfig {
+class AlifConfig { // 134
 public:
 	AlifIntT configInit{};
 
@@ -41,4 +41,4 @@ public:
 
 
 //AlifIntT alif_setStdioLocale(const AlifConfig*);
-//void alifConfig_initAlifConfig(AlifConfig*);
+//void alifConfig_initAlifConfig(AlifConfig*); // 239

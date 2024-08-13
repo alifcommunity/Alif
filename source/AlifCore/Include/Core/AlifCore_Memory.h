@@ -121,8 +121,6 @@ inline void* alif_rawRealloc(void*, AlifUSizeT);
 
 //AlifIntT alifInterpreterMem_init(AlifInterpreter*);
 
-const void alif_getMemState();
-
 
 
 

@@ -62,4 +62,4 @@
  // Return non-zero if the type is signed, return zero if it's unsigned.
  // Use "<= 0" rather than "< 0" to prevent the compiler warning:
  // "comparison of unsigned expression in '< 0' is always false".
-#define _Py_IS_TYPE_SIGNED(_type) ((_type)(-1) <= 0)
+#define ALIF_IS_TYPE_SIGNED(_type) ((_type)(-1) <= 0)

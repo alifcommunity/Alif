@@ -1,16 +1,32 @@
 #pragma once
 
 
-//class AlifStackChunk {
-//public:
-//	AlifStackChunk* previous;
-//	AlifUSizeT size;
-//	AlifUSizeT top;
-//	AlifObject* data[1]; /* Variable sized */
-//};
 
 
-class AlifThread {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ----------------------------------------------------------------------------------------------------------- */
+
+
+
+
+class AlifThread { // 59
 public:
 	AlifThread* prev{};
 	AlifThread* next{};
@@ -33,8 +49,6 @@ public:
 
 
 
-#define ALIFCPP_RECURSION_LIMIT 10000
+#define ALIFCPP_RECURSION_LIMIT 10000 // 214
 
 
-
-//typedef AlifObject* (*AlifFrameEvalFunction)(AlifThread*, AlifInterpreterFrame*, AlifIntT);
