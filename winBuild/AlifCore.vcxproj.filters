@@ -60,6 +60,15 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Thread.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\PThreadStubs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_LList.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\ThreadPThreadStubs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\AlifCore\Objects\AlifMemory.cpp">

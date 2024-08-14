@@ -2,9 +2,9 @@
 
 
 
-AlifSizeT alifThread_getThreadID() { // 260
+AlifUSizeT alifThread_getThreadID() { // 260
 
-    //if (!initialized) alifThread_initThread();
+    if (!INITIALIZED) INITIALIZED = 1;
 
     return GetCurrentThreadId();
 }
@@ -41,4 +41,17 @@ AlifIntT alifThreadTSS_create(AlifTssT* _key) { // 472
 	_key->key = result;
 	_key->isInitialized = 1;
 	return 0;
+}
+
+
+
+void alifThreadTSS_delete(AlifTssT* _key) { // 491
+	/* If the key has not been created, function is silently skipped. */
+	if (!_key->isInitialized) {
+		return;
+	}
+
+	TlsFree(_key->key);
+	_key->key = TLS_OUT_OF_INDEXES;
+	_key->isInitialized = 0;
 }

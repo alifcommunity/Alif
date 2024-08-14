@@ -2,8 +2,8 @@
 
 //#include "AlifCore_InitConfig.h"
 //#include "AlifCore_Memory.h"
-#include "AlifCore_LifeCycle.h"
-//#include "AlifCore_AlifState.h"
+//#include "AlifCore_LifeCycle.h"
+//#include "AlifCore_State.h"
 #include "AlifCore_DureRun.h"
 #include "AlifCore_DureRunInit.h"
 

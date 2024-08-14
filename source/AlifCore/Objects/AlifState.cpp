@@ -38,7 +38,7 @@ static const AlifDureRun initial = ALIF_DURERUNSTATE_INIT(_alifDureRun_); // 393
 
 static void init_dureRun(AlifDureRun* _dureRun) { // 411
 
-	_dureRun->mainThreadID = alifThread_getThreadID();
+	_dureRun->mainThread = alifThread_getThreadID();
 
 	_dureRun->selfInitialized = 1;
 }
@@ -50,13 +50,13 @@ AlifIntT alifDureRunState_init(AlifDureRun* _dureRun) { // 441
 	}
 
 	if (threadTSS_Init(&_dureRun->autoTSSKey) != 0) {
-		alifDureRun_fini(_dureRun);
+		alifDureRunState_fini(_dureRun);
 		return -1;
 	}
-	//if (alifThread_tssCreate(&_dureRun->trashTSSKey) != 0) {
-	//	alifDureRun_fini(_dureRun);
-	//	return -1;
-	//}
+	if (alifThreadTSS_create(&_dureRun->trashTSSKey) != 0) {
+		alifDureRunState_fini(_dureRun);
+		return -1;
+	}
 
 	init_dureRun(_dureRun);
 
@@ -64,3 +64,12 @@ AlifIntT alifDureRunState_init(AlifDureRun* _dureRun) { // 441
 }
 
 
+void alifDureRunState_fini(AlifDureRun* _dureRun) { // 477
+	if (alifThreadTSS_isCreated(&_dureRun->autoTSSKey)) {
+		alifThreadTSS_delete(&_dureRun->autoTSSKey);
+	}
+
+	if (alifThreadTSS_isCreated(&_dureRun->trashTSSKey)) {
+		alifThreadTSS_delete(&_dureRun->trashTSSKey);
+	}
+}
