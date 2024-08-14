@@ -887,7 +887,7 @@ static void fragment_sizeAllocated()
 	std::pair<AlifUSizeT, const char*> freedMemPair =
 		std::pair<AlifUSizeT, const char*>(freedMemSize, freedMemSizeUnit);
 
-	for (int i_ = 0; i_ < FRAGS_NUM; i_++) {
+	for (AlifUSizeT i_ = 0; i_ < FRAGS_NUM; i_++) {
 		Frag* f_ = ALIFMEM_FREEDSEGMS->return_freeSegs(i_).get_arr();
 		if (f_) {
 			while (f_->next_) {
@@ -921,7 +921,7 @@ static void freeBlocks_count()
 	printf("I| --------------------------------------------- |I\n");
 	printf("I|                             : عدد الكتل الحرة |I\n");
 	printf("I| %9sa %4i%1s%4lu                          |I\n",
-		"كتلة", BLOCK_NUMS, L"\\", freeBlocks);
+		"كتلة", BLOCK_NUMS, "\\", freeBlocks);
 }
 
 static void currentSeg_size()
@@ -931,7 +931,7 @@ static void currentSeg_size()
 	printf("I| --------------------------------------------- |I\n");
 	printf("I|                    : حجم القطعة الحرة الحالية |I\n");
 	printf("I| %9sa %4i%1s%4lu                          |I\n",
-		"بايت", BLOCK_SIZE, L"\\", currSegSize);
+		"بايت", BLOCK_SIZE, "\\", currSegSize);
 }
 
 const void alif_getMemState()

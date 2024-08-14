@@ -134,7 +134,7 @@
 
 #define SIZEOF_WCHART 4
 #define USE_PTHREADS
-
+#define HAVE_PTHREAD_H 1
 
 #endif
 

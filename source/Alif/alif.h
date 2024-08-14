@@ -1,7 +1,5 @@
 #pragma once
 
-#pragma warning(disable : 4996) // for disable unsafe functions error
-
 #include <iostream>
 #include <algorithm>
 #include <limits.h>
@@ -16,6 +14,7 @@
 #ifdef _WINDOWS
 #include <io.h>
 #include <windows.h>
+#pragma warning(disable : 4996) // for disable unsafe functions error
 #endif
 
 #include "AlifPort.h"

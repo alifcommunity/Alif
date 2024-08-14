@@ -27,9 +27,9 @@ void alifThreadTSS_delete(AlifTssT*); // 98
 
 
 
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
 #   include <pthread.h>
-#   define NATIVE_TSS_KEY_T		PThreadKeyT
+#   define NATIVE_TSS_KEY_T		pthread_key_t
 #elif defined(NT_THREADS)
 /* In Windows, native TSS key type is DWORD,
    but hardcode the unsigned long to avoid errors for include directive.
@@ -37,7 +37,7 @@ void alifThreadTSS_delete(AlifTssT*); // 98
 #   define NATIVE_TSS_KEY_T     unsigned long
 #elif defined(HAVE_PTHREAD_STUBS)
 #   include "PThreadStubs.h"
-#   define NATIVE_TSS_KEY_T     PThreadKeyT
+#   define NATIVE_TSS_KEY_T     pthread_key_t
 #else
 #   error "Require native threads."
 #endif

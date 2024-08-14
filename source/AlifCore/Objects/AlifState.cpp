@@ -6,7 +6,7 @@
 //#include "AlifCore_InitConfig.h"
 //#include "AlifObject.h"
 #include "AlifCore_LifeCycle.h"
-//#include "AlifCore_AlifState.h"
+//#include "AlifCore_State.h"
 #include "AlifCore_DureRunInit.h"
 
 
@@ -22,7 +22,7 @@
 //------------------------------------------------
 
 
-static inline AlifIntT threadTSS_Init(AlifTssT* _key) { // 127
+static inline AlifIntT threadTSS_init(AlifTssT* _key) { // 127
 	return alifThreadTSS_create(_key);
 }
 
@@ -49,7 +49,7 @@ AlifIntT alifDureRunState_init(AlifDureRun* _dureRun) { // 441
 		memcpy(_dureRun, &initial, sizeof(*_dureRun));
 	}
 
-	if (threadTSS_Init(&_dureRun->autoTSSKey) != 0) {
+	if (threadTSS_init(&_dureRun->autoTSSKey) != 0) {
 		alifDureRunState_fini(_dureRun);
 		return -1;
 	}

@@ -29,10 +29,10 @@ public:
 	class {
 	public:
 		/* NULL when pthread_condattr_setclock(CLOCK_MONOTONIC) is not supported. */
-		PThreadCondAttrT* ptr;
+		pthread_condattr_t* ptr;
 # ifdef CONDATTR_MONOTONIC
 		/* The value to which condattr_monotonic is set. */
-		PThreadCondAttrT val;
+		pthread_condattr_t val;
 # endif
 	} condAttrMonotonic;
 

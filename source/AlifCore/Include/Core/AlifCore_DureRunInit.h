@@ -10,10 +10,10 @@
 		.autoTSSKey = 0,										\
 		.trashTSSKey = 0,										\
 	}
-  //      ALIF_INTERPRETERSTATE_INIT(_dureRun_.mainInterpreter),  \
+  //      ALIF_INTERPRETERSTATE_INIT(_dureRun_.mainInterpreter),
 
 
 #define ALIF_INTERPRETERSTATE_INIT(interpreter)					\
     {															\
     }
-        //IMPORTS_INIT,    \
+        //IMPORTS_INIT,
