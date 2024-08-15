@@ -49,6 +49,8 @@ public:
 	LListNode handles{};
 };
 
+
+// 85
 #define ALIFTHREAD_DURERUN_INIT(_threads) \
     { \
         .handles = LLIST_INIT(_threads.handles), \

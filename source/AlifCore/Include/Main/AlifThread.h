@@ -10,7 +10,7 @@ AlifUSizeT alifThread_getThreadID(); // 21
 
 
 
-typedef struct AlifTssT AlifTssT;
+typedef class AlifTssT;
 
 AlifIntT alifThreadTSS_isCreated(AlifTssT*); // 96
 AlifIntT alifThreadTSS_create(AlifTssT*); // 97

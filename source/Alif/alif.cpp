@@ -30,7 +30,7 @@ static AlifIntT alifMain_init(AlifArgv* _args) {
 		goto done;
 	}
 
-	//status = alif_initFromConfig(&config_);
+	//status = alif_initFromConfig(&config);
 	if (status < 1) {
 		goto done;
 	}

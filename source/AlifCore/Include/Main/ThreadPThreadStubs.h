@@ -16,7 +16,7 @@
 #define ALIF_TLS_ENTRIES (_alifDureRun_.threads.stubs.tlsEntries) // 139
 
 
-AlifIntT pthreadKey_create(pthread_key_t* _key, void (*destr_function)(void*)) { // 141
+AlifIntT pthread_key_create(pthread_key_t* _key, void (*destr_function)(void*)) { // 141
 	if (!_key) {
 		return EINVAL;
 	}
@@ -34,11 +34,11 @@ AlifIntT pthreadKey_create(pthread_key_t* _key, void (*destr_function)(void*)) {
 	return EAGAIN;
 }
 
-AlifIntT pthreadKey_delete(pthread_key_t _key) { // 160
+AlifIntT pthread_key_delete(pthread_key_t _key) { // 160
 	if (_key < 0 or _key >= PTHREAD_KEYS_MAX or !ALIF_TLS_ENTRIES[_key].inUse) {
 		return EINVAL;
 	}
-	ALIF_TLS_ENTRIES[key].inUse = false;
-	ALIF_TLS_ENTRIES[key].value = nullptr;
+	ALIF_TLS_ENTRIES[_key].inUse = false;
+	ALIF_TLS_ENTRIES[_key].value = nullptr;
 	return 0;
 }

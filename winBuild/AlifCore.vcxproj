@@ -27,6 +27,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Memory.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Thread.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifConfig.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifLifeCycle.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifMacro.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifMemory.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifPort.h" />

@@ -53,6 +53,7 @@
 //#include "AlifCppType.h"
 //#include "Compile.h"
 //#include "AlifRun.h"
+#include "AlifLifeCycle.h"
 //#include "AlifEval.h"
 //#include "GenericAliasObject.h"
 //#include "Import.h"

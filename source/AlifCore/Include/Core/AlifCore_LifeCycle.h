@@ -11,6 +11,6 @@
 
 
 
-//AlifIntT alif_initFromConfig(AlifConfig*);
+
 
 //char* alif_setLocale(AlifIntT); // 112

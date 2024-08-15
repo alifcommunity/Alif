@@ -14,7 +14,7 @@
 
 // 55
 #if defined(HAVE_PTHREAD_STUBS)
-#   define PYTHREAD_NAME "pthread-stubs"
+#   define ALIFTHREAD_NAME "pthread-stubs"
 #   include "ThreadPThreadStubs.h"
 #elif defined(USE_PTHREADS)
 #     define ALIFTHREAD_NAME "pthread"

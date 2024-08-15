@@ -32,13 +32,16 @@ public:
 	AlifThread* next{};
 	class AlifInterpreter* interpreter{};
 
-	AlifIntT tracing{};
 
 	class AlifInterpreterFrame* currentFrame{};
 
-	AlifIntT recursionRemaining{};
-	AlifIntT recursionHeadroom{};
+	AlifIntT alifRecursionRemaining{};
+	AlifIntT alifRecursionLimit{};
 
+	AlifIntT cppRecursionRemaining{};
+	AlifIntT recursionHeadroom; /* Allow 50 more calls to handle any errors. */
+
+	AlifIntT tracing{};
 	AlifSizeT id{};
 
 	//AlifStackChunk* dataStackChunk{};
@@ -49,6 +52,6 @@ public:
 
 
 
-#define ALIFCPP_RECURSION_LIMIT 10000 // 214
+#define ALIFCPP_RECURSION_LIMIT 3000 // 214
 
 

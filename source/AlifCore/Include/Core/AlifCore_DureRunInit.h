@@ -1,6 +1,8 @@
 #pragma once
 
 //#include "AlifCore_Import.h"
+#include "AlifCore_Thread.h"
+
 
 #define ALIF_DURERUNSTATE_INIT(dureRun)							\
 	{															\
