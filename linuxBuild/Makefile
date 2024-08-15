@@ -24,4 +24,4 @@ $(TARGET): $(OBJECTS)
 	$(CPP) $(CPPFLAGS) $(INCLUDES) $(OBJECTS) -o $@
 
 clean:
-	em -rf $(BUILD_DIR)
+	rm -rf $(BUILD_DIR)

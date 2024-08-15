@@ -9,8 +9,8 @@ AlifUSizeT alifThread_getThreadID(); // 21
 
 
 
-
-typedef class AlifTssT;
+// Forward Declaration
+class AlifTssT;
 
 AlifIntT alifThreadTSS_isCreated(AlifTssT*); // 96
 AlifIntT alifThreadTSS_create(AlifTssT*); // 97
