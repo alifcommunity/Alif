@@ -772,6 +772,24 @@ void* alifMem_objRealloc(void* _ptr, AlifUSizeT _size)
 
 
 
+/* --------------------------------- أدوات ذاكرة ألف --------------------------------- */
+
+wchar_t* alifMem_rawWcsDup(const wchar_t* _str) {
+
+	AlifUSizeT len = wcslen(_str);
+	if (len > (AlifUSizeT)ALIF_SIZET_MAX / sizeof(wchar_t) - 1) {
+		return nullptr;
+	}
+
+	size_t size = (len + 1) * sizeof(wchar_t);
+	wchar_t* str2 = (wchar_t*)alifMem_dataAlloc(size);
+	if (str2 == nullptr) {
+		return nullptr;
+	}
+
+	memcpy(str2, _str, size);
+	return str2;
+}
 
 
 
@@ -780,7 +798,7 @@ void* alifMem_objRealloc(void* _ptr, AlifUSizeT _size)
 
 
 
-/* -------------------------------- Memory API --------------------------------------- */
+/* ----------------------------------- حالة الذاكرة ----------------------------------- */
 Frag* AlifArray::get_arr()
 {
 	return arr_;

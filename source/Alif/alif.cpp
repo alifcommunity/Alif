@@ -31,7 +31,7 @@ static AlifIntT alifMain_init(AlifArgv* _args) {
 		goto done;
 	}
 
-	//status = alifArgv_asStringList(&config, _args);
+	status = alifArgv_asWStringList(&config, _args);
 	if (status < 1) {
 		goto done;
 	}

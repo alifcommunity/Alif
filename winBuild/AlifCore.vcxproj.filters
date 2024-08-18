@@ -10,6 +10,9 @@
     <Filter Include="Object Files">
       <UniqueIdentifier>{6183a94b-811e-461b-a05c-eb1248052f4f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\StringLib">
+      <UniqueIdentifier>{bcc357c4-aee0-4c89-9a9c-84f0a12057ca}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifVersion.h">
@@ -72,6 +75,30 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifLifeCycle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\FileUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FileUtils.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\UStrObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_UStrObject.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS2Lib.h">
+      <Filter>Header Files\StringLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS4Lib.h">
+      <Filter>Header Files\StringLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Undef.h">
+      <Filter>Header Files\StringLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Codecs.h">
+      <Filter>Header Files\StringLib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\AlifCore\Objects\AlifMemory.cpp">
@@ -87,6 +114,12 @@
       <Filter>Object Files</Filter>
     </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\InitConfig.cpp">
+      <Filter>Object Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\FileUtils.cpp">
+      <Filter>Object Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\UStrObject.cpp">
       <Filter>Object Files</Filter>
     </ClCompile>
   </ItemGroup>

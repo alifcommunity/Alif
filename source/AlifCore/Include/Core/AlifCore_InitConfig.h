@@ -1,5 +1,19 @@
 #pragma once
 
+
+
+
+
+
+
+
+
+extern void alifWStringList_clear(AlifWStringList*); // 59
+extern AlifIntT alifWStringList_copy(AlifWStringList*, const AlifWStringList*); // 60
+
+
+
+
 /* ------------------------------------------- AlifArgv ------------------------------------------- */
 
 class AlifArgv { // 69
@@ -10,7 +24,7 @@ public:
 	wchar_t* const* wcharArgv;
 };
 
-//AlifIntT alifArgv_asStringList(AlifConfig*, AlifArgv*); // 76
+AlifIntT alifArgv_asWStringList(AlifConfig*, AlifArgv*); // 76
 
 
 /* ------------------------------------------ AlifConfig ------------------------------------------- */

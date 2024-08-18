@@ -154,3 +154,11 @@ AlifASTBlock* block_new(AlifUSizeT);
 //AlifASTMem* alifASTMem_new();
 //void* alifASTMem_malloc(AlifASTMem*, AlifUSizeT);
 //int alifASTMem_listAddAlifObj(AlifASTMem*, AlifObject*);
+
+
+
+
+
+/* --------------------------------- ادوات ذاكرة ألف --------------------------------- */
+
+extern wchar_t* alifMem_rawWcsDup(const wchar_t*);

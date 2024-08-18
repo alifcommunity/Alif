@@ -130,6 +130,45 @@ AlifIntT alif_preInitFromConfig(AlifConfig* _config) { // alif
 	return 1;
 }
 
+void alifWStringList_clear(AlifWStringList* _list) { // 516
+	for (AlifSizeT i = 0; i < _list->length; i++) {
+		alifMem_dataFree(_list->items[i]);
+	}
+
+	//free(_list->items);
+	_list->length = 0;
+	_list->items = nullptr;
+}
+
+AlifIntT alifWStringList_copy(AlifWStringList* _list, const AlifWStringList* _list2) { // 529
+
+	if (_list2->length == 0) {
+		alifWStringList_clear(_list);
+		return 0;
+	}
+
+	AlifWStringList copy = { .length = 0, .items = nullptr };
+
+	AlifUSizeT size = _list2->length * sizeof(_list2->items[0]);
+	copy.items = (wchar_t**)alifMem_dataAlloc(size);
+	if (copy.items == nullptr) {
+		return -1;
+	}
+
+	for (AlifSizeT i = 0; i < _list2->length; i++) {
+		wchar_t* item = alifMem_rawWcsDup(_list2->items[i]);
+		if (item == nullptr) {
+			alifWStringList_clear(&copy);
+			return -1;
+		}
+		copy.items[i] = item;
+		copy.length = i + 1;
+	}
+
+	alifWStringList_clear(_list);
+	*_list = copy;
+	return 0;
+}
 
 void alifConfig_initAlifConfig(AlifConfig* _config) { // 897
 	_config->configInit = ConfigInitEnum_::AlifConfig_Init_Alif;
@@ -143,3 +182,43 @@ void alifConfig_initAlifConfig(AlifConfig* _config) { // 897
 	_config->initMain = 1;
 }
 
+
+
+
+
+
+AlifIntT alifArgv_asWStringList(AlifConfig* _config, AlifArgv* _args) { // 78 in preconfig file
+
+	AlifWStringList wArgv = { .length = 0, .items = nullptr };
+	if (_args->useBytesArgv) {
+		wArgv.items = (wchar_t**)alifMem_dataAlloc(_args->argc * sizeof(wchar_t*));
+		if (wArgv.items == nullptr) {
+			// memory error
+			return -1;
+		}
+
+		for (AlifIntT i = 0; i < _args->argc; i++) {
+			AlifUSizeT len{};
+			wchar_t* arg = alif_decodeLocale(_args->bytesArgv[i], &len);
+			if (arg == nullptr) {
+				alifWStringList_clear(&wArgv);
+				return -1;
+			}
+			wArgv.items[i] = arg;
+			wArgv.length++;
+		}
+
+		alifWStringList_clear(&_config->argv);
+		_config->argv = wArgv;
+	}
+	else {
+		wArgv.length = _args->argc;
+		wArgv.items = (wchar_t**)_args->wcharArgv;
+		if (alifWStringList_copy(&_config->argv, &wArgv)) {
+			// memory error
+			return -1;
+		}
+	}
+
+	return 1;
+}
