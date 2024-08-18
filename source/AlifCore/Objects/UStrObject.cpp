@@ -77,7 +77,7 @@ AlifIntT alif_decodeUTF8Ex(const char* s, AlifSizeT size, wchar_t** wstr, AlifUS
 	while (s < e_) {
 		AlifUCS4 ch_;
 #if SIZEOF_WCHAR_T == 4
-		ch = ucs4Lib_utf8Decode(&s, e_, (AlifUCS4*)unicode, &outPos);
+		ch_ = ucs4Lib_utf8Decode(&s, e_, (AlifUCS4*)unicode, &outPos);
 #else
 		ch_ = ucs2Lib_utf8Decode(&s, e_, (AlifUCS2*)unicode, &outPos);
 #endif

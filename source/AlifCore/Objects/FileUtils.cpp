@@ -14,8 +14,7 @@ static const AlifUSizeT _incompleteCharActer_ = (size_t)-2;
 
 
 static AlifIntT get_surrogateEscape(AlifErrorHandler_ _errors, int* _surrogateEscape) { // 60
-	switch (_errors)
-	{
+	switch (_errors) {
 	case AlifErrorHandler_::Alif_Error_Strict:
 		*_surrogateEscape = 0;
 		return 0;

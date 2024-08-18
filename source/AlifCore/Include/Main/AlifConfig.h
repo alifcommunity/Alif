@@ -53,7 +53,7 @@
 #ifdef _WINDOWS 
 
 #define WITH_THREAD
-#define SIZEOF_WCHART 2
+#define SIZEOF_WCHAR_T 2
 #define NT_THREADS
 
 /* ------------------------------ مترجم مايكروسوفت ------------------------------ */
@@ -132,7 +132,7 @@
 #else
 
 
-#define SIZEOF_WCHART 4
+#define SIZEOF_WCHAR_T 4
 #define USE_PTHREADS
 #define HAVE_PTHREAD_H 1
 

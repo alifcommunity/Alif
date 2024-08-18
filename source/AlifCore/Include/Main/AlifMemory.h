@@ -18,8 +18,8 @@ extern class AlifMemory _alifMem_;
 void* alifMem_objAlloc(AlifUSizeT);
 void* alifMem_dataAlloc(AlifUSizeT);
 
-inline void alifMem_objFree(void*);
-inline void alifMem_dataFree(void*);
+void alifMem_objFree(void*);
+void alifMem_dataFree(void*);
 
 void* alifMem_objRealloc(void*, AlifUSizeT);
 void* alifMem_dataRealloc(void*, AlifUSizeT);
