@@ -18,9 +18,15 @@ static AlifIntT alifMain_init(AlifArgv* _args) {
 		return status;
 	}
 
-	//alifConfig_initAlifConfig(&config);
+	alifConfig_initAlifConfig(&config);
 
-	//status = alif_mainMemoryInit();
+	/*
+		- بما أن لغة ألف لغة عربية بالتالي
+		يجب ترميزها قبل البدأ بالبرنامج
+		- يجب تهيئة ذاكرة ألف العامة قبل البدأ بالبرنامج
+		لأنه سيتم أستخدامها خلال كامل البرنامج
+	*/
+	status = alif_preInitFromConfig(&config);
 	if (status < 1) {
 		goto done;
 	}

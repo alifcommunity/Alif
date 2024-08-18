@@ -13,4 +13,4 @@
 
 
 
-//char* alif_setLocale(AlifIntT); // 112
+char* alif_setLocale(AlifIntT); // 112

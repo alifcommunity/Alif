@@ -20,6 +20,6 @@ enum ConfigInitEnum_ { // 149
 };
 
 
-
+AlifIntT alif_preInitFromConfig(AlifConfig*); // alif
 //AlifIntT alifConfig_read(AlifConfig*); // 178
 //AlifIntT alifConfig_write(const AlifConfig*, class AlifDureRun*); // 179

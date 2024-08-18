@@ -22,7 +22,7 @@ public:
 
 	AlifIntT interactive{};
 	AlifIntT optimizationLevel{};
-	AlifIntT configStdio{};
+	//AlifIntT configStdio{}; // نظام ألف يستخدم ترميز utf-8 بشكل إفتراضي
 	AlifIntT bufferedStdio{};
 
 	AlifIntT quite{};
@@ -40,5 +40,5 @@ public:
 };
 
 
-//AlifIntT alif_setStdioLocale(const AlifConfig*);
-//void alifConfig_initAlifConfig(AlifConfig*); // 239
+AlifIntT alif_setStdioLocale(const AlifConfig*); // alif
+void alifConfig_initAlifConfig(AlifConfig*); // 239
