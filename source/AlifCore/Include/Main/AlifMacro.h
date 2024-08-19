@@ -54,6 +54,15 @@
 #endif
 
 
+#if defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
+#  define ALIF_UNREACHABLE() __builtin_unreachable()
+#elif defined(__clang__) || defined(__INTEL_COMPILER)
+#  define ALIF_UNREACHABLE() __builtin_unreachable()
+#elif defined(_MSC_VER)
+#  define ALIF_UNREACHABLE() __assume(0)
+#endif
+
+
 #define ALIF_CONTAINER_OF(_ptr, _type, _member) \
     (_type*)((char*)_ptr - offsetof(_type, _member))
 
