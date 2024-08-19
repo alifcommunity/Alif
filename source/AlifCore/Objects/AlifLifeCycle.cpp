@@ -3,9 +3,10 @@
 #include "AlifCore_InitConfig.h"
 //#include "AlifCore_Memory.h"
 //#include "AlifCore_LifeCycle.h"
-//#include "AlifCore_State.h"
+#include "AlifCore_State.h"
 #include "AlifCore_DureRun.h"
 #include "AlifCore_DureRunInit.h"
+#include "AlifCore_Import.h"
 
 
 
@@ -71,6 +72,42 @@ char* alif_setLocale(AlifIntT category) {  // 332
 }
 
 
+static AlifIntT alifCore_initDureRun(AlifDureRun* _dureRun, const AlifConfig* _config) { // 507
+
+	if (_dureRun->initialized) {
+		return -1;
+	}
+
+	AlifIntT status = alifConfig_write(_config, _dureRun);
+	if (status < 1) return status;
+
+	//status = alifImport_init();
+
+	status = alifInterpreter_enable(_dureRun);
+	if (status < 1) return status;
+
+	return 1;
+}
+
+static AlifIntT alifInit_config(AlifDureRun* _dureRun,
+	AlifThread** _threadP, const AlifConfig* _config) { // 917
+
+	AlifIntT status{};
+
+	status = alifCore_initDureRun(_dureRun, _config);
+	if (status < 1) return status;
+
+	AlifThread* thread_{};
+	status = alifCore_createInterpreter(_dureRun, _config, &thread_);
+	if (status < 1) return status;
+	*_threadP = thread_;
+
+	status = alifCore_interpreterInit(thread_);
+	if (status < 1) return status;
+
+	_dureRun->coreInitialized = 1;
+	return 1;
+}
 
 static AlifIntT alifInit_core(AlifDureRun* _dureRun,
 	const AlifConfig* _config, AlifThread** _threadPtr) { // 1069

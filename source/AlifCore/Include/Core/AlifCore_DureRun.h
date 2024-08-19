@@ -1,6 +1,6 @@
 #pragma once
 
-//#include "AlifCore_Interpreter.h"
+#include "AlifCore_Interpreter.h"
 #include "AlifCore_Thread.h"
 //#include "AlifCore_Import.h"
 //#include "AlifCore_UString.h"
@@ -12,14 +12,14 @@ public:
 
 	AlifIntT coreInitialized{};
 
-	//AlifIntT initialized{};
+	AlifIntT initialized{};
 
-	//class AlifInterpreters {
-	//public:
-	//	AlifInterpreter* head{};
-	//	AlifInterpreter* main{};
-	//	AlifIntT nextID{};
-	//} interpreters;
+	class AlifInterpreters {
+	public:
+		AlifInterpreter* head{};
+		AlifInterpreter* main{};
+		AlifIntT nextID{};
+	} interpreters;
 
 	AlifIntT mainThread{}; // not working in macos it's return pthread_t
 	//AlifThread* mainThreadState{};
@@ -29,21 +29,21 @@ public:
 	AlifTssT autoTSSKey{};
 	AlifTssT trashTSSKey{};
 
-	//AlifWStringList origArgv{};
+	AlifWStringList origArgv{};
 
 	//ImportDureRun imports;
 
-	//class TypesRuntimeState types;
+	//class TypesDureRunState types;
 
 	//AlifStaticObjects staticObjects{};
 
-	//AlifInterpreter mainInterpreter{};
+	AlifInterpreter mainInterpreter{};
 };
 
 extern AlifDureRun _alifDureRun_; // 318
 
 extern AlifIntT alifDureRunState_init(AlifDureRun*); // 320
-extern void alifDureRunState_fini(AlifDureRun*);
+//extern void alifDureRunState_fini(AlifDureRun*);
 
 
 extern AlifIntT alifDureRun_initialize(); // 329

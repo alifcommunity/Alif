@@ -178,6 +178,17 @@ AlifIntT alifWStringList_append(AlifWStringList* _list, const wchar_t* _item)
 	return alifWStringList_insert(_list, _list->length, _item);
 }
 
+static AlifIntT alif_setArgcArgv(AlifSizeT _argc, wchar_t* const* _argv) { // 673
+	const AlifWStringList argv_list = { .length = _argc, .items = (wchar_t**)_argv };
+	AlifIntT res{};
+
+	// XXX _alifDureRun_.origArgv only gets cleared by alif_main(),
+	// so it currently leaks for embedders.
+	res = alifWStringList_copy(&_alifDureRun_.origArgv, &argv_list);
+
+	return res;
+}
+
 void alifConfig_clear(AlifConfig* _config) { // 773
 #define CLEAR(_ATTR) \
     do { \
@@ -366,6 +377,15 @@ static AlifIntT alif_setFileMode(const AlifConfig* _config) { // 2327
 	return 1;
 }
 
+AlifIntT alifConfig_write(const AlifConfig* _config, AlifDureRun* _dureRun) { // 2368
+
+	if (alif_setArgcArgv(_config->origArgv.length, _config->origArgv.items) < 1) {
+		// memory error
+		return -1;
+	}
+
+	return 1;
+}
 
 AlifIntT alif_setStdioLocale(const AlifConfig* _config) { // alif
 

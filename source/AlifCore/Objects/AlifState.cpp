@@ -6,7 +6,7 @@
 //#include "AlifCore_InitConfig.h"
 //#include "AlifObject.h"
 #include "AlifCore_LifeCycle.h"
-//#include "AlifCore_State.h"
+#include "AlifCore_State.h"
 #include "AlifCore_DureRunInit.h"
 
 
@@ -72,4 +72,16 @@ void alifDureRunState_fini(AlifDureRun* _dureRun) { // 477
 	if (alifThreadTSS_isCreated(&_dureRun->trashTSSKey)) {
 		alifThreadTSS_delete(&_dureRun->trashTSSKey);
 	}
+}
+
+
+
+// --------------------
+//		lifecycle
+// --------------------
+
+AlifIntT alifInterpreter_enable(AlifDureRun* _dureRun) { // 559
+	AlifDureRun::AlifInterpreters* interpreters = &_dureRun->interpreters;
+	interpreters->nextID = 0;
+	return 1;
 }

@@ -39,7 +39,7 @@ public:
 	AlifIntT alifRecursionLimit{};
 
 	AlifIntT cppRecursionRemaining{};
-	AlifIntT recursionHeadroom; /* Allow 50 more calls to handle any errors. */
+	AlifIntT recursionHeadroom{}; /* Allow 50 more calls to handle any errors. */
 
 	AlifIntT tracing{};
 	AlifSizeT id{};
