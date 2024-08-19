@@ -774,7 +774,7 @@ void* alifMem_objRealloc(void* _ptr, AlifUSizeT _size)
 
 /* --------------------------------- أدوات ذاكرة ألف --------------------------------- */
 
-wchar_t* alifMem_rawWcsDup(const wchar_t* _str) {
+wchar_t* alifMem_wcsDup(const wchar_t* _str) {
 
 	AlifUSizeT len = wcslen(_str);
 	if (len > (AlifUSizeT)ALIF_SIZET_MAX / sizeof(wchar_t) - 1) {

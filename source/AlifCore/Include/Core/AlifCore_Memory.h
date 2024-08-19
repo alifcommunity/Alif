@@ -161,4 +161,4 @@ AlifASTBlock* block_new(AlifUSizeT);
 
 /* --------------------------------- ادوات ذاكرة ألف --------------------------------- */
 
-extern wchar_t* alifMem_rawWcsDup(const wchar_t*);
+extern wchar_t* alifMem_wcsDup(const wchar_t*);

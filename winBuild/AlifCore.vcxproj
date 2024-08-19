@@ -22,6 +22,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DureRun.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DureRunInit.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FileUtils.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GetOption.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_InitConfig.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_LifeCycle.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_LList.h" />
@@ -54,6 +55,8 @@
     <ClCompile Include="..\source\AlifCore\Objects\AlifState.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifThread.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\FileUtils.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\GetOption.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\GetVersion.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\InitConfig.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\UStrObject.cpp" />
   </ItemGroup>

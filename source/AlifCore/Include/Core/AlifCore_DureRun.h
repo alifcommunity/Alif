@@ -10,7 +10,7 @@ class AlifDureRun { // 159
 public:
 	AlifIntT selfInitialized{};
 
-	//AlifIntT coreInitialized{};
+	AlifIntT coreInitialized{};
 
 	//AlifIntT initialized{};
 

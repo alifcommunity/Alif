@@ -36,7 +36,7 @@ static AlifIntT alifMain_init(AlifArgv* _args) {
 		goto done;
 	}
 
-	//status = alif_initFromConfig(&config);
+	status = alif_initFromConfig(&config);
 	if (status < 1) {
 		goto done;
 	}
@@ -160,7 +160,7 @@ AlifIntT alif_mainBytes(AlifIntT _argc, char** _argv) {
 #ifdef _WINDOWS
 AlifIntT wmain(AlifIntT _argc, wchar_t** _argv)
 {
-	wchar_t* argsv[] = { (wchar_t*)L"alif", (wchar_t*)L"example.alif" };
+	wchar_t* argsv[] = { (wchar_t*)L"alif", (wchar_t*)L"-h" };
 	return alif_mainWchar(2, argsv);
 }
 #else

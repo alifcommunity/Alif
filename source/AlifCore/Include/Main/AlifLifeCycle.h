@@ -5,4 +5,9 @@
 
 
 
-//AlifIntT alif_initFromConfig(AlifConfig*); // 25
+AlifIntT alif_initFromConfig(const AlifConfig*); // 25
+
+
+
+
+const char* alif_getVersion(); // 52

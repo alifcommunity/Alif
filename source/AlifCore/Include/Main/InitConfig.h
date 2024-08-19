@@ -8,6 +8,9 @@ public:
 	wchar_t** items;
 };
 
+// لماذا يوجد append و insert وتقومان بنفس الوظيفة ??
+AlifIntT alifWStringList_append(AlifWStringList*, const wchar_t*); // 38
+AlifIntT alifWStringList_insert(AlifWStringList*, AlifSizeT, const wchar_t*);
 
 /* ----------------------------------- AlifConfig ------------------------------------ */
 class AlifConfig { // 134
@@ -27,8 +30,6 @@ public:
 
 	AlifIntT quite{};
 
-	AlifIntT cpuCount{};
-
 	wchar_t* programName{};
 
 	AlifIntT skipFirstLine{};
@@ -42,3 +43,6 @@ public:
 
 AlifIntT alif_setStdioLocale(const AlifConfig*); // alif
 void alifConfig_initAlifConfig(AlifConfig*); // 239
+
+void alifConfig_clear(AlifConfig*); // 241
+AlifIntT alifConfig_setString(AlifConfig*, wchar_t**, const wchar_t*);
