@@ -25,14 +25,6 @@ AlifIntT alifDureRun_initialize() { // 112
 	return alifDureRunState_init(&_alifDureRun_);
 }
 
-static inline void current_fastSet(AlifThread* _thread) { // alif // temp
-#ifdef HAVE_LOCAL_THREAD
-	_alifTSSThread_ = _thread;
-#else
-	error "خطأ ممر" // need fix
-#endif
-}
-
 
 char* alif_setLocale(AlifIntT category) {  // 332
 
@@ -155,7 +147,7 @@ static AlifIntT alifCore_builtinsInit(AlifThread* _thread) { // 775
 
 	return 1;
 
-error:
+//error:
 	//ALIF_XDECREF(biMod);
 	return -1;
 }
@@ -336,8 +328,3 @@ AlifIntT alif_initFromConfig(const AlifConfig* _config) { // 1383
 	return 1;
 }
 
-
-
-void alifThread_attach(AlifThread* _thread) { // alif // temp
-	current_fastSet(_thread);
-}

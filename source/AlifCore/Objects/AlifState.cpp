@@ -17,16 +17,23 @@
 	ALIF_LOCAL_THREAD AlifThread* _alifTSSThread_ = nullptr; // 68
 #endif
 
-static inline AlifThread* current_fastGet(void)
-{
+static inline AlifThread* current_fastGet() { // 71
 #ifdef HAVE_LOCAL_THREAD
 	return _alifTSSThread_;
 #else
-#  error "no supported thread-local variable storage classifier"
+#  error "خطأ ممر"
 #endif
-	}
+}
 
-AlifThread*	alifThread_getCurrent(void) { // 110
+static inline void current_fastSet(AlifThread* _thread) { // 82
+#ifdef HAVE_LOCAL_THREAD
+	_alifTSSThread_ = _thread;
+#else
+	error "خطأ ممر"
+#endif
+}
+
+AlifThread*	alifThread_getCurrent() { // 110
 	return current_fastGet();
 }
 
@@ -273,7 +280,9 @@ AlifThread* alifThreadState_new(AlifInterpreter* _interpreter) { // 1622
 }
 
 
-
+void alifThread_attach(AlifThread* _thread) { // 2070
+	current_fastSet(_thread);
+}
 
 void alifThread_bind(AlifThread* _thread) { // 2447
 	

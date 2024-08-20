@@ -30,6 +30,11 @@
 #endif
 
 
+#ifndef WITH_THREAD
+#define WITH_THREAD
+#endif
+
+
 #ifdef WITH_THREAD
 #    ifdef HAVE_LOCAL_THREAD
 #      error "HAVE_LOCAL_THREAD معرف بالفعل"
