@@ -170,5 +170,8 @@
     <ClCompile Include="..\source\AlifCore\Objects\BuiltinsModule.cpp">
       <Filter>Object Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\ConfigMinimal.cpp">
+      <Filter>Object Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -20,7 +20,7 @@
 class InitTable { // 7
 public:
 	const wchar_t* name{};
-	//AlifObject* (*initFunc)(void);
+	AlifObject* (*initFunc)(void);
 };
 
 

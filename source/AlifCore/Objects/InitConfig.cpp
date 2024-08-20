@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #ifdef _WINDOWS
 #include <fcntl.h>
+#else
+#include <unistd.h>
 #endif
 
 
