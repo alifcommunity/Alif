@@ -23,6 +23,8 @@ static inline AlifIntT alif_isMainInterpreter(AlifInterpreter* _interpreter) { /
 extern ALIF_LOCAL_THREAD AlifThread* _alifTSSThread_;
 #endif
 
+AlifThread* alifThread_getCurrent(); // 125
+
 static inline AlifThread* alifThread_get() { // 134
 #ifdef HAVE_LOCAL_THREAD
 	return _alifTSSThread_;

@@ -49,6 +49,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\Import.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\InitConfig.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Lock.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\OSDefs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\PThreadStubs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Codecs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS2Lib.h" />

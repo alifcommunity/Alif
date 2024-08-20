@@ -17,11 +17,22 @@
 	ALIF_LOCAL_THREAD AlifThread* _alifTSSThread_ = nullptr; // 68
 #endif
 
+static inline AlifThread* current_fastGet(void)
+{
+#ifdef HAVE_LOCAL_THREAD
+	return _alifTSSThread_;
+#else
+#  error "no supported thread-local variable storage classifier"
+#endif
+	}
 
+AlifThread*	alifThread_getCurrent(void) { // 110
+	return current_fastGet();
+}
 
-//------------------------------------------------
-// the thread state bound to the current OS thread
-//------------------------------------------------
+//	-------------------------------------------------
+//	 the thread state bound to the current OS thread
+//	-------------------------------------------------
 
 
 static inline AlifIntT threadTSS_init(AlifTssT* _key) { // 127
