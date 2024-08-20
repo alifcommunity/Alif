@@ -22,6 +22,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DureRun.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DureRunInit.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FileUtils.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FreeList.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GetOption.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Import.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_InitConfig.h" />
@@ -31,6 +32,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Memory.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_State.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Thread.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ThreadState.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_UStrObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifConfig.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifLifeCycle.h" />

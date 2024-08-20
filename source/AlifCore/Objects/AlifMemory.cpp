@@ -1,7 +1,7 @@
 #include "alif.h"
 
+#include "AlifCore_State.h"
 #include "AlifCore_Memory.h"
-//#include "AlifCore_AlifState.h"
 
 #define ALIFMEM_FRAGIDX (_alifMem_.fragIdx)
 #define ALIFMEM_FRAGMEM (_alifMem_.fragMem)
@@ -753,20 +753,20 @@ void* alifMem_objRealloc(void* _ptr, AlifUSizeT _size)
 
 
 /* ------------------------------- إسناد ذاكرة المفسر ------------------------------- */
-//AlifIntT alifInterpreterMem_init(AlifInterpreter* _interpreter) {
-//
-//	if (_interpreter == _alifDureRun_.interpreters.main) {
-//		_interpreter->memory_ = &_alifMem_;
-//	}
-//	else {
-//		_interpreter->memory_ = alif_memoryInit();
-//		if (_interpreter->memory_ == nullptr) {
-//			return -1;
-//		}
-//	}
-//
-//	return 1;
-//}
+AlifIntT alifInterpreterMem_init(AlifInterpreter* _interpreter) {
+
+	if (_interpreter == _alifDureRun_.interpreters.main) {
+		_interpreter->memory_ = &_alifMem_;
+	}
+	else {
+		_interpreter->memory_ = alif_memoryInit();
+		if (_interpreter->memory_ == nullptr) {
+			return -1;
+		}
+	}
+
+	return 1;
+}
 
 
 

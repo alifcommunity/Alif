@@ -55,3 +55,13 @@ void alifThreadTSS_delete(AlifTssT* _key) { // 491
 	_key->key = TLS_OUT_OF_INDEXES;
 	_key->isInitialized = 0;
 }
+
+
+void* AlifThreadTSS_get(AlifTssT* _key) { // 513
+	int err = GetLastError();
+	void* r = TlsGetValue(_key->key);
+	if (r or !GetLastError()) {
+		SetLastError(err);
+	}
+	return r;
+}

@@ -73,3 +73,8 @@ void alifThreadTSS_delete(AlifTssT* _key) { // 952
 	/* pthread has not provided the defined invalid value for the key. */
 	_key->isInitialized = 0;
 }
+
+
+void* alifThreadTSS_get(AlifTssT* _key) { // 974
+	return pthread_getspecific(_key->key);
+}

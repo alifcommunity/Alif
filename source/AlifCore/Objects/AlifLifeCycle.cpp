@@ -1,12 +1,12 @@
 #include "alif.h"
 
 #include "AlifCore_InitConfig.h"
-//#include "AlifCore_Memory.h"
-//#include "AlifCore_LifeCycle.h"
-#include "AlifCore_State.h"
+#include "AlifCore_LifeCycle.h"
 #include "AlifCore_DureRun.h"
 #include "AlifCore_DureRunInit.h"
 #include "AlifCore_Import.h"
+#include "AlifCore_Memory.h"
+#include "AlifCore_State.h"
 
 
 
@@ -23,7 +23,13 @@ AlifIntT alifDureRun_initialize() { // 112
 	return alifDureRunState_init(&_alifDureRun_);
 }
 
-
+static inline void current_fastSet(AlifThread* _thread) { // alif // temp
+#ifdef HAVE_LOCAL_THREAD
+	_alifTSSThread_ = _thread;
+#else
+	error "خطأ ممر" // need fix
+#endif
+}
 
 
 char* alif_setLocale(AlifIntT category) {  // 332
@@ -40,7 +46,7 @@ char* alif_setLocale(AlifIntT category) {  // 332
 		"LC_ALL",
 		"LC_CTYPE",
 		"LANG",
-		NULL,
+		nullptr,
 	};
 
 	for (pvar = env_var_set; *pvar; pvar++) {
@@ -89,6 +95,42 @@ static AlifIntT alifCore_initDureRun(AlifDureRun* _dureRun, const AlifConfig* _c
 	return 1;
 }
 
+static AlifIntT alifCore_createInterpreter(AlifDureRun* _dureRun,
+	const AlifConfig* _config, AlifThread** _threadP) { // 937
+
+	AlifIntT status{};
+	AlifInterpreter* interpreter{};
+
+	status = alifInterpreter_new(nullptr, &interpreter);
+	if (status < 1) return status;
+
+	interpreter->ready = 1;
+
+	status = alifConfig_copy(&interpreter->config, _config);
+	if (status < 1) return status;
+
+
+	if (alifInterpreterMem_init(interpreter) < 1) {
+		// memory error
+		return -1;
+	}
+
+	AlifThread* thread = alifThreadState_new(interpreter);
+
+	if (thread == nullptr) {
+		// cant make thread
+		printf("%s \n", "لا يمكن إنشاء ممر");
+		return -1;
+	}
+
+	_dureRun->mainThread = thread;
+	alifThread_attach(thread); // temp
+	//alifThread_bind(thread);
+
+	*_threadP = thread;
+	return 1;
+}
+
 static AlifIntT alifInit_config(AlifDureRun* _dureRun,
 	AlifThread** _threadP, const AlifConfig* _config) { // 917
 
@@ -102,8 +144,8 @@ static AlifIntT alifInit_config(AlifDureRun* _dureRun,
 	if (status < 1) return status;
 	*_threadP = thread_;
 
-	status = alifCore_interpreterInit(thread_);
-	if (status < 1) return status;
+	//status = alifCore_interpreterInit(thread_);
+	//if (status < 1) return status;
 
 	_dureRun->coreInitialized = 1;
 	return 1;
@@ -163,4 +205,10 @@ AlifIntT alif_initFromConfig(const AlifConfig* _config) { // 1383
 	//}
 
 	return 1;
+}
+
+
+
+void alifThread_attach(AlifThread* _thread) { // alif // temp
+	current_fastSet(_thread);
 }

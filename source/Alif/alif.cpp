@@ -44,7 +44,7 @@ static AlifIntT alifMain_init(AlifArgv* _args) {
 	status = 1;
 
 done:
-	//alifConfig_clear(&config);
+	alifConfig_clear(&config);
 	return status;
 }
 

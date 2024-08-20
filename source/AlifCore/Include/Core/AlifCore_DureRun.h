@@ -21,8 +21,8 @@ public:
 		AlifIntT nextID{};
 	} interpreters;
 
-	AlifIntT mainThread{}; // not working in macos it's return pthread_t
-	//AlifThread* mainThreadState{};
+	AlifIntT mainThreadID{}; // not working in macos it's return pthread_t
+	AlifThread* mainThread{};
 
 	AlifThreadDureRunState threads{};
 

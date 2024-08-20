@@ -44,7 +44,7 @@ public:
 		\
     }
 
-extern AlifObject* alifImport_initModules(AlifInterpreter*); // 136
+//extern AlifObject* alifImport_initModules(AlifInterpreter*); // 136
 
 
-extern AlifIntT alifImport_init(); // 161
+//extern AlifIntT alifImport_init(); // 161

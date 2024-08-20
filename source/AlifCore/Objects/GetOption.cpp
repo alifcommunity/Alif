@@ -9,7 +9,7 @@ static const LongOption _longOpts_[] = {
 	{L"help-all", 0, 1},
 	{L"help-env", 0, 2},
 	{L"", 0, 3},
-	{NULL, 0, -1},
+	{nullptr, 0, -1},
 };
 
 /*

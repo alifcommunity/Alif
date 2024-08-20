@@ -16,6 +16,7 @@ AlifIntT alifThreadTSS_isCreated(AlifTssT*); // 96
 AlifIntT alifThreadTSS_create(AlifTssT*); // 97
 void alifThreadTSS_delete(AlifTssT*); // 98
 
+void* alifThreadTSS_get(AlifTssT*); // 100
 
 /* --------------------------------------------------------------------------------------------------------- */
 

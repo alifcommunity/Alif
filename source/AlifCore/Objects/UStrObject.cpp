@@ -112,7 +112,7 @@ AlifIntT alif_decodeUTF8Ex(const char* s, AlifSizeT size, wchar_t** wstr, AlifUS
 				}
 				else {
 					alifMem_dataFree(unicode);
-					if (reason != NULL) {
+					if (reason != nullptr) {
 						switch (ch_) {
 						case 0:
 							*reason = "unexpected end of data";
@@ -126,7 +126,7 @@ AlifIntT alif_decodeUTF8Ex(const char* s, AlifSizeT size, wchar_t** wstr, AlifUS
 							break;
 						}
 					}
-					if (wlen != NULL) {
+					if (wlen != nullptr) {
 						*wlen = s - origs;
 					}
 					return -2;

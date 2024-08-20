@@ -55,6 +55,7 @@
 #define WITH_THREAD
 #define SIZEOF_WCHAR_T 2
 #define NT_THREADS
+#define WITH_FREELISTS 1
 
 /* ------------------------------ مترجم مايكروسوفت ------------------------------ */
 #ifdef _MSC_VER

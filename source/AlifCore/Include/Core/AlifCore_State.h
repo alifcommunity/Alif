@@ -2,6 +2,7 @@
 
 //#include "AlifCore_FreeList.h"
 #include "AlifCore_DureRun.h"
+#include "AlifCore_ThreadState.h"
 
 // 113
 #if defined(HAVE_LOCAL_THREAD)
@@ -16,7 +17,10 @@ static inline AlifThread* alifThread_get() { // 134
 #endif // HAVE_LOCAL_THREAD
 }
 
-//extern void alifThread_attach(AlifThread*);
+
+AlifThread* alifThreadState_new(AlifInterpreter*); // 219
+extern void alifThread_bind(AlifThread*); // 222
+extern void alifThread_attach(AlifThread*); // temp
 
 //static inline AlifInterpreter* alifInterpreter_get() {
 //	AlifThread* thread_ = alifThread_get();

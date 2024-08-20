@@ -28,7 +28,7 @@ public:
 	// This matches when ThreadPThread.h is used.
 	class {
 	public:
-		/* NULL when pthread_condattr_setclock(CLOCK_MONOTONIC) is not supported. */
+		/* nullptr when pthread_condattr_setclock(CLOCK_MONOTONIC) is not supported. */
 		pthread_condattr_t* ptr;
 # ifdef CONDATTR_MONOTONIC
 		/* The value to which condattr_monotonic is set. */

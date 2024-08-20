@@ -119,7 +119,7 @@ inline void* alif_rawAlloc(AlifUSizeT);
 inline void alif_rawDelete(void*);
 inline void* alif_rawRealloc(void*, AlifUSizeT);
 
-//AlifIntT alifInterpreterMem_init(AlifInterpreter*);
+extern AlifIntT alifInterpreterMem_init(AlifInterpreter*);
 
 
 

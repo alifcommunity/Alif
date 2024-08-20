@@ -3,7 +3,7 @@
 
 
 
-class AlifInterpreter {
+class AlifInterpreter { // 95
 public:
 
 	//CEval cEval;
@@ -42,5 +42,11 @@ public:
 	//AlifObjectState objectState{};
 
 	//class TypesState types;
-
+	AlifThreadImpl initialThread;
 };
+
+
+
+
+
+AlifIntT alifInterpreter_new(AlifThread*, AlifInterpreter**); // 399
