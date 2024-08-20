@@ -1,12 +1,13 @@
 #pragma once
 
+#include "AlifCore_EvalState.h"
 #include "AlifCore_ThreadState.h"
 
 
 class AlifInterpreter { // 95
 public:
 
-	//CEval cEval;
+	AlifEval eval{};
 
 	AlifInterpreter* next{};
 

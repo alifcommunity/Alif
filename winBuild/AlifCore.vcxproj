@@ -21,6 +21,8 @@
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DureRun.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DureRunInit.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Eval.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_EvalState.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FileUtils.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FreeList.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GetOption.h" />
@@ -30,6 +32,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_LifeCycle.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_LList.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Memory.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Parser.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_State.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Thread.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ThreadState.h" />

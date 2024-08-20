@@ -194,10 +194,10 @@ static AlifIntT alif_setArgcArgv(AlifSizeT _argc, wchar_t* const* _argv) { // 67
 }
 
 void alifConfig_clear(AlifConfig* _config) { // 773
-#define CLEAR(_ATTR) \
-    do { \
-        free(_ATTR); \
-        _ATTR = nullptr; \
+#define CLEAR(_ATTR)					\
+    do {								\
+		alifMem_dataFree(_ATTR);		\
+		_ATTR = nullptr;				\
     } while (0)
 
 	CLEAR(_config->programName);
@@ -383,7 +383,7 @@ static AlifIntT alif_setFileMode(const AlifConfig* _config) { // 2327
 
 AlifIntT alifConfig_write(const AlifConfig* _config, AlifDureRun* _dureRun) { // 2368
 
-	if (alif_setArgcArgv(_config->origArgv.length, _config->origArgv.items) < 1) {
+	if (alif_setArgcArgv(_config->origArgv.length, _config->origArgv.items) < 0) {
 		// memory error
 		return -1;
 	}

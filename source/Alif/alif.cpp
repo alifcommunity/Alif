@@ -160,7 +160,7 @@ AlifIntT alif_mainBytes(AlifIntT _argc, char** _argv) {
 #ifdef _WINDOWS
 AlifIntT wmain(AlifIntT _argc, wchar_t** _argv)
 {
-	wchar_t* argsv[] = { (wchar_t*)L"alif", (wchar_t*)L"-h" };
+	wchar_t* argsv[] = { (wchar_t*)L"alif", (wchar_t*)L"example.alif" };
 	return alif_mainWchar(2, argsv);
 }
 #else

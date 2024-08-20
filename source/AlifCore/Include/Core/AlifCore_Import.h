@@ -32,16 +32,18 @@ public:
 	//} lock_;
 	//class {
 	//public:
-	//	int importLevel;
+	//	AlifIntT importLevel;
 	//	AlifTimeT accumulated_;
-	//	int header_;
+	//	AlifIntT header_;
 	//} findAndLoad;
 };
 
 // 119
 //#define IMPORTS_INIT \
-//    {	\
-//		\
+//    { \
+//        .findAndLoad = { \
+//            .header = 1, \
+//        }, \
 //    }
 
 //extern AlifObject* alifImport_initModules(AlifInterpreter*); // 136

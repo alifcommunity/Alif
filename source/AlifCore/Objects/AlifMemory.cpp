@@ -121,6 +121,8 @@ void* FreeSegments::try_allocFreeSeg() {
 	return nullptr;
 }
 void FreeSegments::dealloc_(void* _ptr) {
+	if (_ptr == nullptr) return;
+
 	/* ------------------------------------
 		في حال كان حجم القطعة اقل من حجم الكتلة،
 		قم بتصفيرها وارسالها الى مصفوفة القطع بحسب المؤشر،

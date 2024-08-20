@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AlifCore_Interpreter.h"
+#include "AlifCore_Parser.h"
 #include "AlifCore_Thread.h"
 //#include "AlifCore_Import.h"
 //#include "AlifCore_UString.h"
@@ -31,11 +32,7 @@ public:
 
 	AlifWStringList origArgv{};
 
-	//ImportDureRun imports;
-
-	//class TypesDureRunState types;
-
-	//AlifStaticObjects staticObjects{};
+	AlifParserDureRunState parser{};
 
 	AlifInterpreter mainInterpreter{};
 };
