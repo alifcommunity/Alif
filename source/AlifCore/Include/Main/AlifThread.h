@@ -4,7 +4,7 @@
 
 
 
-AlifUSizeT alifThread_getThreadID(); // 21
+AlifUIntT alifThread_getThreadID(); // 21
 
 
 

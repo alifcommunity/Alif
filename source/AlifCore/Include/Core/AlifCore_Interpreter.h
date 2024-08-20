@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include "AlifCore_ThreadState.h"
 
 
 class AlifInterpreter { // 95

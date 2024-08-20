@@ -4,8 +4,8 @@
 /* --------------------------------- AlifWStringList --------------------------------- */
 class AlifWStringList { // 31
 public:
-	AlifSizeT length;
-	wchar_t** items;
+	AlifSizeT length{};
+	wchar_t** items{};
 };
 
 // لماذا يوجد append و insert وتقومان بنفس الوظيفة ??

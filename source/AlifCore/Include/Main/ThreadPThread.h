@@ -27,7 +27,7 @@
 
 
 
-AlifUSizeT alifThread_getThreadID() { // 365
+AlifUIntT alifThread_getThreadID() { // 365
 	volatile pthread_t threadID{};
 
 	if (!INITIALIZED) INITIALIZED = 1;

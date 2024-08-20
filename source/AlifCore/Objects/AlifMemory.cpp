@@ -839,7 +839,7 @@ static void rawMem_sizeAllocated()
 
 	printf("I| --------------------------------------------- |I\n");
 	printf("I|                       : ذاكرة النظام المحجوزة |I\n");
-	printf("I| %9sa %9lu                          |I\n",
+	printf("I| %9sa %9llu                          |I\n",
 		sysMemPair.second, sysMemPair.first);
 }
 
@@ -886,15 +886,15 @@ static void alifMem_sizeAllocated()
 
 	printf("I| --------------------------------------------- |I\n");
 	printf("I|                          : ذاكرة ألف المحجوزة |I\n");
-	printf("I| %9sa %9lu                          |I\n",
+	printf("I| %9sa %9llu                          |I\n",
 		alifMemPair.second, alifMemPair.first);
 	printf("I| --------------------------------------------- |I\n");
 	printf("I|                         : ذاكرة ألف المستخدمة |I\n");
-	printf("I| %9sa %9lu                          |I\n",
+	printf("I| %9sa %9llu                          |I\n",
 		alifAllocPair.second, alifAllocPair.first);
 	printf("I| --------------------------------------------- |I\n");
 	printf("I|                          : الهدر في ذاكرة ألف |I\n");
-	printf("I| %9sa %9lu                          |I\n",
+	printf("I| %9sa %9llu                          |I\n",
 		wastePair.second, wastePair.first);
 }
 
@@ -919,7 +919,7 @@ static void fragment_sizeAllocated()
 
 	printf("I| --------------------------------------------- |I\n");
 	printf("I|                             : المساحة المحررة |I\n");
-	printf("I| %9sa %9lu                          |I\n",
+	printf("I| %9sa %9llu                          |I\n",
 		freedMemPair.second, freedMemPair.first);
 }
 
@@ -929,7 +929,7 @@ static void objects_count()
 
 	printf("I| --------------------------------------------- |I\n");
 	printf("I|                                : عدد الكائنات |I\n");
-	printf("I| %9sa %9lu                          |I\n", "كائن", objsNum);
+	printf("I| %9sa %9llu                          |I\n", "كائن", objsNum);
 }
 
 static void freeBlocks_count()
@@ -938,7 +938,7 @@ static void freeBlocks_count()
 
 	printf("I| --------------------------------------------- |I\n");
 	printf("I|                             : عدد الكتل الحرة |I\n");
-	printf("I| %9sa %4i%1s%4lu                          |I\n",
+	printf("I| %9sa %4i%1s%4llu                          |I\n",
 		"كتلة", BLOCK_NUMS, "\\", freeBlocks);
 }
 
@@ -948,7 +948,7 @@ static void currentSeg_size()
 
 	printf("I| --------------------------------------------- |I\n");
 	printf("I|                    : حجم القطعة الحرة الحالية |I\n");
-	printf("I| %9sa %4i%1s%4lu                          |I\n",
+	printf("I| %9sa %4i%1s%4llu                          |I\n",
 		"بايت", BLOCK_SIZE, "\\", currSegSize);
 }
 

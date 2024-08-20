@@ -2,7 +2,7 @@
 
 
 
-AlifUSizeT alifThread_getThreadID() { // 260
+AlifUIntT alifThread_getThreadID() { // 260
 
     if (!INITIALIZED) INITIALIZED = 1;
 

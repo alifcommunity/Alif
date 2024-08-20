@@ -107,8 +107,8 @@ STRINGLIB(utf8Decode)(const char** _inPtr, const char* _end,
 			ch_ = (ch_ << 6) + ch2 -
 				((0xC0 << 6) + 0x80);
 			s_ += 2;
-			if (STRINGLIB_MAX_CHAR <= 0x007F ||
-				(STRINGLIB_MAX_CHAR < 0x07FF && ch_ > STRINGLIB_MAX_CHAR))
+			if (STRINGLIB_MAX_CHAR <= 0x007F or
+				(STRINGLIB_MAX_CHAR < 0x07FF and ch_ > STRINGLIB_MAX_CHAR))
 				/* Out-of-range */
 				goto returnRes;
 			*p_++ = ch_;
@@ -124,7 +124,7 @@ STRINGLIB(utf8Decode)(const char** _inPtr, const char* _end,
 				if (_end - s_ < 2)
 					break;
 				ch2 = (unsigned char)s_[1];
-				if (!IS_CONTINUATION_BYTE(ch2) ||
+				if (!IS_CONTINUATION_BYTE(ch2) or
 					(ch2 < 0xA0 ? ch_ == 0xE0 : ch_ == 0xED))
 					/* for clarification see comments below */
 					goto invalidContinuation1;
@@ -143,11 +143,6 @@ STRINGLIB(utf8Decode)(const char** _inPtr, const char* _end,
 					goto invalidContinuation1;
 			}
 			else if (ch_ == 0xED && ch2 >= 0xA0) {
-				/* Decoding UTF-8 sequences in range \xED\xA0\x80-\xED\xBF\xBF
-				   will result in surrogates in range D800-DFFF. Surrogates are
-				   not valid UTF-8 so they are rejected.
-				   See https://www.unicode.org/versions/Unicode5.2.0/ch03.pdf
-				   (table 3-7) and http://www.rfc-editor.org/rfc/rfc3629.txt */
 				goto invalidContinuation1;
 			}
 			if (!IS_CONTINUATION_BYTE(ch3)) {
@@ -157,8 +152,8 @@ STRINGLIB(utf8Decode)(const char** _inPtr, const char* _end,
 			ch_ = (ch_ << 12) + (ch2 << 6) + ch3 -
 				((0xE0 << 12) + (0x80 << 6) + 0x80);
 			s_ += 3;
-			if (STRINGLIB_MAX_CHAR <= 0x07FF ||
-				(STRINGLIB_MAX_CHAR < 0xFFFF && ch_ > STRINGLIB_MAX_CHAR))
+			if (STRINGLIB_MAX_CHAR <= 0x07FF or
+				(STRINGLIB_MAX_CHAR < 0xFFFF and ch_ > STRINGLIB_MAX_CHAR))
 				/* Out-of-range */
 				goto returnRes;
 			*p_++ = ch_;
@@ -174,7 +169,7 @@ STRINGLIB(utf8Decode)(const char** _inPtr, const char* _end,
 				if (_end - s_ < 2)
 					break;
 				ch2 = (unsigned char)s_[1];
-				if (!IS_CONTINUATION_BYTE(ch2) ||
+				if (!IS_CONTINUATION_BYTE(ch2) or
 					(ch2 < 0x90 ? ch_ == 0xF0 : ch_ == 0xF4))
 					/* for clarification see comments below */
 					goto invalidContinuation1;
@@ -198,7 +193,7 @@ STRINGLIB(utf8Decode)(const char** _inPtr, const char* _end,
 					   \xF0\x80\x80\x80-\xF0\x8F\xBF\xBF -- fake 0000-FFFF */
 					goto invalidContinuation1;
 			}
-			else if (ch_ == 0xF4 && ch2 >= 0x90) {
+			else if (ch_ == 0xF4 and ch2 >= 0x90) {
 				/* invalid sequence
 				   \xF4\x90\x80\x80- -- 110000- overflow */
 				goto invalidContinuation1;
@@ -214,8 +209,8 @@ STRINGLIB(utf8Decode)(const char** _inPtr, const char* _end,
 			ch_ = (ch_ << 18) + (ch2 << 12) + (ch3 << 6) + ch4 -
 				((0xF0 << 18) + (0x80 << 12) + (0x80 << 6) + 0x80);
 			s_ += 4;
-			if (STRINGLIB_MAX_CHAR <= 0xFFFF ||
-				(STRINGLIB_MAX_CHAR < 0x10FFFF && ch_ > STRINGLIB_MAX_CHAR))
+			if (STRINGLIB_MAX_CHAR <= 0xFFFF or
+				(STRINGLIB_MAX_CHAR < 0x10FFFF and ch_ > STRINGLIB_MAX_CHAR))
 				/* Out-of-range */
 				goto returnRes;
 			*p_++ = ch_;

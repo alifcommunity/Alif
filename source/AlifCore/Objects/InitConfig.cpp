@@ -553,6 +553,10 @@ static AlifIntT update_argv(AlifConfig* _config, AlifSizeT _index) { // 2803
 			return -1;
 		}
 
+		if (configArgv.items == nullptr) {
+			// error
+			return -1;
+		}
 		alifMem_dataFree(configArgv.items[0]);
 		configArgv.items[0] = arg1;
 	}

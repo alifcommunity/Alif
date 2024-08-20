@@ -106,7 +106,7 @@ AlifIntT alifInterpreter_enable(AlifDureRun* _dureRun) { // 559
 
 
 static AlifIntT init_interpreter(AlifInterpreter* _interpreter,
-	AlifDureRun* _dureRun, AlifSizeT _id, AlifInterpreter* _next) { // 612
+	AlifDureRun* _dureRun, AlifIntT _id, AlifInterpreter* _next) { // 612
 
 	if (_interpreter->initialized) {
 		// error
@@ -136,7 +136,7 @@ AlifIntT alifInterpreter_new(AlifThread* _thread, AlifInterpreter** _interpreter
 	}
 
 	AlifDureRun::AlifInterpreters* interpreters = &dureRun->interpreters;
-	AlifSizeT id_ = interpreters->nextID;
+	AlifIntT id_ = interpreters->nextID;
 	interpreters->nextID += 1;
 
 	// حجز المفسر وإضافته الى وقت التشغيل
@@ -245,6 +245,9 @@ static AlifThread* new_thread(AlifInterpreter* _interpreter) { // 1533
 		thread = newThread;
 		memcpy(thread, &_initial_.mainInterpreter.initialThread, sizeof(*thread));
 	}
+
+	init_thread(thread, _interpreter, id);
+	add_thread(_interpreter, (AlifThread*)thread, oldHead);
 
 	if (!usedNewThread) {
 		alifMem_dataFree(newThread);
