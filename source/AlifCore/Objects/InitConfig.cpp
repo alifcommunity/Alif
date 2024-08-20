@@ -197,7 +197,7 @@ void alifConfig_clear(AlifConfig* _config) { // 773
 #define CLEAR(_ATTR)							\
     do {										\
 		if (_ATTR) alifMem_dataFree(_ATTR);		\
-		else free(_ATTR);						\
+		else delete (_ATTR);					\
 		_ATTR = nullptr;						\
     } while (0)
 
