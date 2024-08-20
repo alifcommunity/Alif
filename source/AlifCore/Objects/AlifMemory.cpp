@@ -121,8 +121,6 @@ void* FreeSegments::try_allocFreeSeg() {
 	return nullptr;
 }
 void FreeSegments::dealloc_(void* _ptr) {
-	if (_ptr == nullptr) return;
-
 	/* ------------------------------------
 		في حال كان حجم القطعة اقل من حجم الكتلة،
 		قم بتصفيرها وارسالها الى مصفوفة القطع بحسب المؤشر،
@@ -494,10 +492,20 @@ void* alifMem_objAlloc(AlifUSizeT _size) {
 
 
 inline void alifMem_dataFree(void* _ptr) {
+	/*
+		يجب إضافة تحذير يظهر عند وضع التصحيح Debug
+		حيث أنه لا يجب أن يتم عمل تحرير لمؤشر فارغ
+	*/
+	//if (_ptr == nullptr) return;
 	ALIFMEM_FREEDSEGMS->dealloc_(_ptr);
 }
 
 inline void alifMem_objFree(void* _ptr) {
+	/*
+		يجب إضافة تحذير يظهر عند وضع التصحيح Debug
+		حيث أنه لا يجب أن يتم عمل تحرير لمؤشر فارغ
+	*/
+	//if (_ptr == nullptr) return;
 	ALIFMEM_FREEDSEGMS->dealloc_(_ptr);
 	ALIFMEM_OBJNUMS--;
 }

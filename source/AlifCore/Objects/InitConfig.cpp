@@ -194,10 +194,11 @@ static AlifIntT alif_setArgcArgv(AlifSizeT _argc, wchar_t* const* _argv) { // 67
 }
 
 void alifConfig_clear(AlifConfig* _config) { // 773
-#define CLEAR(_ATTR)					\
-    do {								\
-		alifMem_dataFree(_ATTR);		\
-		_ATTR = nullptr;				\
+#define CLEAR(_ATTR)							\
+    do {										\
+		if (_ATTR) alifMem_dataFree(_ATTR);		\
+		else free(_ATTR);						\
+		_ATTR = nullptr;						\
     } while (0)
 
 	CLEAR(_config->programName);
