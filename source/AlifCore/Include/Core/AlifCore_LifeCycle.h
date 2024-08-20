@@ -3,7 +3,7 @@
 #include "AlifCore_DureRun.h"
 
 
-//extern AlifObject* alifBuiltin_init(AlifInterpreter*); // 32
+extern AlifObject* alifBuiltin_init(AlifInterpreter*); // 32
 
 
 

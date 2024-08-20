@@ -123,6 +123,15 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifTypeDefs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\BuiltinsModule.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\Lock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\AlifCore\Objects\AlifMemory.cpp">
@@ -153,6 +162,9 @@
       <Filter>Object Files</Filter>
     </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\Import.cpp">
+      <Filter>Object Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\BuiltinsModule.cpp">
       <Filter>Object Files</Filter>
     </ClCompile>
   </ItemGroup>

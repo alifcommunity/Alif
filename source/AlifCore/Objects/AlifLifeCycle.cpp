@@ -98,7 +98,7 @@ static AlifIntT alifCore_initDureRun(AlifDureRun* _dureRun, const AlifConfig* _c
 }
 
 static AlifIntT alifCore_createInterpreter(AlifDureRun* _dureRun,
-	const AlifConfig* _config, AlifThread** _threadP) { // 937
+	const AlifConfig* _config, AlifThread** _threadP) { // 637
 
 	AlifIntT status{};
 	AlifInterpreter* interpreter{};
@@ -133,6 +133,66 @@ static AlifIntT alifCore_createInterpreter(AlifDureRun* _dureRun,
 	return 1;
 }
 
+static AlifIntT alifCore_builtinsInit(AlifThread* _thread) { // 775
+
+	AlifObject* modules{};
+	AlifObject* builtinsDict{};
+
+	AlifInterpreter* interp = _thread->interpreter;
+
+	AlifObject* biMod = alifBuiltin_init(interp);
+	//if (biMod == nullptr) goto error;
+
+	////modules = interp->imports.modules_; // alifImport_getModule
+	////if (alifImport_fixupBuiltin(_thread, biMod, "builtins", modules) < 0) {
+	////	goto error;
+	////}
+
+	//builtinsDict = alifModule_getDict(biMod);
+	//if (builtinsDict == nullptr) goto error;
+
+	//interp->builtins = ALIF_NEWREF(builtinsDict);
+
+	return 1;
+
+error:
+	//ALIF_XDECREF(biMod);
+	return -1;
+}
+
+static AlifIntT alifCore_interpreterInit(AlifThread* _thread) { // 843
+
+	AlifInterpreter* interpreter = _thread->interpreter;
+	AlifIntT status = 1;
+	const AlifConfig* config;
+	AlifObject* sysMod = nullptr;
+
+	//status = alifGC_init(interpreter);
+	if (status < 0) return status;
+
+	//status = alifCore_initTypes(interpreter);
+	if (status < 0) goto done;
+
+	//status = alifAtExit_init(interpreter);
+	if (status < 0) return status;
+
+	//status = alifSys_create(_thread, &sysMod);
+	if (status < 0) goto done;
+
+	status = alifCore_builtinsInit(_thread);
+	if (status < 0) goto done;
+
+	config = &interpreter->config;
+
+	//status = alifImport_initCore(thread, sysMod, config_->installImportLib);
+	if (status < 0) goto done;
+
+done:
+	//ALIF_XDECREF(sysmod);
+	return status;
+
+}
+
 static AlifIntT alifInit_config(AlifDureRun* _dureRun,
 	AlifThread** _threadP, const AlifConfig* _config) { // 917
 
@@ -146,8 +206,8 @@ static AlifIntT alifInit_config(AlifDureRun* _dureRun,
 	if (status < 1) return status;
 	*_threadP = thread_;
 
-	//status = alifCore_interpreterInit(thread_);
-	//if (status < 1) return status;
+	status = alifCore_interpreterInit(thread_);
+	if (status < 1) return status;
 
 	_dureRun->coreInitialized = 1;
 	return 1;
@@ -180,6 +240,73 @@ done:
 	return status;
 }
 
+static AlifIntT initInterpreter_main(AlifThread* _thread) { // 1156
+
+	AlifIntT status{};
+	AlifIntT isMainInterpreter = alif_isMainInterpreter(_thread->interpreter);
+	AlifInterpreter* interpreter = _thread->interpreter;
+	const AlifConfig* config_ = alifInterpreter_getConfig(interpreter);
+
+	//if (!config_->installImportLib) {
+	//	if (isMainInterpreter) {
+	//		interpreter->dureRun->initialized = 1;
+	//	}
+	//	return 1;
+	//}
+
+	//status = alifConfig_initImportConfig(&interpreter->config);
+	//if (status < 1) return status;
+
+	//if (interpreter_updateConfig(_thread, 1) < 0) {
+	//	return -1;
+	//}
+
+	//status = alifImport_initExternal(_thread);
+	//if (status < 1) return status;
+
+	//status = alifUnicode_initEncoding(_thread);
+	//if (status < 1) return status;
+
+	//if (isMainInterpreter) {
+	//	if (config_->tracemalloc) {
+	//		if (alifTraceMalloc_start(config_->tracemalloc) < 0) {
+	//			return -1;
+	//		}
+	//	}
+	//}
+
+	//status = init_sysStream(_thread);
+	//if (status < 1) return status;
+
+	//status = init_setBuiltinsOpen();
+	//if (status < 1) return status;
+
+	//status = add_mainmodule(interpreter);
+	//if (status < 1) return status;
+
+	// need work
+
+	return 1;
+
+}
+
+static AlifIntT alifInit_main(AlifThread* _thread) { // 1363
+
+	AlifInterpreter* interpreter = _thread->interpreter;
+	if (!interpreter->dureRun->coreInitialized) {
+		// error
+		return -1;
+	}
+
+	if (interpreter->dureRun->initialized) {
+		//return alifInit_mainReconfigure(_thread);
+	}
+
+	AlifIntT status = initInterpreter_main(_thread);
+	if (status < 1) return status;
+
+	return 1;
+}
 
 AlifIntT alif_initFromConfig(const AlifConfig* _config) { // 1383
 
@@ -199,12 +326,12 @@ AlifIntT alif_initFromConfig(const AlifConfig* _config) { // 1383
 	status = alifInit_core(dureRun, _config, &thread_);
 	if (status < 1) return status;
 
-	//_config = alifInterpreterState_getConfig(thread_->interpreter);
+	_config = alifInterpreter_getConfig(thread_->interpreter);
 
-	//if (_config->initMain) {
-	//	status = alifInit_main(thread_);
-	//	if (status < 1) return status;
-	//}
+	if (_config->initMain) {
+		status = alifInit_main(thread_);
+		if (status < 1) return status;
+	}
 
 	return 1;
 }

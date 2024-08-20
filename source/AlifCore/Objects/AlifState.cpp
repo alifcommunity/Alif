@@ -198,7 +198,7 @@ static void init_thread(AlifThreadImpl* _thread, AlifInterpreter* _interpreter, 
 	thread->id = _id;
 
 	//thread->alifRecursionLimit = _interpreter->cEval.recursionLimit,
-	//thread->py_recursion_remaining = _interpreter->cEval.recursionLimit,
+	//thread->alifRecursionRemaining = _interpreter->cEval.recursionLimit,
 	thread->cppRecursionRemaining = ALIFCPP_RECURSION_LIMIT;
 
 	thread->currentFrame = nullptr;
@@ -271,4 +271,18 @@ void alifThread_bind(AlifThread* _thread) { // 2447
 	if (threadTSS_get(&_thread->interpreter->dureRun->autoTSSKey) == nullptr) {
 		//bind_gilstate_tstate(_thread);
 	}
+}
+
+
+
+
+
+
+
+
+
+
+
+const AlifConfig* alifInterpreter_getConfig(AlifInterpreter* _interpreter) { // 2881
+	return &_interpreter->config;
 }

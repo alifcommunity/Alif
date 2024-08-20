@@ -42,7 +42,7 @@ STRINGLIB(utf8Decode)(const char** _inPtr, const char* _end,
 					AlifUSizeT value = *(const AlifUSizeT*)_s;
 					if (value & ASCII_CHAR_MASK)
 						break;
-#if PY_LITTLE_ENDIAN
+#if ALIF_LITTLE_ENDIAN
 					_p[0] = (STRINGLIB_CHAR)(value & 0xFFu);
 					_p[1] = (STRINGLIB_CHAR)((value >> 8) & 0xFFu);
 					_p[2] = (STRINGLIB_CHAR)((value >> 16) & 0xFFu);

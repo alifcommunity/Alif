@@ -33,7 +33,7 @@ public:
 
 	//AlifGCDureRun gc{};
 
-	//AlifObject* builtins{};
+	AlifObject* builtins{};
 
 	//class ImportState imports;
 
@@ -47,6 +47,9 @@ public:
 };
 
 
+
+
+extern const AlifConfig* alifInterpreter_getConfig(AlifInterpreter*); // 329
 
 
 

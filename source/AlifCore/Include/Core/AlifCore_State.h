@@ -4,6 +4,20 @@
 #include "AlifCore_DureRun.h"
 #include "AlifCore_ThreadState.h"
 
+
+
+static inline AlifInterpreter* alifInterpreter_main(void) { // 55
+	return _alifDureRun_.interpreters.main;
+}
+
+static inline AlifIntT alif_isMainInterpreter(AlifInterpreter* _interpreter) { // 61
+	return (_interpreter == alifInterpreter_main());
+}
+
+
+
+
+
 // 113
 #if defined(HAVE_LOCAL_THREAD)
 extern ALIF_LOCAL_THREAD AlifThread* _alifTSSThread_;
