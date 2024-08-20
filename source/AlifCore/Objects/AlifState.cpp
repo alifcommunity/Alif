@@ -3,11 +3,12 @@
 //#include "AlifCore_AlifEval.h"
 //#include "AlifCore_Code.h"
 //#include "AlifCore_Frame.h"
+//#include "AlifCore_FreeList.h"
 #include "AlifCore_InitConfig.h"
 //#include "AlifObject.h"
+//#include "AlifCore_LifeCycle.h"
+//#include "AlifCore_Memory.h"
 #include "AlifCore_State.h"
-#include "AlifCore_FreeList.h"
-#include "AlifCore_LifeCycle.h"
 #include "AlifCore_DureRunInit.h"
 
 

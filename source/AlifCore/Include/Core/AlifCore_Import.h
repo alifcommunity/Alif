@@ -39,10 +39,10 @@ public:
 };
 
 // 119
-#define IMPORTS_INIT \
-    {	\
-		\
-    }
+//#define IMPORTS_INIT \
+//    {	\
+//		\
+//    }
 
 //extern AlifObject* alifImport_initModules(AlifInterpreter*); // 136
 

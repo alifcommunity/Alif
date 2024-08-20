@@ -1,11 +1,11 @@
 #include "alif.h"
 
 #include "AlifCore_GetOption.h"
-#include "AlifCore_Memory.h"
 #include "AlifCore_InitConfig.h"
 //#include "AlifCore_Interpreter.h"
 #include "AlifCore_LifeCycle.h"
-//#include "AlifCore_AlifState.h"
+#include "AlifCore_Memory.h"
+#include "AlifCore_State.h"
 #include "AlifCore_DureRun.h"
 
 #include <locale.h>

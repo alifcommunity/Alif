@@ -43,7 +43,7 @@ public:
 extern AlifDureRun _alifDureRun_; // 318
 
 extern AlifIntT alifDureRunState_init(AlifDureRun*); // 320
-//extern void alifDureRunState_fini(AlifDureRun*);
+extern void alifDureRunState_fini(AlifDureRun*); // 321
 
 
 extern AlifIntT alifDureRun_initialize(); // 329

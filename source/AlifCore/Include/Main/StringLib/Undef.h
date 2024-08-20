@@ -1,5 +1,3 @@
-#pragma once
-
 
 #undef FASTSEARCH
 #undef STRINGLIB

@@ -42,7 +42,8 @@ public:
 	//AlifObjectState objectState{};
 
 	//class TypesState types;
-	AlifThreadImpl initialThread;
+
+	AlifThreadImpl initialThread{};
 };
 
 

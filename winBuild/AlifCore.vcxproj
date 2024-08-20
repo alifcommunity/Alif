@@ -41,6 +41,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifPort.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifState.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifThread.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifTypeDefs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifVersion.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\FileUtils.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Import.h" />

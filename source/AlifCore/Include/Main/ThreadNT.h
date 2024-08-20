@@ -57,7 +57,7 @@ void alifThreadTSS_delete(AlifTssT* _key) { // 491
 }
 
 
-void* AlifThreadTSS_get(AlifTssT* _key) { // 513
+void* alifThreadTSS_get(AlifTssT* _key) { // 513
 	int err = GetLastError();
 	void* r = TlsGetValue(_key->key);
 	if (r or !GetLastError()) {

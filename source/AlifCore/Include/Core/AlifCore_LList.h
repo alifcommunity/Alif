@@ -4,8 +4,8 @@
 
 class LListNode { // 34
 public:
-    class LListNode* next;
-    class LListNode* prev;
+	LListNode* next{};
+	LListNode* prev{};
 };
 
 

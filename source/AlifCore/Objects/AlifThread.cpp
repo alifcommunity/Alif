@@ -1,6 +1,6 @@
 #include "alif.h"
 
-#include "AlifCore_DureRun.h" // should replace "AlifCore_State.h" instade this
+#include "AlifCore_State.h"
 #include "AlifCore_Thread.h"
 
 

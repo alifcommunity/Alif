@@ -25,12 +25,11 @@
 
 
 
-
 class AlifThread { // 59
 public:
 	AlifThread* prev{};
 	AlifThread* next{};
-	class AlifInterpreter* interpreter{};
+	AlifInterpreter* interpreter{};
 
 	class {
 	public:
@@ -44,8 +43,8 @@ public:
 		AlifUIntT finalized : 1;
 
 		/* padding to align to 4 bytes */
-		AlifUIntT : 26;
-	} status;
+		AlifUIntT : 2;
+	} status{};
 
 	class AlifInterpreterFrame* currentFrame{};
 
