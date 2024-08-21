@@ -96,7 +96,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Core</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib</AdditionalIncludeDirectories>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
@@ -112,7 +112,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Core</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
@@ -129,7 +129,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Core</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
@@ -146,7 +146,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Core</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>

@@ -293,6 +293,13 @@ void alifThread_bind(AlifThread* _thread) { // 2447
 	}
 }
 
+uintptr_t alif_getThreadLocalAddr(void) { // 2463
+#ifdef HAVE_LOCAL_THREAD
+	return (uintptr_t)&_alifTSSThread_;
+#else
+#  error "no supported thread-local variable storage classifier"
+#endif
+}
 
 
 

@@ -8,6 +8,12 @@
 #endif
 
 
+#ifdef __has_builtin
+#  define ALIF_HAS_BUILTIN(x) __has_builtin(x)
+#else
+#  define ALIF_HAS_BUILTIN(x) 0
+#endif
+
 /*
 	من الأفضل إستخدام ALIF_STATIC_CAST
 	بدلا من ALIF_CAST
@@ -28,6 +34,18 @@
 #  define ALIF_LOCAL(_type) static _type
 #  define ALIF_LOCAL_INLINE(_type) static inline _type
 #endif
+
+
+
+#if defined(__GNUC__) or defined(__clang__) or defined(__INTEL_COMPILER)
+#  define ALIF_ALWAYS_INLINE __attribute__((always_inline))
+#elif defined(_MSC_VER)
+#  define ALIF_ALWAYS_INLINE __forceinline
+#else
+#  define ALIF_ALWAYS_INLINE
+#endif
+
+
 
 
 #ifndef WITH_THREAD

@@ -32,6 +32,8 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_LifeCycle.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_LList.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Memory.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ModSupport.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ModuleObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Parser.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_State.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Thread.h" />
@@ -47,13 +49,18 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifThread.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifTypeDefs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifVersion.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomicMSC.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\BuiltinsModule.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\FileUtils.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Import.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\InitConfig.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Lock.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\MethodObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\ModuleObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\OSDefs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\PThreadStubs.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\RefCount.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Codecs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS2Lib.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS4Lib.h" />
@@ -66,6 +73,7 @@
   <ItemGroup>
     <ClCompile Include="..\source\AlifCore\Objects\AlifLifeCycle.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifMemory.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifState.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifThread.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\BuiltinsModule.cpp" />
@@ -75,6 +83,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\GetVersion.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Import.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\InitConfig.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\ModuleObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\UStrObject.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -155,7 +164,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
-      <AdditionalIncludeDirectories>..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\Alif</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -175,7 +184,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
-      <AdditionalIncludeDirectories>..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\Alif</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -195,7 +204,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\Alif</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib</AdditionalIncludeDirectories>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
@@ -215,7 +224,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\Alif</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib</AdditionalIncludeDirectories>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>

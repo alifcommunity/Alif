@@ -7,6 +7,15 @@
 //#include "AlifCore_UString.h"
 
 
+
+
+
+class RefTracerDureRunState { // 198
+public:
+	AlifRefTracer tracerFunc{};
+	void* tracerData{};
+};
+
 class AlifDureRun { // 159
 public:
 	AlifIntT selfInitialized{};
@@ -33,6 +42,8 @@ public:
 	AlifWStringList origArgv{};
 
 	AlifParserDureRunState parser{};
+
+	RefTracerDureRunState refTracer{};
 
 	AlifInterpreter mainInterpreter{};
 };

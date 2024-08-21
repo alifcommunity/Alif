@@ -11,23 +11,23 @@
 
 
 
-//static AlifMethodDef builtinMethods[] = { // 3141
-//	BUILTIN_PRINT_METHODDEF,
-//	{nullptr, nullptr},
-//};
-//
-//
-//static AlifModuleDef _alifBuiltinsModule_ = { // 3202
-//	ALIFMODULEDEF_HEAD_INIT,
-//	"builtins",
-//	nullptr,
-//	-1,
-//	builtinMethods,
-//	nullptr,
-//	nullptr,
-//	nullptr,
-//	nullptr,
-//};
+static AlifMethodDef builtinMethods[] = { // 3141
+	BUILTIN_PRINT_METHODDEF,
+	{nullptr, nullptr},
+};
+
+
+static AlifModuleDef _alifBuiltinsModule_ = { // 3202
+	ALIFMODULEDEF_HEAD_INIT,
+	"المضمنة",
+	nullptr,
+	-1,
+	builtinMethods,
+	nullptr,
+	nullptr,
+	nullptr,
+	nullptr,
+};
 
 
 AlifObject* alifBuiltin_init(AlifInterpreter* _interpreter) { // 3215
@@ -35,10 +35,10 @@ AlifObject* alifBuiltin_init(AlifInterpreter* _interpreter) { // 3215
 
 	const AlifConfig* config = alifInterpreter_getConfig(_interpreter);
 
-	//mod = alifModule_createInitialized(&_alifBuiltinsModule_);
-	//if (mod == nullptr) return nullptr;
+	mod = alifModule_createInitialized(&_alifBuiltinsModule_);
+	if (mod == nullptr) return nullptr;
 
-	//dict = alifModule_getDict(mod);
+	dict = alifModule_getDict(mod);
 
 	return mod;
 }

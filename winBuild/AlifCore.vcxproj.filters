@@ -13,6 +13,9 @@
     <Filter Include="Header Files\StringLib">
       <UniqueIdentifier>{bcc357c4-aee0-4c89-9a9c-84f0a12057ca}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Atomics">
+      <UniqueIdentifier>{2805f249-4bf4-44a7-bff8-3515460d8fe6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifVersion.h">
@@ -144,6 +147,27 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Eval.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ModSupport.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\ModuleObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\MethodObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ModuleObject.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\RefCount.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">
+      <Filter>Header Files\Atomics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomicMSC.h">
+      <Filter>Header Files\Atomics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\AlifCore\Objects\AlifMemory.cpp">
@@ -180,6 +204,12 @@
       <Filter>Object Files</Filter>
     </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\ConfigMinimal.cpp">
+      <Filter>Object Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\ModuleObject.cpp">
+      <Filter>Object Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\AlifObject.cpp">
       <Filter>Object Files</Filter>
     </ClCompile>
   </ItemGroup>
