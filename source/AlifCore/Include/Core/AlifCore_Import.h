@@ -7,11 +7,11 @@
 
 
 
-class ImportDureRun { // 40
+class ImportDureRunState { // 40
 public:
-	class InitTable* initTable;
+	class InitTable* initTable{};
 
-
+	AlifSizeT lastModuleIndex{};
 };
 
 class ImportState { // 63
@@ -45,6 +45,9 @@ public:
 //            .header = 1, \
 //        }, \
 //    }
+
+
+AlifSizeT alifImport_getNextModuleIndex(); // 129
 
 //extern AlifObject* alifImport_initModules(AlifInterpreter*); // 136
 

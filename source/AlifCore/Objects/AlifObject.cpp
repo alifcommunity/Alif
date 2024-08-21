@@ -1,5 +1,6 @@
 #include "alif.h"
 
+#include "AlifCore_BiaseRefCount.h"
 #include "AlifCore_State.h"
 
 
@@ -9,11 +10,38 @@
 
 
 
+void alif_decRefSharedDebug(AlifObject* _obj, const char* _filename, AlifIntT _lineno) { // 322
+	AlifIntT shouldQueue;
+
+	AlifSizeT newShared;
+	AlifSizeT shared = alifAtomic_loadSizeRelaxed(&_obj->refShared);
+	do {
+		shouldQueue = (shared == 0 or shared == ALIF_REF_MAYBE_WEAKREF);
+
+		if (shouldQueue) {
+			newShared = ALIF_REF_QUEUED;
+		}
+		else {
+			newShared = shared - (1 << ALIF_REF_SHARED_SHIFT);
+		}
+
+	} while (!alifAtomic_compareExchangeSize(&_obj->refShared,
+		&shared, newShared));
+
+	if (shouldQueue) {
+		alifBRC_queueObject(_obj);
+	}
+	else if (newShared == ALIF_REF_MERGED) {
+		// refcount is zero AND merged
+		alif_dealloc(_obj);
+	}
+}
 
 
 
-
-
+void alif_decRefShared(AlifObject* _o) { // 368
+	alif_decRefSharedDebug(_o, nullptr, 0);
+}
 
 
 void alif_mergeZeroLocalRefcount(AlifObject* _op) { // 374

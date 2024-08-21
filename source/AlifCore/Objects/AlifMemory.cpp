@@ -210,7 +210,7 @@ AlifIntT alif_mainMemoryInit()
 AlifMemory* alif_memoryInit()
 {
 
-	AlifMemory* memory_{};
+	AlifMemory* memory_ = new AlifMemory();
 
 	/* --- تهيئة ذاكرة الشظايا --- */
 	memory_->fragMem = FragsBlock();

@@ -1,7 +1,7 @@
 #include "alif.h"
 
 //#include "AlifCore_AlifEval.h"
-//#include "AlifCore_ModSupport.h"
+#include "AlifCore_ModSupport.h"
 #include "AlifCore_State.h"
 
 #include "BuiltinsModule.h"

@@ -3,7 +3,7 @@
 #include "AlifCore_Interpreter.h"
 #include "AlifCore_Parser.h"
 #include "AlifCore_Thread.h"
-//#include "AlifCore_Import.h"
+#include "AlifCore_Import.h"
 //#include "AlifCore_UString.h"
 
 
@@ -42,6 +42,7 @@ public:
 	AlifWStringList origArgv{};
 
 	AlifParserDureRunState parser{};
+	ImportDureRunState imports{};
 
 	RefTracerDureRunState refTracer{};
 

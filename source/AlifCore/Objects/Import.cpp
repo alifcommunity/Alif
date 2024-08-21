@@ -1,6 +1,7 @@
 #include "alif.h"
 
-//#include "AlifCore_Import.h"
+#include "AlifCore_Import.h"
+#include "AlifCore_State.h"
 //#include "AlifCore_InitConfig.h"
 
 
@@ -13,6 +14,7 @@ extern InitTable _alifImportInitTab_[]; // 55
 InitTable* _alifImportInitTable_ = _alifImportInitTab_; // 59
 
 #define INITTABLE _alifDureRun_.imports.initTable // 69
+#define LAST_MODULE_INDEX _alifDureRun_.imports.lastModuleIndex // 70
 
 // 80
 #define MODULES(interp) \
@@ -26,6 +28,20 @@ InitTable* _alifImportInitTable_ = _alifImportInitTab_; // 59
 //	}
 //	return MODULES(_interp);
 //}
+
+
+
+
+
+
+
+
+AlifSizeT alifImport_getNextModuleIndex() { // 381
+	return alifAtomic_addSize(&LAST_MODULE_INDEX, 1) + 1;
+}
+
+
+
 
 
 

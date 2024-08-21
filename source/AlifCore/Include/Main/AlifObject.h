@@ -7,14 +7,29 @@
 #define ALIFOBJECT_HEAD		AlifObject base // 60
 
 
+#define ALIFOBJECT_HEAD_INIT(_type)		\
+    {									\
+        0,								\
+        0,								\
+        { 0 },							\
+        0,								\
+        ALIF_IMMORTAL_REFCNT_LOCAL,		\
+        0,								\
+        (_type),						\
+    }
 
-
+// 89
+#define ALIFVAROBJECT_HEAD_INIT(_type, _size)	\
+    {											\
+        ALIFOBJECT_HEAD_INIT(_type),			\
+        (_size)									\
+    }
 
 
 #define ALIFOBJECT_VAR_HEAD		AlifVarObject base // 101
 
 
-
+#define ALIF_UNOWNED_TID		0
 
 class AlifObject { // 140
 public:
@@ -108,6 +123,12 @@ static inline AlifTypeObject* alif_type(AlifObject* _ob) { // 250
 
 
 
+static inline void alif_setType(AlifObject* _obj, AlifTypeObject* _type) { // 282
+	_obj->type = _type;
+}
+# define ALIF_SET_TYPE(_ob, _type) alif_setType(ALIFOBJECT_CAST(_ob), _type)
+
+
 
 
 typedef AlifIntT (*Inquiry)(AlifObject*); // 321
@@ -117,6 +138,15 @@ typedef AlifIntT (*TraverseProc)(AlifObject*, VisitProc, void*); // 331
 
 typedef void (*FreeFunc)(void*); // 334
 typedef void (*Destructor)(AlifObject*); // 335
+
+
+
+
+
+extern AlifTypeObject _alifTypeType_; // 405
+
+
+
 
 
 /* -------------------------------------------------------------------------------------------------------------- */
@@ -134,6 +164,25 @@ public:
 	AlifSizeT basicSize{}, itemSize{};
 	Destructor dealloc{};
 };
+
+
+
+
+class AlifHeapTypeObject { // 255
+	AlifTypeObject type{};
+	//AlifAsyncMethods async;
+	//AlifNumberMethods number;
+	//AlifMappingMethods mapping;
+	//AlifSequenceMethods sequence;
+	//AlifBufferProcs Buffer;
+	AlifObject* name{}, * slots{}, * qualname{};
+	AlifObject* Module{};
+	AlifSizeT uniqueID{};
+};
+
+
+
+
 
 
 

@@ -1,5 +1,6 @@
 #include "alif.h"
 
+#include "AlifCore_Import.h"
 #include "AlifCore_ModSupport.h"
 #include "AlifCore_ModuleObject.h"
 
@@ -7,6 +8,12 @@
 
 
 
+AlifTypeObject _alifModuleDefType_ = { // 24
+	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	"تعريف-الوحدة",
+	sizeof(AlifModuleDef),
+	0,
+};
 
 
 
@@ -15,8 +22,14 @@
 
 
 
-
-
+AlifObject* alifModuleDef_init(AlifModuleDef* def) { // 45
+	if (def->base.index == 0) {
+		ALIF_SET_REFCNT(def, 1);
+		ALIF_SET_TYPE(def, &_alifModuleDefType_);
+		def->base.index = alifImport_getNextModuleIndex();
+	}
+	return (AlifObject*)def;
+}
 
 
 
@@ -26,7 +39,7 @@
 
 AlifObject* alifModule_createInitialized(AlifModuleDef* _module) { // 209
 
-	const wchar_t* name{};
+	const char* name{};
 	AlifModuleObject* m{};
 
 	if (!alifModuleDef_init(_module)) return nullptr;
@@ -37,7 +50,7 @@ AlifObject* alifModule_createInitialized(AlifModuleDef* _module) { // 209
 		return nullptr;
 	}
 	//name = alifImport_resolveNameWithPackageContext(name);
-	if ((m = (AlifModuleObject*)alifNew_module(name)) == nullptr) return nullptr;
+	if ((m = (AlifModuleObject*)alifModule_new(name)) == nullptr) return nullptr;
 
 	if (_module->size > 0) {
 		m->state = alifMem_dataAlloc(_module->size);
@@ -46,7 +59,7 @@ AlifObject* alifModule_createInitialized(AlifModuleDef* _module) { // 209
 			ALIF_DECREF(m);
 			return nullptr;
 		}
-		//memset(m->state, 0, _module->size);
+		memset(m->state, 0, _module->size);
 	}
 
 	if (_module->methods != nullptr) {
@@ -54,12 +67,6 @@ AlifObject* alifModule_createInitialized(AlifModuleDef* _module) { // 209
 			ALIF_DECREF(m);
 			return nullptr;
 		}
-	}
-	if (_module->doc != nullptr) {
-		//if (alifModule_setDocString((AlifObject*)m, _module->doc) != 0) {
-		//	ALIF_DECREF(m);
-		//	return nullptr;
-		//}
 	}
 	m->def = _module;
 
