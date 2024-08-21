@@ -8,7 +8,7 @@
 
 
 
-
+AlifObject* alifModule_new(const char*); // 20
 
 
 

@@ -27,6 +27,8 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FileUtils.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FreeList.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GetOption.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GlobalObjects.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GlobalString.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Import.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_InitConfig.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Interpreter.h" />

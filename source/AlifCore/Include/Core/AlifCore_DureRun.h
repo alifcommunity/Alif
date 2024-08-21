@@ -4,7 +4,7 @@
 #include "AlifCore_Parser.h"
 #include "AlifCore_Thread.h"
 #include "AlifCore_Import.h"
-//#include "AlifCore_UString.h"
+#include "AlifCore_UStrObject.h"
 
 
 
@@ -45,6 +45,8 @@ public:
 	ImportDureRunState imports{};
 
 	RefTracerDureRunState refTracer{};
+
+	AlifStaticObjects staticObjects{};
 
 	AlifInterpreter mainInterpreter{};
 };

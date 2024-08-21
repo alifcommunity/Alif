@@ -24,6 +24,26 @@
 #define ALIF_CAST(_type, _expr) ((_type)(_expr))
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+typedef AlifSizeT AlifHashT;
+
+
+
+
+
+
+
 #if defined(_MSC_VER)
 /* ignore warnings if the compiler decides not to inline a function */
 #  pragma warning(disable: 4710)
