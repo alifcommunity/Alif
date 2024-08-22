@@ -11,4 +11,12 @@ public:
 	AlifThread base{};
 
 	LListNode memFreeQueue{};
+
+
+	class {
+	public:
+		AlifSizeT* refCounts{};
+		AlifSizeT size{};
+		AlifIntT isFinalized{};
+	} types{};
 };

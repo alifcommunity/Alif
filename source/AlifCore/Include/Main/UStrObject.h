@@ -16,12 +16,10 @@ using AlifUCS1 = uint8_t;
 
 
 
+extern AlifTypeObject _alifUStrType_;
+
+
 AlifObject* alifUStr_fromString(const char*); // 129
-
-
-
-
-
 
 
 
@@ -93,7 +91,7 @@ public:
 	char* utf8;
 };
 
-class AlifUnicodeObject { // 164
+class AlifUStrObject { // 164
 public:
 	AlifCompactUStrObject base;
 	union {
@@ -105,14 +103,25 @@ public:
 };
 
 
-#define ALIFASCIIOBJECT_CAST(op) ALIF_CAST(AlifASCIIObject*, (op)) // 175
+// 175
+#define ALIFASCIIOBJECT_CAST(_op) ALIF_CAST(AlifASCIIObject*, (_op))
+#define ALIFCOMPACTUSTROBJECT_CAST(_op) ALIF_CAST(AlifCompactUStrObject*, (_op)))
+#define ALIFUSTROBJECT_CAST(_op) ALIF_CAST(AlifUStrObject*, (_op))
 
+static inline unsigned int alifUStr_isASCII(AlifObject* op) { // 211
+	return ALIFASCIIOBJECT_CAST(op)->state.ascii;
+}
+#define ALIFUSTR_IS_ASCII(op) alifUStr_isASCII(ALIFOBJECT_CAST(op))
 
+static inline AlifUIntT alifUstr_isCompact(AlifObject* _op) { // 218
+	return ALIFASCIIOBJECT_CAST(_op)->state.compact;
+}
+#define ALIFUSTR_IS_COMPACT(_op) alifUstr_isCompact(ALIFOBJECT_CAST(_op))
 
-
-
-
-
+static inline int alifUStr_isCompactASCII(AlifObject* _op) { // 225
+	return (ALIFASCIIOBJECT_CAST(_op)->state.ascii and ALIFUSTR_IS_COMPACT(_op));
+}
+#define ALIFUSTR_IS_COMPACT_ASCII(_op) alifUStr_isCompactASCII(ALIFOBJECT_CAST(_op))
 
 
 
@@ -121,3 +130,126 @@ enum AlifUStrKind_ { // 230
 	AlifUStr_2Byte_Kind = 2,
 	AlifUStr_4Byte_Kind = 4
 };
+
+
+
+#define ALIFUSTR_KIND(_op) ALIF_RVALUE(ALIFASCIIOBJECT_CAST(_op)->state.kind) // 243
+
+static inline void* alifUStr_compactData(AlifObject* _op) { // 246
+	if (ALIFUSTR_IS_ASCII(_op)) {
+		return ALIF_STATIC_CAST(void*, (ALIFASCIIOBJECT_CAST(_op) + 1));
+	}
+	return ALIF_STATIC_CAST(void*, (_op + 1));
+}
+
+static inline void* alifUStr_NonCompactData(AlifObject* op) { // 253
+	void* data;
+	data = ALIFUSTROBJECT_CAST(op)->data.any;
+	return data;
+}
+
+
+static inline void* alifUStr_data(AlifObject* op) { // 261
+	if (ALIFUSTR_IS_COMPACT(op)) {
+		return alifUStr_compactData(op);
+	}
+	return alifUStr_NonCompactData(op);
+}
+#define ALIFUSTR_DATA(op) alifUStr_data(ALIFOBJECT_CAST(op))
+
+
+// 274
+#define ALIFUSTR_1BYTE_DATA(op) ALIF_STATIC_CAST(AlifUCS1*, ALIFUSTR_DATA(op))
+#define ALIFUSTR_2BYTE_DATA(op) ALIF_STATIC_CAST(AlifUCS2*, ALIFUSTR_DATA(op))
+#define ALIFUSTR_4BYTE_DATA(op) ALIF_STATIC_CAST(AlifUCS4*, ALIFUSTR_DATA(op))
+
+
+
+static inline AlifSizeT alifUStr_getLength(AlifObject* _op) { // 279
+	return ALIFASCIIOBJECT_CAST(_op)->length;
+}
+#define ALIFUSTR_GET_LENGTH(_op) alifUStr_getLength(ALIFOBJECT_CAST(_op))
+
+
+static inline void alifUStr_write(int kind, void* data,
+	AlifSizeT index, AlifUCS4 value) { // 289
+	if (kind == AlifUStrKind_::AlifUStr_1Byte_Kind) {
+		ALIF_STATIC_CAST(AlifUCS1*, data)[index] = ALIF_STATIC_CAST(AlifUCS1, value);
+	}
+	else if (kind == AlifUStrKind_::AlifUStr_2Byte_Kind) {
+		ALIF_STATIC_CAST(AlifUCS2*, data)[index] = ALIF_STATIC_CAST(AlifUCS2, value);
+	}
+	else {
+		ALIF_STATIC_CAST(AlifUCS4*, data)[index] = value;
+	}
+}
+#define ALIFUSTR_WRITE(kind, data, index, value) \
+    alifUStr_write(ALIF_STATIC_CAST(int, kind), ALIF_CAST(void*, data), (index), ALIF_STATIC_CAST(AlifUCS4, value))
+
+static inline AlifUCS4 alifUStr_read(int kind,
+	const void* data, AlifSizeT index) { // 313
+	if (kind == AlifUStrKind_::AlifUStr_1Byte_Kind) {
+		return ALIF_STATIC_CAST(const AlifUCS1*, data)[index];
+	}
+	if (kind == AlifUStrKind_::AlifUStr_2Byte_Kind) {
+		return ALIF_STATIC_CAST(const AlifUCS2*, data)[index];
+	}
+	return ALIF_STATIC_CAST(const AlifUCS4*, data)[index];
+}
+#define ALIFUSTR_READ(kind, data, index) \
+    alifUStr_read(ALIF_STATIC_CAST(int, kind), ALIF_STATIC_CAST(const void*, data), (index))
+
+
+static inline AlifUCS4 alifUStr_maxCharValue(AlifObject* _op) { // 359
+	AlifIntT kind{};
+
+	if (ALIFUSTR_IS_ASCII(_op)) {
+		return 0x7fU;
+	}
+
+	kind = ALIFUSTR_KIND(_op);
+	if (kind == AlifUStrKind_::AlifUStr_1Byte_Kind) {
+		return 0xffU;
+	}
+	if (kind == AlifUStrKind_::AlifUStr_2Byte_Kind) {
+		return 0xffffU;
+	}
+	return 0x10ffffU;
+}
+#define ALIFUSTR_MAX_CHAR_VALUE(op) alifUStr_maxCharValue(ALIFOBJECT_CAST(op))
+
+
+
+
+
+
+
+
+
+class AlifUStrWriter { // 496
+public:
+	AlifObject* buffer{};
+	void* data{};
+	int kind{};
+	AlifUCS4 maxChar{};
+	AlifSizeT size{};
+	AlifSizeT pos{};
+	AlifSizeT minLength{};
+	AlifUCS4 minChar{};
+	unsigned char overAllocate{};
+	unsigned char readOnly{};
+};
+
+
+
+// 530
+#define ALIFUSTRWRITER_PREPARE(_writer, _length, _maxChar)             \
+    (((_maxChar) <= (_writer)->maxChar                                  \
+      && (_length) <= (_writer)->size - (_writer)->pos)                  \
+     ? 0                                                              \
+     : (((_length) == 0)                                               \
+        ? 0                                                           \
+        : alifUStrWriter_prepareInternal((_writer), (_length), (_maxChar))))
+
+
+AlifIntT alifUStrWriter_prepareInternal(AlifUStrWriter*, AlifSizeT, AlifUCS4);

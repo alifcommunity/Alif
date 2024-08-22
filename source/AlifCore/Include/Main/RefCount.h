@@ -53,6 +53,33 @@ static inline void alifSet_refCount(AlifObject* ob, AlifSizeT refcnt) { // 115
 }
 #define ALIF_SET_REFCNT(_ob, _refcnt) alifSet_refCount(ALIFOBJECT_CAST(_ob), (_refcnt))
 
+void alif_dealloc(AlifObject*); // 196
+
+static inline ALIF_ALWAYS_INLINE void alif_increaseRef(AlifObject* op) { // 211
+	uint32_t local = alifAtomic_loadUint32Relaxed(&op->refLocal);
+	uint32_t newLocal = local + 1;
+	if (newLocal == 0) {
+		// do nothing
+		return;
+	}
+	if (alif_isOwnedByCurrentThread(op)) {
+		alifAtomic_storeUint32Relaxed(&op->refLocal, newLocal);
+	}
+	else {
+		alifAtomic_addSize(&op->refShared, (1 << ALIF_REF_SHARED_SHIFT));
+	}
+#ifdef SIZEOF_VOID_P > 4
+	//ALIF_UINT32_T curRefCnt = op->refCntSplit[ALIF_BIG_ENDIAN];
+	//ALIF_UINT32_T newRefCnt = curRefCnt + 1;
+	//if (newRefCnt == 0) {
+	//	// do nothing
+	//	return;
+	//}
+	//op->refCntSplit[ALIF_BIG_ENDIAN] = newRefCnt;
+#endif
+}
+#define ALIF_INCREF(_op) alif_increaseRef(ALIFOBJECT_CAST(_op))
+
 
 
 void alif_decRefShared(AlifObject*); // 269
@@ -84,6 +111,12 @@ static inline void alif_decreaseRef(AlifObject* _op) { // 319
 
 
 
+static inline void alif_xdecreaseRef(AlifObject* _op) { // 456
+	if (_op != nullptr) {
+		ALIF_DECREF(_op);
+	}
+}
+#define ALIF_XDECREF(op) alif_xdecreaseRef(ALIFOBJECT_CAST(op))
 
 
 
@@ -91,8 +124,3 @@ static inline void alif_decreaseRef(AlifObject* _op) { // 319
 
 
 
-
-
-
-
-void alif_dealloc(AlifObject*); // 192

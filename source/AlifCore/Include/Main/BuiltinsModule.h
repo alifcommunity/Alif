@@ -1,10 +1,10 @@
 #pragma once
 
-//#include "AlifCore_ModSupport.h"
+#include "AlifCore_ModSupport.h"
 
 
 
-#define BUILTIN_PRINT_METHODDEF {L"اطبع", ALIF_CPPFUNCTION_CAST(builtin_print), METHOD_FASTCALL|METHOD_KEYWORDS} // 900
+#define BUILTIN_PRINT_METHODDEF {"اطبع", ALIF_CPPFUNCTION_CAST(builtin_print), METHOD_FASTCALL | METHOD_KEYWORDS} // 900
 
 
 static AlifObject* builtin_print(AlifObject* module, AlifObject** args,
@@ -23,4 +23,5 @@ static AlifObject* builtin_print(AlifObject* module, AlifObject** args,
 
 //exit:
 	//return ALIF_NONE;
+	return (AlifObject*)1;
 }

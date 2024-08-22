@@ -21,6 +21,14 @@ public:
 	AlifObject* copy;
 };
 
+// 60
+#define ALIFMODULEDEF_HEAD_INIT {	\
+    ALIFOBJECT_HEAD_INIT(nullptr),	\
+    nullptr,						\
+    0,								\
+    nullptr,						\
+  }
+
 
 class AlifModuleDefSlot { // 69
 public:
@@ -35,7 +43,7 @@ public:
 	const char* name{};
 	const char* doc{};
 	AlifSizeT size{};
-	AlifMethod* methods{};
+	AlifMethodDef* methods{};
 	AlifModuleDefSlot* slots{};
 	TraverseProc traverse{};
 	Inquiry clear{};

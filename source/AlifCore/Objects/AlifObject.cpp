@@ -1,6 +1,9 @@
 #include "alif.h"
 
 #include "AlifCore_BiaseRefCount.h"
+#include "AlifCore_FreeList.h"
+#include "AlifCore_InitConfig.h"
+#include "AlifCore_Object.h"
 #include "AlifCore_State.h"
 
 
@@ -73,7 +76,24 @@ void alif_mergeZeroLocalRefcount(AlifObject* _op) { // 374
 
 
 
+static inline void new_reference(AlifObject* _op) { // 2405
+	_op->threadID = alif_threadId();
+	_op->padding = 0;
+	_op->mutex = {.bits = 0};
+	_op->gcBits = 0;
+	_op->refLocal = 1;
+	_op->refShared = 0;
 
+	RefTracerDureRunState* tracer = &_alifDureRun_.refTracer;
+	if (tracer->tracerFunc != nullptr) {
+		void* data = tracer->tracerData;
+		tracer->tracerFunc(_op, AlifRefTracerEvent_::Alif_RefTracer_Create, data);
+	}
+}
+
+void alif_newReference(AlifObject* _op) { // 2429
+	new_reference(_op);
+}
 
 
 

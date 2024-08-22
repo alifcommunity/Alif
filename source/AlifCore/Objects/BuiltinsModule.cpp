@@ -38,7 +38,7 @@ AlifObject* alifBuiltin_init(AlifInterpreter* _interpreter) { // 3215
 	mod = alifModule_createInitialized(&_alifBuiltinsModule_);
 	if (mod == nullptr) return nullptr;
 
-	dict = alifModule_getDict(mod);
+	//dict = alifModule_getDict(mod);
 
 	return mod;
 }

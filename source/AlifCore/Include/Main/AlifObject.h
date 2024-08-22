@@ -149,10 +149,20 @@ extern AlifTypeObject _alifTypeType_; // 405
 
 
 
+
+
+#define ALIF_TPFLAGS_HEAPTYPE (1UL << 9) // 524
+
+
+
+
+
+
+
 /* -------------------------------------------------------------------------------------------------------------- */
 
 
-
+void alif_newReference(AlifObject*); // 5
 
 
 
@@ -163,12 +173,15 @@ public:
 	const char* name{};
 	AlifSizeT basicSize{}, itemSize{};
 	Destructor dealloc{};
+
+	unsigned long flags{};
 };
 
 
 
 
 class AlifHeapTypeObject { // 255
+public:
 	AlifTypeObject type{};
 	//AlifAsyncMethods async;
 	//AlifNumberMethods number;
@@ -181,8 +194,15 @@ class AlifHeapTypeObject { // 255
 };
 
 
-
-
+// 338
+#define ALIF_SETREF(_dst, _src) \
+    do { \
+        AlifObject **tmpDstPtr = ALIF_CAST(AlifObject**, &(_dst)); \
+        AlifObject *tmpOldDst = (*tmpDstPtr); \
+        AlifObject *tmpSrc = ALIFOBJECT_CAST(_src); \
+        memcpy(tmpDstPtr, &tmpSrc, sizeof(AlifObject*)); \
+        ALIF_DECREF(tmpOldDst); \
+    } while (0)
 
 
 
@@ -193,3 +213,4 @@ enum AlifRefTracerEvent_ {
 };
 
 typedef AlifIntT (*AlifRefTracer)(AlifObject*, AlifRefTracerEvent_ event, void*); // 526
+

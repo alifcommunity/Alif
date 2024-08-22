@@ -2,6 +2,7 @@
 
 #include "AlifCore_EvalState.h"
 #include "AlifCore_ThreadState.h"
+#include "AlifCore_TypeID.h"
 
 
 class AlifInterpreter { // 95
@@ -31,6 +32,8 @@ public:
 	AlifConfig config{};
 
 	//AlifFrameEvalFunction evalFrame{};
+
+	AlifTypeIDPool typeIDs{};
 
 	//AlifGCDureRun gc{};
 

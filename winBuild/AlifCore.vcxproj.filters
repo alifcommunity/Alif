@@ -180,6 +180,21 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GlobalObjects.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Object.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_TypeID.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\ASCIILib.h">
+      <Filter>Header Files\StringLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS1Lib.h">
+      <Filter>Header Files\StringLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\FindMaxChar.h">
+      <Filter>Header Files\StringLib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\AlifCore\Objects\AlifMemory.cpp">
@@ -228,6 +243,9 @@
       <Filter>Object Files</Filter>
     </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\TypeObject.cpp">
+      <Filter>Object Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\TypeID.cpp">
       <Filter>Object Files</Filter>
     </ClCompile>
   </ItemGroup>

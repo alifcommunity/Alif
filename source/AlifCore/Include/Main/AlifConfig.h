@@ -56,6 +56,7 @@
 #define SIZEOF_WCHAR_T 2
 #define NT_THREADS
 #define WITH_FREELISTS 1
+#define SIZEOF_LONG 4
 
 /* ------------------------------ مترجم مايكروسوفت ------------------------------ */
 #ifdef _MSC_VER
@@ -136,6 +137,7 @@
 #define SIZEOF_WCHAR_T 4
 #define USE_PTHREADS
 #define HAVE_PTHREAD_H 1
+#define SIZEOF_LONG 8
 
 #endif
 
