@@ -118,7 +118,7 @@ static inline AlifUIntT alifUstr_isCompact(AlifObject* _op) { // 218
 }
 #define ALIFUSTR_IS_COMPACT(_op) alifUstr_isCompact(ALIFOBJECT_CAST(_op))
 
-static inline int alifUStr_isCompactASCII(AlifObject* _op) { // 225
+static inline AlifIntT alifUStr_isCompactASCII(AlifObject* _op) { // 225
 	return (ALIFASCIIOBJECT_CAST(_op)->state.ascii and ALIFUSTR_IS_COMPACT(_op));
 }
 #define ALIFUSTR_IS_COMPACT_ASCII(_op) alifUStr_isCompactASCII(ALIFOBJECT_CAST(_op))
@@ -253,3 +253,13 @@ public:
 
 
 AlifIntT alifUStrWriter_prepareInternal(AlifUStrWriter*, AlifSizeT, AlifUCS4);
+
+
+
+// 549
+#define ALIFUSTRWRITER_PREPAREKIND(_writer, _kind)                    \
+    ((_kind) <= (_writer)->kind                                         \
+     ? 0                                                              \
+     : alifUStrWriter_prepareKindInternal((_writer), (_kind)))
+
+AlifIntT alifUStrWriter_prepareKindInternal(AlifUStrWriter*, AlifIntT); // 557

@@ -5,7 +5,9 @@
 #include "AlifCore_UStrObject.h"
 
 
-
+// Forward Declaration
+static inline AlifIntT alifUStrWriter_writeCharInline(AlifUStrWriter*, AlifUCS4);
+static inline void alifUStrWriter_initWithBuffer(AlifUStrWriter*, AlifObject*);
 
 #define MAX_UNICODE 0x10ffff // 106
 
@@ -23,27 +25,28 @@
 
 // 151
 #define ALIFUSTR_HAS_UTF8_MEMORY(_op)                  \
-    ((!ALIFUSTR_IS_COMPACT_ASCII(_op)                   \
-      and ALIFUSTR_UTF8(_op) and ALIFUSTR_UTF8(_op) != ALIFUSTR_DATA(_op)))
+    (( !ALIFUSTR_IS_COMPACT_ASCII(_op) and ALIFUSTR_UTF8(_op)		\
+	and ALIFUSTR_UTF8(_op) != ALIFUSTR_DATA(_op) ))
+
 
 // 161
 #define ALIFUSTR_CONVERT_BYTES(from_type, to_type, begin, end, to) \
-    do {                                                \
-        to_type *_to = (to_type *)(to);                 \
-        const from_type *_iter = (const from_type *)(begin);\
-        const from_type *_end = (const from_type *)(end);\
+    do {									\
+        to_type* to_ = (to_type*)(to);                 \
+        const from_type* _iter = (const from_type*)(begin);\
+        const from_type* _end = (const from_type*)(end);\
         AlifSizeT n = (_end) - (_iter);                \
         const from_type *_unrolled_end =                \
             _iter + ALIF_SIZE_ROUND_DOWN(n, 4);          \
         while (_iter < (_unrolled_end)) {               \
-            _to[0] = (to_type) _iter[0];                \
-            _to[1] = (to_type) _iter[1];                \
-            _to[2] = (to_type) _iter[2];                \
-            _to[3] = (to_type) _iter[3];                \
-            _iter += 4; _to += 4;                       \
+            to_[0] = (to_type) _iter[0];                \
+            to_[1] = (to_type) _iter[1];                \
+            to_[2] = (to_type) _iter[2];                \
+            to_[3] = (to_type) _iter[3];                \
+            _iter += 4; to_ += 4;                       \
         }                                               \
-        while (_iter < (_end)) *_to++ = (to_type) *_iter++;       \
-    } while (0);
+        while (_iter < (_end)) *to_++ = (to_type) *_iter++;       \
+    } while (0)
 
 
 #define LATIN1 ALIF_LATIN1_CHR // 180
@@ -67,6 +70,45 @@ static inline AlifObject* unicode_getEmpty() { // 214
 
 // 360
 #define ALIF_RETURN_UNICODE_EMPTY	return unicode_getEmpty();
+
+
+
+
+
+
+AlifErrorHandler_ alif_getErrorHandler(const char* _errors) { // 488
+	if (_errors == nullptr or strcmp(_errors, "strict") == 0) {
+		return AlifErrorHandler_::Alif_Error_Strict;
+	}
+	if (strcmp(_errors, "surrogateescape") == 0) {
+		return AlifErrorHandler_::Alif_Error_SurrogateEscape;
+	}
+	if (strcmp(_errors, "replace") == 0) {
+		return AlifErrorHandler_::Alif_Error_Replace;
+	}
+	if (strcmp(_errors, "ignore") == 0) {
+		return AlifErrorHandler_::Alif_Error_Ignore;
+	}
+	if (strcmp(_errors, "backslashreplace") == 0) {
+		return AlifErrorHandler_::Alif_Error_BackSlashReplace;
+	}
+	if (strcmp(_errors, "surrogatepass") == 0) {
+		return AlifErrorHandler_::Alif_Error_SurrogatePass;
+	}
+	if (strcmp(_errors, "xmlcharrefreplace") == 0) {
+		return AlifErrorHandler_::Alif_Error_XMLCharRefReplace;
+	}
+	return AlifErrorHandler_::Alif_Error_Other;
+}
+
+
+
+
+
+
+
+
+
 
 // 976
 #include "StringLib/ASCIILib.h"
@@ -106,7 +148,7 @@ static AlifObject* resize_compact(AlifObject* unicode, AlifSizeT length) { // 10
 
 	if (ALIFUSTR_HAS_UTF8_MEMORY(unicode)) {
 		alifMem_dataFree(ALIFUSTR_UTF8(unicode));
-		ALIFUSTR_UTF8(unicode) = NULL;
+		ALIFUSTR_UTF8(unicode) = nullptr;
 		ALIFUSTR_UTF8_LENGTH(unicode) = 0;
 	}
 
@@ -339,6 +381,95 @@ AlifObject* alifUStr_fromString(const char* u) { // 2084
 
 
 
+static AlifIntT unicodeDecode_callErrorHandlerWriter(
+	const char* errors, AlifObject** errorHandler,
+	const char* encoding, const char* reason,
+	const char** input, const char** inend, AlifSizeT* startinpos,
+	AlifSizeT* endinpos, AlifObject** exceptionObject, const char** inptr,
+	AlifUStrWriter* writer) { // 4436
+	static const char* argparse = "Un;decoding error handler must return (str, int) tuple";
+
+	AlifObject* restuple = nullptr;
+	AlifObject* repunicode = nullptr;
+	AlifSizeT insize{};
+	AlifSizeT newpos{};
+	AlifSizeT replen{};
+	AlifSizeT remain{};
+	AlifObject* inputobj = nullptr;
+	int need_to_grow = 0;
+	const char* new_inptr{};
+
+	if (*errorHandler == nullptr) {
+		*errorHandler = alifCodec_lookupError(errors);
+		if (*errorHandler == nullptr)
+			goto onError;
+	}
+
+	make_decodeException(exceptionObject,
+		encoding,
+		*input, *inend - *input,
+		*startinpos, *endinpos,
+		reason);
+	if (*exceptionObject == nullptr)
+		goto onError;
+
+	restuple = alifObject_callOneArg(*errorHandler, *exceptionObject);
+	if (restuple == nullptr)
+		goto onError;
+	if (!ALIFTUPLE_CHECK(restuple)) {
+		//alifErr_setString(alifExcTypeError, &argparse[3]);
+		goto onError;
+	}
+	if (!alifArg_parseTuple(restuple, argparse, &repunicode, &newpos))
+		goto onError;
+
+	inputobj = alifUStrDecodeError_getObject(*exceptionObject);
+	if (!inputobj)
+		goto onError;
+	remain = *inend - *input - *endinpos;
+	*input = ALIFBYTES_AS_STRING(inputobj);
+	insize = ALIFBYTES_GET_SIZE(inputobj);
+	*inend = *input + insize;
+
+	ALIF_DECREF(inputobj);
+
+	if (newpos < 0)
+		newpos = insize + newpos;
+	if (newpos<0 || newpos>insize) {
+		//alifErr_format(alifExcIndexError, "position %zd from error handler out of bounds", newpos);
+		goto onError;
+	}
+
+	replen = ALIFUSTR_GET_LENGTH(repunicode);
+	if (replen > 1) {
+		writer->minLength += replen - 1;
+		need_to_grow = 1;
+	}
+	new_inptr = *input + newpos;
+	if (*inend - new_inptr > remain) {
+		writer->minLength += *inend - new_inptr - remain;
+		need_to_grow = 1;
+	}
+	if (need_to_grow) {
+		writer->overAllocate = 1;
+		if (ALIFUSTRWRITER_PREPARE(writer, writer->minLength - writer->pos,
+			ALIFUSTR_MAX_CHAR_VALUE(repunicode)) == -1)
+			goto onError;
+	}
+	if (alifUStrWriter_writeStr(writer, repunicode) == -1)
+		goto onError;
+
+	*endinpos = newpos;
+	*inptr = new_inptr;
+
+	/* we made it! */
+	ALIF_DECREF(restuple);
+	return 0;
+
+onError:
+	ALIF_XDECREF(restuple);
+	return -1;
+}
 
 
 
@@ -462,8 +593,6 @@ static AlifIntT unicode_decodeUTF8Impl(AlifUStrWriter* writer, const char* start
 			endInpos = startInPos + ch_ - 1;
 			break;
 		default:
-			// ch doesn't fit into kind, so change the buffer kind to write
-			// the character
 			if (alifUStrWriter_writeCharInline(writer, ch_) < 0)
 				goto onError;
 			continue;
@@ -601,8 +730,6 @@ AlifIntT alif_decodeUTF8Ex(const char* s, AlifSizeT size, wchar_t** wstr, AlifUS
 		return -3;
 	}
 
-	/* Note: size will always be longer than the resulting Unicode
-	   character count */
 	if (ALIF_SIZET_MAX / (AlifSizeT)sizeof(wchar_t) - 1 < size) {
 		return -1;
 	}
@@ -817,6 +944,21 @@ AlifIntT alifUStrWriter_prepareInternal(AlifUStrWriter* _writer, AlifSizeT _leng
 #undef OVERALLOCATE_FACTOR
 }
 
+AlifIntT alifUStrWriter_prepareKindInternal(AlifUStrWriter* _writer, AlifIntT _kind) { // 13526
+	AlifUCS4 maxChar{};
+
+	switch (_kind)
+	{
+	case AlifUStrKind_::AlifUStr_1Byte_Kind: maxChar = 0xff; break;
+	case AlifUStrKind_::AlifUStr_2Byte_Kind: maxChar = 0xffff; break;
+	case AlifUStrKind_::AlifUStr_4Byte_Kind: maxChar = MAX_UNICODE; break;
+	default:
+		ALIF_UNREACHABLE();
+	}
+
+	return alifUStrWriter_prepareInternal(_writer, 0, maxChar);
+}
+
 static inline AlifIntT alifUStrWriter_writeCharInline(AlifUStrWriter* writer, AlifUCS4 ch) { // 13547
 	if (ALIFUSTRWRITER_PREPARE(writer, 1, ch) < 0)
 		return -1;
@@ -839,3 +981,5 @@ AlifTypeObject _alifUStrType_ = { // 15235
 	.basicSize =  sizeof(AlifUStrObject),
 	.itemSize = 0,
 };
+
+

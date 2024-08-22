@@ -35,7 +35,7 @@ AlifObject* alifModuleDef_init(AlifModuleDef* def) { // 45
 
 
 AlifObject* alifModule_new(const char* name) { // 137
-	AlifObject* nameobj, * module;
+	AlifObject* nameobj{}, * module{};
 	nameobj = alifUStr_fromString(name);
 	if (nameobj == nullptr)
 		return nullptr;

@@ -163,7 +163,7 @@ extern AlifTypeObject _alifTypeType_; // 405
 
 
 void alif_newReference(AlifObject*); // 5
-
+void alif_newReferenceNoTotal(AlifObject*); // 6
 
 
 

@@ -97,7 +97,9 @@ void alif_newReference(AlifObject* _op) { // 2429
 
 
 
-
+void alif_newReferenceNoTotal(AlifObject* _op) { //2438
+	new_reference(_op);
+}
 
 
 

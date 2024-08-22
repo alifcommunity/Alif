@@ -16,6 +16,9 @@ enum AlifErrorHandler_ { // 26
 };
 
 
+AlifErrorHandler_ alif_getErrorHandler(const char*); // 39
+
+
 AlifIntT alif_decodeLocaleEx(const char*, wchar_t**, AlifUSizeT*,
 	const char**, AlifIntT, AlifErrorHandler_); // 42
 

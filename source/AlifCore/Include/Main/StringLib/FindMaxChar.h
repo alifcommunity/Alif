@@ -19,17 +19,17 @@ STRINGLIB(findMaxChar)(const STRINGLIB_CHAR* _begin, const STRINGLIB_CHAR* _end)
 	const unsigned char* p_ = (const unsigned char*)_begin;
 	const unsigned char* end_ = (const unsigned char*)_end;
 
-	while (p_ < _end) {
+	while ((STRINGLIB_CHAR*)p_ < _end) {
 		if (ALIF_IS_ALIGNED(p_, ALIGNOF_SIZE_T)) {
 			const unsigned char* _p = p_;
-			while (_p + SIZEOF_SIZE_T <= _end) {
+			while ((STRINGLIB_CHAR*)_p + SIZEOF_SIZE_T <= _end) {
 				size_t value = *(const size_t*)_p;
 				if (value & UCS1_ASCII_CHAR_MASK)
 					return 255;
 				_p += SIZEOF_SIZE_T;
 			}
 			p_ = _p;
-			if (p_ == _end)
+			if ((STRINGLIB_CHAR*)p_ == _end)
 				break;
 		}
 		if (*p_++ & 0x80)
