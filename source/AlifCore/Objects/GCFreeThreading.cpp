@@ -7,14 +7,8 @@
 
 
 
-
-
-
-
-
-
-
-
-AlifIntT alifObject_isGC(AlifObject* obj) { // 1748
-	return _alifObject_isGC(obj);
+AlifIntT alifObject_isGC(AlifObject* _obj) { // 1748
+	return _alifObject_isGC(_obj);
 }
+
+

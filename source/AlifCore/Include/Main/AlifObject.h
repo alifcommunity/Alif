@@ -50,6 +50,8 @@ public:
 	AlifSizeT objSize{};
 };
 
+#define ALIFVAROBJECT_CAST(_op) ALIF_CAST(AlifVarObject*, (_op)) // 163
+
 uintptr_t alif_getThreadLocalAddr(void); // 171
 
 static inline uintptr_t alif_threadId(void) { // 173
@@ -128,6 +130,15 @@ static inline void alif_setType(AlifObject* _obj, AlifTypeObject* _type) { // 28
 }
 # define ALIF_SET_TYPE(_ob, _type) alif_setType(ALIFOBJECT_CAST(_ob), _type)
 
+
+static inline void alif_setSize(AlifVarObject* _ob, AlifSizeT _size) { // 289
+#ifdef ALIF_GIL_DISABLED
+	alifAtomic_store_ssizeRelaxed(&_ob->objSize, _size);
+#else
+	_ob->objSize = _size;
+#endif
+}
+#  define ALIF_SETSIZE(_ob, _size) alif_setSize(ALIFVAROBJECT_CAST(_ob), (_size)) // 300
 
 
 
@@ -222,6 +233,7 @@ public:
 	//AlifSequenceMethods sequence;
 	//AlifBufferProcs Buffer;
 	AlifObject* name{}, * slots{}, * qualname{};
+	class DictKeysObject* cachedKeys;
 	AlifObject* Module{};
 	AlifSizeT uniqueID{};
 };

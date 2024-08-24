@@ -201,6 +201,11 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GC.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\ListObject.h">
+      <Filter>Object Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Dict.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\DictObject.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\AlifCore\Objects\AlifMemory.cpp">
@@ -255,6 +260,12 @@
       <Filter>Object Files</Filter>
     </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\GCFreeThreading.cpp">
+      <Filter>Object Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\ListObject.cpp">
+      <Filter>Object Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\GC.cpp">
       <Filter>Object Files</Filter>
     </ClCompile>
   </ItemGroup>

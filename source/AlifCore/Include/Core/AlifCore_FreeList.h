@@ -26,6 +26,7 @@ public:
 
 
 class AlifFreeLists { // 40
+public:
 #ifdef WITH_FREELISTS
 	AlifFreeList floats;
 	AlifFreeList tuples[ALIFTUPLE_MAXSAVESIZE];
@@ -42,3 +43,44 @@ class AlifFreeLists { // 40
 	char _unused;  // Empty structs are not allowed.
 #endif
 };
+
+// ------------------------------------------- AlifCore_FreeList ------------------------------------------ //
+
+#include "AlifCore_State.h"
+
+static inline class AlifFreeLists* alifFreeLists_get(void) // 16
+{
+	AlifThread* tState = alifThread_get();
+#ifdef ALIF_DEBUG
+	alif_ensureTstateNotNULL(tState);
+#endif
+	
+#ifdef ALIF_GIL_DISABLED
+	return &((AlifThreadImpl*)tState)->freeLists;
+#else
+	return nullptr;
+	//return &tState->interp->objectState.freeLists;
+#endif
+}
+
+#define ALIF_FREELIST_POP(TYPE, NAME) ALIF_CAST(TYPE*, alifFreeList_pop(&alifFreeLists_get()->NAME)) // 47
+
+
+static inline void* alifFreeList_popNoStats(class AlifFreeList* _fl) // 80
+{
+	void* obj_ = _fl->freeList;
+	if (obj_ != nullptr) {
+		_fl->freeList = *(void**)obj_;
+		_fl->size--;
+	}
+	return obj_;
+}
+
+static inline AlifObject* alifFreeList_pop(class AlifFreeList* _fl) //  91
+{
+	AlifObject* op_ = (AlifObject*)alifFreeList_popNoStats(_fl);
+	if (op_ != nullptr) {
+		alif_newReference(op_);
+	}
+	return op_;
+}
