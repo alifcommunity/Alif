@@ -149,7 +149,7 @@ static inline void* alifUStr_compactData(AlifObject* _op) { // 246
 	if (ALIFUSTR_IS_ASCII(_op)) {
 		return ALIF_STATIC_CAST(void*, (ALIFASCIIOBJECT_CAST(_op) + 1));
 	}
-	return ALIF_STATIC_CAST(void*, (_op + 1));
+	return ALIF_STATIC_CAST(void*, (ALIFCOMPACTUSTROBJECT_CAST(_op) + 1));
 }
 
 static inline void* alifUStr_NonCompactData(AlifObject* op) { // 253
@@ -226,7 +226,7 @@ static inline AlifUCS4 alifUStr_maxCharValue(AlifObject* _op) { // 359
 	}
 	return 0x10ffffU;
 }
-#define ALIFUSTR_MAX_CHAR_VALUE(op) alifUStr_maxCharValue(ALIFOBJECT_CAST(op))
+#define ALIFUSTR_MAX_CHAR_VALUE(_op) alifUStr_maxCharValue(ALIFOBJECT_CAST(_op))
 
 
 

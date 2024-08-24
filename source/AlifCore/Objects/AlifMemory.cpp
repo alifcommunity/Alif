@@ -487,7 +487,7 @@ void* alifMem_dataAlloc(AlifUSizeT _size) {
 void* alifMem_objAlloc(AlifUSizeT _size) {
 	ALIFMEM_OBJNUMS++;
 
-	return alifMem_alloc(_size);;
+	return alifMem_alloc(_size);
 }
 
 
@@ -567,7 +567,8 @@ static inline void* alif_objToSysAlloc(void* _sourcePtr, AlifUSizeT _distSize) {
 }
 /* ----------------------------------------------------------------------------------- */
 
-void* alifMem_dataRealloc(void* _ptr, AlifUSizeT _size) {
+void* alifMem_dataRealloc(void* _ptr, AlifUSizeT _size)
+{
 	void* sourcePtr = _ptr;
 	AlifUSizeT sourceSize = *((AlifUSizeT*)_ptr - 1);
 	void* distPtr{};

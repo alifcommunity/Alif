@@ -997,11 +997,11 @@ AlifIntT alifUStrWriter_prepareInternal(AlifUStrWriter* _writer, AlifSizeT _leng
 		_writer->buffer = newbuffer;
 	}
 	else if (_maxChar > _writer->maxChar) {
+		AlifObject* a = _writer->buffer;
 		newbuffer = alifUStr_new(_writer->size, _maxChar);
-		if (newbuffer == nullptr)
-			return -1;
-		alifUStr_fastCopyCharacters(newbuffer, 0,
-			_writer->buffer, 0, _writer->pos);
+		if (newbuffer == nullptr) return -1;
+
+		alifUStr_fastCopyCharacters(newbuffer, 0, _writer->buffer, 0, _writer->pos);
 		ALIF_SETREF(_writer->buffer, newbuffer);
 	}
 	alifUStrWriter_update(_writer);
@@ -1025,11 +1025,11 @@ AlifIntT alifUStrWriter_prepareKindInternal(AlifUStrWriter* _writer, AlifIntT _k
 	return alifUStrWriter_prepareInternal(_writer, 0, maxChar);
 }
 
-static inline AlifIntT alifUStrWriter_writeCharInline(AlifUStrWriter* writer, AlifUCS4 ch) { // 13547
-	if (ALIFUSTRWRITER_PREPARE(writer, 1, ch) < 0)
+static inline AlifIntT alifUStrWriter_writeCharInline(AlifUStrWriter* _writer, AlifUCS4 _ch) { // 13547
+	if (ALIFUSTRWRITER_PREPARE(_writer, 1, _ch) < 0)
 		return -1;
-	ALIFUSTR_WRITE(writer->kind, writer->data, writer->pos, ch);
-	writer->pos++;
+	ALIFUSTR_WRITE(_writer->kind, _writer->data, _writer->pos, _ch);
+	_writer->pos++;
 	return 0;
 }
 
