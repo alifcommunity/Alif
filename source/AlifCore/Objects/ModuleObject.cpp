@@ -35,12 +35,12 @@ AlifObject* alifModuleDef_init(AlifModuleDef* def) { // 45
 
 
 AlifObject* alifModule_new(const char* name) { // 137
-	AlifObject* nameobj{}, * module{};
-	nameobj = alifUStr_fromString(name);
-	if (nameobj == nullptr)
+	AlifObject* nameObj{}, * module{};
+	nameObj = alifUStr_fromString(name);
+	if (nameObj == nullptr)
 		return nullptr;
-	module = alifModule_newObject(nameobj);
-	ALIF_DECREF(nameobj);
+	//module = alifModule_newObject(nameobj);
+	ALIF_DECREF(nameObj);
 	return module;
 }
 
@@ -71,10 +71,10 @@ AlifObject* alifModule_createInitialized(AlifModuleDef* _module) { // 209
 	}
 
 	if (_module->methods != nullptr) {
-		if (alifModule_addFunctions((AlifObject*)m, _module->methods) != 0) {
-			ALIF_DECREF(m);
-			return nullptr;
-		}
+		//if (alifModule_addFunctions((AlifObject*)m, _module->methods) != 0) {
+		//	ALIF_DECREF(m);
+		//	return nullptr;
+		//}
 	}
 	m->def = _module;
 

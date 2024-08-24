@@ -101,6 +101,19 @@ void alif_newReferenceNoTotal(AlifObject* _op) { //2438
 	new_reference(_op);
 }
 
+void alif_setImmortalUntracked(AlifObject* _op) { // 2444
+
+	_op->threadID = ALIF_UNOWNED_TID;
+	_op->refLocal = ALIF_IMMORTAL_REFCNT_LOCAL;
+	_op->refShared = 0;
+}
+
+void alif_setImmortal(AlifObject* _op) { // 2463
+	if (alifObject_isGC(_op) and ALIFOBJECT_GC_IS_TRACKED(_op)) {
+		ALIFOBJECT_GC_UNTRACK(_op);
+	}
+	alif_setImmortalUntracked(_op);
+}
 
 
 

@@ -23,7 +23,7 @@ public:
 
 
 
-
+extern void alifType_releaseID(AlifHeapTypeObject*); // 55
 
 
 

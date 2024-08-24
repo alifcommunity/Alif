@@ -4,7 +4,7 @@
 
 
 
-#define ALIFOBJECT_HEAD		AlifObject base // 60
+#define ALIFOBJECT_HEAD		AlifObject objBase // 60
 
 
 #define ALIFOBJECT_HEAD_INIT(_type)		\
@@ -26,7 +26,7 @@
     }
 
 
-#define ALIFOBJECT_VAR_HEAD		AlifVarObject base // 101
+#define ALIFOBJECT_VAR_HEAD		AlifVarObject objBase // 101
 
 
 #define ALIF_UNOWNED_TID		0
@@ -42,12 +42,12 @@ public:
 	AlifTypeObject* type{};
 };
 
-#define ALIFOBJECT_CAST(_op) ALIF_CAST(AlifObject*, (_op)) // 155
+#define ALIFOBJECT_CAST(_op) ALIF_CAST(AlifObject*, _op) // 155
 
 class AlifVarObject { // 157
 public:
-	AlifObject base{};
-	AlifSizeT size{};
+	AlifObject objBase{};
+	AlifSizeT objSize{};
 };
 
 uintptr_t alif_getThreadLocalAddr(void); // 171
@@ -118,7 +118,7 @@ alif_isOwnedByCurrentThread(AlifObject* ob) { // 232
 static inline AlifTypeObject* alif_type(AlifObject* _ob) { // 250
 	return _ob->type;
 }
-#define ALIF_TYPE(ob) alif_type(ob)
+#define ALIF_TYPE(_ob) alif_type(ALIFOBJECT_CAST(_ob))
 
 
 
@@ -149,9 +149,38 @@ extern AlifTypeObject _alifTypeType_; // 405
 
 
 
-
-
-#define ALIF_TPFLAGS_HEAPTYPE (1UL << 9) // 524
+// 491
+#define ALIF_TPFLAGS_STATIC_BUILTIN (1 << 1)
+#define ALIF_TPFLAGS_INLINE_VALUES (1 << 2)
+#define ALIF_TPFLAGS_MANAGED_WEAKREF (1 << 3)
+#define ALIF_TPFLAGS_MANAGED_DICT (1 << 4)
+#define ALIF_TPFLAGS_PREHEADER (ALIF_TPFLAGS_MANAGED_WEAKREF | ALIF_TPFLAGS_MANAGED_DICT)
+#define ALIF_TPFLAGS_SEQUENCE (1 << 5)
+#define ALIF_TPFLAGS_MAPPING (1 << 6)
+#define ALIF_TPFLAGS_DISALLOW_INSTANTIATION (1UL << 7)
+#define ALIF_TPFLAGS_IMMUTABLETYPE (1UL << 8)
+#define ALIF_TPFLAGS_HEAPTYPE (1UL << 9)
+#define ALIF_TPFLAGS_BASETYPE (1UL << 10)
+#define ALIF_TPFLAGS_HAVE_VECTORCALL (1UL << 11)
+#define _ALIF_TPFLAGS_HAVE_VECTORCALL ALIF_TPFLAGS_HAVE_VECTORCALL
+#define ALIF_TPFLAGS_READY (1UL << 12)
+#define ALIF_TPFLAGS_READYING (1UL << 13)
+#define ALIF_TPFLAGS_HAVE_GC (1UL << 14)
+#define ALIF_TPFLAGS_HAVE_STACKLESS_EXTENSION 0
+#define ALIF_TPFLAGS_METHOD_DESCRIPTOR (1UL << 17)
+#define ALIF_TPFLAGS_VALID_VERSION_TAG  (1UL << 19)
+#define ALIF_TPFLAGS_IS_ABSTRACT (1UL << 20)
+#define _ALIF_TPFLAGS_MATCH_SELF (1UL << 22)
+#define ALIF_TPFLAGS_ITEMS_AT_END (1UL << 23)
+#define ALIF_TPFLAGS_LONG_SUBCLASS        (1UL << 24)
+#define ALIF_TPFLAGS_LIST_SUBCLASS        (1UL << 25)
+#define ALIF_TPFLAGS_TUPLE_SUBCLASS       (1UL << 26)
+#define ALIF_TPFLAGS_BYTES_SUBCLASS       (1UL << 27)
+#define ALIF_TPFLAGS_UNICODE_SUBCLASS     (1UL << 28)
+#define ALIF_TPFLAGS_DICT_SUBCLASS        (1UL << 29)
+#define ALIF_TPFLAGS_BASE_EXC_SUBCLASS    (1UL << 30)
+#define ALIF_TPFLAGS_TYPE_SUBCLASS        (1UL << 31)
+#define ALIF_TPFLAGS_DEFAULT  (ALIF_TPFLAGS_HAVE_STACKLESS_EXTENSION | 0)
 
 
 
@@ -175,6 +204,10 @@ public:
 	Destructor dealloc{};
 
 	unsigned long flags{};
+
+	AlifTypeObject* base{};
+	FreeFunc free{};
+	Inquiry isGC{};
 };
 
 
@@ -214,3 +247,23 @@ enum AlifRefTracerEvent_ {
 
 typedef AlifIntT (*AlifRefTracer)(AlifObject*, AlifRefTracerEvent_ event, void*); // 526
 
+
+
+
+
+
+
+
+
+/* -------------------------------------------------------------------------------------------------------------------------------- */
+
+
+
+
+
+
+static inline AlifIntT alifType_hasFeature(AlifTypeObject* _type, unsigned long _feature) { // 749
+	unsigned long flags{};
+	flags = ALIFATOMIC_LOAD_ULONG_RELAXED(&_type->flags);
+	return ((flags & _feature) != 0);
+}

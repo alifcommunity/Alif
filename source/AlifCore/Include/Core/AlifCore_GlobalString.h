@@ -42,9 +42,9 @@ public:
 
 
 #define ALIF_ID(_name) \
-     (ALIF_SINGLETON(strings.identifiers.alif ## _name.ascii.base))
+     (ALIF_SINGLETON(strings.identifiers.alif ## _name.ascii.objBase))
 #define ALIF_STR(_name) \
-     (ALIF_SINGLETON(strings.literals.alif ## _name.ascii.base))
+     (ALIF_SINGLETON(strings.literals.alif ## _name.ascii.objBase))
 #define ALIF_LATIN1_CHR(_ch) \
     ((_ch) < 128 \
      ? (AlifObject*)&ALIF_SINGLETON(strings).ascii[(_ch)] \

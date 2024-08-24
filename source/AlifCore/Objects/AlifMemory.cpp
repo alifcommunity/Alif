@@ -582,7 +582,18 @@ void* alifMem_dataRealloc(void* _ptr, AlifUSizeT _size) {
 		return alifMem_alloc(_size);
 	}
 
-	if (distSize == 0) alifMemError_reallocLessThan();
+	//if (distSize < sourceSize) alifMemError_reallocLessThan();
+	if (distSize < sourceSize) {
+		distPtr = alifMem_dataAlloc(distSize);
+		if (distPtr == nullptr) return nullptr;
+
+		/* انسخ المصدر الى الهدف */
+		memcpy(distPtr, sourcePtr, distSize);
+
+		alifMem_dataFree(sourcePtr);
+
+		return distPtr;
+	}
 
 	if (sourceSize <= BLOCK_SIZE and
 		distSize <= BLOCK_SIZE) { // alifMem to alifMem
@@ -640,7 +651,18 @@ void* alifMem_objRealloc(void* _ptr, AlifUSizeT _size)
 		return alifMem_alloc(_size);
 	}
 
-	if (distSize == 0) alifMemError_reallocLessThan();
+	//if (distSize < sourceSize) alifMemError_reallocLessThan();
+	if (distSize < sourceSize) {
+		distPtr = alifMem_objAlloc(distSize);
+		if (distPtr == nullptr) return nullptr;
+
+		/* انسخ المصدر الى الهدف */
+		memcpy(distPtr, sourcePtr, distSize);
+
+		alifMem_objFree(sourcePtr);
+
+		return distPtr;
+	}
 
 	if (sourceSize <= BLOCK_SIZE and
 		distSize <= BLOCK_SIZE) { // alifMem to alifMem

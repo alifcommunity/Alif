@@ -27,7 +27,7 @@
 #include "Lock.h"
 #include "AlifObject.h"
 #include "RefCount.h"
-//#include "ObjImpl.h"
+#include "ObjImpl.h"
 //#include "IntegerObject.h"
 //#include "BoolObject.h"
 //#include "FloatObject.h"

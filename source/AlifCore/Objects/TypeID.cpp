@@ -34,6 +34,25 @@ static AlifIntT resize_localRefCounts(AlifThreadImpl* _thread) { // 50
 
 
 
+void alifType_releaseID(AlifHeapTypeObject* type) { // 99
+	AlifInterpreter* interp = alifInterpreter_get();
+	AlifTypeIDPool* pool = &interp->typeIDs;
+
+	if (type->uniqueID < 0) {
+		return;
+	}
+
+	//LOCK_POOL(pool);
+	AlifTypeIDEntry* entry = &pool->table[type->uniqueID];
+	entry->next = pool->freelist;
+	pool->freelist = entry;
+
+	type->uniqueID = -1;
+	//UNLOCK_POOL(pool);
+}
+
+
+
 
 void alifType_incRefSlow(AlifHeapTypeObject* type) { // 120
 	AlifThreadImpl* thread = (AlifThreadImpl*)alifThread_get();

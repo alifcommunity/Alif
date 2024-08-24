@@ -105,6 +105,9 @@ static inline int64_t alifAtomic_loadInt64Relaxed(const int64_t* _obj) { // 655
 	return *(volatile int64_t*)_obj;
 }
 
+static inline uint8_t alifAtomic_loadUint8Relaxed(const uint8_t* _obj) { // 667
+	return *(volatile uint8_t*)_obj;
+}
 
 static inline uint32_t alifAtomic_loadUint32Relaxed(const uint32_t* _obj) { // 679
 	return *(volatile uint32_t*)_obj;
@@ -118,7 +121,9 @@ static inline AlifSizeT alifAtomic_loadSizeRelaxed(const AlifSizeT* obj) { // 70
 }
 
 
-
+static inline void alifAtomic_storeUint8Relaxed(uint8_t* obj, uint8_t value) { // 847
+	*(volatile uint8_t*)obj = value;
+}
 
 
 static inline void alifAtomic_storeUint32Relaxed(uint32_t* _obj, uint32_t _value) { // 859

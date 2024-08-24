@@ -107,8 +107,17 @@ static inline void alif_decreaseRef(AlifObject* _op) { // 319
 }
 #define ALIF_DECREF(_op) alif_decreaseRef(ALIFOBJECT_CAST(_op)) // 337
 
-
-
+// 432
+#define ALIF_CLEAR(_op) \
+    do { \
+        AlifObject **tmpOpPtr = ALIF_CAST(AlifObject**, &(_op)); \
+        AlifObject *tmpOldOp = (*tmpOpPtr); \
+        if (tmpOldOp != nullptr) { \
+            AlifObject *nullPtr = nullptr; \
+            memcpy(tmpOpPtr, &nullPtr, sizeof(AlifObject*)); \
+            ALIF_DECREF(tmpOldOp); \
+        } \
+    } while (0)
 
 
 static inline void alif_xdecreaseRef(AlifObject* _op) { // 456

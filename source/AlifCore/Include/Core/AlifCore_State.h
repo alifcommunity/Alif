@@ -38,17 +38,14 @@ AlifThread* alifThreadState_new(AlifInterpreter*); // 219
 extern void alifThread_bind(AlifThread*); // 222
 extern void alifThread_attach(AlifThread*); // temp
 
-//static inline AlifInterpreter* alifInterpreter_get() {
-//	AlifThread* thread_ = alifThread_get();
-//
-//	return thread_->interpreter;
-//}
+static inline AlifInterpreter* alifInterpreter_get() { // 207
+	AlifThread* tstate = alifThread_get();
+	return tstate->interpreter;
+}
 
 
 extern AlifIntT alifInterpreter_enable(AlifDureRun*); // 245
 
-
-//const AlifConfig* alifConfig_get();
 
 
 //static inline AlifObjectFreeLists* alifObject_freeListsGet() {

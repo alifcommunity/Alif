@@ -79,34 +79,44 @@ public:
 		AlifUIntT kind : 3;
 		AlifUIntT compact : 1;
 		AlifUIntT ascii : 1;
-		AlifUIntT statically_allocated : 1;
+		AlifUIntT staticallyAllocated : 1;
 		AlifUIntT : 24;
-	} state;
+	} state{};
 };
 
 class AlifCompactUStrObject { // 156
 public:
-	AlifASCIIObject base;
-	AlifSizeT utf8Length;
-	char* utf8;
+	AlifASCIIObject base{};
+	AlifSizeT utf8Length{};
+	char* utf8{};
 };
 
 class AlifUStrObject { // 164
 public:
-	AlifCompactUStrObject base;
+	AlifCompactUStrObject base{};
 	union {
 		void* any;
 		AlifUCS1* latin1;
 		AlifUCS2* ucs2;
 		AlifUCS4* ucs4;
-	} data;
+	} data{};
 };
 
 
 // 175
-#define ALIFASCIIOBJECT_CAST(_op) ALIF_CAST(AlifASCIIObject*, (_op))
-#define ALIFCOMPACTUSTROBJECT_CAST(_op) ALIF_CAST(AlifCompactUStrObject*, (_op)))
-#define ALIFUSTROBJECT_CAST(_op) ALIF_CAST(AlifUStrObject*, (_op))
+#define ALIFASCIIOBJECT_CAST(_op) ALIF_CAST(AlifASCIIObject*, _op)
+#define ALIFCOMPACTUSTROBJECT_CAST(_op) ALIF_CAST(AlifCompactUStrObject*, _op)
+#define ALIFUSTROBJECT_CAST(_op) ALIF_CAST(AlifUStrObject*, _op)
+
+
+// 191
+#define SSTATE_NOT_INTERNED 0
+#define SSTATE_INTERNED_MORTAL 1
+#define SSTATE_INTERNED_IMMORTAL 2
+#define SSTATE_INTERNED_IMMORTAL_STATIC 3
+
+
+
 
 static inline unsigned int alifUStr_isASCII(AlifObject* op) { // 211
 	return ALIFASCIIOBJECT_CAST(op)->state.ascii;
@@ -149,13 +159,13 @@ static inline void* alifUStr_NonCompactData(AlifObject* op) { // 253
 }
 
 
-static inline void* alifUStr_data(AlifObject* op) { // 261
-	if (ALIFUSTR_IS_COMPACT(op)) {
-		return alifUStr_compactData(op);
+static inline void* alifUStr_data(AlifObject* _op) { // 261
+	if (ALIFUSTR_IS_COMPACT(_op)) {
+		return alifUStr_compactData(_op);
 	}
-	return alifUStr_NonCompactData(op);
+	return alifUStr_NonCompactData(_op);
 }
-#define ALIFUSTR_DATA(op) alifUStr_data(ALIFOBJECT_CAST(op))
+#define ALIFUSTR_DATA(_op) alifUStr_data(ALIFOBJECT_CAST(_op))
 
 
 // 274
@@ -263,3 +273,10 @@ AlifIntT alifUStrWriter_prepareInternal(AlifUStrWriter*, AlifSizeT, AlifUCS4);
      : alifUStrWriter_prepareKindInternal((_writer), (_kind)))
 
 AlifIntT alifUStrWriter_prepareKindInternal(AlifUStrWriter*, AlifIntT); // 557
+
+
+
+AlifObject* alifUStrWriter_finish(AlifUStrWriter*); // 602
+
+
+void alifUStrWriter_dealloc(AlifUStrWriter*); // 607
