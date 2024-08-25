@@ -142,17 +142,17 @@ static AlifObject* ustr_result(AlifObject* unicode) { // 727
 #include "StringLib/FindMaxChar.h"
 #include "StringLib/Undef.h"
 
-#include "stringlib/UCS1Lib.h"
-#include "stringlib/FindMaxChar.h"
-#include "stringlib/Undef.h"
+#include "Stringlib/UCS1Lib.h"
+#include "Stringlib/FindMaxChar.h"
+#include "Stringlib/Undef.h"
 
-#include "stringlib/UCS2Lib.h"
-#include "stringlib/FindMaxChar.h"
-#include "stringlib/Undef.h"
+#include "Stringlib/UCS2Lib.h"
+#include "Stringlib/FindMaxChar.h"
+#include "Stringlib/Undef.h"
 
-#include "stringlib/UCS4Lib.h"
-#include "stringlib/FindMaxChar.h"
-#include "stringlib/Undef.h"
+#include "Stringlib/UCS4Lib.h"
+#include "Stringlib/FindMaxChar.h"
+#include "Stringlib/Undef.h"
 
 
 static AlifObject* resize_compact(AlifObject* _uStr, AlifSizeT _length) { // 1071
