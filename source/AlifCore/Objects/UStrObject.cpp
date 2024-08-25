@@ -997,7 +997,6 @@ AlifIntT alifUStrWriter_prepareInternal(AlifUStrWriter* _writer, AlifSizeT _leng
 		_writer->buffer = newbuffer;
 	}
 	else if (_maxChar > _writer->maxChar) {
-		AlifObject* a = _writer->buffer;
 		newbuffer = alifUStr_new(_writer->size, _maxChar);
 		if (newbuffer == nullptr) return -1;
 
