@@ -91,3 +91,9 @@ static inline AlifIntT _alifObject_isGC(AlifObject* obj) { // 714
 	AlifTypeObject* type = ALIF_TYPE(obj);
 	return (ALIFTYPE_IS_GC(type) and (type->isGC == nullptr or type->isGC(obj)));
 }
+
+
+
+
+
+extern AlifObject* alifType_allocNoTrack(AlifTypeObject*, AlifSizeT); // 763

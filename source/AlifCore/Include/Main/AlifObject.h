@@ -222,7 +222,7 @@ public:
 	//AlifSequenceMethods sequence;
 	//AlifBufferProcs Buffer;
 	AlifObject* name{}, * slots{}, * qualname{};
-	AlifObject* Module{};
+	AlifObject* module_{};
 	AlifSizeT uniqueID{};
 };
 
