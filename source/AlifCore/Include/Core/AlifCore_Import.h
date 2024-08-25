@@ -39,12 +39,14 @@ public:
 };
 
 // 119
-//#define IMPORTS_INIT \
-//    { \
-//        .findAndLoad = { \
-//            .header = 1, \
-//        }, \
-//    }
+/*
+#define IMPORTS_INIT \
+    { \
+        .findAndLoad = { \
+            .header = 1, \
+        }, \
+    }
+*/
 
 
 AlifSizeT alifImport_getNextModuleIndex(); // 129

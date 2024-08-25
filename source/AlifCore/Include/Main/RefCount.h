@@ -68,7 +68,8 @@ static inline ALIF_ALWAYS_INLINE void alif_increaseRef(AlifObject* op) { // 211
 	else {
 		alifAtomic_addSize(&op->refShared, (1 << ALIF_REF_SHARED_SHIFT));
 	}
-#ifdef SIZEOF_VOID_P > 4
+
+//#ifdef SIZEOF_VOID_P > 4
 	//ALIF_UINT32_T curRefCnt = op->refCntSplit[ALIF_BIG_ENDIAN];
 	//ALIF_UINT32_T newRefCnt = curRefCnt + 1;
 	//if (newRefCnt == 0) {
@@ -76,7 +77,7 @@ static inline ALIF_ALWAYS_INLINE void alif_increaseRef(AlifObject* op) { // 211
 	//	return;
 	//}
 	//op->refCntSplit[ALIF_BIG_ENDIAN] = newRefCnt;
-#endif
+//#endif
 }
 #define ALIF_INCREF(_op) alif_increaseRef(ALIFOBJECT_CAST(_op))
 

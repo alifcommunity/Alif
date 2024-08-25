@@ -156,7 +156,7 @@ static AlifIntT alifCore_interpreterInit(AlifThread* _thread) { // 843
 
 	AlifInterpreter* interpreter = _thread->interpreter;
 	AlifIntT status = 1;
-	const AlifConfig* config;
+	const AlifConfig* config{};
 	AlifObject* sysMod = nullptr;
 
 	//status = alifGC_init(interpreter);
