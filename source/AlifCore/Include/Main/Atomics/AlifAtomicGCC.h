@@ -92,7 +92,9 @@ static inline uint32_t alifAtomic_loadUint32Relaxed(const uint32_t* _obj) { // 3
 	return __atomic_load_n(_obj, __ATOMIC_RELAXED);
 }
 
-
+static inline uint64_t alifAtomic_loadUint64Relaxed(const uint64_t* _obj) { // 341
+	return __atomic_load_n(_obj, __ATOMIC_RELAXED);
+}
 
 static inline AlifSizeT alifAtomic_loadSizeRelaxed(const AlifSizeT* _obj) { // 353
 	return __atomic_load_n(_obj, __ATOMIC_RELAXED);
@@ -102,7 +104,9 @@ static inline AlifSizeT alifAtomic_loadSizeRelaxed(const AlifSizeT* _obj) { // 3
 
 
 
-
+static inline void alifAtomic_storeUint64(uint64_t* _obj, uint64_t _value) { // 404
+	__atomic_store_n(_obj, _value, __ATOMIC_SEQ_CST);
+}
 
 
 static inline void alifAtomic_storeUint8Relaxed(uint8_t* _obj, uint8_t _value) { // 451
@@ -114,6 +118,9 @@ static inline void alifAtomic_storeUint32Relaxed(uint32_t* _obj, uint32_t _value
 	__atomic_store_n(_obj, _value, __ATOMIC_RELAXED);
 }
 
+static inline void alifAtomic_storeUint64Relaxed(uint64_t* _obj, uint64_t _value) { // 463
+	__atomic_store_n(_obj, _value, __ATOMIC_RELAXED);
+}
 
 static inline void alifAtomic_storeUintptrRelaxed(uintptr_t* _obj, uintptr_t _value) { // 467
 	__atomic_store_n(_obj, _value, __ATOMIC_RELAXED);
