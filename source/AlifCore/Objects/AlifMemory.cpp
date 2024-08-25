@@ -837,12 +837,12 @@ Frag* AlifArray::get_arr()
 	return arr_;
 }
 
-AlifArray FreeSegments::return_freeSegs(AlifUSizeT i)
+AlifArray FreeSegments::return_freeSegs(unsigned long i)
 {
 	return freeSegs[i];
 }
 
-static std::pair<AlifUSizeT, const char*> convert_(AlifUSizeT _size, const char* _unit) {
+static std::pair<unsigned long, const char*> convert_(unsigned long _size, const char* _unit) {
 	if (_size > 1073741823) {
 		_size /= 1000000000;
 		_unit = "غـ.ـب";
@@ -858,57 +858,57 @@ static std::pair<AlifUSizeT, const char*> convert_(AlifUSizeT _size, const char*
 		_unit = "كـ.ـب";
 	}
 
-	return std::pair<AlifUSizeT, const char*>(_size, _unit);
+	return std::pair<unsigned long, const char*>(_size, _unit);
 }
 
 static void rawMem_sizeAllocated()
 {
-	AlifUSizeT sysMemSize = ALIFMEM_RAWALLOC_SIZE;
+	unsigned long sysMemSize = (unsigned long)ALIFMEM_RAWALLOC_SIZE;
 	const char* sysMemSizeUnit = "بايت";
-	std::pair<AlifUSizeT, const char*> sysMemPair =
-		std::pair<AlifUSizeT, const char*>(sysMemSize, sysMemSizeUnit);
+	std::pair<unsigned long, const char*> sysMemPair =
+		std::pair<unsigned long, const char*>(sysMemSize, sysMemSizeUnit);
 
 	sysMemPair = convert_(sysMemSize, sysMemSizeUnit);
 
 	printf("I| --------------------------------------------- |I\n");
 	printf("I|                       : ذاكرة النظام المحجوزة |I\n");
-	printf("I| %9sa %9llu                          |I\n",
+	printf("I| %9sa %9lu                          |I\n",
 		sysMemPair.second, sysMemPair.first);
 }
 
 static void alifMem_sizeAllocated()
 {
-	AlifUSizeT alifMemSize{};
-	AlifUSizeT alifAllocSize{};
-	AlifUSizeT wasteSize{};
+	unsigned long alifMemSize{};
+	unsigned long alifAllocSize{};
+	unsigned long wasteSize{};
 	const char* alifMemSizeUnit = "بايت";
 	const char* alifAllocSizeUnit = "بايت";
 	const char* wasteSizeUnit = "بايت";
-	std::pair<AlifUSizeT, const char*> alifMemPair =
-		std::pair<AlifUSizeT, const char*>(alifMemSize, alifMemSizeUnit);
-	std::pair<AlifUSizeT, const char*> alifAllocPair =
-		std::pair<AlifUSizeT, const char*>(alifAllocSize, alifAllocSizeUnit);
-	std::pair<AlifUSizeT, const char*> wastePair =
-		std::pair<AlifUSizeT, const char*>(wasteSize, wasteSizeUnit);
+	std::pair<unsigned long, const char*> alifMemPair =
+		std::pair<unsigned long, const char*>(alifMemSize, alifMemSizeUnit);
+	std::pair<unsigned long, const char*> alifAllocPair =
+		std::pair<unsigned long, const char*>(alifAllocSize, alifAllocSizeUnit);
+	std::pair<unsigned long, const char*> wastePair =
+		std::pair<unsigned long, const char*>(wasteSize, wasteSizeUnit);
 
 	AlifMemBlock* currentBlock = ALIFMEM_HEADBLOCK;
 	while (currentBlock->next_) {
 		if (currentBlock->freeSize < SEGMENT) {
-			wasteSize += currentBlock->freeSize;
-			alifAllocSize += BLOCK_SIZE - currentBlock->freeSize;
+			wasteSize += (unsigned long)currentBlock->freeSize;
+			alifAllocSize += BLOCK_SIZE - (unsigned long)currentBlock->freeSize;
 		}
 		else if (currentBlock->freeSize < BLOCK_SIZE) {
-			alifAllocSize += BLOCK_SIZE - currentBlock->freeSize;
+			alifAllocSize += BLOCK_SIZE - (unsigned long)currentBlock->freeSize;
 		}
 		alifMemSize += BLOCK_SIZE;
 		currentBlock = currentBlock->next_;
 	}
 	if (currentBlock->freeSize < SEGMENT) {
-		wasteSize += currentBlock->freeSize;
-		alifAllocSize += BLOCK_SIZE - currentBlock->freeSize;
+		wasteSize += (unsigned long)currentBlock->freeSize;
+		alifAllocSize += BLOCK_SIZE - (unsigned long)currentBlock->freeSize;
 	}
 	else if (currentBlock->freeSize < BLOCK_SIZE) {
-		alifAllocSize += BLOCK_SIZE - currentBlock->freeSize;
+		alifAllocSize += BLOCK_SIZE - (unsigned long)currentBlock->freeSize;
 	}
 	alifMemSize += BLOCK_SIZE;
 
@@ -919,69 +919,69 @@ static void alifMem_sizeAllocated()
 
 	printf("I| --------------------------------------------- |I\n");
 	printf("I|                          : ذاكرة ألف المحجوزة |I\n");
-	printf("I| %9sa %9llu                          |I\n",
+	printf("I| %9sa %9lu                          |I\n",
 		alifMemPair.second, alifMemPair.first);
 	printf("I| --------------------------------------------- |I\n");
 	printf("I|                         : ذاكرة ألف المستخدمة |I\n");
-	printf("I| %9sa %9llu                          |I\n",
+	printf("I| %9sa %9lu                          |I\n",
 		alifAllocPair.second, alifAllocPair.first);
 	printf("I| --------------------------------------------- |I\n");
 	printf("I|                          : الهدر في ذاكرة ألف |I\n");
-	printf("I| %9sa %9llu                          |I\n",
+	printf("I| %9sa %9lu                          |I\n",
 		wastePair.second, wastePair.first);
 }
 
 static void fragment_sizeAllocated()
 {
-	AlifUSizeT freedMemSize{};
+	unsigned long freedMemSize{};
 	const char* freedMemSizeUnit = "بايت";
-	std::pair<AlifUSizeT, const char*> freedMemPair =
-		std::pair<AlifUSizeT, const char*>(freedMemSize, freedMemSizeUnit);
+	std::pair<unsigned long, const char*> freedMemPair =
+		std::pair<unsigned long, const char*>(freedMemSize, freedMemSizeUnit);
 
-	for (AlifUSizeT i_ = 0; i_ < FRAGS_NUM; i_++) {
+	for (unsigned long i_ = 0; i_ < FRAGS_NUM; i_++) {
 		Frag* f_ = ALIFMEM_FREEDSEGMS->return_freeSegs(i_).get_arr();
 		if (f_) {
 			while (f_->next_) {
-				freedMemSize += *((AlifUSizeT*)f_->ptr_ - 1);
+				freedMemSize += *((unsigned long*)f_->ptr_ - 1);
 				f_ = f_->next_;
 			}
-			freedMemSize += *((AlifUSizeT*)f_->ptr_ - 1);
+			freedMemSize += *((unsigned long*)f_->ptr_ - 1);
 		}
 	}
 	freedMemPair = convert_(freedMemSize, freedMemSizeUnit);
 
 	printf("I| --------------------------------------------- |I\n");
 	printf("I|                             : المساحة المحررة |I\n");
-	printf("I| %9sa %9llu                          |I\n",
+	printf("I| %9sa %9lu                          |I\n",
 		freedMemPair.second, freedMemPair.first);
 }
 
 static void objects_count()
 {
-	AlifUSizeT objsNum = ALIFMEM_OBJNUMS;
+	unsigned long objsNum = (unsigned long)ALIFMEM_OBJNUMS;
 
 	printf("I| --------------------------------------------- |I\n");
 	printf("I|                                : عدد الكائنات |I\n");
-	printf("I| %9sa %9llu                          |I\n", "كائن", objsNum);
+	printf("I| %9sa %9lu                          |I\n", "كائن", objsNum);
 }
 
 static void freeBlocks_count()
 {
-	AlifUSizeT freeBlocks = ALIFMEM_FREEBLOCKS_NUM;
+	unsigned long freeBlocks = (unsigned long)ALIFMEM_FREEBLOCKS_NUM;
 
 	printf("I| --------------------------------------------- |I\n");
 	printf("I|                             : عدد الكتل الحرة |I\n");
-	printf("I| %9sa %4i%1s%4llu                          |I\n",
+	printf("I| %9sa %4i%1s%4lu                          |I\n",
 		"كتلة", BLOCK_NUMS, "\\", freeBlocks);
 }
 
 static void currentSeg_size()
 {
-	AlifUSizeT currSegSize = ALIFMEM_CURRENTBLOCK->freeSize;
+	unsigned long currSegSize = (unsigned long)ALIFMEM_CURRENTBLOCK->freeSize;
 
 	printf("I| --------------------------------------------- |I\n");
 	printf("I|                    : حجم القطعة الحرة الحالية |I\n");
-	printf("I| %9sa %4i%1s%4llu                          |I\n",
+	printf("I| %9sa %4i%1s%4lu                          |I\n",
 		"بايت", BLOCK_SIZE, "\\", currSegSize);
 }
 

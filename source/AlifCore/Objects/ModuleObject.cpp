@@ -3,6 +3,7 @@
 #include "AlifCore_Import.h"
 #include "AlifCore_ModSupport.h"
 #include "AlifCore_ModuleObject.h"
+#include "AlifCore_Object.h"
 
 
 
@@ -34,14 +35,14 @@ AlifObject* alifModuleDef_init(AlifModuleDef* def) { // 45
 
 static AlifModuleObject* newModule_noTrack(AlifTypeObject* mt) { // 82
 	AlifModuleObject* m{};
-	//m = (AlifModuleObject*)alifType_allocNoTrack(mt, 0);
-	if (m == nullptr)
-		return nullptr;
+	m = (AlifModuleObject*)alifType_allocNoTrack(mt, 0);
+	if (m == nullptr) return nullptr;
+
 	m->def = nullptr;
 	m->state = nullptr;
 	m->weaklist = nullptr;
 	m->name = nullptr;
-	//m->dict = alifDict_new();
+	m->dict = alifDict_new();
 	if (m->dict == nullptr) {
 		ALIF_DECREF(m);
 		return nullptr;
@@ -53,9 +54,9 @@ AlifObject* alifModule_newObject(AlifObject* _name) { // 121
 	AlifModuleObject* m = newModule_noTrack(&_alifModuleType_);
 	if (m == nullptr) return nullptr;
 
-	//if (module_initDict(m, m->dict, _name, nullptr) != 0)
-	//	goto fail;
-	//track_module(m);
+	if (module_initDict(m, m->dict, _name, nullptr) != 0)
+		goto fail;
+	track_module(m);
 	return (AlifObject*)m;
 
 fail:
@@ -103,10 +104,10 @@ AlifObject* alifModule_createInitialized(AlifModuleDef* _module) { // 209
 	}
 
 	if (_module->methods != nullptr) {
-		//if (alifModule_addFunctions((AlifObject*)m, _module->methods) != 0) {
-		//	ALIF_DECREF(m);
-		//	return nullptr;
-		//}
+		if (alifModule_addFunctions((AlifObject*)m, _module->methods) != 0) {
+			ALIF_DECREF(m);
+			return nullptr;
+		}
 	}
 	m->def = _module;
 

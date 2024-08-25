@@ -93,8 +93,13 @@ static inline AlifIntT _alifObject_isGC(AlifObject* obj) { // 714
 }
 
 
+
 static inline size_t alifType_preHeaderSize(AlifTypeObject* _tp) {// 740 
 	return (
 		ALIFTYPE_IS_GC(_tp) * sizeof(AlifGCHead) +
 		);
 }
+
+
+extern AlifObject* alifType_allocNoTrack(AlifTypeObject*, AlifSizeT); // 763
+

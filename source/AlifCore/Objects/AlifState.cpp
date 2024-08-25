@@ -58,9 +58,9 @@ static void bind_thread(AlifThread* tstate) { // 245
 	tstate->nativeThreadID = alifThread_getThreadNativeID();
 #endif
 
-	//alifBRC_initThread(tstate);
+	alifBRC_initThread(tstate);
 
-	//threadMimalloc_bind(tstate);
+	threadMimalloc_bind(tstate);
 
 	tstate->status.bound = 1;
 }
@@ -289,7 +289,7 @@ void alifThread_bind(AlifThread* _thread) { // 2447
 	bind_thread(_thread);
 
 	if (threadTSS_get(&_thread->interpreter->dureRun->autoTSSKey) == nullptr) {
-		//bind_gilstate_tstate(_thread);
+		bind_gilStateThreadState(_thread);
 	}
 }
 

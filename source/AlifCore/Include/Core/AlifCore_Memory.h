@@ -75,7 +75,7 @@ public:
 	void dealloc_(void*);
 	void freeSeg_dealloc(Frag*);
 
-	AlifArray return_freeSegs(AlifUSizeT);
+	AlifArray return_freeSegs(unsigned long);
 };
 
 /* -------------------------------------- الكتلة ------------------------------------- */

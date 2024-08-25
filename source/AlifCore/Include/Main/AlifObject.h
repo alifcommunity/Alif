@@ -54,7 +54,7 @@ public:
 
 uintptr_t alif_getThreadLocalAddr(void); // 171
 
-static inline uintptr_t alif_threadId(void) { // 173
+static inline uintptr_t alif_threadID(void) { // 173
 	uintptr_t threadID;
 #if defined(_MSC_VER) and defined(_M_X64)
 	threadID = __readgsqword(48);
@@ -114,7 +114,7 @@ static inline uintptr_t alif_threadId(void) { // 173
 
 static inline ALIF_ALWAYS_INLINE AlifIntT
 alif_isOwnedByCurrentThread(AlifObject* ob) { // 232
-	return ob->threadID == alif_threadId();
+	return ob->threadID == alif_threadID();
 }
 
 static inline AlifTypeObject* alif_type(AlifObject* _ob) { // 250
@@ -230,7 +230,7 @@ public:
 	//AlifBufferProcs Buffer;
 	AlifObject* name{}, * slots{}, * qualname{};
 	class DictKeysObject* cachedKeys;
-	AlifObject* Module{};
+	AlifObject* module_{};
 	AlifSizeT uniqueID{};
 };
 
