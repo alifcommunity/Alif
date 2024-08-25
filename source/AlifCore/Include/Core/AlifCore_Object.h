@@ -70,8 +70,8 @@ static inline void alifObject_init(AlifObject* _op, AlifTypeObject* _typeObj) { 
 
 
 
-static inline void alifObject_gcTrack(AlifObject* op) { // 403
-	alifObject_setGCBits(op, ALIFGC_BITS_TRACKED);
+static inline void alifObject_gcTrack(AlifObject* _op) { // 403
+	alifObject_setGCBits(_op, ALIFGC_BITS_TRACKED);
 }
 
 static inline void alifObject_gcUntrack(AlifObject* op) { // 443
@@ -94,15 +94,12 @@ static inline AlifIntT _alifObject_isGC(AlifObject* obj) { // 714
 
 
 
-
-
-
-
-
-
-
-
-
+static inline size_t alifType_preHeaderSize(AlifTypeObject* _tp) {// 740 
+	return (
+		ALIFTYPE_IS_GC(_tp) * sizeof(AlifGCHead) +
+		);
+}
 
 
 extern AlifObject* alifType_allocNoTrack(AlifTypeObject*, AlifSizeT); // 763
+

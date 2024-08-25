@@ -12,6 +12,10 @@ public:
 
 	LListNode memFreeQueue{};
 
+	class GCThreadState gc{};
+
+	class AlifFreeLists freeLists{};
+
 
 	class {
 	public:

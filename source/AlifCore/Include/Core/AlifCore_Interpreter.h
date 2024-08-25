@@ -35,7 +35,7 @@ public:
 
 	AlifTypeIDPool typeIDs{};
 
-	//AlifGCDureRun gc{};
+	AlifGCDureRun gc{};
 
 	AlifObject* builtins{};
 
