@@ -4,6 +4,26 @@
 #include "AlifMemory.h"
 
 
+
+class AlifListArray{ // 28
+public:
+	AlifSizeT allocated;
+	AlifObject* objectItem[];
+} ;
+
+static AlifListArray* list_allocateArray(size_t _capacity) // 34
+{
+	if (_capacity > LLONG_MAX / sizeof(AlifObject*) - 1) {
+		return NULL;
+	}
+	AlifListArray* array = (AlifListArray*)alifMem_objAlloc(sizeof(AlifListArray) + _capacity * sizeof(AlifObject*));
+	if (array == NULL) {
+		return NULL;
+	}
+	array->allocated = _capacity;
+	return array;
+}
+
 AlifObject* alifList_New(AlifSizeT _size) // 212
 {
 	if (_size < 0) {
@@ -22,32 +42,29 @@ AlifObject* alifList_New(AlifSizeT _size) // 212
 		op->item = NULL;
 	}
 	else {
-#ifdef Py_GIL_DISABLED
-		_PyListArray* array = list_allocate_array(_size);
+		AlifListArray* array = list_allocateArray(_size);
 		if (array == NULL) {
-			Py_DECREF(op);
-			return PyErr_NoMemory();
+			ALIF_DECREF(op);
+			return nullptr;
+			//return alifErr_noMemory();
 		}
-		memset(&array->item, 0, _size * sizeof(PyObject*));
-		op->item = array->item;
-#else
-		op->item = (AlifObject**)alifMem_objAlloc(_size * sizeof(AlifObject*));
-#endif
+		memset(&array->objectItem, 0, _size * sizeof(AlifObject*));
+		op->item = array->objectItem;
 		if (op->item == NULL) {
 			ALIF_DECREF(op);
+			return nullptr;
 			//return alifErr_noMemory();
 		}
 	}
-	ALIF_SETSIZE(op, _size);
+	ALIF_SET_SIZE(op, _size);
 	op->allocated = _size;
 	ALIFOBJECT_GC_TRACK(op);
 	return (AlifObject*)op;
 }
 
 
-AlifTypeObject _alfiListType_ = {
+AlifTypeObject _alfiListType_ = { // 3737
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
-	.name = "list",
+	.name = "مصفوفة",
 	.basicSize = sizeof(AlifListObject),
-
 };

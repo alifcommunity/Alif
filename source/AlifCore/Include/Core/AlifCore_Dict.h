@@ -2,13 +2,13 @@
 
 #include "AlifCore_Object.h"
 
- enum DictKeysKind {
-	DICT_KEYS_GENERAL = 0,
-	DICT_KEYS_UNICODE = 1,
-	DICT_KEYS_SPLIT = 2
+ enum DictKeysKind { // 
+	Dict_Kyes_General = 0,
+	Dict_Kyes_UStr = 1,
+	Dict_Kyes_Split = 2
 } ;
 
-class DictKeysObject {
+class DictKeysObject { // 138
 public:
 	AlifSizeT dkRefCnt;
 
@@ -18,9 +18,7 @@ public:
 
 	uint8_t dkKind;
 
-#ifdef ALIF_GIL_DISABLED
 	AlifMutex dkMutex;
-#endif
 
 	uint32_t dkVersion;
 
@@ -33,8 +31,8 @@ public:
 
 static inline size_t sharedKeys_usableSize(AlifDictKeysObject* _keys) // 305
 {
-	AlifSizeT dkUsable = (_keys->dkUsable);
-	AlifSizeT dkNentries = (_keys->dkNentries);
+	AlifSizeT dkUsable = alifAtomic_loadSizeAcquire(&_keys->dkUsable);
+	AlifSizeT dkNentries = alifAtomic_loadSizeAcquire(&_keys->dkNentries);
 	return dkNentries + dkUsable;
 }
 

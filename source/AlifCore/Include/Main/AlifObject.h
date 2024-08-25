@@ -138,7 +138,7 @@ static inline void alif_setSize(AlifVarObject* _ob, AlifSizeT _size) { // 289
 	_ob->objSize = _size;
 #endif
 }
-#  define ALIF_SETSIZE(_ob, _size) alif_setSize(ALIFVAROBJECT_CAST(_ob), (_size)) // 300
+#  define ALIF_SET_SIZE(_ob, _size) alif_setSize(ALIFVAROBJECT_CAST(_ob), (_size)) // 300
 
 
 
