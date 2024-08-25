@@ -57,6 +57,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifTypeDefs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifVersion.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomicGCC.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomicMSC.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\BuiltinsModule.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\DescrObject.h" />

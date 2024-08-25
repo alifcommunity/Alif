@@ -4,8 +4,16 @@
 
 
 
-
-
+// 520
+#ifndef ALIF_USEGCC_BUILTIN_ATOMICS
+#  if defined(__GNUC__) && (__GNUC__ > 4 or (__GNUC__ == 4 && __GNUC_MINOR__ >= 8))
+#    define ALIF_USEGCC_BUILTIN_ATOMICS 1
+#  elif defined(__clang__)
+#    if __has_builtin(__atomic_load)
+#      define ALIF_USEGCC_BUILTIN_ATOMICS 1
+#    endif
+#  endif
+#endif
 
 // 530
 #if ALIF_USEGCC_BUILTIN_ATOMICS
@@ -51,7 +59,7 @@
     alifAtomic_loadUint32Relaxed((uint32_t*)_p)
 # define ALIF_ATOMIC_STORE_ULONG(_p, _v) \
     alifAtomic_storeUint32((uint32_t*)_p, _v)
-# define ALIF_ATOMIC_STORE_ULONG_RELAXED(_p, _v) \
+# define ALIFATOMIC_STORE_ULONG_RELAXED(_p, _v) \
     alifAtomic_storeUint32Relaxed((uint32_t*)_p, _v)
 #else
 # error "long must be 4 or 8 bytes in size"
