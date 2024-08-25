@@ -55,12 +55,12 @@ static inline AlifIntT alifObjectGC_isTracked(AlifObject* _op) { // 82
 
 #define ALIFGC_PREV_MASK            (((uintptr_t) -1) << ALIFGC_PREV_SHIFT) // 163
 
-static inline void alifGCHead_set_next(AlifGCHead* _gc, AlifGCHead* _next) {
+static inline void alifGCHead_setNext(AlifGCHead* _gc, AlifGCHead* _next) { // 191
 	uintptr_t unext = (uintptr_t)_next;
 	_gc->gcNext = (_gc->gcNext & ~ALIFGC_PREV_MASK) | unext;
 }
 
-static inline void alifGCHead_set_perv(AlifGCHead* _gc, AlifGCHead* _prev) { // 203
+static inline void alifGCHead_setPerv(AlifGCHead* _gc, AlifGCHead* _prev) { // 203
 	uintptr_t uprev = (uintptr_t)_prev;
 	_gc->gcPrev = ((_gc->gcPrev & ~ALIFGC_PREV_MASK) | uprev);
 }
@@ -68,8 +68,8 @@ static inline void alifGCHead_set_perv(AlifGCHead* _gc, AlifGCHead* _prev) { // 
 class GCGeneration { // 280
 public:
 	AlifGCHead head;
-	int threshold; 
-	int count;
+	AlifIntT threshold; 
+	AlifIntT count;
 };
 
 class GCGenerationStats { // 296
@@ -79,38 +79,35 @@ public:
 	AlifSizeT uncollectable;
 };
 
-class AlifGCDureRun {
+class AlifGCDureRun { // 305
 public:
 	AlifObject* trashDeleteLater;
-	int trashDeleteNesting;
+	AlifIntT trashDeleteNesting;
 
-	int enabled;
-	int debug;
+	AlifIntT enabled;
+	AlifIntT debug;
 	class GCGeneration young;
 	class GCGeneration old[2];
 	class GCGeneration permanentGeneration;
 	class GCGenerationStats generationStats[3];
-	int collecting;
+	AlifIntT collecting;
 	AlifObject* garbage;
 	AlifObject* callbacks;
 
 	AlifSizeT heapSize;
 	AlifSizeT workToDo;
-	int visited_space;
+	AlifIntT visited_space;
 
-#ifdef ALIF_GIL_DISABLED
 	AlifSizeT longLivedTotal;
 
 	AlifSizeT longLivedPending;
-	int immortalize;
-#endif
+	AlifIntT immortalize;
 };
 
-#ifdef ALIF_GIL_DISABLED
-class GCThreadState {
+class GCThreadState { // 357
 public:
 	AlifSizeT allocCount;
 };
-#endif
+
 
 

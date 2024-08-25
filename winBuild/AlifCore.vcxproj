@@ -40,6 +40,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ModSupport.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ModuleObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Object.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ObjectAlloc.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Parser.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_State.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Thread.h" />

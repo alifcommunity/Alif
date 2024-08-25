@@ -70,24 +70,8 @@ static inline void alifObject_init(AlifObject* _op, AlifTypeObject* _typeObj) { 
 
 
 
-static inline void alifObject_gcTrack(
-//#ifndef NDEBUG
-//	const char* filename, int lineno,
-//#endif
-	AlifObject* _op)
-{
-#ifdef ALIF_GIL_DISABLED
-		alifObject_setGCBits(op, 1);
-#else
-	AlifGCHead* gc_ = alif_asGC(_op);
-	AlifInterpreter* interp = alifInterpreter_get();
-	AlifGCHead* generation0 = &interp->gc.young.head;
-	AlifGCHead* last = (AlifGCHead*)(generation0->gcPrev);
-	alifGCHead_set_next(last, gc_);
-	alifGCHead_set_perv(gc_, last);
-	gc_->gcNext = ((uintptr_t)generation0) | interp->gc.visited_space;
-	generation0->gcPrev = (uintptr_t)gc_;
-#endif
+static inline void alifObject_gcTrack(AlifObject* _op) { // 403
+	alifObject_setGCBits(_op, 1);
 }
 
 static inline void alifObject_gcUntrack(AlifObject* op) { // 443
@@ -109,29 +93,9 @@ static inline AlifIntT _alifObject_isGC(AlifObject* obj) { // 714
 }
 
 
-static inline size_t alifType_preHeaderSize(AlifTypeObject* _tp) // 740
-{
+static inline size_t alifType_preHeaderSize(AlifTypeObject* _tp) {// 740 
 	return (
-#ifndef ALIF_GIL_DISABLED
 		ALIFTYPE_IS_GC(_tp) * sizeof(AlifGCHead) +
-#endif
 		alifType_hasFeature(_tp, ALIF_TPFLAGS_PREHEADER) * 2 * sizeof(AlifObject*)
 		);
-}
-
-
-// ----------------------------------------- AlifCore_Object_Alloc ---------------------------------------------------//
-
-static inline void* alifObject_mallocWithType(AlifTypeObject* _tp, size_t _size) // 38
-{
-#ifdef ALIF_GIL_DISABLED
-	AlifThreadImpl* tState = (AlifThreadImpl*)alifThread_get();
-	class MimallocThreadState* m_ = &tState->mimalloc;
-	m_->currentObjectHeap = alifObject_getAllocationHeap(tState, tp);
-#endif
-	void* mem_ = alifMem_objAlloc(_size);
-#ifdef ALIF_GIL_DISABLED
-	m_->currentObjectHeap = &m->heaps[ALIF_MIMALLOC_HEAP_OBJECT];
-#endif
-	return mem_;
 }

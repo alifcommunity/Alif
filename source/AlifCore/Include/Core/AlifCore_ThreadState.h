@@ -12,6 +12,8 @@ public:
 
 	LListNode memFreeQueue{};
 
+	class AlifFreeLists freeLists;
+
 
 	class {
 	public:

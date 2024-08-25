@@ -1,7 +1,7 @@
 #include "alif.h"
+
 #include "AlifCore_FreeList.h"
 #include "AlifCore_Object.h"
-#include "AlifMemory.h"
 
 
 
@@ -11,14 +11,13 @@ public:
 	AlifObject* objectItem[];
 } ;
 
-static AlifListArray* list_allocateArray(size_t _capacity) // 34
-{
+static AlifListArray* list_allocateArray(size_t _capacity) {// 34
 	if (_capacity > LLONG_MAX / sizeof(AlifObject*) - 1) {
-		return NULL;
+		return nullptr;
 	}
 	AlifListArray* array = (AlifListArray*)alifMem_objAlloc(sizeof(AlifListArray) + _capacity * sizeof(AlifObject*));
-	if (array == NULL) {
-		return NULL;
+	if (array == nullptr) {
+		return nullptr;
 	}
 	array->allocated = _capacity;
 	return array;
@@ -28,29 +27,29 @@ AlifObject* alifList_New(AlifSizeT _size) // 212
 {
 	if (_size < 0) {
 		//alifErr_badInternalCall();
-		return NULL;
+		return nullptr;
 	}
 
 	AlifListObject* op = ALIF_FREELIST_POP(AlifListObject, lists);
-	if (op == NULL) {
-		op = ALIFOBJECT_GC_New(AlifListObject, &_alfiListType_);
-		if (op == NULL) {
-			return NULL;
+	if (op == nullptr) {
+		op = ALIFOBJECT_GC_NEW(AlifListObject, &_alifListType_);
+		if (op == nullptr) {
+			return nullptr;
 		}
 	}
 	if (_size <= 0) {
-		op->item = NULL;
+		op->item = nullptr;
 	}
 	else {
 		AlifListArray* array = list_allocateArray(_size);
-		if (array == NULL) {
+		if (array == nullptr) {
 			ALIF_DECREF(op);
 			return nullptr;
 			//return alifErr_noMemory();
 		}
 		memset(&array->objectItem, 0, _size * sizeof(AlifObject*));
 		op->item = array->objectItem;
-		if (op->item == NULL) {
+		if (op->item == nullptr) {
 			ALIF_DECREF(op);
 			return nullptr;
 			//return alifErr_noMemory();

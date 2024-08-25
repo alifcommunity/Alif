@@ -55,6 +55,11 @@ static inline AlifIntT alifAtomic_compareExchangePtr(void* _obj, void* _expected
 	return 0;
 }
 
+static inline uintptr_t alifAtomic_loadUintptrRelaxed(const uintptr_t* obj) { // 236
+	return *(volatile uintptr_t*)obj;
+}
+
+
 
 static inline AlifIntT alifAtomic_compareExchangeSize(AlifSizeT* _obj,
 	AlifSizeT* _expected, AlifSizeT value) { // 273
@@ -116,8 +121,8 @@ static inline uint32_t alifAtomic_loadUint32Relaxed(const uint32_t* _obj) { // 6
 
 
 
-static inline AlifSizeT alifAtomic_loadSizeRelaxed(const AlifSizeT* obj) { // 703
-	return *(volatile AlifSizeT*)obj;
+static inline AlifSizeT alifAtomic_loadSizeRelaxed(const AlifSizeT* _obj) { // 703
+	return *(volatile AlifSizeT*)_obj;
 }
 
 
@@ -138,6 +143,9 @@ static inline void alifAtomic_storeUintptrRelaxed(uintptr_t* _obj, uintptr_t _va
 }
 
 
+static inline void alifAtomic_storeSsizeRelaxed(AlifSizeT* _obj, AlifSizeT _value) { // 890
+	*(volatile AlifSizeT*)_obj = _value;
+}
 
 
 

@@ -29,17 +29,15 @@ public:
 };
 
 
-static inline size_t sharedKeys_usableSize(AlifDictKeysObject* _keys) // 305
-{
+static inline AlifUSizeT sharedKeys_usableSize(AlifDictKeysObject* _keys) {// 305
 	AlifSizeT dkUsable = alifAtomic_loadSizeAcquire(&_keys->dkUsable);
 	AlifSizeT dkNentries = alifAtomic_loadSizeAcquire(&_keys->dkNentries);
 	return dkNentries + dkUsable;
 }
 
-static inline size_t alifInlineValuesSize(AlifTypeObject* _tp) // 320
-{
+static inline AlifUSizeT alifInlineValuesSize(AlifTypeObject* _tp) {// 320
 	AlifDictKeysObject* keys = ((AlifHeapTypeObject*)_tp)->cachedKeys;
-	size_t size = sharedKeys_usableSize(keys);
-	size_t prefixSize = ALIF_SIZE_ROUND_UP(size, sizeof(AlifObject*));
+	AlifUSizeT size = sharedKeys_usableSize(keys);
+	AlifUSizeT prefixSize = ALIF_SIZE_ROUND_UP(size, sizeof(AlifObject*));
 	return prefixSize + (size + 1) * sizeof(AlifObject*);
 }
