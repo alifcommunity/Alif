@@ -201,6 +201,9 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GC.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomicGCC.h">
+      <Filter>Header Files\Atomics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\AlifCore\Objects\AlifMemory.cpp">

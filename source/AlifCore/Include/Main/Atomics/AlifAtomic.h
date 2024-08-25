@@ -7,10 +7,10 @@
 // 520
 #ifndef ALIF_USEGCC_BUILTIN_ATOMICS
 #  if defined(__GNUC__) && (__GNUC__ > 4 or (__GNUC__ == 4 && __GNUC_MINOR__ >= 8))
-#    define ALIF_USE_GCC_BUILTIN_ATOMICS 1
+#    define ALIF_USEGCC_BUILTIN_ATOMICS 1
 #  elif defined(__clang__)
 #    if __has_builtin(__atomic_load)
-#      define ALIF_USE_GCC_BUILTIN_ATOMICS 1
+#      define ALIF_USEGCC_BUILTIN_ATOMICS 1
 #    endif
 #  endif
 #endif
