@@ -1,19 +1,19 @@
 #pragma once
 
 
-class AlifGCHead { // 12
+class AlifGCHead { //12
 public:
 	uintptr_t gcNext;
 	uintptr_t gcPrev;
 } ;
 
 
-static inline AlifGCHead* alif_asGC(AlifObject* _op) { // 26
+static inline AlifGCHead* alif_asGC(AlifObject* _op) { //26
 	char* gc_ = ((char*)_op) - sizeof(AlifGCHead);
 	return (AlifGCHead*)gc_;
 }
 
-static inline AlifObject* alif_fromGC(AlifGCHead* _gc) { // 32
+static inline AlifObject* alif_fromGC(AlifGCHead* _gc) { //32
 	char* op_ = ((char*)_gc) + sizeof(AlifGCHead);
 	return (AlifObject*)op_;
 }
@@ -51,8 +51,7 @@ static inline AlifIntT alifObjectGC_isTracked(AlifObject* _op) { // 82
 }
 #define ALIFOBJECT_GC_IS_TRACKED(_op) alifObjectGC_isTracked(ALIF_CAST(AlifObject*, _op))
 
-#define ALIFGC_PREV_SHIFT           2
-
+#define ALIFGC_PREV_SHIFT           2 //162 
 #define ALIFGC_PREV_MASK            (((uintptr_t) -1) << ALIFGC_PREV_SHIFT) // 163
 
 static inline void alifGCHead_setNext(AlifGCHead* _gc, AlifGCHead* _next) { // 191
@@ -67,46 +66,46 @@ static inline void alifGCHead_setPerv(AlifGCHead* _gc, AlifGCHead* _prev) { // 2
 
 class GCGeneration { // 280
 public:
-	AlifGCHead head;
-	AlifIntT threshold; 
-	AlifIntT count;
+	AlifGCHead head{};
+	AlifIntT threshold{};
+	AlifIntT count{};
 };
 
 class GCGenerationStats { // 296
 public:
-	AlifSizeT collections;
-	AlifSizeT collected;
-	AlifSizeT uncollectable;
+	AlifSizeT collections{};
+	AlifSizeT collected{};
+	AlifSizeT uncollectable{};
 };
 
 class AlifGCDureRun { // 305
 public:
-	AlifObject* trashDeleteLater;
-	AlifIntT trashDeleteNesting;
+	AlifObject* trashDeleteLater{};
+	AlifIntT trashDeleteNesting{};
 
-	AlifIntT enabled;
-	AlifIntT debug;
-	class GCGeneration young;
-	class GCGeneration old[2];
-	class GCGeneration permanentGeneration;
-	class GCGenerationStats generationStats[3];
-	AlifIntT collecting;
-	AlifObject* garbage;
-	AlifObject* callbacks;
+	AlifIntT enabled{};
+	AlifIntT debug{};
+	class GCGeneration young {};
+	class GCGeneration old[2]{};
+	class GCGeneration permanentGeneration {};
+	class GCGenerationStats generationStats[3]{};
+	AlifIntT collecting{};
+	AlifObject* garbage{};
+	AlifObject* callbacks{};
 
-	AlifSizeT heapSize;
-	AlifSizeT workToDo;
-	AlifIntT visited_space;
+	AlifSizeT heapSize{};
+	AlifSizeT workToDo{};
+	AlifIntT visitedSpace{};
 
-	AlifSizeT longLivedTotal;
+	AlifSizeT longLivedTotal{};
 
-	AlifSizeT longLivedPending;
-	AlifIntT immortalize;
+	AlifSizeT longLivedPending{};
+	AlifIntT immortalize{};
 };
 
 class GCThreadState { // 357
 public:
-	AlifSizeT allocCount;
+	AlifSizeT allocCount{};
 };
 
 

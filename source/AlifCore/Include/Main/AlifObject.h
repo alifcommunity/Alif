@@ -132,7 +132,7 @@ static inline void alif_setType(AlifObject* _obj, AlifTypeObject* _type) { // 28
 
 
 static inline void alif_setSize(AlifVarObject* _ob, AlifSizeT _size) { // 289
-	alifAtomic_storeSsizeRelaxed(&_ob->objSize, _size);
+	alifAtomic_storeSizeRelaxed(&_ob->objSize, _size);
 }
 #  define ALIF_SET_SIZE(_ob, _size) alif_setSize(ALIFVAROBJECT_CAST(_ob), (_size)) // 300
 

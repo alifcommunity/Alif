@@ -269,8 +269,5 @@
     <ClCompile Include="..\source\AlifCore\Objects\ListObject.cpp">
       <Filter>Object Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\GC.cpp">
-      <Filter>Object Files</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>

@@ -48,7 +48,7 @@ public:
 
 #include "AlifCore_State.h"
 
-static inline class AlifFreeLists* alifFreeLists_get(void) {// 16 
+static inline class AlifFreeLists* alifFreeLists_get(void) { // 16 
 	AlifThread* tState = alifThread_get();
 	
 	return &((AlifThreadImpl*)tState)->freeLists;
@@ -57,7 +57,7 @@ static inline class AlifFreeLists* alifFreeLists_get(void) {// 16
 #define ALIF_FREELIST_POP(_tyep, _name) ALIF_CAST(_tyep*, alifFreeList_pop(&alifFreeLists_get()->_name)) // 46
 
 
-static inline void* alifFreeList_popNoStats(class AlifFreeList* _fl)  {// 80
+static inline void* alifFreeList_popNoStats(class AlifFreeList* _fl)  { // 80
 	void* obj_ = _fl->freeList;
 	if (obj_ != nullptr) {
 		_fl->freeList = *(void**)obj_;

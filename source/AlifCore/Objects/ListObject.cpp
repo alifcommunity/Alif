@@ -8,10 +8,9 @@
 class AlifListArray{ // 28
 public:
 	AlifSizeT allocated;
-	AlifObject* objectItem[];
-} ;
-
-static AlifListArray* list_allocateArray(size_t _capacity) {// 34
+	AlifObject* item[];
+};
+static AlifListArray* list_allocateArray(size_t _capacity) { // 34
 	if (_capacity > LLONG_MAX / sizeof(AlifObject*) - 1) {
 		return nullptr;
 	}
@@ -23,8 +22,7 @@ static AlifListArray* list_allocateArray(size_t _capacity) {// 34
 	return array;
 }
 
-AlifObject* alifList_New(AlifSizeT _size) // 212
-{
+AlifObject* alifList_New(AlifSizeT _size) { // 212 
 	if (_size < 0) {
 		//alifErr_badInternalCall();
 		return nullptr;
@@ -47,8 +45,8 @@ AlifObject* alifList_New(AlifSizeT _size) // 212
 			return nullptr;
 			//return alifErr_noMemory();
 		}
-		memset(&array->objectItem, 0, _size * sizeof(AlifObject*));
-		op->item = array->objectItem;
+		memset(&array->item, 0, _size * sizeof(AlifObject*));
+		op->item = array->item;
 		if (op->item == nullptr) {
 			ALIF_DECREF(op);
 			return nullptr;

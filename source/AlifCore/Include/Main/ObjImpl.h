@@ -19,11 +19,11 @@ AlifIntT alifObject_isGC(AlifObject*); // 78
 
 
 
-/* -------------------------------------------------------- */
+/* -------------------------------------------------------------------------------------------------------------------------- */
 
 #define ALIFTYPE_IS_GC(_t) alifType_hasFeature(_t, ALIF_TPFLAGS_HAVE_GC) // 157
 
 
 AlifObject* alifObject_gcNew(AlifTypeObject* _tp); // 165
 
-#define ALIFOBJECT_GC_NEW(type, typeobj) ALIF_CAST(type*, alifObject_gcNew(typeobj)) // 180
+#define ALIFOBJECT_GC_NEW(_type, _typeObj) ALIF_CAST(_type*, alifObject_gcNew(_typeObj)) // 180
