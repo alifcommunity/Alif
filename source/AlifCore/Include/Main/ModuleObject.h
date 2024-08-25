@@ -3,9 +3,9 @@
 
 
 
+extern AlifTypeObject _alifModuleType_; // 10
 
-
-
+AlifObject* alifModule_newObject(AlifObject*); // 16
 
 
 AlifObject* alifModule_new(const char*); // 20
