@@ -44,20 +44,20 @@
 // --------------------------------------------------------------- aliases ---------------------------------------------------------------
 
 #if SIZEOF_LONG == 8
-# define ALIF_ATOMIC_LOAD_ULONG(_p) \
+# define ALIFATOMIC_LOAD_ULONG(_p) \
     alifAtomic_loadUint64((uint64_t*)_p)
-# define ALIF_ATOMIC_LOAD_ULONG_RELAXED(_p) \
+# define ALIFATOMIC_LOAD_ULONG_RELAXED(_p) \
     alifAtomic_loadUint64Relaxed((uint64_t*)_p)
-# define ALIF_ATOMIC_STORE_ULONG(_p, _v) \
+# define ALIFATOMIC_STORE_ULONG(_p, _v) \
     alifAtomic_storeUint64((uint64_t*)_p, _v)
-# define ALIF_ATOMIC_STORE_ULONG_RELAXED(_p, _v) \
+# define ALIFATOMIC_STORE_ULONG_RELAXED(_p, _v) \
     alifAtomic_storeUint64Relaxed((uint64_t*)_p, _v)
 #elif SIZEOF_LONG == 4
-# define ALIF_ATOMIC_LOAD_ULONG(_p) \
+# define ALIFATOMIC_LOAD_ULONG(_p) \
     alifAtomic_loadUint32((uint32_t*)_p)
 # define ALIFATOMIC_LOAD_ULONG_RELAXED(_p) \
     alifAtomic_loadUint32Relaxed((uint32_t*)_p)
-# define ALIF_ATOMIC_STORE_ULONG(_p, _v) \
+# define ALIFATOMIC_STORE_ULONG(_p, _v) \
     alifAtomic_storeUint32((uint32_t*)_p, _v)
 # define ALIFATOMIC_STORE_ULONG_RELAXED(_p, _v) \
     alifAtomic_storeUint32Relaxed((uint32_t*)_p, _v)
