@@ -32,6 +32,38 @@ AlifObject* alifModuleDef_init(AlifModuleDef* def) { // 45
 }
 
 
+static AlifModuleObject* newModule_noTrack(AlifTypeObject* mt) { // 82
+	AlifModuleObject* m{};
+	//m = (AlifModuleObject*)alifType_allocNoTrack(mt, 0);
+	if (m == nullptr)
+		return nullptr;
+	m->def = nullptr;
+	m->state = nullptr;
+	m->weaklist = nullptr;
+	m->name = nullptr;
+	//m->dict = alifDict_new();
+	if (m->dict == nullptr) {
+		ALIF_DECREF(m);
+		return nullptr;
+	}
+	return m;
+}
+
+AlifObject* alifModule_newObject(AlifObject* _name) { // 121
+	AlifModuleObject* m = newModule_noTrack(&_alifModuleType_);
+	if (m == nullptr) return nullptr;
+
+	//if (module_initDict(m, m->dict, _name, nullptr) != 0)
+	//	goto fail;
+	//track_module(m);
+	return (AlifObject*)m;
+
+fail:
+	ALIF_DECREF(m);
+	return nullptr;
+}
+
+
 
 
 AlifObject* alifModule_new(const char* name) { // 137
@@ -39,7 +71,7 @@ AlifObject* alifModule_new(const char* name) { // 137
 	nameObj = alifUStr_fromString(name);
 	if (nameObj == nullptr)
 		return nullptr;
-	//module = alifModule_newObject(nameobj);
+	module = alifModule_newObject(nameObj);
 	ALIF_DECREF(nameObj);
 	return module;
 }
@@ -80,3 +112,24 @@ AlifObject* alifModule_createInitialized(AlifModuleDef* _module) { // 209
 
 	return (AlifObject*)m;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+AlifTypeObject _alifModuleType_ = { // 1290
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "وحدة",
+	.basicSize = sizeof(AlifModuleObject),
+	.itemSize = 0,                                          
+	//(Destructor)module_dealloc,                 
+};
