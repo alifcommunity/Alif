@@ -96,4 +96,13 @@ static inline AlifIntT _alifObject_isGC(AlifObject* obj) { // 714
 
 
 
+
+
+
+
+
+
+
+
+
 extern AlifObject* alifType_allocNoTrack(AlifTypeObject*, AlifSizeT); // 763
