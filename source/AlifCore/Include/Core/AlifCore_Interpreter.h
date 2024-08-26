@@ -41,6 +41,8 @@ public:
 
 	//class ImportState imports;
 
+	BRCState brc{};  // biased reference counting state
+
 	AlifMemory* memory_{};
 
 	//AlifObjectState objectState{};

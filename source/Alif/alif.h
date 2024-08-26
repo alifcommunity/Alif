@@ -47,7 +47,7 @@
 //#include "SetObject.h"
 //#include "Code.h"
 //#include "AlifCapsule.h"
-//#include "AlifTime.h"
+#include "AlifTime.h"
 #include "AlifState.h"
 #include "AlifThread.h"
 //#include "ModSupport.h"

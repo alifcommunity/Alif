@@ -2,7 +2,11 @@
 
 
 
-
+enum AlifLockStatus_ { // 12
+	Alif_Lock_Failure = 0,
+	Alif_Lock_Acquired = 1,
+	Alif_Lock_Intr
+};
 
 AlifUIntT alifThread_getThreadID(); // 21
 

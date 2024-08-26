@@ -201,15 +201,39 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GC.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\ListObject.h">
-      <Filter>Object Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Dict.h" />
-    <ClInclude Include="..\source\AlifCore\Include\Main\DictObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomicGCC.h">
       <Filter>Header Files\Atomics</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ObjectAlloc.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ObjectStack.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\ListObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\DictObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Dict.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ObjectAlloc.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Lock.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifTime.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ParkingLot.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Time.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Semaphore.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\AlifCore\Objects\AlifMemory.cpp">
@@ -267,6 +291,15 @@
       <Filter>Object Files</Filter>
     </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\ListObject.cpp">
+      <Filter>Object Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\Lock.cpp">
+      <Filter>Object Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\AlifTime.cpp">
+      <Filter>Object Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\ParkingLot.cpp">
       <Filter>Object Files</Filter>
     </ClCompile>
   </ItemGroup>

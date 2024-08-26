@@ -1,26 +1,24 @@
 #pragma once
 
-//#include "AlifCore_BRC.h"
-#include "AlifCore_LList.h" // use AlifCore_BRC.h instade
+#include "AlifCore_BiaseRefCount.h"
 #include "AlifCore_FreeList.h"
 
 
 class AlifThreadImpl {
 public:
-	// semi-public fields are in AlifThread.
 	AlifThread base{};
 
 	LListNode memFreeQueue{};
 
 	class GCThreadState gc{};
 
-	class AlifFreeLists freeLists{};
-
+	AlifFreeLists freeLists{};
+	BRCThreadState brc{};
 
 	class {
 	public:
 		AlifSizeT* refCounts{};
 		AlifSizeT size{};
 		AlifIntT isFinalized{};
-	} types{};
+	}types{};
 };
