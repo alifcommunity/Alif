@@ -229,7 +229,7 @@ public:
 	//AlifSequenceMethods sequence;
 	//AlifBufferProcs Buffer;
 	AlifObject* name{}, * slots{}, * qualname{};
-	class DictKeysObject* cachedKeys;
+	class DictKeysObject* cachedKeys{};
 	AlifObject* module_{};
 	AlifSizeT uniqueID{};
 };

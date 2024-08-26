@@ -2,7 +2,7 @@
 
 #include "AlifCore_ObjectAlloc.h"
 #include "AlifCore_Object.h"
-#include <AlifCore_Dict.h>
+#include "AlifCore_Dict.h"
 
 typedef class AlifGCDureRun GCState; // 20
 
@@ -12,10 +12,10 @@ typedef class AlifGCDureRun GCState; // 20
 static bool gc_shouldCollect(AlifGCDureRun* gcstate) { // 1124
 	int count = alifAtomic_loadIntRelaxed(&gcstate->young.count);
 	int threshold = gcstate->young.threshold;
-	if (count <= threshold || threshold == 0 || !gcstate->enabled) {
+	if (count <= threshold or threshold == 0 or !gcstate->enabled) {
 		return false;
 	}
-	return (count > gcstate->longLivedTotal / 4 ||
+	return (count > gcstate->longLivedTotal / 4 or
 		gcstate->old[0].threshold == 0);
 }
 
@@ -47,37 +47,37 @@ void alifObject_gcLink(AlifObject* op) { // 1763
 	record_allocation(alifThread_get());
 }
 
-static AlifObject* gc_alloc(AlifTypeObject* _tp, size_t _basicSize, size_t _preSize) { // 1789
-	AlifThread* tstate = alifThread_get();
+static AlifObject* gc_alloc(AlifTypeObject* _tp, AlifUSizeT _basicSize, AlifUSizeT _preSize) { // 1789
+	AlifThread* thread = alifThread_get();
 	if (_basicSize > LLONG_MAX - _preSize) {
 		return nullptr;
-		//return alifErr_noMemory(tstate);
+		//return alifErr_noMemory(thread);
 	}
-	size_t size = _preSize + _basicSize;
+	AlifUSizeT size = _preSize + _basicSize;
 	char* mem_ = (char*)alifObject_mallocWithType(_tp, size);
-	if (mem_ == NULL) {
+	if (mem_ == nullptr) {
 		return nullptr;
-		//return alifErr_noMemory(tstate);
+		//return alifErr_noMemory(thread);
 	}
 	if (_preSize) {
-		((AlifObject**)mem_)[0] = NULL;
-		((AlifObject**)mem_)[1] = NULL;
+		((AlifObject**)mem_)[0] = nullptr;
+		((AlifObject**)mem_)[1] = nullptr;
 	}
 	AlifObject* op_ = (AlifObject*)(mem_ + _preSize);
-	record_allocation(tstate);
+	record_allocation(thread);
 	return op_;
 }
 
 
 AlifObject* alifObject_gcNew(AlifTypeObject* tp) { // 1800
-	size_t presize = alifType_preHeaderSize(tp);
-	size_t size = alifObject_size(tp);
+	AlifUSizeT preSize = alifType_preHeaderSize(tp);
+	AlifUSizeT size = alifObject_size(tp);
 	if (alifType_hasFeature(tp, ALIF_TPFLAGS_INLINE_VALUES)) {
-		size += alifInlineValuesSize(tp);
+		size += alifInline_valuesSize(tp);
 	}
-	AlifObject* op = gc_alloc(tp, size, presize);
-	if (op == NULL) {
-		return NULL;
+	AlifObject* op = gc_alloc(tp, size, preSize);
+	if (op == nullptr) {
+		return nullptr;
 	}
 	alifObject_init(op, tp);
 	if (tp->flags & ALIF_TPFLAGS_INLINE_VALUES) {

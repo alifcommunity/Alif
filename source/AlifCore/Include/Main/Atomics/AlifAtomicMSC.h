@@ -20,8 +20,7 @@ static inline int64_t alifAtomic_addInt64(int64_t* _obj, int64_t _value) { // 45
 #endif
 }
 
-static inline int alifAtomic_addInt(int* _obj, int _value)
-{
+static inline int alifAtomic_addInt(int* _obj, int _value) { // 81
 	return (int)alifAtomic_addInt32((int32_t*)_obj, (int32_t)_value);
 }
 

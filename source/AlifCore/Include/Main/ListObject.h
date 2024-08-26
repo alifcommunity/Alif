@@ -13,8 +13,8 @@ AlifObject* alifList_New(AlifSizeT) ; // 28
 
 class AlifListObject { //  5
 public:
-	ALIFOBJECT_VAR_HEAD;
-	AlifObject** item;
+	ALIFOBJECT_VAR_HEAD{};
+	AlifObject** item{};
 
-	AlifSizeT allocated;
+	AlifSizeT allocated{};
 } ;

@@ -11,7 +11,7 @@ public:
 	AlifObject* item[];
 };
 static AlifListArray* list_allocateArray(size_t _capacity) { // 34
-	if (_capacity > LLONG_MAX / sizeof(AlifObject*) - 1) {
+	if (_capacity > ALIF_SIZET_MAX / sizeof(AlifObject*) - 1) {
 		return nullptr;
 	}
 	AlifListArray* array = (AlifListArray*)alifMem_objAlloc(sizeof(AlifListArray) + _capacity * sizeof(AlifObject*));
