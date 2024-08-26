@@ -19,3 +19,7 @@ public:
 	AlifIntT counter{};
 #endif
 };
+
+
+
+void alifSemaphore_init(AlifSemaphore*); // 58

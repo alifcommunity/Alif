@@ -35,3 +35,7 @@ class AlifRawMutex { // 103
 public:
 	uintptr_t v{};
 };
+
+
+
+void alifRawMutex_lockSlow(AlifRawMutex*); // 108

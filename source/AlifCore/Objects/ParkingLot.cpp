@@ -45,6 +45,37 @@ static Bucket buckets[NUM_BUCKETS] = { // 48
 };
 
 
+void alifSemaphore_init(AlifSemaphore* _sema) { // 53
+#if defined(_WINDOWS)
+	_sema->platformSem = CreateSemaphore(
+		nullptr,	//  attributes
+		0,			//  initial count
+		10,			//  maximum count
+		nullptr		//  unnamed
+	);
+	if (!_sema->platformSem) {
+		//alif_fatalError("ParkingLot: CreateSemaphore failed");
+		exit(-1);
+	}
+#elif defined(ALIF_USE_SEMAPHORES)
+	if (sem_init(&_sema->platformSem, /*pshared=*/0, /*value=*/0) < 0) {
+		//alif_fatalError("ParkingLot: sem_init failed");
+		exit(-1);
+	}
+#else
+	if (pthread_mutex_init(&_sema->mutex, nullptr) != 0) {
+		alif_fatalError("ParkingLot: pthread_mutex_init failed");
+		exit(-1);
+	}
+	if (pthread_cond_init(&_sema->cond, nullptr)) {
+		alif_fatalError("ParkingLot: pthread_cond_init failed");
+		exit(-1);
+	}
+	_sema->counter = 0;
+#endif
+}
+
+
 
 static inline void alifRawMutex_lock(AlifRawMutex* m) { // 111
 	uintptr_t unlocked = ALIF_UNLOCKED;
@@ -54,6 +85,25 @@ static inline void alifRawMutex_lock(AlifRawMutex* m) { // 111
 	alifRawMutex_lockSlow(m);
 }
 
+AlifIntT alifSemaphore_wait(AlifSemaphore* sema, AlifTimeT timeout, AlifIntT detach) { // 198
+	AlifThread* thread = nullptr;
+	if (detach) {
+		thread = alifThread_get();
+		if (thread and alifAtomic_loadIntRelaxed(&thread->state) ==
+			ALIF_THREAD_ATTACHED) {
+			// Only detach if we are attached
+			alifEval_releaseThread(thread);
+		}
+		else {
+			thread = nullptr;
+		}
+	}
+	int res = alifSemaphore_platformWait(sema, timeout);
+	if (thread) {
+		alifEval_acquireThread(thread);
+	}
+	return res;
+}
 
 
 AlifIntT alifParkingLot_park(const void* addr, const void* expected, AlifUSizeT size,

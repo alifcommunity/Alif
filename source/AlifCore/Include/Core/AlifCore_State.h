@@ -5,6 +5,11 @@
 #include "AlifCore_ThreadState.h"
 
 
+// 40
+#define ALIF_THREAD_DETACHED     0
+#define ALIF_THREAD_ATTACHED     1
+#define ALIF_THREAD_SUSPENDED    2
+
 
 static inline AlifInterpreter* alifInterpreter_main(void) { // 55
 	return _alifDureRun_.interpreters.main;

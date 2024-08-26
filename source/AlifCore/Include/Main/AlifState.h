@@ -46,6 +46,8 @@ public:
 		AlifUIntT : 2;
 	} status{};
 
+	AlifIntT state{};
+
 	class AlifInterpreterFrame* currentFrame{};
 
 	AlifIntT alifRecursionRemaining{};
@@ -64,6 +66,13 @@ public:
 	//AlifObject** dataStackTop{};
 	//AlifObject** dataStackLimit{};
 };
+
+
+
+
+
+extern void alifThread_detach(AlifThread*); // 157
+
 
 
 

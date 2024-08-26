@@ -58,5 +58,5 @@
 #include "FileUtils.h"
 //#include "AlifRun.h"
 #include "AlifLifeCycle.h"
-//#include "AlifEval.h"
+#include "AlifEval.h"
 //#include "GenericAliasObject.h"

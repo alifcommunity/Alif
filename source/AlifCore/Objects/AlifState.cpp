@@ -64,7 +64,7 @@ static void bind_thread(AlifThread* tstate) { // 245
 
 	tstate->status.bound = 1;
 }
-/* ---------------------------------------- AlifCycle ---------------------------------------- */
+/* ------------------------------ AlifCycle ------------------------------- */
 
 
 static const AlifDureRun _initial_ = ALIF_DURERUNSTATE_INIT(_alifDureRun_); // 393
@@ -282,6 +282,24 @@ AlifThread* alifThreadState_new(AlifInterpreter* _interpreter) { // 1622
 
 void alifThread_attach(AlifThread* _thread) { // 2070
 	current_fastSet(_thread);
+}
+
+static void detach_thread(AlifThread* _thread, AlifIntT detachedState) { // 2122
+
+	if (_thread->criticalSection != 0) {
+		alifCriticalSection_suspendAll(_thread);
+	}
+
+	alif_qsbrDetach(((AlifThreadImpl*)_thread)->qsbr);
+
+	tstate_deactivate(_thread);
+	tstate_setDetached(_thread, detachedState);
+	current_fastClear(&_alifDureRun_);
+	alifEval_releaseLock(_thread->interpreter, _thread, 0);
+}
+
+void alifThread_detach(AlifThread* _thread) { // 2140
+	detach_thread(_thread, ALIF_THREAD_DETACHED);
 }
 
 void alifThread_bind(AlifThread* _thread) { // 2447

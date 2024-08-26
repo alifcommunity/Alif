@@ -128,6 +128,10 @@ static inline void* alifAtomic_loadPtr(const void* _obj) { // 597
 #endif
 }
 
+static inline uintptr_t alifAtomic_loadUintptr(const uintptr_t* _obj) { // 614
+	return (uintptr_t)alifAtomic_loadPtr((void*)_obj);
+}
+
 static inline AlifSizeT alifAtomic_loadSize(const AlifSizeT* _obj) { // 621
 	return (AlifSizeT)alifAtomic_loadPtr((void*)_obj);
 }
