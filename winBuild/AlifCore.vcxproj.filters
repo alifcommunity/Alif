@@ -237,6 +237,9 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifEval.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_CriticalSection.h">
+      <Filter>Header Core Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\AlifCore\Objects\AlifMemory.cpp">
@@ -306,6 +309,9 @@
       <Filter>Object Files</Filter>
     </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\AlifEvalGIL.cpp">
+      <Filter>Object Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\CriticalSection.cpp">
       <Filter>Object Files</Filter>
     </ClCompile>
   </ItemGroup>

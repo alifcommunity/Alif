@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_BiaseRefCount.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_CriticalSection.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Dict.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DureRun.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DureRunInit.h" />
@@ -104,6 +105,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\BiaseRefCount.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\BuiltinsModule.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ConfigMinimal.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\CriticalSection.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\FileUtils.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GCFreeThreading.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GetOption.cpp" />

@@ -38,15 +38,31 @@ static inline AlifThread* alifThread_get() { // 134
 #endif // HAVE_LOCAL_THREAD
 }
 
+extern void alifThread_attach(AlifThread*); // 151
 
-AlifThread* alifThreadState_new(AlifInterpreter*); // 219
-extern void alifThread_bind(AlifThread*); // 222
-extern void alifThread_attach(AlifThread*); // temp
+static inline void alif_ensureFuncTstateNotNULL(const char* func, AlifThread* tstate) { // 183
+	if (tstate == nullptr) {
+		//alif_fatalErrorFunc(func,
+		//	"the function must be called with the GIL held, "
+		//	"after Alif initialization and before Alif finalization, "
+		//	"but the GIL is released (the current Alif thread state is NULL)");
+		return;
+	}
+}
+
+#define ALIF_ENSURETHREADNOTNULL(_thread) \
+    alif_ensureFuncTstateNotNULL(__func__, (_thread)) // 195
+
 
 static inline AlifInterpreter* alifInterpreter_get() { // 207
 	AlifThread* tstate = alifThread_get();
 	return tstate->interpreter;
 }
+
+
+AlifThread* alifThreadState_new(AlifInterpreter*); // 219
+extern void alifThread_bind(AlifThread*); // 222
+
 
 
 extern AlifIntT alifInterpreter_enable(AlifDureRun*); // 245

@@ -281,7 +281,36 @@ AlifThread* alifThreadState_new(AlifInterpreter* _interpreter) { // 1622
 
 
 void alifThread_attach(AlifThread* _thread) { // 2070
-	current_fastSet(_thread);
+	ALIF_ENSURETHREADNOTNULL(_thread);
+	if (current_fastGet() != nullptr) {
+		//alif_fatalError("non-NULL old thread state");
+		return; // temp
+	}
+
+
+	while (1) {
+		alifEval_acquireLock(_thread);
+
+		current_fastSet(_thread);
+		thread_activate(_thread);
+
+		if (!thread_tryAttach(_thread)) {
+			thread_waitAttach(_thread);
+		}
+
+		if (alifEval_isGILEnabled(_thread) && !_thread->status.holdsGil) {
+			thread_setDetached(_thread, ALIF_THREAD_DETACHED);
+			thread_deactivate(_thread);
+			current_fastClear(&_alifDureRun_);
+			continue;
+		}
+		alif_qsbrAttach(((AlifThreadImpl*)_thread)->qsbr);
+		break;
+	}
+
+	if (_thread->criticalSection != 0) {
+		alifCriticalSection_resume(_thread);
+	}
 }
 
 static void detach_thread(AlifThread* _thread, AlifIntT detachedState) { // 2122
