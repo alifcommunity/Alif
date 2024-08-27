@@ -34,7 +34,7 @@
 #include "UStrObject.h"
 //#include "AlifErrors.h"
 #include "ListObject.h"
-//#include "TupleObject.h"
+#include "TupleObject.h"
 #include "DictObject.h"
 #include "MethodObject.h"
 #include "ModuleObject.h"

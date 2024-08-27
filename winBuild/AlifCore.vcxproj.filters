@@ -210,6 +210,7 @@
       <Filter>Header Files\Atomics</Filter>
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ObjectAlloc.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\TupleObject.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\AlifCore\Objects\AlifMemory.cpp">
@@ -269,5 +270,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\ListObject.cpp">
       <Filter>Object Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\DictObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\TupleObject.cpp" />
   </ItemGroup>
 </Project>
