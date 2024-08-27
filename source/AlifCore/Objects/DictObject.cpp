@@ -88,7 +88,7 @@ static AlifObject* new_dict(AlifInterpreter* interp,
 }
 
 
-AlifTypeObject _alifDictType_ = {
+AlifTypeObject _alifDictType_ = { // 4760
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "قاموس",
 	.basicSize = sizeof(AlifDictObject),
