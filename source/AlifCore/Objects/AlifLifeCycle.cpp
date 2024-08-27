@@ -130,10 +130,9 @@ static AlifIntT alifCore_createInterpreter(AlifDureRun* _dureRun,
 	}
 
 	_dureRun->mainThread = thread;
-	//alifThread_attach(thread); // deprecated - remove the function if not used
 	alifThread_bind(thread);
 
-	//initInterpreter_createGil(thread, config.gil);
+	initInterpreter_createGil(thread, config.gil);
 
 	*_threadP = thread;
 	return 1;

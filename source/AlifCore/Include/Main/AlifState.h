@@ -46,6 +46,8 @@ public:
 		AlifUIntT : 2;
 	} status{};
 
+	AlifIntT state{};
+
 	class AlifInterpreterFrame* currentFrame{};
 
 	AlifIntT alifRecursionRemaining{};
@@ -66,6 +68,13 @@ public:
 	uint64_t dictGlobalVersion;
 
 };
+
+
+
+
+
+extern void alifThread_detach(AlifThread*); // 157
+
 
 
 
