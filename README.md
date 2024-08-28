@@ -28,9 +28,9 @@
 
 ## نظام <em> Windows  </em> :
 
-قُمْ بِتَحميل برنامج <em> visual studio </em> الإصدار 2014 وَمَا بَعدهُ.   
+قُمْ بِتَحميل برنامج <em> visual studio </em> إصدار سنة (2014) وَمَا بَعدها.   
 يمكنك تحميلهُ من خلالِ الرابط : https://visualstudio.microsoft.com/downloads/  
-وبعدها قم بتحميلِ الشفرةِ المصدرية من مجتمع أَلِفْ على <em> github </em> : https://github.com/alifcommunity/Alif5  
+وبعدها قم بتحميلِ الشفرةِ المصدرية من مجتمع أَلِفْ على <em> github </em> : https://github.com/alifcommunity/Alif  
 ثم قم بفتح ملف <em> winBuild </em> الموجود في ملف <em> Alif5 </em> وبعدها قم بتشغيل ملف <em> Alif5.sln </em>  
 سيتم تشغيل مشروع أَلِفْ على برنامج <em> visual studio </em>  
 يمكنك كتابة الشيفرة من خلال ملف <em> code.alif5 </em> الموجود في ملف <em> Alif5 </em>  
@@ -41,9 +41,9 @@
 
 ## نظام <em> linux  </em> :
 
-يجب أن يتوفرالإصدار 8.0.0 فما فوق من <em> g++ </em>   
+يجب أن يتوفر الإصدار 8.0.0 فما فوق من <em> g++ </em>   
 	يمكنك تحميله من خلال هذا الرابط : https://github.com/niXman/mingw-builds-binaries/releases  
- قم بتحميل الشفرة المصدرية من مجتمع ألف على <em> github </em> : https://github.com/alifcommunity/Alif5  
+ قم بتحميل الشفرة المصدرية من مجتمع ألف على <em> github </em> : https://github.com/alifcommunity/Alif  
  قم بفتح ملف <em> Alif5 </em> 
  ومن ثم تقوم بتشغيل <em> cmd </em> في نفس مسار الملف.  
  بعد ذلك تقوم بكتابة أمر  :keyboard:
