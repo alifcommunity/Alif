@@ -87,17 +87,17 @@ AlifObject* alifObject_gcNew(AlifTypeObject* tp) { // 1800
 }
 
 AlifVarObject* alifObject_gcNewVar(AlifTypeObject* _tp, AlifSizeT _nItems) { // 1820
-	AlifVarObject* op_;
+	AlifVarObject* op_{};
 
 	if (_nItems < 0) {
 		//alifErr_badInternalCall();
-		return NULL;
+		return nullptr;
 	}
-	size_t preSize = alifType_preHeaderSize(_tp);
-	size_t size = alifObject_varSize(_tp, _nItems);
+	AlifUSizeT preSize = alifType_preHeaderSize(_tp);
+	AlifUSizeT size = alifObject_varSize(_tp, _nItems);
 	op_ = (AlifVarObject*)gc_alloc(_tp, size, preSize);
-	if (op_ == NULL) {
-		return NULL;
+	if (op_ == nullptr) {
+		return nullptr;
 	}
 	alifObject_initVar(op_, _tp, _nItems);
 	return op_;

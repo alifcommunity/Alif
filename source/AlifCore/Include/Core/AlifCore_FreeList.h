@@ -66,11 +66,11 @@ static inline class AlifFreeLists* alifFreeLists_get(void) { // 16
 #define ALIF_FREELIST_POP(_tyep, _name) ALIF_CAST(_tyep*, alifFreeList_pop(&alifFreeLists_get()->_name)) // 46
 
 
-static inline int alifFreeList_push(class AlifFreeList* fl, void* obj, AlifSizeT maxsize) {  // 57
-	if (fl->size < maxsize && fl->size >= 0) {
-		*(void**)obj = fl->freeList;
-		fl->freeList = obj;
-		fl->size++;
+static inline AlifIntT alifFreeList_push(class AlifFreeList* _fl, void* _obj, AlifSizeT _maxSize) {  // 57
+	if (_fl->size < _maxSize and _fl->size >= 0) {
+		*(void**)_obj = _fl->freeList;
+		_fl->freeList = _obj;
+		_fl->size++;
 		//OBJECT_STAT_INC(toFreeList);
 		return 1;
 	}

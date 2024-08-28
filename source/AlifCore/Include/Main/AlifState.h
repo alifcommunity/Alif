@@ -58,14 +58,14 @@ public:
 
 	AlifIntT tracing{};
 
-	AlifUSizeT threadID;
+	AlifUSizeT threadID{};
 
 	AlifSizeT id{};
 
 	//AlifStackChunk* dataStackChunk{};
 	//AlifObject** dataStackTop{};
 	//AlifObject** dataStackLimit{};
-	uint64_t dictGlobalVersion;
+	uint64_t dictGlobalVersion{};
 
 };
 

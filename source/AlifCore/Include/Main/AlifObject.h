@@ -145,7 +145,7 @@ typedef AlifIntT (*TraverseProc)(AlifObject*, VisitProc, void*); // 331
 
 typedef void (*FreeFunc)(void*); // 334
 typedef void (*Destructor)(AlifObject*); // 335
-typedef int (*InitProc)(AlifObject*, AlifObject*, AlifObject*); // 347
+typedef AlifIntT (*InitProc)(AlifObject*, AlifObject*, AlifObject*); // 347
 typedef AlifObject* (*NewFunc)(AlifTypeObject*, AlifObject*, AlifObject*); // 348
 
 
@@ -213,8 +213,8 @@ public:
 	unsigned long flags{};
 
 	AlifTypeObject* base{};
-	InitProc init;
-	NewFunc new_;
+	InitProc init{};
+	NewFunc new_{};
 	FreeFunc free{};
 	Inquiry isGC{};
 

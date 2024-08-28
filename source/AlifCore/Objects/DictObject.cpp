@@ -10,22 +10,19 @@
 #include "AlifCore_Object.h"
 
 
-#define DECREF_KEYS(dk)  alifAtomic_addSize(&_dk->dkRefCnt, -1)// 213
+#define DECREF_KEYS(_dk)  alifAtomic_addSize(&_dk->dkRefCnt, -1)// 213
 
 static void free_keysObject(AlifDictKeysObject*, bool); // 421
 
 
-static inline void dictKeys_decref(AlifInterpreter* _interp, AlifDictKeysObject* _dk, bool _useqsbr) { // 431
+static inline void dictKeys_decref(AlifInterpreter* _interp, AlifDictKeysObject* _dk, bool _useqsbr) { // 442
 	if (alifAtomic_loadSizeRelaxed(&_dk->dkRefCnt) == ALIF_IMMORTAL_REFCNT) {
 		return;
 	}
-#ifdef ALIF_REF_DEBUG
-	alif_DecRefTotal(alifThread_get());
-#endif
 	if (DECREF_KEYS(_dk) == 1) {
-		if (DK_IS_UNICODE(_dk)) {
-			AlifDictUnicodeEntry* entries = dk_UStr_entries(_dk);
-			AlifSizeT i, n;
+		if (DK_IS_USTR(_dk)) {
+			AlifDictUStrEntry* entries = dk_UStrEntries(_dk);
+			AlifSizeT i{}, n{};
 			for (i = 0, n = _dk->dkNentries; i < n; i++) {
 				ALIF_XDECREF(entries[i].key);
 				ALIF_XDECREF(entries[i].value);
@@ -45,11 +42,11 @@ static inline void dictKeys_decref(AlifInterpreter* _interp, AlifDictKeysObject*
 
 static void free_keysObject(AlifDictKeysObject* _keys, bool _useqsbr) { // 804
 	if (_useqsbr) {
-		//alifMem_freeDelayed(_keys);
+		//alifMem_freeDelayed(_keys);  يجب عمل الدالة
 		alifMem_objFree(_keys);
 		return;
 	}
-	if (DK_LOG_SIZE(_keys) == ALIFDICT_LOG_MINSIZE && _keys->dkKind == Dict_Kyes_UStr) {
+	if (DK_LOG_SIZE(_keys) == ALIFDICT_LOG_MINSIZE and _keys->dkKind == DictKeysKind_::Dict_Kyes_UStr) {
 		//ALIF_FREELIST_FREE(dictKeys, DICT, _keys, (FreeFunc)alifMem_objFree); // ظهر خطا وسيتم العمل عليه لاحقا
 	}
 	else {
@@ -68,7 +65,7 @@ static inline void free_values(AlifDictValues* _values, bool _useqsbr) { // 848
 
 static AlifObject* new_dict(AlifInterpreter* interp,
 	AlifDictKeysObject* keys, AlifDictValues* values,
-	AlifSizeT used, int free_values_on_failure) { // 860
+	AlifSizeT used, AlifIntT free_values_on_failure) { // 860
 	AlifDictObject* mp_ = ALIF_FREELIST_POP(AlifDictObject, dicts);
 	if (mp_ == NULL) {
 		mp_ = ALIFOBJECT_GC_NEW(AlifDictObject, &_alifDictType_);

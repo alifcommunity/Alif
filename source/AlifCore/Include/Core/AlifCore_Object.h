@@ -67,7 +67,7 @@ static inline void alifObject_init(AlifObject* _op, AlifTypeObject* _typeObj) { 
 	alif_newReference(_op);
 }
 
-static inline void alifObject_initVar(AlifVarObject* _op, AlifTypeObject* _typeObj, AlifSizeT _size) { // 280
+static inline void _alifObject_initVar(AlifVarObject* _op, AlifTypeObject* _typeObj, AlifSizeT _size) { // 380
 	alifObject_init((AlifObject*)_op, _typeObj);
 	ALIF_SET_SIZE(_op, _size);
 }

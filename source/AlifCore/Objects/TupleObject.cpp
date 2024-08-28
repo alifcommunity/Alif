@@ -9,13 +9,13 @@
 
 static AlifTupleObject* tuple_alloc(AlifSizeT _size) { // 34
 	if (_size < 0) {
-		//alifErr_badInternalCall();
-		return NULL;
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
 	}
 	AlifSizeT index = _size - 1;
 	if (index < ALIFTUPLE_MAXSAVESIZE) {
 		AlifTupleObject* op_ = ALIF_FREELIST_POP(AlifTupleObject, tuples[index]);
-		if (op_ != NULL) {
+		if (op_ != nullptr) {
 			return op_;
 		}
 	}
@@ -28,16 +28,16 @@ static AlifTupleObject* tuple_alloc(AlifSizeT _size) { // 34
 }
 
 AlifObject* alifTuple_new(AlifSizeT _size) { // 68
-	AlifTupleObject* op_;
+	AlifTupleObject* op_{};
 	if (_size == 0) {
-		return tuple_get_empty();
+		return tuple_getEmpty();
 	}
 	op_ = tuple_alloc(_size);
-	if (op_ == NULL) {
-		return NULL;
+	if (op_ == nullptr) {
+		return nullptr;
 	}
 	for (AlifSizeT i = 0; i < _size; i++) {
-		op_->item[i] = NULL;
+		op_->item[i] = nullptr;
 	}
 	ALIFOBJECT_GC_TRACK(op_);
 	return (AlifObject*)op_;

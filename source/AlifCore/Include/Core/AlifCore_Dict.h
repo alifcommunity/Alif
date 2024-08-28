@@ -4,16 +4,16 @@
 
 class AlifDictKeyEntry { // 74
 public:
-	AlifUSizeT hash;
-	AlifObject* key;
-	AlifObject* value; 
-} ;
+	AlifUSizeT hash{};
+	AlifObject* key{};
+	AlifObject* value{};
+};
 
-class AlifDictUnicodeEntry { // 81
+class AlifDictUStrEntry { // 81
 public:
-	AlifObject* key;   
-	AlifObject* value; 
-} ;
+	AlifObject* key{};
+	AlifObject* value{};
+};
 
 
  enum DictKeysKind_ { // 131
@@ -35,13 +35,13 @@ public:
 	char dkIndices[];
 };
 
-class DictValues { // 195
+class DictValues { // 194
 public:
-	uint8_t capacity;
-	uint8_t size;
-	uint8_t embedded;
-	uint8_t valid;
-	AlifObject* values[1];
+	uint8_t capacity{};
+	uint8_t size{};
+	uint8_t embedded{};
+	uint8_t valid{};
+	AlifObject* values[1]{};
 };
 
 #define DK_LOG_SIZE(_dk)  ALIF_RVALUE((_dk)->dkLog2Size) // 202
@@ -55,11 +55,11 @@ static inline void* _dk_entries(AlifDictKeysObject* _dk) { // 209
 static inline AlifDictKeyEntry* dk_entries(AlifDictKeysObject* _dk) { // 215
 	return (AlifDictKeyEntry*)_dk_entries(_dk);
 }
-static inline AlifDictUnicodeEntry* dk_UStr_entries(AlifDictKeysObject* _dk) { // 219
-	return (AlifDictUnicodeEntry*)_dk_entries(_dk);
+static inline AlifDictUStrEntry* dk_UStrEntries(AlifDictKeysObject* _dk) { // 219
+	return (AlifDictUStrEntry*)_dk_entries(_dk);
 }
 
-#define DK_IS_UNICODE(_dk) ((_dk)->dkKind != Dict_Kyes_General) // 224
+#define DK_IS_USTR(_dk) ((_dk)->dkKind != DictKeysKind_::Dict_Kyes_General) // 224
 
 static inline AlifUSizeT sharedKeys_usableSize(AlifDictKeysObject* _keys) { // 305
 	AlifSizeT dkUsable = alifAtomic_loadSizeAcquire(&_keys->dkUsable);
@@ -75,16 +75,15 @@ static inline AlifUSizeT alifInline_valuesSize(AlifTypeObject* _tp) { // 320
 }
 
 
-static inline uint64_t dict_nextVersion(AlifInterpreter* interp) { // 882
+static inline uint64_t dict_nextVersion(AlifInterpreter* _interp) { // 235
 	AlifThread* tstate = alifThread_get();
-	uint64_t cur_progress = (tstate->dictGlobalVersion &
+	uint64_t curProgress = (tstate->dictGlobalVersion &
 		(THREAD_LOCAL_DICT_VERSION_BATCH - 1));
-	if (cur_progress == 0) {
-		uint64_t next = alifAtomic_addInt64(&interp->dictState.globalVersion,
+	if (curProgress == 0) {
+		uint64_t next = alifAtomic_addInt64(&_interp->dictState.globalVersion,
 			THREAD_LOCAL_DICT_VERSION_BATCH);
 		tstate->dictGlobalVersion = next;
 	}
 	return tstate->dictGlobalVersion += DICT_VERSION_INCREMENT;
 }
-
 #define DICT_NEXT_VERSION(_interp) dict_nextVersion(_interp)

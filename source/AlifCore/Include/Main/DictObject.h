@@ -13,12 +13,12 @@ class AlifDictObject { // 11
 public:
 	ALIFOBJECT_HEAD;
 
-	AlifSizeT used;
-	uint64_t versionTag;
+	AlifSizeT used{};
+	uint64_t versionTag{};
 
-	AlifDictKeysObject* keys;
+	AlifDictKeysObject* keys{};
 
-	AlifDictValues* values;
-} ;
+	AlifDictValues* values{};
+};
 
 

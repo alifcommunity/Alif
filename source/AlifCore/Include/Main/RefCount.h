@@ -3,7 +3,7 @@
 
 
 
-#define ALIF_IMMORTAL_REFCNT ALIF_CAST(AlifSizeT, UINT_MAX) // 38
+#define ALIF_IMMORTAL_REFCNT ALIF_CAST(AlifSizeT, UINT_MAX) // 37
 
 
 

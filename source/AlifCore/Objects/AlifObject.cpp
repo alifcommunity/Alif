@@ -65,9 +65,15 @@ void alif_mergeZeroLocalRefcount(AlifObject* _op) { // 374
 	}
 }
 
+AlifVarObject* alifObject_initVar(AlifVarObject* _op, AlifTypeObject* _tp, AlifSizeT _size) { // 448
+	if (_op == nullptr) {
+		//return (AlifVarObject*)alifErr_noMemory();
+		return nullptr;
+	}
 
-
-
+	_alifObject_initVar(_op, _tp, _size);
+	return _op;
+}
 
 
 
