@@ -63,23 +63,23 @@ static inline void free_values(AlifDictValues* _values, bool _useqsbr) { // 848
 	alifMem_objFree(_values);
 }
 
-static AlifObject* new_dict(AlifInterpreter* interp,
-	AlifDictKeysObject* keys, AlifDictValues* values,
-	AlifSizeT used, AlifIntT free_values_on_failure) { // 860
+static AlifObject* new_dict(AlifInterpreter* _interp,
+	AlifDictKeysObject* _keys, AlifDictValues* _values,
+	AlifSizeT _used, AlifIntT _freeValuesOnFailure) { // 860
 	AlifDictObject* mp_ = ALIF_FREELIST_POP(AlifDictObject, dicts);
-	if (mp_ == NULL) {
+	if (mp_ == nullptr) {
 		mp_ = ALIFOBJECT_GC_NEW(AlifDictObject, &_alifDictType_);
-		if (mp_ == NULL) {
-			dictKeys_decref(interp, keys, false);
-			if (free_values_on_failure) {
-				free_values(values, false);
+		if (mp_ == nullptr) {
+			dictKeys_decref(_interp, _keys, false);
+			if (_freeValuesOnFailure) {
+				free_values(_values, false);
 			}
-			return NULL;
+			return nullptr;
 		}
 	}
-	mp_->keys = keys;
-	mp_->values = values;
-	mp_->used = used;
+	mp_->keys = _keys;
+	mp_->values = _values;
+	mp_->used = _used;
 	mp_->versionTag = DICT_NEXT_VERSION(interp);
 	return (AlifObject*)mp_;
 }

@@ -1078,7 +1078,7 @@ AlifObject* alifUStrWriter_finish(AlifUStrWriter* _writer) { // 13809
 		str2 = resize_compact(str, _writer->pos);
 		if (str2 == nullptr) {
 			ALIF_DECREF(str);
-			return NULL;
+			return nullptr;
 		}
 		str = str2;
 	}
