@@ -29,22 +29,23 @@ static void alif_yield(void) { // 40
 }
 
 
-AlifLockStatus_ alifMutex_lockTimed(AlifMutex* m, AlifTimeT timeout, AlifLockFlags_ flags) { // 50
-	uint8_t v = alifAtomic_loadUint8Relaxed(&m->bits);
+AlifLockStatus_ alifMutex_lockTimed(AlifMutex* _m,
+	AlifTimeT _timeout, AlifLockFlags_ _flags) { // 50
+	uint8_t v = alifAtomic_loadUint8Relaxed(&_m->bits);
 	if ((v & ALIF_LOCKED) == 0) {
-		if (alifAtomic_compareExchangeUint8(&m->bits, &v, v | ALIF_LOCKED)) {
+		if (alifAtomic_compareExchangeUint8(&_m->bits, &v, v | ALIF_LOCKED)) {
 			return AlifLockStatus_::Alif_Lock_Acquired;
 		}
 	}
-	else if (timeout == 0) {
+	else if (_timeout == 0) {
 		return AlifLockStatus_::Alif_Lock_Failure;
 	}
 
 	AlifTimeT now{};
 	(void)alifTime_monotonicRaw(&now);
 	AlifTimeT endtime = 0;
-	if (timeout > 0) {
-		endtime = _alifTime_add(now, timeout);
+	if (_timeout > 0) {
+		endtime = _alifTime_add(now, _timeout);
 	}
 
 	MutexEntry entry = {
@@ -55,7 +56,7 @@ AlifLockStatus_ alifMutex_lockTimed(AlifMutex* m, AlifTimeT timeout, AlifLockFla
 	AlifSizeT spin_count = 0;
 	for (;;) {
 		if ((v & ALIF_LOCKED) == 0) {
-			if (alifAtomic_compareExchangeUint8(&m->bits, &v, v | ALIF_LOCKED)) {
+			if (alifAtomic_compareExchangeUint8(&_m->bits, &v, v | ALIF_LOCKED)) {
 				return AlifLockStatus_::Alif_Lock_Acquired;
 			}
 			continue;
@@ -67,27 +68,27 @@ AlifLockStatus_ alifMutex_lockTimed(AlifMutex* m, AlifTimeT timeout, AlifLockFla
 			continue;
 		}
 
-		if (timeout == 0) {
+		if (_timeout == 0) {
 			return AlifLockStatus_::Alif_Lock_Failure;
 		}
 
 		uint8_t newv = v;
 		if (!(v & ALIF_HAS_PARKED)) {
 			newv = v | ALIF_HAS_PARKED;
-			if (!alifAtomic_compareExchangeUint8(&m->bits, &v, newv)) {
+			if (!alifAtomic_compareExchangeUint8(&_m->bits, &v, newv)) {
 				continue;
 			}
 		}
 
-		int ret = alifParkingLot_park(&m->bits, &newv, sizeof(newv), timeout,
-			&entry, (flags & AlifLockFlags_::Alif_Lock_Detach) != 0);
+		int ret = alifParkingLot_park(&_m->bits, &newv, sizeof(newv), _timeout,
+			&entry, (_flags & AlifLockFlags_::Alif_Lock_Detach) != 0);
 
 		if (ret == Alif_Park_Ok) {
 			if (entry.handedOff) {
 				return AlifLockStatus_::Alif_Lock_Acquired;
 			}
 		}
-		else if (ret == Alif_Park_Intr and (flags & ALIF_LOCK_HANDLE_SIGNALS)) {
+		else if (ret == Alif_Park_Intr and (_flags & ALIF_LOCK_HANDLE_SIGNALS)) {
 			if (alif_makePendingCalls() < 0) {
 				return Alif_Lock_Intr;
 			}
@@ -96,19 +97,33 @@ AlifLockStatus_ alifMutex_lockTimed(AlifMutex* m, AlifTimeT timeout, AlifLockFla
 			return AlifLockStatus_::Alif_Lock_Failure;
 		}
 
-		if (timeout > 0) {
-			timeout = alifDeadline_get(endtime);
-			if (timeout <= 0) {
-				timeout = 0;
+		if (_timeout > 0) {
+			_timeout = alifDeadline_get(endtime);
+			if (_timeout <= 0) {
+				_timeout = 0;
 			}
 		}
 
-		v = alifAtomic_loadUint8Relaxed(&m->bits);
+		v = alifAtomic_loadUint8Relaxed(&_m->bits);
 	}
 }
 
 
-
+AlifIntT alifMutex_tryUnlock(AlifMutex* _m) { // 158
+	uint8_t v = alifAtomic_loadUint8(&_m->bits);
+	for (;;) {
+		if ((v & ALIF_LOCKED) == 0) {
+			return -1;
+		}
+		else if ((v & ALIF_HAS_PARKED)) {
+			alifParkingLot_unpark(&_m->bits, (AlifUnparkFnT*)mutex_unpark, _m);
+			return 0;
+		}
+		else if (AlifAtomic_compareExchangeUint8(&_m->bits, &v, ALIF_UNLOCKED)) {
+			return 0;
+		}
+	}
+}
 
 
 
@@ -151,7 +166,29 @@ void alifRawMutex_lockSlow(AlifRawMutex* m) { // 186
 
 
 
+void alifRawMutex_unlockSlow(AlifRawMutex* _m) { // 217
+	uintptr_t v = alifAtomic_loadUintptr(&_m->v);
+	for (;;) {
+		if ((v & ALIF_LOCKED) == 0) {
+			//alif_fatalError("unlocking mutex that is not locked");
+			return; // temp
+		}
 
+		RawMutexEntry* waiter = (RawMutexEntry*)(v & ~1);
+		if (waiter) {
+			uintptr_t next_waiter = (uintptr_t)waiter->next;
+			if (alifAtomic_compareExchangeUintptr(&_m->v, &v, next_waiter)) {
+				alifSemaphore_wakeup(&waiter->sema);
+				return;
+			}
+		}
+		else {
+			if (alifAtomic_compareExchangeUintptr(&_m->v, &v, ALIF_UNLOCKED)) {
+				return;
+			}
+		}
+	}
+}
 
 
 
@@ -164,4 +201,13 @@ void alifRawMutex_lockSlow(AlifRawMutex* m) { // 186
 
 void alifMutex_lock(AlifMutex* _m) { // 579
 	alifMutex_lockTimed(_m, -1, AlifLockFlags_::Alif_Lock_Detach);
+}
+
+
+
+void alifMutex_unlock(AlifMutex* _m) { // 586
+	if (alifMutex_tryUnlock(_m) < 0) {
+		//alif_fatalError("unlocking mutex that is not locked");
+		return; // temp
+	}
 }

@@ -103,18 +103,18 @@ static AlifIntT alifCore_createInterpreter(AlifDureRun* _dureRun,
 	status = alifConfig_copy(&interpreter->config, _config);
 	if (status < 1) return status;
 
-	//status = alifGIL_Init(interpreter);
-	//if (status < 1) {
-	//	return status;
-	//}
+	status = alifGIL_Init(interpreter);
+	if (status < 1) {
+		return status;
+	}
 
-	//AlifInterpreterConfig config = ALIFINTERPRETERCONFIG_LEGACY_INIT;
-	//config.gil = ALIFINTERPRETERCONFIG_OWN_GIL;
-	//config.checkMultiInterpExtensions = 0;
-	//status = initInterpreter_settings(interp, &config);
-	//if (status < 1) {
-	//	return status;
-	//}
+	AlifInterpreterConfig config = ALIFINTERPRETERCONFIG_LEGACY_INIT;
+	config.gil = ALIFINTERPRETERCONFIG_OWN_GIL;
+	config.checkMultiInterpExtensions = 0;
+	status = initInterpreter_settings(interp, &config);
+	if (status < 1) {
+		return status;
+	}
 
 	if (alifInterpreterMem_init(interpreter) < 1) {
 		// memory error

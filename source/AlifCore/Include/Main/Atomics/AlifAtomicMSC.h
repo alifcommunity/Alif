@@ -98,6 +98,27 @@ static inline AlifIntT alifAtomic_compareExchangeSize(AlifSizeT* _obj,
 }
 
 
+
+static inline uint8_t alifAtomic_loadUint8(const uint8_t* _obj) { // 511
+#if defined(_M_X64) or defined(_M_IX86)
+	return *(volatile uint8_t*)_obj;
+#elif defined(_M_ARM64)
+	return (uint8_t)__ldar8((unsigned __int8 volatile*)_obj);
+#else
+#  error "no implementation of alifAtomic_loadUint8"
+#endif
+}
+
+static inline uint16_t alifAtomic_loadUint16(const uint16_t* _obj) { // 523
+#if defined(_M_X64) || defined(_M_IX86)
+	return *(volatile uint16_t*)_obj;
+#elif defined(_M_ARM64)
+	return (uint16_t)__ldar16((unsigned __int16 volatile*)_obj);
+#else
+#  error "no implementation of alifAtomic_loadUint16"
+#endif
+}
+
 static inline uint32_t alifAtomic_loadUint32(const uint32_t* _obj) { // 535
 #if defined(_M_X64) or defined(_M_IX86)
 	return *(volatile uint32_t*)_obj;

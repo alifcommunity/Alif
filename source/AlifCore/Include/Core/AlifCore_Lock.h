@@ -25,7 +25,7 @@ enum AlifLockFlags_ { // 41
 extern AlifLockStatus_ alifMutex_lockTimed(AlifMutex*, AlifTimeT, AlifLockFlags_); // 54
 
 
-
+extern AlifIntT alifMutex_tryUnlock(AlifMutex*); // 69
 
 
 
@@ -38,4 +38,14 @@ public:
 
 
 
-void alifRawMutex_lockSlow(AlifRawMutex*); // 108
+extern void alifRawMutex_lockSlow(AlifRawMutex*); // 108
+extern void alifRawMutex_unlockSlow(AlifRawMutex*); // 109
+
+
+static inline void alifRawMutex_unlock(AlifRawMutex* m) { // 131
+	uintptr_t locked = ALIF_LOCKED;
+	if (alifAtomic_compareExchangeUintptr(&m->v, &locked, ALIF_UNLOCKED)) {
+		return;
+	}
+	alifRawMutex_unlockSlow(m);
+}
