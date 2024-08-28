@@ -21,5 +21,7 @@ public:
 };
 
 
+void alifSemaphore_wakeup(AlifSemaphore*); // 54
 
 void alifSemaphore_init(AlifSemaphore*); // 58
+void alifSemaphore_destroy(AlifSemaphore*); // 59

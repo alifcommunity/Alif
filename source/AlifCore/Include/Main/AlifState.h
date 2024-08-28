@@ -43,7 +43,7 @@ public:
 		AlifUIntT finalized : 1;
 
 		/* padding to align to 4 bytes */
-		AlifUIntT : 2;
+		AlifUIntT : 6;
 	} status{};
 
 	AlifIntT state{};
@@ -59,6 +59,12 @@ public:
 	AlifIntT tracing{};
 
 	AlifUSizeT threadID{};
+
+	unsigned long nativeThreadID{};
+
+	AlifObject* deleteLater{};
+
+	uintptr_t criticalSection{};
 
 	AlifSizeT id{};
 
