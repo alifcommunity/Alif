@@ -15,6 +15,12 @@ public:
 	AlifObject* value{};
 };
 
+// 126
+#define DKIX_EMPTY (-1)
+#define DKIX_DUMMY (-2)
+#define DKIX_ERROR (-3)
+#define DKIX_KEY_CHANGED (-4)
+
 
  enum DictKeysKind_ { // 131
 	Dict_Kyes_General = 0,

@@ -15,7 +15,8 @@
 static void free_keysObject(AlifDictKeysObject*, bool); // 421
 
 
-static inline void dictKeys_decref(AlifInterpreter* _interp, AlifDictKeysObject* _dk, bool _useqsbr) { // 442
+static inline void dictKeys_decref(AlifInterpreter* _interp,
+	AlifDictKeysObject* _dk, bool _useqsbr) { // 442
 	if (alifAtomic_loadSizeRelaxed(&_dk->dkRefCnt) == ALIF_IMMORTAL_REFCNT) {
 		return;
 	}
@@ -39,6 +40,22 @@ static inline void dictKeys_decref(AlifInterpreter* _interp, AlifDictKeysObject*
 		free_keysObject(_dk, _useqsbr);
 	}
 }
+
+
+static AlifDictKeysObject _emptyKeysStruct_ = { // 590
+		.dkRefCnt = ALIF_IMMORTAL_REFCNT,
+		.dkLog2Size = 0,
+		.dkLog2IndexBytes = 0,
+		.dkKind = DictKeysKind_::Dict_Kyes_UStr,
+		.dkMutex = {0},
+		.dkVersion = 1,
+		.dkUsable = 0,
+		.dkNentries = 0,
+		.dkIndices = {DKIX_EMPTY, DKIX_EMPTY, DKIX_EMPTY, DKIX_EMPTY,
+		 DKIX_EMPTY, DKIX_EMPTY, DKIX_EMPTY, DKIX_EMPTY},
+};
+#define ALIF_EMPTY_KEYS &_emptyKeysStruct_
+
 
 static void free_keysObject(AlifDictKeysObject* _keys, bool _useqsbr) { // 804
 	if (_useqsbr) {
@@ -80,9 +97,26 @@ static AlifObject* new_dict(AlifInterpreter* _interp,
 	mp_->keys = _keys;
 	mp_->values = _values;
 	mp_->used = _used;
-	mp_->versionTag = DICT_NEXT_VERSION(interp);
+	mp_->versionTag = DICT_NEXT_VERSION(_interp);
 	return (AlifObject*)mp_;
 }
+
+
+
+
+
+AlifObject* alifDict_new() { // 962
+	AlifInterpreter* interp = alifInterpreter_get();
+	return new_dict(interp, ALIF_EMPTY_KEYS, nullptr, 0, 0);
+}
+
+
+
+
+
+
+
+
 
 
 AlifTypeObject _alifDictType_ = { // 4760
