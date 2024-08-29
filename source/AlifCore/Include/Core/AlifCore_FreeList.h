@@ -59,11 +59,10 @@ static inline class AlifFreeLists* alifFreeLists_get(void) { // 16
 	return &((AlifThreadImpl*)tState)->freeLists;
 }
 
-// هنا تم وضع باراميتر اضافي خاص ب دالة alifFreeLists_get سيتم مناقشته لاحقا
 #define ALIF_FREELIST_FREE(_name , _nameMcro, _op, _freeFunc) \
-    alifFreeList_free(&alifFreeLists_get()->_name, ALIFOBJECT_CAST(_op), ALIF ## _nameMcro ## _MAXFREELIST, FreeFunc) // 39
+    alifFreeList_free(&alifFreeLists_get()->_name, ALIFOBJECT_CAST(_op), ALIF ## _nameMcro ## _MAXFREELIST, _freeFunc) // 39
 
-#define ALIF_FREELIST_POP(_tyep, _name) ALIF_CAST(_tyep*, alifFreeList_pop(&alifFreeLists_get()->_name)) // 46
+#define ALIF_FREELIST_POP(_type, _name) ALIF_CAST(_type*, alifFreeList_pop(&alifFreeLists_get()->_name)) // 46
 
 
 static inline AlifIntT alifFreeList_push(class AlifFreeList* _fl, void* _obj, AlifSizeT _maxSize) {  // 57
@@ -71,14 +70,13 @@ static inline AlifIntT alifFreeList_push(class AlifFreeList* _fl, void* _obj, Al
 		*(void**)_obj = _fl->freeList;
 		_fl->freeList = _obj;
 		_fl->size++;
-		//OBJECT_STAT_INC(toFreeList);
 		return 1;
 	}
 	return 0;
 }
 
-static inline void alifFreeList_free(class AlifFreeList* _fl, void* _obj, AlifSizeT _maxSize,
-	FreeFunc _doFree) { // 71
+static inline void alifFreeList_free(AlifFreeList* _fl, void* _obj,
+	AlifSizeT _maxSize, FreeFunc _doFree) { // 71
 	if (!alifFreeList_push(_fl, _obj, _maxSize)) {
 		_doFree(_obj);
 	}

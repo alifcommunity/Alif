@@ -19,7 +19,7 @@ static AlifTupleObject* tuple_alloc(AlifSizeT _size) { // 34
 			return op_;
 		}
 	}
-	if ((size_t)_size > ((size_t)LLONG_MAX - (sizeof(AlifTupleObject) -
+	if ((AlifUSizeT)_size > ((AlifUSizeT)ALIF_SIZET_MAX - (sizeof(AlifTupleObject) -
 		sizeof(AlifObject*))) / sizeof(AlifObject*)) {
 		return nullptr;
 		//return (AlifTupleObject*)alifErr_noMemory();

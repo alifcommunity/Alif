@@ -1,325 +1,330 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Header Core Files">
-      <UniqueIdentifier>{a41a71c9-bf79-4239-b5b5-6d8e5b3b61ef}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{aa4bed23-e90c-4277-9bbb-f19a8355c50e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Object Files">
-      <UniqueIdentifier>{6183a94b-811e-461b-a05c-eb1248052f4f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\StringLib">
-      <UniqueIdentifier>{bcc357c4-aee0-4c89-9a9c-84f0a12057ca}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Atomics">
-      <UniqueIdentifier>{2805f249-4bf4-44a7-bff8-3515460d8fe6}</UniqueIdentifier>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\source\AlifCore\Include\Main\AlifVersion.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\AlifConfig.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\AlifPort.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\AlifMacro.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\AlifMemory.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Memory.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_InitConfig.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\InitConfig.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DureRun.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_LifeCycle.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DureRunInit.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\AlifState.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\ThreadNT.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\ThreadPThread.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\AlifThread.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Thread.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\PThreadStubs.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_LList.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\ThreadPThreadStubs.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\AlifLifeCycle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\FileUtils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FileUtils.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\UStrObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_UStrObject.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS2Lib.h">
-      <Filter>Header Files\StringLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS4Lib.h">
-      <Filter>Header Files\StringLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Undef.h">
-      <Filter>Header Files\StringLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Codecs.h">
-      <Filter>Header Files\StringLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GetOption.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\Import.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Import.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_State.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Interpreter.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ThreadState.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FreeList.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\AlifTypeDefs.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\BuiltinsModule.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\AlifObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\Lock.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\OSDefs.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Parser.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_EvalState.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Eval.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ModSupport.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\ModuleObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\MethodObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ModuleObject.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\RefCount.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">
-      <Filter>Header Files\Atomics</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomicMSC.h">
-      <Filter>Header Files\Atomics</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_BiaseRefCount.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\DescrObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GlobalString.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GlobalObjects.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Object.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_TypeID.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\ASCIILib.h">
-      <Filter>Header Files\StringLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS1Lib.h">
-      <Filter>Header Files\StringLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\FindMaxChar.h">
-      <Filter>Header Files\StringLib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\ObjImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GC.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomicGCC.h">
-      <Filter>Header Files\Atomics</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ObjectAlloc.h" />
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ObjectStack.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\ListObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\DictObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Dict.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ObjectAlloc.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Lock.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\AlifTime.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ParkingLot.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Time.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Semaphore.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\AlifEval.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\TupleObject.h">
-      <Filter>Header Files</Filter>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_CriticalSection.h">
-      <Filter>Header Core Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\source\AlifCore\Objects\AlifMemory.cpp">
-      <Filter>Object Files</Filter>
+    <ClCompile Include="..\source\AlifCore\Objects\AlifEvalGIL.cpp">
+      <Filter>Objects</Filter>
     </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\AlifLifeCycle.cpp">
-      <Filter>Object Files</Filter>
+      <Filter>Objects</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\AlifState.cpp">
-      <Filter>Object Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\AlifThread.cpp">
-      <Filter>Object Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\InitConfig.cpp">
-      <Filter>Object Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\FileUtils.cpp">
-      <Filter>Object Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\UStrObject.cpp">
-      <Filter>Object Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\GetVersion.cpp">
-      <Filter>Object Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\GetOption.cpp">
-      <Filter>Object Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\Import.cpp">
-      <Filter>Object Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\BuiltinsModule.cpp">
-      <Filter>Object Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\ConfigMinimal.cpp">
-      <Filter>Object Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\ModuleObject.cpp">
-      <Filter>Object Files</Filter>
+    <ClCompile Include="..\source\AlifCore\Objects\AlifMemory.cpp">
+      <Filter>Objects</Filter>
     </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\AlifObject.cpp">
-      <Filter>Object Files</Filter>
+      <Filter>Objects</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\BiaseRefCount.cpp">
-      <Filter>Object Files</Filter>
+    <ClCompile Include="..\source\AlifCore\Objects\AlifState.cpp">
+      <Filter>Objects</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\TypeObject.cpp">
-      <Filter>Object Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\TypeID.cpp">
-      <Filter>Object Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\GCFreeThreading.cpp">
-      <Filter>Object Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\ListObject.cpp">
-      <Filter>Object Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\Lock.cpp">
-      <Filter>Object Files</Filter>
+    <ClCompile Include="..\source\AlifCore\Objects\AlifThread.cpp">
+      <Filter>Objects</Filter>
     </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\AlifTime.cpp">
-      <Filter>Object Files</Filter>
+      <Filter>Objects</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\ParkingLot.cpp">
-      <Filter>Object Files</Filter>
+    <ClCompile Include="..\source\AlifCore\Objects\BiaseRefCount.cpp">
+      <Filter>Objects</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\AlifEvalGIL.cpp">
-      <Filter>Object Files</Filter>
+    <ClCompile Include="..\source\AlifCore\Objects\BuiltinsModule.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\ConfigMinimal.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\CriticalSection.cpp">
+      <Filter>Objects</Filter>
     </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\DictObject.cpp">
-      <Filter>Object Files</Filter>
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\FileUtils.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\GCFreeThreading.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\GetOption.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\GetVersion.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\Import.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\InitConfig.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\ListObject.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\Lock.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\ModuleObject.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\ParkingLot.cpp">
+      <Filter>Objects</Filter>
     </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\TupleObject.cpp">
-    <ClCompile Include="..\source\AlifCore\Objects\CriticalSection.cpp">
-      <Filter>Object Files</Filter>
+      <Filter>Objects</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\TypeID.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\TypeObject.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\UStrObject.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">
+      <Filter>Include\Main\Atomics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomicGCC.h">
+      <Filter>Include\Main\Atomics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomicMSC.h">
+      <Filter>Include\Main\Atomics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_BiaseRefCount.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_CriticalSection.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Dict.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DureRun.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DureRunInit.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Eval.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_EvalState.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FileUtils.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FreeList.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GC.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GetOption.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GlobalObjects.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GlobalString.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Import.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_InitConfig.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Interpreter.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_LifeCycle.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_LList.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Lock.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Memory.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ModSupport.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ModuleObject.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Object.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ObjectAlloc.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ObjectStack.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ParkingLot.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Parser.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Semaphore.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_State.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Thread.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ThreadState.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Time.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_TypeID.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_UStrObject.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifConfig.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifEval.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifLifeCycle.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifMacro.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifMemory.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifObject.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifPort.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifState.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifThread.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifTime.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifTypeDefs.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifVersion.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\ASCIILib.h">
+      <Filter>Include\Main\StringLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\BuiltinsModule.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Codecs.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\DescrObject.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\DictObject.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\FileUtils.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\FindMaxChar.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\Import.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\InitConfig.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\ListObject.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\Lock.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\MethodObject.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\ModuleObject.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\ObjImpl.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\OSDefs.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\PThreadStubs.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\RefCount.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\ThreadNT.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\ThreadPThread.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\ThreadPThreadStubs.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\TupleObject.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\UStrObject.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS1Lib.h">
+      <Filter>Include\Main\StringLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS2Lib.h">
+      <Filter>Include\Main\StringLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS4Lib.h">
+      <Filter>Include\Main\StringLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Undef.h">
+      <Filter>Include\Main\StringLib</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Objects">
+      <UniqueIdentifier>{d98b35a5-df8b-4af3-9078-df202580f8dc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Include">
+      <UniqueIdentifier>{bc8e7990-2fbb-434a-8210-c0e8de64854e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Include\Core">
+      <UniqueIdentifier>{bcffc2db-12e0-4d62-80de-857043909343}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Include\Main">
+      <UniqueIdentifier>{c11e8898-7324-4918-a508-6806ffbc98d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Include\Main\Atomics">
+      <UniqueIdentifier>{cf0bcfa9-3b39-41cf-9538-5432d8507187}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Include\Main\StringLib">
+      <UniqueIdentifier>{8fab99c5-0bfc-42d3-861f-8a47bac0f7cf}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

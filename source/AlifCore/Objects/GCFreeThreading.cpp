@@ -43,7 +43,7 @@ AlifIntT alifObject_isGC(AlifObject* _obj) { // 1748
 }
 
 
-void alifObject_gcLink(AlifObject* op_) { // 1763
+void alifObject_gcLink(AlifObject* _op) { // 1763
 	record_allocation(alifThread_get());
 }
 

@@ -48,7 +48,7 @@ public:
 
 static inline void* _dk_entries(AlifDictKeysObject* _dk) { // 209
 	int8_t* indices = (int8_t*)(_dk->dkIndices);
-	size_t index = (size_t)1 << _dk->dkLog2IndexBytes;
+	AlifUSizeT index = (AlifUSizeT)1 << _dk->dkLog2IndexBytes;
 	return (&indices[index]);
 }
 

@@ -47,7 +47,7 @@ static void free_keysObject(AlifDictKeysObject* _keys, bool _useqsbr) { // 804
 		return;
 	}
 	if (DK_LOG_SIZE(_keys) == ALIFDICT_LOG_MINSIZE and _keys->dkKind == DictKeysKind_::Dict_Kyes_UStr) {
-		//ALIF_FREELIST_FREE(dictKeys, DICT, _keys, (FreeFunc)alifMem_objFree); // ظهر خطا وسيتم العمل عليه لاحقا
+		ALIF_FREELIST_FREE(dictKeys, DICT, _keys, alifMem_objFree);
 	}
 	else {
 		alifMem_objFree(_keys);

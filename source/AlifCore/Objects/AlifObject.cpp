@@ -65,7 +65,18 @@ void alif_mergeZeroLocalRefcount(AlifObject* _op) { // 374
 	}
 }
 
-AlifVarObject* alifObject_initVar(AlifVarObject* _op, AlifTypeObject* _tp, AlifSizeT _size) { // 448
+AlifObject* alifObject_init(AlifObject* _op, AlifTypeObject* _tp) { // 437
+	if (_op == nullptr) {
+		//return alifErr_noMemory();
+		return nullptr;
+	}
+
+	_alifObject_init(_op, _tp);
+	return _op;
+}
+
+AlifVarObject* alifObject_initVar(AlifVarObject* _op,
+	AlifTypeObject* _tp, AlifSizeT _size) { // 448
 	if (_op == nullptr) {
 		//return (AlifVarObject*)alifErr_noMemory();
 		return nullptr;
@@ -80,7 +91,7 @@ AlifVarObject* alifObject_initVar(AlifVarObject* _op, AlifTypeObject* _tp, AlifS
 
 
 static inline void new_reference(AlifObject* _op) { // 2405
-	_op->threadID = alif_threadId();
+	_op->threadID = alif_threadID();
 	_op->padding = 0;
 	_op->mutex = {.bits = 0};
 	_op->gcBits = 0;

@@ -3,7 +3,7 @@
 extern AlifTypeObject _alifTupleType_; // 23
 
 
-AlifObject* alifTuple_new(AlifSizeT ); //30
+AlifObject* alifTuple_new(AlifSizeT ); // 30
 
 /* ------------------------------------------------------------------------------------------------------------*/
 
