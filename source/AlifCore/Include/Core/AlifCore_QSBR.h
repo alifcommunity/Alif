@@ -1,7 +1,9 @@
 #pragma once
 
-
-
+// 28
+#define QSBR_OFFLINE 0
+#define QSBR_INITIAL 1
+#define QSBR_INCR    2
 
 class QSBRShared; // 38
 class AlifThreadImpl; // 39
@@ -43,3 +45,4 @@ static inline uint64_t alifQSBR_sharedCurrent(QSBRShared* shared) { // 83
 }
 
 extern void alifQSBR_attach(QSBRThreadState*); // 125
+extern void alifQSBR_detach(QSBRThreadState*); // 130

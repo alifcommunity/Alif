@@ -2,6 +2,7 @@
 
 //#include "AlifCore_AlifEval.h"
 //#include "AlifCore_Code.h"
+#include "AlifCore_CriticalSection.h"
 //#include "AlifCore_Frame.h"
 //#include "AlifCore_FreeList.h"
 #include "AlifCore_InitConfig.h"
@@ -387,11 +388,11 @@ static void detach_thread(AlifThread* _thread, AlifIntT detachedState) { // 2122
 		alifCriticalSection_suspendAll(_thread);
 	}
 
-	alif_qsbrDetach(((AlifThreadImpl*)_thread)->qsbr);
+	alifQSBR_detach(((AlifThreadImpl*)_thread)->qsbr);
 
-	tstate_deactivate(_thread);
-	tstate_setDetached(_thread, detachedState);
-	current_fastClear(&_alifDureRun_);
+	thread_deactivate(_thread);
+	thread_setDetached(_thread, detachedState);
+	current_fastClear();
 	alifEval_releaseLock(_thread->interpreter, _thread, 0);
 }
 

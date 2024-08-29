@@ -11,7 +11,7 @@
 
 
 
-
+void alifCriticalSection_resume(AlifThread*); // 89
 
 
 

@@ -34,7 +34,7 @@
 
 extern void alifEval_acquireLock(AlifThread*); // 134
 
-
+extern void alifEval_releaseLock(AlifInterpreter*, AlifThread*, AlifIntT); // 136
 
 
 

@@ -269,6 +269,15 @@ static inline void alifAtomic_storeSizeRelaxed(AlifSizeT* _obj, AlifSizeT _value
 
 
 
+static inline void alifAtomic_storeUint64Release(uint64_t* _obj, uint64_t _value) { // 1005
+#if defined(_M_X64) or defined(_M_IX86)
+	* (uint64_t volatile*)_obj = _value;
+#elif defined(_M_ARM64)
+	__stlr64((unsigned __int64 volatile*)_obj, (unsigned __int64)_value);
+#else
+#  error "no implementation of alifAtomic_storeUint64Release"
+#endif
+}
 
 
 static inline uint64_t alifAtomic_loadUint64Acquire(const uint64_t* _obj) { // 1018

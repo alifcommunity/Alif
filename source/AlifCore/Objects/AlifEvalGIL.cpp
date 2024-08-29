@@ -17,87 +17,128 @@
 	};
 
 
-static void take_gil(AlifThread* tstate) { // 284
-	int err = errno;
 
-	if (alifThread_mustExit(tstate)) {
-		alifThread_exitThread();
+
+
+
+static void drop_gil(AlifInterpreter* _interp,
+	AlifThread* _thread, AlifIntT _finalRelease) { // 214
+
+	AlifEval* ceval = &_interp->eval;
+
+	GILDureRunState* gil = ceval->gil_;
+	if (_thread != nullptr and !_thread->status.holdsGIL) {
+		return;
 	}
-
-	AlifInterpreter* interp = tstate->interpreter;
-	GILDureRunState* gil = interp->eval.gil_;
-	if (!alifAtomic_loadIntRelaxed(&gil->enabled)) {
+	if (!alifAtomic_loadIntRelaxed(&gil->locked)) {
+		//alif_fatalError("drop_gil: GIL is not locked");
 		return;
 	}
 
-	MUTEX_LOCK(gil->mutex);
+	if (!_finalRelease) {
+		alifAtomic_storePtrRelaxed(&gil->lastHolder, _thread);
+	}
 
-	int drop_requested = 0;
-	while (alifAtomic_loadIntRelaxed(&gil->locked)) {
-		unsigned long saved_switchnum = gil->switchNumber;
+	drop_gilImpl(_thread, gil);
 
-		unsigned long interval = (gil->interval >= 1 ? gil->interval : 1);
+	if (!_finalRelease and
+		alifEval_breakerBitIsSet(_thread, ALIF_GILDROP_REQUEST_BIT)) {
+		MUTEX_LOCK(gil->switchMutex);
+		if (((AlifThread*)alifAtomic_loadPtrRelaxed(&gil->lastHolder)) == _thread)
+		{
+			alifUnset_evalBreakerBit(_thread, ALIF_GILDROP_REQUEST_BIT);
+			COND_WAIT(gil->switchCond, gil->switchMutex);
+		}
+		MUTEX_UNLOCK(gil->switchMutex);
+	}
+}
+
+
+
+
+
+
+static void take_gil(AlifThread* _thread) { // 284
+	int err = errno;
+
+	if (alifThread_mustExit(_thread)) {
+		alifThread_exitThread();
+	}
+
+	AlifInterpreter* interp = _thread->interpreter;
+	GILDureRunState* gil_ = interp->eval.gil_;
+	if (!alifAtomic_loadIntRelaxed(&gil_->enabled)) {
+		return;
+	}
+
+	MUTEX_LOCK(gil_->mutex);
+
+	AlifIntT dropRequested = 0;
+	while (alifAtomic_loadIntRelaxed(&gil_->locked)) {
+		unsigned long saved_switchnum = gil_->switchNumber;
+
+		unsigned long interval = (gil_->interval >= 1 ? gil_->interval : 1);
 		int timed_out = 0;
-		COND_TIMED_WAIT(gil->cond, gil->mutex, interval, timed_out);
+		COND_TIMED_WAIT(gil_->cond, gil_->mutex, interval, timed_out);
 
 		if (timed_out and
-			alifAtomic_loadIntRelaxed(&gil->locked) and
-			gil->switchNumber == saved_switchnum)
+			alifAtomic_loadIntRelaxed(&gil_->locked) and
+			gil_->switchNumber == saved_switchnum)
 		{
 			AlifThread* holder_tstate =
-				(AlifThread*)alifAtomic_loadPtrRelaxed(&gil->lastHolder);
-			if (alifThread_mustExit(tstate)) {
-				MUTEX_UNLOCK(gil->mutex);
+				(AlifThread*)alifAtomic_loadPtrRelaxed(&gil_->lastHolder);
+			if (alifThread_mustExit(_thread)) {
+				MUTEX_UNLOCK(gil_->mutex);
 				// gh-96387: If the loop requested a drop request in a previous
 				// iteration, reset the request. Otherwise, drop_gil() can
 				// block forever waiting for the thread which exited. Drop
 				// requests made by other threads are also reset: these threads
 				// may have to request again a drop request (iterate one more
 				// time).
-				if (drop_requested) {
+				if (dropRequested) {
 					alifUnset_evalBreakerBit(holder_tstate, ALIFGIL_DROP_REQUEST_BIT);
 				}
 				alifThread_exitThread();
 			}
 
 			alifSet_evalBreakerBit(holder_tstate, ALIFGIL_DROP_REQUEST_BIT);
-			drop_requested = 1;
+			dropRequested = 1;
 		}
 	}
 
-	if (!alifAtomic_loadIntRelaxed(&gil->enabled)) {
-		COND_SIGNAL(gil->cond);
-		MUTEX_UNLOCK(gil->mutex);
+	if (!alifAtomic_loadIntRelaxed(&gil_->enabled)) {
+		COND_SIGNAL(gil_->cond);
+		MUTEX_UNLOCK(gil_->mutex);
 		return;
 	}
 
 
-	MUTEX_LOCK(gil->switchMutex);
+	MUTEX_LOCK(gil_->switchMutex);
 
 	/* We now hold the GIL */
-	alifAtomic_storeIntRelaxed(&gil->locked, 1);
-	ALIF_ANNOTATE_RWLOCK_ACQUIRED(&gil->locked, /*is_write=*/1);
+	alifAtomic_storeIntRelaxed(&gil_->locked, 1);
+	ALIF_ANNOTATE_RWLOCK_ACQUIRED(&gil_->locked, /*is_write=*/1);
 
-	if (tstate != (AlifThread*)alifAtomic_loadPtrRelaxed(&gil->lastHolder)) {
-		alifAtomic_storePtrRelaxed(&gil->lastHolder, tstate);
-		++gil->switchNumber;
+	if (_thread != (AlifThread*)alifAtomic_loadPtrRelaxed(&gil_->lastHolder)) {
+		alifAtomic_storePtrRelaxed(&gil_->lastHolder, _thread);
+		++gil_->switchNumber;
 	}
 
-	COND_SIGNAL(gil->switchCond);
-	MUTEX_UNLOCK(gil->switchMutex);
+	COND_SIGNAL(gil_->switchCond);
+	MUTEX_UNLOCK(gil_->switchMutex);
 
-	if (alifThread_mustExit(tstate)) {
-		MUTEX_UNLOCK(gil->mutex);
+	if (alifThread_mustExit(_thread)) {
+		MUTEX_UNLOCK(gil_->mutex);
 
 		drop_gil(interp, nullptr, 1);
 		alifThread_exitThread();
 	}
 
-	tstate->status.holdsGIL = 1;
-	alifUnset_evalBreakerBit(tstate, ALIF_GIL_DROP_REQUEST_BIT);
-	updateEval_breakerForThread(interp, tstate);
+	_thread->status.holdsGIL = 1;
+	alifUnset_evalBreakerBit(_thread, ALIF_GIL_DROP_REQUEST_BIT);
+	updateEval_breakerForThread(interp, _thread);
 
-	MUTEX_UNLOCK(gil->mutex);
+	MUTEX_UNLOCK(gil_->mutex);
 
 	errno = err;
 	return;
@@ -113,6 +154,11 @@ static void take_gil(AlifThread* tstate) { // 284
 void alifEval_acquireLock(AlifThread* _thread) { // 574
 	ALIF_ENSURETHREADNOTNULL(_thread);
 	take_gil(_thread);
+}
+
+void alifEval_releaseLock(AlifInterpreter* _interp,
+	AlifThread* _thread, AlifIntT _finalRelease) { // 581
+	drop_gil(_interp, _thread, _finalRelease);
 }
 
 
