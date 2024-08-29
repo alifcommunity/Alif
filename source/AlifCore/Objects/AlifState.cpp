@@ -6,6 +6,7 @@
 //#include "AlifCore_FreeList.h"
 #include "AlifCore_InitConfig.h"
 //#include "AlifObject.h"
+#include "AlifCore_ParkingLot.h"
 //#include "AlifCore_LifeCycle.h"
 //#include "AlifCore_Memory.h"
 #include "AlifCore_State.h"
@@ -28,6 +29,14 @@ static inline AlifThread* current_fastGet() { // 71
 static inline void current_fastSet(AlifThread* _thread) { // 82
 #ifdef HAVE_LOCAL_THREAD
 	_alifTSSThread_ = _thread;
+#else
+	error "خطأ ممر"
+#endif
+}
+
+static inline void current_fastClear() { // 94
+#ifdef HAVE_LOCAL_THREAD
+	_alifTSSThread_ = nullptr;
 #else
 	error "خطأ ممر"
 #endif
@@ -304,6 +313,41 @@ AlifThread* alifThreadState_new(AlifInterpreter* _interpreter) { // 1622
 }
 
 
+
+static inline void thread_activate(AlifThread* _thread) { // 1992
+	if (!_thread->status.boundGILState) {
+		bind_gilStateThread(_thread);
+	}
+
+	_thread->status.active = 1;
+}
+
+static inline void thread_deactivate(AlifThread* _thread) { // 215
+	_thread->status.active = 0;
+}
+
+static AlifIntT thread_tryAttach(AlifThread* tstate) { // 2029
+	AlifIntT expected = ALIF_THREAD_DETACHED;
+	return alifAtomic_compareExchangeInt(&tstate->state,
+		&expected, ALIF_THREAD_ATTACHED);
+}
+
+
+static void thread_waitAttach(AlifThread* _thread) { // 2055
+	do {
+		AlifIntT expected = ALIF_THREAD_SUSPENDED;
+
+		alifParkingLot_park(&_thread->state, &expected, sizeof(_thread->state),
+			/*timeout=*/-1, nullptr, /*detach=*/0);
+
+	} while (!thread_tryAttach(_thread));
+}
+
+static void thread_setDetached(AlifThread* _thread, AlifIntT _detachedState) { // 2044
+	alifAtomic_storeInt(&_thread->state, _detachedState);
+}
+
+
 void alifThread_attach(AlifThread* _thread) { // 2070
 	ALIF_ENSURETHREADNOTNULL(_thread);
 	if (current_fastGet() != nullptr) {
@@ -322,13 +366,13 @@ void alifThread_attach(AlifThread* _thread) { // 2070
 			thread_waitAttach(_thread);
 		}
 
-		if (alifEval_isGILEnabled(_thread) && !_thread->status.holdsGIL) {
+		if (alifEval_isGILEnabled(_thread) and !_thread->status.holdsGIL) {
 			thread_setDetached(_thread, ALIF_THREAD_DETACHED);
 			thread_deactivate(_thread);
-			current_fastClear(&_alifDureRun_);
+			current_fastClear();
 			continue;
 		}
-		alif_qsbrAttach(((AlifThreadImpl*)_thread)->qsbr);
+		alifQSBR_attach(((AlifThreadImpl*)_thread)->qsbr);
 		break;
 	}
 

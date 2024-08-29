@@ -3,11 +3,13 @@
 #include "AlifCore_BiaseRefCount.h"
 #include "AlifCore_FreeList.h"
 
+#include "AlifCore_QSBR.h"
 
-class AlifThreadImpl {
+class AlifThreadImpl { // 20
 public:
 	AlifThread base{};
 
+	QSBRThreadState* qsbr{};
 	LListNode memFreeQueue{};
 
 	class GCThreadState gc{};

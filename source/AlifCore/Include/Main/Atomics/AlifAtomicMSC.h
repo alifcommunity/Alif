@@ -46,7 +46,19 @@ static inline AlifIntT alifAtomic_compareExchangeInt8(int8_t* obj,
 	return 0;
 }
 
-static inline AlifIntT alifAtomic_compareExchangeInt64(int64_t* _obj, int64_t* _expected, int64_t _value) { // 175
+static inline AlifIntT alifAtomic_compareExchangeInt32(int32_t* _obj,
+	int32_t* _expected, int32_t _value) { // 160
+	int32_t initial = (int32_t)_InterlockedCompareExchange(
+		(volatile long*)_obj, (long)_value, (long)*_expected);
+	if (initial == *_expected) {
+		return 1;
+	}
+	*_expected = initial;
+	return 0;
+}
+
+static inline AlifIntT alifAtomic_compareExchangeInt64(int64_t* _obj,
+	int64_t* _expected, int64_t _value) { // 175
 	int64_t initial = (int64_t)_InterlockedCompareExchange64(
 		(volatile __int64*)_obj,
 		(__int64)_value,
@@ -58,7 +70,8 @@ static inline AlifIntT alifAtomic_compareExchangeInt64(int64_t* _obj, int64_t* _
 	return 0;
 }
 
-static inline AlifIntT alifAtomic_compareExchangePtr(void* _obj, void* _expected, void* _value) { // 190
+static inline AlifIntT alifAtomic_compareExchangePtr(void* _obj,
+	void* _expected, void* _value) { // 190
 	void* initial = _InterlockedCompareExchangePointer((void**)_obj, _value, *(void**)_expected);
 	if (initial == *(void**)_expected) {
 		return 1;
@@ -74,7 +87,11 @@ static inline AlifIntT alifAtomic_compareExchangeUint8(uint8_t* _obj,
 }
 
 
-
+static inline AlifIntT alifAtomic_compareExchangeInt(AlifIntT* _obj,
+	AlifIntT* _expected, AlifIntT _value) { // 229
+	return alifAtomic_compareExchangeInt32((int32_t*)_obj,
+		(int32_t*)_expected, (int32_t)_value);
+}
 
 
 
@@ -97,7 +114,30 @@ static inline AlifIntT alifAtomic_compareExchangeSize(AlifSizeT* _obj,
 		(void*)value);
 }
 
+static inline int32_t alifAtomic_exchangeInt32(int32_t* _obj, int32_t _value) { // 299
+	return (int32_t)_InterlockedExchange((volatile long*)_obj, (long)_value);
+}
 
+static inline int64_t alifAtomic_exchangeInt64(int64_t* _obj, int64_t _value) { // 306
+#if defined(_M_X64) or defined(_M_ARM64)
+	return (int64_t)_InterlockedExchange64((volatile __int64*)_obj, (__int64)_value);
+#else
+	int64_t oldValue = alifAtomic_loadInt64Relaxed(_obj);
+	for (;;) {
+		if (alifAtomic_compareExchangeInt64(_obj, &oldValue, _value)) {
+			return oldValue;
+		}
+	}
+#endif
+}
+
+static inline AlifIntT alifAtomic_exchangeInt(AlifIntT* obj, AlifIntT value) { // 350
+	return (AlifIntT)alifAtomic_exchangeInt32((int32_t*)obj, (int32_t)value);
+}
+
+static inline uint64_t alifAtomic_exchangeUint64(uint64_t* _obj, uint64_t _value) { // 366
+	return (uint64_t)alifAtomic_exchangeInt64((int64_t*)_obj, (int64_t)_value);
+}
 
 static inline uint8_t alifAtomic_loadUint8(const uint8_t* _obj) { // 511
 #if defined(_M_X64) or defined(_M_IX86)
@@ -187,6 +227,17 @@ static inline void* alifAtomic_loadPtrRelaxed(const void* _obj) { // 709
 
 
 
+
+
+
+static inline void alifAtomic_storeInt(AlifIntT* _obj, AlifIntT _value) { // 724
+	(void)alifAtomic_exchangeInt(_obj, _value);
+}
+
+static inline void alifAtomic_storeUint64(uint64_t* _obj, uint64_t _value) { // 778
+	(void)alifAtomic_exchangeUint64(_obj, _value);
+}
+
 static inline void alifAtomic_storeIntRelaxed(AlifIntT* _obj, AlifIntT _value) { // 811
 	*(volatile AlifIntT*)_obj = _value;
 }
@@ -220,7 +271,15 @@ static inline void alifAtomic_storeSizeRelaxed(AlifSizeT* _obj, AlifSizeT _value
 
 
 
-
+static inline uint64_t alifAtomic_loadUint64Acquire(const uint64_t* _obj) { // 1018
+#if defined(_M_X64) or defined(_M_IX86)
+	return *(uint64_t volatile*)_obj;
+#elif defined(_M_ARM64)
+	return (uint64_t)__ldar64((unsigned __int64 volatile*)_obj);
+#else
+#  error "no implementation of alifAtomic_loadUint64Acquire"
+#endif
+}
 
 
 

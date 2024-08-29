@@ -48,6 +48,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ObjectStack.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ParkingLot.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Parser.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_QSBR.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Semaphore.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_State.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Thread.h" />
@@ -120,6 +121,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\ListObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Lock.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ModuleObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\QuiescentStatesBiaseRef.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\TupleObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ParkingLot.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\TypeID.cpp" />
