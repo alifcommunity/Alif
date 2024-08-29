@@ -41,6 +41,9 @@ public:
 
 	//class ImportState imports;
 
+	GILDureRunState gil_{};
+
+
 	BRCState brc{};  // biased reference counting state
 
 	AlifMemory* memory_{};

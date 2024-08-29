@@ -50,6 +50,9 @@ static inline AlifThread* threadTSS_get(AlifTssT* _key) { // 141
 	return (AlifThread*)alifThreadTSS_get(_key);
 }
 
+static inline AlifIntT threadTSS_set(AlifTssT* _key, AlifThread* _thread) { // 148
+	return alifThreadTSS_set(_key, (void*)_thread);
+}
 
 static void bind_thread(AlifThread* tstate) { // 245
 
@@ -64,6 +67,27 @@ static void bind_thread(AlifThread* tstate) { // 245
 
 	tstate->status.bound = 1;
 }
+
+
+
+
+
+static void bind_gilStateThread(AlifThread* tstate) { // 318
+
+	AlifDureRun* runtime = tstate->interpreter->dureRun;
+	AlifThread* tcur = threadTSS_get(&runtime->autoTSSKey);
+
+	if (tcur != nullptr ) {
+		tcur->status.boundGILState = 0;
+	}
+	threadTSS_set(&runtime->autoTSSKey, tstate);
+	tstate->status.boundGILState = 1;
+}
+
+
+
+
+
 /* ------------------------------ AlifCycle ------------------------------- */
 
 
@@ -298,7 +322,7 @@ void alifThread_attach(AlifThread* _thread) { // 2070
 			thread_waitAttach(_thread);
 		}
 
-		if (alifEval_isGILEnabled(_thread) && !_thread->status.holdsGil) {
+		if (alifEval_isGILEnabled(_thread) && !_thread->status.holdsGIL) {
 			thread_setDetached(_thread, ALIF_THREAD_DETACHED);
 			thread_deactivate(_thread);
 			current_fastClear(&_alifDureRun_);
@@ -336,7 +360,7 @@ void alifThread_bind(AlifThread* _thread) { // 2447
 	bind_thread(_thread);
 
 	if (threadTSS_get(&_thread->interpreter->dureRun->autoTSSKey) == nullptr) {
-		bind_gilStateThreadState(_thread);
+		bind_gilStateThread(_thread);
 	}
 }
 

@@ -1,7 +1,7 @@
 #pragma once
 
-
-
+#include "AlifCore_Lock.h"
+#include "AlifCore_GIL.h"
 
 
 
@@ -30,6 +30,7 @@
 class AlifEval { // 119
 public:
 	uintptr_t instrumentationVersion{};
-	int recursionLimit{};
-	//struct PendingCalls pending;
+	AlifIntT recursionLimit{};
+	GILDureRunState* gil_{};
+	AlifIntT ownGil{};
 };

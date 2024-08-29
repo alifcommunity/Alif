@@ -17,3 +17,19 @@
 
 
 #define ALIF_DEFAULT_RECURSION_LIMIT 1000 // 40
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+extern void alifEval_acquireLock(AlifThread*); // 134

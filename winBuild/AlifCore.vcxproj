@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_BiaseRefCount.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_CondVar.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_CriticalSection.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Dict.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DureRun.h" />
@@ -30,6 +31,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FreeList.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GC.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GetOption.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GIL.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GlobalObjects.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GlobalString.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Import.h" />
@@ -69,6 +71,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomicGCC.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomicMSC.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\BuiltinsModule.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\CondVar.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\DescrObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\DictObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\FileUtils.h" />

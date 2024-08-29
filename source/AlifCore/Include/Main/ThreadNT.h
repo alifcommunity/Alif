@@ -57,6 +57,11 @@ void alifThreadTSS_delete(AlifTssT* _key) { // 491
 }
 
 
+AlifIntT alifThreadTSS_set(AlifTssT* _key, void* _value) { // 505
+	BOOL ok = TlsSetValue(_key->key, _value);
+	return ok ? 0 : -1;
+}
+
 void* alifThreadTSS_get(AlifTssT* _key) { // 513
 	int err = GetLastError();
 	void* r = TlsGetValue(_key->key);

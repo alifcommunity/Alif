@@ -36,14 +36,15 @@ public:
 		AlifUIntT initialized : 1;
 
 		AlifUIntT bound : 1;
+		AlifUIntT boundGILState : 1;
 		AlifUIntT active : 1;
 
 		AlifUIntT finalizing : 1;
 		AlifUIntT cleared : 1;
 		AlifUIntT finalized : 1;
-
+		AlifUIntT holdsGIL : 1;
 		/* padding to align to 4 bytes */
-		AlifUIntT : 6;
+		AlifUIntT : 4;
 	} status{};
 
 	AlifIntT state{};

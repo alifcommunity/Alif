@@ -19,7 +19,7 @@ class AlifTssT;
 AlifIntT alifThreadTSS_isCreated(AlifTssT*); // 96
 AlifIntT alifThreadTSS_create(AlifTssT*); // 97
 void alifThreadTSS_delete(AlifTssT*); // 98
-
+AlifIntT alifThreadTSS_set(AlifTssT*, void*); // 99
 void* alifThreadTSS_get(AlifTssT*); // 100
 
 /* --------------------------------------------------------------------------------------------------------- */

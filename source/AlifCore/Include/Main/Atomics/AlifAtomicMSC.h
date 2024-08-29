@@ -157,8 +157,8 @@ static inline AlifSizeT alifAtomic_loadSize(const AlifSizeT* _obj) { // 621
 	return (AlifSizeT)alifAtomic_loadPtr((void*)_obj);
 }
 
-static inline int alifAtomic_loadIntRelaxed(const int* _obj) {  // 633
-	return *(volatile int*)_obj;
+static inline int alifAtomic_loadIntRelaxed(const AlifIntT* _obj) {  // 633
+	return *(volatile AlifIntT*)_obj;
 }
 
 
@@ -181,6 +181,16 @@ static inline AlifSizeT alifAtomic_loadSizeRelaxed(const AlifSizeT* _obj) { // 7
 	return *(volatile AlifSizeT*)_obj;
 }
 
+static inline void* alifAtomic_loadPtrRelaxed(const void* _obj) { // 709
+	return *(void* volatile*)_obj;
+}
+
+
+
+static inline void alifAtomic_storeIntRelaxed(AlifIntT* _obj, AlifIntT _value) { // 811
+	*(volatile AlifIntT*)_obj = _value;
+}
+
 
 static inline void alifAtomic_storeUint8Relaxed(uint8_t* obj, uint8_t value) { // 847
 	*(volatile uint8_t*)obj = value;
@@ -198,6 +208,9 @@ static inline void alifAtomic_storeUintptrRelaxed(uintptr_t* _obj, uintptr_t _va
 	*(volatile uintptr_t*)_obj = _value;
 }
 
+static inline void alifAtomic_storePtrRelaxed(void* _obj, void* _value) { // 883
+	*(void* volatile*)_obj = _value;
+}
 
 static inline void alifAtomic_storeSizeRelaxed(AlifSizeT* _obj, AlifSizeT _value) { // 890
 	*(volatile AlifSizeT*)_obj = _value;
