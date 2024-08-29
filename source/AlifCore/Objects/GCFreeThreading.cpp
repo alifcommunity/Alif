@@ -43,7 +43,7 @@ AlifIntT alifObject_isGC(AlifObject* _obj) { // 1748
 }
 
 
-void alifObject_gcLink(AlifObject* op) { // 1763
+void alifObject_gcLink(AlifObject* op_) { // 1763
 	record_allocation(alifThread_get());
 }
 
@@ -75,13 +75,30 @@ AlifObject* alifObject_gcNew(AlifTypeObject* tp) { // 1800
 	if (alifType_hasFeature(tp, ALIF_TPFLAGS_INLINE_VALUES)) {
 		size += alifInline_valuesSize(tp);
 	}
-	AlifObject* op = gc_alloc(tp, size, preSize);
-	if (op == nullptr) {
+	AlifObject* op_ = gc_alloc(tp, size, preSize);
+	if (op_ == nullptr) {
 		return nullptr;
 	}
-	alifObject_init(op, tp);
+	alifObject_init(op_, tp);
 	if (tp->flags & ALIF_TPFLAGS_INLINE_VALUES) {
-		alifObject_initInlineValues(op, tp);
+		alifObject_initInlineValues(op_, tp);
 	}
-	return op;
+	return op_;
+}
+
+AlifVarObject* alifObject_gcNewVar(AlifTypeObject* _tp, AlifSizeT _nItems) { // 1820
+	AlifVarObject* op_{};
+
+	if (_nItems < 0) {
+		//alifErr_badInternalCall();
+		return nullptr;
+	}
+	AlifUSizeT preSize = alifType_preHeaderSize(_tp);
+	AlifUSizeT size = alifObject_varSize(_tp, _nItems);
+	op_ = (AlifVarObject*)gc_alloc(_tp, size, preSize);
+	if (op_ == nullptr) {
+		return nullptr;
+	}
+	alifObject_initVar(op_, _tp, _nItems);
+	return op_;
 }

@@ -92,6 +92,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\ThreadNT.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\ThreadPThread.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\ThreadPThreadStubs.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\TupleObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\UStrObject.h" />
   </ItemGroup>
   <ItemGroup>
@@ -105,6 +106,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\BiaseRefCount.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\BuiltinsModule.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ConfigMinimal.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\DictObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\CriticalSection.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\FileUtils.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GCFreeThreading.cpp" />
@@ -115,6 +117,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\ListObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Lock.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ModuleObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\TupleObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ParkingLot.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\TypeID.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\TypeObject.cpp" />

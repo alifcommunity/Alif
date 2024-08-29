@@ -58,7 +58,7 @@ public:
 
 	AlifIntT tracing{};
 
-	AlifUSizeT threadID;
+	AlifUSizeT threadID{};
 
 	unsigned long nativeThreadID{};
 
@@ -71,6 +71,8 @@ public:
 	//AlifStackChunk* dataStackChunk{};
 	//AlifObject** dataStackTop{};
 	//AlifObject** dataStackLimit{};
+	uint64_t dictGlobalVersion{};
+
 };
 
 

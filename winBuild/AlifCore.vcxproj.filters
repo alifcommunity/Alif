@@ -204,6 +204,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomicGCC.h">
       <Filter>Header Files\Atomics</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ObjectAlloc.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ObjectStack.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
@@ -237,6 +238,8 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifEval.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\TupleObject.h">
+      <Filter>Header Files</Filter>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_CriticalSection.h">
       <Filter>Header Core Files</Filter>
     </ClInclude>
@@ -311,6 +314,10 @@
     <ClCompile Include="..\source\AlifCore\Objects\AlifEvalGIL.cpp">
       <Filter>Object Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\DictObject.cpp">
+      <Filter>Object Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\TupleObject.cpp">
     <ClCompile Include="..\source\AlifCore\Objects\CriticalSection.cpp">
       <Filter>Object Files</Filter>
     </ClCompile>
