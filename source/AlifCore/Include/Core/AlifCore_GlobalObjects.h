@@ -41,8 +41,8 @@ public:
 		//	char eos;
 		//} bytesCharacters[256];
 
-		AlifGlobalStrings strings;
+		AlifGlobalStrings strings{};
 
-		//AlifTupleObject tupleEmpty;
+		AlifTupleObject tupleEmpty{};
 	} singletons;
 };

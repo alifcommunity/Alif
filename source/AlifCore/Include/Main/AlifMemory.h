@@ -20,6 +20,7 @@ void* alifMem_dataAlloc(AlifUSizeT);
 
 void alifMem_objFree(void*);
 void alifMem_dataFree(void*);
+void alifMem_freeDelayed(void*); // 120
 
 void* alifMem_objRealloc(void*, AlifUSizeT);
 void* alifMem_dataRealloc(void*, AlifUSizeT);

@@ -27,6 +27,10 @@ static AlifTupleObject* tuple_alloc(AlifSizeT _size) { // 34
 	return ALIFOBJECT_GC_NEWVAR(AlifTupleObject, &_alifTupleType_, _size);
 }
 
+static inline AlifObject* tuple_getEmpty(void) { // 62
+	return (AlifObject*)&ALIF_SINGLETON(tupleEmpty);
+}
+
 AlifObject* alifTuple_new(AlifSizeT _size) { // 68
 	AlifTupleObject* op_{};
 	if (_size == 0) {

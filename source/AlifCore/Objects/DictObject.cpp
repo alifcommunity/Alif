@@ -59,8 +59,7 @@ static AlifDictKeysObject _emptyKeysStruct_ = { // 590
 
 static void free_keysObject(AlifDictKeysObject* _keys, bool _useqsbr) { // 804
 	if (_useqsbr) {
-		//alifMem_freeDelayed(_keys);  يجب عمل الدالة
-		alifMem_objFree(_keys);
+		alifMem_freeDelayed(_keys); 
 		return;
 	}
 	if (DK_LOG_SIZE(_keys) == ALIFDICT_LOG_MINSIZE and _keys->dkKind == DictKeysKind_::Dict_Kyes_UStr) {
@@ -71,10 +70,12 @@ static void free_keysObject(AlifDictKeysObject* _keys, bool _useqsbr) { // 804
 	}
 }
 
+#define CACHED_KEYS(_tp) (((AlifHeapTypeObject*)_tp)->cachedKeys) // 830
+
+
 static inline void free_values(AlifDictValues* _values, bool _useqsbr) { // 848
 	if (_useqsbr) {
-		//alifMem_freeDelayed(_values);
-		alifMem_objFree(_values);
+		alifMem_freeDelayed(_values);
 		return;
 	}
 	alifMem_objFree(_values);
@@ -124,3 +125,27 @@ AlifTypeObject _alifDictType_ = { // 4760
 	.name = "قاموس",
 	.basicSize = sizeof(AlifDictObject),
 };
+
+
+void alifObject_initInlineValues(AlifObject* _obj, AlifTypeObject* _tp) {  // 6580
+	AlifDictKeysObject* keys = CACHED_KEYS(_tp);
+	//OBJECT_STAT_INC(inlineValues);
+	AlifSizeT usable = alifAtomic_loadSizeRelaxed(&keys->dkUsable);
+	if (usable > 1) {
+		LOCK_KEYS(keys);
+		if (keys->dkUsable > 1) {
+			alifAtomic_storeSize(&keys->dkUsable, keys->dkUsable - 1);
+		}
+		UNLOCK_KEYS(keys);
+	}
+	size_t size = sharedKeys_usableSize(keys);
+	AlifDictValues* values = alifObject_inlineValues(_obj);
+	values->capacity = (uint8_t)size;
+	values->size = 0;
+	values->embedded = 1;
+	values->valid = 1;
+	for (size_t i = 0; i < size; i++) {
+		values->values[i] = nullptr;
+	}
+	alifObject_managedDictPointer(_obj)->dict = nullptr;
+}

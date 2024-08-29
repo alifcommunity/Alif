@@ -511,6 +511,25 @@ inline void alifMem_objFree(void* _ptr) {
 }
 
 
+static void free_workItem(AlifUSizeT _ptr) {  // 1096
+	if (_ptr & 0x01) {
+		alifMem_objFree((char*)(_ptr - 1));
+	}
+	else {
+		alifMem_dataFree((void*)_ptr);
+	}
+}
+
+static void free_delayed(AlifUSizeT _ptr) { // 1107
+	free_workItem(_ptr);
+}
+
+void alifMem_freeDelayed(void* _ptr) { // 1163
+	free_delayed((AlifUSizeT)_ptr);
+
+}
+
+
 /* ----------------------------------------------------------------------------------- */
 	/* ------------------------------------
 		هذه المنطقة خاصة بالدوال الفرعية

@@ -97,7 +97,14 @@ static inline AlifIntT alifAtomic_compareExchangeSize(AlifSizeT* _obj,
 		(void*)value);
 }
 
+static inline void* alifAtomic_exchangePtr(void* _obj, void* _value) { // 322
+	return (void*)_InterlockedExchangePointer((void* volatile*)_obj, (void*)_value);
+}
 
+static inline AlifSizeT alifAtomic_exchangeSize(AlifSizeT* _obj, AlifSizeT _value) { // 390
+	return (AlifSizeT)alifAtomic_exchangePtr((void**)_obj,
+		(void*)_value);
+}
 
 static inline uint8_t alifAtomic_loadUint8(const uint8_t* _obj) { // 511
 #if defined(_M_X64) or defined(_M_IX86)
@@ -181,6 +188,9 @@ static inline AlifSizeT alifAtomic_loadSizeRelaxed(const AlifSizeT* _obj) { // 7
 	return *(volatile AlifSizeT*)_obj;
 }
 
+static inline void alifAtomic_storeSize(AlifSizeT* _obj, AlifSizeT _value) { // 802
+	(void)_Py_atomic_exchange_ssize(_obj, _value);
+}
 
 static inline void alifAtomic_storeUint8Relaxed(uint8_t* obj, uint8_t value) { // 847
 	*(volatile uint8_t*)obj = value;
