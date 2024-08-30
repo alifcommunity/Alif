@@ -419,6 +419,15 @@ uintptr_t alif_getThreadLocalAddr(void) { // 2463
 
 
 
+AlifIntT alifGILState_init(AlifInterpreter* _interp) { // 2652
+	if (!alif_isMainInterpreter(_interp)) {
+		return 1;
+	}
+	AlifDureRun* dureRun = _interp->dureRun;
+	dureRun->gilState.autoInterpreterState = _interp;
+	return 1;
+}
+
 
 
 
