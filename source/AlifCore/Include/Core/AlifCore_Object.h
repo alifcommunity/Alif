@@ -106,13 +106,13 @@ static inline size_t alifType_preHeaderSize(AlifTypeObject* _tp) { // 740
 
 extern AlifObject* alifType_allocNoTrack(AlifTypeObject*, AlifSizeT); // 763
 
-#  define MANAGED_DICT_OFFSET    (((AlifSizeT)sizeof(AlifObject *))*-1) //778 
+#  define MANAGED_DICT_OFFSET    (((AlifSizeT)sizeof(AlifObject *))*-1) // 778 
 
 union AlifManagedDictPointer{ // 785
 	AlifDictObject* dict{};
-} ;
+};
 
-static inline AlifManagedDictPointer* alifObject_managedDictPointer(AlifObject* obj) { // 
+static inline AlifManagedDictPointer* alifObject_managedDictPointer(AlifObject* obj) { //  790
 	return (AlifManagedDictPointer*)((char*)obj + MANAGED_DICT_OFFSET);
 }
 

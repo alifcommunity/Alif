@@ -28,7 +28,10 @@ extern AlifLockStatus_ alifMutex_lockTimed(AlifMutex*, AlifTimeT, AlifLockFlags_
 extern AlifIntT alifMutex_tryUnlock(AlifMutex*); // 69
 
 
-
+class AlifEvent {
+public:
+	uint8_t v_;
+};
 
 
 class AlifRawMutex { // 103

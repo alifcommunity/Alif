@@ -129,7 +129,6 @@ AlifTypeObject _alifDictType_ = { // 4760
 
 void alifObject_initInlineValues(AlifObject* _obj, AlifTypeObject* _tp) {  // 6580
 	AlifDictKeysObject* keys = CACHED_KEYS(_tp);
-	//OBJECT_STAT_INC(inlineValues);
 	AlifSizeT usable = alifAtomic_loadSizeRelaxed(&keys->dkUsable);
 	if (usable > 1) {
 		LOCK_KEYS(keys);
@@ -138,13 +137,13 @@ void alifObject_initInlineValues(AlifObject* _obj, AlifTypeObject* _tp) {  // 65
 		}
 		UNLOCK_KEYS(keys);
 	}
-	size_t size = sharedKeys_usableSize(keys);
+	AlifUSizeT size = sharedKeys_usableSize(keys);
 	AlifDictValues* values = alifObject_inlineValues(_obj);
 	values->capacity = (uint8_t)size;
 	values->size = 0;
 	values->embedded = 1;
 	values->valid = 1;
-	for (size_t i = 0; i < size; i++) {
+	for (AlifUSizeT i = 0; i < size; i++) {
 		values->values[i] = nullptr;
 	}
 	alifObject_managedDictPointer(_obj)->dict = nullptr;

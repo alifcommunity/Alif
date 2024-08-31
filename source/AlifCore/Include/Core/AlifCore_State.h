@@ -50,6 +50,9 @@ static inline void alif_ensureFuncTstateNotNULL(const char* func, AlifThread* ts
 	}
 }
 
+void alifEval_stopTheWorld(AlifInterpreter* ); // 179
+void alifEval_startTheWorld(AlifInterpreter* ); // 180
+
 #define ALIF_ENSURETHREADNOTNULL(_thread) \
     alif_ensureFuncTstateNotNULL(__func__, (_thread)) // 195
 

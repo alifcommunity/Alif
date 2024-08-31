@@ -79,6 +79,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\UStrObject.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\Qsbr.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">
@@ -306,6 +307,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Undef.h">
       <Filter>Include\Main\StringLib</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Qsbr.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Objects">

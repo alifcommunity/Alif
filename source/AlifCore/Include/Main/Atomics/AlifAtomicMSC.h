@@ -24,6 +24,11 @@ static inline int alifAtomic_addInt(int* _obj, int _value) { // 81
 	return (int)alifAtomic_addInt32((int32_t*)_obj, (int32_t)_value);
 }
 
+static inline uint64_t alifAtomic_addUint64(uint64_t* _obj, uint64_t _value)
+{
+	return (uint64_t)alifAtomic_addInt64((int64_t*)_obj, (int64_t)_value);
+}
+
 static inline intptr_t alifAtomic_addIntptr(intptr_t* _obj, intptr_t _value) { // 101
 #if SIZEOF_VOID_P == 8
 	return (intptr_t)alifAtomic_addInt64((int64_t*)_obj, (int64_t)_value);
@@ -83,6 +88,11 @@ static inline uintptr_t alifAtomic_loadUintptrRelaxed(const uintptr_t* _obj) { /
 	return *(volatile uintptr_t*)_obj;
 }
 
+static inline AlifIntT alifAtomic_compareExchangeUint64(uint64_t* _obj, uint64_t* _expected, uint64_t _value) {  // 247
+	return alifAtomic_compareExchangeInt64((int64_t*)_obj,
+		(int64_t*)_expected,
+		(int64_t)_value);
+}
 
 static inline AlifIntT alifAtomic_compareExchangeUintptr(uintptr_t* obj, uintptr_t* expected, uintptr_t value) { // 264
 	return alifAtomic_compareExchangePtr((void**)obj,
@@ -188,12 +198,21 @@ static inline AlifSizeT alifAtomic_loadSizeRelaxed(const AlifSizeT* _obj) { // 7
 	return *(volatile AlifSizeT*)_obj;
 }
 
-static inline void alifAtomic_storeSize(AlifSizeT* _obj, AlifSizeT _value) { // 802
-	(void)_Py_atomic_exchange_ssize(_obj, _value);
+static inline void* alifAtomic_loadPtrRelaxed(const void* _obj) { // 709
+	return *(void* volatile*)_obj;
 }
 
-static inline void alifAtomic_storeUint8Relaxed(uint8_t* obj, uint8_t value) { // 847
-	*(volatile uint8_t*)obj = value;
+static inline void alifAtomic_storeSize(AlifSizeT* _obj, AlifSizeT _value) { // 802
+	(void)alifAtomic_exchangeSize(_obj, _value);
+}
+
+static inline void alifAtomic_storeIntRelaxed(int* _obj, int _value)
+{
+	*(volatile int*)_obj = _value;
+}
+
+static inline void alifAtomic_storeUint8Relaxed(uint8_t* _obj, uint8_t _value) { // 847
+	*(volatile uint8_t*)_obj = _value;
 }
 
 
@@ -216,10 +235,15 @@ static inline void alifAtomic_storeSizeRelaxed(AlifSizeT* _obj, AlifSizeT _value
 
 
 
-
-
-
-
+static inline uint64_t alifAtomic_loadUint64Acquire(const uint64_t* _obj) { // 1018
+#if defined(_M_X64) || defined(_M_IX86)
+	return *(uint64_t volatile*)_obj;
+#elif defined(_M_ARM64)
+	return (uint64_t)__ldar64((unsigned __int64 volatile*)_obj);
+#else
+#  error "no implementation of alifAtomic_loadUint64Acquire"
+#endif
+}
 
 static inline AlifSizeT alifAtomic_loadSizeAcquire(const AlifSizeT* _obj) { // 1043
 #if defined(_M_X64) or defined(_M_IX86)
@@ -231,3 +255,16 @@ static inline AlifSizeT alifAtomic_loadSizeAcquire(const AlifSizeT* _obj) { // 1
 #endif
 }
 
+
+static inline void alifAtomic_fenceSeqCst(void)
+{
+#if defined(_M_ARM64)
+	__dmb(_ARM64_BARRIER_ISH);
+#elif defined(_M_X64)
+	__faststorefence();
+#elif defined(_M_IX86)
+	_mm_mfence();
+#else
+#  error "no implementation of alifAtomic_fenceSeqCst"
+#endif
+}
