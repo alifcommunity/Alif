@@ -14,7 +14,7 @@ class QsbrShared; // 38
 class AlifThreadImpl;   // 39
 
 
-class QsbrThreadState { // 1213
+class QSBRThreadState { // 1213
 public:
 	uint64_t seq{};
 
@@ -25,14 +25,14 @@ public:
 	AlifIntT deferrals{};
 
 	bool allocated{};
-	class QsbrThreadState* freeListNext{};
+	class QSBRThreadState* freeListNext{};
 };
 
 
 class QsbrPad { // 61
 public:
-	class QsbrThreadState qsbr {};
-	char __padding[64 - sizeof(class QsbrThreadState)]{};
+	class QSBRThreadState qsbr{};
+	char __padding[64 - sizeof(class QSBRThreadState)]{};
 };
 
 
@@ -46,15 +46,14 @@ public:
 	AlifSizeT size{};
 
 	AlifMutex mutex{};
-	class QsbrThreadState* freeList{};
+	class QSBRThreadState* freeList{};
 };
 
 
-static inline uint64_t alifQsbr_sharedCurrent(class QsbrShared* _shared)
-{
+static inline uint64_t alifQsbr_sharedCurrent(class QsbrShared* _shared){ // 84
 	return alifAtomic_loadUint64Acquire(&_shared->wrSeq);
 }
 
-uint64_t alifQsbr_deferredAdvance(class QsbrThreadState*); // 117
+uint64_t alifQsbr_deferredAdvance(class QSBRThreadState*); // 117
 
-bool alifQsbr_poll(class QsbrThreadState* , uint64_t ); // 122
+bool alifQsbr_poll(class QSBRThreadState* , uint64_t ); // 122

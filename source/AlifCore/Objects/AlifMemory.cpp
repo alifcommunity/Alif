@@ -3,7 +3,7 @@
 #include "AlifCore_Interpreter.h"
 #include "AlifCore_State.h"
 #include "AlifCore_Memory.h"
-#include "AlifCore_Qsbr.h" // for class QsbrThreadState
+#include "AlifCore_QSBR.h" // for class QsbrThreadState
 
 
 #define ALIFMEM_FRAGIDX (_alifMem_.fragIdx)
@@ -513,21 +513,23 @@ inline void alifMem_objFree(void* _ptr) {
 	ALIFMEM_OBJNUMS--;
 }
 
+/*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 #define WORK_ITEMS_PER_CHUNK 254 // 1077
 
-class MemWorkItem {
+class MemWorkItem { // 1080
 public:
-	uintptr_t ptr; 
-	uint64_t qsbrGoal;
+	uintptr_t ptr{};
+	uint64_t qsbrGoal{};
 };
 
 class MemWorkChunk { // 1086
 public:
-	class LListNode node;
+	class LListNode node {};
 
-	AlifSizeT rdIDx;  
-	AlifSizeT wrIDx;
-	class MemWorkItem array[WORK_ITEMS_PER_CHUNK];
+	AlifSizeT rdIDx{};
+	AlifSizeT wrIDx{};
+	class MemWorkItem array[WORK_ITEMS_PER_CHUNK]{};
 };
 
 static void free_workItem(AlifUSizeT _ptr) {  // 1096
@@ -541,7 +543,7 @@ static void free_workItem(AlifUSizeT _ptr) {  // 1096
 
 static void free_delayed(AlifUSizeT _ptr) { // 1107
 	AlifInterpreter* interp = alifInterpreter_get();
-	if (alifInterpreterState_getFinalizing(interp) != nullptr ||
+	if (alifInterpreter_getFinalizing(interp) != nullptr ||
 		interp->stopTheWorld.worldStopped)
 	{
 
@@ -593,7 +595,7 @@ static class MemWorkChunk* work_queueFirst(class LListNode* _head) {  // 1177
 	return LLIST_DATA(_head->next, class MemWorkChunk, node);
 }
 
-static void process_queue(class LListNode* _head, class QsbrThreadState* _qsbr,
+static void process_queue(class LListNode* _head, class QSBRThreadState* _qsbr,
 	bool _keepEmpty) { // 1183
 	while (!llist_empty(_head)) {
 		class MemWorkChunk* buf = work_queueFirst(_head);
@@ -608,7 +610,7 @@ static void process_queue(class LListNode* _head, class QsbrThreadState* _qsbr,
 			buf->rdIDx++;
 		}
 
-		if (_keepEmpty && buf->node.next == _head) {
+		if (_keepEmpty and buf->node.next == _head) {
 			buf->rdIDx = buf->wrIDx = 0;
 			return;
 		}
@@ -619,7 +621,7 @@ static void process_queue(class LListNode* _head, class QsbrThreadState* _qsbr,
 }
 
 static void process_interpQueue(class AlifMemInterpFreeQueue* _queue,
-	class QsbrThreadState* _qsbr) {  // 1212
+	class QSBRThreadState* _qsbr) {  // 1212
 	if (!alifAtomic_loadIntRelaxed(&_queue->hasWork)) {
 		return;
 	}

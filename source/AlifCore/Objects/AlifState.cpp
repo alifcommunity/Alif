@@ -96,11 +96,11 @@ static void stop_theWorld(class StopTheWorldState* _stw) { // 2239
 	HEAD_LOCK(runtime);
 	_stw->requested = 1;
 	_stw->threadCountDown = 0;
-	_stw->stopEvent = (AlifEvent)0 ;
+	_stw->stopEvent = (AlifEvent)0;
 	_stw->requester = alifThread_get();
 
-	AlifInterpreter* i;
-	AlifThread* t;
+	AlifInterpreter* i{};
+	AlifThread* t{};
 	ALIF_FOR_EACH_THREAD(_stw, i, t) {
 		if (t != _stw->requester) {
 			_stw->threadCountDown++;
@@ -137,8 +137,8 @@ static void start_theWorld(class StopTheWorldState* _stw){ // 2294
 	HEAD_LOCK(runtime);
 	_stw->requested = 0;
 	_stw->worldStopped = 0;
-	AlifInterpreter* i;
-	AlifThread* t;
+	AlifInterpreter* i{};
+	AlifThread* t{};
 	ALIF_FOR_EACH_THREAD(_stw, i, t) {
 		if (t != _stw->requester) {
 			alifAtomic_storeInt(&t->state, ALIF_THREAD_DETACHED);

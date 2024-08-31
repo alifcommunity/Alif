@@ -46,7 +46,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ObjectStack.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ParkingLot.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Parser.h" />
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Qsbr.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_QSBR.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Semaphore.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_State.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Thread.h" />

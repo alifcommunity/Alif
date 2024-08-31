@@ -10,7 +10,7 @@
 #define QSBR_DEFERRED_LIMIT 10 // 47
 
 
-static inline bool alifQbsr_goalReached(class QsbrThreadState* _qsbr, uint64_t _goal) { // 100
+static inline bool alifQbsr_goalReached(class QSBRThreadState* _qsbr, uint64_t _goal) { // 100
 	uint64_t rdSeq = alifAtomic_loadUint64(&_qsbr->shared->rdSeq);
 	return QSBR_LEQ(_goal, rdSeq);
 }
@@ -20,7 +20,7 @@ uint64_t alifQsbr_advance(class QsbrShared* _shared) { // 111
 	return alifAtomic_addUint64(&_shared->wrSeq, QSBR_INCR) + QSBR_INCR;
 }
 
-uint64_t alifQsbr_deferredAdvance(class QsbrThreadState* _qsbr) { // 120
+uint64_t alifQsbr_deferredAdvance(class QSBRThreadState* _qsbr) { // 120
 	if (++_qsbr->deferrals < QSBR_DEFERRED_LIMIT) {
 		return alifQsbr_sharedCurrent(_qsbr->shared) + QSBR_INCR;
 	}
@@ -35,7 +35,7 @@ static uint64_t qsbr_pollScan(class QsbrShared* _shared) { // 130
 	uint64_t minSeq = alifAtomic_loadUint64(&_shared->wrSeq);
 	class QsbrPad* array = _shared->array;
 	for (AlifSizeT i = 0, size = _shared->size; i != size; i++) {
-		class QsbrThreadState* qsbr = &array[i].qsbr;
+		class QSBRThreadState* qsbr = &array[i].qsbr;
 
 		uint64_t seq = alifAtomic_loadUint64(&qsbr->seq);
 		if (seq != QSBR_OFFLINE && QSBR_LT(seq, minSeq)) {
@@ -53,7 +53,7 @@ static uint64_t qsbr_pollScan(class QsbrShared* _shared) { // 130
 }
 
 
-bool alifQsbr_poll(class QsbrThreadState* _qsbr, uint64_t _goal) { // 161
+bool alifQsbr_poll(class QSBRThreadState* _qsbr, uint64_t _goal) { // 161
 
 	if (alifQbsr_goalReached(_qsbr, _goal)) {
 		return true;

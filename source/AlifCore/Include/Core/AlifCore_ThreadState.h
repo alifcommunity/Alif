@@ -9,7 +9,7 @@ class AlifThreadImpl {
 public:
 	AlifThread base{};
 
-	class QsbrThreadState* qsbr{};  // only used by free-threaded build
+	class QSBRThreadState* qsbr{};  // only used by free-threaded build
 
 
 	LListNode memFreeQueue{};

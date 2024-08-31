@@ -164,11 +164,11 @@ AlifASTBlock* block_new(AlifUSizeT);
 extern wchar_t* alifMem_wcsDup(const wchar_t*);
 
 
-/* ---------------------------------------AlifCore_AlifMem-----------------------------------------------------------------*/
+/* ---------------------------------------AlifCore_Mem-----------------------------------------------------------------*/
 
 class AlifMemInterpFreeQueue { // 52
 public:
-	int hasWork;  
-	AlifMutex mutex;  
-	class LListNode head;  
+	AlifIntT hasWork{};
+	AlifMutex mutex{};
+	class LListNode head {};
 };

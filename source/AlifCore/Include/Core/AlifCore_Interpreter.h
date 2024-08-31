@@ -5,7 +5,7 @@
 #include "AlifCore_TypeID.h"
 #include "AlifCore_Memory.h"
 
-class StopTheWorldState {
+class StopTheWorldState { // 50
 public:
 	AlifMutex mutex{};
 	bool requested{};
@@ -56,7 +56,7 @@ public:
 
 	BRCState brc{};  // biased reference counting state
 
-	class StopTheWorldState stopTheWorld {};
+	StopTheWorldState stopTheWorld{};
 
 	AlifMemory* memory_{};
 
@@ -79,6 +79,6 @@ extern const AlifConfig* alifInterpreter_getConfig(AlifInterpreter*); // 329
 
 AlifIntT alifInterpreter_new(AlifThread*, AlifInterpreter**); // 399
 
-static inline AlifThread* alifInterpreterState_getFinalizing(AlifInterpreter* _interp) {
+static inline AlifThread* alifInterpreter_getFinalizing(AlifInterpreter* _interp) { //  289
 	return (AlifThread*)alifAtomic_loadPtrRelaxed(&_interp->finalizing);
 }
