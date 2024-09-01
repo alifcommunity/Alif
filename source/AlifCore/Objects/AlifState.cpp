@@ -81,7 +81,6 @@ static void bind_thread(AlifThread* tstate) { // 245
 
 
 
-
 static void bind_gilStateThread(AlifThread* tstate) { // 318
 
 	AlifDureRun* runtime = tstate->interpreter->dureRun;
@@ -352,7 +351,7 @@ static void thread_setDetached(AlifThread* _thread, AlifIntT _detachedState) { /
 void alifThread_attach(AlifThread* _thread) { // 2070
 	ALIF_ENSURETHREADNOTNULL(_thread);
 	if (current_fastGet() != nullptr) {
-		//alif_fatalError("non-NULL old thread state");
+		//alif_fatalError("non-nullptr old thread state");
 		return; // temp
 	}
 
@@ -400,6 +399,103 @@ void alifThread_detach(AlifThread* _thread) { // 2140
 	detach_thread(_thread, ALIF_THREAD_DETACHED);
 }
 
+static AlifInterpreter* interp_forStopTheWorld(class StopTheWorldState* _stw) { // 2196
+	return (_stw->isGlobal
+		? alifInterpreter_head()
+		: ALIF_CONTAINER_OF(_stw, AlifInterpreter, stopTheWorld));
+}
+
+#define ALIF_FOR_EACH_THREAD(stw, i, t)                                       \
+    for (i = interp_forStopTheWorld((stw));                              \
+            i != nullptr; i = ((stw->isGlobal) ? i->next : nullptr))             \
+        for (t = i->threads.head; t; t = t->next) // 2206
+
+
+static void stop_theWorld(class StopTheWorldState* _stw) { // 2239
+	AlifDureRun* runtime = &_alifDureRun_;
+
+	alifMutex_lock(&_stw->mutex);
+	if (_stw->isGlobal) {
+		alifMutex_lock(&runtime->stopTeWorldMutex);
+	}
+	else {
+		alifRWMutex_rLock(&runtime->stopTheWorldMutex);
+	}
+
+	HEAD_LOCK(runtime);
+	_stw->requested = 1;
+	_stw->threadCountDown = 0;
+	_stw->stopEvent = (AlifEvent)0;
+	_stw->requester = alifThread_get();
+
+	AlifInterpreter* i{};
+	AlifThread* t{};
+	ALIF_FOR_EACH_THREAD(_stw, i, t) {
+		if (t != _stw->requester) {
+			_stw->threadCountDown++;
+		}
+	}
+
+	if (_stw->threadCountDown == 0) {
+		HEAD_UNLOCK(runtime);
+		_stw->worldStopped = 1;
+		return;
+	}
+
+	for (;;) {
+		bool stoppedAllThreads = park_detached_threads(_stw);
+		HEAD_UNLOCK(runtime);
+
+		if (stoppedAllThreads) {
+			break;
+		}
+
+		AlifTimeT waitNS = 1000 * 1000;  
+		int detach = 0;
+		if (alifEvent_waitTimed(&_stw->stopEvent, waitNS, detach)) {
+			break;
+		}
+
+		HEAD_LOCK(runtime);
+	}
+	_stw->worldStopped = 1;
+}
+
+
+static void start_theWorld(class StopTheWorldState* _stw){ // 2294
+	AlifDureRun* runtime = &_alifDureRun_;
+	HEAD_LOCK(runtime);
+	_stw->requested = 0;
+	_stw->worldStopped = 0;
+	AlifInterpreter* i{};
+	AlifThread* t{};
+	ALIF_FOR_EACH_THREAD(_stw, i, t) {
+		if (t != _stw->requester) {
+			alifAtomic_storeInt(&t->state, ALIF_THREAD_DETACHED);
+			alifParkingLot_unparkAll(&t->state);
+		}
+	}
+	_stw->requester = nullptr;
+	HEAD_UNLOCK(runtime);
+	if (_stw->isGlobal) {
+		alifRWMutex_unlock(&runtime->stopTheWorldMutex);
+	}
+	else {
+		alifRWMutex_rUnlock(&runtime->stopTheWorldMutex);
+	}
+	alifMutex_unlock(&_stw->mutex);
+}
+
+
+void alifEval_stopTheWorld(AlifInterpreter* _interp) { // 2342
+	stop_theWorld(&_interp->stopTheWorld);
+}
+
+void alifEval_startTheWorld(AlifInterpreter* _interp) { // 2350
+	start_theWorld(&_interp->stopTheWorld);
+}
+
+
 void alifThread_bind(AlifThread* _thread) { // 2447
 	
 	bind_thread(_thread);
@@ -419,6 +515,11 @@ uintptr_t alif_getThreadLocalAddr(void) { // 2463
 
 
 
+AlifInterpreter* alifInterpreter_head(void) { // 2485
+	return _alifDureRun_.interpreters.head;
+}
+
+
 AlifIntT alifGILState_init(AlifInterpreter* _interp) { // 2652
 	if (!alif_isMainInterpreter(_interp)) {
 		return 1;
@@ -427,6 +528,8 @@ AlifIntT alifGILState_init(AlifInterpreter* _interp) { // 2652
 	dureRun->gilState.autoInterpreterState = _interp;
 	return 1;
 }
+
+
 
 
 

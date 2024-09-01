@@ -162,3 +162,13 @@ AlifASTBlock* block_new(AlifUSizeT);
 /* --------------------------------- ادوات ذاكرة ألف --------------------------------- */
 
 extern wchar_t* alifMem_wcsDup(const wchar_t*);
+
+
+/* ---------------------------------------AlifCore_Mem-----------------------------------------------------------------*/
+
+class AlifMemInterpFreeQueue { // 52
+public:
+	AlifIntT hasWork{};
+	AlifMutex mutex{};
+	class LListNode head {};
+};

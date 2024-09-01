@@ -40,8 +40,8 @@ static inline AlifThread* alifThread_get() { // 134
 
 extern void alifThread_attach(AlifThread*); // 151
 
-static inline void alif_ensureFuncTstateNotNULL(const char* func, AlifThread* tstate) { // 183
-	if (tstate == nullptr) {
+static inline void alif_ensureFuncTstateNotNULL(const char* _func, AlifThread* _tstate) { // 183
+	if (_tstate == nullptr) {
 		//alif_fatalErrorFunc(func,
 		//	"the function must be called with the GIL held, "
 		//	"after Alif initialization and before Alif finalization, "
@@ -49,6 +49,9 @@ static inline void alif_ensureFuncTstateNotNULL(const char* func, AlifThread* ts
 		return;
 	}
 }
+
+void alifEval_stopTheWorld(AlifInterpreter*); // 179
+void alifEval_startTheWorld(AlifInterpreter*); // 180
 
 #define ALIF_ENSURETHREADNOTNULL(_thread) \
     alif_ensureFuncTstateNotNULL(__func__, (_thread)) // 195

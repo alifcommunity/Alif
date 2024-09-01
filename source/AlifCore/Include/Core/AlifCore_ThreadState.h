@@ -1,5 +1,6 @@
 #pragma once
 
+
 #include "AlifCore_BiaseRefCount.h"
 #include "AlifCore_FreeList.h"
 
@@ -10,6 +11,7 @@ public:
 	AlifThread base{};
 
 	QSBRThreadState* qsbr{};
+
 	LListNode memFreeQueue{};
 
 	class GCThreadState gc{};
