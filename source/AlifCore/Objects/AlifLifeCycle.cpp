@@ -160,8 +160,8 @@ static AlifIntT alifCore_builtinsInit(AlifThread* _thread) { // 775
 
 	return 1;
 
-//error:
-	//ALIF_XDECREF(biMod);
+	//error:
+		//ALIF_XDECREF(biMod);
 	return -1;
 }
 
@@ -340,4 +340,3 @@ AlifIntT alif_initFromConfig(const AlifConfig* _config) { // 1383
 
 	return 1;
 }
-

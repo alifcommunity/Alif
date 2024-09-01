@@ -16,7 +16,7 @@
 
 
 #ifdef HAVE_LOCAL_THREAD
-	ALIF_LOCAL_THREAD AlifThread* _alifTSSThread_ = nullptr; // 68
+ALIF_LOCAL_THREAD AlifThread* _alifTSSThread_ = nullptr; // 68
 #endif
 
 static inline AlifThread* current_fastGet() { // 71
@@ -43,7 +43,7 @@ static inline void current_fastClear() { // 94
 #endif
 }
 
-AlifThread*	alifThread_getCurrent() { // 110
+AlifThread* alifThread_getCurrent() { // 110
 	return current_fastGet();
 }
 
@@ -81,12 +81,13 @@ static void bind_thread(AlifThread* tstate) { // 245
 
 
 
+
 static void bind_gilStateThread(AlifThread* tstate) { // 318
 
 	AlifDureRun* runtime = tstate->interpreter->dureRun;
 	AlifThread* tcur = threadTSS_get(&runtime->autoTSSKey);
 
-	if (tcur != nullptr ) {
+	if (tcur != nullptr) {
 		tcur->status.boundGILState = 0;
 	}
 	threadTSS_set(&runtime->autoTSSKey, tstate);
@@ -167,7 +168,7 @@ static AlifIntT init_interpreter(AlifInterpreter* _interpreter,
 	_interpreter->dureRun = _dureRun;
 	_interpreter->id_ = _id;
 	_interpreter->next = _next;
-	//alifGC_initState(&_interpreter->gc);
+	alifGC_initState(&_interpreter->gc);
 	alifConfig_initAlifConfig(&_interpreter->config);
 
 
@@ -248,14 +249,14 @@ static void init_thread(AlifThreadImpl* _thread, AlifInterpreter* _interpreter, 
 
 	thread->id = _id;
 
-	//thread->alifRecursionLimit = _interpreter->cEval.recursionLimit,
-	//thread->alifRecursionRemaining = _interpreter->cEval.recursionLimit,
+	thread->alifRecursionLimit = _interpreter->eval.recursionLimit,
+	thread->alifRecursionRemaining = _interpreter->eval.recursionLimit,
 	thread->cppRecursionRemaining = ALIFCPP_RECURSION_LIMIT;
 
 	thread->currentFrame = nullptr;
-	//thread->dataStackChunk = nullptr;
-	//thread->dataStackTop = nullptr;
-	//thread->dataStackLimit = nullptr;
+	thread->dataStackChunk = nullptr;
+	thread->dataStackTop = nullptr;
+	thread->dataStackLimit = nullptr;
 
 
 	llist_init(&_thread->memFreeQueue);
@@ -314,7 +315,7 @@ AlifThread* alifThreadState_new(AlifInterpreter* _interpreter) { // 1622
 
 
 
-static inline void thread_activate(AlifThread* _thread) { // 1992
+static inline void thread_activate(AlifThread* _thread) { // 1998
 	if (!_thread->status.boundGILState) {
 		bind_gilStateThread(_thread);
 	}
@@ -322,7 +323,7 @@ static inline void thread_activate(AlifThread* _thread) { // 1992
 	_thread->status.active = 1;
 }
 
-static inline void thread_deactivate(AlifThread* _thread) { // 215
+static inline void thread_deactivate(AlifThread* _thread) { // 2015
 	_thread->status.active = 0;
 }
 
@@ -450,7 +451,7 @@ static void stop_theWorld(class StopTheWorldState* _stw) { // 2239
 			break;
 		}
 
-		AlifTimeT waitNS = 1000 * 1000;  
+		AlifTimeT waitNS = 1000 * 1000;
 		int detach = 0;
 		if (alifEvent_waitTimed(&_stw->stopEvent, waitNS, detach)) {
 			break;
@@ -462,7 +463,7 @@ static void stop_theWorld(class StopTheWorldState* _stw) { // 2239
 }
 
 
-static void start_theWorld(class StopTheWorldState* _stw){ // 2294
+static void start_theWorld(class StopTheWorldState* _stw) { // 2294
 	AlifDureRun* runtime = &_alifDureRun_;
 	HEAD_LOCK(runtime);
 	_stw->requested = 0;
@@ -497,7 +498,7 @@ void alifEval_startTheWorld(AlifInterpreter* _interp) { // 2350
 
 
 void alifThread_bind(AlifThread* _thread) { // 2447
-	
+
 	bind_thread(_thread);
 
 	if (threadTSS_get(&_thread->interpreter->dureRun->autoTSSKey) == nullptr) {
@@ -514,10 +515,11 @@ uintptr_t alif_getThreadLocalAddr(void) { // 2463
 }
 
 
-
 AlifInterpreter* alifInterpreter_head(void) { // 2485
 	return _alifDureRun_.interpreters.head;
 }
+
+
 
 
 AlifIntT alifGILState_init(AlifInterpreter* _interp) { // 2652
@@ -528,8 +530,6 @@ AlifIntT alifGILState_init(AlifInterpreter* _interp) { // 2652
 	dureRun->gilState.autoInterpreterState = _interp;
 	return 1;
 }
-
-
 
 
 

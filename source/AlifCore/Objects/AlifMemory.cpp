@@ -576,7 +576,7 @@ static void free_delayed(AlifUSizeT _ptr) { // 1107
 		return;
 	}
 
-	uint64_t seq = alifQsbr_deferredAdvance(tstate->qsbr);
+	uint64_t seq = alifQSBR_deferredAdvance(tstate->qsbr);
 	buf->array[buf->wrIDx].ptr = _ptr;
 	buf->array[buf->wrIDx].qsbrGoal = seq;
 	buf->wrIDx++;
@@ -602,7 +602,7 @@ static void process_queue(class LListNode* _head, class QSBRThreadState* _qsbr,
 
 		while (buf->rdIDx < buf->wrIDx) {
 			class MemWorkItem* item = &buf->array[buf->rdIDx];
-			if (!alifQsbr_poll(_qsbr, item->qsbrGoal)) {
+			if (!alifQSBR_poll(_qsbr, item->qsbrGoal)) {
 				return;
 			}
 

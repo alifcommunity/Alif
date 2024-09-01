@@ -1,9 +1,17 @@
 #pragma once
 
+#include "AlifCore_Lock.h"
+
+
 // 28
 #define QSBR_OFFLINE 0
 #define QSBR_INITIAL 1
 #define QSBR_INCR    2
+
+
+#define QSBR_LT(a, b) ((int64_t)((a)-(b)) < 0) // 35
+#define QSBR_LEQ(a, b) ((int64_t)((a)-(b)) <= 0) // 36
+
 
 class QSBRShared; // 38
 class AlifThreadImpl; // 39
@@ -43,6 +51,11 @@ public:
 static inline uint64_t alifQSBR_sharedCurrent(QSBRShared* shared) { // 83
 	return alifAtomic_loadUint64Acquire(&shared->wrSeq);
 }
+
+
+uint64_t alifQSBR_deferredAdvance(class QSBRThreadState*); // 117
+
+bool alifQSBR_poll(class QSBRThreadState*, uint64_t); // 122
 
 extern void alifQSBR_attach(QSBRThreadState*); // 125
 extern void alifQSBR_detach(QSBRThreadState*); // 130
