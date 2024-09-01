@@ -7,6 +7,12 @@
 #include "AlifCore_UStrObject.h"
 
 
+struct GILStateDureRunState { // 34
+public:
+	AlifIntT checkEnabled{};
+	AlifInterpreter* autoInterpreterState{};
+};
+
 
 
 
@@ -43,7 +49,7 @@ public:
 
 	AlifParserDureRunState parser{};
 	ImportDureRunState imports{};
-
+	GILStateDureRunState gilState{};
 	RefTracerDureRunState refTracer{};
 
 	AlifStaticObjects staticObjects{};

@@ -54,6 +54,9 @@ public:
 
 	//class ImportState imports;
 
+	GILDureRunState gil_{};
+
+
 	BRCState brc{};  // biased reference counting state
 
 	StopTheWorldState stopTheWorld{};
