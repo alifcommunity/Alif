@@ -33,6 +33,11 @@ enum ConfigInitEnum_ { // 149
 	AlifConfig_Init_Alif = 1,
 };
 
+enum AlifConfigGIL_ { // 156
+	AlifConfig_GIL_Default = -1,
+	AlifConfig_GIL_Disable = 0,
+	AlifConfig_GIL_Enable = 1,
+};
 
 extern AlifIntT alifConfig_copy(AlifConfig*, const AlifConfig*); // 171
 

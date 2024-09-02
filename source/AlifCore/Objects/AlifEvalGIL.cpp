@@ -1,5 +1,6 @@
 #include "alif.h"
 
+#include "AlifCore_InitConfig.h"
 #include "AlifCore_State.h"
 
 
@@ -7,18 +8,68 @@
 #include "CondVar.h" // 107
 
 // 109
+#define MUTEX_INIT(_mut) \
+    if (alifMutex_INIT(&(_mut))) { \
+		return;	\
+        /*ALIF_FATALERROR("alifMutex_INIT(" #_mut ") failed");*/ \
+	};
+#define MUTEX_FINI(_mut) \
+    if (alifMutex_FINI(&(_mut))) { \
+		return;		\
+        /*ALIF_FATALERROR("alifMutex_FINI(" #_mut ") failed");*/	\
+	};
 #define MUTEX_LOCK(_mut) \
     if (alifMutex_LOCK(&(_mut))) { \
-        /*alif_fatalError("alifMutex_LOCK(" #_mut ") failed");*/	\
+		return;		\
+        /*ALIF_FATALERROR("alifMutex_LOCK(" #_mut ") failed");*/	\
 	};
 #define MUTEX_UNLOCK(_mut) \
     if (alifMutex_UNLOCK(&(_mut))) { \
-        /*alif_fatalError("alifMutex_UNLOCK(" #_mut ") failed");*/	\
+		return;		\
+        /*ALIF_FATALERROR("alifMutex_UNLOCK(" #_mut ") failed");*/	\
+	};
+#define COND_INIT(_cond) \
+    if (alifCond_INIT(&(_cond))) { \
+		return; \
+        /*ALIF_FATALERROR("alifCond_INIT(" #_cond ") failed");*/	\
+	};
+#define COND_FINI(_cond) \
+    if (alifCond_FINI(&(_cond))) { \
+		return;		\
+        /*ALIF_FATALERROR("alifCond_FINI(" #_cond ") failed");*/	\
 	};
 
 
 
+static AlifIntT gil_created(GILDureRunState* gil) { // 154
+	if (gil == nullptr) {
+		return 0;
+	}
+	return (alifAtomic_loadIntAcquire(&gil->locked) >= 0);
+}
 
+static void create_gil(struct GILDureRunState* gil) { // 162
+	MUTEX_INIT(gil->mutex);
+#ifdef FORCE_SWITCHING
+	MUTEX_INIT(gil->switchMutex);
+#endif
+	COND_INIT(gil->cond);
+#ifdef FORCE_SWITCHING
+	COND_INIT(gil->switchCond);
+#endif
+	alifAtomic_storePtrRelaxed(&gil->lastHolder, 0);
+	alifAtomic_storeIntRelease(&gil->locked, 0);
+}
+
+static void destroy_gil(GILDureRunState* gil) { // 177
+	COND_FINI(gil->cond);
+	MUTEX_FINI(gil->mutex);
+#ifdef FORCE_SWITCHING
+	COND_FINI(gil->switchCond);
+	MUTEX_FINI(gil->switchMutex);
+#endif
+	alifAtomic_storeIntRelease(&gil->locked, -1);
+}
 
 
 static void drop_gil(AlifInterpreter* _interp,
@@ -89,12 +140,6 @@ static void take_gil(AlifThread* _thread) { // 284
 				(AlifThread*)alifAtomic_loadPtrRelaxed(&gil_->lastHolder);
 			if (alifThread_mustExit(_thread)) {
 				MUTEX_UNLOCK(gil_->mutex);
-				// gh-96387: If the loop requested a drop request in a previous
-				// iteration, reset the request. Otherwise, drop_gil() can
-				// block forever waiting for the thread which exited. Drop
-				// requests made by other threads are also reset: these threads
-				// may have to request again a drop request (iterate one more
-				// time).
 				if (dropRequested) {
 					alifUnset_evalBreakerBit(holder_tstate, ALIFGIL_DROP_REQUEST_BIT);
 				}
@@ -144,10 +189,55 @@ static void take_gil(AlifThread* _thread) { // 284
 	return;
 }
 
+static void init_sharedGIL(AlifInterpreter* _interp, GILDureRunState* _gil) { // 466
+	_interp->eval.gil_ = _gil;
+	_interp->eval.ownGIL = 0;
+}
+
+static void init_ownGIL(AlifInterpreter* _interp, GILDureRunState* _gil) { // 474
+#ifdef ALIF_GIL_DISABLED
+	const AlifConfig* config = alifInterpreter_getConfig(_interp);
+	_gil->enabled = (config->enableGIL == AlifConfigGIL_::AlifConfig_GIL_Enable)
+		? INT_MAX
+		: 0;
+#endif
+	create_gil(_gil);
+	_interp->eval.gil_ = _gil;
+	_interp->eval.ownGIL = 1;
+}
+
+void alifEval_initGIL(AlifThread* _thread, AlifIntT _ownGIL) { // 488
+	if (!_ownGIL) {
+		AlifInterpreter* main_interp = alifInterpreter_main();
+		GILDureRunState* gil = main_interp->eval.gil_;
+		init_sharedGIL(_thread->interpreter, gil);
+	}
+	else {
+		init_ownGIL(_thread->interpreter, &_thread->interpreter->gil_);
+	}
+
+	alifThread_attach(_thread);
+}
 
 
 
+void alifEval_finiGIL(AlifInterpreter* interp) { // 509
+	GILDureRunState* gil = interp->eval.gil_;
+	if (gil == nullptr) {
+		return;
+	}
+	else if (!interp->eval.ownGIL) {
+		interp->eval.gil_ = nullptr;
+		return;
+	}
 
+	if (!gil_created(gil)) {
+		return;
+	}
+
+	destroy_gil(gil);
+	interp->eval.gil_ = nullptr;
+}
 
 
 

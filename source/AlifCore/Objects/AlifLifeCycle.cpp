@@ -10,54 +10,6 @@
 #include "AlifCore_DureRun.h"
 #include "AlifCore_DureRunInit.h"
 
-// 40
-#define ALIFINTERPRETERCONFIG_DEFAULT_GIL (0)
-#define ALIFINTERPRETERCONFIG_SHARED_GIL (1)
-#define ALIFINTERPRETERCONFIG_OWN_GIL (2)
-
-class AlifInterpreterConfig { // 44
-public:
-	AlifIntT useMainAlifMem{};
-	AlifIntT allowFork{};
-	AlifIntT allowExec{};
-	AlifIntT allowThreads{};
-	AlifIntT allowDaemonThreads{};
-	AlifIntT checkMultiInterpExtensions{};
-	AlifIntT gil{};
-};
-
-// 55
-#define ALIFINTERPRETERCONFIG_INIT \
-    { \
-        .useMainAlifMem = 0, \
-        .allowFork = 0, \
-        .allowExec = 0, \
-        .allowThreads = 1, \
-        .allowDaemonThreads = 0, \
-        .checkMultiInterpExtensions = 1, \
-        .gil = ALIFINTERPRETERCONFIG_OWN_GIL, \
-    }
-
-// 69
-#ifdef ALIF_GIL_DISABLED
-#  define ALIFINTERPRETERCONFIG_LEGACY_CHECK_MULTI_INTERP_EXTENSIONS 1
-#else
-#  define ALIFINTERPRETERCONFIG_LEGACY_CHECK_MULTI_INTERP_EXTENSIONS 0
-#endif
-
-// 75
-#define ALIFINTERPRETERCONFIG_LEGACY_INIT \
-    { \
-        .useMainAlifMem = 1, \
-        .allowFork = 1, \
-        .allowExec = 1, \
-        .allowThreads = 1, \
-        .allowDaemonThreads = 1, \
-        .checkMultiInterpExtensions = ALIFINTERPRETERCONFIG_LEGACY_CHECK_MULTI_INTERP_EXTENSIONS, \
-        .gil = PyInterpreterConfig_SHARED_GIL, \
-    }
-
-
 
 
 
@@ -138,6 +90,67 @@ static AlifIntT alifCore_initDureRun(AlifDureRun* _dureRun, const AlifConfig* _c
 	return 1;
 }
 
+static AlifIntT initInterpreter_settings(AlifInterpreter* _interp,
+	const AlifInterpreterConfig* _config) { // 551
+
+	if (_config->useMainAlifMem) {
+		_interp->featureFlags |= ALIF_RTFLAGS_USE_ALIFMEM;
+	}
+	else if (!_config->checkMultiInterpExtensions) {
+		//return ALIFSTATUS_ERR("per-interpreter alifmem does not support "
+		//	"single-phase init extension modules");
+		return -1;
+	}
+#ifdef ALIF_GIL_DISABLED
+	if (!alif_isMainInterpreter(_interp) &&
+		!_config->checkMultiInterpExtensions)
+	{
+		//return ALIFSTATUS_ERR("The free-threaded build does not support "
+		//	"single-phase init extension modules in "
+		//	"subinterpreters");
+		return -1;
+	}
+#endif
+
+	if (_config->allowFork) {
+		_interp->featureFlags |= ALIF_RTFLAGS_FORK;
+	}
+	if (_config->allowExec) {
+		_interp->featureFlags |= ALIF_RTFLAGS_EXEC;
+	}
+	// Note that fork+exec is always allowed.
+
+	if (_config->allowThreads) {
+		_interp->featureFlags |= ALIF_RTFLAGS_THREADS;
+	}
+	if (_config->allowDaemonThreads) {
+		_interp->featureFlags |= ALIF_RTFLAGS_DAEMON_THREADS;
+	}
+
+	if (_config->checkMultiInterpExtensions) {
+		_interp->featureFlags |= ALIF_RTFLAGS_MULTI_INTERP_EXTENSIONS;
+	}
+
+	switch (_config->gil) {
+	case ALIF_INTERPRETERCONFIG_DEFAULT_GIL: break;
+	case ALIF_INTERPRETERCONFIG_SHARED_GIL: break;
+	case ALIF_INTERPRETERCONFIG_OWN_GIL: break;
+	default:
+		//return ALIFSTATUS_ERR("invalid interpreter config 'gil' value");
+		return -1;
+	}
+
+	return 1;
+}
+
+static void initInterpreter_createGIL(AlifThread* tstate, int gil) { // 607
+	alifEval_finiGIL(tstate->interpreter);
+
+	AlifIntT ownGIL = (gil == ALIF_INTERPRETERCONFIG_OWN_GIL);
+
+	alifEval_initGIL(tstate, ownGIL);
+}
+
 static AlifIntT alifCore_createInterpreter(AlifDureRun* _dureRun,
 	const AlifConfig* _config, AlifThread** _threadP) { // 637
 
@@ -181,7 +194,7 @@ static AlifIntT alifCore_createInterpreter(AlifDureRun* _dureRun,
 	_dureRun->mainThread = thread;
 	alifThread_bind(thread);
 
-	initInterpreter_createGil(thread, config.gil);
+	initInterpreter_createGIL(thread, config.gil);
 
 	*_threadP = thread;
 	return 1;

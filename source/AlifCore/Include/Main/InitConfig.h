@@ -30,6 +30,10 @@ public:
 
 	AlifIntT quite{};
 
+#ifdef ALIF_GIL_DISABLED
+	AlifIntT enableGIL{};
+#endif
+
 	wchar_t* programName{};
 
 	AlifIntT skipFirstLine{};

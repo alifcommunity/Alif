@@ -32,5 +32,5 @@ public:
 	uintptr_t instrumentationVersion{};
 	AlifIntT recursionLimit{};
 	GILDureRunState* gil_{};
-	AlifIntT ownGil{};
+	AlifIntT ownGIL{};
 };

@@ -29,8 +29,8 @@
 
 
 
-
-
+extern void alifEval_initGIL(AlifThread*, AlifIntT); // 131
+extern void alifEval_finiGIL(AlifInterpreter*); // 132
 
 extern void alifEval_acquireLock(AlifThread*); // 134
 

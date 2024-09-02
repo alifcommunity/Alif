@@ -43,6 +43,7 @@ public:
 
 	class AlifDureRun* dureRun{};
 	AlifConfig config{};
+	unsigned long featureFlags{};
 
 	//AlifFrameEvalFunction evalFrame{};
 
@@ -77,6 +78,14 @@ public:
 
 
 extern const AlifConfig* alifInterpreter_getConfig(AlifInterpreter*); // 329
+
+// 379
+#define ALIF_RTFLAGS_USE_ALIFMEM (1UL << 5)
+#define ALIF_RTFLAGS_MULTI_INTERP_EXTENSIONS (1UL << 8)
+#define ALIF_RTFLAGS_THREADS (1UL << 10)
+#define ALIF_RTFLAGS_DAEMON_THREADS (1UL << 11)
+#define ALIF_RTFLAGS_FORK (1UL << 15)
+#define ALIF_RTFLAGS_EXEC (1UL << 16)
 
 
 
