@@ -44,3 +44,28 @@ static inline AlifIntT alifEval_isGILEnabled(AlifThread* _thread) { // 145
 	GILDureRunState* gil = _thread->interpreter->eval.gil_;
 	return alifAtomic_loadIntRelaxed(&gil->enabled) != 0;
 }
+
+
+
+
+
+
+// 279
+#define ALIF_GIL_DROP_REQUEST_BIT (1U << 0)
+#define ALIF_SIGNALS_PENDING_BIT (1U << 1)
+#define ALIF_CALLS_TO_DO_BIT (1U << 2)
+#define ALIF_ASYNC_EXCEPTION_BIT (1U << 3)
+#define ALIF_GC_SCHEDULED_BIT (1U << 4)
+#define ALIF_EVAL_PLEASE_STOP_BIT (1U << 5)
+#define ALIF_EVAL_EXPLICIT_MERGE_BIT (1U << 6)
+
+
+
+static inline void alifUnset_evalBreakerBit(AlifThread* _thread, uintptr_t _bit) { // 297
+	alifAtomic_andUintptr(&_thread->evalBreaker, ~_bit);
+}
+
+static inline AlifIntT alifEval_breakerBitIsSet(AlifThread* _thread, uintptr_t _bit) { // 303
+	uintptr_t b = alifAtomic_loadUintptrRelaxed(&_thread->evalBreaker);
+	return (b & _bit) != 0;
+}

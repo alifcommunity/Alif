@@ -19,7 +19,7 @@
 
 class InitTable { // 7
 public:
-	const wchar_t* name{};
+	const char* name{};
 	AlifObject* (*initFunc)(void);
 };
 

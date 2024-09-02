@@ -31,6 +31,8 @@ public:
 	AlifThread* next{};
 	AlifInterpreter* interpreter{};
 
+	uintptr_t evalBreaker{};
+
 	class {
 	public:
 		AlifUIntT initialized : 1;

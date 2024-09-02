@@ -1,5 +1,6 @@
 #include "alif.h"
 
+#include "AlifCore_Eval.h"
 #include "AlifCore_InitConfig.h"
 #include "AlifCore_State.h"
 
@@ -38,7 +39,27 @@
 		return;		\
         /*ALIF_FATALERROR("alifCond_FINI(" #_cond ") failed");*/	\
 	};
-
+#define COND_SIGNAL(_cond) \
+    if (alifCond_SIGNAL(&(_cond))) { \
+		return;	\
+        /*ALIF_FATALERROR("alifCond_SIGNAL(" #_cond ") failed");*/	\
+	};
+#define COND_WAIT(_cond, _mut) \
+    if (alifCond_WAIT(&(_cond), &(_mut))) { \
+		return;	\
+        /*ALIF_FATALERROR("alifCond_WAIT(" #_cond ") failed");*/	\
+	};
+#define COND_TIMED_WAIT(_cond, _mut, _microseconds, _timeOutResult) \
+    { \
+        AlifIntT r = alifCond_TIMEDWAIT(&(_cond), &(_mut), (_microseconds)); \
+        if (r < 0) \
+			return; \
+            /*ALIF_FATALERROR("alifCond_WAIT(" #_cond ") failed");*/ \
+        if (r) /* 1 == timeout, 2 == impl. can't say, so assume timeout */ \
+            _timeOutResult = 1; \
+        else \
+            _timeOutResult = 0; \
+    } \
 
 
 static AlifIntT gil_created(GILDureRunState* gil) { // 154
@@ -71,6 +92,15 @@ static void destroy_gil(GILDureRunState* gil) { // 177
 	alifAtomic_storeIntRelease(&gil->locked, -1);
 }
 
+static inline void drop_gilImpl(AlifThread* _thread, GILDureRunState* _gil) { // 201
+	MUTEX_LOCK(_gil->mutex);
+	alifAtomic_storeIntRelaxed(&_gil->locked, 0);
+	if (_thread != nullptr) {
+		_thread->status.holdsGIL = 0;
+	}
+	COND_SIGNAL(_gil->cond);
+	MUTEX_UNLOCK(_gil->mutex);
+}
 
 static void drop_gil(AlifInterpreter* _interp,
 	AlifThread* _thread, AlifIntT _finalRelease) { // 214
@@ -93,11 +123,11 @@ static void drop_gil(AlifInterpreter* _interp,
 	drop_gilImpl(_thread, gil);
 
 	if (!_finalRelease and
-		alifEval_breakerBitIsSet(_thread, ALIF_GILDROP_REQUEST_BIT)) {
+		alifEval_breakerBitIsSet(_thread, ALIF_GIL_DROP_REQUEST_BIT)) {
 		MUTEX_LOCK(gil->switchMutex);
 		if (((AlifThread*)alifAtomic_loadPtrRelaxed(&gil->lastHolder)) == _thread)
 		{
-			alifUnset_evalBreakerBit(_thread, ALIF_GILDROP_REQUEST_BIT);
+			alifUnset_evalBreakerBit(_thread, ALIF_GIL_DROP_REQUEST_BIT);
 			COND_WAIT(gil->switchCond, gil->switchMutex);
 		}
 		MUTEX_UNLOCK(gil->switchMutex);
@@ -110,7 +140,7 @@ static void drop_gil(AlifInterpreter* _interp,
 
 
 static void take_gil(AlifThread* _thread) { // 284
-	int err = errno;
+	AlifIntT err = errno;
 
 	if (alifThread_mustExit(_thread)) {
 		alifThread_exitThread();
@@ -118,35 +148,37 @@ static void take_gil(AlifThread* _thread) { // 284
 
 	AlifInterpreter* interp = _thread->interpreter;
 	GILDureRunState* gil_ = interp->eval.gil_;
+#ifdef ALIF_GIL_DISABLED
 	if (!alifAtomic_loadIntRelaxed(&gil_->enabled)) {
 		return;
 	}
+#endif
 
 	MUTEX_LOCK(gil_->mutex);
 
 	AlifIntT dropRequested = 0;
 	while (alifAtomic_loadIntRelaxed(&gil_->locked)) {
-		unsigned long saved_switchnum = gil_->switchNumber;
+		unsigned long savedSwitchNum = gil_->switchNumber;
 
 		unsigned long interval = (gil_->interval >= 1 ? gil_->interval : 1);
-		int timed_out = 0;
-		COND_TIMED_WAIT(gil_->cond, gil_->mutex, interval, timed_out);
+		AlifIntT timedOut = 0;
+		COND_TIMED_WAIT(gil_->cond, gil_->mutex, interval, timedOut);
 
-		if (timed_out and
+		if (timedOut and
 			alifAtomic_loadIntRelaxed(&gil_->locked) and
-			gil_->switchNumber == saved_switchnum)
+			gil_->switchNumber == savedSwitchNum)
 		{
-			AlifThread* holder_tstate =
+			AlifThread* holderThread =
 				(AlifThread*)alifAtomic_loadPtrRelaxed(&gil_->lastHolder);
 			if (alifThread_mustExit(_thread)) {
 				MUTEX_UNLOCK(gil_->mutex);
 				if (dropRequested) {
-					alifUnset_evalBreakerBit(holder_tstate, ALIFGIL_DROP_REQUEST_BIT);
+					alifUnset_evalBreakerBit(holderThread, ALIF_GIL_DROP_REQUEST_BIT);
 				}
 				alifThread_exitThread();
 			}
 
-			alifSet_evalBreakerBit(holder_tstate, ALIFGIL_DROP_REQUEST_BIT);
+			alifSet_evalBreakerBit(holderThread, ALIF_GIL_DROP_REQUEST_BIT);
 			dropRequested = 1;
 		}
 	}
@@ -162,7 +194,6 @@ static void take_gil(AlifThread* _thread) { // 284
 
 	/* We now hold the GIL */
 	alifAtomic_storeIntRelaxed(&gil_->locked, 1);
-	ALIF_ANNOTATE_RWLOCK_ACQUIRED(&gil_->locked, /*is_write=*/1);
 
 	if (_thread != (AlifThread*)alifAtomic_loadPtrRelaxed(&gil_->lastHolder)) {
 		alifAtomic_storePtrRelaxed(&gil_->lastHolder, _thread);

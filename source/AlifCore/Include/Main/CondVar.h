@@ -47,3 +47,25 @@ ALIF_LOCAL_INLINE(AlifIntT) alifCond_INIT(AlifCondT* _cv) { // 263
 ALIF_LOCAL_INLINE(AlifIntT) alifCond_FINI(AlifCondT* _cv) { // 276
 	return 0;
 }
+
+
+ALIF_LOCAL_INLINE(AlifIntT) alifCond_WAIT(AlifCondT* _cv, AlifMutexT* _cs) { // 276
+	return SleepConditionVariableSRW(_cv, _cs, INFINITE, 0) ? 0 : -1;
+}
+
+ALIF_LOCAL_INLINE(AlifIntT) alifCond_TIMEDWAIT(AlifCondT* _cv,
+	AlifMutexT* _cs, long long _us) { // 283
+	BOOL success = SleepConditionVariableSRW(_cv, _cs, (DWORD)(_us / 1000), 0);
+	if (!success) {
+		if (GetLastError() == ERROR_TIMEOUT) {
+			return 1;
+		}
+		return -1;
+	}
+	return 0;
+}
+
+ALIF_LOCAL_INLINE(AlifIntT) alifCond_SIGNAL(AlifCondT* _cv) { // 296
+	WakeConditionVariable(_cv);
+	return 0;
+}
