@@ -42,6 +42,10 @@ public:
 	} threads;
 
 	class AlifDureRun* dureRun{};
+
+	AlifThread* finalizing_{};
+	unsigned long finalizingID{};
+
 	AlifConfig config{};
 	unsigned long featureFlags{};
 
@@ -74,6 +78,15 @@ public:
 	AlifThreadImpl initialThread{};
 };
 
+
+
+static inline AlifThread* alifInterpreterState_getFinalizing(AlifInterpreter* _interp) { // 288
+	return (AlifThread*)alifAtomic_loadPtrRelaxed(&_interp->finalizing_);
+}
+
+static inline unsigned long alifInterpreterState_getFinalizingID(AlifInterpreter* _interp) { // 293
+	return ALIFATOMIC_LOAD_ULONG_RELAXED(&_interp->finalizingID);
+}
 
 
 

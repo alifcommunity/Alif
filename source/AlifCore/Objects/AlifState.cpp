@@ -264,7 +264,8 @@ static void init_thread(AlifThreadImpl* _thread, AlifInterpreter* _interpreter, 
 	thread->status.initialized = 1;
 }
 
-static void add_thread(AlifInterpreter* _interpreter, AlifThread* _thread, AlifThread* next) { // 1519
+static void add_thread(AlifInterpreter* _interpreter,
+	AlifThread* _thread, AlifThread* next) { // 1519
 	if (next != nullptr) {
 		next->prev = _thread;
 	}
@@ -540,4 +541,24 @@ AlifIntT alifGILState_init(AlifInterpreter* _interp) { // 2652
 
 const AlifConfig* alifInterpreter_getConfig(AlifInterpreter* _interpreter) { // 2881
 	return &_interpreter->config;
+}
+
+
+
+
+
+
+
+AlifIntT alifThreadState_mustExit(AlifThread* _thread) { // 3004
+	unsigned long finalizing_id = alifDureRunState_getFinalizingID(&_alifDureRun_);
+	AlifThread* finalizing = alifDureRunState_getFinalizing(&_alifDureRun_);
+
+	if (finalizing == nullptr) {
+		finalizing = alifInterpreterState_getFinalizing(_thread->interpreter);
+		finalizing_id = alifInterpreterState_getFinalizingID(_thread->interpreter);
+	}
+	if (finalizing == nullptr) return 0;
+	else if (finalizing == _thread) return 0;
+	else if (finalizing_id == alifThread_getThreadID()) return 0;
+	return 1;
 }

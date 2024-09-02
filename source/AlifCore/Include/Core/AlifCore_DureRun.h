@@ -30,6 +30,10 @@ public:
 
 	AlifIntT initialized{};
 
+	AlifThread* finalizing_{};
+
+	unsigned long finalizingID{};
+
 	class AlifInterpreters {
 	public:
 		AlifInterpreter* head{};
@@ -37,7 +41,7 @@ public:
 		AlifIntT nextID{};
 	} interpreters;
 
-	AlifIntT mainThreadID{}; // not working in macos it's return pthread_t
+	AlifIntT mainThreadID{};
 	AlifThread* mainThread{};
 
 	AlifThreadDureRunState threads{};
@@ -49,6 +53,7 @@ public:
 
 	AlifParserDureRunState parser{};
 	ImportDureRunState imports{};
+	EvalDureRunState eval{};
 	GILStateDureRunState gilState{};
 	RefTracerDureRunState refTracer{};
 
@@ -64,3 +69,16 @@ extern void alifDureRunState_fini(AlifDureRun*); // 321
 
 
 extern AlifIntT alifDureRun_initialize(); // 329
+
+
+
+
+
+
+static inline AlifThread* alifDureRunState_getFinalizing(AlifDureRun* _dureRun) { // 383
+	return (AlifThread*)alifAtomic_loadPtrRelaxed(&_dureRun->finalizing_);
+}
+
+static inline unsigned long alifDureRunState_getFinalizingID(AlifDureRun* _dureRun) { // 388
+	return ALIFATOMIC_LOAD_ULONG_RELAXED(&_dureRun->finalizingID);
+}
