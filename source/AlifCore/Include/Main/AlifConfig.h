@@ -15,6 +15,15 @@
 		#define _OS32
 	#endif
 #elif defined(__linux__)
+	#ifdef __ARM_ARCH
+		#if __ARM_ARCH >= 8
+			#define _ARM64
+			#define _OS64
+		#else
+			#define _ARM32
+			#define _OS32
+		#endif
+	#endif
 	#ifdef __x86_64__
 		#define _LINUX64
 		#define _OS64
@@ -34,16 +43,8 @@
 		#define _MAC64_ARM
 		#define _OS64
 	#endif 
-#elif defined(__ARM_ARCH) // يحتاج مراجعة
-	#if __ARM_ARCH >= 8
-		#define _ARM64
-		#define _OS64
-	#else
-		#define _ARM32
-		#define _OS32
-	#endif
 #else
-	#error L"منصة تشغيل غير معروفة"
+	#error "منصة تشغيل غير معروفة"
 #endif
 
 
@@ -175,3 +176,5 @@
 #define WITH_FREELISTS 1
 
 #define HAVE_SETVBUF
+
+#define ALIF_GIL_DISABLE 1

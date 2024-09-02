@@ -10,6 +10,55 @@
 #include "AlifCore_DureRun.h"
 #include "AlifCore_DureRunInit.h"
 
+// 40
+#define ALIFINTERPRETERCONFIG_DEFAULT_GIL (0)
+#define ALIFINTERPRETERCONFIG_SHARED_GIL (1)
+#define ALIFINTERPRETERCONFIG_OWN_GIL (2)
+
+class AlifInterpreterConfig { // 44
+public:
+	AlifIntT useMainAlifMem{};
+	AlifIntT allowFork{};
+	AlifIntT allowExec{};
+	AlifIntT allowThreads{};
+	AlifIntT allowDaemonThreads{};
+	AlifIntT checkMultiInterpExtensions{};
+	AlifIntT gil{};
+};
+
+// 55
+#define ALIFINTERPRETERCONFIG_INIT \
+    { \
+        .useMainAlifMem = 0, \
+        .allowFork = 0, \
+        .allowExec = 0, \
+        .allowThreads = 1, \
+        .allowDaemonThreads = 0, \
+        .checkMultiInterpExtensions = 1, \
+        .gil = ALIFINTERPRETERCONFIG_OWN_GIL, \
+    }
+
+// 69
+#ifdef ALIF_GIL_DISABLED
+#  define ALIFINTERPRETERCONFIG_LEGACY_CHECK_MULTI_INTERP_EXTENSIONS 1
+#else
+#  define ALIFINTERPRETERCONFIG_LEGACY_CHECK_MULTI_INTERP_EXTENSIONS 0
+#endif
+
+// 75
+#define ALIFINTERPRETERCONFIG_LEGACY_INIT \
+    { \
+        .useMainAlifMem = 1, \
+        .allowFork = 1, \
+        .allowExec = 1, \
+        .allowThreads = 1, \
+        .allowDaemonThreads = 1, \
+        .checkMultiInterpExtensions = ALIFINTERPRETERCONFIG_LEGACY_CHECK_MULTI_INTERP_EXTENSIONS, \
+        .gil = PyInterpreterConfig_SHARED_GIL, \
+    }
+
+
+
 
 
 AlifDureRun _alifDureRun_ = ALIF_DURERUNSTATE_INIT(_alifDureRun_); // 103
