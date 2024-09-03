@@ -413,10 +413,31 @@ static AlifInterpreter* interp_forStopTheWorld(StopTheWorldState* _stw) { // 219
         for (t = i->threads.head; t; t = t->next) // 2206
 
 
+static bool park_detachedThreads(StopTheWorldState* stw) { // 2214
+	AlifIntT numParked = 0;
+	AlifInterpreter* i{};
+	AlifThread* t{};
+	ALIF_FOR_EACH_THREAD(stw, i, t) {
+		int state = alifAtomic_loadIntRelaxed(&t->state);
+		if (state == ALIF_THREAD_DETACHED) {
+			if (alifAtomic_compareExchangeInt(&t->state,
+				&state, ALIF_THREAD_SUSPENDED)) {
+				numParked++;
+			}
+		}
+		else if (state == ALIF_THREAD_ATTACHED and t != stw->requester) {
+			alifSet_evalBreakerBit(t, ALIF_EVAL_PLEASE_STOP_BIT);
+		}
+	}
+	stw->threadCountDown -= numParked;
+	return numParked > 0 and stw->threadCountDown == 0;
+}
+
+
 static void stop_theWorld(StopTheWorldState* _stw) { // 2239
 	AlifDureRun* dureRun = &_alifDureRun_;
 
-	alifMutex_lock(&_stw->mutex);
+	ALIFMUTEX_LOCK(&_stw->mutex);
 	if (_stw->isGlobal) {
 		alifRWMutex_lock(&dureRun->stopTheWorldMutex);
 	}
@@ -465,8 +486,8 @@ static void stop_theWorld(StopTheWorldState* _stw) { // 2239
 
 
 static void start_theWorld(class StopTheWorldState* _stw) { // 2294
-	AlifDureRun* runtime = &_alifDureRun_;
-	HEAD_LOCK(runtime);
+	AlifDureRun* dureRun = &_alifDureRun_;
+	HEAD_LOCK(dureRun);
 	_stw->requested = 0;
 	_stw->worldStopped = 0;
 	AlifInterpreter* i{};
@@ -478,12 +499,12 @@ static void start_theWorld(class StopTheWorldState* _stw) { // 2294
 		}
 	}
 	_stw->requester = nullptr;
-	HEAD_UNLOCK(runtime);
+	HEAD_UNLOCK(dureRun);
 	if (_stw->isGlobal) {
-		alifRWMutex_unlock(&runtime->stopTheWorldMutex);
+		alifRWMutex_unlock(&dureRun->stopTheWorldMutex);
 	}
 	else {
-		alifRWMutex_rUnlock(&runtime->stopTheWorldMutex);
+		alifRWMutex_rUnlock(&dureRun->stopTheWorldMutex);
 	}
 	alifMutex_unlock(&_stw->mutex);
 }

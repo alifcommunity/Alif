@@ -192,10 +192,39 @@ void alifRawMutex_unlockSlow(AlifRawMutex* _m) { // 217
 
 
 
+AlifIntT alifEvent_waitTimed(AlifEvent* _evt, AlifTimeT _timeoutNS, AlifIntT _detach) { // 274
+	for (;;) {
+		uint8_t v = alifAtomic_loadUint8(&_evt->v_);
+		if (v == ALIF_LOCKED) {
+			// event already set
+			return 1;
+		}
+		if (v == ALIF_UNLOCKED) {
+			if (!alifAtomic_compareExchangeUint8(&_evt->v_, &v, ALIF_HAS_PARKED)) {
+				continue;
+			}
+		}
+
+		uint8_t expected = ALIF_HAS_PARKED;
+		(void)alifParkingLot_park(&_evt->v_, &expected, sizeof(_evt->v_),
+			_timeoutNS, nullptr, _detach);
+
+		return alifAtomic_loadUint8(&_evt->v_) == ALIF_LOCKED;
+	}
+}
+
+
+
+
+
+
+
+
+
  // 397
 #define ALIF_WRITE_LOCKED 1
-#define ALIFRWMutex_READER_SHIFT 2
-#define ALIF_RWMUTEX_MAX_READERS (UINTPTR_MAX >> ALIFRWMutex_READER_SHIFT)
+#define ALIFRWMUTEX_READER_SHIFT 2
+#define ALIF_RWMUTEX_MAX_READERS (UINTPTR_MAX >> ALIFRWMUTEX_READER_SHIFT)
 
 static uintptr_t rwMutexSet_parkedAndWait(AlifRWMutex* _rwMutex, uintptr_t _bits) { // 401
 	if ((_bits & ALIF_HAS_PARKED) == 0) {
@@ -210,7 +239,9 @@ static uintptr_t rwMutexSet_parkedAndWait(AlifRWMutex* _rwMutex, uintptr_t _bits
 	return alifAtomic_loadUintptrRelaxed(&_rwMutex->bits);
 }
 
-
+static uintptr_t rwMutex_readerCount(uintptr_t _bits) { // 419
+	return _bits >> ALIFRWMUTEX_READER_SHIFT;
+}
 
 void alifRWMutex_rLock(AlifRWMutex* _rwMutex) { // 425
 	uintptr_t bits = alifAtomic_loadUintptrRelaxed(&_rwMutex->bits);
@@ -226,7 +257,7 @@ void alifRWMutex_rLock(AlifRWMutex* _rwMutex) { // 425
 		}
 		else {
 			// The lock is unlocked or read-locked. Try to grab it.
-			uintptr_t newval = bits + (1 << ALIFRWMutex_READER_SHIFT);
+			uintptr_t newval = bits + (1 << ALIFRWMUTEX_READER_SHIFT);
 			if (!alifAtomic_compareExchangeUintptr(&_rwMutex->bits,
 				&bits, newval)) {
 				continue;
@@ -236,6 +267,17 @@ void alifRWMutex_rLock(AlifRWMutex* _rwMutex) { // 425
 	}
 }
 
+
+
+void alifRWMutex_rUnlock(AlifRWMutex* _rwMutex) { // 456
+	uintptr_t bits = alifAtomic_addUintptr(&_rwMutex->bits, -(1 << ALIFRWMUTEX_READER_SHIFT));
+	bits -= (1 << ALIFRWMUTEX_READER_SHIFT);
+
+	if (rwMutex_readerCount(bits) == 0 and (bits & ALIF_HAS_PARKED)) {
+		alifParkingLot_unparkAll(&_rwMutex->bits);
+		return;
+	}
+}
 
 
 void alifRWMutex_lock(AlifRWMutex* _rwMutex) { // 469
@@ -256,6 +298,15 @@ void alifRWMutex_lock(AlifRWMutex* _rwMutex) { // 469
 }
 
 
+
+
+void alifRWMutex_unlock(AlifRWMutex* _rwMutex) { // 490
+	uintptr_t oldBits = alifAtomic_exchangeUintptr(&_rwMutex->bits, 0);
+
+	if ((oldBits & ALIF_HAS_PARKED) != 0) {
+		alifParkingLot_unparkAll(&_rwMutex->bits);
+	}
+}
 
 
 

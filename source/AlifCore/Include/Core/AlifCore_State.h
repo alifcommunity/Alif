@@ -79,13 +79,9 @@ extern void alifThread_bind(AlifThread*); // 222
 extern AlifIntT alifInterpreter_enable(AlifDureRun*); // 245
 
 
+// 261
+#define HEAD_LOCK(_dureRun) \
+    alifMutex_lockFlags(&(_dureRun)->interpreters.mutex, AlifLockFlags_::Alif_Lock_Dont_Detach)
+#define HEAD_UNLOCK(_dureRun) \
+    ALIFMUTEX_UNLOCK(&(_dureRun)->interpreters.mutex)
 
-//static inline AlifObjectFreeLists* alifObject_freeListsGet() {
-//	AlifThread* thread = alifThread_get();
-//
-//#ifdef ALIF_GIL_DISABLED
-//	return &((AlifThreadImpl*)tstate)->freelists;
-//#else
-//	return &thread->interpreter->objectState.freelists;
-//#endif
-//}

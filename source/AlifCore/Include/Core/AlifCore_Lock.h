@@ -24,6 +24,13 @@ enum AlifLockFlags_ { // 41
 
 extern AlifLockStatus_ alifMutex_lockTimed(AlifMutex*, AlifTimeT, AlifLockFlags_); // 54
 
+static inline void alifMutex_lockFlags(AlifMutex* m, AlifLockFlags_ flags) { // 58
+	uint8_t expected = ALIF_UNLOCKED;
+	if (!alifAtomic_compareExchangeUint8(&m->bits, &expected, ALIF_LOCKED)) {
+		alifMutex_lockTimed(m, -1, flags);
+	}
+}
+
 
 extern AlifIntT alifMutex_tryUnlock(AlifMutex*); // 69
 
@@ -32,6 +39,11 @@ class AlifEvent { // 73
 public:
 	uint8_t v_{};
 };
+
+
+
+AlifIntT alifEvent_waitTimed(AlifEvent*, AlifTimeT, AlifIntT); // 94
+
 
 
 class AlifRawMutex { // 103
@@ -67,5 +79,7 @@ public:
 
 
 void alifRWMutex_rLock(AlifRWMutex*); // 197
+void alifRWMutex_rUnlock(AlifRWMutex*); // 198
 
 void alifRWMutex_lock(AlifRWMutex*); // 201
+void alifRWMutex_unlock(AlifRWMutex*);

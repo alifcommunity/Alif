@@ -36,10 +36,11 @@ public:
 
 	class AlifInterpreters {
 	public:
+		AlifMutex mutex{};
 		AlifInterpreter* head{};
 		AlifInterpreter* main{};
 		AlifIntT nextID{};
-	} interpreters;
+	}interpreters;
 
 	AlifIntT mainThreadID{};
 	AlifThread* mainThread{};

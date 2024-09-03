@@ -256,6 +256,20 @@ static WaitEntry* dequeue(Bucket* _bucket, const void* _address) { // 247
 	return nullptr;
 }
 
+static void dequeue_all(Bucket* bucket, const void* address, LListNode* dst) { // 265
+	LListNode* root = &bucket->root;
+	LListNode* node{};
+	LLIST_FOR_EACH_SAFE(node, root) {
+		WaitEntry* wait = LLIST_DATA(node, WaitEntry, node);
+		if (wait->addr == (uintptr_t)address) {
+			llist_remove(node);
+			llist_insertTail(dst, node);
+			--bucket->numWaiters;
+			wait->isUnparking = true;
+		}
+	}
+}
+
 
 static AlifIntT atomic_memcmp(const void* _addr,
 	const void* _expected, AlifUSizeT _addrSize) { // 283
@@ -331,6 +345,22 @@ void alifParkingLot_unpark(const void* addr, AlifUnparkFnT* fn, void* arg) { // 
 	alifRawMutex_unlock(&bucket->mutex);
 
 	if (waiter) {
+		alifSemaphore_wakeup(&waiter->sema);
+	}
+}
+
+void alifParkingLot_unparkAll(const void* _addr) { // 367
+	LListNode head = LLIST_INIT(head);
+	Bucket* bucket = &buckets[((uintptr_t)_addr) % NUM_BUCKETS];
+
+	alifRawMutex_lock(&bucket->mutex);
+	dequeue_all(bucket, _addr, &head);
+	alifRawMutex_unlock(&bucket->mutex);
+
+	LListNode* node{};
+	LLIST_FOR_EACH_SAFE(node, &head) {
+		WaitEntry* waiter = LLIST_DATA(node, WaitEntry, node);
+		llist_remove(node);
 		alifSemaphore_wakeup(&waiter->sema);
 	}
 }

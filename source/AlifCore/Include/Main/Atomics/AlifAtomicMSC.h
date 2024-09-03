@@ -36,6 +36,10 @@ static inline intptr_t alifAtomic_addIntptr(intptr_t* _obj, intptr_t _value) { /
 #endif
 }
 
+static inline uintptr_t alifAtomic_addUintptr(uintptr_t* _obj, uintptr_t _value) { // 113
+	return (uintptr_t)alifAtomic_addIntptr((intptr_t*)_obj, (intptr_t)_value);
+}
+
 static inline AlifSizeT alifAtomic_addSize(AlifSizeT* _obj, AlifSizeT _value) { // 120
 	return (AlifSizeT)alifAtomic_addIntptr((intptr_t*)_obj, (intptr_t)_value);
 }
@@ -149,6 +153,10 @@ static inline AlifIntT alifAtomic_exchangeInt(AlifIntT* obj, AlifIntT value) { /
 
 static inline uint64_t alifAtomic_exchangeUint64(uint64_t* _obj, uint64_t _value) { // 366
 	return (uint64_t)alifAtomic_exchangeInt64((int64_t*)_obj, (int64_t)_value);
+}
+
+static inline uintptr_t alifAtomic_exchangeUintptr(uintptr_t* _obj, uintptr_t _value) { // 381
+	return (uintptr_t)alifAtomic_exchangePtr((void**)_obj, (void*)_value);
 }
 
 static inline AlifSizeT alifAtomic_exchangeSize(AlifSizeT* _obj, AlifSizeT _value) { // 390

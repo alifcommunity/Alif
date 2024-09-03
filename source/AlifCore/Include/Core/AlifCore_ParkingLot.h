@@ -25,3 +25,5 @@ typedef void AlifUnparkFnT(void* arg, void* parkArg, AlifIntT hasMoreWaiters); /
 
 
 void alifParkingLot_unpark(const void*, AlifUnparkFnT*, void*); // 85
+
+void alifParkingLot_unparkAll(const void*); // 89
