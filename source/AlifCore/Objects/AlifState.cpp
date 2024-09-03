@@ -64,18 +64,18 @@ static inline AlifIntT threadTSS_set(AlifTssT* _key, AlifThread* _thread) { // 1
 	return alifThreadTSS_set(_key, (void*)_thread);
 }
 
-static void bind_thread(AlifThread* tstate) { // 245
+static void bind_thread(AlifThread* _thread) { // 245
 
-	tstate->threadID = alifThread_getThreadID();
+	_thread->threadID = alifThread_getThreadID();
 #ifdef ALIF_HAVE_THREAD_NATIVE_ID
 	tstate->nativeThreadID = alifThread_getThreadNativeID();
 #endif
 
-	alifBRC_initThread(tstate);
+	alifBRC_initThread(_thread);
 
-	threadMimalloc_bind(tstate);
+	thread_mimallocBind(_thread);
 
-	tstate->status.bound = 1;
+	_thread->status.bound = 1;
 }
 
 
@@ -254,9 +254,9 @@ static void init_thread(AlifThreadImpl* _thread, AlifInterpreter* _interpreter, 
 	thread->cppRecursionRemaining = ALIFCPP_RECURSION_LIMIT;
 
 	thread->currentFrame = nullptr;
-	thread->dataStackChunk = nullptr;
-	thread->dataStackTop = nullptr;
-	thread->dataStackLimit = nullptr;
+	//thread->dataStackChunk = nullptr;
+	//thread->dataStackTop = nullptr;
+	//thread->dataStackLimit = nullptr;
 
 
 	llist_init(&_thread->memFreeQueue);
@@ -401,7 +401,7 @@ void alifThread_detach(AlifThread* _thread) { // 2140
 	detach_thread(_thread, ALIF_THREAD_DETACHED);
 }
 
-static AlifInterpreter* interp_forStopTheWorld(class StopTheWorldState* _stw) { // 2196
+static AlifInterpreter* interp_forStopTheWorld(StopTheWorldState* _stw) { // 2196
 	return (_stw->isGlobal
 		? alifInterpreter_head()
 		: ALIF_CONTAINER_OF(_stw, AlifInterpreter, stopTheWorld));
@@ -413,18 +413,18 @@ static AlifInterpreter* interp_forStopTheWorld(class StopTheWorldState* _stw) { 
         for (t = i->threads.head; t; t = t->next) // 2206
 
 
-static void stop_theWorld(class StopTheWorldState* _stw) { // 2239
-	AlifDureRun* runtime = &_alifDureRun_;
+static void stop_theWorld(StopTheWorldState* _stw) { // 2239
+	AlifDureRun* dureRun = &_alifDureRun_;
 
 	alifMutex_lock(&_stw->mutex);
 	if (_stw->isGlobal) {
-		alifMutex_lock(&runtime->stopTeWorldMutex);
+		alifRWMutex_lock(&dureRun->stopTheWorldMutex);
 	}
 	else {
-		alifRWMutex_rLock(&runtime->stopTheWorldMutex);
+		alifRWMutex_rLock(&dureRun->stopTheWorldMutex);
 	}
 
-	HEAD_LOCK(runtime);
+	HEAD_LOCK(dureRun);
 	_stw->requested = 1;
 	_stw->threadCountDown = 0;
 	_stw->stopEvent = (AlifEvent)0;
@@ -439,14 +439,14 @@ static void stop_theWorld(class StopTheWorldState* _stw) { // 2239
 	}
 
 	if (_stw->threadCountDown == 0) {
-		HEAD_UNLOCK(runtime);
+		HEAD_UNLOCK(dureRun);
 		_stw->worldStopped = 1;
 		return;
 	}
 
 	for (;;) {
-		bool stoppedAllThreads = park_detached_threads(_stw);
-		HEAD_UNLOCK(runtime);
+		bool stoppedAllThreads = park_detachedThreads(_stw);
+		HEAD_UNLOCK(dureRun);
 
 		if (stoppedAllThreads) {
 			break;
@@ -458,7 +458,7 @@ static void stop_theWorld(class StopTheWorldState* _stw) { // 2239
 			break;
 		}
 
-		HEAD_LOCK(runtime);
+		HEAD_LOCK(dureRun);
 	}
 	_stw->worldStopped = 1;
 }
@@ -561,4 +561,46 @@ AlifIntT alifThreadState_mustExit(AlifThread* _thread) { // 3004
 	else if (finalizing == _thread) return 0;
 	else if (finalizing_id == alifThread_getThreadID()) return 0;
 	return 1;
+}
+
+
+
+
+/* mimalloc memory support */
+
+static void thread_mimallocBind(AlifThread* _thread) { // 3037
+#ifdef ALIF_GIL_DISABLED
+	MimallocThreadState* mts = &((AlifThreadImpl*)_thread)->mimalloc;
+
+	mi_tld_t* tld = &mts->tld;
+	_mi_tld_init(tld, &mts->heaps[AlifMimallocHeapID_::Alif_Mimalloc_Heap_Mem]);
+	llist_init(&mts->pageList);
+
+	tld->segments.abandoned = &_thread->interpreter->mimalloc.abandonedPool;
+
+	size_t base_offset = offsetof(AlifObject, type);
+	//if (alifMem_debugEnabled()) {
+	//	base_offset += 2 * sizeof(size_t);
+	//}
+	size_t debug_offsets[AlifMimallocHeapID_::Alif_Mimalloc_Heap_Count] = {
+		{},
+		base_offset,
+		base_offset,
+		base_offset + 2 * sizeof(AlifObject*),
+	};
+
+	// Initialize each heap
+	for (uint8_t i = 0; i < AlifMimallocHeapID_::Alif_Mimalloc_Heap_Count; i++) {
+		_mi_heap_init_ex(&mts->heaps[i], tld, _mi_arena_id_none(), false, i);
+		mts->heaps[i].debug_offset = (uint8_t)debug_offsets[i];
+	}
+
+	mts->heaps[AlifMimallocHeapID_::Alif_Mimalloc_Heap_Object].page_use_qsbr = true;
+	mts->heaps[AlifMimallocHeapID_::Alif_Mimalloc_Heap_GC].page_use_qsbr = true;
+	mts->heaps[AlifMimallocHeapID_::Alif_Mimalloc_Heap_GCPre].page_use_qsbr = true;
+
+	mts->currentObjectHeap = &mts->heaps[AlifMimallocHeapID_::Alif_Mimalloc_Heap_Object];
+
+	alifAtomic_storeInt(&mts->initialized, 1);
+#endif
 }

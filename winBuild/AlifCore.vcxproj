@@ -41,6 +41,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_LList.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Lock.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Memory.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Mimalloc.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ModSupport.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ModuleObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Object.h" />

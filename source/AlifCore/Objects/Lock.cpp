@@ -192,6 +192,68 @@ void alifRawMutex_unlockSlow(AlifRawMutex* _m) { // 217
 
 
 
+ // 397
+#define ALIF_WRITE_LOCKED 1
+#define ALIFRWMutex_READER_SHIFT 2
+#define ALIF_RWMUTEX_MAX_READERS (UINTPTR_MAX >> ALIFRWMutex_READER_SHIFT)
+
+static uintptr_t rwMutexSet_parkedAndWait(AlifRWMutex* _rwMutex, uintptr_t _bits) { // 401
+	if ((_bits & ALIF_HAS_PARKED) == 0) {
+		uintptr_t newval = _bits | ALIF_HAS_PARKED;
+		if (!alifAtomic_compareExchangeUintptr(&_rwMutex->bits, &_bits, newval)) {
+			return _bits;
+		}
+		_bits = newval;
+	}
+
+	alifParkingLot_park(&_rwMutex->bits, &_bits, sizeof(_bits), -1, nullptr, 1);
+	return alifAtomic_loadUintptrRelaxed(&_rwMutex->bits);
+}
+
+
+
+void alifRWMutex_rLock(AlifRWMutex* _rwMutex) { // 425
+	uintptr_t bits = alifAtomic_loadUintptrRelaxed(&_rwMutex->bits);
+	for (;;) {
+		if ((bits & ALIF_WRITE_LOCKED)) {
+			// A writer already holds the lock.
+			bits = rwMutexSet_parkedAndWait(_rwMutex, bits);
+			continue;
+		}
+		else if ((bits & ALIF_HAS_PARKED)) {
+			bits = rwMutexSet_parkedAndWait(_rwMutex, bits);
+			continue;
+		}
+		else {
+			// The lock is unlocked or read-locked. Try to grab it.
+			uintptr_t newval = bits + (1 << ALIFRWMutex_READER_SHIFT);
+			if (!alifAtomic_compareExchangeUintptr(&_rwMutex->bits,
+				&bits, newval)) {
+				continue;
+			}
+			return;
+		}
+	}
+}
+
+
+
+void alifRWMutex_lock(AlifRWMutex* _rwMutex) { // 469
+	uintptr_t bits = alifAtomic_loadUintptrRelaxed(&_rwMutex->bits);
+	for (;;) {
+		if ((bits & ~ALIF_HAS_PARKED) == 0) {
+			if (!alifAtomic_compareExchangeUintptr(&_rwMutex->bits,
+				&bits,
+				bits | ALIF_WRITE_LOCKED)) {
+				continue;
+			}
+			return;
+		}
+
+		// Otherwise, we have to wait.
+		bits = rwMutexSet_parkedAndWait(_rwMutex, bits);
+	}
+}
 
 
 

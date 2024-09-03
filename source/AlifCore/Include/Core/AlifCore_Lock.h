@@ -52,3 +52,20 @@ static inline void alifRawMutex_unlock(AlifRawMutex* m) { // 131
 	}
 	alifRawMutex_unlockSlow(m);
 }
+
+
+
+
+
+
+
+
+class AlifRWMutex { // 192
+public:
+	uintptr_t bits{};
+};
+
+
+void alifRWMutex_rLock(AlifRWMutex*); // 197
+
+void alifRWMutex_lock(AlifRWMutex*); // 201

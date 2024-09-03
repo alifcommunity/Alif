@@ -18,6 +18,12 @@ public:
 	AlifThread* requester{};
 };
 
+// 65
+#ifdef ALIF_GIL_DISABLED
+#  define NUM_WEAKREF_LIST_LOCKS 127
+#endif
+
+
 class AlifInterpreter { // 95
 public:
 
@@ -61,8 +67,12 @@ public:
 
 	GILDureRunState gil_{};
 
-
+#ifdef ALIF_GIL_DISABLED
+	MimallocInterpState mimalloc{};
 	BRCState brc{};  // biased reference counting state
+	AlifTypeIDPool typeIDs{};
+	AlifMutex weakrefLocks[NUM_WEAKREF_LIST_LOCKS];
+#endif
 
 	StopTheWorldState stopTheWorld{};
 

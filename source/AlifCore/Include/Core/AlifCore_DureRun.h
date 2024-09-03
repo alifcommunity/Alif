@@ -57,6 +57,9 @@ public:
 	GILStateDureRunState gilState{};
 	RefTracerDureRunState refTracer{};
 
+	AlifRWMutex stopTheWorldMutex{};
+	StopTheWorldState stopTheWorld{};
+
 	AlifStaticObjects staticObjects{};
 
 	AlifInterpreter mainInterpreter{};
