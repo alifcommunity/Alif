@@ -75,6 +75,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomicMSC.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\BuiltinsModule.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\CondVar.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\CriticalSection.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\DescrObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\DictObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\FileUtils.h" />

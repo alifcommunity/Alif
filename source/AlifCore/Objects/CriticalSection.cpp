@@ -28,18 +28,18 @@ void alifCriticalSection_suspendAll(AlifThread* _thread) { // 55
 	while (alifCriticalSection_isActive(*tagptr)) {
 		AlifCriticalSection* c = untag_criticalSection(*tagptr);
 
-		if (c->csMutex) {
-			ALIFMUTEX_UNLOCK(c->csMutex);
+		if (c->mutex) {
+			ALIFMUTEX_UNLOCK(c->mutex);
 			if ((*tagptr & ALIF_CRITICALSECTION_TWO_MUTEXES)) {
 				AlifCriticalSection2* c2 = (AlifCriticalSection2*)c;
-				if (c2->_cs_mutex2) {
-					ALIFMUTEX_UNLOCK(c2->csMutex2);
+				if (c2->mutex2) {
+					ALIFMUTEX_UNLOCK(c2->mutex2);
 				}
 			}
 		}
 
 		*tagptr |= ALIF_CRITICAL_SECTION_INACTIVE;
-		tagptr = &c->csPrev;
+		tagptr = &c->prev;
 	}
 }
 
@@ -50,15 +50,15 @@ void alifCriticalSection_resume(AlifThread* _thread) { // 79
 	uintptr_t p_ = _thread->criticalSection;
 	AlifCriticalSection* c_ = untag_criticalSection(p_);
 
-	AlifMutex* m1_ = c_->csMutex;
-	c_->csMutex = nullptr;
+	AlifMutex* m1_ = c_->mutex;
+	c_->mutex = nullptr;
 
 	AlifMutex* m2_ = nullptr;
 	AlifCriticalSection2* c2_ = nullptr;
-	if ((p_ & ALIF_CRITICALSECTION_TWO_MUTEXES)) {
+	if ((p_ & ALIF_CRITICAL_SECTION_TWO_MUTEXES)) {
 		c2_ = (AlifCriticalSection2*)c_;
-		m2_ = c2_->csMutex2;
-		c2_->csMutex2 = nullptr;
+		m2_ = c2_->mutex2;
+		c2_->mutex2 = nullptr;
 	}
 
 	if (m1_) {
@@ -68,9 +68,9 @@ void alifCriticalSection_resume(AlifThread* _thread) { // 79
 		ALIFMUTEX_LOCK(m2_);
 	}
 
-	c_->csMutex = m1_;
+	c_->mutex = m1_;
 	if (m2_) {
-		c2_->csMutex2 = m2_;
+		c2_->mutex2 = m2_;
 	}
 
 	_thread->criticalSection &= ~ALIF_CRITICAL_SECTION_INACTIVE;

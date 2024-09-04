@@ -55,6 +55,7 @@
 //#include "AlifCppType.h"
 //#include "Compile.h"
 #include "Import.h"
+#include "CriticalSection.h"
 #include "FileUtils.h"
 //#include "AlifRun.h"
 #include "AlifLifeCycle.h"
