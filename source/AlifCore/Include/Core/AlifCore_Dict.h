@@ -34,7 +34,9 @@ public:
 	uint8_t log2Size{};
 	uint8_t log2IndexBytes{};
 	uint8_t kind{};
+#ifdef ALIF_GIL_DISABLED
 	AlifMutex mutex{};
+#endif
 	uint32_t version{};
 	AlifSizeT usable{};
 	AlifSizeT nentries{};

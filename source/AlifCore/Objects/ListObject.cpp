@@ -4,7 +4,7 @@
 #include "AlifCore_Object.h"
 
 
-
+#ifdef ALIF_GIL_DISABLED
 class AlifListArray{ // 28
 public:
 	AlifSizeT allocated;
@@ -21,6 +21,7 @@ static AlifListArray* list_allocateArray(size_t _capacity) { // 34
 	array->allocated = _capacity;
 	return array;
 }
+#endif
 
 AlifObject* alifList_New(AlifSizeT _size) { // 212 
 	if (_size < 0) {
@@ -39,6 +40,7 @@ AlifObject* alifList_New(AlifSizeT _size) { // 212
 		op->item = nullptr;
 	}
 	else {
+#ifdef ALIF_GIL_DISABLED
 		AlifListArray* array = list_allocateArray(_size);
 		if (array == nullptr) {
 			ALIF_DECREF(op);
@@ -47,6 +49,9 @@ AlifObject* alifList_New(AlifSizeT _size) { // 212
 		}
 		memset(&array->item, 0, _size * sizeof(AlifObject*));
 		op->item = array->item;
+#else
+		op->item = (AlifObject**)alifMem_objAlloc(_size* sizeof(AlifObject*));
+#endif
 		if (op->item == nullptr) {
 			ALIF_DECREF(op);
 			return nullptr;

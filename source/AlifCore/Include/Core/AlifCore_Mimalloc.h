@@ -1,8 +1,6 @@
 #pragma once
 
-#include "mimalloc/mimalloc.h"
-#include "mimalloc/mimalloc/types.h"
-#include "mimalloc/mimalloc/internal.h"
+
 
 
 
@@ -32,7 +30,9 @@ enum AlifMimallocHeapID_ { // 12
 
 
 
-
+#include "mimalloc/mimalloc.h"
+#include "mimalloc/mimalloc/types.h"
+#include "mimalloc/mimalloc/internal.h"
 
 
 
