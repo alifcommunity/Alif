@@ -41,6 +41,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_LList.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Lock.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Memory.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Mimalloc.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ModSupport.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ModuleObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Object.h" />
@@ -61,6 +62,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifLifeCycle.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifMacro.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifMemory.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifMimalloc.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifPort.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifState.h" />
@@ -103,6 +105,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\AlifEvalGIL.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifLifeCycle.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifMemory.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifMimalloc.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifState.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifThread.cpp" />
