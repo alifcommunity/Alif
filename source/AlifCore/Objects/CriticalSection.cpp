@@ -15,7 +15,11 @@
 
 
 
-
+#ifdef ALIF_GIL_DISABLED
+static AlifCriticalSection* untag_criticalSection(uintptr_t tag) { // 45
+	return (AlifCriticalSection*)(tag & ~ALIF_CRITICAL_SECTION_MASK);
+}
+#endif
 
 
 
@@ -30,7 +34,7 @@ void alifCriticalSection_suspendAll(AlifThread* _thread) { // 55
 
 		if (c->mutex) {
 			ALIFMUTEX_UNLOCK(c->mutex);
-			if ((*tagptr & ALIF_CRITICALSECTION_TWO_MUTEXES)) {
+			if ((*tagptr & ALIF_CRITICAL_SECTION_TWO_MUTEXES)) {
 				AlifCriticalSection2* c2 = (AlifCriticalSection2*)c;
 				if (c2->mutex2) {
 					ALIFMUTEX_UNLOCK(c2->mutex2);

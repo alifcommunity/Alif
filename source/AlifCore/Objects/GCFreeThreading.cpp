@@ -1,5 +1,6 @@
 #include "alif.h"
 
+#include "AlifCore_Eval.h"
 #include "AlifCore_ObjectAlloc.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_Dict.h"
@@ -54,6 +55,14 @@ static void record_allocation(AlifThread* tstate) { // 1140
 
 AlifIntT alifObject_isGC(AlifObject* _obj) { // 1748
 	return _alifObject_isGC(_obj);
+}
+
+
+void alif_scheduleGC(AlifThread* _thread) { // 1754
+	if (!alifEval_breakerBitIsSet(_thread, ALIF_GC_SCHEDULED_BIT))
+	{
+		alifSet_evalBreakerBit(_thread, ALIF_GC_SCHEDULED_BIT);
+	}
 }
 
 

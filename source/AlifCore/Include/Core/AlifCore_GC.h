@@ -112,3 +112,7 @@ public:
 
 
 extern void alifGC_initState(GCDureRunState*); // 364
+
+
+
+extern void alif_scheduleGC(AlifThread*); // 381

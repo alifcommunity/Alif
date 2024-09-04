@@ -30,15 +30,15 @@ public:
 
 class DictKeysObject { // 138
 public:
-	AlifSizeT dkRefCnt{};
-	uint8_t dkLog2Size{};
-	uint8_t dkLog2IndexBytes{};
-	uint8_t dkKind{};
-	AlifMutex dkMutex{};
-	uint32_t dkVersion{};
-	AlifSizeT dkUsable{};
-	AlifSizeT dkNentries{};
-	char dkIndices[];
+	AlifSizeT refCnt{};
+	uint8_t log2Size{};
+	uint8_t log2IndexBytes{};
+	uint8_t kind{};
+	AlifMutex mutex{};
+	uint32_t version{};
+	AlifSizeT usable{};
+	AlifSizeT nentries{};
+	char indices[];
 };
 
 class DictValues { // 194
@@ -53,8 +53,8 @@ public:
 #define DK_LOG_SIZE(_dk)  ALIF_RVALUE((_dk)->dkLog2Size) // 202
 
 static inline void* _dk_entries(AlifDictKeysObject* _dk) { // 209
-	int8_t* indices = (int8_t*)(_dk->dkIndices);
-	AlifUSizeT index = (AlifUSizeT)1 << _dk->dkLog2IndexBytes;
+	int8_t* indices = (int8_t*)(_dk->indices);
+	AlifUSizeT index = (AlifUSizeT)1 << _dk->log2IndexBytes;
 	return (&indices[index]);
 }
 
@@ -68,8 +68,8 @@ static inline AlifDictUStrEntry* dk_UStrEntries(AlifDictKeysObject* _dk) { // 21
 #define DK_IS_USTR(_dk) ((_dk)->dkKind != DictKeysKind_::Dict_Kyes_General) // 224
 
 static inline AlifUSizeT sharedKeys_usableSize(AlifDictKeysObject* _keys) { // 305
-	AlifSizeT dkUsable = alifAtomic_loadSizeAcquire(&_keys->dkUsable);
-	AlifSizeT dkNentries = alifAtomic_loadSizeAcquire(&_keys->dkNentries);
+	AlifSizeT dkUsable = alifAtomic_loadSizeAcquire(&_keys->usable);
+	AlifSizeT dkNentries = alifAtomic_loadSizeAcquire(&_keys->nentries);
 	return dkNentries + dkUsable;
 }
 
