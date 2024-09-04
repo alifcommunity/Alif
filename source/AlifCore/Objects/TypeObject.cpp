@@ -1,7 +1,8 @@
 #include "alif.h"
 
+#include "AlifCore_Dict.h"
 #include "AlifCore_Object.h"
-
+#include "AlifCore_ObjectAlloc.h"
 
 
 
@@ -18,7 +19,7 @@ AlifObject* alifType_allocNoTrack(AlifTypeObject* _type, AlifSizeT _nitems) { //
 	if (_type->flags & ALIF_TPFLAGS_INLINE_VALUES) {
 		size += alifInline_valuesSize(_type);
 	}
-	char* alloc = alifObject_mallocWithType(_type, size + preSize);
+	char* alloc = (char*)alifObject_mallocWithType(_type, size + preSize);
 	if (alloc == nullptr) {
 		//return alifErr_noMemory();
 		return nullptr;

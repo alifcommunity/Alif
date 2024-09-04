@@ -599,15 +599,15 @@ static void thread_mimallocBind(AlifThread* _thread) { // 3037
 
 	tld->segments.abandoned = &_thread->interpreter->mimalloc.abandonedPool;
 
-	size_t base_offset = offsetof(AlifObject, type);
+	AlifUSizeT baseOffset = offsetof(AlifObject, type);
 	//if (alifMem_debugEnabled()) {
-	//	base_offset += 2 * sizeof(size_t);
+	//	baseOffset += 2 * sizeof(AlifUSizeT);
 	//}
-	size_t debug_offsets[AlifMimallocHeapID_::Alif_Mimalloc_Heap_Count] = {
+	AlifUSizeT debug_offsets[AlifMimallocHeapID_::Alif_Mimalloc_Heap_Count] = {
 		{},
-		base_offset,
-		base_offset,
-		base_offset + 2 * sizeof(AlifObject*),
+		baseOffset,
+		baseOffset,
+		baseOffset + 2 * sizeof(AlifObject*),
 	};
 
 	// Initialize each heap

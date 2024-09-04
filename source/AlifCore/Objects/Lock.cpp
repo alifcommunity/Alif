@@ -119,7 +119,7 @@ AlifIntT alifMutex_tryUnlock(AlifMutex* _m) { // 158
 			alifParkingLot_unpark(&_m->bits, (AlifUnparkFnT*)mutex_unpark, _m);
 			return 0;
 		}
-		else if (AlifAtomic_compareExchangeUint8(&_m->bits, &v, ALIF_UNLOCKED)) {
+		else if (alifAtomic_compareExchangeUint8(&_m->bits, &v, ALIF_UNLOCKED)) {
 			return 0;
 		}
 	}

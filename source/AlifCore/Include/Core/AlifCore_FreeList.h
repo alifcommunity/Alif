@@ -49,9 +49,10 @@ public:
 
 // ------------------------------------------- AlifCore_FreeList ------------------------------------------ //
 
-
-
 #include "AlifCore_State.h"
+
+
+
 
 static inline class AlifFreeLists* alifFreeLists_get(void) { // 16 
 	AlifThread* tState = alifThread_get();
@@ -64,8 +65,11 @@ static inline class AlifFreeLists* alifFreeLists_get(void) { // 16
 
 #define ALIF_FREELIST_POP(_type, _name) ALIF_CAST(_type*, alifFreeList_pop(&alifFreeLists_get()->_name)) // 46
 
+#define ALIF_FREELIST_POP_MEM(_name) \
+    alifFreeList_popMem(&alifFreeLists_get()->_name) // 52
 
-static inline AlifIntT alifFreeList_push(class AlifFreeList* _fl, void* _obj, AlifSizeT _maxSize) {  // 57
+static inline AlifIntT alifFreeList_push(AlifFreeList* _fl,
+	void* _obj, AlifSizeT _maxSize) {  // 57
 	if (_fl->size < _maxSize and _fl->size >= 0) {
 		*(void**)_obj = _fl->freeList;
 		_fl->freeList = _obj;
@@ -97,4 +101,12 @@ static inline AlifObject* alifFreeList_pop(class AlifFreeList* _fl)  {// 91
 		alif_newReference(op_);
 	}
 	return op_;
+}
+
+static inline void* alifFreeList_popMem(AlifFreeList* _fl) { // 102
+	void* op = alifFreeList_popNoStats(_fl);
+	if (op != nullptr) {
+		//OBJECT_STAT_INC(_fromFreeList_); // not needed
+	}
+	return op;
 }

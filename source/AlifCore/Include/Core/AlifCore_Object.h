@@ -19,7 +19,7 @@ void alif_setImmortalUntracked(AlifObject*); // 163
 
 
 
-
+AlifSizeT alif_explicitMergeRefcount(AlifObject*, AlifSizeT); // 263
 
 
 
@@ -103,8 +103,12 @@ static inline size_t alifType_preHeaderSize(AlifTypeObject* _tp) { // 740
 	return (alifType_hasFeature(_tp, ALIF_TPFLAGS_PREHEADER) * 2 * sizeof(AlifObject*));
 }
 
+void alifObject_gcLink(AlifObject*); // 750
 
 extern AlifObject* alifType_allocNoTrack(AlifTypeObject*, AlifSizeT); // 763
+
+void alifObject_initInlineValues(AlifObject*, AlifTypeObject*); // 771
+
 
 # define MANAGED_DICT_OFFSET    (((AlifSizeT)sizeof(AlifObject *))*-1) // 778 
 

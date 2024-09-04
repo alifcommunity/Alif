@@ -10,6 +10,9 @@
     <ClCompile Include="..\source\AlifCore\Objects\AlifMemory.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\AlifMimalloc.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\AlifObject.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
@@ -67,6 +70,9 @@
     <ClCompile Include="..\source\AlifCore\Objects\ParkingLot.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\QuiescentStatesBiaseRef.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\TupleObject.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
@@ -79,11 +85,8 @@
     <ClCompile Include="..\source\AlifCore\Objects\UStrObject.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\QuiescentStatesBiaseRef.cpp">
+    <ClCompile Include="..\source\AlifCore\Objects\ObjectStack.cpp">
       <Filter>Objects</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\AlifMimalloc.cpp">
-      <Filter>Include</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -97,6 +100,9 @@
       <Filter>Include\Main\Atomics</Filter>
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_BiaseRefCount.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_CondVar.h">
       <Filter>Include\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_CriticalSection.h">
@@ -129,6 +135,9 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GetOption.h">
       <Filter>Include\Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GIL.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GlobalObjects.h">
       <Filter>Include\Core</Filter>
     </ClInclude>
@@ -156,6 +165,9 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Memory.h">
       <Filter>Include\Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Mimalloc.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ModSupport.h">
       <Filter>Include\Core</Filter>
     </ClInclude>
@@ -175,6 +187,9 @@
       <Filter>Include\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Parser.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_QSBR.h">
       <Filter>Include\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Semaphore.h">
@@ -198,6 +213,21 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_UStrObject.h">
       <Filter>Include\Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\ASCIILib.h">
+      <Filter>Include\Main\StringLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Undef.h">
+      <Filter>Include\Main\StringLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS4Lib.h">
+      <Filter>Include\Main\StringLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS2Lib.h">
+      <Filter>Include\Main\StringLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS1Lib.h">
+      <Filter>Include\Main\StringLib</Filter>
+    </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifConfig.h">
       <Filter>Include\Main</Filter>
     </ClInclude>
@@ -211,6 +241,9 @@
       <Filter>Include\Main</Filter>
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifMemory.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifMimalloc.h">
       <Filter>Include\Main</Filter>
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifObject.h">
@@ -234,13 +267,13 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifVersion.h">
       <Filter>Include\Main</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\ASCIILib.h">
-      <Filter>Include\Main\StringLib</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Main\BuiltinsModule.h">
       <Filter>Include\Main</Filter>
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Codecs.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\CondVar.h">
       <Filter>Include\Main</Filter>
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Main\DescrObject.h">
@@ -300,53 +333,46 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\UStrObject.h">
       <Filter>Include\Main</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS1Lib.h">
-      <Filter>Include\Main\StringLib</Filter>
+    <ClInclude Include="..\source\AlifCore\Include\Main\mimalloc\mimalloc.h">
+      <Filter>Include\Main\Mimalloc</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS2Lib.h">
-      <Filter>Include\Main\StringLib</Filter>
+    <ClInclude Include="..\source\AlifCore\Include\Main\mimalloc\mimalloc\atomic.h">
+      <Filter>Include\Main\Mimalloc</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS4Lib.h">
-      <Filter>Include\Main\StringLib</Filter>
+    <ClInclude Include="..\source\AlifCore\Include\Main\mimalloc\mimalloc\internal.h">
+      <Filter>Include\Main\Mimalloc</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Undef.h">
-      <Filter>Include\Main\StringLib</Filter>
+    <ClInclude Include="..\source\AlifCore\Include\Main\mimalloc\mimalloc\prim.h">
+      <Filter>Include\Main\Mimalloc</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GIL.h">
-      <Filter>Include\Core</Filter>
+    <ClInclude Include="..\source\AlifCore\Include\Main\mimalloc\mimalloc\track.h">
+      <Filter>Include\Main\Mimalloc</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_CondVar.h">
-      <Filter>Include\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\CondVar.h">
-      <Filter>Include\Main</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_QSBR.h">
-      <Filter>Include\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\AlifMimalloc.h" />
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Mimalloc.h" />
-      <Filter>Include\Core</Filter>
+    <ClInclude Include="..\source\AlifCore\Include\Main\mimalloc\mimalloc\types.h">
+      <Filter>Include\Main\Mimalloc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Objects">
-      <UniqueIdentifier>{d98b35a5-df8b-4af3-9078-df202580f8dc}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Include">
-      <UniqueIdentifier>{bc8e7990-2fbb-434a-8210-c0e8de64854e}</UniqueIdentifier>
+      <UniqueIdentifier>{f17ad6e2-c1ad-405f-83db-631b4d0fb939}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Include\Core">
-      <UniqueIdentifier>{bcffc2db-12e0-4d62-80de-857043909343}</UniqueIdentifier>
+    <Filter Include="Objects">
+      <UniqueIdentifier>{8bc9c848-784e-444d-a369-cfbb79ee103c}</UniqueIdentifier>
     </Filter>
     <Filter Include="Include\Main">
-      <UniqueIdentifier>{c11e8898-7324-4918-a508-6806ffbc98d3}</UniqueIdentifier>
+      <UniqueIdentifier>{0c33bf0c-a7b6-4ad5-b8d0-b770632a0a36}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Include\Core">
+      <UniqueIdentifier>{4a5dcb7c-b03e-4e6d-a3e2-fb4911762bd8}</UniqueIdentifier>
     </Filter>
     <Filter Include="Include\Main\Atomics">
-      <UniqueIdentifier>{cf0bcfa9-3b39-41cf-9538-5432d8507187}</UniqueIdentifier>
+      <UniqueIdentifier>{0337589f-496a-499c-b843-e30e3e57cd4b}</UniqueIdentifier>
     </Filter>
     <Filter Include="Include\Main\StringLib">
-      <UniqueIdentifier>{8fab99c5-0bfc-42d3-861f-8a47bac0f7cf}</UniqueIdentifier>
+      <UniqueIdentifier>{32cbfdf6-f3e7-4882-ad55-78efd06520e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Include\Main\Mimalloc">
+      <UniqueIdentifier>{6cb471e0-2bf6-4fac-bd13-7d576554ecc3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -83,6 +83,12 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\ListObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Lock.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\MethodObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\mimalloc\mimalloc.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\mimalloc\mimalloc\atomic.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\mimalloc\mimalloc\internal.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\mimalloc\mimalloc\prim.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\mimalloc\mimalloc\track.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\mimalloc\mimalloc\types.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\ModuleObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\ObjImpl.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\OSDefs.h" />
@@ -124,6 +130,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\ListObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Lock.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ModuleObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\ObjectStack.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\QuiescentStatesBiaseRef.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\TupleObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ParkingLot.cpp" />
@@ -269,7 +276,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib;..\source\AlifCore\Include\Main\mimalloc;..\source\AlifCore\Include\Main\mimalloc\mimalloc</AdditionalIncludeDirectories>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>

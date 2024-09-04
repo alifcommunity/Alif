@@ -57,6 +57,17 @@ typedef AlifSizeT AlifHashT;
 
 
 
+#ifdef SIGNED_RIGHT_SHIFT_ZERO_FILLS
+#define ALIF_ARITHMETIC_RIGHT_SHIFT(TYPE, I, J) \
+    ((I) < 0 ? -1-((-1-(I)) >> (J)) : (I) >> (J))
+#else
+#define ALIF_ARITHMETIC_RIGHT_SHIFT(TYPE, I, J) ((I) >> (J))
+#endif
+
+
+
+
+
 #if defined(__GNUC__) or defined(__clang__) or defined(__INTEL_COMPILER)
 #  define ALIF_ALWAYS_INLINE __attribute__((always_inline))
 #elif defined(_MSC_VER)
