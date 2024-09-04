@@ -1,5 +1,10 @@
 #pragma once
 
+#include <windows.h>
+#include <limits.h>
+//#ifdef HAVE_PROCESS_H
+#include <process.h>
+//#endif
 
 
 AlifUIntT alifThread_getThreadID() { // 260
@@ -12,7 +17,11 @@ AlifUIntT alifThread_getThreadID() { // 260
 
 
 
-
+void ALIF_NO_RETURN alifThread_exitThread(void) { // 286
+	if (!INITIALIZED)
+		exit(0);
+	_endthreadex(0);
+}
 
 
 

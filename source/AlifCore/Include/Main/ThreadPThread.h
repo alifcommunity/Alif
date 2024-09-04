@@ -39,6 +39,16 @@ AlifUIntT alifThread_getThreadID() { // 365
 
 
 
+void ALIF_NO_RETURN alifThread_exitThread(void) { // 406
+	if (!INITIALIZED)
+		exit(0);
+#if defined(__wasi__)
+	abort();
+#else
+	pthread_exit(0);
+#endif
+}
+
 
 
 

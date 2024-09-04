@@ -11,6 +11,12 @@
 #define ALIF_THREAD_SUSPENDED    2
 
 
+static inline AlifIntT alif_isMainThread(void) { // 47
+	unsigned long thread = alifThread_getThreadID();
+	return (thread == _alifDureRun_.mainThreadID);
+}
+
+
 static inline AlifInterpreter* alifInterpreter_main(void) { // 55
 	return _alifDureRun_.interpreters.main;
 }
@@ -27,6 +33,8 @@ static inline AlifIntT alif_isMainInterpreter(AlifInterpreter* _interpreter) { /
 #if defined(HAVE_LOCAL_THREAD)
 extern ALIF_LOCAL_THREAD AlifThread* _alifTSSThread_;
 #endif
+
+AlifIntT alifThreadState_mustExit(AlifThread*); // 121
 
 AlifThread* alifThread_getCurrent(); // 125
 
@@ -71,13 +79,9 @@ extern void alifThread_bind(AlifThread*); // 222
 extern AlifIntT alifInterpreter_enable(AlifDureRun*); // 245
 
 
+// 261
+#define HEAD_LOCK(_dureRun) \
+    alifMutex_lockFlags(&(_dureRun)->interpreters.mutex, AlifLockFlags_::Alif_Lock_Dont_Detach)
+#define HEAD_UNLOCK(_dureRun) \
+    ALIFMUTEX_UNLOCK(&(_dureRun)->interpreters.mutex)
 
-//static inline AlifObjectFreeLists* alifObject_freeListsGet() {
-//	AlifThread* thread = alifThread_get();
-//
-//#ifdef ALIF_GIL_DISABLED
-//	return &((AlifThreadImpl*)tstate)->freelists;
-//#else
-//	return &thread->interpreter->objectState.freelists;
-//#endif
-//}

@@ -8,6 +8,7 @@ enum AlifLockStatus_ { // 12
 	Alif_Lock_Intr
 };
 
+void ALIF_NO_RETURN alifThread_exitThread(void); // 20
 AlifUIntT alifThread_getThreadID(); // 21
 
 

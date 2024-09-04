@@ -90,3 +90,25 @@ typedef AlifSizeT AlifHashT;
 #      undef HAVE_LOCAL_THREAD
 #    endif
 #endif
+
+
+
+
+
+
+
+
+
+
+#ifndef ALIF_NO_RETURN
+#if defined(__clang__) or \
+    (defined(__GNUC__) and \
+     ((__GNUC__ >= 3) or \
+      (__GNUC__ == 2) and (__GNUC_MINOR__ >= 5)))
+#  define ALIF_NO_RETURN __attribute__((__noreturn__))
+#elif defined(_MSC_VER)
+#  define ALIF_NO_RETURN __declspec(noreturn)
+#else
+#  define ALIF_NO_RETURN
+#endif
+#endif

@@ -5,6 +5,44 @@
 #include "AlifCore_State.h"
 
 
+static inline void copy_evalBreakerBits(uintptr_t* _from,
+	uintptr_t* _to, uintptr_t _mask) { // 53
+	uintptr_t fromBits = alifAtomic_loadUintptrRelaxed(_from) & _mask;
+	uintptr_t oldValue = alifAtomic_loadUintptrRelaxed(_to);
+	uintptr_t toBits = oldValue & _mask;
+	if (fromBits == toBits) {
+		return;
+	}
+
+	uintptr_t new_value;
+	do {
+		new_value = (oldValue & ~_mask) | fromBits;
+	} while (!alifAtomic_compareExchangeUintptr(_to, &oldValue, new_value));
+}
+
+static inline void updateEval_breakerForThread(AlifInterpreter* _interp,
+	AlifThread* _thread) { // 71
+#ifdef ALIF_GIL_DISABLED
+	return;
+#endif
+
+	int32_t npending =
+		alifAtomic_loadInt32Relaxed(&_interp->eval.pending.npending);
+	if (npending) {
+		alifSet_evalBreakerBit(_thread, ALIF_CALLS_TO_DO_BIT);
+	}
+	else if (alif_isMainThread()) {
+		npending = alifAtomic_loadInt32Relaxed(
+			&_alifDureRun_.eval.pendingMainThread.npending);
+		if (npending) {
+			alifSet_evalBreakerBit(_thread, ALIF_CALLS_TO_DO_BIT);
+		}
+	}
+
+	copy_evalBreakerBits(&_interp->eval.instrumentationVersion,
+		&_thread->evalBreaker, ~ALIF_EVAL_EVENTS_MASK);
+}
+
 
 #include "CondVar.h" // 107
 
@@ -142,7 +180,7 @@ static void drop_gil(AlifInterpreter* _interp,
 static void take_gil(AlifThread* _thread) { // 284
 	AlifIntT err = errno;
 
-	if (alifThread_mustExit(_thread)) {
+	if (alifThreadState_mustExit(_thread)) {
 		alifThread_exitThread();
 	}
 
@@ -170,7 +208,7 @@ static void take_gil(AlifThread* _thread) { // 284
 		{
 			AlifThread* holderThread =
 				(AlifThread*)alifAtomic_loadPtrRelaxed(&gil_->lastHolder);
-			if (alifThread_mustExit(_thread)) {
+			if (alifThreadState_mustExit(_thread)) {
 				MUTEX_UNLOCK(gil_->mutex);
 				if (dropRequested) {
 					alifUnset_evalBreakerBit(holderThread, ALIF_GIL_DROP_REQUEST_BIT);
@@ -203,7 +241,7 @@ static void take_gil(AlifThread* _thread) { // 284
 	COND_SIGNAL(gil_->switchCond);
 	MUTEX_UNLOCK(gil_->switchMutex);
 
-	if (alifThread_mustExit(_thread)) {
+	if (alifThreadState_mustExit(_thread)) {
 		MUTEX_UNLOCK(gil_->mutex);
 
 		drop_gil(interp, nullptr, 1);

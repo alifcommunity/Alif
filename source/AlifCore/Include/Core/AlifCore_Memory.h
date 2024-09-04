@@ -16,6 +16,9 @@
 */
 
 
+#include "AlifCore_LList.h"
+#include "AlifCore_Lock.h"
+
 /* ------------------------------------ التعريفات ------------------------------------ */
 
 
@@ -172,3 +175,6 @@ public:
 	AlifMutex mutex{};
 	class LListNode head {};
 };
+
+
+

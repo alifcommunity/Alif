@@ -59,7 +59,13 @@ static inline AlifIntT alifEval_isGILEnabled(AlifThread* _thread) { // 145
 #define ALIF_EVAL_PLEASE_STOP_BIT (1U << 5)
 #define ALIF_EVAL_EXPLICIT_MERGE_BIT (1U << 6)
 
+#define ALIF_EVAL_EVENTS_BITS 8
+#define ALIF_EVAL_EVENTS_MASK ((1 << ALIF_EVAL_EVENTS_BITS)-1)
 
+
+static inline void alifSet_evalBreakerBit(AlifThread* _thread, uintptr_t _bit) { // 291
+	alifAtomic_orUintptr(&_thread->evalBreaker, _bit);
+}
 
 static inline void alifUnset_evalBreakerBit(AlifThread* _thread, uintptr_t _bit) { // 297
 	alifAtomic_andUintptr(&_thread->evalBreaker, ~_bit);

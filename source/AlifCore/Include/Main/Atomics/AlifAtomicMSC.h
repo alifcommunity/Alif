@@ -36,6 +36,10 @@ static inline intptr_t alifAtomic_addIntptr(intptr_t* _obj, intptr_t _value) { /
 #endif
 }
 
+static inline uintptr_t alifAtomic_addUintptr(uintptr_t* _obj, uintptr_t _value) { // 113
+	return (uintptr_t)alifAtomic_addIntptr((intptr_t*)_obj, (intptr_t)_value);
+}
+
 static inline AlifSizeT alifAtomic_addSize(AlifSizeT* _obj, AlifSizeT _value) { // 120
 	return (AlifSizeT)alifAtomic_addIntptr((intptr_t*)_obj, (intptr_t)_value);
 }
@@ -151,6 +155,10 @@ static inline uint64_t alifAtomic_exchangeUint64(uint64_t* _obj, uint64_t _value
 	return (uint64_t)alifAtomic_exchangeInt64((int64_t*)_obj, (int64_t)_value);
 }
 
+static inline uintptr_t alifAtomic_exchangeUintptr(uintptr_t* _obj, uintptr_t _value) { // 381
+	return (uintptr_t)alifAtomic_exchangePtr((void**)_obj, (void*)_value);
+}
+
 static inline AlifSizeT alifAtomic_exchangeSize(AlifSizeT* _obj, AlifSizeT _value) { // 390
 	return (AlifSizeT)alifAtomic_exchangePtr((void**)_obj, (void*)_value);
 }
@@ -178,6 +186,34 @@ static inline uintptr_t alifAtomic_andUintptr(uintptr_t* _obj, uintptr_t _value)
 	return (uintptr_t)alifAtomic_andUint64((uint64_t*)_obj, (uint64_t)_value);
 #else
 	return (uintptr_t)alifAtomic_andUint32((uint32_t*)_obj, (uint32_t)_value);
+#endif
+}
+
+
+static inline uint32_t alifAtomic_orUint32(uint32_t* _obj, uint32_t _value) { // 469
+	return (uint32_t)_InterlockedOr((volatile long*)_obj, (long)_value);
+}
+
+static inline uint64_t alifAtomic_orUint64(uint64_t* _obj, uint64_t _value) { // 476
+#if defined(_M_X64) or defined(_M_ARM64)
+	return (uint64_t)_InterlockedOr64((volatile __int64*)_obj, (__int64)_value);
+#else
+	uint64_t oldValue = alifAtomic_loadUint64Relaxed(_obj);
+	for (;;) {
+		uint64_t new_value = oldValue | _value;
+		if (alifAtomic_compareExchangeUint64(_obj, &oldValue, new_value)) {
+			return oldValue;
+		}
+	}
+#endif
+}
+
+
+static inline uintptr_t alifAtomic_orUintptr(uintptr_t* _obj, uintptr_t _value) { // 494
+#if SIZEOF_VOID_P == 8
+	return (uintptr_t)alifAtomic_orUint64((uint64_t*)_obj, (uint64_t)_value);
+#else
+	return (uintptr_t)alifAtomic_orUint32((uint32_t*)_obj, (uint32_t)_value);
 #endif
 }
 
@@ -244,6 +280,9 @@ static inline int alifAtomic_loadIntRelaxed(const AlifIntT* _obj) {  // 633
 	return *(volatile AlifIntT*)_obj;
 }
 
+static inline int32_t alifAtomic_loadInt32Relaxed(const int32_t* _obj) { // 649
+	return *(volatile int32_t*)_obj;
+}
 
 static inline int64_t alifAtomic_loadInt64Relaxed(const int64_t* _obj) { // 655
 	return *(volatile int64_t*)_obj;

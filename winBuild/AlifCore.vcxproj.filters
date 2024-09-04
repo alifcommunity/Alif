@@ -326,6 +326,8 @@
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifMimalloc.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Mimalloc.h" />
+      <Filter>Include\Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Objects">

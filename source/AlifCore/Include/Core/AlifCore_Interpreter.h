@@ -18,6 +18,12 @@ public:
 	AlifThread* requester{};
 };
 
+// 65
+#ifdef ALIF_GIL_DISABLED
+#  define NUM_WEAKREF_LIST_LOCKS 127
+#endif
+
+
 class AlifInterpreter { // 95
 public:
 
@@ -42,6 +48,10 @@ public:
 	} threads;
 
 	class AlifDureRun* dureRun{};
+
+	AlifThread* finalizing_{};
+	unsigned long finalizingID{};
+
 	AlifConfig config{};
 	unsigned long featureFlags{};
 
@@ -49,7 +59,7 @@ public:
 
 	AlifTypeIDPool typeIDs{};
 
-	AlifGCDureRun gc{};
+	GCDureRunState gc{};
 
 	AlifObject* builtins{};
 
@@ -57,8 +67,12 @@ public:
 
 	GILDureRunState gil_{};
 
-
+#ifdef ALIF_GIL_DISABLED
+	MimallocInterpState mimalloc{};
 	BRCState brc{};  // biased reference counting state
+	AlifTypeIDPool typeIDs{};
+	AlifMutex weakrefLocks[NUM_WEAKREF_LIST_LOCKS];
+#endif
 
 	StopTheWorldState stopTheWorld{};
 
@@ -74,6 +88,15 @@ public:
 	AlifThreadImpl initialThread{};
 };
 
+
+
+static inline AlifThread* alifInterpreterState_getFinalizing(AlifInterpreter* _interp) { // 288
+	return (AlifThread*)alifAtomic_loadPtrRelaxed(&_interp->finalizing_);
+}
+
+static inline unsigned long alifInterpreterState_getFinalizingID(AlifInterpreter* _interp) { // 293
+	return ALIFATOMIC_LOAD_ULONG_RELAXED(&_interp->finalizingID);
+}
 
 
 
