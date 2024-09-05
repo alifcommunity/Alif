@@ -9,7 +9,7 @@
 //#include "AlifObject.h"
 #include "AlifCore_ParkingLot.h"
 //#include "AlifCore_LifeCycle.h"
-//#include "AlifCore_Memory.h"
+#include "AlifCore_Memory.h"
 #include "AlifCore_State.h"
 #include "AlifCore_DureRunInit.h"
 
