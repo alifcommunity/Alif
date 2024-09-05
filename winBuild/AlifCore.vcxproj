@@ -57,6 +57,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ThreadState.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Time.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_TypeID.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_TypeObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_UStrObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifConfig.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifEval.h" />

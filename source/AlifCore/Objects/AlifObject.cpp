@@ -86,6 +86,22 @@ AlifVarObject* alifObject_initVar(AlifVarObject* _op,
 	return _op;
 }
 
+AlifUSizeT alifObject_hashNotImplemented(AlifObject* _v) { // 1059 
+	return -1;
+}
+
+AlifUSizeT alifObject_hash(AlifObject* _v) { // 1067
+	AlifTypeObject* tp_ = ALIF_TYPE(_v);
+	if (tp_->hash != NULL)
+		return (*tp_->hash)(_v);
+	if (!alifType_isReady(tp_)) {
+		if (alifType_ready(tp_) < 0)
+			return -1;
+		if (tp_->hash != NULL)
+			return (*tp_->hash)(_v);
+	}
+	return alifObject_hashNotImplemented(_v);
+}
 
 
 AlifTypeObject _alifNoneType_ = { // 2049

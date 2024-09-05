@@ -120,7 +120,43 @@ AlifObject* alifDict_new() { // 962
 
 
 
+static int setItemTake2_lockHeld(AlifDictObject* mp, AlifObject* key, AlifObject* value)
+{
 
+	AlifUSizeT hash = _PyObject_HashFast(key);
+	if (hash == -1) {
+		ALIF_DECREF(key);
+		ALIF_DECREF(value);
+		return -1;
+	}
+
+	AlifInterpreter* interp = alifInterpreter_get();
+
+	if (mp->keys == ALIF_EMPTY_KEYS) {
+		return insert(interp, mp, key, hash, value);
+	}
+	return insertDict(interp, mp, key, hash, value);
+}
+
+int alifDict_setItemTake2(AlifDictObject* _mp, AlifObject* _key, AlifObject* _value)
+{
+	int res_;
+	//ALIF_BEGIN_CRITICAL_SECTION(mp);
+	res_ = setItemTake2_lockHeld(_mp, _key, _value);
+	//ALIF_END_CRITICAL_SECTION();
+	return res_;
+}
+
+
+int alifDict_setItem(AlifObject* _op, AlifObject* _key, AlifObject* _value)
+{
+	if (!ALIFDICT_CHECK(_op)) {
+		//alifErr_badInternalCall();
+		return -1;
+	}
+	return alifDict_setItemTake2((AlifDictObject*)_op,
+		ALIF_NEWREF(_key), ALIF_NEWREF(_value));
+}
 
 
 

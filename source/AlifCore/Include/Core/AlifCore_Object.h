@@ -98,6 +98,18 @@ static inline AlifIntT _alifObject_isGC(AlifObject* obj) { // 714
 }
 
 
+static inline AlifUSizeT alifObject_hashFast(AlifObject* _op) // 724
+{
+	if (ALIFUSTR_CHECKEXACT(_op)) {
+		AlifUSizeT hash = alifAtomic_loadSizeRelaxed(
+			 &ALIFASCIIOBJECT_CAST(_op)->hash);
+		if (hash != -1) {
+			return hash;
+		}
+	}
+	return alifObject_hash(_op);
+}
+
 
 static inline size_t alifType_preHeaderSize(AlifTypeObject* _tp) { // 740 
 	return (alifType_hasFeature(_tp, ALIF_TPFLAGS_PREHEADER) * 2 * sizeof(AlifObject*));

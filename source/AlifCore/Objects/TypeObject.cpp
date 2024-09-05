@@ -1,14 +1,44 @@
 #include "alif.h"
 
+#include "AlifCore_TypeObject.h"
 #include "AlifCore_Dict.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_ObjectAlloc.h"
 
 
+static inline AlifUSizeT managedStatic_typeIndexGet(AlifTypeObject* _self) { // 130
+	return (AlifUSizeT)_self->subclasses - 1;
+}
 
+static ManagedStaticTypeState* managedStatic_typeStateGet(AlifInterpreter* _interp, AlifTypeObject* _self) { // 176
+	AlifUSizeT index = managedStatic_typeIndexGet(_self);
+	ManagedStaticTypeState* state =
+		&(_interp->types.builtins.initialized[index]);
+	if (state->type == _self) {
+		return state;
+	}
+	if (index > ALIFMAX_MANAGED_STATIC_EXT_TYPES) {
+		return state;
+	}
+	return &(_interp->types.forExtensions.initialized[index]);
+}
 
+ManagedStaticTypeState* alifStaticType_getState(AlifInterpreter* _interp, AlifTypeObject* _self) { // 193
+	return managedStatic_typeStateGet(_interp, _self);
+}
 
+static inline AlifObject* lookup_tpDict(AlifTypeObject* _self) { // 401
+	if (_self->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
+		AlifInterpreter* interp = alifInterpreter_get();
+		ManagedStaticTypeState* state = alifStaticType_getState(interp, _self);
+		return state->dict;
+	}
+	return _self->dict;
+}
 
+AlifObject* alifType_getDict(AlifTypeObject* _self) { // 413
+	return lookup_tpDict(_self);
+}
 
 
 AlifObject* alifType_allocNoTrack(AlifTypeObject* _type, AlifSizeT _nitems) { // 2217
