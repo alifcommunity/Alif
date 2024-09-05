@@ -88,6 +88,14 @@ AlifVarObject* alifObject_initVar(AlifVarObject* _op,
 
 
 
+AlifTypeObject _alifNoneType_ = { // 2049
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "عدم",
+	.basicSize = 0,
+	.itemSize = 0,
+};
+
+AlifObject _alifNoneStruct_ = ALIFOBJECT_HEAD_INIT(&_alifNoneType_); // 2090
 
 
 static inline void new_reference(AlifObject* _op) { // 2405

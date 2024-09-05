@@ -122,16 +122,25 @@ static inline void alif_decreaseRef(AlifObject* _op) { // 319
     } while (0)
 
 
-static inline void alif_xdecreaseRef(AlifObject* _op) { // 456
+static inline void alif_xdecRef(AlifObject* _op) { // 456
 	if (_op != nullptr) {
 		ALIF_DECREF(_op);
 	}
 }
-#define ALIF_XDECREF(op) alif_xdecreaseRef(ALIFOBJECT_CAST(op))
+#define ALIF_XDECREF(op) alif_xdecRef(ALIFOBJECT_CAST(op))
 
 
 
 
+static inline AlifObject* alif_newRef(AlifObject* _obj) { // 473
+	ALIF_INCREF(_obj);
+	return _obj;
+}
+
+
+
+
+#define ALIF_NEWREF(_obj) alif_newRef(ALIFOBJECT_CAST(_obj)) // 489
 
 
 

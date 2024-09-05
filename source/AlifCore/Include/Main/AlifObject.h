@@ -123,6 +123,10 @@ static inline AlifTypeObject* alif_type(AlifObject* _ob) { // 250
 #define ALIF_TYPE(_ob) alif_type(ALIFOBJECT_CAST(_ob))
 
 
+static inline AlifIntT alif_isType(AlifObject* _obj, AlifTypeObject* _type) { // 274
+	return ALIF_TYPE(_obj) == _type;
+}
+#define ALIF_IS_TYPE(_obj, _type) alif_isType(ALIFOBJECT_CAST(_obj), (_type))
 
 
 static inline void alif_setType(AlifObject* _obj, AlifTypeObject* _type) { // 282
@@ -148,6 +152,17 @@ typedef void (*Destructor)(AlifObject*); // 335
 typedef AlifIntT (*InitProc)(AlifObject*, AlifObject*, AlifObject*); // 347
 typedef AlifObject* (*NewFunc)(AlifTypeObject*, AlifObject*, AlifObject*); // 348
 
+
+
+// 360
+#define ALIF_XSETREF(_dst, _src) \
+    do { \
+        AlifObject **tmpDstPtr = ALIF_CAST(AlifObject**, &(_dst)); \
+        AlifObject *tmpOldDst = (*tmpDstPtr); \
+        AlifObject *tmpSrc = ALIFOBJECT_CAST(_src); \
+        memcpy(tmpDstPtr, &tmpSrc, sizeof(AlifObject*)); \
+        alif_xdecRef(tmpOldDst); \
+    } while (0)
 
 
 extern AlifTypeObject _alifTypeType_; // 405
@@ -190,7 +205,9 @@ extern AlifTypeObject _alifTypeType_; // 405
 #define ALIF_TPFLAGS_DEFAULT  (ALIF_TPFLAGS_HAVE_STACKLESS_EXTENSION | 0)
 
 
+extern AlifObject _alifNoneStruct_; // 623
 
+#define ALIF_NONE (&_alifNoneStruct_) // 628
 
 
 

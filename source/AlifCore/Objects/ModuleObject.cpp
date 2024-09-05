@@ -33,6 +33,29 @@ AlifObject* alifModuleDef_init(AlifModuleDef* def) { // 45
 }
 
 
+static AlifIntT module_initDict(AlifModuleObject* mod, AlifObject* md_dict,
+	AlifObject* name, AlifObject* doc) { // 57
+	if (doc == nullptr)
+		doc = ALIF_NONE;
+
+	if (alifDict_setItem(md_dict, &ALIF_ID(__name__), name) != 0)
+		return -1;
+	if (alifDict_setItem(md_dict, &ALIF_ID(__doc__), doc) != 0)
+		return -1;
+	if (alifDict_setItem(md_dict, &ALIF_ID(__package__), ALIF_NONE) != 0)
+		return -1;
+	if (alifDict_setItem(md_dict, &ALIF_ID(__loader__), ALIF_NONE) != 0)
+		return -1;
+	if (alifDict_setItem(md_dict, &ALIF_ID(__spec__), ALIF_NONE) != 0)
+		return -1;
+	if (ALIFUSTR_CHECKEXACT(name)) {
+		ALIF_XSETREF(mod->name, ALIF_NEWREF(name));
+	}
+
+	return 0;
+}
+
+
 static AlifModuleObject* newModule_noTrack(AlifTypeObject* mt) { // 82
 	AlifModuleObject* m{};
 	m = (AlifModuleObject*)alifType_allocNoTrack(mt, 0);

@@ -124,3 +124,11 @@ static inline AlifDictValues* alifObject_inlineValues(AlifObject* _obj) { // 803
 	AlifTypeObject* tp_ = ALIF_TYPE(_obj);
 	return (AlifDictValues*)((char*)_obj + tp_->basicSize);
 }
+
+
+
+
+
+
+
+extern AlifTypeObject _alifNoneType_;
