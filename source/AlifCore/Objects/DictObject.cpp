@@ -17,12 +17,12 @@
 
 
 
-#define DECREF_KEYS(_dk)  alifAtomic_addSize(&_dk->dkRefCnt, -1)// 213
+#define DECREF_KEYS(_dk)  alifAtomic_addSize(&_dk->refCnt, -1)// 213
 
 static void free_keysObject(AlifDictKeysObject*, bool); // 421
 
 
-static inline void dictKeys_decref(AlifInterpreter* _interp,
+static inline void dictKeys_decRef(AlifInterpreter* _interp,
 	AlifDictKeysObject* _dk, bool _useqsbr) { // 442
 	if (alifAtomic_loadSizeRelaxed(&_dk->refCnt) == ALIF_IMMORTAL_REFCNT) {
 		return;
@@ -95,7 +95,7 @@ static AlifObject* new_dict(AlifInterpreter* _interp,
 	if (mp_ == nullptr) {
 		mp_ = ALIFOBJECT_GC_NEW(AlifDictObject, &_alifDictType_);
 		if (mp_ == nullptr) {
-			dictKeys_decref(_interp, _keys, false);
+			dictKeys_decRef(_interp, _keys, false);
 			if (_freeValuesOnFailure) {
 				free_values(_values, false);
 			}
@@ -154,4 +154,18 @@ void alifObject_initInlineValues(AlifObject* _obj, AlifTypeObject* _tp) {  // 65
 		values->values[i] = nullptr;
 	}
 	alifObject_managedDictPointer(_obj)->dict = nullptr;
+}
+
+
+
+
+
+
+
+
+
+
+void alifDictKeys_decRef(AlifDictKeysObject* _keys) { // 7246
+	AlifInterpreter* interp = alifInterpreter_get();
+	dictKeys_decRef(interp, _keys, false);
 }

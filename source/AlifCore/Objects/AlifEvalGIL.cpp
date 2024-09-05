@@ -330,3 +330,208 @@ void alifEval_acquireThread(AlifThread* _thread) { // 591
 void alifEval_releaseThread(AlifThread* _thread) { // 598
 	alifThread_detach(_thread);
 }
+
+
+
+
+
+static AlifIntT next_pendingCall(PendingCalls* _pending,
+	AlifIntT (**_func)(void*), void** _arg, AlifIntT* _flags) { // 729
+	AlifIntT i = _pending->first;
+	if (_pending->npending == 0) {
+		return -1;
+	}
+	*_func = _pending->calls[i].func;
+	*_arg = _pending->calls[i].arg;
+	*_flags = _pending->calls[i].flags;
+	return i;
+}
+
+static void pop_pendingCall(PendingCalls* _pending,
+	AlifIntT (**_func)(void*), void** _arg, AlifIntT* _flags) { // 747
+	AlifIntT i = next_pendingCall(_pending, _func, _arg, _flags);
+	if (i >= 0) {
+		_pending->calls[i] = {0};
+		_pending->first = (i + 1) % PENDINGCALLSARRAYSIZE;
+		alifAtomic_addInt32(&_pending->npending, -1);
+	}
+}
+
+
+
+
+
+static AlifIntT handle_signals(AlifThread* tstate) { // 813
+	alifUnset_evalBreakerBit(tstate, ALIF_SIGNALS_PENDING_BIT);
+	if (!alif_threadCanHandleSignals(tstate->interpreter)) {
+		return 0;
+	}
+	//if (alifErr_checkSignalsThread(tstate) < 0) {
+	//	alifSet_evalBreakerBit(tstate, ALIF_SIGNALS_PENDING_BIT);
+	//	return -1;
+	//}
+	return 0;
+}
+
+
+static AlifIntT _make_pendingCalls(PendingCalls* _pending, int32_t* _pnPending) { // 829
+	AlifIntT res = 0;
+	int32_t npending = -1;
+
+	int32_t maxloop = _pending->maxLoop;
+	if (maxloop == 0) {
+		maxloop = _pending->max;
+	}
+
+	for (int i = 0; i < maxloop; i++) {
+		AlifPendingCallFunc func = nullptr;
+		void* arg = nullptr;
+		AlifIntT flags = 0;
+
+		ALIFMUTEX_LOCK(&_pending->mutex);
+		pop_pendingCall(_pending, &func, &arg, &flags);
+		npending = _pending->npending;
+		ALIFMUTEX_UNLOCK(&_pending->mutex);
+
+		if (func == nullptr) {
+			break;
+		}
+
+		res = func(arg);
+		if ((flags & ALIF_PENDING_RAWFREE) and arg != nullptr) {
+			alifMem_dataFree(arg);
+		}
+		if (res != 0) {
+			res = -1;
+			goto finally;
+		}
+	}
+
+	finally:
+	*_pnPending = npending;
+	return res;
+}
+
+
+static void signal_pendingCalls(AlifThread* _thread, AlifInterpreter* _interp) { // 877
+#ifdef ALIF_GIL_DISABLED
+	alifSet_evalBreakerBitAll(_interp, ALIF_CALLS_TO_DO_BIT);
+#else
+	alifSet_evalBreakerBit(_thread, ALIF_CALLS_TO_DO_BIT);
+#endif
+}
+
+
+static void unsignal_pendingCalls(AlifThread* _thread, AlifInterpreter* _interp) { // 887
+#ifdef ALIF_GIL_DISABLED
+	alifUnset_evalBreakerBitAll(_interp, ALIF_CALLS_TO_DO_BIT);
+#else
+	alifUnset_evalBreakerBit(_thread, ALIF_CALLS_TO_DO_BIT);
+#endif
+}
+
+
+static void clear_pendingHandlingThread(PendingCalls* pending) { // 897
+#ifdef ALIF_GIL_DISABLED
+	ALIFMUTEX_LOCK(&pending->mutex);
+	pending->handlingThread = nullptr;
+	ALIFMUTEX_UNLOCK(&pending->mutex);
+#else
+	pending->handlingThread = nullptr;
+#endif
+}
+
+
+static AlifIntT make_pendingCalls(AlifThread* _thread) { // 909
+	AlifInterpreter* interp = _thread->interpreter;
+	PendingCalls* pending = &interp->eval.pending;
+	PendingCalls* pendingMain = &_alifDureRun_.eval.pendingMainThread;
+
+	ALIFMUTEX_LOCK(&pending->mutex);
+	if (pending->handlingThread != nullptr) {
+		alifSet_evalBreakerBit(pending->handlingThread, ALIF_CALLS_TO_DO_BIT);
+		alifUnset_evalBreakerBit(_thread, ALIF_CALLS_TO_DO_BIT);
+		ALIFMUTEX_UNLOCK(&pending->mutex);
+		return 0;
+	}
+	pending->handlingThread = _thread;
+	ALIFMUTEX_UNLOCK(&pending->mutex);
+
+	unsignal_pendingCalls(_thread, interp);
+
+	int32_t npending;
+	if (_make_pendingCalls(pending, &npending) != 0) {
+		clear_pendingHandlingThread(pending);
+		signal_pendingCalls(_thread, interp);
+		return -1;
+	}
+	if (npending > 0) {
+		signal_pendingCalls(_thread, interp);
+	}
+
+	if (alif_isMainThread() and alif_isMainInterpreter(interp)) {
+		if (_make_pendingCalls(pendingMain, &npending) != 0) {
+			clear_pendingHandlingThread(pending);
+			signal_pendingCalls(_thread, interp);
+			return -1;
+		}
+		if (npending > 0) {
+			signal_pendingCalls(_thread, interp);
+		}
+	}
+
+	clear_pendingHandlingThread(pending);
+	return 0;
+}
+
+
+void alifSet_evalBreakerBitAll(AlifInterpreter* _interp, uintptr_t _bit) { // 969
+	AlifDureRun* dureRun = &_alifDureRun_;
+
+	HEAD_LOCK(dureRun);
+	for (AlifThread* tstate = _interp->threads.head; tstate != nullptr; tstate = tstate->next) {
+		alifSet_evalBreakerBit(tstate, _bit);
+	}
+	HEAD_UNLOCK(dureRun);
+}
+
+void alifUnset_evalBreakerBitAll(AlifInterpreter* _interp, uintptr_t _bit) { // 981
+	AlifDureRun* dureRun = &_alifDureRun_;
+
+	HEAD_LOCK(dureRun);
+	for (AlifThread* thread = _interp->threads.head; thread != nullptr; thread = thread->next) {
+		alifUnset_evalBreakerBit(thread, _bit);
+	}
+	HEAD_UNLOCK(dureRun);
+}
+
+
+
+AlifIntT alifEval_makePendingCalls(AlifThread* _thread) { // 1029
+	AlifIntT res{};
+	if (alif_isMainThread() and alif_isMainInterpreter(_thread->interpreter)) {
+		res = handle_signals(_thread);
+		if (res != 0) {
+			return res;
+		}
+	}
+
+	res = make_pendingCalls(_thread);
+	if (res != 0) {
+		return res;
+	}
+
+	return 0;
+}
+
+
+
+
+AlifIntT alif_makePendingCalls() { // 1054
+	AlifThread* thread = alifThread_get();
+
+	if (!alif_isMainThread() or !alif_isMainInterpreter(thread->interpreter)) {
+		return 0;
+	}
+	return alifEval_makePendingCalls(thread);
+}

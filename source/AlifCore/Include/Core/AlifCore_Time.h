@@ -18,7 +18,7 @@ public:
 
 
 
-
+AlifTimeT alifDeadline_get(AlifTimeT); // 305
 
 
 class AlifTimeFraction { // 310

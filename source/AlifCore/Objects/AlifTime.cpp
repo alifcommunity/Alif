@@ -68,7 +68,8 @@ static AlifTimeT alifTime_gcd(AlifTimeT x, AlifTimeT y) { // 66
 	return x;
 }
 
-AlifIntT alifTimeFraction_set(AlifTimeFraction* frac, AlifTimeT numer, AlifTimeT denom) { // 82
+AlifIntT alifTimeFraction_set(AlifTimeFraction* frac,
+	AlifTimeT numer, AlifTimeT denom) { // 82
 	if (numer < 1 or denom < 1) {
 		return -1;
 	}
@@ -177,7 +178,8 @@ AlifTimeT alifTimeFraction_mul(AlifTimeT _ticks, const AlifTimeFraction* _frac) 
 
 
 #ifdef _WINDOWS
-static AlifIntT alifWin_perfCounterFrequency(AlifTimeFraction* _base, AlifIntT _raiseExc) { // 1041
+static AlifIntT alifWin_perfCounterFrequency(AlifTimeFraction* _base,
+	AlifIntT _raiseExc) { // 1041
 	LARGE_INTEGER freq;
 	(void)QueryPerformanceFrequency(&freq);
 	LONGLONG frequency = freq.QuadPart;
@@ -351,4 +353,13 @@ AlifIntT alifTime_monotonicRaw(AlifTimeT* _result) { // 1246
 		return -1;
 	}
 	return 0;
+}
+
+
+
+
+AlifTimeT alifDeadline_get(AlifTimeT _deadline) { // 1362
+	AlifTimeT now{};
+	(void)alifTime_monotonicRaw(&now);
+	return _deadline - now;
 }

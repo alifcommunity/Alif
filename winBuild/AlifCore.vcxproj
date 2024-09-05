@@ -23,6 +23,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_CondVar.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_CriticalSection.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Dict.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DictState.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DureRun.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DureRunInit.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Eval.h" />

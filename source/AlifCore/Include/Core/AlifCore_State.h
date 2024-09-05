@@ -26,7 +26,9 @@ static inline AlifIntT alif_isMainInterpreter(AlifInterpreter* _interpreter) { /
 }
 
 
-
+static inline AlifIntT alif_threadCanHandleSignals(AlifInterpreter* _interp) { // 103
+	return (alif_isMainThread() and alif_isMainInterpreter(_interp));
+}
 
 
 // 113

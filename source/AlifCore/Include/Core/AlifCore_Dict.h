@@ -15,6 +15,11 @@ public:
 	AlifObject* value{};
 };
 
+
+extern void alifDictKeys_decRef(AlifDictKeysObject*); // 96
+
+
+
 // 126
 #define DKIX_EMPTY (-1)
 #define DKIX_DUMMY (-2)
@@ -52,7 +57,7 @@ public:
 	AlifObject* values[1]{};
 };
 
-#define DK_LOG_SIZE(_dk)  ALIF_RVALUE((_dk)->dkLog2Size) // 202
+#define DK_LOG_SIZE(_dk)  ALIF_RVALUE((_dk)->log2Size) // 202
 
 static inline void* _dk_entries(AlifDictKeysObject* _dk) { // 209
 	int8_t* indices = (int8_t*)(_dk->indices);
@@ -67,7 +72,37 @@ static inline AlifDictUStrEntry* dk_UStrEntries(AlifDictKeysObject* _dk) { // 21
 	return (AlifDictUStrEntry*)_dk_entries(_dk);
 }
 
-#define DK_IS_USTR(_dk) ((_dk)->dkKind != DictKeysKind_::Dict_Kyes_General) // 224
+#define DK_IS_USTR(_dk) ((_dk)->kind != DictKeysKind_::Dict_Kyes_General) // 224
+
+// 226
+#define DICT_VERSION_INCREMENT (1 << (DICT_MAX_WATCHERS + DICT_WATCHED_MUTATION_BITS))
+#define DICT_WATCHER_MASK ((1 << DICT_MAX_WATCHERS) - 1)
+#define DICT_WATCHER_AND_MODIFICATION_MASK ((1 << (DICT_MAX_WATCHERS + DICT_WATCHED_MUTATION_BITS)) - 1)
+
+
+#ifdef ALIF_GIL_DISABLED
+
+#define THREAD_LOCAL_DICT_VERSION_COUNT 256
+#define THREAD_LOCAL_DICT_VERSION_BATCH THREAD_LOCAL_DICT_VERSION_COUNT * DICT_VERSION_INCREMENT
+
+
+static inline uint64_t dict_nextVersion(AlifInterpreter* _interp) { // 235
+	AlifThread* tstate = alifThread_get();
+	uint64_t curProgress = (tstate->dictGlobalVersion &
+		(THREAD_LOCAL_DICT_VERSION_BATCH - 1));
+	if (curProgress == 0) {
+		uint64_t next = alifAtomic_addUint64(&_interp->dictState.globalVersion,
+			THREAD_LOCAL_DICT_VERSION_BATCH);
+		tstate->dictGlobalVersion = next;
+	}
+	return tstate->dictGlobalVersion += DICT_VERSION_INCREMENT;
+}
+#define DICT_NEXT_VERSION(_interp) dict_nextVersion(_interp)
+
+#else
+#define DICT_NEXT_VERSION(_interp) \
+    ((_interp)->dictState.globalVersion += DICT_VERSION_INCREMENT)
+#endif
 
 static inline AlifUSizeT sharedKeys_usableSize(AlifDictKeysObject* _keys) { // 305
 	AlifSizeT dkUsable = alifAtomic_loadSizeAcquire(&_keys->usable);
@@ -83,15 +118,3 @@ static inline AlifUSizeT alifInline_valuesSize(AlifTypeObject* _tp) { // 320
 }
 
 
-static inline uint64_t dict_nextVersion(AlifInterpreter* _interp) { // 235
-	AlifThread* tstate = alifThread_get();
-	uint64_t curProgress = (tstate->dictGlobalVersion &
-		(THREAD_LOCAL_DICT_VERSION_BATCH - 1));
-	if (curProgress == 0) {
-		uint64_t next = alifAtomic_addInt64(&_interp->dictState.globalVersion,
-			THREAD_LOCAL_DICT_VERSION_BATCH);
-		tstate->dictGlobalVersion = next;
-	}
-	return tstate->dictGlobalVersion += DICT_VERSION_INCREMENT;
-}
-#define DICT_NEXT_VERSION(_interp) dict_nextVersion(_interp)

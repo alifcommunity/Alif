@@ -16,11 +16,15 @@ using AlifUCS1 = uint8_t;
 
 
 
-extern AlifTypeObject _alifUStrType_;
+extern AlifTypeObject _alifUStrType_; // 103
+
+
+
+#define ALIFUSTR_CHECKEXACT(op) ALIF_IS_TYPE((op), &_alifUStrType_) // 108
+
 
 
 AlifObject* alifUStr_fromString(const char*); // 129
-
 
 
 
