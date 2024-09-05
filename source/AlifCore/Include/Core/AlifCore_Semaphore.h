@@ -20,6 +20,7 @@ public:
 #endif
 };
 
+AlifIntT alifSemaphore_wait(AlifSemaphore*, AlifTimeT, AlifIntT); // 50
 
 void alifSemaphore_wakeup(AlifSemaphore*); // 54
 

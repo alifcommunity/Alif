@@ -1,5 +1,7 @@
 #pragma once
 
+
+#include "AlifCore_DictState.h"
 #include "AlifCore_EvalState.h"
 #include "AlifCore_ThreadState.h"
 #include "AlifCore_TypeID.h"
@@ -80,7 +82,8 @@ public:
 
 	//AlifObjectState objectState{};
 
-	 AlifMemInterpFreeQueue memFreeQueue{};
+	AlifDictState dictState{};
+	AlifMemInterpFreeQueue memFreeQueue{};
 
 
 	//class TypesState types;

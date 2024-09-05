@@ -13,13 +13,14 @@
 
 
 
-
+AlifIntT alifEval_makePendingCalls(AlifThread*); // 37
 
 
 #define ALIF_DEFAULT_RECURSION_LIMIT 1000 // 40
 
-
-
+// 48
+#define ALIF_PENDING_MAINTHREADONLY 1
+#define ALIF_PENDING_RAWFREE 2
 
 
 
@@ -75,3 +76,8 @@ static inline AlifIntT alifEval_breakerBitIsSet(AlifThread* _thread, uintptr_t _
 	uintptr_t b = alifAtomic_loadUintptrRelaxed(&_thread->evalBreaker);
 	return (b & _bit) != 0;
 }
+
+
+
+void alifSet_evalBreakerBitAll(AlifInterpreter*, uintptr_t); // 312
+void alifUnset_evalBreakerBitAll(AlifInterpreter*, uintptr_t); // 313

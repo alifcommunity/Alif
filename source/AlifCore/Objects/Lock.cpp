@@ -88,7 +88,8 @@ AlifLockStatus_ alifMutex_lockTimed(AlifMutex* _m,
 				return AlifLockStatus_::Alif_Lock_Acquired;
 			}
 		}
-		else if (ret == Alif_Park_Intr and (_flags & ALIF_LOCK_HANDLE_SIGNALS)) {
+		else if (ret == Alif_Park_Intr
+			and (_flags & AlifLockFlags_::Alif_Lock_Handle_Signals)) {
 			if (alif_makePendingCalls() < 0) {
 				return Alif_Lock_Intr;
 			}
@@ -108,6 +109,23 @@ AlifLockStatus_ alifMutex_lockTimed(AlifMutex* _m,
 	}
 }
 
+static void mutex_unpark(AlifMutex* _m, MutexEntry* _entry, AlifIntT _hasMoreWaiters) { // 137
+	uint8_t v = 0;
+	if (_entry) {
+		AlifTimeT now{};
+		(void)alifTime_monotonicRaw(&now);
+		int should_be_fair = now > _entry->timeToBeFair;
+
+		_entry->handedOff = should_be_fair;
+		if (should_be_fair) {
+			v |= ALIF_LOCKED;
+		}
+		if (_hasMoreWaiters) {
+			v |= ALIF_HAS_PARKED;
+		}
+	}
+	alifAtomic_storeUint8(&_m->bits, v);
+}
 
 AlifIntT alifMutex_tryUnlock(AlifMutex* _m) { // 158
 	uint8_t v = alifAtomic_loadUint8(&_m->bits);

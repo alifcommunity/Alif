@@ -196,9 +196,10 @@ static inline void alifRawMutex_lock(AlifRawMutex* m) { // 111
 	alifRawMutex_lockSlow(m);
 }
 
-AlifIntT alifSemaphore_wait(AlifSemaphore* sema, AlifTimeT timeout, AlifIntT detach) { // 198
+AlifIntT alifSemaphore_wait(AlifSemaphore* _sema,
+	AlifTimeT _timeout, AlifIntT _detach) { // 198
 	AlifThread* thread = nullptr;
-	if (detach) {
+	if (_detach) {
 		thread = alifThread_get();
 		if (thread and alifAtomic_loadIntRelaxed(&thread->state) ==
 			ALIF_THREAD_ATTACHED) {
@@ -209,7 +210,7 @@ AlifIntT alifSemaphore_wait(AlifSemaphore* sema, AlifTimeT timeout, AlifIntT det
 			thread = nullptr;
 		}
 	}
-	AlifIntT res = alifSemaphore_platformWait(sema, timeout);
+	AlifIntT res = alifSemaphore_platformWait(_sema, _timeout);
 	if (thread) {
 		alifEval_acquireThread(thread);
 	}
