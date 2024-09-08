@@ -64,8 +64,13 @@ typedef AlifSizeT AlifHashT;
 #define ALIF_ARITHMETIC_RIGHT_SHIFT(TYPE, I, J) ((I) >> (J))
 #endif
 
-
-
+// 323 
+#if defined(__GNUC__) \
+    && ((__GNUC__ >= 5) || (__GNUC__ == 4) && (__GNUC_MINOR__ >= 3))
+#define ALIF_HOT_FUNCTION __attribute__((hot))
+#else
+#define ALIF_HOT_FUNCTION
+#endif
 
 
 #if defined(__GNUC__) or defined(__clang__) or defined(__INTEL_COMPILER)

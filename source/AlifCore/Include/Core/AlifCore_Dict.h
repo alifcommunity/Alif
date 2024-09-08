@@ -2,6 +2,8 @@
 
 #include "AlifCore_Object.h"
 
+#define ALIFDICT_HASSPLITTABLE(_d) ((_d)->values != nullptr) // 50
+
 class AlifDictKeyEntry { // 74
 public:
 	AlifUSizeT hash{};
@@ -59,6 +61,8 @@ public:
 
 #define DK_LOG_SIZE(_dk)  ALIF_RVALUE((_dk)->log2Size) // 202
 
+#define DK_SIZE(_dk) (((int64_t)1)<<DK_LOG_SIZE(_dk)) // 204
+
 static inline void* _dk_entries(AlifDictKeysObject* _dk) { // 209
 	int8_t* indices = (int8_t*)(_dk->indices);
 	AlifUSizeT index = (AlifUSizeT)1 << _dk->log2IndexBytes;
@@ -103,6 +107,13 @@ static inline uint64_t dict_nextVersion(AlifInterpreter* _interp) { // 235
 #define DICT_NEXT_VERSION(_interp) \
     ((_interp)->dictState.globalVersion += DICT_VERSION_INCREMENT)
 #endif
+
+static inline void alifDictValues_addToInsertionOrder(AlifDictValues* _values, AlifSizeT _ix) { // 292
+	int size = _values->size;
+	uint8_t* array = getInsertion_orderArray(_values);
+	array[size] = (uint8_t)_ix;
+	_values->size = size + 1;
+}
 
 static inline AlifUSizeT sharedKeys_usableSize(AlifDictKeysObject* _keys) { // 305
 	AlifSizeT dkUsable = alifAtomic_loadSizeAcquire(&_keys->usable);

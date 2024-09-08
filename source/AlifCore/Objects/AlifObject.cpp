@@ -86,6 +86,27 @@ AlifVarObject* alifObject_initVar(AlifVarObject* _op,
 	return _op;
 }
 
+AlifIntT alifObject_richCompareBool(AlifObject* _v, AlifObject* _w, AlifIntT _op) { // 1033
+	AlifObject* res;
+	AlifIntT ok;
+	if (_v == _w) {
+		if (_op == ALIF_EQ)
+			return 1;
+		else if (_op == ALIF_NE)
+			return 0;
+	}
+
+	res = alifObject_richCompare(_v, _w, _op);
+	if (res == NULL)
+		return -1;
+	if (ALIFBOOL_CHECK(res))
+		ok = (res == ALIF_TRUE);
+	else
+		ok = alifObject_isTrue(res);
+	ALIF_DECREF(res);
+	return ok;
+}
+
 AlifUSizeT alifObject_hashNotImplemented(AlifObject* _v) { // 1059 
 	return -1;
 }

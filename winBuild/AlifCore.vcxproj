@@ -99,6 +99,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\RefCount.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\ASCIILib.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Codecs.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Equal.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\FindMaxChar.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS1Lib.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS2Lib.h" />
