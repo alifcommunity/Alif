@@ -50,6 +50,7 @@ public:
 
 
 AlifSizeT alifImport_getNextModuleIndex(); // 129
+extern const char* alifImport_resolveNameWithPackageContext(const char*);
 
 //extern AlifObject* alifImport_initModules(AlifInterpreter*); // 136
 

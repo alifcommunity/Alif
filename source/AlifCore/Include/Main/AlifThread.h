@@ -1,6 +1,8 @@
 #pragma once
 
 
+typedef void* AlifThreadTypeLock; // 4
+
 
 enum AlifLockStatus_ { // 12
 	Alif_Lock_Failure = 0,
@@ -11,7 +13,9 @@ enum AlifLockStatus_ { // 12
 void ALIF_NO_RETURN alifThread_exitThread(void); // 20
 AlifUIntT alifThread_getThreadID(); // 21
 
-
+AlifIntT alifThread_acquireLock(AlifThreadTypeLock, AlifIntT); // 33
+#define WAIT_LOCK       1
+#define NOWAIT_LOCK     0
 
 
 // Forward Declaration

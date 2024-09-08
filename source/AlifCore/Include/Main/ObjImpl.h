@@ -15,6 +15,7 @@ AlifVarObject* alifObject_initVar(AlifVarObject*, AlifTypeObject*, AlifSizeT); /
 AlifObject* alifObject_gcNew(AlifTypeObject* _tp); // 165
 AlifVarObject* alifObject_gcNewVar(AlifTypeObject*, AlifSizeT); // 166
 
+void alifObject_gcTrack(void*);
 
 #define ALIFOBJECT_GC_NEW(_type, _typeObj) ALIF_CAST(_type*, alifObject_gcNew(_typeObj)) // 180
 #define ALIFOBJECT_GC_NEWVAR(_type, _typeObj, _n) ALIF_CAST(_type*, alifObject_gcNewVar((_typeObj), (_n))) // 181

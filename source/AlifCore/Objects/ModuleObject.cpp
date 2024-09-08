@@ -4,6 +4,8 @@
 #include "AlifCore_ModSupport.h"
 #include "AlifCore_ModuleObject.h"
 #include "AlifCore_Object.h"
+#include "AlifCore_ObjectDeferred.h" // هذا التضمين غير ضروري ويجب حذفه مع التقدم في البرنامج
+
 
 
 
@@ -73,6 +75,15 @@ static AlifModuleObject* newModule_noTrack(AlifTypeObject* mt) { // 82
 	return m;
 }
 
+
+static void track_module(AlifModuleObject* _m) { // 101
+	alifObject_setDeferredRefcount(_m->dict);
+	alifObject_gcTrack(_m->dict);
+
+	alifObject_setDeferredRefcount((AlifObject*)_m);
+	alifObject_gcTrack(_m);
+}
+
 AlifObject* alifModule_newObject(AlifObject* _name) { // 121
 	AlifModuleObject* m = newModule_noTrack(&_alifModuleType_);
 	if (m == nullptr) return nullptr;
@@ -113,7 +124,7 @@ AlifObject* alifModule_createInitialized(AlifModuleDef* _module) { // 209
 		// error
 		return nullptr;
 	}
-	//name = alifImport_resolveNameWithPackageContext(name);
+	name = alifImport_resolveNameWithPackageContext(name);
 	if ((m = (AlifModuleObject*)alifModule_new(name)) == nullptr) return nullptr;
 
 	if (_module->size > 0) {
@@ -138,6 +149,20 @@ AlifObject* alifModule_createInitialized(AlifModuleDef* _module) { // 209
 }
 
 
+
+
+
+AlifIntT alifModule_addFunctions(AlifObject* _m, AlifMethodDef* _functions) { // 523
+	AlifIntT res{};
+	AlifObject* name = alifModule_getNameObject(_m);
+	if (name == nullptr) {
+		return -1;
+	}
+
+	res = addMethods_toObject(_m, name, _functions);
+	ALIF_DECREF(name);
+	return res;
+}
 
 
 

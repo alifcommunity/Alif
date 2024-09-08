@@ -24,7 +24,10 @@ void ALIF_NO_RETURN alifThread_exitThread(void) { // 286
 }
 
 
-
+AlifIntT alifThread_acquireLock(AlifThreadTypeLock aLock, AlifIntT waitflag) { // 374
+	//return alifThread_acquireLockTimed(aLock, waitflag ? -1 : 0, 0);
+	return 0; //
+}
 
 
 

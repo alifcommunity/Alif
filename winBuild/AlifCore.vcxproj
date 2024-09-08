@@ -47,6 +47,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ModuleObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Object.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ObjectAlloc.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ObjectDeferred.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ObjectStack.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ParkingLot.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Parser.h" />
@@ -91,6 +92,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\mimalloc\mimalloc\prim.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\mimalloc\mimalloc\track.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\mimalloc\mimalloc\types.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\ModSupport.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\ModuleObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\ObjImpl.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\OSDefs.h" />
