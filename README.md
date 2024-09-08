@@ -70,12 +70,12 @@
 
 في بايثون:
 
-```sh
+```python
 for i in range(1):
 	print("Hello world!")
 ```
    في ألف:
-```sh
+```python
     لاجل أ في (1):
 	 اطبع("أهلاً بالعالم")
 ```
