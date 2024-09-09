@@ -1,7 +1,7 @@
-#pragma once
+//#pragma once
 
-ALIF_LOCAL_INLINE(int) uStr_eq(AlifObject * _a, AlifObject * _b)
-{
+// stringlib/eq.h
+ALIF_LOCAL_INLINE(AlifIntT) uStr_eq(AlifObject * _a, AlifObject * _b) { // 6
 	if (ALIFUSTR_GET_LENGTH(_a) != ALIFUSTR_GET_LENGTH(_b))
 		return 0;
 	if (ALIFUSTR_GET_LENGTH(_a) == 0)

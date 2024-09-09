@@ -103,24 +103,22 @@ static inline AlifIntT alif_tryIncrefFast(AlifObject* _op) { // 492
 	return 0;
 }
 
-static inline int alif_tryIncRefShared(AlifObject* _op) { // 511
+static inline AlifIntT alif_tryIncRefShared(AlifObject* _op) { // 511
 	AlifSizeT shared = alifAtomic_loadSizeRelaxed(&_op->refShared);
 	for (;;) {
 
-		if (shared == 0 || shared == ALIF_REF_MERGED) {
+		if (shared == 0 or shared == ALIF_REF_MERGED) {
 			return 0;
 		}
 
-		if (alifAtomic_compareExchangeSize(
-			&_op->refShared,
-			&shared,
+		if (alifAtomic_compareExchangeSize( &_op->refShared, &shared,
 			shared + (1 << ALIF_REF_SHARED_SHIFT))) {
 			return 1;
 		}
 	}
 }
 
-static inline AlifIntT alif_tryIncrefCompare(AlifObject** _src, AlifObject* _op) { // 536
+static inline AlifIntT alif_tryIncRefCompare(AlifObject** _src, AlifObject* _op) { // 536
 	if (alif_tryIncrefFast(_op)) {
 		return 1;
 	}
@@ -141,10 +139,9 @@ static inline AlifIntT _alifObject_isGC(AlifObject* obj) { // 714
 }
 
 
-static inline AlifUSizeT alifObject_hashFast(AlifObject* _op) { // 724 
+static inline AlifHashT alifObject_hashFast(AlifObject* _op) { // 724 
 	if (ALIFUSTR_CHECKEXACT(_op)) {
-		AlifUSizeT hash = alifAtomic_loadSizeRelaxed(
-			 &ALIFASCIIOBJECT_CAST(_op)->hash);
+		AlifHashT hash = alifAtomic_loadSizeRelaxed(&ALIFASCIIOBJECT_CAST(_op)->hash);
 		if (hash != -1) {
 			return hash;
 		}
@@ -153,7 +150,7 @@ static inline AlifUSizeT alifObject_hashFast(AlifObject* _op) { // 724
 }
 
 
-static inline size_t alifType_preHeaderSize(AlifTypeObject* _tp) { // 740 
+static inline AlifUSizeT alifType_preHeaderSize(AlifTypeObject* _tp) { // 740 
 	return (alifType_hasFeature(_tp, ALIF_TPFLAGS_PREHEADER) * 2 * sizeof(AlifObject*));
 }
 

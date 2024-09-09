@@ -51,8 +51,8 @@ static inline AlifIntT alifObjectGC_isTracked(AlifObject* _op) { // 82
 }
 #define ALIFOBJECT_GC_IS_TRACKED(_op) alifObjectGC_isTracked(ALIF_CAST(AlifObject*, _op))
 
-static inline AlifIntT alifObjectGC_mayBeTracked(AlifObject* _obj) { // 94
-	if (!_alifObject_isGC(_obj)) {
+static inline AlifIntT alifObject_gcMayBeTracked(AlifObject* _obj) { // 94
+	if (!alifObject_isGC(_obj)) {
 		return 0;
 	}
 	if (ALIFTUPLE_CHECKEXACT(_obj)) {
@@ -61,15 +61,15 @@ static inline AlifIntT alifObjectGC_mayBeTracked(AlifObject* _obj) { // 94
 	return 1;
 }
 
-static inline int alifObjectGC_isShared(AlifObject* _op) { // 112
+static inline AlifIntT alifObject_gcIsShared(AlifObject* _op) { // 112
 	return alifObject_hasGCBits(_op, ALIFGC_BITS_SHARED);
 }
-#define ALIFOBJECT_GC_IS_SHARED(_op) alifObjectGC_isShared(ALIF_CAST(AlifObject*, _op))
+#define ALIFOBJECT_GC_IS_SHARED(_op) alifObject_gcIsShared(ALIF_CAST(AlifObject*, _op))
 
-static inline void alifObjectGC_setShared(AlifObject* _op) { // 117
+static inline void alifObject_gcSetShared(AlifObject* _op) { // 117
 	alifObject_setGCBits(_op, ALIFGC_BITS_SHARED);
 }
-#define ALIFOBJECT_GC_SET_SHARED(_op) alifObjectGC_setShared(ALIF_CAST(AlifObject*, _op))
+#define ALIFOBJECT_GC_SET_SHARED(_op) alifObject_gcSetShared(ALIF_CAST(AlifObject*, _op))
 
 
 #define ALIFGC_PREV_SHIFT           2 // 162 

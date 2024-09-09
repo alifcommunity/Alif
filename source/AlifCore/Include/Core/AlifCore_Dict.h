@@ -30,9 +30,9 @@ extern void alifDictKeys_decRef(AlifDictKeysObject*); // 96
 
 
  enum DictKeysKind_ { // 131
-	Dict_Kyes_General = 0,
-	Dict_Kyes_UStr = 1,
-	Dict_Kyes_Split = 2
+	Dict_Keys_General = 0,
+	Dict_Keys_UStr = 1,
+	Dict_Keys_Split = 2
 };
 
 class DictKeysObject { // 138
@@ -60,8 +60,12 @@ public:
 };
 
 #define DK_LOG_SIZE(_dk)  ALIF_RVALUE((_dk)->log2Size) // 202
-
+#if SIZEOF_VOID_P > 4
 #define DK_SIZE(_dk) (((int64_t)1)<<DK_LOG_SIZE(_dk)) // 204
+#else
+#define DK_SIZE(dk)      (1<<DK_LOG_SIZE(dk))
+#endif
+
 
 static inline void* _dk_entries(AlifDictKeysObject* _dk) { // 209
 	int8_t* indices = (int8_t*)(_dk->indices);
@@ -72,11 +76,11 @@ static inline void* _dk_entries(AlifDictKeysObject* _dk) { // 209
 static inline AlifDictKeyEntry* dk_entries(AlifDictKeysObject* _dk) { // 215
 	return (AlifDictKeyEntry*)_dk_entries(_dk);
 }
-static inline AlifDictUStrEntry* dk_UStrEntries(AlifDictKeysObject* _dk) { // 219
+static inline AlifDictUStrEntry* dk_uStrEntries(AlifDictKeysObject* _dk) { // 219
 	return (AlifDictUStrEntry*)_dk_entries(_dk);
 }
 
-#define DK_IS_USTR(_dk) ((_dk)->kind != DictKeysKind_::Dict_Kyes_General) // 224
+#define DK_IS_USTR(_dk) ((_dk)->kind != DictKeysKind_::Dict_Keys_General) // 224
 
 // 226
 #define DICT_VERSION_INCREMENT (1 << (DICT_MAX_WATCHERS + DICT_WATCHED_MUTATION_BITS))
@@ -108,8 +112,13 @@ static inline uint64_t dict_nextVersion(AlifInterpreter* _interp) { // 235
     ((_interp)->dictState.globalVersion += DICT_VERSION_INCREMENT)
 #endif
 
-static inline void alifDictValues_addToInsertionOrder(AlifDictValues* _values, AlifSizeT _ix) { // 292
-	int size = _values->size;
+static inline uint8_t* getInsertion_orderArray(AlifDictValues* _values) { // 287
+	return (uint8_t*)&_values->values[_values->capacity];
+}
+
+static inline void alifDictValues_addToInsertionOrder(AlifDictValues* _values,
+	AlifSizeT _ix) { // 292
+	AlifIntT size = _values->size;
 	uint8_t* array = getInsertion_orderArray(_values);
 	array[size] = (uint8_t)_ix;
 	_values->size = size + 1;

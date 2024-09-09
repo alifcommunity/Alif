@@ -98,7 +98,7 @@ AlifIntT alifObject_richCompareBool(AlifObject* _v, AlifObject* _w, AlifIntT _op
 	}
 
 	res = alifObject_richCompare(_v, _w, _op);
-	if (res == NULL)
+	if (res == nullptr)
 		return -1;
 	if (ALIFBOOL_CHECK(res))
 		ok = (res == ALIF_TRUE);
@@ -108,18 +108,20 @@ AlifIntT alifObject_richCompareBool(AlifObject* _v, AlifObject* _w, AlifIntT _op
 	return ok;
 }
 
-AlifUSizeT alifObject_hashNotImplemented(AlifObject* _v) { // 1059 
+AlifUSizeT alifObject_hashNotImplemented(AlifObject* _v) { // 1059
+	//alifErrFormat(_alifExcTypeError_, "unhashable type: '%.200s'",
+	//	ALIF_TYPE(_v)->name);
 	return -1;
 }
 
 AlifUSizeT alifObject_hash(AlifObject* _v) { // 1067
 	AlifTypeObject* tp_ = ALIF_TYPE(_v);
-	if (tp_->hash != NULL)
+	if (tp_->hash != nullptr)
 		return (*tp_->hash)(_v);
 	if (!alifType_isReady(tp_)) {
 		if (alifType_ready(tp_) < 0)
 			return -1;
-		if (tp_->hash != NULL)
+		if (tp_->hash != nullptr)
 			return (*tp_->hash)(_v);
 	}
 	return alifObject_hashNotImplemented(_v);

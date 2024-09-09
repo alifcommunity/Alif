@@ -149,7 +149,7 @@ typedef AlifIntT (*TraverseProc)(AlifObject*, VisitProc, void*); // 331
 
 typedef void (*FreeFunc)(void*); // 334
 typedef void (*Destructor)(AlifObject*); // 335
-typedef AlifUSizeT (*HashFunc)(AlifObject*); // 341
+typedef AlifHashT (*HashFunc)(AlifObject*); // 341
 typedef AlifIntT (*InitProc)(AlifObject*, AlifObject*, AlifObject*); // 347
 typedef AlifObject* (*NewFunc)(AlifTypeObject*, AlifObject*, AlifObject*); // 348
 
