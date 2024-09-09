@@ -154,6 +154,9 @@ typedef AlifIntT (*TraverseProc)(AlifObject*, VisitProc, void*); // 331
 
 typedef void (*FreeFunc)(void*); // 334
 typedef void (*Destructor)(AlifObject*); // 335
+typedef AlifObject* (*GetAttrFunc)(AlifObject*, char*); // 336
+typedef AlifIntT (*SetAttrFunc)(AlifObject*, char*, AlifObject*); // 338
+
 typedef AlifHashT (*HashFunc)(AlifObject*); // 341
 typedef AlifIntT (*InitProc)(AlifObject*, AlifObject*, AlifObject*); // 347
 typedef AlifObject* (*NewFunc)(AlifTypeObject*, AlifObject*, AlifObject*); // 348
@@ -189,7 +192,7 @@ extern AlifTypeObject _alifBaseObjectType_; // 406 /* built-in 'object' */
 
 AlifIntT alifObject_richCompareBool(AlifObject* , AlifObject* , AlifIntT ); // 424
 
-
+AlifIntT alifObject_setAttrString(AlifObject*, const char*, AlifObject*); // 426
 
 // 491
 #define ALIF_TPFLAGS_STATIC_BUILTIN (1 << 1)
@@ -252,7 +255,10 @@ public:
 	ALIFOBJECT_VAR_HEAD{};
 	const char* name{};
 	AlifSizeT basicSize{}, itemSize{};
+
 	Destructor dealloc{};
+	GetAttrFunc getAttr{};
+	SetAttrFunc setAttr{};
 
 	HashFunc hash{};
 
