@@ -15,6 +15,7 @@ InitTable* _alifImportInitTable_ = _alifImportInitTab_; // 59
 
 #define INITTABLE _alifDureRun_.imports.initTable // 69
 #define LAST_MODULE_INDEX _alifDureRun_.imports.lastModuleIndex // 70
+//#define EXTENSIONS _alifDureRun_.imports.extensions // 71
 
 // 80
 #define MODULES(interp) \
@@ -30,9 +31,43 @@ InitTable* _alifImportInitTable_ = _alifImportInitTab_; // 59
 //}
 
 
+//static AlifObject* import_addModule(AlifThread* _tstate, AlifObject* _name)
+//{ // 261
+//	AlifObject* modules_ = _tstate->interpreter->imports.modules_;
+//	if (modules_ == nullptr) {
+//		return nullptr;
+//	}
+//
+//	AlifObject* m_;
+//	if (alifMapping_getOptionalItem(modules_, _name, &m_) < 0) {
+//		return nullptr;
+//	}
+//	if (m_ != nullptr and ALIFMODULE_CHECK(m_)) {
+//		return m_;
+//	}
+//	ALIF_XDECREF(m_);
+//	m_ = alifModule_newObject(_name);
+//	if (m_ == nullptr)
+//		return nullptr;
+//	if (alifObject_setItem(modules_, _name, m_) != 0) {
+//		ALIF_DECREF(m_);
+//		return nullptr;
+//	}
+//
+//	return m_;
+//}
 
 
-
+//AlifObject* alifImport_addModuleRef(const wchar_t* _name) { // 288
+//	AlifObject* nameObj = alifUStr_fromString(_name);
+//	if (nameObj == nullptr) {
+//		return nullptr;
+//	}
+//	AlifThread* tstate = alifThread_get();
+//	AlifObject* module_ = import_addModule(tstate, nameObj);
+//	ALIF_DECREF(nameObj);
+//	return module_;
+//}
 
 
 
@@ -41,6 +76,28 @@ AlifSizeT alifImport_getNextModuleIndex() { // 381
 }
 
 
+#ifdef HAVE_LOCAL_THREAD
+ALIF_LOCAL_THREAD const char* _pkgcontext_ = nullptr;
+# undef PKGCONTEXT
+# define PKGCONTEXT _pkgcontext_
+#endif
+
+const char* alifImport_resolveNameWithPackageContext(const char* name) { // 740
+#ifndef HAVE_LOCAL_THREAD
+	alifThread_acquireLock(EXTENSIONS.mutex, WAIT_LOCK);
+#endif
+	if (PKGCONTEXT != nullptr) {
+		const char* p = strrchr(PKGCONTEXT, '.');
+		if (p != nullptr and strcmp(name, p + 1) == 0) {
+			name = PKGCONTEXT;
+			PKGCONTEXT = nullptr;
+		}
+	}
+#ifndef HAVE_LOCAL_THREAD
+	alifThread_releaseLock(EXTENSIONS.mutex);
+#endif
+	return name;
+}
 
 
 
@@ -66,42 +123,7 @@ AlifSizeT alifImport_getNextModuleIndex() { // 381
 
 
 
-//static AlifObject* import_addModule(AlifThread* _tstate, AlifObject* _name)
-//{
-//	AlifObject* modules_ = _tstate->interpreter->imports.modules_;
-//	if (modules_ == nullptr) {
-//		return nullptr;
-//	}
-//
-//	AlifObject* m_;
-//	if (alifMapping_getOptionalItem(modules_, _name, &m_) < 0) {
-//		return nullptr;
-//	}
-//	if (m_ != nullptr and ALIFMODULE_CHECK(m_)) {
-//		return m_;
-//	}
-//	ALIF_XDECREF(m_);
-//	m_ = alifModule_newObject(_name);
-//	if (m_ == nullptr)
-//		return nullptr;
-//	if (alifObject_setItem(modules_, _name, m_) != 0) {
-//		ALIF_DECREF(m_);
-//		return nullptr;
-//	}
-//
-//	return m_;
-//}
 
-//AlifObject* alifImport_addModuleRef(const wchar_t* _name) { // 288
-//	AlifObject* nameObj = alifUStr_fromString(_name);
-//	if (nameObj == nullptr) {
-//		return nullptr;
-//	}
-//	AlifThread* tstate = alifThread_get();
-//	AlifObject* module_ = import_addModule(tstate, nameObj);
-//	ALIF_DECREF(nameObj);
-//	return module_;
-//}
 
 
 //AlifIntT alifImport_init() { // 3954

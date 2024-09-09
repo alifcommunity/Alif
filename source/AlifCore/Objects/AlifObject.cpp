@@ -1,6 +1,7 @@
 #include "alif.h"
 
 #include "AlifCore_BiaseRefCount.h"
+#include "AlifCore_Dict.h"
 #include "AlifCore_FreeList.h"
 #include "AlifCore_InitConfig.h"
 #include "AlifCore_Object.h"
@@ -174,7 +175,12 @@ void alif_setImmortal(AlifObject* _op) { // 2463
 	alif_setImmortalUntracked(_op);
 }
 
-
+void alifObject_setDeferredRefcount(AlifObject* op) { // 2472
+#ifdef ALIF_GIL_DISABLED
+	alifObject_setGCBits(op, ALIFGC_BITS_DEFERRED);
+	op->refShared = ALIF_REF_SHARED(ALIF_REF_DEFERRED, 0);
+#endif
+}
 
 
 

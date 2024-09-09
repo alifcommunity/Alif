@@ -7,7 +7,7 @@
 
 
 
-
+#define ALIF_REF_DEFERRED (ALIF_SIZET_MAX / 8) // 28
 
 
 
@@ -75,7 +75,7 @@ static inline void _alifObject_initVar(AlifVarObject* _op,
 
 
 
-static inline void alifObject_gcTrack(AlifObject* _op) { // 403
+static inline void _alifObject_gcTrack(AlifObject* _op) { // 403
 	alifObject_setGCBits(_op, ALIFGC_BITS_TRACKED);
 }
 
@@ -85,7 +85,7 @@ static inline void alifObject_gcUntrack(AlifObject* op) { // 443
 
 // 471
 #define ALIFOBJECT_GC_TRACK(_op) \
-        alifObject_gcTrack(ALIFOBJECT_CAST(_op))
+        _alifObject_gcTrack(ALIFOBJECT_CAST(_op))
 #define ALIFOBJECT_GC_UNTRACK(_op) \
         alifObject_gcUntrack(ALIFOBJECT_CAST(_op))
 

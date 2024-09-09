@@ -50,7 +50,7 @@
 #include "AlifTime.h"
 #include "AlifState.h"
 #include "AlifThread.h"
-//#include "ModSupport.h"
+#include "ModSupport.h"
 //#include "Abstract.h"
 //#include "AlifCppType.h"
 //#include "Compile.h"

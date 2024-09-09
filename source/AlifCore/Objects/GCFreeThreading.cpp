@@ -52,6 +52,16 @@ static void record_allocation(AlifThread* tstate) { // 1140
 
 
 
+void alifObject_gcTrack(void* _opRaw) { // 1717
+	AlifObject* op_ = ALIFOBJECT_CAST(_opRaw);
+	if (ALIFOBJECT_GC_IS_TRACKED(op_)) {
+		//ALIFOBJEC_ASSERT_FAILED_MSG(op,
+		//	"object already tracked "
+		//	"by the garbage collector");
+	}
+	ALIFOBJECT_GC_TRACK(op_);
+}
+
 
 AlifIntT alifObject_isGC(AlifObject* _obj) { // 1748
 	return _alifObject_isGC(_obj);
@@ -70,7 +80,8 @@ void alifObject_gcLink(AlifObject* _op) { // 1763
 	record_allocation(alifThread_get());
 }
 
-static AlifObject* gc_alloc(AlifTypeObject* _tp, AlifUSizeT _basicSize, AlifUSizeT _preSize) { // 1789
+static AlifObject* gc_alloc(AlifTypeObject* _tp,
+	AlifUSizeT _basicSize, AlifUSizeT _preSize) { // 1789
 	AlifThread* thread = alifThread_get();
 	if (_basicSize > LLONG_MAX - _preSize) {
 		return nullptr;
