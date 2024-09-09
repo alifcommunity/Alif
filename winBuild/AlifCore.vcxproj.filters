@@ -408,6 +408,11 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DictState.h">
       <Filter>Include\Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_TypeObject.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Equal.h">
+      <Filter>Include</Filter>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ObjectDeferred.h">
       <Filter>Include\Core</Filter>
     </ClInclude>

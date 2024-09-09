@@ -149,6 +149,7 @@ typedef AlifIntT (*TraverseProc)(AlifObject*, VisitProc, void*); // 331
 
 typedef void (*FreeFunc)(void*); // 334
 typedef void (*Destructor)(AlifObject*); // 335
+typedef AlifUSizeT (*HashFunc)(AlifObject*); // 341
 typedef AlifIntT (*InitProc)(AlifObject*, AlifObject*, AlifObject*); // 347
 typedef AlifObject* (*NewFunc)(AlifTypeObject*, AlifObject*, AlifObject*); // 348
 
@@ -167,7 +168,7 @@ typedef AlifObject* (*NewFunc)(AlifTypeObject*, AlifObject*, AlifObject*); // 34
 
 extern AlifTypeObject _alifTypeType_; // 405
 
-
+AlifIntT alifObject_richCompareBool(AlifObject* , AlifObject* , AlifIntT ); // 424
 
 
 
@@ -210,6 +211,13 @@ extern AlifObject _alifNoneStruct_; // 623
 #define ALIF_NONE (&_alifNoneStruct_) // 628
 
 
+// 654
+#define ALIF_LT 0
+#define ALIF_LE 1
+#define ALIF_EQ 2
+#define ALIF_NE 3
+#define ALIF_GT 4
+#define ALIF_GE 5
 
 
 /* -------------------------------------------------------------------------------------------------------------- */
@@ -227,14 +235,17 @@ public:
 	AlifSizeT basicSize{}, itemSize{};
 	Destructor dealloc{};
 
+	HashFunc hash{};
+
 	unsigned long flags{};
 
 	AlifTypeObject* base{};
+	AlifObject* dict{};
 	InitProc init{};
 	NewFunc new_{};
 	FreeFunc free{};
 	Inquiry isGC{};
-
+	void* subclasses{};
 };
 
 
@@ -295,3 +306,6 @@ static inline AlifIntT alifType_hasFeature(AlifTypeObject* _type, unsigned long 
 	flags = ALIFATOMIC_LOAD_ULONG_RELAXED(&_type->flags);
 	return ((flags & _feature) != 0);
 }
+
+
+#define ALIFTYPE_FASTSUBCLASS(_type, _flag) alifType_hasFeature((_type), (_flag)) // 766

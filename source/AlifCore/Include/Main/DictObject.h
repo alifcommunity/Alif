@@ -3,6 +3,14 @@
 
 extern AlifTypeObject _alifDictType_; // 15
 
+
+// 17
+#define ALIFDICT_CHECK(_op) \
+                 ALIFTYPE_FASTSUBCLASS(ALIF_TYPE(_op), ALIF_TPFLAGS_DICT_SUBCLASS)
+//19
+#define ALIFDICT_CHECKEXACT(_op) ALIF_IS_TYPE((_op), &_alifDictType_)
+
+
 AlifObject* alifDict_new(); // 21
 
 

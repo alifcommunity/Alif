@@ -6,6 +6,8 @@
 #include "AlifCore_ThreadState.h"
 #include "AlifCore_TypeID.h"
 #include "AlifCore_Memory.h"
+#include "AlifCore_TypeObject.h"
+
 
 class StopTheWorldState { // 50
 public:
@@ -84,6 +86,8 @@ public:
 
 	AlifDictState dictState{};
 	AlifMemInterpFreeQueue memFreeQueue{};
+
+	TypesState types{};
 
 
 	//class TypesState types;

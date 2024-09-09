@@ -89,7 +89,50 @@ static inline void alifObject_gcUntrack(AlifObject* op) { // 443
 #define ALIFOBJECT_GC_UNTRACK(_op) \
         alifObject_gcUntrack(ALIFOBJECT_CAST(_op))
 
+static inline AlifIntT alif_tryIncrefFast(AlifObject* _op) { // 492
+	uint32_t local = alifAtomic_loadUint32Relaxed(&_op->refLocal);
+	local += 1;
+	if (local == 0) {
+		// immortal
+		return 1;
+	}
+	if (alif_isOwnedByCurrentThread(_op)) {
+		alifAtomic_storeUint32Relaxed(&_op->refLocal, local);
+		return 1;
+	}
+	return 0;
+}
 
+static inline int alif_tryIncRefShared(AlifObject* _op) { // 511
+	AlifSizeT shared = alifAtomic_loadSizeRelaxed(&_op->refShared);
+	for (;;) {
+
+		if (shared == 0 || shared == ALIF_REF_MERGED) {
+			return 0;
+		}
+
+		if (alifAtomic_compareExchangeSize(
+			&_op->refShared,
+			&shared,
+			shared + (1 << ALIF_REF_SHARED_SHIFT))) {
+			return 1;
+		}
+	}
+}
+
+static inline AlifIntT alif_tryIncrefCompare(AlifObject** _src, AlifObject* _op) { // 536
+	if (alif_tryIncrefFast(_op)) {
+		return 1;
+	}
+	if (!alif_tryIncRefShared(_op)) {
+		return 0;
+	}
+	if (_op != alifAtomic_loadPtr(_src)) {
+		ALIF_DECREF(_op);
+		return 0;
+	}
+	return 1;
+}
 
 
 static inline AlifIntT _alifObject_isGC(AlifObject* obj) { // 714
@@ -97,6 +140,17 @@ static inline AlifIntT _alifObject_isGC(AlifObject* obj) { // 714
 	return (ALIFTYPE_IS_GC(type) and (type->isGC == nullptr or type->isGC(obj)));
 }
 
+
+static inline AlifUSizeT alifObject_hashFast(AlifObject* _op) { // 724 
+	if (ALIFUSTR_CHECKEXACT(_op)) {
+		AlifUSizeT hash = alifAtomic_loadSizeRelaxed(
+			 &ALIFASCIIOBJECT_CAST(_op)->hash);
+		if (hash != -1) {
+			return hash;
+		}
+	}
+	return alifObject_hash(_op);
+}
 
 
 static inline size_t alifType_preHeaderSize(AlifTypeObject* _tp) { // 740 
