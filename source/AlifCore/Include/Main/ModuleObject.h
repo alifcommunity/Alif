@@ -5,12 +5,16 @@
 
 extern AlifTypeObject _alifModuleType_; // 10
 
+// 12
+#define ALIFMODULE_CHECK(_op) ALIFOBJECT_TYPECHECK((_op), &_alifModuleType_)
+#define ALIFMODULE_CHECKEXACT(_op) ALIF_IS_TYPE((_op), &_alifModuleType_)
+
 AlifObject* alifModule_newObject(AlifObject*); // 16
 
 
 AlifObject* alifModule_new(const char*); // 20
 
-
+AlifObject* alifModule_getNameObject(AlifObject*); // 25
 
 
 class AlifModuleDefBase { // 39

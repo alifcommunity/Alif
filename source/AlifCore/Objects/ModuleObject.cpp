@@ -112,6 +112,36 @@ AlifObject* alifModule_new(const char* name) { // 137
 }
 
 
+
+static AlifIntT addMethods_toObject(AlifObject* module,
+	AlifObject* name, AlifMethodDef* functions) { // 169
+	AlifObject* func{};
+	AlifMethodDef* fdef{};
+
+	for (fdef = functions; fdef->name != nullptr; fdef++) {
+		if ((fdef->flags & METH_CLASS) ||
+			(fdef->flags & METH_STATIC)) {
+			//alifErr_setString(_alifExcValueError_,
+			//	"module functions cannot set"
+			//	" METH_CLASS or METH_STATIC");
+			return -1;
+		}
+		func = ALIFCFUNCTION_NEWEX(fdef, (AlifObject*)module, name);
+		if (func == nullptr) {
+			return -1;
+		}
+		alifObject_setDeferredRefcount(func);
+		if (alifObject_setAttrString(module, fdef->name, func) != 0) {
+			ALIF_DECREF(func);
+			return -1;
+		}
+		ALIF_DECREF(func);
+	}
+
+	return 0;
+}
+
+
 AlifObject* alifModule_createInitialized(AlifModuleDef* _module) { // 209
 
 	const char* name{};
@@ -166,7 +196,34 @@ AlifIntT alifModule_addFunctions(AlifObject* _m, AlifMethodDef* _functions) { //
 
 
 
+AlifObject* alifModule_getNameObject(AlifObject* _mod) { // 561
+	AlifObject* name{};
 
+	if (!ALIFMODULE_CHECK(_mod)) {
+		//alifErr_badArgument();
+		return nullptr;
+	}
+	AlifObject* dict = ((AlifModuleObject*)_mod)->dict;  // borrowed reference
+	if (dict == nullptr or !ALIFDICT_CHECK(dict)) {
+		goto error;
+	}
+	// name
+	if (alifDict_getItemRef(dict, &ALIF_ID(__name__), &name) <= 0) {
+		// error or not found
+		goto error;
+	}
+	if (!ALIFUSTR_CHECK(name)) {
+		ALIF_DECREF(name);
+		goto error;
+	}
+	return name;
+
+error:
+	//if (!alifErr_occurred()) {
+	//	alifErr_setString(_alifExcSystemError_, "nameless module");
+	//}
+	return nullptr;
+}
 
 
 

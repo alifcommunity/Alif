@@ -123,6 +123,11 @@ static inline AlifTypeObject* alif_type(AlifObject* _ob) { // 250
 #define ALIF_TYPE(_ob) alif_type(ALIFOBJECT_CAST(_ob))
 
 
+static inline AlifSizeT alif_size(AlifObject* ob) { // 265
+	return  ALIFVAROBJECT_CAST(ob)->objSize;
+}
+#define ALIF_SIZE(ob) alif_size(ALIFOBJECT_CAST(ob))
+
 static inline AlifIntT alif_isType(AlifObject* _obj, AlifTypeObject* _type) { // 274
 	return ALIF_TYPE(_obj) == _type;
 }
@@ -166,7 +171,21 @@ typedef AlifObject* (*NewFunc)(AlifTypeObject*, AlifObject*, AlifObject*); // 34
     } while (0)
 
 
+
+
+
+AlifIntT alifType_isSubType(AlifTypeObject*, AlifTypeObject*);
+
+static inline AlifIntT alifObject_typeCheck(AlifObject* _ob, AlifTypeObject* _type) {
+	return ALIF_IS_TYPE(_ob, _type) or alifType_isSubType(ALIF_TYPE(_ob), _type);
+}
+#define ALIFOBJECT_TYPECHECK(ob, type) alifObject_typeCheck(ALIFOBJECT_CAST(ob), (type))
+
+
+
+
 extern AlifTypeObject _alifTypeType_; // 405
+extern AlifTypeObject _alifBaseObjectType_; // 406 /* built-in 'object' */
 
 AlifIntT alifObject_richCompareBool(AlifObject* , AlifObject* , AlifIntT ); // 424
 
@@ -245,6 +264,7 @@ public:
 	NewFunc new_{};
 	FreeFunc free{};
 	Inquiry isGC{};
+	AlifObject* methResOrder{}; // mro
 	void* subclasses{};
 };
 

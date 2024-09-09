@@ -208,7 +208,7 @@ static AlifIntT alifCore_builtinsInit(AlifThread* _thread) { // 775
 	AlifInterpreter* interp = _thread->interpreter;
 
 	AlifObject* biMod = alifBuiltin_init(interp);
-	//if (biMod == nullptr) goto error;
+	if (biMod == nullptr) goto error;
 
 	////modules = interp->imports.modules_; // alifImport_getModule
 	////if (alifImport_fixupBuiltin(_thread, biMod, "builtins", modules) < 0) {
@@ -222,8 +222,8 @@ static AlifIntT alifCore_builtinsInit(AlifThread* _thread) { // 775
 
 	return 1;
 
-	//error:
-		//ALIF_XDECREF(biMod);
+	error:
+		ALIF_XDECREF(biMod);
 	return -1;
 }
 

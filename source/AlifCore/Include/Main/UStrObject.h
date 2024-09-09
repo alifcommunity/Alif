@@ -18,8 +18,9 @@ using AlifUCS1 = uint8_t;
 
 extern AlifTypeObject _alifUStrType_; // 103
 
-
-
+// 106
+#define ALIFUSTR_CHECK(op) \
+    ALIFTYPE_FASTSUBCLASS(ALIF_TYPE(op), ALIF_TPFLAGS_UNICODE_SUBCLASS)
 #define ALIFUSTR_CHECKEXACT(op) ALIF_IS_TYPE((op), &_alifUStrType_) // 108
 
 

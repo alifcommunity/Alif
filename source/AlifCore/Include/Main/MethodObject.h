@@ -29,4 +29,8 @@ public:
 #define METHOD_KEYWORDS 0x0002 // 87
 
 
+#define METH_CLASS    0x0010 // 95
+#define METH_STATIC   0x0020
+
+
 #define METHOD_FASTCALL 0x0080 // 106

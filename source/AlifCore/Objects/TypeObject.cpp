@@ -79,6 +79,48 @@ AlifObject* alifType_allocNoTrack(AlifTypeObject* _type, AlifSizeT _nitems) { //
 
 
 
+static AlifIntT typeIsSubType_baseChain(AlifTypeObject* _a, AlifTypeObject* _b) { // 2636
+	do {
+		if (_a == _b)
+			return 1;
+		_a = _a->base;
+	} while (_a != nullptr);
+
+	return (_b == &_alifBaseObjectType_);
+}
+
+
+static AlifIntT isSubType_withMethResOrder(AlifObject* _methResOrder,
+	AlifTypeObject* _a, AlifTypeObject* _b) { // 2648
+	AlifIntT res{};
+	if (_methResOrder != nullptr) {
+		AlifSizeT i, n;
+		n = ALIFTUPLE_GET_SIZE(_methResOrder);
+		res = 0;
+		for (i = 0; i < n; i++) {
+			if (ALIFTUPLE_GET_ITEM(_methResOrder, i) == (AlifObject*)_b) {
+				res = 1;
+				break;
+			}
+		}
+	}
+	else {
+		/* a is not completely initialized yet; follow base */
+		res = typeIsSubType_baseChain(_a, _b);
+	}
+	return res;
+}
+
+
+AlifIntT alifType_isSubtype(AlifTypeObject* a, AlifTypeObject* b) { // 2673
+	return isSubType_withMethResOrder(a->methResOrder, a, b);
+}
+
+
+
+
+
+
 
 static void type_dealloc(AlifObject* self) { // 5911
 	AlifTypeObject* type = (AlifTypeObject*)self;
@@ -129,4 +171,28 @@ AlifTypeObject _alifTypeType_ = { // 6195
 	ALIF_TPFLAGS_ITEMS_AT_END,
 
 	.base = 0,
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+AlifTypeObject _alifBaseObjectType_ = { // 7453
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "كائن",              
+	.basicSize = sizeof(AlifObject),
+	.itemSize = 0,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE,
 };
