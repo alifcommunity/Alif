@@ -113,25 +113,25 @@ AlifObject* alifModule_new(const char* name) { // 137
 
 
 
-static AlifIntT addMethods_toObject(AlifObject* module,
-	AlifObject* name, AlifMethodDef* functions) { // 169
+static AlifIntT addMethods_toObject(AlifObject* _module,
+	AlifObject* _name, AlifMethodDef* _functions) { // 169
 	AlifObject* func{};
 	AlifMethodDef* fdef{};
 
-	for (fdef = functions; fdef->name != nullptr; fdef++) {
-		if ((fdef->flags & METHOD_CLASS) ||
+	for (fdef = _functions; fdef->name != nullptr; fdef++) {
+		if ((fdef->flags & METHOD_CLASS) or
 			(fdef->flags & METHOD_STATIC)) {
 			//alifErr_setString(_alifExcValueError_,
 			//	"module functions cannot set"
 			//	" METH_CLASS or METH_STATIC");
 			return -1;
 		}
-		func = ALIFCPPFUNCTION_NEWEX(fdef, (AlifObject*)module, name);
+		func = ALIFCPPFUNCTION_NEWEX(fdef, (AlifObject*)_module, _name);
 		if (func == nullptr) {
 			return -1;
 		}
 		alifObject_setDeferredRefcount(func);
-		if (alifObject_setAttrString(module, fdef->name, func) != 0) {
+		if (alifObject_setAttrString(_module, fdef->name, func) != 0) {
 			ALIF_DECREF(func);
 			return -1;
 		}

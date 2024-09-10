@@ -81,9 +81,9 @@ void alifObject_gcLink(AlifObject* _op) { // 1763
 }
 
 static AlifObject* gc_alloc(AlifTypeObject* _tp,
-	AlifUSizeT _basicSize, AlifUSizeT _preSize) { // 1789
+	AlifUSizeT _basicSize, AlifUSizeT _preSize) { // 1779
 	AlifThread* thread = alifThread_get();
-	if (_basicSize > LLONG_MAX - _preSize) {
+	if (_basicSize > ALIF_SIZET_MAX - _preSize) {
 		return nullptr;
 		//return alifErr_noMemory(thread);
 	}

@@ -28,19 +28,19 @@ AlifObject* alifCPPMethod_new(AlifMethodDef* _ml,
 		vectorCall = nullptr;
 		break;
 	case METHOD_FASTCALL:
-		vectorCall = cfunction_vectorCallFastCall;
+		//vectorCall = cfunction_vectorCallFastCall;
 		break;
 	case METHOD_FASTCALL | METHOD_KEYWORDS:
-		vectorCall = cfunction_vectorCallFastCallKeywords;
+		//vectorCall = cfunction_vectorCallFastCallKeywords;
 		break;
 	case METHOD_NOARGS:
-		vectorCall = cfunction_vectorCallNoArgs;
+		//vectorCall = cfunction_vectorCallNoArgs;
 		break;
 	case METHOD_O:
-		vectorCall = cfunction_vectorCallO;
+		//vectorCall = cfunction_vectorCallO;
 		break;
 	case METHOD_METHOD | METHOD_FASTCALL | METHOD_KEYWORDS:
-		vectorCall = cfunction_vectorCallFastCallKeyWordsMethod;
+		//vectorCall = cfunction_vectorCallFastCallKeyWordsMethod;
 		break;
 	default:
 		//alifErr_format(_alifExcSystemError_,
