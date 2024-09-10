@@ -8,24 +8,23 @@
 
 AlifTypeObject _alifBoolType_ = { // 171
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
-	.name = "bool",
-	.basicSize = offsetof(struct AlifLongObject, longValue.digit),  /* tp_basicsize */
-	.itemSize = sizeof(uint32_t),                              /* tp_itemsize */
+	.name = "منطق",
+	.basicSize = offsetof(AlifLongObject, longValue.digit),
+	.itemSize = sizeof(digit),
 };
 
-class AlifLongObject _alifFalseClass_ = {
+AlifLongObject _alifFalseClass_ = { // 215
 	ALIFOBJECT_HEAD_INIT(&_alifBoolType_),
 	{
-		.tag = _PyLong_TRUE_TAG,
-		.digit = { 0 }
+		.tag = ALIFLONG_FALSE_TAG,
+		.digit = {0},
 	}
-}
 };
 
-class AlifLongObject _alifTrueClass_ = {
+AlifLongObject _alifTrueClass_ = { // 222
 	ALIFOBJECT_HEAD_INIT(&_alifBoolType_),
 	{
-		.tag = _PyLong_TRUE_TAG,
-		.digit = { 1 }
+		.tag = ALIFLONG_TRUE_TAG,
+		.digit = {1},
 	}
 };

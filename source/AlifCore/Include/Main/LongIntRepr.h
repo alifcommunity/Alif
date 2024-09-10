@@ -1,5 +1,17 @@
 #pragma once
 
+
+
+typedef uint32_t digit; // 43
+
+
+
+
+
+
+
+
+
 class AlifLongValue { // 93
 public:
 	uintptr_t tag{};

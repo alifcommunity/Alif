@@ -87,32 +87,32 @@ AlifVarObject* alifObject_initVar(AlifVarObject* _op,
 	return _op;
 }
 
-int _alifSwappedOp_[] = { ALIF_GT, ALIF_GE, ALIF_EQ, ALIF_NE, ALIF_LT, ALIF_LE }; // 953
+AlifIntT _alifSwappedOp_[] = { ALIF_GT, ALIF_GE, ALIF_EQ, ALIF_NE, ALIF_LT, ALIF_LE }; // 953
 
 static const char* const _opStrings_[] = { "<", "<=", "==", "!=", ">", ">=" }; // 955
 
-static AlifObject* do_richcompare(AlifThread* _tstate, AlifObject* _v, AlifObject* _w, int _op)
-{
-	RichCmpFunc f;
-	AlifObject* res;
-	int checked_reverse_op = 0;
+static AlifObject* do_richCompare(AlifThread* _thread,
+	AlifObject* _v, AlifObject* _w, AlifIntT _op) { // 959
+	RichCmpFunc f{};
+	AlifObject* res{};
+	AlifIntT checkedReverseOp = 0;
 
 	if (!ALIF_IS_TYPE(_v, ALIF_TYPE(_w)) and
 		alifType_isSubType(ALIF_TYPE(_w), ALIF_TYPE(_v)) and
-		(f = ALIF_TYPE(_w)->richCompare) != NULL) {
-		checked_reverse_op = 1;
+		(f = ALIF_TYPE(_w)->richCompare) != nullptr) {
+		checkedReverseOp = 1;
 		res = (*f)(_w, _v, _alifSwappedOp_[_op]);
 		if (res != ALIF_NOTIMPLEMENTED)
 			return res;
 		ALIF_DECREF(res);
 	}
-	if ((f = ALIF_TYPE(_v)->richCompare) != NULL) {
+	if ((f = ALIF_TYPE(_v)->richCompare) != nullptr) {
 		res = (*f)(_v, _w, _op);
 		if (res != ALIF_NOTIMPLEMENTED)
 			return res;
 		ALIF_DECREF(res);
 	}
-	if (!checked_reverse_op && (f = ALIF_TYPE(_w)->richCompare) != NULL) {
+	if (!checkedReverseOp and (f = ALIF_TYPE(_w)->richCompare) != nullptr) {
 		res = (*f)(_w, _v, _alifSwappedOp_[_op]);
 		if (res != ALIF_NOTIMPLEMENTED)
 			return res;
@@ -127,30 +127,30 @@ static AlifObject* do_richcompare(AlifThread* _tstate, AlifObject* _v, AlifObjec
 		res = (_v != _w) ? ALIF_TRUE : ALIF_FALSE;
 		break;
 	default:
-		alifErr_format(_tstate, alifExc_typeError,
-			"'%s' ليس مدعوم بين حالات من '%.100 s' و '%.100 s'",
-			_opStrings_[_op],
-			ALIF_TYPE(_v)->name,
-			ALIF_TYPE(_w)->name);
-		return NULL;
+		//alifErr_format(_tstate, _alifExctypeError_,
+		//	"'%s' ليس مدعوم بين حالات من '%.100 s' و '%.100 s'",
+		//	_opStrings_[_op],
+		//	ALIF_TYPE(_v)->name,
+		//	ALIF_TYPE(_w)->name);
+		return nullptr;
 	}
 	return ALIF_NEWREF(res);
 }
 
-AlifObject* alifObject_richCompare(AlifObject* _v, AlifObject* _w, int _op) { // 1011
-	AlifThread* tstate = alifThread_get();
+AlifObject* alifObject_richCompare(AlifObject* _v, AlifObject* _w, AlifIntT _op) { // 1011
+	AlifThread* thread = alifThread_get();
 
-	if (_v == NULL || _w == NULL) {
-		if (!alifErr_occurred(tstate)) {
-			//alifErr_badInternalCall();
-		}
-		return NULL;
+	if (_v == nullptr or _w == nullptr) {
+		//if (!alifErr_occurred(thread)) {
+		//	ALIFERR_BADINTERNALCALLl();
+		//}
+		return nullptr;
 	}
-	if (alif_enterRecursiveCallTstate(tstate, " in comparison")) {
-		return NULL;
+	if (alif_enterRecursiveCallTstate(thread, " in comparison")) {
+		return nullptr;
 	}
-	AlifObject* res = do_richcompare(tstate, _v, _w, _op);
-	alif_leaveRecursiveCallTstate(tstate);
+	AlifObject* res = do_richCompare(thread, _v, _w, _op);
+	alif_leaveRecursiveCallTstate(thread);
 	return res;
 }
 
