@@ -29,7 +29,7 @@
 #include "RefCount.h"
 #include "ObjImpl.h"
 //#include "IntegerObject.h"
-//#include "BoolObject.h"
+#include "BoolObject.h"
 //#include "FloatObject.h"
 #include "UStrObject.h"
 //#include "AlifErrors.h"

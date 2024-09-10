@@ -41,6 +41,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_LifeCycle.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_LList.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Lock.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Long.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Memory.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Mimalloc.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ModSupport.h" />
@@ -86,7 +87,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\InitConfig.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\ListObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Lock.h" />
-    <ClInclude Include="..\source\AlifCore\Include\Main\LongIntRepr.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\LongIntrerpr.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\MethodObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\mimalloc\mimalloc.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\mimalloc\mimalloc\atomic.h" />

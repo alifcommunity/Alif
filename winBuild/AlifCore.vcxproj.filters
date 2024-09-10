@@ -426,6 +426,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\LongIntrerpr.h">
       <Filter>Include\Main</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Long.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Include">

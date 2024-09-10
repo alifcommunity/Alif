@@ -93,38 +93,38 @@ static const char* const _opStrings_[] = { "<", "<=", "==", "!=", ">", ">=" }; /
 
 static AlifObject* do_richCompare(AlifThread* _thread,
 	AlifObject* _v, AlifObject* _w, AlifIntT _op) { // 959
-	RichCmpFunc f{};
-	AlifObject* res{};
+	RichCmpFunc f_{};
+	AlifObject* res_{};
 	AlifIntT checkedReverseOp = 0;
 
 	if (!ALIF_IS_TYPE(_v, ALIF_TYPE(_w)) and
 		alifType_isSubType(ALIF_TYPE(_w), ALIF_TYPE(_v)) and
-		(f = ALIF_TYPE(_w)->richCompare) != nullptr) {
+		(f_ = ALIF_TYPE(_w)->richCompare) != nullptr) {
 		checkedReverseOp = 1;
-		res = (*f)(_w, _v, _alifSwappedOp_[_op]);
-		if (res != ALIF_NOTIMPLEMENTED)
-			return res;
-		ALIF_DECREF(res);
+		res_ = (*f_)(_w, _v, _alifSwappedOp_[_op]);
+		if (res_ != ALIF_NOTIMPLEMENTED)
+			return res_;
+		ALIF_DECREF(res_);
 	}
-	if ((f = ALIF_TYPE(_v)->richCompare) != nullptr) {
-		res = (*f)(_v, _w, _op);
-		if (res != ALIF_NOTIMPLEMENTED)
-			return res;
-		ALIF_DECREF(res);
+	if ((f_ = ALIF_TYPE(_v)->richCompare) != nullptr) {
+		res_ = (*f_)(_v, _w, _op);
+		if (res_ != ALIF_NOTIMPLEMENTED)
+			return res_;
+		ALIF_DECREF(res_);
 	}
-	if (!checkedReverseOp and (f = ALIF_TYPE(_w)->richCompare) != nullptr) {
-		res = (*f)(_w, _v, _alifSwappedOp_[_op]);
-		if (res != ALIF_NOTIMPLEMENTED)
-			return res;
-		ALIF_DECREF(res);
+	if (!checkedReverseOp and (f_ = ALIF_TYPE(_w)->richCompare) != nullptr) {
+		res_ = (*f_)(_w, _v, _alifSwappedOp_[_op]);
+		if (res_ != ALIF_NOTIMPLEMENTED)
+			return res_;
+		ALIF_DECREF(res_);
 	}
 
 	switch (_op) {
 	case ALIF_EQ:
-		res = (_v == _w) ? ALIF_TRUE : ALIF_FALSE;
+		res_ = (_v == _w) ? ALIF_TRUE : ALIF_FALSE;
 		break;
 	case ALIF_NE:
-		res = (_v != _w) ? ALIF_TRUE : ALIF_FALSE;
+		res_ = (_v != _w) ? ALIF_TRUE : ALIF_FALSE;
 		break;
 	default:
 		//alifErr_format(_tstate, _alifExctypeError_,
@@ -134,7 +134,7 @@ static AlifObject* do_richCompare(AlifThread* _thread,
 		//	ALIF_TYPE(_w)->name);
 		return nullptr;
 	}
-	return ALIF_NEWREF(res);
+	return ALIF_NEWREF(res_);
 }
 
 AlifObject* alifObject_richCompare(AlifObject* _v, AlifObject* _w, AlifIntT _op) { // 1011
@@ -146,18 +146,18 @@ AlifObject* alifObject_richCompare(AlifObject* _v, AlifObject* _w, AlifIntT _op)
 		//}
 		return nullptr;
 	}
-	if (alif_enterRecursiveCallTstate(thread, " in comparison")) {
+	if (alif_enterRecursiveCallThreadState(thread, " في المقارنة")) {
 		return nullptr;
 	}
-	AlifObject* res = do_richCompare(thread, _v, _w, _op);
-	alif_leaveRecursiveCallTstate(thread);
-	return res;
+	AlifObject* res_ = do_richCompare(thread, _v, _w, _op);
+	alif_leaveRecursiveCallThreadState(thread);
+	return res_;
 }
 
 
 AlifIntT alifObject_richCompareBool(AlifObject* _v, AlifObject* _w, AlifIntT _op) { // 1033
-	AlifObject* res;
-	AlifIntT ok;
+	AlifObject* res_;
+	AlifIntT ok_;
 	if (_v == _w) {
 		if (_op == ALIF_EQ)
 			return 1;
@@ -165,15 +165,15 @@ AlifIntT alifObject_richCompareBool(AlifObject* _v, AlifObject* _w, AlifIntT _op
 			return 0;
 	}
 
-	res = alifObject_richCompare(_v, _w, _op);
-	if (res == nullptr)
+	res_ = alifObject_richCompare(_v, _w, _op);
+	if (res_ == nullptr)
 		return -1;
-	if (ALIFBOOL_CHECK(res))
-		ok = (res == ALIF_TRUE);
+	if (ALIFBOOL_CHECK(res_))
+		ok_ = (res_ == ALIF_TRUE);
 	else
-		ok = alifObject_isTrue(res);
-	ALIF_DECREF(res);
-	return ok;
+		ok_ = alifObject_isTrue(res_);
+	ALIF_DECREF(res_);
+	return ok_;
 }
 
 AlifUSizeT alifObject_hashNotImplemented(AlifObject* _v) { // 1059
@@ -198,17 +198,38 @@ AlifUSizeT alifObject_hash(AlifObject* _v) { // 1067
 
 AlifIntT alifObject_setAttrString(AlifObject* _v, const char* _name, AlifObject* _w) { // 1126
 	AlifObject* s{};
-	AlifIntT res{};
+	AlifIntT res_{};
 
 	if (ALIF_TYPE(_v)->setAttr != nullptr)
 		return (*ALIF_TYPE(_v)->setAttr)(_v, (char*)_name, _w);
 	s = alifUStr_internFromString(_name);
 	if (s == nullptr) return -1;
-	res = alifObject_setAttr(_v, s, _w);
+	res_ = alifObject_setAttr(_v, s, _w);
 	ALIF_XDECREF(s);
-	return res;
+	return res_;
 }
 
+AlifIntT alifObject_isTrue(AlifObject* _v) { // 1845
+	AlifSizeT res_;
+	if (_v == ALIF_TRUE)
+		return 1;
+	if (_v == ALIF_FALSE)
+		return 0;
+	if (_v == ALIF_NONE)
+		return 0;
+	else if (ALIF_TYPE(_v)->asNumber != nullptr &&
+		ALIF_TYPE(_v)->asNumber->bool_ != nullptr)
+		res_ = (*ALIF_TYPE(_v)->asNumber->bool_)(_v);
+	else if (ALIF_TYPE(_v)->asMapping != nullptr &&
+		ALIF_TYPE(_v)->asMapping->length != nullptr)
+		res_ = (*ALIF_TYPE(_v)->asMapping->length)(_v);
+	else if (ALIF_TYPE(_v)->asSequence != nullptr &&
+		ALIF_TYPE(_v)->asSequence->length != nullptr)
+		res_ = (*ALIF_TYPE(_v)->asSequence->length)(_v);
+	else
+		return 1;
+	return (res_ > 0) ? 1 : ALIF_SAFE_DOWNCAST(res_, AlifSizeT, AlifIntT);
+}
 
 AlifTypeObject _alifNoneType_ = { // 2049
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
@@ -218,6 +239,13 @@ AlifTypeObject _alifNoneType_ = { // 2049
 };
 
 AlifObject _alifNoneStruct_ = ALIFOBJECT_HEAD_INIT(&_alifNoneType_); // 2090
+
+AlifTypeObject _alifNotImplementedType_ = { // 2149
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "لم يتم تنفيذ النوع",
+};
+
+AlifObject _alifNotImplementedClass_ = ALIFOBJECT_HEAD_INIT(&_alifNotImplementedType_); // 2190
 
 
 static inline void new_reference(AlifObject* _op) { // 2405
