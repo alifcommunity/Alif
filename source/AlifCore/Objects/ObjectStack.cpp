@@ -5,9 +5,9 @@
 #include "AlifCore_ObjectStack.h"
 
 
+extern AlifObjectStackChunk* alifObjectStackChunk_new();
 
-
-AlifObjectStackChunk* alifObjectStackChunk_new(void) { // 11
+AlifObjectStackChunk* alifObjectStackChunk_new() { // 11
 	AlifObjectStackChunk* buf = (AlifObjectStackChunk*)ALIF_FREELIST_POP_MEM(objectStackChunks);
 	if (buf == nullptr) {
 		buf = (AlifObjectStackChunk*)alifMem_objAlloc(sizeof(AlifObjectStackChunk));

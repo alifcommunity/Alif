@@ -176,13 +176,13 @@ AlifIntT alifObject_richCompareBool(AlifObject* _v, AlifObject* _w, AlifIntT _op
 	return ok;
 }
 
-AlifUSizeT alifObject_hashNotImplemented(AlifObject* _v) { // 1059
+AlifHashT alifObject_hashNotImplemented(AlifObject* _v) { // 1059
 	//alifErrFormat(_alifExcTypeError_, "unhashable type: '%.200s'",
 	//	ALIF_TYPE(_v)->name);
 	return -1;
 }
 
-AlifUSizeT alifObject_hash(AlifObject* _v) { // 1067
+AlifHashT alifObject_hash(AlifObject* _v) { // 1067
 	AlifTypeObject* tp_ = ALIF_TYPE(_v);
 	if (tp_->hash != nullptr)
 		return (*tp_->hash)(_v);

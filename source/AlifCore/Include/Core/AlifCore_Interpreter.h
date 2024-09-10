@@ -3,9 +3,10 @@
 
 #include "AlifCore_DictState.h"
 #include "AlifCore_EvalState.h"
-#include "AlifCore_ThreadState.h"
+#include "AlifCore_GC.h"
 #include "AlifCore_TypeID.h"
 #include "AlifCore_Memory.h"
+#include "AlifCore_ThreadState.h"
 #include "AlifCore_TypeObject.h"
 
 
@@ -60,8 +61,6 @@ public:
 	unsigned long featureFlags{};
 
 	//AlifFrameEvalFunction evalFrame{};
-
-	AlifTypeIDPool typeIDs{};
 
 	GCDureRunState gc{};
 

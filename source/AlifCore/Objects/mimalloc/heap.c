@@ -98,7 +98,7 @@ static bool mi_heap_page_collect(mi_heap_t* heap, mi_page_queue_t* pq, mi_page_t
   if (mi_page_all_free(page)) {
     // no more used blocks, free the page.
     // note: this will free retired pages as well.
-    bool freed = _PyMem_mi_page_maybe_free(page, pq, collect >= MI_FORCE);
+    bool freed = alifMemMiPage_maybeFree(page, pq, collect >= MI_FORCE);
     if (!freed && collect == MI_ABANDON) {
       _mi_page_abandon(page, pq);
     }
