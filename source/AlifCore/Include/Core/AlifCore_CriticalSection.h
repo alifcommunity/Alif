@@ -64,7 +64,7 @@ static inline void _alifCriticalSection_end(AlifCriticalSection* _c) { // 145
 	ALIFMUTEX_UNLOCK(_c->mutex);
 	_alifCriticalSection_pop(_c);
 }
-#define ALIFCRITICALSECTION_End _alifCriticalSection_end
+#define ALIFCRITICALSECTION_END _alifCriticalSection_end
 
 
 
