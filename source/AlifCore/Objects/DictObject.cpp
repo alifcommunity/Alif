@@ -848,7 +848,7 @@ static AlifIntT setItemTake2_lockHeld(AlifDictObject* _mp,
 
 AlifIntT alifDict_setItemTake2(AlifDictObject* _mp,
 	AlifObject* _key, AlifObject* _value) { // 2449
-	AlifIntT res_;
+	AlifIntT res_{};
 	ALIF_BEGIN_CRITICAL_SECTION(_mp);
 	res_ = setItemTake2_lockHeld(_mp, _key, _value);
 	ALIF_END_CRITICAL_SECTION();
