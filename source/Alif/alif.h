@@ -33,6 +33,7 @@
 //#include "FloatObject.h"
 #include "UStrObject.h"
 //#include "AlifErrors.h"
+#include "LongIntrerpr.h"
 #include "ListObject.h"
 #include "TupleObject.h"
 #include "DictObject.h"

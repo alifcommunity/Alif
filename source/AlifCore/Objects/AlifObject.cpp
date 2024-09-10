@@ -87,6 +87,74 @@ AlifVarObject* alifObject_initVar(AlifVarObject* _op,
 	return _op;
 }
 
+int _alifSwappedOp_[] = { ALIF_GT, ALIF_GE, ALIF_EQ, ALIF_NE, ALIF_LT, ALIF_LE }; // 953
+
+static const char* const _opStrings_[] = { "<", "<=", "==", "!=", ">", ">=" }; // 955
+
+static AlifObject* do_richcompare(AlifThread* _tstate, AlifObject* _v, AlifObject* _w, int _op)
+{
+	RichCmpFunc f;
+	AlifObject* res;
+	int checked_reverse_op = 0;
+
+	if (!ALIF_IS_TYPE(_v, ALIF_TYPE(_w)) and
+		alifType_isSubType(ALIF_TYPE(_w), ALIF_TYPE(_v)) and
+		(f = ALIF_TYPE(_w)->richCompare) != NULL) {
+		checked_reverse_op = 1;
+		res = (*f)(_w, _v, _alifSwappedOp_[_op]);
+		if (res != ALIF_NOTIMPLEMENTED)
+			return res;
+		ALIF_DECREF(res);
+	}
+	if ((f = ALIF_TYPE(_v)->richCompare) != NULL) {
+		res = (*f)(_v, _w, _op);
+		if (res != ALIF_NOTIMPLEMENTED)
+			return res;
+		ALIF_DECREF(res);
+	}
+	if (!checked_reverse_op && (f = ALIF_TYPE(_w)->richCompare) != NULL) {
+		res = (*f)(_w, _v, _alifSwappedOp_[_op]);
+		if (res != ALIF_NOTIMPLEMENTED)
+			return res;
+		ALIF_DECREF(res);
+	}
+
+	switch (_op) {
+	case ALIF_EQ:
+		res = (_v == _w) ? ALIF_TRUE : ALIF_FALSE;
+		break;
+	case ALIF_NE:
+		res = (_v != _w) ? ALIF_TRUE : ALIF_FALSE;
+		break;
+	default:
+		alifErr_format(_tstate, alifExc_typeError,
+			"'%s' ليس مدعوم بين حالات من '%.100 s' و '%.100 s'",
+			_opStrings_[_op],
+			ALIF_TYPE(_v)->name,
+			ALIF_TYPE(_w)->name);
+		return NULL;
+	}
+	return ALIF_NEWREF(res);
+}
+
+AlifObject* alifObject_richCompare(AlifObject* _v, AlifObject* _w, int _op) { // 1011
+	AlifThread* tstate = alifThread_get();
+
+	if (_v == NULL || _w == NULL) {
+		if (!alifErr_occurred(tstate)) {
+			//alifErr_badInternalCall();
+		}
+		return NULL;
+	}
+	if (alif_enterRecursiveCallTstate(tstate, " in comparison")) {
+		return NULL;
+	}
+	AlifObject* res = do_richcompare(tstate, _v, _w, _op);
+	alif_leaveRecursiveCallTstate(tstate);
+	return res;
+}
+
+
 AlifIntT alifObject_richCompareBool(AlifObject* _v, AlifObject* _w, AlifIntT _op) { // 1033
 	AlifObject* res;
 	AlifIntT ok;
@@ -191,10 +259,10 @@ void alif_setImmortal(AlifObject* _op) { // 2463
 	alif_setImmortalUntracked(_op);
 }
 
-void alifObject_setDeferredRefcount(AlifObject* op) { // 2472
+void alifObject_setDeferredRefcount(AlifObject* _op) { // 2472
 #ifdef ALIF_GIL_DISABLED
-	alifObject_setGCBits(op, ALIFGC_BITS_DEFERRED);
-	op->refShared = ALIF_REF_SHARED(ALIF_REF_DEFERRED, 0);
+	alifObject_setGCBits(_op, ALIFGC_BITS_DEFERRED);
+	_op->refShared = ALIF_REF_SHARED(ALIF_REF_DEFERRED, 0);
 #endif
 }
 

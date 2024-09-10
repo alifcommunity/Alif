@@ -158,6 +158,7 @@ typedef AlifObject* (*GetAttrFunc)(AlifObject*, char*); // 336
 typedef AlifIntT (*SetAttrFunc)(AlifObject*, char*, AlifObject*); // 338
 
 typedef AlifHashT (*HashFunc)(AlifObject*); // 341
+typedef AlifObject* (*RichCmpFunc) (AlifObject*, AlifObject*, AlifIntT); // 342
 typedef AlifIntT (*InitProc)(AlifObject*, AlifObject*, AlifObject*); // 347
 typedef AlifObject* (*NewFunc)(AlifTypeObject*, AlifObject*, AlifObject*); // 348
 
@@ -265,6 +266,9 @@ public:
 	HashFunc hash{};
 
 	unsigned long flags{};
+
+	RichCmpFunc richCompare{};
+
 
 	AlifTypeObject* base{};
 	AlifObject* dict{};
