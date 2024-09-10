@@ -8,7 +8,17 @@
 
 
 
+void alifCriticalSection_beginSlow(AlifCriticalSection* _c, AlifMutex* _m) { // 11
+#ifdef ALIF_GIL_DISABLED
+	AlifThread* thread = alifThread_get();
+	_c->mutex = nullptr;
+	_c->prev = (uintptr_t)thread->criticalSection;
+	thread->criticalSection = (uintptr_t)_c;
 
+	ALIFMUTEX_LOCK(_m);
+	_c->mutex = _m;
+#endif
+}
 
 
 
@@ -78,4 +88,23 @@ void alifCriticalSection_resume(AlifThread* _thread) { // 79
 	}
 
 	_thread->criticalSection &= ~ALIF_CRITICAL_SECTION_INACTIVE;
+}
+
+
+
+
+
+
+#undef ALIFCRITICALSECTION_BEGIN
+void alifCriticalSection_begin(AlifCriticalSection* _c, AlifObject* _op) { // 114
+#ifdef ALIF_GIL_DISABLED
+	_alifCriticalSection_begin(_c, _op);
+#endif
+}
+
+#undef ALIFCRITICALSECTION_END
+void alifCriticalSection_end(AlifCriticalSection* _c) { // 124
+#ifdef ALIF_GIL_DISABLED
+	_alifCriticalSection_end(_c);
+#endif
 }

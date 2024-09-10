@@ -200,15 +200,15 @@ void alifObject_setDeferredRefcount(AlifObject* op) { // 2472
 
 
 
-void alif_dealloc(AlifObject* op) { // 2868
-	AlifTypeObject* type = ALIF_TYPE(op);
+void alif_dealloc(AlifObject* _op) { // 2868
+	AlifTypeObject* type = ALIF_TYPE(_op);
 	Destructor dealloc = type->dealloc;
 
 	RefTracerDureRunState* tracer = &_alifDureRun_.refTracer;
 	if (tracer->tracerFunc != nullptr) {
 		void* data = tracer->tracerData;
-		tracer->tracerFunc(op, AlifRefTracerEvent_::Alif_RefTracer_Destroy, data);
+		tracer->tracerFunc(_op, AlifRefTracerEvent_::Alif_RefTracer_Destroy, data);
 	}
 
-	(*dealloc)(op);
+	(*dealloc)(_op);
 }

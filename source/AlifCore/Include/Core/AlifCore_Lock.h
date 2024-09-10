@@ -8,7 +8,10 @@
 #define ALIF_HAS_PARKED  2
 #define ALIF_ONCE_INITIALIZED 4
 
-
+static inline AlifIntT alifMutex_lockFast(uint8_t* _lockBits) { // 20
+	uint8_t expected = ALIF_UNLOCKED;
+	return alifAtomic_compareExchangeUint8(_lockBits, &expected, ALIF_LOCKED);
+}
 
 
 
