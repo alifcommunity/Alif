@@ -139,6 +139,9 @@
     <ClCompile Include="..\source\AlifCore\Objects\mimalloc\stats.c">
       <Filter>Objects\Mimalloc</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\MethodObject.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">

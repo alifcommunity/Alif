@@ -161,6 +161,8 @@ typedef AlifHashT (*HashFunc)(AlifObject*); // 341
 typedef AlifIntT (*InitProc)(AlifObject*, AlifObject*, AlifObject*); // 347
 typedef AlifObject* (*NewFunc)(AlifTypeObject*, AlifObject*, AlifObject*); // 348
 
+typedef AlifObject* (*VectorCallFunc)(AlifObject*, AlifObject* const*, AlifUSizeT, AlifObject*); // 352
+
 
 
 // 360
@@ -177,9 +179,9 @@ typedef AlifObject* (*NewFunc)(AlifTypeObject*, AlifObject*, AlifObject*); // 34
 
 
 
-AlifIntT alifType_isSubType(AlifTypeObject*, AlifTypeObject*);
+AlifIntT alifType_isSubType(AlifTypeObject*, AlifTypeObject*); // 396
 
-static inline AlifIntT alifObject_typeCheck(AlifObject* _ob, AlifTypeObject* _type) {
+static inline AlifIntT alifObject_typeCheck(AlifObject* _ob, AlifTypeObject* _type) { // 398
 	return ALIF_IS_TYPE(_ob, _type) or alifType_isSubType(ALIF_TYPE(_ob), _type);
 }
 #define ALIFOBJECT_TYPECHECK(ob, type) alifObject_typeCheck(ALIFOBJECT_CAST(ob), (type))

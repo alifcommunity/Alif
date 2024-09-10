@@ -119,14 +119,14 @@ static AlifIntT addMethods_toObject(AlifObject* module,
 	AlifMethodDef* fdef{};
 
 	for (fdef = functions; fdef->name != nullptr; fdef++) {
-		if ((fdef->flags & METH_CLASS) ||
-			(fdef->flags & METH_STATIC)) {
+		if ((fdef->flags & METHOD_CLASS) ||
+			(fdef->flags & METHOD_STATIC)) {
 			//alifErr_setString(_alifExcValueError_,
 			//	"module functions cannot set"
 			//	" METH_CLASS or METH_STATIC");
 			return -1;
 		}
-		func = ALIFCFUNCTION_NEWEX(fdef, (AlifObject*)module, name);
+		func = ALIFCPPFUNCTION_NEWEX(fdef, (AlifObject*)module, name);
 		if (func == nullptr) {
 			return -1;
 		}
