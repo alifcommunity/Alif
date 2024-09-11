@@ -6,7 +6,7 @@
 
 class AlifDictKeyEntry { // 74
 public:
-	AlifUSizeT hash{};
+	AlifHashT hash{};
 	AlifObject* key{};
 	AlifObject* value{};
 };
@@ -20,7 +20,7 @@ public:
 
 extern void alifDictKeys_decRef(AlifDictKeysObject*); // 96
 
-
+AlifIntT alifDict_GetItemRefKnownHash(AlifDictObject* , AlifObject* , AlifHashT , AlifObject** ); // 116
 
 // 126
 #define DKIX_EMPTY (-1)
