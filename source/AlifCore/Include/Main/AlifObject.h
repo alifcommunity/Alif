@@ -274,69 +274,69 @@ void alif_newReferenceNoTotal(AlifObject*); // 6
 
 class AlifNumberMethods{ // 60
 public:
-	BinaryFunc add;
-	BinaryFunc subtract;
-	BinaryFunc multiply;
-	BinaryFunc remainder;
-	BinaryFunc divmod;
-	TernaryFunc power;
-	UnaryFunc negative;
-	UnaryFunc positive;
-	UnaryFunc absolute;
-	Inquiry bool_;
-	UnaryFunc invert;
-	BinaryFunc lshift;
-	BinaryFunc rshift;
-	BinaryFunc and_;
-	BinaryFunc xor_;
-	BinaryFunc or_;
-	UnaryFunc int_;
-	void* reserved;
-	UnaryFunc float_;
+	BinaryFunc add_{};
+	BinaryFunc subtract{};
+	BinaryFunc multiply{};
+	BinaryFunc remainder{};
+	BinaryFunc divmod{};
+	TernaryFunc power{};
+	UnaryFunc negative{};
+	UnaryFunc positive{};
+	UnaryFunc absolute{};
+	Inquiry bool_{};
+	UnaryFunc invert{};
+	BinaryFunc lshift{};
+	BinaryFunc rshift{};
+	BinaryFunc and_{};
+	BinaryFunc xor_{};
+	BinaryFunc or_{};
+	UnaryFunc int_{};
+	void* reserved{};
+	UnaryFunc float_{};
 
-	BinaryFunc inplace_add;
-	BinaryFunc inplace_subtract;
-	BinaryFunc inplace_multiply;
-	BinaryFunc inplace_remainder;
-	TernaryFunc inplace_power;
-	BinaryFunc inplace_lshift;
-	BinaryFunc inplace_rshift;
-	BinaryFunc inplace_and;
-	BinaryFunc inplace_xor;
-	BinaryFunc inplace_or;
+	BinaryFunc inplaceAdd{};
+	BinaryFunc inplaceSubtract{};
+	BinaryFunc inplaceMultiply{};
+	BinaryFunc inplaceRemainder{};
+	TernaryFunc inplacePower{};
+	BinaryFunc inplaceLshift{};
+	BinaryFunc inplaceRshift{};
+	BinaryFunc inplaceAnd{};
+	BinaryFunc inplaceXor{};
+	BinaryFunc inplaceOr{};
 
-	BinaryFunc floor_divide;
-	BinaryFunc true_divide;
-	BinaryFunc inplace_floor_divide;
-	BinaryFunc inplace_true_divide;
+	BinaryFunc floorDivide{};
+	BinaryFunc trueDivide{};
+	BinaryFunc inplaceFloorDivide{};
+	BinaryFunc inplaceTrueDivide{};
 
-	UnaryFunc index;
+	UnaryFunc index{};
 
-	BinaryFunc matrix_multiply;
-	BinaryFunc inplace_matrix_multiply;
+	BinaryFunc matrixMultiply{};
+	BinaryFunc inplaceMatrixMultiply{};
 };
 
 class AlifSequenceMethods{ // 107
 public:
 
-	LenFunc length;
-	BinaryFunc concat;
-	SizeArgFunc repeat;
-	SizeArgFunc item;
-	void* wasSlice;
-	SizeObjArgProc assItem;
-	void* wasAssSlice;
-	ObjObjProc contains;
+	LenFunc length{};
+	BinaryFunc concat{};
+	SizeArgFunc repeat{};
+	SizeArgFunc item{};
+	void* wasSlice{};
+	SizeObjArgProc assItem{};
+	void* wasAssSlice{};
+	ObjObjProc contains{};
 
-	BinaryFunc inplaceConcat;
-	SizeArgFunc inplaceRepeat;
+	BinaryFunc inplaceConcat{};
+	SizeArgFunc inplaceRepeat{};
 };
 
 class AlifMappingMethods{ // 121
 public:
-	LenFunc length;
-	BinaryFunc subscript;
-	ObjObjArgProc assSubscript;
+	LenFunc length{};
+	BinaryFunc subscript{};
+	ObjObjArgProc assSubscript{};
 };
 
 
