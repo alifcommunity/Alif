@@ -226,7 +226,7 @@ void _mi_page_free_collect(mi_page_t* page, bool force) {
   // and the local free list
   if (page->local_free != NULL) {
     // any previous QSBR goals are no longer valid because we reused the page
-    _alifMemMiPage_clearQSBR(page);
+    alifMemMiPage_clearQSBR(page);
 
     if mi_likely(page->free == NULL) {
       // usual case

@@ -1,7 +1,7 @@
 #include "alif.h"
 
 #include "AlifCore_Object.h"
-#include "AlifCore_Interpreter.h"
+#include "AlifCore_Memory.h"
 #include "AlifCore_State.h"
 
 
@@ -11,9 +11,11 @@
 
 
 
-
+static void alifMemMiPage_clearQSBR(mi_page_t*); // 16
+static bool alifMemMiPage_isSafeToFree(mi_page_t*); // 17
 static bool alifMemMiPage_maybeFree(mi_page_t*, mi_page_queue_t*, bool); // 18
-
+static void alifMemMiPage_reclaimed(mi_page_t*); // 19
+static void alifMemMiHeap_collectQSBR(mi_heap_t*); // 20
 
 
 #include "AlifCore_Mimalloc.h"
@@ -22,9 +24,30 @@ static bool alifMemMiPage_maybeFree(mi_page_t*, mi_page_queue_t*, bool); // 18
 
 
 
+#ifdef WITH_MIMALLOC // 93
 
+static void alifMemMiPage_clearQSBR(mi_page_t* page) { // 95 
+#ifdef ALIF_GIL_DISABLED
+	page->qsbr_goal = 0;
+	if (page->qsbr_node.next != nullptr) {
+		llist_remove(&page->qsbr_node);
+	}
+#endif
+}
 
+static bool alifMemMiPage_isSafeToFree(mi_page_t* page) { // 108
+#ifdef ALIF_GIL_DISABLED
+	if (page->use_qsbr and page->qsbr_goal != 0) {
+		AlifThreadImpl* tstate = (AlifThreadImpl*)alifThread_get();
+		if (tstate == nullptr) {
+			return false;
+		}
+		return alifQSBR_goalReached(tstate->qsbr, page->qsbr_goal);
+	}
+#endif
+	return true;
 
+}
 
 static bool alifMemMiPage_maybeFree(mi_page_t* page, mi_page_queue_t* pq, bool force) { // 126
 #ifdef ALIF_GIL_DISABLED
@@ -47,8 +70,53 @@ static bool alifMemMiPage_maybeFree(mi_page_t* page, mi_page_queue_t* pq, bool f
 	return true;
 }
 
+static void alifMemMiPage_reclaimed(mi_page_t* page) { // 150
+#ifdef ALIF_GIL_DISABLED
+	if (page->qsbr_goal != 0) {
+		if (mi_page_all_free(page)) {
+			AlifThreadImpl* tstate = (AlifThreadImpl*)alifThread_get();
+			page->retire_expire = 0;
+			llist_insertTail(&tstate->mimalloc.pageList, &page->qsbr_node);
+		}
+		else {
+			page->qsbr_goal = 0;
+		}
+	}
+#endif
+}
+
+static void alifMemMiHeap_collectQSBR(mi_heap_t* heap) { // 169
+#ifdef ALIF_GIL_DISABLED
+	if (!heap->page_use_qsbr) {
+		return;
+	}
+
+	AlifThreadImpl* thread = (AlifThreadImpl*)alifThread_get();
+	LListNode* head = &thread->mimalloc.pageList;
+	if (llist_empty(head)) {
+		return;
+	}
+
+	LListNode* node{};
+	LLIST_FOR_EACH_SAFE(node, head) {
+		mi_page_t* page = LLIST_DATA(node, mi_page_t, qsbr_node);
+		if (!mi_page_all_free(page)) {
+			alifMemMiPage_clearQSBR(page);
+			continue;
+		}
+
+		if (!alifQSBR_poll(thread->qsbr, page->qsbr_goal)) {
+			return;
+		}
+
+		alifMemMiPage_clearQSBR(page);
+		_mi_page_free(page, mi_page_queue_of(page), false);
+	}
+#endif
+}
 
 
+#endif // 287
 
 #define WORK_ITEMS_PER_CHUNK 254 // 1077
 

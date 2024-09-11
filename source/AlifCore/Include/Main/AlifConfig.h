@@ -180,3 +180,5 @@
 #define ALIF_GIL_DISABLED 1
 
 #define FORCE_SWITCHING
+
+#define	WITH_MIMALLOC
