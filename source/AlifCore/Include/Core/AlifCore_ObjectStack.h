@@ -31,6 +31,7 @@ public:
 };
 
 
+extern AlifObjectStackChunk* alifObjectStackChunk_new();
 
 
 static inline AlifIntT alifObjectStack_push(AlifObjectStack* _stack, AlifObject* _obj) { // 36

@@ -1,7 +1,8 @@
 #pragma once
 
 
-
+typedef class AlifCriticalSection AlifCriticalSection; // 70
+typedef class AlifCriticalSection2 AlifCriticalSection2; // 71
 
 void alifCriticalSection_begin(AlifCriticalSection*, AlifObject*); // 73
 

@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include "AlifCore_GC.h"
 #include "AlifCore_GlobalString.h"
 
 

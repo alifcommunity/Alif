@@ -91,3 +91,5 @@ extern void alifThread_detach(AlifThread*); // 157
 #define ALIFCPP_RECURSION_LIMIT 3000 // 214
 
 
+
+AlifInterpreter* alifInterpreter_head(); // 263

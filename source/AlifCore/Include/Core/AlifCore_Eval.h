@@ -1,8 +1,8 @@
 #pragma once
 
 
-//#include "AlifCore_Interpreter.h"
-//#include "AlifCore_State.h"
+#include "AlifCore_Interpreter.h"
+#include "AlifCore_State.h"
 
 
 

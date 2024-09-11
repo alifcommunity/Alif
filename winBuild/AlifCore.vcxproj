@@ -30,6 +30,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_EvalState.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FileUtils.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FreeList.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FreeListState.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GC.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GetOption.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GIL.h" />

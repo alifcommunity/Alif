@@ -423,10 +423,14 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Equal.h">
       <Filter>Include\Main\StringLib</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\LongIntrerpr.h">
+    <ClInclude Include="..\source\AlifCore\Include\Main\LongIntRepr.h">
       <Filter>Include\Main</Filter>
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Long.h" />
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FreeListState.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Include">

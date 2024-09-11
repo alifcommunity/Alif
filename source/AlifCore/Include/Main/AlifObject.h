@@ -197,7 +197,14 @@ extern AlifTypeObject _alifBaseObjectType_; // 406 /* built-in 'object' */
 AlifIntT alifObject_richCompareBool(AlifObject* , AlifObject* , AlifIntT ); // 424
 
 AlifIntT alifObject_setAttrString(AlifObject*, const char*, AlifObject*); // 426
+
+
+
+AlifHashT alifObject_hash(AlifObject*); // 447
+AlifHashT alifObject_hashNotImplemented(AlifObject*); // 448
 AlifIntT alifObject_isTrue(AlifObject*); // 449
+
+
 // 491
 #define ALIF_TPFLAGS_STATIC_BUILTIN (1 << 1)
 #define ALIF_TPFLAGS_INLINE_VALUES (1 << 2)

@@ -384,6 +384,11 @@ static AlifSizeT ALIF_HOT_FUNCTION uStrKeys_lookupUStr(AlifDictKeysObject* _dk,
 	return do_lookup(nullptr, _dk, _key, _hash, compare_uStrUStr);
 }
 
+
+#ifdef ALIF_GIL_DISABLED
+static AlifSizeT uStrKeysLookup_uStrThreadSafe(AlifDictKeysObject*, AlifObject*, AlifHashT); // 1153
+#endif
+
 AlifSizeT alifDict_lookup(AlifDictObject* _mp, AlifObject* _key,
 	AlifHashT _hash, AlifObject** _valueAddr) { // 1173
 	AlifDictKeysObject* dk_{};
@@ -476,7 +481,7 @@ static inline ALIF_ALWAYS_INLINE AlifIntT compareUStr_uStrThreadSafe(AlifDictObj
 			return uStr_getHash(startkey) == _hash and uStr_eq(startkey, _key);
 		}
 		else {
-			if (!alif_tryIncrefCompare(&ep->key, startkey)) {
+			if (!alif_tryIncRefCompare(&ep->key, startkey)) {
 				return DKIX_KEY_CHANGED;
 			}
 			if (uStr_getHash(startkey) == _hash and uStr_eq(startkey, _key)) {
