@@ -64,7 +64,10 @@ typedef AlifSizeT AlifHashT;
 #define ALIF_ARITHMETIC_RIGHT_SHIFT(TYPE, I, J) ((I) >> (J))
 #endif
 
-#  define ALIF_SAFE_DOWNCAST(_value, _wide, _narrow) ALIF_STATIC_CAST(_narrow, (_value)) // 256
+
+#define ALIF_SAFE_DOWNCAST(_val, _wide, _narrow) ALIF_STATIC_CAST(_narrow, (_val)) // 256
+
+
 
 // 323 
 #if defined(__GNUC__) \

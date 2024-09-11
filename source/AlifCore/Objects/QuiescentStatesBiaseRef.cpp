@@ -13,11 +13,6 @@
 #define QSBR_DEFERRED_LIMIT 10 // 47
 
 
-static inline bool alifQSBR_goalReached(QSBRThreadState* _qsbr, uint64_t _goal) { // 100
-	uint64_t rdSeq = alifAtomic_loadUint64(&_qsbr->shared->rdSeq);
-	return QSBR_LEQ(_goal, rdSeq);
-}
-
 
 uint64_t alifQSBR_advance(QSBRShared* _shared) { // 111
 	return alifAtomic_addUint64(&_shared->wrSeq, QSBR_INCR) + QSBR_INCR;

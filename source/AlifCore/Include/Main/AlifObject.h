@@ -122,7 +122,8 @@ static inline AlifTypeObject* alif_type(AlifObject* _ob) { // 250
 }
 #define ALIF_TYPE(_ob) alif_type(ALIFOBJECT_CAST(_ob))
 
-AlifTypeObject _alifBoolType_; // 262
+//extern AlifTypeObject _alifLongType_; // 261
+extern AlifTypeObject _alifBoolType_; // 262
 
 static inline AlifSizeT alif_size(AlifObject* ob) { // 265
 	return  ALIFVAROBJECT_CAST(ob)->objSize;
@@ -250,7 +251,7 @@ extern AlifObject _alifNoneClass_; // 623
 #define ALIF_NONE (&_alifNoneClass_) // 628
 
 
-AlifObject _alifNotImplementedClass_;  // 642
+extern AlifObject _alifNotImplementedClass_;  // 642
 
 #define ALIF_NOTIMPLEMENTED (&_alifNotImplementedClass_) // 647
 
