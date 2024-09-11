@@ -218,65 +218,65 @@ AlifTypeObject _alifBaseObjectType_ = { // 7453
 };
 
 
-static AlifIntT type_ready(AlifTypeObject* type, AlifTypeObject* def, AlifIntT initial) { // 8383
+static AlifIntT type_ready(AlifTypeObject* _type, AlifTypeObject* _def, AlifIntT _initial) { // 8383
 
-	start_readying(type);
+	start_readying(_type);
 
-	if (type_ready_pre_checks(type) < 0) {
+	if (typeReady_preChecks(_type) < 0) {
 		goto error;
 	}
 
-	if (type_ready_set_dict(type) < 0) {
+	if (typeReady_setDict(_type) < 0) {
 		goto error;
 	}
-	if (type_ready_set_base(type) < 0) {
+	if (typeReady_setBase(_type) < 0) {
 		goto error;
 	}
-	if (type_ready_set_type(type) < 0) {
+	if (typeReady_setType(_type) < 0) {
 		goto error;
 	}
-	if (type_ready_set_bases(type, initial) < 0) {
+	if (typeReady_setBases(_type, _initial) < 0) {
 		goto error;
 	}
-	if (type_ready_mro(type, initial) < 0) {
+	if (typeReady_mro(_type, _initial) < 0) {
 		goto error;
 	}
-	if (type_ready_set_new(type, initial) < 0) {
+	if (typeReady_setNew(_type, _initial) < 0) {
 		goto error;
 	}
-	if (type_ready_fill_dict(type, def) < 0) {
+	if (typeReady_fillDict(_type, _def) < 0) {
 		goto error;
 	}
-	if (initial) {
-		if (type_ready_inherit(type) < 0) {
+	if (_initial) {
+		if (typeReady_inherit(_type) < 0) {
 			goto error;
 		}
-		if (type_ready_preheader(type) < 0) {
-			goto error;
-		}
-	}
-	if (type_ready_set_hash(type) < 0) {
-		goto error;
-	}
-	if (type_ready_add_subclasses(type) < 0) {
-		goto error;
-	}
-	if (initial) {
-		if (type_ready_managed_dict(type) < 0) {
-			goto error;
-		}
-		if (type_ready_post_checks(type) < 0) {
+		if (typeReady_preheader(_type) < 0) {
 			goto error;
 		}
 	}
+	if (typeReady_setHash(_type) < 0) {
+		goto error;
+	}
+	if (typeReady_addSubclasses(_type) < 0) {
+		goto error;
+	}
+	if (_initial) {
+		if (typeReady_managedDict(_type) < 0) {
+			goto error;
+		}
+		if (typeReady_postChecks(_type) < 0) {
+			goto error;
+		}
+	}
 
-	type->flags |= ALIF_TPFLAGS_READY;
-	stop_readying(type);
+	_type->flags |= ALIF_TPFLAGS_READY;
+	stop_readying(_type);
 
 	return 0;
 
 error:
-	stop_readying(type);
+	stop_readying(_type);
 	return -1;
 }
 
@@ -290,10 +290,10 @@ AlifIntT alifType_ready(AlifTypeObject* _type) { // 8462
 		alif_setImmortalUntracked((AlifObject*)_type);
 	}
 
-	int res;
+	AlifIntT res{};
 	BEGIN_TYPE_LOCK();
 	if (!(_type->flags & ALIF_TPFLAGS_READY)) {
-		res = type_ready(_type, NULL, 1);
+		res = type_ready(_type, nullptr, 1);
 	}
 	else {
 		res = 0;
