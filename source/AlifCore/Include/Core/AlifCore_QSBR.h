@@ -52,6 +52,11 @@ static inline uint64_t alifQSBR_sharedCurrent(QSBRShared* shared) { // 83
 	return alifAtomic_loadUint64Acquire(&shared->wrSeq);
 }
 
+static inline bool alifQSBR_goalReached(QSBRThreadState* _qsbr, uint64_t _goal) { // 100
+	uint64_t rdSeq = alifAtomic_loadUint64(&_qsbr->shared->rdSeq);
+	return QSBR_LEQ(_goal, rdSeq);
+}
+
 
 uint64_t alifQSBR_deferredAdvance(class QSBRThreadState*); // 117
 

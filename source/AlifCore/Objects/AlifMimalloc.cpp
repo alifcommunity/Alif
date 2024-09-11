@@ -5,6 +5,17 @@
 #include "AlifCore_State.h"
 
 
+/*
+سيتم عمل الاصدار الجديد من الذاكرة يستعمل خيوط متعددة لتسريع عمليات الذاكرة
+*/
+
+
+
+
+static bool alifMemMiPage_maybeFree(mi_page_t*, mi_page_queue_t*, bool); // 18
+
+
+
 #include "AlifCore_Mimalloc.h"
 #include "mimalloc/static.c"
 #include "mimalloc/mimalloc/internal.h"  // for stats
@@ -13,9 +24,30 @@
 
 
 
-/*
-سيتم عمل الاصدار الجديد من الذاكرة يستعمل خيوط متعددة لتسريع عمليات الذاكرة
-*/
+
+
+static bool alifMemMiPage_maybeFree(mi_page_t* page, mi_page_queue_t* pq, bool force) { // 126
+#ifdef ALIF_GIL_DISABLED
+	if (page->use_qsbr) {
+		AlifThreadImpl* tstate = (AlifThreadImpl*)alifThread_get();
+		if (page->qsbr_goal != 0 and alifQSBR_goalReached(tstate->qsbr, page->qsbr_goal)) {
+			alifMemMiPage_clearQSBR(page);
+			_mi_page_free(page, pq, force);
+			return true;
+		}
+
+		alifMemMiPage_clearQSBR(page);
+		page->retire_expire = 0;
+		page->qsbr_goal = alifQSBR_deferredAdvance(tstate->qsbr);
+		llist_insertTail(&tstate->mimalloc.pageList, &page->qsbr_node);
+		return false;
+	}
+#endif
+	_mi_page_free(page, pq, force);
+	return true;
+}
+
+
 
 
 #define WORK_ITEMS_PER_CHUNK 254 // 1077
@@ -139,10 +171,10 @@ static void process_interpQueue(class AlifMemInterpFreeQueue* _queue,
 	}
 }
 
-void alifMem_processDelayed(AlifThread* _tState) {  // 1231
+void alifMem_processDelayed(AlifThread* _thread) {  // 1231
 
-	AlifInterpreter* interp = _tState->interpreter;
-	AlifThreadImpl* tStateImpl = (AlifThreadImpl*)_tState;
+	AlifInterpreter* interp = _thread->interpreter;
+	AlifThreadImpl* tStateImpl = (AlifThreadImpl*)_thread;
 
 	process_queue(&tStateImpl->memFreeQueue, tStateImpl->qsbr, true);
 

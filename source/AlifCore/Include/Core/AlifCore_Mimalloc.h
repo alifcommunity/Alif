@@ -56,3 +56,13 @@ public:
 	LListNode pageList{};
 };
 #endif
+
+
+
+
+
+
+
+/* ----------------------------------------- AlifCore_Memory ------------------------------------------------- */
+
+extern void alifMem_processDelayed(AlifThread*); // 126

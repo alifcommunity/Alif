@@ -239,7 +239,7 @@ AlifTypeObject _alifNoneType_ = { // 2049
 	.itemSize = 0,
 };
 
-AlifObject _alifNoneStruct_ = ALIFOBJECT_HEAD_INIT(&_alifNoneType_); // 2090
+AlifObject _alifNoneClass_ = ALIFOBJECT_HEAD_INIT(&_alifNoneType_); // 2090
 
 AlifTypeObject _alifNotImplementedType_ = { // 2149
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
