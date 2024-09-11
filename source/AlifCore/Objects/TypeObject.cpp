@@ -27,6 +27,26 @@ ManagedStaticTypeState* alifStaticType_getState(AlifInterpreter* _interp, AlifTy
 	return managedStatic_typeStateGet(_interp, _self);
 }
 
+static inline void start_readying(AlifTypeObject* _type) { // 356
+	if (_type->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
+		AlifInterpreter* interp = alifInterpreter_get();
+		ManagedStaticTypeState* state = managedStatic_typeStateGet(interp, _type);
+		state->readying = 1;
+		return;
+	}
+	_type->flags |= ALIF_TPFLAGS_READYING;
+}
+
+static inline void stop_readying(AlifTypeObject* _type) { // 371 
+	if (_type->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
+		AlifInterpreter* interp = alifInterpreter_get();
+		ManagedStaticTypeState* state = managedStatic_typeStateGet(interp, _type);
+		state->readying = 0;
+		return;
+	}
+	_type->flags &= ~ALIF_TPFLAGS_READYING;
+}
+
 static inline AlifObject* lookup_tpDict(AlifTypeObject* _self) { // 401
 	if (_self->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
 		AlifInterpreter* interp = alifInterpreter_get();
@@ -196,3 +216,88 @@ AlifTypeObject _alifBaseObjectType_ = { // 7453
 	.itemSize = 0,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE,
 };
+
+
+static AlifIntT type_ready(AlifTypeObject* type, AlifTypeObject* def, AlifIntT initial) { // 8383
+
+	start_readying(type);
+
+	if (type_ready_pre_checks(type) < 0) {
+		goto error;
+	}
+
+	if (type_ready_set_dict(type) < 0) {
+		goto error;
+	}
+	if (type_ready_set_base(type) < 0) {
+		goto error;
+	}
+	if (type_ready_set_type(type) < 0) {
+		goto error;
+	}
+	if (type_ready_set_bases(type, initial) < 0) {
+		goto error;
+	}
+	if (type_ready_mro(type, initial) < 0) {
+		goto error;
+	}
+	if (type_ready_set_new(type, initial) < 0) {
+		goto error;
+	}
+	if (type_ready_fill_dict(type, def) < 0) {
+		goto error;
+	}
+	if (initial) {
+		if (type_ready_inherit(type) < 0) {
+			goto error;
+		}
+		if (type_ready_preheader(type) < 0) {
+			goto error;
+		}
+	}
+	if (type_ready_set_hash(type) < 0) {
+		goto error;
+	}
+	if (type_ready_add_subclasses(type) < 0) {
+		goto error;
+	}
+	if (initial) {
+		if (type_ready_managed_dict(type) < 0) {
+			goto error;
+		}
+		if (type_ready_post_checks(type) < 0) {
+			goto error;
+		}
+	}
+
+	type->flags |= ALIF_TPFLAGS_READY;
+	stop_readying(type);
+
+	return 0;
+
+error:
+	stop_readying(type);
+	return -1;
+}
+
+AlifIntT alifType_ready(AlifTypeObject* _type) { // 8462
+	if (_type->flags & ALIF_TPFLAGS_READY) {
+		return 0;
+	}
+
+	if (!(_type->flags & ALIF_TPFLAGS_HEAPTYPE)) {
+		_type->flags |= ALIF_TPFLAGS_IMMUTABLETYPE;
+		alif_setImmortalUntracked((AlifObject*)_type);
+	}
+
+	int res;
+	BEGIN_TYPE_LOCK();
+	if (!(_type->flags & ALIF_TPFLAGS_READY)) {
+		res = type_ready(_type, NULL, 1);
+	}
+	else {
+		res = 0;
+	}
+	END_TYPE_LOCK();
+	return res;
+}
