@@ -122,6 +122,7 @@ static inline AlifTypeObject* alif_type(AlifObject* _ob) { // 250
 }
 #define ALIF_TYPE(_ob) alif_type(ALIFOBJECT_CAST(_ob))
 
+AlifTypeObject _alifBoolType_; // 262
 
 static inline AlifSizeT alif_size(AlifObject* ob) { // 265
 	return  ALIFVAROBJECT_CAST(ob)->objSize;
@@ -201,7 +202,7 @@ AlifIntT alifObject_setAttrString(AlifObject*, const char*, AlifObject*); // 426
 
 AlifHashT alifObject_hash(AlifObject*); // 447
 AlifHashT alifObject_hashNotImplemented(AlifObject*); // 448
-
+AlifIntT alifObject_isTrue(AlifObject*); // 449
 
 
 // 491
@@ -238,9 +239,14 @@ AlifHashT alifObject_hashNotImplemented(AlifObject*); // 448
 #define ALIF_TPFLAGS_DEFAULT  (ALIF_TPFLAGS_HAVE_STACKLESS_EXTENSION | 0)
 
 
-extern AlifObject _alifNoneStruct_; // 623
+extern AlifObject _alifNoneClass_; // 623
 
-#define ALIF_NONE (&_alifNoneStruct_) // 628
+#define ALIF_NONE (&_alifNoneClass_) // 628
+
+
+AlifObject _alifNotImplementedClass_;  // 642
+
+#define ALIF_NOTIMPLEMENTED (&_alifNotImplementedClass_) // 647
 
 
 // 654
