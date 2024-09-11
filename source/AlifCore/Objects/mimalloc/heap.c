@@ -157,7 +157,7 @@ static void mi_heap_collect_ex(mi_heap_t* heap, mi_collect_t collect)
   _mi_heap_collect_retired(heap, force);
 
   // free pages that were delayed with QSBR
-  _PyMem_mi_heap_collect_qsbr(heap);
+  alifMemMiHeap_collectQSBR(heap);
 
   // collect all pages owned by this thread
   mi_heap_visit_pages(heap, &mi_heap_page_collect, &collect, NULL);

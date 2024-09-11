@@ -1,7 +1,8 @@
 #include "alif.h"
 
+#include "AlifCore_Object.h"
 #include "AlifCore_Interpreter.h"
-
+#include "AlifCore_State.h"
 
 
 #include "AlifCore_Mimalloc.h"
@@ -43,9 +44,9 @@ static void free_workItem(AlifUSizeT _ptr) {  // 1096
 	}
 }
 
-static void free_delayed(AlifUSizeT _ptr) { // 1107
+static void free_delayed(uintptr_t _ptr) { // 1107
 	AlifInterpreter* interp = alifInterpreter_get();
-	if (alifInterpreter_getFinalizing(interp) != nullptr ||
+	if (alifInterpreter_getFinalizing(interp) != nullptr or
 		interp->stopTheWorld.worldStopped)
 	{
 

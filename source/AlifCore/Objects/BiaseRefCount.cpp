@@ -125,4 +125,4 @@ AlifSizeT alif_explicitMergeRefcount(AlifObject* op, AlifSizeT extra) { // 405
 		&shared, new_shared));
 	return refcnt;
 }
-#endif  /* Py_GIL_DISABLED */
+#endif  /* ALIF_GIL_DISABLED */

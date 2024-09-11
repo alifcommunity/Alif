@@ -64,6 +64,10 @@ static inline AlifIntT threadTSS_set(AlifTssT* _key, AlifThread* _thread) { // 1
 	return alifThreadTSS_set(_key, (void*)_thread);
 }
 
+
+
+static void thread_mimallocBind(AlifThread*); // 243
+
 static void bind_thread(AlifThread* _thread) { // 245
 
 	_thread->threadID = alifThread_getThreadID();
@@ -537,7 +541,7 @@ uintptr_t alif_getThreadLocalAddr(void) { // 2463
 }
 
 
-AlifInterpreter* alifInterpreter_head(void) { // 2485
+AlifInterpreter* alifInterpreter_head() { // 2485
 	return _alifDureRun_.interpreters.head;
 }
 
