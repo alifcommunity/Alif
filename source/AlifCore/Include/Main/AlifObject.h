@@ -148,9 +148,15 @@ static inline void alif_setSize(AlifVarObject* _ob, AlifSizeT _size) { // 289
 #  define ALIF_SET_SIZE(_ob, _size) alif_setSize(ALIFVAROBJECT_CAST(_ob), (_size)) // 300
 
 
-
+typedef AlifObject* (*UnaryFunc)(AlifObject*); // 318
+typedef AlifObject* (*BinaryFunc)(AlifObject*, AlifObject*); // 319
+typedef AlifObject* (*TernaryFunc)(AlifObject*, AlifObject*, AlifObject*); // 320
 typedef AlifIntT (*Inquiry)(AlifObject*); // 321
-
+typedef AlifSizeT (*LenFunc)(AlifObject*); // 322
+typedef AlifObject* (*SizeArgFunc)(AlifObject*, AlifSizeT); // 323
+typedef AlifIntT (*SizeObjArgProc)(AlifObject*, AlifSizeT, AlifObject*); // 325
+typedef AlifIntT (*ObjObjArgProc)(AlifObject*, AlifObject*, AlifObject*); // 327
+typedef AlifIntT(*ObjObjProc)(AlifObject*, AlifObject*); // 329
 typedef AlifIntT (*VisitProc)(AlifObject*, void*); // 330
 typedef AlifIntT (*TraverseProc)(AlifObject*, VisitProc, void*); // 331
 
@@ -266,6 +272,73 @@ void alif_newReference(AlifObject*); // 5
 void alif_newReferenceNoTotal(AlifObject*); // 6
 
 
+class AlifNumberMethods{ // 60
+public:
+	BinaryFunc add;
+	BinaryFunc subtract;
+	BinaryFunc multiply;
+	BinaryFunc remainder;
+	BinaryFunc divmod;
+	TernaryFunc power;
+	UnaryFunc negative;
+	UnaryFunc positive;
+	UnaryFunc absolute;
+	Inquiry bool_;
+	UnaryFunc invert;
+	BinaryFunc lshift;
+	BinaryFunc rshift;
+	BinaryFunc and_;
+	BinaryFunc xor_;
+	BinaryFunc or_;
+	UnaryFunc int_;
+	void* reserved;
+	UnaryFunc float_;
+
+	BinaryFunc inplace_add;
+	BinaryFunc inplace_subtract;
+	BinaryFunc inplace_multiply;
+	BinaryFunc inplace_remainder;
+	TernaryFunc inplace_power;
+	BinaryFunc inplace_lshift;
+	BinaryFunc inplace_rshift;
+	BinaryFunc inplace_and;
+	BinaryFunc inplace_xor;
+	BinaryFunc inplace_or;
+
+	BinaryFunc floor_divide;
+	BinaryFunc true_divide;
+	BinaryFunc inplace_floor_divide;
+	BinaryFunc inplace_true_divide;
+
+	UnaryFunc index;
+
+	BinaryFunc matrix_multiply;
+	BinaryFunc inplace_matrix_multiply;
+};
+
+class AlifSequenceMethods{ // 107
+public:
+
+	LenFunc length;
+	BinaryFunc concat;
+	SizeArgFunc repeat;
+	SizeArgFunc item;
+	void* wasSlice;
+	SizeObjArgProc assItem;
+	void* wasAssSlice;
+	ObjObjProc contains;
+
+	BinaryFunc inplaceConcat;
+	SizeArgFunc inplaceRepeat;
+};
+
+class AlifMappingMethods{ // 121
+public:
+	LenFunc length;
+	BinaryFunc subscript;
+	ObjObjArgProc assSubscript;
+};
+
 
 class AlifTypeObject { // 147
 public:
@@ -276,6 +349,10 @@ public:
 	Destructor dealloc{};
 	GetAttrFunc getAttr{};
 	SetAttrFunc setAttr{};
+
+	AlifNumberMethods* asNumber{};
+	AlifSequenceMethods* asSequence{};
+	AlifMappingMethods* asMapping{};
 
 	HashFunc hash{};
 

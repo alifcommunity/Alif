@@ -65,7 +65,6 @@ typedef AlifSizeT AlifHashT;
 #endif
 
 
-
 #define ALIF_SAFE_DOWNCAST(_val, _wide, _narrow) ALIF_STATIC_CAST(_narrow, (_val)) // 256
 
 
