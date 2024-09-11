@@ -11,7 +11,8 @@
 
 
 
-void alif_decRefSharedDebug(AlifObject* _obj, const char* _filename, AlifIntT _lineno) { // 322
+void alif_decRefSharedDebug(AlifObject* _obj,
+	const char* _filename, AlifIntT _lineno) { // 322
 	AlifIntT shouldQueue;
 
 	AlifSizeT newShared;
@@ -210,20 +211,20 @@ AlifIntT alifObject_setAttrString(AlifObject* _v, const char* _name, AlifObject*
 }
 
 AlifIntT alifObject_isTrue(AlifObject* _v) { // 1845
-	AlifSizeT res_;
+	AlifSizeT res_{};
 	if (_v == ALIF_TRUE)
 		return 1;
 	if (_v == ALIF_FALSE)
 		return 0;
 	if (_v == ALIF_NONE)
 		return 0;
-	else if (ALIF_TYPE(_v)->asNumber != nullptr &&
+	else if (ALIF_TYPE(_v)->asNumber != nullptr and
 		ALIF_TYPE(_v)->asNumber->bool_ != nullptr)
 		res_ = (*ALIF_TYPE(_v)->asNumber->bool_)(_v);
-	else if (ALIF_TYPE(_v)->asMapping != nullptr &&
+	else if (ALIF_TYPE(_v)->asMapping != nullptr and
 		ALIF_TYPE(_v)->asMapping->length != nullptr)
 		res_ = (*ALIF_TYPE(_v)->asMapping->length)(_v);
-	else if (ALIF_TYPE(_v)->asSequence != nullptr &&
+	else if (ALIF_TYPE(_v)->asSequence != nullptr and
 		ALIF_TYPE(_v)->asSequence->length != nullptr)
 		res_ = (*ALIF_TYPE(_v)->asSequence->length)(_v);
 	else
@@ -242,7 +243,9 @@ AlifObject _alifNoneStruct_ = ALIFOBJECT_HEAD_INIT(&_alifNoneType_); // 2090
 
 AlifTypeObject _alifNotImplementedType_ = { // 2149
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
-	.name = "لم يتم تنفيذ النوع",
+	.name = "نوع_غير_مطبق",
+	.basicSize = 0,
+	.itemSize = 0,
 };
 
 AlifObject _alifNotImplementedClass_ = ALIFOBJECT_HEAD_INIT(&_alifNotImplementedType_); // 2190
