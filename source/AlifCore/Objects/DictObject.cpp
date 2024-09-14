@@ -546,7 +546,7 @@ static inline ALIF_ALWAYS_INLINE AlifIntT compareUStr_uStrThreadSafe(AlifDictObj
 	}
 	if (startkey != nullptr) {
 		if (ALIF_ISIMMORTAL(startkey)) {
-			return uStr_getHash(startkey) == _hash and uStr_eq(startkey, _key);
+			return (uStr_getHash(startkey) == _hash and uStr_eq(startkey, _key));
 		}
 		else {
 			if (!alif_tryIncRefCompare(&ep_->key, startkey)) {
