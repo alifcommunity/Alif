@@ -163,8 +163,9 @@ typedef AlifIntT (*TraverseProc)(AlifObject*, VisitProc, void*); // 331
 typedef void (*FreeFunc)(void*); // 334
 typedef void (*Destructor)(AlifObject*); // 335
 typedef AlifObject* (*GetAttrFunc)(AlifObject*, char*); // 336
+typedef AlifObject* (*GetAttroFunc)(AlifObject*, AlifObject*); // 337
 typedef AlifIntT (*SetAttrFunc)(AlifObject*, char*, AlifObject*); // 338
-
+typedef AlifIntT(*SetAttroFunc)(AlifObject*, AlifObject*, AlifObject*); // 339
 typedef AlifHashT (*HashFunc)(AlifObject*); // 341
 typedef AlifObject* (*RichCmpFunc) (AlifObject*, AlifObject*, AlifIntT); // 342
 typedef AlifIntT (*InitProc)(AlifObject*, AlifObject*, AlifObject*); // 347
@@ -200,6 +201,8 @@ static inline AlifIntT alifObject_typeCheck(AlifObject* _ob, AlifTypeObject* _ty
 
 extern AlifTypeObject _alifTypeType_; // 405
 extern AlifTypeObject _alifBaseObjectType_; // 406 /* built-in 'object' */
+
+AlifIntT alifType_ready(AlifTypeObject*); // 411
 
 AlifIntT alifObject_richCompareBool(AlifObject* , AlifObject* , AlifIntT ); // 424
 
@@ -355,6 +358,9 @@ public:
 	AlifMappingMethods* asMapping{};
 
 	HashFunc hash{};
+
+	GetAttroFunc getAttro{};
+	SetAttroFunc setAttro{};
 
 	unsigned long flags{};
 

@@ -210,6 +210,59 @@ AlifIntT alifObject_setAttrString(AlifObject* _v, const char* _name, AlifObject*
 	return res_;
 }
 
+AlifIntT alifObject_setAttr(AlifObject* _v, AlifObject* _name, AlifObject* _value) { // 1354
+	AlifTypeObject* tp_ = ALIF_TYPE(_v);
+	int err;
+
+	if (!ALIFUSTR_CHECK(_name)) {
+		//alifErr_format(alifExc_typeError,
+			//"attribute name must be string, not '%.200s'",
+			//ALIF_TYPE(_name)->name);
+		return -1;
+	}
+	ALIF_INCREF(_name);
+
+	AlifInterpreter* interp = alifInterpreter_get();
+	alifUStr_internMortal(interp, &_name);
+	if (tp_->setAttro != nullptr) {
+		err = (*tp_->setAttro)(_v, _name, _value);
+		ALIF_DECREF(_name);
+		return err;
+	}
+	if (tp_->setAttr != nullptr) {
+		const char* nameStr = alifUStr_asUTF8(_name);
+		if (nameStr == nullptr) {
+			ALIF_DECREF(_name);
+			return -1;
+		}
+		err = (*tp_->setAttr)(_v, (char*)nameStr, _value);
+		ALIF_DECREF(_name);
+		return err;
+	}
+	ALIF_DECREF(_name);
+	if (tp_->getAttr == nullptr and tp_->getAttro == nullptr) {
+		//alfiErr_format(alifExc_typeError,
+			//"'%.100s' object has no attributes "
+			//"(%s .%U)",
+			//tp_->name,
+			//_value == nullptr ? "del" : "assign to",
+			//_name);
+	}
+	else {
+		//alifErr_format(alifExc_typeError,
+			//"'%.100s' object has only read-only attributes "
+			//"(%s .%U)",
+			//tp_->name,
+			//_value == nullptr ? "del" : "assign to",
+			//_name);
+	}
+	return -1;
+}
+
+AlifIntT alifObject_delAttr(AlifObject* _v, AlifObject* _name) { // 1404
+	return alifObject_setAttr(_v, _name, nullptr);
+}
+
 AlifIntT alifObject_isTrue(AlifObject* _v) { // 1845
 	AlifSizeT res_{};
 	if (_v == ALIF_TRUE)

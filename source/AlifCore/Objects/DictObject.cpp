@@ -55,10 +55,12 @@ static inline void splitKeys_entryAdded(AlifDictKeysObject* _keys) { // 219
 }
 
 
-#define STORE_VALUE(_ep, _value) alifAtomic_storePtrRelease(_ep->value, _value) // 279
+#define STORE_KEY(ep_, _key) alifAtomic_storePtrRelease(ep_->key, _key) // 278
+#define STORE_VALUE(ep_, _value) alifAtomic_storePtrRelease(ep_->value, _value) // 279
 #define STORE_SPLIT_VALUE(_mp, _idx, _value) alifAtomic_storePtrRelease(&_mp->values->values[_idx], _value) // 280
-#define STORE_KEYS_USABLE(_keys, _usable) alifAtomic_storeSizeRelaxed(&_keys->usable, _usable)
-#define STORE_KEYS_NENTRIES(_keys, _nentries) alifAtomic_storeSizeRelaxed(&_keys->nentries, _nentries)
+#define STORE_HASH(ep_, _hash) alifAtomic_storeSizeRelaxed(&ep_->hash, _hash) // 281
+#define STORE_KEYS_USABLE(_keys, _usable) alifAtomic_storeSizeRelaxed(&_keys->usable, _usable) // 282
+#define STORE_KEYS_NENTRIES(_keys, _nentries) alifAtomic_storeSizeRelaxed(&_keys->nentries, _nentries) // 283
 #define STORE_USED(_mp, _used) alifAtomic_storeSizeRelaxed(&_mp->used, _used) // 284
 
 
@@ -368,7 +370,7 @@ static AlifSizeT uStrKeys_lookupGeneric(AlifDictObject* _mp,
 	return do_lookup(_mp, _dk, _key, _hash, compare_uStrGeneric);
 }
 
-static inline AlifIntT compare_uStrUStr(AlifDictObject* mp, AlifDictKeysObject* dk,
+static inline AlifIntT compare_uStrUStr(AlifDictObject* _mp, AlifDictKeysObject* dk,
 	void* _ep0, AlifSizeT _ix, AlifObject* _key, AlifHashT _hash) { // 1072
 	AlifDictUStrEntry* ep_ = &((AlifDictUStrEntry*)_ep0)[_ix];
 	AlifObject* epKey = (AlifObject*)alifAtomic_loadPtrRelaxed(ep_->key);
@@ -384,6 +386,33 @@ static AlifSizeT ALIF_HOT_FUNCTION uStrKeys_lookupUStr(AlifDictKeysObject* _dk,
 	return do_lookup(nullptr, _dk, _key, _hash, compare_uStrUStr);
 }
 
+static inline AlifIntT compare_generic(AlifDictObject* _mp, AlifDictKeysObject* _dk,
+	void* _ep0, AlifSizeT _ix, AlifObject* _key, AlifHashT _hash) { // 1093
+	AlifDictKeyEntry* ep_ = &((AlifDictKeyEntry*)_ep0)[_ix];
+	if (ep_->key == _key) {
+		return 1;
+	}
+	if (ep_->hash == _hash) {
+		AlifObject* startkey = ep_->key;
+		ALIF_INCREF(startkey);
+		int cmp = alifObject_richCompareBool(startkey, _key, ALIF_EQ);
+		ALIF_DECREF(startkey);
+		if (cmp < 0) {
+			return DKIX_ERROR;
+		}
+		if (_dk == _mp->keys and ep_->key == startkey) {
+			return cmp;
+		}
+		else {
+			return DKIX_KEY_CHANGED;
+		}
+	}
+	return 0;
+}
+
+static AlifSizeT dictKeys_genericLookup(AlifDictObject* _mp, AlifDictKeysObject* _dk, AlifObject* _key, AlifHashT _hash) { // 1121
+	return do_lookup(_mp, _dk, _key, _hash, compare_generic);
+}
 
 #ifdef ALIF_GIL_DISABLED
 static AlifSizeT uStrKeysLookup_uStrThreadSafe(AlifDictKeysObject*, AlifObject*, AlifHashT); // 1153
@@ -469,10 +498,49 @@ static inline void ensureShared_onResize(AlifDictObject* _mp) { // 1266
 #endif
 }
 
-static inline ALIF_ALWAYS_INLINE AlifIntT compareUStr_uStrThreadSafe(AlifDictObject* _mp, AlifDictKeysObject* _dk,
-	void* _ep0, AlifSizeT _ix, AlifObject* _key, AlifHashT _hash) { // 1330
+#ifdef ALIF_GIL_DISABLED
+
+static inline ALIF_ALWAYS_INLINE AlifIntT compareUstr_genericThreadsafe(AlifDictObject* _mp, AlifDictKeysObject* _dk,
+	void* _ep0, AlifSizeT _ix, AlifObject* _key, AlifHashT _hash) { // 1288
 	AlifDictUStrEntry* ep = &((AlifDictUStrEntry*)_ep0)[_ix];
 	AlifObject* startkey = (AlifObject*)alifAtomic_loadPtrRelaxed(&ep->key);
+
+	if (startkey != NULL) {
+		if (!alif_tryIncRefCompare(&ep->key, startkey)) {
+			return DKIX_KEY_CHANGED;
+		}
+
+		if (uStr_getHash(startkey) == _hash) {
+			int cmp = alifObject_richCompareBool(startkey, _key, ALIF_EQ);
+			ALIF_DECREF(startkey);
+			if (cmp < 0) {
+				return DKIX_ERROR;
+			}
+			if (_dk == alifAtomic_loadPtrRelaxed(&_mp->keys) and
+				startkey == alifAtomic_loadPtrRelaxed(&ep->key)) {
+				return cmp;
+			}
+			else {
+				/* The dict was mutated, restart */
+				return DKIX_KEY_CHANGED;
+			}
+		}
+		else {
+			ALIF_DECREF(startkey);
+		}
+	}
+	return 0;
+}
+
+// Search non-Unicode key from Unicode table
+static AlifSizeT uStrKeys_lookupGenericThreadSafe(AlifDictObject* _mp, AlifDictKeysObject* _dk, AlifObject* _key, AlifHashT _hash) { // 1325
+	return do_lookup(_mp, _dk, _key, _hash, compareUstr_genericThreadsafe);
+}
+
+static inline ALIF_ALWAYS_INLINE AlifIntT compareUStr_uStrThreadSafe(AlifDictObject* _mp, AlifDictKeysObject* _dk,
+	void* _ep0, AlifSizeT _ix, AlifObject* _key, AlifHashT _hash) { // 1330
+	AlifDictUStrEntry* ep_ = &((AlifDictUStrEntry*)_ep0)[_ix];
+	AlifObject* startkey = (AlifObject*)alifAtomic_loadPtrRelaxed(&ep_->key);
 	if (startkey == _key) {
 		return 1;
 	}
@@ -481,7 +549,7 @@ static inline ALIF_ALWAYS_INLINE AlifIntT compareUStr_uStrThreadSafe(AlifDictObj
 			return uStr_getHash(startkey) == _hash and uStr_eq(startkey, _key);
 		}
 		else {
-			if (!alif_tryIncRefCompare(&ep->key, startkey)) {
+			if (!alif_tryIncRefCompare(&ep_->key, startkey)) {
 				return DKIX_KEY_CHANGED;
 			}
 			if (uStr_getHash(startkey) == _hash and uStr_eq(startkey, _key)) {
@@ -498,6 +566,140 @@ static AlifSizeT ALIF_HOT_FUNCTION uStrKeysLookup_uStrThreadSafe(AlifDictKeysObj
 	AlifObject* _key, AlifHashT _hash) { // 1359
 	return do_lookup(nullptr, _dk, _key, _hash, compareUStr_uStrThreadSafe);
 }
+
+static inline ALIF_ALWAYS_INLINE AlifIntT compareGeneric_threadSafe(AlifDictObject* _mp, AlifDictKeysObject* _dk,
+	void* _ep0, AlifSizeT _ix, AlifObject* _key, AlifHashT _hash) { // 1365
+	AlifDictKeyEntry* ep = &((AlifDictKeyEntry*)_ep0)[_ix];
+	AlifObject* startkey = (AlifObject*)alifAtomic_loadPtrRelaxed(&ep->key);
+	if (startkey == _key) {
+		return 1;
+	}
+	AlifSizeT ep_hash = alifAtomic_loadSizeRelaxed(&ep->hash);
+	if (ep_hash == _hash) {
+		if (startkey == NULL || !alif_tryIncRefCompare(&ep->key, startkey)) {
+			return DKIX_KEY_CHANGED;
+		}
+		int cmp = alifObject_richCompareBool(startkey, _key, ALIF_EQ);
+		ALIF_DECREF(startkey);
+		if (cmp < 0) {
+			return DKIX_ERROR;
+		}
+		if (_dk == alifAtomic_loadPtrRelaxed(&_mp->keys) and
+			startkey == alifAtomic_loadPtrRelaxed(&ep->key)) {
+			return cmp;
+		}
+		else {
+			/* The dict was mutated, restart */
+			return DKIX_KEY_CHANGED;
+		}
+	}
+	return 0;
+}
+
+static AlifSizeT dictKeysGeneric_lookupThreadSafe(AlifDictObject* _mp, AlifDictKeysObject* _dk, AlifObject* _key, AlifHashT _hash) { // 1396
+	return do_lookup(_mp, _dk, _key, _hash, compareGeneric_threadSafe);
+}
+
+AlifSizeT alifDict_lookupThreadSafe(AlifDictObject* _mp, AlifObject* _key, AlifHashT _hash, AlifObject** _valueAddr) { // 1402
+	AlifDictKeysObject* dk;
+	DictKeysKind_ kind;
+	AlifSizeT ix;
+	AlifObject* value;
+
+	//ensureShared_onRead(mp);
+
+	dk = (AlifDictKeysObject*)alifAtomic_loadPtr(&_mp->keys);
+	kind = (DictKeysKind_)dk->kind;
+
+	if (kind != Dict_Keys_General) {
+		if (ALIFUSTR_CHECKEXACT(_key)) {
+			ix = uStrKeysLookup_uStrThreadSafe(dk, _key, _hash);
+		}
+		else {
+			ix = uStrKeys_lookupGenericThreadSafe(_mp, dk, _key, _hash);
+		}
+		if (ix == DKIX_KEY_CHANGED) {
+			goto read_failed;
+		}
+
+		if (ix >= 0) {
+			if (kind == Dict_Keys_General) {
+				AlifDictValues* values = (AlifDictValues*)alifAtomic_loadPtr(&_mp->values);
+				if (values == NULL)
+					goto read_failed;
+
+				uint8_t capacity = alifAtomic_loadUint8Relaxed(&values->capacity);
+				if (ix >= (AlifSizeT)capacity)
+					goto read_failed;
+
+				value = alif_tryXGetRef(&values->values[ix]);
+				if (value == NULL)
+					goto read_failed;
+
+				if (values != alifAtomic_loadPtr(&_mp->values)) {
+					ALIF_DECREF(value);
+					goto read_failed;
+				}
+			}
+			else {
+				value = alif_tryXGetRef(&dk_uStrEntries(dk)[ix].value);
+				if (value == NULL) {
+					goto read_failed;
+				}
+
+				if (dk != alifAtomic_loadPtr(&_mp->keys)) {
+					ALIF_DECREF(value);
+					goto read_failed;
+				}
+			}
+		}
+		else {
+			value = NULL;
+		}
+	}
+	else {
+		ix = dictKeysGeneric_lookupThreadSafe(_mp, dk, _key, _hash);
+		if (ix == DKIX_KEY_CHANGED) {
+			goto read_failed;
+		}
+		if (ix >= 0) {
+			value = alif_tryXGetRef(&dk_entries(dk)[ix].value);
+			if (value == NULL)
+				goto read_failed;
+
+			if (dk != alifAtomic_loadPtr(&_mp->keys)) {
+				ALIF_DECREF(value);
+				goto read_failed;
+			}
+		}
+		else {
+			value = NULL;
+		}
+	}
+
+	*_valueAddr = value;
+	return ix;
+
+read_failed:
+	ALIF_BEGIN_CRITICAL_SECTION(_mp);
+	ix = alifDict_lookup(_mp, _key, _hash, &value);
+	*_valueAddr = value;
+	if (value != NULL) {
+		ALIF_INCREF(value);
+	}
+	ALIF_END_CRITICAL_SECTION();
+	return ix;
+}
+
+#else   // ALIF_GIL_DISABLED
+
+AlifSizeT alifDict_lookupThreadSafe(AlifDictObject* _mp, AlifObject* _key, AlifHashT _hash, AlifObject** _valueAddr) { // 1502
+	AlifSizeT ix = alifDict_lookup(_mp, _key, _hash, _valueAddr);
+	ALIF_XNEWREF(*_valueAddr);
+	return ix;
+}
+
+#endif
 
 // 1526
 #define MAINTAIN_TRACKING(_mp, _key, _value) do { \
@@ -535,6 +737,40 @@ static AlifIntT insertion_resize(AlifInterpreter* _interp,
 	return dict_resize(_interp, _mp, calculate_log2KeySize(GROWTH_RATE(_mp)), _uStr);
 }
 
+static inline AlifIntT insert_combinedDict(AlifInterpreter* _interp, AlifDictObject* _mp,
+	AlifHashT _hash, AlifObject* _key, AlifObject* _value) { // 1620
+	if (_mp->keys->usable <= 0) {
+		if (insertion_resize(_interp, _mp, 1) < 0) {
+			return -1;
+		}
+	}
+
+	//uint64_t newVersion = alifDict_notifyEvent(
+		//interp, ALIFDICT_EVENT_ADDED, _mp, key, value);
+	_mp->keys->version = 0;
+
+	AlifSizeT hashpos = find_emptySlot(_mp->keys, _hash);
+	dictKeys_setIndex(_mp->keys, hashpos, _mp->keys->nentries);
+
+	if (DK_IS_USTR(_mp->keys)) {
+		AlifDictUStrEntry* ep_;
+		ep_ = &dk_uStrEntries(_mp->keys)[_mp->keys->nentries];
+		STORE_KEY(ep_, _key);
+		STORE_VALUE(ep_, _value);
+	}
+	else {
+		AlifDictKeyEntry* ep_;
+		ep_ = &dk_entries(_mp->keys)[_mp->keys->nentries];
+		STORE_KEY(ep_, _key);
+		STORE_VALUE(ep_, _value);
+		STORE_HASH(ep_, _hash);
+	}
+	//_mp->versionTag = newVersion;
+	STORE_KEYS_USABLE(_mp->keys, _mp->keys->usable - 1);
+	STORE_KEYS_NENTRIES(_mp->keys, _mp->keys->nentries + 1);
+	return 0;
+}
+
 static AlifSizeT insert_splitKey(AlifDictKeysObject* _keys,
 	AlifObject* _key, AlifHashT _hash) { // 1658
 	AlifSizeT ix_{};
@@ -554,8 +790,8 @@ static AlifSizeT insert_splitKey(AlifDictKeysObject* _keys,
 		AlifSizeT hashpos = find_emptySlot(_keys, _hash);
 		ix_ = _keys->nentries;
 		dictKeys_setIndex(_keys, hashpos, ix_);
-		AlifDictUStrEntry* ep = &dk_uStrEntries(_keys)[ix_];
-		STORE_SHARED_KEY(ep->key, ALIF_NEWREF(_key));
+		AlifDictUStrEntry* ep_ = &dk_uStrEntries(_keys)[ix_];
+		STORE_SHARED_KEY(ep_->key, ALIF_NEWREF(_key));
 		splitKeys_entryAdded(_keys);
 	}
 	UNLOCK_KEYS(_keys);
@@ -621,14 +857,14 @@ static AlifIntT insert_dict(AlifInterpreter* _interp, AlifDictObject* _mp,
 
 	if (oldValue != _value) {
 		//uint64_t newVersion = alifDict_notifyEvent(
-			//interp, ALIFDICT_EVENT_MODIFIED, mp, key, value);
+			//interp, ALIFDICT_EVENT_MODIFIED, _mp, key, value);
 		if (DK_IS_USTR(_mp->keys)) {
-			AlifDictUStrEntry* ep = &dk_uStrEntries(_mp->keys)[ix_];
-			STORE_VALUE(ep, _value);
+			AlifDictUStrEntry* ep_ = &dk_uStrEntries(_mp->keys)[ix_];
+			STORE_VALUE(ep_, _value);
 		}
 		else {
-			AlifDictKeyEntry* ep = &dk_entries(_mp->keys)[ix_];
-			STORE_VALUE(ep, _value);
+			AlifDictKeyEntry* ep_ = &dk_entries(_mp->keys)[ix_];
+			STORE_VALUE(ep_, _value);
 		}
 		//_mp->versionTag = newVersion;
 	}
@@ -680,10 +916,10 @@ static AlifIntT insertTo_emptyDict(AlifInterpreter* _interp,
 	return 0;
 }
 
-static void build_indicesGeneric(AlifDictKeysObject* _keys, AlifDictKeyEntry* _ep, AlifSizeT _n) { // 1847
+static void build_indicesGeneric(AlifDictKeysObject* _keys, AlifDictKeyEntry* ep_, AlifSizeT _n) { // 1847
 	AlifUSizeT mask = DK_MASK(_keys);
-	for (AlifSizeT ix_ = 0; ix_ != _n; ix_++, _ep++) {
-		AlifUSizeT hash = _ep->hash;
+	for (AlifSizeT ix_ = 0; ix_ != _n; ix_++, ep_++) {
+		AlifUSizeT hash = ep_->hash;
 		AlifUSizeT i = hash & mask;
 		for (AlifUSizeT perturb = hash; dictKeys_getIndex(_keys, i) != DKIX_EMPTY;) {
 			perturb >>= PERTURB_SHIFT;
@@ -694,10 +930,10 @@ static void build_indicesGeneric(AlifDictKeysObject* _keys, AlifDictKeyEntry* _e
 }
 
 static void build_indicesUStr(AlifDictKeysObject* _keys,
-	AlifDictUStrEntry* _ep, AlifSizeT _n) { // 1862
+	AlifDictUStrEntry* ep_, AlifSizeT _n) { // 1862
 	AlifUSizeT mask = DK_MASK(_keys);
-	for (AlifSizeT ix_ = 0; ix_ != _n; ix_++, _ep++) {
-		AlifHashT hash = uStr_getHash(_ep->key);
+	for (AlifSizeT ix_ = 0; ix_ != _n; ix_++, ep_++) {
+		AlifHashT hash = uStr_getHash(ep_->key);
 		AlifUSizeT i = hash & mask;
 		for (AlifUSizeT perturb = hash; dictKeys_getIndex(_keys, i) != DKIX_EMPTY;) {
 			perturb >>= PERTURB_SHIFT;
@@ -742,9 +978,9 @@ static AlifIntT dict_resize(AlifInterpreter* _interp, AlifDictObject* _mp,
 
 			for (AlifSizeT i = 0; i < numentries; i++) {
 				AlifIntT index = getIndex_fromOrder(_mp, i);
-				AlifDictUStrEntry* ep = &oldentries[index];
-				newentries[i].key = ALIF_NEWREF(ep->key);
-				newentries[i].hash = uStr_getHash(ep->key);
+				AlifDictUStrEntry* ep_ = &oldentries[index];
+				newentries[i].key = ALIF_NEWREF(ep_->key);
+				newentries[i].hash = uStr_getHash(ep_->key);
 				newentries[i].value = oldValues->values[index];
 			}
 			build_indicesGeneric(newkeys, newentries, numentries);
@@ -754,8 +990,8 @@ static AlifIntT dict_resize(AlifInterpreter* _interp, AlifDictObject* _mp,
 
 			for (AlifSizeT i = 0; i < numentries; i++) {
 				AlifIntT index = getIndex_fromOrder(_mp, i);
-				AlifDictUStrEntry* ep = &oldentries[index];
-				newentries[i].key = ALIF_NEWREF(ep->key);
+				AlifDictUStrEntry* ep_ = &oldentries[index];
+				newentries[i].key = ALIF_NEWREF(ep_->key);
 				newentries[i].value = oldValues->values[index];
 			}
 			build_indicesUStr(newkeys, newentries, numentries);
@@ -780,11 +1016,11 @@ static AlifIntT dict_resize(AlifInterpreter* _interp, AlifDictObject* _mp,
 				memcpy(newentries, oldentries, numentries * sizeof(AlifDictKeyEntry));
 			}
 			else {
-				AlifDictKeyEntry* ep = oldentries;
+				AlifDictKeyEntry* ep_ = oldentries;
 				for (AlifSizeT i = 0; i < numentries; i++) {
-					while (ep->value == nullptr)
-						ep++;
-					newentries[i] = *ep++;
+					while (ep_->value == nullptr)
+						ep_++;
+					newentries[i] = *ep_++;
 				}
 			}
 			build_indicesGeneric(newkeys, newentries, numentries);
@@ -797,25 +1033,25 @@ static AlifIntT dict_resize(AlifInterpreter* _interp, AlifDictObject* _mp,
 					memcpy(newentries, oldentries, numentries * sizeof(AlifDictUStrEntry));
 				}
 				else {
-					AlifDictUStrEntry* ep = oldentries;
+					AlifDictUStrEntry* ep_ = oldentries;
 					for (AlifSizeT i = 0; i < numentries; i++) {
-						while (ep->value == nullptr)
-							ep++;
-						newentries[i] = *ep++;
+						while (ep_->value == nullptr)
+							ep_++;
+						newentries[i] = *ep_++;
 					}
 				}
 				build_indicesUStr(newkeys, newentries, numentries);
 			}
 			else { // combined uStr -> generic
 				AlifDictKeyEntry* newentries = dk_entries(newkeys);
-				AlifDictUStrEntry* ep = oldentries;
+				AlifDictUStrEntry* ep_ = oldentries;
 				for (AlifSizeT i = 0; i < numentries; i++) {
-					while (ep->value == nullptr)
-						ep++;
-					newentries[i].key = ep->key;
-					newentries[i].hash = uStr_getHash(ep->key);
-					newentries[i].value = ep->value;
-					ep++;
+					while (ep_->value == nullptr)
+						ep_++;
+					newentries[i].key = ep_->key;
+					newentries[i].hash = uStr_getHash(ep_->key);
+					newentries[i].value = ep_->value;
+					ep_++;
 				}
 				build_indicesGeneric(newkeys, newentries, numentries);
 			}
@@ -833,6 +1069,44 @@ static AlifIntT dict_resize(AlifInterpreter* _interp, AlifDictObject* _mp,
 	return 0;
 }
 
+AlifIntT alifDict_GetItemRefKnownHash(AlifDictObject* _op, AlifObject* _key, AlifHashT _hash, AlifObject** _result) { // 2249
+	AlifObject* value;
+#ifdef ALIF_GIL_DISABLED
+	AlifSizeT ix = alifDict_lookupThreadSafe(_op, _key, _hash, &value);
+#else
+	AlifSizeT ix = alifDict_lookup(op, key, hash, &value);
+#endif
+	if (ix == DKIX_ERROR) {
+		*_result = nullptr;
+		return -1;
+	}
+	if (value == nullptr) {
+		*_result = nullptr;
+		return 0;  // missing key
+	}
+#ifdef ALIF_GIL_DISABLED
+	* _result = value;
+#else
+	* _result = ALIF_NEWREF(_value);
+#endif
+	return 1;  // key is present
+}
+
+AlifIntT alifDict_getItemRef(AlifObject* _op, AlifObject* _key, AlifObject** _result) { // 2275
+	if (!ALIFDICT_CHECK(_op)) {
+		//alifErr_badInternalCall();
+		*_result = nullptr;
+		return -1;
+	}
+
+	AlifHashT hash = alifObject_hashFast(_key);
+	if (hash == -1) {
+		*_result = nullptr;
+		return -1;
+	}
+
+	return alifDict_GetItemRefKnownHash((AlifDictObject*)_op, _key, hash, _result);
+}
 
 static AlifIntT setItemTake2_lockHeld(AlifDictObject* _mp,
 	AlifObject* _key, AlifObject* _value) { // 2424
