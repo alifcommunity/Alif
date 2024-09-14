@@ -135,13 +135,13 @@ static inline AlifIntT alif_tryIncRefCompare(AlifObject** _src, AlifObject* _op)
 
 static inline AlifObject* alif_tryXGetRef(AlifObject** _ptr) { // 571
 	AlifObject* value = (AlifObject*)alifAtomic_loadPtr(_ptr);
-	if (value == NULL) {
+	if (value == nullptr) {
 		return value;
 	}
 	if (alif_tryIncRefCompare(_ptr, value)) {
 		return value;
 	}
-	return NULL;
+	return nullptr;
 }
 
 static inline AlifIntT _alifObject_isGC(AlifObject* obj) { // 714
