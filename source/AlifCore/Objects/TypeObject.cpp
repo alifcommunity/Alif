@@ -1,16 +1,47 @@
 #include "alif.h"
 
-#include "AlifCore_TypeObject.h"
 #include "AlifCore_Dict.h"
+#include "AlifCore_Lock.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_ObjectAlloc.h"
+#include "AlifCore_State.h"
+#include "AlifCore_TypeObject.h"
+#include "AlifCore_CriticalSection.h" // ربما يمكن حذفه بعد الإنتهاء من تطوير اللغة
+
+
+
+
+
+
+#ifdef ALIF_GIL_DISABLED // 57
+
+// 64
+#define TYPE_LOCK &alifInterpreter_get()->types.mutex
+#define BEGIN_TYPE_LOCK() ALIF_BEGIN_CRITICAL_SECTION_MUT(TYPE_LOCK)
+#define END_TYPE_LOCK() ALIF_END_CRITICAL_SECTION()
+
+#define BEGIN_TYPE_DICT_LOCK(d) \
+    ALIF_BEGIN_CRITICAL_SECTION2_MUT(TYPE_LOCK, &ALIFOBJECT_CAST(d)->mutex)
+
+#define END_TYPE_DICT_LOCK() ALIF_END_CRITICAL_SECTION2()
+
+#else
+
+#define BEGIN_TYPE_LOCK()
+#define END_TYPE_LOCK()
+#define BEGIN_TYPE_DICT_LOCK(d)
+#define END_TYPE_DICT_LOCK()
+
+#endif // 84
+
 
 
 static inline AlifUSizeT managedStatic_typeIndexGet(AlifTypeObject* _self) { // 130
 	return (AlifUSizeT)_self->subclasses - 1;
 }
 
-static ManagedStaticTypeState* managedStatic_typeStateGet(AlifInterpreter* _interp, AlifTypeObject* _self) { // 176
+static ManagedStaticTypeState* managedStatic_typeStateGet(AlifInterpreter* _interp,
+	AlifTypeObject* _self) { // 176
 	AlifUSizeT index = managedStatic_typeIndexGet(_self);
 	ManagedStaticTypeState* state =
 		&(_interp->types.builtins.initialized[index]);

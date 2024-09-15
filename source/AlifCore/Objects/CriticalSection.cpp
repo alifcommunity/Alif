@@ -22,6 +22,24 @@ void alifCriticalSection_beginSlow(AlifCriticalSection* _c, AlifMutex* _m) { // 
 
 
 
+void alifCriticalSection2_beginSlow(AlifCriticalSection2* _c, AlifMutex* _m1,
+	AlifMutex* _m2, AlifIntT _isM1Locked) { // 25
+#ifdef ALIF_GIL_DISABLED
+	AlifThread* tstate = alifThread_get();
+	_c->base.mutex = nullptr;
+	_c->mutex2 = nullptr;
+	_c->base.prev = tstate->criticalSection;
+	tstate->criticalSection = (uintptr_t)_c | ALIF_CRITICAL_SECTION_TWO_MUTEXES;
+
+	if (!_isM1Locked) {
+		ALIFMUTEX_LOCK(_m1);
+	}
+	ALIFMUTEX_LOCK(_m2);
+	_c->base.mutex = _m1;
+	_c->mutex2 = _m2;
+#endif
+}
+
 
 
 

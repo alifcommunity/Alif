@@ -29,6 +29,7 @@ public:
 		AlifUSizeT nextIndex{};
 		ManagedStaticTypeState initialized[ALIFMAX_MANAGED_STATIC_EXT_TYPES]{};
 	} forExtensions;
+	AlifMutex mutex{};
 };
 
 AlifObject* alifType_getDict(AlifTypeObject*); // 207

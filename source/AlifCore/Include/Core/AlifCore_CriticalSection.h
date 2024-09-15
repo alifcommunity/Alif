@@ -10,14 +10,33 @@
 #define ALIF_CRITICAL_SECTION_MASK           0x3
 
 
+// 23
+#ifdef ALIF_GIL_DISABLED
+#define ALIF_BEGIN_CRITICAL_SECTION_MUT(mutex)                           \
+    {                                                                   \
+        AlifCriticalSection critSec{};                                       \
+        _alifCriticalSection_beginMutex(&critSec, mutex)
+
+#define ALIF_BEGIN_CRITICAL_SECTION2_MUT(m1, m2)                         \
+    {                                                                   \
+        AlifCriticalSection2 critSec2{};                                     \
+        _alifCriticalSection2_beginMutex(&critSec2, m1, m2)
 
 
+#else 
+#define ALIF_BEGIN_CRITICAL_SECTION_MUT(mut) {
+#define ALIF_BEGIN_CRITICAL_SECTION2_MUT(m1, m2) {
+#define ALIF_BEGIN_CRITICAL_SECTION_SEQUENCE_FAST(original) {
+#define ALIF_END_CRITICAL_SECTION_SEQUENCE_FAST() }
+#define ALIF_CRITICAL_SECTION_ASSERT_MUTEX_LOCKED(mutex)
+#define ALIF_CRITICAL_SECTION_ASSERT_OBJECT_LOCKED(op)
+#endif
 
 
 void alifCriticalSection_resume(AlifThread*); // 89
 
 void alifCriticalSection_beginSlow(AlifCriticalSection*, AlifMutex*); // 92
-
+void alifCriticalSection2_beginSlow(AlifCriticalSection2*, AlifMutex*, AlifMutex*, AlifIntT); // 95
 void alifCriticalSection_suspendAll(AlifThread*); // 99
 
 
@@ -65,6 +84,52 @@ static inline void _alifCriticalSection_end(AlifCriticalSection* _c) { // 145
 	_alifCriticalSection_pop(_c);
 }
 #define ALIFCRITICALSECTION_END _alifCriticalSection_end
+
+
+static inline void _alifCriticalSection2_beginMutex(AlifCriticalSection2* _c,
+	AlifMutex* _m1, AlifMutex* _m2) { // 153
+	if (_m1 == _m2) {
+		_c->mutex2 = nullptr;
+		_alifCriticalSection_beginMutex(&_c->base, _m1);
+		return;
+	}
+
+	if ((uintptr_t)_m2 < (uintptr_t)_m1) {
+		AlifMutex* tmp = _m1;
+		_m1 = _m2;
+		_m2 = tmp;
+	}
+
+	if (alifMutex_lockFast(&_m1->bits)) {
+		if (alifMutex_lockFast(&_m2->bits)) {
+			AlifThread* tstate = alifThread_get();
+			_c->base.mutex = _m1;
+			_c->mutex2 = _m2;
+			_c->base.prev = tstate->criticalSection;
+
+			uintptr_t p = (uintptr_t)_c | ALIF_CRITICAL_SECTION_TWO_MUTEXES;
+			tstate->criticalSection = p;
+		}
+		else {
+			alifCriticalSection2_beginSlow(_c, _m1, _m2, 1);
+		}
+	}
+	else {
+		alifCriticalSection2_beginSlow(_c, _m1, _m2, 0);
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

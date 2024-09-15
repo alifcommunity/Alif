@@ -198,15 +198,15 @@ AlifHashT alifObject_hash(AlifObject* _v) { // 1067
 
 
 AlifIntT alifObject_setAttrString(AlifObject* _v, const char* _name, AlifObject* _w) { // 1126
-	AlifObject* s{};
+	AlifObject* s_{};
 	AlifIntT res_{};
 
 	if (ALIF_TYPE(_v)->setAttr != nullptr)
 		return (*ALIF_TYPE(_v)->setAttr)(_v, (char*)_name, _w);
-	s = alifUStr_internFromString(_name);
-	if (s == nullptr) return -1;
-	res_ = alifObject_setAttr(_v, s, _w);
-	ALIF_XDECREF(s);
+	s_ = alifUStr_internFromString(_name);
+	if (s_ == nullptr) return -1;
+	res_ = alifObject_setAttr(_v, s_, _w);
+	ALIF_XDECREF(s_);
 	return res_;
 }
 
