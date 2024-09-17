@@ -1,6 +1,7 @@
 #include "alif.h"
 
 #include "AlifCore_BiaseRefCount.h"
+#include "AlifCore_Eval.h"
 #include "AlifCore_Dict.h"
 #include "AlifCore_FreeList.h"
 #include "AlifCore_InitConfig.h"
@@ -128,11 +129,10 @@ static AlifObject* do_richCompare(AlifThread* _thread,
 		res_ = (_v != _w) ? ALIF_TRUE : ALIF_FALSE;
 		break;
 	default:
-		//alifErr_format(_tstate, _alifExctypeError_,
+		//alifErr_format(_thread, _alifExctypeError_,
 		//	"'%s' ليس مدعوم بين حالات من '%.100 s' و '%.100 s'",
 		//	_opStrings_[_op],
-		//	ALIF_TYPE(_v)->name,
-		//	ALIF_TYPE(_w)->name);
+		//	ALIF_TYPE(_v)->name, ALIF_TYPE(_w)->name);
 		return nullptr;
 	}
 	return ALIF_NEWREF(res_);
@@ -147,11 +147,12 @@ AlifObject* alifObject_richCompare(AlifObject* _v, AlifObject* _w, AlifIntT _op)
 		//}
 		return nullptr;
 	}
-	if (alif_enterRecursiveCallThreadState(thread, " في المقارنة")) {
+	if (alif_enterRecursiveCallTstate(thread, " في المقارنة")) {
 		return nullptr;
 	}
 	AlifObject* res_ = do_richCompare(thread, _v, _w, _op);
-	alif_leaveRecursiveCallThreadState(thread);
+
+	alif_leaveRecursiveCallTstate(thread);
 	return res_;
 }
 
@@ -215,7 +216,7 @@ AlifIntT alifObject_setAttr(AlifObject* _v, AlifObject* _name, AlifObject* _valu
 	AlifIntT err{};
 
 	if (!ALIFUSTR_CHECK(_name)) {
-		//alifErr_format(alifExc_typeError,
+		//alifErr_format(_alifExcTypeError_,
 			//"attribute name must be string, not '%.200s'",
 			//ALIF_TYPE(_name)->name);
 		return -1;
@@ -241,13 +242,13 @@ AlifIntT alifObject_setAttr(AlifObject* _v, AlifObject* _name, AlifObject* _valu
 	}
 	ALIF_DECREF(_name);
 	if (tp_->getAttr == nullptr and tp_->getAttro == nullptr) {
-		//alfiErr_format(alifExc_typeError,
+		//alfiErr_format(_alifExcTypeError_,
 			//"'%.100s' object has no attributes "
 			//"(%s .%U)", tp_->name,
 			//_value == nullptr ? "del" : "assign to", _name);
 	}
 	else {
-		//alifErr_format(alifExc_typeError,
+		//alifErr_format(_alifExcTypeError_,
 			//"'%.100s' object has only read-only attributes "
 			//"(%s .%U)", tp_->name,
 			//_value == nullptr ? "del" : "assign to", _name);

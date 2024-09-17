@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_BiaseRefCount.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_BytesObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_CondVar.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_CriticalSection.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Dict.h" />
@@ -36,6 +37,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GIL.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GlobalObjects.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GlobalString.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_HashTable.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Import.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_InitConfig.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Interpreter.h" />
@@ -79,6 +81,8 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomicGCC.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomicMSC.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\BuiltinsModule.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\ByteArrayObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\BytesObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\CondVar.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\CriticalSection.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\DescrObject.h" />
@@ -117,6 +121,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\UStrObject.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\source\AlifCore\Objects\AlifEval.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifEvalGIL.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifLifeCycle.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifMemory.cpp" />
@@ -128,6 +133,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\BiaseRefCount.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\BoolObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\BuiltinsModule.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\BytesObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ConfigMinimal.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\DictObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\CriticalSection.cpp" />
@@ -135,6 +141,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\GCFreeThreading.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GetOption.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GetVersion.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\HashTable.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Import.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\InitConfig.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ListObject.cpp" />

@@ -142,6 +142,15 @@
     <ClCompile Include="..\source\AlifCore\Objects\BoolObject.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\HashTable.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\AlifEval.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\BytesObject.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">
@@ -324,9 +333,6 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\BuiltinsModule.h">
       <Filter>Include\Main</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Codecs.h">
-      <Filter>Include\Main</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Main\CondVar.h">
       <Filter>Include\Main</Filter>
     </ClInclude>
@@ -430,6 +436,21 @@
       <Filter>Include\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Main\LongIntRepr.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_BytesObject.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_HashTable.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\BytesObject.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Codecs.h">
+      <Filter>Include\Main\StringLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\ByteArrayObject.h">
       <Filter>Include\Main</Filter>
     </ClInclude>
   </ItemGroup>

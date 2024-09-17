@@ -47,8 +47,28 @@ static inline AlifIntT alifEval_isGILEnabled(AlifThread* _thread) { // 145
 }
 
 
+#ifdef USE_STACKCHECK // 187
+static inline AlifIntT alif_makeRecCheck(AlifThread* _thread) {
+	return (_thread->cppRecursionRemaining-- < 0
+		or (_thread->cppRecursionRemaining & 63) == 0);
+}
+#else
+static inline AlifIntT alif_makeRecCheck(AlifThread* _thread) {
+	return _thread->cppRecursionRemaining-- < 0;
+}
+#endif
+
+AlifIntT alif_checkRecursiveCall(AlifThread*, const char*); // 202
+
+static inline AlifIntT alif_enterRecursiveCallTstate(AlifThread* _thread,
+	const char* where) { // 209
+	return (alif_makeRecCheck(_thread) and alif_checkRecursiveCall(_thread, where));
+}
 
 
+static inline void alif_leaveRecursiveCallTstate(AlifThread* _thread) { // 224
+	_thread->cppRecursionRemaining++;
+}
 
 
 // 279

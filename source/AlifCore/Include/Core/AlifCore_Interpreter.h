@@ -8,6 +8,7 @@
 #include "AlifCore_Memory.h"
 #include "AlifCore_ThreadState.h"
 #include "AlifCore_TypeObject.h"
+#include "AlifCore_GlobalObjects.h"
 
 
 class StopTheWorldState { // 50
@@ -81,6 +82,7 @@ public:
 
 	AlifMemory* memory_{};
 
+	AlifInterpCachedObjects cachedObjects{};
 	//AlifObjectState objectState{};
 
 	AlifDictState dictState{};

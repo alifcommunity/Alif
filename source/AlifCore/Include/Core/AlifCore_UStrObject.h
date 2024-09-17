@@ -15,4 +15,11 @@
 
 
 
-extern void alifUStr_fastCopyCharacters(AlifObject*, AlifSizeT, AlifObject*, AlifSizeT, AlifSizeT); // 55
+extern void alifUStr_fastCopyCharacters(AlifObject*, AlifSizeT,
+	AlifObject*, AlifSizeT, AlifSizeT); // 55
+
+
+
+
+
+void alifUStr_internMortal(AlifInterpreter*, AlifObject**); // 284

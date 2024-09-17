@@ -2,6 +2,7 @@
 
 #include "AlifCore_GC.h"
 #include "AlifCore_GlobalString.h"
+#include "AlifCore_HashTable.h"
 
 
 
@@ -17,6 +18,10 @@
 #define ALIF_SINGLETON(_name) \
     ALIF_GLOBAL_OBJECT(singletons._name)
 
+class AlifCachedObjects { // 32
+public:
+	AlifHashTableT* internedStrings{};
+};
 
 
 
@@ -45,4 +50,15 @@ public:
 
 		AlifTupleObject tupleEmpty{};
 	} singletons;
+};
+
+
+// 63
+#define ALIF_INTERP_CACHED_OBJECT(_interp, _name) \
+    (_interp)->cachedObjects._name
+
+
+class AlifInterpCachedObjects { // 66
+public:
+	AlifObject* internedStrings{};
 };

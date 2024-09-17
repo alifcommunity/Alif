@@ -236,3 +236,210 @@ invalidContinuation3:
 	ch_ = 4;
 	goto returnRes;
 }
+
+
+
+
+#undef ASCII_CHAR_MASK // 254
+
+
+
+ALIF_LOCAL_INLINE(char*)
+STRINGLIB(utf8Encoder)(AlifBytesWriter* _writer, AlifObject* _uStr,
+	const STRINGLIB_CHAR* _data, AlifSizeT _size,
+	AlifErrorHandler_ _errorHandler, const char* _errors) { // 260
+	AlifSizeT i_{};                /* index into data of next input character */
+	char* p_{};                     /* next free byte in output buffer */
+#if STRINGLIB_SIZEOF_CHAR > 1
+	AlifObject* errorHandlerObj = nullptr;
+	AlifObject* exc = nullptr;
+	AlifObject* rep = nullptr;
+#endif
+#if STRINGLIB_SIZEOF_CHAR == 1
+	const AlifSizeT maxCharSize = 2;
+#elif STRINGLIB_SIZEOF_CHAR == 2
+	const AlifSizeT maxCharSize = 3;
+#else /*  STRINGLIB_SIZEOF_CHAR == 4 */
+	const AlifSizeT maxCharSize = 4;
+#endif
+
+	if (_size > ALIF_SIZET_MAX / maxCharSize) {
+		/* integer overflow */
+		//alifErr_noMemory();
+		return nullptr;
+	}
+
+	alifBytesWriter_init(_writer);
+	p_ = (char*)alifBytesWriter_alloc(_writer, _size * maxCharSize);
+	if (p_ == nullptr)
+		return nullptr;
+
+	for (i_ = 0; i_ < _size;) {
+		AlifUCS4 ch = _data[i_++];
+
+		if (ch < 0x80) {
+			/* Encode ASCII */
+			*p_++ = (char)ch;
+
+		}
+		else
+//#if STRINGLIB_SIZEOF_CHAR > 1
+			if (ch < 0x0800)
+//#endif
+			{
+				/* Encode Latin-1 */
+				*p_++ = (char)(0xc0 | (ch >> 6));
+				*p_++ = (char)(0x80 | (ch & 0x3f));
+			}
+//#if STRINGLIB_SIZEOF_CHAR > 1
+			else if (ALIF_UNICODE_IS_SURROGATE(ch)) {
+				AlifSizeT startpos{}, endpos{}, newpos{};
+				AlifSizeT k{};
+				//if (_errorHandler == AlifErrorHandler_::Alif_Error_Unknown) {
+				//	_errorHandler = alif_getErrorHandler(_errors);
+				//}
+
+				startpos = i_ - 1;
+				endpos = startpos + 1;
+
+				while ((endpos < _size) and ALIF_UNICODE_IS_SURROGATE(_data[endpos]))
+					endpos++;
+
+				/* Only overallocate the buffer if it's not the last write */
+				_writer->overAllocate = (endpos < _size);
+
+				switch (_errorHandler)
+				{
+				case AlifErrorHandler_::Alif_Error_Replace:
+					memset(p_, '?', endpos - startpos);
+					p_ += (endpos - startpos);
+					ALIF_FALLTHROUGH;
+				case AlifErrorHandler_::Alif_Error_Ignore:
+					i_ += (endpos - startpos - 1);
+					break;
+
+				case AlifErrorHandler_::Alif_Error_SurrogatePass:
+					for (k = startpos; k < endpos; k++) {
+						ch = _data[k];
+						*p_++ = (char)(0xe0 | (ch >> 12));
+						*p_++ = (char)(0x80 | ((ch >> 6) & 0x3f));
+						*p_++ = (char)(0x80 | (ch & 0x3f));
+					}
+					i_ += (endpos - startpos - 1);
+					break;
+
+				case AlifErrorHandler_::Alif_Error_BackSlashReplace:
+					/* subtract preallocated bytes */
+					_writer->minSize -= maxCharSize * (endpos - startpos);
+					p_ = backSlash_replace(_writer, p_,
+						_uStr, startpos, endpos);
+					if (p_ == nullptr)
+						goto error;
+					i_ += (endpos - startpos - 1);
+					break;
+
+				case AlifErrorHandler_::Alif_Error_XMLCharRefReplace:
+					/* subtract preallocated bytes */
+					_writer->minSize -= maxCharSize * (endpos - startpos);
+					p_ = xmlCharRef_replace(_writer, p_,
+						_uStr, startpos, endpos);
+					if (p_ == nullptr)
+						goto error;
+					i_ += (endpos - startpos - 1);
+					break;
+
+				case AlifErrorHandler_::Alif_Error_SurrogateEscape:
+					for (k = startpos; k < endpos; k++) {
+						ch = _data[k];
+						if (!(0xDC80 <= ch && ch <= 0xDCFF))
+							break;
+						*p_++ = (char)(ch & 0xff);
+					}
+					if (k >= endpos) {
+						i_ += (endpos - startpos - 1);
+						break;
+					}
+					startpos = k;
+					ALIF_FALLTHROUGH;
+				default:
+					//rep = unicodeEncode_callErrorHandler(
+					//	_errors, &errorHandlerObj, "utf-8", "surrogates not allowed",
+					//	_uStr, &exc, startpos, endpos, &newpos);
+					//if (!rep)
+					//	goto error;
+
+					if (newpos < startpos) {
+						_writer->overAllocate = 1;
+						p_ = (char*)alifBytesWriter_prepare(_writer, p_,
+							maxCharSize * (startpos - newpos));
+						if (p_ == nullptr)
+							goto error;
+					}
+					else {
+						/* subtract preallocated bytes */
+						_writer->minSize -= maxCharSize * (newpos - startpos);
+						/* Only overallocate the buffer if it's not the last write */
+						_writer->overAllocate = (newpos < _size);
+					}
+
+					//if (ALIFBYTES_CHECK(rep)) {
+					//	p_ = alifBytesWriter_writeBytes(_writer, p_,
+					//		ALIFBYTES_AS_STRING(rep),
+					//		ALIFBYTES_GET_SIZE(rep));
+					//}
+					//else {
+					//	/* rep is unicode */
+					//	if (!ALIFUSTR_IS_ASCII(rep)) {
+					//		raise_encodeException(&exc, "utf-8", _uStr,
+					//			startpos, endpos, "surrogates not allowed");
+					//		goto error;
+					//	}
+
+					//	p_ = alifBytesWriter_writeBytes(_writer, p_,
+					//		ALIFUSTR_DATA(rep),
+					//		ALIFUSTR_GET_LENGTH(rep));
+					//}
+
+					//if (p_ == nullptr)
+					//	goto error;
+					//ALIF_CLEAR(rep);
+
+					i_ = newpos;
+				}
+			}
+			else
+#if STRINGLIB_SIZEOF_CHAR > 2
+				if (ch < 0x10000)
+#endif
+				{
+					*p_++ = (char)(0xe0 | (ch >> 12));
+					*p_++ = (char)(0x80 | ((ch >> 6) & 0x3f));
+					*p_++ = (char)(0x80 | (ch & 0x3f));
+				}
+#if STRINGLIB_SIZEOF_CHAR > 2
+				else /* ch >= 0x10000 */
+				{
+					/* Encode UCS4 Unicode ordinals */
+					*p_++ = (char)(0xf0 | (ch >> 18));
+					*p_++ = (char)(0x80 | ((ch >> 12) & 0x3f));
+					*p_++ = (char)(0x80 | ((ch >> 6) & 0x3f));
+					*p_++ = (char)(0x80 | (ch & 0x3f));
+				}
+#endif /* STRINGLIB_SIZEOF_CHAR > 2 */
+#endif /* STRINGLIB_SIZEOF_CHAR > 1 */
+	}
+
+#if STRINGLIB_SIZEOF_CHAR > 1
+	ALIF_XDECREF(errorHandlerObj);
+	ALIF_XDECREF(exc);
+#endif
+	return p_;
+
+#if STRINGLIB_SIZEOF_CHAR > 1
+error:
+	ALIF_XDECREF(rep);
+	ALIF_XDECREF(errorHandlerObj);
+	ALIF_XDECREF(exc);
+	return nullptr;
+#endif
+}

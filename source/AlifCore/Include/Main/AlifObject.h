@@ -208,7 +208,7 @@ AlifIntT alifObject_richCompareBool(AlifObject* , AlifObject* , AlifIntT ); // 4
 
 AlifIntT alifObject_setAttrString(AlifObject*, const char*, AlifObject*); // 426
 
-AlifIntT alifObject_setAttr(AlifObject*, AlifObject*, AlifObject*);
+AlifIntT alifObject_setAttr(AlifObject*, AlifObject*, AlifObject*); // 434
 
 AlifHashT alifObject_hash(AlifObject*); // 447
 AlifHashT alifObject_hashNotImplemented(AlifObject*); // 448

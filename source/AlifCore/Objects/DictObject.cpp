@@ -422,7 +422,7 @@ AlifSizeT alifDict_lookup(AlifDictObject* _mp, AlifObject* _key,
 	AlifHashT _hash, AlifObject** _valueAddr) { // 1173
 	AlifDictKeysObject* dk_{};
 	DictKeysKind_ kind{};
-	AlifSizeT ix{};
+	AlifSizeT ix_{};
 
 start:
 	dk_ = _mp->keys;
@@ -432,15 +432,15 @@ start:
 		if (ALIFUSTR_CHECKEXACT(_key)) {
 #ifdef ALIF_GIL_DISABLED
 			if (kind == DictKeysKind_::Dict_Keys_Split) {
-				ix = uStrKeysLookup_uStrThreadSafe(dk_, _key, _hash);
-				if (ix == DKIX_KEY_CHANGED) {
+				ix_ = uStrKeysLookup_uStrThreadSafe(dk_, _key, _hash);
+				if (ix_ == DKIX_KEY_CHANGED) {
 					LOCK_KEYS(dk_);
-					ix = uStrKeys_lookupUStr(dk_, _key, _hash);
+					ix_ = uStrKeys_lookupUStr(dk_, _key, _hash);
 					UNLOCK_KEYS(dk_);
 				}
 			}
 			else {
-				ix = uStrKeys_lookupUStr(dk_, _key, _hash);
+				ix_ = uStrKeys_lookupUStr(dk_, _key, _hash);
 			}
 #else
 			ix = uStrKeys_lookupUStr(dk, _key, _hash);
@@ -450,21 +450,21 @@ start:
 			INCREF_KEYS_FT(dk_);
 			LOCK_KEYS_IF_SPLIT(dk_, kind);
 
-			ix = uStrKeys_lookupGeneric(_mp, dk_, _key, _hash);
+			ix_ = uStrKeys_lookupGeneric(_mp, dk_, _key, _hash);
 
 			UNLOCK_KEYS_IF_SPLIT(dk_, kind);
 			DECREF_KEYS_FT(dk_, IS_DICT_SHARED(_mp));
-			if (ix == DKIX_KEY_CHANGED) {
+			if (ix_ == DKIX_KEY_CHANGED) {
 				goto start;
 			}
 		}
 
-		if (ix >= 0) {
+		if (ix_ >= 0) {
 			if (kind == DictKeysKind_::Dict_Keys_Split) {
-				*_valueAddr = _mp->values->values[ix];
+				*_valueAddr = _mp->values->values[ix_];
 			}
 			else {
-				*_valueAddr = dk_uStrEntries(dk_)[ix].value;
+				*_valueAddr = dk_uStrEntries(dk_)[ix_].value;
 			}
 		}
 		else {
@@ -472,19 +472,19 @@ start:
 		}
 	}
 	else {
-		ix = dictKeys_genericLookup(_mp, dk_, _key, _hash);
-		if (ix == DKIX_KEY_CHANGED) {
+		ix_ = dictKeys_genericLookup(_mp, dk_, _key, _hash);
+		if (ix_ == DKIX_KEY_CHANGED) {
 			goto start;
 		}
-		if (ix >= 0) {
-			*_valueAddr = dk_entries(dk_)[ix].value;
+		if (ix_ >= 0) {
+			*_valueAddr = dk_entries(dk_)[ix_].value;
 		}
 		else {
 			*_valueAddr = nullptr;
 		}
 	}
 
-	return ix;
+	return ix_;
 }
 
 
@@ -608,7 +608,7 @@ AlifSizeT alifDict_lookupThreadSafe(AlifDictObject* _mp,
 	AlifSizeT ix_{};
 	AlifObject* value{};
 
-	//ensureShared_onRead(mp);
+	//ensureShared_onRead(_mp);
 
 	dk_ = (AlifDictKeysObject*)alifAtomic_loadPtr(&_mp->keys);
 	kind = (DictKeysKind_)dk_->kind;
@@ -696,9 +696,9 @@ read_failed:
 #else   // ALIF_GIL_DISABLED
 
 AlifSizeT alifDict_lookupThreadSafe(AlifDictObject* _mp, AlifObject* _key, AlifHashT _hash, AlifObject** _valueAddr) { // 1502
-	AlifSizeT ix = alifDict_lookup(_mp, _key, _hash, _valueAddr);
+	AlifSizeT ix_ = alifDict_lookup(_mp, _key, _hash, _valueAddr);
 	ALIF_XNEWREF(*_valueAddr);
-	return ix;
+	return ix_;
 }
 
 #endif
@@ -724,14 +724,14 @@ static inline AlifIntT is_unusableSlot(AlifSizeT _ix) { // 1585
 
 static AlifSizeT find_emptySlot(AlifDictKeysObject* _keys, AlifHashT _hash) { // 1598
 	const AlifUSizeT mask = DK_MASK(_keys);
-	AlifUSizeT i = _hash & mask;
-	AlifSizeT ix = dictKeys_getIndex(_keys, i);
-	for (AlifUSizeT perturb = _hash; is_unusableSlot(ix);) {
+	AlifUSizeT i_ = _hash & mask;
+	AlifSizeT ix_ = dictKeys_getIndex(_keys, i_);
+	for (AlifUSizeT perturb = _hash; is_unusableSlot(ix_);) {
 		perturb >>= PERTURB_SHIFT;
-		i = (i * 5 + perturb + 1) & mask;
-		ix = dictKeys_getIndex(_keys, i);
+		i_ = (i_ * 5 + perturb + 1) & mask;
+		ix_ = dictKeys_getIndex(_keys, i_);
 	}
-	return i;
+	return i_;
 }
 
 static AlifIntT insertion_resize(AlifInterpreter* _interp,
@@ -1146,6 +1146,123 @@ AlifIntT alifDict_setItem(AlifObject* _op, AlifObject* _key, AlifObject* _value)
 		ALIF_NEWREF(_key), ALIF_NEWREF(_value));
 }
 
+
+
+static AlifIntT dictSetDefault_refLockHeld(AlifObject* _d, AlifObject* _key, AlifObject* _defaultValue,
+	AlifObject** _result, AlifIntT _incRefResult) { // 4145
+	AlifDictObject* mp_ = (AlifDictObject*)_d;
+	AlifObject* value{};
+	AlifHashT hash{};
+	AlifInterpreter* interp = alifInterpreter_get();
+	AlifSizeT ix_{};
+
+	if (!ALIFDICT_CHECK(_d)) {
+		//ALIFERR_BADINTERNALCALL();
+		if (_result) {
+			*_result = nullptr;
+		}
+		return -1;
+	}
+
+	hash = alifObject_hashFast(_key);
+	if (hash == -1) {
+		if (_result) {
+			*_result = nullptr;
+		}
+		return -1;
+	}
+
+	if (mp_->keys == ALIF_EMPTY_KEYS) {
+		if (insertTo_emptyDict(interp, mp_, ALIF_NEWREF(_key), hash,
+			ALIF_NEWREF(_defaultValue)) < 0) {
+			if (_result) {
+				*_result = nullptr;
+			}
+			return -1;
+		}
+		if (_result) {
+			*_result = _incRefResult ? ALIF_NEWREF(_defaultValue) : _defaultValue;
+		}
+		return 0;
+	}
+
+	if (!ALIFUSTR_CHECKEXACT(_key) and DK_IS_USTR(mp_->keys)) {
+		if (insertion_resize(interp, mp_, 0) < 0) {
+			if (_result) {
+				*_result = nullptr;
+			}
+			return -1;
+		}
+	}
+
+	if (ALIFDICT_HASSPLITTABLE(mp_)) {
+		AlifSizeT ix_ = insert_splitKey(mp_->keys, _key, hash);
+		if (ix_ != DKIX_EMPTY) {
+			AlifObject* value = mp_->values->values[ix_];
+			AlifIntT alreadyPresent = value != nullptr;
+			if (!alreadyPresent) {
+				insert_splitValue(interp, mp_, _key, _defaultValue, ix_);
+				value = _defaultValue;
+			}
+			if (_result) {
+				*_result = _incRefResult ? ALIF_NEWREF(value) : value;
+			}
+			return alreadyPresent;
+		}
+
+		if (insertion_resize(interp, mp_, 1) < 0) {
+			goto error;
+		}
+	}
+
+
+	ix_ = alifDict_lookup(mp_, _key, hash, &value);
+	if (ix_ == DKIX_ERROR) {
+		if (_result) {
+			*_result = nullptr;
+		}
+		return -1;
+	}
+
+	if (ix_ == DKIX_EMPTY) {
+		value = _defaultValue;
+
+		if (insert_combinedDict(interp, mp_, hash, ALIF_NEWREF(_key), ALIF_NEWREF(value)) < 0) {
+			ALIF_DECREF(_key);
+			ALIF_DECREF(value);
+			if (_result) {
+				*_result = nullptr;
+			}
+		}
+
+		MAINTAIN_TRACKING(mp_, _key, value);
+		STORE_USED(mp_, mp_->used + 1);
+		if (_result) {
+			*_result = _incRefResult ? ALIF_NEWREF(value) : value;
+		}
+		return 0;
+	}
+
+	if (_result) {
+		*_result = _incRefResult ? ALIF_NEWREF(value) : value;
+	}
+	return 1;
+
+error:
+	if (_result) {
+		*_result = nullptr;
+	}
+	return -1;
+}
+
+AlifIntT alifDict_setDefaultRef(AlifObject* _d, AlifObject* _key,
+	AlifObject* _defaultValue, AlifObject** _result) { // 4262
+	AlifIntT res{};
+	ALIF_BEGIN_CRITICAL_SECTION(_d);
+	res = dictSetDefault_refLockHeld(_d, _key, _defaultValue, _result, 1);
+	ALIF_END_CRITICAL_SECTION();
+	return res;
+}
 
 
 
