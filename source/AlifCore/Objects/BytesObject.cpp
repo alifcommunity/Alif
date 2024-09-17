@@ -1,6 +1,8 @@
 #include "alif.h"
 
 #include "AlifCore_BytesObject.h"
+#include "AlifCore_GlobalObjects.h"
+#include "AlifCore_Object.h"
 
 
 
@@ -9,11 +11,149 @@
 
 
 
+#define ALIFBYTESOBJECT_SIZE (offsetof(AlifBytesObject, val) + 1) // 32
+
+// 39
+#define CHARACTERS ALIF_SINGLETON(bytesCharacters)
+#define CHARACTER(ch) \
+     ((AlifBytesObject *)&(CHARACTERS[ch]));
+#define EMPTY (&ALIF_SINGLETON(bytesEmpty)) // 42
+
+
+static inline AlifObject* bytes_getEmpty(void) { // 46
+	AlifObject* empty = &EMPTY->objBase.objBase;
+	return empty;
+}
+
+
+
+static AlifObject* alifBytes_fromSize(AlifSizeT _size, AlifIntT _useCalloc) { // 76
+	AlifBytesObject* op{};
+
+	if (_size == 0) {
+		return bytes_getEmpty();
+	}
+
+	if ((AlifUSizeT)_size > (AlifUSizeT)ALIF_SIZET_MAX - ALIFBYTESOBJECT_SIZE) {
+		//alifErr_SetString(_alifExcOverflowError_,
+		//	"byte string is too large");
+		return nullptr;
+	}
+
+	if (_useCalloc) {
+		op = (AlifBytesObject*)alifMem_objAlloc(ALIFBYTESOBJECT_SIZE + _size); // this calloc and need review
+	} else {
+		op = (AlifBytesObject*)alifMem_objAlloc(ALIFBYTESOBJECT_SIZE + _size);
+	}
+	if (op == nullptr) {
+		//return alifErr_noMemory();
+		return nullptr; // temp
+	}
+	alifObject_initVar((AlifVarObject*)op, &_alifBytesType_, _size);
+	op->hash = -1;
+	if (!_useCalloc) {
+		op->val[_size] = '\0';
+	}
+	return (AlifObject*)op;
+}
+
+
+AlifObject* alifBytes_fromStringAndSize(const char* _str, AlifSizeT _size) { // 111
+	AlifBytesObject* op{};
+	if (_size < 0) {
+		//alifErr_setString(_alifExcSystemError_,
+		//	"Negative size passed to alifBytes_fromStringAndSize");
+		return nullptr;
+	}
+	if (_size == 1 and _str != nullptr) {
+		op = CHARACTER(*_str & 255);
+		return (AlifObject*)op;
+	}
+	if (_size == 0) {
+		return bytes_getEmpty();
+	}
+
+	op = (AlifBytesObject*)alifBytes_fromSize(_size, 0);
+	if (op == nullptr)
+		return nullptr;
+	if (_str == nullptr)
+		return (AlifObject*)op;
+
+	memcpy(op->val, _str, _size);
+	return (AlifObject*)op;
+}
 
 
 
 
 
+
+
+
+AlifTypeObject _alifBytesType_ = { // 3028
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "بايت",
+	.basicSize = ALIFBYTESOBJECT_SIZE,
+	.itemSize = sizeof(char),
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE |
+		ALIF_TPFLAGS_BYTES_SUBCLASS | _ALIF_TPFLAGS_MATCH_SELF,
+};
+
+
+
+AlifIntT alifBytes_resize(AlifObject** _pv, AlifSizeT _newSize) { // 3141
+	AlifObject* v{};
+	AlifBytesObject* sv{};
+	v = *_pv;
+	if (!ALIFBYTES_CHECK(v) or _newSize < 0) {
+		*_pv = 0;
+		ALIF_DECREF(v);
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+	AlifSizeT oldsize = ALIFBYTES_GET_SIZE(v);
+	if (oldsize == _newSize) {
+		/* return early if newsize equals to v->size */
+		return 0;
+	}
+	if (oldsize == 0) {
+		*_pv = alifBytes_fromSize(_newSize, 0);
+		ALIF_DECREF(v);
+		return (*_pv == nullptr) ? -1 : 0;
+	}
+	if (_newSize == 0) {
+		*_pv = bytes_getEmpty();
+		ALIF_DECREF(v);
+		return 0;
+	}
+	if (ALIF_REFCNT(v) != 1) {
+		if (oldsize < _newSize) {
+			*_pv = alifBytes_fromSize(_newSize, 0);
+			if (*_pv) {
+				memcpy(ALIFBYTES_AS_STRING(*_pv), ALIFBYTES_AS_STRING(v), oldsize);
+			}
+		}
+		else {
+			*_pv = alifBytes_fromStringAndSize(ALIFBYTES_AS_STRING(v), _newSize);
+		}
+		ALIF_DECREF(v);
+		return (*_pv == nullptr) ? -1 : 0;
+	}
+
+	* _pv = (AlifObject*)
+		alifMem_objRealloc(v, ALIFBYTESOBJECT_SIZE + _newSize);
+	if (*_pv == NULL) {
+		alifMem_objFree(v);
+		//alifErr_noMemory();
+		return -1;
+	}
+	alif_newReferenceNoTotal(*_pv);
+	sv = (AlifBytesObject*)*_pv;
+	ALIF_SET_SIZE(sv, _newSize);
+	sv->val[_newSize] = '\0';
+	sv->hash = -1;          /* invalidate cached hash value */
+	return 0;
+}
 
 
 
@@ -21,7 +161,7 @@
 
 /* AlifBytesWriter API */
 
-#ifdef _WINDOWS
+#ifdef _WINDOWS // 3363
    /* On Windows, overallocate by 50% is the best factor */
 #  define OVERALLOCATE_FACTOR 2
 #else

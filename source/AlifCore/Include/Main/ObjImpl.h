@@ -10,6 +10,11 @@ AlifIntT alifObject_isGC(AlifObject*); // 78
 AlifObject* alifObject_init(AlifObject*, AlifTypeObject*); // 117
 AlifVarObject* alifObject_initVar(AlifVarObject*, AlifTypeObject*, AlifSizeT); // 118
 
+AlifObject* alifObject_new(AlifTypeObject*); // 127
+
+#define ALIFOBJECT_NEW(_type, _typeObj) ((_type *)alifObject_new(_typeObj)) // 130
+
+
 #define ALIFTYPE_IS_GC(_t) alifType_hasFeature(_t, ALIF_TPFLAGS_HAVE_GC) // 157
 
 AlifObject* alifObject_gcNew(AlifTypeObject* _tp); // 165

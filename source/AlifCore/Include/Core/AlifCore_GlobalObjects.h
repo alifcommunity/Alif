@@ -40,11 +40,12 @@ public:
 	public:
 		//AlifLongObject smallInts[ALIF_NSMALLNEGINTS + ALIF_NSMALLPOSINTS];
 
-		//AlifBytesObject bytesEmpty;
-		//struct {
-		//	AlifBytesObject ob;
-		//	char eos;
-		//} bytesCharacters[256];
+		AlifBytesObject bytesEmpty{};
+		class {
+		public:
+			AlifBytesObject ob{};
+			char eos{};
+		} bytesCharacters[256];
 
 		AlifGlobalStrings strings{};
 

@@ -249,6 +249,9 @@ AlifIntT alifObject_isTrue(AlifObject*); // 449
 #define ALIF_TPFLAGS_DEFAULT  (ALIF_TPFLAGS_HAVE_STACKLESS_EXTENSION | 0)
 
 
+#define _ALIF_TPFLAGS_MATCH_SELF (1UL << 22) // 566
+
+
 extern AlifObject _alifNoneClass_; // 623
 
 #define ALIF_NONE (&_alifNoneClass_) // 628

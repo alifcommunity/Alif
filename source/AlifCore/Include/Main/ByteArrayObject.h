@@ -2,6 +2,21 @@
 
 
 
+
+extern AlifTypeObject _alifByteArrayType_; // 20
+extern AlifTypeObject _alifByteArrayIterType_;
+
+
+
+AlifObject* alifByteArray_fromStringAndSize(const char*, AlifSizeT); // 30
+
+AlifIntT alifByteArray_resize(AlifObject*, AlifSizeT); // 33
+
+
+
+/* -------------------------------------------------------------------------------------------- */
+
+
 class AlifByteArrayObject {
 public:
 	ALIFOBJECT_VAR_HEAD;

@@ -89,6 +89,20 @@ AlifVarObject* alifObject_initVar(AlifVarObject* _op,
 	return _op;
 }
 
+
+AlifObject* alifObject_new(AlifTypeObject* tp) { // 459
+	AlifObject* op = (AlifObject*)alifMem_objAlloc(alifObject_size(tp));
+	if (op == nullptr) {
+		//return alifErr_noMemory();
+		return nullptr; // temp
+	}
+	_alifObject_init(op, tp);
+	return op;
+}
+
+
+
+
 AlifIntT _alifSwappedOp_[] = { ALIF_GT, ALIF_GE, ALIF_EQ, ALIF_NE, ALIF_LT, ALIF_LE }; // 953
 
 static const char* const _opStrings_[] = { "<", "<=", "==", "!=", ">", ">=" }; // 955

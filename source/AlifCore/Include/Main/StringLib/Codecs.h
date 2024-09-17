@@ -283,16 +283,16 @@ STRINGLIB(utf8Encoder)(AlifBytesWriter* _writer, AlifObject* _uStr,
 
 		}
 		else
-//#if STRINGLIB_SIZEOF_CHAR > 1
+#if STRINGLIB_SIZEOF_CHAR > 1
 			if (ch < 0x0800)
-//#endif
+#endif
 			{
 				/* Encode Latin-1 */
 				*p_++ = (char)(0xc0 | (ch >> 6));
 				*p_++ = (char)(0x80 | (ch & 0x3f));
 			}
-//#if STRINGLIB_SIZEOF_CHAR > 1
-			else if (ALIF_UNICODE_IS_SURROGATE(ch)) {
+#if STRINGLIB_SIZEOF_CHAR > 1
+			else if (alifUnicode_isSurrogate(ch)) {
 				AlifSizeT startpos{}, endpos{}, newpos{};
 				AlifSizeT k{};
 				//if (_errorHandler == AlifErrorHandler_::Alif_Error_Unknown) {
@@ -302,7 +302,7 @@ STRINGLIB(utf8Encoder)(AlifBytesWriter* _writer, AlifObject* _uStr,
 				startpos = i_ - 1;
 				endpos = startpos + 1;
 
-				while ((endpos < _size) and ALIF_UNICODE_IS_SURROGATE(_data[endpos]))
+				while ((endpos < _size) and alifUnicode_isSurrogate(_data[endpos]))
 					endpos++;
 
 				/* Only overallocate the buffer if it's not the last write */
@@ -313,7 +313,6 @@ STRINGLIB(utf8Encoder)(AlifBytesWriter* _writer, AlifObject* _uStr,
 				case AlifErrorHandler_::Alif_Error_Replace:
 					memset(p_, '?', endpos - startpos);
 					p_ += (endpos - startpos);
-					ALIF_FALLTHROUGH;
 				case AlifErrorHandler_::Alif_Error_Ignore:
 					i_ += (endpos - startpos - 1);
 					break;
@@ -360,7 +359,6 @@ STRINGLIB(utf8Encoder)(AlifBytesWriter* _writer, AlifObject* _uStr,
 						break;
 					}
 					startpos = k;
-					ALIF_FALLTHROUGH;
 				default:
 					//rep = unicodeEncode_callErrorHandler(
 					//	_errors, &errorHandlerObj, "utf-8", "surrogates not allowed",

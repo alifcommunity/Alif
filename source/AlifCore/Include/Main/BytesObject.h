@@ -3,12 +3,26 @@
 
 
 
+extern AlifTypeObject _alifBytesType_; // 24
+extern AlifTypeObject _alifBytesIterType_;
+// 27
+#define ALIFBYTES_CHECK(op) \
+                 ALIFTYPE_FASTSUBCLASS(ALIF_TYPE(op), ALIF_TPFLAGS_BYTES_SUBCLASS)
+#define ALIFBYTES_CHECKEXACT(op) ALIF_IS_TYPE((op), &_alifBytesType_)
+
+
+AlifObject* alifBytes_fromStringAndSize(const char*, AlifSizeT); // 31
+
+
+
+/* ------------------------------------------------------------------------------------------- */
+
 
 
 class AlifBytesObject { // 5
 public:
 	ALIFOBJECT_VAR_HEAD;
-	AlifHashT Hash{}; // Deprecated
+	AlifHashT hash{}; // Deprecated
 	char val[1]{};
 
 	/* Invariants:
@@ -18,6 +32,7 @@ public:
 	 */
 };
 
+AlifIntT alifBytes_resize(AlifObject**, AlifSizeT); // 17
 
 // 20
 #define ALIFBYTES_CAST(op) \
@@ -27,3 +42,10 @@ static inline char* alifBytes_asString(AlifObject* _op) { // 23
 	return ALIFBYTES_CAST(_op)->val;
 }
 #define ALIFBYTES_AS_STRING(op) alifBytes_asString(ALIFOBJECT_CAST(op))
+
+
+static inline AlifSizeT alifBytes_getSize(AlifObject* op) { // 29
+	AlifBytesObject* self = ALIFBYTES_CAST(op);
+	return ALIF_SIZE(self);
+}
+#define ALIFBYTES_GET_SIZE(self) alifBytes_getSize(ALIFOBJECT_CAST(self))

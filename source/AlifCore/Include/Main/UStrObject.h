@@ -48,8 +48,8 @@ AlifObject* alifUStr_decodeUTF8Stateful(const char*, AlifSizeT, const char*, Ali
 /* ----------------------------------- Internal Unicode Operations ----------------------------------- */
 
 // Static inline functions to work with surrogates
-static inline int alifUnicode_isSurrogate(AlifUCS4 _ch) { // 16
-	return (0xD800 <= _ch && _ch <= 0xDFFF);
+static inline AlifIntT alifUnicode_isSurrogate(AlifUCS4 _ch) { // 16
+	return (0xD800 <= _ch and _ch <= 0xDFFF);
 }
 
 // High surrogate = top 10 bits added to 0xD800.

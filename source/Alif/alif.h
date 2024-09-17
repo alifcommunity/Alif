@@ -51,6 +51,7 @@
 //#include "AlifCapsule.h"
 #include "AlifTime.h"
 #include "AlifState.h"
+#include "Codecs.h"
 #include "AlifThread.h"
 #include "ModSupport.h"
 //#include "Abstract.h"

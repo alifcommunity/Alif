@@ -142,6 +142,129 @@ static AlifObject* ustr_result(AlifObject* _uStr) { // 727
 
 
 
+static char* backSlash_replace(AlifBytesWriter* _writer, char* _str,
+	AlifObject* _uStr, AlifSizeT _collStart, AlifSizeT _collEnd) { // 771
+	AlifSizeT size{}, i_{};
+	AlifUCS4 ch_{};
+	AlifIntT kind{};
+	const void* data{};
+
+	kind = ALIFUSTR_KIND(_uStr);
+	data = ALIFUSTR_DATA(_uStr);
+
+	size = 0;
+	/* determine replacement size */
+	for (i_ = _collStart; i_ < _collEnd; ++i_) {
+		AlifSizeT incr;
+
+		ch_ = ALIFUSTR_READ(kind, data, i_);
+		if (ch_ < 0x100)
+			incr = 2 + 2;
+		else if (ch_ < 0x10000)
+			incr = 2 + 4;
+		else {
+			incr = 2 + 8;
+		}
+		if (size > ALIF_SIZET_MAX - incr) {
+			//alifErr_setString(_alifExcOverflowError_,
+			//	"encoded result is too long for a Alif string");
+			return nullptr;
+		}
+		size += incr;
+	}
+
+	_str = (char*)alifBytesWriter_prepare(_writer, _str, size);
+	if (_str == nullptr)
+		return nullptr;
+
+	/* generate replacement */
+	for (i_ = _collStart; i_ < _collEnd; ++i_) {
+		ch_ = ALIFUSTR_READ(kind, data, i_);
+		*_str++ = '\\';
+		if (ch_ >= 0x00010000) {
+			*_str++ = 'U';
+			*_str++ = _alifHexdigits_[(ch_ >> 28) & 0xf];
+			*_str++ = _alifHexdigits_[(ch_ >> 24) & 0xf];
+			*_str++ = _alifHexdigits_[(ch_ >> 20) & 0xf];
+			*_str++ = _alifHexdigits_[(ch_ >> 16) & 0xf];
+			*_str++ = _alifHexdigits_[(ch_ >> 12) & 0xf];
+			*_str++ = _alifHexdigits_[(ch_ >> 8) & 0xf];
+		}
+		else if (ch_ >= 0x100) {
+			*_str++ = 'u';
+			*_str++ = _alifHexdigits_[(ch_ >> 12) & 0xf];
+			*_str++ = _alifHexdigits_[(ch_ >> 8) & 0xf];
+		}
+		else
+			*_str++ = 'x';
+		*_str++ = _alifHexdigits_[(ch_ >> 4) & 0xf];
+		*_str++ = _alifHexdigits_[ch_ & 0xf];
+	}
+	return _str;
+}
+
+
+
+
+static char* xmlCharRef_replace(AlifBytesWriter* _writer, char* _str,
+	AlifObject* _uStr, AlifSizeT _collStart, AlifSizeT _collEnd) { // 837
+	AlifSizeT size{}, i_{};
+	AlifUCS4 ch_{};
+	AlifIntT kind{};
+	const void* data{};
+
+	kind = ALIFUSTR_KIND(_uStr);
+	data = ALIFUSTR_DATA(_uStr);
+
+	size = 0;
+	/* determine replacement size */
+	for (i_ = _collStart; i_ < _collEnd; ++i_) {
+		AlifSizeT incr{};
+
+		ch_ = ALIFUSTR_READ(kind, data, i_);
+		if (ch_ < 10)
+			incr = 2 + 1 + 1;
+		else if (ch_ < 100)
+			incr = 2 + 2 + 1;
+		else if (ch_ < 1000)
+			incr = 2 + 3 + 1;
+		else if (ch_ < 10000)
+			incr = 2 + 4 + 1;
+		else if (ch_ < 100000)
+			incr = 2 + 5 + 1;
+		else if (ch_ < 1000000)
+			incr = 2 + 6 + 1;
+		else {
+			incr = 2 + 7 + 1;
+		}
+		if (size > ALIF_SIZET_MAX - incr) {
+			//alifErr_setString(_alifExcOverflowError_,
+			//	"encoded result is too long for a Alif string");
+			return nullptr;
+		}
+		size += incr;
+	}
+
+	_str = (char*)alifBytesWriter_prepare(_writer, _str, size);
+	if (_str == nullptr)
+		return nullptr;
+
+	/* generate replacement */
+	for (i_ = _collStart; i_ < _collEnd; ++i_) {
+		size = sprintf(_str, "&#%d;", ALIFUSTR_READ(kind, data, i_));
+		if (size < 0) {
+			return nullptr;
+		}
+		_str += size;
+	}
+	return _str;
+}
+
+
+
+
+
+
 
 
 
@@ -943,13 +1066,16 @@ static AlifIntT uStr_fillUTF8(AlifObject* _uStr) { // 5582
 	default:
 		ALIF_UNREACHABLE();
 	case AlifUStrKind_::AlifUStr_1Byte_Kind:
-		end = ucs1Lib_utf8Encoder(&writer, data, data, size);
+		end = ucs1Lib_utf8Encoder(&writer, _uStr, (AlifUCS1*)data, size,
+			AlifErrorHandler_::Alif_Error_Strict, nullptr);
 		break;
 	case AlifUStrKind_::AlifUStr_2Byte_Kind:
-		end = ucs2Lib_utf8Encoder(&writer, _uStr, data, size);
+		end = ucs2Lib_utf8Encoder(&writer, _uStr, (AlifUCS2*)data, size,
+			AlifErrorHandler_::Alif_Error_Strict, nullptr);
 		break;
 	case AlifUStrKind_::AlifUStr_4Byte_Kind:
-		end = ucs4Lib_utf8Encoder(&writer, _uStr, data, size);
+		end = ucs4Lib_utf8Encoder(&writer, _uStr, (AlifUCS4*)data, size,
+			AlifErrorHandler_::Alif_Error_Strict, nullptr);
 		break;
 	}
 	if (end == nullptr) {

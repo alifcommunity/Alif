@@ -151,6 +151,12 @@
     <ClCompile Include="..\source\AlifCore\Objects\BytesObject.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\ByteArrayObject.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\Codecs.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">
@@ -451,6 +457,9 @@
       <Filter>Include\Main\StringLib</Filter>
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Main\ByteArrayObject.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\Codecs.h">
       <Filter>Include\Main</Filter>
     </ClInclude>
   </ItemGroup>
