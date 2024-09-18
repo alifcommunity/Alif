@@ -47,6 +47,33 @@ AlifObject* alifTuple_new(AlifSizeT _size) { // 68
 	return (AlifObject*)op_;
 }
 
+AlifObject* alifTuple_pack(AlifSizeT _n, ...) { // 153
+	AlifSizeT i;
+	AlifObject* o;
+	AlifObject** items;
+	va_list vargs;
+
+	if (_n == 0) {
+		return tuple_getEmpty();
+	}
+
+	va_start(vargs, _n);
+	AlifTupleObject* result = tuple_alloc(_n);
+	if (result == NULL) {
+		va_end(vargs);
+		return NULL;
+	}
+	items = result->item;
+	for (i = 0; i < _n; i++) {
+		o = va_arg(vargs, AlifObject*);
+		items[i] = ALIF_NEWREF(o);
+	}
+	va_end(vargs);
+	ALIFOBJECT_GC_TRACK(result);
+	return (AlifObject*)result;
+}
+
+
 
 AlifTypeObject _alifTupleType_ = { // 865
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),

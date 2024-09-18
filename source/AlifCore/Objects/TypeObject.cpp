@@ -101,6 +101,30 @@ static inline void set_tpDict(AlifTypeObject* _self, AlifObject* _dict) { // 427
 	_self->dict = _dict;
 }
 
+static inline AlifObject* lookup_tpBases(AlifTypeObject* _self) { // 454
+	return _self->bases;
+}
+
+AlifObject* alifType_getBases(AlifTypeObject* _self) { // 460
+	AlifObject* res_;
+	BEGIN_TYPE_LOCK();
+	res_ = lookup_tpBases(_self);
+	ALIF_INCREF(res_);
+	END_TYPE_LOCK();
+	return res_;
+}
+
+static inline void set_tpBases(AlifTypeObject* _self, AlifObject* _bases, AlifIntT _initial) { // 473
+	if (_self->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
+		if (ALIFTUPLE_GET_SIZE(_bases) == 0) {
+		}
+		else {
+		}
+		alif_setImmortal(_bases);
+	}
+	_self->bases = _bases;
+}
+
 
 AlifObject* alifType_allocNoTrack(AlifTypeObject* _type, AlifSizeT _nitems) { // 2217
 	AlifObject* obj_{};
@@ -290,6 +314,39 @@ static AlifIntT typeReady_setBase(AlifTypeObject* _type) { // 7933
 	return 0;
 }
 
+static AlifIntT typeReady_setType(AlifTypeObject* _type) { // 7961
+	AlifTypeObject* base = _type->base;
+	if (ALIF_IS_TYPE(_type, nullptr) and base != nullptr) {
+		ALIF_SET_TYPE(_type, ALIF_TYPE(base));
+	}
+
+	return 0;
+}
+
+static AlifIntT typeReady_setBases(AlifTypeObject* _type, AlifIntT _initial) { // 7980
+	if (_type->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
+		if (!_initial) {
+			return 0;
+		}
+	}
+
+	AlifObject* bases = lookup_tpBases(_type);
+	if (bases == nullptr) {
+		AlifTypeObject* base = _type->base;
+		if (base == nullptr) {
+			bases = alifTuple_new(0);
+		}
+		else {
+			bases = alifTuple_pack(1, base);
+		}
+		if (bases == nullptr) {
+			return -1;
+		}
+		set_tpBases(_type, bases, 1);
+	}
+	return 0;
+}
+
 static AlifIntT typeReady_setDict(AlifTypeObject* _type) { // 8009
 	if (lookup_tpDict(_type) != nullptr) {
 		return 0;
@@ -321,9 +378,9 @@ static AlifIntT type_ready(AlifTypeObject* _type, AlifTypeObject* _def, AlifIntT
 	if (typeReady_setType(_type) < 0) {
 		goto error;
 	}
-	//if (typeReady_setBases(_type, _initial) < 0) {
-	//	goto error;
-	//}
+	if (typeReady_setBases(_type, _initial) < 0) {
+		goto error;
+	}
 	//if (typeReady_mro(_type, _initial) < 0) {
 	//	goto error;
 	//}
