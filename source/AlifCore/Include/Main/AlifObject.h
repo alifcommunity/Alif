@@ -376,6 +376,7 @@ public:
 	NewFunc new_{};
 	FreeFunc free{};
 	Inquiry isGC{};
+	AlifObject* bases{};
 	AlifObject* methResOrder{}; // mro
 	void* subclasses{};
 };
