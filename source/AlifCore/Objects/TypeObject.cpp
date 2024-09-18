@@ -91,6 +91,16 @@ AlifObject* alifType_getDict(AlifTypeObject* _self) { // 413
 	return lookup_tpDict(_self);
 }
 
+static inline void set_tpDict(AlifTypeObject* _self, AlifObject* _dict) { // 427
+	if (_self->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
+		AlifInterpreter* interp = alifInterpreter_get();
+		ManagedStaticTypeState* state = alifStaticType_getState(interp, _self);
+		state->dict = _dict;
+		return;
+	}
+	_self->dict = _dict;
+}
+
 
 AlifObject* alifType_allocNoTrack(AlifTypeObject* _type, AlifSizeT _nitems) { // 2217
 	AlifObject* obj_{};
@@ -249,11 +259,56 @@ AlifTypeObject _alifBaseObjectType_ = { // 7453
 };
 
 
+static AlifIntT typeReady_preChecks(AlifTypeObject* _type) { // 7902
+	if (_type->name == nullptr) {
+		//alifErr_format(_alifExcSystemError_,
+			//"Type does not define the tp_name field.");
+		return -1;
+	}
+	return 0;
+}
+
+static AlifIntT typeReady_setBase(AlifTypeObject* _type) { // 7933
+
+	AlifTypeObject* base = _type->base;
+	if (base == nullptr && _type != &_alifBaseObjectType_) {
+		base = &_alifBaseObjectType_;
+		if (_type->flags & ALIF_TPFLAGS_HEAPTYPE) {
+			_type->base = (AlifTypeObject*)ALIF_NEWREF((AlifObject*)base);
+		}
+		else {
+			_type->base = base;
+		}
+	}
+
+	if (base != nullptr and !alifType_isReady(base)) {
+		if (alifType_ready(base) < 0) {
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+static AlifIntT typeReady_setDict(AlifTypeObject* _type) { // 8009
+	if (lookup_tpDict(_type) != nullptr) {
+		return 0;
+	}
+
+	AlifObject* dict = alifDict_new();
+	if (dict == nullptr) {
+		return -1;
+	}
+	set_tpDict(_type, dict);
+	return 0;
+}
+
+
 static AlifIntT type_ready(AlifTypeObject* _type, AlifTypeObject* _def, AlifIntT _initial) { // 8383
 
 	start_readying(_type);
 
-	/*if (typeReady_preChecks(_type) < 0) {
+	if (typeReady_preChecks(_type) < 0) {
 		goto error;
 	}
 
@@ -263,43 +318,43 @@ static AlifIntT type_ready(AlifTypeObject* _type, AlifTypeObject* _def, AlifIntT
 	if (typeReady_setBase(_type) < 0) {
 		goto error;
 	}
-	if (typeReady_setType(_type) < 0) {
-		goto error;
-	}
-	if (typeReady_setBases(_type, _initial) < 0) {
-		goto error;
-	}
-	if (typeReady_mro(_type, _initial) < 0) {
-		goto error;
-	}
-	if (typeReady_setNew(_type, _initial) < 0) {
-		goto error;
-	}
-	if (typeReady_fillDict(_type, _def) < 0) {
-		goto error;
-	}
-	if (_initial) {
-		if (typeReady_inherit(_type) < 0) {
-			goto error;
-		}
-		if (typeReady_preheader(_type) < 0) {
-			goto error;
-		}
-	}
-	if (typeReady_setHash(_type) < 0) {
-		goto error;
-	}
-	if (typeReady_addSubclasses(_type) < 0) {
-		goto error;
-	}
-	if (_initial) {
-		if (typeReady_managedDict(_type) < 0) {
-			goto error;
-		}
-		if (typeReady_postChecks(_type) < 0) {
-			goto error;
-		}
-	}*/
+	//if (typeReady_setType(_type) < 0) {
+	//	goto error;
+	//}
+	//if (typeReady_setBases(_type, _initial) < 0) {
+	//	goto error;
+	//}
+	//if (typeReady_mro(_type, _initial) < 0) {
+	//	goto error;
+	//}
+	//if (typeReady_setNew(_type, _initial) < 0) {
+	//	goto error;
+	//}
+	//if (typeReady_fillDict(_type, _def) < 0) {
+	//	goto error;
+	//}
+	//if (_initial) {
+	//	if (typeReady_inherit(_type) < 0) {
+	//		goto error;
+	//	}
+	//	if (typeReady_preheader(_type) < 0) {
+	//		goto error;
+	//	}
+	//}
+	//if (typeReady_setHash(_type) < 0) {
+	//	goto error;
+	//}
+	//if (typeReady_addSubclasses(_type) < 0) {
+	//	goto error;
+	//}
+	//if (_initial) {
+	//	if (typeReady_managedDict(_type) < 0) {
+	//		goto error;
+	//	}
+	//	if (typeReady_postChecks(_type) < 0) {
+	//		goto error;
+	//	}
+	//}
 
 	_type->flags |= ALIF_TPFLAGS_READY;
 	stop_readying(_type);
