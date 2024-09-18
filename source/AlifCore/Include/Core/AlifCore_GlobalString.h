@@ -4,7 +4,7 @@
 #define STRUCT_FOR_ASCII_STR(_litr) \
     class {							\
 	public:							\
-        AlifASCIIObject ascii;		\
+        AlifASCIIObject ascii{};	\
         uint8_t data[sizeof(_litr)]; \
     }
 #define STRUCT_FOR_STR(_name, _litr) \

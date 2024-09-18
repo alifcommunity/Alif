@@ -13,6 +13,16 @@ enum AlifLockStatus_ { // 12
 void ALIF_NO_RETURN alifThread_exitThread(void); // 20
 AlifUIntT alifThread_getThreadID(); // 21
 
+// 23
+#if (defined(__APPLE__) or defined(__linux__) or defined(_WIN32) \
+     or defined(__FreeBSD__) or defined(__FreeBSD_kernel__) \
+     or defined(__OpenBSD__) or defined(__NetBSD__) \
+     or defined(__DragonFly__) or defined(_AIX))
+#define ALIF_HAVE_THREAD_NATIVE_ID
+unsigned long alifThread_getThreadNativeID();
+#endif
+
+
 AlifIntT alifThread_acquireLock(AlifThreadTypeLock, AlifIntT); // 33
 #define WAIT_LOCK       1
 #define NOWAIT_LOCK     0

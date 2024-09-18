@@ -499,7 +499,7 @@ inline void alifMem_dataFree(void* _ptr) {
 		يجب إضافة تحذير يظهر عند وضع التصحيح Debug
 		حيث أنه لا يجب أن يتم عمل تحرير لمؤشر فارغ
 	*/
-	//if (_ptr == nullptr) return;
+	if (_ptr == nullptr) return;
 	ALIFMEM_FREEDSEGMS->dealloc_(_ptr);
 }
 
@@ -508,7 +508,7 @@ inline void alifMem_objFree(void* _ptr) {
 		يجب إضافة تحذير يظهر عند وضع التصحيح Debug
 		حيث أنه لا يجب أن يتم عمل تحرير لمؤشر فارغ
 	*/
-	//if (_ptr == nullptr) return;
+	if (_ptr == nullptr) return;
 	ALIFMEM_FREEDSEGMS->dealloc_(_ptr);
 	ALIFMEM_OBJNUMS--;
 }

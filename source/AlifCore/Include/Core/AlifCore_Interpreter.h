@@ -71,6 +71,9 @@ public:
 
 	GILDureRunState gil_{};
 
+
+	QSBRShared qsbr{};
+
 #ifdef ALIF_GIL_DISABLED
 	MimallocInterpState mimalloc{};
 	BRCState brc{};  // biased reference counting state

@@ -76,7 +76,12 @@ void alifBRC_queueObject(AlifObject* ob) { // 53
 }
 
 
-
+void alifBRC_initState(AlifInterpreter* _interp) { // 134
+	BRCState* brc = &_interp->brc;
+	for (AlifSizeT i = 0; i < ALIF_BRC_NUM_BUCKETS; i++) {
+		llist_init(&brc->table[i].root);
+	}
+}
 
 
 

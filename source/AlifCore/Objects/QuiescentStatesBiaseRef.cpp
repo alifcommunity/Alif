@@ -8,9 +8,65 @@
 
 
 
-
+#define MIN_ARRAY_SIZE 8 // 42
 
 #define QSBR_DEFERRED_LIMIT 10 // 47
+
+
+static QSBRThreadState* qsbr_allocate(QSBRShared* _shared) { // 49
+	QSBRThreadState* qsbr = _shared->freeList;
+	if (qsbr == nullptr) {
+		return nullptr;
+	}
+	_shared->freeList = qsbr->freeListNext;
+	qsbr->freeListNext = nullptr;
+	qsbr->shared = _shared;
+	qsbr->allocated = true;
+	return qsbr;
+}
+
+
+
+static void initialize_newArray(QSBRShared* _shared) { // 64
+	for (AlifSizeT i = 0; i != _shared->size; i++) {
+		QSBRThreadState* qsbr = &_shared->array[i].qsbr;
+		if (qsbr->tstate != nullptr) {
+			AlifThreadImpl* tstate = (AlifThreadImpl*)qsbr->tstate;
+			tstate->qsbr = qsbr;
+		}
+		if (!qsbr->allocated) {
+			// Push to freelist
+			qsbr->freeListNext = _shared->freeList;
+			_shared->freeList = qsbr;
+		}
+	}
+}
+
+
+static AlifIntT grow_threadArray(QSBRShared* _shared) { // 83
+	AlifSizeT newSize = _shared->size * 2;
+	if (newSize < MIN_ARRAY_SIZE) {
+		newSize = MIN_ARRAY_SIZE;
+	}
+
+	QSBRPad* array = (QSBRPad*)alifMem_dataAlloc(newSize * sizeof(*array)); // need review
+	if (array == nullptr) {
+		return -1;
+	}
+
+	QSBRPad* old = _shared->array;
+	if (old != nullptr) {
+		memcpy(array, _shared->array, _shared->size * sizeof(*array));
+	}
+
+	_shared->array = array;
+	_shared->size = newSize;
+	_shared->freeList = nullptr;
+	initialize_newArray(_shared);
+
+	alifMem_dataFree(old);
+	return 0;
+}
 
 
 
@@ -72,4 +128,44 @@ void alifQSBR_attach(QSBRThreadState* _qsbr) { // 173
 
 void alifQSBR_detach(QSBRThreadState* _qsbr) { // 182
 	alifAtomic_storeUint64Release(&_qsbr->seq, QSBR_OFFLINE);
+}
+
+
+
+
+AlifSizeT alifQSBR_reserve(AlifInterpreter* _interp) { // 190
+	QSBRShared* shared = &_interp->qsbr;
+
+	ALIFMUTEX_LOCK(&shared->mutex);
+	QSBRThreadState* qsbr = qsbr_allocate(shared);
+
+	if (qsbr == nullptr) {
+		alifEval_stopTheWorld(_interp);
+		if (grow_threadArray(shared) == 0) {
+			qsbr = qsbr_allocate(shared);
+		}
+		alifEval_startTheWorld(_interp);
+	}
+	ALIFMUTEX_UNLOCK(&shared->mutex);
+
+	if (qsbr == nullptr) {
+		return -1;
+	}
+
+	return (QSBRPad*)qsbr - shared->array;
+}
+
+
+
+
+
+void alifQSBR_register(AlifThreadImpl* _thread,
+	AlifInterpreter* _interp, AlifSizeT _index) { // 219
+	QSBRShared* shared = &_interp->qsbr;
+
+	ALIFMUTEX_LOCK(&shared->mutex);
+	QSBRThreadState* qsbr = &_interp->qsbr.array[_index].qsbr;
+	qsbr->tstate = (AlifThread*)_thread;
+	_thread->qsbr = qsbr;
+	ALIFMUTEX_UNLOCK(&shared->mutex);
 }

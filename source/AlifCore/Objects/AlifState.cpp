@@ -72,10 +72,12 @@ static void bind_thread(AlifThread* _thread) { // 245
 
 	_thread->threadID = alifThread_getThreadID();
 #ifdef ALIF_HAVE_THREAD_NATIVE_ID
-	tstate->nativeThreadID = alifThread_getThreadNativeID();
+	_thread->nativeThreadID = alifThread_getThreadNativeID();
 #endif
 
+#ifdef ALIF_GIL_DISABLED
 	alifBRC_initThread(_thread);
+#endif
 
 	thread_mimallocBind(_thread);
 
@@ -175,6 +177,10 @@ static AlifIntT init_interpreter(AlifInterpreter* _interpreter,
 	alifGC_initState(&_interpreter->gc);
 	alifConfig_initAlifConfig(&_interpreter->config);
 
+#ifdef ALIF_GIL_DISABLED
+	alifBRC_initState(_interpreter);
+#endif
+	llist_init(&_interpreter->memFreeQueue.head);
 
 	_interpreter->initialized = 1;
 	return 1;
@@ -288,6 +294,16 @@ static AlifThread* new_thread(AlifInterpreter* _interpreter) { // 1533
 		return nullptr;
 	}
 
+#ifdef ALIF_GIL_DISABLED
+	AlifSizeT qsbrIDx = alifQSBR_reserve(_interpreter);
+	if (qsbrIDx < 0) {
+		alifMem_dataFree(newThread);
+		return nullptr;
+	}
+#endif
+
+	HEAD_LOCK(dureRun);
+
 	_interpreter->threads.nextUniquID += 1;
 	AlifSizeT id = _interpreter->threads.nextUniquID;
 
@@ -306,9 +322,15 @@ static AlifThread* new_thread(AlifInterpreter* _interpreter) { // 1533
 	init_thread(thread, _interpreter, id);
 	add_thread(_interpreter, (AlifThread*)thread, oldHead);
 
+	HEAD_UNLOCK(dureRun);
 	if (!usedNewThread) {
 		alifMem_dataFree(newThread);
 	}
+
+#ifdef ALIF_GIL_DISABLED
+	// Must be called with lock unlocked to avoid lock ordering deadlocks.
+	alifQSBR_register(thread, _interpreter, qsbrIDx);
+#endif
 
 	return (AlifThread*)thread;
 }

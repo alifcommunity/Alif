@@ -37,6 +37,39 @@ AlifUIntT alifThread_getThreadID() { // 365
 }
 
 
+#ifdef ALIF_HAVE_THREAD_NATIVE_ID
+unsigned long alifThread_getThreadNativeID() { // 372
+	if (!INITIALIZED)
+		//alifThread_initThread();
+#ifdef __APPLE__
+	uint64_t nativeID;
+	(void)pthread_threadid_np(nullptr, &nativeID);
+#elif defined(__linux__)
+	pid_t nativeID;
+	nativeID = syscall(SYS_gettid);
+#elif defined(__FreeBSD__)
+	int nativeID;
+	nativeID = pthread_getthreadid_np();
+#elif defined(__FreeBSD_kernel__)
+	long nativeID;
+	syscall(SYS_thr_self, &nativeID);
+#elif defined(__OpenBSD__)
+	pid_t nativeID;
+	nativeID = getthrid();
+#elif defined(_AIX)
+	tid_t nativeID;
+	nativeID = thread_self();
+#elif defined(__NetBSD__)
+	lwpid_t nativeID;
+	nativeID = _lwp_self();
+#elif defined(__DragonFly__)
+	lwpid_t nativeID;
+	nativeID = lwp_gettid();
+#endif
+	return (unsigned long)nativeID;
+}
+#endif
+
 
 
 void ALIF_NO_RETURN alifThread_exitThread(void) { // 406

@@ -15,6 +15,23 @@ AlifUIntT alifThread_getThreadID() { // 260
 }
 
 
+#ifdef ALIF_HAVE_THREAD_NATIVE_ID
+/*
+ * Return the native Thread ID (TID) of the calling thread.
+ * The native ID of a thread is valid and guaranteed to be unique system-wide
+ * from the time the thread is created until the thread has been terminated.
+ */
+unsigned long alifThread_getThreadNativeID() { // 273
+	if (!INITIALIZED) {
+		//alifThread_initThread();s
+	}
+
+	DWORD nativeID;
+	nativeID = GetCurrentThreadId();
+	return (unsigned long)nativeID;
+}
+#endif
+
 
 
 void ALIF_NO_RETURN alifThread_exitThread(void) { // 286

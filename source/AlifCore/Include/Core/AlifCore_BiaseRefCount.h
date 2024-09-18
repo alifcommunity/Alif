@@ -30,4 +30,6 @@ public:
 void alifBRC_initThread(AlifThread*); // 54
 
 
+void alifBRC_initState(AlifInterpreter*); // 58
+
 void alifBRC_queueObject(AlifObject*); // 64

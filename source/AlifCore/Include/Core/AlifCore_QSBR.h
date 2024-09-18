@@ -21,7 +21,7 @@ class QSBRThreadState { // 42
 public:
 	uint64_t seq{};
 	QSBRShared* shared{};
-	QSBRThreadState* tstate{};
+	AlifThread* tstate{};
 	AlifIntT deferrals{};
 	bool allocated{};
 	QSBRThreadState* freeListNext{};
@@ -64,3 +64,8 @@ bool alifQSBR_poll(class QSBRThreadState*, uint64_t); // 122
 
 extern void alifQSBR_attach(QSBRThreadState*); // 125
 extern void alifQSBR_detach(QSBRThreadState*); // 130
+
+extern AlifSizeT alifQSBR_reserve(AlifInterpreter*); // 133
+
+
+extern void alifQSBR_register(AlifThreadImpl*, AlifInterpreter*, AlifSizeT); // 138
