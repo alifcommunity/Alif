@@ -9,6 +9,13 @@
 
 
 
+
+char _alifByteArrayEmptyString_[] = "";
+
+
+
+
+
 static AlifIntT can_resize(AlifByteArrayObject* self) { // 67
 	if (self->exports > 0) {
 		//alifErr_setString(_alifExcBufferError_, "Existing exports of data: object cannot be re-sized");

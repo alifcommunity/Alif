@@ -88,57 +88,6 @@
     <ClCompile Include="..\source\AlifCore\Objects\ObjectStack.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\mimalloc\alloc.c">
-      <Filter>Objects\Mimalloc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\mimalloc\alloc-aligned.c">
-      <Filter>Objects\Mimalloc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\mimalloc\alloc-override.c">
-      <Filter>Objects\Mimalloc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\mimalloc\alloc-posix.c">
-      <Filter>Objects\Mimalloc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\mimalloc\arena.c">
-      <Filter>Objects\Mimalloc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\mimalloc\bitmap.c">
-      <Filter>Objects\Mimalloc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\mimalloc\heap.c">
-      <Filter>Objects\Mimalloc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\mimalloc\init.c">
-      <Filter>Objects\Mimalloc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\mimalloc\options.c">
-      <Filter>Objects\Mimalloc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\mimalloc\os.c">
-      <Filter>Objects\Mimalloc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\mimalloc\page.c">
-      <Filter>Objects\Mimalloc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\mimalloc\page-queue.c">
-      <Filter>Objects\Mimalloc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\mimalloc\random.c">
-      <Filter>Objects\Mimalloc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\mimalloc\segment.c">
-      <Filter>Objects\Mimalloc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\mimalloc\segment-map.c">
-      <Filter>Objects\Mimalloc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\mimalloc\static.c">
-      <Filter>Objects\Mimalloc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\mimalloc\stats.c">
-      <Filter>Objects\Mimalloc</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\BoolObject.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
@@ -155,6 +104,9 @@
       <Filter>Objects</Filter>
     </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\Codecs.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\MethodObject.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
   </ItemGroup>
@@ -484,9 +436,6 @@
     </Filter>
     <Filter Include="Include\Main\Mimalloc">
       <UniqueIdentifier>{6cb471e0-2bf6-4fac-bd13-7d576554ecc3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Objects\Mimalloc">
-      <UniqueIdentifier>{1dbc3c21-9f94-4392-b87c-8b4adc44ce18}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

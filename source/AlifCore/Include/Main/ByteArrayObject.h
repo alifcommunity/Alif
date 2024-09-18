@@ -17,7 +17,7 @@ AlifIntT alifByteArray_resize(AlifObject*, AlifSizeT); // 33
 /* -------------------------------------------------------------------------------------------- */
 
 
-class AlifByteArrayObject {
+class AlifByteArrayObject { // 6
 public:
 	ALIFOBJECT_VAR_HEAD;
 	AlifSizeT alloc{};   /* How many bytes allocated in ob_bytes */
@@ -26,7 +26,7 @@ public:
 	AlifSizeT exports{}; /* How many buffer exports */
 };
 
-extern char _alifByteArrayEmptyString_[];
+extern char _alifByteArrayEmptyString_[]; // 14
 
 /* Macros and static inline functions, trading safety for speed */
 #define ALIFBYTEARRAY_CAST(op) ALIF_CAST(AlifByteArrayObject*, op)

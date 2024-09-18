@@ -163,7 +163,7 @@ static AlifIntT isSubType_withMethResOrder(AlifObject* _methResOrder,
 }
 
 
-AlifIntT alifType_isSubtype(AlifTypeObject* a, AlifTypeObject* b) { // 2673
+AlifIntT alifType_isSubType(AlifTypeObject* a, AlifTypeObject* b) { // 2673
 	return isSubType_withMethResOrder(a->methResOrder, a, b);
 }
 
@@ -253,7 +253,7 @@ static AlifIntT type_ready(AlifTypeObject* _type, AlifTypeObject* _def, AlifIntT
 
 	start_readying(_type);
 
-	if (typeReady_preChecks(_type) < 0) {
+	/*if (typeReady_preChecks(_type) < 0) {
 		goto error;
 	}
 
@@ -299,7 +299,7 @@ static AlifIntT type_ready(AlifTypeObject* _type, AlifTypeObject* _def, AlifIntT
 		if (typeReady_postChecks(_type) < 0) {
 			goto error;
 		}
-	}
+	}*/
 
 	_type->flags |= ALIF_TPFLAGS_READY;
 	stop_readying(_type);
