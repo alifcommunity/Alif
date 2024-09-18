@@ -271,7 +271,7 @@ static AlifIntT typeReady_preChecks(AlifTypeObject* _type) { // 7902
 static AlifIntT typeReady_setBase(AlifTypeObject* _type) { // 7933
 
 	AlifTypeObject* base = _type->base;
-	if (base == nullptr && _type != &_alifBaseObjectType_) {
+	if (base == nullptr and _type != &_alifBaseObjectType_) {
 		base = &_alifBaseObjectType_;
 		if (_type->flags & ALIF_TPFLAGS_HEAPTYPE) {
 			_type->base = (AlifTypeObject*)ALIF_NEWREF((AlifObject*)base);
@@ -318,9 +318,9 @@ static AlifIntT type_ready(AlifTypeObject* _type, AlifTypeObject* _def, AlifIntT
 	if (typeReady_setBase(_type) < 0) {
 		goto error;
 	}
-	//if (typeReady_setType(_type) < 0) {
-	//	goto error;
-	//}
+	if (typeReady_setType(_type) < 0) {
+		goto error;
+	}
 	//if (typeReady_setBases(_type, _initial) < 0) {
 	//	goto error;
 	//}
