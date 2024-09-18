@@ -15,6 +15,7 @@ AlifObject* alifDict_new(); // 21
 
 AlifIntT alifDict_setItem(AlifObject*, AlifObject*, AlifObject*); // 24
 
+AlifIntT alifDict_contains(AlifObject*, AlifObject*); // 34
 
 AlifIntT alifDict_getItemRef(AlifObject* , AlifObject* , AlifObject** ); // 67
 

@@ -106,7 +106,7 @@ static inline AlifObject* lookup_tpBases(AlifTypeObject* _self) { // 454
 }
 
 AlifObject* alifType_getBases(AlifTypeObject* _self) { // 460
-	AlifObject* res_;
+	AlifObject* res_{};
 	BEGIN_TYPE_LOCK();
 	res_ = lookup_tpBases(_self);
 	ALIF_INCREF(res_);
@@ -116,10 +116,6 @@ AlifObject* alifType_getBases(AlifTypeObject* _self) { // 460
 
 static inline void set_tpBases(AlifTypeObject* _self, AlifObject* _bases, AlifIntT _initial) { // 473
 	if (_self->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
-		if (ALIFTUPLE_GET_SIZE(_bases) == 0) {
-		}
-		else {
-		}
 		alif_setImmortal(_bases);
 	}
 	_self->bases = _bases;
@@ -361,7 +357,35 @@ static AlifIntT typeReady_setDict(AlifTypeObject* _type) { // 8009
 }
 
 
-static AlifIntT type_ready(AlifTypeObject* _type, AlifTypeObject* _def, AlifIntT _initial) { // 8383
+
+
+static AlifIntT typeReady_setHash(AlifTypeObject* type) { // 8237
+	if (type->hash != nullptr) {
+		return 0;
+	}
+
+	AlifObject* dict = lookup_tpDict(type);
+	AlifIntT r = alifDict_contains(dict, &ALIF_ID(__hash__));
+	if (r < 0) {
+		return -1;
+	}
+	if (r > 0) {
+		return 0;
+	}
+
+	if (alifDict_setItem(dict, &ALIF_ID(__hash__), ALIF_NONE) < 0) {
+		return -1;
+	}
+	type->hash = alifObject_hashNotImplemented;
+	return 0;
+}
+
+
+
+
+
+static AlifIntT type_ready(AlifTypeObject* _type,
+	AlifTypeObject* _def, AlifIntT _initial) { // 8383
 
 	start_readying(_type);
 
@@ -381,9 +405,9 @@ static AlifIntT type_ready(AlifTypeObject* _type, AlifTypeObject* _def, AlifIntT
 	if (typeReady_setBases(_type, _initial) < 0) {
 		goto error;
 	}
-	//if (typeReady_mro(_type, _initial) < 0) {
-	//	goto error;
-	//}
+	if (typeReady_mro(_type, _initial) < 0) {
+		goto error;
+	}
 	//if (typeReady_setNew(_type, _initial) < 0) {
 	//	goto error;
 	//}
@@ -398,9 +422,9 @@ static AlifIntT type_ready(AlifTypeObject* _type, AlifTypeObject* _def, AlifIntT
 	//		goto error;
 	//	}
 	//}
-	//if (typeReady_setHash(_type) < 0) {
-	//	goto error;
-	//}
+	if (typeReady_setHash(_type) < 0) {
+		goto error;
+	}
 	//if (typeReady_addSubclasses(_type) < 0) {
 	//	goto error;
 	//}

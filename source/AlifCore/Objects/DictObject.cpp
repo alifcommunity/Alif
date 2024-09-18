@@ -1266,6 +1266,39 @@ AlifIntT alifDict_setDefaultRef(AlifObject* _d, AlifObject* _key,
 
 
 
+AlifIntT alifDict_contains(AlifObject* _op, AlifObject* _key) { // 4593
+	AlifHashT hash = alifObject_hashFast(_key);
+
+	if (hash == -1) {
+		return -1;
+	}
+
+	return alifDict_containsKnownHash(_op, _key, hash);
+}
+
+AlifIntT alifDict_containsKnownHash(AlifObject* _op,
+	AlifObject* _key, AlifHashT _hash) { // 4618
+	AlifDictObject* mp = (AlifDictObject*)_op;
+	AlifObject* value{};
+	AlifSizeT ix_{};
+
+#ifdef ALIF_GIL_DISABLED
+	ix_ = alifDict_lookupThreadSafe(mp, _key, _hash, &value);
+#else
+	ix_ = alifDict_lookup(mp, _key, _hash, &value);
+#endif
+	if (ix_ == DKIX_ERROR)
+		return -1;
+	if (ix_ != DKIX_EMPTY and value != nullptr) {
+#ifdef ALIF_GIL_DISABLED
+		ALIF_DECREF(value);
+#endif
+		return 1;
+	}
+	return 0;
+}
+
+
 
 
 AlifTypeObject _alifDictType_ = { // 4760

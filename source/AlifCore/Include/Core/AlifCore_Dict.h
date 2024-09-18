@@ -2,6 +2,19 @@
 
 #include "AlifCore_Object.h"
 
+
+
+
+
+
+
+
+extern AlifIntT alifDict_containsKnownHash(AlifObject*, AlifObject*, AlifHashT); // 31
+
+
+
+
+
 #define ALIFDICT_HASSPLITTABLE(_d) ((_d)->values != nullptr) // 50
 
 class AlifDictKeyEntry { // 74

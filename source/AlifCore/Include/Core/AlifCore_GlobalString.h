@@ -32,6 +32,7 @@ public:
 		STRUCT_FOR_ID(__package__)
 		STRUCT_FOR_ID(__loader__)
 		STRUCT_FOR_ID(__spec__)
+		STRUCT_FOR_ID(__hash__)
     } identifiers;
 	class {
 	public:
