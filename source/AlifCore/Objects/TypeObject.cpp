@@ -300,7 +300,6 @@ static AlifObject* mro_implementationUnlocked(AlifTypeObject* _type) { // 3052
 			return nullptr;
 		}
 
-		;
 		ALIFTUPLE_SET_ITEM(result, 0, ALIF_NEWREF(_type));
 		for (AlifSizeT i = 0; i < k; i++) {
 			AlifObject* cls = ALIFTUPLE_GET_ITEM(baseMro, i);
