@@ -200,20 +200,20 @@ AlifIntT alifType_isSubType(AlifTypeObject* a, AlifTypeObject* b) { // 2673
 	return isSubType_withMethResOrder(a->methResOrder, a, b);
 }
 
-static AlifObject* lookup_maybeMethod(AlifObject* self, AlifObject* attr, AlifIntT* unbound) { // 2738
-	AlifObject* res = alifType_lookupRef(ALIF_TYPE(self), attr);
+static AlifObject* lookup_maybeMethod(AlifObject* _self, AlifObject* _attr, AlifIntT* _unbound) { // 2738
+	AlifObject* res = alifType_lookupRef(ALIF_TYPE(_self), _attr);
 	if (res == nullptr) {
 		return nullptr;
 	}
 
 	if (alifType_hasFeature(ALIF_TYPE(res), ALIF_TPFLAGS_METHOD_DESCRIPTOR)) {
-		*unbound = 1;
+		*_unbound = 1;
 	}
 	else {
-		*unbound = 0;
+		*_unbound = 0;
 		DescrGetFunc f_ = ALIF_TYPE(res)->descrGet;
 		if (f_ != nullptr) {
-			ALIF_SETREF(res, f_(res, self, (AlifObject*)(ALIF_TYPE(self))));
+			ALIF_SETREF(res, f_(res, _self, (AlifObject*)(ALIF_TYPE(_self))));
 		}
 	}
 	return res;
@@ -225,11 +225,12 @@ static AlifObject* lookup_method(AlifObject* _self, AlifObject* _attr, AlifIntT*
 		//and !alifErr_occurred()
 		) {
 		//alifErr_setObject(_alifExcAttributeError_, _attr);
+		return nullptr; // temp
 	}
 	return res_;
 }
 
-static AlifObject* call_unboundNoarg(AlifIntT _unbound, AlifObject* _func, AlifObject* _self) { // 2786
+static AlifObject* call_unboundNoArg(AlifIntT _unbound, AlifObject* _func, AlifObject* _self) { // 2786
 	if (_unbound) {
 		return alifObject_callOneArg(_func, _self);
 	}
@@ -239,23 +240,23 @@ static AlifObject* call_unboundNoarg(AlifIntT _unbound, AlifObject* _func, AlifO
 }
 
 static AlifObject* class_name(AlifObject* _cls) { // 2881
-	AlifObject* name;
+	AlifObject* name{};
 	if (alifObject_getOptionalAttr(_cls, &ALIF_ID(__name__), &name) == 0) {
 		name = AlifObject_repr(_cls);
 	}
 	return name;
 }
 
-static AlifIntT check_duplicates(AlifObject* _tuple) { // 2892
-	AlifSizeT i, j, n;
-	n = ALIFTUPLE_GET_SIZE(_tuple);
-	for (i = 0; i < n; i++) {
-		AlifObject* o = ALIFTUPLE_GET_ITEM(_tuple, i);
-		for (j = i + 1; j < n; j++) {
-			if (ALIFTUPLE_GET_ITEM(_tuple, j) == o) {
-				o = class_name(o);
-				if (o != NULL) {
-					if (ALIFUSTR_CHECK(o)) {
+static AlifIntT check_duplicates(AlifObject* _tuple) { // 2890
+	AlifSizeT i_{}, j_{}, n_{};
+	n_ = ALIFTUPLE_GET_SIZE(_tuple);
+	for (i_ = 0; i_ < n_; i_++) {
+		AlifObject* o_ = ALIFTUPLE_GET_ITEM(_tuple, i_);
+		for (j_ = i_ + 1; j_ < n_; j_++) {
+			if (ALIFTUPLE_GET_ITEM(_tuple, j_) == o_) {
+				o_ = class_name(o_);
+				if (o_ != nullptr) {
+					if (ALIFUSTR_CHECK(o_)) {
 						//alifErr_format(_alifExcTypeError_,
 							//"duplicate base class %U", o);
 					}
@@ -263,7 +264,7 @@ static AlifIntT check_duplicates(AlifObject* _tuple) { // 2892
 						//alifErr_format(_alifExcTypeError_,
 							//"duplicate base class);
 					}
-					ALIF_DECREF(o);
+					ALIF_DECREF(o_);
 				}
 				return -1;
 			}
@@ -272,13 +273,13 @@ static AlifIntT check_duplicates(AlifObject* _tuple) { // 2892
 	return 0;
 }
 
-static AlifObject* mro_implementationUnlocked(AlifTypeObject* type) { // 3052 
-	if (!alifType_isReady(type)) {
-		if (alifType_ready(type) < 0)
+static AlifObject* mro_implementationUnlocked(AlifTypeObject* _type) { // 3052 
+	if (!alifType_isReady(_type)) {
+		if (alifType_ready(_type) < 0)
 			return nullptr;
 	}
 
-	AlifObject* bases = lookup_tpBases(type);
+	AlifObject* bases = lookup_tpBases(_type);
 	AlifSizeT n = ALIFTUPLE_GET_SIZE(bases);
 	for (AlifSizeT i = 0; i < n; i++) {
 		AlifTypeObject* base = ALIFTYPE_CAST(ALIFTUPLE_GET_ITEM(bases, i));
@@ -300,7 +301,7 @@ static AlifObject* mro_implementationUnlocked(AlifTypeObject* type) { // 3052
 		}
 
 		;
-		ALIFTUPLE_SET_ITEM(result, 0, ALIF_NEWREF(type));
+		ALIFTUPLE_SET_ITEM(result, 0, ALIF_NEWREF(_type));
 		for (AlifSizeT i = 0; i < k; i++) {
 			AlifObject* cls = ALIFTUPLE_GET_ITEM(baseMro, i);
 			ALIFTUPLE_SET_ITEM(result, i + 1, ALIF_NEWREF(cls));
@@ -324,14 +325,14 @@ static AlifObject* mro_implementationUnlocked(AlifTypeObject* type) { // 3052
 	}
 	toMerge[n] = bases;
 
-	AlifObject* result = alifList_New(1);
+	AlifObject* result = alifList_new(1);
 	if (result == nullptr) {
 		alifMem_objFree(toMerge);
 		return nullptr;
 	}
 
-	ALIFLIST_SET_ITEM(result, 0, ALIF_NEWREF(type));
-	if (pmerge(result, toMerge, n + 1) < 0) {
+	ALIFLIST_SET_ITEM(result, 0, ALIF_NEWREF(_type));
+	if (p_merge(result, toMerge, n + 1) < 0) {
 		ALIF_CLEAR(result);
 	}
 	alifMem_objFree(toMerge);
@@ -340,18 +341,18 @@ static AlifObject* mro_implementationUnlocked(AlifTypeObject* type) { // 3052
 }
 
 static AlifObject* mro_invoke(AlifTypeObject* _type) { // 3210
-	AlifObject* mroResult;
-	AlifObject* newMro;
+	AlifObject* mroResult{};
+	AlifObject* newMro{};
 
 	const AlifIntT custom = !ALIF_IS_TYPE(_type, &_alifTypeType_);
 
 	if (custom) {
-		AlifIntT unbound;
+		AlifIntT unbound{};
 		AlifObject* mroMeth = lookup_method(
 			(AlifObject*)_type, &ALIF_ID(mro), &unbound);
 		if (mroMeth == nullptr)
 			return nullptr;
-		mroResult = call_unboundNoarg(unbound, mroMeth, (AlifObject*)_type);
+		mroResult = call_unboundNoArg(unbound, mroMeth, (AlifObject*)_type);
 		ALIF_DECREF(mroMeth);
 	}
 	else {
@@ -382,8 +383,8 @@ static AlifObject* mro_invoke(AlifTypeObject* _type) { // 3210
 
 static AlifIntT mro_internalUnlocked(AlifTypeObject* _type, AlifIntT _initial, AlifObject** _pOldMro) { // 3276
 
-	AlifObject* newMro, * oldMro;
-	AlifIntT reent;
+	AlifObject* newMro{}, * oldMro{};
+	AlifIntT reent{};
 
 	oldMro = ALIF_XNEWREF(lookup_tpMro(_type));
 	newMro = mro_invoke(_type);
@@ -418,23 +419,23 @@ static AlifIntT mro_internalUnlocked(AlifTypeObject* _type, AlifIntT _initial, A
 }
 
 AlifObject* alifType_lookupRef(AlifTypeObject* _type, AlifObject* _name) { // 5420
-	AlifObject* res;
-	AlifIntT error;
+	AlifObject* res{};
+	AlifIntT error{};
 	AlifInterpreter* interp = alifInterpreter_get();
 
-	unsigned int h = MCACHE_HASH_METHOD(_type, _name);
-	class TypeCache* cache = get_typeCache();
-	class TypeCacheEntry* entry = &cache->hashtable[h];
+	AlifUIntT h = MCACHE_HASH_METHOD(_type, _name);
+	TypeCache* cache = get_typeCache();
+	TypeCacheEntry* entry = &cache->hashTable[h];
 #ifdef ALIF_GIL_DISABLED
 	while (1) {
-		uint32_t sequence = _PySeqLock_BeginRead(&entry->sequence);
+		uint32_t sequence = alifSeqLock_beginRead(&entry->sequence);
 		uint32_t entryVersion = alifAtomic_loadUint32Relaxed(&entry->version);
 		uint32_t typeVersion = alifAtomic_loadUint32Acquire(&_type->versionTag);
 		if (entryVersion == typeVersion and
 			alifAtomic_loadPtrRelaxed(&entry->name) == _name) {
 			AlifObject* value = alifAtomic_loadPtrRelaxed(&entry->value);
 			if (value == nullptr or alif_tryInRref(value)) {
-				if (_PySeqLock_EndRead(&entry->sequence, sequence)) {
+				if (alifSeqLock_endRead(&entry->sequence, sequence)) {
 					return value;
 				}
 				ALIF_XDECREF(value);
@@ -460,8 +461,8 @@ AlifObject* alifType_lookupRef(AlifTypeObject* _type, AlifObject* _name) { // 54
 	BEGIN_TYPE_LOCK();
 	res = findName_inMro(_type, _name, &error);
 	if (MCACHE_CACHEABLE_NAME(name)) {
-		has_version = assign_version_tag(interp, _type);
-		version = type->versionTag;
+		hasVersion = assign_versionTag(interp, _type);
+		version = _type->versionTag;
 	}
 	END_TYPE_LOCK();
 
@@ -477,7 +478,7 @@ AlifObject* alifType_lookupRef(AlifTypeObject* _type, AlifObject* _name) { // 54
 #if ALIF_GIL_DISABLED
 		updateCache_gilDisabled(entry, _name, version, res);
 #else
-		AlifObject* oldValue = update_cache(entry, name, version, res);
+		AlifObject* oldValue = update_cache(entry, _name, version, res);
 		ALIF_DECREF(oldValue);
 #endif
 	}

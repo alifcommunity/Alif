@@ -131,4 +131,5 @@
 	INIT_ID(__loader__), \
 	INIT_ID(__spec__), \
 	INIT_ID(__hash__), \
+	INIT_ID(mro), \
 }

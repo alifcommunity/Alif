@@ -425,9 +425,6 @@ enum AlifRefTracerEvent_ {
 typedef AlifIntT (*AlifRefTracer)(AlifObject*, AlifRefTracerEvent_ event, void*); // 526
 
 
-// 775
-#define ALIFTYPE_CAST(_op) \
-    (ALIF_CAST(AlifTypeObject*, (_op)))
 
 
 
@@ -440,6 +437,9 @@ typedef AlifIntT (*AlifRefTracer)(AlifObject*, AlifRefTracerEvent_ event, void*)
 
 
 
+// 775
+#define ALIFTYPE_CAST(_op) \
+    (ALIF_CAST(AlifTypeObject*, (_op)))
 
 
 

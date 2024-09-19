@@ -23,7 +23,7 @@ static AlifListArray* list_allocateArray(size_t _capacity) { // 34
 }
 #endif
 
-AlifObject* alifList_New(AlifSizeT _size) { // 212 
+AlifObject* alifList_new(AlifSizeT _size) { // 212 
 	if (_size < 0) {
 		//alifErr_badInternalCall();
 		return nullptr;

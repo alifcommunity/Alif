@@ -246,8 +246,8 @@ AlifIntT alifObject_getOptionalAttr(AlifObject* _v, AlifObject* _name, AlifObjec
 		//}
 		return 0;
 	}
-	if (tp_->getAttro == alifType_getattro) {
-		int suppressMissingAttributeException = 0;
+	if (tp_->getAttro == alifType_getAttro) {
+		AlifIntT suppressMissingAttributeException = 0;
 		*_result = alifType_getAttroImpl((AlifTypeObject*)_v, _name, &suppressMissingAttributeException);
 		if (suppressMissingAttributeException) {
 			return 0;
@@ -367,12 +367,12 @@ AlifObject* alifObject_genericGetAttrWithDict(AlifObject* _obj, AlifObject* _nam
 	AlifTypeObject* tp = ALIF_TYPE(_obj);
 	AlifObject* descr = nullptr;
 	AlifObject* res = nullptr;
-	DescrGetFunc f;
+	DescrGetFunc f_{};
 
 	if (!ALIFUSTR_CHECK(_name)) {
 		//alifErr_format(_alifExcTypeError_,
 			//"attribute name must be string, not '%.200s'",
-			//ALIF_TYPE(name)->tname);
+			//ALIF_TYPE(name)->name);
 		return nullptr;
 	}
 	ALIF_INCREF(_name);
@@ -384,15 +384,16 @@ AlifObject* alifObject_genericGetAttrWithDict(AlifObject* _obj, AlifObject* _nam
 
 	descr = alifType_lookupRef(tp, _name);
 
-	f = nullptr;
+	f_ = nullptr;
 	if (descr != nullptr) {
-		f = ALIF_TYPE(descr)->descrGet;
-		if (f != nullptr and alifDescr_isData(descr)) {
-			res = f(descr, _obj, (AlifObject*)ALIF_TYPE(_obj));
-			//if (res == nullptr and suppress and
-				//alifErr_exceptionMatches(alifExcAttributeError)) {
-				//alifErr_Clear();
-			//}
+		f_ = ALIF_TYPE(descr)->descrGet;
+		if (f_ != nullptr and alifDescr_isData(descr)) {
+			res = f_(descr, _obj, (AlifObject*)ALIF_TYPE(_obj));
+			if (res == nullptr and _suppress
+				/*and alifErr_exceptionMatches(alifExcAttributeError)*/
+				) {
+				//alifErr_clear();
+			}
 			goto done;
 		}
 	}
@@ -405,46 +406,49 @@ AlifObject* alifObject_genericGetAttrWithDict(AlifObject* _obj, AlifObject* _nam
 				}
 			}
 			else {
-				dict = (AlifObject*)alifObject_materializeManagedDict(obj);
-				if (dict == nullptr) {
+				_dict = (AlifObject*)alifObject_materializeManagedDict(_obj);
+				if (_dict == nullptr) {
 					res = nullptr;
 					goto done;
 				}
 			}
 		}
 		else if ((tp->flags & ALIF_TPFLAGS_MANAGED_DICT)) {
-			dict = (AlifObject*)alifObject_getManagedDict(obj);
+			_dict = (AlifObject*)alifObject_getManagedDict(_obj);
 		}
 		else {
-			AlifObject** dictptr = alifObject_computedDictPointer(obj);
-			if (dictptr) {
-				dict = *dictptr;
+			AlifObject** dictPtr = alifObject_computedDictPointer(_obj);
+			if (dictPtr) {
+				_dict = *dictPtr;
 			}
 		}
 	}
-	if (dict != nullptr) {
-		ALIF_INCREF(dict);
-		int rc = alifDict_getItemRef(dict, _name, &res);
-		ALIF_DECREF(dict);
+	if (_dict != nullptr) {
+		ALIF_INCREF(_dict);
+		AlifIntT rc = alifDict_getItemRef(_dict, _name, &res);
+		ALIF_DECREF(_dict);
 		if (res != nullptr) {
 			goto done;
 		}
 		else if (rc < 0) {
-			//if (suppress and alifErr_exceptionMatches(alifExcAttributeError)) {
+			if (_suppress
+				/*and alifErr_exceptionMatches(alifExcAttributeError)*/
+				) {
 				//alifErr_clear();
-			//}
-			//else {
+			}
+			else {
 				goto done;
-			//}
+			}
 		}
 	}
 
-	if (f != nullptr) {
-		res = f(descr, _obj, (AlifObject*)ALIF_TYPE(_obj));
-		//if (res == nullptr and suppress and
-			//alifErr_exceptionMatches(alifExAttributeError)) {
+	if (f_ != nullptr) {
+		res = f_(descr, _obj, (AlifObject*)ALIF_TYPE(_obj));
+		if (res == nullptr and _suppress
+			/*and alifErr_exceptionMatches(alifExAttributeError)*/
+			) {
 			//alifErr_clear();
-		//}
+		}
 		goto done;
 	}
 
@@ -454,21 +458,20 @@ AlifObject* alifObject_genericGetAttrWithDict(AlifObject* _obj, AlifObject* _nam
 		goto done;
 	}
 
-	//if (!suppress) {
+	if (!_suppress) {
 		//alifErr_format(_alifExcAttributeError_,
-			//"'%.100s' object has no attribute '%U'",
-			//tp->name, name);
+		//	"'%.100s' object has no attribute '%U'",
+		//	tp->name, _name);
 
 		//alifObject_setAttributeErrorContext(_obj, _name);
-	//}
+	}
 done:
 	ALIF_XDECREF(descr);
-	ALIF_DECREF(name);
+	ALIF_DECREF(_name);
 	return res;
 }
 
-AlifObject* alifObject_genericGetAttr(AlifObject* _obj, AlifObject* _name)
-{
+AlifObject* alifObject_genericGetAttr(AlifObject* _obj, AlifObject* _name) { // 1699
 	return alifObject_genericGetAttrWithDict(_obj, _name, nullptr, 0);
 }
 
