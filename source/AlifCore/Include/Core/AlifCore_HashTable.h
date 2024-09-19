@@ -1,8 +1,17 @@
 #pragma once
 
 
+
+typedef class AlifSListItemS {
+public:
+	AlifSListItemS* next{};
+} AlifSListItemT;
+
+
 class AlifHashTableEntryT { // 28
 public:
+	AlifSListItemT alifSListItem{};
+	AlifUHashT keyHash{};
 	void* key{};
 	void* value{};
 };

@@ -1368,7 +1368,7 @@ static AlifObject* intern_common(AlifInterpreter* _interp,
 	_immortalize = 1;
 #endif
 
-	if (alif_isImmortal(_s)) {
+	if (ALIF_ISIMMORTAL(_s)) {
 		_immortalize = 1;
 	}
 

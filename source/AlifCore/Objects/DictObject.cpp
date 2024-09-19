@@ -373,7 +373,7 @@ static AlifSizeT uStrKeys_lookupGeneric(AlifDictObject* _mp,
 static inline AlifIntT compare_uStrUStr(AlifDictObject* _mp, AlifDictKeysObject* dk,
 	void* _ep0, AlifSizeT _ix, AlifObject* _key, AlifHashT _hash) { // 1072
 	AlifDictUStrEntry* ep_ = &((AlifDictUStrEntry*)_ep0)[_ix];
-	AlifObject* epKey = (AlifObject*)alifAtomic_loadPtrRelaxed(ep_->key);
+	AlifObject* epKey = (AlifObject*)alifAtomic_loadPtrRelaxed(&ep_->key);
 	if (epKey == _key or
 		(uStr_getHash(epKey) == _hash and uStr_eq(epKey, _key))) {
 		return 1;
@@ -914,7 +914,7 @@ static AlifIntT insertTo_emptyDict(AlifInterpreter* _interp,
 	//_mp->versionTag = newVersion;
 	newKeys->usable--;
 	newKeys->nentries++;
-	alifAtomic_storePtrRelease(_mp->keys, newKeys);
+	alifAtomic_storePtrRelease(&_mp->keys, newKeys);
 	return 0;
 }
 
