@@ -28,6 +28,7 @@
 #include "AlifObject.h"
 #include "RefCount.h"
 #include "ObjImpl.h"
+#include "AlifHash.h"
 #include "ByteArrayObject.h"
 //#include "IntegerObject.h"
 #include "BoolObject.h"

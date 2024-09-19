@@ -37,6 +37,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GIL.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GlobalObjects.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GlobalString.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Hash.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_HashTable.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Import.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_InitConfig.h" />
@@ -66,6 +67,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_UStrObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifConfig.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifEval.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifHash.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifLifeCycle.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifMacro.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifMemory.h" />
@@ -124,6 +126,7 @@
   <ItemGroup>
     <ClCompile Include="..\source\AlifCore\Objects\AlifEval.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifEvalGIL.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifHash.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifLifeCycle.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifMemory.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifMimalloc.cpp" />

@@ -14,6 +14,12 @@
 #  define ALIF_HAS_BUILTIN(x) 0
 #endif
 
+#ifdef __has_attribute
+#  define ALIF_HAS_ATTRIBUTE(x) __has_attribute(x)
+#else
+#  define ALIF_HAS_ATTRIBUTE(x) 0
+#endif
+
 /*
 	من الأفضل إستخدام ALIF_STATIC_CAST
 	بدلا من ALIF_CAST
@@ -37,7 +43,7 @@
 
 
 typedef AlifSizeT AlifHashT;
-
+typedef AlifUSizeT AlifUHashT;
 
 
 
@@ -88,6 +94,16 @@ typedef AlifSizeT AlifHashT;
 
 
 
+#ifdef WORDS_BIGENDIAN
+#  define ALIF_BIG_ENDIAN 1
+#  define ALIF_LITTLE_ENDIAN 0
+#else
+#  define ALIF_BIG_ENDIAN 0
+#  define ALIF_LITTLE_ENDIAN 1
+#endif
+
+
+
 
 #ifndef WITH_THREAD
 #define WITH_THREAD
@@ -132,4 +148,20 @@ typedef AlifSizeT AlifHashT;
 #else
 #  define ALIF_NO_RETURN
 #endif
+#endif
+
+
+
+
+
+
+
+
+
+
+// 629
+#if ALIF_HAS_ATTRIBUTE(fallthrough)
+#  define ALIF_FALLTHROUGH __attribute__((fallthrough))
+#else
+#  define ALIF_FALLTHROUGH do { } while (0)
 #endif

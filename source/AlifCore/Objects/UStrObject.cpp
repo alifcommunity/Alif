@@ -1124,7 +1124,19 @@ static AlifIntT uStr_fillUTF8(AlifObject* _uStr) { // 5582
 
 
 
+static AlifHashT uStr_hash(AlifObject* _self) { // 11663
+	AlifUHashT x;  /* Unsigned for defined overflow behavior. */
 
+	AlifHashT hash = alifAtomic_loadSizeRelaxed(&ALIFUSTR_HASH(_self));
+	if (hash != -1) {
+		return hash;
+	}
+	x = alif_hashBytes(ALIFUSTR_DATA(_self),
+		ALIFUSTR_GET_LENGTH(_self) * ALIFUSTR_KIND(_self));
+
+	alifAtomic_storeSizeRelaxed(&ALIFUSTR_HASH(_self), x);
+	return x;
+}
 
 
 
@@ -1311,6 +1323,7 @@ AlifTypeObject _alifUStrType_ = { // 15235
 	.basicSize = sizeof(AlifUStrObject),
 	.itemSize = 0,
 	.dealloc = ustr_dealloc,
+	.hash = (HashFunc)uStr_hash,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE |
 		ALIF_TPFLAGS_UNICODE_SUBCLASS |
 		_ALIF_TPFLAGS_MATCH_SELF,

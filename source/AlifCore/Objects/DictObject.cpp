@@ -55,8 +55,8 @@ static inline void splitKeys_entryAdded(AlifDictKeysObject* _keys) { // 219
 }
 
 
-#define STORE_KEY(ep_, _key) alifAtomic_storePtrRelease(ep_->key, _key) // 278
-#define STORE_VALUE(ep_, _value) alifAtomic_storePtrRelease(ep_->value, _value) // 279
+#define STORE_KEY(ep_, _key) alifAtomic_storePtrRelease(&ep_->key, _key) // 278
+#define STORE_VALUE(ep_, _value) alifAtomic_storePtrRelease(&ep_->value, _value) // 279
 #define STORE_SPLIT_VALUE(_mp, _idx, _value) alifAtomic_storePtrRelease(&_mp->values->values[_idx], _value) // 280
 #define STORE_HASH(ep_, _hash) alifAtomic_storeSizeRelaxed(&ep_->hash, _hash) // 281
 #define STORE_KEYS_USABLE(_keys, _usable) alifAtomic_storeSizeRelaxed(&_keys->usable, _usable) // 282
