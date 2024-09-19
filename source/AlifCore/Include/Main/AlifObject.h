@@ -367,11 +367,14 @@ public:
 
 	unsigned long flags{};
 
+	TraverseProc traverse{};
+
 	RichCmpFunc richCompare{};
 
 
 	AlifTypeObject* base{};
 	AlifObject* dict{};
+	AlifSizeT dictOffset{};
 	InitProc init{};
 	NewFunc new_{};
 	FreeFunc free{};

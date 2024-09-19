@@ -382,7 +382,32 @@ static AlifIntT typeReady_setHash(AlifTypeObject* type) { // 8237
 
 
 
-
+static AlifIntT typeReady_postChecks(AlifTypeObject* type) { // 8349
+	if (type->flags & ALIF_TPFLAGS_HAVE_GC
+		and type->traverse == nullptr) {
+		//alifErr_format(_alifExcSystemError_,
+		//	"type %s has the ALIF_TPFLAGS_HAVE_GC flag "
+		//	"but has no traverse function", type->name);
+		return -1;
+	}
+	if (type->flags & ALIF_TPFLAGS_MANAGED_DICT) {
+		if (type->dictOffset != -1) {
+			//alifErr_format(_alifExcSystemError_,
+			//	"type %s has the ALIF_TPFLAGS_MANAGED_DICT flag "
+			//	"but tp_dictoffset is set to incompatible value",
+			//	type->name);
+			return -1;
+		}
+	}
+	else if (type->dictOffset < (AlifSizeT)sizeof(AlifObject)) {
+		if (type->dictOffset + type->basicSize <= 0) {
+			//alifErr_format(_alifExcSystemError_,
+			//	"type %s has a dictOffset that is too small",
+			//	type->name);
+		}
+	}
+	return 0;
+}
 
 static AlifIntT type_ready(AlifTypeObject* _type,
 	AlifTypeObject* _def, AlifIntT _initial) { // 8383
@@ -405,9 +430,9 @@ static AlifIntT type_ready(AlifTypeObject* _type,
 	if (typeReady_setBases(_type, _initial) < 0) {
 		goto error;
 	}
-	if (typeReady_mro(_type, _initial) < 0) {
-		goto error;
-	}
+	//if (typeReady_mro(_type, _initial) < 0) {
+	//	goto error;
+	//}
 	//if (typeReady_setNew(_type, _initial) < 0) {
 	//	goto error;
 	//}
@@ -428,14 +453,14 @@ static AlifIntT type_ready(AlifTypeObject* _type,
 	//if (typeReady_addSubclasses(_type) < 0) {
 	//	goto error;
 	//}
-	//if (_initial) {
-	//	if (typeReady_managedDict(_type) < 0) {
-	//		goto error;
-	//	}
-	//	if (typeReady_postChecks(_type) < 0) {
-	//		goto error;
-	//	}
-	//}
+	if (_initial) {
+		//if (typeReady_managedDict(_type) < 0) {
+		//	goto error;
+		//}
+		if (typeReady_postChecks(_type) < 0) {
+			goto error;
+		}
+	}
 
 	_type->flags |= ALIF_TPFLAGS_READY;
 	stop_readying(_type);
