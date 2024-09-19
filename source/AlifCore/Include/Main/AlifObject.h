@@ -209,7 +209,7 @@ AlifIntT alifObject_richCompareBool(AlifObject* , AlifObject* , AlifIntT ); // 4
 AlifIntT alifObject_setAttrString(AlifObject*, const char*, AlifObject*); // 426
 
 AlifIntT alifObject_setAttr(AlifObject*, AlifObject*, AlifObject*); // 434
-
+typedef AlifObject* (*DescrGetFunc) (AlifObject*, AlifObject*, AlifObject*); // 345
 AlifHashT alifObject_hash(AlifObject*); // 447
 AlifHashT alifObject_hashNotImplemented(AlifObject*); // 448
 AlifIntT alifObject_isTrue(AlifObject*); // 449
@@ -375,11 +375,13 @@ public:
 	AlifTypeObject* base{};
 	AlifObject* dict{};
 	AlifSizeT dictOffset{};
+	DescrGetFunc descrGet{};
 	InitProc init{};
 	NewFunc new_{};
 	FreeFunc free{};
 	Inquiry isGC{};
 	AlifObject* bases{};
+	AlifObject* mro{};
 	AlifObject* methResOrder{}; // mro
 	void* subclasses{};
 };
@@ -422,6 +424,10 @@ enum AlifRefTracerEvent_ {
 
 typedef AlifIntT (*AlifRefTracer)(AlifObject*, AlifRefTracerEvent_ event, void*); // 526
 
+
+// 775
+#define ALIFTYPE_CAST(_op) \
+    (ALIF_CAST(AlifTypeObject*, (_op)))
 
 
 

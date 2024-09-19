@@ -121,6 +121,10 @@ static inline void set_tpBases(AlifTypeObject* _self, AlifObject* _bases, AlifIn
 	_self->bases = _bases;
 }
 
+static inline AlifObject* lookup_tpMro(AlifTypeObject* _self) { // 517 
+	return _self->mro;
+}
+
 
 AlifObject* alifType_allocNoTrack(AlifTypeObject* _type, AlifSizeT _nitems) { // 2217
 	AlifObject* obj_{};
@@ -192,16 +196,293 @@ static AlifIntT isSubType_withMethResOrder(AlifObject* _methResOrder,
 	return res;
 }
 
-
 AlifIntT alifType_isSubType(AlifTypeObject* a, AlifTypeObject* b) { // 2673
 	return isSubType_withMethResOrder(a->methResOrder, a, b);
 }
 
+static AlifObject* lookup_maybeMethod(AlifObject* self, AlifObject* attr, AlifIntT* unbound) { // 2738
+	AlifObject* res = alifType_lookupRef(ALIF_TYPE(self), attr);
+	if (res == nullptr) {
+		return nullptr;
+	}
+
+	if (alifType_hasFeature(ALIF_TYPE(res), ALIF_TPFLAGS_METHOD_DESCRIPTOR)) {
+		*unbound = 1;
+	}
+	else {
+		*unbound = 0;
+		DescrGetFunc f_ = ALIF_TYPE(res)->descrGet;
+		if (f_ != nullptr) {
+			ALIF_SETREF(res, f_(res, self, (AlifObject*)(ALIF_TYPE(self))));
+		}
+	}
+	return res;
+}
+
+static AlifObject* lookup_method(AlifObject* _self, AlifObject* _attr, AlifIntT* _unbound) { // 2760
+	AlifObject* res_ = lookup_maybeMethod(_self, _attr, _unbound);
+	if (res_ == nullptr
+		//and !alifErr_occurred()
+		) {
+		//alifErr_setObject(_alifExcAttributeError_, _attr);
+	}
+	return res_;
+}
+
+static AlifObject* call_unboundNoarg(AlifIntT _unbound, AlifObject* _func, AlifObject* _self) { // 2786
+	if (_unbound) {
+		return alifObject_callOneArg(_func, _self);
+	}
+	else {
+		return alifObject_callNoArgs(_func);
+	}
+}
+
+static AlifObject* class_name(AlifObject* _cls) { // 2881
+	AlifObject* name;
+	if (alifObject_getOptionalAttr(_cls, &ALIF_ID(__name__), &name) == 0) {
+		name = AlifObject_repr(_cls);
+	}
+	return name;
+}
+
+static AlifIntT check_duplicates(AlifObject* _tuple) { // 2892
+	AlifSizeT i, j, n;
+	n = ALIFTUPLE_GET_SIZE(_tuple);
+	for (i = 0; i < n; i++) {
+		AlifObject* o = ALIFTUPLE_GET_ITEM(_tuple, i);
+		for (j = i + 1; j < n; j++) {
+			if (ALIFTUPLE_GET_ITEM(_tuple, j) == o) {
+				o = class_name(o);
+				if (o != NULL) {
+					if (ALIFUSTR_CHECK(o)) {
+						//alifErr_format(_alifExcTypeError_,
+							//"duplicate base class %U", o);
+					}
+					else {
+						//alifErr_format(_alifExcTypeError_,
+							//"duplicate base class);
+					}
+					ALIF_DECREF(o);
+				}
+				return -1;
+			}
+		}
+	}
+	return 0;
+}
+
+static AlifObject* mro_implementationUnlocked(AlifTypeObject* type) { // 3052 
+	if (!alifType_isReady(type)) {
+		if (alifType_ready(type) < 0)
+			return nullptr;
+	}
+
+	AlifObject* bases = lookup_tpBases(type);
+	AlifSizeT n = ALIFTUPLE_GET_SIZE(bases);
+	for (AlifSizeT i = 0; i < n; i++) {
+		AlifTypeObject* base = ALIFTYPE_CAST(ALIFTUPLE_GET_ITEM(bases, i));
+		if (lookup_tpMro(base) == nullptr) {
+			//alifErr_format(_alifExcTypeError_,
+				//"Cannot extend an incomplete type '%.100s'",
+				//base->name);
+			return nullptr;
+		}
+	}
+
+	if (n == 1) {
+		AlifTypeObject* base = ALIFTYPE_CAST(ALIFTUPLE_GET_ITEM(bases, 0));
+		AlifObject* baseMro = lookup_tpMro(base);
+		AlifSizeT k = ALIFTUPLE_GET_SIZE(baseMro);
+		AlifObject* result = alifTuple_new(k + 1);
+		if (result == nullptr) {
+			return nullptr;
+		}
+
+		;
+		ALIFTUPLE_SET_ITEM(result, 0, ALIF_NEWREF(type));
+		for (AlifSizeT i = 0; i < k; i++) {
+			AlifObject* cls = ALIFTUPLE_GET_ITEM(baseMro, i);
+			ALIFTUPLE_SET_ITEM(result, i + 1, ALIF_NEWREF(cls));
+		}
+		return result;
+	}
+
+	if (check_duplicates(bases) < 0) {
+		return nullptr;
+	}
+
+	AlifObject** toMerge = (AlifObject**)alifMem_objAlloc(n + 1);
+	if (toMerge == nullptr) {
+		//alifErr_noMemory();
+		return nullptr;
+	}
+
+	for (AlifSizeT i = 0; i < n; i++) {
+		AlifTypeObject* base = ALIFTYPE_CAST(ALIFTUPLE_GET_ITEM(bases, i));
+		toMerge[i] = lookup_tpMro(base);
+	}
+	toMerge[n] = bases;
+
+	AlifObject* result = alifList_New(1);
+	if (result == nullptr) {
+		alifMem_objFree(toMerge);
+		return nullptr;
+	}
+
+	ALIFLIST_SET_ITEM(result, 0, ALIF_NEWREF(type));
+	if (pmerge(result, toMerge, n + 1) < 0) {
+		ALIF_CLEAR(result);
+	}
+	alifMem_objFree(toMerge);
+
+	return result;
+}
+
+static AlifObject* mro_invoke(AlifTypeObject* _type) { // 3210
+	AlifObject* mroResult;
+	AlifObject* newMro;
+
+	const AlifIntT custom = !ALIF_IS_TYPE(_type, &_alifTypeType_);
+
+	if (custom) {
+		AlifIntT unbound;
+		AlifObject* mroMeth = lookup_method(
+			(AlifObject*)_type, &ALIF_ID(mro), &unbound);
+		if (mroMeth == nullptr)
+			return nullptr;
+		mroResult = call_unboundNoarg(unbound, mroMeth, (AlifObject*)_type);
+		ALIF_DECREF(mroMeth);
+	}
+	else {
+		mroResult = mro_implementationUnlocked(_type);
+	}
+	if (mroResult == nullptr)
+		return nullptr;
+
+	newMro = alifSequence_tuple(mroResult);
+	ALIF_DECREF(mroResult);
+	if (newMro == nullptr) {
+		return nullptr;
+	}
+
+	if (ALIFTUPLE_GET_SIZE(newMro) == 0) {
+		ALIF_DECREF(newMro);
+		//alifErr_format(_alifExcTypeError_, "type MRO must not be empty");
+		return nullptr;
+	}
+
+	if (custom and mro_check(_type, newMro) < 0) {
+		ALIF_DECREF(newMro);
+		return nullptr;
+	}
+	return newMro;
+}
 
 
+static AlifIntT mro_internalUnlocked(AlifTypeObject* _type, AlifIntT _initial, AlifObject** _pOldMro) { // 3276
 
+	AlifObject* newMro, * oldMro;
+	AlifIntT reent;
 
+	oldMro = ALIF_XNEWREF(lookup_tpMro(_type));
+	newMro = mro_invoke(_type);
+	reent = (lookup_tpMro(_type) != oldMro);
+	ALIF_XDECREF(oldMro);
+	if (newMro == nullptr) {
+		return -1;
+	}
 
+	if (reent) {
+		ALIF_DECREF(newMro);
+		return 0;
+	}
+
+	set_tpMro(_type, newMro, _initial);
+
+	type_mroModified(_type, newMro);
+	type_mroModified(_type, lookup_tpBases(_type));
+
+	if (!(_type->flags & ALIF_TPFLAGS_STATIC_BUILTIN)) {
+		alifType_modified(_type);
+	}
+	else {
+	}
+
+	if (_pOldMro != nullptr)
+		*_pOldMro = oldMro; 
+	else
+		ALIF_XDECREF(oldMro);
+
+	return 1;
+}
+
+AlifObject* alifType_lookupRef(AlifTypeObject* _type, AlifObject* _name) { // 5420
+	AlifObject* res;
+	AlifIntT error;
+	AlifInterpreter* interp = alifInterpreter_get();
+
+	unsigned int h = MCACHE_HASH_METHOD(_type, _name);
+	class TypeCache* cache = get_typeCache();
+	class TypeCacheEntry* entry = &cache->hashtable[h];
+#ifdef ALIF_GIL_DISABLED
+	while (1) {
+		uint32_t sequence = _PySeqLock_BeginRead(&entry->sequence);
+		uint32_t entryVersion = alifAtomic_loadUint32Relaxed(&entry->version);
+		uint32_t typeVersion = alifAtomic_loadUint32Acquire(&_type->versionTag);
+		if (entryVersion == typeVersion and
+			alifAtomic_loadPtrRelaxed(&entry->name) == _name) {
+			AlifObject* value = alifAtomic_loadPtrRelaxed(&entry->value);
+			if (value == nullptr or alif_tryInRref(value)) {
+				if (_PySeqLock_EndRead(&entry->sequence, sequence)) {
+					return value;
+				}
+				ALIF_XDECREF(value);
+			}
+			else {
+				break;
+			}
+		}
+		else {
+			break;
+		}
+	}
+#else
+	if (entry->version == type->versionTag and
+		entry->name == _name) {
+		ALIF_XINCREF(entry->value);
+		return entry->value;
+	}
+#endif
+
+	AlifIntT hasVersion = 0;
+	AlifIntT version = 0;
+	BEGIN_TYPE_LOCK();
+	res = findName_inMro(_type, _name, &error);
+	if (MCACHE_CACHEABLE_NAME(name)) {
+		has_version = assign_version_tag(interp, _type);
+		version = type->versionTag;
+	}
+	END_TYPE_LOCK();
+
+	if (error) {
+
+		if (error == -1) {
+			//alifErr_clear();
+		}
+		return nullptr;
+	}
+
+	if (hasVersion) {
+#if ALIF_GIL_DISABLED
+		updateCache_gilDisabled(entry, _name, version, res);
+#else
+		AlifObject* oldValue = update_cache(entry, name, version, res);
+		ALIF_DECREF(oldValue);
+#endif
+	}
+	return res;
+}
 
 static void type_dealloc(AlifObject* self) { // 5911
 	AlifTypeObject* type = (AlifTypeObject*)self;
@@ -353,6 +634,35 @@ static AlifIntT typeReady_setDict(AlifTypeObject* _type) { // 8009
 		return -1;
 	}
 	set_tpDict(_type, dict);
+	return 0;
+}
+
+static AlifIntT typeReady_mro(AlifTypeObject* _type, AlifIntT _initial) { // 8112
+
+	if (_type->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
+		if (!_initial) {
+			return 0;
+		}
+	}
+
+	if (mro_internalUnlocked(_type, _initial, nullptr) < 0) {
+		return -1;
+	}
+	AlifObject* mro = lookup_tpMro(_type);
+
+	if (!(_type->flags & ALIF_TPFLAGS_HEAPTYPE)) {
+		AlifSizeT n = ALIFTUPLE_GET_SIZE(mro);
+		for (AlifSizeT i = 0; i < n; i++) {
+			AlifTypeObject* base = ALIFTYPE_CAST(ALIFTUPLE_GET_SIZE(mro, i));
+			if (base->flags & ALIF_TPFLAGS_HEAPTYPE) {
+				//alifErr_format(_alifExcTypeError_,
+					//"type '%.100s' is not dynamically allocated but "
+					//"its base type '%.100s' is dynamically allocated",
+					//_type->name, base->name);
+				return -1;
+			}
+		}
+	}
 	return 0;
 }
 
