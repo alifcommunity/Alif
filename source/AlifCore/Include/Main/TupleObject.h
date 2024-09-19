@@ -34,3 +34,10 @@ static inline AlifSizeT alifTuple_getSize(AlifObject* _op) { // 21
 #define ALIFTUPLE_GET_SIZE(_op) alifTuple_getSize(ALIFOBJECT_CAST(_op))
 
 #define ALIFTUPLE_GET_ITEM(_op, _index) (ALIFTUPLE_CAST(_op)->item[(_index)]) // 27
+
+static inline void alifTuple_setItem(AlifObject* _op, AlifSizeT _index, AlifObject* _value) { // 31
+	AlifTupleObject* tuple = ALIFTUPLE_CAST(_op);
+	tuple->item[_index] = _value;
+}
+#define ALIFTUPLE_SET_ITEM(_op, _index, _value) \
+    alifTuple_setItem(ALIFOBJECT_CAST(_op), (_index), ALIFOBJECT_CAST(_value))
