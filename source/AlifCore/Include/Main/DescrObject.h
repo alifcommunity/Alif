@@ -19,3 +19,5 @@ public:
 	AlifSizeT offset{};
 	AlifIntT flags{};
 };
+
+AlifIntT alifDescr_isData(AlifObject*); // 62

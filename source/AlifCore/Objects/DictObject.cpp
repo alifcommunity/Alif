@@ -449,6 +449,22 @@ static AlifSizeT dictKeys_genericLookup(AlifDictObject* _mp, AlifDictKeysObject*
 	return do_lookup(_mp, _dk, _key, _hash, compare_generic);
 }
 
+AlifSizeT alifDictKeys_stringLookup(AlifDictKeysObject* _dk, AlifObject* _key) { // 1133
+	DictKeysKind_ kind = (DictKeysKind_)_dk->kind;
+	if (!ALIFUSTR_CHECKEXACT(_key) or kind == Dict_Keys_General) {
+		return DKIX_ERROR;
+	}
+	AlifHashT hash = uStr_getHash(_key);
+	if (hash == -1) {
+		hash = _alifUStrType_.hash(_key);
+		if (hash == -1) {
+			//alfiErr_clear();
+			return DKIX_ERROR;
+		}
+	}
+	return uStrKeys_lookupUStr(_dk, _key, hash);
+}
+
 #ifdef ALIF_GIL_DISABLED
 static AlifSizeT uStrKeysLookup_uStrThreadSafe(AlifDictKeysObject*, AlifObject*, AlifHashT); // 1153
 #endif
@@ -478,7 +494,7 @@ start:
 				ix_ = uStrKeys_lookupUStr(dk_, _key, _hash);
 			}
 #else
-			ix = uStrKeys_lookupUStr(dk, _key, _hash);
+			ix_ = uStrKeys_lookupUStr(dk, _key, _hash);
 #endif
 		}
 		else {
@@ -1434,7 +1450,126 @@ void alifObject_initInlineValues(AlifObject* _obj, AlifTypeObject* _tp) {  // 65
 	alifObject_managedDictPointer(_obj)->dict = nullptr;
 }
 
+static AlifDictObject* makeDict_fromInstanceAttributes(AlifInterpreter* _interp,
+	AlifDictKeysObject* _keys, AlifDictValues* _values) { // 6616
+	dictKeys_incRef(_keys);
+	AlifSizeT used = 0;
+	AlifSizeT track = 0;
+	AlifUSizeT size = sharedKeys_usableSize(_keys);
+	for (AlifUSizeT i = 0; i < size; i++) {
+		AlifObject* val = _values->values[i];
+		if (val != nullptr) {
+			used += 1;
+			track += alifObject_gcMayBeTracked(val);
+		}
+	}
+	AlifDictObject* res = (AlifDictObject*)new_dict(_interp, _keys, _values, used, 0);
+	if (track and res) {
+		ALIFOBJECT_GC_TRACK(res);
+	}
+	return res;
+}
 
+AlifDictObject* alifObject_materializeManagedDictLockHeld(AlifObject* _obj) { // 6638
+
+	AlifDictValues* values = alifObject_inlineValues(_obj);
+	AlifDictObject* dict{};
+	if (values->valid) {
+		AlifInterpreter* interp = alifInterpreter_get();
+		AlifDictKeysObject* keys = CACHED_KEYS(ALIF_TYPE(_obj));
+		dict = makeDict_fromInstanceAttributes(interp, keys, values);
+	}
+	else {
+		dict = (AlifDictObject*)alifDict_new();
+	}
+	alifAtomic_storePtrRelease(&alifObject_managedDictPointer(_obj)->dict, dict);
+	return dict;
+}
+
+AlifDictObject* alifObject_materializeManagedDict(AlifObject* _obj) { // 6660
+	AlifDictObject* dict = alifObject_getManagedDict(_obj);
+	if (dict != nullptr) {
+		return dict;
+	}
+
+	ALIF_BEGIN_CRITICAL_SECTION(_obj);
+
+#ifdef ALIF_GIL_DISABLED
+	dict = alifObject_getManagedDict(_obj);
+	if (dict != nullptr) {
+		goto exit;
+	}
+#endif
+	dict = alifObject_materializeManagedDictLockHeld(_obj);
+
+#ifdef ALIF_GIL_DISABLED
+	exit :
+#endif
+	ALIF_END_CRITICAL_SECTION();
+	return dict;
+}
+
+bool alifObject_tryGetInstanceAttribute(AlifObject* _obj, AlifObject* _name, AlifObject** _attr) { // 6891
+	AlifDictValues* values = alifObject_inlineValues(_obj);
+	if (!alifAtomic_loadUint8(&values->valid)) {
+		return false;
+	}
+
+	AlifDictKeysObject* keys = CACHED_KEYS(ALIF_TYPE(_obj));
+	AlifSizeT ix_ = alifDictKeys_stringLookup(keys, _name);
+	if (ix_ == DKIX_EMPTY) {
+		*_attr = nullptr;
+		return true;
+	}
+
+#ifdef ALIF_GIL_DISABLED
+	AlifObject* value = (AlifObject*)alifAtomic_loadPtrAcquire(&values->values[ix_]);
+	if (value == nullptr or alif_tryIncRefCompare(&values->values[ix_], value)) {
+		*_attr = value;
+		return true;
+	}
+
+	AlifDictObject* dict = alifObject_getManagedDict(_obj);
+	if (dict == nullptr) {
+		bool success = false;
+		ALIF_BEGIN_CRITICAL_SECTION(_obj);
+
+		dict = alifObject_getManagedDict(_obj);
+		if (dict == nullptr) {
+			value = values->values[ix_];
+			*_attr = ALIF_XNEWREF(value);
+			success = true;
+		}
+
+		ALIF_END_CRITICAL_SECTION();
+
+		if (success) {
+			return true;
+		}
+	}
+
+
+	bool success{};
+	ALIF_BEGIN_CRITICAL_SECTION(dict);
+
+	if (dict->values == values and alifAtomic_loadUint8(&values->valid)) {
+		value = (AlifObject*)alifAtomic_loadPtrRelaxed(&values->values[ix_]);
+		*_attr = ALIF_XNEWREF(value);
+		success = true;
+	}
+	else {
+		success = false;
+	}
+
+	ALIF_END_CRITICAL_SECTION();
+
+	return success;
+#else
+	AlifObject* value = values->values[ix_];
+	*attr = ALIF_XNEWREF(value);
+	return true;
+#endif
+}
 
 
 

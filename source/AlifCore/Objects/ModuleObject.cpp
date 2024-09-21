@@ -227,7 +227,145 @@ error:
 
 
 
+AlifObject* alifModule_getAttroImpl(AlifModuleObject* _m, AlifObject* _name, AlifIntT _suppress) { // 921
+	AlifObject* attr{}, * modName{}, * getAttr{};
+	attr = alifObject_genericGetAttrWithDict((AlifObject*)_m, _name, nullptr, _suppress);
+	if (attr) {
+		return attr;
+	}
+	if (_suppress == 1) {
+		//if (alifErr_occurred()) {
+			// pass up non-AttributeError exception
+			//return nullptr;
+		//}
+	}
+	else {
+		//if (!alifErr_exceptionMatches(_alfiExcAttributeError_)) {
+			// pass up non-AttributeError exception
+			//return nullptr;
+		//}
+		//alifErr_clear();
+	}
+	if (alifDict_getItemRef(_m->dict, &ALIF_ID(__getAttr__), &getAttr) < 0) {
+		return nullptr;
+	}
+	if (getAttr) {
+		AlifObject* result = alifObject_callOneArg(getAttr, _name);
+		if (result == nullptr and _suppress == 1
+			//and alifErr_exceptionMatches(exception)
+			) {
+			//alifErr_clear();
+			return nullptr;
+		}
+		ALIF_DECREF(getAttr);
+		return result;
+	}
+	if (_suppress == 1) {
+		return nullptr;
+	}
+	if (alifDict_getItemRef(_m->dict, &ALIF_ID(__name__), &modName) < 0) {
+		return nullptr;
+	}
+	if (!modName or !ALIFUSTR_CHECK(modName)) {
+		ALIF_XDECREF(modName);
+		//alifErr_format(_alifExcAttributeError_,
+			//"module has no attribute '%U'", _name);
+		return nullptr;
+	}
+	AlifObject* spec{};
+	if (alifDict_getItemRef(_m->dict, &ALIF_ID(__spec__), &spec) < 0) {
+		ALIF_DECREF(modName);
+		return nullptr;
+	}
+	if (spec == nullptr) {
+		//alifErr_format(_alifExcAttributeError_,
+			//"module '%U' has no attribute '%U'",
+			//modName, _name);
+		ALIF_DECREF(modName);
+		return nullptr;
+	}
 
+	AlifObject* origin = nullptr;
+	if (_get_file_origin_from_spec(spec, &origin) < 0) {
+		goto done;
+	}
+
+	AlifIntT isPossiblyShadowing = _is_module_possibly_shadowing(origin);
+	if (isPossiblyShadowing < 0) {
+		goto done;
+	}
+	AlifIntT isPossiblyShadowingStdLib = 0;
+	if (isPossiblyShadowing) {
+		AlifObject* stdlib_modules = alifSys_getObject("stdlib_module_names");
+		if (stdlib_modules and alifAnySet_Check(stdlib_modules)) {
+			isPossiblyShadowingStdLib = alifSet_contains(stdlib_modules, modName);
+			if (isPossiblyShadowingStdLib < 0) {
+				goto done;
+			}
+		}
+	}
+
+	if (isPossiblyShadowingStdLib) {
+	//	alifErr_format(_alifExcAttributeError_,
+	//		"module '%U' has no attribute '%U' "
+	//		"(consider renaming '%U' since it has the same "
+	//		"name as the standard library module named '%U' "
+	//		"and the import system gives it precedence)",
+	//		modName, name, origin, modName);
+	}
+	else {
+		int rc = alifModuleSpec_isInitializing(spec);
+		if (rc > 0) {
+			if (isPossiblyShadowing) {
+
+	//	alifErr_format(_alifExcAttributeError_,
+				//"module '%U' has no attribute '%U' "
+					//"(consider renaming '%U' if it has the same name "
+					//"as a third-party module you intended to import)",
+					//modName, name, origin);
+			}
+			else if (origin) {
+				//	alifErr_format(_alifExcAttributeError_,
+				//"partially initialized "
+					//"module '%U' from '%U' has no attribute '%U' "
+					//"(most likely due to a circular import)",
+					//modName, origin, name);
+			}
+			else {
+				//	alifErr_format(_alifExcAttributeError_,
+				//"partially initialized "
+					//"module '%U' has no attribute '%U' "
+					//"(most likely due to a circular import)",
+					//modName, name);
+			}
+		}
+		else if (rc == 0) {
+			rc = alifModuleSpec_isUninitializedSubmodule(spec, _name);
+			if (rc > 0) {
+				//	alifErr_format(_alifExcAttributeError_,
+				//"cannot access submodule '%U' of module '%U' "
+					//"(most likely due to a circular import)",
+					//name, modName);
+			}
+			else if (rc == 0) {
+				//	alifErr_format(_alifExcAttributeError_,
+				//"module '%U' has no attribute '%U'",
+					//modName, name);
+			}
+		}
+	}
+
+done:
+	ALIF_XDECREF(origin);
+	ALIF_DECREF(spec);
+	ALIF_DECREF(modName);
+	return nullptr;
+}
+
+
+AlifObject* alifModule_getAttro(AlifModuleObject* _m, AlifObject* _name) { // 1065
+	return alifModule_getAttroImpl(_m, _name, 0);
+}
 
 
 

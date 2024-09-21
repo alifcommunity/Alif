@@ -171,6 +171,7 @@ extern AlifObject* alifType_allocNoTrack(AlifTypeObject*, AlifSizeT); // 763
 
 void alifObject_initInlineValues(AlifObject*, AlifTypeObject*); // 771
 
+extern bool alifObject_tryGetInstanceAttribute(AlifObject* , AlifObject* , AlifObject** ); // 774 
 
 # define MANAGED_DICT_OFFSET    (((AlifSizeT)sizeof(AlifObject *))*-1) // 778 
 
@@ -181,6 +182,12 @@ union AlifManagedDictPointer{ // 785
 static inline AlifManagedDictPointer* alifObject_managedDictPointer(AlifObject* obj) { // 790
 	return (AlifManagedDictPointer*)((char*)obj + MANAGED_DICT_OFFSET);
 }
+
+static inline AlifDictObject* alifObject_getManagedDict(AlifObject* _obj) { // 797
+	AlifManagedDictPointer* dorv = alifObject_managedDictPointer(_obj);
+	return (AlifDictObject*)alifAtomic_loadPtrAcquire(&dorv->dict);
+}
+
 
 static inline AlifDictValues* alifObject_inlineValues(AlifObject* _obj) { // 803
 	AlifTypeObject* tp_ = ALIF_TYPE(_obj);

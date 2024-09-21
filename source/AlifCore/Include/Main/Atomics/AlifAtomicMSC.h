@@ -394,8 +394,6 @@ static inline void alifAtomic_storeSizeRelaxed(AlifSizeT* _obj, AlifSizeT _value
 }
 
 
-
-
 static inline void* alifAtomic_loadPtrAcquire(const void* _obj) { // 905
 #if defined(_M_X64) or defined(_M_IX86)
 	return *(void* volatile*)_obj;

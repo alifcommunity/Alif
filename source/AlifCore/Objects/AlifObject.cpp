@@ -382,6 +382,26 @@ AlifIntT alifObject_isTrue(AlifObject* _v) { // 1845
 	return (res_ > 0) ? 1 : ALIF_SAFE_DOWNCAST(res_, AlifSizeT, AlifIntT);
 }
 
+AlifObject** alifObject_computedDictPointer(AlifObject* _obj) { // 1410
+	AlifTypeObject* tp_ = ALIF_TYPE(_obj);
+
+	AlifSizeT dictOffset = tp_->dictOffset;
+	if (dictOffset == 0) {
+		return nullptr;
+	}
+
+	if (dictOffset < 0) {
+		AlifSizeT tsize = ALIF_SIZE(_obj);
+		if (tsize < 0) {
+			tsize = -tsize;
+		}
+		AlifUSizeT size = alifObject_varSize(tp, tsize);
+		dictOffset += (AlifSizeT)size;
+	}
+	return (AlifObject**)((char*)_obj + dictOffset);
+}
+
+
 AlifObject* alifObject_genericGetAttrWithDict(AlifObject* _obj, AlifObject* _name,
 	AlifObject* _dict, AlifIntT _suppress) { // 1587
 

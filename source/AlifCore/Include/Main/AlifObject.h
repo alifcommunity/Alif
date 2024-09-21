@@ -209,7 +209,7 @@ AlifIntT alifType_ready(AlifTypeObject*); // 411
 AlifIntT alifObject_richCompareBool(AlifObject* , AlifObject* , AlifIntT ); // 424
 
 AlifIntT alifObject_setAttrString(AlifObject*, const char*, AlifObject*); // 426
-
+AlifIntT alifObject_getOptionalAttr(AlifObject* , AlifObject* , AlifObject** ); // 431
 AlifIntT alifObject_setAttr(AlifObject*, AlifObject*, AlifObject*); // 434
 AlifIntT alifObject_genericSetAttr(AlifObject*, AlifObject*, AlifObject*); // 443
 AlifHashT alifObject_hash(AlifObject*); // 447
@@ -380,6 +380,7 @@ public:
 	DescrSetFunc descrSet{};
 	AlifSizeT dictOffset{};
 	DescrGetFunc descrGet{};
+	DescrSetFunc descrSet{};
 	InitProc init{};
 	NewFunc new_{};
 	FreeFunc free{};
