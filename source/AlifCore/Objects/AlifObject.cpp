@@ -361,6 +361,26 @@ AlifIntT alifObject_isTrue(AlifObject* _v) { // 1845
 	return (res_ > 0) ? 1 : ALIF_SAFE_DOWNCAST(res_, AlifSizeT, AlifIntT);
 }
 
+AlifObject** alifObject_computedDictPointer(AlifObject* _obj) { // 1410
+	AlifTypeObject* tp = ALIF_TYPE(_obj);
+
+	AlifSizeT dictoffset = tp->dictOffset;
+	if (dictoffset == 0) {
+		return nullptr;
+	}
+
+	if (dictoffset < 0) {
+		AlifSizeT tsize = ALIF_SIZE(_obj);
+		if (tsize < 0) {
+			tsize = -tsize;
+		}
+		size_t size = alifObject_varSize(tp, tsize);
+		dictoffset += (AlifSizeT)size;
+	}
+	return (AlifObject**)((char*)_obj + dictoffset);
+}
+
+
 AlifObject* alifObject_genericGetAttrWithDict(AlifObject* _obj, AlifObject* _name,
 	AlifObject* _dict, AlifIntT _suppress) { // 1587
 
@@ -509,7 +529,7 @@ AlifIntT alifObject_genericSetAttrWithDict(AlifObject* _obj, AlifObject* _name,
 		AlifObject** dictptr{};
 
 		if ((tp->flags & ALIF_TPFLAGS_INLINE_VALUES)) {
-			res = _alifObject_storeInstanceAttribute(_obj, _name, _value);
+			res = alifObject_storeInstanceAttribute(_obj, _name, _value);
 			goto error_check;
 		}
 
@@ -518,7 +538,7 @@ AlifIntT alifObject_genericSetAttrWithDict(AlifObject* _obj, AlifObject* _name,
 			dictptr = (AlifObject**)&managed_dict->dict;
 		}
 		else {
-			dictptr = _alifObject_computedDictPointer(_obj);
+			dictptr = alifObject_computedDictPointer(_obj);
 		}
 		if (dictptr == nullptr) {
 			if (descr == nullptr) {
@@ -533,7 +553,7 @@ AlifIntT alifObject_genericSetAttrWithDict(AlifObject* _obj, AlifObject* _name,
 					//	"'%.100s' object has no attribute '%U'",
 					//	tp->name, name);
 				}
-				_alifObject_setAttributeErrorContext(_obj, _name);
+				alifObject_setAttributeErrorContext(_obj, _name);
 			}
 			else {
 				//alifErr_format(_alifExcAttributeError_,
@@ -543,7 +563,7 @@ AlifIntT alifObject_genericSetAttrWithDict(AlifObject* _obj, AlifObject* _name,
 			goto done;
 		}
 		else {
-			res = _alifObjectDict_setItem(tp, _obj, dictptr, _name, _value);
+			res = alifObjectDict_setItem(tp, _obj, dictptr, _name, _value);
 		}
 	}
 	else {

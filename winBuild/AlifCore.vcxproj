@@ -141,6 +141,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\BytesObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Codecs.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ConfigMinimal.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\DescrObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\DictObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\CriticalSection.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\FileUtils.cpp" />

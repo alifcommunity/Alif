@@ -227,7 +227,148 @@ error:
 
 
 
+AlifObject* alifModule_getAttroImpl(AlifModuleObject* _m, AlifObject* _name, AlifIntT _suppress) { // 21
+	AlifObject* attr, * modName, * getAttr;
+	attr = alifObject_genericGetAttrWithDict((AlifObject*)_m, _name, nullptr, _suppress);
+	if (attr) {
+		return attr;
+	}
+	if (_suppress == 1) {
+		//if (alifErr_occurred()) {
+			// pass up non-AttributeError exception
+			//return nullptr;
+		//}
+	}
+	else {
+		//if (!alifErr_exceptionMatches(_alfiExcAttributeError_)) {
+			// pass up non-AttributeError exception
+			//return nullptr;
+		//}
+		//alifErr_clear();
+	}
+	if (alifDict_getItemRef(_m->dict, &ALIF_ID(__getAttr__), &getAttr) < 0) {
+		return nullptr;
+	}
+	if (getAttr) {
+		AlifObject* result = alifObject_callOneArg(getAttr, _name);
+		//if (result == nullptr and _suppress == 1
+			//and alifErr_exceptionMatches(exception)
+			//) {
+			// suppress AttributeError
+			//alifErr_clear();
+		//}
+		ALIF_DECREF(getAttr);
+		return result;
+	}
+	if (_suppress == 1) {
+		return nullptr;
+	}
+	if (alifDict_getItemRef(_m->dict, &ALIF_ID(__name__), &modName) < 0) {
+		return nullptr;
+	}
+	if (!modName or !ALIFUSTR_CHECK(modName)) {
+		ALIF_XDECREF(modName);
+		//alifErr_format(_alifExcAttributeError_,
+			//"module has no attribute '%U'", _name);
+		return nullptr;
+	}
+	AlifObject* spec;
+	if (alifDict_getItemRef(_m->dict, &ALIF_ID(__spec__), &spec) < 0) {
+		ALIF_DECREF(modName);
+		return nullptr;
+	}
+	if (spec == nullptr) {
+		PyErr_Format(PyExc_AttributeError,
+			"module '%U' has no attribute '%U'",
+			modName, _name);
+		ALIF_DECREF(modName);
+		return nullptr;
+	}
 
+	PyObject* origin = nullptr;
+	if (_get_file_origin_from_spec(spec, &origin) < 0) {
+		goto done;
+	}
+
+	int is_possibly_shadowing = _is_module_possibly_shadowing(origin);
+	if (is_possibly_shadowing < 0) {
+		goto done;
+	}
+	int is_possibly_shadowing_stdlib = 0;
+	if (is_possibly_shadowing) {
+		PyObject* stdlib_modules = PySys_GetObject("stdlib_module_names");
+		if (stdlib_modules && PyAnySet_Check(stdlib_modules)) {
+			is_possibly_shadowing_stdlib = PySet_Contains(stdlib_modules, modName);
+			if (is_possibly_shadowing_stdlib < 0) {
+				goto done;
+			}
+		}
+	}
+
+	if (is_possibly_shadowing_stdlib) {
+		assert(origin);
+		PyErr_Format(PyExc_AttributeError,
+			"module '%U' has no attribute '%U' "
+			"(consider renaming '%U' since it has the same "
+			"name as the standard library module named '%U' "
+			"and the import system gives it precedence)",
+			modName, name, origin, modName);
+	}
+	else {
+		int rc = _PyModuleSpec_IsInitializing(spec);
+		if (rc > 0) {
+			if (is_possibly_shadowing) {
+				assert(origin);
+				// For third-party modules, only mention the possibility of
+				// shadowing if the module is being initialized.
+				PyErr_Format(PyExc_AttributeError,
+					"module '%U' has no attribute '%U' "
+					"(consider renaming '%U' if it has the same name "
+					"as a third-party module you intended to import)",
+					modName, name, origin);
+			}
+			else if (origin) {
+				PyErr_Format(PyExc_AttributeError,
+					"partially initialized "
+					"module '%U' from '%U' has no attribute '%U' "
+					"(most likely due to a circular import)",
+					modName, origin, name);
+			}
+			else {
+				PyErr_Format(PyExc_AttributeError,
+					"partially initialized "
+					"module '%U' has no attribute '%U' "
+					"(most likely due to a circular import)",
+					modName, name);
+			}
+		}
+		else if (rc == 0) {
+			rc = _PyModuleSpec_IsUninitializedSubmodule(spec, name);
+			if (rc > 0) {
+				PyErr_Format(PyExc_AttributeError,
+					"cannot access submodule '%U' of module '%U' "
+					"(most likely due to a circular import)",
+					name, modName);
+			}
+			else if (rc == 0) {
+				PyErr_Format(PyExc_AttributeError,
+					"module '%U' has no attribute '%U'",
+					modName, name);
+			}
+		}
+	}
+
+done:
+	ALIF_XDECREF(origin);
+	ALIF_DECREF(spec);
+	ALIF_DECREF(modName);
+	return nullptr;
+}
+
+
+AlifObject* alifModule_getAttro(AlifModuleObject* _m, AlifObject* _name) { // 1065
+	return alifModule_getAttroImpl(_m, _name, 0);
+}
 
 
 

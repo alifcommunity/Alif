@@ -484,6 +484,85 @@ AlifObject* alifType_lookupRef(AlifTypeObject* _type, AlifObject* _name) { // 54
 	return res;
 }
 
+AlifObject* alifType_getAttroImpl(AlifTypeObject* _type, AlifObject* _name, AlifIntT* _suppressMissingAttribute) { // 5580
+	AlifTypeObject* metatype = ALIF_TYPE(_type);
+	AlifObject* metaAttribute, * attribute;
+	DescrGetFunc metaGet;
+	AlifObject* res;
+
+	if (!ALIFUSTR_CHECK(_name)) {
+		//alifErr_format(_alifExctypeError_,
+			//"attribute name must be string, not '%.200s'",
+			//ALIF_TYPE(name)->name);
+		return nullptr;
+	}
+
+	if (!alifType_isReady(_type)) {
+		if (alifType_ready(_type) < 0)
+			return nullptr;
+	}
+
+	/* No readable descriptor found yet */
+	metaGet = nullptr;
+
+	/* Look for the attribute in the metatype */
+	metaAttribute = alifType_lookupRef(metatype, _name);
+
+	if (metaAttribute != nullptr) {
+		metaGet = ALIF_TYPE(metaAttribute)->descrGet;
+
+		if (metaGet != nullptr and alifDescr_isData(metaAttribute)) {
+			res = metaGet(metaAttribute, (AlifObject*)_type,
+				(AlifObject*)metatype);
+			ALIF_DECREF(metaAttribute);
+			return res;
+		}
+	}
+
+	attribute = alifType_lookupRef(_type, _name);
+	if (attribute != nullptr) {
+		DescrGetFunc localGet = ALIF_TYPE(attribute)->descrGet;
+
+		ALIF_XDECREF(metaAttribute);
+
+		if (localGet != nullptr) {
+			res = localGet(attribute, (AlifObject*)nullptr,
+				(AlifObject*)_type);
+			ALIF_DECREF(attribute);
+			return res;
+		}
+
+		return attribute;
+	}
+	if (metaGet != nullptr) {
+		AlifObject* res;
+		res = metaGet(metaAttribute, (AlifObject*)_type,
+			(AlifObject*)metatype);
+		ALIF_DECREF(metaAttribute);
+		return res;
+	}
+
+	if (metaAttribute != nullptr) {
+		return metaAttribute;
+	}
+
+	if (_suppressMissingAttribute == nullptr) {
+		//alfiErr_format(_alifExcAttributeError_,
+			//"type object '%.100s' has no attribute '%U'",
+			//type->name, _name);
+	}
+	else {
+		// signal the caller we have not set an PyExc_AttributeError and gave up
+		*_suppressMissingAttribute = 1;
+	}
+	return nullptr;
+}
+
+
+AlifObject* alifType_getAttro(AlifObject* _type, AlifObject* _name) { // 5672
+	return alifType_getAttroImpl((AlifTypeObject*)_type, _name, nullptr);
+}
+
 static void type_dealloc(AlifObject* self) { // 5911
 	AlifTypeObject* type = (AlifTypeObject*)self;
 

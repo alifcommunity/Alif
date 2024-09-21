@@ -37,3 +37,7 @@ AlifObject* alifType_getDict(AlifTypeObject*); // 207
 static inline AlifIntT alifType_isReady(AlifTypeObject* _type) { // 221
 	return alifType_getDict(_type) != nullptr;
 }
+
+AlifObject* alifType_getAttroImpl(AlifTypeObject* , AlifObject* , AlifIntT* ); // 226
+
+AlifObject* alifType_getAttro(AlifObject* , AlifObject* ); // 228
