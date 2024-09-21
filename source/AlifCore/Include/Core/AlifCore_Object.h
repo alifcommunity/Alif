@@ -188,9 +188,9 @@ static inline AlifDictValues* alifObject_inlineValues(AlifObject* _obj) { // 803
 }
 
 
+extern AlifObject** alifObject_computedDictPointer(AlifObject*); // 813
 
 
 
 
-
-extern AlifTypeObject _alifNoneType_;
+extern AlifTypeObject _alifNoneType_; // 851
