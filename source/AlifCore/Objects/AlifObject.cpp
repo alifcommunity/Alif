@@ -339,6 +339,27 @@ AlifIntT alifObject_delAttr(AlifObject* _v, AlifObject* _name) { // 1404
 	return alifObject_setAttr(_v, _name, nullptr);
 }
 
+
+AlifObject** alifObject_computedDictPointer(AlifObject* _obj) { // 1409
+	AlifTypeObject* tp = ALIF_TYPE(_obj);
+
+	AlifSizeT dictOffset = tp->dictOffset;
+	if (dictOffset == 0) {
+		return nullptr;
+	}
+
+	if (dictOffset < 0) {
+		AlifSizeT tsize = ALIF_SIZE(_obj);
+		if (tsize < 0) {
+			tsize = -tsize;
+		}
+		AlifUSizeT size = alifObject_varSize(tp, tsize);
+		dictOffset += (AlifSizeT)size;
+	}
+	return (AlifObject**)((char*)_obj + dictOffset);
+}
+
+
 AlifIntT alifObject_isTrue(AlifObject* _v) { // 1845
 	AlifSizeT res_{};
 	if (_v == ALIF_TRUE)
@@ -553,7 +574,7 @@ AlifIntT alifObject_genericSetAttrWithDict(AlifObject* _obj, AlifObject* _name,
 					//	"'%.100s' object has no attribute '%U'",
 					//	tp->name, name);
 				}
-				alifObject_setAttributeErrorContext(_obj, _name);
+				//alifObject_setAttributeErrorContext(_obj, _name);
 			}
 			else {
 				//alifErr_format(_alifExcAttributeError_,

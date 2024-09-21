@@ -169,7 +169,7 @@ typedef AlifIntT(*SetAttroFunc)(AlifObject*, AlifObject*, AlifObject*); // 339
 typedef AlifHashT (*HashFunc)(AlifObject*); // 341
 typedef AlifObject* (*RichCmpFunc) (AlifObject*, AlifObject*, AlifIntT); // 342
 typedef AlifObject* (*DescrGetFunc) (AlifObject*, AlifObject*, AlifObject*); // 345
-typedef AlifIntT(*DescrSetFunc) (AlifObject*, AlifObject*, AlifObject*); // 346
+typedef AlifIntT (*DescrSetFunc) (AlifObject*, AlifObject*, AlifObject*); // 346
 typedef AlifIntT (*InitProc)(AlifObject*, AlifObject*, AlifObject*); // 347
 typedef AlifObject* (*NewFunc)(AlifTypeObject*, AlifObject*, AlifObject*); // 348
 
@@ -376,6 +376,8 @@ public:
 
 	AlifTypeObject* base{};
 	AlifObject* dict{};
+	DescrGetFunc descrGet{};
+	DescrSetFunc descrSet{};
 	AlifSizeT dictOffset{};
 	DescrGetFunc descrGet{};
 	DescrSetFunc descrSet{};

@@ -393,7 +393,8 @@ static inline void alifAtomic_storeSizeRelaxed(AlifSizeT* _obj, AlifSizeT _value
 	*(volatile AlifSizeT*)_obj = _value;
 }
 
-static inline void* alifAtomic_loadPtrAcquire(const void* _obj) { // 906
+
+static inline void* alifAtomic_loadPtrAcquire(const void* _obj) { // 905
 #if defined(_M_X64) or defined(_M_IX86)
 	return *(void* volatile*)_obj;
 #elif defined(_M_ARM64)
@@ -402,6 +403,7 @@ static inline void* alifAtomic_loadPtrAcquire(const void* _obj) { // 906
 #  error "no implementation of alifAtomic_loadPtrAcquire"
 #endif
 }
+
 
 static inline void alifAtomic_storePtrRelease(void* _obj, void* _value) { // 930
 #if defined(_M_X64) or defined(_M_IX86)
