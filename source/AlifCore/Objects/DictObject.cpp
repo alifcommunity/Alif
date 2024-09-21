@@ -459,7 +459,7 @@ start:
 				ix_ = uStrKeys_lookupUStr(dk_, _key, _hash);
 			}
 #else
-			ix = uStrKeys_lookupUStr(dk, _key, _hash);
+			ix_ = uStrKeys_lookupUStr(dk, _key, _hash);
 #endif
 		}
 		else {
@@ -1355,10 +1355,10 @@ static AlifDictObject* makeDict_fromInstanceAttributes(AlifInterpreter* _interp,
 	dictKeys_incRef(_keys);
 	AlifSizeT used = 0;
 	AlifSizeT track = 0;
-	size_t size = sharedKeys_usableSize(_keys);
-	for (size_t i = 0; i < size; i++) {
+	AlifUSizeT size = sharedKeys_usableSize(_keys);
+	for (AlifUSizeT i = 0; i < size; i++) {
 		AlifObject* val = _values->values[i];
-		if (val != NULL) {
+		if (val != nullptr) {
 			used += 1;
 			track += alifObject_gcMayBeTracked(val);
 		}
@@ -1373,7 +1373,7 @@ static AlifDictObject* makeDict_fromInstanceAttributes(AlifInterpreter* _interp,
 AlifDictObject* alifObject_materializeManagedDictLockHeld(AlifObject* _obj) { // 6638
 
 	AlifDictValues* values = alifObject_inlineValues(_obj);
-	AlifDictObject* dict;
+	AlifDictObject* dict{};
 	if (values->valid) {
 		AlifInterpreter* interp = alifInterpreter_get();
 		AlifDictKeysObject* keys = CACHED_KEYS(ALIF_TYPE(_obj));
@@ -1382,13 +1382,13 @@ AlifDictObject* alifObject_materializeManagedDictLockHeld(AlifObject* _obj) { //
 	else {
 		dict = (AlifDictObject*)alifDict_new();
 	}
-	alifAtomic_storePtrRelease(alifObject_managedDictPointer(_obj)->dict, dict);
+	alifAtomic_storePtrRelease(&alifObject_managedDictPointer(_obj)->dict, dict);
 	return dict;
 }
 
 AlifDictObject* alifObject_materializeManagedDict(AlifObject* _obj) { // 6660
 	AlifDictObject* dict = alifObject_getManagedDict(_obj);
-	if (dict != NULL) {
+	if (dict != nullptr) {
 		return dict;
 	}
 
@@ -1396,7 +1396,7 @@ AlifDictObject* alifObject_materializeManagedDict(AlifObject* _obj) { // 6660
 
 #ifdef ALIF_GIL_DISABLED
 	dict = alifObject_getManagedDict(_obj);
-	if (dict != NULL) {
+	if (dict != nullptr) {
 		goto exit;
 	}
 #endif
@@ -1416,27 +1416,27 @@ bool alifObject_tryGetInstanceAttribute(AlifObject* _obj, AlifObject* _name, Ali
 	}
 
 	AlifDictKeysObject* keys = CACHED_KEYS(ALIF_TYPE(_obj));
-	AlifSizeT ix = alifDictKeys_stringLookup(keys, _name);
-	if (ix == DKIX_EMPTY) {
-		*_attr = NULL;
+	AlifSizeT ix_ = alifDictKeys_stringLookup(keys, _name);
+	if (ix_ == DKIX_EMPTY) {
+		*_attr = nullptr;
 		return true;
 	}
 
 #ifdef ALIF_GIL_DISABLED
-	AlifObject* value = (AlifObject*)alifAtomic_loadPtrAcquire(&values->values[ix]);
-	if (value == NULL or alif_tryIncRefCompare(&values->values[ix], value)) {
+	AlifObject* value = (AlifObject*)alifAtomic_loadPtrAcquire(&values->values[ix_]);
+	if (value == nullptr or alif_tryIncRefCompare(&values->values[ix_], value)) {
 		*_attr = value;
 		return true;
 	}
 
 	AlifDictObject* dict = alifObject_getManagedDict(_obj);
-	if (dict == NULL) {
+	if (dict == nullptr) {
 		bool success = false;
 		ALIF_BEGIN_CRITICAL_SECTION(_obj);
 
 		dict = alifObject_getManagedDict(_obj);
-		if (dict == NULL) {
-			value = values->values[ix];
+		if (dict == nullptr) {
+			value = values->values[ix_];
 			*_attr = ALIF_XNEWREF(value);
 			success = true;
 		}
@@ -1449,11 +1449,11 @@ bool alifObject_tryGetInstanceAttribute(AlifObject* _obj, AlifObject* _name, Ali
 	}
 
 
-	bool success;
+	bool success{};
 	ALIF_BEGIN_CRITICAL_SECTION(dict);
 
 	if (dict->values == values and alifAtomic_loadUint8(&values->valid)) {
-		value = (AlifObject*)alifAtomic_loadPtrRelaxed(&values->values[ix]);
+		value = (AlifObject*)alifAtomic_loadPtrRelaxed(&values->values[ix_]);
 		*_attr = ALIF_XNEWREF(value);
 		success = true;
 	}
@@ -1465,7 +1465,7 @@ bool alifObject_tryGetInstanceAttribute(AlifObject* _obj, AlifObject* _name, Ali
 
 	return success;
 #else
-	AlifObject* value = values->values[ix];
+	AlifObject* value = values->values[ix_];
 	*attr = ALIF_XNEWREF(value);
 	return true;
 #endif

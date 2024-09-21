@@ -227,8 +227,8 @@ error:
 
 
 
-AlifObject* alifModule_getAttroImpl(AlifModuleObject* _m, AlifObject* _name, AlifIntT _suppress) { // 21
-	AlifObject* attr, * modName, * getAttr;
+AlifObject* alifModule_getAttroImpl(AlifModuleObject* _m, AlifObject* _name, AlifIntT _suppress) { // 921
+	AlifObject* attr{}, * modName{}, * getAttr{};
 	attr = alifObject_genericGetAttrWithDict((AlifObject*)_m, _name, nullptr, _suppress);
 	if (attr) {
 		return attr;
@@ -251,12 +251,12 @@ AlifObject* alifModule_getAttroImpl(AlifModuleObject* _m, AlifObject* _name, Ali
 	}
 	if (getAttr) {
 		AlifObject* result = alifObject_callOneArg(getAttr, _name);
-		//if (result == nullptr and _suppress == 1
+		if (result == nullptr and _suppress == 1
 			//and alifErr_exceptionMatches(exception)
-			//) {
-			// suppress AttributeError
+			) {
 			//alifErr_clear();
-		//}
+			return nullptr;
+		}
 		ALIF_DECREF(getAttr);
 		return result;
 	}
@@ -272,88 +272,85 @@ AlifObject* alifModule_getAttroImpl(AlifModuleObject* _m, AlifObject* _name, Ali
 			//"module has no attribute '%U'", _name);
 		return nullptr;
 	}
-	AlifObject* spec;
+	AlifObject* spec{};
 	if (alifDict_getItemRef(_m->dict, &ALIF_ID(__spec__), &spec) < 0) {
 		ALIF_DECREF(modName);
 		return nullptr;
 	}
 	if (spec == nullptr) {
-		PyErr_Format(PyExc_AttributeError,
-			"module '%U' has no attribute '%U'",
-			modName, _name);
+		//alifErr_format(_alifExcAttributeError_,
+			//"module '%U' has no attribute '%U'",
+			//modName, _name);
 		ALIF_DECREF(modName);
 		return nullptr;
 	}
 
-	PyObject* origin = nullptr;
+	AlifObject* origin = nullptr;
 	if (_get_file_origin_from_spec(spec, &origin) < 0) {
 		goto done;
 	}
 
-	int is_possibly_shadowing = _is_module_possibly_shadowing(origin);
-	if (is_possibly_shadowing < 0) {
+	AlifIntT isPossiblyShadowing = _is_module_possibly_shadowing(origin);
+	if (isPossiblyShadowing < 0) {
 		goto done;
 	}
-	int is_possibly_shadowing_stdlib = 0;
-	if (is_possibly_shadowing) {
-		PyObject* stdlib_modules = PySys_GetObject("stdlib_module_names");
-		if (stdlib_modules && PyAnySet_Check(stdlib_modules)) {
-			is_possibly_shadowing_stdlib = PySet_Contains(stdlib_modules, modName);
-			if (is_possibly_shadowing_stdlib < 0) {
+	AlifIntT isPossiblyShadowingStdLib = 0;
+	if (isPossiblyShadowing) {
+		AlifObject* stdlib_modules = alifSys_getObject("stdlib_module_names");
+		if (stdlib_modules and alifAnySet_Check(stdlib_modules)) {
+			isPossiblyShadowingStdLib = alifSet_contains(stdlib_modules, modName);
+			if (isPossiblyShadowingStdLib < 0) {
 				goto done;
 			}
 		}
 	}
 
-	if (is_possibly_shadowing_stdlib) {
-		assert(origin);
-		PyErr_Format(PyExc_AttributeError,
-			"module '%U' has no attribute '%U' "
-			"(consider renaming '%U' since it has the same "
-			"name as the standard library module named '%U' "
-			"and the import system gives it precedence)",
-			modName, name, origin, modName);
+	if (isPossiblyShadowingStdLib) {
+	//	alifErr_format(_alifExcAttributeError_,
+	//		"module '%U' has no attribute '%U' "
+	//		"(consider renaming '%U' since it has the same "
+	//		"name as the standard library module named '%U' "
+	//		"and the import system gives it precedence)",
+	//		modName, name, origin, modName);
 	}
 	else {
-		int rc = _PyModuleSpec_IsInitializing(spec);
+		int rc = alifModuleSpec_isInitializing(spec);
 		if (rc > 0) {
-			if (is_possibly_shadowing) {
-				assert(origin);
-				// For third-party modules, only mention the possibility of
-				// shadowing if the module is being initialized.
-				PyErr_Format(PyExc_AttributeError,
-					"module '%U' has no attribute '%U' "
-					"(consider renaming '%U' if it has the same name "
-					"as a third-party module you intended to import)",
-					modName, name, origin);
+			if (isPossiblyShadowing) {
+
+	//	alifErr_format(_alifExcAttributeError_,
+				//"module '%U' has no attribute '%U' "
+					//"(consider renaming '%U' if it has the same name "
+					//"as a third-party module you intended to import)",
+					//modName, name, origin);
 			}
 			else if (origin) {
-				PyErr_Format(PyExc_AttributeError,
-					"partially initialized "
-					"module '%U' from '%U' has no attribute '%U' "
-					"(most likely due to a circular import)",
-					modName, origin, name);
+				//	alifErr_format(_alifExcAttributeError_,
+				//"partially initialized "
+					//"module '%U' from '%U' has no attribute '%U' "
+					//"(most likely due to a circular import)",
+					//modName, origin, name);
 			}
 			else {
-				PyErr_Format(PyExc_AttributeError,
-					"partially initialized "
-					"module '%U' has no attribute '%U' "
-					"(most likely due to a circular import)",
-					modName, name);
+				//	alifErr_format(_alifExcAttributeError_,
+				//"partially initialized "
+					//"module '%U' has no attribute '%U' "
+					//"(most likely due to a circular import)",
+					//modName, name);
 			}
 		}
 		else if (rc == 0) {
-			rc = _PyModuleSpec_IsUninitializedSubmodule(spec, name);
+			rc = alifModuleSpec_isUninitializedSubmodule(spec, _name);
 			if (rc > 0) {
-				PyErr_Format(PyExc_AttributeError,
-					"cannot access submodule '%U' of module '%U' "
-					"(most likely due to a circular import)",
-					name, modName);
+				//	alifErr_format(_alifExcAttributeError_,
+				//"cannot access submodule '%U' of module '%U' "
+					//"(most likely due to a circular import)",
+					//name, modName);
 			}
 			else if (rc == 0) {
-				PyErr_Format(PyExc_AttributeError,
-					"module '%U' has no attribute '%U'",
-					modName, name);
+				//	alifErr_format(_alifExcAttributeError_,
+				//"module '%U' has no attribute '%U'",
+					//modName, name);
 			}
 		}
 	}

@@ -125,7 +125,7 @@ static inline uint64_t dict_nextVersion(AlifInterpreter* _interp) { // 235
     ((_interp)->dictState.globalVersion += DICT_VERSION_INCREMENT)
 #endif
 
-AlifDictObject* alifObject_materializeManagedDict(AlifObject* ); // 279
+extern AlifDictObject* alifObject_materializeManagedDict(AlifObject* ); // 279
 
 static inline uint8_t* getInsertion_orderArray(AlifDictValues* _values) { // 287
 	return (uint8_t*)&_values->values[_values->capacity];

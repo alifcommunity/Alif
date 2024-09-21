@@ -486,9 +486,9 @@ AlifObject* alifType_lookupRef(AlifTypeObject* _type, AlifObject* _name) { // 54
 
 AlifObject* alifType_getAttroImpl(AlifTypeObject* _type, AlifObject* _name, AlifIntT* _suppressMissingAttribute) { // 5580
 	AlifTypeObject* metatype = ALIF_TYPE(_type);
-	AlifObject* metaAttribute, * attribute;
-	DescrGetFunc metaGet;
-	AlifObject* res;
+	AlifObject* metaAttribute{}, * attribute{};
+	DescrGetFunc metaGet{};
+	AlifObject* res{};
 
 	if (!ALIFUSTR_CHECK(_name)) {
 		//alifErr_format(_alifExctypeError_,
@@ -535,7 +535,7 @@ AlifObject* alifType_getAttroImpl(AlifTypeObject* _type, AlifObject* _name, Alif
 		return attribute;
 	}
 	if (metaGet != nullptr) {
-		AlifObject* res;
+		AlifObject* res{};
 		res = metaGet(metaAttribute, (AlifObject*)_type,
 			(AlifObject*)metatype);
 		ALIF_DECREF(metaAttribute);

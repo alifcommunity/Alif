@@ -362,22 +362,22 @@ AlifIntT alifObject_isTrue(AlifObject* _v) { // 1845
 }
 
 AlifObject** alifObject_computedDictPointer(AlifObject* _obj) { // 1410
-	AlifTypeObject* tp = ALIF_TYPE(_obj);
+	AlifTypeObject* tp_ = ALIF_TYPE(_obj);
 
-	AlifSizeT dictoffset = tp->dictOffset;
-	if (dictoffset == 0) {
+	AlifSizeT dictOffset = tp_->dictOffset;
+	if (dictOffset == 0) {
 		return nullptr;
 	}
 
-	if (dictoffset < 0) {
+	if (dictOffset < 0) {
 		AlifSizeT tsize = ALIF_SIZE(_obj);
 		if (tsize < 0) {
 			tsize = -tsize;
 		}
-		size_t size = alifObject_varSize(tp, tsize);
-		dictoffset += (AlifSizeT)size;
+		AlifUSizeT size = alifObject_varSize(tp, tsize);
+		dictOffset += (AlifSizeT)size;
 	}
-	return (AlifObject**)((char*)_obj + dictoffset);
+	return (AlifObject**)((char*)_obj + dictOffset);
 }
 
 
