@@ -237,5 +237,6 @@ AlifTypeObject _alifModuleType_ = { // 1290
 	.name = "وحدة",
 	.basicSize = sizeof(AlifModuleObject),
 	.itemSize = 0,                                          
-	//(Destructor)module_dealloc,                 
+	//(Destructor)module_dealloc,
+	.setAttro = alifObject_genericSetAttr,
 };

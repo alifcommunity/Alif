@@ -475,6 +475,104 @@ AlifObject* alifObject_genericGetAttr(AlifObject* _obj, AlifObject* _name) { // 
 	return alifObject_genericGetAttrWithDict(_obj, _name, nullptr, 0);
 }
 
+AlifIntT alifObject_genericSetAttrWithDict(AlifObject* _obj, AlifObject* _name,
+	AlifObject* _value, AlifObject* _dict) { // 1705
+	AlifTypeObject* tp = ALIF_TYPE(_obj);
+	AlifObject* descr{};
+	DescrSetFunc f{};
+	AlifIntT res = -1;
+
+	if (!ALIFUSTR_CHECK(_name)) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"attribute name must be string, not '%.200s'",
+		//	ALIF_TYPE(name)->name);
+		return -1;
+	}
+
+	if (!alifType_isReady(tp) and alifType_ready(tp) < 0) {
+		return -1;
+	}
+
+	ALIF_INCREF(_name);
+	ALIF_INCREF(tp);
+	descr = alifType_lookupRef(tp, _name);
+
+	if (descr != nullptr) {
+		f = ALIF_TYPE(descr)->descrSet;
+		if (f != nullptr) {
+			res = f(descr, _obj, _value);
+			goto done;
+		}
+	}
+
+	if (_dict == nullptr) {
+		AlifObject** dictptr{};
+
+		if ((tp->flags & ALIF_TPFLAGS_INLINE_VALUES)) {
+			res = _alifObject_storeInstanceAttribute(_obj, _name, _value);
+			goto error_check;
+		}
+
+		if ((tp->flags & ALIF_TPFLAGS_MANAGED_DICT)) {
+			AlifManagedDictPointer* managed_dict = alifObject_managedDictPointer(_obj);
+			dictptr = (AlifObject**)&managed_dict->dict;
+		}
+		else {
+			dictptr = _alifObject_computedDictPointer(_obj);
+		}
+		if (dictptr == nullptr) {
+			if (descr == nullptr) {
+				if (tp->setAttro == alifObject_genericSetAttr) {
+					//alifErr_format(_alifExcAttributeError_,
+					//	"'%.100s' object has no attribute '%U' and no "
+					//	"__dict__ for setting new attributes",
+					//	tp->name, name);
+				}
+				else {
+					//alifErr_format(_alifExcAttributeError_,
+					//	"'%.100s' object has no attribute '%U'",
+					//	tp->name, name);
+				}
+				_alifObject_setAttributeErrorContext(_obj, _name);
+			}
+			else {
+				//alifErr_format(_alifExcAttributeError_,
+				//	"'%.100s' object attribute '%U' is read-only",
+				//	tp->name, name);
+			}
+			goto done;
+		}
+		else {
+			res = _alifObjectDict_setItem(tp, _obj, dictptr, _name, _value);
+		}
+	}
+	else {
+		ALIF_INCREF(_dict);
+		if (_value == nullptr)
+			res = alifDict_delItem(_dict, _name);
+		else
+			res = alifDict_setItem(_dict, _name, _value);
+		ALIF_DECREF(_dict);
+	}
+error_check:
+	//if (res < 0 and alifErr_exceptionMatches(_alifExcKeyError_)) {
+	//	alifErr_format(_alifExcAttributeError_,
+	//		"'%.100s' object has no attribute '%U'",
+	//		tp->name, name);
+	//	_alifObject_setAttributeErrorContext(obj, name);
+	//}
+done:
+	ALIF_XDECREF(descr);
+	ALIF_DECREF(tp);
+	ALIF_DECREF(_name);
+	return res;
+}
+
+AlifIntT alifObject_genericSetAttr(AlifObject* _obj, AlifObject* _name, AlifObject* _value) { // 1801
+	return alifObject_genericSetAttrWithDict(_obj, _name, _value, nullptr);
+}
+
+
 AlifTypeObject _alifNoneType_ = { // 2049
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "عدم",

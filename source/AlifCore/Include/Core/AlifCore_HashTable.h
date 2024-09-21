@@ -2,10 +2,21 @@
 
 
 
-typedef class AlifSListItemS {
+typedef class AlifSListItemS { // 13
 public:
 	AlifSListItemS* next{};
 } AlifSListItemT;
+
+
+class AlifSListT { // 17
+public:
+	AlifSListItemT* head{};
+};
+
+
+#define ALIF_SLIST_ITEM_NEXT(_item) ALIF_RVALUE(((AlifSListItemT *)(_item))->next) // 21
+
+#define ALIF_SLIST_HEAD(_slist) ALIF_RVALUE(((AlifSListT *)(_slist))->head) // 23
 
 
 class AlifHashTableEntryT { // 28
@@ -20,16 +31,41 @@ public:
 class AlifHashTableT; // 41 
 typedef class AlifHashTableT AlifHashTableT; // 42
 
+typedef AlifUHashT (*AlifHashTableHashFunc) (const void*);
+typedef AlifIntT (*AlifHashTableCompareFunc) (const void*, const void*);
+typedef void (*AlifHashTableDestroyFunc) (void*);
 typedef AlifHashTableEntryT* (*AlifHashTableGetEntryFunc)(AlifHashTableT*, const void*); // 47
+
+class AlifHashTableAllocatorT { // 50
+public:
+	void* (*malloc) (AlifUSizeT _size);
+	void (*free) (void* _ptr);
+};
 
 class AlifHashTableT { // 60
 public:
 	AlifUSizeT nentries{}; // Total number of entries in the table
 	AlifUSizeT nbuckets{};
 
+	AlifSListT* buckets{};
+
 	AlifHashTableGetEntryFunc getEntryFunc{};
+	AlifHashTableHashFunc hashFunc{};
+	AlifHashTableCompareFunc compareFunc{};
+	AlifHashTableDestroyFunc keyDestroyFunc{};
+	AlifHashTableDestroyFunc valueDestroyFunc{};
+	AlifHashTableAllocatorT alloc{};
 
 };
+
+
+AlifUHashT alifHashTable_hashPtr(const void*); // 79
+
+AlifIntT alifHashTable_compareDirect(const void*, const void*); // 82
+
+AlifHashTableT* alifHashTable_newFull(AlifHashTableHashFunc,
+	AlifHashTableCompareFunc, AlifHashTableDestroyFunc,
+	AlifHashTableDestroyFunc, AlifHashTableAllocatorT*); // 86
 
 
 void* alifHashTable_get(AlifHashTableT*, const void*); // 134

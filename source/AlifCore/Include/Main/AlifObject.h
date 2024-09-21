@@ -209,6 +209,7 @@ AlifIntT alifObject_richCompareBool(AlifObject* , AlifObject* , AlifIntT ); // 4
 AlifIntT alifObject_setAttrString(AlifObject*, const char*, AlifObject*); // 426
 
 AlifIntT alifObject_setAttr(AlifObject*, AlifObject*, AlifObject*); // 434
+AlifIntT alifObject_genericSetAttr(AlifObject*, AlifObject*, AlifObject*); // 443
 typedef AlifObject* (*DescrGetFunc) (AlifObject*, AlifObject*, AlifObject*); // 345
 AlifHashT alifObject_hash(AlifObject*); // 447
 AlifHashT alifObject_hashNotImplemented(AlifObject*); // 448
@@ -402,6 +403,13 @@ public:
 	AlifObject* module_{};
 	AlifSizeT uniqueID{};
 };
+
+
+
+AlifObject* alifType_lookupRef(AlifTypeObject*, AlifObject*); // 281
+
+
+AlifIntT alifObject_genericSetAttrWithDict(AlifObject*, AlifObject*, AlifObject*, AlifObject*); // 301
 
 
 // 338

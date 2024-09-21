@@ -78,6 +78,60 @@ static inline AlifObject* get_internedDict(AlifInterpreter* _interp) { // 223
 
 #define INTERNED_STRINGS _alifDureRun_.cachedObjects.internedStrings // 231
 
+static AlifHashT uStr_hash(AlifObject*); // 263
+static AlifIntT uStrCompare_eq(AlifObject*, AlifObject*);
+
+static AlifUHashT hashTable_uStrHash(const void* _key) { // 266
+	return uStr_hash((AlifObject*)_key);
+}
+
+
+static AlifIntT hashTable_uStrCompare(const void* _key1, const void* _key2) { // 272
+	AlifObject* obj1 = (AlifObject*)_key1;
+	AlifObject* obj2 = (AlifObject*)_key2;
+	if (obj1 != nullptr and obj2 != nullptr) {
+		return uStrCompare_eq(obj1, obj2);
+	}
+	else {
+		return obj1 == obj2;
+	}
+}
+
+
+static AlifIntT init_internedDict(AlifInterpreter* interp) { // 285
+	AlifObject* interned = interned = alifDict_new();
+	if (interned == nullptr) {
+		return -1;
+	}
+	ALIF_INTERP_CACHED_OBJECT(interp, internedStrings) = interned;
+	return 0;
+}
+
+
+static AlifIntT initGlobal_internedStrings(AlifInterpreter* _interp) { // 308
+	AlifHashTableAllocatorT hashTableAlloc = { alifMem_dataAlloc, alifMem_dataFree };
+
+	INTERNED_STRINGS = alifHashTable_newFull(
+		hashTable_uStrHash,
+		hashTable_uStrCompare,
+		nullptr,
+		nullptr,
+		&hashTableAlloc );
+	if (INTERNED_STRINGS == nullptr) {
+		//alifErr_clear();
+		//return ALIFSTATUS_ERR("failed to create global interned dict");
+		return -1;
+	}
+
+	//alifUStr_initStaticStrings(_interp);
+
+	for (int i = 0; i < 256; i++) {
+		AlifObject* s = LATIN1(i);
+		//alifUnicode_internStatic(_interp, &s);
+	}
+	return 1;
+}
+
 
 // 360
 #define ALIF_RETURN_UNICODE_EMPTY	return unicode_getEmpty();
@@ -1111,7 +1165,24 @@ static AlifIntT uStr_fillUTF8(AlifObject* _uStr) { // 5582
 
 
 
+static AlifIntT uStrCompare_eq(AlifObject* _str1, AlifObject* _str2) { // 10963
+	AlifIntT kind{};
+	const void* data1{}, * data2{};
+	AlifSizeT len_{};
+	AlifIntT cmp_{};
 
+	len_ = ALIFUSTR_GET_LENGTH(_str1);
+	if (ALIFUSTR_GET_LENGTH(_str2) != len_)
+		return 0;
+	kind = ALIFUSTR_KIND(_str1);
+	if (ALIFUSTR_KIND(_str2) != kind)
+		return 0;
+	data1 = ALIFUSTR_DATA(_str1);
+	data2 = ALIFUSTR_DATA(_str2);
+
+	cmp_ = memcmp(data1, data2, len_ * kind);
+	return (cmp_ == 0);
+}
 
 
 
@@ -1332,6 +1403,22 @@ AlifTypeObject _alifUStrType_ = { // 15235
 };
 
 
+AlifIntT alifUStr_initGlobalObjects(AlifInterpreter* _interp) { // 15318
+	if (alif_isMainInterpreter(_interp)) {
+		AlifIntT status = initGlobal_internedStrings(_interp);
+		if (status < 1) {
+			return status;
+		}
+	}
+
+	if (init_internedDict(_interp)) {
+		//alifErr_clear();
+		//return ALIFSTATUS_ERR("failed to create interned dict");
+		return -1;
+	}
+	 
+	return 1;
+}
 
 
 static void immortalize_interned(AlifObject* _s) { // 15405

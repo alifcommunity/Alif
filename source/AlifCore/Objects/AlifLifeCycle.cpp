@@ -200,6 +200,27 @@ static AlifIntT alifCore_createInterpreter(AlifDureRun* _dureRun,
 	return 1;
 }
 
+
+static AlifIntT alifCore_initGlobalObjects(AlifInterpreter* _interp) { // 696
+	AlifIntT status{};
+
+	//alifFloat_initState(_interp);
+
+	status = alifUStr_initGlobalObjects(_interp);
+	if (status < 1) {
+		return status;
+	}
+
+	//alifUStr_initState(_interp);
+
+	if (alif_isMainInterpreter(_interp)) {
+		//alif_getConstantInit();
+	}
+
+	return 1;
+}
+
+
 static AlifIntT alifCore_builtinsInit(AlifThread* _thread) { // 775
 
 	AlifObject* modules{};
@@ -210,10 +231,10 @@ static AlifIntT alifCore_builtinsInit(AlifThread* _thread) { // 775
 	AlifObject* biMod = alifBuiltin_init(interp);
 	if (biMod == nullptr) goto error;
 
-	////modules = interp->imports.modules_; // alifImport_getModule
-	////if (alifImport_fixupBuiltin(_thread, biMod, "builtins", modules) < 0) {
-	////	goto error;
-	////}
+	//modules = interp->imports.modules_; // alifImport_getModule
+	//if (alifImport_fixupBuiltin(_thread, biMod, "builtins", modules) < 0) {
+	//	goto error;
+	//}
 
 	//builtinsDict = alifModule_getDict(biMod);
 	//if (builtinsDict == nullptr) goto error;
@@ -222,8 +243,8 @@ static AlifIntT alifCore_builtinsInit(AlifThread* _thread) { // 775
 
 	return 1;
 
-	error:
-		ALIF_XDECREF(biMod);
+error:
+	ALIF_XDECREF(biMod);
 	return -1;
 }
 

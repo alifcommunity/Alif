@@ -20,6 +20,6 @@ extern void alifUStr_fastCopyCharacters(AlifObject*, AlifSizeT,
 
 
 
-
+extern AlifIntT alifUStr_initGlobalObjects(AlifInterpreter*); // 272
 
 void alifUStr_internMortal(AlifInterpreter*, AlifObject**); // 284

@@ -6,6 +6,11 @@
 
 
 
+static inline AlifHashT alif_hashPointerRaw(const void* _ptr) { // 9
+	uintptr_t x = (uintptr_t)_ptr;
+	x = (x >> 4) | (x << (8 * sizeof(uintptr_t) - 4));
+	return (AlifHashT)x;
+}
 
 
 
