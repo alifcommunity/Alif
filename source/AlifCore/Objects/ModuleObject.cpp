@@ -286,19 +286,19 @@ AlifObject* alifModule_getAttroImpl(AlifModuleObject* _m, AlifObject* _name, Ali
 	}
 
 	AlifObject* origin = nullptr;
-	if (_get_file_origin_from_spec(spec, &origin) < 0) {
+	if (getFileOrigin_fromSpec(spec, &origin) < 0) {
 		goto done;
 	}
 
-	AlifIntT isPossiblyShadowing = _is_module_possibly_shadowing(origin);
+	AlifIntT isPossiblyShadowing = isModule_possiblyShadowing(origin);
 	if (isPossiblyShadowing < 0) {
 		goto done;
 	}
 	AlifIntT isPossiblyShadowingStdLib = 0;
 	if (isPossiblyShadowing) {
-		AlifObject* stdlib_modules = alifSys_getObject("stdlib_module_names");
-		if (stdlib_modules and alifAnySet_Check(stdlib_modules)) {
-			isPossiblyShadowingStdLib = alifSet_contains(stdlib_modules, modName);
+		AlifObject* stdlibModules = alifSys_getObject("stdlib_module_names");
+		if (stdlibModules and alifAnySet_check(stdlibModules)) {
+			isPossiblyShadowingStdLib = alifSet_contains(stdlibModules, modName);
 			if (isPossiblyShadowingStdLib < 0) {
 				goto done;
 			}
@@ -314,41 +314,40 @@ AlifObject* alifModule_getAttroImpl(AlifModuleObject* _m, AlifObject* _name, Ali
 	//		modName, name, origin, modName);
 	}
 	else {
-		int rc = alifModuleSpec_isInitializing(spec);
-		if (rc > 0) {
+		AlifIntT rc_ = alifModuleSpec_isInitializing(spec);
+		if (rc_ > 0) {
 			if (isPossiblyShadowing) {
-
-	//	alifErr_format(_alifExcAttributeError_,
-				//"module '%U' has no attribute '%U' "
-					//"(consider renaming '%U' if it has the same name "
-					//"as a third-party module you intended to import)",
-					//modName, name, origin);
+			//	alifErr_format(_alifExcAttributeError_,
+						//"module '%U' has no attribute '%U' "
+							//"(consider renaming '%U' if it has the same name "
+							//"as a third-party module you intended to import)",
+							//modName, name, origin);
 			}
 			else if (origin) {
-				//	alifErr_format(_alifExcAttributeError_,
+			//	alifErr_format(_alifExcAttributeError_,
 				//"partially initialized "
 					//"module '%U' from '%U' has no attribute '%U' "
 					//"(most likely due to a circular import)",
 					//modName, origin, name);
 			}
 			else {
-				//	alifErr_format(_alifExcAttributeError_,
+			//	alifErr_format(_alifExcAttributeError_,
 				//"partially initialized "
 					//"module '%U' has no attribute '%U' "
 					//"(most likely due to a circular import)",
 					//modName, name);
 			}
 		}
-		else if (rc == 0) {
-			rc = alifModuleSpec_isUninitializedSubmodule(spec, _name);
-			if (rc > 0) {
-				//	alifErr_format(_alifExcAttributeError_,
+		else if (rc_ == 0) {
+			rc_ = alifModuleSpec_isUninitializedSubmodule(spec, _name);
+			if (rc_ > 0) {
+			//	alifErr_format(_alifExcAttributeError_,
 				//"cannot access submodule '%U' of module '%U' "
 					//"(most likely due to a circular import)",
 					//name, modName);
 			}
-			else if (rc == 0) {
-				//	alifErr_format(_alifExcAttributeError_,
+			else if (rc_ == 0) {
+			//	alifErr_format(_alifExcAttributeError_,
 				//"module '%U' has no attribute '%U'",
 					//modName, name);
 			}
