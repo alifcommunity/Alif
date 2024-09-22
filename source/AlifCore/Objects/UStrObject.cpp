@@ -720,11 +720,11 @@ AlifObject* alifUStr_fromFormat(const char* _format, ...) { // 3188
 	return ret;
 }
 
-static AlifSizeT uStrGet_wideCharSize(AlifObject* _uStr) { // 3218
+static AlifSizeT uStr_getWideCharSize(AlifObject* _uStr) { // 3218
 	AlifSizeT res_{};
 	res_ = ALIFUSTR_LENGTH(_uStr);
 #if SIZEOF_WCHAR_T == 2
-	if (ALIFUSTR_KIND(_uStr) == AlifUStr_4Byte_Kind) {
+	if (ALIFUSTR_KIND(_uStr) == AlifUStrKind_::AlifUStr_4Byte_Kind) {
 		const AlifUCS4* s_ = ALIFUSTR_4BYTE_DATA(_uStr);
 		const AlifUCS4* end_ = s_ + res_;
 		for (; s_ < end_; ++s_) {
@@ -737,14 +737,14 @@ static AlifSizeT uStrGet_wideCharSize(AlifObject* _uStr) { // 3218
 	return res_;
 }
 
-static void uStrCopy_asWideChar(AlifObject* _uStr, wchar_t* _w, AlifSizeT _size) { // 3241
+static void uStr_copyAsWideChar(AlifObject* _uStr, wchar_t* _w, AlifSizeT _size) { // 3241
 
 	if (ALIFUSTR_KIND(_uStr) == sizeof(wchar_t)) {
 		memcpy(_w, ALIFUSTR_DATA(_uStr), _size * sizeof(wchar_t));
 		return;
 	}
 
-	if (ALIFUSTR_KIND(_uStr) == AlifUStr_1Byte_Kind) {
+	if (ALIFUSTR_KIND(_uStr) == AlifUStrKind_::AlifUStr_1Byte_Kind) {
 		const AlifUCS1* s_ = ALIFUSTR_1BYTE_DATA(_uStr);
 		for (; _size--; ++s_, ++_w) {
 			*_w = *s_;
@@ -774,13 +774,11 @@ static void uStrCopy_asWideChar(AlifObject* _uStr, wchar_t* _w, AlifSizeT _size)
 	}
 }
 
-AlifSizeT alifUStr_asWideChar(AlifObject* _uStr,
-	wchar_t* _w,
-	AlifSizeT _size) { // 3296
+AlifSizeT alifUStr_asWideChar(AlifObject* _uStr, wchar_t* _w, AlifSizeT _size) { // 3296
 	AlifSizeT res_{};
 
 	if (_uStr == nullptr) {
-		//alifErr_badInternalCall();
+		//ALIFERR_BADINTERNALCALL();
 		return -1;
 	}
 	if (!ALIFUSTR_CHECK(_uStr)) {
@@ -788,7 +786,7 @@ AlifSizeT alifUStr_asWideChar(AlifObject* _uStr,
 		return -1;
 	}
 
-	res_ = uStrGet_wideCharSize(_uStr);
+	res_ = uStr_getWideCharSize(_uStr);
 	if (_w == nullptr) {
 		return res_ + 1;
 	}
@@ -799,7 +797,7 @@ AlifSizeT alifUStr_asWideChar(AlifObject* _uStr,
 	else {
 		res_ = _size;
 	}
-	uStrCopy_asWideChar(_uStr, _w, _size);
+	uStr_copyAsWideChar(_uStr, _w, _size);
 
 #ifdef HAVE_NON_UNICODE_WCHAR_T_REPRESENTATION
 	if (alif_localeUsesNonUnicodeWchar()) {
@@ -1221,7 +1219,7 @@ AlifIntT alif_decodeUTF8Ex(const char* s, AlifSizeT size, wchar_t** wstr, AlifUS
 	while (s < e_) {
 		AlifUCS4 ch_;
 #if SIZEOF_WCHAR_T == 4
-		ch_ = ucs4Lib_utf8Decode(&s, e_, (AlifUCS4*)_uStr, &outPos);
+		ch_ = ucs4Lib_utf8Decode(&s, e_, (AlifUCS4*)uStr, &outPos);
 #else
 		ch_ = ucs2Lib_utf8Decode(&s, e_, (AlifUCS2*)uStr, &outPos);
 #endif
