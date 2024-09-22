@@ -2,7 +2,7 @@
 
 #include "AlifCore_FileUtils.h"
 
-
+#include "OSDefs.h"
 
 
 #define MAX_UNICODE 0x10ffff // 53
@@ -256,3 +256,27 @@ wchar_t* alif_decodeLocale(const char* _arg, AlifUSizeT* _wlen) { // 663
 //
 //	return f;
 //}
+
+wchar_t* alif_wGetCWD(wchar_t* _buf, AlifUSizeT _bufLen) { // 2620
+#ifdef _WINDOWS
+	AlifIntT ibuflen = (AlifIntT)min(_bufLen, INT_MAX);
+	return _wgetcwd(_buf, ibuflen);
+#else
+	char fName[MAXPATHLEN];
+	wchar_t* wName;
+	AlifUSizeT len_;
+
+	if (getcwd(fName, ALIF_ARRAY_LENGTH(fName)) == nullptr)
+		return nullptr;
+	wName = alif_decodeLocale(fName, &len_);
+	if (wName == nullptr)
+		return nullptr;
+	if (_bufLen <= len_) {
+		alifMem_dataFree(wName);
+		return nullptr;
+	}
+	wcsncpy(_buf, wName, _bufLen);
+	alifMem_dataFree(wName);
+	return _buf;
+#endif
+}
