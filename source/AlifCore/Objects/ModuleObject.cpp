@@ -324,15 +324,15 @@ AlifObject* alifModule_getAttroImpl(AlifModuleObject* _m, AlifObject* _name, Ali
 		return nullptr;
 	}
 	if (getAttr) {
-		AlifObject* result = alifObject_callOneArg(getAttr, _name);
-		if (result == nullptr and _suppress == 1
-			//and alifErr_exceptionMatches(exception)
-			) {
-			//alifErr_clear();
-			return nullptr;
-		}
-		ALIF_DECREF(getAttr);
-		return result;
+		//AlifObject* result = alifObject_callOneArg(getAttr, _name);
+		//if (result == nullptr and _suppress == 1
+		//	//and alifErr_exceptionMatches(exception)
+		//	) {
+		//	//alifErr_clear();
+		//	return nullptr;
+		//}
+		//ALIF_DECREF(getAttr);
+		//return result;
 	}
 	if (_suppress == 1) {
 		return nullptr;

@@ -327,7 +327,19 @@ void alifRWMutex_unlock(AlifRWMutex* _rwMutex) { // 490
 }
 
 
+#define SEQLOCK_IS_UPDATING(_sequence) (_sequence & 0x01) // 503
 
+
+
+uint32_t alifSeqLock_beginRead(AlifSeqLock* _seqLock) { // 540
+	uint32_t sequence = alifAtomic_loadUint32Acquire(&_seqLock->sequence);
+	while (SEQLOCK_IS_UPDATING(sequence)) {
+		alif_yield();
+		sequence = alifAtomic_loadUint32Acquire(&_seqLock->sequence);
+	}
+
+	return sequence;
+}
 
 
 void alifMutex_lock(AlifMutex* _m) { // 579

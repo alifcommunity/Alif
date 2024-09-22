@@ -207,6 +207,8 @@ extern AlifTypeObject _alifBaseObjectType_; // 406 /* built-in 'object' */
 
 AlifIntT alifType_ready(AlifTypeObject*); // 411
 
+void alifType_modified(AlifTypeObject*); // 416
+
 AlifObject* alifObject_repr(AlifObject*); // 419
 
 AlifIntT alifObject_richCompareBool(AlifObject* , AlifObject* , AlifIntT ); // 424
@@ -395,6 +397,7 @@ public:
 
 	AlifUIntT versionTag{};
 
+	unsigned char watched{};
 	uint16_t versionsUsed{};
 };
 

@@ -143,6 +143,18 @@ static inline void set_tpMro(AlifTypeObject* self,
 	self->mro = mro;
 }
 
+
+
+static inline AlifObject* lookup_tpSubClasses(AlifTypeObject* self) { // 613
+	if (self->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
+		AlifInterpreter* interp = _alifInterpreter_get();
+		ManagedStaticTypeState* state = alifStaticType_getState(interp, self);
+		return state->subclasses;
+	}
+	return (AlifObject*)self->subclasses;
+}
+
+
 static TypeCache* get_typeCache(void) { // 838
 	AlifInterpreter* interp = _alifInterpreter_get();
 	return &interp->types.typeCache;
@@ -176,6 +188,63 @@ static void setVersion_unlocked(AlifTypeObject* tp, AlifUIntT version) { // 999
 		*slot = tp;
 	}
 #endif
+}
+
+
+
+static void typeModified_unlocked(AlifTypeObject* _type) { // 1031
+	//if (_type->versionTag == 0) {
+	//	return;
+	//}
+
+	//AlifObject* subClasses = lookup_tpSubClasses(_type);
+	//if (subClasses != nullptr) {
+	//	AlifSizeT i = 0;
+	//	AlifObject* ref{};
+	//	while (alifDict_next(subClasses, &i, nullptr, &ref)) {
+	//		AlifTypeObject* subClass = type_fromRef(ref);
+	//		if (subClass == nullptr) {
+	//			continue;
+	//		}
+	//		typeModified_unlocked(subClass);
+	//		ALIF_DECREF(subClass);
+	//	}
+	//}
+
+	//if (_type->watched) {
+	//	AlifInterpreter* interp = _alifInterpreter_get();
+	//	AlifIntT bits = _type->watched;
+	//	AlifIntT i_ = 0;
+	//	while (bits) {
+	//		if (bits & 1) {
+	//			AlifTypeWatchCallback cb = interp->typeWatchers[i_];
+	//			if (cb and (cb(_type) < 0)) {
+	//				//alifErr_formatUnraisable(
+	//				//	"Exception ignored in type watcher callback #%d for %R",
+	//				//	i_, type);
+	//			}
+	//		}
+	//		i_++;
+	//		bits >>= 1;
+	//	}
+	//}
+
+	//setVersion_unlocked(_type, 0); /* 0 is not a valid version tag */
+	//if (alifType_hasFeature(_type, ALIF_TPFLAGS_HEAPTYPE)) {
+	//	((AlifHeapTypeObject*)_type)->specCache.getItem = nullptr;
+	//}
+}
+
+
+
+void alifType_modified(AlifTypeObject* _type) { // 1099
+	if (_type->versionTag == 0) {
+		return;
+	}
+
+	BEGIN_TYPE_LOCK();
+	typeModified_unlocked(_type);
+	END_TYPE_LOCK();
 }
 
 
@@ -653,20 +722,20 @@ static AlifTypeObject* solid_base(AlifTypeObject* _type) { // 3401
 
 static void updateCache_gilDisabled(TypeCacheEntry* _entry, AlifObject* _name,
 	AlifUIntT _versionTag, AlifObject* _value) { // 5375
-	alifSeqLock_lockWrite(&_entry->sequence);
+	//alifSeqLock_lockWrite(&_entry->sequence);
 
-	if (_entry->name == _name and
-		_entry->value == _value and
-		_entry->version == _versionTag) {
-		alifSeqLock_abandonWrite(&_entry->sequence);
-		return;
-	}
+	//if (_entry->name == _name and
+	//	_entry->value == _value and
+	//	_entry->version == _versionTag) {
+	//	alifSeqLock_abandonWrite(&_entry->sequence);
+	//	return;
+	//}
 
-	AlifObject* oldValue = update_cache(_entry, _name, _versionTag, _value);
+	//AlifObject* oldValue = update_cache(_entry, _name, _versionTag, _value);
 
-	alifSeqLock_unlockWrite(&_entry->sequence);
+	//alifSeqLock_unlockWrite(&_entry->sequence);
 
-	ALIF_DECREF(oldValue);
+	//ALIF_DECREF(oldValue);
 }
 
 #endif

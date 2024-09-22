@@ -478,6 +478,15 @@ static inline uint64_t alifAtomic_loadUint64Acquire(const uint64_t* _obj) { // 1
 #endif
 }
 
+static inline uint32_t alifAtomic_loadUint32Acquire(const uint32_t* _obj) { // 1031
+#if defined(_M_X64) or defined(_M_IX86)
+	return *(uint32_t volatile*)_obj;
+#elif defined(_M_ARM64)
+	return (uint32_t)__ldar32((uint32_t volatile*)_obj);
+#else
+#  error "no implementation of alifAtomic_loadUint32Acquire"
+#endif
+}
 
 static inline AlifSizeT alifAtomic_loadSizeAcquire(const AlifSizeT* _obj) { // 1043
 #if defined(_M_X64) or defined(_M_IX86)
