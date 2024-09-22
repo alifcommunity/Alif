@@ -93,3 +93,4 @@ extern AlifIntT alifInterpreter_enable(AlifDureRun*); // 245
 #define HEAD_UNLOCK(_dureRun) \
     ALIFMUTEX_UNLOCK(&(_dureRun)->interpreters.mutex)
 
+const AlifConfig* alif_getConfig(); // 269
