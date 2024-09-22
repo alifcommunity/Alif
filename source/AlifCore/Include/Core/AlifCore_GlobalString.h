@@ -34,7 +34,9 @@ public:
 		STRUCT_FOR_ID(__name__)
 		STRUCT_FOR_ID(__package__)
 		STRUCT_FOR_ID(__spec__)
+     	STRUCT_FOR_ID(hasLocation)
      	STRUCT_FOR_ID(mro)
+     	STRUCT_FOR_ID(origin)
     } identifiers;
 	class {
 	public:

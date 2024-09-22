@@ -226,6 +226,30 @@ error:
 }
 
 
+static AlifIntT getFileOrigin_fromSpec(AlifObject* _spec, AlifObject** _pOrigin) { // 828
+	AlifObject* hasLocation = nullptr;
+	AlifIntT rc_ = alifObject_getOptionalAttr(_spec, &ALIF_ID(hasLocation), &hasLocation);
+	if (rc_ <= 0) {
+		return rc_;
+	}
+	rc_ = alifObject_isTrue(hasLocation);
+	ALIF_DECREF(hasLocation);
+	if (rc_ <= 0) {
+		return rc_;
+	}
+	AlifObject* origin = nullptr;
+	rc_ = alifObject_getOptionalAttr(_spec, &ALIF_ID(origin), &origin);
+	if (rc_ <= 0) {
+		return rc_;
+	}
+	if (!ALIFUSTR_CHECK(origin)) {
+		ALIF_DECREF(origin);
+		return 0;
+	}
+	*_pOrigin = origin;
+	return 1;
+}
+
 
 AlifObject* alifModule_getAttroImpl(AlifModuleObject* _m, AlifObject* _name, AlifIntT _suppress) { // 921
 	AlifObject* attr{}, * modName{}, * getAttr{};

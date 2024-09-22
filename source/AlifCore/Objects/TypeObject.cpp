@@ -122,7 +122,7 @@ static inline void set_tpBases(AlifTypeObject* _self, AlifObject* _bases, AlifIn
 }
 
 static inline AlifObject* lookup_tpMro(AlifTypeObject* _self) { // 517 
-	return _self->mro;
+	return _self->methResOrder;
 }
 
 
@@ -230,19 +230,20 @@ static AlifObject* lookup_method(AlifObject* _self, AlifObject* _attr, AlifIntT*
 	return res_;
 }
 
-static AlifObject* call_unboundNoArg(AlifIntT _unbound, AlifObject* _func, AlifObject* _self) { // 2786
+static AlifObject* call_unboundNoArg(AlifIntT _unbound,
+	AlifObject* _func, AlifObject* _self) { // 2786
 	if (_unbound) {
-		return alifObject_callOneArg(_func, _self);
+		//return alifObject_callOneArg(_func, _self);
 	}
 	else {
-		return alifObject_callNoArgs(_func);
+		//return alifObject_callNoArgs(_func);s
 	}
 }
 
 static AlifObject* class_name(AlifObject* _cls) { // 2881
 	AlifObject* name{};
 	if (alifObject_getOptionalAttr(_cls, &ALIF_ID(__name__), &name) == 0) {
-		name = AlifObject_repr(_cls);
+		name = alifObject_repr(_cls);
 	}
 	return name;
 }
@@ -380,7 +381,8 @@ static AlifObject* mro_invoke(AlifTypeObject* _type) { // 3210
 }
 
 
-static AlifIntT mro_internalUnlocked(AlifTypeObject* _type, AlifIntT _initial, AlifObject** _pOldMro) { // 3276
+static AlifIntT mro_internalUnlocked(AlifTypeObject* _type,
+	AlifIntT _initial, AlifObject** _pOldMro) { // 3276
 
 	AlifObject* newMro{}, * oldMro{};
 	AlifIntT reent{};
@@ -417,14 +419,36 @@ static AlifIntT mro_internalUnlocked(AlifTypeObject* _type, AlifIntT _initial, A
 	return 1;
 }
 
+#if ALIF_GIL_DISABLED
+
+static void updateCache_gilDisabled(TypeCacheEntry* entry, AlifObject* name,
+	AlifUIntT version_tag, AlifObject* value) { // 5375
+	alifSeqLock_lockWrite(&entry->sequence);
+
+	if (entry->name == name and
+		entry->value == value and
+		entry->version == version_tag) {
+		alifSeqLock_abandonWrite(&entry->sequence);
+		return;
+	}
+
+	AlifObject* oldValue = update_cache(entry, name, version_tag, value);
+
+	alifSeqLock_unlockWrite(&entry->sequence);
+
+	ALIF_DECREF(oldValue);
+}
+
+#endif
+
 AlifObject* alifType_lookupRef(AlifTypeObject* _type, AlifObject* _name) { // 5420
 	AlifObject* res{};
 	AlifIntT error{};
 	AlifInterpreter* interp = alifInterpreter_get();
 
-	AlifUIntT h = MCACHE_HASH_METHOD(_type, _name);
+	AlifUIntT h_ = MCACHE_HASH_METHOD(_type, _name);
 	TypeCache* cache = get_typeCache();
-	TypeCacheEntry* entry = &cache->hashTable[h];
+	TypeCacheEntry* entry = &cache->hashTable[h_];
 #ifdef ALIF_GIL_DISABLED
 	while (1) {
 		uint32_t sequence = alifSeqLock_beginRead(&entry->sequence);
@@ -432,8 +456,8 @@ AlifObject* alifType_lookupRef(AlifTypeObject* _type, AlifObject* _name) { // 54
 		uint32_t typeVersion = alifAtomic_loadUint32Acquire(&_type->versionTag);
 		if (entryVersion == typeVersion and
 			alifAtomic_loadPtrRelaxed(&entry->name) == _name) {
-			AlifObject* value = alifAtomic_loadPtrRelaxed(&entry->value);
-			if (value == nullptr or alif_tryInRref(value)) {
+			AlifObject* value = (AlifObject*)alifAtomic_loadPtrRelaxed(&entry->value);
+			if (value == nullptr or alif_tryIncRef(value)) {
 				if (alifSeqLock_endRead(&entry->sequence, sequence)) {
 					return value;
 				}
@@ -459,7 +483,7 @@ AlifObject* alifType_lookupRef(AlifTypeObject* _type, AlifObject* _name) { // 54
 	AlifIntT version = 0;
 	BEGIN_TYPE_LOCK();
 	res = findName_inMro(_type, _name, &error);
-	if (MCACHE_CACHEABLE_NAME(name)) {
+	if (MCACHE_CACHEABLE_NAME(_name)) {
 		hasVersion = assign_versionTag(interp, _type);
 		version = _type->versionTag;
 	}
@@ -484,7 +508,8 @@ AlifObject* alifType_lookupRef(AlifTypeObject* _type, AlifObject* _name) { // 54
 	return res;
 }
 
-AlifObject* alifType_getAttroImpl(AlifTypeObject* _type, AlifObject* _name, AlifIntT* _suppressMissingAttribute) { // 5580
+AlifObject* alifType_getAttroImpl(AlifTypeObject* _type,
+	AlifObject* _name, AlifIntT* _suppressMissingAttribute) { // 5580
 	AlifTypeObject* metatype = ALIF_TYPE(_type);
 	AlifObject* metaAttribute{}, * attribute{};
 	DescrGetFunc metaGet{};

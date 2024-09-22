@@ -27,8 +27,9 @@ extern AlifTypeObject _alifUStrType_; // 103
 
 AlifObject* alifUStr_fromString(const char*); // 129
 
+AlifObject* alifUStr_fromFormatV(const char*, va_list); // 237
 
-
+AlifObject* alifUStr_fromFormat(const char*, ...); // 241
 
 AlifObject* alifUStr_decodeUTF8Stateful(const char*, AlifSizeT, const char*, AlifSizeT*); // 435
 
@@ -260,6 +261,9 @@ public:
 
 
 
+void alifUStrWriter_init(AlifUStrWriter*); // 523
+
+
 // 530
 #define ALIFUSTRWRITER_PREPARE(_writer, _length, _maxChar)             \
     (((_maxChar) <= (_writer)->maxChar                                  \
@@ -283,6 +287,7 @@ AlifIntT alifUStrWriter_prepareInternal(AlifUStrWriter*, AlifSizeT, AlifUCS4);
 AlifIntT alifUStrWriter_prepareKindInternal(AlifUStrWriter*, AlifIntT); // 557
 
 
+AlifIntT alifUStrWriter_writeASCIIString(AlifUStrWriter*, const char*, AlifSizeT); // 586
 
 AlifObject* alifUStrWriter_finish(AlifUStrWriter*); // 602
 

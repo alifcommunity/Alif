@@ -14,8 +14,6 @@ static inline AlifIntT alifMutex_lockFast(uint8_t* _lockBits) { // 20
 }
 
 
-
-
 enum AlifLockFlags_ { // 41
 	Alif_Lock_Dont_Detach = 0,
 	Alif_Lock_Detach = 1,
@@ -86,3 +84,9 @@ void alifRWMutex_rUnlock(AlifRWMutex*); // 198
 
 void alifRWMutex_lock(AlifRWMutex*); // 201
 void alifRWMutex_unlock(AlifRWMutex*);
+
+
+class AlifSeqLock { // 213
+public:
+	uint32_t sequence{};
+};

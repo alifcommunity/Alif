@@ -166,6 +166,7 @@ typedef AlifObject* (*GetAttrFunc)(AlifObject*, char*); // 336
 typedef AlifObject* (*GetAttroFunc)(AlifObject*, AlifObject*); // 337
 typedef AlifIntT (*SetAttrFunc)(AlifObject*, char*, AlifObject*); // 338
 typedef AlifIntT(*SetAttroFunc)(AlifObject*, AlifObject*, AlifObject*); // 339
+typedef AlifObject* (*ReprFunc)(AlifObject*); // 340
 typedef AlifHashT (*HashFunc)(AlifObject*); // 341
 typedef AlifObject* (*RichCmpFunc) (AlifObject*, AlifObject*, AlifIntT); // 342
 typedef AlifObject* (*DescrGetFunc) (AlifObject*, AlifObject*, AlifObject*); // 345
@@ -205,6 +206,8 @@ extern AlifTypeObject _alifTypeType_; // 405
 extern AlifTypeObject _alifBaseObjectType_; // 406 /* built-in 'object' */
 
 AlifIntT alifType_ready(AlifTypeObject*); // 411
+
+AlifObject* alifObject_repr(AlifObject*); // 419
 
 AlifIntT alifObject_richCompareBool(AlifObject* , AlifObject* , AlifIntT ); // 424
 
@@ -359,6 +362,8 @@ public:
 	GetAttrFunc getAttr{};
 	SetAttrFunc setAttr{};
 
+	ReprFunc repr{};
+
 	AlifNumberMethods* asNumber{};
 	AlifSequenceMethods* asSequence{};
 	AlifMappingMethods* asMapping{};
@@ -385,9 +390,10 @@ public:
 	FreeFunc free{};
 	Inquiry isGC{};
 	AlifObject* bases{};
-	AlifObject* mro{};
 	AlifObject* methResOrder{}; // mro
 	void* subclasses{};
+
+	AlifUIntT versionTag{};
 };
 
 

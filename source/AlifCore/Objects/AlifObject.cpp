@@ -105,6 +105,48 @@ AlifObject* alifObject_new(AlifTypeObject* _tp) { // 459
 }
 
 
+AlifObject* alifObject_repr(AlifObject* _v) { // 662
+	AlifObject* res{};
+	//if (alifErr_checkSignals())
+	//	return nullptr;
+#ifdef USE_STACKCHECK
+	if (alifOS_checkStack()) {
+		alifErr_setString(_alifExcMemoryError_, "stack overflow");
+		return nullptr;
+	}
+#endif
+	if (_v == nullptr)
+		return alifUStr_fromString("<NULL>");
+	if (ALIF_TYPE(_v)->repr == nullptr)
+		return alifUStr_fromFormat("<%s object at %p>",
+			ALIF_TYPE(_v)->name, _v);
+
+	AlifThread* thread = alifThread_get();
+
+	if (alif_enterRecursiveCallTstate(thread,
+		" while getting the repr of an object")) {
+		return nullptr;
+	}
+	res = (*ALIF_TYPE(_v)->repr)(_v);
+	alif_leaveRecursiveCallTstate(thread);
+
+	if (res == nullptr) {
+		return nullptr;
+	}
+	if (!ALIFUSTR_CHECK(res)) {
+		//alifErr_format(thread, _alifExcTypeError_,
+		//	"__repr__ returned non-string (type %.200s)",
+		//	ALIF_TYPE(res)->name);
+		ALIF_DECREF(res);
+		return nullptr;
+	}
+	return res;
+}
+
+
+
+
+
 
 
 AlifIntT _alifSwappedOp_[] = { ALIF_GT, ALIF_GE, ALIF_EQ, ALIF_NE, ALIF_LT, ALIF_LE }; // 953
@@ -216,7 +258,8 @@ AlifHashT alifObject_hash(AlifObject* _v) { // 1067
 }
 
 
-AlifIntT alifObject_setAttrString(AlifObject* _v, const char* _name, AlifObject* _w) { // 1126
+AlifIntT alifObject_setAttrString(AlifObject* _v,
+	const char* _name, AlifObject* _w) { // 1126
 	AlifObject* s_{};
 	AlifIntT res_{};
 
@@ -229,7 +272,8 @@ AlifIntT alifObject_setAttrString(AlifObject* _v, const char* _name, AlifObject*
 	return res_;
 }
 
-AlifIntT alifObject_getOptionalAttr(AlifObject* _v, AlifObject* _name, AlifObject** _result) { // 1238
+AlifIntT alifObject_getOptionalAttr(AlifObject* _v,
+	AlifObject* _name, AlifObject** _result) { // 1238
 	AlifTypeObject* tp_ = ALIF_TYPE(_v);
 
 	if (!ALIFUSTR_CHECK(_name)) {
@@ -294,7 +338,8 @@ AlifIntT alifObject_getOptionalAttr(AlifObject* _v, AlifObject* _name, AlifObjec
 }
 
 
-AlifIntT alifObject_setAttr(AlifObject* _v, AlifObject* _name, AlifObject* _value) { // 1354
+AlifIntT alifObject_setAttr(AlifObject* _v,
+	AlifObject* _name, AlifObject* _value) { // 1354
 	AlifTypeObject* tp_ = ALIF_TYPE(_v);
 	AlifIntT err{};
 

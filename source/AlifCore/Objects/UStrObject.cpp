@@ -57,10 +57,10 @@ static inline void alifUStrWriter_initWithBuffer(AlifUStrWriter*, AlifObject*);
 
 // 182
 #ifdef _WINDOWS
-   /* On Windows, overallocate by 50% is the best factor */
+   /* On Windows, overAllocate by 50% is the best factor */
 #  define OVERALLOCATE_FACTOR 2
 #else
-   /* On Linux, overallocate by 25% is the best factor */
+   /* On Linux, overAllocate by 25% is the best factor */
 #  define OVERALLOCATE_FACTOR 4
 #endif
 
@@ -629,6 +629,97 @@ AlifObject* alifUStr_fromString(const char* u) { // 2084
 	}
 	return alifUStr_decodeUTF8Stateful(u, (AlifSizeT)size, nullptr, nullptr);
 }
+
+
+
+AlifObject* alifUStr_fromASCII(const char* _buffer, AlifSizeT _size) { // 2179
+	const unsigned char* s_ = (const unsigned char*)_buffer;
+	AlifObject* uStr{};
+	if (_size == 1) {
+		return get_latin1Char(s_[0]);
+	}
+	uStr = alifUStr_new(_size, 127);
+	if (!uStr)
+		return NULL;
+	memcpy(ALIFUSTR_1BYTE_DATA(uStr), s_, _size);
+	return uStr;
+}
+
+
+
+
+static AlifIntT uStr_fromFormat(AlifUStrWriter* _writer,
+	const char* _format, va_list _vargs) { // 3121
+	AlifSizeT len = strlen(_format);
+	_writer->minLength += len + 100;
+	_writer->overAllocate = 1;
+
+	va_list vargs2{};
+	va_copy(vargs2, _vargs);
+
+	AlifIntT isAscii = (ucs1Lib_findMaxChar((AlifUCS1*)_format, (AlifUCS1*)_format + len) < 128);
+	if (!isAscii) {
+		AlifSizeT i{};
+		for (i = 0; i < len and (unsigned char)_format[i] <= 127; i++);
+		//alifErr_format(_alifExcValueError_,
+		//	"alifUStr_fromFormatV() expects an ASCII-encoded format "
+		//	"string, got a non-ASCII byte: 0x%02x",
+		//	(unsigned char)_format[i]);
+		goto fail;
+	}
+
+	for (const char* f = _format; *f; ) {
+		if (*f == '%') {
+			//f = uStr_fromFormatArg(_writer, f, &vargs2);
+			if (f == nullptr)
+				goto fail;
+		}
+		else {
+			const char* p = strchr(f, '%');
+			if (p != nullptr) {
+				len = p - f;
+			}
+			else {
+				len = strlen(f);
+				_writer->overAllocate = 0;
+			}
+
+			if (alifUStrWriter_writeASCIIString(_writer, f, len) < 0) {
+				goto fail;
+			}
+			f += len;
+		}
+	}
+	va_end(vargs2);
+	return 0;
+
+fail:
+	va_end(vargs2);
+	return -1;
+}
+
+
+AlifObject* alifUStr_fromFormatV(const char* _format, va_list _vargs) { // 3175
+	AlifUStrWriter writer{};
+	alifUStrWriter_init(&writer);
+
+	if (uStr_fromFormat(&writer, _format, _vargs) < 0) {
+		alifUStrWriter_dealloc(&writer);
+		return nullptr;
+	}
+	return alifUStrWriter_finish(&writer);
+}
+
+AlifObject* alifUStr_fromFormat(const char* _format, ...) { // 3188
+	AlifObject* ret{};
+	va_list vargs{};
+
+	va_start(vargs, _format);
+	ret = alifUStr_fromFormatV(_format, vargs);
+	va_end(vargs);
+	return ret;
+}
+
 
 
 
@@ -1240,6 +1331,13 @@ static inline void alifUStrWriter_update(AlifUStrWriter* _writer) { // 13364
 }
 
 
+void alifUStrWriter_init(AlifUStrWriter* _writer) { // 13388
+	memset(_writer, 0, sizeof(*_writer));
+	/* ASCII is the bare minimum */
+	_writer->minChar = 127;
+}
+
+
 
 
 static inline void alifUStrWriter_initWithBuffer(AlifUStrWriter* _writer,
@@ -1338,6 +1436,64 @@ static inline AlifIntT alifUStrWriter_writeCharInline(AlifUStrWriter* _writer, A
 	return 0;
 }
 
+
+
+
+AlifIntT alifUStrWriter_writeASCIIString(AlifUStrWriter* _writer,
+	const char* _ascii, AlifSizeT _len) { // 13690
+	if (_len == -1)
+		_len = strlen(_ascii);
+
+	if (_writer->buffer == nullptr and !_writer->overAllocate) {
+		AlifObject* str;
+
+		str = alifUStr_fromASCII(_ascii, _len);
+		if (str == nullptr)
+			return -1;
+
+		_writer->readOnly = 1;
+		_writer->buffer = str;
+		alifUStrWriter_update(_writer);
+		_writer->pos += _len;
+		return 0;
+	}
+
+	if (ALIFUSTRWRITER_PREPARE(_writer, _len, 127) == -1)
+		return -1;
+
+	switch (_writer->kind)
+	{
+	case AlifUStrKind_::AlifUStr_1Byte_Kind:
+	{
+		const AlifUCS1* str = (const AlifUCS1*)_ascii;
+		AlifUCS1* data = (AlifUCS1*)_writer->data;
+
+		memcpy(data + _writer->pos, str, _len);
+		break;
+	}
+	case AlifUStrKind_::AlifUStr_2Byte_Kind:
+	{
+		ALIFUSTR_CONVERT_BYTES(
+			AlifUCS1, AlifUCS2,
+			_ascii, _ascii + _len,
+			(AlifUCS2*)_writer->data + _writer->pos);
+		break;
+	}
+	case AlifUStrKind_::AlifUStr_4Byte_Kind:
+	{
+		ALIFUSTR_CONVERT_BYTES(
+			AlifUCS1, AlifUCS4,
+			_ascii, _ascii + _len,
+			(AlifUCS4*)_writer->data + _writer->pos);
+		break;
+	}
+	default:
+		ALIF_UNREACHABLE();
+	}
+
+	_writer->pos += _len;
+	return 0;
+}
 
 
 
