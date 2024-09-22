@@ -47,6 +47,8 @@ public:
 
 class TypesState { // 78
 public:
+	AlifUIntT nextVersionTag{};
+	TypeCache typeCache{};
 	class {
 	public:
 		AlifUSizeT numInitialized{};

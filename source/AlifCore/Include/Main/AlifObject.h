@@ -390,14 +390,23 @@ public:
 	FreeFunc free{};
 	Inquiry isGC{};
 	AlifObject* bases{};
-	AlifObject* methResOrder{}; // mro
+	AlifObject* mro{}; // MethdResOrder
 	void* subclasses{};
 
 	AlifUIntT versionTag{};
+
+	uint16_t versionsUsed{};
 };
 
 
 
+
+class SpecializationCache {
+public:
+	AlifObject* getItem{};
+	uint32_t getItemVersion{};
+	AlifObject* init{};
+};
 
 class AlifHeapTypeObject { // 255
 public:
@@ -410,7 +419,10 @@ public:
 	AlifObject* name{}, * slots{}, * qualname{};
 	class DictKeysObject* cachedKeys{};
 	AlifObject* module_{};
+	SpecializationCache specCache{};
+#ifdef ALIF_GIL_DISABLED
 	AlifSizeT uniqueID{};
+#endif
 };
 
 
@@ -471,3 +483,8 @@ static inline AlifIntT alifType_hasFeature(AlifTypeObject* _type, unsigned long 
 
 
 #define ALIFTYPE_FASTSUBCLASS(_type, _flag) alifType_hasFeature((_type), (_flag)) // 766
+
+static inline AlifIntT alifType_check(AlifObject* _op) { // 768
+	return ALIFTYPE_FASTSUBCLASS(ALIF_TYPE(_op), ALIF_TPFLAGS_TYPE_SUBCLASS);
+}
+#define ALIFTYPE_CHECK(_op) alifType_check(ALIFOBJECT_CAST(_op))

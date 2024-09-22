@@ -8,10 +8,10 @@
 #ifdef ALIF_GIL_DISABLED
 class AlifListArray{ // 28
 public:
-	AlifSizeT allocated;
+	AlifSizeT allocated{};
 	AlifObject* item[];
 };
-static AlifListArray* list_allocateArray(size_t _capacity) { // 34
+static AlifListArray* list_allocateArray(AlifUSizeT _capacity) { // 34
 	if (_capacity > ALIF_SIZET_MAX / sizeof(AlifObject*) - 1) {
 		return nullptr;
 	}
@@ -23,6 +23,91 @@ static AlifListArray* list_allocateArray(size_t _capacity) { // 34
 	return array;
 }
 #endif
+
+
+
+static void free_listItems(AlifObject** _items, bool _useQSBR) { // 55
+#ifdef ALIF_GIL_DISABLED
+	AlifListArray* array = ALIF_CONTAINER_OF(_items, AlifListArray, item);
+	if (_useQSBR) {
+		alifMem_freeDelayed(array);
+	}
+	else {
+		alifMem_objFree(array);
+	}
+#else
+	alifMem_objFree(_items);
+#endif
+}
+
+
+
+
+
+
+static AlifIntT list_resize(AlifListObject* _self, AlifSizeT _newSize) { // 84
+	AlifUSizeT newAllocated{}, targetBytes{};
+	AlifSizeT allocated = _self->allocated;
+
+	if (allocated >= _newSize and _newSize >= (allocated >> 1)) {
+		ALIF_SET_SIZE(_self, _newSize);
+		return 0;
+	}
+
+	newAllocated = ((AlifUSizeT)_newSize + (_newSize >> 3) + 6) & ~(AlifUSizeT)3;
+	if (_newSize - ALIF_SIZE(_self) > (AlifSizeT)(newAllocated - _newSize))
+		newAllocated = ((AlifUSizeT)_newSize + 3) & ~(AlifUSizeT)3;
+
+	if (_newSize == 0)
+		newAllocated = 0;
+
+#ifdef ALIF_GIL_DISABLED
+	AlifListArray* array = list_allocateArray(newAllocated);
+	if (array == nullptr) {
+		//alifErr_noMemory();
+		return -1;
+	}
+	AlifObject** oldItems = _self->item;
+	if (_self->item) {
+		if (newAllocated < (AlifUSizeT)allocated) {
+			targetBytes = newAllocated * sizeof(AlifObject*);
+		}
+		else {
+			targetBytes = allocated * sizeof(AlifObject*);
+		}
+		memcpy(array->item, _self->item, targetBytes);
+	}
+	if (newAllocated > (AlifUSizeT)allocated) {
+		memset(array->item + allocated, 0, sizeof(AlifObject*) * (newAllocated - allocated));
+	}
+	alifAtomic_storePtrRelease(&_self->item, &array->item);
+	_self->allocated = newAllocated;
+	ALIF_SET_SIZE(_self, _newSize);
+	if (oldItems != nullptr) {
+		free_listItems(oldItems, ALIFOBJECT_GC_IS_SHARED(_self));
+	}
+#else
+	AlifObject** items{};
+	if (newAllocated <= (AlifUSizeT)ALIF_SIZET_MAX / sizeof(AlifObject*)) {
+		targetBytes = newAllocated * sizeof(AlifObject*);
+		items = (AlifObject**)alifMem_objRealloc(_self->item, targetBytes);
+	}
+	else {
+		// integer overflow
+		items = nullptr;
+	}
+	if (items == nullptr) {
+		//alifErr_noMemory();
+		return -1;
+	}
+	_self->item = items;
+	ALIF_SET_SIZE(_self, _newSize);
+	_self->allocated = newAllocated;
+#endif
+	return 0;
+}
+
+
 
 AlifObject* alifList_new(AlifSizeT _size) { // 212 
 	if (_size < 0) {

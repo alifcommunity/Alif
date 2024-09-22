@@ -11,6 +11,15 @@
 
 
 
+// 40
+#define MCACHE_MAX_ATTR_SIZE    100
+#define MCACHE_HASH(_version, _nameHash)                                 \
+        (((AlifUIntT)(_version) ^ (AlifUIntT)(_nameHash))          \
+         & ((1 << MCACHE_SIZE_EXP) - 1))
+#define MCACHE_HASH_METHOD(_type, _name)                                  \
+    MCACHE_HASH(alifAtomic_loadUint32Relaxed(&(_type)->versionTag),   \
+                ((AlifSizeT)(_name)) >> 3)
+
 
 
 #ifdef ALIF_GIL_DISABLED // 57
@@ -122,8 +131,99 @@ static inline void set_tpBases(AlifTypeObject* _self, AlifObject* _bases, AlifIn
 }
 
 static inline AlifObject* lookup_tpMro(AlifTypeObject* _self) { // 517 
-	return _self->methResOrder;
+	return _self->mro;
 }
+
+
+static inline void set_tpMro(AlifTypeObject* self,
+	AlifObject* mro, AlifIntT initial) { // 545
+	if (self->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
+		alif_setImmortal(mro);
+	}
+	self->mro = mro;
+}
+
+static TypeCache* get_typeCache(void) { // 838
+	AlifInterpreter* interp = _alifInterpreter_get();
+	return &interp->types.typeCache;
+}
+
+
+
+static void setVersion_unlocked(AlifTypeObject* tp, AlifUIntT version) { // 999
+#ifndef ALIF_GIL_DISABLED
+	AlifInterpreter* interp = _alifInterpreter_get();
+	if (tp->versionTag != 0) {
+		AlifTypeObject** slot =
+			interp->types.typeVersionCache
+			+ (tp->versionTag % TYPE_VERSION_CACHE_SIZE);
+		*slot = nullptr;
+	}
+	if (version) {
+		tp->versionsUsed++;
+	}
+#else
+	if (version) {
+		alifAtomic_addUint16(&tp->versionsUsed, 1);
+	}
+#endif
+	alifAtomic_storeUint32Relaxed(&tp->versionTag, version);
+#ifndef ALIF_GIL_DISABLED
+	if (version != 0) {
+		AlifTypeObject** slot =
+			interp->types.typeVersionCache
+			+ (version % TYPE_VERSION_CACHE_SIZE);
+		*slot = tp;
+	}
+#endif
+}
+
+
+
+static AlifIntT isSubType_withMro(AlifObject*, AlifTypeObject*, AlifTypeObject*); // 1112
+
+static void type_mroModified(AlifTypeObject* _type, AlifObject* _bases) { // 1115
+	AlifSizeT i_{}, n_{};
+	AlifIntT custom = !ALIF_IS_TYPE(_type, &_alifTypeType_);
+	AlifIntT unbound{};
+
+	if (custom) {
+		AlifObject* mroMeth{}, * typeMroMeth{};
+		mroMeth = lookup_maybeMethod((AlifObject*)_type, &ALIF_ID(mro), &unbound);
+		if (mroMeth == nullptr) {
+			goto clear;
+		}
+		typeMroMeth = lookup_maybeMethod(
+			(AlifObject*) & _alifTypeType_, &ALIF_ID(mro), &unbound);
+		if (typeMroMeth == nullptr) {
+			ALIF_DECREF(mroMeth);
+			goto clear;
+		}
+		AlifIntT customMro = (mroMeth != typeMroMeth);
+		ALIF_DECREF(mroMeth);
+		ALIF_DECREF(typeMroMeth);
+		if (customMro) {
+			goto clear;
+		}
+	}
+	n_ = ALIFTUPLE_GET_SIZE(_bases);
+	for (i_ = 0; i_ < n_; i_++) {
+		AlifObject* b = ALIFTUPLE_GET_ITEM(_bases, i_);
+		AlifTypeObject* cls = ALIFTYPE_CAST(b);
+
+		if (!isSubType_withMro(lookup_tpMro(_type), _type, cls)) {
+			goto clear;
+		}
+	}
+	return;
+
+clear:
+	setVersion_unlocked(_type, 0); /* 0 is not a valid version tag */
+	if (alifType_hasFeature(_type, ALIF_TPFLAGS_HEAPTYPE)) {
+		((AlifHeapTypeObject*)_type)->specCache.getItem = nullptr;
+	}
+}
+
 
 
 AlifObject* alifType_allocNoTrack(AlifTypeObject* _type, AlifSizeT _nitems) { // 2217
@@ -175,7 +275,7 @@ static AlifIntT typeIsSubType_baseChain(AlifTypeObject* _a, AlifTypeObject* _b) 
 }
 
 
-static AlifIntT isSubType_withMethResOrder(AlifObject* _methResOrder,
+static AlifIntT isSubType_withMro(AlifObject* _methResOrder,
 	AlifTypeObject* _a, AlifTypeObject* _b) { // 2648
 	AlifIntT res{};
 	if (_methResOrder != nullptr) {
@@ -197,7 +297,7 @@ static AlifIntT isSubType_withMethResOrder(AlifObject* _methResOrder,
 }
 
 AlifIntT alifType_isSubType(AlifTypeObject* a, AlifTypeObject* b) { // 2673
-	return isSubType_withMethResOrder(a->methResOrder, a, b);
+	return isSubType_withMro(a->mro, a, b);
 }
 
 static AlifObject* lookup_maybeMethod(AlifObject* _self, AlifObject* _attr, AlifIntT* _unbound) { // 2738
@@ -335,7 +435,7 @@ again:
 	}
 
 	if (emptyCnt != _toMergeSize) {
-		set_mroError(_toMerge, _toMergeSize, remain);
+		//setMro_error(_toMerge, _toMergeSize, remain);
 		res = -1;
 	}
 
@@ -412,6 +512,38 @@ static AlifObject* mro_implementationUnlocked(AlifTypeObject* _type) { // 3052
 
 	return result;
 }
+
+
+static AlifIntT mro_check(AlifTypeObject* _type, AlifObject* _mro) { // 3163
+	AlifTypeObject* solid{};
+	AlifSizeT i_{}, n_{};
+
+	solid = solid_base(_type);
+
+	n_ = ALIFTUPLE_GET_SIZE(_mro);
+	for (i_ = 0; i_ < n_; i_++) {
+		AlifObject* obj = ALIFTUPLE_GET_ITEM(_mro, i_);
+		if (!ALIFTYPE_CHECK(obj)) {
+			//alifErr_format(
+			//	_alifExcTypeError_,
+			//	"mro() returned a non-class ('%.500s')",
+			//	ALIF_TYPE(obj)->name);
+			return -1;
+		}
+		AlifTypeObject* base = (AlifTypeObject*)obj;
+
+		if (!isSubType_withMro(lookup_tpMro(solid), solid, solid_base(base))) {
+			//alifErr_format(
+			//	_alifExcTypeError_,
+			//	"mro() returned base with unsuitable layout ('%.500s')",
+			//	base->name);
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
 
 static AlifObject* mro_invoke(AlifTypeObject* _type) { // 3210
 	AlifObject* mroResult{};
@@ -491,6 +623,30 @@ static AlifIntT mro_internalUnlocked(AlifTypeObject* _type,
 
 	return 1;
 }
+
+
+static AlifIntT shape_differs(AlifTypeObject* _t1, AlifTypeObject* _t2) { // 3392
+	return ( _t1->basicSize != _t2->basicSize
+		or _t1->itemSize != _t2->itemSize );
+}
+
+static AlifTypeObject* solid_base(AlifTypeObject* _type) { // 3401
+	AlifTypeObject* base{};
+
+	if (_type->base) {
+		base = solid_base(_type->base);
+	}
+	else {
+		base = &_alifBaseObjectType_;
+	}
+	if (shape_differs(_type, base)) {
+		return _type;
+	}
+	else {
+		return base;
+	}
+}
+
 
 #if ALIF_GIL_DISABLED
 

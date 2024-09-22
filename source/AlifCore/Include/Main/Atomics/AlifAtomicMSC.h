@@ -2,6 +2,11 @@
 
 
 
+static inline int16_t alifAtomic_addInt16(int16_t* _obj, int16_t _value) { // 31
+	return (int16_t)_InterlockedExchangeAdd16((volatile short*)_obj, (short)_value);
+}
+
+
 static inline int32_t alifAtomic_addInt32(int32_t* _obj, int32_t _value) { // 38
 	return (int32_t)_InterlockedExchangeAdd((volatile long*)_obj, (long)_value);
 }
@@ -18,6 +23,10 @@ static inline int64_t alifAtomic_addInt64(int64_t* _obj, int64_t _value) { // 45
 		}
 	}
 #endif
+}
+
+static inline uint16_t alifAtomic_addUint16(uint16_t* _obj, uint16_t _value) { // 69
+	return (uint16_t)alifAtomic_addInt16((int16_t*)_obj, (int16_t)_value);
 }
 
 static inline int alifAtomic_addInt(int* _obj, int _value) { // 81
