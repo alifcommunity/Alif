@@ -99,7 +99,7 @@ done:
 //{
 //	AlifIntT exitCode = 0;
 //
-//	AlifInterpreter* interpreter = alifInterpreter_get();
+//	AlifInterpreter* interpreter = _alifInterpreter_get();
 //
 //	AlifConfig config_ = interpreter->config;
 //

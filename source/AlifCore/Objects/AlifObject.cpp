@@ -351,7 +351,7 @@ AlifIntT alifObject_setAttr(AlifObject* _v,
 	}
 	ALIF_INCREF(_name);
 
-	AlifInterpreter* interp = alifInterpreter_get();
+	AlifInterpreter* interp = _alifInterpreter_get();
 	alifUStr_internMortal(interp, &_name);
 	if (tp_->setAttro != nullptr) {
 		err = (*tp_->setAttro)(_v, _name, _value);

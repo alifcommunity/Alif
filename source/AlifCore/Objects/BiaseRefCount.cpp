@@ -37,7 +37,7 @@ static AlifThreadImpl* find_threadState(BRCBucket* _bucket, uintptr_t _threadID)
 
 
 void alifBRC_queueObject(AlifObject* ob) { // 53
-	AlifInterpreter* interp = alifInterpreter_get();
+	AlifInterpreter* interp = _alifInterpreter_get();
 
 	uintptr_t threadID = alifAtomic_loadUintptr(&ob->threadID);
 	if (threadID == 0) {

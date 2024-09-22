@@ -60,7 +60,7 @@ ManagedStaticTypeState* alifStaticType_getState(AlifInterpreter* _interp, AlifTy
 
 static inline void start_readying(AlifTypeObject* _type) { // 356
 	if (_type->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
-		AlifInterpreter* interp = alifInterpreter_get();
+		AlifInterpreter* interp = _alifInterpreter_get();
 		ManagedStaticTypeState* state = managedStatic_typeStateGet(interp, _type);
 		state->readying = 1;
 		return;
@@ -70,7 +70,7 @@ static inline void start_readying(AlifTypeObject* _type) { // 356
 
 static inline void stop_readying(AlifTypeObject* _type) { // 371 
 	if (_type->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
-		AlifInterpreter* interp = alifInterpreter_get();
+		AlifInterpreter* interp = _alifInterpreter_get();
 		ManagedStaticTypeState* state = managedStatic_typeStateGet(interp, _type);
 		state->readying = 0;
 		return;
@@ -80,7 +80,7 @@ static inline void stop_readying(AlifTypeObject* _type) { // 371
 
 static inline AlifObject* lookup_tpDict(AlifTypeObject* _self) { // 401
 	if (_self->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
-		AlifInterpreter* interp = alifInterpreter_get();
+		AlifInterpreter* interp = _alifInterpreter_get();
 		ManagedStaticTypeState* state = alifStaticType_getState(interp, _self);
 		return state->dict;
 	}
@@ -93,7 +93,7 @@ AlifObject* alifType_getDict(AlifTypeObject* _self) { // 413
 
 static inline void set_tpDict(AlifTypeObject* _self, AlifObject* _dict) { // 427
 	if (_self->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
-		AlifInterpreter* interp = alifInterpreter_get();
+		AlifInterpreter* interp = _alifInterpreter_get();
 		ManagedStaticTypeState* state = alifStaticType_getState(interp, _self);
 		state->dict = _dict;
 		return;
@@ -240,6 +240,17 @@ static AlifObject* call_unboundNoArg(AlifIntT _unbound,
 	}
 }
 
+static AlifIntT tail_contains(AlifObject* _tuple, AlifIntT _whence, AlifObject* _o) { // 2867
+	AlifSizeT j_{}, size{};
+	size = ALIFTUPLE_GET_SIZE(_tuple);
+
+	for (j_ = _whence + 1; j_ < size; j_++) {
+		if (ALIFTUPLE_GET_ITEM(_tuple, j_) == _o)
+			return 1;
+	}
+	return 0;
+}
+
 static AlifObject* class_name(AlifObject* _cls) { // 2881
 	AlifObject* name{};
 	if (alifObject_getOptionalAttr(_cls, &ALIF_ID(__name__), &name) == 0) {
@@ -273,6 +284,68 @@ static AlifIntT check_duplicates(AlifObject* _tuple) { // 2890
 	}
 	return 0;
 }
+
+
+
+static AlifIntT p_merge(AlifObject* _acc,
+	AlifObject** _toMerge, AlifSizeT _toMergeSize) { // 2981
+	AlifIntT res = 0;
+	AlifSizeT i_{}, j_{}, emptyCnt{};
+	AlifIntT* remain{};
+
+	remain = (int*)alifMem_dataAlloc(_toMergeSize * sizeof(int)); // ALIFMEM_NEW(int, _toMergeSize)
+	if (remain == nullptr) {
+		//alifErr_noMemory();
+		return -1;
+	}
+	for (i_ = 0; i_ < _toMergeSize; i_++)
+		remain[i_] = 0;
+
+again:
+	emptyCnt = 0;
+	for (i_ = 0; i_ < _toMergeSize; i_++) {
+		AlifObject* candidate{};
+
+		AlifObject* cur_tuple = _toMerge[i_];
+
+		if (remain[i_] >= ALIFTUPLE_GET_SIZE(cur_tuple)) {
+			emptyCnt++;
+			continue;
+		}
+
+		candidate = ALIFTUPLE_GET_ITEM(cur_tuple, remain[i_]);
+		for (j_ = 0; j_ < _toMergeSize; j_++) {
+			AlifObject* j_lst = _toMerge[j_];
+			if (tail_contains(j_lst, remain[j_], candidate))
+				goto skip; /* continue outer loop */
+		}
+		res = alifList_append(_acc, candidate);
+		if (res < 0)
+			goto out;
+
+		for (j_ = 0; j_ < _toMergeSize; j_++) {
+			AlifObject* j_lst = _toMerge[j_];
+			if (remain[j_] < ALIFTUPLE_GET_SIZE(j_lst) and
+				ALIFTUPLE_GET_ITEM(j_lst, remain[j_]) == candidate) {
+				remain[j_]++;
+			}
+		}
+		goto again;
+	skip:;
+	}
+
+	if (emptyCnt != _toMergeSize) {
+		set_mroError(_toMerge, _toMergeSize, remain);
+		res = -1;
+	}
+
+out:
+	alifMem_dataFree(remain);
+
+	return res;
+}
+
+
 
 static AlifObject* mro_implementationUnlocked(AlifTypeObject* _type) { // 3052 
 	if (!alifType_isReady(_type)) {
@@ -421,20 +494,20 @@ static AlifIntT mro_internalUnlocked(AlifTypeObject* _type,
 
 #if ALIF_GIL_DISABLED
 
-static void updateCache_gilDisabled(TypeCacheEntry* entry, AlifObject* name,
-	AlifUIntT version_tag, AlifObject* value) { // 5375
-	alifSeqLock_lockWrite(&entry->sequence);
+static void updateCache_gilDisabled(TypeCacheEntry* _entry, AlifObject* _name,
+	AlifUIntT _versionTag, AlifObject* _value) { // 5375
+	alifSeqLock_lockWrite(&_entry->sequence);
 
-	if (entry->name == name and
-		entry->value == value and
-		entry->version == version_tag) {
-		alifSeqLock_abandonWrite(&entry->sequence);
+	if (_entry->name == _name and
+		_entry->value == _value and
+		_entry->version == _versionTag) {
+		alifSeqLock_abandonWrite(&_entry->sequence);
 		return;
 	}
 
-	AlifObject* oldValue = update_cache(entry, name, version_tag, value);
+	AlifObject* oldValue = update_cache(_entry, _name, _versionTag, _value);
 
-	alifSeqLock_unlockWrite(&entry->sequence);
+	alifSeqLock_unlockWrite(&_entry->sequence);
 
 	ALIF_DECREF(oldValue);
 }
@@ -444,7 +517,7 @@ static void updateCache_gilDisabled(TypeCacheEntry* entry, AlifObject* name,
 AlifObject* alifType_lookupRef(AlifTypeObject* _type, AlifObject* _name) { // 5420
 	AlifObject* res{};
 	AlifIntT error{};
-	AlifInterpreter* interp = alifInterpreter_get();
+	AlifInterpreter* interp = _alifInterpreter_get();
 
 	AlifUIntT h_ = MCACHE_HASH_METHOD(_type, _name);
 	TypeCache* cache = get_typeCache();
@@ -637,6 +710,7 @@ AlifTypeObject _alifTypeType_ = { // 6195
 	ALIF_TPFLAGS_ITEMS_AT_END,
 
 	.base = 0,
+	.dictOffset = offsetof(AlifTypeObject, dict),
 };
 
 

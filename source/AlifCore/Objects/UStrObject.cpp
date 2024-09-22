@@ -584,7 +584,7 @@ static void ustr_dealloc(AlifObject* _uStr) { // 1633
 		break;
 	//case SSTATE_INTERNED_MORTAL:
 	//	ALIF_SET_REFCNT(_uStr, 2);
-	//	AlifInterpreter* interp = alifInterpreter_get();
+	//	AlifInterpreter* interp = _alifInterpreter_get();
 	//	AlifObject* interned = get_internedDict(interp);
 	//	AlifObject* popped{};
 	//	AlifIntT r = alifDict_pop(interned, _uStr, &popped);
@@ -1674,7 +1674,7 @@ AlifObject* alifUStr_internFromString(const char* _cp) { // 15592
 	if (s == nullptr) {
 		return nullptr;
 	}
-	AlifInterpreter* interp = alifInterpreter_get();
+	AlifInterpreter* interp = _alifInterpreter_get();
 	alifUStr_internMortal(interp, &s);
 	return s;
 }

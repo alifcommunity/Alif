@@ -1,6 +1,7 @@
 #include "alif.h"
 
 #include "AlifCore_FreeList.h"
+#include "AlifCore_List.h"
 #include "AlifCore_Object.h"
 
 
@@ -63,6 +64,39 @@ AlifObject* alifList_new(AlifSizeT _size) { // 212
 	ALIFOBJECT_GC_TRACK(op);
 	return (AlifObject*)op;
 }
+
+
+
+AlifIntT alifList_appendTakeRefListResize(AlifListObject* _self,
+	AlifObject* _newItem) { // 468
+	AlifSizeT len = ALIF_SIZE(_self);
+	if (list_resize(_self, len + 1) < 0) {
+		ALIF_DECREF(_newItem);
+		return -1;
+	}
+	alifAtomic_storePtrRelease(&_self->item[len], _newItem);
+	return 0;
+}
+
+AlifIntT alifList_append(AlifObject* _op, AlifObject* _newItem) { // 481
+	if (ALIFLIST_CHECK(_op) and (_newItem != nullptr)) {
+		AlifIntT ret{};
+		ALIF_BEGIN_CRITICAL_SECTION(_op);
+		ret = alifList_appendTakeRef((AlifListObject*)_op, ALIF_NEWREF(_newItem));
+		ALIF_END_CRITICAL_SECTION();
+		return ret;
+	}
+	//ALIFERR_BADINTERNALCALL();
+	return -1;
+}
+
+
+
+
+
+
+
+
 
 
 AlifTypeObject _alfiListType_ = { // 3737

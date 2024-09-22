@@ -46,7 +46,7 @@ static inline void set_values(AlifDictObject* _mp, AlifDictValues* _values) { //
 #define DECREF_KEYS(_dk)  alifAtomic_addSize(&_dk->refCnt, -1) // 213
 
 #define INCREF_KEYS_FT(_dk) dictKeys_incRef(_dk) // 216
-#define DECREF_KEYS_FT(_dk, _shared) dictKeys_decRef(alifInterpreter_get(), _dk, _shared) // 217
+#define DECREF_KEYS_FT(_dk, _shared) dictKeys_decRef(_alifInterpreter_get(), _dk, _shared) // 217
 
 
 static inline void splitKeys_entryAdded(AlifDictKeysObject* _keys) { // 219
@@ -329,7 +329,7 @@ static AlifObject* newDict_withSharedKeys(AlifInterpreter* interp, AlifDictKeysO
 
 
 AlifObject* alifDict_new() { // 962
-	AlifInterpreter* interp = alifInterpreter_get();
+	AlifInterpreter* interp = _alifInterpreter_get();
 	return new_dict(interp, ALIF_EMPTY_KEYS, nullptr, 0, 0);
 }
 
@@ -1190,7 +1190,7 @@ static AlifIntT setItemTake2_lockHeld(AlifDictObject* _mp,
 		return -1;
 	}
 
-	AlifInterpreter* interp = alifInterpreter_get();
+	AlifInterpreter* interp = _alifInterpreter_get();
 
 	if (_mp->keys == ALIF_EMPTY_KEYS) {
 		return insertTo_emptyDict(interp, _mp, _key, hash, _value);
@@ -1282,7 +1282,8 @@ AlifIntT alifDict_delItem(AlifObject* _op, AlifObject* _key) { // 2580
 }
 
 
-static AlifIntT delItem_knownHashLockHeld(AlifObject* _op, AlifObject* _key, AlifHashT _hash) { // 2592
+static AlifIntT delItem_knownHashLockHeld(AlifObject* _op,
+	AlifObject* _key, AlifHashT _hash) { // 2592
 	AlifSizeT ix_{};
 	AlifDictObject* mp_{};
 	AlifObject* oldValue{};
@@ -1301,7 +1302,7 @@ static AlifIntT delItem_knownHashLockHeld(AlifObject* _op, AlifObject* _key, Ali
 		return -1;
 	}
 
-	AlifInterpreter* interp = alifInterpreter_get();
+	AlifInterpreter* interp = _alifInterpreter_get();
 	//uint64_t newVersion = alifDict_notifyEvent(
 	//	interp, AlifDict_Event_Deleted, mp_, key, nullptr);
 	delItem_common(mp_, _hash, ix_, oldValue/*, newVersion*/);
@@ -1324,7 +1325,7 @@ static AlifIntT dictSetDefault_refLockHeld(AlifObject* _d, AlifObject* _key, Ali
 	AlifDictObject* mp_ = (AlifDictObject*)_d;
 	AlifObject* value{};
 	AlifHashT hash{};
-	AlifInterpreter* interp = alifInterpreter_get();
+	AlifInterpreter* interp = _alifInterpreter_get();
 	AlifSizeT ix_{};
 
 	if (!ALIFDICT_CHECK(_d)) {
@@ -1530,7 +1531,7 @@ AlifDictObject* alifObject_materializeManagedDictLockHeld(AlifObject* _obj) { //
 	AlifDictValues* values = alifObject_inlineValues(_obj);
 	AlifDictObject* dict{};
 	if (values->valid) {
-		AlifInterpreter* interp = alifInterpreter_get();
+		AlifInterpreter* interp = _alifInterpreter_get();
 		AlifDictKeysObject* keys = CACHED_KEYS(ALIF_TYPE(_obj));
 		dict = makeDict_fromInstanceAttributes(interp, keys, values);
 	}
@@ -1780,7 +1781,8 @@ AlifIntT alifDict_setItemLockHeld(AlifDictObject* _dict, AlifObject* _name, Alif
 
 
 
-static inline AlifObject* ensure_nonManagedDict(AlifObject* obj, AlifObject** dictptr) { // 7171
+static inline AlifObject* ensure_nonManagedDict(AlifObject* obj,
+	AlifObject** dictptr) { // 7171
 	AlifDictKeysObject* cached{};
 	AlifTypeObject* tp{};
 
@@ -1795,7 +1797,7 @@ static inline AlifObject* ensure_nonManagedDict(AlifObject* obj, AlifObject** di
 #endif
 		tp = ALIF_TYPE(obj);
 		if (_alifType_hasFeature(tp, ALIF_TPFLAGS_HEAPTYPE) and (cached = CACHED_KEYS(tp))) {
-			AlifInterpreter* interp = alifInterpreter_get();
+			AlifInterpreter* interp = _alifInterpreter_get();
 			dict = newDict_withSharedKeys(interp, cached);
 		}
 		else {
@@ -1827,7 +1829,7 @@ static inline AlifObject* ensure_managedDict(AlifObject* _obj) { // 7138
 				goto done;
 			}
 #endif
-			dict = (AlifDictObject*)newDict_withSharedKeys(alifInterpreter_get(), CACHED_KEYS(tp));
+			dict = (AlifDictObject*)newDict_withSharedKeys(_alifInterpreter_get(), CACHED_KEYS(tp));
 			alifAtomic_storePtrRelease(&alifObject_managedDictPointer(_obj)->dict, (AlifDictObject*)dict);
 
 #ifdef ALIF_GIL_DISABLED
@@ -1877,6 +1879,6 @@ AlifIntT alifObjectDict_setItem(AlifTypeObject* _tp, AlifObject* _obj, AlifObjec
 
 
 void alifDictKeys_decRef(AlifDictKeysObject* _keys) { // 7246
-	AlifInterpreter* interp = alifInterpreter_get();
+	AlifInterpreter* interp = _alifInterpreter_get();
 	dictKeys_decRef(interp, _keys, false);
 }
