@@ -259,8 +259,8 @@ wchar_t* alif_decodeLocale(const char* _arg, AlifUSizeT* _wlen) { // 663
 
 wchar_t* alif_wGetCWD(wchar_t* _buf, AlifUSizeT _bufLen) { // 2620
 #ifdef _WINDOWS
-	AlifIntT ibuflen = (AlifIntT)min(_bufLen, INT_MAX);
-	return _wgetcwd(_buf, ibuflen);
+	AlifIntT iBufLen = (AlifIntT)ALIF_MIN(_bufLen, INT_MAX);
+	return _wgetcwd(_buf, iBufLen);
 #else
 	char fName[MAXPATHLEN]{};
 	wchar_t* wName{};
