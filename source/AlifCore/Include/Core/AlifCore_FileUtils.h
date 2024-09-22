@@ -25,7 +25,7 @@ AlifIntT alif_decodeLocaleEx(const char*, wchar_t**, AlifUSizeT*,
 
 
 
-wchar_t* alif_wGetCWD(wchar_t* , AlifUSizeT ); // 168
+extern wchar_t* alif_wGetCWD(wchar_t* , AlifUSizeT ); // 168
 
 
 
