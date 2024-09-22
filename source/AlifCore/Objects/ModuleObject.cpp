@@ -251,7 +251,7 @@ static AlifIntT getFileOrigin_fromSpec(AlifObject* _spec, AlifObject** _pOrigin)
 }
 
 static AlifIntT isModule_possiblyShadowing(AlifObject* _origin) { // 859
-	if (_origin == NULL) {
+	if (_origin == nullptr) {
 		return 0;
 	}
 
@@ -268,14 +268,14 @@ static AlifIntT isModule_possiblyShadowing(AlifObject* _origin) { // 859
 	root[size] = L'\0';
 
 	wchar_t* sep_ = wcsrchr(root, SEP);
-	if (sep_ == NULL) {
+	if (sep_ == nullptr) {
 		return 0;
 	}
 
 	if (wcscmp(sep_ + 1, L"__init__.alif") == 0) {
 		*sep_ = L'\0';
 		sep_ = wcsrchr(root, SEP);
-		if (sep_ == NULL) {
+		if (sep_ == nullptr) {
 			return 0;
 		}
 	}
