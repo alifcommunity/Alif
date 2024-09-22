@@ -6,7 +6,7 @@
 #include "AlifCore_Object.h"
 #include "AlifCore_ObjectDeferred.h" // هذا التضمين غير ضروري ويجب حذفه مع التقدم في البرنامج
 
-
+#include "OSDefs.h"
 
 
 
@@ -250,6 +250,53 @@ static AlifIntT getFileOrigin_fromSpec(AlifObject* _spec, AlifObject** _pOrigin)
 	return 1;
 }
 
+static AlifIntT isModule_possiblyShadowing(AlifObject* _origin) { // 859
+	if (_origin == NULL) {
+		return 0;
+	}
+
+	const AlifConfig* config = alif_getConfig();
+	if (config->safePath) {
+		return 0;
+	}
+
+	wchar_t root[MAXPATHLEN + 1];
+	AlifSizeT size = alifUStr_asWideChar(_origin, root, MAXPATHLEN);
+	if (size < 0) {
+		return -1;
+	}
+	root[size] = L'\0';
+
+	wchar_t* sep_ = wcsrchr(root, SEP);
+	if (sep_ == NULL) {
+		return 0;
+	}
+
+	if (wcscmp(sep_ + 1, L"__init__.alif") == 0) {
+		*sep_ = L'\0';
+		sep_ = wcsrchr(root, SEP);
+		if (sep_ == NULL) {
+			return 0;
+		}
+	}
+	*sep_ = L'\0';
+
+	wchar_t* sysPath0 = config->sysPath0;
+	if (!sysPath0) {
+		return 0;
+	}
+
+	wchar_t sysPath0Buf[MAXPATHLEN];
+	if (sysPath0[0] == L'\0') {
+		if (!alif_wGetCWD(sysPath0Buf, MAXPATHLEN)) {
+			return -1;
+		}
+		sysPath0 = sysPath0Buf;
+	}
+
+	AlifIntT result = wcscmp(sysPath0, root) == 0;
+	return result;
+}
 
 AlifObject* alifModule_getAttroImpl(AlifModuleObject* _m, AlifObject* _name, AlifIntT _suppress) { // 921
 	AlifObject* attr{}, * modName{}, * getAttr{};
