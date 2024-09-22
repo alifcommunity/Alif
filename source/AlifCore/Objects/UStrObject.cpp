@@ -182,8 +182,8 @@ static AlifObject* ustr_result(AlifObject* _uStr) { // 727
 		int kind = ALIFUSTR_KIND(_uStr);
 		if (kind == AlifUStrKind_::AlifUStr_1Byte_Kind) {
 			const AlifUCS1* data = ALIFUSTR_1BYTE_DATA(_uStr);
-			AlifUCS1 ch = data[0];
-			AlifObject* latin1_char = LATIN1(ch);
+			AlifUCS1 ch_ = data[0];
+			AlifObject* latin1_char = LATIN1(ch_);
 			if (_uStr != latin1_char) {
 				ALIF_DECREF(_uStr);
 			}
@@ -640,7 +640,7 @@ AlifObject* alifUStr_fromASCII(const char* _buffer, AlifSizeT _size) { // 2179
 	}
 	uStr = alifUStr_new(_size, 127);
 	if (!uStr)
-		return NULL;
+		return nullptr;
 	memcpy(ALIFUSTR_1BYTE_DATA(uStr), s_, _size);
 	return uStr;
 }
@@ -720,7 +720,97 @@ AlifObject* alifUStr_fromFormat(const char* _format, ...) { // 3188
 	return ret;
 }
 
+static AlifSizeT uStrGet_wideCharSize(AlifObject* _uStr) { // 3218
+	AlifSizeT res_{};
+	res_ = ALIFUSTR_LENGTH(_uStr);
+#if SIZEOF_WCHAR_T == 2
+	if (ALIFUSTR_KIND(_uStr) == AlifUStr_4Byte_Kind) {
+		const AlifUCS4* s_ = ALIFUSTR_4BYTE_DATA(_uStr);
+		const AlifUCS4* end_ = s_ + res_;
+		for (; s_ < end_; ++s_) {
+			if (*s_ > 0xFFFF) {
+				++res_;
+			}
+		}
+	}
+#endif
+	return res_;
+}
 
+static void uStrCopy_asWideChar(AlifObject* _uStr, wchar_t* _w, AlifSizeT _size) { // 3241
+
+	if (ALIFUSTR_KIND(_uStr) == sizeof(wchar_t)) {
+		memcpy(_w, ALIFUSTR_DATA(_uStr), _size * sizeof(wchar_t));
+		return;
+	}
+
+	if (ALIFUSTR_KIND(_uStr) == AlifUStr_1Byte_Kind) {
+		const AlifUCS1* s_ = ALIFUSTR_1BYTE_DATA(_uStr);
+		for (; _size--; ++s_, ++_w) {
+			*_w = *s_;
+		}
+	}
+	else {
+#if SIZEOF_WCHAR_T == 4
+		const AlifUCS2* s_ = ALIFUSTR_2BYTE_DATA(_uStr);
+		for (; _size--; ++s_, ++_w) {
+			*_w = *s_;
+		}
+#else
+		const AlifUCS4* s_ = ALIFUSTR_4BYTE_DATA(_uStr);
+		for (; _size--; ++s_, ++_w) {
+			AlifUCS4 ch_ = *s_;
+			if (ch_ > 0xFFFF) {
+				*_w++ = alifUnicode_highSurrogate(ch_);
+				if (!_size--)
+					break;
+				*_w = alifUnicode_lowSurrogate(ch_);
+			}
+			else {
+				*_w = ch_;
+			}
+		}
+#endif
+	}
+}
+
+AlifSizeT alifUStr_asWideChar(AlifObject* _uStr,
+	wchar_t* _w,
+	AlifSizeT _size) { // 3296
+	AlifSizeT res_{};
+
+	if (_uStr == nullptr) {
+		//alifErr_badInternalCall();
+		return -1;
+	}
+	if (!ALIFUSTR_CHECK(_uStr)) {
+		//alifErr_badArgument();
+		return -1;
+	}
+
+	res_ = uStrGet_wideCharSize(_uStr);
+	if (_w == nullptr) {
+		return res_ + 1;
+	}
+
+	if (_size > res_) {
+		_size = res_ + 1;
+	}
+	else {
+		res_ = _size;
+	}
+	uStrCopy_asWideChar(_uStr, _w, _size);
+
+#ifdef HAVE_NON_UNICODE_WCHAR_T_REPRESENTATION
+	if (alif_localeUsesNonUnicodeWchar()) {
+		if (alif_encodeNonUnicodeWcharInPlace(_w, _size) < 0) {
+			return -1;
+		}
+	}
+#endif
+
+	return res_;
+}
 
 
 static AlifIntT uStr_fillUTF8(AlifObject*); // 4164
@@ -1131,7 +1221,7 @@ AlifIntT alif_decodeUTF8Ex(const char* s, AlifSizeT size, wchar_t** wstr, AlifUS
 	while (s < e_) {
 		AlifUCS4 ch_;
 #if SIZEOF_WCHAR_T == 4
-		ch_ = ucs4Lib_utf8Decode(&s, e_, (AlifUCS4*)unicode, &outPos);
+		ch_ = ucs4Lib_utf8Decode(&s, e_, (AlifUCS4*)_uStr, &outPos);
 #else
 		ch_ = ucs2Lib_utf8Decode(&s, e_, (AlifUCS2*)uStr, &outPos);
 #endif

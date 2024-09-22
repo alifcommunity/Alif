@@ -31,6 +31,8 @@ AlifObject* alifUStr_fromFormatV(const char*, va_list); // 237
 
 AlifObject* alifUStr_fromFormat(const char*, ...); // 241
 
+AlifSizeT alifUStr_asWideChar(AlifObject* , wchar_t* ,AlifSizeT ); // 277
+
 AlifObject* alifUStr_decodeUTF8Stateful(const char*, AlifSizeT, const char*, AlifSizeT*); // 435
 
 
