@@ -14,10 +14,14 @@ extern AlifTypeObject _alifDictType_; // 15
 AlifObject* alifDict_new(); // 21
 
 AlifIntT alifDict_setItem(AlifObject*, AlifObject*, AlifObject*); // 24
-
+AlifIntT alifDict_delItem(AlifObject*, AlifObject*); // 25
 AlifIntT alifDict_contains(AlifObject*, AlifObject*); // 34
 
 AlifIntT alifDict_getItemRef(AlifObject* , AlifObject* , AlifObject** ); // 67
+
+
+AlifObject* alifObject_genericGetDict(AlifObject*, void*); // 72
+
 
 /* ---------------------------------------------------------------------------------------------------------------- */
 

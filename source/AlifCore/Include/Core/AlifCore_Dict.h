@@ -7,7 +7,7 @@
 
 
 
-
+AlifIntT alifDict_delItemKnownHash(AlifObject*, AlifObject*, AlifHashT); // 29
 
 extern AlifIntT alifDict_containsKnownHash(AlifObject*, AlifObject*, AlifHashT); // 31
 

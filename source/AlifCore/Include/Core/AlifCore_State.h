@@ -73,7 +73,7 @@ static inline void alif_ensureFuncTstateNotNULL(const char* _func, AlifThread* _
     alif_ensureFuncTstateNotNULL(__func__, (_thread)) // 195
 
 
-static inline AlifInterpreter* alifInterpreter_get() { // 207
+static inline AlifInterpreter* _alifInterpreter_get() { // 207
 	AlifThread* tstate = alifThread_get();
 	return tstate->interpreter;
 }

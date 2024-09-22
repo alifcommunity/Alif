@@ -125,11 +125,12 @@
 
 #define ALIF_STR_IDENTIFIERS_INIT { \
     INIT_ID(CANCELLED), \
-    INIT_ID(__name__), \
 	INIT_ID(__doc__), \
-	INIT_ID(__package__), \
-	INIT_ID(__loader__), \
-	INIT_ID(__spec__), \
+	INIT_ID(__getAttr__), \
 	INIT_ID(__hash__), \
+	INIT_ID(__loader__), \
+    INIT_ID(__name__), \
+	INIT_ID(__package__), \
+	INIT_ID(__spec__), \
 	INIT_ID(mro), \
 }

@@ -20,3 +20,10 @@ public:
 	AlifObject* name{};
 	void* gil{};
 };
+
+
+
+
+
+AlifObject* alifModule_getAttroImpl(AlifModuleObject*, AlifObject*, AlifIntT); // 48
+AlifObject* alifModule_getAttro(AlifModuleObject*, AlifObject*); // 49

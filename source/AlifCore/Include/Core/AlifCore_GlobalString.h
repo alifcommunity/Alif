@@ -27,12 +27,13 @@ public:
     class {
 	public:
         STRUCT_FOR_ID(CANCELLED)
-		STRUCT_FOR_ID(__name__)
 		STRUCT_FOR_ID(__doc__)
-		STRUCT_FOR_ID(__package__)
-		STRUCT_FOR_ID(__loader__)
-		STRUCT_FOR_ID(__spec__)
+		STRUCT_FOR_ID(__getAttr__)
 		STRUCT_FOR_ID(__hash__)
+		STRUCT_FOR_ID(__loader__)
+		STRUCT_FOR_ID(__name__)
+		STRUCT_FOR_ID(__package__)
+		STRUCT_FOR_ID(__spec__)
      	STRUCT_FOR_ID(mro)
     } identifiers;
 	class {

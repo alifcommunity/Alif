@@ -229,6 +229,9 @@ error:
 
 AlifObject* alifModule_getAttroImpl(AlifModuleObject* _m, AlifObject* _name, AlifIntT _suppress) { // 921
 	AlifObject* attr{}, * modName{}, * getAttr{};
+	AlifIntT isPossiblyShadowing{};
+	AlifIntT isPossiblyShadowingStdLib = 0;
+
 	attr = alifObject_genericGetAttrWithDict((AlifObject*)_m, _name, nullptr, _suppress);
 	if (attr) {
 		return attr;
@@ -290,11 +293,11 @@ AlifObject* alifModule_getAttroImpl(AlifModuleObject* _m, AlifObject* _name, Ali
 		goto done;
 	}
 
-	AlifIntT isPossiblyShadowing = isModule_possiblyShadowing(origin);
+	isPossiblyShadowing = isModule_possiblyShadowing(origin);
 	if (isPossiblyShadowing < 0) {
 		goto done;
 	}
-	AlifIntT isPossiblyShadowingStdLib = 0;
+	/*AlifIntT isPossiblyShadowingStdLib = 0;*/
 	if (isPossiblyShadowing) {
 		AlifObject* stdlibModules = alifSys_getObject("stdlib_module_names");
 		if (stdlibModules and alifAnySet_check(stdlibModules)) {

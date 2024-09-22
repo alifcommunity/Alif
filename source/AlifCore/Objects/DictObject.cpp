@@ -333,6 +333,25 @@ AlifObject* alifDict_new() { // 962
 	return new_dict(interp, ALIF_EMPTY_KEYS, nullptr, 0, 0);
 }
 
+static AlifSizeT lookDict_index(AlifDictKeysObject* _k, AlifHashT _hash, AlifSizeT _index) { // 971
+	AlifUSizeT mask = DK_MASK(_k);
+	AlifUSizeT perturb = (AlifUSizeT)_hash;
+	AlifUSizeT i_ = (AlifUSizeT)_hash & mask;
+
+	for (;;) {
+		AlifSizeT ix = dictKeys_getIndex(_k, i_);
+		if (ix == _index) {
+			return i_;
+		}
+		if (ix == DKIX_EMPTY) {
+			return DKIX_EMPTY;
+		}
+		perturb >>= PERTURB_SHIFT;
+		i_ = mask & (i_ * 5 + perturb + 1);
+	}
+	ALIF_UNREACHABLE();
+}
+
 static inline ALIF_ALWAYS_INLINE AlifSizeT do_lookup(AlifDictObject* _mp,
 	AlifDictKeysObject* _dk, AlifObject* _key, AlifHashT _hash,
 	AlifIntT (*_checkLookup)(AlifDictObject*, AlifDictKeysObject*, void*, AlifSizeT _ix, AlifObject* _key, AlifHashT)) { // 992
@@ -1198,8 +1217,25 @@ AlifIntT alifDict_setItem(AlifObject* _op, AlifObject* _key, AlifObject* _value)
 		ALIF_NEWREF(_key), ALIF_NEWREF(_value));
 }
 
+static AlifIntT setItem_lockHeld(AlifDictObject* mp, AlifObject* key, AlifObject* value) { // 2477
+	return setItemTake2_lockHeld(mp, ALIF_NEWREF(key), ALIF_NEWREF(value));
+}
 
 
+
+static void deleteIndex_fromValues(AlifDictValues* _values, AlifSizeT _ix) { // 2518
+	uint8_t* array = getInsertion_orderArray(_values);
+	AlifIntT size = _values->size;
+	AlifIntT i_{};
+	//for (i_ = 0; array[i_] != _ix; i_++) {
+	//	assert(i_ < size);
+	//}
+	size--;
+	for (; i_ < size; i_++) {
+		array[i_] = array[i_ + 1];
+	}
+	_values->size = size;
+}
 
 
 static void delItem_common(AlifDictObject* _mp, AlifHashT _hash, AlifSizeT _ix,
@@ -1210,8 +1246,8 @@ static void delItem_common(AlifDictObject* _mp, AlifHashT _hash, AlifSizeT _ix,
 
 	STORE_USED(_mp, _mp->used - 1);
 	//mp->versionTag = _newVersion;
-	if (alifDict_hasSplitTable(_mp)) {
-		STORE_SPLIT_VALUE(_mp, _ix, NULL);
+	if (ALIFDICT_HASSPLITTABLE(_mp)) {
+		STORE_SPLIT_VALUE(_mp, _ix, nullptr);
 		deleteIndex_fromValues(_mp->values, _ix);
 	}
 	else {
@@ -1233,6 +1269,16 @@ static void delItem_common(AlifDictObject* _mp, AlifHashT _hash, AlifSizeT _ix,
 		ALIF_DECREF(oldKey);
 	}
 	ALIF_DECREF(_old_value);
+}
+
+
+AlifIntT alifDict_delItem(AlifObject* _op, AlifObject* _key) { // 2580
+	AlifHashT hash = alifObject_hashFast(_key);
+	if (hash == -1) {
+		return -1;
+	}
+
+	return alifDict_delItemKnownHash(_op, _key, hash);
 }
 
 
@@ -1260,6 +1306,15 @@ static AlifIntT delItem_knownHashLockHeld(AlifObject* _op, AlifObject* _key, Ali
 	//	interp, AlifDict_Event_Deleted, mp_, key, nullptr);
 	delItem_common(mp_, _hash, ix_, oldValue/*, newVersion*/);
 	return 0;
+}
+
+
+AlifIntT alifDict_delItemKnownHash(AlifObject* _op, AlifObject* _key, AlifHashT _hash) { // 2624
+	AlifIntT res{};
+	ALIF_BEGIN_CRITICAL_SECTION(_op);
+	res = delItem_knownHashLockHeld(_op, _key, _hash);
+	ALIF_END_CRITICAL_SECTION();
+	return res;
 }
 
 
@@ -1509,6 +1564,141 @@ AlifDictObject* alifObject_materializeManagedDict(AlifObject* _obj) { // 6660
 	return dict;
 }
 
+
+
+static AlifIntT storeInstance_attrLockHeld(AlifObject* obj, AlifDictValues* values,
+	AlifObject* name, AlifObject* value) { // 6702
+	AlifDictKeysObject* keys = CACHED_KEYS(ALIF_TYPE(obj));
+	AlifSizeT ix = DKIX_EMPTY;
+	AlifDictObject* dict = alifObject_getManagedDict(obj);
+	if (ALIFUSTR_CHECKEXACT(name)) {
+		AlifHashT hash = uStr_getHash(name);
+		if (hash == -1) {
+			hash = _alifUStrType_.hash(name);
+		}
+
+		ix = insert_splitKey(keys, name, hash);
+
+#ifdef ALIF_STATS
+		if (ix == DKIX_EMPTY) {
+			if (ALIFUSTR_CHECKEXACT(name)) {
+				if (sharedKeys_usableSize(keys) == SHARED_KEYS_MAX_SIZE) {
+					OBJECT_STAT_INC(dictMaterializedTooBig);
+				}
+				else {
+					OBJECT_STAT_INC(dictMaterializedNewKey);
+				}
+			}
+			else {
+				OBJECT_STAT_INC(dictMaterializedStrSubclass);
+			}
+		}
+#endif
+	}
+
+	if (ix == DKIX_EMPTY) {
+		AlifIntT res{};
+		if (dict == nullptr) {
+			dict = makeDict_fromInstanceAttributes(alifInterpreter_get(), keys, values);
+			if (dict == nullptr or
+				alifDict_setItemLockHeld(dict, name, value) < 0) {
+				ALIF_XDECREF(dict);
+				return -1;
+			}
+
+			alifAtomic_storePtrRelease(&alifObject_managedDictPointer(obj)->dict,
+				(AlifDictObject*)dict);
+			return 0;
+		}
+
+		res = alifDict_setItemLockHeld(dict, name, value);
+		return res;
+	}
+
+	AlifObject* old_value = values->values[ix];
+	alifAtomic_storePtrRelease(&values->values[ix], ALIF_XNEWREF(value));
+
+	if (old_value == nullptr) {
+		if (value == nullptr) {
+			//alifErr_format(_alifExcAttributeError_,
+			//	"'%.100s' object has no attribute '%U'",
+			//	ALIF_TYPE(obj)->name, name);
+			return -1;
+		}
+		alifDictValues_addToInsertionOrder(values, ix);
+		if (dict) {
+			STORE_USED(dict, dict->used + 1);
+		}
+	}
+	else {
+		if (value == nullptr) {
+			deleteIndex_fromValues(values, ix);
+			if (dict) {
+				STORE_USED(dict, dict->used - 1);
+			}
+		}
+		ALIF_DECREF(old_value);
+	}
+	return 0;
+}
+
+
+
+static inline AlifIntT storeInstance_attrDict(AlifObject* _obj,
+	AlifDictObject* _dict, AlifObject* _name, AlifObject* _value) { // 6791
+	AlifDictValues* values = alifObject_inlineValues(_obj);
+	AlifIntT res{};
+	ALIF_BEGIN_CRITICAL_SECTION(_dict);
+	if (_dict->values == values) {
+		res = storeInstance_attrLockHeld(_obj, values, _name, _value);
+	}
+	else {
+		res = alifDict_setItemLockHeld(_dict, _name, _value);
+	}
+	ALIF_END_CRITICAL_SECTION();
+	return res;
+}
+
+
+AlifIntT alifObject_storeInstanceAttribute(AlifObject* _obj,
+	AlifObject* _name, AlifObject* _value) { // 6807
+	AlifDictValues* values = alifObject_inlineValues(_obj);
+	if (!alifAtomic_loadUint8(&values->valid)) {
+		AlifDictObject* dict = alifObject_getManagedDict(_obj);
+		if (dict == nullptr) {
+			dict = (AlifDictObject*)alifObject_genericGetDict(_obj, nullptr);
+			if (dict == nullptr) {
+				return -1;
+			}
+			AlifIntT res = storeInstance_attrDict(_obj, dict, _name, _value);
+			ALIF_DECREF(dict);
+			return res;
+		}
+		return storeInstance_attrDict(_obj, dict, _name, _value);
+	}
+
+#ifdef ALIF_GIL_DISABLED
+	AlifDictObject* dict = alifObject_getManagedDict(_obj);
+	if (dict == nullptr) {
+		AlifIntT res{};
+		ALIF_BEGIN_CRITICAL_SECTION(_obj);
+		dict = alifObject_getManagedDict(_obj);
+
+		if (dict == nullptr) {
+			res = storeInstance_attrLockHeld(_obj, values, _name, _value);
+		}
+		ALIF_END_CRITICAL_SECTION();
+
+		if (dict == nullptr) {
+			return res;
+		}
+	}
+	return storeInstance_attrDict(_obj, dict, _name, _value);
+#else
+	return storeInstance_attrLockHeld(_obj, values, _name, _value);
+#endif
+}
+
 bool alifObject_tryGetInstanceAttribute(AlifObject* _obj, AlifObject* _name, AlifObject** _attr) { // 6891
 	AlifDictValues* values = alifObject_inlineValues(_obj);
 	if (!alifAtomic_loadUint8(&values->valid)) {
@@ -1594,7 +1784,7 @@ static inline AlifObject* ensure_nonManagedDict(AlifObject* obj, AlifObject** di
 	AlifDictKeysObject* cached{};
 	AlifTypeObject* tp{};
 
-	AlifObject* dict = (AlifObject*)alifAtomic_loadPtrAcquire(&*dictptr); // Macro
+	AlifObject* dict = (AlifObject*)alifAtomic_loadPtrAcquire(&*dictptr);
 	if (dict == nullptr) {
 #ifdef ALIF_GIL_DISABLED
 		ALIF_BEGIN_CRITICAL_SECTION(obj);
@@ -1611,13 +1801,60 @@ static inline AlifObject* ensure_nonManagedDict(AlifObject* obj, AlifObject** di
 		else {
 			dict = alifDict_new();
 		}
-		alifAtomic_storePtrRelease(&*dictptr, dict); // Macro
+		alifAtomic_storePtrRelease(&*dictptr, dict);
 #ifdef ALIF_GIL_DISABLED
 		done :
 		ALIF_END_CRITICAL_SECTION();
 #endif
 	}
 	return dict;
+}
+
+
+static inline AlifObject* ensure_managedDict(AlifObject* _obj) { // 7138
+	AlifDictObject* dict = alifObject_getManagedDict(_obj);
+	if (dict == nullptr) {
+		AlifTypeObject* tp = ALIF_TYPE(_obj);
+		if ((tp->flags & ALIF_TPFLAGS_INLINE_VALUES) &&
+			alifAtomic_loadUint8(&alifObject_inlineValues(_obj)->valid)) {
+			dict = alifObject_materializeManagedDict(_obj);
+		}
+		else {
+#ifdef ALIF_GIL_DISABLED
+			ALIF_BEGIN_CRITICAL_SECTION(_obj);
+			dict = alifObject_getManagedDict(_obj);
+			if (dict != nullptr) {
+				goto done;
+			}
+#endif
+			dict = (AlifDictObject*)newDict_withSharedKeys(alifInterpreter_get(), CACHED_KEYS(tp));
+			alifAtomic_storePtrRelease(&alifObject_managedDictPointer(_obj)->dict, (AlifDictObject*)dict);
+
+#ifdef ALIF_GIL_DISABLED
+			done :
+			ALIF_END_CRITICAL_SECTION();
+#endif
+		}
+	}
+	return (AlifObject*)dict;
+}
+
+
+AlifObject* alifObject_genericGetDict(AlifObject* _obj, void* _context) { // 7203
+	AlifTypeObject* tp = ALIF_TYPE(_obj);
+	if (_alifType_hasFeature(tp, ALIF_TPFLAGS_MANAGED_DICT)) {
+		return ALIF_XNEWREF(ensure_managedDict(_obj));
+	}
+	else {
+		AlifObject** dictptr = alifObject_computedDictPointer(_obj);
+		if (dictptr == nullptr) {
+			//alifErr_setString(_alifExcAttributeError_,
+			//	"This object has no __dict__");
+			return nullptr;
+		}
+
+		return ALIF_XNEWREF(ensure_nonManagedDict(_obj, dictptr));
+	}
 }
 
 

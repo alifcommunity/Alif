@@ -248,6 +248,20 @@ error:
 
 
 
+AlifInterpreter* alifInterpreter_get() { // 1331
+	AlifThread* tstate = current_fastGet();
+	ALIF_ENSURETHREADNOTNULL(tstate);
+	AlifInterpreter* interp = tstate->interpreter;
+	if (interp == nullptr) {
+		//alif_fatalError("no current interpreter");
+		return nullptr; // temp
+	}
+	return interp;
+}
+
+
+
+
 static void init_thread(AlifThreadImpl* _thread, AlifInterpreter* _interpreter, AlifUSizeT _id) { // 1460
 	AlifThread* thread = (AlifThread*)_thread;
 	if (thread->status.initialized) {

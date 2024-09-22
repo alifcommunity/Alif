@@ -211,6 +211,7 @@ AlifIntT alifObject_richCompareBool(AlifObject* , AlifObject* , AlifIntT ); // 4
 AlifIntT alifObject_setAttrString(AlifObject*, const char*, AlifObject*); // 426
 AlifIntT alifObject_getOptionalAttr(AlifObject* , AlifObject* , AlifObject** ); // 431
 AlifIntT alifObject_setAttr(AlifObject*, AlifObject*, AlifObject*); // 434
+AlifObject* alifObject_genericGetAttr(AlifObject*, AlifObject*); // 442
 AlifIntT alifObject_genericSetAttr(AlifObject*, AlifObject*, AlifObject*); // 443
 AlifHashT alifObject_hash(AlifObject*); // 447
 AlifHashT alifObject_hashNotImplemented(AlifObject*); // 448
@@ -379,8 +380,6 @@ public:
 	DescrGetFunc descrGet{};
 	DescrSetFunc descrSet{};
 	AlifSizeT dictOffset{};
-	DescrGetFunc descrGet{};
-	DescrSetFunc descrSet{};
 	InitProc init{};
 	NewFunc new_{};
 	FreeFunc free{};
@@ -413,6 +412,8 @@ public:
 AlifObject* alifType_lookupRef(AlifTypeObject*, AlifObject*); // 281
 
 
+AlifObject* alifObject_genericGetAttrWithDict(AlifObject*, AlifObject*, AlifObject*, AlifIntT);
+
 AlifIntT alifObject_genericSetAttrWithDict(AlifObject*, AlifObject*, AlifObject*, AlifObject*); // 301
 
 
@@ -429,7 +430,8 @@ AlifIntT alifObject_genericSetAttrWithDict(AlifObject*, AlifObject*, AlifObject*
 
 
 
-enum AlifRefTracerEvent_ {
+
+enum AlifRefTracerEvent_ { // 521
 	Alif_RefTracer_Create = 0,
 	Alif_RefTracer_Destroy = 1,
 };

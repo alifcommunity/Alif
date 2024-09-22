@@ -1,6 +1,11 @@
 #pragma once
 
 
+#include "AlifCore_ModuleObject.h"
+#include "AlifCore_Lock.h"
+
+
+
 #define ALIFMAX_MANAGED_STATIC_BUILTIN_TYPES 200 // 22
 #define ALIFMAX_MANAGED_STATIC_EXT_TYPES 10 // 23
 

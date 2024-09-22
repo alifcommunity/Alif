@@ -175,6 +175,6 @@ static inline AlifObject* alif_xnewRef(AlifObject* _obj) { // 479
 
 
 #define ALIF_NEWREF(_obj) alif_newRef(ALIFOBJECT_CAST(_obj)) // 489
-#  define ALIF_XNEWREF(_obj) alif_xnewRef(ALIFOBJECT_CAST(_obj)) // 490
+#define ALIF_XNEWREF(_obj) alif_xnewRef(ALIFOBJECT_CAST(_obj)) // 490
 
 

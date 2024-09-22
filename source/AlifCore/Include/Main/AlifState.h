@@ -10,7 +10,7 @@
 
 
 
-
+AlifInterpreter* alifInterpreter_get(); // 26
 
 
 

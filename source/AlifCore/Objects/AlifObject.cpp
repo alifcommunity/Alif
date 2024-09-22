@@ -2,11 +2,15 @@
 
 #include "AlifCore_BiaseRefCount.h"
 #include "AlifCore_Eval.h"
+#include "AlifCore_CriticalSection.h"
 #include "AlifCore_Dict.h"
 #include "AlifCore_FreeList.h"
 #include "AlifCore_InitConfig.h"
+#include "AlifCore_HashTable.h"
 #include "AlifCore_Object.h"
+#include "AlifCore_Memory.h"
 #include "AlifCore_State.h"
+#include "AlifCore_TypeObject.h"
 
 
 
@@ -380,25 +384,6 @@ AlifIntT alifObject_isTrue(AlifObject* _v) { // 1845
 	else
 		return 1;
 	return (res_ > 0) ? 1 : ALIF_SAFE_DOWNCAST(res_, AlifSizeT, AlifIntT);
-}
-
-AlifObject** alifObject_computedDictPointer(AlifObject* _obj) { // 1410
-	AlifTypeObject* tp_ = ALIF_TYPE(_obj);
-
-	AlifSizeT dictOffset = tp_->dictOffset;
-	if (dictOffset == 0) {
-		return nullptr;
-	}
-
-	if (dictOffset < 0) {
-		AlifSizeT tsize = ALIF_SIZE(_obj);
-		if (tsize < 0) {
-			tsize = -tsize;
-		}
-		AlifUSizeT size = alifObject_varSize(tp, tsize);
-		dictOffset += (AlifSizeT)size;
-	}
-	return (AlifObject**)((char*)_obj + dictOffset);
 }
 
 
