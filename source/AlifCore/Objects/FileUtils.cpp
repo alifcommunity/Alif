@@ -262,9 +262,9 @@ wchar_t* alif_wGetCWD(wchar_t* _buf, AlifUSizeT _bufLen) { // 2620
 	AlifIntT ibuflen = (AlifIntT)min(_bufLen, INT_MAX);
 	return _wgetcwd(_buf, ibuflen);
 #else
-	char fName[MAXPATHLEN];
-	wchar_t* wName;
-	AlifUSizeT len_;
+	char fName[MAXPATHLEN]{};
+	wchar_t* wName{};
+	AlifUSizeT len_{};
 
 	if (getcwd(fName, ALIF_ARRAY_LENGTH(fName)) == nullptr)
 		return nullptr;
