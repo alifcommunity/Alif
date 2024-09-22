@@ -605,6 +605,11 @@ const AlifConfig* alifInterpreter_getConfig(AlifInterpreter* _interpreter) { // 
 }
 
 
+const AlifConfig* alif_getConfig() { // 2903
+	AlifThread* threadState = current_fastGet();
+	ALIF_ENSURETHREADNOTNULL(threadState);
+	return alifInterpreter_getConfig(threadState->interpreter);
+}
 
 
 
