@@ -90,3 +90,8 @@ class AlifSeqLock { // 213
 public:
 	uint32_t sequence{};
 };
+
+
+
+
+uint32_t alifSeqLock_beginRead(AlifSeqLock*); // 228
