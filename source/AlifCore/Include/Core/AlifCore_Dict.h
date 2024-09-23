@@ -36,7 +36,7 @@ extern void alifDictKeys_decRef(AlifDictKeysObject*); // 96
 
 extern AlifIntT alifDict_setItemLockHeld(AlifDictObject*, AlifObject*, AlifObject*); // 110
 
-extern AlifIntT alifDict_GetItemRefKnownHash(AlifDictObject* , AlifObject* , AlifHashT , AlifObject** ); // 116
+extern AlifIntT alifDict_getItemRefKnownHash(AlifDictObject* , AlifObject* , AlifHashT , AlifObject** ); // 116
 
 extern AlifIntT alifObjectDict_setItem(AlifTypeObject*, AlifObject*, AlifObject**, AlifObject*, AlifObject*); // 118
 

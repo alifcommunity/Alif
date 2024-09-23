@@ -341,6 +341,17 @@ uint32_t alifSeqLock_beginRead(AlifSeqLock* _seqLock) { // 540
 	return sequence;
 }
 
+AlifIntT alifSeqLock_endRead(AlifSeqLock* _seqLock, uint32_t _previous) { // 552
+	alifAtomic_fenceAcquire();
+
+	if (alifAtomic_loadUint32Relaxed(&_seqLock->sequence) == _previous) {
+		return 1;
+	}
+
+	alif_yield();
+	return 0;
+}
+
 
 void alifMutex_lock(AlifMutex* _m) { // 579
 	alifMutex_lockTimed(_m, -1, AlifLockFlags_::Alif_Lock_Detach);

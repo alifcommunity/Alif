@@ -1141,7 +1141,7 @@ static AlifIntT dict_resize(AlifInterpreter* _interp, AlifDictObject* _mp,
 	return 0;
 }
 
-AlifIntT alifDict_GetItemRefKnownHash(AlifDictObject* _op, AlifObject* _key,
+AlifIntT alifDict_getItemRefKnownHash(AlifDictObject* _op, AlifObject* _key,
 	AlifHashT _hash, AlifObject** _result) { // 2249
 	AlifObject* value{};
 #ifdef ALIF_GIL_DISABLED
@@ -1178,7 +1178,7 @@ AlifIntT alifDict_getItemRef(AlifObject* _op, AlifObject* _key, AlifObject** _re
 		return -1;
 	}
 
-	return alifDict_GetItemRefKnownHash((AlifDictObject*)_op, _key, hash, _result);
+	return alifDict_getItemRefKnownHash((AlifDictObject*)_op, _key, hash, _result);
 }
 
 static AlifIntT setItemTake2_lockHeld(AlifDictObject* _mp,

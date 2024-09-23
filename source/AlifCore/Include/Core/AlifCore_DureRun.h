@@ -62,6 +62,8 @@ public:
 	AlifRWMutex stopTheWorldMutex{};
 	StopTheWorldState stopTheWorld{};
 
+	TypesDureRunState types{};
+
 	AlifCachedObjects cachedObjects{};
 	AlifStaticObjects staticObjects{};
 

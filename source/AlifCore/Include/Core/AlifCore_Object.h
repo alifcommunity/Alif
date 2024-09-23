@@ -144,6 +144,20 @@ static inline AlifObject* alif_tryXGetRef(AlifObject** _ptr) { // 571
 	return nullptr;
 }
 
+
+static inline AlifIntT alif_tryIncRef(AlifObject* _op) { // 641
+#ifdef ALIF_GIL_DISABLED
+	return alif_tryIncrefFast(_op) or alif_tryIncRefShared(_op);
+#else
+	if (ALIF_REFCNT(_op) > 0) {
+		ALIF_INCREF(_op);
+		return 1;
+	}
+	return 0;
+#endif
+}
+
+
 static inline AlifIntT _alifObject_isGC(AlifObject* obj) { // 714
 	AlifTypeObject* type = ALIF_TYPE(obj);
 	return (ALIFTYPE_IS_GC(type) and (type->isGC == nullptr or type->isGC(obj)));

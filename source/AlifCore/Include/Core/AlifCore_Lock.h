@@ -95,3 +95,6 @@ public:
 
 
 uint32_t alifSeqLock_beginRead(AlifSeqLock*); // 228
+
+
+AlifIntT alifSeqLock_endRead(AlifSeqLock*, uint32_t); // 232

@@ -5,12 +5,29 @@
 #include "AlifCore_Lock.h"
 
 
+ // 17
+#define ALIF_TYPE_BASE_VERSION_TAG (2<<16)
+#define ALIF_MAX_GLOBAL_TYPE_VERSION_TAG (ALIF_TYPE_BASE_VERSION_TAG - 1)
 
 #define ALIFMAX_MANAGED_STATIC_BUILTIN_TYPES 200 // 22
 #define ALIFMAX_MANAGED_STATIC_EXT_TYPES 10 // 23
+#define ALIF_MAX_MANAGED_STATIC_TYPES \
+    (ALIFMAX_MANAGED_STATIC_BUILTIN_TYPES + ALIFMAX_MANAGED_STATIC_EXT_TYPES)
 
 
-
+class TypesDureRunState { // 27
+public:
+	AlifUIntT nextVersionTag{};
+	class {
+	public:
+		class {
+		public:
+			AlifTypeObject* type{};
+			AlifTypeObject def{};
+			int64_t interpCount{};
+		} types[ALIF_MAX_MANAGED_STATIC_TYPES];
+	} managedStatic;
+};
 
 class TypeCacheEntry { // 45
 public:

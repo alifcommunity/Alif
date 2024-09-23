@@ -19,7 +19,12 @@
 #define MCACHE_HASH_METHOD(_type, _name)                                  \
     MCACHE_HASH(alifAtomic_loadUint32Relaxed(&(_type)->versionTag),   \
                 ((AlifSizeT)(_name)) >> 3)
+#define MCACHE_CACHEABLE_NAME(_name)                             \
+        ALIFUSTR_CHECKEXACT(_name) and                           \
+        (ALIFUSTR_GET_LENGTH(_name) <= MCACHE_MAX_ATTR_SIZE)
 
+#define NEXT_GLOBAL_VERSION_TAG _alifDureRun_.types.nextVersionTag
+#define NEXT_VERSION_TAG(_interp) (_interp)->types.nextVersionTag
 
 
 #ifdef ALIF_GIL_DISABLED // 57
@@ -85,6 +90,15 @@ static inline void stop_readying(AlifTypeObject* _type) { // 371
 		return;
 	}
 	_type->flags &= ~ALIF_TPFLAGS_READYING;
+}
+
+static inline AlifIntT is_readying(AlifTypeObject* _type) { // 385
+	if (_type->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
+		AlifInterpreter* interp = _alifInterpreter_get();
+		ManagedStaticTypeState* state = managedStatic_typeStateGet(interp, _type);
+		return state->readying;
+	}
+	return (_type->flags & ALIF_TPFLAGS_READYING) != 0;
 }
 
 static inline AlifObject* lookup_tpDict(AlifTypeObject* _self) { // 401
@@ -293,6 +307,45 @@ clear:
 	}
 }
 
+#define MAX_VERSIONS_PER_CLASS 1000 // 1218
+
+static AlifIntT assign_versionTag(AlifInterpreter* interp, AlifTypeObject* type) { // 1220
+	if (type->versionTag != 0) {
+		return 1;
+	}
+	if (!alifType_hasFeature(type, ALIF_TPFLAGS_READY)) {
+		return 0;
+	}
+	if (type->versionsUsed >= MAX_VERSIONS_PER_CLASS) {
+		return 0;
+	}
+
+	AlifObject* bases = lookup_tpBases(type);
+	AlifSizeT n = ALIFTUPLE_GET_SIZE(bases);
+	for (AlifSizeT i = 0; i < n; i++) {
+		AlifObject* b = ALIFTUPLE_GET_ITEM(bases, i);
+		if (!assign_versionTag(interp, ALIFTYPE_CAST(b))) {
+			return 0;
+		}
+	}
+	if (type->flags & ALIF_TPFLAGS_IMMUTABLETYPE) {
+		/* static types */
+		if (NEXT_GLOBAL_VERSION_TAG > ALIF_MAX_GLOBAL_TYPE_VERSION_TAG) {
+			/* We have run out of version numbers */
+			return 0;
+		}
+		setVersion_unlocked(type, NEXT_GLOBAL_VERSION_TAG++);
+	}
+	else {
+		/* heap types */
+		if (NEXT_VERSION_TAG(interp) == 0) {
+			/* We have run out of version numbers */
+			return 0;
+		}
+		setVersion_unlocked(type, NEXT_VERSION_TAG(interp)++);
+	}
+	return 1;
+}
 
 
 AlifObject* alifType_allocNoTrack(AlifTypeObject* _type, AlifSizeT _nitems) { // 2217
@@ -716,6 +769,52 @@ static AlifTypeObject* solid_base(AlifTypeObject* _type) { // 3401
 		return base;
 	}
 }
+
+
+
+static AlifObject* findName_inMro(AlifTypeObject* _type, AlifObject* _name, AlifIntT* _error) { //  5291
+	AlifHashT hash = alifObject_hashFast(_name);
+	if (hash == -1) {
+		*_error = -1;
+		return nullptr;
+	}
+
+	AlifObject* mro = lookup_tpMro(_type);
+	if (mro == nullptr) {
+		if (!is_readying(_type)) {
+			if (alifType_ready(_type) < 0) {
+				*_error = -1;
+				return NULL;
+			}
+			mro = lookup_tpMro(_type);
+		}
+		if (mro == nullptr) {
+			*_error = 1;
+			return nullptr;
+		}
+	}
+
+	AlifObject* res = nullptr;
+	ALIF_INCREF(mro);
+	AlifSizeT n = ALIFTUPLE_GET_SIZE(mro);
+	for (AlifSizeT i = 0; i < n; i++) {
+		AlifObject* base = ALIFTUPLE_GET_ITEM(mro, i);
+		AlifObject* dict = lookup_tpDict(ALIFTYPE_CAST(base));
+		if (alifDict_getItemRefKnownHash((AlifDictObject*)dict, _name, hash, &res) < 0) {
+			*_error = -1;
+			goto done;
+		}
+		if (res != nullptr) {
+			break;
+		}
+	}
+	*_error = 0;
+done:
+	ALIF_DECREF(mro);
+	return res;
+}
+
+
 
 
 #if ALIF_GIL_DISABLED

@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include <intrin.h>
 
 static inline int16_t alifAtomic_addInt16(int16_t* _obj, int16_t _value) { // 31
 	return (int16_t)_InterlockedExchangeAdd16((volatile short*)_obj, (short)_value);
@@ -508,5 +508,17 @@ static inline void alifAtomic_fenceSeqCst(void) { // 1058
 	_mm_mfence();
 #else
 #  error "no implementation of alifAtomic_fenceSeqCst"
+#endif
+}
+
+
+
+static inline void alifAtomic_fenceAcquire() { // 1071
+#if defined(_M_ARM64)
+	__dmb(_ARM64_BARRIER_ISHLD);
+#elif defined(_M_X64) or defined(_M_IX86)
+	_ReadBarrier();
+#else
+#  error "no implementation of alifAtomic_fenceAcquire"
 #endif
 }
