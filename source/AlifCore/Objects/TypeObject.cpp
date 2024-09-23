@@ -43,7 +43,7 @@
 
 #endif // 84
 
-
+static AlifObject* lookup_maybeMethod(AlifObject*, AlifObject*, AlifIntT*); // 102
 
 static inline AlifUSizeT managedStatic_typeIndexGet(AlifTypeObject* _self) { // 130
 	return (AlifUSizeT)_self->subclasses - 1;
@@ -262,6 +262,7 @@ AlifObject* alifType_allocNoTrack(AlifTypeObject* _type, AlifSizeT _nitems) { //
 }
 
 
+static AlifTypeObject* solid_base(AlifTypeObject*); // 2632
 
 
 static AlifIntT typeIsSubType_baseChain(AlifTypeObject* _a, AlifTypeObject* _b) { // 2636
