@@ -44,7 +44,7 @@ static inline void* alifObject_mallocWithType(AlifTypeObject* _tp, AlifUSizeT _s
 static inline void* alifObject_reallocWithType(AlifTypeObject* _tp, void* _ptr, AlifUSizeT _size) { // 54
 #ifdef ALIF_GIL_DISABLED
 	AlifThreadImpl* threadState = (AlifThreadImpl*)alifThread_get();
-	class MimallocThreadState* m_ = &threadState->mimalloc;
+	MimallocThreadState* m_ = &threadState->mimalloc;
 	m_->currentObjectHeap = alifObject_getAllocationHeap(threadState, _tp);
 #endif
 	void* mem_ = alifMem_objRealloc(_ptr, _size);

@@ -1,6 +1,7 @@
 #include "alif.h"
 
 #include "AlifCore_Eval.h"
+#include "AlifCore_Mimalloc.h"
 #include "AlifCore_ObjectAlloc.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_Dict.h"
@@ -39,7 +40,7 @@ static void record_allocation(AlifThread* tstate) { // 1140
 	gc->allocCount++;
 	if (gc->allocCount >= LOCAL_ALLOC_COUNT_THRESHOLD) {
 		GCState* gcstate = &tstate->interpreter->gc;
-		alifAtomic_addInt(&gcstate->young.count, (int)gc->allocCount);
+		alifAtomic_addInt(&gcstate->young.count, (AlifIntT)gc->allocCount);
 		gc->allocCount = 0;
 
 		if (gc_shouldCollect(gcstate) &&
@@ -57,7 +58,7 @@ static void record_deallocation(AlifThread* _threadState) { // 1161
 	gc_->allocCount--;
 	if (gc_->allocCount <= -LOCAL_ALLOC_COUNT_THRESHOLD) {
 		GCState* gcState = &_threadState->interpreter->gc;
-		alifAtomic_addInt(&gcState->young.count, (int)gc_->allocCount);
+		alifAtomic_addInt(&gcState->young.count, (AlifIntT)gc_->allocCount);
 		gc_->allocCount = 0;
 	}
 }
@@ -167,7 +168,7 @@ AlifVarObject* alifObject_gcResize(AlifVarObject* _op, AlifSizeT _nItems) { // 1
 
 
 void alifObject_gcDel(void* _op) { // 1871
-	size_t preSize = alifType_preHeaderSize(((AlifObject*)_op)->type);
+	AlifUSizeT preSize = alifType_preHeaderSize(((AlifObject*)_op)->type);
 	if (ALIFOBJECT_GC_IS_TRACKED(_op)) {
 		ALIFOBJECT_GC_UNTRACK(_op);
 	}
