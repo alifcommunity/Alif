@@ -17,10 +17,18 @@ AlifObject* alifObject_new(AlifTypeObject*); // 127
 
 #define ALIFTYPE_IS_GC(_t) alifType_hasFeature(_t, ALIF_TPFLAGS_HAVE_GC) // 157
 
+AlifVarObject* alifObject_gcResize(AlifVarObject*, AlifSizeT); // 159
+#define ALIFOBJECT_GC_RESIZE(_type, _op, _n) \
+                ( (_type *) alifObject_gcResize(ALIFVAROBJECT_CAST(_op), (_n)) )
+
+
 AlifObject* alifObject_gcNew(AlifTypeObject* _tp); // 165
 AlifVarObject* alifObject_gcNewVar(AlifTypeObject*, AlifSizeT); // 166
 
-void alifObject_gcTrack(void*);
+void alifObject_gcTrack(void*); // 171
+
+
+void alifObject_gcDel(void*); // 178
 
 #define ALIFOBJECT_GC_NEW(_type, _typeObj) ALIF_CAST(_type*, alifObject_gcNew(_typeObj)) // 180
 #define ALIFOBJECT_GC_NEWVAR(_type, _typeObj, _n) ALIF_CAST(_type*, alifObject_gcNewVar((_typeObj), (_n))) // 181

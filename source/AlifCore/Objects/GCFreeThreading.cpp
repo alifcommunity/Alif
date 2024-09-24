@@ -51,11 +51,21 @@ static void record_allocation(AlifThread* tstate) { // 1140
 }
 
 
+static void record_deallocation(AlifThread* _threadState) { // 1161
+	class GCThreadState* gc_ = &((AlifThreadImpl*)_threadState)->gc;
+
+	gc_->allocCount--;
+	if (gc_->allocCount <= -LOCAL_ALLOC_COUNT_THRESHOLD) {
+		GCState* gcState = &_threadState->interpreter->gc;
+		alifAtomic_addInt(&gcState->young.count, (int)gc_->allocCount);
+		gc_->allocCount = 0;
+	}
+}
 
 void alifObject_gcTrack(void* _opRaw) { // 1717
 	AlifObject* op_ = ALIFOBJECT_CAST(_opRaw);
 	if (ALIFOBJECT_GC_IS_TRACKED(op_)) {
-		//ALIFOBJEC_ASSERT_FAILED_MSG(op,
+		//ALIFOBJEC_ASSERT_FAILED_MSG(op_,
 		//	"object already tracked "
 		//	"by the garbage collector");
 	}
@@ -135,4 +145,39 @@ AlifVarObject* alifObject_gcNewVar(AlifTypeObject* _tp, AlifSizeT _nItems) { // 
 	}
 	alifObject_initVar(op_, _tp, _nItems);
 	return op_;
+}
+
+AlifVarObject* alifObject_gcResize(AlifVarObject* _op, AlifSizeT _nItems) { // 1852 
+	const AlifUSizeT basicSize = alifObject_varSize(ALIF_TYPE(_op), _nItems);
+	const AlifUSizeT preSize = alifType_preHeaderSize(((AlifObject*)_op)->type);
+	if (basicSize > (AlifUSizeT)ALIF_SIZET_MAX - preSize) {
+		return nullptr;
+		//return (AlifVarObject*)alifErr_noMemory();
+	}
+	char* mem_ = (char*)_op - preSize;
+	mem_ = (char*)alifObject_reallocWithType(ALIF_TYPE(_op), mem_, preSize + basicSize);
+	if (mem_ == nullptr) {
+		return nullptr;
+		//return (AlifVarObject*)alifErr_noMemory();
+	}
+	_op = (AlifVarObject*)(mem_ + preSize);
+	ALIF_SET_SIZE(_op, _nItems);
+	return _op;
+}
+
+
+void alifObject_gcDel(void* _op) { // 1871
+	size_t preSize = alifType_preHeaderSize(((AlifObject*)_op)->type);
+	if (ALIFOBJECT_GC_IS_TRACKED(_op)) {
+		ALIFOBJECT_GC_UNTRACK(_op);
+	}
+
+	record_deallocation(alifThread_get());
+	AlifObject* self = (AlifObject*)_op;
+	if (ALIFOBJECT_GC_IS_SHARED_INLINE(self)) {
+		alifObject_freeDelayed(((char*)_op) - preSize);
+	}
+	else {
+		alifMem_dataFree(((char*)_op) - preSize);
+	}
 }

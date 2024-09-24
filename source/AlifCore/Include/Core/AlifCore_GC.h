@@ -71,6 +71,12 @@ static inline void alifObject_gcSetShared(AlifObject* _op) { // 117
 }
 #define ALIFOBJECT_GC_SET_SHARED(_op) alifObject_gcSetShared(ALIF_CAST(AlifObject*, _op))
 
+static inline int alifObject_gcIsSharedInline(AlifObject* _op) {
+	return alifObject_hasGCBits(_op, ALIFGC_BITS_SHARED_INLINE);
+}
+#define ALIFOBJECT_GC_IS_SHARED_INLINE(_op) \
+    alifObject_gcIsSharedInline(ALIF_CAST(AlifObject*, _op))
+
 
 #define ALIFGC_PREV_SHIFT           2 // 162 
 #define ALIFGC_PREV_MASK            (((uintptr_t) -1) << ALIFGC_PREV_SHIFT) // 163
