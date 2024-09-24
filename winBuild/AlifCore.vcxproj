@@ -112,6 +112,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\OSDefs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\PThreadStubs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\RefCount.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\SetObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\ASCIILib.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Codecs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Equal.h" />
@@ -162,6 +163,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\ModuleObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ObjectStack.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\QuiescentStatesBiaseRef.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\SetObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\SysModule.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\TupleObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ParkingLot.cpp" />
