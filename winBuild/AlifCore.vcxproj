@@ -96,6 +96,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\Codecs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Import.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\InitConfig.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\IterObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\ListObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Lock.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\LongIntRepr.h" />
@@ -157,6 +158,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\HashTable.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Import.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\InitConfig.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\IterObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ListObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Lock.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\MethodObject.cpp" />

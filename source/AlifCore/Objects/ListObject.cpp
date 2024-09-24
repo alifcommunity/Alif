@@ -207,7 +207,7 @@ AlifObject* alifList_asTuple(AlifObject* _v) { // 3129
 
 
 
-AlifTypeObject _alfiListType_ = { // 3737
+AlifTypeObject _alifListType_ = { // 3737
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "مصفوفة",
 	.basicSize = sizeof(AlifListObject),
