@@ -1484,6 +1484,17 @@ AlifTypeObject _alifDictType_ = { // 4760
 };
 
 
+AlifIntT alifDict_getItemStringRef(AlifObject* _v, const char* _key, AlifObject** _result) { // 4826
+	AlifObject* keyObj = alifUStr_fromString(_key);
+	if (keyObj == nullptr) {
+		*_result = nullptr;
+		return -1;
+	}
+	AlifIntT res = alifDict_getItemRef(_v, keyObj, _result);
+	ALIF_DECREF(keyObj);
+	return res;
+}
+
 void alifObject_initInlineValues(AlifObject* _obj, AlifTypeObject* _tp) {  // 6580
 	AlifDictKeysObject* keys = CACHED_KEYS(_tp);
 	AlifSizeT usable = alifAtomic_loadSizeRelaxed(&keys->usable);
