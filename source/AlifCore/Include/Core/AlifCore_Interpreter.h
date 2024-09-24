@@ -65,6 +65,8 @@ public:
 
 	GCDureRunState gc{};
 
+	AlifObject* sysDict{};
+
 	AlifObject* builtins{};
 
 	//class ImportState imports;
