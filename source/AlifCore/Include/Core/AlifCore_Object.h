@@ -43,7 +43,7 @@ static inline void alif_increaseRefType(AlifTypeObject* type) { // 296
 #  pragma GCC diagnostic ignored "-Warray-bounds"
 #endif
 
-	AlifThreadImpl* thread = (AlifThreadImpl*)alifThread_get();
+	AlifThreadImpl* thread = (AlifThreadImpl*)_alifThread_get();
 	AlifHeapTypeObject* ht = (AlifHeapTypeObject*)type;
 
 	if ((AlifUSizeT)ht->uniqueID < (AlifUSizeT)thread->types.size) {

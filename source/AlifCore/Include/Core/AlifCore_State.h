@@ -40,7 +40,7 @@ AlifIntT alifThreadState_mustExit(AlifThread*); // 121
 
 AlifThread* alifThread_getCurrent(); // 125
 
-static inline AlifThread* alifThread_get() { // 134
+static inline AlifThread* _alifThread_get() { // 134
 #ifdef HAVE_LOCAL_THREAD
 	return _alifTSSThread_;
 #else
@@ -74,7 +74,7 @@ static inline void alif_ensureFuncTstateNotNULL(const char* _func, AlifThread* _
 
 
 static inline AlifInterpreter* _alifInterpreter_get() { // 207
-	AlifThread* tstate = alifThread_get();
+	AlifThread* tstate = _alifThread_get();
 	return tstate->interpreter;
 }
 

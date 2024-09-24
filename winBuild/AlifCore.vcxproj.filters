@@ -456,6 +456,9 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\IterObject.h">
       <Filter>Include\Main</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Abstract.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Include">

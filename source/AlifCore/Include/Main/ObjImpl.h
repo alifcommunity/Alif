@@ -1,7 +1,7 @@
 #pragma once
 
 
-static inline AlifUSizeT alifObject_size(AlifTypeObject* _type) { // 5
+static inline AlifUSizeT _alifObject_size(AlifTypeObject* _type) { // 5
 	return ALIF_STATIC_CAST(AlifUSizeT, _type->basicSize);
 }
 

@@ -1,6 +1,6 @@
 #include "alif.h"
 
-//#include "AlifCore_Abstract.h"
+#include "AlifCore_Abstract.h"
 #include "AlifCore_Eval.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_State.h"
@@ -9,13 +9,104 @@
 
 
 static AlifObject* null_error(void) { // 27
-	AlifThread* thread = alifThread_get();
+	AlifThread* thread = _alifThread_get();
 	//if (!alifErr_occurred(thread)) {
 	//	alifErr_setString(thread, _alifExcSystemError_,
 	//		"null argument to internal routine");
 	//}
 	return nullptr;
 }
+
+
+AlifSizeT alifObject_size(AlifObject* _o) { // 53
+	if (_o == nullptr) {
+		null_error();
+		return -1;
+	}
+
+	AlifSequenceMethods* m = ALIF_TYPE(_o)->asSequence;
+	if (m and m->length) {
+		AlifSizeT len = m->length(_o);
+		return len;
+	}
+
+	return alifMapping_size(_o);
+}
+
+#undef ALIFOBJECT_LENGTH
+AlifSizeT alifObject_length(AlifObject* _o) { // 72
+	return alifObject_size(_o);
+}
+#define ALIFOBJECT_LENGTH alifObject_size
+
+AlifIntT alifObject_hasLen(AlifObject* _o) { // 79
+	return (ALIF_TYPE(_o)->asSequence and ALIF_TYPE(_o)->asSequence->length)
+		or (ALIF_TYPE(_o)->asMapping and ALIF_TYPE(_o)->asMapping->length);
+}
+
+
+
+AlifSizeT alifObject_lengthHint(AlifObject* _o,
+	AlifSizeT _defaultValue) { // 91
+	AlifObject* hint{}, * result{};
+	AlifSizeT res{};
+	if (alifObject_hasLen(_o)) {
+		res = ALIFOBJECT_LENGTH(_o);
+		if (res < 0) {
+			AlifThread* thread = _alifThread_get();
+			//if (!_alifErr_exceptionMatches(thread, _alifExcTypeError_)) {
+			//	return -1;
+			//}
+			//alifErr_clear(thread);
+		}
+		else {
+			return res;
+		}
+	}
+	hint = alifObject_lookupSpecial(_o, &ALIF_ID(__lengthHint__));
+	if (hint == nullptr) {
+		//if (alifErr_occurred()) {
+		//	return -1;
+		//}
+		return _defaultValue;
+	}
+	result = alifObject_callNoArgs(hint);
+	ALIF_DECREF(hint);
+	if (result == nullptr) {
+		AlifThread* tstate = _alifThread_get();
+		//if (alifErr_exceptionMatches(tstate, _alifExcTypeError_)) {
+		//	alifErr_clear(tstate);
+		//	return _defaultValue;
+		//}
+		return -1;
+	}
+	else if (result == ALIF_NOTIMPLEMENTED) {
+		ALIF_DECREF(result);
+		return _defaultValue;
+	}
+	if (!ALIFLONG_CHECK(result)) {
+		//alifErr_format(_alifExcTypeError_, "__length_hint__ must be an integer, not %.100s",
+		//	ALIF_TYPE(result)->name);
+		ALIF_DECREF(result);
+		return -1;
+	}
+	res = alifLong_asSizeT(result);
+	ALIF_DECREF(result);
+	if (res < 0 /*and alifErr_occurred()*/) {
+		return -1;
+	}
+	if (res < 0) {
+		//alifErr_format(_alifExcValueError_, "__lengthHint__() should return >= 0");
+		return -1;
+	}
+	return res;
+}
+
+
+
+
+
+
 
 
 
@@ -108,7 +199,31 @@ Fail:
 
 
 
+AlifIntT alifMapping_check(AlifObject* _o) { // 2263
+	return _o and ALIF_TYPE(_o)->asMapping and
+		ALIF_TYPE(_o)->asMapping->subscript;
+}
 
+
+AlifSizeT alifMapping_size(AlifObject* _o) { // 2270
+	if (_o == nullptr) {
+		null_error();
+		return -1;
+	}
+
+	AlifMappingMethods* m = ALIF_TYPE(_o)->asMapping;
+	if (m and m->length) {
+		AlifSizeT len = m->length(_o);
+		return len;
+	}
+
+	if (ALIF_TYPE(_o)->asSequence and ALIF_TYPE(_o)->asSequence->length) {
+		//type_error("%.200s is not a mapping", o);
+		return -1;
+	}
+	//type_error("object of type '%.200s' has no len()", o);
+	return -1;
+}
 
 
 
