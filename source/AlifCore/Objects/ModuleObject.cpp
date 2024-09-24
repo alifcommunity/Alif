@@ -388,44 +388,44 @@ AlifObject* alifModule_getAttroImpl(AlifModuleObject* _m, AlifObject* _name, Ali
 		//	modName, name, origin, modName);
 	}
 	else {
-		AlifIntT rc_ = alifModuleSpec_isInitializing(spec);
-		if (rc_ > 0) {
-			if (isPossiblyShadowing) {
-			//	alifErr_format(_alifExcAttributeError_,
-						//"module '%U' has no attribute '%U' "
-							//"(consider renaming '%U' if it has the same name "
-							//"as a third-party module you intended to import)",
-							//modName, name, origin);
-			}
-			else if (origin) {
-			//	alifErr_format(_alifExcAttributeError_,
-				//"partially initialized "
-					//"module '%U' from '%U' has no attribute '%U' "
-					//"(most likely due to a circular import)",
-					//modName, origin, name);
-			}
-			else {
-			//	alifErr_format(_alifExcAttributeError_,
-				//"partially initialized "
-					//"module '%U' has no attribute '%U' "
-					//"(most likely due to a circular import)",
-					//modName, name);
-			}
-		}
-		else if (rc_ == 0) {
-			rc_ = alifModuleSpec_isUninitializedSubmodule(spec, _name);
-			if (rc_ > 0) {
-			//	alifErr_format(_alifExcAttributeError_,
-				//"cannot access submodule '%U' of module '%U' "
-					//"(most likely due to a circular import)",
-					//name, modName);
-			}
-			else if (rc_ == 0) {
-			//	alifErr_format(_alifExcAttributeError_,
-				//"module '%U' has no attribute '%U'",
-					//modName, name);
-			}
-		}
+		//AlifIntT rc_ = alifModuleSpec_isInitializing(spec);
+		//if (rc_ > 0) {
+		//	if (isPossiblyShadowing) {
+		//	//	alifErr_format(_alifExcAttributeError_,
+		//				//"module '%U' has no attribute '%U' "
+		//					//"(consider renaming '%U' if it has the same name "
+		//					//"as a third-party module you intended to import)",
+		//					//modName, name, origin);
+		//	}
+		//	else if (origin) {
+		//	//	alifErr_format(_alifExcAttributeError_,
+		//		//"partially initialized "
+		//			//"module '%U' from '%U' has no attribute '%U' "
+		//			//"(most likely due to a circular import)",
+		//			//modName, origin, name);
+		//	}
+		//	else {
+		//	//	alifErr_format(_alifExcAttributeError_,
+		//		//"partially initialized "
+		//			//"module '%U' has no attribute '%U' "
+		//			//"(most likely due to a circular import)",
+		//			//modName, name);
+		//	}
+		//}
+		//else if (rc_ == 0) {
+		//	rc_ = alifModuleSpec_isUninitializedSubmodule(spec, _name);
+		//	if (rc_ > 0) {
+		//	//	alifErr_format(_alifExcAttributeError_,
+		//		//"cannot access submodule '%U' of module '%U' "
+		//			//"(most likely due to a circular import)",
+		//			//name, modName);
+		//	}
+		//	else if (rc_ == 0) {
+		//	//	alifErr_format(_alifExcAttributeError_,
+		//		//"module '%U' has no attribute '%U'",
+		//			//modName, name);
+		//	}
+		//}
 	}
 
 done:

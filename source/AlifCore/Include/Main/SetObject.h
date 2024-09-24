@@ -1,8 +1,8 @@
 #pragma once
 
 
-AlifTypeObject _alifSetType_; // 9
-AlifTypeObject _alifFrozenSetType_; // 10
+extern AlifTypeObject _alifSetType_; // 9
+extern AlifTypeObject _alifFrozenSetType_; // 10
 
 
 // 30

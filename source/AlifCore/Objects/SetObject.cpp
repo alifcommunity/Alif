@@ -3,16 +3,18 @@
 
 
 
-AlifTypeObject _alifSetType_ = { // 24449
+AlifTypeObject _alifSetType_ = { // 2449
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
-	.name = "set",                           
-	.basicSize = sizeof(AlifSetObject),                
+	.name = "مميزة",                           
+	.basicSize = sizeof(AlifSetObject),
+	.itemSize = 0,
 };
 
 
 
 AlifTypeObject _alifFrozenSetType_ = { // 2539
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
-	.name = "frozenset",
-	.basicSize = sizeof(AlifSetObject),              
+	.name = "مميزة_مجمدة",
+	.basicSize = sizeof(AlifSetObject),
+	.itemSize = 0,
 };
