@@ -368,16 +368,16 @@ AlifObject* alifModule_getAttroImpl(AlifModuleObject* _m, AlifObject* _name, Ali
 	if (isPossiblyShadowing < 0) {
 		goto done;
 	}
-	//AlifIntT isPossiblyShadowingStdLib = 0;
-	//if (isPossiblyShadowing) {
-	//	AlifObject* stdlibModules = alifSys_getObject("stdlib_module_names");
-	//	if (stdlibModules and alifAnySet_check(stdlibModules)) {
-	//		isPossiblyShadowingStdLib = alifSet_contains(stdlibModules, modName);
-	//		if (isPossiblyShadowingStdLib < 0) {
-	//			goto done;
-	//		}
-	//	}
-	//}
+	isPossiblyShadowingStdLib = 0;
+	if (isPossiblyShadowing) {
+		AlifObject* stdlibModules = alifSys_getObject("stdlib_module_names");
+		if (stdlibModules and ALIFANYSET_CHECK(stdlibModules)) {
+			//isPossiblyShadowingStdLib = alifSet_contains(stdlibModules, modName);
+			if (isPossiblyShadowingStdLib < 0) {
+				goto done;
+			}
+		}
+	}
 
 	if (isPossiblyShadowingStdLib) {
 		//alifErr_format(_alifExcAttributeError_,

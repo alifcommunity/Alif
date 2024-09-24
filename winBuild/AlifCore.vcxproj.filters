@@ -121,6 +121,9 @@
     <ClCompile Include="..\source\AlifCore\Objects\SysModule.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\SetObject.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\IterObject.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
@@ -445,6 +448,9 @@
       <Filter>Include\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Main\SysModule.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\SetObject.h">
       <Filter>Include\Main</Filter>
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Main\IterObject.h">
