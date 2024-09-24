@@ -19,6 +19,12 @@ static AlifObject* null_error(void) { // 27
 
 
 
+AlifIntT alifSequence_check(AlifObject* _s) { // 1668
+	if (ALIFDICT_CHECK(_s))
+		return 0;
+	return ALIF_TYPE(_s)->asSequence and
+		ALIF_TYPE(_s)->asSequence->item != nullptr;
+}
 
 
 
@@ -87,8 +93,7 @@ AlifObject* alifSequence_tuple(AlifObject* v) { // 1992
 	}
 
 	/* Cut tuple back if guess was too large. */
-	if (j < n and
-		alifTuple_resize(&result, j) != 0)
+	if (j < n and alifTuple_resize(&result, j) != 0)
 		goto Fail;
 
 	ALIF_DECREF(it);
@@ -109,19 +114,19 @@ Fail:
 
 
 AlifObject* alifObject_getIter(AlifObject* _o) { // 2809
-	AlifTypeObject* t = ALIF_TYPE(_o);
-	GetIterFunc f{};
+	AlifTypeObject* t_ = ALIF_TYPE(_o);
+	GetIterFunc f_{};
 
-	f = t->iter;
-	if (f == nullptr) {
+	f_ = t_->iter;
+	if (f_ == nullptr) {
 		if (alifSequence_check(_o))
 			return alifSeqIter_new(_o);
 		//return type_error("'%.200s' object is not iterable", o);
 		return nullptr;
 	}
 	else {
-		AlifObject* res = (*f)(_o);
-		if (res != nullptr and !alifIter_check(res)) {
+		AlifObject* res = (*f_)(_o);
+		if (res != nullptr /*and !alifIter_check(res)*/) {
 			//alifErr_format(_alifExcTypeError_,
 			//	"iter() returned non-iterator "
 			//	"of type '%.100s'",
