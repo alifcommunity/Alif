@@ -184,6 +184,29 @@ AlifIntT alifList_append(AlifObject* _op, AlifObject* _newItem) { // 481
 
 
 
+
+
+
+
+AlifObject* alifList_asTuple(AlifObject* _v) { // 3129
+	if (_v == nullptr or !ALIFLIST_CHECK(_v)) {
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
+	AlifObject* ret{};
+	AlifListObject* self = (AlifListObject*)_v;
+	ALIF_BEGIN_CRITICAL_SECTION(self);
+	ret = alifTuple_fromArray(self->item, ALIF_SIZE(_v));
+	ALIF_END_CRITICAL_SECTION();
+	return ret;
+}
+
+
+
+
+
+
+
 AlifTypeObject _alfiListType_ = { // 3737
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "مصفوفة",

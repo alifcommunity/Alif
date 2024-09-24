@@ -15,6 +15,8 @@ AlifObject* alifList_new(AlifSizeT); // 28
 AlifIntT alifList_append(AlifObject*, AlifObject*); // 37
 
 
+AlifObject* alifList_asTuple(AlifObject*); // 44
+
 /* -------------------------------------------------------------------------------------- */
 
 

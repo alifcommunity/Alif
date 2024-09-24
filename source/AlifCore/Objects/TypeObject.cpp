@@ -456,10 +456,10 @@ static AlifObject* lookup_method(AlifObject* _self, AlifObject* _attr, AlifIntT*
 static AlifObject* call_unboundNoArg(AlifIntT _unbound,
 	AlifObject* _func, AlifObject* _self) { // 2786
 	if (_unbound) {
-		//return alifObject_callOneArg(_func, _self);
+		return alifObject_callOneArg(_func, _self);
 	}
 	else {
-		//return alifObject_callNoArgs(_func);s
+		return alifObject_callNoArgs(_func);
 	}
 }
 
@@ -1243,9 +1243,9 @@ static AlifIntT type_ready(AlifTypeObject* _type,
 	if (typeReady_setBases(_type, _initial) < 0) {
 		goto error;
 	}
-	//if (typeReady_mro(_type, _initial) < 0) {
-	//	goto error;
-	//}
+	if (typeReady_mro(_type, _initial) < 0) {
+		goto error;
+	}
 	//if (typeReady_setNew(_type, _initial) < 0) {
 	//	goto error;
 	//}

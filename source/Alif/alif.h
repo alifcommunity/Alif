@@ -55,7 +55,7 @@
 #include "Codecs.h"
 #include "AlifThread.h"
 #include "ModSupport.h"
-//#include "Abstract.h"
+#include "Abstract.h"
 //#include "AlifCppType.h"
 //#include "Compile.h"
 #include "Import.h"

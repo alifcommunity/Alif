@@ -368,24 +368,24 @@ AlifObject* alifModule_getAttroImpl(AlifModuleObject* _m, AlifObject* _name, Ali
 	if (isPossiblyShadowing < 0) {
 		goto done;
 	}
-	/*AlifIntT isPossiblyShadowingStdLib = 0;*/
-	if (isPossiblyShadowing) {
-		AlifObject* stdlibModules = alifSys_getObject("stdlib_module_names");
-		if (stdlibModules and alifAnySet_check(stdlibModules)) {
-			isPossiblyShadowingStdLib = alifSet_contains(stdlibModules, modName);
-			if (isPossiblyShadowingStdLib < 0) {
-				goto done;
-			}
-		}
-	}
+	//AlifIntT isPossiblyShadowingStdLib = 0;
+	//if (isPossiblyShadowing) {
+	//	AlifObject* stdlibModules = alifSys_getObject("stdlib_module_names");
+	//	if (stdlibModules and alifAnySet_check(stdlibModules)) {
+	//		isPossiblyShadowingStdLib = alifSet_contains(stdlibModules, modName);
+	//		if (isPossiblyShadowingStdLib < 0) {
+	//			goto done;
+	//		}
+	//	}
+	//}
 
 	if (isPossiblyShadowingStdLib) {
-	//	alifErr_format(_alifExcAttributeError_,
-	//		"module '%U' has no attribute '%U' "
-	//		"(consider renaming '%U' since it has the same "
-	//		"name as the standard library module named '%U' "
-	//		"and the import system gives it precedence)",
-	//		modName, name, origin, modName);
+		//alifErr_format(_alifExcAttributeError_,
+		//	"module '%U' has no attribute '%U' "
+		//	"(consider renaming '%U' since it has the same "
+		//	"name as the standard library module named '%U' "
+		//	"and the import system gives it precedence)",
+		//	modName, name, origin, modName);
 	}
 	else {
 		AlifIntT rc_ = alifModuleSpec_isInitializing(spec);

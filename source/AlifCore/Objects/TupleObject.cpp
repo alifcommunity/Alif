@@ -1,5 +1,6 @@
 #include "alif.h"
 
+#include "AlifCore_Eval.h"
 #include "AlifCore_FreeList.h"
 #include "AlifCore_GC.h"
 #include "AlifCore_Object.h"
@@ -72,6 +73,31 @@ AlifObject* alifTuple_pack(AlifSizeT _n, ...) { // 153
 	ALIFOBJECT_GC_TRACK(result);
 	return (AlifObject*)result;
 }
+
+
+
+
+
+AlifObject* alifTuple_fromArray(AlifObject* const* _src, AlifSizeT _n) { // 371
+	if (_n == 0) {
+		return tuple_getEmpty();
+	}
+
+	AlifTupleObject* tuple = tuple_alloc(_n);
+	if (tuple == nullptr) {
+		return nullptr;
+	}
+	AlifObject** dst = tuple->item;
+	for (AlifSizeT i = 0; i < _n; i++) {
+		AlifObject* item = _src[i];
+		dst[i] = ALIF_NEWREF(item);
+	}
+	ALIFOBJECT_GC_TRACK(tuple);
+	return (AlifObject*)tuple;
+}
+
+
+
 
 
 

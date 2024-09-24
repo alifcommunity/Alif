@@ -7,6 +7,7 @@
 #include "AlifCore_TypeID.h"
 #include "AlifCore_Memory.h"
 #include "AlifCore_ThreadState.h"
+#include "AlifCore_Tuple.h"
 #include "AlifCore_TypeObject.h"
 #include "AlifCore_GlobalObjects.h"
 
