@@ -14,7 +14,7 @@ AlifSizeT alifObject_length(AlifObject*); // 342
 
 AlifObject* alifObject_getIter(AlifObject*); // 383
 
-
+AlifObject* alifIter_next(AlifObject* ); // 417
 
 
 AlifIntT alifSequence_check(AlifObject*); // 664

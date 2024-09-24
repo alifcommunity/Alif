@@ -170,6 +170,7 @@ typedef AlifObject* (*ReprFunc)(AlifObject*); // 340
 typedef AlifHashT (*HashFunc)(AlifObject*); // 341
 typedef AlifObject* (*RichCmpFunc) (AlifObject*, AlifObject*, AlifIntT); // 342
 typedef AlifObject* (*GetIterFunc) (AlifObject*); // 343
+typedef AlifObject* (*IterNextFunc) (AlifObject*); // 344
 typedef AlifObject* (*DescrGetFunc) (AlifObject*, AlifObject*, AlifObject*); // 345
 typedef AlifIntT (*DescrSetFunc) (AlifObject*, AlifObject*, AlifObject*); // 346
 typedef AlifIntT (*InitProc)(AlifObject*, AlifObject*, AlifObject*); // 347
@@ -383,6 +384,7 @@ public:
 	RichCmpFunc richCompare{};
 
 	GetIterFunc iter{};
+	IterNextFunc iterNext{};
 
 
 	AlifTypeObject* base{};
