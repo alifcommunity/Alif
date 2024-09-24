@@ -108,19 +108,19 @@ Fail:
 
 
 
-AlifObject* alifObject_getIter(AlifObject* o) { // 2809
-	AlifTypeObject* t = ALIF_TYPE(o);
+AlifObject* alifObject_getIter(AlifObject* _o) { // 2809
+	AlifTypeObject* t = ALIF_TYPE(_o);
 	GetIterFunc f{};
 
 	f = t->iter;
 	if (f == nullptr) {
-		if (alifSequence_check(o))
-			return alifSeqIter_new(o);
+		if (alifSequence_check(_o))
+			return alifSeqIter_new(_o);
 		//return type_error("'%.200s' object is not iterable", o);
 		return nullptr;
 	}
 	else {
-		AlifObject* res = (*f)(o);
+		AlifObject* res = (*f)(_o);
 		if (res != nullptr and !alifIter_check(res)) {
 			//alifErr_format(_alifExcTypeError_,
 			//	"iter() returned non-iterator "

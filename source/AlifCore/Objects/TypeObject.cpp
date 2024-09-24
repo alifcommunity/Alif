@@ -995,11 +995,11 @@ static void type_dealloc(AlifObject* self) { // 5911
 	//alifObject_clearWeakRefs((AlifObject*)type);
 
 	ALIF_XDECREF(type->base);
-	//ALIF_XDECREF(type->dict);
-	//ALIF_XDECREF(type->bases);
-	//ALIF_XDECREF(type->mro);
+	ALIF_XDECREF(type->dict);
+	ALIF_XDECREF(type->bases);
+	ALIF_XDECREF(type->mro);
 	//ALIF_XDECREF(type->cache);
-	//clear_tpSubClasses(type);	
+	//clear_tpSubclasses(type);
 
 	AlifHeapTypeObject* et = (AlifHeapTypeObject*)type;
 	ALIF_XDECREF(et->name);
@@ -1246,12 +1246,12 @@ static AlifIntT type_ready(AlifTypeObject* _type,
 	if (typeReady_mro(_type, _initial) < 0) {
 		goto error;
 	}
-	//if (typeReady_setNew(_type, _initial) < 0) {
-	//	goto error;
-	//}
-	//if (typeReady_fillDict(_type, _def) < 0) {
-	//	goto error;
-	//}
+	if (typeReady_setNew(_type, _initial) < 0) {
+		goto error;
+	}
+	if (typeReady_fillDict(_type, _def) < 0) {
+		goto error;
+	}
 	//if (_initial) {
 	//	if (typeReady_inherit(_type) < 0) {
 	//		goto error;

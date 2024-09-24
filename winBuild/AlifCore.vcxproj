@@ -63,9 +63,11 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Thread.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ThreadState.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Time.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Tuple.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_TypeID.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_TypeObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_UStrObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\Abstract.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifConfig.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifEval.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifHash.h" />
@@ -118,6 +120,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS2Lib.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS4Lib.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Undef.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\SysModule.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\ThreadNT.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\ThreadPThread.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\ThreadPThreadStubs.h" />
@@ -125,6 +128,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\UStrObject.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\source\AlifCore\Objects\Abstract.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifEval.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifEvalGIL.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifHash.cpp" />
@@ -158,6 +162,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\ModuleObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ObjectStack.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\QuiescentStatesBiaseRef.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\SysModule.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\TupleObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ParkingLot.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\TypeID.cpp" />

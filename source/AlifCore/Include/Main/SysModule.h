@@ -1,3 +1,3 @@
 #pragma once
 
-AlifObject* alifSys_getObject(const char* ); // 104
+AlifObject* alifSys_getObject(const char*); // 7
