@@ -21,7 +21,7 @@ public:
 };
 
 
-
+AlifIntT alifTuple_resize(AlifObject** , AlifSizeT ); // 13
 
 // 16
 #define ALIFTUPLE_CAST(_op) ALIF_CAST(AlifTupleObject*, (_op))

@@ -41,8 +41,8 @@ AlifObject* alifTuple_new(AlifSizeT _size) { // 68
 	if (op_ == nullptr) {
 		return nullptr;
 	}
-	for (AlifSizeT i = 0; i < _size; i++) {
-		op_->item[i] = nullptr;
+	for (AlifSizeT i_ = 0; i_ < _size; i_++) {
+		op_->item[i_] = nullptr;
 	}
 	ALIFOBJECT_GC_TRACK(op_);
 	return (AlifObject*)op_;
@@ -88,9 +88,9 @@ AlifObject* alifTuple_fromArray(AlifObject* const* _src, AlifSizeT _n) { // 371
 		return nullptr;
 	}
 	AlifObject** dst = tuple->item;
-	for (AlifSizeT i = 0; i < _n; i++) {
-		AlifObject* item = _src[i];
-		dst[i] = ALIF_NEWREF(item);
+	for (AlifSizeT i_ = 0; i_ < _n; i_++) {
+		AlifObject* item = _src[i_];
+		dst[i_] = ALIF_NEWREF(item);
 	}
 	ALIFOBJECT_GC_TRACK(tuple);
 	return (AlifObject*)tuple;
@@ -107,3 +107,55 @@ AlifTypeObject _alifTupleType_ = { // 865
 	.basicSize = sizeof(AlifTupleObject) - sizeof(AlifObject*),
 	.itemSize = sizeof(AlifObject*),
 };
+
+
+AlifIntT alifTuple_resize(AlifObject** _pv, AlifSizeT _newSize) { // 918
+	AlifTupleObject* v_{};
+	AlifTupleObject* sv_{};
+	AlifSizeT i_{};
+	AlifSizeT oldSize{};
+
+	v_ = (AlifTupleObject*)*_pv;
+	if (v_ == nullptr or !ALIF_IS_TYPE(v_, &_alifTupleType_) ||
+		(ALIF_SIZE(v_) != 0 and ALIF_REFCNT(v_) != 1)) {
+		*_pv = 0;
+		ALIF_XDECREF(v_);
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+
+	oldSize = ALIF_SIZE(v_);
+	if (oldSize == _newSize) {
+		return 0;
+	}
+	if (_newSize == 0) {
+		ALIF_DECREF(v_);
+		*_pv = tuple_getEmpty();
+		return 0;
+	}
+	if (oldSize == 0) {
+		ALIF_DECREF(v_);
+		*_pv = alifTuple_new(_newSize);
+		return *_pv == nullptr ? -1 : 0;
+	}
+
+	if (ALIFOBJECT_GC_IS_TRACKED(v_)) {
+		ALIFOBJECT_GC_UNTRACK(v_);
+	}
+	for (i_ = _newSize; i_ < oldSize; i_++) {
+		ALIF_CLEAR(v_->item[i_]);
+	}
+	sv_ = ALIFOBJECT_GC_RESIZE(AlifTupleObject, v_, _newSize);
+	if (sv_ == nullptr) {
+		*_pv = nullptr;
+		alifObject_gcDel(v_);
+		return -1;
+	}
+	alif_newReferenceNoTotal((AlifObject*)sv_);
+	if (_newSize > oldSize)
+		memset(&sv_->item[oldSize], 0,
+			sizeof(*sv_->item) * (_newSize - oldSize));
+	*_pv = (AlifObject*)sv_;
+	ALIFOBJECT_GC_TRACK(sv_);
+	return 0;
+}
