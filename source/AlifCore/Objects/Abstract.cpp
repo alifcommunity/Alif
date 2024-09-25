@@ -251,3 +251,28 @@ AlifObject* alifObject_getIter(AlifObject* _o) { // 2809
 		return res;
 	}
 }
+
+static AlifIntT iterNext(AlifObject* _iter, AlifObject** _item) { // 2871
+	IterNextFunc iterNext = ALIF_TYPE(_iter)->iterNext;
+	if ((*_item = iterNext(_iter))) {
+		return 1;
+	}
+
+	AlifThread* threadState = alifThread_get();
+	//if (!alifErr_occurred(threadState)) {
+		//return 0;
+	//}
+	//if (alifErr_exceptionMatches(threadState, _alifExcStopIteration_)) {
+		//alifErr_clear(threadState);
+		//return 0;
+	//}
+
+	return -1;
+}
+
+
+AlifObject* alifIter_next(AlifObject* _iter) { // 2921
+	AlifObject* item{};
+	(void)iterNext(_iter, &item);
+	return item;
+}
