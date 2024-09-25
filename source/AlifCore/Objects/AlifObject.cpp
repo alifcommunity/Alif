@@ -663,6 +663,145 @@ AlifTypeObject _alifNotImplementedType_ = { // 2149
 AlifObject _alifNotImplementedClass_ = ALIFOBJECT_HEAD_INIT(&_alifNotImplementedType_); // 2190
 
 
+
+static AlifTypeObject* staticTypes[] = {
+	// The two most important base types: must be initialized first and
+	// deallocated last.
+	&_alifBaseObjectType_,
+	&_alifTypeType_,
+
+	//&_alifAsyncGenType_,
+	//&_alifByteArrayIterType_,
+	&_alifByteArrayType_,
+	//&_alifBytesIterType_,
+	&_alifBytesType_,
+	&_alifCPPFunctionType_,
+	//&_alifCallIterType_,
+	//&_alifCapsuleType_,
+	//&_alifCellType_,
+	//&_alifClassMethodDescrType_,
+	//&_alifClassMethodType_,
+	//&_alifCodeType_,
+	//&_alifComplexType_,
+	//&_alifContextTokenType_,
+	//&_alifContextVarType_,
+	//&_alifContextType_,
+	//&_alifCoroType_,
+	//&_alifDictItemsType_,
+	//&_alifDictIterItemType_,
+	//&_alifDictIterKeyType_,
+	//&_alifDictIterValueType_,
+	//&_alifDictKeysType_,
+	//&_alifDictProxyType_,
+	//&_alifDictRevIterItemType_,
+	//&_alifDictRevIterKeyType_,
+	//&_alifDictRevIterValueType_,
+	//&_alifDictValuesType_,
+	&_alifDictType_,
+	//&_alifEllipsisType_,
+	//&_alifEnumType_,
+	//&_alifFilterType_,
+	//&_alifFloatType_,
+	//&_alifFrameType_,
+	//&_alifFrameLocalsProxyType_,
+	&_alifFrozenSetType_,
+	//&_alifFunctionType_,
+	//&_alifGenType_,
+	//&_alifGetSetDescrType_,
+	//&_alifInstanceMethodType_,
+	//&_alifListIterType_,
+	//&_alifListRevIterType_,
+	&_alifListType_,
+	//&_alifLongRangeIterType_,
+	//&_alifLongType_,
+	//&_alifMapType_,
+	//&_alifMemberDescrType_,
+	//&_alifMemoryViewType_,
+	//&_alifMethodDescrType_,
+	//&_alifMethodType_,
+	//&_alifModuleDefType_,
+	&_alifModuleType_,
+	//&_alifODictIterType_,
+	//&_alifPickleBufferType_,
+	//&_alifPropertyType_,
+	//&_alifRangeIterType_,
+	//&_alifRangeType_,
+	//&_alifReversedType_,
+	//&_alifSTEntryType_,
+	&_alifSeqIterType_,
+	//&_alifSetIterType_,
+	&_alifSetType_,
+	//&_alifSliceType_,
+	//&_alifStaticMethodType_,
+	//&_alifStdPrinterType_,
+	//&_alifSuperType_,
+	//&_alifTraceBackType_,
+	//&_alifTupleIterType_,
+	&_alifTupleType_,
+	//&_alifUnicodeIterType_,
+	//&_alifUnicodeType_,
+	//&_alifWrapperDescrType_,
+	//&_alifZipType_,
+	//&_alifGenericAliasType_,
+	//&_alifAnextAwaitableType_,
+	//&_alifAsyncGenASendType_,
+	//&_alifAsyncGenAThrowType_,
+	//&_alifAsyncGenWrappedValueType_,
+	//&_alifBufferWrapperType_,
+	//&_alifContextTokenMissingType_,
+	//&_alifCoroWrapperType_,
+
+	//&_alifGenericAliasIterType_,
+	//&_alifHamtItemsType_,
+	//&_alifHamtKeysType_,
+	//&_alifHamtValuesType_,
+	//&_alifHamtArrayNodeType_,
+	//&_alifHamtBitmapNodeType_,
+	//&_alifHamtCollisionNodeType_,
+	//&_alifHamtType_,
+	//&_alifInstructionSequenceType_,
+	//&_alifLegacyEventHandlerType_,
+	//&_alifLineIterator_,
+	//&_alifManagedBufferType_,
+	//&_alifMemoryIterType_,
+	//&_alifMethodWrapperType_,
+	//&_alifNamespaceType_,
+	&_alifNoneType_,
+	&_alifNotImplementedType_,
+	//&_alifPositionsIterator_,
+	//&_alifUStrASCIIIterType_,
+	//&_alifUnionType_,
+
+	// class
+	&_alifBoolType_,       
+	&_alifCPPMethodType_,  
+	//&_alifODictItemsType_,
+	//&_alifODictKeysType_,
+	//&_alifODictValuesType_,
+	//&_alifODictType_,
+};
+
+
+AlifIntT alifTypes_initTypes(AlifInterpreter* _interp) { // 2362
+	for (AlifUSizeT i = 0; i < ALIF_ARRAY_LENGTH(staticTypes); i++) {
+		AlifTypeObject* type = staticTypes[i];
+		if (alifStaticType_initBuiltin(_interp, type) < 0) {
+			//return ALIFSTATUS_ERR("Can't initialize builtin type");
+			return -1; // temp
+		}
+		if (type == &_alifTypeType_) {
+			// nothing
+		}
+	}
+
+	//if (alif_initializeGeneric(_interp) < 0) {
+	//	return ALIFSTATUS_ERR("Can't initialize generic types");
+	//}
+
+	return 1;
+}
+
+
 static inline void new_reference(AlifObject* _op) { // 2405
 	_op->threadID = alif_threadID();
 	_op->padding = 0;

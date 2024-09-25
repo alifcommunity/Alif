@@ -54,6 +54,11 @@ static inline AlifUSizeT managedStatic_typeIndexGet(AlifTypeObject* _self) { // 
 	return (AlifUSizeT)_self->subclasses - 1;
 }
 
+static inline void managedStatic_typeIndexSet(AlifTypeObject* _self,
+	AlifUSizeT _index) { // 137
+	_self->subclasses = (AlifObject*)(_index + 1);
+}
+
 static ManagedStaticTypeState* managedStatic_typeStateGet(AlifInterpreter* _interp,
 	AlifTypeObject* _self) { // 176
 	AlifUSizeT index = managedStatic_typeIndexGet(_self);
@@ -68,9 +73,70 @@ static ManagedStaticTypeState* managedStatic_typeStateGet(AlifInterpreter* _inte
 	return &(_interp->types.forExtensions.initialized[index]);
 }
 
-ManagedStaticTypeState* alifStaticType_getState(AlifInterpreter* _interp, AlifTypeObject* _self) { // 193
+
+
+ManagedStaticTypeState* alifStaticType_getState(AlifInterpreter* _interp,
+	AlifTypeObject* _self) { // 193
 	return managedStatic_typeStateGet(_interp, _self);
 }
+
+
+static void managedStatic_typeStateInit(AlifInterpreter* _interp,
+	AlifTypeObject* _self, AlifIntT _isBuiltin, AlifIntT _initial) { // 200
+
+	AlifUSizeT index{};
+	if (_initial) {
+		if (_isBuiltin) {
+			index = _interp->types.builtins.numInitialized;
+		}
+		else {
+			ALIFMUTEX_LOCK(&_interp->types.mutex);
+			index = _interp->types.forExtensions.nextIndex;
+			_interp->types.forExtensions.nextIndex++;
+			ALIFMUTEX_UNLOCK(&_interp->types.mutex);
+		}
+		managedStatic_typeIndexSet(_self, index);
+	}
+	else {
+		index = managedStatic_typeIndexGet(_self);
+	}
+	AlifUSizeT full_index = _isBuiltin
+		? index
+		: index + ALIFMAX_MANAGED_STATIC_BUILTIN_TYPES;
+
+	(void)alifAtomic_addInt64(
+		&_alifDureRun_.types.managedStatic.types[full_index].interpCount, 1);
+
+	if (_initial) {
+		_alifDureRun_.types.managedStatic.types[full_index].type = _self;
+	}
+
+	ManagedStaticTypeState* state = _isBuiltin
+		? &(_interp->types.builtins.initialized[index])
+		: &(_interp->types.forExtensions.initialized[index]);
+
+	state->type = _self;
+	state->isBuiltin = _isBuiltin;
+
+	if (_isBuiltin) {
+		_interp->types.builtins.numInitialized++;
+	}
+	else {
+		_interp->types.forExtensions.numInitialized++;
+	}
+}
+
+
+
+static AlifTypeObject* managedStatic_typeGetDef(AlifTypeObject* _self,
+	AlifIntT _isBuiltin) { // 317
+	AlifUSizeT index = managedStatic_typeIndexGet(_self);
+	AlifUSizeT fullIndex = _isBuiltin
+		? index
+		: index + ALIFMAX_MANAGED_STATIC_BUILTIN_TYPES;
+	return &_alifDureRun_.types.managedStatic.types[fullIndex].def;
+}
+
 
 static inline void start_readying(AlifTypeObject* _type) { // 356
 	if (_type->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
@@ -102,7 +168,6 @@ static inline AlifIntT is_readying(AlifTypeObject* _type) { // 385
 }
 
 static inline AlifObject* lookup_tpDict(AlifTypeObject* _self) { // 401
-	if (_self->flags == 21760) { _self->flags = 21762; } // temppp
 	if (_self->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
 		AlifInterpreter* interp = _alifInterpreter_get();
 		ManagedStaticTypeState* state = alifStaticType_getState(interp, _self);
@@ -307,6 +372,17 @@ clear:
 		((AlifHeapTypeObject*)_type)->specCache.getItem = nullptr;
 	}
 }
+
+
+
+void alifType_setVersion(AlifTypeObject* _tp, AlifUIntT _version) { // 1184
+	BEGIN_TYPE_LOCK();
+	setVersion_unlocked(_tp, _version);
+	END_TYPE_LOCK();
+}
+
+
+
 
 #define MAX_VERSIONS_PER_CLASS 1000 // 1218
 
@@ -1341,9 +1417,9 @@ static AlifIntT type_ready(AlifTypeObject* _type,
 		//if (typeReady_managedDict(_type) < 0) {
 		//	goto error;
 		//}
-		if (typeReady_postChecks(_type) < 0) {
-			goto error;
-		}
+		//if (typeReady_postChecks(_type) < 0) {
+		//	goto error;
+		//}
 	}
 
 	_type->flags |= ALIF_TPFLAGS_READY;
@@ -1379,7 +1455,40 @@ AlifIntT alifType_ready(AlifTypeObject* _type) { // 8462
 }
 
 
+static AlifIntT init_staticType(AlifInterpreter* _interp, AlifTypeObject* _self,
+	AlifIntT _isBuiltin, AlifIntT _initial) { // 8490
 
+	if ((_self->flags & ALIF_TPFLAGS_READY) == 0) {
+		_self->flags |= ALIF_TPFLAGS_STATIC_BUILTIN;
+		_self->flags |= ALIF_TPFLAGS_IMMUTABLETYPE;
+
+		alifType_setVersion(_self, NEXT_GLOBAL_VERSION_TAG++);
+	}
+
+	managedStatic_typeStateInit(_interp, _self, _isBuiltin, _initial);
+
+	AlifTypeObject* def = managedStatic_typeGetDef(_self, _isBuiltin);
+	if (_initial) {
+		memcpy(def, _self, sizeof(AlifTypeObject));
+	}
+
+	AlifIntT res{};
+	BEGIN_TYPE_LOCK();
+	res = type_ready(_self, def, _initial);
+	END_TYPE_LOCK();
+	if (res < 0) {
+		//alifStaticType_clearWeakRefs(_interp, _self);
+		//managedStatic_typeStateClear(_interp, _self, _isBuiltin, _initial);
+	}
+
+	return res;
+}
+
+
+AlifIntT alifStaticType_initBuiltin(AlifInterpreter* _interp,
+	AlifTypeObject* _self) { // 8539
+	return init_staticType(_interp, _self, 1, alif_isMainInterpreter(_interp));
+}
 
 
 

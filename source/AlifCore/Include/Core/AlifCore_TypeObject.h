@@ -80,6 +80,14 @@ public:
 	AlifMutex mutex{};
 };
 
+
+
+extern AlifIntT alifTypes_initTypes(AlifInterpreter*); // 144
+
+
+extern AlifIntT alifStaticType_initBuiltin(AlifInterpreter*, AlifTypeObject*); // 168
+
+
 AlifObject* alifType_getDict(AlifTypeObject*); // 207
 
 static inline AlifIntT alifType_isReady(AlifTypeObject* _type) { // 221
@@ -89,3 +97,7 @@ static inline AlifIntT alifType_isReady(AlifTypeObject* _type) { // 221
 extern AlifObject* alifType_getAttroImpl(AlifTypeObject* , AlifObject* , AlifIntT* ); // 226
 
 extern AlifObject* alifType_getAttro(AlifObject* , AlifObject* ); // 228
+
+
+
+void alifType_setVersion(AlifTypeObject*, AlifUIntT); // 255

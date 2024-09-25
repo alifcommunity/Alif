@@ -221,6 +221,62 @@ static AlifIntT alifCore_initGlobalObjects(AlifInterpreter* _interp) { // 696
 }
 
 
+static AlifIntT alifCore_initTypes(AlifInterpreter* _interp) { // 718
+	AlifIntT status{};
+
+	status = alifTypes_initTypes(_interp);
+	if (status < 0) {
+		return status;
+	}
+
+	//status = alifLong_initTypes(_interp);
+	//if (status < 0) {
+	//	return status;
+	//}
+
+	//status = alifUstr_InitTypes(_interp);
+	//if (status < 0) {
+	//	return status;
+	//}
+
+	//status = alifFloat_initTypes(_interp);
+	//if (status < 0) {
+	//	return status;
+	//}
+
+	//if (alifExc_initTypes(_interp) < 0) {
+	//	return ALIFSTATUS_ERR("failed to initialize an exception type");
+	//}
+
+	//status = alifExc_initGlobalObjects(_interp);
+	//if (status < 0) {
+	//	return status;
+	//}
+
+	//status = alifExc_initState(_interp);
+	//if (status < 0) {
+	//	return status;
+	//}
+
+	//status = alifErr_initTypes(_interp);
+	//if (status < 0) {
+	//	return status;
+	//}
+
+	//status = alifContext_init(_interp);
+	//if (status < 0) {
+	//	return status;
+	//}
+
+	//status = alifXI_initTypes(_interp);
+	//if (status < 0) {
+	//	return status;
+	//}
+
+	return 1;
+}
+
+
 static AlifIntT alifCore_builtinsInit(AlifThread* _thread) { // 775
 
 	AlifObject* modules{};
@@ -261,7 +317,7 @@ static AlifIntT alifCore_interpreterInit(AlifThread* _thread) { // 843
 	//status = alifGC_init(interpreter);
 	if (status < 0) return status;
 
-	//status = alifCore_initTypes(interpreter);
+	status = alifCore_initTypes(interpreter);
 	if (status < 0) goto done;
 
 	//status = alifAtExit_init(interpreter);
