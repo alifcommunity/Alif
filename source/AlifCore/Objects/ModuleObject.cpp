@@ -469,4 +469,6 @@ AlifTypeObject _alifModuleType_ = { // 1290
 		ALIF_TPFLAGS_BASETYPE,
 
 	.traverse = (TraverseProc)module_traverse,
+
+	.dictOffset = offsetof(AlifModuleObject, dict),
 };

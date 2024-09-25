@@ -133,8 +133,7 @@ static AlifIntT alifMain_main(AlifArgv* _args) {
 	}
 
 	// هذه الدالة مسؤلة عن تشغيل البرنامج
-	//return alif_runMain();
-	return 0; // temp
+	return alif_runMain();
 }
 
 AlifIntT alif_mainWchar(AlifIntT _argc, wchar_t** _argv) {
