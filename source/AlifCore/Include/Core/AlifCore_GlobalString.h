@@ -30,6 +30,7 @@ public:
 		STRUCT_FOR_ID(__doc__)
 		STRUCT_FOR_ID(__getAttr__)
 		STRUCT_FOR_ID(__hash__)
+		STRUCT_FOR_ID(__lengthHint__)
 		STRUCT_FOR_ID(__loader__)
 		STRUCT_FOR_ID(__name__)
 		STRUCT_FOR_ID(__package__)

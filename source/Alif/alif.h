@@ -30,7 +30,7 @@
 #include "ObjImpl.h"
 #include "AlifHash.h"
 #include "ByteArrayObject.h"
-//#include "IntegerObject.h"
+#include "LongObject.h"
 #include "BoolObject.h"
 //#include "FloatObject.h"
 #include "UStrObject.h"

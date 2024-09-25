@@ -423,6 +423,21 @@ AlifIntT alifType_isSubType(AlifTypeObject* a, AlifTypeObject* b) { // 2673
 	return isSubType_withMro(a->mro, a, b);
 }
 
+
+AlifObject* alifObject_lookupSpecial(AlifObject* _self, AlifObject* _attr) { // 2694
+	AlifObject* res{};
+
+	res = alifType_lookupRef(ALIF_TYPE(_self), _attr);
+	if (res != nullptr) {
+		DescrGetFunc f{};
+		if ((f = ALIF_TYPE(res)->descrGet) != nullptr) {
+			ALIF_SETREF(res, f(res, _self, (AlifObject*)(ALIF_TYPE(_self))));
+		}
+	}
+	return res;
+}
+
+
 static AlifObject* lookup_maybeMethod(AlifObject* _self, AlifObject* _attr, AlifIntT* _unbound) { // 2738
 	AlifObject* res = alifType_lookupRef(ALIF_TYPE(_self), _attr);
 	if (res == nullptr) {

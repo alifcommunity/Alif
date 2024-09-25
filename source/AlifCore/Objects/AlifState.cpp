@@ -559,6 +559,13 @@ void alifEval_startTheWorld(AlifInterpreter* _interp) { // 2350
 }
 
 
+AlifThread* alifThread_get() { // 2419
+	AlifThread* thread = current_fastGet();
+	ALIF_ENSURETHREADNOTNULL(thread);
+	return thread;
+}
+
+
 void alifThread_bind(AlifThread* _thread) { // 2447
 
 	bind_thread(_thread);

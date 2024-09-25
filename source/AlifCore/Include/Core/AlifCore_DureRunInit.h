@@ -128,6 +128,7 @@
 	INIT_ID(__doc__), \
 	INIT_ID(__getAttr__), \
 	INIT_ID(__hash__), \
+	INIT_ID(__lengthHint__), \
 	INIT_ID(__loader__), \
     INIT_ID(__name__), \
 	INIT_ID(__package__), \

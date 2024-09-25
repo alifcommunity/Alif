@@ -116,7 +116,7 @@ static AlifObject* gc_alloc(AlifTypeObject* _tp,
 
 AlifObject* alifObject_gcNew(AlifTypeObject* tp) { // 1800
 	AlifUSizeT preSize = alifType_preHeaderSize(tp);
-	AlifUSizeT size = alifObject_size(tp);
+	AlifUSizeT size = _alifObject_size(tp);
 	if (alifType_hasFeature(tp, ALIF_TPFLAGS_INLINE_VALUES)) {
 		size += alifInline_valuesSize(tp);
 	}

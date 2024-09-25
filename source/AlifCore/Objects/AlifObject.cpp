@@ -95,7 +95,7 @@ AlifVarObject* alifObject_initVar(AlifVarObject* _op,
 
 
 AlifObject* alifObject_new(AlifTypeObject* _tp) { // 459
-	AlifObject* op = (AlifObject*)alifMem_objAlloc(alifObject_size(_tp));
+	AlifObject* op = (AlifObject*)alifMem_objAlloc(_alifObject_size(_tp));
 	if (op == nullptr) {
 		//return alifErr_noMemory();
 		return nullptr; // temp

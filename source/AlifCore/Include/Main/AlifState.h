@@ -14,7 +14,7 @@ AlifInterpreter* alifInterpreter_get(); // 26
 
 
 
-
+AlifThread* alifThread_get(); // 60
 
 
 
