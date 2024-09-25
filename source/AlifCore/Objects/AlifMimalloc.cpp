@@ -191,7 +191,11 @@ static void free_delayed(uintptr_t _ptr) { // 1107
 
 void alifMem_freeDelayed(void* _ptr) { // 1163
 	free_delayed((AlifUSizeT)_ptr);
+}
 
+
+void alifObject_freeDelayed(void* _ptr) { // 1169
+	free_delayed(((uintptr_t)_ptr) | 0x01);
 }
 
 static class MemWorkChunk* work_queueFirst(class LListNode* _head) {  // 1177

@@ -49,6 +49,9 @@
 			.wrSeq = QSBR_INITIAL,									\
 			.rdSeq = QSBR_INITIAL,									\
 		},															\
+		.types = {													\
+			.nextVersionTag = _ALIF_TYPE_BASE_VERSION_TAG,			\
+		},															\
     }
         //IMPORTS_INIT,
 
@@ -131,6 +134,7 @@
 	INIT_ID(__lengthHint__), \
 	INIT_ID(__loader__), \
     INIT_ID(__name__), \
+    INIT_ID(__new__), \
 	INIT_ID(__package__), \
 	INIT_ID(__spec__), \
 	INIT_ID(hasLocation), \

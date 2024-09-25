@@ -252,13 +252,13 @@ AlifObject* alifObject_getIter(AlifObject* _o) { // 2809
 	}
 }
 
-static AlifIntT iterNext(AlifObject* _iter, AlifObject** _item) { // 2871
+static AlifIntT iter_next(AlifObject* _iter, AlifObject** _item) { // 2871
 	IterNextFunc iterNext = ALIF_TYPE(_iter)->iterNext;
 	if ((*_item = iterNext(_iter))) {
 		return 1;
 	}
 
-	AlifThread* threadState = alifThread_get();
+	AlifThread* threadState = _alifThread_get();
 	//if (!alifErr_occurred(threadState)) {
 		//return 0;
 	//}
@@ -267,12 +267,13 @@ static AlifIntT iterNext(AlifObject* _iter, AlifObject** _item) { // 2871
 		//return 0;
 	//}
 
+	return 0; // temp
 	return -1;
 }
 
 
 AlifObject* alifIter_next(AlifObject* _iter) { // 2921
 	AlifObject* item{};
-	(void)iterNext(_iter, &item);
+	iter_next(_iter, &item);
 	return item;
 }

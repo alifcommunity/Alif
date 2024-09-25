@@ -1,11 +1,13 @@
 #include "alif.h"
 
+#include "AlifCore_Eval.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_State.h"
 
 
 
-
+static AlifObject* cfunction_vectorCallFastCallKeywords(AlifObject*,
+	AlifObject* const*, AlifUSizeT, AlifObject*); // 20
 
 
 
@@ -31,7 +33,7 @@ AlifObject* alifCPPMethod_new(AlifMethodDef* _ml,
 		//vectorCall = cfunction_vectorCallFastCall;
 		break;
 	case METHOD_FASTCALL | METHOD_KEYWORDS:
-		//vectorCall = cfunction_vectorCallFastCallKeywords;
+		vectorCall = cfunction_vectorCallFastCallKeywords;
 		break;
 	case METHOD_NOARGS:
 		//vectorCall = cfunction_vectorCallNoArgs;
@@ -102,6 +104,9 @@ AlifTypeObject _alifCPPFunctionType_ = { // 332
 	.name = "دالة_او_صفة_مضمنة",
 	.basicSize = sizeof(AlifCPPFunctionObject),
 	.itemSize = 0,
+
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
+	ALIF_TPFLAGS_HAVE_VECTORCALL,
 };
 
 
@@ -112,3 +117,32 @@ AlifTypeObject _alifCPPMethodType_ = { // 368
 	.basicSize = sizeof(AlifCPPMethodObject),
 	.base = &_alifCPPFunctionType_,
 };
+
+
+
+
+typedef void (*FuncPtr)(void);
+
+static inline FuncPtr cfunction_enterCall(AlifThread* _thread, AlifObject* _func) { // 401
+	if (alif_enterRecursiveCallTstate(_thread, " while calling a Alif object")) {
+		return nullptr;
+	}
+	return (FuncPtr)ALIFCPPFUNCTION_GET_FUNCTION(_func);
+}
+
+
+
+
+static AlifObject* cfunction_vectorCallFastCallKeywords(AlifObject* _func,
+	AlifObject* const* _args, AlifUSizeT _nargsf, AlifObject* _kwnames) { // 430
+	AlifThread* tstate = _alifThread_get();
+	AlifSizeT nargs = ALIFVECTORCALL_NARGS(_nargsf);
+	AlifCPPFunctionFastWithKeywords meth = (AlifCPPFunctionFastWithKeywords)
+		cfunction_enterCall(tstate, _func);
+	if (meth == nullptr) {
+		return nullptr;
+	}
+	AlifObject* result = meth(ALIFCPPFUNCTION_GET_SELF(_func), _args, nargs, _kwnames);
+	alif_leaveRecursiveCallTstate(tstate);
+	return result;
+}

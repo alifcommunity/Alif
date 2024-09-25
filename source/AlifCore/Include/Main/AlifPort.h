@@ -27,14 +27,16 @@
 	ولأنها اكثر أمان
 */
 #define ALIF_STATIC_CAST(_type, _expr) static_cast<_type>(_expr)
-#define ALIF_CAST(_type, _expr) ((_type)_expr)
+#define ALIF_CAST(_type, _expr) ((_type)(_expr))
 
 
 
 
 
 
-
+#ifndef ALIFLONG_BITS_IN_DIGIT
+#define ALIFLONG_BITS_IN_DIGIT 30
+#endif
 
 
 

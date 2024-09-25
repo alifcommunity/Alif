@@ -33,6 +33,7 @@ public:
 		STRUCT_FOR_ID(__lengthHint__)
 		STRUCT_FOR_ID(__loader__)
 		STRUCT_FOR_ID(__name__)
+		STRUCT_FOR_ID(__new__)
 		STRUCT_FOR_ID(__package__)
 		STRUCT_FOR_ID(__spec__)
      	STRUCT_FOR_ID(hasLocation)

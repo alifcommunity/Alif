@@ -65,4 +65,13 @@ public:
 
 /* ----------------------------------------- AlifCore_Memory ------------------------------------------------- */
 
+
+
+
+extern void alifObject_freeDelayed(void*); // 123
+
+
+
 extern void alifMem_processDelayed(AlifThread*); // 126
+
+

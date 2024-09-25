@@ -298,7 +298,8 @@ static AlifIntT isModule_possiblyShadowing(AlifObject* _origin) { // 859
 	return result;
 }
 
-AlifObject* alifModule_getAttroImpl(AlifModuleObject* _m, AlifObject* _name, AlifIntT _suppress) { // 921
+AlifObject* alifModule_getAttroImpl(AlifModuleObject* _m,
+	AlifObject* _name, AlifIntT _suppress) { // 921
 	AlifObject* attr{}, * modName{}, * getAttr{};
 	AlifIntT isPossiblyShadowing{};
 	AlifIntT isPossiblyShadowingStdLib = 0;
@@ -441,6 +442,19 @@ AlifObject* alifModule_getAttro(AlifModuleObject* _m, AlifObject* _name) { // 10
 }
 
 
+static AlifIntT module_traverse(AlifModuleObject* m,
+	VisitProc visit, void* arg) { // 1070
+	if (m->def and m->def->traverse
+		and (m->def->size <= 0 or m->state != nullptr))
+	{
+		AlifIntT res = m->def->traverse((AlifObject*)m, visit, arg);
+		if (res)
+			return res;
+	}
+	ALIF_VISIT(m->dict);
+	return 0;
+}
+
 
 
 AlifTypeObject _alifModuleType_ = { // 1290
@@ -450,4 +464,9 @@ AlifTypeObject _alifModuleType_ = { // 1290
 	.itemSize = 0,                                          
 	//(Destructor)module_dealloc,
 	.setAttro = alifObject_genericSetAttr,
+
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
+		ALIF_TPFLAGS_BASETYPE,
+
+	.traverse = (TraverseProc)module_traverse,
 };

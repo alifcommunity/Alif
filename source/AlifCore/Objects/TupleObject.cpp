@@ -106,6 +106,12 @@ AlifTypeObject _alifTupleType_ = { // 865
 	.name = "مترابطة",
 	.basicSize = sizeof(AlifTupleObject) - sizeof(AlifObject*),
 	.itemSize = sizeof(AlifObject*),
+
+	.getAttro = alifObject_genericGetAttr,
+
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
+		ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_TUPLE_SUBCLASS |
+		_ALIF_TPFLAGS_MATCH_SELF | ALIF_TPFLAGS_SEQUENCE,
 };
 
 

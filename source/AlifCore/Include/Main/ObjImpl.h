@@ -35,7 +35,14 @@ void alifObject_gcDel(void*); // 178
 
 
 
-
+#define ALIF_VISIT(_op)                                                    \
+    do {                                                                \
+        if (_op) {                                                       \
+            AlifIntT vret = visit(ALIFOBJECT_CAST(_op), arg);                  \
+            if (vret)                                                   \
+                return vret;                                            \
+        }                                                               \
+    } while (0)
 
 
 

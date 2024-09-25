@@ -6,6 +6,8 @@ extern AlifTypeObject _alifCPPFunctionType_; // 14
 
 typedef AlifObject* (*AlifCPPFunction)(AlifObject*, AlifObject*); // 19
 
+typedef AlifObject* (*AlifCPPFunctionFastWithKeywords)(AlifObject*, AlifObject* const*, AlifSizeT, AlifObject*); // 23
+
 // 52
 #define ALIF_CPPFUNCTION_CAST(_func) \
     ALIF_CAST(AlifCPPFunction, ALIF_CAST(void(*)(void), (_func)))
@@ -59,6 +61,8 @@ public:
 	VectorCallFunc vectorCall{};
 };
 
+ // 16
+#define ALIFCPPFUNCTIONOBJECT_CAST(_func) ALIF_CAST(AlifCPPFunctionObject*, (_func))
 
 
 class AlifCPPMethodObject { // 23
@@ -72,3 +76,21 @@ extern AlifTypeObject _alifCPPMethodType_; // 32
 
 #define ALIFCPPMETHOD_CHECKEXACT(_op) ALIF_IS_TYPE((_op), &_alifCPPMethodType_) // 34
 #define ALIFCPPMETHOD_CHECK(_op) ALIFOBJECT_TYPECHECK((_op), &_alifCPPMethodType_)
+
+
+
+static inline AlifCPPFunction alifCPPFunction_getFunction(AlifObject* _func) { // 40
+	return ALIFCPPFUNCTIONOBJECT_CAST(_func)->ml_->method;
+}
+#define ALIFCPPFUNCTION_GET_FUNCTION(_func) alifCPPFunction_getFunction(ALIFOBJECT_CAST(_func))
+
+
+
+static inline AlifObject* alifCPPFunction_getSelf(AlifObject* _funcObj) { // 45
+	AlifCPPFunctionObject* func = ALIFCPPFUNCTIONOBJECT_CAST(_funcObj);
+	if (func->ml_->flags & METHOD_STATIC) {
+		return nullptr;
+	}
+	return func->self;
+}
+#define ALIFCPPFUNCTION_GET_SELF(_func) alifCPPFunction_getSelf(ALIFOBJECT_CAST(_func))

@@ -102,6 +102,7 @@ static inline AlifIntT is_readying(AlifTypeObject* _type) { // 385
 }
 
 static inline AlifObject* lookup_tpDict(AlifTypeObject* _self) { // 401
+	if (_self->flags == 21760) { _self->flags = 21762; } // temppp
 	if (_self->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
 		AlifInterpreter* interp = _alifInterpreter_get();
 		ManagedStaticTypeState* state = alifStaticType_getState(interp, _self);
@@ -1079,6 +1080,8 @@ AlifTypeObject _alifBaseObjectType_ = { // 7453
 };
 
 
+static AlifIntT add_tpNewWrapper(AlifTypeObject*); // 7898
+
 static AlifIntT typeReady_preChecks(AlifTypeObject* _type) { // 7902
 	if (_type->name == nullptr) {
 		//alifErr_format(_alifExcSystemError_,
@@ -1156,6 +1159,30 @@ static AlifIntT typeReady_setDict(AlifTypeObject* _type) { // 8009
 	return 0;
 }
 
+
+
+static AlifIntT typeReady_fillDict(AlifTypeObject* type,
+	AlifTypeObject* def) { // 8061
+	//if (add_operators(type, def) < 0) {
+	//	return -1;
+	//}
+	//if (type_addMethods(type) < 0) {
+	//	return -1;
+	//}
+	//if (type_addMembers(type) < 0) {
+	//	return -1;
+	//}
+	//if (type_addGetSet(type) < 0) {
+	//	return -1;
+	//}
+	//if (type_dictSetDoc(type) < 0) {
+	//	return -1;
+	//}
+	return 0;
+}
+
+
+
 static AlifIntT typeReady_mro(AlifTypeObject* _type, AlifIntT _initial) { // 8112
 
 	if (_type->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
@@ -1172,7 +1199,7 @@ static AlifIntT typeReady_mro(AlifTypeObject* _type, AlifIntT _initial) { // 811
 	if (!(_type->flags & ALIF_TPFLAGS_HEAPTYPE)) {
 		AlifSizeT n = ALIFTUPLE_GET_SIZE(mro);
 		for (AlifSizeT i = 0; i < n; i++) {
-			AlifTypeObject* base = ALIFTYPE_CAST(ALIFTUPLE_GET_SIZE(mro, i));
+			AlifTypeObject* base = ALIFTYPE_CAST(ALIFTUPLE_GET_ITEM(mro, i));
 			if (base->flags & ALIF_TPFLAGS_HEAPTYPE) {
 				//alifErr_format(_alifExcTypeError_,
 					//"type '%.100s' is not dynamically allocated but "
@@ -1206,6 +1233,34 @@ static AlifIntT typeReady_setHash(AlifTypeObject* type) { // 8237
 		return -1;
 	}
 	type->hash = alifObject_hashNotImplemented;
+	return 0;
+}
+
+
+static AlifIntT typeReady_setNew(AlifTypeObject* _type, AlifIntT _initial) { // 8279
+	AlifTypeObject* base = _type->base;
+	if (_type->new_ == nullptr
+		and base == &_alifBaseObjectType_
+		and !(_type->flags & ALIF_TPFLAGS_HEAPTYPE))
+	{
+		_type->flags |= ALIF_TPFLAGS_DISALLOW_INSTANTIATION;
+	}
+
+	if (!(_type->flags & ALIF_TPFLAGS_DISALLOW_INSTANTIATION)) {
+		if (_type->new_ != nullptr) {
+			if (_initial or base == nullptr or _type->new_ != base->new_) {
+				if (add_tpNewWrapper(_type) < 0) {
+					return -1;
+				}
+			}
+		}
+		else {
+			_type->new_ = base->new_;
+		}
+	}
+	else {
+		_type->new_ = nullptr;
+	}
 	return 0;
 }
 
@@ -1321,4 +1376,40 @@ AlifIntT alifType_ready(AlifTypeObject* _type) { // 8462
 	}
 	END_TYPE_LOCK();
 	return res;
+}
+
+
+
+
+
+
+
+
+static AlifMethodDef _tpNewMethodDef_[] = {
+	//{"__new__", ALIFCPPFUNCTION_CAST(tpNew_wrapper), METHOD_VARARGS | METHOD_KEYWORDS,
+	// ALIFDOC_STR("__new__($type, *args, **kwargs)\n--\n\n"
+	//		   "Create and return a new object.  "
+	//		   "See help(type) for accurate signature.")},
+	{0}
+};
+
+
+
+static AlifIntT add_tpNewWrapper(AlifTypeObject* _type) { // 9302
+	AlifObject* dict = lookup_tpDict(_type);
+	AlifIntT r_ = alifDict_contains(dict, &ALIF_ID(__new__));
+	if (r_ > 0) {
+		return 0;
+	}
+	if (r_ < 0) {
+		return -1;
+	}
+
+	AlifObject* func = ALIFCPPFUNCTION_NEWEX(_tpNewMethodDef_, (AlifObject*)_type, nullptr);
+	if (func == nullptr) {
+		return -1;
+	}
+	r_ = alifDict_setItem(dict, &ALIF_ID(__new__), func);
+	ALIF_DECREF(func);
+	return r_;
 }

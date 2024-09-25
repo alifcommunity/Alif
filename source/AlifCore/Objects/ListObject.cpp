@@ -175,7 +175,26 @@ AlifIntT alifList_append(AlifObject* _op, AlifObject* _newItem) { // 481
 	return -1;
 }
 
-
+static void list_dealloc(AlifObject* _self) { // 497
+	AlifListObject* op = (AlifListObject*)_self;
+	AlifSizeT i_{};
+	ALIFOBJECT_GC_UNTRACK(op);
+	//ALIF_TRASHCAN_BEGIN(op, list_dealloc)
+		if (op->item != nullptr) {
+			i_ = ALIF_SIZE(op);
+			while (--i_ >= 0) {
+				ALIF_XDECREF(op->item[i_]);
+			}
+			free_listItems(op->item, false);
+		}
+	if (ALIFLIST_CHECKEXACT(op)) {
+		ALIF_FREELIST_FREE(lists, LISTS, op, alifObject_gcDel);
+	}
+	else {
+		alifObject_gcDel(op);
+	}
+	//ALIF_TRASHCAN_END
+}
 
 
 
@@ -211,4 +230,9 @@ AlifTypeObject _alifListType_ = { // 3737
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "مصفوفة",
 	.basicSize = sizeof(AlifListObject),
+	.itemSize = 0,
+	.dealloc = list_dealloc,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
+		ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_LIST_SUBCLASS |
+		_ALIF_TPFLAGS_MATCH_SELF | ALIF_TPFLAGS_SEQUENCE,
 };

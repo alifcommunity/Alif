@@ -3,7 +3,23 @@
 #include "AlifCore_DureRun.h"
 
 
-#define NON_SIZE_BITS 3 // 167
+
+ // 164
+#define SIGN_MASK 3
+#define SIGN_ZERO 1
+#define SIGN_NEGATIVE 2
+#define NON_SIZE_BITS 3
+
+
+
+static inline AlifSizeT alifLong_digitCount(const AlifLongObject* _op) { // 223
+	return _op->longValue.tag >> NON_SIZE_BITS;
+}
+
+static inline AlifIntT alifLong_nonCompactSign(const AlifLongObject* _op) { // 247
+	return 1 - (_op->longValue.tag & SIGN_MASK);
+}
+
 
 #define TAG_FROM_SIGN_AND_SIZE(_sign, _size) ((1 - (_sign)) | ((_size) << NON_SIZE_BITS)) // 262
 
