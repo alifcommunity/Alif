@@ -75,7 +75,7 @@ done:
 //
 //	return run;
 //}
-//
+
 //static AlifIntT alifMain_runFile(AlifConfig* _config) {
 //	AlifObject* fileName = alifUStr_objFromWChar(_config->runFilename);
 //	if (fileName == nullptr) {
@@ -94,30 +94,7 @@ done:
 //	ALIF_DECREF(programName);
 //	return res_;
 //}
-//
-//AlifIntT alif_runMain() 
-//{
-//	AlifIntT exitCode = 0;
-//
-//	AlifInterpreter* interpreter = _alifInterpreter_get();
-//
-//	AlifConfig config_ = interpreter->config;
-//
-//	if (config_.runCommand) {
-//		//exitcode = alifMain_runCommand(config_->runCommand);
-//	}
-//	else if (config_.runModule) {
-//		//exitcode = alifMain_runModule(config_->runModule, 1);
-//	}
-//	else if (config_.runFilename != nullptr) {
-//		exitCode = alifMain_runFile(&config_);
-//	}
-//	else {
-//		//exitcode = alifMain_runStdin(config_);
-//	}
-//
-//	return exitCode;
-//}
+
 
 
 static void alifMain_runAlif(AlifIntT* _exitcode) { // 614
