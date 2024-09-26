@@ -128,7 +128,7 @@ static inline uint64_t alifAtomic_exchangeUint64(uint64_t* _obj, uint64_t _value
 	return __atomic_exchange_n(_obj, _value, __ATOMIC_SEQ_CST);
 }
 
-static inline uintptr_t AlifAtomic_exchangeUintptr(uintptr_t* _obj, uintptr_t _value) { // 185
+static inline uintptr_t alifAtomic_exchangeUintptr(uintptr_t* _obj, uintptr_t _value) { // 185
 	return __atomic_exchange_n(_obj, _value, __ATOMIC_SEQ_CST);
 }
 
@@ -204,7 +204,7 @@ static inline void* alifAtomic_loadPtr(const void* _obj) { // 298
 
 
 
-static inline AlifIntT AlifAtomic_loadIntRelaxed(const AlifIntT* _obj) { // 305
+static inline AlifIntT alifAtomic_loadIntRelaxed(const AlifIntT* _obj) { // 305
 	return __atomic_load_n(_obj, __ATOMIC_RELAXED);
 }
 

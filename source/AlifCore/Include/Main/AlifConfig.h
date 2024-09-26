@@ -140,6 +140,8 @@
 #define HAVE_PTHREAD_H 1
 #define SIZEOF_LONG 8
 
+#define HAVE_UNISTD_H 1
+
 #endif
 
 

@@ -5,6 +5,12 @@
 #include "OSDefs.h"
 
 
+#include <stdlib.h>               // mbstowcs()
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>             // getcwd()
+#endif
+
+
 #define MAX_UNICODE 0x10ffff // 53
 
 // mbstowcs() and mbrtowc() errors

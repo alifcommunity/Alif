@@ -29,8 +29,8 @@ static inline uint16_t alifAtomic_addUint16(uint16_t* _obj, uint16_t _value) { /
 	return (uint16_t)alifAtomic_addInt16((int16_t*)_obj, (int16_t)_value);
 }
 
-static inline int alifAtomic_addInt(int* _obj, int _value) { // 81
-	return (int)alifAtomic_addInt32((int32_t*)_obj, (int32_t)_value);
+static inline AlifIntT alifAtomic_addInt(AlifIntT* _obj, AlifIntT _value) { // 81
+	return (AlifIntT)alifAtomic_addInt32((int32_t*)_obj, (int32_t)_value);
 }
 
 static inline uint64_t alifAtomic_addUint64(uint64_t* _obj, uint64_t _value) { // 96
@@ -300,7 +300,7 @@ static inline AlifSizeT alifAtomic_loadSize(const AlifSizeT* _obj) { // 621
 
 
 
-static inline int alifAtomic_loadIntRelaxed(const AlifIntT* _obj) {  // 633
+static inline AlifIntT alifAtomic_loadIntRelaxed(const AlifIntT* _obj) {  // 633
 	return *(volatile AlifIntT*)_obj;
 }
 
