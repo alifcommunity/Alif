@@ -19,10 +19,26 @@
 
 
 
+AlifIntT alifThread_condInit(AlifCondT* _cond) { // 147
+	return pthread_condInit(_cond, condattr_monotonic);
+}
 
 
-
-
+void alifThread_condAfter(long long us, struct timespec* abs) { // 154
+	AlifTimeT timeout = alifTime_fromMicrosecondsClamp(us);
+	AlifTimeT t;
+#ifdef CONDATTR_MONOTONIC
+	if (condattr_monotonic) {
+		(void)alifTime_monotonicRaw(&t);
+	}
+	else
+#endif
+	{
+		(void)alifTime_timeRaw(&t);
+	}
+	t = alifTime_add(t, timeout);
+	alifTime_asTimeSpecClamp(t, abs);
+}
 
 
 

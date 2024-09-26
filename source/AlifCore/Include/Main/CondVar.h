@@ -1,7 +1,46 @@
 #pragma once
 
 
+#include "alif.h"
+#include "AlifCore_Thread.h"
 
+
+#ifdef _POSIX_THREADS
+/*
+ * POSIX support
+ */
+
+AlifIntT alifThread_condInit(AlifCondT*);
+void alifThread_condAfter(long long, timespec*);
+
+/* The following functions return 0 on success, nonzero on error */
+#define ALIFMUTEX_INIT(mut)       pthreadMutex_init((mut), nullptr)
+#define ALIFMUTEX_FINI(mut)       pthreadMutex_destroy(mut)
+#define ALIFMUTEX_LOCK(mut)       pthreadMutex_lock(mut)
+#define ALIFMUTEX_UNLOCK(mut)     pthreadMutex_unlock(mut)
+
+#define ALIFCOND_INIT(cond)       _PyThread_cond_init(cond)
+#define ALIFCOND_FINI(cond)       pthread_cond_destroy(cond)
+#define ALIFCOND_SIGNAL(cond)     pthread_cond_signal(cond)
+#define ALIFCOND_BROADCAST(cond)  pthread_cond_broadcast(cond)
+#define ALIFCOND_WAIT(cond, mut)  pthread_cond_wait((cond), (mut))
+
+/* return 0 for success, 1 on timeout, -1 on error */
+ALIF_LOCAL_INLINE(AlifIntT)
+alifCond_TimedWait(AlifCondT* cond, AlifMutexT* mut, long long us) { // 69
+	timespec abs_timeout;
+	alifThread_condAfter(us, &abs_timeout);
+	AlifIntT ret = pthread_condTimedWait(cond, mut, &abs_timeout);
+	if (ret == ETIMEDOUT) {
+		return 1;
+	}
+	if (ret) {
+		return -1;
+	}
+	return 0;
+}
+
+#elif defined(NT_THREADS)
 
 
 
@@ -69,3 +108,9 @@ ALIF_LOCAL_INLINE(AlifIntT) alifCond_SIGNAL(AlifCondT* _cv) { // 296
 	WakeConditionVariable(_cv);
 	return 0;
 }
+
+
+
+
+
+#endif

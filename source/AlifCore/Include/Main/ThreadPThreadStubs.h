@@ -6,10 +6,17 @@
 
 
 
+AlifIntT pthread_condInit(pthread_cond_t* restrict cond,
+	const pthread_condattr_t* restrict attr) { // 36
+	return 0;
+}
 
 
-
-
+AlifIntT pthread_condTimedWait(pthread_cond_t* restrict cond,
+	pthread_mutex_t* restrict mutex,
+	const struct timespec* restrict abstime) { // 55
+	return 0;
+}
 
 
 
