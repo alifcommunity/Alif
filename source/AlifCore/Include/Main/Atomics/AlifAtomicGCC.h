@@ -162,7 +162,7 @@ static inline uint32_t alifAtomic_orUint32(uint32_t* _obj, uint32_t _value) { //
 }
 
 static inline uint64_t alifAtomic_orUint64(uint64_t* _obj, uint64_t _value) { // 235
-	return __atomic_fetch_or(obj, value, __ATOMIC_SEQ_CST);
+	return __atomic_fetch_or(_obj, _value, __ATOMIC_SEQ_CST);
 }
 
 static inline uintptr_t alifAtomic_orUintptr(uintptr_t* _obj, uintptr_t _value) { // 239
