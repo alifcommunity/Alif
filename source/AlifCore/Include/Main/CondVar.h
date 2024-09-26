@@ -5,7 +5,7 @@
 #include "AlifCore_Thread.h"
 
 
-#ifdef _POSIX_THREADS
+//#ifdef _POSIX_THREADS
 /*
  * POSIX support
  */
@@ -30,7 +30,7 @@ ALIF_LOCAL_INLINE(AlifIntT)
 alifCond_TimedWait(AlifCondT* cond, AlifMutexT* mut, long long us) { // 69
 	timespec abs_timeout;
 	alifThread_condAfter(us, &abs_timeout);
-	AlifIntT ret = pthread_condTimedWait(cond, mut, &abs_timeout);
+	AlifIntT ret = pthread_cond_timedwait(cond, mut, &abs_timeout);
 	if (ret == ETIMEDOUT) {
 		return 1;
 	}
