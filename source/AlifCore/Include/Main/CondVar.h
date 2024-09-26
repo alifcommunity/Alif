@@ -5,7 +5,7 @@
 #include "AlifCore_Thread.h"
 
 
-//#ifdef _POSIX_THREADS
+#ifdef _POSIX_THREADS
 /*
  * POSIX support
  */
