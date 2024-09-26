@@ -28,7 +28,7 @@ public:
 	//AlifIntT configStdio{}; // نظام ألف يستخدم ترميز utf-8 بشكل إفتراضي
 	AlifIntT bufferedStdio{};
 
-	AlifIntT quite{};
+	AlifIntT quiet{};
 
 	AlifIntT safePath{};
 

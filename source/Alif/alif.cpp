@@ -6,6 +6,10 @@
 //#include "AlifCore_Run.h"
 
 
+ // 26
+#define COPYRIGHT \
+    "Type \"help\", \"copyright\", \"credits\" or \"license\" " \
+    "for more information."
 
 /* ----------------------------------- تهيئة اللغة ----------------------------------- */
 static AlifIntT alifMain_init(AlifArgv* _args) {
@@ -76,29 +80,47 @@ done:
 //	return run;
 //}
 
-//static AlifIntT alifMain_runFile(AlifConfig* _config) {
-//	AlifObject* fileName = alifUStr_objFromWChar(_config->runFilename);
-//	if (fileName == nullptr) {
-//		// error
-//		return -1;
-//	}
-//	AlifObject* programName = alifUStr_objFromWChar(_config->programName);
-//	if (programName == nullptr) {
-//		// error
-//		return -1;
-//	}
-//
-//	AlifIntT res_ = alifMain_runFileObj(programName, fileName, _config->skipFirstLine);
-//
-//	ALIF_DECREF(fileName);
-//	ALIF_DECREF(programName);
-//	return res_;
-//}
+static AlifIntT alifMain_runFile(const AlifConfig* _config) { // 414
+	//AlifObject* fileName = alifUStr_fromWideChar(_config->runFilename, -1);
+	//if (fileName == nullptr) {
+	//	//alifErr_print();
+	//	return -1;
+	//}
+	//AlifObject* programName = alifUStr_fromWideChar(_config->programName, -1);
+	//if (programName == nullptr) {
+	//	ALIF_DECREF(fileName);
+	//	//alifErr_print();
+	//	return -1;
+	//}
 
+	//AlifIntT res_ = alifMain_runFileObj(programName, fileName, _config->skipFirstLine);
+
+	//ALIF_DECREF(fileName);
+	//ALIF_DECREF(programName);
+	//return res_;
+	return 9; // temp
+}
+
+
+
+static void alifMain_header(const AlifConfig* _config) { // 183
+	if (_config->quiet) {
+		return;
+	}
+
+	//if (!_config->verbose and (config_runCode(_config) or !stdin_isInteractive(_config))) {
+	//	return;
+	//}
+
+	//fprintf(stderr, "Alif %s on %s\n", alif_getVersion(), alif_getPlatform());
+	//if (_config->siteImport) {
+	//	fprintf(stderr, "%s\n", COPYRIGHT);
+	//}
+}
 
 
 static void alifMain_runAlif(AlifIntT* _exitcode) { // 614
-	AlifObject* main_importer_path = nullptr;
+	AlifObject* mainImporterPath = nullptr;
 	AlifInterpreter* interp = _alifInterpreter_get();
 	AlifConfig* config = (AlifConfig*)alifInterpreter_getConfig(interp);
 
@@ -106,76 +128,76 @@ static void alifMain_runAlif(AlifIntT* _exitcode) { // 614
 	//	goto error;
 	//}
 
-	if (config->runFilename != NULL) {
-		if (alifMain_getImporter(config->runFilename, &main_importer_path,
-			_exitcode)) {
-			return;
-		}
-	}
+	//if (config->runFilename != nullptr) {
+	//	if (alifMain_getImporter(config->runFilename, &main_importer_path,
+	//		_exitcode)) {
+	//		return;
+	//	}
+	//}
 
-	alifMain_importReadline(config);
+	//alifMain_importReadline(config);
 
-	AlifObject* path0 = nullptr;
-	if (main_importer_path != nullptr) {
-		path0 = ALIF_NEWREF(main_importer_path);
-	}
-	else if (!config->safePath) {
-		AlifIntT res = alifPathConfig_computeSysPath0(&config->argv, &path0);
-		if (res < 0) {
-			goto error;
-		}
-		else if (res == 0) {
-			ALIF_CLEAR(path0);
-		}
-	}
-	if (path0 != nullptr) {
-		wchar_t* wstr = alifUStr_asWideCharString(path0, nullptr);
-		if (wstr == nullptr) {
-			ALIF_DECREF(path0);
-			goto error;
-		}
-		config->sysPath0 = alifMem_rawWcsdup(wstr);
-		alifMem_dataFree(wstr);
-		if (config->sysPath0 == nullptr) {
-			ALIF_DECREF(path0);
-			goto error;
-		}
-		AlifIntT res = alifMain_sysPathAddPath0(interp, path0);
-		ALIF_DECREF(path0);
-		if (res < 0) {
-			goto error;
-		}
-	}
+	//AlifObject* path0 = nullptr;
+	//if (mainImporterPath != nullptr) {
+	//	path0 = ALIF_NEWREF(mainImporterPath);
+	//}
+	//else if (!config->safePath) {
+	//	AlifIntT res = alifPathConfig_computeSysPath0(&config->argv, &path0);
+	//	if (res < 0) {
+	//		goto error;
+	//	}
+	//	else if (res == 0) {
+	//		ALIF_CLEAR(path0);
+	//	}
+	//}
+	//if (path0 != nullptr) {
+	//	wchar_t* wstr = alifUStr_asWideCharString(path0, nullptr);
+	//	if (wstr == nullptr) {
+	//		ALIF_DECREF(path0);
+	//		goto error;
+	//	}
+	//	config->sysPath0 = alifMem_rawWcsdup(wstr);
+	//	alifMem_dataFree(wstr);
+	//	if (config->sysPath0 == nullptr) {
+	//		ALIF_DECREF(path0);
+	//		goto error;
+	//	}
+	//	AlifIntT res = alifMain_sysPathAddPath0(interp, path0);
+	//	ALIF_DECREF(path0);
+	//	if (res < 0) {
+	//		goto error;
+	//	}
+	//}
 
 	alifMain_header(config);
 
 	alifInterpreter_setRunningMain(interp);
 
 	if (config->runCommand) {
-		*_exitcode = alifMain_runCommand(config->runCommand);
+		//*_exitcode = alifMain_runCommand(config->runCommand);
 	}
 	else if (config->runModule) {
-		*_exitcode = alifMain_runModule(config->runModule, 1);
+		//*_exitcode = alifMain_runModule(config->runModule, 1);
 	}
-	else if (main_importer_path != nullptr) {
-		*_exitcode = alifMain_runModule(L"__main__", 0);
+	else if (mainImporterPath != nullptr) {
+		//*_exitcode = alifMain_runModule(L"__main__", 0);
 	}
 	else if (config->runFilename != nullptr) {
 		*_exitcode = alifMain_runFile(config);
 	}
 	else {
-		*_exitcode = alifMain_runStdin(config);
+		//*_exitcode = alifMain_runStdin(config);
 	}
 
-	alifMain_repl(config, _exitcode);
+	//alifMain_repl(config, _exitcode);
 	goto done;
 
 error:
-	*_exitcode = alifMain_exitErrprint();
+	//*_exitcode = alifMain_exitErrPrint();
 
 done:
 	alifInterpreter_setNotRunningMain(interp);
-	ALIF_XDECREF(main_importer_path);
+	ALIF_XDECREF(mainImporterPath);
 }
 
 

@@ -243,8 +243,44 @@ error:
 }
 
 
+static inline void set_mainThread(AlifInterpreter* _interp,
+	AlifThread* _thread) { // 1044
+	alifAtomic_storePtrRelaxed(&_interp->threads.main, _thread);
+}
+
+static inline AlifThread* get_mainThread(AlifInterpreter* _interp) { // 1050
+	return (AlifThread*)alifAtomic_loadPtrRelaxed(&_interp->threads.main);
+}
+
+AlifIntT alifInterpreter_setRunningMain(AlifInterpreter* _interp) { // 1056
+	if (alifInterpreter_failIfRunningMain(_interp) < 0) {
+		return -1;
+	}
+	AlifThread* tstate = current_fastGet();
+	ALIF_ENSURETHREADNOTNULL(tstate);
+	if (tstate->interpreter != _interp) {
+		//alifErr_setString(_alifExcDureRunError_,
+		//	"current tstate has wrong interpreter");
+		return -1;
+	}
+	set_mainThread(_interp, tstate);
+
+	return 0;
+}
+
+void alifInterpreter_setNotRunningMain(AlifInterpreter* _interp) { // 1074
+	set_mainThread(_interp, nullptr);
+}
 
 
+AlifIntT alifInterpreter_failIfRunningMain(AlifInterpreter* _interp) { // 1105
+	if (get_mainThread(_interp) != nullptr) {
+		//alifErr_setString(_alifExcInterpreterError_,
+		//	"interpreter already running");
+		return -1;
+	}
+	return 0;
+}
 
 
 

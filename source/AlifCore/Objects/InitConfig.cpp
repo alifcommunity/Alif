@@ -220,7 +220,7 @@ void alifConfig_initAlifConfig(AlifConfig* _config) { // 897
 	_config->interactive = 0;
 	_config->optimizationLevel = 0;
 	_config->bufferedStdio = 1;
-	_config->quite = 0;
+	_config->quiet = 0;
 	_config->initMain = 1;
 }
 
