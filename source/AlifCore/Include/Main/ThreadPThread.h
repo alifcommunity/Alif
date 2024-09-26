@@ -139,7 +139,7 @@ void alifThreadTSS_delete(AlifTssT* _key) { // 952
 }
 
 
-AlifIntT alifThreadTSS_set(AlifTSST* _key, void* _value) { // 966
+AlifIntT alifThreadTSS_set(AlifTssT* _key, void* _value) { // 966
 	AlifIntT fail = pthread_setspecific(_key->key, _value);
 	return fail ? -1 : 0;
 }

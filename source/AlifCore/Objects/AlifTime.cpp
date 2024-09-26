@@ -141,7 +141,8 @@ static inline AlifTimeT _alifTime_mul(AlifTimeT _t, AlifTimeT _k) { // 176
 
 
 
-AlifTimeT alifTimeFraction_mul(AlifTimeT _ticks, const AlifTimeFraction* _frac) { // 184
+AlifTimeT alifTimeFraction_mul(AlifTimeT _ticks,
+	const AlifTimeFraction* _frac) { // 184
 	const AlifTimeT mul = _frac->numer;
 	const AlifTimeT div = _frac->denom;
 
@@ -166,6 +167,34 @@ AlifTimeT alifTimeFraction_mul(AlifTimeT _ticks, const AlifTimeFraction* _frac) 
 
 
 
+
+
+#ifdef HAVE_CLOCK_GETTIME
+static AlifIntT alifTime_fromTimeSpec(AlifTimeT* tp, const struct timespec* ts,
+	AlifIntT raise_exc) { // 498
+
+	AlifTimeT t, tv_nsec;
+
+	t = (AlifTimeT)ts->tv_sec;
+
+	AlifIntT res1 = alifTime_mul(&t, SEC_TO_NS);
+
+	tv_nsec = ts->tv_nsec;
+	AlifIntT res2 = alifTime_add(&t, tv_nsec);
+
+	*tp = t;
+
+	if (raise_exc and (res1 < 0 || res2 < 0)) {
+		//alifTime_overflow();
+		return -1;
+	}
+	return 0;
+}
+
+AlifIntT _alifTime_fromTimeSpec(AlifTimeT* tp, const struct timespec* ts) { // 522
+	return alifTime_fromTimeSpec(tp, ts, 1);
+}
+#endif
 
 
 
