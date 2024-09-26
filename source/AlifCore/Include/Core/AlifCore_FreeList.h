@@ -8,7 +8,7 @@
 
 
 static inline AlifFreeLists* alifFreeLists_get(void) { // 16 
-	AlifThread* thread = alifThread_get();
+	AlifThread* thread = _alifThread_get();
 	
 	return &((AlifThreadImpl*)thread)->freeLists;
 }

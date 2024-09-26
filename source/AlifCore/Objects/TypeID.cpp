@@ -55,7 +55,7 @@ void alifType_releaseID(AlifHeapTypeObject* type) { // 99
 
 
 void alifType_incRefSlow(AlifHeapTypeObject* type) { // 120
-	AlifThreadImpl* thread = (AlifThreadImpl*)alifThread_get();
+	AlifThreadImpl* thread = (AlifThreadImpl*)_alifThread_get();
 	if (type->uniqueID < 0 or resize_localRefCounts(thread) < 0) {
 		// just incref the type directly.
 		ALIF_INCREF(type);

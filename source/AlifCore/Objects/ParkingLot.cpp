@@ -200,7 +200,7 @@ AlifIntT alifSemaphore_wait(AlifSemaphore* _sema,
 	AlifTimeT _timeout, AlifIntT _detach) { // 198
 	AlifThread* thread = nullptr;
 	if (_detach) {
-		thread = alifThread_get();
+		thread = _alifThread_get();
 		if (thread and alifAtomic_loadIntRelaxed(&thread->state) ==
 			ALIF_THREAD_ATTACHED) {
 			// Only detach if we are attached

@@ -50,7 +50,7 @@ static inline AlifIntT alifCriticalSection_isActive(uintptr_t _tag) { // 103
 static inline void _alifCriticalSection_beginMutex(AlifCriticalSection* _c,
 	AlifMutex* _m) { // 109
 	if (alifMutex_lockFast(&_m->bits)) {
-		AlifThread* thread = alifThread_get();
+		AlifThread* thread = _alifThread_get();
 		_c->mutex = _m;
 		_c->prev = thread->criticalSection;
 		thread->criticalSection = (uintptr_t)_c;
@@ -69,7 +69,7 @@ static inline void _alifCriticalSection_begin(AlifCriticalSection* _c,
 
 
 static inline void _alifCriticalSection_pop(AlifCriticalSection* _c) { // 133
-	AlifThread* thread = alifThread_get();
+	AlifThread* thread = _alifThread_get();
 	uintptr_t prev = _c->prev;
 	thread->criticalSection = prev;
 
@@ -102,7 +102,7 @@ static inline void _alifCriticalSection2_beginMutex(AlifCriticalSection2* _c,
 
 	if (alifMutex_lockFast(&_m1->bits)) {
 		if (alifMutex_lockFast(&_m2->bits)) {
-			AlifThread* tstate = alifThread_get();
+			AlifThread* tstate = _alifThread_get();
 			_c->base.mutex = _m1;
 			_c->mutex2 = _m2;
 			_c->base.prev = tstate->criticalSection;

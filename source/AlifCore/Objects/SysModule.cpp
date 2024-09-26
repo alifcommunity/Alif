@@ -19,7 +19,7 @@ static AlifObject* _alifSys_getObject(AlifInterpreter* _interp, const char* _nam
 
 
 AlifObject* alifSys_getObject(const char* _name) { // 104
-	AlifThread* threadState = alifThread_get();
+	AlifThread* threadState = _alifThread_get();
 
 	//AlifObject* exc_ = alifErr_getRaisedException(threadState);
 	AlifObject* value = _alifSys_getObject(threadState->interpreter, _name);

@@ -528,7 +528,7 @@ AlifIntT alifEval_makePendingCalls(AlifThread* _thread) { // 1029
 
 
 AlifIntT alif_makePendingCalls() { // 1054
-	AlifThread* thread = alifThread_get();
+	AlifThread* thread = _alifThread_get();
 
 	if (!alif_isMainThread() or !alif_isMainInterpreter(thread->interpreter)) {
 		return 0;

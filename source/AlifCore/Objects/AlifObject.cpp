@@ -121,7 +121,7 @@ AlifObject* alifObject_repr(AlifObject* _v) { // 662
 		return alifUStr_fromFormat("<%s object at %p>",
 			ALIF_TYPE(_v)->name, _v);
 
-	AlifThread* thread = alifThread_get();
+	AlifThread* thread = _alifThread_get();
 
 	if (alif_enterRecursiveCallTstate(thread,
 		" while getting the repr of an object")) {
@@ -199,7 +199,7 @@ static AlifObject* do_richCompare(AlifThread* _thread,
 }
 
 AlifObject* alifObject_richCompare(AlifObject* _v, AlifObject* _w, AlifIntT _op) { // 1011
-	AlifThread* thread = alifThread_get();
+	AlifThread* thread = _alifThread_get();
 
 	if (_v == nullptr or _w == nullptr) {
 		//if (!alifErr_occurred(thread)) {

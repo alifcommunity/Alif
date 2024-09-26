@@ -88,12 +88,12 @@ void alif_scheduleGC(AlifThread* _thread) { // 1754
 
 
 void alifObject_gcLink(AlifObject* _op) { // 1763
-	record_allocation(alifThread_get());
+	record_allocation(_alifThread_get());
 }
 
 static AlifObject* gc_alloc(AlifTypeObject* _tp,
 	AlifUSizeT _basicSize, AlifUSizeT _preSize) { // 1779
-	AlifThread* thread = alifThread_get();
+	AlifThread* thread = _alifThread_get();
 	if (_basicSize > ALIF_SIZET_MAX - _preSize) {
 		return nullptr;
 		//return alifErr_noMemory(thread);
@@ -173,7 +173,7 @@ void alifObject_gcDel(void* _op) { // 1871
 		ALIFOBJECT_GC_UNTRACK(_op);
 	}
 
-	record_deallocation(alifThread_get());
+	record_deallocation(_alifThread_get());
 	AlifObject* self = (AlifObject*)_op;
 	if (ALIFOBJECT_GC_IS_SHARED_INLINE(self)) {
 		alifObject_freeDelayed(((char*)_op) - preSize);

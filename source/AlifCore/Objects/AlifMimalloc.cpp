@@ -38,7 +38,7 @@ static void alifMemMiPage_clearQSBR(mi_page_t* page) { // 95
 static bool alifMemMiPage_isSafeToFree(mi_page_t* page) { // 108
 #ifdef ALIF_GIL_DISABLED
 	if (page->use_qsbr and page->qsbr_goal != 0) {
-		AlifThreadImpl* tstate = (AlifThreadImpl*)alifThread_get();
+		AlifThreadImpl* tstate = (AlifThreadImpl*)_alifThread_get();
 		if (tstate == nullptr) {
 			return false;
 		}
@@ -91,7 +91,7 @@ static void alifMemMiHeap_collectQSBR(mi_heap_t* heap) { // 169
 		return;
 	}
 
-	AlifThreadImpl* thread = (AlifThreadImpl*)alifThread_get();
+	AlifThreadImpl* thread = (AlifThreadImpl*)_alifThread_get();
 	LListNode* head = &thread->mimalloc.pageList;
 	if (llist_empty(head)) {
 		return;
@@ -154,7 +154,7 @@ static void free_delayed(uintptr_t _ptr) { // 1107
 		return;
 	}
 
-	AlifThreadImpl* tstate = (AlifThreadImpl*)alifThread_get();
+	AlifThreadImpl* tstate = (AlifThreadImpl*)_alifThread_get();
 	LListNode* head = &tstate->memFreeQueue;
 
 	class MemWorkChunk* buf = nullptr;

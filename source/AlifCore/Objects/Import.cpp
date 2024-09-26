@@ -63,7 +63,7 @@ InitTable* _alifImportInitTable_ = _alifImportInitTab_; // 59
 //	if (nameObj == nullptr) {
 //		return nullptr;
 //	}
-//	AlifThread* tstate = alifThread_get();
+//	AlifThread* tstate = _alifThread_get();
 //	AlifObject* module_ = import_addModule(tstate, nameObj);
 //	ALIF_DECREF(nameObj);
 //	return module_;
