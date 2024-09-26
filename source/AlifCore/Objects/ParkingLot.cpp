@@ -65,11 +65,11 @@ void alifSemaphore_init(AlifSemaphore* _sema) { // 53
 	}
 #else
 	if (pthread_mutex_init(&_sema->mutex, nullptr) != 0) {
-		alif_fatalError("ParkingLot: pthread_mutex_init failed");
+		//alif_fatalError("ParkingLot: pthread_mutex_init failed");
 		exit(-1);
 	}
 	if (pthread_cond_init(&_sema->cond, nullptr)) {
-		alif_fatalError("ParkingLot: pthread_cond_init failed");
+		//alif_fatalError("ParkingLot: pthread_cond_init failed");
 		exit(-1);
 	}
 	_sema->counter = 0;

@@ -4,6 +4,7 @@
 
 #include "alif.h"
 
+#include "AlifCore_BitUtils.h"
 #include "AlifCore_FreeList.h"
 #include "AlifCore_Dict.h"
 #include "AlifCore_GC.h"

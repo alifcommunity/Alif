@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Abstract.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_BiaseRefCount.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_BitUtils.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_BytesObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_CondVar.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_CriticalSection.h" />
