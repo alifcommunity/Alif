@@ -188,7 +188,7 @@ static inline uint64_t alifAtomic_loadUint64(const uint64_t* _obj) { // 282
 	return __atomic_load_n(_obj, __ATOMIC_SEQ_CST);
 }
 
-static inline uintptr_t alifAtomic_loaduintptr(const uintptr_t* _obj) { // 286
+static inline uintptr_t alifAtomic_loadUintptr(const uintptr_t* _obj) { // 286
 	return __atomic_load_n(_obj, __ATOMIC_SEQ_CST);
 }
 
@@ -321,6 +321,10 @@ static inline void alifAtomic_storeSizeRelaxed(AlifSizeT* _obj, AlifSizeT _value
 
 static inline void* alifAtomic_loadPtrAcquire(const void* _obj) { // 491
 	return (void*)__atomic_load_n((void* const*)_obj, __ATOMIC_ACQUIRE);
+}
+
+static inline void alifAtomic_storePtrRelease(void* _obj, void* _value) { // 499
+	__atomic_store_n((void**)_obj, _value, __ATOMIC_RELEASE);
 }
 
 static inline void alifAtomic_storeIntRelease(AlifIntT* _obj, AlifIntT _value) { // 507
