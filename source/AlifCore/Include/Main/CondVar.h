@@ -14,12 +14,12 @@ AlifIntT alifThread_condInit(AlifCondT*);
 void alifThread_condAfter(long long, timespec*);
 
 /* The following functions return 0 on success, nonzero on error */
-#define ALIFMUTEX_INIT(mut)       pthreadMutex_init((mut), nullptr)
-#define ALIFMUTEX_FINI(mut)       pthreadMutex_destroy(mut)
-#define ALIFMUTEX_LOCK(mut)       pthreadMutex_lock(mut)
-#define ALIFMUTEX_UNLOCK(mut)     pthreadMutex_unlock(mut)
+#define ALIFMUTEX_INIT(mut)       pthread_mutex_init((mut), nullptr)
+#define ALIFMUTEX_FINI(mut)       pthread_mutex_destroy(mut)
+#define ALIFMUTEX_LOCK(mut)       pthread_mutex_lock(mut)
+#define ALIFMUTEX_UNLOCK(mut)     pthread_mutex_unlock(mut)
 
-#define ALIFCOND_INIT(cond)       _PyThread_cond_init(cond)
+#define ALIFCOND_INIT(cond)       alifThread_condInit(cond)
 #define ALIFCOND_FINI(cond)       pthread_cond_destroy(cond)
 #define ALIFCOND_SIGNAL(cond)     pthread_cond_signal(cond)
 #define ALIFCOND_BROADCAST(cond)  pthread_cond_broadcast(cond)
