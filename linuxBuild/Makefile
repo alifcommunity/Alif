@@ -10,6 +10,7 @@ INCLUDES =  -I$(SOURCE_DIR)/Alif							\
 			-I$(SOURCE_DIR)/AlifCore/Include/Core			\
 			-I$(SOURCE_DIR)/AlifCore/Include/Main			\
 			-I$(SOURCE_DIR)/AlifCore/Include/Main/Atomics	\
+			-I$(SOURCE_DIR)/AlifCore/Include/Main/mimalloc	\
 			-I$(SOURCE_DIR)/AlifCore/Include/Main/StringLib	\
 
 OBJECTS = $(SOURCE_FILES:$(SOURCE_DIR)/AlifCore/Objects/%/%.cpp=$(BUILD_DIR)/%.o)
