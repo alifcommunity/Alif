@@ -25,7 +25,7 @@ AlifIntT alifThread_condInit(AlifCondT* _cond) { // 147
 
 
 void alifThread_condAfter(long long us, struct timespec* abs) { // 154
-	AlifTimeT timeout = alifTime_fromMicrosecondsClamp(us);
+	AlifTimeT timeout = _alifTime_fromMicrosecondsClamp(us);
 	AlifTimeT t{};
 #ifdef CONDATTR_MONOTONIC
 	if (_CONDATTR_MONOTONIC) {
@@ -37,7 +37,7 @@ void alifThread_condAfter(long long us, struct timespec* abs) { // 154
 		(void)alifTime_timeRaw(&t);
 	}
 	t = _alifTime_add(t, timeout);
-	alifTime_asTimeSpecClamp(t, abs);
+	_alifTime_asTimeSpecClamp(t, abs);
 }
 
 

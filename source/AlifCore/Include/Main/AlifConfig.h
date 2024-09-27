@@ -58,6 +58,8 @@
 #define NT_THREADS
 #define WITH_FREELISTS 1
 #define SIZEOF_LONG 4
+#define SIZEOF_LONG_LONG 8
+
 
 /* ------------------------------ مترجم مايكروسوفت ------------------------------ */
 #ifdef _MSC_VER
@@ -158,6 +160,7 @@
 	#define SIZEOF_SIZE_T 8
 	#define ALIGNOF_SIZE_T 8
 	#define SIZEOF_VOID_P 8
+	#define SIZEOF_TIME_T 8
 #else
 	using AlifIntT = int16_t;
 	using AlifUIntT = uint16_t;
@@ -169,6 +172,7 @@
 	#define SIZEOF_VOID_P 4
 	#define ALIGNOF_SIZE_T 4
 	#define SIZEOF_SIZE_T 4
+	#define SIZEOF_TIME_T 4
 #endif
 
 

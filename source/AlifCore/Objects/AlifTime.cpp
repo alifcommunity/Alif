@@ -38,7 +38,15 @@
 #define NS_TO_US (1000)
 #define NS_TO_100NS (100)
 
-
+#if SIZEOF_TIME_T == SIZEOF_LONG_LONG
+#  define ALIF_TIMET_MAX LLONG_MAX
+#  define ALIF_TIMET_MIN LLONG_MIN
+#elif SIZEOF_TIME_T == SIZEOF_LONG
+#  define ALIF_TIMET_MAX LONG_MAX
+#  define ALIF_TIMET_MIN LONG_MIN
+#else
+#  error "unsupported time_t size"
+#endif
 
 
 
@@ -86,6 +94,13 @@ AlifIntT alifTimeFraction_set(AlifTimeFraction* frac,
 double alifTimeFraction_resolution(const AlifTimeFraction* _frac) { // 96
 	return (double)_frac->numer / (double)_frac->denom / 1e9;
 }
+
+
+static void alifTime_timeTOverflow() { // 103
+	//alifErr_setString(_alifExcOverflowError_,
+	//	"timestamp out of range for platform time_t");
+}
+
 
 
 static inline AlifIntT alifTime_add(AlifTimeT* _t1, AlifTimeT _t2) { // 120
@@ -165,6 +180,21 @@ AlifTimeT alifTimeFraction_mul(AlifTimeT _ticks,
 }
 
 
+static AlifIntT _alifTime_asTimeT(AlifTimeT t, time_t* t2) { // 244
+#if SIZEOF_TIME_T < _SIZEOF_ALIFTIME_T
+	if ((AlifTimeT)ALIF_TIMET_MAX < t) {
+		*t2 = ALIF_TIMET_MAX;
+		return -1;
+	}
+	if (t < (AlifTimeT)ALIF_TIMET_MIN) {
+		*t2 = ALIF_TIMET_MIN;
+		return -1;
+	}
+#endif
+	* t2 = (time_t)t;
+	return 0;
+}
+
 
 
 AlifTimeT _alifTime_fromMicrosecondsClamp(AlifTimeT _us) { // 465
@@ -203,6 +233,25 @@ AlifIntT _alifTime_fromTimeSpec(AlifTimeT* tp, const struct timespec* ts) { // 5
 #endif
 
 
+
+static AlifIntT alifTime_divMod(const AlifTimeT _t, const AlifTimeT _k,
+	AlifTimeT* _pq, AlifTimeT* _pr) { // 742
+	AlifTimeT q = _t / _k;
+	AlifTimeT r = _t % _k;
+	if (r < 0) {
+		if (q == ALIFTIME_MIN) {
+			*_pq = ALIFTIME_MIN;
+			*_pr = 0;
+			return -1;
+		}
+		r += _k;
+		q -= 1;
+	}
+
+	*_pq = q;
+	*_pr = r;
+	return 0;
+}
 
 
 #if defined(HAVE_CLOCK_GETTIME) or defined(HAVE_KQUEUE) // 862

@@ -2,7 +2,7 @@
 
 
 
-
+#define _SIZEOF_ALIFTIME_T 8 // 65
 
 
 AlifTimeT _alifTime_fromMicrosecondsClamp(AlifTimeT); // 147
