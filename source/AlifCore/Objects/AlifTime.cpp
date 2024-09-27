@@ -167,6 +167,12 @@ AlifTimeT alifTimeFraction_mul(AlifTimeT _ticks,
 
 
 
+AlifTimeT _alifTime_fromMicrosecondsClamp(AlifTimeT _us) { // 465
+	AlifTimeT ns_ = _alifTime_mul(_us, US_TO_NS);
+	return ns_;
+}
+
+
 
 
 #ifdef HAVE_CLOCK_GETTIME
@@ -199,9 +205,148 @@ AlifIntT _alifTime_fromTimeSpec(AlifTimeT* tp, const struct timespec* ts) { // 5
 
 
 
+#if defined(HAVE_CLOCK_GETTIME) or defined(HAVE_KQUEUE) // 862
+
+static AlifIntT alifTime_asTimeSpec(AlifTimeT ns, timespec* ts, AlifIntT raise_exc) { // 863
+	AlifTimeT tv_sec{}, tv_nsec{};
+	AlifIntT res = alifTime_divMod(ns, SEC_TO_NS, &tv_sec, &tv_nsec);
+
+	AlifIntT res2 = _alifTime_asTimeT(tv_sec, &ts->tv_sec);
+	if (res2 < 0) {
+		tv_nsec = 0;
+	}
+	ts->tv_nsec = tv_nsec;
+
+	if (raise_exc and (res < 0 or res2 < 0)) {
+		alifTime_timeTOverflow();
+		return -1;
+	}
+	return 0;
+}
+
+void _alifTime_asTimeSpecClamp(AlifTimeT t, timespec* ts) { // 882
+	alifTime_asTimeSpec(t, ts, 0);
+}
+
+#endif // 893
+
+static AlifIntT alifGet_systemClock(AlifTimeT* tp, AlifClockInfoT* info, AlifIntT raise_exc) { // 897
+	if (raise_exc) {
+	}
+
+#ifdef _WINDOWS
+	FILETIME system_time{};
+	ULARGE_INTEGER large{};
+
+	GetSystemTimePreciseAsFileTime(&system_time);
+	large.u.LowPart = system_time.dwLowDateTime;
+	large.u.HighPart = system_time.dwHighDateTime;
+	/* 11,644,473,600,000,000,000: number of nanoseconds between
+	   the 1st january 1601 and the 1st january 1970 (369 years + 89 leap
+	   days). */
+	AlifTimeT ns = large.QuadPart * 100 - 11644473600000000000;
+	*tp = ns;
+	if (info) {
+		// GetSystemTimePreciseAsFileTime() is implemented using
+		// QueryPerformanceCounter() internally.
+		if (_alifQPCBase_.denom == 0) {
+			if (alifWin_perfCounterFrequency(&_alifQPCBase_, raise_exc) < 0) {
+				return -1;
+			}
+		}
+
+		info->implementation = "GetSystemTimePreciseAsFileTime()";
+		info->monotonic = 0;
+		info->resolution = alifTimeFraction_resolution(&_alifQPCBase_);
+		info->adjustable = 1;
+	}
+
+#else   /* _WINDOWS */
+	AlifIntT err{};
+#if defined(HAVE_CLOCK_GETTIME)
+	struct timespec ts;
+#endif
+
+#if !defined(HAVE_CLOCK_GETTIME) or defined(__APPLE__)
+	struct timeval tv;
+#endif
+
+#ifdef HAVE_CLOCK_GETTIME
+
+#ifdef HAVE_CLOCK_GETTIME_RUNTIME
+	if (HAVE_CLOCK_GETTIME_RUNTIME) {
+#endif
+
+		err = clock_gettime(CLOCK_REALTIME, &ts);
+		if (err) {
+			if (raise_exc) {
+				//alifErr_setFromErrno(_alifExcOSError_);
+			}
+			return -1;
+		}
+		if (alifTime_fromTimeSpec(tp, &ts, raise_exc) < 0) {
+			return -1;
+		}
+
+		if (info) {
+			struct timespec res;
+			info->implementation = "clock_gettime(CLOCK_REALTIME)";
+			info->monotonic = 0;
+			info->adjustable = 1;
+			if (clock_getres(CLOCK_REALTIME, &res) == 0) {
+				info->resolution = (double)res.tv_sec + (double)res.tv_nsec * 1e-9;
+			}
+			else {
+				info->resolution = 1e-9;
+			}
+		}
+
+#ifdef HAVE_CLOCK_GETTIME_RUNTIME
+	}
+	else {
+#endif
+
+#endif
+
+#if !defined(HAVE_CLOCK_GETTIME) || defined(HAVE_CLOCK_GETTIME_RUNTIME)
+
+		/* test gettimeofday() */
+		err = gettimeofday(&tv, (struct timezone*)NULL);
+		if (err) {
+			if (raise_exc) {
+				//alifErr_setFromErrno(_alifExcOSError_);
+			}
+			return -1;
+		}
+		if (alifTime_fromTimeVal(tp, &tv, raise_exc) < 0) {
+			return -1;
+		}
+
+		if (info) {
+			info->implementation = "gettimeofday()";
+			info->resolution = 1e-6;
+			info->monotonic = 0;
+			info->adjustable = 1;
+		}
+
+#if defined(HAVE_CLOCK_GETTIME_RUNTIME) && defined(HAVE_CLOCK_GETTIME)
+	} /* end of availability block */
+#endif
+
+#endif   /* !HAVE_CLOCK_GETTIME */
+#endif   /* !MS_WINDOWS */
+	return 0;
+}
 
 
 
+AlifIntT alifTime_timeRaw(AlifTimeT* _result) { // 1022
+	if (alifGet_systemClock(_result, nullptr, 0) < 0) {
+		*_result = 0;
+		return -1;
+	}
+	return 0;
+}
 
 
 

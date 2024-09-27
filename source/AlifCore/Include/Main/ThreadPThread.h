@@ -16,11 +16,11 @@
 
 
 
-
+#define _CONDATTR_MONOTONIC _alifDureRun_.threads.condAttrMonotonic.ptr // 130
 
 
 AlifIntT alifThread_condInit(AlifCondT* _cond) { // 147
-	return pthread_condInit(_cond, condattr_monotonic);
+	return pthread_cond_init(_cond, _CONDATTR_MONOTONIC);
 }
 
 
@@ -28,7 +28,7 @@ void alifThread_condAfter(long long us, struct timespec* abs) { // 154
 	AlifTimeT timeout = alifTime_fromMicrosecondsClamp(us);
 	AlifTimeT t{};
 #ifdef CONDATTR_MONOTONIC
-	if (condattr_monotonic) {
+	if (_CONDATTR_MONOTONIC) {
 		(void)alifTime_monotonicRaw(&t);
 	}
 	else

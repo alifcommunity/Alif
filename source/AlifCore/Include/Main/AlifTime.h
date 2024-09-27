@@ -11,4 +11,7 @@ using AlifTimeT = int64_t;
 
 
 
-AlifIntT alifTime_monotonicRaw(AlifTimeT*);
+AlifIntT alifTime_monotonicRaw(AlifTimeT*); // 19
+
+
+AlifIntT alifTime_timeRaw(AlifTimeT*); // 21
