@@ -142,6 +142,8 @@
 
 #define HAVE_UNISTD_H 1
 
+#undef HAVE_CLOCK_GETTIME 1
+
 #endif
 
 

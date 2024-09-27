@@ -164,8 +164,13 @@ static AlifHashT alif_sipHash(const void* _src, AlifSizeT _srcSZ) { // 477
 		_LE64TOH(_alifHashSecret_.sipHash.k0), _LE64TOH(_alifHashSecret_.sipHash.k1),
 		_src, _srcSZ);
 }
-static AlifHashFuncDef _alifHashFunc_ = {.hash = alif_sipHash,
+AlifHashFuncDef _alifHashFunc_ = {.hash = alif_sipHash,
 										 .name = "sipHash_13",
 										 .hashBits = 64,
 										 .seedBits = 128 };
+// need review
+//static AlifHashFuncDef _alifHashFunc_ = {.hash = alif_sipHash,
+//										 .name = "sipHash_13",
+//										 .hashBits = 64,
+//										 .seedBits = 128 };
 #endif

@@ -27,7 +27,7 @@ void alifThread_condAfter(long long, timespec*);
 
 /* return 0 for success, 1 on timeout, -1 on error */
 ALIF_LOCAL_INLINE(AlifIntT)
-alifCond_TimedWait(AlifCondT* cond, AlifMutexT* mut, long long us) { // 69
+alifCond_TIMEDWAIT(AlifCondT* cond, AlifMutexT* mut, long long us) { // 69
 	timespec abs_timeout;
 	alifThread_condAfter(us, &abs_timeout);
 	AlifIntT ret = pthread_cond_timedwait(cond, mut, &abs_timeout);

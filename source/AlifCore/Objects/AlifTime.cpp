@@ -173,7 +173,7 @@ AlifTimeT alifTimeFraction_mul(AlifTimeT _ticks,
 static AlifIntT alifTime_fromTimeSpec(AlifTimeT* tp, const struct timespec* ts,
 	AlifIntT raise_exc) { // 498
 
-	AlifTimeT t, tv_nsec;
+	AlifTimeT t{}, tv_nsec{};
 
 	t = (AlifTimeT)ts->tv_sec;
 
@@ -184,7 +184,7 @@ static AlifIntT alifTime_fromTimeSpec(AlifTimeT* tp, const struct timespec* ts,
 
 	*tp = t;
 
-	if (raise_exc and (res1 < 0 || res2 < 0)) {
+	if (raise_exc and (res1 < 0 or res2 < 0)) {
 		//alifTime_overflow();
 		return -1;
 	}
