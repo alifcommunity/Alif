@@ -14,10 +14,10 @@ static inline void copy_evalBreakerBits(uintptr_t* _from,
 		return;
 	}
 
-	uintptr_t new_value;
+	uintptr_t newValue{};
 	do {
-		new_value = (oldValue & ~_mask) | fromBits;
-	} while (!alifAtomic_compareExchangeUintptr(_to, &oldValue, new_value));
+		newValue = (oldValue & ~_mask) | fromBits;
+	} while (!alifAtomic_compareExchangeUintptr(_to, &oldValue, newValue));
 }
 
 static inline void updateEval_breakerForThread(AlifInterpreter* _interp,

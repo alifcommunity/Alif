@@ -40,23 +40,81 @@ alifCond_TimedWait(AlifCondT* cond, AlifMutexT* mut, long long us) { // 69
 	return 0;
 }
 
-#elif defined(NT_THREADS)
+
+#elif defined(NT_THREADS) // 84
+
+#if ALIF_EMULATED_WIN_CV
+
+ALIF_LOCAL_INLINE(AlifIntT) alifMutex_INIT(AlifmutexT* cs) { // 109
+	InitializeCriticalSection(cs);
+	return 0;
+}
+
+ALIF_LOCAL_INLINE(AlifIntT) alifMutex_FINI(AlifMutexT* cs) { // 116
+	DeleteCriticalSection(cs);
+	return 0;
+}
+
+ALIF_LOCAL_INLINE(AlifIntT) alifMutex_LOCK(AlifMutexT* cs) { // 123
+	EnterCriticalSection(cs);
+	return 0;
+}
+
+ALIF_LOCAL_INLINE(AlifIntT) alifMutex_UNLOCK(AlifMutexT* cs) { // 130
+	LeaveCriticalSection(cs);
+	return 0;
+}
+
+
+ALIF_LOCAL_INLINE(AlifIntT) alifCond_INIT(AlifCondT* cv) { // 138
+	cv->sem = CreateSemaphore(nullptr, 0, 100000, nullptr);
+	if (cv->sem == nullptr)
+		return -1;
+	cv->waiting = 0;
+	return 0;
+}
+
+ALIF_LOCAL_INLINE(AlifIntT) alifCond_FINI(AlifCondT* cv) { // 152
+	return CloseHandle(cv->sem) ? 0 : -1;
+}
+
+
+ALIF_LOCAL_INLINE(AlifIntT) _alifCond_WAIT_MS(AlifCondT* cv, AlifCondT* cs, DWORD ms) { // 161
+	DWORD wait{};
+	cv->waiting++;
+	alifMutex_UNLOCK(cs);
+	wait = WaitForSingleObjectEx(cv->sem, ms, FALSE);
+	alifMutex_LOCK(cs);
+	if (wait != WAIT_OBJECT_0)
+		--cv->waiting;
+
+	if (wait == WAIT_FAILED)
+		return -1;
+	/* return 0 on success, 1 on timeout */
+	return wait != WAIT_OBJECT_0;
+}
+
+ALIF_LOCAL_INLINE(AlifIntT) alifCond_WAIT(AlifCondT* cv, AlifMutexT* cs) { // 192
+	AlifIntT result = _alifCond_WAIT_MS(cv, cs, INFINITE);
+	return result >= 0 ? 0 : result;
+}
+
+ALIF_LOCAL_INLINE(AlifIntT) alifCond_TIMEDWAIT(AlifCondT* cv, AlifCondT* cs, long long us) { // 199
+	return _alifCond_WAIT_MS(cv, cs, (DWORD)(us / 1000));
+}
+
+
+ALIF_LOCAL_INLINE(AlifIntT) alifCond_SIGNAL(AlifCondT* cv) { // 205
+	if (cv->waiting > 0) {
+		cv->waiting--;
+		return ReleaseSemaphore(cv->sem, 1, nullptr) ? 0 : -1;
+	}
+	return 0;
+}
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+#else
 
 ALIF_LOCAL_INLINE(AlifIntT) alifMutex_INIT(AlifMutexT* _cs) { // 236
 	InitializeSRWLock(_cs);
@@ -111,6 +169,6 @@ ALIF_LOCAL_INLINE(AlifIntT) alifCond_SIGNAL(AlifCondT* _cv) { // 296
 
 
 
-
+#endif
 
 #endif
