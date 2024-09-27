@@ -14,16 +14,16 @@ AlifIntT alifThread_condInit(AlifCondT*);
 void alifThread_condAfter(long long, timespec*);
 
 /* The following functions return 0 on success, nonzero on error */
-#define AlifMutex_INIT(mut)       pthread_mutex_init((mut), nullptr)
-#define AlifMutex_FINI(mut)       pthread_mutex_destroy(mut)
-#define AlifMutex_LOCK(mut)       pthread_mutex_lock(mut)
-#define AlifMutex_UNLOCK(mut)     pthread_mutex_unlock(mut)
+#define alifMutex_INIT(mut)       pthread_mutex_init((mut), nullptr)
+#define alifMutex_FINI(mut)       pthread_mutex_destroy(mut)
+#define alifMutex_LOCK(mut)       pthread_mutex_lock(mut)
+#define alifMutex_UNLOCK(mut)     pthread_mutex_unlock(mut)
 
-#define AlifCond_INIT(cond)       alifThread_condInit(cond)
-#define AlifCond_FINI(cond)       pthread_cond_destroy(cond)
-#define AlifCond_SIGNAL(cond)     pthread_cond_signal(cond)
-#define AlifCond_BROADCAST(cond)  pthread_cond_broadcast(cond)
-#define AlifCond_WAIT(cond, mut)  pthread_cond_wait((cond), (mut))
+#define alifCond_INIT(cond)       alifThread_condInit(cond)
+#define alifCond_FINI(cond)       pthread_cond_destroy(cond)
+#define alifCond_SIGNAL(cond)     pthread_cond_signal(cond)
+#define alifCond_BROADCAST(cond)  pthread_cond_broadcast(cond)
+#define alifCond_WAIT(cond, mut)  pthread_cond_wait((cond), (mut))
 
 /* return 0 for success, 1 on timeout, -1 on error */
 ALIF_LOCAL_INLINE(AlifIntT)
