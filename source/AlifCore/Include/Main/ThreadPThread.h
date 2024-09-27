@@ -2,7 +2,7 @@
 
 
 #include "AlifCore_Thread.h"
-
+#include "AlifCore_Time.h"
 
 
 
@@ -26,7 +26,7 @@ AlifIntT alifThread_condInit(AlifCondT* _cond) { // 147
 
 void alifThread_condAfter(long long us, struct timespec* abs) { // 154
 	AlifTimeT timeout = alifTime_fromMicrosecondsClamp(us);
-	AlifTimeT t;
+	AlifTimeT t{};
 #ifdef CONDATTR_MONOTONIC
 	if (condattr_monotonic) {
 		(void)alifTime_monotonicRaw(&t);
@@ -36,7 +36,7 @@ void alifThread_condAfter(long long us, struct timespec* abs) { // 154
 	{
 		(void)alifTime_timeRaw(&t);
 	}
-	t = alifTime_add(t, timeout);
+	t = _alifTime_add(t, timeout);
 	alifTime_asTimeSpecClamp(t, abs);
 }
 
@@ -56,12 +56,12 @@ AlifUIntT alifThread_getThreadID() { // 365
 #ifdef ALIF_HAVE_THREAD_NATIVE_ID
 unsigned long alifThread_getThreadNativeID() { // 372
 	if (!INITIALIZED)
-		//alifThread_initThread();
+	{/*alifThread_initThread(); */}
 #ifdef __APPLE__
 	uint64_t nativeID;
 	(void)pthread_threadid_np(nullptr, &nativeID);
 #elif defined(__linux__)
-	pid_t nativeID;
+	pid_t nativeID{};
 	nativeID = syscall(SYS_gettid);
 #elif defined(__FreeBSD__)
 	int nativeID;

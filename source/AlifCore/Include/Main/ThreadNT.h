@@ -23,7 +23,7 @@ AlifUIntT alifThread_getThreadID() { // 260
  */
 unsigned long alifThread_getThreadNativeID() { // 273
 	if (!INITIALIZED) {
-		//alifThread_initThread();s
+		//alifThread_initThread();
 	}
 
 	DWORD nativeID;

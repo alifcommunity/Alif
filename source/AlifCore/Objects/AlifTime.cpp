@@ -89,7 +89,7 @@ double alifTimeFraction_resolution(const AlifTimeFraction* _frac) { // 96
 
 
 static inline AlifIntT alifTime_add(AlifTimeT* _t1, AlifTimeT _t2) { // 120
-	if (_t2 > 0 && *_t1 > ALIFTIME_MAX - _t2) {
+	if (_t2 > 0 and *_t1 > ALIFTIME_MAX - _t2) {
 		*_t1 = ALIFTIME_MAX;
 		return -1;
 	}
