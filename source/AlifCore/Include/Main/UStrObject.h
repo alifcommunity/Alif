@@ -31,7 +31,10 @@ AlifObject* alifUStr_fromFormatV(const char*, va_list); // 237
 
 AlifObject* alifUStr_fromFormat(const char*, ...); // 241
 
+AlifObject* alifUStr_fromWideChar(const wchar_t*, AlifSizeT); // 260
+
 AlifSizeT alifUStr_asWideChar(AlifObject* , wchar_t* ,AlifSizeT ); // 277
+
 
 AlifObject* alifUStr_decodeUTF8Stateful(const char*, AlifSizeT, const char*, AlifSizeT*); // 435
 
@@ -53,6 +56,17 @@ AlifObject* alifUStr_decodeUTF8Stateful(const char*, AlifSizeT, const char*, Ali
 // Static inline functions to work with surrogates
 static inline AlifIntT alifUnicode_isSurrogate(AlifUCS4 _ch) { // 16
 	return (0xD800 <= _ch and _ch <= 0xDFFF);
+}
+
+static inline AlifIntT alifUnicode_isHighSurrogate(AlifUCS4 _ch) { // 19
+	return (0xD800 <= _ch and _ch <= 0xDBFF);
+}
+static inline AlifIntT alifUnicode_isLowSurrogate(AlifUCS4 _ch) { // 22
+	return (0xDC00 <= _ch and _ch <= 0xDFFF);
+}
+
+static inline AlifUCS4 alifUnicode_joinSurrogates(AlifUCS4 high, AlifUCS4 low) { // 27
+	return 0x10000 + (((high & 0x03FF) << 10) | (low & 0x03FF));
 }
 
 // High surrogate = top 10 bits added to 0xD800.

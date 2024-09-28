@@ -53,52 +53,53 @@ done:
 }
 
 
-///* ----------------------------------- تشغيل اللغة ----------------------------------- */
-//static AlifIntT alifMain_runFileObj(AlifObject* _pn, AlifObject* _fn, AlifIntT _skipFirstLine) {
-//	FILE* fp_ = alif_fOpenObj(_fn, "r");
-//
-//	if (fp_ == nullptr) {
-//		printf("%ls: لا يمكن فتح الملف %ls: [Errno %d] %s\n",
-//			(const char*)((AlifUStrObject*)_pn)->UTF,
-//			(const char*)((AlifUStrObject*)_fn)->UTF,
-//			errno, "لا يوجد ملف او مسار بهذا الاسم");
-//		return 2;
-//	}
-//
-//	if (_skipFirstLine) {
-//		AlifIntT ch{};
-//		while ((ch = getwc(fp_)) != WEOF) {
-//			if (ch == L'\n') {
-//				(void)ungetwc(ch, fp_);
-//				break;
-//			}
-//		}
-//	}
-//
-//	AlifIntT run = alifRun_fileObj(fp_, _fn, 1);
-//
-//	return run;
-//}
+/* ----------------------------------- تشغيل اللغة ----------------------------------- */
+static AlifIntT alifMain_runFileObj(AlifObject* _pn, AlifObject* _fn, AlifIntT _skipFirstLine) { // 365
+	FILE* fp_ = alif_fOpenObj(_fn, "rb");
+
+	if (fp_ == nullptr) {
+		//alifErr_clear();
+		//alifSys_formatStderr("%S: can't open file %R: [Errno %d] %s\n",
+		//	_pn, _fn, errno, strerror(errno));
+		printf("%ls: لا يمكن فتح الملف %ls: [Errno %d] %s\n",
+			(const char*)((AlifUStrObject*)_pn)->data.any,
+			(const char*)((AlifUStrObject*)_fn)->data.any,
+			errno, "لا يوجد ملف او مسار بهذا الاسم");
+		return 2;
+	}
+
+	if (_skipFirstLine) {
+		AlifIntT ch{};
+		while ((ch = getc(fp_)) != EOF) {
+			if (ch == '\n') {
+				(void)ungetc(ch, fp_);
+				break;
+			}
+		}
+	}
+
+	AlifIntT run = alifRun_fileObj(fp_, _fn, 1);
+	return (run != 0);
+}
 
 static AlifIntT alifMain_runFile(const AlifConfig* _config) { // 414
-	//AlifObject* fileName = alifUStr_fromWideChar(_config->runFilename, -1);
-	//if (fileName == nullptr) {
-	//	//alifErr_print();
-	//	return -1;
-	//}
-	//AlifObject* programName = alifUStr_fromWideChar(_config->programName, -1);
-	//if (programName == nullptr) {
-	//	ALIF_DECREF(fileName);
-	//	//alifErr_print();
-	//	return -1;
-	//}
+	AlifObject* fileName = alifUStr_fromWideChar(_config->runFilename, -1);
+	if (fileName == nullptr) {
+		//alifErr_print();
+		return -1;
+	}
+	AlifObject* programName = alifUStr_fromWideChar(_config->programName, -1);
+	if (programName == nullptr) {
+		ALIF_DECREF(fileName);
+		//alifErr_print();
+		return -1;
+	}
 
-	//AlifIntT res_ = alifMain_runFileObj(programName, fileName, _config->skipFirstLine);
+	AlifIntT res_ = alifMain_runFileObj(programName, fileName, _config->skipFirstLine);
 
-	//ALIF_DECREF(fileName);
-	//ALIF_DECREF(programName);
-	//return res_;
-	return 9; // temp
+	ALIF_DECREF(fileName);
+	ALIF_DECREF(programName);
+	return res_;
 }
 
 

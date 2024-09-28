@@ -168,7 +168,7 @@ AlifErrorHandler_ alif_getErrorHandler(const char* _errors) { // 488
 
 
 
-static AlifObject* ustr_result(AlifObject* _uStr) { // 727
+static AlifObject* uStr_result(AlifObject* _uStr) { // 727
 	AlifSizeT length = ALIFUSTR_GET_LENGTH(_uStr);
 	if (length == 0) {
 		AlifObject* empty = unicode_getEmpty();
@@ -574,6 +574,44 @@ void alifUStr_fastCopyCharacters(AlifObject* _to, AlifSizeT _toStart,
 	(void)copy_characters(_to, _toStart, _from, _fromStart, _howMany, 0);
 }
 
+static AlifIntT find_maxCharSurrogates(const wchar_t* _begin, const wchar_t* _end,
+	AlifUCS4* _maxChar, AlifSizeT* _numSurrogates) { // 1593
+
+	const wchar_t* iter{};
+	AlifUCS4 ch_{};
+
+	*_numSurrogates = 0;
+	*_maxChar = 0;
+
+	for (iter = _begin; iter < _end; ) {
+#if SIZEOF_WCHAR_T == 2
+		if (alifUnicode_isHighSurrogate(iter[0])
+			and (iter + 1) < _end
+			and alifUnicode_isLowSurrogate(iter[1]))
+		{
+			ch_ = alifUnicode_joinSurrogates(iter[0], iter[1]);
+			++(*_numSurrogates);
+			iter += 2;
+		}
+		else
+#endif
+		{
+			ch_ = *iter;
+			iter++;
+		}
+		if (ch_ > *_maxChar) {
+			*_maxChar = ch_;
+			if (*_maxChar > MAX_UNICODE) {
+				//alifErr_format(_alifExcValueError_,
+				//	"character U+%x is not in range [U+0000; U+%x]",
+				//	ch, MAX_UNICODE);
+				return -1;
+			}
+		}
+	}
+	return 0;
+}
+
 static void ustr_dealloc(AlifObject* _uStr) { // 1633
 	if (ALIFUSTR_STATE(_uStr).staticallyAllocated) {
 		alif_setImmortal(_uStr);
@@ -619,6 +657,90 @@ static AlifObject* get_latin1Char(AlifUCS1 _ch) { // 1867
 	return obj;
 }
 
+static inline void uStrWrite_wideChar(AlifIntT _kind, void* _data,
+	const wchar_t* _u, AlifSizeT _size, AlifSizeT _numSurrogates) { // 1901
+	switch (_kind) {
+	case AlifUStrKind_::AlifUStr_1Byte_Kind:
+		ALIFUSTR_CONVERT_BYTES(wchar_t, unsigned char, _u, _u + _size, _data);
+		break;
+
+	case AlifUStrKind_::AlifUStr_2Byte_Kind:
+#if SIZEOF_WCHAR_T == 2
+		memcpy(_data, _u, _size * 2);
+#else
+		ALIFUSTR_CONVERT_BYTES(wchar_t, AlifUCS2, _u, _u + _size, _data);
+#endif
+		break;
+
+	case AlifUStrKind_::AlifUStr_4Byte_Kind:
+	{
+#if SIZEOF_WCHAR_T == 2
+		// Convert a 16-bits wchar_t representation to UCS4, this will decode
+		// surrogate pairs.
+		const wchar_t* end = _u + _size;
+		AlifUCS4* ucs4_out = (AlifUCS4*)_data;
+		for (const wchar_t* iter = _u; iter < end; ) {
+			if (alifUnicode_isHighSurrogate(iter[0])
+				and (iter + 1) < end
+				and alifUnicode_isLowSurrogate(iter[1]))
+			{
+				*ucs4_out++ = alifUnicode_joinSurrogates(iter[0], iter[1]);
+				iter += 2;
+			}
+			else {
+				*ucs4_out++ = *iter;
+				iter++;
+			}
+		}
+#else
+		memcpy(_data, _u, _size * 4);
+#endif
+		break;
+	}
+	default:
+		ALIF_UNREACHABLE();
+	}
+}
+
+AlifObject* alifUStr_fromWideChar(const wchar_t* _u, AlifSizeT _size) { // 1956
+	AlifObject* unicode{};
+	AlifUCS4 maxchar = 0;
+	AlifSizeT num_surrogates{};
+
+	if (_u == nullptr and _size != 0) {
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
+
+	if (_size == -1) {
+		_size = wcslen(_u);
+	}
+
+	/* If the Unicode data is known at construction time, we can apply
+	   some optimizations which share commonly used objects. */
+
+	   /* Optimization for empty strings */
+	if (_size == 0)
+		ALIF_RETURN_UNICODE_EMPTY
+
+	if (_size == 1 and (AlifUCS4)*_u < 256)
+		return get_latin1Char((unsigned char)*_u);
+
+	/* If not empty and not single character, copy the Unicode data
+	   into the new object */
+	if (find_maxCharSurrogates(_u, _u + _size,
+		&maxchar, &num_surrogates) == -1)
+		return nullptr;
+
+	unicode = alifUStr_new(_size - num_surrogates, maxchar);
+	if (!unicode)
+		return nullptr;
+
+	uStrWrite_wideChar(ALIFUSTR_KIND(unicode), ALIFUSTR_DATA(unicode),
+		_u, _size, num_surrogates);
+
+	return uStr_result(unicode);
+}
 
 
 AlifObject* alifUStr_fromString(const char* u) { // 2084
@@ -1612,7 +1734,7 @@ AlifObject* alifUStrWriter_finish(AlifUStrWriter* _writer) { // 13809
 		str = str2;
 	}
 
-	return ustr_result(str);
+	return uStr_result(str);
 }
 
 
