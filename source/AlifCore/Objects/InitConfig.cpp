@@ -200,7 +200,7 @@ void alifConfig_clear(AlifConfig* _config) { // 773
 		_ATTR = nullptr;						\
     } while (0)
 
-	CLEAR(_config->programName);
+	//CLEAR(_config->programName);
 
 	alifWStringList_clear(&_config->argv);
 
@@ -700,6 +700,7 @@ AlifIntT alifConfig_read(AlifConfig* _config) { // 3047
 
 AlifIntT alifArgv_asWStringList(AlifConfig* _config, AlifArgv* _args) { // 78 in preconfig file
 
+
 	AlifWStringList wArgv = { .length = 0, .items = nullptr };
 	if (_args->useBytesArgv) {
 		wArgv.items = (wchar_t**)alifMem_dataAlloc(_args->argc * sizeof(wchar_t*));
@@ -721,6 +722,14 @@ AlifIntT alifArgv_asWStringList(AlifConfig* _config, AlifArgv* _args) { // 78 in
 
 		alifWStringList_clear(&_config->argv);
 		_config->argv = wArgv;
+
+		/*
+			تم إسناد اسم البرنامج هنا مؤقتاُ
+			موقع الإسناد يتم خلال الدوال -
+			alifInit_main -> init_interpMain -> _alifConfig_initImportConfig -> config_initImport ->
+			_alifConfig_initPathConfig -> alifEval_evalCode ...
+		*/
+		_config->programName = wArgv.items[0]; // مؤقت
 	}
 	else {
 		wArgv.length = _args->argc;
@@ -729,6 +738,14 @@ AlifIntT alifArgv_asWStringList(AlifConfig* _config, AlifArgv* _args) { // 78 in
 			// memory error
 			return -1;
 		}
+		/*
+			تم إسناد اسم البرنامج هنا مؤقتاُ
+			موقع الإسناد يتم خلال الدوال -
+			alifInit_main -> init_interpMain -> _alifConfig_initImportConfig -> config_initImport ->
+			_alifConfig_initPathConfig -> alifEval_evalCode ...
+
+		*/
+		_config->programName = wArgv.items[0]; // مؤقت
 	}
 
 	return 1;
