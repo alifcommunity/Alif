@@ -1,5 +1,6 @@
 CPP = c++
 CPPFLAGS = -Wall -std=c++20
+# CPPFLAGS = -w -std=c++20 -Wno-c++11-narrowing # بدون تحذيرات، مع التشغيل على نظام aarch64a
 
 SOURCE_DIR = ../source
 BUILD_DIR = build
