@@ -11,8 +11,9 @@
 #include <unistd.h>             // getcwd()
 #endif
 
+#ifdef _WINDOWS
 #include <pathcch.h>
-
+#endif
 
 
 #define MAX_UNICODE 0x10ffff // 53

@@ -1,12 +1,18 @@
 #include "alif.h"
 
+#include "AlifCore_Eval.h"
+#include "AlifCore_FileUtils.h"
+#include "AlifCore_InitConfig.h"
+#include "AlifCore_Object.h"
+#include "AlifCore_LifeCycle.h"
+#include "AlifCore_State.h"
 #include "AlifCore_Memory.h"
 
 
 
 
 
-
+#ifdef _WINDOWS // 4595
 
 
 
@@ -49,3 +55,7 @@ AlifIntT alifOS_getFullPathName(const wchar_t* _path, wchar_t** _absPathP) { // 
 	*_absPathP = alifMem_wcsDup(woutbufp);
 	return 0;
 }
+
+
+
+#endif // 5494

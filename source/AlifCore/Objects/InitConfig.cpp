@@ -594,7 +594,7 @@ static AlifIntT run_absPathFilename(AlifConfig* _config) { // 2888
 	}
 
 #ifndef _WINDOWS
-	if (_alif_isAbs(filename)) {
+	if (alif_isAbs(filename)) {
 		/* path is already absolute */
 		return 1;
 	}
