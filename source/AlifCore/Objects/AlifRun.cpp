@@ -46,3 +46,102 @@ AlifIntT alifRun_fileObject(FILE* _fp, AlifObject* _filename,
 	}
 	return res;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+AlifIntT alifRun_simpleFileObject(FILE* _fp, AlifObject* _filename,
+	AlifIntT _closeIt, AlifCompilerFlags* _flags) { // 399
+	AlifIntT ret = -1;
+	AlifObject* v{};
+	//AlifIntT alifc{};
+
+	AlifObject* mainModule = alifImport_addModuleRef("__main__");
+	if (mainModule == nullptr)	return -1;
+	AlifObject* dict = alifModule_getDict(mainModule);  // borrowed ref
+
+	AlifIntT setFileName = 0;
+	AlifIntT hasFile = alifDict_containsString(dict, "__file__");
+	if (hasFile < 0) {
+		goto done;
+	}
+	if (!hasFile) {
+		if (alifDict_setItemString(dict, "__file__", _filename) < 0) {
+			goto done;
+		}
+		if (alifDict_setItemString(dict, "__cached__", ALIF_NONE) < 0) {
+			goto done;
+		}
+		setFileName = 1;
+	}
+
+	//alifc = maybe_alifcFile(_fp, _filename, _closeIt);
+	//if (alifc < 0) {
+	//	goto done;
+	//}
+
+	//if (alifc) {
+	//	FILE* alifcFP{};
+	//	if (_closeIt) {
+	//		fclose(_fp);
+	//	}
+
+	//	alifcFP = alif_fOpenObj(_filename, "rb");
+	//	if (alifcFP == nullptr) {
+	//		fprintf(stderr, "alif: Can't reopen .alifc file\n");
+	//		goto done;
+	//	}
+
+	//	if (set_mainLoader(dict, _filename, "SourcelessFileLoader") < 0) {
+	//		fprintf(stderr, "alif: failed to set __main__.__loader__\n");
+	//		ret = -1;
+	//		fclose(alifcFP);
+	//		goto done;
+	//	}
+	//	v = run_alifcFile(alifcFP, dict, dict, _flags);
+	//}
+	//else {
+		if ((!ALIFUSTR_CHECK(_filename)
+			or !alifUStr_equalToUTF8(_filename, "<stdin>"))
+			/*and set_mainLoader(dict, _filename, "SourceFileLoader") < 0*/) {
+			fprintf(stderr, "alif: failed to set __main__.__loader__\n");
+			ret = -1;
+			goto done;
+		}
+		v = alifRun_file(_fp, _filename, ALIF_FILE_INPUT, dict, dict,
+			_closeIt, _flags);
+	//}
+	flush_io();
+	if (v == nullptr) {
+		ALIF_CLEAR(mainModule);
+		//alifErr_print();
+		goto done;
+	}
+	ALIF_DECREF(v);
+	ret = 0;
+
+done:
+	if (setFileName) {
+		if (alifDict_popString(dict, "__file__", nullptr) < 0) {
+			//alifErr_print();
+		}
+		if (alifDict_popString(dict, "__cached__", nullptr) < 0) {
+			//alifErr_print();
+		}
+	}
+	ALIF_XDECREF(mainModule);
+	return ret;
+}

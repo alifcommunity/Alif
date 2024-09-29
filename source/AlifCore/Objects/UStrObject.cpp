@@ -982,7 +982,7 @@ wchar_t* alifUStr_asWideCharString(AlifObject* _uStr, AlifSizeT* _size) { // 333
 	if (_size != nullptr) {
 		*_size = buflen;
 	}
-	else if (wcslen(buffer) != (size_t)buflen) {
+	else if (wcslen(buffer) != (AlifUSizeT)buflen) {
 		alifMem_dataFree(buffer);
 		//alifErr_setString(_alifExcValueError_,
 		//	"embedded null character");
@@ -1257,10 +1257,10 @@ static AlifSizeT ascii_decode(const char* _start, const char* _end, AlifUCS1* _d
 		const char* _p = p;
 		AlifUCS1* q = _dest;
 		while (_p + SIZEOF_SIZE_T <= _end) {
-			size_t value = *(const size_t*)_p;
+			AlifUSizeT value = *(const AlifUSizeT*)_p;
 			if (value & ASCII_CHAR_MASK)
 				break;
-			*((size_t*)q) = value;
+			*((AlifUSizeT*)q) = value;
 			_p += SIZEOF_SIZE_T;
 			q += SIZEOF_SIZE_T;
 		}
@@ -1277,7 +1277,7 @@ static AlifSizeT ascii_decode(const char* _start, const char* _end, AlifUCS1* _d
 		if (ALIF_IS_ALIGNED(p, ALIGNOF_SIZE_T)) {
 			const char* _p = p;
 			while (_p + SIZEOF_SIZE_T <= _end) {
-				size_t value = *(const size_t*)_p;
+				AlifUSizeT value = *(const AlifUSizeT*)_p;
 				if (value & ASCII_CHAR_MASK)
 					break;
 				_p += SIZEOF_SIZE_T;
@@ -1648,6 +1648,76 @@ static AlifIntT uStrCompare_eq(AlifObject* _str1, AlifObject* _str2) { // 10963
 
 
 
+
+AlifIntT alifUStr_equalToUTF8(AlifObject* _uStr, const char* _str) { // 11058
+	return alifUStr_equalToUTF8AndSize(_uStr, _str, strlen(_str));
+}
+
+AlifIntT alifUStr_equalToUTF8AndSize(AlifObject* _uStr,
+	const char* _str, AlifSizeT _size) { // 11064
+
+	if (ALIFUSTR_IS_ASCII(_uStr)) {
+		AlifSizeT len = ALIFUSTR_GET_LENGTH(_uStr);
+		return _size == len and
+			memcmp(ALIFUSTR_1BYTE_DATA(_uStr), _str, len) == 0;
+	}
+	if (ALIFUSTR_UTF8(_uStr) != nullptr) {
+		AlifSizeT len = ALIFUSTR_UTF8_LENGTH(_uStr);
+		return _size == len and
+			memcmp(ALIFUSTR_UTF8(_uStr), _str, len) == 0;
+	}
+
+	AlifSizeT len = ALIFUSTR_GET_LENGTH(_uStr);
+	if ((AlifUSizeT)len >= (AlifUSizeT)_size or (AlifUSizeT)len < (AlifUSizeT)_size / 4) {
+		return 0;
+	}
+	const unsigned char* s_ = (const unsigned char*)_str;
+	const unsigned char* ends = s_ + (AlifUSizeT)_size;
+	AlifIntT kind = ALIFUSTR_KIND(_uStr);
+	const void* data = ALIFUSTR_DATA(_uStr);
+	/* Compare Unicode string and UTF-8 string */
+	for (AlifSizeT i = 0; i < len; i++) {
+		AlifUCS4 ch = ALIFUSTR_READ(kind, data, i);
+		if (ch < 0x80) {
+			if (ends == s_ or s_[0] != ch) {
+				return 0;
+			}
+			s_ += 1;
+		}
+		else if (ch < 0x800) {
+			if ((ends - s_) < 2 or
+				s_[0] != (0xc0 | (ch >> 6)) or
+				s_[1] != (0x80 | (ch & 0x3f)))
+			{
+				return 0;
+			}
+			s_ += 2;
+		}
+		else if (ch < 0x10000) {
+			if (alifUnicode_isSurrogate(ch) or
+				(ends - s_) < 3 or
+				s_[0] != (0xe0 | (ch >> 12)) or
+				s_[1] != (0x80 | ((ch >> 6) & 0x3f)) or
+				s_[2] != (0x80 | (ch & 0x3f)))
+			{
+				return 0;
+			}
+			s_ += 3;
+		}
+		else {
+			if ((ends - s_) < 4 or
+				s_[0] != (0xf0 | (ch >> 18)) or
+				s_[1] != (0x80 | ((ch >> 12) & 0x3f)) or
+				s_[2] != (0x80 | ((ch >> 6) & 0x3f)) or
+				s_[3] != (0x80 | (ch & 0x3f)))
+			{
+				return 0;
+			}
+			s_ += 4;
+		}
+	}
+	return s_ == ends;
+}
 
 
 

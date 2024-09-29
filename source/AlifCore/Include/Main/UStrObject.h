@@ -54,6 +54,12 @@ AlifObject* alifUStr_encodeFSDefault(AlifObject*); // 766
 
 
 
+
+AlifIntT alifUStr_equalToUTF8(AlifObject*, const char*); // 965
+AlifIntT alifUStr_equalToUTF8AndSize(AlifObject*, const char*, AlifSizeT); // 966
+
+
+
 /* ---------------------------------------------------------------------------------------------------------- */
 
 
