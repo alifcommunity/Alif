@@ -333,6 +333,25 @@ void alifEval_releaseThread(AlifThread* _thread) { // 598
 
 
 
+AlifThread* alifEval_saveThread() { // 628
+	AlifThread* tstate = _alifThread_get();
+	alifThread_detach(tstate);
+	return tstate;
+}
+
+void alifEval_restoreThread(AlifThread* _thread) { // 636
+#ifdef _WINDOWS
+	AlifIntT err = GetLastError();
+#endif
+
+	ALIF_ENSURETHREADNOTNULL(_thread);
+	alifThread_attach(_thread);
+
+#ifdef _WINDOWS
+	SetLastError(err);
+#endif
+}
+
 
 
 static AlifIntT next_pendingCall(PendingCalls* _pending,

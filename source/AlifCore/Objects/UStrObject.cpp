@@ -167,6 +167,31 @@ AlifErrorHandler_ alif_getErrorHandler(const char* _errors) { // 488
 }
 
 
+static AlifErrorHandler_ get_errorHandlerWide(const wchar_t* _errors) { // 516
+	if (_errors == nullptr or wcscmp(_errors, L"strict") == 0) {
+		return AlifErrorHandler_::Alif_Error_Strict;
+	}
+	if (wcscmp(_errors, L"surrogateescape") == 0) {
+		return AlifErrorHandler_::Alif_Error_SurrogateEscape;
+	}
+	if (wcscmp(_errors, L"replace") == 0) {
+		return AlifErrorHandler_::Alif_Error_Replace;
+	}
+	if (wcscmp(_errors, L"ignore") == 0) {
+		return AlifErrorHandler_::Alif_Error_Ignore;
+	}
+	if (wcscmp(_errors, L"backslashreplace") == 0) {
+		return AlifErrorHandler_::Alif_Error_BackSlashReplace;
+	}
+	if (wcscmp(_errors, L"surrogatepass") == 0) {
+		return AlifErrorHandler_::Alif_Error_SurrogatePass;
+	}
+	if (wcscmp(_errors, L"xmlcharrefreplace") == 0) {
+		return AlifErrorHandler_::Alif_Error_XMLCharRefReplace;
+	}
+	return AlifErrorHandler_::Alif_Error_Other;
+}
+
 
 static AlifObject* uStr_result(AlifObject* _uStr) { // 727
 	AlifSizeT length = ALIFUSTR_GET_LENGTH(_uStr);
@@ -930,6 +955,140 @@ AlifSizeT alifUStr_asWideChar(AlifObject* _uStr, wchar_t* _w, AlifSizeT _size) {
 #endif
 
 	return res_;
+}
+
+
+wchar_t* alifUStr_asWideCharString(AlifObject* _uStr, AlifSizeT* _size) { // 3337
+	wchar_t* buffer{};
+	AlifSizeT buflen{};
+
+	if (_uStr == nullptr) {
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
+	if (!ALIFUSTR_CHECK(_uStr)) {
+		//alifErr_badArgument();
+		return nullptr;
+	}
+
+	buflen = uStr_getWideCharSize(_uStr);
+	buffer = (wchar_t*)alifMem_dataAlloc((buflen + 1) * sizeof(wchar_t)); // ALIFMEM_NEW
+	if (buffer == nullptr) {
+		//alifErr_noMemory();
+		return nullptr;
+	}
+	uStr_copyAsWideChar(_uStr, buffer, buflen + 1);
+
+	if (_size != nullptr) {
+		*_size = buflen;
+	}
+	else if (wcslen(buffer) != (size_t)buflen) {
+		alifMem_dataFree(buffer);
+		//alifErr_setString(_alifExcValueError_,
+		//	"embedded null character");
+		return nullptr;
+	}
+	return buffer;
+}
+
+
+static AlifObject* uStr_encodeLocale(AlifObject* _uStr,
+	AlifErrorHandler_ _errorHandler, AlifIntT _currentLocale) { // 3749
+	AlifSizeT wlen{};
+	wchar_t* wstr = alifUStr_asWideCharString(_uStr, &wlen);
+	if (wstr == nullptr) {
+		return nullptr;
+	}
+
+	if ((AlifUSizeT)wlen != wcslen(wstr)) {
+		//alifErr_setString(_alifExcValueError_, "embedded null character");
+		alifMem_dataFree(wstr);
+		return nullptr;
+	}
+
+	char* str{};
+	AlifUSizeT error_pos{};
+	const char* reason{};
+	AlifIntT res = _alif_encodeLocaleEx(wstr, &str, &error_pos, &reason,
+		_currentLocale, _errorHandler);
+	alifMem_dataFree(wstr);
+
+	if (res != 0) {
+		if (res == -2) {
+			//AlifObject* exc{};
+			//exc = alifObject_callFunction(_alifExcUStrEncodeError_, "sOnns",
+			//	"locale", unicode,
+			//	(AlifSizeT)error_pos,
+			//	(AlifSizeT)(error_pos + 1),
+			//	reason);
+			//if (exc != nullptr) {
+			//	alifCodec_strictErrors(exc);
+			//	ALIF_DECREF(exc);
+			//}
+		}
+		else if (res == -3) {
+			//alifErr_setString(_alifExcValueError_, "unsupported error handler");
+		}
+		else {
+			//alifErr_noMemory();
+		}
+		return nullptr;
+	}
+
+	AlifObject* bytes = alifBytes_fromString(str);
+	free(str); // need review
+	return bytes;
+}
+
+
+AlifObject* alifUStr_encodeFSDefault(AlifObject* _uStr) { // 3806
+	AlifInterpreter* interp = _alifInterpreter_get();
+
+
+	const AlifConfig* config = alifInterpreter_getConfig(interp);
+	//const wchar_t* fileSystemErrors = config->fileSystemErrors;
+	const wchar_t* fileSystemErrors = nullptr;
+	AlifErrorHandler_ errors = get_errorHandlerWide(fileSystemErrors);
+	return uStr_encodeLocale(_uStr, errors, 0);
+}
+
+
+
+AlifIntT alifUStr_fsConverter(AlifObject* _arg, void* _addr) { // 4079
+	AlifObject* path = nullptr;
+	AlifObject* output = nullptr;
+	AlifSizeT size{};
+	const char* data{};
+	if (_arg == nullptr) {
+		ALIF_DECREF(*(AlifObject**)_addr);
+		*(AlifObject**)_addr = nullptr;
+		return 1;
+	}
+	//path = alifOS_fsPath(_arg);
+	//if (path == nullptr) {
+	//	return 0;
+	//}
+	//if (ALIFBYTES_CHECK(path)) {
+	//	output = path;
+	//}
+	//else {  // alifOS_fsPath() guarantees its returned value is bytes or str.
+		//output = alifUStr_encodeFSDefault(path);
+		output = alifUStr_encodeFSDefault(_arg);
+		//ALIF_DECREF(path);
+		if (!output) {
+			return 0;
+		}
+	//}
+
+	size = ALIFBYTES_GET_SIZE(output);
+	data = ALIFBYTES_AS_STRING(output);
+	if ((AlifUSizeT)size != strlen(data)) {
+		//alifErr_setString(_alifExcValueError_, "embedded null byte");
+		ALIF_DECREF(output);
+		return 0;
+	}
+	*(AlifObject**)_addr = output;
+	return ALIF_CLEANUP_SUPPORTED;
 }
 
 

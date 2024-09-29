@@ -60,6 +60,7 @@
 #define SIZEOF_LONG 4
 #define SIZEOF_LONG_LONG 8
 
+#define HAVE_WCHAR_H 1
 
 /* ------------------------------ مترجم مايكروسوفت ------------------------------ */
 #ifdef _MSC_VER
@@ -145,6 +146,8 @@
 #define HAVE_UNISTD_H 1
 
 #define HAVE_CLOCK_GETTIME 1
+
+#define HAVE_WCHAR_H 1
 
 #endif
 

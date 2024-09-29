@@ -31,16 +31,26 @@ AlifObject* alifUStr_fromFormatV(const char*, va_list); // 237
 
 AlifObject* alifUStr_fromFormat(const char*, ...); // 241
 
+#ifdef HAVE_WCHAR_H // 253
+
 AlifObject* alifUStr_fromWideChar(const wchar_t*, AlifSizeT); // 260
 
 AlifSizeT alifUStr_asWideChar(AlifObject* , wchar_t* ,AlifSizeT ); // 277
 
+
+wchar_t* alifUStr_asWideCharString(AlifObject*, AlifSizeT*); // 291
+
+#endif // 296
 
 AlifObject* alifUStr_decodeUTF8Stateful(const char*, AlifSizeT, const char*, AlifSizeT*); // 435
 
 
 
 
+AlifIntT alifUStr_fsConverter(AlifObject*, void*); // 743
+
+
+AlifObject* alifUStr_encodeFSDefault(AlifObject*); // 766
 
 
 

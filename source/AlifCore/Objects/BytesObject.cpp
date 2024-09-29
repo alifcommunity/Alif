@@ -84,6 +84,36 @@ AlifObject* alifBytes_fromStringAndSize(const char* _str, AlifSizeT _size) { // 
 }
 
 
+AlifObject* alifBytes_fromString(const char* _str) { // 139
+	AlifUSizeT size{};
+	AlifBytesObject* op{};
+
+	size = strlen(_str);
+	if (size > ALIF_SIZET_MAX - ALIFBYTESOBJECT_SIZE) {
+		//alifErr_setString(_alifExcOverflowError_,
+		//	"byte string is too long");
+		return nullptr;
+	}
+
+	if (size == 0) {
+		return bytes_getEmpty();
+	}
+	else if (size == 1) {
+		op = CHARACTER(*_str & 255);
+		return (AlifObject*)op;
+	}
+
+	/* Inline AlifObject_NewVar */
+	op = (AlifBytesObject*)alifMem_objAlloc(ALIFBYTESOBJECT_SIZE + size);
+	if (op == nullptr) {
+		//return alifErr_noMemory();
+		return nullptr; // temp
+	}
+	_alifObject_initVar((AlifVarObject*)op, &_alifBytesType_, size);
+	op->hash = -1;
+	memcpy(op->val, _str, size + 1);
+	return (AlifObject*)op;
+}
 
 
 

@@ -12,7 +12,7 @@ extern AlifTypeObject _alifBytesIterType_;
 
 
 AlifObject* alifBytes_fromStringAndSize(const char*, AlifSizeT); // 31
-
+AlifObject* alifBytes_fromString(const char*);
 
 
 /* ------------------------------------------------------------------------------------------- */

@@ -1,6 +1,7 @@
 #include "alif.h"
 
 #include "AlifCore_FileUtils.h"
+#include "AlifCore_DureRun.h"
 
 #include "OSDefs.h"
 
@@ -45,7 +46,7 @@ static AlifIntT isValid_wideChar(wchar_t _ch) { // 118
 		return 0;
 	}
 	if (_ch > MAX_UNICODE) {
-		// bpo-35883: Reject characters outside [U+0000; U+10ffff] range.
+		// Reject characters outside [U+0000; U+10ffff] range.
 		// The glibc mbstowcs() UTF-8 decoder does not respect the RFC 3629,
 		// it creates characters outside the [U+0000; U+10ffff] range:
 		// https://sourceware.org/bugzilla/show_bug.cgi?id=2373
@@ -200,7 +201,31 @@ AlifIntT alif_decodeLocaleEx(const char* _arg, wchar_t** _wstr, AlifUSizeT* _wle
 #endif
 	}
 
+//#ifdef ALIF_FORCE_UTF8_FS_ENCODING
+//	return _alif_decodeUTF8Ex(_arg, strlen(_arg), _wstr, _wlen, _reason, _errors);
+//#else
+//	AlifIntT useUTF8 = (_alifDureRun_.preConfig.utf8Mode >= 1);
+//#ifdef _WINDOWS
+//	useUTF8 |= (_alifDureRun_.preConfig.legacyWindowsFSEncoding == 0);
+//#endif
+//	if (useUTF8) {
+//		return _alif_decodeUTF8Ex(_arg, strlen(_arg), _wstr, _wlen, _reason, _errors);
+//	}
+//
+//#ifdef USE_FORCE_ASCII
+//	if (FORCE_ASCII == -1) {
+//		FORCE_ASCII = check_forceASCII();
+//	}
+//
+//	if (FORCE_ASCII) {
+//		/* force ASCII encoding to workaround mbstowcs() issue */
+//		return decode_ascii(_arg, _wstr, _wlen, _reason, _errors);
+//	}
+//#endif
+
 	return alif_decodeUTF8Ex(_arg, strlen(_arg), _wstr, _wlen, _reason, _errors);
+
+//#endif
 }
 
 wchar_t* alif_decodeLocale(const char* _arg, AlifUSizeT* _wlen) { // 663
@@ -218,50 +243,217 @@ wchar_t* alif_decodeLocale(const char* _arg, AlifUSizeT* _wlen) { // 663
 }
 
 
+static AlifIntT encode_currentLocale(const wchar_t* _text, char** _str,
+	AlifUSizeT* _errorPos, const char** _reason,
+	AlifIntT _rawMalloc, AlifErrorHandler_ _errors) { // 681
+	const AlifUSizeT len = wcslen(_text);
+	char* result = nullptr, * bytes = nullptr;
+	AlifUSizeT i_{}, size{}, converted{};
+	wchar_t c_{}, buf[2]{};
+
+	AlifIntT surrogateescape{};
+	if (get_surrogateEscape(_errors, &surrogateescape) < 0) {
+		return -3;
+	}
+
+	/* The function works in two steps:
+	   1. compute the length of the output buffer in bytes (size)
+	   2. outputs the bytes */
+	size = 0;
+	buf[1] = 0;
+	while (1) {
+		for (i_ = 0; i_ < len; i_++) {
+			c_ = _text[i_];
+			if (c_ >= 0xdc80 and c_ <= 0xdcff) {
+				if (!surrogateescape) {
+					goto encode_error;
+				}
+				/* UTF-8b surrogate */
+				if (bytes != nullptr) {
+					*bytes++ = c_ - 0xdc00;
+					size--;
+				}
+				else {
+					size++;
+				}
+				continue;
+			}
+			else {
+				buf[0] = c_;
+				if (bytes != nullptr) {
+					converted = wcstombs(bytes, buf, size);
+				}
+				else {
+					converted = wcstombs(nullptr, buf, 0);
+				}
+				if (converted == _decodeError_) {
+					goto encode_error;
+				}
+				if (bytes != nullptr) {
+					bytes += converted;
+					size -= converted;
+				}
+				else {
+					size += converted;
+				}
+			}
+		}
+		if (result != nullptr) {
+			*bytes = '\0';
+			break;
+		}
+
+		size += 1; /* nul byte at the end */
+		if (_rawMalloc) {
+			result = (char*)malloc(size);
+		}
+		else {
+			result = (char*)alifMem_dataAlloc(size);
+		}
+		if (result == nullptr) {
+			return -1;
+		}
+		bytes = result;
+	}
+	*_str = result;
+	return 0;
+
+encode_error:
+	if (_rawMalloc) {
+		free(result);
+	}
+	else {
+		alifMem_dataFree(result);
+	}
+	if (_errorPos != nullptr) {
+		*_errorPos = i_;
+	}
+	if (_reason) {
+		*_reason = "encoding error";
+	}
+	return -2;
+}
 
 
 
-//FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) { // 1764
-//	FILE* f{};
-//#ifdef _WINDOWS
-//	wchar_t wmode[10];
-//	AlifIntT uSize;
-//
-//	uSize = MultiByteToWideChar(CP_ACP, 0, _mode, -1,
-//		wmode, ALIF_ARRAY_LENGTH(wmode));
-//
-//	f = _wfopen((wchar_t*)((AlifUStrObject*)_path)->UTF, wmode);
-//
+static AlifIntT encode_localeEX(const wchar_t* _text, char** _str, AlifUSizeT* _errorPos,
+	const char** _reason, AlifIntT _rawMalloc,
+	AlifIntT _currentLocale, AlifErrorHandler_ _errors) { // 792
+
+	if (_currentLocale) {
+#ifdef ALIF_FORCE_UTF8_LOCALE
+		return _alif_encodeUTF8Ex(_text, _str, _errorPos, _reason,
+			_rawMalloc, _errors);
+#else
+		return encode_currentLocale(_text, _str, _errorPos, _reason,
+			_rawMalloc, _errors);
+#endif
+	}
+
+//#ifdef ALIF_FORCE_UTF8_FS_ENCODING
+//	return _alif_encodeUTF8Ex(_text, _str, _errorpos, _reason,
+//		_rawMalloc, _errors);
 //#else
-//	//AlifObject* bytes;
-//	//const char* pathBytes;
-//
-//	//if (!alifUStr_fsConverter(_path, &bytes))
-//	//	return nullptr;
-//	//pathBytes = (const char*)_alifWBytes_asString(bytes); // need review
-//
-//	//if (alifSys_audit("open", "Osi", _path, _mode, 0) < 0) {
-//	//	ALIF_DECREF(bytes);
-//	//	return nullptr;
-//	//}
-//
-//	// temp
-//	mbstate_t mbState{};
-//	char dist[128];
-//	::memset((void*)&mbState, 0, sizeof(mbState));
-//	const wchar_t* src = (const wchar_t*)((AlifUStrObject*)_path)->UTF;
-//	AlifSizeT size = wcsrtombs(dist, &src, 128, &mbState);
-//	//
-//
-//	do {
-//		f = fopen(dist, _mode);
-//	} while (f == nullptr and errno == EINTR);
-//	//AlifIntT savedErrno = errno;
-//	//ALIF_DECREF(bytes);
+//	AlifIntT useUTF8 = (_alifDureRun_.preConfig.utf8Mode >= 1);
+//#ifdef _WINDOWS
+//	useUTF8 |= (_alifDureRun_.preConfig.legacyWindowsFSEncoding == 0);
 //#endif
+//	if (useUTF8) {
+//		return _alif_encodeUTF8Ex(_text, _str, _errorPos, _reason,
+//			_rawMalloc, _errors);
+//	}
 //
-//	return f;
-//}
+//#ifdef USE_FORCE_ASCII
+//	if (FORCE_ASCII == -1) {
+//		FORCE_ASCII = check_forceASCII();
+//	}
+//
+//	if (FORCE_ASCII) {
+//		return encode_ascii(_text, _str, _errorPos, _reason,
+//			_rawMalloc, _errors);
+//	}
+//#endif
+
+	return encode_currentLocale(_text, _str, _errorPos, _reason, _rawMalloc, _errors);
+
+//#endif
+}
+
+
+AlifIntT _alif_encodeLocaleEx(const wchar_t* _text, char** _str,
+	AlifUSizeT* _error_pos, const char** _reason,
+	AlifIntT _currentLocale, AlifErrorHandler_ _errors) { // 881
+	return encode_localeEX(_text, _str, _error_pos, _reason, 1,
+		_currentLocale, _errors);
+}
+
+
+
+
+
+FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) { // 1764
+	FILE* f{};
+    AlifIntT asyncErr = 0;
+#ifdef _WINDOWS
+	wchar_t wmode[10]{};
+	AlifIntT uSize{};
+
+	if (!ALIFUSTR_CHECK(_path)) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"str file path expected under Windows, got %R",
+		//	ALIF_TYPE(_path));
+		return nullptr;
+	}
+
+	wchar_t* wpath = alifUStr_asWideCharString(_path, nullptr);
+	if (wpath == nullptr) return nullptr;
+
+	uSize = MultiByteToWideChar(CP_ACP, 0, _mode, -1,
+		wmode, ALIF_ARRAY_LENGTH(wmode));
+
+	if (uSize == 0) {
+		//alifErr_setFromWindowsErr(0);
+		//alifMem_free(wpath);
+		return nullptr;
+	}
+
+	do {
+		ALIF_BEGIN_ALLOW_THREADS
+			f = _wfopen(wpath, wmode);
+		ALIF_END_ALLOW_THREADS
+	} while (f == nullptr and errno == EINTR /*and !(async_err = alifErr_checkSignals())*/);
+	AlifIntT savedErrNo = errno;
+	alifMem_dataFree(wpath);
+
+#else
+	AlifObject* bytes{};
+	const char* pathBytes{};
+
+	if (!alifUStr_fsConverter(_path, &bytes)) return nullptr;
+	pathBytes = ALIFBYTES_AS_STRING(bytes);
+
+	do {
+		ALIF_BEGIN_ALLOW_THREADS
+			f = fopen(pathBytes, _mode);
+		ALIF_END_ALLOW_THREADS
+	} while (f == nullptr and errno == EINTR /*and !(async_err = alifErr_checkSignals())*/);
+	AlifIntT saved_errno = errno;
+	ALIF_DECREF(bytes);
+#endif
+	if (asyncErr) return nullptr;
+
+	if (f == nullptr) {
+		errno = savedErrNo;
+		//alifErr_setFromErrnoWithFilenameObject(_alifExcOSError_, _path);
+		return nullptr;
+	}
+
+	//if (set_inheritable(fileno(f), 0, 1, nullptr) < 0) {
+	//	fclose(f);
+	//	return nullptr;
+	//}
+	return f;
+}
 
 wchar_t* alif_wGetCWD(wchar_t* _buf, AlifUSizeT _bufLen) { // 2620
 #ifdef _WINDOWS
