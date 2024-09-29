@@ -125,8 +125,11 @@ AlifTypeObject _alifBytesType_ = { // 3028
 	.name = "بايت",
 	.basicSize = ALIFBYTESOBJECT_SIZE,
 	.itemSize = sizeof(char),
+	.dealloc = 0,
+	.getAttro = alifObject_genericGetAttr,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE |
 		ALIF_TPFLAGS_BYTES_SUBCLASS | _ALIF_TPFLAGS_MATCH_SELF,
+	.free = alifMem_objFree,
 };
 
 

@@ -2,7 +2,7 @@
 
 
 
-#ifdef MS_WINDOWS
+#ifdef _WINDOWS
 #  define SEP L'\\'
 #  define ALTSEP L'/'
 #  define MAXPATHLEN 256

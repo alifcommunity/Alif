@@ -11,6 +11,9 @@
 #include <unistd.h>             // getcwd()
 #endif
 
+#include <pathcch.h>
+
+
 
 #define MAX_UNICODE 0x10ffff // 53
 
@@ -437,8 +440,8 @@ FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) { // 1764
 			f = fopen(pathBytes, _mode);
 		ALIF_END_ALLOW_THREADS
 	} while (f == nullptr and errno == EINTR /*and !(async_err = alifErr_checkSignals())*/);
-	AlifIntT saved_errno = errno;
-	ALIF_DECREF(bytes);
+	AlifIntT savedErrNo = errno;
+	//ALIF_DECREF(bytes); // كائن بايت لا يملك dealloc - يجب مراجعة المشكلة
 #endif
 	if (asyncErr) return nullptr;
 
@@ -454,6 +457,87 @@ FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) { // 1764
 	//}
 	return f;
 }
+
+
+
+AlifIntT alif_isAbs(const wchar_t* _path) { // 2147
+#ifdef _WINDOWS
+	const wchar_t* tail{};
+	HRESULT hr = PathCchSkipRoot(_path, &tail);
+	if (FAILED(hr) or _path == tail) {
+		return 0;
+	}
+	if (tail == &_path[1] and (_path[0] == SEP or _path[0] == ALTSEP)) {
+		// Exclude paths with leading SEP
+		return 0;
+	}
+	if (tail == &_path[2] and _path[1] == L':') {
+		// Exclude drive-relative paths (e.g. C:filename.ext)
+		return 0;
+	}
+	return 1;
+#else
+	return (_path[0] == SEP);
+#endif
+}
+
+
+AlifIntT alif_absPath(const wchar_t* _path, wchar_t** _absPathP) { // 2176
+	if (_path[0] == '\0' or !wcscmp(_path, L".")) {
+		wchar_t cwd[MAXPATHLEN + 1]{};
+		cwd[ALIF_ARRAY_LENGTH(cwd) - 1] = 0;
+		if (!alif_wGetCWD(cwd, ALIF_ARRAY_LENGTH(cwd) - 1)) {
+			/* unable to get the current directory */
+			return -1;
+		}
+		*_absPathP = alifMem_wcsDup(cwd);
+		return 0;
+	}
+
+	if (alif_isAbs(_path)) {
+		*_absPathP = alifMem_wcsDup(_path);
+		return 0;
+	}
+
+#ifdef _WINDOWS
+	return alifOS_getFullPathName(_path, _absPathP);
+#else
+	wchar_t cwd[MAXPATHLEN + 1]{};
+	cwd[ALIF_ARRAY_LENGTH(cwd) - 1] = 0;
+	if (!alif_wGetCWD(cwd, ALIF_ARRAY_LENGTH(cwd) - 1)) {
+		/* unable to get the current directory */
+		return -1;
+	}
+
+	AlifUSizeT cwdLen = wcslen(cwd);
+	AlifUSizeT pathLen = wcslen(_path);
+	AlifUSizeT len = cwdLen + 1 + pathLen + 1;
+	if (len <= (AlifUSizeT)ALIF_SIZET_MAX / sizeof(wchar_t)) {
+		*_absPathP = (wchar_t*)alifMem_dataAlloc(len * sizeof(wchar_t));
+	}
+	else {
+		*_absPathP = nullptr;
+	}
+	if (*_absPathP == nullptr) {
+		return 0;
+	}
+
+	wchar_t* abspath = *_absPathP;
+	memcpy(abspath, cwd, cwdLen * sizeof(wchar_t));
+	abspath += cwdLen;
+
+	*abspath = (wchar_t)SEP;
+	abspath++;
+
+	memcpy(abspath, _path, pathLen * sizeof(wchar_t));
+	abspath += pathLen;
+
+	*abspath = 0;
+	return 0;
+#endif
+}
+
+
 
 wchar_t* alif_wGetCWD(wchar_t* _buf, AlifUSizeT _bufLen) { // 2620
 #ifdef _WINDOWS

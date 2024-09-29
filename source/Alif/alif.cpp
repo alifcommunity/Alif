@@ -61,10 +61,8 @@ static AlifIntT alifMain_runFileObj(AlifObject* _pn, AlifObject* _fn, AlifIntT _
 		//alifErr_clear();
 		//alifSys_formatStderr("%S: can't open file %R: [Errno %d] %s\n",
 		//	_pn, _fn, errno, strerror(errno));
-		printf("%ls: لا يمكن فتح الملف %ls: [Errno %d] %s\n",
-			(const char*)((AlifUStrObject*)_pn)->data.any,
-			(const char*)((AlifUStrObject*)_fn)->data.any,
-			errno, "لا يوجد ملف او مسار بهذا الاسم");
+		printf("%s: لا يمكن فتح الملف %s: [Errno %d] %s\n",
+		(const char*)ALIFUSTR_DATA(_pn), (const char*)ALIFUSTR_DATA(_fn), errno, "لا يوجد ملف او مسار بهذا الاسم");
 		return 2;
 	}
 

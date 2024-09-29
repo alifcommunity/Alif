@@ -583,8 +583,9 @@ static AlifIntT alif_extension(wchar_t* _filename) { // alif
 static AlifIntT run_absPathFilename(AlifConfig* _config) { // 2888
 
 	wchar_t* filename = _config->runFilename;
-	// في حال عدم وجود ملف يجب تشغيله، لا تقم بجلب المسار
-	if (!filename) { return -1; }
+	if (!filename) {
+		return 1;
+	}
 
 	// يتم التحقق من لاحقة الملف والتي يجب ان تكون .alif
 	if (!alif_extension(filename)) {
@@ -592,49 +593,25 @@ static AlifIntT run_absPathFilename(AlifConfig* _config) { // 2888
 		exit(-1);
 	}
 
+#ifndef _WINDOWS
+	if (_alif_isAbs(filename)) {
+		/* path is already absolute */
+		return 1;
+	}
+#endif
+
 	wchar_t* absFilename{};
+	if (alif_absPath(filename, &absFilename) < 0) {
+		/* failed to get the absolute path of the command line filename:
+		   ignore the error, keep the relative path */
+		return 1;
+	}
+	if (absFilename == nullptr) {
+		return -1;
+	}
 
-#ifdef _WINDOWS
-	wchar_t wOutBuf[MAX_PATH]{}, * wOutBufP = wOutBuf;
-	DWORD result{};
-	result = GetFullPathNameW(filename, ALIF_ARRAY_LENGTH(wOutBuf), wOutBuf, nullptr);
-	if (!result) return -1;
-
-	wOutBufP = (wchar_t*)alifMem_dataAlloc(result * sizeof(wchar_t));
-	result = GetFullPathNameW(filename, result, wOutBufP, nullptr);
-
-	absFilename = (wchar_t*)alifMem_dataAlloc(result * sizeof(wchar_t));
-	memcpy(absFilename, wOutBuf, result * sizeof(wchar_t));
-#else
-	char buf[MAXPATHLEN]{};
-
-	char* cwd = getcwd(buf, sizeof(buf));
-	size_t len = mbstowcs(nullptr, cwd, 0);
-	wchar_t* wCwd = (wchar_t*)alifMem_dataAlloc(len * sizeof(wchar_t));
-	mbstowcs(wCwd, cwd, len);
-
-	size_t cwdLen = wcslen(wCwd);
-	size_t pathLen = wcslen(filename);
-	size_t length = cwdLen + pathLen;
-
-	absFilename = (wchar_t*)alifMem_dataAlloc(length * sizeof(wchar_t));
-
-	wchar_t* absPath = absFilename;
-	memcpy(absPath, wCwd, cwdLen * sizeof(wchar_t));
-	absPath += cwdLen;
-
-	*absPath = (wchar_t)L'/';
-	absPath++;
-
-	memcpy(absPath, filename, pathLen * sizeof(wchar_t));
-
-	absPath += pathLen - 1;
-	*absPath = 0;
-
-#endif // _WINDOWS
-
+	alifMem_dataFree(_config->runFilename);
 	_config->runFilename = absFilename;
-
 	return 1;
 }
 

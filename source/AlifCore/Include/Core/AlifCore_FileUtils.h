@@ -35,3 +35,12 @@ extern AlifIntT alif_decodeUTF8Ex(const char*, AlifSizeT,
 	wchar_t**, AlifUSizeT*, const char**, AlifErrorHandler_); // 210
 
 //wchar_t* alifUniversal_newLineFGetsWithSize(wchar_t*, int, FILE*, AlifSizeT*);
+
+
+extern AlifIntT alif_isAbs(const wchar_t*); // 267
+extern AlifIntT alif_absPath(const wchar_t*, wchar_t**); // 268
+#ifdef _WINDOWS
+extern AlifIntT alifOS_getFullPathName(const wchar_t*, wchar_t**); // 270
+#endif;
+
+
