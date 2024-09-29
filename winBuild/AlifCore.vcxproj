@@ -60,6 +60,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ParkingLot.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Parser.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_QSBR.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Run.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Semaphore.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_State.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Thread.h" />
@@ -79,6 +80,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifMimalloc.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifPort.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifRun.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifState.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifThread.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifTime.h" />
@@ -90,6 +92,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\BuiltinsModule.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\ByteArrayObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\BytesObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\Compile.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\CondVar.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\CriticalSection.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\DescrObject.h" />
@@ -141,6 +144,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\AlifMemory.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifMimalloc.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifRun.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifState.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifThread.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifTime.cpp" />

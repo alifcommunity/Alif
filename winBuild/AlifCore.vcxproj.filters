@@ -130,6 +130,9 @@
     <ClCompile Include="..\source\AlifCore\Objects\LongObject.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\AlifRun.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">
@@ -467,6 +470,15 @@
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_BitUtils.h">
       <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifRun.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Run.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\Compile.h">
+      <Filter>Include\Main</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

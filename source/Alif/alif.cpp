@@ -3,7 +3,7 @@
 #include "AlifCore_InitConfig.h"
 #include "AlifCore_LifeCycle.h"
 #include "AlifCore_State.h"
-//#include "AlifCore_Run.h"
+#include "AlifCore_Run.h"
 
 
  // 26
@@ -78,7 +78,8 @@ static AlifIntT alifMain_runFileObj(AlifObject* _pn, AlifObject* _fn, AlifIntT _
 		}
 	}
 
-	AlifIntT run = alifRun_fileObj(fp_, _fn, 1);
+	AlifCompilerFlags cf = ALIFCOMPILERFLAGS_INIT;
+	AlifIntT run = alifRun_fileObject(fp_, _fn, 1, &cf);
 	return (run != 0);
 }
 
