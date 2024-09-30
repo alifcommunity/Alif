@@ -8,7 +8,7 @@
 
 
 
-//AlifObject* alifImport_addModuleRef(const wchar_t*); // 47
+AlifObject* alifImport_addModuleRef(const char*); // 47
 
 
 

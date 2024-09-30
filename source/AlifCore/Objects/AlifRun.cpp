@@ -124,7 +124,7 @@ AlifIntT alifRun_simpleFileObject(FILE* _fp, AlifObject* _filename,
 		v = alifRun_file(_fp, _filename, ALIF_FILE_INPUT, dict, dict,
 			_closeIt, _flags);
 	//}
-	flush_io();
+	//flush_io();
 	if (v == nullptr) {
 		ALIF_CLEAR(mainModule);
 		//alifErr_print();

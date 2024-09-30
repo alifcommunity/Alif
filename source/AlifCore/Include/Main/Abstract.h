@@ -13,6 +13,9 @@ AlifSizeT alifObject_length(AlifObject*); // 342
 #define ALIFOBJECT_LENGTH alifObject_size
 
 
+AlifIntT alifObject_setItem(AlifObject*, AlifObject*, AlifObject*); // 357
+
+
 AlifObject* alifObject_getIter(AlifObject*); // 383
 
 AlifObject* alifIter_next(AlifObject* ); // 417
@@ -30,6 +33,8 @@ AlifIntT alifMapping_check(AlifObject*); // 806
 AlifSizeT alifMapping_size(AlifObject*); // 810
 
 
+
+AlifIntT alifMapping_getOptionalItem(AlifObject*, AlifObject*, AlifObject**); // 895
 
 
 

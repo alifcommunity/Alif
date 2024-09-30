@@ -14,6 +14,8 @@ AlifObject* alifModule_newObject(AlifObject*); // 16
 
 AlifObject* alifModule_new(const char*); // 20
 
+AlifObject* alifModule_getDict(AlifObject*); // 23
+
 AlifObject* alifModule_getNameObject(AlifObject*); // 25
 
 

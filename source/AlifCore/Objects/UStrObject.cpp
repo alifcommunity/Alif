@@ -2104,6 +2104,10 @@ static AlifObject* intern_common(AlifInterpreter* _interp,
 }
 
 
+void alifUStr_internImmortal(AlifInterpreter* _interp, AlifObject** _p) { // 15553
+	*_p = intern_common(_interp, *_p, 1);
+}
+
 void alifUStr_internMortal(AlifInterpreter* _interp, AlifObject** _p) { // 15561
 	*_p = intern_common(_interp, *_p, 0);
 }

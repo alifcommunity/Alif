@@ -24,6 +24,11 @@ public:
 
 
 
+static inline AlifObject* _alifModule_getDict(AlifObject* mod) { // 40
+	AlifObject* dict = ((AlifModuleObject*)mod)->dict;
+	return dict;  // borrowed reference
+}
+
 
 AlifObject* alifModule_getAttroImpl(AlifModuleObject*, AlifObject*, AlifIntT); // 48
 AlifObject* alifModule_getAttro(AlifModuleObject*, AlifObject*); // 49

@@ -40,7 +40,7 @@ extern AlifIntT alifDict_getItemRefKnownHash(AlifDictObject* , AlifObject* , Ali
 
 extern AlifIntT alifObjectDict_setItem(AlifTypeObject*, AlifObject*, AlifObject**, AlifObject*, AlifObject*); // 118
 
-
+extern AlifIntT alifDict_popKnownHash(AlifDictObject*, AlifObject*, AlifHashT, AlifObject**); // 120
 
 
 // 126

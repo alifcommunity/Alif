@@ -106,6 +106,57 @@ AlifSizeT alifObject_lengthHint(AlifObject* _o,
 
 
 
+AlifIntT alifMapping_getOptionalItem(AlifObject* _obj,
+	AlifObject* _key, AlifObject** _result) { // 203
+	if (ALIFDICT_CHECKEXACT(_obj)) {
+		return alifDict_getItemRef(_obj, _key, _result);
+	}
+
+	*_result = alifObject_getItem(_obj, _key);
+	if (*_result) {
+		return 1;
+	}
+	//if (!alifErr_exceptionMatches(_alifExcKeyError_)) {
+	//	return -1;
+	//}
+	//alifErr_clear();
+	return 0;
+}
+
+
+AlifIntT alifObject_setItem(AlifObject* _o,
+	AlifObject* _key, AlifObject* _value) { // 222
+	if (_o == nullptr or _key == nullptr or _value == nullptr) {
+		null_error();
+		return -1;
+	}
+
+	AlifMappingMethods* m_ = ALIF_TYPE(_o)->asMapping;
+	if (m_ and m_->assSubscript) {
+		AlifIntT res = m_->assSubscript(_o, _key, _value);
+		return res;
+	}
+
+	if (ALIF_TYPE(_o)->asSequence) {
+		if (_alifIndex_check(_key)) {
+			AlifSizeT keyValue{};
+			keyValue = alifNumber_asSizeT(_key, _alifExcIndexError_);
+			if (keyValue == -1 /*and alifErr_occurred()*/)
+				return -1;
+			return alifSequence_setItem(_o, keyValue, _value);
+		}
+		else if (ALIF_TYPE(_o)->asSequence->assItem) {
+			//type_error("sequence index must be "
+			//	"integer, not '%.200s'", _key);
+			return -1;
+		}
+	}
+
+	//type_error("'%.200s' object does not support item assignment", _o);
+	return -1;
+}
+
+
 
 
 

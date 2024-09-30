@@ -951,8 +951,8 @@ Fail:
 	return -1;
 }
 
-static AlifIntT insertTo_emptyDict(AlifInterpreter* _interp,
-	AlifDictObject* _mp, AlifObject* _key, AlifHashT _hash, AlifObject* _value) { // 1795
+static AlifIntT insertTo_emptyDict(AlifInterpreter* _interp, AlifDictObject* _mp,
+	AlifObject* _key, AlifHashT _hash, AlifObject* _value) { // 1795
 
 	AlifIntT uStr = ALIFUSTR_CHECKEXACT(_key);
 	AlifDictKeysObject* newKeys = new_keysObject(
@@ -989,7 +989,8 @@ static AlifIntT insertTo_emptyDict(AlifInterpreter* _interp,
 	return 0;
 }
 
-static void build_indicesGeneric(AlifDictKeysObject* _keys, AlifDictKeyEntry* ep_, AlifSizeT _n) { // 1847
+static void build_indicesGeneric(AlifDictKeysObject* _keys,
+	AlifDictKeyEntry* ep_, AlifSizeT _n) { // 1847
 	AlifUSizeT mask = DK_MASK(_keys);
 	for (AlifSizeT ix_ = 0; ix_ != _n; ix_++, ep_++) {
 		AlifUSizeT hash = ep_->hash;
@@ -1166,7 +1167,8 @@ AlifIntT alifDict_getItemRefKnownHash(AlifDictObject* _op, AlifObject* _key,
 	return 1;  // key is present
 }
 
-AlifIntT alifDict_getItemRef(AlifObject* _op, AlifObject* _key, AlifObject** _result) { // 2275
+AlifIntT alifDict_getItemRef(AlifObject* _op,
+	AlifObject* _key, AlifObject** _result) { // 2275
 	if (!ALIFDICT_CHECK(_op)) {
 		//ALIFERR_BADINTERNALCALL();
 		*_result = nullptr;
@@ -1209,7 +1211,8 @@ AlifIntT alifDict_setItemTake2(AlifDictObject* _mp,
 }
 
 
-AlifIntT alifDict_setItem(AlifObject* _op, AlifObject* _key, AlifObject* _value) { // 2465
+AlifIntT alifDict_setItem(AlifObject* _op,
+	AlifObject* _key, AlifObject* _value) { // 2465
 	if (!ALIFDICT_CHECK(_op)) {
 		//ALIFERR_BADINTERNALCALL();
 		return -1;
@@ -1311,13 +1314,111 @@ static AlifIntT delItem_knownHashLockHeld(AlifObject* _op,
 }
 
 
-AlifIntT alifDict_delItemKnownHash(AlifObject* _op, AlifObject* _key, AlifHashT _hash) { // 2624
+AlifIntT alifDict_delItemKnownHash(AlifObject* _op,
+	AlifObject* _key, AlifHashT _hash) { // 2624
 	AlifIntT res{};
 	ALIF_BEGIN_CRITICAL_SECTION(_op);
 	res = delItem_knownHashLockHeld(_op, _key, _hash);
 	ALIF_END_CRITICAL_SECTION();
 	return res;
 }
+
+AlifIntT alifDict_popKnownHash(AlifDictObject* _mp, AlifObject* _key,
+	AlifHashT _hash, AlifObject** _result) { // 2843
+
+	if (_mp->used == 0) {
+		if (_result) {
+			*_result = nullptr;
+		}
+		return 0;
+	}
+
+	AlifObject* oldValue{};
+	AlifSizeT ix = alifDict_lookup(_mp, _key, _hash, &oldValue);
+	if (ix == DKIX_ERROR) {
+		if (_result) {
+			*_result = nullptr;
+		}
+		return -1;
+	}
+
+	if (ix == DKIX_EMPTY or oldValue == nullptr) {
+		if (_result) {
+			*_result = nullptr;
+		}
+		return 0;
+	}
+
+	AlifInterpreter* interp = _alifInterpreter_get();
+	//uint64_t newVersion = _alifDict_notifyEvent(
+	//	interp, alifDict_Event_Deleted, mp, key, nullptr);
+	delItem_common(_mp, _hash, ix, ALIF_NEWREF(oldValue)/*, newVersion*/);
+
+	if (_result) {
+		*_result = oldValue;
+	}
+	else {
+		ALIF_DECREF(oldValue);
+	}
+	return 1;
+}
+
+static AlifIntT pop_lockHeld(AlifObject* _op,
+	AlifObject* _key, AlifObject** _result) { // 2890
+	if (!ALIFDICT_CHECK(_op)) {
+		if (_result) {
+			*_result = nullptr;
+		}
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+	AlifDictObject* dict = (AlifDictObject*)_op;
+
+	if (dict->used == 0) {
+		if (_result) {
+			*_result = nullptr;
+		}
+		return 0;
+	}
+
+	AlifHashT hash = alifObject_hashFast(_key);
+	if (hash == -1) {
+		if (_result) {
+			*_result = nullptr;
+		}
+		return -1;
+	}
+	return alifDict_popKnownHash(dict, _key, hash, _result);
+}
+
+
+
+AlifIntT alifDict_pop(AlifObject* _op,
+	AlifObject* _key, AlifObject** _result) { // 2921
+	AlifIntT err{};
+	ALIF_BEGIN_CRITICAL_SECTION(_op);
+	err = pop_lockHeld(_op, _key, _result);
+	ALIF_END_CRITICAL_SECTION();
+
+	return err;
+}
+
+
+AlifIntT alifDict_popString(AlifObject* _op,
+	const char* _key, AlifObject** _result) { // 2933
+	AlifObject* keyObj = alifUStr_fromString(_key);
+	if (keyObj == nullptr) {
+		if (_result != nullptr) {
+			*_result = nullptr;
+		}
+		return -1;
+	}
+
+	AlifIntT res = alifDict_pop(_op, keyObj, _result);
+	ALIF_DECREF(keyObj);
+	return res;
+}
+
 
 
 
@@ -1449,6 +1550,16 @@ AlifIntT alifDict_contains(AlifObject* _op, AlifObject* _key) { // 4593
 	return alifDict_containsKnownHash(_op, _key, hash);
 }
 
+AlifIntT alifDict_containsString(AlifObject* _op, const char* _key) { // 4605
+	AlifObject* keyObj = alifUStr_fromString(_key);
+	if (keyObj == nullptr) {
+		return -1;
+	}
+	AlifIntT res = alifDict_contains(_op, keyObj);
+	ALIF_DECREF(keyObj);
+	return res;
+}
+
 AlifIntT alifDict_containsKnownHash(AlifObject* _op,
 	AlifObject* _key, AlifHashT _hash) { // 4618
 	AlifDictObject* mp = (AlifDictObject*)_op;
@@ -1485,7 +1596,8 @@ AlifTypeObject _alifDictType_ = { // 4760
 };
 
 
-AlifIntT alifDict_getItemStringRef(AlifObject* _v, const char* _key, AlifObject** _result) { // 4826
+AlifIntT alifDict_getItemStringRef(AlifObject* _v,
+	const char* _key, AlifObject** _result) { // 4826
 	AlifObject* keyObj = alifUStr_fromString(_key);
 	if (keyObj == nullptr) {
 		*_result = nullptr;
@@ -1494,6 +1606,19 @@ AlifIntT alifDict_getItemStringRef(AlifObject* _v, const char* _key, AlifObject*
 	AlifIntT res = alifDict_getItemRef(_v, keyObj, _result);
 	ALIF_DECREF(keyObj);
 	return res;
+}
+
+AlifIntT alifDict_setItemString(AlifObject* _v,
+	const char* _key, AlifObject* _item) { // 4848
+	AlifObject* kv{};
+	AlifIntT err{};
+	kv = alifUStr_fromString(_key);
+	if (kv == nullptr) return -1;
+	AlifInterpreter* interp = _alifInterpreter_get();
+	alifUStr_internImmortal(interp, &kv);
+	err = alifDict_setItem(_v, kv, _item);
+	ALIF_DECREF(kv);
+	return err;
 }
 
 void alifObject_initInlineValues(AlifObject* _obj, AlifTypeObject* _tp) {  // 6580

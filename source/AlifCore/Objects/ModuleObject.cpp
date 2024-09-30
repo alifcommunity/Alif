@@ -182,7 +182,8 @@ AlifObject* alifModule_createInitialized(AlifModuleDef* _module) { // 209
 
 
 
-AlifIntT alifModule_addFunctions(AlifObject* _m, AlifMethodDef* _functions) { // 523
+AlifIntT alifModule_addFunctions(AlifObject* _m,
+	AlifMethodDef* _functions) { // 523
 	AlifIntT res{};
 	AlifObject* name = alifModule_getNameObject(_m);
 	if (name == nullptr) {
@@ -194,6 +195,14 @@ AlifIntT alifModule_addFunctions(AlifObject* _m, AlifMethodDef* _functions) { //
 	return res;
 }
 
+
+AlifObject* alifModule_getDict(AlifObject* _m) { // 551
+	if (!ALIFMODULE_CHECK(_m)) {
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
+	return _alifModule_getDict(_m);  // borrowed reference
+}
 
 
 AlifObject* alifModule_getNameObject(AlifObject* _mod) { // 561

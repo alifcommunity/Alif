@@ -19,55 +19,68 @@ InitTable* _alifImportInitTable_ = _alifImportInitTab_; // 59
 
 // 80
 #define MODULES(interp) \
-    (interp)->imports.modules_
+    (interp)->imports.modules
 
 
-//AlifObject* alifImport_initModules(AlifInterpreter* _interp) { // 129
-//	MODULES(_interp) = alifNew_dict();
-//	if (MODULES(_interp) == nullptr) {
-//		return nullptr;
-//	}
-//	return MODULES(_interp);
-//}
+AlifObject* alifImport_initModules(AlifInterpreter* _interp) { // 129
+	MODULES(_interp) = alifDict_new();
+	if (MODULES(_interp) == nullptr) {
+		return nullptr;
+	}
+	return MODULES(_interp);
+}
 
 
-//static AlifObject* import_addModule(AlifThread* _tstate, AlifObject* _name)
-//{ // 261
-//	AlifObject* modules_ = _tstate->interpreter->imports.modules_;
-//	if (modules_ == nullptr) {
-//		return nullptr;
-//	}
-//
-//	AlifObject* m_;
-//	if (alifMapping_getOptionalItem(modules_, _name, &m_) < 0) {
-//		return nullptr;
-//	}
-//	if (m_ != nullptr and ALIFMODULE_CHECK(m_)) {
-//		return m_;
-//	}
-//	ALIF_XDECREF(m_);
-//	m_ = alifModule_newObject(_name);
-//	if (m_ == nullptr)
-//		return nullptr;
-//	if (alifObject_setItem(modules_, _name, m_) != 0) {
-//		ALIF_DECREF(m_);
-//		return nullptr;
-//	}
-//
-//	return m_;
-//}
+static inline AlifObject* get_modulesDict(AlifThread* tstate, bool fatal) { // 152
+	AlifObject* modules = MODULES(tstate->interpreter);
+	if (modules == nullptr) {
+		if (fatal) {
+			//alif_fatalError("interpreter has no modules dictionary");
+		}
+		//alifErr_setString(tstate, _alifExcRuntimeError_, "unable to get sys.modules");
+		return nullptr;
+	}
+	return modules;
+}
+
+static AlifObject* import_addModule(AlifThread* _thread,
+	AlifObject* _name) { // 261
+
+	AlifObject* modules_ = get_modulesDict(_thread, false);
+	if (modules_ == nullptr) {
+		return nullptr;
+	}
+
+	AlifObject* m_{};
+	if (alifMapping_getOptionalItem(modules_, _name, &m_) < 0) {
+		return nullptr;
+	}
+	if (m_ != nullptr and ALIFMODULE_CHECK(m_)) {
+		return m_;
+	}
+	ALIF_XDECREF(m_);
+	m_ = alifModule_newObject(_name);
+	if (m_ == nullptr) return nullptr;
+
+	if (alifObject_setItem(modules_, _name, m_) != 0) {
+		ALIF_DECREF(m_);
+		return nullptr;
+	}
+
+	return m_;
+}
 
 
-//AlifObject* alifImport_addModuleRef(const wchar_t* _name) { // 288
-//	AlifObject* nameObj = alifUStr_fromString(_name);
-//	if (nameObj == nullptr) {
-//		return nullptr;
-//	}
-//	AlifThread* tstate = _alifThread_get();
-//	AlifObject* module_ = import_addModule(tstate, nameObj);
-//	ALIF_DECREF(nameObj);
-//	return module_;
-//}
+AlifObject* alifImport_addModuleRef(const char* _name) { // 288
+	AlifObject* nameObj = alifUStr_fromString(_name);
+	if (nameObj == nullptr) {
+		return nullptr;
+	}
+	AlifThread* thread = _alifThread_get();
+	AlifObject* module = import_addModule(thread, nameObj);
+	ALIF_DECREF(nameObj);
+	return module;
+}
 
 
 

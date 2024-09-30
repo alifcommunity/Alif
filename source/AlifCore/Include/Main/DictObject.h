@@ -17,6 +17,8 @@ AlifIntT alifDict_setItem(AlifObject*, AlifObject*, AlifObject*); // 24
 AlifIntT alifDict_delItem(AlifObject*, AlifObject*); // 25
 AlifIntT alifDict_contains(AlifObject*, AlifObject*); // 34
 
+AlifIntT alifDict_setItemString(AlifObject*, const char*, AlifObject*); // 58
+
 
 AlifIntT alifDict_getItemRef(AlifObject* , AlifObject* , AlifObject** ); // 67
 
@@ -56,6 +58,13 @@ public:
 
 
 AlifIntT alifDict_setDefaultRef(AlifObject*, AlifObject*, AlifObject*, AlifObject**); // 53
+
+
+AlifIntT alifDict_containsString(AlifObject*, const char*); // 68
+
+AlifIntT alifDict_pop(AlifObject*, AlifObject*, AlifObject**); // 72
+AlifIntT alifDict_popString(AlifObject*, const char*, AlifObject**); // 73
+
 
 // 78
 #define ALIF_FOREACH_DICT_EVENT(V) \

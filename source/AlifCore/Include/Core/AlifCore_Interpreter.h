@@ -70,7 +70,7 @@ public:
 
 	AlifObject* builtins{};
 
-	//class ImportState imports;
+	ImportState imports{};
 
 	GILDureRunState gil_{};
 

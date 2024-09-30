@@ -16,7 +16,7 @@ public:
 
 class ImportState { // 63
 public:
-	//AlifObject* modules_;
+	AlifObject* modules{};
 
 	//AlifObject* modulesByIndex;
 	//AlifObject* importLib;
@@ -52,7 +52,7 @@ public:
 AlifSizeT alifImport_getNextModuleIndex(); // 129
 extern const char* alifImport_resolveNameWithPackageContext(const char*);
 
-//extern AlifObject* alifImport_initModules(AlifInterpreter*); // 136
+extern AlifObject* alifImport_initModules(AlifInterpreter*); // 136
 
 
 //extern AlifIntT alifImport_init(); // 161
