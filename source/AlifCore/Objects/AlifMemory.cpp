@@ -721,66 +721,65 @@ void* alifMem_objRealloc(void* _ptr, AlifUSizeT _size)
 
 /* -------------------------------- ذاكرة شجرة المحلل -------------------------------- */
 
-//AlifASTBlock* block_new(AlifUSizeT _size) {
-//	AlifASTBlock* b_ = (AlifASTBlock*)alifMem_dataAlloc(sizeof(AlifASTBlock) + _size);
-//	if (b_ == nullptr) return nullptr;
-//	b_->size_ = _size;
-//	b_->mem_ = (void*)(b_ + 1);
-//	b_->next_ = nullptr;
-//	b_->offset_ = (char*)MEMORY_ALIGN_UP((AlifUSizeT)b_->mem_) - (char*)(b_->mem_);
-//
-//	return b_;
-//}
-//
-//
-//static void* block_alloc(AlifASTBlock* _b, AlifUSizeT _size) {
-//	void* p_{};
-//	_size = MEMORY_ALIGN_UP(_size);
-//	if (_b->offset_ + _size > _b->size_) {
-//		AlifASTBlock* newBlock = block_new(_size < ASTMEM_BLOCKSIZE ? ASTMEM_BLOCKSIZE : _size);
-//		if (newBlock == nullptr) return nullptr;
-//		_b->next_ = newBlock;
-//		_b = newBlock;
-//	}
-//
-//	p_ = (void*)(((char*)_b->mem_) + _b->offset_);
-//	_b->offset_ += _size;
-//	return p_;
-//}
-//
-//
-//AlifASTMem* alifASTMem_new() {
-//	AlifASTMem* astMem = (AlifASTMem*)alifMem_dataAlloc(sizeof(AlifASTMem));
-//	if (astMem == nullptr) return nullptr;
-//
-//	astMem->head_ = block_new(ASTMEM_BLOCKSIZE);
-//	if (astMem->head_ == nullptr) return nullptr;
-//
-//	astMem->current_ = astMem->head_;
-//
-//	astMem->objects_ = alifNew_list(0);
-//
-//	return astMem;
-//}
-//
-//void* alifASTMem_malloc(AlifASTMem* _arena, AlifUSizeT _size) {
-//	void* p_ = block_alloc(_arena->current_, _size);
-//	if (p_ == nullptr) return nullptr;
-//
-//	if (_arena->current_->next_) {
-//		_arena->current_ = _arena->current_->next_;
-//	}
-//
-//	return p_;
-//}
-//
-//int alifASTMem_listAddAlifObj(AlifASTMem* _astMem, AlifObject* _obj) {
-//	int r_ = alifList_append(_astMem->objects_, _obj);
-//	if (r_ >= 0) {
-//		ALIF_DECREF(_obj);
-//	}
-//	return r_;
-//}
+AlifASTBlock* block_new(AlifUSizeT _size) {
+	AlifASTBlock* b_ = (AlifASTBlock*)alifMem_dataAlloc(sizeof(AlifASTBlock) + _size);
+	if (b_ == nullptr) return nullptr;
+	b_->size_ = _size;
+	b_->mem_ = (void*)(b_ + 1);
+	b_->next_ = nullptr;
+	b_->offset_ = (char*)MEMORY_ALIGN_UP((AlifUSizeT)b_->mem_) - (char*)(b_->mem_);
+
+	return b_;
+}
+
+
+static void* block_alloc(AlifASTBlock* _b, AlifUSizeT _size) {
+	void* p_{};
+	_size = MEMORY_ALIGN_UP(_size);
+	if (_b->offset_ + _size > _b->size_) {
+		AlifASTBlock* newBlock = block_new(_size < ASTMEM_BLOCKSIZE ? ASTMEM_BLOCKSIZE : _size);
+		if (newBlock == nullptr) return nullptr;
+		_b->next_ = newBlock;
+		_b = newBlock;
+	}
+
+	p_ = (void*)(((char*)_b->mem_) + _b->offset_);
+	_b->offset_ += _size;
+	return p_;
+}
+
+
+AlifASTMem* alifASTMem_new() {
+	AlifASTMem* astMem = (AlifASTMem*)alifMem_dataAlloc(sizeof(AlifASTMem));
+	if (astMem == nullptr) return nullptr;
+
+	astMem->head = block_new(ASTMEM_BLOCKSIZE);
+	if (astMem->head == nullptr) return nullptr;
+
+	astMem->current = astMem->head;
+	astMem->objects = alifList_new(0);
+
+	return astMem;
+}
+
+void* alifASTMem_malloc(AlifASTMem* _arena, AlifUSizeT _size) {
+	void* p_ = block_alloc(_arena->current, _size);
+	if (p_ == nullptr) return nullptr;
+
+	if (_arena->current->next_) {
+		_arena->current = _arena->current->next_;
+	}
+
+	return p_;
+}
+
+AlifIntT alifASTMem_listAddAlifObj(AlifASTMem* _astMem, AlifObject* _obj) {
+	int r_ = alifList_append(_astMem->objects, _obj);
+	if (r_ >= 0) {
+		ALIF_DECREF(_obj);
+	}
+	return r_;
+}
 
 
 

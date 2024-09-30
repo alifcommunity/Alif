@@ -145,18 +145,18 @@ public:
 	void* mem_{};
 };
 
-//class AlifASTMem {
-//public:
-//	AlifASTBlock* head_{};
-//	AlifASTBlock* current_{};
-//	AlifObject* objects_{};
-//};
+class AlifASTMem {
+public:
+	AlifASTBlock* head{};
+	AlifASTBlock* current{};
+	AlifObject* objects{};
+};
 
 
 AlifASTBlock* block_new(AlifUSizeT);
-//AlifASTMem* alifASTMem_new();
-//void* alifASTMem_malloc(AlifASTMem*, AlifUSizeT);
-//int alifASTMem_listAddAlifObj(AlifASTMem*, AlifObject*);
+AlifASTMem* alifASTMem_new();
+void* alifASTMem_malloc(AlifASTMem*, AlifUSizeT);
+AlifIntT alifASTMem_listAddAlifObj(AlifASTMem*, AlifObject*);
 
 
 

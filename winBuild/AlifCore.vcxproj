@@ -20,6 +20,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Abstract.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ASDL.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_AST.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_BiaseRefCount.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_BitUtils.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_BytesObject.h" />
