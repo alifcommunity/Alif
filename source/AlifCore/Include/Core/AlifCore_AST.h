@@ -11,18 +11,18 @@
 typedef class Mod* ModuleTy; // 15
 typedef class Stmt* StmtTy;
 typedef class Expr* ExprTy;
-typedef enum ExprContext { Load = 1, Store = 2, Del = 3 } ExprContextTy;
-typedef enum BoolOp { And = 1, Or = 2 } BoolOpTy;
-typedef enum Operator {
+typedef enum ExprContext_ { Load = 1, Store = 2, Del = 3 };
+typedef enum BoolOp_ { And = 1, Or = 2 };
+typedef enum Operator_ {
 	Add = 1, Sub = 2, Mult = 3, MatMult = 4, Div = 5, Mod = 6, Pow = 7,
 	LShift = 8, RShift = 9, BitOr = 10, BitXor = 11, BitAnd = 12,
 	FloorDiv = 13
-} OperatorTy;
-typedef enum UnaryOp { Invert = 1, Not = 2, UAdd = 3, USub = 4 } UnaryOpTy;
-typedef enum CmpOp {
-	Eq = 1, NotEq = 2, Lt = 3, LtE = 4, Gt = 5, GtE = 6, Is = 7, IsNot = 8,
+};
+typedef enum UnaryOp_ { Invert = 1, Not = 2, UAdd = 3, USub = 4 };
+typedef enum CmpOp_ {
+	Equal = 1, NotEq = 2, LessThan = 3, LtE = 4, GreaterThan = 5, GtE = 6, Is = 7, IsNot = 8,
 	In = 9, NotIn = 10
-} CmpOpTy;
+};
 typedef class Comprehension* ComprehensionTy;
 typedef class Excepthandler* ExcepthandlerTy;
 typedef class Arguments* ArgumentsTy;
@@ -174,7 +174,7 @@ public:
 		class {
 		public:
 			ExprTy target{};
-			OperatorTy op{};
+			Operator_ op{};
 			ExprTy val{};
 		}augAssign;
 
@@ -255,7 +255,7 @@ public:
 	{
 		class {
 		public:
-			BoolOpTy op{};
+			BoolOp_ op{};
 			ASDLExprSeq* vals{};
 		}boolOp;
 
@@ -268,13 +268,13 @@ public:
 		class {
 		public:
 			ExprTy left{};
-			OperatorTy op{};
+			Operator_ op{};
 			ExprTy right{};
 		}binOp;
 
 		class {
 		public:
-			UnaryOpTy op{};
+			UnaryOp_ op{};
 			ExprTy operand{};
 		}unaryOp;
 
@@ -299,7 +299,7 @@ public:
 		class {
 		public:
 			ASDLExprSeq* elts{};
-			ExprContextTy ctx{};
+			ExprContext_ ctx{};
 		}list;
 
 		class {
@@ -372,32 +372,32 @@ public:
 		public:
 			ExprTy val{};
 			Identifier attr{};
-			ExprContextTy ctx{};
+			ExprContext_ ctx{};
 		}attribute;
 
 		class {
 		public:
 			ExprTy val{};
 			ExprTy slice{};
-			ExprContextTy ctx{};
+			ExprContext_ ctx{};
 		}subScript;
 
 		class {
 		public:
 			ExprTy val{};
-			ExprContextTy ctx{};
+			ExprContext_ ctx{};
 		}star;
 
 		class {
 		public:
 			Identifier name{};
-			ExprContextTy ctx{};
+			ExprContext_ ctx{};
 		}name;
 
 		class {
 		public:
 			ASDLExprSeq* elts{};
-			ExprContextTy ctx{};
+			ExprContext_ ctx{};
 		}tuple;
 
 		class {
@@ -511,7 +511,7 @@ StmtTy alifAST_functionDef(Identifier, ArgumentsTy, ASDLStmtSeq*, AlifIntT, Alif
 StmtTy alifAST_return(ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_delete(ASDLExprSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_classDef(Identifier, ASDLExprSeq*, ASDLKeywordSeq*, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
-StmtTy alifAST_augAssign(ExprTy, OperatorTy, ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
+StmtTy alifAST_augAssign(ExprTy, Operator_, ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_for(ExprTy, ExprTy, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_asyncFor(ExprTy, ExprTy, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_while(ExprTy, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
@@ -525,9 +525,9 @@ StmtTy alifAST_nonlocal(ASDLIdentifierSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIn
 StmtTy alifAST_pass(AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_break(AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_continue(AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
-ExprTy alifAST_boolOp(BoolOpTy, ASDLExprSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
-ExprTy alifAST_binOp(ExprTy, OperatorTy, ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
-ExprTy alifAST_unaryOp(UnaryOpTy, ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
+ExprTy alifAST_boolOp(BoolOp_, ASDLExprSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
+ExprTy alifAST_binOp(ExprTy, Operator_, ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
+ExprTy alifAST_unaryOp(UnaryOp_, ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 ExprTy alifAST_ifExpr(ExprTy, ExprTy, ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 ExprTy alifAST_dict(ASDLExprSeq*, ASDLExprSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 ExprTy alifAST_listComp(ExprTy, ASDLComprehensionSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
@@ -539,12 +539,12 @@ ExprTy alifAST_compare(ExprTy, ASDLIntSeq*, ASDLExprSeq*, AlifIntT, AlifIntT, Al
 ExprTy alifAST_call(ExprTy, ASDLExprSeq*, ASDLKeywordSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 ExprTy alifAST_formattedValue(ExprTy, AlifIntT, ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 ExprTy alifAST_joinedStr(ASDLExprSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
-ExprTy alifAST_attribute(ExprTy, Identifier, ExprContextTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
-ExprTy alifAST_subScript(ExprTy, ExprTy, ExprContextTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
-ExprTy alifAST_star(ExprTy, ExprContextTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
-ExprTy alifAST_name(Identifier, ExprContextTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
-ExprTy alifAST_list(ASDLExprSeq*, ExprContextTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
-ExprTy alifAST_tuple(ASDLExprSeq*, ExprContextTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
+ExprTy alifAST_attribute(ExprTy, Identifier, ExprContext_, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
+ExprTy alifAST_subScript(ExprTy, ExprTy, ExprContext_, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
+ExprTy alifAST_star(ExprTy, ExprContext_, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
+ExprTy alifAST_name(Identifier, ExprContext_, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
+ExprTy alifAST_list(ASDLExprSeq*, ExprContext_, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
+ExprTy alifAST_tuple(ASDLExprSeq*, ExprContext_, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 ExprTy alifAST_slice(ExprTy, ExprTy, ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 ComprehensionTy alifAST_comprehension(ExprTy, ExprTy, ASDLExprSeq*, AlifIntT, AlifASTMem*);
 ArgumentsTy alifAST_arguments(ASDLArgSeq*, ASDLArgSeq*, ArgTy*, ASDLArgSeq*, ASDLExprSeq*, Arg*, ASDLExprSeq*, AlifASTMem*);

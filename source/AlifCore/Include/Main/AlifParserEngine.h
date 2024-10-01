@@ -68,7 +68,7 @@ public:
 
 class CompExprPair { // 83
 public:
-	CmpOp cmpOp{};
+	CmpOp_ cmpOp{};
 	ExprTy expr{};
 };
 
@@ -169,17 +169,17 @@ public:
 //Expression* alifParserEngine_numberToken(AlifParser*);
 //
 //int alifParserEngine_fillToken(AlifParser*);
-//
-//
-//
-//
-//
-//
-//void alifParserEngineError_stackOverflow(AlifParser*);
-//
-//
-//
-//
+
+
+
+
+
+
+void alifParserEngineError_stackOverflow(AlifParser*); // 171
+
+
+
+
 //#define EXTRA_EXPR(head, tail) (head)->lineNo, (head)->colOffset, (tail)->endLineNo, (tail)->endColOffset, _p->astMem
 //
 //#define EXTRA startLineNo, startColOffset, endLineNo, endColOffset, _p->astMem

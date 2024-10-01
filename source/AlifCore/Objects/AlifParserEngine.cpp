@@ -414,31 +414,33 @@ void alifParserEngine_parserFree(AlifParser* _p) { // 852
 	alifMem_dataFree(_p);
 }
 
-//
-//void alifParserEngine_parserFree(AlifParser* _p) { 
-//	ALIF_XDECREF(_p->normalize);
-//	for (int i = 0; i < _p->size_; i++) {
-//		alifMem_dataFree(_p->tokens[i]);
-//	}
-//	alifMem_dataFree(_p->tokens);
-//	//growableCommentArr_dealloc(&_p->typeIgnoreComments);
-//	alifMem_dataFree(_p);
-//}
-//
-//
-//void* alifParserEngine_runParser(AlifParser* _p) { 
-//
-//	void* res = alifParserEngine_parse(_p);
-//
-//	if (res == nullptr) {
-//		AlifPToken* lastToken = _p->tokens[_p->fill_ - 1];
-//		//alifParserEngine_setSyntaxError(_p, lastToken);
-//
-//		return nullptr;
-//	}
-//
-//	return res;
-//}
+
+void* alifParserEngine_runParser(AlifParser* _p) { // 883
+
+	void* res = alifParserEngine_parse(_p);
+	if (res == nullptr) {
+		//if ((_p->flags & ALIFPARSE_ALLOW_INCOMPLETE_INPUT) and is_endOfSource(_p)) {
+		//	alifErr_clear();
+		//	return alifParserEngine_raiseError(_p, ALIFEXC_INCOMPLETEINPUTERROR, 0, "incomplete input");
+		//}
+		//if (alifErr_occurred() and !alifErr_exceptionMatches(_alifExcSyntaxError_)) {
+		//	return nullptr;
+		//}
+		AlifPToken* lastToken = _p->tokens[_p->fill - 1];
+		//reset_parserStateForErrorPass(_p);
+		alifParserEngine_parse(_p);
+
+		//alifParserEngine_setSyntaxError(_p, lastToken);
+		return nullptr;
+	}
+
+	//if (_p->startRule == ALIF_SINGLE_INPUT and bad_singleStatement(_p)) {
+	//	_p->tok->done = E_BADSINGLE;
+	//	return RAISE_SYNTAX_ERROR("multiple statements found while compiling a single statement");
+	//}
+
+	return res;
+}
 
 ModuleTy alifParser_astFromFile(FILE* _fp, AlifIntT _startRule,
 	AlifObject* _fn, const char* _enc, const char* _ps1, const char* _ps2,
