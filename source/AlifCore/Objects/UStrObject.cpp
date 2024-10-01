@@ -1647,7 +1647,45 @@ static AlifIntT uStrCompare_eq(AlifObject* _str1, AlifObject* _str2) { // 10963
 
 
 
+AlifIntT alifUStr_compareWithASCIIString(AlifObject* _uni, const char* _str) { // 11013
+	AlifSizeT i_{};
+	AlifIntT kind{};
+	AlifUCS4 chr{};
 
+	kind = ALIFUSTR_KIND(_uni);
+	if (kind == AlifUStrKind_::AlifUStr_1Byte_Kind) {
+		const void* data = ALIFUSTR_1BYTE_DATA(_uni);
+		AlifUSizeT len1 = (AlifUSizeT)ALIFUSTR_GET_LENGTH(_uni);
+		AlifUSizeT len, len2 = strlen(_str);
+		AlifIntT cmp{};
+
+		len = ALIF_MIN(len1, len2);
+		cmp = memcmp(data, _str, len);
+		if (cmp != 0) {
+			if (cmp < 0)
+				return -1;
+			else
+				return 1;
+		}
+		if (len1 > len2)
+			return 1; /* _uni is longer */
+		if (len1 < len2)
+			return -1; /* _str is longer */
+		return 0;
+	}
+	else {
+		const void* data = ALIFUSTR_DATA(_uni);
+		/* Compare Unicode string and source character set string */
+		for (i_ = 0; (chr = ALIFUSTR_READ(kind, data, i_)) and _str[i_]; i_++)
+			if (chr != (unsigned char)_str[i_])
+				return (chr < (unsigned char)(_str[i_])) ? -1 : 1;
+		if (ALIFUSTR_GET_LENGTH(_uni) != i_ || chr)
+			return 1; /* _uni is longer */
+		if (_str[i_])
+			return -1; /* _str is longer */
+		return 0;
+	}
+}
 
 AlifIntT alifUStr_equalToUTF8(AlifObject* _uStr, const char* _str) { // 11058
 	return alifUStr_equalToUTF8AndSize(_uStr, _str, strlen(_str));

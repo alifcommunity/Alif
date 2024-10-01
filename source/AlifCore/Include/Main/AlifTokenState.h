@@ -12,14 +12,14 @@
 
 
 enum DecodingState_ { // 13
-	STATE_INIT,
-	STATE_SEEK_CODING,
-	STATE_NORMAL
+	State_Init,
+	State_Seek_Coding,
+	State_Normal
 };
 
 enum InteractiveUnderflow_ { // 19
-	IUNDERFLOW_NORMAL,
-	IUNDERFLOW_STOP,
+	IUnderflow_Normal,
+	IUnderflow_Stop,
 };
 
 
@@ -121,4 +121,5 @@ public:
 
 AlifIntT alifLexer_setupToken(TokenState*, AlifToken*, AlifIntT, const char*, const char*); // 134
 
-TokenState* alifTokenizer_newTokenState(); // 136
+TokenState* alifTokenizer_tokNew(); // 136
+void alifTokenizer_free(TokenState*); // 137

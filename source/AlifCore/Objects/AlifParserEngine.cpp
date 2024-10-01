@@ -322,47 +322,98 @@
 //
 //	return alifAST_constant(num, nullptr, tok->lineNo, tok->colOffset, tok->endLineNo, tok->endColOffset, _p->astMem); // type should be NUMBER not nullptr!
 //}
-//
-//
-//AlifParser* alifParserEngine_newParser(TokenInfo* _tokInfo, int _startRule, AlifASTMem* _astMem)
-//{ 
-//	AlifParser* p = (AlifParser*)alifMem_dataAlloc(sizeof(AlifParser));
-//	if (p == nullptr) {
-//		// error
-//		return nullptr;
-//	}
-//
-//	p->tok = _tokInfo;
-//	p->keywords = nullptr;
-//	p->nKeywordList = -1;
-//	p->softKeyword = nullptr;
-//	p->tokens = (AlifPToken**)alifMem_dataAlloc(sizeof(AlifPToken*));
-//	if (p->tokens == nullptr) {
-//		// error
-//		return nullptr;
-//	}
-//	p->tokens[0] = (AlifPToken*)alifMem_dataAlloc(sizeof(AlifPToken));
-//	if (p->tokens[0] == nullptr) {
-//		// error
-//		return nullptr;
-//	}
-//
-//	p->mark_ = 0;
-//	p->fill_ = 0;
-//	p->size_ = 1;
-//
-//	p->astMem = _astMem;
-//	p->startRule = _startRule;
-//	p->parsingStarted = 0;
-//	p->normalize = nullptr;
-//	p->errorIndicator = 0;
-//	p->startingLineNo = 0;
-//	p->startingColOffset = 0;
-//	p->level = 0;
-//
-//	return p;
-//}
-//
+
+
+static AlifIntT compute_parserFlags(AlifCompilerFlags* flags) { // 769
+	AlifIntT parser_flags = 0;
+	if (!flags) {
+		return 0;
+	}
+	if (flags->flags & ALIFCF_DONT_IMPLY_DEDENT) {
+		parser_flags |= ALIFPARSE_DONT_IMPLY_DEDENT;
+	}
+	if (flags->flags & ALIFCF_IGNORE_COOKIE) {
+		parser_flags |= ALIFPARSE_IGNORE_COOKIE;
+	}
+	if (flags->flags & CO_FUTURE_BARRY_AS_BDFL) {
+		parser_flags |= ALIFPARSE_BARRY_AS_BDFL;
+	}
+	if (flags->flags & ALIFCF_TYPE_COMMENTS) {
+		parser_flags |= ALIFPARSE_TYPE_COMMENTS;
+	}
+	if (flags->flags & ALIFCF_ALLOW_INCOMPLETE_INPUT) {
+		parser_flags |= ALIFPARSE_ALLOW_INCOMPLETE_INPUT;
+	}
+	return parser_flags;
+}
+
+
+AlifParser* alifParserEngine_parserNew(TokenState* _tokState,
+	AlifIntT _startRule, AlifIntT _flags, AlifIntT _featureVersion,
+	AlifIntT* _error, AlifASTMem* _astMem) { // 796
+
+	AlifParser* p_ = (AlifParser*)alifMem_dataAlloc(sizeof(AlifParser));
+	if (p_ == nullptr) {
+		//return (AlifParser*)alifErr_noMemory();
+		return nullptr;
+	}
+	//_tokState->typeComments = (_flags & ALIFPARSE_TYPE_COMMENTS) > 0;
+
+	p_->tok = _tokState;
+	p_->keywords = nullptr;
+	p_->nKeywordList = -1;
+	p_->softKeyword = nullptr;
+	p_->tokens = (AlifPToken**)alifMem_dataAlloc(sizeof(AlifPToken*));
+	if (!p_->tokens) {
+		alifMem_dataFree(p_);
+		//return (AlifParser*)alifErr_noMemory();
+		return nullptr; // temp
+	}
+	p_->tokens[0] = (AlifPToken*)alifMem_dataAlloc(sizeof(AlifPToken));
+	if (!p_->tokens[0]) {
+		alifMem_dataFree(p_->tokens);
+		alifMem_dataFree(p_);
+		//return (AlifParser*)alifErr_noMemory();
+		return nullptr; // temp
+	}
+	//if (!growableComment_arrayInit(&p_->typeIgnoreComments, 10)) {
+	//	alifMem_dataFree(p_->tokens[0]);
+	//	alifMem_dataFree(p_->tokens);
+	//	alifMem_dataFree(p_);
+	//	return (AlifParser*)alifErr_noMemory();
+	//}
+
+	p_->mark = 0;
+	p_->fill = 0;
+	p_->size = 1;
+
+	p_->errorCode = _error;
+	p_->astMem = _astMem;
+	p_->startRule = _startRule;
+	p_->parsingStarted = 0;
+	p_->normalize = nullptr;
+	p_->errorIndicator = 0;
+	p_->startingLineNo = 0;
+	p_->startingColOffset = 0;
+	p_->flags = _flags;
+	p_->featureVersion = _featureVersion;
+	p_->KnownErrToken = nullptr;
+	p_->level = 0;
+	p_->callInvalidRules = 0;
+
+	return p_;
+}
+
+void alifParserEngine_parserFree(AlifParser* _p) { // 852
+	ALIF_XDECREF(_p->normalize);
+	for (int i = 0; i < _p->size; i++) {
+		alifMem_dataFree(_p->tokens[i]);
+	}
+	alifMem_dataFree(_p->tokens);
+	//growableComment_arrayDeallocate(&_p->typeIgnoreComments);
+	alifMem_dataFree(_p);
+}
+
 //
 //void alifParserEngine_parserFree(AlifParser* _p) { 
 //	ALIF_XDECREF(_p->normalize);
@@ -403,7 +454,7 @@ ModuleTy alifParser_astFromFile(FILE* _fp, AlifIntT _startRule,
 		return nullptr;
 	}
 	if (!tokState->fp or _ps1 != nullptr or _ps2 != nullptr
-		/*or alifUStr_compareWithASCIIString(_fn, "<stdin>") == 0*/) {
+		or alifUStr_compareWithASCIIString(_fn, "<stdin>") == 0) {
 		tokState->interactive = 1;
 	}
 
@@ -411,7 +462,7 @@ ModuleTy alifParser_astFromFile(FILE* _fp, AlifIntT _startRule,
 
 	ModuleTy result{};
 	AlifIntT parserFlags = compute_parserFlags(_flags);
-	AlifParser* p_ = alifParserEngine_newParser(tokState, _startRule,
+	AlifParser* p_ = alifParserEngine_parserNew(tokState, _startRule,
 		parserFlags, ALIF_MINOR_VERSION, _error, _astMem);
 	if (p_ == nullptr) goto error;
 
@@ -420,13 +471,13 @@ ModuleTy alifParser_astFromFile(FILE* _fp, AlifIntT _startRule,
 
 	if (tokState->interactive and tokState->interactiveSrcStart and result and _interactiveSrc != NULL) {
 		*_interactiveSrc = alifUStr_fromString(tokState->interactiveSrcStart);
-		if (!_interactiveSrc or alifASTMem_addAlifObject(_astMem, *_interactiveSrc) < 0) {
+		if (!_interactiveSrc or alifASTMem_listAddAlifObj(_astMem, *_interactiveSrc) < 0) {
 			ALIF_XDECREF(_interactiveSrc);
 			result = nullptr;
 			goto error;
 		}
 	}
 error:
-	alifTokenizer_Free(tokState);
+	alifTokenizer_free(tokState);
 	return result;
 }

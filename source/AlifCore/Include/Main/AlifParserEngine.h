@@ -6,105 +6,117 @@
 #include "AlifCore_Token.h"
 
 
-//class Memo {
-//public:
-//	int type{};
-//	void* node{};
-//	AlifIntT mark_{};
-//	Memo* next{};
-//};
-//
-//class AlifPToken { // Token
-//public:
-//	AlifIntT type{};
-//	AlifObject* bytes{};
-//	AlifIntT level{};
-//	AlifIntT lineNo{}, colOffset{}, endLineNo{}, endColOffset{};
-//	Memo* memo{};
-//	AlifObject* data{};
-//};
-//
-//class KeywordToken {
-//public:
-//	const wchar_t* str{};
-//	AlifIntT type{};
-//};
-//
-//class AlifParser {
-//public:
-//	class TokenInfo* tok{};
-//	AlifPToken** tokens{};
-//	AlifIntT mark_{};
-//	AlifIntT fill_{}, size_{};
-//	AlifASTMem* astMem{};
-//	KeywordToken** keywords{};
-//	wchar_t** softKeyword{};
-//	int nKeywordList{};
-//	int startRule{};
-//	int* errorCode{};
-//	int parsingStarted{};
-//	AlifObject* normalize{};
-//	int startingLineNo{};
-//	int startingColOffset{};
-//	int errorIndicator{};
-//	int flags{};
-//	int featureVersion{};
-//	AlifPToken* KnownErrToken{};
-//	int level{};
-//	//int callInvalidRules{}; // we'll need it
-//};
-//
-//class CompExprPair {
-//public:
-//	CmpOp cmpOp{};
-//	Expression* expr_{};
-//};
-//
-//class KeyValuePair {
-//public:
-//	Expression* key_{};
-//	Expression* val_{};
-//};
-//
-//class NameDefaultPair {
-//public:
-//	Arg* arg_{};
-//	Expression* value_{};
-//};
-//
-//class SlashWithDefault {
-//public:
-//	ArgSeq* plainNames{};
-//	Seq* namesWithDefaults{};
-//};
-//
-//class StarEtc {
-//public:
-//	Arg* varArg{};
-//	Seq* kwOnlyArgs{};
-//	Arg* kwArg{};
-//};
-//
-//
-//class AugOperator {
-//public:
-//	Operator type{};
-//};
-//
-//class KeywordOrStar {
-//public:
-//	void* element{};
-//	AlifIntT isKeyword{};
-//};
-//
-//class ResultTokenWithMetadata {
-//public:
-//	void* result{};
-//	AlifObject* metadata{};
-//};
-//
-//
-//
+ // 12
+#define ALIFPARSE_DONT_IMPLY_DEDENT       0x0002
+
+#define ALIFPARSE_IGNORE_COOKIE 0x0010
+#define ALIFPARSE_BARRY_AS_BDFL 0x0020
+#define ALIFPARSE_TYPE_COMMENTS 0x0040
+#define ALIFPARSE_ALLOW_INCOMPLETE_INPUT 0x0100
+
+
+
+class Memo { // 27
+public:
+	int type{};
+	void* node{};
+	AlifIntT mark{};
+	Memo* next{};
+};
+
+// Token
+class AlifPToken {  // 34
+public:
+	AlifIntT type{};
+	AlifObject* bytes{};
+	AlifIntT level{};
+	AlifIntT lineNo{}, colOffset{}, endLineNo{}, endColOffset{};
+	Memo* memo{};
+	AlifObject* data{};
+};
+
+class KeywordToken { // 43
+public:
+	const char* str{};
+	AlifIntT type{};
+};
+
+class AlifParser { // 58
+public:
+	class TokenState* tok{};
+	AlifPToken** tokens{};
+	AlifIntT mark{};
+	AlifIntT fill{}, size{};
+	AlifASTMem* astMem{};
+	KeywordToken** keywords{};
+	char** softKeyword{};
+	AlifIntT nKeywordList{};
+	AlifIntT startRule{};
+	AlifIntT* errorCode{};
+	AlifIntT parsingStarted{};
+	AlifObject* normalize{};
+	AlifIntT startingLineNo{};
+	AlifIntT startingColOffset{};
+	AlifIntT errorIndicator{};
+	AlifIntT flags{};
+	AlifIntT featureVersion{};
+	AlifPToken* KnownErrToken{};
+	AlifIntT level{};
+	AlifIntT callInvalidRules{};
+	//AlifIntT debug{};
+};
+
+class CompExprPair { // 83
+public:
+	CmpOp cmpOp{};
+	ExprTy expr{};
+};
+
+class KeyValuePair { // 88
+public:
+	ExprTy key{};
+	ExprTy val{};
+};
+
+class NameDefaultPair { // 98
+public:
+	ArgTy arg{};
+	ExprTy value{};
+};
+
+class SlashWithDefault { // 103
+public:
+	ASDLArgSeq* plainNames{};
+	ASDLSeq* namesWithDefaults{};
+};
+
+class StarEtc { // 108
+public:
+	ArgTy varArg{};
+	ASDLSeq* kwOnlyArgs{};
+	ArgTy kwArg{};
+};
+
+
+class AugOperator { // 114
+public:
+	OperatorTy type{};
+};
+
+class KeywordOrStar { // 115
+public:
+	void* element{};
+	AlifIntT isKeyword{};
+};
+
+class ResultTokenWithMetadata { // 120
+public:
+	void* result{};
+	AlifObject* metadata{};
+};
+
+
+
 //// يجب إيجاد الملف المناسب لنقل هذا الصنف له
 //class AlifPArray {
 //public:
@@ -135,13 +147,13 @@
 //		return data_[_index];
 //	}
 //};
-//
-//
-//
-//
-//
-//
-//
+
+
+
+
+
+
+
 //int alifParserEngine_insertMemo(AlifParser*, int, int, void*);
 //int alifParserEngine_updateMemo(AlifParser*, int, int, void*);
 //int alifParserEngine_isMemorized(AlifParser*, int, void*);
@@ -219,7 +231,9 @@
 //ResultTokenWithMetadata* alifParserEngine_setupFullFormatSpec(AlifParser*, AlifPToken*, ExprSeq*, int, int, int, int, AlifASTMem*);
 //
 //
-//AlifParser* alifParserEngine_newParser(class TokenInfo*, int, AlifASTMem*);
+AlifParser* alifParserEngine_parserNew(TokenState*, AlifIntT, AlifIntT,
+	AlifIntT, AlifIntT*, AlifASTMem*); // 352
+void alifParserEngine_parserFree(AlifParser*); // 353
 //void alifParserEngine_parserFree(AlifParser*);
 //Module* alifParser_astFromFile(FILE*, AlifObject*, int, AlifASTMem*);
 //

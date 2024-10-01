@@ -53,7 +53,7 @@ AlifIntT alifUStr_fsConverter(AlifObject*, void*); // 743
 AlifObject* alifUStr_encodeFSDefault(AlifObject*); // 766
 
 
-
+AlifIntT alifUStr_compareWithASCIIString(AlifObject*, const char*); // 955
 
 AlifIntT alifUStr_equalToUTF8(AlifObject*, const char*); // 965
 AlifIntT alifUStr_equalToUTF8AndSize(AlifObject*, const char*, AlifSizeT); // 966

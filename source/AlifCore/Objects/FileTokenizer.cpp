@@ -31,7 +31,7 @@
 //	return 1;
 //}
 //
-//static int tokInfo_underflowFile(TokenInfo* _tokInfo) {
+//static int tokState_underflowFile(TokenInfo* _tokInfo) {
 //	if (_tokInfo->start == nullptr and !INSIDE_FSTRING(_tokInfo)) {
 //		_tokInfo->cur = _tokInfo->inp = _tokInfo->buf;
 //	}
@@ -79,10 +79,10 @@ TokenState* alifTokenizerInfo_fromFile(FILE* _fp, const char* _enc,
 	tokState->prompt = _ps1;
 	tokState->nextPrompt = _ps2;
 	if (_ps1 or _ps2) {
-		tokState->underflow = &tokInfo_underflowInteractive;
+		tokState->underflow = &tokState_underflowInteractive;
 	}
 	else {
-		tokState->underflow = &tokInfo_underflowFile;
+		tokState->underflow = &tokState_underflowFile;
 	}
 	if (_enc != nullptr) {
 		/* Must copy encoding declaration since it

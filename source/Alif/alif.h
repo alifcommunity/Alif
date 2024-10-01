@@ -48,7 +48,7 @@
 //#include "IterObject.h"
 #include "DescrObject.h"
 #include "SetObject.h"
-//#include "Code.h"
+#include "Code.h"
 //#include "AlifCapsule.h"
 #include "AlifTime.h"
 #include "IterObject.h"

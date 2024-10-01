@@ -172,8 +172,8 @@ static AlifObject* alifRun_file(FILE* _fp, AlifObject* _filename,
 	}
 
 	ModuleTy mod{};
-	mod = alifParser_astFromFile(_fp, _start, _filename, nullptr, nullptr, nullptr,
-		_flags, nullptr, nullptr, astMem);
+	mod = alifParser_astFromFile(_fp, _start, _filename, nullptr, nullptr,
+		nullptr, _flags, nullptr, nullptr, astMem);
 
 	if (_closeIt) {
 		fclose(_fp);
