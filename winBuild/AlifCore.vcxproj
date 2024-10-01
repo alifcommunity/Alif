@@ -76,16 +76,19 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifConfig.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifEval.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifHash.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifLexer.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifLifeCycle.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifMacro.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifMemory.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifMimalloc.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifParserEngine.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifPort.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifRun.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifState.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifThread.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifTime.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifTokenState.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifTypeDefs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifVersion.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h" />
@@ -134,6 +137,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\ThreadNT.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\ThreadPThread.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\ThreadPThreadStubs.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\Tokenizer.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\TupleObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\UStrObject.h" />
   </ItemGroup>
@@ -146,6 +150,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\AlifMemory.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifMimalloc.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifParserEngine.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifRun.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifState.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifThread.cpp" />
@@ -160,6 +165,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\DescrObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\DictObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\CriticalSection.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\FileTokenizer.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\FileUtils.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GCFreeThreading.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GetOption.cpp" />

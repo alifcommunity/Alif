@@ -30,3 +30,8 @@ public:
         }, \
 		*/	\
     }
+
+
+
+ModuleTy alifParser_astFromFile(FILE*, AlifIntT, AlifObject*, const char*, const char*, const char*,
+	AlifCompilerFlags*, AlifIntT*, AlifObject**, AlifASTMem*); // 70

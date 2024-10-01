@@ -748,6 +748,13 @@ static void* block_alloc(AlifASTBlock* _b, AlifUSizeT _size) {
 	return p_;
 }
 
+static void block_free(AlifASTBlock* _b) {
+	while (_b) {
+		AlifASTBlock* next = _b->next_;
+		alifMem_dataFree(_b);
+		_b = next;
+	}
+}
 
 AlifASTMem* alifASTMem_new() {
 	AlifASTMem* astMem = (AlifASTMem*)alifMem_dataAlloc(sizeof(AlifASTMem));
@@ -782,6 +789,11 @@ AlifIntT alifASTMem_listAddAlifObj(AlifASTMem* _astMem, AlifObject* _obj) {
 }
 
 
+void alifASTMem_free(AlifASTMem* _astMem) { // 153
+	block_free(_astMem->head);
+	ALIF_DECREF(_astMem->objects);
+	alifMem_dataFree(_astMem);
+}
 
 
 

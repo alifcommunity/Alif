@@ -3,6 +3,7 @@
 #include "AlifCore_AST.h"
 #include "AlifCore_Interpreter.h"
 #include "AlifCore_Object.h"
+#include "AlifCore_Parser.h"
 #include "AlifCore_LifeCycle.h"
 #include "AlifCore_State.h"
 #include "AlifCore_Run.h"
@@ -165,14 +166,14 @@ done:
 static AlifObject* alifRun_file(FILE* _fp, AlifObject* _filename,
 	AlifIntT _start, AlifObject* _globals, AlifObject* _locals,
 	AlifIntT _closeIt, AlifCompilerFlags* _flags) { // 1191
-	AlifASTMem* arena = alifASTMem_new();
-	if (arena == nullptr) {
+	AlifASTMem* astMem = alifASTMem_new();
+	if (astMem == nullptr) {
 		return nullptr;
 	}
 
 	ModuleTy mod{};
-	mod = alifParser_astFromFile(_fp, _filename, nullptr, _start, nullptr, nullptr,
-		_flags, nullptr, arena);
+	mod = alifParser_astFromFile(_fp, _start, _filename, nullptr, nullptr, nullptr,
+		_flags, nullptr, nullptr, astMem);
 
 	if (_closeIt) {
 		fclose(_fp);
@@ -180,12 +181,12 @@ static AlifObject* alifRun_file(FILE* _fp, AlifObject* _filename,
 
 	AlifObject* ret{};
 	if (mod != nullptr) {
-		ret = run_mod(mod, _filename, _globals, _locals, _flags, arena, nullptr, 0);
+		ret = run_mod(mod, _filename, _globals, _locals, _flags, astMem, nullptr, 0);
 	}
 	else {
 		ret = nullptr;
 	}
-	alifASTMem_free(arena);
+	alifASTMem_free(astMem);
 
 	return ret;
 }

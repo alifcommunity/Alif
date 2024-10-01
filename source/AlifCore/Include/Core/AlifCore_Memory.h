@@ -157,7 +157,7 @@ AlifASTBlock* block_new(AlifUSizeT);
 AlifASTMem* alifASTMem_new();
 void* alifASTMem_malloc(AlifASTMem*, AlifUSizeT);
 AlifIntT alifASTMem_listAddAlifObj(AlifASTMem*, AlifObject*);
-
+void alifASTMem_free(AlifASTMem*);
 
 
 
