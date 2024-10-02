@@ -157,44 +157,46 @@
 //	}
 //	return 0;
 //}
-//
-//int alifParserEngine_lookaheadWithInt(int _positive, AlifPToken* (_func)(AlifParser*, AlifIntT), AlifParser* _p, int _arg) { 
-//	AlifIntT mark_ = _p->mark_;
-//	void* res = _func(_p, _arg);
-//	_p->mark_ = mark_;
-//	return (res != nullptr) == _positive;
-//}
-//
-//int alifParserEngine_lookahead(int _positive, void* (_func)(AlifParser*), AlifParser* _p) { 
-//	AlifIntT mark_ = _p->mark_;
-//	void* res = _func(_p);
-//	_p->mark_ = mark_;
-//	return (res != nullptr) == _positive;
-//}
-//
-//AlifPToken* alifParserEngine_expectToken(AlifParser* _p, AlifIntT _type) {
-//	/*
-//		إذا وصل المؤشر mark
-//		الى مؤشر الملء fill
-//		هذا يعني أنه لم يعد هنالك رموز المأخوذة tokens
-//		قابلة للإستخدام وبالتالي يجب جلب رمز جديد
-//		-------------------------------------------
-//		الفرق بين المؤشر الحالي ومؤشر الملء يدل على عدد الرموز المأخوذة tokens
-//	*/
-//	if (_p->mark_ == _p->fill_) {
-//		if (alifParserEngine_fillToken(_p) < 0) {
-//			_p->errorIndicator = 1;
-//			return nullptr;
-//		}
-//	}
-//	AlifPToken* t = _p->tokens[_p->mark_];
-//	if (t->type != _type) {
-//		return nullptr;
-//	}
-//	_p->mark_ += 1;
-//	return t;
-//}
-//
+
+AlifIntT alifParserEngine_lookaheadWithInt(AlifIntT _positive,
+	AlifPToken* (_func)(AlifParser*, AlifIntT), AlifParser* _p, AlifIntT _arg) { // 397
+	AlifIntT mark_ = _p->mark;
+	void* res = _func(_p, _arg);
+	_p->mark = mark_;
+	return (res != nullptr) == _positive;
+}
+
+AlifIntT alifParserEngine_lookahead(AlifIntT _positive,
+	void* (_func)(AlifParser*), AlifParser* _p) { // 406
+	AlifIntT mark_ = _p->mark;
+	void* res = _func(_p);
+	_p->mark = mark_;
+	return (res != nullptr) == _positive;
+}
+
+AlifPToken* alifParserEngine_expectToken(AlifParser* _p, AlifIntT _type) { // 415
+	/*
+		إذا وصل المؤشر mark
+		الى مؤشر الملء fill
+		هذا يعني أنه لم يعد هنالك رموز المأخوذة tokens
+		قابلة للإستخدام وبالتالي يجب جلب رمز جديد
+		-------------------------------------------
+		الفرق بين المؤشر الحالي ومؤشر الملء يدل على عدد الرموز المأخوذة tokens
+	*/
+	if (_p->mark == _p->fill) {
+		if (alifParserEngine_fillToken(_p) < 0) {
+			_p->errorIndicator = 1;
+			return nullptr;
+		}
+	}
+	AlifPToken* t = _p->tokens[_p->mark];
+	if (t->type != _type) {
+		return nullptr;
+	}
+	_p->mark += 1;
+	return t;
+}
+
 //AlifPToken* alifParserEngine_expectTokenForced(AlifParser* _p, int _type, const wchar_t* _expected) { 
 //	if (_p->errorIndicator == 1) return nullptr;
 //

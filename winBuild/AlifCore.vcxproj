@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Abstract.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Array.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ASDL.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_AST.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_BiaseRefCount.h" />
@@ -146,6 +147,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\AlifCore\Objects\Abstract.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\ActionHelpers.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifArray.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifEval.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifEvalGIL.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifHash.cpp" />
