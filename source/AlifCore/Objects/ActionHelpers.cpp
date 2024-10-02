@@ -448,15 +448,15 @@ Arguments* alifParserEngine_emptyArguments(AlifParser* _p) { // 681
 		kwDefaults, nullptr, posDefaults, _p->astMem);
 }
 
-//AugOperator* alifParserEngine_augOperator(AlifParser* _p, Operator _type) { // 710
-//
-//	AugOperator* a_ = (AugOperator*)alifASTMem_malloc(_p->astMem, sizeof(AugOperator));
-//	if (!a_) return nullptr;
-//
-//	a_->type = _type;
-//	return a_;
-//}
-//
+AugOperator* alifParserEngine_augOperator(AlifParser* _p, Operator_ _type) { // 710
+
+	AugOperator* a_ = (AugOperator*)alifASTMem_malloc(_p->astMem, sizeof(AugOperator));
+	if (!a_) return nullptr;
+
+	a_->type = _type;
+	return a_;
+}
+
 //static AlifIntT seqNumber_ofStarExprs(ASDLSeq* _seq) {
 //	AlifIntT n_ = 0;
 //	for (AlifUSizeT i = 0, l = SEQ_LEN(_seq); i < l; i++) {

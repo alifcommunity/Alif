@@ -11,17 +11,17 @@
 
 
 
-//int alifParserEngine_insertMemo(AlifParser* _p, int _mark, int _type, void* _node) { 
-//	Memo* m = (Memo*)alifASTMem_malloc(_p->astMem, sizeof(Memo));
-//	if (m == nullptr) return -1;
-//	m->type = _type;
-//	m->node = _node;
-//	m->mark_ = _p->mark_;
-//	m->next = _p->tokens[_mark]->memo;
-//	_p->tokens[_mark]->memo = m;
-//	return 0;
-//}
-//
+AlifIntT alifParserEngine_insertMemo(AlifParser* _p, AlifIntT _mark, AlifIntT _type, void* _node) { // 76
+	Memo* m = (Memo*)alifASTMem_malloc(_p->astMem, sizeof(Memo));
+	if (m == nullptr) return -1;
+	m->type = _type;
+	m->node = _node;
+	m->mark = _p->mark;
+	m->next = _p->tokens[_mark]->memo;
+	_p->tokens[_mark]->memo = m;
+	return 0;
+}
+
 //int alifParserEngine_updateMemo(AlifParser* _p, int _mark, int _type, void* _node) { 
 //	for (Memo* m = _p->tokens[_mark]->memo; m != nullptr; m = m->next) {
 //		if (m->type == _type) {
@@ -97,66 +97,68 @@
 //	_p->size_ = newSize;
 //	return 0;
 //}
-//
-//int alifParserEngine_fillToken(AlifParser* _p) { 
-//	AlifToken newToken{};
-//	int type = alifTokenizer_get(_p->tok, &newToken);
-//
-//	AlifPToken* pT{};
-//	//while (type == TYPEIGNORE) {
-//	//	AlifSizeT len = newToken.endColOffset - newToken.colOffset;
-//	//	wchar_t* tag = (wchar_t*)malloc(len + 1);
-//	//	wcsncpy(tag, newToken.start, len);
-//	//	tag[len] = L'0';
-//	//	if (!growableCommentArr_add(&_p->typeIgnoreComments, _p->tok->lineNo, tag)) {
-//	//		//goto error;
-//	//	}
-//	//	type = alifTokenizer_get(_p->tok, &newToken);
-//	//}
-//
-//	if (_p->startRule == ALIFSINGLE_INPUT and type == ENDMARKER and _p->parsingStarted) {
-//		type = NEWLINE;
-//		_p->parsingStarted = 0;
-//		if (_p->tok->indent) {
-//			_p->tok->pendInd = -_p->tok->indent;
-//			_p->tok->indent = 0;
-//		}
-//		else {
-//			_p->parsingStarted = 1;
-//		}
-//	}
-//
-//	if ((_p->fill_ == _p->size_) and (resize_tokensArr(_p)) != 0) {
-//		goto error;
-//	}
-//
-//	pT = _p->tokens[_p->fill_];
-//	return initialize_token(_p, pT, &newToken, type);
-//
-//error:
-//	//alifToken_free(&newToken);
-//	return -1;
-//}
-//
-//int alifParserEngine_isMemorized(AlifParser* _p, int _type, void* _pres) { 
-//	if (_p->mark_ == _p->fill_) {
-//		if (alifParserEngine_fillToken(_p) < 0) {
-//			_p->errorIndicator = 1;
-//			return -1;
-//		}
-//	}
-//
-//	AlifPToken* t_ = _p->tokens[_p->mark_];
-//
-//	for (Memo* m_ = t_->memo; m_ != nullptr; m_ = m_->next) {
-//		if (m_->type == _type) {
-//			_p->mark_ = m_->mark_;
-//			*(void**)_pres = m_->node;
-//			return 1;
-//		}
-//	}
-//	return 0;
-//}
+
+AlifIntT alifParserEngine_fillToken(AlifParser* _p) { // 240 
+	AlifToken newToken{};
+	AlifPToken* pT{};
+
+	AlifIntT type = alifTokenizer_get(_p->tok, &newToken);
+
+	//while (type == TYPEIGNORE) {
+	//	AlifSizeT len = newToken.endColOffset - newToken.colOffset;
+	//	char* tag = (char*)alifMem_dataAlloc(len + 1);
+	//	strncpy(tag, newToken.start, len);
+	//	tag[len] = '0';
+	//	if (!growableComment_arrayAdd(&_p->typeIgnoreComments, _p->tok->lineNo, tag)) {
+	//		//alifErr_noMemory();
+	//		goto error;
+	//	}
+	//	type = alifTokenizer_get(_p->tok, &newToken);
+	//}
+
+	if (_p->startRule == ALIF_SINGLE_INPUT and type == ENDMARKER and _p->parsingStarted) {
+		type = NEWLINE;
+		_p->parsingStarted = 0;
+		if (_p->tok->indent and !(_p->flags & ALIFPARSE_DONT_IMPLY_DEDENT)) {
+			_p->tok->pendInd = -_p->tok->indent;
+			_p->tok->indent = 0;
+		}
+		else {
+			_p->parsingStarted = 1;
+		}
+	}
+
+	if ((_p->fill == _p->size) and (resize_tokensArr(_p)) != 0) {
+		goto error;
+	}
+
+	pT = _p->tokens[_p->fill];
+	return initialize_token(_p, pT, &newToken, type);
+
+error:
+	//alifToken_free(&newToken);
+	return -1;
+}
+
+AlifIntT alifParserEngine_isMemorized(AlifParser* _p, AlifIntT _type, void* _pres) { // 345
+	if (_p->mark == _p->fill) {
+		if (alifParserEngine_fillToken(_p) < 0) {
+			_p->errorIndicator = 1;
+			return -1;
+		}
+	}
+
+	AlifPToken* t_ = _p->tokens[_p->mark];
+
+	for (Memo* m_ = t_->memo; m_ != nullptr; m_ = m_->next) {
+		if (m_->type == _type) {
+			_p->mark = m_->mark;
+			*(void**)_pres = m_->node;
+			return 1;
+		}
+	}
+	return 0;
+}
 
 AlifIntT alifParserEngine_lookaheadWithInt(AlifIntT _positive,
 	AlifPToken* (_func)(AlifParser*, AlifIntT), AlifParser* _p, AlifIntT _arg) { // 397
@@ -215,49 +217,88 @@ AlifPToken* alifParserEngine_expectToken(AlifParser* _p, AlifIntT _type) { // 41
 //	_p->mark_ += 1;
 //	return t_;
 //}
-//
-//AlifPToken* alifParserEngine_getLastNonWhitespaceToken(AlifParser* _p) { 
-//	AlifPToken* token = nullptr;
-//	for (int i = _p->mark_ - 1; i >= 0; i--) {
-//		token = _p->tokens[i];
-//		if (token->type != ENDMARKER and (token->type < NEWLINE or token->type > DEDENT)) {
-//			break;
-//		}
-//	}
-//
-//	return token;
-//}
-//
-//AlifObject* alifParserEngine_newIdentifier(AlifParser* _p, const wchar_t* _s) { 
-//	AlifObject* id = alifUStr_decodeStringToUTF8(_s);
-//
-//	if (alifASTMem_listAddAlifObj(_p->astMem, id) < 0) {
-//		// error
-//	}
-//	return id;
-//}
-//
-//static Expression* alifParserEngine_nameFromToken(AlifParser* _p, AlifPToken* _t) { 
-//	if (_t == nullptr) {
-//		return nullptr;
-//	}
-//
-//	const wchar_t* s = _alifWBytes_asString(_t->bytes);
-//
-//	if (!s) {
-//		_p->errorIndicator = 1;
-//		return nullptr;
-//	}
-//	AlifObject* id = alifParserEngine_newIdentifier(_p, s); // need work on it
-//
-//	return alifAST_name(id, Load, _t->lineNo, _t->colOffset, _t->endLineNo, _t->endColOffset, _p->astMem);
-//}
-//
-//Expression* alifParserEngine_nameToken(AlifParser* _p) { 
-//	AlifPToken* tok = alifParserEngine_expectToken(_p, NAME);
-//	return alifParserEngine_nameFromToken(_p, tok);
-//}
-//
+
+AlifPToken* alifParserEngine_getLastNonWhitespaceToken(AlifParser* _p) { // 491
+	AlifPToken* token = nullptr;
+	for (AlifIntT i = _p->mark - 1; i >= 0; i--) {
+		token = _p->tokens[i];
+		if (token->type != ENDMARKER and (token->type < NEWLINE or token->type > DEDENT)) {
+			break;
+		}
+	}
+
+	return token;
+}
+
+AlifObject* alifParserEngine_newIdentifier(AlifParser* _p, const char* _s) { // 505
+	AlifInterpreter* interp{};
+	AlifObject* id = alifUStr_decodeUTF8(_s);
+	if (!id) {
+		goto error;
+	}
+	if (!ALIFUSTR_IS_ASCII(id))
+	{
+		//if (!init_normalization(_p))
+		//{
+		//	ALIF_DECREF(id);
+		//	goto error;
+		//}
+		//AlifObject* form = alifUStr_internFromString("NFKC");
+		//if (form == nullptr) {
+		//	ALIF_DECREF(id);
+		//	goto error;
+		//}
+		//AlifObject* args[2] = { form, id };
+		//AlifObject* id2 = alifObject_vectorCall(_p->normalize, args, 2, nullptr);
+		//ALIF_DECREF(id);
+		//ALIF_DECREF(form);
+		//if (!id2) {
+		//	goto error;
+		//}
+
+		//if (!ALIFUSTR_CHECK(id2))
+		//{
+		//	alifErr_format(_alifExcTypeError_,
+		//		"unicodedata.normalize() must return a string, not "
+		//		"%.200s",
+		//		alifType_name(ALIF_TYPE(id2)));
+		//	ALIF_DECREF(id2);
+		//	goto error;
+		//}
+		//id = id2;
+	}
+	interp = _alifInterpreter_get();
+	alifUStr_internImmortal(interp, &id);
+	if (alifASTMem_listAddAlifObj(_p->astMem, id) < 0)
+	{
+		ALIF_DECREF(id);
+		goto error;
+	}
+	return id;
+error:
+	_p->errorIndicator = 1;
+	return nullptr;
+}
+
+static ExprTy alifParserEngine_nameFromToken(AlifParser* _p, AlifPToken* _t) { // 562
+	if (_t == nullptr) return nullptr;
+
+	const char* s = alifBytes_asString(_t->bytes);
+
+	if (!s) {
+		_p->errorIndicator = 1;
+		return nullptr;
+	}
+	AlifObject* id = alifParserEngine_newIdentifier(_p, s); // need work on it
+
+	return alifAST_name(id, ExprContext_::Load, _t->lineNo, _t->colOffset, _t->endLineNo, _t->endColOffset, _p->astMem);
+}
+
+ExprTy alifParserEngine_nameToken(AlifParser* _p) { // 582
+	AlifPToken* tok = alifParserEngine_expectToken(_p, NAME);
+	return alifParserEngine_nameFromToken(_p, tok);
+}
+
 //void* alifParserEngine_stringToken(AlifParser* _p) { 
 //	return alifParserEngine_expectToken(_p, STRING);
 //}

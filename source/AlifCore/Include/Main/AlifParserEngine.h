@@ -123,21 +123,21 @@ public:
 
 
 
-//int alifParserEngine_insertMemo(AlifParser*, int, int, void*);
+AlifIntT alifParserEngine_insertMemo(AlifParser*, AlifIntT, AlifIntT, void*); // 131
 //int alifParserEngine_updateMemo(AlifParser*, int, int, void*);
-//int alifParserEngine_isMemorized(AlifParser*, int, void*);
+AlifIntT alifParserEngine_isMemorized(AlifParser*, AlifIntT, void*);
 
 AlifIntT alifParserEngine_lookaheadWithInt(AlifIntT, AlifPToken* (_func)(AlifParser*, AlifIntT), AlifParser*, AlifIntT); // 136
 AlifIntT alifParserEngine_lookahead(AlifIntT, void* (_func)(AlifParser*), AlifParser*); // 138
 
 AlifPToken* alifParserEngine_expectToken(AlifParser*, AlifIntT); // 140
 //AlifPToken* alifParserEngine_expectTokenForced(AlifParser*, int, const wchar_t*);
-//AlifPToken* alifParserEngine_getLastNonWhitespaceToken(AlifParser*);
-//Expression* alifParserEngine_nameToken(AlifParser*);
+AlifPToken* alifParserEngine_getLastNonWhitespaceToken(AlifParser*); // 146
+ExprTy alifParserEngine_nameToken(AlifParser*); // 148
 //void* alifParserEngine_stringToken(AlifParser*);
 //Expression* alifParserEngine_numberToken(AlifParser*);
-//
-//int alifParserEngine_fillToken(AlifParser*);
+
+AlifIntT alifParserEngine_fillToken(AlifParser*); // 147
 
 
 
@@ -166,7 +166,7 @@ void* alifParserEngine_dummyName(AlifParser*, ...); // 248
 
 
 
-//AlifObject* alifParserEngine_newIdentifier(AlifParser*, const wchar_t*);
+AlifObject* alifParserEngine_newIdentifier(AlifParser*, const char*); // 296
 ASDLSeq* alifParserEngine_singletonSeq(AlifParser*, void*); // 297
 //Seq* alifParserEngine_seqInsertInFront(AlifParser*, void*, Seq*);
 ASDLSeq* alifParserEngine_seqFlatten(AlifParser*, ASDLSeq*); // 300
@@ -186,7 +186,7 @@ ASDLSeq* alifParserEngine_seqFlatten(AlifParser*, ASDLSeq*); // 300
 Arguments* alifParserEngine_emptyArguments(AlifParser*); // 320
 //Expression* alifParserEngine_formattedValue(AlifParser*, Expression*, AlifPToken*,
 //	ResultTokenWithMetadata*, ResultTokenWithMetadata*, AlifPToken*, int, int, int, int, AlifASTMem*);
-//AugOperator* alifParserEngine_augOperator(AlifParser*, Operator);
+AugOperator* alifParserEngine_augOperator(AlifParser*, Operator_); // 323
 //KeywordOrStar* alifParserEngine_keywordOrStarred(AlifParser*, void*, AlifIntT);
 //ExprSeq* alifParserEngine_seqExtractStarExprs(AlifParser*, Seq*);
 //KeywordSeq* alifParserEngine_seqDeleteStarExprs(AlifParser*, Seq*);
