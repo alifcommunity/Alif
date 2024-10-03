@@ -63,7 +63,7 @@ ASDLSeq* alifParserEngine_seqFlatten(AlifParser* _p, ASDLSeq* _seqs) { // 81
 
 // Creates a new name like first_name.second_name
 ExprTy alifParserEngine_joinNamesWithDot(AlifParser* _p,
-	ExprTy _firstName, ExprTy _secondName) {
+	ExprTy _firstName, ExprTy _secondName) { // 118
 	AlifObject* str_ = alifUStr_fromFormat("%U.%U", _firstName->V.name.name, _secondName->V.name.name);
 	if (!str_) return nullptr;
 
@@ -131,10 +131,10 @@ ASDLIdentifierSeq* alifParserEngine_mapNamesToIds(AlifParser* _p,
 //	return newSeq;
 //}
 //
-//ExprSeq* alifParserEngine_getExprs(AlifParser* _p, ASDLSeq* _seq) {
+//ASDLExprSeq* alifParserEngine_getExprs(AlifParser* _p, ASDLSeq* _seq) {
 //	AlifUSizeT len_ = SEQ_LEN(_seq);
 //
-//	ExprSeq* newSeq = alifNew_exprSeq(len_, _p->astMem);
+//	ASDLExprSeq* newSeq = alifNew_exprSeq(len_, _p->astMem);
 //	if (!newSeq) return nullptr;
 //
 //	for (AlifUSizeT i = 0; i < len_; i++) {
@@ -145,11 +145,11 @@ ASDLIdentifierSeq* alifParserEngine_mapNamesToIds(AlifParser* _p,
 //	return newSeq;
 //}
 //
-//static ExprSeq* setContext_seq(AlifParser* _p, ExprSeq* _seq, ExprCTX _ctx) {
+//static ASDLExprSeq* setContext_seq(AlifParser* _p, ASDLExprSeq* _seq, ExprCTX _ctx) {
 //	AlifUSizeT len = SEQ_LEN(_seq);
 //	if (len == 0) return nullptr;
 //
-//	ExprSeq* newSeq = alifNew_exprSeq(len, _p->astMem);
+//	ASDLExprSeq* newSeq = alifNew_exprSeq(len, _p->astMem);
 //	if (!newSeq) return nullptr;
 //
 //	for (AlifUSizeT i = 0; i < len; i++) {
@@ -222,10 +222,10 @@ ASDLIdentifierSeq* alifParserEngine_mapNamesToIds(AlifParser* _p,
 //	return a_;
 //}
 //
-//ExprSeq* alifParserEngine_getKeys(AlifParser* _p, ASDLSeq* _seq) {
+//ASDLExprSeq* alifParserEngine_getKeys(AlifParser* _p, ASDLSeq* _seq) {
 //
 //	AlifUSizeT len_ = SEQ_LEN(_seq);
-//	ExprSeq* newSeq = alifNew_exprSeq(len_, _p->astMem);
+//	ASDLExprSeq* newSeq = alifNew_exprSeq(len_, _p->astMem);
 //	if (!newSeq) return nullptr;
 //
 //	for (AlifUSizeT i = 0; i < len_; i++) {
@@ -236,10 +236,10 @@ ASDLIdentifierSeq* alifParserEngine_mapNamesToIds(AlifParser* _p,
 //	return newSeq;
 //}
 //
-//ExprSeq* alifParserEngine_getValues(AlifParser* _p, ASDLSeq* _seq) {
+//ASDLExprSeq* alifParserEngine_getValues(AlifParser* _p, ASDLSeq* _seq) {
 //
 //	AlifUSizeT len_ = SEQ_LEN(_seq);
-//	ExprSeq* newSeq = alifNew_exprSeq(len_, _p->astMem);
+//	ASDLExprSeq* newSeq = alifNew_exprSeq(len_, _p->astMem);
 //	if (!newSeq) return nullptr;
 //
 //	for (AlifUSizeT i = 0; i < len_; i++) {
@@ -249,29 +249,31 @@ ASDLIdentifierSeq* alifParserEngine_mapNamesToIds(AlifParser* _p,
 //
 //	return newSeq;
 //}
-//
-//NameDefaultPair* alifParserEngine_nameDefaultPair(AlifParser* _p, Arg* _arg, Expression* _value) {
-//
-//	NameDefaultPair* a_ = (NameDefaultPair*)alifASTMem_malloc(_p->astMem, sizeof(NameDefaultPair));
-//	if (!a_) return nullptr;
-//
-//	a_->arg_ = alifAST_arg(_arg->arg, _arg->lineNo, _arg->colOffset, _arg->endLineNo, _arg->endColOffset, _p->astMem);
-//	a_->value_ = _value;
-//
-//	return a_;
-//}
-//
-//StarEtc* alifParserEngine_starEtc(AlifParser* _p, Arg* _varArg, ASDLSeq* _kwOnlyArgs, Arg* _kwArg) {
-//	StarEtc* a_ = (StarEtc*)alifASTMem_malloc(_p->astMem, sizeof(StarEtc));
-//	if (!a_) return nullptr;
-//
-//	a_->varArg = _varArg;
-//	a_->kwOnlyArgs = _kwOnlyArgs;
-//	a_->kwArg = _kwArg;
-//
-//	return a_;
-//}
-//
+
+NameDefaultPair* alifParserEngine_nameDefaultPair(AlifParser* _p,
+	ArgTy _arg, ExprTy _value) { // 428
+
+	NameDefaultPair* a_ = (NameDefaultPair*)alifASTMem_malloc(_p->astMem, sizeof(NameDefaultPair));
+	if (!a_) return nullptr;
+
+	a_->arg = alifAST_arg(_arg->arg, _arg->lineNo, _arg->colOffset, _arg->endLineNo, _arg->endColOffset, _p->astMem);
+	a_->value = _value;
+
+	return a_;
+}
+
+StarEtc* alifParserEngine_starEtc(AlifParser* _p, ArgTy _varArg,
+	ASDLSeq* _kwOnlyArgs, ArgTy _kwArg) { // 454
+	StarEtc* a_ = (StarEtc*)alifASTMem_malloc(_p->astMem, sizeof(StarEtc));
+	if (!a_) return nullptr;
+
+	a_->varArg = _varArg;
+	a_->kwOnlyArgs = _kwOnlyArgs;
+	a_->kwArg = _kwArg;
+
+	return a_;
+}
+
 //ASDLSeq* alifParserEngine_joinSequences(AlifParser* _p, ASDLSeq* _a, ASDLSeq* _b) {
 //	AlifUSizeT firstLen = SEQ_LEN(_a);
 //	AlifUSizeT secondLen = SEQ_LEN(_b);
@@ -289,9 +291,9 @@ ASDLIdentifierSeq* alifParserEngine_mapNamesToIds(AlifParser* _p,
 //	return newSeq;
 //}
 //
-//static ArgSeq* get_names(AlifParser* _p, ASDLSeq* _namesWithDefaults) {
+//static ASDLArgSeq* get_names(AlifParser* _p, ASDLSeq* _namesWithDefaults) {
 //	AlifUSizeT len_ = SEQ_LEN(_namesWithDefaults);
-//	ArgSeq* seq_ = alifNew_argSeq(len_, _p->astMem);
+//	ASDLArgSeq* seq_ = alifNew_argSeq(len_, _p->astMem);
 //	if (!seq_) return nullptr;
 //
 //	for (AlifUSizeT i = 0; i < len_; i++) {
@@ -301,10 +303,10 @@ ASDLIdentifierSeq* alifParserEngine_mapNamesToIds(AlifParser* _p,
 //	return seq_;
 //}
 //
-//static ExprSeq* get_defaults(AlifParser* _p, ASDLSeq* _namesWithDefaults) {
+//static ASDLExprSeq* get_defaults(AlifParser* _p, ASDLSeq* _namesWithDefaults) {
 //
 //	AlifUSizeT len_ = SEQ_LEN(_namesWithDefaults);
-//	ExprSeq* seq_ = alifNew_exprSeq(len_, _p->astMem);
+//	ASDLExprSeq* seq_ = alifNew_exprSeq(len_, _p->astMem);
 //	if (!seq_) return nullptr;
 //
 //	for (AlifUSizeT i = 0; i < len_; i++) {
@@ -315,8 +317,8 @@ ASDLIdentifierSeq* alifParserEngine_mapNamesToIds(AlifParser* _p,
 //	return seq_;
 //}
 //
-//static AlifIntT make_posOnlyArgs(AlifParser* _p, ArgSeq* _slashWithoutDefault,
-//	SlashWithDefault* slashWithDefault, ArgSeq** _posOnlyArgs) {
+//static AlifIntT make_posOnlyArgs(AlifParser* _p, ASDLArgSeq* _slashWithoutDefault,
+//	SlashWithDefault* slashWithDefault, ASDLArgSeq** _posOnlyArgs) {
 //
 //	if (_slashWithoutDefault != nullptr) {
 //		// code here
@@ -332,13 +334,13 @@ ASDLIdentifierSeq* alifParserEngine_mapNamesToIds(AlifParser* _p,
 //	return *_posOnlyArgs == nullptr ? -1 : 0;
 //}
 //
-//static AlifIntT make_posArgs(AlifParser* _p, ArgSeq* _plainNames,
-//	ASDLSeq* _namesWithDefault, ArgSeq** _posArgs) {
+//static AlifIntT make_posArgs(AlifParser* _p, ASDLArgSeq* _plainNames,
+//	ASDLSeq* _namesWithDefault, ASDLArgSeq** _posArgs) {
 //
 //	if (_plainNames != nullptr and _namesWithDefault != nullptr) {
-//		ArgSeq* namesWithDefaultNames = get_names(_p, _namesWithDefault);
+//		ASDLArgSeq* namesWithDefaultNames = get_names(_p, _namesWithDefault);
 //		if (!namesWithDefaultNames) return -1;
-//		*_posArgs = (ArgSeq*)alifParserEngine_joinSequences(_p, (ASDLSeq*)_plainNames, (ASDLSeq*)namesWithDefaultNames);
+//		*_posArgs = (ASDLArgSeq*)alifParserEngine_joinSequences(_p, (ASDLSeq*)_plainNames, (ASDLSeq*)namesWithDefaultNames);
 //	}
 //	else if (_plainNames == nullptr and _namesWithDefault != nullptr) {
 //		*_posArgs = get_names(_p, _namesWithDefault);
@@ -353,16 +355,16 @@ ASDLIdentifierSeq* alifParserEngine_mapNamesToIds(AlifParser* _p,
 //}
 //
 //static AlifIntT make_posDefaults(AlifParser* _p, SlashWithDefault* _slashWithDefault,
-//	ASDLSeq* _namesWithDefault, ExprSeq** _posDefaults) {
+//	ASDLSeq* _namesWithDefault, ASDLExprSeq** _posDefaults) {
 //
 //	if (_slashWithDefault != nullptr and _namesWithDefault != nullptr) {
-//		ExprSeq* slashWithDefaultValues = get_defaults(_p, _slashWithDefault->namesWithDefaults);
+//		ASDLExprSeq* slashWithDefaultValues = get_defaults(_p, _slashWithDefault->namesWithDefaults);
 //		if (!slashWithDefaultValues) return -1;
 //
-//		ExprSeq* namesWithDefaultValues = get_defaults(_p, _namesWithDefault);
+//		ASDLExprSeq* namesWithDefaultValues = get_defaults(_p, _namesWithDefault);
 //		if (!namesWithDefaultValues) return -1;
 //
-//		*_posDefaults = (ExprSeq*)alifParserEngine_joinSequences(_p, (ASDLSeq*)slashWithDefaultValues, (ASDLSeq*)namesWithDefaultValues);
+//		*_posDefaults = (ASDLExprSeq*)alifParserEngine_joinSequences(_p, (ASDLSeq*)slashWithDefaultValues, (ASDLSeq*)namesWithDefaultValues);
 //	}
 //	else if (_slashWithDefault == nullptr and _namesWithDefault != nullptr) {
 //		*_posDefaults = get_defaults(_p, _namesWithDefault);
@@ -376,7 +378,7 @@ ASDLIdentifierSeq* alifParserEngine_mapNamesToIds(AlifParser* _p,
 //	return *_posDefaults == nullptr ? -1 : 0;
 //}
 //
-//static AlifIntT make_kwArgs(AlifParser* _p, StarEtc* _starEtc, ArgSeq** _kwOnlyArgs, ExprSeq** _kwDefaults) {
+//static AlifIntT make_kwArgs(AlifParser* _p, StarEtc* _starEtc, ASDLArgSeq** _kwOnlyArgs, ASDLExprSeq** _kwDefaults) {
 //	if (_starEtc != nullptr and _starEtc->kwOnlyArgs != nullptr) {
 //		*_kwOnlyArgs = get_names(_p, _starEtc->kwOnlyArgs);
 //	}
@@ -397,40 +399,41 @@ ASDLIdentifierSeq* alifParserEngine_mapNamesToIds(AlifParser* _p,
 //
 //	return 0;
 //}
-//
-//// Constructs an arguments_ty object out of all the parsed constructs in the parameters rule
-//Arguments* alifParserEngine_makeArguments(AlifParser* _p, ArgSeq* _slashWithoutDefault, SlashWithDefault* _slashWithDefault,
-//	ArgSeq* _plainNames, ASDLSeq* _namesWithDefault, StarEtc* _starEtc) {
-//
-//	ArgSeq* posOnlyArgs{};
-//	if (make_posOnlyArgs(_p, _slashWithoutDefault, _slashWithDefault, &posOnlyArgs) == -1) return nullptr;
-//
-//	ArgSeq* posArgs{};
-//	if (make_posArgs(_p, _plainNames, _namesWithDefault, &posArgs) == -1) return nullptr;
-//
-//	ExprSeq* posDefaults{};
-//	if (make_posDefaults(_p, _slashWithDefault, _namesWithDefault, &posDefaults) == -1) return nullptr;
-//
-//	Arg* varArg{};
-//	if (_starEtc != nullptr and _starEtc->varArg != nullptr) {
-//		varArg = _starEtc->varArg;
-//	}
-//
-//	ArgSeq* kwOnlyArgs{};
-//	ExprSeq* kwDefaults{};
-//	if (make_kwArgs(_p, _starEtc, &kwOnlyArgs, &kwDefaults) == -1) {
-//		return nullptr;
-//	}
-//
-//	Arg* kwArg{};
-//	if (_starEtc != nullptr and _starEtc->kwArg != nullptr) {
-//		kwArg = _starEtc->kwArg;
-//	}
-//
-//	return alifAST_arguments(posOnlyArgs, posArgs, varArg, kwOnlyArgs, kwDefaults, kwArg, posDefaults, _p->astMem);
-//}
 
-Arguments* alifParserEngine_emptyArguments(AlifParser* _p) { // 681
+// Constructs an arguments_ty object out of all the parsed constructs in the parameters rule
+ArgumentsTy alifParserEngine_makeArguments(AlifParser* _p,
+	ASDLArgSeq* _slashWithoutDefault, SlashWithDefault* _slashWithDefault,
+	ASDLArgSeq* _plainNames, ASDLSeq* _namesWithDefault, StarEtc* _starEtc) { // 638
+
+	ASDLArgSeq* posOnlyArgs{};
+	if (make_posOnlyArgs(_p, _slashWithoutDefault, _slashWithDefault, &posOnlyArgs) == -1) return nullptr;
+
+	ASDLArgSeq* posArgs{};
+	if (make_posArgs(_p, _plainNames, _namesWithDefault, &posArgs) == -1) return nullptr;
+
+	ASDLExprSeq* posDefaults{};
+	if (make_posDefaults(_p, _slashWithDefault, _namesWithDefault, &posDefaults) == -1) return nullptr;
+
+	ArgTy varArg{};
+	if (_starEtc != nullptr and _starEtc->varArg != nullptr) {
+		varArg = _starEtc->varArg;
+	}
+
+	ASDLArgSeq* kwOnlyArgs{};
+	ASDLExprSeq* kwDefaults{};
+	if (make_kwArgs(_p, _starEtc, &kwOnlyArgs, &kwDefaults) == -1) {
+		return nullptr;
+	}
+
+	ArgTy kwArg{};
+	if (_starEtc != nullptr and _starEtc->kwArg != nullptr) {
+		kwArg = _starEtc->kwArg;
+	}
+
+	return alifAST_arguments(posOnlyArgs, posArgs, varArg, kwOnlyArgs, kwDefaults, kwArg, posDefaults, _p->astMem);
+}
+
+ArgumentsTy alifParserEngine_emptyArguments(AlifParser* _p) { // 681
 
 	ASDLArgSeq* posOnlyArgs = alifNew_argSeq(0, _p->astMem);
 	if (!posOnlyArgs) return nullptr;
@@ -483,11 +486,11 @@ AugOperator* alifParserEngine_augOperator(AlifParser* _p, Operator_ _type) { // 
 //	return a_;
 //}
 //
-//ExprSeq* alifParserEngine_seqExtractStarExprs(AlifParser* _p, ASDLSeq* _kwArgs) { // 791
+//ASDLExprSeq* alifParserEngine_seqExtractStarExprs(AlifParser* _p, ASDLSeq* _kwArgs) { // 791
 //	AlifIntT newLen = seqNumber_ofStarExprs(_kwArgs);
 //	if (newLen == 0) return nullptr;
 //
-//	ExprSeq* newSeq = alifNew_exprSeq(newLen, _p->astMem);
+//	ASDLExprSeq* newSeq = alifNew_exprSeq(newLen, _p->astMem);
 //	if (!newSeq) return nullptr;
 //
 //	AlifIntT index_ = 0;
@@ -567,7 +570,7 @@ ModuleTy alifParserEngine_makeModule(AlifParser* _p, ASDLStmtSeq* _a) {
 //	return resultToken_withMetadata(_p, _conv, _convTok->data);
 //}
 //
-//ResultTokenWithMetadata* alifParserEngine_setupFullFormatSpec(AlifParser* _p, AlifPToken* _lit, ExprSeq* _spec,
+//ResultTokenWithMetadata* alifParserEngine_setupFullFormatSpec(AlifParser* _p, AlifPToken* _lit, ASDLExprSeq* _spec,
 //	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 //
 //	if (!_spec) return nullptr;
@@ -584,7 +587,7 @@ ModuleTy alifParserEngine_makeModule(AlifParser* _p, ASDLStmtSeq* _a) {
 //	return resultToken_withMetadata(_p, res_, _lit->data);
 //}
 //
-//Expression* alifParserEngine_collectCallSeqs(AlifParser* _p, ExprSeq* _a, ASDLSeq* _b,
+//Expression* alifParserEngine_collectCallSeqs(AlifParser* _p, ASDLExprSeq* _a, ASDLSeq* _b,
 //	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 //
 //	AlifUSizeT argsLen = SEQ_LEN(_a);
@@ -596,12 +599,12 @@ ModuleTy alifParserEngine_makeModule(AlifParser* _p, ASDLStmtSeq* _a) {
 //			_lineNo, _colOffset, _endLineNo, _endColOffset, _astMem);
 //	}
 //
-//	ExprSeq* stars_ = alifParserEngine_seqExtractStarExprs(_p, _b);
+//	ASDLExprSeq* stars_ = alifParserEngine_seqExtractStarExprs(_p, _b);
 //	KeywordSeq* keywords_ = alifParserEngine_seqDeleteStarExprs(_p, _b);
 //
 //	if (stars_) totalLen += SEQ_LEN(stars_);
 //
-//	ExprSeq* args_ = alifNew_exprSeq(totalLen, _astMem);
+//	ASDLExprSeq* args_ = alifNew_exprSeq(totalLen, _astMem);
 //
 //	AlifUSizeT i = 0;
 //	for (i = 0; i < argsLen; i++) {
@@ -642,7 +645,7 @@ ModuleTy alifParserEngine_makeModule(AlifParser* _p, ASDLStmtSeq* _a) {
 //		_const->endLineNo, _const->endColOffset, _p->astMem);
 //}
 //
-//static ExprSeq* unpackTopLevel_joinedStrs(AlifParser* _p, ExprSeq* _rawExpr) {
+//static ASDLExprSeq* unpackTopLevel_joinedStrs(AlifParser* _p, ASDLExprSeq* _rawExpr) {
 //	// هذه الدالة غير ضرورية ويجب مراجعة عملها
 //	/* The parser might put multiple f-string values into an individual
 //	 * JoinedStr node at the top level due to stuff like f-string debugging
@@ -662,13 +665,13 @@ ModuleTy alifParserEngine_makeModule(AlifParser* _p, ASDLStmtSeq* _a) {
 //		}
 //	}
 //
-//	ExprSeq* expressions = alifNew_exprSeq(reqSize, _p->astMem);
+//	ASDLExprSeq* expressions = alifNew_exprSeq(reqSize, _p->astMem);
 //
 //	AlifSizeT raw_index, req_index = 0;
 //	for (raw_index = 0; raw_index < rawSize; raw_index++) {
 //		expr_ = SEQ_GET(_rawExpr, raw_index);
 //		if (expr_->type == JoinStrK) {
-//			ExprSeq* values = expr_->V.joinStr.vals;
+//			ASDLExprSeq* values = expr_->V.joinStr.vals;
 //			for (AlifSizeT n = 0; n < SEQ_LEN(values); n++) {
 //				SEQ_SET(expressions, req_index, SEQ_GET(values, n));
 //				req_index++;
@@ -682,8 +685,8 @@ ModuleTy alifParserEngine_makeModule(AlifParser* _p, ASDLStmtSeq* _a) {
 //	return expressions;
 //}
 //
-//Expression* alifParserEngine_joinedStr(AlifParser* _p, AlifPToken* _a, ExprSeq* _rawExprs, AlifPToken* _b) {
-//	ExprSeq* expr_ = unpackTopLevel_joinedStrs(_p, _rawExprs);
+//Expression* alifParserEngine_joinedStr(AlifParser* _p, AlifPToken* _a, ASDLExprSeq* _rawExprs, AlifPToken* _b) {
+//	ASDLExprSeq* expr_ = unpackTopLevel_joinedStrs(_p, _rawExprs);
 //	AlifUSizeT nItems = SEQ_LEN(expr_);
 //
 //	const wchar_t* quoteStr = _alifWBytes_asString(_a->bytes);
@@ -691,7 +694,7 @@ ModuleTy alifParserEngine_makeModule(AlifParser* _p, ASDLStmtSeq* _a) {
 //
 //	AlifIntT isRaw = wcspbrk(quoteStr, L"خ") != nullptr;
 //
-//	ExprSeq* seq_ = alifNew_exprSeq(nItems, _p->astMem);
+//	ASDLExprSeq* seq_ = alifNew_exprSeq(nItems, _p->astMem);
 //	if (seq_ == nullptr) return nullptr;
 //
 //
@@ -712,7 +715,7 @@ ModuleTy alifParserEngine_makeModule(AlifParser* _p, ASDLStmtSeq* _a) {
 //		SEQ_SET(seq_, index_++, item_);
 //	}
 //
-//	ExprSeq* resizedExprs{};
+//	ASDLExprSeq* resizedExprs{};
 //	if (index_ != nItems) {
 //		resizedExprs = alifNew_exprSeq(index_, _p->astMem);
 //		if (resizedExprs == nullptr) return nullptr;
@@ -814,7 +817,7 @@ ModuleTy alifParserEngine_makeModule(AlifParser* _p, ASDLStmtSeq* _a) {
 //	return nullptr;
 //}
 //
-//Expression* alifParserEngine_combineStrings(AlifParser* _p, ExprSeq* _strings,
+//Expression* alifParserEngine_combineStrings(AlifParser* _p, ASDLExprSeq* _strings,
 //	int _lineNo, int _colOffset, int _endLineNo, int _endColOffset, AlifASTMem* _astMem) {
 //
 //	AlifUSizeT len_ = SEQ_LEN(_strings);
@@ -869,7 +872,7 @@ ModuleTy alifParserEngine_makeModule(AlifParser* _p, ASDLStmtSeq* _a) {
 //		return SEQ_GET(_strings, 0);
 //	}
 //
-//	ExprSeq* flattened_ = alifNew_exprSeq(nFlattenedElems, _p->astMem);
+//	ASDLExprSeq* flattened_ = alifNew_exprSeq(nFlattenedElems, _p->astMem);
 //	if (flattened_ == nullptr) return nullptr;
 //
 //	/* build flattened list */
@@ -906,7 +909,7 @@ ModuleTy alifParserEngine_makeModule(AlifParser* _p, ASDLStmtSeq* _a) {
 //		prevIsConstant = element_->type == ConstantK;
 //	}
 //
-//	ExprSeq* values_ = alifNew_exprSeq(nElements, _p->astMem);
+//	ASDLExprSeq* values_ = alifNew_exprSeq(nElements, _p->astMem);
 //	if (values_ == nullptr) return nullptr;
 //
 //	/* build folded list */

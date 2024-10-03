@@ -18,9 +18,9 @@ typedef enum Operator_ {
 	LShift = 8, RShift = 9, BitOr = 10, BitXor = 11, BitAnd = 12,
 	FloorDiv = 13
 };
-typedef enum UnaryOp_ { Invert = 1, Not = 2, UAdd = 3, USub = 4 };
+typedef enum UnaryOp_ { Invert = 1, Not = 2, UAdd = 3, USub = 4, Sqrt = 5 };
 typedef enum CmpOp_ {
-	Equal = 1, NotEq = 2, LessThan = 3, LtE = 4, GreaterThan = 5, GtE = 6, Is = 7, IsNot = 8,
+	Equal = 1, NotEq = 2, LessThan = 3, LessThanEq = 4, GreaterThan = 5, GreaterThanEq = 6, Is = 7, IsNot = 8,
 	In = 9, NotIn = 10
 };
 typedef class Comprehension* ComprehensionTy;
@@ -547,7 +547,7 @@ ExprTy alifAST_list(ASDLExprSeq*, ExprContext_, AlifIntT, AlifIntT, AlifIntT, Al
 ExprTy alifAST_tuple(ASDLExprSeq*, ExprContext_, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 ExprTy alifAST_slice(ExprTy, ExprTy, ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 ComprehensionTy alifAST_comprehension(ExprTy, ExprTy, ASDLExprSeq*, AlifIntT, AlifASTMem*);
-ArgumentsTy alifAST_arguments(ASDLArgSeq*, ASDLArgSeq*, ArgTy*, ASDLArgSeq*, ASDLExprSeq*, Arg*, ASDLExprSeq*, AlifASTMem*);
+ArgumentsTy alifAST_arguments(ASDLArgSeq*, ASDLArgSeq*, ArgTy, ASDLArgSeq*, ASDLExprSeq*, Arg*, ASDLExprSeq*, AlifASTMem*);
 ArgTy alifAST_arg(Identifier, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 KeywordTy alifAST_keyword(Identifier, ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 AliasTy alifAST_alias(Identifier, Identifier, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
