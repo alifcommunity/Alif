@@ -19,11 +19,12 @@ AlifPArray::~AlifPArray() {
 	alifMem_dataFree(data);
 }
 
-void AlifPArray::push_back(void*& value) {
+bool AlifPArray::push_back(void*& value) {
 	if (size == capacity) {
 		capacity *= 2;
 		data = (void**)alifMem_dataRealloc(data, capacity * sizeof(void**));
-		if (data == nullptr) return;
+		if (data == nullptr) return false;
 	}
 	data[size++] = value;
+	return true;
 }

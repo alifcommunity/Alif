@@ -22,17 +22,18 @@ AlifIntT alifParserEngine_insertMemo(AlifParser* _p, AlifIntT _mark, AlifIntT _t
 	return 0;
 }
 
-//int alifParserEngine_updateMemo(AlifParser* _p, int _mark, int _type, void* _node) { 
-//	for (Memo* m = _p->tokens[_mark]->memo; m != nullptr; m = m->next) {
-//		if (m->type == _type) {
-//			m->node = _node;
-//			m->mark_ = _p->mark_;
-//			return 0;
-//		}
-//	}
-//	return alifParserEngine_insertMemo(_p, _mark, _type, _node);
-//}
-//
+AlifIntT alifParserEngine_updateMemo(AlifParser* _p,
+	AlifIntT _mark, AlifIntT _type, void* _node) { // 93
+	for (Memo* m = _p->tokens[_mark]->memo; m != nullptr; m = m->next) {
+		if (m->type == _type) {
+			m->node = _node;
+			m->mark = _p->mark;
+			return 0;
+		}
+	}
+	return alifParserEngine_insertMemo(_p, _mark, _type, _node);
+}
+
 //static int get_keywordOrName(AlifParser* _p, AlifToken* _token) { 
 //	int nameLen = _token->endColOffset - _token->colOffset;
 //
@@ -199,24 +200,25 @@ AlifPToken* alifParserEngine_expectToken(AlifParser* _p, AlifIntT _type) { // 41
 	return t;
 }
 
-//AlifPToken* alifParserEngine_expectTokenForced(AlifParser* _p, int _type, const wchar_t* _expected) { 
-//	if (_p->errorIndicator == 1) return nullptr;
-//
-//	if (_p->mark_ == _p->fill_) {
-//		if (alifParserEngine_fillToken(_p) < 0) {
-//			_p->errorIndicator = 1;
-//			return nullptr;
-//		}
-//	}
-//
-//	AlifPToken* t_ = _p->tokens[_p->mark_];
-//	if (t_->type != _type) {
-//		// error
-//		return nullptr;
-//	}
-//	_p->mark_ += 1;
-//	return t_;
-//}
+AlifPToken* alifParserEngine_expectTokenForced(AlifParser* _p,
+	AlifIntT _type, const char* _expected) { // 445 
+
+	if (_p->errorIndicator == 1) return nullptr;
+	if (_p->mark == _p->fill) {
+		if (alifParserEngine_fillToken(_p) < 0) {
+			_p->errorIndicator = 1;
+			return nullptr;
+		}
+	}
+
+	AlifPToken* t_ = _p->tokens[_p->mark];
+	if (t_->type != _type) {
+		//RAISE_SYNTAX_ERROR_KNOWN_LOCATION(t_, "expected '%s'", _expected);
+		return nullptr;
+	}
+	_p->mark += 1;
+	return t_;
+}
 
 AlifPToken* alifParserEngine_getLastNonWhitespaceToken(AlifParser* _p) { // 491
 	AlifPToken* token = nullptr;

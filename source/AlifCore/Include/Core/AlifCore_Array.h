@@ -15,7 +15,7 @@ public:
 	AlifPArray();
 	~AlifPArray();
 
-	void push_back(void*& value);
+	bool push_back(void*& value);
 
 	void* operator[](AlifUSizeT _index) const {
 		return data[_index];

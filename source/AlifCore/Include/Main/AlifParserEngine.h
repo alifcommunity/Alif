@@ -124,14 +124,14 @@ public:
 
 
 AlifIntT alifParserEngine_insertMemo(AlifParser*, AlifIntT, AlifIntT, void*); // 131
-//int alifParserEngine_updateMemo(AlifParser*, int, int, void*);
+AlifIntT alifParserEngine_updateMemo(AlifParser*, AlifIntT, AlifIntT, void*); // 132
 AlifIntT alifParserEngine_isMemorized(AlifParser*, AlifIntT, void*);
 
 AlifIntT alifParserEngine_lookaheadWithInt(AlifIntT, AlifPToken* (_func)(AlifParser*, AlifIntT), AlifParser*, AlifIntT); // 136
 AlifIntT alifParserEngine_lookahead(AlifIntT, void* (_func)(AlifParser*), AlifParser*); // 138
 
 AlifPToken* alifParserEngine_expectToken(AlifParser*, AlifIntT); // 140
-//AlifPToken* alifParserEngine_expectTokenForced(AlifParser*, int, const wchar_t*);
+AlifPToken* alifParserEngine_expectTokenForced(AlifParser*, AlifIntT, const char*); // 142
 AlifPToken* alifParserEngine_getLastNonWhitespaceToken(AlifParser*); // 146
 ExprTy alifParserEngine_nameToken(AlifParser*); // 148
 //void* alifParserEngine_stringToken(AlifParser*);
@@ -168,11 +168,11 @@ void* alifParserEngine_dummyName(AlifParser*, ...); // 248
 
 AlifObject* alifParserEngine_newIdentifier(AlifParser*, const char*); // 296
 ASDLSeq* alifParserEngine_singletonSeq(AlifParser*, void*); // 297
-//Seq* alifParserEngine_seqInsertInFront(AlifParser*, void*, Seq*);
+ASDLSeq* alifParserEngine_seqInsertInFront(AlifParser*, void*, ASDLSeq*); // 298
 ASDLSeq* alifParserEngine_seqFlatten(AlifParser*, ASDLSeq*); // 300
-//Expression* alifParserEngine_joinNamesWithDot(AlifParser*, Expression*, Expression*);
-//Alias* alifParserEngine_aliasForStar(AlifParser*, int, int, int, int, AlifASTMem*);
-//IdentifierSeq* alifParserEngine_mapNamesToIds(AlifParser*, ExprSeq*);
+ExprTy alifParserEngine_joinNamesWithDot(AlifParser*, ExprTy, ExprTy); // 301
+AliasTy alifParserEngine_aliasForStar(AlifParser*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*); // 303
+ASDLIdentifierSeq* alifParserEngine_mapNamesToIds(AlifParser*, ASDLExprSeq*); // 304
 //CompExprPair* alifParserEngine_compExprPair(AlifParser*, CmpOp, Expression*);
 //IntSeq* alifParserEngine_getCmpOps(AlifParser*, Seq*);
 //ExprSeq* alifParserEngine_getExprs(AlifParser*, Seq*);
