@@ -106,45 +106,45 @@ ASDLIdentifierSeq* alifParserEngine_mapNamesToIds(AlifParser* _p,
 	return newSeq;
 }
 
-//CompExprPair* alifParserEngine_compExprPair(AlifParser* _p, CmpOp _cmpOp, Expression* _expr) {
-//
-//	CompExprPair* a_ = (CompExprPair*)alifASTMem_malloc(_p->astMem, sizeof(CompExprPair));
-//	if (!a_) return nullptr;
-//
-//	a_->cmpOp = _cmpOp;
-//	a_->expr_ = _expr;
-//
-//	return a_;
-//}
-//
-//IntSeq* alifParserEngine_getCmpOps(AlifParser* _p, ASDLSeq* _seq) {
-//	AlifUSizeT len_ = SEQ_LEN(_seq);
-//
-//	IntSeq* newSeq = alifNew_intSeq(len_, _p->astMem);
-//	if (!newSeq) return nullptr;
-//
-//	for (AlifUSizeT i = 0; i < len_; i++) {
-//		CompExprPair* pair_ = (CompExprPair*)SEQ_GETUNTYPED(_seq, i);
-//		SEQ_SET(newSeq, i, pair_->cmpOp);
-//	}
-//
-//	return newSeq;
-//}
-//
-//ASDLExprSeq* alifParserEngine_getExprs(AlifParser* _p, ASDLSeq* _seq) {
-//	AlifUSizeT len_ = SEQ_LEN(_seq);
-//
-//	ASDLExprSeq* newSeq = alifNew_exprSeq(len_, _p->astMem);
-//	if (!newSeq) return nullptr;
-//
-//	for (AlifUSizeT i = 0; i < len_; i++) {
-//		CompExprPair* pair_ = (CompExprPair*)SEQ_GETUNTYPED(_seq, i);
-//		SEQ_SET(newSeq, i, pair_->expr_);
-//	}
-//
-//	return newSeq;
-//}
-//
+CompExprPair* alifParserEngine_compExprPair(AlifParser* _p, CmpOp_ _cmpOp, ExprTy _expr) { // 193
+
+	CompExprPair* a_ = (CompExprPair*)alifASTMem_malloc(_p->astMem, sizeof(CompExprPair));
+	if (!a_) return nullptr;
+
+	a_->cmpOp = _cmpOp;
+	a_->expr = _expr;
+
+	return a_;
+}
+
+ASDLIntSeq* alifParserEngine_getCmpOps(AlifParser* _p, ASDLSeq* _seq) { // 206
+	AlifSizeT len_ = ASDL_SEQ_LEN(_seq);
+
+	ASDLIntSeq* newSeq = alifNew_intSeq(len_, _p->astMem);
+	if (!newSeq) return nullptr;
+
+	for (AlifSizeT i = 0; i < len_; i++) {
+		CompExprPair* pair = (CompExprPair*)ASDL_SEQ_GETUNTYPED(_seq, i);
+		ASDL_SEQ_SET(newSeq, i, pair->cmpOp);
+	}
+
+	return newSeq;
+}
+
+ASDLExprSeq* alifParserEngine_getExprs(AlifParser* _p, ASDLSeq* _seq) { // 223
+	AlifSizeT len_ = ASDL_SEQ_LEN(_seq);
+
+	ASDLExprSeq* newSeq = alifNew_exprSeq(len_, _p->astMem);
+	if (!newSeq) return nullptr;
+
+	for (AlifSizeT i = 0; i < len_; i++) {
+		CompExprPair* pair_ = (CompExprPair*)ASDL_SEQ_GETUNTYPED(_seq, i);
+		ASDL_SEQ_SET(newSeq, i, pair_->expr);
+	}
+
+	return newSeq;
+}
+
 //static ASDLExprSeq* setContext_seq(AlifParser* _p, ASDLExprSeq* _seq, ExprCTX _ctx) {
 //	AlifUSizeT len = SEQ_LEN(_seq);
 //	if (len == 0) return nullptr;
