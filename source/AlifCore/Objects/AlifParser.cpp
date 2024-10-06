@@ -5380,8 +5380,8 @@ static ExprTy term_raw(AlifParser* _p) {
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	ExprTy res_{};
-	AlifIntT mark_ = _p->mark;
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
 	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
@@ -5390,30 +5390,30 @@ static ExprTy term_raw(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // term "*" factor
+	{ // حد "*" معامل
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
+		AlifPToken* literal{};
 		ExprTy a_{};
 		ExprTy b_{};
 		if (
-			(a_ = term_rule(_p)) // term
+			(a_ = term_rule(_p)) // حد
 			and
-			(literal_ = alifParserEngine_expectToken(_p, STAR)) // "*"
+			(literal = alifParserEngine_expectToken(_p, STAR)) // "*"
 			and
-			(b_ = factor_rule(_p)) // factor
+			(b_ = factor_rule(_p)) // معامل
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_binOp(a_, Operator_::Mult, b_, EXTRA);
-			if (res_ == nullptr
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_binOp(a_, Operator_::Mult, b_, EXTRA);
+			if (res == nullptr
 				/*and alifErr_occurred()*/)
 			{
 				_p->errorIndicator = 1;
@@ -5422,29 +5422,29 @@ static ExprTy term_raw(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark = mark_;
+		_p->mark = mark;
 	}
-	{ // term "/" factor
+	{ // حد "/" معامل
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
+		AlifPToken* literal{};
 		ExprTy a_{};
 		ExprTy b_{};
 		if (
-			(a_ = term_rule(_p)) // term
+			(a_ = term_rule(_p)) // حد
 			and
-			(literal_ = alifParserEngine_expectToken(_p, SLASH)) // "/"
+			(literal = alifParserEngine_expectToken(_p, SLASH)) // "/"
 			and
-			(b_ = factor_rule(_p)) // factor
+			(b_ = factor_rule(_p)) // معامل
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_binOp(a_, Operator_::Div, b_, EXTRA);
-			if (res_ == nullptr
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_binOp(a_, Operator_::Div, b_, EXTRA);
+			if (res == nullptr
 				/*and alifErr_occurred()*/)
 			{
 				_p->errorIndicator = 1;
@@ -5453,29 +5453,29 @@ static ExprTy term_raw(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark = mark_;
+		_p->mark = mark;
 	}
-	{ // term "/*" factor
+	{ // حد "/*" معامل
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
+		AlifPToken* literal{};
 		ExprTy a_{};
 		ExprTy b_{};
 		if (
-			(a_ = term_rule(_p)) // term
+			(a_ = term_rule(_p)) // حد
 			and
-			(literal_ = alifParserEngine_expectToken(_p, SLASHSTAR)) // "/*"
+			(literal = alifParserEngine_expectToken(_p, SLASHSTAR)) // "/*"
 			and
-			(b_ = factor_rule(_p)) // factor
+			(b_ = factor_rule(_p)) // معامل
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_binOp(a_, Operator_::FloorDiv, b_, EXTRA);
-			if (res_ == nullptr
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_binOp(a_, Operator_::FloorDiv, b_, EXTRA);
+			if (res == nullptr
 				/*and alifErr_occurred()*/)
 			{
 				_p->errorIndicator = 1;
@@ -5484,29 +5484,29 @@ static ExprTy term_raw(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark = mark_;
+		_p->mark = mark;
 	}
-	{ // term "//" factor
+	{ // حد "//" معامل
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
+		AlifPToken* literal{};
 		ExprTy a_{};
 		ExprTy b_{};
 		if (
-			(a_ = term_rule(_p)) // term
+			(a_ = term_rule(_p)) // حد
 			and
-			(literal_ = alifParserEngine_expectToken(_p, DOUBLESLASH)) // "//"
+			(literal = alifParserEngine_expectToken(_p, DOUBLESLASH)) // "//"
 			and
-			(b_ = factor_rule(_p)) // factor
+			(b_ = factor_rule(_p)) // معامل
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_binOp(a_, Operator_::Mod, b_, EXTRA);
-			if (res_ == nullptr
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_binOp(a_, Operator_::Mod, b_, EXTRA);
+			if (res == nullptr
 				/*and alifErr_occurred()*/)
 			{
 				_p->errorIndicator = 1;
@@ -5515,24 +5515,23 @@ static ExprTy term_raw(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark = mark_;
+		_p->mark = mark;
 	}
-	{ // factor
+	{ // معامل
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		ExprTy factorVar{};
 		if (factorVar = factor_rule(_p)) {
-			res_ = factorVar;
+			res = factorVar;
 			goto done;
 		}
-		_p->mark = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 /*
 	Left-recursive
