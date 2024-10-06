@@ -291,7 +291,7 @@ static ExprTy alifParserEngine_nameFromToken(AlifParser* _p, AlifPToken* _t) { /
 		_p->errorIndicator = 1;
 		return nullptr;
 	}
-	AlifObject* id = alifParserEngine_newIdentifier(_p, s); // need work on it
+	AlifObject* id = alifParserEngine_newIdentifier(_p, s);
 
 	return alifAST_name(id, ExprContext_::Load, _t->lineNo, _t->colOffset, _t->endLineNo, _t->endColOffset, _p->astMem);
 }
@@ -301,10 +301,10 @@ ExprTy alifParserEngine_nameToken(AlifParser* _p) { // 582
 	return alifParserEngine_nameFromToken(_p, tok);
 }
 
-//void* alifParserEngine_stringToken(AlifParser* _p) { 
-//	return alifParserEngine_expectToken(_p, STRING);
-//}
-//
+void* alifParserEngine_stringToken(AlifParser* _p) { // 589
+	return alifParserEngine_expectToken(_p, STRING);
+}
+
 //static AlifObject* parseNumber_raw(const wchar_t* _s) { 
 //	const wchar_t* end{};
 //	int64_t x{};
@@ -351,22 +351,52 @@ ExprTy alifParserEngine_nameToken(AlifParser* _p) { // 582
 //	free(dup);
 //	return res;
 //}
-//
-//Expression* alifParserEngine_numberToken(AlifParser* _p) { 
-//	AlifPToken* tok = alifParserEngine_expectToken(_p, NUMBER);
-//	if (tok == nullptr) return nullptr;
-//
-//	const wchar_t* rawNum = _alifWBytes_asString(tok->bytes);
-//
-//	AlifObject* num = parse_number(rawNum);
-//
-//	if (alifASTMem_listAddAlifObj(_p->astMem, num) < 0) {
-//		// error
-//		return nullptr;
-//	}
-//
-//	return alifAST_constant(num, nullptr, tok->lineNo, tok->colOffset, tok->endLineNo, tok->endColOffset, _p->astMem); // type should be NUMBER not nullptr!
-//}
+
+ExprTy alifParserEngine_numberToken(AlifParser* _p) { // 684
+	AlifPToken* tok = alifParserEngine_expectToken(_p, NUMBER);
+	if (tok == nullptr) return nullptr;
+
+	const char* rawNum = alifBytes_asString(tok->bytes);
+	if (rawNum == nullptr) {
+		_p->errorIndicator = 1;
+		return nullptr;
+	}
+
+	if (_p->featureVersion < 6 and strchr(rawNum, '_') != nullptr) {
+		_p->errorIndicator = 1;
+		//return RAISE_SYNTAX_ERROR("Underscores in numeric literals are only supported "
+		//	"in Alif 5 and greater");
+		return nullptr; // temp
+	}
+
+	AlifObject* num = parse_number(rawNum);
+	if (num == nullptr) {
+		_p->errorIndicator = 1;
+		//AlifThread* tstate = _alifThread_get();
+		//if (tstate->currentException != nullptr and
+		//	ALIF_TYPE(tstate->currentException) == (AlifTypeObject*)_alifExcValueError_) {
+		//	AlifObject* exc = alifErr_getRaisedException();
+		//	RAISE_ERROR_KNOWN_LOCATION(
+		//		_p, _alifExcSyntaxError_,
+		//		tok->lineNo, -1 /* col_offset */,
+		//		tok->endLineNo, -1 /* end_col_offset */,
+		//		"%S - Consider hexadecimal for huge integer literals "
+		//		"to avoid decimal conversion limits.",
+		//		exc);
+			//ALIF_DECREF(exc);
+		//}
+		return nullptr;
+	}
+
+
+	if (alifASTMem_listAddAlifObj(_p->astMem, num) < 0) {
+		ALIF_DECREF(num);
+		_p->errorIndicator = 1;
+		return nullptr;
+	}
+
+	return alifAST_constant(num, nullptr, tok->lineNo, tok->colOffset, tok->endLineNo, tok->endColOffset, _p->astMem); // type should be NUMBER not nullptr!
+}
 
 
 static AlifIntT compute_parserFlags(AlifCompilerFlags* flags) { // 769
