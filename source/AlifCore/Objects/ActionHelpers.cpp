@@ -210,45 +210,45 @@ ASDLExprSeq* alifParserEngine_getExprs(AlifParser* _p, ASDLSeq* _seq) { // 223
 //
 //	return new_;
 //}
-//
-//KeyValuePair* alifParserEngine_keyValuePair(AlifParser* _p, ExprTy _key, ExprTy _val) {
-//
-//	KeyValuePair* a_ = (KeyValuePair*)alifASTMem_malloc(_p->astMem, sizeof(KeyValuePair));
-//	if (!a_) return nullptr;
-//
-//	a_->key_ = _key;
-//	a_->val_ = _val;
-//
-//	return a_;
-//}
-//
-//ASDLExprSeq* alifParserEngine_getKeys(AlifParser* _p, ASDLSeq* _seq) {
-//
-//	AlifUSizeT len_ = SEQ_LEN(_seq);
-//	ASDLExprSeq* newSeq = alifNew_exprSeq(len_, _p->astMem);
-//	if (!newSeq) return nullptr;
-//
-//	for (AlifUSizeT i = 0; i < len_; i++) {
-//		KeyValuePair* pair_ = (KeyValuePair*)SEQ_GETUNTYPED(_seq, i);
-//		SEQ_SET(newSeq, i, pair_->key_);
-//	}
-//
-//	return newSeq;
-//}
-//
-//ASDLExprSeq* alifParserEngine_getValues(AlifParser* _p, ASDLSeq* _seq) {
-//
-//	AlifUSizeT len_ = SEQ_LEN(_seq);
-//	ASDLExprSeq* newSeq = alifNew_exprSeq(len_, _p->astMem);
-//	if (!newSeq) return nullptr;
-//
-//	for (AlifUSizeT i = 0; i < len_; i++) {
-//		KeyValuePair* pair_ = (KeyValuePair*)SEQ_GETUNTYPED(_seq, i);
-//		SEQ_SET(newSeq, i, pair_->val_);
-//	}
-//
-//	return newSeq;
-//}
+
+KeyValuePair* alifParserEngine_keyValuePair(AlifParser* _p, ExprTy _key, ExprTy _val) { // 338
+
+	KeyValuePair* a_ = (KeyValuePair*)alifASTMem_malloc(_p->astMem, sizeof(KeyValuePair));
+	if (!a_) return nullptr;
+
+	a_->key = _key;
+	a_->val = _val;
+
+	return a_;
+}
+
+ASDLExprSeq* alifParserEngine_getKeys(AlifParser* _p, ASDLSeq* _seq) { // 351
+
+	AlifUSizeT len = ASDL_SEQ_LEN(_seq);
+	ASDLExprSeq* newSeq = alifNew_exprSeq(len, _p->astMem);
+	if (!newSeq) return nullptr;
+
+	for (AlifUSizeT i = 0; i < len; i++) {
+		KeyValuePair* pair_ = (KeyValuePair*)ASDL_SEQ_GETUNTYPED(_seq, i);
+		ASDL_SEQ_SET(newSeq, i, pair_->key);
+	}
+
+	return newSeq;
+}
+
+ASDLExprSeq* alifParserEngine_getValues(AlifParser* _p, ASDLSeq* _seq) { // 367
+
+	AlifUSizeT len_ = ASDL_SEQ_LEN(_seq);
+	ASDLExprSeq* newSeq = alifNew_exprSeq(len_, _p->astMem);
+	if (!newSeq) return nullptr;
+
+	for (AlifUSizeT i = 0; i < len_; i++) {
+		KeyValuePair* pair_ = (KeyValuePair*)ASDL_SEQ_GETUNTYPED(_seq, i);
+		ASDL_SEQ_SET(newSeq, i, pair_->val);
+	}
+
+	return newSeq;
+}
 
 NameDefaultPair* alifParserEngine_nameDefaultPair(AlifParser* _p,
 	ArgTy _arg, ExprTy _value) { // 428
@@ -525,7 +525,7 @@ AugOperator* alifParserEngine_augOperator(AlifParser* _p, Operator_ _type) { // 
 //}
 
 
-ModuleTy alifParserEngine_makeModule(AlifParser* _p, ASDLStmtSeq* _a) {
+ModuleTy alifParserEngine_makeModule(AlifParser* _p, ASDLStmtSeq* _a) { // 857
 	//ASDLTypeIgnoreSeq* typeIgnores = nullptr;
 	//AlifSizeT num = _p->typeIgnoreComments.numItems;
 	//if (num > 0) {
@@ -767,23 +767,23 @@ ExprTy alifParserEngine_joinedStr(AlifParser* _p, AlifPToken* _a,
 	return alifAST_joinedStr(resizedExprs, _a->lineNo, _a->colOffset, _b->endLineNo, _b->endColOffset, _p->astMem);
 }
 
-//ExprTy alifParserEngine_decodeConstantFromToken(AlifParser* _p, AlifPToken* _t) {
-//
-//	AlifSizeT bSize{};
-//	wchar_t* bStr{};
-//
-//	if (alifWBytes_asStringAndSize(_t->bytes, &bStr, &bSize) == -1) return nullptr;
-//
-//	AlifObject* str_ = alifParserEngine_decodeString(_p, 0, bStr, bSize, _t);
-//	if (str_ == nullptr) return nullptr;
-//
-//	if (alifASTMem_listAddAlifObj(_p->astMem, str_) < 0) {
-//		ALIF_DECREF(str_);
-//		return nullptr;
-//	}
-//
-//	return alifAST_constant(str_, nullptr, _t->lineNo, _t->colOffset, _t->endLineNo, _t->endColOffset, _p->astMem);
-//}
+ExprTy alifParserEngine_decodeConstantFromToken(AlifParser* _p, AlifPToken* _t) { // 1375
+
+	AlifSizeT bSize{};
+	char* bStr{};
+
+	if (alifBytes_asStringAndSize(_t->bytes, &bStr, &bSize) == -1) return nullptr;
+
+	AlifObject* str = alifParserEngine_decodeString(_p, 0, bStr, bSize, _t);
+	if (str == nullptr) return nullptr;
+
+	if (alifASTMem_listAddAlifObj(_p->astMem, str) < 0) {
+		ALIF_DECREF(str);
+		return nullptr;
+	}
+
+	return alifAST_constant(str, nullptr, _t->lineNo, _t->colOffset, _t->endLineNo, _t->endColOffset, _p->astMem);
+}
 
 ExprTy alifParserEngine_constantFromToken(AlifParser* _p, AlifPToken* _t) {
 	char* bStr = alifBytes_asString(_t->bytes);
