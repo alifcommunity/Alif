@@ -176,7 +176,7 @@ ASDLIdentifierSeq* alifParserEngine_mapNamesToIds(AlifParser*, ASDLExprSeq*); //
 CompExprPair* alifParserEngine_compExprPair(AlifParser*, CmpOp_, ExprTy); // 305
 ASDLIntSeq* alifParserEngine_getCmpOps(AlifParser*, ASDLSeq*); // 306
 ASDLExprSeq* alifParserEngine_getExprs(AlifParser*, ASDLSeq*); // 307
-//Expression* alifParserEngine_setExprContext(AlifParser*, Expression*, ExprCTX);
+ExprTy alifParserEngine_setExprContext(AlifParser*, ExprTy, ExprContext_); // 308
 KeyValuePair* alifParserEngine_keyValuePair(AlifParser*, ExprTy, ExprTy); // 309
 ASDLExprSeq* alifParserEngine_getKeys(AlifParser*, ASDLSeq*); // 310
 ASDLExprSeq* alifParserEngine_getValues(AlifParser*, ASDLSeq*); // 311
@@ -188,15 +188,15 @@ ExprTy alifParserEngine_formattedValue(AlifParser*, ExprTy, AlifPToken*,
 	ResultTokenWithMetadata*, ResultTokenWithMetadata*, AlifPToken*, AlifIntT,
 	AlifIntT, AlifIntT, AlifIntT, AlifASTMem*); // 321
 AugOperator* alifParserEngine_augOperator(AlifParser*, Operator_); // 323
-//KeywordOrStar* alifParserEngine_keywordOrStarred(AlifParser*, void*, AlifIntT);
-//ExprSeq* alifParserEngine_seqExtractStarExprs(AlifParser*, Seq*);
-//KeywordSeq* alifParserEngine_seqDeleteStarExprs(AlifParser*, Seq*);
-//Expression* alifParserEngine_collectCallSeqs(AlifParser*, ExprSeq*, Seq*,int, int, int, int, AlifASTMem*);
+KeywordOrStar* alifParserEngine_keywordOrStarred(AlifParser*, void*, AlifIntT); // 326
+ASDLExprSeq* alifParserEngine_seqExtractStarExprs(AlifParser*, ASDLSeq*); // 327
+ASDLKeywordSeq* alifParserEngine_seqDeleteStarExprs(AlifParser*, ASDLSeq*); // 328
+ExprTy alifParserEngine_collectCallSeqs(AlifParser*, ASDLExprSeq*, ASDLSeq*,AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*); // 329
 ExprTy alifParserEngine_constantFromToken(AlifParser*, AlifPToken*); // 332
 ExprTy alifParserEngine_decodeConstantFromToken(AlifParser*, AlifPToken*); // 333
 ExprTy alifParserEngine_constantFromString(AlifParser*, AlifPToken*); // 334
 ExprTy alifParserEngine_concatenateStrings(AlifParser*, ASDLExprSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*); // 335
-//Seq* alifParserEngine_joinSequences(AlifParser*, Seq*, Seq*);
+ASDLSeq* alifParserEngine_joinSequences(AlifParser*, ASDLSeq*, ASDLSeq*); // 339
 ResultTokenWithMetadata* alifParserEngine_checkFStringConversion(AlifParser*, AlifPToken*, ExprTy); // 342
 ResultTokenWithMetadata* alifParserEngine_setupFullFormatSpec(AlifParser*, AlifPToken*,
 	ASDLExprSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*); // 343
