@@ -24,9 +24,9 @@ AlifSizeT alifObject_size(AlifObject* _o) { // 53
 		return -1;
 	}
 
-	AlifSequenceMethods* m = ALIF_TYPE(_o)->asSequence;
-	if (m and m->length) {
-		AlifSizeT len = m->length(_o);
+	AlifSequenceMethods* m_ = ALIF_TYPE(_o)->asSequence;
+	if (m_ and m_->length) {
+		AlifSizeT len = m_->length(_o);
 		return len;
 	}
 
@@ -102,7 +102,54 @@ AlifSizeT alifObject_lengthHint(AlifObject* _o,
 	return res;
 }
 
+AlifObject* alifObject_getItem(AlifObject* _o, AlifObject* _key) { // 150
 
+	if (_o == nullptr || _key == nullptr) {
+		return null_error();
+	}
+
+	AlifMappingMethods* m_ = ALIF_TYPE(_o)->asMapping;
+	if (m_ and m_->subscript) {
+		AlifObject* item = m_->subscript(_o, _key);
+		return item;
+	}
+
+	AlifSequenceMethods* ms = ALIF_TYPE(_o)->asSequence;
+	if (ms and ms->item) {
+		if (alifIndex_check(_key)) {
+			AlifSizeT keyValue;
+			keyValue = alifNumber_asSizeT(_key, _alifExcIndexError_);
+			return alifSequence_getItem(_o, keyValue);
+		}
+		else {
+			//return type_error("sequence index must "
+				//"be integer, not '%.200s'", _key);
+		}
+	}
+
+	if (ALIFTYPE_CHECK(_o)) {
+		AlifObject* meth, * result;
+
+		if ((AlifTypeObject*)_o == &_alifTypeType_) {
+			return alif_GenericAlias(_o, _key);
+		}
+
+		if (alifObject_getOptionalAttr(_o, &ALIF_ID(__class_getitem__), &meth) < 0) {
+			return nullptr;
+		}
+		if (meth and meth != ALIF_NONE) {
+			result = alifObject_callOneArg(meth, _key);
+			ALIF_DECREF(meth);
+			return result;
+		}
+		ALIF_XDECREF(meth);
+		alifErr_format(_alifExcTypeError_, "type '%.200s' is not subscriptable",
+			((AlifTypeObject*)_o)->name);
+		return nullptr;
+	}
+
+	return type_error("'%.200s' object is not subscriptable", _o);
+}
 
 
 
@@ -175,18 +222,18 @@ AlifIntT alifSequence_setItem(AlifObject* _s, AlifSizeT _i, AlifObject* _o) { //
 		return -1;
 	}
 
-	AlifSequenceMethods* m = ALIF_TYPE(_s)->asSequence;
-	if (m and m->assItem) {
+	AlifSequenceMethods* m_ = ALIF_TYPE(_s)->asSequence;
+	if (m_ and m_->assItem) {
 		if (_i < 0) {
-			if (m->length) {
-				AlifSizeT l = (*m->length)(_s);
+			if (m_->length) {
+				AlifSizeT l = (*m_->length)(_s);
 				if (l < 0) {
 					return -1;
 				}
 				_i += l;
 			}
 		}
-		AlifIntT res = m->assItem(_s, _i, _o);
+		AlifIntT res = m_->assItem(_s, _i, _o);
 		return res;
 	}
 
@@ -290,17 +337,17 @@ AlifSizeT alifMapping_size(AlifObject* _o) { // 2270
 		return -1;
 	}
 
-	AlifMappingMethods* m = ALIF_TYPE(_o)->asMapping;
-	if (m and m->length) {
-		AlifSizeT len = m->length(_o);
+	AlifMappingMethods* m_ = ALIF_TYPE(_o)->asMapping;
+	if (m_ and m_->length) {
+		AlifSizeT len = m_->length(_o);
 		return len;
 	}
 
 	if (ALIF_TYPE(_o)->asSequence and ALIF_TYPE(_o)->asSequence->length) {
-		//type_error("%.200s is not a mapping", o);
+		//type_error("%.200s is not a mapping", _o);
 		return -1;
 	}
-	//type_error("object of type '%.200s' has no len()", o);
+	//type_error("object of type '%.200s' has no len()", _o);
 	return -1;
 }
 
@@ -315,7 +362,7 @@ AlifObject* alifObject_getIter(AlifObject* _o) { // 2809
 	if (f_ == nullptr) {
 		if (alifSequence_check(_o))
 			return alifSeqIter_new(_o);
-		//return type_error("'%.200s' object is not iterable", o);
+		//return type_error("'%.200s' object is not iterable", _o);
 		return nullptr;
 	}
 	else {
