@@ -52,7 +52,7 @@ public:
 	ASDL_SEQ_HEAD;
 	ExprTy typedElements[1]{};
 };
-//ASDLExprSeq* alifNew_exprSeq(AlifUSizeT, AlifASTMem*); // جسم هذه الدالة تم إنشاؤه من قبل GENERATE_SEQ_CONSTRUCTOR(Expr, expr, ExprTy*)
+ASDLExprSeq* alifNew_exprSeq(AlifSizeT, AlifASTMem*); // جسم هذه الدالة تم إنشاؤه من قبل GENERATE_SEQ_CONSTRUCTOR(Expr, expr, ExprTy*)
 
 class ASDLComprehensionSeq { // 78
 public:
@@ -70,14 +70,14 @@ public:
 	ASDL_SEQ_HEAD;
 	ArgTy typedElements[1]{};
 };
-//ASDLArgSeq* alifNew_argSeq(AlifUSizeT, AlifASTMem*); // جسم هذه الدالة تم إنشاؤه من قبل GENERATE_SEQ_CONSTRUCTOR(Arg, arg, Arg*)
+ASDLArgSeq* alifNew_argSeq(AlifSizeT, AlifASTMem*); // جسم هذه الدالة تم إنشاؤه من قبل GENERATE_SEQ_CONSTRUCTOR(Arg, arg, Arg*)
 
 class ASDLKeywordSeq { // 108
 public:
 	ASDL_SEQ_HEAD;
 	KeywordTy typedElements[1]{};
 };
-//ASDLKeywordSeq* alifNew_keywordSeq(AlifUSizeT, AlifASTMem*); // جسم هذه الدالة تم إنشاؤه من قبل GENERATE_SEQ_CONSTRUCTOR(Keyword, keyword, Keyword*)
+ASDLKeywordSeq* alifNew_keywordSeq(AlifSizeT, AlifASTMem*); // جسم هذه الدالة تم إنشاؤه من قبل GENERATE_SEQ_CONSTRUCTOR(Keyword, keyword, Keyword*)
 
 class ASDLAliasSeq { // 115
 public:

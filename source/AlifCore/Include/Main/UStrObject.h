@@ -237,7 +237,7 @@ static inline void alifUStr_write(int kind, void* data,
 #define ALIFUSTR_WRITE(kind, data, index, value) \
     alifUStr_write(ALIF_STATIC_CAST(int, kind), ALIF_CAST(void*, data), (index), ALIF_STATIC_CAST(AlifUCS4, value))
 
-static inline AlifUCS4 alifUStr_read(int kind,
+static inline AlifUCS4 alifUStr_read(AlifIntT kind,
 	const void* data, AlifSizeT index) { // 313
 	if (kind == AlifUStrKind_::AlifUStr_1Byte_Kind) {
 		return ALIF_STATIC_CAST(const AlifUCS1*, data)[index];
@@ -248,7 +248,23 @@ static inline AlifUCS4 alifUStr_read(int kind,
 	return ALIF_STATIC_CAST(const AlifUCS4*, data)[index];
 }
 #define ALIFUSTR_READ(kind, data, index) \
-    alifUStr_read(ALIF_STATIC_CAST(int, kind), ALIF_STATIC_CAST(const void*, data), (index))
+    alifUStr_read(ALIF_STATIC_CAST(AlifIntT, kind), ALIF_STATIC_CAST(const void*, data), (index))
+
+
+static inline AlifUCS4 alifUStr_readChar(AlifObject* _unicode, AlifSizeT _index) { // 335
+	AlifIntT kind{};
+
+	kind = ALIFUSTR_KIND(_unicode);
+	if (kind == AlifUStrKind_::AlifUStr_1Byte_Kind) {
+		return ALIFUSTR_1BYTE_DATA(_unicode)[_index];
+	}
+	if (kind == AlifUStrKind_::AlifUStr_2Byte_Kind) {
+		return ALIFUSTR_2BYTE_DATA(_unicode)[_index];
+	}
+	return ALIFUSTR_4BYTE_DATA(_unicode)[_index];
+}
+#define ALIFUSTR_READ_CHAR(_unicode, _index) \
+    alifUStr_readChar(ALIFOBJECT_CAST(_unicode), (_index))
 
 
 static inline AlifUCS4 alifUStr_maxCharValue(AlifObject* _op) { // 359

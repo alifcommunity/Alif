@@ -40,7 +40,7 @@ ASDLIntSeq* alifNew_intSeq(AlifSizeT, AlifASTMem*);
 
 
 
-#define GENERATE_SEQ_CONSTRUCTOR(typeName, name, type) typeName ## Seq* alifNew_ ## name ## Seq(AlifUSizeT _size, AlifASTMem* _astMem) { \
+#define GENERATE_SEQ_CONSTRUCTOR(typeName, name, type) typeName ## Seq* alifNew_ ## name ## Seq(AlifSizeT _size, AlifASTMem* _astMem) { \
 	typeName ## Seq* seq_ = nullptr; \
 	AlifUSizeT n_{}; \
 	if (_size < 0 or (_size and (((AlifUSizeT)_size - 1) > (SIZE_MAX / sizeof(void*))))) { \

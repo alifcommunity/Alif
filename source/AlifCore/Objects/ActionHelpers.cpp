@@ -35,14 +35,14 @@ ASDLSeq* alifParserEngine_seqInsertInFront(AlifParser* _p,
 	return newSeq;
 }
 
-//static AlifSizeT getFlattenedSeq_size(ASDLSeq* _seqs) {
-//	AlifSizeT size = 0;
-//	for (AlifSizeT i = 0, l = SEQ_LEN(_seqs); i < l; i++) {
-//		ASDLSeq* innerSeq = (ASDLSeq*)SEQ_GETUNTYPED(_seqs, i);
-//		size += SEQ_LEN(innerSeq);
-//	}
-//	return size;
-//}
+static AlifSizeT getFlattenedSeq_size(ASDLSeq* _seqs) { // 69
+	AlifSizeT size = 0;
+	for (AlifSizeT i = 0, l = ASDL_SEQ_LEN(_seqs); i < l; i++) {
+		ASDLSeq* innerSeq = (ASDLSeq*)ASDL_SEQ_GETUNTYPED(_seqs, i);
+		size += ASDL_SEQ_LEN(innerSeq);
+	}
+	return size;
+}
 
 ASDLSeq* alifParserEngine_seqFlatten(AlifParser* _p, ASDLSeq* _seqs) { // 81
 	AlifSizeT flatSeqSize = getFlattenedSeq_size(_seqs);
@@ -145,43 +145,43 @@ ASDLExprSeq* alifParserEngine_getExprs(AlifParser* _p, ASDLSeq* _seq) { // 223
 	return newSeq;
 }
 
-//static ASDLExprSeq* setContext_seq(AlifParser* _p, ASDLExprSeq* _seq, ExprCTX _ctx) {
-//	AlifUSizeT len = SEQ_LEN(_seq);
-//	if (len == 0) return nullptr;
-//
-//	ASDLExprSeq* newSeq = alifNew_exprSeq(len, _p->astMem);
-//	if (!newSeq) return nullptr;
-//
-//	for (AlifUSizeT i = 0; i < len; i++) {
-//		ExprTy e = SEQ_GET(_seq, i);
-//		SEQ_SET(newSeq, i, alifParserEngine_setExprContext(_p, e, _ctx));
-//	}
-//	return newSeq;
-//}
-//
-//static ExprTy setContext_name(AlifParser* _p, ExprTy _expr, ExprCTX _ctx) {
-//	return alifAST_name(_expr->V.name.name, _ctx, EXTRA_EXPR(_expr, _expr));
-//}
-//
-//static ExprTy setContext_tuple(AlifParser* _p, ExprTy _expr, ExprCTX _ctx) {
-//	return alifAST_tuple(setContext_seq(_p, _expr->V.tuple.elts, _ctx), _ctx, EXTRA_EXPR(_expr, _expr));
-//}
-//
-//static ExprTy setContext_list(AlifParser* _p, ExprTy _expr, ExprCTX _ctx) {
-//	return alifAST_list(setContext_seq(_p, _expr->V.list.elts, _ctx), _ctx, EXTRA_EXPR(_expr, _expr));
-//}
-//
-//static ExprTy setContext_subScript(AlifParser* _p, ExprTy _expr, ExprCTX _ctx) {
-//	return alifAST_subScript(_expr->V.subScript.val, _expr->V.subScript.slice, _ctx, EXTRA_EXPR(_expr, _expr));
-//}
-//
-//static ExprTy setContext_attribute(AlifParser* _p, ExprTy _expr, ExprCTX _ctx) {
-//	return alifAST_attribute(_expr->V.attribute.val, _expr->V.attribute.attr, _ctx, EXTRA_EXPR(_expr, _expr));
-//}
-//
-//static ExprTy setContext_star(AlifParser* _p, ExprTy _expr, ExprCTX _ctx) {
-//	return alifAST_star(alifParserEngine_setExprContext(_p, _expr->V.star.val, _ctx), _ctx, EXTRA_EXPR(_expr, _expr));
-//}
+static ASDLExprSeq* setContext_seq(AlifParser* _p, ASDLExprSeq* _seq, ExprContext_ _ctx) { // 241
+	AlifUSizeT len = ASDL_SEQ_LEN(_seq);
+	if (len == 0) return nullptr;
+
+	ASDLExprSeq* newSeq = alifNew_exprSeq(len, _p->astMem);
+	if (!newSeq) return nullptr;
+
+	for (AlifSizeT i = 0; i < len; i++) {
+		ExprTy e = ASDL_SEQ_GET(_seq, i);
+		ASDL_SEQ_SET(newSeq, i, alifParserEngine_setExprContext(_p, e, _ctx));
+	}
+	return newSeq;
+}
+
+static ExprTy setContext_name(AlifParser* _p, ExprTy _expr, ExprContext_ _ctx) { // 260
+	return alifAST_name(_expr->V.name.name, _ctx, EXTRA_EXPR(_expr, _expr));
+}
+
+static ExprTy setContext_tuple(AlifParser* _p, ExprTy _expr, ExprContext_ _ctx) { // 266
+	return alifAST_tuple(setContext_seq(_p, _expr->V.tuple.elts, _ctx), _ctx, EXTRA_EXPR(_expr, _expr));
+}
+
+static ExprTy setContext_list(AlifParser* _p, ExprTy _expr, ExprContext_ _ctx) {
+	return alifAST_list(setContext_seq(_p, _expr->V.list.elts, _ctx), _ctx, EXTRA_EXPR(_expr, _expr));
+}
+
+static ExprTy setContext_subScript(AlifParser* _p, ExprTy _expr, ExprContext_ _ctx) { // 284
+	return alifAST_subScript(_expr->V.subScript.val, _expr->V.subScript.slice, _ctx, EXTRA_EXPR(_expr, _expr));
+}
+
+static ExprTy setContext_attribute(AlifParser* _p, ExprTy _expr, ExprContext_ _ctx) {
+	return alifAST_attribute(_expr->V.attribute.val, _expr->V.attribute.attr, _ctx, EXTRA_EXPR(_expr, _expr));
+}
+
+static ExprTy setContext_star(AlifParser* _p, ExprTy _expr, ExprContext_ _ctx) { // 298
+	return alifAST_star(alifParserEngine_setExprContext(_p, _expr->V.star.val, _ctx), _ctx, EXTRA_EXPR(_expr, _expr));
+}
 
 ExprTy alifParserEngine_setExprContext(AlifParser* _p, ExprTy _expr, ExprContext_ _ctx) { // 306
 	ExprTy new_{};
@@ -291,114 +291,128 @@ ASDLSeq* alifParserEngine_joinSequences(AlifParser* _p, ASDLSeq* _a, ASDLSeq* _b
 	return newSeq;
 }
 
-//static ASDLArgSeq* get_names(AlifParser* _p, ASDLSeq* _namesWithDefaults) {
-//	AlifUSizeT len_ = SEQ_LEN(_namesWithDefaults);
-//	ASDLArgSeq* seq_ = alifNew_argSeq(len_, _p->astMem);
-//	if (!seq_) return nullptr;
-//
-//	for (AlifUSizeT i = 0; i < len_; i++) {
-//		NameDefaultPair* pair_ = (NameDefaultPair*)SEQ_GETUNTYPED(_namesWithDefaults, i);
-//		SEQ_SET(seq_, i, pair_->arg_);
-//	}
-//	return seq_;
-//}
-//
-//static ASDLExprSeq* get_defaults(AlifParser* _p, ASDLSeq* _namesWithDefaults) {
-//
-//	AlifUSizeT len_ = SEQ_LEN(_namesWithDefaults);
-//	ASDLExprSeq* seq_ = alifNew_exprSeq(len_, _p->astMem);
-//	if (!seq_) return nullptr;
-//
-//	for (AlifUSizeT i = 0; i < len_; i++) {
-//		NameDefaultPair* pair_ = (NameDefaultPair*)SEQ_GETUNTYPED(_namesWithDefaults, i);
-//		SEQ_SET(seq_, i, pair_->value_);
-//	}
-//
-//	return seq_;
-//}
-//
-//static AlifIntT make_posOnlyArgs(AlifParser* _p, ASDLArgSeq* _slashWithoutDefault,
-//	SlashWithDefault* slashWithDefault, ASDLArgSeq** _posOnlyArgs) {
-//
-//	if (_slashWithoutDefault != nullptr) {
-//		// code here
-//	}
-//	else if (slashWithDefault != nullptr) {
-//		// code here
-//	}
-//	else
-//	{
-//		*_posOnlyArgs = alifNew_argSeq(0, _p->astMem);
-//	}
-//
-//	return *_posOnlyArgs == nullptr ? -1 : 0;
-//}
-//
-//static AlifIntT make_posArgs(AlifParser* _p, ASDLArgSeq* _plainNames,
-//	ASDLSeq* _namesWithDefault, ASDLArgSeq** _posArgs) {
-//
-//	if (_plainNames != nullptr and _namesWithDefault != nullptr) {
-//		ASDLArgSeq* namesWithDefaultNames = get_names(_p, _namesWithDefault);
-//		if (!namesWithDefaultNames) return -1;
-//		*_posArgs = (ASDLArgSeq*)alifParserEngine_joinSequences(_p, (ASDLSeq*)_plainNames, (ASDLSeq*)namesWithDefaultNames);
-//	}
-//	else if (_plainNames == nullptr and _namesWithDefault != nullptr) {
-//		*_posArgs = get_names(_p, _namesWithDefault);
-//	}
-//	else if (_plainNames != nullptr and _namesWithDefault == nullptr) {
-//		*_posArgs = _plainNames;
-//	}
-//	else {
-//		*_posArgs = alifNew_argSeq(0, _p->astMem);
-//	}
-//	return *_posArgs == nullptr ? -1 : 0;
-//}
-//
-//static AlifIntT make_posDefaults(AlifParser* _p, SlashWithDefault* _slashWithDefault,
-//	ASDLSeq* _namesWithDefault, ASDLExprSeq** _posDefaults) {
-//
-//	if (_slashWithDefault != nullptr and _namesWithDefault != nullptr) {
-//		ASDLExprSeq* slashWithDefaultValues = get_defaults(_p, _slashWithDefault->namesWithDefaults);
-//		if (!slashWithDefaultValues) return -1;
-//
-//		ASDLExprSeq* namesWithDefaultValues = get_defaults(_p, _namesWithDefault);
-//		if (!namesWithDefaultValues) return -1;
-//
-//		*_posDefaults = (ASDLExprSeq*)alifParserEngine_joinSequences(_p, (ASDLSeq*)slashWithDefaultValues, (ASDLSeq*)namesWithDefaultValues);
-//	}
-//	else if (_slashWithDefault == nullptr and _namesWithDefault != nullptr) {
-//		*_posDefaults = get_defaults(_p, _namesWithDefault);
-//	}
-//	else if (_slashWithDefault != nullptr and _namesWithDefault == nullptr) {
-//		*_posDefaults = get_defaults(_p, _slashWithDefault->namesWithDefaults);
-//	}
-//	else {
-//		*_posDefaults = alifNew_exprSeq(0, _p->astMem);
-//	}
-//	return *_posDefaults == nullptr ? -1 : 0;
-//}
-//
-//static AlifIntT make_kwArgs(AlifParser* _p, StarEtc* _starEtc, ASDLArgSeq** _kwOnlyArgs, ASDLExprSeq** _kwDefaults) {
-//	if (_starEtc != nullptr and _starEtc->kwOnlyArgs != nullptr) {
-//		*_kwOnlyArgs = get_names(_p, _starEtc->kwOnlyArgs);
-//	}
-//	else {
-//		*_kwOnlyArgs = alifNew_argSeq(0, _p->astMem);
-//	}
-//
-//	if (*_kwOnlyArgs == nullptr) return -1;
-//
-//	if (_starEtc != nullptr and _starEtc->kwOnlyArgs != nullptr) {
-//		*_kwDefaults = get_defaults(_p, _starEtc->kwOnlyArgs);
-//	}
-//	else {
-//		*_kwDefaults = alifNew_exprSeq(0, _p->astMem);
-//	}
-//
-//	if (*_kwDefaults == nullptr) return -1;
-//
-//	return 0;
-//}
+static ASDLArgSeq* get_names(AlifParser* _p, ASDLSeq* _namesWithDefaults) { // 488
+	AlifSizeT len_ = ASDL_SEQ_LEN(_namesWithDefaults);
+	ASDLArgSeq* seq_ = alifNew_argSeq(len_, _p->astMem);
+	if (!seq_) return nullptr;
+
+	for (AlifSizeT i = 0; i < len_; i++) {
+		NameDefaultPair* pair = (NameDefaultPair*)ASDL_SEQ_GETUNTYPED(_namesWithDefaults, i);
+		ASDL_SEQ_SET(seq_, i, pair->arg);
+	}
+	return seq_;
+}
+
+static ASDLExprSeq* get_defaults(AlifParser* _p, ASDLSeq* _namesWithDefaults) { // 503
+
+	AlifSizeT len_ = ASDL_SEQ_LEN(_namesWithDefaults);
+	ASDLExprSeq* seq_ = alifNew_exprSeq(len_, _p->astMem);
+	if (!seq_) return nullptr;
+
+	for (AlifSizeT i = 0; i < len_; i++) {
+		NameDefaultPair* pair_ = (NameDefaultPair*)ASDL_SEQ_GETUNTYPED(_namesWithDefaults, i);
+		ASDL_SEQ_SET(seq_, i, pair_->value);
+	}
+
+	return seq_;
+}
+
+static AlifIntT make_posOnlyArgs(AlifParser* _p, ASDLArgSeq* _slashWithoutDefault,
+	SlashWithDefault* _slashWithDefault, ASDLArgSeq** _posOnlyArgs) { // 518
+
+	if (_slashWithoutDefault != nullptr) {
+		*_posOnlyArgs = _slashWithoutDefault;
+	}
+	else if (_slashWithDefault != nullptr) {
+		ASDLArgSeq* slashWithDefaultNames =
+			get_names(_p, _slashWithDefault->namesWithDefaults);
+		if (!slashWithDefaultNames) {
+			return -1;
+		}
+		*_posOnlyArgs = (ASDLArgSeq*)alifParserEngine_joinSequences(_p,
+			(ASDLSeq*)_slashWithDefault->plainNames,
+			(ASDLSeq*)slashWithDefaultNames);
+	}
+	else
+	{
+		*_posOnlyArgs = alifNew_argSeq(0, _p->astMem);
+	}
+
+	return *_posOnlyArgs == nullptr ? -1 : 0;
+}
+
+static AlifIntT make_posArgs(AlifParser* _p, ASDLArgSeq* _plainNames,
+	ASDLSeq* _namesWithDefault, ASDLArgSeq** _posArgs) { // 543
+
+	if (_namesWithDefault != nullptr) {
+		if (_plainNames != nullptr) {
+			ASDLArgSeq* namesWithDefaultNames = get_names(_p, _namesWithDefault);
+			if (!namesWithDefaultNames) return -1;
+			*_posArgs = (ASDLArgSeq*)alifParserEngine_joinSequences(_p, (ASDLSeq*)_plainNames, (ASDLSeq*)namesWithDefaultNames);
+
+		}
+		else {
+			*_posArgs = get_names(_p, _namesWithDefault);
+		}
+	}
+	else {
+		if (_plainNames != nullptr) {
+			*_posArgs = _plainNames;
+		}
+		else {
+			*_posArgs = alifNew_argSeq(0, _p->astMem);
+		}
+	}
+	return *_posArgs == nullptr ? -1 : 0;
+}
+
+static AlifIntT make_posDefaults(AlifParser* _p, SlashWithDefault* _slashWithDefault,
+	ASDLSeq* _namesWithDefault, ASDLExprSeq** _posDefaults) {
+
+	if (_slashWithDefault != nullptr and _namesWithDefault != nullptr) {
+		ASDLExprSeq* slashWithDefaultValues = get_defaults(_p, _slashWithDefault->namesWithDefaults);
+		if (!slashWithDefaultValues) return -1;
+
+		ASDLExprSeq* namesWithDefaultValues = get_defaults(_p, _namesWithDefault);
+		if (!namesWithDefaultValues) return -1;
+
+		*_posDefaults = (ASDLExprSeq*)alifParserEngine_joinSequences(_p,
+			(ASDLSeq*)slashWithDefaultValues, (ASDLSeq*)namesWithDefaultValues);
+	}
+	else if (_slashWithDefault == nullptr and _namesWithDefault != nullptr) {
+		*_posDefaults = get_defaults(_p, _namesWithDefault);
+	}
+	else if (_slashWithDefault != nullptr and _namesWithDefault == nullptr) {
+		*_posDefaults = get_defaults(_p, _slashWithDefault->namesWithDefaults);
+	}
+	else {
+		*_posDefaults = alifNew_exprSeq(0, _p->astMem);
+	}
+	return *_posDefaults == nullptr ? -1 : 0;
+}
+
+static AlifIntT make_kwArgs(AlifParser* _p, StarEtc* _starEtc,
+	ASDLArgSeq** _kwOnlyArgs, ASDLExprSeq** _kwDefaults) { // 608
+	if (_starEtc != nullptr and _starEtc->kwOnlyArgs != nullptr) {
+		*_kwOnlyArgs = get_names(_p, _starEtc->kwOnlyArgs);
+	}
+	else {
+		*_kwOnlyArgs = alifNew_argSeq(0, _p->astMem);
+	}
+
+	if (*_kwOnlyArgs == nullptr) return -1;
+
+	if (_starEtc != nullptr and _starEtc->kwOnlyArgs != nullptr) {
+		*_kwDefaults = get_defaults(_p, _starEtc->kwOnlyArgs);
+	}
+	else {
+		*_kwDefaults = alifNew_exprSeq(0, _p->astMem);
+	}
+
+	if (*_kwDefaults == nullptr) return -1;
+
+	return 0;
+}
 
 // Constructs an arguments_ty object out of all the parsed constructs in the parameters rule
 ArgumentsTy alifParserEngine_makeArguments(AlifParser* _p,
@@ -464,16 +478,16 @@ AugOperator* alifParserEngine_augOperator(AlifParser* _p, Operator_ _type) { // 
 	return a_;
 }
 
-//static AlifIntT seqNumber_ofStarExprs(ASDLSeq* _seq) {
-//	AlifIntT n_ = 0;
-//	for (AlifUSizeT i = 0, l = SEQ_LEN(_seq); i < l; i++) {
-//		KeywordOrStar* k_ = (KeywordOrStar*)SEQ_GETUNTYPED(_seq, i);
-//		if (!k_->isKeyword) {
-//			n_++;
-//		}
-//	}
-//	return n_;
-//}
+static AlifIntT seqNumber_ofStarExprs(ASDLSeq* _seq) { // 777
+	AlifIntT n_ = 0;
+	for (AlifSizeT i = 0, l = ASDL_SEQ_LEN(_seq); i < l; i++) {
+		KeywordOrStar* k_ = (KeywordOrStar*)ASDL_SEQ_GETUNTYPED(_seq, i);
+		if (!k_->isKeyword) {
+			n_++;
+		}
+	}
+	return n_;
+}
 
 KeywordOrStar* alifParserEngine_keywordOrStarred(AlifParser* _p,
 	void* _element, AlifIntT _isKeyword) { // 764
@@ -654,72 +668,72 @@ ExprTy alifParserEngine_collectCallSeqs(AlifParser* _p, ASDLExprSeq* _a, ASDLSeq
 		_lineNo, _colOffset, _endLineNo, _endColOffset, _astMem);
 }
 
-//static ExprTy alifParserEngine_decodeFStringPart(AlifParser* _p, AlifIntT _isRaw, ExprTy _const, AlifPToken* _token) {
-//
-//	const wchar_t* bStr = alifUStr_asUTF8(_const->V.constant.val);
-//	if (bStr == nullptr) return nullptr;
-//
-//	AlifUSizeT len_;
-//	if (wcscmp(bStr, L"{{") == 0 or wcscmp(bStr, L"}}") == 0) {
-//		len_ = 1;
-//	}
-//	else {
-//		len_ = wcslen(bStr);
-//	}
-//
-//	_isRaw = _isRaw or wcschr(bStr, L'\\') == nullptr;
-//	AlifObject* str_ = alifParserEngine_decodeString(_p, _isRaw, bStr, len_, _token);
-//	if (str_ == nullptr) {
-//		//alifParserEngine_raiseDecodeError(_p);
-//		return nullptr;
-//	}
-//	if (alifASTMem_listAddAlifObj(_p->astMem, str_) < 0) {
-//		ALIF_DECREF(str_);
-//		return nullptr;
-//	}
-//	return alifAST_constant(str_, nullptr, _const->lineNo, _const->colOffset,
-//		_const->endLineNo, _const->endColOffset, _p->astMem);
-//}
-//
-//static ASDLExprSeq* unpackTopLevel_joinedStrs(AlifParser* _p, ASDLExprSeq* _rawExpr) {
-//	// هذه الدالة غير ضرورية ويجب مراجعة عملها
-//	/* The parser might put multiple f-string values into an individual
-//	 * JoinedStr node at the top level due to stuff like f-string debugging
-//	 * expressions. This function flattens those and promotes them to the
-//	 * upper level. Only simplifies AST, but the compiler already takes care
-//	 * of the regular output, so this is not necessary if you are not going
-//	 * to expose the output AST to Alif level. */
-//
-//	AlifSizeT i, reqSize, rawSize;
-//
-//	reqSize = rawSize = SEQ_LEN(_rawExpr);
-//	ExprTy expr_;
-//	for (i = 0; i < rawSize; i++) {
-//		expr_ = SEQ_GET(_rawExpr, i);
-//		if (expr_->type == JoinStrK) {
-//			reqSize += SEQ_LEN(expr_->V.joinStr.vals) - 1;
-//		}
-//	}
-//
-//	ASDLExprSeq* expressions = alifNew_exprSeq(reqSize, _p->astMem);
-//
-//	AlifSizeT raw_index, req_index = 0;
-//	for (raw_index = 0; raw_index < rawSize; raw_index++) {
-//		expr_ = SEQ_GET(_rawExpr, raw_index);
-//		if (expr_->type == JoinStrK) {
-//			ASDLExprSeq* values = expr_->V.joinStr.vals;
-//			for (AlifSizeT n = 0; n < SEQ_LEN(values); n++) {
-//				SEQ_SET(expressions, req_index, SEQ_GET(values, n));
-//				req_index++;
-//			}
-//		}
-//		else {
-//			SEQ_SET(expressions, req_index, expr_);
-//			req_index++;
-//		}
-//	}
-//	return expressions;
-//}
+static ExprTy alifParserEngine_decodeFStringPart(AlifParser* _p, AlifIntT _isRaw,
+	ExprTy _const, AlifPToken* _token) { // 1248
+
+	const char* bStr = alifUStr_asUTF8(_const->V.constant.val);
+	if (bStr == nullptr) return nullptr;
+
+	AlifUSizeT len{};
+	if (strcmp(bStr, "{{") == 0 or strcmp(bStr, "}}") == 0) {
+		len = 1;
+	}
+	else {
+		len = strlen(bStr);
+	}
+
+	_isRaw = _isRaw or strchr(bStr, '\\') == nullptr;
+	AlifObject* str = alifParserEngine_decodeString(_p, _isRaw, bStr, len, _token);
+	if (str == nullptr) {
+		//alifParserEngine_raiseDecodeError(_p);
+		return nullptr;
+	}
+	if (alifASTMem_listAddAlifObj(_p->astMem, str) < 0) {
+		ALIF_DECREF(str);
+		return nullptr;
+	}
+	return alifAST_constant(str, nullptr, _const->lineNo, _const->colOffset,
+		_const->endLineNo, _const->endColOffset, _p->astMem);
+}
+
+static ASDLExprSeq* unpackTopLevel_joinedStrs(AlifParser* _p, ASDLExprSeq* _rawExpr) { // 1279
+	/* The parser might put multiple f-string values into an individual
+	 * JoinedStr node at the top level due to stuff like f-string debugging
+	 * expressions. This function flattens those and promotes them to the
+	 * upper level. Only simplifies AST, but the compiler already takes care
+	 * of the regular output, so this is not necessary if you are not going
+	 * to expose the output AST to Alif level. */
+
+	AlifSizeT i_{}, reqSize{}, rawSize{};
+
+	reqSize = rawSize = ASDL_SEQ_LEN(_rawExpr);
+	ExprTy expr{};
+	for (i_ = 0; i_ < rawSize; i_++) {
+		expr = ASDL_SEQ_GET(_rawExpr, i_);
+		if (expr->type == JoinStrK) {
+			reqSize += ASDL_SEQ_LEN(expr->V.joinStr.vals) - 1;
+		}
+	}
+
+	ASDLExprSeq* expressions = alifNew_exprSeq(reqSize, _p->astMem);
+
+	AlifSizeT rawIndex{}, reqIndex = 0;
+	for (rawIndex = 0; rawIndex < rawSize; rawIndex++) {
+		expr = ASDL_SEQ_GET(_rawExpr, rawIndex);
+		if (expr->type == JoinStrK) {
+			ASDLExprSeq* values = expr->V.joinStr.vals;
+			for (AlifSizeT n = 0; n < ASDL_SEQ_LEN(values); n++) {
+				ASDL_SEQ_SET(expressions, reqIndex, ASDL_SEQ_GET(values, n));
+				reqIndex++;
+			}
+		}
+		else {
+			ASDL_SEQ_SET(expressions, reqIndex, expr);
+			reqIndex++;
+		}
+	}
+	return expressions;
+}
 
 ExprTy alifParserEngine_joinedStr(AlifParser* _p, AlifPToken* _a,
 	ASDLExprSeq* _rawExprs, AlifPToken* _b) { // 1319
@@ -1007,7 +1021,7 @@ ExprTy alifParserEngine_concatenateStrings(AlifParser* _p, ASDLExprSeq* _strings
 				elem = alifAST_constant(concat_str, kind, firstElem->lineNo,
 					firstElem->colOffset,
 					lastElem->endLineNo,
-					lastElem->endColOffset, p->arena);
+					lastElem->endColOffset, _p->astMem);
 				if (elem == nullptr) {
 					return nullptr;
 				}
