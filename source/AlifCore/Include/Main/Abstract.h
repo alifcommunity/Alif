@@ -23,6 +23,7 @@ AlifObject* alifIter_next(AlifObject* ); // 417
 
 AlifIntT alifSequence_check(AlifObject*); // 664
 
+AlifIntT alifSequence_setItem(AlifObject*, AlifSizeT, AlifObject*); // 700
 
 AlifObject* alifSequence_tuple(AlifObject*); // 723
 

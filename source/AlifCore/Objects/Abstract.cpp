@@ -169,6 +169,34 @@ AlifIntT alifSequence_check(AlifObject* _s) { // 1668
 }
 
 
+AlifIntT alifSequence_setItem(AlifObject* _s, AlifSizeT _i, AlifObject* _o) { // 1880
+	if (_s == nullptr) {
+		null_error();
+		return -1;
+	}
+
+	AlifSequenceMethods* m = ALIF_TYPE(_s)->asSequence;
+	if (m and m->assItem) {
+		if (_i < 0) {
+			if (m->length) {
+				AlifSizeT l = (*m->length)(_s);
+				if (l < 0) {
+					return -1;
+				}
+				_i += l;
+			}
+		}
+		AlifIntT res = m->assItem(_s, _i, _o);
+		return res;
+	}
+
+	if (ALIF_TYPE(_s)->asMapping and ALIF_TYPE(_s)->asMapping->assSubscript) {
+		//type_error("%.200s is not a sequence", s);
+		return -1;
+	}
+	//type_error("'%.200s' object does not support item assignment", s);
+	return -1;
+}
 
 
 
