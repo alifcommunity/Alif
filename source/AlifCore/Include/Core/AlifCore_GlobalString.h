@@ -27,6 +27,7 @@ public:
     class {
 	public:
         STRUCT_FOR_ID(CANCELLED)
+        STRUCT_FOR_ID(__classGetItem__)
 		STRUCT_FOR_ID(__doc__)
 		STRUCT_FOR_ID(__getAttr__)
 		STRUCT_FOR_ID(__hash__)
