@@ -206,7 +206,84 @@ AlifIntT alifObject_setItem(AlifObject* _o,
 }
 
 
+AlifObject * _alifNumber_index(AlifObject * _item) { // 1397
+	if (_item == nullptr) {
+		return null_error();
+	}
 
+	if (ALIFLONG_CHECK(_item)) {
+		return ALIF_NEWREF(_item);
+	}
+	if (!alifIndex_check(_item)) {
+		//alifErr_format(_alifExcTypeError_,
+			//"'%.200s' object cannot be interpreted "
+			//"as an integer", ALIF_TYPE(_item)->name);
+		return nullptr;
+	}
+
+	AlifObject* result = ALIF_TYPE(_item)->asNumber->index(_item);
+	if (!result or ALIFLONG_CHECKEXACT(result)) {
+		return result;
+	}
+
+	if (!ALIFLONG_CHECK(result)) {
+		//alifErr_format(_alifExcTypeError_,
+			//"__index__ returned non-int (type %.200s)",
+			//ALIF_TYPE(result)->tp_name);
+		ALIF_DECREF(result);
+		return nullptr;
+	}
+	//if (alifErr_warnFormat(_alifExcDeprecationWarning_, 1,
+		//"__index__ returned non-int (type %.200s).  "
+		//"The ability to return an instance of a strict subclass of int "
+		//"is deprecated, and may be removed in a future version of alif.",
+		//ALIF_TYPE(result)->name)) {
+		//ALIF_DECREF(result);
+		//return nullptr;
+	//}
+	return result;
+}
+
+AlifSizeT alifNumber_asSizeT(AlifObject* _item, AlifObject* _err) { // 1455
+	AlifSizeT result;
+	AlifObject* runErr;
+	AlifObject* value = _alifNumber_index(_item);
+	AlifThread* tState = alifThread_get();
+
+	if (value == nullptr)
+		return -1;
+
+	result = alifLong_asSizeT(value);
+	if (result != -1)
+		goto finish;
+
+	tState = alifThread_get();
+	//runErr = alifErr_occurred(tState);
+	if (!runErr) {
+		goto finish;
+	}
+
+	if (!alifErr_givenExceptionMatches(runErr, _alifExcOverflowError_)) {
+		goto finish;
+	}
+	//alifErr_clear(tState);
+
+	if (!_err) {
+		if (alifLong_isNegative((AlifLongObject*)value))
+			result = ALIF_SIZET_MIN;
+		else
+			result = ALIF_SIZET_MAX;
+	}
+	else {
+		//alifErr_format(tState, err,
+			//"cannot fit '%.200s' into an index-sized integer",
+			//ALIF_TYPE(_item)->name);
+	}
+
+finish:
+	ALIF_DECREF(value);
+	return result;
+}
 
 
 
