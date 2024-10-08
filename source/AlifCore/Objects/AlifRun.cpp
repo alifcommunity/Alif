@@ -14,6 +14,8 @@
 #endif
 
 
+static AlifObject* alifRun_file(FILE*, AlifObject*, AlifIntT,
+	AlifObject*, AlifObject*, AlifIntT, AlifCompilerFlags*); // 47
 
 
 

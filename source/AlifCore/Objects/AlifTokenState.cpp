@@ -52,7 +52,7 @@ TokenState* alifTokenizer_tokNew() { // 12
 	tokState->commentNewline = 0;
 	tokState->implicitNewline = 0;
 	tokState->tokModeStackIndex = 0;
-	tokState->tokModeStack[0] = { .type = Token_RegularMode,
+	tokState->tokModeStack[0] = { .type = TokenizerModeType_::Token_RegularMode,
 		.fStringQuote = '\0', .fStringQuoteSize = 0, .fStringDebug = 0};
 
 	return tokState;

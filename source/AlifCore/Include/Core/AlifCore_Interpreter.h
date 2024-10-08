@@ -8,8 +8,9 @@
 #include "AlifCore_Memory.h"
 #include "AlifCore_ThreadState.h"
 #include "AlifCore_Tuple.h"
-#include "AlifCore_TypeObject.h"
 #include "AlifCore_GlobalObjects.h"
+#include "AlifCore_Import.h"
+#include "AlifCore_TypeObject.h"
 
 
 class StopTheWorldState { // 50

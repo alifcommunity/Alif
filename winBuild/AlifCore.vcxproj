@@ -108,6 +108,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\ErrorCode.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\FileUtils.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Codecs.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\Helpers.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Import.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\InitConfig.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\IterObject.h" />
@@ -182,6 +183,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\GetOption.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GetVersion.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\HashTable.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\Helpers.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Import.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\InitConfig.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\IterObject.cpp" />
