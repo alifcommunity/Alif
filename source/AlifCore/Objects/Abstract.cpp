@@ -104,7 +104,7 @@ AlifSizeT alifObject_lengthHint(AlifObject* _o,
 
 AlifObject* alifObject_getItem(AlifObject* _o, AlifObject* _key) { // 150
 
-	if (_o == nullptr || _key == nullptr) {
+	if (_o == nullptr or _key == nullptr) {
 		return null_error();
 	}
 
@@ -123,18 +123,19 @@ AlifObject* alifObject_getItem(AlifObject* _o, AlifObject* _key) { // 150
 		}
 		else {
 			//return type_error("sequence index must "
-				//"be integer, not '%.200s'", _key);
+			//	"be integer, not '%.200s'", _key);
+			return nullptr; // temp
 		}
 	}
 
 	if (ALIFTYPE_CHECK(_o)) {
-		AlifObject* meth, * result;
+		AlifObject* meth{}, * result{};
 
 		if ((AlifTypeObject*)_o == &_alifTypeType_) {
-			return alif_GenericAlias(_o, _key);
+			return alif_genericAlias(_o, _key);
 		}
 
-		if (alifObject_getOptionalAttr(_o, &ALIF_ID(__class_getitem__), &meth) < 0) {
+		if (alifObject_getOptionalAttr(_o, &ALIF_ID(__classGetItem__), &meth) < 0) {
 			return nullptr;
 		}
 		if (meth and meth != ALIF_NONE) {
@@ -143,12 +144,13 @@ AlifObject* alifObject_getItem(AlifObject* _o, AlifObject* _key) { // 150
 			return result;
 		}
 		ALIF_XDECREF(meth);
-		alifErr_format(_alifExcTypeError_, "type '%.200s' is not subscriptable",
-			((AlifTypeObject*)_o)->name);
+		//alifErr_format(_alifExcTypeError_, "type '%.200s' is not subscriptable",
+		//	((AlifTypeObject*)_o)->name);
 		return nullptr;
 	}
 
-	return type_error("'%.200s' object is not subscriptable", _o);
+	//return type_error("'%.200s' object is not subscriptable", _o);
+	return nullptr; // temp
 }
 
 
@@ -185,7 +187,7 @@ AlifIntT alifObject_setItem(AlifObject* _o,
 	}
 
 	if (ALIF_TYPE(_o)->asSequence) {
-		if (_alifIndex_check(_key)) {
+		if (alifIndex_check(_key)) {
 			AlifSizeT keyValue{};
 			keyValue = alifNumber_asSizeT(_key, _alifExcIndexError_);
 			if (keyValue == -1 /*and alifErr_occurred()*/)
