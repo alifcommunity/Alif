@@ -122,7 +122,7 @@ static inline AlifTypeObject* alif_type(AlifObject* _ob) { // 250
 }
 #define ALIF_TYPE(_ob) alif_type(ALIFOBJECT_CAST(_ob))
 
-//extern AlifTypeObject _alifLongType_; // 261
+extern AlifTypeObject _alifLongType_; // 261
 extern AlifTypeObject _alifBoolType_; // 262
 
 static inline AlifSizeT alif_size(AlifObject* ob) { // 265

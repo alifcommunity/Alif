@@ -58,7 +58,7 @@
 #include "ModSupport.h"
 #include "Compile.h"
 #include "Abstract.h"
-//#include "AlifCppType.h"
+#include "AlifCppType.h"
 #include "SysModule.h"
 #include "Import.h"
 #include "CriticalSection.h"

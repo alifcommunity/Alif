@@ -76,6 +76,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_UStrObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Abstract.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifConfig.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifCppType.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifEval.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifHash.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifLexer.h" />
@@ -151,6 +152,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\Abstract.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ActionHelpers.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifArray.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifCppType.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifEval.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifEvalGIL.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifHash.cpp" />

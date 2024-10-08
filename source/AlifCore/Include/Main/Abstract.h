@@ -20,6 +20,7 @@ AlifObject* alifObject_getIter(AlifObject*); // 383
 
 AlifObject* alifIter_next(AlifObject* ); // 417
 
+AlifObject* alifNumber_index(AlifObject*); // 545
 
 AlifIntT alifSequence_check(AlifObject*); // 664
 

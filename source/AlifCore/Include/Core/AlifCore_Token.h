@@ -53,12 +53,13 @@
 #define RBRACE					49  // }
 #define EXCLAMATION				50  // !
 #define OP						51
-#define COMMENT					52
-#define FSTRINGSTART			53	
-#define FSTRINGMIDDLE			54	
-#define FSTRINGEND				55	
-#define NL						56	
-#define ERRORTOKEN				57	
+#define ELLIPSIS				52	// ...
+#define COMMENT					53
+#define FSTRINGSTART			54	
+#define FSTRINGMIDDLE			55	
+#define FSTRINGEND				56	
+#define NL						57	
+#define ERRORTOKEN				58	
 #define NTOFFSET				256
 
 

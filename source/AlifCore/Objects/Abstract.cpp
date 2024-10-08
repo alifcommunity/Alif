@@ -244,9 +244,17 @@ AlifObject * _alifNumber_index(AlifObject * _item) { // 1397
 	return result;
 }
 
+AlifObject* alifNumber_index(AlifObject* _item) { // 1442
+	AlifObject* result = _alifNumber_index(_item);
+	if (result != nullptr and !ALIFLONG_CHECKEXACT(result)) {
+		ALIF_SETREF(result, _alifLong_copy((AlifLongObject*)result));
+	}
+	return result;
+}
+
 AlifSizeT alifNumber_asSizeT(AlifObject* _item, AlifObject* _err) { // 1455
-	AlifSizeT result;
-	AlifObject* runErr;
+	AlifSizeT result{};
+	AlifObject* runErr{};
 	AlifObject* value = _alifNumber_index(_item);
 	AlifThread* tState = alifThread_get();
 
@@ -257,15 +265,15 @@ AlifSizeT alifNumber_asSizeT(AlifObject* _item, AlifObject* _err) { // 1455
 	if (result != -1)
 		goto finish;
 
-	tState = alifThread_get();
+	tState = _alifThread_get();
 	//runErr = alifErr_occurred(tState);
 	if (!runErr) {
 		goto finish;
 	}
 
-	if (!alifErr_givenExceptionMatches(runErr, _alifExcOverflowError_)) {
-		goto finish;
-	}
+	//if (!alifErr_givenExceptionMatches(runErr, _alifExcOverflowError_)) {
+	//	goto finish;
+	//}
 	//alifErr_clear(tState);
 
 	if (!_err) {

@@ -29,6 +29,41 @@
 #define MAKE_TOKEN(TT) alifLexer_setupToken(_tokState, _token, TT, pStart, pEnd)
 
 
+static inline AlifIntT contains_nullBytes(const char* _str, AlifUSizeT _size) { // 49
+	return memchr(_str, 0, _size) != nullptr;
+}
+
+static AlifIntT tok_nextChar(TokenState* _tokState) { // 56
+	AlifIntT rc{};
+	for (;;) {
+		if (_tokState->cur != _tokState->inp) {
+			if ((AlifUIntT)_tokState->colOffset >= (AlifUIntT)INT_MAX) {
+				_tokState->done = E_COLUMNOVERFLOW;
+				return EOF;
+			}
+			_tokState->colOffset++;
+			return ALIF_CHARMASK(*_tokState->cur++);
+		}
+		if (_tokState->done != E_OK) {
+			return EOF;
+		}
+
+		rc = _tokState->underflow(_tokState);
+
+		if (!rc) {
+			_tokState->cur = _tokState->inp;
+			return EOF;
+		}
+		_tokState->lineStart = _tokState->cur;
+		if (contains_nullBytes(_tokState->lineStart, _tokState->inp - _tokState->lineStart)) {
+			//alifTokenizer_syntaxError(_tokState, "source code cannot contain null bytes");
+			_tokState->cur = _tokState->inp;
+			return EOF;
+		}
+	}
+	ALIF_UNREACHABLE();
+}
+
 static void tok_backup(TokenState* _tokState, AlifIntT _c) { // 97
 	if (_c != EOF) {
 		if (--_tokState->cur < _tokState->buf) {
@@ -41,34 +76,6 @@ static void tok_backup(TokenState* _tokState, AlifIntT _c) { // 97
 	}
 }
 
-
-//static AlifIntT tok_nextChar(TokenState* _tokState) {
-//	AlifIntT rc{};
-//	for (;;) {
-//		if (_tokState->cur != _tokState->inp) {
-//			if ((unsigned AlifIntT)_tokState->colOffset >= (unsigned AlifIntT)INT_MAX) {
-//				//_tokState->done = E_COLOMN_OVERFLOW;
-//				return EOF;
-//			}
-//			_tokState->colOffset++;
-//			return ALIF_WCHARMASK(*_tokState->cur++);
-//		}
-//		if (_tokState->done != E_OK) {
-//			return EOF;
-//		}
-//
-//		rc = _tokState->underflow(_tokState);
-//
-//		if (!rc) {
-//			_tokState->cur = _tokState->inp;
-//			return EOF;
-//		}
-//		_tokState->lineStart = _tokState->cur;
-//
-//	}
-//}
-//
-//
 //static AlifIntT set_fStringExpr(TokenState* _tokState, AlifToken* _token, wchar_t _wcs) {
 //
 //	TokenizerMode* tokMode = TOK_GETMODE(_tokState);
@@ -197,25 +204,25 @@ static void tok_backup(TokenState* _tokState, AlifIntT _c) { // 97
 //	}
 //	return wcs;
 //}
-//
-//static inline AlifIntT tok_continuationLine(TokenState* _tokState) {
-//
-//	AlifIntT wcs = tok_nextChar(_tokState);
-//	if (wcs == '\r') wcs = tok_nextChar(_tokState);
-//	if (wcs != '\n') { _tokState->done = E_LINECONT; return -1; }
-//
-//	wcs = tok_nextChar(_tokState);
-//	if (wcs == EOF) {
-//		_tokState->done = E_WEOF;
-//		_tokState->cur = _tokState->inp;
-//		return -1;
-//	}
-//	else {
-//		tok_backup(_tokState, wcs);
-//	}
-//
-//	return wcs;
-//}
+
+static inline AlifIntT tok_continuationLine(TokenState* _tokState) { // 387
+
+	AlifIntT c_ = tok_nextChar(_tokState);
+	if (c_ == '\r') c_ = tok_nextChar(_tokState);
+	if (c_ != '\n') { _tokState->done = E_LINECONT; return -1; }
+
+	c_ = tok_nextChar(_tokState);
+	if (c_ == EOF) {
+		_tokState->done = E_EOF;
+		_tokState->cur = _tokState->inp;
+		return -1;
+	}
+	else {
+		tok_backup(_tokState, c_);
+	}
+
+	return c_;
+}
 
 static AlifIntT tokGet_normalMode(TokenState* _tokState,
 	TokenizerMode* _currentTok, AlifToken* _token) { // 408
@@ -465,9 +472,9 @@ again:
 			c_ = tok_nextChar(_tokState);
 		}
 		tok_backup(_tokState, c_);
-		if (nonASCII && !verify_identifier(_tokState)) {
-			return MAKE_TOKEN(ERRORTOKEN);
-		}
+		//if (nonASCII and !verify_identifier(_tokState)) {
+		//	return MAKE_TOKEN(ERRORTOKEN);
+		//}
 
 		pStart = _tokState->start;
 		pEnd = _tokState->cur;

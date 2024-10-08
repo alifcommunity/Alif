@@ -58,3 +58,33 @@ overflow:
 	//	"ALIF int too large to convert to CPP ssize_t");
 	return -1;
 }
+
+
+
+
+
+
+
+
+
+
+AlifTypeObject _alifLongType_ = { // 6597
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "عدد_صحيح",                                   
+	.basicSize = offsetof(AlifLongObject, longValue.digit),
+	.itemSize = sizeof(digit),                              
+	//.dealloc = long_dealloc,                               
+                                        
+	//.repr = long_toDecimalString,                     
+	//.asNumber = &_longAsNumber_,
+                                        
+	//.hash = long_hash,                                  
+                                        
+	.getAttro = alifObject_genericGetAttr,                    
+                                        
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE |
+		ALIF_TPFLAGS_LONG_SUBCLASS |
+		_ALIF_TPFLAGS_MATCH_SELF,                                                     
+                                       
+	.free = alifMem_objFree,                            
+};
