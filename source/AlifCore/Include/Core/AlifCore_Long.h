@@ -21,6 +21,10 @@ extern unsigned char _alifLongDigitValue_[256]; // 118
 #define NON_SIZE_BITS 3
 
 
+static inline bool _alifLong_isNegative(const AlifLongObject* _op) { // 212
+	return (_op->longValue.tag & SIGN_MASK) == SIGN_NEGATIVE;
+}
+
 
 static inline AlifSizeT alifLong_digitCount(const AlifLongObject* _op) { // 223
 	return _op->longValue.tag >> NON_SIZE_BITS;

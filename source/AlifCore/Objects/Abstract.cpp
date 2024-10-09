@@ -3,6 +3,7 @@
 #include "AlifCore_Abstract.h"
 #include "AlifCore_Eval.h"
 #include "AlifCore_Object.h"
+#include "AlifCore_Long.h"
 #include "AlifCore_State.h"
 
 
@@ -277,7 +278,7 @@ AlifSizeT alifNumber_asSizeT(AlifObject* _item, AlifObject* _err) { // 1455
 	//alifErr_clear(tState);
 
 	if (!_err) {
-		if (alifLong_isNegative((AlifLongObject*)value))
+		if (_alifLong_isNegative((AlifLongObject*)value))
 			result = ALIF_SIZET_MIN;
 		else
 			result = ALIF_SIZET_MAX;
@@ -303,6 +304,32 @@ AlifIntT alifSequence_check(AlifObject* _s) { // 1668
 }
 
 
+AlifObject* alifSequence_getItem(AlifObject* _s, AlifSizeT _i) { // 1829
+	if (_s == nullptr) {
+		return null_error();
+	}
+
+	AlifSequenceMethods* m_ = ALIF_TYPE(_s)->asSequence;
+	if (m_ and m_->item) {
+		if (_i < 0) {
+			if (m_->length) {
+				AlifSizeT l_ = (*m_->length)(_s);
+				if (l_ < 0) {
+					return nullptr;
+				}
+				_i += l_;
+			}
+		}
+		AlifObject* res_ = m_->item(_s, _i);
+		return res_;
+	}
+
+	if (ALIF_TYPE(_s)->asMapping and ALIF_TYPE(_s)->asMapping->subscript) {
+		return type_error("%.200s is not a sequence", _s);
+	}
+	return type_error("'%.200s' object does not support indexing", _s);
+}
+
 AlifIntT alifSequence_setItem(AlifObject* _s, AlifSizeT _i, AlifObject* _o) { // 1880
 	if (_s == nullptr) {
 		null_error();
@@ -325,10 +352,10 @@ AlifIntT alifSequence_setItem(AlifObject* _s, AlifSizeT _i, AlifObject* _o) { //
 	}
 
 	if (ALIF_TYPE(_s)->asMapping and ALIF_TYPE(_s)->asMapping->assSubscript) {
-		//type_error("%.200s is not a sequence", s);
+		//type_error("%.200s is not a sequence", _s);
 		return -1;
 	}
-	//type_error("'%.200s' object does not support item assignment", s);
+	//type_error("'%.200s' object does not support item assignment", _s);
 	return -1;
 }
 
