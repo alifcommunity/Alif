@@ -8,7 +8,8 @@
 
 
 
-
+#define ALIF_NSMALLPOSINTS           257 // 20
+#define ALIF_NSMALLNEGINTS           5 // 21
 
 
 
