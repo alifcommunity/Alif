@@ -183,7 +183,7 @@ static AlifObject* alifRun_file(FILE* _fp, AlifObject* _filename,
 
 	AlifObject* ret{};
 	if (mod != nullptr) {
-		ret = run_mod(mod, _filename, _globals, _locals, _flags, astMem, nullptr, 0);
+		//ret = run_mod(mod, _filename, _globals, _locals, _flags, astMem, nullptr, 0);
 	}
 	else {
 		ret = nullptr;

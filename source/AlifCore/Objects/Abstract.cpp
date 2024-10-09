@@ -140,7 +140,7 @@ AlifObject* alifObject_getItem(AlifObject* _o, AlifObject* _key) { // 150
 			return nullptr;
 		}
 		if (meth and meth != ALIF_NONE) {
-			result = alifObject_callOneArg(meth, _key);
+			//result = alifObject_callOneArg(meth, _key);
 			ALIF_DECREF(meth);
 			return result;
 		}
@@ -325,9 +325,11 @@ AlifObject* alifSequence_getItem(AlifObject* _s, AlifSizeT _i) { // 1829
 	}
 
 	if (ALIF_TYPE(_s)->asMapping and ALIF_TYPE(_s)->asMapping->subscript) {
-		return type_error("%.200s is not a sequence", _s);
+		//return type_error("%.200s is not a sequence", _s);
+		return nullptr; // temp
 	}
-	return type_error("'%.200s' object does not support indexing", _s);
+	//return type_error("'%.200s' object does not support indexing", _s);
+	return nullptr; // temp
 }
 
 AlifIntT alifSequence_setItem(AlifObject* _s, AlifSizeT _i, AlifObject* _o) { // 1880
