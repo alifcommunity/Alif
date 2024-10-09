@@ -4,6 +4,14 @@
 
 
 
+#define MEDIUM_VALUE(_x) ((stwodigits)alifLong_compactValue(_x)) // 23
+
+#define IS_SMALL_INT(_iVal) (-ALIF_NSMALLNEGINTS <= (_iVal) and (_iVal) < ALIF_NSMALLPOSINTS) // 25
+
+
+static AlifObject* get_smallInt(sdigit _iVal) { // 50
+	return (AlifObject*)&ALIFLONG_SMALL_INTS[ALIF_NSMALLNEGINTS + _iVal];
+}
 
 
  // 446
@@ -12,8 +20,30 @@
 
 
 
+AlifLongObject* _alifLong_fromDigits(AlifIntT _negative, AlifSizeT _digitCount, digit* _digits) { // 172
+	if (_digitCount == 0) {
+		return (AlifLongObject*)_alifLong_getZero();
+	}
+	AlifLongObject* result = _alifLong_new(_digitCount);
+	if (result == nullptr) {
+		//alifErr_noMemory();
+		return NULL;
+	}
+	_alifLong_setSignAndDigitCount(result, _negative ? -1 : 1, _digitCount);
+	memcpy(result->longValue.digit, _digits, _digitCount * sizeof(digit));
+	return result;
+}
 
-
+AlifObject* _alifLong_copy(AlifLongObject* _src) { // 189
+	if (alifLong_isCompact(_src)) {
+		stwodigits iVal = MEDIUM_VALUE(_src);
+		if (IS_SMALL_INT(iVal)) {
+			return get_smallInt((sdigit)iVal);
+		}
+	}
+	AlifSizeT size = alifLong_digitCount(_src);
+	return (AlifObject*)_alifLong_fromDigits(_alifLong_isNegative(_src), size, _src->longValue.digit);
+}
 
 
 
