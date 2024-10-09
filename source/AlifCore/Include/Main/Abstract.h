@@ -24,6 +24,8 @@ AlifObject* alifNumber_index(AlifObject*); // 545
 
 AlifIntT alifSequence_check(AlifObject*); // 664
 
+AlifObject* alifSequence_getItem(AlifObject*, AlifSizeT); // 689
+
 AlifIntT alifSequence_setItem(AlifObject*, AlifSizeT, AlifObject*); // 700
 
 AlifObject* alifSequence_tuple(AlifObject*); // 723
