@@ -76,134 +76,134 @@ static void tok_backup(TokenState* _tokState, AlifIntT _c) { // 97
 	}
 }
 
-//static AlifIntT set_fStringExpr(TokenState* _tokState, AlifToken* _token, wchar_t _wcs) {
-//
-//	TokenizerMode* tokMode = TOK_GETMODE(_tokState);
-//
-//	if (_token->data) return 0;
-//
-//	AlifObject* res = nullptr;
-//
-//	// Check if there is a # character in the expression
-//	AlifIntT hashDetected = 0;
-//	for (AlifUSizeT i = 0; i < tokMode->lastExprSize - tokMode->lastExprEnd; i++) {
-//		if (tokMode->lastExprBuff[i] == '#') {
-//			hashDetected = 1;
-//			break;
-//		}
-//	}
-//
-//	if (hashDetected) {
-//		AlifUSizeT inputLength = tokMode->lastExprSize - tokMode->lastExprEnd;
-//		wchar_t* result = (wchar_t*)alifMem_dataAlloc((inputLength + 1) * sizeof(wchar_t));
-//		if (!result) return -1;
-//
-//		AlifUSizeT i = 0;
-//		AlifUSizeT j = 0;
-//
-//		for (i = 0, j = 0; i < inputLength; i++) {
-//			if (tokMode->lastExprBuff[i] == '#') {
-//				// Skip characters until newline or end of string
-//				while (tokMode->lastExprBuff[i] != '\0' && i < inputLength) {
-//					if (tokMode->lastExprBuff[i] == '\n') {
-//						result[j++] = tokMode->lastExprBuff[i];
-//						break;
-//					}
-//					i++;
-//				}
-//			}
-//			else {
-//				result[j++] = tokMode->lastExprBuff[i];
-//			}
-//		}
-//
-//		result[j] = '\0';  // Null-terminate the result string
-//		res = alifUStr_decodeUTF8(result, j, nullptr);
-//		alifMem_dataFree(result);
-//	}
-//	else {
-//		res = alifUStr_decodeUTF8(tokMode->lastExprBuff, tokMode->lastExprSize - tokMode->lastExprEnd, nullptr);
-//	}
-//
-//	if (!res) return -1;
-//	_token->data = res;
-//	return 0;
-//}
-//
-//
-//AlifIntT alifLexer_updateFStringExpr(TokenState* _tokState, wchar_t _cur) {
-//
-//	AlifUSizeT size = wcslen(_tokState->cur);
-//	TokenizerMode* tokMode = TOK_GETMODE(_tokState);
-//	wchar_t* newBuffer{};
-//
-//	switch (_cur) {
-//
-//	case 0:
-//		if (!tokMode->lastExprBuff or tokMode->lastExprEnd >= 0) {
-//			return 1;
-//		}
-//		newBuffer = (wchar_t*)alifMem_dataRealloc(tokMode->lastExprBuff, tokMode->lastExprSize + size);
-//
-//		if (newBuffer == nullptr) {
-//			alifMem_dataFree(tokMode->lastExprBuff);
-//			goto error;
-//		}
-//		tokMode->lastExprBuff = newBuffer;
-//		wcsncpy(tokMode->lastExprBuff + tokMode->lastExprSize, _tokState->cur, size);
-//		tokMode->lastExprSize += size;
-//		break;
-//	case '{':
-//		if (tokMode->lastExprBuff != nullptr) {
-//			alifMem_dataFree(tokMode->lastExprBuff);
-//		}
-//		tokMode->lastExprBuff = (wchar_t*)alifMem_dataAlloc(size);
-//		if (tokMode->lastExprBuff == nullptr) {
-//			goto error;
-//		}
-//		tokMode->lastExprSize = size;
-//		tokMode->lastExprEnd = -1;
-//		wcsncpy(tokMode->lastExprBuff, _tokState->cur, size);
-//		break;
-//	case '}':
-//	case '!':
-//	case ':':
-//		if (tokMode->lastExprEnd == -1) {
-//			tokMode->lastExprEnd = wcslen(_tokState->start);
-//		}
-//		break;
-//	default:
-//		//ALIF_UNREACHABLE();
-//		break;
-//	}
-//
-//	return 1;
-//
-//error:
-//	_tokState->done = E_NOMEM;
-//	return 0;
-//}
-//
-//
-//static AlifIntT tok_decimalTail(TokenState* _tokState) {
-//	AlifIntT wcs{};
-//
-//	while (1) {
-//		do {
-//			wcs = tok_nextChar(_tokState);
-//		} while (ALIF_ISDIGIT(wcs));
-//		if (wcs != '_') {
-//			break;
-//		}
-//		wcs = tok_nextChar(_tokState);
-//		if (!ALIF_ISDIGIT(wcs)) {
-//			tok_backup(_tokState, wcs);
-//			// error
-//			return 0;
-//		}
-//	}
-//	return wcs;
-//}
+static AlifIntT set_fStringExpr(TokenState* _tokState,
+	AlifToken* _token, char _c) { // 110
+
+	TokenizerMode* tokMode = TOK_GET_MODE(_tokState);
+
+	if (!tokMode->fStringDebug or _token->data) {
+		return 0;
+	}
+	AlifObject* res = nullptr;
+
+	// Check if there is a # character in the expression
+	AlifIntT hashDetected = 0;
+	for (AlifSizeT i = 0; i < tokMode->lastExprSize - tokMode->lastExprEnd; i++) {
+		if (tokMode->lastExprBuff[i] == '#') {
+			hashDetected = 1;
+			break;
+		}
+	}
+
+	if (hashDetected) {
+		AlifSizeT inputLength = tokMode->lastExprSize - tokMode->lastExprEnd;
+		char* result = (char*)alifMem_dataAlloc((inputLength + 1) * sizeof(char));
+		if (!result) return -1;
+
+		AlifSizeT i = 0;
+		AlifSizeT j = 0;
+
+		for (i = 0, j = 0; i < inputLength; i++) {
+			if (tokMode->lastExprBuff[i] == '#') {
+				// Skip characters until newline or end of string
+				while (tokMode->lastExprBuff[i] != '\0' and i < inputLength) {
+					if (tokMode->lastExprBuff[i] == '\n') {
+						result[j++] = tokMode->lastExprBuff[i];
+						break;
+					}
+					i++;
+				}
+			}
+			else {
+				result[j++] = tokMode->lastExprBuff[i];
+			}
+		}
+
+		result[j] = '\0';  // Null-terminate the result string
+		res = alifUStr_decodeUTF8(result, j, nullptr);
+		alifMem_dataFree(result);
+	}
+	else {
+		res = alifUStr_decodeUTF8(tokMode->lastExprBuff, tokMode->lastExprSize - tokMode->lastExprEnd, nullptr);
+	}
+
+	if (!res) return -1;
+	_token->data = res;
+	return 0;
+}
+
+
+AlifIntT alifLexer_updateFStringExpr(TokenState* _tokState, char _cur) { // 175
+
+	AlifSizeT size = strlen(_tokState->cur);
+	TokenizerMode* tokMode = TOK_GET_MODE(_tokState);
+	char* newBuffer{};
+
+	switch (_cur) {
+	case 0:
+		if (!tokMode->lastExprBuff or tokMode->lastExprEnd >= 0) {
+			return 1;
+		}
+		newBuffer = (char*)alifMem_dataRealloc(tokMode->lastExprBuff, tokMode->lastExprSize + size);
+
+		if (newBuffer == nullptr) {
+			alifMem_dataFree(tokMode->lastExprBuff);
+			goto error;
+		}
+		tokMode->lastExprBuff = newBuffer;
+		strncpy(tokMode->lastExprBuff + tokMode->lastExprSize, _tokState->cur, size);
+		tokMode->lastExprSize += size;
+		break;
+	case '{':
+		if (tokMode->lastExprBuff != nullptr) {
+			alifMem_dataFree(tokMode->lastExprBuff);
+		}
+		tokMode->lastExprBuff = (char*)alifMem_dataAlloc(size);
+		if (tokMode->lastExprBuff == nullptr) {
+			goto error;
+		}
+		tokMode->lastExprSize = size;
+		tokMode->lastExprEnd = -1;
+		strncpy(tokMode->lastExprBuff, _tokState->cur, size);
+		break;
+	case '}':
+	case '!':
+	case ':':
+		if (tokMode->lastExprEnd == -1) {
+			tokMode->lastExprEnd = strlen(_tokState->start);
+		}
+		break;
+	default:
+		ALIF_UNREACHABLE();
+		break;
+	}
+
+	return 1;
+error:
+	_tokState->done = E_NOMEM;
+	return 0;
+}
+
+
+static AlifIntT tok_decimalTail(TokenState* _tokState) { // 365
+	AlifIntT c_{};
+
+	while (1) {
+		do {
+			c_ = tok_nextChar(_tokState);
+		} while (ALIF_ISDIGIT(c_));
+		if (c_ != '_') {
+			break;
+		}
+		c_ = tok_nextChar(_tokState);
+		if (!ALIF_ISDIGIT(c_)) {
+			tok_backup(_tokState, c_);
+			//alifTokenizer_syntaxError(_tokState, "invalid decimal literal");
+			return 0;
+		}
+	}
+	return c_;
+}
 
 static inline AlifIntT tok_continuationLine(TokenState* _tokState) { // 387
 
@@ -974,200 +974,208 @@ letterQuote:
 }
 
 
-//static AlifIntT tokGet_fStringMode(TokenState* _tokState, TokenizerMode* _currentTok, AlifToken* _token) {
-//	const wchar_t* pStart{};
-//	const wchar_t* pEnd{};
-//	AlifIntT endQuoteSize = 0;
-//	AlifIntT unicodeEscape = 0;
-//
-//	_tokState->start = _tokState->cur;
-//	_tokState->firstLineNo = _tokState->lineNo;
-//	_tokState->startingColOffset = _tokState->colOffset;
-//
-//	// If we start with a bracket, we defer to the normal mode as there is nothing for us to tokenize
-//	// before it.
-//	AlifIntT startChar = tok_nextChar(_tokState);
-//	if (startChar == '{') {
-//		AlifIntT peek1 = tok_nextChar(_tokState);
-//		tok_backup(_tokState, peek1);
-//		tok_backup(_tokState, startChar);
-//		if (peek1 != '{') {
-//			_currentTok->curlyBracExprStartDepth++;
-//			if (_currentTok->curlyBracExprStartDepth >= MAX_EXPR_NESTING) {
-//				//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, L"نص منسق:التعبير المتداخل للنص المنسق وصل الحد الاقصى لعدد التداخلات"));
-//			}
-//			TOK_GETMODE(_tokinfo)->type = Token_RegularMode;
-//			return tokGet_normalMode(_tokState, _currentTok, _token);
-//		}
-//	}
-//	else {
-//		tok_backup(_tokState, startChar);
-//	}
-//
-//	// Check if we are at the end of the string
-//	for (AlifIntT i = 0; i < _currentTok->fStringQuoteSize; i++) {
-//		AlifIntT quote = tok_nextChar(_tokState);
-//		if (quote != _currentTok->fStringQuote) {
-//			tok_backup(_tokState, quote);
-//			goto fStringMiddle;
-//		}
-//	}
-//
-//	if (_currentTok->lastExprBuff != nullptr) {
-//		alifMem_dataFree(_currentTok->lastExprBuff);
-//		_currentTok->lastExprBuff = nullptr;
-//		_currentTok->lastExprSize = 0;
-//		_currentTok->lastExprEnd = -1;
-//	}
-//
-//	pStart = _tokState->start;
-//	pEnd = _tokState->cur;
-//	_tokState->tokModeStackIndex--;
-//	return MAKE_TOKEN(FSTRINGEND);
-//
-//fStringMiddle:
-//
-//	// TODO: This is a bit of a hack, but it works for now. We need to find a better way to handle
-//	// this.
-//	_tokState->multiLineStart = _tokState->lineStart;
-//	while (endQuoteSize != _currentTok->fStringQuoteSize) {
-//		AlifIntT wcs = tok_nextChar(_tokState);
-//		if (_tokState->done == E_ERROR) return MAKE_TOKEN(ERRORTOKEN);
-//
-//		AlifIntT inFormatSpec = (_currentTok->lastExprEnd != -1 and INSIDE_FSTRING_EXPR(_currentTok));
-//
-//		if (wcs == EOF or (_currentTok->fStringQuoteSize == 1 and wcs == '\n')) {
-//
-//			// If we are in a format spec and we found a newline,
-//			// it means that the format spec ends here and we should
-//			// return to the regular mode.
-//			if (inFormatSpec and wcs == '\n') {
-//				tok_backup(_tokState, wcs);
-//				TOK_GETMODE(_tokState)->type = Token_RegularMode;
-//				pStart = _tokState->start;
-//				pEnd = _tokState->cur;
-//				return MAKE_TOKEN(FSTRINGMIDDLE);
-//			}
-//
-//			// shift the tok_state's location into
-//			// the start of string, and report the error
-//			// from the initial quote character
-//			_tokState->cur = (wchar_t*)_currentTok->fStringStart;
-//			_tokState->cur++;
-//			_tokState->lineStart = _currentTok->fStringMultiLineStart;
-//			AlifIntT start = _tokState->lineNo;
-//
-//			TokenizerMode* currentTok = TOK_GETMODE(_tokState);
-//			_tokState->lineNo = currentTok->fStringLineStart;
-//
-//			if (currentTok->fStringQuoteSize == 3) {
-//				//alifTokenizer_syntaxError(_tokState, L"نص متعدد الاسطر غير منتهي" L" (السطر %d)", start);
-//				if (wcs != '\n') {
-//					_tokState->done = E_EOFS;
-//				}
-//				return MAKE_TOKEN(ERRORTOKEN);
-//			}
-//			else {
-//				//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, L"نص منسق غير منتهي" L" السطر %d)", start));
-//			}
-//		}
-//
-//		if (wcs == _currentTok->fStringQuote) {
-//			endQuoteSize++;
-//			continue;
-//		}
-//		else {
-//			endQuoteSize = 0;
-//		}
-//
-//		if (wcs == '{') {
-//			AlifIntT peek = tok_nextChar(_tokState);
-//			if (peek != '{' or inFormatSpec) {
-//				tok_backup(_tokState, peek);
-//				tok_backup(_tokState, wcs);
-//				_currentTok->curlyBracExprStartDepth++;
-//				if (_currentTok->curlyBracExprStartDepth >= MAX_EXPR_NESTING) {
-//					//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "نص منسق:التعبير المتداخل للنص المنسق وصل الحد الاقصى لعدد التداخلات"));
-//				}
-//				TOK_GETMODE(_tokState)->type = Token_RegularMode;
-//				pStart = _tokState->start;
-//				pEnd = _tokState->cur;
-//			}
-//			else {
-//				pStart = _tokState->start;
-//				pEnd = _tokState->cur - 1;
-//			}
-//			return MAKE_TOKEN(FSTRINGMIDDLE);
-//		}
-//		else if (wcs == '}') {
-//			if (unicodeEscape) {
-//				pStart = _tokState->start;
-//				pEnd = _tokState->cur;
-//				return MAKE_TOKEN(FSTRINGMIDDLE);
-//			}
-//			AlifIntT peek = tok_nextChar(_tokState);
-//
-//			// The tokenizer can only be in the format spec if we have already completed the expression
-//			// scanning (indicated by the end of the expression being set) and we are not at the top level
-//			// of the bracket stack (-1 is the top level). Since format specifiers can't legally use double
-//			// brackets, we can bypass it here.
-//			if (peek == '}' and !inFormatSpec) {
-//				pStart = _tokState->start;
-//				pEnd = _tokState->cur - 1;
-//			}
-//			else {
-//				tok_backup(_tokState, peek);
-//				tok_backup(_tokState, wcs);
-//				TOK_GETMODE(_tokState)->type = Token_RegularMode;
-//				pStart = _tokState->start;
-//				pEnd = _tokState->cur;
-//			}
-//			return MAKE_TOKEN(FSTRINGMIDDLE);
-//		}
-//		else if (wcs == '\\') {
-//			AlifIntT peek = tok_nextChar(_tokState);
-//			if (peek == '\r') {
-//				peek = tok_nextChar(_tokState);
-//			}
-//			// Special case when the backslash is right before a curly
-//			// brace. We have to restore and return the control back
-//			// to the loop for the next iteration.
-//			if (peek == '{' or peek == '}') {
-//				if (!_currentTok->fStringRaw) {
-//					//if (alifTokenizer_warnInvalidEscapeSequence(_tokState, peek)) {
-//					//	return MAKE_TOKEN(ERRORTOKEN);
-//					//}
-//				}
-//				tok_backup(_tokState, peek);
-//				continue;
-//			}
-//
-//			if (!_currentTok->fStringRaw) {
-//				if (peek == 'N') {
-//					/* Handle named unicode escapes (\N{BULLET}) */
-//					peek = tok_nextChar(_tokState);
-//					if (peek == '{') {
-//						unicodeEscape = 1;
-//					}
-//					else {
-//						tok_backup(_tokState, peek);
-//					}
-//				}
-//			} /* else {
-//				skip the escaped character
-//			}*/
-//		}
-//	}
-//
-//	// Backup the f-string quotes to emit a final FSTRINGMIDDLE and
-//	// add the quotes to the FSTRINGEND in the next tokenizer iteration.
-//	for (AlifIntT i = 0; i < _currentTok->fStringQuoteSize; i++) {
-//		tok_backup(_tokState, _currentTok->fStringQuote);
-//	}
-//	pStart = _tokState->start;
-//	pEnd = _tokState->cur;
-//	return MAKE_TOKEN(FSTRINGMIDDLE);
-//}
+static AlifIntT tokGet_fStringMode(TokenState* _tokState,
+	TokenizerMode* _currentTok, AlifToken* _token) { // 1270
+	const char* pStart{};
+	const char* pEnd{};
+	AlifIntT endQuoteSize = 0;
+	AlifIntT unicodeEscape = 0;
+
+	_tokState->start = _tokState->cur;
+	_tokState->firstLineNo = _tokState->lineNo;
+	_tokState->startingColOffset = _tokState->colOffset;
+
+	// If we start with a bracket, we defer to the normal mode as there is nothing for us to tokenize
+	// before it.
+	AlifIntT startChar = tok_nextChar(_tokState);
+	if (startChar == '{') {
+		AlifIntT peek1 = tok_nextChar(_tokState);
+		tok_backup(_tokState, peek1);
+		tok_backup(_tokState, startChar);
+		if (peek1 != '{') {
+			_currentTok->curlyBracExprStartDepth++;
+			if (_currentTok->curlyBracExprStartDepth >= MAX_EXPR_NESTING) {
+				//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, L"نص منسق:التعبير المتداخل للنص المنسق وصل الحد الاقصى لعدد التداخلات"));
+			}
+			TOK_GET_MODE(_tokState)->type = TokenizerModeType_::Token_RegularMode;
+			return tokGet_normalMode(_tokState, _currentTok, _token);
+		}
+	}
+	else {
+		tok_backup(_tokState, startChar);
+	}
+
+	// Check if we are at the end of the string
+	for (AlifIntT i = 0; i < _currentTok->fStringQuoteSize; i++) {
+		AlifIntT quote = tok_nextChar(_tokState);
+		if (quote != _currentTok->fStringQuote) {
+			tok_backup(_tokState, quote);
+			goto fStringMiddle;
+		}
+	}
+
+	if (_currentTok->lastExprBuff != nullptr) {
+		alifMem_dataFree(_currentTok->lastExprBuff);
+		_currentTok->lastExprBuff = nullptr;
+		_currentTok->lastExprSize = 0;
+		_currentTok->lastExprEnd = -1;
+	}
+
+	pStart = _tokState->start;
+	pEnd = _tokState->cur;
+	_tokState->tokModeStackIndex--;
+	return MAKE_TOKEN(FSTRINGEND);
+
+fStringMiddle:
+
+	// TODO: This is a bit of a hack, but it works for now. We need to find a better way to handle
+	// this.
+	_tokState->multiLineStart = _tokState->lineStart;
+	while (endQuoteSize != _currentTok->fStringQuoteSize) {
+		AlifIntT c_ = tok_nextChar(_tokState);
+		if (_tokState->done == E_ERROR or _tokState->done == E_DECODE)
+			return MAKE_TOKEN(ERRORTOKEN);
+
+		AlifIntT inFormatSpec = (_currentTok->lastExprEnd != -1
+			and INSIDE_FSTRING_EXPR(_currentTok));
+
+		if (c_ == EOF or (_currentTok->fStringQuoteSize == 1 and c_ == '\n')) {
+
+			// If we are in a format spec and we found a newline,
+			// it means that the format spec ends here and we should
+			// return to the regular mode.
+			if (inFormatSpec and c_ == '\n') {
+				tok_backup(_tokState, c_);
+				TOK_GET_MODE(_tokState)->type = TokenizerModeType_::Token_RegularMode;
+				pStart = _tokState->start;
+				pEnd = _tokState->cur;
+				return MAKE_TOKEN(FSTRINGMIDDLE);
+			}
+
+			// shift the tok_state's location into
+			// the start of string, and report the error
+			// from the initial quote character
+			_tokState->cur = (char*)_currentTok->fStringStart;
+			_tokState->cur++;
+			_tokState->lineStart = _currentTok->fStringMultiLineStart;
+			AlifIntT start = _tokState->lineNo;
+
+			TokenizerMode* currentTok = TOK_GET_MODE(_tokState);
+			_tokState->lineNo = currentTok->fStringLineStart;
+
+			if (currentTok->fStringQuoteSize == 3) {
+				//alifTokenizer_syntaxError(_tokState, L"نص متعدد الاسطر غير منتهي" L" (السطر %d)", start);
+				if (c_ != '\n') {
+					_tokState->done = E_EOFS;
+				}
+				return MAKE_TOKEN(ERRORTOKEN);
+			}
+			else {
+				//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, L"نص منسق غير منتهي" L" السطر %d)", start));
+			}
+		}
+
+		if (c_ == _currentTok->fStringQuote) {
+			endQuoteSize++;
+			continue;
+		}
+		else {
+			endQuoteSize = 0;
+		}
+
+		if (c_ == '{') {
+			if (!alifLexer_updateFStringExpr(_tokState, c_)) {
+				return MAKE_TOKEN(ENDMARKER);
+			}
+			AlifIntT peek = tok_nextChar(_tokState);
+			if (peek != '{' or inFormatSpec) {
+				tok_backup(_tokState, peek);
+				tok_backup(_tokState, c_);
+				_currentTok->curlyBracExprStartDepth++;
+				if (_currentTok->curlyBracExprStartDepth >= MAX_EXPR_NESTING) {
+					//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "نص منسق:التعبير المتداخل للنص المنسق وصل الحد الاقصى لعدد التداخلات"));
+				}
+				TOK_GET_MODE(_tokState)->type = TokenizerModeType_::Token_RegularMode;
+				pStart = _tokState->start;
+				pEnd = _tokState->cur;
+			}
+			else {
+				pStart = _tokState->start;
+				pEnd = _tokState->cur - 1;
+			}
+			return MAKE_TOKEN(FSTRINGMIDDLE);
+		}
+		else if (c_ == '}') {
+			if (unicodeEscape) {
+				pStart = _tokState->start;
+				pEnd = _tokState->cur;
+				return MAKE_TOKEN(FSTRINGMIDDLE);
+			}
+			AlifIntT peek = tok_nextChar(_tokState);
+
+			// The tokenizer can only be in the format spec if we have already completed the expression
+			// scanning (indicated by the end of the expression being set) and we are not at the top level
+			// of the bracket stack (-1 is the top level). Since format specifiers can't legally use double
+			// brackets, we can bypass it here.
+			AlifIntT cursor = _currentTok->curlyBracDepth;
+			if (peek == '}' and !inFormatSpec and cursor == 0) {
+				pStart = _tokState->start;
+				pEnd = _tokState->cur - 1;
+			}
+			else {
+				tok_backup(_tokState, peek);
+				tok_backup(_tokState, c_);
+				TOK_GET_MODE(_tokState)->type = TokenizerModeType_::Token_RegularMode;
+				_currentTok->inFormatSpec = 0;
+				pStart = _tokState->start;
+				pEnd = _tokState->cur;
+			}
+			return MAKE_TOKEN(FSTRINGMIDDLE);
+		}
+		else if (c_ == '\\') {
+			AlifIntT peek = tok_nextChar(_tokState);
+			if (peek == '\r') {
+				peek = tok_nextChar(_tokState);
+			}
+			// Special case when the backslash is right before a curly
+			// brace. We have to restore and return the control back
+			// to the loop for the next iteration.
+			if (peek == '{' or peek == '}') {
+				if (!_currentTok->fStringRaw) {
+					//if (alifTokenizer_warnInvalidEscapeSequence(_tokState, peek)) {
+					//	return MAKE_TOKEN(ERRORTOKEN);
+					//}
+				}
+				tok_backup(_tokState, peek);
+				continue;
+			}
+
+			if (!_currentTok->fStringRaw) {
+				if (peek == 'N') {
+					/* Handle named unicode escapes (\N{BULLET}) */
+					peek = tok_nextChar(_tokState);
+					if (peek == '{') {
+						unicodeEscape = 1;
+					}
+					else {
+						tok_backup(_tokState, peek);
+					}
+				}
+			} /* else {
+				skip the escaped character
+			}*/
+		}
+	}
+
+	// Backup the f-string quotes to emit a final FSTRINGMIDDLE and
+	// add the quotes to the FSTRINGEND in the next tokenizer iteration.
+	for (AlifIntT i = 0; i < _currentTok->fStringQuoteSize; i++) {
+		tok_backup(_tokState, _currentTok->fStringQuote);
+	}
+	pStart = _tokState->start;
+	pEnd = _tokState->cur;
+	return MAKE_TOKEN(FSTRINGMIDDLE);
+}
 
 
 static AlifIntT token_get(TokenState* _tokState, AlifToken* _token) { // 1481

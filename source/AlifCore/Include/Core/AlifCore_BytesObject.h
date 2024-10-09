@@ -2,6 +2,22 @@
 
 
 
+
+
+
+
+
+
+
+AlifObject* _alifBytes_decodeEscape(const char*, AlifSizeT, const char*, const char**); // 23
+
+
+
+
+
+
+
+
 class AlifBytesWriter { // 67
 public:
 	AlifObject* buffer{};
@@ -24,6 +40,8 @@ public:
 
 
 void alifBytesWriter_init(AlifBytesWriter*); // 96
+
+AlifObject* alifBytesWriter_finish(AlifBytesWriter*, void*); // 101
 
 void alifBytesWriter_dealloc(AlifBytesWriter*); // 105
 

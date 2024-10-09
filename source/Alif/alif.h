@@ -23,7 +23,7 @@
 #include "InitConfig.h"
 #include "AlifTypeDefs.h"
 #include "AlifAtomic.h"
-//#include "AlifBuffer.h"
+#include "AlifBuffer.h"
 #include "Lock.h"
 #include "AlifObject.h"
 #include "RefCount.h"

@@ -24,6 +24,11 @@ extern AlifObject* alifUStr_fromASCII(const char*, AlifSizeT); // 65
 
 
 
+
+AlifObject* alifUStr_decodeUStrEscapeInternal(const char*, AlifSizeT, const char*, AlifSizeT*, const char**); // 144
+
+
+
 extern AlifIntT alifUStr_initGlobalObjects(AlifInterpreter*); // 272
 
 void alifUStr_internMortal(AlifInterpreter*, AlifObject**); // 284

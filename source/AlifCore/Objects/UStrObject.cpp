@@ -1220,6 +1220,11 @@ const char* alifUStr_asUTF8(AlifObject* _uStr) { // 4193
 
 /* ------------------------------------------ UTF-8 Codec ------------------------------------------ */
 
+AlifObject* alifUStr_decodeUTF8(const char* _str,
+	AlifSizeT _size, const char* _errors) { // 4938
+	return alifUStr_decodeUTF8Stateful(_str, _size, _errors, nullptr);
+}
+
 #include "StringLib/ASCIILib.h" // 4946
 #include "StringLib/Codecs.h"
 #include "StringLib/Undef.h"
@@ -1614,6 +1619,251 @@ static AlifIntT uStr_fillUTF8(AlifObject* _uStr) { // 5582
 	alifBytesWriter_dealloc(&writer);
 	return 0;
 }
+
+
+
+
+
+
+
+
+
+
+/* --- Unicode Escape Codec ----------------------------------------------- */
+
+AlifObject* alifUStr_decodeUStrEscapeInternal(const char* _str, AlifSizeT _size,
+	const char* _errors, AlifSizeT* _consumed, const char** _firstInvalidEscape) { // 6308
+	const char* starts = _str;
+	AlifUStrWriter writer{};
+	const char* end{};
+	AlifObject* errorHandler = nullptr;
+	AlifObject* exc = nullptr;
+	//AlifUStrNameCAPI* ucnhash_capi{};
+
+	// so we can remember if we've seen an invalid escape char or not
+	*_firstInvalidEscape = nullptr;
+
+	if (_size == 0) {
+		if (_consumed) {
+			*_consumed = 0;
+		}
+		ALIF_RETURN_UNICODE_EMPTY
+	}
+	/* Escaped strings will always be longer than the resulting
+	   Unicode string, so we start with size here and then reduce the
+	   length after conversion to the true value.
+	   (but if the error callback returns a long replacement string
+	   we'll have to allocate more space) */
+	alifUStrWriter_init(&writer);
+	writer.minLength = _size;
+	if (ALIFUSTRWRITER_PREPARE(&writer, _size, 127) < 0) {
+		goto onError;
+	}
+
+	end = _str + _size;
+	while (_str < end) {
+		unsigned char c = (unsigned char)*_str++;
+		AlifUCS4 ch{};
+		AlifIntT count{};
+		const char* message{};
+
+#define WRITE_ASCII_CHAR(ch)                                                  \
+            do {                                                              \
+                ALIFUSTR_WRITE(writer.kind, writer.data, writer.pos++, ch);  \
+            } while(0)
+
+#define WRITE_CHAR(ch)                                                        \
+            do {                                                              \
+                if (ch <= writer.maxChar) {                                   \
+                    ALIFUSTR_WRITE(writer.kind, writer.data, writer.pos++, ch); \
+                }                                                             \
+                else if (alifUStrWriter_writeCharInline(&writer, ch) < 0) { \
+                    goto onError;                                             \
+                }                                                             \
+            } while(0)
+
+		/* Non-escape characters are interpreted as Unicode ordinals */
+		if (c != '\\') {
+			WRITE_CHAR(c);
+			continue;
+		}
+
+		AlifSizeT startinpos = _str - starts - 1;
+		/* \ - Escapes */
+		if (_str >= end) {
+			message = "\\ at end of string";
+			goto incomplete;
+		}
+		c = (unsigned char)*_str++;
+
+		switch (c) {
+
+			/* \x escapes */
+		case '\n': continue;
+		case '\\': WRITE_ASCII_CHAR('\\'); continue;
+		case '\'': WRITE_ASCII_CHAR('\''); continue;
+		case '\"': WRITE_ASCII_CHAR('\"'); continue;
+		case 'b': WRITE_ASCII_CHAR('\b'); continue;
+			/* FF */
+		case 'f': WRITE_ASCII_CHAR('\014'); continue;
+		case 't': WRITE_ASCII_CHAR('\t'); continue;
+		case 'n': WRITE_ASCII_CHAR('\n'); continue;
+		case 'r': WRITE_ASCII_CHAR('\r'); continue;
+			/* VT */
+		case 'v': WRITE_ASCII_CHAR('\013'); continue;
+			/* BEL, not classic C */
+		case 'a': WRITE_ASCII_CHAR('\007'); continue;
+
+			/* \OOO (octal) escapes */
+		case '0': case '1': case '2': case '3':
+		case '4': case '5': case '6': case '7':
+			ch = c - '0';
+			if (_str < end and '0' <= *_str and *_str <= '7') {
+				ch = (ch << 3) + *_str++ - '0';
+				if (_str < end and '0' <= *_str and *_str <= '7') {
+					ch = (ch << 3) + *_str++ - '0';
+				}
+			}
+			if (ch > 0377) {
+				if (*_firstInvalidEscape == nullptr) {
+					*_firstInvalidEscape = _str - 3; /* Back up 3 chars, since we've
+													already incremented s. */
+				}
+			}
+			WRITE_CHAR(ch);
+			continue;
+
+			/* hex escapes */
+			/* \xXX */
+		case 'x':
+			count = 2;
+			message = "truncated \\xXX escape";
+			goto hexescape;
+
+			/* \uXXXX */
+		case 'u':
+			count = 4;
+			message = "truncated \\uXXXX escape";
+			goto hexescape;
+
+			/* \UXXXXXXXX */
+		case 'U':
+			count = 8;
+			message = "truncated \\UXXXXXXXX escape";
+		hexescape:
+			for (ch = 0; count; ++_str, --count) {
+				if (_str >= end) {
+					goto incomplete;
+				}
+				c = (unsigned char)*_str;
+				ch <<= 4;
+				if (c >= '0' and c <= '9') {
+					ch += c - '0';
+				}
+				else if (c >= 'a' and c <= 'f') {
+					ch += c - ('a' - 10);
+				}
+				else if (c >= 'A' and c <= 'F') {
+					ch += c - ('A' - 10);
+				}
+				else {
+					goto error;
+				}
+			}
+
+			/* when we get here, ch is a 32-bit unicode character */
+			if (ch > MAX_UNICODE) {
+				message = "illegal Unicode character";
+				goto error;
+			}
+
+			WRITE_CHAR(ch);
+			continue;
+
+			/* \N{name} */
+		case 'N':
+			//ucnhash_capi = _alifUStr_getNameCAPI();
+			//if (ucnhash_capi == nullptr) {
+			//	alifErr_setString(
+			//		_alifExcUnicodeError_,
+			//		"\\N escapes not supported (can't load unicodedata module)"
+			//	);
+			//	goto onError;
+			//}
+
+			message = "malformed \\N character escape";
+			if (_str >= end) {
+				goto incomplete;
+			}
+			if (*_str == '{') {
+				const char* start = ++_str;
+				size_t namelen;
+				/* look for the closing brace */
+				while (_str < end and *_str != '}')
+					_str++;
+				if (_str >= end) {
+					goto incomplete;
+				}
+				namelen = _str - start;
+				if (namelen) {
+					/* found a name.  look it up in the unicode database */
+					_str++;
+					ch = 0xffffffff; /* in case 'getcode' messes up */
+					if (namelen <= INT_MAX /*and
+						ucnhash_capi->getcode(start, (int)namelen,
+							&ch, 0)*/) {
+						WRITE_CHAR(ch);
+						continue;
+					}
+					message = "unknown Unicode character name";
+				}
+			}
+			goto error;
+
+		default:
+			if (*_firstInvalidEscape == nullptr) {
+				*_firstInvalidEscape = _str - 1; /* Back up one char, since we've
+												already incremented s. */
+			}
+			WRITE_ASCII_CHAR('\\');
+			WRITE_CHAR(c);
+			continue;
+		}
+
+	incomplete:
+		if (_consumed) {
+			*_consumed = startinpos;
+			break;
+		}
+	error:;
+		AlifSizeT endinpos = _str - starts;
+		writer.minLength = end - _str + writer.pos;
+		//if (uStrDecode_callErrorhandlerWriter(
+		//	_errors, &errorHandler,
+		//	"unicodeescape", message,
+		//	&starts, &end, &startinpos, &endinpos, &exc, &_str,
+		//	&writer)) {
+		//	goto onError;
+		//}
+
+#undef WRITE_ASCII_CHAR
+#undef WRITE_CHAR
+	}
+
+	ALIF_XDECREF(errorHandler);
+	ALIF_XDECREF(exc);
+	return alifUStrWriter_finish(&writer);
+
+onError:
+	alifUStrWriter_dealloc(&writer);
+	ALIF_XDECREF(errorHandler);
+	ALIF_XDECREF(exc);
+	return nullptr;
+}
+
+
+
+
 
 
 

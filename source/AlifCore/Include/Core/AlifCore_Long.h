@@ -4,6 +4,16 @@
 
 
 
+
+
+
+extern unsigned char _alifLongDigitValue_[256]; // 118
+
+
+
+
+
+
  // 164
 #define SIGN_MASK 3
 #define SIGN_ZERO 1

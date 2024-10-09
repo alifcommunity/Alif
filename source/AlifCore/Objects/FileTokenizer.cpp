@@ -9,8 +9,7 @@
 #include "Helpers.h"
 #include "AlifTokenState.h"
 #include "AlifLexer.h"
-#include "AlifBuffer.h"
-
+//#include "Buffer.h"
 
 
 static AlifIntT tok_readlineRaw(TokenState* _tokState) { // 55

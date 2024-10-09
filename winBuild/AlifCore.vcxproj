@@ -75,6 +75,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_TypeObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_UStrObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Abstract.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifBuffer.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifConfig.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifCppType.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifEval.h" />
@@ -180,6 +181,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\DescrObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\DictObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\CriticalSection.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\FileObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\FileTokenizer.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\FileUtils.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GCFreeThreading.cpp" />

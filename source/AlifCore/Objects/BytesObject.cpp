@@ -1,7 +1,9 @@
 #include "alif.h"
 
+#include "AlifCore_Abstract.h"
 #include "AlifCore_BytesObject.h"
 #include "AlifCore_GlobalObjects.h"
+#include "AlifCore_Long.h"
 #include "AlifCore_Object.h"
 
 
@@ -114,6 +116,132 @@ AlifObject* alifBytes_fromString(const char* _str) { // 139
 	memcpy(op->val, _str, size + 1);
 	return (AlifObject*)op;
 }
+
+
+
+
+
+
+
+
+
+
+AlifObject* _alifBytes_decodeEscape(const char* _str, AlifSizeT _len, const char* _errors,
+	const char** _firstInvalidEscape) { // 1058
+	AlifIntT c_{};
+	char* p_{};
+	const char* end{};
+	AlifBytesWriter writer{};
+
+	alifBytesWriter_init(&writer);
+
+	p_ = (char*)alifBytesWriter_alloc(&writer, _len);
+	if (p_ == nullptr)
+		return nullptr;
+	writer.overAllocate = 1;
+
+	*_firstInvalidEscape = nullptr;
+
+	end = _str + _len;
+	while (_str < end) {
+		if (*_str != '\\') {
+			*p_++ = *_str++;
+			continue;
+		}
+
+		_str++;
+		if (_str == end) {
+			//alifErr_setString(_alifExcValueError_,
+			//	"Trailing \\ in string");
+			goto failed;
+		}
+
+		switch (*_str++) {
+			/* XXX This assumes ASCII! */
+		case '\n': break;
+		case '\\': *p_++ = '\\'; break;
+		case '\'': *p_++ = '\''; break;
+		case '\"': *p_++ = '\"'; break;
+		case 'b': *p_++ = '\b'; break;
+		case 'f': *p_++ = '\014'; break; /* FF */
+		case 't': *p_++ = '\t'; break;
+		case 'n': *p_++ = '\n'; break;
+		case 'r': *p_++ = '\r'; break;
+		case 'v': *p_++ = '\013'; break; /* VT */
+		case 'a': *p_++ = '\007'; break; /* BEL, not classic C */
+		case '0': case '1': case '2': case '3':
+		case '4': case '5': case '6': case '7':
+			c_ = _str[-1] - '0';
+			if (_str < end and '0' <= *_str and *_str <= '7') {
+				c_ = (c_ << 3) + *_str++ - '0';
+				if (_str < end and '0' <= *_str and *_str <= '7')
+					c_ = (c_ << 3) + *_str++ - '0';
+			}
+			if (c_ > 0377) {
+				if (*_firstInvalidEscape == NULL) {
+					*_firstInvalidEscape = _str - 3; /* Back up 3 chars, since we've
+													already incremented s. */
+				}
+			}
+			*p_++ = c_;
+			break;
+		case 'x':
+			if (_str + 1 < end) {
+				int digit1, digit2;
+				digit1 = _alifLongDigitValue_[ALIF_CHARMASK(_str[0])];
+				digit2 = _alifLongDigitValue_[ALIF_CHARMASK(_str[1])];
+				if (digit1 < 16 and digit2 < 16) {
+					*p_++ = (unsigned char)((digit1 << 4) + digit2);
+					_str += 2;
+					break;
+				}
+			}
+			/* invalid hexadecimal digits */
+
+			if (!_errors or strcmp(_errors, "strict") == 0) {
+				//alifErr_format(_alifExcValueError_,
+				//	"invalid \\x escape at position %zd",
+				//	_str - 2 - (end - _len));
+				goto failed;
+			}
+			if (strcmp(_errors, "replace") == 0) {
+				*p_++ = '?';
+			}
+			else if (strcmp(_errors, "ignore") == 0)
+				/* do nothing */;
+			else {
+				//alifErr_format(_alifExcValueError_,
+				//	"decoding error; unknown "
+				//	"error handling code: %.400s",
+				//	_errors);
+				goto failed;
+			}
+			/* skip \x */
+			if (_str < end and ALIF_ISXDIGIT(_str[0]))
+				_str++; /* and a hexdigit */
+			break;
+
+		default:
+			if (*_firstInvalidEscape == nullptr) {
+				*_firstInvalidEscape = _str - 1; /* Back up one char, since we've
+												already incremented s. */
+			}
+			*p_++ = '\\';
+			_str--;
+		}
+	}
+
+	return alifBytesWriter_finish(&writer, p_);
+
+failed:
+	alifBytesWriter_dealloc(&writer);
+	return nullptr;
+}
+
+
+
+
+
 
 
 
@@ -316,4 +444,45 @@ void* alifBytesWriter_alloc(AlifBytesWriter* writer, AlifSizeT size) { // 3552
 	writer->useSmallBuffer = 1;
 	writer->allocated = sizeof(writer->smallBuffer);
 	return alifBytesWriter_prepare(writer, writer->smallBuffer, size);
+}
+
+
+
+AlifObject* alifBytesWriter_finish(AlifBytesWriter* _writer, void* _str) { // 3582
+	AlifSizeT size{};
+	AlifObject* result{};
+
+	size = alifBytesWriter_getSize(_writer, (char*)_str);
+	if (size == 0 and !_writer->useByteArray) {
+		ALIF_CLEAR(_writer->buffer);
+		/* Get the empty byte string singleton */
+		result = alifBytes_fromStringAndSize(nullptr, 0);
+	}
+	else if (_writer->useSmallBuffer) {
+		if (_writer->useByteArray) {
+			result = alifByteArray_fromStringAndSize(_writer->smallBuffer, size);
+		}
+		else {
+			result = alifBytes_fromStringAndSize(_writer->smallBuffer, size);
+		}
+	}
+	else {
+		result = _writer->buffer;
+		_writer->buffer = nullptr;
+
+		if (size != _writer->allocated) {
+			if (_writer->useByteArray) {
+				if (alifByteArray_resize(result, size)) {
+					ALIF_DECREF(result);
+					return nullptr;
+				}
+			}
+			else {
+				if (alifBytes_resize(&result, size)) {
+					return nullptr;
+				}
+			}
+		}
+	}
+	return result;
 }

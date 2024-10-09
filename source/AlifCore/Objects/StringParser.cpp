@@ -8,6 +8,121 @@
 #include "StringParser.h"
 
 
+
+
+
+static AlifObject* decode_utf8(const char** _sPtr, const char* _end) { // 70
+	const char* s_{};
+	const char* t_{};
+	t_ = s_ = *_sPtr;
+	while (s_ < _end and (*s_ & 0x80)) {
+		s_++;
+	}
+	*_sPtr = s_;
+	return alifUStr_decodeUTF8(t_, s_ - t_, nullptr);
+}
+
+
+
+static AlifObject* decode_uStrWithEscapes(AlifParser* _parser,
+	const char* _str, AlifUSizeT _len, AlifPToken* _t) { // 83
+	AlifObject* v_{};
+	AlifObject* u_{};
+	char* buf{};
+	char* p_{};
+	const char* end{};
+
+	/* check for integer overflow */
+	if (_len > SIZE_MAX / 6) {
+		return nullptr;
+	}
+	/* "ä" (2 bytes) may become "\U000000E4" (10 bytes), or 1:5
+	   "\ä" (3 bytes) may become "\u005c\U000000E4" (16 bytes), or ~1:6 */
+	u_ = alifBytes_fromStringAndSize((char*)nullptr, _len * 6);
+	if (u_ == nullptr) {
+		return nullptr;
+	}
+	p_ = buf = alifBytes_asString(u_);
+	if (p_ == nullptr) {
+		return nullptr;
+	}
+	end = _str + _len;
+	while (_str < end) {
+		if (*_str == '\\') {
+			*p_++ = *_str++;
+			if (_str >= end or *_str & 0x80) {
+				strcpy(p_, "u005c");
+				p_ += 5;
+				if (_str >= end) {
+					break;
+				}
+			}
+		}
+		if (*_str & 0x80) {
+			AlifObject* w_{};
+			AlifIntT kind{};
+			const void* data{};
+			AlifSizeT wLen{};
+			AlifSizeT i_{};
+			w_ = decode_utf8(&_str, end);
+			if (w_ == nullptr) {
+				ALIF_DECREF(u_);
+				return nullptr;
+			}
+			kind = ALIFUSTR_KIND(w_);
+			data = ALIFUSTR_DATA(w_);
+			wLen = ALIFUSTR_GET_LENGTH(w_);
+			for (i_ = 0; i_ < wLen; i_++) {
+				AlifUCS4 chr = ALIFUSTR_READ(kind, data, i_);
+				sprintf(p_, "\\U%08x", chr);
+				p_ += 10;
+			}
+			/* Should be impossible to overflow */
+			ALIF_DECREF(w_);
+		}
+		else {
+			*p_++ = *_str++;
+		}
+	}
+	_len = p_ - buf;
+	_str = buf;
+
+	const char* firstInvalidEscape;
+	v_ = alifUStr_decodeUStrEscapeInternal(_str, _len, nullptr, nullptr, &firstInvalidEscape);
+	// HACK: later we can simply pass the line no, since we don't preserve the tokens
+	// when we are decoding the string but we preserve the line numbers.
+	//if (v_ != nullptr && first_invalid_escape != nullptr and _t != nullptr) {
+	//	if (warn_invalidEscapeSequence(_parser, first_invalid_escape, _t) < 0) {
+	//		/* We have not decref u before because first_invalid_escape points
+	//		   inside u. */
+	//		ALIF_XDECREF(u_);
+	//		ALIF_DECREF(v_);
+	//		return nullptr;
+	//	}
+	//}
+	ALIF_XDECREF(u_);
+	return v_;
+}
+
+static AlifObject* decode_bytesWithEscapes(AlifParser* _p, const char* _str,
+	AlifSizeT _len, AlifPToken* _t) { // 166
+	const char* first_invalid_escape;
+	AlifObject* result = _alifBytes_decodeEscape(_str, _len, nullptr, &first_invalid_escape);
+	if (result == nullptr) {
+		return nullptr;
+	}
+
+	if (first_invalid_escape != nullptr) {
+		//if (warn_invalidEscapeSequence(_p, first_invalid_escape, _t) < 0) {
+		//	ALIF_DECREF(result);
+		//	return nullptr;
+		//}
+	}
+	return result;
+}
+
+
+
 AlifObject* alifParserEngine_decodeString(AlifParser* _p, AlifIntT _raw,
 	const char* _s, AlifUSizeT _len, AlifPToken* _t) { // 184
 	if (_raw) {

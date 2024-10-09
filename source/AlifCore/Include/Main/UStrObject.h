@@ -42,7 +42,14 @@ wchar_t* alifUStr_asWideCharString(AlifObject*, AlifSizeT*); // 291
 
 #endif // 296
 
+
+/* --- UTF-8 Codecs ------------------------------------------------------- */
+
+AlifObject* alifUStr_decodeUTF8(const char*, AlifSizeT, const char*); // 429
+
 AlifObject* alifUStr_decodeUTF8Stateful(const char*, AlifSizeT, const char*, AlifSizeT*); // 435
+
+/* --- UTF-32 Codecs ------------------------------------------------------ */
 
 
 
