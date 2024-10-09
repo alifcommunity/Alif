@@ -351,7 +351,7 @@ static AlifObject* parseNumber_raw(const char* _s) { // 611
 	//	return alifComplex_fromCComplex(compl);
 	//}
 	dx = alifOS_stringToDouble(_s, nullptr, nullptr);
-	if (dx == -1.0 and alifErr_occurred()) {
+	if (dx == -1.0 /*and alifErr_occurred()*/) {
 		return nullptr;
 	}
 	return alifFloat_fromDouble(dx);

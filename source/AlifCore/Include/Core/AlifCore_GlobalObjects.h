@@ -39,7 +39,7 @@ class AlifStaticObjects { // 37
 public:
 	class {
 	public:
-		//AlifLongObject smallInts[ALIF_NSMALLNEGINTS + ALIF_NSMALLPOSINTS];
+		AlifLongObject smallInts[ALIF_NSMALLNEGINTS + ALIF_NSMALLPOSINTS]{};
 
 		AlifBytesObject bytesEmpty{};
 		class {

@@ -34,7 +34,7 @@
 #include "BoolObject.h"
 //#include "FloatObject.h"
 #include "UStrObject.h"
-//#include "AlifErrors.h"
+#include "AlifErrors.h"
 #include "LongIntRepr.h"
 #include "ListObject.h"
 #include "TupleObject.h"
@@ -53,6 +53,7 @@
 #include "AlifTime.h"
 #include "IterObject.h"
 #include "AlifState.h"
+#include "GenericAliasObject.h"
 #include "Codecs.h"
 #include "AlifThread.h"
 #include "ModSupport.h"
@@ -66,5 +67,4 @@
 #include "AlifRun.h"
 #include "AlifLifeCycle.h"
 #include "AlifEval.h"
-//#include "GenericAliasObject.h"
 

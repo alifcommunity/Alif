@@ -44,6 +44,8 @@ public:
 };
 
 
+AlifObject* _alifLong_copy(AlifLongObject*); // 106
+
 
  // 117
 #define ALIFLONG_SIGN_MASK 3

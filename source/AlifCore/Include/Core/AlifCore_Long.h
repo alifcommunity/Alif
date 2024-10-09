@@ -5,7 +5,7 @@
 
 
 
-#define ALIFLONG_SMALL_INTS ALIF_SINGLETON(smallInts)
+#define ALIFLONG_SMALL_INTS ALIF_SINGLETON(smallInts) // 58
 
 
 extern unsigned char _alifLongDigitValue_[256]; // 118

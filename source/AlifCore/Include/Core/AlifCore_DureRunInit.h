@@ -136,6 +136,7 @@
 	INIT_ID(__loader__), \
     INIT_ID(__name__), \
     INIT_ID(__new__), \
+    INIT_ID(__origClass__), \
 	INIT_ID(__package__), \
 	INIT_ID(__spec__), \
 	INIT_ID(hasLocation), \

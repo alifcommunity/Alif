@@ -208,7 +208,7 @@ extern AlifTypeObject _alifTypeType_; // 405
 extern AlifTypeObject _alifBaseObjectType_; // 406 /* built-in 'object' */
 
 AlifIntT alifType_ready(AlifTypeObject*); // 411
-
+AlifObject* alifType_genericAlloc(AlifTypeObject*, AlifSizeT); // 412
 void alifType_modified(AlifTypeObject*); // 416
 
 AlifObject* alifObject_repr(AlifObject*); // 419
@@ -361,6 +361,7 @@ public:
 	AlifSizeT basicSize{}, itemSize{};
 
 	Destructor dealloc{};
+	AlifSizeT vectorCallOffset{};
 	GetAttrFunc getAttr{};
 	SetAttrFunc setAttr{};
 
@@ -380,6 +381,8 @@ public:
 	TraverseProc traverse{};
 
 	RichCmpFunc richCompare{};
+
+	AlifSizeT weakListOffset{};
 
 	GetIterFunc iter{};
 	IterNextFunc iterNext{};

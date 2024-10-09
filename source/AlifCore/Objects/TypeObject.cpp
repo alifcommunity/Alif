@@ -461,6 +461,21 @@ AlifObject* alifType_allocNoTrack(AlifTypeObject* _type, AlifSizeT _nitems) { //
 }
 
 
+
+AlifObject* alifType_genericAlloc(AlifTypeObject* _type, AlifSizeT _nitems) { // 2260
+	AlifObject* obj = alifType_allocNoTrack(_type, _nitems);
+	if (obj == nullptr) {
+		return nullptr;
+	}
+
+	if (ALIFTYPE_IS_GC(_type)) {
+		ALIFOBJECT_GC_TRACK(obj);
+	}
+	return obj;
+}
+
+
+
 static AlifTypeObject* solid_base(AlifTypeObject*); // 2632
 
 

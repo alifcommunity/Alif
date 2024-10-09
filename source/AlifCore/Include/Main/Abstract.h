@@ -22,6 +22,8 @@ AlifObject* alifIter_next(AlifObject* ); // 417
 
 AlifObject* alifNumber_index(AlifObject*); // 545
 
+AlifSizeT alifNumber_asSizeT(AlifObject*, AlifObject*); // 553
+
 AlifIntT alifSequence_check(AlifObject*); // 664
 
 AlifObject* alifSequence_getItem(AlifObject*, AlifSizeT); // 689
@@ -55,7 +57,7 @@ static inline AlifSizeT _alifVectorCall_nArgs(AlifUSizeT _n) { // 32
 #define ALIFVECTORCALL_NARGS(_n) _alifVectorCall_nArgs(_n)
 
 
-
+VectorCallFunc alifVectorCall_function(AlifObject*); // 39
 
 
 AlifSizeT alifObject_lengthHint(AlifObject*, AlifSizeT); // 80

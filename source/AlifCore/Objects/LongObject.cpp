@@ -15,7 +15,7 @@ static AlifObject* get_smallInt(sdigit _iVal) { // 50
 
 
  // 446
-#define ALIF_ABS_LONG_MIN         (0-(unsigned long)LONG_MIN)
+#define ALIF_ABS_LONG_MIN       (0-(unsigned long)LONG_MIN)
 #define ALIF_ABS_SIZET_MIN      (0-(AlifUSizeT)ALIF_SIZET_MIN)
 
 
@@ -27,7 +27,7 @@ AlifLongObject* _alifLong_fromDigits(AlifIntT _negative, AlifSizeT _digitCount, 
 	AlifLongObject* result = _alifLong_new(_digitCount);
 	if (result == nullptr) {
 		//alifErr_noMemory();
-		return NULL;
+		return nullptr;
 	}
 	_alifLong_setSignAndDigitCount(result, _negative ? -1 : 1, _digitCount);
 	memcpy(result->longValue.digit, _digits, _digitCount * sizeof(digit));

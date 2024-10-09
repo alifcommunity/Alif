@@ -26,6 +26,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_BiaseRefCount.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_BitUtils.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_BytesObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Call.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_CondVar.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_CriticalSection.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Dict.h" />
@@ -78,6 +79,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifBuffer.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifConfig.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifCppType.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifErrors.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifEval.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifHash.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifLexer.h" />
@@ -110,6 +112,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\ErrorCode.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\FileUtils.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Codecs.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\GenericAliasObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Helpers.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Import.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\InitConfig.h" />
@@ -176,6 +179,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\BuiltinsModule.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ByteArrayObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\BytesObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\Call.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Codecs.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ConfigMinimal.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\DescrObject.cpp" />
@@ -185,6 +189,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\FileTokenizer.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\FileUtils.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GCFreeThreading.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\GenericAliasObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GetOption.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GetVersion.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\HashTable.cpp" />
