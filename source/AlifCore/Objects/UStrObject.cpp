@@ -2164,6 +2164,29 @@ static inline AlifIntT alifUStrWriter_writeCharInline(AlifUStrWriter* _writer, A
 }
 
 
+AlifIntT alifUStrWriter_writeStr(AlifUStrWriter* _writer, AlifObject* _str) { // 13576
+	AlifUCS4 maxChar{};
+	AlifSizeT len{};
+
+	len = ALIFUSTR_GET_LENGTH(_str);
+	if (len == 0) return 0;
+	maxChar = ALIFUSTR_MAX_CHAR_VALUE(_str);
+	if (maxChar > _writer->maxChar or len > _writer->size - _writer->pos) {
+		if (_writer->buffer == nullptr and !_writer->overAllocate) {
+			_writer->readOnly = 1;
+			_writer->buffer = ALIF_NEWREF(_str);
+			alifUStrWriter_update(_writer);
+			_writer->pos += len;
+			return 0;
+		}
+		if (alifUStrWriter_prepareInternal(_writer, len, maxChar) == -1)
+			return -1;
+	}
+	alifUStr_fastCopyCharacters(_writer->buffer, _writer->pos, _str, 0, len);
+	_writer->pos += len;
+	return 0;
+}
+
 
 
 AlifIntT alifUStrWriter_writeASCIIString(AlifUStrWriter* _writer,

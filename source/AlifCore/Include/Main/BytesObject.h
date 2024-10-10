@@ -15,6 +15,12 @@ AlifObject* alifBytes_fromStringAndSize(const char*, AlifSizeT); // 31
 AlifObject* alifBytes_fromString(const char*);
 
 
+char* alifBytes_asString(AlifObject*); // 39
+
+void alifBytes_concat(AlifObject**, AlifObject*); // 41
+
+AlifIntT alifBytes_asStringAndSize(AlifObject*, char**, AlifSizeT*); // 51
+
 /* ------------------------------------------------------------------------------------------- */
 
 
@@ -38,10 +44,10 @@ AlifIntT alifBytes_resize(AlifObject**, AlifSizeT); // 17
 #define ALIFBYTES_CAST(op) \
     (ALIF_CAST(AlifBytesObject*, op))
 
-static inline char* alifBytes_asString(AlifObject* _op) { // 23
+static inline char* _alifBytes_asString(AlifObject* _op) { // 23
 	return ALIFBYTES_CAST(_op)->val;
 }
-#define ALIFBYTES_AS_STRING(op) alifBytes_asString(ALIFOBJECT_CAST(op))
+#define ALIFBYTES_AS_STRING(op) _alifBytes_asString(ALIFOBJECT_CAST(op))
 
 
 static inline AlifSizeT alifBytes_getSize(AlifObject* op) { // 29

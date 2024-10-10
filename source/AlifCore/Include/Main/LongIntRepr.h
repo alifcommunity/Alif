@@ -44,6 +44,8 @@ public:
 };
 
 
+AlifLongObject* alifLong_new(AlifSizeT); // 103
+
 AlifObject* _alifLong_copy(AlifLongObject*); // 106
 
 

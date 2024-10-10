@@ -1,6 +1,7 @@
 #include "alif.h"
 
 #include "AlifCore_Long.h"
+#include "AlifCore_Object.h"
 
 
 
@@ -13,18 +14,45 @@ static AlifObject* get_smallInt(sdigit _iVal) { // 50
 	return (AlifObject*)&ALIFLONG_SMALL_INTS[ALIF_NSMALLNEGINTS + _iVal];
 }
 
+ // 136
+#define MAX_LONG_DIGITS \
+    ((ALIF_SIZET_MAX - offsetof(AlifLongObject, longValue.digit))/sizeof(digit))
 
- // 446
-#define ALIF_ABS_LONG_MIN       (0-(unsigned long)LONG_MIN)
-#define ALIF_ABS_SIZET_MIN      (0-(AlifUSizeT)ALIF_SIZET_MIN)
+AlifLongObject* alifLong_new(AlifSizeT _size) { // 139
+	AlifLongObject* result{};
+	if (_size > (AlifSizeT)MAX_LONG_DIGITS) {
+		//alifErr_setString(_alifExcOverflowError_,
+		//	"too many digits in integer");
+		return nullptr;
+	}
+	/* Fast operations for single digit integers (including zero)
+	 * assume that there is always at least one digit present. */
+	AlifSizeT ndigits = _size ? _size : 1;
+	/* Number of bytes needed is: offsetof(AlifLongObject, digit) +
+	   sizeof(digit)*size.  Previous incarnations of this code used
+	   sizeof() instead of the offsetof, but this risks being
+	   incorrect in the presence of padding between the header
+	   and the digits. */
+	result = (AlifLongObject*)alifMem_objAlloc(offsetof(AlifLongObject, longValue.digit) +
+		ndigits * sizeof(digit));
+	if (!result) {
+		//alifErr_noMemory();
+		return nullptr;
+	}
+	_alifLong_setSignAndDigitCount(result, _size != 0, _size);
+	_alifObject_init((AlifObject*)result, &_alifLongType_);
+	/* The digit has to be initialized explicitly to avoid
+	 * use-of-uninitialized-value. */
+	result->longValue.digit[0] = 0;
+	return result;
+}
 
-
-
-AlifLongObject* _alifLong_fromDigits(AlifIntT _negative, AlifSizeT _digitCount, digit* _digits) { // 172
+AlifLongObject* _alifLong_fromDigits(AlifIntT _negative,
+	AlifSizeT _digitCount, digit* _digits) { // 172
 	if (_digitCount == 0) {
 		return (AlifLongObject*)_alifLong_getZero();
 	}
-	AlifLongObject* result = _alifLong_new(_digitCount);
+	AlifLongObject* result = alifLong_new(_digitCount);
 	if (result == nullptr) {
 		//alifErr_noMemory();
 		return nullptr;
@@ -44,6 +72,14 @@ AlifObject* _alifLong_copy(AlifLongObject* _src) { // 189
 	AlifSizeT size = alifLong_digitCount(_src);
 	return (AlifObject*)_alifLong_fromDigits(_alifLong_isNegative(_src), size, _src->longValue.digit);
 }
+
+
+
+
+
+// 446
+#define ALIF_ABS_LONG_MIN       (0-(unsigned long)LONG_MIN)
+#define ALIF_ABS_SIZET_MIN      (0-(AlifUSizeT)ALIF_SIZET_MIN)
 
 
 

@@ -8,6 +8,12 @@
 #define ALIFLONG_SMALL_INTS ALIF_SINGLETON(smallInts) // 58
 
 
+static inline AlifObject* _alifLong_getZero() { // 68
+	return (AlifObject*)&ALIFLONG_SMALL_INTS[ALIF_NSMALLNEGINTS];
+}
+
+
+
 extern unsigned char _alifLongDigitValue_[256]; // 118
 
 
@@ -38,6 +44,10 @@ static inline AlifIntT alifLong_nonCompactSign(const AlifLongObject* _op) { // 2
 
 #define TAG_FROM_SIGN_AND_SIZE(_sign, _size) ((1 - (_sign)) | ((_size) << NON_SIZE_BITS)) // 262
 
+static inline void _alifLong_setSignAndDigitCount(AlifLongObject* _op,
+	AlifIntT _sign, AlifSizeT _size) { // 264
+	_op->longValue.tag = TAG_FROM_SIGN_AND_SIZE(_sign, (AlifUSizeT)_size);
+}
 
 #define ALIFLONG_FALSE_TAG TAG_FROM_SIGN_AND_SIZE(0, 0) // 300
 #define ALIFLONG_TRUE_TAG TAG_FROM_SIGN_AND_SIZE(1, 1) // 301

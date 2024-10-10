@@ -242,6 +242,85 @@ failed:
 
 
 
+char* alifBytes_asString(AlifObject* _op) { // 1221
+	if (!ALIFBYTES_CHECK(_op)) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"expected bytes, %.200s found", ALIF_TYPE(_op)->name);
+		return nullptr;
+	}
+	return ((AlifBytesObject*)_op)->val;
+}
+
+
+AlifIntT alifBytes_asStringAndSize(AlifObject* _obj,
+	char** _str, AlifSizeT* _len) { // 1232
+	if (_str == nullptr) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+
+	if (!ALIFBYTES_CHECK(_obj)) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"expected bytes, %.200s found", ALIF_TYPE(_obj)->name);
+		return -1;
+	}
+
+	*_str = ALIFBYTES_AS_STRING(_obj);
+	if (_len != nullptr)
+		*_len = ALIFBYTES_GET_SIZE(_obj);
+	else if (strlen(*_str) != (AlifUSizeT)ALIFBYTES_GET_SIZE(_obj)) {
+		//alifErr_setString(_alifExcValueError_,
+		//	"embedded null byte");
+		return -1;
+	}
+	return 0;
+}
+
+
+
+static AlifObject* bytes_concat(AlifObject* _a, AlifObject* _b) { // 1414
+	AlifBuffer va{}, vb{};
+	AlifObject* result = nullptr;
+
+	va.len = -1;
+	vb.len = -1;
+	if (alifObject_getBuffer(_a, &va, ALIFBUF_SIMPLE) != 0 or
+		alifObject_getBuffer(_b, &vb, ALIFBUF_SIMPLE) != 0) {
+		//alifErr_format(_alifExcTypeError_, "can't concat %.100s to %.100s",
+		//	ALIF_TYPE(_b)->name, ALIF_TYPE(_a)->name);
+		goto done;
+	}
+
+	/* Optimize end cases */
+	if (va.len == 0 and ALIFBYTES_CHECKEXACT(_b)) {
+		result = ALIF_NEWREF(_b);
+		goto done;
+	}
+	if (vb.len == 0 and ALIFBYTES_CHECKEXACT(_a)) {
+		result = ALIF_NEWREF(_a);
+		goto done;
+	}
+
+	if (va.len > ALIF_SIZET_MAX - vb.len) {
+		//alifErr_noMemory();
+		goto done;
+	}
+
+	result = alifBytes_fromStringAndSize(nullptr, va.len + vb.len);
+	if (result != nullptr) {
+		memcpy(ALIFBYTES_AS_STRING(result), va.buf, va.len);
+		memcpy(ALIFBYTES_AS_STRING(result) + va.len, vb.buf, vb.len);
+	}
+
+done:
+	if (va.len != -1)
+		alifBuffer_release(&va);
+	if (vb.len != -1)
+		alifBuffer_release(&vb);
+	return result;
+}
+
+
 
 
 
@@ -260,6 +339,50 @@ AlifTypeObject _alifBytesType_ = { // 3028
 	.free = alifMem_objFree,
 };
 
+void alifBytes_concat(AlifObject** _pv, AlifObject* _w) { // 3072
+	if (*_pv == nullptr) return;
+	if (_w == nullptr) {
+		ALIF_CLEAR(*_pv);
+		return;
+	}
+
+	if (ALIF_REFCNT(*_pv) == 1 and ALIFBYTES_CHECKEXACT(*_pv)) {
+		/* Only one reference, so we can resize in place */
+		AlifSizeT oldsize{};
+		AlifBuffer wb{};
+
+		if (alifObject_getBuffer(_w, &wb, ALIFBUF_SIMPLE) != 0) {
+			//alifErr_format(_alifExcTypeError_, "can't concat %.100s to %.100s",
+			//	ALIF_TYPE(_w)->name, ALIF_TYPE(*_pv)->name);
+			ALIF_CLEAR(*_pv);
+			return;
+		}
+
+		oldsize = ALIFBYTES_GET_SIZE(*_pv);
+		if (oldsize > ALIF_SIZET_MAX - wb.len) {
+			//alifErr_noMemory();
+			goto error;
+		}
+		if (alifBytes_resize(_pv, oldsize + wb.len) < 0)
+			goto error;
+
+		memcpy(ALIFBYTES_AS_STRING(*_pv) + oldsize, wb.buf, wb.len);
+		alifBuffer_release(&wb);
+		return;
+
+	error:
+		alifBuffer_release(&wb);
+		ALIF_CLEAR(*_pv);
+		return;
+	}
+
+	else {
+		/* Multiple references, need to create new object */
+		AlifObject* v{};
+		v = bytes_concat(*_pv, _w);
+		ALIF_SETREF(*_pv, v);
+	}
+}
 
 
 AlifIntT alifBytes_resize(AlifObject** _pv, AlifSizeT _newSize) { // 3141

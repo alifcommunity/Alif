@@ -23,3 +23,8 @@ typedef void (*ReleaseBufferProc)(AlifObject*, AlifBuffer*);
 AlifIntT alifObject_getBuffer(AlifObject* , AlifBuffer* , AlifIntT); // 46
 
 void alifBuffer_release(AlifBuffer*); // 102
+
+
+ // 108
+#define ALIFBUF_SIMPLE 0
+#define ALIFBUF_WRITABLE 0x0001
