@@ -14,5 +14,17 @@
 #define ALIFLONG_CHECKEXACT(_op) ALIF_IS_TYPE((_op), &_alifLongType_)
 
 
+AlifObject* alifLong_fromLong(long); // 16
+
 
 AlifSizeT alifLong_asSizeT(AlifObject*); // 24
+
+
+
+
+AlifObject* alifLong_fromString(const char*, char**, AlifIntT); // 97
+
+
+
+
+/* -------------------------------------------------------------------------------------------------------------------------------------- */

@@ -75,6 +75,59 @@ AlifObject* _alifLong_copy(AlifLongObject* _src) { // 189
 
 
 
+static AlifObject* _alifLong_fromMedium(sdigit _x) { // 203
+	/* We could use a freelist here */
+	AlifLongObject* v_ = (AlifLongObject*)alifMem_objAlloc(sizeof(AlifLongObject));
+	if (v_ == nullptr) {
+		//alifErr_noMemory();
+		return nullptr;
+	}
+	digit abs_x = _x < 0 ? -_x : _x;
+	_alifLong_setSignAndDigitCount(v_, _x < 0 ? -1 : 1, 1);
+	_alifObject_init((AlifObject*)v_, &_alifLongType_);
+	v_->longValue.digit[0] = abs_x;
+	return (AlifObject*)v_;
+}
+
+
+AlifObject* alifLong_fromLong(long _iVal) { // 293
+	AlifLongObject* v_{};
+	unsigned long absIVal{}, t_{};
+	AlifIntT ndigits{};
+
+	/* Handle small and medium cases. */
+	if (IS_SMALL_INT(_iVal)) {
+		return get_smallInt((sdigit)_iVal);
+	}
+	if (-(long)ALIFLONG_MASK <= _iVal && _iVal <= (long)ALIFLONG_MASK) {
+		return _alifLong_fromMedium((sdigit)_iVal);
+	}
+
+	/* Count digits (at least two - smaller cases were handled above). */
+	absIVal = _iVal < 0 ? 0U - (unsigned long)_iVal : (unsigned long)_iVal;
+	/* Do shift in two steps to avoid possible undefined behavior. */
+	t_ = absIVal >> ALIFLONG_SHIFT >> ALIFLONG_SHIFT;
+	ndigits = 2;
+	while (t_) {
+		++ndigits;
+		t_ >>= ALIFLONG_SHIFT;
+	}
+
+	/* Construct output value. */
+	v_ = alifLong_new(ndigits);
+	if (v_ != nullptr) {
+		digit* p = v_->longValue.digit;
+		_alifLong_setSignAndDigitCount(v_, _iVal < 0 ? -1 : 1, ndigits);
+		t_ = absIVal;
+		while (t_) {
+			*p++ = (digit)(t_ & ALIFLONG_MASK);
+			t_ >>= ALIFLONG_SHIFT;
+		}
+	}
+	return (AlifObject*)v_;
+}
+
+
 
 
 // 446
@@ -134,7 +187,7 @@ overflow:
 
 
 
-unsigned char _alifLongDigitValue_[256] = {
+unsigned char _alifLongDigitValue_[256] = { // 2527
 	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
 	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
 	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
@@ -158,7 +211,109 @@ unsigned char _alifLongDigitValue_[256] = {
 
 
 
+AlifObject* alifLong_fromString(const char* _str, char** _pend, AlifIntT _base) { // 2995
+	AlifIntT sign = 1, errorIfNonZero = 0;
+	const char* orig_str = _str;
+	AlifLongObject* z_ = nullptr;
+	AlifObject* strObj{};
+	AlifSizeT slen{};
 
+	if ((_base != 0 and _base < 2) or _base > 36) {
+		//alifErr_setString(_alifExcValueError_,
+		//	"int() arg 2 must be >= 2 and <= 36");
+		return nullptr;
+	}
+	while (*_str != '\0' and ALIF_ISSPACE(*_str)) {
+		++_str;
+	}
+	if (*_str == '+') {
+		++_str;
+	}
+	else if (*_str == '-') {
+		++_str;
+		sign = -1;
+	}
+	if (_base == 0) {
+		if (_str[0] != '0') {
+			_base = 10;
+		}
+		else if (_str[1] == 'x' or _str[1] == 'X') {
+			_base = 16;
+		}
+		else if (_str[1] == 'o' or _str[1] == 'O') {
+			_base = 8;
+		}
+		else if (_str[1] == 'b' or _str[1] == 'B') {
+			_base = 2;
+		}
+		else {
+			/* "old" (C-style) octal literal, now invalid.
+			   it might still be zero though */
+			errorIfNonZero = 1;
+			_base = 10;
+		}
+	}
+	if (_str[0] == '0' and
+		((_base == 16 and (_str[1] == 'x' or _str[1] == 'X')) or
+			(_base == 8 and (_str[1] == 'o' or _str[1] == 'O')) or
+			(_base == 2 and (_str[1] == 'b' or _str[1] == 'B')))) {
+		_str += 2;
+		/* One underscore allowed here. */
+		if (*_str == '_') {
+			++_str;
+		}
+	}
+
+	/* long_fromStringBase is the main workhorse here. */
+	int ret = long_fromStringBase(&_str, _base, &z_);
+	if (ret == -1) {
+		/* Syntax error. */
+		goto onError;
+	}
+	if (z_ == nullptr) {
+		/* Error. exception already set. */
+		return nullptr;
+	}
+
+	if (errorIfNonZero) {
+		/* reset the base to 0, else the exception message
+		   doesn't make too much sense */
+		_base = 0;
+		if (!_alifLong_isZero(z_)) {
+			goto onError;
+		}
+		/* there might still be other problems, therefore base
+		   remains zero here for the same reason */
+	}
+
+	/* Set sign and normalize */
+	if (sign < 0) {
+		_alifLong_flipSign(z_);
+	}
+	long_normalize(z_);
+	z_ = maybe_smallLong(z_);
+
+	if (_pend != nullptr) {
+		*_pend = (char*)_str;
+	}
+	return (AlifObject*)z_;
+
+onError:
+	if (_pend != nullptr) {
+		*_pend = (char*)_str;
+	}
+	ALIF_XDECREF(z_);
+	slen = strlen(orig_str) < 200 ? strlen(orig_str) : 200;
+	strObj = alifUStr_fromStringAndSize(orig_str, slen);
+	if (strObj == nullptr) {
+		return nullptr;
+	}
+	//alifErr_format(_alifExcValueError_,
+	//	"invalid literal for int() with base %d: %.200R",
+	//	_base, strObj);
+	ALIF_DECREF(strObj);
+	return nullptr;
+}
 
 
 AlifTypeObject _alifLongType_ = { // 6597

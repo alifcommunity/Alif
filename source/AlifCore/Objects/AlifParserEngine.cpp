@@ -328,7 +328,7 @@ static AlifObject* parseNumber_raw(const char* _s) { // 611
 	imFlag = *end == 'j' or *end == 'J';
 	if (_s[0] == '0') {
 		x_ = (long)alifOS_strToUL(_s, (char**)&end, 0);
-		if (x < 0 and errno == 0) {
+		if (x_ < 0 and errno == 0) {
 			return alifLong_fromString(_s, (char**)0, 0);
 		}
 	}
