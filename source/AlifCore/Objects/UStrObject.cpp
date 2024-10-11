@@ -768,6 +768,24 @@ AlifObject* alifUStr_fromWideChar(const wchar_t* _u, AlifSizeT _size) { // 1956
 }
 
 
+AlifObject* alifUStr_fromStringAndSize(const char* _u, AlifSizeT _size) { // 2065
+	if (_size < 0) {
+		//alifErr_setString(_alifExcSystemError_,
+		//	"Negative size passed to alifUStr_fromStringAndSize");
+		return nullptr;
+	}
+	if (_u != nullptr) {
+		return alifUStr_decodeUTF8Stateful(_u, _size, nullptr, nullptr);
+	}
+	if (_size > 0) {
+		//alifErr_setString(_alifExcSystemError_,
+		//	"nullptr string with positive size with nullptr passed to alifUStr_fromStringAndSize");
+		return nullptr;
+	}
+	return unicode_getEmpty();
+}
+
+
 AlifObject* alifUStr_fromString(const char* u) { // 2084
 	AlifUSizeT size = strlen(u);
 	if (size > ALIF_SIZET_MAX) {

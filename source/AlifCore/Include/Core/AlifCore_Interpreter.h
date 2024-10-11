@@ -13,6 +13,15 @@
 #include "AlifCore_TypeObject.h"
 
 
+
+
+
+class AlifLongState { // 44
+public:
+	AlifIntT maxStrDigits{};
+};
+
+
 class StopTheWorldState { // 50
 public:
 	AlifMutex mutex{};
@@ -91,6 +100,7 @@ public:
 
 	AlifInterpCachedObjects cachedObjects{};
 	//AlifObjectState objectState{};
+	AlifLongState longState{};
 
 	AlifDictState dictState{};
 	AlifMemInterpFreeQueue memFreeQueue{};

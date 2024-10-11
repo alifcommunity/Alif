@@ -24,7 +24,7 @@ AlifSizeT alifLong_asSizeT(AlifObject*); // 24
 
 AlifObject* alifLong_fromString(const char*, char**, AlifIntT); // 97
 
-
-
+unsigned long alifOS_strToULong(const char*, char**, AlifIntT); // 102
+long alifOS_strToLong(const char*, char**, AlifIntT); // 103
 
 /* -------------------------------------------------------------------------------------------------------------------------------------- */

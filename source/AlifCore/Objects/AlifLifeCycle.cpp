@@ -73,6 +73,35 @@ char* alif_setLocale(AlifIntT category) {  // 332
 }
 
 
+static AlifIntT interpreter_updateConfig(AlifThread* tstate, AlifIntT _onlyUpdatePathConfig) { // 391
+	const AlifConfig* config = &tstate->interpreter->config;
+
+	if (!_onlyUpdatePathConfig) {
+		AlifIntT status = alifConfig_write(config, tstate->interpreter->dureRun);
+		if (status < 1) {
+			//_alifErr_setFromAlifStatus(status);
+			return -1;
+		}
+	}
+
+	//if (alif_isMainInterpreter(tstate->interpreter)) {
+	//	AlifIntT status = _alifPathConfig_updateGlobal(config);
+	//	if (status < 1) {
+	//		//_alifErr_setFromalifStatus(status);
+	//		return -1;
+	//	}
+	//}
+
+	tstate->interpreter->longState.maxStrDigits = config->intMaxStrDigits;
+
+	// Update the sys module for the new configuration
+	//if (_alifSys_updateConfig(tstate) < 0) {
+	//	return -1;
+	//}
+	return 0;
+}
+
+
 static AlifIntT alifCore_initDureRun(AlifDureRun* _dureRun, const AlifConfig* _config) { // 507
 
 	if (_dureRun->initialized) {
@@ -404,9 +433,9 @@ static AlifIntT initInterpreter_main(AlifThread* _thread) { // 1156
 	//status = alifConfig_initImportConfig(&interpreter->config);
 	//if (status < 1) return status;
 
-	//if (interpreter_updateConfig(_thread, 1) < 0) {
-	//	return -1;
-	//}
+	if (interpreter_updateConfig(_thread, 1) < 0) {
+		return -1;
+	}
 
 	//status = alifImport_initExternal(_thread);
 	//if (status < 1) return status;

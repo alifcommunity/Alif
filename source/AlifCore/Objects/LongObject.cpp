@@ -9,9 +9,39 @@
 
 #define IS_SMALL_INT(_iVal) (-ALIF_NSMALLNEGINTS <= (_iVal) and (_iVal) < ALIF_NSMALLPOSINTS) // 25
 
+//#define WITH_ALIFLONG_MODULE 1 // 32
 
 static AlifObject* get_smallInt(sdigit _iVal) { // 50
 	return (AlifObject*)&ALIFLONG_SMALL_INTS[ALIF_NSMALLNEGINTS + _iVal];
+}
+
+static AlifLongObject* maybe_smallLong(AlifLongObject* _v) { // 56
+	if (_v and alifLong_isCompact(_v)) {
+		stwodigits ival = MEDIUM_VALUE(_v);
+		if (IS_SMALL_INT(ival)) {
+			ALIF_DECREF(_v); //_ALIF_DECREF_INT(_v);
+			return (AlifLongObject*)get_smallInt((sdigit)ival);
+		}
+	}
+	return _v;
+}
+
+
+static AlifLongObject* long_normalize(AlifLongObject* v) { // 114
+	AlifSizeT j = alifLong_digitCount(v);
+	AlifSizeT i = j;
+
+	while (i > 0 && v->longValue.digit[i - 1] == 0)
+		--i;
+	if (i != j) {
+		if (i == 0) {
+			_alifLong_setSignAndDigitCount(v, 0, 0);
+		}
+		else {
+			_alifLong_setDigitCount(v, i);
+		}
+	}
+	return v;
 }
 
  // 136
@@ -207,7 +237,271 @@ unsigned char _alifLongDigitValue_[256] = { // 2527
 };
 
 
+static AlifIntT long_fromBinaryBase(const char* _start,
+	const char* _end, AlifSizeT _digits, AlifIntT _base, AlifLongObject** _res) { // 2559
+	const char* p_{};
+	AlifIntT bitsPerChar{};
+	AlifSizeT n_{};
+	AlifLongObject* z_{};
+	twodigits accum{};
+	AlifIntT bitsInAccum{};
+	digit* pDigit{};
 
+	n_ = _base;
+	for (bitsPerChar = -1; n_; ++bitsPerChar) {
+		n_ >>= 1;
+	}
+
+	/* n <- the number of Python digits needed,
+			= ceiling((digits * bits_per_char) / PyLong_SHIFT). */
+	if (_digits > (ALIF_SIZET_MAX - (ALIFLONG_SHIFT - 1)) / bitsPerChar) {
+		//alifErr_setString(_alifExcValueError_,
+		//	"int string too large to convert");
+		*_res = nullptr;
+		return 0;
+	}
+	n_ = (_digits * bitsPerChar + ALIFLONG_SHIFT - 1) / ALIFLONG_SHIFT;
+	z_ = alifLong_new(n_);
+	if (z_ == nullptr) {
+		*_res = nullptr;
+		return 0;
+	}
+	/* Read string from right, and fill in int from left; i.e.,
+	 * from least to most significant in both.
+	 */
+	accum = 0;
+	bitsInAccum = 0;
+	pDigit = z_->longValue.digit;
+	p_ = _end;
+	while (--p_ >= _start) {
+		int k;
+		if (*p_ == '_') {
+			continue;
+		}
+		k = (int)_alifLongDigitValue_[ALIF_CHARMASK(*p_)];
+		accum |= (twodigits)k << bitsInAccum;
+		bitsInAccum += bitsPerChar;
+		if (bitsInAccum >= ALIFLONG_SHIFT) {
+			*pDigit++ = (digit)(accum & ALIFLONG_MASK);
+			accum >>= ALIFLONG_SHIFT;
+			bitsInAccum -= ALIFLONG_SHIFT;
+		}
+	}
+	if (bitsInAccum) {
+		*pDigit++ = (digit)accum;
+	}
+	while (pDigit - z_->longValue.digit < n_) *pDigit++ = 0;
+	*_res = z_;
+	return 0;
+}
+
+
+static AlifIntT long_fromNonBinaryBase(const char* _start,
+	const char* _end, AlifSizeT _digits, AlifIntT _base, AlifLongObject** _res) { // 2749
+	twodigits c_{};           /* current input character */
+	AlifSizeT sizeZ{};
+	AlifIntT i_{};
+	AlifIntT convwidth{};
+	twodigits convmultmax, convmult;
+	digit* pz{}, * pzstop{};
+	AlifLongObject* z_{};
+	const char* p_{};
+
+	static double log_base_BASE[37] = { 0.0e0, };
+	static AlifIntT convwidth_base[37] = { 0, };
+	static twodigits convmultmax_base[37] = { 0, };
+
+	if (log_base_BASE[_base] == 0.0) {
+		twodigits convmax = _base;
+		int i = 1;
+
+		log_base_BASE[_base] = (log((double)_base) /
+			log((double)ALIFLONG_BASE));
+		for (;;) {
+			twodigits next = convmax * _base;
+			if (next > ALIFLONG_BASE) {
+				break;
+			}
+			convmax = next;
+			++i;
+		}
+		convmultmax_base[_base] = convmax;
+		convwidth_base[_base] = i;
+	}
+
+	double fsize_z = (double)_digits * log_base_BASE[_base] + 1.0;
+	if (fsize_z > (double)MAX_LONG_DIGITS) {
+		/* The same exception as in _PyLong_New(). */
+		//alifErr_setString(_alifExcOverflowError_,
+		//	"too many digits in integer");
+		*_res = nullptr;
+		return 0;
+	}
+	sizeZ = (AlifSizeT)fsize_z;
+	/* Uncomment next line to test exceedingly rare copy code */
+	/* size_z = 1; */
+	z_ = alifLong_new(sizeZ);
+	if (z_ == NULL) {
+		*_res = NULL;
+		return 0;
+	}
+	_alifLong_setSignAndDigitCount(z_, 0, 0);
+
+	/* `convwidth` consecutive input digits are treated as a single
+	 * digit in base `convmultmax`.
+	 */
+	convwidth = convwidth_base[_base];
+	convmultmax = convmultmax_base[_base];
+
+	/* Work ;-) */
+	p_ = _start;
+	while (p_ < _end) {
+		if (*p_ == '_') {
+			p_++;
+			continue;
+		}
+		/* grab up to convwidth digits from the input string */
+		c_ = (digit)_alifLongDigitValue_[ALIF_CHARMASK(*p_++)];
+		for (i_ = 1; i_ < convwidth and p_ != _end; ++p_) {
+			if (*p_ == '_') {
+				continue;
+			}
+			i_++;
+			c_ = (twodigits)(c_ * _base +
+				(AlifIntT)_alifLongDigitValue_[ALIF_CHARMASK(*p_)]);
+		}
+
+		convmult = convmultmax;
+		/* Calculate the shift only if we couldn't get
+		 * convwidth digits.
+		 */
+		if (i_ != convwidth) {
+			convmult = _base;
+			for (; i_ > 1; --i_) {
+				convmult *= _base;
+			}
+		}
+
+		/* Multiply z by convmult, and add c. */
+		pz = z_->longValue.digit;
+		pzstop = pz + alifLong_digitCount(z_);
+		for (; pz < pzstop; ++pz) {
+			c_ += (twodigits)*pz * convmult;
+			*pz = (digit)(c_ & ALIFLONG_MASK);
+			c_ >>= ALIFLONG_SHIFT;
+		}
+		/* carry off the current end? */
+		if (c_) {
+			if (alifLong_digitCount(z_) < sizeZ) {
+				*pz = (digit)c_;
+				_alifLong_setSignAndDigitCount(z_, 1, alifLong_digitCount(z_) + 1);
+			}
+			else {
+				AlifLongObject* tmp{};
+				/* Extremely rare.  Get more space. */
+				tmp = alifLong_new(sizeZ + 1);
+				if (tmp == nullptr) {
+					ALIF_DECREF(z_);
+					*_res = nullptr;
+					return 0;
+				}
+				memcpy(tmp->longValue.digit,
+					z_->longValue.digit,
+					sizeof(digit) * sizeZ);
+				ALIF_SETREF(z_, tmp);
+				z_->longValue.digit[sizeZ] = (digit)c_;
+				++sizeZ;
+			}
+		}
+	}
+	*_res = z_;
+	return 0;
+}
+
+
+static AlifIntT long_fromStringBase(const char** _str, AlifIntT _base, AlifLongObject** _res) { // 2902
+	const char* start{}, * end{}, * p{};
+	char prev = 0;
+	AlifSizeT digits = 0;
+	AlifIntT isBinaryBase = (_base & (_base - 1)) == 0;
+
+	/* Here we do four things:
+	 *
+	 * - Find the `end` of the string.
+	 * - Validate the string.
+	 * - Count the number of `digits` (rather than underscores)
+	 * - Point *str to the end-of-string or first invalid character.
+	 */
+	start = p = *_str;
+	/* Leading underscore not allowed. */
+	if (*start == '_') {
+		return -1;
+	}
+	/* Verify all characters are digits and underscores. */
+	while (_alifLongDigitValue_[ALIF_CHARMASK(*p)] < _base or *p == '_') {
+		if (*p == '_') {
+			/* Double underscore not allowed. */
+			if (prev == '_') {
+				*_str = p - 1;
+				return -1;
+			}
+		}
+		else {
+			++digits;
+		}
+		prev = *p;
+		++p;
+	}
+	/* Trailing underscore not allowed. */
+	if (prev == '_') {
+		*_str = p - 1;
+		return -1;
+	}
+	*_str = end = p;
+	/* Reject empty strings */
+	if (start == end) {
+		return -1;
+	}
+	/* Allow only trailing whitespace after `end` */
+	while (*p and ALIF_ISSPACE(*p)) {
+		p++;
+	}
+	*_str = p;
+	if (*p != '\0') {
+		return -1;
+	}
+
+	/*
+	 * Pass a validated string consisting of only valid digits and underscores
+	 * to long_from_xxx_base.
+	 */
+	if (isBinaryBase) {
+		/* Use the linear algorithm for binary bases. */
+		return long_fromBinaryBase(start, end, digits, _base, _res);
+	}
+	else {
+		/* Limit the size to avoid excessive computation attacks exploiting the
+		 * quadratic algorithm. */
+		if (digits > ALIF_LONG_MAX_STR_DIGITS_THRESHOLD) {
+			AlifInterpreter* interp = _alifInterpreter_get();
+			AlifIntT maxStrDigits = interp->longState.maxStrDigits;
+			if ((maxStrDigits > 0) && (digits > maxStrDigits)) {
+				//alifErr_format(_alifExcValueError_, _MAX_STR_DIGITS_ERROR_FMT_TO_INT,
+				//	max_str_digits, digits);
+				*_res = nullptr;
+				return 0;
+			}
+		}
+//#if WITH_ALIFLONG_MODULE
+//		if (digits > 6000 and _base == 10) {
+//			/* Switch to _pylong.int_from_string() */
+//			return alifLong_intFromString(start, end, _res);
+//		}
+//#endif
+		/* Use the quadratic algorithm for non binary bases. */
+		return long_fromNonBinaryBase(start, end, digits, _base, _res);
+	}
+}
 
 
 

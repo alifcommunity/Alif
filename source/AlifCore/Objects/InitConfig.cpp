@@ -5,6 +5,7 @@
 #include "AlifCore_Interpreter.h"
 #include "AlifCore_LifeCycle.h"
 #include "AlifCore_Memory.h"
+#include "AlifCore_Long.h"
 #include "AlifCore_State.h"
 #include "AlifCore_DureRun.h"
 
@@ -222,6 +223,7 @@ void alifConfig_initAlifConfig(AlifConfig* _config) { // 897
 	_config->bufferedStdio = 1;
 	_config->quiet = 0;
 	_config->initMain = 1;
+	_config->intMaxStrDigits = ALIF_LONG_DEFAULT_MAX_STR_DIGITS; // need review
 }
 
 /* duplicate the string */

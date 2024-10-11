@@ -24,6 +24,8 @@ extern AlifTypeObject _alifUStrType_; // 103
 #define ALIFUSTR_CHECKEXACT(op) ALIF_IS_TYPE((op), &_alifUStrType_) // 108
 
 
+AlifObject* alifUStr_fromStringAndSize(const char*, AlifSizeT); // 122
+
 
 AlifObject* alifUStr_fromString(const char*); // 129
 

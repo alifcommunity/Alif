@@ -184,6 +184,15 @@
     <ClCompile Include="..\source\AlifCore\Objects\FloatObject.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\AlifStrToULong.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\AlifStrToDouble.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\DoubleToASCII.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">
@@ -584,6 +593,12 @@
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Main\FloatObject.h">
       <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifStrToDouble.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DoubleToASCII.h">
+      <Filter>Include\Core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

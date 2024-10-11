@@ -63,6 +63,7 @@
 #include "SysModule.h"
 #include "Import.h"
 #include "CriticalSection.h"
+#include "AlifStrToDouble.h"
 #include "FileUtils.h"
 #include "AlifRun.h"
 #include "AlifLifeCycle.h"

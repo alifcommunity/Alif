@@ -207,6 +207,26 @@ AlifIntT alifObject_setItem(AlifObject* _o,
 }
 
 
+AlifIntT alifObject_getBuffer(AlifObject* obj, AlifBuffer* view, AlifIntT flags) { // 425
+	if (flags != ALIFBUF_SIMPLE) {  /* fast path */
+		if (flags == ALIFBUF_READ or flags == ALIFBUF_WRITE) {
+			//ALIFERR_BADINTERNALCALL();
+			return -1;
+		}
+	}
+	AlifBufferProcs* pb = ALIF_TYPE(obj)->asBuffer;
+
+	if (pb == nullptr or pb->bf_getbuffer == nullptr) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"a bytes-like object is required, not '%.100s'",
+		//	ALIF_TYPE(obj)->name);
+		return -1;
+	}
+	AlifIntT res = (*pb->getBuffer)(obj, view, flags);
+	return res;
+}
+
+
 AlifObject * _alifNumber_index(AlifObject * _item) { // 1397
 	if (_item == nullptr) {
 		return null_error();
