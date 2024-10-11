@@ -13,6 +13,28 @@ struct Bigint { // 16
 };
 
 
+ // 33
+#define BIGINT_KMAX 7
+
+#define BIGINT_POW5SIZE 8
+
+#ifndef PRIVATE_MEM
+#define PRIVATE_MEM 2304
+#endif
+#define BIGINT_PREALLOC_SIZE \
+    ((PRIVATE_MEM+sizeof(double)-1)/sizeof(double))
+
+class DToAState {
+public:
+	Bigint* p5s[BIGINT_POW5SIZE]{};
+	struct Bigint* freeList[BIGINT_KMAX + 1]{};
+	double preAllocated[BIGINT_PREALLOC_SIZE]{};
+	double* preAllocatedNext{};
+};
+#define DTOA_STATE_INIT(INTERP) \
+    { \
+        .preAllocatedNext = (INTERP)->dtoa.preAllocated, \
+    }
 
 
 

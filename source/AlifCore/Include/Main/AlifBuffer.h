@@ -28,3 +28,11 @@ void alifBuffer_release(AlifBuffer*); // 102
  // 108
 #define ALIFBUF_SIMPLE 0
 #define ALIFBUF_WRITABLE 0x0001
+
+
+
+
+
+ // 137
+#define ALIFBUF_READ  0x100
+#define ALIFBUF_WRITE 0x200

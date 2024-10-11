@@ -190,7 +190,10 @@
     <ClCompile Include="..\source\AlifCore\Objects\AlifStrToDouble.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\DoubleToASCII.cpp">
+    <ClCompile Include="..\source\AlifCore\Objects\dtoa\DoubleToASCII.cpp">
+      <Filter>Objects\dtoa</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\AlifAST.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
   </ItemGroup>
@@ -622,6 +625,9 @@
     </Filter>
     <Filter Include="Include\Main\Mimalloc">
       <UniqueIdentifier>{6cb471e0-2bf6-4fac-bd13-7d576554ecc3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Objects\dtoa">
+      <UniqueIdentifier>{27744aa5-428b-4a07-a363-0429b512d46c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

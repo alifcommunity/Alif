@@ -216,7 +216,7 @@ AlifIntT alifObject_getBuffer(AlifObject* obj, AlifBuffer* view, AlifIntT flags)
 	}
 	AlifBufferProcs* pb = ALIF_TYPE(obj)->asBuffer;
 
-	if (pb == nullptr or pb->bf_getbuffer == nullptr) {
+	if (pb == nullptr or pb->getBuffer == nullptr) {
 		//alifErr_format(_alifExcTypeError_,
 		//	"a bytes-like object is required, not '%.100s'",
 		//	ALIF_TYPE(obj)->name);
@@ -225,6 +225,21 @@ AlifIntT alifObject_getBuffer(AlifObject* obj, AlifBuffer* view, AlifIntT flags)
 	AlifIntT res = (*pb->getBuffer)(obj, view, flags);
 	return res;
 }
+
+
+
+void alifBuffer_release(AlifBuffer* _view) { // 803
+	AlifObject* obj = _view->obj;
+	AlifBufferProcs* pb{};
+	if (obj == nullptr) return;
+	pb = ALIF_TYPE(obj)->asBuffer;
+	if (pb and pb->releaseBuffer) {
+		pb->releaseBuffer(obj, _view);
+	}
+	_view->obj = nullptr;
+	ALIF_DECREF(obj);
+}
+
 
 
 AlifObject * _alifNumber_index(AlifObject * _item) { // 1397

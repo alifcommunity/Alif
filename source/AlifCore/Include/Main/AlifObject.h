@@ -354,6 +354,13 @@ public:
 };
 
 
+class AlifBufferProcs{ // 136
+public:
+	GetBufferProc getBuffer{};
+	ReleaseBufferProc releaseBuffer{};
+};
+
+
 class AlifTypeObject { // 147
 public:
 	ALIFOBJECT_VAR_HEAD{};
@@ -375,6 +382,8 @@ public:
 
 	GetAttroFunc getAttro{};
 	SetAttroFunc setAttro{};
+
+	AlifBufferProcs* asBuffer{};
 
 	unsigned long flags{};
 
