@@ -1420,6 +1420,55 @@ AlifIntT alifDict_popString(AlifObject* _op,
 }
 
 
+static AlifSizeT dict_length(AlifObject* _self) { // 3228
+	return alifAtomic_loadSizeRelaxed(&((AlifDictObject*)_self)->used);
+}
+
+static AlifObject* dict_subscript(AlifObject* _self, AlifObject* _key) { // 3234
+	AlifDictObject* mp = (AlifDictObject*)_self;
+	AlifSizeT ix{};
+	AlifHashT hash{};
+	AlifObject* value{};
+
+	hash = alifObject_hashFast(_key);
+	if (hash == -1) {
+		return nullptr;
+	}
+	ix = alifDict_lookupThreadSafe(mp, _key, hash, &value);
+	if (ix == DKIX_ERROR)
+		return nullptr;
+	if (ix == DKIX_EMPTY or value == nullptr) {
+		if (!ALIFDICT_CHECKEXACT(mp)) {
+			AlifObject* missing{}, * res{};
+			//missing = _alifObject_lookupSpecial(
+			//	(AlifObject*)mp, &ALIF_ID(__missing__));
+			//if (missing != nullptr) {
+			//	res = AlifObject_callOneArg(missing, key);
+			//	ALIF_DECREF(missing);
+			//	return res;
+			//}
+			//else if (alifErr_occurred())
+			//	return nullptr;
+		}
+		//_alifErr_setKeyError(key);
+		return nullptr;
+	}
+	return value;
+}
+
+static AlifIntT dict_assSub(AlifObject* _mp, AlifObject* _v, AlifObject* _w) { // 3269
+	if (_w == nullptr)
+		return alifDict_delItem(_mp, _v);
+	else
+		return alifDict_setItem(_mp, _v, _w);
+}
+
+static AlifMappingMethods _dictAsMapping_ = { // 3278
+	.length = dict_length,
+	.subscript = dict_subscript,
+	.assSubscript = dict_assSub,
+};
+
 
 
 static AlifIntT dictSetDefault_refLockHeld(AlifObject* _d, AlifObject* _key, AlifObject* _defaultValue,
@@ -1540,27 +1589,27 @@ AlifIntT alifDict_setDefaultRef(AlifObject* _d, AlifObject* _key,
 
 
 
-static AlifObject* dict_or(AlifObject* _self, AlifObject* _other) { // 4533
-	if (!ALIFDICT_CHECK(_self) or !ALIFDICT_CHECK(_other)) {
-		return ALIF_NOTIMPLEMENTED;
-	}
-	AlifObject* new_ = alifDict_copy(_self);
-	if (new_ == nullptr) {
-		return nullptr;
-	}
-	if (dict_updateArg(new_, _other)) {
-		ALIF_DECREF(new_);
-		return nullptr;
-	}
-	return new_;
-}
-
-static AlifObject* dict_ior(AlifObject* _self, AlifObject* _other) { // 4550
-	if (dict_updateArg(_self, _other)) {
-		return nullptr;
-	}
-	return ALIF_NEWREF(_self);
-}
+//static AlifObject* dict_or(AlifObject* _self, AlifObject* _other) { // 4533
+//	if (!ALIFDICT_CHECK(_self) or !ALIFDICT_CHECK(_other)) {
+//		return ALIF_NOTIMPLEMENTED;
+//	}
+//	AlifObject* new_ = alifDict_copy(_self);
+//	if (new_ == nullptr) {
+//		return nullptr;
+//	}
+//	if (dict_updateArg(new_, _other)) {
+//		ALIF_DECREF(new_);
+//		return nullptr;
+//	}
+//	return new_;
+//}
+//
+//static AlifObject* dict_ior(AlifObject* _self, AlifObject* _other) { // 4550
+//	if (dict_updateArg(_self, _other)) {
+//		return nullptr;
+//	}
+//	return ALIF_NEWREF(_self);
+//}
 
 
 AlifIntT alifDict_contains(AlifObject* _op, AlifObject* _key) { // 4593
@@ -1619,10 +1668,10 @@ static AlifSequenceMethods _dictAsSequence_ = { // 4652
 	.inplaceRepeat = 0,
 };
 
-static AlifNumberMethods _dictAsNumber_ = { // 4665
-	.or_ = dict_or,
-	.inplaceOr = dict_ior,
-};
+//static AlifNumberMethods _dictAsNumber_ = { // 4665
+//	.or_ = dict_or,
+//	.inplaceOr = dict_ior,
+//};
 
 
 AlifTypeObject _alifDictType_ = { // 4760
@@ -1630,8 +1679,9 @@ AlifTypeObject _alifDictType_ = { // 4760
 	.name = "قاموس",
 	.basicSize = sizeof(AlifDictObject),
 	.itemSize = 0,
-	.asNumber = &_dictAsNumber_,
+	.asNumber = 0,
 	.asSequence = &_dictAsSequence_,
+	.asMapping = &_dictAsMapping_,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
 		ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_DICT_SUBCLASS |
 		_ALIF_TPFLAGS_MATCH_SELF | ALIF_TPFLAGS_MAPPING, 

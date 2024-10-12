@@ -72,5 +72,17 @@ static inline void _alifLong_flipSign(AlifLongObject* op) { // 282
 	op->longValue.tag |= flippedSign;
 }
 
+
+#define ALIFLONG_DIGIT_INIT(val) \
+    { \
+        .objBase = ALIFOBJECT_HEAD_INIT(&_alifLongType_), \
+        .longValue  = { \
+            .tag = TAG_FROM_SIGN_AND_SIZE( \
+                (val) == 0 ? 0 : ((val) < 0 ? -1 : 1), \
+                (val) == 0 ? 0 : 1), \
+            .digit = { ((val) >= 0 ? (val) : -(val)) }, \
+        } \
+    }
+
 #define ALIFLONG_FALSE_TAG TAG_FROM_SIGN_AND_SIZE(0, 0) // 300
 #define ALIFLONG_TRUE_TAG TAG_FROM_SIGN_AND_SIZE(1, 1) // 301

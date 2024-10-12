@@ -53,7 +53,7 @@ static AlifIntT get_keywordOrName(AlifParser* _p, AlifToken* _token) { // 158
 static AlifIntT initialize_token(AlifParser* _p,
 	AlifPToken* _pToken, AlifToken* _token, AlifIntT _tokType) { // 177
 	_pToken->type = (_tokType == NAME) ? get_keywordOrName(_p, _token) : _tokType;
-	_pToken->bytes = alifBytes_fromStringAndSize(_token->start, (_token->end - _token->start) * sizeof(wchar_t));
+	_pToken->bytes = alifBytes_fromStringAndSize(_token->start, _token->end - _token->start);
 
 	if (_pToken->bytes == nullptr) {
 		return -1;

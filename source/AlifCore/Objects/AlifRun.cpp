@@ -118,13 +118,13 @@ AlifIntT alifRun_simpleFileObject(FILE* _fp, AlifObject* _filename,
 	//	v = run_alifcFile(alifcFP, dict, dict, _flags);
 	//}
 	//else {
-		if ((!ALIFUSTR_CHECK(_filename)
-			or !alifUStr_equalToUTF8(_filename, "<stdin>"))
-			/*and set_mainLoader(dict, _filename, "SourceFileLoader") < 0*/) {
-			fprintf(stderr, "alif: failed to set __main__.__loader__\n");
-			ret = -1;
-			goto done;
-		}
+		//if ((!ALIFUSTR_CHECK(_filename)
+		//	or !alifUStr_equalToUTF8(_filename, "<stdin>"))
+		//	and set_mainLoader(dict, _filename, "SourceFileLoader") < 0) {
+		//	fprintf(stderr, "alif: failed to set __main__.__loader__\n");
+		//	ret = -1;
+		//	goto done;
+		//}
 		v = alifRun_file(_fp, _filename, ALIF_FILE_INPUT, dict, dict,
 			_closeIt, _flags);
 	//}
