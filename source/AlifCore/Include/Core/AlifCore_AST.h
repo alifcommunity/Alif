@@ -8,7 +8,8 @@
 
 
 
-typedef class Mod* ModuleTy; // 15
+
+typedef class Module* ModuleTy; // 15
 typedef class Stmt* StmtTy;
 typedef class Expr* ExprTy;
 enum ExprContext_ { Load = 1, Store = 2, Del = 3 };
@@ -93,7 +94,7 @@ public:
 
 
 enum ModK { ModuleK = 1, InteractiveK, ExpressionK, FunctionK }; // يجب تحديد رقم البداية 1 لكي لا يبدأ من 0 حيث يتم التحقق فيما بعد ولا يجب أن تكون الحالة 0
-class Mod { // 163
+class Module { // 163
 public:
 	enum ModK type{};
 	union
@@ -119,7 +120,7 @@ public:
 			ExprTy returns{};
 		} function;
 
-	} V{};
+	} V;
 };
 
 enum StmtK { // 187
