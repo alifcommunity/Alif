@@ -352,7 +352,7 @@ static AlifIntT alifCore_interpreterInit(AlifThread* _thread) { // 843
 	//status = alifAtExit_init(interpreter);
 	if (status < 0) return status;
 
-	//status = alifSys_create(_thread, &sysMod);
+	status = alifSys_create(_thread, &sysMod);
 	if (status < 0) goto done;
 
 	status = alifCore_builtinsInit(_thread);

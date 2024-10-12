@@ -123,16 +123,19 @@ StmtTy alifAST_asyncFunctionDef(AlifObject* _name, Arguments* _args,
 	return p_;
 }
 
-StmtTy alifAST_functionDef(AlifObject* _name, Arguments* _args, ASDLStmtSeq* _body,
-	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo, AlifIntT _endColOffset, AlifASTMem* _astMem) {
+StmtTy alifAST_functionDef(AlifObject* _name, Arguments* _args,
+	ASDLStmtSeq* _body, AlifIntT _lineNo, AlifIntT _colOffset,
+	AlifIntT _endLineNo, AlifIntT _endColOffset, AlifASTMem* _astMem) { // 6734
 
 	StmtTy p_{};
 	if (!_name) {
-		// error
+		//alifErr_setString(_alifExcValueError_,
+		//	"field 'name' is required for FunctionDef");
 		return nullptr;
 	}
 	if (!_args) {
-		// error
+		//alifErr_setString(_alifExcValueError_,
+		//	"field 'args' is required for FunctionDef");
 		return nullptr;
 	}
 	p_ = (StmtTy)alifASTMem_malloc(_astMem, sizeof(*p_));
@@ -150,8 +153,9 @@ StmtTy alifAST_functionDef(AlifObject* _name, Arguments* _args, ASDLStmtSeq* _bo
 	return p_;
 }
 
-StmtTy alifAST_return(ExprTy _val,
-	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo, AlifIntT _endColOffset, AlifASTMem* _astMem) {
+StmtTy alifAST_return(ExprTy _val, AlifIntT _lineNo,
+	AlifIntT _colOffset, AlifIntT _endLineNo,
+	AlifIntT _endColOffset, AlifASTMem* _astMem) { // 6835
 
 	StmtTy p_{};
 	p_ = (StmtTy)alifASTMem_malloc(_astMem, sizeof(*p_));
@@ -169,7 +173,8 @@ StmtTy alifAST_return(ExprTy _val,
 }
 
 StmtTy alifAST_delete(ASDLExprSeq* _targets,
-	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo, AlifIntT _endColOffset, AlifASTMem* _astMem) {
+	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo,
+	AlifIntT _endColOffset, AlifASTMem* _astMem) { // 6852
 
 	StmtTy p_{};
 	p_ = (StmtTy)alifASTMem_malloc(_astMem, sizeof(*p_));
@@ -186,12 +191,15 @@ StmtTy alifAST_delete(ASDLExprSeq* _targets,
 	return p_;
 }
 
-StmtTy alifAST_classDef(AlifObject* _name, ASDLExprSeq* _bases, ASDLKeywordSeq* _keywords, ASDLStmtSeq* _body,
-	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo, AlifIntT _endColOffset, AlifASTMem* _astMem) {
+StmtTy alifAST_classDef(AlifObject* _name, ASDLExprSeq* _bases,
+	ASDLKeywordSeq* _keywords, ASDLStmtSeq* _body, AlifIntT _lineNo,
+	AlifIntT _colOffset, AlifIntT _endLineNo,
+	AlifIntT _endColOffset, AlifASTMem* _astMem) { // 6806
 
 	StmtTy p_{};
 	if (!_name) {
-		// error
+		//alifErr_setString(_alifExcValueError_,
+		//	"field 'name' is required for ClassDef");
 		return nullptr;
 	}
 	p_ = (StmtTy)alifASTMem_malloc(_astMem, sizeof(*p_));
@@ -211,7 +219,8 @@ StmtTy alifAST_classDef(AlifObject* _name, ASDLExprSeq* _bases, ASDLKeywordSeq* 
 }
 
 StmtTy alifAST_augAssign(ExprTy _target, Operator_ _op, ExprTy _val,
-	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo, AlifIntT _endColOffset, AlifASTMem* _astMem) {
+	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo,
+	AlifIntT _endColOffset, AlifASTMem* _astMem) { // 6924
 
 	StmtTy p_{};
 	if (!_target) {
@@ -241,8 +250,9 @@ StmtTy alifAST_augAssign(ExprTy _target, Operator_ _op, ExprTy _val,
 	return p_;
 }
 
-StmtTy alifAST_for(ExprTy _target, ExprTy _iter, ASDLStmtSeq* _body,
-	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo, AlifIntT _endColOffset, AlifASTMem* _astMem) {
+StmtTy alifAST_for(ExprTy _target, ExprTy _iter,
+	ASDLStmtSeq* _body, AlifIntT _lineNo, AlifIntT _colOffset,
+	AlifIntT _endLineNo, AlifIntT _endColOffset, AlifASTMem* _astMem) { // 6989
 
 	StmtTy p_{};
 	if (!_target) {
@@ -269,7 +279,8 @@ StmtTy alifAST_for(ExprTy _target, ExprTy _iter, ASDLStmtSeq* _body,
 }
 
 StmtTy alifAST_asyncFor(ExprTy _target, ExprTy _iter, ASDLStmtSeq* _body,
-	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo, AlifIntT _endColOffset, AlifASTMem* _astMem) {
+	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo,
+	AlifIntT _endColOffset, AlifASTMem* _astMem) { // 7021
 
 	StmtTy p_{};
 	if (!_target) {
@@ -296,7 +307,8 @@ StmtTy alifAST_asyncFor(ExprTy _target, ExprTy _iter, ASDLStmtSeq* _body,
 }
 
 StmtTy alifAST_while(ExprTy _condetion, ASDLStmtSeq* _body,
-	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo, AlifIntT _endColOffset, AlifASTMem* _astMem) {
+	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo,
+	AlifIntT _endColOffset, AlifASTMem* _astMem) { // 7053
 
 	StmtTy p_{};
 	if (!_condetion) {
@@ -1063,15 +1075,15 @@ Alias* alifAST_alias(AlifObject* _name, AlifObject* _asName,
 	return p;
 }
 
-WithItem* alifAST_withItem(ExprTy _exprCTX, ExprTy _optVars, AlifASTMem* _astMem) {
+WithItemTy alifAST_withItem(ExprTy _exprCTX, ExprTy _optVars, AlifASTMem* _astMem) {
 
-	WithItem* p_{};
+	WithItemTy p_{};
 	if (!_exprCTX) {
 		// error
 		return nullptr;
 	}
 
-	p_ = (WithItem*)alifASTMem_malloc(_astMem, sizeof(*p_));
+	p_ = (WithItemTy)alifASTMem_malloc(_astMem, sizeof(*p_));
 	if (!p_) return nullptr;
 
 	p_->contextExpr = _exprCTX;

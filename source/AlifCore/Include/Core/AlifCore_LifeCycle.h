@@ -4,7 +4,7 @@
 
 
 extern AlifObject* alifBuiltin_init(AlifInterpreter*); // 32
-
+extern AlifIntT alifSys_create(AlifThread*, AlifObject**); // 33
 
 
 

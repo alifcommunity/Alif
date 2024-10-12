@@ -1540,6 +1540,29 @@ AlifIntT alifDict_setDefaultRef(AlifObject* _d, AlifObject* _key,
 
 
 
+static AlifObject* dict_or(AlifObject* _self, AlifObject* _other) { // 4533
+	if (!ALIFDICT_CHECK(_self) or !ALIFDICT_CHECK(_other)) {
+		return ALIF_NOTIMPLEMENTED;
+	}
+	AlifObject* new_ = alifDict_copy(_self);
+	if (new_ == nullptr) {
+		return nullptr;
+	}
+	if (dict_updateArg(new_, _other)) {
+		ALIF_DECREF(new_);
+		return nullptr;
+	}
+	return new_;
+}
+
+static AlifObject* dict_ior(AlifObject* _self, AlifObject* _other) { // 4550
+	if (dict_updateArg(_self, _other)) {
+		return nullptr;
+	}
+	return ALIF_NEWREF(_self);
+}
+
+
 AlifIntT alifDict_contains(AlifObject* _op, AlifObject* _key) { // 4593
 	AlifHashT hash = alifObject_hashFast(_key);
 
@@ -1583,6 +1606,23 @@ AlifIntT alifDict_containsKnownHash(AlifObject* _op,
 }
 
 
+static AlifSequenceMethods _dictAsSequence_ = { // 4652
+	.length = 0,
+	.concat = 0,
+	.repeat = 0,
+	.item = 0,
+	.wasSlice = 0,
+	.assItem = 0,
+	.wasAssSlice = 0,
+	.contains = alifDict_contains,
+	.inplaceConcat = 0,
+	.inplaceRepeat = 0,
+};
+
+static AlifNumberMethods _dictAsNumber_ = { // 4665
+	.or_ = dict_or,
+	.inplaceOr = dict_ior,
+};
 
 
 AlifTypeObject _alifDictType_ = { // 4760
@@ -1590,6 +1630,8 @@ AlifTypeObject _alifDictType_ = { // 4760
 	.name = "قاموس",
 	.basicSize = sizeof(AlifDictObject),
 	.itemSize = 0,
+	.asNumber = &_dictAsNumber_,
+	.asSequence = &_dictAsSequence_,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
 		ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_DICT_SUBCLASS |
 		_ALIF_TPFLAGS_MATCH_SELF | ALIF_TPFLAGS_MAPPING, 

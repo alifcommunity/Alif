@@ -119,7 +119,7 @@ AlifObject* alifObject_getItem(AlifObject* _o, AlifObject* _key) { // 150
 	if (ms and ms->item) {
 		if (alifIndex_check(_key)) {
 			AlifSizeT keyValue;
-			keyValue = alifNumber_asSizeT(_key, _alifExcIndexError_);
+			keyValue = alifNumber_asSizeT(_key, nullptr/*_alifExcIndexError_*/); // need review
 			return alifSequence_getItem(_o, keyValue);
 		}
 		else {
@@ -190,7 +190,7 @@ AlifIntT alifObject_setItem(AlifObject* _o,
 	if (ALIF_TYPE(_o)->asSequence) {
 		if (alifIndex_check(_key)) {
 			AlifSizeT keyValue{};
-			keyValue = alifNumber_asSizeT(_key, _alifExcIndexError_);
+			keyValue = alifNumber_asSizeT(_key, nullptr/*_alifExcIndexError_*/); // need review
 			if (keyValue == -1 /*and alifErr_occurred()*/)
 				return -1;
 			return alifSequence_setItem(_o, keyValue, _value);
