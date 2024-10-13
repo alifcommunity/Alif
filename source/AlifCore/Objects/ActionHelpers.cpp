@@ -600,7 +600,7 @@ ResultTokenWithMetadata* alifParserEngine_setupFullFormatSpec(AlifParser* _p,
 	AlifSizeT nonEmptyCount = 0;
 	for (AlifSizeT i = 0; i < nItems; i++) {
 		ExprTy item = ASDL_SEQ_GET(_spec, i);
-		nonEmptyCount += !(item->type == ExprK::ConstantK and
+		nonEmptyCount += !(item->type == ExprK_::ConstantK and
 			ALIFUSTR_CHECKEXACT(item->V.constant.val) and
 			ALIFUSTR_GET_LENGTH(item->V.constant.val) == 0);
 	}
@@ -613,7 +613,7 @@ ResultTokenWithMetadata* alifParserEngine_setupFullFormatSpec(AlifParser* _p,
 		AlifSizeT j = 0;
 		for (AlifSizeT i = 0; i < nItems; i++) {
 			ExprTy item = ASDL_SEQ_GET(_spec, i);
-			if (item->type == ExprK::ConstantK and
+			if (item->type == ExprK_::ConstantK and
 				ALIFUSTR_CHECKEXACT(item->V.constant.val) and
 				ALIFUSTR_GET_LENGTH(item->V.constant.val) == 0) {
 				continue;
@@ -624,7 +624,7 @@ ResultTokenWithMetadata* alifParserEngine_setupFullFormatSpec(AlifParser* _p,
 	}
 	ExprTy res{};
 	AlifSizeT n = ASDL_SEQ_LEN(_spec);
-	if (n == 0 or (n == 1 and ASDL_SEQ_GET(_spec, 0)->type == ExprK::ConstantK)) {
+	if (n == 0 or (n == 1 and ASDL_SEQ_GET(_spec, 0)->type == ExprK_::ConstantK)) {
 		res = alifAST_joinedStr(_spec, _lineNo, _colOffset, _endLineNo, _endColOffset, _p->astMem);
 	}
 	else {
@@ -752,7 +752,7 @@ ExprTy alifParserEngine_joinedStr(AlifParser* _p, AlifPToken* _a,
 	AlifSizeT index = 0;
 	for (AlifSizeT i = 0; i < nItems; i++) {
 		ExprTy item_ = ASDL_SEQ_GET(expr_, i);
-		if (item_->type == ExprK::ConstantK) {
+		if (item_->type == ExprK_::ConstantK) {
 			item_ = alifParserEngine_decodeFStringPart(_p, isRaw, item_, _b);
 			if (item_ == nullptr) return nullptr;
 
@@ -889,7 +889,7 @@ ExprTy alifParserEngine_concatenateStrings(AlifParser* _p, ASDLExprSeq* _strings
 	AlifSizeT nFlattenedElems = 0;
 	for (i = 0; i < len; i++) {
 		ExprTy elem = ASDL_SEQ_GET(_strings, i);
-		if (elem->type == ExprK::ConstantK) {
+		if (elem->type == ExprK_::ConstantK) {
 			if (ALIFBYTES_CHECK(elem->V.constant.val)) {
 				bytesFound = 1;
 			}
@@ -898,7 +898,7 @@ ExprTy alifParserEngine_concatenateStrings(AlifParser* _p, ASDLExprSeq* _strings
 			}
 			nFlattenedElems++;
 		}
-		else if (elem->type == ExprK::JoinStrK) {
+		else if (elem->type == ExprK_::JoinStrK) {
 			nFlattenedElems += ASDL_SEQ_LEN(elem->V.joinStr.vals);
 			fStringFound = 1;
 		}
@@ -940,7 +940,7 @@ ExprTy alifParserEngine_concatenateStrings(AlifParser* _p, ASDLExprSeq* _strings
 	AlifSizeT j = 0;
 	for (i = 0; i < len; i++) {
 		ExprTy element = ASDL_SEQ_GET(_strings, i);
-		if (element->type == ExprK::JoinStrK) {
+		if (element->type == ExprK_::JoinStrK) {
 			for (j = 0; j < ASDL_SEQ_LEN(element->V.joinStr.vals); j++) {
 				ExprTy subVal = ASDL_SEQ_GET(element->V.joinStr.vals, j);
 				if (subVal == nullptr) return nullptr;
@@ -978,9 +978,9 @@ ExprTy alifParserEngine_concatenateStrings(AlifParser* _p, ASDLExprSeq* _strings
 	for (i = 0; i < nFlattenedElems; i++) {
 		ExprTy elem = ASDL_SEQ_GET(flattened, i);
 
-		if (elem->type == ExprK::ConstantK) {
+		if (elem->type == ExprK_::ConstantK) {
 			if (i + 1 < nFlattenedElems and
-				ASDL_SEQ_GET(flattened, i + 1)->type == ExprK::ConstantK) {
+				ASDL_SEQ_GET(flattened, i + 1)->type == ExprK_::ConstantK) {
 				ExprTy firstElem = elem;
 
 				/* When a string is getting concatenated, the kind of the string
@@ -995,7 +995,7 @@ ExprTy alifParserEngine_concatenateStrings(AlifParser* _p, ASDLExprSeq* _strings
 				ExprTy lastElem = elem;
 				for (j = i; j < nFlattenedElems; j++) {
 					ExprTy currentElem = ASDL_SEQ_GET(flattened, j);
-					if (currentElem->type == ExprK::ConstantK) {
+					if (currentElem->type == ExprK_::ConstantK) {
 						if (alifUStrWriter_writeStr(
 							&writer, currentElem->V.constant.val)) {
 							alifUStrWriter_dealloc(&writer);

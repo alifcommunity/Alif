@@ -15,9 +15,9 @@ typedef class Expr* ExprTy;
 enum ExprContext_ { Load = 1, Store = 2, Del = 3 };
 enum BoolOp_ { And = 1, Or = 2 };
 enum Operator_ {
-	Add = 1, Sub = 2, Mult = 3, MatMult = 4, Div = 5, Mod = 6, Pow = 7,
-	LShift = 8, RShift = 9, BitOr = 10, BitXor = 11, BitAnd = 12,
-	FloorDiv = 13
+	Add = 1, Sub = 2, Mult = 3, Div = 4, Mod = 5, Pow = 6,
+	LShift = 7, RShift = 8, BitOr = 9, BitXor = 10, BitAnd = 11,
+	FloorDiv = 12
 };
 enum UnaryOp_ { Invert = 1, Not = 2, UAdd = 3, USub = 4, Sqrt = 5 };
 enum CmpOp_ {
@@ -93,10 +93,10 @@ public:
 };
 
 
-enum ModK { ModuleK = 1, InteractiveK, ExpressionK, FunctionK }; // يجب تحديد رقم البداية 1 لكي لا يبدأ من 0 حيث يتم التحقق فيما بعد ولا يجب أن تكون الحالة 0
+enum ModK_ { ModuleK = 1, InteractiveK, ExpressionK, FunctionK }; // يجب تحديد رقم البداية 1 لكي لا يبدأ من 0 حيث يتم التحقق فيما بعد ولا يجب أن تكون الحالة 0
 class Module { // 163
 public:
-	enum ModK type{};
+	enum ModK_ type{};
 	union
 	{
 		class {
@@ -123,7 +123,7 @@ public:
 	} V;
 };
 
-enum StmtK { // 187
+enum StmtK_ { // 187
 	ClassDefK = 1, FunctionDefK, AsyncFunctionDefK, ReturnK,
 	DeleteK, AssignK, AugAssignK, ForK, AsyncForK, WhileK,
 	IfK, WithK, AsyncWithK, TryK, ImportK, ImportFromK,
@@ -131,7 +131,7 @@ enum StmtK { // 187
 }; 
 class Stmt { // 196
 public:
-	enum StmtK type{};
+	enum StmtK_ type{};
 	union
 	{
 		class {
@@ -243,7 +243,7 @@ public:
 	AlifIntT endColOffset{};
 };
 
-enum ExprK { // 359
+enum ExprK_ { // 359
 	BoolOpK = 1, NamedExprK, BinOpK, UnaryOpK, IfExprK, DictK, SetK, ListK,
 	DictCompK, SetCompK, ListCompK, GeneratorExprK, AwaitK, YieldK,
 	YieldFromK, CompareK, CallK, FormattedValK, JoinStrK, ConstantK,
@@ -251,7 +251,7 @@ enum ExprK { // 359
 }; 
 class Expr { // 367
 public:
-	enum ExprK type{};
+	enum ExprK_ type{};
 	union
 	{
 		class {

@@ -21,7 +21,7 @@ public:
     { \
 		.mutex = {0},							\
         .dummyName = {							\
-            .type = ExprK::NameK,				\
+            .type = ExprK_::NameK,				\
 			.V = {								\
 				.name = {						\
 					.name = &ALIF_STR(Empty),	\

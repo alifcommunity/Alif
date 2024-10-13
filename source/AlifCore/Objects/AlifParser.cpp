@@ -12245,7 +12245,7 @@ done:
 	return res;
 }
 
-
+void parser_test(ModuleTy _p);
 void* alifParserEngine_parse(AlifParser* _p) { 
 	// تهيئة الكلمات المفتاحية
 	_p->keywords = reservedKeywords;
@@ -12268,5 +12268,44 @@ void* alifParserEngine_parse(AlifParser* _p) {
 		result = funcRun_rule(_p);
 	}
 
+	parser_test((ModuleTy)result);
 	return result;
+}
+
+
+
+#define VISIT(name, val) visit_ ## name(val) 
+const char* operators[] = { 0, "جمع", "طرح", "ضرب", "قسمة", "باقي", "أس",
+	"إزاحة_يسار", "إزاحة_يمين", "وحدة_او", "وحدة_او_فقط", "وحدة_و",
+	"بدون_باقي"};
+
+void visit_constant(Constant v) {
+	printf("%s : %u \n", v->type->name, alifLong_asSizeT(v));
+}
+
+void visit_binop(ExprTy v) {
+	if (v->type == ExprK_::ConstantK) {
+		VISIT(constant, v->V.constant.val);
+	}
+}
+
+void visit_expr(ExprTy v) {
+	if (v->type == ExprK_::BinOpK) {
+		VISIT(binop, v->V.binOp.left);
+		printf("%s\n", operators[v->V.binOp.op]);
+		VISIT(binop, v->V.binOp.right);
+	}
+}
+
+void parser_test(ModuleTy _p) {
+	ASDLStmtSeq* m = _p->V.module.body;
+	AlifSizeT size = _p->V.module.body->size;
+
+	for (AlifSizeT i = 0; i < size; i++) {
+		printf("العقدة %u : \n", i);
+		if (m->typedElements[i]->type == StmtK_::ExprK) {
+			VISIT(expr, m->typedElements[i]->V.expression.val);
+		}
+	}
+
 }

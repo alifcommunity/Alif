@@ -111,7 +111,7 @@ StmtTy alifAST_asyncFunctionDef(AlifObject* _name, Arguments* _args,
 	p_ = (StmtTy)alifASTMem_malloc(_astMem, sizeof(*p_));
 	if (!p_) return nullptr;
 
-	p_->type = StmtK::FunctionDefK;
+	p_->type = StmtK_::FunctionDefK;
 	p_->V.functionDef.name = _name;
 	p_->V.functionDef.args = _args;
 	p_->V.functionDef.body = _body;
@@ -141,7 +141,7 @@ StmtTy alifAST_functionDef(AlifObject* _name, Arguments* _args,
 	p_ = (StmtTy)alifASTMem_malloc(_astMem, sizeof(*p_));
 	if (!p_) return nullptr;
 
-	p_->type = StmtK::AsyncFunctionDefK;
+	p_->type = StmtK_::AsyncFunctionDefK;
 	p_->V.asyncFunctionDef.name = _name;
 	p_->V.asyncFunctionDef.args = _args;
 	p_->V.asyncFunctionDef.body = _body;
@@ -181,7 +181,7 @@ StmtTy alifAST_delete(ASDLExprSeq* _targets,
 	if (!p_)
 		return nullptr;
 
-	p_->type = StmtK::DeleteK;
+	p_->type = StmtK_::DeleteK;
 	p_->V.delete_.targets = _targets;
 	p_->lineNo = _lineNo;
 	p_->colOffset = _colOffset;
@@ -205,7 +205,7 @@ StmtTy alifAST_classDef(AlifObject* _name, ASDLExprSeq* _bases,
 	p_ = (StmtTy)alifASTMem_malloc(_astMem, sizeof(*p_));
 	if (!p_) return nullptr;
 
-	p_->type = StmtK::ClassDefK;
+	p_->type = StmtK_::ClassDefK;
 	p_->V.classDef.name = _name;
 	p_->V.classDef.bases = _bases;
 	p_->V.classDef.keywords = _keywords;
@@ -238,7 +238,7 @@ StmtTy alifAST_augAssign(ExprTy _target, Operator_ _op, ExprTy _val,
 	p_ = (StmtTy)alifASTMem_malloc(_astMem, sizeof(*p_));
 	if (!p_) return nullptr;
 
-	p_->type = StmtK::AugAssignK;
+	p_->type = StmtK_::AugAssignK;
 	p_->V.augAssign.target = _target;
 	p_->V.augAssign.op = _op;
 	p_->V.augAssign.val = _val;
@@ -266,7 +266,7 @@ StmtTy alifAST_for(ExprTy _target, ExprTy _iter,
 	p_ = (StmtTy)alifASTMem_malloc(_astMem, sizeof(*p_));
 	if (!p_) return nullptr;
 
-	p_->type = StmtK::ForK;
+	p_->type = StmtK_::ForK;
 	p_->V.for_.target = _target;
 	p_->V.for_.iter = _iter;
 	p_->V.for_.body = _body;
@@ -294,7 +294,7 @@ StmtTy alifAST_asyncFor(ExprTy _target, ExprTy _iter, ASDLStmtSeq* _body,
 	p_ = (StmtTy)alifASTMem_malloc(_astMem, sizeof(*p_));
 	if (!p_) return nullptr;
 
-	p_->type = StmtK::ForK;
+	p_->type = StmtK_::ForK;
 	p_->V.asyncFor.target = _target;
 	p_->V.asyncFor.iter = _iter;
 	p_->V.asyncFor.body = _body;
@@ -318,7 +318,7 @@ StmtTy alifAST_while(ExprTy _condetion, ASDLStmtSeq* _body,
 	p_ = (StmtTy)alifASTMem_malloc(_astMem, sizeof(*p_));
 	if (!p_) return nullptr;
 
-	p_->type = StmtK::WhileK;
+	p_->type = StmtK_::WhileK;
 	p_->V.while_.condition = _condetion;
 	p_->V.while_.body = _body;
 	p_->lineNo = _lineNo;
@@ -340,7 +340,7 @@ StmtTy alifAST_if(ExprTy _condition, ASDLStmtSeq* _body, ASDLStmtSeq* _else,
 	p_ = (StmtTy)alifASTMem_malloc(_astMem, sizeof(*p_));
 	if (!p_) return nullptr;
 
-	p_->type = StmtK::IfK;
+	p_->type = StmtK_::IfK;
 	p_->V.if_.condition = _condition;
 	p_->V.if_.body = _body;
 	p_->V.if_.else_ = _else;
@@ -360,7 +360,7 @@ StmtTy alifAST_with(ASDLWithItemSeq* _items, ASDLStmtSeq* _body,
 	if (!p_)
 		return nullptr;
 
-	p_->type = StmtK::WithK;
+	p_->type = StmtK_::WithK;
 	p_->V.with_.items = _items;
 	p_->V.with_.body = _body;
 	p_->lineNo = _lineNo;
@@ -379,7 +379,7 @@ StmtTy alifAST_asyncWith(ASDLWithItemSeq* _items, ASDLStmtSeq* _body,
 	if (!p_)
 		return nullptr;
 
-	p_->type = StmtK::AsyncWithK;
+	p_->type = StmtK_::AsyncWithK;
 	p_->V.with_.items = _items;
 	p_->V.with_.body = _body;
 	p_->lineNo = _lineNo;
@@ -398,7 +398,7 @@ StmtTy alifAST_import(ASDLAliasSeq* _names,
 	if (!p_)
 		return nullptr;
 
-	p_->type = StmtK::ImportK;
+	p_->type = StmtK_::ImportK;
 	p_->V.import.names = _names;
 	p_->lineNo = _lineNo;
 	p_->colOffset = _colOffset;
@@ -416,7 +416,7 @@ StmtTy alifAST_importFrom(AlifObject* _module, ASDLAliasSeq* _names,
 	if (!p_)
 		return nullptr;
 
-	p_->type = StmtK::ImportFromK;
+	p_->type = StmtK_::ImportFromK;
 	p_->V.importFrom.module = _module;
 	p_->V.importFrom.names = _names;
 	p_->lineNo = _lineNo;
@@ -435,7 +435,7 @@ StmtTy alifAST_global(ASDLIdentifierSeq* _names,
 	if (!p_)
 		return nullptr;
 
-	p_->type = StmtK::GlobalK;
+	p_->type = StmtK_::GlobalK;
 	p_->lineNo = _lineNo;
 	p_->colOffset = _colOffset;
 	p_->endLineNo = _endLineNo;
@@ -452,7 +452,7 @@ StmtTy alifAST_nonlocal(ASDLIdentifierSeq* _names,
 	if (!p_)
 		return nullptr;
 
-	p_->type = StmtK::NonlocalK;
+	p_->type = StmtK_::NonlocalK;
 	p_->lineNo = _lineNo;
 	p_->colOffset = _colOffset;
 	p_->endLineNo = _endLineNo;
@@ -467,7 +467,7 @@ StmtTy alifAST_pass(AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo, 
 	if (!p_)
 		return nullptr;
 
-	p_->type = StmtK::PassK;
+	p_->type = StmtK_::PassK;
 	p_->lineNo = _lineNo;
 	p_->colOffset = _colOffset;
 	p_->endLineNo = _endLineNo;
@@ -482,7 +482,7 @@ StmtTy alifAST_break(AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo,
 	if (!p_)
 		return nullptr;
 
-	p_->type = StmtK::BreakK;
+	p_->type = StmtK_::BreakK;
 	p_->lineNo = _lineNo;
 	p_->colOffset = _colOffset;
 	p_->endLineNo = _endLineNo;
@@ -497,7 +497,7 @@ StmtTy alifAST_continue(AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLine
 	if (!p_)
 		return nullptr;
 
-	p_->type = StmtK::CountinueK;
+	p_->type = StmtK_::CountinueK;
 	p_->lineNo = _lineNo;
 	p_->colOffset = _colOffset;
 	p_->endLineNo = _endLineNo;
@@ -518,7 +518,7 @@ ExprTy alifAST_boolOp(BoolOp_ _op, ASDLExprSeq* _vals,
 	if (!p_)
 		return nullptr;
 
-	p_->type = ExprK::BoolOpK;
+	p_->type = ExprK_::BoolOpK;
 	p_->V.boolOp.op = _op;
 	p_->V.boolOp.vals = _vals;
 	p_->lineNo = _lineNo;
@@ -603,7 +603,7 @@ ExprTy alifAST_ifExpr(ExprTy _condition, ExprTy _body, ExprTy _else,
 	p = (ExprTy)alifASTMem_malloc(_astMem, sizeof(*p));
 	if (!p) return nullptr;
 
-	p->type = ExprK::IfExprK;
+	p->type = ExprK_::IfExprK;
 	p->V.ifExpr.condition = _condition;
 	p->V.ifExpr.body = _body;
 	p->V.ifExpr.else_ = _else;
@@ -749,7 +749,7 @@ ExprTy alifAST_compare(ExprTy _left, ASDLIntSeq* _ops, ASDLExprSeq* _comparators
 		return nullptr;
 	}
 	p = (ExprTy)alifASTMem_malloc(_astMem, sizeof(*p));
-	p->type = ExprK::CompareK;
+	p->type = ExprK_::CompareK;
 	p->V.compare.left = _left;
 	p->V.compare.ops = _ops;
 	p->V.compare.comparators = _comparators;
@@ -1099,10 +1099,10 @@ AlifObject* alifAST_getDocString(ASDLStmtSeq* _body) {
 	if (!ASDL_SEQ_LEN(_body)) return nullptr;
 
 	StmtTy stmt = ASDL_SEQ_GET(_body ,0);
-	if (stmt->type != StmtK::ExprK) return nullptr;
+	if (stmt->type != StmtK_::ExprK) return nullptr;
 
 	ExprTy expr = stmt->V.expression.val;
-	if (expr->type == ExprK::ConstantK and ALIFUSTR_CHECKEXACT(expr->V.constant.val)) {
+	if (expr->type == ExprK_::ConstantK and ALIFUSTR_CHECKEXACT(expr->V.constant.val)) {
 		return expr->V.constant.val;
 	}
 
