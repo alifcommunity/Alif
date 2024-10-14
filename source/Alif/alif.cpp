@@ -104,9 +104,9 @@ static AlifIntT alifMain_runFile(const AlifConfig* _config) { // 414
 
 
 static void alifMain_header(const AlifConfig* _config) { // 183
-	if (_config->quiet) {
-		return;
-	}
+	//if (_config->quiet) {
+	//	return;
+	//}
 
 	//if (!_config->verbose and (config_runCode(_config) or !stdin_isInteractive(_config))) {
 	//	return;

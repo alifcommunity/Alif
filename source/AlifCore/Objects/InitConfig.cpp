@@ -221,7 +221,6 @@ void alifConfig_initAlifConfig(AlifConfig* _config) { // 897
 	_config->interactive = 0;
 	_config->optimizationLevel = 0;
 	_config->bufferedStdio = 1;
-	_config->quiet = 0;
 	_config->initMain = 1;
 	_config->intMaxStrDigits = ALIF_LONG_DEFAULT_MAX_STR_DIGITS; // need review
 }
@@ -372,7 +371,7 @@ static AlifIntT alif_setFileMode(const AlifConfig* _config) { // 2327
 		buffIn = setvbuf(stdin, (char*)nullptr, _IOLBF, BUFSIZ);
 		buffOut = setvbuf(stdout, (char*)nullptr, _IOLBF, BUFSIZ);
 		if (buffIn or buffOut) {
-			std::cout << "لم يستطع تهيئة مخزن النصوص الإفتراضي في نظام ويندوز" << std::endl;
+			std::cout << "لم يستطع تهيئة مخزن النصوص الإفتراضي" << std::endl;
 			return -1;
 		}
 #endif /* HAVE_SETVBUF */
