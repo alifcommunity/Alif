@@ -18,48 +18,47 @@
 #define MINUS					14	// -
 #define STAR					15	// *
 #define DOT						16	// .
-#define SLASHCIRCUMFLEX			17	// /^
-#define EQUAL					18	// =
-#define AMPER					19	// &
-#define LSHIFTEQUAL				20	// <<=
-#define RSHIFTEQUAL				21	// >>=
-#define DOUBLECIRCUMFLEXEQUAL	22	// ^^=
-#define VBAREQUAL				23	// |=
-#define AMPEREQUAL				24	// &=
-#define DOUBLESLASHEQUAL		25	// //=
-#define SLASHSTAREQUAL			26	// /*=
-#define CIRCUMFLEXEQUAL			27	// ^=
-#define SLASHEQUAL				28	// /=
-#define STAREQUAL				29	// *=
-#define MINUSEQUAL				30	// -=
-#define PLUSEQUAL				31	// +=
-#define DOUBLESTAR				32	// **
-#define EQUALEQUAL				33  // ==
-#define NOTEQUAL				34  // !=
-#define LESSEQUAL				35  // <=
-#define LESSTHAN				36  // <
-#define GREATEREQUAL			37  // >=
-#define GREATERTHAN				38  // >
-#define VBAR					39  // |
-#define STARVBAR				40  // *|
-#define RSHIFT					41  // >>
-#define LSHIFT					42  // <<
-#define DOUBLESLASH				43  // //
-#define SLASH					44  // /
-#define SLASHSTAR				45  // /*
-#define CIRCUMFLEX				46  // ^
-#define SLASHCIRCUMFLEX			47  // /^
-#define LBRACE					48  // {
-#define RBRACE					49  // }
-#define EXCLAMATION				50  // !
-#define OP						51
-#define ELLIPSIS				52	// ...
-#define COMMENT					53
-#define FSTRINGSTART			54	
-#define FSTRINGMIDDLE			55	
-#define FSTRINGEND				56	
-#define NL						57	
-#define ERRORTOKEN				58	
+#define EQUAL					17	// =
+#define AMPER					18	// &
+#define LSHIFTEQUAL				19	// <<=
+#define RSHIFTEQUAL				20	// >>=
+#define DOUBLECIRCUMFLEXEQUAL	21	// ^^=
+#define VBAREQUAL				22	// |=
+#define AMPEREQUAL				23	// &=
+#define DOUBLESLASHEQUAL		24	// //=
+#define SLASHSTAREQUAL			25	// /*=
+#define CIRCUMFLEXEQUAL			26	// ^=
+#define SLASHEQUAL				27	// /=
+#define STAREQUAL				28	// *=
+#define MINUSEQUAL				29	// -=
+#define PLUSEQUAL				30	// +=
+#define DOUBLESTAR				31	// **
+#define EQUALEQUAL				32  // ==
+#define NOTEQUAL				33  // !=
+#define LESSEQUAL				34  // <=
+#define LESSTHAN				35  // <
+#define GREATEREQUAL			36  // >=
+#define GREATERTHAN				37  // >
+#define VBAR					38  // |
+#define STARVBAR				39  // *|
+#define RSHIFT					40  // >>
+#define LSHIFT					41  // <<
+#define DOUBLESLASH				42  // //
+#define SLASH					43  // /
+#define SLASHSTAR				44  // /*
+#define CIRCUMFLEX				45  // ^
+#define SLASHCIRCUMFLEX			46  // /^
+#define LBRACE					47  // {
+#define RBRACE					48  // }
+#define EXCLAMATION				49  // !
+#define OP						50
+#define ELLIPSIS				51	// ...
+#define COMMENT					52
+#define FSTRINGSTART			53	
+#define FSTRINGMIDDLE			54	
+#define FSTRINGEND				55	
+#define NL						56	
+#define ERRORTOKEN				57	
 #define NTOFFSET				256
 
 

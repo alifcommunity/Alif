@@ -12280,6 +12280,10 @@ const char* operators[] = { 0, "جمع", "طرح", "ضرب", "قسمة", "باق
 	"بدون_باقي"};
 
 void visit_constant(Constant v) {
+	if (ALIFUSTR_CHECK(v)) {
+		printf("%s : %s \n", v->type->name, alifUStr_asUTF8(v));
+		return;
+	}
 	printf("%s : %u \n", v->type->name, alifLong_asSizeT(v));
 }
 
@@ -12287,10 +12291,18 @@ void visit_binop(ExprTy v) {
 	if (v->type == ExprK_::ConstantK) {
 		VISIT(constant, v->V.constant.val);
 	}
+	else if (v->type == ExprK_::BinOpK) {
+		VISIT(binop, v->V.binOp.left);
+		printf("%s\n", operators[v->V.binOp.op]);
+		VISIT(binop, v->V.binOp.right);
+	}
 }
 
 void visit_expr(ExprTy v) {
-	if (v->type == ExprK_::BinOpK) {
+	if (v->type == ExprK_::ConstantK) {
+		VISIT(constant, v->V.constant.val);
+	}
+	else if (v->type == ExprK_::BinOpK) {
 		VISIT(binop, v->V.binOp.left);
 		printf("%s\n", operators[v->V.binOp.op]);
 		VISIT(binop, v->V.binOp.right);

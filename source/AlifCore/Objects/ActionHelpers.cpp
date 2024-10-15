@@ -682,7 +682,7 @@ static ExprTy alifParserEngine_decodeFStringPart(AlifParser* _p, AlifIntT _isRaw
 		len = strlen(bStr);
 	}
 
-	_isRaw = _isRaw or strchr(bStr, '\\') == nullptr;
+	_isRaw = _isRaw or strchr(bStr, L'\\') == nullptr;
 	AlifObject* str = alifParserEngine_decodeString(_p, _isRaw, bStr, len, _token);
 	if (str == nullptr) {
 		//alifParserEngine_raiseDecodeError(_p);
@@ -816,7 +816,7 @@ ExprTy alifParserEngine_constantFromToken(AlifParser* _p, AlifPToken* _t) {
 }
 
 ExprTy alifParserEngine_constantFromString(AlifParser* _p, AlifPToken* _tok) { // 1412
-	char* str = alifBytes_asString(_tok->bytes);
+	wchar_t* str = alifBytes_asWString(_tok->bytes);
 	if (str == nullptr) return nullptr;
 
 	AlifObject* s = alifParserEngine_parseString(_p, _tok);
@@ -827,7 +827,7 @@ ExprTy alifParserEngine_constantFromString(AlifParser* _p, AlifPToken* _tok) { /
 		return nullptr;
 	}
 	AlifObject* type{};
-	if (str and str[0] == 'م') {
+	if (str and str[0] == L'م') {
 		type = alifParserEngine_newIdentifier(_p, "م");
 		if (type == nullptr) return nullptr;
 	}
@@ -845,7 +845,7 @@ ExprTy alifParserEngine_formattedValue(AlifParser* _p, ExprTy _expr, AlifPToken*
 		AlifUCS4 first = ALIFUSTR_READ_CHAR(conversionExpr->V.name.name, 0);
 
 		if (ALIFUSTR_GET_LENGTH(conversionExpr->V.name.name) > 1 or
-			!(first == 's' or first == 'r' or first == 'a')) {
+			!(first == L's' or first == L'r' or first == L'a')) {
 			//RAISE_SYNTAX_ERROR_KNOWN_LOCATION(conversionExpr,
 			//	"f-string: invalid conversion character %R: expected 's', 'r', or 'a'",
 			//	conversionExpr->V.name.name);
@@ -855,7 +855,7 @@ ExprTy alifParserEngine_formattedValue(AlifParser* _p, ExprTy _expr, AlifPToken*
 		conversionVal = ALIF_SAFE_DOWNCAST(first, AlifUCS4, AlifIntT);
 	}
 	else if (_d and _f) {
-		conversionVal = (AlifIntT)'ر';
+		conversionVal = (AlifIntT)L'ر';
 	}
 
 	ExprTy formattedValue = alifAST_formattedValue(_expr, conversionVal,

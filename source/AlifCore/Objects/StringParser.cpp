@@ -48,7 +48,7 @@ static AlifObject* decode_uStrWithEscapes(AlifParser* _parser,
 	}
 	end = _str + _len;
 	while (_str < end) {
-		if (*_str == '\\') {
+		if (*_str == L'\\') {
 			*p_++ = *_str++;
 			if (_str >= end or *_str & 0x80) {
 				strcpy(p_, "u005c");
@@ -142,14 +142,14 @@ AlifObject* alifParserEngine_parseString(AlifParser* _p, AlifPToken* _t) { // 19
 
 	//if (ALIF_ISALPHA(quote)) {
 	//	while (!bytesMode or !rawMode) {
-	//		if (quote == 'b' or quote == 'B') {
+	//		if (quote == L'b' or quote == L'B') {
 	//			quote = (unsigned char)*++s;
 	//			bytesMode = 1;
 	//		}
-	//		else if (quote == 'u' or quote == 'U') {
+	//		else if (quote == L'u' or quote == L'U') {
 	//			quote = (unsigned char)*++s;
 	//		}
-	//		else if (quote == 'r' or quote == 'R') {
+	//		else if (quote == L'r' or quote == L'R') {
 	//			quote = (unsigned char)*++s;
 	//			rawMode = 1;
 	//		}
@@ -159,7 +159,7 @@ AlifObject* alifParserEngine_parseString(AlifParser* _p, AlifPToken* _t) { // 19
 	//	}
 	//}
 
-	if (quote != '\'' and quote != '\"') {
+	if (quote != L'\'' and quote != L'\"') {
 		//ALIFERR_BADINTERNALCALL();
 		return nullptr;
 	}
@@ -185,7 +185,7 @@ AlifObject* alifParserEngine_parseString(AlifParser* _p, AlifPToken* _t) { // 19
 		}
 	}
 
-	rawMode = rawMode or strchr(s, '\\') == nullptr;
+	rawMode = rawMode or strchr(s, L'\\') == nullptr;
 	if (bytesMode) {
 		/* Disallow non-ASCII characters. */
 		const char* ch{};

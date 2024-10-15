@@ -120,7 +120,7 @@ AlifIntT alifParserEngine_fillToken(AlifParser* _p) { // 240
 	//	AlifSizeT len = newToken.endColOffset - newToken.colOffset;
 	//	char* tag = (char*)alifMem_dataAlloc(len + 1);
 	//	strncpy(tag, newToken.start, len);
-	//	tag[len] = '0';
+	//	tag[len] = L'0';
 	//	if (!growableComment_arrayAdd(&_p->typeIgnoreComments, _p->tok->lineNo, tag)) {
 	//		//alifErr_noMemory();
 	//		goto error;
@@ -325,8 +325,8 @@ static AlifObject* parseNumber_raw(const char* _s) { // 611
 
 	errno = 0;
 	end = _s + strlen(_s) - 1;
-	imFlag = *end == 'j' or *end == 'J';
-	if (_s[0] == '0') {
+	imFlag = *end == L'j' or *end == L'J';
+	if (_s[0] == L'0') {
 		x_ = (long)alifOS_strToULong(_s, (char**)&end, 0);
 		if (x_ < 0 and errno == 0) {
 			return alifLong_fromString(_s, (char**)0, 0);
@@ -335,7 +335,7 @@ static AlifObject* parseNumber_raw(const char* _s) { // 611
 	else {
 		x_ = alifOS_strToLong(_s, (char**)&end, 0);
 	}
-	if (*end == '\0') {
+	if (*end == L'\0') {
 		if (errno != 0) {
 			return alifLong_fromString(_s, (char**)0, 0);
 		}
@@ -362,7 +362,7 @@ static AlifObject* parse_number(const char* _s) { // 655
 	char* end{};
 	AlifObject* res{};
 
-	if (strchr(_s, '_') == nullptr) {
+	if (strchr(_s, L'_') == nullptr) {
 		return parseNumber_raw(_s);
 	}
 
@@ -373,11 +373,11 @@ static AlifObject* parse_number(const char* _s) { // 655
 	}
 	end = dup;
 	for (; *_s; _s++) {
-		if (*_s != '_') {
+		if (*_s != L'_') {
 			*end++ = *_s;
 		}
 	}
-	*end = '\0';
+	*end = L'\0';
 	res = parseNumber_raw(dup);
 	alifMem_dataFree(dup);
 	return res;
@@ -393,7 +393,7 @@ ExprTy alifParserEngine_numberToken(AlifParser* _p) { // 684
 		return nullptr;
 	}
 
-	if (_p->featureVersion < 6 and strchr(rawNum, '_') != nullptr) {
+	if (_p->featureVersion < 6 and strchr(rawNum, L'_') != nullptr) {
 		_p->errorIndicator = 1;
 		//return RAISE_SYNTAX_ERROR("Underscores in numeric literals are only supported "
 		//	"in Alif 5 and greater");
