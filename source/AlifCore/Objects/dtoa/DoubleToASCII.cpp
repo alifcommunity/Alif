@@ -5,6 +5,7 @@
 
 
 
+#include "float.h"
 
 
 #define MALLOC alifMem_dataAlloc
