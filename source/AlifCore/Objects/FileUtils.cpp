@@ -464,7 +464,7 @@ FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) { // 1764
 AlifIntT alif_isAbs(const wchar_t* _path) { // 2147
 #ifdef _WINDOWS
 	const wchar_t* tail{};
-	HRESULT hr = PathCchSkipRoot(_path, &tail);
+	HRESULT hr = PathCchSkipRoot(_path, &tail); // تمت إضافة مكتبة pathcch.lib; الى Linker->Input
 	if (FAILED(hr) or _path == tail) {
 		return 0;
 	}

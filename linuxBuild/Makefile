@@ -5,7 +5,7 @@ CPPFLAGS = -Wall -std=c++20
 SOURCE_DIR = ../source
 BUILD_DIR = build
 
-SOURCE_FILES = $(wildcard $(SOURCE_DIR)/Alif/*.cpp) $(wildcard $(SOURCE_DIR)/AlifCore/Objects/*.cpp)
+SOURCE_FILES = $(wildcard $(SOURCE_DIR)/Alif/*.cpp) $(wildcard $(SOURCE_DIR)/AlifCore/Objects/*.cpp) $(wildcard $(SOURCE_DIR)/AlifCore/Objects/dtoa/*.cpp)
 
 INCLUDES =  -I$(SOURCE_DIR)/Alif							\
 			-I$(SOURCE_DIR)/AlifCore/Include/Core			\

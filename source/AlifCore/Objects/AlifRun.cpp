@@ -188,7 +188,7 @@ static AlifObject* alifRun_file(FILE* _fp, AlifObject* _filename,
 	else {
 		ret = nullptr;
 	}
-	alifASTMem_free(astMem);
+	//alifASTMem_free(astMem); // لا تعمل بشكل صحيح وتحتاج مراجعة
 
 	return ret;
 }
