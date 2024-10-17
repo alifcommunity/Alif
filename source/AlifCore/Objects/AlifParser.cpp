@@ -12273,13 +12273,23 @@ void* alifParserEngine_parse(AlifParser* _p) {
 }
 
 
+int spaces = 0;
+
 
 #define VISIT(name, val) visit_ ## name(val) 
-const char* operators[] = { 0, "جمع", "طرح", "ضرب", "قسمة", "باقي", "أس",
+const char* operators[] = { 0, "جمع : +", "طرح : -", "ضرب : *", "قسمة : /", "باقي : */", "أس : ^",
 	"إزاحة_يسار", "إزاحة_يمين", "وحدة_او", "وحدة_او_فقط", "وحدة_و",
 	"بدون_باقي"};
+const char* unaryop[] = { 0, "Invert", "Not", "UAdd", "USub", "جذر : /^"};
+
+void print_space(int _space) {
+	for (int i = 0; i < _space; i++) {
+		printf(" ");
+	}
+}
 
 void visit_constant(Constant v) {
+	print_space(spaces);
 	if (ALIFUSTR_CHECK(v)) {
 		printf("%s : %s \n", v->type->name, alifUStr_asUTF8(v));
 		return;
@@ -12287,25 +12297,37 @@ void visit_constant(Constant v) {
 	printf("%s : %u \n", v->type->name, alifLong_asSizeT(v));
 }
 
+
 void visit_binop(ExprTy v) {
 	if (v->type == ExprK_::ConstantK) {
 		VISIT(constant, v->V.constant.val);
 	}
+	else if (v->type == ExprK_::UnaryOpK) {
+		print_space(spaces);
+		printf("%s\n", unaryop[v->V.unaryOp.op]);
+		VISIT(binop, v->V.unaryOp.operand);
+		spaces += 4;
+	}
 	else if (v->type == ExprK_::BinOpK) {
 		VISIT(binop, v->V.binOp.left);
+		print_space(spaces);
 		printf("%s\n", operators[v->V.binOp.op]);
 		VISIT(binop, v->V.binOp.right);
+		spaces += 4;
 	}
 }
 
 void visit_expr(ExprTy v) {
 	if (v->type == ExprK_::ConstantK) {
 		VISIT(constant, v->V.constant.val);
+		spaces -= 4;
 	}
 	else if (v->type == ExprK_::BinOpK) {
 		VISIT(binop, v->V.binOp.left);
+		print_space(spaces);
 		printf("%s\n", operators[v->V.binOp.op]);
 		VISIT(binop, v->V.binOp.right);
+		spaces -= 4;
 	}
 }
 
@@ -12316,6 +12338,7 @@ void parser_test(ModuleTy _p) {
 	for (AlifSizeT i = 0; i < size; i++) {
 		printf("العقدة %u : \n", i);
 		if (m->typedElements[i]->type == StmtK_::ExprK) {
+			spaces += 4;
 			VISIT(expr, m->typedElements[i]->V.expression.val);
 		}
 	}
