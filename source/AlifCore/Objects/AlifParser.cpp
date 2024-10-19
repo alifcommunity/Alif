@@ -12280,7 +12280,7 @@ int spaces = 0;
 const char* operators[] = { 0, "جمع : +", "طرح : -", "ضرب : *", "قسمة : /", "باقي : */", "أس : ^",
 	"إزاحة_يسار", "إزاحة_يمين", "وحدة_او", "وحدة_او_فقط", "وحدة_و",
 	"بدون_باقي"};
-const char* unaryop[] = { 0, "Invert", "Not", "UAdd", "USub", "جذر : /^"};
+const char* unaryop[] = { 0, "عكس", "ليس", "_جمع : +", "_طرح : -", "جذر : /^"};
 
 void print_space(int _space) {
 	for (int i = 0; i < _space; i++) {
@@ -12294,7 +12294,14 @@ void visit_constant(Constant v) {
 		printf("%s : %s \n", v->type->name, alifUStr_asUTF8(v));
 		return;
 	}
-	printf("%s : %u \n", v->type->name, alifLong_asSizeT(v));
+	if (ALIFLONG_CHECK(v)) {
+		printf("%s : %u \n", v->type->name, alifLong_asSizeT(v));
+		return;
+	}
+	if (ALIFFLOAT_CHECK(v)) {
+		printf("%s : %f \n", v->type->name, ALIFFLOAT_AS_DOUBLE(v));
+		return;
+	}
 }
 
 
