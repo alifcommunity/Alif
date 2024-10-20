@@ -3,7 +3,7 @@
 
 class Module; // 11
 
-typedef enum AlifBlockType { // 13
+enum AlifBlockType { // 13
 	Function_Block, Class_Block, Module_Block,
 
 	Annotation_Block,
@@ -15,20 +15,12 @@ typedef enum AlifBlockType { // 13
 	Type_Variable_Block,
 };
 
-typedef enum AlifComprehensionType { // 38
+enum AlifComprehensionType { // 38
 	No_Comprehension = 0,
 	List_Comprehension = 1,
 	Dict_Comprehension = 2,
 	Set_Comprehension = 3,
 	Generator_Expression = 4
-};
-
-typedef class AlifSourceLocation { // 46
-public:
-	AlifIntT lineno{};
-	AlifIntT endLineno{};
-	AlifIntT colOffset{};
-	AlifIntT endColOffset{};
 };
 
 // 53
@@ -39,13 +31,9 @@ public:
                .colOffset = (_n)->colOffset, \
                .endColOffset = (_n)->endColOffset }
 
-static const AlifSourceLocation _noLocation_ = { -1, -1, -1, -1 }; // 60
-
-
-typedef class AlifFutureFeatures { // 63
+class AlifFutureFeatures { // 63
 public:
 	AlifIntT features{};              
-	AlifSourceLocation location{};    
 };
 
 class AlifSTEntryObject; // 68
@@ -65,7 +53,7 @@ public:
 	AlifIntT recursionLimit{};
 };
 
-typedef class AlifSTEntryObject { // 89
+class AlifSTEntryObject { // 89
 public:
 	ALIFOBJECT_HEAD;
 	AlifObject* id{};
@@ -96,7 +84,6 @@ public:
 	unsigned canSeeClassScope : 1;
 
 	AlifIntT compIterExpr{};
-	AlifSourceLocation loc{};
 	class AlifSTEntryObject* annotationBlock{};
 	class AlifSymTable* table{};
 } ;

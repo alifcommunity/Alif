@@ -6,89 +6,84 @@
 #include "AlifCore_SymTable.h"
 
 class AlifSymTable* alifSymtable_build(ModuleTy mod, AlifObject* filename, AlifFutureFeatures* future) { // 394
-	class symtable* st = symtable_new();
-	ASDLStmtSeq* seq{};
-	AlifSizeT i{};
+	AlifSymTable* st_ = symtable_new();
+	ASDLStmtSeq* seq_{};
+	AlifSizeT i_{};
 	AlifThread* tstate{};
-	AlifIntT startingRecursionDepth;
+	AlifIntT startingRecursionDepth{};
 
-	if (st == NULL)
-		return NULL;
-	if (filename == NULL) {
-		_Symtable_Free(st);
-		return NULL;
+	if (st_ == nullptr)
+		return nullptr;
+	if (filename == nullptr) {
+		//alifSymtable_free(st_);
+		return nullptr;
 	}
-	st->filename = ALIF_NEWREF(filename);
-	st->future = future;
+	st_->fileName = ALIF_NEWREF(filename);
+	st_->future = future;
 
-	tstate = alifThread_get();
+	tstate = _alifThread_get();
 	if (!tstate) {
-		_Symtable_Free(st);
-		return NULL;
+		//alifSymtable_free(st_);
+		return nullptr;
 	}
-	/* Be careful here to prevent overflow. */
-	AlifIntT recursion_depth = _C_RECURSION_LIMIT - tstate->c_recursion_remaining;
-	starting_recursion_depth = recursion_depth;
-	st->recursion_depth = starting_recursion_depth;
-	st->recursion_limit = _C_RECURSION_LIMIT;
+	AlifIntT recursionDepth = ALIFCPP_RECURSION_LIMIT - tstate->cppRecursionRemaining;
+	startingRecursionDepth = recursionDepth;
+	st_->recursionDepth = startingRecursionDepth;
+	st_->recursionLimit = ALIFCPP_RECURSION_LIMIT;
 
-	/* Make the initial symbol information gathering pass */
-
-	__SourceLocation loc0 = { 0, 0, 0, 0 };
-	if (!symtable_enter_block(st, &__ID(top), ModuleBlock, (void*)mod, loc0)) {
-		_Symtable_Free(st);
-		return NULL;
+	if (!symtable_enter_block(st_, &ALIF_ID(top), ModuleBlock, (void*)mod)) {
+		//alifSymtable_free(st_);
+		return nullptr;
 	}
 
-	st->st_top = st->st_cur;
-	switch (mod->kind) {
-	case Module_kind:
-		seq = mod->v.Module.body;
-		for (i = 0; i < asdl_seq_LEN(seq); i++)
-			if (!symtable_visit_stmt(st,
-				(stmt_ty)asdl_seq_GET(seq, i)))
+	st_->top = st_->cur;
+	switch (mod->type) {
+	case ModuleK:
+		seq_ = mod->V.module.body;
+		for (i_ = 0; i_ < ASDL_SEQ_LEN(seq_); i_++)
+			if (!symtable_visit_stmt(st_,
+				(StmtTy)ASDL_SEQ_GET(seq_, i_)))
 				goto error;
 		break;
-	case Expression_kind:
-		if (!symtable_visit_expr(st, mod->v.Expression.body))
+	case ExpressionK:
+		if (!symtable_visit_expr(st_, mod->V.expression.body))
 			goto error;
 		break;
-	case Interactive_kind:
-		seq = mod->v.Interactive.body;
-		for (i = 0; i < asdl_seq_LEN(seq); i++)
-			if (!symtable_visit_stmt(st,
-				(stmt_ty)asdl_seq_GET(seq, i)))
+	case InteractiveK:
+		seq_ = mod->V.interactive.body;
+		for (i_ = 0; i_ < ASDL_SEQ_LEN(seq_); i_++)
+			if (!symtable_visit_stmt(st_,
+				(StmtTy)ASDL_SEQ_GET(seq_, i_)))
 				goto error;
 		break;
-	case FunctionType_kind:
-		Err_SetString(Exc_RuntimeError,
-			"this compiler does not handle FunctionTypes");
+	case FunctionK:
+		//alifErr_setString(_alifExcRuntimeError_,
+			//"this compiler does not handle FunctionTypes");
 		goto error;
 	}
-	if (!symtable_exit_block(st)) {
-		_Symtable_Free(st);
-		return NULL;
+	if (!symtable_exit_block(st_)) {
+		//alifSymtable_free(st_);
+		return nullptr;
 	}
 	/* Check that the recursion depth counting balanced correctly */
-	if (st->recursion_depth != starting_recursion_depth) {
-		Err_Format(Exc_SystemError,
-			"symtable analysis recursion depth mismatch (before=%d, after=%d)",
-			starting_recursion_depth, st->recursion_depth);
-		_Symtable_Free(st);
-		return NULL;
+	if (st_->recursionDepth != startingRecursionDepth) {
+		//alifErr_format(_alifExcsystemError_,
+			//"symtable analysis recursion depth mismatch (before=%d, after=%d)",
+			//startingRecursionDepth, st_->recursionDepth);
+		//alifSymtable_free(st_);
+		return nullptr;
 	}
-	/* Make the second symbol analysis pass */
-	if (symtable_analyze(st)) {
-#if __DUMP_SYMTABLE
-		dump_symtable(st->st_top);
+	if (symtable_analyze(st_)) {
+#if _ALIF_DUMP_SYMTABLE
+		dump_symtable(st_->st_top);
 #endif
-		return st;
+		return st_;
 	}
-	_Symtable_Free(st);
-	return NULL;
+	//alifSymtable_free(st_);
+	return nullptr;
 error:
-	(void)symtable_exit_block(st);
-	_Symtable_Free(st);
-	return NULL;
+	(void)symtable_exit_block(st_);
+	//alifSymtable_free(st_);
+	return nullptr;
 }
 
