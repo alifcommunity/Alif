@@ -577,7 +577,7 @@ ModuleTy alifParser_astFromFile(FILE* _fp, AlifIntT _startRule,
 	result = (ModuleTy)alifParserEngine_runParser(p_);
 	alifParserEngine_parserFree(p_);
 
-	if (tokState->interactive and tokState->interactiveSrcStart and result and _interactiveSrc != NULL) {
+	if (tokState->interactive and tokState->interactiveSrcStart and result and _interactiveSrc != nullptr) {
 		*_interactiveSrc = alifUStr_fromString(tokState->interactiveSrcStart);
 		if (!_interactiveSrc or alifASTMem_listAddAlifObj(_astMem, *_interactiveSrc) < 0) {
 			ALIF_XDECREF(_interactiveSrc);
