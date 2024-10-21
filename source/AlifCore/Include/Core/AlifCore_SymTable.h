@@ -23,17 +23,30 @@ enum AlifComprehensionType { // 38
 	Generator_Expression = 4
 };
 
+
+class AlifSourceLocation { // 46
+public:
+	AlifIntT lineno{};
+	AlifIntT endLineno{};
+	AlifIntT colOffset{};
+	AlifIntT endColOffset{};
+};
+
+
 // 53
-#define SRC_LOCATION_FROM_AST(_n) \
-    (AlifSourceLocation){ \
+#define SRC_LOCATION_FROM_AST(_n) { \
                .lineno = (_n)->lineno, \
                .endLineno = (_n)->endLineno, \
                .colOffset = (_n)->colOffset, \
                .endColOffset = (_n)->endColOffset }
 
+
+static const AlifSourceLocation _noLocation_ = { -1, -1, -1, -1 }; // 60
+
 class AlifFutureFeatures { // 63
 public:
-	AlifIntT features{};              
+	AlifIntT features{};
+	AlifSourceLocation location{};
 };
 
 class AlifSTEntryObject; // 68
@@ -41,8 +54,8 @@ class AlifSTEntryObject; // 68
 class AlifSymTable { // 70
 public:
 	AlifObject* fileName{};
-	class AlifSTEntryObject* cur{}; 
-	class AlifSTEntryObject* top{};
+	AlifSTEntryObject* cur{}; 
+	AlifSTEntryObject* top{};
 	AlifObject* blocks{};
 	AlifObject* stack{};
 	AlifObject* global{};
@@ -84,6 +97,7 @@ public:
 	unsigned canSeeClassScope : 1;
 
 	AlifIntT compIterExpr{};
-	class AlifSTEntryObject* annotationBlock{};
-	class AlifSymTable* table{};
+	AlifSourceLocation loc{};
+	AlifSTEntryObject* annotationBlock{};
+	AlifSymTable* table{};
 } ;
