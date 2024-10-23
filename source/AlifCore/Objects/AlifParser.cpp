@@ -19,7 +19,7 @@
 #define MAXSTACK 6000
 
 
-static const int nKeywordList = 7;
+static const AlifIntT nKeywordList = 7;
 static KeywordToken* reservedKeywords[7] = {
 	new (KeywordToken[1]) { {nullptr, -1} },  // 0 char
 	new (KeywordToken[3]) { {"ك", 501}, {"و", 502}, {nullptr, -1} },  // 1 char

@@ -100,4 +100,4 @@ public:
 	AlifSourceLocation loc{};
 	AlifSTEntryObject* annotationBlock{};
 	AlifSymTable* table{};
-} ;
+};

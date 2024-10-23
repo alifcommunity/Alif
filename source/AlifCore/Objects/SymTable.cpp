@@ -21,7 +21,7 @@
 
 
 
-class AlifSymTable* alifSymtable_build(ModuleTy _mod, AlifObject* _filename,
+AlifSymTable* alifSymtable_build(ModuleTy _mod, AlifObject* _filename,
 	AlifFutureFeatures* _future) { // 394
 	AlifSymTable* st_ = symtable_new();
 	ASDLStmtSeq* seq_{};

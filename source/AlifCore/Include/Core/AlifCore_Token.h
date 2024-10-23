@@ -69,7 +69,7 @@
                                  (x) == NEWLINE   || \
                                  (x) == INDENT    || \
                                  (x) == DEDENT)
-#define ISSTRINGLIT(x)          ((x) == STRING           || \
+#define ISSTRINGLIT(x)          ((x) == STRING		|| \
                                  (x) == FSTRINGMIDDLE)
 
 

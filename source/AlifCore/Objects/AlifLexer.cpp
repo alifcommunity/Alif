@@ -362,7 +362,7 @@ again:
 		const char* prefix{}, * typeStart;
 		AlifIntT currentStartingColOffset{};
 
-		while (c_ != WEOF and c_ != L'\n' and c_ != L'\r') {
+		while (c_ != EOF and c_ != L'\n' and c_ != L'\r') {
 			c_ = tok_nextChar(_tokState);
 		}
 
