@@ -101,3 +101,32 @@ public:
 	AlifSTEntryObject* annotationBlock{};
 	AlifSymTable* table{};
 };
+
+
+extern void alifSymtable_free(AlifSymTable*); // 147
+
+// 154
+#define DEF_GLOBAL 1            
+#define DEF_LOCAL 2           
+#define DEF_PARAM (2<<1)       
+#define DEF_NONLOCAL (2<<2)      
+#define USE (2<<3)              
+#define DEF_FREE_CLASS (2<<5)  
+#define DEF_IMPORT (2<<6)        
+#define DEF_ANNOT (2<<7)        
+#define DEF_COMP_ITER (2<<8)    
+#define DEF_TYPE_PARAM (2<<9)    
+#define DEF_COMP_CELL (2<<10)    
+
+#define DEF_BOUND (DEF_LOCAL | DEF_PARAM | DEF_IMPORT)
+
+#define SCOPE_OFFSET 12
+#define SCOPE_MASK (DEF_GLOBAL | DEF_LOCAL | DEF_PARAM | DEF_NONLOCAL)
+#define SYMBOL_TO_SCOPE(S) (((S) >> SCOPE_OFFSET) & SCOPE_MASK)
+
+#define LOCAL 1
+#define GLOBAL_EXPLICIT 2
+#define GLOBAL_IMPLICIT 3
+#define FREE 4
+#define CELL 5
+// 181
