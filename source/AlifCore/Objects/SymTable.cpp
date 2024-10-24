@@ -15,7 +15,7 @@
 static AlifSymTable* symtable_new() { // 367
 	AlifSymTable* st_{};
 
-	st_ = (AlifSymTable*)alifMem_objAlloc(sizeof(AlifSymTable));
+	st_ = (AlifSymTable*)alifMem_dataAlloc(sizeof(AlifSymTable));
 	if (st_ == nullptr) {
 		//alifErr_noMemory();
 		return nullptr;
@@ -64,7 +64,7 @@ AlifSymTable* alifSymtable_build(ModuleTy _mod, AlifObject* _filename,
 	st_->recursionLimit = ALIFCPP_RECURSION_LIMIT;
 
 	AlifSourceLocation loc0 = { 0, 0, 0, 0 };
-	if (!symtable_enter_block(st_, &ALIF_ID(top), AlifBlockType::Module_Block, (void*)_mod), loc0) {
+	if (!symtable_enter_block(st_, &ALIF_ID(top), BlockType_::Module_Block, (void*)_mod), loc0) {
 		//alifSymtable_free(st_);
 		return nullptr;
 	}
@@ -116,12 +116,11 @@ error:
 }
 
 
-void alifSymtable_free(AlifSymTable* _st) // 485
-{
+void alifSymtable_free(AlifSymTable* _st) { // 485
 	ALIF_XDECREF(_st->fileName);
 	ALIF_XDECREF(_st->blocks);
 	ALIF_XDECREF(_st->stack);
-	alifMem_objFree((void*)_st);
+	alifMem_dataFree((void*)_st);
 }
 
 static AlifIntT symtableEnter_existingBlock(AlifSymTable* _st, AlifSTEntryObject* _ste) { // 1381
@@ -134,17 +133,17 @@ static AlifIntT symtableEnter_existingBlock(AlifSymTable* _st, AlifSTEntryObject
 		_ste->compIterExpr = prev->compIterExpr;
 	}
 	
-	if (prev and prev->mangledNames != nullptr and _ste->type != Class_Block) {
+	if (prev and prev->mangledNames != nullptr and _ste->type != BlockType_::Class_Block) {
 		_ste->mangledNames = ALIF_NEWREF(prev->mangledNames);
 	}
 
 	_st->cur = _ste;
 
-	if (_st->future->features & CO_FUTURE_ANNOTATIONS and _ste->type == Annotation_Block) {
+	if (_st->future->features & CO_FUTURE_ANNOTATIONS and _ste->type == BlockType_::Annotation_Block) {
 		return 1;
 	}
 
-	if (_ste->type == Module_Block)
+	if (_ste->type == BlockType_::Module_Block)
 		_st->global = _st->cur->symbols;
 
 	if (prev) {
@@ -155,15 +154,14 @@ static AlifIntT symtableEnter_existingBlock(AlifSymTable* _st, AlifSTEntryObject
 	return 1;
 }
 
-static AlifIntT symtable_enterBlock(AlifSymTable* _st, AlifObject* _name, AlifBlockType _block,
+static AlifIntT symtable_enterBlock(AlifSymTable* _st, AlifObject* _name, BlockType_ _block,
 	void* _ast, AlifSourceLocation _loc) { // 1421
 	AlifSTEntryObject* _ste = ste_new(_st, _name, _block, _ast, _loc);
-	if (_ste == NULL)
-		return 0;
-	int result = symtableEnter_existingBlock(_st, _ste);
+	if (_ste == nullptr) return 0;
+
+	AlifIntT result = symtableEnter_existingBlock(_st, _ste);
 	ALIF_DECREF(_ste);
-	if (_block == Annotation_Block or _block == Type_Variable_Block or _block == Type_Alias_Block) {
-		//_Py_DECLARE_STR(format, ".format");
+	if (_block == BlockType_::Annotation_Block or _block == BlockType_::Type_Variable_Block or _block == BlockType_::Type_Alias_Block) {
 		if (!symtable_addDef(_st, &ALIF_STR(format), DEF_PARAM, _loc)) {
 			return 0;
 		}

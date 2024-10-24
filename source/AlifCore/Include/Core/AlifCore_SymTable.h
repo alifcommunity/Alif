@@ -3,7 +3,7 @@
 
 class Module; // 11
 
-enum AlifBlockType { // 13
+enum BlockType_ { // 13
 	Function_Block, Class_Block, Module_Block,
 
 	Annotation_Block,
@@ -77,7 +77,7 @@ public:
 	AlifObject* directives{};
 	AlifObject* mangledNames{};
 
-	AlifBlockType type{};
+	BlockType_ type{};
 
 	const char* scopeInfo{};
 
