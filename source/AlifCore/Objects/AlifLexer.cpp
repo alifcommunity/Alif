@@ -466,11 +466,25 @@ again:
 			}
 		}
 		while (IS_IDENTIFIER_CHAR(c_)) { // يجب مراجعة وظيفة هذا التحقق
+			/* // alif
+				هذا النظام تم إنشاءه لحساب عدد الاحرف الحقيقي للنص
+				حيث أن النظام القديم كان يعتبر الحرف العربي حرفين في نظام ويندوز واربعة في غيره
+				لأنه يقوم بحساب عدد البايتات بدل من حساب الاحرف
+				أي أن النظام القديم لا يأخذ الترميز النصي في الحسبان
+			*/
 			if (c_ >= 128) {
 				nonASCII = 1;
+				for (AlifIntT i = 0; i < sizeof(wchar_t); i++) {
+					c_ = tok_nextChar(_tokState);
+				}
+				_tokState->colOffset += 1 - sizeof(wchar_t);
 			}
-			c_ = tok_nextChar(_tokState);
+			else {
+				c_ = tok_nextChar(_tokState);
+			}
 		}
+		// c_ = tok_nextChar(_tokState);
+		/////////////////////////
 		tok_backup(_tokState, c_);
 		//if (nonASCII and !verify_identifier(_tokState)) {
 		//	return MAKE_TOKEN(ERRORTOKEN);
@@ -769,7 +783,23 @@ letterQuote:
 
 		/* the rest of STRING */
 		while (endQuoteSize != quoteSize) {
-			c_ = tok_nextChar(_tokState);
+			/* // alif
+				هذا النظام تم إنشاءه لحساب عدد الاحرف الحقيقي للنص
+				حيث أن النظام القديم كان يعتبر الحرف العربي حرفين في نظام ويندوز واربعة في غيره
+				لأنه يقوم بحساب عدد البايتات بدل من حساب الاحرف
+				أي أن النظام القديم لا يأخذ الترميز النصي في الحسبان
+			*/
+			if (c_ >= 128) {
+				for (AlifIntT i = 0; i < sizeof(wchar_t); i++) {
+					c_ = tok_nextChar(_tokState);
+				}
+				_tokState->colOffset += 1 - sizeof(wchar_t);
+			}
+			else {
+				c_ = tok_nextChar(_tokState);
+			}
+			//c_ = tok_nextChar(_tokState);
+			//////////////////////
 			if (_tokState->done == E_ERROR) {
 				return MAKE_TOKEN(ERRORTOKEN);
 			}
