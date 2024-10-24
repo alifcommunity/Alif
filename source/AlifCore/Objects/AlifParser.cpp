@@ -12343,7 +12343,7 @@ void parser_test(ModuleTy _p) {
 	AlifSizeT size = _p->V.module.body->size;
 
 	for (AlifSizeT i = 0; i < size; i++) {
-		printf("العقدة %u : \n", i);
+		printf("الحالة %u : \n", i);
 		if (m->typedElements[i]->type == StmtK_::ExprK) {
 			spaces += 4;
 			VISIT(expr, m->typedElements[i]->V.expression.val);

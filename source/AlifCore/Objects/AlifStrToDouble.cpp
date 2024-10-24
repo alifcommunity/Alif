@@ -21,7 +21,7 @@ static double _alifOS_asciiStrToDouble(const char* _nPtr, char** _endPtr) { // 9
 	result = _alif_dgStrToDouble(_nPtr, _endPtr);
 	//_ALIF_SET_53BIT_PRECISION_END;
 
-	if (*_endPtr == _nPtr)
+	//if (*_endPtr == _nPtr)
 		/* string might represent an inf or nan */
 		//result = _alif_parseInfOrNan(_nPtr, _endPtr);
 

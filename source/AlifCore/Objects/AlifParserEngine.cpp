@@ -10,7 +10,6 @@
 #include "AlifCore_Memory.h"
 
 
-
 AlifIntT alifParserEngine_insertMemo(AlifParser* _p, AlifIntT _mark, AlifIntT _type, void* _node) { // 76
 	Memo* m = (Memo*)alifASTMem_malloc(_p->astMem, sizeof(Memo));
 	if (m == nullptr) return -1;
@@ -34,14 +33,32 @@ AlifIntT alifParserEngine_updateMemo(AlifParser* _p,
 	return alifParserEngine_insertMemo(_p, _mark, _type, _node);
 }
 
-static AlifIntT get_keywordOrName(AlifParser* _p, AlifToken* _token) { // 158
-	AlifIntT nameLen = _token->endColOffset - _token->colOffset;
 
-	if (nameLen >= _p->nKeywordList
-		or _p->keywords[nameLen] == nullptr
-		or _p->keywords[nameLen]->type == -1) return NAME;
-	for (KeywordToken* k = _p->keywords[nameLen]; k != nullptr and k->type != -1; k++) {
-		if (strncmp(k->str, _token->start, nameLen) == 0) {
+static AlifIntT strLetters_count(const char* _str) { // alif
+	AlifIntT len = 0;
+	AlifIntT ch = 0;
+	while (_str[len] != L'\0' and _str[len] != L' '
+		and _str[len] != L'\r' and _str[len] != L'\n') {
+
+		if (iswalpha((unsigned char)_str[len])) {
+			len++;
+		}
+		ch++;
+		len++;
+	}
+	return ch;
+}
+
+static AlifIntT get_keywordOrName(AlifParser* _p, AlifToken* _token) { // 158
+	AlifIntT bytesCount = _token->endColOffset - _token->colOffset;
+	AlifIntT lettersCount = strLetters_count(_token->start); // alif
+
+	if (lettersCount >= _p->nKeywordList
+		or _p->keywords[lettersCount] == nullptr
+		or _p->keywords[lettersCount]->type == -1) return NAME;
+
+	for (KeywordToken* k = _p->keywords[lettersCount]; k != nullptr and k->type != -1; k++) {
+		if (strncmp(k->str, _token->start, bytesCount) == 0) {
 			return k->type;
 		}
 	}
