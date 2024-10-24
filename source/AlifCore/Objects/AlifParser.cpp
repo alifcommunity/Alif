@@ -21,13 +21,13 @@
 
 static const AlifIntT nKeywordList = 7;
 static KeywordToken* reservedKeywords[7] = {
-	new (KeywordToken[1]) { {nullptr, -1} },  // 0 char
-	new (KeywordToken[3]) { {"ك", 501}, {"و", 502}, {nullptr, -1} },  // 1 char
-	new (KeywordToken[7]) { {"في", 511}, {"او", 512}, {"من", 513},  {"مع", 514}, {"صح", 515}, {"هل", 516}, {nullptr, -1} },  // 2 chars
-	new (KeywordToken[9]) { {"اذا", 521}, {"ليس", 522}, {"مرر", 523}, {"عدم", 524}, {"ولد", 525},  {"صنف", 526},  {"خطا", 527},  {"عام", 528}, {nullptr, -1} },  // 3 chars
-	new (KeywordToken[8]) { {"احذف", 531}, {"دالة", 532}, {"لاجل", 533},  {"والا", 534}, {"توقف", 535}, {"نطاق", 536}, {"ارجع", 537}, {nullptr, -1}},  // 4 chars
-	new (KeywordToken[5]) { {"اواذا", 541}, {"بينما", 542},  {"انتظر", 543}, {"استمر", 544}, {nullptr, -1}},  // 5 chars
-	new (KeywordToken[3]) { {"مزامنة", 551}, {"استورد", 552}, {nullptr, -1}}  // 6 chars
+	new (KeywordToken[1])  { {nullptr, -1} },  // 0 char
+	new (KeywordToken[3])  { {"ك", 501}, {"و", 502}, {nullptr, -1} },  // 1 char
+	new (KeywordToken[8])  { {"في", 511}, {"او", 512}, {"أو", 512}, {"من", 513},  {"مع", 514}, {"صح", 515}, {"هل", 516}, {nullptr, -1} },  // 2 chars
+	new (KeywordToken[11]) { {"اذا", 521}, {"إذا", 521}, {"ليس", 522}, {"مرر", 523}, {"عدم", 524}, {"ولد", 525},  {"صنف", 526}, {"خطا", 527}, {"خطأ", 527},  {"عام", 528}, {nullptr, -1} },  // 3 chars
+	new (KeywordToken[10]) { {"احذف", 531}, {"دالة", 532}, {"لاجل", 533}, {"لأجل", 533},  {"والا", 534}, {"وإلا", 534}, {"توقف", 535}, {"نطاق", 536}, {"ارجع", 537}, {nullptr, -1}},  // 4 chars
+	new (KeywordToken[6])  { {"اواذا", 541}, {"أوإذا", 541}, {"بينما", 542},  {"انتظر", 543}, {"استمر", 544}, {nullptr, -1}},  // 5 chars
+	new (KeywordToken[3])  { {"مزامنة", 551}, {"استورد", 552}, {nullptr, -1}}  // 6 chars
 };
 // ^
 // |
@@ -12328,6 +12328,12 @@ void visit_expr(ExprTy v) {
 	if (v->type == ExprK_::ConstantK) {
 		VISIT(constant, v->V.constant.val);
 		spaces -= 4;
+	}
+	else if (v->type == ExprK_::NameK) {
+		print_space(spaces);
+		printf("%s : %s \n", "اسم", alifUStr_asUTF8(v->V.name.name));
+		spaces -= 4;
+		return;
 	}
 	else if (v->type == ExprK_::BinOpK) {
 		VISIT(binop, v->V.binOp.left);
