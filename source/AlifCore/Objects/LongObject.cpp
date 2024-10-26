@@ -8,6 +8,8 @@
 #define MEDIUM_VALUE(_x) ((stwodigits)alifLong_compactValue(_x)) // 23
 
 #define IS_SMALL_INT(_iVal) (-ALIF_NSMALLNEGINTS <= (_iVal) and (_iVal) < ALIF_NSMALLPOSINTS) // 25
+#define IS_SMALL_UINT(_iVal) ((_iVal) < ALIF_NSMALLPOSINTS)
+
 
 //#define WITH_ALIFLONG_MODULE 1 // 32
 
@@ -156,7 +158,34 @@ AlifObject* alifLong_fromLong(long _iVal) { // 293
 	}
 	return (AlifObject*)v_;
 }
+#define ALIFLONG_FROM_UINT(_intType, _iVal) \
+    do { \
+        if (IS_SMALL_UINT(_iVal)) { \
+            return get_smallInt((sdigit)(_iVal)); \
+        } \
+        /* Count the number of Python digits. */ \
+        AlifSizeT ndigits = 0; \
+        _intType t = (_iVal); \
+        while (t) { \
+            ++ndigits; \
+            t >>= ALIFLONG_SHIFT; \
+        } \
+        AlifLongObject *v = alifLong_new(ndigits); \
+        if (v == nullptr) { \
+            return nullptr; \
+        } \
+        digit *p = v->longValue.digit; \
+        while ((_iVal)) { \
+            *p++ = (digit)((_iVal) & ALIFLONG_MASK); \
+            (_iVal) >>= ALIFLONG_SHIFT; \
+        } \
+        return (AlifObject *)v; \
+    } while(0)
 
+
+AlifObject* alifLong_fromUnsignedLongLong(unsigned long long _ival) { // 367
+	ALIFLONG_FROM_UINT(unsigned long, _ival);
+}
 
 
 
@@ -208,12 +237,18 @@ overflow:
 	return -1;
 }
 
+AlifObject* alifLong_fromVoidPtr(void* _p) { // 1349
+#if SIZEOF_VOID_P <= SIZEOF_LONG
+	return alifLong_fromUnsignedLong((unsigned long)(uintptr_t)p);
+#else
 
+#if SIZEOF_LONG_LONG < SIZEOF_VOID_P
+#   error "alifLong_fromVoidPtr: sizeof(long long) < sizeof(void*)"
+#endif
+	return alifLong_fromUnsignedLongLong((unsigned long long)(uintptr_t)_p);
+#endif /* SIZEOF_VOID_P <= SIZEOF_LONG */
 
-
-
-
-
+}
 
 
 

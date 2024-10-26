@@ -10,7 +10,78 @@
 
 
 
+static AlifSTEntryObject* ste_new(AlifSymTable* _st, AlifObject* _name, BlockType_ _block,
+	void* _key, AlifSourceLocation _loc) { // 88
+	AlifSTEntryObject* ste_ = nullptr;
+	AlifObject* k = nullptr;
 
+	k = alifLong_fromVoidPtr(_key);
+	if (k == nullptr)
+		goto fail;
+	ste_ = ALIFOBJECT_NEW(AlifSTEntryObject, &_alifSTEntryType_);
+	if (ste_ == nullptr) {
+		ALIF_DECREF(k);
+		goto fail;
+	}
+	ste_->table = _st;
+	ste_->id = k; 
+
+	ste_->name = ALIF_NEWREF(_name);
+
+	ste_->symbols = nullptr;
+	ste_->varNames = nullptr;
+	ste_->children = nullptr;
+
+	ste_->directives = nullptr;
+	ste_->mangledNames = nullptr;
+
+	ste_->type = _block;
+	ste_->scopeInfo = nullptr;
+
+	ste_->nested = 0;
+	ste_->varArgs = 0;
+	ste_->varKeywords = 0;
+	ste_->annotationsUsed = 0;
+	ste_->loc = _loc;
+
+	if (_st->cur != nullptr and
+		(_st->cur->nested or
+			alifST_isFunctionLike(_st->cur)))
+		ste_->nested = 1;
+	ste_->generator = 0;
+	ste_->coroutine = 0;
+	ste_->comprehension = AlifComprehensionType::No_Comprehension;
+	ste_->returnsValue = 0;
+	ste_->needsClassClosure = 0;
+	ste_->compInlined = 0;
+	ste_->compIterTarget = 0;
+	ste_->canSeeClassScope = 0;
+	ste_->compIterExpr = 0;
+	ste_->needsClassDict = 0;
+	ste_->annotationBlock = nullptr;
+
+	ste_->symbols = alifDict_new();
+	ste_->varNames = alifList_new(0);
+	ste_->children = alifList_new(0);
+	if (ste_->symbols == nullptr
+		|| ste_->varNames == nullptr
+		|| ste_->children == nullptr)
+		goto fail;
+
+	if (alifDict_setItem(_st->blocks, ste_->id, (AlifObject*)ste_) < 0)
+		goto fail;
+
+	return ste_;
+fail:
+	ALIF_XDECREF(ste_);
+	return nullptr;
+}
+
+AlifTypeObject _alifSTEntryType_ = {
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "جدول الرموز الداخلي",
+	.basicSize = sizeof(AlifSTEntryObject),
+};
 
 static AlifSymTable* symtable_new() { // 367
 	AlifSymTable* st_{};
@@ -64,7 +135,7 @@ AlifSymTable* alifSymtable_build(ModuleTy _mod, AlifObject* _filename,
 	st_->recursionLimit = ALIFCPP_RECURSION_LIMIT;
 
 	AlifSourceLocation loc0 = { 0, 0, 0, 0 };
-	if (!symtable_enter_block(st_, &ALIF_ID(top), BlockType_::Module_Block, (void*)_mod), loc0) {
+	if (!symtable_enterBlock(st_, &ALIF_ID(top), BlockType_::Module_Block, (void*)_mod), loc0) {
 		//alifSymtable_free(st_);
 		return nullptr;
 	}
@@ -123,6 +194,14 @@ void alifSymtable_free(AlifSymTable* _st) { // 485
 	alifMem_dataFree((void*)_st);
 }
 
+AlifIntT alifST_isFunctionLike(AlifSTEntryObject* _ste) { // 558
+	return _ste->type == Function_Block
+		or _ste->type == Annotation_Block
+		or _ste->type == Type_Variable_Block
+		or _ste->type == Type_Alias_Block
+		or _ste->type == Type_Parameters_Block;
+}
+
 static AlifIntT symtableEnter_existingBlock(AlifSymTable* _st, AlifSTEntryObject* _ste) { // 1381
 	if (alifList_append(_st->stack, (AlifObject*)_ste) < 0) {
 		return 0;
@@ -171,3 +250,4 @@ static AlifIntT symtable_enterBlock(AlifSymTable* _st, AlifObject* _name, BlockT
 	}
 	return result;
 }
+

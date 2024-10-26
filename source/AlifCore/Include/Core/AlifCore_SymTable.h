@@ -102,7 +102,7 @@ public:
 	AlifSymTable* table{};
 };
 
-
+AlifIntT alifST_isFunctionLike(AlifSTEntryObject* ); // 138
 extern void alifSymtable_free(AlifSymTable*); // 147
 
 // 154

@@ -15,13 +15,14 @@
 
 
 AlifObject* alifLong_fromLong(long); // 16
+AlifObject* alifLong_fromUnsignedLongLong(unsigned long long ); // 17
 
 
 AlifSizeT alifLong_asSizeT(AlifObject*); // 24
 
 
 
-
+AlifObject* alifLong_fromVoidPtr(void*); // 87
 AlifObject* alifLong_fromString(const char*, char**, AlifIntT); // 97
 
 unsigned long alifOS_strToULong(const char*, char**, AlifIntT); // 102
