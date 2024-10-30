@@ -652,6 +652,7 @@
 
 #define ALIF_STR_LITERALS_INIT { \
     INIT_STR(Empty, ""), \
+    INIT_STR(format, ".format"), \
 }
 
 #define ALIF_STR_IDENTIFIERS_INIT { \
@@ -670,4 +671,5 @@
 	INIT_ID(hasLocation), \
 	INIT_ID(mro), \
 	INIT_ID(origin), \
+	INIT_ID(top), \
 }

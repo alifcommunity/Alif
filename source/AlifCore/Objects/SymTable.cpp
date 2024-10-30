@@ -64,8 +64,8 @@ static AlifSTEntryObject* ste_new(AlifSymTable* _st, AlifObject* _name, BlockTyp
 	ste_->varNames = alifList_new(0);
 	ste_->children = alifList_new(0);
 	if (ste_->symbols == nullptr
-		|| ste_->varNames == nullptr
-		|| ste_->children == nullptr)
+		or ste_->varNames == nullptr
+		or ste_->children == nullptr)
 		goto fail;
 
 	if (alifDict_setItem(_st->blocks, ste_->id, (AlifObject*)ste_) < 0)
@@ -77,10 +77,15 @@ fail:
 	return nullptr;
 }
 
-AlifTypeObject _alifSTEntryType_ = {
+AlifTypeObject _alifSTEntryType_ = { // 192
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
-	.name = "جدول الرموز الداخلي",
+	.name = "مدخل_جدول_الاسماء",
 	.basicSize = sizeof(AlifSTEntryObject),
+	.itemSize = 0,
+
+	.getAttro = alifObject_genericGetAttr,
+
+	.flags = ALIF_TPFLAGS_DEFAULT,
 };
 
 static AlifSymTable* symtable_new() { // 367
@@ -195,11 +200,11 @@ void alifSymtable_free(AlifSymTable* _st) { // 485
 }
 
 AlifIntT alifST_isFunctionLike(AlifSTEntryObject* _ste) { // 558
-	return _ste->type == Function_Block
-		or _ste->type == Annotation_Block
-		or _ste->type == Type_Variable_Block
-		or _ste->type == Type_Alias_Block
-		or _ste->type == Type_Parameters_Block;
+	return _ste->type == BlockType_::Function_Block
+		or _ste->type == BlockType_::Annotation_Block
+		or _ste->type == BlockType_::Type_Variable_Block
+		or _ste->type == BlockType_::Type_Alias_Block
+		or _ste->type == BlockType_::Type_Parameters_Block;
 }
 
 static AlifIntT symtableEnter_existingBlock(AlifSymTable* _st, AlifSTEntryObject* _ste) { // 1381
