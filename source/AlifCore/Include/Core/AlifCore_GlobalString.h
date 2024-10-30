@@ -18,7 +18,7 @@ public:
     class {
 	public:
         STRUCT_FOR_STR(Empty, "")
-		STRUCT_FOR_STR(format, ".شكل") // يرجى مراجعة الاسم ممكن اضافة شكل او تشكيل 
+		STRUCT_FOR_STR(format, ".format")
         //STRUCT_FOR_STR(Newline, "\n")
         //STRUCT_FOR_STR(OpenBr, "{")
         //STRUCT_FOR_STR(Percent, "%")
@@ -39,10 +39,10 @@ public:
 		STRUCT_FOR_ID(__origClass__)
 		STRUCT_FOR_ID(__package__)
 		STRUCT_FOR_ID(__spec__)
-     	STRUCT_FOR_ID(top)
      	STRUCT_FOR_ID(hasLocation)
      	STRUCT_FOR_ID(mro)
      	STRUCT_FOR_ID(origin)
+     	STRUCT_FOR_ID(top)
     } identifiers;
 	class {
 	public:

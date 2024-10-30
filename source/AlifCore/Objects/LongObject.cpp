@@ -158,12 +158,15 @@ AlifObject* alifLong_fromLong(long _iVal) { // 293
 	}
 	return (AlifObject*)v_;
 }
+
+
+ // 332
 #define ALIFLONG_FROM_UINT(_intType, _iVal) \
     do { \
         if (IS_SMALL_UINT(_iVal)) { \
             return get_smallInt((sdigit)(_iVal)); \
         } \
-        /* Count the number of Python digits. */ \
+        /* Count the number of Alif digits. */ \
         AlifSizeT ndigits = 0; \
         _intType t = (_iVal); \
         while (t) { \
@@ -183,8 +186,12 @@ AlifObject* alifLong_fromLong(long _iVal) { // 293
     } while(0)
 
 
-AlifObject* alifLong_fromUnsignedLongLong(unsigned long long _ival) { // 367
+AlifObject* alifLong_fromUnsignedLong(unsigned long _ival) { // 358
 	ALIFLONG_FROM_UINT(unsigned long, _ival);
+}
+
+AlifObject* alifLong_fromUnsignedLongLong(unsigned long long _ival) { // 366
+	ALIFLONG_FROM_UINT(unsigned long long, _ival);
 }
 
 
