@@ -6,6 +6,9 @@
 #include "AlifCore_BytesObject.h"
 
 
+#include <Equal.h>
+
+
 // Forward Declaration
 static inline AlifIntT alifUStrWriter_writeCharInline(AlifUStrWriter*, AlifUCS4);
 static inline void alifUStrWriter_initWithBuffer(AlifUStrWriter*, AlifObject*);
@@ -2028,7 +2031,9 @@ AlifIntT alifUStr_equalToUTF8AndSize(AlifObject* _uStr,
 
 
 
-
+AlifIntT alifUStr_eq(AlifObject* _aa, AlifObject* _bb) { // 11229
+	return uStr_eq(_aa, _bb);
+}
 
 
 static AlifHashT uStr_hash(AlifObject* _self) { // 11663

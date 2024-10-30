@@ -4,6 +4,13 @@
 extern AlifTypeObject _alifSetType_; // 9
 extern AlifTypeObject _alifFrozenSetType_; // 10
 
+AlifIntT alifSet_add(AlifObject* , AlifObject* ); // 16
+
+// 24
+#define ALIFFROZENSET_CHECK(_ob) \
+    (ALIF_IS_TYPE((_ob), &_alifFrozenSetType_) || \
+      alifType_isSubType(ALIF_TYPE(_ob), &_alifFrozenSetType_))
+
 
 // 30
 #define ALIFANYSET_CHECK(_ob) \
@@ -11,6 +18,10 @@ extern AlifTypeObject _alifFrozenSetType_; // 10
 	alifType_isSubType(ALIF_TYPE(_ob), &_alifSetType_) or \
 	alifType_isSubType(ALIF_TYPE(_ob), &_alifFrozenSetType_))
 
+// 36
+#define ALIFSET_CHECK(_ob) \
+    (ALIF_IS_TYPE((_ob), &_alifSetType_) or \
+    alifType_isSubType(ALIF_TYPE(_ob), &_alifSetType_))
 
 
 

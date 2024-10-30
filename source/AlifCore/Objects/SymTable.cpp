@@ -251,3 +251,37 @@ static AlifIntT symtable_enterBlock(AlifSymTable* _st, AlifObject* _name, BlockT
 	return result;
 }
 
+static AlifIntT check_name(AlifSymTable* _st, AlifObject* _name, AlifSourceLocation _loc,
+	ExprContext_ _ctx) { // 1556
+	//if (_ctx == Store and alifUStr_equalToASCIIString(name, "__debug__")) {
+		//alifErr_setString(_alifExcSyntaxError_, "cannot assign to __debug__");
+		//SET_ERROR_LOCATION(_st->fileName, _loc);
+		//return 0;
+	//}
+	//if (_ctx == Del and alifUStr_equalToASCIIString(name, "__debug__")) {
+		//alifErr_setString(_alifExcSyntaxError_, "cannot delete __debug__");
+		//SET_ERROR_LOCATION(_st->fileName, _loc);
+		//return 0;
+	//}
+	return 1;
+}
+
+static AlifIntT symtableAdd_defCtx(AlifSymTable* _st, AlifObject* _name, AlifIntT _flag,
+	AlifSourceLocation _loc, ExprContext_ _ctx) { // 1600
+	AlifIntT write_mask = DEF_PARAM | DEF_LOCAL | DEF_IMPORT;
+	if ((_flag & write_mask) and !check_name(_st, _name, _loc, _ctx)) {
+		return 0;
+	}
+	if ((_flag & DEF_TYPE_PARAM) and _st->cur->mangledNames != nullptr) {
+		if (alifSet_add(_st->cur->mangledNames, _name) < 0) {
+			return 0;
+		}
+	}
+	return symtable_add_def_helper(_st, _name, _flag, _st->cur, _loc);
+}
+
+static AlifIntT symtable_addDef(AlifSymTable* _st, AlifObject* _name, AlifIntT _flag,
+	AlifSourceLocation _loc) { // 1616
+	return symtableAdd_defCtx(_st, _name, _flag, _loc,
+		_flag == USE ? Load : Store);
+}
