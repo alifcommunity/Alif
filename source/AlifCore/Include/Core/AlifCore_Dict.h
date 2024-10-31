@@ -68,7 +68,7 @@ public:
 	uint32_t version{};
 	AlifSizeT usable{};
 	AlifSizeT nentries{};
-	char indices[];
+	char indices[0];
 };
 
 class DictValues { // 194
