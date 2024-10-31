@@ -12295,7 +12295,7 @@ void visit_constant(Constant v) {
 		return;
 	}
 	if (ALIFLONG_CHECK(v)) {
-		printf("%s : %u \n", v->type->name, alifLong_asSizeT(v));
+		printf("%s : %lld \n", v->type->name, alifLong_asSizeT(v));
 		return;
 	}
 	if (ALIFFLOAT_CHECK(v)) {
@@ -12349,10 +12349,11 @@ void parser_test(ModuleTy _p) {
 	AlifSizeT size = _p->V.module.body->size;
 
 	for (AlifSizeT i = 0; i < size; i++) {
-		printf("الحالة %u : \n", i);
+		printf("الحالة %lld : \n", i);
 		if (m->typedElements[i]->type == StmtK_::ExprK) {
 			spaces += 4;
 			VISIT(expr, m->typedElements[i]->V.expression.val);
+			spaces = 0;
 		}
 	}
 

@@ -88,6 +88,12 @@ AlifTypeObject _alifSTEntryType_ = { // 192
 	.flags = ALIF_TPFLAGS_DEFAULT,
 };
 
+
+
+static AlifIntT symtable_enterBlock(AlifSymTable*, AlifObject*, BlockType_, void*, AlifSourceLocation); // 234
+
+
+
 static AlifSymTable* symtable_new() { // 367
 	AlifSymTable* st_{};
 
@@ -140,7 +146,7 @@ AlifSymTable* alifSymtable_build(ModuleTy _mod, AlifObject* _filename,
 	st_->recursionLimit = ALIFCPP_RECURSION_LIMIT;
 
 	AlifSourceLocation loc0 = { 0, 0, 0, 0 };
-	if (!symtable_enterBlock(st_, &ALIF_ID(top), BlockType_::Module_Block, (void*)_mod), loc0) {
+	if (!symtable_enterBlock(st_, &ALIF_ID(top), BlockType_::Module_Block, (void*)_mod, loc0)) {
 		//alifSymtable_free(st_);
 		return nullptr;
 	}
@@ -185,6 +191,7 @@ AlifSymTable* alifSymtable_build(ModuleTy _mod, AlifObject* _filename,
 	}
 	alifSymtable_free(st_);
 	return nullptr;
+
 error:
 	(void)symtable_exitBlock(st_);
 	alifSymtable_free(st_);

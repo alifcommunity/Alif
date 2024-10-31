@@ -284,7 +284,7 @@ ASDLSeq* alifParserEngine_joinSequences(AlifParser* _p, ASDLSeq* _a, ASDLSeq* _b
 	for (AlifSizeT i = 0; i < firstLen; i++) {
 		ASDL_SEQ_SETUNTYPED(newSeq, k_++, ASDL_SEQ_GETUNTYPED(_a, i));
 	}
-	for (AlifUSizeT i = 0; i < secondLen; i++) {
+	for (AlifSizeT i = 0; i < secondLen; i++) {
 		ASDL_SEQ_SETUNTYPED(newSeq, k_++, ASDL_SEQ_GETUNTYPED(_b, i));
 	}
 
@@ -771,7 +771,7 @@ ExprTy alifParserEngine_joinedStr(AlifParser* _p, AlifPToken* _a,
 		resizedExprs = alifNew_exprSeq(index, _p->astMem);
 		if (resizedExprs == nullptr) return nullptr;
 
-		for (AlifUSizeT i = 0; i < index; i++) {
+		for (AlifSizeT i = 0; i < index; i++) {
 			ASDL_SEQ_SET(resizedExprs, i, ASDL_SEQ_GET(seq, i));
 		}
 	}

@@ -102,6 +102,9 @@ public:
 	AlifSymTable* table{};
 };
 
+extern AlifTypeObject _alifSTEntryType_; // 132
+
+
 extern AlifIntT alifST_isFunctionLike(AlifSTEntryObject* ); // 138
 extern void alifSymtable_free(AlifSymTable*); // 147
 

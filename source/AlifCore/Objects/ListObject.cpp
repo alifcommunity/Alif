@@ -9,7 +9,7 @@
 class AlifListArray{ // 28
 public:
 	AlifSizeT allocated{};
-	AlifObject* item[];
+	AlifObject* item[0];
 };
 static AlifListArray* list_allocateArray(AlifUSizeT _capacity) { // 34
 	if (_capacity > ALIF_SIZET_MAX / sizeof(AlifObject*) - 1) {
