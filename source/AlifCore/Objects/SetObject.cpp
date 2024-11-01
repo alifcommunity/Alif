@@ -1,29 +1,35 @@
 #include "alif.h"
-#include "AlifCore_ObjectAlloc.h""
+#include "AlifCore_ObjectAlloc.h"
+
+
+
+extern AlifObject _dummyStruct_; // 59 // was static
+
+#define DUMMY (&_dummyStruct_) // 61
 
 
 #define LINEAR_PROBES 9 // 69
 
 #define PERTURB_SHIFT 5 // 73
 
-static AlifIntT set_tableResize(AlifSetObject*, AlifSizeT);
+static AlifIntT set_tableResize(AlifSetObject*, AlifSizeT); // 120
 
 static AlifIntT set_addEntry(AlifSetObject* _so, AlifObject* _key, AlifHashT _hash) { // 123
-	SetEntry* table;
-	SetEntry* freesLot;
-	SetEntry* entry;
-	size_t perturb;
-	size_t mask;
-	size_t i_;                       /* Unsigned for defined overflow behavior */
-	AlifIntT probes;
-	AlifIntT cmp_;
+	SetEntry* table{};
+	SetEntry* freesLot{};
+	SetEntry* entry{};
+	AlifUSizeT perturb{};
+	AlifUSizeT mask{};
+	AlifUSizeT i_{};                       /* Unsigned for defined overflow behavior */
+	AlifIntT probes{};
+	AlifIntT cmp_{};
 
 	ALIF_INCREF(_key);
 
 restart:
 
 	mask = _so->mask;
-	i_ = (size_t)_hash & mask;
+	i_ = (AlifUSizeT)_hash & mask;
 	freesLot = nullptr;
 	perturb = _hash;
 
@@ -48,7 +54,7 @@ restart:
 					goto foundActive;
 				if (cmp_ < 0)
 					goto comparisonError;
-				if (table != _so->table || entry->key != startkey)
+				if (table != _so->table or entry->key != startkey)
 					goto restart;
 				mask = _so->mask;
 			}
@@ -74,7 +80,7 @@ foundUnused:
 	alifAtomic_storeSizeRelaxed(&_so->used, _so->used + 1);
 	entry->key = _key;
 	entry->hash = _hash;
-	if ((size_t)_so->fill * 5 < mask * 3)
+	if ((AlifUSizeT)_so->fill * 5 < mask * 3)
 		return 0;
 	return set_tableResize(_so, _so->used > 50000 ? _so->used * 2 : _so->used * 4);
 
@@ -86,6 +92,75 @@ comparisonError:
 	ALIF_DECREF(_key);
 	return -1;
 }
+
+
+static AlifIntT set_tableResize(AlifSetObject* _so, AlifSizeT _minUsed) { // 253
+	SetEntry* oldTable{}, * newTable{}, * entry{};
+	AlifSizeT oldMask = _so->mask;
+	AlifUSizeT newMask{};
+	AlifIntT isOldTableMalloced{};
+	SetEntry smallCopy[ALIFSET_MINSIZE];
+
+
+	/* Find the smallest table size > minused. */
+	/* XXX speed-up with intrinsics */
+	AlifUSizeT newSize = ALIFSET_MINSIZE;
+	while (newSize <= (AlifUSizeT)_minUsed) {
+		newSize <<= 1; // The largest possible value is ALIF_SIZET_MAX + 1.
+	}
+
+	/* Get space for a new table. */
+	oldTable = _so->table;
+	isOldTableMalloced = oldTable != _so->smallTable;
+
+	if (newSize == ALIFSET_MINSIZE) {
+		/* A large table is shrinking, or we can't get any smaller. */
+		newTable = _so->smallTable;
+		if (newTable == oldTable) {
+			if (_so->fill == _so->used) {
+				/* No dummies, so no point doing anything. */
+				return 0;
+			}
+			memcpy(smallCopy, oldTable, sizeof(smallCopy));
+			oldTable = smallCopy;
+		}
+	}
+	else {
+		newTable = (SetEntry*)alifMem_dataAlloc(newSize * sizeof(SetEntry));
+		if (newTable == nullptr) {
+			//alifErr_noMemory();
+			return -1;
+		}
+	}
+
+	/* Make the set empty, using the new table. */
+	memset(newTable, 0, sizeof(SetEntry) * newSize);
+	_so->mask = newSize - 1;
+	_so->table = newTable;
+
+	/* Copy the data over; this is refcount-neutral for active entries;
+	   dummy entries aren't copied over, of course */
+	newMask = (AlifUSizeT)_so->mask;
+	if (_so->fill == _so->used) {
+		for (entry = oldTable; entry <= oldTable + oldMask; entry++) {
+			if (entry->key != nullptr) {
+				set_insertClean(newTable, newMask, entry->key, entry->hash);
+			}
+		}
+	}
+	else {
+		_so->fill = _so->used;
+		for (entry = oldTable; entry <= oldTable + oldMask; entry++) {
+			if (entry->key != nullptr and entry->key != DUMMY) {
+				set_insertClean(newTable, newMask, entry->key, entry->hash);
+			}
+		}
+	}
+
+	if (isOldTableMalloced) alifMem_dataFree(oldTable);
+	return 0;
+}
+
 
 static AlifIntT set_addKey(AlifSetObject* _so, AlifObject* _key) { // 366
 	AlifHashT hash = alifObject_hashFast(_key);
@@ -119,9 +194,21 @@ AlifIntT alifSet_add(AlifObject* _anySet, AlifObject* _key) { // 2658
 		return -1;
 	}
 
-	AlifIntT rv_;
+	AlifIntT rv_{};
 	ALIF_BEGIN_CRITICAL_SECTION(_anySet);
 	rv_ = set_addKey((AlifSetObject*)_anySet, _key);
 	ALIF_END_CRITICAL_SECTION();
 	return rv_;
 }
+
+
+
+static AlifTypeObject _alifSetDummyType_ = { // 2743
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "<مفتاح_وهمي> نوع",
+	.basicSize = 0,
+	.itemSize = 0,
+	.flags = ALIF_TPFLAGS_DEFAULT, /*tp_flags */
+};
+
+static AlifObject _dummyStruct_ = ALIFOBJECT_HEAD_INIT(&_alifSetDummyType_); // 2766

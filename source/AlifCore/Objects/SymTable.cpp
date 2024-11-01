@@ -91,7 +91,7 @@ AlifTypeObject _alifSTEntryType_ = { // 192
 
 
 static AlifIntT symtable_enterBlock(AlifSymTable*, AlifObject*, BlockType_, void*, AlifSourceLocation); // 234
-
+static AlifIntT symtable_addDef(AlifSymTable*, AlifObject*, AlifIntT, AlifSourceLocation); // 261
 
 
 static AlifSymTable* symtable_new() { // 367
@@ -278,10 +278,10 @@ static AlifIntT check_name(AlifSymTable* _st, AlifObject* _name, AlifSourceLocat
 	return 1;
 }
 
-static AlifIntT symtableAdd_defCtx(AlifSymTable* _st, AlifObject* _name, AlifIntT _flag,
+static AlifIntT symtable_addDefCtx(AlifSymTable* _st, AlifObject* _name, AlifIntT _flag,
 	AlifSourceLocation _loc, ExprContext_ _ctx) { // 1600
-	AlifIntT write_mask = DEF_PARAM | DEF_LOCAL | DEF_IMPORT;
-	if ((_flag & write_mask) and !check_name(_st, _name, _loc, _ctx)) {
+	AlifIntT writeMask = DEF_PARAM | DEF_LOCAL | DEF_IMPORT;
+	if ((_flag & writeMask) and !check_name(_st, _name, _loc, _ctx)) {
 		return 0;
 	}
 	if ((_flag & DEF_TYPE_PARAM) and _st->cur->mangledNames != nullptr) {
@@ -289,11 +289,11 @@ static AlifIntT symtableAdd_defCtx(AlifSymTable* _st, AlifObject* _name, AlifInt
 			return 0;
 		}
 	}
-	return symtable_add_def_helper(_st, _name, _flag, _st->cur, _loc);
+	return symtable_addDefHelper(_st, _name, _flag, _st->cur, _loc);
 }
 
 static AlifIntT symtable_addDef(AlifSymTable* _st, AlifObject* _name, AlifIntT _flag,
 	AlifSourceLocation _loc) { // 1616
-	return symtableAdd_defCtx(_st, _name, _flag, _loc,
-		_flag == USE ? Load : Store);
+	return symtable_addDefCtx(_st, _name, _flag, _loc,
+		_flag == USE ? ExprContext_::Load : ExprContext_::Store);
 }

@@ -8,7 +8,7 @@ AlifIntT alifSet_add(AlifObject* , AlifObject* ); // 16
 
 // 24
 #define ALIFFROZENSET_CHECK(_ob) \
-    (ALIF_IS_TYPE((_ob), &_alifFrozenSetType_) || \
+    (ALIF_IS_TYPE((_ob), &_alifFrozenSetType_) or \
       alifType_isSubType(ALIF_TYPE(_ob), &_alifFrozenSetType_))
 
 
