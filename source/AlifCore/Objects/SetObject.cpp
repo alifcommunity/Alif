@@ -12,6 +12,48 @@ extern AlifObject _dummyStruct_; // 59 // was static
 
 #define PERTURB_SHIFT 5 // 73
 
+static SetEntry* set_lookKey(AlifSetObject* _so, AlifObject* _key, AlifHashT _hash) { // 76
+	SetEntry* table{};
+	SetEntry* entry{};
+	size_t perturb = _hash;
+	size_t mask = _so->mask;
+	size_t i_ = (size_t)_hash & mask; /* Unsigned for defined overflow behavior */
+	int probes{};
+	int cmp_{};
+
+	while (1) {
+		entry = &_so->table[i_];
+		probes = (i_ + LINEAR_PROBES <= mask) ? LINEAR_PROBES : 0;
+		do {
+			if (entry->hash == 0 and entry->key == NULL)
+				return entry;
+			if (entry->hash == _hash) {
+				AlifObject* startKey = entry->key;
+				if (startKey == _key)
+					return entry;
+				if (ALIFUSTR_CHECKEXACT(startKey)
+					and ALIFUSTR_CHECKEXACT(_key)
+					and alifUStr_eq(startKey, _key))
+					return entry;
+				table = _so->table;
+				ALIF_INCREF(startKey);
+				cmp_ = alifObject_richCompareBool(startKey, _key, ALIF_EQ);
+				ALIF_DECREF(startKey);
+				if (cmp_ < 0)
+					return NULL;
+				if (table != _so->table || entry->key != startKey)
+					return set_lookKey(_so, _key, _hash);
+				if (cmp_ > 0)
+					return entry;
+				mask = _so->mask;
+			}
+			entry++;
+		} while (probes--);
+		perturb >>= PERTURB_SHIFT;
+		i_ = (i_ * 5 + 1 + perturb) & mask;
+	}
+}
+
 static AlifIntT set_tableResize(AlifSetObject*, AlifSizeT); // 120
 
 static AlifIntT set_addEntry(AlifSetObject* _so, AlifObject* _key, AlifHashT _hash) { // 123
@@ -40,21 +82,21 @@ restart:
 			if (entry->hash == 0 and entry->key == nullptr)
 				goto foundUnusedOrDummy;
 			if (entry->hash == _hash) {
-				AlifObject* startkey = entry->key;
-				if (startkey == _key)
+				AlifObject* startKey = entry->key;
+				if (startKey == _key)
 					goto foundActive;
-				if (ALIFUSTR_CHECKEXACT(startkey)
-					and ALIFUSTR_CHECKEXACT(_key) and alifUStr_eq(startkey, _key) )
+				if (ALIFUSTR_CHECKEXACT(startKey)
+					and ALIFUSTR_CHECKEXACT(_key) and alifUStr_eq(startKey, _key) )
 					goto foundActive;
 				table = _so->table;
-				ALIF_INCREF(startkey);
-				cmp_ = alifObject_richCompareBool(startkey, _key, ALIF_EQ);
-				ALIF_DECREF(startkey);
+				ALIF_INCREF(startKey);
+				cmp_ = alifObject_richCompareBool(startKey, _key, ALIF_EQ);
+				ALIF_DECREF(startKey);
 				if (cmp_ > 0)
 					goto foundActive;
 				if (cmp_ < 0)
 					goto comparisonError;
-				if (table != _so->table or entry->key != startkey)
+				if (table != _so->table or entry->key != startKey)
 					goto restart;
 				mask = _so->mask;
 			}
@@ -162,12 +204,29 @@ static AlifIntT set_tableResize(AlifSetObject* _so, AlifSizeT _minUsed) { // 253
 }
 
 
+static AlifIntT set_containsEntry(AlifSetObject* _so, AlifObject* _key, AlifHashT _hash) { // 333
+	SetEntry* entry{};
+
+	entry = set_lookKey(_so, _key, _hash);
+	if (entry != nullptr)
+		return entry->key != nullptr;
+	return -1;
+}
+
 static AlifIntT set_addKey(AlifSetObject* _so, AlifObject* _key) { // 366
 	AlifHashT hash = alifObject_hashFast(_key);
 	if (hash == -1) {
 		return -1;
 	}
 	return set_addEntry(_so, _key, hash);
+}
+
+static AlifIntT set_containsKey(AlifSetObject* _so, AlifObject* _key) { // 376
+	AlifHashT hash = alifObject_hashFast(_key);
+	if (hash == -1) {
+		return -1;
+	}
+	return set_containsEntry(_so, _key, hash);
 }
 
 AlifTypeObject _alifSetType_ = { // 2449
@@ -186,6 +245,18 @@ AlifTypeObject _alifFrozenSetType_ = { // 2539
 	.itemSize = 0,
 };
 
+AlifIntT alifSet_contains(AlifObject* _anySet, AlifObject* _key) { // 2628
+	if (!ALIFANYSET_CHECK(_anySet)) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+
+	AlifIntT rv_;
+	ALIF_BEGIN_CRITICAL_SECTION(_anySet);
+	rv_ = set_containsKey((AlifSetObject*)_anySet, _key);
+	ALIF_END_CRITICAL_SECTION();
+	return rv_;
+}
 
 AlifIntT alifSet_add(AlifObject* _anySet, AlifObject* _key) { // 2658
 	if (!ALIFSET_CHECK(_anySet) and

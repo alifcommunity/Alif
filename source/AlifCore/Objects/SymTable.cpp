@@ -13,18 +13,18 @@
 static AlifSTEntryObject* ste_new(AlifSymTable* _st, AlifObject* _name, BlockType_ _block,
 	void* _key, AlifSourceLocation _loc) { // 88
 	AlifSTEntryObject* ste_ = nullptr;
-	AlifObject* k = nullptr;
+	AlifObject* k_ = nullptr;
 
-	k = alifLong_fromVoidPtr(_key);
-	if (k == nullptr)
+	k_ = alifLong_fromVoidPtr(_key);
+	if (k_ == nullptr)
 		goto fail;
 	ste_ = ALIFOBJECT_NEW(AlifSTEntryObject, &_alifSTEntryType_);
 	if (ste_ == nullptr) {
-		ALIF_DECREF(k);
+		ALIF_DECREF(k_);
 		goto fail;
 	}
 	ste_->table = _st;
-	ste_->id = k; 
+	ste_->id = k_; 
 
 	ste_->name = ALIF_NEWREF(_name);
 
@@ -263,6 +263,93 @@ static AlifIntT symtable_enterBlock(AlifSymTable* _st, AlifObject* _name, BlockT
 	return result;
 }
 
+static AlifIntT symtable_addDefHelper(AlifSymTable* _st, AlifObject* _name, AlifIntT _flag, AlifSTEntryObject* _ste,
+	AlifSourceLocation _loc) { // 1463
+	AlifObject* o_{};
+	AlifObject* dict{};
+	long val_{};
+	AlifObject* mangled = alif_maybeMangle(_st->private_, _st->cur, _name);
+
+	if (!mangled)
+		return 0;
+	dict = _ste->symbols;
+	if ((o_ = alifDict_getItemWithError(dict, mangled))) {
+		val_ = alifLong_asLong(o_);
+		//if (val_ == -1 and alifErr_occurred()) {
+			//goto error;
+		//}
+		if ((_flag & DEF_PARAM) and (val_ & DEF_PARAM)) {
+			/* Is it better to use 'mangled' or '_name' here? */
+			//alifErr_format(_alifExcSyntaxError_, DUPLICATE_ARGUMENT, _name);
+			//SET_ERROR_LOCATION(_st->fileName, _loc);
+			goto error;
+		}
+		if ((_flag & DEF_TYPE_PARAM) and (val_ & DEF_TYPE_PARAM)) {
+			//alifErr_format(_alifExcSyntaxError_, DUPLICATE_TYPE_PARAM, _name);
+			//SET_ERROR_LOCATION(_st->fileName, _loc);
+			goto error;
+		}
+		val_ |= _flag;
+	}
+	//else if (alifErr_occurred()) {
+		//goto error;
+	//}
+	else {
+		val_ = _flag;
+	}
+	if (_ste->compIterTarget) {
+		if (val_ & (DEF_GLOBAL | DEF_NONLOCAL)) {
+			//alifErr_format(_alifExcSyntaxError_,
+				//NAMED_EXPR_COMP_INNER_LOOP_CONFLICT, _name);
+			//SET_ERROR_LOCATION(_st->fileName, _loc);
+			goto error;
+		}
+		val_ |= DEF_COMP_ITER;
+	}
+	o_ = alifLong_fromLong(val_);
+	if (o_ == nullptr)
+		goto error;
+	if (alifDict_setItem(dict, mangled, o_) < 0) {
+		ALIF_DECREF(o_);
+		goto error;
+	}
+	ALIF_DECREF(o_);
+
+	if (_flag & DEF_PARAM) {
+		if (alifList_append(_ste->varNames, mangled) < 0)
+			goto error;
+	}
+	else if (_flag & DEF_GLOBAL) {
+		/* XXX need to update DEF_GLOBAL for other flags too;
+		   perhaps only DEF_FREE_GLOBAL */
+		val_ = 0;
+		if ((o_ = alifDict_getItemWithError(_st->global, mangled))) {
+			val_ = alifLong_asLong(o_);
+			//if (val_ == -1 and alifErr_occurred()) {
+				//goto error;
+			//}
+		}
+		//else if (alifErr_occurred()) {
+			//goto error;
+		//}
+		val_ |= _flag;
+		o_ = alifLong_fromLong(val_);
+		if (o_ == nullptr)
+			goto error;
+		if (alifDict_setItem(_st->global, mangled, o_) < 0) {
+			ALIF_DECREF(o_);
+			goto error;
+		}
+		ALIF_DECREF(o_);
+	}
+	ALIF_DECREF(mangled);
+	return 1;
+
+error:
+	ALIF_DECREF(mangled);
+	return 0;
+}
+
 static AlifIntT check_name(AlifSymTable* _st, AlifObject* _name, AlifSourceLocation _loc,
 	ExprContext_ _ctx) { // 1556
 	//if (_ctx == Store and alifUStr_equalToASCIIString(name, "__debug__")) {
@@ -296,4 +383,66 @@ static AlifIntT symtable_addDef(AlifSymTable* _st, AlifObject* _name, AlifIntT _
 	AlifSourceLocation _loc) { // 1616
 	return symtable_addDefCtx(_st, _name, _flag, _loc,
 		_flag == USE ? ExprContext_::Load : ExprContext_::Store);
+}
+
+AlifObject* alif_maybeMangle(AlifObject* _privateObj, AlifSTEntryObject* ste, AlifObject* name) { // 3070
+	if (ste->mangledNames != nullptr) {
+		AlifIntT result = alifSet_contains(ste->mangledNames, name);
+		if (result < 0) {
+			return nullptr;
+		}
+		if (result == 0) {
+			return ALIF_NEWREF(name);
+		}
+	}
+	return alif_mangle(_privateObj, name);
+}
+
+AlifObject* alif_mangle(AlifObject* _privateObj, AlifObject* _ident) { // 3090
+	if (_privateObj == nullptr or !ALIFUSTR_CHECK(_privateObj) ||
+		ALIFUSTR_READ_CHAR(_ident, 0) != '_' or
+		ALIFUSTR_READ_CHAR(_ident, 1) != '_') {
+		return ALIF_NEWREF(_ident);
+	}
+	AlifUSizeT nLen = ALIFUSTR_GET_LENGTH(_ident);
+	AlifUSizeT pLen = ALIFUSTR_GET_LENGTH(_privateObj);
+	if ((ALIFUSTR_READ_CHAR(_ident, nLen - 1) == '_' and
+		ALIFUSTR_READ_CHAR(_ident, nLen - 2) == '_') or
+		alifUStr_findChar(_ident, '.', 0, nLen, 1) != -1) {
+		return ALIF_NEWREF(_ident); /* Don't mangle __whatever__ */
+	}
+	AlifUSizeT iPriv = 0;
+	while (ALIFUSTR_READ_CHAR(_privateObj, iPriv) == '_') {
+		iPriv++;
+	}
+	if (iPriv == pLen) {
+		return ALIF_NEWREF(_ident); /* Don't mangle if class is just underscores */
+	}
+	pLen -= iPriv;
+
+	if (pLen + nLen >= ALIF_SIZET_MAX - 1) {
+		//alifErr_setString(_alifExcOverflowError_,
+			//"private identifier too large to be mangled");
+		return nullptr;
+	}
+
+	AlifUCS4 maxChar = ALIFUSTR_MAX_CHAR_VALUE(_ident);
+	if (ALIFUSTR_MAX_CHAR_VALUE(_privateObj) > maxChar) {
+		maxChar = ALIFUSTR_MAX_CHAR_VALUE(_privateObj);
+	}
+
+	AlifObject* result = alifUStr_new(1 + nLen + pLen, maxChar);
+	if (!result) {
+		return nullptr;
+	}
+	alifUStr_write(ALIFUSTR_KIND(result), ALIFUSTR_DATA(result), 0, '_');
+	if (alifUStr_copyCharacters(result, 1, _privateObj, iPriv, pLen) < 0) {
+		ALIF_DECREF(result);
+		return nullptr;
+	}
+	if (alifUStr_copyCharacters(result, pLen + 1, _ident, 0, nLen) < 0) {
+		ALIF_DECREF(result);
+		return nullptr;
+	}
+	return result;
 }

@@ -296,6 +296,7 @@ static inline AlifUCS4 alifUStr_maxCharValue(AlifObject* _op) { // 359
 
 
 
+AlifObject* alifUStr_new(AlifSizeT, AlifUCS4 ); // 386
 
 
 
