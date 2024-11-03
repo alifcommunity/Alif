@@ -3232,107 +3232,6 @@ done:
 }
 
 
-// ألف21: تعبير_فرعي_نجمة "," تعبيرات_فرعية_نجمة?
-static ASDLExprSeq* alif21(AlifParser* _p) {
-
-	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
-	if (_p->errorIndicator) { _p->level--; return nullptr; }
-
-	ASDLExprSeq* res{};
-	AlifIntT mark = _p->mark;
-
-	{ // تعبيرات_فرعية_نجمة "," تعبيرات_فرعية_نجمة?
-		if (_p->errorIndicator) { _p->level--; return nullptr; }
-
-		AlifPToken* literal{};
-		ExprTy a_{};
-		ASDLExprSeq* b_{};
-		if (
-			(a_ = starSubExpression_rule(_p)) // تعبير_فرعي_نجمة
-			and
-			(literal = alifParserEngine_expectToken(_p, COMMA)) // ","
-			and
-			(b_ = starSubExpressions_rule(_p), !_p->errorIndicator) // تعبير_فرعي_نجمة?
-			)
-		{
-			res = (ASDLExprSeq*)alifParserEngine_seqInsertInFront(_p, a_, (ASDLSeq*)b_);
-			if (res == nullptr
-				/*and alifErr_occurred()*/)
-			{
-				_p->errorIndicator = 1;
-				_p->level--;
-				return nullptr;
-			}
-			goto done;
-		}
-		_p->mark = mark;
-	}
-
-	res = nullptr;
-done:
-	_p->level--;
-	return res;
-}
-// ^
-// |
-// |
-// مترابطة: "(" [تعبير_فرعي_نجمة "," تعبيرات_فرعية_نجمة?] ")"
-static ExprTy tuple_rule(AlifParser* _p) {
-
-	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
-	if (_p->errorIndicator) { _p->level--; return nullptr; }
-
-	ExprTy res{};
-	AlifIntT mark = _p->mark;
-	if (_p->mark == _p->fill
-		and
-		alifParserEngine_fillToken(_p) < 0)
-	{
-		_p->errorIndicator = 1;
-		_p->level--;
-		return nullptr;
-	}
-
-	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
-
-	{ // "(" [تعبير_فرعي_نجمة "," تعبير_فرعي_نجمة?] ")"
-		AlifPToken* literal{};
-		AlifPToken* literal1{};
-		ASDLExprSeq* a_{}; // casted to ASDLExprSeq*
-		if (
-			(literal = alifParserEngine_expectToken(_p, LPAR)) // "("
-			and
-			(a_ = alif21(_p), !_p->errorIndicator) // [تعبير_فرعي_نجمة ',' تعبيرات_فرعية_نجمة?]
-			and
-			(literal1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
-			)
-		{
-			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token == nullptr) { _p->level--; return nullptr; }
-
-			AlifIntT endLineNo = token->endLineNo;
-			AlifIntT endColOffset = token->endColOffset;
-			res = alifAST_tuple(a_, ExprContext_::Load, EXTRA);
-			if (res == nullptr
-				/*and alifErr_occurred()*/)
-			{
-				_p->errorIndicator = 1;
-				_p->level--;
-				return nullptr;
-			}
-			goto done;
-		}
-		_p->mark = mark;
-	}
-
-	res = nullptr;
-done:
-	_p->level--;
-	return res;
-}
-
-
 // مصفوفة: "[" تعبيرات_فرعية_نجمة? "]"
 static ExprTy list_rule(AlifParser* _p) {
 
@@ -4020,6 +3919,234 @@ done:
 }
 
 
+// ألف21: تعبير_فرعي_نجمة "," تعبيرات_فرعية_نجمة?
+static ASDLExprSeq* alif21(AlifParser* _p) {
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	ASDLExprSeq* res{};
+	AlifIntT mark = _p->mark;
+
+	{ // تعبيرات_فرعية_نجمة "," تعبيرات_فرعية_نجمة?
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ASDLExprSeq* b_{};
+		if (
+			(a_ = starSubExpression_rule(_p)) // تعبير_فرعي_نجمة
+			and
+			(literal = alifParserEngine_expectToken(_p, COMMA)) // ","
+			and
+			(b_ = starSubExpressions_rule(_p), !_p->errorIndicator) // تعبيرات_فرعية_نجمة?
+			)
+		{
+			res = (ASDLExprSeq*)alifParserEngine_seqInsertInFront(_p, a_, (ASDLSeq*)b_);
+			if (res == nullptr
+				/*and alifErr_occurred()*/)
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+
+	res = nullptr;
+done:
+	_p->level--;
+	return res;
+}
+// ^
+// |
+// |
+// مترابطة: "(" [تعبير_فرعي_نجمة "," تعبيرات_فرعية_نجمة?] ")"
+static ExprTy tuple_rule(AlifParser* _p) {
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
+		and
+		alifParserEngine_fillToken(_p) < 0)
+	{
+		_p->errorIndicator = 1;
+		_p->level--;
+		return nullptr;
+	}
+
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
+
+	{ // "(" [تعبير_فرعي_نجمة "," تعبير_فرعي_نجمة?] ")"
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		ASDLExprSeq* a_{}; // casted to ASDLExprSeq*
+		if (
+			(literal = alifParserEngine_expectToken(_p, LPAR)) // "("
+			and
+			(a_ = alif21(_p), !_p->errorIndicator) // [تعبير_فرعي_نجمة ',' تعبيرات_فرعية_نجمة?]
+			and
+			(literal1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
+			)
+		{
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
+
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_tuple(a_, ExprContext_::Load, EXTRA);
+			if (res == nullptr
+				/*and alifErr_occurred()*/)
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+
+	res = nullptr;
+done:
+	_p->level--;
+	return res;
+}
+
+// ألف29: تعبير_ولد > تعبير
+static ExprTy alif29(AlifParser* _p) {
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+
+	{ // تعبير_ولد
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		ExprTy a_{};
+		if (
+			(a_ = yieldExpr_rule(_p)) // تعبير_ولد
+			)
+		{
+			res = a_;
+			goto done;
+		}
+		_p->mark = mark;
+	}
+	{ // تعبير
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		ExprTy a_{};
+		if (
+			(a_ = expression_rule(_p)) // تعبير
+			)
+		{
+			res = a_;
+			goto done;
+		}
+		_p->mark = mark;
+	}
+
+	res = nullptr;
+done:
+	_p->level--;
+	return res;
+}
+// ^
+// |
+// |
+// مجموعة: "(" تعبير_ولد > تعبير ")"
+static ExprTy group_rule(AlifParser* _p) {
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	{ // "(" تعبير_ولد > تعبير ")"
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		ExprTy a_{};
+		if (
+			(literal = alifParserEngine_expectToken(_p, LPAR)) // "("
+			and
+			(a_ = alif29(_p)) // تعبير_ولد > تعبير
+			and
+			(literal1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
+			)
+		{
+			res = a_;
+			if (res == nullptr
+				/*and alifErr_occurred()*/)
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+
+	res = nullptr;
+done:
+	_p->level--;
+	return res;
+}
+// ^
+// |
+// |
+// ألف28: مترابطة > مجموعة
+static ExprTy alif28(AlifParser* _p) {
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	{ // مترابطة
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		ExprTy tupleVar{};
+		if ((tupleVar = tuple_rule(_p)))
+		{
+			res = tupleVar;
+			goto done;
+		}
+		_p->mark = mark;
+	}
+	{ // مجموعة
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		ExprTy groupVar{};
+		if ((groupVar = group_rule(_p)))
+		{
+			res = groupVar;
+			goto done;
+		}
+		_p->mark = mark;
+	}
+
+	res = nullptr;
+done:
+	_p->level--;
+	return res;
+}
+// ^
+// |
+// |
 // ألف18: فهرس > فهرس_ضمني
 static ExprTy alif18(AlifParser* _p) { 
 
@@ -4276,17 +4403,17 @@ static ExprTy atom_rule(AlifParser* _p) {
 		}
 		_p->mark = mark;
 	}
-	{ // &"(" مترابطة
+	{ // &"(" (مترابطة > مجموعة)
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		ExprTy tupleVar{};
+		ExprTy val{};
 		if (
 			alifParserEngine_lookaheadWithInt(1, alifParserEngine_expectToken, _p, LPAR) // "("
 			and
-			(tupleVar = tuple_rule(_p)) // مترابطة
+			(val = alif28(_p)) // مترابطة > مجموعة
 			)
 		{
-			res = tupleVar;
+			res = val;
 			goto done;
 		}
 		_p->mark = mark;
@@ -12291,8 +12418,11 @@ void print_space(int _space) {
 void visit_constant(Constant v) {
 	print_space(spaces);
 	if (ALIFUSTR_CHECK(v)) {
+		if (alifUStr_isASCII(v)) {
+			printf("%s : %s \n", v->type->name, (const char*)ALIFUSTR_DATA(v));
+			return;
+		}
 		printf("%s : %s \n", v->type->name, alifUStr_asUTF8(v));
-		return;
 	}
 	if (ALIFLONG_CHECK(v)) {
 		printf("%s : %lld \n", v->type->name, alifLong_asSizeT(v));
@@ -12355,6 +12485,17 @@ void visit_expr(ExprTy v) {
 	}
 	else if (v->type == ExprK_::FormattedValK) {
 		VISIT(expr, v->V.fromattedValue.val);
+	}
+	else if (v->type == ExprK_::TupleK) {
+		print_space(spaces);
+		printf("%s\n", "مترابطة: ");
+		spaces += 4;
+		ExprTy tp{};
+		for (int i = 0; i < v->V.tuple.elts->size; i++) {
+			tp = v->V.tuple.elts->typedElements[i];
+			VISIT(expr, tp);
+			spaces += 4;
+		}
 	}
 }
 

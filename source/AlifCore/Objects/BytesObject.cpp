@@ -240,32 +240,6 @@ failed:
 
 
 
-wchar_t* alifBytes_asWString(AlifObject* _op) { // alif
-	if (!ALIFBYTES_CHECK(_op)) {
-		//alifErr_format(_alifExcTypeError_,
-		//	"expected bytes, %.200s found", ALIF_TYPE(_op)->name);
-		return nullptr;
-	}
-
-	const char* val = ((AlifBytesObject*)_op)->val;
-	AlifSizeT size = mbstowcs(nullptr, val, 0);
-
-	if (size == -1) {
-		// invalid conversion error
-		return nullptr;
-	}
-
-	wchar_t* res = (wchar_t*)alifMem_dataAlloc(size * sizeof(wchar_t));
-	if (res == nullptr) {
-		//alifErr_noMemory();
-		return nullptr;
-	}
-
-	mbstowcs(res, val, size);
-
-	return res;
-}
-
 char* alifBytes_asString(AlifObject* _op) { // 1221
 	if (!ALIFBYTES_CHECK(_op)) {
 		//alifErr_format(_alifExcTypeError_,

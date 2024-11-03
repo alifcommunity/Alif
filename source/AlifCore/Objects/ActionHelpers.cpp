@@ -816,7 +816,7 @@ ExprTy alifParserEngine_constantFromToken(AlifParser* _p, AlifPToken* _t) {
 }
 
 ExprTy alifParserEngine_constantFromString(AlifParser* _p, AlifPToken* _tok) { // 1412
-	wchar_t* str = alifBytes_asWString(_tok->bytes);
+	char* str = alifBytes_asString(_tok->bytes);
 	if (str == nullptr) return nullptr;
 
 	AlifObject* s = alifParserEngine_parseString(_p, _tok);
@@ -827,8 +827,8 @@ ExprTy alifParserEngine_constantFromString(AlifParser* _p, AlifPToken* _tok) { /
 		return nullptr;
 	}
 	AlifObject* type{};
-	if (str and str[0] == L'م') {
-		type = alifParserEngine_newIdentifier(_p, "م");
+	if (str and str[1] == (unsigned char)"ت"[1]) {
+		type = alifParserEngine_newIdentifier(_p, "ت");
 		if (type == nullptr) return nullptr;
 	}
 	return alifAST_constant(s, type, _tok->lineNo, _tok->colOffset, _tok->endLineNo, _tok->endColOffset, _p->astMem);
