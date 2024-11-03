@@ -246,7 +246,7 @@ overflow:
 
 AlifObject* alifLong_fromVoidPtr(void* _p) { // 1349
 #if SIZEOF_VOID_P <= SIZEOF_LONG
-	return alifLong_fromUnsignedLong((unsigned long)(uintptr_t)p);
+	return alifLong_fromUnsignedLong((unsigned long)(uintptr_t)_p);
 #else
 
 #if SIZEOF_LONG_LONG < SIZEOF_VOID_P

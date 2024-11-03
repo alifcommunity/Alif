@@ -179,7 +179,7 @@ static AlifDictKeysObject _emptyKeysStruct_ = { // 590
 		.log2Size = 0,
 		.log2IndexBytes = 0,
 		.kind = DictKeysKind_::Dict_Keys_UStr,
-		.mutex = {0},
+		.mutex = { .bits = 0 },
 		.version = 1,
 		.usable = 0,
 		.nentries = 0,
