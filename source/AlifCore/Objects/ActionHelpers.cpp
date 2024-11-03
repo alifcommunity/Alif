@@ -1038,7 +1038,7 @@ ExprTy alifParserEngine_concatenateStrings(AlifParser* _p, ASDLExprSeq* _strings
 		ASDL_SEQ_SET(values, currentPos++, elem);
 	}
 
-	if (fStringFound) {
+	if (!fStringFound) {
 		ExprTy element = ASDL_SEQ_GET(values, 0);
 		return element;
 	}

@@ -26,8 +26,8 @@
                 .strings = { \
                     .literals = ALIF_STR_LITERALS_INIT, \
                     .identifiers = ALIF_STR_IDENTIFIERS_INIT, \
-                    /*.ascii = ALIF_STR_ASCII_INIT,*/ \
-                    /*.latin1 = ALIF_STR_LATIN1_INIT,*/ \
+                    .ascii = ALIF_STR_ASCII_INIT, \
+                    .latin1 = ALIF_STR_LATIN1_INIT, \
                 }, \
                 .tupleEmpty = { \
                     .objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTupleType_, 0), \
@@ -95,8 +95,8 @@
     { \
         .latin1 = { \
             .base = ALIFUSTR_ASCII_BASE_INIT((_litr), 0), \
-            .utf8 = (UTF8), \
             .utf8Length = sizeof(UTF8) - 1, \
+            .utf8 = (char*)(UTF8), /* <<--- casted to (char*) // alif */ \
         }, \
         .data = (_litr), \
     }
@@ -672,4 +672,268 @@
 	INIT_ID(mro), \
 	INIT_ID(origin), \
 	INIT_ID(top), \
+}
+
+
+#define ALIF_STR_ASCII_INIT { \
+    ALIFASCIIOBJECT_INIT("\x00"), \
+    ALIFASCIIOBJECT_INIT("\x01"), \
+    ALIFASCIIOBJECT_INIT("\x02"), \
+    ALIFASCIIOBJECT_INIT("\x03"), \
+    ALIFASCIIOBJECT_INIT("\x04"), \
+    ALIFASCIIOBJECT_INIT("\x05"), \
+    ALIFASCIIOBJECT_INIT("\x06"), \
+    ALIFASCIIOBJECT_INIT("\x07"), \
+    ALIFASCIIOBJECT_INIT("\x08"), \
+    ALIFASCIIOBJECT_INIT("\x09"), \
+    ALIFASCIIOBJECT_INIT("\x0a"), \
+    ALIFASCIIOBJECT_INIT("\x0b"), \
+    ALIFASCIIOBJECT_INIT("\x0c"), \
+    ALIFASCIIOBJECT_INIT("\x0d"), \
+    ALIFASCIIOBJECT_INIT("\x0e"), \
+    ALIFASCIIOBJECT_INIT("\x0f"), \
+    ALIFASCIIOBJECT_INIT("\x10"), \
+    ALIFASCIIOBJECT_INIT("\x11"), \
+    ALIFASCIIOBJECT_INIT("\x12"), \
+    ALIFASCIIOBJECT_INIT("\x13"), \
+    ALIFASCIIOBJECT_INIT("\x14"), \
+    ALIFASCIIOBJECT_INIT("\x15"), \
+    ALIFASCIIOBJECT_INIT("\x16"), \
+    ALIFASCIIOBJECT_INIT("\x17"), \
+    ALIFASCIIOBJECT_INIT("\x18"), \
+    ALIFASCIIOBJECT_INIT("\x19"), \
+    ALIFASCIIOBJECT_INIT("\x1a"), \
+    ALIFASCIIOBJECT_INIT("\x1b"), \
+    ALIFASCIIOBJECT_INIT("\x1c"), \
+    ALIFASCIIOBJECT_INIT("\x1d"), \
+    ALIFASCIIOBJECT_INIT("\x1e"), \
+    ALIFASCIIOBJECT_INIT("\x1f"), \
+    ALIFASCIIOBJECT_INIT("\x20"), \
+    ALIFASCIIOBJECT_INIT("\x21"), \
+    ALIFASCIIOBJECT_INIT("\x22"), \
+    ALIFASCIIOBJECT_INIT("\x23"), \
+    ALIFASCIIOBJECT_INIT("\x24"), \
+    ALIFASCIIOBJECT_INIT("\x25"), \
+    ALIFASCIIOBJECT_INIT("\x26"), \
+    ALIFASCIIOBJECT_INIT("\x27"), \
+    ALIFASCIIOBJECT_INIT("\x28"), \
+    ALIFASCIIOBJECT_INIT("\x29"), \
+    ALIFASCIIOBJECT_INIT("\x2a"), \
+    ALIFASCIIOBJECT_INIT("\x2b"), \
+    ALIFASCIIOBJECT_INIT("\x2c"), \
+    ALIFASCIIOBJECT_INIT("\x2d"), \
+    ALIFASCIIOBJECT_INIT("\x2e"), \
+    ALIFASCIIOBJECT_INIT("\x2f"), \
+    ALIFASCIIOBJECT_INIT("\x30"), \
+    ALIFASCIIOBJECT_INIT("\x31"), \
+    ALIFASCIIOBJECT_INIT("\x32"), \
+    ALIFASCIIOBJECT_INIT("\x33"), \
+    ALIFASCIIOBJECT_INIT("\x34"), \
+    ALIFASCIIOBJECT_INIT("\x35"), \
+    ALIFASCIIOBJECT_INIT("\x36"), \
+    ALIFASCIIOBJECT_INIT("\x37"), \
+    ALIFASCIIOBJECT_INIT("\x38"), \
+    ALIFASCIIOBJECT_INIT("\x39"), \
+    ALIFASCIIOBJECT_INIT("\x3a"), \
+    ALIFASCIIOBJECT_INIT("\x3b"), \
+    ALIFASCIIOBJECT_INIT("\x3c"), \
+    ALIFASCIIOBJECT_INIT("\x3d"), \
+    ALIFASCIIOBJECT_INIT("\x3e"), \
+    ALIFASCIIOBJECT_INIT("\x3f"), \
+    ALIFASCIIOBJECT_INIT("\x40"), \
+    ALIFASCIIOBJECT_INIT("\x41"), \
+    ALIFASCIIOBJECT_INIT("\x42"), \
+    ALIFASCIIOBJECT_INIT("\x43"), \
+    ALIFASCIIOBJECT_INIT("\x44"), \
+    ALIFASCIIOBJECT_INIT("\x45"), \
+    ALIFASCIIOBJECT_INIT("\x46"), \
+    ALIFASCIIOBJECT_INIT("\x47"), \
+    ALIFASCIIOBJECT_INIT("\x48"), \
+    ALIFASCIIOBJECT_INIT("\x49"), \
+    ALIFASCIIOBJECT_INIT("\x4a"), \
+    ALIFASCIIOBJECT_INIT("\x4b"), \
+    ALIFASCIIOBJECT_INIT("\x4c"), \
+    ALIFASCIIOBJECT_INIT("\x4d"), \
+    ALIFASCIIOBJECT_INIT("\x4e"), \
+    ALIFASCIIOBJECT_INIT("\x4f"), \
+    ALIFASCIIOBJECT_INIT("\x50"), \
+    ALIFASCIIOBJECT_INIT("\x51"), \
+    ALIFASCIIOBJECT_INIT("\x52"), \
+    ALIFASCIIOBJECT_INIT("\x53"), \
+    ALIFASCIIOBJECT_INIT("\x54"), \
+    ALIFASCIIOBJECT_INIT("\x55"), \
+    ALIFASCIIOBJECT_INIT("\x56"), \
+    ALIFASCIIOBJECT_INIT("\x57"), \
+    ALIFASCIIOBJECT_INIT("\x58"), \
+    ALIFASCIIOBJECT_INIT("\x59"), \
+    ALIFASCIIOBJECT_INIT("\x5a"), \
+    ALIFASCIIOBJECT_INIT("\x5b"), \
+    ALIFASCIIOBJECT_INIT("\x5c"), \
+    ALIFASCIIOBJECT_INIT("\x5d"), \
+    ALIFASCIIOBJECT_INIT("\x5e"), \
+    ALIFASCIIOBJECT_INIT("\x5f"), \
+    ALIFASCIIOBJECT_INIT("\x60"), \
+    ALIFASCIIOBJECT_INIT("\x61"), \
+    ALIFASCIIOBJECT_INIT("\x62"), \
+    ALIFASCIIOBJECT_INIT("\x63"), \
+    ALIFASCIIOBJECT_INIT("\x64"), \
+    ALIFASCIIOBJECT_INIT("\x65"), \
+    ALIFASCIIOBJECT_INIT("\x66"), \
+    ALIFASCIIOBJECT_INIT("\x67"), \
+    ALIFASCIIOBJECT_INIT("\x68"), \
+    ALIFASCIIOBJECT_INIT("\x69"), \
+    ALIFASCIIOBJECT_INIT("\x6a"), \
+    ALIFASCIIOBJECT_INIT("\x6b"), \
+    ALIFASCIIOBJECT_INIT("\x6c"), \
+    ALIFASCIIOBJECT_INIT("\x6d"), \
+    ALIFASCIIOBJECT_INIT("\x6e"), \
+    ALIFASCIIOBJECT_INIT("\x6f"), \
+    ALIFASCIIOBJECT_INIT("\x70"), \
+    ALIFASCIIOBJECT_INIT("\x71"), \
+    ALIFASCIIOBJECT_INIT("\x72"), \
+    ALIFASCIIOBJECT_INIT("\x73"), \
+    ALIFASCIIOBJECT_INIT("\x74"), \
+    ALIFASCIIOBJECT_INIT("\x75"), \
+    ALIFASCIIOBJECT_INIT("\x76"), \
+    ALIFASCIIOBJECT_INIT("\x77"), \
+    ALIFASCIIOBJECT_INIT("\x78"), \
+    ALIFASCIIOBJECT_INIT("\x79"), \
+    ALIFASCIIOBJECT_INIT("\x7a"), \
+    ALIFASCIIOBJECT_INIT("\x7b"), \
+    ALIFASCIIOBJECT_INIT("\x7c"), \
+    ALIFASCIIOBJECT_INIT("\x7d"), \
+    ALIFASCIIOBJECT_INIT("\x7e"), \
+    ALIFASCIIOBJECT_INIT("\x7f"), \
+}
+
+
+#define ALIF_STR_LATIN1_INIT { \
+    ALIFUSTR_LATIN1_INIT("\x80", "\xc2\x80"), \
+    ALIFUSTR_LATIN1_INIT("\x81", "\xc2\x81"), \
+    ALIFUSTR_LATIN1_INIT("\x82", "\xc2\x82"), \
+    ALIFUSTR_LATIN1_INIT("\x83", "\xc2\x83"), \
+    ALIFUSTR_LATIN1_INIT("\x84", "\xc2\x84"), \
+    ALIFUSTR_LATIN1_INIT("\x85", "\xc2\x85"), \
+    ALIFUSTR_LATIN1_INIT("\x86", "\xc2\x86"), \
+    ALIFUSTR_LATIN1_INIT("\x87", "\xc2\x87"), \
+    ALIFUSTR_LATIN1_INIT("\x88", "\xc2\x88"), \
+    ALIFUSTR_LATIN1_INIT("\x89", "\xc2\x89"), \
+    ALIFUSTR_LATIN1_INIT("\x8a", "\xc2\x8a"), \
+    ALIFUSTR_LATIN1_INIT("\x8b", "\xc2\x8b"), \
+    ALIFUSTR_LATIN1_INIT("\x8c", "\xc2\x8c"), \
+    ALIFUSTR_LATIN1_INIT("\x8d", "\xc2\x8d"), \
+    ALIFUSTR_LATIN1_INIT("\x8e", "\xc2\x8e"), \
+    ALIFUSTR_LATIN1_INIT("\x8f", "\xc2\x8f"), \
+    ALIFUSTR_LATIN1_INIT("\x90", "\xc2\x90"), \
+    ALIFUSTR_LATIN1_INIT("\x91", "\xc2\x91"), \
+    ALIFUSTR_LATIN1_INIT("\x92", "\xc2\x92"), \
+    ALIFUSTR_LATIN1_INIT("\x93", "\xc2\x93"), \
+    ALIFUSTR_LATIN1_INIT("\x94", "\xc2\x94"), \
+    ALIFUSTR_LATIN1_INIT("\x95", "\xc2\x95"), \
+    ALIFUSTR_LATIN1_INIT("\x96", "\xc2\x96"), \
+    ALIFUSTR_LATIN1_INIT("\x97", "\xc2\x97"), \
+    ALIFUSTR_LATIN1_INIT("\x98", "\xc2\x98"), \
+    ALIFUSTR_LATIN1_INIT("\x99", "\xc2\x99"), \
+    ALIFUSTR_LATIN1_INIT("\x9a", "\xc2\x9a"), \
+    ALIFUSTR_LATIN1_INIT("\x9b", "\xc2\x9b"), \
+    ALIFUSTR_LATIN1_INIT("\x9c", "\xc2\x9c"), \
+    ALIFUSTR_LATIN1_INIT("\x9d", "\xc2\x9d"), \
+    ALIFUSTR_LATIN1_INIT("\x9e", "\xc2\x9e"), \
+    ALIFUSTR_LATIN1_INIT("\x9f", "\xc2\x9f"), \
+    ALIFUSTR_LATIN1_INIT("\xa0", "\xc2\xa0"), \
+    ALIFUSTR_LATIN1_INIT("\xa1", "\xc2\xa1"), \
+    ALIFUSTR_LATIN1_INIT("\xa2", "\xc2\xa2"), \
+    ALIFUSTR_LATIN1_INIT("\xa3", "\xc2\xa3"), \
+    ALIFUSTR_LATIN1_INIT("\xa4", "\xc2\xa4"), \
+    ALIFUSTR_LATIN1_INIT("\xa5", "\xc2\xa5"), \
+    ALIFUSTR_LATIN1_INIT("\xa6", "\xc2\xa6"), \
+    ALIFUSTR_LATIN1_INIT("\xa7", "\xc2\xa7"), \
+    ALIFUSTR_LATIN1_INIT("\xa8", "\xc2\xa8"), \
+    ALIFUSTR_LATIN1_INIT("\xa9", "\xc2\xa9"), \
+    ALIFUSTR_LATIN1_INIT("\xaa", "\xc2\xaa"), \
+    ALIFUSTR_LATIN1_INIT("\xab", "\xc2\xab"), \
+    ALIFUSTR_LATIN1_INIT("\xac", "\xc2\xac"), \
+    ALIFUSTR_LATIN1_INIT("\xad", "\xc2\xad"), \
+    ALIFUSTR_LATIN1_INIT("\xae", "\xc2\xae"), \
+    ALIFUSTR_LATIN1_INIT("\xaf", "\xc2\xaf"), \
+    ALIFUSTR_LATIN1_INIT("\xb0", "\xc2\xb0"), \
+    ALIFUSTR_LATIN1_INIT("\xb1", "\xc2\xb1"), \
+    ALIFUSTR_LATIN1_INIT("\xb2", "\xc2\xb2"), \
+    ALIFUSTR_LATIN1_INIT("\xb3", "\xc2\xb3"), \
+    ALIFUSTR_LATIN1_INIT("\xb4", "\xc2\xb4"), \
+    ALIFUSTR_LATIN1_INIT("\xb5", "\xc2\xb5"), \
+    ALIFUSTR_LATIN1_INIT("\xb6", "\xc2\xb6"), \
+    ALIFUSTR_LATIN1_INIT("\xb7", "\xc2\xb7"), \
+    ALIFUSTR_LATIN1_INIT("\xb8", "\xc2\xb8"), \
+    ALIFUSTR_LATIN1_INIT("\xb9", "\xc2\xb9"), \
+    ALIFUSTR_LATIN1_INIT("\xba", "\xc2\xba"), \
+    ALIFUSTR_LATIN1_INIT("\xbb", "\xc2\xbb"), \
+    ALIFUSTR_LATIN1_INIT("\xbc", "\xc2\xbc"), \
+    ALIFUSTR_LATIN1_INIT("\xbd", "\xc2\xbd"), \
+    ALIFUSTR_LATIN1_INIT("\xbe", "\xc2\xbe"), \
+    ALIFUSTR_LATIN1_INIT("\xbf", "\xc2\xbf"), \
+    ALIFUSTR_LATIN1_INIT("\xc0", "\xc3\x80"), \
+    ALIFUSTR_LATIN1_INIT("\xc1", "\xc3\x81"), \
+    ALIFUSTR_LATIN1_INIT("\xc2", "\xc3\x82"), \
+    ALIFUSTR_LATIN1_INIT("\xc3", "\xc3\x83"), \
+    ALIFUSTR_LATIN1_INIT("\xc4", "\xc3\x84"), \
+    ALIFUSTR_LATIN1_INIT("\xc5", "\xc3\x85"), \
+    ALIFUSTR_LATIN1_INIT("\xc6", "\xc3\x86"), \
+    ALIFUSTR_LATIN1_INIT("\xc7", "\xc3\x87"), \
+    ALIFUSTR_LATIN1_INIT("\xc8", "\xc3\x88"), \
+    ALIFUSTR_LATIN1_INIT("\xc9", "\xc3\x89"), \
+    ALIFUSTR_LATIN1_INIT("\xca", "\xc3\x8a"), \
+    ALIFUSTR_LATIN1_INIT("\xcb", "\xc3\x8b"), \
+    ALIFUSTR_LATIN1_INIT("\xcc", "\xc3\x8c"), \
+    ALIFUSTR_LATIN1_INIT("\xcd", "\xc3\x8d"), \
+    ALIFUSTR_LATIN1_INIT("\xce", "\xc3\x8e"), \
+    ALIFUSTR_LATIN1_INIT("\xcf", "\xc3\x8f"), \
+    ALIFUSTR_LATIN1_INIT("\xd0", "\xc3\x90"), \
+    ALIFUSTR_LATIN1_INIT("\xd1", "\xc3\x91"), \
+    ALIFUSTR_LATIN1_INIT("\xd2", "\xc3\x92"), \
+    ALIFUSTR_LATIN1_INIT("\xd3", "\xc3\x93"), \
+    ALIFUSTR_LATIN1_INIT("\xd4", "\xc3\x94"), \
+    ALIFUSTR_LATIN1_INIT("\xd5", "\xc3\x95"), \
+    ALIFUSTR_LATIN1_INIT("\xd6", "\xc3\x96"), \
+    ALIFUSTR_LATIN1_INIT("\xd7", "\xc3\x97"), \
+    ALIFUSTR_LATIN1_INIT("\xd8", "\xc3\x98"), \
+    ALIFUSTR_LATIN1_INIT("\xd9", "\xc3\x99"), \
+    ALIFUSTR_LATIN1_INIT("\xda", "\xc3\x9a"), \
+    ALIFUSTR_LATIN1_INIT("\xdb", "\xc3\x9b"), \
+    ALIFUSTR_LATIN1_INIT("\xdc", "\xc3\x9c"), \
+    ALIFUSTR_LATIN1_INIT("\xdd", "\xc3\x9d"), \
+    ALIFUSTR_LATIN1_INIT("\xde", "\xc3\x9e"), \
+    ALIFUSTR_LATIN1_INIT("\xdf", "\xc3\x9f"), \
+    ALIFUSTR_LATIN1_INIT("\xe0", "\xc3\xa0"), \
+    ALIFUSTR_LATIN1_INIT("\xe1", "\xc3\xa1"), \
+    ALIFUSTR_LATIN1_INIT("\xe2", "\xc3\xa2"), \
+    ALIFUSTR_LATIN1_INIT("\xe3", "\xc3\xa3"), \
+    ALIFUSTR_LATIN1_INIT("\xe4", "\xc3\xa4"), \
+    ALIFUSTR_LATIN1_INIT("\xe5", "\xc3\xa5"), \
+    ALIFUSTR_LATIN1_INIT("\xe6", "\xc3\xa6"), \
+    ALIFUSTR_LATIN1_INIT("\xe7", "\xc3\xa7"), \
+    ALIFUSTR_LATIN1_INIT("\xe8", "\xc3\xa8"), \
+    ALIFUSTR_LATIN1_INIT("\xe9", "\xc3\xa9"), \
+    ALIFUSTR_LATIN1_INIT("\xea", "\xc3\xaa"), \
+    ALIFUSTR_LATIN1_INIT("\xeb", "\xc3\xab"), \
+    ALIFUSTR_LATIN1_INIT("\xec", "\xc3\xac"), \
+    ALIFUSTR_LATIN1_INIT("\xed", "\xc3\xad"), \
+    ALIFUSTR_LATIN1_INIT("\xee", "\xc3\xae"), \
+    ALIFUSTR_LATIN1_INIT("\xef", "\xc3\xaf"), \
+    ALIFUSTR_LATIN1_INIT("\xf0", "\xc3\xb0"), \
+    ALIFUSTR_LATIN1_INIT("\xf1", "\xc3\xb1"), \
+    ALIFUSTR_LATIN1_INIT("\xf2", "\xc3\xb2"), \
+    ALIFUSTR_LATIN1_INIT("\xf3", "\xc3\xb3"), \
+    ALIFUSTR_LATIN1_INIT("\xf4", "\xc3\xb4"), \
+    ALIFUSTR_LATIN1_INIT("\xf5", "\xc3\xb5"), \
+    ALIFUSTR_LATIN1_INIT("\xf6", "\xc3\xb6"), \
+    ALIFUSTR_LATIN1_INIT("\xf7", "\xc3\xb7"), \
+    ALIFUSTR_LATIN1_INIT("\xf8", "\xc3\xb8"), \
+    ALIFUSTR_LATIN1_INIT("\xf9", "\xc3\xb9"), \
+    ALIFUSTR_LATIN1_INIT("\xfa", "\xc3\xba"), \
+    ALIFUSTR_LATIN1_INIT("\xfb", "\xc3\xbb"), \
+    ALIFUSTR_LATIN1_INIT("\xfc", "\xc3\xbc"), \
+    ALIFUSTR_LATIN1_INIT("\xfd", "\xc3\xbd"), \
+    ALIFUSTR_LATIN1_INIT("\xfe", "\xc3\xbe"), \
+    ALIFUSTR_LATIN1_INIT("\xff", "\xc3\xbf"), \
 }

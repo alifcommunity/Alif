@@ -4785,9 +4785,9 @@ static ExprTy primary_raw(AlifParser* _p) {
 	{ // جزء
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		ExprTy جزء{};
-		if (جزء = atom_rule(_p)) {
-			res = جزء;
+		ExprTy atom{};
+		if (atom = atom_rule(_p)) {
+			res = atom;
 			goto done;
 		}
 		_p->mark = mark;
@@ -12268,7 +12268,7 @@ void* alifParserEngine_parse(AlifParser* _p) {
 		result = funcRun_rule(_p);
 	}
 
-	parser_test((ModuleTy)result);
+	parser_test((ModuleTy)result); // alif
 	return result;
 }
 
@@ -12341,6 +12341,20 @@ void visit_expr(ExprTy v) {
 		printf("%s\n", operators[v->V.binOp.op]);
 		VISIT(binop, v->V.binOp.right);
 		spaces -= 4;
+	}
+	else if (v->type == ExprK_::JoinStrK) {
+		print_space(spaces);
+		printf("%s\n", "نص تنفيذي: ");
+		spaces += 4;
+		ExprTy js{};
+		for (int i = 0; i < v->V.joinStr.vals->size; i++) {
+			js = v->V.joinStr.vals->typedElements[i];
+			VISIT(expr, js);
+			spaces += 4;
+		}
+	}
+	else if (v->type == ExprK_::FormattedValK) {
+		VISIT(expr, v->V.fromattedValue.val);
 	}
 }
 

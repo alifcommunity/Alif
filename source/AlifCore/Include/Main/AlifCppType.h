@@ -26,9 +26,10 @@ extern const unsigned int _alifCppTypeTable_[256];
 #define ALIF_ISSPACE(_c)  (_alifCppTypeTable_[ALIF_CHARMASK(_c)] & ALIF_CPPTF_SPACE)
 
 
-extern const unsigned char _alifCppTypeToLower_[256];
-extern const unsigned char _alifCppTypeToUpper_[256];
-
-#define ALIF_TOLOWER(_c) (_alifCppTypeToLower_[ALIF_CHARMASK(_c)])
-#define ALIF_TOUPPER(_c) (_alifCppTypeToUpper_[ALIF_CHARMASK(_c)])
+// لا حاجة بها ويجب خذفها
+//extern const unsigned char _alifCppTypeToLower_[256];
+//extern const unsigned char _alifCppTypeToUpper_[256];
+//
+//#define ALIF_TOLOWER(_c) (_alifCppTypeToLower_[ALIF_CHARMASK(_c)])
+//#define ALIF_TOUPPER(_c) (_alifCppTypeToUpper_[ALIF_CHARMASK(_c)])
 
