@@ -16,7 +16,6 @@ AlifObject* alifBytes_fromString(const char*);
 
 
 char* alifBytes_asString(AlifObject*); // 39
-wchar_t* alifBytes_asWString(AlifObject*); // alif
 
 void alifBytes_concat(AlifObject**, AlifObject*); // 41
 

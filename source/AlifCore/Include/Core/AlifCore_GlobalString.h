@@ -44,11 +44,13 @@ public:
      	STRUCT_FOR_ID(origin)
      	STRUCT_FOR_ID(top)
     } identifiers;
+
 	class {
 	public:
 		AlifASCIIObject ascii;
 		uint8_t data[2];
 	} ascii[128];
+
 	class {
 	public:
 		AlifCompactUStrObject latin1;

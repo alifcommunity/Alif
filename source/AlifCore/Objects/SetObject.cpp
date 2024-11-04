@@ -2,8 +2,8 @@
 #include "AlifCore_ObjectAlloc.h"
 
 
-
-extern AlifObject _dummyStruct_; // 59 // was static
+// was static but shows error
+extern AlifObject _dummyStruct_; // 59 // alif
 
 #define DUMMY (&_dummyStruct_) // 61
 
@@ -282,4 +282,4 @@ static AlifTypeObject _alifSetDummyType_ = { // 2743
 	.flags = ALIF_TPFLAGS_DEFAULT, /*tp_flags */
 };
 
-static AlifObject _dummyStruct_ = ALIFOBJECT_HEAD_INIT(&_alifSetDummyType_); // 2766
+AlifObject _dummyStruct_ = ALIFOBJECT_HEAD_INIT(&_alifSetDummyType_); // 2766

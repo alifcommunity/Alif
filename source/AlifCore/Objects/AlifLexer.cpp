@@ -226,6 +226,8 @@ static inline AlifIntT tok_continuationLine(TokenState* _tokState) { // 387
 
 static AlifIntT tokGet_normalMode(TokenState* _tokState,
 	TokenizerMode* _currentTok, AlifToken* _token) { // 408
+
+	AlifIntT secondByte = 1; // alif
 	AlifIntT c_{};
 	AlifIntT blankLine{}, nonASCII{};
 
@@ -453,11 +455,15 @@ again:
 	if (IS_IDENTIFIER_START(c_)) {
 		AlifIntT b_ = 0, r_ = 0, u_ = 0, f_ = 0;
 		while (true) {
-			if (!(b_ or u_ or f_) and c_ == L'ب') b_ = 1; // ب = بايت
-			else if (!(b_ or u_ or r_) and c_ == L'ت') u_ = 1; // ت = ترميز
-			else if (!(r_ or u_) and c_ == L'خ') r_ = 1; // خ = خام
-			else if (!(f_ or b_ or u_) and c_ == L'م') f_ = 1; // م = منسق
-			else break;
+			if (c_ >= 128) { c_ = tok_nextChar(_tokState); }
+			if (!(b_ or u_ or f_) and c_ == (unsigned char)"ب"[secondByte]) b_ = 1; // ب = بايت
+			else if (!(b_ or u_ or r_) and c_ == (unsigned char)"ت"[secondByte]) u_ = 1; // ت = ترميز
+			else if (!(r_ or u_) and c_ == (unsigned char)"خ"[secondByte]) r_ = 1; // خ = خام
+			else if (!(f_ or b_ or u_) and c_ == (unsigned char)"م"[secondByte]) f_ = 1; // م = منسق
+			else {
+				tok_backup(_tokState, c_); // alif
+				break;
+			}
 
 			c_ = tok_nextChar(_tokState);
 			if (c_ == L'"' or c_ == L'\'') {
@@ -698,9 +704,10 @@ again:
 	}
 
 fStringQuote:
-	if ((ALIF_TOLOWER(*_tokState->start) == L'م' or ALIF_TOLOWER(*_tokState->start) == L'خ')
-		and (c_ == L'\'' or c_ == L'"'))
-	{
+	if ((*(_tokState->start + secondByte) == "م"[secondByte]
+		or (*_tokState->start + secondByte + 2) == "خ"[secondByte]) // alif
+		and (c_ == L'\'' or c_ == L'"')) {
+
 		AlifIntT quote = c_;
 		AlifIntT quoteSize = 1;
 
@@ -742,10 +749,10 @@ fStringQuote:
 		theCurrentTok->inFormatSpec = 0;
 		theCurrentTok->fStringDebug = 0;
 
-		if (*_tokState->start == L'م') {
-			theCurrentTok->fStringRaw = ALIF_TOLOWER(*(_tokState->start + 1)) == L'خ';
+		if (*(_tokState->start + secondByte) == "م"[secondByte]) {
+			theCurrentTok->fStringRaw = *(_tokState->start + secondByte + 2) == "خ"[secondByte];
 		}
-		else if (*_tokState->start == L'خ') {
+		else if (*_tokState->start == "خ"[secondByte]) {
 			theCurrentTok->fStringRaw = 1;
 		}
 		else {
@@ -892,6 +899,7 @@ letterQuote:
 
 		if (c_ == L':' and cursor == _currentTok->curlyBracExprStartDepth) {
 			_currentTok->type = TokenizerModeType_::Token_FStringMode;
+			_currentTok->inFormatSpec = 1;
 			pStart = _tokState->start;
 			pEnd = _tokState->cur;
 			return MAKE_TOKEN(alifToken_oneChar(c_));
@@ -1066,10 +1074,10 @@ fStringMiddle:
 	_tokState->multiLineStart = _tokState->lineStart;
 	while (endQuoteSize != _currentTok->fStringQuoteSize) {
 		AlifIntT c_ = tok_nextChar(_tokState);
-		if (_tokState->done == E_ERROR or _tokState->done == E_DECODE)
+		if (_tokState->done == E_ERROR or _tokState->done == E_DECODE) {
 			return MAKE_TOKEN(ERRORTOKEN);
-
-		AlifIntT inFormatSpec = (_currentTok->lastExprEnd != -1
+		}
+		AlifIntT inFormatSpec = (_currentTok->inFormatSpec
 			and INSIDE_FSTRING_EXPR(_currentTok));
 
 		if (c_ == EOF or (_currentTok->fStringQuoteSize == 1 and c_ == L'\n')) {
@@ -1080,6 +1088,7 @@ fStringMiddle:
 			if (inFormatSpec and c_ == L'\n') {
 				tok_backup(_tokState, c_);
 				TOK_GET_MODE(_tokState)->type = TokenizerModeType_::Token_RegularMode;
+				_currentTok->inFormatSpec = 0;
 				pStart = _tokState->start;
 				pEnd = _tokState->cur;
 				return MAKE_TOKEN(FSTRINGMIDDLE);
@@ -1129,6 +1138,7 @@ fStringMiddle:
 					//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "نص منسق:التعبير المتداخل للنص المنسق وصل الحد الاقصى لعدد التداخلات"));
 				}
 				TOK_GET_MODE(_tokState)->type = TokenizerModeType_::Token_RegularMode;
+				_currentTok->inFormatSpec = 0;
 				pStart = _tokState->start;
 				pEnd = _tokState->cur;
 			}

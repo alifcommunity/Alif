@@ -252,7 +252,9 @@ static AlifIntT symtable_enterBlock(AlifSymTable* _st, AlifObject* _name, BlockT
 
 	AlifIntT result = symtableEnter_existingBlock(_st, _ste);
 	ALIF_DECREF(_ste);
-	if (_block == BlockType_::Annotation_Block or _block == BlockType_::Type_Variable_Block or _block == BlockType_::Type_Alias_Block) {
+	if (_block == BlockType_::Annotation_Block
+		or _block == BlockType_::Type_Variable_Block
+		or _block == BlockType_::Type_Alias_Block) {
 		if (!symtable_addDef(_st, &ALIF_STR(format), DEF_PARAM, _loc)) {
 			return 0;
 		}
