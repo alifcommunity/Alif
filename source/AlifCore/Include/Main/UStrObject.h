@@ -62,6 +62,8 @@ AlifIntT alifUStr_fsConverter(AlifObject*, void*); // 743
 AlifObject* alifUStr_encodeFSDefault(AlifObject*); // 766
 
 
+AlifSizeT alifUStr_findChar(AlifObject*, AlifUCS4, AlifSizeT, AlifSizeT, AlifIntT); // 911
+
 AlifIntT alifUStr_compareWithASCIIString(AlifObject*, const char*); // 955
 
 AlifIntT alifUStr_equalToUTF8(AlifObject*, const char*); // 965
@@ -76,7 +78,7 @@ AlifIntT alifUStr_equalToUTF8AndSize(AlifObject*, const char*, AlifSizeT); // 96
 
 
 
-/* ----------------------------------- Internal Unicode Operations ----------------------------------- */
+/* ------------------------------- Internal Unicode Operations ------------------------------- */
 
 // Static inline functions to work with surrogates
 static inline AlifIntT alifUnicode_isSurrogate(AlifUCS4 _ch) { // 16
@@ -299,6 +301,8 @@ static inline AlifUCS4 alifUStr_maxCharValue(AlifObject* _op) { // 359
 AlifObject* alifUStr_new(AlifSizeT, AlifUCS4 ); // 386
 
 
+
+AlifSizeT alifUStr_copyCharacters(AlifObject*, AlifSizeT, AlifObject*, AlifSizeT, AlifSizeT); // 416
 
 
 

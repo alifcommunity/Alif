@@ -1184,6 +1184,30 @@ AlifIntT alifDict_getItemRef(AlifObject* _op,
 	return alifDict_getItemRefKnownHash((AlifDictObject*)_op, _key, hash, _result);
 }
 
+AlifObject* alifDict_getItemWithError(AlifObject* _op, AlifObject* _key) { // 2323
+	AlifSizeT ix{}; (void)ix;
+	AlifHashT hash{};
+	AlifDictObject* mp = (AlifDictObject*)_op;
+	AlifObject* value;
+
+	if (!ALIFDICT_CHECK(_op)) {
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
+	hash = alifObject_hashFast(_key);
+	if (hash == -1) {
+		return nullptr;
+	}
+
+#ifdef ALIF_GIL_DISABLED
+	ix = alifDict_lookupThreadSafe(mp, _key, hash, &value);
+	ALIF_XDECREF(value);
+#else
+	ix = alifDict_lookup(mp, _key, hash, &value);
+#endif
+	return value;  // borrowed reference
+}
+
 static AlifIntT setItemTake2_lockHeld(AlifDictObject* _mp,
 	AlifObject* _key, AlifObject* _value) { // 2424
 	AlifHashT hash = alifObject_hashFast(_key);

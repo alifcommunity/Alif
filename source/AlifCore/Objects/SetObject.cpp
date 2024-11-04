@@ -15,17 +15,17 @@ extern AlifObject _dummyStruct_; // 59 // alif
 static SetEntry* set_lookKey(AlifSetObject* _so, AlifObject* _key, AlifHashT _hash) { // 76
 	SetEntry* table{};
 	SetEntry* entry{};
-	size_t perturb = _hash;
-	size_t mask = _so->mask;
-	size_t i_ = (size_t)_hash & mask; /* Unsigned for defined overflow behavior */
-	int probes{};
-	int cmp_{};
+	AlifUSizeT perturb = _hash;
+	AlifUSizeT mask = _so->mask;
+	AlifUSizeT i_ = (AlifUSizeT)_hash & mask; /* Unsigned for defined overflow behavior */
+	AlifIntT probes{};
+	AlifIntT cmp_{};
 
 	while (1) {
 		entry = &_so->table[i_];
 		probes = (i_ + LINEAR_PROBES <= mask) ? LINEAR_PROBES : 0;
 		do {
-			if (entry->hash == 0 and entry->key == NULL)
+			if (entry->hash == 0 and entry->key == nullptr)
 				return entry;
 			if (entry->hash == _hash) {
 				AlifObject* startKey = entry->key;
@@ -40,8 +40,8 @@ static SetEntry* set_lookKey(AlifSetObject* _so, AlifObject* _key, AlifHashT _ha
 				cmp_ = alifObject_richCompareBool(startKey, _key, ALIF_EQ);
 				ALIF_DECREF(startKey);
 				if (cmp_ < 0)
-					return NULL;
-				if (table != _so->table || entry->key != startKey)
+					return nullptr;
+				if (table != _so->table or entry->key != startKey)
 					return set_lookKey(_so, _key, _hash);
 				if (cmp_ > 0)
 					return entry;
@@ -251,7 +251,7 @@ AlifIntT alifSet_contains(AlifObject* _anySet, AlifObject* _key) { // 2628
 		return -1;
 	}
 
-	AlifIntT rv_;
+	AlifIntT rv_{};
 	ALIF_BEGIN_CRITICAL_SECTION(_anySet);
 	rv_ = set_containsKey((AlifSetObject*)_anySet, _key);
 	ALIF_END_CRITICAL_SECTION();

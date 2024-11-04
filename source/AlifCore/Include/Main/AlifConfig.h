@@ -53,6 +53,8 @@
 /* ------------------------------------- Windows ------------------------------------- */
 #ifdef _WINDOWS 
 
+#define LONG_BIT    32
+
 #define WITH_THREAD
 #define SIZEOF_WCHAR_T 2
 #define NT_THREADS

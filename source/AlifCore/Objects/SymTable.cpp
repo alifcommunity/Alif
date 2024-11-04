@@ -174,7 +174,7 @@ AlifSymTable* alifSymtable_build(ModuleTy _mod, AlifObject* _filename,
 			//"this compiler does not handle FunctionTypes");
 		goto error;
 	}
-	if (!symtable_exit_block(st_)) {
+	if (!symtable_exitBlock(st_)) {
 		alifSymtable_free(st_);
 		return nullptr;
 	}
@@ -387,7 +387,8 @@ static AlifIntT symtable_addDef(AlifSymTable* _st, AlifObject* _name, AlifIntT _
 		_flag == USE ? ExprContext_::Load : ExprContext_::Store);
 }
 
-AlifObject* alif_maybeMangle(AlifObject* _privateObj, AlifSTEntryObject* ste, AlifObject* name) { // 3070
+AlifObject* alif_maybeMangle(AlifObject* _privateObj,
+	AlifSTEntryObject* ste, AlifObject* name) { // 3070
 	if (ste->mangledNames != nullptr) {
 		AlifIntT result = alifSet_contains(ste->mangledNames, name);
 		if (result < 0) {
@@ -401,7 +402,7 @@ AlifObject* alif_maybeMangle(AlifObject* _privateObj, AlifSTEntryObject* ste, Al
 }
 
 AlifObject* alif_mangle(AlifObject* _privateObj, AlifObject* _ident) { // 3090
-	if (_privateObj == nullptr or !ALIFUSTR_CHECK(_privateObj) ||
+	if (_privateObj == nullptr or !ALIFUSTR_CHECK(_privateObj) or
 		ALIFUSTR_READ_CHAR(_ident, 0) != '_' or
 		ALIFUSTR_READ_CHAR(_ident, 1) != '_') {
 		return ALIF_NEWREF(_ident);
@@ -437,7 +438,7 @@ AlifObject* alif_mangle(AlifObject* _privateObj, AlifObject* _ident) { // 3090
 	if (!result) {
 		return nullptr;
 	}
-	alifUStr_write(ALIFUSTR_KIND(result), ALIFUSTR_DATA(result), 0, '_');
+	ALIFUSTR_WRITE(ALIFUSTR_KIND(result), ALIFUSTR_DATA(result), 0, '_');
 	if (alifUStr_copyCharacters(result, 1, _privateObj, iPriv, pLen) < 0) {
 		ALIF_DECREF(result);
 		return nullptr;

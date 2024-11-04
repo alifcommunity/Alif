@@ -612,6 +612,9 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_SymTable.h">
       <Filter>Include\Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\FastSearch.h">
+      <Filter>Include\Main\StringLib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Include">

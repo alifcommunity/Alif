@@ -108,6 +108,8 @@ extern AlifTypeObject _alifSTEntryType_; // 132
 extern AlifIntT alifST_isFunctionLike(AlifSTEntryObject* ); // 138
 extern void alifSymtable_free(AlifSymTable*); // 147
 
+extern AlifObject* alif_maybeMangle(AlifObject*, AlifSTEntryObject*, AlifObject*); // 149
+extern AlifObject* alif_mangle(AlifObject*, AlifObject*); // 150
 // 154
 #define DEF_GLOBAL 1            
 #define DEF_LOCAL 2           

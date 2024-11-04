@@ -7,3 +7,6 @@
 #define STRINGLIB_SIZEOF_CHAR    1
 #define STRINGLIB_MAX_CHAR       0xFFu
 #define STRINGLIB_CHAR           AlifUCS1
+
+#define STRINGLIB_FAST_MEMCHR    memchr
+#define STRINGLIB_MUTABLE 0

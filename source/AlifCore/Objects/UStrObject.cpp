@@ -142,6 +142,8 @@ static AlifIntT initGlobal_internedStrings(AlifInterpreter* _interp) { // 308
 
 
 
+static AlifIntT uStr_modifiable(AlifObject*); // 432
+
 
 
 AlifErrorHandler_ alif_getErrorHandler(const char* _errors) { // 488
@@ -356,41 +358,43 @@ static char* xmlCharRef_replace(AlifBytesWriter* _writer, char* _str,
 #include "StringLib/Undef.h"
 
 #include "StringLib/UCS1Lib.h"
+#include "StringLib/FastSearch.h"
 #include "StringLib/FindMaxChar.h"
 #include "StringLib/Undef.h"
 
 #include "StringLib/UCS2Lib.h"
+#include "StringLib/FastSearch.h"
 #include "StringLib/FindMaxChar.h"
 #include "StringLib/Undef.h"
 
 #include "StringLib/UCS4Lib.h"
+#include "StringLib/FastSearch.h"
 #include "StringLib/FindMaxChar.h"
 #include "StringLib/Undef.h"
 
 
 static inline AlifSizeT findChar(const void* _s, AlifIntT _kind,
-	AlifSizeT _size, AlifUCS4 _ch,
-	AlifIntT _direction) { // 1023
+	AlifSizeT _size, AlifUCS4 _ch, AlifIntT _direction) { // 1023
 	switch (_kind) {
 	case AlifUStrKind_::AlifUStr_1Byte_Kind:
 		if ((AlifUCS1)_ch != _ch)
 			return -1;
-		//if (_direction > 0)
-			//return ucs1Lib_findChar((const AlifUCS1*)_s, _size, (AlifUCS1)_ch);
-		//else
-			//return ucs1Lib_rFindChar((const AlifUCS1*)_s, _size, (AlifUCS1)_ch);
+		if (_direction > 0)
+			return ucs1Lib_findChar((const AlifUCS1*)_s, _size, (AlifUCS1)_ch);
+		else
+			return ucs1Lib_rFindChar((const AlifUCS1*)_s, _size, (AlifUCS1)_ch);
 	case AlifUStrKind_::AlifUStr_2Byte_Kind:
 		if ((AlifUCS2)_ch != _ch)
 			return -1;
-		//if (_direction > 0)
-			//return ucs2Lib_findChar((const AlifUCS2*)_s, _size, (AlifUCS2)_ch);
-		//else
-			//return ucs2Lib_rFindChar((const AlifUCS2*)_s, _size, (AlifUCS2)_ch);
+		if (_direction > 0)
+			return ucs2Lib_findChar((const AlifUCS2*)_s, _size, (AlifUCS2)_ch);
+		else
+			return ucs2Lib_rFindChar((const AlifUCS2*)_s, _size, (AlifUCS2)_ch);
 	case AlifUStrKind_::AlifUStr_4Byte_Kind:
-		//if (_direction > 0)
-			//return ucs4Lib_findChar((const AlifUCS4*)_s, _size, _ch);
-		//else
-			//return ucs4Lib_rFindChar((const AlifUCS4*)_s, _size, _ch);
+		if (_direction > 0)
+			return ucs4Lib_findChar((const AlifUCS4*)_s, _size, _ch);
+		else
+			return ucs4Lib_rFindChar((const AlifUCS4*)_s, _size, _ch);
 	default:
 		ALIF_UNREACHABLE();
 	}
@@ -524,6 +528,15 @@ AlifObject* alifUStr_new(AlifSizeT _size, AlifUCS4 _maxChar) { // 1282
 	return obj;
 }
 
+static AlifIntT uStr_checkModifiable(AlifObject* _unicode) { // 1378
+	if (!uStr_modifiable(_unicode)) {
+		//alifErr_setString(_alifExcSystemError_,
+		//	"Cannot modify a string currently used");
+		return -1;
+	}
+	return 0;
+}
+
 static AlifIntT copy_characters(AlifObject* _to, AlifSizeT _toStart, AlifObject* _from,
 	AlifSizeT _fromStart, AlifSizeT _howMany, AlifIntT _checkMaxChar) { // 1389
 	AlifIntT fromKind{}, toKind{};
@@ -630,6 +643,55 @@ void alifUStr_fastCopyCharacters(AlifObject* _to, AlifSizeT _toStart,
 	(void)copy_characters(_to, _toStart, _from, _fromStart, _howMany, 0);
 }
 
+AlifSizeT alifUStr_copyCharacters(AlifObject* _to, AlifSizeT _toStart,
+	AlifObject* _from, AlifSizeT _fromStart, AlifSizeT _howMany) { // 1537
+	AlifIntT err{};
+
+	if (!ALIFUSTR_CHECK(_from) or !ALIFUSTR_CHECK(_to)) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+
+	if ((AlifUSizeT)_fromStart > (AlifUSizeT)ALIFUSTR_GET_LENGTH(_from)) {
+		//alifErr_setString(_alifExcIndexError_, "string index out of range");
+		return -1;
+	}
+	if ((AlifUSizeT)_toStart > (AlifUSizeT)ALIFUSTR_GET_LENGTH(_to)) {
+		//alifErr_setString(_alifExcIndexError_, "string index out of range");
+		return -1;
+	}
+	if (_howMany < 0) {
+		//alifErr_setString(_alifExcSystemError_, "how_many cannot be negative");
+		return -1;
+	}
+	_howMany = ALIF_MIN(ALIFUSTR_GET_LENGTH(_from) - _fromStart, _howMany);
+	if (_toStart + _howMany > ALIFUSTR_GET_LENGTH(_to)) {
+		//alifErr_format(_alifExcSystemError_,
+		//	"Cannot write %zi characters at %zi "
+		//	"in a string of %zi characters",
+		//	_howMany, _toStart, ALIFUSTR_GET_LENGTH(_to));
+		return -1;
+	}
+
+	if (_howMany == 0)
+		return 0;
+
+	if (uStr_checkModifiable(_to))
+		return -1;
+
+	err = copy_characters(_to, _toStart, _from, _fromStart, _howMany, 1);
+	if (err) {
+		//alifErr_format(_alifExcSystemError_,
+		//	"Cannot copy %s characters "
+		//	"into a string of %s characters",
+		//	unicode_kindName(_from),
+		//	unicode_kindName(_to));
+		return -1;
+	}
+	return _howMany;
+}
+
+
 static AlifIntT find_maxCharSurrogates(const wchar_t* _begin, const wchar_t* _end,
 	AlifUCS4* _maxChar, AlifSizeT* _numSurrogates) { // 1593
 
@@ -706,6 +768,18 @@ static void ustr_dealloc(AlifObject* _uStr) { // 1633
 	}
 
 	ALIF_TYPE(_uStr)->free(_uStr);
+}
+
+static AlifIntT uStr_modifiable(AlifObject* _unicode) { // 1738
+	if (ALIF_REFCNT(_unicode) != 1)
+		return 0;
+	if (alifAtomic_loadSizeRelaxed(&ALIFUSTR_HASH(_unicode)) != -1)
+		return 0;
+	if (ALIFUSTR_CHECK_INTERNED(_unicode))
+		return 0;
+	if (!ALIFUSTR_CHECKEXACT(_unicode))
+		return 0;
+	return 1;
 }
 
 static AlifObject* get_latin1Char(AlifUCS1 _ch) { // 1867
