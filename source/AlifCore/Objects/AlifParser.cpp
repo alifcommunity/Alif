@@ -12482,6 +12482,7 @@ void visit_expr(ExprTy v) {
 			VISIT(expr, js);
 			spaces += 4;
 		}
+		spaces -= 4;
 	}
 	else if (v->type == ExprK_::FormattedValK) {
 		VISIT(expr, v->V.fromattedValue.val);
@@ -12496,6 +12497,38 @@ void visit_expr(ExprTy v) {
 			VISIT(expr, tp);
 			spaces += 4;
 		}
+		spaces -= 4;
+	}
+	else if (v->type == ExprK_::ListK) {
+		print_space(spaces);
+		printf("%s\n", "مصفوفة: ");
+		spaces += 4;
+		ExprTy ls{};
+		for (int i = 0; i < v->V.list.elts->size; i++) {
+			ls = v->V.list.elts->typedElements[i];
+			VISIT(expr, ls);
+			spaces += 4;
+		}
+		spaces -= 4;
+	}
+	else if (v->type == ExprK_::DictK) {
+		print_space(spaces);
+		printf("%s\n", "قاموس: ");
+		ExprTy key{};
+		ExprTy val{};
+		for (int i = 0; i < v->V.dict.keys->size; i++) {
+			if (i % 2 == 1 or i == 0)
+				printf(":-----------------------------\n");
+			key = v->V.dict.keys->typedElements[i];
+			spaces += 4;
+			VISIT(expr, key);
+			val = v->V.dict.vals->typedElements[i];
+			spaces += 4;
+			VISIT(expr, val);
+			if (i%2 == 1 or i == v->V.dict.keys->size - 1)
+				printf(":-----------------------------\n");
+		}
+		spaces -= 4;
 	}
 }
 
