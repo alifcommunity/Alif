@@ -183,7 +183,7 @@ static AlifObject* alifRun_file(FILE* _fp, AlifObject* _filename,
 
 	AlifObject* ret{};
 	if (mod != nullptr) {
-		//ret = run_mod(mod, _filename, _globals, _locals, _flags, astMem, nullptr, 0);
+		ret = run_mod(mod, _filename, _globals, _locals, _flags, astMem, nullptr, 0);
 	}
 	else {
 		ret = nullptr;
@@ -191,4 +191,89 @@ static AlifObject* alifRun_file(FILE* _fp, AlifObject* _filename,
 	//alifASTMem_free(astMem); // لا تعمل بشكل صحيح وتحتاج مراجعة
 
 	return ret;
+}
+
+
+
+
+static AlifObject* run_mod(ModuleTy _mod, AlifObject* _filename,
+	AlifObject* _globals, AlifObject* _locals, AlifCompilerFlags* _flags,
+	AlifASTMem* _astMem, AlifObject* _interactiveSrc, AlifIntT _generateNewSource) { // 1299
+	AlifThread* thread = _alifThread_get();
+	AlifObject* interactiveFilename = _filename;
+	if (_interactiveSrc) {
+		AlifInterpreter* interp = thread->interpreter;
+		if (_generateNewSource) {
+			//interactiveFilename = alifUStr_fromFormat(
+			//	"%U-%d", _filename, interp->interactiveSrcCount++);
+		}
+		else {
+			ALIF_INCREF(interactiveFilename);
+		}
+		if (interactiveFilename == nullptr) {
+			return nullptr;
+		}
+	}
+
+	AlifCodeObject* co = alifAST_compile(_mod, interactiveFilename, _flags, -1, _astMem);
+	if (co == nullptr) {
+		if (_interactiveSrc) {
+			ALIF_DECREF(interactiveFilename);
+		}
+		return nullptr;
+	}
+
+	//if (_interactiveSrc) {
+	//	AlifObject* lineCacheModule = alifImport_importModule("linecache");
+
+	//	if (lineCacheModule == nullptr) {
+	//		ALIF_DECREF(co);
+	//		ALIF_DECREF(interactiveFilename);
+	//		return nullptr;
+	//	}
+
+	//	AlifObject* printTBFunc = alifObject_getAttrString(lineCacheModule, "_register_code");
+
+	//	if (printTBFunc == nullptr) {
+	//		ALIF_DECREF(co);
+	//		ALIF_DECREF(interactiveFilename);
+	//		ALIF_DECREF(lineCacheModule);
+	//		return nullptr;
+	//	}
+
+	//	if (!alifCallable_check(printTBFunc)) {
+	//		ALIF_DECREF(co);
+	//		ALIF_DECREF(interactiveFilename);
+	//		ALIF_DECREF(lineCacheModule);
+	//		ALIF_DECREF(printTBFunc);
+	//		alifErr_setString(_alifExcValueError_, "linecache._register_code is not callable");
+	//		return nullptr;
+	//	}
+
+	//	AlifObject* result = alifObject_callFunction(
+	//		printTBFunc, "OOO",
+	//		interactiveFilename,
+	//		_interactiveSrc,
+	//		_filename
+	//	);
+
+	//	ALIF_DECREF(interactiveFilename);
+
+	//	ALIF_DECREF(lineCacheModule);
+	//	ALIF_XDECREF(printTBFunc);
+	//	ALIF_XDECREF(result);
+	//	if (!result) {
+	//		ALIF_DECREF(co);
+	//		return nullptr;
+	//	}
+	//}
+
+	//if (_alifSys_audit(thread, "exec", "O", co) < 0) {
+	//	ALIF_DECREF(co);
+	//	return nullptr;
+	//}
+
+	AlifObject* v = run_evalCodeObj(thread, co, _globals, _locals);
+	ALIF_DECREF(co);
+	return v;
 }

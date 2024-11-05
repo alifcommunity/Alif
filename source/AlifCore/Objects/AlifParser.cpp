@@ -12372,7 +12372,7 @@ done:
 	return res;
 }
 
-void parser_test(ModuleTy _p);
+void parser_test(ModuleTy _p); // alif // للحذف
 void* alifParserEngine_parse(AlifParser* _p) { 
 	// تهيئة الكلمات المفتاحية
 	_p->keywords = reservedKeywords;
@@ -12395,11 +12395,15 @@ void* alifParserEngine_parse(AlifParser* _p) {
 		result = funcRun_rule(_p);
 	}
 
-	parser_test((ModuleTy)result); // alif
+	parser_test((ModuleTy)result); // alif // للحذف
 	return result;
 }
 
 
+
+/* ------------------------------------------------------------------------------------ */
+
+// للحذف بعد الانتهاء من الاختبارات
 int spaces = 0;
 
 
