@@ -7,7 +7,7 @@
 
 
 
-
+#define LOCATION(x) SRC_LOCATION_FROM_AST(x) // 79
 
 
 static AlifSTEntryObject* ste_new(AlifSymTable* _st, AlifObject* _name, BlockType_ _block,
@@ -91,6 +91,8 @@ AlifTypeObject _alifSTEntryType_ = { // 192
 
 
 static AlifIntT symtable_enterBlock(AlifSymTable*, AlifObject*, BlockType_, void*, AlifSourceLocation); // 234
+static AlifIntT symtable_visitStmt(AlifSymTable* , StmtTy ); // 237
+static AlifIntT symtable_visitExpr(AlifSymTable* , ExprTy ); // 238
 static AlifIntT symtable_addDef(AlifSymTable*, AlifObject*, AlifIntT, AlifSourceLocation); // 261
 
 
@@ -212,6 +214,45 @@ AlifIntT alifST_isFunctionLike(AlifSTEntryObject* _ste) { // 558
 		or _ste->type == BlockType_::Type_Variable_Block
 		or _ste->type == BlockType_::Type_Alias_Block
 		or _ste->type == BlockType_::Type_Parameters_Block;
+}
+
+static AlifIntT symtable_analyze(AlifSymTable* _st) { // 1333
+	AlifObject* free{}, * global{}, * typeParams{};
+	AlifIntT r_{};
+
+	free = alifSet_new(nullptr);
+	if (!free)
+		return 0;
+	global = alifSet_new(nullptr);
+	if (!global) {
+		ALIF_DECREF(free);
+		return 0;
+	}
+	typeParams = alifSet_new(nullptr);
+	if (!typeParams) {
+		ALIF_DECREF(free);
+		ALIF_DECREF(global);
+		return 0;
+	}
+	r_ = analyze_block(_st->top, nullptr, free, global, typeParams, nullptr);
+	ALIF_DECREF(free);
+	ALIF_DECREF(global);
+	ALIF_DECREF(typeParams);
+	return r_;
+}
+
+static AlifIntT symtable_exitBlock(AlifSymTable* _st) { // 1365
+	AlifSizeT size{};
+
+	_st->cur = nullptr;
+	size = ALIFLIST_GET_SIZE(_st->stack);
+	if (size) {
+		if (alifList_setSlice(_st->stack, size - 1, size, nullptr) < 0)
+			return 0;
+		if (--size)
+			_st->cur = (AlifSTEntryObject*)ALIFLIST_GET_ITEM(_st->stack, size - 1);
+	}
+	return 1;
 }
 
 static AlifIntT symtableEnter_existingBlock(AlifSymTable* _st, AlifSTEntryObject* _ste) { // 1381
@@ -385,6 +426,104 @@ static AlifIntT symtable_addDef(AlifSymTable* _st, AlifObject* _name, AlifIntT _
 	AlifSourceLocation _loc) { // 1616
 	return symtable_addDefCtx(_st, _name, _flag, _loc,
 		_flag == USE ? ExprContext_::Load : ExprContext_::Store);
+}
+
+// 1686
+#define VISIT(_st, _type, _v) \
+    do { \
+        if (!symtable_visit ## _type((_st), (_v))) { \
+            return 0; \
+        } \
+    } while(0)
+
+// 1693
+#define VISIT_SEQ(_st, _type, _seq) \
+    do { \
+        AlifSizeT i; \
+        ASDL ## _type ## Seq *seq = (_seq); /* avoid variable capture */ \
+        for (i = 0; i < ASDL_SEQ_LEN(seq); i++) { \
+            _type ## Ty elt = (_type ## Ty)ASDL_SEQ_GET(seq, i); \
+            if (!symtable_visit ## _type((_st), elt)) \
+                return 0;                 \
+        } \
+    } while(0)
+
+// 1727
+#define ENTER_RECURSIVE(_st) \
+    do { \
+        if (++(_st)->recursionDepth > (_st)->recursionLimit) { \
+            return 0; \
+        } \
+    } while(0)
+
+// 1736
+#define LEAVE_RECURSIVE(_st) \
+    do { \
+        --(_st)->recursionDepth; \
+    } while(0)
+
+static AlifIntT symtable_visitStmt(AlifSymTable* _st, StmtTy _s) { // 1812
+	ENTER_RECURSIVE(_st);
+	switch (_s->type) {
+	case AssignK:
+		VISIT_SEQ(_st, Expr, _s->V.assign.targets);
+		VISIT(_st, Expr, _s->V.assign.val);
+		break;
+	case ExprK:
+		VISIT(_st, Expr, _s->V.expression.val);
+		break;
+	case PassK:
+	case BreakK:
+
+	}
+	LEAVE_RECURSIVE(_st);
+	return 1;
+}
+
+static AlifIntT symtable_visitExpr(AlifSymTable* _st, ExprTy _e) { // 2334
+	
+	ENTER_RECURSIVE(_st);
+	switch (_e->type) {
+	case ExprK_::BoolOpK:
+		VISIT_SEQ(_st, Expr, _e->V.boolOp.vals);
+		break;
+	case ExprK_::BinOpK:
+		VISIT(_st, Expr, _e->V.binOp.left);
+		VISIT(_st, Expr, _e->V.binOp.right);
+		break;
+	case ExprK_::UnaryOpK:
+		VISIT(_st, Expr, _e->V.unaryOp.operand);
+		break;
+	case ExprK_::IfExprK:
+		VISIT(_st, Expr, _e->V.ifExpr.condition);
+		VISIT(_st, Expr, _e->V.ifExpr.body);
+		VISIT(_st, Expr, _e->V.ifExpr.else_);
+		break;
+	case ExprK_::SetK:
+		VISIT_SEQ(_st, Expr, _e->V.set.elts);
+		break;
+	case ExprK_::NameK:
+		if (!symtable_addDefCtx(_st, _e->V.name.name,
+			_e->V.name.ctx == Load ? USE : DEF_LOCAL,
+			LOCATION(_e), _e->V.name.ctx)) {
+			return 0;
+		}
+		if (_e->V.name.ctx == Load and
+			alifST_isFunctionLike(_st->cur) and
+			alifUStr_equalToASCIIString(_e->V.name.name, "وراثة")) {
+			if (!symtable_addDef(_st, &ALIF_ID(__class__), USE, LOCATION(_e)))
+				return 0;
+		}
+		break;
+	case ExprK_::ListK:
+		VISIT_SEQ(_st, Expr, _e->V.list.elts);
+		break;
+	case ExprK_::TupleK:
+		VISIT_SEQ(_st, Expr, _e->V.tuple.elts);
+		break;
+	}
+	LEAVE_RECURSIVE(_st);
+	return 1;
 }
 
 AlifObject* alif_maybeMangle(AlifObject* _privateObj,

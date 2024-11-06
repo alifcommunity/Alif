@@ -39,6 +39,7 @@ public:
 		STRUCT_FOR_ID(__origClass__)
 		STRUCT_FOR_ID(__package__)
 		STRUCT_FOR_ID(__spec__)
+		STRUCT_FOR_ID(__class__)
      	STRUCT_FOR_ID(hasLocation)
      	STRUCT_FOR_ID(mro)
      	STRUCT_FOR_ID(origin)

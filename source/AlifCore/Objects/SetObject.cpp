@@ -25,10 +25,10 @@ static SetEntry* set_lookKey(AlifSetObject* _so, AlifObject* _key, AlifHashT _ha
 		entry = &_so->table[i_];
 		probes = (i_ + LINEAR_PROBES <= mask) ? LINEAR_PROBES : 0;
 		do {
-			if (entry->hash == 0 and entry->key == nullptr)
+			if (entry->hash == 0 and entry->key_ == nullptr)
 				return entry;
 			if (entry->hash == _hash) {
-				AlifObject* startKey = entry->key;
+				AlifObject* startKey = entry->key_;
 				if (startKey == _key)
 					return entry;
 				if (ALIFUSTR_CHECKEXACT(startKey)
@@ -41,7 +41,7 @@ static SetEntry* set_lookKey(AlifSetObject* _so, AlifObject* _key, AlifHashT _ha
 				ALIF_DECREF(startKey);
 				if (cmp_ < 0)
 					return nullptr;
-				if (table != _so->table or entry->key != startKey)
+				if (table != _so->table or entry->key_ != startKey)
 					return set_lookKey(_so, _key, _hash);
 				if (cmp_ > 0)
 					return entry;
@@ -79,10 +79,10 @@ restart:
 		entry = &_so->table[i_];
 		probes = (i_ + LINEAR_PROBES <= mask) ? LINEAR_PROBES : 0;
 		do {
-			if (entry->hash == 0 and entry->key == nullptr)
+			if (entry->hash == 0 and entry->key_ == nullptr)
 				goto foundUnusedOrDummy;
 			if (entry->hash == _hash) {
-				AlifObject* startKey = entry->key;
+				AlifObject* startKey = entry->key_;
 				if (startKey == _key)
 					goto foundActive;
 				if (ALIFUSTR_CHECKEXACT(startKey)
@@ -96,7 +96,7 @@ restart:
 					goto foundActive;
 				if (cmp_ < 0)
 					goto comparisonError;
-				if (table != _so->table or entry->key != startKey)
+				if (table != _so->table or entry->key_ != startKey)
 					goto restart;
 				mask = _so->mask;
 			}
@@ -113,14 +113,14 @@ foundUnusedOrDummy:
 	if (freesLot == nullptr)
 		goto foundUnused;
 	alifAtomic_storeSizeRelaxed(&_so->used, _so->used + 1);
-	freesLot->key = _key;
+	freesLot->key_ = _key;
 	freesLot->hash = _hash;
 	return 0;
 
 foundUnused:
 	_so->fill++;
 	alifAtomic_storeSizeRelaxed(&_so->used, _so->used + 1);
-	entry->key = _key;
+	entry->key_ = _key;
 	entry->hash = _hash;
 	if ((AlifUSizeT)_so->fill * 5 < mask * 3)
 		return 0;
@@ -160,7 +160,7 @@ static AlifIntT set_tableResize(AlifSetObject* _so, AlifSizeT _minUsed) { // 253
 		newTable = _so->smallTable;
 		if (newTable == oldTable) {
 			if (_so->fill == _so->used) {
-				/* No dummies, so no point doing anything. */
+				/* No dummies, so_ no point doing anything. */
 				return 0;
 			}
 			memcpy(smallCopy, oldTable, sizeof(smallCopy));
@@ -185,16 +185,16 @@ static AlifIntT set_tableResize(AlifSetObject* _so, AlifSizeT _minUsed) { // 253
 	newMask = (AlifUSizeT)_so->mask;
 	if (_so->fill == _so->used) {
 		for (entry = oldTable; entry <= oldTable + oldMask; entry++) {
-			if (entry->key != nullptr) {
-				set_insertClean(newTable, newMask, entry->key, entry->hash);
+			if (entry->key_ != nullptr) {
+				set_insertClean(newTable, newMask, entry->key_, entry->hash);
 			}
 		}
 	}
 	else {
 		_so->fill = _so->used;
 		for (entry = oldTable; entry <= oldTable + oldMask; entry++) {
-			if (entry->key != nullptr and entry->key != DUMMY) {
-				set_insertClean(newTable, newMask, entry->key, entry->hash);
+			if (entry->key_ != nullptr and entry->key_ != DUMMY) {
+				set_insertClean(newTable, newMask, entry->key_, entry->hash);
 			}
 		}
 	}
@@ -203,13 +203,12 @@ static AlifIntT set_tableResize(AlifSetObject* _so, AlifSizeT _minUsed) { // 253
 	return 0;
 }
 
-
 static AlifIntT set_containsEntry(AlifSetObject* _so, AlifObject* _key, AlifHashT _hash) { // 333
 	SetEntry* entry{};
 
 	entry = set_lookKey(_so, _key, _hash);
 	if (entry != nullptr)
-		return entry->key != nullptr;
+		return entry->key_ != nullptr;
 	return -1;
 }
 
@@ -227,6 +226,82 @@ static AlifIntT set_containsKey(AlifSetObject* _so, AlifObject* _key) { // 376
 		return -1;
 	}
 	return set_containsEntry(_so, _key, hash);
+}
+
+static AlifIntT setUpdateIterable_lockHeld(AlifSetObject *_so, AlifObject *_other) { // 961
+
+    AlifObject *it_ = alifObject_getIter(_other);
+    if (it_ == nullptr) {
+        return -1;
+    }
+
+    AlifObject *key_;
+    while ((key_ = alifIter_next(it_)) != nullptr) {
+        if (set_addKey(_so, key_)) {
+            ALIF_DECREF(it_);
+            ALIF_DECREF(key_);
+            return -1;
+        }
+        ALIF_DECREF(key_);
+    }
+    ALIF_DECREF(it_);
+    //if (alifErr_occurred())
+        //return -1;
+    return 0;
+}
+
+static AlifIntT setUpdate_lockHeld(AlifSetObject *_so, AlifObject *_other) { // 986
+    if (ALIFANYSET_CHECK(_other)) {
+        return setMerge_lockHeld(_so, _other);
+    }
+    else if (ALIFDICT_CHECKEXACT(_other)) {
+        return setUpdateDict_lockHeld(_so, _other);
+    }
+    return setUpdateIterable_lockHeld(_so, _other);
+}
+
+// set_update for a `so` that is only visible to the current thread
+static AlifIntT setUpdate_local(AlifSetObject *so, AlifObject *_other) { // 999
+    if (ALIFANYSET_CHECK(_other)) {
+		AlifIntT rv_{};
+        ALIF_BEGIN_CRITICAL_SECTION(_other);
+        rv_ = setMerge_lockHeld(so, _other);
+        ALIF_END_CRITICAL_SECTION();
+        return rv_;
+    }
+    else if (ALIFDICT_CHECKEXACT(_other)) {
+		AlifIntT rv_{};
+        ALIF_BEGIN_CRITICAL_SECTION(_other);
+        rv_ = setUpdateDict_lockHeld(so, _other);
+        ALIF_END_CRITICAL_SECTION();
+        return rv_;
+    }
+    return setUpdateIterable_lockHeld(so, _other);
+}
+
+static AlifObject* make_newSet(AlifTypeObject* _type, AlifObject* _iterable) { // 1077
+	AlifSetObject* so_{};
+
+	so_ = (AlifSetObject*)_type->alloc(_type, 0);
+	if (so_ == nullptr)
+		return nullptr;
+
+	so_->fill = 0;
+	so_->used = 0;
+	so_->mask = ALIFSET_MINSIZE - 1;
+	so_->table = so_->smallTable;
+	so_->hash = -1;
+	so_->finger = 0;
+	so_->weakreList = nullptr;
+
+	if (_iterable != nullptr) {
+		if (set_update_local(so_, _iterable)) {
+			ALIF_DECREF(so_);
+			return nullptr;
+		}
+	}
+
+	return (AlifObject*)so_;
 }
 
 AlifTypeObject _alifSetType_ = { // 2449

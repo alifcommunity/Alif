@@ -410,9 +410,9 @@ public:
 
 	} V{};
 
-	AlifIntT lineNo{};
+	AlifIntT lineno{};
+	AlifIntT endLineno{};
 	AlifIntT colOffset{};
-	AlifIntT endLineNo{};
 	AlifIntT endColOffset{};
 };
 
