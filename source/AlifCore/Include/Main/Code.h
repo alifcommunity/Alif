@@ -5,8 +5,8 @@
 
 
 
-
-#define ALIFCODE_DEF(SIZE) {                                                    \
+ // 73
+#define ALIFCODE_DEF(_size) {                                                    \
 public:																			\
     ALIFOBJECT_VAR_HEAD;                                                         \
                                                                                \
@@ -61,20 +61,20 @@ public:																			\
     AlifObject *qualname{};        /* unicode (qualname, for reference) */      \
     AlifObject *lineTable{};       /* bytes object that holds location info */  \
     AlifObject *weakRefList{};     /* to support weakrefs to code objects */    \
-    AlifExecutorArray *executors{};      /* executors from optimizer */        \
-    AlifCoCached *_cached{};      /* cached co_* attributes */                 \
+    /*AlifExecutorArray *executors{};*/      /* executors from optimizer */        \
+    /*AlifCoCached *_cached{};*/      /* cached co_* attributes */                 \
     uintptr_t _instrumentationVersion{}; /* current instrumentation version */ \
-    AlifCoMonitoringData *_monitoring{}; /* Monitoring data */                 \
+    /*AlifCoMonitoringData *_monitoring{};*/ /* Monitoring data */                 \
     AlifIntT _firsttraceable{};       /* index of first traceable instruction */   \
     /* Scratch space for extra data relating to the code object.               \
        Type is a void* to keep the format private in codeobject.c to force     \
        people to go through the proper APIs. */                                \
     void *extra{};                                                            \
-    char codeAdaptive[(SIZE)]{};                                             \
+    char codeAdaptive[(_size)]{};                                             \
 }
 
 /* Bytecode object */
-class AlifCodeObject ALIFCODE_DEF(1);
+class AlifCodeObject ALIFCODE_DEF(1); // 140
 
 
 
@@ -91,3 +91,7 @@ class AlifCodeObject ALIFCODE_DEF(1);
 #define CO_FUTURE_ANNOTATIONS    0x1000000
 
 #define CO_NO_MONITORING_EVENTS 0x2000000
+
+
+
+#define MAXBLOCKS 21

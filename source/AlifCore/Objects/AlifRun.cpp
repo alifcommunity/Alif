@@ -1,6 +1,7 @@
 #include "alif.h"
 
 #include "AlifCore_AST.h"
+#include "AlifCore_Compile.h"
 #include "AlifCore_Interpreter.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_Parser.h"
@@ -14,6 +15,8 @@
 #endif
 
 
+static AlifObject* run_mod(ModuleTy, AlifObject*, AlifObject*,
+	AlifObject*, AlifCompilerFlags*, AlifASTMem*, AlifObject*, AlifIntT); // 42
 static AlifObject* alifRun_file(FILE*, AlifObject*, AlifIntT,
 	AlifObject*, AlifObject*, AlifIntT, AlifCompilerFlags*); // 47
 
