@@ -202,6 +202,9 @@
     <ClCompile Include="..\source\AlifCore\Objects\SymTable.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\AlifCompile.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">
@@ -614,6 +617,12 @@
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\FastSearch.h">
       <Filter>Include\Main\StringLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Compile.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_InstructionSequence.h">
+      <Filter>Include\Core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

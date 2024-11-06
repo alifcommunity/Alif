@@ -27,6 +27,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_BitUtils.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_BytesObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Call.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Compile.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_CondVar.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_CriticalSection.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Dict.h" />
@@ -48,6 +49,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_HashTable.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Import.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_InitConfig.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_InstructionSequence.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Interpreter.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_LifeCycle.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_List.h" />
@@ -162,6 +164,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\ActionHelpers.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifArray.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifAST.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifCompile.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifCppType.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifEval.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifEvalGIL.cpp" />

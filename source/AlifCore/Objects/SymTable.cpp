@@ -139,7 +139,7 @@ AlifSymTable* alifSymtable_build(ModuleTy _mod, AlifObject* _filename,
 
 	tstate = _alifThread_get();
 	if (!tstate) {
-		//alifSymtable_free(st_);
+		alifSymtable_free(st_);
 		return nullptr;
 	}
 	AlifIntT recursionDepth = ALIFCPP_RECURSION_LIMIT - tstate->cppRecursionRemaining;
@@ -149,7 +149,7 @@ AlifSymTable* alifSymtable_build(ModuleTy _mod, AlifObject* _filename,
 
 	AlifSourceLocation loc0 = { 0, 0, 0, 0 };
 	if (!symtable_enterBlock(st_, &ALIF_ID(top), BlockType_::Module_Block, (void*)_mod, loc0)) {
-		//alifSymtable_free(st_);
+		alifSymtable_free(st_);
 		return nullptr;
 	}
 

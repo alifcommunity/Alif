@@ -5,11 +5,11 @@
 
 typedef class AlifModuleDef AlifModuleDef;
 typedef class AlifMethodDef AlifMethodDef;
-//typedef class AlifThreadImpl AlifThreadImpl;
 
 typedef class AlifObject AlifObject;
 typedef class AlifLongObject AlifLongObject;
 typedef class AlifTypeObject AlifTypeObject;
+typedef class AlifCodeObject AlifCodeObject;
 
 typedef class AlifThread AlifThread;
 typedef class AlifInterpreter AlifInterpreter;
