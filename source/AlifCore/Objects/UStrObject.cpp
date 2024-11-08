@@ -2167,7 +2167,7 @@ AlifIntT alifUStr_equalToASCIIString(AlifObject* _uStr, const char* _str) { // 1
 	AlifUSizeT len_{};
 	if (!ALIFUSTR_IS_ASCII(_uStr))
 		return 0;
-	len_ = (size_t)ALIFUSTR_GET_LENGTH(_uStr);
+	len_ = (AlifSizeT)ALIFUSTR_GET_LENGTH(_uStr);
 	return strlen(_str) == len_ and
 		memcmp(ALIFUSTR_1BYTE_DATA(_uStr), _str, len_) == 0;
 }

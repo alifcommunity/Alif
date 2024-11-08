@@ -439,7 +439,7 @@ static AlifIntT symtable_addDef(AlifSymTable* _st, AlifObject* _name, AlifIntT _
 // 1693
 #define VISIT_SEQ(_st, _type, _seq) \
     do { \
-        AlifSizeT i; \
+        AlifSizeT i{}; \
         ASDL ## _type ## Seq *seq = (_seq); /* avoid variable capture */ \
         for (i = 0; i < ASDL_SEQ_LEN(seq); i++) { \
             _type ## Ty elt = (_type ## Ty)ASDL_SEQ_GET(seq, i); \
@@ -465,15 +465,15 @@ static AlifIntT symtable_addDef(AlifSymTable* _st, AlifObject* _name, AlifIntT _
 static AlifIntT symtable_visitStmt(AlifSymTable* _st, StmtTy _s) { // 1812
 	ENTER_RECURSIVE(_st);
 	switch (_s->type) {
-	case AssignK:
+	case StmtK_::AssignK:
 		VISIT_SEQ(_st, Expr, _s->V.assign.targets);
 		VISIT(_st, Expr, _s->V.assign.val);
 		break;
-	case ExprK:
+	case StmtK_::ExprK:
 		VISIT(_st, Expr, _s->V.expression.val);
 		break;
-	case PassK:
-	case BreakK:
+	case StmtK_::PassK:
+	case StmtK_::BreakK:
 
 	}
 	LEAVE_RECURSIVE(_st);
@@ -504,13 +504,13 @@ static AlifIntT symtable_visitExpr(AlifSymTable* _st, ExprTy _e) { // 2334
 		break;
 	case ExprK_::NameK:
 		if (!symtable_addDefCtx(_st, _e->V.name.name,
-			_e->V.name.ctx == Load ? USE : DEF_LOCAL,
+			_e->V.name.ctx == ExprContext_::Load ? USE : DEF_LOCAL,
 			LOCATION(_e), _e->V.name.ctx)) {
 			return 0;
 		}
 		if (_e->V.name.ctx == Load and
 			alifST_isFunctionLike(_st->cur) and
-			alifUStr_equalToASCIIString(_e->V.name.name, "وراثة")) {
+			alifUStr_equalToASCIIString(_e->V.name.name, "super")) {
 			if (!symtable_addDef(_st, &ALIF_ID(__class__), USE, LOCATION(_e)))
 				return 0;
 		}

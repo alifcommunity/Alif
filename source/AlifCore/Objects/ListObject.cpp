@@ -248,7 +248,7 @@ static void list_clearImpl(AlifListObject* _a, bool _isResize) { // 787
 
 	AlifSizeT i_ = ALIF_SIZE(_a);
 	ALIF_SET_SIZE(_a, 0);
-	alifAtomic_storePtrRelease(_a->item, nullptr);
+	alifAtomic_storePtrRelease(&_a->item, nullptr);
 	_a->allocated = 0;
 	while (--i_ >= 0) {
 		ALIF_XDECREF(items[i_]);
@@ -266,7 +266,7 @@ static void list_clear(AlifListObject* _a) { // 814
 }
 
 static AlifIntT listAssSlice_lockHeld(AlifListObject* _a, AlifSizeT _iLow, AlifSizeT _iHigh, AlifObject* _v) { // 833 
-	AlifObject* recycleOnStack[8];
+	AlifObject* recycleOnStack[8]{};
 	AlifObject** recycle = recycleOnStack; /* will allocate more if needed */
 	AlifObject** item{};
 	AlifObject** vitem = nullptr;
@@ -275,13 +275,13 @@ static AlifIntT listAssSlice_lockHeld(AlifListObject* _a, AlifSizeT _iLow, AlifS
 	AlifSizeT norig{}; /* # of elements in list getting replaced */
 	AlifSizeT d_{}; /* Change in size */
 	AlifSizeT k_{};
-	AlifSizeT s_{};
+	AlifUSizeT s_{};
 	AlifIntT result = -1;            /* guilty until proved innocent */
 #define b ((AlifListObject *)_v)
 	if (_v == nullptr)
 		n_ = 0;
 	else {
-		//vAsSF = alifSequence_fast(_v, "can only assign an iterable");
+		vAsSF = alifSequence_fast(_v, "can only assign an iterable");
 		if (vAsSF == nullptr)
 			goto Error;
 		//n_ = ALIFSEQUENCE_FAST_GET_SIZE(vAsSF);

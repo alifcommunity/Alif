@@ -2,7 +2,7 @@
 
 #include "AlifCore_Long.h"
 #include "AlifCore_Object.h"
-
+#include "AlifCore_Abstract.h"
 
 
 #define MEDIUM_VALUE(_x) ((stwodigits)alifLong_compactValue(_x)) // 23
@@ -131,7 +131,7 @@ AlifObject* alifLong_fromLong(long _iVal) { // 293
 	if (IS_SMALL_INT(_iVal)) {
 		return get_smallInt((sdigit)_iVal);
 	}
-	if (-(long)ALIFLONG_MASK <= _iVal && _iVal <= (long)ALIFLONG_MASK) {
+	if (-(long)ALIFLONG_MASK <= _iVal and _iVal <= (long)ALIFLONG_MASK) {
 		return _alifLong_fromMedium((sdigit)_iVal);
 	}
 
@@ -207,7 +207,7 @@ long alifLong_asLongAndOverflow(AlifObject* _vv, AlifIntT* _overflow) { // 460
 	long res_{};
 	AlifSizeT i_{};
 	AlifIntT sign{};
-	AlifIntT doDecref = 0; /* if PyNumber_Index was called */
+	AlifIntT doDecref = 0;
 
 	*_overflow = 0;
 	if (_vv == nullptr) {
@@ -219,7 +219,7 @@ long alifLong_asLongAndOverflow(AlifObject* _vv, AlifIntT* _overflow) { // 460
 		v_ = (AlifLongObject*)_vv;
 	}
 	else {
-		v_ = (AlifLongObject*)alifNumber_index(_vv);
+		v_ = (AlifLongObject*)_alifNumber_index(_vv);
 		if (v_ == nullptr)
 			return -1;
 		doDecref = 1;
@@ -259,7 +259,7 @@ long alifLong_asLongAndOverflow(AlifObject* _vv, AlifIntT* _overflow) { // 460
 		if (x_ <= (unsigned long)LONG_MAX) {
 			res_ = (long)x_ * sign;
 		}
-		else if (sign < 0 && x_ == ALIF_ABS_LONG_MIN) {
+		else if (sign < 0 and x_ == ALIF_ABS_LONG_MIN) {
 			res_ = LONG_MIN;
 		}
 		else {
@@ -310,7 +310,7 @@ AlifSizeT alifLong_asSizeT(AlifObject* _vv) { // 575
 		prev = x_;
 		x_ = (x_ << ALIFLONG_SHIFT) | v_->longValue.digit[i_];
 		if ((x_ >> ALIFLONG_SHIFT) != prev)
-			goto _overflow;
+			goto overflow;
 	}
 	if (x_ <= (AlifUSizeT)ALIF_SIZET_MAX) {
 		return (AlifSizeT)x_ * sign;
@@ -318,11 +318,11 @@ AlifSizeT alifLong_asSizeT(AlifObject* _vv) { // 575
 	else if (sign < 0 and x_ == ALIF_ABS_SIZET_MIN) {
 		return ALIF_SIZET_MIN;
 	}
-	/* else _overflow */
+	/* else overflow */
 
-_overflow:
+overflow:
 	//alifErr_setString(_alifExcOverflowError_,
-	//	"ALIF AlifIntT too large to convert to CPP ssize_t");
+	//	"alif AlifIntT too large to convert to CPP AlifUSizeT");
 	return -1;
 }
 
@@ -376,8 +376,8 @@ static AlifIntT long_fromBinaryBase(const char* _start,
 		n_ >>= 1;
 	}
 
-	/* n <- the number of Python digits needed,
-			= ceiling((digits * bits_per_char) / PyLong_SHIFT). */
+	/* n <- the number of alif digits needed,
+			= ceiling((digits * bits_per_char) / ALIFLONG_SHIFT). */
 	if (_digits > (ALIF_SIZET_MAX - (ALIFLONG_SHIFT - 1)) / bitsPerChar) {
 		//alifErr_setString(_alifExcValueError_,
 		//	"AlifIntT string too large to convert");
@@ -390,7 +390,7 @@ static AlifIntT long_fromBinaryBase(const char* _start,
 		*_res = nullptr;
 		return 0;
 	}
-	/* Read string from right, and fill in AlifIntT from left; i_.e.,
+	/* Read string from right, and fill in AlifIntT from left; i.e.,
 	 * from least to most significant in both.
 	 */
 	accum = 0;

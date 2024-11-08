@@ -237,7 +237,7 @@ public:
 
 	} V{};
 
-	AlifIntT lineNo{};
+	AlifIntT lineno{};
 	AlifIntT colOffset{};
 	AlifIntT endLineNo{};
 	AlifIntT endColOffset{};

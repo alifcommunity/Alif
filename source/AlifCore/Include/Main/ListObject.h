@@ -34,7 +34,7 @@ public:
     (ALIF_CAST(AlifListObject*, (_op))) // 25
 
 
-static inline AlifSizeT alifList_getSize(AlifObject* _op) { // 30
+static inline AlifSizeT _alifList_getSize(AlifObject* _op) { // 30
 	AlifListObject* list = ALIFLIST_CAST(_op);
 #ifdef ALIF_GIL_DISABLED
 	return alifAtomic_loadSizeRelaxed(&(ALIFVAROBJECT_CAST(list)->objSize));
@@ -42,7 +42,7 @@ static inline AlifSizeT alifList_getSize(AlifObject* _op) { // 30
 	return ALIF_SIZE(list);
 #endif
 }
-#define ALIFLIST_GET_SIZE(_op) alifList_getSize(ALIFOBJECT_CAST(_op)) 
+#define ALIFLIST_GET_SIZE(_op) _alifList_getSize(ALIFOBJECT_CAST(_op)) 
 
 #define ALIFLIST_GET_ITEM(_op, _index) (ALIFLIST_CAST(_op)->item[(_index)])
 

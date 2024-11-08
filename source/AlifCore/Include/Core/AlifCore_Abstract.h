@@ -13,3 +13,4 @@ static inline AlifIntT alifIndex_check(AlifObject* _obj) { // 13
 
 
 extern AlifIntT alifObject_hasLen(AlifObject*); // 22
+AlifObject* _alifNumber_index(AlifObject*); // 56
