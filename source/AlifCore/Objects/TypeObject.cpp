@@ -1144,6 +1144,7 @@ AlifTypeObject _alifTypeType_ = { // 6195
 
 	.base = 0,
 	.dictOffset = offsetof(AlifTypeObject, dict),
+	.alloc = 0,
 };
 
 

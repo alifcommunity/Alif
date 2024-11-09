@@ -26,8 +26,8 @@ enum AlifComprehensionType { // 38
 
 class AlifSourceLocation { // 46
 public:
-	AlifIntT lineno{};
-	AlifIntT endLineno{};
+	AlifIntT lineNo{};
+	AlifIntT endLineNo{};
 	AlifIntT colOffset{};
 	AlifIntT endColOffset{};
 };
@@ -35,8 +35,8 @@ public:
 
 // 53
 #define SRC_LOCATION_FROM_AST(_n) { \
-               .lineno = (_n)->lineno, \
-               .endLineno = (_n)->endLineno, \
+               .lineNo = (_n)->lineNo, \
+               .endLineNo = (_n)->endLineNo, \
                .colOffset = (_n)->colOffset, \
                .endColOffset = (_n)->endColOffset }
 
@@ -106,6 +106,8 @@ extern AlifTypeObject _alifSTEntryType_; // 132
 
 
 extern AlifIntT alifST_isFunctionLike(AlifSTEntryObject* ); // 138
+extern AlifSymTable* alifSymtable_build(ModuleTy, AlifObject*, AlifFutureFeatures*); // 140
+
 extern void alifSymtable_free(AlifSymTable*); // 147
 
 extern AlifObject* alif_maybeMangle(AlifObject*, AlifSTEntryObject*, AlifObject*); // 149
@@ -135,3 +137,8 @@ extern AlifObject* alif_mangle(AlifObject*, AlifObject*); // 150
 #define FREE 4
 #define CELL 5
 // 181
+
+
+
+
+AlifIntT alifFuture_fromAST(ModuleTy, AlifObject*, AlifFutureFeatures*); // 189

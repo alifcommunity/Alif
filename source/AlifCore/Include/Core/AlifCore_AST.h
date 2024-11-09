@@ -127,7 +127,7 @@ enum StmtK_ { // 187
 	ClassDefK = 1, FunctionDefK, AsyncFunctionDefK, ReturnK,
 	DeleteK, AssignK, AugAssignK, ForK, AsyncForK, WhileK,
 	IfK, WithK, AsyncWithK, TryK, ImportK, ImportFromK,
-	ExprK, PassK, BreakK, CountinueK, GlobalK, NonlocalK,
+	ExprK, PassK, BreakK, ContinueK, GlobalK, NonlocalK,
 }; 
 class Stmt { // 196
 public:
@@ -228,6 +228,7 @@ public:
 		public:
 			Identifier module{};
 			ASDLAliasSeq* names{};
+			AlifIntT level{};
 		}importFrom;
 
 		class {
@@ -237,7 +238,7 @@ public:
 
 	} V{};
 
-	AlifIntT lineno{};
+	AlifIntT lineNo{};
 	AlifIntT colOffset{};
 	AlifIntT endLineNo{};
 	AlifIntT endColOffset{};
@@ -410,9 +411,9 @@ public:
 
 	} V{};
 
-	AlifIntT lineno{};
-	AlifIntT endLineno{};
+	AlifIntT lineNo{};
 	AlifIntT colOffset{};
+	AlifIntT endLineNo{};
 	AlifIntT endColOffset{};
 };
 

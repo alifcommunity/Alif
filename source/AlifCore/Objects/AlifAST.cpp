@@ -497,7 +497,7 @@ StmtTy alifAST_continue(AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLine
 	if (!p_)
 		return nullptr;
 
-	p_->type = StmtK_::CountinueK;
+	p_->type = StmtK_::ContinueK;
 	p_->lineNo = _lineNo;
 	p_->colOffset = _colOffset;
 	p_->endLineNo = _endLineNo;

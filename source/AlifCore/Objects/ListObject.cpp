@@ -270,10 +270,10 @@ static AlifIntT listAssSlice_lockHeld(AlifListObject* _a, AlifSizeT _iLow, AlifS
 	AlifObject** recycle = recycleOnStack; /* will allocate more if needed */
 	AlifObject** item{};
 	AlifObject** vitem = nullptr;
-	AlifObject* vAsSF = nullptr; /* PySequence_Fast(_v) */
-	AlifSizeT n_{}; /* # of elements in replacement list */
-	AlifSizeT norig{}; /* # of elements in list getting replaced */
-	AlifSizeT d_{}; /* Change in size */
+	AlifObject* vAsSF = nullptr;	/* alifSequence_fast(_v) */
+	AlifSizeT n_{};					/* # of elements in replacement list */
+	AlifSizeT norig{};				/* # of elements in list getting replaced */
+	AlifSizeT d_{};					/* Change in size */
 	AlifSizeT k_{};
 	AlifUSizeT s_{};
 	AlifIntT result = -1;            /* guilty until proved innocent */

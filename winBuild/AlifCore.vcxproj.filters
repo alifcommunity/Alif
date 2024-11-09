@@ -205,6 +205,9 @@
     <ClCompile Include="..\source\AlifCore\Objects\AlifCompile.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\Future.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">
@@ -549,9 +552,6 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Run.h">
       <Filter>Include\Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\Compile.h">
-      <Filter>Include\Main</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_AST.h">
       <Filter>Include\Core</Filter>
     </ClInclude>
@@ -623,6 +623,9 @@
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_InstructionSequence.h">
       <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifCompile.h">
+      <Filter>Include\Main</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

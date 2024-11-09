@@ -160,7 +160,7 @@ static AlifIntT set_tableResize(AlifSetObject* _so, AlifSizeT _minUsed) { // 253
 		newTable = _so->smallTable;
 		if (newTable == oldTable) {
 			if (_so->fill == _so->used) {
-				/* No dummies, _so no point doing anything. */
+				/* No dummies, so no point doing anything. */
 				return 0;
 			}
 			memcpy(smallCopy, oldTable, sizeof(smallCopy));
@@ -230,12 +230,12 @@ static AlifIntT set_containsKey(AlifSetObject* _so, AlifObject* _key) { // 376
 
 static AlifIntT setUpdateIterable_lockHeld(AlifSetObject *_so, AlifObject *_other) { // 961
 
-    AlifObject *it_ = alifObject_getIter(_other);
+	AlifObject* it_ = alifObject_getIter(_other);
     if (it_ == nullptr) {
         return -1;
     }
 
-    AlifObject *key_;
+	AlifObject* key_{};
     while ((key_ = alifIter_next(it_)) != nullptr) {
         if (set_addKey(_so, key_)) {
             ALIF_DECREF(it_);

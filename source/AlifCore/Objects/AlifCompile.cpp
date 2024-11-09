@@ -138,7 +138,7 @@ static AlifIntT compiler_setup(AlifCompiler* _c, ModuleTy _mod, AlifObject* _fil
 
 	_c->filename = ALIF_NEWREF(_filename);
 	_c->astMem = _astMem;
-	if (!_alifFuture_fromAST(_mod, _filename, &_c->future)) {
+	if (!alifFuture_fromAST(_mod, _filename, &_c->future)) {
 		return ERROR;
 	}
 	if (!_flags) {
@@ -154,7 +154,7 @@ static AlifIntT compiler_setup(AlifCompiler* _c, ModuleTy _mod, AlifObject* _fil
 	if (!_alifAST_optimize(_mod, _astMem, _c->optimize, merged)) {
 		return ERROR;
 	}
-	_c->st = _alifSymtable_build(_mod, _filename, &_c->future);
+	_c->st = alifSymtable_build(_mod, _filename, &_c->future);
 	if (_c->st == nullptr) {
 		//if (!alifErr_occurred()) {
 		//	alifErr_setString(_alifExcSystemError_, "no symtable");

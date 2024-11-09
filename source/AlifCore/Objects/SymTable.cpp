@@ -89,8 +89,9 @@ AlifTypeObject _alifSTEntryType_ = { // 192
 };
 
 
-
+static AlifIntT symtable_analyze(AlifSymTable*); // 233
 static AlifIntT symtable_enterBlock(AlifSymTable*, AlifObject*, BlockType_, void*, AlifSourceLocation); // 234
+static AlifIntT symtable_exitBlock(AlifSymTable*); // 236
 static AlifIntT symtable_visitStmt(AlifSymTable* , StmtTy ); // 237
 static AlifIntT symtable_visitExpr(AlifSymTable* , ExprTy ); // 238
 static AlifIntT symtable_addDef(AlifSymTable*, AlifObject*, AlifIntT, AlifSourceLocation); // 261
@@ -452,6 +453,8 @@ static AlifIntT symtable_addDef(AlifSymTable* _st, AlifObject* _name, AlifIntT _
 #define ENTER_RECURSIVE(_st) \
     do { \
         if (++(_st)->recursionDepth > (_st)->recursionLimit) { \
+			/*alifErr_setString(alifExcRecursionError,			\
+			"maximum recursion depth exceeded during compilation");*/ \
             return 0; \
         } \
     } while(0)
@@ -474,7 +477,9 @@ static AlifIntT symtable_visitStmt(AlifSymTable* _st, StmtTy _s) { // 1812
 		break;
 	case StmtK_::PassK:
 	case StmtK_::BreakK:
-
+	case StmtK_::ContinueK:
+		/* nothing to do here */
+		break;
 	}
 	LEAVE_RECURSIVE(_st);
 	return 1;

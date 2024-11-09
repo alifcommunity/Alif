@@ -175,6 +175,7 @@ typedef AlifObject* (*DescrGetFunc) (AlifObject*, AlifObject*, AlifObject*); // 
 typedef AlifIntT (*DescrSetFunc) (AlifObject*, AlifObject*, AlifObject*); // 346
 typedef AlifIntT (*InitProc)(AlifObject*, AlifObject*, AlifObject*); // 347
 typedef AlifObject* (*NewFunc)(AlifTypeObject*, AlifObject*, AlifObject*); // 348
+typedef AlifObject* (*AllocFunc)(AlifTypeObject*, AlifSizeT); // 349
 
 typedef AlifObject* (*VectorCallFunc)(AlifObject*, AlifObject* const*, AlifUSizeT, AlifObject*); // 352
 
@@ -403,6 +404,7 @@ public:
 	DescrSetFunc descrSet{};
 	AlifSizeT dictOffset{};
 	InitProc init{};
+	AllocFunc alloc{};
 	NewFunc new_{};
 	FreeFunc free{};
 	Inquiry isGC{};

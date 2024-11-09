@@ -274,9 +274,9 @@ exit:
 }
 
 long alifLong_asLong(AlifObject* _obj) { // 540
-	AlifIntT _overflow{};
-	long result = alifLong_asLongAndOverflow(_obj, &_overflow);
-	if (_overflow) {
+	AlifIntT overflow{};
+	long result = alifLong_asLongAndOverflow(_obj, &overflow);
+	if (overflow) {
 		//alifErr_setString(_alifExcOverflowError_,
 			//"alif AlifIntT too large to convert to C long");
 	}
