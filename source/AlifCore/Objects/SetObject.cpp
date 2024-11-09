@@ -160,7 +160,7 @@ static AlifIntT set_tableResize(AlifSetObject* _so, AlifSizeT _minUsed) { // 253
 		newTable = _so->smallTable;
 		if (newTable == oldTable) {
 			if (_so->fill == _so->used) {
-				/* No dummies, so no point doing anything. */
+				/* No dummies, _so no point doing anything. */
 				return 0;
 			}
 			memcpy(smallCopy, oldTable, sizeof(smallCopy));
@@ -203,7 +203,6 @@ static AlifIntT set_tableResize(AlifSetObject* _so, AlifSizeT _minUsed) { // 253
 	return 0;
 }
 
-
 static AlifIntT set_containsEntry(AlifSetObject* _so, AlifObject* _key, AlifHashT _hash) { // 333
 	SetEntry* entry{};
 
@@ -227,6 +226,82 @@ static AlifIntT set_containsKey(AlifSetObject* _so, AlifObject* _key) { // 376
 		return -1;
 	}
 	return set_containsEntry(_so, _key, hash);
+}
+
+static AlifIntT setUpdateIterable_lockHeld(AlifSetObject *_so, AlifObject *_other) { // 961
+
+    AlifObject *it_ = alifObject_getIter(_other);
+    if (it_ == nullptr) {
+        return -1;
+    }
+
+    AlifObject *key_;
+    while ((key_ = alifIter_next(it_)) != nullptr) {
+        if (set_addKey(_so, key_)) {
+            ALIF_DECREF(it_);
+            ALIF_DECREF(key_);
+            return -1;
+        }
+        ALIF_DECREF(key_);
+    }
+    ALIF_DECREF(it_);
+    //if (alifErr_occurred())
+        //return -1;
+    return 0;
+}
+
+static AlifIntT setUpdate_lockHeld(AlifSetObject *_so, AlifObject *_other) { // 986
+    if (ALIFANYSET_CHECK(_other)) {
+        return setMerge_lockHeld(_so, _other);
+    }
+    else if (ALIFDICT_CHECKEXACT(_other)) {
+        return setUpdateDict_lockHeld(_so, _other);
+    }
+    return setUpdateIterable_lockHeld(_so, _other);
+}
+
+// set_update for a `_so` that is only visible to the current thread
+static AlifIntT setUpdate_local(AlifSetObject *_so, AlifObject *_other) { // 999
+    if (ALIFANYSET_CHECK(_other)) {
+		AlifIntT rv_{};
+        ALIF_BEGIN_CRITICAL_SECTION(_other);
+        rv_ = setMerge_lockHeld(_so, _other);
+        ALIF_END_CRITICAL_SECTION();
+        return rv_;
+    }
+    else if (ALIFDICT_CHECKEXACT(_other)) {
+		AlifIntT rv_{};
+        ALIF_BEGIN_CRITICAL_SECTION(_other);
+        rv_ = setUpdateDict_lockHeld(_so, _other);
+        ALIF_END_CRITICAL_SECTION();
+        return rv_;
+    }
+    return setUpdateIterable_lockHeld(_so, _other);
+}
+
+static AlifObject* make_newSet(AlifTypeObject* _type, AlifObject* _iterable) { // 1077
+	AlifSetObject* so_{};
+
+	so_ = (AlifSetObject*)_type->alloc(_type, 0);
+	if (so_ == nullptr)
+		return nullptr;
+
+	so_->fill = 0;
+	so_->used = 0;
+	so_->mask = ALIFSET_MINSIZE - 1;
+	so_->table = so_->smallTable;
+	so_->hash = -1;
+	so_->finger = 0;
+	so_->weakreList = nullptr;
+
+	if (_iterable != nullptr) {
+		if (set_updateLocal(so_, _iterable)) {
+			ALIF_DECREF(so_);
+			return nullptr;
+		}
+	}
+
+	return (AlifObject*)so_;
 }
 
 AlifTypeObject _alifSetType_ = { // 2449

@@ -2163,7 +2163,14 @@ AlifIntT alifUStr_equalToUTF8AndSize(AlifObject* _uStr,
 	return s_ == ends;
 }
 
-
+AlifIntT alifUStr_equalToASCIIString(AlifObject* _uStr, const char* _str) { // 11135
+	AlifUSizeT len_{};
+	if (!ALIFUSTR_IS_ASCII(_uStr))
+		return 0;
+	len_ = (AlifSizeT)ALIFUSTR_GET_LENGTH(_uStr);
+	return strlen(_str) == len_ and
+		memcmp(ALIFUSTR_1BYTE_DATA(_uStr), _str, len_) == 0;
+}
 
 
 AlifIntT alifUStr_eq(AlifObject* _aa, AlifObject* _bb) { // 11229
