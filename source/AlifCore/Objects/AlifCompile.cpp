@@ -19,7 +19,11 @@
 #undef NEED_OPCODE_METADATA
 
 
-
+ // 60
+#undef SUCCESS
+#undef ERROR
+#define SUCCESS 0
+#define ERROR -1
 
 
 typedef AlifInstructionSequence InstrSequence; // 84
@@ -114,6 +118,52 @@ public:
 
 
 static void compiler_free(AlifCompiler*); // 307
+
+
+
+
+static AlifIntT compiler_setup(AlifCompiler* _c, ModuleTy _mod, AlifObject* _filename,
+	AlifCompilerFlags* _flags, AlifIntT _optimize, AlifASTMem* _astMem) { // 363
+	AlifCompilerFlags localFlags = ALIFCOMPILERFLAGS_INIT;
+
+	_c->constCache = alifDict_new();
+	if (!_c->constCache) {
+		return ERROR;
+	}
+
+	_c->stack = alifList_new(0);
+	if (!_c->stack) {
+		return ERROR;
+	}
+
+	_c->filename = ALIF_NEWREF(_filename);
+	_c->astMem = _astMem;
+	if (!_alifFuture_fromAST(_mod, _filename, &_c->future)) {
+		return ERROR;
+	}
+	if (!_flags) {
+		_flags = &localFlags;
+	}
+	AlifIntT merged = _c->future.features | _flags->flags;
+	_c->future.features = merged;
+	_flags->flags = merged;
+	_c->flags = *_flags;
+	_c->optimize = (_optimize == -1) ? alif_getConfig()->optimizationLevel : _optimize;
+	_c->saveNestedSeqs = false;
+
+	if (!_alifAST_optimize(_mod, _astMem, _c->optimize, merged)) {
+		return ERROR;
+	}
+	_c->st = _alifSymtable_build(_mod, _filename, &_c->future);
+	if (_c->st == nullptr) {
+		//if (!alifErr_occurred()) {
+		//	alifErr_setString(_alifExcSystemError_, "no symtable");
+		//}
+		return ERROR;
+	}
+	return SUCCESS;
+}
+
 
 
 
