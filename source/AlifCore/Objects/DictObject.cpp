@@ -41,6 +41,7 @@ static inline void set_values(AlifDictObject* _mp, AlifDictValues* _values) { //
  // 204
 #define LOCK_KEYS(_keys) alifMutex_lockFlags(&_keys->mutex, AlifLockFlags_::Alif_Lock_Dont_Detach)
 #define UNLOCK_KEYS(_keys) ALIFMUTEX_UNLOCK(&_keys->mutex)
+#define LOAD_SHARED_KEY(_key) alifAtomic_loadPtrAcquire(&_key)
 
 #define STORE_SHARED_KEY(_key, _value) alifAtomic_storePtrRelease(&_key, _value) // 209
 #define INCREF_KEYS(_dk)  alifAtomic_addSize(&_dk->refCnt, 1) // 211
@@ -320,7 +321,7 @@ static AlifObject* newDict_withSharedKeys(AlifInterpreter* interp, AlifDictKeysO
 	}
 	dictKeys_incRef(keys);
 	for (AlifUSizeT i = 0; i < size; i++) {
-		values->values[i] = NULL;
+		values->values[i] = nullptr;
 	}
 	return new_dict(interp, keys, values, 0, 1);
 }
@@ -1273,7 +1274,7 @@ static void delItem_common(AlifDictObject* _mp, AlifHashT _hash, AlifSizeT _ix,
 	AlifSizeT hashPos = lookDict_index(_mp->keys, _hash, _ix);
 
 	STORE_USED(_mp, _mp->used - 1);
-	//mp->versionTag = _newVersion;
+	//mp_->versionTag = _newVersion;
 	if (ALIFDICT_HASSPLITTABLE(_mp)) {
 		STORE_SPLIT_VALUE(_mp, _ix, nullptr);
 		deleteIndex_fromValues(_mp->values, _ix);
@@ -1345,6 +1346,65 @@ AlifIntT alifDict_delItemKnownHash(AlifObject* _op,
 	res = delItem_knownHashLockHeld(_op, _key, _hash);
 	ALIF_END_CRITICAL_SECTION();
 	return res;
+}
+
+AlifIntT _alifDict_next(AlifObject* _op, AlifSizeT* _ppos, AlifObject** _pKey,
+	AlifObject** _pValue, AlifHashT* _pHash) { // 2755
+	AlifSizeT i{};
+	AlifDictObject* mp{};
+	AlifObject* key{}, * value{};
+	AlifHashT hash{};
+
+	if (!ALIFDICT_CHECK(_op))
+		return 0;
+
+	mp = (AlifDictObject*)_op;
+	i = *_ppos;
+	if (ALIFDICT_HASSPLITTABLE(mp)) {
+		if (i < 0 || i >= mp->used)
+			return 0;
+		AlifIntT index = getIndex_fromOrder(mp, i);
+		value = mp->values->values[index];
+		key = (AlifObject*)LOAD_SHARED_KEY(dk_uStrEntries(mp->keys)[index].key);
+		hash = uStr_getHash(key);
+	}
+	else {
+		AlifSizeT n = mp->keys->nentries;
+		if (i < 0 || i >= n)
+			return 0;
+		if (DK_IS_USTR(mp->keys)) {
+			AlifDictUStrEntry* entryPtr = &dk_uStrEntries(mp->keys)[i];
+			while (i < n and entryPtr->value == nullptr) {
+				entryPtr++;
+				i++;
+			}
+			if (i >= n)
+				return 0;
+			key = entryPtr->key;
+			hash = uStr_getHash(entryPtr->key);
+			value = entryPtr->value;
+		}
+		else {
+			AlifDictKeyEntry* entryPtr = &dk_entries(mp->keys)[i];
+			while (i < n and entryPtr->value == nullptr) {
+				entryPtr++;
+				i++;
+			}
+			if (i >= n)
+				return 0;
+			key = entryPtr->key;
+			hash = entryPtr->hash;
+			value = entryPtr->value;
+		}
+	}
+	*_ppos = i + 1;
+	if (_pKey)
+		*_pKey = key;
+	if (_pValue)
+		*_pValue = value;
+	if (_pHash)
+		*_pHash = hash;
+	return 1;
 }
 
 AlifIntT alifDict_popKnownHash(AlifDictObject* _mp, AlifObject* _key,
@@ -2120,7 +2180,7 @@ AlifIntT alifObjectDict_setItem(AlifTypeObject* _tp, AlifObject* _obj, AlifObjec
 	AlifIntT res{};
 
 	dict = ensure_nonManagedDict(_obj, _dictptr);
-	if (dict == NULL) {
+	if (dict == nullptr) {
 		return -1;
 	}
 

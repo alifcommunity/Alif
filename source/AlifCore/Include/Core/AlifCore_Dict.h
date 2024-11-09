@@ -12,7 +12,7 @@ AlifIntT alifDict_delItemKnownHash(AlifObject*, AlifObject*, AlifHashT); // 29
 extern AlifIntT alifDict_containsKnownHash(AlifObject*, AlifObject*, AlifHashT); // 31
 
 
-
+AlifIntT _alifDict_next(AlifObject* , AlifSizeT* , AlifObject** , AlifObject** , AlifHashT* ); // 40
 
 
 #define ALIFDICT_HASSPLITTABLE(_d) ((_d)->values != nullptr) // 50
