@@ -308,19 +308,19 @@ public:
 		public:
 			ExprTy key{};
 			ExprTy val{};
-			ASDLComprehensionSeq* generetors{};
+			ASDLComprehensionSeq* generators{};
 		}dictComp;
 
 		class {
 		public:
 			ExprTy elts{};
-			ASDLComprehensionSeq* generetors{};
+			ASDLComprehensionSeq* generators{};
 		}setComp;
 
 		class {
 		public:
 			ExprTy elt{};
-			ASDLComprehensionSeq* generetors{};
+			ASDLComprehensionSeq* generators{};
 		}listComp;
 
 		class {
@@ -357,7 +357,7 @@ public:
 			ExprTy val{};
 			AlifIntT conversion{};
 			ExprTy formatSpec{};
-		}fromattedValue;
+		}formattedValue;
 
 		class {
 		public:

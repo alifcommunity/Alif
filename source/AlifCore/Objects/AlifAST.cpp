@@ -646,7 +646,7 @@ ExprTy alifAST_listComp(ExprTy _elt, ASDLComprehensionSeq* _generators,
 
 	p->type = ListCompK;
 	p->V.listComp.elt = _elt;
-	p->V.listComp.generetors = _generators;
+	p->V.listComp.generators = _generators;
 	p->lineNo = _lineNo;
 	p->colOffset = _colOffset;
 	p->endLineNo = _endLineNo;
@@ -673,7 +673,7 @@ ExprTy alifAST_dictComp(ExprTy _key, ExprTy _val, ASDLComprehensionSeq* _generat
 	p->type = DictCompK;
 	p->V.dictComp.key = _key;
 	p->V.dictComp.val = _val;
-	p->V.dictComp.generetors = _generators;
+	p->V.dictComp.generators = _generators;
 	p->lineNo = _lineNo;
 	p->colOffset = _colOffset;
 	p->endLineNo = _endLineNo;
@@ -794,9 +794,9 @@ ExprTy alifAST_formattedValue(ExprTy _val, AlifIntT _conversion, ExprTy _formatS
 	if (!p) return nullptr;
 
 	p->type = FormattedValK;
-	p->V.fromattedValue.val = _val;
-	p->V.fromattedValue.conversion = _conversion;
-	p->V.fromattedValue.formatSpec = _formatSpec;
+	p->V.formattedValue.val = _val;
+	p->V.formattedValue.conversion = _conversion;
+	p->V.formattedValue.formatSpec = _formatSpec;
 	p->lineNo = _lineNo;
 	p->colOffset = _colOffset;
 	p->endLineNo = _endLineNo;

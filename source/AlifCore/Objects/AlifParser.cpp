@@ -12489,7 +12489,7 @@ void visit_expr(ExprTy v) {
 		spaces -= 4;
 	}
 	else if (v->type == ExprK_::FormattedValK) {
-		VISIT(expr, v->V.fromattedValue.val);
+		VISIT(expr, v->V.formattedValue.val);
 	}
 	else if (v->type == ExprK_::TupleK) {
 		print_space(spaces);

@@ -9,7 +9,7 @@
 AlifCodeObject* alifAST_compile(ModuleTy, AlifObject*, AlifCompilerFlags*, AlifIntT, AlifASTMem*); // 18
 
 
-
+extern AlifIntT alifAST_optimize(ModuleTy, AlifASTMem*, AlifIntT, AlifIntT); // 35
 
 
 

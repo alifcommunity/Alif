@@ -186,6 +186,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\AlifToken.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifTokenState.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ASDL.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\ASTOpt.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\BiaseRefCount.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\BoolObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\BuiltinsModule.cpp" />

@@ -151,7 +151,7 @@ static AlifIntT compiler_setup(AlifCompiler* _c, ModuleTy _mod, AlifObject* _fil
 	_c->optimize = (_optimize == -1) ? alif_getConfig()->optimizationLevel : _optimize;
 	_c->saveNestedSeqs = false;
 
-	if (!_alifAST_optimize(_mod, _astMem, _c->optimize, merged)) {
+	if (!alifAST_optimize(_mod, _astMem, _c->optimize, merged)) {
 		return ERROR;
 	}
 	_c->st = alifSymtable_build(_mod, _filename, &_c->future);
