@@ -32,6 +32,135 @@ public:
 
 
 
+static AlifIntT fold_unaryOp(ExprTy _node, AlifASTMem* _astMem, AlifASTOptimizeState* _state) { // 79
+	ExprTy arg = _node->V.unaryOp.operand;
+
+	if (arg->type != ExprK_::ConstantK) {
+		/* Fold not into comparison */
+		if (_node->V.unaryOp.op == UnaryOp_::Not and arg->type == ExprK_::CompareK and
+			ASDL_SEQ_LEN(arg->V.compare.ops) == 1) {
+			CmpOp_ op = (CmpOp_)ASDL_SEQ_GET(arg->V.compare.ops, 0);
+			switch (op) {
+			case CmpOp_::Is:
+				op = CmpOp_::IsNot;
+				break;
+			case CmpOp_::IsNot:
+				op = CmpOp_::Is;
+				break;
+			case CmpOp_::In:
+				op = CmpOp_::NotIn;
+				break;
+			case CmpOp_::NotIn:
+				op = CmpOp_::In;
+				break;
+				// The remaining comparison operators can't be safely inverted
+			case CmpOp_::Equal:
+			case CmpOp_::NotEq:
+			case CmpOp_::LessThan:
+			case CmpOp_::LessThanEq:
+			case CmpOp_::GreaterThan:
+			case CmpOp_::GreaterThanEq:
+				op = (CmpOp_)0; // The AST enums leave "0" free as an "unused" marker
+				break;
+				// No default case, so the compiler will emit a warning if new
+				// comparison operators are added without being handled here
+			}
+			if (op) {
+				ASDL_SEQ_SET(arg->V.compare.ops, 0, op);
+				COPY_NODE(_node, arg);
+				return 1;
+			}
+		}
+		return 1;
+	}
+
+	typedef AlifObject* (*UnaryOp)(AlifObject*);
+	static const UnaryOp ops[] = {
+		alifNumber_invert,			// [UnaryOp_::Invert]
+		unary_not,					// [UnaryOp_::Not] 
+		alifNumber_positive,		// [UnaryOp_::UAdd] 
+		alifNumber_negative,		// [UnaryOp_::USub] 
+		alifNumber_sqrt,			// [UnaryOp_::Sqrt]  // alif
+	};
+	AlifObject* newval = ops[_node->V.unaryOp.op](arg->V.constant.val);
+	return make_const(_node, newval, _astMem);
+}
+
+
+static AlifIntT fold_binOp(ExprTy _node, AlifASTMem* _astMem, AlifASTOptimizeState* _state) { // 461
+	ExprTy lhs{}, rhs{};
+	lhs = _node->V.binOp.left;
+	rhs = _node->V.binOp.right;
+	if (lhs->type != ExprK_::ConstantK) {
+		return 1;
+	}
+	AlifObject* lv = lhs->V.constant.val;
+
+	if (_node->V.binOp.op == Mod and
+		rhs->type == ExprK_::TupleK and
+		ALIFUSTR_CHECK(lv) and
+		!has_starred(rhs->V.tuple.elts))
+	{
+		return optimize_format(_node, lv, rhs->V.tuple.elts, _astMem);
+	}
+
+	if (rhs->type != ExprK_::ConstantK) {
+		return 1;
+	}
+
+	AlifObject* rv = rhs->V.constant.val;
+	AlifObject* newval = nullptr;
+
+	switch (_node->V.binOp.op) {
+	case Operator_::Add:
+		newval = alifNumber_add(lv, rv);
+		break;
+	case Operator_::Sub:
+		newval = alifNumber_subtract(lv, rv);
+		break;
+	case Operator_::Mult:
+		newval = safe_multiply(lv, rv);
+		break;
+	case Operator_::Div:
+		newval = alifNumber_trueDivide(lv, rv);
+		break;
+	case Operator_::FloorDiv:
+		newval = alifNumber_floorDivide(lv, rv);
+		break;
+	case Operator_::Mod:
+		newval = safe_mod(lv, rv);
+		break;
+	case Operator_::Pow:
+		newval = safe_power(lv, rv);
+		break;
+	case Operator_::LShift:
+		newval = safe_lshift(lv, rv);
+		break;
+	case Operator_::RShift:
+		newval = alifNumber_rShift(lv, rv);
+		break;
+	case Operator_::BitOr:
+		newval = alifNumber_or(lv, rv);
+		break;
+	case Operator_::BitXor:
+		newval = alifNumber_xor(lv, rv);
+		break;
+	case Operator_::BitAnd:
+		newval = alifNumber_and(lv, rv);
+		break;
+		// No builtin constants implement the following operators
+	//case Operator_::MatMult:
+	//	return 1;
+		// No default case, so the compiler will emit a warning if new binary
+		// operators are added without being handled here
+	}
+
+	return make_const(_node, newval, _astMem);
+}
+
+
+
+
 static AlifIntT astFold_mod(ModuleTy, AlifASTMem*, AlifASTOptimizeState*); // 644
 static AlifIntT astFold_stmt(StmtTy, AlifASTMem*, AlifASTOptimizeState*);
 static AlifIntT astFold_expr(ExprTy, AlifASTMem*, AlifASTOptimizeState*);
