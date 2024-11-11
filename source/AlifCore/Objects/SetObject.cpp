@@ -259,7 +259,7 @@ static AlifIntT setMerge_lockHeld(AlifSetObject* _so, AlifObject* _otherSet) { /
 	SetEntry* otherEntry{};
 
 	other = (AlifSetObject*)_otherSet;
-	if (other == _so || other->used == 0)
+	if (other == _so or other->used == 0)
 		return 0;
 	if ((_so->fill + other->used) * 5 >= _so->mask * 3) {
 		if (set_tableResize(_so, (_so->used + other->used) * 2) != 0)
@@ -268,7 +268,7 @@ static AlifIntT setMerge_lockHeld(AlifSetObject* _so, AlifObject* _otherSet) { /
 	soEntry = _so->table;
 	otherEntry = other->table;
 
-	if (_so->fill == 0 && _so->mask == other->mask && other->fill == other->used) {
+	if (_so->fill == 0 and _so->mask == other->mask and other->fill == other->used) {
 		for (i_ = 0; i_ <= other->mask; i_++, soEntry++, otherEntry++) {
 			key = otherEntry->key;
 			if (key != nullptr) {
@@ -288,7 +288,7 @@ static AlifIntT setMerge_lockHeld(AlifSetObject* _so, AlifObject* _otherSet) { /
 		alifAtomic_storeSizeRelaxed(&_so->used, other->used);
 		for (i_ = other->mask + 1; i_ > 0; i_--, otherEntry++) {
 			key = otherEntry->key;
-			if (key != nullptr && key != DUMMY) {
+			if (key != nullptr and key != DUMMY) {
 				set_insertClean(newtable, newMask, ALIF_NEWREF(key),
 					otherEntry->hash);
 			}
@@ -299,7 +299,7 @@ static AlifIntT setMerge_lockHeld(AlifSetObject* _so, AlifObject* _otherSet) { /
 	for (i_ = 0; i_ <= other->mask; i_++) {
 		otherEntry = &other->table[i_];
 		key = otherEntry->key;
-		if (key != nullptr && key != DUMMY) {
+		if (key != nullptr and key != DUMMY) {
 			if (set_addEntry(_so, key, otherEntry->hash))
 				return -1;
 		}

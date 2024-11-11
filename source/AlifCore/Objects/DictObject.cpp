@@ -1361,7 +1361,7 @@ AlifIntT _alifDict_next(AlifObject* _op, AlifSizeT* _ppos, AlifObject** _pKey,
 	mp = (AlifDictObject*)_op;
 	i = *_ppos;
 	if (ALIFDICT_HASSPLITTABLE(mp)) {
-		if (i < 0 || i >= mp->used)
+		if (i < 0 or i >= mp->used)
 			return 0;
 		AlifIntT index = getIndex_fromOrder(mp, i);
 		value = mp->values->values[index];
@@ -1370,7 +1370,7 @@ AlifIntT _alifDict_next(AlifObject* _op, AlifSizeT* _ppos, AlifObject** _pKey,
 	}
 	else {
 		AlifSizeT n = mp->keys->nentries;
-		if (i < 0 || i >= n)
+		if (i < 0 or i >= n)
 			return 0;
 		if (DK_IS_USTR(mp->keys)) {
 			AlifDictUStrEntry* entryPtr = &dk_uStrEntries(mp->keys)[i];
