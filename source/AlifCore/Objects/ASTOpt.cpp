@@ -30,6 +30,26 @@ public:
         --(ST)->recursionDepth; \
     } while(0)
 
+static AlifIntT make_const(ExprTy _node,
+	AlifObject* _val, AlifASTMem* _astMem) { // 32
+	// Even if no new value was calculated, make_const may still
+	// need to clear an error (e.g. for division by zero)
+	if (_val == nullptr) {
+		//if (alifErr_exceptionMatches(_alifExcKeyboardInterrupt_)) {
+		//	return 0;
+		//}
+		//alifErr_clear();
+		return 1;
+	}
+	if (alifASTMem_listAddAlifObj(_astMem, _val) < 0) {
+		ALIF_DECREF(_val);
+		return 0;
+	}
+	_node->type = ExprK_::ConstantK;
+	_node->V.constant.type = nullptr;
+	_node->V.constant.val = _val;
+	return 1;
+}
 
 
 static AlifIntT fold_unaryOp(ExprTy _node, AlifASTMem* _astMem, AlifASTOptimizeState* _state) { // 79
@@ -158,12 +178,70 @@ static AlifIntT fold_binOp(ExprTy _node, AlifASTMem* _astMem, AlifASTOptimizeSta
 	return make_const(_node, newval, _astMem);
 }
 
+static AlifIntT fold_tuple(ExprTy _node,
+	AlifASTMem* _astMem, AlifASTOptimizeState* _state) { // 558
+	AlifObject* newVal{};
 
+	if (_node->V.tuple.ctx != ExprContext_::Load)
+		return 1;
+
+	newVal = make_constTuple(_node->V.tuple.elts);
+	return make_const(_node, newVal, _astMem);
+}
+
+static AlifIntT fold_iter(ExprTy _arg,
+	AlifASTMem* _astMem, AlifASTOptimizeState* _state) { // 594
+	AlifObject* newVal{};
+	if (_arg->type == ExprK_::ListK) {
+		/* First change a list into tuple. */
+		ASDLExprSeq* elts = _arg->V.list.elts;
+		if (has_starred(elts)) {
+			return 1;
+		}
+		ExprContext_ ctx = _arg->V.list.ctx;
+		_arg->type = ExprK_::TupleK;
+		_arg->V.tuple.elts = elts;
+		_arg->V.tuple.ctx = ctx;
+		/* Try to create a constant tuple. */
+		newVal = make_constTuple(elts);
+	}
+	else if (_arg->type == ExprK_::SetK) {
+		newVal = make_constTuple(_arg->V.set.elts);
+		if (newVal) {
+			ALIF_SETREF(newVal, alifFrozenSet_new(newVal));
+		}
+	}
+	else {
+		return 1;
+	}
+	return make_const(_arg, newVal, _astMem);
+}
+
+static AlifIntT fold_compare(ExprTy _node,
+	AlifASTMem* _astMem, AlifASTOptimizeState* _state) { // 623
+	ASDLIntSeq* ops{};
+	ASDLExprSeq* args{};
+	AlifSizeT i{};
+
+	ops = _node->V.compare.ops;
+	args = _node->V.compare.comparators;
+	/* Change literal list or set in 'in' or 'not in' into
+	   tuple or frozenset respectively. */
+	i = ASDL_SEQ_LEN(ops) - 1;
+	AlifIntT op = ASDL_SEQ_GET(ops, i);
+	if (op == CmpOp_::In or op == CmpOp_::NotIn) {
+		if (!fold_iter((ExprTy)ASDL_SEQ_GET(args, i), _astMem, _state)) {
+			return 0;
+		}
+	}
+	return 1;
+}
 
 
 static AlifIntT astFold_mod(ModuleTy, AlifASTMem*, AlifASTOptimizeState*); // 644
 static AlifIntT astFold_stmt(StmtTy, AlifASTMem*, AlifASTOptimizeState*);
 static AlifIntT astFold_expr(ExprTy, AlifASTMem*, AlifASTOptimizeState*);
+static AlifIntT astFold_keyword(KeywordTy, AlifASTMem*, AlifASTOptimizeState*); //  649
 
 
  // 657
@@ -187,7 +265,8 @@ static AlifIntT astFold_expr(ExprTy, AlifASTMem*, AlifASTOptimizeState*);
 
 
 
-static AlifIntT astFold_body(ASDLStmtSeq* _stmts, AlifASTMem* _ctx, AlifASTOptimizeState* _state) { // 676
+static AlifIntT astFold_body(ASDLStmtSeq* _stmts,
+	AlifASTMem* _ctx, AlifASTOptimizeState* _state) { // 676
 	AlifIntT docstring = alifAST_getDocString(_stmts) != nullptr;
 	CALL_SEQ(astFold_stmt, Stmt, _stmts);
 	if (!docstring and alifAST_getDocString(_stmts) != nullptr) {
@@ -336,6 +415,12 @@ static AlifIntT astFold_expr(ExprTy _node, AlifASTMem* _ctx, AlifASTOptimizeStat
 		// kinds are added without being handled here
 	}
 	LEAVE_RECURSIVE(_state);;
+	return 1;
+}
+
+static AlifIntT astFold_keyword(KeywordTy _node,
+	AlifASTMem* _ctx, AlifASTOptimizeState* _state) { // 840
+	CALL(astFold_expr, ExprTy, _node->val);
 	return 1;
 }
 

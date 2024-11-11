@@ -11,3 +11,10 @@ extern AlifLongObject _alifTrueClass_; // 18
 
 #define ALIF_FALSE ALIFOBJECT_CAST(&_alifFalseClass_) // 25
 #define ALIF_TRUE ALIFOBJECT_CAST(&_alifTrueClass_) // 26
+
+
+
+
+
+
+AlifObject* alifBool_fromLong(long); // 42

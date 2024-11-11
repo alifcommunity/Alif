@@ -106,6 +106,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomicGCC.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomicMSC.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\BoolObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\BuiltinsModule.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\ByteArrayObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\BytesObject.h" />
