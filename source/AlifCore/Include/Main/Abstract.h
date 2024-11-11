@@ -20,6 +20,13 @@ AlifObject* alifObject_getIter(AlifObject*); // 383
 
 AlifObject* alifIter_next(AlifObject* ); // 417
 
+// this funcs in Abstract.cpp alter-line: 1361
+AlifObject* alifNumber_negative(AlifObject*); // 494
+AlifObject* alifNumber_positive(AlifObject*); // 499
+AlifObject* alifNumber_absolute(AlifObject*); // 504
+AlifObject* alifNumber_invert(AlifObject*); // 509
+AlifObject* alifNumber_sqrt(AlifObject*); // alif
+
 AlifObject* alifNumber_index(AlifObject*); // 545
 
 AlifSizeT alifNumber_asSizeT(AlifObject*, AlifObject*); // 553

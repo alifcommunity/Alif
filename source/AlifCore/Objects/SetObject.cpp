@@ -419,6 +419,14 @@ AlifTypeObject _alifFrozenSetType_ = { // 2539
 	.itemSize = 0,
 };
 
+AlifObject* alifSet_new(AlifObject* _iterable) { // 2588
+	return make_newSet(&_alifSetType_, _iterable);
+}
+
+AlifObject* alifFrozenSet_new(AlifObject* _iterable) { // 2594
+	return make_newSet(&_alifFrozenSetType_, _iterable);
+}
+
 AlifIntT alifSet_contains(AlifObject* _anySet, AlifObject* _key) { // 2628
 	if (!ALIFANYSET_CHECK(_anySet)) {
 		//ALIFERR_BADINTERNALCALL();

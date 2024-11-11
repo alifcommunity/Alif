@@ -51,8 +51,27 @@ static AlifIntT make_const(ExprTy _node,
 	return 1;
 }
 
+#define COPY_NODE(_to, _from) (memcpy((_to), (_from), sizeof(Expr)))
 
-static AlifIntT fold_unaryOp(ExprTy _node, AlifASTMem* _astMem, AlifASTOptimizeState* _state) { // 79
+static AlifIntT has_starred(ASDLExprSeq* _elts) { // 56
+	AlifSizeT n = ASDL_SEQ_LEN(_elts);
+	for (AlifSizeT i = 0; i < n; i++) {
+		ExprTy e = (ExprTy)ASDL_SEQ_GET(_elts, i);
+		if (e->type == ExprK_::StarK) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+static AlifObject* unary_not(AlifObject* _v) { // 70
+	AlifIntT r = alifObject_isTrue(_v);
+	if (r < 0) return nullptr;
+	return alifBool_fromLong(!r);
+}
+
+static AlifIntT fold_unaryOp(ExprTy _node,
+	AlifASTMem* _astMem, AlifASTOptimizeState* _state) { // 79
 	ExprTy arg = _node->V.unaryOp.operand;
 
 	if (arg->type != ExprK_::ConstantK) {
@@ -107,7 +126,60 @@ static AlifIntT fold_unaryOp(ExprTy _node, AlifASTMem* _astMem, AlifASTOptimizeS
 }
 
 
-static AlifIntT fold_binOp(ExprTy _node, AlifASTMem* _astMem, AlifASTOptimizeState* _state) { // 461
+
+static AlifIntT optimize_format(ExprTy _node,
+	AlifObject* _fmt, ASDLExprSeq* _elts, AlifASTMem* _astMem) { // 409
+	AlifSizeT pos = 0;
+	AlifSizeT cnt = 0;
+	ASDLExprSeq* seq = alifNew_exprSeq(ASDL_SEQ_LEN(_elts) * 2 + 1, _astMem);
+	if (!seq) {
+		return 0;
+	}
+	seq->size = 0;
+
+	while (1) {
+		ExprTy lit = parse_literal(_fmt, &pos, _astMem);
+		if (lit) {
+			ASDL_SEQ_SET(seq, seq->size++, lit);
+		}
+		//else if (alifErr_occurred()) {
+		//	return 0;
+		//}
+
+		if (pos >= ALIFUSTR_GET_LENGTH(_fmt)) {
+			break;
+		}
+		if (cnt >= ASDL_SEQ_LEN(_elts)) {
+			// More format units than items.
+			return 1;
+		}
+		pos++;
+		ExprTy expr = parse_format(_fmt, &pos, ASDL_SEQ_GET(_elts, cnt), _astMem);
+		cnt++;
+		if (!expr) {
+			//return !alifErr_occurred();
+			return 0; // alif
+		}
+		ASDL_SEQ_SET(seq, seq->size++, expr);
+	}
+	if (cnt < ASDL_SEQ_LEN(_elts)) {
+		// More items than format units.
+		return 1;
+	}
+	ExprTy res = alifAST_joinedStr(seq,
+		_node->lineNo, _node->colOffset,
+		_node->endLineNo, _node->endColOffset,
+		_astMem);
+	if (!res) {
+		return 0;
+	}
+	COPY_NODE(_node, res);
+	return 1;
+}
+
+
+static AlifIntT fold_binOp(ExprTy _node,
+	AlifASTMem* _astMem, AlifASTOptimizeState* _state) { // 461
 	ExprTy lhs{}, rhs{};
 	lhs = _node->V.binOp.left;
 	rhs = _node->V.binOp.right;
@@ -176,6 +248,27 @@ static AlifIntT fold_binOp(ExprTy _node, AlifASTMem* _astMem, AlifASTOptimizeSta
 	}
 
 	return make_const(_node, newval, _astMem);
+}
+
+static AlifObject* make_constTuple(ASDLExprSeq* _elts) { // 534
+	for (AlifSizeT i = 0; i < ASDL_SEQ_LEN(_elts); i++) {
+		ExprTy e = (ExprTy)ASDL_SEQ_GET(_elts, i);
+		if (e->type != ExprK_::ConstantK) {
+			return nullptr;
+		}
+	}
+
+	AlifObject* newVal = alifTuple_new(ASDL_SEQ_LEN(_elts));
+	if (newVal == nullptr) {
+		return nullptr;
+	}
+
+	for (AlifSizeT i = 0; i < ASDL_SEQ_LEN(_elts); i++) {
+		ExprTy e = (ExprTy)ASDL_SEQ_GET(_elts, i);
+		AlifObject* v = e->V.constant.val;
+		ALIFTUPLE_SET_ITEM(newVal, i, ALIF_NEWREF(v));
+	}
+	return newVal;
 }
 
 static AlifIntT fold_tuple(ExprTy _node,

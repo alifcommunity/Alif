@@ -241,6 +241,29 @@ void alifBuffer_release(AlifBuffer* _view) { // 803
 }
 
 
+ // 1361
+#define UNARY_FUNC(_func, _op, _methName, _descr)                           \
+    AlifObject* _func(AlifObject *o) {                                                  \
+        if (o == nullptr) {                                                 \
+            return null_error();                                         \
+        }                                                                \
+                                                                         \
+        AlifNumberMethods *m = ALIF_TYPE(o)->asNumber;                   \
+        if (m and m->_op) {                                                \
+            AlifObject *res = (*m->_op)(o);                                 \
+            return res;                                                  \
+        }                                                                \
+                                                                         \
+        /*return type_error("bad operand type for "_descr": '%.200s'", o);*/  \
+        return nullptr; \
+    }
+
+UNARY_FUNC(alifNumber_negative, negative, __neg__, "unary -")
+UNARY_FUNC(alifNumber_positive, positive, __pos__, "unary +")
+UNARY_FUNC(alifNumber_invert, invert, __invert__, "unary ~")
+UNARY_FUNC(alifNumber_absolute, absolute, __abs__, "abs()")
+UNARY_FUNC(alifNumber_sqrt, sqrt, __sqrt__, "sqrt()") // alif
+
 
 AlifObject * _alifNumber_index(AlifObject * _item) { // 1397
 	if (_item == nullptr) {
