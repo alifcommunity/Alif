@@ -1,6 +1,6 @@
 #include "alif.h"
 #include "AlifCore_ObjectAlloc.h"
-
+#include "AlifCore_Dict.h"
 
 // was static but shows error
 extern AlifObject _dummyStruct_; // 59 // alif
@@ -135,6 +135,30 @@ comparisonError:
 	return -1;
 }
 
+static void set_insertClean(SetEntry* _table, AlifUSizeT _mask, AlifObject* _key, AlifHashT _hash) { // 218
+	SetEntry* entry{};
+	AlifUSizeT perturb = _hash;
+	AlifUSizeT i_ = (AlifUSizeT)_hash & _mask;
+	AlifUSizeT j_{};
+
+	while (1) {
+		entry = &_table[i_];
+		if (entry->key == nullptr)
+			goto foundNull;
+		if (i_ + LINEAR_PROBES <= _mask) {
+			for (j_ = 0; j_ < LINEAR_PROBES; j_++) {
+				entry++;
+				if (entry->key == nullptr)
+					goto foundNull;
+			}
+		}
+		perturb >>= PERTURB_SHIFT;
+		i_ = (i_ * 5 + 1 + perturb) & _mask;
+	}
+foundNull:
+	entry->key = _key;
+	entry->hash = _hash;
+}
 
 static AlifIntT set_tableResize(AlifSetObject* _so, AlifSizeT _minUsed) { // 253
 	SetEntry* oldTable{}, * newTable{}, * entry{};
@@ -160,7 +184,6 @@ static AlifIntT set_tableResize(AlifSetObject* _so, AlifSizeT _minUsed) { // 253
 		newTable = _so->smallTable;
 		if (newTable == oldTable) {
 			if (_so->fill == _so->used) {
-				/* No dummies, so no point doing anything. */
 				return 0;
 			}
 			memcpy(smallCopy, oldTable, sizeof(smallCopy));
@@ -228,6 +251,82 @@ static AlifIntT set_containsKey(AlifSetObject* _so, AlifObject* _key) { // 376
 	return set_containsEntry(_so, _key, hash);
 }
 
+static AlifIntT setMerge_lockHeld(AlifSetObject* _so, AlifObject* _otherSet) { // 578
+	AlifSetObject* other{};
+	AlifObject* key{};
+	AlifSizeT i_{};
+	SetEntry* soEntry{};
+	SetEntry* otherEntry{};
+
+	other = (AlifSetObject*)_otherSet;
+	if (other == _so || other->used == 0)
+		return 0;
+	if ((_so->fill + other->used) * 5 >= _so->mask * 3) {
+		if (set_tableResize(_so, (_so->used + other->used) * 2) != 0)
+			return -1;
+	}
+	soEntry = _so->table;
+	otherEntry = other->table;
+
+	if (_so->fill == 0 && _so->mask == other->mask && other->fill == other->used) {
+		for (i_ = 0; i_ <= other->mask; i_++, soEntry++, otherEntry++) {
+			key = otherEntry->key;
+			if (key != nullptr) {
+				soEntry->key = ALIF_NEWREF(key);
+				soEntry->hash = otherEntry->hash;
+			}
+		}
+		_so->fill = other->fill;
+		alifAtomic_storeSizeRelaxed(&_so->used, other->used);
+		return 0;
+	}
+
+	if (_so->fill == 0) {
+		SetEntry* newtable = _so->table;
+		AlifUSizeT newMask = (AlifUSizeT)_so->mask;
+		_so->fill = other->used;
+		alifAtomic_storeSizeRelaxed(&_so->used, other->used);
+		for (i_ = other->mask + 1; i_ > 0; i_--, otherEntry++) {
+			key = otherEntry->key;
+			if (key != nullptr && key != DUMMY) {
+				set_insertClean(newtable, newMask, ALIF_NEWREF(key),
+					otherEntry->hash);
+			}
+		}
+		return 0;
+	}
+
+	for (i_ = 0; i_ <= other->mask; i_++) {
+		otherEntry = &other->table[i_];
+		key = otherEntry->key;
+		if (key != nullptr && key != DUMMY) {
+			if (set_addEntry(_so, key, otherEntry->hash))
+				return -1;
+		}
+	}
+	return 0;
+}
+
+static AlifIntT setUpdateDict_lockHeld(AlifSetObject* _so, AlifObject* _other) { // 930
+	AlifSizeT dictSize = ALIFDICT_GET_SIZE(_other);
+	if ((_so->fill + dictSize) * 5 >= _so->mask * 3) {
+		if (set_tableResize(_so, (_so->used + dictSize) * 2) != 0) {
+			return -1;
+		}
+	}
+
+	AlifSizeT pos = 0;
+	AlifObject* key{};
+	AlifObject* value{};
+	AlifHashT hash{};
+	while (_alifDict_next(_other, &pos, &key, &value, &hash)) {
+		if (set_addEntry(_so, key, hash)) {
+			return -1;
+		}
+	}
+	return 0;
+}
+
 static AlifIntT setUpdateIterable_lockHeld(AlifSetObject *_so, AlifObject *_other) { // 961
 
 	AlifObject* it_ = alifObject_getIter(_other);
@@ -261,7 +360,7 @@ static AlifIntT setUpdate_lockHeld(AlifSetObject *_so, AlifObject *_other) { // 
 }
 
 // set_update for a `_so` that is only visible to the current thread
-static AlifIntT setUpdate_local(AlifSetObject *_so, AlifObject *_other) { // 999
+static AlifIntT set_updateLocal(AlifSetObject *_so, AlifObject *_other) { // 999
     if (ALIFANYSET_CHECK(_other)) {
 		AlifIntT rv_{};
         ALIF_BEGIN_CRITICAL_SECTION(_other);
