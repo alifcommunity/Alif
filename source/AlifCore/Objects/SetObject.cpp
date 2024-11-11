@@ -403,6 +403,11 @@ static AlifObject* make_newSet(AlifTypeObject* _type, AlifObject* _iterable) { /
 	return (AlifObject*)so_;
 }
 
+static AlifObject* set_new(AlifTypeObject* _type, AlifObject* _args, AlifObject* _kwds) { // 1166
+	return make_newSet(_type, nullptr);
+}
+
+
 AlifTypeObject _alifSetType_ = { // 2449
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "مميزة",                           
@@ -418,6 +423,11 @@ AlifTypeObject _alifFrozenSetType_ = { // 2539
 	.basicSize = sizeof(AlifSetObject),
 	.itemSize = 0,
 };
+
+AlifObject* alifSet_new(AlifObject* _iterable) { // 2589
+	return make_newSet(&_alifSetType_, _iterable);
+}
+
 
 AlifIntT alifSet_contains(AlifObject* _anySet, AlifObject* _key) { // 2628
 	if (!ALIFANYSET_CHECK(_anySet)) {

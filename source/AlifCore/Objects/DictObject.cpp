@@ -1407,6 +1407,11 @@ AlifIntT _alifDict_next(AlifObject* _op, AlifSizeT* _ppos, AlifObject** _pKey,
 	return 1;
 }
 
+AlifIntT alifDict_next(AlifObject* _op, AlifSizeT* _pPos, AlifObject** _pKey, AlifObject** _pValue) { // 2836
+	return _alifDict_next(_op, _pPos, _pKey, _pValue, nullptr);
+}
+
+
 AlifIntT alifDict_popKnownHash(AlifDictObject* _mp, AlifObject* _key,
 	AlifHashT _hash, AlifObject** _result) { // 2843
 

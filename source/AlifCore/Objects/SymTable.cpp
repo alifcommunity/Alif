@@ -217,6 +217,158 @@ AlifIntT alifST_isFunctionLike(AlifSTEntryObject* _ste) { // 558
 		or _ste->type == BlockType_::Type_Parameters_Block;
 }
 
+static AlifIntT analyze_block(AlifSTEntryObject* _ste, AlifObject* _bound, AlifObject* _free,
+	AlifObject* _global, AlifObject* _typeParams,
+	AlifSTEntryObject* _classEntry) { // 1097
+	AlifObject* name, * v_, * local = nullptr, * scopes = nullptr, * newBound = nullptr;
+	AlifObject* newGlobal = nullptr, * newFree = nullptr, * inlinedCells = nullptr;
+	AlifObject* temp;
+	AlifIntT success = 0;
+	AlifSizeT i_, pos_ = 0;
+
+	local = alifSet_new(nullptr);  
+	if (!local)
+		goto error;
+	scopes = alifDict_new();
+	if (!scopes)
+		goto error;
+
+	newGlobal = alifSet_new(nullptr);
+	if (!newGlobal)
+		goto error;
+	newFree = alifSet_new(nullptr);
+	if (!newFree)
+		goto error;
+	newBound = alifSet_new(nullptr);
+	if (!newBound)
+		goto error;
+	inlinedCells = alifSet_new(nullptr);
+	if (!inlinedCells)
+		goto error;
+
+	if (_ste->type == BlockType_::Class_Block) {
+		temp = alifNumber_inPlaceOr(newGlobal, _global);
+		if (!temp)
+			goto error;
+		ALIF_DECREF(temp);
+		if (_bound) {
+			temp = alifNumber_inPlaceOr(newBound, _bound);
+			if (!temp)
+				goto error;
+			ALIF_DECREF(temp);
+		}
+	}
+
+	while (alifDict_next(_ste->symbols, &pos_, &name, &v_)) {
+		long flags = alifLong_asLong(v_);
+		if (flags == -1) {
+			goto error;
+		}
+		if (!analyze_name(_ste, scopes, name, flags,
+			_bound, local, _free, _global, _typeParams, _classEntry))
+			goto error;
+	}
+
+	if (_ste->type != BlockType_::Class_Block) {
+		if (alifST_isFunctionLike(_ste)) {
+			temp = alifNumber_inPlaceOr(newBound, local);
+			if (!temp)
+				goto error;
+			ALIF_DECREF(temp);
+		}
+		if (_bound) {
+			temp = alifNumber_inPlaceOr(newBound, _bound);
+			if (!temp)
+				goto error;
+			ALIF_DECREF(temp);
+		}
+		temp = alifNumber_inPlaceOr(newGlobal, _global);
+		if (!temp)
+			goto error;
+		ALIF_DECREF(temp);
+	}
+	else {
+		if (alifSet_add(newBound, &ALIF_ID(__class__)) < 0)
+			goto error;
+		if (alifSet_add(newBound, &ALIF_ID(__classDict__)) < 0)
+			goto error;
+	}
+
+	for (i_ = 0; i_ < ALIFLIST_GET_SIZE(_ste->children); ++i_) {
+		AlifObject* childFree = nullptr;
+		AlifObject* c_ = ALIFLIST_GET_ITEM(_ste->children, i_);
+		AlifSTEntryObject* entry;
+		entry = (AlifSTEntryObject*)c_;
+
+		AlifSTEntryObject* newClassEntry = nullptr;
+		if (entry->canSeeClassScope) {
+			if (_ste->type == BlockType_::Class_Block) {
+				newClassEntry = _ste;
+			}
+			else if (_classEntry) {
+				newClassEntry = _classEntry;
+			}
+		}
+
+		AlifIntT inlineComp =
+			entry->comprehension and
+			!entry->generator and
+			!_ste->canSeeClassScope;
+
+		if (!analyze_childBlock(entry, newBound, newFree, newGlobal,
+			_typeParams, newClassEntry, &childFree))
+		{
+			goto error;
+		}
+		if (inlineComp) {
+			if (!inline_comprehension(_ste, entry, scopes, childFree, inlinedCells)) {
+				ALIF_DECREF(childFree);
+				goto error;
+			}
+			entry->compInlined = 1;
+		}
+		temp = alifNumber_inPlaceOr(newFree, childFree);
+		ALIF_DECREF(childFree);
+		if (!temp)
+			goto error;
+		ALIF_DECREF(temp);
+	}
+
+	for (i_ = ALIFLIST_GET_SIZE(_ste->children) - 1; i_ >= 0; --i_) {
+		AlifObject* c_ = ALIFLIST_GET_ITEM(_ste->children, i_);
+		AlifSTEntryObject* entry;
+		entry = (AlifSTEntryObject*)c_;
+		if (entry->compInlined and
+			alifList_setSlice(_ste->children, i_, i_ + 1,
+				entry->children) < 0)
+		{
+			goto error;
+		}
+	}
+
+	if (alifST_isFunctionLike(_ste) and !analyze_cells(scopes, newFree, inlinedCells))
+		goto error;
+	else if (_ste->type == BlockType_::Class_Block and !drop_classFree(_ste, newFree))
+		goto error;
+	if (!update_symbols(_ste->symbols, scopes, _bound, newFree, inlinedCells,
+		(_ste->type == BlockType_::Class_Block) || _ste->canSeeClassScope))
+		goto error;
+
+	temp = alifNumber_inPlaceOr(_free, newFree);
+	if (!temp)
+		goto error;
+	ALIF_DECREF(temp);
+	success = 1;
+error:
+	ALIF_XDECREF(scopes);
+	ALIF_XDECREF(local);
+	ALIF_XDECREF(newBound);
+	ALIF_XDECREF(newGlobal);
+	ALIF_XDECREF(newFree);
+	ALIF_XDECREF(inlinedCells);
+	return success;
+}
+
 static AlifIntT symtable_analyze(AlifSymTable* _st) { // 1333
 	AlifObject* free{}, * global{}, * typeParams{};
 	AlifIntT r_{};
@@ -440,10 +592,10 @@ static AlifIntT symtable_addDef(AlifSymTable* _st, AlifObject* _name, AlifIntT _
 // 1693
 #define VISIT_SEQ(_st, _type, _seq) \
     do { \
-        AlifSizeT i{}; \
+        AlifSizeT i_{}; \
         ASDL ## _type ## Seq *seq = (_seq); /* avoid variable capture */ \
-        for (i = 0; i < ASDL_SEQ_LEN(seq); i++) { \
-            _type ## Ty elt = (_type ## Ty)ASDL_SEQ_GET(seq, i); \
+        for (i_ = 0; i_ < ASDL_SEQ_LEN(seq); i_++) { \
+            _type ## Ty elt = (_type ## Ty)ASDL_SEQ_GET(seq, i_); \
             if (!symtable_visit ## _type((_st), elt)) \
                 return 0;                 \
         } \
@@ -532,17 +684,17 @@ static AlifIntT symtable_visitExpr(AlifSymTable* _st, ExprTy _e) { // 2334
 }
 
 AlifObject* alif_maybeMangle(AlifObject* _privateObj,
-	AlifSTEntryObject* ste, AlifObject* name) { // 3070
-	if (ste->mangledNames != nullptr) {
-		AlifIntT result = alifSet_contains(ste->mangledNames, name);
+	AlifSTEntryObject* _ste, AlifObject* _name) { // 3070
+	if (_ste->mangledNames != nullptr) {
+		AlifIntT result = alifSet_contains(_ste->mangledNames, _name);
 		if (result < 0) {
 			return nullptr;
 		}
 		if (result == 0) {
-			return ALIF_NEWREF(name);
+			return ALIF_NEWREF(_name);
 		}
 	}
-	return alif_mangle(_privateObj, name);
+	return alif_mangle(_privateObj, _name);
 }
 
 AlifObject* alif_mangle(AlifObject* _privateObj, AlifObject* _ident) { // 3090
