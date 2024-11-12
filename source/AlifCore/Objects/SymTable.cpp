@@ -220,11 +220,11 @@ AlifIntT alifST_isFunctionLike(AlifSTEntryObject* _ste) { // 558
 static AlifIntT analyze_block(AlifSTEntryObject* _ste, AlifObject* _bound, AlifObject* _free,
 	AlifObject* _global, AlifObject* _typeParams,
 	AlifSTEntryObject* _classEntry) { // 1097
-	AlifObject* name, * v_, * local = nullptr, * scopes = nullptr, * newBound = nullptr;
+	AlifObject* name{}, * v_{}, * local = nullptr, * scopes = nullptr, * newBound = nullptr;
 	AlifObject* newGlobal = nullptr, * newFree = nullptr, * inlinedCells = nullptr;
-	AlifObject* temp;
+	AlifObject* temp{};
 	AlifIntT success = 0;
-	AlifSizeT i_, pos_ = 0;
+	AlifSizeT i_{}, pos_ = 0;
 
 	local = alifSet_new(nullptr);  
 	if (!local)
@@ -297,8 +297,7 @@ static AlifIntT analyze_block(AlifSTEntryObject* _ste, AlifObject* _bound, AlifO
 	for (i_ = 0; i_ < ALIFLIST_GET_SIZE(_ste->children); ++i_) {
 		AlifObject* childFree = nullptr;
 		AlifObject* c_ = ALIFLIST_GET_ITEM(_ste->children, i_);
-		AlifSTEntryObject* entry;
-		entry = (AlifSTEntryObject*)c_;
+		AlifSTEntryObject* entry = (AlifSTEntryObject*)c_;
 
 		AlifSTEntryObject* newClassEntry = nullptr;
 		if (entry->canSeeClassScope) {
@@ -336,8 +335,7 @@ static AlifIntT analyze_block(AlifSTEntryObject* _ste, AlifObject* _bound, AlifO
 
 	for (i_ = ALIFLIST_GET_SIZE(_ste->children) - 1; i_ >= 0; --i_) {
 		AlifObject* c_ = ALIFLIST_GET_ITEM(_ste->children, i_);
-		AlifSTEntryObject* entry;
-		entry = (AlifSTEntryObject*)c_;
+		AlifSTEntryObject* entry = (AlifSTEntryObject*)c_;
 		if (entry->compInlined and
 			alifList_setSlice(_ste->children, i_, i_ + 1,
 				entry->children) < 0)
