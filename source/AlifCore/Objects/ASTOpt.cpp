@@ -1,6 +1,7 @@
 #include "alif.h"
 
 #include "AlifCore_AST.h"
+#include "AlifCore_Format.h"
 #include "AlifCore_Long.h"
 #include "AlifCore_State.h"
 
@@ -201,6 +202,149 @@ static AlifObject* safe_power(AlifObject* _v, AlifObject* _w) { // 212
 	}
 
 	return alifNumber_power(_v, _w, ALIF_NONE);
+}
+
+static ExprTy parse_literal(AlifObject* _fmt,
+	AlifSizeT* _ppos, AlifASTMem* _astMem) { // 261
+	const void* data = ALIFUSTR_DATA(_fmt);
+	AlifIntT kind = ALIFUSTR_KIND(_fmt);
+	AlifSizeT size = ALIFUSTR_GET_LENGTH(_fmt);
+	AlifSizeT start, pos;
+	AlifIntT hasPercents = 0;
+	start = pos = *_ppos;
+	while (pos < size) {
+		if (ALIFUSTR_READ(kind, data, pos) != '%') {
+			pos++;
+		}
+		else if (pos + 1 < size and ALIFUSTR_READ(kind, data, pos + 1) == '%') {
+			hasPercents = 1;
+			pos += 2;
+		}
+		else {
+			break;
+		}
+	}
+	*_ppos = pos;
+	if (pos == start) {
+		return nullptr;
+	}
+	AlifObject* str = alifUStr_subString(_fmt, start, pos);
+	/* str = str.replace('%%', '%') */
+	if (str and hasPercents) {
+		ALIF_SETREF(str, alifUStr_replace(str, &ALIF_STR(dbl_percent),
+			ALIF_LATIN1_CHR('%'), -1));
+	}
+	if (!str) {
+		return nullptr;
+	}
+
+	if (alifASTMem_listAddAlifObj(_astMem, str) < 0) {
+		ALIF_DECREF(str);
+		return nullptr;
+	}
+	return alifAST_constant(str, nullptr, -1, -1, -1, -1, _astMem);
+}
+
+#define MAXDIGITS 3 // 304
+
+static AlifIntT simpleFormat_argParse(AlifObject* _fmt, AlifSizeT* _ppos,
+	AlifIntT* _spec, AlifIntT* _flags, AlifIntT* _width, AlifIntT* _prec) { // 306
+	AlifSizeT pos = *_ppos, len = ALIFUSTR_GET_LENGTH(_fmt);
+	AlifUCS4 ch{};
+
+#define NEXTC do {                      \
+    if (pos >= len) {                   \
+        return 0;                       \
+    }                                   \
+    ch = ALIFUSTR_READ_CHAR(_fmt, pos); \
+    pos++;                              \
+} while (0)
+
+	*_flags = 0;
+	while (1) {
+		NEXTC;
+		switch (ch) {
+		case '-': *_flags |= F_LJUST; continue;
+		case '+': *_flags |= F_SIGN; continue;
+		case ' ': *_flags |= F_BLANK; continue;
+		case '#': *_flags |= F_ALT; continue;
+		case '0': *_flags |= F_ZERO; continue;
+		}
+		break;
+	}
+	if ('0' <= ch && ch <= '9') {
+		*_width = 0;
+		AlifIntT digits = 0;
+		while ('0' <= ch and ch <= '9') {
+			*_width = *_width * 10 + (ch - '0');
+			NEXTC;
+			if (++digits >= MAXDIGITS) {
+				return 0;
+			}
+		}
+	}
+
+	if (ch == '.') {
+		NEXTC;
+		*_prec = 0;
+		if ('0' <= ch and ch <= '9') {
+			AlifIntT digits = 0;
+			while ('0' <= ch and ch <= '9') {
+				*_prec = *_prec * 10 + (ch - '0');
+				NEXTC;
+				if (++digits >= MAXDIGITS) {
+					return 0;
+				}
+			}
+		}
+	}
+	*_spec = ch;
+	*_ppos = pos;
+	return 1;
+
+#undef NEXTC
+}
+
+static ExprTy parse_format(AlifObject* _fmt, AlifSizeT* _ppos,
+	ExprTy _arg, AlifASTMem* _astMem) { // 366
+	AlifIntT spec{}, flags{}, width = -1, prec = -1;
+	if (!simpleFormat_argParse(_fmt, _ppos, &spec, &flags, &width, &prec)) {
+		// Unsupported format.
+		return nullptr;
+	}
+	if (spec == 's' or spec == 'r' or spec == 'a') {
+		char buf[1 + MAXDIGITS + 1 + MAXDIGITS + 1], * p = buf;
+		if (!(flags & F_LJUST) && width > 0) {
+			*p++ = '>';
+		}
+		if (width >= 0) {
+			p += snprintf(p, MAXDIGITS + 1, "%d", width);
+		}
+		if (prec >= 0) {
+			p += snprintf(p, MAXDIGITS + 2, ".%d", prec);
+		}
+		ExprTy format_spec = nullptr;
+		if (p != buf) {
+			AlifObject* str = alifUStr_fromString(buf);
+			if (str == nullptr) {
+				return nullptr;
+			}
+			if (alifASTMem_listAddAlifObj(_astMem, str) < 0) {
+				ALIF_DECREF(str);
+				return nullptr;
+			}
+			format_spec = alifAST_constant(str, nullptr, -1, -1, -1, -1, _astMem);
+			if (format_spec == nullptr) {
+				return nullptr;
+			}
+		}
+		return alifAST_formattedValue(_arg, spec, format_spec,
+			_arg->lineNo, _arg->colOffset,
+			_arg->endLineNo, _arg->endColOffset,
+			_astMem);
+	}
+	// Unsupported format.
+	return nullptr;
 }
 
 static AlifIntT optimize_format(ExprTy _node,

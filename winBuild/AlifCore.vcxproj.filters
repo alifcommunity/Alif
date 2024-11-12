@@ -630,6 +630,10 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifCompile.h">
       <Filter>Include\Main</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\BoolObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Format.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Include">
