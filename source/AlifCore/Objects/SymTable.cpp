@@ -447,10 +447,10 @@ static AlifIntT symtable_enterBlock(AlifSymTable* _st, AlifObject* _name, BlockT
 	if (_block == BlockType_::Annotation_Block
 		or _block == BlockType_::Type_Variable_Block
 		or _block == BlockType_::Type_Alias_Block) {
-		if (!symtable_addDef(_st, &ALIF_STR(format), DEF_PARAM, _loc)) {
+		if (!symtable_addDef(_st, &ALIF_STR(Format), DEF_PARAM, _loc)) {
 			return 0;
 		}
-		if (!symtable_addDef(_st, &ALIF_STR(format), USE, _loc)) {
+		if (!symtable_addDef(_st, &ALIF_STR(Format), USE, _loc)) {
 			return 0;
 		}
 	}
