@@ -128,7 +128,7 @@ static AlifIntT initGlobal_internedStrings(AlifInterpreter* _interp) { // 308
 
 	//alifUStr_initStaticStrings(_interp);
 
-	for (int i = 0; i < 256; i++) {
+	for (AlifIntT i = 0; i < 256; i++) {
 		AlifObject* s = LATIN1(i);
 		//alifUnicode_internStatic(_interp, &s);
 	}
@@ -209,7 +209,7 @@ static AlifObject* uStr_result(AlifObject* _uStr) { // 727
 	}
 
 	if (length == 1) {
-		int kind = ALIFUSTR_KIND(_uStr);
+		AlifIntT kind = ALIFUSTR_KIND(_uStr);
 		if (kind == AlifUStrKind_::AlifUStr_1Byte_Kind) {
 			const AlifUCS1* data = ALIFUSTR_1BYTE_DATA(_uStr);
 			AlifUCS1 ch_ = data[0];
@@ -1379,7 +1379,7 @@ const char* alifUStr_asUTF8(AlifObject* _uStr) { // 4193
 //	const char** input, const char** inend, AlifSizeT* startinpos,
 //	AlifSizeT* endinpos, AlifObject** exceptionObject, const char** inptr,
 //	AlifUStrWriter* writer) { // 4436
-//	static const char* argparse = "Un;decoding error handler must return (str, int) tuple";
+//	static const char* argparse = "Un;decoding error handler must return (str, AlifIntT) tuple";
 //
 //	AlifObject* restuple = nullptr;
 //	AlifObject* repunicode = nullptr;
@@ -1388,7 +1388,7 @@ const char* alifUStr_asUTF8(AlifObject* _uStr) { // 4193
 //	AlifSizeT replen{};
 //	AlifSizeT remain{};
 //	AlifObject* inputobj = nullptr;
-//	int need_to_grow = 0;
+//	AlifIntT need_to_grow = 0;
 //	const char* new_inptr{};
 //
 //	if (*errorHandler == nullptr) {
@@ -2056,9 +2056,7 @@ AlifObject* alifUStr_decodeUStrEscapeInternal(const char* _str, AlifSizeT _size,
 					/* found a name.  look it up in the unicode database */
 					_str++;
 					ch = 0xffffffff; /* in case 'getcode' messes up */
-					if (namelen <= INT_MAX /*and
-						ucnhash_capi->getcode(start, (int)namelen,
-							&ch, 0)*/) {
+					if (namelen <= INT_MAX ) {
 						WRITE_CHAR(ch);
 						continue;
 					}
@@ -2151,7 +2149,117 @@ AlifSizeT alifUStr_findChar(AlifObject* _str, AlifUCS4 _ch,
 
 
 
+static AlifIntT uStr_compare(AlifObject* _str1, AlifObject* _str2) { // 10847
+#define COMPARE(_type1, _type2) \
+    do { \
+        _type1* p1 = (_type1 *)data1; \
+        _type2* p2 = (_type2 *)data2; \
+        _type1* end = p1 + len; \
+        AlifUCS4 c1, c2; \
+        for (; p1 != end; p1++, p2++) { \
+            c1 = *p1; \
+            c2 = *p2; \
+            if (c1 != c2) \
+                return (c1 < c2) ? -1 : 1; \
+        } \
+    } \
+    while (0)
 
+	AlifIntT kind1{}, kind2{};
+	const void* data1{}, * data2{};
+	AlifSizeT len1{}, len2{}, len{};
+
+	kind1 = ALIFUSTR_KIND(_str1);
+	kind2 = ALIFUSTR_KIND(_str2);
+	data1 = ALIFUSTR_DATA(_str1);
+	data2 = ALIFUSTR_DATA(_str2);
+	len1 = ALIFUSTR_GET_LENGTH(_str1);
+	len2 = ALIFUSTR_GET_LENGTH(_str2);
+	len = ALIF_MIN(len1, len2);
+
+	switch (kind1) {
+	case AlifUStr_1Byte_Kind:
+	{
+		switch (kind2) {
+		case AlifUStr_1Byte_Kind:
+		{
+			AlifIntT cmp_ = memcmp(data1, data2, len);
+			if (cmp_ < 0)
+				return -1;
+			if (cmp_ > 0)
+				return 1;
+			break;
+		}
+		case AlifUStr_2Byte_Kind:
+			COMPARE(AlifUCS1, AlifUCS2);
+			break;
+		case AlifUStr_4Byte_Kind:
+			COMPARE(AlifUCS1, AlifUCS4);
+			break;
+		default:
+			ALIF_UNREACHABLE();
+		}
+		break;
+	}
+	case AlifUStr_2Byte_Kind:
+	{
+		switch (kind2) {
+		case AlifUStr_1Byte_Kind:
+			COMPARE(AlifUCS2, AlifUCS1);
+			break;
+		case AlifUStr_2Byte_Kind:
+		{
+			COMPARE(AlifUCS2, AlifUCS2);
+			break;
+		}
+		case AlifUStr_4Byte_Kind:
+			COMPARE(AlifUCS2, AlifUCS4);
+			break;
+		default:
+			ALIF_UNREACHABLE();
+		}
+		break;
+	}
+	case AlifUStr_4Byte_Kind:
+	{
+		switch (kind2) {
+		case AlifUStr_1Byte_Kind:
+			COMPARE(AlifUCS4, AlifUCS1);
+			break;
+		case AlifUStr_2Byte_Kind:
+			COMPARE(AlifUCS4, AlifUCS2);
+			break;
+		case AlifUStr_4Byte_Kind:
+		{
+#if defined(HAVE_WMEMCMP) and SIZEOF_WCHAR_T == 4
+			AlifIntT cmp_ = wmemcmp((wchar_t*)data1, (wchar_t*)data2, len);
+		if (cmp_ < 0)
+				return -1;
+			if (cmp_ > 0)
+				return 1;
+#else
+			COMPARE(AlifUCS4, AlifUCS4);
+#endif
+			break;
+		}
+		default:
+			ALIF_UNREACHABLE();
+		}
+		break;
+	}
+	default:
+		ALIF_UNREACHABLE();
+	}
+
+	if (len1 == len2)
+		return 0;
+	if (len1 < len2)
+		return -1;
+	else
+		return 1;
+
+#undef COMPARE
+}
 
 
 
@@ -2176,7 +2284,19 @@ static AlifIntT uStrCompare_eq(AlifObject* _str1, AlifObject* _str2) { // 10963
 }
 
 
+AlifIntT alifUStr_compare(AlifObject* _left, AlifObject* _right) { // 10996
+	if (ALIFUSTR_CHECK(_left) and ALIFUSTR_CHECK(_right)) {
+		if (_left == _right)
+			return 0;
 
+		return uStr_compare(_left, _right);
+	}
+	//alifErr_format(_alifExcTypeError_,
+		//"Can't compare %.100s and %.100s",
+		//ALIF_TYPE(_left)->name,
+		//ALIF_TYPE(right)->name);
+	return -1;
+}
 
 AlifIntT alifUStr_compareWithASCIIString(AlifObject* _uni, const char* _str) { // 11013
 	AlifSizeT i_{};
@@ -2188,12 +2308,12 @@ AlifIntT alifUStr_compareWithASCIIString(AlifObject* _uni, const char* _str) { /
 		const void* data = ALIFUSTR_1BYTE_DATA(_uni);
 		AlifUSizeT len1 = (AlifUSizeT)ALIFUSTR_GET_LENGTH(_uni);
 		AlifUSizeT len, len2 = strlen(_str);
-		AlifIntT cmp{};
+		AlifIntT cmp_{};
 
 		len = ALIF_MIN(len1, len2);
-		cmp = memcmp(data, _str, len);
-		if (cmp != 0) {
-			if (cmp < 0)
+		cmp_ = memcmp(data, _str, len);
+		if (cmp_ != 0) {
+			if (cmp_ < 0)
 				return -1;
 			else
 				return 1;

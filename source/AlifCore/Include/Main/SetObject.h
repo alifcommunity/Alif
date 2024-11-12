@@ -10,7 +10,7 @@ AlifObject* alifFrozenSet_new(AlifObject*); // 14
 
 AlifIntT alifSet_add(AlifObject* , AlifObject* ); // 16
 AlifIntT alifSet_contains(AlifObject* , AlifObject*); // 18
-
+AlifIntT alifSet_discard(AlifObject* , AlifObject* ); // 19
 
 // 24
 #define ALIFFROZENSET_CHECK(_ob) \

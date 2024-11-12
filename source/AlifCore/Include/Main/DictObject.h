@@ -20,7 +20,7 @@ AlifIntT alifDict_next(AlifObject* , AlifSizeT* , AlifObject** , AlifObject** );
 AlifIntT alifDict_contains(AlifObject*, AlifObject*); // 34
 
 AlifIntT alifDict_setItemString(AlifObject*, const char*, AlifObject*); // 58
-
+AlifIntT alifDict_delItemString(AlifObject*, const char* ); // 59
 
 AlifIntT alifDict_getItemRef(AlifObject* , AlifObject* , AlifObject** ); // 67
 
