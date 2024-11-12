@@ -6,6 +6,19 @@
 
 
 
+
+
+
+AlifObject* alifBool_fromLong(long _ok) { // 21
+	return _ok ? ALIF_TRUE : ALIF_FALSE;
+}
+
+
+
+
+
+
+
 AlifTypeObject _alifBoolType_ = { // 171
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "منطق",

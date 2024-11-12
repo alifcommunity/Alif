@@ -241,6 +241,260 @@ void alifBuffer_release(AlifBuffer* _view) { // 803
 }
 
 
+#define NB_SLOT(_x) offsetof(AlifNumberMethods, _x) // 910
+#define NB_BINOP(_methods, _slot) \
+        (*(BinaryFunc*)(& ((char*)_methods)[_slot]))
+#define NB_TERNOP(_methods, _slot) \
+        (*(TernaryFunc*)(&((char*)_methods)[_slot]))
+
+
+
+static AlifObject* binary_op1(AlifObject* _v, AlifObject* _w, const AlifIntT _opSlot) { // 926
+	BinaryFunc slotV{};
+	if (ALIF_TYPE(_v)->asNumber != nullptr) {
+		slotV = NB_BINOP(ALIF_TYPE(_v)->asNumber, _opSlot);
+	}
+	else {
+		slotV = nullptr;
+	}
+
+	BinaryFunc slotW{};
+	if (!ALIF_IS_TYPE(_w, ALIF_TYPE(_v)) and ALIF_TYPE(_w)->asNumber != nullptr) {
+		slotW = NB_BINOP(ALIF_TYPE(_w)->asNumber, _opSlot);
+		if (slotW == slotV) {
+			slotW = nullptr;
+		}
+	}
+	else {
+		slotW = NULL;
+	}
+
+	if (slotV) {
+		AlifObject* x{};
+		if (slotW and alifType_isSubType(ALIF_TYPE(_w), ALIF_TYPE(_v))) {
+			x = slotW(_v, _w);
+			if (x != ALIF_NOTIMPLEMENTED)
+				return x;
+			ALIF_DECREF(x); /* can't do it */
+			slotW = nullptr;
+		}
+		x = slotV(_v, _w);
+		if (x != ALIF_NOTIMPLEMENTED) {
+			return x;
+		}
+		ALIF_DECREF(x); /* can't do it */
+	}
+	if (slotW) {
+		AlifObject* x = slotW(_v, _w);
+		if (x != ALIF_NOTIMPLEMENTED) {
+			return x;
+		}
+		ALIF_DECREF(x); /* can't do it */
+	}
+	return ALIF_NOTIMPLEMENTED;
+}
+
+#define BINARY_OP1(_v, _w, _opSlot) binary_op1(_v, _w, _opSlot) // 980
+
+static AlifObject* binary_op(AlifObject* _v, AlifObject* _w,
+	const AlifIntT _opSlot, const char* _opName) { // 997
+	AlifObject* result = BINARY_OP1(_v, _w, _opSlot, _opName);
+	if (result == ALIF_NOTIMPLEMENTED) {
+		ALIF_DECREF(result);
+		//return binOp_typeError(_v, _w, _opName);
+		return nullptr; // alif
+	}
+	return result;
+}
+
+
+static AlifObject* ternary_op(AlifObject* _v, AlifObject* _w, AlifObject* _z,
+	const AlifIntT _opSlot, const char* _opName ) { // 1016
+	AlifNumberMethods* mv = ALIF_TYPE(_v)->asNumber;
+	AlifNumberMethods* mw = ALIF_TYPE(_w)->asNumber;
+
+	TernaryFunc slotV{};
+	if (mv != nullptr) {
+		slotV = NB_TERNOP(mv, _opSlot);
+	}
+	else {
+		slotV = nullptr;
+	}
+
+	TernaryFunc slotW{};
+	if (!ALIF_IS_TYPE(_w, ALIF_TYPE(_v)) and mw != nullptr) {
+		slotW = NB_TERNOP(mw, _opSlot);
+		if (slotW == slotV) {
+			slotW = nullptr;
+		}
+	}
+	else {
+		slotW = nullptr;
+	}
+
+	if (slotV) {
+		AlifObject* x{};
+		if (slotW and alifType_isSubType(ALIF_TYPE(_w), ALIF_TYPE(_v))) {
+			x = slotW(_v, _w, _z);
+			if (x != ALIF_NOTIMPLEMENTED) {
+				return x;
+			}
+			ALIF_DECREF(x); /* can't do it */
+			slotW = nullptr;
+		}
+		x = slotV(_v, _w, _z);
+		if (x != ALIF_NOTIMPLEMENTED) {
+			return x;
+		}
+		ALIF_DECREF(x); /* can't do it */
+	}
+	if (slotW) {
+		AlifObject* x = slotW(_v, _w, _z);
+		if (x != ALIF_NOTIMPLEMENTED) {
+			return x;
+		}
+		ALIF_DECREF(x); /* can't do it */
+	}
+
+	AlifNumberMethods* mz = ALIF_TYPE(_z)->asNumber;
+	if (mz != nullptr) {
+		TernaryFunc slotz = NB_TERNOP(mz, _opSlot);
+		if (slotz == slotV or slotz == slotW) {
+			slotz = nullptr;
+		}
+		if (slotz) {
+			AlifObject* x = slotz(_v, _w, _z);
+			if (x != ALIF_NOTIMPLEMENTED) {
+				return x;
+			}
+			ALIF_DECREF(x); /* can't do it */
+		}
+	}
+
+	if (_z == ALIF_NONE) {
+		//alifErr_format(
+		//	_alifExcTypeError_,
+		//	"unsupported operand type(s) for %.100s: "
+		//	"'%.100s' and '%.100s'",
+		//	_opName,
+		//	ALIF_TYPE(_v)->name,
+		//	ALIF_TYPE(_w)->name);
+	}
+	else {
+		//alifErr_format(
+		//	_alifExcTypeError_,
+		//	"unsupported operand type(s) for %.100s: "
+		//	"'%.100s', '%.100s', '%.100s'",
+		//	_opName,
+		//	ALIF_TYPE(_v)->name,
+		//	ALIF_TYPE(_w)->name,
+		//	ALIF_TYPE(_z)->name);
+	}
+	return nullptr;
+}
+
+
+ // 1110
+#define BINARY_FUNC(_func, _op, _opName) \
+    AlifObject* _func(AlifObject *_v, AlifObject *_w) { \
+        return binary_op(_v, _w, NB_SLOT(_op), _opName); \
+    }
+
+BINARY_FUNC(alifNumber_or, or_, "|") // 1116
+BINARY_FUNC(alifNumber_xor, xor_, "^")
+BINARY_FUNC(alifNumber_and, and_, "&")
+BINARY_FUNC(alifNumber_lshift, lshift, "<<")
+BINARY_FUNC(alifNumber_rshift, rshift, ">>")
+BINARY_FUNC(alifNumber_subtract, subtract, "-")
+BINARY_FUNC(alifNumber_divmod, divmod, "divmod()")
+
+
+AlifObject* alifNumber_add(AlifObject* _v, AlifObject* _w) { // 1124
+	AlifObject* result = BINARY_OP1(_v, _w, NB_SLOT(add_));
+	if (result != ALIF_NOTIMPLEMENTED) {
+		return result;
+	}
+	ALIF_DECREF(result);
+
+	AlifSequenceMethods* m = ALIF_TYPE(_v)->asSequence;
+	if (m and m->concat) {
+		result = (*m->concat)(_v, _w);
+		return result;
+	}
+
+	//return binOp_typeError(_v, _w, "+");
+	return nullptr; // alif
+}
+
+static AlifObject* sequence_repeat(SizeArgFunc _repeatFunc, AlifObject* _seq, AlifObject* _n) { // 1143
+	AlifSizeT count{};
+	if (alifIndex_check(_n)) {
+		count = alifNumber_asSizeT(_n, _alifExcOverflowError_);
+		if (count == -1 /*and alifErr_occurred()*/) {
+			return nullptr;
+		}
+	}
+	else {
+		//return type_error("can't multiply sequence by "
+		//	"non-int of type '%.200s'", _n);
+		return nullptr; // alif
+	}
+	AlifObject* res = (*_repeatFunc)(_seq, count);
+	return res;
+}
+
+
+AlifObject* alifNumber_multiply(AlifObject* _v, AlifObject* _w) { // 1162
+	AlifObject* result = BINARY_OP1(_v, _w, NB_SLOT(multiply));
+	if (result == ALIF_NOTIMPLEMENTED) {
+		AlifSequenceMethods* mv = ALIF_TYPE(_v)->asSequence;
+		AlifSequenceMethods* mw = ALIF_TYPE(_w)->asSequence;
+		ALIF_DECREF(result);
+		if (mv and mv->repeat) {
+			return sequence_repeat(mv->repeat, _v, _w);
+		}
+		else if (mw and mw->repeat) {
+			return sequence_repeat(mw->repeat, _w, _v);
+		}
+		//result = binop_typeError(_v, _w, "*");
+		result = nullptr; // alif
+	}
+	return result;
+}
+
+
+//BINARY_FUNC(alifNumber_floorDivide, floor_divide, "//") // 1182
+BINARY_FUNC(alifNumber_trueDivide, trueDivide, "/") // 1183
+//BINARY_FUNC(alifNumber_remainder, remainder, "%")
+
+AlifObject* alifNumber_power(AlifObject* _v, AlifObject* _w, AlifObject* _z) { // 1186
+	return ternary_op(_v, _w, _z, NB_SLOT(power), "** or pow()");
+}
+
+
+ // 1361
+#define UNARY_FUNC(_func, _op, _methName, _descr)                           \
+    AlifObject* _func(AlifObject *o) {                                                  \
+        if (o == nullptr) {                                                 \
+            return null_error();                                         \
+        }                                                                \
+                                                                         \
+        AlifNumberMethods *m = ALIF_TYPE(o)->asNumber;                   \
+        if (m and m->_op) {                                                \
+            AlifObject *res = (*m->_op)(o);                                 \
+            return res;                                                  \
+        }                                                                \
+                                                                         \
+        /*return type_error("bad operand type for "_descr": '%.200s'", o);*/  \
+        return nullptr; \
+    }
+
+UNARY_FUNC(alifNumber_negative, negative, __neg__, "unary -")
+UNARY_FUNC(alifNumber_positive, positive, __pos__, "unary +")
+UNARY_FUNC(alifNumber_invert, invert, __invert__, "unary ~")
+UNARY_FUNC(alifNumber_absolute, absolute, __abs__, "abs()")
+UNARY_FUNC(alifNumber_sqrt, sqrt, __sqrt__, "sqrt()") // alif
+
 
 AlifObject * _alifNumber_index(AlifObject * _item) { // 1397
 	if (_item == nullptr) {

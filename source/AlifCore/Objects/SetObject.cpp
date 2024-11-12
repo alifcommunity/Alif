@@ -424,8 +424,13 @@ AlifTypeObject _alifFrozenSetType_ = { // 2539
 	.itemSize = 0,
 };
 
-AlifObject* alifSet_new(AlifObject* _iterable) { // 2589
+
+AlifObject* alifSet_new(AlifObject* _iterable) { // 2588
 	return make_newSet(&_alifSetType_, _iterable);
+}
+
+AlifObject* alifFrozenSet_new(AlifObject* _iterable) { // 2594
+	return make_newSet(&_alifFrozenSetType_, _iterable);
 }
 
 

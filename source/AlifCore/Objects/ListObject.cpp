@@ -352,7 +352,8 @@ Error:
 }
 
 
-static AlifIntT list_assSlice(AlifListObject* _a, AlifSizeT _iLow, AlifSizeT _iHigh, AlifObject* _v) { // 930
+static AlifIntT list_assSlice(AlifListObject* _a, AlifSizeT _iLow,
+	AlifSizeT _iHigh, AlifObject* _v) { // 930
 	AlifIntT ret_{};
 	if (_a == (AlifListObject*)_v) {
 		ALIF_BEGIN_CRITICAL_SECTION(_a);
@@ -366,9 +367,9 @@ static AlifIntT list_assSlice(AlifListObject* _a, AlifSizeT _iLow, AlifSizeT _iH
 		ALIF_END_CRITICAL_SECTION();
 	}
 	else if (_v != nullptr and ALIFLIST_CHECKEXACT(_v)) {
-		ALIF_BEGIN_CRITICAL_SECTION(_a, _v);
+		ALIF_BEGIN_CRITICAL_SECTION2(_a, _v);
 		ret_ = listAssSlice_lockHeld(_a, _iLow, _iHigh, _v);
-		ALIF_END_CRITICAL_SECTION();
+		ALIF_END_CRITICAL_SECTION2();
 	}
 	else {
 		ALIF_BEGIN_CRITICAL_SECTION(_a);
