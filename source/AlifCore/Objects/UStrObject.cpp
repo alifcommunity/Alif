@@ -356,7 +356,15 @@ static char* xmlCharRef_replace(AlifBytesWriter* _writer, char* _str,
 
 
 
-
+static AlifIntT ensure_uStr(AlifObject* _obj) { // 960
+	if (!ALIFUSTR_CHECK(_obj)) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"must be str, not %.100s",
+		//	ALIF_TYPE(_obj)->name);
+		return -1;
+	}
+	return 0;
+}
 
 
 
@@ -1022,6 +1030,45 @@ AlifObject* alifUStr_fromKindAndData(AlifIntT _kind,
 	}
 }
 
+static void uStr_adjustMaxChar(AlifObject** _pUStr) { // 2393
+	AlifObject* unicode{}, * copy{};
+	AlifUCS4 maxChar{};
+	AlifSizeT len{};
+	AlifIntT kind{};
+
+	unicode = *_pUStr;
+	if (ALIFUSTR_IS_ASCII(unicode))
+		return;
+
+	len = ALIFUSTR_GET_LENGTH(unicode);
+	kind = ALIFUSTR_KIND(unicode);
+	if (kind == AlifUStrKind_::AlifUStr_1Byte_Kind) {
+		const AlifUCS1* u = ALIFUSTR_1BYTE_DATA(unicode);
+		maxChar = ucs1Lib_findMaxChar(u, u + len);
+		if (maxChar >= 128)
+			return;
+	}
+	else if (kind == AlifUStrKind_::AlifUStr_2Byte_Kind) {
+		const AlifUCS2* u = ALIFUSTR_2BYTE_DATA(unicode);
+		maxChar = ucs2Lib_findMaxChar(u, u + len);
+		if (maxChar >= 256)
+			return;
+	}
+	else if (kind == AlifUStrKind_::AlifUStr_4Byte_Kind) {
+		const AlifUCS4* u = ALIFUSTR_4BYTE_DATA(unicode);
+		maxChar = ucs4Lib_findMaxChar(u, u + len);
+		if (maxChar >= 0x10000)
+			return;
+	}
+	else ALIF_UNREACHABLE();
+
+	copy = alifUStr_new(len, maxChar);
+	if (copy != nullptr)
+		alifUStr_fastCopyCharacters(copy, 0, unicode, 0, len);
+	ALIF_DECREF(unicode);
+	*_pUStr = copy;
+}
+
 AlifObject* _alifUStr_copy(AlifObject* _uStr) { // 2436
 	AlifSizeT length{};
 	AlifObject* copy{};
@@ -1039,6 +1086,51 @@ AlifObject* _alifUStr_copy(AlifObject* _uStr) { // 2436
 	memcpy(ALIFUSTR_DATA(copy), ALIFUSTR_DATA(_uStr),
 		length * ALIFUSTR_KIND(_uStr));
 	return copy;
+}
+
+
+static void* unicode_asKind(AlifIntT _sKind, void const* _data,
+	AlifSizeT _len, AlifIntT _kind) { // 2463
+	void* result{};
+
+	switch (_kind) {
+	case AlifUStrKind_::AlifUStr_2Byte_Kind:
+		result = alifMem_dataAlloc(_len * sizeof(AlifUCS2)); // alif
+		if (!result) {
+			//return alifErr_noMemory();
+			return nullptr; // alif
+		}
+		ALIFUSTR_CONVERT_BYTES(
+			AlifUCS1, AlifUCS2,
+			(const AlifUCS1*)_data,
+			((const AlifUCS1*)_data) + _len,
+			result);
+		return result;
+	case AlifUStrKind_::AlifUStr_4Byte_Kind:
+		result = alifMem_dataAlloc(_len * sizeof(AlifUCS4)); // alif
+		if (!result) {
+			//return alifErr_noMemory();
+			return nullptr; // alif
+		}
+		if (_sKind == AlifUStrKind_::AlifUStr_2Byte_Kind) {
+			ALIFUSTR_CONVERT_BYTES(
+				AlifUCS2, AlifUCS4,
+				(const AlifUCS2*)_data,
+				((const AlifUCS2*)_data) + _len,
+				result);
+		}
+		else {
+			ALIFUSTR_CONVERT_BYTES(
+				AlifUCS1, AlifUCS4,
+				(const AlifUCS1*)_data,
+				((const AlifUCS1*)_data) + _len,
+				result);
+		}
+		return result;
+	default:
+		ALIF_UNREACHABLE();
+		return nullptr;
+	}
 }
 
 
@@ -2147,7 +2239,288 @@ AlifSizeT alifUStr_findChar(AlifObject* _str, AlifUCS4 _ch,
 }
 
 
+static AlifSizeT anyLib_find(AlifIntT _kind, AlifObject* _str1,
+	const void* _buf1, AlifSizeT _len1, AlifObject* _str2,
+	const void* _buf2, AlifSizeT _len2, AlifSizeT _offset) { // 10407
+	switch (_kind) {
+	case AlifUStrKind_::AlifUStr_1Byte_Kind:
+		if (ALIFUSTR_IS_ASCII(_str1) and ALIFUSTR_IS_ASCII(_str2))
+			return asciiLib_find(_buf1, _len1, _buf2, _len2, _offset);
+		else
+			return ucs1Lib_find(_buf1, _len1, _buf2, _len2, _offset);
+	case AlifUStrKind_::AlifUStr_2Byte_Kind:
+		return ucs2Lib_find(_buf1, _len1, _buf2, _len2, _offset);
+	case AlifUStrKind_::AlifUStr_4Byte_Kind:
+		return ucs4Lib_find(_buf1, _len1, _buf2, _len2, _offset);
+	}
+	ALIF_UNREACHABLE();
+}
 
+static AlifSizeT anyLib_count(AlifIntT _kind, AlifObject* _sstr,
+	const void* _sbuf, AlifSizeT _slen, AlifObject* _str1,
+	const void* _buf1, AlifSizeT _len1, AlifSizeT _maxCount) { // 10425
+	switch (_kind) {
+	case AlifUStrKind_::AlifUStr_1Byte_Kind:
+		return ucs1Lib_count(_sbuf, _slen, _buf1, _len1, _maxCount);
+	case AlifUStrKind_::AlifUStr_2Byte_Kind:
+		return ucs2Lib_count(_sbuf, _slen, _buf1, _len1, _maxCount);
+	case AlifUStrKind_::AlifUStr_4Byte_Kind:
+		return ucs4Lib_count(_sbuf, _slen, _buf1, _len1, _maxCount);
+	}
+	ALIF_UNREACHABLE();
+}
+
+static void replace_1charInplace(AlifObject* _u, AlifSizeT _pos,
+	AlifUCS4 _u1, AlifUCS4 _u2, AlifSizeT _maxCount) { // 10440
+	AlifIntT kind = ALIFUSTR_KIND(_u);
+	void* data = ALIFUSTR_DATA(_u);
+	AlifSizeT len = ALIFUSTR_GET_LENGTH(_u);
+	if (kind == AlifUStrKind_::AlifUStr_1Byte_Kind) {
+		ucs1Lib_replace1CharInplace((AlifUCS1*)data + _pos,
+			(AlifUCS1*)data + len,
+			_u1, _u2, _maxCount);
+	}
+	else if (kind == AlifUStrKind_::AlifUStr_2Byte_Kind) {
+		ucs2Lib_replace1CharInplace((AlifUCS2*)data + _pos,
+			(AlifUCS2*)data + len,
+			_u1, _u2, _maxCount);
+	}
+	else {
+		ucs4Lib_replace1CharInplace((AlifUCS4*)data + _pos,
+			(AlifUCS4*)data + len,
+			_u1, _u2, _maxCount);
+	}
+}
+
+
+static AlifObject* replace(AlifObject* _self, AlifObject* _str1,
+	AlifObject* _str2, AlifSizeT _maxCount) { // 10465
+
+	AlifObject* u{};
+	const char* sbuf = (const char*)ALIFUSTR_DATA(_self);
+	const void* buf1 = ALIFUSTR_DATA(_str1);
+	const void* buf2 = ALIFUSTR_DATA(_str2);
+	AlifIntT srelease = 0, release1 = 0, release2 = 0;
+	AlifIntT skind = ALIFUSTR_KIND(_self);
+	AlifIntT kind1 = ALIFUSTR_KIND(_str1);
+	AlifIntT kind2 = ALIFUSTR_KIND(_str2);
+	AlifSizeT slen = ALIFUSTR_GET_LENGTH(_self);
+	AlifSizeT len1 = ALIFUSTR_GET_LENGTH(_str1);
+	AlifSizeT len2 = ALIFUSTR_GET_LENGTH(_str2);
+	AlifIntT mayshrink{};
+	AlifUCS4 maxchar{}, maxchar_str1{}, maxchar_str2{};
+
+	if (slen < len1)
+		goto nothing;
+
+	if (_maxCount < 0)
+		_maxCount = ALIF_SIZET_MAX;
+	else if (_maxCount == 0)
+		goto nothing;
+
+	if (_str1 == _str2)
+		goto nothing;
+
+	maxchar = ALIFUSTR_MAX_CHAR_VALUE(_self);
+	maxchar_str1 = ALIFUSTR_MAX_CHAR_VALUE(_str1);
+	if (maxchar < maxchar_str1)
+		/* substring too wide to be present */
+		goto nothing;
+	maxchar_str2 = ALIFUSTR_MAX_CHAR_VALUE(_str2);
+	/* Replacing str1 with str2 may cause a maxchar reduction in the
+	   result string. */
+	mayshrink = (maxchar_str2 < maxchar_str1) and (maxchar == maxchar_str1);
+	maxchar = ALIF_MAX(maxchar, maxchar_str2);
+
+	if (len1 == len2) {
+		/* same length */
+		if (len1 == 0)
+			goto nothing;
+		if (len1 == 1) {
+			/* replace characters */
+			AlifUCS4 u1{}, u2{};
+			AlifSizeT pos{};
+
+			u1 = ALIFUSTR_READ(kind1, buf1, 0);
+			pos = findChar(sbuf, skind, slen, u1, 1);
+			if (pos < 0)
+				goto nothing;
+			u2 = ALIFUSTR_READ(kind2, buf2, 0);
+			u = alifUStr_new(slen, maxchar);
+			if (!u)
+				goto error;
+
+			alifUStr_fastCopyCharacters(u, 0, _self, 0, slen);
+			replace_1charInplace(u, pos, u1, u2, _maxCount);
+		}
+		else {
+			AlifIntT rkind = skind;
+			char* res{};
+			AlifSizeT i{};
+
+			if (kind1 < rkind) {
+				/* widen substring */
+				buf1 = unicode_asKind(kind1, buf1, len1, rkind);
+				if (!buf1) goto error;
+				release1 = 1;
+			}
+			i = anyLib_find(rkind, _self, sbuf, slen, _str1, buf1, len1, 0);
+			if (i < 0)
+				goto nothing;
+			if (rkind > kind2) {
+				/* widen replacement */
+				buf2 = unicode_asKind(kind2, buf2, len2, rkind);
+				if (!buf2) goto error;
+				release2 = 1;
+			}
+			else if (rkind < kind2) {
+				/* widen self and buf1 */
+				rkind = kind2;
+				if (release1) {
+					alifMem_dataFree((void*)buf1);
+					buf1 = ALIFUSTR_DATA(_str1);
+					release1 = 0;
+				}
+				sbuf = (const char*)unicode_asKind(skind, sbuf, slen, rkind);
+				if (!sbuf) goto error;
+				srelease = 1;
+				buf1 = unicode_asKind(kind1, buf1, len1, rkind);
+				if (!buf1) goto error;
+				release1 = 1;
+			}
+			u = alifUStr_new(slen, maxchar);
+			if (!u)
+				goto error;
+			res = (char*)ALIFUSTR_DATA(u);
+
+			memcpy(res, sbuf, rkind * slen);
+			/* change everything in-place, starting with this one */
+			memcpy(res + rkind * i,
+				buf2,
+				rkind * len2);
+			i += len1;
+
+			while (--_maxCount > 0) {
+				i = anyLib_find(rkind, _self,
+					sbuf + rkind * i, slen - i,
+					_str1, buf1, len1, i);
+				if (i == -1)
+					break;
+				memcpy(res + rkind * i,
+					buf2,
+					rkind * len2);
+				i += len1;
+			}
+		}
+	}
+	else {
+		AlifSizeT n, i, j, ires;
+		AlifSizeT new_size;
+		int rkind = skind;
+		char* res;
+
+		if (kind1 < rkind) {
+			/* widen substring */
+			buf1 = unicode_asKind(kind1, buf1, len1, rkind);
+			if (!buf1) goto error;
+			release1 = 1;
+		}
+		n = anyLib_count(rkind, _self, sbuf, slen, _str1, buf1, len1, _maxCount);
+		if (n == 0)
+			goto nothing;
+		if (kind2 < rkind) {
+			/* widen replacement */
+			buf2 = unicode_asKind(kind2, buf2, len2, rkind);
+			if (!buf2) goto error;
+			release2 = 1;
+		}
+		else if (kind2 > rkind) {
+			/* widen self and buf1 */
+			rkind = kind2;
+			sbuf = (const char*)unicode_asKind(skind, sbuf, slen, rkind);
+			if (!sbuf) goto error;
+			srelease = 1;
+			if (release1) {
+				alifMem_dataFree((void*)buf1);
+				buf1 = ALIFUSTR_DATA(_str1);
+				release1 = 0;
+			}
+			buf1 = unicode_asKind(kind1, buf1, len1, rkind);
+			if (!buf1) goto error;
+			release1 = 1;
+		}
+		/* new_size = ALIFUSTR_GET_LENGTH(self) + n * (ALIFUSTR_GET_LENGTH(str2) -
+		   ALIFUSTR_GET_LENGTH(str1)); */
+		if (len1 < len2 and len2 - len1 >(ALIF_SIZET_MAX - slen) / n) {
+			//alifErr_setString(_alifExcOverflowError_,
+			//	"replace string is too long");
+			goto error;
+		}
+		new_size = slen + n * (len2 - len1);
+		if (new_size == 0) {
+			u = unicode_getEmpty();
+			goto done;
+		}
+		if (new_size > (ALIF_SIZET_MAX / rkind)) {
+			//alifErr_setString(_alifExcOverflowError_,
+			//	"replace string is too long");
+			goto error;
+		}
+		u = alifUStr_new(new_size, maxchar);
+		if (!u)
+			goto error;
+		res = (char*)ALIFUSTR_DATA(u);
+		ires = i = 0;
+		if (len1 > 0) {
+			while (n-- > 0) {
+				/* look for next match */
+				j = anyLib_find(rkind, _self,
+					sbuf + rkind * i, slen - i,
+					_str1, buf1, len1, i);
+				if (j == -1)
+					break;
+				else if (j > i) {
+					/* copy unchanged part [i:j] */
+					memcpy(res + rkind * ires,
+						sbuf + rkind * i,
+						rkind * (j - i));
+					ires += j - i;
+				}
+				/* copy substitution string */
+				if (len2 > 0) {
+					memcpy(res + rkind * ires,
+						buf2,
+						rkind * len2);
+					ires += len2;
+				}
+				i = j + len1;
+			}
+			if (i < slen)
+				/* copy tail [i:] */
+				memcpy(res + rkind * ires,
+					sbuf + rkind * i,
+					rkind * (slen - i));
+		}
+		else {
+			/* interleave */
+			while (n > 0) {
+				memcpy(res + rkind * ires,
+					buf2,
+					rkind * len2);
+				ires += len2;
+				if (--n <= 0)
+					break;
+				memcpy(res + rkind * ires,
+					sbuf + rkind * i,
+					rkind);
+				ires++;
+				i++;
+			}
+			memcpy(res + rkind * ires,
+				sbuf + rkind * i,
+				rkind * (slen - i));
+		}
+	}
 
 static AlifIntT uStr_compare(AlifObject* _str1, AlifObject* _str2) { // 10847
 #define COMPARE(_type1, _type2) \
@@ -2259,9 +2632,41 @@ static AlifIntT uStr_compare(AlifObject* _str1, AlifObject* _str2) { // 10847
 		return 1;
 
 #undef COMPARE
+=======
+	if (mayshrink) {
+		uStr_adjustMaxChar(&u);
+		if (u == nullptr)
+			goto error;
+	}
+
+done:
+	if (srelease)
+		alifMem_dataFree((void*)sbuf);
+	if (release1)
+		alifMem_dataFree((void*)buf1);
+	if (release2)
+		alifMem_dataFree((void*)buf2);
+	return u;
+
+nothing:
+	/* nothing to replace; return original string (when possible) */
+	if (srelease)
+		alifMem_dataFree((void*)sbuf);
+	if (release1)
+		alifMem_dataFree((void*)buf1);
+	if (release2)
+		alifMem_dataFree((void*)buf2);
+	return uStr_resultUnchanged(_self);
+
+error:
+	if (srelease)
+		alifMem_dataFree((void*)sbuf);
+	if (release1)
+		alifMem_dataFree((void*)buf1);
+	if (release2)
+		alifMem_dataFree((void*)buf2);
+	return nullptr;
 }
-
-
 
 
 static AlifIntT uStrCompare_eq(AlifObject* _str1, AlifObject* _str2) { // 10963
@@ -2477,6 +2882,14 @@ AlifObject* alifUStr_subString(AlifObject* _self,
 
 
 
+
+AlifObject* alifUStr_replace(AlifObject* _str,
+	AlifObject* _subStr, AlifObject* _replstr, AlifSizeT _maxCount) { // 12530
+	if (ensure_uStr(_str) < 0 or ensure_uStr(_subStr) < 0 or
+		ensure_uStr(_replstr) < 0)
+		return nullptr;
+	return replace(_str, _subStr, _replstr, _maxCount);
+}
 
 
 

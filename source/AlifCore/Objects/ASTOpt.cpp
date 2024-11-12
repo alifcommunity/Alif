@@ -231,7 +231,7 @@ static ExprTy parse_literal(AlifObject* _fmt,
 	AlifObject* str = alifUStr_subString(_fmt, start, pos);
 	/* str = str.replace('%%', '%') */
 	if (str and hasPercents) {
-		ALIF_SETREF(str, alifUStr_replace(str, &ALIF_STR(dbl_percent),
+		ALIF_SETREF(str, alifUStr_replace(str, &ALIF_STR(DblPercent),
 			ALIF_LATIN1_CHR('%'), -1));
 	}
 	if (!str) {

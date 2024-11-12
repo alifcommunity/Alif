@@ -651,8 +651,9 @@
 
 
 #define ALIF_STR_LITERALS_INIT { \
+    INIT_STR(DblPercent, "%%"), \
     INIT_STR(Empty, ""), \
-    INIT_STR(format, ".format"), \
+    INIT_STR(Format, ".format"), \
 }
 
 #define ALIF_STR_IDENTIFIERS_INIT { \

@@ -17,11 +17,11 @@ class AlifGlobalStrings {
 public:
     class {
 	public:
+        STRUCT_FOR_STR(DblPercent, "%%")
         STRUCT_FOR_STR(Empty, "")
-		STRUCT_FOR_STR(format, ".format")
+		STRUCT_FOR_STR(Format, ".format")
         //STRUCT_FOR_STR(Newline, "\n")
         //STRUCT_FOR_STR(OpenBr, "{")
-        //STRUCT_FOR_STR(Percent, "%")
         //STRUCT_FOR_STR(UTF_8, "utf-8")
     } literals;
 
