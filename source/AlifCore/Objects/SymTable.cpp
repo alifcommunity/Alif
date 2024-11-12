@@ -261,7 +261,7 @@ static AlifIntT analyze_block(AlifSTEntryObject* _ste, AlifObject* _bound, AlifO
 
 	while (alifDict_next(_ste->symbols, &pos_, &name, &v_)) {
 		long flags = alifLong_asLong(v_);
-		if (flags == -1) {
+		if (flags == -1 /*and alifErr_occurred()*/) {
 			goto error;
 		}
 		if (!analyze_name(_ste, scopes, name, flags,
@@ -349,7 +349,7 @@ static AlifIntT analyze_block(AlifSTEntryObject* _ste, AlifObject* _bound, AlifO
 	else if (_ste->type == BlockType_::Class_Block and !drop_classFree(_ste, newFree))
 		goto error;
 	if (!update_symbols(_ste->symbols, scopes, _bound, newFree, inlinedCells,
-		(_ste->type == BlockType_::Class_Block) || _ste->canSeeClassScope))
+		(_ste->type == BlockType_::Class_Block) or _ste->canSeeClassScope))
 		goto error;
 
 	temp = alifNumber_inPlaceOr(_free, newFree);
