@@ -297,8 +297,8 @@ static AlifObject* binary_op1(AlifObject* _v, AlifObject* _w, const AlifIntT _op
 #define BINARY_OP1(_v, _w, _opSlot) binary_op1(_v, _w, _opSlot) // 980
 
 static AlifObject* binary_op(AlifObject* _v, AlifObject* _w,
-	const AlifIntT _opSlot, const char* _opName) { // 997
-	AlifObject* result = BINARY_OP1(_v, _w, _opSlot, _opName);
+	const AlifIntT _opSlot) { // 997
+	AlifObject* result = BINARY_OP1(_v, _w, _opSlot);
 	if (result == ALIF_NOTIMPLEMENTED) {
 		ALIF_DECREF(result);
 		//return binOp_typeError(_v, _w, _opName);
@@ -395,18 +395,18 @@ static AlifObject* ternary_op(AlifObject* _v, AlifObject* _w, AlifObject* _z,
 
 
  // 1110
-#define BINARY_FUNC(_func, _op, _opName) \
+#define BINARY_FUNC(_func, _op) \
     AlifObject* _func(AlifObject *_v, AlifObject *_w) { \
-        return binary_op(_v, _w, NB_SLOT(_op), _opName); \
+        return binary_op(_v, _w, NB_SLOT(_op)); \
     }
 
-BINARY_FUNC(alifNumber_or, or_, "|") // 1116
-BINARY_FUNC(alifNumber_xor, xor_, "^")
-BINARY_FUNC(alifNumber_and, and_, "&")
-BINARY_FUNC(alifNumber_lshift, lshift, "<<")
-BINARY_FUNC(alifNumber_rshift, rshift, ">>")
-BINARY_FUNC(alifNumber_subtract, subtract, "-")
-BINARY_FUNC(alifNumber_divmod, divmod, "divmod()")
+BINARY_FUNC(alifNumber_or, or_) // 1116
+BINARY_FUNC(alifNumber_xor, xor_)
+BINARY_FUNC(alifNumber_and, and_)
+BINARY_FUNC(alifNumber_lshift, lshift)
+BINARY_FUNC(alifNumber_rshift, rshift)
+BINARY_FUNC(alifNumber_subtract, subtract)
+BINARY_FUNC(alifNumber_divmod, divmod)
 
 
 AlifObject* alifNumber_add(AlifObject* _v, AlifObject* _w) { // 1124
@@ -463,9 +463,9 @@ AlifObject* alifNumber_multiply(AlifObject* _v, AlifObject* _w) { // 1162
 }
 
 
-//BINARY_FUNC(alifNumber_floorDivide, floor_divide, "//") // 1182
-BINARY_FUNC(alifNumber_trueDivide, trueDivide, "/") // 1183
-//BINARY_FUNC(alifNumber_remainder, remainder, "%")
+//BINARY_FUNC(alifNumber_floorDivide, floor_divide) // 1182
+BINARY_FUNC(alifNumber_trueDivide, trueDivide) // 1183
+//BINARY_FUNC(alifNumber_remainder, remainder)
 
 AlifObject* alifNumber_power(AlifObject* _v, AlifObject* _w, AlifObject* _z) { // 1186
 	return ternary_op(_v, _w, _z, NB_SLOT(power), "** or pow()");

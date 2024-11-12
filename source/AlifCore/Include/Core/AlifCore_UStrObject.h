@@ -11,7 +11,7 @@
 
 
 
-
+AlifObject* _alifUStr_copy(AlifObject*); // 40
 
 
 

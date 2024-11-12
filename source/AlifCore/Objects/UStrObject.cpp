@@ -224,7 +224,15 @@ static AlifObject* uStr_result(AlifObject* _uStr) { // 727
 	return _uStr;
 }
 
-
+static AlifObject* uStr_resultUnchanged(AlifObject* _uStr) { // 758
+	if (ALIFUSTR_CHECKEXACT(_uStr)) {
+		return ALIF_NEWREF(_uStr);
+	}
+	else {
+		/* Subtype -- return genuine unicode string with the same value. */
+		return _alifUStr_copy(_uStr);
+	}
+}
 
 static char* backSlash_replace(AlifBytesWriter* _writer, char* _str,
 	AlifObject* _uStr, AlifSizeT _collStart, AlifSizeT _collEnd) { // 771
@@ -787,6 +795,25 @@ static AlifObject* get_latin1Char(AlifUCS1 _ch) { // 1867
 	return obj;
 }
 
+static AlifObject* uStr_char(AlifUCS4 _ch) { // 1874
+	AlifObject* unicode{};
+
+	if (_ch < 256) {
+		return get_latin1Char(_ch);
+	}
+
+	unicode = alifUStr_new(1, _ch);
+	if (unicode == nullptr) return nullptr;
+
+	if (ALIFUSTR_KIND(unicode) == AlifUStrKind_::AlifUStr_2Byte_Kind) {
+		ALIFUSTR_2BYTE_DATA(unicode)[0] = (AlifUCS2)_ch;
+	}
+	else {
+		ALIFUSTR_4BYTE_DATA(unicode)[0] = _ch;
+	}
+	return unicode;
+}
+
 static inline void uStrWrite_wideChar(AlifIntT _kind, void* _data,
 	const wchar_t* _u, AlifSizeT _size, AlifSizeT _numSurrogates) { // 1901
 	switch (_kind) {
@@ -915,7 +942,104 @@ AlifObject* alifUStr_fromASCII(const char* _buffer, AlifSizeT _size) { // 2179
 	return uStr;
 }
 
+static AlifObject* _alifUStr_fromUCS1(const AlifUCS1* _u, AlifSizeT _size) { // 2213
+	AlifObject* res{};
+	unsigned char maxChar{};
 
+	if (_size == 0) {
+		ALIF_RETURN_UNICODE_EMPTY;
+	}
+	if (_size == 1) {
+		return get_latin1Char(_u[0]);
+	}
+
+	maxChar = ucs1Lib_findMaxChar(_u, _u + _size);
+	res = alifUStr_new(_size, maxChar);
+	if (!res) return nullptr;
+	memcpy(ALIFUSTR_1BYTE_DATA(res), _u, _size);
+	return res;
+}
+
+static AlifObject* _alifUStr_fromUCS2(const AlifUCS2* _u, AlifSizeT _size) { // 2236
+	AlifObject* res{};
+	AlifUCS2 maxChar{};
+
+	if (_size == 0) ALIF_RETURN_UNICODE_EMPTY;
+	if (_size == 1) return uStr_char(_u[0]);
+
+	maxChar = ucs2Lib_findMaxChar(_u, _u + _size);
+	res = alifUStr_new(_size, maxChar);
+	if (!res)
+		return nullptr;
+	if (maxChar >= 256)
+		memcpy(ALIFUSTR_2BYTE_DATA(res), _u, sizeof(AlifUCS2) * _size);
+	else {
+		ALIFUSTR_CONVERT_BYTES(AlifUCS2, AlifUCS1,
+			_u, _u + _size, ALIFUSTR_1BYTE_DATA(res));
+	}
+	return res;
+}
+
+static AlifObject* _alifUStr_fromUCS4(const AlifUCS4* _u, AlifSizeT _size) { // 2262
+	AlifObject* res{};
+	AlifUCS4 maxChar{};
+
+	if (_size == 0)
+		ALIF_RETURN_UNICODE_EMPTY;
+	if (_size == 1)
+		return uStr_char(_u[0]);
+
+	maxChar = ucs4Lib_findMaxChar(_u, _u + _size);
+	res = alifUStr_new(_size, maxChar);
+	if (!res) return nullptr;
+	if (maxChar < 256)
+		ALIFUSTR_CONVERT_BYTES(AlifUCS4, AlifUCS1, _u, _u + _size,
+			ALIFUSTR_1BYTE_DATA(res));
+	else if (maxChar < 0x10000)
+		ALIFUSTR_CONVERT_BYTES(AlifUCS4, AlifUCS2, _u, _u + _size,
+			ALIFUSTR_2BYTE_DATA(res));
+	else
+		memcpy(ALIFUSTR_4BYTE_DATA(res), _u, sizeof(AlifUCS4) * _size);
+	return res;
+}
+
+AlifObject* alifUStr_fromKindAndData(AlifIntT _kind,
+	const void* _buffer, AlifSizeT _size) { // 2335
+	if (_size < 0) {
+		//alifErr_setString(_alifExcValueError_, "size must be positive");
+		return nullptr;
+	}
+	switch (_kind) {
+	case AlifUStrKind_::AlifUStr_1Byte_Kind:
+		return _alifUStr_fromUCS1((const AlifUCS1*)_buffer, _size);
+	case AlifUStrKind_::AlifUStr_2Byte_Kind:
+		return _alifUStr_fromUCS2((const AlifUCS2*)_buffer, _size);
+	case AlifUStrKind_::AlifUStr_4Byte_Kind:
+		return _alifUStr_fromUCS4((const AlifUCS4*)_buffer, _size);
+	default:
+		//alifErr_setString(_alifExcSystemError_, "invalid kind");
+		return nullptr;
+	}
+}
+
+AlifObject* _alifUStr_copy(AlifObject* _uStr) { // 2436
+	AlifSizeT length{};
+	AlifObject* copy{};
+
+	if (!ALIFUSTR_CHECK(_uStr)) {
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
+
+	length = ALIFUSTR_GET_LENGTH(_uStr);
+	copy = alifUStr_new(length, ALIFUSTR_MAX_CHAR_VALUE(_uStr));
+	if (!copy)
+		return nullptr;
+
+	memcpy(ALIFUSTR_DATA(copy), ALIFUSTR_DATA(_uStr),
+		length * ALIFUSTR_KIND(_uStr));
+	return copy;
+}
 
 
 static AlifIntT uStr_fromFormat(AlifUStrWriter* _writer,
@@ -1790,12 +1914,12 @@ AlifObject* alifUStr_decodeUStrEscapeInternal(const char* _str, AlifSizeT _size,
 		AlifIntT count{};
 		const char* message{};
 
-#define WRITE_ASCII_CHAR(ch)                                                  \
+#define WRITE_ASCII_CHAR(_ch)                                                  \
             do {                                                              \
                 ALIFUSTR_WRITE(writer.kind, writer.data, writer.pos++, ch);  \
             } while(0)
 
-#define WRITE_CHAR(ch)                                                        \
+#define WRITE_CHAR(_ch)                                                        \
             do {                                                              \
                 if (ch <= writer.maxChar) {                                   \
                     ALIFUSTR_WRITE(writer.kind, writer.data, writer.pos++, ch); \
@@ -1983,6 +2107,7 @@ onError:
 	ALIF_XDECREF(exc);
 	return nullptr;
 }
+
 
 
 
@@ -2194,6 +2319,41 @@ static AlifHashT uStr_hash(AlifObject* _self) { // 11663
 
 
 
+
+
+
+
+AlifObject* alifUStr_subString(AlifObject* _self,
+	AlifSizeT _start, AlifSizeT _end) { // 12304
+	const unsigned char* data{};
+	AlifIntT kind{};
+	AlifSizeT length{};
+
+	length = ALIFUSTR_GET_LENGTH(_self);
+	_end = ALIF_MIN(_end, length);
+
+	if (_start == 0 and _end == length)
+		return uStr_resultUnchanged(_self);
+
+	if (_start < 0 or _end < 0) {
+		//alifErr_setString(_alifExcIndexError_, "string index out of range");
+		return nullptr;
+	}
+	if (_start >= length || _end < _start)
+		ALIF_RETURN_UNICODE_EMPTY;
+
+	length = _end - _start;
+	if (ALIFUSTR_IS_ASCII(_self)) {
+		data = ALIFUSTR_1BYTE_DATA(_self);
+		return alifUStr_fromASCII((const char*)(data + _start), length);
+	}
+	else {
+		kind = ALIFUSTR_KIND(_self);
+		data = ALIFUSTR_1BYTE_DATA(_self);
+		return alifUStr_fromKindAndData(kind,
+			data + kind * _start, length);
+	}
+}
 
 
 

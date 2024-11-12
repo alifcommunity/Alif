@@ -29,6 +29,8 @@ AlifObject* alifUStr_fromStringAndSize(const char*, AlifSizeT); // 122
 
 AlifObject* alifUStr_fromString(const char*); // 129
 
+AlifObject* alifUStr_subString(AlifObject*, AlifSizeT, AlifSizeT); // 134
+
 AlifObject* alifUStr_fromFormatV(const char*, va_list); // 237
 
 AlifObject* alifUStr_fromFormat(const char*, ...); // 241
@@ -110,6 +112,7 @@ static inline AlifUCS4 alifUnicode_lowSurrogate(AlifUCS4 ch) { // 42
 
 
 AlifObject* alifUStr_internFromString(const char*); // 247
+
 
 
 
@@ -305,6 +308,7 @@ AlifObject* alifUStr_new(AlifSizeT, AlifUCS4 ); // 386
 AlifSizeT alifUStr_copyCharacters(AlifObject*, AlifSizeT, AlifObject*, AlifSizeT, AlifSizeT); // 416
 
 
+AlifObject* alifUStr_fromKindAndData(AlifIntT, const void*, AlifSizeT); // 441
 
 
 class AlifUStrWriter { // 496
