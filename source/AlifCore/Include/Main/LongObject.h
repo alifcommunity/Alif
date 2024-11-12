@@ -30,3 +30,10 @@ unsigned long alifOS_strToULong(const char*, char**, AlifIntT); // 102
 long alifOS_strToLong(const char*, char**, AlifIntT); // 103
 
 /* -------------------------------------------------------------------------------------------------------------------------------------- */
+
+
+
+
+
+
+AlifUSizeT _alifLong_numBits(AlifObject*); // 77

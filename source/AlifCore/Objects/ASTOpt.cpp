@@ -125,7 +125,83 @@ static AlifIntT fold_unaryOp(ExprTy _node,
 	return make_const(_node, newval, _astMem);
 }
 
+static AlifSizeT check_complexity(AlifObject* _obj, AlifSizeT _limit) { // 147
+	if (ALIFTUPLE_CHECK(_obj)) {
+		AlifSizeT i{};
+		_limit -= ALIFTUPLE_GET_SIZE(_obj);
+		for (i = 0; _limit >= 0 and i < ALIFTUPLE_GET_SIZE(_obj); i++) {
+			_limit = check_complexity(ALIFTUPLE_GET_ITEM(_obj, i), _limit);
+		}
+		return _limit;
+	}
+	return _limit;
+}
 
+ // 161
+#define MAX_INT_SIZE           128  /* bits */
+#define MAX_COLLECTION_SIZE    256  /* items */
+#define MAX_STR_SIZE          4096  /* characters */
+#define MAX_TOTAL_ITEMS       1024  /* including nested collections */
+
+static AlifObject* safe_multiply(AlifObject* _v, AlifObject* _w) { // 166
+	if (ALIFLONG_CHECK(_v) and ALIFLONG_CHECK(_w) and
+		!_alifLong_isZero((AlifLongObject*)_v) and !_alifLong_isZero((AlifLongObject*)_w)) {
+		AlifUSizeT vBits = _alifLong_numBits(_v);
+		AlifUSizeT wBits = _alifLong_numBits(_w);
+		if (vBits == (AlifUSizeT)-1 or wBits == (AlifUSizeT)-1) {
+			return nullptr;
+		}
+		if (vBits + wBits > MAX_INT_SIZE) {
+			return nullptr;
+		}
+	}
+	else if (ALIFLONG_CHECK(_v) and ALIFTUPLE_CHECK(_w)) {
+		AlifSizeT size = ALIFTUPLE_GET_SIZE(_w);
+		if (size) {
+			long n = alifLong_asLong(_v);
+			if (n < 0 or n > MAX_COLLECTION_SIZE / size) {
+				return nullptr;
+			}
+			if (n and check_complexity(_w, MAX_TOTAL_ITEMS / n) < 0) {
+				return nullptr;
+			}
+		}
+	}
+	else if (ALIFLONG_CHECK(_v) and (ALIFUSTR_CHECK(_w) or ALIFBYTES_CHECK(_w))) {
+		AlifSizeT size = ALIFUSTR_CHECK(_w) ? ALIFUSTR_GET_LENGTH(_w) :
+			ALIFBYTES_GET_SIZE(_w);
+		if (size) {
+			long n = alifLong_asLong(_v);
+			if (n < 0 or n > MAX_STR_SIZE / size) {
+				return nullptr;
+			}
+		}
+	}
+	else if (ALIFLONG_CHECK(_w) and
+		(ALIFTUPLE_CHECK(_v) or ALIFUSTR_CHECK(_v) or ALIFBYTES_CHECK(_v)))
+	{
+		return safe_multiply(_w, _v);
+	}
+
+	return alifNumber_multiply(_v, _w);
+}
+
+
+static AlifObject* safe_power(AlifObject* _v, AlifObject* _w) { // 212
+	if (ALIFLONG_CHECK(_v) and ALIFLONG_CHECK(_w) and
+		!_alifLong_isZero((AlifLongObject*)_v) and _alifLong_isPositive((AlifLongObject*)_w)) {
+		AlifUSizeT vBits = _alifLong_numBits(_v);
+		AlifUSizeT wBits = alifLong_asSizeT(_w);
+		if (vBits == (AlifUSizeT)-1 or wBits == (AlifUSizeT)-1) {
+			return nullptr;
+		}
+		if (vBits > MAX_INT_SIZE / wBits) {
+			return nullptr;
+		}
+	}
+
+	return alifNumber_power(_v, _w, ALIF_NONE);
+}
 
 static AlifIntT optimize_format(ExprTy _node,
 	AlifObject* _fmt, ASDLExprSeq* _elts, AlifASTMem* _astMem) { // 409
@@ -216,29 +292,29 @@ static AlifIntT fold_binOp(ExprTy _node,
 	case Operator_::Div:
 		newval = alifNumber_trueDivide(lv, rv);
 		break;
-	case Operator_::FloorDiv:
-		newval = alifNumber_floorDivide(lv, rv);
-		break;
 	case Operator_::Mod:
-		newval = safe_mod(lv, rv);
+		//newval = safe_mod(lv, rv);
 		break;
 	case Operator_::Pow:
 		newval = safe_power(lv, rv);
 		break;
 	case Operator_::LShift:
-		newval = safe_lshift(lv, rv);
+		//newval = safe_lshift(lv, rv);
 		break;
 	case Operator_::RShift:
-		newval = alifNumber_rShift(lv, rv);
+		//newval = alifNumber_rShift(lv, rv);
 		break;
 	case Operator_::BitOr:
-		newval = alifNumber_or(lv, rv);
+		//newval = alifNumber_or(lv, rv);
 		break;
 	case Operator_::BitXor:
-		newval = alifNumber_xor(lv, rv);
+		//newval = alifNumber_xor(lv, rv);
 		break;
 	case Operator_::BitAnd:
-		newval = alifNumber_and(lv, rv);
+		//newval = alifNumber_and(lv, rv);
+		break;
+	case Operator_::FloorDiv:
+		//newval = alifNumber_floorDivide(lv, rv);
 		break;
 		// No builtin constants implement the following operators
 	//case Operator_::MatMult:

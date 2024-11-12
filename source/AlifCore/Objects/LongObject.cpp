@@ -1,5 +1,6 @@
 #include "alif.h"
 
+#include "AlifCore_BitUtils.h"
 #include "AlifCore_Long.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_Abstract.h"
@@ -325,6 +326,42 @@ overflow:
 	//	"alif AlifIntT too large to convert to CPP AlifUSizeT");
 	return -1;
 }
+
+
+static AlifIntT bit_lengthDigit(digit _x) { // 797
+	// digit can be larger than unsigned long, but only ALIFLONG_SHIFT bits
+	// of it will be ever used.
+	static_assert(ALIFLONG_SHIFT <= sizeof(unsigned long) * 8,
+		"digit is larger than unsigned long");
+	return alifBit_length((unsigned long)_x);
+}
+
+AlifUSizeT _alifLong_numBits(AlifObject* _vv) { // 807
+	AlifLongObject* v = (AlifLongObject*)_vv;
+	AlifUSizeT result = 0;
+	AlifSizeT ndigits{};
+	AlifIntT msdBits{};
+
+	ndigits = alifLong_digitCount(v);
+	if (ndigits > 0) {
+		digit msd = v->longValue.digit[ndigits - 1];
+		if ((AlifUSizeT)(ndigits - 1) > SIZE_MAX / (AlifUSizeT)ALIFLONG_SHIFT)
+			goto Overflow;
+		result = (AlifUSizeT)(ndigits - 1) * (AlifUSizeT)ALIFLONG_SHIFT;
+		msdBits = bit_lengthDigit(msd);
+		if (SIZE_MAX - msdBits < result)
+			goto Overflow;
+		result += msdBits;
+	}
+	return result;
+
+Overflow:
+	//alifErr_setString(_alifExcOverflowError_, "int has too many bits "
+	//	"to express in a platform AlifUSizeT");
+	return (AlifUSizeT)-1;
+}
+
+
 
 AlifObject* alifLong_fromVoidPtr(void* _p) { // 1349
 #if SIZEOF_VOID_P <= SIZEOF_LONG
