@@ -4,6 +4,7 @@
 extern AlifTypeObject _alifSetType_; // 9
 extern AlifTypeObject _alifFrozenSetType_; // 10
 
+
 AlifObject* alifSet_new(AlifObject*); // 13
 AlifObject* alifFrozenSet_new(AlifObject*); // 14
 
