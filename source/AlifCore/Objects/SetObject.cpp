@@ -482,7 +482,7 @@ AlifIntT alifSet_discard(AlifObject* _set, AlifObject* _key) { // 2643
 		return -1;
 	}
 
-	AlifIntT rv_;
+	AlifIntT rv_{};
 	ALIF_BEGIN_CRITICAL_SECTION(_set);
 	rv_ = set_discardKey((AlifSetObject*)_set, _key);
 	ALIF_END_CRITICAL_SECTION();

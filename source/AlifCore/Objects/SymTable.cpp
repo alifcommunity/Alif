@@ -403,9 +403,9 @@ static AlifIntT inline_comprehension(AlifSTEntryObject* _ste, AlifSTEntryObject*
 
 	while (alifDict_next(_comp->symbols, &pos_, &k_, &v_)) {
 		long compFlags = alifLong_asLong(v_);
-		//if (comp_flags == -1 and alifErr_occurred()) {
-			//return 0;
-		//}
+		if (compFlags == -1 /*and alifErr_occurred()*/) {
+			return 0;
+		}
 		if (compFlags & DEF_PARAM) {
 			continue;
 		}
@@ -417,9 +417,9 @@ static AlifIntT inline_comprehension(AlifSTEntryObject* _ste, AlifSTEntryObject*
 			}
 		}
 		AlifObject* existing = alifDict_getItemWithError(_ste->symbols, k_);
-		//if (existing == nullptr and alifErr_occurred()) {
-			//return 0;
-		//}
+		if (existing == nullptr /*and alifErr_occurred()*/) {
+			return 0;
+		}
 		if (scope == FREE and _ste->type == BlockType_::Class_Block and
 			alifUStr_equalToASCIIString(k_, "__class__")) {
 			scope = GLOBAL_IMPLICIT;
@@ -442,9 +442,9 @@ static AlifIntT inline_comprehension(AlifSTEntryObject* _ste, AlifSTEntryObject*
 		}
 		else {
 			long flags = alifLong_asLong(existing);
-			//if (flags == -1 and alifErr_occurred()) {
-				//return 0;
-			//}
+			if (flags == -1 /*and alifErr_occurred()*/) {
+				return 0;
+			}
 			if ((flags & DEF_BOUND) and _ste->type != BlockType_::Class_Block) {
 				AlifIntT ok_ = isFree_inAnyChild(_comp, k_);
 				if (ok_ < 0) {
@@ -474,9 +474,9 @@ static AlifIntT analyze_cells(AlifObject* _scopes, AlifObject* _free, AlifObject
 		return 0;
 	while (alifDict_next(_scopes, &pos_, &name, &v_)) {
 		long scope = alifLong_asLong(v_);
-		//if (scope == -1 and alifErr_occurred()) {
-			//goto error;
-		//}
+		if (scope == -1 /*and alifErr_occurred()*/) {
+			goto error;
+		}
 		if (scope != LOCAL)
 			continue;
 		AlifIntT contains = alifSet_contains(_free, name);
@@ -527,9 +527,9 @@ static AlifIntT update_symbols(AlifObject* _symbols, AlifObject* _scopes,
 
 	while (alifDict_next(_symbols, &pos_, &name, &v_)) {
 		long flags = alifLong_asLong(v_);
-		//if (flags == -1 and alifErr_occurred()) {
-			//return 0;
-		//}
+		if (flags == -1 /*and alifErr_occurred()*/) {
+			return 0;
+		}
 		AlifIntT contains = alifSet_contains(_inlinedCells, name);
 		if (contains < 0) {
 			return 0;
@@ -546,9 +546,9 @@ static AlifIntT update_symbols(AlifObject* _symbols, AlifObject* _scopes,
 		}
 		long scope = alifLong_asLong(vScope);
 		ALIF_DECREF(vScope);
-		//if (scope == -1 and alifErr_occurred()) {
-			//return 0;
-		//}
+		if (scope == -1 /*and alifErr_occurred()*/) {
+			return 0;
+		}
 		flags |= (scope << SCOPE_OFFSET);
 		vNew = alifLong_fromLong(flags);
 		if (!vNew)
@@ -577,9 +577,9 @@ static AlifIntT update_symbols(AlifObject* _symbols, AlifObject* _scopes,
 
 			if (_classFlag) {
 				long flags = alifLong_asLong(v_);
-				//if (flags == -1 and alifErr_occurred()) {
-					//goto error;
-				//}
+				if (flags == -1 /*and alifErr_occurred()*/) {
+					goto error;
+				}
 				flags |= DEF_FREE_CLASS;
 				vNew = alifLong_fromLong(flags);
 				if (!vNew) {

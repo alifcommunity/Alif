@@ -265,7 +265,8 @@ static void list_clear(AlifListObject* _a) { // 814
 	list_clearImpl(_a, true);
 }
 
-static AlifIntT listAssSlice_lockHeld(AlifListObject* _a, AlifSizeT _iLow, AlifSizeT _iHigh, AlifObject* _v) { // 833 
+static AlifIntT listAssSlice_lockHeld(AlifListObject* _a, AlifSizeT _iLow,
+	AlifSizeT _iHigh, AlifObject* _v) { // 833 
 	AlifObject* recycleOnStack[8]{};
 	AlifObject** recycle = recycleOnStack; /* will allocate more if needed */
 	AlifObject** item{};
@@ -284,8 +285,8 @@ static AlifIntT listAssSlice_lockHeld(AlifListObject* _a, AlifSizeT _iLow, AlifS
 		vAsSF = alifSequence_fast(_v, "can only assign an iterable");
 		if (vAsSF == nullptr)
 			goto Error;
-		//n_ = ALIFSEQUENCE_FAST_GET_SIZE(vAsSF);
-		//vitem = ALIFSEQUENCE_FAST_ITEMS(vAsSF);
+		n_ = ALIFSEQUENCE_FAST_GET_SIZE(vAsSF);
+		vitem = ALIFSEQUENCE_FAST_ITEMS(vAsSF);
 	}
 	if (_iLow < 0)
 		_iLow = 0;
@@ -379,7 +380,8 @@ static AlifIntT list_assSlice(AlifListObject* _a, AlifSizeT _iLow,
 	return ret_;
 }
 
-AlifIntT alifList_setSlice(AlifObject* _a, AlifSizeT _iLow, AlifSizeT _iHigh, AlifObject* _v) { // 958
+AlifIntT alifList_setSlice(AlifObject* _a, AlifSizeT _iLow,
+	AlifSizeT _iHigh, AlifObject* _v) { // 958
 	if (!ALIFLIST_CHECK(_a)) {
 		//ALIFERR_BADINTERNALCALL();
 		return -1;
@@ -387,6 +389,74 @@ AlifIntT alifList_setSlice(AlifObject* _a, AlifSizeT _iLow, AlifSizeT _iHigh, Al
 	return list_assSlice((AlifListObject*)_a, _iLow, _iHigh, _v);
 }
 
+
+
+
+static AlifIntT _list_extend(AlifListObject* _self, AlifObject* _iterable) { // 1318
+	// Special case:
+	// lists and tuples which can use alifSequence_fast ops
+	int res = -1;
+	if ((AlifObject*)_self == _iterable) {
+		ALIF_BEGIN_CRITICAL_SECTION(_self);
+		res = listInplaceRepeat_lockHeld(_self, 2);
+		ALIF_END_CRITICAL_SECTION();
+	}
+	else if (ALIFLIST_CHECKEXACT(_iterable)) {
+		ALIF_BEGIN_CRITICAL_SECTION2(_self, _iterable);
+		res = listExtend_lockHeld(_self, _iterable);
+		ALIF_END_CRITICAL_SECTION2();
+	}
+	else if (ALIFTUPLE_CHECKEXACT(_iterable)) {
+		ALIF_BEGIN_CRITICAL_SECTION(_self);
+		res = listExtend_lockHeld(_self, _iterable);
+		ALIF_END_CRITICAL_SECTION();
+	}
+	else if (ALIFANYSET_CHECKEXACT(_iterable)) {
+		ALIF_BEGIN_CRITICAL_SECTION2(_self, _iterable);
+		res = listExtend_set(_self, (AlifSetObject*)_iterable);
+		ALIF_END_CRITICAL_SECTION2();
+	}
+	else if (ALIFDICT_CHECKEXACT(_iterable)) {
+		ALIF_BEGIN_CRITICAL_SECTION2(_self, _iterable);
+		res = listExtend_dict(_self, (AlifDictObject*)_iterable, 0 /*keys*/);
+		ALIF_END_CRITICAL_SECTION2();
+	}
+	else if (ALIF_IS_TYPE(_iterable, &_alifDictKeysType_)) {
+		AlifDictObject* dict = ((AlifDictViewObject*)_iterable)->dict;
+		ALIF_BEGIN_CRITICAL_SECTION2(_self, dict);
+		res = listExtend_dict(_self, dict, 0 /*keys*/);
+		ALIF_END_CRITICAL_SECTION2();
+	}
+	else if (ALIF_IS_TYPE(_iterable, &_alifDictValuesType_)) {
+		AlifDictObject* dict = ((AlifDictViewObject*)_iterable)->dict;
+		ALIF_BEGIN_CRITICAL_SECTION2(_self, dict);
+		res = listExtend_dict(_self, dict, 1 /*values*/);
+		ALIF_END_CRITICAL_SECTION2();
+	}
+	else if (ALIF_IS_TYPE(_iterable, &_alifDictItemsType_)) {
+		AlifDictObject* dict = ((AlifDictViewObject*)_iterable)->dict;
+		ALIF_BEGIN_CRITICAL_SECTION2(_self, dict);
+		res = listExtend_dictItems(_self, dict);
+		ALIF_END_CRITICAL_SECTION2();
+	}
+	else {
+		ALIF_BEGIN_CRITICAL_SECTION(_self);
+		res = listExtendIter_lockHeld(_self, _iterable);
+		ALIF_END_CRITICAL_SECTION();
+	}
+	return res;
+}
+
+static AlifObject* list_extend(AlifListObject* _self, AlifObject* _iterable) { // 1384
+	if (_list_extend(_self, _iterable) < 0) {
+		return nullptr;
+	}
+	return ALIF_NONE; // alif
+}
+
+AlifObject* _alifList_extend(AlifListObject* _self, AlifObject* _iterable) { // 1394
+	return list_extend(_self, _iterable);
+}
 
 
 

@@ -50,6 +50,18 @@ AlifObject* alifNumber_index(AlifObject*); // 545
 
 AlifSizeT alifNumber_asSizeT(AlifObject*, AlifObject*); // 553
 
+
+AlifObject* alifNumber_inPlaceSubtract(AlifObject*, AlifObject*); // 580
+AlifObject* alifNumber_inPlaceFloorDivide(AlifObject*, AlifObject*); // 597
+AlifObject* alifNumber_inPlaceTrueDivide(AlifObject*, AlifObject*); // 604
+AlifObject* alifNumber_inPlaceRemainder(AlifObject*, AlifObject*); // 611
+AlifObject* alifNumber_inPlaceLshift(AlifObject*, AlifObject*); // 625
+AlifObject* alifNumber_inPlaceRshift(AlifObject*, AlifObject*); // 631
+AlifObject* alifNumber_inPlaceAnd(AlifObject*, AlifObject*); // 637
+AlifObject* alifNumber_inPlaceXor(AlifObject*, AlifObject*); // 643
+AlifObject* alifNumber_inPlaceOr(AlifObject*, AlifObject*); // 649
+
+
 AlifIntT alifSequence_check(AlifObject*); // 664
 
 AlifObject* alifSequence_getItem(AlifObject*, AlifSizeT); // 689
@@ -58,7 +70,20 @@ AlifIntT alifSequence_setItem(AlifObject*, AlifSizeT, AlifObject*); // 700
 
 AlifObject* alifSequence_tuple(AlifObject*); // 723
 
+AlifObject* alifSequence_list(AlifObject*); // 727
 
+AlifObject* alifSequence_fast(AlifObject*, const char*); // 736
+
+
+ // 740
+#define ALIFSEQUENCE_FAST_GET_SIZE(o) \
+    (ALIFLIST_CHECK(o) ? ALIFLIST_GET_SIZE(o) : ALIFTUPLE_GET_SIZE(o))
+
+
+ // 750
+#define ALIFSEQUENCE_FAST_ITEMS(sf) \
+    (ALIFLIST_CHECK(sf) ? ((AlifListObject *)(sf))->item \
+                      : ((AlifTupleObject *)(sf))->item)
 
 AlifIntT alifMapping_check(AlifObject*); // 806
 

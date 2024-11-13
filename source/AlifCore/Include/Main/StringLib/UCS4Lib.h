@@ -3,6 +3,7 @@
 #define STRINGLIB_IS_UNICODE     1
 
 // 6
+#define FASTSEARCH               ucs4Lib_fastSearch
 #define STRINGLIB(_F)			 ucs4Lib_##_F
 #define STRINGLIB_OBJECT         AlifUStrObject
 #define STRINGLIB_SIZEOF_CHAR    4

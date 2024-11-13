@@ -1,10 +1,12 @@
 #include "alif.h"
 
 #include "AlifCore_Abstract.h"
+#include "AlifCore_Call.h"
 #include "AlifCore_Eval.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_Long.h"
 #include "AlifCore_State.h"
+#include "AlifCore_UStrObject.h"
 
 
 
@@ -472,6 +474,53 @@ AlifObject* alifNumber_power(AlifObject* _v, AlifObject* _w, AlifObject* _z) { /
 }
 
 
+static AlifObject* binary_iop1(AlifObject* _v, AlifObject* _w,
+	const AlifIntT _iopSlot, const AlifIntT _opSlot) { // 1214
+	AlifNumberMethods* mv = ALIF_TYPE(_v)->asNumber;
+	if (mv != nullptr) {
+		BinaryFunc slot = NB_BINOP(mv, _iopSlot);
+		if (slot) {
+			AlifObject* x = (slot)(_v, _w);
+			if (x != ALIF_NOTIMPLEMENTED) {
+				return x;
+			}
+			ALIF_DECREF(x);
+		}
+	}
+	return binary_op1(_v, _w, _opSlot);
+}
+
+#define BINARY_IOP1(_v, _w, _iopSlot, _opSlot) binary_iop1(_v, _w, _iopSlot, _opSlot) // 1241
+
+static AlifObject* binary_iop(AlifObject* _v, AlifObject* _w,
+	const AlifIntT _iopSlot, const AlifIntT _opSlot) { // 1246
+	AlifObject* result = BINARY_IOP1(_v, _w, _iopSlot, _opSlot);
+	if (result == ALIF_NOTIMPLEMENTED) {
+		ALIF_DECREF(result);
+		//return binOp_typeError(_v, _w, opName);
+	}
+	return result;
+}
+
+ // 1276
+#define INPLACE_BINOP(_func, _iop, _op) \
+    AlifObject * _func(AlifObject *_v, AlifObject *_w) { \
+        return binary_iop(_v, _w, NB_SLOT(_iop), NB_SLOT(_op)); \
+    }
+
+INPLACE_BINOP(alifNumber_inPlaceOr, inplaceOr, or_)
+INPLACE_BINOP(alifNumber_inPlaceXor, inplaceXor, xor_)
+INPLACE_BINOP(alifNumber_inPlaceAnd, inplaceAnd, and_)
+INPLACE_BINOP(alifNumber_inPlaceLshift, inplaceLshift, lshift)
+INPLACE_BINOP(alifNumber_inPlaceRshift, inplaceRshift, rshift)
+INPLACE_BINOP(alifNumber_inPlaceSubtract, inplaceSubtract, subtract)
+INPLACE_BINOP(alifNumber_inPlaceFloorDivide, inplaceFloorDivide, floorDivide)
+INPLACE_BINOP(alifNumber_inPlaceTrueDivide, inplaceTrueDivide, trueDivide)
+INPLACE_BINOP(alifNumber_inPlaceRemainder, inplaceRemainder, remainder) // 1291
+
+
+
+
  // 1361
 #define UNARY_FUNC(_func, _op, _methName, _descr)                           \
     AlifObject* _func(AlifObject *o) {                                                  \
@@ -727,7 +776,52 @@ Fail:
 	return nullptr;
 }
 
+AlifObject* alifSequence_list(AlifObject* _v) { // 2075
+	AlifObject* result{};  /* result list */
+	AlifObject* rv{};          /* return value from alifList_extend */
 
+	if (_v == nullptr) {
+		return null_error();
+	}
+
+	result = alifList_new(0);
+	if (result == nullptr)
+		return nullptr;
+
+	rv = _alifList_extend((AlifListObject*)result, _v);
+	if (rv == nullptr) {
+		ALIF_DECREF(result);
+		return nullptr;
+	}
+	ALIF_DECREF(rv);
+	return result;
+}
+
+AlifObject* alifSequence_fast(AlifObject* _v, const char* _m) { // 2098
+	AlifObject* it{};
+
+	if (_v == nullptr) {
+		return null_error();
+	}
+
+	if (ALIFLIST_CHECKEXACT(_v) or ALIFTUPLE_CHECKEXACT(_v)) {
+		return ALIF_NEWREF(_v);
+	}
+
+	it = alifObject_getIter(_v);
+	if (it == nullptr) {
+		AlifThread* thread = _alifThread_get();
+		//if (alifErr_exceptionMatches(thread, _alifExcTypeError_)) {
+		//	alifErr_setString(thread, _alifExcTypeError_, _m);
+		//}
+		return nullptr;
+	}
+
+	_v = alifSequence_list(it);
+	ALIF_DECREF(it);
+
+	return _v;
+}
 
 
 AlifIntT alifMapping_check(AlifObject* _o) { // 2263

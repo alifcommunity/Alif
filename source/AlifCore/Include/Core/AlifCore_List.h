@@ -4,7 +4,7 @@
 
 
 
-
+AlifObject* _alifList_extend(AlifListObject*, AlifObject*); // 11
 
 AlifIntT alifList_appendTakeRefListResize(AlifListObject*, AlifObject*); // 17
 

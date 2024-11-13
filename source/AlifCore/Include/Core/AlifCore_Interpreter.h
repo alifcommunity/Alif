@@ -6,11 +6,12 @@
 #include "AlifCore_GC.h"
 #include "AlifCore_TypeID.h"
 #include "AlifCore_DoubleToASCII.h"
+#include "AlifCore_List.h"
 #include "AlifCore_Memory.h"
 #include "AlifCore_ThreadState.h"
-#include "AlifCore_Tuple.h"
 #include "AlifCore_GlobalObjects.h"
 #include "AlifCore_Import.h"
+#include "AlifCore_Tuple.h"
 #include "AlifCore_TypeObject.h"
 
 

@@ -2,6 +2,7 @@
 
 #define STRINGLIB_IS_UNICODE     1
 
+#define FASTSEARCH               asciiLib_fastSearch
 #define STRINGLIB(_F)			 asciiLib_##_F
 #define STRINGLIB_OBJECT         AlifUStrObject
 #define STRINGLIB_SIZEOF_CHAR    1

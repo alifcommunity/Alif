@@ -370,21 +370,33 @@ static AlifIntT ensure_uStr(AlifObject* _obj) { // 960
 
 // 976
 #include "StringLib/ASCIILib.h"
+#include "StringLib/FastSearch.h"
+#include "StringLib/Count.h"
+#include "StringLib/Find.h"
 #include "StringLib/FindMaxChar.h"
 #include "StringLib/Undef.h"
 
 #include "StringLib/UCS1Lib.h"
 #include "StringLib/FastSearch.h"
+#include "StringLib/Count.h"
+#include "StringLib/Find.h"
+#include "StringLib/Replace.h"
 #include "StringLib/FindMaxChar.h"
 #include "StringLib/Undef.h"
 
 #include "StringLib/UCS2Lib.h"
 #include "StringLib/FastSearch.h"
+#include "StringLib/Count.h"
+#include "StringLib/Find.h"
+#include "StringLib/Replace.h"
 #include "StringLib/FindMaxChar.h"
 #include "StringLib/Undef.h"
 
 #include "StringLib/UCS4Lib.h"
 #include "StringLib/FastSearch.h"
+#include "StringLib/Count.h"
+#include "StringLib/Find.h"
+#include "StringLib/Replace.h"
 #include "StringLib/FindMaxChar.h"
 #include "StringLib/Undef.h"
 
@@ -2245,13 +2257,13 @@ static AlifSizeT anyLib_find(AlifIntT _kind, AlifObject* _str1,
 	switch (_kind) {
 	case AlifUStrKind_::AlifUStr_1Byte_Kind:
 		if (ALIFUSTR_IS_ASCII(_str1) and ALIFUSTR_IS_ASCII(_str2))
-			return asciiLib_find(_buf1, _len1, _buf2, _len2, _offset);
+			return asciiLib_find((const AlifUCS1*)_buf1, _len1, (const AlifUCS1*)_buf2, _len2, _offset);
 		else
-			return ucs1Lib_find(_buf1, _len1, _buf2, _len2, _offset);
+			return ucs1Lib_find((const AlifUCS1*)_buf1, _len1, (const AlifUCS1*)_buf2, _len2, _offset);
 	case AlifUStrKind_::AlifUStr_2Byte_Kind:
-		return ucs2Lib_find(_buf1, _len1, _buf2, _len2, _offset);
+		return ucs2Lib_find((const AlifUCS2*)_buf1, _len1, (const AlifUCS2*)_buf2, _len2, _offset);
 	case AlifUStrKind_::AlifUStr_4Byte_Kind:
-		return ucs4Lib_find(_buf1, _len1, _buf2, _len2, _offset);
+		return ucs4Lib_find((const AlifUCS4*)_buf1, _len1, (const AlifUCS4*)_buf2, _len2, _offset);
 	}
 	ALIF_UNREACHABLE();
 }
@@ -2261,11 +2273,11 @@ static AlifSizeT anyLib_count(AlifIntT _kind, AlifObject* _sstr,
 	const void* _buf1, AlifSizeT _len1, AlifSizeT _maxCount) { // 10425
 	switch (_kind) {
 	case AlifUStrKind_::AlifUStr_1Byte_Kind:
-		return ucs1Lib_count(_sbuf, _slen, _buf1, _len1, _maxCount);
+		return ucs1Lib_count((const AlifUCS1*)_sbuf, _slen, (const AlifUCS1*)_buf1, _len1, _maxCount);
 	case AlifUStrKind_::AlifUStr_2Byte_Kind:
-		return ucs2Lib_count(_sbuf, _slen, _buf1, _len1, _maxCount);
+		return ucs2Lib_count((const AlifUCS2*)_sbuf, _slen, (const AlifUCS2*)_buf1, _len1, _maxCount);
 	case AlifUStrKind_::AlifUStr_4Byte_Kind:
-		return ucs4Lib_count(_sbuf, _slen, _buf1, _len1, _maxCount);
+		return ucs4Lib_count((const AlifUCS4*)_sbuf, _slen, (const AlifUCS4*)_buf1, _len1, _maxCount);
 	}
 	ALIF_UNREACHABLE();
 }
@@ -2522,117 +2534,6 @@ static AlifObject* replace(AlifObject* _self, AlifObject* _str1,
 		}
 	}
 
-static AlifIntT uStr_compare(AlifObject* _str1, AlifObject* _str2) { // 10847
-#define COMPARE(_type1, _type2) \
-    do { \
-        _type1* p1 = (_type1 *)data1; \
-        _type2* p2 = (_type2 *)data2; \
-        _type1* end = p1 + len; \
-        AlifUCS4 c1, c2; \
-        for (; p1 != end; p1++, p2++) { \
-            c1 = *p1; \
-            c2 = *p2; \
-            if (c1 != c2) \
-                return (c1 < c2) ? -1 : 1; \
-        } \
-    } \
-    while (0)
-
-	AlifIntT kind1{}, kind2{};
-	const void* data1{}, * data2{};
-	AlifSizeT len1{}, len2{}, len{};
-
-	kind1 = ALIFUSTR_KIND(_str1);
-	kind2 = ALIFUSTR_KIND(_str2);
-	data1 = ALIFUSTR_DATA(_str1);
-	data2 = ALIFUSTR_DATA(_str2);
-	len1 = ALIFUSTR_GET_LENGTH(_str1);
-	len2 = ALIFUSTR_GET_LENGTH(_str2);
-	len = ALIF_MIN(len1, len2);
-
-	switch (kind1) {
-	case AlifUStr_1Byte_Kind:
-	{
-		switch (kind2) {
-		case AlifUStr_1Byte_Kind:
-		{
-			AlifIntT cmp_ = memcmp(data1, data2, len);
-			if (cmp_ < 0)
-				return -1;
-			if (cmp_ > 0)
-				return 1;
-			break;
-		}
-		case AlifUStr_2Byte_Kind:
-			COMPARE(AlifUCS1, AlifUCS2);
-			break;
-		case AlifUStr_4Byte_Kind:
-			COMPARE(AlifUCS1, AlifUCS4);
-			break;
-		default:
-			ALIF_UNREACHABLE();
-		}
-		break;
-	}
-	case AlifUStr_2Byte_Kind:
-	{
-		switch (kind2) {
-		case AlifUStr_1Byte_Kind:
-			COMPARE(AlifUCS2, AlifUCS1);
-			break;
-		case AlifUStr_2Byte_Kind:
-		{
-			COMPARE(AlifUCS2, AlifUCS2);
-			break;
-		}
-		case AlifUStr_4Byte_Kind:
-			COMPARE(AlifUCS2, AlifUCS4);
-			break;
-		default:
-			ALIF_UNREACHABLE();
-		}
-		break;
-	}
-	case AlifUStr_4Byte_Kind:
-	{
-		switch (kind2) {
-		case AlifUStr_1Byte_Kind:
-			COMPARE(AlifUCS4, AlifUCS1);
-			break;
-		case AlifUStr_2Byte_Kind:
-			COMPARE(AlifUCS4, AlifUCS2);
-			break;
-		case AlifUStr_4Byte_Kind:
-		{
-#if defined(HAVE_WMEMCMP) and SIZEOF_WCHAR_T == 4
-			AlifIntT cmp_ = wmemcmp((wchar_t*)data1, (wchar_t*)data2, len);
-		if (cmp_ < 0)
-				return -1;
-			if (cmp_ > 0)
-				return 1;
-#else
-			COMPARE(AlifUCS4, AlifUCS4);
-#endif
-			break;
-		}
-		default:
-			ALIF_UNREACHABLE();
-		}
-		break;
-	}
-	default:
-		ALIF_UNREACHABLE();
-	}
-
-	if (len1 == len2)
-		return 0;
-	if (len1 < len2)
-		return -1;
-	else
-		return 1;
-
-#undef COMPARE
-=======
 	if (mayshrink) {
 		uStr_adjustMaxChar(&u);
 		if (u == nullptr)
@@ -2667,6 +2568,121 @@ error:
 		alifMem_dataFree((void*)buf2);
 	return nullptr;
 }
+
+
+
+static AlifIntT uStr_compare(AlifObject* _str1, AlifObject* _str2) { // 10847
+#define COMPARE(_type1, _type2) \
+    do { \
+        _type1* p1 = (_type1 *)data1; \
+        _type2* p2 = (_type2 *)data2; \
+        _type1* end = p1 + len; \
+        AlifUCS4 c1, c2; \
+        for (; p1 != end; p1++, p2++) { \
+            c1 = *p1; \
+            c2 = *p2; \
+            if (c1 != c2) \
+                return (c1 < c2) ? -1 : 1; \
+        } \
+    } \
+    while (0)
+
+	AlifIntT kind1{}, kind2{};
+	const void* data1{}, * data2{};
+	AlifSizeT len1{}, len2{}, len{};
+
+	kind1 = ALIFUSTR_KIND(_str1);
+	kind2 = ALIFUSTR_KIND(_str2);
+	data1 = ALIFUSTR_DATA(_str1);
+	data2 = ALIFUSTR_DATA(_str2);
+	len1 = ALIFUSTR_GET_LENGTH(_str1);
+	len2 = ALIFUSTR_GET_LENGTH(_str2);
+	len = ALIF_MIN(len1, len2);
+
+	switch (kind1) {
+	case AlifUStrKind_::AlifUStr_1Byte_Kind:
+	{
+		switch (kind2) {
+		case AlifUStrKind_::AlifUStr_1Byte_Kind:
+		{
+			AlifIntT cmp_ = memcmp(data1, data2, len);
+			if (cmp_ < 0)
+				return -1;
+			if (cmp_ > 0)
+				return 1;
+			break;
+		}
+		case AlifUStrKind_::AlifUStr_2Byte_Kind:
+			COMPARE(AlifUCS1, AlifUCS2);
+			break;
+		case AlifUStrKind_::AlifUStr_4Byte_Kind:
+			COMPARE(AlifUCS1, AlifUCS4);
+			break;
+		default:
+			ALIF_UNREACHABLE();
+		}
+		break;
+	}
+	case AlifUStrKind_::AlifUStr_2Byte_Kind:
+	{
+		switch (kind2) {
+		case AlifUStrKind_::AlifUStr_1Byte_Kind:
+			COMPARE(AlifUCS2, AlifUCS1);
+			break;
+		case AlifUStrKind_::AlifUStr_2Byte_Kind:
+		{
+			COMPARE(AlifUCS2, AlifUCS2);
+			break;
+		}
+		case AlifUStrKind_::AlifUStr_4Byte_Kind:
+			COMPARE(AlifUCS2, AlifUCS4);
+			break;
+		default:
+			ALIF_UNREACHABLE();
+		}
+		break;
+	}
+	case AlifUStrKind_::AlifUStr_4Byte_Kind:
+	{
+		switch (kind2) {
+		case AlifUStrKind_::AlifUStr_1Byte_Kind:
+			COMPARE(AlifUCS4, AlifUCS1);
+			break;
+		case AlifUStrKind_::AlifUStr_2Byte_Kind:
+			COMPARE(AlifUCS4, AlifUCS2);
+			break;
+		case AlifUStrKind_::AlifUStr_4Byte_Kind:
+		{
+#if defined(HAVE_WMEMCMP) and SIZEOF_WCHAR_T == 4
+			AlifIntT cmp_ = wmemcmp((wchar_t*)data1, (wchar_t*)data2, len);
+			if (cmp_ < 0)
+				return -1;
+			if (cmp_ > 0)
+				return 1;
+#else
+			COMPARE(AlifUCS4, AlifUCS4);
+#endif
+			break;
+		}
+		default:
+			ALIF_UNREACHABLE();
+		}
+		break;
+	}
+	default:
+		ALIF_UNREACHABLE();
+	}
+
+	if (len1 == len2)
+		return 0;
+	if (len1 < len2)
+		return -1;
+	else
+		return 1;
+
+#undef COMPARE
+}
+
 
 
 static AlifIntT uStrCompare_eq(AlifObject* _str1, AlifObject* _str2) { // 10963
