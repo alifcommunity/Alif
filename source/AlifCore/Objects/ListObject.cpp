@@ -107,6 +107,28 @@ static AlifIntT list_resize(AlifListObject* _self, AlifSizeT _newSize) { // 84
 	return 0;
 }
 
+static AlifIntT list_preallocateExact(AlifListObject* _self, AlifSizeT _size) { //167
+	AlifObject** items{};
+	_size = (_size + 1) & ~(size_t)1;
+#ifdef ALIF_GIL_DISABLED
+	AlifListArray* array = list_allocateArray(_size);
+	if (array == nullptr) {
+		//alifErr_noMemory();
+		return -1;
+	}
+	items = array->item;
+	memset(items, 0, _size * sizeof(AlifObject*));
+#else
+	items = alifMem_objAlloc(AlifObject*, _size);
+	if (items == nullptr) {
+		//alifErr_noMemory();
+		return -1;
+	}
+#endif
+	alifAtomic_storePtrRelaxed(&_self->item, items);
+	_self->allocated = _size;
+	return 0;
+}
 
 
 AlifObject* alifList_new(AlifSizeT _size) { // 212 
@@ -390,7 +412,71 @@ AlifIntT alifList_setSlice(AlifObject* _a, AlifSizeT _iLow,
 }
 
 
+static AlifIntT listInplaceRepeat_lockHeld(AlifListObject* _self, AlifSizeT _n) { // 968
+	AlifSizeT inputSize = ALIFLIST_GET_SIZE(_self);
+	if (inputSize == 0 or _n == 1) {
+		return 0;
+	}
 
+	if (_n < 1) {
+		list_clear(_self);
+		return 0;
+	}
+
+	if (inputSize > ALIF_SIZET_MAX / _n) {
+		//alifErr_noMemory();
+		return -1;
+	}
+	AlifSizeT outputSize = inputSize * _n;
+
+	if (list_resize(_self, outputSize) < 0) {
+		return -1;
+	}
+
+	AlifObject** items = _self->item;
+	for (AlifSizeT j = 0; j < inputSize; j++) {
+		ALIF_REFCNTADD(items[j], _n - 1);
+	}
+	alif_memoryRepeat((char*)items, sizeof(AlifObject*) * outputSize,
+		sizeof(AlifObject*) * inputSize);
+	return 0;
+}
+
+static AlifIntT list_extendFast(AlifListObject* _self, AlifObject* _iterable) { // 1120
+	AlifSizeT n_ = ALIFSEQUENCE_FAST_GET_SIZE(_iterable);
+	if (n_ == 0) {
+		return 0;
+	}
+
+	AlifSizeT m_ = ALIF_SIZE(_self);
+	if (_self->item == nullptr) {
+		if (list_preallocateExact(_self, n_) < 0) {
+			return -1;
+		}
+		ALIF_SET_SIZE(_self, n_);
+	}
+	else if (list_resize(_self, m_ + n_) < 0) {
+		return -1;
+	}
+	AlifObject** src_ = ALIFSEQUENCE_FAST_ITEMS(_iterable);
+	AlifObject** dest = _self->item + m_;
+	for (AlifSizeT i = 0; i < n_; i++) {
+		AlifObject* o_ = src_[i];
+		alifAtomic_storePtrRelaxed(&dest[i], ALIF_NEWREF(o_));
+	}
+	return 0;
+}
+
+static AlifIntT listExtend_lockHeld(AlifListObject* _self, AlifObject* _iterable) { // 1233
+	AlifObject* seq_ = alifSequence_fast(_iterable, "argument must be iterable");
+	if (!seq_) {
+		return -1;
+	}
+
+	AlifIntT res_ = list_extendFast(_self, seq_);
+	ALIF_DECREF(seq_);
+	return res_;
+}
 
 static AlifIntT _list_extend(AlifListObject* _self, AlifObject* _iterable) { // 1318
 	// Special case:
