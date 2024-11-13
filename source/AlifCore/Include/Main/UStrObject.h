@@ -116,6 +116,7 @@ static inline AlifUCS4 alifUnicode_lowSurrogate(AlifUCS4 ch) { // 42
 AlifObject* alifUStr_internFromString(const char*); // 247
 
 
+AlifIntT alifUStr_compare(AlifObject*, AlifObject*); // 944
 
 
 
@@ -366,3 +367,5 @@ void alifUStrWriter_dealloc(AlifUStrWriter*); // 607
 
 
 const char* alifUStr_asUTF8(AlifObject*); // 625
+
+

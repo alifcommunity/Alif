@@ -235,6 +235,26 @@ static AlifIntT set_containsEntry(AlifSetObject* _so, AlifObject* _key, AlifHash
 	return -1;
 }
 
+#define DISCARD_NOTFOUND 0
+#define DISCARD_FOUND 1
+
+static AlifIntT set_discardEntry(AlifSetObject* _so, AlifObject* _key, AlifHashT _hash) { // 347
+	SetEntry* entry{};
+	AlifObject* oldKey{};
+
+	entry = set_lookKey(_so, _key, _hash);
+	if (entry == nullptr)
+		return -1;
+	if (entry->key == nullptr)
+		return DISCARD_NOTFOUND;
+	oldKey = entry->key;
+	entry->key = DUMMY;
+	entry->hash = -1;
+	alifAtomic_storeSizeRelaxed(&_so->used, _so->used - 1);
+	ALIF_DECREF(oldKey);
+	return DISCARD_FOUND;
+}
+
 static AlifIntT set_addKey(AlifSetObject* _so, AlifObject* _key) { // 366
 	AlifHashT hash = alifObject_hashFast(_key);
 	if (hash == -1) {
@@ -250,6 +270,15 @@ static AlifIntT set_containsKey(AlifSetObject* _so, AlifObject* _key) { // 376
 	}
 	return set_containsEntry(_so, _key, hash);
 }
+
+static AlifIntT set_discardKey(AlifSetObject* _so, AlifObject* _key) { // 386
+	AlifHashT hash = alifObject_hashFast(_key);
+	if (hash == -1) {
+		return -1;
+	}
+	return set_discardEntry(_so, _key, hash);
+}
+
 
 static AlifIntT setMerge_lockHeld(AlifSetObject* _so, AlifObject* _otherSet) { // 578
 	AlifSetObject* other{};
@@ -443,6 +472,19 @@ AlifIntT alifSet_contains(AlifObject* _anySet, AlifObject* _key) { // 2628
 	AlifIntT rv_{};
 	ALIF_BEGIN_CRITICAL_SECTION(_anySet);
 	rv_ = set_containsKey((AlifSetObject*)_anySet, _key);
+	ALIF_END_CRITICAL_SECTION();
+	return rv_;
+}
+
+AlifIntT alifSet_discard(AlifObject* _set, AlifObject* _key) { // 2643
+ 	if (!ALIFSET_CHECK(_set)) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+
+	AlifIntT rv_;
+	ALIF_BEGIN_CRITICAL_SECTION(_set);
+	rv_ = set_discardKey((AlifSetObject*)_set, _key);
 	ALIF_END_CRITICAL_SECTION();
 	return rv_;
 }

@@ -209,6 +209,33 @@ void alifSymtable_free(AlifSymTable* _st) { // 485
 	alifMem_dataFree((void*)_st);
 }
 
+long alifST_getSymbol(AlifSTEntryObject* ste, AlifObject* name) { // 527
+	AlifObject* v_{};
+	if (alifDict_getItemRef(ste->symbols, name, &v_) < 0) {
+		return -1;
+	}
+	if (!v_) {
+		return 0;
+	}
+	long symbol = alifLong_asLong(v_);
+	ALIF_DECREF(v_);
+	if (symbol < 0) {
+		//if (!alifErr_occurred()) {
+			//alifErr_setString(_alifExcSystemError_, "invalid symbol");
+		//}
+		return -1;
+	}
+	return symbol;
+}
+
+AlifIntT alifST_getScope(AlifSTEntryObject* _ste, AlifObject* _name) { // 548
+	long symbol = alifST_getSymbol(_ste, _name);
+	if (symbol < 0) {
+		return -1;
+	}
+	return SYMBOL_TO_SCOPE(symbol);
+}
+
 AlifIntT alifST_isFunctionLike(AlifSTEntryObject* _ste) { // 558
 	return _ste->type == BlockType_::Function_Block
 		or _ste->type == BlockType_::Annotation_Block
@@ -216,6 +243,394 @@ AlifIntT alifST_isFunctionLike(AlifSTEntryObject* _ste) { // 558
 		or _ste->type == BlockType_::Type_Alias_Block
 		or _ste->type == BlockType_::Type_Parameters_Block;
 }
+
+static AlifIntT error_atDirective(AlifSTEntryObject* _ste, AlifObject* _name) { // 568
+	AlifSizeT i{};
+	AlifObject* data{};
+	for (i = 0; i < ALIFLIST_GET_SIZE(_ste->directives); i++) {
+		data = ALIFLIST_GET_ITEM(_ste->directives, i);
+		if (alifUStr_compare(ALIFTUPLE_GET_ITEM(data, 0), _name) == 0) {
+			//alifErr_rangedSyntaxLocationObject(_ste->table->filename,
+				//alifLong_asLong(ALIFTUPLE_GET_ITEM(data, 1)),
+				//alifLong_asLong(ALIFTUPLE_GET_ITEM(data, 2)) + 1,
+				//alifLong_asLong(ALIFTUPLE_GET_ITEM(data, 3)),
+				//alifLong_asLong(ALIFTUPLE_GET_ITEM(data, 4)) + 1);
+
+			return 0;
+		}
+	}
+	//alifErr_setString(_alifExcRuntimeError_,
+		//"BUG: internal directive bookkeeping broken");
+	return 0;
+}
+
+// 638
+#define SET_SCOPE(_dict, _name, _i) \
+    do { \
+        AlifObject *o_ = alifLong_fromLong(_i); \
+        if (!o_) \
+            return 0; \
+        if (alifDict_setItem((_dict), (_name), o_) < 0) { \
+            ALIF_DECREF(o_); \
+            return 0; \
+        } \
+        ALIF_DECREF(o_); \
+    } while(0)
+
+static AlifIntT analyze_name(AlifSTEntryObject* _ste, AlifObject* _scopes, AlifObject* _name, long _flags,
+	AlifObject* _bound, AlifObject* _local, AlifObject* _free,
+	AlifObject* _global, AlifObject* _typeParams, AlifSTEntryObject* _classEntry) { // 658
+	AlifIntT contains{};
+	if (_flags & DEF_GLOBAL) {
+		if (_flags & DEF_NONLOCAL) {
+			//alifErr_format(_alifExcSyntaxError_,
+				//"name '%U' is nonlocal and global",
+				//_name);
+			return error_atDirective(_ste, _name);
+		}
+		SET_SCOPE(_scopes, _name, GLOBAL_EXPLICIT);
+		if (alifSet_add(_global, _name) < 0)
+			return 0;
+		if (_bound and (alifSet_discard(_bound, _name) < 0))
+			return 0;
+		return 1;
+	}
+	if (_flags & DEF_NONLOCAL) {
+		if (!_bound) {
+			//alifErr_format(_alifExcSyntaxError_,
+				//"nonlocal declaration not allowed at module level");
+			return error_atDirective(_ste, _name);
+		}
+		contains = alifSet_contains(_bound, _name);
+		if (contains < 0) {
+			return 0;
+		}
+		if (!contains) {
+			//alifErr_format(_alifExcSyntaxError_,
+				//"no binding for nonlocal '%U' found",
+				//name);
+
+			return error_atDirective(_ste, _name);
+		}
+		contains = alifSet_contains(_typeParams, _name);
+		if (contains < 0) {
+			return 0;
+		}
+		if (contains) {
+			//alifErr_format(_alifExcSyntaxError_,
+				//"nonlocal binding not allowed for type parameter '%U'",
+				//name);
+			return error_atDirective(_ste, _name);
+		}
+		SET_SCOPE(_scopes, _name, FREE);
+		return alifSet_add(_free, _name) >= 0;
+	}
+	if (_flags & DEF_BOUND) {
+		SET_SCOPE(_scopes, _name, LOCAL);
+		if (alifSet_add(_local, _name) < 0)
+			return 0;
+		if (alifSet_discard(_global, _name) < 0)
+			return 0;
+		if (_flags & DEF_TYPE_PARAM) {
+			if (alifSet_add(_typeParams, _name) < 0)
+				return 0;
+		}
+		else {
+			if (alifSet_discard(_typeParams, _name) < 0)
+				return 0;
+		}
+		return 1;
+	}
+	if (_classEntry != nullptr) {
+		long class_flags = alifST_getSymbol(_classEntry, _name);
+		if (class_flags < 0) {
+			return 0;
+		}
+		if (class_flags & DEF_GLOBAL) {
+			SET_SCOPE(_scopes, _name, GLOBAL_EXPLICIT);
+			return 1;
+		}
+		else if ((class_flags & DEF_BOUND) and !(class_flags & DEF_NONLOCAL)) {
+			SET_SCOPE(_scopes, _name, GLOBAL_IMPLICIT);
+			return 1;
+		}
+	}
+	if (_bound) {
+		contains = alifSet_contains(_bound, _name);
+		if (contains < 0) {
+			return 0;
+		}
+		if (contains) {
+			SET_SCOPE(_scopes, _name, FREE);
+			return alifSet_add(_free, _name) >= 0;
+		}
+	}
+	if (_global) {
+		contains = alifSet_contains(_global, _name);
+		if (contains < 0) {
+			return 0;
+		}
+		if (contains) {
+			SET_SCOPE(_scopes, _name, GLOBAL_IMPLICIT);
+			return 1;
+		}
+	}
+	SET_SCOPE(_scopes, _name, GLOBAL_IMPLICIT);
+	return 1;
+}
+
+static AlifIntT isFree_inAnyChild(AlifSTEntryObject* _entry, AlifObject* _key) { // 777
+	for (AlifSizeT i = 0; i < ALIFLIST_GET_SIZE(_entry->children); i++) {
+		AlifSTEntryObject* childSte = (AlifSTEntryObject*)ALIFLIST_GET_ITEM(
+			_entry->children, i);
+		long scope = alifST_getScope(childSte, _key);
+		if (scope < 0) {
+			return -1;
+		}
+		if (scope == FREE) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+static AlifIntT inline_comprehension(AlifSTEntryObject* _ste, AlifSTEntryObject* _comp,
+	AlifObject* _scopes, AlifObject* _compFree,
+	AlifObject* _inlinedCells) { // 794
+	AlifObject* k_{}, * v_{};
+	AlifSizeT pos_ = 0;
+	AlifIntT removeDunderClass = 0;
+
+	while (alifDict_next(_comp->symbols, &pos_, &k_, &v_)) {
+		long compFlags = alifLong_asLong(v_);
+		//if (comp_flags == -1 and alifErr_occurred()) {
+			//return 0;
+		//}
+		if (compFlags & DEF_PARAM) {
+			continue;
+		}
+		AlifIntT scope = SYMBOL_TO_SCOPE(compFlags);
+		AlifIntT onlyFlags = compFlags & ((1 << SCOPE_OFFSET) - 1);
+		if (scope == CELL or onlyFlags & DEF_COMP_CELL) {
+			if (alifSet_add(_inlinedCells, k_) < 0) {
+				return 0;
+			}
+		}
+		AlifObject* existing = alifDict_getItemWithError(_ste->symbols, k_);
+		//if (existing == nullptr and alifErr_occurred()) {
+			//return 0;
+		//}
+		if (scope == FREE and _ste->type == BlockType_::Class_Block and
+			alifUStr_equalToASCIIString(k_, "__class__")) {
+			scope = GLOBAL_IMPLICIT;
+			if (alifSet_discard(_compFree, k_) < 0) {
+				return 0;
+			}
+			removeDunderClass = 1;
+		}
+		if (!existing) {
+			AlifObject* vFlags = alifLong_fromLong(onlyFlags);
+			if (vFlags == nullptr) {
+				return 0;
+			}
+			AlifIntT ok_ = alifDict_setItem(_ste->symbols, k_, vFlags);
+			ALIF_DECREF(vFlags);
+			if (ok_ < 0) {
+				return 0;
+			}
+			SET_SCOPE(_scopes, k_, scope);
+		}
+		else {
+			long flags = alifLong_asLong(existing);
+			//if (flags == -1 and alifErr_occurred()) {
+				//return 0;
+			//}
+			if ((flags & DEF_BOUND) and _ste->type != BlockType_::Class_Block) {
+				AlifIntT ok_ = isFree_inAnyChild(_comp, k_);
+				if (ok_ < 0) {
+					return 0;
+				}
+				if (!ok_) {
+					if (alifSet_discard(_compFree, k_) < 0) {
+						return 0;
+					}
+				}
+			}
+		}
+	}
+	if (removeDunderClass and alifDict_delItemString(_comp->symbols, "__class__") < 0) {
+		return 0;
+	}
+	return 1;
+}
+
+static AlifIntT analyze_cells(AlifObject* _scopes, AlifObject* _free, AlifObject* _inlinedCells) { // 885
+	AlifObject* name{}, * v_{}, * vCell{};
+	AlifIntT success = 0;
+	AlifSizeT pos_ = 0;
+
+	vCell = alifLong_fromLong(CELL);
+	if (!vCell)
+		return 0;
+	while (alifDict_next(_scopes, &pos_, &name, &v_)) {
+		long scope = alifLong_asLong(v_);
+		//if (scope == -1 and alifErr_occurred()) {
+			//goto error;
+		//}
+		if (scope != LOCAL)
+			continue;
+		AlifIntT contains = alifSet_contains(_free, name);
+		if (contains < 0) {
+			goto error;
+		}
+		if (!contains) {
+			contains = alifSet_contains(_inlinedCells, name);
+			if (contains < 0) {
+				goto error;
+			}
+			if (!contains) {
+				continue;
+			}
+		}
+		if (alifDict_setItem(_scopes, name, vCell) < 0)
+			goto error;
+		if (alifSet_discard(_free, name) < 0)
+			goto error;
+	}
+	success = 1;
+error:
+	ALIF_DECREF(vCell);
+	return success;
+}
+
+static AlifIntT drop_classFree(AlifSTEntryObject* _ste, AlifObject* _free) { // 930
+	AlifIntT res_{};
+	res_ = alifSet_discard(_free, &ALIF_ID(__class__));
+	if (res_ < 0)
+		return 0;
+	if (res_)
+		_ste->needsClassClosure = 1;
+	res_ = alifSet_discard(_free, &ALIF_ID(__classDict__));
+	if (res_ < 0)
+		return 0;
+	if (res_)
+		_ste->needsClassDict = 1;
+	return 1;
+}
+
+static AlifIntT update_symbols(AlifObject* _symbols, AlifObject* _scopes,
+	AlifObject* _bound, AlifObject* _free,
+	AlifObject* _inlinedCells, AlifIntT _classFlag) { // 951
+	AlifObject* name = nullptr, * itr_ = nullptr;
+	AlifObject* v_ = nullptr, * vScope = nullptr, * vNew = nullptr, * vFree = nullptr;
+	AlifSizeT pos_ = 0;
+
+	while (alifDict_next(_symbols, &pos_, &name, &v_)) {
+		long flags = alifLong_asLong(v_);
+		//if (flags == -1 and alifErr_occurred()) {
+			//return 0;
+		//}
+		AlifIntT contains = alifSet_contains(_inlinedCells, name);
+		if (contains < 0) {
+			return 0;
+		}
+		if (contains) {
+			flags |= DEF_COMP_CELL;
+		}
+		if (alifDict_getItemRef(_scopes, name, &vScope) < 0) {
+			return 0;
+		}
+		if (!vScope) {
+			//alifErr_setObject(_alifExcKeyError_, name);
+			return 0;
+		}
+		long scope = alifLong_asLong(vScope);
+		ALIF_DECREF(vScope);
+		//if (scope == -1 and alifErr_occurred()) {
+			//return 0;
+		//}
+		flags |= (scope << SCOPE_OFFSET);
+		vNew = alifLong_fromLong(flags);
+		if (!vNew)
+			return 0;
+		if (alifDict_setItem(_symbols, name, vNew) < 0) {
+			ALIF_DECREF(vNew);
+			return 0;
+		}
+		ALIF_DECREF(vNew);
+	}
+
+	vFree = alifLong_fromLong(FREE << SCOPE_OFFSET);
+	if (!vFree)
+		return 0;
+
+	itr_ = alifObject_getIter(_free);
+	if (itr_ == nullptr) {
+		ALIF_DECREF(vFree);
+		return 0;
+	}
+
+	while ((name = alifIter_next(itr_))) {
+		v_ = alifDict_getItemWithError(_symbols, name);
+
+		if (v_) {
+
+			if (_classFlag) {
+				long flags = alifLong_asLong(v_);
+				//if (flags == -1 and alifErr_occurred()) {
+					//goto error;
+				//}
+				flags |= DEF_FREE_CLASS;
+				vNew = alifLong_fromLong(flags);
+				if (!vNew) {
+					goto error;
+				}
+				if (alifDict_setItem(_symbols, name, vNew) < 0) {
+					ALIF_DECREF(vNew);
+					goto error;
+				}
+				ALIF_DECREF(vNew);
+			}
+			ALIF_DECREF(name);
+			continue;
+		}
+		//else if (alifErr_occurred()) {
+			//goto error;
+		//}
+		if (_bound) {
+			AlifIntT contains = alifSet_contains(_bound, name);
+			if (contains < 0) {
+				goto error;
+			}
+			if (!contains) {
+				ALIF_DECREF(name);
+				continue;       /* it's a global */
+			}
+		}
+		if (alifDict_setItem(_symbols, name, vFree) < 0) {
+			goto error;
+		}
+		ALIF_DECREF(name);
+	}
+
+	//if (alifErr_occurred()) {
+		//goto error;
+	//}
+
+	ALIF_DECREF(itr_);
+	ALIF_DECREF(vFree);
+	return 1;
+error:
+	ALIF_XDECREF(vFree);
+	ALIF_XDECREF(itr_);
+	ALIF_XDECREF(name);
+	return 0;
+}
+
+
+static AlifIntT analyze_childBlock(AlifSTEntryObject* , AlifObject* , AlifObject* ,
+	AlifObject* , AlifObject* , AlifSTEntryObject* , AlifObject** ); // 1092
+
 
 static AlifIntT analyze_block(AlifSTEntryObject* _ste, AlifObject* _bound, AlifObject* _free,
 	AlifObject* _global, AlifObject* _typeParams,
@@ -365,6 +780,42 @@ error:
 	ALIF_XDECREF(newFree);
 	ALIF_XDECREF(inlinedCells);
 	return success;
+}
+
+static AlifIntT analyze_childBlock(AlifSTEntryObject* _entry, AlifObject* _bound, AlifObject* _free,
+	AlifObject* _global, AlifObject* _typeParams,
+	AlifSTEntryObject* _classEntry, AlifObject** _childFree) { // 1292
+
+	AlifObject* tempBound = nullptr, * tempGlobal = nullptr, * tempFree = nullptr;
+	AlifObject* tempTypeParams = nullptr;
+
+	tempBound = alifSet_new(_bound);
+	if (!tempBound)
+		goto error;
+	tempFree = alifSet_new(_free);
+	if (!tempFree)
+		goto error;
+	tempGlobal = alifSet_new(_global);
+	if (!tempGlobal)
+		goto error;
+	tempTypeParams = alifSet_new(_typeParams);
+	if (!tempTypeParams)
+		goto error;
+
+	if (!analyze_block(_entry, tempBound, tempFree, tempGlobal,
+		tempTypeParams, _classEntry))
+		goto error;
+	*_childFree = tempFree;
+	ALIF_DECREF(tempBound);
+	ALIF_DECREF(tempGlobal);
+	ALIF_DECREF(tempTypeParams);
+	return 1;
+error:
+	ALIF_XDECREF(tempBound);
+	ALIF_XDECREF(tempFree);
+	ALIF_XDECREF(tempGlobal);
+	ALIF_XDECREF(tempTypeParams);
+	return 0;
 }
 
 static AlifIntT symtable_analyze(AlifSymTable* _st) { // 1333

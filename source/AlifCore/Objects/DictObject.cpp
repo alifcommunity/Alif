@@ -1789,6 +1789,17 @@ AlifIntT alifDict_getItemStringRef(AlifObject* _v,
 	return res;
 }
 
+AlifIntT alifDict_delItemString(AlifObject* _v, const char* _key) { // 4873
+	AlifObject* kv_{};
+	AlifIntT err_{};
+	kv_ = alifUStr_fromString(_key);
+	if (kv_ == nullptr)
+		return -1;
+	err_ = alifDict_delItem(_v, kv_);
+	ALIF_DECREF(kv_);
+	return err_;
+}
+
 AlifIntT alifDict_setItemString(AlifObject* _v,
 	const char* _key, AlifObject* _item) { // 4848
 	AlifObject* kv{};
