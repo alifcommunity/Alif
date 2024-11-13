@@ -30,6 +30,16 @@ AlifIntT alifDict_getItemStringRef(AlifObject* , const char* , AlifObject** ); /
 AlifObject* alifObject_genericGetDict(AlifObject*, void*); // 72
 
 
+
+
+extern AlifTypeObject _alifDictKeysType_;
+extern AlifTypeObject _alifDictValuesType_;
+extern AlifTypeObject _alifDictItemsType_;
+
+
+
+
+
 /* ---------------------------------------------------------------------------------------------------------------- */
 
 

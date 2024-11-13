@@ -17,6 +17,15 @@ extern AlifIntT _alifDict_next(AlifObject* , AlifSizeT* , AlifObject** , AlifObj
 
 #define ALIFDICT_HASSPLITTABLE(_d) ((_d)->values != nullptr) // 50
 
+
+class AlifDictViewObject { // 64
+public:
+	ALIFOBJECT_HEAD;
+	AlifDictObject* dict{};
+};
+
+
+
 class AlifDictKeyEntry { // 74
 public:
 	AlifHashT hash{};

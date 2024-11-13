@@ -70,6 +70,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_QSBR.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Run.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Semaphore.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_SetObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_State.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_SymTable.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Thread.h" />

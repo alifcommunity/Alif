@@ -1,8 +1,10 @@
 #include "alif.h"
 
+#include "AlifCore_Dict.h"
 #include "AlifCore_FreeList.h"
 #include "AlifCore_List.h"
 #include "AlifCore_Object.h"
+#include "AlifCore_SetObject.h"
 
 
 #ifdef ALIF_GIL_DISABLED
@@ -107,7 +109,8 @@ static AlifIntT list_resize(AlifListObject* _self, AlifSizeT _newSize) { // 84
 	return 0;
 }
 
-static AlifIntT list_preallocateExact(AlifListObject* _self, AlifSizeT _size) { //167
+static AlifIntT list_preallocateExact(AlifListObject* _self,
+	AlifSizeT _size) { //167
 	AlifObject** items{};
 	_size = (_size + 1) & ~(size_t)1;
 #ifdef ALIF_GIL_DISABLED
@@ -119,7 +122,7 @@ static AlifIntT list_preallocateExact(AlifListObject* _self, AlifSizeT _size) { 
 	items = array->item;
 	memset(items, 0, _size * sizeof(AlifObject*));
 #else
-	items = alifMem_objAlloc(AlifObject*, _size);
+	items = (AlifObject**)alifMem_objAlloc(_size * sizeof(AlifObject*)); // alif
 	if (items == nullptr) {
 		//alifErr_noMemory();
 		return -1;
@@ -476,6 +479,25 @@ static AlifIntT listExtend_lockHeld(AlifListObject* _self, AlifObject* _iterable
 	AlifIntT res_ = list_extendFast(_self, seq_);
 	ALIF_DECREF(seq_);
 	return res_;
+}
+
+static AlifIntT listExtend_set(AlifListObject* _self, AlifSetObject* _other) { // 1245
+	AlifSizeT m = ALIF_SIZE(_self);
+	AlifSizeT n = ALIFSET_GET_SIZE(_other);
+	if (list_resize(_self, m + n) < 0) {
+		return -1;
+	}
+	/* populate the end of self with iterable's items */
+	AlifSizeT setpos = 0;
+	AlifHashT hash{};
+	AlifObject* key{};
+	AlifObject** dest = _self->item + m;
+	while (_alifSet_nextEntryRef((AlifObject*)_other, &setpos, &key, &hash)) {
+		alifAtomic_storePtrRelease(&*dest, key);
+		dest++;
+	}
+	ALIF_SET_SIZE(_self, m + n);
+	return 0;
 }
 
 static AlifIntT _list_extend(AlifListObject* _self, AlifObject* _iterable) { // 1318

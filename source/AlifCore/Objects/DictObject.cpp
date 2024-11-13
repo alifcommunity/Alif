@@ -1813,6 +1813,50 @@ AlifIntT alifDict_setItemString(AlifObject* _v,
 	return err;
 }
 
+
+
+
+
+AlifTypeObject _alifDictKeysType_ = { // 6300
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "مفاتيح_قاموس",
+	.basicSize = sizeof(AlifDictViewObject),
+	.itemSize = 0,
+	/* methods */
+	.getAttro = alifObject_genericGetAttr,
+	.setAttro = 0,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
+};
+
+
+AlifTypeObject _alifDictItemsType_ = { // 6412
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "عناصر_قاموس",                            
+	.basicSize = sizeof(AlifDictViewObject),                
+	.itemSize = 0,                                         
+	/* methods */
+	.getAttr = 0,                                          
+	.setAttr = 0,                                          
+	.getAttro = alifObject_genericGetAttr,                    
+	.setAttro = 0,                                          
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
+};
+
+
+AlifTypeObject _alifDictValuesType_ = { // 6502
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "قيم_قاموس",                             
+	.basicSize = sizeof(AlifDictViewObject),                
+	.itemSize = 0,                                    
+	/* methods */
+	.getAttr = 0,                                        
+	.setAttr = 0,                                    
+	.getAttro = alifObject_genericGetAttr,                  
+	.setAttro = 0,                                    
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
+};
+
+
 void alifObject_initInlineValues(AlifObject* _obj, AlifTypeObject* _tp) {  // 6580
 	AlifDictKeysObject* keys = CACHED_KEYS(_tp);
 	AlifSizeT usable = alifAtomic_loadSizeRelaxed(&keys->usable);

@@ -10,7 +10,7 @@
 
 #define ALIF_REF_DEFERRED (ALIF_SIZET_MAX / 8) // 28
 
-static inline void _alif_refcntAdd(AlifObject* _op, AlifSizeT _n) { //132 
+static inline void _alif_refcntAdd(AlifObject* _op, AlifSizeT _n) { // 132 
 	if (ALIF_ISIMMORTAL(_op)) {
 		return;
 	}

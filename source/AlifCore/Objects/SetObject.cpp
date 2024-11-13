@@ -1,6 +1,7 @@
 #include "alif.h"
 #include "AlifCore_ObjectAlloc.h"
 #include "AlifCore_Dict.h"
+#include "AlifCore_SetObject.h"
 
 // was static but shows error
 extern AlifObject _dummyStruct_; // 59 // alif
@@ -280,6 +281,27 @@ static AlifIntT set_discardKey(AlifSetObject* _so, AlifObject* _key) { // 386
 }
 
 
+
+static AlifIntT set_next(AlifSetObject* so,
+	AlifSizeT* pos_ptr, SetEntry** entry_ptr) { // 468
+	AlifSizeT i{};
+	AlifSizeT mask{};
+	SetEntry* entry{};
+
+	i = *pos_ptr;
+	mask = so->mask;
+	entry = &so->table[i];
+	while (i <= mask && (entry->key == nullptr or entry->key == DUMMY)) {
+		i++;
+		entry++;
+	}
+	*pos_ptr = i + 1;
+	if (i > mask) return 0;
+	*entry_ptr = entry;
+	return 1;
+}
+
+
 static AlifIntT setMerge_lockHeld(AlifSetObject* _so, AlifObject* _otherSet) { // 578
 	AlifSetObject* other{};
 	AlifObject* key{};
@@ -503,6 +525,21 @@ AlifIntT alifSet_add(AlifObject* _anySet, AlifObject* _key) { // 2658
 	return rv_;
 }
 
+
+AlifIntT _alifSet_nextEntryRef(AlifObject* _set,
+	AlifSizeT* _pos, AlifObject** _key, AlifHashT* _hash) { // 2689
+	SetEntry* entry{};
+
+	if (!ALIFANYSET_CHECK(_set)) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+	if (set_next((AlifSetObject*)_set, _pos, &entry) == 0)
+		return 0;
+	*_key = ALIF_NEWREF(entry->key);
+	*_hash = entry->hash;
+	return 1;
+}
 
 
 static AlifTypeObject _alifSetDummyType_ = { // 2743

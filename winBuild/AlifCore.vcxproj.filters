@@ -645,6 +645,9 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Replace.h">
       <Filter>Include\Main\StringLib</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_SetObject.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Include">
