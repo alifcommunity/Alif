@@ -24,3 +24,13 @@ static inline AlifIntT alifList_appendTakeRef(AlifListObject* _self,
 	}
 	return alifList_appendTakeRefListResize(_self, _newItem);
 }
+
+
+static inline void alif_memoryRepeat(char* _dest, AlifSizeT _lenDest, AlifSizeT _lenSrc) { // 42
+	AlifSizeT copied = _lenSrc;
+	while (copied < _lenDest) {
+		AlifSizeT bytesToCopy = ALIF_MIN(copied, _lenDest - copied);
+		memcpy(_dest + copied, _dest, bytesToCopy);
+		copied += bytesToCopy;
+	}
+}

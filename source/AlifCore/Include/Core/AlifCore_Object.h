@@ -10,6 +10,31 @@
 
 #define ALIF_REF_DEFERRED (ALIF_SIZET_MAX / 8) // 28
 
+static inline void _alif_refcntAdd(AlifObject* _op, AlifSizeT _n) { //132 
+	if (ALIF_ISIMMORTAL(_op)) {
+		return;
+	}
+
+#if !defined(ALIF_GIL_DISABLED)
+	op->refLocal += _n;
+#else
+	if (alif_isOwnedByCurrentThread(_op)) {
+		uint32_t local = _op->refLocal;
+		AlifSizeT refcnt = (AlifSizeT)local + _n;
+#  if ALIF_SIZET_MAX > UINT32_MAX
+		if (refcnt > (AlifSizeT)UINT32_MAX) {
+
+			refcnt = ALIF_IMMORTAL_REFCNT_LOCAL;
+		}
+#  endif
+		alifAtomic_storeUint32Relaxed(&_op->refLocal, (uint32_t)refcnt);
+	}
+	else {
+		alifAtomic_addSize(&_op->refShared, (_n << ALIF_REF_SHARED_SHIFT));
+	}
+#endif
+}
+#define ALIF_REFCNTADD(_op, _n) _alif_refcntAdd(ALIFOBJECT_CAST(_op), _n)
 
 
 void alif_setImmortal(AlifObject*); // 162

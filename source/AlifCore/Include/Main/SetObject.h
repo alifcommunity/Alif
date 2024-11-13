@@ -17,7 +17,9 @@ AlifIntT alifSet_discard(AlifObject* , AlifObject* ); // 19
     (ALIF_IS_TYPE((_ob), &_alifFrozenSetType_) or \
       alifType_isSubType(ALIF_TYPE(_ob), &_alifFrozenSetType_))
 
-
+//28
+#define ALIFANYSET_CHECKEXACT(_ob) \
+    (ALIF_IS_TYPE((_ob), &_alifSetType_) or ALIF_IS_TYPE((_ob), &_alifFrozenSetType_))
 // 30
 #define ALIFANYSET_CHECK(_ob) \
 (ALIF_IS_TYPE((_ob), &_alifSetType_) or ALIF_IS_TYPE((_ob), &_alifFrozenSetType_) or \
