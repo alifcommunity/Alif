@@ -902,6 +902,35 @@ onError:
 
 
 
+double alifLong_asDouble(AlifObject* _v) { // 3526
+	AlifSizeT exponent{};
+	double x{};
+
+	if (_v == nullptr) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1.0;
+	}
+	if (!ALIFLONG_CHECK(_v)) {
+		//alifErr_setString(_alifExcTypeError_, "an integer is required");
+		return -1.0;
+	}
+	if (alifLong_isCompact((AlifLongObject*)_v)) {
+		/* Fast path; single digit long (31 bits) will cast safely
+		   to double.  This improves performance of FP/long operations
+		   by 20%.
+		*/
+		return (double)MEDIUM_VALUE((AlifLongObject*)_v);
+	}
+	x = _alifLong_frexp((AlifLongObject*)_v, &exponent);
+	if ((x == -1.0 /*and alifErr_occurred()*/) or exponent > DBL_MAX_EXP) {
+		//alifErr_setString(_alifExcOverflowError_,
+		//	"int too large to convert to float");
+		return -1.0;
+	}
+	return ldexp(x, (int)exponent);
+}
+
+
 
 static AlifLongObject* x_add(AlifLongObject* _a, AlifLongObject* _b) { // 3675
 	AlifSizeT sizeA = alifLong_digitCount(_a), sizeB = alifLong_digitCount(_b);
