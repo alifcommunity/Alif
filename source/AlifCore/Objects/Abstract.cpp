@@ -431,7 +431,7 @@ AlifObject* alifNumber_add(AlifObject* _v, AlifObject* _w) { // 1124
 static AlifObject* sequence_repeat(SizeArgFunc _repeatFunc, AlifObject* _seq, AlifObject* _n) { // 1143
 	AlifSizeT count{};
 	if (alifIndex_check(_n)) {
-		count = alifNumber_asSizeT(_n, _alifExcOverflowError_);
+		count = alifNumber_asSizeT(_n, nullptr /*_alifExcOverflowError_*/);
 		if (count == -1 /*and alifErr_occurred()*/) {
 			return nullptr;
 		}

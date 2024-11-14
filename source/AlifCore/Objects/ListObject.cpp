@@ -470,6 +470,82 @@ static AlifIntT list_extendFast(AlifListObject* _self, AlifObject* _iterable) { 
 	return 0;
 }
 
+
+
+static AlifIntT listExtendIter_lockHeld(AlifListObject* _self, AlifObject* _iterable) { // 1157
+	AlifObject* it = alifObject_getIter(_iterable);
+	if (it == nullptr) {
+		return -1;
+	}
+	AlifObject* (*iternext)(AlifObject*) = *ALIF_TYPE(it)->iterNext;
+
+	/* Guess a result list size. */
+	AlifSizeT n = alifObject_lengthHint(_iterable, 8);
+	if (n < 0) {
+		ALIF_DECREF(it);
+		return -1;
+	}
+
+	AlifSizeT m = ALIF_SIZE(_self);
+	if (m > ALIF_SIZET_MAX - n) {
+		/* m + n overflowed; on the chance that n lied, and there really
+		 * is enough room, ignore it.  If n was telling the truth, we'll
+		 * eventually run out of memory during the loop.
+		 */
+	}
+	else if (_self->item == nullptr) {
+		if (n and list_preallocateExact(_self, n) < 0)
+			goto error;
+	}
+	else {
+		/* Make room. */
+		if (list_resize(_self, m + n) < 0) {
+			goto error;
+		}
+
+		/* Make the list sane again. */
+		ALIF_SET_SIZE(_self, m);
+	}
+
+	/* Run iterator to exhaustion. */
+	for (;;) {
+		AlifObject* item = iternext(it);
+		if (item == nullptr) {
+			//if (alifErr_occurred()) {
+			//	if (alifErr_exceptionMatches(_alifExcStopIteration_))
+			//		alifErr_clear();
+			//	else
+			//		goto error;
+			//}
+			break;
+		}
+
+		if (ALIF_SIZE(_self) < _self->allocated) {
+			AlifSizeT len = ALIF_SIZE(_self);
+			alifAtomic_storePtrRelease(&_self->item[len], item); // alif
+			ALIF_SET_SIZE(_self, len + 1);
+		}
+		else {
+			if (alifList_appendTakeRef(_self, item) < 0)
+				goto error;
+		}
+	}
+
+	/* Cut back result list if initial guess was too large. */
+	if (ALIF_SIZE(_self) < _self->allocated) {
+		if (list_resize(_self, ALIF_SIZE(_self)) < 0)
+			goto error;
+	}
+
+	ALIF_DECREF(it);
+	return 0;
+
+error:
+	ALIF_DECREF(it);
+	return -1;
+}
+
+
 static AlifIntT listExtend_lockHeld(AlifListObject* _self, AlifObject* _iterable) { // 1233
 	AlifObject* seq_ = alifSequence_fast(_iterable, "argument must be iterable");
 	if (!seq_) {
@@ -509,7 +585,7 @@ static AlifIntT listExtend_dict(AlifListObject* _self, AlifDictObject* _dict, Al
 
 	AlifObject** dest = _self->item + m_;
 	AlifSizeT pos_ = 0;
-	AlifObject* keyValue[2];
+	AlifObject* keyValue[2]{};
 	while (_alifDict_next((AlifObject*)_dict, &pos_, &keyValue[0], &keyValue[1], nullptr)) {
 		AlifObject* obj = keyValue[_whichItem];
 		ALIF_INCREF(obj);
