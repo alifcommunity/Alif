@@ -42,7 +42,9 @@ void alif_setImmortalUntracked(AlifObject*); // 163
 
 
 
-
+static inline void _alif_decrefSpecialized(AlifObject* _op, const Destructor _destruct) { // 237
+	ALIF_DECREF(_op);
+}
 
 
 AlifSizeT alif_explicitMergeRefcount(AlifObject*, AlifSizeT); // 263

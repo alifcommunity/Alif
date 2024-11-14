@@ -38,15 +38,6 @@ static inline AlifIntT _alifLong_bothAreCompact(const AlifLongObject* _a,
 }
 
 
-
-static inline AlifSizeT alifLong_digitCount(const AlifLongObject* _op) { // 223
-	return _op->longValue.tag >> NON_SIZE_BITS;
-}
-
-static inline AlifIntT alifLong_nonCompactSign(const AlifLongObject* _op) { // 247
-	return 1 - (_op->longValue.tag & SIGN_MASK);
-}
-
 static inline bool _alifLong_isZero(const AlifLongObject* _op) { // 205
 	return (_op->longValue.tag & SIGN_MASK) == SIGN_ZERO;
 }
@@ -58,6 +49,20 @@ static inline bool _alifLong_isNegative(const AlifLongObject* op) { // 211
 static inline bool _alifLong_isPositive(const AlifLongObject* op) { // 217
 	return (op->longValue.tag & SIGN_MASK) == 0;
 }
+
+static inline AlifSizeT alifLong_digitCount(const AlifLongObject* _op) { // 223
+	return _op->longValue.tag >> NON_SIZE_BITS;
+}
+
+static inline AlifIntT alifLong_nonCompactSign(const AlifLongObject* _op) { // 247
+	return 1 - (_op->longValue.tag & SIGN_MASK);
+}
+
+static inline AlifIntT _alifLong_sameSign(const AlifLongObject* _a,
+	const AlifLongObject* _b) { // 256
+	return (_a->longValue.tag & SIGN_MASK) == (_b->longValue.tag & SIGN_MASK);
+}
+
 
 #define TAG_FROM_SIGN_AND_SIZE(_sign, _size) ((1 - (_sign)) | ((_size) << NON_SIZE_BITS)) // 262
 
