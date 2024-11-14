@@ -970,6 +970,20 @@ static AlifObject* long_add(AlifLongObject* _a, AlifLongObject* _b) { // 3795
 
 
 
+static AlifObject* long_long(AlifObject* _v) { // 5630
+	if (ALIFLONG_CHECKEXACT(_v)) {
+		return ALIF_NEWREF(_v);
+	}
+	else {
+		return _alifLong_copy((AlifLongObject*)_v);
+	}
+}
+
+
+
+
+
+
 
 
 
