@@ -1328,9 +1328,133 @@ static AlifObject* long_mul(AlifLongObject* _a, AlifLongObject* _b) { // 4275
 }
 
 
+static AlifObject* fast_mod(AlifLongObject* _a, AlifLongObject* _b) { // 4282
+	sdigit left = _a->longValue.digit[0];
+	sdigit right = _b->longValue.digit[0];
+	sdigit mod{};
+
+	sdigit sign = _alifLong_compactSign(_b);
+	if (_alifLong_sameSign(_a, _b)) {
+		mod = left % right;
+	}
+	else {
+		/* Either 'a' or 'b' is negative. */
+		mod = right - 1 - (left - 1) % right;
+	}
+
+	return alifLong_fromLong(mod * sign);
+}
+
+static AlifIntT l_mod(AlifLongObject* _v, AlifLongObject* _w, AlifLongObject** _pmod) { // 4464
+	AlifLongObject* mod{};
+
+	if (alifLong_digitCount(_v) == 1 and alifLong_digitCount(_w) == 1) {
+		/* Fast path for single-digit longs */
+		*_pmod = (AlifLongObject*)fast_mod(_v, _w);
+		return -(*_pmod == nullptr);
+	}
+	if (long_rem(_v, _w, &mod) < 0)
+		return -1;
+	if ((_alifLong_isNegative(mod) and _alifLong_isPositive(_w)) ||
+		(_alifLong_isPositive(mod) and _alifLong_isNegative(_w))) {
+		AlifLongObject* temp{};
+		temp = (AlifLongObject*)long_add(mod, _w);
+		ALIF_SETREF(mod, temp);
+		if (mod == nullptr) return -1;
+	}
+	*_pmod = mod;
+
+	return 0;
+}
+
+static AlifObject* long_div(AlifObject* _a, AlifObject* _b) { // 4490
+	AlifLongObject* div{};
+
+	CHECK_BINOP(_a, _b);
+
+	if (alifLong_digitCount((AlifLongObject*)_a) == 1
+		and alifLong_digitCount((AlifLongObject*)_b) == 1) {
+		return fast_floorDiv((AlifLongObject*)_a, (AlifLongObject*)_b);
+	}
+
+	if (l_divmod((AlifLongObject*)_a, (AlifLongObject*)_b, &div, nullptr) < 0) div = nullptr;
+	return (AlifObject*)div;
+}
+
+static AlifObject* long_mod(AlifObject* _a, AlifObject* _b) { // 4768
+	AlifLongObject* mod{};
+
+	CHECK_BINOP(_a, _b);
+
+	if (l_mod((AlifLongObject*)_a, (AlifLongObject*)_b, &mod) < 0) mod = nullptr;
+	return (AlifObject*)mod;
+}
 
 
 
+static AlifObject* long_invert(AlifLongObject* _v) { // 5175
+	/* Implement ~x as -(x+1) */
+	AlifLongObject* x{};
+	if (alifLong_isCompact(_v))
+		return _alifLong_fromSTwoDigits(~MEDIUM_VALUE(_v));
+	x = (AlifLongObject*)long_add(_v, (AlifLongObject*)_alifLong_getOne());
+	if (x == nullptr) return nullptr;
+	_alifLong_negate(&x);
+	/* No need for maybe_small_long here, since any small longs
+	   will have been caught in the alifLong_isCompact() fast path. */
+	return (AlifObject*)x;
+}
+
+static AlifObject* long_neg(AlifLongObject* _v) { // 5191
+	AlifLongObject* z{};
+	if (alifLong_isCompact(_v))
+		return _alifLong_fromSTwoDigits(-MEDIUM_VALUE(_v));
+	z = (AlifLongObject*)_alifLong_copy(_v);
+	if (z != nullptr) _alifLong_flipSign(z);
+	return (AlifObject*)z;
+}
+
+static AlifObject* long_abs(AlifLongObject* _v) { // 5203
+	if (_alifLong_isNegative(_v))
+		return long_neg(_v);
+	else
+		return long_long((AlifObject*)_v);
+}
+
+static AlifIntT long_bool(AlifLongObject* _v) { // 5212
+	return !_alifLong_isZero(_v);
+}
+
+
+static AlifObject* long_and(AlifObject* _a, AlifObject* _b) { // 5594
+	CHECK_BINOP(_a, _b);
+	AlifLongObject* x = (AlifLongObject*)_a;
+	AlifLongObject* y = (AlifLongObject*)_b;
+	if (alifLong_isCompact(x) and alifLong_isCompact(y)) {
+		return _alifLong_fromSTwoDigits(MEDIUM_VALUE(x) & MEDIUM_VALUE(y));
+	}
+	return long_bitwise(x, '&', y);
+}
+
+static AlifObject* long_xor(AlifObject* _a, AlifObject* _b) { // 5606
+	CHECK_BINOP(_a, _b);
+	AlifLongObject* x = (AlifLongObject*)_a;
+	AlifLongObject* y = (AlifLongObject*)_b;
+	if (alifLong_isCompact(x) and alifLong_isCompact(y)) {
+		return _alifLong_fromSTwoDigits(MEDIUM_VALUE(x) ^ MEDIUM_VALUE(y));
+	}
+	return long_bitwise(x, '^', y);
+}
+
+static AlifObject* long_or(AlifObject* _a, AlifObject* _b) { // 5618
+	CHECK_BINOP(_a, _b);
+	AlifLongObject* x = (AlifLongObject*)_a;
+	AlifLongObject* y = (AlifLongObject*)_b;
+	if (alifLong_isCompact(x) and alifLong_isCompact(y)) {
+		return _alifLong_fromSTwoDigits(MEDIUM_VALUE(x) | MEDIUM_VALUE(y));
+	}
+	return long_bitwise(x, '|', y);
+}
 
 
 static AlifObject* long_long(AlifObject* _v) { // 5630
@@ -1343,7 +1467,12 @@ static AlifObject* long_long(AlifObject* _v) { // 5630
 }
 
 
-
+static AlifObject* long_float(AlifObject* _v) { // 5848
+	double result{};
+	result = alifLong_asDouble(_v);
+	if (result == -1.0 /*and alifErr_occurred()*/) return nullptr;
+	return alifFloat_fromDouble(result);
+}
 
 
 
@@ -1361,7 +1490,7 @@ static AlifNumberMethods _longAsNumber_ = { // 6560
 	.negative = (UnaryFunc)long_neg,   
 	.positive = long_long,             
 	.absolute = (UnaryFunc)long_abs,
-	.sqrt = long_sqrt,
+	//.sqrt = long_sqrt,
 	.bool_ = (Inquiry)long_bool,    
 	.invert = (UnaryFunc)long_invert,
 	.lshift = long_lshift,           

@@ -54,6 +54,10 @@ static inline AlifSizeT alifLong_digitCount(const AlifLongObject* _op) { // 223
 	return _op->longValue.tag >> NON_SIZE_BITS;
 }
 
+static inline AlifIntT _alifLong_compactSign(const AlifLongObject* _op) { // 239
+	return 1 - (_op->longValue.tag & SIGN_MASK);
+}
+
 static inline AlifIntT alifLong_nonCompactSign(const AlifLongObject* _op) { // 247
 	return 1 - (_op->longValue.tag & SIGN_MASK);
 }
