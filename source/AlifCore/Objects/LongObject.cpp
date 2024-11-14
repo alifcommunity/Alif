@@ -14,6 +14,15 @@
 
 //#define WITH_ALIFLONG_MODULE 1 // 32
 
+
+
+static inline AlifIntT is_mediumInt(stwodigits _x) { // 41
+	/* Take care that we are comparing unsigned values. */
+	twodigits xPlusMask = ((twodigits)_x) + ALIFLONG_MASK;
+	return xPlusMask < ((twodigits)ALIFLONG_MASK) + ALIFLONG_BASE;
+}
+
+
 static AlifObject* get_smallInt(sdigit _iVal) { // 50
 	return (AlifObject*)&ALIFLONG_SMALL_INTS[ALIF_NSMALLNEGINTS + _iVal];
 }
@@ -120,6 +129,51 @@ static AlifObject* _alifLong_fromMedium(sdigit _x) { // 203
 	_alifObject_init((AlifObject*)v_, &_alifLongType_);
 	v_->longValue.digit[0] = abs_x;
 	return (AlifObject*)v_;
+}
+
+static AlifObject* _alifLong_fromLarge(stwodigits _iVal) { // 221
+	twodigits absIVal{};
+	AlifIntT sign{};
+
+	if (_iVal < 0) {
+		/* negate: can't write this as abs_ival = -ival since that
+		   invokes undefined behaviour when ival is LONG_MIN */
+		absIVal = 0U - (twodigits)_iVal;
+		sign = -1;
+	}
+	else {
+		absIVal = (twodigits)_iVal;
+		sign = 1;
+	}
+	/* Must be at least two digits */
+	twodigits t = absIVal >> (ALIFLONG_SHIFT * 2);
+	AlifSizeT ndigits = 2;
+	while (t) {
+		++ndigits;
+		t >>= ALIFLONG_SHIFT;
+	}
+	AlifLongObject* v = alifLong_new(ndigits);
+	if (v != nullptr) {
+		digit* p = v->longValue.digit;
+		_alifLong_setSignAndDigitCount(v, sign, ndigits);
+		t = absIVal;
+		while (t) {
+			*p++ = ALIF_SAFE_DOWNCAST(
+				t & ALIFLONG_MASK, twodigits, digit);
+			t >>= ALIFLONG_SHIFT;
+		}
+	}
+	return (AlifObject*)v;
+}
+
+static inline AlifObject* _alifLong_fromSTwoDigits(stwodigits _x) { // 261
+	if (IS_SMALL_INT(_x)) {
+		return get_smallInt((sdigit)_x);
+	}
+	if (is_mediumInt(_x)) {
+		return _alifLong_fromMedium((sdigit)_x);
+	}
+	return _alifLong_fromLarge(_x);
 }
 
 
@@ -378,6 +432,18 @@ AlifObject* alifLong_fromVoidPtr(void* _p) { // 1349
 
 
 
+ // 1820
+#define CHECK_BINOP(_v,_w)									\
+    do {													\
+        if (!ALIFLONG_CHECK(_v) or !ALIFLONG_CHECK(_w))     \
+            return ALIF_NOTIMPLEMENTED;						\
+    } while(0)
+
+
+
+
+
+
 unsigned char _alifLongDigitValue_[256] = { // 2527
 	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
 	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
@@ -580,7 +646,8 @@ static AlifIntT long_fromNonBinaryBase(const char* _start,
 }
 
 
-static AlifIntT long_fromStringBase(const char** _str, AlifIntT _base, AlifLongObject** _res) { // 2902
+static AlifIntT long_fromStringBase(const char** _str,
+	AlifIntT _base, AlifLongObject** _res) { // 2902
 	const char* start{}, * end{}, * p{};
 	char prev = 0;
 	AlifSizeT digits = 0;
@@ -771,6 +838,180 @@ onError:
 }
 
 
+
+
+
+static AlifLongObject* x_add(AlifLongObject* _a, AlifLongObject* _b) { // 3675
+	AlifSizeT sizeA = alifLong_digitCount(_a), sizeB = alifLong_digitCount(_b);
+	AlifLongObject* z{};
+	AlifSizeT i{};
+	digit carry = 0;
+
+	/* Ensure a is the larger of the two: */
+	if (sizeA < sizeB) {
+		{ AlifLongObject* temp = _a; _a = _b; _b = temp; }
+		{
+			AlifSizeT size_temp = sizeA;
+			sizeA = sizeB;
+			sizeB = size_temp;
+		}
+	}
+	z = alifLong_new(sizeA + 1);
+	if (z == nullptr) return nullptr;
+	for (i = 0; i < sizeB; ++i) {
+		carry += _a->longValue.digit[i] + _b->longValue.digit[i];
+		z->longValue.digit[i] = carry & ALIFLONG_MASK;
+		carry >>= ALIFLONG_SHIFT;
+	}
+	for (; i < sizeA; ++i) {
+		carry += _a->longValue.digit[i];
+		z->longValue.digit[i] = carry & ALIFLONG_MASK;
+		carry >>= ALIFLONG_SHIFT;
+	}
+	z->longValue.digit[i] = carry;
+	return long_normalize(z);
+}
+
+static AlifLongObject* x_sub(AlifLongObject* a, AlifLongObject* b) { // 3709
+	AlifSizeT sizeA = alifLong_digitCount(a), sizeB = alifLong_digitCount(b);
+	AlifLongObject* z{};
+	AlifSizeT i{};
+	AlifIntT sign = 1;
+	digit borrow = 0;
+
+	/* Ensure a is the larger of the two: */
+	if (sizeA < sizeB) {
+		sign = -1;
+		{ AlifLongObject* temp = a; a = b; b = temp; }
+		{
+			AlifSizeT size_temp = sizeA;
+			sizeA = sizeB;
+			sizeB = size_temp;
+		}
+	}
+	else if (sizeA == sizeB) {
+		/* Find highest digit where a and b differ: */
+		i = sizeA;
+		while (--i >= 0 and a->longValue.digit[i] == b->longValue.digit[i])
+			;
+		if (i < 0)
+			return (AlifLongObject*)alifLong_fromLong(0);
+		if (a->longValue.digit[i] < b->longValue.digit[i]) {
+			sign = -1;
+			{ AlifLongObject* temp = a; a = b; b = temp; }
+		}
+		sizeA = sizeB = i + 1;
+	}
+	z = alifLong_new(sizeA);
+	if (z == nullptr) return nullptr;
+	for (i = 0; i < sizeB; ++i) {
+		/* The following assumes unsigned arithmetic
+		   works module 2**N for some N>ALIFLONG_SHIFT. */
+		borrow = a->longValue.digit[i] - b->longValue.digit[i] - borrow;
+		z->longValue.digit[i] = borrow & ALIFLONG_MASK;
+		borrow >>= ALIFLONG_SHIFT;
+		borrow &= 1; /* Keep only one sign bit */
+	}
+	for (; i < sizeA; ++i) {
+		borrow = a->longValue.digit[i] - borrow;
+		z->longValue.digit[i] = borrow & ALIFLONG_MASK;
+		borrow >>= ALIFLONG_SHIFT;
+		borrow &= 1; /* Keep only one sign bit */
+	}
+	if (sign < 0) {
+		_alifLong_flipSign(z);
+	}
+	return maybe_smallLong(long_normalize(z));
+}
+
+
+AlifObject* _alifLong_add(AlifLongObject* _a, AlifLongObject* _b) { // 3763
+	if (_alifLong_bothAreCompact(_a, _b)) {
+		return _alifLong_fromSTwoDigits(MEDIUM_VALUE(_a) + MEDIUM_VALUE(_b));
+	}
+
+	AlifLongObject* z{};
+	if (_alifLong_isNegative(_a)) {
+		if (_alifLong_isNegative(_b)) {
+			z = x_add(_a, _b);
+			if (z != nullptr) {
+				/* x_add received at least one multiple-digit int,
+				   and thus z must be a multiple-digit int.
+				   That also means z is not an element of
+				   small_ints, so negating it in-place is safe. */
+				_alifLong_flipSign(z);
+			}
+		}
+		else
+			z = x_sub(_b, _a);
+	}
+	else {
+		if (_alifLong_isNegative(_b))
+			z = x_sub(_a, _b);
+		else
+			z = x_add(_a, _b);
+	}
+	return (AlifObject*)z;
+}
+
+
+static AlifObject* long_add(AlifLongObject* _a, AlifLongObject* _b) { // 3795
+	CHECK_BINOP(_a, _b);
+	return _alifLong_add(_a, _b);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+static AlifNumberMethods _longAsNumber_ = { // 6560
+	.add_ = (BinaryFunc)long_add,  
+	.subtract = (BinaryFunc)long_sub,
+	.multiply = (BinaryFunc)long_mul,  
+	.remainder = long_mod,              
+	.divmod = long_divmod,           
+	.power = long_pow,              
+	.negative = (UnaryFunc)long_neg,   
+	.positive = long_long,             
+	.absolute = (UnaryFunc)long_abs,
+	.sqrt = long_sqrt,
+	.bool_ = (Inquiry)long_bool,    
+	.invert = (UnaryFunc)long_invert,
+	.lshift = long_lshift,           
+	.rshift = long_rshift,           
+	.and_ = long_and,              
+	.xor_ = long_xor,              
+	.or_ = long_or,               
+	.int_ = long_long,             
+	.reserved = 0,                     
+	.float_ = long_float,            
+	.inplaceAdd = 0,                     
+	.inplaceSubtract = 0,                     
+	.inplaceMultiply = 0,                     
+	.inplaceRemainder = 0,                     
+	.inplacePower = 0,                     
+	.inplaceLshift = 0,                     
+	.inplaceRshift = 0,                     
+	.inplaceAnd = 0,                     
+	.inplaceXor = 0,                     
+	.inplaceOr = 0,                     
+	.floorDivide = long_div,              
+	.trueDivide = long_true_divide,      
+	.inplaceFloorDivide = 0,                     
+	.inplaceTrueDivide = 0,                     
+	.index = long_long,
+};
+
 AlifTypeObject _alifLongType_ = { // 6597
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "عدد_صحيح",                                   
@@ -779,7 +1020,7 @@ AlifTypeObject _alifLongType_ = { // 6597
 	//.dealloc = long_dealloc,                               
                                         
 	//.repr = long_toDecimalString,                     
-	//.asNumber = &_longAsNumber_,
+	.asNumber = &_longAsNumber_,
                                         
 	//.hash = long_hash,                                  
                                         

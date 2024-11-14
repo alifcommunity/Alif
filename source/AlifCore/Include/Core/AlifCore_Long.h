@@ -15,7 +15,7 @@ static inline AlifObject* _alifLong_getZero() { // 68
 	return (AlifObject*)&ALIFLONG_SMALL_INTS[ALIF_NSMALLNEGINTS];
 }
 
-
+AlifObject* _alifLong_add(AlifLongObject*, AlifLongObject*); // 113
 
 extern unsigned char _alifLongDigitValue_[256]; // 118
 
@@ -29,6 +29,13 @@ extern unsigned char _alifLongDigitValue_[256]; // 118
 #define SIGN_ZERO 1
 #define SIGN_NEGATIVE 2
 #define NON_SIZE_BITS 3
+
+
+
+static inline AlifIntT _alifLong_bothAreCompact(const AlifLongObject* _a,
+	const AlifLongObject* _b) { // 198
+	return (_a->longValue.tag | _b->longValue.tag) < (2 << NON_SIZE_BITS);
+}
 
 
 

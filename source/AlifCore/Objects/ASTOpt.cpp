@@ -178,9 +178,11 @@ static AlifObject* safe_multiply(AlifObject* _v, AlifObject* _w) { // 166
 			}
 		}
 	}
-	else if (ALIFLONG_CHECK(_w) and
-		(ALIFTUPLE_CHECK(_v) or ALIFUSTR_CHECK(_v) or ALIFBYTES_CHECK(_v)))
-	{
+	else if (ALIFLONG_CHECK(_w)
+		and (ALIFTUPLE_CHECK(_v)
+			or ALIFUSTR_CHECK(_v)
+			or ALIFBYTES_CHECK(_v))
+		) {
 		return safe_multiply(_w, _v);
 	}
 
