@@ -1455,6 +1455,108 @@ static AlifIntT long_bool(AlifLongObject* _v) { // 5212
 }
 
 
+static AlifObject* long_bitwise(AlifLongObject* _a,
+	char _op,  /* '&', '|', '^' */ AlifLongObject* _b) { // 5473
+	AlifIntT nega{}, negb{}, negz{};
+	AlifSizeT sizeA{}, sizeB{}, sizeZ{}, i{};
+	AlifLongObject* z{};
+
+	   /* If a is negative, replace it by its two's complement. */
+	sizeA = alifLong_digitCount(_a);
+	nega = _alifLong_isNegative(_a);
+	if (nega) {
+		z = alifLong_new(sizeA);
+		if (z == nullptr) return nullptr;
+		v_complement(z->longValue.digit, _a->longValue.digit, sizeA);
+		_a = z;
+	}
+	else
+		/* Keep reference count consistent. */
+		ALIF_INCREF(_a);
+
+	/* Same for b. */
+	sizeB = alifLong_digitCount(_b);
+	negb = _alifLong_isNegative(_b);
+	if (negb) {
+		z = alifLong_new(sizeB);
+		if (z == nullptr) {
+			ALIF_DECREF(_a);
+			return nullptr;
+		}
+		v_complement(z->longValue.digit, _b->longValue.digit, sizeB);
+		_b = z;
+	}
+	else ALIF_INCREF(_b);
+
+	/* Swap a and b if necessary to ensure size_a >= size_b. */
+	if (sizeA < sizeB) {
+		z = _a; _a = _b; _b = z;
+		sizeZ = sizeA; sizeA = sizeB; sizeB = sizeZ;
+		negz = nega; nega = negb; negb = negz;
+	}
+
+	switch (_op) {
+	case '^':
+		negz = nega ^ negb;
+		sizeZ = sizeA;
+		break;
+	case '&':
+		negz = nega & negb;
+		sizeZ = negb ? sizeA : sizeB;
+		break;
+	case '|':
+		negz = nega | negb;
+		sizeZ = negb ? sizeB : sizeA;
+		break;
+	default:
+		ALIF_UNREACHABLE();
+	}
+
+	z = alifLong_new(sizeZ + negz);
+	if (z == nullptr) {
+		ALIF_DECREF(_a);
+		ALIF_DECREF(_b);
+		return nullptr;
+	}
+
+	/* Compute digits for overlap of a and b. */
+	switch (_op) {
+	case '&':
+		for (i = 0; i < sizeB; ++i)
+			z->longValue.digit[i] = _a->longValue.digit[i] & _b->longValue.digit[i];
+		break;
+	case '|':
+		for (i = 0; i < sizeB; ++i)
+			z->longValue.digit[i] = _a->longValue.digit[i] | _b->longValue.digit[i];
+		break;
+	case '^':
+		for (i = 0; i < sizeB; ++i)
+			z->longValue.digit[i] = _a->longValue.digit[i] ^ _b->longValue.digit[i];
+		break;
+	default:
+		ALIF_UNREACHABLE();
+	}
+
+	/* Copy any remaining digits of a, inverting if necessary. */
+	if (_op == '^' && negb)
+		for (; i < sizeZ; ++i)
+			z->longValue.digit[i] = _a->longValue.digit[i] ^ ALIFLONG_MASK;
+	else if (i < sizeZ)
+		memcpy(&z->longValue.digit[i], &_a->longValue.digit[i],
+			(sizeZ - i) * sizeof(digit));
+
+	/* Complement result if negative. */
+	if (negz) {
+		_alifLong_flipSign(z);
+		z->longValue.digit[sizeZ] = ALIFLONG_MASK;
+		v_complement(z->longValue.digit, z->longValue.digit, sizeZ + 1);
+	}
+
+	ALIF_DECREF(_a);
+	ALIF_DECREF(_b);
+	return (AlifObject*)maybe_smallLong(long_normalize(z));
+}
+
 static AlifObject* long_and(AlifObject* _a, AlifObject* _b) { // 5594
 	CHECK_BINOP(_a, _b);
 	AlifLongObject* x = (AlifLongObject*)_a;
