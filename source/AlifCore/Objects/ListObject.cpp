@@ -463,9 +463,9 @@ static AlifIntT list_extendFast(AlifListObject* _self, AlifObject* _iterable) { 
 	}
 	AlifObject** src_ = ALIFSEQUENCE_FAST_ITEMS(_iterable);
 	AlifObject** dest = _self->item + m_;
-	for (AlifSizeT i = 0; i < n_; i++) {
-		AlifObject* o_ = src_[i];
-		alifAtomic_storePtrRelaxed(&dest[i], ALIF_NEWREF(o_));
+	for (AlifSizeT i_ = 0; i_ < n_; i_++) {
+		AlifObject* o_ = src_[i_];
+		alifAtomic_storePtrRelaxed(&dest[i_], ALIF_NEWREF(o_));
 	}
 	return 0;
 }
@@ -482,23 +482,71 @@ static AlifIntT listExtend_lockHeld(AlifListObject* _self, AlifObject* _iterable
 }
 
 static AlifIntT listExtend_set(AlifListObject* _self, AlifSetObject* _other) { // 1245
-	AlifSizeT m = ALIF_SIZE(_self);
-	AlifSizeT n = ALIFSET_GET_SIZE(_other);
-	if (list_resize(_self, m + n) < 0) {
+	AlifSizeT m_ = ALIF_SIZE(_self);
+	AlifSizeT n_ = ALIFSET_GET_SIZE(_other);
+	if (list_resize(_self, m_ + n_) < 0) {
 		return -1;
 	}
 	/* populate the end of self with iterable's items */
 	AlifSizeT setpos = 0;
 	AlifHashT hash{};
 	AlifObject* key{};
-	AlifObject** dest = _self->item + m;
+	AlifObject** dest = _self->item + m_;
 	while (_alifSet_nextEntryRef((AlifObject*)_other, &setpos, &key, &hash)) {
 		alifAtomic_storePtrRelease(&*dest, key);
 		dest++;
 	}
-	ALIF_SET_SIZE(_self, m + n);
+	ALIF_SET_SIZE(_self, m_ + n_);
 	return 0;
 }
+
+static AlifIntT listExtend_dict(AlifListObject* _self, AlifDictObject* _dict, AlifIntT _whichItem) { // 1267
+	AlifSizeT m_ = ALIF_SIZE(_self);
+	AlifSizeT n_ = ALIFDICT_GET_SIZE(_dict);
+	if (list_resize(_self, m_ + n_) < 0) {
+		return -1;
+	}
+
+	AlifObject** dest = _self->item + m_;
+	AlifSizeT pos_ = 0;
+	AlifObject* keyValue[2];
+	while (_alifDict_next((AlifObject*)_dict, &pos_, &keyValue[0], &keyValue[1], nullptr)) {
+		AlifObject* obj = keyValue[_whichItem];
+		ALIF_INCREF(obj);
+		alifAtomic_storePtrRelaxed(&*dest, obj);
+		dest++;
+	}
+
+	ALIF_SET_SIZE(_self, m_ + n_);
+	return 0;
+}
+
+static AlifIntT listExtend_dictItems(AlifListObject* _self, AlifDictObject* _dict) { // 1291
+	AlifSizeT m_ = ALIF_SIZE(_self);
+	AlifSizeT n_ = ALIFDICT_GET_SIZE(_dict);
+	if (list_resize(_self, m_ + n_) < 0) {
+		return -1;
+	}
+
+	AlifObject** dest = _self->item + m_;
+	AlifSizeT pos_ = 0;
+	AlifSizeT i_ = 0;
+	AlifObject* key_{}, * value{};
+	while (_alifDict_next((AlifObject*)_dict, &pos_, &key_, &value, nullptr)) {
+		AlifObject* item = alifTuple_pack(2, key_, value);
+		if (item == nullptr) {
+			ALIF_SET_SIZE(_self, m_ + i_);
+			return -1;
+		}
+		alifAtomic_storePtrRelaxed(&*dest, item);
+		dest++;
+		i_++;
+	}
+
+	ALIF_SET_SIZE(_self, m_ + n_);
+	return 0;
+}
+
 
 static AlifIntT _list_extend(AlifListObject* _self, AlifObject* _iterable) { // 1318
 	// Special case:
