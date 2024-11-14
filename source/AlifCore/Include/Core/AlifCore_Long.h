@@ -15,6 +15,11 @@ static inline AlifObject* _alifLong_getZero() { // 68
 	return (AlifObject*)&ALIFLONG_SMALL_INTS[ALIF_NSMALLNEGINTS];
 }
 
+static inline AlifObject* _alifLong_getOne(void) { // 73
+	return (AlifObject*)&ALIFLONG_SMALL_INTS[ALIF_NSMALLNEGINTS + 1];
+}
+
+
 AlifObject* _alifLong_add(AlifLongObject*, AlifLongObject*); // 113
 
 extern unsigned char _alifLongDigitValue_[256]; // 118
@@ -30,7 +35,9 @@ extern unsigned char _alifLongDigitValue_[256]; // 118
 #define SIGN_NEGATIVE 2
 #define NON_SIZE_BITS 3
 
-
+static inline AlifIntT _alifLong_isNonNegativeCompact(const AlifLongObject* _op) { // 192
+	return _op->longValue.tag <= (1 << NON_SIZE_BITS);
+}
 
 static inline AlifIntT _alifLong_bothAreCompact(const AlifLongObject* _a,
 	const AlifLongObject* _b) { // 198
@@ -52,6 +59,11 @@ static inline bool _alifLong_isPositive(const AlifLongObject* op) { // 217
 
 static inline AlifSizeT alifLong_digitCount(const AlifLongObject* _op) { // 223
 	return _op->longValue.tag >> NON_SIZE_BITS;
+}
+
+static inline AlifSizeT _alifLong_signedDigitCount(const AlifLongObject* _op) { // 232
+	AlifSizeT sign = 1 - (_op->longValue.tag & SIGN_MASK);
+	return sign * (AlifSizeT)(_op->longValue.tag >> NON_SIZE_BITS);
 }
 
 static inline AlifIntT _alifLong_compactSign(const AlifLongObject* _op) { // 239
