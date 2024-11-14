@@ -39,6 +39,10 @@ static AlifLongObject* maybe_smallLong(AlifLongObject* _v) { // 56
 }
 
 
+#define KARATSUBA_CUTOFF 70 // 73
+#define KARATSUBA_SQUARE_CUTOFF (2 * KARATSUBA_CUTOFF) // 74
+
+
 static AlifLongObject* long_normalize(AlifLongObject* _v) { // 114
 	AlifSizeT j = alifLong_digitCount(_v);
 	AlifSizeT i_ = j;
@@ -493,7 +497,7 @@ static AlifIntT long_fromBinaryBase(const char* _start,
 		*_res = nullptr;
 		return 0;
 	}
-	/* Read string from right, and fill in AlifIntT from left; i.e.,
+	/* Read string from right, and fill in AlifIntT from left; i_.e.,
 	 * from least to most significant in both.
 	 */
 	accum = 0;
@@ -787,8 +791,8 @@ AlifObject* alifLong_fromString(const char* _str, char** _pend, AlifIntT _base) 
 	}
 
 	/* long_fromStringBase is the main workhorse here. */
-	AlifIntT ret = long_fromStringBase(&_str, _base, &z_);
-	if (ret == -1) {
+	AlifIntT ret_ = long_fromStringBase(&_str, _base, &z_);
+	if (ret_ == -1) {
 		/* Syntax error. */
 		goto onError;
 	}
@@ -844,7 +848,7 @@ onError:
 static AlifLongObject* x_add(AlifLongObject* _a, AlifLongObject* _b) { // 3675
 	AlifSizeT sizeA = alifLong_digitCount(_a), sizeB = alifLong_digitCount(_b);
 	AlifLongObject* z{};
-	AlifSizeT i{};
+	AlifSizeT i_{};
 	digit carry = 0;
 
 	/* Ensure a is the larger of the two: */
@@ -858,31 +862,31 @@ static AlifLongObject* x_add(AlifLongObject* _a, AlifLongObject* _b) { // 3675
 	}
 	z = alifLong_new(sizeA + 1);
 	if (z == nullptr) return nullptr;
-	for (i = 0; i < sizeB; ++i) {
-		carry += _a->longValue.digit[i] + _b->longValue.digit[i];
-		z->longValue.digit[i] = carry & ALIFLONG_MASK;
+	for (i_ = 0; i_ < sizeB; ++i_) {
+		carry += _a->longValue.digit[i_] + _b->longValue.digit[i_];
+		z->longValue.digit[i_] = carry & ALIFLONG_MASK;
 		carry >>= ALIFLONG_SHIFT;
 	}
-	for (; i < sizeA; ++i) {
-		carry += _a->longValue.digit[i];
-		z->longValue.digit[i] = carry & ALIFLONG_MASK;
+	for (; i_ < sizeA; ++i_) {
+		carry += _a->longValue.digit[i_];
+		z->longValue.digit[i_] = carry & ALIFLONG_MASK;
 		carry >>= ALIFLONG_SHIFT;
 	}
-	z->longValue.digit[i] = carry;
+	z->longValue.digit[i_] = carry;
 	return long_normalize(z);
 }
 
-static AlifLongObject* x_sub(AlifLongObject* a, AlifLongObject* b) { // 3709
-	AlifSizeT sizeA = alifLong_digitCount(a), sizeB = alifLong_digitCount(b);
+static AlifLongObject* x_sub(AlifLongObject* _a, AlifLongObject* _b) { // 3709
+	AlifSizeT sizeA = alifLong_digitCount(_a), sizeB = alifLong_digitCount(_b);
 	AlifLongObject* z{};
-	AlifSizeT i{};
+	AlifSizeT i_{};
 	AlifIntT sign = 1;
 	digit borrow = 0;
 
 	/* Ensure a is the larger of the two: */
 	if (sizeA < sizeB) {
 		sign = -1;
-		{ AlifLongObject* temp = a; a = b; b = temp; }
+		{ AlifLongObject* temp = _a; _a = _b; _b = temp; }
 		{
 			AlifSizeT size_temp = sizeA;
 			sizeA = sizeB;
@@ -891,30 +895,30 @@ static AlifLongObject* x_sub(AlifLongObject* a, AlifLongObject* b) { // 3709
 	}
 	else if (sizeA == sizeB) {
 		/* Find highest digit where a and b differ: */
-		i = sizeA;
-		while (--i >= 0 and a->longValue.digit[i] == b->longValue.digit[i])
+		i_ = sizeA;
+		while (--i_ >= 0 and _a->longValue.digit[i_] == _b->longValue.digit[i_])
 			;
-		if (i < 0)
+		if (i_ < 0)
 			return (AlifLongObject*)alifLong_fromLong(0);
-		if (a->longValue.digit[i] < b->longValue.digit[i]) {
+		if (_a->longValue.digit[i_] < _b->longValue.digit[i_]) {
 			sign = -1;
-			{ AlifLongObject* temp = a; a = b; b = temp; }
+			{ AlifLongObject* temp = _a; _a = _b; _b = temp; }
 		}
-		sizeA = sizeB = i + 1;
+		sizeA = sizeB = i_ + 1;
 	}
 	z = alifLong_new(sizeA);
 	if (z == nullptr) return nullptr;
-	for (i = 0; i < sizeB; ++i) {
+	for (i_ = 0; i_ < sizeB; ++i_) {
 		/* The following assumes unsigned arithmetic
 		   works module 2**N for some N>ALIFLONG_SHIFT. */
-		borrow = a->longValue.digit[i] - b->longValue.digit[i] - borrow;
-		z->longValue.digit[i] = borrow & ALIFLONG_MASK;
+		borrow = _a->longValue.digit[i_] - _b->longValue.digit[i_] - borrow;
+		z->longValue.digit[i_] = borrow & ALIFLONG_MASK;
 		borrow >>= ALIFLONG_SHIFT;
 		borrow &= 1; /* Keep only one sign bit */
 	}
-	for (; i < sizeA; ++i) {
-		borrow = a->longValue.digit[i] - borrow;
-		z->longValue.digit[i] = borrow & ALIFLONG_MASK;
+	for (; i_ < sizeA; ++i_) {
+		borrow = _a->longValue.digit[i_] - borrow;
+		z->longValue.digit[i_] = borrow & ALIFLONG_MASK;
 		borrow >>= ALIFLONG_SHIFT;
 		borrow &= 1; /* Keep only one sign bit */
 	}
@@ -960,9 +964,236 @@ static AlifObject* long_add(AlifLongObject* _a, AlifLongObject* _b) { // 3795
 	return _alifLong_add(_a, _b);
 }
 
+AlifObject* _alifLong_subtract(AlifLongObject* _a, AlifLongObject* _b) { // 3802
+	AlifLongObject* z_{};
+
+	if (_alifLong_bothAreCompact(_a, _b)) {
+		return _alifLong_fromSTwoDigits(MEDIUM_VALUE(_a) - MEDIUM_VALUE(_b));
+	}
+	if (_alifLong_isNegative(_a)) {
+		if (_alifLong_isNegative(_b)) {
+			z_ = x_sub(_b, _a);
+		}
+		else {
+			z_ = x_add(_a, _b);
+			if (z_ != nullptr) {
+				_alifLong_flipSign(z_);
+			}
+		}
+	}
+	else {
+		if (_alifLong_isNegative(_b))
+			z_ = x_add(_a, _b);
+		else
+			z_ = x_sub(_a, _b);
+	}
+	return (AlifObject*)z_;
+}
+
+static AlifObject* long_sub(AlifLongObject* _a, AlifLongObject* _b) { // 3832
+	CHECK_BINOP(_a, _b);
+	return _alifLong_subtract(_a, _b);
+}
+
+static AlifLongObject* x_mul(AlifLongObject* a, AlifLongObject* b) { // 3842
+	AlifLongObject* z;
+	AlifSizeT size_a = alifLong_digitCount(a);
+	AlifSizeT size_b = alifLong_digitCount(b);
+	AlifSizeT i;
+
+	z = alifLong_new(size_a + size_b);
+	if (z == NULL)
+		return NULL;
+
+	memset(z->longValue.digit, 0, alifLong_digitCount(z) * sizeof(digit));
+	if (a == b) {
+
+		digit* paend = a->longValue.digit + size_a;
+		for (i = 0; i < size_a; ++i) {
+			twodigits carry;
+			twodigits f = a->longValue.digit[i];
+			digit* pz = z->longValue.digit + (i << 1);
+			digit* pa = a->longValue.digit + i + 1;
+
+			SIGCHECK({
+					ALIF_DECREF(z);
+					return NULL;
+				});
+
+			carry = *pz + f * f;
+			*pz++ = (digit)(carry & ALIFLONG_MASK);
+			carry >>= ALIFLONG_SHIFT;
+			f <<= 1;
+			while (pa < paend) {
+				carry += *pz + *pa++ * f;
+				*pz++ = (digit)(carry & ALIFLONG_MASK);
+				carry >>= ALIFLONG_SHIFT;
+			}
+			if (carry) {
+				carry += *pz;
+				*pz = (digit)(carry & ALIFLONG_MASK);
+				carry >>= ALIFLONG_SHIFT;
+				if (carry) {
+
+					pz[1] = (digit)carry;
+				}
+			}
+		}
+	}
+	else {      /* a is not the same as b -- gradeschool int mult */
+		for (i = 0; i < size_a; ++i) {
+			twodigits carry = 0;
+			twodigits f = a->long_value.ob_digit[i];
+			digit* pz = z->long_value.ob_digit + i;
+			digit* pb = b->long_value.ob_digit;
+			digit* pbend = b->long_value.ob_digit + size_b;
+
+			SIGCHECK({
+					ALIF_DECREF(z);
+					return NULL;
+				});
+
+			while (pb < pbend) {
+				carry += *pz + *pb++ * f;
+				*pz++ = (digit)(carry & ALIFLONG_MASK);
+				carry >>= ALIFLONG_SHIFT;
+			}
+			if (carry)
+				*pz += (digit)(carry & ALIFLONG_MASK);
+		}
+	}
+	return long_normalize(z);
+}
+
+static AlifLongObject* k_mul(AlifLongObject* _a, AlifLongObject* _b) { // 3981
+	AlifSizeT aSize = alifLong_digitCount(_a);
+	AlifSizeT bSize = alifLong_digitCount(_b);
+	AlifLongObject* ah_ = nullptr;
+	AlifLongObject* al_ = nullptr;
+	AlifLongObject* bh_ = nullptr;
+	AlifLongObject* bl_ = nullptr;
+	AlifLongObject* ret_ = nullptr;
+	AlifLongObject* t1_{}, * t2_{}, * t3_{};
+	AlifSizeT shift{};
+	AlifSizeT i_{};
 
 
+	if (aSize > bSize) {
+		t1_ = _a;
+		_a = _b;
+		_b = t1_;
 
+		i_ = aSize;
+		aSize = bSize;
+		bSize = i_;
+	}
+
+	i_ = _a == _b ? KARATSUBA_SQUARE_CUTOFF : KARATSUBA_CUTOFF;
+	if (aSize <= i_) {
+		if (aSize == 0)
+			return (AlifLongObject*)alifLong_fromLong(0);
+		else
+			return x_mul(_a, _b);
+	}
+
+	if (2 * aSize <= bSize)
+		return k_lopsidedMul(_a, _b);
+
+	shift = bSize >> 1;
+	if (kmul_split(_a, shift, &ah_, &al_) < 0) goto fail;
+
+	if (_a == _b) {
+		bh_ = (AlifLongObject*)ALIF_NEWREF(ah_);
+		bl_ = (AlifLongObject*)ALIF_NEWREF(al_);
+	}
+	else if (kmul_split(_b, shift, &bh_, &bl_) < 0) goto fail;
+
+	ret_ = alifLong_new(aSize + bSize);
+	if (ret_ == nullptr) goto fail;
+
+	if ((t1_ = k_mul(ah_, bh_)) == nullptr) goto fail;
+	memcpy(ret_->longValue.digit + 2 * shift, t1_->longValue.digit,
+		alifLong_digitCount(t1_) * sizeof(digit));
+
+	/* Zero-out the digits higher than the ah_*bh_ copy. */
+	i_ = alifLong_digitCount(ret_) - 2 * shift - alifLong_digitCount(t1_);
+	if (i_)
+		memset(ret_->longValue.digit + 2 * shift + alifLong_digitCount(t1_), 0,
+			i_ * sizeof(digit));
+
+	if ((t2_ = k_mul(al_, bl_)) == nullptr) {
+		ALIF_DECREF(t1_);
+		goto fail;
+	}
+	memcpy(ret_->longValue.digit, t2_->longValue.digit, alifLong_digitCount(t2_) * sizeof(digit));
+
+	i_ = 2 * shift - alifLong_digitCount(t2_);          /* number of uninitialized digits */
+	if (i_)
+		memset(ret_->longValue.digit + alifLong_digitCount(t2_), 0, i_ * sizeof(digit));
+
+	i_ = alifLong_digitCount(ret_) - shift;  /* # digits after shift */
+	(void)v_isub(ret_->longValue.digit + shift, i_, t2_->longValue.digit, alifLong_digitCount(t2_));
+	_ALIF_DECREF_INT(t2_);
+
+	(void)v_isub(ret_->longValue.digit + shift, i_, t1_->longValue.digit, alifLong_digitCount(t1_));
+	_ALIF_DECREF_INT(t1_);
+
+	/* 6. t3_ <- (ah_+al_)(bh_+bl_), and add into result. */
+	if ((t1_ = x_add(ah_, al_)) == nullptr) goto fail;
+	_ALIF_DECREF_INT(ah_);
+	_ALIF_DECREF_INT(al_);
+	ah_ = al_ = nullptr;
+
+	if (_a == b) {
+		t2_ = (AlifLongObject*)ALIF_NEWREF(t1_);
+	}
+	else if ((t2_ = x_add(bh_, bl_)) == nullptr) {
+		ALIF_DECREF(t1_);
+		goto fail;
+	}
+	_ALIF_DECREF_INT(bh_);
+	_ALIF_DECREF_INT(bl_);
+	bh_ = bl_ = nullptr;
+
+	t3_ = k_mul(t1_, t2_);
+	_ALIF_DECREF_INT(t1_);
+	_ALIF_DECREF_INT(t2_);
+	if (t3_ == nullptr) goto fail;
+	(void)v_iadd(ret_->longValue.digit + shift, i_, t3_->longValue.digit, alifLong_digitCount(t3_));
+	_ALIF_DECREF_INT(t3_);
+
+	return long_normalize(ret_);
+
+fail:
+	ALIF_XDECREF(ret_);
+	ALIF_XDECREF(ah_);
+	ALIF_XDECREF(al_);
+	ALIF_XDECREF(bh_);
+	ALIF_XDECREF(bl_);
+	return nullptr;
+}
+
+AlifObject* _alifLong_multiply(AlifLongObject* _a, AlifLongObject* _b) { // 4254
+	AlifLongObject* z_{};
+
+	if (_alifLong_bothAreCompact(_a, _b)) {
+		stwodigits v_ = MEDIUM_VALUE(_a) * MEDIUM_VALUE(_b);
+		return _alifLong_fromSTwoDigits(v_);
+	}
+
+	z_ = k_mul(_a, _b);
+	if (!_alifLong_sameSign(_a, _b) and z_) {
+		_alifLong_negate(&z_);
+		if (z_ == nullptr)
+			return nullptr;
+	}
+	return (AlifObject*)z_;
+}
+
+static AlifObject* long_mul(AlifLongObject* _a, AlifLongObject* _b) { // 4275
+	CHECK_BINOP(_a, _b);
+	return _alifLong_multiply(_a, _b);
+}
 
 
 
