@@ -12,7 +12,7 @@
 #define IS_SMALL_UINT(_iVal) ((_iVal) < ALIF_NSMALLPOSINTS)
 
 
-//#define WITH_ALIFLONG_MODULE 1 // 32
+#define WITH_ALIFLONG_MODULE 1 // 32
 
 static inline void _alif_decrefInt(AlifLongObject* _op) { // 34
 	_alif_decrefSpecialized((AlifObject*)_op, (Destructor)alifMem_objFree);
@@ -417,14 +417,14 @@ static AlifIntT bit_lengthDigit(digit _x) { // 797
 }
 
 AlifUSizeT _alifLong_numBits(AlifObject* _vv) { // 807
-	AlifLongObject* _v = (AlifLongObject*)_vv;
+	AlifLongObject* v_ = (AlifLongObject*)_vv;
 	AlifUSizeT result = 0;
 	AlifSizeT ndigits{};
 	AlifIntT msdBits{};
 
-	ndigits = alifLong_digitCount(_v);
+	ndigits = alifLong_digitCount(v_);
 	if (ndigits > 0) {
-		digit msd = _v->longValue.digit[ndigits - 1];
+		digit msd = v_->longValue.digit[ndigits - 1];
 		if ((AlifUSizeT)(ndigits - 1) > SIZE_MAX / (AlifUSizeT)ALIFLONG_SHIFT)
 			goto Overflow;
 		result = (AlifUSizeT)(ndigits - 1) * (AlifUSizeT)ALIFLONG_SHIFT;
@@ -604,7 +604,7 @@ static AlifIntT long_fromBinaryBase(const char* _start,
 		*_res = nullptr;
 		return 0;
 	}
-	/* Read string from right, and fill in AlifIntT from left; i_.e.,
+	/* Read string from right, and fill in AlifIntT from left; i.e.,
 	 * from least to most significant in both.
 	 */
 	accum = 0;
@@ -831,12 +831,12 @@ static AlifIntT long_fromStringBase(const char** _str,
 				return 0;
 			}
 		}
-//#if WITH_ALIFLONG_MODULE
-//		if (digits > 6000 and _base == 10) {
-//			/* Switch to _pylong.int_from_string() */
-//			return alifLong_intFromString(start, end, _res);
-//		}
-//#endif
+#if WITH_ALIFLONG_MODULE
+		if (digits > 6000 and _base == 10) {
+			/* Switch to alifLong_intFromString() */
+			return alifLong_intFromString(start, end, _res);
+		}
+#endif
 		/* Use the quadratic algorithm for non binary bases. */
 		return long_fromNonBinaryBase(start, end, digits, _base, _res);
 	}
@@ -1048,13 +1048,13 @@ static AlifLongObject* x_divrem(AlifLongObject* _v1, AlifLongObject* _w1, AlifLo
 	for (vk_ = v0_ + k_, ak_ = a_->longValue.digit + k_; vk_-- > v0_;) {
 
 
-		SIGCHECK({
-				ALIF_DECREF(a_);
-				ALIF_DECREF(w_);
-				ALIF_DECREF(v_);
-				*_pRem = nullptr;
-				return nullptr;
-			});
+		//SIGCHECK({
+		//		ALIF_DECREF(a_);
+		//		ALIF_DECREF(w_);
+		//		ALIF_DECREF(v_);
+		//		*_pRem = nullptr;
+		//		return nullptr;
+		//});
 
 		vTop = vk_[sizeW];
 		vv_ = ((twodigits)vTop << ALIFLONG_SHIFT) | vk_[sizeW - 1];
