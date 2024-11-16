@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Abstract.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_AlifMath.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Array.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ASDL.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_AST.h" />
@@ -92,6 +93,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifLexer.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifLifeCycle.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifMacro.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifMath.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifMemory.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifMimalloc.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifObject.h" />
