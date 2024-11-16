@@ -21,7 +21,7 @@ long alifLong_asLong(AlifObject* ); // 22
 AlifSizeT alifLong_asSizeT(AlifObject*); // 24
 
 
-
+double alifLong_asDouble(AlifObject*); // 86
 AlifObject* alifLong_fromVoidPtr(void*); // 87
 AlifObject* alifLong_fromUnsignedLongLong(unsigned long long); // 91
 AlifObject* alifLong_fromString(const char*, char**, AlifIntT); // 97

@@ -729,7 +729,7 @@ static AlifIntT astFold_expr(ExprTy _node, AlifASTMem* _ctx, AlifASTOptimizeStat
 		// No default case, so the compiler will emit a warning if new expression
 		// kinds are added without being handled here
 	}
-	LEAVE_RECURSIVE(_state);;
+	LEAVE_RECURSIVE(_state);
 	return 1;
 }
 
