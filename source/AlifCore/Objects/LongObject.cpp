@@ -1008,6 +1008,44 @@ static AlifIntT long_divrem(AlifLongObject* _a, AlifLongObject* _b,
 	return 0;
 }
 
+static AlifIntT long_rem(AlifLongObject* _a, AlifLongObject* _b, AlifLongObject** _prem) { // 3226
+	AlifSizeT sizeA = alifLong_digitCount(_a), sizeB = alifLong_digitCount(_b);
+
+	if (sizeB == 0) {
+		//alifErr_setString(_alifExcZeroDivisionError_,
+		//	"division by zero");
+		return -1;
+	}
+	if (sizeA < sizeB or
+		(sizeA == sizeB and
+			_a->longValue.digit[sizeA - 1] < _b->longValue.digit[sizeB - 1])) {
+		/* |a| < |b|. */
+		*_prem = (AlifLongObject*)long_long((AlifObject*)_a);
+		return -(*_prem == nullptr);
+	}
+	if (sizeB == 1) {
+		*_prem = rem1(_a, _b->longValue.digit[0]);
+		if (*_prem == nullptr)
+			return -1;
+	}
+	else {
+		/* Slow path using divrem. */
+		ALIF_XDECREF(x_divrem(_a, _b, _prem));
+		*_prem = maybe_smallLong(*_prem);
+		if (*_prem == nullptr)
+			return -1;
+	}
+	/* Set the sign. */
+	if (_alifLong_isNegative(_a) and !_alifLong_isZero(*_prem)) {
+		_alifLong_negate(_prem);
+		if (*_prem == nullptr) {
+			ALIF_CLEAR(*_prem);
+			return -1;
+		}
+	}
+	return 0;
+}
+
 static AlifLongObject* x_divrem(AlifLongObject* _v1, AlifLongObject* _w1, AlifLongObject** _pRem) { // 3270
 	AlifLongObject* v_{}, * w_{}, * a_{};
 	AlifSizeT i_{}, k_{}, sizeV{}, sizeW{};
@@ -1708,15 +1746,15 @@ static AlifObject* long_div(AlifObject* _a, AlifObject* _b) { // 4490
 	return (AlifObject*)div_;
 }
 
-#define MANT_DIG_DIGITS (DBL_MANT_DIG / ALIFLONG_SHIFT) // 4057
-#define MANT_DIG_BITS (DBL_MANT_DIG % ALIFLONG_SHIFT) // 4058
+#define MANT_DIG_DIGITS (DBL_MANT_DIG / ALIFLONG_SHIFT) // 4508
+#define MANT_DIG_BITS (DBL_MANT_DIG % ALIFLONG_SHIFT) // 4509
 
 
 static AlifObject* long_trueDivide(AlifObject* _v, AlifObject* _w) { // 4512
 	AlifLongObject* a_{}, * b_{}, * x_{};
 	AlifSizeT aSize{}, bSize{}, shift{}, extraBits{}, diff{}, xSize{}, xBits{};
 	digit mask{}, low_{};
-	AlifIntT inexact{}, negate{}, AisSmall{}, BisSmall{};
+	AlifIntT inexact{}, negate{}, aIsSmall{}, bIsSmall{};
 	double dx_{}, result{};
 
 	CHECK_BINOP(_v, _w);
@@ -1733,13 +1771,13 @@ static AlifObject* long_trueDivide(AlifObject* _v, AlifObject* _w) { // 4512
 	if (aSize == 0)
 		goto underflow_or_zero;
 
-	AisSmall = aSize <= MANT_DIG_DIGITS or
+	aIsSmall = aSize <= MANT_DIG_DIGITS or
 		(aSize == MANT_DIG_DIGITS + 1 and
 			a_->longValue.digit[MANT_DIG_DIGITS] >> MANT_DIG_BITS == 0);
-	BisSmall = bSize <= MANT_DIG_DIGITS or
+	bIsSmall = bSize <= MANT_DIG_DIGITS or
 		(bSize == MANT_DIG_DIGITS + 1 and
 			b_->longValue.digit[MANT_DIG_DIGITS] >> MANT_DIG_BITS == 0);
-	if (AisSmall and BisSmall) {
+	if (aIsSmall and bIsSmall) {
 		double da_{}, db_{};
 		da_ = a_->longValue.digit[--aSize];
 		while (aSize > 0)
@@ -2286,7 +2324,7 @@ static AlifObject* long_rShift(AlifObject* _a, AlifObject* _b) { // 5342
 	CHECK_BINOP(_a, _b);
 
 	if (_alifLong_isNegative((AlifLongObject*)_b)) {
-		//alifErr_setString(PyExc_ValueError, "negative shift count");
+		//alifErr_setString(_alifExcValueError, "negative shift count");
 		return nullptr;
 	}
 	if (_alifLong_isZero((AlifLongObject*)_a)) {
@@ -2350,6 +2388,16 @@ static AlifObject* long_lShift(AlifObject* _a, AlifObject* _b) { // 5419
 	if (divmod_shift(_b, &wordShift, &remShift) < 0)
 		return nullptr;
 	return long_lShift1((AlifLongObject*)_a, wordShift, remShift);
+}
+
+static void v_complement(digit* _z, digit* _a, AlifSizeT _m) { // 5458
+	AlifSizeT i{};
+	digit carry = 1;
+	for (i = 0; i < _m; ++i) {
+		carry += _a[i] ^ ALIFLONG_MASK;
+		_z[i] = carry & ALIFLONG_MASK;
+		carry >>= ALIFLONG_SHIFT;
+	}
 }
 
 static AlifObject* long_bitwise(AlifLongObject* _a,
