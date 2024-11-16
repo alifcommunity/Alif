@@ -558,6 +558,20 @@ static AlifLongObject* divrem1(AlifLongObject* _a, digit _n, digit* _pRem) { // 
 	return long_normalize(z_);
 }
 
+static digit inplace_rem1(digit* _pin, AlifSizeT _size, digit _n) { // 1975
+	twodigits rem = 0;
+
+	while (--_size >= 0)
+		rem = ((rem << ALIFLONG_SHIFT) | _pin[_size]) % _n;
+	return (digit)rem;
+}
+
+static AlifLongObject* rem1(AlifLongObject* _a, digit _n) { // 1990
+	const AlifSizeT size = alifLong_digitCount(_a);
+
+	return (AlifLongObject*)alifLong_fromLong(
+		(long)inplace_rem1(_a->longValue.digit, size, _n));
+}
 
 
 unsigned char _alifLongDigitValue_[256] = { // 2527
@@ -637,6 +651,39 @@ static AlifIntT long_fromBinaryBase(const char* _start,
 	*_res = z_;
 	return 0;
 }
+
+
+#ifdef WITH_ALIFLONG_MODULE
+static AlifIntT alifLong_intFromString(const char* _start,
+	const char* _end, AlifLongObject** _res) { // 2629
+//	AlifObject* mod = alifImport_importModule("_aliflong");
+//	if (mod == nullptr) {
+//		goto error;
+//	}
+//	AlifObject* s = alifUStr_fromStringAndSize(_start, _end - _start);
+//	if (s == nullptr) {
+//		ALIF_DECREF(mod);
+//		goto error;
+//	}
+//	AlifObject* result = alifObject_callMethod(mod, "int_from_string", "O", s);
+//	ALIF_DECREF(s);
+//	ALIF_DECREF(mod);
+//	if (result == nullptr) {
+//		goto error;
+//	}
+//	if (!ALIFLONG_CHECK(result)) {
+//		ALIF_DECREF(result);
+//		alifErr_setString(_alifExcTypeError_,
+//			"_aliflong.int_from_string did not return an int");
+//		goto error;
+//	}
+//	*_res = (AlifLongObject*)result;
+//	return 0;
+//error:
+	*_res = nullptr;
+	return 0; 
+}
+#endif /* WITH_ALIFLONG_MODULE */
 
 
 static AlifIntT long_fromNonBinaryBase(const char* _start,
@@ -953,6 +1000,11 @@ onError:
 	return nullptr;
 }
 
+
+/* forward */
+static AlifLongObject* x_divrem(AlifLongObject*, AlifLongObject*, AlifLongObject**); // 3155
+static AlifObject* long_long(AlifObject*);
+
 static AlifIntT long_divrem(AlifLongObject* _a, AlifLongObject* _b,
 	AlifLongObject** _pDiv, AlifLongObject** _pRem) { // 3163
 	AlifSizeT sizeA = alifLong_digitCount(_a), sizeB = alifLong_digitCount(_b);
@@ -1141,6 +1193,85 @@ static AlifLongObject* x_divrem(AlifLongObject* _v1, AlifLongObject* _w1, AlifLo
 	*_pRem = long_normalize(w_);
 	return long_normalize(a_);
 }
+
+ // 3408
+#if DBL_MANT_DIG == 53
+#define EXP2_DBL_MANT_DIG 9007199254740992.0
+#else
+#define EXP2_DBL_MANT_DIG (ldexp(1.0, DBL_MANT_DIG))
+#endif
+
+double _alifLong_frexp(AlifLongObject* a, AlifSizeT* e) { // 3414
+	AlifSizeT aSize{}, aBits{}, shiftDigits{}, shiftBits{}, xSize{};
+	digit rem{};
+	digit xDigits[2 + (DBL_MANT_DIG + 1) / ALIFLONG_SHIFT] = { 0, };
+	double dx{};
+	static const AlifIntT halfEvenCorrection[8] = { 0, -1, -2, 1, 0, -1, 2, 1 };
+
+	aSize = alifLong_digitCount(a);
+	if (aSize == 0) {
+		*e = 0;
+		return 0.0;
+	}
+	aBits = bit_lengthDigit(a->longValue.digit[aSize - 1]);
+	if (aSize >= (ALIF_SIZET_MAX - 1) / ALIFLONG_SHIFT + 1 and
+		(aSize > (ALIF_SIZET_MAX - 1) / ALIFLONG_SHIFT + 1 or
+			aBits > (ALIF_SIZET_MAX - 1) % ALIFLONG_SHIFT + 1))
+		goto overflow;
+	aBits = (aSize - 1) * ALIFLONG_SHIFT + aBits;
+
+	if (aBits <= DBL_MANT_DIG + 2) {
+		shiftDigits = (DBL_MANT_DIG + 2 - aBits) / ALIFLONG_SHIFT;
+		shiftBits = (DBL_MANT_DIG + 2 - aBits) % ALIFLONG_SHIFT;
+		xSize = shiftDigits;
+		rem = v_lShift(xDigits + xSize, a->longValue.digit, aSize,
+			(int)shiftBits);
+		xSize += aSize;
+		xDigits[xSize++] = rem;
+	}
+	else {
+		shiftDigits = (aBits - DBL_MANT_DIG - 2) / ALIFLONG_SHIFT;
+		shiftBits = (aBits - DBL_MANT_DIG - 2) % ALIFLONG_SHIFT;
+		rem = v_rShift(xDigits, a->longValue.digit + shiftDigits,
+			aSize - shiftDigits, (int)shiftBits);
+		xSize = aSize - shiftDigits;
+		if (rem)
+			xDigits[0] |= 1;
+		else
+			while (shiftDigits > 0)
+				if (a->longValue.digit[--shiftDigits]) {
+					xDigits[0] |= 1;
+					break;
+				}
+	}
+
+	/* Round, and convert to double. */
+	xDigits[0] += halfEvenCorrection[xDigits[0] & 7];
+	dx = xDigits[--xSize];
+	while (xSize > 0)
+		dx = dx * ALIFLONG_BASE + xDigits[--xSize];
+
+	/* Rescale;  make correction if result is 1.0. */
+	dx /= 4.0 * EXP2_DBL_MANT_DIG;
+	if (dx == 1.0) {
+		if (aBits == ALIF_SIZET_MAX)
+			goto overflow;
+		dx = 0.5;
+		aBits += 1;
+	}
+
+	*e = aBits;
+	return _alifLong_isNegative(a) ? -dx : dx;
+
+overflow:
+	//alifErr_setString(_alifExcOverflowError_,
+	//	"huge integer: number of bits overflows a AlifSizeT");
+	*e = 0;
+	return -1.0;
+}
+
+
+
 
 double alifLong_asDouble(AlifObject* _v) { // 3526
 	AlifSizeT exponent{};
@@ -1646,6 +1777,45 @@ static AlifObject* fast_floorDiv(AlifLongObject* _a, AlifLongObject* _b) { // 43
 	return alifLong_fromLong(div_);
 }
 
+#ifdef WITH_ALIFLONG_MODULE
+static AlifIntT alifLong_intDivmod(AlifLongObject* _v, AlifLongObject* _w,
+	AlifLongObject** _pdiv, AlifLongObject** _pmod) { // 4325
+	//AlifObject* mod = alifImport_importModule("_aliflong");
+	//if (mod == nullptr) {
+	//	return -1;
+	//}
+	//AlifObject* result = alifObject_callMethod(mod, "int_divmod", "OO", _v, _w);
+	//ALIF_DECREF(mod);
+	//if (result == nullptr) {
+	//	return -1;
+	//}
+	//if (!ALIFTUPLE_CHECK(result)) {
+	//	ALIF_DECREF(result);
+	//	alifErr_setString(_alifExcValueError_,
+	//		"tuple is required from int_divmod()");
+	//	return -1;
+	//}
+	//AlifObject* q = ALIFTUPLE_GET_ITEM(result, 0);
+	//AlifObject* r = ALIFTUPLE_GET_ITEM(result, 1);
+	//if (!ALIFLONG_CHECK(q) or !ALIFLONG_CHECK(r)) {
+	//	ALIF_DECREF(result);
+	//	alifErr_setString(_alifExcValueError_,
+	//		"tuple of int is required from int_divmod()");
+	//	return -1;
+	//}
+	//if (_pdiv != nullptr) {
+	//	*_pdiv = (AlifLongObject*)ALIF_NEWREF(q);
+	//}
+	//if (_pmod != nullptr) {
+	//	*_pmod = (AlifLongObject*)ALIF_NEWREF(r);
+	//}
+	//ALIF_DECREF(result);
+	//return 0;
+
+	return -1; // alif
+}
+#endif /* WITH_ALIFLONG_MODULE */
+
 static AlifIntT l_divmod(AlifLongObject* _v, AlifLongObject* _w,
 	AlifLongObject** _pDiv, AlifLongObject** _pMod) { // 4387
 	AlifLongObject* div_{}, * mod_{};
@@ -1675,7 +1845,7 @@ static AlifIntT l_divmod(AlifLongObject* _v, AlifLongObject* _w,
 	AlifSizeT sizeV = alifLong_digitCount(_v); /* digits in numerator */
 	AlifSizeT sizeW = alifLong_digitCount(_w); /* digits in denominator */
 	if (sizeW > 300 and (sizeV - sizeW) > 150) {
-		return aliflong_intDivmod(_v, _w, _pDiv, _pMod);
+		return alifLong_intDivmod(_v, _w, _pDiv, _pMod);
 	}
 #endif
 	if (long_divrem(_v, _w, &div_, &mod_) < 0)
