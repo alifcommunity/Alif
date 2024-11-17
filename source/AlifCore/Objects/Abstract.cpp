@@ -866,7 +866,7 @@ AlifObject* alifObject_getIter(AlifObject* _o) { // 2809
 	}
 	else {
 		AlifObject* res = (*f_)(_o);
-		if (res != nullptr /*and !alifIter_check(res)*/) {
+		if (res != nullptr and !alifIter_check(res)) {
 			//alifErr_format(_alifExcTypeError_,
 			//	"iter() returned non-iterator "
 			//	"of type '%.100s'",
@@ -875,6 +875,12 @@ AlifObject* alifObject_getIter(AlifObject* _o) { // 2809
 		}
 		return res;
 	}
+}
+
+AlifIntT alifIter_check(AlifObject* _obj) { // 2853
+	AlifTypeObject* tp = ALIF_TYPE(_obj);
+	return (tp->iterNext != nullptr
+		/*and tp->iterNext != &_alifObject_nextNotImplemented*/);
 }
 
 static AlifIntT iter_next(AlifObject* _iter, AlifObject** _item) { // 2871

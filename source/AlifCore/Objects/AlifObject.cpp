@@ -407,6 +407,9 @@ AlifObject** alifObject_computedDictPointer(AlifObject* _obj) { // 1409
 	return (AlifObject**)((char*)_obj + dictOffset);
 }
 
+AlifObject* alifObject_selfIter(AlifObject* _obj) { // 1461
+	return ALIF_NEWREF(_obj);
+}
 
 AlifIntT alifObject_isTrue(AlifObject* _v) { // 1845
 	AlifSizeT res_{};

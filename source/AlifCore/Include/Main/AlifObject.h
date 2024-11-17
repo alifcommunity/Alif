@@ -44,6 +44,9 @@ public:
 
 #define ALIFOBJECT_CAST(_op) ALIF_CAST(AlifObject*, _op) // 155
 
+#define ALIF_IS(_x, _y) ((_x) == (_y)) // 168
+
+
 class AlifVarObject { // 157
 public:
 	AlifObject objBase{};
@@ -219,6 +222,7 @@ AlifIntT alifObject_richCompareBool(AlifObject* , AlifObject* , AlifIntT ); // 4
 AlifIntT alifObject_setAttrString(AlifObject*, const char*, AlifObject*); // 426
 AlifIntT alifObject_getOptionalAttr(AlifObject* , AlifObject* , AlifObject** ); // 431
 AlifIntT alifObject_setAttr(AlifObject*, AlifObject*, AlifObject*); // 434
+AlifObject* alifObject_selfIter(AlifObject*); // 441
 AlifObject* alifObject_genericGetAttr(AlifObject*, AlifObject*); // 442
 AlifIntT alifObject_genericSetAttr(AlifObject*, AlifObject*, AlifObject*); // 443
 AlifHashT alifObject_hash(AlifObject*); // 447

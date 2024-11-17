@@ -30,9 +30,15 @@
 
 
 
+#if SIZEOF_VOID_P >= 8
+#define ALIFHASH_BITS 61
+#else
+#define ALIFHASH_BITS 31
+#endif
 
 
-
+#define ALIFHASH_MODULUS (((AlifUSizeT)1 << ALIFHASH_BITS) - 1)
+#define ALIFHASH_INF 314159
 
 
 

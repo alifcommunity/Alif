@@ -1367,6 +1367,49 @@ static AlifSizeT long_compare(AlifLongObject* _a, AlifLongObject* _b) { // 3563
 	return sign;
 }
 
+static void long_dealloc(AlifObject* _self) { // 3595
+	AlifLongObject* alifLong = (AlifLongObject*)_self;
+	if (alifLong and alifLong_isCompact(alifLong)) {
+		stwodigits ival = MEDIUM_VALUE(alifLong);
+		if (IS_SMALL_INT(ival)) {
+			AlifLongObject* smallAlifLong = (AlifLongObject*)get_smallInt((sdigit)ival);
+			if (alifLong == smallAlifLong) {
+				alif_setImmortal(_self);
+				return;
+			}
+		}
+	}
+	ALIF_TYPE(_self)->free(_self);
+}
+
+static AlifHashT long_hash(AlifObject* _obj) { // 3616
+	AlifLongObject* v = (AlifLongObject*)_obj;
+	AlifUHashT x{};
+	AlifSizeT i{};
+	AlifIntT sign{};
+
+	if (alifLong_isCompact(v)) {
+		x = (AlifUHashT)alifLong_compactValue(v);
+		if (x == (AlifUHashT)-1) {
+			x = (AlifUHashT)-2;
+		}
+		return x;
+	}
+	i = alifLong_digitCount(v);
+	sign = alifLong_nonCompactSign(v);
+	x = 0;
+	while (--i >= 0) {
+		x = ((x << ALIFLONG_SHIFT) & ALIFHASH_MODULUS) |
+			(x >> (ALIFHASH_BITS - ALIFLONG_SHIFT));
+		x += v->longValue.digit[i];
+		if (x >= ALIFHASH_MODULUS)
+			x -= ALIFHASH_MODULUS;
+	}
+	x = x * sign;
+	if (x == (AlifUHashT)-1) x = (AlifUHashT)-2;
+	return (AlifHashT)x;
+}
+
 static AlifLongObject* x_add(AlifLongObject* _a, AlifLongObject* _b) { // 3675
 	AlifSizeT sizeA = alifLong_digitCount(_a), sizeB = alifLong_digitCount(_b);
 	AlifLongObject* z{};
@@ -2841,12 +2884,12 @@ AlifTypeObject _alifLongType_ = { // 6597
 	.name = "عدد_صحيح",                                   
 	.basicSize = offsetof(AlifLongObject, longValue.digit),
 	.itemSize = sizeof(digit),                              
-	//.dealloc = long_dealloc,                               
+	.dealloc = long_dealloc,                               
                                         
 	//.repr = long_toDecimalString,                     
 	.asNumber = &_longAsNumber_,
                                         
-	//.hash = long_hash,                                  
+	.hash = long_hash,                              
                                         
 	.getAttro = alifObject_genericGetAttr,                    
                                         

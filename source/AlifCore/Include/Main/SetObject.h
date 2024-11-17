@@ -55,7 +55,7 @@ public:
 	AlifHashT hash{};
 	AlifSizeT finger{};
 	SetEntry smallTable[ALIFSET_MINSIZE]{};
-	AlifObject* weakreList{};
+	AlifObject* weakRefList{};
 };
 
 
