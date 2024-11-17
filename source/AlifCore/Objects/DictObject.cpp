@@ -1509,6 +1509,49 @@ AlifIntT alifDict_popString(AlifObject* _op,
 }
 
 
+
+
+
+static void dict_dealloc(AlifObject* _self) { // 3089
+	AlifDictObject* mp = (AlifDictObject*)_self;
+	AlifInterpreter* interp = _alifInterpreter_get();
+	ALIF_SET_REFCNT(mp, 1);
+	_alifDict_notifyEvent(interp, AlifDictWatchEvent_::AlifDict_Event_Deallocated, mp, NULL, NULL);
+	if (ALIF_REFCNT(mp) > 1) {
+		ALIF_SET_REFCNT(mp, ALIF_REFCNT(mp) - 1);
+		return;
+	}
+	ALIF_SET_REFCNT(mp, 0);
+	AlifDictValues* values = mp->values;
+	AlifDictKeysObject* keys = mp->keys;
+	AlifSizeT i{}, n{};
+
+	alifObject_gcUnTrack(mp);
+	ALIF_TRASHCAN_BEGIN(mp, dict_dealloc)
+		if (values != nullptr) {
+			if (values->embedded == 0) {
+				for (i = 0, n = mp->keys->nentries; i < n; i++) {
+					ALIF_XDECREF(values->values[i]);
+				}
+				free_values(values, false);
+			}
+			dictKeys_decRef(interp, keys, false);
+		}
+		else if (keys != nullptr) {
+			dictKeys_decRef(interp, keys, false);
+		}
+	if (ALIF_IS_TYPE(mp, &_alifDictType_)) {
+		ALIF_FREELIST_FREE(dicts, mp, ALIF_TYPE(mp)->free);
+	}
+	else {
+		ALIF_TYPE(mp)->free((AlifObject*)mp);
+	}
+	ALIF_TRASHCAN_END
+}
+
+
+
+
 static AlifSizeT dict_length(AlifObject* _self) { // 3228
 	return alifAtomic_loadSizeRelaxed(&((AlifDictObject*)_self)->used);
 }
@@ -1768,7 +1811,9 @@ AlifTypeObject _alifDictType_ = { // 4760
 	.name = "قاموس",
 	.basicSize = sizeof(AlifDictObject),
 	.itemSize = 0,
-	.asNumber = 0,
+
+	.dealloc = dict_dealloc,
+	//.asNumber = 0,
 	.asSequence = &_dictAsSequence_,
 	.asMapping = &_dictAsMapping_,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |

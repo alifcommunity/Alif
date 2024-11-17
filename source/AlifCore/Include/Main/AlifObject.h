@@ -473,6 +473,27 @@ AlifIntT alifObject_genericSetAttrWithDict(AlifObject*, AlifObject*, AlifObject*
 
 
 
+#define ALIF_TRASHCAN_HEADROOM 50 // 480
+
+ // 482
+#define ALIF_TRASHCAN_BEGIN(op, dealloc) \
+do { \
+    AlifThread* tstate = alifThread_get(); \
+    if (tstate->cppRecursionRemaining <= ALIF_TRASHCAN_HEADROOM and ALIF_TYPE(op)->dealloc == (Destructor)dealloc) { \
+        _alifTrashThread_depositObject(tstate, (AlifObject*)op); \
+        break; \
+    } \
+    tstate->cppRecursionRemaining--;
+	/* The body of the deallocator is here. */
+#define ALIF_TRASHCAN_END \
+    tstate->cppRecursionRemaining++; \
+    if (tstate->deleteLater and tstate->cppRecursionRemaining > (ALIF_TRASHCAN_HEADROOM*2)) { \
+        _alifTrashThread_destroyChain(tstate); \
+    } \
+} while (0);
+
+
+
 
 enum AlifRefTracerEvent_ { // 521
 	Alif_RefTracer_Create = 0,

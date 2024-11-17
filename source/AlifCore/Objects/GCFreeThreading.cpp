@@ -73,6 +73,12 @@ void alifObject_gcTrack(void* _opRaw) { // 1717
 	ALIFOBJECT_GC_TRACK(op_);
 }
 
+void alifObject_gcUnTrack(void* _opRaw) { // 1736
+	AlifObject* op = ALIFOBJECT_CAST(_opRaw);
+	if (ALIFOBJECT_GC_IS_TRACKED(op)) {
+		ALIFOBJECT_GC_UNTRACK(op);
+	}
+}
 
 AlifIntT alifObject_isGC(AlifObject* _obj) { // 1748
 	return _alifObject_isGC(_obj);

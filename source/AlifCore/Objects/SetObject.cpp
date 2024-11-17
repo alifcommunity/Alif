@@ -301,24 +301,24 @@ static AlifIntT set_next(AlifSetObject* so,
 	return 1;
 }
 
-//static void set_dealloc(AlifSetObject* _so) { // 492
-//	SetEntry* entry{};
-//	AlifSizeT used = _so->used;
-//
-//	alifObject_gcUnTrack(_so);
-//	ALIF_TRASHCAN_BEGIN(_so, set_dealloc);
-//	if(_so->weakRefList != nullptr) alifObject_clearWeakRefs((AlifObject*)_so);
-//
-//	for (entry = _so->table; used > 0; entry++) {
-//		if (entry->key and entry->key != DUMMY) {
-//			used--;
-//			ALIF_DECREF(entry->key);
-//		}
-//	}
-//	if (_so->table != _so->smallTable) alifMem_dataFree(_so->table);
-//	ALIF_TYPE(_so)->free(_so);
-//	ALIF_TRASHCAN_END;
-//}
+static void set_dealloc(AlifSetObject* _so) { // 492
+	SetEntry* entry{};
+	AlifSizeT used = _so->used;
+
+	alifObject_gcUnTrack(_so);
+	ALIF_TRASHCAN_BEGIN(_so, set_dealloc);
+	if(_so->weakRefList != nullptr) alifObject_clearWeakRefs((AlifObject*)_so);
+
+	for (entry = _so->table; used > 0; entry++) {
+		if (entry->key and entry->key != DUMMY) {
+			used--;
+			ALIF_DECREF(entry->key);
+		}
+	}
+	if (_so->table != _so->smallTable) alifMem_dataFree(_so->table);
+	ALIF_TYPE(_so)->free(_so);
+	ALIF_TRASHCAN_END;
+}
 
 static AlifSizeT set_len(AlifSetObject* _so) { // 571
 	return alifAtomic_loadSizeRelaxed(&_so->used);
@@ -658,7 +658,7 @@ AlifTypeObject _alifSetType_ = { // 2449
 	.name = "مميزة",
 	.basicSize = sizeof(AlifSetObject),
 	.itemSize = 0,
-	//.dealloc = (Destructor)set_dealloc,
+	.dealloc = (Destructor)set_dealloc,
 
 	.asNumber = &_asNumber_,
 
