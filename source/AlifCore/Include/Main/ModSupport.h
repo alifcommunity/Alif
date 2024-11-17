@@ -5,7 +5,7 @@
 
 
 
-
+AlifObject* alif_buildValue(const char*, ...); // 19
 
 
 

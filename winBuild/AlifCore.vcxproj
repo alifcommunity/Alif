@@ -20,7 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Abstract.h" />
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_AlifMath.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Math.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Array.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ASDL.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_AST.h" />
@@ -225,6 +225,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\Lock.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\LongObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\MethodObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\ModSupport.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ModuleObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ObjectStack.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\PosixModule.cpp" />

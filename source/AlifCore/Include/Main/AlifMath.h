@@ -2,4 +2,4 @@
 
 
 
-#  define ALIF_HUGE_VAL HUGE_VAL
+#  define ALIF_HUGE_VAL HUGE_VAL // 55

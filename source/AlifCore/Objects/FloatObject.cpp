@@ -2,8 +2,7 @@
 
 #include "AlifCore_Abstract.h"
 #include "AlifCore_FreeList.h"
-#include "AlifCore_AlifMath.h"
-#include <corecrt_math.h>
+#include "AlifCore_Math.h"
 
 
 
@@ -137,7 +136,7 @@ static AlifObject* float_divmod(AlifObject* _v, AlifObject* _w) { // 667
 	CONVERT_TO_DOUBLE(_w, wx_);
 	if (wx_ == 0.0) {
 		//alifErr_setString(_alifExcZeroDivisionError_, "division by zero");
-		return NULL;
+		return nullptr;
 	}
 	_float_divMod(vx_, wx_, &floorDiv, &mod_);
 	return alif_buildValue("(dd)", floorDiv, mod_);
@@ -156,17 +155,18 @@ static AlifObject* float_floorDiv(AlifObject* _v, AlifObject* _w) { // 682
 	return alifFloat_fromDouble(floorDiv);
 }
 
-#define DOUBLE_IS_ODD_INTEGER(_x) (fmod(fabs(_x), 2.0) == 1.0)
+#define DOUBLE_IS_ODD_INTEGER(_x) (fmod(fabs(_x), 2.0) == 1.0) // 698
 
 
-static AlifObject* float_pow(AlifObject* _v, AlifObject* _w, AlifObject* _z) { // 701
+static AlifObject* float_pow(AlifObject* _v,
+	AlifObject* _w, AlifObject* _z) { // 701
 	double iv_{}, iw_{}, ix_{};
 	AlifIntT negateResult = 0;
 
 	if ((AlifObject*)_z != ALIF_NONE) {
 		//alifErr_setString(_alifExcTypeError_, "pow() 3rd argument not "
 			//"allowed unless all arguments are integers");
-		return NULL;
+		return nullptr;
 	}
 
 	CONVERT_TO_DOUBLE(_v, iv_);
@@ -202,7 +202,7 @@ static AlifObject* float_pow(AlifObject* _v, AlifObject* _w, AlifObject* _z) { /
 		if (iw_ < 0.0) {
 			//alifErr_setString(_alifExcZeroDivisionError_,
 				//"zero to a negative power");
-			return NULL;
+			return nullptr;
 		}
 		return alifFloat_fromDouble(iw_is_odd ? iv_ : 0.0);
 	}
@@ -210,7 +210,7 @@ static AlifObject* float_pow(AlifObject* _v, AlifObject* _w, AlifObject* _z) { /
 	if (iv_ < 0.0) {
 
 		if (iw_ != floor(iw_)) {
-			return _alifComplexType_.asNumber->power(_v, _w, _z);
+			//return _alifComplexType_.asNumber->power(_v, _w, _z);
 		}
 		iv_ = -iv_;
 		negateResult = DOUBLE_IS_ODD_INTEGER(iw_);
@@ -229,10 +229,47 @@ static AlifObject* float_pow(AlifObject* _v, AlifObject* _w, AlifObject* _z) { /
 	if (errno != 0) {
 		//alifErr_setFromErrno(errno == ERANGE ? _alifExcOverflowError_ :
 			//_alifExcValueError_);
-		return NULL;
+		return nullptr;
 	}
 	return alifFloat_fromDouble(ix_);
 }
+
+
+#undef DOUBLE_IS_ODD_INTEGER // 819
+
+static AlifObject* float_neg(AlifFloatObject* _v) { // 821
+	return alifFloat_fromDouble(-_v->val);
+}
+
+static AlifObject* float_abs(AlifFloatObject* _v) { // 827
+	return alifFloat_fromDouble(fabs(_v->val));
+}
+
+static AlifIntT float_bool(AlifFloatObject* _v) { // 833
+	return _v->val != 0.0;
+}
+
+
+
+static AlifObject* float___trunc__Impl(AlifObject* _self) { // 872
+	return alifLong_fromDouble(ALIFFLOAT_AS_DOUBLE(_self));
+}
+
+
+
+static AlifObject* float_float(AlifObject* _v) { // 1079
+	if (ALIFFLOAT_CHECKEXACT(_v)) {
+		return ALIF_NEWREF(_v);
+	}
+	else {
+		return alifFloat_fromDouble(((AlifFloatObject*)_v)->val);
+	}
+}
+
+
+
+
+
 
 static AlifNumberMethods _floatAsNumber_ = { // 1811
 	.add_ = float_add,
@@ -251,7 +288,7 @@ static AlifNumberMethods _floatAsNumber_ = { // 1811
 	.and_ = 0,
 	.xor_ = 0,
 	.or_ = 0,
-	.int_ = float___trunc___impl,
+	.int_ = float___trunc__Impl,
 	.reserved = 0,
 	.float_ = float_float,
 	.inplaceAdd = 0,

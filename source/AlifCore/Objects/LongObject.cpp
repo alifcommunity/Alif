@@ -282,6 +282,53 @@ AlifObject* alifLong_fromUnsignedLongLong(unsigned long long _ival) { // 366
 
 
 
+
+
+AlifObject* alifLong_fromDouble(double _dVal) { // 382
+	const double intMax = (unsigned long)LONG_MAX + 1;
+	if (-intMax < _dVal and _dVal < intMax) {
+		return alifLong_fromLong((long)_dVal);
+	}
+
+	AlifLongObject* v{};
+	double frac{};
+	AlifIntT i{}, ndig{}, expo{}, neg{};
+	neg = 0;
+	if (isinf(_dVal)) {
+		//alifErr_setString(_alifExcOverflowError_,
+		//	"cannot convert float infinity to integer");
+		return nullptr;
+	}
+	if (isnan(_dVal)) {
+		//alifErr_setString(_alifExcValueError_,
+		//	"cannot convert float NaN to integer");
+		return nullptr;
+	}
+	if (_dVal < 0.0) {
+		neg = 1;
+		_dVal = -_dVal;
+	}
+	frac = frexp(_dVal, &expo); /* dval = frac*2**expo; 0.0 <= frac < 1.0 */
+	ndig = (expo - 1) / ALIFLONG_SHIFT + 1; /* Number of 'digits' in result */
+	v = alifLong_new(ndig);
+	if (v == nullptr) return nullptr;
+	frac = ldexp(frac, (expo - 1) % ALIFLONG_SHIFT + 1);
+	for (i = ndig; --i >= 0; ) {
+		digit bits = (digit)frac;
+		v->longValue.digit[i] = bits;
+		frac = frac - (double)bits;
+		frac = ldexp(frac, ALIFLONG_SHIFT);
+	}
+	if (neg) {
+		_alifLong_flipSign(v);
+	}
+	return (AlifObject*)v;
+}
+
+
+
+
+
 // 446
 #define ALIF_ABS_LONG_MIN       (0-(unsigned long)LONG_MIN)
 #define ALIF_ABS_SIZET_MIN      (0-(AlifUSizeT)ALIF_SIZET_MIN)

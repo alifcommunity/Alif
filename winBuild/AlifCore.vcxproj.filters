@@ -211,6 +211,9 @@
     <ClCompile Include="..\source\AlifCore\Objects\ASTOpt.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\ModSupport.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">
@@ -648,7 +651,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_SetObject.h">
       <Filter>Include\Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_AlifMath.h">
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Math.h">
       <Filter>Include\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifMath.h">

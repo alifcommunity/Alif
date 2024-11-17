@@ -16,6 +16,9 @@
 
 AlifObject* alifLong_fromLong(long); // 16
 AlifObject* alifLong_fromUnsignedLong(unsigned long); // 17
+
+AlifObject* alifLong_fromDouble(double); // 20
+
 long alifLong_asLong(AlifObject* ); // 22
 
 AlifSizeT alifLong_asSizeT(AlifObject*); // 24
