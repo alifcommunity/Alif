@@ -19,6 +19,7 @@
 
 #include "AlifPort.h"
 #include "AlifMacro.h"
+#include "AlifMath.h"
 #include "AlifMemory.h"
 #include "InitConfig.h"
 #include "AlifTypeDefs.h"
