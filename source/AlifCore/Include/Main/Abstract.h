@@ -25,12 +25,10 @@ AlifObject* alifNumber_add(AlifObject*, AlifObject*); // 443
 AlifObject* alifNumber_subtract(AlifObject*, AlifObject*); // 448
 
 AlifObject* alifNumber_multiply(AlifObject*, AlifObject*); // 453
-
+AlifObject* alifNumber_floorDivide(AlifObject*, AlifObject*); // 464
 AlifObject* alifNumber_trueDivide(AlifObject*, AlifObject*); // 470
-
-
+AlifObject* alifNumber_remainder(AlifObject*, AlifObject*); // 475
 AlifObject* alifNumber_divmod(AlifObject*, AlifObject*); // 482
-
 AlifObject* alifNumber_power(AlifObject*, AlifObject*, AlifObject*); // 488
 
 

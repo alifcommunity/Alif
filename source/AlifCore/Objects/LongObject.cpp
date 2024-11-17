@@ -2413,6 +2413,31 @@ done:
 }
 
 
+static AlifObject* long_sqrt(AlifObject* _v) { // alif
+	AlifLongObject* a_{}, *res{};
+
+	a_ = (AlifLongObject*)ALIF_NEWREF(_v);
+	AlifIntT sizeA = alifLong_digitCount(a_);
+
+	if (_alifLong_isNegative(a_)) {
+		//error
+		return nullptr;
+	}
+
+	AlifSizeT val = alifLong_asSizeT((AlifObject*)a_);
+
+	AlifSizeT sqrtVal = sqrt(val);
+
+	res = alifLong_new(sizeA);
+	if (res == nullptr) return nullptr;
+
+	res->longValue.digit[0] = sqrtVal;
+
+	ALIF_DECREF(a_);
+	return (AlifObject*)res;
+}
+
+
 static AlifObject* long_invert(AlifLongObject* _v) { // 5175
 	/* Implement ~x as -(x+1) */
 	AlifLongObject* x{};
@@ -2783,7 +2808,7 @@ static AlifNumberMethods _longAsNumber_ = { // 6560
 	.negative = (UnaryFunc)long_neg,   
 	.positive = long_long,             
 	.absolute = (UnaryFunc)long_abs,
-	//.sqrt = long_sqrt,
+	.sqrt = long_sqrt,
 	.bool_ = (Inquiry)long_bool,    
 	.invert = (UnaryFunc)long_invert,
 	.lshift = long_lShift,           

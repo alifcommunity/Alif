@@ -465,9 +465,9 @@ AlifObject* alifNumber_multiply(AlifObject* _v, AlifObject* _w) { // 1162
 }
 
 
-//BINARY_FUNC(alifNumber_floorDivide, floor_divide) // 1182
+BINARY_FUNC(alifNumber_floorDivide, floorDivide) // 1182
 BINARY_FUNC(alifNumber_trueDivide, trueDivide) // 1183
-//BINARY_FUNC(alifNumber_remainder, remainder)
+BINARY_FUNC(alifNumber_remainder, remainder)
 
 AlifObject* alifNumber_power(AlifObject* _v, AlifObject* _w, AlifObject* _z) { // 1186
 	return ternary_op(_v, _w, _z, NB_SLOT(power), "** or pow()");

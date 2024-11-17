@@ -116,6 +116,7 @@ static AlifIntT fold_unaryOp(ExprTy _node,
 
 	typedef AlifObject* (*UnaryOp)(AlifObject*);
 	static const UnaryOp ops[] = {
+		nullptr,
 		alifNumber_invert,			// [UnaryOp_::Invert]
 		unary_not,					// [UnaryOp_::Not] 
 		alifNumber_positive,		// [UnaryOp_::UAdd] 
@@ -204,6 +205,14 @@ static AlifObject* safe_power(AlifObject* _v, AlifObject* _w) { // 212
 	}
 
 	return alifNumber_power(_v, _w, ALIF_NONE);
+}
+
+static AlifObject* safe_mod(AlifObject* _v, AlifObject* _w) { // 250
+	if (ALIFUSTR_CHECK(_v) or ALIFBYTES_CHECK(_v)) {
+		return nullptr;
+	}
+
+	return alifNumber_remainder(_v, _w);
 }
 
 static ExprTy parse_literal(AlifObject* _fmt,
@@ -439,7 +448,7 @@ static AlifIntT fold_binOp(ExprTy _node,
 		newval = alifNumber_trueDivide(lv, rv);
 		break;
 	case Operator_::Mod:
-		//newval = safe_mod(lv, rv);
+		newval = safe_mod(lv, rv);
 		break;
 	case Operator_::Pow:
 		newval = safe_power(lv, rv);
@@ -460,7 +469,7 @@ static AlifIntT fold_binOp(ExprTy _node,
 		//newval = alifNumber_and(lv, rv);
 		break;
 	case Operator_::FloorDiv:
-		//newval = alifNumber_floorDivide(lv, rv);
+		newval = alifNumber_floorDivide(lv, rv);
 		break;
 		// No builtin constants implement the following operators
 	//case Operator_::MatMult:
