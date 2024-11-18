@@ -14,7 +14,8 @@ static inline AlifFreeLists* alifFreeLists_get(void) { // 16
 }
 
 #define ALIF_FREELIST_FREE(_name , _nameMcro, _op, _freeFunc) \
-    alifFreeList_free(&alifFreeLists_get()->_name, ALIFOBJECT_CAST(_op), ALIF ## _nameMcro ## _MAXFREELIST, _freeFunc) // 39
+    alifFreeList_free(&alifFreeLists_get()->_name, ALIFOBJECT_CAST(_op),	\
+		ALIF ## _nameMcro ## _MAXFREELIST, _freeFunc) // 39
 
 #define ALIF_FREELIST_POP(_type, _name) ALIF_CAST(_type*, alifFreeList_pop(&alifFreeLists_get()->_name)) // 46
 

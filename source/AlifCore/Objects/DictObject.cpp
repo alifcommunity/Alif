@@ -1516,7 +1516,7 @@ static void dict_dealloc(AlifObject* _self) { // 3089
 	AlifDictObject* mp = (AlifDictObject*)_self;
 	AlifInterpreter* interp = _alifInterpreter_get();
 	ALIF_SET_REFCNT(mp, 1);
-	_alifDict_notifyEvent(interp, AlifDictWatchEvent_::AlifDict_Event_Deallocated, mp, NULL, NULL);
+	//_alifDict_notifyEvent(interp, AlifDictWatchEvent_::AlifDict_Event_Deallocated, mp, NULL, NULL);
 	if (ALIF_REFCNT(mp) > 1) {
 		ALIF_SET_REFCNT(mp, ALIF_REFCNT(mp) - 1);
 		return;
@@ -1541,7 +1541,7 @@ static void dict_dealloc(AlifObject* _self) { // 3089
 			dictKeys_decRef(interp, keys, false);
 		}
 	if (ALIF_IS_TYPE(mp, &_alifDictType_)) {
-		ALIF_FREELIST_FREE(dicts, mp, ALIF_TYPE(mp)->free);
+		ALIF_FREELIST_FREE(dicts, DICTS, mp, ALIF_TYPE(mp)->free);
 	}
 	else {
 		ALIF_TYPE(mp)->free((AlifObject*)mp);
