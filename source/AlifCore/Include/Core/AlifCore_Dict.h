@@ -142,6 +142,20 @@ static inline uint64_t dict_nextVersion(AlifInterpreter* _interp) { // 235
     ((_interp)->dictState.globalVersion += DICT_VERSION_INCREMENT)
 #endif
 
+static inline uint64_t _alifDict_notifyEvent(AlifInterpreter* _interp,
+	AlifDictWatchEvent_ _event,
+	AlifDictObject* _mp,
+	AlifObject* _key,
+	AlifObject* _value) { // 264
+	AlifIntT watcherBits = _mp->versionTag & DICT_WATCHER_MASK;
+	if (watcherBits) {
+		//RARE_EVENT_STAT_INC(watchedDictModification); // يرجى المراجعة
+		_alifDict_sendEvent(watcherBits, _event, _mp, _key, _value);
+	}
+	return DICT_NEXT_VERSION(_interp) | (_mp->versionTag & DICT_WATCHER_AND_MODIFICATION_MASK);
+}
+
+
 extern AlifDictObject* alifObject_materializeManagedDict(AlifObject* ); // 279
 
 static inline uint8_t* getInsertion_orderArray(AlifDictValues* _values) { // 287
