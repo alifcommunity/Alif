@@ -2300,3 +2300,23 @@ void alifDictKeys_decRef(AlifDictKeysObject* _keys) { // 7246
 	AlifInterpreter* interp = _alifInterpreter_get();
 	dictKeys_decRef(interp, _keys, false);
 }
+
+
+void _alifDict_sendEvent(AlifIntT _watcherBits,
+	AlifDictWatchEvent_ _event,
+	AlifDictObject* _mp,
+	AlifObject* _key,
+	AlifObject* _value) { // 7348
+	AlifInterpreter* interp = alifInterpreter_get();
+	for (AlifIntT i = 0; i < DICT_MAX_WATCHERS; i++) {
+		if (_watcherBits & 1) {
+			AlifDictWatchCallback cb_ = interp->dictState.watchers[i];
+			if (cb_ and (cb_(_event, (AlifObject*)_mp, _key, _value) < 0)) {
+				//alifErr_formatUnraisable(
+					//"Exception ignored in %s watcher callback for <dict at %p>",
+					//dict_eventName(event), mp);
+			}
+		}
+		_watcherBits >>= 1;
+	}
+}
