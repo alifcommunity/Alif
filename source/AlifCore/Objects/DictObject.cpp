@@ -1516,7 +1516,7 @@ static void dict_dealloc(AlifObject* _self) { // 3089
 	AlifDictObject* mp = (AlifDictObject*)_self;
 	AlifInterpreter* interp = _alifInterpreter_get();
 	ALIF_SET_REFCNT(mp, 1);
-	//_alifDict_notifyEvent(interp, AlifDictWatchEvent_::AlifDict_Event_Deallocated, mp, NULL, NULL);
+	_alifDict_notifyEvent(interp, AlifDictWatchEvent_::AlifDict_Event_Deallocated, mp, NULL, NULL);
 	if (ALIF_REFCNT(mp) > 1) {
 		ALIF_SET_REFCNT(mp, ALIF_REFCNT(mp) - 1);
 		return;
