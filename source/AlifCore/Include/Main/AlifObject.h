@@ -229,6 +229,7 @@ AlifHashT alifObject_hash(AlifObject*); // 447
 AlifHashT alifObject_hashNotImplemented(AlifObject*); // 448
 AlifIntT alifObject_isTrue(AlifObject*); // 449
 
+void alifObject_clearWeakRefs(AlifObject*); // 452
 
 // 491
 #define ALIF_TPFLAGS_STATIC_BUILTIN (1 << 1)
@@ -472,15 +473,19 @@ AlifIntT alifObject_genericSetAttrWithDict(AlifObject*, AlifObject*, AlifObject*
 
 
 
+void _alifTrashThread_depositObject(AlifThread*, AlifObject*); // 471
+void _alifTrashThread_destroyChain(AlifThread*); // 472
+
 
 #define ALIF_TRASHCAN_HEADROOM 50 // 480
 
  // 482
-#define ALIF_TRASHCAN_BEGIN(op, dealloc) \
+#define ALIF_TRASHCAN_BEGIN(_op, _dealloc) \
 do { \
     AlifThread* tstate = alifThread_get(); \
-    if (tstate->cppRecursionRemaining <= ALIF_TRASHCAN_HEADROOM and ALIF_TYPE(op)->dealloc == (Destructor)dealloc) { \
-        _alifTrashThread_depositObject(tstate, (AlifObject*)op); \
+    if (tstate->cppRecursionRemaining <= ALIF_TRASHCAN_HEADROOM	\
+			and ALIF_TYPE(_op)->dealloc == (Destructor)_dealloc) { \
+        _alifTrashThread_depositObject(tstate, (AlifObject*)_op); \
         break; \
     } \
     tstate->cppRecursionRemaining--;

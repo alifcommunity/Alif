@@ -1516,7 +1516,7 @@ static void dict_dealloc(AlifObject* _self) { // 3089
 	AlifDictObject* mp = (AlifDictObject*)_self;
 	AlifInterpreter* interp = _alifInterpreter_get();
 	ALIF_SET_REFCNT(mp, 1);
-	_alifDict_notifyEvent(interp, AlifDictWatchEvent_::AlifDict_Event_Deallocated, mp, NULL, NULL);
+	_alifDict_notifyEvent(interp, AlifDictWatchEvent_::AlifDict_Event_Deallocated, mp, nullptr, nullptr);
 	if (ALIF_REFCNT(mp) > 1) {
 		ALIF_SET_REFCNT(mp, ALIF_REFCNT(mp) - 1);
 		return;
@@ -2303,10 +2303,8 @@ void alifDictKeys_decRef(AlifDictKeysObject* _keys) { // 7246
 
 
 void _alifDict_sendEvent(AlifIntT _watcherBits,
-	AlifDictWatchEvent_ _event,
-	AlifDictObject* _mp,
-	AlifObject* _key,
-	AlifObject* _value) { // 7348
+	AlifDictWatchEvent_ _event, AlifDictObject* _mp,
+	AlifObject* _key, AlifObject* _value) { // 7348
 	AlifInterpreter* interp = alifInterpreter_get();
 	for (AlifIntT i = 0; i < DICT_MAX_WATCHERS; i++) {
 		if (_watcherBits & 1) {

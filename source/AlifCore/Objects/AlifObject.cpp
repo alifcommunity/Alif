@@ -411,28 +411,6 @@ AlifObject* alifObject_selfIter(AlifObject* _obj) { // 1461
 	return ALIF_NEWREF(_obj);
 }
 
-AlifIntT alifObject_isTrue(AlifObject* _v) { // 1845
-	AlifSizeT res_{};
-	if (_v == ALIF_TRUE)
-		return 1;
-	if (_v == ALIF_FALSE)
-		return 0;
-	if (_v == ALIF_NONE)
-		return 0;
-	else if (ALIF_TYPE(_v)->asNumber != nullptr and
-		ALIF_TYPE(_v)->asNumber->bool_ != nullptr)
-		res_ = (*ALIF_TYPE(_v)->asNumber->bool_)(_v);
-	else if (ALIF_TYPE(_v)->asMapping != nullptr and
-		ALIF_TYPE(_v)->asMapping->length != nullptr)
-		res_ = (*ALIF_TYPE(_v)->asMapping->length)(_v);
-	else if (ALIF_TYPE(_v)->asSequence != nullptr and
-		ALIF_TYPE(_v)->asSequence->length != nullptr)
-		res_ = (*ALIF_TYPE(_v)->asSequence->length)(_v);
-	else
-		return 1;
-	return (res_ > 0) ? 1 : ALIF_SAFE_DOWNCAST(res_, AlifSizeT, AlifIntT);
-}
-
 
 AlifObject* alifObject_genericGetAttrWithDict(AlifObject* _obj, AlifObject* _name,
 	AlifObject* _dict, AlifIntT _suppress) { // 1587
@@ -641,8 +619,32 @@ done:
 	return res;
 }
 
-AlifIntT alifObject_genericSetAttr(AlifObject* _obj, AlifObject* _name, AlifObject* _value) { // 1801
+
+AlifIntT alifObject_genericSetAttr(AlifObject* _obj,
+	AlifObject* _name, AlifObject* _value) { // 1801
 	return alifObject_genericSetAttrWithDict(_obj, _name, _value, nullptr);
+}
+
+AlifIntT alifObject_isTrue(AlifObject* _v) { // 1845
+	AlifSizeT res_{};
+	if (_v == ALIF_TRUE)
+		return 1;
+	if (_v == ALIF_FALSE)
+		return 0;
+	if (_v == ALIF_NONE)
+		return 0;
+	else if (ALIF_TYPE(_v)->asNumber != nullptr and
+		ALIF_TYPE(_v)->asNumber->bool_ != nullptr)
+		res_ = (*ALIF_TYPE(_v)->asNumber->bool_)(_v);
+	else if (ALIF_TYPE(_v)->asMapping != nullptr and
+		ALIF_TYPE(_v)->asMapping->length != nullptr)
+		res_ = (*ALIF_TYPE(_v)->asMapping->length)(_v);
+	else if (ALIF_TYPE(_v)->asSequence != nullptr and
+		ALIF_TYPE(_v)->asSequence->length != nullptr)
+		res_ = (*ALIF_TYPE(_v)->asSequence->length)(_v);
+	else
+		return 1;
+	return (res_ > 0) ? 1 : ALIF_SAFE_DOWNCAST(res_, AlifSizeT, AlifIntT);
 }
 
 
@@ -850,6 +852,35 @@ void alifObject_setDeferredRefcount(AlifObject* _op) { // 2472
 #endif
 }
 
+
+
+void _alifTrashThread_depositObject(AlifThread* _tstate, AlifObject* _op) { // 2761
+#ifdef ALIF_GIL_DISABLED
+	_op->threadID = (uintptr_t)_tstate->deleteLater;
+#else
+	ALIFGCHEAD_SET_PREV(ALIF_AS_GC(_op), (AlifGCHead*)_tstate->deleteLater);
+#endif
+	_tstate->deleteLater = _op;
+}
+
+void _alifTrashThread_destroyChain(AlifThread* tstate) { // 2777
+	tstate->cppRecursionRemaining--;
+	while (tstate->deleteLater) {
+		AlifObject* op = tstate->deleteLater;
+		Destructor dealloc = ALIF_TYPE(op)->dealloc;
+
+#ifdef ALIF_GIL_DISABLED
+		tstate->deleteLater = (AlifObject*)op->threadID;
+		op->threadID = 0;
+		alifAtomic_storeSizeRelaxed(&op->refShared, ALIF_REF_MERGED);
+#else
+		tstate->deleteLater = (AlifObject*)ALIFGCHEAD_PREV(ALIF_AS_GC(op));
+#endif
+
+		(*dealloc)(op);
+	}
+	tstate->cppRecursionRemaining++;
+}
 
 
 void alif_dealloc(AlifObject* _op) { // 2868

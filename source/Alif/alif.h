@@ -54,6 +54,7 @@
 #include "AlifTime.h"
 #include "IterObject.h"
 #include "AlifState.h"
+#include "WeaKRefObject.h"
 #include "GenericAliasObject.h"
 #include "Codecs.h"
 #include "AlifThread.h"

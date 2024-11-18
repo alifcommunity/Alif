@@ -291,7 +291,7 @@ static AlifIntT set_next(AlifSetObject* so,
 	i = *pos_ptr;
 	mask = so->mask;
 	entry = &so->table[i];
-	while (i <= mask && (entry->key == nullptr or entry->key == DUMMY)) {
+	while (i <= mask and (entry->key == nullptr or entry->key == DUMMY)) {
 		i++;
 		entry++;
 	}
@@ -662,9 +662,16 @@ AlifTypeObject _alifSetType_ = { // 2449
 
 	.asNumber = &_asNumber_,
 
+
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
+		ALIF_TPFLAGS_BASETYPE | _ALIF_TPFLAGS_MATCH_SELF,
+
+
 	.iter = (GetIterFunc)set_iter,
 
 	.alloc = alifType_genericAlloc,
+	.new_ = set_new,
+	.free = alifObject_gcDel,
 };
 
 

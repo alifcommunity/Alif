@@ -82,6 +82,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_TypeID.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_TypeObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_UStrObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_WeakRef.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Abstract.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifBuffer.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifCompile.h" />
@@ -166,6 +167,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\Tokenizer.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\TupleObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\UStrObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\WeakRefObject.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\AlifCore\Objects\Abstract.cpp" />
@@ -239,6 +241,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\TypeID.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\TypeObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\UStrObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\WeakRefObject.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

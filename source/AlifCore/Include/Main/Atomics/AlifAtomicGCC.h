@@ -265,6 +265,10 @@ static inline void alifAtomic_storeUint64(uint64_t* _obj, uint64_t _value) { // 
 	__atomic_store_n(_obj, _value, __ATOMIC_SEQ_CST);
 }
 
+static inline void alifAtomic_storePtr(void* _obj, void* _value) { // 416
+	__atomic_store_n((void**)_obj, _value, __ATOMIC_SEQ_CST);
+}
+
 static inline void alifAtomic_storeSize(AlifSizeT* _obj, AlifSizeT _value) { // 420
 	__atomic_store_n(_obj, _value, __ATOMIC_SEQ_CST);
 }

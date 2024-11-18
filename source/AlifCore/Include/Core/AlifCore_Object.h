@@ -185,6 +185,21 @@ static inline AlifIntT alif_tryIncRef(AlifObject* _op) { // 641
 }
 
 
+static inline AlifObject** _alifObject_getWeakRefsListPtr(AlifObject* _op) { // 677
+	if (ALIFTYPE_CHECK(_op) and
+		((AlifTypeObject*)_op)->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
+		AlifInterpreter* interp = _alifInterpreter_get();
+		ManagedStaticTypeState* state = _alifStaticType_getState(
+			interp, (AlifTypeObject*)_op);
+		return _alifStaticType_getWeakRefsListPtr(state);
+	}
+	AlifSizeT offset = ALIF_TYPE(_op)->weakListOffset;
+	return (AlifObject**)((char*)_op + offset);
+}
+
+
+
+
 static inline AlifIntT _alifObject_isGC(AlifObject* obj) { // 714
 	AlifTypeObject* type = ALIF_TYPE(obj);
 	return (ALIFTYPE_IS_GC(type) and (type->isGC == nullptr or type->isGC(obj)));
@@ -207,6 +222,12 @@ static inline AlifUSizeT alifType_preHeaderSize(AlifTypeObject* _tp) { // 740
 }
 
 void alifObject_gcLink(AlifObject*); // 750
+
+
+static inline AlifIntT _alifType_supportsWeakRefs(AlifTypeObject* _type) { // 759
+	return (_type->weakListOffset != 0);
+}
+
 
 extern AlifObject* alifType_allocNoTrack(AlifTypeObject*, AlifSizeT); // 763
 

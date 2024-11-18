@@ -361,6 +361,10 @@ static inline void alifAtomic_storeUint64(uint64_t* _obj, uint64_t _value) { // 
 	(void)alifAtomic_exchangeUint64(_obj, _value);
 }
 
+static inline void alifAtomic_storePtr(void* _obj, void* _value) { // 796
+	(void)alifAtomic_exchangePtr(_obj, _value);
+}
+
 static inline void alifAtomic_storeSize(AlifSizeT* _obj, AlifSizeT _value) { // 802
 	(void)alifAtomic_exchangeSize(_obj, _value);
 }

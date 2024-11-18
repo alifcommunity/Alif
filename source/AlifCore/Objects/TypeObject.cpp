@@ -75,7 +75,7 @@ static ManagedStaticTypeState* managedStatic_typeStateGet(AlifInterpreter* _inte
 
 
 
-ManagedStaticTypeState* alifStaticType_getState(AlifInterpreter* _interp,
+ManagedStaticTypeState* _alifStaticType_getState(AlifInterpreter* _interp,
 	AlifTypeObject* _self) { // 193
 	return managedStatic_typeStateGet(_interp, _self);
 }
@@ -170,7 +170,7 @@ static inline AlifIntT is_readying(AlifTypeObject* _type) { // 385
 static inline AlifObject* lookup_tpDict(AlifTypeObject* _self) { // 401
 	if (_self->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
 		AlifInterpreter* interp = _alifInterpreter_get();
-		ManagedStaticTypeState* state = alifStaticType_getState(interp, _self);
+		ManagedStaticTypeState* state = _alifStaticType_getState(interp, _self);
 		return state->dict;
 	}
 	return _self->dict;
@@ -183,7 +183,7 @@ AlifObject* alifType_getDict(AlifTypeObject* _self) { // 413
 static inline void set_tpDict(AlifTypeObject* _self, AlifObject* _dict) { // 427
 	if (_self->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
 		AlifInterpreter* interp = _alifInterpreter_get();
-		ManagedStaticTypeState* state = alifStaticType_getState(interp, _self);
+		ManagedStaticTypeState* state = _alifStaticType_getState(interp, _self);
 		state->dict = _dict;
 		return;
 	}
@@ -228,7 +228,7 @@ static inline void set_tpMro(AlifTypeObject* self,
 static inline AlifObject* lookup_tpSubClasses(AlifTypeObject* self) { // 613
 	if (self->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
 		AlifInterpreter* interp = _alifInterpreter_get();
-		ManagedStaticTypeState* state = alifStaticType_getState(interp, self);
+		ManagedStaticTypeState* state = _alifStaticType_getState(interp, self);
 		return state->subclasses;
 	}
 	return (AlifObject*)self->subclasses;

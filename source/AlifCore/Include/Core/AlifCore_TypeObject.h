@@ -84,9 +84,14 @@ public:
 
 extern AlifIntT alifTypes_initTypes(AlifInterpreter*); // 144
 
+static inline AlifObject** _alifStaticType_getWeakRefsListPtr(ManagedStaticTypeState* _state) { // 161
+	return &_state->weakList;
+}
 
 extern AlifIntT alifStaticType_initBuiltin(AlifInterpreter*, AlifTypeObject*); // 168
 
+
+extern ManagedStaticTypeState* _alifStaticType_getState(AlifInterpreter*, AlifTypeObject*); // 177
 
 AlifObject* alifType_getDict(AlifTypeObject*); // 207
 
