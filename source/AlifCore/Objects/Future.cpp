@@ -1,7 +1,7 @@
 #include "alif.h"
 
 #include "AlifCore_AST.h"
-#include "AlifCore_Symtable.h"
+#include "AlifCore_SymTable.h"
 #include "AlifCore_UStrObject.h"
 
 #define UNDEFINED_FUTURE_FEATURE "future feature %.100s is not defined"
