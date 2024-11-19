@@ -47,3 +47,5 @@ class AlifJumpTargetLabel { // 50
 public:
 	AlifIntT id{};
 };
+
+AlifObject* _alifInstructionSequence_new();

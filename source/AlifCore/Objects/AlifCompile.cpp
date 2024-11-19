@@ -127,7 +127,7 @@ public:
 static void compiler_free(AlifCompiler*); // 307
 
 
-
+#define CAPSULE_NAME "AlifCompile.cpp AlifCompiler unit"
 
 static AlifIntT compiler_setup(AlifCompiler* _c, ModuleTy _mod, AlifObject* _filename,
 	AlifCompilerFlags* _flags, AlifIntT _optimize, AlifASTMem* _astMem) { // 363
@@ -214,7 +214,131 @@ static void compiler_free(AlifCompiler* _c) { // 456
 	alifMem_dataFree(_c);
 }
 
+static AlifObject* list2dict(AlifObject* _list) { // 467
+	AlifSizeT i{}, n{};
+	AlifObject* v{}, * k{};
+	AlifObject* dict = alifDict_new();
+	if (!dict) return nullptr;
 
+	n = alifList_size(_list);
+	for (i = 0; i < n; i++) {
+		v = alifLong_fromSizeT(i);
+		if (!v) {
+			ALIF_DECREF(dict);
+			return nullptr;
+		}
+		k = ALIFLIST_GET_ITEM(_list, i);
+		if (alifDict_setItem(dict, k, v) < 0) {
+			ALIF_DECREF(v);
+			ALIF_DECREF(dict);
+			return nullptr;
+		}
+		ALIF_DECREF(v);
+	}
+	return dict;
+}
+
+static AlifObject* dict_byType(AlifObject* _src, AlifIntT _scopeType,
+	AlifIntT _flag, AlifSizeT _offset) { // 501
+	AlifSizeT i = _offset, numKeys, keyI;
+	AlifObject* k, * v, * dest = alifDict_new();
+	AlifObject* sortedKeys;
+
+	if (dest == nullptr) return nullptr;
+
+	sortedKeys = alifDict_keys(_src);
+	if (sortedKeys == nullptr) {
+		ALIF_DECREF(dest);
+		return nullptr;
+	}
+	if (alifList_sort(sortedKeys) != 0) {
+		ALIF_DECREF(sortedKeys);
+		ALIF_DECREF(dest);
+		return nullptr;
+	}
+	numKeys = ALIFLIST_GET_SIZE(sortedKeys);
+
+	for (keyI = 0; keyI < numKeys; keyI++) {
+		k = ALIFLIST_GET_ITEM(sortedKeys, keyI);
+		v = alifDict_getItemWithError(_src, k);
+		if (!v) {
+			//if (!alifErr_occurred()) {
+			//	alifErr_SetObject(_alifExcKeyError_, k);
+			//}
+			ALIF_DECREF(sortedKeys);
+			ALIF_DECREF(dest);
+			return nullptr;
+		}
+		long vi = alifLong_asLong(v);
+		if (vi == -1 /*and alifErr_occurred()*/) {
+			ALIF_DECREF(sortedKeys);
+			ALIF_DECREF(dest);
+			return nullptr;
+		}
+		if (SYMBOL_TO_SCOPE(vi) == _scopeType or vi & _flag) {
+			AlifObject* item = alifLong_fromSizeT(i);
+			if (item == nullptr) {
+				ALIF_DECREF(sortedKeys);
+				ALIF_DECREF(dest);
+				return nullptr;
+			}
+			i++;
+			if (alifDict_setItem(dest, k, item) < 0) {
+				ALIF_DECREF(sortedKeys);
+				ALIF_DECREF(item);
+				ALIF_DECREF(dest);
+				return nullptr;
+			}
+			ALIF_DECREF(item);
+		}
+	}
+	ALIF_DECREF(sortedKeys);
+	return dest;
+}
+
+static void compiler_unitFree(CompilerUnit* _u) { // 567
+	ALIF_CLEAR(_u->instrSequence);
+	ALIF_CLEAR(_u->ste);
+	ALIF_CLEAR(_u->metadata.name);
+	ALIF_CLEAR(_u->metadata.qualname);
+	ALIF_CLEAR(_u->metadata.consts);
+	ALIF_CLEAR(_u->metadata.names);
+	ALIF_CLEAR(_u->metadata.varnames);
+	ALIF_CLEAR(_u->metadata.freevars);
+	ALIF_CLEAR(_u->metadata.cellvars);
+	ALIF_CLEAR(_u->metadata.fasthidden);
+	ALIF_CLEAR(_u->private_);
+	ALIF_CLEAR(_u->staticAttributes);
+	ALIF_CLEAR(_u->deferredAnnotations);
+	alifMem_dataFree(_u);
+}
+
+
+
+
+static AlifSizeT dict_addO(AlifObject* _dict, AlifObject* _o) { // 735
+	AlifObject* v{};
+	AlifSizeT arg{};
+
+	if (alifDict_getItemRef(_dict, _o, &v) < 0) {
+		return ERROR;
+	}
+	if (!v) {
+		arg = ALIFDICT_GET_SIZE(_dict);
+		v = alifLong_fromSizeT(arg);
+		if (!v) {
+			return ERROR;
+		}
+		if (alifDict_setItem(_dict, _o, v) < 0) {
+			ALIF_DECREF(v);
+			return ERROR;
+		}
+	}
+	else arg = alifLong_asLong(v);
+
+	ALIF_DECREF(v);
+	return arg;
+}
 
 
 
@@ -239,7 +363,7 @@ static AlifIntT compiler_enterScope(AlifCompiler* _c, Identifier _name,
 		u->metadata.posOnlyArgCount = 0;
 		u->metadata.kwOnlyArgCount = 0;
 	}
-	u->ste = alifSymtable_lookup(_c->st, _key);
+	u->ste = _alifSymtable_lookup(_c->st, _key);
 	if (!u->ste) {
 		compiler_unitFree(u);
 		return ERROR;

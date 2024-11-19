@@ -1,6 +1,7 @@
 #pragma once
 
-
+#include "AlifCore_SymTable.h"
+#include "AlifCore_InstructionSequence.h"
 
 
 

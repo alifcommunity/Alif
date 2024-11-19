@@ -209,6 +209,22 @@ void alifSymtable_free(AlifSymTable* _st) { // 485
 	alifMem_dataFree((void*)_st);
 }
 
+
+AlifSTEntryObject* _alifSymtable_lookup(AlifSymTable* _st, void* _key) { // 493
+	AlifObject* k{}, * v{};
+
+	k = alifLong_fromVoidPtr(_key);
+	if (k == nullptr) return nullptr;
+	if (alifDict_getItemRef(_st->blocks, k, &v) == 0) {
+		//alifErr_setString(_alifExcKeyError_,
+		//	"unknown symbol table entry");
+	}
+	ALIF_DECREF(k);
+
+	return (AlifSTEntryObject*)v;
+}
+
+
 long alifST_getSymbol(AlifSTEntryObject* ste, AlifObject* name) { // 527
 	AlifObject* v_{};
 	if (alifDict_getItemRef(ste->symbols, name, &v_) < 0) {

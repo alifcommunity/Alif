@@ -108,6 +108,8 @@ extern AlifTypeObject _alifSTEntryType_; // 132
 extern AlifIntT alifST_isFunctionLike(AlifSTEntryObject* ); // 138
 extern AlifSymTable* alifSymtable_build(ModuleTy, AlifObject*, AlifFutureFeatures*); // 140
 
+extern AlifSTEntryObject* _alifSymtable_lookup(AlifSymTable*, void*); // 144
+
 extern void alifSymtable_free(AlifSymTable*); // 147
 
 extern AlifObject* alif_maybeMangle(AlifObject*, AlifSTEntryObject*, AlifObject*); // 149
