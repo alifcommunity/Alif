@@ -1,9 +1,9 @@
 #include "alif.h"
 
-//#include "Opcode.h"
+#include "OpcodeIDs.h"
 #include "AlifCore_AST.h"
 #define NEED_OPCODE_TABLES
-//#include "AlifCore_OpcodeUtils.h"
+#include "AlifCore_OpcodeUtils.h"
 #undef NEED_OPCODE_TABLES
 //#include "AlifCore_Code.h"
 #include "AlifCore_Compile.h"
@@ -31,7 +31,14 @@
     }
 
 
+class AlifCompiler; // 81
+
+
 typedef AlifInstructionSequence InstrSequence; // 84
+
+static InstrSequence* compiler_instrSequence(AlifCompiler*); // 86
+
+#define INSTR_SEQUENCE(_c) compiler_instrSequence(_c) // 91
 
 
 typedef AlifSourceLocation Location; // 99
@@ -72,6 +79,51 @@ enum ScopeType_ { // 152
 	Compiler_Scope_Annotations,
 };
 
+
+
+
+AlifIntT _alifCompile_ensureArrayLargeEnough(AlifIntT _idx, void** _array,
+	AlifIntT* _alloc, AlifIntT _defaultAlloc, AlifUSizeT _itemSize) { // 182
+	void* arr = *_array;
+
+	if (arr == nullptr) {
+		AlifIntT newAlloc = _defaultAlloc;
+		if (_idx >= newAlloc) {
+			newAlloc = _idx + _defaultAlloc;
+		}
+		arr = alifMem_dataAlloc(newAlloc * _itemSize); // alif
+		if (arr == nullptr) {
+			//alifErr_noMemory();
+			return ERROR;
+		}
+		*_alloc = newAlloc;
+	}
+	else if (_idx >= *_alloc) {
+		AlifUSizeT oldsize = *_alloc * _itemSize;
+		AlifIntT new_alloc = *_alloc << 1;
+		if (_idx >= new_alloc) {
+			new_alloc = _idx + _defaultAlloc;
+		}
+		AlifUSizeT newsize = new_alloc * _itemSize;
+
+		if (oldsize > (SIZE_MAX >> 1)) {
+			//alifErr_noMemory();
+			return ERROR;
+		}
+
+		void* tmp = alifMem_dataRealloc(arr, newsize);
+		if (tmp == nullptr) {
+			//alifErr_noMemory();
+			return ERROR;
+		}
+		*_alloc = new_alloc;
+		arr = tmp;
+		memset((char*)arr + oldsize, 0, newsize - oldsize);
+	}
+
+	*_array = arr;
+	return SUCCESS;
+}
 
 
 
@@ -314,6 +366,16 @@ static void compiler_unitFree(CompilerUnit* _u) { // 567
 }
 
 
+
+static AlifIntT codegen_addOpI(InstrSequence* seq,
+	AlifIntT opcode, AlifSizeT oparg, Location loc) { // 699
+
+	AlifIntT oparg_ = ALIF_SAFE_DOWNCAST(oparg, AlifSizeT, AlifIntT);
+	return _alifInstructionSequence_addOp(seq, opcode, oparg_, loc);
+}
+
+#define ADDOP_I(_c, _loc, _op, _o) \
+    RETURN_IF_ERROR(codegen_addOpI(INSTR_SEQUENCE(_c), _op, _o, _loc)) // 715
 
 
 static AlifSizeT dict_addO(AlifObject* _dict, AlifObject* _o) { // 735
@@ -562,4 +624,20 @@ static AlifCodeObject* compiler_mod(AlifCompiler* _c, ModuleTy _mod) { // 1641
 finally:
 	compiler_exitScope(_c);
 	return co;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+static InstrSequence* compiler_instrSequence(AlifCompiler* _c) { // 7358
+	return _c->u_->instrSequence;
 }

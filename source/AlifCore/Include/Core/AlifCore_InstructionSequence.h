@@ -48,4 +48,8 @@ public:
 	AlifIntT id{};
 };
 
-AlifObject* _alifInstructionSequence_new();
+typedef AlifInstructionSequence InstrSequence; // alif
+
+AlifObject* _alifInstructionSequence_new(); // 54
+
+AlifIntT _alifInstructionSequence_addOp(InstrSequence*, AlifIntT, AlifIntT, Location); // 57

@@ -11,7 +11,7 @@ extern AlifTypeObject _alifListType_; // 20
 
 
 AlifObject* alifList_new(AlifSizeT); // 28
-
+AlifSizeT alifList_size(AlifObject*); // 29
 AlifIntT alifList_append(AlifObject*, AlifObject*); // 37
 
 AlifIntT alifList_setSlice(AlifObject* , AlifSizeT , AlifSizeT , AlifObject*); // 40

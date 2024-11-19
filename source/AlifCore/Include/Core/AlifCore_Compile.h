@@ -38,3 +38,9 @@ public:
 
 	AlifIntT firstLineno; /* the first lineno of the block */
 };
+
+
+
+
+AlifIntT _alifCompile_ensureArrayLargeEnough(AlifIntT,
+	void**, AlifIntT*, AlifIntT, AlifUSizeT); // 68

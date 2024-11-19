@@ -198,6 +198,19 @@ static AlifObject* list_newPrealloc(AlifSizeT _size) { // 252
 	return (AlifObject*)op_;
 }
 
+AlifSizeT alifList_size(AlifObject* _op) { // 279
+	if (!ALIFLIST_CHECK(_op)) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+	else {
+		return ALIFLIST_GET_SIZE(_op);
+	}
+}
+
+
+
+
 AlifIntT alifList_appendTakeRefListResize(AlifListObject* _self,
 	AlifObject* _newItem) { // 468
 	AlifSizeT len_ = ALIF_SIZE(_self);
@@ -243,7 +256,8 @@ static void list_dealloc(AlifObject* _self) { // 497
 }
 
 
-static AlifObject* listSlice_lockHeld(AlifListObject* _a, AlifSizeT _iLow, AlifSizeT _iHigh) { // 635
+static AlifObject* listSlice_lockHeld(AlifListObject* _a,
+	AlifSizeT _iLow, AlifSizeT _iHigh) { // 635
 	AlifListObject* np_{};
 	AlifObject** src_{}, ** dest{};
 	AlifSizeT i_{}, len_{};

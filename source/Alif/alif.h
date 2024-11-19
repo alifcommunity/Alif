@@ -50,7 +50,7 @@
 #include "DescrObject.h"
 #include "SetObject.h"
 #include "Code.h"
-//#include "AlifCapsule.h"
+#include "AlifCapsule.h"
 #include "AlifTime.h"
 #include "IterObject.h"
 #include "AlifState.h"

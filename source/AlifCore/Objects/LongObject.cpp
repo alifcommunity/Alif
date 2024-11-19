@@ -510,6 +510,55 @@ AlifObject* alifLong_fromVoidPtr(void* _p) { // 1349
 
 
 
+AlifObject* alifLong_fromSizeT(AlifSizeT _iVal) { // 1447
+	AlifLongObject* v{};
+	AlifUSizeT absIVal{};
+	AlifUSizeT t{};  /* unsigned so >> doesn't propagate sign bit */
+	AlifIntT ndigits = 0;
+	AlifIntT negative = 0;
+
+	if (IS_SMALL_INT(_iVal)) {
+		return get_smallInt((sdigit)_iVal);
+	}
+
+	if (_iVal < 0) {
+		/* avoid signed overflow when ival = SIZE_T_MIN */
+		absIVal = (size_t)(-1 - _iVal) + 1;
+		negative = 1;
+	}
+	else {
+		absIVal = (size_t)_iVal;
+	}
+
+	/* Count the number of Alif digits. */
+	t = absIVal;
+	while (t) {
+		++ndigits;
+		t >>= ALIFLONG_SHIFT;
+	}
+	v = alifLong_new(ndigits);
+	if (v != nullptr) {
+		digit* p = v->longValue.digit;
+		_alifLong_setSignAndDigitCount(v, negative ? -1 : 1, ndigits);
+		t = absIVal;
+		while (t) {
+			*p++ = (digit)(t & ALIFLONG_MASK);
+			t >>= ALIFLONG_SHIFT;
+		}
+	}
+	return (AlifObject*)v;
+}
+
+
+
+
+
+
+
+
+
+
+
  // 1820
 #define CHECK_BINOP(_v,_w)									\
     do {													\
