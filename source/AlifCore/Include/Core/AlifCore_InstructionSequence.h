@@ -49,6 +49,7 @@ public:
 };
 
 typedef AlifInstructionSequence InstrSequence; // alif
+typedef AlifSourceLocation Location; // alif
 
 AlifObject* _alifInstructionSequence_new(); // 54
 
