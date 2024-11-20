@@ -47,13 +47,13 @@ wchar_t* alifUStr_asWideCharString(AlifObject*, AlifSizeT*); // 291
 #endif // 296
 
 
-/* --- UTF-8 Codecs ------------------------------------------------------- */
+/* --- UTF-8 Codecs ---------------------------------------------------- */
 
 AlifObject* alifUStr_decodeUTF8(const char*, AlifSizeT, const char*); // 429
 
 AlifObject* alifUStr_decodeUTF8Stateful(const char*, AlifSizeT, const char*, AlifSizeT*); // 435
 
-/* --- UTF-32 Codecs ------------------------------------------------------ */
+/* --- UTF-32 Codecs --------------------------------------------------- */
 
 
 
@@ -63,6 +63,9 @@ AlifIntT alifUStr_fsConverter(AlifObject*, void*); // 743
 
 AlifObject* alifUStr_encodeFSDefault(AlifObject*); // 766
 
+AlifObject* alifUStr_concat(AlifObject*, AlifObject*); // 778
+
+void alifUStr_append(AlifObject**, AlifObject*); // 786
 
 AlifSizeT alifUStr_findChar(AlifObject*, AlifUCS4, AlifSizeT, AlifSizeT, AlifIntT); // 911
 

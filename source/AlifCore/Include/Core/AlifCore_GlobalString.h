@@ -19,6 +19,7 @@ public:
 	public:
 		STRUCT_FOR_STR(AnonModule, "<module>")
         STRUCT_FOR_STR(DblPercent, "%%")
+		STRUCT_FOR_STR(DotLocals, ".<locals>")
         STRUCT_FOR_STR(Empty, "")
 		STRUCT_FOR_STR(Format, ".format")
         //STRUCT_FOR_STR(Newline, "\n")

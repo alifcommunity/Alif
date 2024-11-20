@@ -54,3 +54,7 @@ typedef AlifSourceLocation Location; // alif
 AlifObject* _alifInstructionSequence_new(); // 54
 
 AlifIntT _alifInstructionSequence_addOp(InstrSequence*, AlifIntT, AlifIntT, Location); // 57
+
+
+
+AlifIntT _alifInstructionSequence_addNested(InstrSequence*, InstrSequence*); // 64

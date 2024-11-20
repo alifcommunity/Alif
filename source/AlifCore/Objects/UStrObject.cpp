@@ -2844,6 +2844,123 @@ AlifIntT alifUStr_eq(AlifObject* _aa, AlifObject* _bb) { // 11229
 }
 
 
+
+AlifObject* alifUStr_concat(AlifObject* _left, AlifObject* _right) { // 11295
+	AlifObject* result{};
+	AlifUCS4 maxChar{}, maxChar2{};
+	AlifSizeT leftLen{}, rightLen{}, newLen{};
+
+	if (ensure_uStr(_left) < 0)
+		return nullptr;
+
+	if (!ALIFUSTR_CHECK(_right)) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"can only concatenate str (not \"%.200s\") to str",
+		//	ALIF_TYPE(_right)->name);
+		return nullptr;
+	}
+
+	/* Shortcuts */
+	AlifObject* empty = unicode_getEmpty();  // Borrowed reference
+	if (_left == empty) {
+		return alifUStr_fromObject(_right);
+	}
+	if (_right == empty) {
+		return alifUStr_fromObject(_left);
+	}
+
+	leftLen = ALIFUSTR_GET_LENGTH(_left);
+	rightLen = ALIFUSTR_GET_LENGTH(_right);
+	if (leftLen > ALIF_SIZET_MAX - rightLen) {
+		//alifErr_setString(_alifExcOverflowError_,
+		//	"strings are too large to concat");
+		return nullptr;
+	}
+	newLen = leftLen + rightLen;
+
+	maxChar = ALIFUSTR_MAX_CHAR_VALUE(_left);
+	maxChar2 = ALIFUSTR_MAX_CHAR_VALUE(_right);
+	maxChar = ALIF_MAX(maxChar, maxChar2);
+
+	/* Concat the two Unicode strings */
+	result = alifUStr_new(newLen, maxChar);
+	if (result == nullptr) return nullptr;
+	alifUStr_fastCopyCharacters(result, 0, _left, 0, leftLen);
+	alifUStr_fastCopyCharacters(result, leftLen, _right, 0, rightLen);
+	return result;
+}
+
+void alifUStr_append(AlifObject** _pLeft, AlifObject* _right) { // 11344
+	AlifObject* left{}, * res{};
+	AlifUCS4 maxChar{}, maxChar2{};
+	AlifSizeT leftLen{}, rightLen{}, newLen{};
+	AlifObject* empty{};
+
+	if (_pLeft == nullptr) {
+		//if (!alifErr_occurred())
+		//	ALIFERR_BADINTERNALCALL();
+		return;
+	}
+	left = *_pLeft;
+	if (_right == nullptr or left == nullptr
+		or !ALIFUSTR_CHECK(left) or !ALIFUSTR_CHECK(_right)) {
+		//if (!alifErr_occurred())
+		//	ALIFERR_BADINTERNALCALL();
+		goto error;
+	}
+
+	/* Shortcuts */
+	empty = unicode_getEmpty();  // Borrowed reference
+	if (left == empty) {
+		ALIF_DECREF(left);
+		*_pLeft = ALIF_NEWREF(_right);
+		return;
+	}
+	if (_right == empty) {
+		return;
+	}
+
+	leftLen = ALIFUSTR_GET_LENGTH(left);
+	rightLen = ALIFUSTR_GET_LENGTH(_right);
+	if (leftLen > ALIF_SIZET_MAX - rightLen) {
+		//alifErr_setString(_alifExcOverflowError_,
+		//	"strings are too large to concat");
+		goto error;
+	}
+	newLen = leftLen + rightLen;
+
+	if (uStr_modifiable(left)
+		and ALIFUSTR_CHECKEXACT(_right)
+		and ALIFUSTR_KIND(_right) <= ALIFUSTR_KIND(left)
+		and !(ALIFUSTR_IS_ASCII(left) and !ALIFUSTR_IS_ASCII(_right)))
+	{
+		/* append inplace */
+		if (uStr_resize(_pLeft, newLen) != 0)
+			goto error;
+
+		/* copy 'right' into the newly allocated area of 'left' */
+		alifUStr_fastCopyCharacters(*_pLeft, leftLen, _right, 0, rightLen);
+	}
+	else {
+		maxChar = ALIFUSTR_MAX_CHAR_VALUE(left);
+		maxChar2 = ALIFUSTR_MAX_CHAR_VALUE(_right);
+		maxChar = ALIF_MAX(maxChar, maxChar2);
+
+		/* Concat the two Unicode strings */
+		res = alifUStr_new(newLen, maxChar);
+		if (res == nullptr) goto error;
+		alifUStr_fastCopyCharacters(res, 0, left, 0, leftLen);
+		alifUStr_fastCopyCharacters(res, leftLen, _right, 0, rightLen);
+		ALIF_DECREF(left);
+		*_pLeft = res;
+	}
+	return;
+
+error:
+	ALIF_CLEAR(*_pLeft);
+}
+
+
 static AlifHashT uStr_hash(AlifObject* _self) { // 11663
 	AlifUHashT x;  /* Unsigned for defined overflow behavior. */
 

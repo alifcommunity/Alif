@@ -397,7 +397,7 @@ static AlifIntT compiler_setQualname(AlifCompiler* _c) { // 612
 				return ERROR;
 			}
 
-			scope = _alifST_getScope(parent->ste, mangled);
+			scope = alifST_getScope(parent->ste, mangled);
 			ALIF_DECREF(mangled);
 			RETURN_IF_ERROR(scope);
 			if (scope == GLOBAL_EXPLICIT) forceGlobal = 1;

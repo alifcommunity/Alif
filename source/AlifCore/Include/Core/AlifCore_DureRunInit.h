@@ -653,6 +653,7 @@
 #define ALIF_STR_LITERALS_INIT { \
 	INIT_STR(AnonModule, "<module>"), \
     INIT_STR(DblPercent, "%%"), \
+    INIT_STR(DotLocals, ".<locals>"), \
     INIT_STR(Empty, ""), \
     INIT_STR(Format, ".format"), \
 }

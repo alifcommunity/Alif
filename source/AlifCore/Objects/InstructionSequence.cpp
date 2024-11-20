@@ -56,7 +56,19 @@ AlifIntT _alifInstructionSequence_addOp(InstrSequence * _seq,
 
 
 
-
+AlifIntT _alifInstructionSequence_addNested(InstrSequence* _seq,
+	InstrSequence* _nested) { // 146
+	if (_seq->nested == nullptr) {
+		_seq->nested = alifList_new(0);
+		if (_seq->nested == nullptr) {
+			return ERROR;
+		}
+	}
+	if (alifList_append(_seq->nested, (AlifObject*)_nested) < 0) {
+		return ERROR;
+	}
+	return SUCCESS;
+}
 
 
 

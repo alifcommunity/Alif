@@ -700,6 +700,35 @@ AlifIntT alifSequence_setItem(AlifObject* _s, AlifSizeT _i, AlifObject* _o) { //
 }
 
 
+AlifIntT alifSequence_delItem(AlifObject* _s, AlifSizeT _i) { // 1913
+	if (_s == nullptr) {
+		null_error();
+		return -1;
+	}
+
+	AlifSequenceMethods* m = ALIF_TYPE(_s)->asSequence;
+	if (m and m->assItem) {
+		if (_i < 0) {
+			if (m->length) {
+				AlifSizeT l = (*m->length)(_s);
+				if (l < 0) {
+					return -1;
+				}
+				_i += l;
+			}
+		}
+		AlifIntT res = m->assItem(_s, _i, (AlifObject*)nullptr);
+		return res;
+	}
+
+	if (ALIF_TYPE(_s)->asMapping and ALIF_TYPE(_s)->asMapping->assSubscript) {
+		//type_error("%.200s is not a sequence", _s);
+		return -1;
+	}
+	//type_error("'%.200s' object doesn't support item deletion", _s);
+	return -1;
+}
+
 
 AlifObject* alifSequence_tuple(AlifObject* v) { // 1992
 	AlifObject* it{};  /* iter(v) */

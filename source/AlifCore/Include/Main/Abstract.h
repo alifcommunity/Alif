@@ -68,6 +68,8 @@ AlifObject* alifSequence_getItem(AlifObject*, AlifSizeT); // 689
 
 AlifIntT alifSequence_setItem(AlifObject*, AlifSizeT, AlifObject*); // 700
 
+AlifIntT alifSequence_delItem(AlifObject*, AlifSizeT); // 705
+
 AlifObject* alifSequence_tuple(AlifObject*); // 723
 
 AlifObject* alifSequence_list(AlifObject*); // 727
