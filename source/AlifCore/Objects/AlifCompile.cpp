@@ -366,6 +366,79 @@ static void compiler_unitFree(CompilerUnit* _u) { // 567
 }
 
 
+static AlifIntT compiler_setQualname(AlifCompiler* _c) { // 612
+	AlifSizeT stackSize{};
+	CompilerUnit* u = _c->u_;
+	AlifObject* name{}, * base{};
+
+	base = nullptr;
+	stackSize = ALIFLIST_GET_SIZE(_c->stack);
+	if (stackSize > 1) {
+		AlifIntT scope, forceGlobal = 0;
+		CompilerUnit* parent{};
+		AlifObject* mangled{}, * capsule{};
+
+		capsule = ALIFLIST_GET_ITEM(_c->stack, stackSize - 1);
+		parent = (CompilerUnit*)alifCapsule_getPointer(capsule, CAPSULE_NAME);
+		if (parent->scopeType == ScopeType_::Compiler_Scope_Annotations) {
+			if (stackSize == 2) {
+				u->metadata.qualname = ALIF_NEWREF(u->metadata.name);
+				return SUCCESS;
+			}
+			capsule = ALIFLIST_GET_ITEM(_c->stack, stackSize - 2);
+			parent = (struct compiler_unit*)alifCapsule_getPointer(capsule, CAPSULE_NAME);
+		}
+
+		if (u->scopeType == ScopeType_::Compiler_Scope_Function
+			or u->scopeType == ScopeType_::Compiler_Scope_Async_Function
+			or u->scopeType == ScopeType_::Compiler_Scope_Class) {
+			mangled = alif_mangle(parent->private_, u->metadata.name);
+			if (!mangled) {
+				return ERROR;
+			}
+
+			scope = _alifST_getScope(parent->ste, mangled);
+			ALIF_DECREF(mangled);
+			RETURN_IF_ERROR(scope);
+			if (scope == GLOBAL_EXPLICIT) forceGlobal = 1;
+		}
+
+		if (!forceGlobal) {
+			if (parent->scopeType == ScopeType_::Compiler_Scope_Function
+				or parent->scopeType == ScopeType_::Compiler_Scope_Async_Function
+				or parent->scopeType == ScopeType_::Compiler_Scope_Lambda)
+			{
+				base = alifUStr_concat(parent->metadata.qualname,
+					&ALIF_STR(DotLocals));
+				if (base == nullptr) {
+					return ERROR;
+				}
+			}
+			else {
+				base = ALIF_NEWREF(parent->metadata.qualname);
+			}
+		}
+	}
+
+	if (base != nullptr) {
+		name = alifUStr_concat(base, ALIF_LATIN1_CHR('.'));
+		ALIF_DECREF(base);
+		if (name == nullptr) {
+			return ERROR;
+		}
+		alifUStr_append(&name, u->metadata.name);
+		if (name == nullptr) {
+			return ERROR;
+		}
+	}
+	else {
+		name = ALIF_NEWREF(u->metadata.name);
+	}
+	u->metadata.qualname = name;
+
+	return SUCCESS;
+}
+
 
 static AlifIntT codegen_addOpI(InstrSequence* seq,
 	AlifIntT opcode, AlifSizeT oparg, Location loc) { // 699

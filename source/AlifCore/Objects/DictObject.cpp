@@ -1602,6 +1602,43 @@ static AlifMappingMethods _dictAsMapping_ = { // 3278
 };
 
 
+static AlifObject* keys_lockHeld(AlifObject* _dict) { // 3284
+	if (_dict == nullptr or !ALIFDICT_CHECK(_dict)) {
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
+	AlifDictObject* mp = (AlifDictObject*)_dict;
+	AlifObject* v{};
+	AlifSizeT n{};
+
+again:
+	n = mp->used;
+	v = alifList_new(n);
+	if (v == nullptr) return nullptr;
+	if (n != mp->used) {
+		ALIF_DECREF(v);
+		goto again;
+	}
+
+	AlifSizeT j = 0, pos = 0;
+	AlifObject* key{};
+	while (_alifDict_next((AlifObject*)mp, &pos, &key, nullptr, nullptr)) {
+		ALIFLIST_SET_ITEM(v, j, ALIF_NEWREF(key));
+		j++;
+	}
+	return v;
+}
+
+AlifObject* alifDict_keys(AlifObject* _dict) { // 3322
+	AlifObject* res{};
+	ALIF_BEGIN_CRITICAL_SECTION(_dict);
+	res = keys_lockHeld(_dict);
+	ALIF_END_CRITICAL_SECTION();
+
+	return res;
+}
+
+
 
 static AlifIntT dictSetDefault_refLockHeld(AlifObject* _d, AlifObject* _key, AlifObject* _defaultValue,
 	AlifObject** _result, AlifIntT _incRefResult) { // 4145

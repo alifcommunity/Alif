@@ -706,6 +706,250 @@ AlifObject* _alifList_extend(AlifListObject* _self, AlifObject* _iterable) { // 
 
 
 
+static AlifObject* list_sortImpl(AlifListObject* _self,
+	AlifObject* _keyFunc, AlifIntT _reverse) { // 2814
+	MergeState ms{};
+	AlifSizeT nremaining{};
+	AlifSizeT minrun{};
+	SortSlice lo{};
+	AlifSizeT savedObjSize{}, savedAllocated{};
+	AlifObject** savedObjItem{};
+	AlifObject** finalObjItem{};
+	AlifObject* result = nullptr;            /* guilty until proved innocent */
+	AlifSizeT i{};
+	AlifObject** keys{};
+
+	if (_keyFunc == ALIF_NONE) _keyFunc = nullptr;
+
+	savedObjSize = ALIF_SIZE(_self);
+	savedObjItem = _self->item;
+	savedAllocated = _self->allocated;
+	ALIF_SET_SIZE(_self, 0);
+	alifAtomic_storePtrRelease(&_self->item, nullptr);
+	_self->allocated = -1; /* any operation will reset it to >= 0 */
+
+	if (_keyFunc == nullptr) {
+		keys = nullptr;
+		lo.keys = savedObjItem;
+		lo.values = nullptr;
+	}
+	else {
+		if (savedObjSize < MERGESTATE_TEMP_SIZE / 2)
+			/* Leverage stack space we allocated but won't otherwise use */
+			keys = &ms.temparray[savedObjSize + 1];
+		else {
+			keys = (AlifObject**)alifMem_dataAlloc(sizeof(AlifObject*) * savedObjSize);
+			if (keys == nullptr) {
+				//alifErr_noMemory();
+				goto keyFuncFail;
+			}
+		}
+
+		for (i = 0; i < savedObjSize; i++) {
+			keys[i] = alifObject_callOneArg(_keyFunc, savedObjItem[i]);
+			if (keys[i] == nullptr) {
+				for (i = i - 1; i >= 0; i--)
+					ALIF_DECREF(keys[i]);
+				if (savedObjSize >= MERGESTATE_TEMP_SIZE / 2)
+					alifMem_dataFree(keys);
+				goto keyFuncFail;
+			}
+		}
+
+		lo.keys = keys;
+		lo.values = savedObjItem;
+	}
+
+
+	if (savedObjSize > 1) {
+		/* Assume the first element is representative of the whole list. */
+		AlifIntT keysAreInTuples = (ALIF_IS_TYPE(lo.keys[0], &_alifTupleType_) and
+			ALIF_SIZE(lo.keys[0]) > 0);
+
+		AlifTypeObject* keyType = (keysAreInTuples ?
+			ALIF_TYPE(ALIFTUPLE_GET_ITEM(lo.keys[0], 0)) :
+			ALIF_TYPE(lo.keys[0]));
+
+		AlifIntT keysAreAllSameType = 1;
+		AlifIntT stringsAreLatin = 1;
+		AlifIntT intsAreBounded = 1;
+
+		/* Prove that assumption by checking every key. */
+		for (i = 0; i < savedObjSize; i++) {
+
+			if (keysAreInTuples &&
+				!(ALIF_IS_TYPE(lo.keys[i], &_alifTupleType_)
+					and ALIF_SIZE(lo.keys[i]) != 0)) {
+				keysAreInTuples = 0;
+				keysAreAllSameType = 0;
+				break;
+			}
+
+			AlifObject* key = (keysAreInTuples ?
+				ALIFTUPLE_GET_ITEM(lo.keys[i], 0) :
+				lo.keys[i]);
+
+			if (!ALIF_IS_TYPE(key, keyType)) {
+				keysAreAllSameType = 0;
+				if (!keysAreInTuples) {
+					break;
+				}
+			}
+
+			if (keysAreAllSameType) {
+				if (keyType == &_alifLongType_ and
+					intsAreBounded and
+					!alifLong_isCompact((AlifLongObject*)key)) {
+
+					intsAreBounded = 0;
+				}
+				else if (keyType == &_alifUStrType_ and
+					stringsAreLatin and
+					ALIFUSTR_KIND(key) != AlifUStrKind_::AlifUStr_1Byte_Kind) {
+
+					stringsAreLatin = 0;
+				}
+			}
+		}
+
+		/* Choose the best compare, given what we now know about the keys. */
+		if (keysAreAllSameType) {
+
+			if (keyType == &_alifUStrType_ and stringsAreLatin) {
+				ms.key_compare = unsafe_latinCompare;
+			}
+			else if (keyType == &_alifLongType_ and intsAreBounded) {
+				ms.key_compare = unsafe_longCompare;
+			}
+			else if (keyType == &_alifFloatType_) {
+				ms.key_compare = unsafe_floatCompare;
+			}
+			else if ((ms.key_richcompare = keyType->richCompare) != nullptr) {
+				ms.key_compare = unsafe_objectCompare;
+			}
+			else {
+				ms.key_compare = safe_objectCompare;
+			}
+		}
+		else {
+			ms.key_compare = safe_objectCompare;
+		}
+
+		if (keysAreInTuples) {
+			/* Make sure we're not dealing with tuples of tuples
+			 * (remember: here, key_type refers list [key[0] for key in keys]) */
+			if (keyType == &_alifTupleType_) {
+				ms.tuple_elem_compare = safe_objectCompare;
+			}
+			else {
+				ms.tuple_elem_compare = ms.key_compare;
+			}
+
+			ms.key_compare = unsafe_tupleCompare;
+		}
+	}
+
+	merge_init(&ms, savedObjSize, keys != nullptr, &lo);
+
+	nremaining = savedObjSize;
+	if (nremaining < 2) goto succeed;
+
+	if (_reverse) {
+		if (keys != nullptr)
+			reverse_slice(&keys[0], &keys[savedObjSize]);
+		reverse_slice(&savedObjItem[0], &savedObjItem[savedObjSize]);
+	}
+
+	minrun = merge_computeMinRun(nremaining);
+	do {
+		AlifSizeT n{};
+
+		/* Identify next run. */
+		n = count_run(&ms, &lo, nremaining);
+		if (n < 0) goto fail;
+		/* If short, extend to min(minrun, nremaining). */
+		if (n < minrun) {
+			const AlifSizeT force = nremaining <= minrun ?
+				nremaining : minrun;
+			if (binarysort(&ms, &lo, force, n) < 0)
+				goto fail;
+			n = force;
+		}
+		/* Maybe merge pending runs. */
+		if (found_newRun(&ms, n) < 0)
+			goto fail;
+		/* Push new run on stack. */
+		ms.pending[ms.n].base = lo;
+		ms.pending[ms.n].len = n;
+		++ms.n;
+		/* Advance to find next run. */
+		sortSlice_advance(&lo, n);
+		nremaining -= n;
+	} while (nremaining);
+
+	if (merge_forceCollapse(&ms) < 0)
+		goto fail;
+	lo = ms.pending[0].base;
+
+succeed:
+	result = ALIF_NONE;
+fail:
+	if (keys != nullptr) {
+		for (i = 0; i < savedObjSize; i++)
+			ALIF_DECREF(keys[i]);
+		if (savedObjSize >= MERGESTATE_TEMP_SIZE / 2)
+			alifMem_dataFree(keys);
+	}
+
+	if (_self->allocated != -1 and result != nullptr) {
+		//alifErr_setString(_alifExcValueError_, "list modified during sort");
+		result = nullptr;
+	}
+
+	if (_reverse and savedObjSize > 1)
+		reverse_slice(savedObjItem, savedObjItem + savedObjSize);
+
+	merge_freeMem(&ms);
+
+keyFuncFail:
+	finalObjItem = _self->item;
+	i = ALIF_SIZE(_self);
+	ALIF_SET_SIZE(_self, savedObjSize);
+	alifAtomic_storePtrRelease(&_self->item, savedObjItem);
+	alifAtomic_storeSizeRelaxed(&_self->allocated, savedAllocated);
+	if (finalObjItem != nullptr) {
+		/* we cannot use list_clear() for this because it does not
+		   guarantee that the list is really empty when it returns */
+		while (--i >= 0) {
+			ALIF_XDECREF(finalObjItem[i]);
+		}
+#ifdef ALIF_GIL_DISABLED
+		bool use_qsbr = ALIFOBJECT_GC_IS_SHARED(_self);
+#else
+		bool use_qsbr = false;
+#endif
+		free_listItems(finalObjItem, use_qsbr);
+	}
+	return ALIF_XNEWREF(result);
+}
+#undef IFLT
+#undef ISLT
+
+AlifIntT alifList_sort(AlifObject* _v) { // 3080
+	if (_v == nullptr or !ALIFLIST_CHECK(_v)) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+	ALIF_BEGIN_CRITICAL_SECTION(_v);
+	_v = list_sortImpl((AlifListObject*)_v, nullptr, 0);
+	ALIF_END_CRITICAL_SECTION();
+	if (_v == nullptr) return -1;
+	ALIF_DECREF(_v);
+	return 0;
+}
+
+
+
 
 
 AlifObject* alifList_asTuple(AlifObject* _v) { // 3129

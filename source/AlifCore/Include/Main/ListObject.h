@@ -15,6 +15,7 @@ AlifSizeT alifList_size(AlifObject*); // 29
 AlifIntT alifList_append(AlifObject*, AlifObject*); // 37
 
 AlifIntT alifList_setSlice(AlifObject* , AlifSizeT , AlifSizeT , AlifObject*); // 40
+AlifIntT alifList_sort(AlifObject*); // 42
 AlifObject* alifList_asTuple(AlifObject*); // 44
 
 /* -------------------------------------------------------------------------------------- */
