@@ -386,7 +386,7 @@ static AlifIntT compiler_setQualname(AlifCompiler* _c) { // 612
 				return SUCCESS;
 			}
 			capsule = ALIFLIST_GET_ITEM(_c->stack, stackSize - 2);
-			parent = (struct compiler_unit*)alifCapsule_getPointer(capsule, CAPSULE_NAME);
+			parent = (CompilerUnit*)alifCapsule_getPointer(capsule, CAPSULE_NAME);
 		}
 
 		if (u->scopeType == ScopeType_::Compiler_Scope_Function
