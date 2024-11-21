@@ -52,9 +52,11 @@ typedef AlifInstructionSequence InstrSequence; // alif
 typedef AlifSourceLocation Location; // alif
 
 AlifObject* _alifInstructionSequence_new(); // 54
-
+AlifIntT _alifInstructionSequence_useLabel(InstrSequence*, AlifIntT); // 56
 AlifIntT _alifInstructionSequence_addOp(InstrSequence*, AlifIntT, AlifIntT, Location); // 57
 
+
+AlifJumpTargetLabel _alifInstructionSequence_newLabel(InstrSequence*); // 60
 
 
 AlifIntT _alifInstructionSequence_addNested(InstrSequence*, InstrSequence*); // 64

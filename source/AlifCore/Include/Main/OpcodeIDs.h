@@ -39,11 +39,11 @@
 //#define STORE_SLICE                             35
 //#define STORE_SUBSCR                            36
 #define TO_BOOL                                 37
-//#define UNARY_INVERT                            38
-//#define UNARY_NEGATIVE                          39
+#define UNARY_INVERT                            38
+#define UNARY_NEGATIVE                          39
 #define UNARY_NOT                               40
 //#define WITH_EXCEPT_START                       41
-//#define BINARY_OP                               42
+#define BINARY_OP                               42
 //#define BUILD_LIST                              43
 //#define BUILD_MAP                               44
 //#define BUILD_SET                               45
@@ -80,7 +80,7 @@
 //#define LIST_EXTEND                             76
 #define LOAD_ATTR                               77
 //#define LOAD_COMMON_CONSTANT                    78
-//#define LOAD_CONST                              79
+#define LOAD_CONST                              79
 //#define LOAD_DEREF                              80
 //#define LOAD_FAST                               81
 //#define LOAD_FAST_AND_CLEAR                     82
@@ -216,7 +216,7 @@
 //#define INSTRUMENTED_LINE                      254
 //#define ENTER_EXECUTOR                         255
 //#define JUMP                                   256
-//#define JUMP_NO_INTERRUPT                      257
+#define JUMP_NO_INTERRUPT                      257
 //#define LOAD_CLOSURE                           258
 //#define POP_BLOCK                              259
 //#define SETUP_CLEANUP                          260

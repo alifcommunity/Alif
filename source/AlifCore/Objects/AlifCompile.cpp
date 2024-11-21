@@ -1,6 +1,6 @@
 #include "alif.h"
 
-#include "OpcodeIDs.h"
+#include "Opcode.h"
 #include "AlifCore_AST.h"
 #define NEED_OPCODE_TABLES
 #include "AlifCore_OpcodeUtils.h"
@@ -52,6 +52,9 @@ typedef AlifSourceLocation Location; // 99
 typedef AlifJumpTargetLabel JumpTargetLabel; // 113
 
 static JumpTargetLabel _noLabel_ = { -1 }; // 115
+
+#define SAME_LABEL(_l1, _l2) ((_l1).id == (_l2).id) // 117
+#define IS_LABEL(_l) (!SAME_LABEL((_l), (_noLabel_)))
 
  // 120
 #define NEW_JUMP_TARGET_LABEL(_c, _name) \
@@ -501,12 +504,41 @@ static AlifSizeT dict_addO(AlifObject* _dict, AlifObject* _o) { // 735
 
 
 
+
+static AlifObject* merge_constsRecursive(AlifObject* _constCache, AlifObject* _o) { // 876
+	return const_cacheInsert(_constCache, _o, true);
+}
+
+static AlifSizeT compiler_addConst(AlifCompiler* _c, AlifObject* _o) { // 882
+	AlifObject* key = merge_constsRecursive(_c->constCache, _o);
+	if (key == nullptr) {
+		return ERROR;
+	}
+
+	AlifSizeT arg = dict_addO(_c->u_->metadata.consts, key);
+	ALIF_DECREF(key);
+	return arg;
+}
+
+static AlifIntT codegen_addOpLoadConst(AlifCompiler* _c,
+	Location _loc, AlifObject* _o) { // 895
+	AlifSizeT arg = compiler_addConst(_c, _o);
+	if (arg < 0) {
+		return ERROR;
+	}
+	ADDOP_I(_c, _loc, LOAD_CONST, arg);
+	return SUCCESS;
+}
+
 #define ADDOP_LOAD_CONST(_c, _loc, _o) \
     RETURN_IF_ERROR(codegen_addOpLoadConst(_c, _loc, _o)) // 906
 
 
 
-
+static AlifIntT codegen_addOpJ(InstrSequence* _seq, Location _loc,
+	AlifIntT _opcode, JumpTargetLabel _target) { // 1000
+	return _alifInstructionSequence_addOp(_seq, _opcode, _target.id, _loc);
+}
 
 
 #define ADDOP_JUMP(_c, _loc, _op, _o) \
@@ -691,7 +723,8 @@ static void compiler_exitScope(AlifCompiler* _c) { // 1197
 
 
 
-static AlifIntT compiler_body(AlifCompiler* _c, Location _loc, ASDLStmtSeq* _stmts) { // 1507
+static AlifIntT compiler_body(AlifCompiler* _c,
+	Location _loc, ASDLStmtSeq* _stmts) { // 1507
 	//if ((FUTURE_FEATURES(_c) & CO_FUTURE_ANNOTATIONS) and SYMTABLE_ENTRY(_c)->annotationsUsed) {
 	//	ADDOP(_c, _loc, SETUP_ANNOTATIONS);
 	//}
@@ -826,6 +859,27 @@ finally:
 
 
 
+static AlifIntT codegen_ifExpr(AlifCompiler* _c, ExprTy _e) { // 2812
+	NEW_JUMP_TARGET_LABEL(_c, end);
+	NEW_JUMP_TARGET_LABEL(_c, next);
+
+	RETURN_IF_ERROR(
+		codegen_jumpIf(_c, LOC(_e), _e->V.ifExpr.condition, next, 0));
+
+	VISIT(_c, Expr, _e->V.ifExpr.body);
+	ADDOP_JUMP(_c, _noLocation_, JUMP_NO_INTERRUPT, end);
+
+	USE_LABEL(_c, next);
+	VISIT(_c, Expr, _e->V.ifExpr.else_);
+
+	USE_LABEL(_c, end);
+	return SUCCESS;
+}
+
+
+
+
+
 
 
 
@@ -947,6 +1001,73 @@ static AlifIntT compiler_visitStmt(AlifCompiler* _c, StmtTy _s) { // 3818
 }
 
 
+static AlifIntT unaryop(UnaryOp_ _op) { // 3916
+	switch (_op) {
+	case UnaryOp_::Invert:
+		return UNARY_INVERT;
+	case UnaryOp_::USub:
+		return UNARY_NEGATIVE;
+	default:
+		//alifErr_format(_alifExcSystemError_,
+		//	"unary op %d should not be possible", _op);
+		return 0;
+	}
+}
+
+static AlifIntT addop_binary(AlifCompiler* _c, Location _loc,
+	Operator_ _binop, bool _inplace) { // 3931
+	AlifIntT oparg{};
+	switch (_binop) {
+	case Operator_::Add:
+		oparg = _inplace ? NB_INPLACE_ADD : NB_ADD;
+		break;
+	case Operator_::Sub:
+		oparg = _inplace ? NB_INPLACE_SUBTRACT : NB_SUBTRACT;
+		break;
+	case Operator_::Mult:
+		oparg = _inplace ? NB_INPLACE_MULTIPLY : NB_MULTIPLY;
+		break;
+	//case MatMult:
+	//	oparg = _inplace ? NB_INPLACE_MATRIX_MULTIPLY : NB_MATRIX_MULTIPLY;
+	//	break;
+	case Operator_::Div:
+		oparg = _inplace ? NB_INPLACE_TRUE_DIVIDE : NB_TRUE_DIVIDE;
+		break;
+	case Operator_::Mod:
+		oparg = _inplace ? NB_INPLACE_REMAINDER : NB_REMAINDER;
+		break;
+	case Operator_::Pow:
+		oparg = _inplace ? NB_INPLACE_POWER : NB_POWER;
+		break;
+	case Operator_::LShift:
+		oparg = _inplace ? NB_INPLACE_LSHIFT : NB_LSHIFT;
+		break;
+	case Operator_::RShift:
+		oparg = _inplace ? NB_INPLACE_RSHIFT : NB_RSHIFT;
+		break;
+	case Operator_::BitOr:
+		oparg = _inplace ? NB_INPLACE_OR : NB_OR;
+		break;
+	case Operator_::BitXor:
+		oparg = _inplace ? NB_INPLACE_XOR : NB_XOR;
+		break;
+	case Operator_::BitAnd:
+		oparg = _inplace ? NB_INPLACE_AND : NB_AND;
+		break;
+	case Operator_::FloorDiv:
+		oparg = _inplace ? NB_INPLACE_FLOOR_DIVIDE : NB_FLOOR_DIVIDE;
+		break;
+	default:
+		//alifErr_format(_alifExcSystemError_, "%s op %d should not be possible",
+		//	_inplace ? "inplace" : "binary", _binop);
+		return ERROR;
+	}
+	ADDOP_I(_c, _loc, BINARY_OP, oparg);
+	return SUCCESS;
+}
+
+
+
 
 
 
@@ -958,7 +1079,7 @@ static AlifIntT codegen_boolOp(AlifCompiler* _c, ExprTy _e) { // 4151
 	ASDLExprSeq* s{};
 
 	Location loc = LOC(_e);
-	if (_e->V.boolOp.op == And)
+	if (_e->V.boolOp.op == BoolOp_::And)
 		jumpi = POP_JUMP_IF_FALSE;
 	else
 		jumpi = POP_JUMP_IF_TRUE;

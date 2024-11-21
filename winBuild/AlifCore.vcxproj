@@ -146,6 +146,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\ModSupport.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\ModuleObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\ObjImpl.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\Opcode.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\OpcodeIDs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\OSDefs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\PThreadStubs.h" />

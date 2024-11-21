@@ -37,6 +37,28 @@ static AlifIntT instrSequence_nextInst(InstrSequence * _seq) { // 35
 }
 
 
+AlifJumpTargetLabel _alifInstructionSequence_newLabel(InstrSequence* _seq) { // 50
+	AlifJumpTargetLabel lbl = { ++_seq->nextFreeLabel };
+	return lbl;
+}
+
+
+AlifIntT _alifInstructionSequence_useLabel(InstrSequence* _seq, AlifIntT _lbl) { // 57
+	AlifIntT oldSize = _seq->labelMapSize;
+	RETURN_IF_ERROR(
+		_alifCompile_ensureArrayLargeEnough(_lbl,
+			(void**)&_seq->labelMap,
+			&_seq->labelMapSize,
+			INITIAL_INSTR_SEQUENCE_LABELS_MAP_SIZE,
+			sizeof(AlifIntT)));
+
+	for (AlifIntT i = oldSize; i < _seq->labelMapSize; i++) {
+		_seq->labelMap[i] = -111;  /* something weird, for debugging */
+	}
+	_seq->labelMap[_lbl] = _seq->used; /* label refers to the next instruction */
+	return SUCCESS;
+}
+
 
  // 102
 #define MAX_OPCODE 511
