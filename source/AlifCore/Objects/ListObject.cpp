@@ -747,9 +747,9 @@ public:
 	AlifSizeT alloced{};
 
 	AlifIntT n_{};
-	Slice pending[MAX_MERGE_PENDING];
+	Slice pending[MAX_MERGE_PENDING]{};
 
-	AlifObject* temparray[MERGESTATE_TEMP_SIZE];
+	AlifObject* temparray[MERGESTATE_TEMP_SIZE]{};
 
 	AlifIntT(*KeyCompare)(AlifObject*, AlifObject*, MergeState*);
 
@@ -803,16 +803,17 @@ static AlifSizeT gallop_left(MergeState* _ms, AlifObject* _key, AlifObject** _a,
 
 		IFLT(_a[m], _key)
 			lastOfS = m + 1;              
-	else
-	ofs_ = m;                    
+		else
+			ofs_ = m;                    
 	}
 	return ofs_;
 
-	fail:
+fail:
 	return -1;
 }
 
-static AlifSizeT gallop_right(MergeState * _ms, AlifObject* _key, AlifObject* *_a, AlifSizeT _n, AlifSizeT _hint) { // 2024
+static AlifSizeT gallop_right(MergeState * _ms, AlifObject* _key,
+	AlifObject* *_a, AlifSizeT _n, AlifSizeT _hint) { // 2024
 	AlifSizeT ofs_{};
 	AlifSizeT lastOfS{};
 	AlifSizeT k_{};
@@ -838,7 +839,6 @@ static AlifSizeT gallop_right(MergeState * _ms, AlifObject* _key, AlifObject* *_
 		ofs_ = _hint - k_;
 	}
 	else {
-
 		const AlifSizeT maxOfS = _n - _hint;             /* &a[n-1] is highest */
 		while (ofs_ < maxOfS) {
 			IFLT(_key, _a[ofs_])
@@ -850,22 +850,43 @@ static AlifSizeT gallop_right(MergeState * _ms, AlifObject* _key, AlifObject* *_
 			ofs_ = maxOfS;
 		lastOfS += _hint;
 		ofs_ += _hint;
-		}
-		_a -= _hint;
+	}
+	_a -= _hint;
 
-		++lastOfS;
-		while (lastOfS < ofs_) {
-			AlifSizeT m_ = lastOfS + ((ofs_ - lastOfS) >> 1);
+	++lastOfS;
+	while (lastOfS < ofs_) {
+		AlifSizeT m_ = lastOfS + ((ofs_ - lastOfS) >> 1);
 
-			IFLT(_key, _a[m_])
-				ofs_ = m_;                    /* key < a[m] */
+		IFLT(_key, _a[m_])
+			ofs_ = m_;                    /* key < a[m] */
 		else
 			lastOfS = m_ + 1;             
-		}
-		return ofs_;
+	}
+	return ofs_;
 
-	fail:
-		return -1;
+fail:
+	return -1;
+}
+
+static void merge_init(MergeState* _ms, AlifSizeT _listSize, AlifIntT _hasKeyFunc,
+	SortSlice* _lo) { // 2099
+	if (_hasKeyFunc) {
+
+		_ms->alloced = (_listSize + 1) / 2;
+
+		if (MERGESTATE_TEMP_SIZE / 2 < _ms->alloced)
+			_ms->alloced = MERGESTATE_TEMP_SIZE / 2;
+		_ms->a_.values = &_ms->temparray[_ms->alloced];
+	}
+	else {
+		_ms->alloced = MERGESTATE_TEMP_SIZE;
+		_ms->a_.values = nullptr;
+	}
+	_ms->a_.keys = _ms->temparray;
+	_ms->n_ = 0;
+	_ms->minGallop = MIN_GALLOP;
+	_ms->listLen = _listSize;
+	_ms->baseKeys = _lo->keys;
 }
 
 static AlifSizeT merge_lo(MergeState* _ms, SortSlice _ssa, AlifSizeT _na,
@@ -958,7 +979,7 @@ static AlifSizeT merge_lo(MergeState* _ms, SortSlice _ssa, AlifSizeT _na,
 			--_na;
 			if (_na == 1)
 				goto CopyB;
-		} while (aCount >= MIN_GALLOP || bCount >= MIN_GALLOP);
+		} while (aCount >= MIN_GALLOP or bCount >= MIN_GALLOP);
 		++minGallop;          
 		_ms->minGallop = minGallop;
 	}
@@ -990,7 +1011,7 @@ static AlifSizeT merge_hi(MergeState* _ms, SortSlice _ssa, AlifSizeT _na,
 	basea = _ssa;
 	baseb = _ms->a_;
 	_ssb.keys = _ms->a_.keys + _nb - 1;
-	if (_ssb.values != NULL)
+	if (_ssb.values != nullptr)
 		_ssb.values = _ms->a_.values + _nb - 1;
 	sortSlice_advance(&_ssa, _na - 1);
 
@@ -1042,9 +1063,9 @@ static AlifSizeT merge_hi(MergeState* _ms, SortSlice _ssa, AlifSizeT _na,
 			k_ = _na - k_;
 			aCount = k_;
 			if (k_) {
-				sortslice_advance(&dest, -k_);
-				sortslice_advance(&_ssa, -k_);
-				sortslice_memmove(&dest, 1, &_ssa, 1, k_);
+				sortSlice_advance(&dest, -k_);
+				sortSlice_advance(&_ssa, -k_);
+				sortSlice_memmove(&dest, 1, &_ssa, 1, k_);
 				_na -= k_;
 				if (_na == 0)
 					goto Succeed;
@@ -1060,9 +1081,9 @@ static AlifSizeT merge_hi(MergeState* _ms, SortSlice _ssa, AlifSizeT _na,
 			k_ = _nb - k_;
 			bCount = k_;
 			if (k_) {
-				sortslice_advance(&dest, -k_);
-				sortslice_advance(&_ssb, -k_);
-				sortslice_memcpy(&dest, 1, &_ssb, 1, k_);
+				sortSlice_advance(&dest, -k_);
+				sortSlice_advance(&_ssb, -k_);
+				sortSlice_memcpy(&dest, 1, &_ssb, 1, k_);
 				_nb -= k_;
 				if (_nb == 1)
 					goto CopyA;
@@ -1073,7 +1094,7 @@ static AlifSizeT merge_hi(MergeState* _ms, SortSlice _ssa, AlifSizeT _na,
 			--_na;
 			if (_na == 0)
 				goto Succeed;
-		} while (aCount >= MIN_GALLOP || bCount >= MIN_GALLOP);
+		} while (aCount >= MIN_GALLOP or bCount >= MIN_GALLOP);
 		++minGallop;           /* penalize it for leaving galloping mode */
 		_ms->minGallop = minGallop;
 	}
@@ -1091,27 +1112,6 @@ CopyA:
 	return 0;
 }
 
-
-static void merge_init(MergeState* _ms, AlifSizeT _listSize, AlifIntT _hasKeyFunc,
-	SortSlice* _lo) { // 2099
-	if (_hasKeyFunc) {
-
-		_ms->alloced = (_listSize + 1) / 2;
-
-		if (MERGESTATE_TEMP_SIZE / 2 < _ms->alloced)
-			_ms->alloced = MERGESTATE_TEMP_SIZE / 2;
-		_ms->a_.values = &_ms->temparray[_ms->alloced];
-	}
-	else {
-		_ms->alloced = MERGESTATE_TEMP_SIZE;
-		_ms->a_.values = nullptr;
-	}
-	_ms->a_.keys = _ms->temparray;
-	_ms->n_ = 0;
-	_ms->minGallop = MIN_GALLOP;
-	_ms->listLen = _listSize;
-	_ms->baseKeys = _lo->keys;
-}
 
 static AlifSizeT merge_at(MergeState* _ms, AlifSizeT _i) { // 2458
 	SortSlice ssa_{}, ssb_{};
@@ -1151,7 +1151,7 @@ static AlifIntT merge_forceCollapse(MergeState* _ms) { // 2590
 	Slice* p_ = _ms->pending;
 	while (_ms->n_ > 1) {
 		AlifSizeT n_ = _ms->n_ - 2;
-		if (n_ > 0 && p_[n_ - 1].len_ < p_[n_ + 1].len_)
+		if (n_ > 0 and p_[n_ - 1].len_ < p_[n_ + 1].len_)
 			--n_;
 		if (merge_at(_ms, n_) < 0)
 			return -1;
@@ -1248,7 +1248,7 @@ static AlifIntT unsafe_tupleCompare(AlifObject* _v, AlifObject* _w, MergeState* 
 	vLen = ALIF_SIZE(vt_);
 	wLen = ALIF_SIZE(wt_);
 
-	for (i_ = 0; i_ < vLen && i_ < wLen; i_++) {
+	for (i_ = 0; i_ < vLen and i_ < wLen; i_++) {
 		k_ = alifObject_richCompareBool(vt_->item[i_], wt_->item[i_], ALIF_EQ);
 		if (k_ < 0)
 			return -1;
@@ -1256,7 +1256,7 @@ static AlifIntT unsafe_tupleCompare(AlifObject* _v, AlifObject* _w, MergeState* 
 			break;
 	}
 
-	if (i_ >= vLen || i_ >= wLen)
+	if (i_ >= vLen or i_ >= wLen)
 		return vLen < wLen;
 
 	if (i_ == 0)
@@ -1305,12 +1305,12 @@ static AlifObject* list_sortImpl(AlifListObject* _self,
 		}
 
 		for (i = 0; i < savedObjSize; i++) {
-			keys[i] = alifObject_callOneArg(_keyFunc, savedObjItem[i]);
+			//keys[i] = alifObject_callOneArg(_keyFunc, savedObjItem[i]);
 			if (keys[i] == nullptr) {
-				for (i = i - 1; i >= 0; i--)
-					ALIF_DECREF(keys[i]);
-				if (savedObjSize >= MERGESTATE_TEMP_SIZE / 2)
-					alifMem_dataFree(keys);
+			//	for (i = i - 1; i >= 0; i--)
+			//		ALIF_DECREF(keys[i]);
+			//	if (savedObjSize >= MERGESTATE_TEMP_SIZE / 2)
+			//		alifMem_dataFree(keys);
 				goto keyFuncFail;
 			}
 		}
