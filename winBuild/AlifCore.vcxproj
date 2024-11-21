@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Abstract.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Intrinsics.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Math.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Array.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ASDL.h" />

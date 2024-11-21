@@ -681,6 +681,9 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_OpcodeUtils.h">
       <Filter>Include\Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Intrinsics.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Include">
