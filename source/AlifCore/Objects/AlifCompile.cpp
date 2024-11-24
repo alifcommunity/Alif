@@ -618,6 +618,9 @@ static AlifIntT codegen_addOpJ(InstrSequence* _seq, Location _loc,
 #define ADDOP_JUMP(_c, _loc, _op, _o) \
     RETURN_IF_ERROR(codegen_addOpJ(INSTR_SEQUENCE(_c), _loc, _op, _o)) // 1010
 
+#define ADDOP_COMPARE(_c, _loc, _cmp) \
+    RETURN_IF_ERROR(codegen_addCompare(_c, _loc, (CmpOp_)_cmp))
+
 #define ADDOP_BINARY(_c, _loc, _binOp) \
     RETURN_IF_ERROR(addop_binary(_c, _loc, _binOp, false)) // 1016
 
@@ -943,6 +946,138 @@ finally:
 
 
 
+static AlifIntT codegen_jumpIf(AlifCompiler* _c, Location _loc,
+	ExprTy _e, JumpTargetLabel _next, AlifIntT _cond) { // 2718
+	switch (_e->type) {
+	case ExprK_::UnaryOpK:
+		if (_e->V.unaryOp.op == UnaryOp_::Not) {
+			return codegen_jumpIf(_c, _loc, _e->V.unaryOp.operand, _next, !_cond);
+		}
+		/* fallback to general implementation */
+		break;
+	case ExprK_::BoolOpK: {
+		ASDLExprSeq* s = _e->V.boolOp.vals;
+		AlifSizeT i, n = ASDL_SEQ_LEN(s) - 1;
+		AlifIntT cond2 = _e->V.boolOp.op == BoolOp_::Or;
+		JumpTargetLabel next2 = _next;
+		if (!cond2 != !_cond) {
+			NEW_JUMP_TARGET_LABEL(_c, new_next2);
+			next2 = new_next2;
+		}
+		for (i = 0; i < n; ++i) {
+			RETURN_IF_ERROR(
+				codegen_jumpIf(_c, _loc, (ExprTy)ASDL_SEQ_GET(s, i), next2, cond2));
+		}
+		RETURN_IF_ERROR(
+			codegen_jumpIf(_c, _loc, (ExprTy)ASDL_SEQ_GET(s, n), _next, _cond));
+		if (!SAME_LABEL(next2, _next)) {
+			USE_LABEL(_c, next2);
+		}
+		return SUCCESS;
+	}
+	case ExprK_::IfExprK: {
+		NEW_JUMP_TARGET_LABEL(_c, end);
+		NEW_JUMP_TARGET_LABEL(_c, next2);
+		RETURN_IF_ERROR(
+			codegen_jumpIf(_c, _loc, _e->V.ifExpr.condition, next2, 0));
+		RETURN_IF_ERROR(
+			codegen_jumpIf(_c, _loc, _e->V.ifExpr.body, _next, _cond));
+		ADDOP_JUMP(_c, _noLocation_, JUMP_NO_INTERRUPT, end);
+
+		USE_LABEL(_c, next2);
+		RETURN_IF_ERROR(
+			codegen_jumpIf(_c, _loc, _e->V.ifExpr.else_, _next, _cond));
+
+		USE_LABEL(_c, end);
+		return SUCCESS;
+	}
+	case ExprK_::CompareK: {
+		AlifSizeT n = ASDL_SEQ_LEN(_e->V.compare.ops) - 1;
+		if (n > 0) {
+			RETURN_IF_ERROR(codegen_checkCompare(_c, _e));
+			NEW_JUMP_TARGET_LABEL(_c, cleanup);
+			VISIT(_c, Expr, _e->V.compare.left);
+			for (AlifSizeT i = 0; i < n; i++) {
+				VISIT(_c, Expr,
+					(ExprTy)ASDL_SEQ_GET(_e->V.compare.comparators, i));
+				ADDOP_I(_c, LOC(_e), SWAP, 2);
+				ADDOP_I(_c, LOC(_e), COPY, 2);
+				ADDOP_COMPARE(_c, LOC(_e), ASDL_SEQ_GET(_e->V.compare.ops, i));
+				ADDOP(_c, LOC(_e), TO_BOOL);
+				ADDOP_JUMP(_c, LOC(_e), POP_JUMP_IF_FALSE, cleanup);
+			}
+			VISIT(_c, Expr, (ExprTy)ASDL_SEQ_GET(_e->V.compare.comparators, n));
+			ADDOP_COMPARE(_c, LOC(_e), ASDL_SEQ_GET(_e->V.compare.ops, n));
+			ADDOP(_c, LOC(_e), TO_BOOL);
+			ADDOP_JUMP(_c, LOC(_e), _cond ? POP_JUMP_IF_TRUE : POP_JUMP_IF_FALSE, _next);
+			NEW_JUMP_TARGET_LABEL(_c, end);
+			ADDOP_JUMP(_c, _noLocation_, JUMP_NO_INTERRUPT, end);
+
+			USE_LABEL(_c, cleanup);
+			ADDOP(_c, LOC(_e), POP_TOP);
+			if (!_cond) {
+				ADDOP_JUMP(_c, _noLocation_, JUMP_NO_INTERRUPT, _next);
+			}
+
+			USE_LABEL(_c, end);
+			return SUCCESS;
+		}
+		/* fallback to general implementation */
+		break;
+	}
+	default:
+		/* fallback to general implementation */
+		break;
+	}
+
+	/* general implementation */
+	VISIT(_c, Expr, _e);
+	ADDOP(_c, LOC(_e), TO_BOOL);
+	ADDOP_JUMP(_c, LOC(_e), _cond ? POP_JUMP_IF_TRUE : POP_JUMP_IF_FALSE, _next);
+	return SUCCESS;
+}
+
+
+
+static AlifIntT codegen_addCompare(AlifCompiler* _c, Location _loc, CmpOp_ _op) { // 2672
+	int cmp;
+	switch (_op) {
+	case CmpOp_::Equal :
+		cmp = ALIF_EQ;
+		break;
+	case CmpOp_::NotEq:
+		cmp = ALIF_NE;
+		break;
+	case CmpOp_::LessThan:
+		cmp = ALIF_LT;
+		break;
+	case CmpOp_::LessThanEq:
+		cmp = ALIF_LE;
+		break;
+	case CmpOp_::GreaterThan:
+		cmp = ALIF_GT;
+		break;
+	case CmpOp_::GreaterThanEq:
+		cmp = ALIF_GE;
+		break;
+	case CmpOp_::Is:
+		ADDOP_I(_c, _loc, IS_OP, 0);
+		return SUCCESS;
+	case CmpOp_::IsNot:
+		ADDOP_I(_c, _loc, IS_OP, 1);
+		return SUCCESS;
+	case CmpOp_::In:
+		ADDOP_I(_c, _loc, CONTAINS_OP, 0);
+		return SUCCESS;
+	case CmpOp_::NotIn:
+		ADDOP_I(_c, _loc, CONTAINS_OP, 1);
+		return SUCCESS;
+	default:
+		ALIF_UNREACHABLE();
+	}
+	ADDOP_I(_c, _loc, COMPARE_OP, (cmp << 5) | compare_masks[cmp]);
+	return SUCCESS;
+}
 
 static AlifIntT codegen_ifExpr(AlifCompiler* _c, ExprTy _e) { // 2812
 	NEW_JUMP_TARGET_LABEL(_c, end);
@@ -1326,6 +1461,130 @@ static AlifIntT codegen_boolOp(AlifCompiler* _c, ExprTy _e) { // 4151
 	return SUCCESS;
 }
 
+
+static AlifIntT starUnpack_helper(AlifCompiler* _c, Location _loc,
+	ASDLExprSeq* _elts, AlifIntT _pushed, AlifIntT _build,
+	AlifIntT _add, AlifIntT _extend, AlifIntT _tuple) { // 4181
+	AlifSizeT n = ASDL_SEQ_LEN(_elts);
+	if (n > 2 and areAllItems_const(_elts, 0, n)) {
+		AlifObject* folded = alifTuple_new(n);
+		if (folded == nullptr) {
+			return ERROR;
+		}
+		AlifObject* val{};
+		for (AlifSizeT i = 0; i < n; i++) {
+			val = ((ExprTy)ASDL_SEQ_GET(_elts, i))->V.constant.val;
+			ALIFTUPLE_SET_ITEM(folded, i, ALIF_NEWREF(val));
+		}
+		if (_tuple and !_pushed) {
+			ADDOP_LOAD_CONST_NEW(_c, _loc, folded);
+		}
+		else {
+			if (_add == SET_ADD) {
+				ALIF_SETREF(folded, alifFrozenSet_new(folded));
+				if (folded == nullptr) {
+					return ERROR;
+				}
+			}
+			ADDOP_I(_c, _loc, _build, _pushed);
+			ADDOP_LOAD_CONST_NEW(_c, _loc, folded);
+			ADDOP_I(_c, _loc, _extend, 1);
+			if (_tuple) {
+				ADDOP_I(_c, _loc, CALL_INTRINSIC_1, INTRINSIC_LIST_TO_TUPLE);
+			}
+		}
+		return SUCCESS;
+	}
+
+	AlifIntT big = n + _pushed > STACK_USE_GUIDELINE;
+	AlifIntT seenStar = 0;
+	for (AlifSizeT i = 0; i < n; i++) {
+		ExprTy elt = ASDL_SEQ_GET(_elts, i);
+		if (elt->type == ExprK_::StarK) {
+			seenStar = 1;
+			break;
+		}
+	}
+	if (!seenStar and !big) {
+		for (AlifSizeT i = 0; i < n; i++) {
+			ExprTy elt = ASDL_SEQ_GET(_elts, i);
+			VISIT(_c, Expr, elt);
+		}
+		if (_tuple) {
+			ADDOP_I(_c, _loc, BUILD_TUPLE, n + _pushed);
+		}
+		else {
+			ADDOP_I(_c, _loc, _build, n + _pushed);
+		}
+		return SUCCESS;
+	}
+	AlifIntT sequenceBuilt = 0;
+	if (big) {
+		ADDOP_I(_c, _loc, _build, _pushed);
+		sequenceBuilt = 1;
+	}
+	for (AlifSizeT i = 0; i < n; i++) {
+		ExprTy elt = ASDL_SEQ_GET(_elts, i);
+		if (elt->type == ExprK_::StarK) {
+			if (sequenceBuilt == 0) {
+				ADDOP_I(_c, _loc, _build, i + _pushed);
+				sequenceBuilt = 1;
+			}
+			VISIT(_c, Expr, elt->V.star.val);
+			ADDOP_I(_c, _loc, _extend, 1);
+		}
+		else {
+			VISIT(_c, Expr, elt);
+			if (sequenceBuilt) {
+				ADDOP_I(_c, _loc, _add, 1);
+			}
+		}
+	}
+	if (_tuple) {
+		ADDOP_I(_c, _loc, CALL_INTRINSIC_1, INTRINSIC_LIST_TO_TUPLE);
+	}
+	return SUCCESS;
+}
+
+
+
+static AlifIntT unpack_helper(AlifCompiler* _c, Location _loc, ASDLExprSeq* _elts) { // 4266
+	AlifSizeT n = ASDL_SEQ_LEN(_elts);
+	AlifIntT seenStar = 0;
+	for (AlifSizeT i = 0; i < n; i++) {
+		ExprTy elt = ASDL_SEQ_GET(_elts, i);
+		if (elt->type == ExprK_::StarK and !seenStar) {
+			if ((i >= (1 << 8)) or
+				(n - i - 1 >= (INT_MAX >> 8))) {
+				//return compiler_error(_c, _loc,
+				//	"too many expressions in "
+				//	"star-unpacking assignment");
+			}
+			ADDOP_I(_c, _loc, UNPACK_EX, (i + ((n - i - 1) << 8)));
+			seenStar = 1;
+		}
+		else if (elt->type == ExprK_::StarK) {
+			//return compiler_error(_c, _loc,
+			//	"multiple starred expressions in assignment");
+		}
+	}
+	if (!seenStar) {
+		ADDOP_I(_c, _loc, UNPACK_SEQUENCE, n);
+	}
+	return SUCCESS;
+}
+
+
+static AlifIntT assignment_helper(AlifCompiler* _c,
+	Location _loc, ASDLExprSeq* _elts) { // 4294
+	AlifSizeT n = ASDL_SEQ_LEN(_elts);
+	RETURN_IF_ERROR(unpack_helper(_c, _loc, _elts));
+	for (AlifSizeT i = 0; i < n; i++) {
+		ExprTy elt = ASDL_SEQ_GET(_elts, i);
+		VISIT(_c, Expr, elt->type != ExprK_::StarK ? elt : elt->V.star.val);
+	}
+	return SUCCESS;
+}
 
 
 static AlifIntT codegen_list(AlifCompiler* _c, ExprTy _e) { // 4306
