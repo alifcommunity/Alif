@@ -704,11 +704,55 @@ AlifObject* _alifList_extend(AlifListObject* _self, AlifObject* _iterable) { // 
 	return list_extend(_self, _iterable);
 }
 
+static void reverse_slice(AlifObject** _lo, AlifObject** _hi) { // 1491
+	--_hi;
+	while (_lo < _hi) {
+		AlifObject* t_ = *_lo;
+		*_lo = *_hi;
+		*_hi = t_;
+		++_lo;
+		--_hi;
+	}
+}
+
 class SortSlice { // 1518
 public:
 	AlifObject** keys{};
 	AlifObject** values{};
 };
+
+
+ALIF_LOCAL_INLINE(void) sortSlice_copy(SortSlice* _s1, AlifSizeT _i, SortSlice* _s2, AlifSizeT _j) { // 1524
+	_s1->keys[_i] = _s2->keys[_j];
+	if (_s1->values != nullptr)
+		_s1->values[_i] = _s2->values[_j];
+}
+
+ALIF_LOCAL_INLINE(void) sortSlice_copyIncr(SortSlice* _dst, SortSlice* _src) { // 1532
+	*_dst->keys++ = *_src->keys++;
+	if (_dst->values != nullptr)
+		*_dst->values++ = *_src->values++;
+}
+
+ALIF_LOCAL_INLINE(void) sortSlice_copyDecr(SortSlice* _dst, SortSlice* _src) { // 1540
+	*_dst->keys-- = *_src->keys--;
+	if (_dst->values != nullptr)
+		*_dst->values-- = *_src->values--;
+}
+
+ALIF_LOCAL_INLINE(void) sortSlice_memcpy(SortSlice* _s1, AlifSizeT _i, SortSlice* _s2, AlifSizeT _j,
+	AlifSizeT _n) { // 1549
+	memcpy(&_s1->keys[_i], &_s2->keys[_j], sizeof(AlifObject*) * _n);
+	if (_s1->values != nullptr)
+		memcpy(&_s1->values[_i], &_s2->values[_j], sizeof(AlifObject*) * _n);
+}
+
+ALIF_LOCAL_INLINE(void) sortSlice_memMove(SortSlice* _s1, AlifSizeT _i, SortSlice* _s2, AlifSizeT _j,
+	AlifSizeT _n) { //  1558
+	memmove(&_s1->keys[_i], &_s2->keys[_j], sizeof(AlifObject*) * _n);
+	if (_s1->values != nullptr)
+		memmove(&_s1->values[_i], &_s2->values[_j], sizeof(AlifObject*) * _n);
+}
 
 ALIF_LOCAL_INLINE(void) sortSlice_advance(SortSlice* _slice, AlifSizeT _n) { // 1566
 	_slice->keys += _n;
@@ -729,7 +773,7 @@ ALIF_LOCAL_INLINE(void) sortSlice_advance(SortSlice* _slice, AlifSizeT _n) { // 
 
 #define MAX_MINRUN 64 // 1607
 
-class Slice { // 1615
+class SSlice { // 1615
 public:
 	SortSlice base{};
 	AlifSizeT len_{};   /* length of run */
@@ -747,7 +791,7 @@ public:
 	AlifSizeT alloced{};
 
 	AlifIntT n_{};
-	Slice pending[MAX_MERGE_PENDING]{};
+	SSlice pending[MAX_MERGE_PENDING]{};
 
 	AlifObject* temparray[MERGESTATE_TEMP_SIZE]{};
 
@@ -757,6 +801,151 @@ public:
 
 	AlifIntT(*TupleElemCompare)(AlifObject*, AlifObject*, MergeState*);
 };
+
+static AlifIntT binarySort(MergeState* _ms, const SortSlice* _ss, AlifSizeT _n, AlifSizeT _ok) { // 1681
+	AlifSizeT k_{};
+	AlifObject** const a_ = _ss->keys;
+	AlifObject** const v_ = _ss->values;
+	const bool hasValues = v_ != nullptr;
+	AlifObject* pivot{};
+	AlifSizeT m_{};
+
+	if (!_ok)
+		++_ok;
+
+#if 0 
+	AlifObject* vPivot = nullptr;
+	for (; ok < n; ++ok) {
+		pivot = a[ok];
+		if (hasValues)
+			vPivot = v[ok];
+		for (M = ok - 1; M >= 0; --M) {
+			k = ISLT(pivot, a[M]);
+			if (k < 0) {
+				a[M + 1] = pivot;
+				if (hasValues)
+					v[M + 1] = vPivot;
+				goto fail;
+			}
+			else if (k) {
+				a[M + 1] = a[M];
+				if (hasValues)
+					v[M + 1] = v[M];
+			}
+			else
+				break;
+		}
+		a[M + 1] = pivot;
+		if (hasValues)
+			v[M + 1] = vPivot;
+	}
+#else // binary insertion sort
+	AlifSizeT l_{}, r_{};
+	for (; _ok < _n; ++_ok) {
+		l_ = 0;
+		r_ = _ok;
+		pivot = a_[_ok];
+		do {
+
+			m_ = (l_ + r_) >> 1;
+#if 1 
+			IFLT(pivot, a_[m_])
+				r_ = m_;
+	else
+		l_ = m_ + 1;
+#else
+			k = ISLT(pivot, a[M]);
+			if (k < 0)
+				goto fail;
+			AlifSizeT Mp1 = M + 1;
+			R = k ? M : R;
+			L = k ? L : Mp1;
+#endif
+		} while (l_ < r_);
+		for (m_ = _ok; m_ > l_; --m_)
+			a_[m_] = a_[m_ - 1];
+		a_[l_] = pivot;
+		if (hasValues) {
+			pivot = v_[_ok];
+			for (m_ = _ok; m_ > l_; --m_)
+				v_[m_] = v_[m_ - 1];
+			v_[l_] = pivot;
+		}
+	}
+#endif /
+	return 0;
+
+fail:
+	return -1;
+}
+
+static void sortSlice_reverse(SortSlice* _s, AlifSizeT _n) { // 1803
+	reverse_slice(_s->keys, &_s->keys[_n]);
+	if (_s->values != nullptr)
+		reverse_slice(_s->values, &_s->values[_n]);
+}
+
+static AlifSizeT count_run(MergeState* _ms, SortSlice* _slo, AlifSizeT _nremaining) { // 1819
+	AlifSizeT k_{};
+	AlifSizeT n_{};
+	AlifObject** const lo_ = _slo->keys;
+	AlifSizeT neq_{};
+
+#define REVERSE_LAST_NEQ                        \
+    if (neq_) {                                  \
+        SortSlice slice = *_slo;                 \
+        ++neq_;                                  \
+        sortSlice_advance(&slice, n_ - neq_);     \
+        sortSlice_reverse(&slice, neq_);         \
+        neq_ = 0;                                \
+    }
+
+
+#define IF_NEXT_LARGER  IFLT(lo_[n_-1], lo_[n_])
+#define IF_NEXT_SMALLER IFLT(lo_[n_], lo_[n_-1])
+
+	for (n_ = 1; n_ < _nremaining; ++n_) {
+		IF_NEXT_SMALLER
+			break;
+	}
+	if (n_ == _nremaining)
+		return n_;
+
+	if (n_ > 1) {
+		IFLT(lo_[0], lo_[n_ - 1])
+			return n_;
+		sortSlice_reverse(_slo, n_);
+	}
+	++n_;
+
+	neq_ = 0;
+	for (; n_ < _nremaining; ++n_) {
+		IF_NEXT_SMALLER{
+
+			REVERSE_LAST_NEQ
+		}
+	else {
+		IF_NEXT_LARGER /* descending run is over */
+			break;
+	else /* not x < y and not y < x implies x == y */
+		++neq_;
+	}
+	}
+	REVERSE_LAST_NEQ
+		sortSlice_reverse(_slo, n_);
+	for (; n_ < _nremaining; ++n_) {
+		IF_NEXT_SMALLER
+			break;
+	}
+
+	return n_;
+fail:
+	return -1;
+
+#undef REVERSE_LAST_NEQ
+#undef IF_NEXT_SMALLER
+#undef IF_NEXT_LARGER
+}
 
 static AlifSizeT gallop_left(MergeState* _ms, AlifObject* _key, AlifObject** _a, AlifSizeT _n, AlifSizeT _hint) { // 1935
 	AlifSizeT ofs_{};
@@ -889,6 +1078,40 @@ static void merge_init(MergeState* _ms, AlifSizeT _listSize, AlifIntT _hasKeyFun
 	_ms->baseKeys = _lo->keys;
 }
 
+static void merge_freeMem(MergeState* _ms) { // 2135
+	if (_ms->a_.keys != _ms->temparray) {
+		alifMem_dataAlloc((AlifUSizeT)_ms->a_.keys);
+		_ms->a_.keys = nullptr;
+	}
+}
+
+static AlifIntT merge_getMem(MergeState* _ms, AlifSizeT _need) { // 2147
+	AlifIntT multiplier{};
+
+	if (_need <= _ms->alloced)
+		return 0;
+
+	multiplier = _ms->a_.values != nullptr ? 2 : 1;
+
+	merge_freeMem(_ms);
+	if ((AlifUSizeT)_need > ALIF_SIZET_MAX / sizeof(AlifObject*) / multiplier) {
+		//alifErr_noMemory();
+		return -1;
+	}
+	_ms->a_.keys = (AlifObject**)alifMem_dataAlloc(multiplier * _need
+		* sizeof(AlifObject*));
+	if (_ms->a_.keys != nullptr) {
+		_ms->alloced = _need;
+		if (_ms->a_.values != nullptr)
+			_ms->a_.values = &_ms->a_.keys[_need];
+		return 0;
+	}
+	//alifErr_noMemory();
+	return -1;
+}
+#define MERGE_GETMEM(_ms, _need) ((_need) <= (_ms)->alloced ? 0 :   \
+                                merge_getMem(_ms, _need))
+
 static AlifSizeT merge_lo(MergeState* _ms, SortSlice _ssa, AlifSizeT _na,
 	SortSlice _ssb, AlifSizeT _nb) { // 2186
 	AlifSizeT k_{};
@@ -968,7 +1191,7 @@ static AlifSizeT merge_lo(MergeState* _ms, SortSlice _ssa, AlifSizeT _na,
 			if (k_) {
 				if (k_ < 0)
 					goto Fail;
-				sortSlice_memmove(&dest_, 0, &_ssb, 0, k_);
+				sortSlice_memMove(&dest_, 0, &_ssb, 0, k_);
 				sortSlice_advance(&dest_, k_);
 				sortSlice_advance(&_ssb, k_);
 				_nb -= k_;
@@ -990,7 +1213,7 @@ Fail:
 		sortSlice_memcpy(&dest_, 0, &_ssa, 0, _na);
 	return result;
 CopyB:
-	sortSlice_memmove(&dest_, 0, &_ssb, 0, _nb);
+	sortSlice_memMove(&dest_, 0, &_ssb, 0, _nb);
 	sortSlice_copy(&dest_, _nb, &_ssa, 0);
 	return 0;
 }
@@ -1065,7 +1288,7 @@ static AlifSizeT merge_hi(MergeState* _ms, SortSlice _ssa, AlifSizeT _na,
 			if (k_) {
 				sortSlice_advance(&dest, -k_);
 				sortSlice_advance(&_ssa, -k_);
-				sortSlice_memmove(&dest, 1, &_ssa, 1, k_);
+				sortSlice_memMove(&dest, 1, &_ssa, 1, k_);
 				_na -= k_;
 				if (_na == 0)
 					goto Succeed;
@@ -1105,7 +1328,7 @@ Fail:
 		sortSlice_memcpy(&dest, -(_nb - 1), &baseb, 0, _nb);
 	return result;
 CopyA:
-	sortSlice_memmove(&dest, 1 - _na, &_ssa, 1 - _na, _na);
+	sortSlice_memMove(&dest, 1 - _na, &_ssa, 1 - _na, _na);
 	sortSlice_advance(&dest, -_na);
 	sortSlice_advance(&_ssa, -_na);
 	sortSlice_copy(&dest, 0, &_ssb, 0);
@@ -1147,8 +1370,43 @@ static AlifSizeT merge_at(MergeState* _ms, AlifSizeT _i) { // 2458
 		return merge_hi(_ms, ssa_, na_, ssb_, nb_);
 }
 
+static AlifIntT powerLoop(AlifSizeT _s1, AlifSizeT _n1, AlifSizeT _n2, AlifSizeT _n) { // 2518
+	AlifIntT result = 0;
+	AlifSizeT a_ = 2 * _s1 + _n1;  /* 2*a */
+	AlifSizeT b_ = a_ + _n1 + _n2;  /* 2*b */
+	for (;;) {
+		++result;
+		if (a_ >= _n) {  /* both quotient bits are 1 */
+			a_ -= _n;
+			b_ -= _n;
+		}
+		else if (b_ >= _n) {  /* a/n bit is 0, b/n bit is 1 */
+			break;
+		} /* else both quotient bits are 0 */
+		a_ <<= 1;
+		b_ <<= 1;
+	}
+	return result;
+}
+
+static AlifIntT found_newRun(MergeState* _ms, AlifSizeT _n2) { // 2565
+	if (_ms->n_) {
+		SSlice* p_ = _ms->pending;
+		AlifSizeT s1_ = p_[_ms->n_ - 1].base.keys - _ms->baseKeys; 
+		AlifSizeT n1_ = p_[_ms->n_ - 1].len_;
+		AlifIntT power = powerLoop(s1_, n1_, _n2, _ms->listLen);
+		while (_ms->n_ > 1 and p_[_ms->n_ - 2].power > power) {
+			if (merge_at(_ms, _ms->n_ - 2) < 0)
+				return -1;
+		}
+		p_[_ms->n_ - 1].power = power;
+	}
+	return 0;
+}
+
+
 static AlifIntT merge_forceCollapse(MergeState* _ms) { // 2590
-	Slice* p_ = _ms->pending;
+	SSlice* p_ = _ms->pending;
 	while (_ms->n_ > 1) {
 		AlifSizeT n_ = _ms->n_ - 2;
 		if (n_ > 0 and p_[n_ - 1].len_ < p_[n_ + 1].len_)
@@ -1336,7 +1594,7 @@ static AlifObject* list_sortImpl(AlifListObject* _self,
 		/* Prove that assumption by checking every key. */
 		for (i = 0; i < savedObjSize; i++) {
 
-			if (keysAreInTuples &&
+			if (keysAreInTuples and
 				!(ALIF_IS_TYPE(lo.keys[i], &_alifTupleType_)
 					and ALIF_SIZE(lo.keys[i]) != 0)) {
 				keysAreInTuples = 0;
@@ -1430,7 +1688,7 @@ static AlifObject* list_sortImpl(AlifListObject* _self,
 		if (n < minrun) {
 			const AlifSizeT force = nremaining <= minrun ?
 				nremaining : minrun;
-			if (binarysort(&ms, &lo, force, n) < 0)
+			if (binarySort(&ms, &lo, force, n) < 0)
 				goto fail;
 			n = force;
 		}
