@@ -30,6 +30,11 @@ static inline void alifUStrWriter_initWithBuffer(AlifUStrWriter*, AlifObject*);
 #define ALIFUSTR_DATA_ANY(op)                         \
     (ALIFUSTROBJECT_CAST(op)->data.any)
 
+// 144
+#define ALIFUSTR_SHARE_UTF8(_op)                       \
+     (ALIFUSTR_UTF8(_op) == ALIFUSTR_DATA(_op))        
+
+
 // 151
 #define ALIFUSTR_HAS_UTF8_MEMORY(_op)                  \
     !ALIFUSTR_IS_COMPACT_ASCII(_op) and ALIFUSTR_UTF8(_op)		\
@@ -466,6 +471,61 @@ static AlifObject* resize_compact(AlifObject* _uStr, AlifSizeT _length) { // 107
 	return _uStr;
 }
 
+static AlifIntT resize_inplace(AlifObject* _uStr, AlifSizeT _length) { // 1126
+	AlifSizeT newSize{};
+	AlifSizeT charSize{};
+	AlifIntT shareUTF8{};
+	void* data{};
+
+	data = ALIFUSTR_DATA_ANY(_uStr);
+	charSize = ALIFUSTR_KIND(_uStr);
+	shareUTF8 = ALIFUSTR_SHARE_UTF8(_uStr);
+
+	if (_length > (ALIF_SIZET_MAX / charSize - 1)) {
+		//alifErr_noMemory();
+		return -1;
+	}
+	newSize = (_length + 1) * charSize;
+
+	if (!shareUTF8 and ALIFUSTR_HAS_UTF8_MEMORY(_uStr))
+	{
+		alifMem_objFree(ALIFUSTR_UTF8(_uStr));
+		ALIFUSTR_UTF8(_uStr) = NULL;
+		ALIFUSTR_UTF8_LENGTH(_uStr) = 0;
+	}
+
+	data = (AlifObject*)alifMem_objRealloc(data, newSize);
+	if (data == NULL) {
+		//alifErr_noMemory();
+		return -1;
+	}
+	ALIFUSTR_DATA_ANY(_uStr) = data;
+	if (shareUTF8) {
+		ALIFUSTR_UTF8(_uStr) = (char*)data;
+		ALIFUSTR_UTF8_LENGTH(_uStr) = _length;
+	}
+	ALIFUSTR_LENGTH(_uStr) = _length;
+	ALIFUSTR_WRITE(ALIFUSTR_KIND(_uStr), data, _length, 0);
+
+	if (_length > ALIF_SIZET_MAX / (AlifSizeT)sizeof(wchar_t) - 1) {
+		//alifErr_noMemory();
+		return -1;
+	}
+	return 0;
+}
+
+static AlifObject* resize_copy(AlifObject* _uStr, AlifSizeT _length) { // 1182
+	AlifSizeT copyLength{};
+	AlifObject* copy{};
+
+	copy = alifUStr_new(_length, ALIFUSTR_MAX_CHAR_VALUE(_uStr));
+	if (copy == NULL)
+		return NULL;
+
+	copyLength = ALIF_MIN(_length, ALIFUSTR_GET_LENGTH(_uStr));
+	alifUStr_fastCopyCharacters(copy, 0, _uStr, 0, copyLength);
+	return copy;
+}
 
 AlifObject* alifUStr_new(AlifSizeT _size, AlifUCS4 _maxChar) { // 1282
 	/* Optimization for empty strings */
@@ -809,6 +869,41 @@ static AlifIntT uStr_modifiable(AlifObject* _unicode) { // 1738
 		return 0;
 	return 1;
 }
+
+static AlifIntT uStr_resize(AlifObject** _pUStr, AlifSizeT _length) { // 1758
+	AlifObject* uStr{};
+	AlifSizeT oldLength{};
+
+	uStr = *_pUStr;
+
+	oldLength = ALIFUSTR_GET_LENGTH(uStr);
+	if (oldLength == _length)
+		return 0;
+
+	if (_length == 0) {
+		AlifObject* empty = unicode_getEmpty();
+		ALIF_SETREF(*_pUStr, empty);
+		return 0;
+	}
+
+	if (!uStr_modifiable(uStr)) {
+		AlifObject* copy = resize_copy(uStr, _length);
+		if (copy == nullptr)
+			return -1;
+		ALIF_SETREF(*_pUStr, copy);
+		return 0;
+	}
+
+	if (ALIFUSTR_IS_COMPACT(uStr)) {
+		AlifObject* newUStr = resize_compact(uStr, _length);
+		if (newUStr == nullptr)
+			return -1;
+		*_pUStr = newUStr;
+		return 0;
+	}
+	return resize_inplace(uStr, _length);
+}
+
 
 static AlifObject* get_latin1Char(AlifUCS1 _ch) { // 1867
 	AlifObject* obj = LATIN1(_ch);
@@ -1340,6 +1435,21 @@ wchar_t* alifUStr_asWideCharString(AlifObject* _uStr, AlifSizeT* _size) { // 333
 		return nullptr;
 	}
 	return buffer;
+}
+
+AlifObject* alifUStr_fromObject(AlifObject* _obj) { // 3446
+	if (ALIFUSTR_CHECKEXACT(_obj)) {
+		return ALIF_NEWREF(_obj);
+	}
+	if (ALIFUSTR_CHECK(_obj)) {
+		/* For a Unicode subtype that's not a Unicode object,
+		   return a true Unicode object with the same data. */
+		return _alifUStr_copy(_obj);
+	}
+	//alifErr_format(_alifExcTypeError_,
+		//"Can't convert '%.100s' object to str implicitly",
+		//ALIF_TYPE(obj)->name);
+	return nullptr;
 }
 
 
