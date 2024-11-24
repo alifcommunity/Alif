@@ -490,12 +490,12 @@ static AlifIntT resize_inplace(AlifObject* _uStr, AlifSizeT _length) { // 1126
 	if (!shareUTF8 and ALIFUSTR_HAS_UTF8_MEMORY(_uStr))
 	{
 		alifMem_objFree(ALIFUSTR_UTF8(_uStr));
-		ALIFUSTR_UTF8(_uStr) = NULL;
+		ALIFUSTR_UTF8(_uStr) = nullptr;
 		ALIFUSTR_UTF8_LENGTH(_uStr) = 0;
 	}
 
 	data = (AlifObject*)alifMem_objRealloc(data, newSize);
-	if (data == NULL) {
+	if (data == nullptr) {
 		//alifErr_noMemory();
 		return -1;
 	}
@@ -519,8 +519,7 @@ static AlifObject* resize_copy(AlifObject* _uStr, AlifSizeT _length) { // 1182
 	AlifObject* copy{};
 
 	copy = alifUStr_new(_length, ALIFUSTR_MAX_CHAR_VALUE(_uStr));
-	if (copy == NULL)
-		return NULL;
+	if (copy == nullptr) return nullptr;
 
 	copyLength = ALIF_MIN(_length, ALIFUSTR_GET_LENGTH(_uStr));
 	alifUStr_fastCopyCharacters(copy, 0, _uStr, 0, copyLength);

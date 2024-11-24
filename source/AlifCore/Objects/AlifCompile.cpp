@@ -943,7 +943,42 @@ finally:
 
 
 
+static bool check_isArg(ExprTy _e) { // 2626
+	if (_e->type != ExprK_::ConstantK) {
+		return true;
+	}
+	AlifObject* value = _e->V.constant.val;
+	return (value == ALIF_NONE
+		or value == ALIF_FALSE
+		or value == ALIF_TRUE
+		/*or value == ALIF_ELLIPSIS*/);
+}
 
+static AlifIntT codegen_checkCompare(AlifCompiler* _c, ExprTy _e) { // 2644
+	AlifSizeT i{}, n{};
+	bool left = check_isArg(_e->V.compare.left);
+	ExprTy leftExpr = _e->V.compare.left;
+	n = ASDL_SEQ_LEN(_e->V.compare.ops);
+	for (i = 0; i < n; i++) {
+		CmpOp_ op = (CmpOp_)ASDL_SEQ_GET(_e->V.compare.ops, i);
+		ExprTy rightExpr = (ExprTy)ASDL_SEQ_GET(_e->V.compare.comparators, i);
+		bool right = check_isArg(rightExpr);
+		if (op == CmpOp_::Is or op == CmpOp_::IsNot) {
+			if (!right or !left) {
+				const char* msg = (op == Is)
+					? "\"is\" with '%.200s' literal. Did you mean \"==\"?"
+					: "\"is not\" with '%.200s' literal. Did you mean \"!=\"?";
+				ExprTy literal = !left ? leftExpr : rightExpr;
+				//return compiler_warn(
+				//	_c, LOC(_e), msg, infer_type(literal)->tp_name
+				//);
+			}
+		}
+		left = right;
+		leftExpr = rightExpr;
+	}
+	return SUCCESS;
+}
 
 
 static AlifIntT codegen_jumpIf(AlifCompiler* _c, Location _loc,
