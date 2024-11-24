@@ -143,8 +143,9 @@ AlifIntT _alifCompile_ensureArrayLargeEnough(AlifIntT _idx, void** _array,
 
 
 
-/* The following items change on entry and exit of code blocks.
-   They must be saved and restored when returning to a block.
+/*
+	The following items change on entry and exit of code blocks.
+	They must be saved and restored when returning to a block.
 */
 class CompilerUnit { // 231
 public:

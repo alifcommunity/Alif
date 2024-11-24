@@ -773,7 +773,7 @@ ALIF_LOCAL_INLINE(void) sortSlice_advance(SortSlice* _slice, AlifSizeT _n) { // 
 
 #define MAX_MINRUN 64 // 1607
 
-class Slice { // 1615
+class SSlice { // 1615
 public:
 	SortSlice base{};
 	AlifSizeT len_{};   /* length of run */
@@ -791,7 +791,7 @@ public:
 	AlifSizeT alloced{};
 
 	AlifIntT n_{};
-	Slice pending[MAX_MERGE_PENDING]{};
+	SSlice pending[MAX_MERGE_PENDING]{};
 
 	AlifObject* temparray[MERGESTATE_TEMP_SIZE]{};
 
@@ -917,6 +917,7 @@ static AlifSizeT count_run(MergeState* _ms, SortSlice* _slo, AlifSizeT _nremaini
 		sortSlice_reverse(_slo, n_);
 	}
 	++n_;
+
 	neq_ = 0;
 	for (; n_ < _nremaining; ++n_) {
 		IF_NEXT_SMALLER{
@@ -1079,7 +1080,7 @@ static void merge_init(MergeState* _ms, AlifSizeT _listSize, AlifIntT _hasKeyFun
 
 static void merge_freeMem(MergeState* _ms) { // 2135
 	if (_ms->a_.keys != _ms->temparray) {
-		alifMem_objAlloc((AlifUSizeT)_ms->a_.keys);
+		alifMem_dataAlloc((AlifUSizeT)_ms->a_.keys);
 		_ms->a_.keys = nullptr;
 	}
 }
@@ -1093,11 +1094,11 @@ static AlifIntT merge_getMem(MergeState* _ms, AlifSizeT _need) { // 2147
 	multiplier = _ms->a_.values != nullptr ? 2 : 1;
 
 	merge_freeMem(_ms);
-	if ((size_t)_need > ALIF_SIZET_MAX / sizeof(AlifObject*) / multiplier) {
+	if ((AlifUSizeT)_need > ALIF_SIZET_MAX / sizeof(AlifObject*) / multiplier) {
 		//alifErr_noMemory();
 		return -1;
 	}
-	_ms->a_.keys = (AlifObject**)alifMem_objAlloc(multiplier * _need
+	_ms->a_.keys = (AlifObject**)alifMem_dataAlloc(multiplier * _need
 		* sizeof(AlifObject*));
 	if (_ms->a_.keys != nullptr) {
 		_ms->alloced = _need;
@@ -1390,7 +1391,7 @@ static AlifIntT powerLoop(AlifSizeT _s1, AlifSizeT _n1, AlifSizeT _n2, AlifSizeT
 
 static AlifIntT found_newRun(MergeState* _ms, AlifSizeT _n2) { // 2565
 	if (_ms->n_) {
-		Slice* p_ = _ms->pending;
+		SSlice* p_ = _ms->pending;
 		AlifSizeT s1_ = p_[_ms->n_ - 1].base.keys - _ms->baseKeys; 
 		AlifSizeT n1_ = p_[_ms->n_ - 1].len_;
 		AlifIntT power = powerLoop(s1_, n1_, _n2, _ms->listLen);
@@ -1405,7 +1406,7 @@ static AlifIntT found_newRun(MergeState* _ms, AlifSizeT _n2) { // 2565
 
 
 static AlifIntT merge_forceCollapse(MergeState* _ms) { // 2590
-	Slice* p_ = _ms->pending;
+	SSlice* p_ = _ms->pending;
 	while (_ms->n_ > 1) {
 		AlifSizeT n_ = _ms->n_ - 2;
 		if (n_ > 0 and p_[n_ - 1].len_ < p_[n_ + 1].len_)
