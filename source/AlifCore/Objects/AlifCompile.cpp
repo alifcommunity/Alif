@@ -20,6 +20,9 @@
 #undef NEED_OPCODE_METADATA
 
 
+
+#define STACK_USE_GUIDELINE 30 // 58
+
  // 60
 #undef SUCCESS
 #undef ERROR
@@ -535,6 +538,75 @@ static AlifIntT codegen_addOpLoadConst(AlifCompiler* _c,
 
 
 
+ // 913
+#define ADDOP_LOAD_CONST_NEW(_c, _loc, _o) { \
+    AlifObject *__new_const = _o; \
+    if (__new_const == nullptr) { \
+        return ERROR; \
+    } \
+    if (codegen_addOpLoadConst(_c, _loc, __new_const) < 0) { \
+        ALIF_DECREF(__new_const); \
+        return ERROR; \
+    } \
+    ALIF_DECREF(__new_const); \
+}
+
+
+ // 949
+#define LOAD_METHOD -1
+#define LOAD_SUPER_METHOD -2
+#define LOAD_ZERO_SUPER_ATTR -3
+#define LOAD_ZERO_SUPER_METHOD -4
+
+static AlifIntT codegen_addOpName(AlifCompiler* _c, Location _loc,
+	AlifIntT _opcode, AlifObject* _dict, AlifObject* _o) { // 954
+	AlifObject* mangled = compiler_maybeMangle(_c, _o);
+	if (!mangled) {
+		return ERROR;
+	}
+	AlifSizeT arg = dict_addO(_dict, mangled);
+	ALIF_DECREF(mangled);
+	if (arg < 0) {
+		return ERROR;
+	}
+	if (_opcode == LOAD_ATTR) {
+		arg <<= 1;
+	}
+	if (_opcode == LOAD_METHOD) {
+		_opcode = LOAD_ATTR;
+		arg <<= 1;
+		arg |= 1;
+	}
+	if (_opcode == LOAD_SUPER_ATTR) {
+		arg <<= 2;
+		arg |= 2;
+	}
+	if (_opcode == LOAD_SUPER_METHOD) {
+		_opcode = LOAD_SUPER_ATTR;
+		arg <<= 2;
+		arg |= 3;
+	}
+	if (_opcode == LOAD_ZERO_SUPER_ATTR) {
+		_opcode = LOAD_SUPER_ATTR;
+		arg <<= 2;
+	}
+	if (_opcode == LOAD_ZERO_SUPER_METHOD) {
+		_opcode = LOAD_SUPER_ATTR;
+		arg <<= 2;
+		arg |= 1;
+	}
+	ADDOP_I(_c, _loc, _opcode, arg);
+	return SUCCESS;
+}
+
+
+
+#define ADDOP_NAME(_c, _loc, _op, _o, _type) \
+    RETURN_IF_ERROR(codegen_addOpName(_c, _loc, _op, _c->u_->metadata. ## _type, _o)) // 997
+
+
+
+
 static AlifIntT codegen_addOpJ(InstrSequence* _seq, Location _loc,
 	AlifIntT _opcode, JumpTargetLabel _target) { // 1000
 	return _alifInstructionSequence_addOp(_seq, _opcode, _target.id, _loc);
@@ -551,6 +623,17 @@ static AlifIntT codegen_addOpJ(InstrSequence* _seq, Location _loc,
  // 1035
 #define VISIT(_c, _type, _v) \
     RETURN_IF_ERROR(compiler_visit ## _type(_c, _v));
+
+
+ // 1041
+#define VISIT_SEQ(_c, _type, _sequ) { \
+    AlifIntT i_{}; \
+    ASDL ## _type ## Seq *seq = (_sequ); /* avoid variable capture */ \
+    for (i_ = 0; i_ < ASDL_SEQ_LEN(seq); i_++) { \
+        _type ## Ty elt = (_type ## Ty)ASDL_SEQ_GET(seq, i_); \
+        RETURN_IF_ERROR(compiler_visit ## _type(_c, elt)); \
+    } \
+}
 
 
 static AlifIntT compiler_enterScope(AlifCompiler* _c, Identifier _name,
@@ -1083,7 +1166,7 @@ static AlifIntT codegen_boolOp(AlifCompiler* _c, ExprTy _e) { // 4151
 		jumpi = POP_JUMP_IF_FALSE;
 	else
 		jumpi = POP_JUMP_IF_TRUE;
-	NEW_JUMP_TARGET_LABEL(_c, end);
+	NEW_JUMP_TARGET_LABEL(_c, _end);
 	s = _e->V.boolOp.vals;
 	n = ASDL_SEQ_LEN(s) - 1;
 	for (i = 0; i < n; ++i) {
@@ -1099,6 +1182,146 @@ static AlifIntT codegen_boolOp(AlifCompiler* _c, ExprTy _e) { // 4151
 	return SUCCESS;
 }
 
+
+
+
+
+static AlifIntT codegen_subDict(AlifCompiler* _c,
+	ExprTy _e, AlifSizeT _begin, AlifSizeT _end) { // 4362
+	AlifSizeT i, n = _end - _begin;
+	AlifIntT big = n * 2 > STACK_USE_GUIDELINE;
+	Location loc = LOC(_e);
+	if (big) {
+		ADDOP_I(_c, loc, BUILD_MAP, 0);
+	}
+	for (i = _begin; i < _end; i++) {
+		VISIT(_c, Expr, (ExprTy)ASDL_SEQ_GET(_e->V.dict.keys, i));
+		VISIT(_c, Expr, (ExprTy)ASDL_SEQ_GET(_e->V.dict.vals, i));
+		if (big) {
+			ADDOP_I(_c, loc, MAP_ADD, 1);
+		}
+	}
+	if (!big) {
+		ADDOP_I(_c, loc, BUILD_MAP, n);
+	}
+	return SUCCESS;
+}
+
+static AlifIntT codegen_dict(AlifCompiler* _c, ExprTy _e) { // 4384
+	Location loc = LOC(_e);
+	AlifSizeT i{}, n{}, elements{};
+	AlifIntT haveDict{};
+	AlifIntT isUnpacking = 0;
+	n = ASDL_SEQ_LEN(_e->V.dict.vals);
+	haveDict = 0;
+	elements = 0;
+	for (i = 0; i < n; i++) {
+		isUnpacking = (ExprTy)ASDL_SEQ_GET(_e->V.dict.keys, i) == nullptr;
+		if (isUnpacking) {
+			if (elements) {
+				RETURN_IF_ERROR(codegen_subDict(_c, _e, i - elements, i));
+				if (haveDict) {
+					ADDOP_I(_c, loc, DICT_UPDATE, 1);
+				}
+				haveDict = 1;
+				elements = 0;
+			}
+			if (haveDict == 0) {
+				ADDOP_I(_c, loc, BUILD_MAP, 0);
+				haveDict = 1;
+			}
+			VISIT(_c, Expr, (ExprTy)ASDL_SEQ_GET(_e->V.dict.vals, i));
+			ADDOP_I(_c, loc, DICT_UPDATE, 1);
+		}
+		else {
+			if (elements * 2 > STACK_USE_GUIDELINE) {
+				RETURN_IF_ERROR(codegen_subDict(_c, _e, i - elements, i + 1));
+				if (haveDict) {
+					ADDOP_I(_c, loc, DICT_UPDATE, 1);
+				}
+				haveDict = 1;
+				elements = 0;
+			}
+			else {
+				elements++;
+			}
+		}
+	}
+	if (elements) {
+		RETURN_IF_ERROR(codegen_subDict(_c, _e, n - elements, n));
+		if (haveDict) {
+			ADDOP_I(_c, loc, DICT_UPDATE, 1);
+		}
+		haveDict = 1;
+	}
+	if (!haveDict) {
+		ADDOP_I(_c, loc, BUILD_MAP, 0);
+	}
+	return SUCCESS;
+}
+
+
+
+
+
+
+
+
+static AlifIntT codegen_joinedStr(AlifCompiler* _c, ExprTy _e) { // 4847
+	Location loc = LOC(_e);
+	AlifSizeT valueCount = ASDL_SEQ_LEN(_e->V.joinStr.vals);
+	if (valueCount > STACK_USE_GUIDELINE) {
+		ADDOP_LOAD_CONST_NEW(_c, loc, ALIF_NEWREF(&ALIF_STR(Empty)));
+		ADDOP_NAME(_c, loc, LOAD_METHOD, &ALIF_ID(Join), names);
+		ADDOP_I(_c, loc, BUILD_LIST, 0);
+		for (AlifSizeT i = 0; i < ASDL_SEQ_LEN(_e->V.joinStr.vals); i++) {
+			VISIT(_c, Expr, ASDL_SEQ_GET(_e->V.joinStr.vals, i));
+			ADDOP_I(_c, loc, LIST_APPEND, 1);
+		}
+		ADDOP_I(_c, loc, CALL, 1);
+	}
+	else {
+		VISIT_SEQ(_c, Expr, _e->V.joinStr.vals);
+		if (valueCount > 1) {
+			ADDOP_I(_c, loc, BUILD_STRING, valueCount);
+		}
+		else if (valueCount == 0) {
+			ADDOP_LOAD_CONST_NEW(_c, loc, ALIF_NEWREF(&ALIF_STR(Empty)));
+		}
+	}
+	return SUCCESS;
+}
+
+static AlifIntT codegen_formattedValue(AlifCompiler* _c, ExprTy _e) { // 4877
+	AlifIntT conversion = _e->V.formattedValue.conversion;
+	AlifIntT oparg;
+
+	/* The expression to be formatted. */
+	VISIT(_c, Expr, _e->V.formattedValue.val);
+
+	Location loc = LOC(_e);
+	if (conversion != -1) {
+		switch (conversion) {
+		case 's': oparg = FVC_STR;   break;
+		case 'r': oparg = FVC_REPR;  break;
+		case 'a': oparg = FVC_ASCII; break;
+		default:
+			//alifErr_format(_alifExcSystemError_,
+			//	"Unrecognized conversion character %d", conversion);
+			return ERROR;
+		}
+		ADDOP_I(_c, loc, CONVERT_VALUE, oparg);
+	}
+	if (_e->V.formattedValue.formatSpec) {
+		/* Evaluate the format spec, and update our opcode arg. */
+		VISIT(_c, Expr, _e->V.formattedValue.formatSpec);
+		ADDOP(_c, loc, FORMAT_WITH_SPEC);
+	}
+	else {
+		ADDOP(_c, loc, FORMAT_SIMPLE);
+	}
+	return SUCCESS;
+}
 
 
 
@@ -1258,7 +1481,9 @@ static AlifIntT compiler_visitExpr(AlifCompiler* _c, ExprTy _e) { // 5997
 
 
 
-
+static AlifObject* compiler_maybeMangle(AlifCompiler* _c, AlifObject* _name) { // 7352
+	return alif_maybeMangle(_c->u_->private_, _c->u_->ste, _name);
+}
 
 static InstrSequence* compiler_instrSequence(AlifCompiler* _c) { // 7358
 	return _c->u_->instrSequence;

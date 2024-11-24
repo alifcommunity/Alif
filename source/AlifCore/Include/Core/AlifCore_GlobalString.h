@@ -44,6 +44,7 @@ public:
 		STRUCT_FOR_ID(__package__)
 		STRUCT_FOR_ID(__spec__)
      	STRUCT_FOR_ID(hasLocation)
+     	STRUCT_FOR_ID(Join)
      	STRUCT_FOR_ID(mro)
      	STRUCT_FOR_ID(origin)
      	STRUCT_FOR_ID(top)

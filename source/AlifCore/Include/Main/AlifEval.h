@@ -26,4 +26,18 @@ void alifEval_releaseThread(AlifThread*); // 117
 
 
 
+ // 127
+/* Masks and values used by FORMAT_VALUE opcode. */
+#define FVC_MASK      0x3
+#define FVC_NONE      0x0
+#define FVC_STR       0x1
+#define FVC_REPR      0x2
+#define FVC_ASCII     0x3
+#define FVS_MASK      0x4
+#define FVS_HAVE_SPEC 0x4
+
+
+
+
+
 /* ----------------------------------------------------------------------------------------------------- */
