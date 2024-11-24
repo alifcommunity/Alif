@@ -44,6 +44,7 @@ static InstrSequence* compiler_instrSequence(AlifCompiler*); // 86
 
 #define INSTR_SEQUENCE(_c) compiler_instrSequence(_c) // 91
 
+#define SYMTABLE_ENTRY(_c) compiler_symtableEntry(_c) // 94
 
 typedef AlifSourceLocation Location; // 99
 
@@ -1151,6 +1152,148 @@ static AlifIntT addop_binary(AlifCompiler* _c, Location _loc,
 }
 
 
+static AlifIntT compiler_nameOp(AlifCompiler* _c, Location _loc,
+	Identifier _name, ExprContext_ _ctx) { // 4004
+	AlifIntT op{}, scope{};
+	AlifSizeT arg{};
+	enum OpType_ { OP_FAST, OP_GLOBAL, OP_DEREF, OP_NAME } optype;
+
+	AlifObject* dict = _c->u_->metadata.names;
+	AlifObject* mangled;
+
+	mangled = compiler_maybeMangle(_c, _name);
+	if (!mangled) {
+		return ERROR;
+	}
+
+	op = 0;
+	optype = OpType_::OP_NAME;
+	scope = alifST_getScope(SYMTABLE_ENTRY(_c), mangled);
+	switch (scope) {
+	case FREE:
+		dict = _c->u_->metadata.freevars;
+		optype = OpType_::OP_DEREF;
+		break;
+	case CELL:
+		dict = _c->u_->metadata.cellvars;
+		optype = OpType_::OP_DEREF;
+		break;
+	case LOCAL:
+		if (alifST_isFunctionLike(SYMTABLE_ENTRY(_c))) {
+			optype = OpType_::OP_FAST;
+		}
+		else {
+			AlifObject* item{};
+			if (alifDict_getItemRef(_c->u_->metadata.fasthidden, mangled,
+				&item) < 0) {
+				goto error;
+			}
+			if (item == ALIF_TRUE) {
+				optype = OpType_::OP_FAST;
+			}
+			ALIF_XDECREF(item);
+		}
+		break;
+	case GLOBAL_IMPLICIT:
+		if (alifST_isFunctionLike(SYMTABLE_ENTRY(_c)))
+			optype = OpType_::OP_GLOBAL;
+		break;
+	case GLOBAL_EXPLICIT:
+		optype = OpType_::OP_GLOBAL;
+		break;
+	case -1:
+		goto error;
+	default:
+		/* scope can be 0 */
+		break;
+	}
+
+	switch (optype) {
+	case OpType_::OP_DEREF:
+		switch (_ctx) {
+		case Load:
+			if (SYMTABLE_ENTRY(_c)->type == BlockType_::Class_Block
+				and !_c->u_->inInlinedComp) {
+				op = LOAD_FROM_DICT_OR_DEREF;
+				// First load the locals
+				if (codegen_addOpNoArg(INSTR_SEQUENCE(_c), LOAD_LOCALS, _loc) < 0) {
+					goto error;
+				}
+			}
+			else if (SYMTABLE_ENTRY(_c)->canSeeClassScope) {
+				op = LOAD_FROM_DICT_OR_DEREF;
+				// First load the classdict
+				if (codegen_loadClassDictFreeVar(_c, _loc) < 0) {
+					goto error;
+				}
+			}
+			else {
+				op = LOAD_DEREF;
+			}
+			break;
+		case Store: op = STORE_DEREF; break;
+		case Del: op = DELETE_DEREF; break;
+		}
+		break;
+	case OpType_::OP_FAST:
+		switch (_ctx) {
+		case Load: op = LOAD_FAST; break;
+		case Store: op = STORE_FAST; break;
+		case Del: op = DELETE_FAST; break;
+		}
+		ADDOP_N(_c, _loc, op, mangled, varnames);
+		return SUCCESS;
+	case OpType_::OP_GLOBAL:
+		switch (_ctx) {
+		case Load:
+			if (SYMTABLE_ENTRY(_c)->canSeeClassScope
+				and scope == GLOBAL_IMPLICIT) {
+				op = LOAD_FROM_DICT_OR_GLOBALS;
+				// First load the classdict
+				if (codegen_loadClassDictFreeVar(_c, _loc) < 0) {
+					goto error;
+				}
+			}
+			else {
+				op = LOAD_GLOBAL;
+			}
+			break;
+		case Store: op = STORE_GLOBAL; break;
+		case Del: op = DELETE_GLOBAL; break;
+		}
+		break;
+	case OpType_::OP_NAME:
+		switch (_ctx) {
+		case Load:
+			op = (SYMTABLE_ENTRY(_c)->type == BlockType_::Class_Block
+				and _c->u_->inInlinedComp)
+				? LOAD_GLOBAL
+				: LOAD_NAME;
+			break;
+		case Store: op = STORE_NAME; break;
+		case Del: op = DELETE_NAME; break;
+		}
+		break;
+	}
+
+	arg = dict_addO(dict, mangled);
+	ALIF_DECREF(mangled);
+	if (arg < 0) {
+		return ERROR;
+	}
+	if (op == LOAD_GLOBAL) {
+		arg <<= 1;
+	}
+	ADDOP_I(_c, _loc, op, arg);
+	return SUCCESS;
+
+error:
+	ALIF_DECREF(mangled);
+	return ERROR;
+}
+
+
+
 
 
 
@@ -1174,18 +1317,48 @@ static AlifIntT codegen_boolOp(AlifCompiler* _c, ExprTy _e) { // 4151
 		VISIT(_c, Expr, (ExprTy)ASDL_SEQ_GET(s, i));
 		ADDOP_I(_c, loc, COPY, 1);
 		ADDOP(_c, loc, TO_BOOL);
-		ADDOP_JUMP(_c, loc, jumpi, end);
+		ADDOP_JUMP(_c, loc, jumpi, _end);
 		ADDOP(_c, loc, POP_TOP);
 	}
 	VISIT(_c, Expr, (ExprTy)ASDL_SEQ_GET(s, n));
 
-	USE_LABEL(_c, end);
+	USE_LABEL(_c, _end);
 	return SUCCESS;
 }
 
 
 
+static AlifIntT codegen_list(AlifCompiler* _c, ExprTy _e) { // 4306
+	Location loc = LOC(_e);
+	ASDLExprSeq* elts = _e->V.list.elts;
+	if (_e->V.list.ctx == ExprContext_::Store) {
+		return assignment_helper(_c, loc, elts);
+	}
+	else if (_e->V.list.ctx == ExprContext_::Load) {
+		return starUnpack_helper(_c, loc, elts, 0,
+			BUILD_LIST, LIST_APPEND, LIST_EXTEND, 0);
+	}
+	else {
+		VISIT_SEQ(_c, Expr, elts);
+	}
+	return SUCCESS;
+}
 
+static AlifIntT codegen_tuple(AlifCompiler* _c, ExprTy _e) { // 4324
+	Location loc = LOC(_e);
+	ASDLExprSeq* elts = _e->V.tuple.elts;
+	if (_e->V.tuple.ctx == ExprContext_::Store) {
+		return assignment_helper(_c, loc, elts);
+	}
+	else if (_e->V.tuple.ctx == ExprContext_::Load) {
+		return starUnpack_helper(_c, loc, elts, 0,
+			BUILD_LIST, LIST_APPEND, LIST_EXTEND, 1);
+	}
+	else {
+		VISIT_SEQ(_c, Expr, elts);
+	}
+	return SUCCESS;
+}
 
 static AlifIntT codegen_subDict(AlifCompiler* _c,
 	ExprTy _e, AlifSizeT _begin, AlifSizeT _end) { // 4362
@@ -1488,4 +1661,10 @@ static AlifObject* compiler_maybeMangle(AlifCompiler* _c, AlifObject* _name) { /
 
 static InstrSequence* compiler_instrSequence(AlifCompiler* _c) { // 7358
 	return _c->u_->instrSequence;
+}
+
+
+
+static AlifSTEntryObject* compiler_symtableEntry(AlifCompiler* _c) { // 7376
+	return _c->u_->ste;
 }
