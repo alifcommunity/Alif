@@ -733,6 +733,20 @@ AlifIntT alifSet_add(AlifObject* _anySet, AlifObject* _key) { // 2658
 	return rv_;
 }
 
+AlifIntT alifSet_nextEntry(AlifObject* _set, AlifSizeT* _pos, AlifObject** _key, AlifHashT* _hash) { // 2674
+	SetEntry* entry{};
+
+	if (!ALIFANYSET_CHECK(_set)) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+	if (set_next((AlifSetObject*)_set, _pos, &entry) == 0)
+		return 0;
+	*_key = entry->key;
+	*_hash = entry->hash;
+	return 1;
+}
+
 
 AlifIntT _alifSet_nextEntryRef(AlifObject* _set,
 	AlifSizeT* _pos, AlifObject** _key, AlifHashT* _hash) { // 2689

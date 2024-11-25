@@ -152,6 +152,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\PThreadStubs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\RefCount.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\SetObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\SliceObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\ASCIILib.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Codecs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Count.h" />
@@ -173,6 +174,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\TupleObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\UStrObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\WeakRefObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\SliceObject.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\AlifCore\Objects\Abstract.cpp" />
@@ -240,6 +242,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\PosixModule.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\QuiescentStatesBiaseRef.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\SetObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\SliceObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\StringParser.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\SymTable.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\SysModule.cpp" />
