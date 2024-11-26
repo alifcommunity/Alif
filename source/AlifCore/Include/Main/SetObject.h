@@ -12,6 +12,8 @@ AlifIntT alifSet_add(AlifObject* , AlifObject* ); // 16
 AlifIntT alifSet_contains(AlifObject* , AlifObject*); // 18
 AlifIntT alifSet_discard(AlifObject* , AlifObject* ); // 19
 
+
+#define ALIFFROZENSET_CHECKEXACT(_ob) ALIF_IS_TYPE((_ob), &_alifFrozenSetType_) // 23
 // 24
 #define ALIFFROZENSET_CHECK(_ob) \
     (ALIF_IS_TYPE((_ob), &_alifFrozenSetType_) or \

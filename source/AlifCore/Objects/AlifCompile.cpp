@@ -11,6 +11,7 @@
 #include "AlifCore_InstructionSequence.h"
 #include "AlifCore_Intrinsics.h"
 #include "AlifCore_State.h"
+#include "AlifCore_SetObject.h"
 
 #include "AlifCore_SymTable.h"
 
@@ -507,6 +508,97 @@ static AlifSizeT dict_addO(AlifObject* _dict, AlifObject* _o) { // 735
 }
 
 
+static AlifObject* const_cacheInsert(AlifObject* _constCache, AlifObject* _o, bool _recursive) { // 765
+	if (_o == ALIF_NONE or _o == ALIF_ELLIPSIS) {
+		return _o;
+	}
+
+	AlifObject* key_ = alifCode_constantKey(_o);
+	if (key_ == nullptr) {
+		return nullptr;
+	}
+
+	AlifObject* t_{};
+	AlifIntT res_ = alifDict_setDefaultRef(_constCache, key_, key_, &t_);
+	if (res_ != 0) {
+		ALIF_DECREF(key_);
+		return t_;
+	}
+	ALIF_DECREF(t_);
+
+	if (!_recursive) {
+		return key_;
+	}
+
+	if (ALIFTUPLE_CHECKEXACT(_o)) {
+		AlifSizeT len_ = ALIFTUPLE_GET_SIZE(_o);
+		for (AlifSizeT i = 0; i < len_; i++) {
+			AlifObject* item = ALIFTUPLE_GET_ITEM(_o, i);
+			AlifObject* u_ = const_cacheInsert(_constCache, item, _recursive);
+			if (u_ == nullptr) {
+				ALIF_DECREF(key_);
+				return nullptr;
+			}
+
+			AlifObject* v_{};
+			if (ALIFTUPLE_CHECKEXACT(u_)) {
+				v_ = ALIFTUPLE_GET_ITEM(u_, 1);
+			}
+			else {
+				v_ = u_;
+			}
+			if (v_ != item) {
+				ALIFTUPLE_SET_ITEM(_o, i, ALIF_NEWREF(v_));
+				ALIF_DECREF(item);
+			}
+
+			ALIF_DECREF(u_);
+		}
+	}
+	else if (ALIFFROZENSET_CHECKEXACT(_o)) {
+
+		AlifSizeT len_ = ALIFSET_GET_SIZE(_o);
+		if (len_ == 0) {  
+			return key_;
+		}
+		AlifObject* tuple = alifTuple_new(len_);
+		if (tuple == nullptr) {
+			ALIF_DECREF(key_);
+			return nullptr;
+		}
+		AlifSizeT i_ = 0, pos_ = 0;
+		AlifObject* item{};
+		AlifHashT hash{};
+		while (alifSet_nextEntry(_o, &pos_, &item, &hash)) {
+			AlifObject* k_ = const_cacheInsert(_constCache, item, _recursive);
+			if (k_ == nullptr) {
+				ALIF_DECREF(tuple);
+				ALIF_DECREF(key_);
+				return nullptr;
+			}
+			AlifObject* u_{};
+			if (ALIFTUPLE_CHECKEXACT(k_)) {
+				u_ = ALIF_NEWREF(ALIFTUPLE_GET_ITEM(k_, 1));
+				ALIF_DECREF(k_);
+			}
+			else {
+				u_ = k_;
+			}
+			ALIFTUPLE_SET_ITEM(tuple, i_, u_);  // Steals reference of u.
+			i_++;
+		}
+		AlifObject* new_ = alifFrozenSet_new(tuple);
+		ALIF_DECREF(tuple);
+		if (new_ == nullptr) {
+			ALIF_DECREF(key_);
+			return nullptr;
+		}
+		ALIF_DECREF(_o);
+		ALIFTUPLE_SET_ITEM(key_, 1, new_);
+	}
+
+	return key_;
+}
 
 
 
@@ -1075,7 +1167,7 @@ static AlifIntT codegen_jumpIf(AlifCompiler* _c, Location _loc,
 
 
 static AlifIntT codegen_addCompare(AlifCompiler* _c, Location _loc, CmpOp_ _op) { // 2672
-	int cmp;
+	AlifIntT cmp;
 	switch (_op) {
 	case CmpOp_::Equal :
 		cmp = ALIF_EQ;
@@ -1175,9 +1267,9 @@ static AlifIntT compiler_visitStmt(AlifCompiler* _c, StmtTy _s) { // 3818
 	//		break;
 	//case StmtK_::AssignK:
 	//{
-	//	Py_ssize_t n = asdl_seq_LEN(_s->v.Assign.targets);
+	//	AlifSizeT n = asdl_seq_LEN(_s->v.Assign.targets);
 	//	VISIT(_c, expr, _s->v.Assign.value);
-	//	for (Py_ssize_t i = 0; i < n; i++) {
+	//	for (AlifSizeT i = 0; i < n; i++) {
 	//		if (i < n - 1) {
 	//			ADDOP_I(_c, LOC(_s), COPY, 1);
 	//		}
@@ -1200,7 +1292,7 @@ static AlifIntT compiler_visitStmt(AlifCompiler* _c, StmtTy _s) { // 3818
 	//	return codegen_match(_c, _s);
 	//case StmtK_::RaiseK:
 	//{
-	//	Py_ssize_t n = 0;
+	//	AlifSizeT n = 0;
 	//	if (_s->v.Raise.exc) {
 	//		VISIT(_c, expr, _s->v.Raise.exc);
 	//		n++;
@@ -1209,7 +1301,7 @@ static AlifIntT compiler_visitStmt(AlifCompiler* _c, StmtTy _s) { // 3818
 	//			n++;
 	//		}
 	//	}
-	//	ADDOP_I(_c, LOC(_s), RAISE_VARARGS, (int)n);
+	//	ADDOP_I(_c, LOC(_s), RAISE_VARARGS, (AlifIntT)n);
 	//	break;
 	//}
 	//case StmtK_::TryK:
