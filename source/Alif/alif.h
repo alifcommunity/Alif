@@ -34,6 +34,7 @@
 #include "LongObject.h"
 #include "BoolObject.h"
 #include "FloatObject.h"
+#include "ComplexObject.h"
 #include "UStrObject.h"
 #include "AlifErrors.h"
 #include "LongIntRepr.h"

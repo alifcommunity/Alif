@@ -226,6 +226,12 @@
     <ClCompile Include="..\source\AlifCore\Objects\SliceObject.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\CodeObject.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\ComplexObject.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">
@@ -694,6 +700,9 @@
       <Filter>Include\Main</Filter>
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Main\SliceObject.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\ComplexObject.h">
       <Filter>Include\Main</Filter>
     </ClInclude>
   </ItemGroup>

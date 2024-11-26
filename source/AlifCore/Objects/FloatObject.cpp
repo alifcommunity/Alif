@@ -20,6 +20,63 @@ AlifObject* alifFloat_fromDouble(double _fVal) { // 123
 	return (AlifObject*)op_;
 }
 
+double alifFloat_asDouble(AlifObject* _op) { // 250
+	AlifNumberMethods* nb_{};
+	AlifObject* res_{};
+	double val_{};
+
+	if (_op == nullptr) {
+		//alifErr_badArgument();
+		return -1;
+	}
+
+	if (ALIFFLOAT_CHECK(_op)) {
+		return ALIFFLOAT_AS_DOUBLE(_op);
+	}
+
+	nb_ = ALIF_TYPE(_op)->asNumber;
+	if (nb_ == nullptr or nb_->float_ == nullptr) {
+		if (nb_ and nb_->index) {
+			AlifObject* res = _alifNumber_index(_op);
+			if (!res) {
+				return -1;
+			}
+			double val_ = alifLong_asDouble(res);
+			ALIF_DECREF(res);
+			return val_;
+		}
+		//alifErr_format(_alifExcTypeError_, "must be real number, not %.50s",
+			//ALIF_TYPE(_op)->name);
+		return -1;
+	}
+
+	res_ = (*nb_->float_) (_op);
+	if (res_ == nullptr) {
+		return -1;
+	}
+	if (!ALIFFLOAT_CHECKEXACT(res_)) {
+		if (!ALIFFLOAT_CHECK(res_)) {
+			//alifErr_format(_alifExcTypeError_,
+				//"%.50s.__float__ returned non-float (type %.50s)",
+				//ALIF_TYPE(_op)->tp_name, ALIF_TYPE(res_)->tp_name);
+			ALIF_DECREF(res_);
+			return -1;
+		}
+		//if (alifErr_warnFormat(_alifExcDeprecationWarning_, 1,
+			//"%.50s.__float__ returned non-float (type %.50s).  "
+			//"The ability to return an instance of a strict subclass of float "
+			//"is deprecated, and may be removed in a future version of alif.",
+			//ALIF_TYPE(_op)->tp_name, ALIF_TYPE(res_)->tp_name)) {
+			//ALIF_DECREF(res_);
+			//return -1;
+		//}
+	}
+
+	val_ = ALIFFLOAT_AS_DOUBLE(res_);
+	ALIF_DECREF(res_);
+	return val_;
+}
+
  // 314
 #define CONVERT_TO_DOUBLE(_obj, _dbl)                     \
     if (ALIFFLOAT_CHECK(_obj))                             \
