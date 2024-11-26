@@ -2,7 +2,7 @@
 
 #include "AlifCore_Compile.h"
 #include "AlifCore_OpcodeUtils.h"
-#include "AlifCore_OpcodeMetadata.h"
+//#include "AlifCore_OpcodeMetadata.h"
 
 
  // 16

@@ -1,5 +1,5 @@
-
 #include "alif.h"
+
 #include "AlifCore_SetObject.h"
 
 
@@ -119,3 +119,26 @@ AlifObject* alifCode_constantKey(AlifObject* _op) { // 2331
 	}
 	return key_;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
