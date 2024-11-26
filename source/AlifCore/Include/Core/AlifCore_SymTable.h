@@ -106,7 +106,7 @@ extern AlifTypeObject _alifSTEntryType_; // 132
 
 extern AlifIntT alifST_getScope(AlifSTEntryObject*, AlifObject*); // 137
 extern AlifIntT alifST_isFunctionLike(AlifSTEntryObject* ); // 138
-extern AlifSymTable* alifSymtable_build(ModuleTy, AlifObject*, AlifFutureFeatures*); // 140
+extern AlifSymTable* alifSymtable_build(Module*, AlifObject*, AlifFutureFeatures*); // 140
 
 extern AlifSTEntryObject* _alifSymtable_lookup(AlifSymTable*, void*); // 144
 
@@ -143,4 +143,4 @@ extern AlifObject* alif_mangle(AlifObject*, AlifObject*); // 150
 
 
 
-AlifIntT alifFuture_fromAST(ModuleTy, AlifObject*, AlifFutureFeatures*); // 189
+AlifIntT alifFuture_fromAST(Module*, AlifObject*, AlifFutureFeatures*); // 189

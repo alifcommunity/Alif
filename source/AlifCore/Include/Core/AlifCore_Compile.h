@@ -2,15 +2,16 @@
 
 #include "AlifCore_SymTable.h"
 #include "AlifCore_InstructionSequence.h"
+#include "AlifCore_Memory.h"
 
 
 
 
 
-AlifCodeObject* alifAST_compile(ModuleTy, AlifObject*, AlifCompilerFlags*, AlifIntT, AlifASTMem*); // 18
+AlifCodeObject* alifAST_compile(Module*, AlifObject*, AlifCompilerFlags*, AlifIntT, AlifASTMem*); // 18
 
 
-extern AlifIntT alifAST_optimize(ModuleTy, AlifASTMem*, AlifIntT, AlifIntT); // 35
+extern AlifIntT alifAST_optimize(Module*, AlifASTMem*, AlifIntT, AlifIntT); // 35
 
 
 

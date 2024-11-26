@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Abstract.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Code.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Intrinsics.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Math.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Array.h" />
@@ -212,6 +213,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\Call.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifCapsule.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Codecs.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\CodeObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ConfigMinimal.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\DescrObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\DictObject.cpp" />

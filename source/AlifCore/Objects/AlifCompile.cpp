@@ -5,7 +5,7 @@
 #define NEED_OPCODE_TABLES
 #include "AlifCore_OpcodeUtils.h"
 #undef NEED_OPCODE_TABLES
-//#include "AlifCore_Code.h"
+#include "AlifCore_Code.h"
 #include "AlifCore_Compile.h"
 //#include "AlifCore_FlowGraph.h"
 #include "AlifCore_InstructionSequence.h"
@@ -42,12 +42,16 @@ class AlifCompiler; // 81
 typedef AlifInstructionSequence InstrSequence; // 84
 
 static InstrSequence* compiler_instrSequence(AlifCompiler*); // 86
+static AlifSTEntryObject* compiler_symtableEntry(AlifCompiler*); // 89
 
 #define INSTR_SEQUENCE(_c) compiler_instrSequence(_c) // 91
 
 #define SYMTABLE_ENTRY(_c) compiler_symtableEntry(_c) // 94
 
 typedef AlifSourceLocation Location; // 99
+
+
+static AlifObject* compiler_maybeMangle(AlifCompiler*, AlifObject*); // 103
 
 
 #define LOCATION(_lno, _endLno, _col, _endCol) {_lno, _endLno, _col, _endCol} // 108
@@ -100,6 +104,15 @@ enum ScopeType_ { // 152
 	Compiler_Scope_Annotations,
 };
 
+
+static const AlifIntT _compareMasks_[] = { // 163
+	COMPARISON_LESS_THAN,
+	COMPARISON_LESS_THAN | COMPARISON_EQUALS,
+	COMPARISON_EQUALS,
+	COMPARISON_NOT_EQUALS,
+	COMPARISON_GREATER_THAN,
+	COMPARISON_GREATER_THAN | COMPARISON_EQUALS,
+};
 
 
 
@@ -202,6 +215,10 @@ static void compiler_free(AlifCompiler*); // 307
 static AlifCodeObject* compiler_mod(AlifCompiler*, ModuleTy); // 312
 static AlifIntT compiler_visitStmt(AlifCompiler*, StmtTy); // 313
 static AlifIntT compiler_visitExpr(AlifCompiler*, ExprTy); // 315
+
+
+static AlifIntT codegen_addCompare(AlifCompiler*, Location, CmpOp_); // alif
+static bool areAllItems_const(ASDLExprSeq*, AlifSizeT, AlifSizeT); // 321
 
 
 #define CAPSULE_NAME "AlifCompile.cpp AlifCompiler unit" // 360
@@ -508,7 +525,8 @@ static AlifSizeT dict_addO(AlifObject* _dict, AlifObject* _o) { // 735
 }
 
 
-static AlifObject* const_cacheInsert(AlifObject* _constCache, AlifObject* _o, bool _recursive) { // 765
+static AlifObject* const_cacheInsert(AlifObject* _constCache,
+	AlifObject* _o, bool _recursive) { // 765
 	if (_o == ALIF_NONE or _o == ALIF_ELLIPSIS) {
 		return _o;
 	}
@@ -646,6 +664,22 @@ static AlifIntT codegen_addOpLoadConst(AlifCompiler* _c,
 }
 
 
+static AlifIntT codegen_addOpO(AlifCompiler* _c, Location _loc,
+	AlifIntT _opcode, AlifObject* _dict, AlifObject* _o) { // 925
+	AlifSizeT arg = dict_addO(_dict, _o);
+	RETURN_IF_ERROR(arg);
+	ADDOP_I(_c, _loc, _opcode, arg);
+	return SUCCESS;
+}
+
+ // 935
+#define ADDOP_N(_c, _loc, _op, _o, _type) { \
+    AlifIntT ret = codegen_addOpO(_c, _loc, _op, _c->u_->metadata. ## _type, _o); \
+    ALIF_DECREF(_o); \
+    RETURN_IF_ERROR(ret); \
+}
+
+
  // 949
 #define LOAD_METHOD -1
 #define LOAD_SUPER_METHOD -2
@@ -711,7 +745,7 @@ static AlifIntT codegen_addOpJ(InstrSequence* _seq, Location _loc,
     RETURN_IF_ERROR(codegen_addOpJ(INSTR_SEQUENCE(_c), _loc, _op, _o)) // 1010
 
 #define ADDOP_COMPARE(_c, _loc, _cmp) \
-    RETURN_IF_ERROR(codegen_addCompare(_c, _loc, (CmpOp_)_cmp))
+    RETURN_IF_ERROR(codegen_addCompare(_c, _loc, (CmpOp_)_cmp)) // 1013
 
 #define ADDOP_BINARY(_c, _loc, _binOp) \
     RETURN_IF_ERROR(addop_binary(_c, _loc, _binOp, false)) // 1016
@@ -725,9 +759,9 @@ static AlifIntT codegen_addOpJ(InstrSequence* _seq, Location _loc,
  // 1041
 #define VISIT_SEQ(_c, _type, _sequ) { \
     AlifIntT i_{}; \
-    ASDL ## _type ## Seq *seq = (_sequ); /* avoid variable capture */ \
-    for (i_ = 0; i_ < ASDL_SEQ_LEN(seq); i_++) { \
-        _type ## Ty elt = (_type ## Ty)ASDL_SEQ_GET(seq, i_); \
+    ASDL ## _type ## Seq *_seq = (_sequ); /* avoid variable capture */ \
+    for (i_ = 0; i_ < ASDL_SEQ_LEN(_seq); i_++) { \
+        _type ## Ty elt = (_type ## Ty)ASDL_SEQ_GET(_seq, i_); \
         RETURN_IF_ERROR(compiler_visit ## _type(_c, elt)); \
     } \
 }
@@ -1043,7 +1077,7 @@ static bool check_isArg(ExprTy _e) { // 2626
 	return (value == ALIF_NONE
 		or value == ALIF_FALSE
 		or value == ALIF_TRUE
-		/*or value == ALIF_ELLIPSIS*/);
+		or value == ALIF_ELLIPSIS);
 }
 
 static AlifIntT codegen_checkCompare(AlifCompiler* _c, ExprTy _e) { // 2644
@@ -1057,7 +1091,7 @@ static AlifIntT codegen_checkCompare(AlifCompiler* _c, ExprTy _e) { // 2644
 		bool right = check_isArg(rightExpr);
 		if (op == CmpOp_::Is or op == CmpOp_::IsNot) {
 			if (!right or !left) {
-				const char* msg = (op == Is)
+				const char* msg = (op == CmpOp_::Is)
 					? "\"is\" with '%.200s' literal. Did you mean \"==\"?"
 					: "\"is not\" with '%.200s' literal. Did you mean \"!=\"?";
 				ExprTy literal = !left ? leftExpr : rightExpr;
@@ -1125,8 +1159,7 @@ static AlifIntT codegen_jumpIf(AlifCompiler* _c, Location _loc,
 			NEW_JUMP_TARGET_LABEL(_c, cleanup);
 			VISIT(_c, Expr, _e->V.compare.left);
 			for (AlifSizeT i = 0; i < n; i++) {
-				VISIT(_c, Expr,
-					(ExprTy)ASDL_SEQ_GET(_e->V.compare.comparators, i));
+				VISIT(_c, Expr, (ExprTy)ASDL_SEQ_GET(_e->V.compare.comparators, i));
 				ADDOP_I(_c, LOC(_e), SWAP, 2);
 				ADDOP_I(_c, LOC(_e), COPY, 2);
 				ADDOP_COMPARE(_c, LOC(_e), ASDL_SEQ_GET(_e->V.compare.ops, i));
@@ -1202,7 +1235,7 @@ static AlifIntT codegen_addCompare(AlifCompiler* _c, Location _loc, CmpOp_ _op) 
 	default:
 		ALIF_UNREACHABLE();
 	}
-	ADDOP_I(_c, _loc, COMPARE_OP, (cmp << 5) | compare_masks[cmp]);
+	ADDOP_I(_c, _loc, COMPARE_OP, (cmp << 5) | _compareMasks_[cmp]);
 	return SUCCESS;
 }
 
@@ -1410,6 +1443,13 @@ static AlifIntT addop_binary(AlifCompiler* _c, Location _loc,
 		return ERROR;
 	}
 	ADDOP_I(_c, _loc, BINARY_OP, oparg);
+	return SUCCESS;
+}
+
+
+
+static AlifIntT codegen_loadClassDictFreeVar(AlifCompiler* _c, Location _loc) { // 3997
+	ADDOP_N(_c, _loc, LOAD_DEREF, &ALIF_ID(__classDict__), freevars);
 	return SUCCESS;
 }
 
@@ -1744,6 +1784,17 @@ static AlifIntT codegen_tuple(AlifCompiler* _c, ExprTy _e) { // 4324
 		VISIT_SEQ(_c, Expr, elts);
 	}
 	return SUCCESS;
+}
+
+
+static bool areAllItems_const(ASDLExprSeq* _seq, AlifSizeT _begin, AlifSizeT _end) { // 4350
+	for (AlifSizeT i = _begin; i < _end; i++) {
+		ExprTy key = (ExprTy)ASDL_SEQ_GET(_seq, i);
+		if (key == nullptr or key->type != ExprK_::ConstantK) {
+			return false;
+		}
+	}
+	return true;
 }
 
 static AlifIntT codegen_subDict(AlifCompiler* _c,
