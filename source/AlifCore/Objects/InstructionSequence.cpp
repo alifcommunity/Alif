@@ -93,6 +93,23 @@ AlifIntT _alifInstructionSequence_addNested(InstrSequence* _seq,
 }
 
 
+static AlifInstructionSequence* instSeq_create(void) { // 178
+	AlifInstructionSequence* seq_{};
+	seq_ = ALIFOBJECT_GC_NEW(AlifInstructionSequence, &_alifInstructionSequenceType_);
+	if (seq_ == nullptr) {
+		return nullptr;
+	}
+	seq_->instrs = nullptr;
+	seq_->allocated = 0;
+	seq_->used = 0;
+	seq_->nextFreeLabel = 0;
+	seq_->labelMap = nullptr;
+	seq_->labelMapSize = 0;
+	seq_->nested = nullptr;
+
+	alifObject_gcTrack(seq_);
+	return seq_;
+}
 
 
 
@@ -103,3 +120,10 @@ AlifObject* _alifInstructionSequence_new() { // 197
 	}
 	return (AlifObject*)seq;
 }
+
+
+AlifTypeObject _alifInstructionSequenceType_ = { // 414
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "InstructionSequence",
+	.basicSize = sizeof(AlifInstructionSequence),
+};
