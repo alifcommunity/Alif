@@ -15,7 +15,7 @@ AlifObject* alifFloat_fromDouble(double); // 39
 
 
 
-
+double alifFloat_asDouble(AlifObject* ); // 43
 /*----------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 class AlifFloatObject { // 5

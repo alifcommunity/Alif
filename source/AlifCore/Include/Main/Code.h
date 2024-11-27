@@ -95,3 +95,6 @@ class AlifCodeObject ALIFCODE_DEF(1); // 140
 
 
 #define MAXBLOCKS 21
+
+extern AlifTypeObject _alifCodeType_; // 179
+#define ALIFCODE_CHECK(_op) ALIF_IS_TYPE((_op), &_alifCodeType_)
