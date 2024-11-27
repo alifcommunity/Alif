@@ -1,6 +1,6 @@
 #include "alif.h"
 
-#include "AlifCore_Call.h"r
+#include "AlifCore_Call.h"
 #include "AlifCore_Object.h"
 
 
@@ -20,13 +20,12 @@ static AlifObject* tryComplex_specialMethod(AlifObject* _op) { // 328
 			return res_;
 		}
 		if (!ALIFCOMPLEX_CHECK(res_)) {
-			//alifErr_format(PyExc_TypeError,
+			//alifErr_format(_alifExcTypeError_,
 				//"__complex__ returned non-complex (type %.200s)",
 				//ALIF_TYPE(res)->name);
 			ALIF_DECREF(res_);
 			return nullptr;
 		}
-		/* Issue #29894: warn if 'res' not of exact type complex. */
 		//if (alifErr_warnFormat(_alifExcDeprecationWarning_, 1,
 			//"__complex__ returned non-complex (type %.200s).  "
 			//"The ability to return an instance of a strict subclass of complex "

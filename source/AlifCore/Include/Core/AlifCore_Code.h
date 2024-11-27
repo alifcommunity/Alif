@@ -1,6 +1,21 @@
 #pragma once
 
 
+#include "AlifCore_Lock.h"
+#include "AlifCore_Backoff.h"
+
+
+
+
+union AlifCodeUnit { // 25
+	uint16_t cache{};
+	class {
+	public:
+		uint8_t code{};
+		uint8_t arg{};
+	} op;
+	AlifBackoffCounter counter;  // First cache entry of specializable op
+};
 
 
 
@@ -11,10 +26,7 @@
 
 
 
-
-
-
-
+ // 584
 #define COMPARISON_UNORDERED 1
 
 #define COMPARISON_LESS_THAN 2

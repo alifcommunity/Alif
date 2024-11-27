@@ -1,5 +1,6 @@
 #include "alif.h"
 
+#include "AlifCore_Code.h"
 #include "AlifCore_SetObject.h"
 
 
@@ -8,7 +9,18 @@
 
 AlifTypeObject _alifCodeType_ = { // 2276
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
-	.name = "code",
+	.name = "شفرة",
+	.basicSize = offsetof(AlifCodeObject, codeAdaptive),
+	.itemSize = sizeof(AlifCodeUnit),
+
+
+	.getAttro = alifObject_genericGetAttr,
+
+#ifdef ALIF_GIL_DISABLED
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
+#else
+	.flags = ALIF_TPFLAGS_DEFAULT
+#endif
 };
 
 
@@ -90,14 +102,14 @@ AlifObject* alifCode_constantKey(AlifObject* _op) { // 2331
 
 		i_ = 0;
 		while (alifSet_nextEntry(_op, &pos_, &item, &hash)) {
-			AlifObject* item_key;
+			AlifObject* itemKey{};
 
-			item_key = alifCode_constantKey(item);
-			if (item_key == nullptr) {
+			itemKey = alifCode_constantKey(item);
+			if (itemKey == nullptr) {
 				ALIF_DECREF(tuple);
 				return nullptr;
 			}
-			ALIFTUPLE_SET_ITEM(tuple, i_, item_key);
+			ALIFTUPLE_SET_ITEM(tuple, i_, itemKey);
 			i_++;
 		}
 		set_ = alifFrozenSet_new(tuple);
