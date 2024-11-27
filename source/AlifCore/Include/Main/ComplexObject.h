@@ -23,4 +23,5 @@ public:
 };
 
 
-AlifComplex alifComplex_asCComplex(AlifObject* ); // 33
+
+AlifComplex alifComplex_asCComplex(AlifObject*); // 33

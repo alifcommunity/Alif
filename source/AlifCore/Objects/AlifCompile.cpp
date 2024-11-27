@@ -220,6 +220,7 @@ static AlifIntT compiler_visitExpr(AlifCompiler*, ExprTy); // 315
 static AlifIntT codegen_addCompare(AlifCompiler*, Location, CmpOp_); // alif
 static bool areAllItems_const(ASDLExprSeq*, AlifSizeT, AlifSizeT); // 321
 
+static AlifCodeObject* optimize_andAssemble(AlifCompiler*, AlifIntT); // 358
 
 #define CAPSULE_NAME "AlifCompile.cpp AlifCompiler unit" // 360
 
@@ -2104,4 +2105,64 @@ static InstrSequence* compiler_instrSequence(AlifCompiler* _c) { // 7358
 
 static AlifSTEntryObject* compiler_symtableEntry(AlifCompiler* _c) { // 7376
 	return _c->u_->ste;
+}
+
+
+
+
+
+static AlifIntT compute_codeFlags(AlifCompiler* _c) { // 7402
+	AlifSTEntryObject* ste = SYMTABLE_ENTRY(_c);
+	AlifIntT flags = 0;
+	if (alifST_isFunctionLike(ste)) {
+		flags |= CO_NEWLOCALS | CO_OPTIMIZED;
+		if (ste->nested)
+			flags |= CO_NESTED;
+		if (ste->generator and !ste->coroutine)
+			flags |= CO_GENERATOR;
+		if (ste->generator and ste->coroutine)
+			flags |= CO_ASYNC_GENERATOR;
+		if (ste->varArgs)
+			flags |= CO_VARARGS;
+		if (ste->varKeywords)
+			flags |= CO_VARKEYWORDS;
+	}
+
+	if (ste->coroutine and !ste->generator) {
+		flags |= CO_COROUTINE;
+	}
+
+	flags |= (_c->flags.flags & ALIFCF_MASK);
+
+	return flags;
+}
+
+
+static AlifIntT addReturn_atEnd(AlifCompiler* _c, AlifIntT _addNone) { // 7451
+	/* Make sure every instruction stream that falls off the end returns None.
+	 * This also ensures that no jump target offsets are out of bounds.
+	 */
+	if (_addNone) {
+		ADDOP_LOAD_CONST(_c, _noLocation_, ALIF_NONE);
+	}
+	ADDOP(_c, _noLocation_, RETURN_VALUE);
+	return SUCCESS;
+}
+
+
+static AlifCodeObject* optimize_andAssemble(AlifCompiler* _c, AlifIntT _addNone) { // 7511
+	CompilerUnit* u = _c->u_;
+	AlifObject* constCache = _c->constCache;
+	AlifObject* filename = _c->filename;
+
+	AlifIntT codeFlags = compute_codeFlags(_c);
+	if (codeFlags < 0) {
+		return nullptr;
+	}
+
+	if (addReturn_atEnd(_c, _addNone) < 0) {
+		return nullptr;
+	}
+
+	return optimizeAndAssemble_codeUnit(u, constCache, codeFlags, filename);
 }

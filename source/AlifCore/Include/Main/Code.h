@@ -76,7 +76,17 @@ public:																			\
 /* Bytecode object */
 class AlifCodeObject ALIFCODE_DEF(1); // 140
 
+ // 143
+#define CO_OPTIMIZED    0x0001
+#define CO_NEWLOCALS    0x0002
+#define CO_VARARGS      0x0004
+#define CO_VARKEYWORDS  0x0008
+#define CO_NESTED       0x0010
+#define CO_GENERATOR    0x0020
 
+#define CO_COROUTINE            0x0080
+#define CO_ITERABLE_COROUTINE   0x0100
+#define CO_ASYNC_GENERATOR      0x0200
 
 
  // 160
