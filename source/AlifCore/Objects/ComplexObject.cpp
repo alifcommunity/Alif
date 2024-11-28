@@ -67,3 +67,29 @@ AlifComplex alifComplex_asCComplex(AlifObject* _op) { // 361
 		return cv_;
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+AlifTypeObject _alifComplexType_ = { // 1211
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "عدد_مركب",
+	.basicSize = sizeof(AlifComplexObject),
+
+	.getAttro = alifObject_genericGetAttr,
+
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE,
+
+	.alloc = alifType_genericAlloc,
+
+	.free = alifMem_objFree,
+};
