@@ -14,18 +14,19 @@ static AlifObject* tryComplex_specialMethod(AlifObject* _op) { // 328
 
 	f_ = alifObject_lookupSpecial(_op, &ALIF_ID(__complex__));
 	if (f_) {
-		AlifObject* res_ = _alifObject_callNoArgs(f_);
-		ALIF_DECREF(f_);
-		if (!res_ or ALIFCOMPLEX_CHECKEXACT(res_)) {
-			return res_;
-		}
-		if (!ALIFCOMPLEX_CHECK(res_)) {
-			//alifErr_format(_alifExcTypeError_,
-				//"__complex__ returned non-complex (type %.200s)",
-				//ALIF_TYPE(res)->name);
-			ALIF_DECREF(res_);
-			return nullptr;
-		}
+		//AlifObject* res_ = _alifObject_callNoArgs(f_);
+		//ALIF_DECREF(f_);
+		//if (!res_ or ALIFCOMPLEX_CHECKEXACT(res_)) {
+		//	return res_;
+		//}
+		//if (!ALIFCOMPLEX_CHECK(res_)) {
+		//	//alifErr_format(_alifExcTypeError_,
+		//		//"__complex__ returned non-complex (type %.200s)",
+		//		//ALIF_TYPE(res)->name);
+		//	ALIF_DECREF(res_);
+		//	return nullptr;
+		//}
+		
 		//if (alifErr_warnFormat(_alifExcDeprecationWarning_, 1,
 			//"__complex__ returned non-complex (type %.200s).  "
 			//"The ability to return an instance of a strict subclass of complex "
@@ -34,7 +35,8 @@ static AlifObject* tryComplex_specialMethod(AlifObject* _op) { // 328
 			//ALIF_DECREF(res);
 			//return nullptr;
 		//}
-		return res_;
+		
+		//return res_;
 	}
 	return nullptr;
 }
