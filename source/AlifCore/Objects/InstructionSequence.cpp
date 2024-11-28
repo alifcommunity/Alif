@@ -124,6 +124,10 @@ AlifObject* _alifInstructionSequence_new() { // 197
 
 AlifTypeObject _alifInstructionSequenceType_ = { // 414
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
-	.name = "InstructionSequence",
+	.name = "تعليمات_تتالي",
 	.basicSize = sizeof(AlifInstructionSequence),
+
+	.getAttro = alifObject_genericGetAttr,
+
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
 };
