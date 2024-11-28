@@ -1416,6 +1416,16 @@ static AlifSizeT long_compare(AlifLongObject* _a, AlifLongObject* _b) { // 3563
 	return sign;
 }
 
+static AlifObject* long_richCompare(AlifObject* _self, AlifObject* _other, AlifIntT _op) { // 3583
+	AlifSizeT result{};
+	CHECK_BINOP(_self, _other);
+	if (_self == _other)
+		result = 0;
+	else
+		result = long_compare((AlifLongObject*)_self, (AlifLongObject*)_other);
+	ALIF_RETURN_RICHCOMPARE(result, 0, _op);
+}
+
 static void long_dealloc(AlifObject* _self) { // 3595
 	AlifLongObject* alifLong = (AlifLongObject*)_self;
 	if (alifLong and alifLong_isCompact(alifLong)) {
@@ -2944,7 +2954,9 @@ AlifTypeObject _alifLongType_ = { // 6597
                                         
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE |
 		ALIF_TPFLAGS_LONG_SUBCLASS |
-		_ALIF_TPFLAGS_MATCH_SELF,                                                     
+		_ALIF_TPFLAGS_MATCH_SELF,
+
+	.richCompare = long_richCompare,
                                        
 	.free = alifMem_objFree,                            
 };

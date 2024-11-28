@@ -17,4 +17,14 @@ extern AlifLongObject _alifTrueClass_; // 18
 
 
 
+ // 38
+#define ALIF_RETURN_TRUE return ALIF_TRUE
+#define ALIF_RETURN_FALSE return ALIF_FALSE
+
+
+
 AlifObject* alifBool_fromLong(long); // 42
+
+
+
+

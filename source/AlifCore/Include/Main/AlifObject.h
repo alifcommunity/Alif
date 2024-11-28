@@ -285,7 +285,40 @@ extern AlifObject _alifNotImplementedClass_;  // 642
 #define ALIF_GE 5
 
 
+
+
+
+
+
+#define ALIF_RETURN_RICHCOMPARE(_val1, _val2, _op)                               \
+    do {                                                                    \
+        switch (_op) {                                                       \
+        case ALIF_EQ: if ((_val1) == (_val2)) ALIF_RETURN_TRUE; ALIF_RETURN_FALSE;  \
+        case ALIF_NE: if ((_val1) != (_val2)) ALIF_RETURN_TRUE; ALIF_RETURN_FALSE;  \
+        case ALIF_LT: if ((_val1) < (_val2)) ALIF_RETURN_TRUE; ALIF_RETURN_FALSE;   \
+        case ALIF_GT: if ((_val1) > (_val2)) ALIF_RETURN_TRUE; ALIF_RETURN_FALSE;   \
+        case ALIF_LE: if ((_val1) <= (_val2)) ALIF_RETURN_TRUE; ALIF_RETURN_FALSE;  \
+        case ALIF_GE: if ((_val1) >= (_val2)) ALIF_RETURN_TRUE; ALIF_RETURN_FALSE;  \
+        default:                                                            \
+            ALIF_UNREACHABLE();                                               \
+        }                                                                   \
+    } while (0)
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* -------------------------------------------------------------------------------------------------------------- */
+
+
 
 
 void alif_newReference(AlifObject*); // 5

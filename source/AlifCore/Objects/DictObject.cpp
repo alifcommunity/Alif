@@ -560,6 +560,19 @@ start:
 }
 
 
+#ifdef ALIF_GIL_DISABLED
+static inline void ensureShared_onRead(AlifDictObject* mp) {
+	if (!alif_isOwnedByCurrentThread((AlifObject*)mp) and !IS_DICT_SHARED(mp)) {
+		ALIF_BEGIN_CRITICAL_SECTION(mp);
+		if (!IS_DICT_SHARED(mp)) {
+			SET_DICT_SHARED(mp);
+		}
+		ALIF_END_CRITICAL_SECTION();
+	}
+}
+#endif
+
+
 static inline void ensureShared_onResize(AlifDictObject* _mp) { // 1266
 #ifdef ALIF_GIL_DISABLED
 
@@ -680,7 +693,7 @@ AlifSizeT alifDict_lookupThreadSafe(AlifDictObject* _mp,
 	AlifSizeT ix_{};
 	AlifObject* value{};
 
-	//ensureShared_onRead(_mp);
+	ensureShared_onRead(_mp);
 
 	dk_ = (AlifDictKeysObject*)alifAtomic_loadPtr(&_mp->keys);
 	kind = (DictKeysKind_)dk_->kind;
@@ -963,8 +976,8 @@ static AlifIntT insertTo_emptyDict(AlifInterpreter* _interp, AlifDictObject* _mp
 		ALIF_DECREF(_value);
 		return -1;
 	}
-	//uint64_t newVersion = alifDict_notifyEvent(
-		//_interp, AlifDict_Event_Added, _mp, _key, _value);
+	uint64_t newVersion = _alifDict_notifyEvent(
+		_interp, AlifDict_Event_Added, _mp, _key, _value);
 
 
 	MAINTAIN_TRACKING(_mp, _key, _value);
@@ -983,7 +996,7 @@ static AlifIntT insertTo_emptyDict(AlifInterpreter* _interp, AlifDictObject* _mp
 		STORE_VALUE(ep_, _value);
 	}
 	STORE_USED(_mp, _mp->used + 1);
-	//_mp->versionTag = newVersion;
+	_mp->versionTag = newVersion;
 	newKeys->usable--;
 	newKeys->nentries++;
 	alifAtomic_storePtrRelease(&_mp->keys, newKeys);
