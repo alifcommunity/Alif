@@ -21,3 +21,7 @@ public:
 	ALIFOBJECT_HEAD;
 	AlifComplex cVal{};
 };
+
+
+
+AlifComplex alifComplex_asCComplex(AlifObject*); // 33

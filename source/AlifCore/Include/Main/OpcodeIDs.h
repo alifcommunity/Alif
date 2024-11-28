@@ -34,7 +34,7 @@
 //#define PUSH_EXC_INFO                           30
 //#define PUSH_NULL                               31
 //#define RETURN_GENERATOR                        32
-//#define RETURN_VALUE                            33
+#define RETURN_VALUE                            33
 //#define SETUP_ANNOTATIONS                       34
 //#define STORE_SLICE                             35
 //#define STORE_SUBSCR                            36

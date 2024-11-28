@@ -47,7 +47,7 @@ AlifObject* alifCode_constantKey(AlifObject* _op) { // 2331
 	else if (ALIFCOMPLEX_CHECKEXACT(_op)) {
 		AlifComplex z_{};
 		AlifIntT realNegZero{}, imagNegZero{};
-		z_ = alifComplex_asComplex(_op);
+		z_ = alifComplex_asCComplex(_op);
 		realNegZero = z_.real == 0.0 and copysign(1.0, z_.real) < 0.0;
 		imagNegZero = z_.imag == 0.0 and copysign(1.0, z_.imag) < 0.0;
 		if (realNegZero and imagNegZero) {
