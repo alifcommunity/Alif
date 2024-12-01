@@ -17,6 +17,64 @@ extern AlifHashFuncDef _alifHashFunc_;
 //#endif
 
 
+AlifHashT _alif_hashDouble(AlifObject* _inst, double _v) { // 86
+	AlifIntT e{}, sign{};
+	double m{};
+	AlifUHashT x{}, y{};
+
+	if (!isfinite(_v)) {
+		if (isinf(_v))
+			return _v > 0 ? ALIFHASH_INF : -ALIFHASH_INF;
+		else
+			return alifObject_genericHash(_inst);
+	}
+
+	m = frexp(_v, &e);
+
+	sign = 1;
+	if (m < 0) {
+		sign = -1;
+		m = -m;
+	}
+
+	/* process 28 bits at a time;  this should work well both for binary
+	   and hexadecimal floating point. */
+	x = 0;
+	while (m) {
+		x = ((x << 28) & ALIFHASH_MODULUS) | x >> (ALIFHASH_BITS - 28);
+		m *= 268435456.0;  /* 2**28 */
+		e -= 28;
+		y = (AlifUHashT)m;  /* pull out integer part */
+		m -= y;
+		x += y;
+		if (x >= ALIFHASH_MODULUS)
+			x -= ALIFHASH_MODULUS;
+	}
+
+	/* adjust for the exponent;  first reduce it modulo ALIFHASH_BITS */
+	e = e >= 0 ? e % ALIFHASH_BITS : ALIFHASH_BITS - 1 - ((-1 - e) % ALIFHASH_BITS);
+	x = ((x << e) & ALIFHASH_MODULUS) | x >> (ALIFHASH_BITS - e);
+
+	x = x * sign;
+	if (x == (AlifUHashT)-1)
+		x = (AlifUHashT)-2;
+	return (AlifHashT)x;
+}
+
+
+AlifHashT alif_hashPointer(const void* _ptr) { // 132
+	AlifHashT hash = alif_hashPointerRaw(_ptr);
+	if (hash == -1) {
+		hash = -2;
+	}
+	return hash;
+}
+
+AlifHashT alifObject_genericHash(AlifObject* _obj) { // 142
+	return alif_hashPointer(_obj);
+}
+
+
 
 AlifHashT alif_hashBytes(const void* _src, AlifSizeT _len) { // 148
 	AlifHashT x;

@@ -41,6 +41,8 @@
 #define ALIFHASH_INF 314159
 
 
+AlifHashT _alif_hashDouble(AlifObject*, double); // 30
+
 
 /* hash function definition */
 class AlifHashFuncDef { // 37
@@ -50,3 +52,7 @@ public:
 	const AlifIntT hashBits{};
 	const AlifIntT seedBits{};
 };
+
+
+AlifHashT alif_hashPointer(const void*); // 46
+AlifHashT alifObject_genericHash(AlifObject*); // 47

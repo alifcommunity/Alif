@@ -892,7 +892,7 @@ static AlifObject* findName_inMro(AlifTypeObject* _type, AlifObject* _name, Alif
 		if (!is_readying(_type)) {
 			if (alifType_ready(_type) < 0) {
 				*_error = -1;
-				return NULL;
+				return nullptr;
 			}
 			mro = lookup_tpMro(_type);
 		}
@@ -1168,11 +1168,213 @@ AlifTypeObject _alifBaseObjectType_ = { // 7453
 	.name = "كائن",              
 	.basicSize = sizeof(AlifObject),
 	.itemSize = 0,
+	.hash = alifObject_genericHash,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE,
+	.alloc = alifType_genericAlloc,
+	.free = alifMem_objFree,
 };
 
 
+
+
+
+static AlifIntT overrides_hash(AlifTypeObject* _type) { // 7688
+	AlifObject* dict = lookup_tpDict(_type);
+
+	AlifIntT r = alifDict_contains(dict, &ALIF_ID(__eq__));
+	if (r == 0) {
+		r = alifDict_contains(dict, &ALIF_ID(__hash__));
+	}
+	return r;
+}
+
+
+
+static AlifIntT inherit_slots(AlifTypeObject* _type, AlifTypeObject* _base) { // 7701
+	AlifTypeObject* baseBase{};
+
+#undef SLOTDEFINED
+#undef COPYSLOT
+#undef COPYNUM
+#undef COPYSEQ
+#undef COPYMAP
+#undef COPYBUF
+
+#define SLOTDEFINED(_slot) \
+    (_base->_slot != 0 and \
+     (baseBase == nullptr or _base->_slot != baseBase->_slot))
+
+#define COPYSLOT(_slot) \
+    if (!_type->_slot and SLOTDEFINED(_slot)) _type->_slot = _base->_slot
+
+#define COPYASYNC(_slot) COPYSLOT(asSsync->_slot)
+#define COPYNUM(_slot) COPYSLOT(asNumber->_slot)
+#define COPYSEQ(_slot) COPYSLOT(asSequence->_slot)
+#define COPYMAP(_slot) COPYSLOT(asMapping->_slot)
+#define COPYBUF(_slot) COPYSLOT(asBuffer->_slot)
+
+	if (_type->asNumber != nullptr and _base->asNumber != nullptr) {
+		baseBase = _base->base;
+		if (baseBase->asNumber == nullptr)
+			baseBase = nullptr;
+		COPYNUM(add_);
+		COPYNUM(subtract);
+		COPYNUM(multiply);
+		COPYNUM(remainder);
+		COPYNUM(divmod);
+		COPYNUM(power);
+		COPYNUM(negative);
+		COPYNUM(positive);
+		COPYNUM(absolute);
+		COPYNUM(bool_);
+		COPYNUM(invert);
+		COPYNUM(lshift);
+		COPYNUM(rshift);
+		COPYNUM(and_);
+		COPYNUM(xor_);
+		COPYNUM(or_);
+		COPYNUM(int_);
+		COPYNUM(float_);
+		COPYNUM(inplaceAdd);
+		COPYNUM(inplaceSubtract);
+		COPYNUM(inplaceMultiply);
+		COPYNUM(inplaceRemainder);
+		COPYNUM(inplacePower);
+		COPYNUM(inplaceLshift);
+		COPYNUM(inplaceRshift);
+		COPYNUM(inplaceAnd);
+		COPYNUM(inplaceXor);
+		COPYNUM(inplaceOr);
+		COPYNUM(trueDivide);
+		COPYNUM(floorDivide);
+		COPYNUM(inplaceTrueDivide);
+		COPYNUM(inplaceFloorDivide);
+		COPYNUM(index);
+		COPYNUM(matrixMultiply);
+		//COPYNUM(inplaceMatrix_multiply);
+	}
+
+	//if (_type->asAsync != nullptr and _base->asAsync != nullptr) {
+	//	baseBase = _base->base;
+	//	if (baseBase->asAsync == nullptr)
+	//		baseBase = nullptr;
+	//	COPYASYNC(am_await);
+	//	COPYASYNC(am_aiter);
+	//	COPYASYNC(am_anext);
+	//}
+
+	if (_type->asSequence != nullptr and _base->asSequence != nullptr) {
+		baseBase = _base->base;
+		if (baseBase->asSequence == nullptr)
+			baseBase = nullptr;
+		COPYSEQ(length);
+		COPYSEQ(concat);
+		COPYSEQ(repeat);
+		COPYSEQ(item);
+		COPYSEQ(assItem);
+		COPYSEQ(contains);
+		COPYSEQ(inplaceConcat);
+		COPYSEQ(inplaceRepeat);
+	}
+
+	if (_type->asMapping != nullptr and _base->asMapping != nullptr) {
+		baseBase = _base->base;
+		if (baseBase->asMapping == nullptr)
+			baseBase = nullptr;
+		COPYMAP(length);
+		COPYMAP(subscript);
+		COPYMAP(assSubscript);
+	}
+
+	if (_type->asBuffer != nullptr and _base->asBuffer != nullptr) {
+		baseBase = _base->base;
+		if (baseBase->asBuffer == nullptr)
+			baseBase = nullptr;
+		COPYBUF(getBuffer);
+		COPYBUF(releaseBuffer);
+	}
+
+	baseBase = _base->base;
+
+	COPYSLOT(dealloc);
+	if (_type->getAttr == nullptr and _type->getAttro == nullptr) {
+		_type->getAttr = _base->getAttr;
+		_type->getAttro = _base->getAttro;
+	}
+	if (_type->setAttr == nullptr and _type->setAttro == nullptr) {
+		_type->setAttr = _base->setAttr;
+		_type->setAttro = _base->setAttro;
+	}
+	COPYSLOT(repr);
+	//{
+	//	COPYSLOT(vectorCallOffset);
+
+	//	if (!_type->call and
+	//		_alifType_hasFeature(_base, ALIF_TPFLAGS_HAVE_VECTORCALL))
+	//	{
+	//		_type->flags |= ALIF_TPFLAGS_HAVE_VECTORCALL;
+	//	}
+	//	COPYSLOT(call);
+	//}
+	//COPYSLOT(str);
+	{
+		/* Copy comparison-related slots only when
+		   not overriding them anywhere */
+		if (_type->richCompare == nullptr and
+			_type->hash == nullptr)
+		{
+			AlifIntT r = overrides_hash(_type);
+			if (r < 0) {
+				return -1;
+			}
+			if (!r) {
+				_type->richCompare = _base->richCompare;
+				_type->hash = _base->hash;
+			}
+		}
+	}
+	{
+		COPYSLOT(iter);
+		COPYSLOT(iterNext);
+	}
+	{
+		COPYSLOT(descrGet);
+		if (_base->descrGet and
+			_type->descrGet == _base->descrGet and
+			_alifType_hasFeature(_type, ALIF_TPFLAGS_IMMUTABLETYPE) and
+			_alifType_hasFeature(_base, ALIF_TPFLAGS_METHOD_DESCRIPTOR))
+		{
+			_type->flags |= ALIF_TPFLAGS_METHOD_DESCRIPTOR;
+		}
+		COPYSLOT(descrSet);
+		COPYSLOT(dictOffset);
+		COPYSLOT(init);
+		COPYSLOT(alloc);
+		COPYSLOT(isGC);
+		//COPYSLOT(finalize);
+		if ((_type->flags & ALIF_TPFLAGS_HAVE_GC) ==
+			(_base->flags & ALIF_TPFLAGS_HAVE_GC)) {
+			/* They agree about gc. */
+			COPYSLOT(free);
+		}
+		else if ((_type->flags & ALIF_TPFLAGS_HAVE_GC) and
+			_type->free == nullptr &&
+			_base->free == alifMem_objFree) {
+			_type->free = alifObject_gcDel;
+		}
+	}
+	return 0;
+}
+
+
+
+
+
+
 static AlifIntT add_tpNewWrapper(AlifTypeObject*); // 7898
+
+
+#define COLLECTION_FLAGS (ALIF_TPFLAGS_SEQUENCE | ALIF_TPFLAGS_MAPPING) // 7900
 
 static AlifIntT typeReady_preChecks(AlifTypeObject* _type) { // 7902
 	if (_type->name == nullptr) {
@@ -1306,6 +1508,70 @@ static AlifIntT typeReady_mro(AlifTypeObject* _type, AlifIntT _initial) { // 811
 
 
 
+static void typeReady_inheritAsStructs(AlifTypeObject* _type, AlifTypeObject* _base) { // 8159
+	//if (_type->asAsync == nullptr) {
+	//	_type->asAsync = _base->asAsync;
+	//}
+	if (_type->asNumber == nullptr) {
+		_type->asNumber = _base->asNumber;
+	}
+	if (_type->asSequence == nullptr) {
+		_type->asSequence = _base->asSequence;
+	}
+	if (_type->asMapping == nullptr) {
+		_type->asMapping = _base->asMapping;
+	}
+	if (_type->asBuffer == nullptr) {
+		_type->asBuffer = _base->asBuffer;
+	}
+}
+
+
+static void inherit_patmaFlags(AlifTypeObject* _type, AlifTypeObject* _base) { // 8179
+	if ((_type->flags & COLLECTION_FLAGS) == 0) {
+		_type->flags |= _base->flags & COLLECTION_FLAGS;
+	}
+}
+
+
+static AlifIntT typeReady_inherit(AlifTypeObject* _type) { // 8186
+	AlifTypeObject* base = _type->base;
+	if (base != nullptr) {
+		//inherit_special(_type, base);
+	}
+
+	// Inherit slots
+	AlifObject* mro = lookup_tpMro(_type);
+	AlifSizeT n = ALIFTUPLE_GET_SIZE(mro);
+	for (AlifSizeT i = 1; i < n; i++) {
+		AlifObject* b = ALIFTUPLE_GET_ITEM(mro, i);
+		if (ALIFTYPE_CHECK(b)) {
+			if (inherit_slots(_type, (AlifTypeObject*)b) < 0) {
+				return -1;
+			}
+			inherit_patmaFlags(_type, (AlifTypeObject*)b);
+		}
+	}
+
+	if (base != nullptr) {
+		typeReady_inheritAsStructs(_type, base);
+	}
+
+	/* Sanity check for free. */
+	if (ALIFTYPE_IS_GC(_type) and (_type->flags & ALIF_TPFLAGS_BASETYPE) and
+		(_type->free == nullptr or _type->free == alifMem_objFree)) {
+		//alifErr_format(_alifExcTypeError_, "type '%.100s' participates in "
+		//	"gc and is a base type but has inappropriate "
+		//	"free slot",
+		//	_type->name);
+		return -1;
+	}
+
+	return 0;
+}
+
+
+
 
 static AlifIntT typeReady_setHash(AlifTypeObject* type) { // 8237
 	if (type->hash != nullptr) {
@@ -1415,14 +1681,14 @@ static AlifIntT type_ready(AlifTypeObject* _type,
 	//if (typeReady_fillDict(_type, _def) < 0) {
 	//	goto error;
 	//}
-	//if (_initial) {
-	//	if (typeReady_inherit(_type) < 0) {
-	//		goto error;
-	//	}
-	//	if (typeReady_preheader(_type) < 0) {
-	//		goto error;
-	//	}
-	//}
+	if (_initial) {
+		if (typeReady_inherit(_type) < 0) {
+			goto error;
+		}
+		//if (typeReady_preheader(_type) < 0) {
+		//	goto error;
+		//}
+	}
 	if (typeReady_setHash(_type) < 0) {
 		goto error;
 	}

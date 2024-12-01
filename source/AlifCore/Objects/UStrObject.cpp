@@ -3071,7 +3071,7 @@ error:
 
 
 static AlifHashT uStr_hash(AlifObject* _self) { // 11663
-	AlifUHashT x;  /* Unsigned for defined overflow behavior. */
+	AlifUHashT x{};  /* Unsigned for defined overflow behavior. */
 
 	AlifHashT hash = alifAtomic_loadSizeRelaxed(&ALIFUSTR_HASH(_self));
 	if (hash != -1) {

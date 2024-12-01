@@ -103,6 +103,11 @@ static AlifIntT convert_toDouble(AlifObject** _v, double* _dbl) { // 322
 }
 
 
+static AlifHashT float_hash(AlifFloatObject* _v) { // 549
+	return _alif_hashDouble((AlifObject*)_v, _v->val);
+}
+
+
 static AlifObject* float_add(AlifObject* _v, AlifObject* _w) { // 555
 	double a{}, b{};
 	CONVERT_TO_DOUBLE(_v, a);
@@ -370,6 +375,7 @@ AlifTypeObject _alifFloatType_ = { // 1847
 	.basicSize = sizeof(AlifFloatObject),
 	.itemSize = 0,
 	.asNumber = &_floatAsNumber_,
+	.hash = (HashFunc)float_hash,
 	.getAttro = alifObject_genericGetAttr,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE |
 		_ALIF_TPFLAGS_MATCH_SELF,

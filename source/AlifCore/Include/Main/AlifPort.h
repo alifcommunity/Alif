@@ -45,6 +45,7 @@
 
 
 typedef AlifSizeT AlifHashT;
+#define SIZEOF_ALIF_UHASH_T SIZEOF_SIZE_T
 typedef AlifUSizeT AlifUHashT;
 
 

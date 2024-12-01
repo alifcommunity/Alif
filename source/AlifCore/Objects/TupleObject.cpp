@@ -52,29 +52,68 @@ AlifObject* alifTuple_pack(AlifSizeT _n, ...) { // 153
 	AlifSizeT i_{};
 	AlifObject* o_{};
 	AlifObject** items{};
-	va_list vargs{};
+	va_list vArgs{};
 
 	if (_n == 0) {
 		return tuple_getEmpty();
 	}
 
-	va_start(vargs, _n);
+	va_start(vArgs, _n);
 	AlifTupleObject* result = tuple_alloc(_n);
 	if (result == nullptr) {
-		va_end(vargs);
+		va_end(vArgs);
 		return nullptr;
 	}
 	items = result->item;
 	for (i_ = 0; i_ < _n; i_++) {
-		o_ = va_arg(vargs, AlifObject*);
+		o_ = va_arg(vArgs, AlifObject*);
 		items[i_] = ALIF_NEWREF(o_);
 	}
-	va_end(vargs);
+	va_end(vArgs);
 	ALIFOBJECT_GC_TRACK(result);
 	return (AlifObject*)result;
 }
 
 
+
+
+
+#if SIZEOF_ALIF_UHASH_T > 4
+#define ALIFHASH_XXPRIME_1 ((AlifUHashT)11400714785074694791ULL)
+#define ALIFHASH_XXPRIME_2 ((AlifUHashT)14029467366897019727ULL)
+#define ALIFHASH_XXPRIME_5 ((AlifUHashT)2870177450012600261ULL)
+#define ALIFHASH_XXROTATE(x) ((x << 31) | (x >> 33))  /* Rotate left 31 bits */
+#else
+#define ALIFHASH_XXPRIME_1 ((AlifUHashT)2654435761UL)
+#define ALIFHASH_XXPRIME_2 ((AlifUHashT)2246822519UL)
+#define ALIFHASH_XXPRIME_5 ((AlifUHashT)374761393UL)
+#define ALIFHASH_XXROTATE(x) ((x << 13) | (x >> 19))  /* Rotate left 13 bits */
+#endif
+
+
+static AlifHashT tuple_hash(AlifTupleObject* _v) { // 318
+	AlifSizeT i{}, len = ALIF_SIZE(_v);
+	AlifObject** item = _v->item;
+
+	AlifUHashT acc = ALIFHASH_XXPRIME_5;
+	for (i = 0; i < len; i++) {
+		AlifUHashT lane = alifObject_hash(item[i]);
+		if (lane == (AlifUHashT)-1) {
+			return -1;
+		}
+		acc += lane * ALIFHASH_XXPRIME_2;
+		acc = ALIFHASH_XXROTATE(acc);
+		acc *= ALIFHASH_XXPRIME_1;
+	}
+
+	/* Add input length, mangled to keep the historical value of hash(()). */
+	acc += len ^ (ALIFHASH_XXPRIME_5 ^ 3527539UL);
+
+	if (acc == (AlifUHashT)-1) {
+		return 1546275796;
+	}
+	return acc;
+}
 
 
 
@@ -106,6 +145,8 @@ AlifTypeObject _alifTupleType_ = { // 865
 	.name = "مترابطة",
 	.basicSize = sizeof(AlifTupleObject) - sizeof(AlifObject*),
 	.itemSize = sizeof(AlifObject*),
+
+	.hash = (HashFunc)tuple_hash,
 
 	.getAttro = alifObject_genericGetAttr,
 
