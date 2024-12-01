@@ -49,7 +49,7 @@ static AlifSTEntryObject* compiler_symtableEntry(AlifCompiler*); // 89
 #define SYMTABLE_ENTRY(_c) compiler_symtableEntry(_c) // 94
 
 typedef AlifSourceLocation Location; // 99
-
+typedef class AlifCFGBuilder CFGBuilder; // 100
 
 static AlifObject* compiler_maybeMangle(AlifCompiler*, AlifObject*); // 103
 
@@ -2147,6 +2147,56 @@ static AlifIntT addReturn_atEnd(AlifCompiler* _c, AlifIntT _addNone) { // 7451
 	}
 	ADDOP(_c, _noLocation_, RETURN_VALUE);
 	return SUCCESS;
+}
+
+
+
+static AlifCodeObject* optimizeAndAssemble_codeUnit(CompilerUnit* u, AlifObject* const_cache,
+	AlifIntT _codeFlags, AlifObject* filename) { // 7464
+	CFGBuilder* g = nullptr;
+	InstrSequence optimizedInstrs{};
+	memset(&optimizedInstrs, 0, sizeof(InstrSequence));
+
+	AlifIntT nlocals{};
+	AlifIntT nparams{};
+
+	AlifIntT stackDepth{};
+	AlifIntT nLocalsPlus{};
+
+	AlifCodeObject* co = nullptr;
+	AlifObject* consts = constsDict_keysInorder(u->metadata.consts);
+	if (consts == nullptr) {
+		goto error;
+	}
+	g = _alifCFG_fromInstructionSequence(u->instrSequence);
+	if (g == nullptr) {
+		goto error;
+	}
+	nlocals = (AlifIntT)ALIFDICT_GET_SIZE(u->metadata.varnames);
+	nparams = (AlifIntT)ALIFLIST_GET_SIZE(u->ste->varNames);
+
+	if (_alifCFG_optimizeCodeUnit(g, consts, const_cache, nlocals,
+		nparams, u->metadata.firstLineno) < 0) {
+		goto error;
+	}
+
+
+	if (_alifCFG_optimizedCfgToInstructionSequence(g, &u->metadata, _codeFlags,
+		&stackDepth, &nLocalsPlus,
+		&optimizedInstrs) < 0) {
+		goto error;
+	}
+
+	/** Assembly **/
+
+	co = alifAssemble_makeCodeObject(&u->metadata, const_cache, consts,
+		stackDepth, &optimizedInstrs, nLocalsPlus, _codeFlags, filename);
+
+error:
+	ALIF_XDECREF(consts);
+	alifInstructionSequence_fini(&optimizedInstrs);
+	_alifCFGBuilder_free(g);
+	return co;
 }
 
 
