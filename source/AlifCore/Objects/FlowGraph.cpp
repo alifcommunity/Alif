@@ -68,6 +68,7 @@ public:
 
 
 
+typedef class AlifCFGBuilder CFGBuilder; // 87
 
 
 
@@ -103,8 +104,21 @@ public:
 
 
 
-
-
+void _alifCFGBuilder_free(CFGBuilder* _g) { // 430
+	if (_g == nullptr) {
+		return;
+	}
+	BasicBlock* b = _g->blockList;
+	while (b != nullptr) {
+		if (b->instr) {
+			alifMem_dataFree((void*)b->instr);
+		}
+		BasicBlock* next = b->list;
+		alifMem_dataFree((void*)b);
+		b = next;
+	}
+	alifMem_dataFree(_g);
+}
 
 
 

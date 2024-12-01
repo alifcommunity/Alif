@@ -93,6 +93,19 @@ AlifIntT _alifInstructionSequence_addNested(InstrSequence* _seq,
 }
 
 
+
+void alifInstructionSequence_fini(InstrSequence* _seq) { // 161
+	ALIF_XDECREF(_seq->nested);
+
+	alifMem_dataFree(_seq->labelMap);
+	_seq->labelMap = nullptr;
+
+	alifMem_dataFree(_seq->instrs);
+	_seq->instrs = nullptr;
+}
+
+
+
 static AlifInstructionSequence* instSeq_create(void) { // 178
 	AlifInstructionSequence* seq_{};
 	seq_ = ALIFOBJECT_GC_NEW(AlifInstructionSequence, &_alifInstructionSequenceType_);

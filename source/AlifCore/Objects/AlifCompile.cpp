@@ -7,7 +7,7 @@
 #undef NEED_OPCODE_TABLES
 #include "AlifCore_Code.h"
 #include "AlifCore_Compile.h"
-//#include "AlifCore_FlowGraph.h"
+#include "AlifCore_FlowGraph.h"
 #include "AlifCore_InstructionSequence.h"
 #include "AlifCore_Intrinsics.h"
 #include "AlifCore_State.h"
@@ -2089,6 +2089,23 @@ static AlifIntT compiler_visitExpr(AlifCompiler* _c, ExprTy _e) { // 5997
 }
 
 
+
+
+static AlifObject* constsDict_keysInorder(AlifObject* _dict) { // 7321
+	AlifObject* consts{}, * k{}, * v{};
+	AlifSizeT i{}, pos = 0, size = ALIFDICT_GET_SIZE(_dict);
+
+	consts = alifList_new(size);
+	if (consts == nullptr) return nullptr;
+	while (alifDict_next(_dict, &pos, &k, &v)) {
+		i = alifLong_asLong(v);
+		if (ALIFTUPLE_CHECKEXACT(k)) {
+			k = ALIFTUPLE_GET_ITEM(k, 1);
+		}
+		ALIFLIST_SET_ITEM(consts, i, ALIF_NEWREF(k));
+	}
+	return consts;
+}
 
 
 

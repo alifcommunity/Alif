@@ -60,5 +60,5 @@ AlifJumpTargetLabel _alifInstructionSequence_newLabel(InstrSequence*); // 60
 
 
 AlifIntT _alifInstructionSequence_addNested(InstrSequence*, InstrSequence*); // 64
-
+void alifInstructionSequence_fini(InstrSequence*); // 65
 extern AlifTypeObject _alifInstructionSequenceType_; // 67
