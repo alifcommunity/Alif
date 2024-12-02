@@ -180,11 +180,44 @@ void alifCFGBuilder_free(CFGBuilder* _g) { // 430
 
 
 
+static AlifIntT get_maxLabel(BasicBlock* _entryBlock) { // 622
+	AlifIntT lbl = -1;
+	for (BasicBlock* b = _entryBlock; b != nullptr; b = b->next) {
+		if (b->label.id > lbl) {
+			lbl = b->label.id;
+		}
+	}
+	return lbl;
+}
 
 
 
-
-
+static AlifIntT translateJump_labelsToTargets(BasicBlock* _entryBlock) { // 635
+	AlifIntT maxLabel = get_maxLabel(_entryBlock);
+	AlifUSizeT mapSize = sizeof(BasicBlock*) * (maxLabel + 1);
+	BasicBlock** label2block = (BasicBlock**)alifMem_dataAlloc(mapSize);
+	if (!label2block) {
+		//alifErr_noMemory();
+		return ERROR;
+	}
+	memset(label2block, 0, mapSize);
+	for (BasicBlock* b = _entryBlock; b != nullptr; b = b->next) {
+		if (b->label.id >= 0) {
+			label2block[b->label.id] = b;
+		}
+	}
+	for (BasicBlock* b = _entryBlock; b != nullptr; b = b->next) {
+		for (AlifIntT i = 0; i < b->iused; i++) {
+			CFGInstr* instr = &b->instr[i];
+			if (HAS_TARGET(instr->opcode)) {
+				AlifIntT lbl = instr->oparg;
+				instr->target = label2block[lbl];
+			}
+		}
+	}
+	alifMem_dataFree(label2block);
+	return SUCCESS;
+}
 
 
 
