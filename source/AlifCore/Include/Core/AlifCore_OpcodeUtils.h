@@ -8,12 +8,17 @@
 
 
 
+// 19
+#define IS_BLOCK_PUSH_OPCODE(_opcode) \
+        ((_opcode) == SETUP_FINALLY or \
+         (_opcode) == SETUP_WITH or \
+         (_opcode) == SETUP_CLEANUP)
 
 
 
-
-
-
+// 24
+#define HAS_TARGET(_opcode) \
+        (OPCODE_HAS_JUMP(_opcode) or IS_BLOCK_PUSH_OPCODE(_opcode))
 
 
 

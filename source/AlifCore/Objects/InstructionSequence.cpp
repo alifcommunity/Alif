@@ -59,6 +59,26 @@ AlifIntT _alifInstructionSequence_useLabel(InstrSequence* _seq, AlifIntT _lbl) {
 	return SUCCESS;
 }
 
+AlifIntT _alifInstructionSequence_applyLabelMap(InstrSequence* _instrs)
+{
+	if (_instrs->labelMap == nullptr) {
+		return SUCCESS;
+	}
+	for (AlifIntT i = 0; i < _instrs->used; i++) {
+		Instruction* instr = &_instrs->instrs[i];
+		if (HAS_TARGET(instr->opcode)) {
+			instr->oparg = _instrs->labelMap[instr->oparg];
+		}
+		AlifExceptHandlerInfo* hi = &instr->exceptHandlerInfo;
+		if (hi->label >= 0) {
+			hi->label = _instrs->labelMap[hi->label];
+		}
+	}
+	alifMem_objFree(_instrs->labelMap);
+	_instrs->labelMap = nullptr;
+	_instrs->labelMapSize = 0;
+	return SUCCESS;
+}
 
  // 102
 #define MAX_OPCODE 511
