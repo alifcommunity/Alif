@@ -54,3 +54,5 @@ public:
 #define FUTURE_BARRY_AS_BDFL "barry_as_FLUFL"
 #define FUTURE_GENERATOR_STOP "generator_stop"
 #define FUTURE_ANNOTATIONS "annotations"
+
+#define ALIF_INVALID_STACK_EFFECT INT_MAX // 48
