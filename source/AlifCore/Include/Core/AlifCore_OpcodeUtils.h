@@ -29,6 +29,17 @@
 
 
 
+#define IS_SCOPE_EXIT_OPCODE(_opcode) \
+        ((_opcode) == RETURN_VALUE or \
+         (_opcode) == RETURN_CONST or \
+         (_opcode) == RAISE_VARARGS or \
+         (_opcode) == RERAISE)
+
+
+
+
+
+
 
 
 

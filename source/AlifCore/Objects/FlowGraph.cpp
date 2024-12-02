@@ -140,7 +140,7 @@ static bool cfgBuilder_currentBlockIsTerminated(CFGBuilder* _g) { // 346
 static AlifIntT cfgBuilderMaybe_startNewBlock(CFGBuilder* _g) { // 366
 	if (cfgBuilder_currentBlockIsTerminated(_g)) {
 		BasicBlock* b = cfgBuilder_newBlock(_g);
-		if (b == NULL) {
+		if (b == nullptr) {
 			return ERROR;
 		}
 		b->label = _g->currentLabel;
@@ -210,7 +210,7 @@ void alifCFGBuilder_free(CFGBuilder* _g) { // 430
 
 
 
-AlifIntT _alifCfgBuilder_useLabel(CFGBuilder* _g, JumpTargetLabel _lbl) { // 464
+AlifIntT _alifCFGBuilder_useLabel(CFGBuilder* _g, JumpTargetLabel _lbl) { // 464
 	_g->currentLabel = _lbl;
 	return cfgBuilderMaybe_startNewBlock(_g);
 }

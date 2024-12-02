@@ -99,9 +99,9 @@
 //#define POP_JUMP_IF_NONE                        95
 //#define POP_JUMP_IF_NOT_NONE                    96
 #define POP_JUMP_IF_TRUE                        97
-//#define RAISE_VARARGS                           98
-//#define RERAISE                                 99
-//#define RETURN_CONST                           100
+#define RAISE_VARARGS                           98
+#define RERAISE                                 99
+#define RETURN_CONST                           100
 //#define SEND                                   101
 #define SET_ADD                                102
 //#define SET_FUNCTION_ATTRIBUTE                 103
