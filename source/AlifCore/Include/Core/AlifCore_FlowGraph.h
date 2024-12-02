@@ -18,9 +18,9 @@ AlifIntT alifCFG_optimizeCodeUnit(AlifCFGBuilder*, AlifObject*,
 	AlifObject*, AlifIntT, AlifIntT, AlifIntT); // 24
 
 
+AlifCFGBuilder* alifCFG_fromInstructionSequence(AlifInstructionSequence*); // 28
 
-
-AlifIntT alifCFG_optimizedCFGToInstructionSequence(CFGBuilder*, AlifCompileCodeUnitMetadata*,
+AlifIntT alifCFG_optimizedCFGToInstructionSequence(AlifCFGBuilder*, AlifCompileCodeUnitMetadata*,
 	AlifIntT, AlifIntT*, AlifIntT*, AlifInstructionSequence*); // 29
 
 

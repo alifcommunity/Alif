@@ -3,6 +3,9 @@
 #include "AlifCore_FlowGraph.h"
 #include "AlifCore_Compile.h"
 
+#include "AlifCore_OpcodeUtils.h"
+#include "AlifCore_OpcodeMetaData.h"
+
 
  // 13
 #undef SUCCESS
@@ -76,14 +79,14 @@ public:
 
 
 
-typedef class AlifCFGBuilder CFGBuilder; // 87
+typedef AlifCFGBuilder CFGBuilder; // 87
 
 static const JumpTargetLabel _noLable_ = { -1 }; // 89
 
 
 
 static BasicBlock* cfgBuilder_newBlock(CFGBuilder* _g) { // 163
-	BasicBlock* b_ = (BasicBlock*)alifMem_objAlloc(sizeof(BasicBlock));
+	BasicBlock* b_ = (BasicBlock*)alifMem_dataAlloc(sizeof(BasicBlock));
 	if (b_ == nullptr) {
 		//alifErr_noMemory();
 		return nullptr;
@@ -123,34 +126,18 @@ static AlifIntT init_cfgBuilder(CFGBuilder* _g) { // 402
 	return SUCCESS;
 }
 
-CFGBuilder* _alifCfgBuilder_new(void) { // 415
-	CFGBuilder* g_ = (CFGBuilder*)alifMem_objAlloc(sizeof(CFGBuilder));
+CFGBuilder* _alifCFGBuilder_new(void) { // 415
+	CFGBuilder* g_ = (CFGBuilder*)alifMem_dataAlloc(sizeof(CFGBuilder));
 	if (g_ == nullptr) {
 		//alifErr_noMemory();
 		return nullptr;
 	}
 	memset(g_, 0, sizeof(CFGBuilder));
 	if (init_cfgBuilder(g_) < 0) {
-		alifMem_objFree(g_);
+		alifMem_dataFree(g_);
 		return nullptr;
 	}
 	return g_;
-}
-
-void _alifCfgBuilder_Free(CFGBuilder* _g) { // 431
-	if (_g == nullptr) {
-		return;
-	}
-	BasicBlock* b_ = _g->blockList;
-	while (b_ != nullptr) {
-		if (b_->instr) {
-			alifMem_objFree((void*)b_->instr);
-		}
-		BasicBlock* next = b_->list;
-		alifMem_objFree((void*)b_);
-		b_ = next;
-	}
-	alifMem_objFree(_g);
 }
 
 
@@ -210,6 +197,7 @@ void alifCFGBuilder_free(CFGBuilder* _g) { // 430
 
 
 class AlifCFGExceptStack { // 687
+public:
 	BasicBlock* handlers[MAXBLOCKS + 2]{};
 	AlifIntT depth{};
 };
@@ -270,7 +258,7 @@ AlifIntT alifCFG_optimizeCodeUnit(CFGBuilder* _g, AlifObject* _consts,
 
 	/** Optimization **/
 	RETURN_IF_ERROR(optimize_cfg(_g, _consts, _constCache, _firstLineno));
-	RETURN_IF_ERROR(remove_unusedConsts(_g->entryblock, _consts));
+	RETURN_IF_ERROR(remove_unusedConsts(_g->entryBlock, _consts));
 	RETURN_IF_ERROR(
 		addChecksFor_loadsOfUninitializedVariables(
 			_g->entryBlock, _nlocals, _nparams));
@@ -295,11 +283,11 @@ AlifIntT alifCFG_optimizeCodeUnit(CFGBuilder* _g, AlifObject* _consts,
 
 
 
-CFGBuilder* _alifCfg_fromInstructionSequence(AlifInstructionSequence* _seq) { // 2745
+CFGBuilder* alifCFG_fromInstructionSequence(AlifInstructionSequence* _seq) { // 2745
 	if (_alifInstructionSequence_applyLabelMap(_seq) < 0) {
 		return nullptr;
 	}
-	CFGBuilder* g_ = _alifCfgBuilder_new();
+	CFGBuilder* g_ = _alifCFGBuilder_new();
 	if (g_ == nullptr) {
 		return nullptr;
 	}
@@ -316,25 +304,24 @@ CFGBuilder* _alifCfg_fromInstructionSequence(AlifInstructionSequence* _seq) { //
 		AlifInstruction* instr = &_seq->instrs[i];
 		if (instr->target) {
 			JumpTargetLabel lbl_ = { i };
-			if (_alifCfgBuilder_useLabel(g_, lbl_) < 0) {
+			if (_alifCFGBuilder_useLabel(g_, lbl_) < 0) {
 				goto error;
 			}
 		}
 		AlifIntT opcode = instr->opcode;
 		AlifIntT oparg = instr->oparg;
-		if (_alifCfgBuilder_Addop(g_, opcode, oparg, instr->loc) < 0) {
+		if (_alifCFGBuilder_addOp(g_, opcode, oparg, instr->loc) < 0) {
 			goto error;
 		}
 	}
-	if (_alifCfgBuilder_checkSize(g_) < 0) {
+	if (_alifCFGBuilder_checkSize(g_) < 0) {
 		goto error;
 	}
 	return g_;
 error:
-	_alifCfgBuilder_free(g_);
+	alifCFGBuilder_free(g_);
 	return nullptr;
-
-
+}
 
 
 

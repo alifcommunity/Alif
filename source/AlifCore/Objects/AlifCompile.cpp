@@ -17,7 +17,7 @@
 
 
 #define NEED_OPCODE_METADATA
-//#include "AlifCore_OpcodeMetadata.h"
+#include "AlifCore_OpcodeMetadata.h"
 #undef NEED_OPCODE_METADATA
 
 

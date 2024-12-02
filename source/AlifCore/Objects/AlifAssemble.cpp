@@ -101,7 +101,7 @@ public:
 AlifCodeObject* alifAssemble_makeCodeObject(AlifCompileCodeUnitMetadata* _umd,
 	AlifObject* _constCache, AlifObject* _consts, AlifIntT _maxDepth, InstrSequence* _instrs,
 	AlifIntT _nLocalsPlus, AlifIntT _codeFlags, AlifObject* _filename) { // 735
-	if (alifInstructionSequence_applyLabelMap(_instrs) < 0) {
+	if (_alifInstructionSequence_applyLabelMap(_instrs) < 0) {
 		return nullptr;
 	}
 	if (resolve_unconditionalJumps(_instrs) < 0) {

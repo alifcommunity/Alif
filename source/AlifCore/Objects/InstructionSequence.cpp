@@ -2,7 +2,7 @@
 
 #include "AlifCore_Compile.h"
 #include "AlifCore_OpcodeUtils.h"
-//#include "AlifCore_OpcodeMetadata.h"
+#include "AlifCore_OpcodeMetadata.h"
 
 
  // 16
@@ -59,8 +59,7 @@ AlifIntT _alifInstructionSequence_useLabel(InstrSequence* _seq, AlifIntT _lbl) {
 	return SUCCESS;
 }
 
-AlifIntT _alifInstructionSequence_applyLabelMap(InstrSequence* _instrs)
-{
+AlifIntT _alifInstructionSequence_applyLabelMap(InstrSequence* _instrs) { // 75
 	if (_instrs->labelMap == nullptr) {
 		return SUCCESS;
 	}
@@ -74,7 +73,7 @@ AlifIntT _alifInstructionSequence_applyLabelMap(InstrSequence* _instrs)
 			hi->label = _instrs->labelMap[hi->label];
 		}
 	}
-	alifMem_objFree(_instrs->labelMap);
+	alifMem_dataFree(_instrs->labelMap);
 	_instrs->labelMap = nullptr;
 	_instrs->labelMapSize = 0;
 	return SUCCESS;
