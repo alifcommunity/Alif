@@ -22,6 +22,9 @@
 
 
 
+// 27
+#define IS_TERMINATOR_OPCODE(_opcode) \
+        (OPCODE_HAS_JUMP(_opcode) or IS_SCOPE_EXIT_OPCODE(_opcode))
 
 
 
