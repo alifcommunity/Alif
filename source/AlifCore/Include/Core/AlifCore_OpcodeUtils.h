@@ -5,6 +5,7 @@
 
 
 
+#define MAX_REAL_OPCODE 254 // 13
 
 
 

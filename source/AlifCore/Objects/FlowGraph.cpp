@@ -208,6 +208,17 @@ void alifCFGBuilder_free(CFGBuilder* _g) { // 430
 	alifMem_dataFree(_g);
 }
 
+AlifIntT _alifCFGBuilder_checkSize(CFGBuilder* _g) { // 450
+	AlifIntT nBlocks = 0;
+	for (BasicBlock* b = _g->blockList; b != nullptr; b = b->list) {
+		nBlocks++;
+	}
+	if ((size_t)nBlocks > SIZE_MAX / sizeof(BasicBlock*)) {
+		//alifErr_noMemory();
+		return ERROR;
+	}
+	return SUCCESS;
+}
 
 
 AlifIntT _alifCFGBuilder_useLabel(CFGBuilder* _g, JumpTargetLabel _lbl) { // 464
@@ -284,7 +295,125 @@ public:
 
 
 
+static BasicBlock** makeCfg_traversalStack(BasicBlock* _entryBlock) { // 741
+	AlifIntT nBlocks = 0;
+	for (BasicBlock* b = _entryBlock; b != nullptr; b = b->next) {
+		b->visited = 0;
+		nBlocks++;
+	}
+	BasicBlock** stack = (BasicBlock**)alifMem_objAlloc(sizeof(BasicBlock*) * nBlocks);
+	if (!stack) {
+		//alifErr_noMemory();
+	}
+	return stack;
+}
 
+ALIF_LOCAL(AlifIntT) stack_effect(AlifIntT _opcode, AlifIntT _oparg, AlifIntT _jump) { // 764
+	if (_opcode < 0) {
+		return ALIF_INVALID_STACK_EFFECT;
+	}
+	if ((_opcode <= MAX_REAL_OPCODE) and (_alifOpcode_deopt[_opcode] != _opcode)) {
+		return ALIF_INVALID_STACK_EFFECT;
+	}
+	AlifIntT popped = _alifOpcode_num_popped(_opcode, _oparg);
+	AlifIntT pushed = _alifOpcode_num_pushed(_opcode, _oparg);
+	if (popped < 0 or pushed < 0) {
+		return ALIF_INVALID_STACK_EFFECT;
+	}
+	if (IS_BLOCK_PUSH_OPCODE(_opcode) and !_jump) {
+		return 0;
+	}
+	return pushed - popped;
+}
+
+ALIF_LOCAL_INLINE(AlifIntT) stackDepth_push(BasicBlock*** _sp, BasicBlock* _b, AlifIntT _depth) { // 785
+	if (!(_b->startDepth < 0 or _b->startDepth == _depth)) {
+		//alifErr_format(_alifExcValueError_, "Invalid CFG, inconsistent stackdepth");
+		return ERROR;
+	}
+	if (_b->startDepth < _depth and _b->startDepth < 100) {
+		_b->startDepth = _depth;
+		*(*_sp)++ = _b;
+	}
+	return SUCCESS;
+}
+
+
+
+static AlifIntT calculate_stackdepth(CFGBuilder* _g) { // 803
+	BasicBlock* entryBlock = _g->entryBlock;
+	for (BasicBlock* b = entryBlock; b != nullptr; b = b->next) {
+		b->startDepth = INT_MIN;
+	}
+	BasicBlock** stack = makeCfg_traversalStack(entryBlock);
+	if (!stack) {
+		return ERROR;
+	}
+
+
+	AlifIntT stackDepth = -1;
+	AlifIntT maxDepth = 0;
+	BasicBlock** sp_ = stack;
+	if (stackDepth_push(&sp_, entryBlock, 0) < 0) {
+		goto error;
+	}
+	while (sp_ != stack) {
+		BasicBlock* b_ = *--sp_;
+		AlifIntT depth = b_->startDepth;
+		BasicBlock* next = b_->next;
+		for (AlifIntT i = 0; i < b_->iused; i++) {
+			CFGInstr* instr_ = &b_->instr[i];
+			AlifIntT effect = stack_effect(instr_->opcode, instr_->oparg, 0);
+			if (effect == ALIF_INVALID_STACK_EFFECT) {
+				//alifErr_format(_alifExcSystemError_,
+					//"Invalid stack effect for opcode=%d, arg=%i",
+					//instr->opcode, instr->oparg);
+				goto error;
+			}
+			AlifIntT newDepth = depth + effect;
+			if (newDepth < 0) {
+				//alifErr_format(_alifExcValueError_,
+					//"Invalid CFG, stack underflow");
+				goto error;
+			}
+			if (newDepth > maxDepth) {
+				maxDepth = newDepth;
+			}
+			if (HAS_TARGET(instr_->opcode)) {
+				effect = stack_effect(instr_->opcode, instr_->oparg, 1);
+				if (effect == ALIF_INVALID_STACK_EFFECT) {
+					//alifErr_format(_alifExcSystemError_,
+						//"Invalid stack effect for opcode=%d, arg=%i",
+						//instr->opcode, instr->oparg);
+					goto error;
+				}
+				AlifIntT targetDepth = depth + effect;
+				if (targetDepth > maxDepth) {
+					maxDepth = targetDepth;
+				}
+				if (stackDepth_push(&sp_, instr_->target, targetDepth) < 0) {
+					goto error;
+				}
+			}
+			depth = newDepth;
+			if (IS_UNCONDITIONAL_JUMP_OPCODE(instr_->opcode) or
+				IS_SCOPE_EXIT_OPCODE(instr_->i_opcode))
+			{
+				next = nullptr;
+				break;
+			}
+		}
+		if (next != nullptr) {
+			if (stackDepth_push(&sp_, next, depth) < 0) {
+				goto error;
+			}
+		}
+	}
+	stackDepth = maxDepth;
+error:
+	alifMem_objFree(stack);
+	return stackDepth;
+}
 
 
 
