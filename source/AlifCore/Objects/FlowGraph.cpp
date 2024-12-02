@@ -83,7 +83,16 @@ typedef AlifCFGBuilder CFGBuilder; // 87
 
 static const JumpTargetLabel _noLable_ = { -1 }; // 89
 
+// 91
+#define SAME_LABEL(_l1, _l2) ((_l1).id == (_l2).id)
+#define IS_LABEL(_l) (!SAME_LABEL((_l), (_noLable_)))
 
+static CFGInstr* basicBlock_lastInstr(const BasicBlock* _b) { // 149
+	if (_b->iused > 0) {
+		return &_b->instr[_b->iused - 1];
+	}
+	return nullptr;
+}
 
 static BasicBlock* cfgBuilder_newBlock(CFGBuilder* _g) { // 163
 	BasicBlock* b_ = (BasicBlock*)alifMem_dataAlloc(sizeof(BasicBlock));
@@ -103,11 +112,43 @@ static BasicBlock* cfgBuilder_newBlock(CFGBuilder* _g) { // 163
 
 
 
+static BasicBlock* cfgBuilder_useNextBlock(CFGBuilder* _g, BasicBlock* _block) { // 321
+	_g->curBlock->next = _block;
+	_g->curBlock = _block;
+	return _block;
+}
 
 
 
+static bool cfgBuilder_currentBlockIsTerminated(CFGBuilder* _g) { // 346
+	CFGInstr* last = basicBlock_lastInstr(_g->curBlock);
+	if (last and IS_TERMINATOR_OPCODE(last->opcode)) {
+		return true;
+	}
+	if (IS_LABEL(_g->currentLabel)) {
+		if (last or IS_LABEL(_g->curBlock->label)) {
+			return true;
+		}
+		else {
+			_g->curBlock->label = _g->currentLabel;
+			_g->currentLabel = _noLable_;
+		}
+	}
+	return false;
+}
 
-
+static AlifIntT cfgBuilderMaybe_startNewBlock(CFGBuilder* _g) { // 366
+	if (cfgBuilder_currentBlockIsTerminated(_g)) {
+		BasicBlock* b = cfgBuilder_newBlock(_g);
+		if (b == NULL) {
+			return ERROR;
+		}
+		b->label = _g->currentLabel;
+		_g->currentLabel = _noLable_;
+		cfgBuilder_useNextBlock(_g, b);
+	}
+	return SUCCESS;
+}
 
 
 
@@ -169,7 +210,10 @@ void alifCFGBuilder_free(CFGBuilder* _g) { // 430
 
 
 
-
+AlifIntT _alifCfgBuilder_useLabel(CFGBuilder* _g, JumpTargetLabel _lbl) { // 464
+	_g->currentLabel = _lbl;
+	return cfgBuilderMaybe_startNewBlock(_g);
+}
 
 
 
