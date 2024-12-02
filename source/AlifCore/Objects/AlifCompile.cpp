@@ -2185,20 +2185,20 @@ static AlifCodeObject* optimizeAndAssemble_codeUnit(CompilerUnit* u, AlifObject*
 	if (consts == nullptr) {
 		goto error;
 	}
-	g = _alifCFG_fromInstructionSequence(u->instrSequence);
+	g = alifCFG_fromInstructionSequence(u->instrSequence);
 	if (g == nullptr) {
 		goto error;
 	}
 	nlocals = (AlifIntT)ALIFDICT_GET_SIZE(u->metadata.varnames);
 	nparams = (AlifIntT)ALIFLIST_GET_SIZE(u->ste->varNames);
 
-	if (_alifCFG_optimizeCodeUnit(g, consts, const_cache, nlocals,
+	if (alifCFG_optimizeCodeUnit(g, consts, const_cache, nlocals,
 		nparams, u->metadata.firstLineno) < 0) {
 		goto error;
 	}
 
 
-	if (_alifCFG_optimizedCfgToInstructionSequence(g, &u->metadata, _codeFlags,
+	if (alifCFG_optimizedCFGToInstructionSequence(g, &u->metadata, _codeFlags,
 		&stackDepth, &nLocalsPlus,
 		&optimizedInstrs) < 0) {
 		goto error;
@@ -2212,7 +2212,7 @@ static AlifCodeObject* optimizeAndAssemble_codeUnit(CompilerUnit* u, AlifObject*
 error:
 	ALIF_XDECREF(consts);
 	alifInstructionSequence_fini(&optimizedInstrs);
-	_alifCFGBuilder_free(g);
+	alifCFGBuilder_free(g);
 	return co;
 }
 
