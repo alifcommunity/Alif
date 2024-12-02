@@ -57,6 +57,7 @@ AlifIntT _alifInstructionSequence_addOp(InstrSequence*, AlifIntT, AlifIntT, Loca
 
 
 AlifJumpTargetLabel _alifInstructionSequence_newLabel(InstrSequence*); // 60
+AlifIntT _alifInstructionSequence_applyLabelMap(InstrSequence* ); // 61
 
 
 AlifIntT _alifInstructionSequence_addNested(InstrSequence*, InstrSequence*); // 64
