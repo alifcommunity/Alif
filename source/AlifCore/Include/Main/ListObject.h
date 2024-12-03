@@ -49,11 +49,11 @@ static inline AlifSizeT _alifList_getSize(AlifObject* _op) { // 30
 
 
 
-static inline void alifList_SetItem(AlifObject* _op,
+static inline void alifList_setItem(AlifObject* _op,
 	AlifSizeT _index, AlifObject* _value) { // 42
 	AlifListObject* list = ALIFLIST_CAST(_op);
 	list->item[_index] = _value;
 }
 #define ALIFLIST_SET_ITEM(_op, _index, _value) \
-    alifList_SetItem(ALIFOBJECT_CAST(_op), (_index), ALIFOBJECT_CAST(_value))
+    alifList_setItem(ALIFOBJECT_CAST(_op), (_index), ALIFOBJECT_CAST(_value))
 

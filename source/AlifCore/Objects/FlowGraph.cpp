@@ -47,9 +47,9 @@ public:
 	uint64_t unsafeLocalsMask{};
 	AlifIntT predecessors{};
 	AlifIntT startDepth{};
-	unsigned preserveLasti : 1;
+	unsigned preserveLastI : 1;
 	unsigned visited : 1;
-	unsigned except_handler : 1;
+	unsigned exceptHandler : 1;
 	unsigned cold : 1;
 	unsigned warm : 1;
 };
@@ -87,6 +87,18 @@ static const JumpTargetLabel _noLable_ = { -1 }; // 89
 #define SAME_LABEL(_l1, _l2) ((_l1).id == (_l2).id)
 #define IS_LABEL(_l) (!SAME_LABEL((_l), (_noLable_)))
 
+#define LOCATION(_lno, _endLno, _col, _endCol) {_lno, _endLno, _col, _endCol} // 94
+
+static inline AlifIntT is_blockPush(CFGInstr* _i) { // 97
+	return IS_BLOCK_PUSH_OPCODE(_i->opcode);
+}
+
+
+
+
+
+
+
 static CFGInstr* basicBlock_lastInstr(const BasicBlock* _b) { // 149
 	if (_b->iused > 0) {
 		return &_b->instr[_b->iused - 1];
@@ -108,6 +120,15 @@ static BasicBlock* cfgBuilder_newBlock(CFGBuilder* _g) { // 163
 
 
 
+static AlifIntT basicBlock_insertInstruction(BasicBlock* _block,
+	AlifIntT _pos, CFGInstr* _instr) { // 255
+	RETURN_IF_ERROR(basicBlock_nextInstr(_block));
+	for (AlifIntT i = _block->iused - 1; i > _pos; i--) {
+		_block->instr[i] = _block->instr[i - 1];
+	}
+	_block->instr[_pos] = *_instr;
+	return SUCCESS;
+}
 
 
 
@@ -188,10 +209,6 @@ CFGBuilder* _alifCFGBuilder_new(void) { // 415
 
 
 
-
-
-
-
 void alifCFGBuilder_free(CFGBuilder* _g) { // 430
 	if (_g == nullptr) {
 		return;
@@ -227,11 +244,28 @@ AlifIntT _alifCFGBuilder_useLabel(CFGBuilder* _g, JumpTargetLabel _lbl) { // 464
 }
 
 
-AlifIntT _alifCFGBuilder_addOp(CFGBuilder* _g, AlifIntT _opcode, AlifIntT _oparg, Location _loc) { // 470
+AlifIntT _alifCFGBuilder_addOp(CFGBuilder* _g, AlifIntT _opcode,
+	AlifIntT _oparg, Location _loc) { // 470
 	RETURN_IF_ERROR(cfgBuilder_maybeStartNewBlock(_g));
 	return basicBlock_addOp(_g->curBlock, _opcode, _oparg, _loc);
 }
 
+
+
+
+
+
+static AlifIntT normalize_jumps(CFGBuilder* _g) { // 590
+	BasicBlock* entryBlock = _g->entryBlock;
+	for (BasicBlock* b = entryBlock; b != nullptr; b = b->next) {
+		b->visited = 0;
+	}
+	for (BasicBlock* b = entryBlock; b != nullptr; b = b->next) {
+		b->visited = 1;
+		RETURN_IF_ERROR(normalize_jumpsInBlock(_g, b));
+	}
+	return SUCCESS;
+}
 
 
 
@@ -281,7 +315,17 @@ static AlifIntT translateJump_labelsToTargets(BasicBlock* _entryBlock) { // 635
 
 
 
-
+static AlifIntT mark_exceptHandlers(BasicBlock* _entryBlock) { // 668
+	for (BasicBlock* b = _entryBlock; b != nullptr; b = b->next) {
+		for (AlifIntT i = 0; i < b->iused; i++) {
+			CFGInstr* instr = &b->instr[i];
+			if (is_blockPush(instr)) {
+				instr->target->exceptHandler = 1;
+			}
+		}
+	}
+	return SUCCESS;
+}
 
 
 
@@ -340,7 +384,7 @@ ALIF_LOCAL_INLINE(AlifIntT) stackDepth_push(BasicBlock*** _sp, BasicBlock* _b, A
 
 
 
-static AlifIntT calculate_stackdepth(CFGBuilder* _g) { // 803
+static AlifIntT calculate_stackDepth(CFGBuilder* _g) { // 803
 	BasicBlock* entryBlock = _g->entryBlock;
 	for (BasicBlock* b = entryBlock; b != nullptr; b = b->next) {
 		b->startDepth = INT_MIN;
@@ -442,39 +486,26 @@ error:
 
 
 
+/* Perform optimizations on a control flow graph.
+   The consts object should still be in list form to allow new constants
+   to be appended.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-AlifIntT alifCFG_optimizeCodeUnit(CFGBuilder* _g, AlifObject* _consts,
-	AlifObject* _constCache, AlifIntT _nlocals,
-	AlifIntT _nparams, AlifIntT _firstLineno) { // 2511
-	RETURN_IF_ERROR(translateJump_labelsToTargets(_g->entryBlock));
-	RETURN_IF_ERROR(markExcept_handlers(_g->entryBlock));
-	RETURN_IF_ERROR(labelException_targets(_g->entryBlock));
-
-	/** Optimization **/
-	RETURN_IF_ERROR(optimize_cfg(_g, _consts, _constCache, _firstLineno));
-	RETURN_IF_ERROR(remove_unusedConsts(_g->entryBlock, _consts));
-	RETURN_IF_ERROR(
-		addChecksFor_loadsOfUninitializedVariables(
-			_g->entryBlock, _nlocals, _nparams));
-	RETURN_IF_ERROR(insert_superInstructions(_g));
-
-	RETURN_IF_ERROR(pushCold_blocksToEnd(_g));
+   Code trasnformations that reduce code size initially fill the gaps with
+   NOPs.  Later those NOPs are removed.
+*/
+static AlifIntT optimize_cfg(CFGBuilder* _g, AlifObject* _consts,
+	AlifObject* _constCache, AlifIntT _firstLineno) { // 1884
+	RETURN_IF_ERROR(check_cfg(_g));
+	RETURN_IF_ERROR(inline_smallOrNoLinenoBlocks(_g->entryBlock));
+	RETURN_IF_ERROR(remove_unreachable(_g->entryBlock));
 	RETURN_IF_ERROR(resolve_lineNumbers(_g, _firstLineno));
+	RETURN_IF_ERROR(optimize_loadConst(_constCache, _g, _consts));
+	for (BasicBlock* b = _g->entryBlock; b != nullptr; b = b->next) {
+		RETURN_IF_ERROR(optimize_basicBlock(_constCache, b, _consts));
+	}
+	RETURN_IF_ERROR(remove_redundantNopsAndPairs(_g->entryBlock));
+	RETURN_IF_ERROR(remove_unreachable(_g->entryBlock));
+	RETURN_IF_ERROR(remove_redundantNopsAndJumps(_g));
 	return SUCCESS;
 }
 
@@ -482,11 +513,398 @@ AlifIntT alifCFG_optimizeCodeUnit(CFGBuilder* _g, AlifObject* _consts,
 
 
 
+static AlifIntT remove_unusedConsts(BasicBlock* _entryBlock, AlifObject* _consts) { // 2063
+	AlifSizeT nconsts = ALIFLIST_GET_SIZE(_consts);
+	if (nconsts == 0) {
+		return SUCCESS;  /* nothing to do */
+	}
+
+	AlifSizeT* indexMap = nullptr;
+	AlifSizeT* reverseIndexMap = nullptr;
+	AlifIntT err = ERROR;
+
+	AlifSizeT nUsedConsts{}; // alif
+
+	indexMap = (AlifSizeT*)alifMem_dataAlloc(nconsts * sizeof(AlifSizeT));
+	if (indexMap == nullptr) {
+		goto end;
+	}
+	for (AlifSizeT i = 1; i < nconsts; i++) {
+		indexMap[i] = -1;
+	}
+	// The first constant may be docstring; keep it always.
+	indexMap[0] = 0;
+
+	/* mark used consts */
+	for (BasicBlock* b = _entryBlock; b != nullptr; b = b->next) {
+		for (int i = 0; i < b->iused; i++) {
+			if (OPCODE_HAS_CONST(b->instr[i].opcode)) {
+				AlifIntT index = b->instr[i].oparg;
+				indexMap[index] = index;
+			}
+		}
+	}
+	/* now index_map[i] == i if consts[i] is used, -1 otherwise */
+	/* condense consts */
+	nUsedConsts = 0;
+	for (AlifSizeT i = 0; i < nconsts; i++) {
+		if (indexMap[i] != -1) {
+			indexMap[nUsedConsts++] = indexMap[i];
+		}
+	}
+	if (nUsedConsts == nconsts) {
+		/* nothing to do */
+		err = SUCCESS;
+		goto end;
+	}
+
+	/* move all used consts to the beginning of the consts list */
+	for (AlifSizeT i = 0; i < nUsedConsts; i++) {
+		AlifSizeT oldIndex = indexMap[i];
+		if (i != oldIndex) {
+			AlifObject* value = ALIFLIST_GET_ITEM(_consts, indexMap[i]);
+			alifList_setItem(_consts, i, ALIF_NEWREF(value));
+		}
+	}
+
+	/* truncate the consts list at its new size */
+	if (alifList_setSlice(_consts, nUsedConsts, nconsts, nullptr) < 0) {
+		goto end;
+	}
+	/* adjust const indices in the bytecode */
+	reverseIndexMap = (AlifSizeT*)alifMem_dataAlloc(nconsts * sizeof(AlifSizeT));
+	if (reverseIndexMap == nullptr) {
+		goto end;
+	}
+	for (AlifSizeT i = 0; i < nconsts; i++) {
+		reverseIndexMap[i] = -1;
+	}
+	for (AlifSizeT i = 0; i < nUsedConsts; i++) {
+		reverseIndexMap[indexMap[i]] = i;
+	}
+
+	for (BasicBlock* b = _entryBlock; b != nullptr; b = b->next) {
+		for (int i = 0; i < b->iused; i++) {
+			if (OPCODE_HAS_CONST(b->instr[i].opcode)) {
+				int index = b->instr[i].oparg;
+				b->instr[i].oparg = (int)reverseIndexMap[index];
+			}
+		}
+	}
+
+	err = SUCCESS;
+end:
+	alifMem_dataFree(indexMap);
+	alifMem_dataFree(reverseIndexMap);
+	return err;
+}
+
+
+static AlifIntT push_coldBlocksToEnd(CFGBuilder* g) { // 2291
+	BasicBlock* entryblock = g->entryBlock;
+	if (entryblock->next == nullptr) {
+		/* single BasicBlock, no need to reorder */
+		return SUCCESS;
+	}
+	RETURN_IF_ERROR(mark_cold(entryblock));
+
+	AlifIntT nextLbl = get_maxLabel(g->entryBlock) + 1;
+
+	for (BasicBlock* b = entryblock; b != nullptr; b = b->next) {
+		if (b->cold && BB_HAS_FALLTHROUGH(b) and b->next and b->next->warm) {
+			BasicBlock* explicit_jump = cfgBuilder_newBlock(g);
+			if (explicit_jump == nullptr) {
+				return ERROR;
+			}
+			if (!IS_LABEL(b->next->label)) {
+				b->next->label.id = nextLbl++;
+			}
+			basicBlock_addOp(explicit_jump, JUMP_NO_INTERRUPT, b->next->label.id,
+				_noLocation_);
+			explicit_jump->cold = 1;
+			explicit_jump->next = b->next;
+			explicit_jump->predecessors = 1;
+			b->next = explicit_jump;
+
+			/* set target */
+			CFGInstr* last = basicBlock_lastInstr(explicit_jump);
+			last->target = explicit_jump->next;
+		}
+	}
+
+	BasicBlock* coldBlocks = nullptr;
+	BasicBlock* coldBlocksTail = nullptr;
+
+	BasicBlock* b = entryblock;
+	while (b->next) {
+		while (b->next and !b->next->cold) {
+			b = b->next;
+		}
+		if (b->next == nullptr) {
+			/* no more cold blocks */
+			break;
+		}
+
+		BasicBlock* b_end = b->next;
+		while (b_end->next and b_end->next->cold) {
+			b_end = b_end->next;
+		}
+
+		if (coldBlocks == nullptr) {
+			coldBlocks = b->next;
+		}
+		else {
+			coldBlocksTail->next = b->next;
+		}
+		coldBlocksTail = b_end;
+		b->next = b_end->next;
+		b_end->next = nullptr;
+	}
+	b->next = coldBlocks;
+
+	if (coldBlocks != nullptr) {
+		RETURN_IF_ERROR(remove_redundantNopsAndJumps(g));
+	}
+	return SUCCESS;
+}
+
+
+
+static AlifIntT convert_pseudoOps(CFGBuilder* _g) { // 2372
+	BasicBlock* entryblock = _g->entryBlock;
+	for (BasicBlock* b = entryblock; b != nullptr; b = b->next) {
+		for (int i = 0; i < b->iused; i++) {
+			CFGInstr* instr = &b->instr[i];
+			if (is_blockPush(instr)) {
+				INSTR_SET_OP0(instr, NOP);
+			}
+			else if (instr->opcode == LOAD_CLOSURE) {
+				instr->opcode = LOAD_FAST;
+			}
+			else if (instr->opcode == STORE_FAST_MAYBE_NULL) {
+				instr->opcode = STORE_FAST;
+			}
+		}
+	}
+	return remove_redundantNopsAndJumps(_g);
+}
 
 
 
 
+static AlifIntT resolve_lineNumbers(CFGBuilder* _g, AlifIntT _firstLineno) { // 2503
+	RETURN_IF_ERROR(duplicateExits_withoutLineno(_g));
+	propagate_lineNumbers(_g->entryBlock);
+	return SUCCESS;
+}
 
+
+
+AlifIntT alifCFG_optimizeCodeUnit(CFGBuilder* _g, AlifObject* _consts,
+	AlifObject* _constCache, AlifIntT _nlocals,
+	AlifIntT _nparams, AlifIntT _firstLineno) { // 2511
+	RETURN_IF_ERROR(translateJump_labelsToTargets(_g->entryBlock));
+	RETURN_IF_ERROR(mark_exceptHandlers(_g->entryBlock));
+	//RETURN_IF_ERROR(labelException_targets(_g->entryBlock));
+
+	/** Optimization **/
+	RETURN_IF_ERROR(optimize_cfg(_g, _consts, _constCache, _firstLineno));
+	RETURN_IF_ERROR(remove_unusedConsts(_g->entryBlock, _consts));
+	RETURN_IF_ERROR(
+		addChecksFor_loadsOfUninitializedVariables(
+			_g->entryBlock, _nlocals, _nparams));
+	//RETURN_IF_ERROR(insert_superInstructions(_g));
+
+	RETURN_IF_ERROR(push_coldBlocksToEnd(_g));
+	RETURN_IF_ERROR(resolve_lineNumbers(_g, _firstLineno));
+	return SUCCESS;
+}
+
+
+static AlifIntT* build_cellFixedOffsets(AlifCompileCodeUnitMetadata* _umd) { // 2536
+	AlifIntT nlocals = (AlifIntT)ALIFDICT_GET_SIZE(_umd->varnames);
+	AlifIntT ncellvars = (AlifIntT)ALIFDICT_GET_SIZE(_umd->cellvars);
+	AlifIntT nfreevars = (AlifIntT)ALIFDICT_GET_SIZE(_umd->freevars);
+
+	AlifIntT noffsets = ncellvars + nfreevars;
+	AlifIntT* fixed = (AlifIntT*)alifMem_dataAlloc(noffsets * sizeof(AlifIntT));
+	if (fixed == nullptr) {
+		//alifErr_noMemory();
+		return nullptr;
+	}
+	for (AlifIntT i = 0; i < noffsets; i++) {
+		fixed[i] = nlocals + i;
+	}
+
+	AlifObject* varname{}, * cellindex{};
+	AlifSizeT pos = 0;
+	while (alifDict_next(_umd->cellvars, &pos, &varname, &cellindex)) {
+		AlifObject* varindex{};
+		if (alifDict_getItemRef(_umd->varnames, varname, &varindex) < 0) {
+			goto error;
+		}
+		if (varindex == nullptr) {
+			continue;
+		}
+
+		AlifIntT argoffset = alifLong_asInt(varindex);
+		ALIF_DECREF(varindex);
+		if (argoffset == -1 /*and alifErr_occurred()*/) {
+			goto error;
+		}
+
+		AlifIntT oldindex = alifLong_asInt(cellindex);
+		if (oldindex == -1 /*and alifErr_occurred()*/) {
+			goto error;
+		}
+		fixed[oldindex] = argoffset;
+	}
+	return fixed;
+
+error:
+	alifMem_dataFree(fixed);
+	return nullptr;
+}
+
+
+
+#define IS_GENERATOR(_cf) (_cf & (CO_GENERATOR | CO_COROUTINE | CO_ASYNC_GENERATOR)) // 2583
+
+static AlifIntT insert_prefixInstructions(AlifCompileCodeUnitMetadata* _umd,
+	BasicBlock* _entryBlock, AlifIntT* _fixed,
+	AlifIntT _nFreeVars, AlifIntT _codeFlags) { // 2586
+	if (IS_GENERATOR(_codeFlags)) {
+		Location loc = LOCATION(_umd->firstLineno, _umd->firstLineno, -1, -1);
+		CFGInstr make_gen = {
+			.opcode = RETURN_GENERATOR,
+			.oparg = 0,
+			.loc = loc,
+			.target = nullptr,
+		};
+		RETURN_IF_ERROR(basicBlock_insertInstruction(_entryBlock, 0, &make_gen));
+		CFGInstr pop_top = {
+			.opcode = POP_TOP,
+			.oparg = 0,
+			.loc = loc,
+			.target = nullptr,
+		};
+		RETURN_IF_ERROR(basicBlock_insertInstruction(_entryBlock, 1, &pop_top));
+	}
+
+	const AlifIntT ncellvars = (AlifIntT)ALIFDICT_GET_SIZE(_umd->cellvars);
+	if (ncellvars) {
+		const AlifIntT nvars = ncellvars + (AlifIntT)ALIFDICT_GET_SIZE(_umd->varnames);
+		AlifIntT* sorted = (AlifIntT*)alifMem_dataAlloc(nvars * sizeof(int));
+		if (sorted == nullptr) {
+			//alifErr_noMemory();
+			return ERROR;
+		}
+		for (AlifIntT i = 0; i < ncellvars; i++) {
+			sorted[_fixed[i]] = i + 1;
+		}
+		for (AlifIntT i = 0, ncellsused = 0; ncellsused < ncellvars; i++) {
+			AlifIntT oldindex = sorted[i] - 1;
+			if (oldindex == -1) {
+				continue;
+			}
+			CFGInstr make_cell = {
+				.opcode = MAKE_CELL,
+				.oparg = oldindex,
+				.loc = _noLocation_,
+				.target = nullptr,
+			};
+			if (basicBlock_insertInstruction(_entryBlock, ncellsused, &make_cell) < 0) {
+				alifMem_dataFree(sorted);
+				return ERROR;
+			}
+			ncellsused += 1;
+		}
+		alifMem_dataFree(sorted);
+	}
+
+	if (_nFreeVars) {
+		CFGInstr copy_frees = {
+			.opcode = COPY_FREE_VARS,
+			.oparg = _nFreeVars,
+			.loc = _noLocation_,
+			.target = nullptr,
+		};
+		RETURN_IF_ERROR(basicBlock_insertInstruction(_entryBlock, 0, &copy_frees));
+	}
+
+	return SUCCESS;
+}
+
+
+static AlifIntT fix_cellOffsets(AlifCompileCodeUnitMetadata* _umd,
+	BasicBlock* _entryBlock, AlifIntT* _fixedMap) { // 2665
+	AlifIntT nlocals = (AlifIntT)ALIFDICT_GET_SIZE(_umd->varnames);
+	AlifIntT ncellvars = (AlifIntT)ALIFDICT_GET_SIZE(_umd->cellvars);
+	AlifIntT nfreevars = (AlifIntT)ALIFDICT_GET_SIZE(_umd->freevars);
+	AlifIntT noffsets = ncellvars + nfreevars;
+
+	// First deal with duplicates (arg cells).
+	AlifIntT numdropped = 0;
+	for (AlifIntT i = 0; i < noffsets; i++) {
+		if (_fixedMap[i] == i + nlocals) {
+			_fixedMap[i] -= numdropped;
+		}
+		else {
+			// It was a duplicate (cell/arg).
+			numdropped += 1;
+		}
+	}
+
+	// Then update offsets, either relative to locals or by cell2arg.
+	for (BasicBlock* b = _entryBlock; b != nullptr; b = b->next) {
+		for (int i = 0; i < b->iused; i++) {
+			CFGInstr* inst = &b->instr[i];
+			// This is called before extended args are generated.
+			int oldoffset = inst->oparg;
+			switch (inst->opcode) {
+			case MAKE_CELL:
+			case LOAD_CLOSURE:
+			case LOAD_DEREF:
+			case STORE_DEREF:
+			case DELETE_DEREF:
+			case LOAD_FROM_DICT_OR_DEREF:
+				inst->oparg = _fixedMap[oldoffset];
+			}
+		}
+	}
+
+	return numdropped;
+}
+
+
+
+static AlifIntT prepare_localsPlus(AlifCompileCodeUnitMetadata* _umd,
+	CFGBuilder* _g, AlifIntT _codeFlags) { // 2710
+	AlifIntT nlocals = (int)ALIFDICT_GET_SIZE(_umd->varnames);
+	AlifIntT ncellvars = (int)ALIFDICT_GET_SIZE(_umd->cellvars);
+	AlifIntT nfreevars = (int)ALIFDICT_GET_SIZE(_umd->freevars);
+	AlifIntT nlocalsplus = nlocals + ncellvars + nfreevars;
+	AlifIntT* cellFixedOffsets = build_cellFixedOffsets(_umd);
+	if (cellFixedOffsets == nullptr) {
+		return ERROR;
+	}
+
+	// This must be called before fix_cellOffsets().
+	if (insert_prefixInstructions(_umd, _g->entryBlock, cellFixedOffsets, nfreevars, _codeFlags)) {
+		alifMem_dataFree(cellFixedOffsets);
+		return ERROR;
+	}
+
+	AlifIntT numdropped = fix_cellOffsets(_umd, _g->entryBlock, cellFixedOffsets);
+	alifMem_dataFree(cellFixedOffsets);  // At this point we're done with it.
+	cellFixedOffsets = nullptr;
+	if (numdropped < 0) {
+		return ERROR;
+	}
+
+	nlocalsplus -= numdropped;
+	return nlocalsplus;
+}
 
 
 
@@ -533,10 +951,38 @@ error:
 }
 
 
+AlifIntT alifCFG_toInstructionSequence(CFGBuilder* _g, AlifInstructionSequence* _seq) { // 2787
+	AlifIntT lbl = 0;
+	for (BasicBlock* b = _g->entryBlock; b != nullptr; b = b->next) {
+		b->label = { lbl };
+		lbl += 1;
+	}
+	for (BasicBlock* b = _g->entryBlock; b != nullptr; b = b->next) {
+		RETURN_IF_ERROR(_alifInstructionSequence_useLabel(_seq, b->label.id));
+		for (int i = 0; i < b->iused; i++) {
+			CFGInstr* instr = &b->instr[i];
+			if (HAS_TARGET(instr->opcode)) {
+				instr->oparg = instr->target->label.id;
+			}
+			RETURN_IF_ERROR(
+				_alifInstructionSequence_addOp(_seq, instr->opcode, instr->oparg, instr->loc));
 
-
-
-
+			AlifExceptHandlerInfo* hi = &_seq->instrs[_seq->used - 1].exceptHandlerInfo;
+			if (instr->except != nullptr) {
+				hi->label = instr->except->label.id;
+				hi->startDepth = instr->except->startDepth;
+				hi->preserveLastI = instr->except->preserveLastI;
+			}
+			else {
+				hi->label = -1;
+			}
+		}
+	}
+	if (_alifInstructionSequence_applyLabelMap(_seq) < 0) {
+		return ERROR;
+	}
+	return SUCCESS;
+}
 
 
 

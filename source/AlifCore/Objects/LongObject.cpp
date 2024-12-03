@@ -416,6 +416,19 @@ long alifLong_asLong(AlifObject* _obj) { // 540
 	return result;
 }
 
+AlifIntT alifLong_asInt(AlifObject* _obj) { // 557
+	AlifIntT overflow{};
+	long result = alifLong_asLongAndOverflow(_obj, &overflow);
+	if (overflow or result > INT_MAX or result < INT_MIN) {
+		/* XXX: could be cute and give a different
+		   message for overflow == -1 */
+		//alifErr_setString(_alifExcOverflowError_,
+		//	"Alif int too large to convert to Cpp int");
+		return -1;
+	}
+	return (int)result;
+}
+
 
 AlifSizeT alifLong_asSizeT(AlifObject* _vv) { // 575
 	AlifLongObject* v_{};

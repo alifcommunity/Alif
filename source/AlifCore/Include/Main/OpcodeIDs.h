@@ -33,7 +33,7 @@
 #define POP_TOP                                 29
 //#define PUSH_EXC_INFO                           30
 //#define PUSH_NULL                               31
-//#define RETURN_GENERATOR                        32
+#define RETURN_GENERATOR                        32
 #define RETURN_VALUE                            33
 //#define SETUP_ANNOTATIONS                       34
 //#define STORE_SLICE                             35
@@ -59,7 +59,7 @@
 #define CONTAINS_OP                             55
 #define CONVERT_VALUE                           56
 #define COPY                                    57
-//#define COPY_FREE_VARS                          58
+#define COPY_FREE_VARS                          58
 #define DELETE_ATTR                             59
 #define DELETE_DEREF                            60
 #define DELETE_FAST                             61
@@ -92,7 +92,7 @@
 #define LOAD_NAME                               88
 //#define LOAD_SPECIAL                            89
 #define LOAD_SUPER_ATTR                         90
-//#define MAKE_CELL                               91
+#define MAKE_CELL                               91
 #define MAP_ADD                                 92
 //#define MATCH_CLASS                             93
 #define POP_JUMP_IF_FALSE                       94
@@ -217,7 +217,7 @@
 //#define ENTER_EXECUTOR                         255
 //#define JUMP                                   256
 #define JUMP_NO_INTERRUPT                      257
-//#define LOAD_CLOSURE                           258
+#define LOAD_CLOSURE                           258
 //#define POP_BLOCK                              259
 #define SETUP_CLEANUP                          260
 #define SETUP_FINALLY                          261
