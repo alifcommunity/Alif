@@ -27,9 +27,15 @@
 #define IS_TERMINATOR_OPCODE(_opcode) \
         (OPCODE_HAS_JUMP(_opcode) or IS_SCOPE_EXIT_OPCODE(_opcode))
 
+// 41
+#define IS_UNCONDITIONAL_JUMP_OPCODE(_opcode) \
+        ((_opcode) == JUMP or \
+         (_opcode) == JUMP_NO_INTERRUPT or \
+         (_opcode) == JUMP_FORWARD or \
+         (_opcode) == JUMP_BACKWARD or \
+         (_opcode) == JUMP_BACKWARD_NO_INTERRUPT)
 
-
-
+// 48
 #define IS_SCOPE_EXIT_OPCODE(_opcode) \
         ((_opcode) == RETURN_VALUE or \
          (_opcode) == RETURN_CONST or \

@@ -19,6 +19,8 @@
     }
  // 21
 
+#define DEFAULT_BLOCK_SIZE 16 // 23
+
 
 typedef AlifJumpTargetLabel JumpTargetLabel; // 26
 
@@ -95,9 +97,22 @@ static inline AlifIntT is_blockPush(CFGInstr* _i) { // 97
 
 
 
+static inline AlifIntT is_jump(CFGInstr* _i) { // 105
+	return OPCODE_HAS_JUMP(_i->opcode);
+}
 
 
 
+static AlifIntT basicBlock_nextInstr(BasicBlock* _b) { // 135
+	RETURN_IF_ERROR(
+		_alifCompile_ensureArrayLargeEnough(
+			_b->iused + 1,
+			(void**)&_b->instr,
+			&_b->ialloc,
+			DEFAULT_BLOCK_SIZE,
+			sizeof(CFGInstr)));
+	return _b->iused++;
+}
 
 static CFGInstr* basicBlock_lastInstr(const BasicBlock* _b) { // 149
 	if (_b->iused > 0) {
@@ -118,6 +133,32 @@ static BasicBlock* cfgBuilder_newBlock(CFGBuilder* _g) { // 163
 	return b_;
 }
 
+static AlifIntT basicBlock_addOp(BasicBlock* _b, AlifIntT _opcode, AlifIntT _oparg, Location _loc) { // 178
+	AlifIntT off_ = basicBlock_nextInstr(_b);
+	if (off_ < 0) {
+		return ERROR;
+	}
+	CFGInstr* i = &_b->instr[off_];
+	i->opcode = _opcode;
+	i->oparg = _oparg;
+	i->target = nullptr;
+	i->loc = _loc;
+
+	return SUCCESS;
+}
+
+static AlifIntT basicBlock_addJump(BasicBlock* _b, AlifIntT _opcode, BasicBlock* _target, Location _loc) { // 199
+	CFGInstr* last = basicBlock_lastInstr(_b);
+	if (last and is_jump(last)) {
+		return ERROR;
+	}
+
+	RETURN_IF_ERROR(
+		basicBlock_addOp(_b, _opcode, _target->label.id, _loc));
+	last = basicBlock_lastInstr(_b);
+	last->target = _target;
+	return SUCCESS;
+}
 
 
 static AlifIntT basicBlock_insertInstruction(BasicBlock* _block,
@@ -251,7 +292,48 @@ AlifIntT _alifCFGBuilder_addOp(CFGBuilder* _g, AlifIntT _opcode,
 }
 
 
+static AlifIntT normalizeJumps_inBlock(CFGBuilder* _g, BasicBlock* _b) { // 540
+	CFGInstr* last = basicBlock_lastInstr(_b);
+	if (last == nullptr or !is_jump(last) or IS_UNCONDITIONAL_JUMP_OPCODE(last->opcode)) {
+		return SUCCESS;
+	}
 
+	bool is_forward = last->target->visited == 0;
+	if (is_forward) {
+		return SUCCESS;
+	}
+
+	AlifIntT reversedOpcode = 0;
+	switch (last->opcode) {
+	case POP_JUMP_IF_NOT_NONE:
+		reversedOpcode = POP_JUMP_IF_NONE;
+		break;
+	case POP_JUMP_IF_NONE:
+		reversedOpcode = POP_JUMP_IF_NOT_NONE;
+		break;
+	case POP_JUMP_IF_FALSE:
+		reversedOpcode = POP_JUMP_IF_TRUE;
+		break;
+	case POP_JUMP_IF_TRUE:
+		reversedOpcode = POP_JUMP_IF_FALSE;
+		break;
+	}
+
+	BasicBlock* target = last->target;
+	BasicBlock* backwardsJump = cfgBuilder_newBlock(_g);
+	if (backwardsJump == nullptr) {
+		return ERROR;
+	}
+	RETURN_IF_ERROR(
+		basicBlock_addJump(backwardsJump, JUMP, target, last->loc));
+	last->opcode = reversedOpcode;
+	last->target = _b->next;
+
+	backwardsJump->cold = _b->cold;
+	backwardsJump->next = _b->next;
+	_b->next = backwardsJump;
+	return SUCCESS;
+}
 
 
 
@@ -262,7 +344,7 @@ static AlifIntT normalize_jumps(CFGBuilder* _g) { // 590
 	}
 	for (BasicBlock* b = entryBlock; b != nullptr; b = b->next) {
 		b->visited = 1;
-		RETURN_IF_ERROR(normalize_jumpsInBlock(_g, b));
+		RETURN_IF_ERROR(normalizeJumps_inBlock(_g, b));
 	}
 	return SUCCESS;
 }
@@ -611,7 +693,7 @@ static AlifIntT push_coldBlocksToEnd(CFGBuilder* g) { // 2291
 	AlifIntT nextLbl = get_maxLabel(g->entryBlock) + 1;
 
 	for (BasicBlock* b = entryblock; b != nullptr; b = b->next) {
-		if (b->cold && BB_HAS_FALLTHROUGH(b) and b->next and b->next->warm) {
+		if (b->cold and BB_HAS_FALLTHROUGH(b) and b->next and b->next->warm) {
 			BasicBlock* explicit_jump = cfgBuilder_newBlock(g);
 			if (explicit_jump == nullptr) {
 				return ERROR;
