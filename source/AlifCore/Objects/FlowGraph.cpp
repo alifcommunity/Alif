@@ -137,7 +137,7 @@ static bool cfgBuilder_currentBlockIsTerminated(CFGBuilder* _g) { // 346
 	return false;
 }
 
-static AlifIntT cfgBuilderMaybe_startNewBlock(CFGBuilder* _g) { // 366
+static AlifIntT cfgBuilder_maybeStartNewBlock(CFGBuilder* _g) { // 366
 	if (cfgBuilder_currentBlockIsTerminated(_g)) {
 		BasicBlock* b = cfgBuilder_newBlock(_g);
 		if (b == nullptr) {
@@ -213,7 +213,7 @@ AlifIntT _alifCFGBuilder_checkSize(CFGBuilder* _g) { // 450
 	for (BasicBlock* b = _g->blockList; b != nullptr; b = b->list) {
 		nBlocks++;
 	}
-	if ((size_t)nBlocks > SIZE_MAX / sizeof(BasicBlock*)) {
+	if ((AlifUSizeT)nBlocks > SIZE_MAX / sizeof(BasicBlock*)) {
 		//alifErr_noMemory();
 		return ERROR;
 	}
@@ -223,7 +223,7 @@ AlifIntT _alifCFGBuilder_checkSize(CFGBuilder* _g) { // 450
 
 AlifIntT _alifCFGBuilder_useLabel(CFGBuilder* _g, JumpTargetLabel _lbl) { // 464
 	_g->currentLabel = _lbl;
-	return cfgBuilderMaybe_startNewBlock(_g);
+	return cfgBuilder_maybeStartNewBlock(_g);
 }
 
 
@@ -295,13 +295,13 @@ public:
 
 
 
-static BasicBlock** makeCfg_traversalStack(BasicBlock* _entryBlock) { // 741
+static BasicBlock** makeCFG_traversalStack(BasicBlock* _entryBlock) { // 741
 	AlifIntT nBlocks = 0;
 	for (BasicBlock* b = _entryBlock; b != nullptr; b = b->next) {
 		b->visited = 0;
 		nBlocks++;
 	}
-	BasicBlock** stack = (BasicBlock**)alifMem_objAlloc(sizeof(BasicBlock*) * nBlocks);
+	BasicBlock** stack = (BasicBlock**)alifMem_dataAlloc(sizeof(BasicBlock*) * nBlocks);
 	if (!stack) {
 		//alifErr_noMemory();
 	}
@@ -312,11 +312,11 @@ ALIF_LOCAL(AlifIntT) stack_effect(AlifIntT _opcode, AlifIntT _oparg, AlifIntT _j
 	if (_opcode < 0) {
 		return ALIF_INVALID_STACK_EFFECT;
 	}
-	if ((_opcode <= MAX_REAL_OPCODE) and (_alifOpcode_deopt[_opcode] != _opcode)) {
+	if ((_opcode <= MAX_REAL_OPCODE) and (_alifOpcodeDeopt_[_opcode] != _opcode)) {
 		return ALIF_INVALID_STACK_EFFECT;
 	}
-	AlifIntT popped = _alifOpcode_num_popped(_opcode, _oparg);
-	AlifIntT pushed = _alifOpcode_num_pushed(_opcode, _oparg);
+	AlifIntT popped = _alifOpcode_numPopped(_opcode, _oparg);
+	AlifIntT pushed = _alifOpcode_numPushed(_opcode, _oparg);
 	if (popped < 0 or pushed < 0) {
 		return ALIF_INVALID_STACK_EFFECT;
 	}
@@ -345,7 +345,7 @@ static AlifIntT calculate_stackdepth(CFGBuilder* _g) { // 803
 	for (BasicBlock* b = entryBlock; b != nullptr; b = b->next) {
 		b->startDepth = INT_MIN;
 	}
-	BasicBlock** stack = makeCfg_traversalStack(entryBlock);
+	BasicBlock** stack = makeCFG_traversalStack(entryBlock);
 	if (!stack) {
 		return ERROR;
 	}
@@ -397,7 +397,7 @@ static AlifIntT calculate_stackdepth(CFGBuilder* _g) { // 803
 			}
 			depth = newDepth;
 			if (IS_UNCONDITIONAL_JUMP_OPCODE(instr_->opcode) or
-				IS_SCOPE_EXIT_OPCODE(instr_->i_opcode))
+				IS_SCOPE_EXIT_OPCODE(instr_->opcode))
 			{
 				next = nullptr;
 				break;
@@ -411,7 +411,7 @@ static AlifIntT calculate_stackdepth(CFGBuilder* _g) { // 803
 	}
 	stackDepth = maxDepth;
 error:
-	alifMem_objFree(stack);
+	alifMem_dataFree(stack);
 	return stackDepth;
 }
 
