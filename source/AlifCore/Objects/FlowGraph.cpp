@@ -216,7 +216,10 @@ AlifIntT _alifCFGBuilder_useLabel(CFGBuilder* _g, JumpTargetLabel _lbl) { // 464
 }
 
 
-
+AlifIntT _alifCFGBuilder_addOp(CFGBuilder* _g, AlifIntT _opcode, AlifIntT _oparg, Location _loc) { // 470
+	RETURN_IF_ERROR(cfgBuilder_maybeStartNewBlock(_g));
+	return basicBlock_addOp(_g->curBlock, _opcode, _oparg, _loc);
+}
 
 
 
