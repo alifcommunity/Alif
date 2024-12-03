@@ -72,10 +72,10 @@
 //#define GET_AWAITABLE                           68
 //#define IMPORT_FROM                             69
 //#define IMPORT_NAME                             70
-#define IS_OP                                   71
-//#define JUMP_BACKWARD                           72
-//#define JUMP_BACKWARD_NO_INTERRUPT              73
-//#define JUMP_FORWARD                            74
+//#define IS_OP                                   71
+#define JUMP_BACKWARD                           72
+#define JUMP_BACKWARD_NO_INTERRUPT              73
+#define JUMP_FORWARD                            74
 #define LIST_APPEND                             75
 #define LIST_EXTEND                             76
 #define LOAD_ATTR                               77
@@ -96,8 +96,8 @@
 #define MAP_ADD                                 92
 //#define MATCH_CLASS                             93
 #define POP_JUMP_IF_FALSE                       94
-//#define POP_JUMP_IF_NONE                        95
-//#define POP_JUMP_IF_NOT_NONE                    96
+#define POP_JUMP_IF_NONE                        95
+#define POP_JUMP_IF_NOT_NONE                    96
 #define POP_JUMP_IF_TRUE                        97
 #define RAISE_VARARGS                           98
 #define RERAISE                                 99
@@ -215,7 +215,7 @@
 //#define INSTRUMENTED_JUMP_BACKWARD             253
 //#define INSTRUMENTED_LINE                      254
 //#define ENTER_EXECUTOR                         255
-//#define JUMP                                   256
+#define JUMP                                   256
 #define JUMP_NO_INTERRUPT                      257
 #define LOAD_CLOSURE                           258
 //#define POP_BLOCK                              259
