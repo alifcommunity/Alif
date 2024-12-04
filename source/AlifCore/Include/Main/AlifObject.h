@@ -1,6 +1,7 @@
 #pragma once
 
 
+#define ALIF_ISNONE(_x) ALIF_IS((_x), ALIF_NONE) // 633
 
 
 
