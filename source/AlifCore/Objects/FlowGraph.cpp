@@ -101,6 +101,13 @@ static inline AlifIntT is_jump(CFGInstr* _i) { // 105
 	return OPCODE_HAS_JUMP(_i->opcode);
 }
 
+// 120
+#define INSTR_SET_OP0(_i, _op) \
+    do { \
+        CFGInstr *instrPtr = (_i); \
+        instrPtr->opcode = (_op); \
+        instrPtr->oparg = 0; \
+    } while (0);
 
 
 static AlifIntT basicBlock_nextInstr(BasicBlock* _b) { // 135
@@ -162,6 +169,17 @@ static AlifIntT basicBlock_addJump(BasicBlock* _b, AlifIntT _opcode,
 }
 
 
+static inline AlifIntT basicBlock_appendInstructions(BasicBlock* _to, BasicBlock* _from) { // 215
+	for (AlifIntT i = 0; i < _from->iused; i++) {
+		AlifIntT n = basicBlock_nextInstr(_to);
+		if (n < 0) {
+			return ERROR;
+		}
+		_to->instr[n] = _from->instr[i];
+	}
+	return SUCCESS;
+}
+
 static inline AlifIntT basicBlock_noFallThrough(const BasicBlock* _b) { // 227
 	CFGInstr* last = basicBlock_lastInstr(_b);
 	return (last and
@@ -192,7 +210,10 @@ static BasicBlock* cfgBuilder_useNextBlock(CFGBuilder* _g, BasicBlock* _block) {
 	return _block;
 }
 
-
+static inline AlifIntT basicBlock_exitsScope(const BasicBlock* _b) { // 330
+	CFGInstr* last = basicBlock_lastInstr(_b);
+	return last and IS_SCOPE_EXIT_OPCODE(last->opcode);
+}
 
 static bool cfgBuilder_currentBlockIsTerminated(CFGBuilder* _g) { // 346
 	CFGInstr* last = basicBlock_lastInstr(_g->curBlock);
@@ -362,7 +383,20 @@ static AlifIntT normalize_jumps(CFGBuilder* _g) { // 590
 }
 
 
-
+static AlifIntT check_cfg(CFGBuilder* _g) { // 605
+	for (BasicBlock* b_ = _g->entryBlock; b_ != nullptr; b_ = b_->next) {
+		for (AlifIntT i = 0; i < b_->iused; i++) {
+			AlifIntT opcode = b_->instr[i].opcode;
+			if (IS_TERMINATOR_OPCODE(opcode)) {
+				if (i != b_->iused - 1) {
+					//alifErr_setString(_alifExcSystemError_, "malformed control flow graph.");
+					return ERROR;
+				}
+			}
+		}
+	}
+	return SUCCESS;
+}
 
 
 
@@ -554,11 +588,109 @@ error:
 }
 
 
+static AlifIntT remove_unreachable(BasicBlock* _entryBlock) { // 995
+	for (BasicBlock* b = _entryBlock; b != nullptr; b = b->next) {
+		b->predecessors = 0;
+	}
+	BasicBlock** stack = makeCFG_traversalStack(_entryBlock);
+	if (stack == nullptr) {
+		return ERROR;
+	}
+	BasicBlock** sp_ = stack;
+	_entryBlock->predecessors = 1;
+	*sp_++ = _entryBlock;
+	while (sp_ > stack) {
+		BasicBlock* b_ = *(--sp_);
+		b_->visited = 1;
+		if (b_->next and BB_HAS_FALLTHROUGH(b_)) {
+			if (!b_->next->visited) {
+				*sp_++ = b_->next;
+			}
+			b_->next->predecessors++;
+		}
+		for (AlifIntT i = 0; i < b_->iused; i++) {
+			BasicBlock* target{};
+			CFGInstr* instr = &b_->instr[i];
+			if (is_jump(instr) or is_blockPush(instr)) {
+				target = instr->target;
+				if (!target->visited) {
+					*sp_++ = target;
+				}
+				target->predecessors++;
+			}
+		}
+	}
+	alifMem_dataFree(stack);
+
+	/* Delete unreachable instructions */
+	for (BasicBlock* b = _entryBlock; b != nullptr; b = b->next) {
+		if (b->predecessors == 0) {
+			b->iused = 0;
+			b->exceptHandler = 0;
+		}
+	}
+	return SUCCESS;
+}
 
 
+static inline bool basicBlock_hasNoLineno(BasicBlock* b) { // 1191
+	for (AlifIntT i = 0; i < b->iused; i++) {
+		if (b->instr[i].loc.lineNo >= 0) {
+			return false;
+		}
+	}
+	return true;
+}
 
 
+#define MAX_COPY_SIZE 4 // 1201
 
+
+static AlifIntT basicBlock_inlineSmallOrNoLinenoBlocks(BasicBlock* _bb) { // 1209
+	CFGInstr* last = basicBlock_lastInstr(_bb);
+	if (last == nullptr) {
+		return 0;
+	}
+	if (!IS_UNCONDITIONAL_JUMP_OPCODE(last->opcode)) {
+		return 0;
+	}
+	BasicBlock* target = last->target;
+	bool smallExitBlock = (basicBlock_exitsScope(target) and
+		target->iused <= MAX_COPY_SIZE);
+	bool noLinenoNoFallThrough = (basicBlock_hasNoLineno(target) and
+		!BB_HAS_FALLTHROUGH(target));
+	if (smallExitBlock or noLinenoNoFallThrough) {
+		AlifIntT removedJumpOpcode = last->opcode;
+		INSTR_SET_OP0(last, NOP);
+		RETURN_IF_ERROR(basicBlock_appendInstructions(_bb, target));
+		if (noLinenoNoFallThrough) {
+			last = basicBlock_lastInstr(_bb);
+			if (IS_UNCONDITIONAL_JUMP_OPCODE(last->opcode) and
+				removedJumpOpcode == JUMP)
+			{
+				last->opcode = JUMP;
+			}
+		}
+		target->predecessors--;
+		return 1;
+	}
+	return 0;
+}
+
+static AlifIntT inline_smallOrNoLinenoBlocks(BasicBlock* _entryBlock) { // 1243
+	bool changes{};
+	do {
+		changes = false;
+		for (BasicBlock* b = _entryBlock; b != nullptr; b = b->next) {
+			AlifIntT res_ = basicBlock_inlineSmallOrNoLinenoBlocks(b);
+			RETURN_IF_ERROR(res_);
+			if (res_) {
+				changes = true;
+			}
+		}
+	} while (changes); /* every change removes a jump, ensuring convergence */
+	return changes;
+}
 
 
 
@@ -631,7 +763,7 @@ static AlifIntT remove_unusedConsts(BasicBlock* _entryBlock, AlifObject* _consts
 
 	/* mark used consts */
 	for (BasicBlock* b = _entryBlock; b != nullptr; b = b->next) {
-		for (int i = 0; i < b->iused; i++) {
+		for (AlifIntT i = 0; i < b->iused; i++) {
 			if (OPCODE_HAS_CONST(b->instr[i].opcode)) {
 				AlifIntT index = b->instr[i].oparg;
 				indexMap[index] = index;
@@ -678,10 +810,10 @@ static AlifIntT remove_unusedConsts(BasicBlock* _entryBlock, AlifObject* _consts
 	}
 
 	for (BasicBlock* b = _entryBlock; b != nullptr; b = b->next) {
-		for (int i = 0; i < b->iused; i++) {
+		for (AlifIntT i = 0; i < b->iused; i++) {
 			if (OPCODE_HAS_CONST(b->instr[i].opcode)) {
-				int index = b->instr[i].oparg;
-				b->instr[i].oparg = (int)reverseIndexMap[index];
+				AlifIntT index = b->instr[i].oparg;
+				b->instr[i].oparg = (AlifIntT)reverseIndexMap[index];
 			}
 		}
 	}
@@ -806,7 +938,7 @@ static AlifIntT push_coldBlocksToEnd(CFGBuilder* g) { // 2291
 static AlifIntT convert_pseudoOps(CFGBuilder* _g) { // 2372
 	BasicBlock* entryblock = _g->entryBlock;
 	for (BasicBlock* b = entryblock; b != nullptr; b = b->next) {
-		for (int i = 0; i < b->iused; i++) {
+		for (AlifIntT i = 0; i < b->iused; i++) {
 			CFGInstr* instr = &b->instr[i];
 			if (is_blockPush(instr)) {
 				INSTR_SET_OP0(instr, NOP);
@@ -868,7 +1000,7 @@ static AlifIntT duplicateExits_withoutLineno(CFGBuilder* _g) { // 2415
 static void propagate_lineNumbers(BasicBlock* _entryBlock) { // 2468
 	for (BasicBlock* b = _entryBlock; b != nullptr; b = b->next) {
 		CFGInstr* last = basicBlock_lastInstr(b);
-		if (last == NULL) {
+		if (last == nullptr) {
 			continue;
 		}
 
@@ -1002,7 +1134,7 @@ static AlifIntT insert_prefixInstructions(AlifCompileCodeUnitMetadata* _umd,
 	const AlifIntT ncellvars = (AlifIntT)ALIFDICT_GET_SIZE(_umd->cellvars);
 	if (ncellvars) {
 		const AlifIntT nvars = ncellvars + (AlifIntT)ALIFDICT_GET_SIZE(_umd->varnames);
-		AlifIntT* sorted = (AlifIntT*)alifMem_dataAlloc(nvars * sizeof(int));
+		AlifIntT* sorted = (AlifIntT*)alifMem_dataAlloc(nvars * sizeof(AlifIntT));
 		if (sorted == nullptr) {
 			//alifErr_noMemory();
 			return ERROR;
@@ -1065,10 +1197,10 @@ static AlifIntT fix_cellOffsets(AlifCompileCodeUnitMetadata* _umd,
 
 	// Then update offsets, either relative to locals or by cell2arg.
 	for (BasicBlock* b = _entryBlock; b != nullptr; b = b->next) {
-		for (int i = 0; i < b->iused; i++) {
+		for (AlifIntT i = 0; i < b->iused; i++) {
 			CFGInstr* inst = &b->instr[i];
 			// This is called before extended args are generated.
-			int oldoffset = inst->oparg;
+			AlifIntT oldoffset = inst->oparg;
 			switch (inst->opcode) {
 			case MAKE_CELL:
 			case LOAD_CLOSURE:
@@ -1088,9 +1220,9 @@ static AlifIntT fix_cellOffsets(AlifCompileCodeUnitMetadata* _umd,
 
 static AlifIntT prepare_localsPlus(AlifCompileCodeUnitMetadata* _umd,
 	CFGBuilder* _g, AlifIntT _codeFlags) { // 2710
-	AlifIntT nlocals = (int)ALIFDICT_GET_SIZE(_umd->varnames);
-	AlifIntT ncellvars = (int)ALIFDICT_GET_SIZE(_umd->cellvars);
-	AlifIntT nfreevars = (int)ALIFDICT_GET_SIZE(_umd->freevars);
+	AlifIntT nlocals = (AlifIntT)ALIFDICT_GET_SIZE(_umd->varnames);
+	AlifIntT ncellvars = (AlifIntT)ALIFDICT_GET_SIZE(_umd->cellvars);
+	AlifIntT nfreevars = (AlifIntT)ALIFDICT_GET_SIZE(_umd->freevars);
 	AlifIntT nlocalsplus = nlocals + ncellvars + nfreevars;
 	AlifIntT* cellFixedOffsets = build_cellFixedOffsets(_umd);
 	if (cellFixedOffsets == nullptr) {
@@ -1167,7 +1299,7 @@ AlifIntT alifCFG_toInstructionSequence(CFGBuilder* _g, AlifInstructionSequence* 
 	}
 	for (BasicBlock* b = _g->entryBlock; b != nullptr; b = b->next) {
 		RETURN_IF_ERROR(_alifInstructionSequence_useLabel(_seq, b->label.id));
-		for (int i = 0; i < b->iused; i++) {
+		for (AlifIntT i = 0; i < b->iused; i++) {
 			CFGInstr* instr = &b->instr[i];
 			if (HAS_TARGET(instr->opcode)) {
 				instr->oparg = instr->target->label.id;
