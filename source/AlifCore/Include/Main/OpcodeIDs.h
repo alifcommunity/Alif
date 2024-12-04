@@ -32,7 +32,7 @@
 //#define POP_EXCEPT                              28
 #define POP_TOP                                 29
 //#define PUSH_EXC_INFO                           30
-//#define PUSH_NULL                               31
+#define PUSH_NULL                               31
 #define RETURN_GENERATOR                        32
 #define RETURN_VALUE                            33
 //#define SETUP_ANNOTATIONS                       34
@@ -68,7 +68,7 @@
 //#define DICT_MERGE                              64
 #define DICT_UPDATE                             65
 //#define EXTENDED_ARG                            66
-//#define FOR_ITER                                67
+#define FOR_ITER                                67
 //#define GET_AWAITABLE                           68
 //#define IMPORT_FROM                             69
 //#define IMPORT_NAME                             70
@@ -83,8 +83,8 @@
 #define LOAD_CONST                              79
 #define LOAD_DEREF                              80
 #define LOAD_FAST                               81
-//#define LOAD_FAST_AND_CLEAR                     82
-//#define LOAD_FAST_CHECK                         83
+#define LOAD_FAST_AND_CLEAR                     82
+#define LOAD_FAST_CHECK                         83
 //#define LOAD_FAST_LOAD_FAST                     84
 #define LOAD_FROM_DICT_OR_DEREF                 85
 #define LOAD_FROM_DICT_OR_GLOBALS               86
@@ -222,7 +222,7 @@
 #define SETUP_CLEANUP                          260
 #define SETUP_FINALLY                          261
 #define SETUP_WITH                             262
-//#define STORE_FAST_MAYBE_NULL                  263
+#define STORE_FAST_MAYBE_NULL                  263
 //
 //#define HAVE_ARGUMENT                           41
 //#define MIN_SPECIALIZED_OPCODE                 150

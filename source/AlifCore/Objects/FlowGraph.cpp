@@ -101,11 +101,22 @@ static inline AlifIntT is_jump(CFGInstr* _i) { // 105
 	return OPCODE_HAS_JUMP(_i->opcode);
 }
 
-// 120
+ // 110
+/* One arg*/
+#define INSTR_SET_OP1(_i, _op, _arg) \
+    do { \
+        CFGInstr *instrPtr = _i; \
+        instrPtr->opcode = _op; \
+        instrPtr->oparg = _arg; \
+    } while (0);
+
+
+ // 120
+/* No args*/
 #define INSTR_SET_OP0(_i, _op) \
     do { \
-        CFGInstr *instrPtr = (_i); \
-        instrPtr->opcode = (_op); \
+        CFGInstr *instrPtr = _i; \
+        instrPtr->opcode = _op; \
         instrPtr->oparg = 0; \
     } while (0);
 
@@ -190,6 +201,16 @@ static inline AlifIntT basicBlock_noFallThrough(const BasicBlock* _b) { // 227
 #define BB_NO_FALLTHROUGH(_b) (basicBlock_noFallThrough(_b))
 #define BB_HAS_FALLTHROUGH(_b) (!basicBlock_noFallThrough(_b)) // 236
 
+static BasicBlock* copy_basicBlock(CFGBuilder* _g, BasicBlock* _block) { // 238
+	BasicBlock* result = cfgBuilder_newBlock(_g);
+	if (result == nullptr) {
+		return nullptr;
+	}
+	if (basicBlock_appendInstructions(result, _block) < 0) {
+		return nullptr;
+	}
+	return result;
+}
 
 static AlifIntT basicBlock_insertInstruction(BasicBlock* _block,
 	AlifIntT _pos, CFGInstr* _instr) { // 255
@@ -213,6 +234,15 @@ static BasicBlock* cfgBuilder_useNextBlock(CFGBuilder* _g, BasicBlock* _block) {
 static inline AlifIntT basicBlock_exitsScope(const BasicBlock* _b) { // 330
 	CFGInstr* last = basicBlock_lastInstr(_b);
 	return last and IS_SCOPE_EXIT_OPCODE(last->opcode);
+}
+
+static inline AlifIntT basicBlock_hasEvalBreak(const BasicBlock* _b) { // 335
+	for (int i = 0; i < _b->iused; i++) {
+		if (OPCODE_HAS_EVAL_BREAK(_b->instr[i].opcode)) {
+			return true;
+		}
+	}
+	return false;
 }
 
 static bool cfgBuilder_currentBlockIsTerminated(CFGBuilder* _g) { // 346
@@ -324,6 +354,12 @@ AlifIntT _alifCFGBuilder_addOp(CFGBuilder* _g, AlifIntT _opcode,
 	return basicBlock_addOp(_g->curBlock, _opcode, _oparg, _loc);
 }
 
+static BasicBlock* next_nonemptyBlock(BasicBlock* _b) { // 478
+	while (_b and _b->iused == 0) {
+		_b = _b->next;
+	}
+	return _b;
+}
 
 static AlifIntT normalizeJumps_inBlock(CFGBuilder* _g, BasicBlock* _b) { // 540
 	CFGInstr* last = basicBlock_lastInstr(_b);
@@ -633,6 +669,87 @@ static AlifIntT remove_unreachable(BasicBlock* _entryBlock) { // 995
 }
 
 
+static AlifIntT remove_redundantNops(CFGBuilder* _g) { // 1101
+	AlifIntT changes = 0;
+	for (BasicBlock* b = _g->entryBlock; b != nullptr; b = b->next) {
+		AlifIntT change = basicBlock_removeRedundantNops(b);
+		RETURN_IF_ERROR(change);
+		changes += change;
+	}
+	return changes;
+}
+
+
+static AlifIntT remove_redundantNopsAndPairs(BasicBlock* _entryBlock) { // 1112
+	bool done = false;
+
+	while (!done) {
+		done = true;
+		CFGInstr* prevInstr = nullptr;
+		CFGInstr* instr = nullptr;
+		for (BasicBlock* b = _entryBlock; b != nullptr; b = b->next) {
+			RETURN_IF_ERROR(basicBlock_removeRedundantNops(b));
+			if (IS_LABEL(b->label)) {
+				/* this block is a jump target, forget instr */
+				instr = nullptr;
+			}
+			for (AlifIntT i = 0; i < b->iused; i++) {
+				prevInstr = instr;
+				instr = &b->instr[i];
+				AlifIntT prev_opcode = prevInstr ? prevInstr->opcode : 0;
+				AlifIntT prev_oparg = prevInstr ? prevInstr->oparg : 0;
+				AlifIntT opcode = instr->opcode;
+				bool is_redundant_pair = false;
+				if (opcode == POP_TOP) {
+					if (prev_opcode == LOAD_CONST) {
+						is_redundant_pair = true;
+					}
+					else if (prev_opcode == COPY and prev_oparg == 1) {
+						is_redundant_pair = true;
+					}
+				}
+				if (is_redundant_pair) {
+					INSTR_SET_OP0(prevInstr, NOP);
+					INSTR_SET_OP0(instr, NOP);
+					done = false;
+				}
+			}
+			if ((instr and is_jump(instr)) or !BB_HAS_FALLTHROUGH(b)) {
+				instr = NULL;
+			}
+		}
+	}
+	return SUCCESS;
+}
+
+
+
+static AlifIntT remove_redundantJumps(CFGBuilder* _g) { // 1156
+	AlifIntT changes = 0;
+	for (BasicBlock* b = _g->entryBlock; b != nullptr; b = b->next) {
+		CFGInstr* last = basicBlock_lastInstr(b);
+		if (last == nullptr) {
+			continue;
+		}
+		if (IS_UNCONDITIONAL_JUMP_OPCODE(last->opcode)) {
+			BasicBlock* jumpTarget = next_nonemptyBlock(last->target);
+			if (jumpTarget == nullptr) {
+				//alifErr_setString(_alifExcSystemError_, "jump with nullptr target");
+				return ERROR;
+			}
+			BasicBlock* next = next_nonemptyBlock(b->next);
+			if (jumpTarget == next) {
+				changes++;
+				INSTR_SET_OP0(last, NOP);
+			}
+		}
+	}
+
+	return changes;
+}
+
+
+
 static inline bool basicBlock_hasNoLineno(BasicBlock* b) { // 1191
 	for (AlifIntT i = 0; i < b->iused; i++) {
 		if (b->instr[i].loc.lineNo >= 0) {
@@ -694,6 +811,125 @@ static AlifIntT inline_smallOrNoLinenoBlocks(BasicBlock* _entryBlock) { // 1243
 
 
 
+static bool jump_thread(BasicBlock* _bb, CFGInstr* _inst,
+	CFGInstr* _target, AlifIntT _opcode) { // 1261
+	if (_inst->target != _target->target) {
+		INSTR_SET_OP0(_inst, NOP);
+
+		RETURN_IF_ERROR(
+			basicBlock_addJump(_bb, _opcode, _target->target, _target->loc));
+
+		return true;
+	}
+	return false;
+}
+
+
+
+static AlifIntT foldTuple_onConstants(AlifObject* _constCache,
+	CFGInstr* _inst, AlifIntT _n, AlifObject* _consts) { // 1337
+	for (AlifIntT i = 0; i < _n; i++) {
+		if (!OPCODE_HAS_CONST(_inst[i].opcode)) {
+			return SUCCESS;
+		}
+	}
+
+	/* Buildup new tuple of constants */
+	AlifObject* newconst = alifTuple_new(_n);
+	if (newconst == nullptr) {
+		return ERROR;
+	}
+	for (AlifIntT i = 0; i < _n; i++) {
+		AlifIntT op = _inst[i].opcode;
+		AlifIntT arg = _inst[i].oparg;
+		AlifObject* constant = get_constValue(op, arg, _consts);
+		if (constant == nullptr) {
+			return ERROR;
+		}
+		ALIFTUPLE_SET_ITEM(newconst, i, constant);
+	}
+	AlifIntT index = add_const(newconst, _consts, _constCache);
+	if (index < 0) {
+		return ERROR;
+	}
+	for (AlifIntT i = 0; i < _n; i++) {
+		INSTR_SET_OP0(&_inst[i], NOP);
+	}
+	INSTR_SET_OP1(&_inst[_n], LOAD_CONST, index);
+	return SUCCESS;
+}
+
+
+
+#define VISITED (-1) // 1379
+
+
+static AlifIntT swaptimize(BasicBlock* _block, AlifIntT* _ix) { // 1383
+	CFGInstr* instructions = &_block->instr[*_ix];
+
+	AlifIntT depth = instructions[0].oparg;
+	AlifIntT len = 0;
+	AlifIntT more = false;
+	AlifIntT limit = _block->iused - *_ix;
+	while (++len < limit) {
+		int opcode = instructions[len].opcode;
+		if (opcode == SWAP) {
+			depth = ALIF_MAX(depth, instructions[len].oparg);
+			more = true;
+		}
+		else if (opcode != NOP) {
+			break;
+		}
+	}
+	if (!more) {
+		return SUCCESS;
+	}
+	// Create an array with elements {0, 1, 2, ..., depth - 1}:
+	AlifIntT* stack = (AlifIntT*)alifMem_dataAlloc(depth * sizeof(int));
+	if (stack == nullptr) {
+		//alifErr_noMemory();
+		return ERROR;
+	}
+	for (AlifIntT i = 0; i < depth; i++) {
+		stack[i] = i;
+	}
+
+	for (AlifIntT i = 0; i < len; i++) {
+		if (instructions[i].opcode == SWAP) {
+			AlifIntT oparg = instructions[i].oparg;
+			AlifIntT top = stack[0];
+			// SWAPs are 1-indexed:
+			stack[0] = stack[oparg - 1];
+			stack[oparg - 1] = top;
+		}
+	}
+
+	AlifIntT current = len - 1;
+	for (AlifIntT i = 0; i < depth; i++) {
+		if (stack[i] == VISITED or stack[i] == i) {
+			continue;
+		}
+		AlifIntT j = i;
+		while (true) {
+			if (j) {
+				instructions[current].opcode = SWAP;
+				instructions[current--].oparg = j + 1;
+			}
+			if (stack[j] == VISITED) {
+				break;
+			}
+			int next_j = stack[j];
+			stack[j] = VISITED;
+			j = next_j;
+		}
+	}
+	while (0 <= current) {
+		INSTR_SET_OP0(&instructions[current--], NOP);
+	}
+	alifMem_dataFree(stack);
+	*_ix += len - 1;
+	return SUCCESS;
+}
 
 
 
@@ -704,12 +940,330 @@ static AlifIntT inline_smallOrNoLinenoBlocks(BasicBlock* _entryBlock) { // 1243
 
 
 
+static void apply_staticSwaps(BasicBlock* _block, AlifIntT _i) { // 1518
+	for (; 0 <= _i; _i--) {
+		CFGInstr* swap = &_block->instr[_i];
+		if (swap->opcode != SWAP) {
+			if (swap->opcode == NOP or SWAPPABLE(swap->opcode)) {
+				continue;
+			}
+			return;
+		}
+		AlifIntT j = next_swappableInstruction(_block, _i, -1);
+		if (j < 0) {
+			return;
+		}
+		AlifIntT k = j;
+		AlifIntT lineno = _block->instr[j].loc.lineNo;
+		for (AlifIntT count = swap->oparg - 1; 0 < count; count--) {
+			k = next_swappableInstruction(_block, k, lineno);
+			if (k < 0) {
+				return;
+			}
+		}
+
+		AlifIntT storeJ = STORES_TO(_block->instr[j]);
+		AlifIntT storeK = STORES_TO(_block->instr[k]);
+		if (storeJ >= 0 or storeK >= 0) {
+			if (storeJ == storeK) {
+				return;
+			}
+			for (AlifIntT idx = j + 1; idx < k; idx++) {
+				AlifIntT storeIDx = STORES_TO(_block->instr[idx]);
+				if (storeIDx >= 0 and (storeIDx == storeJ or storeIDx == storeK)) {
+					return;
+				}
+			}
+		}
+
+		// Success!
+		INSTR_SET_OP0(swap, NOP);
+		CFGInstr temp = _block->instr[j];
+		_block->instr[j] = _block->instr[k];
+		_block->instr[k] = temp;
+	}
+}
 
 
 
 
 
+static AlifIntT basicBlock_optimizeLoadConst(AlifObject* const_cache,
+	BasicBlock* bb, AlifObject* consts) { // 1570
+	AlifIntT opcode = 0;
+	AlifIntT oparg = 0;
+	for (AlifIntT i = 0; i < bb->iused; i++) {
+		CFGInstr* inst = &bb->instr[i];
+		bool isCopyOfLoadConst = (opcode == LOAD_CONST and
+			inst->opcode == COPY and
+			inst->oparg == 1);
+		if (!isCopyOfLoadConst) {
+			opcode = inst->opcode;
+			oparg = inst->oparg;
+		}
+		if (opcode != LOAD_CONST) {
+			continue;
+		}
+		AlifIntT nextop = i + 1 < bb->iused ? bb->instr[i + 1].opcode : 0;
+		switch (nextop) {
+		case POP_JUMP_IF_FALSE:
+		case POP_JUMP_IF_TRUE:
+		{
+			AlifObject* cnt = get_constValue(opcode, oparg, consts);
+			if (cnt == nullptr) {
+				return ERROR;
+			}
+			AlifIntT isTrue = alifObject_isTrue(cnt);
+			ALIF_DECREF(cnt);
+			if (isTrue == -1) {
+				return ERROR;
+			}
+			INSTR_SET_OP0(inst, NOP);
+			AlifIntT jumpIfTrue = nextop == POP_JUMP_IF_TRUE;
+			if (isTrue == jumpIfTrue) {
+				bb->instr[i + 1].opcode = JUMP;
+			}
+			else {
+				INSTR_SET_OP0(&bb->instr[i + 1], NOP);
+			}
+			break;
+		}
+		case IS_OP:
+		{
+			AlifObject* cnt = get_constValue(opcode, oparg, consts);
+			if (cnt == nullptr) {
+				return ERROR;
+			}
+			if (!ALIF_ISNONE(cnt)) {
+				ALIF_DECREF(cnt);
+				break;
+			}
+			if (bb->iused <= i + 2) {
+				break;
+			}
+			CFGInstr* isInstr = &bb->instr[i + 1];
+			CFGInstr* jumpInstr = &bb->instr[i + 2];
+			if (jumpInstr->opcode == TO_BOOL) {
+				INSTR_SET_OP0(jumpInstr, NOP);
+				if (bb->iused <= i + 3) {
+					break;
+				}
+				jumpInstr = &bb->instr[i + 3];
+			}
+			bool invert = isInstr->oparg;
+			if (jumpInstr->opcode == POP_JUMP_IF_FALSE) {
+				invert = !invert;
+			}
+			else if (jumpInstr->opcode != POP_JUMP_IF_TRUE) {
+				break;
+			}
+			INSTR_SET_OP0(inst, NOP);
+			INSTR_SET_OP0(isInstr, NOP);
+			jumpInstr->opcode = invert ? POP_JUMP_IF_NOT_NONE
+				: POP_JUMP_IF_NONE;
+			break;
+		}
+		case RETURN_VALUE:
+		{
+			INSTR_SET_OP0(inst, NOP);
+			INSTR_SET_OP1(&bb->instr[++i], RETURN_CONST, oparg);
+			break;
+		}
+		case TO_BOOL:
+		{
+			AlifObject* cnt = get_constValue(opcode, oparg, consts);
+			if (cnt == NULL) {
+				return ERROR;
+			}
+			AlifIntT isTrue = alifObject_isTrue(cnt);
+			ALIF_DECREF(cnt);
+			if (isTrue == -1) {
+				return ERROR;
+			}
+			cnt = alifBool_fromLong(isTrue);
+			AlifIntT index = add_const(cnt, consts, const_cache);
+			if (index < 0) {
+				return ERROR;
+			}
+			INSTR_SET_OP0(inst, NOP);
+			INSTR_SET_OP1(&bb->instr[i + 1], LOAD_CONST, index);
+			break;
+		}
+		}
+	}
+	return SUCCESS;
+}
 
+static AlifIntT optimize_loadConst(AlifObject* _constCache,
+	CFGBuilder* _g, AlifObject* _consts) { // 1692
+	for (BasicBlock* b = _g->entryBlock; b != nullptr; b = b->next) {
+		RETURN_IF_ERROR(basicBlock_optimizeLoadConst(_constCache, b, _consts));
+	}
+	return SUCCESS;
+}
+
+static AlifIntT optimize_basicBlock(AlifObject* _constCache,
+	BasicBlock* _bb, AlifObject* _consts) { // 1700
+	CFGInstr nop{};
+	INSTR_SET_OP0(&nop, NOP);
+	for (AlifIntT i = 0; i < _bb->iused; i++) {
+		CFGInstr* inst = &_bb->instr[i];
+		CFGInstr* target;
+		AlifIntT opcode = inst->opcode;
+		AlifIntT oparg = inst->oparg;
+		if (HAS_TARGET(opcode)) {
+			target = &inst->target->instr[0];
+		}
+		else {
+			target = &nop;
+		}
+		AlifIntT nextop = i + 1 < _bb->iused ? _bb->instr[i + 1].opcode : 0;
+		switch (opcode) {
+		case BUILD_TUPLE:
+			if (nextop == UNPACK_SEQUENCE and oparg == _bb->instr[i + 1].oparg) {
+				switch (oparg) {
+				case 1:
+					INSTR_SET_OP0(inst, NOP);
+					INSTR_SET_OP0(&_bb->instr[i + 1], NOP);
+					continue;
+				case 2:
+				case 3:
+					INSTR_SET_OP0(inst, NOP);
+					_bb->instr[i + 1].opcode = SWAP;
+					continue;
+				}
+			}
+			if (i >= oparg) {
+				if (foldTuple_onConstants(_constCache, inst - oparg, oparg, _consts)) {
+					goto error;
+				}
+			}
+			break;
+		case POP_JUMP_IF_NOT_NONE:
+		case POP_JUMP_IF_NONE:
+			switch (target->opcode) {
+			case JUMP:
+				i -= jump_thread(_bb, inst, target, inst->opcode);
+			}
+			break;
+		case POP_JUMP_IF_FALSE:
+			switch (target->opcode) {
+			case JUMP:
+				i -= jump_thread(_bb, inst, target, POP_JUMP_IF_FALSE);
+			}
+			break;
+		case POP_JUMP_IF_TRUE:
+			switch (target->opcode) {
+			case JUMP:
+				i -= jump_thread(_bb, inst, target, POP_JUMP_IF_TRUE);
+			}
+			break;
+		case JUMP:
+		case JUMP_NO_INTERRUPT:
+			switch (target->opcode) {
+			case JUMP:
+				i -= jump_thread(_bb, inst, target, JUMP);
+				continue;
+			case JUMP_NO_INTERRUPT:
+				i -= jump_thread(_bb, inst, target, opcode);
+				continue;
+			}
+			break;
+		case FOR_ITER:
+			if (target->opcode == JUMP) {
+				/* This will not work now because the jump (at target) could
+				 * be forward or backward and FOR_ITER only jumps forward. We
+				 * can re-enable this if ever we implement a backward version
+				 * of FOR_ITER.
+				 */
+				 /*
+				 i -= jump_thread(bb, inst, target, FOR_ITER);
+				 */
+			}
+			break;
+		case STORE_FAST:
+			if (opcode == nextop and
+				oparg == _bb->instr[i + 1].oparg and
+				_bb->instr[i].loc.lineNo == _bb->instr[i + 1].loc.lineNo) {
+				_bb->instr[i].opcode = POP_TOP;
+				_bb->instr[i].oparg = 0;
+			}
+			break;
+		case SWAP:
+			if (oparg == 1) {
+				INSTR_SET_OP0(inst, NOP);
+			}
+			break;
+		case LOAD_GLOBAL:
+			if (nextop == PUSH_NULL and (oparg & 1) == 0) {
+				INSTR_SET_OP1(inst, LOAD_GLOBAL, oparg | 1);
+				INSTR_SET_OP0(&_bb->instr[i + 1], NOP);
+			}
+			break;
+		case COMPARE_OP:
+			if (nextop == TO_BOOL) {
+				INSTR_SET_OP0(inst, NOP);
+				INSTR_SET_OP1(&_bb->instr[i + 1], COMPARE_OP, oparg | 16);
+				continue;
+			}
+			break;
+		case CONTAINS_OP:
+		case IS_OP:
+			if (nextop == TO_BOOL) {
+				INSTR_SET_OP0(inst, NOP);
+				INSTR_SET_OP1(&_bb->instr[i + 1], opcode, oparg);
+				continue;
+			}
+			break;
+		case TO_BOOL:
+			if (nextop == TO_BOOL) {
+				INSTR_SET_OP0(inst, NOP);
+				continue;
+			}
+			break;
+		case UNARY_NOT:
+			if (nextop == TO_BOOL) {
+				INSTR_SET_OP0(inst, NOP);
+				INSTR_SET_OP0(&_bb->instr[i + 1], UNARY_NOT);
+				continue;
+			}
+			if (nextop == UNARY_NOT) {
+				INSTR_SET_OP0(inst, NOP);
+				INSTR_SET_OP0(&_bb->instr[i + 1], NOP);
+				continue;
+			}
+			break;
+		}
+	}
+
+	for (AlifIntT i = 0; i < _bb->iused; i++) {
+		CFGInstr* inst = &_bb->instr[i];
+		if (inst->opcode == SWAP) {
+			if (swaptimize(_bb, &i) < 0) {
+				goto error;
+			}
+			apply_staticSwaps(_bb, i);
+		}
+	}
+	return SUCCESS;
+error:
+	return ERROR;
+}
+
+
+
+
+
+static AlifIntT remove_redundantNopsAndJumps(CFGBuilder* _g) { // 1860
+	AlifIntT removedNops{}, removedJumps{};
+	do {
+		removedNops = remove_redundantNops(_g);
+		RETURN_IF_ERROR(removedNops);
+		removedJumps = remove_redundantJumps(_g);
+		RETURN_IF_ERROR(removedJumps);
+	} while (removedNops + removedJumps > 0);
+	return SUCCESS;
+}
 
 
 /* Perform optimizations on a control flow graph.
@@ -736,7 +1290,102 @@ static AlifIntT optimize_cfg(CFGBuilder* _g, AlifObject* _consts,
 }
 
 
+static inline void maybe_push(BasicBlock* _b,
+	uint64_t _unsafeMask, BasicBlock*** _sp) { // 1951
+	// Push b if the unsafe mask is giving us any new information.
+	// To avoid overflowing the stack, only allow each block once.
+	// Use b->visited=1 to mean that b is currently on the stack.
+	uint64_t both = _b->unsafeLocalsMask | _unsafeMask;
+	if (_b->unsafeLocalsMask != both) {
+		_b->unsafeLocalsMask = both;
+		// More work left to do.
+		if (!_b->visited) {
+			// not on the stack, so push it.
+			*(*_sp)++ = _b;
+			_b->visited = 1;
+		}
+	}
+}
 
+
+static void scanBlock_forLocals(BasicBlock* b, BasicBlock*** sp) { // 1969
+	uint64_t unsafe_mask = b->unsafeLocalsMask;
+	for (AlifIntT i = 0; i < b->iused; i++) {
+		CFGInstr* instr = &b->instr[i];
+		if (instr->except != nullptr) {
+			maybe_push(instr->except, unsafe_mask, sp);
+		}
+		if (instr->oparg >= 64) {
+			continue;
+		}
+		uint64_t bit = (uint64_t)1 << instr->oparg;
+		switch (instr->opcode) {
+		case DELETE_FAST:
+		case LOAD_FAST_AND_CLEAR:
+		case STORE_FAST_MAYBE_NULL:
+			unsafe_mask |= bit;
+			break;
+		case STORE_FAST:
+			unsafe_mask &= ~bit;
+			break;
+		case LOAD_FAST_CHECK:
+			unsafe_mask &= ~bit;
+			break;
+		case LOAD_FAST:
+			if (unsafe_mask & bit) {
+				instr->opcode = LOAD_FAST_CHECK;
+			}
+			unsafe_mask &= ~bit;
+			break;
+		}
+	}
+	if (b->next and BB_HAS_FALLTHROUGH(b)) {
+		maybe_push(b->next, unsafe_mask, sp);
+	}
+	CFGInstr* last = basicBlock_lastInstr(b);
+	if (last and is_jump(last)) {
+		maybe_push(last->target, unsafe_mask, sp);
+	}
+}
+
+
+static AlifIntT fastScan_manyLocals(BasicBlock* _entryBlock, AlifIntT _nlocals) { // 2016
+	AlifSizeT* states = (AlifSizeT*)alifMem_dataAlloc((_nlocals - 64) * sizeof(AlifSizeT));
+	if (states == nullptr) {
+		//alifErr_noMemory();
+		return ERROR;
+	}
+	AlifSizeT blocknum = 0;
+	for (BasicBlock* b = _entryBlock; b != nullptr; b = b->next) {
+		blocknum++;
+		for (AlifIntT i = 0; i < b->iused; i++) {
+			CFGInstr* instr = &b->instr[i];
+			AlifIntT arg = instr->oparg;
+			if (arg < 64) {
+				continue;
+			}
+			switch (instr->opcode) {
+			case DELETE_FAST:
+			case LOAD_FAST_AND_CLEAR:
+			case STORE_FAST_MAYBE_NULL:
+				states[arg - 64] = blocknum - 1;
+				break;
+			case STORE_FAST:
+				states[arg - 64] = blocknum;
+				break;
+			case LOAD_FAST:
+				if (states[arg - 64] != blocknum) {
+					instr->opcode = LOAD_FAST_CHECK;
+				}
+				states[arg - 64] = blocknum;
+				break;
+				ALIF_UNREACHABLE();
+			}
+		}
+	}
+	alifMem_dataFree(states);
+	return SUCCESS;
+}
 
 
 static AlifIntT remove_unusedConsts(BasicBlock* _entryBlock, AlifObject* _consts) { // 2063
@@ -864,6 +1513,78 @@ static AlifIntT addChecksFor_loadsOfUninitializedVariables(BasicBlock* _entryBlo
 }
 
 
+static AlifIntT mark_warm(BasicBlock* _entryBlock) { // 2210
+	BasicBlock** stack = makeCFG_traversalStack(_entryBlock);
+	if (stack == nullptr) {
+		return ERROR;
+	}
+	BasicBlock** sp = stack;
+
+	*sp++ = _entryBlock;
+	_entryBlock->visited = 1;
+	while (sp > stack) {
+		BasicBlock* b = *(--sp);
+		b->warm = 1;
+		BasicBlock* next = b->next;
+		if (next and BB_HAS_FALLTHROUGH(b) and !next->visited) {
+			*sp++ = next;
+			next->visited = 1;
+		}
+		for (int i = 0; i < b->iused; i++) {
+			CFGInstr* instr = &b->instr[i];
+			if (is_jump(instr) and !instr->target->visited) {
+				*sp++ = instr->target;
+				instr->target->visited = 1;
+			}
+		}
+	}
+	alifMem_dataFree(stack);
+	return SUCCESS;
+}
+
+static AlifIntT mark_cold(BasicBlock* _entryBlock) { // 2241
+	if (mark_warm(_entryBlock) < 0) {
+		return ERROR;
+	}
+
+	BasicBlock** stack = makeCFG_traversalStack(_entryBlock);
+	if (stack == nullptr) {
+		return ERROR;
+	}
+
+	BasicBlock** sp = stack;
+	for (BasicBlock* b = _entryBlock; b != nullptr; b = b->next) {
+		if (b->exceptHandler) {
+			*sp++ = b;
+			b->visited = 1;
+		}
+	}
+
+	while (sp > stack) {
+		BasicBlock* b = *(--sp);
+		b->cold = 1;
+		BasicBlock* next = b->next;
+		if (next && BB_HAS_FALLTHROUGH(b)) {
+			if (!next->warm and !next->visited) {
+				*sp++ = next;
+				next->visited = 1;
+			}
+		}
+		for (int i = 0; i < b->iused; i++) {
+			CFGInstr* instr = &b->instr[i];
+			if (is_jump(instr)) {
+				BasicBlock* target = b->instr[i].target;
+				if (!target->warm and !target->visited) {
+					*sp++ = target;
+					target->visited = 1;
+				}
+			}
+		}
+	}
+	alifMem_dataFree(stack);
+	return SUCCESS;
+}
+
 
 static AlifIntT push_coldBlocksToEnd(CFGBuilder* g) { // 2291
 	BasicBlock* entryblock = g->entryBlock;
@@ -954,7 +1675,14 @@ static AlifIntT convert_pseudoOps(CFGBuilder* _g) { // 2372
 	return remove_redundantNopsAndJumps(_g);
 }
 
-
+static inline bool isExit_orEvalCheckWithoutLineno(BasicBlock* b) { // 2395
+	if (basicBlock_exitsScope(b) or basicBlock_hasEvalBreak(b)) {
+		return basicBlock_hasNoLineno(b);
+	}
+	else {
+		return false;
+	}
+}
 
 static AlifIntT duplicateExits_withoutLineno(CFGBuilder* _g) { // 2415
 	AlifIntT nextLbl = get_maxLabel(_g->entryBlock) + 1;
