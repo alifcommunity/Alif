@@ -147,7 +147,8 @@ static AlifIntT basicBlock_addOp(BasicBlock* _b, AlifIntT _opcode, AlifIntT _opa
 	return SUCCESS;
 }
 
-static AlifIntT basicBlock_addJump(BasicBlock* _b, AlifIntT _opcode, BasicBlock* _target, Location _loc) { // 199
+static AlifIntT basicBlock_addJump(BasicBlock* _b, AlifIntT _opcode,
+	BasicBlock* _target, Location _loc) { // 199
 	CFGInstr* last = basicBlock_lastInstr(_b);
 	if (last and is_jump(last)) {
 		return ERROR;
@@ -159,6 +160,17 @@ static AlifIntT basicBlock_addJump(BasicBlock* _b, AlifIntT _opcode, BasicBlock*
 	last->target = _target;
 	return SUCCESS;
 }
+
+
+static inline AlifIntT basicBlock_noFallThrough(const BasicBlock* _b) { // 227
+	CFGInstr* last = basicBlock_lastInstr(_b);
+	return (last and
+		(IS_SCOPE_EXIT_OPCODE(last->opcode) or
+			IS_UNCONDITIONAL_JUMP_OPCODE(last->opcode)));
+}
+
+#define BB_NO_FALLTHROUGH(_b) (basicBlock_noFallThrough(_b))
+#define BB_HAS_FALLTHROUGH(_b) (!basicBlock_noFallThrough(_b)) // 236
 
 
 static AlifIntT basicBlock_insertInstruction(BasicBlock* _block,
@@ -298,8 +310,8 @@ static AlifIntT normalizeJumps_inBlock(CFGBuilder* _g, BasicBlock* _b) { // 540
 		return SUCCESS;
 	}
 
-	bool is_forward = last->target->visited == 0;
-	if (is_forward) {
+	bool isForward = last->target->visited == 0;
+	if (isForward) {
 		return SUCCESS;
 	}
 
@@ -682,6 +694,45 @@ end:
 }
 
 
+
+static AlifIntT addChecksFor_loadsOfUninitializedVariables(BasicBlock* _entryBlock,
+	AlifIntT _nlocals, AlifIntT _nparams) { // 2160
+	if (_nlocals == 0) {
+		return SUCCESS;
+	}
+	if (_nlocals > 64) {
+		if (fastScan_manyLocals(_entryBlock, _nlocals) < 0) {
+			return ERROR;
+		}
+		_nlocals = 64;
+	}
+	BasicBlock** stack = makeCFG_traversalStack(_entryBlock);
+	if (stack == nullptr) {
+		return ERROR;
+	}
+	BasicBlock** sp = stack;
+
+	uint64_t startMask = 0;
+	for (AlifIntT i = _nparams; i < _nlocals; i++) {
+		startMask |= (uint64_t)1 << i;
+	}
+	maybe_push(_entryBlock, startMask, &sp);
+
+	for (BasicBlock* b = _entryBlock; b != nullptr; b = b->next) {
+		scanBlock_forLocals(b, &sp);
+	}
+
+	while (sp > stack) {
+		BasicBlock* b = *--sp;
+		b->visited = 0;
+		scanBlock_forLocals(b, &sp);
+	}
+	alifMem_dataFree(stack);
+	return SUCCESS;
+}
+
+
+
 static AlifIntT push_coldBlocksToEnd(CFGBuilder* g) { // 2291
 	BasicBlock* entryblock = g->entryBlock;
 	if (entryblock->next == nullptr) {
@@ -772,6 +823,81 @@ static AlifIntT convert_pseudoOps(CFGBuilder* _g) { // 2372
 }
 
 
+
+static AlifIntT duplicateExits_withoutLineno(CFGBuilder* _g) { // 2415
+	AlifIntT nextLbl = get_maxLabel(_g->entryBlock) + 1;
+
+	BasicBlock* entryblock = _g->entryBlock;
+	for (BasicBlock* b = entryblock; b != nullptr; b = b->next) {
+		CFGInstr* last = basicBlock_lastInstr(b);
+		if (last == nullptr) {
+			continue;
+		}
+		if (is_jump(last)) {
+			BasicBlock* target = next_nonemptyBlock(last->target);
+			if (isExit_orEvalCheckWithoutLineno(target) and target->predecessors > 1) {
+				BasicBlock* new_target = copy_basicBlock(_g, target);
+				if (new_target == nullptr) {
+					return ERROR;
+				}
+				new_target->instr[0].loc = last->loc;
+				last->target = new_target;
+				target->predecessors--;
+				new_target->predecessors = 1;
+				new_target->next = target->next;
+				new_target->label.id = nextLbl++;
+				target->next = new_target;
+			}
+		}
+	}
+
+	for (BasicBlock* b = entryblock; b != nullptr; b = b->next) {
+		if (BB_HAS_FALLTHROUGH(b) and b->next and b->iused > 0) {
+			if (isExit_orEvalCheckWithoutLineno(b->next)) {
+				CFGInstr* last = basicBlock_lastInstr(b);
+				b->next->instr[0].loc = last->loc;
+			}
+		}
+	}
+	return SUCCESS;
+}
+
+
+
+
+static void propagate_lineNumbers(BasicBlock* _entryBlock) { // 2468
+	for (BasicBlock* b = _entryBlock; b != nullptr; b = b->next) {
+		CFGInstr* last = basicBlock_lastInstr(b);
+		if (last == NULL) {
+			continue;
+		}
+
+		Location prevLocation = _noLocation_;
+		for (AlifIntT i = 0; i < b->iused; i++) {
+			if (b->instr[i].loc.lineNo < 0) {
+				b->instr[i].loc = prevLocation;
+			}
+			else {
+				prevLocation = b->instr[i].loc;
+			}
+		}
+		if (BB_HAS_FALLTHROUGH(b) and b->next->predecessors == 1) {
+			if (b->next->iused > 0) {
+				if (b->next->instr[0].loc.lineNo < 0) {
+					b->next->instr[0].loc = prevLocation;
+				}
+			}
+		}
+		if (is_jump(last)) {
+			BasicBlock* target = last->target;
+			if (target->predecessors == 1) {
+				if (target->instr[0].loc.lineNo < 0) {
+					target->instr[0].loc = prevLocation;
+				}
+			}
+		}
+	}
+}
 
 
 static AlifIntT resolve_lineNumbers(CFGBuilder* _g, AlifIntT _firstLineno) { // 2503

@@ -72,7 +72,7 @@
 //#define GET_AWAITABLE                           68
 //#define IMPORT_FROM                             69
 //#define IMPORT_NAME                             70
-//#define IS_OP                                   71
+#define IS_OP                                   71
 #define JUMP_BACKWARD                           72
 #define JUMP_BACKWARD_NO_INTERRUPT              73
 #define JUMP_FORWARD                            74
