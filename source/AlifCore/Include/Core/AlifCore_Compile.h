@@ -45,3 +45,6 @@ public:
 
 AlifIntT _alifCompile_ensureArrayLargeEnough(AlifIntT,
 	void**, AlifIntT*, AlifIntT, AlifUSizeT); // 68
+
+
+AlifIntT _alifCompile_constCacheMergeOne(AlifObject*, AlifObject**); // 75

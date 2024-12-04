@@ -2154,6 +2154,23 @@ static AlifIntT compute_codeFlags(AlifCompiler* _c) { // 7402
 	return flags;
 }
 
+AlifIntT _alifCompile_constCacheMergeOne(AlifObject* _constCache,
+	AlifObject** _obj) { // 7433
+
+	AlifObject* key = const_cacheInsert(_constCache, *_obj, false);
+	if (key == nullptr) {
+		return ERROR;
+	}
+	if (ALIFTUPLE_CHECKEXACT(key)) {
+		AlifObject* item = ALIFTUPLE_GET_ITEM(key, 1);
+		ALIF_SETREF(*_obj, ALIF_NEWREF(item));
+		ALIF_DECREF(key);
+	}
+	else {
+		ALIF_SETREF(*_obj, key);
+	}
+	return SUCCESS;
+}
 
 static AlifIntT addReturn_atEnd(AlifCompiler* _c, AlifIntT _addNone) { // 7451
 	/* Make sure every instruction stream that falls off the end returns None.

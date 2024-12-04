@@ -1,5 +1,19 @@
 #pragma once
 
+#include "OpcodeIDs.h"
+
+
+ // 20
+#define IS_PSEUDO_INSTR(_op)  ( \
+    ((_op) == LOAD_CLOSURE) or \
+    ((_op) == STORE_FAST_MAYBE_NULL) or \
+    ((_op) == JUMP) or \
+    ((_op) == JUMP_NO_INTERRUPT) or \
+    ((_op) == SETUP_FINALLY) or \
+    ((_op) == SETUP_CLEANUP) or \
+    ((_op) == SETUP_WITH) or \
+    ((_op) == POP_BLOCK) or \
+    0)
 
 
 
@@ -43,7 +57,7 @@ extern const OpcodeMetadata _alifOpcodeOpcodeMetadata[264]; // 1004
 
 
 
-
+extern const uint8_t _alifOpcodeCaches_[256]; // 1647
 
 
 

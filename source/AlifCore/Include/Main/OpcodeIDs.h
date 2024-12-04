@@ -218,7 +218,7 @@
 #define JUMP                                   256
 #define JUMP_NO_INTERRUPT                      257
 #define LOAD_CLOSURE                           258
-//#define POP_BLOCK                              259
+#define POP_BLOCK                              259
 #define SETUP_CLEANUP                          260
 #define SETUP_FINALLY                          261
 #define SETUP_WITH                             262
