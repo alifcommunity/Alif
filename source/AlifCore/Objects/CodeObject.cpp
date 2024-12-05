@@ -164,8 +164,8 @@ static void init_code(AlifCodeObject* _co, AlifCodeConstructor* _con) { // 452
 #ifdef ALIF_GIL_DISABLED
 	ALIFMUTEX_UNLOCK(&interp->func_state.mutex);
 #endif
-	_co->monitoring = nullptr;
-	_co->instrumentationVersion = 0;
+	//_co->monitoring = nullptr;
+	//_co->instrumentationVersion = 0;
 	/* not set */
 	_co->weakRefList = nullptr;
 	_co->extra = nullptr;

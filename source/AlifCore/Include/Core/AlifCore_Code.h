@@ -17,6 +17,18 @@ union AlifCodeUnit { // 25
 	AlifBackoffCounter counter;  // First cache entry of specializable op
 };
 
+#define ALIFCODE_CODE(_co) ALIF_RVALUE((AlifCodeUnit *)(_co)->codeAdaptive) // 34
+
+
+
+
+class AlifCodeState { // 69
+public:
+	AlifMutex mutex{};
+	AlifHashTableT* constants{};
+};
+
+
 
 
  // 219
