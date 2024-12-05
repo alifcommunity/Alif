@@ -98,6 +98,55 @@ static void assemble_free(AlifAssembler* _a) { // 90
 }
 
 
+static inline void write_exceptByte(AlifAssembler* _a, AlifIntT _byte) { // 99
+	unsigned char* p_ = (unsigned char*)ALIFBYTES_AS_STRING(_a->exceptTable);
+	p_[_a->exceptTableOff++] = _byte;
+}
+
+#define CONTINUATION_BIT 64
+
+static void assemble_emitExceptionTableItem(AlifAssembler* _a, AlifIntT _value, AlifIntT _msb) { // 107
+	if (_value >= 1 << 24) {
+		write_exceptByte(_a, (_value >> 24) | CONTINUATION_BIT | _msb);
+		_msb = 0;
+	}
+	if (_value >= 1 << 18) {
+		write_exceptByte(_a, ((_value >> 18) & 0x3f) | CONTINUATION_BIT | _msb);
+		_msb = 0;
+	}
+	if (_value >= 1 << 12) {
+		write_exceptByte(_a, ((_value >> 12) & 0x3f) | CONTINUATION_BIT | _msb);
+		_msb = 0;
+	}
+	if (_value >= 1 << 6) {
+		write_exceptByte(_a, ((_value >> 6) & 0x3f) | CONTINUATION_BIT | _msb);
+		_msb = 0;
+	}
+	write_exceptByte(_a, (_value & 0x3f) | _msb);
+}
+
+#define MAX_SIZE_OF_ENTRY 20
+
+static AlifIntT assemble_emitExceptionTableEntry(AlifAssembler* _a, AlifIntT _start, AlifIntT _end,
+	AlifIntT _handlerOffset,
+	AlifExceptHandlerInfo* _handler) { // 134
+	AlifSizeT len_ = ALIFBYTES_GET_SIZE(_a->exceptTable);
+	if (_a->exceptTableOff + MAX_SIZE_OF_ENTRY >= len_) {
+		RETURN_IF_ERROR(alifBytes_resize(&_a->exceptTable, len_ * 2));
+	}
+	AlifIntT size = _end - _start;
+	AlifIntT target = _handlerOffset;
+	AlifIntT depth = _handler->startDepth - 1;
+	if (_handler->preserveLastI > 0) {
+		depth -= 1;
+	}
+	AlifIntT depthLastI = (depth << 1) | _handler->preserveLastI;
+	assemble_emitExceptionTableItem(_a, _start, (1 << 7));
+	assemble_emitExceptionTableItem(_a, size, 0);
+	assemble_emitExceptionTableItem(_a, target, 0);
+	assemble_emitExceptionTableItem(_a, depthLastI, 0);
+	return SUCCESS;
+}
 
 static AlifIntT assemble_exceptionTable(AlifAssembler* _a,
 	InstrSequence* _instrs) { // 158
@@ -140,6 +189,104 @@ static AlifIntT assemble_emitLocation(AlifAssembler* _a, Location _loc, AlifIntT
 		_isize -= 8;
 	}
 	return write_locationInfoEntry(_a, _loc, _isize);
+}
+
+
+#define MSB 0x80
+
+static void write_locationByte(AlifAssembler* _a, AlifIntT _val) { // 197
+	ALIFBYTES_AS_STRING(_a->lineTable)[_a->locationOff] = _val & 255;
+	_a->locationOff++;
+}
+
+
+static uint8_t* location_pointer(AlifAssembler* _a) { // 205
+	return (uint8_t*)ALIFBYTES_AS_STRING(_a->lineTable) +
+		_a->locationOff;
+}
+
+static void write_locationFirstByte(AlifAssembler* _a, AlifIntT _code, AlifIntT _length) { // 212
+	_a->locationOff += write_locationEntryStart(
+		location_pointer(_a), _code, _length);
+}
+
+static void write_locationVarint(AlifAssembler* _a, unsigned int _val) { // 219
+	uint8_t* ptr_ = location_pointer(_a);
+	_a->locationOff += write_varint(ptr_, _val);
+}
+
+
+static void write_locationSignedVarint(AlifAssembler* _a, AlifIntT _val) { // 227
+	uint8_t* ptr_ = location_pointer(_a);
+	_a->locationOff += write_signedVarint(ptr_, _val);
+}
+
+static void write_locationInfoShortForm(AlifAssembler* _a, AlifIntT _length, AlifIntT _column, AlifIntT _endColumn) { // 234
+	AlifIntT columnLowBits = _column & 7;
+	AlifIntT columnGroup = _column >> 3;
+	write_locationFirstByte(_a, AlifCode_Location_Info_Short + columnGroup, _length);
+	write_locationByte(_a, (columnLowBits << 4) | (_endColumn - _column));
+}
+
+static void
+write_locationInfoOneLineForm(AlifAssembler* _a, AlifIntT _length, AlifIntT _lineDelta, AlifIntT _column, AlifIntT _endColumn) { // 247
+	write_locationFirstByte(_a, AlifCode_Location_Info_One_Line0 + _lineDelta, _length);
+	write_locationByte(_a, _column);
+	write_locationByte(_a, _endColumn);
+}
+
+static void write_locationInfoLongForm(AlifAssembler* _a, Location _loc, AlifIntT _length) { // 259
+	write_locationFirstByte(_a, AlifCode_Location_Info_Long, _length);
+	write_locationSignedVarint(_a, _loc.lineNo - _a->lineno);
+	write_locationVarint(_a, _loc.endLineNo - _loc.lineNo);
+	write_locationVarint(_a, _loc.colOffset + 1);
+	write_locationVarint(_a, _loc.endColOffset + 1);
+}
+
+static void write_locationInfoNone(AlifAssembler* _a, AlifIntT _length) { // 271
+	write_locationFirstByte(_a, AlifCode_Location_Info_None, _length);
+}
+
+static void write_locationInfoNoColumn(AlifAssembler* _a, AlifIntT _length, AlifIntT _lineDelta) { // 277
+	write_locationFirstByte(_a, AlifCode_Location_Info_No_Columns, _length);
+	write_locationSignedVarint(_a, _lineDelta);
+}
+
+#define THEORETICAL_MAX_ENTRY_SIZE 25 // 283
+
+static AlifIntT write_locationInfoEntry(AlifAssembler* _a, Location _loc, AlifIntT _iSize) { // 287
+	AlifSizeT len_ = ALIFBYTES_GET_SIZE(_a->lineTable);
+	if (_a->locationOff + THEORETICAL_MAX_ENTRY_SIZE >= len_) {
+		RETURN_IF_ERROR(alifBytes_resize(&_a->lineTable, len_ * 2));
+	}
+	if (_loc.lineNo < 0) {
+		write_locationInfoNone(_a, _iSize);
+		return SUCCESS;
+	}
+	AlifIntT lineDelta = _loc.lineNo - _a->lineno;
+	AlifIntT column = _loc.colOffset;
+	AlifIntT endColumn = _loc.endColOffset;
+	if (column < 0 or endColumn < 0) {
+		if (_loc.endLineNo == _loc.lineNo or _loc.endLineNo == -1) {
+			write_locationInfoNoColumn(_a, _iSize, lineDelta);
+			_a->lineno = _loc.lineNo;
+			return SUCCESS;
+		}
+	}
+	else if (_loc.endLineNo == _loc.lineNo) {
+		if (lineDelta == 0 and column < 80 and endColumn - column < 16 and endColumn >= column) {
+			write_locationInfoShortForm(_a, _iSize, column, endColumn);
+			return SUCCESS;
+		}
+		if (lineDelta >= 0 and lineDelta < 3 and column < 128 and endColumn < 128) {
+			write_locationInfoOneLineForm(_a, _iSize, lineDelta, column, endColumn);
+			_a->lineno = _loc.lineNo;
+			return SUCCESS;
+		}
+	}
+	write_locationInfoLongForm(_a, _loc, _iSize);
+	_a->lineno = _loc.lineNo;
+	return SUCCESS;
 }
 
 
@@ -228,7 +375,7 @@ static AlifIntT assemble_emit(AlifAssembler* _a, InstrSequence* _instrs,
 	AlifIntT _firstLineno, AlifObject* _constCache) { // 422
 	RETURN_IF_ERROR(assemble_init(_a, _firstLineno));
 
-	for (int i = 0; i < _instrs->used; i++) {
+	for (AlifIntT i = 0; i < _instrs->used; i++) {
 		Instruction* instr = &_instrs->instrs[i];
 		RETURN_IF_ERROR(assemble_emitInstr(_a, instr));
 	}
