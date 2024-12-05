@@ -1,7 +1,7 @@
 //#pragma once
 //
 //
-//#define CACHE                                    0
+#define CACHE                                    0
 //#define BINARY_SLICE                             1
 //#define BINARY_SUBSCR                            2
 //#define BINARY_OP_INPLACE_ADD_UNICODE            3
@@ -67,7 +67,7 @@
 #define DELETE_NAME                             63
 //#define DICT_MERGE                              64
 #define DICT_UPDATE                             65
-//#define EXTENDED_ARG                            66
+#define EXTENDED_ARG                            66
 #define FOR_ITER                                67
 //#define GET_AWAITABLE                           68
 //#define IMPORT_FROM                             69

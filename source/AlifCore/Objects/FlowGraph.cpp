@@ -935,7 +935,7 @@ static AlifIntT add_const(AlifObject* _newConst, AlifObject* _consts, AlifObject
 		}
 	}
 	if (index == ALIFLIST_GET_SIZE(_consts)) {
-		if ((size_t)index >= (size_t)INT_MAX - 1) {
+		if ((AlifUSizeT)index >= (AlifUSizeT)INT_MAX - 1) {
 			//alifErr_setString(_alifExcOverflowError_, "too many constants");
 			ALIF_DECREF(_newConst);
 			return -1;

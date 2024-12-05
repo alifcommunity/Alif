@@ -1,7 +1,135 @@
 #include "alif.h"
+#include "Opcode.h"
 
 #include "AlifCore_Code.h"
+#include "AlifCore_InitConfig.h"
+#include "AlifCore_Object.h"
+#include "AlifCore_OpcodeUtils.h"
+#include "AlifCore_OpcodeMetaData.h"
+#include "AlifCore_State.h"
 #include "AlifCore_SetObject.h"
+#include "AlifCore_Tuple.h"
+
+
+
+
+
+
+
+void alifSet_localsPlusInfo(AlifIntT _offset, AlifObject* _name,
+	AlifLocalsKind _kind, AlifObject* _names, AlifObject* _kinds) { // 327
+	ALIFTUPLE_SET_ITEM(_names, _offset, ALIF_NEWREF(_name));
+	_alifLocals_setKind(_kinds, _offset, _kind);
+}
+
+
+
+
+
+
+
+
+AlifIntT _alifCode_validate(AlifCodeConstructor* _con) { // 392
+	/* Check argument types */
+	if (_con->argCount < _con->posOnlyArgCount or _con->posOnlyArgCount < 0 or
+		_con->kwOnlyArgCount < 0 or
+		_con->stackSize < 0 or _con->flags < 0 or
+		_con->code == nullptr or !ALIFBYTES_CHECK(_con->code) or
+		_con->consts == nullptr or !ALIFTUPLE_CHECK(_con->consts) or
+		_con->names == nullptr or !ALIFTUPLE_CHECK(_con->names) or
+		_con->localsPlusNames == nullptr or !ALIFTUPLE_CHECK(_con->localsPlusNames) or
+		_con->localsPlusKinds == nullptr or !ALIFBYTES_CHECK(_con->localsPlusKinds) or
+		ALIFTUPLE_GET_SIZE(_con->localsPlusNames)
+		!= ALIFBYTES_GET_SIZE(_con->localsPlusKinds) or
+		_con->name == nullptr or !ALIFUSTR_CHECK(_con->name) or
+		_con->qualname == nullptr or !ALIFUSTR_CHECK(_con->qualname) or
+		_con->filename == nullptr or !ALIFUSTR_CHECK(_con->filename) or
+		_con->lineTable == nullptr or !ALIFBYTES_CHECK(_con->lineTable) or
+		_con->exceptionTable == nullptr or !ALIFBYTES_CHECK(_con->exceptionTable)
+		) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+
+	if (ALIFBYTES_GET_SIZE(_con->code) > INT_MAX) {
+		//alifErr_setString(_alifExcOverflowError_,
+		//	"code: code larger than INT_MAX");
+		return -1;
+	}
+	if (ALIFBYTES_GET_SIZE(_con->code) % sizeof(AlifCodeUnit) != 0 or
+		!ALIF_IS_ALIGNED(ALIFBYTES_AS_STRING(_con->code), sizeof(AlifCodeUnit))
+		) {
+		//alifErr_setString(_alifExcValueError_, "code: co_code is malformed");
+		return -1;
+	}
+
+	AlifIntT nlocals{};
+	get_localsPlusCounts(_con->localsPlusNames, _con->localsPlusKinds,
+		&nlocals, nullptr, nullptr);
+	AlifIntT nplainlocals = nlocals -
+		_con->argCount -
+		_con->kwOnlyArgCount -
+		((_con->flags & CO_VARARGS) != 0) -
+		((_con->flags & CO_VARKEYWORDS) != 0);
+	if (nplainlocals < 0) {
+		//alifErr_setString(_alifExcValueError_, "code: varnames is too small");
+		return -1;
+	}
+
+	return 0;
+}
+
+
+
+
+
+
+
+
+AlifCodeObject* alifCode_new(AlifCodeConstructor* _con) { // 647
+	if (intern_codeConstants(_con) < 0) {
+		return nullptr;
+	}
+
+	AlifObject* replacementLocations = nullptr;
+
+	if (!alif_getConfig()->codeDebugRanges) {
+		replacementLocations = remove_columnInfo(_con->lineTable);
+		if (replacementLocations == nullptr) {
+			return nullptr;
+		}
+		_con->lineTable = replacementLocations;
+	}
+
+	AlifSizeT size = ALIFBYTES_GET_SIZE(_con->code) / sizeof(AlifCodeUnit);
+	AlifCodeObject* co{};
+#ifdef ALIF_GIL_DISABLED
+	co = ALIFOBJECT_GC_NEWVAR(AlifCodeObject, &_alifCodeType_, size);
+#else
+	co = ALIFOBJECT_NEWVAR(AlifCodeObject, &_alifCodeType_, size);
+#endif
+	if (co == nullptr) {
+		ALIF_XDECREF(replacementLocations);
+		//alifErr_noMemory();
+		return nullptr;
+	}
+	init_code(co, _con);
+#ifdef ALIF_GIL_DISABLED
+	_alifObject_setDeferredRefCount((AlifObject*)co);
+	ALIFOBJECT_GC_TRACK(co);
+#endif
+	ALIF_XDECREF(replacementLocations);
+	return co;
+}
+
+
+
+
+
+
+
+
+
 
 
 

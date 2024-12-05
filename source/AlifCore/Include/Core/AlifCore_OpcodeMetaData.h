@@ -16,6 +16,17 @@
     0)
 
 
+extern AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg); // 32
+
+
+
+
+
+
+
+
+
+extern AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg); // 487
 
 
 

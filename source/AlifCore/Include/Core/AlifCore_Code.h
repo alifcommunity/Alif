@@ -19,10 +19,23 @@ union AlifCodeUnit { // 25
 
 
 
+ // 219
+#define CO_FAST_HIDDEN  0x10
+#define CO_FAST_LOCAL   0x20
+#define CO_FAST_CELL    0x40
+#define CO_FAST_FREE    0x80
+
+typedef unsigned char AlifLocalsKind; // 224
 
 
 
 
+
+static inline void _alifLocals_setKind(AlifObject* kinds,
+	AlifIntT i, AlifLocalsKind kind) { // 235
+	char* ptr = ALIFBYTES_AS_STRING(kinds);
+	ptr[i] = (char)kind;
+}
 
 
 class AlifCodeConstructor { // 245
@@ -60,8 +73,8 @@ public:
 
 
 
-
-
+extern AlifIntT _alifCode_validate(AlifCodeConstructor*); // 287
+extern AlifCodeObject* alifCode_new(AlifCodeConstructor*); // 288
 
 
 
