@@ -114,3 +114,13 @@ extern AlifTypeObject _alifCodeType_; // 179
 
 
 AlifObject* alifCode_constantKey(AlifObject*); // 309
+
+enum AlifCodeLocationInfoKind { // 340
+	AlifCode_Location_Info_Short = 0,
+	AlifCode_Location_Info_One_Line0 = 10,
+	AlifCode_Location_Info_No_Columns = 13,
+
+	AlifCode_Location_Info_Long = 14,
+	AlifCode_Location_Info_None = 15
+
+};

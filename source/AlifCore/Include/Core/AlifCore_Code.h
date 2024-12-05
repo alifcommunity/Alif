@@ -25,7 +25,7 @@ union AlifCodeUnit { // 25
 class AlifCodeState { // 69
 public:
 	AlifMutex mutex{};
-	AlifHashTableT* constants{};
+	AlifHashT* constants{};
 };
 
 
@@ -94,6 +94,33 @@ extern AlifCodeObject* alifCode_new(AlifCodeConstructor*); // 288
 
 
 
+static inline AlifIntT write_varint(uint8_t* _ptr, unsigned int _val) { // 482
+	AlifIntT written = 1;
+	while (_val >= 64) {
+		*_ptr++ = 64 | (_val & 63);
+		_val >>= 6;
+		written++;
+	}
+	*_ptr = (uint8_t)_val;
+	return written;
+}
+
+static inline AlifIntT write_signedVarint(uint8_t* _ptr, AlifIntT _val) { // 496
+	unsigned int uVal{};
+	if (_val < 0) {
+		uVal = ((0 - (unsigned int)_val) << 1) | 1;
+	}
+	else {
+		uVal = (unsigned int)_val << 1;
+	}
+	return write_varint(_ptr, uVal);
+}
+
+
+static inline AlifIntT write_locationEntryStart(uint8_t* _ptr, AlifIntT _code, AlifIntT _length) { // 510
+	*_ptr = 128 | (uint8_t)(_code << 3) | (uint8_t)(_length - 1);
+	return 1;
+}
 
 
  // 584
