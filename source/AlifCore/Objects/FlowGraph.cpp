@@ -889,6 +889,33 @@ static AlifObject* get_constValue(AlifIntT _opcode, AlifIntT _oparg, AlifObject*
 	return ALIF_NEWREF(constant);
 }
 
+static AlifIntT add_const(AlifObject* _newConst, AlifObject* _consts, AlifObject* _constCache) { // 1302
+	if (_alifCompile_constCacheMergeOne(_constCache, &_newConst) < 0) {
+		ALIF_DECREF(_newConst);
+		return -1;
+	}
+
+	AlifSizeT index{};
+	for (index = 0; index < ALIFLIST_GET_SIZE(_consts); index++) {
+		if (ALIFLIST_GET_ITEM(_consts, index) == _newConst) {
+			break;
+		}
+	}
+	if (index == ALIFLIST_GET_SIZE(_consts)) {
+		if ((AlifUSizeT)index >= (AlifUSizeT)INT_MAX - 1) {
+			//alifErr_setString(_alifExcOverflowError_, "too many constants");
+			ALIF_DECREF(_newConst);
+			return -1;
+		}
+		if (alifList_append(_consts, _newConst)) {
+			ALIF_DECREF(_newConst);
+			return -1;
+		}
+	}
+	ALIF_DECREF(_newConst);
+	return (int)index;
+}
+
 static AlifIntT foldTuple_onConstants(AlifObject* _constCache,
 	CFGInstr* _inst, AlifIntT _n, AlifObject* _consts) { // 1337
 	for (AlifIntT i = 0; i < _n; i++) {
@@ -920,33 +947,6 @@ static AlifIntT foldTuple_onConstants(AlifObject* _constCache,
 	}
 	INSTR_SET_OP1(&_inst[_n], LOAD_CONST, index);
 	return SUCCESS;
-}
-
-static AlifIntT add_const(AlifObject* _newConst, AlifObject* _consts, AlifObject* _constCache) { // 1302
-	if (_alifCompile_constCacheMergeOne(_constCache, &_newConst) < 0) {
-		ALIF_DECREF(_newConst);
-		return -1;
-	}
-
-	AlifSizeT index{};
-	for (index = 0; index < ALIFLIST_GET_SIZE(_consts); index++) {
-		if (ALIFLIST_GET_ITEM(_consts, index) == _newConst) {
-			break;
-		}
-	}
-	if (index == ALIFLIST_GET_SIZE(_consts)) {
-		if ((AlifUSizeT)index >= (AlifUSizeT)INT_MAX - 1) {
-			//alifErr_setString(_alifExcOverflowError_, "too many constants");
-			ALIF_DECREF(_newConst);
-			return -1;
-		}
-		if (alifList_append(_consts, _newConst)) {
-			ALIF_DECREF(_newConst);
-			return -1;
-		}
-	}
-	ALIF_DECREF(_newConst);
-	return (int)index;
 }
 
 #define VISITED (-1) // 1379

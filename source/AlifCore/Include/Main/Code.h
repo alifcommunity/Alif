@@ -2,8 +2,21 @@
 
 
 
+class AlifCoCached { // 28
+public:
+	AlifObject* coCode{};
+	AlifObject* CoVarNames{};
+	AlifObject* coCellVars{};
+	AlifObject* coFreeVars{};
+};
 
 
+class AlifExecutorArray {
+public:
+	AlifIntT size{};
+	AlifIntT capacity{};
+	AlifExecutorObject* executors[1];
+};
 
  // 73
 #define ALIFCODE_DEF(_size) {                                                    \
@@ -61,11 +74,11 @@ public:																			\
     AlifObject *qualname{};        /* unicode (qualname, for reference) */      \
     AlifObject *lineTable{};       /* bytes object that holds location info */  \
     AlifObject *weakRefList{};     /* to support weakrefs to code objects */    \
-    /*AlifExecutorArray *executors{};*/      /* executors from optimizer */        \
-    /*AlifCoCached *_cached{};*/      /* cached co_* attributes */                 \
+    AlifExecutorArray *executors{};      /* executors from optimizer */        \
+    AlifCoCached *_cached{};      /* cached co_* attributes */                 \
     uintptr_t _instrumentationVersion{}; /* current instrumentation version */ \
     /*AlifCoMonitoringData *_monitoring{};*/ /* Monitoring data */                 \
-    AlifIntT _firsttraceable{};       /* index of first traceable instruction */   \
+    AlifIntT firstTraceable{};       /* index of first traceable instruction */   \
     /* Scratch space for extra data relating to the code object.               \
        Type is a void* to keep the format private in codeobject.c to force     \
        people to go through the proper APIs. */                                \
@@ -111,6 +124,16 @@ extern AlifTypeObject _alifCodeType_; // 179
 
 
 
+
+#define ALIF_FOREACH_CODE_EVENT(_v) \
+    _v(CREATE)                 \
+    _v(DESTROY)
+
+enum AlifCodeEvent {
+#define ALIF_DEF_EVENT(op) ALIF_CODE_EVENT_##op,
+	ALIF_FOREACH_CODE_EVENT(ALIF_DEF_EVENT)
+#undef ALIF_DEF_EVENT
+};
 
 
 AlifObject* alifCode_constantKey(AlifObject*); // 309
