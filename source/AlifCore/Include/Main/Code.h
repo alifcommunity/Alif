@@ -53,8 +53,8 @@ public:																			\
     AlifIntT nFreeVars{};             /* number of free variables */               \
     uint32_t version{};          /* version number */                         \
                                                                                \
-    AlifObject *localSplusNames{}; /* tuple mapping offsets to names */         \
-    AlifObject *localSplusKinds{}; /* Bytes mapping to local kinds (one byte    \
+    AlifObject *localsPlusNames{}; /* tuple mapping offsets to names */         \
+    AlifObject *localsPlusKinds{}; /* Bytes mapping to local kinds (one byte    \
                                      per variable) */                          \
     AlifObject *filename{};        /* unicode (where it was loaded from) */     \
     AlifObject *name{};            /* unicode (name, for reference) */          \

@@ -723,6 +723,12 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_OpcodeMetaData.h">
       <Filter>Include\Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_StackRef.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Frame.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Include">

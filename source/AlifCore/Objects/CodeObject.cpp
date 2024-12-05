@@ -2,6 +2,7 @@
 #include "Opcode.h"
 
 #include "AlifCore_Code.h"
+#include "AlifCore_Frame.h"
 #include "AlifCore_InitConfig.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_OpcodeUtils.h"
@@ -81,6 +82,76 @@ AlifIntT _alifCode_validate(AlifCodeConstructor* _con) { // 392
 
 
 
+static void init_code(AlifCodeObject* _co, AlifCodeConstructor* _con) { // 452
+	AlifIntT nlocalsplus = (AlifIntT)ALIFTUPLE_GET_SIZE(_con->localsPlusNames);
+	AlifIntT nlocals, ncellvars, nfreevars;
+	get_localsPlusCounts(_con->localsPlusNames, _con->localsPlusKinds,
+		&nlocals, &ncellvars, &nfreevars);
+	if (_con->stackSize == 0) {
+		_con->stackSize = 1;
+	}
+
+	AlifInterpreter* interp = _alifInterpreter_get();
+	_co->filename = ALIF_NEWREF(_con->filename);
+	_co->name = ALIF_NEWREF(_con->name);
+	_co->qualname = ALIF_NEWREF(_con->qualname);
+	alifUStr_internMortal(interp, &_co->filename);
+	alifUStr_internMortal(interp, &_co->name);
+	alifUStr_internMortal(interp, &_co->qualname);
+	_co->flags = _con->flags;
+
+	_co->firstLineno = _con->firstLineno;
+	_co->lineTable = ALIF_NEWREF(_con->lineTable);
+
+	_co->consts = ALIF_NEWREF(_con->consts);
+	_co->names = ALIF_NEWREF(_con->names);
+
+	_co->localsPlusNames = ALIF_NEWREF(_con->localsPlusNames);
+	_co->localsPlusKinds = ALIF_NEWREF(_con->localsPlusKinds);
+
+	_co->argCount = _con->argCount;
+	_co->posOnlyArgCount = _con->posOnlyArgCount;
+	_co->kwOnlyArgCount = _con->kwOnlyArgCount;
+
+	_co->stackSize = _con->stackSize;
+
+	_co->exceptiontable = ALIF_NEWREF(_con->exceptionTable);
+
+	/* derived values */
+	_co->nLocalsPlus = nlocalsplus;
+	_co->nLocals = nlocals;
+	_co->frameSize = nlocalsplus + _con->stackSize + FRAME_SPECIALS_SIZE;
+	_co->nCellVars = ncellvars;
+	_co->nFreeVars = nfreevars;
+#ifdef ALIF_GIL_DISABLED
+	ALIFMUTEX_LOCK(&interp->funcState.mutex);
+#endif
+	_co->version = interp->funcState.nextVersion;
+	if (interp->funcState.nextVersion != 0) {
+		interp->funcState.nextVersion++;
+	}
+#ifdef ALIF_GIL_DISABLED
+	ALIFMUTEX_UNLOCK(&interp->func_state.mutex);
+#endif
+	_co->monitoring = nullptr;
+	_co->instrumentationVersion = 0;
+	/* not set */
+	_co->weakRefList = nullptr;
+	_co->extra = nullptr;
+	_co->cached = nullptr;
+	_co->executors = nullptr;
+
+	memcpy(ALIFCODE_CODE(_co), ALIFBYTES_AS_STRING(_con->code),
+		ALIFBYTES_GET_SIZE(_con->code));
+	AlifIntT entryPoint = 0;
+	while (entryPoint < ALIF_SIZE(_co) and
+		ALIFCODE_CODE(_co)[entryPoint].op.code != RESUME) {
+		entryPoint++;
+	}
+	_co->firstTraceable = entryPoint;
+	alifCode_quicken(_co);
+	notify_codeWatchers(AlifCode_Event_Create, _co);
+}
 
 
 
@@ -115,7 +186,7 @@ AlifCodeObject* alifCode_new(AlifCodeConstructor* _con) { // 647
 	}
 	init_code(co, _con);
 #ifdef ALIF_GIL_DISABLED
-	_alifObject_setDeferredRefCount((AlifObject*)co);
+	alifObject_setDeferredRefcount((AlifObject*)co);
 	ALIFOBJECT_GC_TRACK(co);
 #endif
 	ALIF_XDECREF(replacementLocations);

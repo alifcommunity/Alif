@@ -216,7 +216,8 @@ AlifObject* alifObject_richCompare(AlifObject* _v, AlifObject* _w, AlifIntT _op)
 }
 
 
-AlifIntT alifObject_richCompareBool(AlifObject* _v, AlifObject* _w, AlifIntT _op) { // 1033
+AlifIntT alifObject_richCompareBool(AlifObject* _v,
+	AlifObject* _w, AlifIntT _op) { // 1033
 	AlifObject* res_{};
 	AlifIntT ok_{};
 	if (_v == _w) {
