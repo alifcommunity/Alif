@@ -23,7 +23,38 @@ void alifSet_localsPlusInfo(AlifIntT _offset, AlifObject* _name,
 	_alifLocals_setKind(_kinds, _offset, _kind);
 }
 
-
+static void get_localsPlusCounts(AlifObject* _names, AlifObject* _kinds,
+	AlifIntT* pnlocals, AlifIntT* pncellvars,
+	AlifIntT* pnfreevars) { // 335
+	AlifIntT nlocals = 0;
+	AlifIntT ncellvars = 0;
+	AlifIntT nfreevars = 0;
+	AlifSizeT nlocalsplus = ALIFTUPLE_GET_SIZE(_names);
+	for (AlifIntT i = 0; i < nlocalsplus; i++) {
+		AlifLocalsKind kind = _alifLocals_getKind(_kinds, i);
+		if (kind & CO_FAST_LOCAL) {
+			nlocals += 1;
+			if (kind & CO_FAST_CELL) {
+				ncellvars += 1;
+			}
+		}
+		else if (kind & CO_FAST_CELL) {
+			ncellvars += 1;
+		}
+		else if (kind & CO_FAST_FREE) {
+			nfreevars += 1;
+		}
+	}
+	if (pnlocals != nullptr) {
+		*pnlocals = nlocals;
+	}
+	if (pncellvars != nullptr) {
+		*pncellvars = ncellvars;
+	}
+	if (pnfreevars != nullptr) {
+		*pnfreevars = nfreevars;
+	}
+}
 
 
 
@@ -156,6 +187,33 @@ static void init_code(AlifCodeObject* _co, AlifCodeConstructor* _con) { // 452
 
 
 
+static AlifIntT intern_codeConstants(AlifCodeConstructor* _con) { // 616
+#ifdef ALIF_GIL_DISABLED
+	AlifInterpreter* interp = _alifInterpreter_get();
+	AlifCodeState* state = &interp->codeState;
+	ALIFMUTEX_LOCK(&state->mutex);
+#endif
+	if (intern_strings(_con->names) < 0) {
+		goto error;
+	}
+	if (intern_constants(_con->consts, nullptr) < 0) {
+		goto error;
+	}
+	if (intern_strings(_con->localsPlusNames) < 0) {
+		goto error;
+	}
+#ifdef ALIF_GIL_DISABLED
+	ALIFMUTEX_UNLOCK(&state->mutex);
+#endif
+	return 0;
+
+error:
+#ifdef ALIF_GIL_DISABLED
+	ALIFMUTEX_UNLOCK(&state->mutex);
+#endif
+	return -1;
+}
+
 
 AlifCodeObject* alifCode_new(AlifCodeConstructor* _con) { // 647
 	if (intern_codeConstants(_con) < 0) {
@@ -164,13 +222,13 @@ AlifCodeObject* alifCode_new(AlifCodeConstructor* _con) { // 647
 
 	AlifObject* replacementLocations = nullptr;
 
-	if (!alif_getConfig()->codeDebugRanges) {
-		replacementLocations = remove_columnInfo(_con->lineTable);
-		if (replacementLocations == nullptr) {
-			return nullptr;
-		}
-		_con->lineTable = replacementLocations;
-	}
+	//if (!alif_getConfig()->codeDebugRanges) {
+	//	replacementLocations = remove_columnInfo(_con->lineTable);
+	//	if (replacementLocations == nullptr) {
+	//		return nullptr;
+	//	}
+	//	_con->lineTable = replacementLocations;
+	//}
 
 	AlifSizeT size = ALIFBYTES_GET_SIZE(_con->code) / sizeof(AlifCodeUnit);
 	AlifCodeObject* co{};

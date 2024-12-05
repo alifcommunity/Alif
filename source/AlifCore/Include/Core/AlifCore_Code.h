@@ -27,7 +27,11 @@ union AlifCodeUnit { // 25
 
 typedef unsigned char AlifLocalsKind; // 224
 
-
+static inline AlifLocalsKind _alifLocals_getKind(AlifObject* kinds,
+	AlifIntT i) { // 226
+	char* ptr = ALIFBYTES_AS_STRING(kinds);
+	return (AlifLocalsKind)(ptr[i]);
+}
 
 
 
