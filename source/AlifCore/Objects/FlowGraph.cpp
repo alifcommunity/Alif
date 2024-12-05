@@ -237,7 +237,7 @@ static inline AlifIntT basicBlock_exitsScope(const BasicBlock* _b) { // 330
 }
 
 static inline AlifIntT basicBlock_hasEvalBreak(const BasicBlock* _b) { // 335
-	for (int i = 0; i < _b->iused; i++) {
+	for (AlifIntT i = 0; i < _b->iused; i++) {
 		if (OPCODE_HAS_EVAL_BREAK(_b->instr[i].opcode)) {
 			return true;
 		}
@@ -668,6 +668,57 @@ static AlifIntT remove_unreachable(BasicBlock* _entryBlock) { // 995
 	return SUCCESS;
 }
 
+static AlifIntT basicBlock_removeRedundantNops(BasicBlock* _bb) { // 1042
+	AlifIntT dest = 0;
+	AlifIntT prevLineNo = -1;
+	for (AlifIntT src_ = 0; src_ < _bb->iused; src_++) {
+		AlifIntT lineno = _bb->instr[src_].loc.lineNo;
+		if (_bb->instr[src_].opcode == NOP) {
+			if (lineno < 0) {
+				continue;
+			}
+			if (prevLineNo == lineno) {
+				continue;
+			}
+			if (src_ < _bb->iused - 1) {
+				AlifIntT next_lineno = _bb->instr[src_ + 1].loc.lineNo;
+				if (next_lineno == lineno) {
+					continue;
+				}
+				if (next_lineno < 0) {
+					_bb->instr[src_ + 1].loc = _bb->instr[src_].loc;
+					continue;
+				}
+			}
+			else {
+				BasicBlock* next = next_nonemptyBlock(_bb->next);
+				if (next) {
+					Location nextLoc = _noLocation_;
+					for (AlifIntT nextI = 0; nextI < next->iused; nextI++) {
+						CFGInstr* instr = &next->instr[nextI];
+						if (instr->opcode == NOP and instr->loc.lineNo == _noLocation_.lineNo) {
+							continue;
+						}
+						nextLoc = instr->loc;
+						break;
+					}
+					if (lineno == nextLoc.lineNo) {
+						continue;
+					}
+				}
+			}
+
+		}
+		if (dest != src_) {
+			_bb->instr[dest] = _bb->instr[src_];
+		}
+		dest++;
+		prevLineNo = lineno;
+	}
+	AlifIntT numRemoved = _bb->iused - dest;
+	_bb->iused = dest;
+	return numRemoved;
+}
 
 static AlifIntT remove_redundantNops(CFGBuilder* _g) { // 1101
 	AlifIntT changes = 0;
@@ -715,7 +766,7 @@ static AlifIntT remove_redundantNopsAndPairs(BasicBlock* _entryBlock) { // 1112
 				}
 			}
 			if ((instr and is_jump(instr)) or !BB_HAS_FALLTHROUGH(b)) {
-				instr = NULL;
+				instr = nullptr;
 			}
 		}
 	}
@@ -824,7 +875,19 @@ static bool jump_thread(BasicBlock* _bb, CFGInstr* _inst,
 	return false;
 }
 
+static AlifObject* get_constValue(AlifIntT _opcode, AlifIntT _oparg, AlifObject* _coConsts) { // 1285
+	AlifObject* constant = nullptr;
+	if (_opcode == LOAD_CONST) {
+		constant = ALIFLIST_GET_ITEM(_coConsts, _oparg);
+	}
 
+	if (constant == nullptr) {
+		//alifErr_setString(_alifExcSystemError_,
+			//"Internal error: failed to get value of a constant");
+		return nullptr;
+	}
+	return ALIF_NEWREF(constant);
+}
 
 static AlifIntT foldTuple_onConstants(AlifObject* _constCache,
 	CFGInstr* _inst, AlifIntT _n, AlifObject* _consts) { // 1337
@@ -859,7 +922,32 @@ static AlifIntT foldTuple_onConstants(AlifObject* _constCache,
 	return SUCCESS;
 }
 
+static AlifIntT add_const(AlifObject* _newConst, AlifObject* _consts, AlifObject* _constCache) { // 1302
+	if (_alifCompile_constCacheMergeOne(_constCache, &_newConst) < 0) {
+		ALIF_DECREF(_newConst);
+		return -1;
+	}
 
+	AlifSizeT index{};
+	for (index = 0; index < ALIFLIST_GET_SIZE(_consts); index++) {
+		if (ALIFLIST_GET_ITEM(_consts, index) == _newConst) {
+			break;
+		}
+	}
+	if (index == ALIFLIST_GET_SIZE(_consts)) {
+		if ((size_t)index >= (size_t)INT_MAX - 1) {
+			//alifErr_setString(_alifExcOverflowError_, "too many constants");
+			ALIF_DECREF(_newConst);
+			return -1;
+		}
+		if (alifList_append(_consts, _newConst)) {
+			ALIF_DECREF(_newConst);
+			return -1;
+		}
+	}
+	ALIF_DECREF(_newConst);
+	return (int)index;
+}
 
 #define VISITED (-1) // 1379
 
@@ -872,7 +960,7 @@ static AlifIntT swaptimize(BasicBlock* _block, AlifIntT* _ix) { // 1383
 	AlifIntT more = false;
 	AlifIntT limit = _block->iused - *_ix;
 	while (++len < limit) {
-		int opcode = instructions[len].opcode;
+		AlifIntT opcode = instructions[len].opcode;
 		if (opcode == SWAP) {
 			depth = ALIF_MAX(depth, instructions[len].oparg);
 			more = true;
@@ -885,7 +973,7 @@ static AlifIntT swaptimize(BasicBlock* _block, AlifIntT* _ix) { // 1383
 		return SUCCESS;
 	}
 	// Create an array with elements {0, 1, 2, ..., depth - 1}:
-	AlifIntT* stack = (AlifIntT*)alifMem_dataAlloc(depth * sizeof(int));
+	AlifIntT* stack = (AlifIntT*)alifMem_dataAlloc(depth * sizeof(AlifIntT));
 	if (stack == nullptr) {
 		//alifErr_noMemory();
 		return ERROR;
@@ -918,7 +1006,7 @@ static AlifIntT swaptimize(BasicBlock* _block, AlifIntT* _ix) { // 1383
 			if (stack[j] == VISITED) {
 				break;
 			}
-			int next_j = stack[j];
+			AlifIntT next_j = stack[j];
 			stack[j] = VISITED;
 			j = next_j;
 		}
@@ -935,10 +1023,35 @@ static AlifIntT swaptimize(BasicBlock* _block, AlifIntT* _ix) { // 1383
 
 
 
+// 1484
+#define SWAPPABLE(_opcode) \
+    ((_opcode) == STORE_FAST or \
+     (_opcode) == STORE_FAST_MAYBE_NULL or \
+     (_opcode) == POP_TOP)
+
+// 1489
+#define STORES_TO(_instr) \
+    (((_instr).opcode == STORE_FAST or \
+      (_instr).opcode == STORE_FAST_MAYBE_NULL) \
+     ? (_instr).oparg : -1)
 
 
-
-
+static AlifIntT next_swappableInstruction(BasicBlock* _block, AlifIntT _i, AlifIntT _lineNo) { // 1495
+	while (++_i < _block->iused) {
+		CFGInstr* instruction = &_block->instr[_i];
+		if (0 <= _lineNo and instruction->loc.lineNo != _lineNo) {
+			return -1;
+		}
+		if (instruction->opcode == NOP) {
+			continue;
+		}
+		if (SWAPPABLE(instruction->opcode)) {
+			return _i;
+		}
+		return -1;
+	}
+	return -1;
+}
 
 static void apply_staticSwaps(BasicBlock* _block, AlifIntT _i) { // 1518
 	for (; 0 <= _i; _i--) {
@@ -1072,7 +1185,7 @@ static AlifIntT basicBlock_optimizeLoadConst(AlifObject* const_cache,
 		case TO_BOOL:
 		{
 			AlifObject* cnt = get_constValue(opcode, oparg, consts);
-			if (cnt == NULL) {
+			if (cnt == nullptr) {
 				return ERROR;
 			}
 			AlifIntT isTrue = alifObject_isTrue(cnt);
@@ -1530,7 +1643,7 @@ static AlifIntT mark_warm(BasicBlock* _entryBlock) { // 2210
 			*sp++ = next;
 			next->visited = 1;
 		}
-		for (int i = 0; i < b->iused; i++) {
+		for (AlifIntT i = 0; i < b->iused; i++) {
 			CFGInstr* instr = &b->instr[i];
 			if (is_jump(instr) and !instr->target->visited) {
 				*sp++ = instr->target;
@@ -1570,7 +1683,7 @@ static AlifIntT mark_cold(BasicBlock* _entryBlock) { // 2241
 				next->visited = 1;
 			}
 		}
-		for (int i = 0; i < b->iused; i++) {
+		for (AlifIntT i = 0; i < b->iused; i++) {
 			CFGInstr* instr = &b->instr[i];
 			if (is_jump(instr)) {
 				BasicBlock* target = b->instr[i].target;
