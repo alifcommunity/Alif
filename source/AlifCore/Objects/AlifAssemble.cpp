@@ -103,7 +103,7 @@ static inline void write_exceptByte(AlifAssembler* _a, AlifIntT _byte) { // 99
 	p_[_a->exceptTableOff++] = _byte;
 }
 
-#define CONTINUATION_BIT 64
+#define CONTINUATION_BIT 64 // 104
 
 static void assemble_emitExceptionTableItem(AlifAssembler* _a, AlifIntT _value, AlifIntT _msb) { // 107
 	if (_value >= 1 << 24) {
@@ -125,7 +125,7 @@ static void assemble_emitExceptionTableItem(AlifAssembler* _a, AlifIntT _value, 
 	write_exceptByte(_a, (_value & 0x3f) | _msb);
 }
 
-#define MAX_SIZE_OF_ENTRY 20
+#define MAX_SIZE_OF_ENTRY 20 // 131
 
 static AlifIntT assemble_emitExceptionTableEntry(AlifAssembler* _a, AlifIntT _start, AlifIntT _end,
 	AlifIntT _handlerOffset,
@@ -180,19 +180,7 @@ static AlifIntT assemble_exceptionTable(AlifAssembler* _a,
 	return SUCCESS;
 }
 
-static AlifIntT assemble_emitLocation(AlifAssembler* _a, Location _loc, AlifIntT _isize) { // 326
-	if (_isize == 0) {
-		return SUCCESS;
-	}
-	while (_isize > 8) {
-		RETURN_IF_ERROR(write_locationInfoEntry(_a, _loc, 8));
-		_isize -= 8;
-	}
-	return write_locationInfoEntry(_a, _loc, _isize);
-}
-
-
-#define MSB 0x80
+#define MSB 0x80 // 194
 
 static void write_locationByte(AlifAssembler* _a, AlifIntT _val) { // 197
 	ALIFBYTES_AS_STRING(_a->lineTable)[_a->locationOff] = _val & 255;
@@ -210,7 +198,7 @@ static void write_locationFirstByte(AlifAssembler* _a, AlifIntT _code, AlifIntT 
 		location_pointer(_a), _code, _length);
 }
 
-static void write_locationVarint(AlifAssembler* _a, unsigned int _val) { // 219
+static void write_locationVarint(AlifAssembler* _a, AlifUIntT _val) { // 219
 	uint8_t* ptr_ = location_pointer(_a);
 	_a->locationOff += write_varint(ptr_, _val);
 }
@@ -287,6 +275,17 @@ static AlifIntT write_locationInfoEntry(AlifAssembler* _a, Location _loc, AlifIn
 	write_locationInfoLongForm(_a, _loc, _iSize);
 	_a->lineno = _loc.lineNo;
 	return SUCCESS;
+}
+
+static AlifIntT assemble_emitLocation(AlifAssembler* _a, Location _loc, AlifIntT _isize) { // 326
+	if (_isize == 0) {
+		return SUCCESS;
+	}
+	while (_isize > 8) {
+		RETURN_IF_ERROR(write_locationInfoEntry(_a, _loc, 8));
+		_isize -= 8;
+	}
+	return write_locationInfoEntry(_a, _loc, _isize);
 }
 
 

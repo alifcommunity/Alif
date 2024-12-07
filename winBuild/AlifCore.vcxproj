@@ -74,6 +74,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ObjectStack.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_OpcodeMetaData.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_OpcodeUtils.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Optimizer.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ParkingLot.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Parser.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_QSBR.h" />

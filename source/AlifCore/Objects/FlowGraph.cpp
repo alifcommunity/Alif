@@ -1365,6 +1365,7 @@ error:
 
 
 
+static AlifIntT resolve_lineNumbers(CFGBuilder*, AlifIntT); // 1858
 
 
 static AlifIntT remove_redundantNopsAndJumps(CFGBuilder* _g) { // 1860

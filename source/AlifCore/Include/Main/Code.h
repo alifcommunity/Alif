@@ -15,7 +15,7 @@ class AlifExecutorArray { // 44
 public:
 	AlifIntT size{};
 	AlifIntT capacity{};
-	AlifExecutorObject* executors[1]{};
+	class AlifExecutorObject* executors[1]{};
 };
 
  // 73
@@ -34,8 +34,6 @@ public:																			\
     AlifIntT stackSize{};             /* #entries needed for evaluation stack */   \
     AlifIntT firstLineno{};           /* first source line number */               \
                                                                                \
-    /* redundant values (derived from co_localsplusnames and                   \
-       co_localspluskinds) */                                                  \
     AlifIntT nLocalsPlus{};           /* number of local + cell + free variables */ \
     AlifIntT frameSize{};             /* Size of frame in words */                 \
     AlifIntT nLocals{};               /* number of local variables */              \
@@ -114,6 +112,8 @@ AlifObject* alifCode_constantKey(AlifObject*); // 309
 enum AlifCodeLocationInfoKind { // 340
 	AlifCode_Location_Info_Short = 0,
 	AlifCode_Location_Info_One_Line0 = 10,
+	AlifCode_Location_Info_One_Line1 = 11,
+	AlifCode_Location_Info_One_Line2 = 12,
 	AlifCode_Location_Info_No_Columns = 13,
 
 	AlifCode_Location_Info_Long = 14,

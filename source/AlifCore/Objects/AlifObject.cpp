@@ -8,6 +8,8 @@
 #include "AlifCore_InitConfig.h"
 #include "AlifCore_HashTable.h"
 #include "AlifCore_Object.h"
+#include "AlifCore_Long.h"
+#include "AlifCore_Optimizer.h"
 #include "AlifCore_Memory.h"
 #include "AlifCore_State.h"
 #include "AlifCore_TypeObject.h"

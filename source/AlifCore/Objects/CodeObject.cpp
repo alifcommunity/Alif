@@ -29,17 +29,17 @@ static const char* code_eventName(AlifCodeEvent _event) { // 20
 static void notify_codeWatchers(AlifCodeEvent _event, AlifCodeObject* _co) { // 32
 	AlifInterpreter* interp = _alifInterpreter_get();
 	uint8_t bits = interp->activeCodeWatchers;
-	AlifIntT _i = 0;
+	AlifIntT i = 0;
 	while (bits) {
 		if (bits & 1) {
-			alifCode_watchCallback cb = interp->codeWatchers[_i];
+			AlifCodeWatchCallback cb = interp->codeWatchers[i];
 			if (cb(_event, _co) < 0) {
 				//alifErr_formatUnraisable(
 					//"Exception ignored in %s watcher callback for %R",
 					//code_eventName(event), co);
 			}
 		}
-		_i++;
+		i++;
 		bits >>= 1;
 	}
 }
