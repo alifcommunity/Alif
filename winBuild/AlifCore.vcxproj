@@ -24,6 +24,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Code.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FlowGraph.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Frame.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Function.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Intrinsics.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Math.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Array.h" />
@@ -134,6 +135,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\FileUtils.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Codecs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\FloatObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\FunctionObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\GenericAliasObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Helpers.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Import.h" />

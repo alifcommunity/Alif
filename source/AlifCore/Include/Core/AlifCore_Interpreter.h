@@ -6,6 +6,7 @@
 #include "AlifCore_GC.h"
 #include "AlifCore_TypeID.h"
 #include "AlifCore_DoubleToASCII.h"
+#include "AlifCore_Function.h"
 #include "AlifCore_List.h"
 #include "AlifCore_Memory.h"
 #include "AlifCore_ThreadState.h"
@@ -104,6 +105,8 @@ public:
 	//AlifObjectState objectState{};
 	AlifLongState longState{};
 	DToAState dtoa{};
+	AlifFuncState funcState{};
+	AlifCodeState codeState{};
 
 	AlifDictState dictState{};
 	AlifMemInterpFreeQueue memFreeQueue{};

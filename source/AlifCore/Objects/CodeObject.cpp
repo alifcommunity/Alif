@@ -15,6 +15,34 @@
 
 
 
+static const char* code_eventName(AlifCodeEvent _event) { // 20
+	switch (_event) {
+#define CASE(_op)                \
+        case ALIF_CODE_EVENT_##op:         \
+            return "ALIF_CODE_EVENT_" #_op;
+		ALIF_FOREACH_CODE_EVENT(CASE)
+#undef CASE
+	}
+	ALIF_UNREACHABLE();
+}
+
+static void notify_codeWatchers(AlifCodeEvent _event, AlifCodeObject* _co) { // 32
+	AlifInterpreter* interp = alifInterpreter_get();
+	uint8_t bits = interp->active_code_watchers;
+	AlifIntT _i = 0;
+	while (bits) {
+		if (bits & 1) {
+			alifCode_watchCallback cb = interp->codeWatchers[_i];
+			if (cb(_event, _co) < 0) {
+				//alifErr_formatUnraisable(
+					//"Exception ignored in %s watcher callback for %R",
+					//code_eventName(event), co);
+			}
+		}
+		_i++;
+		bits >>= 1;
+	}
+}
 
 
 void alifSet_localsPlusInfo(AlifIntT _offset, AlifObject* _name,
@@ -162,14 +190,14 @@ static void init_code(AlifCodeObject* _co, AlifCodeConstructor* _con) { // 452
 		interp->funcState.nextVersion++;
 	}
 #ifdef ALIF_GIL_DISABLED
-	ALIFMUTEX_UNLOCK(&interp->func_state.mutex);
+	ALIFMUTEX_UNLOCK(&interp->funcState.mutex);
 #endif
 	//_co->monitoring = nullptr;
 	//_co->instrumentationVersion = 0;
 	/* not set */
 	_co->weakRefList = nullptr;
 	_co->extra = nullptr;
-	_co->cached = nullptr;
+	_co->_cached = nullptr;
 	_co->executors = nullptr;
 
 	memcpy(ALIFCODE_CODE(_co), ALIFBYTES_AS_STRING(_con->code),
