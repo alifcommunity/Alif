@@ -68,4 +68,11 @@ AlifHashTableT* alifHashTable_newFull(AlifHashTableHashFunc,
 	AlifHashTableDestroyFunc, AlifHashTableAllocatorT*); // 86
 
 
+static inline AlifHashTableEntryT* _alifHashTable_getEntry(AlifHashTableT* _ht, const void* _key) { // 123
+	return _ht->getEntryFunc(_ht, _key);
+}
+
+AlifIntT alif_hashtableSet(AlifHashTableT* , const void* , void*); // 114
+
+
 void* alifHashTable_get(AlifHashTableT*, const void*); // 134
