@@ -1,32 +1,33 @@
 #pragma once
 
+// alif
 // 11
-#define ALIF_COMMON_FIELDS(__prefix) \
-    AlifObject *_prefix ## globals; \
-    AlifObject *_prefix ## builtins; \
-    AlifObject *_prefix ## name; \
-    AlifObject *_prefix ## qualname; \
-    AlifObject *_prefix ## code;         \
-    AlifObject *_prefix ## defaults;   \
-    AlifObject *_prefix ## kwdefaults;  \
-    AlifObject *_prefix ## closure;     
+#define ALIF_COMMON_FIELDS() \
+    AlifObject *globals{}; \
+    AlifObject *builtins{}; \
+    AlifObject *name{}; \
+    AlifObject *qualname{}; \
+    AlifObject *code{};         \
+    AlifObject *defaults{};   \
+    AlifObject *kwDefaults{};  \
+    AlifObject *closure{};     
 
 class AlifFrameConstructor { // 21
 public:
-	ALIF_COMMON_FIELDS(fc_{})
+	ALIF_COMMON_FIELDS()
 };
 
 class AlifFunctionObject{ // 36
 public:
-	ALIFOBJECT_HEAD;
-	ALIF_COMMON_FIELDS(func_{})
-	AlifObject* funcDoc{};         /* The __doc__ attribute, can be anything */
-	AlifObject* funcDict{};        /* The __dict__ attribute, a dict or NULL */
-	AlifObject* funcWeakRefList{}; /* List of weak references */
-	AlifObject* funcModule{};      /* The __module__ attribute, can be anything */
-	AlifObject* funcAnnotations{}; /* Annotations, a dict or NULL */
-	AlifObject* funcAnnotate{};    /* Callable to fill the annotations dictionary */
-	AlifObject* funcTypeParams{};  /* Tuple of active type variables or NULL */
+	ALIFOBJECT_HEAD{};
+	ALIF_COMMON_FIELDS()
+	AlifObject* doc{};
+	AlifObject* dict{};
+	AlifObject* weakRefList{};
+	AlifObject* module{};
+	AlifObject* annotations{};
+	AlifObject* annotate{};
+	AlifObject* typeParams{};
 	VectorCallFunc vectorCall{};
-	uint32_t funcVersion{};
+	uint32_t version{};
 };

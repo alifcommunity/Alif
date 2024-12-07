@@ -21,5 +21,5 @@ class AlifFuncState { // 28
 #endif
 
 	uint32_t nextVersion{};
-	FuncVersionCacheItem funcVersionCache[FUNC_VERSION_CACHE_SIZE];
+	FuncVersionCacheItem funcVersionCache[FUNC_VERSION_CACHE_SIZE]{};
 };

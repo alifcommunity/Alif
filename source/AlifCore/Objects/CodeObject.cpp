@@ -17,18 +17,18 @@
 
 static const char* code_eventName(AlifCodeEvent _event) { // 20
 	switch (_event) {
-#define CASE(_op)                \
-        case ALIF_CODE_EVENT_##op:         \
-            return "ALIF_CODE_EVENT_" #_op;
+		#define CASE(_op)                \
+        case Alif_Code_Event_##_op:         \
+            return "Alif_Code_Event_" #_op;
 		ALIF_FOREACH_CODE_EVENT(CASE)
-#undef CASE
+		#undef CASE
 	}
 	ALIF_UNREACHABLE();
 }
 
 static void notify_codeWatchers(AlifCodeEvent _event, AlifCodeObject* _co) { // 32
-	AlifInterpreter* interp = alifInterpreter_get();
-	uint8_t bits = interp->active_code_watchers;
+	AlifInterpreter* interp = _alifInterpreter_get();
+	uint8_t bits = interp->activeCodeWatchers;
 	AlifIntT _i = 0;
 	while (bits) {
 		if (bits & 1) {
@@ -197,7 +197,7 @@ static void init_code(AlifCodeObject* _co, AlifCodeConstructor* _con) { // 452
 	/* not set */
 	_co->weakRefList = nullptr;
 	_co->extra = nullptr;
-	_co->_cached = nullptr;
+	_co->cached = nullptr;
 	_co->executors = nullptr;
 
 	memcpy(ALIFCODE_CODE(_co), ALIFBYTES_AS_STRING(_con->code),
@@ -209,7 +209,7 @@ static void init_code(AlifCodeObject* _co, AlifCodeConstructor* _con) { // 452
 	}
 	_co->firstTraceable = entryPoint;
 	alifCode_quicken(_co);
-	notify_codeWatchers(AlifCode_Event_Create, _co);
+	notify_codeWatchers(AlifCodeEvent::Alif_Code_Event_Create, _co);
 }
 
 

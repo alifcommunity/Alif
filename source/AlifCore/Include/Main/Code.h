@@ -4,51 +4,28 @@
 
 class AlifCoCached { // 28
 public:
-	AlifObject* coCode{};
-	AlifObject* CoVarNames{};
-	AlifObject* coCellVars{};
-	AlifObject* coFreeVars{};
+	AlifObject* code{};
+	AlifObject* varNames{};
+	AlifObject* cellVars{};
+	AlifObject* freeVars{};
 };
 
 
-class AlifExecutorArray {
+class AlifExecutorArray { // 44
 public:
 	AlifIntT size{};
 	AlifIntT capacity{};
-	AlifExecutorObject* executors[1];
+	AlifExecutorObject* executors[1]{};
 };
 
  // 73
 #define ALIFCODE_DEF(_size) {                                                    \
 public:																			\
     ALIFOBJECT_VAR_HEAD;                                                         \
-                                                                               \
-    /* Note only the following fields are used in hash and/or comparisons      \
-     *                                                                         \
-     * - name                                                               \
-     * - argcount                                                           \
-     * - posonlyargcount                                                    \
-     * - kwonlyargcount                                                     \
-     * - nlocals                                                            \
-     * - stacksize                                                          \
-     * - flags                                                              \
-     * - firstlineno                                                        \
-     * - consts                                                             \
-     * - names                                                              \
-     * - localsplusnames                                                    \
-     * This is done to preserve the name and line number for tracebacks        \
-     * and debuggers; otherwise, constant de-duplication would collapse        \
-     * identical functions/lambdas defined on different lines.                 \
-     */                                                                        \
-                                                                               \
-    /* These fields are set with provided values on new code objects. */       \
-                                                                               \
-    /* The hottest fields (in the eval loop) are grouped here at the top. */   \
     AlifObject *consts{};           /* list (constants used) */                 \
     AlifObject *names{};            /* list of strings (names used) */          \
-    AlifObject *exceptiontable{};   /* Byte string encoding exception handling  \
-                                      table */                                 \
-    AlifIntT flags{};                  /* CO_..., see below */                     \
+    AlifObject *exceptiontable{};												\
+    AlifIntT flags{};															\
                                                                                \
     /* The rest are not so impactful on performance. */                        \
     AlifIntT argCount{};              /* #arguments, except *args */               \
@@ -67,21 +44,17 @@ public:																			\
     uint32_t version{};          /* version number */                         \
                                                                                \
     AlifObject *localsPlusNames{}; /* tuple mapping offsets to names */         \
-    AlifObject *localsPlusKinds{}; /* Bytes mapping to local kinds (one byte    \
-                                     per variable) */                          \
+    AlifObject *localsPlusKinds{};												\
     AlifObject *filename{};        /* unicode (where it was loaded from) */     \
     AlifObject *name{};            /* unicode (name, for reference) */          \
     AlifObject *qualname{};        /* unicode (qualname, for reference) */      \
     AlifObject *lineTable{};       /* bytes object that holds location info */  \
     AlifObject *weakRefList{};     /* to support weakrefs to code objects */    \
     AlifExecutorArray *executors{};      /* executors from optimizer */        \
-    AlifCoCached *_cached{};      /* cached co_* attributes */                 \
-    uintptr_t _instrumentationVersion{}; /* current instrumentation version */ \
-    /*AlifCoMonitoringData *_monitoring{};*/ /* Monitoring data */                 \
+    AlifCoCached *cached{};      /* cached co_* attributes */                 \
+    uintptr_t instrumentationVersion{}; /* current instrumentation version */ \
+    /*AlifCoMonitoringData *monitoring{};*/ /* Monitoring data */                 \
     AlifIntT firstTraceable{};       /* index of first traceable instruction */   \
-    /* Scratch space for extra data relating to the code object.               \
-       Type is a void* to keep the format private in codeobject.c to force     \
-       people to go through the proper APIs. */                                \
     void *extra{};                                                            \
     char codeAdaptive[(_size)]{};                                             \
 }
@@ -126,11 +99,11 @@ extern AlifTypeObject _alifCodeType_; // 179
 
 
 #define ALIF_FOREACH_CODE_EVENT(_v) \
-    _v(CREATE)                 \
-    _v(DESTROY)
+    _v(Create)                 \
+    _v(Destroy)
 
 enum AlifCodeEvent {
-#define ALIF_DEF_EVENT(op) ALIF_CODE_EVENT_##op,
+#define ALIF_DEF_EVENT(_op) Alif_Code_Event_##_op,
 	ALIF_FOREACH_CODE_EVENT(ALIF_DEF_EVENT)
 #undef ALIF_DEF_EVENT
 };

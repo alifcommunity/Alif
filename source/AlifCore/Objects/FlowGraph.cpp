@@ -913,7 +913,7 @@ static AlifIntT add_const(AlifObject* _newConst, AlifObject* _consts, AlifObject
 		}
 	}
 	ALIF_DECREF(_newConst);
-	return (int)index;
+	return (AlifIntT)index;
 }
 
 static AlifIntT foldTuple_onConstants(AlifObject* _constCache,
