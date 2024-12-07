@@ -20,6 +20,10 @@
         ((AlifHashTableEntryT *)ALIF_SLIST_ITEM_NEXT(_entry))
 
 
+static void alifSList_prepend(AlifSListT* _list, AlifSListItemT* _item) { // 74 
+	_item->next = _list->head;
+	_list->head = _item;
+}
 
 
 
@@ -30,6 +34,16 @@ AlifUHashT alifHashTable_hashPtr(const void* _key) { // 92
 
 AlifIntT alifHashTable_compareDirect(const void* _key1, const void* _key2) { // 99
 	return (_key1 == _key2);
+}
+
+static AlifUSizeT round_size(AlifUSizeT _s) { // 108
+	AlifUSizeT i_{};
+	if (_s < HASHTABLE_MIN_SIZE)
+		return HASHTABLE_MIN_SIZE;
+	i_ = 1;
+	while (i_ < _s)
+		i_ <<= 1;
+	return i_;
 }
 
 
@@ -52,7 +66,7 @@ AlifHashTableEntryT* alifHashTable_getEntryGeneric(AlifHashTableT* ht, const voi
 
 static AlifHashTableEntryT* alifHashTable_getEntryPtr(AlifHashTableT* _ht, const void* _key) { // 161
 	AlifUHashT keyHash = alifHashTable_hashPtr(_key);
-	size_t index = keyHash & (_ht->nbuckets - 1);
+	AlifUSizeT index = keyHash & (_ht->nbuckets - 1);
 	AlifHashTableEntryT* entry = TABLE_HEAD(_ht, index);
 	while (1) {
 		if (entry == nullptr) {
@@ -66,6 +80,67 @@ static AlifHashTableEntryT* alifHashTable_getEntryPtr(AlifHashTableT* _ht, const
 	return entry;
 }
 
+AlifIntT alif_hashtableSet(AlifHashTableT* _ht, const void* _key, void* _value) { // 217
+	AlifHashTableEntryT* entry{};
+
+#ifndef NDEBUG
+	entry = _ht->getEntryFunc(_ht, _key);
+#endif
+
+	entry = (AlifHashTableEntryT*)_ht->alloc.malloc(sizeof(AlifHashTableEntryT));
+	if (entry == nullptr) {
+		return -1;
+	}
+
+	entry->keyHash = _ht->hashFunc(_key);
+	entry->key = (void*)_key;
+	entry->value = _value;
+
+	_ht->nentries++;
+	if ((float)_ht->nentries / (float)_ht->nbuckets > HASHTABLE_HIGH) {
+		if (hashtable_rehash(_ht) < 0) {
+			_ht->nentries--;
+			_ht->alloc.free(entry);
+			return -1;
+		}
+	}
+
+	AlifUSizeT index = entry->keyHash & (_ht->nbuckets - 1);
+	alifSList_prepend(&_ht->buckets[index], (AlifSListItemT*)entry);
+	return 0;
+}
+
+
+static AlifIntT hashtable_rehash(AlifHashTableT* _ht) { // 287
+	AlifUSizeT newSize = round_size((AlifUSizeT)(_ht->nentries * HASHTABLE_REHASH_FACTOR));
+	if (newSize == _ht->nbuckets) {
+		return 0;
+	}
+
+	AlifUSizeT bucketsSize = newSize * sizeof(_ht->buckets[0]);
+	AlifSListT* newBuckets = (AlifSListT*)_ht->alloc.malloc(bucketsSize);
+	if (newBuckets == nullptr) {
+		return -1;
+	}
+	memset(newBuckets, 0, bucketsSize);
+
+	for (AlifUSizeT bucket = 0; bucket < _ht->nbuckets; bucket++) {
+		AlifHashTableEntryT* entry = BUCKETS_HEAD(_ht->buckets[bucket]);
+		while (entry != nullptr) {
+			AlifHashTableEntryT* next = ENTRY_NEXT(entry);
+			AlifUSizeT entry_index = entry->keyHash & (newSize - 1);
+
+			alifSList_prepend(&newBuckets[entry_index], (AlifSListItemT*)entry);
+
+			entry = next;
+		}
+	}
+
+	_ht->alloc.free(_ht->buckets);
+	_ht->nbuckets = newSize;
+	_ht->buckets = newBuckets;
+	return 0;
+}
 
 
 void* alifHashTable_get(AlifHashTableT* _ht, const void* _key) { // 255
