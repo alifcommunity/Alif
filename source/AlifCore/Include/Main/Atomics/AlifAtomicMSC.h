@@ -279,6 +279,9 @@ static inline uint64_t alifAtomic_loadUint64(const uint64_t* _obj) { // 547
 #endif
 }
 
+static inline AlifIntT alifAtomic_loadInt(const AlifIntT* _obj) { // 577
+	return (AlifIntT)alifAtomic_loadUint32((uint32_t*)_obj);
+}
 
 static inline void* alifAtomic_loadPtr(const void* _obj) { // 597
 #if SIZEOF_VOID_P == 8

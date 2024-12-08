@@ -29,6 +29,8 @@ public:
 };
 
 
+#define CODE_MAX_WATCHERS 8 // 78
+
 
 
  // 219

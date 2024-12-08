@@ -45,6 +45,127 @@ static void notify_codeWatchers(AlifCodeEvent _event, AlifCodeObject* _co) { // 
 }
 
 
+
+static AlifIntT intern_strings(AlifObject* _tuple) { // 137
+	AlifInterpreter* interp = _alifInterpreter_get();
+	AlifSizeT i{};
+
+	for (i = ALIFTUPLE_GET_SIZE(_tuple); --i >= 0; ) {
+		AlifObject* v = ALIFTUPLE_GET_ITEM(_tuple, i);
+		if (v == nullptr or !ALIFUSTR_CHECKEXACT(v)) {
+			//alifErr_setString(_alifExcSystemError_,
+			//	"non-string found in code slot");
+			return -1;
+		}
+		alifUStr_internImmortal(interp, &ALIFTUPLE_ITEMS(_tuple)[i]);
+	}
+	return 0;
+}
+
+
+static AlifIntT intern_constants(AlifObject* _tuple, AlifIntT* _modified) { // 158
+	AlifInterpreter* interp = _alifInterpreter_get();
+	for (AlifSizeT i = ALIFTUPLE_GET_SIZE(_tuple); --i >= 0; ) {
+		AlifObject* v = ALIFTUPLE_GET_ITEM(_tuple, i);
+		if (ALIFUSTR_CHECKEXACT(v)) {
+			if (should_internString(v)) {
+				AlifObject* w = v;
+				alifUStr_internMortal(interp, &v);
+				if (w != v) {
+					ALIFTUPLE_SET_ITEM(_tuple, i, v);
+					if (_modified) {
+						*_modified = 1;
+					}
+				}
+			}
+		}
+		else if (ALIFTUPLE_CHECKEXACT(v)) {
+			if (intern_constants(v, nullptr) < 0) {
+				return -1;
+			}
+		}
+		else if (ALIFFROZENSET_CHECKEXACT(v)) {
+			AlifObject* w = v;
+			AlifObject* tmp = alifSequence_tuple(v);
+			if (tmp == nullptr) {
+				return -1;
+			}
+			AlifIntT tmpModified = 0;
+			if (intern_constants(tmp, &tmpModified) < 0) {
+				ALIF_DECREF(tmp);
+				return -1;
+			}
+			if (tmpModified) {
+				v = alifFrozenSet_new(tmp);
+				if (v == nullptr) {
+					ALIF_DECREF(tmp);
+					return -1;
+				}
+
+				ALIFTUPLE_SET_ITEM(_tuple, i, v);
+				ALIF_DECREF(w);
+				if (_modified) {
+					*_modified = 1;
+				}
+			}
+			ALIF_DECREF(tmp);
+		}
+#ifdef ALIF_GIL_DISABLED
+		else if (ALIFSLICE_CHECK(v)) {
+			AlifSliceObject* slice = (AlifSliceObject*)v;
+			AlifObject* tmp = alifTuple_new(3);
+			if (tmp == nullptr) {
+				return -1;
+			}
+			ALIFTUPLE_SET_ITEM(tmp, 0, ALIF_NEWREF(slice->start));
+			ALIFTUPLE_SET_ITEM(tmp, 1, ALIF_NEWREF(slice->stop));
+			ALIFTUPLE_SET_ITEM(tmp, 2, ALIF_NEWREF(slice->step));
+			AlifIntT tmpModified = 0;
+			if (intern_constants(tmp, &tmpModified) < 0) {
+				ALIF_DECREF(tmp);
+				return -1;
+			}
+			if (tmpModified) {
+				v = alifSlice_new(ALIFTUPLE_GET_ITEM(tmp, 0),
+					ALIFTUPLE_GET_ITEM(tmp, 1),
+					ALIFTUPLE_GET_ITEM(tmp, 2));
+				if (v == nullptr) {
+					ALIF_DECREF(tmp);
+					return -1;
+				}
+				ALIFTUPLE_SET_ITEM(_tuple, i, v);
+				ALIF_DECREF(slice);
+				if (_modified) {
+					*_modified = 1;
+				}
+			}
+			ALIF_DECREF(tmp);
+		}
+
+		AlifThread* tstate = alifThread_get();
+		if (!ALIF_ISIMMORTAL(v) and !ALIFCODE_CHECK(v) and
+			!ALIFUSTR_CHECKEXACT(v) and
+			alifAtomic_loadInt(&tstate->interpreter->gc.immortalize) >= 0)
+		{
+			AlifObject* interned = intern_oneConstant(v);
+			if (interned == nullptr) {
+				return -1;
+			}
+			else if (interned != v) {
+				ALIFTUPLE_SET_ITEM(_tuple, i, interned);
+				ALIF_SETREF(v, interned);
+				if (_modified) {
+					*_modified = 1;
+				}
+			}
+		}
+#endif
+	}
+	return 0;
+}
+
+
+
 void alifSet_localsPlusInfo(AlifIntT _offset, AlifObject* _name,
 	AlifLocalsKind _kind, AlifObject* _names, AlifObject* _kinds) { // 327
 	ALIFTUPLE_SET_ITEM(_names, _offset, ALIF_NEWREF(_name));
@@ -208,7 +329,7 @@ static void init_code(AlifCodeObject* _co, AlifCodeConstructor* _con) { // 452
 		entryPoint++;
 	}
 	_co->firstTraceable = entryPoint;
-	alifCode_quicken(_co);
+	//alifCode_quicken(_co);
 	notify_codeWatchers(AlifCodeEvent::Alif_Code_Event_Create, _co);
 }
 

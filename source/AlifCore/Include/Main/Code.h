@@ -95,16 +95,21 @@ extern AlifTypeObject _alifCodeType_; // 179
 
 
 
-
+ // 243
 #define ALIF_FOREACH_CODE_EVENT(_v) \
     _v(Create)                 \
     _v(Destroy)
 
-enum AlifCodeEvent {
+enum AlifCodeEvent { // 274
 #define ALIF_DEF_EVENT(_op) Alif_Code_Event_##_op,
 	ALIF_FOREACH_CODE_EVENT(ALIF_DEF_EVENT)
 #undef ALIF_DEF_EVENT
 };
+
+
+
+typedef AlifIntT (*AlifCodeWatchCallback)(AlifCodeEvent _event, AlifCodeObject* _co); // 263
+
 
 
 AlifObject* alifCode_constantKey(AlifObject*); // 309

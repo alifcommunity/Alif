@@ -184,7 +184,6 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\TupleObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\UStrObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\WeakRefObject.h" />
-    <ClInclude Include="..\source\AlifCore\Include\SliceObject.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\AlifCore\Objects\Abstract.cpp" />

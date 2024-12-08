@@ -103,7 +103,11 @@ public:
 
 	AlifMemory* memory_{};
 
-	AlifInterpCachedObjects cachedObjects{};
+
+	//AlifTypeWatchCallback typeWatchers[TYPE_MAX_WATCHERS]{};
+	AlifCodeWatchCallback codeWatchers[CODE_MAX_WATCHERS]{};
+	uint8_t activeCodeWatchers{};
+
 	//AlifObjectState objectState{};
 	AlifLongState longState{};
 	DToAState dtoa{};
@@ -117,6 +121,7 @@ public:
 
 
 	//class TypesState types;
+	AlifInterpCachedObjects cachedObjects{};
 
 	AlifThreadImpl initialThread{};
 };
