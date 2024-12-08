@@ -46,7 +46,7 @@ static void notify_codeWatchers(AlifCodeEvent _event, AlifCodeObject* _co) { // 
 
 static AlifIntT should_internString(AlifObject* _o) { // 106
 #ifdef ALIF_GIL_DISABLED
-	AlifInterpreter* interp = alifInterpreter_get();
+	AlifInterpreter* interp = _alifInterpreter_get();
 	if (alifAtomic_loadInt(&interp->gc.immortalize) < 0) {
 		return 1;
 	}
@@ -65,6 +65,10 @@ static AlifIntT should_internString(AlifObject* _o) { // 106
 	}
 	return 1;
 }
+
+#ifdef ALIF_GIL_DISABLED
+static AlifObject* intern_oneConstant(AlifObject*); // 133
+#endif
 
 static AlifIntT intern_strings(AlifObject* _tuple) { // 137
 	AlifInterpreter* interp = _alifInterpreter_get();
@@ -563,11 +567,11 @@ AlifObject* alifCode_constantKey(AlifObject* _op) { // 2331
 
 #ifdef ALIF_GIL_DISABLED
 static AlifObject* intern_oneConstant(AlifObject* _op) { // 2461
-	AlifInterpreter* interp = alifInterpreter_get();
+	AlifInterpreter* interp = _alifInterpreter_get();
 	AlifHashTableT* consts = interp->codeState.constants;
 	AlifHashTableEntryT* entry = _alifHashTable_getEntry(consts, _op);
 	if (entry == nullptr) {
-		if (alif_hashtableSet(consts, _op, _op) != 0) {
+		if (alifHashTable_set(consts, _op, _op) != 0) {
 			return nullptr;
 		}
 

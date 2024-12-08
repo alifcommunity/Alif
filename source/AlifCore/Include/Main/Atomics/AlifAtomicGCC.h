@@ -170,6 +170,10 @@ static inline uintptr_t alifAtomic_orUintptr(uintptr_t* _obj, uintptr_t _value) 
 }
 
 
+static inline AlifIntT alifAtomic_loadInt(const AlifIntT* _obj) { // 246
+	return __atomic_load_n(_obj, __ATOMIC_SEQ_CST);
+}
+
 
 static inline uint8_t alifAtomic_loadUint8(const uint8_t* _obj) { // 270
 	return __atomic_load_n(_obj, __ATOMIC_SEQ_CST);

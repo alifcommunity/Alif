@@ -44,12 +44,12 @@ extern AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg); // 487
 #define HAS_EVAL_BREAK_FLAG (64) // 964
 
 
-#define OPCODE_HAS_CONST(_op) (_alifOpcodeOpcodeMetadata[_op].flags & (HAS_CONST_FLAG)) // 974
+#define OPCODE_HAS_CONST(_op) (_alifOpcodeOpcodeMetadata_[_op].flags & (HAS_CONST_FLAG)) // 974
 
-#define OPCODE_HAS_JUMP(_op) (_alifOpcodeOpcodeMetadata[_op].flags & (HAS_JUMP_FLAG)) // 976
+#define OPCODE_HAS_JUMP(_op) (_alifOpcodeOpcodeMetadata_[_op].flags & (HAS_JUMP_FLAG)) // 976
 
 
-#define OPCODE_HAS_EVAL_BREAK(_op) (_alifOpcodeOpcodeMetadata[_op].flags & (HAS_EVAL_BREAK_FLAG)) // 979
+#define OPCODE_HAS_EVAL_BREAK(_op) (_alifOpcodeOpcodeMetadata_[_op].flags & (HAS_EVAL_BREAK_FLAG)) // 979
 
 
 
@@ -63,7 +63,7 @@ public:
 	int16_t flags{};
 };
 
-extern const OpcodeMetadata _alifOpcodeOpcodeMetadata[264]; // 1004
+extern const OpcodeMetadata _alifOpcodeOpcodeMetadata_[264]; // 1004
 
 
 

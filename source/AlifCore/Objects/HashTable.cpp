@@ -20,6 +20,11 @@
         ((AlifHashTableEntryT *)ALIF_SLIST_ITEM_NEXT(_entry))
 
 
+
+/* Forward declaration */
+static AlifIntT hashTable_rehash(AlifHashTableT*); // 63
+
+
 static void alifSList_prepend(AlifSListT* _list, AlifSListItemT* _item) { // 74 
 	_item->next = _list->head;
 	_list->head = _item;
@@ -80,12 +85,8 @@ static AlifHashTableEntryT* alifHashTable_getEntryPtr(AlifHashTableT* _ht, const
 	return entry;
 }
 
-AlifIntT alif_hashtableSet(AlifHashTableT* _ht, const void* _key, void* _value) { // 217
+AlifIntT alifHashTable_set(AlifHashTableT* _ht, const void* _key, void* _value) { // 217
 	AlifHashTableEntryT* entry{};
-
-#ifndef NDEBUG
-	entry = _ht->getEntryFunc(_ht, _key);
-#endif
 
 	entry = (AlifHashTableEntryT*)_ht->alloc.malloc(sizeof(AlifHashTableEntryT));
 	if (entry == nullptr) {
@@ -98,7 +99,7 @@ AlifIntT alif_hashtableSet(AlifHashTableT* _ht, const void* _key, void* _value) 
 
 	_ht->nentries++;
 	if ((float)_ht->nentries / (float)_ht->nbuckets > HASHTABLE_HIGH) {
-		if (hashtable_rehash(_ht) < 0) {
+		if (hashTable_rehash(_ht) < 0) {
 			_ht->nentries--;
 			_ht->alloc.free(entry);
 			return -1;
@@ -111,7 +112,7 @@ AlifIntT alif_hashtableSet(AlifHashTableT* _ht, const void* _key, void* _value) 
 }
 
 
-static AlifIntT hashtable_rehash(AlifHashTableT* _ht) { // 287
+static AlifIntT hashTable_rehash(AlifHashTableT* _ht) { // 287
 	AlifUSizeT newSize = round_size((AlifUSizeT)(_ht->nentries * HASHTABLE_REHASH_FACTOR));
 	if (newSize == _ht->nbuckets) {
 		return 0;
