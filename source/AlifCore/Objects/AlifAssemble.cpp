@@ -4,7 +4,7 @@
 #include "AlifCore_Compile.h"
 #include "AlifCore_InstructionSequence.h"
 #include "AlifCore_OpcodeUtils.h"
-#include "AlifCore_OpcodeMetadata.h"
+#include "AlifCore_OpcodeMetaData.h"
 #include "AlifCore_SymTable.h"
 
 

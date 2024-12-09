@@ -5,6 +5,8 @@
 #include "AlifCore_Object.h"
 #include "AlifCore_Abstract.h"
 
+#include <float.h>
+
 
 #define MEDIUM_VALUE(_x) ((stwodigits)alifLong_compactValue(_x)) // 23
 

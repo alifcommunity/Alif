@@ -17,7 +17,7 @@
 
 
 #define NEED_OPCODE_METADATA
-#include "AlifCore_OpcodeMetadata.h"
+#include "AlifCore_OpcodeMetaData.h"
 #undef NEED_OPCODE_METADATA
 
 
@@ -675,7 +675,7 @@ static AlifIntT codegen_addOpO(AlifCompiler* _c, Location _loc,
 
  // 935
 #define ADDOP_N(_c, _loc, _op, _o, _type) { \
-    AlifIntT ret = codegen_addOpO(_c, _loc, _op, _c->u_->metadata. ## _type, _o); \
+    AlifIntT ret = codegen_addOpO(_c, _loc, _op, _c->u_->metadata._type, _o); \
     ALIF_DECREF(_o); \
     RETURN_IF_ERROR(ret); \
 }
@@ -731,7 +731,7 @@ static AlifIntT codegen_addOpName(AlifCompiler* _c, Location _loc,
 
 
 #define ADDOP_NAME(_c, _loc, _op, _o, _type) \
-    RETURN_IF_ERROR(codegen_addOpName(_c, _loc, _op, _c->u_->metadata. ## _type, _o)) // 997
+    RETURN_IF_ERROR(codegen_addOpName(_c, _loc, _op, _c->u_->metadata._type, _o)) // 997
 
 
 
