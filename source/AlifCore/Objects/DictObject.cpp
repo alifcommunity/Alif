@@ -102,7 +102,7 @@ static inline void dictKeys_decRef(AlifInterpreter* _interp,
 		}
 		else {
 			AlifDictKeyEntry* entries = dk_entries(_dk);
-			AlifSizeT i, n;
+			AlifSizeT i{}, n{};
 			for (i = 0, n = _dk->nentries; i < n; i++) {
 				ALIF_XDECREF(entries[i].key);
 				ALIF_XDECREF(entries[i].value);

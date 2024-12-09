@@ -77,11 +77,30 @@ fail:
 	return nullptr;
 }
 
+
+
+
+static void ste_dealloc(AlifSTEntryObject* _ste) { // 163
+	_ste->table = nullptr;
+	ALIF_XDECREF(_ste->id);
+	ALIF_XDECREF(_ste->name);
+	ALIF_XDECREF(_ste->symbols);
+	ALIF_XDECREF(_ste->varNames);
+	ALIF_XDECREF(_ste->children);
+	ALIF_XDECREF(_ste->directives);
+	ALIF_XDECREF(_ste->annotationBlock);
+	ALIF_XDECREF(_ste->mangledNames);
+	alifMem_objFree(_ste);
+}
+
+
+
+
 AlifTypeObject _alifSTEntryType_ = { // 192
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "مدخل_جدول_الاسماء",
 	.basicSize = sizeof(AlifSTEntryObject),
-	.itemSize = 0,
+	.dealloc = (Destructor)ste_dealloc,
 
 	.getAttro = alifObject_genericGetAttr,
 

@@ -7,6 +7,9 @@
 
 
 
+static inline AlifIntT maybe_freeListPush(AlifTupleObject*); // 21
+
+
 
 static AlifTupleObject* tuple_alloc(AlifSizeT _size) { // 34
 	if (_size < 0) {
@@ -77,6 +80,28 @@ AlifObject* alifTuple_pack(AlifSizeT _n, ...) { // 153
 
 
 
+static void tuple_dealloc(AlifTupleObject* _op) { // 184
+	if (ALIF_SIZE(_op) == 0) {
+		if (_op == &ALIF_SINGLETON(tupleEmpty)) {
+			return;
+		}
+	}
+
+	alifObject_gcUnTrack(_op);
+	ALIF_TRASHCAN_BEGIN(_op, tuple_dealloc)
+
+		AlifSizeT i = ALIF_SIZE(_op);
+	while (--i >= 0) {
+		ALIF_XDECREF(_op->item[i]);
+	}
+	if (!maybe_freeListPush(_op)) {
+		ALIF_TYPE(_op)->free((AlifObject*)_op);
+	}
+
+	ALIF_TRASHCAN_END
+}
+
+
 
 #if SIZEOF_ALIF_UHASH_T > 4
 #define ALIFHASH_XXPRIME_1 ((AlifUHashT)11400714785074694791ULL)
@@ -145,7 +170,7 @@ AlifTypeObject _alifTupleType_ = { // 865
 	.name = "مترابطة",
 	.basicSize = sizeof(AlifTupleObject) - sizeof(AlifObject*),
 	.itemSize = sizeof(AlifObject*),
-
+	.dealloc = (Destructor)tuple_dealloc,
 	.hash = (HashFunc)tuple_hash,
 
 	.getAttro = alifObject_genericGetAttr,
@@ -204,5 +229,30 @@ AlifIntT alifTuple_resize(AlifObject** _pv, AlifSizeT _newSize) { // 918
 			sizeof(*sv_->item) * (_newSize - oldSize));
 	*_pv = (AlifObject*)sv_;
 	ALIFOBJECT_GC_TRACK(sv_);
+	return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+static inline AlifIntT maybe_freeListPush(AlifTupleObject* _op) { // 1132
+	if (!ALIF_IS_TYPE(_op, &_alifTupleType_)) {
+		return 0;
+	}
+	AlifSizeT index = ALIF_SIZE(_op) - 1;
+	if (index < ALIFTUPLE_MAXSAVESIZE) {
+		return ALIF_FREELIST_PUSH(tuples[index], _op, ALIFTUPLE_MAXFREELIST);
+	}
 	return 0;
 }

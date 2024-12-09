@@ -154,11 +154,22 @@ AlifObject* _alifInstructionSequence_new() { // 197
 }
 
 
+
+
+static void instSeq_dealloc(AlifInstructionSequence* _seq) { // 390
+	alifObject_gcUnTrack(_seq);
+	ALIF_TRASHCAN_BEGIN(_seq, instSeq_dealloc)
+	alifInstructionSequence_fini(_seq);
+	alifObject_gcDel(_seq);
+	ALIF_TRASHCAN_END
+}
+
+
 AlifTypeObject _alifInstructionSequenceType_ = { // 414
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "تعليمات_تتالي",
 	.basicSize = sizeof(AlifInstructionSequence),
-
+	.dealloc = (Destructor)instSeq_dealloc,
 	.getAttro = alifObject_genericGetAttr,
 
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
