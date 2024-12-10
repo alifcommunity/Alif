@@ -41,6 +41,31 @@ void alif_setImmortal(AlifObject*); // 162
 void alif_setImmortalUntracked(AlifObject*); // 163 
 
 
+static inline void _alif_setMortal(AlifObject* _op, AlifSizeT _refCnt) { // 167
+	if (_op) {
+#ifdef ALIF_GIL_DISABLED
+		_op->threadID = ALIF_UNOWNED_TID;
+		_op->refLocal = 0;
+		_op->refShared = ALIF_REF_SHARED(_refCnt, ALIF_REF_MERGED);
+#else
+		_op->refcnt = _refCnt;
+#endif
+	}
+}
+
+static inline void _alif_clearImmortal(AlifObject* _op) { // 182
+	if (_op) {
+		_alif_setMortal(_op, 1);
+		ALIF_DECREF(_op);
+	}
+}
+#define ALIF_CLEARIMMORTAL(_op) \
+    do { \
+        _alif_clearImmortal(ALIFOBJECT_CAST(_op)); \
+        _op = nullptr; \
+    } while (0)
+
+
 
 static inline void _alif_decrefSpecialized(AlifObject* _op, const Destructor _destruct) { // 237
 	ALIF_DECREF(_op);

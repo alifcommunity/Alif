@@ -451,7 +451,7 @@ static AlifIntT get_maxLabel(BasicBlock* _entryBlock) { // 622
 static AlifIntT translateJump_labelsToTargets(BasicBlock* _entryBlock) { // 635
 	AlifIntT maxLabel = get_maxLabel(_entryBlock);
 	AlifUSizeT mapSize = sizeof(BasicBlock*) * (maxLabel + 1);
-	BasicBlock** label2block = (BasicBlock**)alifMem_dataAlloc(mapSize);
+	BasicBlock** label2block = (BasicBlock**)alifMem_dataAlloc(mapSize ? mapSize : 1); // alif
 	if (!label2block) {
 		//alifErr_noMemory();
 		return ERROR;
@@ -1909,6 +1909,7 @@ static AlifIntT* build_cellFixedOffsets(AlifCompileCodeUnitMetadata* _umd) { // 
 	AlifIntT nfreevars = (AlifIntT)ALIFDICT_GET_SIZE(_umd->freevars);
 
 	AlifIntT noffsets = ncellvars + nfreevars;
+	noffsets ? noffsets : noffsets = 1; // alif
 	AlifIntT* fixed = (AlifIntT*)alifMem_dataAlloc(noffsets * sizeof(AlifIntT));
 	if (fixed == nullptr) {
 		//alifErr_noMemory();

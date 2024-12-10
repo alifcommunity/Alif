@@ -343,6 +343,9 @@ static AlifIntT alifCore_interpreterInit(AlifThread* _thread) { // 843
 	status = alifCore_initGlobalObjects(interpreter);
 	if (status < 0) return status;
 
+	status = alifCode_init(interpreter);
+	if (status < 0) return status;
+
 	//status = alifGC_init(interpreter);
 	if (status < 0) return status;
 

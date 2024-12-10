@@ -21,7 +21,7 @@
         .staticObjects = { \
             .singletons = { \
                 .smallInts = ALIF_SMALL_INTS_INIT, \
-                /*.bytesEmpty = ALIFBYTES_SIMPLE_INIT(0, 0),*/ \
+                .bytesEmpty = ALIFBYTES_SIMPLE_INIT(0, 0), \
                 .bytesCharacters = ALIF_BYTES_CHARACTERS_INIT, \
                 .strings = { \
                     .literals = ALIF_STR_LITERALS_INIT, \

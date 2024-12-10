@@ -582,11 +582,110 @@ static AlifObject* intern_oneConstant(AlifObject* _op) { // 2461
 	return (AlifObject*)entry->value;
 }
 
+static AlifIntT compare_constants(const void* _key1, const void* _key2) { // 2491
+	AlifObject* op1 = (AlifObject*)_key1;
+	AlifObject* op2 = (AlifObject*)_key2;
+	if (op1 == op2) {
+		return 1;
+	}
+	if (ALIF_TYPE(op1) != ALIF_TYPE(op2)) {
+		return 0;
+	}
 
+	if (ALIFTUPLE_CHECKEXACT(op1)) {
+		AlifSizeT size = ALIFTUPLE_GET_SIZE(op1);
+		if (size != ALIFTUPLE_GET_SIZE(op2)) {
+			return 0;
+		}
+		for (AlifSizeT i = 0; i < size; i++) {
+			if (ALIFTUPLE_GET_ITEM(op1, i) != ALIFTUPLE_GET_ITEM(op2, i)) {
+				return 0;
+			}
+		}
+		return 1;
+	}
+	else if (ALIFFROZENSET_CHECKEXACT(op1)) {
+		if (ALIFSET_GET_SIZE(op1) != ALIFSET_GET_SIZE(op2)) {
+			return 0;
+		}
+		AlifSizeT pos1 = 0, pos2 = 0;
+		AlifObject* obj1{}, * obj2{};
+		AlifHashT hash1{}, hash2{};
+		while ((alifSet_nextEntry(op1, &pos1, &obj1, &hash1)) and
+			(alifSet_nextEntry(op2, &pos2, &obj2, &hash2)))
+		{
+			if (obj1 != obj2) {
+				return 0;
+			}
+		}
+		return 1;
+	}
+	else if (ALIFSLICE_CHECK(op1)) {
+		AlifSliceObject* s1 = (AlifSliceObject*)op1;
+		AlifSliceObject* s2 = (AlifSliceObject*)op2;
+		return (s1->start == s2->start and
+			s1->stop == s2->stop and
+			s1->step == s2->step);
+	}
+	else if (ALIFBYTES_CHECKEXACT(op1) or ALIFLONG_CHECKEXACT(op1)) {
+		return alifObject_richCompareBool(op1, op2, ALIF_EQ);
+	}
+	else if (ALIFFLOAT_CHECKEXACT(op1)) {
+		// Ensure that, for example, +0.0 and -0.0 are distinct
+		double f1 = ALIFFLOAT_AS_DOUBLE(op1);
+		double f2 = ALIFFLOAT_AS_DOUBLE(op2);
+		return memcmp(&f1, &f2, sizeof(double)) == 0;
+	}
+	else if (ALIFCOMPLEX_CHECKEXACT(op1)) {
+		AlifComplex c1 = ((AlifComplexObject*)op1)->cVal;
+		AlifComplex c2 = ((AlifComplexObject*)op2)->cVal;
+		return memcmp(&c1, &c2, sizeof(AlifComplex)) == 0;
+	}
+	//alif_fatalErrorFormat("unexpected type in compare_constants: %s",
+	//	ALIF_TYPE(op1)->name);
+	return 0;
+}
+
+static AlifUHashT hash_const(const void* _key) { // 2557
+	AlifObject* op = (AlifObject*)_key;
+	if (ALIFSLICE_CHECK(op)) {
+		AlifSliceObject* s = (AlifSliceObject*)op;
+		AlifObject* data[3] = { s->start, s->stop, s->step };
+		return alif_hashBytes(&data, sizeof(data));
+	}
+	else if (ALIFTUPLE_CHECKEXACT(op)) {
+		AlifSizeT size = ALIFTUPLE_GET_SIZE(op);
+		AlifObject** data = ALIFTUPLE_ITEMS(op);
+		return alif_hashBytes(data, sizeof(AlifObject*) * size);
+	}
+	AlifHashT h = alifObject_hash(op);
+	if (h == -1) {
+		//alif_fatalError("code: hash failed");
+	}
+	return (AlifUHashT)h;
+}
+
+
+
+static void destroy_key(void* _key) { // 2604
+	ALIF_CLEARIMMORTAL(_key);
+}
 
 #endif // 2609
 
 
+AlifIntT alifCode_init(AlifInterpreter* _interp) { // 2611
+#ifdef ALIF_GIL_DISABLED
+	AlifCodeState* state = &_interp->codeState;
+	state->constants = alifHashTable_newFull(&hash_const, &compare_constants,
+		&destroy_key, nullptr, nullptr);
+	if (state->constants == nullptr) {
+		//return ALIFSTATUS_NO_MEMORY();
+		return -1; // alif
+	}
+#endif
+	return 1;
+}
 
 
 

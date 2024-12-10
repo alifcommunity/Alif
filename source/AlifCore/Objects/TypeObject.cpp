@@ -1152,7 +1152,9 @@ AlifTypeObject _alifTypeType_ = { // 6195
 
 
 
-
+static void object_dealloc(AlifObject* _self) { // 6386
+	ALIF_TYPE(_self)->free(_self);
+}
 
 
 
@@ -1168,6 +1170,7 @@ AlifTypeObject _alifBaseObjectType_ = { // 7453
 	.name = "كائن",              
 	.basicSize = sizeof(AlifObject),
 	.itemSize = 0,
+	.dealloc = object_dealloc,
 	.hash = alifObject_genericHash,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE,
 	.alloc = alifType_genericAlloc,
@@ -1251,7 +1254,7 @@ static AlifIntT inherit_slots(AlifTypeObject* _type, AlifTypeObject* _base) { //
 		COPYNUM(inplaceFloorDivide);
 		COPYNUM(index);
 		COPYNUM(matrixMultiply);
-		//COPYNUM(inplaceMatrix_multiply);
+		//COPYNUM(inplaceMatrixMultiply);
 	}
 
 	//if (_type->asAsync != nullptr and _base->asAsync != nullptr) {
@@ -1358,7 +1361,7 @@ static AlifIntT inherit_slots(AlifTypeObject* _type, AlifTypeObject* _base) { //
 			COPYSLOT(free);
 		}
 		else if ((_type->flags & ALIF_TPFLAGS_HAVE_GC) and
-			_type->free == nullptr &&
+			_type->free == nullptr and
 			_base->free == alifMem_objFree) {
 			_type->free = alifObject_gcDel;
 		}
