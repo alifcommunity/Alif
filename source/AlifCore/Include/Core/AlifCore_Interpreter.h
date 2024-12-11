@@ -47,6 +47,15 @@ public:
 #endif
 
 
+class RareEvents { // 75
+public:
+	uint8_t setClass{};
+	uint8_t setBases{};
+	uint8_t setEvalFrameFunc{};
+	uint8_t builtinDict{};
+	uint8_t funcModification{};
+};
+
 class AlifInterpreter { // 95
 public:
 
@@ -79,6 +88,10 @@ public:
 	unsigned long featureFlags{};
 
 	AlifFrameEvalFunction evalFrame{};
+
+	AlifFunctionWatchCallback funcWatchers[FUNC_MAX_WATCHERS];
+
+	uint8_t activeFuncWatchers{};
 
 	GCDureRunState gc{};
 
@@ -121,6 +134,9 @@ public:
 	TypesState types{};
 
 
+	RareEvents rareEvents{};
+
+
 	//class TypesState types;
 	AlifInterpCachedObjects cachedObjects{};
 
@@ -150,9 +166,17 @@ extern const AlifConfig* alifInterpreter_getConfig(AlifInterpreter*); // 329
 #define ALIF_RTFLAGS_EXEC (1UL << 16)
 
 
-
-AlifIntT alifInterpreter_new(AlifThread*, AlifInterpreter**); // 399
-
 static inline AlifThread* alifInterpreter_getFinalizing(AlifInterpreter* _interp) { //  289
 	return (AlifThread*)alifAtomic_loadPtrRelaxed(&_interp->finalizing);
 }
+
+AlifIntT alifInterpreter_new(AlifThread*, AlifInterpreter**); // 399
+
+
+#define RARE_EVENT_INTERP_INC(_interp, _name) \
+    do { \
+        AlifIntT val_ = alifAtomic_loadUint8Relaxed((const uint8_t*)_interp->rareEvents._name); \
+        if (val_ < UINT8_MAX) { \
+            alifAtomic_storeInt((AlifIntT*)_interp->rareEvents._name, val_ + 1); \
+        } \
+    } while (0); \

@@ -43,3 +43,24 @@ public:
 
 
 extern AlifTypeObject _alifFunctionType_; // 66
+
+// 132
+#define ALIF_FOREACH_FUNC_EVENT(_v) \
+    _v(Create)                    \
+    _v(Destroy)                   \
+    _v(Modify_Code)               \
+    _v(Modify_Defaults)           \
+    _v(Modify_KWDefaults)
+
+enum AlifFunctionWatchEvent { // 139
+#define ALIF_DEF_EVENT(_Event) AlifFunction_Event_##_Event,
+	ALIF_FOREACH_FUNC_EVENT(ALIF_DEF_EVENT)
+#undef ALIF_DEF_EVENT
+};
+
+
+
+typedef AlifIntT (*AlifFunctionWatchCallback)(
+	AlifFunctionWatchEvent ,
+	AlifFunctionObject* ,
+	AlifObject* ); // 160
