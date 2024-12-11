@@ -46,6 +46,6 @@ AlifObject* _alifEval_builtinsFromGlobals(AlifThread* _thread, AlifObject* _glob
 	//	return nullptr;
 	//}
 
-	return alifEval_getBuiltins(_thread);
+	return _alifEval_getBuiltins(_thread);
 }
 

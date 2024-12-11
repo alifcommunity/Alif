@@ -178,3 +178,26 @@ AlifObject* alifEval_vector(AlifThread* _tstate, AlifFunctionObject* _func,
 	}
 	return alifEval_evalFrame(_tstate, frame, 0);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+AlifObject* _alifEval_getBuiltins(AlifThread* _thread) { // 2444
+	AlifInterpreterFrame* frame = _alifThreadState_getFrame(_thread);
+	if (frame != nullptr) {
+		return frame->builtins;
+	}
+	return _thread->interpreter->builtins;
+}
