@@ -218,7 +218,7 @@ static AlifObject* runEval_codeObj(AlifThread* _thread, AlifCodeObject* _co,
 		}
 	}
 
-	//v = alifEval_evalCode((AlifObject*)_co, _globals, _locals);
+	v = alifEval_evalCode((AlifObject*)_co, _globals, _locals);
 	//if (!v and _alifErr_Occurred(_thread) == _alifExcKeyboardInterrupt_) {
 	//	_alifDureRun_.signals.unhandledKeyboardInterrupt = 1;
 	//}
