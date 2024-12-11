@@ -26,7 +26,23 @@ AlifIntT alifEval_makePendingCalls(AlifThread*); // 37
 
 
 
+extern AlifObject* _alifEval_builtinsFromGlobals(AlifThread*, AlifObject*); // 86
 
+
+
+static inline AlifObject* alifEval_evalFrame(AlifThread* _tstate,
+	AlifInterpreterFrame* _frame, AlifIntT _throwflag) { // 114
+	if (_tstate->interpreter->evalFrame == nullptr) {
+		return alifEval_evalFrameDefault(_tstate, _frame, _throwflag);
+	}
+	return _tstate->interpreter->evalFrame(_tstate, _frame, _throwflag);
+}
+
+
+
+
+extern AlifObject* alifEval_vector(AlifThread*, AlifFunctionObject*,
+	AlifObject*, AlifObject* const*, AlifUSizeT, AlifObject*); // 125
 
 
 

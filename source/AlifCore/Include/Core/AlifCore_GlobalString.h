@@ -30,6 +30,7 @@ public:
     class {
 	public:
         STRUCT_FOR_ID(CANCELLED)
+        STRUCT_FOR_ID(__builtins__)
         STRUCT_FOR_ID(__classGetItem__)
 		STRUCT_FOR_ID(__class__)
 		STRUCT_FOR_ID(__classDict__)

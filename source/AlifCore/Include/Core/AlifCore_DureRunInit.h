@@ -660,6 +660,7 @@
 
 #define ALIF_STR_IDENTIFIERS_INIT { \
     INIT_ID(CANCELLED), \
+    INIT_ID(__builtins__), \
     INIT_ID(__classGetItem__), \
     INIT_ID(__class__), \
     INIT_ID(__classDict__), \

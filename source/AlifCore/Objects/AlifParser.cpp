@@ -12372,7 +12372,7 @@ done:
 	return res;
 }
 
-void parser_test(ModuleTy _p); // alif // للحذف
+void parser_test(ModuleTy _p); // test
 void* alifParserEngine_parse(AlifParser* _p) { 
 	// تهيئة الكلمات المفتاحية
 	_p->keywords = reservedKeywords;
@@ -12403,7 +12403,7 @@ void* alifParserEngine_parse(AlifParser* _p) {
 
 /* ------------------------------------------------------------------------------------ */
 
-// للحذف بعد الانتهاء من الاختبارات
+// test
 int spaces = 0;
 
 
@@ -12536,7 +12536,7 @@ void visit_expr(ExprTy v) {
 	}
 }
 
-void parser_test(ModuleTy _p) {
+void parser_test(ModuleTy _p) { // test
 	ASDLStmtSeq* m = _p->V.module.body;
 	AlifSizeT size = _p->V.module.body->size;
 
