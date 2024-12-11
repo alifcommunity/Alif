@@ -111,7 +111,8 @@ static AlifIntT alifCore_initDureRun(AlifDureRun* _dureRun, const AlifConfig* _c
 	AlifIntT status = alifConfig_write(_config, _dureRun);
 	if (status < 1) return status;
 
-	//status = alifImport_init();
+	status = alifImport_init();
+	if (status < 1) return status;
 
 	status = alifInterpreter_enable(_dureRun);
 	if (status < 1) return status;
@@ -321,10 +322,10 @@ static AlifIntT alifCore_builtinsInit(AlifThread* _thread) { // 775
 	//	goto error;
 	//}
 
-	//builtinsDict = alifModule_getDict(biMod);
-	//if (builtinsDict == nullptr) goto error;
+	builtinsDict = alifModule_getDict(biMod);
+	if (builtinsDict == nullptr) goto error;
 
-	//interp->builtins = ALIF_NEWREF(builtinsDict);
+	interp->builtins = ALIF_NEWREF(builtinsDict);
 
 	return 1;
 

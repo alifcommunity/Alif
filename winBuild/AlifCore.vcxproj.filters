@@ -28,10 +28,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\BiaseRefCount.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\BuiltinsModule.cpp">
-      <Filter>Objects</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\ConfigMinimal.cpp">
+    <ClCompile Include="..\source\AlifCore\Objects\Config.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\CriticalSection.cpp">
@@ -86,9 +83,6 @@
       <Filter>Objects</Filter>
     </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\ObjectStack.cpp">
-      <Filter>Objects</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\BoolObject.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\HashTable.cpp">
@@ -236,6 +230,12 @@
       <Filter>Objects</Filter>
     </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\AlifAssemble.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\BuiltinsModule.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\BoolObject.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
   </ItemGroup>

@@ -118,37 +118,36 @@ const char* alifImport_resolveNameWithPackageContext(const char* name) { // 740
 
 /* the internal table */
 
-//static AlifIntT initBuildin_modulesTable() { // 2419
-//
-//	AlifUSizeT size_{};
-//
-//	for (size_ = 0; _alifImportInitTable_[size_].name != nullptr; size_++)
-//		;
-//	size_++;
-//
-//	InitTable* tableCopy = (InitTable*)alifMem_dataAlloc(size_ * sizeof(InitTable));
-//	if (tableCopy == nullptr) return -1;
-//
-//	memcpy(tableCopy, _alifImportInitTable_, size_ * sizeof(InitTable));
-//	INITTABLE = tableCopy;
-//	return 0;
-//}
+static AlifIntT initBuildin_modulesTable() { // 2419
+
+	AlifUSizeT size_{};
+	for (size_ = 0; _alifImportInitTable_[size_].name != nullptr; size_++)
+		;
+	size_++;
+
+	InitTable* tableCopy = (InitTable*)alifMem_dataAlloc(size_ * sizeof(InitTable));
+	if (tableCopy == nullptr) return -1;
+
+	memcpy(tableCopy, _alifImportInitTable_, size_ * sizeof(InitTable));
+	INITTABLE = tableCopy;
+	return 0;
+}
 
 
 
 
 
+// alif
+AlifIntT alifImport_init() { // 3954
 
-//AlifIntT alifImport_init() { // 3954
-//
-//	if (INITTABLE != nullptr) {
-//		// error
-//		return -1;
-//	}
-//
-//	if (initBuildin_modulesTable() != 0) {
-//		return -1;
-//	}
-//
-//	return 1;
-//}
+	if (INITTABLE != nullptr) {
+		// error
+		return -1; // alif
+	}
+
+	if (initBuildin_modulesTable() != 0) {
+		return -1;
+	}
+
+	return 1;
+}

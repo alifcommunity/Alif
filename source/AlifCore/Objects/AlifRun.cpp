@@ -197,6 +197,33 @@ static AlifObject* alifRun_file(FILE* _fp, AlifObject* _filename,
 }
 
 
+static AlifObject* runEval_codeObj(AlifThread* _thread, AlifCodeObject* _co,
+	AlifObject* _globals, AlifObject* _locals) { // 1258
+	AlifObject* v{};
+	//_alifDureRun_.signals.unhandledKeyboardInterrupt = 0;
+
+	if (!_globals or !ALIFDICT_CHECK(_globals)) {
+		//alifErr_setString(_alifExcSystemError_, "globals must be a real dict");
+		return nullptr;
+	}
+	AlifIntT hasBuiltins = alifDict_containsString(_globals, "__builtins__");
+	if (hasBuiltins < 0) {
+		return nullptr;
+	}
+	if (!hasBuiltins) {
+		if (alifDict_setItemString(_globals, "__builtins__",
+			_thread->interpreter->builtins) < 0)
+		{
+			return nullptr;
+		}
+	}
+
+	//v = alifEval_evalCode((AlifObject*)_co, _globals, _locals);
+	//if (!v and _alifErr_Occurred(_thread) == _alifExcKeyboardInterrupt_) {
+	//	_alifDureRun_.signals.unhandledKeyboardInterrupt = 1;
+	//}
+	return v;
+}
 
 
 static AlifObject* run_mod(ModuleTy _mod, AlifObject* _filename,
@@ -276,7 +303,7 @@ static AlifObject* run_mod(ModuleTy _mod, AlifObject* _filename,
 	//	return nullptr;
 	//}
 
-	AlifObject* v = run_evalCodeObj(thread, co, _globals, _locals);
+	AlifObject* v = runEval_codeObj(thread, co, _globals, _locals);
 	ALIF_DECREF(co);
 	return v;
 }
