@@ -8,6 +8,7 @@
 #include "AlifCore_TypeID.h"
 #include "AlifCore_DoubleToASCII.h"
 #include "AlifCore_Function.h"
+#include "AlifCore_GenObject.h"
 #include "AlifCore_List.h"
 #include "AlifCore_Memory.h"
 #include "AlifCore_Optimizer.h"
@@ -77,7 +78,7 @@ public:
 	AlifConfig config{};
 	unsigned long featureFlags{};
 
-	//AlifFrameEvalFunction evalFrame{};
+	AlifFrameEvalFunction evalFrame{};
 
 	GCDureRunState gc{};
 

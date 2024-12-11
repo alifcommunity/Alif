@@ -1,5 +1,9 @@
 #pragma once
 
+
+AlifObject* alifFunction_vectorCall(AlifObject*, AlifObject* const* ,
+	AlifUSizeT , AlifObject* ); // 13
+
 // 19
 #define FUNC_MAX_WATCHERS 8
 
