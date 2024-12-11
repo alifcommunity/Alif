@@ -93,3 +93,5 @@ extern void alifThread_detach(AlifThread*); // 157
 
 
 AlifInterpreter* alifInterpreter_head(); // 263
+
+typedef AlifObject* (*AlifFrameEvalFunction)(AlifThread* , AlifInterpreterFrame*, int);
