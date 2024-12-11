@@ -6,12 +6,19 @@
 #include "AlifCore_Eval.h"
 #include "AlifCore_Code.h"
 
+#include "AlifCore_Function.h"
+
+#include "AlifCore_ModuleObject.h"
 #include "AlifCore_Object.h"
+#include "AlifCore_OpcodeMetaData.h"
+#include "AlifCore_Optimizer.h"
+#include "AlifCore_OpcodeUtils.h"
 
 #include "AlifCore_State.h"
 
 
 
+#include "AlifCore_Frame.h"
 
 
 
@@ -102,6 +109,11 @@ AlifObject* alifEval_evalCode(AlifObject* _co,
 
 
 
+AlifObject* ALIF_HOT_FUNCTION alifEval_evalFrameDefault(AlifThread* _thread,
+	AlifInterpreterFrame* _frame, AlifIntT _throwflag) { // 726
+
+
+}
 
 
 
@@ -116,8 +128,30 @@ AlifObject* alifEval_evalCode(AlifObject* _co,
 
 
 
-
-
+static AlifInterpreterFrame* _alifEvalFramePushAndInit_unTagged(AlifThread* _thread,
+	AlifFunctionObject* _func, AlifObject* _locals, AlifObject* const* _args,
+	AlifUSizeT _argCount, AlifObject* _kwNames, AlifInterpreterFrame* _previous) { // 1724
+#if defined(ALIF_GIL_DISABLED)
+	AlifUSizeT kwCount = _kwNames == nullptr ? 0 : ALIFTUPLE_GET_SIZE(_kwNames);
+	AlifUSizeT totalArgCount = _argCount + kwCount;
+	AlifStackRef* taggedArgsBuffer = (AlifStackRef*)alifMem_dataAlloc(sizeof(AlifStackRef) * totalArgCount);
+	if (taggedArgsBuffer == nullptr) {
+		//alifErr_noMemory();
+		return nullptr;
+	}
+	for (AlifUSizeT i = 0; i < _argCount; i++) {
+		taggedArgsBuffer[i] = ALIFSTACKREF_FROMPYOBJECTSTEAL(_args[i]);
+	}
+	for (AlifUSizeT i = 0; i < kwCount; i++) {
+		taggedArgsBuffer[_argCount + i] = ALIFSTACKREF_FROMPYOBJECTSTEAL(_args[_argCount + i]);
+	}
+	AlifInterpreterFrame* res = _alifEval_framePushAndInit(_thread, _func, _locals, (AlifStackRef const*)taggedArgsBuffer, _argCount, _kwNames, _previous);
+	alifMem_dataFree(taggedArgsBuffer);
+	return res;
+#else
+	return _alifEval_framePushAndInit(_thread, _func, _locals, (AlifStackRef const*)_args, _argCount, _kwNames, _previous);
+#endif
+}
 
 
 

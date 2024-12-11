@@ -134,7 +134,7 @@ VectorCallFunc alifVectorCall_function(AlifObject* _callable) { // 256
 //	return alifObject_vectorCallThread(thread, callable,
 //		args, nargsf, kwnames);
 //}
-//
+
 //AlifObject* alifObject_callOneArg(AlifObject* func, AlifObject* arg) { 
 //
 //	AlifObject* _args[2];
@@ -144,21 +144,23 @@ VectorCallFunc alifVectorCall_function(AlifObject* _callable) { // 256
 //	size_t nargsf = 1 | ALIF_VECTORCALL_ARGUMENTS_OFFSET;
 //	return alifObject_vectorCallThread(thread, func, args, nargsf, nullptr);
 //}
-//
+
+
 AlifObject* alifFunction_vectorCall(AlifObject* _func, AlifObject* const* _stack,
-	AlifUSizeT _nArgsF, AlifObject* _kWNames) { // 402
+	AlifUSizeT _nArgsF, AlifObject* _kwNames) { // 402
 
 	AlifFunctionObject* f_ = (AlifFunctionObject*)_func;
 	AlifSizeT nArgs = ALIFVECTORCALL_NARGS(_nArgsF);
-	AlifThread* tstate = alifThread_get();
+	AlifThread* tstate = _alifThread_get();
 	if (((AlifCodeObject*)f_->code)->flags & CO_OPTIMIZED) {
-		return alifEval_vector(tstate, f_, nullptr, _stack, nArgs, _kWNames);
+		return alifEval_vector(tstate, f_, nullptr, _stack, nArgs, _kwNames);
 	}
 	else {
-		return alifEval_vector(tstate, f_, f_->globals, _stack, nArgs, _kWNames);
+		return alifEval_vector(tstate, f_, f_->globals, _stack, nArgs, _kwNames);
 	}
 }
-//
+
+
 //AlifObject* alifStack_asDict(AlifObject* const* _values, AlifObject* _kwNames) { 
 //	AlifSizeT nkwargs;
 //

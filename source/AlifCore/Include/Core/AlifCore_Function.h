@@ -1,7 +1,7 @@
 #pragma once
 
 
-AlifObject* alifFunction_vectorCall(AlifObject*, AlifObject* const* ,
+extern AlifObject* alifFunction_vectorCall(AlifObject*, AlifObject* const* ,
 	AlifUSizeT , AlifObject* ); // 13
 
 // 19
@@ -27,3 +27,9 @@ class AlifFuncState { // 28
 	uint32_t nextVersion{};
 	FuncVersionCacheItem funcVersionCache[FUNC_VERSION_CACHE_SIZE]{};
 };
+
+
+
+
+
+extern AlifFunctionObject* _alifFunction_fromConstructor(AlifFrameConstructor*); // 42
