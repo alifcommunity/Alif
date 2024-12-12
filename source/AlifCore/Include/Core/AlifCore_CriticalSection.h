@@ -22,6 +22,21 @@
         AlifCriticalSection2 critSec2{};                                     \
         _alifCriticalSection2_beginMutex(&critSec2, m1, m2)
 
+// 39
+# define ALIF_BEGIN_CRITICAL_SECTION_SEQUENCE_FAST(_original)              \
+    {                                                                   \
+        AlifObject *origSeq = ALIFOBJECT_CAST(_original);                 \
+        const bool shouldLockSC = ALIFLIST_CHECKEXACT(origSeq);      \
+        AlifCriticalSection cs{};                                          \
+        if (shouldLockSC) {                                          \
+            _alifCriticalSection_begin(&cs, origSeq);                  \
+        }
+// 48
+# define ALIF_END_CRITICAL_SECTION_SEQUENCE_FAST()                        \
+        if (shouldLockSC) {                                          \
+            alifCriticalSection_end(&cs);                                \
+        }                                                               \
+    }
 
 #else 
 #define ALIF_BEGIN_CRITICAL_SECTION_MUT(mut) {
@@ -31,6 +46,7 @@
 #define ALIF_CRITICAL_SECTION_ASSERT_MUTEX_LOCKED(mutex)
 #define ALIF_CRITICAL_SECTION_ASSERT_OBJECT_LOCKED(op)
 #endif
+
 
 
 void alifCriticalSection_resume(AlifThread*); // 89

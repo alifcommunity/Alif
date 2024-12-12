@@ -4,6 +4,7 @@
 #include "AlifCore_State.h"
 #include "AlifCore_UStrObject.h"
 #include "AlifCore_BytesObject.h"
+#include "AlifCore_CriticalSection.h"
 
 
 #include <Equal.h> // 61
