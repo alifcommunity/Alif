@@ -2381,13 +2381,13 @@ AlifObject* alifUStr_join(AlifObject* _separator, AlifObject* _seq) { // 9910
 		return nullptr;
 	}
 
-	//ALIF_BEGIN_CRITICAL_SECTION_SEQUENCE_FAST(seq);
+	ALIF_BEGIN_CRITICAL_SECTION_SEQUENCE_FAST(_seq);
 
 	items = ALIFSEQUENCE_FAST_ITEMS(fSeq);
 	seqLen = ALIFSEQUENCE_FAST_GET_SIZE(fSeq);
 	res_ = alifUStr_joinArray(_separator, items, seqLen);
 
-	//ALIF_END_CRITICAL_SECTION_SEQUENCE_FAST();
+	ALIF_END_CRITICAL_SECTION_SEQUENCE_FAST();
 
 	ALIF_DECREF(fSeq);
 	return res_;
@@ -2398,7 +2398,7 @@ AlifObject* alifUStr_joinArray(AlifObject* _separator, AlifObject* const* _items
 	AlifObject* sep_ = nullptr;
 	AlifSizeT sepLen{};
 	AlifObject* item{};
-	AlifSizeT sz_{}, i_{}, resOffset;
+	AlifSizeT sz_{}, i_{}, resOffset{};
 	AlifUCS4 maxChar{};
 	AlifUCS4 itemMaxChar{};
 	AlifIntT useMemCpy{};
@@ -2447,7 +2447,7 @@ AlifObject* alifUStr_joinArray(AlifObject* _separator, AlifObject* const* _items
 	sz_ = 0;
 	useMemCpy = 1;
 	for (i_ = 0; i_ < _seqLen; i_++) {
-		size_t add_sz;
+		AlifUSizeT addSZ{};
 		item = _items[i_];
 		if (!ALIFUSTR_CHECK(item)) {
 			//alifErr_format(_alifExcTypeError_,
@@ -2456,18 +2456,18 @@ AlifObject* alifUStr_joinArray(AlifObject* _separator, AlifObject* const* _items
 				//i, ALIF_TYPE(item)->name);
 			goto onError;
 		}
-		add_sz = ALIFUSTR_GET_LENGTH(item);
+		addSZ = ALIFUSTR_GET_LENGTH(item);
 		itemMaxChar = ALIFUSTR_MAX_CHAR_VALUE(item);
 		maxChar = ALIF_MAX(maxChar, itemMaxChar);
 		if (i_ != 0) {
-			add_sz += sepLen;
+			addSZ += sepLen;
 		}
-		if (add_sz > (size_t)(ALIF_SIZET_MAX - sz_)) {
+		if (addSZ > (AlifUSizeT)(ALIF_SIZET_MAX - sz_)) {
 			//alifErr_setString(_alifExcOverflowError_,
-				//"join() result is too long for a Python string");
+				//"join() result is too long for a Alif string");
 			goto onError;
 		}
-		sz_ += add_sz;
+		sz_ += addSZ;
 		if (useMemCpy and lastObj != nullptr) {
 			if (ALIFUSTR_KIND(lastObj) != ALIFUSTR_KIND(item))
 				useMemCpy = 0;
@@ -2480,19 +2480,16 @@ AlifObject* alifUStr_joinArray(AlifObject* _separator, AlifObject* const* _items
 		goto onError;
 
 	/* Catenate everything. */
-#ifdef Py_DEBUG
-	use_memcpy = 0;
-#else
 	if (useMemCpy) {
 		resData = ALIFUSTR_1BYTE_DATA(res_);
 		kind = ALIFUSTR_KIND(res_);
 		if (sepLen != 0)
 			sepData = ALIFUSTR_1BYTE_DATA(sep_);
 	}
-#endif
+
 	if (useMemCpy) {
 		for (i_ = 0; i_ < _seqLen; ++i_) {
-			AlifSizeT itemlen;
+			AlifSizeT itemlen{};
 			item = _items[i_];
 
 			/* Copy item, and maybe the separator. */
@@ -2511,11 +2508,10 @@ AlifObject* alifUStr_joinArray(AlifObject* _separator, AlifObject* const* _items
 				resData += kind * itemlen;
 			}
 		}
-			+ kind * ALIFUSTR_GET_LENGTH(res_);
 	}
 	else {
 		for (i_ = 0, resOffset = 0; i_ < _seqLen; ++i_) {
-			AlifSizeT itemlen;
+			AlifSizeT itemlen{};
 			item = _items[i_];
 
 			if (i_ and sepLen != 0) {

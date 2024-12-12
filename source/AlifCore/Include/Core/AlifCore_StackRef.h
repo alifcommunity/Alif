@@ -47,16 +47,12 @@ static inline AlifObject* alifStackRef_asAlifObjectBorrow(AlifStackRef _stackRef
 	return cleared;
 }
 
-#ifdef ALIF_GIL_DISABLED
 static inline AlifObject* alifStackRef_asAlifObjectSteal(AlifStackRef _stackRef) { // 112
 	if (!ALIFSTACKREF_ISNULL(_stackRef) and ALIFSTACKREF_ISDEFERRED(_stackRef)) {
 		return ALIF_NEWREF(alifStackRef_asAlifObjectBorrow(_stackRef));
 	}
 	return alifStackRef_asAlifObjectBorrow(_stackRef);
 }
-#else
-#   define ALIFSTACKREF_ASALIFOBJECTSTEAL(stackref) alifStackRef_asAlifObjectBorrow(stackref)
-#endif
 
 
 static inline AlifStackRef _alifStackRef_fromPyObjectSteal(AlifObject* _obj) { // 131

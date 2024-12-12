@@ -115,10 +115,14 @@ AlifObject* ALIF_HOT_FUNCTION alifEval_evalFrameDefault(AlifThread* _thread,
 
 }
 
-static AlifIntT positionalOnly_passedAsKeyword(AlifThread* _tstate, AlifCodeObject* _co,
-	AlifSizeT _kWCount, AlifObject* _kWNames,
-	AlifObject* _qualname)
-{
+
+
+
+
+
+static AlifIntT positionalOnly_passedAsKeyword(AlifThread* _tstate,
+	AlifCodeObject* _co, AlifSizeT _kWCount,
+	AlifObject* _kWNames, AlifObject* _qualname) { // 1267
 	AlifIntT posOnlyConflicts = 0;
 	AlifObject* posOnlyNames = alifList_new(0);
 	if (posOnlyNames == nullptr) {
