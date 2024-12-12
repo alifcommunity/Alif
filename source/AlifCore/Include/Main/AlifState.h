@@ -25,6 +25,16 @@ AlifThread* alifThread_get(); // 60
 
 
 
+class AlifStackChunk { // 52
+public:
+	AlifStackChunk* previous{};
+	AlifUSizeT size{};
+	AlifUSizeT top{};
+	AlifObject* data[1]{}; /* Variable sized */
+};
+
+
+
 class AlifThread { // 59
 public:
 	AlifThread* prev{};
@@ -71,9 +81,9 @@ public:
 
 	AlifSizeT id{};
 
-	//AlifStackChunk* dataStackChunk{};
-	//AlifObject** dataStackTop{};
-	//AlifObject** dataStackLimit{};
+	AlifStackChunk* dataStackChunk{};
+	AlifObject** dataStackTop{};
+	AlifObject** dataStackLimit{};
 	uint64_t dictGlobalVersion{};
 
 };

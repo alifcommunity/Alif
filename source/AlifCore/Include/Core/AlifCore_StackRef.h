@@ -42,3 +42,15 @@ static inline AlifStackRef _alifStackRef_fromPyObjectSteal(AlifObject* _obj) { /
 	return { .bits = ((uintptr_t)(_obj)) | tag };
 }
 #   define ALIFSTACKREF_FROMPYOBJECTSTEAL(_obj) _alifStackRef_fromPyObjectSteal(ALIFOBJECT_CAST(_obj))
+
+
+
+
+
+
+static inline void alifStackRef_close(AlifStackRef _stackRef) { // 193
+	if (ALIFSTACKREF_ISDEFERRED(_stackRef)) {
+		return;
+	}
+	ALIF_DECREF(alifStackRef_asAlifObjectBorrow(_stackRef));
+}

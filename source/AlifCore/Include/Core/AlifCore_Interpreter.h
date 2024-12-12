@@ -89,7 +89,7 @@ public:
 
 	AlifFrameEvalFunction evalFrame{};
 
-	AlifFunctionWatchCallback funcWatchers[FUNC_MAX_WATCHERS];
+	AlifFunctionWatchCallback funcWatchers[FUNC_MAX_WATCHERS]{};
 
 	uint8_t activeFuncWatchers{};
 
@@ -137,7 +137,6 @@ public:
 	RareEvents rareEvents{};
 
 
-	//class TypesState types;
 	AlifInterpCachedObjects cachedObjects{};
 
 	AlifThreadImpl initialThread{};
@@ -172,7 +171,7 @@ static inline AlifThread* alifInterpreter_getFinalizing(AlifInterpreter* _interp
 
 AlifIntT alifInterpreter_new(AlifThread*, AlifInterpreter**); // 399
 
-
+ // alif
 #define RARE_EVENT_INTERP_INC(_interp, _name) \
     do { \
         AlifIntT val_ = alifAtomic_loadUint8Relaxed((const uint8_t*)_interp->rareEvents._name); \

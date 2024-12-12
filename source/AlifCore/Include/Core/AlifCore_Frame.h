@@ -72,6 +72,32 @@ static inline AlifCodeObject* _alifFrame_getCode(AlifInterpreterFrame* _f) { // 
 
 
 
+static inline void _alifFrame_initialize(AlifInterpreterFrame* _frame,
+	AlifFunctionObject* func, AlifObject* _locals, AlifCodeObject* code,
+	AlifIntT _nullLocalsFrom, AlifInterpreterFrame* _previous) { // 144
+
+	_frame->previous = _previous;
+	_frame->funcObj = (AlifObject*)func;
+	_frame->executable = ALIF_NEWREF(code);
+	_frame->builtins = func->builtins;
+	_frame->globals = func->globals;
+	_frame->locals = _locals;
+	_frame->stackPointer = _frame->localsPlus + code->nLocalsPlus;
+	_frame->frameObj = nullptr;
+	_frame->instrPtr = ALIFCODE_CODE(code);
+	_frame->returnOffset = 0;
+	_frame->owner = FrameOwner::FRAME_OWNED_BY_THREAD;
+
+	for (AlifIntT i = _nullLocalsFrom; i < code->nLocalsPlus; i++) {
+		_frame->localsPlus[i] = _alifStackRefNullptr_;
+	}
+
+#ifdef ALIF_GIL_DISABLED
+	for (AlifIntT i = code->nLocalsPlus; i < code->nLocalsPlus + code->stackSize; i++) {
+		_frame->localsPlus[i] = _alifStackRefNullptr_;
+	}
+#endif
+}
 
 
 
@@ -100,3 +126,15 @@ static inline AlifInterpreterFrame* _alifFrame_getFirstComplete(AlifInterpreterF
 static inline AlifInterpreterFrame* _alifThreadState_getFrame(AlifThread* _thread) { // 231
 	return _alifFrame_getFirstComplete(_thread->currentFrame);
 }
+
+
+
+extern AlifInterpreterFrame* _alifThreadState_pushFrame(AlifThread*, AlifUSizeT); // 294
+
+
+
+
+
+
+AlifInterpreterFrame* _alifEval_framePushAndInit(AlifThread* _thread, AlifFunctionObject*,
+	AlifObject*, AlifStackRef const*, AlifUSizeT, AlifObject*, AlifInterpreterFrame*); // 347
