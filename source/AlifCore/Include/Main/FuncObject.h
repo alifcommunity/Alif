@@ -60,7 +60,5 @@ enum AlifFunctionWatchEvent { // 139
 
 
 
-typedef AlifIntT (*AlifFunctionWatchCallback)(
-	AlifFunctionWatchEvent ,
-	AlifFunctionObject* ,
-	AlifObject* ); // 160
+typedef AlifIntT (*AlifFunctionWatchCallback)(AlifFunctionWatchEvent,
+	AlifFunctionObject* , AlifObject* ); // 160

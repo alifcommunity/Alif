@@ -33,3 +33,8 @@ class AlifFuncState { // 28
 
 
 extern AlifFunctionObject* _alifFunction_fromConstructor(AlifFrameConstructor*); // 42
+
+
+
+
+

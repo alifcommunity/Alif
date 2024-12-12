@@ -655,6 +655,14 @@ const AlifConfig* alif_getConfig() { // 2903
 }
 
 
+AlifInterpreterFrame* _alifThreadState_pushFrame(AlifThread* _thread, AlifUSizeT _size) { // 2946
+	if (_alifThreadState_hasStackSpace(_thread, (AlifIntT)_size)) {
+		AlifInterpreterFrame* res = (AlifInterpreterFrame*)_thread->dataStackTop;
+		_thread->dataStackTop += _size;
+		return res;
+	}
+	return (AlifInterpreterFrame*)push_chunk(_thread, (AlifIntT)_size);
+}
 
 
 
