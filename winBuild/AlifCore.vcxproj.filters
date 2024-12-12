@@ -241,6 +241,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\FrameObject.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\FuncObject.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">
@@ -732,17 +733,17 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Function.h">
       <Filter>Include\Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\FunctionObject.h">
-      <Filter>Include\Core</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Optimizer.h">
       <Filter>Include\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GenObject.h">
       <Filter>Include\Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\FuncObject.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Main\FrameObject.h">
-      <Filter>Include\Core</Filter>
+      <Filter>Include\Main</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

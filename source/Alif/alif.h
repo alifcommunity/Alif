@@ -44,7 +44,7 @@
 #include "MethodObject.h"
 #include "ModuleObject.h"
 //#include "ClassObject.h"
-#include "FunctionObject.h"
+#include "FuncObject.h"
 #include "BytesObject.h"
 #include "SliceObject.h"
 //#include "IterObject.h"
