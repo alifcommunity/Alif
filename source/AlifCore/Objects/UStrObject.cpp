@@ -142,7 +142,7 @@ static AlifIntT initGlobal_internedStrings(AlifInterpreter* _interp) { // 308
 
 
 // 360
-#define ALIF_RETURN_UNICODE_EMPTY	return unicode_getEmpty();
+#define ALIF_RETURN_UNICODE_EMPTY return unicode_getEmpty();
 
 
 
@@ -1436,6 +1436,16 @@ wchar_t* alifUStr_asWideCharString(AlifObject* _uStr, AlifSizeT* _size) { // 333
 	return buffer;
 }
 
+AlifObject* alifUStr_fromOrdinal(AlifIntT _ordinal) { // 3434
+	if (_ordinal < 0 or _ordinal > MAX_UNICODE) {
+		//alifErr_setString(_alifExcValueError_,
+			//"chr() arg not in range(0x110000)");
+		return nullptr;
+	}
+
+	return uStr_char((AlifUCS4)_ordinal);
+}
+
 AlifObject* alifUStr_fromObject(AlifObject* _obj) { // 3446
 	if (ALIFUSTR_CHECKEXACT(_obj)) {
 		return ALIF_NEWREF(_obj);
@@ -2360,6 +2370,177 @@ AlifSizeT alifUStr_findChar(AlifObject* _str, AlifUCS4 _ch,
 }
 
 
+AlifObject* alifUStr_join(AlifObject* _separator, AlifObject* _seq) { // 9910
+	AlifObject* res_{};
+	AlifObject* fSeq{};
+	AlifSizeT seqLen{};
+	AlifObject** items{};
+
+	fSeq = alifSequence_fast(_seq, "can only join an iterable");
+	if (fSeq == nullptr) {
+		return nullptr;
+	}
+
+	//ALIF_BEGIN_CRITICAL_SECTION_SEQUENCE_FAST(seq);
+
+	items = ALIFSEQUENCE_FAST_ITEMS(fSeq);
+	seqLen = ALIFSEQUENCE_FAST_GET_SIZE(fSeq);
+	res_ = alifUStr_joinArray(_separator, items, seqLen);
+
+	//ALIF_END_CRITICAL_SECTION_SEQUENCE_FAST();
+
+	ALIF_DECREF(fSeq);
+	return res_;
+}
+
+AlifObject* alifUStr_joinArray(AlifObject* _separator, AlifObject* const* _items, AlifSizeT _seqLen) { // 9935
+	AlifObject* res_ = nullptr; /* the result */
+	AlifObject* sep_ = nullptr;
+	AlifSizeT sepLen{};
+	AlifObject* item{};
+	AlifSizeT sz_{}, i_{}, resOffset;
+	AlifUCS4 maxChar{};
+	AlifUCS4 itemMaxChar{};
+	AlifIntT useMemCpy{};
+	unsigned char* resData = nullptr, * sepData = nullptr;
+	AlifObject* lastObj{};
+	AlifIntT kind = 0;
+
+	if (_seqLen == 0) {
+		return unicode_getEmpty();
+	}
+
+	lastObj = nullptr;
+	if (_seqLen == 1) {
+		if (ALIFUSTR_CHECKEXACT(_items[0])) {
+			res_ = _items[0];
+			return ALIF_NEWREF(res_);
+		}
+		sepLen = 0;
+		maxChar = 0;
+	}
+	else {
+		if (_separator == nullptr) {
+			sep_ = alifUStr_fromOrdinal(' ');
+			if (!sep_)
+				goto onError;
+			sepLen = 1;
+			maxChar = 32;
+		}
+		else {
+			if (!ALIFUSTR_CHECK(_separator)) {
+				//alifErr_format(_alifExcTypeError_,
+					//"separator: expected str instance,"
+					//" %.80s found",
+					//ALIF_TYPE(_separator)->name);
+				goto onError;
+			}
+			sep_ = _separator;
+			sepLen = ALIFUSTR_GET_LENGTH(_separator);
+			maxChar = ALIFUSTR_MAX_CHAR_VALUE(_separator);
+
+			ALIF_INCREF(sep_);
+		}
+		lastObj = sep_;
+	}
+
+	sz_ = 0;
+	useMemCpy = 1;
+	for (i_ = 0; i_ < _seqLen; i_++) {
+		size_t add_sz;
+		item = _items[i_];
+		if (!ALIFUSTR_CHECK(item)) {
+			//alifErr_format(_alifExcTypeError_,
+				//"sequence item %zd: expected str instance,"
+				//" %.80s found",
+				//i, ALIF_TYPE(item)->name);
+			goto onError;
+		}
+		add_sz = ALIFUSTR_GET_LENGTH(item);
+		itemMaxChar = ALIFUSTR_MAX_CHAR_VALUE(item);
+		maxChar = ALIF_MAX(maxChar, itemMaxChar);
+		if (i_ != 0) {
+			add_sz += sepLen;
+		}
+		if (add_sz > (size_t)(ALIF_SIZET_MAX - sz_)) {
+			//alifErr_setString(_alifExcOverflowError_,
+				//"join() result is too long for a Python string");
+			goto onError;
+		}
+		sz_ += add_sz;
+		if (useMemCpy and lastObj != nullptr) {
+			if (ALIFUSTR_KIND(lastObj) != ALIFUSTR_KIND(item))
+				useMemCpy = 0;
+		}
+		lastObj = item;
+	}
+
+	res_ = alifUStr_new(sz_, maxChar);
+	if (res_ == nullptr)
+		goto onError;
+
+	/* Catenate everything. */
+#ifdef Py_DEBUG
+	use_memcpy = 0;
+#else
+	if (useMemCpy) {
+		resData = ALIFUSTR_1BYTE_DATA(res_);
+		kind = ALIFUSTR_KIND(res_);
+		if (sepLen != 0)
+			sepData = ALIFUSTR_1BYTE_DATA(sep_);
+	}
+#endif
+	if (useMemCpy) {
+		for (i_ = 0; i_ < _seqLen; ++i_) {
+			AlifSizeT itemlen;
+			item = _items[i_];
+
+			/* Copy item, and maybe the separator. */
+			if (i_ and sepLen != 0) {
+				memcpy(resData,
+					sepData,
+					kind * sepLen);
+				resData += kind * sepLen;
+			}
+
+			itemlen = ALIFUSTR_GET_LENGTH(item);
+			if (itemlen != 0) {
+				memcpy(resData,
+					ALIFUSTR_DATA(item),
+					kind * itemlen);
+				resData += kind * itemlen;
+			}
+		}
+			+ kind * ALIFUSTR_GET_LENGTH(res_);
+	}
+	else {
+		for (i_ = 0, resOffset = 0; i_ < _seqLen; ++i_) {
+			AlifSizeT itemlen;
+			item = _items[i_];
+
+			if (i_ and sepLen != 0) {
+				alifUStr_fastCopyCharacters(res_, resOffset, sep_, 0, sepLen);
+				resOffset += sepLen;
+			}
+
+			itemlen = ALIFUSTR_GET_LENGTH(item);
+			if (itemlen != 0) {
+				alifUStr_fastCopyCharacters(res_, resOffset, item, 0, itemlen);
+				resOffset += itemlen;
+			}
+		}
+	}
+
+	ALIF_XDECREF(sep_);
+	return res_;
+
+onError:
+	ALIF_XDECREF(sep_);
+	ALIF_XDECREF(res_);
+	return nullptr;
+}
+
+
 static AlifSizeT anyLib_find(AlifIntT _kind, AlifObject* _str1,
 	const void* _buf1, AlifSizeT _len1, AlifObject* _str2,
 	const void* _buf2, AlifSizeT _len2, AlifSizeT _offset) { // 10407
@@ -2537,7 +2718,7 @@ static AlifObject* replace(AlifObject* _self, AlifObject* _str1,
 	else {
 		AlifSizeT n, i, j, ires;
 		AlifSizeT new_size;
-		int rkind = skind;
+		AlifIntT rkind = skind;
 		char* res;
 
 		if (kind1 < rkind) {
@@ -3106,7 +3287,7 @@ AlifObject* alifUStr_subString(AlifObject* _self,
 		//alifErr_setString(_alifExcIndexError_, "string index out of range");
 		return nullptr;
 	}
-	if (_start >= length || _end < _start)
+	if (_start >= length or _end < _start)
 		ALIF_RETURN_UNICODE_EMPTY;
 
 	length = _end - _start;

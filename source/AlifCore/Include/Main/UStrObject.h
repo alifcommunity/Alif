@@ -67,6 +67,9 @@ AlifObject* alifUStr_concat(AlifObject*, AlifObject*); // 778
 
 void alifUStr_append(AlifObject**, AlifObject*); // 786
 
+AlifObject* alifUStr_join(AlifObject* , AlifObject* ); // 881
+
+
 AlifSizeT alifUStr_findChar(AlifObject*, AlifUCS4, AlifSizeT, AlifSizeT, AlifIntT); // 911
 
 AlifObject* alifUStr_replace(AlifObject*, AlifObject*, AlifObject*, AlifSizeT); // 932
