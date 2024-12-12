@@ -7,6 +7,41 @@
 
 
 
+static void notify_funcWatchers(AlifInterpreter* _interp, AlifFunctionWatchEvent _event,
+	AlifFunctionObject* _func, AlifObject* _newValue) { // 25
+	uint8_t bits = _interp->activeFuncWatchers;
+	AlifIntT i_ = 0;
+	while (bits) {
+		if (bits & 1) {
+			AlifFunctionWatchCallback cb_ = _interp->funcWatchers[i_];
+		
+			if (cb_(_event, _func, _newValue) < 0) {
+				//alifErr_formatUnraisable(
+					//"Exception ignored in %s watcher callback for function %U at %p",
+					//func_eventName(event), func->funcQualname, func);
+			}
+		}
+		i_++;
+		bits >>= 1;
+	}
+}
+
+static inline void handle_funcEvent(AlifFunctionWatchEvent _event, AlifFunctionObject* _func,
+	AlifObject* _newValue) { // 48
+	AlifInterpreter* interp = alifInterpreter_get();
+	if (interp->activeFuncWatchers) {
+		notify_funcWatchers(interp, _event, _func, _newValue);
+	}
+	switch (_event) {
+	case AlifFunctionWatchEvent::AlifFunction_Event_Modify_Code:
+	case AlifFunctionWatchEvent::AlifFunction_Event_Modify_Defaults:
+	case AlifFunctionWatchEvent::AlifFunction_Event_Modify_KWDefaults:
+		RARE_EVENT_INTERP_INC(interp, funcModification);
+		break;
+	default:
+		break;
+	}
+}
 
 
 AlifFunctionObject* _alifFunction_fromConstructor(AlifFrameConstructor* _constr) { // 103
