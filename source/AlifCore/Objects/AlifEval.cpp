@@ -115,6 +115,69 @@ AlifObject* ALIF_HOT_FUNCTION alifEval_evalFrameDefault(AlifThread* _thread,
 
 }
 
+static AlifIntT positionalOnly_passedAsKeyword(AlifThread* _tstate, AlifCodeObject* _co,
+	AlifSizeT _kWCount, AlifObject* _kWNames,
+	AlifObject* _qualname)
+{
+	AlifIntT posOnlyConflicts = 0;
+	AlifObject* posOnlyNames = alifList_new(0);
+	if (posOnlyNames == nullptr) {
+		goto fail;
+	}
+	for (AlifIntT k = 0; k < _co->posOnlyArgCount; k++) {
+		AlifObject* posOnlyName = ALIFTUPLE_GET_ITEM(_co->localsPlusNames, k);
+
+		for (AlifIntT k2 = 0; k2 < _kWCount; k2++) {
+			AlifObject* kWName = ALIFTUPLE_GET_ITEM(_kWNames, k2);
+			if (kWName == posOnlyName) {
+				if (alifList_append(posOnlyNames, kWName) != 0) {
+					goto fail;
+				}
+				posOnlyConflicts++;
+				continue;
+			}
+
+			AlifIntT cmp_ = alifObject_richCompareBool(posOnlyName, kWName, ALIF_EQ);
+
+			if (cmp_ > 0) {
+				if (alifList_append(posOnlyNames, kWName) != 0) {
+					goto fail;
+				}
+				posOnlyConflicts++;
+			}
+			else if (cmp_ < 0) {
+				goto fail;
+			}
+
+		}
+	}
+	if (posOnlyConflicts) {
+		AlifObject* comma = alifUStr_fromString(", ");
+		if (comma == nullptr) {
+			goto fail;
+		}
+		AlifObject* errorNames = alifUStr_join(comma, posOnlyNames);
+		ALIF_DECREF(comma);
+		if (errorNames == nullptr) {
+			goto fail;
+		}
+		//_alifErr_format(tstate, _alifExcTypeError_,
+			//"%U() got some positional-only arguments passed"
+			//" as keyword arguments: '%U'",
+			//qualname, error_names);
+		ALIF_DECREF(errorNames);
+		goto fail;
+	}
+
+	ALIF_DECREF(posOnlyNames);
+	return 0;
+
+fail:
+	ALIF_DECREF(posOnlyNames);
+	return 1;
+
+}
+
 
 static AlifIntT initialize_locals(AlifThread* _thread, AlifFunctionObject* _func,
 	AlifStackRef* _localsPlus, AlifStackRef const* _args,
@@ -124,22 +187,22 @@ static AlifIntT initialize_locals(AlifThread* _thread, AlifFunctionObject* _func
 
 	AlifObject* kwdict{};
 	AlifSizeT i{};
+	AlifSizeT j{}, n{};
 	if (co->flags & CO_VARKEYWORDS) {
 		kwdict = alifDict_new();
 		if (kwdict == nullptr) {
-			goto fail_pre_positional;
+			goto failPrePositional;
 		}
 		i = totalArgs;
 		if (co->flags & CO_VARARGS) {
 			i++;
 		}
-		_localsPlus[i] = alifStackRef_fromAlifObjectSteal(kwdict);
+		_localsPlus[i] = ALIFSTACKREF_FROMALIFBJECTSTEAL(kwdict);
 	}
 	else {
 		kwdict = nullptr;
 	}
 
-	AlifSizeT j{}, n{};
 	if (_argCount > co->argCount) {
 		n = co->argCount;
 	}
@@ -156,12 +219,12 @@ static AlifIntT initialize_locals(AlifThread* _thread, AlifFunctionObject* _func
 			u = (AlifObject*)&ALIF_SINGLETON(tupleEmpty);
 		}
 		else {
-			u = _alifTuple_fromStackRefSteal(_args + n, _argCount - n);
+			u = alifTuple_fromStackRefSteal(_args + n, _argCount - n);
 		}
 		if (u == nullptr) {
 			goto fail_post_positional;
 		}
-		_localsPlus[totalArgs] = ALIFSTACKREF_FROMPYOBJECTSTEAL(u);
+		_localsPlus[totalArgs] = ALIFSTACKREF_FROMALIFBJECTSTEAL(u);
 	}
 	else if (_argCount > n) {
 		/* Too many positional args. Error is reported later */
@@ -261,7 +324,7 @@ static AlifIntT initialize_locals(AlifThread* _thread, AlifFunctionObject* _func
 			goto fail_post_args;
 
 		kw_found:
-			if (alifStackRef_asPyObjectBorrow(_localsPlus[j]) != nullptr) {
+			if (alifStackRef_asAlifObjectBorrow(_localsPlus[j]) != nullptr) {
 				//_alifErr_format(_thread, _alifExcTypeError_,
 				//	"%U() got multiple values for argument '%S'",
 				//	_func->qualname, keyword);
@@ -321,7 +384,7 @@ static AlifIntT initialize_locals(AlifThread* _thread, AlifFunctionObject* _func
 					goto fail_post_args;
 				}
 				if (def) {
-					_localsPlus[i] = alifStackRef_fromAlifObjectSteal(def);
+					_localsPlus[i] = ALIFSTACKREF_FROMALIFBJECTSTEAL(def);
 					continue;
 				}
 			}
@@ -335,7 +398,7 @@ static AlifIntT initialize_locals(AlifThread* _thread, AlifFunctionObject* _func
 	}
 	return 0;
 
-fail_pre_positional:
+failPrePositional:
 	for (j = 0; j < _argCount; j++) {
 		alifStackRef_close(_args[j]);
 	}
@@ -411,10 +474,10 @@ static AlifInterpreterFrame* _alifEvalFramePushAndInit_unTagged(AlifThread* _thr
 		return nullptr;
 	}
 	for (AlifUSizeT i = 0; i < _argCount; i++) {
-		taggedArgsBuffer[i] = ALIFSTACKREF_FROMPYOBJECTSTEAL(_args[i]);
+		taggedArgsBuffer[i] = ALIFSTACKREF_FROMALIFBJECTSTEAL(_args[i]);
 	}
 	for (AlifUSizeT i = 0; i < kwCount; i++) {
-		taggedArgsBuffer[_argCount + i] = ALIFSTACKREF_FROMPYOBJECTSTEAL(_args[_argCount + i]);
+		taggedArgsBuffer[_argCount + i] = ALIFSTACKREF_FROMALIFBJECTSTEAL(_args[_argCount + i]);
 	}
 	AlifInterpreterFrame* res = _alifEval_framePushAndInit(_thread, _func, _locals, (AlifStackRef const*)taggedArgsBuffer, _argCount, _kwNames, _previous);
 	alifMem_dataFree(taggedArgsBuffer);

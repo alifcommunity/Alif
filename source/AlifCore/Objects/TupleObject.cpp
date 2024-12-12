@@ -162,6 +162,24 @@ AlifObject* alifTuple_fromArray(AlifObject* const* _src, AlifSizeT _n) { // 371
 
 
 
+AlifObject* alifTuple_fromStackRefSteal(const AlifStackRef* _src, AlifSizeT _n) { // 392
+	if (_n == 0) {
+		return tuple_getEmpty();
+	}
+	AlifTupleObject* tuple = tuple_alloc(_n);
+	if (tuple == nullptr) {
+		for (AlifSizeT i = 0; i < _n; i++) {
+			alifStackRef_close(_src[i]);
+		}
+		return nullptr;
+	}
+	AlifObject** dst_ = tuple->item;
+	for (AlifSizeT i = 0; i < _n; i++) {
+		dst_[i] = alifStackRef_asAlifObjectSteal(_src[i]);
+	}
+	ALIFOBJECT_GC_TRACK(tuple);
+	return (AlifObject*)tuple;
+}
 
 
 
