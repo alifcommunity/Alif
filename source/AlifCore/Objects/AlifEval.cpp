@@ -119,6 +119,44 @@ AlifObject* ALIF_HOT_FUNCTION alifEval_evalFrameDefault(AlifThread* _thread,
 
 
 
+static void missing_arguments(AlifThread* _thread, AlifCodeObject* _co,
+	AlifSizeT _missing, AlifSizeT _defcount,
+	AlifStackRef* _localsPlus, AlifObject* _qualname) { // 1170
+	AlifSizeT i{}, j = 0;
+	AlifSizeT start{}, end{};
+	AlifIntT positional = (_defcount != -1);
+	const char* kind = positional ? "positional" : "keyword-only";
+	AlifObject* missingNames{};
+
+	/* Compute the names of the arguments that are missing. */
+	missingNames = alifList_new(_missing);
+	if (missingNames == nullptr)
+		return;
+	if (positional) {
+		start = 0;
+		end = _co->argCount - _defcount;
+	}
+	else {
+		start = _co->argCount;
+		end = start + _co->kwOnlyArgCount;
+	}
+	for (i = start; i < end; i++) {
+		if (ALIFSTACKREF_ISNULL(_localsPlus[i])) {
+			AlifObject* raw = ALIFTUPLE_GET_ITEM(_co->localsPlusNames, i);
+			AlifObject* name = alifObject_repr(raw);
+			if (name == nullptr) {
+				ALIF_DECREF(missingNames);
+				return;
+			}
+			ALIFLIST_SET_ITEM(missingNames, j++, name);
+		}
+	}
+	format_missing(_thread, kind, _co, missingNames, _qualname);
+	ALIF_DECREF(missingNames);
+}
+
+
+
 
 static AlifIntT positionalOnly_passedAsKeyword(AlifThread* _tstate,
 	AlifCodeObject* _co, AlifSizeT _kWCount,
@@ -369,7 +407,7 @@ static AlifIntT initialize_locals(AlifThread* _thread, AlifFunctionObject* _func
 			for (; i < defcount; i++) {
 				if (alifStackRef_asAlifObjectBorrow(_localsPlus[m + i]) == nullptr) {
 					AlifObject* def = defs[i];
-					_localsPlus[m + i] = alifStackRef_fromAlifObjectNew(def);
+					_localsPlus[m + i] = ALIFSTACKREF_FROMALIFOBJECTNEW(def);
 				}
 			}
 		}

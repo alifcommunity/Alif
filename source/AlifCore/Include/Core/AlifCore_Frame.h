@@ -89,12 +89,12 @@ static inline void _alifFrame_initialize(AlifInterpreterFrame* _frame,
 	_frame->owner = FrameOwner::FRAME_OWNED_BY_THREAD;
 
 	for (AlifIntT i = _nullLocalsFrom; i < code->nLocalsPlus; i++) {
-		_frame->localsPlus[i] = _alifStackRefNullptr_;
+		_frame->localsPlus[i] = _alifStackRefNull_;
 	}
 
 #ifdef ALIF_GIL_DISABLED
 	for (AlifIntT i = code->nLocalsPlus; i < code->nLocalsPlus + code->stackSize; i++) {
-		_frame->localsPlus[i] = _alifStackRefNullptr_;
+		_frame->localsPlus[i] = _alifStackRefNull_;
 	}
 #endif
 }
@@ -129,9 +129,12 @@ static inline AlifInterpreterFrame* _alifThreadState_getFrame(AlifThread* _threa
 
 
 
+void _alifFrame_clearExceptCode(AlifInterpreterFrame*); // 269
+
+
 extern AlifInterpreterFrame* _alifThreadState_pushFrame(AlifThread*, AlifUSizeT); // 294
 
-
+void _alifThreadState_popFrame(AlifThread*, AlifInterpreterFrame*); // 296
 
 
 

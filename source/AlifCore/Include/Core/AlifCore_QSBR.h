@@ -21,7 +21,7 @@ class QSBRThreadState { // 42
 public:
 	uint64_t seq{};
 	QSBRShared* shared{};
-	AlifThread* tstate{};
+	AlifThread* thread{};
 	AlifIntT deferrals{};
 	bool allocated{};
 	QSBRThreadState* freeListNext{};

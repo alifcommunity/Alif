@@ -665,6 +665,23 @@ AlifInterpreterFrame* _alifThreadState_pushFrame(AlifThread* _thread, AlifUSizeT
 }
 
 
+void _alifThreadState_popFrame(AlifThread* tstate, AlifInterpreterFrame* _frame) { // 2958
+	AlifObject** base = (AlifObject**)_frame;
+	if (base == &tstate->dataStackChunk->data[0]) {
+		AlifStackChunk* chunk = tstate->dataStackChunk;
+		AlifStackChunk* previous = chunk->previous;
+
+		tstate->dataStackTop = &previous->data[previous->top];
+		tstate->dataStackChunk = previous;
+		_alifObject_virtualFree(chunk, chunk->size);
+		tstate->dataStackLimit = (AlifObject**)(((char*)previous) + previous->size);
+	}
+	else {
+		tstate->dataStackTop = base;
+	}
+}
+
+
 
 AlifIntT alifThreadState_mustExit(AlifThread* _thread) { // 3004
 	unsigned long finalizing_id = alifDureRunState_getFinalizingID(&_alifDureRun_);

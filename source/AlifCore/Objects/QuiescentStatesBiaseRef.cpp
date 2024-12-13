@@ -30,8 +30,8 @@ static QSBRThreadState* qsbr_allocate(QSBRShared* _shared) { // 49
 static void initialize_newArray(QSBRShared* _shared) { // 64
 	for (AlifSizeT i = 0; i != _shared->size; i++) {
 		QSBRThreadState* qsbr = &_shared->array[i].qsbr;
-		if (qsbr->tstate != nullptr) {
-			AlifThreadImpl* tstate = (AlifThreadImpl*)qsbr->tstate;
+		if (qsbr->thread != nullptr) {
+			AlifThreadImpl* tstate = (AlifThreadImpl*)qsbr->thread;
 			tstate->qsbr = qsbr;
 		}
 		if (!qsbr->allocated) {
@@ -165,7 +165,7 @@ void alifQSBR_register(AlifThreadImpl* _thread,
 
 	ALIFMUTEX_LOCK(&shared->mutex);
 	QSBRThreadState* qsbr = &_interp->qsbr.array[_index].qsbr;
-	qsbr->tstate = (AlifThread*)_thread;
+	qsbr->thread = (AlifThread*)_thread;
 	_thread->qsbr = qsbr;
 	ALIFMUTEX_UNLOCK(&shared->mutex);
 }
