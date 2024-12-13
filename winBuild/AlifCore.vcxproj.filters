@@ -241,8 +241,10 @@
     <ClCompile Include="..\source\AlifCore\Objects\FrameObject.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\FuncObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Frame.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\FuncObject.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
   </ItemGroup>

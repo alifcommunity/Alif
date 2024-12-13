@@ -27,6 +27,10 @@ extern AlifObject* alifUStr_fromASCII(const char*, AlifSizeT); // 65
 
 AlifObject* alifUStr_decodeUStrEscapeInternal(const char*, AlifSizeT, const char*, AlifSizeT*, const char**); // 144
 
+
+AlifObject* alifUStr_joinArray(AlifObject*, AlifObject* const*, AlifSizeT); // 206
+
+
 AlifIntT alifUStr_equalToASCIIString(AlifObject* , const char* ); // 224
 
 
