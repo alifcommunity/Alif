@@ -295,6 +295,18 @@ AlifInterpreter* alifInterpreter_get() { // 1331
 	return interp;
 }
 
+#define DATA_STACK_CHUNK_SIZE (16*1024) // 1440
+
+static AlifStackChunk* allocate_chunk(AlifIntT _sizeInBytes, AlifStackChunk* _previous) { // 1417
+	AlifStackChunk* res_ = (AlifStackChunk*)alifMem_objAlloc(_sizeInBytes); // _alifObject_virtualAlloc يجب النظر في امرها
+	if (res_ == nullptr) {
+		return nullptr;
+	}
+	res_->previous = _previous;
+	res_->size = _sizeInBytes;
+	res_->top = 0;
+	return res_;
+}
 
 
 
@@ -655,6 +667,28 @@ const AlifConfig* alif_getConfig() { // 2903
 }
 
 
+#define MINIMUM_OVERHEAD 1000
+
+static AlifObject** push_chunk(AlifThread* _tState, AlifIntT _size) { // 2922
+	AlifIntT allocateSize = DATA_STACK_CHUNK_SIZE;
+	while (allocateSize < (int)sizeof(AlifObject*) * (_size + MINIMUM_OVERHEAD)) {
+		allocateSize *= 2;
+	}
+	AlifStackChunk* new_ = allocate_chunk(allocateSize, _tState->dataStackChunk);
+	if (new_ == nullptr) {
+		return nullptr;
+	}
+	if (_tState->dataStackChunk) {
+		_tState->dataStackChunk->top = _tState->dataStackTop -
+			&_tState->dataStackChunk->data[0];
+	}
+	_tState->dataStackChunk = new_;
+	_tState->dataStackLimit = (AlifObject**)(((char*)new_) + allocateSize);
+	AlifObject** res_ = &new_->data[new_->previous == nullptr];
+	_tState->dataStackTop = res_ + _size;
+	return res_;
+}
+
 AlifInterpreterFrame* _alifThreadState_pushFrame(AlifThread* _thread, AlifUSizeT _size) { // 2946
 	if (_alifThreadState_hasStackSpace(_thread, (AlifIntT)_size)) {
 		AlifInterpreterFrame* res = (AlifInterpreterFrame*)_thread->dataStackTop;
@@ -673,7 +707,7 @@ void _alifThreadState_popFrame(AlifThread* tstate, AlifInterpreterFrame* _frame)
 
 		tstate->dataStackTop = &previous->data[previous->top];
 		tstate->dataStackChunk = previous;
-		_alifObject_virtualFree(chunk, chunk->size);
+		alifMem_objFree(chunk); // _alifObject_virtualFree يجب النظر في امرها
 		tstate->dataStackLimit = (AlifObject**)(((char*)previous) + previous->size);
 	}
 	else {
