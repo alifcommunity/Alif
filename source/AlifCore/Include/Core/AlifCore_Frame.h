@@ -131,6 +131,11 @@ static inline AlifInterpreterFrame* _alifThreadState_getFrame(AlifThread* _threa
 
 void _alifFrame_clearExceptCode(AlifInterpreterFrame*); // 269
 
+static inline bool _alifThreadState_hasStackSpace(AlifThread* _tState, AlifIntT _size) { // 282
+	return _tState->dataStackTop != nullptr and
+		_size < _tState->dataStackLimit - _tState->dataStackTop;
+}
+
 
 extern AlifInterpreterFrame* _alifThreadState_pushFrame(AlifThread*, AlifUSizeT); // 294
 
