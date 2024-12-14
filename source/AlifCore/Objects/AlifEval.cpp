@@ -116,7 +116,58 @@ AlifObject* ALIF_HOT_FUNCTION alifEval_evalFrameDefault(AlifThread* _thread,
 }
 
 
+static void format_missing(AlifThread* _thread, const char* _kind,
+	AlifCodeObject* _co, AlifObject* _names, AlifObject* _qualname) { // 1107
+	AlifIntT err{};
+	AlifSizeT len = ALIFLIST_GET_SIZE(_names);
+	AlifObject* nameStr{}, * comma{}, * tail{}, * tmp{};
 
+	switch (len) {
+	case 1:
+		nameStr = ALIFLIST_GET_ITEM(_names, 0);
+		ALIF_INCREF(nameStr);
+		break;
+	case 2:
+		nameStr = alifUStr_fromFormat("%U and %U",
+			ALIFLIST_GET_ITEM(_names, len - 2),
+			ALIFLIST_GET_ITEM(_names, len - 1));
+		break;
+	default:
+		tail = alifUStr_fromFormat(", %U, and %U",
+			ALIFLIST_GET_ITEM(_names, len - 2),
+			ALIFLIST_GET_ITEM(_names, len - 1));
+		if (tail == NULL)
+			return;
+
+		err = alifList_setSlice(_names, len - 2, len, nullptr);
+		if (err == -1) {
+			ALIF_DECREF(tail);
+			return;
+		}
+		comma = alifUStr_fromString(", ");
+		if (comma == nullptr) {
+			ALIF_DECREF(tail);
+			return;
+		}
+		tmp = alifUStr_join(comma, _names);
+		ALIF_DECREF(comma);
+		if (tmp == nullptr) {
+			ALIF_DECREF(tail);
+			return;
+		}
+		nameStr = alifUStr_concat(tmp, tail);
+		ALIF_DECREF(tmp);
+		ALIF_DECREF(tail);
+		break;
+	}
+	if (nameStr == nullptr)
+		return;
+	//_alifErr_format(_thread, _alifExcTypeError_,
+	//	"%U() missing %i required %s argument%s: %U",
+	//	_qualname, len, _kind,
+	//	len == 1 ? "" : "s", nameStr);
+	ALIF_DECREF(nameStr);
+}
 
 
 static void missing_arguments(AlifThread* _thread, AlifCodeObject* _co,
@@ -156,6 +207,55 @@ static void missing_arguments(AlifThread* _thread, AlifCodeObject* _co,
 }
 
 
+static void tooMany_positional(AlifThread* _thread, AlifCodeObject* _co,
+	AlifSizeT _given, AlifObject* _defaults,
+	AlifStackRef* _localsPlus, AlifObject* _qualname) { // 1209
+	AlifIntT plural{};
+	AlifSizeT kwOnlyGiven = 0;
+	AlifSizeT i{};
+	AlifObject* sig{}, * kwOnlySig{};
+	AlifSizeT coArgCount = _co->argCount;
+
+	/* Count missing keyword-only args. */
+	for (i = coArgCount; i < coArgCount + _co->kwOnlyArgCount; i++) {
+		if (alifStackRef_asAlifObjectBorrow(_localsPlus[i]) != nullptr) {
+			kwOnlyGiven++;
+		}
+	}
+	AlifSizeT defcount = _defaults == nullptr ? 0 : ALIFTUPLE_GET_SIZE(_defaults);
+	if (defcount) {
+		AlifSizeT atleast = coArgCount - defcount;
+		plural = 1;
+		sig = alifUStr_fromFormat("from %zd to %zd", atleast, coArgCount);
+	}
+	else {
+		plural = (coArgCount != 1);
+		sig = alifUStr_fromFormat("%zd", coArgCount);
+	}
+	if (sig == nullptr)
+		return;
+	if (kwOnlyGiven) {
+		const char* format = " positional argument%s (and %zd keyword-only argument%s)";
+		kwOnlySig = alifUStr_fromFormat(format,
+			_given != 1 ? "s" : "",
+			kwOnlyGiven,
+			kwOnlyGiven != 1 ? "s" : "");
+		if (kwOnlySig == nullptr) {
+			ALIF_DECREF(sig);
+			return;
+		}
+	}
+	else {
+		/* This will not fail. */
+		kwOnlySig = alifUStr_fromString("");
+	}
+	//_alifErr_format(_thread, _alifExcTypeError_,
+	//	"%U() takes %U positional argument%s but %zd%U %s given",
+	//	_qualname, sig, plural ? "s" : "", _given, kwOnlySig,
+	//	_given == 1 and !kwOnlyGiven ? "was" : "were");
+	ALIF_DECREF(sig);
+	ALIF_DECREF(kwOnlySig);
+}
 
 
 static AlifIntT positionalOnly_passedAsKeyword(AlifThread* _tstate,
@@ -333,7 +433,7 @@ static AlifIntT initialize_locals(AlifThread* _thread, AlifFunctionObject* _func
 							ALIFLIST_SET_ITEM(possibleKeywords, k - co->posOnlyArgCount, varNames[k]);
 						}
 
-						suggestionKeyword = _alif_CalculateSuggestions(possibleKeywords, keyword);
+						//suggestionKeyword = _alif_calculateSuggestions(possibleKeywords, keyword);
 						ALIF_DECREF(possibleKeywords);
 					}
 				}
