@@ -102,16 +102,133 @@ AlifObject* alifEval_evalCode(AlifObject* _co,
 
 
 
+#include "AlifEvalMacros.h" // 641
+
+AlifIntT _alif_checkRecursiveCallAlif(AlifThread* _thread) { // 643
+	if (_thread->recursionHeadroom) {
+		if (_thread->alifRecursionRemaining < -50) {
+			//alif_fatalError("Cannot recover from Alif stack overflow.");
+		}
+	}
+	else {
+		if (_thread->alifRecursionRemaining <= 0) {
+			_thread->recursionHeadroom++;
+			//_alifErr_format(_thread, _alifExcRecursionError_,
+			//	"maximum recursion depth exceeded");
+			_thread->recursionHeadroom--;
+			return -1;
+		}
+	}
+	return 0;
+}
+
+static const AlifCodeUnit _alifInterpreterTrampolineInstructions_[] = { // 664
+	/* Put a NOP at the start, so that the IP points into
+	* the code, rather than before it */
+	{.op{.code = NOP, .arg = 0 } },
+	{.op{.code = INTERPRETER_EXIT, .arg = 0 } },  /* reached on return */
+	{.op{.code = NOP, .arg = 0 } },
+	{.op{.code = INTERPRETER_EXIT, .arg = 0 } },  /* reached on yield */
+	{.op{.code = RESUME, .arg = RESUME_OPARG_DEPTH1_MASK | RESUME_AT_FUNC_START } }
+};
 
 
-
-
-
+#define ALIF_EVAL_CPP_STACK_UNITS 2 // 724
 
 
 AlifObject* ALIF_HOT_FUNCTION alifEval_evalFrameDefault(AlifThread* _thread,
 	AlifInterpreterFrame* _frame, AlifIntT _throwflag) { // 726
 
+#ifdef ALIF_STATS
+	AlifIntT lastOpcode = 0;
+#endif
+	uint8_t opcode{};			/* Current opcode */
+	AlifIntT oparg{};			/* Current opcode argument, if any */
+#ifdef LLTRACE
+	AlifIntT lltrace = 0;
+#endif
+
+	AlifInterpreterFrame  entryFrame{};
+
+	entryFrame.executable = ALIF_NONE;
+	entryFrame.instrPtr = (AlifCodeUnit*)_alifInterpreterTrampolineInstructions_ + 1;
+	entryFrame.stackPointer = entryFrame.localsPlus;
+	entryFrame.owner = FrameOwner::FRAME_OWNED_BY_CSTACK;
+	entryFrame.returnOffset = 0;
+	/* Push frame */
+	entryFrame.previous = _thread->currentFrame;
+	_frame->previous = &entryFrame;
+	_thread->currentFrame = _frame;
+
+	_thread->cppRecursionRemaining -= (ALIF_EVAL_CPP_STACK_UNITS - 1);
+	if (alif_enterRecursiveCallTstate(_thread, "")) {
+		_thread->cppRecursionRemaining--;
+		_thread->alifRecursionRemaining--;
+		//goto exit_unwind;
+	}
+
+	//if (_throwflag) {
+	//	if (_alif_enterRecursiveAlif(_thread)) {
+	//		goto exit_unwind;
+	//	}
+	//	_alif_instrument(_alifFrame_getCode(_frame), _thread->interpreter);
+	//	monitor_throw(_thread, _frame, _frame->instrPtr);
+	//	goto resume_with_error;
+	//}
+
+
+	AlifCodeUnit* nextInstr{};
+	AlifStackRef* stackPointer{};
+
+
+
+start_frame:
+	if (_alif_enterRecursiveAlif(_thread)) {
+		goto exit_unwind;
+	}
+
+	nextInstr = _frame->instrPtr;
+resume_frame:
+	stackPointer = _alifFrame_getStackPointer(_frame);
+
+//#ifdef LLTRACE
+//	lltrace = maybe_lltrace_resume_frame(frame, &entry_frame, GLOBALS());
+//	if (lltrace < 0) {
+//		goto exit_unwind;
+//	}
+//#endif
+
+	DISPATCH();
+
+	{
+	/* Start instructions */
+#if !USE_COMPUTED_GOTOS
+		dispatch_opcode :
+		switch (opcode)
+#endif
+		{
+
+
+
+		}
+
+	}
+
+exit_unwind:
+	//_alif_leaveRecursiveCallAlif(_thread);
+	//AlifInterpreterFrame* dying = _frame;
+	//_frame = _thread->currentFrame = dying->previous;
+	//_alifEval_frameClearAndPop(_thread, dying);
+	//_frame->returnOffset = 0;
+	//if (_frame == &entryFrame) {
+	//	_thread->currentFrame = _frame->previous;
+	//	_thread->cppRecursionRemaining += ALIF_EVAL_CPP_STACK_UNITS;
+	//	return nullptr;
+	//}
+
+
+
+	return ALIF_NONE;
 }
 
 

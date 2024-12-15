@@ -21,7 +21,7 @@
 //#define RESERVED                                17
 //#define GET_LEN                                 18
 //#define GET_YIELD_FROM_ITER                     19
-//#define INTERPRETER_EXIT                        20
+#define INTERPRETER_EXIT                        20
 //#define LOAD_BUILD_CLASS                        21
 #define LOAD_LOCALS                             22
 //#define MAKE_FUNCTION                           23

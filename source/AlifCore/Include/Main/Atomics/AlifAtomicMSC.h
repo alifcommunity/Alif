@@ -327,6 +327,10 @@ static inline uint8_t alifAtomic_loadUint8Relaxed(const uint8_t* _obj) { // 667
 	return *(volatile uint8_t*)_obj;
 }
 
+static inline uint16_t alifAtomic_loadUint16Relaxed(const uint16_t* _obj) { // 673
+	return *(volatile uint16_t*)_obj;
+}
+
 static inline uint32_t alifAtomic_loadUint32Relaxed(const uint32_t* _obj) { // 679
 	return *(volatile uint32_t*)_obj;
 }

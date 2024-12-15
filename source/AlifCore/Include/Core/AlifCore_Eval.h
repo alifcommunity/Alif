@@ -76,6 +76,8 @@ static inline AlifIntT alif_makeRecCheck(AlifThread* _thread) {
 
 AlifIntT alif_checkRecursiveCall(AlifThread*, const char*); // 202
 
+AlifIntT _alif_checkRecursiveCallAlif(AlifThread*); // 206
+
 static inline AlifIntT alif_enterRecursiveCallTstate(AlifThread* _thread,
 	const char* where) { // 209
 	return (alif_makeRecCheck(_thread) and alif_checkRecursiveCall(_thread, where));

@@ -103,7 +103,11 @@ static inline void _alifFrame_initialize(AlifInterpreterFrame* _frame,
 
 
 
-
+static inline AlifStackRef* _alifFrame_getStackPointer(AlifInterpreterFrame* _frame) { // 188
+	AlifStackRef* sp = _frame->stackPointer;
+	_frame->stackPointer = nullptr;
+	return sp;
+}
 
 
 
