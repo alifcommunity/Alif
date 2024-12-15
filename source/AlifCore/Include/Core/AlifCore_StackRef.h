@@ -81,3 +81,15 @@ static inline void alifStackRef_close(AlifStackRef _stackRef) { // 193
 	}
 	ALIF_DECREF(alifStackRef_asAlifObjectBorrow(_stackRef));
 }
+
+
+
+
+ // 207
+#define ALIFSTACKREF_XCLOSE(_stackref) \
+    do {                            \
+        AlifStackRef _tmp = (_stackref); \
+        if (!ALIFSTACKREF_ISNULL(_tmp)) { \
+            alifStackRef_close(_tmp); \
+        } \
+    } while (0);

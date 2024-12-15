@@ -27,6 +27,8 @@ public:
 
 
 
+extern AlifFrameObject* _alifFrame_newNoTrack(AlifCodeObject*); // 38
+
 
 
 enum FrameOwner { // 55
@@ -56,7 +58,7 @@ public:
 	char owner{};
 	/* Locals and stack */
 	AlifStackRef localsPlus[1]{};
-} _PyInterpreterFrame;
+};
 
 
 
@@ -127,6 +129,16 @@ static inline AlifInterpreterFrame* _alifThreadState_getFrame(AlifThread* _threa
 	return _alifFrame_getFirstComplete(_thread->currentFrame);
 }
 
+AlifFrameObject* _alifFrame_makeAndSetFrameObject(AlifInterpreterFrame*); // 240
+
+static inline AlifFrameObject* _alifFrame_getFrameObject(AlifInterpreterFrame* _frame) { // 245
+
+	AlifFrameObject* res = _frame->frameObj;
+	if (res != nullptr) {
+		return res;
+	}
+	return _alifFrame_makeAndSetFrameObject(_frame);
+}
 
 
 void _alifFrame_clearExceptCode(AlifInterpreterFrame*); // 269

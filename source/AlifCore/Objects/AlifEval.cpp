@@ -112,7 +112,6 @@ AlifObject* alifEval_evalCode(AlifObject* _co,
 AlifObject* ALIF_HOT_FUNCTION alifEval_evalFrameDefault(AlifThread* _thread,
 	AlifInterpreterFrame* _frame, AlifIntT _throwflag) { // 726
 
-
 }
 
 
@@ -610,6 +609,7 @@ static AlifInterpreterFrame* _alifEvalFramePushAndInit_unTagged(AlifThread* _thr
 #if defined(ALIF_GIL_DISABLED)
 	AlifUSizeT kwCount = _kwNames == nullptr ? 0 : ALIFTUPLE_GET_SIZE(_kwNames);
 	AlifUSizeT totalArgCount = _argCount + kwCount;
+	totalArgCount ? totalArgCount : totalArgCount = 1; // alif
 	AlifStackRef* taggedArgsBuffer = (AlifStackRef*)alifMem_dataAlloc(sizeof(AlifStackRef) * totalArgCount);
 	if (taggedArgsBuffer == nullptr) {
 		//alifErr_noMemory();

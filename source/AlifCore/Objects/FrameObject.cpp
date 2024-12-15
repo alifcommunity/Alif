@@ -20,9 +20,42 @@
 
 
 
+AlifTypeObject _alifFrameType_ = { // 1758
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "إطار",
+	.basicSize = offsetof(AlifFrameObject, frameData) +
+	offsetof(AlifInterpreterFrame, localsPlus),
+	.itemSize = sizeof(AlifObject*),
+	//.dealloc = (Destructor)frame_dealloc,
+	//(ReprFunc)frame_repr,
+	.getAttro = alifObject_genericGetAttr,
+	.setAttro = alifObject_genericSetAttr,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
+	//(TraverseProc)frame_traverse,
+	//(Inquiry)frame_tpClear,
+	//frame_memberList,
+	//frame_getSetList,
+};
 
 
 
+
+
+AlifFrameObject* _alifFrame_newNoTrack(AlifCodeObject* _code) { // 1802
+	AlifIntT slots = _code->nLocalsPlus + _code->stackSize;
+	AlifFrameObject* f = ALIFOBJECT_GC_NEWVAR(AlifFrameObject, &_alifFrameType_, slots);
+	if (f == nullptr) {
+		return nullptr;
+	}
+	f->back = nullptr;
+	f->trace = nullptr;
+	f->traceLines = 1;
+	f->traceOpcodes = 0;
+	f->lineno = 0;
+	f->extraLocals = nullptr;
+	f->localsCache = nullptr;
+	return f;
+}
 
 
 

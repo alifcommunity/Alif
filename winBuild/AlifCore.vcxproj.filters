@@ -750,6 +750,9 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\FrameObject.h">
       <Filter>Include\Main</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\AlifFrame.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Include">
