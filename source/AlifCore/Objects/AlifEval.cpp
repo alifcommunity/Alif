@@ -241,11 +241,11 @@ dispatch_opcode :
 				AlifStackRef value{};
 				AlifStackRef res{};
 				value = stackPointer[-1];
-				AlifObject* value_o = alifStackRef_asAlifObjectBorrow(value);
+				AlifObject* valueObj = alifStackRef_asAlifObjectBorrow(value);
 				/* If value is a UStr object, then we know the result
 				 * of format(value) is value itself. */
-				if (!ALIFUSTR_CHECKEXACT(value_o)) {
-					res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(alifObject_format(value_o, nullptr));
+				if (!ALIFUSTR_CHECKEXACT(valueObj)) {
+					res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(alifObject_format(valueObj, nullptr));
 					alifStackRef_close(value);
 					//if (ALIFSTACKREF_ISNULL(res)) goto pop_1_error;
 				}

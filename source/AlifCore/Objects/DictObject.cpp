@@ -70,6 +70,11 @@ static inline void splitKeys_entryAdded(AlifDictKeysObject* _keys) { // 219
 
 static AlifIntT dict_resize(AlifInterpreter* ,AlifDictObject* ,uint8_t , AlifIntT); // 380
 
+
+static AlifIntT setItem_lockHeld(AlifDictObject*, AlifObject*, AlifObject*); // 385
+
+
+
 static inline AlifUSizeT uStr_getHash(AlifObject* _o) { // 399
 	return alifAtomic_loadSizeRelaxed(&ALIFASCIIOBJECT_CAST(_o)->hash);
 }
@@ -1184,16 +1189,15 @@ static AlifObject* dictNew_presized(AlifInterpreter* _interp, AlifSizeT _minused
 }
 
 AlifObject* _alifDict_newPresized(AlifSizeT _minused) { // 2072
-	AlifInterpreter* interp = alifInterpreter_get();
+	AlifInterpreter* interp = _alifInterpreter_get();
 	return dictNew_presized(interp, _minused, false);
 }
 
 AlifObject* _alifDict_fromItems(AlifObject* const* _keys, AlifSizeT _keysOffset,
-	AlifObject* const* _values, AlifSizeT _valuesOffset,
-	AlifSizeT _length) { // 2079
+	AlifObject* const* _values, AlifSizeT _valuesOffset, AlifSizeT _length) { // 2079
 	bool uStr = true;
 	AlifObject* const* ks_ = _keys;
-	AlifInterpreter* interp = alifInterpreter_get();
+	AlifInterpreter* interp = _alifInterpreter_get();
 
 	for (AlifSizeT i = 0; i < _length; i++) {
 		if (!ALIFUSTR_CHECKEXACT(*ks_)) {
@@ -1327,8 +1331,9 @@ AlifIntT alifDict_setItem(AlifObject* _op,
 		ALIF_NEWREF(_key), ALIF_NEWREF(_value));
 }
 
-static AlifIntT setItem_lockHeld(AlifDictObject* mp, AlifObject* key, AlifObject* value) { // 2477
-	return setItemTake2_lockHeld(mp, ALIF_NEWREF(key), ALIF_NEWREF(value));
+static AlifIntT setItem_lockHeld(AlifDictObject* _mp,
+	AlifObject* _key, AlifObject* _value) { // 2477
+	return setItemTake2_lockHeld(_mp, ALIF_NEWREF(_key), ALIF_NEWREF(_value));
 }
 
 

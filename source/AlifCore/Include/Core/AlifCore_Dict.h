@@ -160,9 +160,8 @@ static inline uint64_t _alifDict_notifyEvent(AlifInterpreter* _interp,
 
 extern AlifDictObject* alifObject_materializeManagedDict(AlifObject* ); // 279
 
-AlifObject* _alifDict_fromItems(AlifObject* const* , AlifSizeT,
-	AlifObject* const* , AlifSizeT ,
-	AlifSizeT); // 281
+AlifObject* _alifDict_fromItems(AlifObject* const*, AlifSizeT,
+	AlifObject* const*, AlifSizeT, AlifSizeT); // 281
 
 static inline uint8_t* getInsertion_orderArray(AlifDictValues* _values) { // 287
 	return (uint8_t*)&_values->values[_values->capacity];

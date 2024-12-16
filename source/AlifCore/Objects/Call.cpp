@@ -72,7 +72,7 @@ static void object_isNotCallable(AlifThread* _thread, AlifObject* _callable) { /
 	}
 basic_type_error:
 	//alifErr_format(_thread, alifExcTypeError, "'%.200s' object is not callable", ALIF_TYPE(_callable)->name_);
-	return; //
+	return; // alif
 }
 
 AlifObject* alifObject_makeTpCall(AlifThread* _thread, AlifObject* _callable,
@@ -107,10 +107,10 @@ AlifObject* alifObject_makeTpCall(AlifThread* _thread, AlifObject* _callable,
 	}
 
 	AlifObject* result = nullptr;
-	if (alif_enterRecursiveCallThread(_thread, L" بينما يتم إستدعاء كائن ألف") == 0)
+	if (_alif_enterRecursiveCallThread(_thread, " while calling a Alif object") == 0)
 	{
 		result = ALIFCFUNCTIONWITHKEYWORDS_TRAMPOLINECALL((AlifCFunctionWithKeywords)call, _callable, argstuple, kwdict);
-		alif_leaveRecursiveCallThread(_thread);
+		_alif_leaveRecursiveCallThread(_thread);
 	}
 
 	ALIF_DECREF(argsTuple);
@@ -118,7 +118,7 @@ AlifObject* alifObject_makeTpCall(AlifThread* _thread, AlifObject* _callable,
 		ALIF_DECREF(kWDict);
 	}
 
-	return alif_checkFunctionResult(_thread, _callable, result, nullptr);
+	return _alif_checkFunctionResult(_thread, _callable, result, nullptr);
 }
 
 
@@ -137,11 +137,11 @@ VectorCallFunc alifVectorCall_function(AlifObject* _callable) { // 256
 
 AlifObject* alifObject_callOneArg(AlifObject* _func, AlifObject* _arg) { // 386
 
-	AlifObject* _args[2];
+	AlifObject* _args[2]{};
 	AlifObject** args = _args + 1;
 	args[0] = _arg;
-	AlifThread* thread = alifThread_get();
-	size_t nArgsF = 1 | ALIF_VECTORCALL_ARGUMENTS_OFFSET;
+	AlifThread* thread = _alifThread_get();
+	AlifUSizeT nArgsF = 1 | ALIF_VECTORCALL_ARGUMENTS_OFFSET;
 	return alifObject_vectorCallThread(thread, _func, args, nArgsF, nullptr);
 }
 

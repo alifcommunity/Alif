@@ -217,6 +217,7 @@ AlifObject* alifType_genericAlloc(AlifTypeObject*, AlifSizeT); // 412
 void alifType_modified(AlifTypeObject*); // 416
 
 AlifObject* alifObject_repr(AlifObject*); // 419
+AlifObject* alifObject_str(AlifObject*); // 420
 
 AlifIntT alifObject_richCompareBool(AlifObject* , AlifObject* , AlifIntT ); // 424
 
@@ -230,6 +231,7 @@ AlifHashT alifObject_hash(AlifObject*); // 447
 AlifHashT alifObject_hashNotImplemented(AlifObject*); // 448
 AlifIntT alifObject_isTrue(AlifObject*); // 449
 
+AlifIntT alifCallable_check(AlifObject*); // 451
 void alifObject_clearWeakRefs(AlifObject*); // 452
 
 // 491
@@ -552,9 +554,6 @@ typedef AlifIntT (*AlifRefTracer)(AlifObject*, AlifRefTracerEvent_ event, void*)
 
 /* -------------------------------------------------------------------------------------------------------------------------------- */
 
-AlifObject* alifObject_str(AlifObject*); // 420
-
-AlifIntT alifCallable_check(AlifObject*); // 451
 
 
 // 775
