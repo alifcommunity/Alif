@@ -146,8 +146,8 @@ AlifObject* alifObject_repr(AlifObject* _v) { // 662
 
 AlifObject* alifObject_str(AlifObject* _v) { // 711
 	AlifObject* res_{};
-	if (alifErr_checkSignals())
-		return nullptr;
+	//if (alifErr_checkSignals())
+	//	return nullptr;
 #ifdef USE_STACKCHECK
 	if (alifOS_checkStack()) {
 		//alifErr_setString(_alifExcMemoryError_, "stack overflow");

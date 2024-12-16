@@ -11,41 +11,41 @@
 
 //#define ALIFVECTORCALL_ARGUMENTS_OFFSET \
 //    ((size_t)1 << (8 * sizeof(size_t) - 1))
-//
-//AlifObject* alif_checkFunctionResult(AlifThread* _thread,
-//	AlifObject* _callable, AlifObject* _result, const wchar_t* _where) { 
-//
-//	if (_result == nullptr) {
-//		//if (!alifErr_occurred(_thread)) {
-//		//	if (_callable)
-//		//		alifErr_format(_thread, alifExcSystemError,
-//		//			"%R returned nullptr without setting an exception", _callable);
-//		//	else
-//		//		alifErr_format(_thread, alifExcSystemError,
-//		//			"%s returned nullptr without setting an exception", _where);
-//		//	return nullptr;
-//		//}
-//	}
-//	else {
-//		//if (alifErr_occurred(_thread)) {
-//		//	ALIF_DECREF(_result);
-//
-//		//	if (_callable) {
-//		//		alifErr_formatFromCauseThread(
-//		//			_thread, alifExcSystemError,
-//		//			"%R returned a result with an exception set", _callable);
-//		//	}
-//		//	else {
-//		//		alifErr_formatFromCauseTstate(
-//		//			_thread, alifExcSystemError,
-//		//			"%s returned a result with an exception set", _where);
-//		//	}
-//		//	return nullptr;
-//		//}
-//	}
-//	return _result;
-//}
-//
+
+AlifObject* _alif_checkFunctionResult(AlifThread* _thread,
+	AlifObject* _callable, AlifObject* _result, const wchar_t* _where) { // 24
+
+	if (_result == nullptr) {
+		//if (!alifErr_occurred(_thread)) {
+		//	if (_callable)
+		//		alifErr_format(_thread, alifExcSystemError,
+		//			"%R returned nullptr without setting an exception", _callable);
+		//	else
+		//		alifErr_format(_thread, alifExcSystemError,
+		//			"%s returned nullptr without setting an exception", _where);
+		//	return nullptr;
+		//}
+	}
+	else {
+		//if (alifErr_occurred(_thread)) {
+		//	ALIF_DECREF(_result);
+
+		//	if (_callable) {
+		//		alifErr_formatFromCauseThread(
+		//			_thread, alifExcSystemError,
+		//			"%R returned a result with an exception set", _callable);
+		//	}
+		//	else {
+		//		alifErr_formatFromCauseTstate(
+		//			_thread, alifExcSystemError,
+		//			"%s returned a result with an exception set", _where);
+		//	}
+		//	return nullptr;
+		//}
+	}
+	return _result;
+}
+
 static void object_isNotCallable(AlifThread* _thread, AlifObject* _callable) { // 163
 	if (ALIF_IS_TYPE(_callable, &_alifModuleType_)) {
 		AlifObject* name = alifModule_getNameObject(_callable);

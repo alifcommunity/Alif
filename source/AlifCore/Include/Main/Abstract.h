@@ -106,7 +106,7 @@ AlifIntT alifMapping_getOptionalItem(AlifObject*, AlifObject*, AlifObject**); //
 
 
 
-
+AlifObject* alifStack_asDict(AlifObject* const*, AlifObject*); // 24
 
 static inline AlifSizeT _alifVectorCall_nArgs(AlifUSizeT _n) { // 32
 	return _n & ~ALIF_VECTORCALL_ARGUMENTS_OFFSET;

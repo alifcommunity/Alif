@@ -3,7 +3,7 @@
 
 
 
-//AlifObject* alif_checkFunctionResult(AlifThread*, AlifObject*, AlifObject*, const wchar_t*); 
+AlifObject* _alif_checkFunctionResult(AlifThread*, AlifObject*, AlifObject*, const wchar_t*); // 27 
 
 AlifObject* alifObject_makeTpCall(AlifThread*, AlifObject*, AlifObject* const*, AlifSizeT, AlifObject*); // 106
 
@@ -36,7 +36,7 @@ static inline AlifObject* alifObject_vectorCallThread(AlifThread* _thread,
 		return alifObject_makeTpCall(_thread, _callable, _args, nargs, _kWNames);
 	}
 	res_ = func(_callable, _args, _nArgsF, _kWNames);
-	return alif_checkFunctionResult(_thread, _callable, res_, nullptr);
+	return _alif_checkFunctionResult(_thread, _callable, res_, nullptr);
 }
 
 
