@@ -173,6 +173,10 @@ static inline uint8_t calculate_log2KeySize(AlifSizeT _minSize) { // 542
 #endif
 }
 
+static inline uint8_t estimate_log2Keysize(AlifSizeT _n) { // 569
+	return calculate_log2KeySize((_n * 3 + 1) / 2);
+}
+
 #define GROWTH_RATE(_d) ((_d)->used*3) // 585
 
 static AlifDictKeysObject _emptyKeysStruct_ = { // 590
@@ -1155,6 +1159,70 @@ static AlifIntT dict_resize(AlifInterpreter* _interp, AlifDictObject* _mp,
 	STORE_KEYS_USABLE(_mp->keys, _mp->keys->usable - numentries);
 	STORE_KEYS_NENTRIES(_mp->keys, numentries);
 	return 0;
+}
+
+static AlifObject* dictNew_presized(AlifInterpreter* _interp, AlifSizeT _minused, bool _uStr) { // 2044
+	const uint8_t log2MaxPresize = 17;
+	const AlifSizeT maxPresize = ((AlifSizeT)1) << log2MaxPresize;
+	uint8_t log2NewSize{};
+	AlifDictKeysObject* newKeys{};
+
+	if (_minused <= USABLE_FRACTION(ALIFDICT_MINSIZE)) {
+		return alifDict_new();
+	}
+	if (_minused > USABLE_FRACTION(maxPresize)) {
+		log2NewSize = log2MaxPresize;
+	}
+	else {
+		log2NewSize = estimate_log2Keysize(_minused);
+	}
+
+	newKeys = new_keysObject(_interp, log2NewSize, _uStr);
+	if (newKeys == nullptr)
+		return nullptr;
+	return new_dict(_interp, newKeys, nullptr, 0, 0);
+}
+
+AlifObject* _alifDict_newPresized(AlifSizeT _minused) { // 2072
+	AlifInterpreter* interp = alifInterpreter_get();
+	return dictNew_presized(interp, _minused, false);
+}
+
+AlifObject* _alifDict_fromItems(AlifObject* const* _keys, AlifSizeT _keysOffset,
+	AlifObject* const* _values, AlifSizeT _valuesOffset,
+	AlifSizeT _length) { // 2079
+	bool uStr = true;
+	AlifObject* const* ks_ = _keys;
+	AlifInterpreter* interp = alifInterpreter_get();
+
+	for (AlifSizeT i = 0; i < _length; i++) {
+		if (!ALIFUSTR_CHECKEXACT(*ks_)) {
+			uStr = false;
+			break;
+		}
+		ks_ += _keysOffset;
+	}
+
+	AlifObject* dict = dictNew_presized(interp, _length, uStr);
+	if (dict == nullptr) {
+		return nullptr;
+	}
+
+	ks_ = _keys;
+	AlifObject* const* vs_ = _values;
+
+	for (AlifSizeT i = 0; i < _length; i++) {
+		AlifObject* key = *ks_;
+		AlifObject* value = *vs_;
+		if (setItem_lockHeld((AlifDictObject*)dict, key, value) < 0) {
+			ALIF_DECREF(dict);
+			return nullptr;
+		}
+		ks_ += _keysOffset;
+		vs_ += _valuesOffset;
+	}
+
+	return dict;
 }
 
 AlifIntT alifDict_getItemRefKnownHash(AlifDictObject* _op, AlifObject* _key,

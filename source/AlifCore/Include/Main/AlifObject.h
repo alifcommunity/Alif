@@ -420,7 +420,7 @@ public:
 	AlifMappingMethods* asMapping{};
 
 	HashFunc hash{};
-
+	TernaryFunc call{};
 	GetAttroFunc getAttro{};
 	SetAttroFunc setAttro{};
 
@@ -552,6 +552,9 @@ typedef AlifIntT (*AlifRefTracer)(AlifObject*, AlifRefTracerEvent_ event, void*)
 
 /* -------------------------------------------------------------------------------------------------------------------------------- */
 
+AlifObject* alifObject_str(AlifObject*); // 420
+
+AlifIntT alifCallable_check(AlifObject*); // 451
 
 
 // 775

@@ -144,7 +144,44 @@ AlifObject* alifObject_repr(AlifObject* _v) { // 662
 	return res;
 }
 
+AlifObject* alifObject_str(AlifObject* _v) { // 711
+	AlifObject* res_{};
+	if (alifErr_checkSignals())
+		return nullptr;
+#ifdef USE_STACKCHECK
+	if (alifOS_checkStack()) {
+		//alifErr_setString(_alifExcMemoryError_, "stack overflow");
+		return nullptr;
+	}
+#endif
+	if (_v == nullptr)
+		return alifUStr_fromString("<NULL>");
+	if (ALIFUSTR_CHECKEXACT(_v)) {
+		return ALIF_NEWREF(_v);
+	}
+	if (ALIF_TYPE(_v)->str == nullptr)
+		return alifObject_repr(_v);
 
+	AlifThread* tstate = alifThread_get();
+
+	if (_alif_enterRecursiveCallTstate(tstate, " while getting the str of an object")) {
+		return nullptr;
+	}
+	res_ = (*ALIF_TYPE(_v)->str)(_v);
+	_alif_leaveRecursiveCallTstate(tstate);
+
+	if (res_ == nullptr) {
+		return nullptr;
+	}
+	if (!ALIFUSTR_CHECK(res_)) {
+		//_alifErr_format(tstate, _alifExcTypeError_,
+			//"__str__ returned non-string (type %.200s)",
+			//ALIF_TYPE(res_)->name);
+		ALIF_DECREF(res_);
+		return nullptr;
+	}
+	return res_;
+}
 
 
 
@@ -648,6 +685,13 @@ AlifIntT alifObject_isTrue(AlifObject* _v) { // 1845
 	else
 		return 1;
 	return (res_ > 0) ? 1 : ALIF_SAFE_DOWNCAST(res_, AlifSizeT, AlifIntT);
+}
+
+
+AlifIntT alifCallable_check(AlifObject* _x) { // 1884
+	if (_x == nullptr)
+		return 0;
+	return ALIF_TYPE(_x)->call != nullptr;
 }
 
 

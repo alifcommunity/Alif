@@ -46,80 +46,80 @@
 //	return _result;
 //}
 //
-//static void object_isNotCallable(AlifThread* _thread, AlifObject* _callable) {
-//	if (ALIF_IS_TYPE(_callable, &_alifModuleType_)) {
-//		AlifObject* name = alifModule_getNameObject(_callable);
-//		if (name == nullptr) {
-//			//alifErr_clear(_thread);
-//			goto basic_type_error;
-//		}
-//		AlifObject* attr;
-//		int res = alifObject_getOptionalAttr(_callable, name, &attr);
-//		if (res < 0) {
-//			//alifErr_clear(_thread);
-//		}
-//		else if (res > 0 and alifCallable_check(attr)) {
-//			//alifErr_format(_thread, alifExcTypeError,
-//			//	"'%.200s' object is not callable. "
-//			//	"Did you mean: '%U.%U(...)'?",
-//			//	ALIF_TYPE(_callable)->name_, name, name);
-//			ALIF_DECREF(attr);
-//			ALIF_DECREF(name);
-//			return;
-//		}
-//		ALIF_XDECREF(attr);
-//		ALIF_DECREF(name);
-//	}
-//basic_type_error:
-//	//alifErr_format(_thread, alifExcTypeError, "'%.200s' object is not callable", ALIF_TYPE(_callable)->name_);
-//	return; //
-//}
-//
-//AlifObject* alifObject_makeTpCall(AlifThread* _thread, AlifObject* _callable,
-//	AlifObject* const* _args, AlifSizeT _nargs, AlifObject* _keywords) { 
-//
-//	TernaryFunc call = ALIF_TYPE(_callable)->call_;
-//	if (call == nullptr) {
-//		object_isNotCallable(_thread, _callable);
-//		return nullptr;
-//	}
-//
-//	AlifObject* argstuple = alifSubTuple_fromArray(_args, _nargs);
-//	if (argstuple == nullptr) {
-//		return nullptr;
-//	}
-//
-//	AlifObject* kwdict;
-//	if (_keywords == nullptr or ALIFDICT_CHECK(_keywords)) {
-//		kwdict = _keywords;
-//	}
-//	else {
-//		if (ALIFTUPLE_GET_SIZE(_keywords)) {
-//			kwdict = alifStack_asDict(_args + _nargs, _keywords);
-//			if (kwdict == nullptr) {
-//				ALIF_DECREF(argstuple);
-//				return nullptr;
-//			}
-//		}
-//		else {
-//			_keywords = kwdict = nullptr;
-//		}
-//	}
-//
-//	AlifObject* result = nullptr;
-//	if (alif_enterRecursiveCallThread(_thread, L" بينما يتم إستدعاء كائن ألف") == 0)
-//	{
-//		result = ALIFCFUNCTIONWITHKEYWORDS_TRAMPOLINECALL((AlifCFunctionWithKeywords)call, _callable, argstuple, kwdict);
-//		alif_leaveRecursiveCallThread(_thread);
-//	}
-//
-//	ALIF_DECREF(argstuple);
-//	if (kwdict != _keywords) {
-//		ALIF_DECREF(kwdict);
-//	}
-//
-//	return alif_checkFunctionResult(_thread, _callable, result, nullptr);
-//}
+static void object_isNotCallable(AlifThread* _thread, AlifObject* _callable) { // 163
+	if (ALIF_IS_TYPE(_callable, &_alifModuleType_)) {
+		AlifObject* name = alifModule_getNameObject(_callable);
+		if (name == nullptr) {
+			//alifErr_clear(_thread);
+			goto basic_type_error;
+		}
+		AlifObject* attr{};
+		AlifIntT res = alifObject_getOptionalAttr(_callable, name, &attr);
+		if (res < 0) {
+			//alifErr_clear(_thread);
+		}
+		else if (res > 0 and alifCallable_check(attr)) {
+			//alifErr_format(_thread, alifExcTypeError,
+			//	"'%.200s' object is not callable. "
+			//	"Did you mean: '%U.%U(...)'?",
+			//	ALIF_TYPE(_callable)->name_, name, name);
+			ALIF_DECREF(attr);
+			ALIF_DECREF(name);
+			return;
+		}
+		ALIF_XDECREF(attr);
+		ALIF_DECREF(name);
+	}
+basic_type_error:
+	//alifErr_format(_thread, alifExcTypeError, "'%.200s' object is not callable", ALIF_TYPE(_callable)->name_);
+	return; //
+}
+
+AlifObject* alifObject_makeTpCall(AlifThread* _thread, AlifObject* _callable,
+	AlifObject* const* _args, AlifSizeT _nargs, AlifObject* _keywords) { // 200
+
+	TernaryFunc call = ALIF_TYPE(_callable)->call;
+	if (call == nullptr) {
+		object_isNotCallable(_thread, _callable);
+		return nullptr;
+	}
+
+	AlifObject* argsTuple = alifTuple_fromArray(_args, _nargs);
+	if (argsTuple == nullptr) {
+		return nullptr;
+	}
+
+	AlifObject* kWDict{};
+	if (_keywords == nullptr or ALIFDICT_CHECK(_keywords)) {
+		kWDict = _keywords;
+	}
+	else {
+		if (ALIFTUPLE_GET_SIZE(_keywords)) {
+			kWDict = alifStack_asDict(_args + _nargs, _keywords);
+			if (kWDict == nullptr) {
+				ALIF_DECREF(argsTuple);
+				return nullptr;
+			}
+		}
+		else {
+			_keywords = kWDict = nullptr;
+		}
+	}
+
+	AlifObject* result = nullptr;
+	if (alif_enterRecursiveCallThread(_thread, L" بينما يتم إستدعاء كائن ألف") == 0)
+	{
+		result = ALIFCFUNCTIONWITHKEYWORDS_TRAMPOLINECALL((AlifCFunctionWithKeywords)call, _callable, argstuple, kwdict);
+		alif_leaveRecursiveCallThread(_thread);
+	}
+
+	ALIF_DECREF(argsTuple);
+	if (kWDict != _keywords) {
+		ALIF_DECREF(kWDict);
+	}
+
+	return alif_checkFunctionResult(_thread, _callable, result, nullptr);
+}
 
 
 
@@ -135,15 +135,15 @@ VectorCallFunc alifVectorCall_function(AlifObject* _callable) { // 256
 //		args, nargsf, kwnames);
 //}
 
-//AlifObject* alifObject_callOneArg(AlifObject* func, AlifObject* arg) { 
-//
-//	AlifObject* _args[2];
-//	AlifObject** args = _args + 1; 
-//	args[0] = arg;
-//	AlifThread* thread = alifThread_get();
-//	size_t nargsf = 1 | ALIF_VECTORCALL_ARGUMENTS_OFFSET;
-//	return alifObject_vectorCallThread(thread, func, args, nargsf, nullptr);
-//}
+AlifObject* alifObject_callOneArg(AlifObject* _func, AlifObject* _arg) { // 386
+
+	AlifObject* _args[2];
+	AlifObject** args = _args + 1;
+	args[0] = _arg;
+	AlifThread* thread = alifThread_get();
+	size_t nArgsF = 1 | ALIF_VECTORCALL_ARGUMENTS_OFFSET;
+	return alifObject_vectorCallThread(thread, _func, args, nArgsF, nullptr);
+}
 
 
 AlifObject* alifFunction_vectorCall(AlifObject* _func, AlifObject* const* _stack,
@@ -161,13 +161,13 @@ AlifObject* alifFunction_vectorCall(AlifObject* _func, AlifObject* const* _stack
 }
 
 
-//AlifObject* alifStack_asDict(AlifObject* const* _values, AlifObject* _kwNames) { 
-//	AlifSizeT nkwargs;
-//
-//	nkwargs = ALIFTUPLE_GET_SIZE(_kwNames);
-//	return alifDict_fromItems(&ALIFTUPLE_GET_ITEM(_kwNames, 0), 1, _values, 1, nkwargs);
-//}
-//
+AlifObject* alifStack_asDict(AlifObject* const* _values, AlifObject* _kwNames) {  // 936
+	AlifSizeT nkwargs{};
+
+	nkwargs = ALIFTUPLE_GET_SIZE(_kwNames);
+	return _alifDict_fromItems(&ALIFTUPLE_GET_ITEM(_kwNames, 0), 1, _values, 1, nkwargs);
+}
+
 //static AlifObject* alifVectorCall_callSub(VectorCallFunc func,
 //    AlifObject* callable, AlifObject* tuple, AlifObject* kwArgs)
 //{
@@ -175,7 +175,7 @@ AlifObject* alifFunction_vectorCall(AlifObject* _func, AlifObject* const* _stack
 //    int64_t nargs = ((AlifTupleObject*)tuple)->_base_.size_;
 //
 //    /* Fast path for no keywords */
-//    if (kwArgs == nullptr || ((AlifDictObject*)kwArgs)->used == 0) {
+//    if (kwArgs == nullptr or ((AlifDictObject*)kwArgs)->used == 0) {
 //        return func(callable, ((AlifTupleObject*)tuple)->items_, nargs, nullptr);
 //    }
 //
