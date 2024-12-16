@@ -133,6 +133,34 @@ static const AlifCodeUnit _alifInterpreterTrampolineInstructions_[] = { // 664
 };
 
 
+AlifObject** _alifObjectArray_fromStackRefArray(AlifStackRef* _input,
+	AlifSizeT _nargs, AlifObject** _scratch) { // 692
+	AlifObject** result{};
+	if (_nargs > MAX_STACKREF_SCRATCH) {
+		// +1 in case ALIF_VECTORCALL_ARGUMENTS_OFFSET is set.
+		result = (AlifObject**)alifMem_dataAlloc((_nargs + 1) * sizeof(AlifObject*));
+		if (result == nullptr) {
+			return nullptr;
+		}
+		result++;
+	}
+	else {
+		result = _scratch;
+	}
+	for (AlifIntT i = 0; i < _nargs; i++) {
+		result[i] = alifStackRef_asAlifObjectBorrow(_input[i]);
+	}
+	return result;
+}
+
+
+void _alifObjectArray_free(AlifObject** _array, AlifObject** _scratch) { // 713
+	if (_array != _scratch) {
+		alifMem_dataFree(_array);
+	}
+}
+
+
 #define ALIF_EVAL_CPP_STACK_UNITS 2 // 724
 
 
@@ -226,12 +254,42 @@ dispatch_opcode :
 				}
 				stackPointer[-1] = res;
 				DISPATCH();
-			}
+			} // ------------------------------------------------------------ //
 			TARGET(NOP) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;
 				DISPATCH();
-			}
+			} // ------------------------------------------------------------ //
+			TARGET(BUILD_STRING) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef* pieces{};
+				AlifStackRef str{};
+				pieces = &stackPointer[-oparg];
+				STACKREFS_TO_ALIFOBJECTS(pieces, oparg, piecesO);
+				if (CONVERSION_FAILED(piecesO)) {
+					for (AlifIntT _i = oparg; --_i >= 0;) {
+						alifStackRef_close(pieces[_i]);
+					}
+					if (true) {
+						stackPointer += -oparg;
+						//goto error;
+					}
+				}
+				AlifObject* strO = alifUStr_joinArray(&ALIF_STR(Empty), piecesO, oparg);
+				STACKREFS_TO_ALIFOBJECTS_CLEANUP(piecesO);
+				for (AlifIntT _i = oparg; --_i >= 0;) {
+					alifStackRef_close(pieces[_i]);
+				}
+				if (strO == nullptr) {
+					stackPointer += -oparg;
+					//goto error;
+				}
+				str = ALIFSTACKREF_FROMALIFOBJECTSTEAL(strO);
+				stackPointer[-oparg] = str;
+				stackPointer += 1 - oparg;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(LOAD_CONST) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;
@@ -240,7 +298,7 @@ dispatch_opcode :
 				stackPointer[0] = value;
 				stackPointer += 1;
 				DISPATCH();
-			}
+			} // ------------------------------------------------------------ //
 			TARGET(RESUME) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;
@@ -281,7 +339,7 @@ dispatch_opcode :
 					}
 				}
 				DISPATCH();
-			}
+			} // ------------------------------------------------------------ //
 
 
 		}

@@ -64,3 +64,21 @@ static inline AlifIntT _alif_enterRecursiveAlif(AlifThread* _thread) { // 368
 	return (_thread->alifRecursionRemaining-- <= 0) and
 		_alif_checkRecursiveCallAlif(_thread);
 }
+
+
+
+
+#define MAX_STACKREF_SCRATCH 10 // 442
+
+ // 445
+#define STACKREFS_TO_ALIFOBJECTS(_args, _argCount, _name) \
+    /* +1 because vectorcall might use -1 to write self */ \
+    AlifObject *_name##_temp[MAX_STACKREF_SCRATCH+1]; \
+    AlifObject **_name = _alifObjectArray_fromStackRefArray(_args, _argCount, _name##_temp + 1);
+
+ // 456
+#define STACKREFS_TO_ALIFOBJECTS_CLEANUP(_name) \
+    /* +1 because we +1 previously */ \
+    _alifObjectArray_free(_name - 1, _name##_temp);
+
+#define CONVERSION_FAILED(_name) (_name == nullptr) // 465

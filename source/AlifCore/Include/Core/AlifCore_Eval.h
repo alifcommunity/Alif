@@ -89,6 +89,13 @@ static inline void alif_leaveRecursiveCallTstate(AlifThread* _thread) { // 224
 }
 
 
+AlifObject** _alifObjectArray_fromStackRefArray(AlifStackRef*, AlifSizeT, AlifObject**); // 269
+
+
+void _alifObjectArray_free(AlifObject**, AlifObject**); // 271
+
+
+
 // 279
 #define ALIF_GIL_DROP_REQUEST_BIT (1U << 0)
 #define ALIF_SIGNALS_PENDING_BIT (1U << 1)

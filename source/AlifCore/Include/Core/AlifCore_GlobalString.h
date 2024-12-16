@@ -37,6 +37,7 @@ public:
 		STRUCT_FOR_ID(__complex__)
 		STRUCT_FOR_ID(__doc__)
 		STRUCT_FOR_ID(__eq__)
+		STRUCT_FOR_ID(__format__)
 		STRUCT_FOR_ID(__getAttr__)
 		STRUCT_FOR_ID(__hash__)
 		STRUCT_FOR_ID(__lengthHint__)

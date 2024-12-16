@@ -667,6 +667,7 @@
     INIT_ID(__complex__), \
 	INIT_ID(__doc__), \
 	INIT_ID(__eq__), \
+	INIT_ID(__format__), \
 	INIT_ID(__getAttr__), \
 	INIT_ID(__hash__), \
 	INIT_ID(__lengthHint__), \
