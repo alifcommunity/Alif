@@ -59,7 +59,7 @@ static inline AlifStackRef _alifStackRef_fromPyObjectSteal(AlifObject* _obj) { /
 	AlifIntT tag = (_obj == nullptr or ALIF_ISIMMORTAL(_obj)) ? (ALIF_TAG_DEFERRED) : ALIF_TAG_PTR;
 	return { .bits = ((uintptr_t)(_obj)) | tag };
 }
-#define ALIFSTACKREF_FROMALIFBJECTSTEAL(_obj) _alifStackRef_fromPyObjectSteal(ALIFOBJECT_CAST(_obj))
+#define ALIFSTACKREF_FROMALIFOBJECTSTEAL(_obj) _alifStackRef_fromPyObjectSteal(ALIFOBJECT_CAST(_obj))
 
 
 static inline AlifStackRef _alifStackRef_fromAlifObjectNew(AlifObject* _obj) { // 147

@@ -431,6 +431,17 @@ static inline void* alifAtomic_loadPtrAcquire(const void* _obj) { // 905
 }
 
 
+static inline uintptr_t alifAtomic_loadUintptrAcquire(const uintptr_t* _obj) { // 917
+#if defined(_M_X64) or defined(_M_IX86)
+	return *(uintptr_t volatile*)_obj;
+#elif defined(_M_ARM64)
+	return (uintptr_t)__ldar64((unsigned __int64 volatile*)_obj);
+#else
+#  error "no implementation of alifAtomic_loadUintptrAcquire"
+#endif
+}
+
+
 static inline void alifAtomic_storePtrRelease(void* _obj, void* _value) { // 930
 #if defined(_M_X64) or defined(_M_IX86)
 	* (void* volatile*)_obj = _value;

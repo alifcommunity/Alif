@@ -12,10 +12,17 @@
 #  define TARGET(op) TARGET_##op:
 #  define DISPATCH_GOTO() goto *opcode_targets[opcode]
 #else
-#  define TARGET(_op) case _op: TARGET_##op:
+#  define TARGET(_op) case _op: TARGET_##_op:
 #  define DISPATCH_GOTO() goto dispatch_opcode
 #endif
 
+
+ // 101
+#ifdef ALIF_GIL_DISABLED
+#define QSBR_QUIESCENT_STATE(_thread) _alifQSBR_quiescentState(((AlifThreadImpl*)_thread)->qsbr)
+#else
+#define QSBR_QUIESCENT_STATE(_thread)
+#endif
 
  // 109
 #define DISPATCH() \
@@ -27,7 +34,7 @@
 
 
 
-
+#define GETITEM(_v, _i) ALIFTUPLE_GET_ITEM(_v, _i) // 139
 
 
 
@@ -41,7 +48,16 @@
         oparg = word.op.arg; \
     } while (0)
 
+ // 193
+#define PREDICT_ID(_op)          PRED_##_op
+#define PREDICTED(_op)           PREDICT_ID(_op):
 
+
+
+
+/* Data access macros */
+#define FRAME_CO_CONSTS (_alifFrame_getCode(_frame)->consts) // 243
+#define FRAME_CO_NAMES  (_alifFrame_getCode(_frame)->names)
 
 
 static inline AlifIntT _alif_enterRecursiveAlif(AlifThread* _thread) { // 368

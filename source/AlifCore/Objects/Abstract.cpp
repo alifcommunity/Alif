@@ -243,6 +243,64 @@ void alifBuffer_release(AlifBuffer* _view) { // 803
 }
 
 
+AlifObject* alifObject_format(AlifObject* _obj, AlifObject* _formatSpec) { // 839
+	AlifObject* meth;
+	AlifObject* empty = nullptr;
+	AlifObject* result = nullptr;
+
+	if (_formatSpec != nullptr and !ALIFUSTR_CHECK(_formatSpec)) {
+		//alifErr_format(_alifExcSystemError_,
+		//	"Format specifier must be a string, not %.200s",
+		//	ALIF_TYPE(_formatSpec)->name);
+		return nullptr;
+	}
+
+	/* Fast path for common types. */
+	if (_formatSpec == nullptr or ALIFUSTR_GET_LENGTH(_formatSpec) == 0) {
+		if (ALIFUSTR_CHECKEXACT(_obj)) {
+			return ALIF_NEWREF(_obj);
+		}
+		if (ALIFLONG_CHECKEXACT(_obj)) {
+			return alifObject_str(_obj);
+		}
+	}
+
+	/* If no format_spec is provided, use an empty string */
+	if (_formatSpec == nullptr) {
+		empty = alifUStr_new(0, 0);
+		_formatSpec = empty;
+	}
+
+	/* Find the (unbound!) __format__ method */
+	meth = alifObject_lookupSpecial(_obj, &ALIF_ID(__format__));
+	if (meth == nullptr) {
+		AlifThread* thread = _alifThread_get();
+		//if (!_alifErr_occurred(tstate)) {
+		//	_alifErr_format(tstate, _alifExcTypeError_,
+		//		"Type %.100s doesn't define __format__",
+		//		ALIF_TYPE(_obj)->name);
+		//}
+		goto done;
+	}
+
+	/* And call it. */
+	result = alifObject_callOneArg(meth, _formatSpec);
+	ALIF_DECREF(meth);
+
+	if (result and !ALIFUSTR_CHECK(result)) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"__format__ must return a str, not %.200s",
+		//	ALIF_TYPE(result)->name);
+		ALIF_SETREF(result, nullptr);
+		goto done;
+	}
+
+done:
+	ALIF_XDECREF(empty);
+	return result;
+}
+
+
 #define NB_SLOT(_x) offsetof(AlifNumberMethods, _x) // 910
 #define NB_BINOP(_methods, _slot) \
         (*(BinaryFunc*)(& ((char*)_methods)[_slot]))

@@ -136,3 +136,4 @@ static inline AlifIntT write_locationEntryStart(uint8_t* _ptr, AlifIntT _code, A
 
 #define COMPARISON_NOT_EQUALS (COMPARISON_UNORDERED | COMPARISON_LESS_THAN | COMPARISON_GREATER_THAN)
 
+extern AlifIntT _alif_instrument(AlifCodeObject*, AlifInterpreter*);

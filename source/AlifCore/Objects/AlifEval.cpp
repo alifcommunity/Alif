@@ -203,11 +203,85 @@ resume_frame:
 	{
 	/* Start instructions */
 #if !USE_COMPUTED_GOTOS
-		dispatch_opcode :
+dispatch_opcode :
 		switch (opcode)
 #endif
 		{
-
+			TARGET(FORMAT_SIMPLE) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef value{};
+				AlifStackRef res{};
+				value = stackPointer[-1];
+				AlifObject* value_o = alifStackRef_asAlifObjectBorrow(value);
+				/* If value is a UStr object, then we know the result
+				 * of format(value) is value itself. */
+				if (!ALIFUSTR_CHECKEXACT(value_o)) {
+					res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(alifObject_format(value_o, nullptr));
+					alifStackRef_close(value);
+					//if (ALIFSTACKREF_ISNULL(res)) goto pop_1_error;
+				}
+				else {
+					res = value;
+				}
+				stackPointer[-1] = res;
+				DISPATCH();
+			}
+			TARGET(NOP) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				DISPATCH();
+			}
+			TARGET(LOAD_CONST) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef value{};
+				value = ALIFSTACKREF_FROMALIFOBJECTNEW(GETITEM(FRAME_CO_CONSTS, oparg));
+				stackPointer[0] = value;
+				stackPointer += 1;
+				DISPATCH();
+			}
+			TARGET(RESUME) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				PREDICTED(RESUME);
+				AlifCodeUnit* thisInstr = nextInstr - 1;
+				// _MAYBE_INSTRUMENT
+				{
+					if (_thread->tracing == 0) {
+						uintptr_t globalVersion = alifAtomic_loadUintptrRelaxed(&_thread->evalBreaker) & ~ALIF_EVAL_EVENTS_MASK;
+						uintptr_t codeVersion = alifAtomic_loadUintptrAcquire(&_alifFrame_getCode(_frame)->instrumentationVersion);
+						if (codeVersion != globalVersion) {
+							AlifIntT err = _alif_instrument(_alifFrame_getCode(_frame), _thread->interpreter);
+							if (err) {
+								//goto error;
+							}
+							nextInstr = thisInstr;
+							DISPATCH();
+						}
+					}
+				}
+				// _QUICKEN_RESUME
+				{
+#if ENABLE_SPECIALIZATION
+					if (_thread->tracing == 0 and thisInstr->op.code == RESUME) {
+						alifAtomic_storeUint8Relaxed(thisInstr->op.code, RESUME_CHECK);
+					}
+#endif  /* ENABLE_SPECIALIZATION */
+				}
+				// _CHECK_PERIODIC_IF_NOT_YIELD_FROM
+				{
+					if ((oparg & RESUME_OPARG_LOCATION_MASK) < RESUME_AFTER_YIELD_FROM) {
+						//ALIF_CHECK_EMSCRIPTEN_SIGNALS_PERIODICALLY();
+						QSBR_QUIESCENT_STATE(_thread); \
+							if (alifAtomic_loadUintptrRelaxed(&_thread->evalBreaker) & ALIF_EVAL_EVENTS_MASK) {
+								//AlifIntT err = _alif_handlePending(_thread);
+								//if (err != 0) goto error;
+							}
+					}
+				}
+				DISPATCH();
+			}
 
 
 		}
@@ -455,7 +529,7 @@ static AlifIntT initialize_locals(AlifThread* _thread, AlifFunctionObject* _func
 		if (co->flags & CO_VARARGS) {
 			i++;
 		}
-		_localsPlus[i] = ALIFSTACKREF_FROMALIFBJECTSTEAL(kwdict);
+		_localsPlus[i] = ALIFSTACKREF_FROMALIFOBJECTSTEAL(kwdict);
 	}
 	else {
 		kwdict = nullptr;
@@ -482,7 +556,7 @@ static AlifIntT initialize_locals(AlifThread* _thread, AlifFunctionObject* _func
 		if (u == nullptr) {
 			goto fail_post_positional;
 		}
-		_localsPlus[totalArgs] = ALIFSTACKREF_FROMALIFBJECTSTEAL(u);
+		_localsPlus[totalArgs] = ALIFSTACKREF_FROMALIFOBJECTSTEAL(u);
 	}
 	else if (_argCount > n) {
 		/* Too many positional args. Error is reported later */
@@ -642,7 +716,7 @@ static AlifIntT initialize_locals(AlifThread* _thread, AlifFunctionObject* _func
 					goto fail_post_args;
 				}
 				if (def) {
-					_localsPlus[i] = ALIFSTACKREF_FROMALIFBJECTSTEAL(def);
+					_localsPlus[i] = ALIFSTACKREF_FROMALIFOBJECTSTEAL(def);
 					continue;
 				}
 			}
@@ -733,10 +807,10 @@ static AlifInterpreterFrame* _alifEvalFramePushAndInit_unTagged(AlifThread* _thr
 		return nullptr;
 	}
 	for (AlifUSizeT i = 0; i < _argCount; i++) {
-		taggedArgsBuffer[i] = ALIFSTACKREF_FROMALIFBJECTSTEAL(_args[i]);
+		taggedArgsBuffer[i] = ALIFSTACKREF_FROMALIFOBJECTSTEAL(_args[i]);
 	}
 	for (AlifUSizeT i = 0; i < kwCount; i++) {
-		taggedArgsBuffer[_argCount + i] = ALIFSTACKREF_FROMALIFBJECTSTEAL(_args[_argCount + i]);
+		taggedArgsBuffer[_argCount + i] = ALIFSTACKREF_FROMALIFOBJECTSTEAL(_args[_argCount + i]);
 	}
 	AlifInterpreterFrame* res = _alifEval_framePushAndInit(_thread, _func, _locals, (AlifStackRef const*)taggedArgsBuffer, _argCount, _kwNames, _previous);
 	alifMem_dataFree(taggedArgsBuffer);

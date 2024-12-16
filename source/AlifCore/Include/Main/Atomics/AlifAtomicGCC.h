@@ -334,6 +334,10 @@ static inline void* alifAtomic_loadPtrAcquire(const void* _obj) { // 491
 	return (void*)__atomic_load_n((void* const*)_obj, __ATOMIC_ACQUIRE);
 }
 
+static inline uintptr_t alifAtomic_loadUintptrAcquire(const uintptr_t* _obj) { // 495
+	return (uintptr_t)__atomic_load_n(_obj, __ATOMIC_ACQUIRE);
+}
+
 static inline void alifAtomic_storePtrRelease(void* _obj, void* _value) { // 499
 	__atomic_store_n((void**)_obj, _value, __ATOMIC_RELEASE);
 }
