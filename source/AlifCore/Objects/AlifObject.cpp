@@ -164,11 +164,11 @@ AlifObject* alifObject_str(AlifObject* _v) { // 711
 
 	AlifThread* thread = _alifThread_get();
 
-	if (_alif_enterRecursiveCallThread(thread, " while getting the str of an object")) {
+	if (alif_enterRecursiveCallTstate(thread, " while getting the str of an object")) {
 		return nullptr;
 	}
 	res_ = (*ALIF_TYPE(_v)->str)(_v);
-	_alif_leaveRecursiveCallThread(thread);
+	alif_leaveRecursiveCallTstate(thread);
 
 	if (res_ == nullptr) {
 		return nullptr;
