@@ -5,7 +5,8 @@ extern AlifTypeObject _alifCPPFunctionType_; // 14
 
 
 typedef AlifObject* (*AlifCPPFunction)(AlifObject*, AlifObject*); // 19
-
+typedef AlifObject* (*AlifCFunctionWithKeywords)(AlifObject*, AlifObject*,
+	AlifObject*);
 typedef AlifObject* (*AlifCPPFunctionFastWithKeywords)(AlifObject*, AlifObject* const*, AlifSizeT, AlifObject*); // 23
 
 // 52

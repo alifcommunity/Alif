@@ -423,6 +423,7 @@ public:
 
 	HashFunc hash{};
 	TernaryFunc call{};
+	ReprFunc str{};
 	GetAttroFunc getAttro{};
 	SetAttroFunc setAttro{};
 
