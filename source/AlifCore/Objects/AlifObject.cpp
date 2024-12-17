@@ -117,7 +117,7 @@ AlifObject* alifObject_repr(AlifObject* _v) { // 662
 	}
 #endif
 	if (_v == nullptr)
-		return alifUStr_fromString("<NULL>");
+		return alifUStr_fromString("<nullptr>");
 	if (ALIF_TYPE(_v)->repr == nullptr)
 		return alifUStr_fromFormat("<%s object at %p>",
 			ALIF_TYPE(_v)->name, _v);
@@ -155,7 +155,7 @@ AlifObject* alifObject_str(AlifObject* _v) { // 711
 	}
 #endif
 	if (_v == nullptr)
-		return alifUStr_fromString("<NULL>");
+		return alifUStr_fromString("<nullptr>");
 	if (ALIFUSTR_CHECKEXACT(_v)) {
 		return ALIF_NEWREF(_v);
 	}
@@ -296,6 +296,19 @@ AlifHashT alifObject_hash(AlifObject* _v) { // 1067
 	return alifObject_hashNotImplemented(_v);
 }
 
+AlifObject* alifObject_getAttrString(AlifObject* _v, const char* _name) { // 1088
+	AlifObject* w_{}, * res_{};
+
+	if (ALIF_TYPE(_v)->getAttr != nullptr)
+		return (*ALIF_TYPE(_v)->getAttr)(_v, (char*)_name);
+	w_ = alifUStr_fromString(_name);
+	if (w_ == nullptr)
+		return nullptr;
+	res_ = alifObject_getAttr(_v, w_);
+	ALIF_DECREF(w_);
+	return res_;
+}
+
 
 AlifIntT alifObject_setAttrString(AlifObject* _v,
 	const char* _name, AlifObject* _w) { // 1126
@@ -309,6 +322,59 @@ AlifIntT alifObject_setAttrString(AlifObject* _v,
 	res_ = alifObject_setAttr(_v, s_, _w);
 	ALIF_XDECREF(s_);
 	return res_;
+}
+
+AlifIntT alifObject_setAttributeErrorContext(AlifObject* _v, AlifObject* _name) { // 1177
+	//if (!alifErr_exceptionMatches(_alifExcAttributeError_)) {
+		//return 0;
+	//}
+	//AlifObject* exc = alifErr_getRaisedException();
+	//if (!alifErr_givenExceptionMatches(exc, _alifExcAttributeError_)) {
+		//goto restore;
+	//}
+	//AlifAttributeErrorObject* theExc = (AlifAttributeErrorObject*)exc;
+	//if (theExc->name or theExc->obj) {
+		//goto restore;
+	//}
+	//if (alifObject_setAttr(exc, &ALIF_ID(_name), _name) or
+		//alifObject_setAttr(exc, &ALIF_ID(obj), _v)) {
+		//return 1;
+	//}
+//restore:
+	//alifErr_setRaisedException(exc);
+	return 0;
+}
+
+AlifObject* alifObject_getAttr(AlifObject* _v, AlifObject* _name) { // 1204
+	AlifTypeObject* tp_ = ALIF_TYPE(_v);
+	if (!ALIFUSTR_CHECK(_name)) {
+		//alifErr_format(_alifExcTypeError_,
+			//"attribute name must be string, not '%.200s'",
+			//ALIF_TYPE(_name)->_name);
+		return nullptr;
+	}
+
+	AlifObject* result = nullptr;
+	if (tp_->getAttro != nullptr) {
+		result = (*tp_->getAttro)(_v, _name);
+	}
+	else if (tp_->getAttr != nullptr) {
+		const char* nameStr = alifUStr_asUTF8(_name);
+		if (nameStr == nullptr) {
+			return nullptr;
+		}
+		result = (*tp_->getAttr)(_v, (char*)nameStr);
+	}
+	else {
+		//alifErr_format(_alifExcAttributeError_,
+			//"'%.100s' object has no attribute '%U'",
+			//tp->name, _name);
+	}
+
+	if (result == nullptr) {
+		alifObject_setAttributeErrorContext(_v, _name);
+	}
+	return result;
 }
 
 AlifIntT alifObject_getOptionalAttr(AlifObject* _v,

@@ -8,7 +8,12 @@
 
 
 
-
+extern AlifObject** _alif_vaBuildStack(
+	AlifObject** ,
+	AlifSizeT ,
+	const char* ,
+	va_list ,
+	AlifSizeT* ); // 37
 
 
 
