@@ -324,7 +324,7 @@ class AlifUStrWriter { // 496
 public:
 	AlifObject* buffer{};
 	void* data{};
-	int kind{};
+	AlifIntT kind{};
 	AlifUCS4 maxChar{};
 	AlifSizeT size{};
 	AlifSizeT pos{};

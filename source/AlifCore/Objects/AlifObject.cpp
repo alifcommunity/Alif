@@ -124,12 +124,12 @@ AlifObject* alifObject_repr(AlifObject* _v) { // 662
 
 	AlifThread* thread = _alifThread_get();
 
-	if (alif_enterRecursiveCallTstate(thread,
+	if (_alif_enterRecursiveCallThread(thread,
 		" while getting the repr of an object")) {
 		return nullptr;
 	}
 	res = (*ALIF_TYPE(_v)->repr)(_v);
-	alif_leaveRecursiveCallTstate(thread);
+	_alif_leaveRecursiveCallThread(thread);
 
 	if (res == nullptr) {
 		return nullptr;
@@ -164,11 +164,11 @@ AlifObject* alifObject_str(AlifObject* _v) { // 711
 
 	AlifThread* thread = _alifThread_get();
 
-	if (alif_enterRecursiveCallTstate(thread, " while getting the str of an object")) {
+	if (_alif_enterRecursiveCallThread(thread, " while getting the str of an object")) {
 		return nullptr;
 	}
 	res_ = (*ALIF_TYPE(_v)->str)(_v);
-	alif_leaveRecursiveCallTstate(thread);
+	_alif_leaveRecursiveCallThread(thread);
 
 	if (res_ == nullptr) {
 		return nullptr;
@@ -245,12 +245,12 @@ AlifObject* alifObject_richCompare(AlifObject* _v, AlifObject* _w, AlifIntT _op)
 		//}
 		return nullptr;
 	}
-	if (alif_enterRecursiveCallTstate(thread, " في المقارنة")) {
+	if (_alif_enterRecursiveCallThread(thread, " في المقارنة")) {
 		return nullptr;
 	}
 	AlifObject* res_ = do_richCompare(thread, _v, _w, _op);
 
-	alif_leaveRecursiveCallTstate(thread);
+	_alif_leaveRecursiveCallThread(thread);
 	return res_;
 }
 

@@ -1263,7 +1263,7 @@ static AlifIntT uStr_fromFormat(AlifUStrWriter* _writer,
 
 	for (const char* f = _format; *f; ) {
 		if (*f == '%') {
-			//f = uStr_fromFormatArg(_writer, f, &vargs2);
+			f = uStr_fromFormatArg(_writer, f, &vargs2);
 			if (f == nullptr)
 				goto fail;
 		}

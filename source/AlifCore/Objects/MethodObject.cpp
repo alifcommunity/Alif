@@ -124,7 +124,7 @@ AlifTypeObject _alifCPPMethodType_ = { // 368
 typedef void (*FuncPtr)(void);
 
 static inline FuncPtr cfunction_enterCall(AlifThread* _thread, AlifObject* _func) { // 401
-	if (alif_enterRecursiveCallTstate(_thread, " while calling a Alif object")) {
+	if (_alif_enterRecursiveCallThread(_thread, " while calling a Alif object")) {
 		return nullptr;
 	}
 	return (FuncPtr)ALIFCPPFUNCTION_GET_FUNCTION(_func);
@@ -143,6 +143,6 @@ static AlifObject* cfunction_vectorCallFastCallKeywords(AlifObject* _func,
 		return nullptr;
 	}
 	AlifObject* result = meth(ALIFCPPFUNCTION_GET_SELF(_func), _args, nargs, _kwnames);
-	alif_leaveRecursiveCallTstate(tstate);
+	_alif_leaveRecursiveCallThread(tstate);
 	return result;
 }

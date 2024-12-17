@@ -189,7 +189,7 @@ AlifObject* ALIF_HOT_FUNCTION alifEval_evalFrameDefault(AlifThread* _thread,
 	_thread->currentFrame = _frame;
 
 	_thread->cppRecursionRemaining -= (ALIF_EVAL_CPP_STACK_UNITS - 1);
-	if (alif_enterRecursiveCallTstate(_thread, "")) {
+	if (_alif_enterRecursiveCallThread(_thread, "")) {
 		_thread->cppRecursionRemaining--;
 		_thread->alifRecursionRemaining--;
 		//goto exit_unwind;

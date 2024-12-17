@@ -107,10 +107,10 @@ AlifObject* alifObject_makeTpCall(AlifThread* _thread, AlifObject* _callable,
 	}
 
 	AlifObject* result = nullptr;
-	if (alif_enterRecursiveCallTstate(_thread, " while calling a Alif object") == 0)
+	if (_alif_enterRecursiveCallThread(_thread, " while calling a Alif object") == 0)
 	{
-		result = ALIFCFUNCTIONWITHKEYWORDS_TRAMPOLINECALL((AlifCFunctionWithKeywords)call, _callable, argsTuple, kWDict);
-		alif_leaveRecursiveCallTstate(_thread);
+		result = ALIFCPPFUNCTIONWITHKEYWORDS_TRAMPOLINECALL((AlifCPPFunctionWithKeywords)call, _callable, argsTuple, kWDict);
+		_alif_leaveRecursiveCallThread(_thread);
 	}
 
 	ALIF_DECREF(argsTuple);

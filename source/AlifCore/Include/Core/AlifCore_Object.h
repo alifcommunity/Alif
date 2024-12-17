@@ -287,7 +287,7 @@ extern AlifObject** alifObject_computedDictPointer(AlifObject*); // 813
 
 AlifObject* alifObject_lookupSpecial(AlifObject*, AlifObject*); // 817
 
-#define ALIFCFUNCTIONWITHKEYWORDS_TRAMPOLINECALL(_meth, _self, _args, _kw) \
-    (_meth)((_self), (_args), (_kw))
+#define ALIFCPPFUNCTIONWITHKEYWORDS_TRAMPOLINECALL(_meth, _self, _args, _kw) \
+    (_meth)((_self), (_args), (_kw)) // 846
 
 extern AlifTypeObject _alifNoneType_; // 851

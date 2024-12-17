@@ -685,6 +685,18 @@ static AlifLongObject* rem1(AlifLongObject* _a, digit _n) { // 1990
 }
 
 
+
+
+static AlifObject* longTo_decimalString(AlifObject* _aa) { // 2294
+	AlifObject* v{};
+	if (longTo_decimalStringInternal(_aa, &v, nullptr, nullptr, nullptr) == -1)
+		return nullptr;
+	return v;
+}
+
+
+
+
 unsigned char _alifLongDigitValue_[256] = { // 2527
 	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
 	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
@@ -2960,7 +2972,7 @@ AlifTypeObject _alifLongType_ = { // 6597
 	.itemSize = sizeof(digit),                              
 	.dealloc = long_dealloc,                               
                                         
-	//.repr = long_toDecimalString,                     
+	.repr = longTo_decimalString,                     
 	.asNumber = &_longAsNumber_,
                                         
 	.hash = long_hash,                              
