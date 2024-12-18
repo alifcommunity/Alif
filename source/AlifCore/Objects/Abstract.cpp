@@ -603,7 +603,7 @@ UNARY_FUNC(alifNumber_absolute, absolute, __abs__, "abs()")
 UNARY_FUNC(alifNumber_sqrt, sqrt, __sqrt__, "sqrt()") // alif
 
 
-AlifObject * _alifNumber_index(AlifObject * _item) { // 1397
+AlifObject* _alifNumber_index(AlifObject * _item) { // 1397
 	if (_item == nullptr) {
 		return null_error();
 	}

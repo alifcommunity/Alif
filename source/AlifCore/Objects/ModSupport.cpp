@@ -480,7 +480,7 @@ AlifObject** _alif_vaBuildStack(AlifObject** _smallStack, AlifSizeT _smallStackL
 		stack = _smallStack;
 	}
 	else {
-		stack = (AlifObject**)alifMem_objAlloc(n_ * sizeof(stack[0]));
+		stack = (AlifObject**)alifMem_dataAlloc(n_ * sizeof(stack[0]));
 		if (stack == nullptr) {
 			//alifErr_noMemory();
 			return nullptr;
@@ -494,7 +494,7 @@ AlifObject** _alif_vaBuildStack(AlifObject** _smallStack, AlifSizeT _smallStackL
 
 	if (res_ < 0) {
 		if (stack != _smallStack) {
-			alifMem_objFree(stack);
+			alifMem_dataFree(stack);
 		}
 		return nullptr;
 	}

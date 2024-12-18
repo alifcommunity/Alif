@@ -222,6 +222,7 @@ AlifObject* alifObject_str(AlifObject*); // 420
 AlifIntT alifObject_richCompareBool(AlifObject* , AlifObject* , AlifIntT ); // 424
 AlifObject* alifObject_getAttrString(AlifObject*, const char* ); // 425
 AlifIntT alifObject_setAttrString(AlifObject*, const char*, AlifObject*); // 426
+AlifObject* alifObject_getAttr(AlifObject*, AlifObject*); // 429
 AlifIntT alifObject_getOptionalAttr(AlifObject* , AlifObject* , AlifObject** ); // 431
 AlifIntT alifObject_setAttr(AlifObject*, AlifObject*, AlifObject*); // 434
 AlifObject* alifObject_selfIter(AlifObject*); // 441

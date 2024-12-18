@@ -5,6 +5,7 @@
 #include "AlifCore_UStrObject.h"
 #include "AlifCore_BytesObject.h"
 #include "AlifCore_CriticalSection.h"
+#include "AlifCore_Format.h"
 
 
 #include <Equal.h> // 61
@@ -1238,6 +1239,419 @@ static void* unicode_asKind(AlifIntT _sKind, void const* _data,
 		ALIF_UNREACHABLE();
 		return nullptr;
 	}
+}
+
+
+ // 2692
+#define F_LONG 1
+#define F_LONGLONG 2
+#define F_SIZE 3
+#define F_PTRDIFF 4
+#define F_INTMAX 5
+static const char* const formats[] = { "%d", "%ld", "%lld", "%zd", "%td", "%jd" };
+static const char* const formats_o[] = { "%o", "%lo", "%llo", "%zo", "%to", "%jo" };
+static const char* const formats_u[] = { "%u", "%lu", "%llu", "%zu", "%tu", "%ju" };
+static const char* const formats_x[] = { "%x", "%lx", "%llx", "%zx", "%tx", "%jx" };
+static const char* const formats_X[] = { "%X", "%lX", "%llX", "%zX", "%tX", "%jX" };
+
+static const char* uStr_fromFormatArg(AlifUStrWriter* _writer,
+	const char* _f, va_list* _vargs) { // 2703
+	const char* p{};
+	AlifSizeT len{};
+	AlifIntT flags = 0;
+	AlifSizeT width{};
+	AlifSizeT precision{};
+
+	p = _f;
+	_f++;
+	if (*_f == '%') {
+		if (alifUStrWriter_writeCharInline(_writer, '%') < 0)
+			return NULL;
+		_f++;
+		return _f;
+	}
+
+	while (1) {
+		switch (*_f++) {
+		case '-': flags |= F_LJUST; continue;
+		case '0': flags |= F_ZERO; continue;
+		case '#': flags |= F_ALT; continue;
+		}
+		_f--;
+		break;
+	}
+
+	width = -1;
+	if (*_f == '*') {
+		width = va_arg(*_vargs, int);
+		if (width < 0) {
+			flags |= F_LJUST;
+			width = -width;
+		}
+		_f++;
+	}
+	else if (ALIF_ISDIGIT((unsigned)*_f)) {
+		width = *_f - '0';
+		_f++;
+		while (ALIF_ISDIGIT((unsigned)*_f)) {
+			if (width > (ALIF_SIZET_MAX - ((int)*_f - '0')) / 10) {
+				//alifErr_setString(_alifExcValueError_,
+				//	"width too big");
+				return nullptr;
+			}
+			width = (width * 10) + (*_f - '0');
+			_f++;
+		}
+	}
+	precision = -1;
+	if (*_f == '.') {
+		_f++;
+		if (*_f == '*') {
+			precision = va_arg(*_vargs, int);
+			if (precision < 0) {
+				precision = -2;
+			}
+			_f++;
+		}
+		else if (ALIF_ISDIGIT((unsigned)*_f)) {
+			precision = (*_f - '0');
+			_f++;
+			while (ALIF_ISDIGIT((unsigned)*_f)) {
+				if (precision > (ALIF_SIZET_MAX - ((int)*_f - '0')) / 10) {
+					//alifErr_setString(_alifExcValueError_,
+					//	"precision too big");
+					return nullptr;
+				}
+				precision = (precision * 10) + (*_f - '0');
+				_f++;
+			}
+		}
+	}
+
+	AlifIntT sizemod = 0;
+	if (*_f == 'l') {
+		if (_f[1] == 'l') {
+			sizemod = F_LONGLONG;
+			_f += 2;
+		}
+		else {
+			sizemod = F_LONG;
+			++_f;
+		}
+	}
+	else if (*_f == 'z') {
+		sizemod = F_SIZE;
+		++_f;
+	}
+	else if (*_f == 't') {
+		sizemod = F_PTRDIFF;
+		++_f;
+	}
+	else if (*_f == 'j') {
+		sizemod = F_INTMAX;
+		++_f;
+	}
+	if (_f[0] != '\0' && _f[1] == '\0')
+		_writer->overAllocate = 0;
+
+	switch (*_f) {
+	case 'd': case 'i': case 'o': case 'u': case 'x': case 'X':
+		break;
+	case 'c': case 'p':
+		if (sizemod or width >= 0 or precision >= 0) goto invalid_format;
+		break;
+	case 's':
+	case 'V':
+		if (sizemod and sizemod != F_LONG) goto invalid_format;
+		break;
+	default:
+		if (sizemod) goto invalid_format;
+		break;
+	}
+
+	switch (*_f) {
+	case 'c':
+	{
+		AlifIntT ordinal = va_arg(*_vargs, AlifIntT);
+		if (ordinal < 0 or ordinal > MAX_UNICODE) {
+			//alifErr_setString(_alifExcOverflowError_,
+			//	"character argument not in range(0x110000)");
+			return nullptr;
+		}
+		if (alifUStrWriter_writeCharInline(_writer, ordinal) < 0)
+			return nullptr;
+		break;
+	}
+
+	//case 'd': case 'i':
+	//case 'o': case 'u': case 'x': case 'X':
+	//{
+	//	/* used by sprintf */
+	//	char buffer[MAX_INTMAX_CHARS];
+	//	const char* fmt = nullptr;
+	//	switch (*_f) {
+	//	case 'o': fmt = formats_o[sizemod]; break;
+	//	case 'u': fmt = formats_u[sizemod]; break;
+	//	case 'x': fmt = formats_x[sizemod]; break;
+	//	case 'X': fmt = formats_X[sizemod]; break;
+	//	default: fmt = formats[sizemod]; break;
+	//	}
+	//	int issigned = (*_f == 'd' or *_f == 'i');
+	//	switch (sizemod) {
+	//	case F_LONG:
+	//		len = issigned ?
+	//			sprintf(buffer, fmt, va_arg(*_vargs, long)) :
+	//			sprintf(buffer, fmt, va_arg(*_vargs, unsigned long));
+	//		break;
+	//	case F_LONGLONG:
+	//		len = issigned ?
+	//			sprintf(buffer, fmt, va_arg(*_vargs, long long)) :
+	//			sprintf(buffer, fmt, va_arg(*_vargs, unsigned long long));
+	//		break;
+	//	case F_SIZE:
+	//		len = issigned ?
+	//			sprintf(buffer, fmt, va_arg(*_vargs, AlifSizeT)) :
+	//			sprintf(buffer, fmt, va_arg(*_vargs, AlifUSizeT));
+	//		break;
+	//	case F_PTRDIFF:
+	//		len = sprintf(buffer, fmt, va_arg(*_vargs, ptrdiff_t));
+	//		break;
+	//	case F_INTMAX:
+	//		len = issigned ?
+	//			sprintf(buffer, fmt, va_arg(*_vargs, intmax_t)) :
+	//			sprintf(buffer, fmt, va_arg(*_vargs, uintmax_t));
+	//		break;
+	//	default:
+	//		len = issigned ?
+	//			sprintf(buffer, fmt, va_arg(*_vargs, int)) :
+	//			sprintf(buffer, fmt, va_arg(*_vargs, unsigned int));
+	//		break;
+	//	}
+
+	//	AlifIntT sign = (buffer[0] == '-');
+	//	len -= sign;
+
+	//	precision = ALIF_MAX(precision, len);
+	//	width = ALIF_MAX(width, precision + sign);
+	//	if ((flags & F_ZERO) and !(flags & F_LJUST)) {
+	//		precision = width - sign;
+	//	}
+
+	//	AlifSizeT spacepad = ALIF_MAX(width - precision - sign, 0);
+	//	AlifSizeT zeropad = ALIF_MAX(precision - len, 0);
+
+	//	if (ALIFUSTRWRITER_PREPARE(_writer, width, 127) == -1)
+	//		return nullptr;
+
+	//	if (spacepad and !(flags & F_LJUST)) {
+	//		if (alifUStr_fill(_writer->buffer, _writer->pos, spacepad, ' ') == -1)
+	//			return nullptr;
+	//		_writer->pos += spacepad;
+	//	}
+
+	//	if (sign) {
+	//		if (_alifUStrWriter_writeChar(_writer, '-') == -1)
+	//			return nullptr;
+	//	}
+
+	//	if (zeropad) {
+	//		if (alifUStr_fill(_writer->buffer, _writer->pos, zeropad, '0') == -1)
+	//			return nullptr;
+	//		_writer->pos += zeropad;
+	//	}
+
+	//	if (alifUStrWriter_writeASCIIString(_writer, &buffer[sign], len) < 0)
+	//		return nullptr;
+
+	//	if (spacepad and (flags & F_LJUST)) {
+	//		if (alifUStr_fill(_writer->buffer, _writer->pos, spacepad, ' ') == -1)
+	//			return nullptr;
+	//		_writer->pos += spacepad;
+	//	}
+	//	break;
+	//}
+
+	//case 'p':
+	//{
+	//	char number[MAX_INTMAX_CHARS]{};
+
+	//	len = sprintf(number, "%p", va_arg(*_vargs, void*));
+
+	//	/* %p is ill-defined:  ensure leading 0x. */
+	//	if (number[1] == 'X')
+	//		number[1] = 'x';
+	//	else if (number[1] != 'x') {
+	//		memmove(number + 2, number,
+	//			strlen(number) + 1);
+	//		number[0] = '0';
+	//		number[1] = 'x';
+	//		len += 2;
+	//	}
+
+	//	if (alifUStrWriter_writeASCIIString(_writer, number, len) < 0)
+	//		return nullptr;
+	//	break;
+	//}
+
+	//case 's':
+	//{
+	//	if (sizemod) {
+	//		const wchar_t* s = va_arg(*_vargs, const wchar_t*);
+	//		if (uStr_fromFormatWriteWcstr(_writer, s, width, precision, flags) < 0)
+	//			return nullptr;
+	//	}
+	//	else {
+	//		/* UTF-8 */
+	//		const char* s = va_arg(*_vargs, const char*);
+	//		if (uStr_fromFormatWriteUtf8(_writer, s, width, precision, flags) < 0)
+	//			return nullptr;
+	//	}
+	//	break;
+	//}
+
+	//case 'U':
+	//{
+	//	AlifObject* obj = va_arg(*_vargs, AlifObject*);
+
+	//	if (uStr_fromFormatWriteStr(_writer, obj, width, precision, flags) == -1)
+	//		return nullptr;
+	//	break;
+	//}
+
+	//case 'V':
+	//{
+	//	AlifObject* obj = va_arg(*_vargs, AlifObject*);
+	//	const char* str{};
+	//	const wchar_t* wstr{};
+	//	if (sizemod) {
+	//		wstr = va_arg(*_vargs, const wchar_t*);
+	//	}
+	//	else {
+	//		str = va_arg(*_vargs, const char*);
+	//	}
+	//	if (obj) {
+	//		if (unicode_fromformat_write_str(_writer, obj, width, precision, flags) == -1)
+	//			return nullptr;
+	//	}
+	//	else if (sizemod) {
+	//		if (unicode_fromformat_write_wcstr(_writer, wstr, width, precision, flags) < 0)
+	//			return nullptr;
+	//	}
+	//	else {
+	//		if (unicode_fromformat_write_utf8(_writer, str, width, precision, flags) < 0)
+	//			return nullptr;
+	//	}
+	//	break;
+	//}
+
+	//case 'S':
+	//{
+	//	AlifObject* obj = va_arg(*_vargs, AlifObject*);
+	//	AlifObject* str;
+	//	str = alifObject_str(obj);
+	//	if (!str)
+	//		return nullptr;
+	//	if (unicode_fromFormatWriteStr(_writer, str, width, precision, flags) == -1) {
+	//		ALIF_DECREF(str);
+	//		return nullptr;
+	//	}
+	//	ALIF_DECREF(str);
+	//	break;
+	//}
+
+	//case 'R':
+	//{
+	//	AlifObject* obj = va_arg(*_vargs, AlifObject*);
+	//	AlifObject* repr;
+	//	repr = alifObject_repr(obj);
+	//	if (!repr)
+	//		return nullptr;
+	//	if (unicode_fromFormatWriteStr(_writer, repr, width, precision, flags) == -1) {
+	//		ALIF_DECREF(repr);
+	//		return nullptr;
+	//	}
+	//	ALIF_DECREF(repr);
+	//	break;
+	//}
+
+	//case 'A':
+	//{
+	//	AlifObject* obj = va_arg(*_vargs, AlifObject*);
+	//	AlifObject* ascii;
+	//	ascii = alifObject_ascii(obj);
+	//	if (!ascii)
+	//		return nullptr;
+	//	if (unicode_fromFormatWriteStr(_writer, ascii, width, precision, flags) == -1) {
+	//		ALIF_DECREF(ascii);
+	//		return nullptr;
+	//	}
+	//	ALIF_DECREF(ascii);
+	//	break;
+	//}
+
+	//case 'T':
+	//{
+	//	AlifObject* obj = va_arg(*_vargs, AlifObject*);
+	//	AlifTypeObject* type = (AlifTypeObject*)ALIF_NEWREF(ALIF_TYPE(obj));
+
+	//	AlifObject* type_name{};
+	//	if (flags & F_ALT) {
+	//		type_name = _alifType_getFullyQualifiedName(type, ':');
+	//	}
+	//	else {
+	//		type_name = alifType_getFullyQualifiedName(type);
+	//	}
+	//	ALIF_DECREF(type);
+	//	if (!type_name) {
+	//		return nullptr;
+	//	}
+
+	//	if (unicode_fromFormatWriteStr(_writer, type_name,
+	//		width, precision, flags) == -1) {
+	//		ALIF_DECREF(type_name);
+	//		return nullptr;
+	//	}
+	//	ALIF_DECREF(type_name);
+	//	break;
+	//}
+
+	//case 'N':
+	//{
+	//	AlifObject* typeRaw = va_arg(*_vargs, AlifObject*);
+
+	//	if (!ALIFTYPE_CHECK(typeRaw)) {
+	//		//alifErr_setString(_alifExcTypeError_, "%N argument must be a type");
+	//		return nullptr;
+	//	}
+	//	AlifTypeObject* type = (AlifTypeObject*)typeRaw;
+
+	//	AlifObject* typeName{};
+	//	if (flags & F_ALT) {
+	//		typeName = _alifType_getFullyQualifiedName(type, ':');
+	//	}
+	//	else {
+	//		typeName = alifType_getFullyQualifiedName(type);
+	//	}
+	//	if (!typeName) {
+	//		return nullptr;
+	//	}
+	//	if (unicode_fromFormatWriteStr(_writer, typeName,
+	//		width, precision, flags) == -1) {
+	//		ALIF_DECREF(typeName);
+	//		return nullptr;
+	//	}
+	//	ALIF_DECREF(typeName);
+	//	break;
+	//}
+	//
+	default:
+	invalid_format:
+		//alifErr_format(_alifExcSystemError_, "invalid format string: %s", p);
+		return nullptr;
+	}
+
+	_f++;
+	return _f;
 }
 
 

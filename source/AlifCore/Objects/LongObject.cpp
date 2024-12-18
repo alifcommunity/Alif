@@ -1,10 +1,13 @@
 #include "alif.h"
 
+#include "AlifCore_Abstract.h" // alif
 #include "AlifCore_BitUtils.h"
+#include "AlifCore_InitConfig.h"
+#include "AlifCore_Call.h"
 #include "AlifCore_Long.h"
 #include "AlifCore_Object.h"
-#include "AlifCore_Abstract.h"
-#include "AlifCore_BytesObject.h"
+#include "AlifCore_DureRun.h"
+
 #include <float.h>
 
 
@@ -49,7 +52,7 @@ static AlifLongObject* maybe_smallLong(AlifLongObject* _v) { // 56
 
 #define SIGCHECK(_alifTryBlock)							\
     do {												\
-        if (alifErr_checkSignals()) _alifTryBlock		\
+        /*if (alifErr_checkSignals()) _alifTryBlock*/		\
     } while(0)
 
 #define EXP_WINDOW_SIZE 5 // 82
@@ -686,20 +689,17 @@ static AlifLongObject* rem1(AlifLongObject* _a, digit _n) { // 1990
 
 #ifdef WITH_ALIFLONG_MODULE
 static AlifIntT alifLong_intToDecimalString(AlifObject* _aa,
-	AlifObject** _pOutput,
-	AlifUStrWriter* _writer,
-	AlifBytesWriter* _bytesWriter,
-	char** _bytesStr)
-{
+	AlifObject** _pOutput, AlifUStrWriter* _writer,
+	AlifBytesWriter* _bytesWriter, char** _bytesStr) { // 2003
 	AlifObject* s_ = nullptr;
-	AlifObject* mod_ = alifImport_importModule("alifLong");
-	if (mod_ == nullptr) {
-		return -1;
-	}
-	s_ = alifObject_callMethod(mod_, "intToDecimalString", "O", _aa);
-	if (s_ == nullptr) {
-		goto error;
-	}
+	//AlifObject* mod_ = alifImport_importModule("alifLong");
+	//if (mod_ == nullptr) {
+	//	return -1;
+	//}
+	//s_ = alifObject_callMethod(mod_, "intToDecimalString", "O", _aa);
+	//if (s_ == nullptr) {
+	//	goto error;
+	//}
 	if (!ALIFUSTR_CHECK(s_)) {
 		//alifErr_setString(_alifExcTypeError_,
 			//"aliflong.intToDecimalString did not return a str");
@@ -707,7 +707,7 @@ static AlifIntT alifLong_intToDecimalString(AlifObject* _aa,
 	}
 	if (_writer) {
 		AlifSizeT size = ALIFUSTR_GET_LENGTH(s_);
-		if (alifUStrWriter_prepare(_writer, size, '9') == -1) {
+		if (ALIFUSTRWRITER_PREPARE(_writer, size, '9') == -1) {
 			goto error;
 		}
 		if (alifUStrWriter_writeStr(_writer, s_) < 0) {
@@ -737,23 +737,21 @@ static AlifIntT alifLong_intToDecimalString(AlifObject* _aa,
 	}
 
 error:
-	ALIF_DECREF(mod_);
+	//ALIF_DECREF(mod_);
 	ALIF_XDECREF(s_);
 	return -1;
 
 success:
-	ALIF_DECREF(mod_);
+	//ALIF_DECREF(mod_);
 	ALIF_XDECREF(s_);
 	return 0;
 }
-#endif /* WITH_PYLONG_MODULE */
+#endif /* WITH_ALIFLONG_MODULE */
 
 
 static AlifIntT longTo_decimalStringInternal(AlifObject* _aa,
-	AlifObject** _pOutput,
-	AlifUStrWriter* _writer,
-	AlifBytesWriter* _bytesWriter,
-	char** _bytesStr) { // 2072
+	AlifObject** _pOutput, AlifUStrWriter* _writer,
+	AlifBytesWriter* _bytesWriter, char** _bytesStr) { // 2072
 	AlifLongObject* scratch{}, * a_{};
 	AlifObject* str_ = nullptr;
 	AlifSizeT size{}, strLen{}, sizeA{}, i_{}, j_{};
@@ -771,7 +769,7 @@ static AlifIntT longTo_decimalStringInternal(AlifObject* _aa,
 
 	if (sizeA >= 10 * ALIF_LONG_MAX_STR_DIGITS_THRESHOLD
 		/ (3 * ALIFLONG_SHIFT) + 2) {
-		AlifInterpreter* interp = alifInterpreter_get();
+		AlifInterpreter* interp = _alifInterpreter_get();
 		AlifIntT maxStrDigits = interp->longState.maxStrDigits;
 		if ((maxStrDigits > 0) and
 			(maxStrDigits / (3 * ALIFLONG_SHIFT) <= (sizeA - 11) / 10)) {
@@ -829,10 +827,10 @@ static AlifIntT longTo_decimalStringInternal(AlifObject* _aa,
 		strLen++;
 	}
 	if (strLen > ALIF_LONG_MAX_STR_DIGITS_THRESHOLD) {
-		AlifInterpreter* interp = alifInterpreter_get();
-		AlifIntT max_str_digits = interp->longState.maxStrDigits;
-		AlifSizeT strlen_nosign = strLen - negative;
-		if ((max_str_digits > 0) && (strlen_nosign > max_str_digits)) {
+		AlifInterpreter* interp = _alifInterpreter_get();
+		AlifIntT maxStrDigits = interp->longState.maxStrDigits;
+		AlifSizeT strLenNoSign = strLen - negative;
+		if ((maxStrDigits > 0) and (strLenNoSign > maxStrDigits)) {
 			ALIF_DECREF(scratch);
 			//alifErr_format(_alifExcValueError_, _MAX_STR_DIGITS_ERROR_FMT_TO_STR,
 				//max_str_digits);
@@ -840,7 +838,7 @@ static AlifIntT longTo_decimalStringInternal(AlifObject* _aa,
 		}
 	}
 	if (_writer) {
-		if (alifUStrWriter_prepare(_writer, strLen, '9') == -1) {
+		if (ALIFUSTRWRITER_PREPARE(_writer, strLen, '9') == -1) {
 			ALIF_DECREF(scratch);
 			return -1;
 		}
@@ -892,11 +890,11 @@ static AlifIntT longTo_decimalStringInternal(AlifObject* _aa,
 	}
 	else {
 		AlifIntT kind = _writer ? _writer->kind : ALIFUSTR_KIND(str_);
-		if (kind == AlifUStr_1Byte_Kind) {
+		if (kind == AlifUStrKind_::AlifUStr_1Byte_Kind) {
 			AlifUCS1* p;
 			WRITE_UNICODE_DIGITS(AlifUCS1);
 		}
-		else if (kind == AlifUStr_2Byte_Kind) {
+		else if (kind == AlifUStrKind_::AlifUStr_2Byte_Kind) {
 			AlifUCS2* p;
 			WRITE_UNICODE_DIGITS(AlifUCS2);
 		}
@@ -909,7 +907,7 @@ static AlifIntT longTo_decimalStringInternal(AlifObject* _aa,
 #undef WRITE_DIGITS
 #undef WRITE_USTR_DIGITS
 
-	alifDecref_int(scratch);
+	_alif_decrefInt(scratch);
 	if (_writer) {
 		_writer->pos += strLen;
 	}

@@ -1,5 +1,7 @@
 #include "alif.h"
 
+#include "AlifCore_Abstract.h"
+#include "AlifCore_Eval.h"
 #include "AlifCore_Dict.h"
 #include "AlifCore_FreeList.h"
 #include "AlifCore_List.h"

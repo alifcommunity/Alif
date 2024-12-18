@@ -1,5 +1,6 @@
 #include "alif.h"
 
+#include "AlifCore_Abstract.h"
 #include "AlifCore_BytesObject.h"
 #include "AlifCore_Eval.h"
 #include "AlifCore_Object.h"

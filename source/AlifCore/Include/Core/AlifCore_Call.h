@@ -1,6 +1,9 @@
 #pragma once
 
 
+#include "AlifCore_State.h"
+
+
 #define ALIF_FASTCALL_SMALL_STACK 5 // 22
 
 
@@ -40,8 +43,8 @@ static inline AlifObject* alifObject_vectorCallThread(AlifThread* _thread,
 	return _alif_checkFunctionResult(_thread, _callable, res_, nullptr);
 }
 
-static inline AlifObject* _alifObject_callNoArgsTstate(AlifThread* _tstate, AlifObject* _func) {
-	return alifObject_vectorCallThread(_tstate, _func, nullptr, 0, nullptr);
+static inline AlifObject* _alifObject_callNoArgsThread(AlifThread* _thread, AlifObject* _func) { // 172
+	return alifObject_vectorCallThread(_thread, _func, nullptr, 0, nullptr);
 }
 
 

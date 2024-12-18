@@ -260,6 +260,15 @@ dispatch_opcode :
 				nextInstr += 1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(POP_TOP) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef value{};
+				value = stackPointer[-1];
+				alifStackRef_close(value);
+				stackPointer += -1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(BUILD_STRING) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;
