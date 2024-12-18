@@ -1,6 +1,7 @@
 #pragma once
 
 
+#define ALIF_FASTCALL_SMALL_STACK 5 // 22
 
 
 AlifObject* _alif_checkFunctionResult(AlifThread*, AlifObject*, AlifObject*, const wchar_t*); // 27 
@@ -39,5 +40,14 @@ static inline AlifObject* alifObject_vectorCallThread(AlifThread* _thread,
 	return _alif_checkFunctionResult(_thread, _callable, res_, nullptr);
 }
 
+static inline AlifObject* _alifObject_callNoArgsTstate(AlifThread* _tstate, AlifObject* _func) {
+	return alifObject_vectorCallThread(_tstate, _func, nullptr, 0, nullptr);
+}
+
+
+
+
 
 //AlifObject* const* alifStack_unpackDict(AlifObject* const* args, int64_t nArgs, AlifObject* kwArgs, AlifObject** p_kwnames);
+
+

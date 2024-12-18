@@ -12,6 +12,14 @@
 //#define ALIFVECTORCALL_ARGUMENTS_OFFSET \
 //    ((size_t)1 << (8 * sizeof(size_t) - 1))
 
+static AlifObject* null_error(AlifThread* _tstate) { // 13
+	//if (!alifErr_occurred(_tstate)) {
+		//alifErr_setString(_tstate, _alifExcSystemError_,
+			//"null argument to internal routine");
+	//}
+	return nullptr;
+}
+
 AlifObject* _alif_checkFunctionResult(AlifThread* _thread,
 	AlifObject* _callable, AlifObject* _result, const wchar_t* _where) { // 24
 
@@ -158,6 +166,80 @@ AlifObject* alifFunction_vectorCall(AlifObject* _func, AlifObject* const* _stack
 	else {
 		return alifEval_vector(tstate, f_, f_->globals, _stack, nArgs, _kwNames);
 	}
+}
+
+static AlifObject* alifObject_callFunctionVa(AlifThread* tstate, AlifObject* callable,
+	const char* format, va_list va) { // 517
+	AlifObject* small_stack[ALIF_FASTCALL_SMALL_STACK];
+	const AlifSizeT small_stack_len = ALIF_ARRAY_LENGTH(small_stack);
+	AlifObject** stack;
+	AlifSizeT nargs, i;
+	AlifObject* result;
+
+	if (callable == nullptr) {
+		return null_error(tstate);
+	}
+
+	if (!format or !*format) {
+		return _alifObject_callNoArgsTstate(tstate, callable);
+	}
+
+	stack = _alif_vaBuildStack(small_stack, small_stack_len,
+		format, va, &nargs);
+	if (stack == nullptr) {
+		return nullptr;
+	}
+	if (nargs == 1 and ALIFTUPLE_CHECK(stack[0])) {
+		AlifObject* args = stack[0];
+		result = alifObject_vectorCallThread(tstate, callable,
+			ALIFTUPLE_ITEMS(args),
+			ALIFTUPLE_GET_SIZE(args),
+			nullptr);
+	}
+	else {
+		result = alifObject_vectorCallThread(tstate, callable,
+			stack, nargs, nullptr);
+	}
+
+	for (i = 0; i < nargs; ++i) {
+		ALIF_DECREF(stack[i]);
+	}
+	if (stack != small_stack) {
+		alifMem_objFree(stack);
+	}
+	return result;
+}
+
+static AlifObject* callMethod(AlifThread* _tstate, AlifObject* _callable, const char* _format, va_list _va) { // 616
+	if (!alifCallable_check(_callable)) {
+		//alifErr_format(tstate, _alifExcTypeError_,
+			//"attribute of type '%.200s' is not callable",
+			//ALIF_TYPE(callable)->name);
+		return nullptr;
+	}
+
+	return alifObject_callFunctionVa(_tstate, _callable, _format, _va);
+}
+
+AlifObject* alifObject_callMethod(AlifObject* obj, const char* name, const char* format, ...) { // 630
+	AlifThread* tstate = alifThread_get();
+
+	if (obj == nullptr or name == nullptr) {
+		return null_error(tstate);
+	}
+
+	AlifObject* callable = alifObject_getAttrString(obj, name);
+	if (callable == nullptr) {
+		return nullptr;
+	}
+
+	va_list va_{};
+	va_start(va_, format);
+	AlifObject* retval = callMethod(tstate, callable, format, va_);
+	va_end(va_);
+
+	ALIF_DECREF(callable);
+	return retval;
 }
 
 

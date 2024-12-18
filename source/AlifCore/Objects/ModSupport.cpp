@@ -50,7 +50,7 @@ static AlifSizeT count_format(const char* _format, char _endchar) { // 39
 
 
 static AlifObject* do_mkTuple(const char**, va_list*, char, AlifSizeT); // 85
-//static AlifIntT do_mkStack(AlifObject**, const char**, va_list*, char, AlifSizeT);
+static AlifIntT do_mkStack(AlifObject**, const char**, va_list*, char, AlifSizeT);
 static AlifObject* do_mkList(const char**, va_list*, char, AlifSizeT);
 static AlifObject* do_mkDict(const char**, va_list*, char, AlifSizeT);
 static AlifObject* do_mkValue(const char**, va_list*);
@@ -169,6 +169,34 @@ static AlifObject* do_mkList(const char** _pFormat,
 }
 
 
+static AlifIntT do_mkStack(AlifObject** _stack, const char** _pFormat, va_list* _pVa,
+	char _endChar, AlifSizeT _n) { // 211
+	AlifSizeT i_{};
+
+	if (_n < 0) {
+		return -1;
+	}
+
+	for (i_ = 0; i_ < _n; i_++) {
+		AlifObject* w = do_mkValue(_pFormat, _pVa);
+		if (w == nullptr) {
+			do_ignore(_pFormat, _pVa, _endChar, _n - i_ - 1);
+			goto error;
+		}
+		_stack[i_] = w;
+	}
+	if (!check_end(_pFormat, _endChar)) {
+		goto error;
+	}
+	return 0;
+
+error:
+	_n = i_;
+	for (i_ = 0; i_ < _n; i_++) {
+		ALIF_DECREF(_stack[i_]);
+	}
+	return -1;
+}
 
 static AlifObject* do_mkTuple(const char** _pFormat,
 	va_list* _pVa, char _endChar, AlifSizeT n) { // 242
@@ -428,3 +456,50 @@ static AlifObject* va_buildValue(const char* _format, va_list _va) { // 509
 	va_end(lva);
 	return retVal;
 }
+
+AlifObject** _alif_vaBuildStack(AlifObject** _smallStack, AlifSizeT _smallStackLen,
+	const char* _format, va_list _va, AlifSizeT* _pNArgs) { // 533
+	const char* f_{};
+	AlifSizeT n_{};
+	va_list lVa_{};
+	AlifObject** stack{};
+	AlifIntT res_{};
+
+	n_ = count_format(_format, '\0');
+	if (n_ < 0) {
+		*_pNArgs = 0;
+		return nullptr;
+	}
+
+	if (n_ == 0) {
+		*_pNArgs = 0;
+		return _smallStack;
+	}
+
+	if (n_ <= _smallStackLen) {
+		stack = _smallStack;
+	}
+	else {
+		stack = (AlifObject**)alifMem_objAlloc(n_ * sizeof(stack[0]));
+		if (stack == nullptr) {
+			//alifErr_noMemory();
+			return nullptr;
+		}
+	}
+
+	va_copy(lVa_, _va);
+	f_ = _format;
+	res_ = do_mkStack(stack, &f_, &lVa_, '\0', n_);
+	va_end(lVa_);
+
+	if (res_ < 0) {
+		if (stack != _smallStack) {
+			alifMem_objFree(stack);
+		}
+		return nullptr;
+	}
+
+	*_pNArgs = n_;
+	return stack;
+}
+
