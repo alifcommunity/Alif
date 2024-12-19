@@ -1,8 +1,8 @@
 #include "alif.h"
 
 #include "FrameObject.h"
-#include "AlifCore_code.h"
-#include "AlifCore_frame.h"
+#include "AlifCore_Code.h"
+#include "AlifCore_Frame.h"
 #include "AlifCore_Object.h"
 
 #include "Opcode.h"
