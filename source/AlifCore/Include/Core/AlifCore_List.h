@@ -34,3 +34,12 @@ static inline void alif_memoryRepeat(char* _dest, AlifSizeT _lenDest, AlifSizeT 
 		copied += bytesToCopy;
 	}
 }
+
+
+
+
+
+
+
+
+AlifObject* _alifList_fromStackRefSteal(const AlifStackRef*, AlifSizeT); // 61

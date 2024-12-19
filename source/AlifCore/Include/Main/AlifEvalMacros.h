@@ -66,6 +66,23 @@ static inline AlifIntT _alif_enterRecursiveAlif(AlifThread* _thread) { // 368
 }
 
 
+static inline void _alif_leaveRecursiveCallAlif(AlifThread* _thread) { // 373
+	_thread->alifRecursionRemaining++;
+}
+
+
+ // 382
+#define LOAD_IP(_offset) do { \
+        nextInstr = _frame->instrPtr + (_offset); \
+    } while (0)
+
+ // 388
+#define LOAD_SP() \
+stackPointer = _alifFrame_getStackPointer(_frame)
+ // 391
+#define SAVE_SP() \
+_alifFrame_setStackPointer(_frame, stackPointer)
+
 
 
 #define MAX_STACKREF_SCRATCH 10 // 442

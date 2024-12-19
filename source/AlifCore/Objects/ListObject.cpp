@@ -1785,7 +1785,26 @@ AlifObject* alifList_asTuple(AlifObject* _v) { // 3129
 }
 
 
+AlifObject* _alifList_fromStackRefSteal(const AlifStackRef* _src, AlifSizeT _n) { // 3144
+	if (_n == 0) {
+		return alifList_new(0);
+	}
 
+	AlifListObject* list = (AlifListObject*)alifList_new(_n);
+	if (list == nullptr) {
+		for (AlifSizeT i = 0; i < _n; i++) {
+			alifStackRef_close(_src[i]);
+		}
+		return nullptr;
+	}
+
+	AlifObject** dst = list->item;
+	for (AlifSizeT i = 0; i < _n; i++) {
+		dst[i] = alifStackRef_asAlifObjectSteal(_src[i]);
+	}
+
+	return (AlifObject*)list;
+}
 
 
 

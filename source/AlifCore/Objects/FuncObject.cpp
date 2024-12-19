@@ -80,6 +80,58 @@ AlifFunctionObject* _alifFunction_fromConstructor(AlifFrameConstructor* _constr)
 
 
 
+void _alifFunction_setVersion(AlifFunctionObject* _func,
+	uint32_t _version) { // 290
+	_func->version = _version;
+}
+
+
+
+
+
+
+static AlifIntT func_clear(AlifFunctionObject* _op) { // 1019
+	_alifFunction_setVersion(_op, 0);
+	ALIF_CLEAR(_op->globals);
+	ALIF_CLEAR(_op->builtins);
+	ALIF_CLEAR(_op->module);
+	ALIF_CLEAR(_op->defaults);
+	ALIF_CLEAR(_op->kwDefaults);
+	ALIF_CLEAR(_op->doc);
+	ALIF_CLEAR(_op->dict);
+	ALIF_CLEAR(_op->closure);
+	ALIF_CLEAR(_op->annotations);
+	ALIF_CLEAR(_op->annotate);
+	ALIF_CLEAR(_op->typeParams);
+	ALIF_SETREF(_op->name, &ALIF_STR(Empty));
+	ALIF_SETREF(_op->qualname, &ALIF_STR(Empty));
+	return 0;
+}
+
+static void func_dealloc(AlifFunctionObject* _op) { // 1044
+	ALIF_SET_REFCNT(_op, 1);
+	handle_funcEvent(AlifFunctionWatchEvent::AlifFunction_Event_Destroy, _op, nullptr);
+	if (ALIF_REFCNT(_op) > 1) {
+		ALIF_SET_REFCNT(_op, ALIF_REFCNT(_op) - 1);
+		return;
+	}
+	ALIF_SET_REFCNT(_op, 0);
+	ALIFOBJECT_GC_UNTRACK(_op);
+	if (_op->weakRefList != nullptr) {
+		alifObject_clearWeakRefs((AlifObject*)_op);
+	}
+	_alifFunction_setVersion(_op, 0);
+	(void)func_clear(_op);
+	// These aren't cleared by func_clear().
+	ALIF_DECREF(_op->code);
+	ALIF_DECREF(_op->name);
+	ALIF_DECREF(_op->qualname);
+	alifObject_gcDel(_op);
+}
+
+
+
+
 
 
 
@@ -88,7 +140,7 @@ AlifTypeObject _alifFunctionType_ = { // 1105
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "دالة",
 	.basicSize = sizeof(AlifFunctionObject),
-	//.dealloc = (Destructor)func_dealloc,
+	.dealloc = (Destructor)func_dealloc,
 	.vectorCallOffset = offsetof(AlifFunctionObject, vectorCall),
 
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
