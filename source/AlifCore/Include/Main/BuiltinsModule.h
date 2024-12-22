@@ -10,18 +10,17 @@
 static AlifObject* builtin_print(AlifObject* module, AlifObject** args,
 	AlifSizeT nargs, AlifObject* kwnames) { // 907
 
-	wchar_t res[10]{};
+	char res[10]{};
 
 	//if (!args) {
 	//	goto exit;
 	//}
 
-	//swprintf(res, 10, L"%d", ((AlifIntegerObject*)*args)->digits_);
+	sprintf(res, "%d", *((AlifLongObject*)*args)->longValue.digit);
 
-	std::wcout << res << std::endl;
+	std::cout << res << std::endl;
 
 
 //exit:
-	//return ALIF_NONE;
-	return (AlifObject*)1;
+	return ALIF_NONE;
 }

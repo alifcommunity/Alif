@@ -12,8 +12,8 @@
 #include "AlifCore_Intrinsics.h"
 #include "AlifCore_State.h"
 #include "AlifCore_SetObject.h"
-
 #include "AlifCore_SymTable.h"
+
 
 
 #define NEED_OPCODE_METADATA
@@ -42,10 +42,11 @@ class AlifCompiler; // 81
 typedef AlifInstructionSequence InstrSequence; // 84
 
 static InstrSequence* compiler_instrSequence(AlifCompiler*); // 86
+static AlifSymTable* compiler_symtable(AlifCompiler* c); // 88
 static AlifSTEntryObject* compiler_symtableEntry(AlifCompiler*); // 89
 
 #define INSTR_SEQUENCE(_c) compiler_instrSequence(_c) // 91
-
+#define SYMTABLE(_c) compiler_symtable(_c) // 93
 #define SYMTABLE_ENTRY(_c) compiler_symtableEntry(_c) // 94
 
 typedef AlifSourceLocation Location; // 99
@@ -214,11 +215,16 @@ public:
 static void compiler_free(AlifCompiler*); // 307
 static AlifCodeObject* compiler_mod(AlifCompiler*, ModuleTy); // 312
 static AlifIntT compiler_visitStmt(AlifCompiler*, StmtTy); // 313
+static AlifIntT compiler_visitKeyword(AlifCompiler*, KeywordTy); // 314
 static AlifIntT compiler_visitExpr(AlifCompiler*, ExprTy); // 315
 
 
 static AlifIntT codegen_addCompare(AlifCompiler*, Location, CmpOp_); // alif
 static bool areAllItems_const(ASDLExprSeq*, AlifSizeT, AlifSizeT); // 321
+
+
+static AlifIntT codegen_callSimpleKwHelper(AlifCompiler*, Location, ASDLKeywordSeq*, AlifSizeT); // 327
+static AlifIntT codegen_callHelper(AlifCompiler*, Location, AlifIntT, ASDLExprSeq*, ASDLKeywordSeq*); // 331
 
 static AlifCodeObject* optimize_andAssemble(AlifCompiler*, AlifIntT); // 358
 
@@ -1872,9 +1878,178 @@ static AlifIntT codegen_dict(AlifCompiler* _c, ExprTy _e) { // 4384
 	return SUCCESS;
 }
 
+static AlifIntT check_caller(AlifCompiler* _c, ExprTy _e) { // 4509
+	switch (_e->type) {
+	case ExprK_::ConstantK:
+	case ExprK_::TupleK:
+	case ExprK_::ListK:
+	case ExprK_::ListCompK:
+	case ExprK_::DictK:
+	case ExprK_::DictCompK:
+	case ExprK_::SetK:
+	case ExprK_::SetCompK:
+	//case GeneratorExpK:
+	case ExprK_::JoinStrK:
+	case ExprK_::FormattedValK: {
+		Location loc = LOC(_e);
+		//return compiler_warn(_c, loc, "'%.200s' object is not callable; "
+		//	"perhaps you missed a comma?",
+		//	infer_type(_e)->name);
+		return -1; // alif
+	}
+	default:
+		return SUCCESS;
+	}
+}
+
+
+static AlifIntT is_importOriginated(AlifCompiler* _c, ExprTy _e) { // 4599
+	/* Check whether the global scope has an import named
+	 e, if it is a Name object. For not traversing all the
+	 scope stack every time this function is called, it will
+	 only check the global scope to determine whether something
+	 is imported or not. */
+
+	if (_e->type != ExprK_::NameK) {
+		return 0;
+	}
+
+	long flags = alifST_getSymbol(SYMTABLE(_c)->top, _e->V.name.name);
+	RETURN_IF_ERROR(flags);
+	return flags & DEF_IMPORT;
+}
 
 
 
+
+static Location updateStartLocation_toMatchAttr(AlifCompiler* _c,
+	Location _loc, ExprTy _attr) { // 4704
+	if (_loc.lineNo != _attr->endLineNo) {
+		_loc.lineNo = _attr->endLineNo;
+		AlifIntT len = (int)ALIFUSTR_GET_LENGTH(_attr->V.attribute.attr);
+		if (len <= _attr->endColOffset) {
+			_loc.colOffset = _attr->endColOffset - len;
+		}
+		else {
+			_loc.colOffset = -1;
+			_loc.endColOffset = -1;
+		}
+		// Make sure the end position still follows the start position, even for
+		// weird ASTs:
+		_loc.endLineNo = ALIF_MAX(_loc.lineNo, _loc.endLineNo);
+		if (_loc.lineNo == _loc.endLineNo) {
+			_loc.endColOffset = ALIF_MAX(_loc.colOffset, _loc.endColOffset);
+		}
+	}
+	return _loc;
+}
+
+
+static AlifIntT maybeOptimize_methodCall(AlifCompiler* _c, ExprTy _e) { // 4731
+	AlifSizeT argsl{}, i{}, kwdsl{};
+	ExprTy meth = _e->V.call.func;
+	ASDLExprSeq* args = _e->V.call.args;
+	ASDLKeywordSeq* kwds = _e->V.call.keywords;
+
+	/* Check that the call node is an attribute access */
+	if (meth->type != ExprK_::AttributeK or meth->V.attribute.ctx != ExprContext_::Load) {
+		return 0;
+	}
+
+	/* Check that the base object is not something that is imported */
+	AlifIntT ret = is_importOriginated(_c, meth->V.attribute.val);
+	RETURN_IF_ERROR(ret);
+	if (ret) return 0;
+
+	/* Check that there aren't too many arguments */
+	argsl = ASDL_SEQ_LEN(args);
+	kwdsl = ASDL_SEQ_LEN(kwds);
+	if (argsl + kwdsl + (kwdsl != 0) >= STACK_USE_GUIDELINE) {
+		return 0;
+	}
+	/* Check that there are no *varargs types of arguments. */
+	for (i = 0; i < argsl; i++) {
+		ExprTy elt = ASDL_SEQ_GET(args, i);
+		if (elt->type == ExprK_::StarK) {
+			return 0;
+		}
+	}
+
+	for (i = 0; i < kwdsl; i++) {
+		KeywordTy kw = ASDL_SEQ_GET(kwds, i);
+		if (kw->arg == nullptr) {
+			return 0;
+		}
+	}
+
+	/* Alright, we can optimize the code. */
+	Location loc = LOC(meth);
+
+	//ret = canOptimize_superCall(_c, meth);
+	RETURN_IF_ERROR(ret);
+	if (ret) {
+		//RETURN_IF_ERROR(loadArgs_forSuper(_c, meth->V.attribute.val));
+		AlifIntT opcode = ASDL_SEQ_LEN(meth->V.attribute.val->V.call.args) ?
+			LOAD_SUPER_METHOD : LOAD_ZERO_SUPER_METHOD;
+		ADDOP_NAME(_c, loc, opcode, meth->V.attribute.attr, names);
+		loc = updateStartLocation_toMatchAttr(_c, loc, meth);
+		ADDOP(_c, loc, NOP);
+	}
+	else {
+		VISIT(_c, Expr, meth->V.attribute.val);
+		loc = updateStartLocation_toMatchAttr(_c, loc, meth);
+		ADDOP_NAME(_c, loc, LOAD_METHOD, meth->V.attribute.attr, names);
+	}
+
+	VISIT_SEQ(_c, Expr, _e->V.call.args);
+
+	if (kwdsl) {
+		VISIT_SEQ(_c, Keyword, kwds);
+		RETURN_IF_ERROR(
+			codegen_callSimpleKwHelper(_c, loc, kwds, kwdsl));
+		loc = updateStartLocation_toMatchAttr(_c, LOC(_e), meth);
+		ADDOP_I(_c, loc, CALL_KW, argsl + kwdsl);
+	}
+	else {
+		loc = updateStartLocation_toMatchAttr(_c, LOC(_e), meth);
+		ADDOP_I(_c, loc, CALL, argsl);
+	}
+	return 1;
+}
+
+static AlifIntT codegen_validateKeywords(AlifCompiler* _c, ASDLKeywordSeq* _keywords) { // 4806
+	AlifSizeT nkeywords = ASDL_SEQ_LEN(_keywords);
+	for (AlifSizeT i = 0; i < nkeywords; i++) {
+		KeywordTy key = ((KeywordTy)ASDL_SEQ_GET(_keywords, i));
+		if (key->arg == nullptr) {
+			continue;
+		}
+		for (AlifSizeT j = i + 1; j < nkeywords; j++) {
+			KeywordTy other = ((KeywordTy)ASDL_SEQ_GET(_keywords, j));
+			if (other->arg and !alifUStr_compare(key->arg, other->arg)) {
+				//compiler_error(_c, LOC(other), "keyword argument repeated: %U", key->arg);
+				return ERROR;
+			}
+		}
+	}
+	return SUCCESS;
+}
+
+static AlifIntT codegen_call(AlifCompiler* _c, ExprTy _e) { // 4826
+	RETURN_IF_ERROR(codegen_validateKeywords(_c, _e->V.call.keywords));
+	AlifIntT ret = maybeOptimize_methodCall(_c, _e);
+	if (ret < 0) return ERROR;
+	if (ret == 1) return SUCCESS;
+
+	RETURN_IF_ERROR(check_caller(_c, _e->V.call.func));
+	VISIT(_c, Expr, _e->V.call.func);
+	Location loc = LOC(_e->V.call.func);
+	ADDOP(_c, loc, PUSH_NULL);
+	loc = LOC(_e);
+	return codegen_callHelper(_c, loc, 0,
+		_e->V.call.args,
+		_e->V.call.keywords);
+}
 
 
 
@@ -1937,7 +2112,144 @@ static AlifIntT codegen_formattedValue(AlifCompiler* _c, ExprTy _e) { // 4877
 
 
 
+static AlifIntT codegen_subKwArgs(AlifCompiler* _c, Location _loc,
+	ASDLKeywordSeq* _keywords, AlifSizeT _begin, AlifSizeT _end) { // 4923
+	AlifSizeT i{}, n = _end - _begin;
+	KeywordTy kw{};
+	AlifIntT big = n * 2 > STACK_USE_GUIDELINE;
+	if (big) {
+		ADDOP_I(_c, _noLocation_, BUILD_MAP, 0);
+	}
+	for (i = _begin; i < _end; i++) {
+		kw = ASDL_SEQ_GET(_keywords, i);
+		ADDOP_LOAD_CONST(_c, _loc, kw->arg);
+		VISIT(_c, Expr, kw->val);
+		if (big) {
+			ADDOP_I(_c, _noLocation_, MAP_ADD, 1);
+		}
+	}
+	if (!big) {
+		ADDOP_I(_c, _loc, BUILD_MAP, n);
+	}
+	return SUCCESS;
+}
 
+static AlifIntT codegen_callSimpleKwHelper(AlifCompiler* _c, Location _loc,
+	ASDLKeywordSeq* _keywords, AlifSizeT _nkwelts) { // 4952
+	AlifObject* names{};
+	names = alifTuple_new(_nkwelts);
+	if (names == nullptr) {
+		return ERROR;
+	}
+	for (AlifSizeT i = 0; i < _nkwelts; i++) {
+		KeywordTy kw = ASDL_SEQ_GET(_keywords, i);
+		ALIFTUPLE_SET_ITEM(names, i, ALIF_NEWREF(kw->arg));
+	}
+	ADDOP_LOAD_CONST_NEW(_c, _loc, names);
+	return SUCCESS;
+}
+
+static AlifIntT codegen_callHelper(AlifCompiler* _c, Location _loc,
+	AlifIntT _n, /* Args already pushed */ ASDLExprSeq* _args,
+	ASDLKeywordSeq* _keywords) { // 4971
+	AlifSizeT i{}, nseen{}, nelts{}, nkwelts{};
+
+	RETURN_IF_ERROR(codegen_validateKeywords(_c, _keywords));
+
+	nelts = ASDL_SEQ_LEN(_args);
+	nkwelts = ASDL_SEQ_LEN(_keywords);
+
+	if (nelts + nkwelts * 2 > STACK_USE_GUIDELINE) {
+		goto ex_call;
+	}
+	for (i = 0; i < nelts; i++) {
+		ExprTy elt = ASDL_SEQ_GET(_args, i);
+		if (elt->type == ExprK_::StarK) {
+			goto ex_call;
+		}
+	}
+	for (i = 0; i < nkwelts; i++) {
+		KeywordTy kw = ASDL_SEQ_GET(_keywords, i);
+		if (kw->arg == nullptr) {
+			goto ex_call;
+		}
+	}
+
+	/* No * or ** args, so can use faster calling sequence */
+	for (i = 0; i < nelts; i++) {
+		ExprTy elt = ASDL_SEQ_GET(_args, i);
+		VISIT(_c, Expr, elt);
+	}
+	if (nkwelts) {
+		VISIT_SEQ(_c, Keyword, _keywords);
+		RETURN_IF_ERROR(
+			codegen_callSimpleKwHelper(_c, _loc, _keywords, nkwelts));
+		ADDOP_I(_c, _loc, CALL_KW, _n + nelts + nkwelts);
+	}
+	else {
+		ADDOP_I(_c, _loc, CALL, _n + nelts);
+	}
+	return SUCCESS;
+
+ex_call:
+
+	/* Do positional arguments. */
+	if (_n == 0 and nelts == 1 and ((ExprTy)ASDL_SEQ_GET(_args, 0))->type == ExprK_::StarK) {
+		VISIT(_c, Expr, ((ExprTy)ASDL_SEQ_GET(_args, 0))->V.star.val);
+	}
+	else {
+		RETURN_IF_ERROR(starUnpack_helper(_c, _loc, _args, _n, BUILD_LIST,
+			LIST_APPEND, LIST_EXTEND, 1));
+	}
+	/* Then keyword arguments */
+	if (nkwelts) {
+		/* Has a new dict been pushed */
+		AlifIntT have_dict = 0;
+
+		nseen = 0;  /* the number of keyword arguments on the stack following */
+		for (i = 0; i < nkwelts; i++) {
+			KeywordTy kw = ASDL_SEQ_GET(_keywords, i);
+			if (kw->arg == nullptr) {
+				/* A keyword argument unpacking. */
+				if (nseen) {
+					RETURN_IF_ERROR(codegen_subKwArgs(_c, _loc, _keywords, i - nseen, i));
+					if (have_dict) {
+						ADDOP_I(_c, _loc, DICT_MERGE, 1);
+					}
+					have_dict = 1;
+					nseen = 0;
+				}
+				if (!have_dict) {
+					ADDOP_I(_c, _loc, BUILD_MAP, 0);
+					have_dict = 1;
+				}
+				VISIT(_c, Expr, kw->val);
+				ADDOP_I(_c, _loc, DICT_MERGE, 1);
+			}
+			else {
+				nseen++;
+			}
+		}
+		if (nseen) {
+			/* Pack up any trailing keyword arguments. */
+			RETURN_IF_ERROR(codegen_subKwArgs(_c, _loc, _keywords, nkwelts - nseen, nkwelts));
+			if (have_dict) {
+				ADDOP_I(_c, _loc, DICT_MERGE, 1);
+			}
+			have_dict = 1;
+		}
+	}
+	ADDOP_I(_c, _loc, CALL_FUNCTION_EX, nkwelts > 0);
+	return SUCCESS;
+}
+
+
+
+
+static AlifIntT compiler_visitKeyword(AlifCompiler* _c, KeywordTy _k) { // 5769
+	VISIT(_c, Expr, _k->val);
+	return SUCCESS;
+}
 
 
 static AlifIntT compiler_visitExpr(AlifCompiler* _c, ExprTy _e) { // 5997
@@ -2016,8 +2328,8 @@ static AlifIntT compiler_visitExpr(AlifCompiler* _c, ExprTy _e) { // 5997
 	//	break;
 	//case ExprK_::CompareK:
 	//	return codegen_compare(_c, _e);
-	//case ExprK_::CallK:
-	//	return codegen_call(_c, _e);
+	case ExprK_::CallK:
+		return codegen_call(_c, _e);
 	case ExprK_::ConstantK:
 		ADDOP_LOAD_CONST(_c, loc, _e->V.constant.val);
 		break;
@@ -2120,6 +2432,10 @@ static InstrSequence* compiler_instrSequence(AlifCompiler* _c) { // 7358
 
 
 
+static AlifSymTable* compiler_symtable(AlifCompiler* _c) { // 7370
+	return _c->st;
+}
+
 static AlifSTEntryObject* compiler_symtableEntry(AlifCompiler* _c) { // 7376
 	return _c->u_->ste;
 }
@@ -2216,8 +2532,7 @@ static AlifCodeObject* optimizeAndAssemble_codeUnit(CompilerUnit* u, AlifObject*
 
 
 	if (alifCFG_optimizedCFGToInstructionSequence(g, &u->metadata, _codeFlags,
-		&stackDepth, &nLocalsPlus,
-		&optimizedInstrs) < 0) {
+		&stackDepth, &nLocalsPlus, &optimizedInstrs) < 0) {
 		goto error;
 	}
 

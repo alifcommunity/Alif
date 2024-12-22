@@ -94,7 +94,7 @@ AlifObject** _alifObjectArray_fromStackRefArray(AlifStackRef*, AlifSizeT, AlifOb
 
 void _alifObjectArray_free(AlifObject**, AlifObject**); // 271
 
-
+AlifObject* _alifEval_loadName(AlifThread*, AlifInterpreterFrame*, AlifObject*); // 276
 
 // 279
 #define ALIF_GIL_DROP_REQUEST_BIT (1U << 0)

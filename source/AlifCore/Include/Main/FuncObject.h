@@ -44,6 +44,26 @@ public:
 
 extern AlifTypeObject _alifFunctionType_; // 66
 
+
+
+
+#define ALIFFUNCTION_CAST(_func) \
+    (ALIF_CAST(AlifFunctionObject*, _func)) // 85
+
+static inline AlifObject* alifFunction_getCode(AlifObject* _func) { // 90
+	return ALIFFUNCTION_CAST(_func)->code;
+}
+#define ALIFFUNCTION_GET_CODE(_func) alifFunction_getCode(ALIFOBJECT_CAST(_func))
+
+
+static inline AlifObject* alifFunction_getGlobals(AlifObject* _func) { // 95
+	return ALIFFUNCTION_CAST(_func)->globals;
+}
+#define ALIFFUNCTION_GET_GLOBALS(_func) alifFunction_getGlobals(ALIFOBJECT_CAST(_func))
+
+
+
+
 // 132
 #define ALIF_FOREACH_FUNC_EVENT(_v) \
     _v(Create)                    \

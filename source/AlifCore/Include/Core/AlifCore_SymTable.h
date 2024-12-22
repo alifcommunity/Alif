@@ -104,6 +104,7 @@ public:
 
 extern AlifTypeObject _alifSTEntryType_; // 132
 
+extern long alifST_getSymbol(AlifSTEntryObject*, AlifObject*); // 136
 extern AlifIntT alifST_getScope(AlifSTEntryObject*, AlifObject*); // 137
 extern AlifIntT alifST_isFunctionLike(AlifSTEntryObject* ); // 138
 extern AlifSymTable* alifSymtable_build(Module*, AlifObject*, AlifFutureFeatures*); // 140

@@ -33,6 +33,15 @@
     }
 
 
+ // 123
+#define DISPATCH_INLINED(_newFrame)                     \
+    do {                                                \
+        _alifFrame_setStackPointer(_frame, stackPointer); \
+        _frame = _thread->currentFrame = (_newFrame);     \
+        goto start_frame;                               \
+    } while (0)
+
+
 
 #define GETITEM(_v, _i) ALIFTUPLE_GET_ITEM(_v, _i) // 139
 
@@ -53,6 +62,15 @@
 #define PREDICTED(_op)           PREDICT_ID(_op):
 
 
+
+
+#define BASIC_STACKADJ(_n) (stackPointer += _n) // 212
+
+
+ // 227
+#define STACK_SHRINK(_n) do { \
+                            BASIC_STACKADJ(-(_n)); \
+                        } while (0)
 
 
 /* Data access macros */

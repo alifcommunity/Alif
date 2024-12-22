@@ -18,6 +18,9 @@
 #define UNLOCK_CODE()   ALIF_END_CRITICAL_SECTION()
 
 
+AlifObject _alifInstrumentationDisable_ = ALIFOBJECT_HEAD_INIT(&_alifBaseObjectType_);
+
+AlifObject _alifInstrumentationMissing_ = ALIFOBJECT_HEAD_INIT(&_alifBaseObjectType_);
 
 
 

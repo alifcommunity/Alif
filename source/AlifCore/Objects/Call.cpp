@@ -134,13 +134,12 @@ VectorCallFunc alifVectorCall_function(AlifObject* _callable) { // 256
 	return _alifVectorCall_functionInline(_callable);
 }
 
-//AlifObject* alifObject_vectorCall(AlifObject* callable, AlifObject* const* args,
-//	AlifUSizeT nargsf, AlifObject* kwnames)
-//{
-//	AlifThread* thread = alifThread_get();
-//	return alifObject_vectorCallThread(thread, callable,
-//		args, nargsf, kwnames);
-//}
+AlifObject* alifObject_vectorCall(AlifObject* _callable, AlifObject* const* _args,
+	AlifUSizeT _nArgsF, AlifObject* _kwNames) { // 322
+	AlifThread* thread = _alifThread_get();
+	return alifObject_vectorCallThread(thread, _callable,
+		_args, _nArgsF, _kwNames);
+}
 
 AlifObject* alifObject_callOneArg(AlifObject* _func, AlifObject* _arg) { // 386
 

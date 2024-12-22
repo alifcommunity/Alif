@@ -103,7 +103,7 @@ AlifTypeObject _alifCPPFunctionType_ = { // 332
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "دالة_او_صفة_مضمنة",
 	.basicSize = sizeof(AlifCPPFunctionObject),
-	.itemSize = 0,
+	.vectorCallOffset = offsetof(AlifCPPFunctionObject, vectorCall),
 
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
 	ALIF_TPFLAGS_HAVE_VECTORCALL,

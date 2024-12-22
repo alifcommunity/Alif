@@ -98,6 +98,10 @@ extern AlifCodeObject* alifCode_new(AlifCodeConstructor*); // 288
 
 
 
+static inline uint16_t read_u16(uint16_t* _p) { // 439
+	return *_p;
+}
+
 static inline AlifIntT write_varint(uint8_t* _ptr, AlifUIntT _val) { // 482
 	AlifIntT written = 1;
 	while (_val >= 64) {

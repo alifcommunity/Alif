@@ -51,10 +51,10 @@
 #define BUILD_STRING                            47
 #define BUILD_TUPLE                             48
 #define CALL                                    49
-//#define CALL_FUNCTION_EX                        50
+#define CALL_FUNCTION_EX                        50
 #define CALL_INTRINSIC_1                        51
 //#define CALL_INTRINSIC_2                        52
-//#define CALL_KW                                 53
+#define CALL_KW                                 53
 #define COMPARE_OP                              54
 #define CONTAINS_OP                             55
 #define CONVERT_VALUE                           56
@@ -65,7 +65,7 @@
 #define DELETE_FAST                             61
 #define DELETE_GLOBAL                           62
 #define DELETE_NAME                             63
-//#define DICT_MERGE                              64
+#define DICT_MERGE                              64
 #define DICT_UPDATE                             65
 #define EXTENDED_ARG                            66
 #define FOR_ITER                                67
@@ -211,7 +211,7 @@
 //#define INSTRUMENTED_RETURN_VALUE              249
 //#define INSTRUMENTED_RETURN_CONST              250
 //#define INSTRUMENTED_YIELD_VALUE               251
-//#define INSTRUMENTED_CALL                      252
+#define INSTRUMENTED_CALL                      252
 //#define INSTRUMENTED_JUMP_BACKWARD             253
 //#define INSTRUMENTED_LINE                      254
 //#define ENTER_EXECUTOR                         255

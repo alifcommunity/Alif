@@ -244,9 +244,9 @@ AlifSTEntryObject* _alifSymtable_lookup(AlifSymTable* _st, void* _key) { // 493
 }
 
 
-long alifST_getSymbol(AlifSTEntryObject* ste, AlifObject* name) { // 527
+long alifST_getSymbol(AlifSTEntryObject* _ste, AlifObject* _name) { // 527
 	AlifObject* v_{};
-	if (alifDict_getItemRef(ste->symbols, name, &v_) < 0) {
+	if (alifDict_getItemRef(_ste->symbols, _name, &v_) < 0) {
 		return -1;
 	}
 	if (!v_) {

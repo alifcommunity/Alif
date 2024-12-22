@@ -54,6 +54,9 @@ static inline AlifObject* alifStackRef_asAlifObjectSteal(AlifStackRef _stackRef)
 	return alifStackRef_asAlifObjectBorrow(_stackRef);
 }
 
+#define ALIFSTACKREF_ASALIFOBJECTNEW(_stackref) ALIF_NEWREF(alifStackRef_asAlifObjectBorrow(_stackref)) // 125
+
+#define ALIFSTACKREF_TYPE(_stackref) ALIF_TYPE(alifStackRef_asAlifObjectBorrow(_stackref)) // 127
 
 static inline AlifStackRef _alifStackRef_fromPyObjectSteal(AlifObject* _obj) { // 131
 	AlifIntT tag = (_obj == nullptr or ALIF_ISIMMORTAL(_obj)) ? (ALIF_TAG_DEFERRED) : ALIF_TAG_PTR;
