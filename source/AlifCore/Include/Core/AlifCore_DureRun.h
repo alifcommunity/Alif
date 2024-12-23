@@ -8,6 +8,14 @@
 #include "AlifCore_UStrObject.h"
 
 
+
+
+
+class GetArgsDureRunState {
+public:
+	AlifArgParser* staticParsers{};
+};
+
 struct GILStateDureRunState { // 34
 public:
 	AlifIntT checkEnabled{};
@@ -57,6 +65,7 @@ public:
 	ImportDureRunState imports{};
 	EvalDureRunState eval{};
 	GILStateDureRunState gilState{};
+	GetArgsDureRunState getArgs{};
 	RefTracerDureRunState refTracer{};
 
 	AlifRWMutex stopTheWorldMutex{};

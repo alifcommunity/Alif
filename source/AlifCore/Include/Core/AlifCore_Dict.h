@@ -4,7 +4,7 @@
 
 
 
-
+extern AlifObject* _alifDict_getItemWithError(AlifObject*, AlifObject*); // 15
 
 
 AlifIntT alifDict_delItemKnownHash(AlifObject*, AlifObject*, AlifHashT); // 29

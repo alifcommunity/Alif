@@ -677,11 +677,17 @@
     INIT_ID(__origClass__), \
 	INIT_ID(__package__), \
 	INIT_ID(__spec__), \
-	INIT_ID(hasLocation), \
+	INIT_ID(End), \
+	INIT_ID(File), \
+	INIT_ID(Flush), \
+	INIT_ID(HasLocation), \
 	INIT_ID(Join), \
-	INIT_ID(mro), \
-	INIT_ID(origin), \
-	INIT_ID(top), \
+	INIT_ID(Mro), \
+	INIT_ID(Origin), \
+	INIT_ID(Sep), \
+	INIT_ID(Stdout), \
+	INIT_ID(Top), \
+	INIT_ID(Write), \
 }
 
 

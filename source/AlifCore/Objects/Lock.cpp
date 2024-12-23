@@ -234,8 +234,57 @@ AlifIntT alifEvent_waitTimed(AlifEvent* _evt, AlifTimeT _timeoutNS, AlifIntT _de
 
 
 
+static AlifIntT unlock_once(AlifOnceFlag* _o, AlifIntT _res) { // 297
+	uint8_t newValue{};
+	switch (_res) {
+	case -1: newValue = ALIF_UNLOCKED; break;
+	case  0: newValue = ALIF_ONCE_INITIALIZED; break;
+	default: {
+		//alif_fatalError("invalid result from _alifOnceFlag_callOnce");
+		ALIF_UNREACHABLE();
+		break;
+	}
+	}
+
+	uint8_t old_value = alifAtomic_exchangeUint8(&_o->v, newValue);
+	if ((old_value & ALIF_HAS_PARKED) != 0) {
+		alifParkingLot_unparkAll(&_o->v);
+	}
+	return _res;
+}
 
 
+
+AlifIntT _alifOnceFlag_callOnceSlow(AlifOnceFlag* _flag, AlifOnceFnT* _fn, void* _arg) { // 321
+	uint8_t v = alifAtomic_loadUint8(&_flag->v);
+	for (;;) {
+		if (v == ALIF_UNLOCKED) {
+			if (!alifAtomic_compareExchangeUint8(&_flag->v, &v, ALIF_LOCKED)) {
+				continue;
+			}
+			AlifIntT res = _fn(_arg);
+			return unlock_once(_flag, res);
+		}
+
+		if (v == ALIF_ONCE_INITIALIZED) {
+			return 0;
+		}
+
+		// The once flag is initializing (locked).
+		if (!(v & ALIF_HAS_PARKED)) {
+			// We are the first waiter. Set the _Py_HAS_PARKED flag.
+			uint8_t newValue = v | ALIF_HAS_PARKED;
+			if (!alifAtomic_compareExchangeUint8(&_flag->v, &v, newValue)) {
+				continue;
+			}
+			v = newValue;
+		}
+
+		// Wait for initialization to finish.
+		alifParkingLot_park(&_flag->v, &v, sizeof(v), -1, nullptr, 1);
+		v = alifAtomic_loadUint8(&_flag->v);
+	}
+}
 
 
 

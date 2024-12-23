@@ -237,7 +237,7 @@ error:
 
 static AlifIntT getFileOrigin_fromSpec(AlifObject* _spec, AlifObject** _pOrigin) { // 828
 	AlifObject* hasLocation = nullptr;
-	AlifIntT rc_ = alifObject_getOptionalAttr(_spec, &ALIF_ID(hasLocation), &hasLocation);
+	AlifIntT rc_ = alifObject_getOptionalAttr(_spec, &ALIF_ID(HasLocation), &hasLocation);
 	if (rc_ <= 0) {
 		return rc_;
 	}
@@ -247,7 +247,7 @@ static AlifIntT getFileOrigin_fromSpec(AlifObject* _spec, AlifObject** _pOrigin)
 		return rc_;
 	}
 	AlifObject* origin = nullptr;
-	rc_ = alifObject_getOptionalAttr(_spec, &ALIF_ID(origin), &origin);
+	rc_ = alifObject_getOptionalAttr(_spec, &ALIF_ID(Origin), &origin);
 	if (rc_ <= 0) {
 		return rc_;
 	}

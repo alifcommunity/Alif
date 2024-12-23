@@ -168,7 +168,7 @@ AlifSymTable* alifSymtable_build(ModuleTy _mod, AlifObject* _filename,
 	st_->recursionLimit = ALIFCPP_RECURSION_LIMIT;
 
 	AlifSourceLocation loc0 = { 0, 0, 0, 0 };
-	if (!symtable_enterBlock(st_, &ALIF_ID(top), BlockType_::Module_Block, (void*)_mod, loc0)) {
+	if (!symtable_enterBlock(st_, &ALIF_ID(Top), BlockType_::Module_Block, (void*)_mod, loc0)) {
 		alifSymtable_free(st_);
 		return nullptr;
 	}

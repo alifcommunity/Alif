@@ -66,8 +66,17 @@ static inline void alifRawMutex_unlock(AlifRawMutex* m) { // 131
 	alifRawMutex_unlockSlow(m);
 }
 
+typedef AlifIntT AlifOnceFnT(void* _arg); // 133
 
 
+AlifIntT _alifOnceFlag_callOnceSlow(AlifOnceFlag*, AlifOnceFnT*, void*); // 137
+
+static inline AlifIntT _alifOnceFlag_callOnce(AlifOnceFlag* _flag, AlifOnceFnT* _fn, void* _arg) { // 145
+	if (alifAtomic_loadUint8(&_flag->v) == ALIF_ONCE_INITIALIZED) {
+		return 0;
+	}
+	return _alifOnceFlag_callOnceSlow(_flag, _fn, _arg);
+}
 
 
 

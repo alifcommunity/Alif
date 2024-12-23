@@ -1,8 +1,8 @@
 #include "alif.h"
 
-//#include "AlifCore_FileUtils.h"
-//#include "AlifCore_FreeList.h"
-//#include "AlifCore_Import.h"
+#include "AlifCore_FileUtils.h"
+#include "AlifCore_FreeList.h"
+#include "AlifCore_Import.h"
 #include "AlifCore_InitConfig.h"
 #include "AlifCore_LifeCycle.h"
 #include "AlifCore_Memory.h"

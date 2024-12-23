@@ -47,11 +47,17 @@ public:
 		STRUCT_FOR_ID(__origClass__)
 		STRUCT_FOR_ID(__package__)
 		STRUCT_FOR_ID(__spec__)
-     	STRUCT_FOR_ID(hasLocation)
+     	STRUCT_FOR_ID(End)
+     	STRUCT_FOR_ID(File)
+     	STRUCT_FOR_ID(Flush)
+     	STRUCT_FOR_ID(HasLocation)
      	STRUCT_FOR_ID(Join)
-     	STRUCT_FOR_ID(mro)
-     	STRUCT_FOR_ID(origin)
-     	STRUCT_FOR_ID(top)
+     	STRUCT_FOR_ID(Mro)
+     	STRUCT_FOR_ID(Origin)
+     	STRUCT_FOR_ID(Sep)
+     	STRUCT_FOR_ID(Stdout)
+     	STRUCT_FOR_ID(Top)
+     	STRUCT_FOR_ID(Write)
     } identifiers;
 
 	class {

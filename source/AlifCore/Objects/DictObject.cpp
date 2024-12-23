@@ -1229,6 +1229,29 @@ AlifObject* _alifDict_fromItems(AlifObject* const* _keys, AlifSizeT _keysOffset,
 	return dict;
 }
 
+
+
+AlifObject* _alifDict_getItemKnownHash(AlifObject* _op,
+	AlifObject* _key, AlifHashT _hash) { // 2200
+	AlifSizeT ix{}; (void)ix;
+	AlifDictObject* mp = (AlifDictObject*)_op;
+	AlifObject* value;
+
+	if (!ALIFDICT_CHECK(_op)) {
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
+
+#ifdef ALIF_GIL_DISABLED
+	ix = alifDict_lookupThreadSafe(mp, _key, _hash, &value);
+	ALIF_XDECREF(value);
+#else
+	ix = _alifDict_lookup(mp, _key, _hash, &value);
+#endif
+	return value;  // borrowed reference
+}
+
+
 AlifIntT alifDict_getItemRefKnownHash(AlifDictObject* _op, AlifObject* _key,
 	AlifHashT _hash, AlifObject** _result) { // 2249
 	AlifObject* value{};
@@ -1292,6 +1315,14 @@ AlifObject* alifDict_getItemWithError(AlifObject* _op, AlifObject* _key) { // 23
 	ix = alifDict_lookup(mp, _key, hash, &value);
 #endif
 	return value;  // borrowed reference
+}
+
+AlifObject* _alifDict_getItemWithError(AlifObject* _dp, AlifObject* _kv) { // 2350
+	AlifHashT hash = ALIF_TYPE(_kv)->hash(_kv);
+	if (hash == -1) {
+		return nullptr;
+	}
+	return _alifDict_getItemKnownHash(_dp, _kv, hash);  // borrowed reference
 }
 
 static AlifIntT setItemTake2_lockHeld(AlifDictObject* _mp,

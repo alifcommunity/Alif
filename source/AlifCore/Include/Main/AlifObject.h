@@ -1,8 +1,6 @@
 #pragma once
 
 
-#define ALIF_ISNONE(_x) ALIF_IS((_x), ALIF_NONE) // 633
-
 
 
 #define ALIFOBJECT_HEAD		AlifObject objBase // 60
@@ -235,6 +233,12 @@ AlifIntT alifObject_isTrue(AlifObject*); // 449
 AlifIntT alifCallable_check(AlifObject*); // 451
 void alifObject_clearWeakRefs(AlifObject*); // 452
 
+
+ // 466
+#define ALIF_PRINT_RAW    1
+
+
+
 // 491
 #define ALIF_TPFLAGS_STATIC_BUILTIN (1 << 1)
 #define ALIF_TPFLAGS_INLINE_VALUES (1 << 2)
@@ -275,6 +279,9 @@ extern AlifObject _alifNoneClass_; // 623
 #define ALIF_NONE (&_alifNoneClass_) // 628
 
 
+#define ALIF_ISNONE(_x) ALIF_IS((_x), ALIF_NONE) // 633
+
+
 extern AlifObject _alifNotImplementedClass_;  // 642
 
 #define ALIF_NOTIMPLEMENTED (&_alifNotImplementedClass_) // 647
@@ -293,7 +300,7 @@ extern AlifObject _alifNotImplementedClass_;  // 642
 
 
 
-
+ // 675
 #define ALIF_RETURN_RICHCOMPARE(_val1, _val2, _op)                               \
     do {                                                                    \
         switch (_op) {                                                       \

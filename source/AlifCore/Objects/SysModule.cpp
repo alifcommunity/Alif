@@ -6,7 +6,22 @@
 #include "AlifCore_Object.h"
 #include "AlifCore_LifeCycle.h"
 #include "AlifCore_State.h"
+#include "AlifCore_SysModule.h"
 
+
+
+
+
+AlifObject* _alifSys_getAttr(AlifThread* _thread, AlifObject* _name) { // 73
+	AlifObject* sd = _thread->interpreter->sysDict;
+	if (sd == nullptr) {
+		return nullptr;
+	}
+	//AlifObject* exc = _alifErr_getRaisedException(_thread);
+	AlifObject* value = _alifDict_getItemWithError(sd, _name);
+	//_alifErr_setRaisedException(_thread, exc);
+	return value;
+}
 
 
 static AlifObject* _alifSys_getObject(AlifInterpreter* _interp, const char* _name) { // 89
@@ -45,7 +60,17 @@ AlifObject* alifSys_getObject(const char* _name) { // 104
 
 
 
-
+static AlifModuleDef _sysModule_ = { // 3447
+	ALIFMODULEDEF_HEAD_INIT,
+	"sys",
+	0, //_sysDoc_
+	-1, /* multiple "initialization" just copies the module dict. */
+	0, //_sysMethods_,
+	nullptr,
+	nullptr,
+	nullptr,
+	nullptr
+};
 
 
 
@@ -64,44 +89,44 @@ AlifIntT alifSys_create(AlifThread* _thread, AlifObject** _sysModP) { // 3779
 		goto error;
 	}
 
-//	sysmod = alifModule_createInitialized(&_sysModule_, ALIF_API_VERSION);
-//	if (sysmod == nullptr) {
-//		//return ALIFSTATUS_ERR("failed to create a module object");
-//		return -1; // temp
-//	}
-//#ifdef ALIF_GIL_DISABLED
-//	alifUnstableModule_setGIL(sysmod, ALIF_MOD_GIL_NOT_USED);
-//#endif
-//
-//	sysdict = alifModule_getDict(sysmod);
-//	if (sysdict == nullptr) {
-//		goto error;
-//	}
-//	interp->sysDict = ALIF_NEWREF(sysdict);
-//
-//	interp->sysDictCopy = alifDict_copy(sysdict);
-//	if (interp->sysDictCopy == nullptr) {
-//		goto error;
-//	}
-//
-//	if (alifDict_setItemString(sysdict, "modules", modules) < 0) {
-//		goto error;
-//	}
-//
-//	status = _alifSys_setPreliminaryStderr(sysdict);
-//	if (status < 1) {
-//		return status;
-//	}
-//
-//	status = _alifSys_initCore(_thread, sysdict);
-//	if (status < 1) {
-//		return status;
-//	}
-//
-//	if (_alifImport_fixupBuiltin(_thread, sysmod, "sys", modules) < 0) {
-//		goto error;
-//	}
-//
+	sysmod = alifModule_createInitialized(&_sysModule_/*, ALIF_API_VERSION*/); // alif
+	if (sysmod == nullptr) {
+		//return ALIFSTATUS_ERR("failed to create a module object");
+		return -1; // temp
+	}
+#ifdef ALIF_GIL_DISABLED
+	//alifUnstableModule_setGIL(sysmod, ALIF_MOD_GIL_NOT_USED);
+#endif
+
+	sysdict = alifModule_getDict(sysmod);
+	if (sysdict == nullptr) {
+		goto error;
+	}
+	interp->sysDict = ALIF_NEWREF(sysdict);
+
+	//interp->sysDictCopy = alifDict_copy(sysdict);
+	//if (interp->sysDictCopy == nullptr) {
+	//	goto error;
+	//}
+
+	if (alifDict_setItemString(sysdict, "modules", modules) < 0) {
+		goto error;
+	}
+
+	//status = _alifSys_setPreliminaryStderr(sysdict);
+	//if (status < 1) {
+	//	return status;
+	//}
+
+	//status = _alifSys_initCore(_thread, sysdict);
+	//if (status < 1) {
+	//	return status;
+	//}
+
+	//if (_alifImport_fixupBuiltin(_thread, sysmod, "sys", modules) < 0) {
+	//	goto error;
+	//}
+
 //	monitoring = _alif_createMonitoringObject();
 //	if (monitoring == nullptr) {
 //		goto error;
@@ -111,12 +136,12 @@ AlifIntT alifSys_create(AlifThread* _thread, AlifObject** _sysModP) { // 3779
 //	if (err < 0) {
 //		goto error;
 //	}
-//
-//
-//	*_sysModP = sysmod;
+
+
+	*_sysModP = sysmod;
 	return 1;
 
 error:
 	//return ALIFSTATUS_ERR("can't initialize sys module");
-	return -1; // temp
+	return -1; // alif
 }

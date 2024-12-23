@@ -86,6 +86,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_StackRef.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_State.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_SymTable.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_SysModule.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Thread.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ThreadState.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Time.h" />
@@ -127,7 +128,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomicGCC.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomicMSC.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\BoolObject.h" />
-    <ClInclude Include="..\source\AlifCore\Include\Main\BuiltinsModule.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\BltinModule.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\ByteArrayObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\BytesObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\ClassObject.h" />
@@ -138,6 +139,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\DescrObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\DictObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\ErrorCode.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\FileObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\FileUtils.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Codecs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\FloatObject.h" />
@@ -222,7 +224,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\ASTOpt.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\BiaseRefCount.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\BoolObject.cpp" />
-    <ClCompile Include="..\source\AlifCore\Objects\BuiltinsModule.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\BltinModule.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ByteArrayObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\BytesObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Call.cpp" />
@@ -247,6 +249,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\Future.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GCFreeThreading.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GenericAliasObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\GetArgs.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GetOption.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GetVersion.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\HashTable.cpp" />

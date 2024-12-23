@@ -71,6 +71,11 @@ public:
 };
 
 
+
+
+AlifObject* _alifDict_getItemKnownHash(AlifObject*, AlifObject*, AlifHashT); // 38
+
+
 AlifIntT alifDict_setDefaultRef(AlifObject*, AlifObject*, AlifObject*, AlifObject**); // 53
 
 static inline AlifSizeT _alifDict_getSize(AlifObject* _op) { // 56

@@ -338,12 +338,12 @@ static void type_mroModified(AlifTypeObject* _type, AlifObject* _bases) { // 111
 
 	if (custom) {
 		AlifObject* mroMeth{}, * typeMroMeth{};
-		mroMeth = lookup_maybeMethod((AlifObject*)_type, &ALIF_ID(mro), &unbound);
+		mroMeth = lookup_maybeMethod((AlifObject*)_type, &ALIF_ID(Mro), &unbound);
 		if (mroMeth == nullptr) {
 			goto clear;
 		}
 		typeMroMeth = lookup_maybeMethod(
-			(AlifObject*) & _alifTypeType_, &ALIF_ID(mro), &unbound);
+			(AlifObject*) & _alifTypeType_, &ALIF_ID(Mro), &unbound);
 		if (typeMroMeth == nullptr) {
 			ALIF_DECREF(mroMeth);
 			goto clear;
@@ -785,7 +785,7 @@ static AlifObject* mro_invoke(AlifTypeObject* _type) { // 3210
 	if (custom) {
 		AlifIntT unbound{};
 		AlifObject* mroMeth = lookup_method(
-			(AlifObject*)_type, &ALIF_ID(mro), &unbound);
+			(AlifObject*)_type, &ALIF_ID(Mro), &unbound);
 		if (mroMeth == nullptr)
 			return nullptr;
 		mroResult = call_unboundNoArg(unbound, mroMeth, (AlifObject*)_type);
