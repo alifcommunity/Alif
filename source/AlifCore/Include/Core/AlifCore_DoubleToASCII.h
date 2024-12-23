@@ -40,3 +40,5 @@ public:
 
 
 extern double _alif_dgStrToDouble(const char*, char**); // 62
+extern char* _alif_dgDoubletoASCII(double, int, int, int*, int*, char**); // 63
+extern void _alif_dgFreeDoubleToASCII(char*); // 65

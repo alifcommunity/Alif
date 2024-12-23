@@ -78,3 +78,261 @@ double alifOS_stringToDouble(const char* _s,
 	if (_endPtr != nullptr) *_endPtr = failPos;
 	return result;
 }
+
+
+
+ // 923
+#define OFS_INF 0
+#define OFS_NAN 1
+#define OFS_E 2
+
+/* The lengths of these are known to the code below, so don't change them */
+static const char* const _lcFloatStrings_[] = { // 928
+	"inf",
+	"nan",
+	"e",
+};
+static const char* const _ucFloatStrings_[] = { // 933
+	"INF",
+	"NAN",
+	"E",
+};
+
+
+static char* format_floatShort(double _d, char _formatCode,
+	AlifIntT _mode, AlifIntT _precision, AlifIntT _alwaysAddSign,
+	AlifIntT _addDot0IfInteger, AlifIntT _useAltFormatting,
+	AlifIntT _noNegativeZero, const char* const* _floatStrings,
+	AlifIntT* _type) { // 968
+
+	char* buf = nullptr;
+	char* p = nullptr;
+	AlifSizeT bufsize = 0;
+	char* digits{}, * digits_end{};
+	AlifIntT decpt_as_int{}, sign{}, exp_len{}, exp = 0, use_exp = 0;
+	AlifSizeT decpt{}, digits_len{}, vdigits_start{}, vdigits_end{};
+
+	digits = _alif_dgDoubletoASCII(_d, _mode, _precision, &decpt_as_int, &sign,
+		&digits_end);
+
+	decpt = (AlifSizeT)decpt_as_int;
+	if (digits == nullptr) {
+		/* The only failure mode is no memory. */
+		//alifErr_noMemory();
+		goto exit;
+	}
+	digits_len = digits_end - digits;
+
+	if (_noNegativeZero and sign == 1 and
+		(digits_len == 0 or (digits_len == 1 and digits[0] == '0'))) {
+		sign = 0;
+	}
+
+	if (digits_len and !ALIF_ISDIGIT(digits[0])) {
+		if (digits[0] == 'n' or digits[0] == 'N')
+			sign = 0;
+
+		bufsize = 5;
+		buf = (char*)alifMem_dataAlloc(bufsize);
+		if (buf == nullptr) {
+			//alifErr_noMemory();
+			goto exit;
+		}
+		p = buf;
+
+		if (sign == 1) {
+			*p++ = '-';
+		}
+		else if (_alwaysAddSign) {
+			*p++ = '+';
+		}
+		if (digits[0] == 'i' or digits[0] == 'I') {
+			strncpy(p, _floatStrings[OFS_INF], 3);
+			p += 3;
+
+			if (_type)
+				*_type = ALIF_DTST_INFINITE;
+		}
+		else if (digits[0] == 'n' or digits[0] == 'N') {
+			strncpy(p, _floatStrings[OFS_NAN], 3);
+			p += 3;
+
+			if (_type)
+				*_type = ALIF_DTST_NAN;
+		}
+		else {
+			ALIF_UNREACHABLE();
+		}
+		goto exit;
+	}
+
+	if (_type)
+		*_type = ALIF_DTST_FINITE;
+
+	vdigits_end = digits_len;
+	switch (_formatCode) {
+	case 'e':
+		use_exp = 1;
+		vdigits_end = _precision;
+		break;
+	case 'f':
+		vdigits_end = decpt + _precision;
+		break;
+	case 'g':
+		if (decpt <= -4 or decpt >
+			(_addDot0IfInteger ? _precision - 1 : _precision))
+			use_exp = 1;
+		if (_useAltFormatting)
+			vdigits_end = _precision;
+		break;
+	case 'r':
+		if (decpt <= -4 or decpt > 16)
+			use_exp = 1;
+		break;
+	default:
+		//ALIFERR_BADINTERNALCALL();
+		goto exit;
+	}
+
+	if (use_exp) {
+		exp = (int)decpt - 1;
+		decpt = 1;
+	}
+
+	vdigits_start = decpt <= 0 ? decpt - 1 : 0;
+	if (!use_exp and _addDot0IfInteger)
+		vdigits_end = vdigits_end > decpt ? vdigits_end : decpt + 1;
+	else
+		vdigits_end = vdigits_end > decpt ? vdigits_end : decpt;
+
+
+	bufsize = 3 + (vdigits_end - vdigits_start) + (use_exp ? 5 : 0);
+
+	buf = (char*)alifMem_dataAlloc(bufsize);
+	if (buf == nullptr) {
+		//alifErr_noMemory();
+		goto exit;
+	}
+	p = buf;
+
+	if (sign == 1)
+		*p++ = '-';
+	else if (_alwaysAddSign)
+		*p++ = '+';
+
+	if (decpt <= 0) {
+		memset(p, '0', decpt - vdigits_start);
+		p += decpt - vdigits_start;
+		*p++ = '.';
+		memset(p, '0', 0 - decpt);
+		p += 0 - decpt;
+	}
+	else {
+		memset(p, '0', 0 - vdigits_start);
+		p += 0 - vdigits_start;
+	}
+
+	if (0 < decpt and decpt <= digits_len) {
+		strncpy(p, digits, decpt - 0);
+		p += decpt - 0;
+		*p++ = '.';
+		strncpy(p, digits + decpt, digits_len - decpt);
+		p += digits_len - decpt;
+	}
+	else {
+		strncpy(p, digits, digits_len);
+		p += digits_len;
+	}
+
+	if (digits_len < decpt) {
+		memset(p, '0', decpt - digits_len);
+		p += decpt - digits_len;
+		*p++ = '.';
+		memset(p, '0', vdigits_end - decpt);
+		p += vdigits_end - decpt;
+	}
+	else {
+		memset(p, '0', vdigits_end - digits_len);
+		p += vdigits_end - digits_len;
+	}
+
+	if (p[-1] == '.' and !_useAltFormatting)
+		p--;
+
+	if (use_exp) {
+		*p++ = _floatStrings[OFS_E][0];
+		exp_len = sprintf(p, "%+.02d", exp);
+		p += exp_len;
+	}
+exit:
+	if (buf) {
+		*p = '\0';
+	}
+	if (digits)
+		_alif_dgFreeDoubleToASCII(digits);
+
+	return buf;
+}
+
+
+char* alifOS_doubleToString(double _val, char _formatCode,
+	AlifIntT _precision, AlifIntT _flags, AlifIntT* _type) { // 1221
+	const char* const* float_strings = _lcFloatStrings_;
+	AlifIntT mode{};
+
+	/* Validate format_code, and map upper and lower case. Compute the
+	   mode and make any adjustments as needed. */
+	switch (_formatCode) {
+		/* exponent */
+	case 'E':
+		float_strings = _ucFloatStrings_;
+		_formatCode = 'e';
+		ALIF_FALLTHROUGH;
+	case 'e':
+		mode = 2;
+		_precision++;
+		break;
+
+		/* fixed */
+	case 'F':
+		float_strings = _ucFloatStrings_;
+		_formatCode = 'f';
+		ALIF_FALLTHROUGH;
+	case 'f':
+		mode = 3;
+		break;
+
+		/* general */
+	case 'G':
+		float_strings = _ucFloatStrings_;
+		_formatCode = 'g';
+		ALIF_FALLTHROUGH;
+	case 'g':
+		mode = 2;
+		/* precision 0 makes no sense for 'g' format; interpret as 1 */
+		if (_precision == 0)
+			_precision = 1;
+		break;
+
+		/* repr format */
+	case 'r':
+		mode = 0;
+		/* Supplied precision is unused, must be 0. */
+		if (_precision != 0) {
+			//ALIFERR_BADINTERNALCALL();
+			return nullptr;
+		}
+		break;
+
+	default:
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
+
+	return format_floatShort(_val, _formatCode, mode, _precision,
+		_flags & ALIF_DTSF_SIGN,
+		_flags & ALIF_DTSF_ADD_DOT_0,
+		_flags & ALIF_DTSF_ALT,
+		_flags & ALIF_DTSF_NO_NEG_0,
+		float_strings, _type);
+}
