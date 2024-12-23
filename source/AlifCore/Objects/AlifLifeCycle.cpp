@@ -1,6 +1,7 @@
 #include "alif.h"
 
 #include "AlifCore_FileUtils.h"
+#include "AlifCore_FloatObject.h"
 #include "AlifCore_FreeList.h"
 #include "AlifCore_Import.h"
 #include "AlifCore_InitConfig.h"

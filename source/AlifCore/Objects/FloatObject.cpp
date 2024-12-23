@@ -4,10 +4,18 @@
 #include "AlifCore_FloatObject.h"
 #include "AlifCore_FreeList.h"
 #include "AlifCore_Math.h"
-
+#include "AlifCore_StructSeq.h"
 
 
 #include "clinic/FloatObject.cpp.h"
+
+
+
+
+
+
+static AlifTypeObject _floatInfoType_; // 42
+
 
 
 
@@ -433,3 +441,23 @@ AlifTypeObject _alifFloatType_ = { // 1847
 		_ALIF_TPFLAGS_MATCH_SELF,
 	.methods = _floatMethods_,
 };
+
+
+
+
+
+
+
+
+
+
+AlifIntT alifFloat_initTypes(AlifInterpreter* _interp) { // 1951
+	/* Init float info */
+	if (_alifStructSequence_initBuiltin(_interp, &_floatInfoType_,
+		nullptr /*&_floatInfoDesc_*/) < 0) {
+		//return ALIFSTATUS_ERR("can't init float info type");
+		return -1; // alif
+	}
+
+	return 1; // alif
+}

@@ -86,6 +86,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_SetObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_StackRef.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_State.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_StructSeq.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_SymTable.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_SysModule.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Thread.h" />
@@ -186,6 +187,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS4Lib.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Undef.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringParser.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\StructSeq.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\SysModule.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\ThreadNT.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\ThreadPThread.h" />
@@ -195,6 +197,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\UStrObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\UStrTypeDB.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\WeakRefObject.h" />
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\BltinModule.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\FloatObject.cpp.h" />
   </ItemGroup>
   <ItemGroup>
@@ -276,6 +279,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\SetObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\SliceObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\StringParser.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\StructSeq.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\SymTable.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\SysModule.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\TupleObject.cpp" />

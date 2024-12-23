@@ -11,7 +11,7 @@
 
 
 
-
+extern AlifIntT alifFloat_initTypes(AlifInterpreter*); // 16
 
 
 

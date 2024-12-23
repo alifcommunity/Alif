@@ -5,7 +5,7 @@
 #include "AlifCore_State.h"
 #include "AlifCore_SysModule.h"
 
-#include "BltinModule.h"
+#include "clinic/BltinModule.cpp.h"
 
 
 
