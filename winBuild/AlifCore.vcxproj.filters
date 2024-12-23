@@ -259,6 +259,9 @@
     <ClCompile Include="..\source\AlifCore\Objects\UStrCppType.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\FormatterUStr.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">
@@ -786,6 +789,12 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Repr.h">
       <Filter>Include\Main\StringLib</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\FloatObject.cpp.h">
+      <Filter>Objects\clinic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FloatObject.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Include">
@@ -811,6 +820,9 @@
     </Filter>
     <Filter Include="Objects\dtoa">
       <UniqueIdentifier>{27744aa5-428b-4a07-a363-0429b512d46c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Objects\clinic">
+      <UniqueIdentifier>{cc031cc4-6eb8-4646-aee7-345e533a37d6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

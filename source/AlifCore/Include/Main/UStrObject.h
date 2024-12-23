@@ -374,9 +374,11 @@ void alifUStrWriter_dealloc(AlifUStrWriter*); // 607
 
 const char* alifUStr_asUTF8(AlifObject*); // 625
 
+AlifIntT _alifUStr_toDecimalDigit(AlifUCS4); // 672
 
 AlifIntT _alifUStr_isPrintable(AlifUCS4); // 696
 
 
 
 #define ALIF_USTR_ISPRINTABLE(_ch) _alifUStr_isPrintable(_ch) // 730
+#define ALIF_USTR_TODECIMAL(_ch) _alifUStr_toDecimalDigit(_ch) // 732

@@ -1,8 +1,14 @@
 #include "alif.h"
 
 #include "AlifCore_Abstract.h"
+#include "AlifCore_FloatObject.h"
 #include "AlifCore_FreeList.h"
 #include "AlifCore_Math.h"
+
+
+
+#include "clinic/FloatObject.cpp.h"
+
 
 
 
@@ -346,6 +352,36 @@ static AlifObject* float_float(AlifObject* _v) { // 1079
 
 
 
+static AlifObject* float___format___impl(AlifObject* _self, AlifObject* _formatSpec) { // 1762
+	AlifUStrWriter writer{};
+	AlifIntT ret{};
+
+	alifUStrWriter_init(&writer);
+	ret = _alifFloat_formatAdvancedWriter( &writer, _self,
+		_formatSpec, 0, ALIFUSTR_GET_LENGTH(_formatSpec));
+	if (ret == -1) {
+		alifUStrWriter_dealloc(&writer);
+		return nullptr;
+	}
+	return alifUStrWriter_finish(&writer);
+}
+
+static AlifMethodDef _floatMethods_[] = { // 1781
+	//FLOAT_FROM_NUMBER_METHODDEF
+	//FLOAT_CONJUGATE_METHODDEF
+	//FLOAT___TRUNC___METHODDEF
+	//FLOAT___FLOOR___METHODDEF
+	//FLOAT___CEIL___METHODDEF
+	//FLOAT___ROUND___METHODDEF
+	//FLOAT_AS_INTEGER_RATIO_METHODDEF
+	//FLOAT_FROMHEX_METHODDEF
+	//FLOAT_HEX_METHODDEF
+	//FLOAT_IS_INTEGER_METHODDEF
+	//FLOAT___GETNEWARGS___METHODDEF
+	//FLOAT___GETFORMAT___METHODDEF
+	FLOAT___FORMAT___METHODDEF
+	{nullptr,              nullptr}           /* sentinel */
+};
 
 
 static AlifNumberMethods _floatAsNumber_ = { // 1811
@@ -395,4 +431,5 @@ AlifTypeObject _alifFloatType_ = { // 1847
 	.getAttro = alifObject_genericGetAttr,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE |
 		_ALIF_TPFLAGS_MATCH_SELF,
+	.methods = _floatMethods_,
 };

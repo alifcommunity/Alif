@@ -215,12 +215,12 @@ static inline AlifObject* lookup_tpMro(AlifTypeObject* _self) { // 517
 }
 
 
-static inline void set_tpMro(AlifTypeObject* self,
-	AlifObject* mro, AlifIntT initial) { // 545
-	if (self->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
-		alif_setImmortal(mro);
+static inline void set_tpMro(AlifTypeObject* _self,
+	AlifObject* _mro, AlifIntT _initial) { // 545
+	if (_self->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
+		alif_setImmortal(_mro);
 	}
-	self->mro = mro;
+	_self->mro = _mro;
 }
 
 
@@ -717,7 +717,7 @@ static AlifObject* mro_implementationUnlocked(AlifTypeObject* _type) { // 3052
 		return nullptr;
 	}
 
-	AlifObject** toMerge = (AlifObject**)alifMem_objAlloc(n + 1);
+	AlifObject** toMerge = (AlifObject**)alifMem_dataAlloc(n + 1);
 	if (toMerge == nullptr) {
 		//alifErr_noMemory();
 		return nullptr;
@@ -731,7 +731,7 @@ static AlifObject* mro_implementationUnlocked(AlifTypeObject* _type) { // 3052
 
 	AlifObject* result = alifList_new(1);
 	if (result == nullptr) {
-		alifMem_objFree(toMerge);
+		alifMem_dataFree(toMerge);
 		return nullptr;
 	}
 
@@ -739,7 +739,7 @@ static AlifObject* mro_implementationUnlocked(AlifTypeObject* _type) { // 3052
 	if (p_merge(result, toMerge, n + 1) < 0) {
 		ALIF_CLEAR(result);
 	}
-	alifMem_objFree(toMerge);
+	alifMem_dataFree(toMerge);
 
 	return result;
 }
@@ -1309,17 +1309,17 @@ static AlifIntT inherit_slots(AlifTypeObject* _type, AlifTypeObject* _base) { //
 		_type->setAttro = _base->setAttro;
 	}
 	COPYSLOT(repr);
-	//{
-	//	COPYSLOT(vectorCallOffset);
+	{
+		COPYSLOT(vectorCallOffset);
 
-	//	if (!_type->call and
-	//		_alifType_hasFeature(_base, ALIF_TPFLAGS_HAVE_VECTORCALL))
-	//	{
-	//		_type->flags |= ALIF_TPFLAGS_HAVE_VECTORCALL;
-	//	}
-	//	COPYSLOT(call);
-	//}
-	//COPYSLOT(str);
+		if (!_type->call and
+			_alifType_hasFeature(_base, ALIF_TPFLAGS_HAVE_VECTORCALL))
+		{
+			_type->flags |= ALIF_TPFLAGS_HAVE_VECTORCALL;
+		}
+		COPYSLOT(call);
+	}
+	COPYSLOT(str);
 	{
 		/* Copy comparison-related slots only when
 		   not overriding them anywhere */

@@ -160,7 +160,7 @@ AlifObject* alifModule_createInitialized(AlifModuleDef* _module) { // 209
 	if (_module->size > 0) {
 		m->state = alifMem_dataAlloc(_module->size);
 		if (!m->state) {
-			// memory error
+			//alifErr_noMemory();
 			ALIF_DECREF(m);
 			return nullptr;
 		}
@@ -174,9 +174,26 @@ AlifObject* alifModule_createInitialized(AlifModuleDef* _module) { // 209
 		}
 	}
 	m->def = _module;
+#ifdef ALIF_GIL_DISABLED
+	m->gil = ALIF_MOD_GIL_USED;
+#endif
 
 	return (AlifObject*)m;
 }
+
+
+
+
+#ifdef ALIF_GIL_DISABLED
+AlifIntT alifUnstable_moduleSetGIL(AlifObject* _module, void* _gil) { // 442
+	if (!ALIFMODULE_CHECK(_module)) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+	((AlifModuleObject*)_module)->gil = _gil;
+	return 0;
+}
+#endif
 
 
 

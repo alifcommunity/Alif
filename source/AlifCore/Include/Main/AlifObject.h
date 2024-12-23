@@ -449,6 +449,9 @@ public:
 	IterNextFunc iterNext{};
 
 
+	AlifMethodDef* methods{};
+
+
 	AlifTypeObject* base{};
 	AlifObject* dict{};
 	DescrGetFunc descrGet{};

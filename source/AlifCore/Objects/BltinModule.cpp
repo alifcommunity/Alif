@@ -109,14 +109,60 @@ static AlifModuleDef _alifBuiltinsModule_ = { // 3202
 
 
 AlifObject* alifBuiltin_init(AlifInterpreter* _interpreter) { // 3215
-	AlifObject* mod{}, * dict{};
+	AlifObject* mod{}, * dict{}, *debug{};
 
 	const AlifConfig* config = alifInterpreter_getConfig(_interpreter);
 
 	mod = alifModule_createInitialized(&_alifBuiltinsModule_);
 	if (mod == nullptr) return nullptr;
 
-	//dict = alifModule_getDict(mod);
+#ifdef ALIF_GIL_DISABLED
+	alifUnstable_moduleSetGIL(mod, ALIF_MOD_GIL_NOT_USED);
+#endif
+	dict = alifModule_getDict(mod);
+
+#define SETBUILTIN(_name, _object) \
+    if (alifDict_setItemString(dict, _name, (AlifObject *)_object) < 0)       \
+        return nullptr;                                                    \
+
+	SETBUILTIN("None", ALIF_NONE);
+	SETBUILTIN("Ellipsis", ALIF_ELLIPSIS);
+	SETBUILTIN("NotImplemented", ALIF_NOTIMPLEMENTED);
+	SETBUILTIN("False", ALIF_FALSE);
+	SETBUILTIN("True", ALIF_TRUE);
+	SETBUILTIN("bool", &_alifBoolType_);
+	//SETBUILTIN("memoryview", &_alifMemoryViewType_);
+	SETBUILTIN("bytearray", &_alifByteArrayType_);
+	SETBUILTIN("bytes", &_alifBytesType_);
+	//SETBUILTIN("classmethod", &_alifClassMethodType_);
+	SETBUILTIN("complex", &_alifComplexType_);
+	SETBUILTIN("dict", &_alifDictType_);
+	//SETBUILTIN("enumerate", &_alifEnumType_);
+	//SETBUILTIN("filter", &_alifFilterType_);
+	SETBUILTIN("float", &_alifFloatType_);
+	SETBUILTIN("frozenset", &_alifFrozenSetType_);
+	//SETBUILTIN("property", &_alifPropertyType_);
+	SETBUILTIN("int", &_alifLongType_);
+	SETBUILTIN("list", &_alifListType_);
+	//SETBUILTIN("map", &_alifMapType_);
+	SETBUILTIN("object", &_alifBaseObjectType_);
+	//SETBUILTIN("range", &_alifRangeType_);
+	//SETBUILTIN("reversed", &_alifReversedType_);
+	SETBUILTIN("set", &_alifSetType_);
+	SETBUILTIN("slice", &_alifSliceType_);
+	//SETBUILTIN("staticmethod", &_alifStaticMethodType_);
+	SETBUILTIN("str", &_alifUStrType_);
+	//SETBUILTIN("super", &_alifSuperType_);
+	SETBUILTIN("tuple", &_alifTupleType_);
+	SETBUILTIN("type", &_alifTypeType_);
+	debug = alifBool_fromLong(config->optimizationLevel == 0);
+	if (alifDict_setItemString(dict, "__debug__", debug) < 0) {
+		ALIF_DECREF(debug);
+		return nullptr;
+	}
+	ALIF_DECREF(debug);
 
 	return mod;
+#undef ADD_TO_ALL
+#undef SETBUILTIN
 }

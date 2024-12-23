@@ -43,6 +43,11 @@ public:
 };
 
 
+#define ALIF_MOD_GIL_USED ((void *)0) // 99
+#define ALIF_MOD_GIL_NOT_USED ((void *)1)
+
+AlifIntT alifUnstable_moduleSetGIL(AlifObject*, void*); // 104
+
 class AlifModuleDef { // 107
 public:
 	AlifModuleDefBase base{};

@@ -3,6 +3,8 @@
 
 
 
+#define DECIMAL_MASK 0x02 // 14
+
 #define PRINTABLE_MASK 0x400 // 21
 
 class AlifUStrTypeRecord { // 27
@@ -34,6 +36,13 @@ static const AlifUStrTypeRecord* get_typeRecord(AlifUCS4 _code) { // 43
 
 
 
+
+
+AlifIntT _alifUStr_toDecimalDigit(AlifUCS4 ch) { // 104
+	const AlifUStrTypeRecord* ctype = get_typeRecord(ch);
+
+	return (ctype->flags & DECIMAL_MASK) ? ctype->decimal : -1;
+}
 
 
 AlifIntT _alifUStr_isPrintable(AlifUCS4 _ch) { // 158

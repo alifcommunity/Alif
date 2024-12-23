@@ -31,3 +31,24 @@ static inline double _alifFloat_asDouble(AlifObject* _op) { // 15
 	return ALIFFLOAT_CAST(_op)->val;
 }
 #define ALIFFLOAT_AS_DOUBLE(_op) _alifFloat_asDouble(ALIFOBJECT_CAST(_op))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
