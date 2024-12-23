@@ -460,7 +460,7 @@ public:
 	FreeFunc free{};
 	Inquiry isGC{};
 	AlifObject* bases{};
-	AlifObject* mro{}; // MethdResOrder
+	AlifObject* mro{}; // MethodResolutionOrder
 	void* subclasses{};
 
 	AlifUIntT versionTag{};

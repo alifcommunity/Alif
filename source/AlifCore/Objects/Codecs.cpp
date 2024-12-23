@@ -4,4 +4,4 @@
 
 
 
-const char* _alifHexdigits_ = "0123456789abcdef"; // 19 // need review
+const char* _alifHexDigits_ = "0123456789abcdef"; // 19 // need review

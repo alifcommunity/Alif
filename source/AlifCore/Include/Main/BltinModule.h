@@ -20,8 +20,14 @@ static AlifObject* builtin_print(AlifObject* _module, AlifObject* const* _args,
 	for (AlifIntT i = 0; i < _nargs; i++) {
 		func = ALIF_TYPE(*_args)->repr;
 		AlifObject* res = func(*_args);
-		char* buf = (char*)ALIFUSTR_DATA(res);
-		printf(buf);
+		if (alifUStr_isASCII(res)) {
+			char* buf = (char*)ALIFUSTR_DATA(res);
+			printf("%s \n", buf);
+		}
+		else {
+			char* buf = (char*)alifUStr_asUTF8(res);
+			printf("%s \n", buf);
+		}
 	}
 	return ALIF_NONE;
 	// alif

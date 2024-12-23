@@ -7,4 +7,4 @@
 
 
 
-extern const char* _alifHexdigits_;
+extern const char* _alifHexDigits_;

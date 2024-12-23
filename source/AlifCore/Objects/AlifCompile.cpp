@@ -2081,7 +2081,7 @@ static AlifIntT codegen_joinedStr(AlifCompiler* _c, ExprTy _e) { // 4847
 
 static AlifIntT codegen_formattedValue(AlifCompiler* _c, ExprTy _e) { // 4877
 	AlifIntT conversion = _e->V.formattedValue.conversion;
-	AlifIntT oparg;
+	AlifIntT oparg{};
 
 	/* The expression to be formatted. */
 	VISIT(_c, Expr, _e->V.formattedValue.val);

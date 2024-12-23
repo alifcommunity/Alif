@@ -17,8 +17,14 @@ static inline void alifUStrWriter_initWithBuffer(AlifUStrWriter*, AlifObject*);
 
 #define MAX_UNICODE 0x10ffff // 106
 
+
 // 114
-#define ALIFUSTR_UTF8(_op) ALIFCOMPACTUSTROBJECT_CAST(_op)->utf8
+#define _ALIFUSTR_UTF8(_op)                             \
+    (ALIFCOMPACTUSTROBJECT_CAST(_op)->utf8)
+#define ALIFUSTR_UTF8(_op) (                 \
+     ALIFUSTR_IS_COMPACT_ASCII(_op) ?                   \
+         ((char*)(ALIFASCIIOBJECT_CAST(_op) + 1)) :       \
+         _ALIFUSTR_UTF8(_op))
 
 #define ALIFUSTR_UTF8_LENGTH(_op) ALIFCOMPACTUSTROBJECT_CAST(_op)->utf8Length
 
@@ -282,22 +288,22 @@ static char* backSlash_replace(AlifBytesWriter* _writer, char* _str,
 		*_str++ = '\\';
 		if (ch_ >= 0x00010000) {
 			*_str++ = 'U';
-			*_str++ = _alifHexdigits_[(ch_ >> 28) & 0xf];
-			*_str++ = _alifHexdigits_[(ch_ >> 24) & 0xf];
-			*_str++ = _alifHexdigits_[(ch_ >> 20) & 0xf];
-			*_str++ = _alifHexdigits_[(ch_ >> 16) & 0xf];
-			*_str++ = _alifHexdigits_[(ch_ >> 12) & 0xf];
-			*_str++ = _alifHexdigits_[(ch_ >> 8) & 0xf];
+			*_str++ = _alifHexDigits_[(ch_ >> 28) & 0xf];
+			*_str++ = _alifHexDigits_[(ch_ >> 24) & 0xf];
+			*_str++ = _alifHexDigits_[(ch_ >> 20) & 0xf];
+			*_str++ = _alifHexDigits_[(ch_ >> 16) & 0xf];
+			*_str++ = _alifHexDigits_[(ch_ >> 12) & 0xf];
+			*_str++ = _alifHexDigits_[(ch_ >> 8) & 0xf];
 		}
 		else if (ch_ >= 0x100) {
 			*_str++ = 'u';
-			*_str++ = _alifHexdigits_[(ch_ >> 12) & 0xf];
-			*_str++ = _alifHexdigits_[(ch_ >> 8) & 0xf];
+			*_str++ = _alifHexDigits_[(ch_ >> 12) & 0xf];
+			*_str++ = _alifHexDigits_[(ch_ >> 8) & 0xf];
 		}
 		else
 			*_str++ = 'x';
-		*_str++ = _alifHexdigits_[(ch_ >> 4) & 0xf];
-		*_str++ = _alifHexdigits_[ch_ & 0xf];
+		*_str++ = _alifHexDigits_[(ch_ >> 4) & 0xf];
+		*_str++ = _alifHexDigits_[ch_ & 0xf];
 	}
 	return _str;
 }
@@ -388,6 +394,7 @@ static AlifIntT ensure_uStr(AlifObject* _obj) { // 960
 #include "StringLib/Count.h"
 #include "StringLib/Find.h"
 #include "StringLib/Replace.h"
+#include "StringLib/Repr.h"
 #include "StringLib/FindMaxChar.h"
 #include "StringLib/Undef.h"
 
@@ -396,6 +403,7 @@ static AlifIntT ensure_uStr(AlifObject* _obj) { // 960
 #include "StringLib/Count.h"
 #include "StringLib/Find.h"
 #include "StringLib/Replace.h"
+#include "StringLib/Repr.h"
 #include "StringLib/FindMaxChar.h"
 #include "StringLib/Undef.h"
 
@@ -404,6 +412,7 @@ static AlifIntT ensure_uStr(AlifObject* _obj) { // 960
 #include "StringLib/Count.h"
 #include "StringLib/Find.h"
 #include "StringLib/Replace.h"
+#include "StringLib/Repr.h"
 #include "StringLib/FindMaxChar.h"
 #include "StringLib/Undef.h"
 
@@ -455,7 +464,7 @@ static AlifObject* resize_compact(AlifObject* _uStr, AlifSizeT _length) { // 107
 
 	if (ALIFUSTR_HAS_UTF8_MEMORY(_uStr)) {
 		alifMem_dataFree(ALIFUSTR_UTF8(_uStr));
-		ALIFUSTR_UTF8(_uStr) = nullptr;
+		_ALIFUSTR_UTF8(_uStr) = nullptr;
 		ALIFUSTR_UTF8_LENGTH(_uStr) = 0;
 	}
 
@@ -491,8 +500,8 @@ static AlifIntT resize_inplace(AlifObject* _uStr, AlifSizeT _length) { // 1126
 
 	if (!shareUTF8 and ALIFUSTR_HAS_UTF8_MEMORY(_uStr))
 	{
-		alifMem_objFree(ALIFUSTR_UTF8(_uStr));
-		ALIFUSTR_UTF8(_uStr) = nullptr;
+		alifMem_objFree(_ALIFUSTR_UTF8(_uStr));
+		_ALIFUSTR_UTF8(_uStr) = nullptr;
 		ALIFUSTR_UTF8_LENGTH(_uStr) = 0;
 	}
 
@@ -503,7 +512,7 @@ static AlifIntT resize_inplace(AlifObject* _uStr, AlifSizeT _length) { // 1126
 	}
 	ALIFUSTR_DATA_ANY(_uStr) = data;
 	if (shareUTF8) {
-		ALIFUSTR_UTF8(_uStr) = (char*)data;
+		_ALIFUSTR_UTF8(_uStr) = (char*)data;
 		ALIFUSTR_UTF8_LENGTH(_uStr) = _length;
 	}
 	ALIFUSTR_LENGTH(_uStr) = _length;
@@ -2497,7 +2506,7 @@ static AlifIntT uStr_fillUTF8(AlifObject* _uStr) { // 5582
 		//alifErr_noMemory();
 		return -1;
 	}
-	ALIFUSTR_UTF8(_uStr) = cache;
+	_ALIFUSTR_UTF8(_uStr) = cache;
 	ALIFUSTR_UTF8_LENGTH(_uStr) = len;
 	memcpy(cache, start, len);
 	cache[len] = '\0';
@@ -2808,7 +2817,8 @@ AlifObject* alifUStr_join(AlifObject* _separator, AlifObject* _seq) { // 9910
 	return res_;
 }
 
-AlifObject* alifUStr_joinArray(AlifObject* _separator, AlifObject* const* _items, AlifSizeT _seqLen) { // 9935
+AlifObject* alifUStr_joinArray(AlifObject* _separator,
+	AlifObject* const* _items, AlifSizeT _seqLen) { // 9935
 	AlifObject* res_ = nullptr; /* the result */
 	AlifObject* sep_ = nullptr;
 	AlifSizeT sepLen{};
@@ -3732,6 +3742,102 @@ AlifObject* alifUStr_replace(AlifObject* _str,
 
 
 
+static AlifObject* uStr_repr(AlifObject* _UStr) { // 12621
+	AlifSizeT isize = ALIFUSTR_GET_LENGTH(_UStr);
+	const void* idata = ALIFUSTR_DATA(_UStr);
+
+	/* Compute length of output, quote characters, and
+	   maximum character */
+	AlifSizeT osize = 0;
+	AlifUCS4 maxch = 127;
+	AlifSizeT squote = 0;
+	AlifSizeT dquote = 0;
+	AlifIntT ikind = ALIFUSTR_KIND(_UStr);
+	for (AlifSizeT i = 0; i < isize; i++) {
+		AlifUCS4 ch = ALIFUSTR_READ(ikind, idata, i);
+		AlifSizeT incr = 1;
+		switch (ch) {
+		case '\'': squote++; break;
+		case '"':  dquote++; break;
+		case '\\': case '\t': case '\r': case '\n':
+			incr = 2;
+			break;
+		default:
+			/* Fast-path ASCII */
+			if (ch < ' ' || ch == 0x7f)
+				incr = 4; /* \xHH */
+			else if (ch < 0x7f)
+				;
+			else if (ALIF_USTR_ISPRINTABLE(ch))
+				maxch = (ch > maxch) ? ch : maxch;
+			else if (ch < 0x100)
+				incr = 4; /* \xHH */
+			else if (ch < 0x10000)
+				incr = 6; /* \uHHHH */
+			else
+				incr = 10; /* \uHHHHHHHH */
+		}
+		if (osize > ALIF_SIZET_MAX - incr) {
+			//alifErr_setString(_alifExcOverflowError_,
+			//	"string is too long to generate repr");
+			return nullptr;
+		}
+		osize += incr;
+	}
+
+	AlifUCS4 quote = '\'';
+	AlifIntT changed = (osize != isize);
+	if (squote) {
+		changed = 1;
+		if (dquote)
+			/* Both squote and dquote present. Use squote,
+			   and escape them */
+			osize += squote;
+		else
+			quote = '"';
+	}
+	osize += 2;   /* quotes */
+
+	AlifObject* repr = alifUStr_new(osize, maxch);
+	if (repr == nullptr)
+		return nullptr;
+	AlifIntT okind = ALIFUSTR_KIND(repr);
+	void* odata = ALIFUSTR_DATA(repr);
+
+	if (!changed) {
+		ALIFUSTR_WRITE(okind, odata, 0, quote);
+
+		alifUStr_fastCopyCharacters(repr, 1,
+			_UStr, 0,
+			isize);
+
+		ALIFUSTR_WRITE(okind, odata, osize - 1, quote);
+	}
+	else {
+		switch (okind) {
+		case AlifUStrKind_::AlifUStr_1Byte_Kind:
+			ucs1Lib_repr(_UStr, quote, (AlifUCS1*)odata);
+			break;
+		case AlifUStrKind_::AlifUStr_2Byte_Kind:
+			ucs2Lib_repr(_UStr, quote, (AlifUCS2*)odata);
+			break;
+		default:
+			ucs4Lib_repr(_UStr, quote, (AlifUCS4*)odata);
+		}
+	}
+
+	return repr;
+}
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3992,6 +4098,7 @@ AlifTypeObject _alifUStrType_ = { // 15235
 	.basicSize = sizeof(AlifUStrObject),
 	.itemSize = 0,
 	.dealloc = ustr_dealloc,
+	.repr = uStr_repr,
 	.hash = (HashFunc)uStr_hash,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE |
 		ALIF_TPFLAGS_UNICODE_SUBCLASS |
