@@ -20,6 +20,7 @@ INCLUDES =  -I$(SOURCE_DIR)/Alif									\
 			-I$(SOURCE_DIR)/AlifCore/Include/Main/Atomics			\
 			-I$(SOURCE_DIR)/AlifCore/Include/Main/mimalloc			\
 			-I$(SOURCE_DIR)/AlifCore/Include/Main/StringLib			\
+			-I$(SOURCE_DIR)/AlifCore/Objects/clinic					\
 
 # مرحلة إنشاء الملفات المطلوبة
 ifeq ($(wildcard $(BUILD_DIR)),)
