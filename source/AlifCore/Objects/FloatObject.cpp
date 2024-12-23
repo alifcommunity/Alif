@@ -102,6 +102,21 @@ static AlifIntT convert_toDouble(AlifObject** _v, double* _dbl) { // 322
 	return 0;
 }
 
+static AlifObject* float_repr(AlifFloatObject* _v) { // 341
+	AlifObject* result{};
+	char* buf{};
+
+	buf = alifOS_doubleToString(ALIFFLOAT_AS_DOUBLE(_v),
+		'r', 0, ALIF_DTSF_ADD_DOT_0, nullptr);
+	if (!buf) {
+		//return alifErr_noMemory();
+		return nullptr; // alif
+	}
+	result = alifUStr_fromASCII(buf, strlen(buf));
+	alifMem_dataFree(buf);
+	return result;
+}
+
 
 static AlifHashT float_hash(AlifFloatObject* _v) { // 549
 	return _alif_hashDouble((AlifObject*)_v, _v->val);
@@ -374,6 +389,7 @@ AlifTypeObject _alifFloatType_ = { // 1847
 	.name = "عدد_عشري",
 	.basicSize = sizeof(AlifFloatObject),
 	.itemSize = 0,
+	.repr = (ReprFunc)float_repr,
 	.asNumber = &_floatAsNumber_,
 	.hash = (HashFunc)float_hash,
 	.getAttro = alifObject_genericGetAttr,

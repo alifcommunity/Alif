@@ -12372,7 +12372,7 @@ done:
 	return res;
 }
 
-void parser_test(ModuleTy _p); // test
+//void parser_test(ModuleTy _p); // alif // test
 void* alifParserEngine_parse(AlifParser* _p) { 
 	// تهيئة الكلمات المفتاحية
 	_p->keywords = reservedKeywords;
@@ -12395,158 +12395,158 @@ void* alifParserEngine_parse(AlifParser* _p) {
 		result = funcRun_rule(_p);
 	}
 
-	parser_test((ModuleTy)result); // alif // للحذف
+	//parser_test((ModuleTy)result); // alif // للحذف
 	return result;
 }
 
 
 
 /* ------------------------------------------------------------------------------------ */
-
-// test
-int spaces = 0;
-
-
-#define VISIT(name, val) visit_ ## name(val) 
-const char* operators[] = { 0, "جمع : +", "طرح : -", "ضرب : *", "قسمة : /", "باقي : */", "أس : ^",
-	"إزاحة_يسار", "إزاحة_يمين", "وحدة_او", "وحدة_او_فقط", "وحدة_و",
-	"بدون_باقي"};
-const char* unaryop[] = { 0, "عكس", "ليس", "_جمع : +", "_طرح : -", "جذر : /^"};
-
-void print_space(int _space) {
-	for (int i = 0; i < _space; i++) {
-		printf(" ");
-	}
-}
-
-void visit_constant(Constant v) {
-	print_space(spaces);
-	if (ALIFUSTR_CHECK(v)) {
-		if (alifUStr_isASCII(v)) {
-			printf("%s : %s \n", v->type->name, (const char*)ALIFUSTR_DATA(v));
-			return;
-		}
-		printf("%s : %s \n", v->type->name, alifUStr_asUTF8(v));
-	}
-	if (ALIFLONG_CHECK(v)) {
-		printf("%s : %lld \n", v->type->name, alifLong_asSizeT(v));
-		return;
-	}
-	if (ALIFFLOAT_CHECK(v)) {
-		printf("%s : %f \n", v->type->name, ALIFFLOAT_AS_DOUBLE(v));
-		return;
-	}
-}
-
-
-void visit_binop(ExprTy v) {
-	if (v->type == ExprK_::ConstantK) {
-		VISIT(constant, v->V.constant.val);
-	}
-	else if (v->type == ExprK_::UnaryOpK) {
-		print_space(spaces);
-		printf("%s\n", unaryop[v->V.unaryOp.op]);
-		VISIT(binop, v->V.unaryOp.operand);
-		spaces += 4;
-	}
-	else if (v->type == ExprK_::BinOpK) {
-		VISIT(binop, v->V.binOp.left);
-		print_space(spaces);
-		printf("%s\n", operators[v->V.binOp.op]);
-		VISIT(binop, v->V.binOp.right);
-		spaces += 4;
-	}
-}
-
-void visit_expr(ExprTy v) {
-	if (v->type == ExprK_::ConstantK) {
-		VISIT(constant, v->V.constant.val);
-		spaces -= 4;
-	}
-	else if (v->type == ExprK_::NameK) {
-		print_space(spaces);
-		printf("%s : %s \n", "اسم", alifUStr_asUTF8(v->V.name.name));
-		spaces -= 4;
-		return;
-	}
-	else if (v->type == ExprK_::BinOpK) {
-		VISIT(binop, v->V.binOp.left);
-		print_space(spaces);
-		printf("%s\n", operators[v->V.binOp.op]);
-		VISIT(binop, v->V.binOp.right);
-		spaces -= 4;
-	}
-	else if (v->type == ExprK_::JoinStrK) {
-		print_space(spaces);
-		printf("%s\n", "نص تنفيذي: ");
-		spaces += 4;
-		ExprTy js{};
-		for (int i = 0; i < v->V.joinStr.vals->size; i++) {
-			js = v->V.joinStr.vals->typedElements[i];
-			VISIT(expr, js);
-			spaces += 4;
-		}
-		spaces -= 4;
-	}
-	else if (v->type == ExprK_::FormattedValK) {
-		VISIT(expr, v->V.formattedValue.val);
-	}
-	else if (v->type == ExprK_::TupleK) {
-		print_space(spaces);
-		printf("%s\n", "مترابطة: ");
-		spaces += 4;
-		ExprTy tp{};
-		for (int i = 0; i < v->V.tuple.elts->size; i++) {
-			tp = v->V.tuple.elts->typedElements[i];
-			VISIT(expr, tp);
-			spaces += 4;
-		}
-		spaces -= 4;
-	}
-	else if (v->type == ExprK_::ListK) {
-		print_space(spaces);
-		printf("%s\n", "مصفوفة: ");
-		spaces += 4;
-		ExprTy ls{};
-		for (int i = 0; i < v->V.list.elts->size; i++) {
-			ls = v->V.list.elts->typedElements[i];
-			VISIT(expr, ls);
-			spaces += 4;
-		}
-		spaces -= 4;
-	}
-	else if (v->type == ExprK_::DictK) {
-		print_space(spaces);
-		printf("%s\n", "قاموس: ");
-		ExprTy key{};
-		ExprTy val{};
-		for (int i = 0; i < v->V.dict.keys->size; i++) {
-			if (i % 2 == 1 or i == 0)
-				printf(":-----------------------------\n");
-			key = v->V.dict.keys->typedElements[i];
-			spaces += 4;
-			VISIT(expr, key);
-			val = v->V.dict.vals->typedElements[i];
-			spaces += 4;
-			VISIT(expr, val);
-			if (i%2 == 1 or i == v->V.dict.keys->size - 1)
-				printf(":-----------------------------\n");
-		}
-		spaces -= 4;
-	}
-}
-
-void parser_test(ModuleTy _p) { // test
-	ASDLStmtSeq* m = _p->V.module.body;
-	AlifSizeT size = _p->V.module.body->size;
-
-	for (AlifSizeT i = 0; i < size; i++) {
-		printf("الحالة %lld : \n", i);
-		if (m->typedElements[i]->type == StmtK_::ExprK) {
-			spaces += 4;
-			VISIT(expr, m->typedElements[i]->V.expression.val);
-			spaces = 0;
-		}
-	}
-
-}
+//
+//// test
+//int spaces = 0;
+//
+//
+//#define VISIT(name, val) visit_ ## name(val) 
+//const char* operators[] = { 0, "جمع : +", "طرح : -", "ضرب : *", "قسمة : /", "باقي : */", "أس : ^",
+//	"إزاحة_يسار", "إزاحة_يمين", "وحدة_او", "وحدة_او_فقط", "وحدة_و",
+//	"بدون_باقي"};
+//const char* unaryop[] = { 0, "عكس", "ليس", "_جمع : +", "_طرح : -", "جذر : /^"};
+//
+//void print_space(int _space) {
+//	for (int i = 0; i < _space; i++) {
+//		printf(" ");
+//	}
+//}
+//
+//void visit_constant(Constant v) {
+//	print_space(spaces);
+//	if (ALIFUSTR_CHECK(v)) {
+//		if (alifUStr_isASCII(v)) {
+//			printf("%s : %s \n", v->type->name, (const char*)ALIFUSTR_DATA(v));
+//			return;
+//		}
+//		printf("%s : %s \n", v->type->name, alifUStr_asUTF8(v));
+//	}
+//	if (ALIFLONG_CHECK(v)) {
+//		printf("%s : %lld \n", v->type->name, alifLong_asSizeT(v));
+//		return;
+//	}
+//	if (ALIFFLOAT_CHECK(v)) {
+//		printf("%s : %f \n", v->type->name, ALIFFLOAT_AS_DOUBLE(v));
+//		return;
+//	}
+//}
+//
+//
+//void visit_binop(ExprTy v) {
+//	if (v->type == ExprK_::ConstantK) {
+//		VISIT(constant, v->V.constant.val);
+//	}
+//	else if (v->type == ExprK_::UnaryOpK) {
+//		print_space(spaces);
+//		printf("%s\n", unaryop[v->V.unaryOp.op]);
+//		VISIT(binop, v->V.unaryOp.operand);
+//		spaces += 4;
+//	}
+//	else if (v->type == ExprK_::BinOpK) {
+//		VISIT(binop, v->V.binOp.left);
+//		print_space(spaces);
+//		printf("%s\n", operators[v->V.binOp.op]);
+//		VISIT(binop, v->V.binOp.right);
+//		spaces += 4;
+//	}
+//}
+//
+//void visit_expr(ExprTy v) {
+//	if (v->type == ExprK_::ConstantK) {
+//		VISIT(constant, v->V.constant.val);
+//		spaces -= 4;
+//	}
+//	else if (v->type == ExprK_::NameK) {
+//		print_space(spaces);
+//		printf("%s : %s \n", "اسم", alifUStr_asUTF8(v->V.name.name));
+//		spaces -= 4;
+//		return;
+//	}
+//	else if (v->type == ExprK_::BinOpK) {
+//		VISIT(binop, v->V.binOp.left);
+//		print_space(spaces);
+//		printf("%s\n", operators[v->V.binOp.op]);
+//		VISIT(binop, v->V.binOp.right);
+//		spaces -= 4;
+//	}
+//	else if (v->type == ExprK_::JoinStrK) {
+//		print_space(spaces);
+//		printf("%s\n", "نص تنفيذي: ");
+//		spaces += 4;
+//		ExprTy js{};
+//		for (int i = 0; i < v->V.joinStr.vals->size; i++) {
+//			js = v->V.joinStr.vals->typedElements[i];
+//			VISIT(expr, js);
+//			spaces += 4;
+//		}
+//		spaces -= 4;
+//	}
+//	else if (v->type == ExprK_::FormattedValK) {
+//		VISIT(expr, v->V.formattedValue.val);
+//	}
+//	else if (v->type == ExprK_::TupleK) {
+//		print_space(spaces);
+//		printf("%s\n", "مترابطة: ");
+//		spaces += 4;
+//		ExprTy tp{};
+//		for (int i = 0; i < v->V.tuple.elts->size; i++) {
+//			tp = v->V.tuple.elts->typedElements[i];
+//			VISIT(expr, tp);
+//			spaces += 4;
+//		}
+//		spaces -= 4;
+//	}
+//	else if (v->type == ExprK_::ListK) {
+//		print_space(spaces);
+//		printf("%s\n", "مصفوفة: ");
+//		spaces += 4;
+//		ExprTy ls{};
+//		for (int i = 0; i < v->V.list.elts->size; i++) {
+//			ls = v->V.list.elts->typedElements[i];
+//			VISIT(expr, ls);
+//			spaces += 4;
+//		}
+//		spaces -= 4;
+//	}
+//	else if (v->type == ExprK_::DictK) {
+//		print_space(spaces);
+//		printf("%s\n", "قاموس: ");
+//		ExprTy key{};
+//		ExprTy val{};
+//		for (int i = 0; i < v->V.dict.keys->size; i++) {
+//			if (i % 2 == 1 or i == 0)
+//				printf(":-----------------------------\n");
+//			key = v->V.dict.keys->typedElements[i];
+//			spaces += 4;
+//			VISIT(expr, key);
+//			val = v->V.dict.vals->typedElements[i];
+//			spaces += 4;
+//			VISIT(expr, val);
+//			if (i%2 == 1 or i == v->V.dict.keys->size - 1)
+//				printf(":-----------------------------\n");
+//		}
+//		spaces -= 4;
+//	}
+//}
+//
+//void parser_test(ModuleTy _p) { // test
+//	ASDLStmtSeq* m = _p->V.module.body;
+//	AlifSizeT size = _p->V.module.body->size;
+//
+//	for (AlifSizeT i = 0; i < size; i++) {
+//		printf("الحالة %lld : \n", i);
+//		if (m->typedElements[i]->type == StmtK_::ExprK) {
+//			spaces += 4;
+//			VISIT(expr, m->typedElements[i]->V.expression.val);
+//			spaces = 0;
+//		}
+//	}
+//
+//}
