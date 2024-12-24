@@ -78,6 +78,14 @@
 #define FRAME_CO_NAMES  (_alifFrame_getCode(_frame)->names)
 
 
+
+
+#define LOCALS() _frame->locals // 288
+
+
+
+
+
 static inline AlifIntT _alif_enterRecursiveAlif(AlifThread* _thread) { // 368
 	return (_thread->alifRecursionRemaining-- <= 0) and
 		_alif_checkRecursiveCallAlif(_thread);

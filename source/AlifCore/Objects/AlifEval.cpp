@@ -626,6 +626,29 @@ dispatch_opcode :
 				stackPointer += 1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(STORE_NAME) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef v{};
+				v = stackPointer[-1];
+				AlifObject* name = GETITEM(FRAME_CO_NAMES, oparg);
+				AlifObject* ns = LOCALS();
+				AlifIntT err{};
+				if (ns == nullptr) {
+					//_alifErr_format(_thread, _alifExcSystemError_,
+					//	"no locals found when storing %R", name);
+					alifStackRef_close(v);
+					//if (true) goto pop_1_error;
+				}
+				if (ALIFDICT_CHECKEXACT(ns))
+					err = alifDict_setItem(ns, name, alifStackRef_asAlifObjectBorrow(v));
+				else
+					err = alifObject_setItem(ns, name, alifStackRef_asAlifObjectBorrow(v));
+				alifStackRef_close(v);
+				//if (err) goto pop_1_error;
+				stackPointer += -1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 
 		}
 

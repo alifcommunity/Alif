@@ -1305,19 +1305,18 @@ static AlifIntT compiler_visitStmt(AlifCompiler* _c, StmtTy _s) { // 3818
 	//case StmtK_::DeleteK:
 	//	VISIT_SEQ(_c, expr, _s->v.Delete.targets)
 	//		break;
-	//case StmtK_::AssignK:
-	//{
-	//	AlifSizeT n = asdl_seq_LEN(_s->v.Assign.targets);
-	//	VISIT(_c, expr, _s->v.Assign.value);
-	//	for (AlifSizeT i = 0; i < n; i++) {
-	//		if (i < n - 1) {
-	//			ADDOP_I(_c, LOC(_s), COPY, 1);
-	//		}
-	//		VISIT(_c, expr,
-	//			(expr_ty)asdl_seq_GET(_s->v.Assign.targets, i));
-	//	}
-	//	break;
-	//}
+	case StmtK_::AssignK:
+	{
+		AlifSizeT n = ASDL_SEQ_LEN(_s->V.assign.targets);
+		VISIT(_c, Expr, _s->V.assign.val);
+		for (AlifSizeT i = 0; i < n; i++) {
+			if (i < n - 1) {
+				ADDOP_I(_c, LOC(_s), COPY, 1);
+			}
+			VISIT(_c, Expr, (ExprTy)ASDL_SEQ_GET(_s->V.assign.targets, i));
+		}
+		break;
+	}
 	//case StmtK_::AugAssignK:
 	//	return codegen_augassign(_c, _s);
 	//case StmtK_::AnnAssignK:
