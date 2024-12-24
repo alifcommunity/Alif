@@ -1028,101 +1028,133 @@ const class OpcodeMetadata _alifOpcodeOpcodeMetadata_[264] = {
 	{ true, InstructionFormat::Instr_FMT_IX, HAS_ESCAPES_FLAG }, // INTERPRETER_EXIT // 20
 	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // LOAD_BUILD_CLASS // 21
 	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // LOAD_LOCALS // 22
-	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // MAKE_FUNCTION
-	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // MATCH_KEYS
-	{ true, InstructionFormat::Instr_FMT_IX, 0 }, // MATCH_MAPPING
-	{ true, InstructionFormat::Instr_FMT_IX, 0 }, // MATCH_SEQUENCE
-	{ true, InstructionFormat::Instr_FMT_IX, HAS_PURE_FLAG }, // NOP
-	{ true, InstructionFormat::Instr_FMT_IX, HAS_ESCAPES_FLAG }, // POP_EXCEPT
-	{ true, InstructionFormat::Instr_FMT_IX, HAS_PURE_FLAG }, // POP_TOP
-	{ true, InstructionFormat::Instr_FMT_IX, 0 }, // PUSH_EXC_INFO
-	{ true, InstructionFormat::Instr_FMT_IX, HAS_PURE_FLAG }, // PUSH_NULL
-	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // RETURN_GENERATOR
-	{ true, InstructionFormat::Instr_FMT_IX, 0 }, // RETURN_VALUE
-	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // SETUP_ANNOTATIONS
-	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // STORE_SLICE
-	{ true, InstructionFormat::Instr_FMT_IXC, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // STORE_SUBSCR
-	{ true, InstructionFormat::Instr_FMT_IXC00, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // TO_BOOL
-	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // UNARY_INVERT
-	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // UNARY_NEGATIVE
-	{ true, InstructionFormat::Instr_FMT_IX, HAS_PURE_FLAG }, // UNARY_NOT
-	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // WITH_EXCEPT_START
-	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // BINARY_OP
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG }, // BUILD_LIST
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // BUILD_MAP
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // BUILD_SET
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG }, // BUILD_SLICE
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG }, // BUILD_STRING
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG }, // BUILD_TUPLE
-	{ true, InstructionFormat::Instr_FMT_IBC00, HAS_ARG_FLAG | HAS_EVAL_BREAK_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // CALL
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_EVAL_BREAK_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // CALL_FUNCTION_EX
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // CALL_INTRINSIC_1
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // CALL_INTRINSIC_2
-	{ true, InstructionFormat::Instr_FMT_IBC00, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // CALL_KW
-	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // COMPARE_OP
-	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // CONTAINS_OP
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG }, // CONVERT_VALUE
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_PURE_FLAG }, // COPY
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG }, // COPY_FREE_VARS
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // DELETE_ATTR
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_FREE_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // DELETE_DEREF
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_LOCAL_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // DELETE_FAST
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // DELETE_GLOBAL
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // DELETE_NAME
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // DICT_MERGE
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // DICT_UPDATE
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG }, // EXTENDED_ARG
-	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_JUMP_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // FOR_ITER
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // GET_AWAITABLE
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // IMPORT_FROM
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // IMPORT_NAME
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG }, // IS_OP
-	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_JUMP_FLAG | HAS_EVAL_BREAK_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // JUMP_BACKWARD
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_JUMP_FLAG }, // JUMP_BACKWARD_NO_INTERRUPT
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_JUMP_FLAG }, // JUMP_FORWARD
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG }, // LIST_APPEND
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // LIST_EXTEND
-	{ true, InstructionFormat::Instr_FMT_IBC00000000, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // LOAD_ATTR
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG }, // LOAD_COMMON_CONSTANT
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_CONST_FLAG | HAS_PURE_FLAG }, // LOAD_CONST
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_FREE_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // LOAD_DEREF
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_LOCAL_FLAG | HAS_PURE_FLAG }, // LOAD_FAST
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_LOCAL_FLAG }, // LOAD_FAST_AND_CLEAR
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_LOCAL_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // LOAD_FAST_CHECK
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_LOCAL_FLAG }, // LOAD_FAST_LOAD_FAST
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_FREE_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // LOAD_FROM_DICT_OR_DEREF
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // LOAD_FROM_DICT_OR_GLOBALS
-	{ true, InstructionFormat::Instr_FMT_IBC000, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // LOAD_GLOBAL
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // LOAD_NAME
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // LOAD_SPECIAL
-	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // LOAD_SUPER_ATTR
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_FREE_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG }, // MAKE_CELL
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // MAP_ADD
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // MATCH_CLASS
-	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_JUMP_FLAG }, // POP_JUMP_IF_FALSE
-	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_JUMP_FLAG }, // POP_JUMP_IF_NONE
-	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_JUMP_FLAG }, // POP_JUMP_IF_NOT_NONE
-	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_JUMP_FLAG }, // POP_JUMP_IF_TRUE
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // RAISE_VARARGS
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // RERAISE
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_CONST_FLAG }, // RETURN_CONST
-	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_JUMP_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // SEND
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // SET_ADD
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ESCAPES_FLAG }, // SET_FUNCTION_ATTRIBUTE
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // SET_UPDATE
-	{ true, InstructionFormat::Instr_FMT_IBC000, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // STORE_ATTR
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_FREE_FLAG | HAS_ESCAPES_FLAG }, // STORE_DEREF
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_LOCAL_FLAG }, // STORE_FAST
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_LOCAL_FLAG }, // STORE_FAST_LOAD_FAST
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_LOCAL_FLAG }, // STORE_FAST_STORE_FAST
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // STORE_GLOBAL
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // STORE_NAME
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_PURE_FLAG }, // SWAP
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // UNPACK_EX
-	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // UNPACK_SEQUENCE
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ESCAPES_FLAG }, // YIELD_VALUE
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // _DO_CALL_FUNCTION_EX
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_EVAL_BREAK_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // RESUME
+	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // MAKE_FUNCTION // 23
+	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // MATCH_KEYS // 24
+	{ true, InstructionFormat::Instr_FMT_IX, 0 }, // MATCH_MAPPING // 25
+	{ true, InstructionFormat::Instr_FMT_IX, 0 }, // MATCH_SEQUENCE // 26
+	{ true, InstructionFormat::Instr_FMT_IX, HAS_PURE_FLAG }, // NOP // 27
+	{ true, InstructionFormat::Instr_FMT_IX, HAS_ESCAPES_FLAG }, // POP_EXCEPT // 28
+	{ true, InstructionFormat::Instr_FMT_IX, HAS_PURE_FLAG }, // POP_TOP // 29
+	{ true, InstructionFormat::Instr_FMT_IX, 0 }, // PUSH_EXC_INFO // 30
+	{ true, InstructionFormat::Instr_FMT_IX, HAS_PURE_FLAG }, // PUSH_NULL // 31
+	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // RETURN_GENERATOR // 32
+	{ true, InstructionFormat::Instr_FMT_IX, 0 }, // RETURN_VALUE // 33
+	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // SETUP_ANNOTATIONS // 34
+	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // STORE_SLICE // 35
+	{ true, InstructionFormat::Instr_FMT_IXC, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // STORE_SUBSCR // 36
+	{ true, InstructionFormat::Instr_FMT_IXC00, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // TO_BOOL // 37
+	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // UNARY_INVERT // 38
+	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // UNARY_NEGATIVE // 39
+	{ true, InstructionFormat::Instr_FMT_IX, HAS_PURE_FLAG }, // UNARY_NOT 40
+	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // WITH_EXCEPT_START // 41
+	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // BINARY_OP // 42
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG }, // BUILD_LIST // 43
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // BUILD_MAP // 44
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // BUILD_SET // 45
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG }, // BUILD_SLICE // 46
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG }, // BUILD_STRING // 47
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG }, // BUILD_TUPLE // 48
+	{ true, InstructionFormat::Instr_FMT_IBC00, HAS_ARG_FLAG | HAS_EVAL_BREAK_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // CALL // 49
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_EVAL_BREAK_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // CALL_FUNCTION_EX // 50
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // CALL_INTRINSIC_1 // 51
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // CALL_INTRINSIC_2 // 52
+	{ true, InstructionFormat::Instr_FMT_IBC00, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // CALL_KW // 53
+	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // COMPARE_OP // 54
+	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // CONTAINS_OP // 55
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG }, // CONVERT_VALUE // 56
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_PURE_FLAG }, // COPY // 57
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG }, // COPY_FREE_VARS // 58
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // DELETE_ATTR // 59
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_FREE_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // DELETE_DEREF // 60
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_LOCAL_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // DELETE_FAST // 61
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // DELETE_GLOBAL // 62
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // DELETE_NAME // 63
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // DICT_MERGE // 64
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // DICT_UPDATE // 65
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG }, // EXTENDED_ARG // 66
+	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_JUMP_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // FOR_ITER // 67
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // GET_AWAITABLE // 68
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // IMPORT_FROM // 69
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // IMPORT_NAME // 70
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG }, // IS_OP // 71
+	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_JUMP_FLAG | HAS_EVAL_BREAK_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // JUMP_BACKWARD // 72
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_JUMP_FLAG }, // JUMP_BACKWARD_NO_INTERRUPT // 73
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_JUMP_FLAG }, // JUMP_FORWARD // 74
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG }, // LIST_APPEND // 75
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // LIST_EXTEND // 76
+	{ true, InstructionFormat::Instr_FMT_IBC00000000, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // LOAD_ATTR // 77
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG }, // LOAD_COMMON_CONSTANT // 78
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_CONST_FLAG | HAS_PURE_FLAG }, // LOAD_CONST // 79
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_FREE_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // LOAD_DEREF // 80
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_LOCAL_FLAG | HAS_PURE_FLAG }, // LOAD_FAST // 81
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_LOCAL_FLAG }, // LOAD_FAST_AND_CLEAR // 82
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_LOCAL_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // LOAD_FAST_CHECK // 83
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_LOCAL_FLAG }, // LOAD_FAST_LOAD_FAST // 84
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_FREE_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // LOAD_FROM_DICT_OR_DEREF // 85
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // LOAD_FROM_DICT_OR_GLOBALS // 86
+	{ true, InstructionFormat::Instr_FMT_IBC000, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // LOAD_GLOBAL // 87
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // LOAD_NAME // 88
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // LOAD_SPECIAL // 89
+	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // LOAD_SUPER_ATTR // 90
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_FREE_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG }, // MAKE_CELL // 91
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // MAP_ADD // 92
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // MATCH_CLASS // 93
+	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_JUMP_FLAG }, // POP_JUMP_IF_FALSE // 94
+	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_JUMP_FLAG }, // POP_JUMP_IF_NONE // 95
+	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_JUMP_FLAG }, // POP_JUMP_IF_NOT_NONE // 96
+	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_JUMP_FLAG }, // POP_JUMP_IF_TRUE // 97
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // RAISE_VARARGS // 98
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // RERAISE // 99
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_CONST_FLAG }, // RETURN_CONST // 100
+	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_JUMP_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // SEND // 101
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // SET_ADD // 102
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ESCAPES_FLAG }, // SET_FUNCTION_ATTRIBUTE // 103
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // SET_UPDATE // 104
+	{ true, InstructionFormat::Instr_FMT_IBC000, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // STORE_ATTR // 105
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_FREE_FLAG | HAS_ESCAPES_FLAG }, // STORE_DEREF // 106
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_LOCAL_FLAG }, // STORE_FAST // 107
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_LOCAL_FLAG }, // STORE_FAST_LOAD_FAST // 108
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_LOCAL_FLAG }, // STORE_FAST_STORE_FAST // 109
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // STORE_GLOBAL // 110
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // STORE_NAME // 111
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_PURE_FLAG }, // SWAP // 112
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // UNPACK_EX // 113
+	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // UNPACK_SEQUENCE // 114
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ESCAPES_FLAG }, // YIELD_VALUE // 115
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // _DO_CALL_FUNCTION_EX // 116
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{false, -1},
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_EVAL_BREAK_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // RESUME // 149
 	{ true, InstructionFormat::Instr_FMT_IXC, HAS_EXIT_FLAG }, // BINARY_OP_ADD_FLOAT
 	{ true, InstructionFormat::Instr_FMT_IXC, HAS_EXIT_FLAG | HAS_ERROR_FLAG }, // BINARY_OP_ADD_INT
 	{ true, InstructionFormat::Instr_FMT_IXC, HAS_EXIT_FLAG | HAS_ERROR_FLAG }, // BINARY_OP_ADD_UNICODE
@@ -1198,8 +1230,18 @@ const class OpcodeMetadata _alifOpcodeOpcodeMetadata_[264] = {
 	{ true, InstructionFormat::Instr_FMT_IXC00, HAS_EXIT_FLAG }, // TO_BOOL_STR
 	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_DEOPT_FLAG }, // UNPACK_SEQUENCE_LIST
 	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_DEOPT_FLAG }, // UNPACK_SEQUENCE_TUPLE
-	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_DEOPT_FLAG }, // UNPACK_SEQUENCE_TWO_TUPLE
-	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG }, // INSTRUMENTED_END_FOR
+	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_DEOPT_FLAG }, // UNPACK_SEQUENCE_TWO_TUPLE // 225
+	{ false, -1 },
+	{ false, -1 },
+	{ false, -1 },
+	{ false, -1 },
+	{ false, -1 },
+	{ false, -1 },
+	{ false, -1 },
+	{ false, -1 },
+	{ false, -1 },
+	{ false, -1 },
+	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG }, // INSTRUMENTED_END_FOR // 236
 	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG }, // INSTRUMENTED_END_SEND
 	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG }, // INSTRUMENTED_LOAD_SUPER_ATTR
 	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // INSTRUMENTED_FOR_ITER
@@ -1217,16 +1259,16 @@ const class OpcodeMetadata _alifOpcodeOpcodeMetadata_[264] = {
 	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // INSTRUMENTED_YIELD_VALUE
 	{ true, InstructionFormat::Instr_FMT_IBC00, HAS_ARG_FLAG | HAS_EVAL_BREAK_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // INSTRUMENTED_CALL
 	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_EVAL_BREAK_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // INSTRUMENTED_JUMP_BACKWARD
-	{ true, InstructionFormat::Instr_FMT_IX, HAS_ESCAPES_FLAG }, // INSTRUMENTED_LINE
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG }, // ENTER_EXECUTOR
-	{ true, -1, HAS_ARG_FLAG | HAS_JUMP_FLAG | HAS_EVAL_BREAK_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // JUMP
-	{ true, -1, HAS_ARG_FLAG | HAS_JUMP_FLAG }, // JUMP_NO_INTERRUPT
-	{ true, -1, HAS_ARG_FLAG | HAS_LOCAL_FLAG | HAS_PURE_FLAG }, // LOAD_CLOSURE
-	{ true, -1, HAS_PURE_FLAG }, // POP_BLOCK
-	{ true, -1, HAS_PURE_FLAG | HAS_ARG_FLAG }, // SETUP_CLEANUP
-	{ true, -1, HAS_PURE_FLAG | HAS_ARG_FLAG }, // SETUP_FINALLY
-	{ true, -1, HAS_PURE_FLAG | HAS_ARG_FLAG }, // SETUP_WITH
-	{ true, -1, HAS_ARG_FLAG | HAS_LOCAL_FLAG }, // STORE_FAST_MAYBE_NULL
+	{ true, InstructionFormat::Instr_FMT_IX, HAS_ESCAPES_FLAG }, // INSTRUMENTED_LINE // 254
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG }, // ENTER_EXECUTOR // 255
+	{ true, -1, HAS_ARG_FLAG | HAS_JUMP_FLAG | HAS_EVAL_BREAK_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // JUMP // 256
+	{ true, -1, HAS_ARG_FLAG | HAS_JUMP_FLAG }, // JUMP_NO_INTERRUPT // 257
+	{ true, -1, HAS_ARG_FLAG | HAS_LOCAL_FLAG | HAS_PURE_FLAG }, // LOAD_CLOSURE // 258
+	{ true, -1, HAS_PURE_FLAG }, // POP_BLOCK // 259
+	{ true, -1, HAS_PURE_FLAG | HAS_ARG_FLAG }, // SETUP_CLEANUP // 260
+	{ true, -1, HAS_PURE_FLAG | HAS_ARG_FLAG }, // SETUP_FINALLY // 261
+	{ true, -1, HAS_PURE_FLAG | HAS_ARG_FLAG }, // SETUP_WITH // 262
+	{ true, -1, HAS_ARG_FLAG | HAS_LOCAL_FLAG }, // STORE_FAST_MAYBE_NULL // 263
 };
 #endif
 

@@ -509,6 +509,57 @@ dispatch_opcode :
 				stackPointer += -1 - oparg;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(COMPARE_OP) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 2;
+				PREDICTED(COMPARE_OP);
+				AlifCodeUnit* thisInstr = nextInstr - 2;
+				AlifStackRef left{};
+				AlifStackRef right{};
+				AlifStackRef res{};
+				// _SPECIALIZE_COMPARE_OP
+				right = stackPointer[-1];
+				left = stackPointer[-2];
+				{
+					uint16_t counter = read_u16(&thisInstr[1].cache);
+#if ENABLE_SPECIALIZATION
+					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
+						nextOnstr = thisInstr;
+						_alifSpecialize_compareOp(left, right, nextInstr, oparg);
+						DISPATCH_SAME_OPARG();
+					}
+					OPCODE_DEFERRED_INC(COMPARE_OP);
+					ADVANCE_ADAPTIVE_COUNTER(thisInstr[1].counter);
+#endif  /* ENABLE_SPECIALIZATION */
+				}
+				// _COMPARE_OP
+				{
+					AlifObject* leftObj = alifStackRef_asAlifObjectBorrow(left);
+					AlifObject* rightObj = alifStackRef_asAlifObjectBorrow(right);
+					AlifObject* resObj = alifObject_richCompare(leftObj, rightObj, oparg >> 5);
+					alifStackRef_close(left);
+					alifStackRef_close(right);
+					//if (res_o == nullptr) goto pop_2_error;
+					if (oparg & 16) {
+						AlifIntT resBool = alifObject_isTrue(resObj);
+						ALIF_DECREF(resObj);
+						//if (res_bool < 0) goto pop_2_error;
+						resBool ? res = ALIFSTACKREF_TRUE : res = ALIFSTACKREF_FALSE;
+					}
+					else {
+						res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(resObj);
+					}
+				}
+				stackPointer[-2] = res;
+				stackPointer += -1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
+			TARGET(JUMP_FORWARD) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				JUMPBY(oparg);
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(LIST_EXTEND) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;
@@ -557,45 +608,18 @@ dispatch_opcode :
 				stackPointer += 1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
-			TARGET(RESUME) {
-				_frame->instrPtr = nextInstr;
-				nextInstr += 1;
-				PREDICTED(RESUME);
-				AlifCodeUnit* thisInstr = nextInstr - 1;
-				// _MAYBE_INSTRUMENT
-				{
-					if (_thread->tracing == 0) {
-						uintptr_t globalVersion = alifAtomic_loadUintptrRelaxed(&_thread->evalBreaker) & ~ALIF_EVAL_EVENTS_MASK;
-						uintptr_t codeVersion = alifAtomic_loadUintptrAcquire(&_alifFrame_getCode(_frame)->instrumentationVersion);
-						if (codeVersion != globalVersion) {
-							AlifIntT err = _alif_instrument(_alifFrame_getCode(_frame), _thread->interpreter);
-							if (err) {
-								//goto error;
-							}
-							nextInstr = thisInstr;
-							DISPATCH();
-						}
-					}
-				}
-				// _QUICKEN_RESUME
-				{
+			TARGET(POP_JUMP_IF_FALSE) {
+				AlifCodeUnit* thisInstr = _frame->instrPtr = nextInstr;
+				nextInstr += 2;
+				AlifStackRef cond{};
+				/* Skip 1 cache entry */
+				cond = stackPointer[-1];
+				AlifIntT flag = ALIFSTACKREF_IS(cond, ALIFSTACKREF_FALSE);
 #if ENABLE_SPECIALIZATION
-					if (_thread->tracing == 0 and thisInstr->op.code == RESUME) {
-						alifAtomic_storeUint8Relaxed(thisInstr->op.code, RESUME_CHECK);
-					}
-#endif  /* ENABLE_SPECIALIZATION */
-				}
-				// _CHECK_PERIODIC_IF_NOT_YIELD_FROM
-				{
-					if ((oparg & RESUME_OPARG_LOCATION_MASK) < RESUME_AFTER_YIELD_FROM) {
-						//ALIF_CHECK_EMSCRIPTEN_SIGNALS_PERIODICALLY();
-						QSBR_QUIESCENT_STATE(_thread); \
-							if (alifAtomic_loadUintptrRelaxed(&_thread->evalBreaker) & ALIF_EVAL_EVENTS_MASK) {
-								//AlifIntT err = _alif_handlePending(_thread);
-								//if (err != 0) goto error;
-							}
-					}
-				}
+				this_instr[1].cache = (thisInstr[1].cache << 1) | flag;
+#endif
+				JUMPBY(oparg * flag);
+				stackPointer += -1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
 			TARGET(RETURN_CONST) {
@@ -649,7 +673,47 @@ dispatch_opcode :
 				stackPointer += -1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
-
+			TARGET(RESUME) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				PREDICTED(RESUME);
+				AlifCodeUnit* thisInstr = nextInstr - 1;
+				// _MAYBE_INSTRUMENT
+				{
+					if (_thread->tracing == 0) {
+						uintptr_t globalVersion = alifAtomic_loadUintptrRelaxed(&_thread->evalBreaker) & ~ALIF_EVAL_EVENTS_MASK;
+						uintptr_t codeVersion = alifAtomic_loadUintptrAcquire(&_alifFrame_getCode(_frame)->instrumentationVersion);
+						if (codeVersion != globalVersion) {
+							AlifIntT err = _alif_instrument(_alifFrame_getCode(_frame), _thread->interpreter);
+							if (err) {
+								//goto error;
+							}
+							nextInstr = thisInstr;
+							DISPATCH();
+						}
+					}
+				}
+				// _QUICKEN_RESUME
+				{
+#if ENABLE_SPECIALIZATION
+					if (_thread->tracing == 0 and thisInstr->op.code == RESUME) {
+						alifAtomic_storeUint8Relaxed(thisInstr->op.code, RESUME_CHECK);
+					}
+#endif  /* ENABLE_SPECIALIZATION */
+				}
+				// _CHECK_PERIODIC_IF_NOT_YIELD_FROM
+				{
+					if ((oparg & RESUME_OPARG_LOCATION_MASK) < RESUME_AFTER_YIELD_FROM) {
+						//ALIF_CHECK_EMSCRIPTEN_SIGNALS_PERIODICALLY();
+						QSBR_QUIESCENT_STATE(_thread); \
+							if (alifAtomic_loadUintptrRelaxed(&_thread->evalBreaker) & ALIF_EVAL_EVENTS_MASK) {
+								//AlifIntT err = _alif_handlePending(_thread);
+								//if (err != 0) goto error;
+							}
+					}
+				}
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 		}
 
 	}

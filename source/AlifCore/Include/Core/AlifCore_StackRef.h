@@ -40,6 +40,12 @@ static const AlifStackRef _alifStackRefNull_ = { .bits = 0 };
 
 #define ALIFSTACKREF_ISNULL(_stackRef) ((_stackRef).bits == _alifStackRefNull_.bits) // 68
 
+#define ALIFSTACKREF_TRUE AlifStackRef({.bits = ((uintptr_t)&_alifTrueClass_) | ALIF_TAG_DEFERRED }) // 72
+#define ALIFSTACKREF_FALSE AlifStackRef({.bits = ((uintptr_t)&_alifFalseClass_) | ALIF_TAG_DEFERRED }) // 78
+
+#define ALIFSTACKREF_IS(_a, _b) (_a.bits == _b.bits) // 91
+
+
 #define ALIFSTACKREF_ISDEFERRED(ref) (((ref).bits & ALIF_TAG_BITS) == ALIF_TAG_DEFERRED) // 93
 
 static inline AlifObject* alifStackRef_asAlifObjectBorrow(AlifStackRef _stackRef) { // 99

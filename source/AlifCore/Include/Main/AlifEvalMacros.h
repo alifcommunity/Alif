@@ -57,6 +57,12 @@
         oparg = word.op.arg; \
     } while (0)
 
+
+
+#define JUMPBY(_x)       (nextInstr += (_x)) // 164
+#define SKIP_OVER(_x)    (nextInstr += (_x))
+
+
  // 193
 #define PREDICT_ID(_op)          PRED_##_op
 #define PREDICTED(_op)           PREDICT_ID(_op):

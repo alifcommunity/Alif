@@ -216,7 +216,7 @@ void alifType_modified(AlifTypeObject*); // 416
 
 AlifObject* alifObject_repr(AlifObject*); // 419
 AlifObject* alifObject_str(AlifObject*); // 420
-
+AlifObject* alifObject_richCompare(AlifObject*, AlifObject*, AlifIntT); // 423
 AlifIntT alifObject_richCompareBool(AlifObject* , AlifObject* , AlifIntT ); // 424
 AlifObject* alifObject_getAttrString(AlifObject*, const char* ); // 425
 AlifIntT alifObject_setAttrString(AlifObject*, const char*, AlifObject*); // 426
