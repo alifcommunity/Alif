@@ -8751,7 +8751,7 @@ static StmtTy elifStmt_rule(AlifParser* _p) {
 
 			AlifIntT endLineNo = token_->endLineNo;
 			AlifIntT endColOffset = token_->endColOffset;
-			alifAST_if(a_, b_, c_, EXTRA);
+			res = alifAST_if(a_, b_, c_, EXTRA);
 			if (res == nullptr
 				/*and alifErr_occurred()*/)
 			{

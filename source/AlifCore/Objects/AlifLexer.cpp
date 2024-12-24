@@ -231,8 +231,8 @@ static AlifIntT tokGet_normalMode(TokenState* _tokState,
 	AlifIntT c_{};
 	AlifIntT blankLine{}, nonASCII{};
 
-	const char* pStart{};
-	const char* pEnd{};
+	const char* pStart = nullptr;
+	const char* pEnd = nullptr;
 
 nextline:
 	_tokState->start = nullptr;
@@ -248,16 +248,16 @@ nextline:
 
 		for (;;) {
 			c_ = tok_nextChar(_tokState);
-			if (c_ == L' ') { col++; altCol++; }
-			else if (c_ == L'\t')
+			if (c_ == ' ') { col++; altCol++; }
+			else if (c_ == '\t')
 			{
 				col = (col / _tokState->tabSize + 1) * _tokState->tabSize;
 				altCol = (altCol / ALTTABSIZE + 1) * ALTTABSIZE;
 			}
-			else if (c_ == L'\014') {/* Control-L (formfeed) */
+			else if (c_ == '\014') {/* Control-L (formfeed) */
 				col = altCol = 0; /* For Emacs users */
 			}
-			else if (c_ == L'\\') {
+			else if (c_ == '\\') {
 				contLineCol = contLineCol ? contLineCol : col;
 				if ((c_ = tok_continuationLine(_tokState)) == -1)
 					return MAKE_TOKEN(ERRORTOKEN);
@@ -265,8 +265,8 @@ nextline:
 			else break;
 		}
 		tok_backup(_tokState, c_);
-		if (c_ == L'#' or c_ == L'\n' or c_ == L'\r') {
-			if (col == 0 and c_ == L'\n' and _tokState->prompt != nullptr) {
+		if (c_ == '#' or c_ == '\n' or c_ == '\r') {
+			if (col == 0 and c_ == '\n' and _tokState->prompt != nullptr) {
 				blankLine = 0;
 			}
 			else if (_tokState->prompt != nullptr and _tokState->lineNo == 1) {
@@ -296,7 +296,7 @@ nextline:
 				}
 				_tokState->pendInd++;
 				_tokState->indStack[++_tokState->indent] = col;
-				_tokState->alterIndStack[++_tokState->indent] = altCol;
+				_tokState->alterIndStack[_tokState->indent] = altCol;
 			}
 			else {
 				/* col < tok->indstack[tok->indent] */
@@ -466,7 +466,7 @@ again:
 			}
 
 			c_ = tok_nextChar(_tokState);
-			if (c_ == L'"' or c_ == L'\'') {
+			if (c_ == '"' or c_ == '\'') {
 				if (f_) goto fStringQuote;
 				goto letterQuote;
 			}
@@ -503,10 +503,10 @@ again:
 		return MAKE_TOKEN(NAME);
 	}
 
-	if (c_ == L'\r') { c_ = tok_nextChar(_tokState); }
+	if (c_ == '\r') { c_ = tok_nextChar(_tokState); }
 
 	/* Newline */
-	if (c_ == L'\n') {
+	if (c_ == '\n') {
 		_tokState->atBeginOfLine = 1;
 		if (blankLine or _tokState->level > 0) {
 			if (_tokState->tokExtraTokens) {
@@ -533,15 +533,15 @@ again:
 	}
 
 	/* Period or number starting with period? */
-	if (c_ == L'.') {
+	if (c_ == '.') {
 
 		c_ = tok_nextChar(_tokState);
 		if (ALIF_ISDIGIT(c_)) {
 			goto fraction;
 		}
-		else if (c_ == L'.') {
+		else if (c_ == '.') {
 			c_ = tok_nextChar(_tokState);
-			if (c_ == L'.') {
+			if (c_ == '.') {
 				pStart = _tokState->start;
 				pEnd = _tokState->cur;
 				return MAKE_TOKEN(ELLIPSIS);
@@ -562,13 +562,13 @@ again:
 
 	/* Number */
 	if (ALIF_ISDIGIT(c_)) {
-		if (c_ == L'0') {
+		if (c_ == '0') {
 			/* Hex or Octal or Binary */
 			c_ = tok_nextChar(_tokState);
 			if (c_ == L'ه') {
 				c_ = tok_nextChar(_tokState);
 				do {
-					if (c_ == L'_') {
+					if (c_ == '_') {
 						c_ = tok_nextChar(_tokState);
 					}
 					if (!ALIF_ISXDIGIT(c_)) {
@@ -578,7 +578,7 @@ again:
 					do {
 						c_ = tok_nextChar(_tokState);
 					} while (ALIF_ISXDIGIT(c_));
-				} while (c_ == L'_');
+				} while (c_ == '_');
 				//if (!verify_endOfNumber(_tokState, c_, L"ستعشري")) {
 				//	return MAKE_TOKEN(ERRORTOKEN);
 				//}
@@ -587,8 +587,8 @@ again:
 				// Octal
 				c_ = tok_nextChar(_tokState);
 				do {
-					if (c_ == L'_') { c_ = tok_nextChar(_tokState); }
-					if (c_ < L'0' or c_ >= L'8') {
+					if (c_ == '_') { c_ = tok_nextChar(_tokState); }
+					if (c_ < '0' or c_ >= '8') {
 						if (ALIF_ISDIGIT(c_)) {
 							//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, L"رقم ثماني غير صحيح '%wcs'", wcs));
 						}
@@ -599,8 +599,8 @@ again:
 					}
 					do {
 						c_ = tok_nextChar(_tokState);
-					} while (L'0' <= c_ and c_ < L'8');
-				} while (c_ == L'-');
+					} while ('0' <= c_ and c_ < '8');
+				} while (c_ == '-');
 				if (ALIF_ISDIGIT(c_)) {
 					//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, L"رقم ثماني غير صحيح '%wcs'", wcs));
 				}
@@ -649,7 +649,7 @@ again:
 			if (c_ == 0) return MAKE_TOKEN(ERRORTOKEN);
 			{
 				/* float number */
-				if (c_ == L'.') {
+				if (c_ == '.') {
 					c_ = tok_nextChar(_tokState);
 				fraction:
 					// Fraction
@@ -663,7 +663,7 @@ again:
 				exponent:
 					e = c_;
 					c_ = tok_nextChar(_tokState);
-					if (c_ == L'+' or c_ == L'-') {
+					if (c_ == '+' or c_ == '-') {
 						c_ = tok_nextChar(_tokState);
 						if (!ALIF_ISDIGIT(c_)) {
 							tok_backup(_tokState, c_);
