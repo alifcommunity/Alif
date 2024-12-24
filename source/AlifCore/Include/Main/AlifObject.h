@@ -508,6 +508,10 @@ AlifObject* alifObject_genericGetAttrWithDict(AlifObject*, AlifObject*, AlifObje
 
 AlifIntT alifObject_genericSetAttrWithDict(AlifObject*, AlifObject*, AlifObject*, AlifObject*); // 301
 
+AlifObject* _alifObject_functionStr(AlifObject*); // 304
+
+
+
 
 // 338
 #define ALIF_SETREF(_dst, _src) \

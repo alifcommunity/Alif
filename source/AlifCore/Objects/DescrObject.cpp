@@ -12,6 +12,87 @@
 
 
 
+static AlifIntT descr_check(AlifDescrObject* descr, AlifObject* obj) { // 78
+	if (!ALIFOBJECT_TYPECHECK(obj, descr->type)) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"descriptor '%V' for '%.100s' objects "
+		//	"doesn't apply to a '%.100s' object",
+		//	descr_name((AlifDescrObject*)descr), "?",
+		//	descr->type->name,
+		//	ALIF_TYPE(obj)->name);
+		return -1;
+	}
+	return 0;
+}
+
+
+
+static AlifObject* method_get(AlifObject* self, AlifObject* obj, AlifObject* type) { // 136
+	AlifMethodDescrObject* descr = (AlifMethodDescrObject*)self;
+	if (obj == nullptr) {
+		return ALIF_NEWREF(descr);
+	}
+	if (descr_check((AlifDescrObject*)descr, obj) < 0) {
+		return nullptr;
+	}
+	if (descr->method->flags & METHOD_METHOD) {
+		if (ALIFTYPE_CHECK(type)) {
+			return alifCPPMethod_new(descr->method, obj, nullptr, descr->common.type);
+		}
+		else {
+			//alifErr_format(_alifExcTypeError_,
+			//	"descriptor '%V' needs a type, not '%s', as arg 2",
+			//	descr_name((AlifDescrObject*)descr),
+			//	ALIF_TYPE(type)->name);
+			return nullptr;
+		}
+	}
+	else {
+		return ALIFCPPFUNCTION_NEWEX(descr->method, obj, nullptr);
+	}
+}
+
+
+
+static inline AlifIntT method_checkArgs(AlifObject* func,
+	AlifObject* const* args, AlifSizeT nargs, AlifObject* kwnames) { // 265
+	if (nargs < 1) {
+		AlifObject* funcstr = _alifObject_functionStr(func);
+		if (funcstr != nullptr) {
+			//alifErr_format(_alifExcTypeError_,
+			//	"unbound method %U needs an argument", funcstr);
+			ALIF_DECREF(funcstr);
+		}
+		return -1;
+	}
+	AlifObject* self = args[0];
+	if (descr_check((AlifDescrObject*)func, self) < 0) {
+		return -1;
+	}
+	if (kwnames and ALIFTUPLE_GET_SIZE(kwnames)) {
+		AlifObject* funcstr = _alifObject_functionStr(func);
+		if (funcstr != nullptr) {
+			//alifErr_format(_alifExcTypeError_,
+			//	"%U takes no keyword arguments", funcstr);
+			ALIF_DECREF(funcstr);
+		}
+		return -1;
+	}
+	return 0;
+}
+
+
+typedef void (*FuncPtr)(void); // 294
+
+static inline FuncPtr method_enterCall(AlifThread* _thread, AlifObject* _func) { // 296
+	if (_alif_enterRecursiveCallThread(_thread, " while calling a Alif object")) {
+		return nullptr;
+	}
+	return (FuncPtr)((AlifMethodDescrObject*)_func)->method->method;
+}
+
+
+
 
 static AlifObject* method_vectorCallO(AlifObject* _func, AlifObject* const* _args,
 	AlifUSizeT _nargsf, AlifObject* _kwnames) { // 452
@@ -59,7 +140,7 @@ AlifTypeObject _alifMethodDescrType_ = { // 716
 	//.methods = descr_methods,
 	//.members = descr_members,
 	//.getSet = method_getset,
-	//.descrGet = method_get,
+	.descrGet = method_get,
 };
 
 

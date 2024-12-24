@@ -10,7 +10,8 @@ static AlifObject* cfunction_vectorCallFastCallKeywords(AlifObject*,
 	AlifObject* const*, AlifUSizeT, AlifObject*); // 20
 
 
-
+static AlifObject* cfunction_vectorCallO(AlifObject*,
+	AlifObject* const*, AlifUSizeT, AlifObject*); // 26
 
 
 
@@ -39,7 +40,7 @@ AlifObject* alifCPPMethod_new(AlifMethodDef* _ml,
 		//vectorCall = cfunction_vectorCallNoArgs;
 		break;
 	case METHOD_O:
-		//vectorCall = cfunction_vectorCallO;
+		vectorCall = cfunction_vectorCallO;
 		break;
 	case METHOD_METHOD | METHOD_FASTCALL | METHOD_KEYWORDS:
 		//vectorCall = cfunction_vectorCallFastCallKeyWordsMethod;
@@ -119,6 +120,20 @@ AlifTypeObject _alifCPPMethodType_ = { // 368
 };
 
 
+static inline AlifIntT cfunction_checkKWArgs(AlifThread* tstate,
+	AlifObject* func, AlifObject* kwnames) { // 382
+	if (kwnames and ALIFTUPLE_GET_SIZE(kwnames)) {
+		AlifObject* funcstr = _alifObject_functionStr(func);
+		if (funcstr != nullptr) {
+			//_alifErr_format(tstate, _alifExcTypeError_,
+			//	"%U takes no keyword arguments", funcstr);
+			ALIF_DECREF(funcstr);
+		}
+		return -1;
+	}
+	return 0;
+}
+
 
 
 typedef void (*FuncPtr)(void);
@@ -144,5 +159,38 @@ static AlifObject* cfunction_vectorCallFastCallKeywords(AlifObject* _func,
 	}
 	AlifObject* result = meth(ALIFCPPFUNCTION_GET_SELF(_func), _args, nargs, _kwnames);
 	_alif_leaveRecursiveCallThread(tstate);
+	return result;
+}
+
+
+
+
+
+
+
+
+static AlifObject* cfunction_vectorCallO(AlifObject* _func, AlifObject* const* _args,
+	AlifUSizeT _nargsf, AlifObject* _kwnames) { // 490
+	AlifThread* thread = _alifThread_get();
+	if (cfunction_checkKWArgs(thread, _func, _kwnames)) {
+		return nullptr;
+	}
+	AlifSizeT nargs = ALIFVECTORCALL_NARGS(_nargsf);
+	if (nargs != 1) {
+		AlifObject* funcstr = _alifObject_functionStr(_func);
+		if (funcstr != nullptr) {
+			//_alifErr_format(thread, _alifExcTypeError_,
+			//	"%U takes exactly one argument (%zd given)", funcstr, nargs);
+			//ALIF_DECREF(funcstr);
+		}
+		return nullptr;
+	}
+	AlifCPPFunction meth = (AlifCPPFunction)cfunction_enterCall(thread, _func);
+	if (meth == nullptr) {
+		return nullptr;
+	}
+	AlifObject* result = ALIFCPPFUNCTION_TRAMPOLINECALL(
+		meth, ALIFCPPFUNCTION_GET_SELF(_func), _args[0]);
+	_alif_leaveRecursiveCallThread(thread);
 	return result;
 }

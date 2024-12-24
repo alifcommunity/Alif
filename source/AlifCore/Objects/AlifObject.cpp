@@ -183,6 +183,38 @@ AlifObject* alifObject_str(AlifObject* _v) { // 711
 	return res_;
 }
 
+AlifObject* _alifObject_functionStr(AlifObject* _x) { // 886
+	AlifObject* qualname{};
+	AlifIntT ret = alifObject_getOptionalAttr(_x, &ALIF_ID(__qualname__), &qualname);
+	if (qualname == nullptr) {
+		if (ret < 0) {
+			return nullptr;
+		}
+		return alifObject_str(_x);
+	}
+	AlifObject* module{};
+	AlifObject* result = nullptr;
+	ret = alifObject_getOptionalAttr(_x, &ALIF_ID(__module__), &module);
+	if (module != nullptr and module != ALIF_NONE) {
+		ret = alifObject_richCompareBool(module, &ALIF_ID(Builtins), ALIF_NE);
+		if (ret < 0) {
+			// error
+			goto done;
+		}
+		if (ret > 0) {
+			result = alifUStr_fromFormat("%S.%S()", module, qualname);
+			goto done;
+		}
+	}
+	else if (ret < 0) {
+		goto done;
+	}
+	result = alifUStr_fromFormat("%S()", qualname);
+done:
+	ALIF_DECREF(qualname);
+	ALIF_XDECREF(module);
+	return result;
+}
 
 
 

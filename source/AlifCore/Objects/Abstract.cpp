@@ -263,6 +263,7 @@ AlifObject* alifObject_format(AlifObject* _obj, AlifObject* _formatSpec) { // 83
 		if (ALIFLONG_CHECKEXACT(_obj)) {
 			return alifObject_str(_obj);
 		}
+		// لماذا العدد العشري لا يضف الى التنفيذ السريع هنا !!
 	}
 
 	/* If no format_spec is provided, use an empty string */

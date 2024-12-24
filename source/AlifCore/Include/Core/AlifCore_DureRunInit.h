@@ -672,11 +672,14 @@
 	INIT_ID(__hash__), \
 	INIT_ID(__lengthHint__), \
 	INIT_ID(__loader__), \
+	INIT_ID(__module__), \
     INIT_ID(__name__), \
     INIT_ID(__new__), \
     INIT_ID(__origClass__), \
 	INIT_ID(__package__), \
+	INIT_ID(__qualname__), \
 	INIT_ID(__spec__), \
+	INIT_ID(Builtins), \
 	INIT_ID(End), \
 	INIT_ID(File), \
 	INIT_ID(Flush), \
