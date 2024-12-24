@@ -1179,6 +1179,77 @@ AlifTypeObject _alifBaseObjectType_ = { // 7453
 
 
 
+static AlifIntT type_addMethod(AlifTypeObject* type, AlifMethodDef* meth) { // 7496
+	AlifObject* descr{};
+	AlifIntT isdescr = 1;
+	if (meth->flags & METHOD_CLASS) {
+		if (meth->flags & METHOD_STATIC) {
+			//alifErr_setString(_alifExcValueError_,
+			//	"method cannot be both class and static");
+			return -1;
+		}
+		descr = alifDescr_newClassMethod(type, meth);
+	}
+	else if (meth->flags & METHOD_STATIC) {
+		AlifObject* cfunc = ALIFCPPFUNCTION_NEWEX(meth, (AlifObject*)type, nullptr);
+		if (cfunc == nullptr) {
+			return -1;
+		}
+		descr = alifStaticMethod_new(cfunc);
+		isdescr = 0;
+		ALIF_DECREF(cfunc);
+	}
+	else {
+		descr = alifDescr_newMethod(type, meth);
+	}
+	if (descr == nullptr) {
+		return -1;
+	}
+
+	AlifObject* name{};
+	if (isdescr) {
+		name = ALIFDESCR_NAME(descr);
+	}
+	else {
+		name = alifUStr_fromString(meth->name);
+		if (name == nullptr) {
+			ALIF_DECREF(descr);
+			return -1;
+		}
+	}
+
+	AlifIntT err{};
+	AlifObject* dict = lookup_tpDict(type);
+	if (!(meth->flags & METHOD_COEXIST)) {
+		err = alifDict_setDefaultRef(dict, name, descr, nullptr) < 0;
+	}
+	else {
+		err = alifDict_setItem(dict, name, descr) < 0;
+	}
+	if (!isdescr) {
+		ALIF_DECREF(name);
+	}
+	ALIF_DECREF(descr);
+	if (err) {
+		return -1;
+	}
+	return 0;
+}
+
+static AlifIntT type_addMethods(AlifTypeObject* _type) { // 7557
+	AlifMethodDef* meth = _type->methods;
+	if (meth == nullptr) {
+		return 0;
+	}
+
+	for (; meth->name != nullptr; meth++) {
+		if (type_addMethod(_type, meth) < 0) {
+			return -1;
+		}
+	}
+	return 0;
+}
+
 
 
 static AlifIntT overrides_hash(AlifTypeObject* _type) { // 7688
@@ -1463,9 +1534,9 @@ static AlifIntT typeReady_fillDict(AlifTypeObject* type,
 	//if (add_operators(type, def) < 0) {
 	//	return -1;
 	//}
-	//if (type_addMethods(type) < 0) {
-	//	return -1;
-	//}
+	if (type_addMethods(type) < 0) {
+		return -1;
+	}
 	//if (type_addMembers(type) < 0) {
 	//	return -1;
 	//}
@@ -1681,9 +1752,9 @@ static AlifIntT type_ready(AlifTypeObject* _type,
 	//if (typeReady_setNew(_type, _initial) < 0) {
 	//	goto error;
 	//}
-	//if (typeReady_fillDict(_type, _def) < 0) {
-	//	goto error;
-	//}
+	if (typeReady_fillDict(_type, _def) < 0) {
+		goto error;
+	}
 	if (_initial) {
 		if (typeReady_inherit(_type) < 0) {
 			goto error;

@@ -147,3 +147,47 @@ AlifTypeObject _alifFunctionType_ = { // 1105
 	ALIF_TPFLAGS_HAVE_VECTORCALL |
 	ALIF_TPFLAGS_METHOD_DESCRIPTOR,
 };
+
+
+
+
+class StaticMethod { // 1467
+public:
+	ALIFOBJECT_HEAD{};
+	AlifObject* callable{};
+	AlifObject* dict{};
+};
+
+
+
+AlifTypeObject _alifStaticMethodType_ = { // 1615
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "صفة_ساكنة",
+	.basicSize = sizeof(StaticMethod),
+	//(Destructor)sm_dealloc,
+	//(reprfunc)sm_repr,                          /* repr */
+	//sm_call,                                    /* call */
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_HAVE_GC,
+	//staticmethod_doc,                           /* doc */
+	//(TraverseProc)sm_traverse,                  /* traverse */
+	//(Inquiry)sm_clear,                          /* clear */
+	//sm_memberlist,							  /* members */
+	//sm_getsetlist,                              /* getset */
+	//sm_descr_get,                               /* descr_get */
+	.dictOffset = offsetof(StaticMethod, dict),
+	//sm_init,                                    /* init */
+	.alloc = alifType_genericAlloc,
+	//alifType_genericNew,                          /* new */
+	.free = alifObject_gcDel,
+};
+
+
+
+AlifObject* alifStaticMethod_new(AlifObject* callable) { // 1657
+	StaticMethod* sm = (StaticMethod*)
+		alifType_genericAlloc(&_alifStaticMethodType_, 0);
+	if (sm != nullptr) {
+		sm->callable = ALIF_NEWREF(callable);
+	}
+	return (AlifObject*)sm;
+}

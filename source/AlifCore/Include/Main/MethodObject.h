@@ -37,6 +37,8 @@ AlifObject* alifCPPMethod_new(AlifMethodDef*, AlifObject*, AlifObject*, AlifType
 #define METHOD_STATIC   0x0020
 
 
+#define METHOD_COEXIST   0x0040 // 103
+
 #define METHOD_FASTCALL 0x0080 // 106
 
 
