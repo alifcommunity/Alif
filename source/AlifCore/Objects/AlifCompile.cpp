@@ -1113,6 +1113,46 @@ static AlifIntT codegen_checkCompare(AlifCompiler* _c, ExprTy _e) { // 2644
 	return SUCCESS;
 }
 
+static AlifIntT codegen_addCompare(AlifCompiler* _c, Location _loc, CmpOp_ _op) { // 2672
+	AlifIntT cmp;
+	switch (_op) {
+	case CmpOp_::Equal:
+		cmp = ALIF_EQ;
+		break;
+	case CmpOp_::NotEq:
+		cmp = ALIF_NE;
+		break;
+	case CmpOp_::LessThan:
+		cmp = ALIF_LT;
+		break;
+	case CmpOp_::LessThanEq:
+		cmp = ALIF_LE;
+		break;
+	case CmpOp_::GreaterThan:
+		cmp = ALIF_GT;
+		break;
+	case CmpOp_::GreaterThanEq:
+		cmp = ALIF_GE;
+		break;
+	case CmpOp_::Is:
+		ADDOP_I(_c, _loc, IS_OP, 0);
+		return SUCCESS;
+	case CmpOp_::IsNot:
+		ADDOP_I(_c, _loc, IS_OP, 1);
+		return SUCCESS;
+	case CmpOp_::In:
+		ADDOP_I(_c, _loc, CONTAINS_OP, 0);
+		return SUCCESS;
+	case CmpOp_::NotIn:
+		ADDOP_I(_c, _loc, CONTAINS_OP, 1);
+		return SUCCESS;
+	default:
+		ALIF_UNREACHABLE();
+	}
+	ADDOP_I(_c, _loc, COMPARE_OP, (cmp << 5) | _compareMasks_[cmp]);
+	return SUCCESS;
+}
+
 
 static AlifIntT codegen_jumpIf(AlifCompiler* _c, Location _loc,
 	ExprTy _e, JumpTargetLabel _next, AlifIntT _cond) { // 2718
@@ -1206,45 +1246,7 @@ static AlifIntT codegen_jumpIf(AlifCompiler* _c, Location _loc,
 
 
 
-static AlifIntT codegen_addCompare(AlifCompiler* _c, Location _loc, CmpOp_ _op) { // 2672
-	AlifIntT cmp;
-	switch (_op) {
-	case CmpOp_::Equal :
-		cmp = ALIF_EQ;
-		break;
-	case CmpOp_::NotEq:
-		cmp = ALIF_NE;
-		break;
-	case CmpOp_::LessThan:
-		cmp = ALIF_LT;
-		break;
-	case CmpOp_::LessThanEq:
-		cmp = ALIF_LE;
-		break;
-	case CmpOp_::GreaterThan:
-		cmp = ALIF_GT;
-		break;
-	case CmpOp_::GreaterThanEq:
-		cmp = ALIF_GE;
-		break;
-	case CmpOp_::Is:
-		ADDOP_I(_c, _loc, IS_OP, 0);
-		return SUCCESS;
-	case CmpOp_::IsNot:
-		ADDOP_I(_c, _loc, IS_OP, 1);
-		return SUCCESS;
-	case CmpOp_::In:
-		ADDOP_I(_c, _loc, CONTAINS_OP, 0);
-		return SUCCESS;
-	case CmpOp_::NotIn:
-		ADDOP_I(_c, _loc, CONTAINS_OP, 1);
-		return SUCCESS;
-	default:
-		ALIF_UNREACHABLE();
-	}
-	ADDOP_I(_c, _loc, COMPARE_OP, (cmp << 5) | _compareMasks_[cmp]);
-	return SUCCESS;
-}
+
 
 static AlifIntT codegen_ifExpr(AlifCompiler* _c, ExprTy _e) { // 2812
 	NEW_JUMP_TARGET_LABEL(_c, end);
@@ -1263,6 +1265,31 @@ static AlifIntT codegen_ifExpr(AlifCompiler* _c, ExprTy _e) { // 2812
 	return SUCCESS;
 }
 
+
+static AlifIntT codegen_if(AlifCompiler* _c, StmtTy _s) { // 2880
+	JumpTargetLabel next{};
+	NEW_JUMP_TARGET_LABEL(_c, end);
+	if (ASDL_SEQ_LEN(_s->V.if_.else_)) {
+		NEW_JUMP_TARGET_LABEL(_c, else_);
+		next = else_;
+	}
+	else {
+		next = end;
+	}
+	RETURN_IF_ERROR(
+		codegen_jumpIf(_c, LOC(_s), _s->V.if_.condition, next, 0));
+
+	VISIT_SEQ(_c, Stmt, _s->V.if_.body);
+	if (ASDL_SEQ_LEN(_s->V.if_.else_)) {
+		ADDOP_JUMP(_c, _noLocation_, JUMP_NO_INTERRUPT, end);
+
+		USE_LABEL(_c, next);
+		VISIT_SEQ(_c, Stmt, _s->V.if_.else_);
+	}
+
+	USE_LABEL(_c, end);
+	return SUCCESS;
+}
 
 
 
@@ -1325,8 +1352,10 @@ static AlifIntT compiler_visitStmt(AlifCompiler* _c, StmtTy _s) { // 3818
 	//	return codegen_for(_c, _s);
 	//case StmtK_::WhileK:
 	//	return codegen_while(_c, _s);
-	//case StmtK_::IfK:
-	//	return codegen_if(_c, _s);
+	case StmtK_::IfK:
+	{
+		return codegen_if(_c, _s);
+	}
 	//case StmtK_::MatchK:
 	//	return codegen_match(_c, _s);
 	//case StmtK_::RaiseK:
@@ -1877,6 +1906,44 @@ static AlifIntT codegen_dict(AlifCompiler* _c, ExprTy _e) { // 4384
 	return SUCCESS;
 }
 
+static AlifIntT codegen_compare(AlifCompiler* _c, ExprTy _e) { // 4438
+	Location loc = LOC(_e);
+	AlifSizeT i{}, n{};
+
+	RETURN_IF_ERROR(codegen_checkCompare(_c, _e));
+	VISIT(_c, Expr, _e->V.compare.left);
+	n = ASDL_SEQ_LEN(_e->V.compare.ops) - 1;
+	if (n == 0) {
+		VISIT(_c, Expr, (ExprTy)ASDL_SEQ_GET(_e->V.compare.comparators, 0));
+		ADDOP_COMPARE(_c, loc, ASDL_SEQ_GET(_e->V.compare.ops, 0));
+	}
+	else {
+		NEW_JUMP_TARGET_LABEL(_c, cleanup);
+		for (i = 0; i < n; i++) {
+			VISIT(_c, Expr,
+				(ExprTy)ASDL_SEQ_GET(_e->V.compare.comparators, i));
+			ADDOP_I(_c, loc, SWAP, 2);
+			ADDOP_I(_c, loc, COPY, 2);
+			ADDOP_COMPARE(_c, loc, ASDL_SEQ_GET(_e->V.compare.ops, i));
+			ADDOP_I(_c, loc, COPY, 1);
+			ADDOP(_c, loc, TO_BOOL);
+			ADDOP_JUMP(_c, loc, POP_JUMP_IF_FALSE, cleanup);
+			ADDOP(_c, loc, POP_TOP);
+		}
+		VISIT(_c, Expr, (ExprTy)ASDL_SEQ_GET(_e->V.compare.comparators, n));
+		ADDOP_COMPARE(_c, loc, ASDL_SEQ_GET(_e->V.compare.ops, n));
+		NEW_JUMP_TARGET_LABEL(_c, end);
+		ADDOP_JUMP(_c, _noLocation_, JUMP_NO_INTERRUPT, end);
+
+		USE_LABEL(_c, cleanup);
+		ADDOP_I(_c, loc, SWAP, 2);
+		ADDOP(_c, loc, POP_TOP);
+
+		USE_LABEL(_c, end);
+	}
+	return SUCCESS;
+}
+
 static AlifIntT check_caller(AlifCompiler* _c, ExprTy _e) { // 4509
 	switch (_e->type) {
 	case ExprK_::ConstantK:
@@ -2325,8 +2392,8 @@ static AlifIntT compiler_visitExpr(AlifCompiler* _c, ExprTy _e) { // 5997
 	//	ADDOP_LOAD_CONST(_c, loc, ALIF_NONE);
 	//	ADD_YIELD_FROM(_c, loc, 1);
 	//	break;
-	//case ExprK_::CompareK:
-	//	return codegen_compare(_c, _e);
+	case ExprK_::CompareK:
+		return codegen_compare(_c, _e);
 	case ExprK_::CallK:
 		return codegen_call(_c, _e);
 	case ExprK_::ConstantK:

@@ -151,7 +151,8 @@ static BasicBlock* cfgBuilder_newBlock(CFGBuilder* _g) { // 163
 	return b_;
 }
 
-static AlifIntT basicBlock_addOp(BasicBlock* _b, AlifIntT _opcode, AlifIntT _oparg, Location _loc) { // 178
+static AlifIntT basicBlock_addOp(BasicBlock* _b, AlifIntT _opcode,
+	AlifIntT _oparg, Location _loc) { // 178
 	AlifIntT off_ = basicBlock_nextInstr(_b);
 	if (off_ < 0) {
 		return ERROR;

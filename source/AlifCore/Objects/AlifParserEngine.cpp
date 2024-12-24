@@ -10,6 +10,18 @@
 #include "AlifCore_Memory.h"
 
 
+ // alif
+/*
+	هذا التعريف يستخدم فقط لعد الاحرف والارقام للاسماء
+*/
+#define IS_IDENTIFIER_START(_c) ((_c >= L'a' and _c <= L'z') \
+								or (_c >= L'A' and _c <= L'Z') /* to exclude nums and symbols */ \
+								or (_c == L'_') \
+								or (_c < L'٠' and _c >= 128) \
+								or (_c > L'٩' and _c >= 128)) /* exclude arabic-indic nums */
+
+
+
 AlifIntT alifParserEngine_insertMemo(AlifParser* _p, AlifIntT _mark, AlifIntT _type, void* _node) { // 76
 	Memo* m = (Memo*)alifASTMem_malloc(_p->astMem, sizeof(Memo));
 	if (m == nullptr) return -1;
@@ -34,12 +46,11 @@ AlifIntT alifParserEngine_updateMemo(AlifParser* _p,
 }
 
 
-static AlifIntT strLetters_count(const char* _str) { // alif
+static AlifIntT str_lettersCount(const char* _str) { // alif
 	AlifIntT len = 0;
 	AlifIntT ch = 0;
-	while (_str[len] != L'\0' and _str[len] != L' '
-		and _str[len] != L'\r' and _str[len] != L'\n') {
 
+	while (IS_IDENTIFIER_START((unsigned char)_str[len])) {
 		if (iswalpha((unsigned char)_str[len])) {
 			len++;
 		}
@@ -51,7 +62,7 @@ static AlifIntT strLetters_count(const char* _str) { // alif
 
 static AlifIntT get_keywordOrName(AlifParser* _p, AlifToken* _token) { // 158
 	AlifIntT bytesCount = _token->endColOffset - _token->colOffset;
-	AlifIntT lettersCount = strLetters_count(_token->start); // alif
+	AlifIntT lettersCount = str_lettersCount(_token->start); // alif
 
 	if (lettersCount >= _p->nKeywordList
 		or _p->keywords[lettersCount] == nullptr
