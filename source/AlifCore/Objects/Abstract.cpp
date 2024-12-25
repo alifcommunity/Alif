@@ -370,7 +370,7 @@ static AlifObject* binary_op(AlifObject* _v, AlifObject* _w,
 
 
 static AlifObject* ternary_op(AlifObject* _v, AlifObject* _w, AlifObject* _z,
-	const AlifIntT _opSlot, const char* _opName ) { // 1016
+	const AlifIntT _opSlot/*, const char* _opName */) { // 1016
 	AlifNumberMethods* mv = ALIF_TYPE(_v)->asNumber;
 	AlifNumberMethods* mw = ALIF_TYPE(_w)->asNumber;
 
@@ -529,7 +529,7 @@ BINARY_FUNC(alifNumber_trueDivide, trueDivide) // 1183
 BINARY_FUNC(alifNumber_remainder, remainder)
 
 AlifObject* alifNumber_power(AlifObject* _v, AlifObject* _w, AlifObject* _z) { // 1186
-	return ternary_op(_v, _w, _z, NB_SLOT(power), "** or pow()");
+	return ternary_op(_v, _w, _z, NB_SLOT(power));
 }
 
 AlifObject* _alifNumber_powerNoMod(AlifObject* _lhs, AlifObject* _rhs) { // 1192
@@ -566,7 +566,7 @@ static AlifObject* binary_iop(AlifObject* _v, AlifObject* _w,
 
 static AlifObject* ternary_iOp(AlifObject* _v, AlifObject* _w,
 	AlifObject* _z, const AlifIntT _iopSlot,
-	const AlifIntT _opSlot, const char* _opName) { // 1258
+	const AlifIntT _opSlot/*, const char* _opName*/) { // 1258
 	AlifNumberMethods* mv = ALIF_TYPE(_v)->asNumber;
 	if (mv != nullptr) {
 		TernaryFunc slot = NB_TERNOP(mv, _iopSlot);
@@ -578,7 +578,7 @@ static AlifObject* ternary_iOp(AlifObject* _v, AlifObject* _w,
 			ALIF_DECREF(x);
 		}
 	}
-	return ternary_op(_v, _w, _z, _opSlot, _opName);
+	return ternary_op(_v, _w, _z, _opSlot/*, _opName*/);
 }
 
  // 1276
@@ -599,8 +599,7 @@ INPLACE_BINOP(alifNumber_inPlaceRemainder, inplaceRemainder, remainder) // 1291
 
 
 AlifObject* alifNumber_inPlaceAdd(AlifObject* _v, AlifObject* _w) { // 1293
-	AlifObject* result = BINARY_IOP1(_v, _w, NB_SLOT(inplaceAdd),
-		NB_SLOT(add_), "+=");
+	AlifObject* result = BINARY_IOP1(_v, _w, NB_SLOT(inplaceAdd), NB_SLOT(add_));
 	if (result == ALIF_NOTIMPLEMENTED) {
 		AlifSequenceMethods* m = ALIF_TYPE(_v)->asSequence;
 		ALIF_DECREF(result);
@@ -619,8 +618,7 @@ AlifObject* alifNumber_inPlaceAdd(AlifObject* _v, AlifObject* _w) { // 1293
 }
 
 AlifObject* alifNumber_inPlaceMultiply(AlifObject* _v, AlifObject* _w) { // 1316
-	AlifObject* result = BINARY_IOP1(_v, _w, NB_SLOT(inplaceMultiply),
-		NB_SLOT(multiply), "*=");
+	AlifObject* result = BINARY_IOP1(_v, _w, NB_SLOT(inplaceMultiply), NB_SLOT(multiply));
 	if (result == ALIF_NOTIMPLEMENTED) {
 		SizeArgFunc f = nullptr;
 		AlifSequenceMethods* mv = ALIF_TYPE(_v)->asSequence;
@@ -643,8 +641,7 @@ AlifObject* alifNumber_inPlaceMultiply(AlifObject* _v, AlifObject* _w) { // 1316
 }
 
 AlifObject* alifNumber_inPlacePower(AlifObject* _v, AlifObject* _w, AlifObject* _z) { // 1345
-	return ternary_iOp(_v, _w, _z, NB_SLOT(inplacePower),
-		NB_SLOT(power), "^=");
+	return ternary_iOp(_v, _w, _z, NB_SLOT(inplacePower), NB_SLOT(power));
 }
 
 AlifObject* _alifNumber_inPlacePowerNoMod(AlifObject* _lhs, AlifObject* _rhs) { // 1352
