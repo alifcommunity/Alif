@@ -3,6 +3,7 @@
 #include "AlifCore_Abstract.h"
 #include "AlifCore_FloatObject.h"
 #include "AlifCore_FreeList.h"
+#include "AlifCore_Long.h"
 #include "AlifCore_Math.h"
 #include "AlifCore_StructSeq.h"
 
@@ -160,7 +161,7 @@ static AlifObject* float_richCompare(AlifObject* _v, AlifObject* _w, AlifIntT _o
 		}
 
 		nbits = _alifLong_numBits(_w);
-		if (nbits == (size_t)-1/* and alifErr_occurred()*/) {
+		if (nbits == (AlifUSizeT)-1/* and alifErr_occurred()*/) {
 			//alifErr_clear();
 			i = (double)vsign;
 			j = wsign * 2.0;
@@ -175,12 +176,12 @@ static AlifObject* float_richCompare(AlifObject* _v, AlifObject* _w, AlifIntT _o
 			_op = _alifSwappedOp_[_op];
 		}
 		(void)frexp(i, &exponent);
-		if (exponent < 0 or (size_t)exponent < nbits) {
+		if (exponent < 0 or (AlifUSizeT)exponent < nbits) {
 			i = 1.0;
 			j = 2.0;
 			goto Compare;
 		}
-		if ((size_t)exponent > nbits) {
+		if ((AlifUSizeT)exponent > nbits) {
 			i = 2.0;
 			j = 1.0;
 			goto Compare;
@@ -209,12 +210,12 @@ static AlifObject* float_richCompare(AlifObject* _v, AlifObject* _w, AlifIntT _o
 			if (fracpart != 0.0) {
 				AlifObject* temp{};
 
-				temp = _alifLong_lshift(ww, 1);
+				temp = _alifLong_lShift(ww, 1);
 				if (temp == nullptr)
 					goto Error;
 				ALIF_SETREF(ww, temp);
 
-				temp = _alifLong_lshift(vv, 1);
+				temp = _alifLong_lShift(vv, 1);
 				if (temp == nullptr)
 					goto Error;
 				ALIF_SETREF(vv, temp);

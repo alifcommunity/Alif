@@ -43,7 +43,7 @@ long alifOS_strToLong(const char*, char**, AlifIntT); // 103
 
 
 
-
+AlifIntT _alifLong_sign(AlifObject*); // 68
 
 
 AlifUSizeT _alifLong_numBits(AlifObject*); // 77

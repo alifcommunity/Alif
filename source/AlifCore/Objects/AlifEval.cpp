@@ -264,6 +264,15 @@ dispatch_opcode :
 		switch (opcode)
 #endif
 		{
+			TARGET(END_FOR) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef value{};
+				value = stackPointer[-1];
+				alifStackRef_close(value);
+				stackPointer += -1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(FORMAT_SIMPLE) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;
@@ -282,6 +291,19 @@ dispatch_opcode :
 					res = value;
 				}
 				stackPointer[-1] = res;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
+			TARGET(GET_ITER) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef iterable{};
+				AlifStackRef iter{};
+				iterable = stackPointer[-1];
+				/* before: [obj]; after [getiter(obj)] */
+				iter = ALIFSTACKREF_FROMALIFOBJECTSTEAL(alifObject_getIter(alifStackRef_asAlifObjectBorrow(iterable)));
+				alifStackRef_close(iterable);
+				//if (ALIFSTACKREF_ISNULL(iter)) goto pop_1_error;
+				stackPointer[-1] = iter;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
 			TARGET(INTERPRETER_EXIT) {
@@ -616,6 +638,100 @@ dispatch_opcode :
 				}
 				stackPointer[-2] = res;
 				stackPointer += -1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
+			TARGET(FOR_ITER) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 2;
+				PREDICTED(FOR_ITER);
+				AlifCodeUnit* thisInstr = nextInstr - 2;
+				AlifStackRef iter{};
+				AlifStackRef next{};
+				// _SPECIALIZE_FOR_ITER
+				iter = stackPointer[-1];
+				{
+					uint16_t counter = read_u16(&thisInstr[1].cache);
+					(void)counter;
+#if ENABLE_SPECIALIZATION
+					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
+						nextInstr = thisInstr;
+						_alifSpecialize_forIter(iter, nextInstr, oparg);
+						DISPATCH_SAME_OPARG();
+					}
+					OPCODE_DEFERRED_INC(FOR_ITER);
+					ADVANCE_ADAPTIVE_COUNTER(thisInstr[1].counter);
+#endif  /* ENABLE_SPECIALIZATION */
+				}
+				// _FOR_ITER
+				{
+					/* before: [iter]; after: [iter, iter()] *or* [] (and jump over END_FOR.) */
+					AlifObject* iter_o = alifStackRef_asAlifObjectBorrow(iter);
+					AlifObject* next_o = (*ALIF_TYPE(iter_o)->iterNext)(iter_o);
+					if (next_o == nullptr) {
+						next = _alifStackRefNull_;
+						//if (_alifErr_occurred(_thread)) {
+						//	AlifIntT matches = _alifErr_exceptionMatches(_thread, _alifExcStopIteration_);
+						//	if (!matches) {
+						//		goto error;
+						//	}
+						//	_alifEval_monitorRaise(_thread, _frame, thisInstr);
+						//	_alifErr_clear(_thread);
+						//}
+						/* iterator ended normally */
+						alifStackRef_close(iter);
+						STACK_SHRINK(1);
+						/* Jump forward oparg, then skip following END_FOR and POP_TOP instruction */
+						JUMPBY(oparg + 2);
+						DISPATCH();
+					}
+					next = ALIFSTACKREF_FROMALIFOBJECTSTEAL(next_o);
+					// Common case: no jump, leave it to the code generator
+				}
+				stackPointer[0] = next;
+				stackPointer += 1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
+			TARGET(JUMP_BACKWARD) {
+				AlifCodeUnit* thisInstr = _frame->instrPtr = nextInstr;
+				nextInstr += 2;
+				// _CHECK_PERIODIC
+				{
+					QSBR_QUIESCENT_STATE(_thread); \
+						if (alifAtomic_loadUintptrRelaxed(&_thread->evalBreaker) & ALIF_EVAL_EVENTS_MASK) {
+							//AlifIntT err = _alif_handlePending(_thread);
+							//if (err != 0) goto error;
+						}
+				}
+				// _JUMP_BACKWARD
+				{
+					uint16_t the_counter = read_u16(&thisInstr[1].cache);
+					JUMPBY(-oparg);
+#ifdef ALIF_TIER2
+#if ENABLE_SPECIALIZATION
+					AlifBackoffCounter counter = thisInstr[1].counter;
+					if (backoff_counterTriggers(counter) and thisInstr->op.code == JUMP_BACKWARD) {
+						AlifCodeUnit* start = thisInstr;
+						while (oparg > 255) {
+							oparg >>= 8;
+							start--;
+						}
+						AlifExecutorObject* executor{};
+						AlifIntT optimized = _alifOptimizer_optimize(_frame, start, stackPointer, &executor, 0);
+						if (optimized < 0) goto error;
+						if (optimized) {
+							_thread->previousExecutor = ALIF_NONE;
+							GOTO_TIER_TWO(executor);
+						}
+						else {
+							thisInstr[1].counter = restart_backoffCounter(counter);
+						}
+					}
+					else {
+						ADVANCE_ADAPTIVE_COUNTER(thisInstr[1].counter);
+					}
+#endif  /* ENABLE_SPECIALIZATION */
+#endif /* ALIF_TIER2 */
+				}
 				DISPATCH();
 			} // ------------------------------------------------------------ //
 			TARGET(JUMP_FORWARD) {

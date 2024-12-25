@@ -1039,7 +1039,7 @@ AlifObject* alifObject_getIter(AlifObject* _o) { // 2809
 AlifIntT alifIter_check(AlifObject* _obj) { // 2853
 	AlifTypeObject* tp = ALIF_TYPE(_obj);
 	return (tp->iterNext != nullptr
-		/*and tp->iterNext != &_alifObject_nextNotImplemented*/);
+		and tp->iterNext != &_alifObject_nextNotImplemented);
 }
 
 static AlifIntT iter_next(AlifObject* _iter, AlifObject** _item) { // 2871

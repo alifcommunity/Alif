@@ -549,6 +549,13 @@ AlifObject* alifObject_selfIter(AlifObject* _obj) { // 1461
 	return ALIF_NEWREF(_obj);
 }
 
+AlifObject* _alifObject_nextNotImplemented(AlifObject* _self) { // 1472
+	//alifErr_format(_alifExcTypeError_,
+	//	"'%.200s' object is not iterable",
+	//	ALIF_TYPE(_self)->name);
+	return nullptr;
+}
+
 
 AlifObject* alifObject_genericGetAttrWithDict(AlifObject* _obj, AlifObject* _name,
 	AlifObject* _dict, AlifIntT _suppress) { // 1587

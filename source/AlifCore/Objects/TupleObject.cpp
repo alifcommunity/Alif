@@ -182,6 +182,7 @@ AlifObject* alifTuple_fromStackRefSteal(const AlifStackRef* _src, AlifSizeT _n) 
 }
 
 
+static AlifObject* tuple_iter(AlifObject* _seq); // 863
 
 AlifTypeObject _alifTupleType_ = { // 865
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
@@ -196,6 +197,10 @@ AlifTypeObject _alifTupleType_ = { // 865
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
 		ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_TUPLE_SUBCLASS |
 		_ALIF_TPFLAGS_MATCH_SELF | ALIF_TPFLAGS_SEQUENCE,
+
+	.iter = tuple_iter,
+
+	.free = alifObject_gcDel,
 };
 
 
@@ -254,12 +259,64 @@ AlifIntT alifTuple_resize(AlifObject** _pv, AlifSizeT _newSize) { // 918
 
 
 
+/* -------------------------------  Tuple Iterator ------------------------------- */
+
+static void tupleIter_dealloc(AlifTupleIterObject* _it) { // 986
+	ALIFOBJECT_GC_UNTRACK(_it);
+	ALIF_XDECREF(_it->seq);
+	alifObject_gcDel(_it);
+}
+
+static AlifObject* tupleIter_next(AlifTupleIterObject* _it) { // 1001
+	AlifTupleObject* seq{};
+	AlifObject* item{};
+
+	seq = _it->seq;
+	if (seq == nullptr)
+		return nullptr;
+
+	if (_it->index < ALIFTUPLE_GET_SIZE(seq)) {
+		item = ALIFTUPLE_GET_ITEM(seq, _it->index);
+		++_it->index;
+		return ALIF_NEWREF(item);
+	}
+
+	_it->seq = nullptr;
+	ALIF_DECREF(seq);
+	return nullptr;
+}
+
+AlifTypeObject _alifTupleIterType_ = { // 1076
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "مترابطة_تكرار",
+	.basicSize = sizeof(AlifTupleIterObject),
+	/* methods */
+	.dealloc = (Destructor)tupleIter_dealloc,
+	.getAttro = alifObject_genericGetAttr,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
+	//.traverse = (TraverseProc)tupleIter_traverse,
+	.iter = alifObject_selfIter,
+	.iterNext = (IterNextFunc)tupleIter_next,
+	//.methods = tupleIter_methods,
+};
 
 
 
+static AlifObject* tuple_iter(AlifObject* _seq) { // 1109
+	AlifTupleIterObject* it{};
 
-
-
+	if (!ALIFTUPLE_CHECK(_seq)) {
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
+	it = ALIFOBJECT_GC_NEW(AlifTupleIterObject, &_alifTupleIterType_);
+	if (it == nullptr)
+		return nullptr;
+	it->index = 0;
+	it->seq = (AlifTupleObject*)ALIF_NEWREF(_seq);
+	ALIFOBJECT_GC_TRACK(it);
+	return (AlifObject*)it;
+}
 
 
 

@@ -1316,7 +1316,49 @@ static AlifIntT codegen_if(AlifCompiler* _c, StmtTy _s) { // 2880
 	return SUCCESS;
 }
 
+static AlifIntT codegen_for(AlifCompiler* _c, StmtTy _s) { // 2908
+	Location loc = LOC(_s);
+	NEW_JUMP_TARGET_LABEL(_c, start);
+	NEW_JUMP_TARGET_LABEL(_c, body);
+	NEW_JUMP_TARGET_LABEL(_c, cleanup);
+	NEW_JUMP_TARGET_LABEL(_c, end);
 
+	RETURN_IF_ERROR(compiler_pushFBlock(_c, loc, FBlockType_::For_Loop, start, end, nullptr));
+
+	VISIT(_c, Expr, _s->V.for_.iter);
+
+	loc = LOC(_s->V.for_.iter);
+	ADDOP(_c, loc, GET_ITER);
+
+	USE_LABEL(_c, start);
+	ADDOP_JUMP(_c, loc, FOR_ITER, cleanup);
+
+	/* Add NOP to ensure correct line tracing of multiline for statements.
+	 * It will be removed later if redundant.
+	 */
+	ADDOP(_c, LOC(_s->V.for_.target), NOP);
+
+	USE_LABEL(_c, body);
+	VISIT(_c, Expr, _s->V.for_.target);
+	VISIT_SEQ(_c, Stmt, _s->V.for_.body);
+	/* Mark jump as artificial */
+	ADDOP_JUMP(_c, _noLocation_, JUMP, start);
+
+	USE_LABEL(_c, cleanup);
+	/* It is important for instrumentation that the `END_FOR` comes first.
+	* Iteration over a generator will jump to the first of these instructions,
+	* but a non-generator will jump to a later instruction.
+	*/
+	ADDOP(_c, _noLocation_, END_FOR);
+	ADDOP(_c, _noLocation_, POP_TOP);
+
+	compiler_popFBlock(_c, FBlockType_::For_Loop, start);
+
+	//VISIT_SEQ(_c, Stmt, _s->V.for_.else_);
+
+	USE_LABEL(_c, end);
+	return SUCCESS;
+}
 
 
 static AlifIntT codegen_while(AlifCompiler* _c, StmtTy _s) { // 3001
@@ -1397,8 +1439,8 @@ static AlifIntT compiler_visitStmt(AlifCompiler* _c, StmtTy _s) { // 3818
 		return codegen_augAssign(_c, _s);
 	//case StmtK_::AnnAssignK:
 	//	return compiler_annassign(_c, _s);
-	//case StmtK_::ForK:
-	//	return codegen_for(_c, _s);
+	case StmtK_::ForK:
+		return codegen_for(_c, _s);
 	case StmtK_::WhileK:
 		return codegen_while(_c, _s);
 	case StmtK_::IfK:

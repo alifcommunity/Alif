@@ -478,6 +478,16 @@ overflow:
 }
 
 
+AlifIntT _alifLong_sign(AlifObject* _vv) { // 772
+	AlifLongObject* v = (AlifLongObject*)_vv;
+
+	if (alifLong_isCompact(v)) {
+		return _alifLong_compactSign(v);
+	}
+	return alifLong_nonCompactSign(v);
+}
+
+
 static AlifIntT bit_lengthDigit(digit _x) { // 797
 	// digit can be larger than unsigned long, but only ALIFLONG_SHIFT bits
 	// of it will be ever used.
@@ -2993,6 +3003,18 @@ static AlifObject* long_lShift(AlifObject* _a, AlifObject* _b) { // 5419
 	if (divmod_shift(_b, &wordShift, &remShift) < 0)
 		return nullptr;
 	return long_lShift1((AlifLongObject*)_a, wordShift, remShift);
+}
+
+AlifObject* _alifLong_lShift(AlifObject* _a, AlifUSizeT _shiftby) { // 5439
+	AlifSizeT wordshift{};
+	digit remshift{};
+
+	if (_alifLong_isZero((AlifLongObject*)_a)) {
+		return alifLong_fromLong(0);
+	}
+	wordshift = _shiftby / ALIFLONG_SHIFT;
+	remshift = _shiftby % ALIFLONG_SHIFT;
+	return long_lShift1((AlifLongObject*)_a, wordshift, remshift);
 }
 
 static void v_complement(digit* _z, digit* _a, AlifSizeT _m) { // 5458

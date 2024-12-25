@@ -22,6 +22,9 @@ static inline AlifObject* _alifLong_getOne(void) { // 73
 }
 
 
+AlifObject* _alifLong_lShift(AlifObject*, AlifUSizeT); // 111
+
+
 AlifObject* _alifLong_add(AlifLongObject*, AlifLongObject*); // 113
 
 extern unsigned char _alifLongDigitValue_[256]; // 118

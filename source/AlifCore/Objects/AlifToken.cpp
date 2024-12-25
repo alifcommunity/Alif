@@ -85,9 +85,9 @@ int alifToken_oneChar(int _c1) {
 	case L':': return COLON;
 	case L',': return COMMA;
 	case L'&': return AMPER;
-	case L'<': return LESSTHAN;
+	case L'>': return LESSTHAN;
 	case L'=': return EQUAL;
-	case L'>': return GREATERTHAN;
+	case L'<': return GREATERTHAN;
 	case L'!': return EXCLAMATION;
 	case L'/': return SLASH;
 	case L'^': return CIRCUMFLEX;

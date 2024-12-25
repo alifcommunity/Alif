@@ -166,8 +166,8 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 		return 2 + (_oparg - 1);
 	//case END_ASYNC_FOR:
 	//	return 2;
-	//case END_FOR:
-	//	return 1;
+	case END_FOR:
+		return 1;
 	//case END_SEND:
 	//	return 2;
 	//case ENTER_EXECUTOR:
@@ -196,8 +196,8 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 1;
 	//case GET_AWAITABLE:
 	//	return 1;
-	//case GET_ITER:
-	//	return 1;
+	case GET_ITER:
+		return 1;
 	//case GET_LEN:
 	//	return 1;
 	//case GET_YIELD_FROM_ITER:
@@ -628,8 +628,8 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 		return 1 + (_oparg - 1);
 	//case END_ASYNC_FOR:
 	//	return 0;
-	//case END_FOR:
-	//	return 0;
+	case END_FOR:
+		return 0;
 	//case END_SEND:
 	//	return 1;
 	//case ENTER_EXECUTOR:
@@ -658,8 +658,8 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 2;
 	//case GET_AWAITABLE:
 	//	return 1;
-	//case GET_ITER:
-	//	return 1;
+	case GET_ITER:
+		return 1;
 	//case GET_LEN:
 	//	return 2;
 	//case GET_YIELD_FROM_ITER:
@@ -1330,14 +1330,14 @@ const uint8_t _alifOpcodeDeopt_[256] = {
 	0,//CLEANUP_THROW, // CLEANUP_THROW // 6
 	0,//DELETE_SUBSCR, // DELETE_SUBSCR // 7
 	0,//END_ASYNC_FOR, // END_ASYNC_FOR // 8
-	0,//END_FOR, // END_FOR // 9
+	END_FOR, // END_FOR // 9
 	0,//END_SEND, // END_SEND // 10
 	0,//EXIT_INIT_CHECK, // EXIT_INIT_CHECK // 11
 	FORMAT_SIMPLE, // FORMAT_SIMPLE // 12
 	FORMAT_WITH_SPEC, // FORMAT_WITH_SPEC // 13
 	0,//GET_AITER, // GET_AITER // 14
 	0,//GET_ANEXT, // GET_ANEXT // 15
-	0,//GET_ITER, // GET_ITER // 16
+	GET_ITER, // GET_ITER // 16
 	0,//RESERVED, // RESERVED // 17
 	0,//GET_LEN, // GET_LEN // 18
 	0,//GET_YIELD_FROM_ITER, // GET_YIELD_FROM_ITER // 19
