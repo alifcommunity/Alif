@@ -131,6 +131,140 @@ static AlifObject* float_repr(AlifFloatObject* _v) { // 341
 	return result;
 }
 
+static AlifObject* float_richCompare(AlifObject* _v, AlifObject* _w, AlifIntT _op) { // 373
+	double i{}, j{};
+	AlifIntT r = 0;
+
+	i = ALIFFLOAT_AS_DOUBLE(_v);
+
+	if (ALIFFLOAT_CHECK(_w))
+		j = ALIFFLOAT_AS_DOUBLE(_w);
+
+	else if (!isfinite(i)) {
+		if (ALIFLONG_CHECK(_w))
+			j = 0.0;
+		else
+			goto Unimplemented;
+	}
+
+	else if (ALIFLONG_CHECK(_w)) {
+		AlifIntT vsign = i == 0.0 ? 0 : i < 0.0 ? -1 : 1;
+		AlifIntT wsign = _alifLong_sign(_w);
+		size_t nbits{};
+		AlifIntT exponent{};
+
+		if (vsign != wsign) {
+			i = (double)vsign;
+			j = (double)wsign;
+			goto Compare;
+		}
+
+		nbits = _alifLong_numBits(_w);
+		if (nbits == (size_t)-1/* and alifErr_occurred()*/) {
+			//alifErr_clear();
+			i = (double)vsign;
+			j = wsign * 2.0;
+			goto Compare;
+		}
+		if (nbits <= 48) {
+			j = alifLong_asDouble(_w);
+			goto Compare;
+		}
+		if (vsign < 0) {
+			i = -i;
+			_op = _alifSwappedOp_[_op];
+		}
+		(void)frexp(i, &exponent);
+		if (exponent < 0 or (size_t)exponent < nbits) {
+			i = 1.0;
+			j = 2.0;
+			goto Compare;
+		}
+		if ((size_t)exponent > nbits) {
+			i = 2.0;
+			j = 1.0;
+			goto Compare;
+		}
+
+		{
+			double fracpart;
+			double intpart;
+			AlifObject* result = nullptr;
+			AlifObject* vv = nullptr;
+			AlifObject* ww = _w;
+
+			if (wsign < 0) {
+				ww = alifNumber_negative(_w);
+				if (ww == nullptr)
+					goto Error;
+			}
+			else
+				ALIF_INCREF(ww);
+
+			fracpart = modf(i, &intpart);
+			vv = alifLong_fromDouble(intpart);
+			if (vv == nullptr)
+				goto Error;
+
+			if (fracpart != 0.0) {
+				AlifObject* temp{};
+
+				temp = _alifLong_lshift(ww, 1);
+				if (temp == nullptr)
+					goto Error;
+				ALIF_SETREF(ww, temp);
+
+				temp = _alifLong_lshift(vv, 1);
+				if (temp == nullptr)
+					goto Error;
+				ALIF_SETREF(vv, temp);
+
+				temp = alifNumber_or(vv, _alifLong_getOne());
+				if (temp == nullptr)
+					goto Error;
+				ALIF_SETREF(vv, temp);
+			}
+
+			r = alifObject_richCompareBool(vv, ww, _op);
+			if (r < 0)
+				goto Error;
+			result = alifBool_fromLong(r);
+		Error:
+			ALIF_XDECREF(vv);
+			ALIF_XDECREF(ww);
+			return result;
+		}
+	}
+
+	else        /* w isn't float or int */
+		goto Unimplemented;
+
+Compare:
+	switch (_op) {
+	case ALIF_EQ:
+		r = i == j;
+		break;
+	case ALIF_NE:
+		r = i != j;
+		break;
+	case ALIF_LE:
+		r = i <= j;
+		break;
+	case ALIF_GE:
+		r = i >= j;
+		break;
+	case ALIF_LT:
+		r = i < j;
+		break;
+	case ALIF_GT:
+		r = i > j;
+		break;
+	}
+	return alifBool_fromLong(r);
+
+Unimplemented:
+	return ALIF_NOTIMPLEMENTED;
+}
 
 static AlifHashT float_hash(AlifFloatObject* _v) { // 549
 	return _alif_hashDouble((AlifObject*)_v, _v->val);
@@ -439,6 +573,7 @@ AlifTypeObject _alifFloatType_ = { // 1847
 	.getAttro = alifObject_genericGetAttr,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE |
 		_ALIF_TPFLAGS_MATCH_SELF,
+	.richCompare = float_richCompare,
 	.methods = _floatMethods_,
 };
 

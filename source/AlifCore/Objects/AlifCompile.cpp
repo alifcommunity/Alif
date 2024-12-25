@@ -944,7 +944,27 @@ static void compiler_exitScope(AlifCompiler* _c) { // 1197
 
 
 
+static AlifIntT compiler_pushFBlock(AlifCompiler* _c, Location _loc,
+	FBlockType_ _t, JumpTargetLabel _blockLabel,
+	JumpTargetLabel _exit, void* _datum) { // 1239
+	FBlockInfo* f{};
+	if (_c->u_->nfBlocks >= MAXBLOCKS) {
+		//return compiler_error(_c, _loc, "too many statically nested blocks");
+	}
+	f = &_c->u_->fBlock[_c->u_->nfBlocks++];
+	f->type = _t;
+	f->block = _blockLabel;
+	f->loc = _loc;
+	f->exit = _exit;
+	f->datum = _datum;
+	return SUCCESS;
+}
 
+static void compiler_popFBlock(AlifCompiler* _c,
+	FBlockType_ _t, JumpTargetLabel _blockLabel) { // 1257
+	CompilerUnit* u = _c->u_;
+	u->nfBlocks--;
+}
 
 
 
@@ -1299,6 +1319,30 @@ static AlifIntT codegen_if(AlifCompiler* _c, StmtTy _s) { // 2880
 
 
 
+static AlifIntT codegen_while(AlifCompiler* _c, StmtTy _s) { // 3001
+	NEW_JUMP_TARGET_LABEL(_c, loop);
+	NEW_JUMP_TARGET_LABEL(_c, end);
+	NEW_JUMP_TARGET_LABEL(_c, anchor);
+
+	USE_LABEL(_c, loop);
+
+	RETURN_IF_ERROR(compiler_pushFBlock(_c, LOC(_s), FBlockType_::While_Loop, loop, end, nullptr));
+	RETURN_IF_ERROR(codegen_jumpIf(_c, LOC(_s), _s->V.while_.condition, anchor, 0));
+
+	VISIT_SEQ(_c, Stmt, _s->V.while_.body);
+	ADDOP_JUMP(_c, _noLocation_, JUMP, loop);
+
+	compiler_popFBlock(_c, FBlockType_::While_Loop, loop);
+
+	USE_LABEL(_c, anchor);
+	//if (_s->V.while_.else_) {
+	//	VISIT_SEQ(_c, Stmt, _s->V.while_.else_);
+	//}
+
+	USE_LABEL(_c, end);
+	return SUCCESS;
+}
+
 
 
 
@@ -1355,8 +1399,8 @@ static AlifIntT compiler_visitStmt(AlifCompiler* _c, StmtTy _s) { // 3818
 	//	return compiler_annassign(_c, _s);
 	//case StmtK_::ForK:
 	//	return codegen_for(_c, _s);
-	//case StmtK_::WhileK:
-	//	return codegen_while(_c, _s);
+	case StmtK_::WhileK:
+		return codegen_while(_c, _s);
 	case StmtK_::IfK:
 	{
 		return codegen_if(_c, _s);
