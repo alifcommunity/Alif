@@ -57,8 +57,9 @@ AlifObject* alifNumber_index(AlifObject*); // 545
 
 AlifSizeT alifNumber_asSizeT(AlifObject*, AlifObject*); // 553
 
-
+AlifObject* alifNumber_inPlaceAdd(AlifObject*, AlifObject*); // 574
 AlifObject* alifNumber_inPlaceSubtract(AlifObject*, AlifObject*); // 580
+AlifObject* alifNumber_inPlaceMultiply(AlifObject*, AlifObject*); // 586
 AlifObject* alifNumber_inPlaceFloorDivide(AlifObject*, AlifObject*); // 597
 AlifObject* alifNumber_inPlaceTrueDivide(AlifObject*, AlifObject*); // 604
 AlifObject* alifNumber_inPlaceRemainder(AlifObject*, AlifObject*); // 611

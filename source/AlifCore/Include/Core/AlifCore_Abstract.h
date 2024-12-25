@@ -9,7 +9,8 @@ static inline AlifIntT alifIndex_check(AlifObject* _obj) { // 13
 
 
 
-
+AlifObject* _alifNumber_powerNoMod(AlifObject*, AlifObject*); // 19
+AlifObject* _alifNumber_inPlacePowerNoMod(AlifObject*, AlifObject*); // 20
 
 
 extern AlifIntT alifObject_hasLen(AlifObject*); // 22

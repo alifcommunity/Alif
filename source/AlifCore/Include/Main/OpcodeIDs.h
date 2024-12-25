@@ -2,8 +2,8 @@
 //
 //
 #define CACHE                                    0
-//#define BINARY_SLICE                             1
-//#define BINARY_SUBSCR                            2
+#define BINARY_SLICE                             1
+#define BINARY_SUBSCR                            2
 //#define BINARY_OP_INPLACE_ADD_UNICODE            3
 //#define CHECK_EG_MATCH                           4
 //#define CHECK_EXC_MATCH                          5
@@ -36,8 +36,8 @@
 #define RETURN_GENERATOR                        32
 #define RETURN_VALUE                            33
 //#define SETUP_ANNOTATIONS                       34
-//#define STORE_SLICE                             35
-//#define STORE_SUBSCR                            36
+#define STORE_SLICE                             35
+#define STORE_SUBSCR                            36
 #define TO_BOOL                                 37
 #define UNARY_INVERT                            38
 #define UNARY_NEGATIVE                          39

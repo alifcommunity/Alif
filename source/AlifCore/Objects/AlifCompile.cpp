@@ -217,7 +217,9 @@ static AlifCodeObject* compiler_mod(AlifCompiler*, ModuleTy); // 312
 static AlifIntT compiler_visitStmt(AlifCompiler*, StmtTy); // 313
 static AlifIntT compiler_visitKeyword(AlifCompiler*, KeywordTy); // 314
 static AlifIntT compiler_visitExpr(AlifCompiler*, ExprTy); // 315
+static AlifIntT codegen_augAssign(AlifCompiler*, StmtTy); // 316
 
+static AlifIntT codegen_slice(AlifCompiler*, ExprTy); // 319
 
 static AlifIntT codegen_addCompare(AlifCompiler*, Location, CmpOp_); // alif
 static bool areAllItems_const(ASDLExprSeq*, AlifSizeT, AlifSizeT); // 321
@@ -756,6 +758,9 @@ static AlifIntT codegen_addOpJ(InstrSequence* _seq, Location _loc,
 
 #define ADDOP_BINARY(_c, _loc, _binOp) \
     RETURN_IF_ERROR(addop_binary(_c, _loc, _binOp, false)) // 1016
+
+#define ADDOP_INPLACE(_c, _loc, _binOp) \
+    RETURN_IF_ERROR(addop_binary(_c, _loc, _binOp, true)) // 1019
 
 
  // 1035
@@ -1344,8 +1349,8 @@ static AlifIntT compiler_visitStmt(AlifCompiler* _c, StmtTy _s) { // 3818
 		}
 		break;
 	}
-	//case StmtK_::AugAssignK:
-	//	return codegen_augassign(_c, _s);
+	case StmtK_::AugAssignK:
+		return codegen_augAssign(_c, _s);
 	//case StmtK_::AnnAssignK:
 	//	return compiler_annassign(_c, _s);
 	//case StmtK_::ForK:
@@ -2466,7 +2471,107 @@ static AlifIntT compiler_visitExpr(AlifCompiler* _c, ExprTy _e) { // 5997
 	return SUCCESS;
 }
 
+static bool is_twoElementSlice(ExprTy _s) { // 6152
+	return _s->type == ExprK_::SliceK and
+		_s->V.slice.step == nullptr;
+}
 
+static AlifIntT codegen_augAssign(AlifCompiler* _c, StmtTy _s) { // 6159
+	ExprTy e = _s->V.augAssign.target;
+
+	Location loc = LOC(e);
+
+	switch (e->type) {
+	case ExprK_::AttributeK:
+		VISIT(_c, Expr, e->V.attribute.val);
+		ADDOP_I(_c, loc, COPY, 1);
+		loc = updateStartLocation_toMatchAttr(_c, loc, e);
+		ADDOP_NAME(_c, loc, LOAD_ATTR, e->V.attribute.attr, names);
+		break;
+	case ExprK_::SubScriptK:
+		VISIT(_c, Expr, e->V.subScript.val);
+		if (is_twoElementSlice(e->V.subScript.slice)) {
+			RETURN_IF_ERROR(codegen_slice(_c, e->V.subScript.slice));
+			ADDOP_I(_c, loc, COPY, 3);
+			ADDOP_I(_c, loc, COPY, 3);
+			ADDOP_I(_c, loc, COPY, 3);
+			ADDOP(_c, loc, BINARY_SLICE);
+		}
+		else {
+			VISIT(_c, Expr, e->V.subScript.slice);
+			ADDOP_I(_c, loc, COPY, 2);
+			ADDOP_I(_c, loc, COPY, 2);
+			ADDOP(_c, loc, BINARY_SUBSCR);
+		}
+		break;
+	case ExprK_::NameK:
+		RETURN_IF_ERROR(compiler_nameOp(_c, loc, e->V.name.name, ExprContext_::Load));
+		break;
+	default:
+		//alifErr_format(_alifExcSystemError_,
+		//	"invalid node type (%d) for augmented assignment",
+		//	e->type);
+		return ERROR;
+	}
+
+	loc = LOC(_s);
+
+	VISIT(_c, Expr, _s->V.augAssign.val);
+	ADDOP_INPLACE(_c, loc, _s->V.augAssign.op);
+
+	loc = LOC(e);
+
+	switch (e->type) {
+	case ExprK_::AttributeK:
+		loc = updateStartLocation_toMatchAttr(_c, loc, e);
+		ADDOP_I(_c, loc, SWAP, 2);
+		ADDOP_NAME(_c, loc, STORE_ATTR, e->V.attribute.attr, names);
+		break;
+	case ExprK_::SubScriptK:
+		if (is_twoElementSlice(e->V.subScript.slice)) {
+			ADDOP_I(_c, loc, SWAP, 4);
+			ADDOP_I(_c, loc, SWAP, 3);
+			ADDOP_I(_c, loc, SWAP, 2);
+			ADDOP(_c, loc, STORE_SLICE);
+		}
+		else {
+			ADDOP_I(_c, loc, SWAP, 3);
+			ADDOP_I(_c, loc, SWAP, 2);
+			ADDOP(_c, loc, STORE_SUBSCR);
+		}
+		break;
+	case ExprK_::NameK:
+		return compiler_nameOp(_c, loc, e->V.name.name, ExprContext_::Store);
+	default:
+		ALIF_UNREACHABLE();
+	}
+	return SUCCESS;
+}
+
+
+static AlifIntT codegen_slice(AlifCompiler* _c, ExprTy _s) { // 6465
+	AlifIntT n = 2;
+
+	if (_s->V.slice.lower) {
+		VISIT(_c, Expr, _s->V.slice.lower);
+	}
+	else {
+		ADDOP_LOAD_CONST(_c, LOC(_s), ALIF_NONE);
+	}
+
+	if (_s->V.slice.upper) {
+		VISIT(_c, Expr, _s->V.slice.upper);
+	}
+	else {
+		ADDOP_LOAD_CONST(_c, LOC(_s), ALIF_NONE);
+	}
+
+	if (_s->V.slice.step) {
+		n++;
+		VISIT(_c, Expr, _s->V.slice.step);
+	}
+	return n;
+}
 
 
 static AlifObject* constsDict_keysInorder(AlifObject* _dict) { // 7321

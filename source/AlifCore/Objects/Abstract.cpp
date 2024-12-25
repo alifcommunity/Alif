@@ -532,6 +532,9 @@ AlifObject* alifNumber_power(AlifObject* _v, AlifObject* _w, AlifObject* _z) { /
 	return ternary_op(_v, _w, _z, NB_SLOT(power), "** or pow()");
 }
 
+AlifObject* _alifNumber_powerNoMod(AlifObject* _lhs, AlifObject* _rhs) { // 1192
+	return alifNumber_power(_lhs, _rhs, ALIF_NONE);
+}
 
 static AlifObject* binary_iop1(AlifObject* _v, AlifObject* _w,
 	const AlifIntT _iopSlot, const AlifIntT _opSlot) { // 1214
@@ -561,6 +564,23 @@ static AlifObject* binary_iop(AlifObject* _v, AlifObject* _w,
 	return result;
 }
 
+static AlifObject* ternary_iOp(AlifObject* _v, AlifObject* _w,
+	AlifObject* _z, const AlifIntT _iopSlot,
+	const AlifIntT _opSlot, const char* _opName) { // 1258
+	AlifNumberMethods* mv = ALIF_TYPE(_v)->asNumber;
+	if (mv != nullptr) {
+		TernaryFunc slot = NB_TERNOP(mv, _iopSlot);
+		if (slot) {
+			AlifObject* x = (slot)(_v, _w, _z);
+			if (x != ALIF_NOTIMPLEMENTED) {
+				return x;
+			}
+			ALIF_DECREF(x);
+		}
+	}
+	return ternary_op(_v, _w, _z, _opSlot, _opName);
+}
+
  // 1276
 #define INPLACE_BINOP(_func, _iop, _op) \
     AlifObject * _func(AlifObject *_v, AlifObject *_w) { \
@@ -578,7 +598,58 @@ INPLACE_BINOP(alifNumber_inPlaceTrueDivide, inplaceTrueDivide, trueDivide)
 INPLACE_BINOP(alifNumber_inPlaceRemainder, inplaceRemainder, remainder) // 1291
 
 
+AlifObject* alifNumber_inPlaceAdd(AlifObject* _v, AlifObject* _w) { // 1293
+	AlifObject* result = BINARY_IOP1(_v, _w, NB_SLOT(inplaceAdd),
+		NB_SLOT(add_), "+=");
+	if (result == ALIF_NOTIMPLEMENTED) {
+		AlifSequenceMethods* m = ALIF_TYPE(_v)->asSequence;
+		ALIF_DECREF(result);
+		if (m != nullptr) {
+			BinaryFunc func = m->inplaceConcat;
+			if (func == nullptr)
+				func = m->concat;
+			if (func != nullptr) {
+				result = func(_v, _w);
+				return result;
+			}
+		}
+		//result = binOp_typeError(_v, _w, "+=");
+	}
+	return result;
+}
 
+AlifObject* alifNumber_inPlaceMultiply(AlifObject* _v, AlifObject* _w) { // 1316
+	AlifObject* result = BINARY_IOP1(_v, _w, NB_SLOT(inplaceMultiply),
+		NB_SLOT(multiply), "*=");
+	if (result == ALIF_NOTIMPLEMENTED) {
+		SizeArgFunc f = nullptr;
+		AlifSequenceMethods* mv = ALIF_TYPE(_v)->asSequence;
+		AlifSequenceMethods* mw = ALIF_TYPE(_w)->asSequence;
+		ALIF_DECREF(result);
+		if (mv != nullptr) {
+			f = mv->inplaceRepeat;
+			if (f == nullptr)
+				f = mv->repeat;
+			if (f != nullptr)
+				return sequence_repeat(f, _v, _w);
+		}
+		else if (mw != nullptr) {
+			if (mw->repeat)
+				return sequence_repeat(mw->repeat, _w, _v);
+		}
+		//result = binOp_typeError(_v, _w, "*=");
+	}
+	return result;
+}
+
+AlifObject* alifNumber_inPlacePower(AlifObject* _v, AlifObject* _w, AlifObject* _z) { // 1345
+	return ternary_iOp(_v, _w, _z, NB_SLOT(inplacePower),
+		NB_SLOT(power), "^=");
+}
+
+AlifObject* _alifNumber_inPlacePowerNoMod(AlifObject* _lhs, AlifObject* _rhs) { // 1352
+	return alifNumber_inPlacePower(_lhs, _rhs, ALIF_NONE);
+}
 
  // 1361
 #define UNARY_FUNC(_func, _op, _methName, _descr)                           \

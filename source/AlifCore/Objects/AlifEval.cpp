@@ -22,7 +22,7 @@
 
 #include "AlifCore_Frame.h"
 
-
+#include "Opcode.h"
 
 
 
@@ -66,7 +66,34 @@ AlifIntT alif_checkRecursiveCall(AlifThread* _thread, const char* _where) { // 3
 }
 
 
-
+const BinaryFunc _alifEvalBinaryOps_[] = { // 307
+	alifNumber_add, // NB_ADD
+	alifNumber_and, // NB_AND
+	alifNumber_floorDivide, // NB_FLOOR_DIVIDE
+	alifNumber_lshift, // NB_LSHIFT
+	nullptr, // alifNumber_matrixMultiply, // NB_MATRIX_MULTIPLY
+	alifNumber_multiply, // NB_MULTIPLY
+	alifNumber_remainder, // NB_REMAINDER
+	alifNumber_or, // NB_OR
+	_alifNumber_powerNoMod, // NB_POWER
+	alifNumber_rshift, // NB_RSHIFT
+	alifNumber_subtract, // NB_SUBTRACT
+	alifNumber_trueDivide, // NB_TRUE_DIVIDE
+	alifNumber_xor, // NB_XOR
+	alifNumber_inPlaceAdd, // NB_INPLACE_ADD
+	alifNumber_inPlaceAnd, // NB_INPLACE_AND
+	alifNumber_inPlaceFloorDivide, // NB_INPLACE_FLOOR_DIVIDE
+	alifNumber_inPlaceLshift, // NB_INPLACE_LSHIFT
+	nullptr, // alifNumber_inPlaceMatrixMultiply, // NB_INPLACE_MATRIX_MULTIPLY
+	alifNumber_inPlaceMultiply, // NB_INPLACE_MULTIPLY
+	alifNumber_inPlaceRemainder, // NB_INPLACE_REMAINDER
+	alifNumber_inPlaceOr, // NB_INPLACE_OR
+	_alifNumber_inPlacePowerNoMod, // NB_INPLACE_POWER
+	alifNumber_inPlaceRshift, // NB_INPLACE_RSHIFT
+	alifNumber_inPlaceSubtract, // NB_INPLACE_SUBTRACT
+	alifNumber_inPlaceTrueDivide, // NB_INPLACE_TRUE_DIVIDE
+	alifNumber_inPlaceXor, // NB_INPLACE_XOR
+};
 
 
 
@@ -288,6 +315,43 @@ dispatch_opcode :
 				res = _alifStackRefNull_;
 				stackPointer[0] = res;
 				stackPointer += 1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
+			TARGET(BINARY_OP) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 2;
+				PREDICTED(BINARY_OP);
+				AlifCodeUnit* this_instr = nextInstr - 2;
+				AlifStackRef lhs{};
+				AlifStackRef rhs{};
+				AlifStackRef res{};
+				// _SPECIALIZE_BINARY_OP
+				rhs = stackPointer[-1];
+				lhs = stackPointer[-2];
+				{
+					uint16_t counter = read_u16(&this_instr[1].cache);
+#if ENABLE_SPECIALIZATION
+					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
+						nextInstr = this_instr;
+						_alifSpecialize_binaryOp(lhs, rhs, nextInstr, oparg, LOCALS_ARRAY);
+						DISPATCH_SAME_OPARG();
+					}
+					OPCODE_DEFERRED_INC(BINARY_OP);
+					ADVANCE_ADAPTIVE_COUNTER(thisInstr[1].counter);
+#endif  /* ENABLE_SPECIALIZATION */
+				}
+				// _BINARY_OP
+				{
+					AlifObject* lhsObj = alifStackRef_asAlifObjectBorrow(lhs);
+					AlifObject* rhsObj = alifStackRef_asAlifObjectBorrow(rhs);
+					AlifObject* resObj = _alifEvalBinaryOps_[oparg](lhsObj, rhsObj);
+					alifStackRef_close(lhs);
+					alifStackRef_close(rhs);
+					//if (resObj == nullptr) goto pop_2_error;
+					res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(resObj);
+				}
+				stackPointer[-2] = res;
+				stackPointer += -1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
 			TARGET(BUILD_LIST) {
