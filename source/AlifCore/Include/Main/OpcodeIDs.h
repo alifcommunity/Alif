@@ -7,11 +7,11 @@
 //#define BINARY_OP_INPLACE_ADD_UNICODE            3
 //#define CHECK_EG_MATCH                           4
 //#define CHECK_EXC_MATCH                          5
-//#define CLEANUP_THROW                            6
+#define CLEANUP_THROW                            6
 //#define DELETE_SUBSCR                            7
 //#define END_ASYNC_FOR                            8
 #define END_FOR                                  9
-//#define END_SEND                                10
+#define END_SEND                                10
 //#define EXIT_INIT_CHECK                         11
 #define FORMAT_SIMPLE                           12
 #define FORMAT_WITH_SPEC                        13
@@ -29,7 +29,7 @@
 //#define MATCH_MAPPING                           25
 //#define MATCH_SEQUENCE                          26
 #define NOP                                     27
-//#define POP_EXCEPT                              28
+#define POP_EXCEPT                              28
 #define POP_TOP                                 29
 //#define PUSH_EXC_INFO                           30
 #define PUSH_NULL                               31
@@ -69,7 +69,7 @@
 #define DICT_UPDATE                             65
 #define EXTENDED_ARG                            66
 #define FOR_ITER                                67
-//#define GET_AWAITABLE                           68
+#define GET_AWAITABLE                           68
 //#define IMPORT_FROM                             69
 //#define IMPORT_NAME                             70
 #define IS_OP                                   71
@@ -102,7 +102,7 @@
 #define RAISE_VARARGS                           98
 #define RERAISE                                 99
 #define RETURN_CONST                           100
-//#define SEND                                   101
+#define SEND                                   101
 #define SET_ADD                                102
 //#define SET_FUNCTION_ATTRIBUTE                 103
 //#define SET_UPDATE                             104
@@ -116,7 +116,7 @@
 #define SWAP                                   112
 #define UNPACK_EX                              113
 #define UNPACK_SEQUENCE                        114
-//#define YIELD_VALUE                            115
+#define YIELD_VALUE                            115
 //#define _DO_CALL_FUNCTION_EX                   116
 #define RESUME                                 149
 //#define BINARY_OP_ADD_FLOAT                    150

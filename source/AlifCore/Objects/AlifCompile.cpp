@@ -213,6 +213,7 @@ public:
 
 
 static void compiler_free(AlifCompiler*); // 307
+static AlifIntT compiler_nameOp(AlifCompiler*, Location, Identifier, ExprContext_); // 310
 static AlifCodeObject* compiler_mod(AlifCompiler*, ModuleTy); // 312
 static AlifIntT compiler_visitStmt(AlifCompiler*, StmtTy); // 313
 static AlifIntT compiler_visitKeyword(AlifCompiler*, KeywordTy); // 314
@@ -762,6 +763,8 @@ static AlifIntT codegen_addOpJ(InstrSequence* _seq, Location _loc,
 #define ADDOP_INPLACE(_c, _loc, _binOp) \
     RETURN_IF_ERROR(addop_binary(_c, _loc, _binOp, true)) // 1019
 
+#define ADD_YIELD_FROM(_c, _loc, _await) \
+    RETURN_IF_ERROR(codegen_addYieldFrom(_c, _loc, _await)) // 1022
 
  // 1035
 #define VISIT(_c, _type, _v) \
@@ -965,6 +968,171 @@ static void compiler_popFBlock(AlifCompiler* _c,
 	CompilerUnit* u = _c->u_;
 	u->nfBlocks--;
 }
+
+static FBlockInfo* compiler_topFBlock(AlifCompiler* _c) { // 1267
+	if (_c->u_->nfBlocks == 0) {
+		return nullptr;
+	}
+	return &_c->u_->fBlock[_c->u_->nfBlocks - 1];
+}
+
+static AlifIntT codegen_callExitWithNones(AlifCompiler* _c, Location _loc) { // 1276
+	ADDOP_LOAD_CONST(_c, _loc, ALIF_NONE);
+	ADDOP_LOAD_CONST(_c, _loc, ALIF_NONE);
+	ADDOP_LOAD_CONST(_c, _loc, ALIF_NONE);
+	ADDOP_I(_c, _loc, CALL, 3);
+	return SUCCESS;
+}
+
+static AlifIntT codegen_addYieldFrom(AlifCompiler* _c, Location _loc, AlifIntT _await) { // 1286
+	NEW_JUMP_TARGET_LABEL(_c, send);
+	NEW_JUMP_TARGET_LABEL(_c, fail);
+	NEW_JUMP_TARGET_LABEL(_c, exit);
+
+	USE_LABEL(_c, send);
+	ADDOP_JUMP(_c, _loc, SEND, exit);
+	// Set up a virtual try/except to handle when StopIteration is raised during
+	// a close or throw call. The only way YIELD_VALUE raises if they do!
+	ADDOP_JUMP(_c, _loc, SETUP_FINALLY, fail);
+	ADDOP_I(_c, _loc, YIELD_VALUE, 1);
+	ADDOP(_c, _noLocation_, POP_BLOCK);
+	ADDOP_I(_c, _loc, RESUME, _await ? RESUME_AFTER_AWAIT : RESUME_AFTER_YIELD_FROM);
+	ADDOP_JUMP(_c, _loc, JUMP_NO_INTERRUPT, send);
+
+	USE_LABEL(_c, fail);
+	ADDOP(_c, _loc, CLEANUP_THROW);
+
+	USE_LABEL(_c, exit);
+	ADDOP(_c, _loc, END_SEND);
+	return SUCCESS;
+}
+
+
+static AlifIntT codegen_unwindFBlock(AlifCompiler* _c, Location* _ploc,
+	FBlockInfo* _info, AlifIntT _preserveTos) { // 1332
+	switch (_info->type) {
+	case FBlockType_::While_Loop:
+	case FBlockType_::Exception_Handler:
+	case FBlockType_::Exception_Group_Handler:
+	case FBlockType_::Async_Comprehension_Generator:
+	case FBlockType_::Stop_Iteration:
+		return SUCCESS;
+
+	case FBlockType_::For_Loop:
+		/* Pop the iterator */
+		if (_preserveTos) {
+			ADDOP_I(_c, *_ploc, SWAP, 2);
+		}
+		ADDOP(_c, *_ploc, POP_TOP);
+		return SUCCESS;
+
+	case FBlockType_::Try_Except:
+		ADDOP(_c, *_ploc, POP_BLOCK);
+		return SUCCESS;
+
+	case FBlockType_::Finally_Try:
+		/* This POP_BLOCK gets the line number of the unwinding statement */
+		ADDOP(_c, *_ploc, POP_BLOCK);
+		if (_preserveTos) {
+			RETURN_IF_ERROR(
+				compiler_pushFBlock(_c, *_ploc, FBlockType_::Pop_Value, _noLabel_, _noLabel_, nullptr));
+		}
+		/* Emit the finally block */
+		VISIT_SEQ(_c, Stmt, (ASDLStmtSeq*)_info->datum);
+		if (_preserveTos) {
+			compiler_popFBlock(_c, FBlockType_::Pop_Value, _noLabel_);
+		}
+		/* The finally block should appear to execute after the
+		 * statement causing the unwinding, so make the unwinding
+		 * instruction artificial */
+		*_ploc = _noLocation_;
+		return SUCCESS;
+
+	case FBlockType_::Finally_End:
+		if (_preserveTos) {
+			ADDOP_I(_c, *_ploc, SWAP, 2);
+		}
+		ADDOP(_c, *_ploc, POP_TOP); /* exc_value */
+		if (_preserveTos) {
+			ADDOP_I(_c, *_ploc, SWAP, 2);
+		}
+		ADDOP(_c, *_ploc, POP_BLOCK);
+		ADDOP(_c, *_ploc, POP_EXCEPT);
+		return SUCCESS;
+
+	case FBlockType_::With:
+	case FBlockType_::Async_With:
+		*_ploc = _info->loc;
+		ADDOP(_c, *_ploc, POP_BLOCK);
+		if (_preserveTos) {
+			ADDOP_I(_c, *_ploc, SWAP, 3);
+			ADDOP_I(_c, *_ploc, SWAP, 2);
+		}
+		RETURN_IF_ERROR(codegen_callExitWithNones(_c, *_ploc));
+		if (_info->type == FBlockType_::Async_With) {
+			ADDOP_I(_c, *_ploc, GET_AWAITABLE, 2);
+			ADDOP_LOAD_CONST(_c, *_ploc, ALIF_NONE);
+			ADD_YIELD_FROM(_c, *_ploc, 1);
+		}
+		ADDOP(_c, *_ploc, POP_TOP);
+		/* The exit block should appear to execute after the
+		 * statement causing the unwinding, so make the unwinding
+		 * instruction artificial */
+		*_ploc = _noLocation_;
+		return SUCCESS;
+
+	case FBlockType_::Handler_Cleanup: {
+		if (_info->datum) {
+			ADDOP(_c, *_ploc, POP_BLOCK);
+		}
+		if (_preserveTos) {
+			ADDOP_I(_c, *_ploc, SWAP, 2);
+		}
+		ADDOP(_c, *_ploc, POP_BLOCK);
+		ADDOP(_c, *_ploc, POP_EXCEPT);
+		if (_info->datum) {
+			ADDOP_LOAD_CONST(_c, *_ploc, ALIF_NONE);
+			RETURN_IF_ERROR(compiler_nameOp(_c, *_ploc, (Identifier)_info->datum, ExprContext_::Store));
+			RETURN_IF_ERROR(compiler_nameOp(_c, *_ploc, (Identifier)_info->datum, ExprContext_::Del));
+		}
+		return SUCCESS;
+	}
+	case FBlockType_::Pop_Value: {
+		if (_preserveTos) {
+			ADDOP_I(_c, *_ploc, SWAP, 2);
+		}
+		ADDOP(_c, *_ploc, POP_TOP);
+		return SUCCESS;
+	}
+	}
+	ALIF_UNREACHABLE();
+}
+
+/** Unwind block stack. If loop is not nullptr, then stop when the first loop is encountered. */
+static AlifIntT codegen_unwindFBlockStack(AlifCompiler* _c, Location* _ploc,
+	AlifIntT _preserveTos, FBlockInfo** _loop) { // 1435
+	FBlockInfo* top = compiler_topFBlock(_c);
+	if (top == nullptr) {
+		return SUCCESS;
+	}
+	if (top->type == FBlockType_::Exception_Group_Handler) {
+		//return compiler_error(
+		//	_c, *_ploc, "'break', 'continue' and 'return' cannot appear in an except* block");
+	}
+	if (_loop != nullptr
+		and (top->type == FBlockType_::While_Loop or top->type == FBlockType_::For_Loop)) {
+		*_loop = top;
+		return SUCCESS;
+	}
+	FBlockInfo copy = *top;
+	compiler_popFBlock(_c, top->type, top->block);
+	RETURN_IF_ERROR(codegen_unwindFBlock(_c, _ploc, &copy, _preserveTos));
+	RETURN_IF_ERROR(codegen_unwindFBlockStack(_c, _ploc, _preserveTos, _loop));
+	compiler_pushFBlock(_c, copy.loc, copy.type, copy.block,
+		copy.exit, copy.datum);
+	return SUCCESS;
+}
+
 
 
 
@@ -1388,6 +1556,32 @@ static AlifIntT codegen_while(AlifCompiler* _c, StmtTy _s) { // 3001
 
 
 
+static AlifIntT codegen_break(AlifCompiler* _c, Location _loc) { // 3067
+	FBlockInfo* loop = nullptr;
+	Location originLoc = _loc;
+	/* Emit instruction with line number */
+	ADDOP(_c, _loc, NOP);
+	RETURN_IF_ERROR(codegen_unwindFBlockStack(_c, &_loc, 0, &loop));
+	if (loop == nullptr) {
+		//return compiler_error(_c, origin_loc, "'break' outside loop");
+	}
+	RETURN_IF_ERROR(codegen_unwindFBlock(_c, &_loc, loop, 0));
+	ADDOP_JUMP(_c, _loc, JUMP, loop->exit);
+	return SUCCESS;
+}
+
+static AlifIntT codegen_continue(AlifCompiler* _c, Location _loc) { // 3083
+	FBlockInfo* loop = nullptr;
+	Location origin_loc = _loc;
+	/* Emit instruction with line number */
+	ADDOP(_c, _loc, NOP);
+	RETURN_IF_ERROR(codegen_unwindFBlockStack(_c, &_loc, 0, &loop));
+	if (loop == nullptr) {
+		//return compiler_error(_c, origin_loc, "'continue' not properly in loop");
+	}
+	ADDOP_JUMP(_c, _loc, JUMP, loop->block);
+	return SUCCESS;
+}
 
 
 static AlifIntT codegen_stmtExpr(AlifCompiler* _c, Location _loc, ExprTy _value) { // 3797
@@ -1480,19 +1674,19 @@ static AlifIntT compiler_visitStmt(AlifCompiler* _c, StmtTy _s) { // 3818
 	{
 		return codegen_stmtExpr(_c, LOC(_s), _s->V.expression.val);
 	}
-	//case StmtK_::PassK:
-	//{
-	//	ADDOP(_c, LOC(_s), NOP);
-	//	break;
-	//}
-	//case StmtK_::BreakK:
-	//{
-	//	return codegen_break(_c, LOC(_s));
-	//}
-	//case StmtK_::ContinueK:
-	//{
-	//	return codegen_continue(_c, LOC(_s));
-	//}
+	case StmtK_::PassK:
+	{
+		ADDOP(_c, LOC(_s), NOP);
+		break;
+	}
+	case StmtK_::BreakK:
+	{
+		return codegen_break(_c, LOC(_s));
+	}
+	case StmtK_::ContinueK:
+	{
+		return codegen_continue(_c, LOC(_s));
+	}
 	//case StmtK_::WithK:
 	//	return codegen_with(_c, _s, 0);
 	//case StmtK_::AsyncFunctionDefK:
