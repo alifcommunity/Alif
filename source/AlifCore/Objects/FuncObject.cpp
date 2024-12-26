@@ -78,6 +78,92 @@ AlifFunctionObject* _alifFunction_fromConstructor(AlifFrameConstructor* _constr)
 	return op_;
 }
 
+AlifObject* alifFunction_newWithQualName(AlifObject* _code,
+	AlifObject* _globals, AlifObject* _qualname) { // 140
+	ALIF_INCREF(_globals);
+
+	AlifFunctionObject* op{}; // alif
+
+	AlifThread* thread = _alifThread_get();
+
+	AlifCodeObject* codeObj = (AlifCodeObject*)ALIF_NEWREF(_code);
+
+	AlifObject* name = ALIF_NEWREF(codeObj->name);
+
+	if (!_qualname) {
+		_qualname = codeObj->qualname;
+	}
+	ALIF_INCREF(_qualname);
+
+	AlifObject* consts = codeObj->consts;
+	AlifObject* doc{};
+	if (alifTuple_size(consts) >= 1) {
+		doc = alifTuple_getItem(consts, 0);
+		if (!ALIFUSTR_CHECK(doc)) {
+			doc = ALIF_NONE;
+		}
+	}
+	else {
+		doc = ALIF_NONE;
+	}
+	ALIF_INCREF(doc);
+
+	// __module__: Use globals['__name__'] if it exists, or nullptr.
+	AlifObject* module{};
+	AlifObject* builtins = nullptr;
+	if (alifDict_getItemRef(_globals, &ALIF_ID(__name__), &module) < 0) {
+		goto error;
+	}
+
+	builtins = _alifEval_builtinsFromGlobals(thread, _globals); // borrowed ref
+	if (builtins == nullptr) {
+		goto error;
+	}
+	ALIF_INCREF(builtins);
+
+	op = ALIFOBJECT_GC_NEW(AlifFunctionObject, &_alifFunctionType_);
+	if (op == nullptr) {
+		goto error;
+	}
+	/* Note: No failures from this point on, since func_dealloc() does not
+	   expect a partially-created object. */
+
+	op->globals = _globals;
+	op->builtins = builtins;
+	op->name = name;
+	op->qualname = _qualname;
+	op->code = (AlifObject*)codeObj;
+	op->defaults = nullptr;    // No default positional arguments
+	op->kwDefaults = nullptr;  // No default keyword arguments
+	op->closure = nullptr;
+	op->doc = doc;
+	op->dict = nullptr;
+	op->weakRefList = nullptr;
+	op->module = module;
+	op->annotations = nullptr;
+	op->annotate = nullptr;
+	op->typeParams = nullptr;
+	op->vectorCall = alifFunction_vectorCall;
+	op->version = 0;
+	if ((codeObj->flags & CO_NESTED) == 0) {
+		alifObject_setDeferredRefcount((AlifObject*)op);
+	}
+	ALIFOBJECT_GC_TRACK(op);
+	handle_funcEvent(AlifFunctionWatchEvent::AlifFunction_Event_Create, op, nullptr);
+	return (AlifObject*)op;
+
+error:
+	ALIF_DECREF(_globals);
+	ALIF_DECREF(codeObj);
+	ALIF_DECREF(name);
+	ALIF_DECREF(_qualname);
+	ALIF_DECREF(doc);
+	ALIF_XDECREF(module);
+	ALIF_XDECREF(builtins);
+	return nullptr;
+}
+
+
 
 
 void _alifFunction_setVersion(AlifFunctionObject* _func,
@@ -86,7 +172,9 @@ void _alifFunction_setVersion(AlifFunctionObject* _func,
 }
 
 
-
+AlifObject* alifFunction_new(AlifObject* _code, AlifObject* _globals) { // 370
+	return alifFunction_newWithQualName(_code, _globals, nullptr);
+}
 
 
 

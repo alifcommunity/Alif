@@ -51,6 +51,31 @@ AlifObject* alifTuple_new(AlifSizeT _size) { // 68
 	return (AlifObject*)op_;
 }
 
+
+AlifSizeT alifTuple_size(AlifObject* _op) { // 85
+	if (!ALIFTUPLE_CHECK(_op)) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+	else
+		return ALIF_SIZE(_op);
+}
+
+
+AlifObject* alifTuple_getItem(AlifObject* _op, AlifSizeT _i) { // 96
+	if (!ALIFTUPLE_CHECK(_op)) {
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
+	if (_i < 0 or _i >= ALIF_SIZE(_op)) {
+		//alifErr_setString(_alifExcIndexError_, "tuple index out of range");
+		return nullptr;
+	}
+	return ((AlifTupleObject*)_op)->item[_i];
+}
+
+
+
 AlifObject* alifTuple_pack(AlifSizeT _n, ...) { // 153
 	AlifSizeT i_{};
 	AlifObject* o_{};

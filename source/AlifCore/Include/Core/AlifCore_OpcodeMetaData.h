@@ -86,8 +86,8 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 3 + (_oparg & 1);
 	case CALL_INTRINSIC_1:
 		return 1;
-	//case CALL_INTRINSIC_2:
-	//	return 2;
+	case CALL_INTRINSIC_2:
+		return 2;
 	//case CALL_ISINSTANCE:
 	//	return 2 + _oparg;
 	//case CALL_KW:
@@ -126,7 +126,7 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 2;
 	//case CHECK_EXC_MATCH:
 	//	return 2;
-	//case CLEANUP_THROW:
+	case CLEANUP_THROW:
 		return 3;
 	case COMPARE_OP:
 		return 2;
@@ -168,8 +168,8 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 2;
 	case END_FOR:
 		return 1;
-	//case END_SEND:
-	//	return 2;
+	case END_SEND:
+		return 2;
 	//case ENTER_EXECUTOR:
 	//	return 0;
 	//case EXIT_INIT_CHECK:
@@ -194,8 +194,8 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 1;
 	//case GET_ANEXT:
 	//	return 1;
-	//case GET_AWAITABLE:
-	//	return 1;
+	case GET_AWAITABLE:
+		return 1;
 	case GET_ITER:
 		return 1;
 	//case GET_LEN:
@@ -330,8 +330,8 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 3;
 	case MAKE_CELL:
 		return 0;
-	//case MAKE_FUNCTION:
-	//	return 1;
+	case MAKE_FUNCTION:
+		return 1;
 	case MAP_ADD:
 		return 3 + (_oparg - 1);
 	//case MATCH_CLASS:
@@ -346,8 +346,8 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 		return 0;
 	case POP_BLOCK:
 		return 0;
-	//case POP_EXCEPT:
-	//	return 1;
+	case POP_EXCEPT:
+		return 1;
 	case POP_JUMP_IF_FALSE:
 		return 1;
 	case POP_JUMP_IF_NONE:
@@ -378,8 +378,8 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 		return 0;
 	case RETURN_VALUE:
 		return 1;
-	//case SEND:
-	//	return 2;
+	case SEND:
+		return 2;
 	//case SEND_GEN:
 	//	return 2;
 	//case SETUP_ANNOTATIONS:
@@ -392,8 +392,8 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 		return 0;
 	case SET_ADD:
 		return 2 + (_oparg - 1);
-	//case SET_FUNCTION_ATTRIBUTE:
-	//	return 2;
+	case SET_FUNCTION_ATTRIBUTE:
+		return 2;
 	//case SET_UPDATE:
 	//	return 2 + (_oparg - 1);
 	case STORE_ATTR:
@@ -548,8 +548,8 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 1;
 	case CALL_INTRINSIC_1:
 		return 1;
-	//case CALL_INTRINSIC_2:
-	//	return 1;
+	case CALL_INTRINSIC_2:
+		return 1;
 	//case CALL_ISINSTANCE:
 	//	return 1;
 	//case CALL_KW:
@@ -588,8 +588,8 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 2;
 	//case CHECK_EXC_MATCH:
 	//	return 2;
-	//case CLEANUP_THROW:
-	//	return 2;
+	case CLEANUP_THROW:
+		return 2;
 	case COMPARE_OP:
 		return 1;
 	//case COMPARE_OP_FLOAT:
@@ -630,8 +630,8 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 0;
 	case END_FOR:
 		return 0;
-	//case END_SEND:
-	//	return 1;
+	case END_SEND:
+		return 1;
 	//case ENTER_EXECUTOR:
 	//	return 0;
 	//case EXIT_INIT_CHECK:
@@ -656,8 +656,8 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 1;
 	//case GET_ANEXT:
 	//	return 2;
-	//case GET_AWAITABLE:
-	//	return 1;
+	case GET_AWAITABLE:
+		return 1;
 	case GET_ITER:
 		return 1;
 	//case GET_LEN:
@@ -792,8 +792,8 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 2;
 	case MAKE_CELL:
 		return 0;
-	//case MAKE_FUNCTION:
-	//	return 1;
+	case MAKE_FUNCTION:
+		return 1;
 	case MAP_ADD:
 		return 1 + (_oparg - 1);
 	//case MATCH_CLASS:
@@ -808,8 +808,8 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 		return 0;
 	case POP_BLOCK:
 		return 0;
-	//case POP_EXCEPT:
-	//	return 0;
+	case POP_EXCEPT:
+		return 0;
 	case POP_JUMP_IF_FALSE:
 		return 0;
 	case POP_JUMP_IF_NONE:
@@ -840,8 +840,8 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 		return 1;
 	case RETURN_VALUE:
 		return 1;
-	//case SEND:
-	//	return 2;
+	case SEND:
+		return 2;
 	//case SEND_GEN:
 	//	return 1;
 	//case SETUP_ANNOTATIONS:
@@ -854,8 +854,8 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 		return 1;
 	case SET_ADD:
 		return 1 + (_oparg - 1);
-	//case SET_FUNCTION_ATTRIBUTE:
-	//	return 1;
+	case SET_FUNCTION_ATTRIBUTE:
+		return 1;
 	//case SET_UPDATE:
 	//	return 1 + (_oparg - 1);
 	case STORE_ATTR:
@@ -1327,11 +1327,11 @@ const uint8_t _alifOpcodeDeopt_[256] = {
 	BINARY_OP, // BINARY_OP_INPLACE_ADD_UNICODE // 3
 	0,//CHECK_EG_MATCH, // CHECK_EG_MATCH // 4
 	0,//CHECK_EXC_MATCH, // CHECK_EXC_MATCH // 5
-	0,//CLEANUP_THROW, // CLEANUP_THROW // 6
+	CLEANUP_THROW, // CLEANUP_THROW // 6
 	0,//DELETE_SUBSCR, // DELETE_SUBSCR // 7
 	0,//END_ASYNC_FOR, // END_ASYNC_FOR // 8
 	END_FOR, // END_FOR // 9
-	0,//END_SEND, // END_SEND // 10
+	END_SEND, // END_SEND // 10
 	0,//EXIT_INIT_CHECK, // EXIT_INIT_CHECK // 11
 	FORMAT_SIMPLE, // FORMAT_SIMPLE // 12
 	FORMAT_WITH_SPEC, // FORMAT_WITH_SPEC // 13
@@ -1344,12 +1344,12 @@ const uint8_t _alifOpcodeDeopt_[256] = {
 	0,//INTERPRETER_EXIT, // INTERPRETER_EXIT // 20
 	0,//LOAD_BUILD_CLASS, // LOAD_BUILD_CLASS // 21
 	LOAD_LOCALS, // LOAD_LOCALS // 22
-	0,//MAKE_FUNCTION, // MAKE_FUNCTION // 23
+	MAKE_FUNCTION, // MAKE_FUNCTION // 23
 	0,//MATCH_KEYS, // MATCH_KEYS // 24
 	0,//MATCH_MAPPING, // MATCH_MAPPING // 25
 	0,//MATCH_SEQUENCE, // MATCH_SEQUENCE // 26
 	NOP, // NOP // 27
-	0,//POP_EXCEPT, // POP_EXCEPT // 28
+	POP_EXCEPT, // POP_EXCEPT // 28
 	POP_TOP, // POP_TOP // 29
 	0,//PUSH_EXC_INFO, // PUSH_EXC_INFO // 30
 	PUSH_NULL, // PUSH_NULL // 31
@@ -1373,7 +1373,7 @@ const uint8_t _alifOpcodeDeopt_[256] = {
 	CALL, // CALL // 49
 	0,//CALL_FUNCTION_EX, // CALL_FUNCTION_EX // 50
 	CALL_INTRINSIC_1, // CALL_INTRINSIC_1 // 51
-	0,//CALL_INTRINSIC_2, // CALL_INTRINSIC_2 // 52
+	CALL_INTRINSIC_2, // CALL_INTRINSIC_2 // 52
 	0,//CALL_KW, // CALL_KW // 53
 	COMPARE_OP, // COMPARE_OP // 54
 	CONTAINS_OP, // CONTAINS_OP // 55
@@ -1389,7 +1389,7 @@ const uint8_t _alifOpcodeDeopt_[256] = {
 	DICT_UPDATE, // DICT_UPDATE // 65
 	EXTENDED_ARG, // EXTENDED_ARG // 66
 	FOR_ITER, // FOR_ITER // 67
-	0,//GET_AWAITABLE, // GET_AWAITABLE // 68
+	GET_AWAITABLE, // GET_AWAITABLE // 68
 	0,//IMPORT_FROM, // IMPORT_FROM // 69
 	0,//IMPORT_NAME, // IMPORT_NAME // 70
 	IS_OP, // IS_OP // 71
@@ -1422,9 +1422,9 @@ const uint8_t _alifOpcodeDeopt_[256] = {
 	RAISE_VARARGS, // RAISE_VARARGS // 98
 	RERAISE, // RERAISE // 99
 	RETURN_CONST, // RETURN_CONST // 100
-	0,//SEND, // SEND // 101
+	SEND, // SEND // 101
 	SET_ADD, // SET_ADD // 102
-	0,//SET_FUNCTION_ATTRIBUTE, // SET_FUNCTION_ATTRIBUTE // 103
+	SET_FUNCTION_ATTRIBUTE, // SET_FUNCTION_ATTRIBUTE // 103
 	0,//SET_UPDATE, // SET_UPDATE // 104
 	STORE_ATTR, // STORE_ATTR // 105
 	STORE_DEREF, // STORE_DEREF // 106
@@ -1436,7 +1436,7 @@ const uint8_t _alifOpcodeDeopt_[256] = {
 	SWAP, // SWAP // 112
 	UNPACK_EX, // UNPACK_EX // 113
 	UNPACK_SEQUENCE, // UNPACK_SEQUENCE // 114
-	0,//YIELD_VALUE, // YIELD_VALUE // 115
+	YIELD_VALUE, // YIELD_VALUE // 115
 	0,//_DO_CALL_FUNCTION_EX, // _DO_CALL_FUNCTION_EX // 116
 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,

@@ -45,6 +45,10 @@ public:
 extern AlifTypeObject _alifFunctionType_; // 66
 
 
+AlifObject* alifFunction_new(AlifObject*, AlifObject*); // 70
+
+
+
 
 
 #define ALIFFUNCTION_CAST(_func) \

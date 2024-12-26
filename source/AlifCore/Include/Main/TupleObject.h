@@ -9,6 +9,8 @@ extern AlifTypeObject _alifTupleType_; // 23
 
 
 AlifObject* alifTuple_new(AlifSizeT ); // 30
+AlifSizeT alifTuple_size(AlifObject*); // 31
+AlifObject* alifTuple_getItem(AlifObject*, AlifSizeT); // 32
 AlifObject* alifTuple_pack(AlifSizeT , ...); // 35
 
 

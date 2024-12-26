@@ -85,9 +85,11 @@
 
 
 
-
+#define GLOBALS() _frame->globals // 286
+#define BUILTINS() _frame->builtins
 #define LOCALS() _frame->locals // 288
-
+#define CONSTS() _alifFrame_getCode(_frame)->consts
+#define NAMES() _alifFrame_getCode(_frame)->names
 
 
 
