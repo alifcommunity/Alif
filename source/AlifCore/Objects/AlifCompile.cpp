@@ -34,6 +34,14 @@
     if ((_x) == -1) {        \
         return ERROR;       \
     }
+ // 70
+#define RETURN_IF_ERROR_IN_SCOPE(_c, _call) { \
+    if (_call < 0) { \
+        compiler_exitScope(_c); \
+        return ERROR; \
+    } \
+}
+
 
 
 class AlifCompiler; // 81
@@ -48,12 +56,14 @@ static AlifSTEntryObject* compiler_symtableEntry(AlifCompiler*); // 89
 #define INSTR_SEQUENCE(_c) compiler_instrSequence(_c) // 91
 #define SYMTABLE(_c) compiler_symtable(_c) // 93
 #define SYMTABLE_ENTRY(_c) compiler_symtableEntry(_c) // 94
+#define OPTIMIZATION_LEVEL(_c) compiler_optimizationLevel(_c) // 95
+
 
 typedef AlifSourceLocation Location; // 99
 typedef class AlifCFGBuilder CFGBuilder; // 100
 
 static AlifObject* compiler_maybeMangle(AlifCompiler*, AlifObject*); // 103
-
+static AlifIntT compiler_optimizationLevel(AlifCompiler *); // 104
 
 #define LOCATION(_lno, _endLno, _col, _endCol) {_lno, _endLno, _col, _endCol} // 108
 
@@ -502,6 +512,9 @@ static AlifIntT codegen_addOpI(InstrSequence* seq,
 #define ADDOP_I(_c, _loc, _op, _o) \
     RETURN_IF_ERROR(codegen_addOpI(INSTR_SEQUENCE(_c), _op, _o, _loc)) // 715
 
+#define ADDOP_I_IN_SCOPE(_c, _loc, _op, _o) \
+    RETURN_IF_ERROR_IN_SCOPE(_c, codegen_addOpI(INSTR_SEQUENCE(_c), _op, _o, _loc)); // 718
+
 static AlifIntT codegen_addOpNoArg(InstrSequence* _seq,
 	AlifIntT _opcode, Location _loc) { // 721
 	return _alifInstructionSequence_addOp(_seq, _opcode, 0, _loc);
@@ -769,6 +782,9 @@ static AlifIntT codegen_addOpJ(InstrSequence* _seq, Location _loc,
  // 1035
 #define VISIT(_c, _type, _v) \
     RETURN_IF_ERROR(compiler_visit ## _type(_c, _v));
+
+#define VISIT_IN_SCOPE(_c, _type, _v) \
+    RETURN_IF_ERROR_IN_SCOPE(_c, compiler_visit ## _type(_c, _v)) // 1038
 
 
  // 1041
@@ -1267,6 +1283,388 @@ finally:
 	return co;
 }
 
+static AlifIntT compiler_getRefType(AlifCompiler* _c, AlifObject* _name) { // 1657
+	if (_c->u_->scopeType == ScopeType_::Compiler_Scope_Class and
+		(alifUStr_equalToASCIIString(_name, "__class__") or
+			alifUStr_equalToASCIIString(_name, "__classdict__"))) {
+		return CELL;
+	}
+	AlifSTEntryObject* ste = SYMTABLE_ENTRY(_c);
+	AlifIntT scope = alifST_getScope(ste, _name);
+	if (scope == 0) {
+		//alifErr_format(_alifExcSystemError_,
+		//	"alifST_getScope(name=%R) failed: "
+		//	"unknown scope in unit %S (%R); "
+		//	"symbols: %R; locals: %R; "
+		//	"globals: %R",
+		//	_name, _c->u_->metadata.name, ste->id,
+		//	ste->symbols, _c->u_->metadata.varnames,
+		//	_c->u_->metadata.names);
+		return ERROR;
+	}
+	return scope;
+}
+
+static AlifIntT dict_lookupArg(AlifObject* _dict, AlifObject* _name) { // 1682
+	AlifObject* v = alifDict_getItemWithError(_dict, _name);
+	if (v == nullptr) {
+		return ERROR;
+	}
+	return alifLong_asLong(v);
+}
+
+static AlifIntT compiler_lookupArg(AlifCompiler* _c,
+	AlifCodeObject* _co, AlifObject* _name) { // 1692
+	/* Special case: If a class contains a method with a
+	 * free variable that has the same name as a method,
+	 * the name will be considered free *and* local in the
+	 * class.  It should be handled by the closure, as
+	 * well as by the normal name lookup logic.
+	 */
+	AlifIntT reftype = compiler_getRefType(_c, _name);
+	if (reftype == -1) {
+		return ERROR;
+	}
+	AlifIntT arg{};
+	if (reftype == CELL) {
+		arg = dict_lookupArg(_c->u_->metadata.cellvars, _name);
+	}
+	else {
+		arg = dict_lookupArg(_c->u_->metadata.freevars, _name);
+	}
+	if (arg == -1 /*and !alifErr_occurred()*/) {
+		//AlifObject* freevars = _alifCode_getFreeVars(_co);
+		//if (freevars == nullptr) {
+		//	alifErr_clear();
+		//}
+		//alifErr_format(_alifExcSystemError_,
+		//	"compiler_lookup_arg(name=%R) with reftype=%d failed in %S; "
+		//	"freevars of code %S: %R",
+		//	_name, reftype, _c->u_->metadata.name, _co->name, freevars);
+		//ALIF_DECREF(freevars);
+		return ERROR;
+	}
+	return arg;
+}
+
+
+
+static AlifIntT codegen_makeClosure(AlifCompiler* _c, Location _loc,
+	AlifCodeObject* _co, AlifSizeT _flags) { // 1731
+	if (_co->nFreeVars) {
+		AlifIntT i = alifUnstableCode_getFirstFree(_co);
+		for (; i < _co->nLocalsPlus; ++i) {
+			/* Bypass com_addop_varname because it will generate
+			   LOAD_DEREF but LOAD_CLOSURE is needed.
+			*/
+			AlifObject* name = ALIFTUPLE_GET_ITEM(_co->localsPlusNames, i);
+			AlifIntT arg = compiler_lookupArg(_c, _co, name);
+			RETURN_IF_ERROR(arg);
+			ADDOP_I(_c, _loc, LOAD_CLOSURE, arg);
+		}
+		_flags |= MAKE_FUNCTION_CLOSURE;
+		ADDOP_I(_c, _loc, BUILD_TUPLE, _co->nFreeVars);
+	}
+	ADDOP_LOAD_CONST(_c, _loc, (AlifObject*)_co);
+
+	ADDOP(_c, _loc, MAKE_FUNCTION);
+
+	if (_flags & MAKE_FUNCTION_CLOSURE) {
+		ADDOP_I(_c, _loc, SET_FUNCTION_ATTRIBUTE, MAKE_FUNCTION_CLOSURE);
+	}
+	if (_flags & MAKE_FUNCTION_ANNOTATIONS) {
+		ADDOP_I(_c, _loc, SET_FUNCTION_ATTRIBUTE, MAKE_FUNCTION_ANNOTATIONS);
+	}
+	if (_flags & MAKE_FUNCTION_ANNOTATE) {
+		ADDOP_I(_c, _loc, SET_FUNCTION_ATTRIBUTE, MAKE_FUNCTION_ANNOTATE);
+	}
+	if (_flags & MAKE_FUNCTION_KWDEFAULTS) {
+		ADDOP_I(_c, _loc, SET_FUNCTION_ATTRIBUTE, MAKE_FUNCTION_KWDEFAULTS);
+	}
+	if (_flags & MAKE_FUNCTION_DEFAULTS) {
+		ADDOP_I(_c, _loc, SET_FUNCTION_ATTRIBUTE, MAKE_FUNCTION_DEFAULTS);
+	}
+	return SUCCESS;
+}
+
+
+
+static AlifIntT codegen_kwOnlyDefaults(AlifCompiler* _c, Location _loc,
+	ASDLArgSeq* _kwOnlyArgs, ASDLExprSeq* _kwDefaults) { // 1798
+	/* Push a dict of keyword-only default values.
+
+	   Return -1 on error, 0 if no dict pushed, 1 if a dict is pushed.
+	   */
+	AlifIntT i{};
+	AlifObject* keys = nullptr;
+	AlifIntT defaultCount = 0;
+	for (i = 0; i < ASDL_SEQ_LEN(_kwOnlyArgs); i++) {
+		ArgTy arg = ASDL_SEQ_GET(_kwOnlyArgs, i);
+		ExprTy default_ = ASDL_SEQ_GET(_kwDefaults, i);
+		if (default_) {
+			defaultCount++;
+			AlifObject* mangled = compiler_maybeMangle(_c, arg->arg);
+			if (!mangled) {
+				goto error;
+			}
+			ADDOP_LOAD_CONST_NEW(_c, _loc, mangled);
+			if (compiler_visitExpr(_c, default_) < 0) {
+				goto error;
+			}
+		}
+	}
+	if (defaultCount) {
+		ADDOP_I(_c, _loc, BUILD_MAP, defaultCount);
+		return 1;
+	}
+	else {
+		return 0;
+	}
+
+error:
+	ALIF_XDECREF(keys);
+	return ERROR;
+}
+
+
+
+
+static AlifIntT codegen_defaults(AlifCompiler* _c, ArgumentsTy _args,
+	Location _loc) { // 1967
+	VISIT_SEQ(_c, Expr, _args->defaults);
+	ADDOP_I(_c, _loc, BUILD_TUPLE, ASDL_SEQ_LEN(_args->defaults));
+	return SUCCESS;
+}
+
+static AlifSizeT codegen_defaultArguments(AlifCompiler* _c, Location _loc,
+	ArgumentsTy _args) { // 1976
+	AlifSizeT funcflags = 0;
+	if (_args->defaults and ASDL_SEQ_LEN(_args->defaults) > 0) {
+		RETURN_IF_ERROR(codegen_defaults(_c, _args, _loc));
+		funcflags |= MAKE_FUNCTION_DEFAULTS;
+	}
+	if (_args->kwOnlyArgs) {
+		AlifIntT res = codegen_kwOnlyDefaults(_c, _loc,
+			_args->kwOnlyArgs, _args->kwDefaults);
+		RETURN_IF_ERROR(res);
+		if (res > 0) {
+			funcflags |= MAKE_FUNCTION_KWDEFAULTS;
+		}
+	}
+	return funcflags;
+}
+
+
+static AlifIntT codegen_wrapInStopIterationHandler(AlifCompiler* _c) { // 1997
+	NEW_JUMP_TARGET_LABEL(_c, handler);
+
+	/* Insert SETUP_CLEANUP at start */
+	RETURN_IF_ERROR(
+		_alifInstructionSequence_insertInstruction(
+			INSTR_SEQUENCE(_c), 0,
+			SETUP_CLEANUP, handler.id, _noLocation_));
+
+	ADDOP_LOAD_CONST(_c, _noLocation_, ALIF_NONE);
+	ADDOP(_c, _noLocation_, RETURN_VALUE);
+	USE_LABEL(_c, handler);
+	ADDOP_I(_c, _noLocation_, CALL_INTRINSIC_1, INTRINSIC_STOPITERATION_ERROR);
+	ADDOP_I(_c, _noLocation_, RERAISE, 1);
+	return SUCCESS;
+}
+
+
+
+static AlifIntT codegen_functionBody(AlifCompiler* _c, StmtTy _s,
+	AlifIntT _isAsync, AlifSizeT _funcFlags, AlifIntT _firstLineNo) { // 2132
+	ArgumentsTy args{};
+	Identifier name{};
+	ASDLStmtSeq* body{};
+	AlifIntT scopeType{};
+
+	if (_isAsync) {
+		args = _s->V.asyncFunctionDef.args;
+		name = _s->V.asyncFunctionDef.name;
+		body = _s->V.asyncFunctionDef.body;
+
+		scopeType = ScopeType_::Compiler_Scope_Async_Function;
+	}
+	else {
+		args = _s->V.functionDef.args;
+		name = _s->V.functionDef.name;
+		body = _s->V.functionDef.body;
+
+		scopeType = ScopeType_::Compiler_Scope_Function;
+	}
+
+	AlifCompileCodeUnitMetadata umd = {
+		.argCount = ASDL_SEQ_LEN(args->args),
+		.posOnlyArgCount = ASDL_SEQ_LEN(args->posOnlyArgs),
+		.kwOnlyArgCount = ASDL_SEQ_LEN(args->kwOnlyArgs),
+	};
+	RETURN_IF_ERROR(
+		compiler_enterScope(_c, name, scopeType, (void*)_s, _firstLineNo, nullptr, &umd));
+
+	AlifSizeT first_instr = 0;
+	AlifObject* docstring = alifAST_getDocString(body);
+	if (docstring) {
+		first_instr = 1;
+		/* if not -OO mode, add docstring */
+		if (OPTIMIZATION_LEVEL(_c) < 2) {
+			//docstring = _alifCompile_cleanDoc(docstring);
+			//if (docstring == nullptr) {
+			//	compiler_exitScope(_c);
+			//	return ERROR;
+			//}
+		}
+		else {
+			docstring = nullptr;
+		}
+	}
+	AlifSizeT idx = compiler_addConst(_c, docstring ? docstring : ALIF_NONE);
+	ALIF_XDECREF(docstring);
+	RETURN_IF_ERROR_IN_SCOPE(_c, idx < 0 ? ERROR : SUCCESS);
+
+	NEW_JUMP_TARGET_LABEL(_c, start);
+	USE_LABEL(_c, start);
+	AlifSTEntryObject* ste = SYMTABLE_ENTRY(_c);
+	bool add_stopiteration_handler = ste->coroutine or ste->generator;
+	if (add_stopiteration_handler) {
+		RETURN_IF_ERROR(
+			compiler_pushFBlock(_c, _noLocation_, FBlockType_::Stop_Iteration,
+				start, _noLabel_, nullptr));
+	}
+
+	for (AlifSizeT i = first_instr; i < ASDL_SEQ_LEN(body); i++) {
+		VISIT_IN_SCOPE(_c, Stmt, (StmtTy)ASDL_SEQ_GET(body, i));
+	}
+	if (add_stopiteration_handler) {
+		RETURN_IF_ERROR_IN_SCOPE(_c, codegen_wrapInStopIterationHandler(_c));
+		compiler_popFBlock(_c, FBlockType_::Stop_Iteration, start);
+	}
+	AlifCodeObject* co = optimize_andAssemble(_c, 1);
+	compiler_exitScope(_c);
+	if (co == nullptr) {
+		ALIF_XDECREF(co);
+		return ERROR;
+	}
+	AlifIntT ret = codegen_makeClosure(_c, LOC(_s), co, _funcFlags);
+	ALIF_DECREF(co);
+	return ret;
+}
+
+
+static AlifIntT codegen_function(AlifCompiler* _c, StmtTy _s, AlifIntT _isAsync) { // 2220
+	ArgumentsTy args{};
+	ExprTy returns{};
+	Identifier name{};
+	//ASDLExprSeq* decos{};
+	ASDLTypeParamSeq* typeParams{};
+	AlifSizeT funcflags{};
+	AlifIntT firstlineno{};
+
+	if (_isAsync) {
+		args = _s->V.asyncFunctionDef.args;
+		//returns = _s->V.asyncFunctionDef.returns;
+		//decos = _s->V.asyncFunctionDef.decoratorList;
+		name = _s->V.asyncFunctionDef.name;
+		typeParams = _s->V.asyncFunctionDef.typeParams;
+	}
+	else {
+		args = _s->V.functionDef.args;
+		//returns = _s->V.functionDef.returns;
+		//decos = _s->V.functionDef.decoratorList;
+		name = _s->V.functionDef.name;
+		typeParams = _s->V.functionDef.typeParams;
+	}
+
+	//RETURN_IF_ERROR(codegen_decorators(_c, decos));
+
+	firstlineno = _s->lineNo;
+	//if (ASDL_SEQ_LEN(decos)) {
+	//	firstlineno = ((ExprTy)ASDL_SEQ_GET(decos, 0))->lineNo;
+	//}
+
+	Location loc = LOC(_s);
+
+	AlifIntT isGeneric = ASDL_SEQ_LEN(typeParams) > 0;
+
+	funcflags = codegen_defaultArguments(_c, loc, args);
+	RETURN_IF_ERROR(funcflags);
+
+	AlifIntT numTypeParamArgs = 0;
+
+	if (isGeneric) {
+		if (funcflags & MAKE_FUNCTION_DEFAULTS) {
+			numTypeParamArgs += 1;
+		}
+		if (funcflags & MAKE_FUNCTION_KWDEFAULTS) {
+			numTypeParamArgs += 1;
+		}
+		if (numTypeParamArgs == 2) {
+			ADDOP_I(_c, loc, SWAP, 2);
+		}
+		AlifObject* typeParamsName = alifUStr_fromFormat("<generic parameters of %U>", name);
+		if (!typeParamsName) {
+			return ERROR;
+		}
+		AlifCompileCodeUnitMetadata umd = {
+			.argCount = numTypeParamArgs,
+		};
+		AlifIntT ret = compiler_enterScope(_c, typeParamsName, ScopeType_::Compiler_Scope_Annotations,
+			(void*)typeParams, firstlineno, nullptr, &umd);
+		ALIF_DECREF(typeParamsName);
+		RETURN_IF_ERROR(ret);
+		//RETURN_IF_ERROR_IN_SCOPE(_c, codegen_typeParams(_c, typeParams));
+		for (AlifIntT i = 0; i < numTypeParamArgs; i++) {
+			ADDOP_I_IN_SCOPE(_c, loc, LOAD_FAST, i);
+		}
+	}
+
+	//AlifIntT annotationsFlag = codegen_annotations(_c, loc, args, returns);
+	//if (annotationsFlag < 0) {
+	//	if (isGeneric) {
+	//		compiler_exitScope(_c);
+	//	}
+	//	return ERROR;
+	//}
+	//funcflags |= annotationsFlag;
+
+	AlifIntT ret = codegen_functionBody(_c, _s, _isAsync, funcflags, firstlineno);
+	if (isGeneric) {
+		RETURN_IF_ERROR_IN_SCOPE(_c, ret);
+	}
+	else {
+		RETURN_IF_ERROR(ret);
+	}
+
+	if (isGeneric) {
+		ADDOP_I_IN_SCOPE(_c, loc, SWAP, 2);
+		ADDOP_I_IN_SCOPE(_c, loc, CALL_INTRINSIC_2, INTRINSIC_SET_FUNCTION_TYPE_PARAMS);
+
+		AlifCodeObject* co = optimize_andAssemble(_c, 0);
+		compiler_exitScope(_c);
+		if (co == nullptr) {
+			return ERROR;
+		}
+		AlifIntT ret = codegen_makeClosure(_c, loc, co, 0);
+		ALIF_DECREF(co);
+		RETURN_IF_ERROR(ret);
+		if (numTypeParamArgs > 0) {
+			ADDOP_I(_c, loc, SWAP, numTypeParamArgs + 1);
+			ADDOP_I(_c, loc, CALL, numTypeParamArgs - 1);
+		}
+		else {
+			ADDOP(_c, loc, PUSH_NULL);
+			ADDOP_I(_c, loc, CALL, 0);
+		}
+	}
+
+	//RETURN_IF_ERROR(codegen_applyDecorators(_c, decos));
+	return compiler_nameOp(_c, loc, name, ExprContext_::Store);
+}
+
+
+
 
 
 static bool check_isArg(ExprTy _e) { // 2626
@@ -1606,8 +2004,8 @@ static AlifIntT codegen_stmtExpr(AlifCompiler* _c, Location _loc, ExprTy _value)
 
 static AlifIntT compiler_visitStmt(AlifCompiler* _c, StmtTy _s) { // 3818
 	switch (_s->type) {
-	//case StmtK_::FunctionDefK:
-	//	return codegen_function(_c, _s, 0);
+	case StmtK_::FunctionDefK:
+		return codegen_function(_c, _s, 0);
 	//case StmtK_::ClassDefK:
 	//	return codegen_class(_c, _s);
 	//case StmtK_::TypeAliasK:
@@ -2891,7 +3289,9 @@ static AlifSTEntryObject* compiler_symtableEntry(AlifCompiler* _c) { // 7376
 	return _c->u_->ste;
 }
 
-
+static AlifIntT compiler_optimizationLevel(AlifCompiler* _c) { // 7381
+	return _c->optimize;
+}
 
 
 

@@ -32,6 +32,8 @@ typedef class Keyword* KeywordTy;
 typedef class Alias* AliasTy;
 typedef class WithItem* WithItemTy; // 46
 
+typedef class TypeParam* TypeParamTy; // 54
+
 
 
 
@@ -92,6 +94,11 @@ public:
 	WithItemTy typedElements[1]{};
 };
 
+class ASDLTypeParamSeq { // 155
+public:
+	ASDL_SEQ_HEAD;
+	TypeParamTy typedElements[1]{};
+};
 
 enum ModK_ { ModuleK = 1, InteractiveK, ExpressionK, FunctionK }; // يجب تحديد رقم البداية 1 لكي لا يبدأ من 0 حيث يتم التحقق فيما بعد ولا يجب أن تكون الحالة 0
 class Module { // 163
@@ -147,6 +154,7 @@ public:
 			Identifier name{};
 			ArgumentsTy args{};
 			ASDLStmtSeq* body{};
+			ASDLTypeParamSeq* typeParams{};
 		}functionDef;
 
 		class {
@@ -154,6 +162,7 @@ public:
 			Identifier name{};
 			ArgumentsTy args{};
 			ASDLStmtSeq* body{};
+			ASDLTypeParamSeq* typeParams{};
 		}asyncFunctionDef;
 
 		class {

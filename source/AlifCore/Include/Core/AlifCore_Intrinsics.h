@@ -15,3 +15,14 @@
 #define INTRINSIC_PARAMSPEC                      8
 #define INTRINSIC_TYPEVARTUPLE                   9
 #define INTRINSIC_SUBSCRIPT_GENERIC             10
+
+
+
+
+/* Binary Functions: */
+#define INTRINSIC_2_INVALID                      0
+#define INTRINSIC_PREP_RERAISE_STAR              1
+#define INTRINSIC_TYPEVAR_WITH_BOUND             2
+#define INTRINSIC_TYPEVAR_WITH_CONSTRAINTS       3
+#define INTRINSIC_SET_FUNCTION_TYPE_PARAMS       4
+#define INTRINSIC_SET_TYPEPARAM_DEFAULT          5

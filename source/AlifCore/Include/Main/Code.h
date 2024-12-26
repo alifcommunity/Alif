@@ -95,6 +95,12 @@ extern AlifTypeObject _alifCodeType_; // 179
 
 
 
+static inline AlifIntT alifUnstableCode_getFirstFree(AlifCodeObject* _op) { // 188
+	return _op->nLocalsPlus - _op->nFreeVars;
+}
+
+
+
  // 243
 #define ALIF_FOREACH_CODE_EVENT(_v) \
     _v(Create)                 \

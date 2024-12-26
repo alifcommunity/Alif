@@ -24,7 +24,7 @@
 #define INTERPRETER_EXIT                        20
 //#define LOAD_BUILD_CLASS                        21
 #define LOAD_LOCALS                             22
-//#define MAKE_FUNCTION                           23
+#define MAKE_FUNCTION                           23
 //#define MATCH_KEYS                              24
 //#define MATCH_MAPPING                           25
 //#define MATCH_SEQUENCE                          26
@@ -53,7 +53,7 @@
 #define CALL                                    49
 #define CALL_FUNCTION_EX                        50
 #define CALL_INTRINSIC_1                        51
-//#define CALL_INTRINSIC_2                        52
+#define CALL_INTRINSIC_2                        52
 #define CALL_KW                                 53
 #define COMPARE_OP                              54
 #define CONTAINS_OP                             55
@@ -104,7 +104,7 @@
 #define RETURN_CONST                           100
 #define SEND                                   101
 #define SET_ADD                                102
-//#define SET_FUNCTION_ATTRIBUTE                 103
+#define SET_FUNCTION_ATTRIBUTE                 103
 //#define SET_UPDATE                             104
 #define STORE_ATTR                             105
 #define STORE_DEREF                            106

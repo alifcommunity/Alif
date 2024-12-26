@@ -94,7 +94,26 @@ AlifIntT _alifInstructionSequence_addOp(InstrSequence * _seq,
 	return SUCCESS;
 }
 
+AlifIntT _alifInstructionSequence_insertInstruction(InstrSequence* _seq, AlifIntT _pos,
+	AlifIntT _opcode, AlifIntT _oparg, Location _loc) { // 122
+	AlifIntT lastIdx = instrSequence_nextInst(_seq);
+	RETURN_IF_ERROR(lastIdx);
+	for (AlifIntT i = lastIdx - 1; i >= _pos; i--) {
+		_seq->instrs[i + 1] = _seq->instrs[i];
+	}
+	Instruction* ci = &_seq->instrs[_pos];
+	ci->opcode = _opcode;
+	ci->oparg = _oparg;
+	ci->loc = _loc;
 
+	/* fix the labels map */
+	for (AlifIntT lbl = 0; lbl < _seq->labelMapSize; lbl++) {
+		if (_seq->labelMap[lbl] >= _pos) {
+			_seq->labelMap[lbl]++;
+		}
+	}
+	return SUCCESS;
+}
 
 
 AlifIntT _alifInstructionSequence_addNested(InstrSequence* _seq,

@@ -111,7 +111,7 @@ StmtTy alifAST_asyncFunctionDef(AlifObject* _name, Arguments* _args,
 	p_ = (StmtTy)alifASTMem_malloc(_astMem, sizeof(*p_));
 	if (!p_) return nullptr;
 
-	p_->type = StmtK_::FunctionDefK;
+	p_->type = StmtK_::AsyncFunctionDefK;
 	p_->V.functionDef.name = _name;
 	p_->V.functionDef.args = _args;
 	p_->V.functionDef.body = _body;
@@ -141,7 +141,7 @@ StmtTy alifAST_functionDef(AlifObject* _name, Arguments* _args,
 	p_ = (StmtTy)alifASTMem_malloc(_astMem, sizeof(*p_));
 	if (!p_) return nullptr;
 
-	p_->type = StmtK_::AsyncFunctionDefK;
+	p_->type = StmtK_::FunctionDefK;
 	p_->V.asyncFunctionDef.name = _name;
 	p_->V.asyncFunctionDef.args = _args;
 	p_->V.asyncFunctionDef.body = _body;

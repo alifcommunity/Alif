@@ -44,8 +44,13 @@
 
 
 
-
-
+ // 55
+/* Flags used in the oparg for MAKE_FUNCTION */
+#define MAKE_FUNCTION_DEFAULTS    0x01
+#define MAKE_FUNCTION_KWDEFAULTS  0x02
+#define MAKE_FUNCTION_ANNOTATIONS 0x04
+#define MAKE_FUNCTION_CLOSURE     0x08
+#define MAKE_FUNCTION_ANNOTATE    0x10
 
 
 

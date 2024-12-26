@@ -35,8 +35,8 @@ static inline void alifUStrWriter_initWithBuffer(AlifUStrWriter*, AlifObject*);
     (ALIFASCIIOBJECT_CAST(_op)->state)
 #define ALIFUSTR_HASH(_op)                             \
     (ALIFASCIIOBJECT_CAST(_op)->hash)					
-#define ALIFUSTR_DATA_ANY(op)                         \
-    (ALIFUSTROBJECT_CAST(op)->data.any)
+#define ALIFUSTR_DATA_ANY(_op)                         \
+    (ALIFUSTROBJECT_CAST(_op)->data.any)
 
 // 144
 #define ALIFUSTR_SHARE_UTF8(_op)                       \
@@ -95,7 +95,7 @@ static inline AlifObject* get_internedDict(AlifInterpreter* _interp) { // 223
 #define INTERNED_STRINGS _alifDureRun_.cachedObjects.internedStrings // 231
 
 static AlifHashT uStr_hash(AlifObject*); // 263
-static AlifIntT uStrCompare_eq(AlifObject*, AlifObject*);
+static AlifIntT uStr_compareEq(AlifObject*, AlifObject*);
 
 static AlifUHashT hashTable_uStrHash(const void* _key) { // 266
 	return uStr_hash((AlifObject*)_key);
@@ -106,7 +106,7 @@ static AlifIntT hashTable_uStrCompare(const void* _key1, const void* _key2) { //
 	AlifObject* obj1 = (AlifObject*)_key1;
 	AlifObject* obj2 = (AlifObject*)_key2;
 	if (obj1 != nullptr and obj2 != nullptr) {
-		return uStrCompare_eq(obj1, obj2);
+		return uStr_compareEq(obj1, obj2);
 	}
 	else {
 		return obj1 == obj2;
@@ -3396,7 +3396,7 @@ static AlifIntT uStr_compare(AlifObject* _str1, AlifObject* _str2) { // 10847
 
 
 
-static AlifIntT uStrCompare_eq(AlifObject* _str1, AlifObject* _str2) { // 10963
+static AlifIntT uStr_compareEq(AlifObject* _str1, AlifObject* _str2) { // 10963
 	AlifIntT kind{};
 	const void* data1{}, * data2{};
 	AlifSizeT len_{};
@@ -3548,6 +3548,41 @@ AlifIntT alifUStr_equalToASCIIString(AlifObject* _uStr, const char* _str) { // 1
 	return strlen(_str) == len_ and
 		memcmp(ALIFUSTR_1BYTE_DATA(_uStr), _str, len_) == 0;
 }
+
+
+AlifObject* alifUStr_richCompare(AlifObject* _left, AlifObject* _right, AlifIntT _op) { // 11193
+	AlifIntT result{};
+
+	if (!ALIFUSTR_CHECK(_left) or !ALIFUSTR_CHECK(_right))
+		return ALIF_NOTIMPLEMENTED;
+
+	if (_left == _right) {
+		switch (_op) {
+		case ALIF_EQ:
+		case ALIF_LE:
+		case ALIF_GE:
+			/* a string is equal to itself */
+			ALIF_RETURN_TRUE;
+		case ALIF_NE:
+		case ALIF_LT:
+		case ALIF_GT:
+			ALIF_RETURN_FALSE;
+		default:
+			//alifErr_badArgument();
+			return nullptr;
+		}
+	}
+	else if (_op == ALIF_EQ or _op == ALIF_NE) {
+		result = uStr_compareEq(_left, _right);
+		result ^= (_op == ALIF_NE);
+		return alifBool_fromLong(result);
+	}
+	else {
+		result = uStr_compare(_left, _right);
+		ALIF_RETURN_RICHCOMPARE(result, 0, _op);
+	}
+}
+
 
 
 AlifIntT alifUStr_eq(AlifObject* _aa, AlifObject* _bb) { // 11229
@@ -4103,7 +4138,7 @@ AlifTypeObject _alifUStrType_ = { // 15235
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE |
 		ALIF_TPFLAGS_UNICODE_SUBCLASS |
 		_ALIF_TPFLAGS_MATCH_SELF,
-	.base = 0,
+	.richCompare = alifUStr_richCompare,
 	.free = alifMem_objFree,
 };
 

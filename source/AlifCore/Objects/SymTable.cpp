@@ -113,6 +113,7 @@ static AlifIntT symtable_enterBlock(AlifSymTable*, AlifObject*, BlockType_, void
 static AlifIntT symtable_exitBlock(AlifSymTable*); // 236
 static AlifIntT symtable_visitStmt(AlifSymTable* , StmtTy ); // 237
 static AlifIntT symtable_visitExpr(AlifSymTable* , ExprTy ); // 238
+static AlifIntT symtable_visitArguments(AlifSymTable*, ArgumentsTy); // 244
 static AlifIntT symtable_addDef(AlifSymTable*, AlifObject*, AlifIntT, AlifSourceLocation); // 261
 
 
@@ -892,7 +893,7 @@ static AlifIntT symtable_exitBlock(AlifSymTable* _st) { // 1365
 	return 1;
 }
 
-static AlifIntT symtableEnter_existingBlock(AlifSymTable* _st, AlifSTEntryObject* _ste) { // 1381
+static AlifIntT symtable_enterExistingBlock(AlifSymTable* _st, AlifSTEntryObject* _ste) { // 1381
 	if (alifList_append(_st->stack, (AlifObject*)_ste) < 0) {
 		return 0;
 	}
@@ -928,7 +929,7 @@ static AlifIntT symtable_enterBlock(AlifSymTable* _st, AlifObject* _name, BlockT
 	AlifSTEntryObject* _ste = ste_new(_st, _name, _block, _ast, _loc);
 	if (_ste == nullptr) return 0;
 
-	AlifIntT result = symtableEnter_existingBlock(_st, _ste);
+	AlifIntT result = symtable_enterExistingBlock(_st, _ste);
 	ALIF_DECREF(_ste);
 	if (_block == BlockType_::Annotation_Block
 		or _block == BlockType_::Type_Variable_Block
@@ -943,7 +944,8 @@ static AlifIntT symtable_enterBlock(AlifSymTable* _st, AlifObject* _name, BlockT
 	return result;
 }
 
-static AlifIntT symtable_addDefHelper(AlifSymTable* _st, AlifObject* _name, AlifIntT _flag, AlifSTEntryObject* _ste,
+static AlifIntT symtable_addDefHelper(AlifSymTable* _st,
+	AlifObject* _name, AlifIntT _flag, AlifSTEntryObject* _ste,
 	AlifSourceLocation _loc) { // 1463
 	AlifObject* o_{};
 	AlifObject* dict{};
@@ -1085,6 +1087,18 @@ static AlifIntT symtable_addDef(AlifSymTable* _st, AlifObject* _name, AlifIntT _
         } \
     } while(0)
 
+#define VISIT_SEQ_WITH_NULL(_st, _type, _seq) \
+    do { \
+        AlifIntT i_ = 0; \
+        ASDL ## _type ## Seq *seq = (_seq); /* avoid variable capture */ \
+        for (i_ = 0; i_ < ASDL_SEQ_LEN(seq); i_++) { \
+            _type ## Ty elt = (_type ## Ty)ASDL_SEQ_GET(seq, i_); \
+            if (!elt) continue; /* can be NULL */ \
+            if (!symtable_visit ## _type((_st), elt)) \
+                return 0;             \
+        } \
+    } while(0)
+
 // 1727
 #define ENTER_RECURSIVE(_st) \
     do { \
@@ -1104,6 +1118,55 @@ static AlifIntT symtable_addDef(AlifSymTable* _st, AlifObject* _name, AlifIntT _
 static AlifIntT symtable_visitStmt(AlifSymTable* _st, StmtTy _s) { // 1812
 	ENTER_RECURSIVE(_st);
 	switch (_s->type) {
+	case StmtK_::FunctionDefK: {
+		if (!symtable_addDef(_st, _s->V.functionDef.name, DEF_LOCAL, LOCATION(_s)))
+			return 0;
+		if (_s->V.functionDef.args->defaults)
+			VISIT_SEQ(_st, Expr, _s->V.functionDef.args->defaults);
+		if (_s->V.functionDef.args->kwDefaults)
+			VISIT_SEQ_WITH_NULL(_st, Expr, _s->V.functionDef.args->kwDefaults);
+		//if (_s->V.functionDef.decoratorList)
+		//	VISIT_SEQ(_st, Expr, _s->V.functionDef.decoratorList);
+		//if (ASDL_SEQ_LEN(_s->V.functionDef.typeParams) > 0) {
+		//	if (!symtable_enterTypeParamBlock(
+		//		_st, _s->V.functionDef.name,
+		//		(void*)_s->V.functionDef.typeParams,
+		//		_s->V.functionDef.args->defaults != nullptr,
+		//		has_kwOnlyDefaults(_s->V.functionDef.args->kwOnlyArgs,
+		//			_s->V.functionDef.args->kwDefaults),
+		//		_s->type,
+		//		LOCATION(_s))) {
+		//		return 0;
+		//	}
+		//	VISIT_SEQ(_st, TypeParam, _s->V.functionDef.typeparams);
+		//}
+		AlifSTEntryObject* newSte = ste_new(_st, _s->V.functionDef.name,
+			BlockType_::Function_Block, (void*)_s,
+			LOCATION(_s));
+		if (!newSte) {
+			return 0;
+		}
+
+		//if (!symtable_visitAnnotations(_st, _s, _s->V.functionDef.args,
+		//	_s->V.functionDef.returns, newSte)) {
+		//	ALIF_DECREF(newSte);
+		//	return 0;
+		//}
+		if (!symtable_enterExistingBlock(_st, newSte)) {
+			ALIF_DECREF(newSte);
+			return 0;
+		}
+		ALIF_DECREF(newSte);
+		VISIT(_st, Arguments, _s->V.functionDef.args);
+		VISIT_SEQ(_st, Stmt, _s->V.functionDef.body);
+		if (!symtable_exitBlock(_st))
+			return 0;
+		if (ASDL_SEQ_LEN(_s->V.functionDef.typeParams) > 0) {
+			if (!symtable_exitBlock(_st))
+				return 0;
+		}
+		break;
+	}
 	case StmtK_::AssignK:
 		VISIT_SEQ(_st, Expr, _s->V.assign.targets);
 		VISIT(_st, Expr, _s->V.assign.val);
@@ -1166,6 +1229,47 @@ static AlifIntT symtable_visitExpr(AlifSymTable* _st, ExprTy _e) { // 2334
 	LEAVE_RECURSIVE(_st);
 	return 1;
 }
+
+
+
+static AlifIntT symtable_visitParams(AlifSymTable* _st, ASDLArgSeq* _args){ // 2664
+	AlifSizeT i{};
+
+	for (i = 0; i < ASDL_SEQ_LEN(_args); i++) {
+		ArgTy arg = (ArgTy)ASDL_SEQ_GET(_args, i);
+		if (!symtable_addDef(_st, arg->arg, DEF_PARAM, LOCATION(arg)))
+			return 0;
+	}
+
+	return 1;
+}
+
+
+static AlifIntT symtable_visitArguments(AlifSymTable* _st, ArgumentsTy _a) { // 2766
+	/* skip default arguments inside function block
+	   XXX should ast be different?
+	*/
+	if (_a->posOnlyArgs and !symtable_visitParams(_st, _a->posOnlyArgs))
+		return 0;
+	if (_a->args and !symtable_visitParams(_st, _a->args))
+		return 0;
+	if (_a->kwOnlyArgs and !symtable_visitParams(_st, _a->kwOnlyArgs))
+		return 0;
+	if (_a->varArg) {
+		if (!symtable_addDef(_st, _a->varArg->arg, DEF_PARAM, LOCATION(_a->varArg)))
+			return 0;
+		_st->cur->varArgs = 1;
+	}
+	if (_a->kwArg) {
+		if (!symtable_addDef(_st, _a->kwArg->arg, DEF_PARAM, LOCATION(_a->kwArg)))
+			return 0;
+		_st->cur->varKeywords = 1;
+	}
+	return 1;
+}
+
+
+
 
 AlifObject* alif_maybeMangle(AlifObject* _privateObj,
 	AlifSTEntryObject* _ste, AlifObject* _name) { // 3070

@@ -240,7 +240,7 @@ static void list_dealloc(AlifObject* _self) { // 497
 	AlifListObject* op_ = (AlifListObject*)_self;
 	AlifSizeT i_{};
 	ALIFOBJECT_GC_UNTRACK(op_);
-	//ALIF_TRASHCAN_BEGIN(op_, list_dealloc)
+	ALIF_TRASHCAN_BEGIN(op_, list_dealloc)
 		if (op_->item != nullptr) {
 			i_ = ALIF_SIZE(op_);
 			while (--i_ >= 0) {
@@ -254,7 +254,7 @@ static void list_dealloc(AlifObject* _self) { // 497
 	else {
 		alifObject_gcDel(op_);
 	}
-	//ALIF_TRASHCAN_END
+	ALIF_TRASHCAN_END
 }
 
 

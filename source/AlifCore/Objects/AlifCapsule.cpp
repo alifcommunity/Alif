@@ -93,7 +93,14 @@ void* alifCapsule_getPointer(AlifObject* _op, const char* _name) { // 96
 
 
 
-
+static void capsule_dealloc(AlifObject* _op) { // 284
+	AlifCapsule* capsule = (AlifCapsule*)_op;
+	alifObject_gcUnTrack(_op);
+	if (capsule->destructor) {
+		capsule->destructor(_op);
+	}
+	alifObject_gcDel(_op);
+}
 
 
 
@@ -101,7 +108,7 @@ AlifTypeObject _alifCapsuleType_ = { // 349
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "كبسولة",
 	.basicSize = sizeof(AlifCapsule),
-	//.dealloc = capsule_dealloc,
+	.dealloc = capsule_dealloc,
 	//.repr = capsule_repr,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
 	//.traverse = (TraverseProc)capsule_traverse,
