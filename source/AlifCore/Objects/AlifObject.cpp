@@ -799,12 +799,14 @@ AlifIntT alifCallable_check(AlifObject* _x) { // 1884
 	return ALIF_TYPE(_x)->call != nullptr;
 }
 
+static AlifObject* none_repr(AlifObject* _op) { // 1970
+	return alifUStr_fromString("عدم");
+}
 
 AlifTypeObject _alifNoneType_ = { // 2049
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "عدم",
-	.basicSize = 0,
-	.itemSize = 0,
+	.repr = none_repr,
 };
 
 AlifObject _alifNoneClass_ = ALIFOBJECT_HEAD_INIT(&_alifNoneType_); // 2090

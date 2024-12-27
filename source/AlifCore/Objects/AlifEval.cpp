@@ -358,6 +358,26 @@ dispatch_opcode :
 				stackPointer += 1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(RETURN_VALUE) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef retval{};
+				AlifStackRef res{};
+				retval = stackPointer[-1];
+				stackPointer += -1;
+				_alifFrame_setStackPointer(_frame, stackPointer);
+				_alif_leaveRecursiveCallAlif(_thread);
+				AlifInterpreterFrame* dying = _frame;
+				_frame = _thread->currentFrame = dying->previous;
+				_alifEval_frameClearAndPop(_thread, dying);
+				LOAD_SP();
+				LOAD_IP(_frame->returnOffset);
+				res = retval;
+				//LLTRACE_RESUME_FRAME();
+				stackPointer[0] = res;
+				stackPointer += 1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(BINARY_OP) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 2;
@@ -478,13 +498,13 @@ dispatch_opcode :
 				PREDICTED(CALL);
 				AlifCodeUnit* this_instr = nextInstr - 4;
 				AlifStackRef callable{};
-				AlifStackRef self_or_null{};
+				AlifStackRef selfOrNull{};
 				AlifStackRef* args{};
 				AlifStackRef func{};
 				AlifStackRef maybe_self{};
 				AlifStackRef res{};
 				// _SPECIALIZE_CALL
-				self_or_null = stackPointer[-1 - oparg];
+				selfOrNull = stackPointer[-1 - oparg];
 				callable = stackPointer[-2 - oparg];
 				{
 					uint16_t counter = read_u16(&this_instr[1].cache);
@@ -503,7 +523,7 @@ dispatch_opcode :
 				args = &stackPointer[-oparg];
 				{
 					args = &stackPointer[-oparg];
-					if (ALIFSTACKREF_TYPE(callable) == &_alifMethodType_ and ALIFSTACKREF_ISNULL(self_or_null)) {
+					if (ALIFSTACKREF_TYPE(callable) == &_alifMethodType_ and ALIFSTACKREF_ISNULL(selfOrNull)) {
 						AlifObject* callable_o = alifStackRef_asAlifObjectBorrow(callable);
 						AlifObject* self = ((AlifMethodObject*)callable_o)->self;
 						maybe_self = ALIFSTACKREF_FROMALIFOBJECTNEW(self);
@@ -518,17 +538,17 @@ dispatch_opcode :
 					}
 					else {
 						func = callable;
-						maybe_self = self_or_null;
+						maybe_self = selfOrNull;
 					}
 				}
 				// _DO_CALL
-				self_or_null = maybe_self;
+				selfOrNull = maybe_self;
 				callable = func;
 				{
 					AlifObject* callableObj = alifStackRef_asAlifObjectBorrow(callable);
 					// oparg counts all of the args, but *not* self:
 					AlifIntT totalArgs = oparg;
-					if (!ALIFSTACKREF_ISNULL(self_or_null)) {
+					if (!ALIFSTACKREF_ISNULL(selfOrNull)) {
 						args--;
 						totalArgs++;
 					}
@@ -795,13 +815,22 @@ dispatch_opcode :
 				stackPointer += 1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(LOAD_FAST) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef value{};
+				value = alifStackRef_dup(GETLOCAL(oparg));
+				stackPointer[0] = value;
+				stackPointer += 1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(LOAD_NAME) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;
 				AlifStackRef v{};
 				AlifObject* name = GETITEM(FRAME_CO_NAMES, oparg);
 				AlifObject* vObj = _alifEval_loadName(_thread, _frame, name);
-				//if (v_o == nullptr) goto error;
+				//if (vObj == nullptr) goto error;
 				v = ALIFSTACKREF_FROMALIFOBJECTSTEAL(vObj);
 				stackPointer[0] = v;
 				stackPointer += 1;
@@ -816,6 +845,20 @@ dispatch_opcode :
 				AlifIntT flag = ALIFSTACKREF_IS(cond, ALIFSTACKREF_FALSE);
 #if ENABLE_SPECIALIZATION
 				this_instr[1].cache = (thisInstr[1].cache << 1) | flag;
+#endif
+				JUMPBY(oparg * flag);
+				stackPointer += -1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
+			TARGET(POP_JUMP_IF_TRUE) {
+				AlifCodeUnit* thisInstr = _frame->instrPtr = nextInstr;
+				nextInstr += 2;
+				AlifStackRef cond{};
+				/* Skip 1 cache entry */
+				cond = stackPointer[-1];
+				AlifIntT flag = ALIFSTACKREF_IS(cond, ALIFSTACKREF_TRUE);
+#if ENABLE_SPECIALIZATION
+				thisInstr[1].cache = (thisInstr[1].cache << 1) | flag;
 #endif
 				JUMPBY(oparg * flag);
 				stackPointer += -1;
@@ -849,6 +892,15 @@ dispatch_opcode :
 				stackPointer += 1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(STORE_FAST) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef value{};
+				value = stackPointer[-1];
+				SETLOCAL(oparg, value);
+				stackPointer += -1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(STORE_NAME) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;
@@ -870,6 +922,17 @@ dispatch_opcode :
 				alifStackRef_close(v);
 				//if (err) goto pop_1_error;
 				stackPointer += -1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
+			TARGET(SWAP) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef bottom{};
+				AlifStackRef top{};
+				top = stackPointer[-1];
+				bottom = stackPointer[-2 - (oparg - 2)];
+				stackPointer[-2 - (oparg - 2)] = top;
+				stackPointer[-1] = bottom;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
 			TARGET(RESUME) {
@@ -914,7 +977,6 @@ dispatch_opcode :
 				DISPATCH();
 			} // ------------------------------------------------------------ //
 		}
-
 	}
 
 exit_unwind:
@@ -931,7 +993,7 @@ exit_unwind:
 
 
 
-	return ALIF_NONE;
+	return ALIF_NONE; // alif
 }
 
 

@@ -5,13 +5,9 @@ class Module; // 11
 
 enum BlockType_ { // 13
 	Function_Block, Class_Block, Module_Block,
-
 	Annotation_Block,
-
 	Type_Alias_Block,
-
 	Type_Parameters_Block,
-
 	Type_Variable_Block,
 };
 

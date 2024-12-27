@@ -114,6 +114,7 @@ static AlifIntT symtable_exitBlock(AlifSymTable*); // 236
 static AlifIntT symtable_visitStmt(AlifSymTable* , StmtTy ); // 237
 static AlifIntT symtable_visitExpr(AlifSymTable* , ExprTy ); // 238
 static AlifIntT symtable_visitArguments(AlifSymTable*, ArgumentsTy); // 244
+static AlifIntT symtable_visitKeyword(AlifSymTable*, KeywordTy); // 248
 static AlifIntT symtable_addDef(AlifSymTable*, AlifObject*, AlifIntT, AlifSourceLocation); // 261
 
 
@@ -957,9 +958,9 @@ static AlifIntT symtable_addDefHelper(AlifSymTable* _st,
 	dict = _ste->symbols;
 	if ((o_ = alifDict_getItemWithError(dict, mangled))) {
 		val_ = alifLong_asLong(o_);
-		//if (val_ == -1 and alifErr_occurred()) {
-			//goto error;
-		//}
+		if (val_ == -1 /*and alifErr_occurred()*/) {
+			goto error;
+		}
 		if ((_flag & DEF_PARAM) and (val_ & DEF_PARAM)) {
 			/* Is it better to use 'mangled' or '_name' here? */
 			//alifErr_format(_alifExcSyntaxError_, DUPLICATE_ARGUMENT, _name);
@@ -1044,6 +1045,16 @@ static AlifIntT check_name(AlifSymTable* _st, AlifObject* _name, AlifSourceLocat
 		//SET_ERROR_LOCATION(_st->fileName, _loc);
 		//return 0;
 	//}
+	return 1;
+}
+
+static AlifIntT check_keywords(AlifSymTable* _st, ASDLKeywordSeq* _keywords) { // 1572
+	for (AlifSizeT i = 0; i < ASDL_SEQ_LEN(_keywords); i++) {
+		KeywordTy key = ((KeywordTy)ASDL_SEQ_GET(_keywords, i));
+		if (key->arg and !check_name(_st, key->arg, LOCATION(key), ExprContext_::Store)) {
+			return 0;
+		}
+	}
 	return 1;
 }
 
@@ -1171,6 +1182,30 @@ static AlifIntT symtable_visitStmt(AlifSymTable* _st, StmtTy _s) { // 1812
 		VISIT_SEQ(_st, Expr, _s->V.assign.targets);
 		VISIT(_st, Expr, _s->V.assign.val);
 		break;
+	case StmtK_::AugAssignK: {
+		VISIT(_st, Expr, _s->V.augAssign.target);
+		VISIT(_st, Expr, _s->V.augAssign.val);
+		break;
+	}
+	case StmtK_::ForK:
+		VISIT(_st, Expr, _s->V.for_.target);
+		VISIT(_st, Expr, _s->V.for_.iter);
+		VISIT_SEQ(_st, Stmt, _s->V.for_.body);
+		//if (_s->V.for_.else_)
+		//	VISIT_SEQ(_st, Stmt, _s->V.for_.else_);
+		break;
+	case StmtK_::WhileK:
+		VISIT(_st, Expr, _s->V.while_.condition);
+		VISIT_SEQ(_st, Stmt, _s->V.while_.body);
+		//if (_s->V.while_.else_)
+		//	VISIT_SEQ(_st, Stmt, _s->V.while_.else_);
+		break;
+	case StmtK_::IfK:
+		VISIT(_st, Expr, _s->V.if_.condition);
+		VISIT_SEQ(_st, Stmt, _s->V.if_.body);
+		if (_s->V.if_.else_)
+			VISIT_SEQ(_st, Stmt, _s->V.if_.else_);
+		break;
 	case StmtK_::ExprK:
 		VISIT(_st, Expr, _s->V.expression.val);
 		break;
@@ -1203,8 +1238,53 @@ static AlifIntT symtable_visitExpr(AlifSymTable* _st, ExprTy _e) { // 2334
 		VISIT(_st, Expr, _e->V.ifExpr.body);
 		VISIT(_st, Expr, _e->V.ifExpr.else_);
 		break;
+	case ExprK_::DictK:
+		VISIT_SEQ_WITH_NULL(_st, Expr, _e->V.dict.keys);
+		VISIT_SEQ(_st, Expr, _e->V.dict.vals);
+		break;
 	case ExprK_::SetK:
 		VISIT_SEQ(_st, Expr, _e->V.set.elts);
+		break;
+	case ExprK_::CompareK:
+		VISIT(_st, Expr, _e->V.compare.left);
+		VISIT_SEQ(_st, Expr, _e->V.compare.comparators);
+		break;
+	case ExprK_::CallK:
+		VISIT(_st, Expr, _e->V.call.func);
+		VISIT_SEQ(_st, Expr, _e->V.call.args);
+		if (!check_keywords(_st, _e->V.call.keywords)) {
+			return 0;
+		}
+		VISIT_SEQ_WITH_NULL(_st, Keyword, _e->V.call.keywords);
+		break;
+	case ExprK_::FormattedValK:
+		VISIT(_st, Expr, _e->V.formattedValue.val);
+		if (_e->V.formattedValue.formatSpec)
+			VISIT(_st, Expr, _e->V.formattedValue.formatSpec);
+		break;
+	case ExprK_::JoinStrK:
+		VISIT_SEQ(_st, Expr, _e->V.joinStr.vals);
+		break;
+	case ExprK_::ConstantK:
+		/* Nothing to do here. */
+		break;
+	case ExprK_::AttributeK:
+		if (!check_name(_st, _e->V.attribute.attr, LOCATION(_e), _e->V.attribute.ctx)) {
+			return 0;
+		}
+		VISIT(_st, Expr, _e->V.attribute.val);
+		break;
+	case ExprK_::SubScriptK:
+		VISIT(_st, Expr, _e->V.subScript.val);
+		VISIT(_st, Expr, _e->V.subScript.slice);
+		break;
+	case ExprK_::SliceK:
+		if (_e->V.slice.lower)
+			VISIT(_st, Expr, _e->V.slice.lower);
+		if (_e->V.slice.upper)
+			VISIT(_st, Expr, _e->V.slice.upper);
+		if (_e->V.slice.step)
+			VISIT(_st, Expr, _e->V.slice.step);
 		break;
 	case ExprK_::NameK:
 		if (!symtable_addDefCtx(_st, _e->V.name.name,
@@ -1212,7 +1292,7 @@ static AlifIntT symtable_visitExpr(AlifSymTable* _st, ExprTy _e) { // 2334
 			LOCATION(_e), _e->V.name.ctx)) {
 			return 0;
 		}
-		if (_e->V.name.ctx == Load and
+		if (_e->V.name.ctx == ExprContext_::Load and
 			alifST_isFunctionLike(_st->cur) and
 			alifUStr_equalToASCIIString(_e->V.name.name, "super")) {
 			if (!symtable_addDef(_st, &ALIF_ID(__class__), USE, LOCATION(_e)))
@@ -1268,6 +1348,12 @@ static AlifIntT symtable_visitArguments(AlifSymTable* _st, ArgumentsTy _a) { // 
 	return 1;
 }
 
+
+
+static AlifIntT symtable_visitKeyword(AlifSymTable* _st, KeywordTy _k) { // 2879
+	VISIT(_st, Expr, _k->val);
+	return 1;
+}
 
 
 

@@ -1951,7 +1951,45 @@ static AlifIntT codegen_while(AlifCompiler* _c, StmtTy _s) { // 3001
 	return SUCCESS;
 }
 
+static AlifIntT codegen_return(AlifCompiler* _c, StmtTy _s) { // 3027
+	Location loc = LOC(_s);
+	AlifIntT preserve_tos = ((_s->V.return_.val != nullptr) and
+		(_s->V.return_.val->type != ExprK_::ConstantK));
 
+	AlifSTEntryObject* ste = SYMTABLE_ENTRY(_c);
+	if (!alifST_isFunctionLike(ste)) {
+		//return compiler_error(_c, loc, "'return' outside function");
+	}
+	if (_s->V.return_.val != nullptr and ste->coroutine and ste->generator) {
+		//return compiler_error(_c, loc, "'return' with value in async generator");
+	}
+
+	if (preserve_tos) {
+		VISIT(_c, Expr, _s->V.return_.val);
+	}
+	else {
+		/* Emit instruction with line number for return value */
+		if (_s->V.return_.val != nullptr) {
+			loc = LOC(_s->V.return_.val);
+			ADDOP(_c, loc, NOP);
+		}
+	}
+	if (_s->V.return_.val == nullptr or _s->V.return_.val->lineNo != _s->lineNo) {
+		loc = LOC(_s);
+		ADDOP(_c, loc, NOP);
+	}
+
+	RETURN_IF_ERROR(codegen_unwindFBlockStack(_c, &loc, preserve_tos, nullptr));
+	if (_s->V.return_.val == nullptr) {
+		ADDOP_LOAD_CONST(_c, loc, ALIF_NONE);
+	}
+	else if (!preserve_tos) {
+		ADDOP_LOAD_CONST(_c, loc, _s->V.return_.val->V.constant.val);
+	}
+	ADDOP(_c, loc, RETURN_VALUE);
+
+	return SUCCESS;
+}
 
 
 static AlifIntT codegen_break(AlifCompiler* _c, Location _loc) { // 3067
@@ -2010,8 +2048,8 @@ static AlifIntT compiler_visitStmt(AlifCompiler* _c, StmtTy _s) { // 3818
 	//	return codegen_class(_c, _s);
 	//case StmtK_::TypeAliasK:
 	//	return codegen_typealias(_c, _s);
-	//case StmtK_::ReturnK:
-	//	return codegen_return(_c, _s);
+	case StmtK_::ReturnK:
+		return codegen_return(_c, _s);
 	//case StmtK_::DeleteK:
 	//	VISIT_SEQ(_c, expr, _s->v.Delete.targets)
 	//		break;
@@ -2179,7 +2217,7 @@ static AlifIntT compiler_nameOp(AlifCompiler* _c, Location _loc,
 	enum OpType_ { OP_FAST, OP_GLOBAL, OP_DEREF, OP_NAME } optype;
 
 	AlifObject* dict = _c->u_->metadata.names;
-	AlifObject* mangled;
+	AlifObject* mangled{};
 
 	mangled = compiler_maybeMangle(_c, _name);
 	if (!mangled) {

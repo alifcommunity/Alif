@@ -84,6 +84,15 @@
 #define FRAME_CO_NAMES  (_alifFrame_getCode(_frame)->names)
 
 
+#define LOCALS_ARRAY    (_frame->localsPlus) // 248
+#define GETLOCAL(_i)     (_frame->localsPlus[_i])
+
+
+ // 257
+#define SETLOCAL(_i, _value)	do { AlifStackRef tmp = GETLOCAL(_i); \
+                                     GETLOCAL(_i) = _value; \
+                                     ALIFSTACKREF_XCLOSE(tmp); } while (0)
+
 
 #define GLOBALS() _frame->globals // 286
 #define BUILTINS() _frame->builtins

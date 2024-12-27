@@ -102,3 +102,14 @@ static inline void alifStackRef_close(AlifStackRef _stackRef) { // 193
             alifStackRef_close(_tmp); \
         } \
     } while (0);
+
+
+
+
+static inline AlifStackRef alifStackRef_dup(AlifStackRef _stackRef) { // 217
+	if (ALIFSTACKREF_ISDEFERRED(_stackRef)) {
+		return _stackRef;
+	}
+	ALIF_INCREF(alifStackRef_asAlifObjectBorrow(_stackRef));
+	return _stackRef;
+}
