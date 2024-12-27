@@ -1325,6 +1325,29 @@ AlifObject* _alifDict_getItemWithError(AlifObject* _dp, AlifObject* _kv) { // 23
 	return _alifDict_getItemKnownHash(_dp, _kv, hash);  // borrowed reference
 }
 
+AlifObject* _alifDict_loadGlobal(AlifDictObject* _globals,
+	AlifDictObject* _builtins, AlifObject* _key) { // 2398
+	AlifSizeT ix{};
+	AlifHashT hash{};
+	AlifObject* value{};
+
+	hash = alifObject_hashFast(_key);
+	if (hash == -1) {
+		return nullptr;
+	}
+
+	/* namespace 1: globals */
+	ix = alifDict_lookupThreadSafe(_globals, _key, hash, &value);
+	if (ix == DKIX_ERROR)
+		return nullptr;
+	if (ix != DKIX_EMPTY and value != nullptr)
+		return value;
+
+	/* namespace 2: builtins */
+	ix = alifDict_lookupThreadSafe(_builtins, _key, hash, &value);
+	return value;
+}
+
 static AlifIntT setItemTake2_lockHeld(AlifDictObject* _mp,
 	AlifObject* _key, AlifObject* _value) { // 2424
 	AlifHashT hash = alifObject_hashFast(_key);

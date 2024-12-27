@@ -824,6 +824,40 @@ dispatch_opcode :
 				stackPointer += 1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(LOAD_GLOBAL) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 5;
+				PREDICTED(LOAD_GLOBAL);
+				AlifCodeUnit* thisInstr = nextInstr - 5;
+				AlifStackRef res{};
+				AlifStackRef null = _alifStackRefNull_;
+				// _SPECIALIZE_LOAD_GLOBAL
+				{
+					uint16_t counter = read_u16(&thisInstr[1].cache);
+#if ENABLE_SPECIALIZATION
+					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
+						AlifObject* name = GETITEM(FRAME_CO_NAMES, oparg >> 1);
+						nextInstr = thisInstr;
+						_alifSpecialize_loadGlobal(GLOBALS(), BUILTINS(), nextInstr, name);
+						DISPATCH_SAME_OPARG();
+					}
+					OPCODE_DEFERRED_INC(LOAD_GLOBAL);
+					ADVANCE_ADAPTIVE_COUNTER(thisInstr[1].counter);
+#endif  /* ENABLE_SPECIALIZATION */
+				}
+				// _LOAD_GLOBAL
+				{
+					AlifObject* name = GETITEM(FRAME_CO_NAMES, oparg >> 1);
+					AlifObject* resObj = _alifEval_loadGlobal(GLOBALS(), BUILTINS(), name);
+					//if (resObj == nullptr) goto error;
+					null = _alifStackRefNull_;
+					res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(resObj);
+				}
+				stackPointer[0] = res;
+				if (oparg & 1) stackPointer[1] = null;
+				stackPointer += 1 + (oparg & 1);
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(LOAD_NAME) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;
@@ -890,6 +924,39 @@ dispatch_opcode :
 				}
 				stackPointer[0] = res;
 				stackPointer += 1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
+			TARGET(SET_FUNCTION_ATTRIBUTE) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef attrSt{};
+				AlifStackRef funcSt{};
+				funcSt = stackPointer[-1];
+				attrSt = stackPointer[-2];
+				AlifObject* func = alifStackRef_asAlifObjectBorrow(funcSt);
+				AlifObject* attr = alifStackRef_asAlifObjectBorrow(attrSt);
+				AlifFunctionObject* funcObj = (AlifFunctionObject*)func;
+				switch (oparg) {
+				case MAKE_FUNCTION_CLOSURE:
+					funcObj->closure = attr;
+					break;
+				case MAKE_FUNCTION_ANNOTATIONS:
+					funcObj->annotations = attr;
+					break;
+				case MAKE_FUNCTION_KWDEFAULTS:
+					funcObj->kwDefaults = attr;
+					break;
+				case MAKE_FUNCTION_DEFAULTS:
+					funcObj->defaults = attr;
+					break;
+				case MAKE_FUNCTION_ANNOTATE:
+					funcObj->annotate = attr;
+					break;
+				default:
+					ALIF_UNREACHABLE();
+				}
+				stackPointer[-2] = funcSt;
+				stackPointer += -1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
 			TARGET(STORE_FAST) {
@@ -1575,7 +1642,35 @@ AlifObject* _alifEval_getBuiltins(AlifThread* _thread) { // 2444
 
 
 
-
+AlifObject* _alifEval_loadGlobal(AlifObject* _globals,
+	AlifObject* _builtins, AlifObject* _name) { // 3073
+	AlifObject* res{};
+	if (ALIFDICT_CHECKEXACT(_globals) and ALIFDICT_CHECKEXACT(_builtins)) {
+		res = _alifDict_loadGlobal((AlifDictObject*)_globals,
+			(AlifDictObject*)_builtins, _name);
+		if (res == nullptr /*and !alifErr_occurred()*/) {
+			//_alifEval_formatExcCheckArg(ALIFTHREADSTATE_GET(), _alifExcNameError_,
+			//	NAME_ERROR_MSG, _name);
+		}
+	}
+	else {
+		if (alifMapping_getOptionalItem(_globals, _name, &res) < 0) {
+			return nullptr;
+		}
+		if (res == nullptr) {
+			/* namespace 2: builtins */
+			if (alifMapping_getOptionalItem(_builtins, _name, &res) < 0) {
+				return nullptr;
+			}
+			if (res == nullptr) {
+				//_alifEval_formatExcCheckArg(
+				//	ALIFTHREADSTATE_GET(), _alifExcNameError_,
+				//	NAME_ERROR_MSG, _name);
+			}
+		}
+	}
+	return res;
+}
 
 
 AlifObject* _alifEval_loadName(AlifThread* _thread,

@@ -42,6 +42,7 @@ public:
 
 extern void alifDictKeys_decRef(AlifDictKeysObject*); // 96
 
+AlifObject* _alifDict_loadGlobal(AlifDictObject*, AlifDictObject*, AlifObject*); // 106
 
 extern AlifIntT alifDict_setItemLockHeld(AlifDictObject*, AlifObject*, AlifObject*); // 110
 
