@@ -237,6 +237,43 @@ AlifTypeObject _alifFunctionType_ = { // 1105
 };
 
 
+class ClassMethod { // 1248
+public:
+	ALIFOBJECT_HEAD{};
+	AlifObject* callable{};
+	AlifObject* dict{};
+};
+
+
+AlifTypeObject _alifClassMethodType_ = { // 1395
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "صفة_صنف",
+	.basicSize = sizeof(ClassMethod),
+	//.dealloc = (Destructor)cm_dealloc,
+	//.repr = (ReprFunc)cm_repr,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_HAVE_GC,
+	//.traverse = (TraverseProc)cm_traverse,
+	//(Inquiry)cm_clear,                          /* tp_clear */
+	//.members = cm_memberlist, 
+	//.getSet = cm_getsetlist,
+	//.descrGet = cm_descr_get,
+	.dictOffset = offsetof(ClassMethod, dict),
+	//.init = cm_init,
+	.alloc = alifType_genericAlloc,
+	//.new_ = alifType_genericNew,
+	.free = alifObject_gcDel,
+};
+
+
+AlifObject* alifClassMethod_new(AlifObject* _callable) { // 1437
+	ClassMethod* cm = (ClassMethod*)
+		alifType_genericAlloc(&_alifClassMethodType_, 0);
+	if (cm != nullptr) {
+		cm->callable = ALIF_NEWREF(_callable);
+	}
+	return (AlifObject*)cm;
+}
+
 
 
 class StaticMethod { // 1467

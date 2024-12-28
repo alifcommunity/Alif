@@ -678,6 +678,7 @@
 	INIT_ID(__format__), \
 	INIT_ID(__getAttr__), \
 	INIT_ID(__hash__), \
+	INIT_ID(__initSubclass__), \
 	INIT_ID(__lengthHint__), \
 	INIT_ID(__loader__), \
 	INIT_ID(__module__), \
@@ -688,6 +689,8 @@
 	INIT_ID(__package__), \
 	INIT_ID(__prepare__), \
 	INIT_ID(__qualname__), \
+	INIT_ID(__setName__), \
+	INIT_ID(__slots__), \
 	INIT_ID(__spec__), \
 	INIT_ID(__staticAttributes__), \
 	INIT_ID(__typeParams__), \

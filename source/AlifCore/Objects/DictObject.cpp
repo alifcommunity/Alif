@@ -797,6 +797,20 @@ AlifSizeT alifDict_lookupThreadSafe(AlifDictObject* _mp, AlifObject* _key, AlifH
 
 #endif
 
+
+AlifIntT _alifDict_hasOnlyStringKeys(AlifObject* _dict) { // 1511
+	AlifSizeT pos = 0;
+	AlifObject* key{}, * value{};
+	/* Shortcut */
+	if (((AlifDictObject*)_dict)->keys->kind != DictKeysKind_::Dict_Keys_General)
+		return 1;
+	while (alifDict_next(_dict, &pos, &key, &value))
+		if (!ALIFUSTR_CHECK(key))
+			return 0;
+	return 1;
+}
+
+
 // 1526
 #define MAINTAIN_TRACKING(_mp, _key, _value) do { \
         if (!ALIFOBJECT_GC_IS_TRACKED(_mp)) { \
@@ -1775,6 +1789,88 @@ AlifObject* alifDict_keys(AlifObject* _dict) { // 3322
 	res = keys_lockHeld(_dict);
 	ALIF_END_CRITICAL_SECTION();
 
+	return res;
+}
+
+
+static AlifObject* copy_lockHeld(AlifObject* o) { // 3876
+	AlifObject* copy{};
+	AlifDictObject* mp{};
+	AlifInterpreter* interp = _alifInterpreter_get();
+
+	mp = (AlifDictObject*)o;
+	if (mp->used == 0) {
+		/* The dict is empty; just return a new dict. */
+		return alifDict_new();
+	}
+
+	if (ALIFDICT_HASSPLITTABLE(mp)) {
+		AlifDictObject* split_copy{};
+		AlifDictValues* newvalues = copy_values(mp->values);
+		if (newvalues == nullptr) {
+			//return alifErr_noMemory();
+		}
+		split_copy = ALIFOBJECT_GC_NEW(AlifDictObject, &_alifDictType_);
+		if (split_copy == nullptr) {
+			free_values(newvalues, false);
+			return nullptr;
+		}
+		for (size_t i = 0; i < newvalues->capacity; i++) {
+			ALIF_XINCREF(newvalues->values[i]);
+		}
+		split_copy->values = newvalues;
+		split_copy->keys = mp->keys;
+		split_copy->used = mp->used;
+		split_copy->versionTag = DICT_NEXT_VERSION(interp);
+		dictKeys_incRef(mp->keys);
+		if (ALIFOBJECT_GC_IS_TRACKED(mp))
+			ALIFOBJECT_GC_TRACK(split_copy);
+		return (AlifObject*)split_copy;
+	}
+
+	if (ALIF_TYPE(mp)->iter == dict_iter and
+		mp->values == nullptr and
+		(mp->used >= (mp->keys->nentries * 2) / 3))
+	{
+		AlifDictKeysObject* keys = cloneCombined_dictKeys(mp);
+		if (keys == nullptr) {
+			return nullptr;
+		}
+		AlifDictObject* new_ = (AlifDictObject*)new_dict(interp, keys, nullptr, 0, 0);
+		if (new_ == nullptr) {
+			return nullptr;
+		}
+
+		new_->used = mp->used;
+		if (ALIFOBJECT_GC_IS_TRACKED(mp)) {
+			/* Maintain tracking. */
+			ALIFOBJECT_GC_TRACK(new_);
+		}
+
+		return (AlifObject*)new_;
+	}
+
+	copy = alifDict_new();
+	if (copy == nullptr)
+		return nullptr;
+	if (dict_merge(interp, copy, o, 1) == 0)
+		return copy;
+	ALIF_DECREF(copy);
+	return nullptr;
+}
+
+AlifObject* alifDict_copy(AlifObject* _o) { // 3963
+	if (_o == nullptr or !ALIFDICT_CHECK(_o)) {
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
+
+	AlifObject* res{};
+	ALIF_BEGIN_CRITICAL_SECTION(_o);
+
+	res = copy_lockHeld(_o);
+
+	ALIF_END_CRITICAL_SECTION();
 	return res;
 }
 

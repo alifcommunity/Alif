@@ -5,7 +5,14 @@
 
 
 
-
+AlifIntT alifCell_set(AlifObject* _op, AlifObject* _value) { // 63
+	if (!ALIFCELL_CHECK(_op)) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+	alifCell_setTakeRef((AlifCellObject*)_op, ALIF_XNEWREF(_value));
+	return 0;
+}
 
 
 

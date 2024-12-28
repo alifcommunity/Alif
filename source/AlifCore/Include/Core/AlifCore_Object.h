@@ -261,7 +261,8 @@ void alifObject_initInlineValues(AlifObject*, AlifTypeObject*); // 771
 extern AlifIntT alifObject_storeInstanceAttribute(AlifObject*, AlifObject*, AlifObject*);
 extern bool alifObject_tryGetInstanceAttribute(AlifObject* , AlifObject* , AlifObject** ); // 774 
 
-# define MANAGED_DICT_OFFSET    (((AlifSizeT)sizeof(AlifObject *))*-1) // 778 
+#define MANAGED_DICT_OFFSET    (((AlifSizeT)sizeof(AlifObject *))*-1) // 778 
+#define MANAGED_WEAKREF_OFFSET (((AlifSizeT)sizeof(AlifObject *))*-2)
 
 union AlifManagedDictPointer{ // 785
 	AlifDictObject* dict{};

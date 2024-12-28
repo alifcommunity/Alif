@@ -4,6 +4,10 @@
 AlifObject* alifObject_callOneArg(AlifObject* , AlifObject* ); // 59
 
 
+AlifObject* alifObject_callFunctionObjArgs(AlifObject* _callable, ...); // 249
+
+
+
  // 276
 #define ALIF_VECTORCALL_ARGUMENTS_OFFSET \
     (ALIF_STATIC_CAST(AlifUSizeT, 1) << (8 * sizeof(AlifUSizeT) - 1))
