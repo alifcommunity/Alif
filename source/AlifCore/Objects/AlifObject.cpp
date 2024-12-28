@@ -106,6 +106,41 @@ AlifObject* alifObject_new(AlifTypeObject* _tp) { // 459
 }
 
 
+void alifObject_callFinalizer(AlifObject* _self) { // 483
+	AlifTypeObject* tp = ALIF_TYPE(_self);
+
+	if (tp->finalize == nullptr)
+		return;
+	if (ALIFTYPE_IS_GC(tp) and _alifGC_finalized(_self))
+		return;
+
+	tp->finalize(_self);
+	if (ALIFTYPE_IS_GC(tp)) {
+		_alifGC_setFinalized(_self);
+	}
+}
+
+
+AlifIntT alifObject_callFinalizerFromDealloc(AlifObject* _self) { // 500
+	if (ALIF_REFCNT(_self) != 0) {
+	}
+
+	ALIF_SET_REFCNT(_self, 1);
+
+	alifObject_callFinalizer(_self);
+
+
+	ALIF_SET_REFCNT(_self, ALIF_REFCNT(_self) - 1);
+	if (ALIF_REFCNT(_self) == 0) {
+		return 0;         /* this is the normal path out */
+	}
+
+	//_alif_resurrectReference(self);
+
+	return -1;
+}
+
+
 AlifObject* alifObject_repr(AlifObject* _v) { // 662
 	AlifObject* res{};
 	//if (alifErr_checkSignals())

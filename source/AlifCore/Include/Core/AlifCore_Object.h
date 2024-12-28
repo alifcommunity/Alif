@@ -110,7 +110,21 @@ static inline void alif_increaseRefType(AlifTypeObject* type) { // 296
 #endif
 }
 
+static inline void alif_decreaseRefType(AlifTypeObject* _type) { // 336
+	if (!_alifType_hasFeature(_type, ALIF_TPFLAGS_HEAPTYPE)) {
+		return;
+	}
 
+	AlifThreadImpl* thread = (AlifThreadImpl*)_alifThread_get();
+	AlifHeapTypeObject* ht = (AlifHeapTypeObject*)_type;
+
+	if ((AlifUSizeT)ht->uniqueID < (AlifUSizeT)thread->types.size) {
+		thread->types.refCounts[ht->uniqueID]--;
+	}
+	else {
+		ALIF_DECREF(_type);
+	}
+}
 
 
 

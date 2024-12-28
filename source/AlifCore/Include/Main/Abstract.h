@@ -23,6 +23,9 @@ AlifSizeT alifObject_length(AlifObject*); // 342
 #define ALIFOBJECT_LENGTH alifObject_size
 
 
+AlifObject* alifObject_getItem(AlifObject*, AlifObject*); // 349
+
+
 AlifIntT alifObject_setItem(AlifObject*, AlifObject*, AlifObject*); // 357
 
 AlifObject* alifObject_format(AlifObject*, AlifObject*); // 374
@@ -75,6 +78,8 @@ AlifObject* alifNumber_inPlaceOr(AlifObject*, AlifObject*); // 649
 
 
 AlifIntT alifSequence_check(AlifObject*); // 664
+
+AlifSizeT alifSequence_size(AlifObject*); // 667
 
 AlifObject* alifSequence_getItem(AlifObject*, AlifSizeT); // 689
 

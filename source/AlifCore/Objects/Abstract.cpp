@@ -769,6 +769,27 @@ AlifIntT alifSequence_check(AlifObject* _s) { // 1668
 }
 
 
+AlifSizeT alifSequence_size(AlifObject* _s) { // 1677
+	if (_s == nullptr) {
+		null_error();
+		return -1;
+	}
+
+	AlifSequenceMethods* m = ALIF_TYPE(_s)->asSequence;
+	if (m and m->length) {
+		AlifSizeT len = m->length(_s);
+		return len;
+	}
+
+	if (ALIF_TYPE(_s)->asMapping and ALIF_TYPE(_s)->asMapping->length) {
+		//type_error("%.200s is not a sequence", s);
+		return -1;
+	}
+	//type_error("object of type '%.200s' has no len()", s);
+	return -1;
+}
+
+
 AlifObject* alifSequence_getItem(AlifObject* _s, AlifSizeT _i) { // 1829
 	if (_s == nullptr) {
 		return null_error();

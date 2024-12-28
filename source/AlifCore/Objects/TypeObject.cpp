@@ -531,12 +531,30 @@ static inline AlifMemberDef* _alifHeapType_getMembers(AlifHeapTypeObject* _type)
 	return (AlifMemberDef*)alifObject_getItemData((AlifObject*)_type);
 }
 
+static void clear_slots(AlifTypeObject* _type, AlifObject* _self) { // 2363
+	AlifSizeT i{}, n{};
+	AlifMemberDef* mp{};
 
+	n = ALIF_SIZE(_type);
+	mp = _alifHeapType_getMembers((AlifHeapTypeObject*)_type);
+	for (i = 0; i < n; i++, mp++) {
+		if (mp->type == ALIF_T_OBJECT_EX and !(mp->flags & ALIF_READONLY)) {
+			char* addr = (char*)_self + mp->offset;
+			AlifObject* obj = *(AlifObject**)addr;
+			if (obj != nullptr) {
+				*(AlifObject**)addr = nullptr;
+				ALIF_DECREF(obj);
+			}
+		}
+	}
+}
 
 static void subtype_dealloc(AlifObject* self) { // 2442
 	AlifTypeObject* type{}, * base{};
 	Destructor basedealloc{};
 	AlifIntT has_finalizer{};
+
+	AlifIntT typeNeedsDecref{};
 
 	type = ALIF_TYPE(self);
 
@@ -566,7 +584,7 @@ static void subtype_dealloc(AlifObject* self) { // 2442
 		basedealloc(self);
 
 		if (type_needs_decref) {
-			_alif_DecRefType(type);
+			alif_decreaseRefType(type);
 		}
 
 		/* Done */
@@ -607,7 +625,7 @@ static void subtype_dealloc(AlifObject* self) { // 2442
 	}
 	if (has_finalizer) {
 		if (type->weakListOffset and !base->weakListOffset) {
-			_alifWeakRef_clearWeakRefsNoCallbacks(self);
+			//_alifWeakRef_clearWeakRefsNoCallbacks(self);
 		}
 	}
 
@@ -619,10 +637,10 @@ static void subtype_dealloc(AlifObject* self) { // 2442
 	}
 
 	if (type->flags & ALIF_TPFLAGS_MANAGED_DICT) {
-		alifObject_clearManagedDict(self);
+		//alifObject_clearManagedDict(self);
 	}
 	else if (type->dictOffset and !base->dictOffset) {
-		AlifObject** dictptr = _alifObject_computedDictPointer(self);
+		AlifObject** dictptr = alifObject_computedDictPointer(self);
 		if (dictptr != nullptr) {
 			AlifObject* dict = *dictptr;
 			if (dict != nullptr) {
@@ -638,13 +656,13 @@ static void subtype_dealloc(AlifObject* self) { // 2442
 		ALIFOBJECT_GC_TRACK(self);
 	}
 
-	AlifIntT type_needs_decref = (type->flags & ALIF_TPFLAGS_HEAPTYPE
+	typeNeedsDecref = (type->flags & ALIF_TPFLAGS_HEAPTYPE
 		and !(base->flags & ALIF_TPFLAGS_HEAPTYPE));
 
 	basedealloc(self);
 
-	if (type_needs_decref) {
-		_alif_decRefType(type);
+	if (typeNeedsDecref) {
+		alif_decreaseRefType(type);
 	}
 
 endlabel:
@@ -1105,6 +1123,13 @@ static AlifTypeObject* solid_base(AlifTypeObject* _type) { // 3401
 		return base;
 	}
 }
+
+
+
+static AlifIntT typeNew_setNames(AlifTypeObject*); // 3425
+static AlifIntT typeNew_initSubclass(AlifTypeObject*, AlifObject*); // 3426
+
+
 
 static AlifGetSetDef _subtypeGetSetsFull_[] = { // 3561
 	{"__dict__", nullptr/*subtype_dict*/, nullptr/*subtype_setDict*/,
@@ -2975,8 +3000,8 @@ static AlifIntT add_tpNewWrapper(AlifTypeObject* _type) { // 9302
 //}
 
 
-static AlifIntT typeNew_setNames(AlifTypeObject* type) { // 10973
-	AlifObject* dict = lookup_tpDict(type);
+static AlifIntT typeNew_setNames(AlifTypeObject* _type) { // 10973
+	AlifObject* dict = lookup_tpDict(_type);
 	AlifObject* names_to_set = alifDict_copy(dict);
 	if (names_to_set == nullptr) {
 		return -1;
@@ -2994,7 +3019,7 @@ static AlifIntT typeNew_setNames(AlifTypeObject* type) { // 10973
 			continue;
 		}
 
-		AlifObject* res = alifObject_callFunctionObjArgs(set_name, type, key, nullptr);
+		AlifObject* res = alifObject_callFunctionObjArgs(set_name, _type, key, nullptr);
 		ALIF_DECREF(set_name);
 
 		if (res == nullptr) {

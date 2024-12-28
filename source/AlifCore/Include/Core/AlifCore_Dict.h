@@ -42,6 +42,8 @@ public:
 };
 
 
+extern AlifUSizeT _alifDict_keysSize(AlifDictKeysObject*); // 94
+
 extern void alifDictKeys_decRef(AlifDictKeysObject*); // 96
 
 AlifObject* _alifDict_loadGlobal(AlifDictObject*, AlifDictObject*, AlifObject*); // 106

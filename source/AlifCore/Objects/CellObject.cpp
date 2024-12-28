@@ -1,5 +1,8 @@
 #include "alif.h"
 
+#include "AlifCore_Cell.h"
+#include "AlifCore_ModSupport.h"
+#include "AlifCore_Object.h"
 
 
 

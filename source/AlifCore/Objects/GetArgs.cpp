@@ -29,6 +29,12 @@ public:
 #define STATIC_FREELIST_ENTRIES 8 // 43
 
 
+static AlifIntT vGetArgs1(AlifObject*, const char*, va_list*, AlifIntT); // 48
+
+
+static const char* convert_item(AlifObject*, const char**, va_list*, AlifIntT,
+	AlifIntT*, char*, AlifUSizeT, FreeListT*); // 50
+
 
 AlifIntT alifArg_parseTuple(AlifObject* _args, const char* _format, ...) { // 94
 	AlifIntT retval{};

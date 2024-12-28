@@ -3,8 +3,13 @@
 
 
 
+
+
+
 #define DECIMAL_MASK 0x02 // 14
 
+#define XID_START_MASK 0x100 // 19
+#define XID_CONTINUE_MASK 0x200 // 20
 #define PRINTABLE_MASK 0x400 // 21
 
 class AlifUStrTypeRecord { // 27
@@ -35,6 +40,19 @@ static const AlifUStrTypeRecord* get_typeRecord(AlifUCS4 _code) { // 43
 }
 
 
+
+AlifIntT _alifUStr_isXIDStart(AlifUCS4 ch) { // 84
+	const AlifUStrTypeRecord* ctype = get_typeRecord(ch);
+
+	return (ctype->flags & XID_START_MASK) != 0;
+}
+
+
+int _alifUStr_isXIDContinue(AlifUCS4 ch) { // 94
+	const AlifUStrTypeRecord* ctype = get_typeRecord(ch);
+
+	return (ctype->flags & XID_CONTINUE_MASK) != 0;
+}
 
 
 

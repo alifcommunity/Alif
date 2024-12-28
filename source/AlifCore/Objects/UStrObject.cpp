@@ -3731,6 +3731,31 @@ static AlifHashT uStr_hash(AlifObject* _self) { // 11663
 
 
 
+AlifSizeT _alifUStr_scanIdentifier(AlifObject* _self) { // 12090
+	AlifSizeT i{};
+	AlifSizeT len = ALIFUSTR_GET_LENGTH(_self);
+	if (len == 0) {
+		/* an empty string is not a valid identifier */
+		return 0;
+	}
+
+	int kind = ALIFUSTR_KIND(_self);
+	const void* data = ALIFUSTR_DATA(_self);
+	AlifUCS4 ch = ALIFUSTR_READ(kind, data, 0);
+	if (!_alifUStr_isXIDStart(ch) and ch != 0x5F /* LOW LINE */) {
+		return 0;
+	}
+
+	for (i = 1; i < len; i++) {
+		ch = ALIFUSTR_READ(kind, data, i);
+		if (!_alifUStr_isXIDContinue(ch)) {
+			return i;
+		}
+	}
+	return i;
+}
+
+
 AlifIntT alifUStr_isIdentifier(AlifObject* _self) { // 12124
 	AlifSizeT i = _alifUStr_scanIdentifier(_self);
 	AlifSizeT len = ALIFUSTR_GET_LENGTH(_self);

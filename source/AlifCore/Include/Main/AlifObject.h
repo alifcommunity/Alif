@@ -469,8 +469,11 @@ public:
 	AlifObject* mro{}; // MethodResolutionOrder
 	void* subclasses{};
 
+	Destructor del{};
+
 	AlifUIntT versionTag{};
 
+	Destructor finalize{};
 	VectorCallFunc vectorCall{};
 
 	unsigned char watched{};
@@ -480,7 +483,7 @@ public:
 
 
 
-class SpecializationCache {
+class SpecializationCache { // 238
 public:
 	AlifObject* getItem{};
 	uint32_t getItemVersion{};
@@ -508,8 +511,10 @@ public:
 
 AlifObject* alifType_lookupRef(AlifTypeObject*, AlifObject*); // 281
 
+void alifObject_callFinalizer(AlifObject*); // 291
+AlifIntT alifObject_callFinalizerFromDealloc(AlifObject*); // 292
 
-AlifObject* alifObject_genericGetAttrWithDict(AlifObject*, AlifObject*, AlifObject*, AlifIntT);
+AlifObject* alifObject_genericGetAttrWithDict(AlifObject*, AlifObject*, AlifObject*, AlifIntT); // 298
 
 AlifIntT alifObject_genericSetAttrWithDict(AlifObject*, AlifObject*, AlifObject*, AlifObject*); // 301
 

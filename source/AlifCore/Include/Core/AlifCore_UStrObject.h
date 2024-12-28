@@ -7,7 +7,8 @@
 
 
 
-
+extern AlifIntT _alifUStr_isXIDStart(AlifUCS4); // 18
+extern AlifIntT _alifUStr_isXIDContinue(AlifUCS4); // 19
 
 
 
@@ -37,6 +38,8 @@ AlifIntT alifUStr_equalToASCIIString(AlifObject* , const char* ); // 224
 extern AlifIntT alifUStr_eq(AlifObject*, AlifObject*); // 257
 
 AlifIntT _alifUStr_equal(AlifObject*, AlifObject*); // 261
+
+AlifSizeT _alifUStr_scanIdentifier(AlifObject*); // 267
 
 extern AlifIntT alifUStr_initGlobalObjects(AlifInterpreter*); // 272
 
