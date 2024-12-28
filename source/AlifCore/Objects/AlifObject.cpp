@@ -510,7 +510,7 @@ AlifIntT alifObject_getOptionalAttr(AlifObject* _v,
 }
 
 
-AlifIntT alifObject_hasAttrWithError(AlifObject* _obj, AlifObject* _name) { // 13330
+AlifIntT alifObject_hasAttrWithError(AlifObject* _obj, AlifObject* _name) { // 1330
 	AlifObject* res{};
 	AlifIntT rc = alifObject_getOptionalAttr(_obj, _name, &res);
 	ALIF_XDECREF(res);
@@ -597,6 +597,96 @@ AlifObject* _alifObject_nextNotImplemented(AlifObject* _self) { // 1472
 	//	"'%.200s' object is not iterable",
 	//	ALIF_TYPE(_self)->name);
 	return nullptr;
+}
+
+
+AlifIntT _alifObject_getMethod(AlifObject* _obj,
+	AlifObject* _name, AlifObject** _method) { // 1492
+	AlifIntT meth_found = 0;
+
+	AlifTypeObject* tp = ALIF_TYPE(_obj);
+	if (!alifType_isReady(tp)) {
+		if (alifType_ready(tp) < 0) {
+			return 0;
+		}
+	}
+
+	if (tp->getAttro != alifObject_genericGetAttr or !ALIFUSTR_CHECKEXACT(_name)) {
+		*_method = alifObject_getAttr(_obj, _name);
+		return 0;
+	}
+
+	AlifObject* descr = alifType_lookupRef(tp, _name);
+	DescrGetFunc f = nullptr;
+	if (descr != nullptr) {
+		if (_alifType_hasFeature(ALIF_TYPE(descr), ALIF_TPFLAGS_METHOD_DESCRIPTOR)) {
+			meth_found = 1;
+		}
+		else {
+			f = ALIF_TYPE(descr)->descrGet;
+			if (f != nullptr and alifDescr_isData(descr)) {
+				*_method = f(descr, _obj, (AlifObject*)ALIF_TYPE(_obj));
+				ALIF_DECREF(descr);
+				return 0;
+			}
+		}
+	}
+	AlifObject* dict{}, * attr{};
+	if ((tp->flags & ALIF_TPFLAGS_INLINE_VALUES) and
+		alifObject_tryGetInstanceAttribute(_obj, _name, &attr)) {
+		if (attr != nullptr) {
+			*_method = attr;
+			ALIF_XDECREF(descr);
+			return 0;
+		}
+		dict = nullptr;
+	}
+	else if ((tp->flags & ALIF_TPFLAGS_MANAGED_DICT)) {
+		dict = (AlifObject*)alifObject_getManagedDict(_obj);
+	}
+	else {
+		AlifObject** dictptr = alifObject_computedDictPointer(_obj);
+		if (dictptr != nullptr) {
+			dict = *dictptr;
+		}
+		else {
+			dict = nullptr;
+		}
+	}
+	if (dict != nullptr) {
+		ALIF_INCREF(dict);
+		if (alifDict_getItemRef(dict, _name, _method) != 0) {
+			// found or error
+			ALIF_DECREF(dict);
+			ALIF_XDECREF(descr);
+			return 0;
+		}
+		// not found
+		ALIF_DECREF(dict);
+	}
+
+	if (meth_found) {
+		*_method = descr;
+		return 1;
+	}
+
+	if (f != nullptr) {
+		*_method = f(descr, _obj, (AlifObject*)ALIF_TYPE(_obj));
+		ALIF_DECREF(descr);
+		return 0;
+	}
+
+	if (descr != nullptr) {
+		*_method = descr;
+		return 0;
+	}
+
+	//alifErr_format(_alifExcAttributeError_,
+	//	"'%.100s' object has no attribute '%U'",
+	//	tp->name, name);
+
+	//_alifObject_setAttributeErrorContext(obj, name);
+	return 0;
 }
 
 

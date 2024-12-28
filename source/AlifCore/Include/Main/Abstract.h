@@ -15,6 +15,8 @@ AlifObject* alifObject_callFunctionObjArgs(AlifObject* _callable, ...); // 249
 AlifObject* alifObject_vectorCall(AlifObject*, AlifObject* const*, AlifUSizeT, AlifObject*); // 280
 
 
+AlifObject* alifObject_vectorCallMethod(AlifObject*, AlifObject* const*, AlifUSizeT, AlifObject*); // 287
+
 AlifSizeT alifObject_size(AlifObject*); // 328
 
 
@@ -108,7 +110,7 @@ AlifIntT alifMapping_check(AlifObject*); // 806
 
 AlifSizeT alifMapping_size(AlifObject*); // 810
 
-
+AlifObject* alifMapping_keys(AlifObject*); // 867
 
 AlifIntT alifMapping_getOptionalItem(AlifObject*, AlifObject*, AlifObject**); // 895
 
@@ -131,5 +133,10 @@ VectorCallFunc alifVectorCall_function(AlifObject*); // 39
 
 AlifObject* alifObject_vectorCallDict(AlifObject*, AlifObject* const*, AlifUSizeT, AlifObject*); // 53
 
+
+static inline AlifObject* alifObject_callMethodNoArgs(AlifObject* _self, AlifObject* _name) { // 61
+	AlifUSizeT nargsf = 1 | ALIF_VECTORCALL_ARGUMENTS_OFFSET;
+	return alifObject_vectorCallMethod(_name, &_self, nargsf, nullptr);
+}
 
 AlifSizeT alifObject_lengthHint(AlifObject*, AlifSizeT); // 80

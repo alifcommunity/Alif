@@ -335,6 +335,32 @@ static AlifObject* object_vacall(AlifThread* _thread, AlifObject* _base,
 
 
 
+AlifObject* alifObject_vectorCallMethod(AlifObject* _name, AlifObject* const* _args,
+	AlifUSizeT _nargsf, AlifObject* _kwnames) { // 828
+
+	AlifThread* thread = _alifThread_get();
+	AlifObject* callable = nullptr;
+
+	AlifIntT unbound = _alifObject_getMethod(_args[0], _name, &callable);
+	if (callable == nullptr) {
+		return nullptr;
+	}
+
+	if (unbound) {
+		_nargsf &= ~ALIF_VECTORCALL_ARGUMENTS_OFFSET;
+	}
+	else {
+		_args++;
+		_nargsf--;
+	}
+	AlifObject* result = alifObject_vectorCallThread(thread, callable,
+		_args, _nargsf, _kwnames);
+	ALIF_DECREF(callable);
+	return result;
+}
+
+
+
 AlifObject* alifObject_callFunctionObjArgs(AlifObject* _callable, ...) { // 918
 	AlifThread* thread = _alifThread_get();
 	va_list vargs{};

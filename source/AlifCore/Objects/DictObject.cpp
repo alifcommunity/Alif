@@ -1837,7 +1837,91 @@ AlifObject* alifDict_keys(AlifObject* _dict) { // 3322
 }
 
 
+static AlifIntT dict_dictMerge(AlifInterpreter* interp, AlifDictObject* mp, AlifDictObject* other, AlifIntT override) { // 3619
+	if (other == mp or other->used == 0)
+		return 0;
+	if (mp->used == 0) {
+		override = 1;
+		AlifDictKeysObject* okeys = other->keys;
 
+		if (mp->values == nullptr and
+			other->values == nullptr and
+			other->used == okeys->nentries and
+			(DK_LOG_SIZE(okeys) == ALIFDICT_LOG_MINSIZE or
+				USABLE_FRACTION(DK_SIZE(okeys) / 2) < other->used)
+			) {
+			uint64_t new_version = _alifDict_notifyEvent(
+				interp, AlifDictWatchEvent_::AlifDict_Event_Cloned, mp, (AlifObject*)other, nullptr);
+			AlifDictKeysObject* keys = cloneCombined_dictKeys(other);
+			if (keys == nullptr)
+				return -1;
+
+			ensureShared_onResize(mp);
+			dictKeys_decRef(interp, mp->keys, IS_DICT_SHARED(mp));
+			mp->keys = keys;
+			STORE_USED(mp, other->used);
+			mp->versionTag = new_version;
+
+			if (ALIFOBJECT_GC_IS_TRACKED(other) and !ALIFOBJECT_GC_IS_TRACKED(mp)) {
+				/* Maintain tracking. */
+				ALIFOBJECT_GC_TRACK(mp);
+			}
+
+			return 0;
+		}
+	}
+
+	if (USABLE_FRACTION(DK_SIZE(mp->keys)) < other->used) {
+		AlifIntT unicode = DK_IS_USTR(other->keys);
+		if (dict_resize(interp, mp,
+			estimate_log2Keysize(mp->used + other->used),
+			unicode)) {
+			return -1;
+		}
+	}
+
+	AlifSizeT orig_size = other->keys->nentries;
+	AlifSizeT pos = 0;
+	AlifHashT hash{};
+	AlifObject* key{}, * value{};
+
+	while (_alifDict_next((AlifObject*)other, &pos, &key, &value, &hash)) {
+		AlifIntT err = 0;
+		ALIF_INCREF(key);
+		ALIF_INCREF(value);
+		if (override == 1) {
+			err = insert_dict(interp, mp,
+				ALIF_NEWREF(key), hash, ALIF_NEWREF(value));
+		}
+		else {
+			err = alifDict_containsKnownHash((AlifObject*)mp, key, hash);
+			if (err == 0) {
+				err = insert_dict(interp, mp,
+					ALIF_NEWREF(key), hash, ALIF_NEWREF(value));
+			}
+			else if (err > 0) {
+				if (override != 0) {
+					//_alifErr_setKeyError(key);
+					ALIF_DECREF(value);
+					ALIF_DECREF(key);
+					return -1;
+				}
+				err = 0;
+			}
+		}
+		ALIF_DECREF(value);
+		ALIF_DECREF(key);
+		if (err != 0)
+			return -1;
+
+		if (orig_size != other->keys->nentries) {
+			//alifErr_setString(_alifExcRuntimeError_,
+			//	"dict mutated during update");
+			return -1;
+		}
+	}
+	return 0;
+}
 
 static AlifIntT dict_merge(AlifInterpreter* interp, AlifObject* a, AlifObject* b, AlifIntT override) { // 3720
 	AlifDictObject* mp{}, * other{};

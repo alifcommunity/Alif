@@ -303,7 +303,7 @@ extern AlifObject** alifObject_computedDictPointer(AlifObject*); // 813
 
 AlifObject* alifObject_lookupSpecial(AlifObject*, AlifObject*); // 817
 
-
+AlifIntT _alifObject_getMethod(AlifObject*, AlifObject*, AlifObject**); // 822
 extern AlifObject* _alifObject_nextNotImplemented(AlifObject*); // 823
 
 

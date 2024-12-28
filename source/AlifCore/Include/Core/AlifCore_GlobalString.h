@@ -69,6 +69,7 @@ public:
      	STRUCT_FOR_ID(Flush)
      	STRUCT_FOR_ID(HasLocation)
      	STRUCT_FOR_ID(Join)
+     	STRUCT_FOR_ID(keys)
      	STRUCT_FOR_ID(MetaClass)
      	STRUCT_FOR_ID(Mro)
      	STRUCT_FOR_ID(Origin)

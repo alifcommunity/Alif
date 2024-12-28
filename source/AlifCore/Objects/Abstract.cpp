@@ -1028,6 +1028,45 @@ AlifSizeT alifMapping_size(AlifObject* _o) { // 2270
 }
 
 
+static AlifObject* methodOutput_asList(AlifObject* o, AlifObject* meth) { // 2427
+	AlifObject* it{}, * result{}, * meth_output{};
+
+	meth_output = alifObject_callMethodNoArgs(o, meth);
+	if (meth_output == nullptr or ALIFLIST_CHECKEXACT(meth_output)) {
+		return meth_output;
+	}
+	it = alifObject_getIter(meth_output);
+	if (it == nullptr) {
+		AlifThread* tstate = _alifThread_get();
+		//if (_alifErr_exceptionMatches(tstate, _alifExcTypeError_)) {
+		//	_alifErr_format(tstate, _alifExcTypeError_,
+		//		"%.200s.%U() returned a non-iterable (type %.200s)",
+		//		ALIF_TYPE(o)->_name,
+		//		meth,
+		//		ALIF_TYPE(meth_output)->name);
+		//}
+		ALIF_DECREF(meth_output);
+		return nullptr;
+	}
+	ALIF_DECREF(meth_output);
+	result = alifSequence_list(it);
+	ALIF_DECREF(it);
+	return result;
+}
+
+
+AlifObject* alifMapping_keys(AlifObject* _o) { // 2456
+	if (_o == nullptr) {
+		return null_error();
+	}
+	if (ALIFDICT_CHECKEXACT(_o)) {
+		return alifDict_keys(_o);
+	}
+	return methodOutput_asList(_o, &ALIF_ID(keys));
+}
+
+
+
 
 
 AlifObject* alifObject_getIter(AlifObject* _o) { // 2809
