@@ -84,6 +84,8 @@ AlifIntT alifUStr_equalToUTF8AndSize(AlifObject*, const char*, AlifSizeT); // 96
 
 
 
+AlifIntT alifUStr_isIdentifier(AlifObject*); // 1008
+
 /* ---------------------------------------------------------------------------------------------------------- */
 
 

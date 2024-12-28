@@ -36,6 +36,8 @@ AlifIntT alifUStr_equalToASCIIString(AlifObject* , const char* ); // 224
 
 extern AlifIntT alifUStr_eq(AlifObject*, AlifObject*); // 257
 
+AlifIntT _alifUStr_equal(AlifObject*, AlifObject*); // 261
+
 extern AlifIntT alifUStr_initGlobalObjects(AlifInterpreter*); // 272
 
 void alifUStr_internMortal(AlifInterpreter*, AlifObject**); // 284

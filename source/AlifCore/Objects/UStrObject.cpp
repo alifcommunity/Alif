@@ -3416,6 +3416,14 @@ static AlifIntT uStr_compareEq(AlifObject* _str1, AlifObject* _str2) { // 10963
 }
 
 
+AlifIntT _alifUStr_equal(AlifObject* _str1, AlifObject* _str2) { // 10984
+	if (_str1 == _str2) {
+		return 1;
+	}
+	return uStr_compareEq(_str1, _str2);
+}
+
+
 AlifIntT alifUStr_compare(AlifObject* _left, AlifObject* _right) { // 10996
 	if (ALIFUSTR_CHECK(_left) and ALIFUSTR_CHECK(_right)) {
 		if (_left == _right)
@@ -3723,7 +3731,12 @@ static AlifHashT uStr_hash(AlifObject* _self) { // 11663
 
 
 
-
+AlifIntT alifUStr_isIdentifier(AlifObject* _self) { // 12124
+	AlifSizeT i = _alifUStr_scanIdentifier(_self);
+	AlifSizeT len = ALIFUSTR_GET_LENGTH(_self);
+	/* an empty string is not a valid identifier */
+	return len and i == len;
+}
 
 
 

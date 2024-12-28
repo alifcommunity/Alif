@@ -7,7 +7,9 @@
 #include "AlifCore_Object.h"
 #include "AlifCore_ObjectAlloc.h"
 #include "AlifCore_State.h"
+#include "AlifCore_SymTable.h"
 #include "AlifCore_TypeObject.h"
+#include "AlifCore_UStrObject.h"
 #include "AlifCore_CriticalSection.h" // ربما يمكن حذفه بعد الإنتهاء من تطوير اللغة
 
 
@@ -1125,6 +1127,22 @@ static AlifGetSetDef _subtypeGetSetsWeakRefOnly_[] = { // 3575
 };
 
 
+static AlifIntT valid_identifier(AlifObject* s) { // 3581
+	if (!ALIFUSTR_CHECK(s)) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"__slots__ items must be strings, not '%.200s'",
+		//	ALIF_TYPE(s)->name);
+		return 0;
+	}
+	if (!alifUStr_isIdentifier(s)) {
+		//alifErr_setString(_alifExcTypeError_,
+		//	"__slots__ must be identifiers");
+		return 0;
+	}
+	return 1;
+}
+
+
 static AlifIntT type_init(AlifObject* _cls, AlifObject* _args, AlifObject* _kwds) { // 3598
 	if (_kwds != nullptr and ALIFTUPLE_GET_SIZE(_args) == 1 and
 		ALIFDICT_GET_SIZE(_kwds) != 0) {
@@ -1194,6 +1212,137 @@ public:
 	AlifIntT mayAddDict{};
 	AlifIntT mayAddWeak{};
 };
+
+
+static AlifIntT typeNew_visitSlots(TypeNewCtx* _ctx) { // 3694
+	AlifObject* slots = _ctx->slots;
+	AlifSizeT nslot = _ctx->nslot;
+	for (AlifSizeT i = 0; i < nslot; i++) {
+		AlifObject* name = ALIFTUPLE_GET_ITEM(slots, i);
+		if (!valid_identifier(name)) {
+			return -1;
+		}
+		if (_alifUStr_equal(name, &ALIF_ID(__dict__))) {
+			if (!_ctx->mayAddDict or _ctx->addDict != 0) {
+				//alifErr_setString(_alifExcTypeError_,
+				//	"__dict__ slot disallowed: "
+				//	"we already got one");
+				return -1;
+			}
+			_ctx->addDict++;
+		}
+		if (_alifUStr_equal(name, &ALIF_ID(__weakRef__))) {
+			if (!_ctx->mayAddWeak or _ctx->addWeak != 0) {
+				//alifErr_setString(_alfiExcTypeError_,
+				//	"__weakref__ slot disallowed: "
+				//	"we already got one");
+				return -1;
+			}
+			_ctx->addWeak++;
+		}
+	}
+	return 0;
+}
+
+static AlifObject* typeNew_copySlots(TypeNewCtx* ctx, AlifObject* dict) { // 3732
+	AlifObject* slots = ctx->slots;
+	AlifSizeT nslot = ctx->nslot;
+
+	AlifObject* tuple{}; // alif
+
+	AlifSizeT new_nslot = nslot - ctx->addDict - ctx->addWeak;
+	AlifObject* new_slots = alifList_new(new_nslot);
+	if (new_slots == nullptr) {
+		return nullptr;
+	}
+
+	AlifSizeT j = 0;
+	for (AlifSizeT i = 0; i < nslot; i++) {
+		AlifObject* slot = ALIFTUPLE_GET_ITEM(slots, i);
+		if ((ctx->addDict and _alifUStr_equal(slot, &ALIF_ID(__dict__))) ||
+			(ctx->addWeak and _alifUStr_equal(slot, &ALIF_ID(__weakRef__))))
+		{
+			continue;
+		}
+
+		slot = alif_mangle(ctx->name, slot);
+		if (!slot) {
+			goto error;
+		}
+		ALIFLIST_SET_ITEM(new_slots, j, slot);
+
+		AlifIntT r = alifDict_contains(dict, slot);
+		if (r < 0) {
+			goto error;
+		}
+		if (r > 0) {
+			if (!_alifUStr_equal(slot, &ALIF_ID(__qualname__)) and
+				!_alifUStr_equal(slot, &ALIF_ID(__classCell__)) and
+				!_alifUStr_equal(slot, &ALIF_ID(__classDictCell__)))
+			{
+				//alifErr_format(_alifExcValueError_,
+				//	"%R in __slots__ conflicts with class variable",
+				//	slot);
+				goto error;
+			}
+		}
+
+		j++;
+	}
+
+	if (alifList_sort(new_slots) == -1) {
+		goto error;
+	}
+
+	tuple = alifList_asTuple(new_slots);
+	ALIF_DECREF(new_slots);
+	if (tuple == nullptr) {
+		return nullptr;
+	}
+
+	return tuple;
+
+error:
+	ALIF_DECREF(new_slots);
+	return nullptr;
+}
+
+
+static void typeNew_slotsBases(TypeNewCtx* _ctx) { // 3801
+	AlifSizeT nbases = ALIFTUPLE_GET_SIZE(_ctx->bases);
+	if (nbases > 1 and
+		((_ctx->mayAddDict and _ctx->addDict == 0) or
+			(_ctx->mayAddWeak and _ctx->addWeak == 0)))
+	{
+		for (AlifSizeT i = 0; i < nbases; i++) {
+			AlifObject* obj = ALIFTUPLE_GET_ITEM(_ctx->bases, i);
+			if (obj == (AlifObject*)_ctx->base) {
+				/* Skip primary base */
+				continue;
+			}
+			AlifTypeObject* base = ALIFTYPE_CAST(obj);
+
+			if (_ctx->mayAddDict and _ctx->addDict == 0 and
+				base->dictOffset != 0)
+			{
+				_ctx->addDict++;
+			}
+			if (_ctx->mayAddWeak and _ctx->addWeak == 0 and
+				base->weakListOffset != 0)
+			{
+				_ctx->addWeak++;
+			}
+			if (_ctx->mayAddDict and _ctx->addDict == 0) {
+				continue;
+			}
+			if (_ctx->mayAddWeak and _ctx->addWeak == 0) {
+				continue;
+			}
+			/* Nothing more to check */
+			break;
+		}
+	}
+}
 
 
 static AlifIntT typeNew_slotsImpl(TypeNewCtx* _ctx, AlifObject* _dict) { // 3840
