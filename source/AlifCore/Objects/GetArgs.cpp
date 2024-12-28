@@ -88,7 +88,7 @@ static AlifIntT vGetArgs1_impl(AlifObject* _compatArgs,
 	_flags = _flags & ~FLAG_COMPAT;
 
 	while (endfmt == 0) {
-		int c = *_format++;
+		AlifIntT c = *_format++;
 		switch (c) {
 		case '(':
 			if (level == 0)
@@ -157,7 +157,7 @@ static AlifIntT vGetArgs1_impl(AlifObject* _compatArgs,
 			//	fname == nullptr ? "" : "()");
 			return clean_return(0, &freelist);
 		}
-		else if (min == 1 && max == 1) {
+		else if (min == 1 and max == 1) {
 			if (_compatArgs == nullptr) {
 				//alifErr_format(_alifExcTypeError_,
 				//	"%.200s%s takes at least one argument",
@@ -179,7 +179,7 @@ static AlifIntT vGetArgs1_impl(AlifObject* _compatArgs,
 		}
 	}
 
-	if (_nargs < min || max < _nargs) {
+	if (_nargs < min or max < _nargs) {
 		//if (message == nullptr)
 			//alifErr_format(_alifExcTypeError_,
 			//	"%.150s%s takes %s %d argument%s (%zd given)",
@@ -331,8 +331,8 @@ static const char* convert_item(AlifObject* _arg, const char** _pFormat, va_list
 			format++;
 	}
 	else {
-		//msg = convert_simple(_arg, &format, _pVa, _flags,
-		//	_msgbuf, _bufsize, _freelist);
+		msg = convert_simple(_arg, &format, _pVa, _flags,
+			_msgbuf, _bufsize, _freelist);
 		if (msg != nullptr)
 			_levels[0] = 0;
 	}
