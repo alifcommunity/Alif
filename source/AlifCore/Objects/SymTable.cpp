@@ -113,6 +113,7 @@ static AlifIntT symtable_enterBlock(AlifSymTable*, AlifObject*, BlockType_, void
 static AlifIntT symtable_exitBlock(AlifSymTable*); // 236
 static AlifIntT symtable_visitStmt(AlifSymTable* , StmtTy ); // 237
 static AlifIntT symtable_visitExpr(AlifSymTable* , ExprTy ); // 238
+static AlifIntT symtable_visitTypeParam(AlifSymTable*, TypeParamTy); // 239
 static AlifIntT symtable_visitArguments(AlifSymTable*, ArgumentsTy); // 244
 static AlifIntT symtable_visitKeyword(AlifSymTable*, KeywordTy); // 248
 static AlifIntT symtable_addDef(AlifSymTable*, AlifObject*, AlifIntT, AlifSourceLocation); // 261
@@ -1078,6 +1079,46 @@ static AlifIntT symtable_addDef(AlifSymTable* _st, AlifObject* _name, AlifIntT _
 		_flag == USE ? ExprContext_::Load : ExprContext_::Store);
 }
 
+static AlifIntT symtable_enterTypeParamBlock(AlifSymTable* _st, Identifier _name,
+	void* _ast, AlifIntT _hasDefaults, AlifIntT _hasKwDefaults,
+	StmtK_ _kind, AlifSourceLocation _loc) { // 1623
+	BlockType_ current_type = _st->cur->type;
+	if (!symtable_enterBlock(_st, _name, BlockType_::Type_Parameters_Block, _ast, _loc)) {
+		return 0;
+	}
+	if (current_type == BlockType_::Class_Block) {
+		_st->cur->canSeeClassScope = 1;
+		if (!symtable_addDef(_st, &ALIF_ID(__classDict__), USE, _loc)) {
+			return 0;
+		}
+	}
+	if (_kind == StmtK_::ClassDefK) {
+		if (!symtable_addDef(_st, &ALIF_STR(TypeParams), DEF_LOCAL, _loc)) {
+			return 0;
+		}
+		if (!symtable_addDef(_st, &ALIF_STR(TypeParams), USE, _loc)) {
+			return 0;
+		}
+		if (!symtable_addDef(_st, &ALIF_STR(GenericBase), DEF_LOCAL, _loc)) {
+			return 0;
+		}
+		if (!symtable_addDef(_st, &ALIF_STR(GenericBase), USE, _loc)) {
+			return 0;
+		}
+	}
+	if (_hasDefaults) {
+		if (!symtable_addDef(_st, &ALIF_STR(Defaults), DEF_PARAM, _loc)) {
+			return 0;
+		}
+	}
+	if (_hasKwDefaults) {
+		if (!symtable_addDef(_st, &ALIF_STR(KWDefaults), DEF_PARAM, _loc)) {
+			return 0;
+		}
+	}
+	return 1;
+}
+
 // 1686
 #define VISIT(_st, _type, _v) \
     do { \
@@ -1176,6 +1217,57 @@ static AlifIntT symtable_visitStmt(AlifSymTable* _st, StmtTy _s) { // 1812
 			if (!symtable_exitBlock(_st))
 				return 0;
 		}
+		break;
+	}
+	case StmtK_::ClassDefK: {
+		AlifObject* tmp{};
+		if (!symtable_addDef(_st, _s->V.classDef.name, DEF_LOCAL, LOCATION(_s)))
+			return 0;
+		//if (_s->V.classDef.decoratorList)
+		//	VISIT_SEQ(_st, Expr, _s->V.classDef.decoratorList);
+		tmp = _st->private_;
+		if (ASDL_SEQ_LEN(_s->V.classDef.typeParams) > 0) {
+			if (!symtable_enterTypeParamBlock(_st, _s->V.classDef.name,
+				(void*)_s->V.classDef.typeParams,
+				false, false, _s->type,
+				LOCATION(_s))) {
+				return 0;
+			}
+			_st->private_ = _s->V.classDef.name;
+			_st->cur->mangledNames = alifSet_new(nullptr);
+			if (!_st->cur->mangledNames) {
+				return 0;
+			}
+			VISIT_SEQ(_st, TypeParam, _s->V.classDef.typeParams);
+		}
+		VISIT_SEQ(_st, Expr, _s->V.classDef.bases);
+		if (!check_keywords(_st, _s->V.classDef.keywords)) {
+			return 0;
+		}
+		VISIT_SEQ(_st, Keyword, _s->V.classDef.keywords);
+		if (!symtable_enterBlock(_st, _s->V.classDef.name, BlockType_::Class_Block,
+			(void*)_s, LOCATION(_s))) {
+			return 0;
+		}
+		_st->private_ = _s->V.classDef.name;
+		if (ASDL_SEQ_LEN(_s->V.classDef.typeParams) > 0) {
+			if (!symtable_addDef(_st, &ALIF_ID(__typeParams__),
+				DEF_LOCAL, LOCATION(_s))) {
+				return 0;
+			}
+			if (!symtable_addDef(_st, &ALIF_STR(TypeParams),
+				USE, LOCATION(_s))) {
+				return 0;
+			}
+		}
+		VISIT_SEQ(_st, Stmt, _s->V.classDef.body);
+		if (!symtable_exitBlock(_st))
+			return 0;
+		if (ASDL_SEQ_LEN(_s->V.classDef.typeParams) > 0) {
+			if (!symtable_exitBlock(_st))
+				return 0;
+		}
+		_st->private_ = tmp;
 		break;
 	}
 	case StmtK_::AssignK:
@@ -1310,6 +1402,57 @@ static AlifIntT symtable_visitExpr(AlifSymTable* _st, ExprTy _e) { // 2334
 	return 1;
 }
 
+
+static AlifIntT symtable_visitTypeParam(AlifSymTable* _st, TypeParamTy _tp) { // 2538
+	ENTER_RECURSIVE(_st);
+	switch (_tp->type) {
+	case TypeParamK::TypeVarK: {
+		if (!symtable_addDef(_st, _tp->V.typeVar.name, DEF_TYPE_PARAM | DEF_LOCAL, LOCATION(_tp)))
+			return 0;
+
+		const char* steScopeInfo = nullptr;
+		const ExprTy bound = _tp->V.typeVar.bound;
+		if (bound != nullptr) {
+			steScopeInfo = bound->type == ExprK_::TupleK ? "a TypeVar constraint" : "a TypeVar bound";
+		}
+
+		//if (!symtable_visitTypeParamBoundOrDefault(_st, _tp->V.typeVar.bound, _tp->V.typeVar.name,
+		//	(void*)_tp, ste_scope_info)) {
+		//	return 0;
+		//}
+
+		//if (!symtable_visitTypeParamBoundOrDefault(_st, _tp->V.typeVar.defaultValue, _tp->V.typeVar.name,
+		//	(void*)((uintptr_t)_tp + 1), "a TypeVar default")) {
+		//	return 0;
+		//}
+		break;
+	}
+	case TypeParamK::TypeVarTupleK: {
+
+		if (!symtable_addDef(_st, _tp->V.typeVarTuple.name, DEF_TYPE_PARAM | DEF_LOCAL, LOCATION(_tp))) {
+			return 0;
+		}
+
+		//if (!symtable_visitTypeParamBoundOrDefault(_st, _tp->V.typeVarTuple.defaultValue, _tp->V.typeVarTuple.name,
+		//	(void*)_tp, "a TypeVarTuple default")) {
+		//	return 0;
+		//}
+		break;
+	}
+	//case TypeParamK::ParamSpecK:
+	//	if (!symtable_addDef(_st, _tp->V.paramSpec.name, DEF_TYPE_PARAM | DEF_LOCAL, LOCATION(_tp))) {
+	//		return 0;
+	//	}
+
+	//	if (!symtable_visitTypeParamBoundOrDefault(_st, _tp->V.paramSpec.defaultValue, _tp->V.paramSpec.name,
+	//		(void*)_tp, "a ParamSpec default")) {
+	//		return 0;
+	//	}
+	//	break;
+	}
+	LEAVE_RECURSIVE(_st);
+	return 1;
+}
 
 
 static AlifIntT symtable_visitParams(AlifSymTable* _st, ASDLArgSeq* _args){ // 2664

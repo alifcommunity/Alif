@@ -653,38 +653,51 @@
 #define ALIF_STR_LITERALS_INIT { \
 	INIT_STR(AnonModule, "<module>"), \
     INIT_STR(DblPercent, "%%"), \
+    INIT_STR(Defaults, ".defaults"), \
     INIT_STR(DotLocals, ".<locals>"), \
     INIT_STR(Empty, ""), \
     INIT_STR(Format, ".format"), \
+    INIT_STR(GenericBase, ".generic_base"),	\
+    INIT_STR(KWDefaults, ".kwdefaults"),	\
+    INIT_STR(TypeParams, ".type_params"),	\
 }
 
 #define ALIF_STR_IDENTIFIERS_INIT { \
     INIT_ID(CANCELLED), \
+    INIT_ID(__buildClass__), \
     INIT_ID(__builtins__), \
-    INIT_ID(__classGetItem__), \
     INIT_ID(__class__), \
+    INIT_ID(__classCell__), \
     INIT_ID(__classDict__), \
+    INIT_ID(__classDictCell__), \
+    INIT_ID(__classGetItem__), \
     INIT_ID(__complex__), \
 	INIT_ID(__doc__), \
 	INIT_ID(__eq__), \
+	INIT_ID(__firstLineno__), \
 	INIT_ID(__format__), \
 	INIT_ID(__getAttr__), \
 	INIT_ID(__hash__), \
 	INIT_ID(__lengthHint__), \
 	INIT_ID(__loader__), \
 	INIT_ID(__module__), \
+	INIT_ID(__mroEntries__), \
     INIT_ID(__name__), \
     INIT_ID(__new__), \
     INIT_ID(__origClass__), \
 	INIT_ID(__package__), \
+	INIT_ID(__prepare__), \
 	INIT_ID(__qualname__), \
 	INIT_ID(__spec__), \
+	INIT_ID(__staticAttributes__), \
+	INIT_ID(__typeParams__), \
 	INIT_ID(Builtins), \
 	INIT_ID(End), \
 	INIT_ID(File), \
 	INIT_ID(Flush), \
 	INIT_ID(HasLocation), \
 	INIT_ID(Join), \
+	INIT_ID(MetaClass), \
 	INIT_ID(Mro), \
 	INIT_ID(Origin), \
 	INIT_ID(Sep), \

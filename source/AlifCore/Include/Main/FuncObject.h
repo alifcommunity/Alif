@@ -44,6 +44,8 @@ public:
 
 extern AlifTypeObject _alifFunctionType_; // 66
 
+#define ALIFFUNCTION_CHECK(_op) ALIF_IS_TYPE(_op, &_alifFunctionType_) // 68
+
 
 AlifObject* alifFunction_new(AlifObject*, AlifObject*); // 70
 

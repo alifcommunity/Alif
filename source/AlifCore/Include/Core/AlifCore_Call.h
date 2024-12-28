@@ -49,8 +49,12 @@ static inline AlifObject* _alifObject_callNoArgsThread(AlifThread* _thread, Alif
 
 
 
+extern AlifObject* const* _alifStack_unpackDict(AlifThread*,
+	AlifObject* const*, AlifSizeT, AlifObject*, AlifObject**); // 187
 
+extern void _alifStack_unpackDictFree(AlifObject* const*, AlifSizeT, AlifObject*); // 192
 
-//AlifObject* const* alifStack_unpackDict(AlifObject* const* args, int64_t nArgs, AlifObject* kwArgs, AlifObject** p_kwnames);
+extern void _alifStack_unpackDictFreeNoDecRef(AlifObject* const*, AlifObject*); // 197
+
 
 

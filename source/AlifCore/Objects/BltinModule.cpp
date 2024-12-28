@@ -2,10 +2,229 @@
 
 #include "AlifCore_Eval.h"
 #include "AlifCore_ModSupport.h"
+#include "AlifCore_Object.h"
 #include "AlifCore_State.h"
 #include "AlifCore_SysModule.h"
 
 #include "clinic/BltinModule.cpp.h"
+
+
+
+static AlifObject* update_bases(AlifObject* _bases, AlifObject* const* _args, AlifSizeT _nargs) { // 25
+	AlifSizeT i{}, j{};
+	AlifObject* base, * meth, * new_base, * result, * new_bases = nullptr;
+
+	for (i = 0; i < _nargs; i++) {
+		base = _args[i];
+		if (ALIFTYPE_CHECK(base)) {
+			if (new_bases) {
+				/* If we already have made a replacement, then we append every normal base,
+				   otherwise just skip it. */
+				if (alifList_append(new_bases, base) < 0) {
+					goto error;
+				}
+			}
+			continue;
+		}
+		if (alifObject_getOptionalAttr(base, &ALIF_ID(__mroEntries__), &meth) < 0) {
+			goto error;
+		}
+		if (!meth) {
+			if (new_bases) {
+				if (alifList_append(new_bases, base) < 0) {
+					goto error;
+				}
+			}
+			continue;
+		}
+		new_base = alifObject_callOneArg(meth, _bases);
+		ALIF_DECREF(meth);
+		if (!new_base) {
+			goto error;
+		}
+		if (!ALIFTUPLE_CHECK(new_base)) {
+			//alifErr_setString(_alifExcTypeError_,
+			//	"__mro_entries__ must return a tuple");
+			ALIF_DECREF(new_base);
+			goto error;
+		}
+		if (!new_bases) {
+			/* If this is a first successful replacement, create new_bases list and
+			   copy previously encountered bases. */
+			if (!(new_bases = alifList_new(i))) {
+				ALIF_DECREF(new_base);
+				goto error;
+			}
+			for (j = 0; j < i; j++) {
+				base = _args[j];
+				ALIFLIST_SET_ITEM(new_bases, j, ALIF_NEWREF(base));
+			}
+		}
+		j = ALIFLIST_GET_SIZE(new_bases);
+		if (alifList_setSlice(new_bases, j, j, new_base) < 0) {
+			ALIF_DECREF(new_base);
+			goto error;
+		}
+		ALIF_DECREF(new_base);
+	}
+	if (!new_bases) {
+		return _bases;
+	}
+	result = alifList_asTuple(new_bases);
+	ALIF_DECREF(new_bases);
+	return result;
+
+error:
+	ALIF_XDECREF(new_bases);
+	return nullptr;
+}
+
+static AlifObject* builtin___buildClass__(AlifObject* _self,
+	AlifObject* const* _args, AlifSizeT _nargs, AlifObject* _kwnames) { // 97
+	AlifObject* func, * name, * winner, * prep;
+	AlifObject* cls = nullptr, * cell = nullptr, * ns = nullptr, * meta = nullptr, * orig_bases = nullptr;
+	AlifObject* mkw = nullptr, * bases = nullptr;
+	AlifIntT isclass = 0;   /* initialize to prevent gcc warning */
+
+	AlifThread* thread{}; // alif
+
+	if (_nargs < 2) {
+		//alifErr_setString(_alifExcTypeError_,
+		//	"__buildClass__: not enough arguments");
+		return nullptr;
+	}
+	func = _args[0];   /* Better be callable */
+	if (!ALIFFUNCTION_CHECK(func)) {
+		//alifErr_setString(_alifExcTypeError_,
+		//	"__buildClass__: func must be a function");
+		return nullptr;
+	}
+	name = _args[1];
+	if (!ALIFUSTR_CHECK(name)) {
+		//alifErr_setString(_alifExcTypeError_,
+		//	"__buildClass__: name is not a string");
+		return nullptr;
+	}
+	orig_bases = alifTuple_fromArray(_args + 2, _nargs - 2);
+	if (orig_bases == nullptr)
+		return nullptr;
+
+	bases = update_bases(orig_bases, _args + 2, _nargs - 2);
+	if (bases == nullptr) {
+		ALIF_DECREF(orig_bases);
+		return nullptr;
+	}
+
+	if (_kwnames == nullptr) {
+		meta = nullptr;
+		mkw = nullptr;
+	}
+	else {
+		mkw = alifStack_asDict(_args + _nargs, _kwnames);
+		if (mkw == nullptr) {
+			goto error;
+		}
+
+		if (alifDict_pop(mkw, &ALIF_ID(MetaClass), &meta) < 0) {
+			goto error;
+		}
+		if (meta != nullptr) {
+			/* metaclass is explicitly given, check if it's indeed a class */
+			isclass = ALIFTYPE_CHECK(meta);
+		}
+	}
+	if (meta == nullptr) {
+		/* if there are no bases, use type: */
+		if (ALIFTUPLE_GET_SIZE(bases) == 0) {
+			meta = (AlifObject*)(&_alifTypeType_);
+		}
+		/* else get the type of the first base */
+		else {
+			AlifObject* base0 = ALIFTUPLE_GET_ITEM(bases, 0);
+			meta = (AlifObject*)ALIF_TYPE(base0);
+		}
+		ALIF_INCREF(meta);
+		isclass = 1;  /* meta is really a class */
+	}
+
+	if (isclass) {
+		/* meta is really a class, so check for a more derived
+		   metaclass, or possible metaclass conflicts: */
+		winner = (AlifObject*)_alifType_calculateMetaClass((AlifTypeObject*)meta,
+			bases);
+		if (winner == nullptr) {
+			goto error;
+		}
+		if (winner != meta) {
+			ALIF_SETREF(meta, ALIF_NEWREF(winner));
+		}
+	}
+	/* else: meta is not a class, so we cannot do the metaclass
+	   calculation, so we will use the explicitly given object as it is */
+	if (alifObject_getOptionalAttr(meta, &ALIF_ID(__prepare__), &prep) < 0) {
+		ns = nullptr;
+	}
+	else if (prep == nullptr) {
+		ns = alifDict_new();
+	}
+	else {
+		AlifObject* pargs[2] = { name, bases };
+		ns = alifObject_vectorCallDict(prep, pargs, 2, mkw);
+		ALIF_DECREF(prep);
+	}
+	if (ns == nullptr) {
+		goto error;
+	}
+	if (!alifMapping_check(ns)) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"%.200s.__prepare__() must return a mapping, not %.200s",
+		//	isclass ? ((AlifTypeObject*)meta)->name : "<metaclass>",
+		//	ALIF_TYPE(ns)->name);
+		goto error;
+	}
+	thread = _alifThread_get();
+	cell = alifEval_vector(thread, (AlifFunctionObject*)func, ns, nullptr, 0, nullptr);
+	if (cell != nullptr) {
+		if (bases != orig_bases) {
+			//if (alifMapping_setItemString(ns, "__origBases__", orig_bases) < 0) {
+			//	goto error;
+			//}
+			printf("تعليق : BltinModule.cpp - builtin___buildClass__"); // alif
+		}
+		AlifObject* margs[3] = { name, bases, ns };
+		cls = alifObject_vectorCallDict(meta, margs, 3, mkw);
+		if (cls != nullptr and ALIFTYPE_CHECK(cls) and ALIFCELL_CHECK(cell)) {
+			AlifObject* cell_cls = ALIFCELL_GET(cell);
+			if (cell_cls != cls) {
+				if (cell_cls == nullptr) {
+					//const char* msg =
+					//	"__class__ not set defining %.200R as %.200R. "
+					//	"Was __classCell__ propagated to type.__new__?";
+					//alifErr_format(_alifExcRuntimeError_, msg, name, cls);
+				}
+				else {
+					//const char* msg =
+					//	"__class__ set to %.200R defining %.200R as %.200R";
+					//alifErr_format(_alifExcTypeError_, msg, cell_cls, name, cls);
+				}
+				ALIF_SETREF(cls, nullptr);
+				goto error;
+			}
+		}
+	}
+error:
+	ALIF_XDECREF(cell);
+	ALIF_XDECREF(ns);
+	ALIF_XDECREF(meta);
+	ALIF_XDECREF(mkw);
+	if (bases != orig_bases) {
+		ALIF_DECREF(orig_bases);
+	}
+	ALIF_DECREF(bases);
+	return cls;
+}
+
+
 
 
 
@@ -90,6 +309,8 @@ static AlifObject* builtin_printImpl(AlifObject* _module, AlifObject* _args,
 
 
 static AlifMethodDef builtinMethods[] = { // 3141
+	{"__buildClass__", ALIF_CPPFUNCTION_CAST(builtin___buildClass__),
+	 METHOD_FASTCALL | METHOD_KEYWORDS},
 	BUILTIN_PRINT_METHODDEF,
 	{nullptr, nullptr},
 };

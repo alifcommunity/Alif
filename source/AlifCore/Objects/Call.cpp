@@ -53,6 +53,42 @@ AlifObject* _alif_checkFunctionResult(AlifThread* _thread,
 	return _result;
 }
 
+AlifObject* _alifObject_vectorCallDictThread(AlifThread* _thread, AlifObject* _callable,
+	AlifObject* const* _args, AlifUSizeT _nargsf, AlifObject* _kwargs) { // 110
+	AlifSizeT nargs = ALIFVECTORCALL_NARGS(_nargsf);
+
+	VectorCallFunc func = alifVectorCall_function(_callable);
+	if (func == nullptr) {
+		/* Use call instead */
+		return alifObject_makeTpCall(_thread, _callable, _args, nargs, _kwargs);
+	}
+
+	AlifObject* res{};
+	if (_kwargs == nullptr or ALIFDICT_GET_SIZE(_kwargs) == 0) {
+		res = func(_callable, _args, _nargsf, nullptr);
+	}
+	else {
+		AlifObject* kwnames{};
+		AlifObject* const* newargs{};
+		newargs = _alifStack_unpackDict(_thread,
+			_args, nargs,
+			_kwargs, &kwnames);
+		if (newargs == nullptr) {
+			return nullptr;
+		}
+		res = func(_callable, newargs,
+			nargs | ALIF_VECTORCALL_ARGUMENTS_OFFSET, kwnames);
+		_alifStack_unpackDictFree(newargs, nargs, kwnames);
+	}
+	return _alif_checkFunctionResult(_thread, _callable, res, nullptr);
+}
+
+AlifObject* alifObject_vectorCallDict(AlifObject* _callable, AlifObject* const* _args,
+	AlifUSizeT _nargsf, AlifObject* _kwargs) { // 154
+	AlifThread* tstate = _alifThread_get();
+	return _alifObject_vectorCallDictThread(tstate, _callable, _args, _nargsf, _kwargs);
+}
+
 static void object_isNotCallable(AlifThread* _thread, AlifObject* _callable) { // 163
 	if (ALIF_IS_TYPE(_callable, &_alifModuleType_)) {
 		AlifObject* name = alifModule_getNameObject(_callable);
@@ -297,70 +333,70 @@ AlifObject* alifStack_asDict(AlifObject* const* _values, AlifObject* _kwNames) {
 //
 //    return alifVectorCall_callSub(func, callable, tuple, kwArgs);
 //}
-//
-//AlifObject* const* alifStack_unpackDict(AlifObject* const* args, int64_t nArgs,
-//    AlifObject* kwArgs, AlifObject** p_kwnames)
-//{
-//
-//    int64_t nKwArgs = ((AlifDictObject*)kwArgs)->used;
-//
-//    int64_t maxnargs = INT64_MAX / sizeof(args[0]) - 1;
-//    if (nArgs > maxnargs - nKwArgs) {
-//        return nullptr;
-//    }
-//
-//    AlifObject** stack = (AlifObject**)alifMem_objAlloc((1 + nArgs + nKwArgs) * sizeof(args[0]));
-//    if (stack == nullptr) {
-//        return nullptr;
-//    }
-//
-//    AlifObject* kwNames = alifNew_tuple(nKwArgs);
-//    if (kwNames == nullptr) {
-//        alifMem_objFree(stack);
-//        return nullptr;
-//    }
-//
-//    stack++; 
-//
-//    for (int64_t i = 0; i < nArgs; i++) {
-//        stack[i] = args[i];
-//    }
-//
-//    AlifObject** kwStack = stack + nArgs;
-//
-//	AlifSizeT pos = 0, i = 0;
-//    AlifObject* key{}, * value{};
-//    unsigned long keys_are_strings = ALIFTPFLAGS_USTR_SUBCLASS;
-//    while (alifDict_next(kwArgs, &pos, &key, &value)) {
-//        keys_are_strings &= key->type_->flags_;
-//        ((AlifTupleObject*)kwNames)->items_[i] = key;
-//        kwStack[i] = value;
-//        i++;
-//    }
-//
-//    //if (!keys_are_strings) {
-//    //    _PyErr_SetString(tstate, PyExc_TypeError,
-//    //        "keywords must be strings");
-//    //    _PyStack_UnpackDict_Free(stack, nargs, kwNames);
-//    //    return nullptr;
-//    //}
-//
-//    *p_kwnames = kwNames;
-//    return stack;
-//}
-//
-//void alifStack_unpackDict_free(AlifObject* const* stack, int64_t nArgs,
-//    AlifObject* kwNames)
-//{
-//    int64_t n = ((AlifTupleObject*)kwNames)->_base_.size_ +nArgs;
-//    //for (int64_t i = 0; i < n; i++) {
-//    //    ALIF_DECREF(stack[i]);
-//    //}
-//    //alifStack_unpackDict_freeNoDecRef(stack, kwNames);
-//}
-//
-//void alifStack_unpackDict_freeNoDecRef(AlifObject* const* stack, AlifObject* kwNames)
-//{
-//    alifMem_objFree((AlifObject**)stack - 1);
-//    //ALIF_DECREF(kwNames);
-//}
+
+AlifObject* const* _alifStack_unpackDict(AlifThread* _thread,
+	AlifObject* const* _args, AlifSizeT _nargs,
+	AlifObject* _kwargs, AlifObject** _pKwnames) { // 959
+
+	AlifSizeT nkwargs = ALIFDICT_GET_SIZE(_kwargs);
+	AlifSizeT maxnargs = ALIF_SIZET_MAX / sizeof(_args[0]) - 1;
+	if (_nargs > maxnargs - nkwargs) {
+		//_alifErr_noMemory(_thread);
+		return nullptr;
+	}
+
+	AlifObject** stack = (AlifObject**)alifMem_dataAlloc((1 + _nargs + nkwargs) * sizeof(_args[0]));
+	if (stack == nullptr) {
+		//_alifErr_noMemory(_thread);
+		return nullptr;
+	}
+
+	AlifObject* kwnames = alifTuple_new(nkwargs);
+	if (kwnames == nullptr) {
+		alifMem_dataFree(stack);
+		return nullptr;
+	}
+
+	stack++;  /* For ALIF_VECTORCALL_ARGUMENTS_OFFSET */
+
+	/* Copy positional arguments */
+	for (AlifSizeT i = 0; i < _nargs; i++) {
+		stack[i] = ALIF_NEWREF(_args[i]);
+	}
+
+	AlifObject** kwstack = stack + _nargs;
+	AlifSizeT pos = 0, i = 0;
+	AlifObject* key{}, * value{};
+	unsigned long keys_are_strings = ALIF_TPFLAGS_UNICODE_SUBCLASS;
+	while (alifDict_next(_kwargs, &pos, &key, &value)) {
+		keys_are_strings &= ALIF_TYPE(key)->flags;
+		ALIFTUPLE_SET_ITEM(kwnames, i, ALIF_NEWREF(key));
+		kwstack[i] = ALIF_NEWREF(value);
+		i++;
+	}
+
+	if (!keys_are_strings) {
+		//_alifErr_setString(_thread, _alifExcTypeError_,
+		//	"keywords must be strings");
+		_alifStack_unpackDictFree(stack, _nargs, kwnames);
+		return nullptr;
+	}
+
+	*_pKwnames = kwnames;
+	return stack;
+}
+
+void _alifStack_unpackDictFree(AlifObject* const* _stack,
+	AlifSizeT _nArgs, AlifObject* _kwNames) { // 1028
+	AlifSizeT n = ALIFTUPLE_GET_SIZE(_kwNames) + _nArgs;
+	for (AlifSizeT i = 0; i < n; i++) {
+		ALIF_DECREF(_stack[i]);
+	}
+	_alifStack_unpackDictFreeNoDecRef(_stack, _kwNames);
+}
+
+void _alifStack_unpackDictFreeNoDecRef(AlifObject* const* _stack,
+	AlifObject* _kwnames) { // 1039
+	alifMem_dataFree((AlifObject**)_stack - 1);
+	ALIF_DECREF(_kwnames);
+}

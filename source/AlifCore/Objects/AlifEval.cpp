@@ -316,6 +316,23 @@ dispatch_opcode :
 				_thread->cppRecursionRemaining += ALIF_EVAL_CPP_STACK_UNITS;
 				return alifStackRef_asAlifObjectSteal(retval);
 			} // ------------------------------------------------------------ //
+			TARGET(LOAD_BUILD_CLASS) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef bc{};
+				AlifObject* bc_o{};
+				if (alifMapping_getOptionalItem(BUILTINS(), &ALIF_ID(__buildClass__), &bc_o) < 0)
+				{ /*goto error;*/ }
+				if (bc_o == nullptr) {
+					//_alifErr_setString(_thread, _alifExcNameError_,
+					//	"__build_class__ not found");
+					//if (true) goto error;
+				}
+				bc = ALIFSTACKREF_FROMALIFOBJECTSTEAL(bc_o);
+				stackPointer[0] = bc;
+				stackPointer += 1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(MAKE_FUNCTION) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;

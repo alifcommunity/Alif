@@ -147,6 +147,7 @@ public:
 			ASDLExprSeq* bases{};
 			ASDLKeywordSeq* keywords{};
 			ASDLStmtSeq* body{};
+			ASDLTypeParamSeq* typeParams{};
 		}classDef;
 
 		class {
@@ -491,15 +492,18 @@ public:
 	union
 	{
 		class {
+		public:
 			Identifier name{};
 			ExprTy bound{};
 		}typeVar;
 
 		class {
+		public:
 			Identifier name{};
 		}paramSpec;
 
 		class {
+		public:
 			Identifier name{};
 		}typeVarTuple;
 

@@ -468,6 +468,8 @@ public:
 
 	AlifUIntT versionTag{};
 
+	VectorCallFunc vectorCall{};
+
 	unsigned char watched{};
 	uint16_t versionsUsed{};
 };

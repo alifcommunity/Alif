@@ -265,6 +265,9 @@
     <ClCompile Include="..\source\AlifCore\Objects\StructSeq.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\CellObject.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">
@@ -806,6 +809,9 @@
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_StructSeq.h">
       <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\CellObject.h">
+      <Filter>Include\Main</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

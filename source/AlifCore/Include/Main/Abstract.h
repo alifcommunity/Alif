@@ -120,5 +120,7 @@ static inline AlifSizeT _alifVectorCall_nArgs(AlifUSizeT _n) { // 32
 
 VectorCallFunc alifVectorCall_function(AlifObject*); // 39
 
+AlifObject* alifObject_vectorCallDict(AlifObject*, AlifObject* const*, AlifUSizeT, AlifObject*); // 53
+
 
 AlifSizeT alifObject_lengthHint(AlifObject*, AlifSizeT); // 80

@@ -425,6 +425,54 @@ static AlifIntT assign_versionTag(AlifInterpreter* interp, AlifTypeObject* type)
 }
 
 
+
+
+static AlifObject* type_call(AlifObject* _self, AlifObject* _args, AlifObject* _kwds) { // 2136
+	AlifTypeObject* type = (AlifTypeObject*)_self;
+	AlifObject* obj{};
+	AlifThread* thread = _alifThread_get();
+
+	if (type == &_alifTypeType_) {
+		AlifSizeT nargs = ALIFTUPLE_GET_SIZE(_args);
+
+		if (nargs == 1 and (_kwds == nullptr or !ALIFDICT_GET_SIZE(_kwds))) {
+			obj = (AlifObject*)ALIF_TYPE(ALIFTUPLE_GET_ITEM(_args, 0));
+			return ALIF_NEWREF(obj);
+		}
+		if (nargs != 3) {
+			//alifErr_setString(_alifExcTypeError_,
+			//	"type() takes 1 or 3 arguments");
+			return nullptr;
+		}
+	}
+
+	if (type->new_ == nullptr) {
+		//_alifErr_format(thread, _alifExcTypeError_,
+		//	"cannot create '%s' instances", type->name);
+		return nullptr;
+	}
+
+	obj = type->new_(type, _args, _kwds);
+	obj = _alif_checkFunctionResult(thread, (AlifObject*)type, obj, nullptr);
+	if (obj == nullptr)
+		return nullptr;
+
+	if (!ALIFOBJECT_TYPECHECK(obj, type))
+		return obj;
+
+	type = ALIF_TYPE(obj);
+	if (type->init != nullptr) {
+		AlifIntT res = type->init(obj, _args, _kwds);
+		if (res < 0) {
+			ALIF_SETREF(obj, nullptr);
+		}
+		else {
+		}
+	}
+	return obj;
+}
+
+
 AlifObject* alifType_allocNoTrack(AlifTypeObject* _type, AlifSizeT _nitems) { // 2217
 	AlifObject* obj_{};
 	size_t size = alifObject_varSize(_type, _nitems + 1);
@@ -879,6 +927,98 @@ static AlifTypeObject* solid_base(AlifTypeObject* _type) { // 3401
 }
 
 
+static AlifIntT type_init(AlifObject* _cls, AlifObject* _args, AlifObject* _kwds) { // 3598
+	if (_kwds != nullptr and ALIFTUPLE_GET_SIZE(_args) == 1 and
+		ALIFDICT_GET_SIZE(_kwds) != 0) {
+		//alifErr_setString(_alifExcTypeError_,
+		//	"type.__init__() takes no keyword arguments");
+		return -1;
+	}
+
+	if ((ALIFTUPLE_GET_SIZE(_args) != 1 and ALIFTUPLE_GET_SIZE(_args) != 3)) {
+		//alifErr_setString(_alifExcTypeError_,
+		//	"type.__init__() takes 1 or 3 arguments");
+		return -1;
+	}
+
+	return 0;
+}
+
+
+/* Determine the most derived metatype. */
+AlifTypeObject* _alifType_calculateMetaClass(AlifTypeObject* _metatype,
+	AlifObject* _bases) { // 3635
+	AlifSizeT i{}, nbases{};
+	AlifTypeObject* winner{};
+	AlifObject* tmp{};
+	AlifTypeObject* tmptype{};
+
+	nbases = ALIFTUPLE_GET_SIZE(_bases);
+	winner = _metatype;
+	for (i = 0; i < nbases; i++) {
+		tmp = ALIFTUPLE_GET_ITEM(_bases, i);
+		tmptype = ALIF_TYPE(tmp);
+		if (alifType_isSubType(winner, tmptype))
+			continue;
+		if (alifType_isSubType(tmptype, winner)) {
+			winner = tmptype;
+			continue;
+		}
+		/* else: */
+		//alifErr_setString(_alifExcTypeError_,
+		//	"metaclass conflict: "
+		//	"the metaclass of a derived class "
+		//	"must be a (non-strict) subclass "
+		//	"of the metaclasses of all its bases");
+		return nullptr;
+	}
+	return winner;
+}
+
+
+
+
+static AlifObject* type_new(AlifTypeObject* metatype,
+	AlifObject* args, AlifObject* kwds) { // 4478
+	AlifObject* name{}, * bases{}, * orig_dict{};
+	if (!alifArg_parseTuple(args, "UO!O!:type.__new__",
+		&name,
+		&_alifTupleType_, &bases,
+		&_alifDictType_, &orig_dict))
+	{
+		return nullptr;
+	}
+
+	TypeNewCtx ctx = {
+		.metatype = metatype,
+		.args = args,
+		.kwds = kwds,
+		.origDict = orig_dict,
+		.name = name,
+		.bases = bases,
+		.base = nullptr,
+		.slots = nullptr,
+		.nslot = 0,
+		.addDict = 0,
+		.addWeak = 0,
+		.mayAddDict = 0,
+		.mayAddWeak = 0 };
+	AlifObject* type = nullptr;
+	AlifIntT res = typeNew_getBases(&ctx, &type);
+	if (res < 0) {
+		return nullptr;
+	}
+	if (res == 1) {
+		return type;
+	}
+
+	type = type_newImpl(&ctx);
+	ALIF_DECREF(ctx.bases);
+	return type;
+}
+
+
+
 
 static AlifObject* findName_inMro(AlifTypeObject* _type, AlifObject* _name, AlifIntT* _error) { //  5291
 	AlifHashT hash = alifObject_hashFast(_name);
@@ -1083,7 +1223,7 @@ AlifObject* alifType_getAttroImpl(AlifTypeObject* _type,
 			//type->name, _name);
 	}
 	else {
-		// signal the caller we have not set an PyExc_AttributeError and gave up
+		// signal the caller we have not set an _alifExcAttributeError_ and gave up
 		*_suppressMissingAttribute = 1;
 	}
 	return nullptr;
@@ -1137,6 +1277,8 @@ AlifTypeObject _alifTypeType_ = { // 6195
 	.basicSize = sizeof(AlifHeapTypeObject),
 	.itemSize = sizeof(AlifMemberDef),
 	.dealloc = type_dealloc,
+	.vectorCallOffset = offsetof(AlifTypeObject, vectorCall),
+	.call = type_call,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
 	ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_TYPE_SUBCLASS |
 	ALIF_TPFLAGS_HAVE_VECTORCALL |
@@ -1144,7 +1286,9 @@ AlifTypeObject _alifTypeType_ = { // 6195
 
 	.base = 0,
 	.dictOffset = offsetof(AlifTypeObject, dict),
-	.alloc = 0,
+	.init = type_init,
+	.new_ = type_new,
+	.free = alifObject_gcDel,
 };
 
 

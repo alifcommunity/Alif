@@ -58,8 +58,8 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 		return _oparg * 2;
 	//case BUILD_SET:
 	//	return _oparg;
-	//case BUILD_SLICE:
-	//	return 2 + ((_oparg == 3) ? 1 : 0);
+	case BUILD_SLICE:
+		return 2 + ((_oparg == 3) ? 1 : 0);
 	case BUILD_STRING:
 		return _oparg;
 	case BUILD_TUPLE:
@@ -158,8 +158,8 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 		return 0;
 	case DELETE_NAME:
 		return 0;
-	//case DELETE_SUBSCR:
-	//	return 2;
+	case DELETE_SUBSCR:
+		return 2;
 	//case DICT_MERGE:
 	//	return 5 + (_oparg - 1);
 	case DICT_UPDATE:
@@ -288,8 +288,8 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 1;
 	//case LOAD_ATTR_WITH_HINT:
 	//	return 1;
-	//case LOAD_BUILD_CLASS:
-	//	return 0;
+	case LOAD_BUILD_CLASS:
+		return 0;
 	//case LOAD_CLOSURE:
 	//	return 0;
 	//case LOAD_COMMON_CONSTANT:
@@ -520,8 +520,8 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 		return 1;
 	//case BUILD_SET:
 	//	return 1;
-	//case BUILD_SLICE:
-	//	return 1;
+	case BUILD_SLICE:
+		return 1;
 	case BUILD_STRING:
 		return 1;
 	case BUILD_TUPLE:
@@ -620,8 +620,8 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 		return 0;
 	case DELETE_NAME:
 		return 0;
-	//case DELETE_SUBSCR:
-	//	return 0;
+	case DELETE_SUBSCR:
+		return 0;
 	//case DICT_MERGE:
 	//	return 4 + (_oparg - 1);
 	case DICT_UPDATE:
@@ -750,8 +750,8 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 1 + (_oparg & 1);
 	//case LOAD_ATTR_WITH_HINT:
 	//	return 1 + (_oparg & 1);
-	//case LOAD_BUILD_CLASS:
-	//	return 1;
+	case LOAD_BUILD_CLASS:
+		return 1;
 	//case LOAD_CLOSURE:
 	//	return 1;
 	//case LOAD_COMMON_CONSTANT:
@@ -1328,7 +1328,7 @@ const uint8_t _alifOpcodeDeopt_[256] = {
 	0,//CHECK_EG_MATCH, // CHECK_EG_MATCH // 4
 	0,//CHECK_EXC_MATCH, // CHECK_EXC_MATCH // 5
 	CLEANUP_THROW, // CLEANUP_THROW // 6
-	0,//DELETE_SUBSCR, // DELETE_SUBSCR // 7
+	DELETE_SUBSCR, // DELETE_SUBSCR // 7
 	0,//END_ASYNC_FOR, // END_ASYNC_FOR // 8
 	END_FOR, // END_FOR // 9
 	END_SEND, // END_SEND // 10
@@ -1342,7 +1342,7 @@ const uint8_t _alifOpcodeDeopt_[256] = {
 	0,//GET_LEN, // GET_LEN // 18
 	0,//GET_YIELD_FROM_ITER, // GET_YIELD_FROM_ITER // 19
 	0,//INTERPRETER_EXIT, // INTERPRETER_EXIT // 20
-	0,//LOAD_BUILD_CLASS, // LOAD_BUILD_CLASS // 21
+	LOAD_BUILD_CLASS, // LOAD_BUILD_CLASS // 21
 	LOAD_LOCALS, // LOAD_LOCALS // 22
 	MAKE_FUNCTION, // MAKE_FUNCTION // 23
 	0,//MATCH_KEYS, // MATCH_KEYS // 24
@@ -1367,7 +1367,7 @@ const uint8_t _alifOpcodeDeopt_[256] = {
 	BUILD_LIST, // BUILD_LIST // 43
 	BUILD_MAP, // BUILD_MAP // 44
 	0,//BUILD_SET, // BUILD_SET // 45
-	0,//BUILD_SLICE, // BUILD_SLICE // 46
+	BUILD_SLICE, // BUILD_SLICE // 46
 	BUILD_STRING, // BUILD_STRING // 47
 	BUILD_TUPLE, // BUILD_TUPLE // 48
 	CALL, // CALL // 49

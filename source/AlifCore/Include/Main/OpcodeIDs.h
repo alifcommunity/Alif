@@ -8,7 +8,7 @@
 //#define CHECK_EG_MATCH                           4
 //#define CHECK_EXC_MATCH                          5
 #define CLEANUP_THROW                            6
-//#define DELETE_SUBSCR                            7
+#define DELETE_SUBSCR                            7
 //#define END_ASYNC_FOR                            8
 #define END_FOR                                  9
 #define END_SEND                                10
@@ -22,7 +22,7 @@
 //#define GET_LEN                                 18
 //#define GET_YIELD_FROM_ITER                     19
 #define INTERPRETER_EXIT                        20
-//#define LOAD_BUILD_CLASS                        21
+#define LOAD_BUILD_CLASS                        21
 #define LOAD_LOCALS                             22
 #define MAKE_FUNCTION                           23
 //#define MATCH_KEYS                              24
@@ -47,7 +47,7 @@
 #define BUILD_LIST                              43
 #define BUILD_MAP                               44
 //#define BUILD_SET                               45
-//#define BUILD_SLICE                             46
+#define BUILD_SLICE                             46
 #define BUILD_STRING                            47
 #define BUILD_TUPLE                             48
 #define CALL                                    49
