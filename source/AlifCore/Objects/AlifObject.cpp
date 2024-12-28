@@ -475,6 +475,14 @@ AlifIntT alifObject_getOptionalAttr(AlifObject* _v,
 }
 
 
+AlifIntT alifObject_hasAttrWithError(AlifObject* _obj, AlifObject* _name) { // 13330
+	AlifObject* res{};
+	AlifIntT rc = alifObject_getOptionalAttr(_obj, _name, &res);
+	ALIF_XDECREF(res);
+	return rc;
+}
+
+
 AlifIntT alifObject_setAttr(AlifObject* _v,
 	AlifObject* _name, AlifObject* _value) { // 1354
 	AlifTypeObject* tp_ = ALIF_TYPE(_v);

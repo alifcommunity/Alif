@@ -904,6 +904,59 @@ static AlifIntT mro_internalUnlocked(AlifTypeObject* _type,
 }
 
 
+
+static AlifTypeObject* best_base(AlifObject* bases) { // 3337
+	AlifSizeT i{}, n{};
+	AlifTypeObject* base{}, * winner{}, * candidate{};
+
+	n = ALIFTUPLE_GET_SIZE(bases);
+	base = nullptr;
+	winner = nullptr;
+	for (i = 0; i < n; i++) {
+		AlifObject* base_proto = ALIFTUPLE_GET_ITEM(bases, i);
+		if (!ALIFTYPE_CHECK(base_proto)) {
+			//alifErr_setString(
+			//	_alifExcTypeError_,
+			//	"bases must be types");
+			return nullptr;
+		}
+		AlifTypeObject* base_i = (AlifTypeObject*)base_proto;
+
+		if (!alifType_isReady(base_i)) {
+			if (alifType_ready(base_i) < 0)
+				return nullptr;
+		}
+		if (!_alifType_hasFeature(base_i, ALIF_TPFLAGS_BASETYPE)) {
+			//alifErr_format(_alifExcTypeError_,
+			//	"type '%.100s' is not an acceptable base type",
+			//	base_i->name);
+			return nullptr;
+		}
+		candidate = solid_base(base_i);
+		if (winner == nullptr) {
+			winner = candidate;
+			base = base_i;
+		}
+		else if (alifType_isSubType(winner, candidate))
+			;
+		else if (alifType_isSubType(candidate, winner)) {
+			winner = candidate;
+			base = base_i;
+		}
+		else {
+			//alifErr_setString(
+			//	_alifExcTypeError_,
+			//	"multiple bases have "
+			//	"instance lay-out conflict");
+			return nullptr;
+		}
+	}
+
+	return base;
+}
+
+
+
 static AlifIntT shape_differs(AlifTypeObject* _t1, AlifTypeObject* _t2) { // 3392
 	return ( _t1->basicSize != _t2->basicSize
 		or _t1->itemSize != _t2->itemSize );
@@ -946,7 +999,7 @@ static AlifIntT type_init(AlifObject* _cls, AlifObject* _args, AlifObject* _kwds
 
 
 /* Determine the most derived metatype. */
-AlifTypeObject* _alifType_calculateMetaClass(AlifTypeObject* _metatype,
+AlifTypeObject* _alifType_calculateMetaclass(AlifTypeObject* _metatype,
 	AlifObject* _bases) { // 3635
 	AlifSizeT i{}, nbases{};
 	AlifTypeObject* winner{};
@@ -977,11 +1030,140 @@ AlifTypeObject* _alifType_calculateMetaClass(AlifTypeObject* _metatype,
 
 
 
+// Forward declaration
+static AlifObject* type_new(AlifTypeObject*, AlifObject*, AlifObject*); // 3673
 
-static AlifObject* type_new(AlifTypeObject* metatype,
-	AlifObject* args, AlifObject* kwds) { // 4478
+class TypeNewCtx { // 3676
+public:
+	AlifTypeObject* metatype{};
+	AlifObject* args{};
+	AlifObject* kwds{};
+	AlifObject* origDict{};
+	AlifObject* name{};
+	AlifObject* bases{};
+	AlifTypeObject* base{};
+	AlifObject* slots{};
+	AlifSizeT nslot{};
+	AlifIntT addDict{};
+	AlifIntT addWeak{};
+	AlifIntT mayAddDict{};
+	AlifIntT mayAddWeak{};
+};
+
+
+
+static AlifObject* type_newImpl(TypeNewCtx* _ctx) { // 4365
+	AlifTypeObject* type = typeNew_init(_ctx);
+	if (type == nullptr) {
+		return nullptr;
+	}
+
+	if (typeNew_setAttrs(_ctx, type) < 0) {
+		goto error;
+	}
+
+	/* Initialize the rest */
+	if (alifType_ready(type) < 0) {
+		goto error;
+	}
+
+	// Put the proper slots in place
+	fixup_slotDispatchers(type);
+
+	if (!_alifDict_hasOnlyStringKeys(type->dict)) {
+		//if (alifErr_WarnFormat(
+		//	_alifExcRuntimeWarning_,
+		//	1,
+		//	"non-string key in the __dict__ of class %.200s",
+		//	type->name) == -1)
+		//{
+		//	goto error;
+		//}
+	}
+
+	if (typeNew_setNames(type) < 0) {
+		goto error;
+	}
+
+	if (typeNew_initSubclass(type, _ctx->kwds) < 0) {
+		goto error;
+	}
+
+
+	return (AlifObject*)type;
+
+error:
+	ALIF_DECREF(type);
+	return nullptr;
+}
+
+
+static AlifIntT typeNew_getBases(TypeNewCtx* _ctx, AlifObject** _type) { // 4414
+	AlifSizeT nbases = ALIFTUPLE_GET_SIZE(_ctx->bases);
+	if (nbases == 0) {
+		// Adjust for empty tuple bases
+		_ctx->base = &_alifBaseObjectType_;
+		AlifObject* new_bases = alifTuple_pack(1, _ctx->base);
+		if (new_bases == nullptr) {
+			return -1;
+		}
+		_ctx->bases = new_bases;
+		return 0;
+	}
+
+	for (AlifSizeT i = 0; i < nbases; i++) {
+		AlifObject* base = ALIFTUPLE_GET_ITEM(_ctx->bases, i);
+		if (ALIFTYPE_CHECK(base)) {
+			continue;
+		}
+		AlifIntT rc = alifObject_hasAttrWithError(base, &ALIF_ID(__mroEntries__));
+		if (rc < 0) {
+			return -1;
+		}
+		if (rc) {
+			//alifErr_setString(_alifExcTypeError_,
+			//	"type() doesn't support MRO entry resolution; "
+			//	"use types.new_class()");
+			return -1;
+		}
+	}
+
+	// Search the bases for the proper metatype to deal with this
+	AlifTypeObject* winner{};
+	winner = _alifType_calculateMetaclass(_ctx->metatype, _ctx->bases);
+	if (winner == nullptr) {
+		return -1;
+	}
+
+	if (winner != _ctx->metatype) {
+		if (winner->new_ != type_new) {
+			/* Pass it to the winner */
+			*_type = winner->new_(winner, _ctx->args, _ctx->kwds);
+			if (*_type == nullptr) {
+				return -1;
+			}
+			return 1;
+		}
+
+		_ctx->metatype = winner;
+	}
+
+	/* Calculate best base, and check that all bases are type objects */
+	AlifTypeObject* base = best_base(_ctx->bases);
+	if (base == nullptr) {
+		return -1;
+	}
+
+	_ctx->base = base;
+	_ctx->bases = ALIF_NEWREF(_ctx->bases);
+	return 0;
+}
+
+
+static AlifObject* type_new(AlifTypeObject* _metatype,
+	AlifObject* _args, AlifObject* _kwds) { // 4478
 	AlifObject* name{}, * bases{}, * orig_dict{};
-	if (!alifArg_parseTuple(args, "UO!O!:type.__new__",
+	if (!alifArg_parseTuple(_args, "UO!O!:type.__new__",
 		&name,
 		&_alifTupleType_, &bases,
 		&_alifDictType_, &orig_dict))
@@ -990,9 +1172,9 @@ static AlifObject* type_new(AlifTypeObject* metatype,
 	}
 
 	TypeNewCtx ctx = {
-		.metatype = metatype,
-		.args = args,
-		.kwds = kwds,
+		.metatype = _metatype,
+		.args = _args,
+		.kwds = _kwds,
 		.origDict = orig_dict,
 		.name = name,
 		.bases = bases,

@@ -8,6 +8,336 @@
 #include "AlifCore_Tuple.h"
 
 
+#define FLAG_COMPAT 1 // 23
+
+typedef AlifIntT (*DestrT)(AlifObject*, void*); // 25
+
+class FreeListEntryT { // 32
+public:
+	void* item{};
+	DestrT destructor{};
+};
+
+class FreeListT { // 37
+public:
+	FreeListEntryT* entries{};
+	AlifIntT first_available{};
+	AlifIntT entries_malloced{};
+};
+
+
+#define STATIC_FREELIST_ENTRIES 8 // 43
+
+
+
+AlifIntT alifArg_parseTuple(AlifObject* _args, const char* _format, ...) { // 94
+	AlifIntT retval{};
+	va_list va{};
+
+	va_start(va, _format);
+	retval = vGetArgs1(_args, _format, &va, 0);
+	va_end(va);
+	return retval;
+}
+
+
+static AlifIntT clean_return(AlifIntT _retval, FreeListT* _freelist) { // 193
+	AlifIntT index{};
+
+	if (_retval == 0) {
+		for (index = 0; index < _freelist->first_available; ++index) {
+			_freelist->entries[index].destructor(nullptr,
+				_freelist->entries[index].item);
+		}
+	}
+	if (_freelist->entries_malloced)
+		alifMem_dataFree(_freelist->entries);
+	return _retval;
+}
+
+
+static AlifIntT vGetArgs1_impl(AlifObject* _compatArgs,
+	AlifObject* const* _stack, AlifSizeT _nargs, const char* _format,
+	va_list* _pVa, AlifIntT _flags) { // 213
+	char msgbuf[256]{};
+	AlifIntT levels[32]{};
+	const char* fname = nullptr;
+	const char* message = nullptr;
+	AlifIntT min = -1;
+	AlifIntT max = 0;
+	AlifIntT level = 0;
+	AlifIntT endfmt = 0;
+	const char* formatsave = _format;
+	AlifSizeT i{};
+	const char* msg;
+	AlifIntT compat = _flags & FLAG_COMPAT;
+	FreeListEntryT static_entries[STATIC_FREELIST_ENTRIES];
+	FreeListT freelist;
+
+
+	freelist.entries = static_entries;
+	freelist.first_available = 0;
+	freelist.entries_malloced = 0;
+
+	_flags = _flags & ~FLAG_COMPAT;
+
+	while (endfmt == 0) {
+		int c = *_format++;
+		switch (c) {
+		case '(':
+			if (level == 0)
+				max++;
+			level++;
+			if (level >= 30)
+			{ /*alif_fatalError("too many tuple nesting levels "
+					"in argument format string");*/ }
+			break;
+		case ')':
+			if (level == 0)
+			{ /*alif_fatalError("excess ')' in getargs format");*/ }
+			else
+				level--;
+			break;
+		case '\0':
+			endfmt = 1;
+			break;
+		case ':':
+			fname = _format;
+			endfmt = 1;
+			break;
+		case ';':
+			message = _format;
+			endfmt = 1;
+			break;
+		case '|':
+			if (level == 0)
+				min = max;
+			break;
+		default:
+			if (level == 0) {
+				if (ALIF_ISALPHA(c))
+					if (c != 'e') /* skip encoded */
+						max++;
+			}
+			break;
+		}
+	}
+
+	//if (level != 0)
+	//{ alif_fatalError(/* '(' */ "missing ')' in getargs format"); }
+
+	if (min < 0)
+		min = max;
+
+	_format = formatsave;
+
+	if (max > STATIC_FREELIST_ENTRIES) {
+		freelist.entries = ((AlifUSizeT)max > ALIF_SIZET_MAX / sizeof(FreeListEntryT)) ? nullptr : \
+			(FreeListEntryT*)alifMem_dataAlloc(max * sizeof(FreeListEntryT)); // alif
+		if (freelist.entries == nullptr) {
+			//alifErr_noMemory();
+			return 0;
+		}
+		freelist.entries_malloced = 1;
+	}
+
+	if (compat) {
+		if (max == 0) {
+			if (_compatArgs == nullptr)
+				return 1;
+			//alifErr_format(_alifExcTypeError_,
+			//	"%.200s%s takes no arguments",
+			//	fname == nullptr ? "function" : fname,
+			//	fname == nullptr ? "" : "()");
+			return clean_return(0, &freelist);
+		}
+		else if (min == 1 && max == 1) {
+			if (_compatArgs == nullptr) {
+				//alifErr_format(_alifExcTypeError_,
+				//	"%.200s%s takes at least one argument",
+				//	fname == nullptr ? "function" : fname,
+				//	fname == nullptr ? "" : "()");
+				return clean_return(0, &freelist);
+			}
+			msg = convert_item(_compatArgs, &_format, _pVa, _flags, levels,
+				msgbuf, sizeof(msgbuf), &freelist);
+			if (msg == nullptr)
+				return clean_return(1, &freelist);
+			//seterror(levels[0], msg, levels + 1, fname, message);
+			return clean_return(0, &freelist);
+		}
+		else {
+			//alifErr_setString(_alifExcSystemError_,
+			//	"old style getargs format uses new features");
+			return clean_return(0, &freelist);
+		}
+	}
+
+	if (_nargs < min || max < _nargs) {
+		//if (message == nullptr)
+			//alifErr_format(_alifExcTypeError_,
+			//	"%.150s%s takes %s %d argument%s (%zd given)",
+			//	fname == nullptr ? "function" : fname,
+			//	fname == nullptr ? "" : "()",
+			//	min == max ? "exactly"
+			//	: _nargs < min ? "at least" : "at most",
+			//	_nargs < min ? min : max,
+			//	(_nargs < min ? min : max) == 1 ? "" : "s",
+			//	_nargs);
+		//else
+			//alifErr_setString(_alifExcTypeError_, message);
+		return clean_return(0, &freelist);
+	}
+
+	for (i = 0; i < _nargs; i++) {
+		if (*_format == '|')
+			_format++;
+		msg = convert_item(_stack[i], &_format, _pVa,
+			_flags, levels, msgbuf,
+			sizeof(msgbuf), &freelist);
+		if (msg) {
+			//seterror(i + 1, msg, levels, fname, message);
+			return clean_return(0, &freelist);
+		}
+	}
+
+	if (*_format != '\0' and !ALIF_ISALPHA(*_format) and
+		*_format != '(' and
+		*_format != '|' and *_format != ':' and *_format != ';') {
+		//alifErr_format(_alifExcSystemError_,
+		//	"bad format string: %.200s", formatsave);
+		return clean_return(0, &freelist);
+	}
+
+	return clean_return(1, &freelist);
+}
+
+
+
+static AlifIntT vGetArgs1(AlifObject* _args, const char* _format,
+	va_list* _pVa, AlifIntT _flags) { // 370
+	AlifObject** stack{};
+	AlifSizeT nargs{};
+
+	if (!(_flags & FLAG_COMPAT)) {
+
+		if (!ALIFTUPLE_CHECK(_args)) {
+			//alifErr_setString(_alifExcSystemError_,
+			//	"new style getargs format but argument is not a tuple");
+			return 0;
+		}
+
+		stack = ALIFTUPLE_ITEMS(_args);
+		nargs = ALIFTUPLE_GET_SIZE(_args);
+	}
+	else {
+		stack = nullptr;
+		nargs = 0;
+	}
+
+	return vGetArgs1_impl(_args, stack, nargs, _format, _pVa, _flags);
+}
+
+
+
+static const char* convert_tuple(AlifObject* _arg, const char** _pFormat,
+	va_list* _pVa, AlifIntT _flags, AlifIntT* _levels, char* _msgbuf,
+	AlifUSizeT _bufsize, FreeListT* _freelist) { // 458
+	AlifIntT level = 0;
+	AlifIntT n = 0;
+	const char* format = *_pFormat;
+	AlifIntT i{};
+	AlifSizeT len{};
+
+	for (;;) {
+		int c = *format++;
+		if (c == '(') {
+			if (level == 0)
+				n++;
+			level++;
+		}
+		else if (c == ')') {
+			if (level == 0)
+				break;
+			level--;
+		}
+		else if (c == ':' || c == ';' || c == '\0')
+			break;
+		else if (level == 0 and ALIF_ISALPHA(c) and c != 'e')
+			n++;
+	}
+
+	if (!alifSequence_check(_arg) or ALIFBYTES_CHECK(_arg)) {
+		_levels[0] = 0;
+		//alifOS_snprintf(_msgbuf, _bufsize,
+		//	"must be %d-item sequence, not %.50s",
+		//	n,
+		//	_arg == ALIF_NONE ? "None" : ALIF_TYPE(_arg)->name);
+		return _msgbuf;
+	}
+
+	len = alifSequence_size(_arg);
+	if (len != n) {
+		_levels[0] = 0;
+		//alifOS_snprintf(_msgbuf, _bufsize,
+		//	"must be sequence of length %d, not %zd",
+		//	n, len);
+		return _msgbuf;
+	}
+
+	format = *_pFormat;
+	for (i = 0; i < n; i++) {
+		const char* msg{};
+		AlifObject* item{};
+		item = alifSequence_getItem(_arg, i);
+		if (item == nullptr) {
+			//alifErr_clear();
+			_levels[0] = i + 1;
+			_levels[1] = 0;
+			strncpy(_msgbuf, "is not retrievable", _bufsize);
+			return _msgbuf;
+		}
+		msg = convert_item(item, &format, _pVa, _flags, _levels + 1,
+			_msgbuf, _bufsize, _freelist);
+		ALIF_XDECREF(item);
+		if (msg != nullptr) {
+			_levels[0] = i + 1;
+			return msg;
+		}
+	}
+
+	*_pFormat = format;
+	return nullptr;
+}
+
+
+
+static const char* convert_item(AlifObject* _arg, const char** _pFormat, va_list* _pVa, AlifIntT _flags,
+	AlifIntT* _levels, char* _msgbuf, AlifUSizeT _bufsize, FreeListT* _freelist) { // 534
+	const char* msg{};
+	const char* format = *_pFormat;
+
+	if (*format == '(' /* ')' */) {
+		format++;
+		msg = convert_tuple(_arg, &format, _pVa, _flags, _levels, _msgbuf,
+			_bufsize, _freelist);
+		if (msg == nullptr)
+			format++;
+	}
+	else {
+		//msg = convert_simple(_arg, &format, _pVa, _flags,
+		//	_msgbuf, _bufsize, _freelist);
+		if (msg != nullptr)
+			_levels[0] = 0;
+	}
+	if (msg == nullptr)
+		*_pFormat = format;
+	return msg;
+}
+
+
+
+
 
 
 #define IS_END_OF_FORMAT(_c) (_c == '\0' or _c == ';' or _c == ':') // 1510
@@ -40,7 +370,7 @@ static AlifIntT parse_format(const char* _format, AlifIntT _total,
 	const char* fname = strchr(_format, ':');
 	if (fname) {
 		fname++;
-		custommsg = NULL;
+		custommsg = nullptr;
 	}
 	else {
 		custommsg = strchr(_format, ';');

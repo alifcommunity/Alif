@@ -150,7 +150,7 @@ static AlifObject* builtin___buildClass__(AlifObject* _self,
 	if (isclass) {
 		/* meta is really a class, so check for a more derived
 		   metaclass, or possible metaclass conflicts: */
-		winner = (AlifObject*)_alifType_calculateMetaClass((AlifTypeObject*)meta,
+		winner = (AlifObject*)_alifType_calculateMetaclass((AlifTypeObject*)meta,
 			bases);
 		if (winner == nullptr) {
 			goto error;

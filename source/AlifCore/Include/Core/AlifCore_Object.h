@@ -255,7 +255,7 @@ static inline AlifIntT _alifType_supportsWeakRefs(AlifTypeObject* _type) { // 75
 
 
 extern AlifObject* alifType_allocNoTrack(AlifTypeObject*, AlifSizeT); // 763
-extern AlifTypeObject* _alifType_calculateMetaClass(AlifTypeObject*, AlifObject*); // 766
+extern AlifTypeObject* _alifType_calculateMetaclass(AlifTypeObject*, AlifObject*); // 766
 
 void alifObject_initInlineValues(AlifObject*, AlifTypeObject*); // 771
 extern AlifIntT alifObject_storeInstanceAttribute(AlifObject*, AlifObject*, AlifObject*);
