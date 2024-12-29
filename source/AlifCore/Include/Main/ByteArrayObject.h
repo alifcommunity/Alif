@@ -7,6 +7,9 @@ extern AlifTypeObject _alifByteArrayType_; // 20
 extern AlifTypeObject _alifByteArrayIterType_;
 
 
+#define ALIFBYTEARRAY_CHECK(_self) ALIFOBJECT_TYPECHECK((_self), &_alifByteArrayType_)
+#define ALIFBYTEARRAY_CHECKEXACT(_self) ALIF_IS_TYPE((_self), &_alifByteArrayType_)
+
 
 AlifObject* alifByteArray_fromStringAndSize(const char*, AlifSizeT); // 30
 
