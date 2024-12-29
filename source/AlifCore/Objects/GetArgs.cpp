@@ -46,6 +46,32 @@ AlifIntT alifArg_parseTuple(AlifObject* _args, const char* _format, ...) { // 94
 	return retval;
 }
 
+static AlifIntT cleanup_ptr(AlifObject* _self, void* _ptr) { // 160
+	void** pptr = (void**)_ptr;
+	alifMem_dataFree(*pptr);
+	*pptr = nullptr;
+	return 0;
+}
+
+static AlifIntT cleanup_buffer(AlifObject* _self, void* _ptr) { // 169
+	AlifBuffer* buf = (AlifBuffer*)_ptr;
+	if (buf) {
+		alifBuffer_release(buf);
+	}
+	return 0;
+}
+
+static AlifIntT add_cleanup(void* _ptr, FreeListT* _freelist, DestrT _destructor) { // 179
+	AlifIntT index{};
+
+	index = _freelist->first_available;
+	_freelist->first_available += 1;
+
+	_freelist->entries[index].item = _ptr;
+	_freelist->entries[index].destructor = _destructor;
+
+	return 0;
+}
 
 static AlifIntT clean_return(AlifIntT _retval, FreeListT* _freelist) { // 193
 	AlifIntT index{};
@@ -638,7 +664,9 @@ static const char* convert_simple(AlifObject* _arg, const char** _pFormat, va_li
 			else { /* any bytes-like object */
 				const char* buf{};
 				if (get_buffer(_arg, p, &buf) < 0)
-					return convert_err(buf, _arg, _mSGBuf, _bufSize);
+				{
+					//return convert_err(buf, _arg, _mSGBuf, _bufSize);
+				}
 			}
 			if (add_cleanup(p, _freeList, cleanup_buffer)) {
 				//return convert_err(
@@ -670,7 +698,9 @@ static const char* convert_simple(AlifObject* _arg, const char** _pFormat, va_li
 				const char* buf{};
 				AlifSizeT count = convert_buffer(_arg, p, &buf);
 				if (count < 0)
-					return convert_err(buf, _arg, _mSGBuf, _bufSize);
+				{
+					//return convert_err(buf, _arg, _mSGBuf, _bufSize);
+				}
 				*psize = count;
 			}
 			format++;
@@ -929,6 +959,36 @@ static const char* convert_simple(AlifObject* _arg, const char** _pFormat, va_li
 #undef RETURN_ERR_OCCURRED
 }
 
+static AlifSizeT convert_buffer(AlifObject* arg, const void** p, const char** errmsg) { // 1237
+	AlifBufferProcs* pb = ALIF_TYPE(arg)->asBuffer;
+	AlifSizeT count{};
+	AlifBuffer view{};
+
+	*errmsg = nullptr;
+	*p = nullptr;
+	if (pb != nullptr and pb->releaseBuffer != nullptr) {
+		*errmsg = "read-only bytes-like object";
+		return -1;
+	}
+
+	if (get_buffer(arg, &view, errmsg) < 0)
+		return -1;
+	count = view.len;
+	*p = view.buf;
+	alifBuffer_release(&view);
+	return count;
+}
+
+static AlifIntT get_buffer(AlifObject* arg, AlifBuffer* view, const char** errmsg) { // 1259
+	if (alifObject_getBuffer(arg, view, ALIFBUF_SIMPLE) != 0) {
+		*errmsg = "bytes-like object";
+		return -1;
+	}
+	return 0;
+}
+
+
+
 
 
 
@@ -938,7 +998,8 @@ static const char* convert_simple(AlifObject* _arg, const char** _pFormat, va_li
 
 
 
-static AlifIntT scan_keywords(const char* const* _keywords, AlifIntT* _ptotal, AlifIntT* _pposonly) { // 1820
+static AlifIntT scan_keywords(const char* const* _keywords,
+	AlifIntT* _ptotal, AlifIntT* _pposonly) { // 1820
 	AlifIntT i{};
 	for (i = 0; _keywords[i] and !*_keywords[i]; i++) {
 	}
