@@ -75,6 +75,7 @@ onError:
 static AlifObject* _alifCodec_textEncoder(const char* encoding) { // 567
 	//return codec_getItemChecked(encoding, "codecs.encode()", 0);
 	printf("تعليق: _alifCodec_textEncoder() - Codecs.cpp");
+	return nullptr;
 }
 
 

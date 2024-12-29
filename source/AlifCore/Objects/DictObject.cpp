@@ -2338,12 +2338,18 @@ AlifTypeObject _alifDictType_ = { // 4760
 	.itemSize = 0,
 
 	.dealloc = dict_dealloc,
-	//.asNumber = 0,
 	.asSequence = &_dictAsSequence_,
 	.asMapping = &_dictAsMapping_,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
 		ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_DICT_SUBCLASS |
-		_ALIF_TPFLAGS_MATCH_SELF | ALIF_TPFLAGS_MAPPING, 
+		_ALIF_TPFLAGS_MATCH_SELF | ALIF_TPFLAGS_MAPPING,
+	.iter = dict_iter,
+
+
+	//.init = dict_init,
+	.alloc = alifType_allocNoTrack,
+	//.new_ = dict_new,
+	.free = alifObject_gcDel,
 };
 
 

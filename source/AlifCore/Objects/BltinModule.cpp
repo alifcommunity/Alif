@@ -12,7 +12,7 @@
 
 static AlifObject* update_bases(AlifObject* _bases, AlifObject* const* _args, AlifSizeT _nargs) { // 25
 	AlifSizeT i{}, j{};
-	AlifObject* base, * meth, * new_base, * result, * new_bases = nullptr;
+	AlifObject* base{}, * meth{}, * new_base{}, * result{}, * new_bases = nullptr;
 
 	for (i = 0; i < _nargs; i++) {
 		base = _args[i];

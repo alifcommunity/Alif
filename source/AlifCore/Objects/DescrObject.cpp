@@ -25,7 +25,46 @@ static AlifIntT descr_check(AlifDescrObject* descr, AlifObject* obj) { // 78
 	return 0;
 }
 
-
+static AlifObject* classMethod_get(AlifObject* self, AlifObject* obj, AlifObject* type) { // 93
+	AlifMethodDescrObject* descr = (AlifMethodDescrObject*)self;
+	/* Ensure a valid type.  Class methods ignore obj. */
+	if (type == nullptr) {
+		if (obj != nullptr)
+			type = (AlifObject*)ALIF_TYPE(obj);
+		else {
+			/* Wot - no type?! */
+			//alifErr_format(_alifExcTypeError_,
+			//	"descriptor '%V' for type '%.100s' "
+			//	"needs either an object or a type",
+			//	descr_name((AlifDescrObject*)descr), "?",
+			//	ALIFDESCR_TYPE(descr)->name);
+			return nullptr;
+		}
+	}
+	if (!ALIFTYPE_CHECK(type)) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"descriptor '%V' for type '%.100s' "
+		//	"needs a type, not a '%.100s' as arg 2",
+		//	descr_name((AlifDescrObject*)descr), "?",
+		//	ALIFDESCR_TYPE(descr)->name,
+		//	ALIF_TYPE(type)->name);
+		return nullptr;
+	}
+	if (!alifType_isSubType((AlifTypeObject*)type, ALIFDESCR_TYPE(descr))) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"descriptor '%V' requires a subtype of '%.100s' "
+		//	"but received '%.100s'",
+		//	descr_name((AlifDescrObject*)descr), "?",
+		//	ALIFDESCR_TYPE(descr)->name,
+		//	((AlifTypeObject*)type)->name);
+		return nullptr;
+	}
+	AlifTypeObject* cls = nullptr;
+	if (descr->method->flags & METHOD_METHOD) {
+		cls = descr->common.type;
+	}
+	return alifCPPMethod_new(descr->method, type, nullptr, cls);
+}
 
 static AlifObject* method_get(AlifObject* self, AlifObject* obj, AlifObject* type) { // 136
 	AlifMethodDescrObject* descr = (AlifMethodDescrObject*)self;
@@ -156,7 +195,7 @@ AlifTypeObject _alifClassMethodDescrType_ = { // 756
 	//.traverse = descr_traverse,
 	//descr_members,                              /* members */
 	//method_getset,                              /* getset */
-	//classmethod_get,                            /* descr_get */
+	.descrGet = classMethod_get,
 };
 
 

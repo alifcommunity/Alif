@@ -250,7 +250,6 @@ static AlifIntT vGetArgs1_impl(AlifObject* _compatArgs,
 }
 
 
-
 static AlifIntT vGetArgs1(AlifObject* _args, const char* _format,
 	va_list* _pVa, AlifIntT _flags) { // 370
 	AlifObject** stack{};
@@ -1197,9 +1196,10 @@ static AlifObject* find_keyword(AlifObject* kwnames, AlifObject* const* kwstack,
 
 
 
-AlifObject* const* _alifArg_unpackKeywordsWithVarArg(AlifObject* const* _args, AlifSizeT _nargs,
-	AlifObject* _kwargs, AlifObject* _kwnames, AlifArgParser* _parser,
-	AlifIntT _minpos, AlifIntT _maxpos, AlifIntT _minkw, AlifIntT _vararg, AlifObject** _buf) { // 2489
+AlifObject* const* _alifArg_unpackKeywordsWithVarArg(AlifObject* const* _args,
+	AlifSizeT _nargs, AlifObject* _kwargs, AlifObject* _kwnames, AlifArgParser* _parser,
+	AlifIntT _minpos, AlifIntT _maxpos, AlifIntT _minkw,
+	AlifIntT _vararg, AlifObject** _buf) { // 2489
 	AlifObject* kwtuple{};
 	AlifObject* keyword{};
 	AlifSizeT varargssize = 0;
@@ -1325,4 +1325,61 @@ AlifObject* const* _alifArg_unpackKeywordsWithVarArg(AlifObject* const* _args, A
 exit:
 	ALIF_XDECREF(_buf[_vararg]);
 	return nullptr;
+}
+
+
+
+
+AlifIntT _alifArg_checkPositional(const char* name, AlifSizeT nargs,
+	AlifSizeT min, AlifSizeT max) { // 2778
+	if (nargs < min) {
+		//if (name != nullptr)
+		//	alifErr_format(
+		//		_alifExcTypeError_,
+		//		"%.200s expected %s%zd argument%s, got %zd",
+		//		name, (min == max ? "" : "at least "), min, min == 1 ? "" : "s", nargs);
+		//else
+		//	alifErr_format(
+		//		_alifExcTypeError_,
+		//		"unpacked tuple should have %s%zd element%s,"
+		//		" but has %zd",
+		//		(min == max ? "" : "at least "), min, min == 1 ? "" : "s", nargs);
+		return 0;
+	}
+
+	if (nargs == 0) {
+		return 1;
+	}
+
+	if (nargs > max) {
+		//if (name != nullptr)
+		//	alifErr_format(
+		//		_alifExcTypeError_,
+		//		"%.200s expected %s%zd argument%s, got %zd",
+		//		name, (min == max ? "" : "at most "), max, max == 1 ? "" : "s", nargs);
+		//else
+		//	alifErr_format(
+		//		_alifExcTypeError_,
+		//		"unpacked tuple should have %s%zd element%s,"
+		//		" but has %zd",
+		//		(min == max ? "" : "at most "), max, max == 1 ? "" : "s", nargs);
+		return 0;
+	}
+
+	return 1;
+}
+
+
+
+AlifIntT _alifArg_noKwnames(const char* funcname, AlifObject* kwnames) { // 2921
+	if (kwnames == nullptr) {
+		return 1;
+	}
+
+	if (ALIFTUPLE_GET_SIZE(kwnames) == 0) {
+		return 1;
+	}
+
+	//alifErr_format(_alifExcTypeError_, "%s() takes no keyword arguments", funcname);
+	return 0;
 }

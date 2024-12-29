@@ -4,6 +4,7 @@
 #include "AlifCore_Call.h"
 #include "AlifCore_Dict.h"
 #include "AlifCore_Lock.h"
+#include "AlifCore_ModSupport.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_ObjectAlloc.h"
 #include "AlifCore_State.h"
@@ -1967,6 +1968,18 @@ static AlifObject* type_new(AlifTypeObject* _metatype,
 }
 
 
+static AlifObject* type_vectorCall(AlifObject* metatype, AlifObject* const* args,
+	AlifUSizeT nargsf, AlifObject* kwnames) { // 4527
+	AlifSizeT nargs = ALIFVECTORCALL_NARGS(nargsf);
+	if (nargs == 1 and metatype == (AlifObject*)&_alifTypeType_) {
+		if (!_ALIFARG_NOKWNAMES("type", kwnames)) {
+			return nullptr;
+		}
+		return ALIF_NEWREF(ALIF_TYPE(args[0]));
+	}
+	AlifThread* tstate = _alifThread_get();
+	return alifObject_makeTpCall(tstate, metatype, args, nargs, kwnames);
+}
 
 
 void* alifObject_getItemData(AlifObject* _obj) { // 5276
@@ -2224,9 +2237,26 @@ static void type_dealloc(AlifObject* self) { // 5911
 	ALIF_TYPE(type)->free((AlifObject*)type);
 }
 
+static AlifObject* type_prepare(AlifObject* self, AlifObject* const* args,
+	AlifSizeT nargs, AlifObject* kwnames) { // 5967
+	return alifDict_new();
+}
 
-
-
+static AlifMethodDef _typeMethods_[] = { // 6083
+	//TYPE_MRO_METHODDEF
+	//TYPE___SUBCLASSES___METHODDEF
+	{"__prepare__", ALIF_CPPFUNCTION_CAST(type_prepare),
+	 METHOD_FASTCALL | METHOD_KEYWORDS | METHOD_CLASS,
+	 /*ALIFDOC_STR("__prepare__($cls, name, bases, /, **kwds)\n"
+			   "--\n"
+			   "\n"
+			   "Create the namespace for the class statement")*/},
+	//TYPE___INSTANCECHECK___METHODDEF
+	//TYPE___SUBCLASSCHECK___METHODDEF
+	//TYPE___DIR___METHODDEF
+	//TYPE___SIZEOF___METHODDEF
+	{0}
+};
 
 
 
@@ -2239,16 +2269,18 @@ AlifTypeObject _alifTypeType_ = { // 6195
 	.dealloc = type_dealloc,
 	.vectorCallOffset = offsetof(AlifTypeObject, vectorCall),
 	.call = type_call,
+	.getAttro = alifType_getAttro,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
 	ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_TYPE_SUBCLASS |
 	ALIF_TPFLAGS_HAVE_VECTORCALL |
 	ALIF_TPFLAGS_ITEMS_AT_END,
 
-	.base = 0,
+	.methods = _typeMethods_,
 	.dictOffset = offsetof(AlifTypeObject, dict),
 	.init = type_init,
 	.new_ = type_new,
 	.free = alifObject_gcDel,
+	.vectorCall = type_vectorCall,
 };
 
 
@@ -3082,6 +3114,133 @@ public:
 
 
 
+static AlifTypeObject* super_check(AlifTypeObject* type, AlifObject* obj) { // 11349
+	if (ALIFTYPE_CHECK(obj) and alifType_isSubType((AlifTypeObject*)obj, type)) {
+		return (AlifTypeObject*)ALIF_NEWREF(obj);
+	}
+
+	/* Normal case */
+	if (alifType_isSubType(ALIF_TYPE(obj), type)) {
+		return (AlifTypeObject*)ALIF_NEWREF(ALIF_TYPE(obj));
+	}
+	else {
+		/* Try the slow way */
+		AlifObject* class_attr{};
+
+		if (alifObject_getOptionalAttr(obj, &ALIF_ID(__class__), &class_attr) < 0) {
+			return nullptr;
+		}
+		if (class_attr != nullptr and
+			ALIFTYPE_CHECK(class_attr) and
+			(AlifTypeObject*)class_attr != ALIF_TYPE(obj))
+		{
+			AlifIntT ok = alifType_isSubType(
+				(AlifTypeObject*)class_attr, type);
+			if (ok) {
+				return (AlifTypeObject*)class_attr;
+			}
+		}
+		ALIF_XDECREF(class_attr);
+	}
+
+	const char* type_or_instance{}, * obj_str{};
+
+	if (ALIFTYPE_CHECK(obj)) {
+		type_or_instance = "نوع"; // alif
+		obj_str = ((AlifTypeObject*)obj)->name;
+	}
+	else {
+		type_or_instance = "نسخة_من"; // alif
+		obj_str = ALIF_TYPE(obj)->name;
+	}
+
+	//alifErr_format(_alifExcTypeError_,
+	//	"super(type, obj): obj (%s %.200s) is not "
+	//	"an instance or subtype of type (%.200s).",
+	//	type_or_instance, obj_str, type->name);
+
+	return nullptr;
+}
+
+
+
+
+
+static inline AlifIntT super_initImpl(AlifObject* self,
+	AlifTypeObject* type, AlifObject* obj) { // 11549
+	SuperObject* su = (SuperObject*)self;
+	AlifTypeObject* obj_type = nullptr;
+	if (type == nullptr) {
+		AlifThread* tstate = _alifThread_get();
+		AlifInterpreterFrame* frame = _alifThreadState_getFrame(tstate);
+		if (frame == nullptr) {
+			//alifErr_setString(_alifExcRuntimeError_,
+			//	"super(): no current frame");
+			return -1;
+		}
+		AlifIntT res = super_initWithoutArgs(frame, _alifFrame_getCode(frame), &type, &obj);
+
+		if (res < 0) {
+			return -1;
+		}
+	}
+
+	if (obj == ALIF_NONE)
+		obj = nullptr;
+	if (obj != nullptr) {
+		obj_type = super_check(type, obj);
+		if (obj_type == nullptr)
+			return -1;
+		ALIF_INCREF(obj);
+	}
+	ALIF_XSETREF(su->type, (AlifTypeObject*)ALIF_NEWREF(type));
+	ALIF_XSETREF(su->obj, obj);
+	ALIF_XSETREF(su->objType, obj_type);
+	return 0;
+}
+
+
+
+static AlifObject* super_vectorCall(AlifObject* self, AlifObject* const* args,
+	AlifUSizeT nargsf, AlifObject* kwnames) { // 11611
+	if (!_ALIFARG_NOKWNAMES("super", kwnames)) {
+		return nullptr;
+	}
+	AlifSizeT nargs = ALIFVECTORCALL_NARGS(nargsf);
+	if (!_ALIFARG_CHECKPOSITIONAL("super()", nargs, 0, 2)) {
+		return nullptr;
+	}
+	AlifTypeObject* type = nullptr;
+	AlifObject* obj = nullptr;
+	AlifTypeObject* self_type = (AlifTypeObject*)self;
+	AlifObject* su = self_type->alloc(self_type, 0);
+	if (su == nullptr) {
+		return nullptr;
+	}
+	// 1 or 2 argument form super().
+	if (nargs != 0) {
+		AlifObject* arg0 = args[0];
+		if (!ALIFTYPE_CHECK(arg0)) {
+			//alifErr_format(_alifExcTypeError_,
+			//	"super() argument 1 must be a type, not %.200s", ALIF_TYPE(arg0)->name);
+			goto fail;
+		}
+		type = (AlifTypeObject*)arg0;
+	}
+	if (nargs == 2) {
+		obj = args[1];
+	}
+	if (super_initImpl(su, type, obj) < 0) {
+		goto fail;
+	}
+	return su;
+fail:
+	ALIF_DECREF(su);
+	return nullptr;
+}
+
+
+
 AlifTypeObject _alifSuperType_ = { // 11652
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "super",
@@ -3096,5 +3255,5 @@ AlifTypeObject _alifSuperType_ = { // 11652
 	.alloc = alifType_genericAlloc,
 	//.new_ = alifType_genericNew,
 	.free = alifObject_gcDel,
-	//.vectorCall = (VectorCallFunc)super_vectorCall,
+	.vectorCall = (VectorCallFunc)super_vectorCall,
 };
