@@ -277,6 +277,104 @@ AlifObject* alifObject_callMethod(AlifObject* _obj, const char* _name, const cha
 }
 
 
+
+static AlifObject* object_vacall(AlifThread* _thread, AlifObject* _base,
+	AlifObject* _callable, va_list _vargs) { // 765
+	AlifObject* small_stack[ALIF_FASTCALL_SMALL_STACK];
+	AlifObject** stack{};
+	AlifSizeT nargs{};
+	AlifObject* result{};
+	AlifSizeT i{};
+	va_list countva{};
+
+	if (_callable == nullptr) {
+		return null_error(_thread);
+	}
+
+	/* Count the number of arguments */
+	va_copy(countva, _vargs);
+	nargs = _base ? 1 : 0;
+	while (1) {
+		AlifObject* arg = va_arg(countva, AlifObject*);
+		if (arg == nullptr) {
+			break;
+		}
+		nargs++;
+	}
+	va_end(countva);
+
+	/* Copy arguments */
+	if (nargs <= (AlifSizeT)ALIF_ARRAY_LENGTH(small_stack)) {
+		stack = small_stack;
+	}
+	else {
+		stack = (AlifObject**)alifMem_dataAlloc(nargs * sizeof(stack[0]));
+		if (stack == nullptr) {
+			//alifErr_noMemory();
+			return nullptr;
+		}
+	}
+
+	i = 0;
+	if (_base) {
+		stack[i++] = _base;
+	}
+
+	for (; i < nargs; ++i) {
+		stack[i] = va_arg(_vargs, AlifObject*);
+	}
+
+	/* Call the function */
+	result = alifObject_vectorCallThread(_thread, _callable, stack, nargs, nullptr);
+
+	if (stack != small_stack) {
+		alifMem_dataFree(stack);
+	}
+	return result;
+}
+
+
+
+AlifObject* alifObject_vectorCallMethod(AlifObject* _name, AlifObject* const* _args,
+	AlifUSizeT _nargsf, AlifObject* _kwnames) { // 828
+
+	AlifThread* thread = _alifThread_get();
+	AlifObject* callable = nullptr;
+
+	AlifIntT unbound = _alifObject_getMethod(_args[0], _name, &callable);
+	if (callable == nullptr) {
+		return nullptr;
+	}
+
+	if (unbound) {
+		_nargsf &= ~ALIF_VECTORCALL_ARGUMENTS_OFFSET;
+	}
+	else {
+		_args++;
+		_nargsf--;
+	}
+	AlifObject* result = alifObject_vectorCallThread(thread, callable,
+		_args, _nargsf, _kwnames);
+	ALIF_DECREF(callable);
+	return result;
+}
+
+
+
+AlifObject* alifObject_callFunctionObjArgs(AlifObject* _callable, ...) { // 918
+	AlifThread* thread = _alifThread_get();
+	va_list vargs{};
+	AlifObject* result{};
+
+	va_start(vargs, _callable);
+	result = object_vacall(thread, nullptr, _callable, vargs);
+	va_end(vargs);
+
+	return result;
+}
+
+
+
 AlifObject* alifStack_asDict(AlifObject* const* _values, AlifObject* _kwNames) {  // 936
 	AlifSizeT nkwargs{};
 
@@ -284,55 +382,6 @@ AlifObject* alifStack_asDict(AlifObject* const* _values, AlifObject* _kwNames) {
 	return _alifDict_fromItems(&ALIFTUPLE_GET_ITEM(_kwNames, 0), 1, _values, 1, nkwargs);
 }
 
-//static AlifObject* alifVectorCall_callSub(VectorCallFunc func,
-//    AlifObject* callable, AlifObject* tuple, AlifObject* kwArgs)
-//{
-//
-//    int64_t nargs = ((AlifTupleObject*)tuple)->_base_.size_;
-//
-//    /* Fast path for no keywords */
-//    if (kwArgs == nullptr or ((AlifDictObject*)kwArgs)->used == 0) {
-//        return func(callable, ((AlifTupleObject*)tuple)->items_, nargs, nullptr);
-//    }
-//
-//    /* Convert arguments & call */
-//    AlifObject* const* args{};
-//    AlifObject* kwNames{};
-//    args = alifStack_unpackDict(
-//        ((AlifTupleObject*)tuple)->items_, nargs,
-//        kwArgs, &kwNames);
-//    if (args == nullptr) {
-//        return nullptr;
-//    }
-//    AlifObject* result = func(callable, args,
-//        nargs | ALIFVECTORCALL_ARGUMENTS_OFFSET, kwNames);
-//    //alifStack_unpackDict_free(args, nargs, kwNames);
-//
-//    return result;
-//}
-//
-//AlifObject* alifVectorCall_call(AlifObject* callable, AlifObject* tuple, AlifObject* kwArgs)
-//{
-//
-//    int64_t offset = callable->type_->vectorCallOffset;
-//    if (offset <= 0) {
-//        //_PyErr_Format(tstate, PyExc_TypeError,
-//        //    "'%.200s' object does not support vectorcall",
-//        //    Py_TYPE(callable)->tp_name);
-//        return nullptr;
-//    }
-//
-//    VectorCallFunc func{};
-//    memcpy(&func, (char*)callable + offset, sizeof(func));
-//    if (func == nullptr) {
-//        //_PyErr_Format(tstate, PyExc_TypeError,
-//        //    "'%.200s' object does not support vectorcall",
-//        //    Py_TYPE(callable)->tp_name);
-//        return nullptr;
-//    }
-//
-//    return alifVectorCall_callSub(func, callable, tuple, kwArgs);
-//}
 
 AlifObject* const* _alifStack_unpackDict(AlifThread* _thread,
 	AlifObject* const* _args, AlifSizeT _nargs,

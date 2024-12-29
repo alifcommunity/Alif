@@ -15,6 +15,8 @@ extern AlifIntT alifDict_containsKnownHash(AlifObject*, AlifObject*, AlifHashT);
 extern AlifIntT _alifDict_next(AlifObject* , AlifSizeT* , AlifObject** , AlifObject** , AlifHashT* ); // 40
 
 
+extern AlifIntT _alifDict_hasOnlyStringKeys(AlifObject*); // 43
+
 #define ALIFDICT_HASSPLITTABLE(_d) ((_d)->values != nullptr) // 50
 
 
@@ -39,6 +41,8 @@ public:
 	AlifObject* value{};
 };
 
+
+extern AlifUSizeT _alifDict_keysSize(AlifDictKeysObject*); // 94
 
 extern void alifDictKeys_decRef(AlifDictKeysObject*); // 96
 

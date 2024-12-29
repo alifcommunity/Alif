@@ -30,6 +30,11 @@
         }
 
 
+static inline AlifSizeT load_keysNentries(AlifDictObject * mp) { // 183
+	AlifDictKeysObject* keys = (AlifDictKeysObject*)alifAtomic_loadPtr(&mp->keys);
+	return alifAtomic_loadSize(&keys->nentries);
+}
+
 static inline void set_keys(AlifDictObject* _mp, AlifDictKeysObject* _keys) { // 191
 	alifAtomic_storePtrRelease(&_mp->keys, _keys);
 }
@@ -70,6 +75,7 @@ static inline void splitKeys_entryAdded(AlifDictKeysObject* _keys) { // 219
 
 static AlifIntT dict_resize(AlifInterpreter* ,AlifDictObject* ,uint8_t , AlifIntT); // 380
 
+static AlifObject* dict_iter(AlifObject*); // 383
 
 static AlifIntT setItem_lockHeld(AlifDictObject*, AlifObject*, AlifObject*); // 385
 
@@ -336,6 +342,44 @@ static AlifObject* newDict_withSharedKeys(AlifInterpreter* interp, AlifDictKeysO
 }
 
 
+static AlifDictKeysObject* cloneCombined_dictKeys(AlifDictObject* orig) { // 903
+	AlifUSizeT keys_size = _alifDict_keysSize(orig->keys);
+	AlifDictKeysObject* keys = (AlifDictKeysObject*)alifMem_objAlloc(keys_size);
+	if (keys == nullptr) {
+		//alifErr_noMemory();
+		return nullptr;
+	}
+
+	memcpy(keys, orig->keys, keys_size);
+
+	AlifObject** pkey{}, ** pvalue{};
+	AlifUSizeT offs{};
+	if (DK_IS_USTR(orig->keys)) {
+		AlifDictUStrEntry* ep0 = dk_uStrEntries(keys);
+		pkey = &ep0->key;
+		pvalue = &ep0->value;
+		offs = sizeof(AlifDictUStrEntry) / sizeof(AlifObject*);
+	}
+	else {
+		AlifDictKeyEntry* ep0 = dk_entries(keys);
+		pkey = &ep0->key;
+		pvalue = &ep0->value;
+		offs = sizeof(AlifDictKeyEntry) / sizeof(AlifObject*);
+	}
+
+	AlifSizeT n = keys->nentries;
+	for (AlifSizeT i = 0; i < n; i++) {
+		AlifObject* value = *pvalue;
+		if (value != nullptr) {
+			ALIF_INCREF(value);
+			ALIF_INCREF(*pkey);
+		}
+		pvalue += offs;
+		pkey += offs;
+	}
+
+	return keys;
+}
 
 
 
@@ -796,6 +840,20 @@ AlifSizeT alifDict_lookupThreadSafe(AlifDictObject* _mp, AlifObject* _key, AlifH
 }
 
 #endif
+
+
+AlifIntT _alifDict_hasOnlyStringKeys(AlifObject* _dict) { // 1511
+	AlifSizeT pos = 0;
+	AlifObject* key{}, * value{};
+	/* Shortcut */
+	if (((AlifDictObject*)_dict)->keys->kind != DictKeysKind_::Dict_Keys_General)
+		return 1;
+	while (alifDict_next(_dict, &pos, &key, &value))
+		if (!ALIFUSTR_CHECK(key))
+			return 0;
+	return 1;
+}
+
 
 // 1526
 #define MAINTAIN_TRACKING(_mp, _key, _value) do { \
@@ -1779,6 +1837,277 @@ AlifObject* alifDict_keys(AlifObject* _dict) { // 3322
 }
 
 
+static AlifIntT dict_dictMerge(AlifInterpreter* interp, AlifDictObject* mp, AlifDictObject* other, AlifIntT override) { // 3619
+	if (other == mp or other->used == 0)
+		return 0;
+	if (mp->used == 0) {
+		override = 1;
+		AlifDictKeysObject* okeys = other->keys;
+
+		if (mp->values == nullptr and
+			other->values == nullptr and
+			other->used == okeys->nentries and
+			(DK_LOG_SIZE(okeys) == ALIFDICT_LOG_MINSIZE or
+				USABLE_FRACTION(DK_SIZE(okeys) / 2) < other->used)
+			) {
+			uint64_t new_version = _alifDict_notifyEvent(
+				interp, AlifDictWatchEvent_::AlifDict_Event_Cloned, mp, (AlifObject*)other, nullptr);
+			AlifDictKeysObject* keys = cloneCombined_dictKeys(other);
+			if (keys == nullptr)
+				return -1;
+
+			ensureShared_onResize(mp);
+			dictKeys_decRef(interp, mp->keys, IS_DICT_SHARED(mp));
+			mp->keys = keys;
+			STORE_USED(mp, other->used);
+			mp->versionTag = new_version;
+
+			if (ALIFOBJECT_GC_IS_TRACKED(other) and !ALIFOBJECT_GC_IS_TRACKED(mp)) {
+				/* Maintain tracking. */
+				ALIFOBJECT_GC_TRACK(mp);
+			}
+
+			return 0;
+		}
+	}
+
+	if (USABLE_FRACTION(DK_SIZE(mp->keys)) < other->used) {
+		AlifIntT unicode = DK_IS_USTR(other->keys);
+		if (dict_resize(interp, mp,
+			estimate_log2Keysize(mp->used + other->used),
+			unicode)) {
+			return -1;
+		}
+	}
+
+	AlifSizeT orig_size = other->keys->nentries;
+	AlifSizeT pos = 0;
+	AlifHashT hash{};
+	AlifObject* key{}, * value{};
+
+	while (_alifDict_next((AlifObject*)other, &pos, &key, &value, &hash)) {
+		AlifIntT err = 0;
+		ALIF_INCREF(key);
+		ALIF_INCREF(value);
+		if (override == 1) {
+			err = insert_dict(interp, mp,
+				ALIF_NEWREF(key), hash, ALIF_NEWREF(value));
+		}
+		else {
+			err = alifDict_containsKnownHash((AlifObject*)mp, key, hash);
+			if (err == 0) {
+				err = insert_dict(interp, mp,
+					ALIF_NEWREF(key), hash, ALIF_NEWREF(value));
+			}
+			else if (err > 0) {
+				if (override != 0) {
+					//_alifErr_setKeyError(key);
+					ALIF_DECREF(value);
+					ALIF_DECREF(key);
+					return -1;
+				}
+				err = 0;
+			}
+		}
+		ALIF_DECREF(value);
+		ALIF_DECREF(key);
+		if (err != 0)
+			return -1;
+
+		if (orig_size != other->keys->nentries) {
+			//alifErr_setString(_alifExcRuntimeError_,
+			//	"dict mutated during update");
+			return -1;
+		}
+	}
+	return 0;
+}
+
+static AlifIntT dict_merge(AlifInterpreter* interp, AlifObject* a, AlifObject* b, AlifIntT override) { // 3720
+	AlifDictObject* mp{}, * other{};
+
+	if (a == nullptr or !ALIFDICT_CHECK(a) or b == nullptr) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+	mp = (AlifDictObject*)a;
+	int res = 0;
+	if (ALIFDICT_CHECK(b) and (ALIF_TYPE(b)->iter == dict_iter)) {
+		other = (AlifDictObject*)b;
+		int res;
+		ALIF_BEGIN_CRITICAL_SECTION2(a, b);
+		res = dict_dictMerge(interp, (AlifDictObject*)a, other, override);
+		ALIF_END_CRITICAL_SECTION2();
+		return res;
+	}
+	else {
+		/* Do it the generic, slower way */
+		ALIF_BEGIN_CRITICAL_SECTION(a);
+		AlifObject* keys = alifMapping_keys(b);
+		AlifObject* iter{};
+		AlifObject* key{}, * value{};
+		AlifIntT status{};
+
+		if (keys == nullptr) {
+			res = -1;
+			goto slow_exit;
+		}
+
+		iter = alifObject_getIter(keys);
+		ALIF_DECREF(keys);
+		if (iter == nullptr) {
+			res = -1;
+			goto slow_exit;
+		}
+
+		for (key = alifIter_next(iter); key; key = alifIter_next(iter)) {
+			if (override != 1) {
+				status = alifDict_contains(a, key);
+				if (status != 0) {
+					if (status > 0) {
+						if (override == 0) {
+							ALIF_DECREF(key);
+							continue;
+						}
+						//_alifErr_setKeyError(key);
+					}
+					ALIF_DECREF(key);
+					ALIF_DECREF(iter);
+					res = -1;
+					goto slow_exit;
+				}
+			}
+			value = alifObject_getItem(b, key);
+			if (value == nullptr) {
+				ALIF_DECREF(iter);
+				ALIF_DECREF(key);
+				res = -1;
+				goto slow_exit;
+			}
+			status = setItem_lockHeld(mp, key, value);
+			ALIF_DECREF(key);
+			ALIF_DECREF(value);
+			if (status < 0) {
+				ALIF_DECREF(iter);
+				res = -1;
+				goto slow_exit;
+				return -1;
+			}
+		}
+		ALIF_DECREF(iter);
+		//if (alifErr_occurred()) {
+		//	/* Iterator completed, via error */
+		//	res = -1;
+		//	goto slow_exit;
+		//}
+
+	slow_exit:
+		ALIF_END_CRITICAL_SECTION();
+		return res;
+	}
+}
+
+
+
+
+static AlifDictValues* copy_values(AlifDictValues* values) { // 3857
+	AlifDictValues* newvalues = new_values(values->capacity);
+	if (newvalues == nullptr) {
+		//alifErr_noMemory();
+		return nullptr;
+	}
+	newvalues->size = values->size;
+	uint8_t* valuesOrder = getInsertion_orderArray(values);
+	uint8_t* newValuesOrder = getInsertion_orderArray(newvalues);
+	memcpy(newValuesOrder, valuesOrder, values->capacity);
+	for (AlifIntT i = 0; i < values->capacity; i++) {
+		newvalues->values[i] = values->values[i];
+	}
+	return newvalues;
+}
+
+static AlifObject* copy_lockHeld(AlifObject* o) { // 3876
+	AlifObject* copy{};
+	AlifDictObject* mp{};
+	AlifInterpreter* interp = _alifInterpreter_get();
+
+	mp = (AlifDictObject*)o;
+	if (mp->used == 0) {
+		/* The dict is empty; just return a new dict. */
+		return alifDict_new();
+	}
+
+	if (ALIFDICT_HASSPLITTABLE(mp)) {
+		AlifDictObject* split_copy{};
+		AlifDictValues* newvalues = copy_values(mp->values);
+		if (newvalues == nullptr) {
+			//return alifErr_noMemory();
+		}
+		split_copy = ALIFOBJECT_GC_NEW(AlifDictObject, &_alifDictType_);
+		if (split_copy == nullptr) {
+			free_values(newvalues, false);
+			return nullptr;
+		}
+		for (size_t i = 0; i < newvalues->capacity; i++) {
+			ALIF_XINCREF(newvalues->values[i]);
+		}
+		split_copy->values = newvalues;
+		split_copy->keys = mp->keys;
+		split_copy->used = mp->used;
+		split_copy->versionTag = DICT_NEXT_VERSION(interp);
+		dictKeys_incRef(mp->keys);
+		if (ALIFOBJECT_GC_IS_TRACKED(mp))
+			ALIFOBJECT_GC_TRACK(split_copy);
+		return (AlifObject*)split_copy;
+	}
+
+	if (ALIF_TYPE(mp)->iter == dict_iter and
+		mp->values == nullptr and
+		(mp->used >= (mp->keys->nentries * 2) / 3))
+	{
+		AlifDictKeysObject* keys = cloneCombined_dictKeys(mp);
+		if (keys == nullptr) {
+			return nullptr;
+		}
+		AlifDictObject* new_ = (AlifDictObject*)new_dict(interp, keys, nullptr, 0, 0);
+		if (new_ == nullptr) {
+			return nullptr;
+		}
+
+		new_->used = mp->used;
+		if (ALIFOBJECT_GC_IS_TRACKED(mp)) {
+			/* Maintain tracking. */
+			ALIFOBJECT_GC_TRACK(new_);
+		}
+
+		return (AlifObject*)new_;
+	}
+
+	copy = alifDict_new();
+	if (copy == nullptr)
+		return nullptr;
+	if (dict_merge(interp, copy, o, 1) == 0)
+		return copy;
+	ALIF_DECREF(copy);
+	return nullptr;
+}
+
+AlifObject* alifDict_copy(AlifObject* _o) { // 3963
+	if (_o == nullptr or !ALIFDICT_CHECK(_o)) {
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
+
+	AlifObject* res{};
+	ALIF_BEGIN_CRITICAL_SECTION(_o);
+
+	res = copy_lockHeld(_o);
+
+	ALIF_END_CRITICAL_SECTION();
+	return res;
+}
+
+
 
 static AlifIntT dictSetDefault_refLockHeld(AlifObject* _d, AlifObject* _key, AlifObject* _defaultValue,
 	AlifObject** _result, AlifIntT _incRefResult) { // 4145
@@ -1896,6 +2225,19 @@ AlifIntT alifDict_setDefaultRef(AlifObject* _d, AlifObject* _key,
 	return res;
 }
 
+static AlifObject* dictIter_new(AlifDictObject*, AlifTypeObject*); // 4480
+
+
+
+AlifUSizeT _alifDict_keysSize(AlifDictKeysObject* _keys) { // 4509
+	AlifUSizeT es = (_keys->kind == DictKeysKind_::Dict_Keys_General
+		? sizeof(AlifDictKeyEntry) : sizeof(AlifDictUStrEntry));
+	AlifUSizeT size = sizeof(AlifDictKeysObject);
+	size += (AlifUSizeT)1 << _keys->log2IndexBytes;
+	size += USABLE_FRACTION((AlifUSizeT)DK_SIZE(_keys)) * es;
+	return size;
+}
+
 
 
 //static AlifObject* dict_or(AlifObject* _self, AlifObject* _other) { // 4533
@@ -1983,6 +2325,12 @@ static AlifSequenceMethods _dictAsSequence_ = { // 4652
 //};
 
 
+static AlifObject* dict_iter(AlifObject* _self) { // 4742
+	AlifDictObject* dict = (AlifDictObject*)_self;
+	return dictIter_new(dict, &_alifDictIterKeyType_);
+}
+
+
 AlifTypeObject _alifDictType_ = { // 4760
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "قاموس",
@@ -2034,6 +2382,128 @@ AlifIntT alifDict_setItemString(AlifObject* _v,
 	ALIF_DECREF(kv);
 	return err;
 }
+
+class DictIterObject { // 4887
+public:
+	ALIFOBJECT_HEAD{};
+	AlifDictObject* dict{}; /* Set to nullptr when iterator is exhausted */
+	AlifSizeT used{};
+	AlifSizeT pos{};
+	AlifObject* result{}; /* reusable result tuple for iteritems */
+	AlifSizeT len{};
+};
+
+static AlifObject* dictIter_new(AlifDictObject* _dict,
+	AlifTypeObject* _itertype) { // 4896
+	AlifSizeT used{};
+	DictIterObject* di{};
+	di = ALIFOBJECT_GC_NEW(DictIterObject, _itertype);
+	if (di == nullptr) {
+		return nullptr;
+	}
+	di->dict = (AlifDictObject*)ALIF_NEWREF(_dict);
+	used = alifAtomic_loadSizeRelaxed(&_dict->used);
+	di->used = used;
+	di->len = used;
+	if (_itertype == &_alifDictRevIterKeyType_ or
+		_itertype == &_alifDictRevIterItemType_ or
+		_itertype == &_alifDictRevIterValueType_) {
+		if (ALIFDICT_HASSPLITTABLE(_dict)) {
+			di->pos = used - 1;
+		}
+		else {
+			di->pos = load_keysNentries(_dict) - 1;
+		}
+	}
+	else {
+		di->pos = 0;
+	}
+	if (_itertype == &_alifDictIterItemType_ or
+		_itertype == &_alifDictRevIterItemType_) {
+		di->result = alifTuple_pack(2, ALIF_NONE, ALIF_NONE);
+		if (di->result == nullptr) {
+			ALIF_DECREF(di);
+			return nullptr;
+		}
+	}
+	else {
+		di->result = nullptr;
+	}
+	ALIFOBJECT_GC_TRACK(di);
+	return (AlifObject*)di;
+}
+
+
+AlifTypeObject _alifDictIterKeyType_ = { // 5081
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "مصفوفة_مكرر_المفاتيح",
+	.basicSize = sizeof(DictIterObject),
+	/* methods */
+	//.dealloc = dictIter_dealloc,
+	.getAttro = alifObject_genericGetAttr,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
+	//.traverse = dictIter_traverse,
+	.iter = alifObject_selfIter, 
+	//.iterNext = dictIter_iterNextKey,
+	//.methods = dictIter_methods,
+};
+
+
+AlifTypeObject _alifDictIterItemType_ = { // 5515
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "قاموس_تكرار_عنصر",
+	.basicSize = sizeof(DictIterObject),
+	/* methods */
+	//.dealloc = dictIter_dealloc,
+	.getAttro = alifObject_genericGetAttr,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
+	//.traverse = dictIter_traverse,
+	.iter = alifObject_selfIter,
+	//.iterNext = dictIter_iterNextItem,
+	//.methods = _dictIterMethods_,
+};
+
+
+
+AlifTypeObject _alifDictRevIterKeyType_ = { // 5665
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "مصفوفة_تكرار_المفاتيح_العكسي",
+	.basicSize = sizeof(DictIterObject),
+	//.dealloc = dictIter_dealloc,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
+	//.traverse = dictIter_traverse,
+	.iter = alifObject_selfIter,
+	//.iternext = dictRevIter_iterNext,
+	//.methods = dictiter_methods
+};
+
+
+
+
+
+AlifTypeObject _alifDictRevIterItemType_ = { // 5707
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "قاموس_تكرار_عنصر_عكسي",
+	.basicSize = sizeof(DictIterObject),
+	//.dealloc = dictIter_dealloc,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
+	//.traverse = dictIter_traverse,
+	.iter = alifObject_selfIter,
+	//.iterNext = dictRevIter_iterNext,
+	//.methods = dictIter_methods
+};
+
+AlifTypeObject _alifDictRevIterValueType_ = { // 5719
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "قاموس_تكرار_قيمة_عكسية",
+	.basicSize = sizeof(DictIterObject),
+	//.dealloc = dictIter_dealloc,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
+	//.traverse = dictIter_traverse,
+	.iter = alifObject_selfIter,
+	//.iterNext = dictRevIter_iterNext,
+	//.methods = dictIter_methods
+};
 
 
 
@@ -2372,6 +2842,14 @@ AlifIntT alifDict_setItemLockHeld(AlifDictObject* _dict, AlifObject* _name, Alif
 	}
 }
 
+
+
+
+//void alifObject_clearManagedDict(AlifObject* _obj) { // 7098
+//	if (_alifObject_setManagedDict(_obj, nullptr) < 0) {
+//		alifErr_writeUnraisable(nullptr);
+//	}
+//}
 
 
 

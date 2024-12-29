@@ -769,6 +769,27 @@ AlifIntT alifSequence_check(AlifObject* _s) { // 1668
 }
 
 
+AlifSizeT alifSequence_size(AlifObject* _s) { // 1677
+	if (_s == nullptr) {
+		null_error();
+		return -1;
+	}
+
+	AlifSequenceMethods* m = ALIF_TYPE(_s)->asSequence;
+	if (m and m->length) {
+		AlifSizeT len = m->length(_s);
+		return len;
+	}
+
+	if (ALIF_TYPE(_s)->asMapping and ALIF_TYPE(_s)->asMapping->length) {
+		//type_error("%.200s is not a sequence", s);
+		return -1;
+	}
+	//type_error("object of type '%.200s' has no len()", s);
+	return -1;
+}
+
+
 AlifObject* alifSequence_getItem(AlifObject* _s, AlifSizeT _i) { // 1829
 	if (_s == nullptr) {
 		return null_error();
@@ -1005,6 +1026,45 @@ AlifSizeT alifMapping_size(AlifObject* _o) { // 2270
 	//type_error("object of type '%.200s' has no len()", _o);
 	return -1;
 }
+
+
+static AlifObject* methodOutput_asList(AlifObject* o, AlifObject* meth) { // 2427
+	AlifObject* it{}, * result{}, * meth_output{};
+
+	meth_output = alifObject_callMethodNoArgs(o, meth);
+	if (meth_output == nullptr or ALIFLIST_CHECKEXACT(meth_output)) {
+		return meth_output;
+	}
+	it = alifObject_getIter(meth_output);
+	if (it == nullptr) {
+		AlifThread* tstate = _alifThread_get();
+		//if (_alifErr_exceptionMatches(tstate, _alifExcTypeError_)) {
+		//	_alifErr_format(tstate, _alifExcTypeError_,
+		//		"%.200s.%U() returned a non-iterable (type %.200s)",
+		//		ALIF_TYPE(o)->_name,
+		//		meth,
+		//		ALIF_TYPE(meth_output)->name);
+		//}
+		ALIF_DECREF(meth_output);
+		return nullptr;
+	}
+	ALIF_DECREF(meth_output);
+	result = alifSequence_list(it);
+	ALIF_DECREF(it);
+	return result;
+}
+
+
+AlifObject* alifMapping_keys(AlifObject* _o) { // 2456
+	if (_o == nullptr) {
+		return null_error();
+	}
+	if (ALIFDICT_CHECKEXACT(_o)) {
+		return alifDict_keys(_o);
+	}
+	return methodOutput_asList(_o, &ALIF_ID(keys));
+}
+
 
 
 

@@ -209,6 +209,7 @@ static inline AlifIntT alifObject_typeCheck(AlifObject* _ob, AlifTypeObject* _ty
 
 extern AlifTypeObject _alifTypeType_; // 405
 extern AlifTypeObject _alifBaseObjectType_; // 406 /* built-in 'object' */
+extern AlifTypeObject _alifSuperType_; // 407 /* built-in 'super' */
 
 AlifIntT alifType_ready(AlifTypeObject*); // 411
 AlifObject* alifType_genericAlloc(AlifTypeObject*, AlifSizeT); // 412
@@ -451,7 +452,8 @@ public:
 
 
 	AlifMethodDef* methods{};
-
+	AlifMemberDef* members{};
+	AlifGetSetDef* getSet{};
 
 	AlifTypeObject* base{};
 	AlifObject* dict{};
@@ -467,8 +469,11 @@ public:
 	AlifObject* mro{}; // MethodResolutionOrder
 	void* subclasses{};
 
+	Destructor del{};
+
 	AlifUIntT versionTag{};
 
+	Destructor finalize{};
 	VectorCallFunc vectorCall{};
 
 	unsigned char watched{};
@@ -478,7 +483,7 @@ public:
 
 
 
-class SpecializationCache {
+class SpecializationCache { // 238
 public:
 	AlifObject* getItem{};
 	uint32_t getItemVersion{};
@@ -489,10 +494,10 @@ class AlifHeapTypeObject { // 255
 public:
 	AlifTypeObject type{};
 	//AlifAsyncMethods async;
-	//AlifNumberMethods number;
-	//AlifMappingMethods mapping;
-	//AlifSequenceMethods sequence;
-	//AlifBufferProcs Buffer;
+	AlifNumberMethods number;
+	AlifMappingMethods mapping;
+	AlifSequenceMethods sequence;
+	AlifBufferProcs buffer;
 	AlifObject* name{}, * slots{}, * qualname{};
 	class DictKeysObject* cachedKeys{};
 	AlifObject* module_{};
@@ -506,8 +511,10 @@ public:
 
 AlifObject* alifType_lookupRef(AlifTypeObject*, AlifObject*); // 281
 
+void alifObject_callFinalizer(AlifObject*); // 291
+AlifIntT alifObject_callFinalizerFromDealloc(AlifObject*); // 292
 
-AlifObject* alifObject_genericGetAttrWithDict(AlifObject*, AlifObject*, AlifObject*, AlifIntT);
+AlifObject* alifObject_genericGetAttrWithDict(AlifObject*, AlifObject*, AlifObject*, AlifIntT); // 298
 
 AlifIntT alifObject_genericSetAttrWithDict(AlifObject*, AlifObject*, AlifObject*, AlifObject*); // 301
 
@@ -554,6 +561,8 @@ do { \
 
 
 
+void* alifObject_getItemData(AlifObject*); // 499
+
 
 enum AlifRefTracerEvent_ { // 521
 	Alif_RefTracer_Create = 0,
@@ -572,6 +581,7 @@ typedef AlifIntT (*AlifRefTracer)(AlifObject*, AlifRefTracerEvent_ event, void*)
 
 
 /* -------------------------------------------------------------------------------------------------------------------------------- */
+
 
 
 

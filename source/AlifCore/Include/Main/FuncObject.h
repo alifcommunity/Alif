@@ -68,6 +68,9 @@ static inline AlifObject* alifFunction_getGlobals(AlifObject* _func) { // 95
 #define ALIFFUNCTION_GET_GLOBALS(_func) alifFunction_getGlobals(ALIFOBJECT_CAST(_func))
 
 
+AlifObject* alifClassMethod_new(AlifObject*); // 129
+
+
 AlifObject* alifStaticMethod_new(AlifObject*); // 130
 
 // 132

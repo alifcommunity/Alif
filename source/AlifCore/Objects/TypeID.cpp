@@ -33,6 +33,30 @@ static AlifIntT resize_localRefCounts(AlifThreadImpl* _thread) { // 50
 
 
 
+//void _alifType_assignId(AlifHeapTypeObject* type) { // 76
+//	AlifInterpreter* interp = _alifInterpreter_get();
+//	AlifTypeIDPool* pool = &interp->typeIds;
+//
+//	LOCK_POOL(pool);
+//	if (pool->freelist == nullptr) {
+//		if (resize_interpTypeIDPool(pool) < 0) {
+//			type->uniqueId = -1;
+//			UNLOCK_POOL(pool);
+//			return;
+//		}
+//	}
+//
+//	AlifTypeIDEntry* entry = pool->freelist;
+//	pool->freelist = entry->next;
+//	entry->type = type;
+//	_alifObject_setDeferredRefCount((AlifObject*)type);
+//	type->uniqueId = (entry - pool->table);
+//	UNLOCK_POOL(pool);
+//}
+
+
+
+
 
 void alifType_releaseID(AlifHeapTypeObject* type) { // 99
 	AlifInterpreter* interp = _alifInterpreter_get();

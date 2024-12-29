@@ -3,7 +3,7 @@
 
 
 
-
+AlifIntT alifArg_parseTuple(AlifObject*, const char*, ...); // 10
 
 AlifObject* alif_buildValue(const char*, ...); // 19
 

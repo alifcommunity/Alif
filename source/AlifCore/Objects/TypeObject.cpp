@@ -1,11 +1,15 @@
 #include "alif.h"
 
+#include "AlifCore_Abstract.h"
+#include "AlifCore_Call.h"
 #include "AlifCore_Dict.h"
 #include "AlifCore_Lock.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_ObjectAlloc.h"
 #include "AlifCore_State.h"
+#include "AlifCore_SymTable.h"
 #include "AlifCore_TypeObject.h"
+#include "AlifCore_UStrObject.h"
 #include "AlifCore_CriticalSection.h" // ربما يمكن حذفه بعد الإنتهاء من تطوير اللغة
 
 
@@ -523,6 +527,147 @@ AlifObject* alifType_genericAlloc(AlifTypeObject* _type, AlifSizeT _nitems) { //
 }
 
 
+static inline AlifMemberDef* _alifHeapType_getMembers(AlifHeapTypeObject* _type) { // 2282
+	return (AlifMemberDef*)alifObject_getItemData((AlifObject*)_type);
+}
+
+static void clear_slots(AlifTypeObject* _type, AlifObject* _self) { // 2363
+	AlifSizeT i{}, n{};
+	AlifMemberDef* mp{};
+
+	n = ALIF_SIZE(_type);
+	mp = _alifHeapType_getMembers((AlifHeapTypeObject*)_type);
+	for (i = 0; i < n; i++, mp++) {
+		if (mp->type == ALIF_T_OBJECT_EX and !(mp->flags & ALIF_READONLY)) {
+			char* addr = (char*)_self + mp->offset;
+			AlifObject* obj = *(AlifObject**)addr;
+			if (obj != nullptr) {
+				*(AlifObject**)addr = nullptr;
+				ALIF_DECREF(obj);
+			}
+		}
+	}
+}
+
+static void subtype_dealloc(AlifObject* self) { // 2442
+	AlifTypeObject* type{}, * base{};
+	Destructor basedealloc{};
+	AlifIntT has_finalizer{};
+
+	AlifIntT typeNeedsDecref{};
+
+	type = ALIF_TYPE(self);
+
+	if (!ALIFTYPE_IS_GC(type)) {
+		if (type->finalize) {
+			if (alifObject_callFinalizerFromDealloc(self) < 0)
+				return;
+		}
+		if (type->del) {
+			type->del(self);
+			if (ALIF_REFCNT(self) > 0) {
+				return;
+			}
+		}
+
+		base = type;
+		while ((basedealloc = base->dealloc) == subtype_dealloc) {
+			base = base->base;
+		}
+
+		type = ALIF_TYPE(self);
+
+		AlifIntT type_needs_decref = (type->flags & ALIF_TPFLAGS_HEAPTYPE
+			and !(base->flags & ALIF_TPFLAGS_HEAPTYPE));
+
+
+		basedealloc(self);
+
+		if (type_needs_decref) {
+			alif_decreaseRefType(type);
+		}
+
+		/* Done */
+		return;
+	}
+
+	alifObject_gcUnTrack(self);
+	ALIF_TRASHCAN_BEGIN(self, subtype_dealloc);
+
+	base = type;
+	while ((/*basedealloc =*/ base->dealloc) == subtype_dealloc) {
+		base = base->base;
+	}
+
+	has_finalizer = type->finalize or type->del;
+
+	if (type->finalize) {
+		ALIFOBJECT_GC_TRACK(self);
+		if (alifObject_callFinalizerFromDealloc(self) < 0) {
+			/* Resurrected */
+			goto endlabel;
+		}
+		ALIFOBJECT_GC_UNTRACK(self);
+	}
+
+	if (type->weakListOffset and !base->weakListOffset) {
+		alifObject_clearWeakRefs(self);
+	}
+
+	if (type->del) {
+		ALIFOBJECT_GC_TRACK(self);
+		type->del(self);
+		if (ALIF_REFCNT(self) > 0) {
+			/* Resurrected */
+			goto endlabel;
+		}
+		ALIFOBJECT_GC_UNTRACK(self);
+	}
+	if (has_finalizer) {
+		if (type->weakListOffset and !base->weakListOffset) {
+			//_alifWeakRef_clearWeakRefsNoCallbacks(self);
+		}
+	}
+
+	base = type;
+	while ((basedealloc = base->dealloc) == subtype_dealloc) {
+		if (ALIF_SIZE(base))
+			clear_slots(base, self);
+		base = base->base;
+	}
+
+	if (type->flags & ALIF_TPFLAGS_MANAGED_DICT) {
+		//alifObject_clearManagedDict(self);
+	}
+	else if (type->dictOffset and !base->dictOffset) {
+		AlifObject** dictptr = alifObject_computedDictPointer(self);
+		if (dictptr != nullptr) {
+			AlifObject* dict = *dictptr;
+			if (dict != nullptr) {
+				ALIF_DECREF(dict);
+				*dictptr = nullptr;
+			}
+		}
+	}
+
+	type = ALIF_TYPE(self);
+
+	if (ALIFTYPE_IS_GC(base)) {
+		ALIFOBJECT_GC_TRACK(self);
+	}
+
+	typeNeedsDecref = (type->flags & ALIF_TPFLAGS_HEAPTYPE
+		and !(base->flags & ALIF_TPFLAGS_HEAPTYPE));
+
+	basedealloc(self);
+
+	if (typeNeedsDecref) {
+		alif_decreaseRefType(type);
+	}
+
+endlabel:
+	ALIF_TRASHCAN_END
+}
 
 static AlifTypeObject* solid_base(AlifTypeObject*); // 2632
 
@@ -980,6 +1125,49 @@ static AlifTypeObject* solid_base(AlifTypeObject* _type) { // 3401
 }
 
 
+
+static AlifIntT typeNew_setNames(AlifTypeObject*); // 3425
+static AlifIntT typeNew_initSubclass(AlifTypeObject*, AlifObject*); // 3426
+
+
+
+static AlifGetSetDef _subtypeGetSetsFull_[] = { // 3561
+	{"__dict__", nullptr/*subtype_dict*/, nullptr/*subtype_setDict*/,
+	 nullptr},
+	{"__weakRef__", nullptr/*subtype_getWeakRef*/, nullptr,
+	 nullptr},
+	{0}
+};
+
+static AlifGetSetDef _subtypeGetSetsDictOnly_[] = { // 3569
+	{"__dict__", nullptr/*subtype_dict*/, nullptr/*subtype_setDict*/,
+	 nullptr},
+	{0}
+};
+
+static AlifGetSetDef _subtypeGetSetsWeakRefOnly_[] = { // 3575
+	{"__weakRef__", nullptr/*subtype_getWeakRef*/, nullptr,
+	 nullptr},
+	{0}
+};
+
+
+static AlifIntT valid_identifier(AlifObject* s) { // 3581
+	if (!ALIFUSTR_CHECK(s)) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"__slots__ items must be strings, not '%.200s'",
+		//	ALIF_TYPE(s)->name);
+		return 0;
+	}
+	if (!alifUStr_isIdentifier(s)) {
+		//alifErr_setString(_alifExcTypeError_,
+		//	"__slots__ must be identifiers");
+		return 0;
+	}
+	return 1;
+}
+
+
 static AlifIntT type_init(AlifObject* _cls, AlifObject* _args, AlifObject* _kwds) { // 3598
 	if (_kwds != nullptr and ALIFTUPLE_GET_SIZE(_args) == 1 and
 		ALIFDICT_GET_SIZE(_kwds) != 0) {
@@ -1051,6 +1239,585 @@ public:
 };
 
 
+static AlifIntT typeNew_visitSlots(TypeNewCtx* _ctx) { // 3694
+	AlifObject* slots = _ctx->slots;
+	AlifSizeT nslot = _ctx->nslot;
+	for (AlifSizeT i = 0; i < nslot; i++) {
+		AlifObject* name = ALIFTUPLE_GET_ITEM(slots, i);
+		if (!valid_identifier(name)) {
+			return -1;
+		}
+		if (_alifUStr_equal(name, &ALIF_ID(__dict__))) {
+			if (!_ctx->mayAddDict or _ctx->addDict != 0) {
+				//alifErr_setString(_alifExcTypeError_,
+				//	"__dict__ slot disallowed: "
+				//	"we already got one");
+				return -1;
+			}
+			_ctx->addDict++;
+		}
+		if (_alifUStr_equal(name, &ALIF_ID(__weakRef__))) {
+			if (!_ctx->mayAddWeak or _ctx->addWeak != 0) {
+				//alifErr_setString(_alfiExcTypeError_,
+				//	"__weakref__ slot disallowed: "
+				//	"we already got one");
+				return -1;
+			}
+			_ctx->addWeak++;
+		}
+	}
+	return 0;
+}
+
+static AlifObject* typeNew_copySlots(TypeNewCtx* ctx, AlifObject* dict) { // 3732
+	AlifObject* slots = ctx->slots;
+	AlifSizeT nslot = ctx->nslot;
+
+	AlifObject* tuple{}; // alif
+
+	AlifSizeT new_nslot = nslot - ctx->addDict - ctx->addWeak;
+	AlifObject* new_slots = alifList_new(new_nslot);
+	if (new_slots == nullptr) {
+		return nullptr;
+	}
+
+	AlifSizeT j = 0;
+	for (AlifSizeT i = 0; i < nslot; i++) {
+		AlifObject* slot = ALIFTUPLE_GET_ITEM(slots, i);
+		if ((ctx->addDict and _alifUStr_equal(slot, &ALIF_ID(__dict__))) ||
+			(ctx->addWeak and _alifUStr_equal(slot, &ALIF_ID(__weakRef__))))
+		{
+			continue;
+		}
+
+		slot = alif_mangle(ctx->name, slot);
+		if (!slot) {
+			goto error;
+		}
+		ALIFLIST_SET_ITEM(new_slots, j, slot);
+
+		AlifIntT r = alifDict_contains(dict, slot);
+		if (r < 0) {
+			goto error;
+		}
+		if (r > 0) {
+			if (!_alifUStr_equal(slot, &ALIF_ID(__qualname__)) and
+				!_alifUStr_equal(slot, &ALIF_ID(__classCell__)) and
+				!_alifUStr_equal(slot, &ALIF_ID(__classDictCell__)))
+			{
+				//alifErr_format(_alifExcValueError_,
+				//	"%R in __slots__ conflicts with class variable",
+				//	slot);
+				goto error;
+			}
+		}
+
+		j++;
+	}
+
+	if (alifList_sort(new_slots) == -1) {
+		goto error;
+	}
+
+	tuple = alifList_asTuple(new_slots);
+	ALIF_DECREF(new_slots);
+	if (tuple == nullptr) {
+		return nullptr;
+	}
+
+	return tuple;
+
+error:
+	ALIF_DECREF(new_slots);
+	return nullptr;
+}
+
+
+static void typeNew_slotsBases(TypeNewCtx* _ctx) { // 3801
+	AlifSizeT nbases = ALIFTUPLE_GET_SIZE(_ctx->bases);
+	if (nbases > 1 and
+		((_ctx->mayAddDict and _ctx->addDict == 0) or
+			(_ctx->mayAddWeak and _ctx->addWeak == 0)))
+	{
+		for (AlifSizeT i = 0; i < nbases; i++) {
+			AlifObject* obj = ALIFTUPLE_GET_ITEM(_ctx->bases, i);
+			if (obj == (AlifObject*)_ctx->base) {
+				/* Skip primary base */
+				continue;
+			}
+			AlifTypeObject* base = ALIFTYPE_CAST(obj);
+
+			if (_ctx->mayAddDict and _ctx->addDict == 0 and
+				base->dictOffset != 0)
+			{
+				_ctx->addDict++;
+			}
+			if (_ctx->mayAddWeak and _ctx->addWeak == 0 and
+				base->weakListOffset != 0)
+			{
+				_ctx->addWeak++;
+			}
+			if (_ctx->mayAddDict and _ctx->addDict == 0) {
+				continue;
+			}
+			if (_ctx->mayAddWeak and _ctx->addWeak == 0) {
+				continue;
+			}
+			/* Nothing more to check */
+			break;
+		}
+	}
+}
+
+
+static AlifIntT typeNew_slotsImpl(TypeNewCtx* _ctx, AlifObject* _dict) { // 3840
+	/* Are slots allowed? */
+	if (_ctx->nslot > 0 and _ctx->base->itemSize != 0) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"nonempty __slots__ not supported for subtype of '%s'",
+		//	_ctx->base->name);
+		return -1;
+	}
+
+	if (typeNew_visitSlots(_ctx) < 0) {
+		return -1;
+	}
+
+	AlifObject* new_slots = typeNew_copySlots(_ctx, _dict);
+	if (new_slots == nullptr) {
+		return -1;
+	}
+
+	ALIF_XSETREF(_ctx->slots, new_slots);
+	_ctx->nslot = ALIFTUPLE_GET_SIZE(new_slots);
+
+	/* Secondary bases may provide weakrefs or dict */
+	typeNew_slotsBases(_ctx);
+	return 0;
+}
+
+static AlifSizeT typeNew_slots(TypeNewCtx* _ctx, AlifObject* _dict) { // 3870
+	_ctx->addDict = 0;
+	_ctx->addWeak = 0;
+	_ctx->mayAddDict = (_ctx->base->dictOffset == 0);
+	_ctx->mayAddWeak = (_ctx->base->weakListOffset == 0
+		&& _ctx->base->itemSize == 0);
+
+	if (_ctx->slots == nullptr) {
+		if (_ctx->mayAddDict) {
+			_ctx->addDict++;
+		}
+		if (_ctx->mayAddWeak) {
+			_ctx->addWeak++;
+		}
+	}
+	else {
+		/* Have slots */
+		if (typeNew_slotsImpl(_ctx, _dict) < 0) {
+			return -1;
+		}
+	}
+	return 0;
+}
+
+
+
+static AlifTypeObject* typeNew_alloc(TypeNewCtx* _ctx) { // 3898
+	AlifTypeObject* metatype = _ctx->metatype;
+	AlifTypeObject* type{};
+
+	// Allocate the type object
+	type = (AlifTypeObject*)metatype->alloc(metatype, _ctx->nslot);
+	if (type == nullptr) {
+		return nullptr;
+	}
+	AlifHeapTypeObject* et = (AlifHeapTypeObject*)type;
+
+
+	type->flags = (ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HEAPTYPE |
+		ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_HAVE_GC);
+
+	// Initialize essential fields
+	//type->asAsync = &et->async;
+	type->asNumber = &et->number;
+	type->asSequence = &et->sequence;
+	type->asMapping = &et->mapping;
+	type->asBuffer = &et->buffer;
+
+	set_tpBases(type, ALIF_NEWREF(_ctx->bases), 1);
+	type->base = (AlifTypeObject*)ALIF_NEWREF(_ctx->base);
+
+	type->dealloc = subtype_dealloc;
+	/* Always override allocation strategy to use regular heap */
+	type->alloc = alifType_genericAlloc;
+	type->free = alifObject_gcDel;
+
+	//type->traverse = subtype_traverse;
+	//type->clear = subtype_clear;
+
+	et->name = ALIF_NEWREF(_ctx->name);
+	et->module_ = nullptr;
+	//et->tpName = nullptr;
+
+#ifdef ALIF_GIL_DISABLED
+	//_alifType_assignId(et);
+#endif
+
+	return type;
+}
+
+
+static AlifIntT typeNew_setName(const TypeNewCtx* ctx, AlifTypeObject* type) { // 3947
+	AlifSizeT nameSize{};
+	type->name = alifUStr_asUTF8AndSize(ctx->name, &nameSize);
+	if (!type->name) {
+		return -1;
+	}
+	if (strlen(type->name) != (AlifUSizeT)nameSize) {
+		//alifErr_setString(_alifExcValueError_,
+		//	"type name must not contain null characters");
+		return -1;
+	}
+	return 0;
+}
+
+
+static AlifIntT typeNew_setModule(AlifTypeObject* _type) { // 3965
+	AlifObject* dict = lookup_tpDict(_type);
+	AlifIntT r = alifDict_contains(dict, &ALIF_ID(__module__));
+	if (r < 0) {
+		return -1;
+	}
+	if (r > 0) {
+		return 0;
+	}
+
+	AlifObject* globals = alifEval_getGlobals();
+	if (globals == nullptr) {
+		return 0;
+	}
+
+	AlifObject* module{};
+	r = alifDict_getItemRef(globals, &ALIF_ID(__name__), &module);
+	if (module) {
+		r = alifDict_setItem(dict, &ALIF_ID(__module__), module);
+		ALIF_DECREF(module);
+	}
+	return r;
+}
+
+
+static AlifIntT typeNew_setHtName(AlifTypeObject* _type) { // 3994
+	AlifHeapTypeObject* et = (AlifHeapTypeObject*)_type;
+	AlifObject* dict = lookup_tpDict(_type);
+	AlifObject* qualname;
+	if (alifDict_getItemRef(dict, &ALIF_ID(__qualname__), &qualname) < 0) {
+		return -1;
+	}
+	if (qualname != nullptr) {
+		if (!ALIFUSTR_CHECK(qualname)) {
+			//alifErr_format(_alifExcTypeError_,
+			//	"type __qualname__ must be a str, not %s",
+			//	ALIF_TYPE(qualname)->name);
+			ALIF_DECREF(qualname);
+			return -1;
+		}
+		et->qualname = qualname;
+		if (alifDict_delItem(dict, &ALIF_ID(__qualname__)) < 0) {
+			return -1;
+		}
+	}
+	else {
+		et->qualname = ALIF_NEWREF(et->name);
+	}
+	return 0;
+}
+
+
+
+
+static AlifIntT typeNew_staticMethod(AlifTypeObject* _type, AlifObject* _attr) { // 4062
+	AlifObject* dict = lookup_tpDict(_type);
+	AlifObject* func = alifDict_getItemWithError(dict, _attr);
+	if (func == nullptr) {
+		//if (alifErr_occurred()) {
+		//	return -1;
+		//}
+		return 0;
+	}
+	if (!ALIFFUNCTION_CHECK(func)) {
+		return 0;
+	}
+
+	AlifObject* staticFunc = alifStaticMethod_new(func);
+	if (staticFunc == nullptr) {
+		return -1;
+	}
+	if (alifDict_setItem(dict, _attr, staticFunc) < 0) {
+		ALIF_DECREF(staticFunc);
+		return -1;
+	}
+	ALIF_DECREF(staticFunc);
+	return 0;
+}
+
+
+static AlifIntT typeNew_classMethod(AlifTypeObject* _type, AlifObject* _attr) { // 4090
+	AlifObject* dict = lookup_tpDict(_type);
+	AlifObject* func = alifDict_getItemWithError(dict, _attr);
+	if (func == nullptr) {
+		//if (alifErr_occurred()) {
+		//	return -1;
+		//}
+		return 0;
+	}
+	if (!ALIFFUNCTION_CHECK(func)) {
+		return 0;
+	}
+
+	AlifObject* method = alifClassMethod_new(func);
+	if (method == nullptr) {
+		return -1;
+	}
+
+	if (alifDict_setItem(dict, _attr, method) < 0) {
+		ALIF_DECREF(method);
+		return -1;
+	}
+	ALIF_DECREF(method);
+	return 0;
+}
+
+
+
+static AlifIntT typeNew_descriptors(const TypeNewCtx* _ctx, AlifTypeObject* _type) { // 4120
+	AlifHeapTypeObject* et = (AlifHeapTypeObject*)_type;
+	AlifSizeT slotoffset = _ctx->base->basicSize;
+	if (et->slots != nullptr) {
+		AlifMemberDef* mp = _alifHeapType_getMembers(et);
+		AlifSizeT nslot = ALIFTUPLE_GET_SIZE(et->slots);
+		for (AlifSizeT i = 0; i < nslot; i++, mp++) {
+			mp->name = alifUStr_asUTF8(
+				ALIFTUPLE_GET_ITEM(et->slots, i));
+			if (mp->name == nullptr) {
+				return -1;
+			}
+			mp->type = ALIF_T_OBJECT_EX;
+			mp->offset = slotoffset;
+
+			slotoffset += sizeof(AlifObject*);
+		}
+	}
+
+	if (_ctx->addWeak) {
+		_type->flags |= ALIF_TPFLAGS_MANAGED_WEAKREF;
+		_type->weakListOffset = MANAGED_WEAKREF_OFFSET;
+	}
+	if (_ctx->addDict) {
+		_type->flags |= ALIF_TPFLAGS_MANAGED_DICT;
+		_type->dictOffset = -1;
+	}
+
+	_type->basicSize = slotoffset;
+	_type->itemSize = _ctx->base->itemSize;
+	_type->members = _alifHeapType_getMembers(et);
+	return 0;
+}
+
+
+
+static void typeNew_setSlots(const TypeNewCtx* ctx, AlifTypeObject* type) { // 4163
+	if (type->weakListOffset and type->dictOffset) {
+		type->getSet = _subtypeGetSetsFull_;
+	}
+	else if (type->weakListOffset and !type->dictOffset) {
+		type->getSet = _subtypeGetSetsWeakRefOnly_;
+	}
+	else if (!type->weakListOffset and type->dictOffset) {
+		type->getSet = _subtypeGetSetsDictOnly_;
+	}
+	else {
+		type->getSet = nullptr;
+	}
+
+	/* Special case some slots */
+	if (type->dictOffset != 0 or ctx->nslot > 0) {
+		AlifTypeObject* base = ctx->base;
+		if (base->getAttr == nullptr and base->getAttro == nullptr) {
+			type->getAttro = alifObject_genericGetAttr;
+		}
+		if (base->setAttr == nullptr and base->setAttro == nullptr) {
+			type->setAttro = alifObject_genericSetAttr;
+		}
+	}
+}
+
+
+static AlifIntT typeNew_setClassCell(AlifTypeObject* _type) { // 4193
+	AlifObject* dict = lookup_tpDict(_type);
+	AlifObject* cell = alifDict_getItemWithError(dict, &ALIF_ID(__classCell__));
+	if (cell == nullptr) {
+		//if (alifErr_occurred()) {
+		//	return -1;
+		//}
+		return 0;
+	}
+
+	/* At least one method requires a reference to its defining class */
+	if (!ALIFCELL_CHECK(cell)) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"__classcell__ must be a nonlocal cell, not %.200R",
+		//	ALIF_TYPE(cell));
+		return -1;
+	}
+
+	(void)alifCell_set(cell, (AlifObject*)_type);
+	if (alifDict_delItem(dict, &ALIF_ID(__classCell__)) < 0) {
+		return -1;
+	}
+	return 0;
+}
+
+
+static AlifIntT typeNew_setClassDictCell(AlifTypeObject* _type) { // 4220
+	AlifObject* dict = lookup_tpDict(_type);
+	AlifObject* cell = alifDict_getItemWithError(dict, &ALIF_ID(__classDictCell__));
+	if (cell == nullptr) {
+		//if (alifErr_occurred()) {
+		//	return -1;
+		//}
+		return 0;
+	}
+
+	/* At least one method requires a reference to the dict of its defining class */
+	if (!ALIFCELL_CHECK(cell)) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"__classdictcell__ must be a nonlocal cell, not %.200R",
+		//	ALIF_TYPE(cell));
+		return -1;
+	}
+
+	(void)alifCell_set(cell, (AlifObject*)dict);
+	if (alifDict_delItem(dict, &ALIF_ID(__classDictCell__)) < 0) {
+		return -1;
+	}
+	return 0;
+}
+
+
+static AlifIntT typeNew_setAttrs(const TypeNewCtx* _ctx, AlifTypeObject* _type) { // 4247
+	if (typeNew_setName(_ctx, _type) < 0) {
+		return -1;
+	}
+
+	if (typeNew_setModule(_type) < 0) {
+		return -1;
+	}
+
+	if (typeNew_setHtName(_type) < 0) {
+		return -1;
+	}
+
+	//if (typeNew_setDoc(_type) < 0) {
+	//	return -1;
+	//}
+
+	/* Special-case __new__: if it's a plain function,
+	   make it a static function */
+	if (typeNew_staticMethod(_type, &ALIF_ID(__new__)) < 0) {
+		return -1;
+	}
+
+	/* Special-case __init_subclass__ and __class_getitem__:
+	   if they are plain functions, make them classmethods */
+	if (typeNew_classMethod(_type, &ALIF_ID(__initSubclass__)) < 0) {
+		return -1;
+	}
+	if (typeNew_classMethod(_type, &ALIF_ID(__classGetItem__)) < 0) {
+		return -1;
+	}
+
+	if (typeNew_descriptors(_ctx, _type) < 0) {
+		return -1;
+	}
+
+	typeNew_setSlots(_ctx, _type);
+
+	if (typeNew_setClassCell(_type) < 0) {
+		return -1;
+	}
+	if (typeNew_setClassDictCell(_type) < 0) {
+		return -1;
+	}
+	return 0;
+}
+
+
+static AlifIntT typeNew_getSlots(TypeNewCtx* _ctx, AlifObject* _dict) { // 4297
+	AlifObject* slots = alifDict_getItemWithError(_dict, &ALIF_ID(__slots__));
+	if (slots == nullptr) {
+		//if (alifErr_occurred()) {
+		//	return -1;
+		//}
+		_ctx->slots = nullptr;
+		_ctx->nslot = 0;
+		return 0;
+	}
+
+	// Make it into a tuple
+	AlifObject* new_slots{};
+	if (ALIFUSTR_CHECK(slots)) {
+		new_slots = alifTuple_pack(1, slots);
+	}
+	else {
+		new_slots = alifSequence_tuple(slots);
+	}
+	if (new_slots == nullptr) {
+		return -1;
+	}
+	_ctx->slots = new_slots;
+	_ctx->nslot = ALIFTUPLE_GET_SIZE(new_slots);
+	return 0;
+}
+
+
+static AlifTypeObject* typeNew_init(TypeNewCtx* _ctx) { // 4328
+
+	AlifTypeObject* type{};
+	AlifHeapTypeObject* et{};
+
+	AlifObject* dict = alifDict_copy(_ctx->origDict);
+	if (dict == nullptr) {
+		goto error;
+	}
+
+	if (typeNew_getSlots(_ctx, dict) < 0) {
+		goto error;
+	}
+
+	if (typeNew_slots(_ctx, dict) < 0) {
+		goto error;
+	}
+
+	type = typeNew_alloc(_ctx);
+	if (type == nullptr) {
+		goto error;
+	}
+
+	set_tpDict(type, dict);
+
+	et = (AlifHeapTypeObject*)type;
+	et->slots = _ctx->slots;
+	_ctx->slots = nullptr;
+
+	return type;
+
+error:
+	ALIF_CLEAR(_ctx->slots);
+	ALIF_XDECREF(dict);
+	return nullptr;
+}
+
 
 static AlifObject* type_newImpl(TypeNewCtx* _ctx) { // 4365
 	AlifTypeObject* type = typeNew_init(_ctx);
@@ -1068,7 +1835,7 @@ static AlifObject* type_newImpl(TypeNewCtx* _ctx) { // 4365
 	}
 
 	// Put the proper slots in place
-	fixup_slotDispatchers(type);
+	//fixup_slotDispatchers(type);
 
 	if (!_alifDict_hasOnlyStringKeys(type->dict)) {
 		//if (alifErr_WarnFormat(
@@ -1200,6 +1967,17 @@ static AlifObject* type_new(AlifTypeObject* _metatype,
 }
 
 
+
+
+void* alifObject_getItemData(AlifObject* _obj) { // 5276
+	if (!alifType_hasFeature(ALIF_TYPE(_obj), ALIF_TPFLAGS_ITEMS_AT_END)) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"type '%s' does not have ALIF_TPFLAGS_ITEMS_AT_END",
+		//	ALIF_TYPE(obj)->name);
+		return nullptr;
+	}
+	return (char*)_obj + ALIF_TYPE(_obj)->basicSize;
+}
 
 
 static AlifObject* findName_inMro(AlifTypeObject* _type, AlifObject* _name, AlifIntT* _error) { //  5291
@@ -2204,3 +2982,119 @@ static AlifIntT add_tpNewWrapper(AlifTypeObject* _type) { // 9302
 	ALIF_DECREF(func);
 	return r_;
 }
+
+
+
+
+
+
+
+//static void fixup_slotDispatchers(AlifTypeObject* _type) { // 10920
+//	BEGIN_TYPE_LOCK();
+//
+//	for (AlifTypeSlotDef* p = _slotDefs_; p->name; ) {
+//		p = update_oneSlot(_type, p);
+//	}
+//
+//	END_TYPE_LOCK();
+//}
+
+
+static AlifIntT typeNew_setNames(AlifTypeObject* _type) { // 10973
+	AlifObject* dict = lookup_tpDict(_type);
+	AlifObject* names_to_set = alifDict_copy(dict);
+	if (names_to_set == nullptr) {
+		return -1;
+	}
+
+	AlifSizeT i = 0;
+	AlifObject* key{}, * value{};
+	while (alifDict_next(names_to_set, &i, &key, &value)) {
+		AlifObject* set_name = alifObject_lookupSpecial(value,
+			&ALIF_ID(__setName__));
+		if (set_name == nullptr) {
+			//if (alifErr_occurred()) {
+			//	goto error;
+			//}
+			continue;
+		}
+
+		AlifObject* res = alifObject_callFunctionObjArgs(set_name, _type, key, nullptr);
+		ALIF_DECREF(set_name);
+
+		if (res == nullptr) {
+			//_alifErr_formatNote(
+			//	"Error calling __set_name__ on '%.100s' instance %R "
+			//	"in '%.100s'",
+			//	ALIF_TYPE(value)->name, key, type->name);
+			goto error;
+		}
+		else {
+			ALIF_DECREF(res);
+		}
+	}
+
+	ALIF_DECREF(names_to_set);
+	return 0;
+
+error:
+	ALIF_DECREF(names_to_set);
+	return -1;
+}
+
+
+
+static AlifIntT typeNew_initSubclass(AlifTypeObject* _type, AlifObject* _kwds) { // 11019
+	AlifObject* args[2] = { (AlifObject*)_type, (AlifObject*)_type };
+	AlifObject* super = alifObject_vectorCall((AlifObject*)&_alifSuperType_,
+		args, 2, nullptr);
+	if (super == nullptr) {
+		return -1;
+	}
+
+	AlifObject* func = alifObject_getAttr(super, &ALIF_ID(__initSubclass__));
+	ALIF_DECREF(super);
+	if (func == nullptr) {
+		return -1;
+	}
+
+	AlifObject* result = alifObject_vectorCallDict(func, nullptr, 0, _kwds);
+	ALIF_DECREF(func);
+	if (result == nullptr) {
+		return -1;
+	}
+
+	ALIF_DECREF(result);
+	return 0;
+}
+
+
+
+class SuperObject { // 11183
+public:
+	ALIFOBJECT_HEAD{};
+	AlifTypeObject* type{};
+	AlifObject* obj{};
+	AlifTypeObject* objType{};
+};
+
+
+
+
+
+AlifTypeObject _alifSuperType_ = { // 11652
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "super",
+	.basicSize = sizeof(SuperObject),
+	/* methods */
+	//.dealloc = super_dealloc,
+	//.repr = super_repr,
+	//.getAttro = super_getAttro,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
+		ALIF_TPFLAGS_BASETYPE,
+	//.init = super_init,
+	.alloc = alifType_genericAlloc,
+	//.new_ = alifType_genericNew,
+	.free = alifObject_gcDel,
+	//.vectorCall = (VectorCallFunc)super_vectorCall,
+};

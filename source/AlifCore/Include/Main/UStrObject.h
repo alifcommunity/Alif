@@ -53,6 +53,9 @@ AlifObject* alifUStr_decodeUTF8(const char*, AlifSizeT, const char*); // 429
 
 AlifObject* alifUStr_decodeUTF8Stateful(const char*, AlifSizeT, const char*, AlifSizeT*); // 435
 
+
+const char* alifUStr_asUTF8AndSize(AlifObject*, AlifSizeT*); // 458
+
 /* --- UTF-32 Codecs --------------------------------------------------- */
 
 
@@ -80,6 +83,8 @@ AlifIntT alifUStr_equalToUTF8(AlifObject*, const char*); // 965
 AlifIntT alifUStr_equalToUTF8AndSize(AlifObject*, const char*, AlifSizeT); // 966
 
 
+
+AlifIntT alifUStr_isIdentifier(AlifObject*); // 1008
 
 /* ---------------------------------------------------------------------------------------------------------- */
 

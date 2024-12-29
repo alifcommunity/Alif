@@ -2,7 +2,17 @@
 
 
 
+typedef AlifObject* (*Getter)(AlifObject*, void*); // 8
+typedef AlifIntT (*Setter)(AlifObject*, AlifObject*, void*);
 
+class AlifGetSetDef { // 11
+public:
+	const char* name{};
+	Getter get{};
+	Setter set{};
+	const char* doc{};
+	void* closure{};
+};
 
 
 extern AlifTypeObject _alifClassMethodDescrType_; // 19
@@ -25,6 +35,11 @@ public:
 
 #define ALIF_T_OBJECT   6  // 59
 
+
+
+
+
+#define ALIF_T_OBJECT_EX 16 // 75
 
 #define ALIF_READONLY	1 // 83
 

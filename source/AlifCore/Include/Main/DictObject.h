@@ -18,7 +18,7 @@ AlifIntT alifDict_delItem(AlifObject*, AlifObject*); // 25
 AlifIntT alifDict_next(AlifObject* , AlifSizeT* , AlifObject** , AlifObject** ); // 27
 
 AlifObject* alifDict_keys(AlifObject*); // 29
-
+AlifObject* alifDict_copy(AlifObject*); // 33
 AlifIntT alifDict_contains(AlifObject*, AlifObject*); // 34
 
 AlifIntT alifDict_setItemString(AlifObject*, const char*, AlifObject*); // 58
@@ -34,13 +34,18 @@ AlifObject* alifObject_genericGetDict(AlifObject*, void*); // 72
 
 
 
-extern AlifTypeObject _alifDictKeysType_;
+extern AlifTypeObject _alifDictKeysType_; // 77
 extern AlifTypeObject _alifDictValuesType_;
 extern AlifTypeObject _alifDictItemsType_;
 
 
+extern AlifTypeObject _alifDictIterKeyType_; // 90
 
+extern AlifTypeObject _alifDictIterItemType_; // 92
 
+extern AlifTypeObject _alifDictRevIterKeyType_; // 94
+extern AlifTypeObject _alifDictRevIterItemType_; // 95
+extern AlifTypeObject _alifDictRevIterValueType_; // 96
 
 /* ---------------------------------------------------------------------------------------------------------------- */
 

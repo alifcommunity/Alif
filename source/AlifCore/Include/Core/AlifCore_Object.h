@@ -110,7 +110,21 @@ static inline void alif_increaseRefType(AlifTypeObject* type) { // 296
 #endif
 }
 
+static inline void alif_decreaseRefType(AlifTypeObject* _type) { // 336
+	if (!_alifType_hasFeature(_type, ALIF_TPFLAGS_HEAPTYPE)) {
+		return;
+	}
 
+	AlifThreadImpl* thread = (AlifThreadImpl*)_alifThread_get();
+	AlifHeapTypeObject* ht = (AlifHeapTypeObject*)_type;
+
+	if ((AlifUSizeT)ht->uniqueID < (AlifUSizeT)thread->types.size) {
+		thread->types.refCounts[ht->uniqueID]--;
+	}
+	else {
+		ALIF_DECREF(_type);
+	}
+}
 
 
 
@@ -261,7 +275,8 @@ void alifObject_initInlineValues(AlifObject*, AlifTypeObject*); // 771
 extern AlifIntT alifObject_storeInstanceAttribute(AlifObject*, AlifObject*, AlifObject*);
 extern bool alifObject_tryGetInstanceAttribute(AlifObject* , AlifObject* , AlifObject** ); // 774 
 
-# define MANAGED_DICT_OFFSET    (((AlifSizeT)sizeof(AlifObject *))*-1) // 778 
+#define MANAGED_DICT_OFFSET    (((AlifSizeT)sizeof(AlifObject *))*-1) // 778 
+#define MANAGED_WEAKREF_OFFSET (((AlifSizeT)sizeof(AlifObject *))*-2)
 
 union AlifManagedDictPointer{ // 785
 	AlifDictObject* dict{};
@@ -288,7 +303,7 @@ extern AlifObject** alifObject_computedDictPointer(AlifObject*); // 813
 
 AlifObject* alifObject_lookupSpecial(AlifObject*, AlifObject*); // 817
 
-
+AlifIntT _alifObject_getMethod(AlifObject*, AlifObject*, AlifObject**); // 822
 extern AlifObject* _alifObject_nextNotImplemented(AlifObject*); // 823
 
 

@@ -91,6 +91,13 @@ static inline void alifGCHead_setPerv(AlifGCHead* _gc, AlifGCHead* _prev) { // 2
 	_gc->gcPrev = ((_gc->gcPrev & ~ALIFGC_PREV_MASK) | uprev);
 }
 
+static inline int _alifGC_finalized(AlifObject* _op) {
+	return alifObject_hasGCBits(_op, ALIFGC_BITS_FINALIZED);
+}
+static inline void _alifGC_setFinalized(AlifObject* _op) {
+	alifObject_setGCBits(_op, ALIFGC_BITS_FINALIZED);
+}
+
 class GCGeneration { // 280
 public:
 	AlifGCHead head{};

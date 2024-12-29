@@ -672,12 +672,14 @@
     INIT_ID(__classDictCell__), \
     INIT_ID(__classGetItem__), \
     INIT_ID(__complex__), \
+	INIT_ID(__dict__), \
 	INIT_ID(__doc__), \
 	INIT_ID(__eq__), \
 	INIT_ID(__firstLineno__), \
 	INIT_ID(__format__), \
 	INIT_ID(__getAttr__), \
 	INIT_ID(__hash__), \
+	INIT_ID(__initSubclass__), \
 	INIT_ID(__lengthHint__), \
 	INIT_ID(__loader__), \
 	INIT_ID(__module__), \
@@ -688,15 +690,19 @@
 	INIT_ID(__package__), \
 	INIT_ID(__prepare__), \
 	INIT_ID(__qualname__), \
+	INIT_ID(__setName__), \
+	INIT_ID(__slots__), \
 	INIT_ID(__spec__), \
 	INIT_ID(__staticAttributes__), \
 	INIT_ID(__typeParams__), \
+	INIT_ID(__weakRef__), \
 	INIT_ID(Builtins), \
 	INIT_ID(End), \
 	INIT_ID(File), \
 	INIT_ID(Flush), \
 	INIT_ID(HasLocation), \
 	INIT_ID(Join), \
+	INIT_ID(keys), \
 	INIT_ID(MetaClass), \
 	INIT_ID(Mro), \
 	INIT_ID(Origin), \

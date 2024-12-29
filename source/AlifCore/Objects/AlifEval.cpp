@@ -1656,7 +1656,14 @@ AlifObject* _alifEval_getBuiltins(AlifThread* _thread) { // 2444
 
 
 
-
+AlifObject* alifEval_getGlobals() { // 2557
+	AlifThread* thread = _alifThread_get();
+	AlifInterpreterFrame* current_frame = _alifThreadState_getFrame(thread);
+	if (current_frame == nullptr) {
+		return nullptr;
+	}
+	return current_frame->globals;
+}
 
 
 AlifObject* _alifEval_loadGlobal(AlifObject* _globals,
