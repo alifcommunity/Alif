@@ -1,5 +1,8 @@
 #include "alif.h"
 
+#include "AlifCore_Abstract.h"
+#include "AlifCore_Eval.h"
+#include "AlifCore_Codecs.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_State.h"
 #include "AlifCore_UStrObject.h"
@@ -1275,7 +1278,7 @@ static const char* uStr_fromFormatArg(AlifUStrWriter* _writer,
 	_f++;
 	if (*_f == '%') {
 		if (alifUStrWriter_writeCharInline(_writer, '%') < 0)
-			return NULL;
+			return nullptr;
 		_f++;
 		return _f;
 	}
@@ -1886,6 +1889,48 @@ AlifObject* alifUStr_fromObject(AlifObject* _obj) { // 3446
 }
 
 
+AlifIntT _alif_normalizeEncoding(const char* encoding,
+	char* lower, AlifUSizeT lower_len) { // 3520
+	const char* e{};
+	char* l{};
+	char* l_end{};
+	int punct{};
+
+	e = encoding;
+	l = lower;
+	l_end = &lower[lower_len - 1];
+	punct = 0;
+	while (1) {
+		char c = *e;
+		if (c == 0) {
+			break;
+		}
+
+		if (ALIF_ISALNUM(c) or c == '.') {
+			if (punct and l != lower) {
+				if (l == l_end) {
+					return 0;
+				}
+				*l++ = '_';
+			}
+			punct = 0;
+
+			if (l == l_end) {
+				return 0;
+			}
+			//*l++ = ALIF_TOLOWER(c); // !? // alif
+		}
+		else {
+			punct = 1;
+		}
+
+		e++;
+	}
+	*l = '\0';
+	return 1;
+}
+
+
 static AlifObject* uStr_encodeLocale(AlifObject* _uStr,
 	AlifErrorHandler_ _errorHandler, AlifIntT _currentLocale) { // 3749
 	AlifSizeT wlen{};
@@ -1945,6 +1990,105 @@ AlifObject* alifUStr_encodeFSDefault(AlifObject* _uStr) { // 3806
 	AlifErrorHandler_ errors = get_errorHandlerWide(fileSystemErrors);
 	return uStr_encodeLocale(_uStr, errors, 0);
 }
+
+
+AlifObject* alifUStr_asEncodedString(AlifObject* unicode,
+	const char* encoding, const char* errors) { // 3840
+	AlifObject* v{};
+	char buflower[11]{};
+
+	if (!ALIFUSTR_CHECK(unicode)) {
+		//alifErr_badArgument();
+		return nullptr;
+	}
+
+	//if (uStr_checkEncodingErrors(encoding, errors) < 0) {
+	//	return nullptr;
+	//}
+
+	if (encoding == nullptr) {
+		return _alifUStr_asUTF8String(unicode, errors);
+	}
+
+	/* Shortcuts for common default encodings */
+	if (_alif_normalizeEncoding(encoding, buflower, sizeof(buflower))) {
+		char* lower = buflower;
+
+		/* Fast paths */
+		if (lower[0] == 'u' and lower[1] == 't' and lower[2] == 'f') {
+			lower += 3;
+			if (*lower == '_') {
+				/* Match "utf8" and "utf_8" */
+				lower++;
+			}
+
+			if (lower[0] == '8' and lower[1] == 0) {
+				return _alifUStr_asUTF8String(unicode, errors);
+			}
+			else if (lower[0] == '1' and lower[1] == '6' and lower[2] == 0) {
+				return _alifUStr_encodeUTF16(unicode, errors, 0);
+			}
+			else if (lower[0] == '3' and lower[1] == '2' and lower[2] == 0) {
+				return _alifUStr_encodeUTF32(unicode, errors, 0);
+			}
+		}
+		else {
+			if (strcmp(lower, "ascii") == 0
+				or strcmp(lower, "us_ascii") == 0) {
+				return _alifUStr_asASCIIString(unicode, errors);
+			}
+#ifdef _WINDOWS
+			else if (strcmp(lower, "mbcs") == 0) {
+				return alifUStr_encodeCodePage(CP_ACP, unicode, errors);
+			}
+#endif
+			else if (strcmp(lower, "latin1") == 0 or
+				strcmp(lower, "latin_1") == 0 or
+				strcmp(lower, "iso_8859_1") == 0 or
+				strcmp(lower, "iso8859_1") == 0) {
+				return _alifUStr_asLatin1String(unicode, errors);
+			}
+		}
+	}
+
+	/* Encode via the codec registry */
+	v = _alifCodec_encodeText(unicode, encoding, errors);
+	if (v == nullptr)
+		return nullptr;
+
+	/* The normal path */
+	if (ALIFBYTES_CHECK(v))
+		return v;
+
+	/* If the codec returns a buffer, raise a warning and convert to bytes */
+	if (ALIFBYTEARRAY_CHECK(v)) {
+		AlifIntT error{};
+		AlifObject* b{};
+
+		//error = alifErr_warnFormat(_alifExcRuntimeWarning_, 1,
+		//	"encoder %s returned bytearray instead of bytes; "
+		//	"use codecs.encode() to encode to arbitrary types",
+		//	encoding);
+		if (error) {
+			ALIF_DECREF(v);
+			return nullptr;
+		}
+
+		b = alifBytes_fromStringAndSize(ALIFBYTEARRAY_AS_STRING(v),
+			ALIFBYTEARRAY_GET_SIZE(v));
+		ALIF_DECREF(v);
+		return b;
+	}
+
+	//alifErr_format(_alifExcTypeError_,
+	//	"'%.400s' encoder returned '%.400s' instead of 'bytes'; "
+	//	"use codecs.encode() to encode to arbitrary types",
+	//	encoding,
+	//	ALIF_TYPE(v)->name);
+	ALIF_DECREF(v);
+	return nullptr;
+}
+
 
 
 
@@ -2017,7 +2161,9 @@ const char* alifUStr_asUTF8(AlifObject* _uStr) { // 4193
 }
 
 
-
+const char* alifUStr_getDefaultEncoding(void) { // 4277
+	return "utf-8";
+}
 
 
 //static AlifIntT unicodeDecode_callErrorHandlerWriter(
@@ -2516,11 +2662,309 @@ static AlifIntT uStr_fillUTF8(AlifObject* _uStr) { // 5582
 
 
 
+AlifObject* _alifUStr_asUTF8String(AlifObject* unicode, const char* errors) { // 5633
+	return uStr_encodeUtf8(unicode, AlifErrorHandler_::Alif_Error_Unknown, errors);
+}
+
+
+
+AlifObject* _alifUStr_encodeUTF32(AlifObject* str,
+	const char* errors, AlifIntT byteorder) { // 5802
+	AlifIntT kind{};
+	const void* data{};
+	AlifSizeT len{};
+	AlifObject* v{};
+	uint32_t* out;
+#if ALIF_LITTLE_ENDIAN
+	AlifIntT native_ordering = byteorder <= 0;
+#else
+	AlifIntT native_ordering = byteorder >= 0;
+#endif
+	const char* encoding{};
+	AlifSizeT nsize{}, pos{};
+	AlifObject* errorHandler = nullptr;
+	AlifObject* exc = nullptr;
+	AlifObject* rep = nullptr;
+
+	if (!ALIFUSTR_CHECK(str)) {
+		//alifErr_badArgument();
+		return nullptr;
+	}
+	kind = ALIFUSTR_KIND(str);
+	data = ALIFUSTR_DATA(str);
+	len = ALIFUSTR_GET_LENGTH(str);
+
+	if (len > ALIF_SIZET_MAX / 4 - (byteorder == 0))
+	{
+		//return alifErr_noMemory();
+	}
+	nsize = len + (byteorder == 0);
+	v = alifBytes_fromStringAndSize(nullptr, nsize * 4);
+	if (v == nullptr)
+		return nullptr;
+
+	/* output buffer is 4-bytes aligned */
+	out = (uint32_t*)ALIFBYTES_AS_STRING(v);
+	if (byteorder == 0)
+		*out++ = 0xFEFF;
+	if (len == 0)
+		goto done;
+
+	if (byteorder == -1)
+		encoding = "utf-32-le";
+	else if (byteorder == 1)
+		encoding = "utf-32-be";
+	else
+		encoding = "utf-32";
+
+	if (kind == AlifUStrKind_::AlifUStr_1Byte_Kind) {
+		ucs1Lib_utf32Encode((const AlifUCS1*)data, len, &out, native_ordering);
+		goto done;
+	}
+
+	pos = 0;
+	while (pos < len) {
+		AlifSizeT newpos{}, repsize{}, moreunits{};
+
+		if (kind == AlifUStrKind_::AlifUStr_2Byte_Kind) {
+			pos += ucs2Lib_utf32Encode((const AlifUCS2*)data + pos, len - pos,
+				&out, native_ordering);
+		}
+		else {
+			pos += ucs4Lib_utf32Encode((const AlifUCS4*)data + pos, len - pos,
+				&out, native_ordering);
+		}
+		if (pos == len)
+			break;
+
+		rep = uStr_encodeCallErrorhandler(
+			errors, &errorHandler,
+			encoding, "surrogates not allowed",
+			str, &exc, pos, pos + 1, &newpos);
+		if (!rep)
+			goto error;
+
+		if (ALIFBYTES_CHECK(rep)) {
+			repsize = ALIFBYTES_GET_SIZE(rep);
+			if (repsize & 3) {
+				//raise_encodeException(&exc, encoding,
+				//	str, pos, pos + 1,
+				//	"surrogates not allowed");
+				goto error;
+			}
+			moreunits = repsize / 4;
+		}
+		else {
+			moreunits = repsize = ALIFUSTR_GET_LENGTH(rep);
+			if (!ALIFUSTR_IS_ASCII(rep)) {
+				//raise_encodeException(&exc, encoding,
+				//	str, pos, pos + 1,
+				//	"surrogates not allowed");
+				goto error;
+			}
+		}
+		moreunits += pos - newpos;
+		pos = newpos;
+
+		/* four bytes are reserved for each surrogate */
+		if (moreunits > 0) {
+			AlifSizeT outpos = out - (uint32_t*)ALIFBYTES_AS_STRING(v);
+			if (moreunits >= (ALIF_SIZET_MAX - ALIFBYTES_GET_SIZE(v)) / 4) {
+				/* integer overflow */
+				//alifErr_noMemory();
+				goto error;
+			}
+			if (alifBytes_resize(&v, ALIFBYTES_GET_SIZE(v) + 4 * moreunits) < 0)
+				goto error;
+			out = (uint32_t*)ALIFBYTES_AS_STRING(v) + outpos;
+		}
+
+		if (ALIFBYTES_CHECK(rep)) {
+			memcpy(out, ALIFBYTES_AS_STRING(rep), repsize);
+			out += repsize / 4;
+		}
+		else /* rep is unicode */ {
+			ucs1Lib_utf32Encode(ALIFUSTR_1BYTE_DATA(rep), repsize,
+				&out, native_ordering);
+		}
+
+		ALIF_CLEAR(rep);
+	}
+
+	nsize = (unsigned char*)out - (unsigned char*)ALIFBYTES_AS_STRING(v);
+	if (nsize != ALIFBYTES_GET_SIZE(v))
+		alifBytes_resize(&v, nsize);
+	ALIF_XDECREF(errorHandler);
+	ALIF_XDECREF(exc);
+done:
+	return v;
+error:
+	ALIF_XDECREF(rep);
+	ALIF_XDECREF(errorHandler);
+	ALIF_XDECREF(exc);
+	ALIF_XDECREF(v);
+	return nullptr;
+}
 
 
 
 
 
+
+AlifObject* _alifUStr_encodeUTF16(AlifObject* str,
+	const char* errors, AlifIntT byteorder) { // 6119
+	AlifIntT kind{};
+	const void* data{};
+	AlifSizeT len{};
+	AlifObject* v{};
+	unsigned short* out{};
+	AlifSizeT pairs{};
+#if ALIF_BIG_ENDIAN
+	AlifIntT native_ordering = byteorder >= 0;
+#else
+	AlifIntT native_ordering = byteorder <= 0;
+#endif
+	const char* encoding{};
+	AlifSizeT nsize{}, pos{};
+	AlifObject* errorHandler = nullptr;
+	AlifObject* exc = nullptr;
+	AlifObject* rep = nullptr;
+
+	if (!ALIFUSTR_CHECK(str)) {
+		//alifErr_badArgument();
+		return nullptr;
+	}
+	kind = ALIFUSTR_KIND(str);
+	data = ALIFUSTR_DATA(str);
+	len = ALIFUSTR_GET_LENGTH(str);
+
+	pairs = 0;
+	if (kind == AlifUStrKind_::AlifUStr_4Byte_Kind) {
+		const AlifUCS4* in = (const AlifUCS4*)data;
+		const AlifUCS4* end = in + len;
+		while (in < end) {
+			if (*in++ >= 0x10000) {
+				pairs++;
+			}
+		}
+	}
+	if (len > ALIF_SIZET_MAX / 2 - pairs - (byteorder == 0)) {
+		//return alifErr_noMemory();
+	}
+	nsize = len + pairs + (byteorder == 0);
+	v = alifBytes_fromStringAndSize(nullptr, nsize * 2);
+	if (v == nullptr) {
+		return nullptr;
+	}
+
+	/* output buffer is 2-bytes aligned */
+	out = (unsigned short*)ALIFBYTES_AS_STRING(v);
+	if (byteorder == 0) {
+		*out++ = 0xFEFF;
+	}
+	if (len == 0) {
+		goto done;
+	}
+
+	if (kind == AlifUStrKind_::AlifUStr_1Byte_Kind) {
+		ucs1Lib_utf16Encode((const AlifUCS1*)data, len, &out, native_ordering);
+		goto done;
+	}
+
+	if (byteorder < 0) {
+		encoding = "utf-16-le";
+	}
+	else if (byteorder > 0) {
+		encoding = "utf-16-be";
+	}
+	else {
+		encoding = "utf-16";
+	}
+
+	pos = 0;
+	while (pos < len) {
+		AlifSizeT newpos{}, repsize{}, moreunits{};
+
+		if (kind == AlifUStrKind_::AlifUStr_2Byte_Kind) {
+			pos += ucs2Lib_utf16Encode((const AlifUCS2*)data + pos, len - pos,
+				&out, native_ordering);
+		}
+		else {
+			pos += ucs4Lib_utf16Encode((const AlifUCS4*)data + pos, len - pos,
+				&out, native_ordering);
+		}
+		if (pos == len)
+			break;
+
+		rep = uStr_encodeCallErrorhandler(
+			errors, &errorHandler,
+			encoding, "surrogates not allowed",
+			str, &exc, pos, pos + 1, &newpos);
+		if (!rep)
+			goto error;
+
+		if (ALIFBYTES_CHECK(rep)) {
+			repsize = ALIFBYTES_GET_SIZE(rep);
+			if (repsize & 1) {
+				//raise_encodeException(&exc, encoding,
+				//	str, pos, pos + 1,
+				//	"surrogates not allowed");
+				goto error;
+			}
+			moreunits = repsize / 2;
+		}
+		else {
+			moreunits = repsize = ALIFUSTR_GET_LENGTH(rep);
+			if (!ALIFUSTR_IS_ASCII(rep)) {
+				//raise_encodeException(&exc, encoding,
+				//	str, pos, pos + 1,
+				//	"surrogates not allowed");
+				goto error;
+			}
+		}
+		moreunits += pos - newpos;
+		pos = newpos;
+
+		/* two bytes are reserved for each surrogate */
+		if (moreunits > 0) {
+			AlifSizeT outpos = out - (unsigned short*)ALIFBYTES_AS_STRING(v);
+			if (moreunits >= (ALIF_SIZET_MAX - ALIFBYTES_GET_SIZE(v)) / 2) {
+				/* integer overflow */
+				//alifErr_noMemory();
+				goto error;
+			}
+			if (alifBytes_resize(&v, ALIFBYTES_GET_SIZE(v) + 2 * moreunits) < 0)
+				goto error;
+			out = (unsigned short*)ALIFBYTES_AS_STRING(v) + outpos;
+		}
+
+		if (ALIFBYTES_CHECK(rep)) {
+			memcpy(out, ALIFBYTES_AS_STRING(rep), repsize);
+			out += repsize / 2;
+		}
+		else /* rep is unicode */ {
+			ucs1Lib_utf16Encode(ALIFUSTR_1BYTE_DATA(rep), repsize,
+				&out, native_ordering);
+		}
+
+		ALIF_CLEAR(rep);
+	}
+
+	nsize = (unsigned char*)out - (unsigned char*)ALIFBYTES_AS_STRING(v);
+	if (nsize != ALIFBYTES_GET_SIZE(v))
+		alifBytes_resize(&v, nsize);
+	ALIF_XDECREF(errorHandler);
+	ALIF_XDECREF(exc);
+done:
+	return v;
+error:
+	ALIF_XDECREF(rep);
+	ALIF_XDECREF(errorHandler);
+	ALIF_XDECREF(exc);
+	ALIF_XDECREF(v);
+	return nullptr;
+#undef STORECHAR
+}
 
 
 /* --- Unicode Escape Codec ----------------------------------------------- */
@@ -2752,6 +3196,57 @@ onError:
 	ALIF_XDECREF(exc);
 	return nullptr;
 }
+
+
+
+
+
+
+AlifObject* _alifUStr_asLatin1String(AlifObject* unicode, const char* errors) { // 7221
+	if (!ALIFUSTR_CHECK(unicode)) {
+		//alifErr_badArgument();
+		return nullptr;
+	}
+	if (ALIFUSTR_KIND(unicode) == AlifUStrKind_::AlifUStr_1Byte_Kind)
+		return alifBytes_fromStringAndSize((const char*)ALIFUSTR_DATA(unicode),
+			ALIFUSTR_GET_LENGTH(unicode));
+	return uStr_encodeUcs1(unicode, errors, 256);
+}
+
+
+
+
+
+AlifObject* _alifUStr_asASCIIString(AlifObject* unicode, const char* errors) { // 7345
+	if (!ALIFUSTR_CHECK(unicode)) {
+		//alifErr_badArgument();
+		return nullptr;
+	}
+	/* Fast path: if it is an ASCII-only string, construct bytes object
+	   directly. Else defer to above function to raise the exception. */
+	if (ALIFUSTR_IS_ASCII(unicode))
+		return alifBytes_fromStringAndSize((const char*)ALIFUSTR_DATA(unicode),
+			ALIFUSTR_GET_LENGTH(unicode));
+	return uStr_encodeUcs1(unicode, errors, 128);
+}
+
+
+
+
+
+
+
+AlifObject* alifUStr_encodeCodePage(AlifIntT code_page,
+	AlifObject* unicode, const char* errors) { // 8051
+	return encode_codePage(code_page, unicode, errors);
+}
+
+
+
+
+
+
+
 
 
 

@@ -230,6 +230,54 @@ AlifIntT alifObject_getBuffer(AlifObject* obj, AlifBuffer* view, AlifIntT flags)
 
 
 
+
+
+
+AlifIntT alifBuffer_fillInfo(AlifBuffer* _view, AlifObject* _obj, void* _buf,
+	AlifSizeT _len, AlifIntT _readonly, AlifIntT _flags) { // 760
+	if (_view == nullptr) {
+		//alifErr_setString(_alifExcBufferError_,
+		//	"alifBuffer_fillInfo: view==NULL argument is obsolete");
+		return -1;
+	}
+
+	if (_flags != ALIFBUF_SIMPLE) {  /* fast path */
+		if (_flags == ALIFBUF_READ or _flags == ALIFBUF_WRITE) {
+			//ALIFERR_BADINTERNALCALL();
+			return -1;
+		}
+		if (((_flags & ALIFBUF_WRITABLE) == ALIFBUF_WRITABLE) and
+			(_readonly == 1)) {
+			//alifErr_setString(_alifExcBufferError_,
+			//	"Object is not writable.");
+			return -1;
+		}
+	}
+
+	_view->obj = ALIF_XNEWREF(_obj);
+	_view->buf = _buf;
+	_view->len = _len;
+	_view->readonly = _readonly;
+	_view->itemSize = 1;
+	_view->format = nullptr;
+	if ((_flags & ALIFBUF_FORMAT) == ALIFBUF_FORMAT)
+		_view->format = (char*)"B"; // alif
+	_view->nDim = 1;
+	_view->shape = nullptr;
+	if ((_flags & ALIFBUF_ND) == ALIFBUF_ND)
+		_view->shape = &(_view->len);
+	_view->strides = nullptr;
+	if ((_flags & ALIFBUF_STRIDES) == ALIFBUF_STRIDES)
+		_view->strides = &(_view->itemSize);
+	_view->subOffsets = nullptr;
+	_view->internal = nullptr;
+	return 0;
+}
+
+
+
+
+
 void alifBuffer_release(AlifBuffer* _view) { // 803
 	AlifObject* obj = _view->obj;
 	AlifBufferProcs* pb{};
