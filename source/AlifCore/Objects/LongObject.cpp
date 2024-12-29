@@ -483,7 +483,7 @@ static unsigned long _alifLong_asUnsignedLongMask(AlifObject* _vv) { // 721
 	unsigned long x_{};
 	AlifSizeT i_{};
 
-	if (_vv == NULL or !ALIFLONG_CHECK(_vv)) {
+	if (_vv == nullptr or !ALIFLONG_CHECK(_vv)) {
 		//ALIFERR_BADINTERNALCALL();
 		return (unsigned long)-1;
 	}
@@ -492,7 +492,7 @@ static unsigned long _alifLong_asUnsignedLongMask(AlifObject* _vv) { // 721
 #if SIZEOF_LONG < SIZEOF_SIZE_T
 		return (unsigned long)(size_t)alifLong_compactValue(v_);
 #else
-		return (unsigned long)(long)alifLong_compactValue(v);
+		return (unsigned long)(long)alifLong_compactValue(v_);
 #endif
 	}
 	i_ = alifLong_digitCount(v_);
@@ -784,14 +784,14 @@ static unsigned long long _alifLong_asUnsignedLongLongMask(AlifObject* _vv) { //
 	AlifSizeT i_{};
 	AlifIntT sign{};
 
-	if (_vv == NULL or !ALIFLONG_CHECK(_vv)) {
+	if (_vv == nullptr or !ALIFLONG_CHECK(_vv)) {
 		//ALIFERR_BADINTERNALCALL();
 		return (unsigned long long) - 1;
 	}
 	v_ = (AlifLongObject*)_vv;
 	if (alifLong_isCompact(v_)) {
 #if SIZEOF_LONG_LONG < SIZEOF_SIZE_T
-		return (unsigned long long)(size_t)alifLong_compactValue(v);
+		return (unsigned long long)(size_t)alifLong_compactValue(v_);
 #else
 		return (unsigned long long)(long long)alifLong_compactValue(v_);
 #endif
