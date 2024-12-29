@@ -478,6 +478,32 @@ overflow:
 }
 
 
+
+unsigned long alifLong_asUnsignedLongMask(AlifObject* _op) { // 748
+	AlifLongObject* lo{};
+	unsigned long val{};
+
+	if (_op == nullptr) {
+		//ALIFERR_BADINTERNALCALL();
+		return (unsigned long)-1;
+	}
+
+	if (ALIFLONG_CHECK(_op)) {
+		return _alifLong_asUnsignedLongMask(_op);
+	}
+
+	lo = (AlifLongObject*)_alifNumber_index(_op);
+	if (lo == nullptr)
+		return (unsigned long)-1;
+
+	val = _alifLong_asUnsignedLongMask((AlifObject*)lo);
+	ALIF_DECREF(lo);
+	return val;
+}
+
+
+
+
 AlifIntT _alifLong_sign(AlifObject* _vv) { // 772
 	AlifLongObject* v = (AlifLongObject*)_vv;
 
@@ -579,6 +605,71 @@ AlifObject* alifLong_fromSizeT(AlifSizeT _iVal) { // 1447
 
 
 
+
+long long alifLong_asLongLong(AlifObject* vv) { // 1491
+	AlifLongObject* v{};
+	long long bytes{};
+	AlifIntT res{};
+	AlifIntT do_decref = 0; /* if PyNumber_Index was called */
+
+	if (vv == nullptr) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+
+	if (ALIFLONG_CHECK(vv)) {
+		v = (AlifLongObject*)vv;
+	}
+	else {
+		v = (AlifLongObject*)_alifNumber_index(vv);
+		if (v == nullptr)
+			return -1;
+		do_decref = 1;
+	}
+
+	if (alifLong_isCompact(v)) {
+		res = 0;
+		bytes = alifLong_compactValue(v);
+	}
+	else {
+		res = _alifLong_asByteArray((AlifLongObject*)v, (unsigned char*)&bytes,
+			SIZEOF_LONG_LONG, ALIF_LITTLE_ENDIAN, 1, 1);
+	}
+	if (do_decref) {
+		ALIF_DECREF(v);
+	}
+
+	/* Plan 9 can't handle long long in ? : expressions */
+	if (res < 0)
+		return (long long)-1;
+	else
+		return bytes;
+}
+
+
+
+
+unsigned long long alifLong_asUnsignedLongLongMask(AlifObject* _op) { // 1612
+	AlifLongObject* lo{};
+	unsigned long long val{};
+
+	if (_op == nullptr) {
+		//ALIFERR_BADINTERNALCALL();
+		return (unsigned long long) - 1;
+	}
+
+	if (ALIFLONG_CHECK(_op)) {
+		return _alifLong_asUnsignedLongLongMask(_op);
+	}
+
+	lo = (AlifLongObject*)_alifNumber_index(_op);
+	if (lo == nullptr)
+		return (unsigned long long) - 1;
+
+	val = _alifLong_asUnsignedLongLongMask((AlifObject*)lo);
+	ALIF_DECREF(lo);
+	return val;
+}
 
 
 
