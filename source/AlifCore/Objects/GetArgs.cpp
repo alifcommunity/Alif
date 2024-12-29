@@ -82,7 +82,7 @@ static AlifIntT vGetArgs1_impl(AlifObject* _compatArgs,
 	_flags = _flags & ~FLAG_COMPAT;
 
 	while (endfmt == 0) {
-		int c = *_format++;
+		AlifIntT c = *_format++;
 		switch (c) {
 		case '(':
 			if (level == 0)
@@ -151,7 +151,7 @@ static AlifIntT vGetArgs1_impl(AlifObject* _compatArgs,
 			//	fname == nullptr ? "" : "()");
 			return clean_return(0, &freelist);
 		}
-		else if (min == 1 && max == 1) {
+		else if (min == 1 and max == 1) {
 			if (_compatArgs == nullptr) {
 				//alifErr_format(_alifExcTypeError_,
 				//	"%.200s%s takes at least one argument",
@@ -173,7 +173,7 @@ static AlifIntT vGetArgs1_impl(AlifObject* _compatArgs,
 		}
 	}
 
-	if (_nargs < min || max < _nargs) {
+	if (_nargs < min or max < _nargs) {
 		//if (message == nullptr)
 			//alifErr_format(_alifExcTypeError_,
 			//	"%.150s%s takes %s %d argument%s (%zd given)",
@@ -250,7 +250,7 @@ static const char* convert_tuple(AlifObject* _arg, const char** _pFormat,
 	AlifSizeT len{};
 
 	for (;;) {
-		int c = *format++;
+		AlifIntT c = *format++;
 		if (c == '(') {
 			if (level == 0)
 				n++;
@@ -261,7 +261,7 @@ static const char* convert_tuple(AlifObject* _arg, const char** _pFormat,
 				break;
 			level--;
 		}
-		else if (c == ':' || c == ';' || c == '\0')
+		else if (c == ':' or c == ';' or c == '\0')
 			break;
 		else if (level == 0 and ALIF_ISALPHA(c) and c != 'e')
 			n++;
@@ -335,7 +335,606 @@ static const char* convert_item(AlifObject* _arg, const char** _pFormat, va_list
 	return msg;
 }
 
+static const char* convert_Simple(AlifObject* _arg, const char** _pFormat, va_list* _pVa, AlifIntT _flags,
+	char* _mSGBuf, AlifUSizeT _bufSize, FreeListT* _freeList)
+{
+#define RETURN_ERR_OCCURRED return _mSGBuf
 
+	const char* format = *_pFormat;
+	char c = *format++;
+	const char* sarg{};
+
+	switch (c) {
+
+	case 'b': { /* unsigned byte -- very short AlifIntT */
+		unsigned char* p_ = va_arg(*_pVa, unsigned char*);
+		long iVal = alifLong_asLong(_arg);
+		if (iVal == -1 and alifErr_occurred())
+			RETURN_ERR_OCCURRED;
+		if (iVal < 0) {
+			//alifErr_setString(_alifExcOverflowError_,
+				//"unsigned byte integer is less than minimum");
+			RETURN_ERR_OCCURRED;
+		}
+		else if (iVal > UCHAR_MAX) {
+			//alifErr_setString(_alifExcoverflowError_,
+				//"unsigned byte integer is greater than maximum");
+			RETURN_ERR_OCCURRED;
+		}
+		else
+			*p_ = (unsigned char)iVal;
+		break;
+	}
+
+	case 'B': {
+		unsigned char* p_ = va_arg(*_pVa, unsigned char*);
+		unsigned long iVal = alifLong_asUnsignedLongMask(_arg);
+		if (iVal == (unsigned long)-1 and alifErr_occurred())
+			RETURN_ERR_OCCURRED;
+		else
+			*p_ = (unsigned char)iVal;
+		break;
+	}
+
+	case 'h': {
+		short* p_ = va_arg(*_pVa, short*);
+		long iVal
+			= alifLong_asLong(_arg);
+		if (iVal == -1 and alifErr_occurred())
+			RETURN_ERR_OCCURRED;
+		if (iVal < SHRT_MIN) {
+			//alifErr_setString(_alifExcOverflowError_,
+				//"signed short integer is less than minimum");
+			RETURN_ERR_OCCURRED;
+		}
+		else if (iVal > SHRT_MAX) {
+			//alifErr_setString(_alifExcOverflowError_,
+				//"signed short integer is greater than maximum");
+			RETURN_ERR_OCCURRED;
+		}
+		else
+			*p_ = (short)iVal;
+		break;
+	}
+
+	case 'H': { 
+		unsigned short* p_ = va_arg(*_pVa, unsigned short*);
+		unsigned long iVal = alifLong_asUnsignedLongMask(_arg);
+		if (iVal == (unsigned long)-1 and alifErr_occurred())
+			RETURN_ERR_OCCURRED;
+		else
+			*p_ = (unsigned short)iVal;
+		break;
+	}
+
+	case 'i': {/* signed AlifIntT */
+		AlifIntT* p_ = va_arg(*_pVa, AlifIntT*);
+		long iVal = alifLong_asLong(_arg);
+		if (iVal == -1 and alifErr_occurred())
+			RETURN_ERR_OCCURRED;
+		if (iVal > INT_MAX) {
+			//alifErr_setString(_alifExcOverflowError_,
+				//"signed integer is greater than maximum");
+			RETURN_ERR_OCCURRED;
+		}
+		else if (iVal < INT_MIN) {
+			//alifErr_setString(_alifExcOverflowError_,
+				//"signed integer is less than minimum");
+			RETURN_ERR_OCCURRED;
+		}
+		else
+			*p_ = iVal;
+		break;
+	}
+
+	case 'I': {
+		unsigned int* p_ = va_arg(*_pVa, unsigned int*);
+		unsigned long iVal = alifLong_asUnsignedLongMask(_arg);
+		if (iVal == (unsigned long)-1 and alifErr_occurred())
+			RETURN_ERR_OCCURRED;
+		else
+			*p_ = (unsigned int)iVal;
+		break;
+	}
+
+	case 'n': /* AlifSizeT */
+	{
+		AlifObject* iObj{};
+		AlifSizeT* p_ = va_arg(*_pVa, AlifSizeT*);
+		AlifSizeT iVal = -1;
+		iObj = _alifNumber_index(_arg);
+		if (iObj != NULL) {
+			iVal = alifLong_asSizeT(iObj);
+			ALIF_DECREF(iObj);
+		}
+		if (iVal == -1 and alifErr_occurred())
+			RETURN_ERR_OCCURRED;
+		*p_ = iVal;
+		break;
+	}
+	case 'l': {/* long AlifIntT */
+		long* p_ = va_arg(*_pVa, long*);
+		long iVal = alifLong_asLong(_arg);
+		if (iVal == -1 and alifErr_occurred())
+			RETURN_ERR_OCCURRED;
+		else
+			*p_ = iVal;
+		break;
+	}
+
+	case 'k': { /* long sized bitfield */
+		unsigned long* p = va_arg(*_pVa, unsigned long*);
+		unsigned long ival;
+		if (ALIFLONG_CHECK(_arg))
+			ival = alifLong_asUnsignedLongMask(_arg);
+		else
+			return convertErr("AlifIntT", _arg, _mSGBuf, _bufSize);
+		*p = ival;
+		break;
+	}
+
+	case 'L': {/* long long */
+		long long* p = va_arg(*_pVa, long long*);
+		long long ival = alifLong_asLongLong(_arg);
+		if (ival == (long long)-1 and alifErr_occurred())
+			RETURN_ERR_OCCURRED;
+		else
+			*p = ival;
+		break;
+	}
+
+	case 'K': { /* long long sized bitfield */
+		unsigned long long* p = va_arg(*_pVa, unsigned long long*);
+		unsigned long long ival;
+		if (ALIFLONG_CHECK(_arg))
+			ival = alifLong_asUnsignedLongLongMask(_arg);
+		else
+			return convertErr("AlifIntT", _arg, _mSGBuf, _bufSize);
+		*p = ival;
+		break;
+	}
+
+	case 'f': {/* float */
+		float* p = va_arg(*_pVa, float*);
+		double dval = alifFloat_asDouble(_arg);
+		if (dval == -1.0 and alifErr_occurred())
+			RETURN_ERR_OCCURRED;
+		else
+			*p = (float)dval;
+		break;
+	}
+
+	case 'd': {/* double */
+		double* p = va_arg(*_pVa, double*);
+		double dval = alifFloat_asDouble(_arg);
+		if (dval == -1.0 and alifErr_occurred())
+			RETURN_ERR_OCCURRED;
+		else
+			*p = dval;
+		break;
+	}
+
+	case 'D': {/* complex double */
+		AlifComplex* p = va_arg(*_pVa, AlifComplex*);
+		AlifComplex cval;
+		cval = PyComplex_asCComplex(_arg);
+		if (alifErr_occurred())
+			RETURN_ERR_OCCURRED;
+		else
+			*p = cval;
+		break;
+	}
+
+	case 'c': {/* char */
+		char* p = va_arg(*_pVa, char*);
+		if (ALIFBYTES_CHECK(_arg)) {
+			if (ALIFBYTES_GET_SIZE(_arg) != 1) {
+				return convertCharErr("a byte string of length 1",
+					"a bytes object", ALIFBYTES_GET_SIZE(_arg),
+					_mSGBuf, _bufSize);
+			}
+			*p = ALIFBYTES_AS_STRING(_arg)[0];
+		}
+		else if (ALIFBYTEARRAY_CHECK(_arg)) {
+			if (ALIFBYTEARRAY_GET_SIZE(_arg) != 1) {
+				return convertCharErr("a byte string of length 1",
+					"a bytearray object", ALIFBYTEARRAY_GET_SIZE(_arg),
+					_mSGBuf, _bufSize);
+			}
+			*p = ALIFBYTEARRAY_AS_STRING(_arg)[0];
+		}
+		else
+			return convertErr("a byte string of length 1", _arg, _mSGBuf, _bufSize);
+		break;
+	}
+
+	case 'C': {/* unicode char */
+		AlifIntT* p = va_arg(*_pVa, AlifIntT*);
+		AlifIntT kind;
+		const void* data;
+
+		if (!PyUnicode_Check(_arg))
+			return convertErr("a unicode character", _arg, _mSGBuf, _bufSize);
+
+		if (PyUnicode_GET_LENGTH(_arg) != 1) {
+			return convertCharErr("a unicode character",
+				"a string", PyUnicode_GET_LENGTH(_arg),
+				_mSGBuf, _bufSize);
+		}
+
+		kind = PyUnicode_KIND(_arg);
+		data = PyUnicode_DATA(_arg);
+		*p = PyUnicode_READ(kind, data, 0);
+		break;
+	}
+
+	case 'p': {/* boolean *p*redicate */
+		AlifIntT* p = va_arg(*_pVa, AlifIntT*);
+		AlifIntT val = PyObject_IsTrue(_arg);
+		if (val > 0)
+			*p = 1;
+		else if (val == 0)
+			*p = 0;
+		else
+			RETURN_ERR_OCCURRED;
+		break;
+	}
+
+			/* XXX WAAAAH!  's', 'y', 'z', 'u', 'Z', 'e', 'w' codes all
+			   need to be cleaned up! */
+
+	case 'y': {/* any bytes-like object */
+		void** p = (void**)va_arg(*_pVa, char**);
+		const char* buf;
+		AlifSizeT count;
+		if (*format == '*') {
+			if (getbuffer(_arg, (Py_buffer*)p, &buf) < 0)
+				return convertErr(buf, _arg, _mSGBuf, _bufSize);
+			format++;
+			if (addcleanup(p, _freeList, cleanup_buffer)) {
+				return convertErr(
+					"(cleanup problem)",
+					_arg, _mSGBuf, _bufSize);
+			}
+			break;
+		}
+		count = convertbuffer(_arg, (const void**)p, &buf);
+		if (count < 0)
+			return convertErr(buf, _arg, _mSGBuf, _bufSize);
+		if (*format == '#') {
+			AlifSizeT* psize = va_arg(*_pVa, AlifSizeT*);
+			*psize = count;
+			format++;
+		}
+		else {
+			if (strlen(*p) != (AlifUSizeT)count) {
+				PyErr_SetString(PyExc_ValueError, "embedded null byte");
+				RETURN_ERR_OCCURRED;
+			}
+		}
+		break;
+	}
+
+	case 's': /* text string or bytes-like object */
+	case 'z': /* text string, bytes-like object or None */
+	{
+		if (*format == '*') {
+			/* "s*" or "z*" */
+			Py_buffer* p = (Py_buffer*)va_arg(*_pVa, Py_buffer*);
+
+			if (c == 'z' and _arg == Py_None)
+				PyBuffer_FillInfo(p, NULL, NULL, 0, 1, 0);
+			else if (PyUnicode_Check(_arg)) {
+				AlifSizeT len;
+				sarg = PyUnicode_AsUTF8AndSize(_arg, &len);
+				if (sarg == NULL)
+					return convertErr(CONV_UNICODE,
+						_arg, _mSGBuf, _bufSize);
+				PyBuffer_FillInfo(p, _arg, (void*)sarg, len, 1, 0);
+			}
+			else { /* any bytes-like object */
+				const char* buf;
+				if (getbuffer(_arg, p, &buf) < 0)
+					return convertErr(buf, _arg, _mSGBuf, _bufSize);
+			}
+			if (addcleanup(p, _freeList, cleanup_buffer)) {
+				return convertErr(
+					"(cleanup problem)",
+					_arg, _mSGBuf, _bufSize);
+			}
+			format++;
+		}
+		else if (*format == '#') { /* a string or read-only bytes-like object */
+			/* "s#" or "z#" */
+			const void** p = (const void**)va_arg(*_pVa, const char**);
+			AlifSizeT* psize = va_arg(*_pVa, AlifSizeT*);
+
+			if (c == 'z' and _arg == Py_None) {
+				*p = NULL;
+				*psize = 0;
+			}
+			else if (PyUnicode_Check(_arg)) {
+				AlifSizeT len;
+				sarg = PyUnicode_AsUTF8AndSize(_arg, &len);
+				if (sarg == NULL)
+					return convertErr(CONV_UNICODE,
+						_arg, _mSGBuf, _bufSize);
+				*p = sarg;
+				*psize = len;
+			}
+			else { /* read-only bytes-like object */
+				/* XXX Really? */
+				const char* buf;
+				AlifSizeT count = convertbuffer(_arg, p, &buf);
+				if (count < 0)
+					return convertErr(buf, _arg, _mSGBuf, _bufSize);
+				*psize = count;
+			}
+			format++;
+		}
+		else {
+			/* "s" or "z" */
+			const char** p = va_arg(*_pVa, const char**);
+			AlifSizeT len;
+			sarg = NULL;
+
+			if (c == 'z' and _arg == Py_None)
+				*p = NULL;
+			else if (PyUnicode_Check(_arg)) {
+				sarg = PyUnicode_AsUTF8AndSize(_arg, &len);
+				if (sarg == NULL)
+					return convertErr(CONV_UNICODE,
+						_arg, _mSGBuf, _bufSize);
+				if (strlen(sarg) != (AlifUSizeT)len) {
+					PyErr_SetString(PyExc_ValueError, "embedded null character");
+					RETURN_ERR_OCCURRED;
+				}
+				*p = sarg;
+			}
+			else
+				return convertErr(c == 'z' ? "str or None" : "str",
+					_arg, _mSGBuf, _bufSize);
+		}
+		break;
+	}
+
+	case 'e': {/* encoded string */
+		char** buffer;
+		const char* encoding;
+		AlifObject* s;
+		AlifIntT recode_strings;
+		AlifSizeT size;
+		const char* ptr;
+
+		/* Get 'e' parameter: the encoding name */
+		encoding = (const char*)va_arg(*_pVa, const char*);
+		if (encoding == NULL)
+			encoding = PyUnicode_GetDefaultEncoding();
+
+		/* Get output buffer parameter:
+		   's' (recode all objects via Unicode) or
+		   't' (only recode non-string objects)
+		*/
+		if (*format == 's')
+			recode_strings = 1;
+		else if (*format == 't')
+			recode_strings = 0;
+		else
+			return convertErr(
+				"(unknown parser marker combination)",
+				_arg, _mSGBuf, _bufSize);
+		buffer = (char**)va_arg(*_pVa, char**);
+		format++;
+		if (buffer == NULL)
+			return convertErr("(buffer is NULL)",
+				_arg, _mSGBuf, _bufSize);
+
+		/* Encode object */
+		if (!recode_strings and
+			(ALIFBYTES_CHECK(_arg) or ALIFBYTEARRAY_CHECK(_arg))) {
+			s = Py_NewRef(_arg);
+			if (ALIFBYTES_CHECK(_arg)) {
+				size = ALIFBYTES_GET_SIZE(s);
+				ptr = ALIFBYTES_AS_STRING(s);
+			}
+			else {
+				size = ALIFBYTEARRAY_GET_SIZE(s);
+				ptr = ALIFBYTEARRAY_AS_STRING(s);
+			}
+		}
+		else if (PyUnicode_Check(_arg)) {
+			/* Encode object; use default error handling */
+			s = PyUnicode_AsEncodedString(_arg,
+				encoding,
+				NULL);
+			if (s == NULL)
+				return convertErr("(encoding failed)",
+					_arg, _mSGBuf, _bufSize);
+			size = ALIFBYTES_GET_SIZE(s);
+			ptr = ALIFBYTES_AS_STRING(s);
+			if (ptr == NULL)
+				ptr = "";
+		}
+		else {
+			return convertErr(
+				recode_strings ? "str" : "str, bytes or bytearray",
+				_arg, _mSGBuf, _bufSize);
+		}
+
+		if (*format == '#') {
+
+			AlifSizeT* psize = va_arg(*_pVa, AlifSizeT*);
+
+			format++;
+			if (psize == NULL) {
+				ALIF_DECREF(s);
+				return convertErr(
+					"(buffer_len is NULL)",
+					_arg, _mSGBuf, _bufSize);
+			}
+			if (*buffer == NULL) {
+				*buffer = PyMem_NEW(char, size + 1);
+				if (*buffer == NULL) {
+					ALIF_DECREF(s);
+					PyErr_NoMemory();
+					RETURN_ERR_OCCURRED;
+				}
+				if (addcleanup(buffer, _freeList, cleanup_ptr)) {
+					ALIF_DECREF(s);
+					return convertErr(
+						"(cleanup problem)",
+						_arg, _mSGBuf, _bufSize);
+				}
+			}
+			else {
+				if (size + 1 > *psize) {
+					ALIF_DECREF(s);
+					PyErr_Format(PyExc_ValueError,
+						"encoded string too long "
+						"(%zd, maximum length %zd)",
+						(AlifSizeT)size, (AlifSizeT)(*psize - 1));
+					RETURN_ERR_OCCURRED;
+				}
+			}
+			memcpy(*buffer, ptr, size + 1);
+
+			*psize = size;
+		}
+		else {
+			/* Using a 0-terminated buffer:
+
+			   - the encoded string has to be 0-terminated
+			   for this variant to work; if it is not, an
+			   error raised
+
+			   - a new buffer of the needed size is
+			   allocated and the data copied into it;
+			   *buffer is updated to point to the new
+			   buffer; the caller is responsible for
+			   PyMem_Free()ing it after usage
+
+			*/
+			if ((AlifSizeT)strlen(ptr) != size) {
+				ALIF_DECREF(s);
+				return convertErr(
+					"encoded string without null bytes",
+					_arg, _mSGBuf, _bufSize);
+			}
+			*buffer = PyMem_NEW(char, size + 1);
+			if (*buffer == NULL) {
+				ALIF_DECREF(s);
+				PyErr_NoMemory();
+				RETURN_ERR_OCCURRED;
+			}
+			if (addcleanup(buffer, _freeList, cleanup_ptr)) {
+				ALIF_DECREF(s);
+				return convertErr("(cleanup problem)",
+					_arg, _mSGBuf, _bufSize);
+			}
+			memcpy(*buffer, ptr, size + 1);
+		}
+		ALIF_DECREF(s);
+		break;
+	}
+
+	case 'S': { /* PyBytes object */
+		AlifObject** p = va_arg(*_pVa, AlifObject**);
+		if (ALIFBYTES_CHECK(_arg))
+			*p = _arg;
+		else
+			return convertErr("bytes", _arg, _mSGBuf, _bufSize);
+		break;
+	}
+
+	case 'Y': { /* PyByteArray object */
+		AlifObject** p = va_arg(*_pVa, AlifObject**);
+		if (ALIFBYTEARRAY_CHECK(_arg))
+			*p = _arg;
+		else
+			return convertErr("bytearray", _arg, _mSGBuf, _bufSize);
+		break;
+	}
+
+	case 'U': { /* PyUnicode object */
+		AlifObject** p = va_arg(*_pVa, AlifObject**);
+		if (PyUnicode_Check(_arg)) {
+			*p = _arg;
+		}
+		else
+			return convertErr("str", _arg, _mSGBuf, _bufSize);
+		break;
+	}
+
+	case 'O': { /* object */
+		PyTypeObject* type;
+		AlifObject** p;
+		if (*format == '!') {
+			type = va_arg(*_pVa, PyTypeObject*);
+			p = va_arg(*_pVa, AlifObject**);
+			format++;
+			if (PyType_IsSubtype(Py_TYPE(_arg), type))
+				*p = _arg;
+			else
+				return convertErr(type->tp_name, _arg, _mSGBuf, _bufSize);
+
+		}
+		else if (*format == '&') {
+			typedef AlifIntT (*converter)(AlifObject*, void*);
+			converter convert = va_arg(*_pVa, converter);
+			void* addr = va_arg(*_pVa, void*);
+			AlifIntT res;
+			format++;
+			if (!(res = (*convert)(_arg, addr)))
+				return convertErr("(unspecified)",
+					_arg, _mSGBuf, _bufSize);
+			if (res == Py_CLEANUP_SUPPORTED and
+				addcleanup(addr, _freeList, convert) == -1)
+				return convertErr("(cleanup problem)",
+					_arg, _mSGBuf, _bufSize);
+		}
+		else {
+			p = va_arg(*_pVa, AlifObject**);
+			*p = _arg;
+		}
+		break;
+	}
+
+
+	case 'w': { /* "w*": memory buffer, read-write access */
+		void** p = va_arg(*_pVa, void**);
+
+		if (*format != '*')
+			return convertErr(
+				"(invalid use of 'w' format character)",
+				_arg, _mSGBuf, _bufSize);
+		format++;
+
+		/* Caller is interested in Py_buffer, and the object supports it
+		   directly. The request implicitly asks for PyBUF_SIMPLE, so the
+		   result is C-contiguous with format 'B'. */
+		if (PyObject_GetBuffer(_arg, (Py_buffer*)p, PyBUF_WRITABLE) < 0) {
+			PyErr_Clear();
+			return convertErr("read-write bytes-like object",
+				_arg, _mSGBuf, _bufSize);
+		}
+		if (addcleanup(p, _freeList, cleanup_buffer)) {
+			return convertErr(
+				"(cleanup problem)",
+				_arg, _mSGBuf, _bufSize);
+		}
+		break;
+	}
+
+	default:
+		return convertErr("(impossible<bad format char>)", _arg, _mSGBuf, _bufSize);
+
+	}
+
+	*_pFormat = format;
+	return NULL;
+
+#undef RETURN_ERR_OCCURRED
+}
 
 
 
@@ -381,7 +980,7 @@ static AlifIntT parse_format(const char* _format, AlifIntT _total,
 
 	AlifIntT min = INT_MAX;
 	AlifIntT max = INT_MAX;
-	for (int i = 0; i < _total; i++) {
+	for (AlifIntT i = 0; i < _total; i++) {
 		if (*_format == '|') {
 			if (min != INT_MAX) {
 				//alifErr_setString(_alifExcSystemError_,
@@ -427,7 +1026,7 @@ static AlifIntT parse_format(const char* _format, AlifIntT _total,
 	min = ALIF_MIN(min, _total);
 	max = ALIF_MIN(max, _total);
 
-	if (!IS_END_OF_FORMAT(*_format) && (*_format != '|') && (*_format != '$')) {
+	if (!IS_END_OF_FORMAT(*_format) and (*_format != '|') and (*_format != '$')) {
 		//alifErr_format(_alifExcSystemError_,
 		//	"more argument specifiers than keyword list entries "
 		//	"(remaining format:'%s')", _format);
@@ -559,7 +1158,7 @@ AlifObject* const* _alifArg_unpackKeywordsWithVarArg(AlifObject* const* _args, A
 		return nullptr;
 	}
 
-	if (_args == nullptr && _nargs == 0) {
+	if (_args == nullptr and _nargs == 0) {
 		_args = _buf;
 	}
 
