@@ -16,7 +16,30 @@
 
 
 
+static inline AlifObject* _alifWeakRef_getRef(AlifObject* ref_obj) { // 58
+	AlifWeakReference* ref = ALIF_CAST(AlifWeakReference*, ref_obj);
 
+	AlifObject* obj = (AlifObject*)alifAtomic_loadPtr(&ref->object);
+	if (obj == ALIF_NONE) {
+		// clear_weakref() was called
+		return nullptr;
+	}
+
+	LOCK_WEAKREFS(obj);
+#ifdef ALIF_GIL_DISABLED
+	if (ref->object == ALIF_NONE) {
+		// clear_weakref() was called
+		UNLOCK_WEAKREFS(obj);
+		return nullptr;
+	}
+#endif
+	if (alif_tryIncRef(obj)) {
+		UNLOCK_WEAKREFS(obj);
+		return obj;
+	}
+	UNLOCK_WEAKREFS(obj);
+	return nullptr;
+}
 
 
 

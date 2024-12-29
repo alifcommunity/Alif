@@ -60,8 +60,9 @@ public:
 	AlifStackRef localsPlus[1]{};
 };
 
-
-
+ // 78
+#define ALIFINTERPRETERFRAME_LASTI(_if) \
+    ((AlifIntT)((_if)->instrPtr - ALIFCODE_CODE(_alifFrame_getCode(_if))))
 
 static inline AlifCodeObject* _alifFrame_getCode(AlifInterpreterFrame* _f) { // 81
 	return (AlifCodeObject*)_f->executable;
@@ -101,6 +102,11 @@ static inline void _alifFrame_initialize(AlifInterpreterFrame* _frame,
 #endif
 }
 
+
+
+static inline AlifStackRef* _alifFrame_getLocalsArray(AlifInterpreterFrame* _frame) { // 179
+	return _frame->localsPlus;
+}
 
 
 static inline AlifStackRef* _alifFrame_getStackPointer(AlifInterpreterFrame* _frame) { // 188

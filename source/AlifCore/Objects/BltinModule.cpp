@@ -355,7 +355,7 @@ AlifObject* alifBuiltin_init(AlifInterpreter* _interpreter) { // 3215
 	//SETBUILTIN("memoryview", &_alifMemoryViewType_);
 	SETBUILTIN("bytearray", &_alifByteArrayType_);
 	SETBUILTIN("bytes", &_alifBytesType_);
-	//SETBUILTIN("classmethod", &_alifClassMethodType_);
+	SETBUILTIN("classmethod", &_alifClassMethodType_);
 	SETBUILTIN("complex", &_alifComplexType_);
 	SETBUILTIN("dict", &_alifDictType_);
 	//SETBUILTIN("enumerate", &_alifEnumType_);

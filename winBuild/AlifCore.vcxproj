@@ -202,6 +202,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\WeakRefObject.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\BltinModule.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\FloatObject.cpp.h" />
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\TypeObject.cpp.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\AlifCore\Objects\Abstract.cpp" />

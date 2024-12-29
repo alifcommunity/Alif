@@ -11,9 +11,11 @@
 #include "AlifCore_SymTable.h"
 #include "AlifCore_TypeObject.h"
 #include "AlifCore_UStrObject.h"
+#include "AlifCore_WeakRef.h"
 #include "AlifCore_CriticalSection.h" // ربما يمكن حذفه بعد الإنتهاء من تطوير اللغة
 
 
+#include "clinic/TypeObject.cpp.h"
 
 
 // 40
@@ -54,6 +56,19 @@
 #endif // 84
 
 static AlifObject* lookup_maybeMethod(AlifObject*, AlifObject*, AlifIntT*); // 102
+
+
+
+
+static inline AlifTypeObject* type_fromRef(AlifObject* ref) { // 108
+	AlifObject* obj = _alifWeakRef_getRef(ref);
+	if (obj == nullptr) {
+		return nullptr;
+	}
+	return ALIFTYPE_CAST(obj);
+}
+
+
 
 static inline AlifUSizeT managedStatic_typeIndexGet(AlifTypeObject* _self) { // 130
 	return (AlifUSizeT)_self->subclasses - 1;
@@ -237,6 +252,36 @@ static inline AlifObject* lookup_tpSubClasses(AlifTypeObject* self) { // 613
 		return state->subclasses;
 	}
 	return (AlifObject*)self->subclasses;
+}
+
+
+AlifObject* _alifType_getSubClasses(AlifTypeObject* self) { // 641
+	AlifObject* list = alifList_new(0);
+	if (list == nullptr) {
+		return nullptr;
+	}
+
+	AlifObject* subclasses = lookup_tpSubClasses(self);  // borrowed ref
+	if (subclasses == nullptr) {
+		return list;
+	}
+
+	AlifSizeT i = 0;
+	AlifObject* ref{};  // borrowed ref
+	while (alifDict_next(subclasses, &i, nullptr, &ref)) {
+		AlifTypeObject* subclass = type_fromRef(ref);
+		if (subclass == nullptr) {
+			continue;
+		}
+
+		if (alifList_append(list, ALIFOBJECT_CAST(subclass)) < 0) {
+			ALIF_DECREF(list);
+			ALIF_DECREF(subclass);
+			return nullptr;
+		}
+		ALIF_DECREF(subclass);
+	}
+	return list;
 }
 
 
@@ -2237,6 +2282,10 @@ static void type_dealloc(AlifObject* self) { // 5911
 	ALIF_TYPE(type)->free((AlifObject*)type);
 }
 
+static AlifObject* type___subclasses___impl(AlifTypeObject* _self) { // 5960
+	return _alifType_getSubClasses(_self);
+}
+
 static AlifObject* type_prepare(AlifObject* self, AlifObject* const* args,
 	AlifSizeT nargs, AlifObject* kwnames) { // 5967
 	return alifDict_new();
@@ -2244,7 +2293,7 @@ static AlifObject* type_prepare(AlifObject* self, AlifObject* const* args,
 
 static AlifMethodDef _typeMethods_[] = { // 6083
 	//TYPE_MRO_METHODDEF
-	//TYPE___SUBCLASSES___METHODDEF
+	TYPE___SUBCLASSES___METHODDEF
 	{"__prepare__", ALIF_CPPFUNCTION_CAST(type_prepare),
 	 METHOD_FASTCALL | METHOD_KEYWORDS | METHOD_CLASS,
 	 /*ALIFDOC_STR("__prepare__($cls, name, bases, /, **kwds)\n"
@@ -2293,10 +2342,17 @@ static void object_dealloc(AlifObject* _self) { // 6386
 }
 
 
+static AlifObject* object_initSubclass(AlifObject* cls, AlifObject* arg) { // 7317
+	return ALIF_NONE;
+}
 
 
+static AlifMethodDef _objectMethods_[] = { // 7433
 
-
+	{"__initSubclass__", object_initSubclass, METHOD_CLASS | METHOD_NOARGS/*,
+	 object_init_subclass_doc*/},
+	{0}
+};
 
 
 
@@ -2309,6 +2365,7 @@ AlifTypeObject _alifBaseObjectType_ = { // 7453
 	.dealloc = object_dealloc,
 	.hash = alifObject_genericHash,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE,
+	.methods = _objectMethods_,
 	.alloc = alifType_genericAlloc,
 	.free = alifMem_objFree,
 };
@@ -3112,6 +3169,116 @@ public:
 
 
 
+static void super_dealloc(AlifObject* self) { // 11200
+	SuperObject* su = (SuperObject*)self;
+
+	ALIFOBJECT_GC_UNTRACK(self);
+	ALIF_XDECREF(su->obj);
+	ALIF_XDECREF(su->type);
+	ALIF_XDECREF(su->objType);
+	ALIF_TYPE(self)->free(self);
+}
+
+static AlifObject* _super_lookupDescr(AlifTypeObject* _suType,
+	AlifTypeObject* _suObjType, AlifObject* _name) { // 11232
+	AlifObject* mro{}, * res{};
+	AlifSizeT i{}, n{};
+
+	BEGIN_TYPE_LOCK();
+	mro = lookup_tpMro(_suObjType);
+	ALIF_XINCREF(mro);
+	END_TYPE_LOCK();
+
+	if (mro == nullptr)
+		return nullptr;
+
+	n = ALIFTUPLE_GET_SIZE(mro);
+
+	for (i = 0; i + 1 < n; i++) {
+		if ((AlifObject*)(_suType) == ALIFTUPLE_GET_ITEM(mro, i))
+			break;
+	}
+	i++;  /* skip su->type (if any)  */
+	if (i >= n) {
+		ALIF_DECREF(mro);
+		return nullptr;
+	}
+
+	do {
+		AlifObject* obj = ALIFTUPLE_GET_ITEM(mro, i);
+		AlifObject* dict = lookup_tpDict(ALIFTYPE_CAST(obj));
+
+		if (alifDict_getItemRef(dict, _name, &res) != 0) {
+			ALIF_DECREF(mro);
+			return res;
+		}
+
+		i++;
+	} while (i < n);
+	ALIF_DECREF(mro);
+	return nullptr;
+}
+
+
+static AlifObject* do_superLookup(SuperObject* _su, AlifTypeObject* _suType,
+	AlifObject* _suObj, AlifTypeObject* _suObjType,
+	AlifObject* _name, AlifIntT* _method) { // 11283
+	AlifObject* res{};
+	AlifIntT temp_su = 0;
+
+	if (_suObjType == nullptr) {
+		goto skip;
+	}
+
+	res = _super_lookupDescr(_suType, _suObjType, _name);
+	if (res != nullptr) {
+		if (_method and _alifType_hasFeature(ALIF_TYPE(res), ALIF_TPFLAGS_METHOD_DESCRIPTOR)) {
+			*_method = 1;
+		}
+		else {
+			DescrGetFunc f = ALIF_TYPE(res)->descrGet;
+			if (f != nullptr) {
+				AlifObject* res2{};
+				res2 = f(res,
+					(_suObj == (AlifObject*)_suObjType) ? nullptr : _suObj,
+					(AlifObject*)_suObjType);
+				ALIF_SETREF(res, res2);
+			}
+		}
+
+		return res;
+	}
+	//else if (alifErr_occurred()) {
+	//	return nullptr;
+	//}
+
+skip:
+	if (_su == nullptr) {
+		AlifObject* args[] = { (AlifObject*)_suType, _suObj };
+		_su = (SuperObject*)alifObject_vectorCall((AlifObject*)&_alifSuperType_, args, 2, nullptr);
+		if (_su == nullptr) {
+			return nullptr;
+		}
+		temp_su = 1;
+	}
+	res = alifObject_genericGetAttr((AlifObject*)_su, _name);
+	if (temp_su) {
+		ALIF_DECREF(_su);
+	}
+	return res;
+}
+
+
+static AlifObject* super_getAttro(AlifObject* self, AlifObject* name) { // 11334
+	SuperObject* su = (SuperObject*)self;
+
+	if (ALIFUSTR_CHECK(name) and
+		ALIFUSTR_GET_LENGTH(name) == 9 and
+		_alifUStr_equal(name, &ALIF_ID(__class__)))
+		return alifObject_genericGetAttr(self, name);
+
+	return do_superLookup(su, su->type, su->obj, su->objType, name, nullptr);
+}
 
 
 static AlifTypeObject* super_check(AlifTypeObject* type, AlifObject* obj) { // 11349
@@ -3163,7 +3330,64 @@ static AlifTypeObject* super_check(AlifTypeObject* type, AlifObject* obj) { // 1
 }
 
 
+static AlifIntT super_initWithoutArgs(AlifInterpreterFrame* cframe, AlifCodeObject* co,
+	AlifTypeObject** type_p, AlifObject** obj_p) { // 11460
+	if (co->argCount == 0) {
+		//alifErr_setString(_alifExcRuntimeError_,
+		//	"super(): no arguments");
+		return -1;
+	}
 
+	AlifObject* firstarg = alifStackRef_asAlifObjectBorrow(_alifFrame_getLocalsArray(cframe)[0]);
+	// The first argument might be a cell.
+	if (firstarg != nullptr and (_alifLocals_getKind(co->localsPlusKinds, 0) & CO_FAST_CELL)) {
+		if (ALIFINTERPRETERFRAME_LASTI(cframe) >= 0) {
+			firstarg = ALIFCELL_GET(firstarg);
+		}
+	}
+	if (firstarg == nullptr) {
+		//alifErr_setString(_alifExcRuntimeError_,
+		//	"super(): arg[0] deleted");
+		return -1;
+	}
+
+	// Look for __class__ in the free vars.
+	AlifTypeObject* type = nullptr;
+	AlifIntT i = alifUnstableCode_getFirstFree(co);
+	for (; i < co->nLocalsPlus; i++) {
+		AlifObject* name = ALIFTUPLE_GET_ITEM(co->localsPlusNames, i);
+		if (_alifUStr_equal(name, &ALIF_ID(__class__))) {
+			AlifObject* cell = alifStackRef_asAlifObjectBorrow(_alifFrame_getLocalsArray(cframe)[i]);
+			if (cell == nullptr or !ALIFCELL_CHECK(cell)) {
+				//alifErr_setString(_alifExcRuntimeError_,
+				//	"super(): bad __class__ cell");
+				return -1;
+			}
+			type = (AlifTypeObject*)ALIFCELL_GET(cell);
+			if (type == nullptr) {
+				//alifErr_setString(_alifExcRuntimeError_,
+				//	"super(): empty __class__ cell");
+				return -1;
+			}
+			if (!ALIFTYPE_CHECK(type)) {
+				//alifErr_format(_alifExcRuntimeError_,
+				//	"super(): __class__ is not a type (%s)",
+				//	ALIF_TYPE(type)->name);
+				return -1;
+			}
+			break;
+		}
+	}
+	if (type == nullptr) {
+		//alifErr_setString(_alifExcRuntimeError_,
+		//	"super(): __class__ cell not found");
+		return -1;
+	}
+
+	*type_p = type;
+	*obj_p = firstarg;
+	return 0;
+}
 
 
 static inline AlifIntT super_initImpl(AlifObject* self,
@@ -3246,9 +3470,9 @@ AlifTypeObject _alifSuperType_ = { // 11652
 	.name = "super",
 	.basicSize = sizeof(SuperObject),
 	/* methods */
-	//.dealloc = super_dealloc,
+	.dealloc = super_dealloc,
 	//.repr = super_repr,
-	//.getAttro = super_getAttro,
+	.getAttro = super_getAttro,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
 		ALIF_TPFLAGS_BASETYPE,
 	//.init = super_init,
