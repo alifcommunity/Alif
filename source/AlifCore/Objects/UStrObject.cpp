@@ -2611,6 +2611,45 @@ AlifIntT alif_decodeUTF8Ex(const char* _s, AlifSizeT size, wchar_t** wstr, AlifU
 }
 
 
+static AlifObject* uStr_encodeUtf8(AlifObject* unicode,
+	AlifErrorHandler_ error_handler, const char* errors) { // 5538
+	if (!ALIFUSTR_CHECK(unicode)) {
+		//alifErr_badArgument();
+		return nullptr;
+	}
+
+	if (ALIFUSTR_UTF8(unicode))
+		return alifBytes_fromStringAndSize(ALIFUSTR_UTF8(unicode),
+			ALIFUSTR_UTF8_LENGTH(unicode));
+
+	AlifIntT kind = ALIFUSTR_KIND(unicode);
+	const void* data = ALIFUSTR_DATA(unicode);
+	AlifSizeT size = ALIFUSTR_GET_LENGTH(unicode);
+
+	AlifBytesWriter writer{};
+	char* end{};
+
+	switch (kind) {
+	default:
+		ALIF_UNREACHABLE();
+	case AlifUStrKind_::AlifUStr_1Byte_Kind:
+		end = ucs1Lib_utf8Encoder(&writer, unicode, (AlifUCS1*)data, size, error_handler, errors);
+		break;
+	case AlifUStrKind_::AlifUStr_2Byte_Kind:
+		end = ucs2Lib_utf8Encoder(&writer, unicode, (AlifUCS2*)data, size, error_handler, errors);
+		break;
+	case AlifUStrKind_::AlifUStr_4Byte_Kind:
+		end = ucs4Lib_utf8Encoder(&writer, unicode, (AlifUCS4*)data, size, error_handler, errors);
+		break;
+	}
+
+	if (end == nullptr) {
+		alifBytesWriter_dealloc(&writer);
+		return nullptr;
+	}
+	return alifBytesWriter_finish(&writer, end);
+}
+
 
 static AlifIntT uStr_fillUTF8(AlifObject* _uStr) { // 5582
 
@@ -3174,7 +3213,7 @@ AlifObject* alifUStr_decodeUStrEscapeInternal(const char* _str, AlifSizeT _size,
 	error:;
 		AlifSizeT endinpos = _str - starts;
 		writer.minLength = end - _str + writer.pos;
-		//if (uStrDecode_callErrorhandlerWriter(
+		//if (uStr_decodeCallErrorhandlerWriter(
 		//	_errors, &errorHandler,
 		//	"unicodeescape", message,
 		//	&starts, &end, &startinpos, &endinpos, &exc, &_str,
@@ -3195,6 +3234,60 @@ onError:
 	ALIF_XDECREF(errorHandler);
 	ALIF_XDECREF(exc);
 	return nullptr;
+}
+
+
+
+static AlifObject* uStr_encodeCallErrorhandler(const char* errors,
+	AlifObject** errorHandler, const char* encoding, const char* reason,
+	AlifObject* unicode, AlifObject** exceptionObject, AlifSizeT startpos,
+	AlifSizeT endpos, AlifSizeT* newpos) { // 6988
+	static const char* argparse = "On;encoding error handler must return (str/bytes, int) tuple";
+	AlifSizeT len{};
+	AlifObject* restuple{};
+	AlifObject* resunicode{};
+
+	if (*errorHandler == nullptr) {
+		//*errorHandler = alifCodec_lookupError(errors);
+		if (*errorHandler == nullptr)
+			return nullptr;
+	}
+
+	len = ALIFUSTR_GET_LENGTH(unicode);
+
+	//make_encodeException(exceptionObject,
+	//	encoding, unicode, startpos, endpos, reason);
+	if (*exceptionObject == nullptr)
+		return nullptr;
+
+	restuple = alifObject_callOneArg(*errorHandler, *exceptionObject);
+	if (restuple == nullptr)
+		return nullptr;
+	if (!ALIFTUPLE_CHECK(restuple)) {
+		//alifErr_setString(_alifExcTypeError_, &argparse[3]);
+		ALIF_DECREF(restuple);
+		return nullptr;
+	}
+	if (!alifArg_parseTuple(restuple, argparse,
+		&resunicode, newpos)) {
+		ALIF_DECREF(restuple);
+		return nullptr;
+	}
+	if (!ALIFUSTR_CHECK(resunicode) and !ALIFBYTES_CHECK(resunicode)) {
+		//alifErr_setString(_alifExcTypeError_, &argparse[3]);
+		ALIF_DECREF(restuple);
+		return nullptr;
+	}
+	if (*newpos < 0)
+		*newpos = len + *newpos;
+	if (*newpos<0 || *newpos>len) {
+		//alifErr_format(_alifExcIndexError_, "position %zd from error handler out of bounds", *newpos);
+		ALIF_DECREF(restuple);
+		return nullptr;
+	}
+	ALIF_INCREF(resunicode);
+	ALIF_DECREF(restuple);
+	return resunicode;
 }
 
 
@@ -3358,7 +3451,7 @@ static AlifObject* uStr_encodeUcs1(AlifObject* unicode,
 
 				if (ALIFBYTES_CHECK(rep)) {
 					/* Directly copy bytes result to output. */
-					str = _alifBytesWriter_writeBytes(&writer, str,
+					str = (char*)alifBytesWriter_writeBytes(&writer, str,
 						ALIFBYTES_AS_STRING(rep),
 						ALIFBYTES_GET_SIZE(rep));
 				}
@@ -3373,7 +3466,7 @@ static AlifObject* uStr_encodeUcs1(AlifObject* unicode,
 						//	collstart, collend, reason);
 						goto onError;
 					}
-					str = _alifBytesWriter_writeBytes(&writer, str,
+					str = (char*)alifBytesWriter_writeBytes(&writer, str,
 						ALIFUSTR_DATA(rep),
 						ALIFUSTR_GET_LENGTH(rep));
 				}
@@ -3398,7 +3491,177 @@ onError:
 	return nullptr;
 }
 
+ // 7370
+#if SIZEOF_INT < SIZEOF_SIZE_T
+#define NEED_RETRY
+#endif
 
+ // 7378
+#define DECODING_CHUNK_SIZE (INT_MAX/4)
+
+
+
+
+static DWORD encode_codePageFlags(UINT code_page, const char* errors) { // 7684
+	if (code_page == CP_UTF8) {
+		return WC_ERR_INVALID_CHARS;
+	}
+	else if (code_page == CP_UTF7) {
+		/* CP_UTF7 only supports flags=0 */
+		return 0;
+	}
+	else {
+		if (errors != nullptr and strcmp(errors, "replace") == 0)
+			return 0;
+		else
+			return WC_NO_BEST_FIT_CHARS;
+	}
+}
+
+
+
+static AlifObject* encode_codePage(AlifIntT code_page,
+	AlifObject* unicode, const char* errors) { // 7992
+	AlifSizeT len{};
+	AlifObject* outbytes = nullptr;
+	AlifSizeT offset{};
+	AlifIntT chunk_len{}, ret{}, done{};
+
+	if (!ALIFUSTR_CHECK(unicode)) {
+		//alifErr_badArgument();
+		return nullptr;
+	}
+
+	len = ALIFUSTR_GET_LENGTH(unicode);
+
+	if (code_page < 0) {
+		//alifErr_setString(_alifExcValueError_, "invalid code page number");
+		return nullptr;
+	}
+
+	if (len == 0)
+		return alifBytes_fromStringAndSize(nullptr, 0);
+
+	offset = 0;
+	do
+	{
+#ifdef NEED_RETRY
+		if (len > DECODING_CHUNK_SIZE) {
+			chunk_len = DECODING_CHUNK_SIZE;
+			done = 0;
+		}
+		else
+#endif
+		{
+			chunk_len = (int)len;
+			done = 1;
+		}
+
+		ret = encode_codePageStrict(code_page, &outbytes,
+			unicode, offset, chunk_len,
+			errors);
+		//if (ret == -2)
+		//	ret = encode_codePageErrors(code_page, &outbytes,
+		//		unicode, offset,
+		//		chunk_len, errors);
+		if (ret < 0) {
+			ALIF_XDECREF(outbytes);
+			return nullptr;
+		}
+
+		offset += chunk_len;
+		len -= chunk_len;
+	} while (!done);
+
+	return outbytes;
+}
+
+static AlifIntT encode_codePageStrict(UINT code_page, AlifObject** outbytes,
+	AlifObject* unicode, AlifSizeT offset, AlifIntT len, const char* errors) { // 7712
+	BOOL usedDefaultChar = FALSE;
+	BOOL* pusedDefaultChar = &usedDefaultChar;
+	AlifIntT outsize{};
+	wchar_t* p{};
+	AlifSizeT size;
+	const DWORD flags = encode_codePageFlags(code_page, nullptr);
+	char* out{};
+	AlifObject* substring{};
+	AlifIntT ret = -1;
+
+
+	if (code_page != CP_UTF8 && code_page != CP_UTF7)
+		pusedDefaultChar = &usedDefaultChar;
+	else
+		pusedDefaultChar = nullptr;
+
+	substring = alifUStr_subString(unicode, offset, offset + len);
+	if (substring == nullptr)
+		return -1;
+	p = alifUStr_asWideCharString(substring, &size);
+	ALIF_CLEAR(substring);
+	if (p == nullptr) {
+		return -1;
+	}
+
+	/* First get the size of the result */
+	outsize = WideCharToMultiByte(code_page, flags,
+		p, (int)size,
+		nullptr, 0,
+		nullptr, pusedDefaultChar);
+	if (outsize <= 0)
+		goto error;
+	/* If we used a default char, then we failed! */
+	if (pusedDefaultChar and *pusedDefaultChar) {
+		ret = -2;
+		goto done;
+	}
+
+	if (*outbytes == nullptr) {
+		/* Create string object */
+		*outbytes = alifBytes_fromStringAndSize(nullptr, outsize);
+		if (*outbytes == nullptr) {
+			goto done;
+		}
+		out = ALIFBYTES_AS_STRING(*outbytes);
+	}
+	else {
+		/* Extend string object */
+		const AlifSizeT n = alifBytes_size(*outbytes);
+		if (outsize > ALIF_SIZET_MAX - n) {
+			//alifErr_noMemory();
+			goto done;
+		}
+		if (alifBytes_resize(outbytes, n + outsize) < 0) {
+			goto done;
+		}
+		out = ALIFBYTES_AS_STRING(*outbytes) + n;
+	}
+
+	/* Do the conversion */
+	outsize = WideCharToMultiByte(code_page, flags,
+		p, (int)size,
+		out, outsize,
+		nullptr, pusedDefaultChar);
+	if (outsize <= 0)
+		goto error;
+	if (pusedDefaultChar && *pusedDefaultChar) {
+		ret = -2;
+		goto done;
+	}
+	ret = 0;
+
+done:
+	alifMem_dataFree(p);
+	return ret;
+
+error:
+	if (GetLastError() == ERROR_NO_UNICODE_TRANSLATION) {
+		ret = -2;
+		goto done;
+	}
+	//alifErr_setFromWindowsErr(0);
+	goto done;
+}
 
 
 

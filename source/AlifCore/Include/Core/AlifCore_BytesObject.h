@@ -52,3 +52,6 @@ void* alifBytesWriter_prepare(AlifBytesWriter*, void*, AlifSizeT); // 119
 
 
 void* alifBytesWriter_resize(AlifBytesWriter*, void*, AlifSizeT); // 134
+
+
+void* alifBytesWriter_writeBytes(AlifBytesWriter*, void*, const void*, AlifSizeT); // 140

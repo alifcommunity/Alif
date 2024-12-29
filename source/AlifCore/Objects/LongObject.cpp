@@ -490,7 +490,7 @@ static unsigned long _alifLong_asUnsignedLongMask(AlifObject* _vv) { // 721
 	v_ = (AlifLongObject*)_vv;
 	if (alifLong_isCompact(v_)) {
 #if SIZEOF_LONG < SIZEOF_SIZE_T
-		return (unsigned long)(size_t)alifLong_compactValue(v_);
+		return (unsigned long)(AlifUSizeT)alifLong_compactValue(v_);
 #else
 		return (unsigned long)(long)alifLong_compactValue(v_);
 #endif
@@ -579,7 +579,7 @@ AlifIntT _alifLong_asByteArray(AlifLongObject* _v,
 	AlifSizeT i_{};               /* index into v->long_value.ob_digit */
 	AlifSizeT nDigits{};         /* number of digits */
 	twodigits accum{};            /* sliding register */
-	unsigned int accumBits{};     /* # bits in accum */
+	AlifUIntT accumBits{};     /* # bits in accum */
 	AlifIntT doTwosComp{};           /* store 2's-comp?  is_signed and v < 0 */
 	digit carry{};                /* for computing 2's-comp */
 	AlifUSizeT j_{};                   /* # bytes filled */
@@ -709,11 +709,11 @@ AlifObject* alifLong_fromSizeT(AlifSizeT _iVal) { // 1447
 
 	if (_iVal < 0) {
 		/* avoid signed overflow when ival = SIZE_T_MIN */
-		absIVal = (size_t)(-1 - _iVal) + 1;
+		absIVal = (AlifUSizeT)(-1 - _iVal) + 1;
 		negative = 1;
 	}
 	else {
-		absIVal = (size_t)_iVal;
+		absIVal = (AlifUSizeT)_iVal;
 	}
 
 	/* Count the number of Alif digits. */
@@ -791,7 +791,7 @@ static unsigned long long _alifLong_asUnsignedLongLongMask(AlifObject* _vv) { //
 	v_ = (AlifLongObject*)_vv;
 	if (alifLong_isCompact(v_)) {
 #if SIZEOF_LONG_LONG < SIZEOF_SIZE_T
-		return (unsigned long long)(size_t)alifLong_compactValue(v_);
+		return (unsigned long long)(AlifUSizeT)alifLong_compactValue(v_);
 #else
 		return (unsigned long long)(long long)alifLong_compactValue(v_);
 #endif

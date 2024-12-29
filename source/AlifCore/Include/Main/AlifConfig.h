@@ -61,6 +61,7 @@
 #define WITH_FREELISTS 1
 #define SIZEOF_LONG 4
 #define SIZEOF_LONG_LONG 8
+#define SIZEOF_INT 4 // review
 
 #define HAVE_WCHAR_H 1
 

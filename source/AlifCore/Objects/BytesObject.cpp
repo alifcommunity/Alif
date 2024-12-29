@@ -239,6 +239,15 @@ failed:
 }
 
 
+AlifSizeT alifBytes_size(AlifObject* op) { // 1211
+	if (!ALIFBYTES_CHECK(op)) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"expected bytes, %.200s found", ALIF_TYPE(op)->name);
+		return -1;
+	}
+	return ALIF_SIZE(op);
+}
+
 
 char* alifBytes_asString(AlifObject* _op) { // 1221
 	if (!ALIFBYTES_CHECK(_op)) {
@@ -606,4 +615,22 @@ AlifObject* alifBytesWriter_finish(AlifBytesWriter* _writer, void* _str) { // 35
 		}
 	}
 	return result;
+}
+
+
+
+
+
+void* alifBytesWriter_writeBytes(AlifBytesWriter* _writer, void* _ptr,
+	const void* _bytes, AlifSizeT _size) { // 3626
+	char* str = (char*)_ptr;
+
+	str = (char*)alifBytesWriter_prepare(_writer, str, _size);
+	if (str == nullptr)
+		return nullptr;
+
+	memcpy(str, _bytes, _size);
+	str += _size;
+
+	return str;
 }
