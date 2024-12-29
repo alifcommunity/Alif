@@ -441,3 +441,229 @@ error:
 	return nullptr;
 #endif
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#if STRINGLIB_MAX_CHAR >= 0x80
+ALIF_LOCAL_INLINE(AlifSizeT)
+STRINGLIB(utf16Encode)(const STRINGLIB_CHAR* in, AlifSizeT len,
+	unsigned short** outptr, AlifIntT native_ordering) { // 619
+	unsigned short* out = *outptr;
+	const STRINGLIB_CHAR* end = in + len;
+#if STRINGLIB_SIZEOF_CHAR == 1
+	if (native_ordering) {
+		const STRINGLIB_CHAR* unrolled_end = in + ALIF_SIZE_ROUND_DOWN(len, 4);
+		while (in < unrolled_end) {
+			out[0] = in[0];
+			out[1] = in[1];
+			out[2] = in[2];
+			out[3] = in[3];
+			in += 4; out += 4;
+		}
+		while (in < end) {
+			*out++ = *in++;
+		}
+	}
+	else {
+# define SWAB2(CH)  ((CH) << 8) /* high byte is zero */
+		const STRINGLIB_CHAR* unrolled_end = in + ALIF_SIZE_ROUND_DOWN(len, 4);
+		while (in < unrolled_end) {
+			out[0] = SWAB2(in[0]);
+			out[1] = SWAB2(in[1]);
+			out[2] = SWAB2(in[2]);
+			out[3] = SWAB2(in[3]);
+			in += 4; out += 4;
+		}
+		while (in < end) {
+			AlifUCS4 ch = *in++;
+			*out++ = SWAB2((AlifUCS2)ch);
+		}
+#undef SWAB2
+	}
+	*outptr = out;
+	return len;
+#else
+	if (native_ordering) {
+#if STRINGLIB_MAX_CHAR < 0x10000
+		const STRINGLIB_CHAR* unrolled_end = in + ALIF_SIZE_ROUND_DOWN(len, 4);
+		while (in < unrolled_end) {
+			/* check if any character is a surrogate character */
+			if (((in[0] ^ 0xd800) &
+				(in[1] ^ 0xd800) &
+				(in[2] ^ 0xd800) &
+				(in[3] ^ 0xd800) & 0xf800) == 0)
+				break;
+			out[0] = in[0];
+			out[1] = in[1];
+			out[2] = in[2];
+			out[3] = in[3];
+			in += 4; out += 4;
+		}
+#endif
+		while (in < end) {
+			AlifUCS4 ch;
+			ch = *in++;
+			if (ch < 0xd800)
+				*out++ = ch;
+			else if (ch < 0xe000)
+				/* reject surrogate characters (U+D800-U+DFFF) */
+				goto fail;
+#if STRINGLIB_MAX_CHAR >= 0x10000
+			else if (ch >= 0x10000) {
+				out[0] = alifUnicode_highSurrogate(ch);
+				out[1] = alifUnicode_lowSurrogate(ch);
+				out += 2;
+			}
+#endif
+			else
+				*out++ = ch;
+		}
+	}
+	else {
+#define SWAB2(CH)  (((CH) << 8) | ((CH) >> 8))
+#if STRINGLIB_MAX_CHAR < 0x10000
+		const STRINGLIB_CHAR* unrolled_end = in + ALIF_SIZE_ROUND_DOWN(len, 4);
+		while (in < unrolled_end) {
+			/* check if any character is a surrogate character */
+			if (((in[0] ^ 0xd800) &
+				(in[1] ^ 0xd800) &
+				(in[2] ^ 0xd800) &
+				(in[3] ^ 0xd800) & 0xf800) == 0)
+				break;
+			out[0] = SWAB2(in[0]);
+			out[1] = SWAB2(in[1]);
+			out[2] = SWAB2(in[2]);
+			out[3] = SWAB2(in[3]);
+			in += 4; out += 4;
+		}
+#endif
+		while (in < end) {
+			AlifUCS4 ch = *in++;
+			if (ch < 0xd800)
+				*out++ = SWAB2((AlifUCS2)ch);
+			else if (ch < 0xe000)
+				/* reject surrogate characters (U+D800-U+DFFF) */
+				goto fail;
+#if STRINGLIB_MAX_CHAR >= 0x10000
+			else if (ch >= 0x10000) {
+				AlifUCS2 ch1 = alifUnicode_highSurrogate(ch);
+				AlifUCS2 ch2 = alifUnicode_lowSurrogate(ch);
+				out[0] = SWAB2(ch1);
+				out[1] = SWAB2(ch2);
+				out += 2;
+			}
+#endif
+			else
+				*out++ = SWAB2((AlifUCS2)ch);
+		}
+#undef SWAB2
+	}
+	*outptr = out;
+	return len;
+fail:
+	*outptr = out;
+	return len - (end - in + 1);
+#endif
+}
+
+
+
+static inline uint32_t
+STRINGLIB(SWAB4)(STRINGLIB_CHAR ch) { // 742
+	uint32_t word = ch;
+#if STRINGLIB_SIZEOF_CHAR == 1
+	/* high bytes are zero */
+	return (word << 24);
+#elif STRINGLIB_SIZEOF_CHAR == 2
+	/* high bytes are zero */
+	return ((word & 0x00FFu) << 24) | ((word & 0xFF00u) << 8);
+#else
+	return _alif_bswap32(word);
+#endif
+}
+
+ALIF_LOCAL_INLINE(AlifSizeT)
+STRINGLIB(utf32Encode)(const STRINGLIB_CHAR* in,
+	AlifSizeT len, uint32_t** outptr, AlifIntT native_ordering) { // 757
+	uint32_t* out = *outptr;
+	const STRINGLIB_CHAR* end = in + len;
+	if (native_ordering) {
+		const STRINGLIB_CHAR* unrolled_end = in + ALIF_SIZE_ROUND_DOWN(len, 4);
+		while (in < unrolled_end) {
+#if STRINGLIB_SIZEOF_CHAR > 1
+			/* check if any character is a surrogate character */
+			if (((in[0] ^ 0xd800) &
+				(in[1] ^ 0xd800) &
+				(in[2] ^ 0xd800) &
+				(in[3] ^ 0xd800) & 0xf800) == 0)
+				break;
+#endif
+			out[0] = in[0];
+			out[1] = in[1];
+			out[2] = in[2];
+			out[3] = in[3];
+			in += 4; out += 4;
+		}
+		while (in < end) {
+			AlifUCS4 ch;
+			ch = *in++;
+#if STRINGLIB_SIZEOF_CHAR > 1
+			if (alifUnicode_isSurrogate(ch)) {
+				/* reject surrogate characters (U+D800-U+DFFF) */
+				goto fail;
+			}
+#endif
+			* out++ = ch;
+		}
+	}
+	else {
+		const STRINGLIB_CHAR* unrolled_end = in + ALIF_SIZE_ROUND_DOWN(len, 4);
+		while (in < unrolled_end) {
+#if STRINGLIB_SIZEOF_CHAR > 1
+			/* check if any character is a surrogate character */
+			if (((in[0] ^ 0xd800) &
+				(in[1] ^ 0xd800) &
+				(in[2] ^ 0xd800) &
+				(in[3] ^ 0xd800) & 0xf800) == 0)
+				break;
+#endif
+			out[0] = STRINGLIB(SWAB4)(in[0]);
+			out[1] = STRINGLIB(SWAB4)(in[1]);
+			out[2] = STRINGLIB(SWAB4)(in[2]);
+			out[3] = STRINGLIB(SWAB4)(in[3]);
+			in += 4; out += 4;
+		}
+		while (in < end) {
+			AlifUCS4 ch = *in++;
+#if STRINGLIB_SIZEOF_CHAR > 1
+			if (alifUnicode_isSurrogate(ch)) {
+				/* reject surrogate characters (U+D800-U+DFFF) */
+				goto fail;
+			}
+#endif
+			* out++ = STRINGLIB(SWAB4)(ch);
+		}
+	}
+	*outptr = out;
+	return len;
+#if STRINGLIB_SIZEOF_CHAR > 1
+	fail:
+	*outptr = out;
+	return len - (end - in + 1);
+#endif
+}
+
+
+#endif // 830
