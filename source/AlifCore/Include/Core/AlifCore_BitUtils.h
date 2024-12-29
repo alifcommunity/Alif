@@ -9,7 +9,20 @@
 
 
 
-
+static inline uint32_t
+_alif_bswap32(uint32_t word) { // 48
+#if defined(ALIF_HAVE_BUILTIN_BSWAP) or ALIF_HAS_BUILTIN(__builtin_bswap32)
+	return __builtin_bswap32(word);
+#elif defined(_MSC_VER)
+	return _byteswap_ulong(word);
+#else
+	// Portable implementation which doesn't rely on circular bit shift
+	return (((word & UINT32_C(0x000000FF)) << 24)
+		| ((word & UINT32_C(0x0000FF00)) << 8)
+		| ((word & UINT32_C(0x00FF0000)) >> 8)
+		| ((word & UINT32_C(0xFF000000)) >> 24));
+#endif
+}
 
 
 

@@ -3231,6 +3231,172 @@ AlifObject* _alifUStr_asASCIIString(AlifObject* unicode, const char* errors) { /
 }
 
 
+static AlifObject* uStr_encodeUcs1(AlifObject* unicode,
+	const char* errors, const AlifUCS4 limit) { // 7044
+	/* input state */
+	AlifSizeT pos = 0, size{};
+	AlifIntT kind{};
+	const void* data{};
+	/* pointer into the output */
+	char* str{};
+	const char* encoding = (limit == 256) ? "latin-1" : "ascii";
+	const char* reason = (limit == 256) ? "ordinal not in range(256)" : "ordinal not in range(128)";
+	AlifObject* error_handler_obj = nullptr;
+	AlifObject* exc = nullptr;
+	AlifErrorHandler_ error_handler = AlifErrorHandler_::Alif_Error_Unknown;
+	AlifObject* rep = nullptr;
+	/* output object */
+	AlifBytesWriter writer{};
+
+	size = ALIFUSTR_GET_LENGTH(unicode);
+	kind = ALIFUSTR_KIND(unicode);
+	data = ALIFUSTR_DATA(unicode);
+	/* allocate enough for a simple encoding without
+	   replacements, if we need more, we'll resize */
+	if (size == 0)
+		return alifBytes_fromStringAndSize(nullptr, 0);
+
+	alifBytesWriter_init(&writer);
+	str = (char*)alifBytesWriter_alloc(&writer, size);
+	if (str == nullptr)
+		return nullptr;
+
+	while (pos < size) {
+		AlifUCS4 ch = ALIFUSTR_READ(kind, data, pos);
+
+		/* can we encode this? */
+		if (ch < limit) {
+			/* no overflow check, because we know that the space is enough */
+			*str++ = (char)ch;
+			++pos;
+		}
+		else {
+			AlifSizeT newpos{}, i{};
+			/* startpos for collecting unencodable chars */
+			AlifSizeT collstart = pos;
+			AlifSizeT collend = collstart + 1;
+			/* find all unecodable characters */
+
+			while ((collend < size) and (ALIFUSTR_READ(kind, data, collend) >= limit))
+				++collend;
+
+			/* Only overallocate the buffer if it's not the last write */
+			writer.overAllocate = (collend < size);
+
+			/* cache callback name lookup (if not done yet, i.e. it's the first error) */
+			if (error_handler == AlifErrorHandler_::Alif_Error_Unknown)
+				error_handler = alif_getErrorHandler(errors);
+
+			switch (error_handler) {
+			case AlifErrorHandler_::Alif_Error_Strict:
+				//raise_encodeException(&exc, encoding, unicode, collstart, collend, reason);
+				goto onError;
+
+			case AlifErrorHandler_::Alif_Error_Replace:
+				memset(str, '?', collend - collstart);
+				str += (collend - collstart);
+				ALIF_FALLTHROUGH;
+			case AlifErrorHandler_::Alif_Error_Ignore:
+				pos = collend;
+				break;
+
+			case AlifErrorHandler_::Alif_Error_BackSlashReplace:
+				/* subtract preallocated bytes */
+				writer.minSize -= (collend - collstart);
+				str = backSlash_replace(&writer, str,
+					unicode, collstart, collend);
+				if (str == nullptr)
+					goto onError;
+				pos = collend;
+				break;
+
+			case AlifErrorHandler_::Alif_Error_XMLCharRefReplace:
+				/* subtract preallocated bytes */
+				writer.minSize -= (collend - collstart);
+				str = xmlCharRef_replace(&writer, str,
+					unicode, collstart, collend);
+				if (str == nullptr)
+					goto onError;
+				pos = collend;
+				break;
+
+			case AlifErrorHandler_::Alif_Error_SurrogateEscape:
+				for (i = collstart; i < collend; ++i) {
+					ch = ALIFUSTR_READ(kind, data, i);
+					if (ch < 0xdc80 || 0xdcff < ch) {
+						/* Not a UTF-8b surrogate */
+						break;
+					}
+					*str++ = (char)(ch - 0xdc00);
+					++pos;
+				}
+				if (i >= collend)
+					break;
+				collstart = pos;
+				ALIF_FALLTHROUGH;
+
+			default:
+				rep = uStr_encodeCallErrorhandler(errors, &error_handler_obj,
+					encoding, reason, unicode, &exc,
+					collstart, collend, &newpos);
+				if (rep == nullptr)
+					goto onError;
+
+				if (newpos < collstart) {
+					writer.overAllocate = 1;
+					str = (char*)alifBytesWriter_prepare(&writer, str,
+						collstart - newpos);
+					if (str == nullptr)
+						goto onError;
+				}
+				else {
+					/* subtract preallocated bytes */
+					writer.minSize -= newpos - collstart;
+					/* Only overallocate the buffer if it's not the last write */
+					writer.overAllocate = (newpos < size);
+				}
+
+				if (ALIFBYTES_CHECK(rep)) {
+					/* Directly copy bytes result to output. */
+					str = _alifBytesWriter_writeBytes(&writer, str,
+						ALIFBYTES_AS_STRING(rep),
+						ALIFBYTES_GET_SIZE(rep));
+				}
+				else {
+
+					if (limit == 256 ?
+						ALIFUSTR_KIND(rep) != AlifUStrKind_::AlifUStr_1Byte_Kind :
+						!ALIFUSTR_IS_ASCII(rep))
+					{
+						/* Not all characters are smaller than limit */
+						//raise_encodeException(&exc, encoding, unicode,
+						//	collstart, collend, reason);
+						goto onError;
+					}
+					str = _alifBytesWriter_writeBytes(&writer, str,
+						ALIFUSTR_DATA(rep),
+						ALIFUSTR_GET_LENGTH(rep));
+				}
+				if (str == nullptr)
+					goto onError;
+
+				pos = newpos;
+				ALIF_CLEAR(rep);
+			}
+		}
+	}
+
+	ALIF_XDECREF(error_handler_obj);
+	ALIF_XDECREF(exc);
+	return alifBytesWriter_finish(&writer, str);
+
+onError:
+	ALIF_XDECREF(rep);
+	alifBytesWriter_dealloc(&writer);
+	ALIF_XDECREF(error_handler_obj);
+	ALIF_XDECREF(exc);
+	return nullptr;
+}
 
 
 
