@@ -478,6 +478,31 @@ overflow:
 }
 
 
+static unsigned long _alifLong_asUnsignedLongMask(AlifObject* _vv) { // 721
+	AlifLongObject* v_{};
+	unsigned long x_{};
+	AlifSizeT i_{};
+
+	if (_vv == NULL or !ALIFLONG_CHECK(_vv)) {
+		//ALIFERR_BADINTERNALCALL();
+		return (unsigned long)-1;
+	}
+	v_ = (AlifLongObject*)_vv;
+	if (alifLong_isCompact(v_)) {
+#if SIZEOF_LONG < SIZEOF_SIZE_T
+		return (unsigned long)(size_t)alifLong_compactValue(v_);
+#else
+		return (unsigned long)(long)alifLong_compactValue(v);
+#endif
+	}
+	i_ = alifLong_digitCount(v_);
+	AlifIntT sign = alifLong_nonCompactSign(v_);
+	x_ = 0;
+	while (--i_ >= 0) {
+		x_ = (x_ << ALIFLONG_SHIFT) | v_->longValue.digit[i_];
+	}
+	return x_ * sign;
+}
 
 unsigned long alifLong_asUnsignedLongMask(AlifObject* _op) { // 748
 	AlifLongObject* lo{};
@@ -547,7 +572,114 @@ Overflow:
 	return (AlifUSizeT)-1;
 }
 
+AlifIntT _alifLong_asByteArray(AlifLongObject* _v,
+	unsigned char* _bytes, AlifUSizeT _n,
+	AlifIntT _littleEndian, AlifIntT _isSigned,
+	AlifIntT _withExceptions) { // 953
+	AlifSizeT i_{};               /* index into v->long_value.ob_digit */
+	AlifSizeT nDigits{};         /* number of digits */
+	twodigits accum{};            /* sliding register */
+	unsigned int accumBits{};     /* # bits in accum */
+	AlifIntT doTwosComp{};           /* store 2's-comp?  is_signed and v < 0 */
+	digit carry{};                /* for computing 2's-comp */
+	AlifUSizeT j_{};                   /* # bytes filled */
+	unsigned char* p_{};           /* pointer to next byte in bytes */
+	AlifIntT pincr{};                  /* direction to move p */
 
+
+	nDigits = alifLong_digitCount(_v);
+	if (_alifLong_isNegative(_v)) {
+		if (!_isSigned) {
+			if (_withExceptions) {
+				//alifErr_setString(_alifExcOverflowError_,
+					//"can't convert negative int to unsigned");
+			}
+			return -1;
+		}
+		doTwosComp = 1;
+	}
+	else {
+		doTwosComp = 0;
+	}
+
+	if (_littleEndian) {
+		p_ = _bytes;
+		pincr = 1;
+	}
+	else {
+		p_ = _bytes + _n - 1;
+		pincr = -1;
+	}
+
+	j_ = 0;
+	accum = 0;
+	accumBits = 0;
+	carry = doTwosComp ? 1 : 0;
+	for (i_ = 0; i_ < nDigits; ++i_) {
+		digit thisdigit = _v->longValue.digit[i_];
+		if (doTwosComp) {
+			thisdigit = (thisdigit ^ ALIFLONG_MASK) + carry;
+			carry = thisdigit >> ALIFLONG_SHIFT;
+			thisdigit &= ALIFLONG_MASK;
+		}
+		accum |= (twodigits)thisdigit << accumBits;
+
+		if (i_ == nDigits - 1) {
+	
+			digit s = doTwosComp ? thisdigit ^ ALIFLONG_MASK : thisdigit;
+			while (s != 0) {
+				s >>= 1;
+				accumBits++;
+			}
+		}
+		else
+			accumBits += ALIFLONG_SHIFT;
+
+		while (accumBits >= 8) {
+			if (j_ >= _n)
+				goto Overflow;
+			++j_;
+			*p_ = (unsigned char)(accum & 0xff);
+			p_ += pincr;
+			accumBits -= 8;
+			accum >>= 8;
+		}
+	}
+
+	if (accumBits > 0) {
+		if (j_ >= _n)
+			goto Overflow;
+		++j_;
+		if (doTwosComp) {
+			accum |= (~(twodigits)0) << accumBits;
+		}
+		*p_ = (unsigned char)(accum & 0xff);
+		p_ += pincr;
+	}
+	else if (j_ == _n and _n > 0 and _isSigned) {
+		unsigned char msb_ = *(p_ - pincr);
+		AlifIntT signBitSet = msb_ >= 0x80;
+		if (signBitSet == doTwosComp)
+			return 0;
+		else
+			goto Overflow;
+	}
+
+	{
+		unsigned char signbyte = doTwosComp ? 0xffU : 0U;
+		for (; j_ < _n; ++j_, p_ += pincr)
+			*p_ = signbyte;
+	}
+
+	return 0;
+
+Overflow:
+	if (_withExceptions) {
+		//alifErr_setString((alifExcOverflowError_, "int too big to convert");
+	}
+	return -1;
+
+}
 
 AlifObject* alifLong_fromVoidPtr(void* _p) { // 1349
 #if SIZEOF_VOID_P <= SIZEOF_LONG
@@ -646,8 +778,32 @@ long long alifLong_asLongLong(AlifObject* vv) { // 1491
 		return bytes;
 }
 
+static unsigned long long _alifLong_asUnsignedLongLongMask(AlifObject* _vv) { // 1583
+	AlifLongObject* v_{};
+	unsigned long long x_{};
+	AlifSizeT i_{};
+	AlifIntT sign{};
 
-
+	if (_vv == NULL or !ALIFLONG_CHECK(_vv)) {
+		//ALIFERR_BADINTERNALCALL();
+		return (unsigned long long) - 1;
+	}
+	v_ = (AlifLongObject*)_vv;
+	if (alifLong_isCompact(v_)) {
+#if SIZEOF_LONG_LONG < SIZEOF_SIZE_T
+		return (unsigned long long)(size_t)alifLong_compactValue(v);
+#else
+		return (unsigned long long)(long long)alifLong_compactValue(v_);
+#endif
+	}
+	i_ = alifLong_digitCount(v_);
+	sign = alifLong_nonCompactSign(v_);
+	x_ = 0;
+	while (--i_ >= 0) {
+		x_ = (x_ << ALIFLONG_SHIFT) | v_->longValue.digit[i_];
+	}
+	return x_ * sign;
+}
 
 unsigned long long alifLong_asUnsignedLongLongMask(AlifObject* _op) { // 1612
 	AlifLongObject* lo{};
