@@ -1,5 +1,5 @@
 
-
+#include "AlifCore_BitUtils.h"
 
 
 #if (SIZEOF_SIZE_T == 8)

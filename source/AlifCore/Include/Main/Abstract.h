@@ -4,6 +4,8 @@
 AlifObject* alifObject_callOneArg(AlifObject* , AlifObject* ); // 59
 
 
+AlifObject* alifObject_call(AlifObject*, AlifObject*, AlifObject*); // 201
+
 AlifObject* alifObject_callFunctionObjArgs(AlifObject* _callable, ...); // 249
 
 

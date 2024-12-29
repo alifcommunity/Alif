@@ -9,7 +9,26 @@ const char* _alifHexDigits_ = "0123456789abcdef"; // 19 // need review
 
 
 
+static AlifObject* args_tuple(AlifObject* object,
+	const char* errors) { // 237
+	AlifObject* args{};
 
+	args = alifTuple_new(1 + (errors != nullptr));
+	if (args == nullptr)
+		return nullptr;
+	ALIFTUPLE_SET_ITEM(args, 0, ALIF_NEWREF(object));
+	if (errors) {
+		AlifObject* v{};
+
+		v = alifUStr_fromString(errors);
+		if (v == nullptr) {
+			ALIF_DECREF(args);
+			return nullptr;
+		}
+		ALIFTUPLE_SET_ITEM(args, 1, v);
+	}
+	return args;
+}
 
 
 
@@ -54,7 +73,8 @@ onError:
 
 
 static AlifObject* _alifCodec_textEncoder(const char* encoding) { // 567
-	return codec_getItemChecked(encoding, "codecs.encode()", 0);
+	//return codec_getItemChecked(encoding, "codecs.encode()", 0);
+	printf("تعليق: _alifCodec_textEncoder() - Codecs.cpp");
 }
 
 

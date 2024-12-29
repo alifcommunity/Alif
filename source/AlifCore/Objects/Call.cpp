@@ -170,11 +170,71 @@ VectorCallFunc alifVectorCall_function(AlifObject* _callable) { // 256
 	return _alifVectorCall_functionInline(_callable);
 }
 
+static AlifObject* _alifVectorCall_call(AlifThread* tstate, VectorCallFunc func,
+	AlifObject* callable, AlifObject* tuple, AlifObject* kwargs) { // 263
+
+	AlifSizeT nargs = ALIFTUPLE_GET_SIZE(tuple);
+
+	/* Fast path for no keywords */
+	if (kwargs == nullptr or ALIFDICT_GET_SIZE(kwargs) == 0) {
+		return func(callable, ALIFTUPLE_ITEMS(tuple), nargs, nullptr);
+	}
+
+	/* Convert arguments & call */
+	AlifObject* const* args;
+	AlifObject* kwnames{};
+	args = _alifStack_unpackDict(tstate,
+		ALIFTUPLE_ITEMS(tuple), nargs,
+		kwargs, &kwnames);
+	if (args == nullptr) {
+		return nullptr;
+	}
+	AlifObject* result = func(callable, args,
+		nargs | ALIF_VECTORCALL_ARGUMENTS_OFFSET, kwnames);
+	_alifStack_unpackDictFree(args, nargs, kwnames);
+
+	return _alif_checkFunctionResult(tstate, callable, result, nullptr);
+}
+
 AlifObject* alifObject_vectorCall(AlifObject* _callable, AlifObject* const* _args,
 	AlifUSizeT _nArgsF, AlifObject* _kwNames) { // 322
 	AlifThread* thread = _alifThread_get();
 	return alifObject_vectorCallThread(thread, _callable,
 		_args, _nArgsF, _kwNames);
+}
+
+AlifObject* _alifObject_call(AlifThread* tstate, AlifObject* callable,
+	AlifObject* args, AlifObject* kwargs) { // 332
+	TernaryFunc call{};
+	AlifObject* result{};
+
+	VectorCallFunc vector_func = alifVectorCall_function(callable);
+	if (vector_func != nullptr) {
+		return _alifVectorCall_call(tstate, vector_func, callable, args, kwargs);
+	}
+	else {
+		call = ALIF_TYPE(callable)->call;
+		if (call == nullptr) {
+			object_isNotCallable(tstate, callable);
+			return nullptr;
+		}
+
+		if (_alif_enterRecursiveCallThread(tstate, " while calling a Alif object")) {
+			return nullptr;
+		}
+
+		result = (*call)(callable, args, kwargs);
+
+		_alif_leaveRecursiveCallThread(tstate);
+
+		return _alif_checkFunctionResult(tstate, callable, result, nullptr);
+	}
+}
+
+AlifObject* alifObject_call(AlifObject* callable,
+	AlifObject* args, AlifObject* kwargs) { // 369
+	AlifThread* thread = _alifThread_get();
+	return _alifObject_call(thread, callable, args, kwargs);
 }
 
 AlifObject* alifObject_callOneArg(AlifObject* _func, AlifObject* _arg) { // 386

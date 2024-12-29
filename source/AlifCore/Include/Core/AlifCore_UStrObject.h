@@ -23,11 +23,21 @@ extern void alifUStr_fastCopyCharacters(AlifObject*, AlifSizeT,
 
 extern AlifObject* alifUStr_fromASCII(const char*, AlifSizeT); // 65
 
+AlifObject* _alifUStr_asUTF8String(AlifObject*, const char*); // 98
+
+AlifObject* _alifUStr_encodeUTF32(AlifObject*, const char*, AlifIntT); // 105
+
+AlifObject* _alifUStr_encodeUTF16(AlifObject*, const char*, AlifIntT); // 127
+
+AlifObject* alifUStr_decodeUStrEscapeInternal(const char*, AlifSizeT,
+	const char*, AlifSizeT*, const char**); // 144
 
 
 
-AlifObject* alifUStr_decodeUStrEscapeInternal(const char*, AlifSizeT, const char*, AlifSizeT*, const char**); // 144
+extern AlifObject* _alifUStr_asLatin1String(AlifObject*, const char*); // 164
 
+
+extern AlifObject* _alifUStr_asASCIIString(AlifObject*, const char*); // 170
 
 AlifObject* alifUStr_joinArray(AlifObject*, AlifObject* const*, AlifSizeT); // 206
 

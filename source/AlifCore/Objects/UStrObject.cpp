@@ -160,7 +160,9 @@ static AlifIntT initGlobal_internedStrings(AlifInterpreter* _interp) { // 308
 
 static AlifIntT uStr_modifiable(AlifObject*); // 432
 
-
+static AlifObject* uStr_encodeCallErrorhandler(const char*,
+	AlifObject**, const char*, const char*, AlifObject*,
+	AlifObject**, AlifSizeT, AlifSizeT, AlifSizeT*); // 443
 
 AlifErrorHandler_ alif_getErrorHandler(const char* _errors) { // 488
 	if (_errors == nullptr or strcmp(_errors, "strict") == 0) {
@@ -3292,38 +3294,6 @@ static AlifObject* uStr_encodeCallErrorhandler(const char* errors,
 
 
 
-
-
-
-AlifObject* _alifUStr_asLatin1String(AlifObject* unicode, const char* errors) { // 7221
-	if (!ALIFUSTR_CHECK(unicode)) {
-		//alifErr_badArgument();
-		return nullptr;
-	}
-	if (ALIFUSTR_KIND(unicode) == AlifUStrKind_::AlifUStr_1Byte_Kind)
-		return alifBytes_fromStringAndSize((const char*)ALIFUSTR_DATA(unicode),
-			ALIFUSTR_GET_LENGTH(unicode));
-	return uStr_encodeUcs1(unicode, errors, 256);
-}
-
-
-
-
-
-AlifObject* _alifUStr_asASCIIString(AlifObject* unicode, const char* errors) { // 7345
-	if (!ALIFUSTR_CHECK(unicode)) {
-		//alifErr_badArgument();
-		return nullptr;
-	}
-	/* Fast path: if it is an ASCII-only string, construct bytes object
-	   directly. Else defer to above function to raise the exception. */
-	if (ALIFUSTR_IS_ASCII(unicode))
-		return alifBytes_fromStringAndSize((const char*)ALIFUSTR_DATA(unicode),
-			ALIFUSTR_GET_LENGTH(unicode));
-	return uStr_encodeUcs1(unicode, errors, 128);
-}
-
-
 static AlifObject* uStr_encodeUcs1(AlifObject* unicode,
 	const char* errors, const AlifUCS4 limit) { // 7044
 	/* input state */
@@ -3491,6 +3461,38 @@ onError:
 	return nullptr;
 }
 
+
+AlifObject* _alifUStr_asLatin1String(AlifObject* unicode, const char* errors) { // 7221
+	if (!ALIFUSTR_CHECK(unicode)) {
+		//alifErr_badArgument();
+		return nullptr;
+	}
+	if (ALIFUSTR_KIND(unicode) == AlifUStrKind_::AlifUStr_1Byte_Kind)
+		return alifBytes_fromStringAndSize((const char*)ALIFUSTR_DATA(unicode),
+			ALIFUSTR_GET_LENGTH(unicode));
+	return uStr_encodeUcs1(unicode, errors, 256);
+}
+
+
+
+
+
+AlifObject* _alifUStr_asASCIIString(AlifObject* unicode, const char* errors) { // 7345
+	if (!ALIFUSTR_CHECK(unicode)) {
+		//alifErr_badArgument();
+		return nullptr;
+	}
+	/* Fast path: if it is an ASCII-only string, construct bytes object
+	   directly. Else defer to above function to raise the exception. */
+	if (ALIFUSTR_IS_ASCII(unicode))
+		return alifBytes_fromStringAndSize((const char*)ALIFUSTR_DATA(unicode),
+			ALIFUSTR_GET_LENGTH(unicode));
+	return uStr_encodeUcs1(unicode, errors, 128);
+}
+
+
+
+
  // 7370
 #if SIZEOF_INT < SIZEOF_SIZE_T
 #define NEED_RETRY
@@ -3518,63 +3520,6 @@ static DWORD encode_codePageFlags(UINT code_page, const char* errors) { // 7684
 	}
 }
 
-
-
-static AlifObject* encode_codePage(AlifIntT code_page,
-	AlifObject* unicode, const char* errors) { // 7992
-	AlifSizeT len{};
-	AlifObject* outbytes = nullptr;
-	AlifSizeT offset{};
-	AlifIntT chunk_len{}, ret{}, done{};
-
-	if (!ALIFUSTR_CHECK(unicode)) {
-		//alifErr_badArgument();
-		return nullptr;
-	}
-
-	len = ALIFUSTR_GET_LENGTH(unicode);
-
-	if (code_page < 0) {
-		//alifErr_setString(_alifExcValueError_, "invalid code page number");
-		return nullptr;
-	}
-
-	if (len == 0)
-		return alifBytes_fromStringAndSize(nullptr, 0);
-
-	offset = 0;
-	do
-	{
-#ifdef NEED_RETRY
-		if (len > DECODING_CHUNK_SIZE) {
-			chunk_len = DECODING_CHUNK_SIZE;
-			done = 0;
-		}
-		else
-#endif
-		{
-			chunk_len = (int)len;
-			done = 1;
-		}
-
-		ret = encode_codePageStrict(code_page, &outbytes,
-			unicode, offset, chunk_len,
-			errors);
-		//if (ret == -2)
-		//	ret = encode_codePageErrors(code_page, &outbytes,
-		//		unicode, offset,
-		//		chunk_len, errors);
-		if (ret < 0) {
-			ALIF_XDECREF(outbytes);
-			return nullptr;
-		}
-
-		offset += chunk_len;
-		len -= chunk_len;
-	} while (!done);
-
-	return outbytes;
-}
 
 static AlifIntT encode_codePageStrict(UINT code_page, AlifObject** outbytes,
 	AlifObject* unicode, AlifSizeT offset, AlifIntT len, const char* errors) { // 7712
@@ -3662,6 +3607,65 @@ error:
 	//alifErr_setFromWindowsErr(0);
 	goto done;
 }
+
+
+static AlifObject* encode_codePage(AlifIntT code_page,
+	AlifObject* unicode, const char* errors) { // 7992
+	AlifSizeT len{};
+	AlifObject* outbytes = nullptr;
+	AlifSizeT offset{};
+	AlifIntT chunk_len{}, ret{}, done{};
+
+	if (!ALIFUSTR_CHECK(unicode)) {
+		//alifErr_badArgument();
+		return nullptr;
+	}
+
+	len = ALIFUSTR_GET_LENGTH(unicode);
+
+	if (code_page < 0) {
+		//alifErr_setString(_alifExcValueError_, "invalid code page number");
+		return nullptr;
+	}
+
+	if (len == 0)
+		return alifBytes_fromStringAndSize(nullptr, 0);
+
+	offset = 0;
+	do
+	{
+#ifdef NEED_RETRY
+		if (len > DECODING_CHUNK_SIZE) {
+			chunk_len = DECODING_CHUNK_SIZE;
+			done = 0;
+		}
+		else
+#endif
+		{
+			chunk_len = (int)len;
+			done = 1;
+		}
+
+		ret = encode_codePageStrict(code_page, &outbytes,
+			unicode, offset, chunk_len,
+			errors);
+		//if (ret == -2)
+		//	ret = encode_codePageErrors(code_page, &outbytes,
+		//		unicode, offset,
+		//		chunk_len, errors);
+		if (ret < 0) {
+			ALIF_XDECREF(outbytes);
+			return nullptr;
+		}
+
+		offset += chunk_len;
+		len -= chunk_len;
+	} while (!done);
+
+	return outbytes;
+}
+
+
 
 
 

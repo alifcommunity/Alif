@@ -32,9 +32,14 @@ public:
 static AlifIntT vGetArgs1(AlifObject*, const char*, va_list*, AlifIntT); // 48
 
 
+static const char* convert_simple(AlifObject*, const char**, va_list*,
+	AlifIntT, char*, AlifUSizeT, FreeListT*); // 54
+
 static const char* convert_item(AlifObject*, const char**, va_list*, AlifIntT,
 	AlifIntT*, char*, AlifUSizeT, FreeListT*); // 50
 
+static AlifSizeT convert_buffer(AlifObject*, const void**, const char**); // 56
+static AlifIntT get_buffer(AlifObject*, AlifBuffer*, const char**); // 57
 
 AlifIntT alifArg_parseTuple(AlifObject* _args, const char* _format, ...) { // 94
 	AlifIntT retval{};
@@ -959,7 +964,8 @@ static const char* convert_simple(AlifObject* _arg, const char** _pFormat, va_li
 #undef RETURN_ERR_OCCURRED
 }
 
-static AlifSizeT convert_buffer(AlifObject* arg, const void** p, const char** errmsg) { // 1237
+static AlifSizeT convert_buffer(AlifObject* arg,
+	const void** p, const char** errmsg) { // 1237
 	AlifBufferProcs* pb = ALIF_TYPE(arg)->asBuffer;
 	AlifSizeT count{};
 	AlifBuffer view{};
