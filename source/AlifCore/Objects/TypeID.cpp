@@ -24,15 +24,7 @@ static AlifIntT resizeInterp_typeIDPool(AlifTypeIDPool* pool) { // 20
 		new_size = POOL_MIN_SIZE;
 	}
 
-	// alif
-	AlifTypeIDEntry* table{};
-	if (pool->table) {
-		table = (AlifTypeIDEntry*)alifMem_dataRealloc(pool->table, new_size * sizeof(*pool->table));
-	}
-	else {
-		table = (AlifTypeIDEntry*)alifMem_dataAlloc(new_size * sizeof(*pool->table));
-	}
-	// alif
+	AlifTypeIDEntry* table = (AlifTypeIDEntry*)alifMem_dataRealloc(pool->table, new_size * sizeof(*pool->table));
 
 	if (table == nullptr) {
 		return -1;

@@ -572,9 +572,6 @@ static inline void* alif_objToSysAlloc(void* _sourcePtr, AlifUSizeT _distSize) {
 void* alifMem_dataRealloc(void* _ptr, AlifUSizeT _size)
 {
 	void* sourcePtr = _ptr;
-	AlifUSizeT sourceSize = *((AlifUSizeT*)_ptr - 1);
-	void* distPtr{};
-	AlifUSizeT distSize = MEMORY_ALIGN_UP(_size + ALIGNMENT);
 
 	/*
 		في حال كان مؤشر المصدر فارغ
@@ -584,6 +581,10 @@ void* alifMem_dataRealloc(void* _ptr, AlifUSizeT _size)
 	{
 		return alifMem_alloc(_size);
 	}
+
+	AlifUSizeT sourceSize = *((AlifUSizeT*)_ptr - 1);
+	void* distPtr{};
+	AlifUSizeT distSize = MEMORY_ALIGN_UP(_size + ALIGNMENT);
 
 	//if (distSize < sourceSize) alifMemError_reallocLessThan();
 	if (distSize < sourceSize) {
@@ -641,9 +642,6 @@ void* alifMem_dataRealloc(void* _ptr, AlifUSizeT _size)
 void* alifMem_objRealloc(void* _ptr, AlifUSizeT _size)
 {
 	void* sourcePtr = _ptr;
-	AlifUSizeT sourceSize = *((AlifUSizeT*)_ptr - 1);
-	void* distPtr{};
-	AlifUSizeT distSize = MEMORY_ALIGN_UP(_size + ALIGNMENT);
 
 	/*
 		في حال كان مؤشر المصدر فارغ
@@ -653,6 +651,10 @@ void* alifMem_objRealloc(void* _ptr, AlifUSizeT _size)
 	{
 		return alifMem_alloc(_size);
 	}
+
+	AlifUSizeT sourceSize = *((AlifUSizeT*)_ptr - 1);
+	void* distPtr{};
+	AlifUSizeT distSize = MEMORY_ALIGN_UP(_size + ALIGNMENT);
 
 	//if (distSize < sourceSize) alifMemError_reallocLessThan();
 	if (distSize < sourceSize) {

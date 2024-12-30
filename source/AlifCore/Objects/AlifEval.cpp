@@ -823,6 +823,59 @@ dispatch_opcode :
 				stackPointer += -1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(LOAD_ATTR) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 10;
+				PREDICTED(LOAD_ATTR);
+				AlifCodeUnit* thisInstr = nextInstr - 10;
+				AlifStackRef owner{};
+				AlifStackRef attr{};
+				AlifStackRef self_or_null = _alifStackRefNull_;
+				// _SPECIALIZE_LOAD_ATTR
+				owner = stackPointer[-1];
+				{
+					uint16_t counter = read_u16(&thisInstr[1].cache);
+#if ENABLE_SPECIALIZATION
+					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
+						AlifObject* name = GETITEM(FRAME_CO_NAMES, oparg >> 1);
+						nextInstr = thisInstr;
+						_alifSpecialize_loadAttr(owner, nextInstr, name);
+						DISPATCH_SAME_OPARG();
+					}
+					OPCODE_DEFERRED_INC(LOAD_ATTR);
+					ADVANCE_ADAPTIVE_COUNTER(thisInstr[1].counter);
+#endif  /* ENABLE_SPECIALIZATION */
+				}
+				/* Skip 8 cache entries */
+				// _LOAD_ATTR
+				{
+					AlifObject* name = GETITEM(FRAME_CO_NAMES, oparg >> 1);
+					AlifObject* attrObj{};
+					if (oparg & 1) {
+						attrObj = nullptr;
+						AlifIntT is_meth = _alifObject_getMethod(alifStackRef_asAlifObjectBorrow(owner), name, &attrObj);
+						if (is_meth) {
+							self_or_null = owner;  // Transfer ownership
+						}
+						else {
+							alifStackRef_close(owner);
+							//if (attrObj == nullptr) goto pop_1_error;
+							self_or_null = _alifStackRefNull_;
+						}
+					}
+					else {
+						/* Classic, pushes one value. */
+						attrObj = alifObject_getAttr(alifStackRef_asAlifObjectBorrow(owner), name);
+						alifStackRef_close(owner);
+						//if (attrObj == nullptr) goto pop_1_error;
+					}
+					attr = ALIFSTACKREF_FROMALIFOBJECTSTEAL(attrObj);
+				}
+				stackPointer[-1] = attr;
+				if (oparg & 1) stackPointer[0] = self_or_null;
+				stackPointer += (oparg & 1);
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(LOAD_CONST) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;
