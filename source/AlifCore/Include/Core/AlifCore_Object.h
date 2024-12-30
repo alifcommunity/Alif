@@ -221,9 +221,7 @@ static inline AlifObject* _alif_newRefWithLock(AlifObject* _op) { // 586
 			newShared |= ALIF_REF_MAYBE_WEAKREF;
 		}
 		if (alifAtomic_compareExchangeSize(
-			&_op->refShared,
-			&shared,
-			newShared)) {
+			&_op->refShared, &shared, newShared)) {
 			return _op;
 		}
 	}

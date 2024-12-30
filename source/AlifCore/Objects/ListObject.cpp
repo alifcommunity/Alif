@@ -226,7 +226,6 @@ static inline AlifIntT valid_index(AlifSizeT i, AlifSizeT limit) { // 291
 	return (AlifUSizeT)i < (AlifUSizeT)limit;
 }
 
-#ifdef ALIF_GIL_DISABLED
 
 static AlifObject* list_itemImpl(AlifListObject* _self, AlifSizeT _idx) { // 307
 	AlifObject* item = nullptr;
@@ -271,14 +270,6 @@ static inline AlifObject* listGet_itemRef(AlifListObject* _op, AlifSizeT _i) { /
 	return item;
 }
 
-#else
-static inline AlifObject* listGet_itemRef(AlifListObject* _op, AlifSizeT _i) { // 356
-	if (!valid_index(_i, ALIF_SIZE(_op))) {
-		return nullptr;
-	}
-	return ALIF_NEWREF(ALIFLIST_GET_ITEM(_op, _i));
-}
-#endif
 
 AlifIntT alifList_appendTakeRefListResize(AlifListObject* _self,
 	AlifObject* _newItem) { // 468
