@@ -167,6 +167,7 @@
 	#define ALIGNOF_SIZE_T 8
 	#define SIZEOF_VOID_P 8
 	#define SIZEOF_TIME_T 8
+	#define SIZEOF_LONG_LONG sizeof(long long) // alif
 #else
 	using AlifIntT = int16_t;
 	using AlifUIntT = uint16_t;
@@ -179,6 +180,7 @@
 	#define ALIGNOF_SIZE_T 4
 	#define SIZEOF_SIZE_T 4
 	#define SIZEOF_TIME_T 4
+	#define SIZEOF_LONG_LONG sizeof(long long) // alif
 #endif
 
 
