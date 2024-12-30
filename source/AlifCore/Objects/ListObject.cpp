@@ -26,6 +26,11 @@ static AlifListArray* list_allocateArray(AlifUSizeT _capacity) { // 34
 	array->allocated = _capacity;
 	return array;
 }
+
+static AlifSizeT list_capacity(AlifObject** _items) { // 48
+	AlifListArray* array = ALIF_CONTAINER_OF(_items, AlifListArray, item);
+	return array->allocated;
+}
 #endif
 
 
@@ -221,6 +226,59 @@ static inline AlifIntT valid_index(AlifSizeT i, AlifSizeT limit) { // 291
 	return (AlifUSizeT)i < (AlifUSizeT)limit;
 }
 
+#ifdef ALIF_GIL_DISABLED
+
+static AlifObject* list_itemImpl(AlifListObject* _self, AlifSizeT _idx) { // 307
+	AlifObject* item = nullptr;
+	ALIF_BEGIN_CRITICAL_SECTION(_self);
+	if (!ALIFOBJECT_GC_IS_SHARED(_self)) {
+		ALIFOBJECT_GC_SET_SHARED(_self);
+	}
+	AlifSizeT size = ALIF_SIZE(_self);
+	if (!valid_index(_idx, size)) {
+		goto exit;
+	}
+#ifdef ALIF_GIL_DISABLED
+	item = _alif_newRefWithLock(_self->item[_idx]);
+#else
+	item = ALIF_NEWREF(self->item[_idx]);
+#endif
+exit:
+	ALIF_END_CRITICAL_SECTION();
+	return item;
+}
+
+static inline AlifObject* listGet_itemRef(AlifListObject* _op, AlifSizeT _i) { // 329
+	if (!alif_isOwnedByCurrentThread((AlifObject*)_op) and !ALIFOBJECT_GC_IS_SHARED(_op)) {
+		return list_itemImpl(_op, _i);
+	}
+	AlifSizeT size = ALIFLIST_GET_SIZE(_op);
+	if (!valid_index(_i, size)) {
+		return nullptr;
+	}
+	AlifObject** obItem = (AlifObject**)alifAtomic_loadPtr(&_op->item);
+	if (obItem == nullptr) {
+		return nullptr;
+	}
+	AlifSizeT cap_ = list_capacity(obItem);
+	if (!valid_index(_i, cap_)) {
+		return nullptr;
+	}
+	AlifObject* item = alif_tryXGetRef(&obItem[_i]);
+	if (item == nullptr) {
+		return list_itemImpl(_op, _i);
+	}
+	return item;
+}
+
+#else
+static inline AlifObject* listGet_itemRef(AlifListObject* _op, AlifSizeT _i) { // 356
+	if (!valid_index(_i, ALIF_SIZE(_op))) {
+		return nullptr;
+	}
+	return ALIF_NEWREF(ALIFLIST_GET_ITEM(_op, _i));
+}
+#endif
 
 AlifIntT alifList_appendTakeRefListResize(AlifListObject* _self,
 	AlifObject* _newItem) { // 468
@@ -330,6 +388,34 @@ static AlifObject* listSlice_lockHeld(AlifListObject* _a,
 	return (AlifObject*)np_;
 }
 
+static AlifObject* listConcat_lockHeld(AlifListObject* _a, AlifListObject* _b) { // 685
+	AlifSizeT size{};
+	AlifSizeT i_{};
+	AlifObject** src_{}, ** dest{};
+	AlifListObject* np_{};
+	size = ALIF_SIZE(_a) + ALIF_SIZE(_b);
+	if (size == 0) {
+		return alifList_new(0);
+	}
+	np_ = (AlifListObject*)list_newPrealloc(size);
+	if (np_ == nullptr) {
+		return nullptr;
+	}
+	src_ = _a->item;
+	dest = np_->item;
+	for (i_ = 0; i_ < ALIF_SIZE(_a); i_++) {
+		AlifObject* v_ = src_[i_];
+		dest[i_] = ALIF_NEWREF(v_);
+	}
+	src_ = _b->item;
+	dest = np_->item + ALIF_SIZE(_a);
+	for (i_ = 0; i_ < ALIF_SIZE(_b); i_++) {
+		AlifObject* v_ = src_[i_];
+		dest[i_] = ALIF_NEWREF(v_);
+	}
+	ALIF_SET_SIZE(np_, size);
+	return (AlifObject*)np_;
+}
 
 static AlifObject* list_concat(AlifObject* aa, AlifObject* bb) { // 716
 	if (!ALIFLIST_CHECK(bb)) {
@@ -345,6 +431,44 @@ static AlifObject* list_concat(AlifObject* aa, AlifObject* bb) { // 716
 	ret = listConcat_lockHeld(a, b);
 	ALIF_END_CRITICAL_SECTION2();
 	return ret;
+}
+
+static AlifObject* listRepeat_lockHeld(AlifListObject* _a, AlifSizeT _n) { // 735
+	const AlifSizeT inputSize = ALIF_SIZE(_a);
+	if (inputSize == 0 or _n <= 0)
+		return alifList_new(0);
+
+	//if (inputSize > ALIF_SIZET_MAX / _n)
+		//return alifErr_noMemory();
+	AlifSizeT outputSize = inputSize * _n;
+
+	AlifListObject* np_ = (AlifListObject*)list_newPrealloc(outputSize);
+	if (np_ == nullptr)
+		return nullptr;
+
+	AlifObject** dest = np_->item;
+	if (inputSize == 1) {
+		AlifObject* elem = _a->item[0];
+		ALIF_REFCNTADD(elem, _n);
+		AlifObject** destEnd = dest + outputSize;
+		while (dest < destEnd) {
+			*dest++ = elem;
+		}
+	}
+	else {
+		AlifObject** src_ = _a->item;
+		AlifObject** srcEnd = src_ + inputSize;
+		while (src_ < srcEnd) {
+			ALIF_REFCNTADD(*src_, _n);
+			*dest++ = *src_++;
+		}
+
+		alif_memoryRepeat((char*)np_->item, sizeof(AlifObject*) * outputSize,
+			sizeof(AlifObject*) * inputSize);
+	}
+
+	ALIF_SET_SIZE(np_, outputSize);
+	return (AlifObject*)np_;
 }
 
 static AlifObject* list_repeat(AlifObject* _aa, AlifSizeT _n) { // 775
