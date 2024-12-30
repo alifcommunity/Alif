@@ -35,6 +35,7 @@
 #include "BoolObject.h"
 #include "FloatObject.h"
 #include "ComplexObject.h"
+#include "RangeObject.h"
 #include "UStrObject.h"
 #include "AlifErrors.h"
 #include "LongIntRepr.h"

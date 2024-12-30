@@ -1016,7 +1016,7 @@ static AlifTypeObject* staticTypes[] = {
 	//&_alifPickleBufferType_,
 	//&_alifPropertyType_,
 	//&_alifRangeIterType_,
-	//&_alifRangeType_,
+	&_alifRangeType_,
 	//&_alifReversedType_,
 	//&_alifSTEntryType_,
 	&_alifSeqIterType_,

@@ -21,6 +21,7 @@ AlifObject* alifLong_fromSizeT(AlifSizeT); // 19
 AlifObject* alifLong_fromDouble(double); // 20
 
 long alifLong_asLong(AlifObject* ); // 22
+long alifLong_asLongAndOverflow(AlifObject*, AlifIntT*); // 23
 
 AlifSizeT alifLong_asSizeT(AlifObject*); // 24
 

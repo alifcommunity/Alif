@@ -699,6 +699,8 @@
 	INIT_ID(__weakRef__), \
 	INIT_ID(Builtins), \
 	INIT_ID(End), \
+	INIT_ID(False), \
+	INIT_ID(خطأ), \
 	INIT_ID(File), \
 	INIT_ID(Flush), \
 	INIT_ID(HasLocation), \
@@ -710,6 +712,8 @@
 	INIT_ID(Sep), \
 	INIT_ID(Stdout), \
 	INIT_ID(Top), \
+	INIT_ID(True), \
+	INIT_ID(صح), \
 	INIT_ID(Write), \
 }
 

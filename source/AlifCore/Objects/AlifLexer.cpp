@@ -257,7 +257,7 @@ nextline:
 			else if (c_ == '\014') {/* Control-L (formfeed) */
 				col = altCol = 0; /* For Emacs users */
 			}
-			else if (c_ == '\\') {
+			else if (c_ == '/') {
 				contLineCol = contLineCol ? contLineCol : col;
 				if ((c_ = tok_continuationLine(_tokState)) == -1)
 					return MAKE_TOKEN(ERRORTOKEN);
@@ -450,7 +450,7 @@ again:
 	}
 
 
-	/* Identifire */
+	/* Identifier */
 	nonASCII = 0;
 	if (IS_IDENTIFIER_START(c_)) {
 		AlifIntT b_ = 0, r_ = 0, u_ = 0, f_ = 0;
@@ -461,7 +461,7 @@ again:
 			else if (!(r_ or u_) and c_ == (unsigned char)"خ"[secondByte]) r_ = 1; // خ = خام
 			else if (!(f_ or b_ or u_) and c_ == (unsigned char)"م"[secondByte]) f_ = 1; // م = منسق
 			else {
-				tok_backup(_tokState, c_); // alif
+				//tok_backup(_tokState, c_); // alif
 				break;
 			}
 
@@ -855,7 +855,7 @@ letterQuote:
 			}
 			else {
 				endQuoteSize = 0;
-				if (c_ == L'\\') {
+				if (c_ == L'/') {
 					c_ = tok_nextChar(_tokState);  // skip escape char
 					if (c_ == quote) {	           // record if the escape was a quote
 						hasEscapedQuote = 1;
@@ -873,7 +873,7 @@ letterQuote:
 	}
 
 	/* line continuation */
-	if (c_ == L'\\') {
+	if (c_ == '/') {
 		if ((c_ = tok_continuationLine(_tokState)) == -1) {
 			return MAKE_TOKEN(ERRORTOKEN);
 		}
@@ -1175,7 +1175,7 @@ fStringMiddle:
 			}
 			return MAKE_TOKEN(FSTRINGMIDDLE);
 		}
-		else if (c_ == L'\\') {
+		else if (c_ == L'/') {
 			AlifIntT peek = tok_nextChar(_tokState);
 			if (peek == L'\r') {
 				peek = tok_nextChar(_tokState);

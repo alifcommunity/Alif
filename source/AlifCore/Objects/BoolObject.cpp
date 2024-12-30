@@ -7,7 +7,9 @@
 
 
 
-
+static AlifObject* bool_repr(AlifObject* _self) { // 13
+	return _self == ALIF_TRUE ? &ALIF_ID(خطأ) : &ALIF_ID(صح);
+}
 
 
 AlifObject* alifBool_fromLong(long _ok) { // 21
@@ -25,6 +27,8 @@ AlifTypeObject _alifBoolType_ = { // 171
 	.name = "منطق",
 	.basicSize = offsetof(AlifLongObject, longValue.digit),
 	.itemSize = sizeof(digit),
+	.repr = bool_repr,
+	.flags = ALIF_TPFLAGS_DEFAULT,
 };
 
 AlifLongObject _alifFalseClass_ = { // 215

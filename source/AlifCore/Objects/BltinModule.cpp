@@ -346,36 +346,36 @@ AlifObject* alifBuiltin_init(AlifInterpreter* _interpreter) { // 3215
     if (alifDict_setItemString(dict, _name, (AlifObject *)_object) < 0)       \
         return nullptr;                                                    \
 
-	SETBUILTIN("None", ALIF_NONE);
+	SETBUILTIN("عدم", ALIF_NONE);
 	SETBUILTIN("Ellipsis", ALIF_ELLIPSIS);
 	SETBUILTIN("NotImplemented", ALIF_NOTIMPLEMENTED);
-	SETBUILTIN("False", ALIF_FALSE);
-	SETBUILTIN("True", ALIF_TRUE);
-	SETBUILTIN("bool", &_alifBoolType_);
+	SETBUILTIN("خطأ", ALIF_FALSE);
+	SETBUILTIN("صح", ALIF_TRUE);
+	SETBUILTIN("منطق", &_alifBoolType_);
 	//SETBUILTIN("memoryview", &_alifMemoryViewType_);
 	SETBUILTIN("bytearray", &_alifByteArrayType_);
 	SETBUILTIN("bytes", &_alifBytesType_);
 	SETBUILTIN("classmethod", &_alifClassMethodType_);
 	SETBUILTIN("complex", &_alifComplexType_);
-	SETBUILTIN("dict", &_alifDictType_);
+	SETBUILTIN("قاموس", &_alifDictType_);
 	//SETBUILTIN("enumerate", &_alifEnumType_);
 	//SETBUILTIN("filter", &_alifFilterType_);
-	SETBUILTIN("float", &_alifFloatType_);
+	SETBUILTIN("عدد_عشري", &_alifFloatType_);
 	SETBUILTIN("frozenset", &_alifFrozenSetType_);
 	//SETBUILTIN("property", &_alifPropertyType_);
-	SETBUILTIN("int", &_alifLongType_);
+	SETBUILTIN("عدد_صحيح", &_alifLongType_);
 	SETBUILTIN("list", &_alifListType_);
 	//SETBUILTIN("map", &_alifMapType_);
-	SETBUILTIN("object", &_alifBaseObjectType_);
-	//SETBUILTIN("range", &_alifRangeType_);
+	SETBUILTIN("كائن", &_alifBaseObjectType_);
+	SETBUILTIN("مدى", &_alifRangeType_);
 	//SETBUILTIN("reversed", &_alifReversedType_);
 	SETBUILTIN("set", &_alifSetType_);
 	SETBUILTIN("slice", &_alifSliceType_);
 	//SETBUILTIN("staticmethod", &_alifStaticMethodType_);
-	SETBUILTIN("str", &_alifUStrType_);
-	//SETBUILTIN("super", &_alifSuperType_);
-	SETBUILTIN("tuple", &_alifTupleType_);
-	SETBUILTIN("type", &_alifTypeType_);
+	SETBUILTIN("نص", &_alifUStrType_);
+	SETBUILTIN("super", &_alifSuperType_);
+	SETBUILTIN("مترابطة", &_alifTupleType_);
+	SETBUILTIN("نوع", &_alifTypeType_);
 	debug = alifBool_fromLong(config->optimizationLevel == 0);
 	if (alifDict_setItemString(dict, "__debug__", debug) < 0) {
 		ALIF_DECREF(debug);

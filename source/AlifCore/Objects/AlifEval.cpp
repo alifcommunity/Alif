@@ -395,6 +395,38 @@ dispatch_opcode :
 				stackPointer += 1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(TO_BOOL) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 4;
+				PREDICTED(TO_BOOL);
+				AlifCodeUnit* thisInstr = nextInstr - 4;
+				AlifStackRef value{};
+				AlifStackRef res{};
+				// _SPECIALIZE_TO_BOOL
+				value = stackPointer[-1];
+				{
+					uint16_t counter = read_u16(&thisInstr[1].cache);
+#if ENABLE_SPECIALIZATION
+					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
+						nextInstr = thisInstr;
+						_alifSpecialize_toBool(value, nextInstr);
+						DISPATCH_SAME_OPARG();
+					}
+					OPCODE_DEFERRED_INC(TO_BOOL);
+					ADVANCE_ADAPTIVE_COUNTER(thisInstr[1].counter);
+#endif  /* ENABLE_SPECIALIZATION */
+				}
+				/* Skip 2 cache entries */
+				// _TO_BOOL
+				{
+					AlifIntT err = alifObject_isTrue(alifStackRef_asAlifObjectBorrow(value));
+					alifStackRef_close(value);
+					//if (err < 0) goto pop_1_error;
+					err ? res = ALIFSTACKREF_TRUE : res = ALIFSTACKREF_FALSE;
+				}
+				stackPointer[-1] = res;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(BINARY_OP) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 2;

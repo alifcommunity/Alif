@@ -89,7 +89,7 @@ int alifToken_oneChar(int _c1) {
 	case L'=': return EQUAL;
 	case L'<': return GREATERTHAN;
 	case L'!': return EXCLAMATION;
-	case L'/': return SLASH;
+	case L'\\': return SLASH;
 	case L'^': return CIRCUMFLEX;
 	case L'{': return LBRACE;
 	case L'}': return RBRACE;
@@ -118,8 +118,8 @@ int alifToken_twoChars(int _c1, int _c2) {
 	case L'-':
 		if (_c2 == L'=') return MINUSEQUAL;
 		break;
-	case L'/':
-		if (_c2 == L'/') return DOUBLESLASH;
+	case L'\\':
+		if (_c2 == L'\\') return DOUBLESLASH;
 		else if (_c2 == L'=') return SLASHEQUAL;
 		else if (_c2 == L'^') return SLASHCIRCUMFLEX;
 		else if (_c2 == L'*') return SLASHSTAR;
@@ -148,8 +148,8 @@ int alifToken_twoChars(int _c1, int _c2) {
 int alifToken_threeChars(int _c1, int _c2, int _c3) {
 
 	switch (_c1) {
-	case L'/':
-		if (_c2 == L'/') { if (_c3 == L'=') return DOUBLESLASHEQUAL; }
+	case L'\\':
+		if (_c2 == L'\\') { if (_c3 == L'=') return DOUBLESLASHEQUAL; }
 		else if (_c2 == L'*') { if (_c3 == L'=') return SLASHSTAREQUAL; }
 		break;
 	case L'<':

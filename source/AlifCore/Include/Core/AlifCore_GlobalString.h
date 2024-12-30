@@ -66,6 +66,8 @@ public:
 		STRUCT_FOR_ID(__weakRef__)
 		STRUCT_FOR_ID(Builtins)
      	STRUCT_FOR_ID(End)
+     	STRUCT_FOR_ID(False)
+     	STRUCT_FOR_ID(خطأ) // alif
      	STRUCT_FOR_ID(File)
      	STRUCT_FOR_ID(Flush)
      	STRUCT_FOR_ID(HasLocation)
@@ -77,6 +79,8 @@ public:
      	STRUCT_FOR_ID(Sep)
      	STRUCT_FOR_ID(Stdout)
      	STRUCT_FOR_ID(Top)
+     	STRUCT_FOR_ID(True)
+     	STRUCT_FOR_ID(صح) // alif
      	STRUCT_FOR_ID(Write)
     } identifiers;
 
