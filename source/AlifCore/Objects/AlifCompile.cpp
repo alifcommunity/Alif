@@ -728,7 +728,7 @@ static AlifIntT codegen_addOpO(AlifCompiler* _c, Location _loc,
 
  // 942
 #define ADDOP_N_IN_SCOPE(_c, _loc, _op, _o, _type) { \
-    AlifIntT ret = codegen_addOpO(_c, _loc, _op, _c->u_->metadata. ## _type, _o); \
+    AlifIntT ret = codegen_addOpO(_c, _loc, _op, _c->u_->metadata._type, _o); \
     ALIF_DECREF(_o); \
     RETURN_IF_ERROR_IN_SCOPE(_c, ret); \
 }
