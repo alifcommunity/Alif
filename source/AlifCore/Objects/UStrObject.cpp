@@ -3492,7 +3492,7 @@ AlifObject* _alifUStr_asASCIIString(AlifObject* unicode, const char* errors) { /
 
 
 
-#ifdef _WINDOWS
+#ifdef _WINDOWS // 7366
 
 /* --- MBCS codecs for Windows -------------------------------------------- */
 
