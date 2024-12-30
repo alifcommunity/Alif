@@ -210,7 +210,16 @@ AlifSizeT alifList_size(AlifObject* _op) { // 279
 	}
 }
 
+static inline AlifIntT valid_index(AlifSizeT i, AlifSizeT limit) { // 291
+	/* The cast to AlifUSizeT lets us use just a single comparison
+	   to check whether i is in the range: 0 <= i < limit.
 
+	   See:  Section 14.2 "Bounds Checking" in the Agner Fog
+	   optimization manual found at:
+	   https://www.agner.org/optimize/optimizing_cpp.pdf
+	*/
+	return (AlifUSizeT)i < (AlifUSizeT)limit;
+}
 
 
 AlifIntT alifList_appendTakeRefListResize(AlifListObject* _self,
@@ -539,6 +548,27 @@ static AlifObject* list_inplaceRepeat(AlifObject* _self, AlifSizeT n) { // 999
 	}
 	ALIF_END_CRITICAL_SECTION();
 	return ret;
+}
+
+static AlifIntT listAssItem_lockHeld(AlifListObject* a, AlifSizeT i, AlifObject* v) { // 1015
+	if (!valid_index(i, ALIF_SIZE(a))) {
+		//alifErr_setString(_alifExcIndexError_,
+		//	"list assignment index out of range");
+		return -1;
+	}
+	AlifObject* tmp = a->item[i];
+	if (v == nullptr) {
+		AlifSizeT size = ALIF_SIZE(a);
+		for (AlifSizeT idx = i; idx < size - 1; idx++) {
+			alifAtomic_storePtrRelaxed(&a->item[idx], a->item[idx + 1]);
+		}
+		ALIF_SET_SIZE(a, size - 1);
+	}
+	else {
+		alifAtomic_storePtrRelease(&a->item[i], ALIF_NEWREF(v));
+	}
+	ALIF_DECREF(tmp);
+	return 0;
 }
 
 static AlifIntT list_assItem(AlifObject* _aa, AlifSizeT _i, AlifObject* _v) { // 1038
