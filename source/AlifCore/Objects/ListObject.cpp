@@ -257,6 +257,46 @@ static void list_dealloc(AlifObject* _self) { // 497
 	ALIF_TRASHCAN_END
 }
 
+static AlifSizeT list_length(AlifObject* _a) { // 588
+	return ALIFLIST_GET_SIZE(_a);
+}
+
+static AlifIntT list_contains(AlifObject* _aa, AlifObject* _el) { // 594
+
+	for (AlifSizeT i = 0; ; i++) {
+		AlifObject* item = listGet_itemRef((AlifListObject*)_aa, i);
+		if (item == nullptr) {
+			// out-of-bounds
+			return 0;
+		}
+		AlifIntT cmp = alifObject_richCompareBool(item, _el, ALIF_EQ);
+		ALIF_DECREF(item);
+		if (cmp != 0) {
+			return cmp;
+		}
+	}
+	return 0;
+}
+
+static AlifObject* list_item(AlifObject* _aa, AlifSizeT _i) { // 613
+	AlifListObject* a = (AlifListObject*)_aa;
+	if (!valid_index(_i, ALIFLIST_GET_SIZE(a))) {
+		//alifErr_setObject(_alifExcIndexError_, &ALIF_STR(ListErr));
+		return nullptr;
+	}
+	AlifObject* item{};
+#ifdef ALIF_GIL_DISABLED
+	item = listGet_itemRef(a, _i);
+	if (item == nullptr) {
+		//alifErr_setObject(_alifExcIndexError_, &ALIF_STR(ListErr));
+		return nullptr;
+	}
+#else
+	item = ALIF_NEWREF(a->item[i]);
+#endif
+	return item;
+}
+
 
 static AlifObject* listSlice_lockHeld(AlifListObject* _a,
 	AlifSizeT _iLow, AlifSizeT _iHigh) { // 635
@@ -279,6 +319,32 @@ static AlifObject* listSlice_lockHeld(AlifListObject* _a,
 	}
 	ALIF_SET_SIZE(np_, len_);
 	return (AlifObject*)np_;
+}
+
+
+static AlifObject* list_concat(AlifObject* aa, AlifObject* bb) { // 716
+	if (!ALIFLIST_CHECK(bb)) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"can only concatenate list (not \"%.200s\") to list",
+		//	ALIF_TYPE(bb)->name);
+		return nullptr;
+	}
+	AlifListObject* a = (AlifListObject*)aa;
+	AlifListObject* b = (AlifListObject*)bb;
+	AlifObject* ret{};
+	ALIF_BEGIN_CRITICAL_SECTION2(a, b);
+	ret = listConcat_lockHeld(a, b);
+	ALIF_END_CRITICAL_SECTION2();
+	return ret;
+}
+
+static AlifObject* list_repeat(AlifObject* _aa, AlifSizeT _n) { // 775
+	AlifObject* ret{};
+	AlifListObject* a = (AlifListObject*)_aa;
+	ALIF_BEGIN_CRITICAL_SECTION(a);
+	ret = listRepeat_lockHeld(a, _n);
+	ALIF_END_CRITICAL_SECTION();
+	return ret;
 }
 
 static void list_clearImpl(AlifListObject* _a, bool _isResize) { // 787
@@ -459,6 +525,29 @@ static AlifIntT listInplaceRepeat_lockHeld(AlifListObject* _self, AlifSizeT _n) 
 	alif_memoryRepeat((char*)items, sizeof(AlifObject*) * outputSize,
 		sizeof(AlifObject*) * inputSize);
 	return 0;
+}
+
+static AlifObject* list_inplaceRepeat(AlifObject* _self, AlifSizeT n) { // 999
+	AlifObject* ret{};
+	AlifListObject* self = (AlifListObject*)_self;
+	ALIF_BEGIN_CRITICAL_SECTION(self);
+	if (listInplaceRepeat_lockHeld(self, n) < 0) {
+		ret = nullptr;
+	}
+	else {
+		ret = ALIF_NEWREF(self);
+	}
+	ALIF_END_CRITICAL_SECTION();
+	return ret;
+}
+
+static AlifIntT list_assItem(AlifObject* _aa, AlifSizeT _i, AlifObject* _v) { // 1038
+	AlifIntT ret{};
+	AlifListObject* a = (AlifListObject*)_aa;
+	ALIF_BEGIN_CRITICAL_SECTION(a);
+	ret = listAssItem_lockHeld(a, _i, _v);
+	ALIF_END_CRITICAL_SECTION();
+	return ret;
 }
 
 static AlifIntT list_extendFast(AlifListObject* _self, AlifObject* _iterable) { // 1120
@@ -704,6 +793,14 @@ static AlifObject* list_extend(AlifListObject* _self, AlifObject* _iterable) { /
 
 AlifObject* _alifList_extend(AlifListObject* _self, AlifObject* _iterable) { // 1394
 	return list_extend(_self, _iterable);
+}
+
+static AlifObject* list_inplaceConcat(AlifObject* _self, AlifObject* other) { // 1423
+	AlifListObject* self = (AlifListObject*)_self;
+	if (_list_extend(self, other) < 0) {
+		return nullptr;
+	}
+	return ALIF_NEWREF(self);
 }
 
 static void reverse_slice(AlifObject** _lo, AlifObject** _hi) { // 1491
@@ -1809,12 +1906,26 @@ AlifObject* _alifList_fromStackRefSteal(const AlifStackRef* _src, AlifSizeT _n) 
 
 
 
+static AlifSequenceMethods _listAsSequence_ = { // 3465
+	.length = list_length,
+	.concat = list_concat,
+	.repeat = list_repeat,
+	.item = list_item,
+	.assItem = list_assItem,
+	.contains = list_contains,
+	.inplaceConcat = list_inplaceConcat,
+	.inplaceRepeat = list_inplaceRepeat,
+};
+
+
+
 AlifTypeObject _alifListType_ = { // 3737
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "مصفوفة",
 	.basicSize = sizeof(AlifListObject),
 	.itemSize = 0,
 	.dealloc = list_dealloc,
+	.asSequence = &_listAsSequence_,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
 		ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_LIST_SUBCLASS |
 		_ALIF_TPFLAGS_MATCH_SELF | ALIF_TPFLAGS_SEQUENCE,
