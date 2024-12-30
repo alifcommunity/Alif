@@ -31,6 +31,7 @@ public:
     class {
 	public:
         STRUCT_FOR_ID(CANCELLED)
+        STRUCT_FOR_ID(__abstractMethods__)
         STRUCT_FOR_ID(__buildClass__)
         STRUCT_FOR_ID(__builtins__)
 		STRUCT_FOR_ID(__class__)

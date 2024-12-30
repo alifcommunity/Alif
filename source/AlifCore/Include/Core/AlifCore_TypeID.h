@@ -21,7 +21,7 @@ public:
 };
 
 
-
+extern void _alifType_assignId(AlifHeapTypeObject*); // 52
 
 extern void alifType_releaseID(AlifHeapTypeObject*); // 55
 

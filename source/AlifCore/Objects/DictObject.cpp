@@ -2555,6 +2555,22 @@ AlifTypeObject _alifDictValuesType_ = { // 6502
 };
 
 
+
+AlifDictKeysObject* _alifDict_newKeysForClass() { // 6561
+	AlifInterpreter* interp = _alifInterpreter_get();
+	AlifDictKeysObject* keys = new_keysObject(
+		interp, NEXT_LOG2_SHARED_KEYS_MAX_SIZE, 1);
+	if (keys == nullptr) {
+		//alifErr_clear();
+	}
+	else {
+		keys->usable = SHARED_KEYS_MAX_SIZE;
+		keys->kind = DictKeysKind_::Dict_Keys_Split;
+	}
+	return keys;
+}
+
+
 void alifObject_initInlineValues(AlifObject* _obj, AlifTypeObject* _tp) {  // 6580
 	AlifDictKeysObject* keys = CACHED_KEYS(_tp);
 	AlifSizeT usable = alifAtomic_loadSizeRelaxed(&keys->usable);

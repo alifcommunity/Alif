@@ -42,6 +42,9 @@ public:
 };
 
 
+
+extern AlifDictKeysObject* _alifDict_newKeysForClass(); // 86
+
 extern AlifUSizeT _alifDict_keysSize(AlifDictKeysObject*); // 94
 
 extern void alifDictKeys_decRef(AlifDictKeysObject*); // 96
@@ -84,6 +87,12 @@ public:
 	AlifSizeT nentries{};
 	char indices[8];
 };
+
+
+#define SHARED_KEYS_MAX_SIZE 30
+#define NEXT_LOG2_SHARED_KEYS_MAX_SIZE 6
+
+
 
 class DictValues { // 194
 public:

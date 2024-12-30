@@ -262,6 +262,41 @@ AlifObject* alifFunction_vectorCall(AlifObject* _func, AlifObject* const* _stack
 	}
 }
 
+
+AlifObject* _alifObject_callPrepend(AlifThread* _thread, AlifObject* _callable,
+	AlifObject* _obj, AlifObject* _args, AlifObject* _kwargs) { // 477
+
+	AlifObject* small_stack[ALIF_FASTCALL_SMALL_STACK]{};
+	AlifObject** stack{};
+
+	AlifSizeT argcount = ALIFTUPLE_GET_SIZE(_args);
+	if (argcount + 1 <= (AlifSizeT)ALIF_ARRAY_LENGTH(small_stack)) {
+		stack = small_stack;
+	}
+	else {
+		stack = (AlifObject**)alifMem_dataAlloc((argcount + 1) * sizeof(AlifObject*));
+		if (stack == nullptr) {
+			//alifErr_noMemory();
+			return nullptr;
+		}
+	}
+
+	/* use borrowed references */
+	stack[0] = _obj;
+	memcpy(&stack[1],
+		ALIFTUPLE_ITEMS(_args),
+		argcount * sizeof(AlifObject*));
+
+	AlifObject* result = _alifObject_vectorCallDictThread(_thread, _callable,
+		stack, argcount + 1,
+		_kwargs);
+	if (stack != small_stack) {
+		alifMem_dataFree(stack);
+	}
+	return result;
+}
+
+
 static AlifObject* alifObject_callFunctionVa(AlifThread* _thread, AlifObject* _callable,
 	const char* _format, va_list _va) { // 517
 	AlifObject* smallStack[ALIF_FASTCALL_SMALL_STACK]{};

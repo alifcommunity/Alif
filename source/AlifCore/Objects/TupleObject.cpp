@@ -207,6 +207,34 @@ AlifObject* alifTuple_fromStackRefSteal(const AlifStackRef* _src, AlifSizeT _n) 
 }
 
 
+static AlifObject* tuple_slice(AlifTupleObject* a, AlifSizeT ilow,
+	AlifSizeT ihigh) { // 434
+	if (ilow < 0)
+		ilow = 0;
+	if (ihigh > ALIF_SIZE(a))
+		ihigh = ALIF_SIZE(a);
+	if (ihigh < ilow)
+		ihigh = ilow;
+	if (ilow == 0 and ihigh == ALIF_SIZE(a) and ALIFTUPLE_CHECKEXACT(a)) {
+		return ALIF_NEWREF(a);
+	}
+	return alifTuple_fromArray(a->item + ilow, ihigh - ilow);
+}
+
+
+AlifObject* alifTuple_getSlice(AlifObject* _op,
+	AlifSizeT _i, AlifSizeT _j) { // 450
+	if (_op == nullptr or !ALIFTUPLE_CHECK(_op)) {
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
+	return tuple_slice((AlifTupleObject*)_op, _i, _j);
+}
+
+
+
+
+
 static AlifObject* tuple_iter(AlifObject* _seq); // 863
 
 AlifTypeObject _alifTupleType_ = { // 865

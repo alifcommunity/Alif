@@ -55,6 +55,10 @@
 
 #endif // 84
 
+
+static AlifObject* slot_tpNew(AlifTypeObject*, AlifObject*, AlifObject*); // 99
+
+
 static AlifObject* lookup_maybeMethod(AlifObject*, AlifObject*, AlifIntT*); // 102
 
 
@@ -475,6 +479,20 @@ static AlifIntT assign_versionTag(AlifInterpreter* interp, AlifTypeObject* type)
 }
 
 
+static AlifObject* type_abstractMethods(AlifTypeObject* type, void* context) { // 1491
+	AlifObject* mod = nullptr;
+	if (type == &_alifTypeType_) {
+		//alifErr_setObject(_alifExcAttributeError_, &ALIF_ID(__abstractMethods__));
+	}
+	else {
+		AlifObject* dict = lookup_tpDict(type);
+		if (alifDict_getItemRef(dict, &ALIF_ID(__abstractMethods__), &mod) == 0) {
+			//alifErr_setObject(_alifExcAttributeError_, &ALIF_ID(__abstractMethods__));
+		}
+	}
+	return mod;
+}
+
 
 
 static AlifObject* type_call(AlifObject* _self, AlifObject* _args, AlifObject* _kwds) { // 2136
@@ -525,9 +543,9 @@ static AlifObject* type_call(AlifObject* _self, AlifObject* _args, AlifObject* _
 
 AlifObject* alifType_allocNoTrack(AlifTypeObject* _type, AlifSizeT _nitems) { // 2217
 	AlifObject* obj_{};
-	size_t size = alifObject_varSize(_type, _nitems + 1);
+	AlifUSizeT size = alifObject_varSize(_type, _nitems + 1);
 
-	const size_t preSize = alifType_preHeaderSize(_type);
+	const AlifUSizeT preSize = alifType_preHeaderSize(_type);
 	if (_type->flags & ALIF_TPFLAGS_INLINE_VALUES) {
 		size += alifInline_valuesSize(_type);
 	}
@@ -1506,7 +1524,7 @@ static AlifTypeObject* typeNew_alloc(TypeNewCtx* _ctx) { // 3898
 	//et->tpName = nullptr;
 
 #ifdef ALIF_GIL_DISABLED
-	//_alifType_assignId(et);
+	_alifType_assignId(et);
 #endif
 
 	return type;
@@ -2334,7 +2352,97 @@ AlifTypeObject _alifTypeType_ = { // 6195
 
 
 
+static AlifObject* object_new(AlifTypeObject*, AlifObject*, AlifObject*); // 6286
 
+static AlifIntT excess_args(AlifObject* _args, AlifObject* _kwds) { // 6289
+	return ALIFTUPLE_GET_SIZE(_args) or
+		(_kwds and ALIFDICT_CHECK(_kwds) and ALIFDICT_GET_SIZE(_kwds));
+}
+
+static AlifIntT object_init(AlifObject* _self, AlifObject* _args, AlifObject* _kwds) { // 6296
+	AlifTypeObject* type = ALIF_TYPE(_self);
+	if (excess_args(_args, _kwds)) {
+		if (type->init != object_init) {
+			//alifErr_setString(_alifExcTypeError_,
+			//	"object.__init__() takes exactly one argument (the instance to initialize)");
+			return -1;
+		}
+		if (type->new_ == object_new) {
+			//alifErr_format(_alifExcTypeError_,
+			//	"%.200s.__init__() takes exactly one argument (the instance to initialize)",
+			//	type->name);
+			return -1;
+		}
+	}
+	return 0;
+}
+
+static AlifObject* object_new(AlifTypeObject* type,
+	AlifObject* args, AlifObject* kwds) { // 6316
+	if (excess_args(args, kwds)) {
+		if (type->new_ != object_new) {
+			//alifErr_setString(_alifExcTypeError_,
+			//	"object.__new__() takes exactly one argument (the type to instantiate)");
+			return nullptr;
+		}
+		if (type->init == object_init) {
+			//alifErr_format(_alifExcTypeError_, "%.200s() takes no arguments",
+			//	type->name);
+			return nullptr;
+		}
+	}
+
+	if (type->flags & ALIF_TPFLAGS_IS_ABSTRACT) {
+		AlifObject* abstract_methods{};
+		AlifObject* sorted_methods{};
+		AlifObject* joined{};
+		AlifObject* comma_w_quotes_sep{};
+		AlifSizeT method_count{};
+
+		abstract_methods = type_abstractMethods(type, nullptr);
+		if (abstract_methods == nullptr)
+			return nullptr;
+		sorted_methods = alifSequence_list(abstract_methods);
+		ALIF_DECREF(abstract_methods);
+		if (sorted_methods == nullptr)
+			return nullptr;
+		if (alifList_sort(sorted_methods)) {
+			ALIF_DECREF(sorted_methods);
+			return nullptr;
+		}
+		comma_w_quotes_sep = alifUStr_fromString("', '");
+		if (!comma_w_quotes_sep) {
+			ALIF_DECREF(sorted_methods);
+			return nullptr;
+		}
+		joined = alifUStr_join(comma_w_quotes_sep, sorted_methods);
+		ALIF_DECREF(comma_w_quotes_sep);
+		if (joined == nullptr) {
+			ALIF_DECREF(sorted_methods);
+			return nullptr;
+		}
+		method_count = alifObject_length(sorted_methods);
+		ALIF_DECREF(sorted_methods);
+		if (method_count == -1) {
+			ALIF_DECREF(joined);
+			return nullptr;
+		}
+
+		//alifErr_format(_alifExcTypeError_,
+		//	"Can't instantiate abstract class %s "
+		//	"without an implementation for abstract method%s '%U'",
+		//	type->name,
+		//	method_count > 1 ? "s" : "",
+		//	joined);
+		ALIF_DECREF(joined);
+		return nullptr;
+	}
+	AlifObject* obj = type->alloc(type, 0);
+	if (obj == nullptr) {
+		return nullptr;
+	}
+	return obj;
+}
 
 
 static void object_dealloc(AlifObject* _self) { // 6386
@@ -2366,7 +2474,9 @@ AlifTypeObject _alifBaseObjectType_ = { // 7453
 	.hash = alifObject_genericHash,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE,
 	.methods = _objectMethods_,
+	.init = object_init,
 	.alloc = alifType_genericAlloc,
+	.new_ = object_new,
 	.free = alifMem_objFree,
 };
 
@@ -2889,7 +2999,30 @@ static AlifIntT typeReady_setNew(AlifTypeObject* _type, AlifIntT _initial) { // 
 	return 0;
 }
 
-
+static AlifIntT typeReady_managedDict(AlifTypeObject* _type) { // 8322
+	if (!(_type->flags & ALIF_TPFLAGS_MANAGED_DICT)) {
+		return 0;
+	}
+	if (!(_type->flags & ALIF_TPFLAGS_HEAPTYPE)) {
+		//alifErr_format(_alifExcSystemError_,
+		//	"type %s has the ALIF_TPFLAGS_MANAGED_DICT flag "
+		//	"but not ALIF_TPFLAGS_HEAPTYPE flag",
+		//	type->name);
+		return -1;
+	}
+	AlifHeapTypeObject* et = (AlifHeapTypeObject*)_type;
+	if (et->cachedKeys == nullptr) {
+		et->cachedKeys = _alifDict_newKeysForClass();
+		if (et->cachedKeys == nullptr) {
+			//alifErr_noMemory();
+			return -1;
+		}
+	}
+	if (_type->itemSize == 0) {
+		_type->flags |= ALIF_TPFLAGS_INLINE_VALUES;
+	}
+	return 0;
+}
 
 static AlifIntT typeReady_postChecks(AlifTypeObject* type) { // 8349
 	if (type->flags & ALIF_TPFLAGS_HAVE_GC
@@ -2942,9 +3075,9 @@ static AlifIntT type_ready(AlifTypeObject* _type,
 	if (typeReady_mro(_type, _initial) < 0) {
 		goto error;
 	}
-	//if (typeReady_setNew(_type, _initial) < 0) {
-	//	goto error;
-	//}
+	if (typeReady_setNew(_type, _initial) < 0) {
+		goto error;
+	}
 	if (typeReady_fillDict(_type, _def) < 0) {
 		goto error;
 	}
@@ -2963,9 +3096,9 @@ static AlifIntT type_ready(AlifTypeObject* _type,
 	//	goto error;
 	//}
 	if (_initial) {
-		//if (typeReady_managedDict(_type) < 0) {
-		//	goto error;
-		//}
+		if (typeReady_managedDict(_type) < 0) {
+			goto error;
+		}
 		//if (typeReady_postChecks(_type) < 0) {
 		//	goto error;
 		//}
@@ -3041,13 +3174,67 @@ AlifIntT alifStaticType_initBuiltin(AlifInterpreter* _interp,
 
 
 
+static AlifObject* tpNew_wrapper(AlifObject* _self,
+	AlifObject* _args, AlifObject* _kwds) { // 9230
+	AlifTypeObject* staticbase{};
+	AlifObject* arg0{}, * res{};
 
+	if (_self == nullptr or !ALIFTYPE_CHECK(_self)) {
+		//alifErr_format(_alifExcSystemError_,
+		//	"__new__() called with non-type 'self'");
+		return nullptr;
+	}
+	AlifTypeObject* type = (AlifTypeObject*)_self;
 
-static AlifMethodDef _tpNewMethodDef_[] = {
-	//{"__new__", ALIFCPPFUNCTION_CAST(tpNew_wrapper), METHOD_VARARGS | METHOD_KEYWORDS,
-	// ALIFDOC_STR("__new__($type, *args, **kwargs)\n--\n\n"
-	//		   "Create and return a new object.  "
-	//		   "See help(type) for accurate signature.")},
+	if (!ALIFTUPLE_CHECK(_args) or ALIFTUPLE_GET_SIZE(_args) < 1) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"%s.__new__(): not enough arguments",
+		//	type->name);
+		return nullptr;
+	}
+	arg0 = ALIFTUPLE_GET_ITEM(_args, 0);
+	if (!ALIFTYPE_CHECK(arg0)) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"%s.__new__(X): X is not a type object (%s)",
+		//	type->name,
+		//	ALIF_TYPE(arg0)->name);
+		return nullptr;
+	}
+	AlifTypeObject* subtype = (AlifTypeObject*)arg0;
+
+	if (!alifType_isSubType(subtype, type)) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"%s.__new__(%s): %s is not a subtype of %s",
+		//	type->name,
+		//	subtype->name,
+		//	subtype->name,
+		//	type->name);
+		return NULL;
+	}
+
+	staticbase = subtype;
+	while (staticbase and (staticbase->new_ == slot_tpNew))
+		staticbase = staticbase->base;
+	if (staticbase and staticbase->new_ != type->new_) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"%s.__new__(%s) is not safe, use %s.__new__()",
+		//	type->name, subtype->name, staticbase->name);
+		return nullptr;
+	}
+
+	_args = alifTuple_getSlice(_args, 1, ALIFTUPLE_GET_SIZE(_args));
+	if (_args == nullptr)
+		return nullptr;
+	res = type->new_(subtype, _args, _kwds);
+	ALIF_DECREF(_args);
+	return res;
+}
+
+static AlifMethodDef _tpNewMethodDef_[] = { // 9294
+	{"__new__", ALIF_CPPFUNCTION_CAST(tpNew_wrapper), METHOD_VARARGS | METHOD_KEYWORDS
+	 /*,ALIFDOC_STR("__new__($type, *args, **kwargs)\n--\n\n"
+			   "Create and return a new object.  "
+			   "See help(type) for accurate signature.")*/},
 	{0}
 };
 
@@ -3074,7 +3261,20 @@ static AlifIntT add_tpNewWrapper(AlifTypeObject* _type) { // 9302
 
 
 
+static AlifObject* slot_tpNew(AlifTypeObject* _type,
+	AlifObject* _args, AlifObject* _kwds) { // 10018
+	AlifThread* thread = _alifThread_get();
+	AlifObject* func{}, * result{};
 
+	func = alifObject_getAttr((AlifObject*)_type, &ALIF_ID(__new__));
+	if (func == nullptr) {
+		return nullptr;
+	}
+
+	result = _alifObject_callPrepend(thread, func, (AlifObject*)_type, _args, _kwds);
+	ALIF_DECREF(func);
+	return result;
+}
 
 
 
