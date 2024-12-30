@@ -3492,6 +3492,10 @@ AlifObject* _alifUStr_asASCIIString(AlifObject* unicode, const char* errors) { /
 
 
 
+#ifdef _WINDOWS
+
+/* --- MBCS codecs for Windows -------------------------------------------- */
+
 
  // 7370
 #if SIZEOF_INT < SIZEOF_SIZE_T
@@ -3677,7 +3681,7 @@ AlifObject* alifUStr_encodeCodePage(AlifIntT code_page,
 
 
 
-
+#endif /* _WINDOWS */ // 8067
 
 
 
