@@ -259,13 +259,13 @@ AlifIntT alif_mainBytes(AlifIntT _argc, char** _argv) {
 #ifdef _WINDOWS
 AlifIntT wmain(AlifIntT _argc, wchar_t** _argv)
 {
-	wchar_t* argsv[] = { (wchar_t*)L"alif", (wchar_t*)L"example.alif" };
-	return alif_mainWchar(2, argsv);
+	//wchar_t* argsv[] = { (wchar_t*)L"alif", (wchar_t*)L"example.alif" }; // alif
+	return alif_mainWchar(_argc, _argv);
 }
 #else
 AlifIntT main(AlifIntT _argc, char** _argv)
 {
-	char* argsv[] = { (char*)"alif", (char*)"example.alif" };
-	return alif_mainBytes(2, argsv);
+	//char* argsv[] = { (char*)"alif", (char*)"example.alif" }; // alif
+	return alif_mainBytes(_argc, _argv);
 }
 #endif
