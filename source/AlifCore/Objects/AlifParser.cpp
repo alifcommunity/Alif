@@ -11040,7 +11040,7 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 		AlifPToken* literal{};
 		if ((literal = alifParserEngine_expectToken(_p, SLASHSTAREQUAL))) // "/*="
 		{
-			res = alifParserEngine_augOperator(_p, Operator_::Mod);
+			res = alifParserEngine_augOperator(_p, Operator_::FloorDiv);
 			if (res == nullptr
 				/*and alifErr_occurred()*/)
 			{
@@ -11058,7 +11058,7 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 		AlifPToken* literal{};
 		if ((literal = alifParserEngine_expectToken(_p, DOUBLESLASHEQUAL))) // "//="
 		{
-			res = alifParserEngine_augOperator(_p, Operator_::FloorDiv);
+			res = alifParserEngine_augOperator(_p, Operator_::Mod);
 			if (res == nullptr
 				/*and alifErr_occurred()*/)
 			{
