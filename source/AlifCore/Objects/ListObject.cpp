@@ -9,7 +9,6 @@
 #include "AlifCore_SetObject.h"
 
 
-#ifdef ALIF_GIL_DISABLED
 class AlifListArray{ // 28
 public:
 	AlifSizeT allocated{};
@@ -31,12 +30,10 @@ static AlifSizeT list_capacity(AlifObject** _items) { // 48
 	AlifListArray* array = ALIF_CONTAINER_OF(_items, AlifListArray, item);
 	return array->allocated;
 }
-#endif
 
 
 
 static void free_listItems(AlifObject** _items, bool _useQSBR) { // 55
-#ifdef ALIF_GIL_DISABLED
 	AlifListArray* array = ALIF_CONTAINER_OF(_items, AlifListArray, item);
 	if (_useQSBR) {
 		alifMem_freeDelayed(array);
@@ -44,9 +41,6 @@ static void free_listItems(AlifObject** _items, bool _useQSBR) { // 55
 	else {
 		alifMem_objFree(array);
 	}
-#else
-	alifMem_objFree(_items);
-#endif
 }
 
 
@@ -70,7 +64,6 @@ static AlifIntT list_resize(AlifListObject* _self, AlifSizeT _newSize) { // 84
 	if (_newSize == 0)
 		newAllocated = 0;
 
-#ifdef ALIF_GIL_DISABLED
 	AlifListArray* array = list_allocateArray(newAllocated);
 	if (array == nullptr) {
 		//alifErr_noMemory();
@@ -95,24 +88,6 @@ static AlifIntT list_resize(AlifListObject* _self, AlifSizeT _newSize) { // 84
 	if (oldItems != nullptr) {
 		free_listItems(oldItems, ALIFOBJECT_GC_IS_SHARED(_self));
 	}
-#else
-	AlifObject** items{};
-	if (newAllocated <= (AlifUSizeT)ALIF_SIZET_MAX / sizeof(AlifObject*)) {
-		targetBytes = newAllocated * sizeof(AlifObject*);
-		items = (AlifObject**)alifMem_objRealloc(_self->item, targetBytes);
-	}
-	else {
-		// integer overflow
-		items = nullptr;
-	}
-	if (items == nullptr) {
-		//alifErr_noMemory();
-		return -1;
-	}
-	_self->item = items;
-	ALIF_SET_SIZE(_self, _newSize);
-	_self->allocated = newAllocated;
-#endif
 	return 0;
 }
 
@@ -120,7 +95,6 @@ static AlifIntT list_preallocateExact(AlifListObject* _self,
 	AlifSizeT _size) { //167
 	AlifObject** items{};
 	_size = (_size + 1) & ~(size_t)1;
-#ifdef ALIF_GIL_DISABLED
 	AlifListArray* array = list_allocateArray(_size);
 	if (array == nullptr) {
 		//alifErr_noMemory();
@@ -128,13 +102,6 @@ static AlifIntT list_preallocateExact(AlifListObject* _self,
 	}
 	items = array->item;
 	memset(items, 0, _size * sizeof(AlifObject*));
-#else
-	items = (AlifObject**)alifMem_objAlloc(_size * sizeof(AlifObject*)); // alif
-	if (items == nullptr) {
-		//alifErr_noMemory();
-		return -1;
-	}
-#endif
 	alifAtomic_storePtrRelaxed(&_self->item, items);
 	_self->allocated = _size;
 	return 0;
@@ -158,7 +125,6 @@ AlifObject* alifList_new(AlifSizeT _size) { // 212
 		op_->item = nullptr;
 	}
 	else {
-#ifdef ALIF_GIL_DISABLED
 		AlifListArray* array = list_allocateArray(_size);
 		if (array == nullptr) {
 			ALIF_DECREF(op_);
@@ -167,9 +133,6 @@ AlifObject* alifList_new(AlifSizeT _size) { // 212
 		}
 		memset(&array->item, 0, _size * sizeof(AlifObject*));
 		op_->item = array->item;
-#else
-		op_->item = (AlifObject**)alifMem_objAlloc(_size* sizeof(AlifObject*));
-#endif
 		if (op_->item == nullptr) {
 			ALIF_DECREF(op_);
 			return nullptr;
@@ -187,20 +150,12 @@ static AlifObject* list_newPrealloc(AlifSizeT _size) { // 252
 	if (op_ == nullptr) {
 		return nullptr;
 	}
-#ifdef ALIF_GIL_DISABLED
 	AlifListArray* array = list_allocateArray(_size);
 	if (array == nullptr) {
 		ALIF_DECREF(op_);
 		//return alifErr_noMemory();
 	}
 	op_->item = array->item;
-#else
-	op_->item = alifMem_objAlloc(AlifObject*, _size);
-	if (op_->item == nullptr) {
-		ALIF_DECREF(op_);
-		//return alifErr_noMemory();
-	}
-#endif
 	op_->allocated = _size;
 	return (AlifObject*)op_;
 }
@@ -237,11 +192,7 @@ static AlifObject* list_itemImpl(AlifListObject* _self, AlifSizeT _idx) { // 307
 	if (!valid_index(_idx, size)) {
 		goto exit;
 	}
-#ifdef ALIF_GIL_DISABLED
 	item = _alif_newRefWithLock(_self->item[_idx]);
-#else
-	item = ALIF_NEWREF(self->item[_idx]);
-#endif
 exit:
 	ALIF_END_CRITICAL_SECTION();
 	return item;
@@ -343,15 +294,11 @@ static AlifObject* list_item(AlifObject* _aa, AlifSizeT _i) { // 613
 		return nullptr;
 	}
 	AlifObject* item{};
-#ifdef ALIF_GIL_DISABLED
 	item = listGet_itemRef(a, _i);
 	if (item == nullptr) {
 		//alifErr_setObject(_alifExcIndexError_, &ALIF_STR(ListErr));
 		return nullptr;
 	}
-#else
-	item = ALIF_NEWREF(a->item[i]);
-#endif
 	return item;
 }
 
@@ -484,11 +431,7 @@ static void list_clearImpl(AlifListObject* _a, bool _isResize) { // 787
 	while (--i_ >= 0) {
 		ALIF_XDECREF(items[i_]);
 	}
-#ifdef ALIF_GIL_DISABLED
 	bool useQsbr = _isResize and ALIFOBJECT_GC_IS_SHARED(_a);
-#else
-	bool useQsbr = false;
-#endif
 	free_listItems(items, useQsbr);
 }
 
@@ -1984,11 +1927,7 @@ keyFuncFail:
 		while (--i >= 0) {
 			ALIF_XDECREF(finalObjItem[i]);
 		}
-#ifdef ALIF_GIL_DISABLED
 		bool use_qsbr = ALIFOBJECT_GC_IS_SHARED(_self);
-#else
-		bool use_qsbr = false;
-#endif
 		free_listItems(finalObjItem, use_qsbr);
 	}
 	return ALIF_XNEWREF(result);

@@ -502,9 +502,7 @@ public:
 	class DictKeysObject* cachedKeys{};
 	AlifObject* module_{};
 	SpecializationCache specCache{};
-#ifdef ALIF_GIL_DISABLED
 	AlifSizeT uniqueID{};
-#endif
 };
 
 

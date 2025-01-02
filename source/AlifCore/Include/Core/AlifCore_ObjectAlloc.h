@@ -12,7 +12,6 @@
 
 
 
-#ifdef ALIF_GIL_DISABLED
 static inline mi_heap_t* alifObject_getAllocationHeap(AlifThreadImpl* _thread, AlifTypeObject* _tp) { // 17
 	MimallocThreadState* m = &_thread->mimalloc;
 	if (_alifType_hasFeature(_tp, ALIF_TPFLAGS_PREHEADER)) {
@@ -25,7 +24,6 @@ static inline mi_heap_t* alifObject_getAllocationHeap(AlifThreadImpl* _thread, A
 		return &m->heaps[AlifMimallocHeapID_::Alif_Mimalloc_Heap_Object];
 	}
 }
-#endif
 
 
 
@@ -42,14 +40,10 @@ static inline void* alifObject_mallocWithType(AlifTypeObject* _tp, AlifUSizeT _s
 
 
 static inline void* alifObject_reallocWithType(AlifTypeObject* _tp, void* _ptr, AlifUSizeT _size) { // 54
-#ifdef ALIF_GIL_DISABLED
 	AlifThreadImpl* threadState = (AlifThreadImpl*)_alifThread_get();
 	MimallocThreadState* m_ = &threadState->mimalloc;
 	m_->currentObjectHeap = alifObject_getAllocationHeap(threadState, _tp);
-#endif
 	void* mem_ = alifMem_objRealloc(_ptr, _size);
-#ifdef ALIF_GIL_DISABLED
 	m_->currentObjectHeap = &m_->heaps[AlifMimallocHeapID_::Alif_Mimalloc_Heap_Object];
-#endif
 	return mem_;
 }

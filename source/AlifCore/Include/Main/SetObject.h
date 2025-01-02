@@ -64,10 +64,6 @@ public:
 #define ALIFSET_CAST(_so) ALIF_CAST(AlifSetObject*, _so) // 61
 
 static inline AlifSizeT _alifSet_GetSize(AlifObject* so) { // 64
-#ifdef ALIF_GIL_DISABLED
 	return alifAtomic_loadSizeRelaxed(&(ALIFSET_CAST(so)->used));
-#else
-	return ALIFSET_CAST(so)->used;
-#endif
 }
 #define ALIFSET_GET_SIZE(so) _alifSet_GetSize(ALIFOBJECT_CAST(so))

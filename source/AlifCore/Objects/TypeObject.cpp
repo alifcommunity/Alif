@@ -34,7 +34,6 @@
 #define NEXT_VERSION_TAG(_interp) (_interp)->types.nextVersionTag
 
 
-#ifdef ALIF_GIL_DISABLED // 57
 
 // 64
 #define TYPE_LOCK &alifInterpreter_get()->types.mutex
@@ -46,14 +45,6 @@
 
 #define END_TYPE_DICT_LOCK() ALIF_END_CRITICAL_SECTION2()
 
-#else
-
-#define BEGIN_TYPE_LOCK()
-#define END_TYPE_LOCK()
-#define BEGIN_TYPE_DICT_LOCK(d)
-#define END_TYPE_DICT_LOCK()
-
-#endif // 84
 
 
 static AlifObject* slot_tpNew(AlifTypeObject*, AlifObject*, AlifObject*); // 99
@@ -297,31 +288,10 @@ static TypeCache* get_typeCache(void) { // 838
 
 
 static void setVersion_unlocked(AlifTypeObject* tp, AlifUIntT version) { // 999
-#ifndef ALIF_GIL_DISABLED
-	AlifInterpreter* interp = _alifInterpreter_get();
-	if (tp->versionTag != 0) {
-		AlifTypeObject** slot =
-			interp->types.typeVersionCache
-			+ (tp->versionTag % TYPE_VERSION_CACHE_SIZE);
-		*slot = nullptr;
-	}
-	if (version) {
-		tp->versionsUsed++;
-	}
-#else
 	if (version) {
 		alifAtomic_addUint16(&tp->versionsUsed, 1);
 	}
-#endif
 	alifAtomic_storeUint32Relaxed(&tp->versionTag, version);
-#ifndef ALIF_GIL_DISABLED
-	if (version != 0) {
-		AlifTypeObject** slot =
-			interp->types.typeVersionCache
-			+ (version % TYPE_VERSION_CACHE_SIZE);
-		*slot = tp;
-	}
-#endif
 }
 
 
@@ -1523,9 +1493,7 @@ static AlifTypeObject* typeNew_alloc(TypeNewCtx* _ctx) { // 3898
 	et->module_ = nullptr;
 	//et->tpName = nullptr;
 
-#ifdef ALIF_GIL_DISABLED
 	_alifType_assignId(et);
-#endif
 
 	return type;
 }
@@ -2101,7 +2069,6 @@ done:
 
 
 
-#if ALIF_GIL_DISABLED
 
 static void updateCache_gilDisabled(TypeCacheEntry* _entry, AlifObject* _name,
 	AlifUIntT _versionTag, AlifObject* _value) { // 5375
@@ -2121,7 +2088,6 @@ static void updateCache_gilDisabled(TypeCacheEntry* _entry, AlifObject* _name,
 	//ALIF_DECREF(oldValue);
 }
 
-#endif
 
 AlifObject* alifType_lookupRef(AlifTypeObject* _type, AlifObject* _name) { // 5420
 	AlifObject* res{};
@@ -2131,7 +2097,6 @@ AlifObject* alifType_lookupRef(AlifTypeObject* _type, AlifObject* _name) { // 54
 	AlifUIntT h_ = MCACHE_HASH_METHOD(_type, _name);
 	TypeCache* cache = get_typeCache();
 	TypeCacheEntry* entry = &cache->hashTable[h_];
-#ifdef ALIF_GIL_DISABLED
 	while (1) {
 		uint32_t sequence = alifSeqLock_beginRead(&entry->sequence);
 		uint32_t entryVersion = alifAtomic_loadUint32Relaxed(&entry->version);
@@ -2153,13 +2118,6 @@ AlifObject* alifType_lookupRef(AlifTypeObject* _type, AlifObject* _name) { // 54
 			break;
 		}
 	}
-#else
-	if (entry->version == type->versionTag and
-		entry->name == _name) {
-		ALIF_XINCREF(entry->value);
-		return entry->value;
-	}
-#endif
 
 	AlifIntT hasVersion = 0;
 	AlifIntT version = 0;
@@ -2180,12 +2138,7 @@ AlifObject* alifType_lookupRef(AlifTypeObject* _type, AlifObject* _name) { // 54
 	}
 
 	if (hasVersion) {
-#if ALIF_GIL_DISABLED
 		updateCache_gilDisabled(entry, _name, version, res);
-#else
-		AlifObject* oldValue = update_cache(entry, _name, version, res);
-		ALIF_DECREF(oldValue);
-#endif
 	}
 	return res;
 }

@@ -94,9 +94,7 @@ AlifIntT alifSys_create(AlifThread* _thread, AlifObject** _sysModP) { // 3779
 		//return ALIFSTATUS_ERR("failed to create a module object");
 		return -1; // temp
 	}
-#ifdef ALIF_GIL_DISABLED
 	//alifUnstableModule_setGIL(sysmod, ALIF_MOD_GIL_NOT_USED);
-#endif
 
 	sysdict = alifModule_getDict(sysmod);
 	if (sysdict == nullptr) {

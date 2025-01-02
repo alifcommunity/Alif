@@ -15,9 +15,7 @@ static inline void _alif_refcntAdd(AlifObject* _op, AlifSizeT _n) { // 132
 		return;
 	}
 
-#if !defined(ALIF_GIL_DISABLED)
-	op->refLocal += _n;
-#else
+
 	if (alif_isOwnedByCurrentThread(_op)) {
 		uint32_t local = _op->refLocal;
 		AlifSizeT refcnt = (AlifSizeT)local + _n;
@@ -32,7 +30,6 @@ static inline void _alif_refcntAdd(AlifObject* _op, AlifSizeT _n) { // 132
 	else {
 		alifAtomic_addSize(&_op->refShared, (_n << ALIF_REF_SHARED_SHIFT));
 	}
-#endif
 }
 #define ALIF_REFCNTADD(_op, _n) _alif_refcntAdd(ALIFOBJECT_CAST(_op), _n)
 
@@ -43,13 +40,9 @@ void alif_setImmortalUntracked(AlifObject*); // 163
 
 static inline void _alif_setMortal(AlifObject* _op, AlifSizeT _refCnt) { // 167
 	if (_op) {
-#ifdef ALIF_GIL_DISABLED
 		_op->threadID = ALIF_UNOWNED_TID;
 		_op->refLocal = 0;
 		_op->refShared = ALIF_REF_SHARED(_refCnt, ALIF_REF_MERGED);
-#else
-		_op->refcnt = _refCnt;
-#endif
 	}
 }
 
@@ -228,15 +221,7 @@ static inline AlifObject* _alif_newRefWithLock(AlifObject* _op) { // 586
 }
 
 static inline AlifIntT alif_tryIncRef(AlifObject* _op) { // 641
-#ifdef ALIF_GIL_DISABLED
 	return alif_tryIncrefFast(_op) or alif_tryIncRefShared(_op);
-#else
-	if (ALIF_REFCNT(_op) > 0) {
-		ALIF_INCREF(_op);
-		return 1;
-	}
-	return 0;
-#endif
 }
 
 

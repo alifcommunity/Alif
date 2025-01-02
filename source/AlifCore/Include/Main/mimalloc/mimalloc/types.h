@@ -337,13 +337,12 @@ typedef struct mi_page_s {
   struct mi_page_s*     next;              // next page owned by this thread with the same `block_size`
   struct mi_page_s*     prev;              // previous page owned by this thread with the same `block_size`
 
-#ifdef ALIF_GIL_DISABLED
   LListNode     qsbr_node;
   uint64_t              qsbr_goal;
 #endif
 
   // 64-bit 9 words, 32-bit 12 words, (+2 for secure)
-  #if MI_INTPTR_SIZE==8 && !defined(ALIF_GIL_DISABLED)
+  #if MI_INTPTR_SIZE==8 
   uintptr_t padding[1];
   #endif
 } mi_page_t;

@@ -1133,20 +1133,14 @@ void alif_setImmortal(AlifObject* _op) { // 2463
 }
 
 void alifObject_setDeferredRefcount(AlifObject* _op) { // 2472
-#ifdef ALIF_GIL_DISABLED
 	alifObject_setGCBits(_op, ALIFGC_BITS_DEFERRED);
 	_op->refShared = ALIF_REF_SHARED(ALIF_REF_DEFERRED, 0);
-#endif
 }
 
 
 
 void _alifTrashThread_depositObject(AlifThread* _tstate, AlifObject* _op) { // 2761
-#ifdef ALIF_GIL_DISABLED
 	_op->threadID = (uintptr_t)_tstate->deleteLater;
-#else
-	ALIFGCHEAD_SET_PREV(ALIF_AS_GC(_op), (AlifGCHead*)_tstate->deleteLater);
-#endif
 	_tstate->deleteLater = _op;
 }
 
@@ -1156,13 +1150,9 @@ void _alifTrashThread_destroyChain(AlifThread* tstate) { // 2777
 		AlifObject* op = tstate->deleteLater;
 		Destructor dealloc = ALIF_TYPE(op)->dealloc;
 
-#ifdef ALIF_GIL_DISABLED
 		tstate->deleteLater = (AlifObject*)op->threadID;
 		op->threadID = 0;
 		alifAtomic_storeSizeRelaxed(&op->refShared, ALIF_REF_MERGED);
-#else
-		tstate->deleteLater = (AlifObject*)ALIFGCHEAD_PREV(ALIF_AS_GC(op));
-#endif
 
 		(*dealloc)(op);
 	}

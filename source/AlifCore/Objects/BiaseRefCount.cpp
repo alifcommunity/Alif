@@ -103,7 +103,6 @@ void alifBRC_initThread(AlifThread* _thread) { // 143
 
 
 
-#ifdef ALIF_GIL_DISABLED // 309
 
 
 
@@ -130,4 +129,3 @@ AlifSizeT alif_explicitMergeRefcount(AlifObject* op, AlifSizeT extra) { // 405
 		&shared, new_shared));
 	return refcnt;
 }
-#endif  /* ALIF_GIL_DISABLED */

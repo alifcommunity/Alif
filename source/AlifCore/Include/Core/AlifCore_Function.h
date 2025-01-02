@@ -20,9 +20,8 @@ public:
 
 class AlifFuncState { // 28
 	public:
-#ifdef ALIF_GIL_DISABLED
 	AlifMutex mutex{};
-#endif
+
 
 	uint32_t nextVersion{};
 	FuncVersionCacheItem funcVersionCache[FUNC_VERSION_CACHE_SIZE]{};

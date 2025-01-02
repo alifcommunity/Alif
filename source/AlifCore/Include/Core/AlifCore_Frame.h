@@ -95,11 +95,10 @@ static inline void _alifFrame_initialize(AlifInterpreterFrame* _frame,
 		_frame->localsPlus[i] = _alifStackRefNull_;
 	}
 
-#ifdef ALIF_GIL_DISABLED
 	for (AlifIntT i = code->nLocalsPlus; i < code->nLocalsPlus + code->stackSize; i++) {
 		_frame->localsPlus[i] = _alifStackRefNull_;
 	}
-#endif
+
 }
 
 

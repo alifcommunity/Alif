@@ -32,9 +32,7 @@ public:
 class TypeCacheEntry { // 45
 public:
 	AlifUIntT version{};
-#ifdef ALIF_GIL_DISABLED
 	AlifSeqLock sequence{};
-#endif
 	AlifObject* name{};        // reference to exactly a str or None
 	AlifObject* value{};       // borrowed reference or nullptr
 };

@@ -26,13 +26,11 @@ static inline AlifObject* _alifWeakRef_getRef(AlifObject* ref_obj) { // 58
 	}
 
 	LOCK_WEAKREFS(obj);
-#ifdef ALIF_GIL_DISABLED
 	if (ref->object == ALIF_NONE) {
 		// clear_weakref() was called
 		UNLOCK_WEAKREFS(obj);
 		return nullptr;
 	}
-#endif
 	if (alif_tryIncRef(obj)) {
 		UNLOCK_WEAKREFS(obj);
 		return obj;

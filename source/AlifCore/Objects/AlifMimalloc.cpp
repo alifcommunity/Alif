@@ -27,16 +27,13 @@ static void alifMemMiHeap_collectQSBR(mi_heap_t*); // 20
 #ifdef WITH_MIMALLOC // 93
 
 static void alifMemMiPage_clearQSBR(mi_page_t* page) { // 95 
-#ifdef ALIF_GIL_DISABLED
 	page->qsbr_goal = 0;
 	if (page->qsbr_node.next != nullptr) {
 		llist_remove(&page->qsbr_node);
 	}
-#endif
 }
 
 static bool alifMemMiPage_isSafeToFree(mi_page_t* page) { // 108
-#ifdef ALIF_GIL_DISABLED
 	if (page->use_qsbr and page->qsbr_goal != 0) {
 		AlifThreadImpl* tstate = (AlifThreadImpl*)_alifThread_get();
 		if (tstate == nullptr) {
@@ -44,13 +41,11 @@ static bool alifMemMiPage_isSafeToFree(mi_page_t* page) { // 108
 		}
 		return alifQSBR_goalReached(tstate->qsbr, page->qsbr_goal);
 	}
-#endif
 	return true;
 
 }
 
 static bool alifMemMiPage_maybeFree(mi_page_t* page, mi_page_queue_t* pq, bool force) { // 126
-#ifdef ALIF_GIL_DISABLED
 	if (page->use_qsbr) {
 		AlifThreadImpl* tstate = (AlifThreadImpl*)alifThread_get();
 		if (page->qsbr_goal != 0 and alifQSBR_goalReached(tstate->qsbr, page->qsbr_goal)) {
@@ -65,13 +60,11 @@ static bool alifMemMiPage_maybeFree(mi_page_t* page, mi_page_queue_t* pq, bool f
 		llist_insertTail(&tstate->mimalloc.pageList, &page->qsbr_node);
 		return false;
 	}
-#endif
 	_mi_page_free(page, pq, force);
 	return true;
 }
 
 static void alifMemMiPage_reclaimed(mi_page_t* page) { // 150
-#ifdef ALIF_GIL_DISABLED
 	if (page->qsbr_goal != 0) {
 		if (mi_page_all_free(page)) {
 			AlifThreadImpl* tstate = (AlifThreadImpl*)alifThread_get();
@@ -82,11 +75,9 @@ static void alifMemMiPage_reclaimed(mi_page_t* page) { // 150
 			page->qsbr_goal = 0;
 		}
 	}
-#endif
 }
 
 static void alifMemMiHeap_collectQSBR(mi_heap_t* heap) { // 169
-#ifdef ALIF_GIL_DISABLED
 	if (!heap->page_use_qsbr) {
 		return;
 	}
@@ -112,7 +103,6 @@ static void alifMemMiHeap_collectQSBR(mi_heap_t* heap) { // 169
 		alifMemMiPage_clearQSBR(page);
 		_mi_page_free(page, mi_page_queue_of(page), false);
 	}
-#endif
 }
 
 

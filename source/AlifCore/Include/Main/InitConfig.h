@@ -32,9 +32,7 @@ public:
 
 	AlifIntT intMaxStrDigits{};
 
-#ifdef ALIF_GIL_DISABLED
 	AlifIntT enableGIL{};
-#endif
 
 	wchar_t* programName{};
 
