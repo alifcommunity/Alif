@@ -1104,6 +1104,38 @@ dispatch_opcode :
 				stackPointer[-1] = bottom;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(UNPACK_SEQUENCE) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 2;
+				PREDICTED(UNPACK_SEQUENCE);
+				AlifCodeUnit* thisInstr = nextInstr - 2;
+				AlifStackRef seq{};
+				AlifStackRef* output{};
+				// _SPECIALIZE_UNPACK_SEQUENCE
+				seq = stackPointer[-1];
+				{
+					uint16_t counter = read_u16(&thisInstr[1].cache);
+#if ENABLE_SPECIALIZATION
+					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
+						nextInstr = thisInstr;
+						_alifSpecialize_UnpackSequence(seq, nextInstr, oparg);
+						DISPATCH_SAME_OPARG();
+					}
+					OPCODE_DEFERRED_INC(UNPACK_SEQUENCE);
+					ADVANCE_ADAPTIVE_COUNTER(thisInstr[1].counter);
+#endif  /* ENABLE_SPECIALIZATION */
+				}
+				// _UNPACK_SEQUENCE
+				{
+					output = &stackPointer[-1];
+					AlifStackRef* top = output + oparg;
+					AlifIntT res = _alifEval_unpackIterableStackRef(_thread, seq, oparg, -1, top);
+					alifStackRef_close(seq);
+					//if (res == 0) goto pop_1_error;
+				}
+				stackPointer += -1 + oparg;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(RESUME) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;
@@ -1718,6 +1750,99 @@ AlifObject* alifEval_vector(AlifThread* _tstate, AlifFunctionObject* _func,
 
 
 
+
+
+AlifIntT _alifEval_unpackIterableStackRef(AlifThread* _thread, AlifStackRef _vStackRef,
+	AlifIntT _argCnt, AlifIntT _argCntAfter, AlifStackRef* _sp) { // 2064
+	AlifIntT i = 0, j = 0;
+	AlifSizeT ll = 0;
+	AlifObject* it;  /* iter(v) */
+	AlifObject* w{};
+	AlifObject* l = nullptr; /* variable list */
+
+	AlifObject* v = alifStackRef_asAlifObjectBorrow(_vStackRef);
+
+	it = alifObject_getIter(v);
+	if (it == nullptr) {
+		//if (_alifErr_exceptionMatches(_thread, _alifExcTypeError_) and
+		//	ALIF_TYPE(v)->iter == nullptr and !alifSequence_check(v))
+		//{
+		//	_alifErr_format(_thread, _alifExcTypeError_,
+		//		"cannot unpack non-iterable %.200s object",
+		//		ALIF_TYPE(v)->name);
+		//}
+		return 0;
+	}
+
+	for (; i < _argCnt; i++) {
+		w = alifIter_next(it);
+		if (w == nullptr) {
+			/* Iterator done, via error or exhaustion. */
+			//if (!_alifErr_occurred(_thread)) {
+			//	if (_argCntAfter == -1) {
+			//		_alifErr_format(_thread, _alifExcValueError_,
+			//			"not enough values to unpack "
+			//			"(expected %d, got %d)",
+			//			_argCnt, i);
+			//	}
+			//	else {
+			//		_alifErr_format(_thread, _alifExcValueError_,
+			//			"not enough values to unpack "
+			//			"(expected at least %d, got %d)",
+			//			_argCnt + _argCntAfter, i);
+			//	}
+			//}
+			goto Error;
+		}
+		*--_sp = ALIFSTACKREF_FROMALIFOBJECTSTEAL(w);
+	}
+
+	if (_argCntAfter == -1) {
+		/* We better have exhausted the iterator now. */
+		w = alifIter_next(it);
+		if (w == nullptr) {
+			//if (_alifErr_occurred(_thread))
+			//	goto Error;
+			ALIF_DECREF(it);
+			return 1;
+		}
+		ALIF_DECREF(w);
+		//_alifErr_format(_thread, _alifExcValueError_,
+		//	"too many values to unpack (expected %d)",
+		//	_argCnt);
+		goto Error;
+	}
+
+	l = alifSequence_list(it);
+	if (l == nullptr)
+		goto Error;
+	*--_sp = ALIFSTACKREF_FROMALIFOBJECTSTEAL(l);
+	i++;
+
+	ll = ALIFLIST_GET_SIZE(l);
+	if (ll < _argCntAfter) {
+		//_alifErr_format(_thread, _alifExcValueError_,
+		//	"not enough values to unpack (expected at least %d, got %zd)",
+		//	_argCnt + _argCntAfter, _argCnt + ll);
+		goto Error;
+	}
+
+	/* Pop the "after-variable" args off the list. */
+	for (j = _argCntAfter; j > 0; j--, i++) {
+		*--_sp = ALIFSTACKREF_FROMALIFOBJECTSTEAL(ALIFLIST_GET_ITEM(l, ll - j));
+	}
+	/* Resize the list. */
+	ALIF_SET_SIZE(l, ll - _argCntAfter);
+	ALIF_DECREF(it);
+	return 1;
+
+Error:
+	for (; i > 0; i--, _sp++) {
+		alifStackRef_close(*_sp);
+	}
+	ALIF_XDECREF(it);
+	return 0;
+}
 
 
 
