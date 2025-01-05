@@ -16,8 +16,8 @@ public:
 
 
 extern AlifTypeObject _alifClassMethodDescrType_; // 19
-
-extern AlifTypeObject _alifMemberDescrType_;
+extern AlifTypeObject _alifMemberDescrType_; // 21
+extern AlifTypeObject _alifWrapperDescrType_; // 23
 
 AlifObject* alifDescr_newMethod(AlifTypeObject*, AlifMethodDef*); // 27
 AlifObject* alifDescr_newClassMethod(AlifTypeObject*, AlifMethodDef*); // 28
@@ -53,8 +53,26 @@ public:
 /* ------------------------------------------------------------------------------------ */
 
 
+typedef AlifObject* (*WrapperFunc)(AlifObject*, AlifObject*, void*); // 5
 
-class AlifDescrObject {
+
+class WrapperBase { // 11
+public:
+	const char* name{};
+	AlifIntT offset{};
+	void* function{};
+	WrapperFunc wrapper{};
+	const char* doc{};
+	AlifIntT flags{};
+	AlifObject* nameStrObj{};
+};
+
+ // 21
+/* Flags for above struct */
+#define ALIFWRAPPERFLAG_KEYWORDS 1 /* wrapper function takes keyword args */
+
+
+class AlifDescrObject { // 26
 public:
 	ALIFOBJECT_HEAD{};
 	AlifTypeObject* type{};
@@ -77,5 +95,13 @@ public:
 
 
 
+class AlifWrapperDescrObject { // 54
+public:
+	ALIFDESCR_COMMON;
+	WrapperBase* base{};
+	void* wrapped{}; /* This can be any function pointer */
+};
+
+AlifObject* alifDescr_newWrapper(AlifTypeObject*, WrapperBase*, void*); // 60
 
 AlifIntT alifDescr_isData(AlifObject*); // 62

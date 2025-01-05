@@ -203,31 +203,31 @@ AlifObject* alifObject_vectorCall(AlifObject* _callable, AlifObject* const* _arg
 		_args, _nArgsF, _kwNames);
 }
 
-AlifObject* _alifObject_call(AlifThread* tstate, AlifObject* callable,
-	AlifObject* args, AlifObject* kwargs) { // 332
+AlifObject* _alifObject_call(AlifThread* _thread, AlifObject* _callable,
+	AlifObject* _args, AlifObject* _kwargs) { // 332
 	TernaryFunc call{};
 	AlifObject* result{};
 
-	VectorCallFunc vector_func = alifVectorCall_function(callable);
+	VectorCallFunc vector_func = alifVectorCall_function(_callable);
 	if (vector_func != nullptr) {
-		return _alifVectorCall_call(tstate, vector_func, callable, args, kwargs);
+		return _alifVectorCall_call(_thread, vector_func, _callable, _args, _kwargs);
 	}
 	else {
-		call = ALIF_TYPE(callable)->call;
+		call = ALIF_TYPE(_callable)->call;
 		if (call == nullptr) {
-			object_isNotCallable(tstate, callable);
+			object_isNotCallable(_thread, _callable);
 			return nullptr;
 		}
 
-		if (_alif_enterRecursiveCallThread(tstate, " while calling a Alif object")) {
+		if (_alif_enterRecursiveCallThread(_thread, " while calling a Alif object")) {
 			return nullptr;
 		}
 
-		result = (*call)(callable, args, kwargs);
+		result = (*call)(_callable, _args, _kwargs);
 
-		_alif_leaveRecursiveCallThread(tstate);
+		_alif_leaveRecursiveCallThread(_thread);
 
-		return _alif_checkFunctionResult(tstate, callable, result, nullptr);
+		return _alif_checkFunctionResult(_thread, _callable, result, nullptr);
 	}
 }
 

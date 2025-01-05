@@ -668,6 +668,7 @@
     INIT_ID(__annotate__), \
     INIT_ID(__buildClass__), \
     INIT_ID(__builtins__), \
+    INIT_ID(__call__), \
     INIT_ID(__class__), \
     INIT_ID(__classCell__), \
     INIT_ID(__classDict__), \
@@ -681,6 +682,7 @@
 	INIT_ID(__format__), \
 	INIT_ID(__getAttr__), \
 	INIT_ID(__hash__), \
+	INIT_ID(__init__), \
 	INIT_ID(__initSubclass__), \
 	INIT_ID(__lengthHint__), \
 	INIT_ID(__loader__), \
