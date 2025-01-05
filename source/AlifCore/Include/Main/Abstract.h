@@ -32,6 +32,8 @@ AlifObject* alifObject_getItem(AlifObject*, AlifObject*); // 349
 
 AlifIntT alifObject_setItem(AlifObject*, AlifObject*, AlifObject*); // 357
 
+AlifIntT alifObject_delItem(AlifObject*, AlifObject*); // 369
+
 AlifObject* alifObject_format(AlifObject*, AlifObject*); // 374
 
 AlifObject* alifObject_getIter(AlifObject*); // 383

@@ -209,6 +209,39 @@ AlifIntT alifObject_setItem(AlifObject* _o,
 }
 
 
+AlifIntT alifObject_delItem(AlifObject* _o, AlifObject* _key) { // 256
+	if (_o == nullptr or _key == nullptr) {
+		null_error();
+		return -1;
+	}
+
+	AlifMappingMethods* m = ALIF_TYPE(_o)->asMapping;
+	if (m and m->assSubscript) {
+		AlifIntT res = m->assSubscript(_o, _key, (AlifObject*)nullptr);
+		return res;
+	}
+
+	if (ALIF_TYPE(_o)->asSequence) {
+		if (alifIndex_check(_key)) {
+			AlifSizeT keyValue{};
+			keyValue = alifNumber_asSizeT(_key, nullptr/*_alifExcIndexError_*/);
+			if (keyValue == -1 /*and alifErr_occurred()*/)
+				return -1;
+			return alifSequence_delItem(_o, keyValue);
+		}
+		else if (ALIF_TYPE(_o)->asSequence->assItem) {
+			//type_error("sequence index must be "
+			//	"integer, not '%.200s'", key);
+			return -1;
+		}
+	}
+
+	//type_error("'%.200s' object does not support item deletion", o);
+	return -1;
+}
+
+
+
 AlifIntT alifObject_getBuffer(AlifObject* obj, AlifBuffer* view, AlifIntT flags) { // 425
 	if (flags != ALIFBUF_SIMPLE) {  /* fast path */
 		if (flags == ALIFBUF_READ or flags == ALIFBUF_WRITE) {

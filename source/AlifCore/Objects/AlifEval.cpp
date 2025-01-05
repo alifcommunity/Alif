@@ -728,6 +728,27 @@ dispatch_opcode :
 				stackPointer += -1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(DELETE_NAME) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifObject* name = GETITEM(FRAME_CO_NAMES, oparg);
+				AlifObject* ns = LOCALS();
+				AlifIntT err{};
+				if (ns == nullptr) {
+					//_alifErr_format(_thread, _alifExcSystemError_,
+					//	"no locals when deleting %R", name);
+					//goto error;
+				}
+				err = alifObject_delItem(ns, name);
+				// Can't use ERROR_IF here.
+				if (err != 0) {
+					//_alifEval_formatExcCheckArg(_thread, _alifExcNameError_,
+					//	NAME_ERROR_MSG,
+					//	name);
+					//goto error;
+				}
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(FOR_ITER) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 2;

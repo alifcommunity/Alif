@@ -2268,9 +2268,9 @@ static AlifIntT compiler_visitStmt(AlifCompiler* _c, StmtTy _s) { // 3818
 	//	return codegen_typealias(_c, _s);
 	case StmtK_::ReturnK:
 		return codegen_return(_c, _s);
-	//case StmtK_::DeleteK:
-	//	VISIT_SEQ(_c, expr, _s->v.Delete.targets)
-	//		break;
+	case StmtK_::DeleteK:
+		VISIT_SEQ(_c, Expr, _s->V.delete_.targets)
+			break;
 	case StmtK_::AssignK:
 	{
 		AlifSizeT n = ASDL_SEQ_LEN(_s->V.assign.targets);
