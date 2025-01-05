@@ -3,6 +3,7 @@
 #include "AlifCore_Abstract.h"
 #include "AlifCore_Backoff.h"
 #include "AlifCore_Call.h"
+#include "AlifCore_Cell.h"
 #include "AlifCore_Eval.h"
 #include "AlifCore_Code.h"
 
@@ -330,6 +331,21 @@ dispatch_opcode :
 				}
 				bc = ALIFSTACKREF_FROMALIFOBJECTSTEAL(bc_o);
 				stackPointer[0] = bc;
+				stackPointer += 1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
+			TARGET(LOAD_LOCALS) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef locals{};
+				AlifObject* l = LOCALS();
+				if (l == nullptr) {
+					//_alifErr_setString(_thread, _alifExcSystemError_,
+					//	"no locals found");
+					//if (true) goto error;
+				}
+				locals = ALIFSTACKREF_FROMALIFOBJECTNEW(l);
+				stackPointer[0] = locals;
 				stackPointer += 1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
@@ -993,6 +1009,19 @@ dispatch_opcode :
 				stackPointer += 1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(MAKE_CELL) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				// "initial" is probably NULL but not if it's an arg (or set
+				// via the f_locals proxy before MAKE_CELL has run).
+				AlifObject* initial = alifStackRef_asAlifObjectBorrow(GETLOCAL(oparg));
+				AlifObject* cell = alifCell_new(initial);
+				if (cell == nullptr) {
+					//goto error;
+				}
+				SETLOCAL(oparg, ALIFSTACKREF_FROMALIFOBJECTSTEAL(cell));
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(POP_JUMP_IF_FALSE) {
 				AlifCodeUnit* thisInstr = _frame->instrPtr = nextInstr;
 				nextInstr += 2;
@@ -1079,6 +1108,16 @@ dispatch_opcode :
 					ALIF_UNREACHABLE();
 				}
 				stackPointer[-2] = funcSt;
+				stackPointer += -1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
+			TARGET(STORE_DEREF) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef v{};
+				v = stackPointer[-1];
+				AlifCellObject* cell = (AlifCellObject*)alifStackRef_asAlifObjectBorrow(GETLOCAL(oparg));
+				alifCell_setTakeRef(cell, alifStackRef_asAlifObjectSteal(v));
 				stackPointer += -1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //

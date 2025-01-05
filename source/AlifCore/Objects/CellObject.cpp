@@ -6,6 +6,18 @@
 
 
 
+AlifObject* alifCell_new(AlifObject* _obj) { // 8
+	AlifCellObject* op{};
+
+	op = (AlifCellObject*)ALIFOBJECT_GC_NEW(AlifCellObject, &_alifCellType_);
+	if (op == nullptr)
+		return nullptr;
+	op->ref = ALIF_XNEWREF(_obj);
+
+	ALIFOBJECT_GC_TRACK(op);
+	return (AlifObject*)op;
+}
+
 
 
 AlifIntT alifCell_set(AlifObject* _op, AlifObject* _value) { // 63

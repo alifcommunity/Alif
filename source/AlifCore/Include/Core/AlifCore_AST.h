@@ -156,6 +156,7 @@ public:
 			ArgumentsTy args{};
 			ASDLStmtSeq* body{};
 			ASDLTypeParamSeq* typeParams{};
+			ExprTy returns{};
 		}functionDef;
 
 		class {

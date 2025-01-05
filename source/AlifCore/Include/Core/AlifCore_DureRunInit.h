@@ -665,6 +665,7 @@
 #define ALIF_STR_IDENTIFIERS_INIT { \
     INIT_ID(CANCELLED), \
     INIT_ID(__abstractMethods__), \
+    INIT_ID(__annotate__), \
     INIT_ID(__buildClass__), \
     INIT_ID(__builtins__), \
     INIT_ID(__class__), \

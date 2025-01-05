@@ -290,8 +290,8 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 1;
 	case LOAD_BUILD_CLASS:
 		return 0;
-	//case LOAD_CLOSURE:
-	//	return 0;
+	case LOAD_CLOSURE:
+		return 0;
 	//case LOAD_COMMON_CONSTANT:
 	//	return 0;
 	case LOAD_CONST:
@@ -752,8 +752,8 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 1 + (_oparg & 1);
 	case LOAD_BUILD_CLASS:
 		return 1;
-	//case LOAD_CLOSURE:
-	//	return 1;
+	case LOAD_CLOSURE:
+		return 1;
 	//case LOAD_COMMON_CONSTANT:
 	//	return 1;
 	case LOAD_CONST:
