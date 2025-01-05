@@ -510,7 +510,7 @@ static ASDLExprSeq* delTargets_rule(AlifParser* _p) {
 		if (
 			(a_ = (ASDLExprSeq*)alif12_gather(_p)) // ",".حذف_هدف+
 			and
-			(literal = alifParserEngine_expectToken(_p, COMMA)) // ","?
+			(literal = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
 			)
 		{
 			res = a_;
