@@ -1111,6 +1111,42 @@ dispatch_opcode :
 				stackPointer += -1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(STORE_ATTR) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 5;
+				PREDICTED(STORE_ATTR);
+				AlifCodeUnit* thisInstr = nextInstr - 5;
+				AlifStackRef owner{};
+				AlifStackRef v{};
+				// _SPECIALIZE_STORE_ATTR
+				owner = stackPointer[-1];
+				{
+					uint16_t counter = read_u16(&thisInstr[1].cache);
+#if ENABLE_SPECIALIZATION
+					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
+						AlifObject* name = GETITEM(FRAME_CO_NAMES, oparg);
+						nextInstr = thisInstr;
+						_alifSpecialize_storeAttr(owner, nextInstr, name);
+						DISPATCH_SAME_OPARG();
+					}
+					OPCODE_DEFERRED_INC(STORE_ATTR);
+					ADVANCE_ADAPTIVE_COUNTER(thisInstr[1].counter);
+#endif  /* ENABLE_SPECIALIZATION */
+				}
+				/* Skip 3 cache entries */
+				// _STORE_ATTR
+				v = stackPointer[-2];
+				{
+					AlifObject* name = GETITEM(FRAME_CO_NAMES, oparg);
+					AlifIntT err = alifObject_setAttr(alifStackRef_asAlifObjectBorrow(owner),
+						name, alifStackRef_asAlifObjectBorrow(v));
+					alifStackRef_close(v);
+					alifStackRef_close(owner);
+					//if (err) goto pop_2_error;
+				}
+				stackPointer += -2;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(STORE_DEREF) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;

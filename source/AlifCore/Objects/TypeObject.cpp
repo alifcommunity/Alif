@@ -751,7 +751,7 @@ static AlifIntT isSubType_withMro(AlifObject* _methResOrder,
 	AlifTypeObject* _a, AlifTypeObject* _b) { // 2648
 	AlifIntT res{};
 	if (_methResOrder != nullptr) {
-		AlifSizeT i, n;
+		AlifSizeT i{}, n{};
 		n = ALIFTUPLE_GET_SIZE(_methResOrder);
 		res = 0;
 		for (i = 0; i < n; i++) {

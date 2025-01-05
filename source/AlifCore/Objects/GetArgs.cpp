@@ -1370,6 +1370,63 @@ AlifIntT _alifArg_checkPositional(const char* name, AlifSizeT nargs,
 }
 
 
+static AlifIntT unpack_stack(AlifObject* const* args,
+	AlifSizeT nargs, const char* name,
+	AlifSizeT min, AlifSizeT max, va_list vargs) { // 2822
+	AlifSizeT i{};
+	AlifObject** o{};
+
+	if (!_alifArg_checkPositional(name, nargs, min, max)) {
+		return 0;
+	}
+
+	for (i = 0; i < nargs; i++) {
+		o = va_arg(vargs, AlifObject**);
+		*o = args[i];
+	}
+	return 1;
+}
+
+AlifIntT alifArg_unpackTuple(AlifObject* args,
+	const char* name, AlifSizeT min, AlifSizeT max, ...) { // 2840
+	AlifObject** stack{};
+	AlifSizeT nargs{};
+	AlifIntT retval{};
+	va_list vargs{};
+
+	if (!ALIFTUPLE_CHECK(args)) {
+		//alifErr_setString(_alifExcSystemError_,
+		//	"alifArg_unpackTuple() argument list is not a tuple");
+		return 0;
+	}
+	stack = ALIFTUPLE_ITEMS(args);
+	nargs = ALIFTUPLE_GET_SIZE(args);
+
+	va_start(vargs, max);
+	retval = unpack_stack(stack, nargs, name, min, max, vargs);
+	va_end(vargs);
+	return retval;
+}
+
+
+
+AlifIntT _alifArg_noKeywords(const char* funcname, AlifObject* kwargs) { // 2885
+	if (kwargs == nullptr) {
+		return 1;
+	}
+	if (!ALIFDICT_CHECKEXACT(kwargs)) {
+		//ALIFERR_BADINTERNALCALL();
+		return 0;
+	}
+	if (ALIFDICT_GET_SIZE(kwargs) == 0) {
+		return 1;
+	}
+
+	//alifErr_format(_alifExcTypeError_, "%.200s() takes no keyword arguments",
+	//	funcname);
+	return 0;
+}
+
 
 AlifIntT _alifArg_noKwnames(const char* funcname, AlifObject* kwnames) { // 2921
 	if (kwnames == nullptr) {
