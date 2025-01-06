@@ -109,9 +109,28 @@
 
 
 
-
-
-
+ // alif //
+// هذا القسم خاص بالنصوص ذات الترميز العريض فقط
+#define ALIFUSTR_USTR_BASE_INIT(_litr, ASCII) \
+    { \
+        .objBase = ALIFOBJECT_HEAD_INIT(&_alifUStrType_), \
+        .length = 5, \
+        .hash = -1, \
+        .state = { \
+            .kind = 2, \
+            .compact = 1, \
+            .ascii = (ASCII), \
+            .staticallyAllocated = 1, \
+        }, \
+    }
+#define ALIFUSTROBJECT_INIT(_litr, _name)									\
+	{																\
+		.ascii = ALIFUSTR_USTR_BASE_INIT(_litr, 1),				\
+		.data = _name												\
+	}
+#define INIT_UID(_name1, _name2) \
+    .alif ## _name1 = ALIFUSTROBJECT_INIT(#_name1, L#_name2)
+// alif //
 
 
 
@@ -682,7 +701,7 @@
 	INIT_ID(__format__), \
 	INIT_ID(__getAttr__), \
 	INIT_ID(__hash__), \
-	INIT_ID(__init__), \
+	INIT_UID(__init__, تهيئة), \
 	INIT_ID(__initSubclass__), \
 	INIT_ID(__lengthHint__), \
 	INIT_ID(__loader__), \

@@ -13,6 +13,20 @@
     STRUCT_FOR_ASCII_STR(#_name) alif ## _name;
 
 
+// alif //
+// هذا القسم خاص بالنصوص ذات الترميز العريض فقط
+#define STRUCT_FOR_USTR(_litr) \
+    class {							\
+	public:							\
+        AlifASCIIObject ascii{};	\
+        wchar_t data[6]; \
+    }
+#define STRUCT_FOR_UID(_name1, _name2) \
+    STRUCT_FOR_USTR(#_name2) alif ## _name1;
+// alif //
+
+
+
 class AlifGlobalStrings {
 public:
     class {
@@ -49,7 +63,12 @@ public:
 		STRUCT_FOR_ID(__format__)
 		STRUCT_FOR_ID(__getAttr__)
 		STRUCT_FOR_ID(__hash__)
-		STRUCT_FOR_ID(__init__)
+		STRUCT_FOR_UID(__init__, تهيئة)
+		//class {
+		//public:
+		//	AlifASCIIObject ascii{};
+		//	wchar_t data[6];
+		//}alif__init__;
 		STRUCT_FOR_ID(__initSubclass__)
 		STRUCT_FOR_ID(__lengthHint__)
 		STRUCT_FOR_ID(__loader__)
@@ -103,6 +122,8 @@ public:
 
 #define ALIF_ID(_name) \
      (ALIF_SINGLETON(strings.identifiers.alif ## _name.ascii.objBase))
+#define ALIF_UID(_name) \
+     (ALIF_SINGLETON(strings.identifiers.alif ## _name.unicode.base.base.objBase))
 #define ALIF_STR(_name) \
      (ALIF_SINGLETON(strings.literals.alif ## _name.ascii.objBase))
 #define ALIF_LATIN1_CHR(_ch) \
