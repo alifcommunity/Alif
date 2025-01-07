@@ -19,27 +19,6 @@ AlifDureRun _alifDureRun_ = ALIF_DURERUNSTATE_INIT(_alifDureRun_); // 103
 static AlifIntT dureRunInitialized = 0; // 110
 
 AlifIntT alifDureRun_initialize() { // 112
-	//_alifDureRun_.staticObjects.singletons.strings.identifiers.alif__init__ =
-	//{
-	//	.ascii = {
-	//		//.base = {
-	//		//	.base = {
-	//				.objBase = ALIFOBJECT_HEAD_INIT(&_alifUStrType_),
-	//				.length = 5,
-	//				.hash = -1,
-	//				.state = {
-	//					.kind = 2,
-	//					.compact = 1,
-	//					.ascii = 1,
-	//					.staticallyAllocated = 1, },
-	//			//},
-	//			//.utf8Length = (long long)strlen("__init__"),
-	//			//.utf8 = (char*)"__init__"
-	//		//},
-	//	},
-	//	.data = L"تهيئة"
-	//};
-
 
 	if (dureRunInitialized) return 1;
 

@@ -66,11 +66,6 @@ public:
 		STRUCT_FOR_ID(__getAttr__)
 		STRUCT_FOR_ID(__hash__)
 		STRUCT_FOR_UID(__init__, _تهيئة_, 8)
-		//class {
-		//public:
-		//	AlifASCIIObject ascii{};
-		//	wchar_t data[6];
-		//}alif__init__;
 		STRUCT_FOR_ID(__initSubclass__)
 		STRUCT_FOR_ID(__lengthHint__)
 		STRUCT_FOR_ID(__loader__)
