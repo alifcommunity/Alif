@@ -3413,7 +3413,7 @@ static void** resolve_slotDups(AlifTypeObject* type, AlifObject* name) { // 1065
 	res = nullptr;
 	for (pp = ptrs; *pp; pp++) {
 		ptr = slot_ptr(type, (*pp)->offset);
-		if (ptr == nullptr || *ptr == nullptr)
+		if (ptr == nullptr or *ptr == nullptr)
 			continue;
 		if (res != nullptr)
 			return nullptr;

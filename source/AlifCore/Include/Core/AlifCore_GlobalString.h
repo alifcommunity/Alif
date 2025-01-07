@@ -14,14 +14,15 @@
 
 
 // alif //
-// هذا القسم خاص بالنصوص ذات الترميز العريض فقط
+// هذا القسم خاص بالنصوص ذات الترميز الحرفي الثنائي فقط "الاحرف العربية"
 // طول الكلمة يساوي عدد الاحرف زائد 1 لقاطع النص,
 // وقد تم تمريرها يدويا لانه لا يوجد طريقة لحسابها اثناء البناء
+// نوع البيانات يجب ان يكون const char16_t لأنه يتم البحث عن الاحرف ك 2 بايت لكل حرف بغض النظر عن النظام المستخدم
 #define STRUCT_FOR_USTR(_litr, _len) \
     class {							\
 	public:							\
         AlifASCIIObject ascii{};	\
-        wchar_t data[_len]; \
+        const char16_t data[_len]; \
     }
 #define STRUCT_FOR_UID(_name1, _name2, _len) \
     STRUCT_FOR_USTR(#_name2, _len) alif ## _name1;
