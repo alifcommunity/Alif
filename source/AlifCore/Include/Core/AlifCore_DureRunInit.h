@@ -128,10 +128,10 @@
 #define ALIFUSTROBJECT_INIT(_litr, _name, _len)								\
 	{																		\
 		.ascii = ALIFUSTR_USTR_BASE_INIT(_litr, _len, 1, sizeof(wchar_t)),	\
-		.data = _name														\
+		.data = L ## _name														\
 	}
 #define INIT_UID(_name1, _name2, _len) \
-    .alif ## _name1 = ALIFUSTROBJECT_INIT(#_name1, L#_name2, _len)
+    .alif ## _name1 = ALIFUSTROBJECT_INIT(#_name1, #_name2, _len)
 // alif //
 
 
