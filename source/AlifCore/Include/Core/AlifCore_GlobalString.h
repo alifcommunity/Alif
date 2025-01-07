@@ -15,14 +15,16 @@
 
 // alif //
 // هذا القسم خاص بالنصوص ذات الترميز العريض فقط
-#define STRUCT_FOR_USTR(_litr) \
+// طول الكلمة يساوي عدد الاحرف زائد 1 لقاطع النص,
+// وقد تم تمريرها يدويا لانه لا يوجد طريقة لحسابها اثناء البناء
+#define STRUCT_FOR_USTR(_litr, _len) \
     class {							\
 	public:							\
         AlifASCIIObject ascii{};	\
-        wchar_t data[6]; \
+        wchar_t data[_len]; \
     }
-#define STRUCT_FOR_UID(_name1, _name2) \
-    STRUCT_FOR_USTR(#_name2) alif ## _name1;
+#define STRUCT_FOR_UID(_name1, _name2, _len) \
+    STRUCT_FOR_USTR(#_name2, _len) alif ## _name1;
 // alif //
 
 
@@ -63,7 +65,7 @@ public:
 		STRUCT_FOR_ID(__format__)
 		STRUCT_FOR_ID(__getAttr__)
 		STRUCT_FOR_ID(__hash__)
-		STRUCT_FOR_UID(__init__, تهيئة)
+		STRUCT_FOR_UID(__init__, _تهيئة_, 8)
 		//class {
 		//public:
 		//	AlifASCIIObject ascii{};

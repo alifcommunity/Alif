@@ -111,25 +111,27 @@
 
  // alif //
 // هذا القسم خاص بالنصوص ذات الترميز العريض فقط
-#define ALIFUSTR_USTR_BASE_INIT(_litr, ASCII) \
+// طول النص يساوي عدد احرف الكلمة,
+// وقد تم تمريره يدويا لانه لا يوجد طريقة لحسابه اثناء البناء
+#define ALIFUSTR_USTR_BASE_INIT(_litr, _len, _isAscii, _kind) \
     { \
         .objBase = ALIFOBJECT_HEAD_INIT(&_alifUStrType_), \
-        .length = 5, \
+        .length = _len, \
         .hash = -1, \
         .state = { \
-            .kind = 2, \
+            .kind = _kind, \
             .compact = 1, \
-            .ascii = (ASCII), \
+            .ascii = _isAscii, \
             .staticallyAllocated = 1, \
         }, \
     }
-#define ALIFUSTROBJECT_INIT(_litr, _name)									\
-	{																\
-		.ascii = ALIFUSTR_USTR_BASE_INIT(_litr, 1),				\
-		.data = _name												\
+#define ALIFUSTROBJECT_INIT(_litr, _name, _len)								\
+	{																		\
+		.ascii = ALIFUSTR_USTR_BASE_INIT(_litr, _len, 1, sizeof(wchar_t)),	\
+		.data = _name														\
 	}
-#define INIT_UID(_name1, _name2) \
-    .alif ## _name1 = ALIFUSTROBJECT_INIT(#_name1, L#_name2)
+#define INIT_UID(_name1, _name2, _len) \
+    .alif ## _name1 = ALIFUSTROBJECT_INIT(#_name1, L#_name2, _len)
 // alif //
 
 
@@ -701,7 +703,7 @@
 	INIT_ID(__format__), \
 	INIT_ID(__getAttr__), \
 	INIT_ID(__hash__), \
-	INIT_UID(__init__, تهيئة), \
+	INIT_UID(__init__, _تهيئة_, 7), \
 	INIT_ID(__initSubclass__), \
 	INIT_ID(__lengthHint__), \
 	INIT_ID(__loader__), \
