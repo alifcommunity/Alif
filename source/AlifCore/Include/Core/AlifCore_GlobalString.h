@@ -15,17 +15,16 @@
 
 // alif //
 // هذا القسم خاص بالنصوص ذات الترميز الحرفي الثنائي فقط "الاحرف العربية"
-// طول الكلمة يساوي عدد الاحرف زائد 1 لقاطع النص,
-// وقد تم تمريرها يدويا لانه لا يوجد طريقة لحسابها اثناء البناء
+// طول الكلمة يساوي عدد الاحرف زائد 1 لقاطع النص
 // نوع البيانات يجب ان يكون const char16_t لأنه يتم البحث عن الاحرف ك 2 بايت لكل حرف بغض النظر عن النظام المستخدم
-#define STRUCT_FOR_USTR(_litr, _len) \
+#define STRUCT_FOR_USTR(_litr) \
     class {							\
 	public:							\
         AlifASCIIObject ascii{};	\
-        const char16_t data[_len]; \
+        const char16_t data[sizeof(u ## _litr) / 2]; \
     }
-#define STRUCT_FOR_UID(_name1, _name2, _len) \
-    STRUCT_FOR_USTR(#_name2, _len) alif ## _name1;
+#define STRUCT_FOR_UID(_name, _litr) \
+    STRUCT_FOR_USTR(#_litr) alif ## _name;
 // alif //
 
 
@@ -66,7 +65,7 @@ public:
 		STRUCT_FOR_ID(__format__)
 		STRUCT_FOR_ID(__getAttr__)
 		STRUCT_FOR_ID(__hash__)
-		STRUCT_FOR_UID(__init__, _تهيئة_, 8)
+		STRUCT_FOR_UID(__init__, _تهيئة_)
 		STRUCT_FOR_ID(__initSubclass__)
 		STRUCT_FOR_ID(__lengthHint__)
 		STRUCT_FOR_ID(__loader__)

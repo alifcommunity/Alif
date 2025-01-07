@@ -111,28 +111,27 @@
 
  // alif //
 // هذا القسم خاص بالنصوص ذات الترميز الحرفي الثنائي فقط "الاحرف العربية"
-// طول النص يساوي عدد احرف الكلمة,
-// وقد تم تمريره يدويا لانه لا يوجد طريقة لحسابه اثناء البناء
+// طول النص يساوي عدد احرف الكلمة
 // النوع يجب ان يكون 2 لأنه يتم البحث عن الاحرف ك 2 بايت لكل حرف بغض النظر عن النظام المستخدم
-#define ALIFUSTR_USTR_BASE_INIT(_litr, _len, _isAscii) \
+#define ALIFUSTR_USTR_BASE_INIT(_litr) \
     { \
         .objBase = ALIFOBJECT_HEAD_INIT(&_alifUStrType_), \
-        .length = _len, \
+        .length = (sizeof(u ## _litr) / 2) - 1, \
         .hash = -1, \
         .state = { \
             .kind = 2, \
             .compact = 1, \
-            .ascii = _isAscii, \
+            .ascii = 1, \
             .staticallyAllocated = 1, \
         }, \
     }
-#define ALIFUSTROBJECT_INIT(_litr, _name, _len)								\
+#define ALIFUSTROBJECT_INIT(_litr)								\
 	{																		\
-		.ascii = ALIFUSTR_USTR_BASE_INIT(_litr, _len, 1),				\
-		.data = u ## _name													\
+		.ascii = ALIFUSTR_USTR_BASE_INIT(_litr),				\
+		.data = u ## _litr													\
 	}
-#define INIT_UID(_name1, _name2, _len) \
-    .alif ## _name1 = ALIFUSTROBJECT_INIT(#_name1, #_name2, _len)
+#define INIT_UID(_name, _litr) \
+    .alif ## _name = ALIFUSTROBJECT_INIT(#_litr)
 // alif //
 
 
@@ -704,7 +703,7 @@
 	INIT_ID(__format__), \
 	INIT_ID(__getAttr__), \
 	INIT_ID(__hash__), \
-	INIT_UID(__init__, _تهيئة_, 7), \
+	INIT_UID(__init__, _تهيئة_), \
 	INIT_ID(__initSubclass__), \
 	INIT_ID(__lengthHint__), \
 	INIT_ID(__loader__), \
