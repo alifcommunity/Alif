@@ -531,7 +531,7 @@ ASDLKeywordSeq* alifParserEngine_seqDeleteStarExprs(AlifParser* _p, ASDLSeq* _kw
 	AlifIntT index_ = 0;
 	for (AlifSizeT i = 0; i < len; i++) {
 		KeywordOrStar* k_ = (KeywordOrStar*)ASDL_SEQ_GETUNTYPED(_kwArgs, i);
-		if (!k_->isKeyword) {
+		if (k_->isKeyword) {
 			ASDL_SEQ_SET(newSeq, index_++, (Keyword*)k_->element);
 		}
 	}

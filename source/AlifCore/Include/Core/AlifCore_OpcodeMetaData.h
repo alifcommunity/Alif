@@ -90,8 +90,8 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 		return 2;
 	//case CALL_ISINSTANCE:
 	//	return 2 + _oparg;
-	//case CALL_KW:
-	//	return 3 + _oparg;
+	case CALL_KW:
+		return 3 + _oparg;
 	//case CALL_KW_BOUND_METHOD:
 	//	return 3 + _oparg;
 	//case CALL_KW_NON_ALIF:
@@ -552,8 +552,8 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 		return 1;
 	//case CALL_ISINSTANCE:
 	//	return 1;
-	//case CALL_KW:
-	//	return 1;
+	case CALL_KW:
+		return 1;
 	//case CALL_KW_BOUND_METHOD:
 	//	return 0;
 	//case CALL_KW_NON_ALIF:
@@ -1374,7 +1374,7 @@ const uint8_t _alifOpcodeDeopt_[256] = {
 	0,//CALL_FUNCTION_EX, // CALL_FUNCTION_EX // 50
 	CALL_INTRINSIC_1, // CALL_INTRINSIC_1 // 51
 	CALL_INTRINSIC_2, // CALL_INTRINSIC_2 // 52
-	0,//CALL_KW, // CALL_KW // 53
+	CALL_KW, // CALL_KW // 53
 	COMPARE_OP, // COMPARE_OP // 54
 	CONTAINS_OP, // CONTAINS_OP // 55
 	CONVERT_VALUE, // CONVERT_VALUE // 56

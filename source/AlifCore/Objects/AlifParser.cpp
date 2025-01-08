@@ -109,6 +109,7 @@ static ExprTy expression_rule(AlifParser*);
 static ExprTy disjunction_rule(AlifParser*);
 static ExprTy sum_rule(AlifParser*);
 static ExprTy starExpression_rule(AlifParser*);
+static ExprTy starredExpression_rule(AlifParser*);
 static ExprTy starSubExpression_rule(AlifParser*);
 static ASDLExprSeq* starSubExpressions_rule(AlifParser*);
 static ExprTy primary_rule(AlifParser*);
@@ -1922,22 +1923,15 @@ static KeywordOrStar* kwArgOrStar_rule(AlifParser* _p) {
 		}
 		_p->mark = mark;
 	}
-	{ // تعبير_نجمة
+	{ // تعبير_نجمي_
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal{};
 		ExprTy a_{};
 		if (
-			(literal = alifParserEngine_expectToken(_p, STAR)) // "*"
-			and
-			(a_ = expression_rule(_p))) // تعبير
+			(a_ = starredExpression_rule(_p)) // تعبير_نجمي_
+			) 
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
-
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res = alifParserEngine_keywordOrStarred(_p, alifAST_star(a_, ExprContext_::Load, EXTRA), 0);
+			res = alifParserEngine_keywordOrStarred(_p, a_, 0);
 			if (res == nullptr
 				/*and alifErr_occurred()*/)
 			{
@@ -2223,6 +2217,66 @@ done:
 }
 
 
+
+// تعبير_نجمي_: '*' تعبير
+static ExprTy starredExpression_rule(AlifParser* _p) {
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
+		and
+		alifParserEngine_fillToken(_p) < 0)
+	{
+		_p->errorIndicator = 1;
+		_p->level--;
+		return nullptr;
+	}
+
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
+
+	{ // '*' تعبير
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		AlifPToken* literal{};
+		ExprTy a{};
+		if (
+			(literal = alifParserEngine_expectToken(_p, STAR))  // token='*'
+			and
+			(a = expression_rule(_p))  // تعبير
+			)
+		{
+			AlifPToken* _token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (_token == nullptr) {
+				_p->level--;
+				return nullptr;
+			}
+			AlifIntT endLineNo = _token->endLineNo;
+			AlifIntT endColOffset = _token->endColOffset;
+			res = alifAST_star(a, Load, EXTRA);
+			if (res == nullptr
+				/*and alifErr_occurred()*/)
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+
+	res = nullptr;
+done:
+	_p->level--;
+	return res;
+}
+// ^
+// |
+// |
 // ألف24: "," وسيطات_مفتاحية
 static void* alif24(AlifParser* _p) {
 
@@ -2328,7 +2382,7 @@ static ASDLSeq* alif25_loop0(AlifParser* _p) {
 // ^
 // |
 // |
-// ألف23: تعبير_نجمة > تعبير !"="
+// ألف23: تعبير_نجمي_ > تعبير !"="
 static void* alif23(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
@@ -2337,11 +2391,11 @@ static void* alif23(AlifParser* _p) {
 	void* res{};
 	AlifIntT mark = _p->mark;
 
-	{ // تعبير_نجمة
+	{ // تعبير_نجمي_
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		ExprTy a_{};
-		if ((a_ = starExpression_rule(_p)))
+		if ((a_ = starredExpression_rule(_p))) // تعبير_نجمي_
 		{
 			res = a_;
 			goto done;
@@ -2355,7 +2409,7 @@ static void* alif23(AlifParser* _p) {
 		if (
 			(a_ = expression_rule(_p)) // تعبير
 			and
-			alifParserEngine_lookaheadWithInt(0, alifParserEngine_expectToken, _p, NOTEQUAL) // !"="
+			alifParserEngine_lookaheadWithInt(0, alifParserEngine_expectToken, _p, EQUAL) // !"="
 			)
 		{
 			res = a_;
@@ -2469,7 +2523,9 @@ static ExprTy args_rule(AlifParser* _p) {
 
 			AlifIntT endLineNo = token->endLineNo;
 			AlifIntT endColOffset = token->endColOffset;
-			res = alifAST_call((ExprTy)alifParserEngine_dummyName(_p), (ASDLExprSeq*)alifParserEngine_seqExtractStarExprs(_p, a_), (ASDLKeywordSeq*)alifParserEngine_seqDeleteStarExprs(_p, a_), EXTRA);
+			res = alifAST_call((ExprTy)alifParserEngine_dummyName(_p),
+				(ASDLExprSeq*)alifParserEngine_seqExtractStarExprs(_p, a_),
+				(ASDLKeywordSeq*)alifParserEngine_seqDeleteStarExprs(_p, a_), EXTRA);
 			if (res == nullptr
 				/*and alifErr_occurred()*/)
 			{
@@ -4576,7 +4632,7 @@ done:
 }
 
 
-// ألف14: قاطع > تعبير_نجمة
+// ألف14: قاطع > تعبير_نجمي_
 static void* alif14(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
@@ -4596,11 +4652,11 @@ static void* alif14(AlifParser* _p) {
 		}
 		_p->mark = mark;
 	}
-	{ // تعبير_نجمة
+	{ // تعبير_نجمي_
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		ExprTy a_{};
-		if ((a_ = starExpression_rule(_p)))
+		if ((a_ = starredExpression_rule(_p)))
 		{
 			res = a_;
 			goto done;

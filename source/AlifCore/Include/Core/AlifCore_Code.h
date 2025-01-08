@@ -35,6 +35,22 @@ extern AlifIntT alifCode_init(AlifInterpreter*); // 75
 
 
 
+#define CACHE_ENTRIES(cache) (sizeof(cache)/sizeof(AlifCodeUnit)) // 89
+
+
+
+
+class AlifCallCache { // 153
+public:
+	AlifBackoffCounter counter{};
+	uint16_t funcVersion[2]{};
+};
+
+#define INLINE_CACHE_ENTRIES_CALL_KW CACHE_ENTRIES(AlifCallCache) // 159
+
+
+
+
  // 219
 #define CO_FAST_HIDDEN  0x10
 #define CO_FAST_LOCAL   0x20

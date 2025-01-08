@@ -199,7 +199,7 @@
 //#define INSTRUMENTED_END_SEND                  237
 //#define INSTRUMENTED_LOAD_SUPER_ATTR           238
 //#define INSTRUMENTED_FOR_ITER                  239
-//#define INSTRUMENTED_CALL_KW                   240
+#define INSTRUMENTED_CALL_KW                   240
 //#define INSTRUMENTED_CALL_FUNCTION_EX          241
 //#define INSTRUMENTED_INSTRUCTION               242
 //#define INSTRUMENTED_JUMP_FORWARD              243
