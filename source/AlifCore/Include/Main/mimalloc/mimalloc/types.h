@@ -342,9 +342,7 @@ typedef struct mi_page_s {
 #endif
 
   // 64-bit 9 words, 32-bit 12 words, (+2 for secure)
-  #if MI_INTPTR_SIZE==8 
   uintptr_t padding[1];
-  #endif
 } mi_page_t;
 
 
@@ -717,4 +715,3 @@ struct mi_tld_s {
   mi_stats_t          stats;         // statistics
 };
 
-#endif

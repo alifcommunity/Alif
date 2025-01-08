@@ -32,8 +32,6 @@ public:
 
 	AlifIntT intMaxStrDigits{};
 
-	AlifIntT enableGIL{};
-
 	wchar_t* programName{};
 
 	AlifIntT skipFirstLine{};
