@@ -5161,9 +5161,7 @@ static AlifObject* intern_common(AlifInterpreter* _interp,
 		return _s;
 	}
 
-#if ALIF_GIL_DISABLED
 	_immortalize = 1;
-#endif
 
 	if (ALIF_ISIMMORTAL(_s)) {
 		_immortalize = 1;

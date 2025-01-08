@@ -132,7 +132,6 @@ static AlifIntT initInterpreter_settings(AlifInterpreter* _interp,
 		//	"single-phase init extension modules");
 		return -1;
 	}
-#ifdef ALIF_GIL_DISABLED
 	if (!alif_isMainInterpreter(_interp) &&
 		!_config->checkMultiInterpExtensions)
 	{
@@ -141,7 +140,6 @@ static AlifIntT initInterpreter_settings(AlifInterpreter* _interp,
 		//	"subinterpreters");
 		return -1;
 	}
-#endif
 
 	if (_config->allowFork) {
 		_interp->featureFlags |= ALIF_RTFLAGS_FORK;

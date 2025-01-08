@@ -18,11 +18,7 @@
 
 
  // 101
-#ifdef ALIF_GIL_DISABLED
 #define QSBR_QUIESCENT_STATE(_thread) _alifQSBR_quiescentState(((AlifThreadImpl*)_thread)->qsbr)
-#else
-#define QSBR_QUIESCENT_STATE(_thread)
-#endif
 
  // 109
 #define DISPATCH() \

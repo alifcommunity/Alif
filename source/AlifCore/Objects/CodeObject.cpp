@@ -45,12 +45,10 @@ static void notify_codeWatchers(AlifCodeEvent _event, AlifCodeObject* _co) { // 
 }
 
 static AlifIntT should_internString(AlifObject* _o) { // 106
-#ifdef ALIF_GIL_DISABLED
 	AlifInterpreter* interp = _alifInterpreter_get();
 	if (alifAtomic_loadInt(&interp->gc.immortalize) < 0) {
 		return 1;
 	}
-#endif
 
 	const unsigned char* s_{}, * e_{};
 
@@ -66,9 +64,7 @@ static AlifIntT should_internString(AlifObject* _o) { // 106
 	return 1;
 }
 
-#ifdef ALIF_GIL_DISABLED
 static AlifObject* intern_oneConstant(AlifObject*); // 133
-#endif
 
 static AlifIntT intern_strings(AlifObject* _tuple) { // 137
 	AlifInterpreter* interp = _alifInterpreter_get();
@@ -134,7 +130,6 @@ static AlifIntT intern_constants(AlifObject* _tuple, AlifIntT* _modified) { // 1
 			}
 			ALIF_DECREF(tmp);
 		}
-#ifdef ALIF_GIL_DISABLED
 		else if (ALIFSLICE_CHECK(v)) {
 			AlifSliceObject* slice = (AlifSliceObject*)v;
 			AlifObject* tmp = alifTuple_new(3);
@@ -183,7 +178,6 @@ static AlifIntT intern_constants(AlifObject* _tuple, AlifIntT* _modified) { // 1
 				}
 			}
 		}
-#endif
 	}
 	return 0;
 }
@@ -327,16 +321,12 @@ static void init_code(AlifCodeObject* _co, AlifCodeConstructor* _con) { // 452
 	_co->frameSize = nlocalsplus + _con->stackSize + FRAME_SPECIALS_SIZE;
 	_co->nCellVars = ncellvars;
 	_co->nFreeVars = nfreevars;
-#ifdef ALIF_GIL_DISABLED
 	ALIFMUTEX_LOCK(&interp->funcState.mutex);
-#endif
 	_co->version = interp->funcState.nextVersion;
 	if (interp->funcState.nextVersion != 0) {
 		interp->funcState.nextVersion++;
 	}
-#ifdef ALIF_GIL_DISABLED
 	ALIFMUTEX_UNLOCK(&interp->funcState.mutex);
-#endif
 	//_co->monitoring = nullptr;
 	//_co->instrumentationVersion = 0;
 	/* not set */
@@ -361,11 +351,9 @@ static void init_code(AlifCodeObject* _co, AlifCodeConstructor* _con) { // 452
 
 
 static AlifIntT intern_codeConstants(AlifCodeConstructor* _con) { // 616
-#ifdef ALIF_GIL_DISABLED
 	AlifInterpreter* interp = _alifInterpreter_get();
 	AlifCodeState* state = &interp->codeState;
 	ALIFMUTEX_LOCK(&state->mutex);
-#endif
 	if (intern_strings(_con->names) < 0) {
 		goto error;
 	}
@@ -375,15 +363,11 @@ static AlifIntT intern_codeConstants(AlifCodeConstructor* _con) { // 616
 	if (intern_strings(_con->localsPlusNames) < 0) {
 		goto error;
 	}
-#ifdef ALIF_GIL_DISABLED
 	ALIFMUTEX_UNLOCK(&state->mutex);
-#endif
 	return 0;
 
 error:
-#ifdef ALIF_GIL_DISABLED
 	ALIFMUTEX_UNLOCK(&state->mutex);
-#endif
 	return -1;
 }
 
@@ -405,21 +389,15 @@ AlifCodeObject* alifCode_new(AlifCodeConstructor* _con) { // 647
 
 	AlifSizeT size = ALIFBYTES_GET_SIZE(_con->code) / sizeof(AlifCodeUnit);
 	AlifCodeObject* co{};
-#ifdef ALIF_GIL_DISABLED
 	co = ALIFOBJECT_GC_NEWVAR(AlifCodeObject, &_alifCodeType_, size);
-#else
-	co = ALIFOBJECT_NEWVAR(AlifCodeObject, &_alifCodeType_, size);
-#endif
 	if (co == nullptr) {
 		ALIF_XDECREF(replacementLocations);
 		//alifErr_noMemory();
 		return nullptr;
 	}
 	init_code(co, _con);
-#ifdef ALIF_GIL_DISABLED
 	alifObject_setDeferredRefcount((AlifObject*)co);
 	ALIFOBJECT_GC_TRACK(co);
-#endif
 	ALIF_XDECREF(replacementLocations);
 	return co;
 }
@@ -446,11 +424,7 @@ AlifTypeObject _alifCodeType_ = { // 2276
 
 	.getAttro = alifObject_genericGetAttr,
 
-#ifdef ALIF_GIL_DISABLED
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
-#else
-	.flags = ALIF_TPFLAGS_DEFAULT
-#endif
 };
 
 
@@ -565,7 +539,6 @@ AlifObject* alifCode_constantKey(AlifObject* _op) { // 2331
 
 
 
-#ifdef ALIF_GIL_DISABLED
 static AlifObject* intern_oneConstant(AlifObject* _op) { // 2461
 	AlifInterpreter* interp = _alifInterpreter_get();
 	AlifHashTableT* consts = interp->codeState.constants;
@@ -671,11 +644,9 @@ static void destroy_key(void* _key) { // 2604
 	ALIF_CLEARIMMORTAL(_key);
 }
 
-#endif // 2609
 
 
 AlifIntT alifCode_init(AlifInterpreter* _interp) { // 2611
-#ifdef ALIF_GIL_DISABLED
 	AlifCodeState* state = &_interp->codeState;
 	state->constants = alifHashTable_newFull(&hash_const, &compare_constants,
 		&destroy_key, nullptr, nullptr);
@@ -683,7 +654,6 @@ AlifIntT alifCode_init(AlifInterpreter* _interp) { // 2611
 		//return ALIFSTATUS_NO_MEMORY();
 		return -1; // alif
 	}
-#endif
 	return 1;
 }
 

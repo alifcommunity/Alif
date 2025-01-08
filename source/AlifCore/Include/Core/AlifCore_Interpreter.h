@@ -42,9 +42,7 @@ public:
 };
 
 // 65
-#ifdef ALIF_GIL_DISABLED
 #  define NUM_WEAKREF_LIST_LOCKS 127
-#endif
 
 
 class RareEvents { // 75
@@ -106,12 +104,10 @@ public:
 
 	QSBRShared qsbr{};
 
-#ifdef ALIF_GIL_DISABLED
 	MimallocInterpState mimalloc{};
 	BRCState brc{};  // biased reference counting state
 	AlifTypeIDPool typeIDs{};
 	AlifMutex weakrefLocks[NUM_WEAKREF_LIST_LOCKS];
-#endif
 
 	StopTheWorldState stopTheWorld{};
 

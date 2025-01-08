@@ -86,11 +86,7 @@ AlifIntT alifDict_setDefaultRef(AlifObject*, AlifObject*, AlifObject*, AlifObjec
 static inline AlifSizeT _alifDict_getSize(AlifObject* _op) { // 56
 	AlifDictObject* mp_{};
 	mp_ = ALIF_CAST(AlifDictObject*, _op);
-#ifdef ALIF_GIL_DISABLED
 	return alifAtomic_loadSizeRelaxed(&mp_->used);
-#else
-	return mp_->used;
-#endif
 }
 #define ALIFDICT_GET_SIZE(_op) _alifDict_getSize(ALIFOBJECT_CAST(_op))
 

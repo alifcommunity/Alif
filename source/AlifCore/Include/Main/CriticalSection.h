@@ -13,11 +13,7 @@ void alifCriticalSection_end(AlifCriticalSection*); // 76
 //void alifCriticalSection2_end(AlifCriticalSection2*); // 82
 
 
-#ifndef ALIF_GIL_DISABLED
 
-// code here
-
-#else
 class AlifCriticalSection { // 98
 public:
 	uintptr_t prev{};

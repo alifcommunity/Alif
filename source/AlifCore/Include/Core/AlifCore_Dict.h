@@ -79,9 +79,7 @@ public:
 	uint8_t log2Size{};
 	uint8_t log2IndexBytes{};
 	uint8_t kind{};
-#ifdef ALIF_GIL_DISABLED
 	AlifMutex mutex{};
-#endif
 	uint32_t version{};
 	AlifSizeT usable{};
 	AlifSizeT nentries{};
@@ -132,7 +130,6 @@ static inline AlifDictUStrEntry* dk_uStrEntries(AlifDictKeysObject* _dk) { // 21
 #define DICT_WATCHER_AND_MODIFICATION_MASK ((1 << (DICT_MAX_WATCHERS + DICT_WATCHED_MUTATION_BITS)) - 1)
 
 
-#ifdef ALIF_GIL_DISABLED
 
 #define THREAD_LOCAL_DICT_VERSION_COUNT 256
 #define THREAD_LOCAL_DICT_VERSION_BATCH THREAD_LOCAL_DICT_VERSION_COUNT * DICT_VERSION_INCREMENT
@@ -151,10 +148,6 @@ static inline uint64_t dict_nextVersion(AlifInterpreter* _interp) { // 235
 }
 #define DICT_NEXT_VERSION(_interp) dict_nextVersion(_interp)
 
-#else
-#define DICT_NEXT_VERSION(_interp) \
-    ((_interp)->dictState.globalVersion += DICT_VERSION_INCREMENT)
-#endif
 
 
 void _alifDict_sendEvent(AlifIntT, AlifDictWatchEvent_,

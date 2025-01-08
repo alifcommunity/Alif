@@ -13,7 +13,6 @@ public:
 
 	LListNode memFreeQueue{};
 
-#ifdef ALIF_GIL_DISABLED
 	GCThreadState gc{};
 	MimallocThreadState mimalloc{};
 
@@ -26,6 +25,5 @@ public:
 		AlifSizeT size{};
 		AlifIntT isFinalized{};
 	}types{};
-#endif // ALIF_GIL_DISABLED
 
 };

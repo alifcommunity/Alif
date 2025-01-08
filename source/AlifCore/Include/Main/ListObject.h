@@ -37,11 +37,7 @@ public:
 
 static inline AlifSizeT _alifList_getSize(AlifObject* _op) { // 30
 	AlifListObject* list = ALIFLIST_CAST(_op);
-#ifdef ALIF_GIL_DISABLED
 	return alifAtomic_loadSizeRelaxed(&(ALIFVAROBJECT_CAST(list)->objSize));
-#else
-	return ALIF_SIZE(list);
-#endif
 }
 #define ALIFLIST_GET_SIZE(_op) _alifList_getSize(ALIFOBJECT_CAST(_op)) 
 

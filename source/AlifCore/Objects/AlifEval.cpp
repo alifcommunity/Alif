@@ -1933,7 +1933,6 @@ fail:
 static AlifInterpreterFrame* _alifEvalFramePushAndInit_unTagged(AlifThread* _thread,
 	AlifFunctionObject* _func, AlifObject* _locals, AlifObject* const* _args,
 	AlifUSizeT _argCount, AlifObject* _kwNames, AlifInterpreterFrame* _previous) { // 1724
-#if defined(ALIF_GIL_DISABLED)
 	AlifUSizeT kwCount = _kwNames == nullptr ? 0 : ALIFTUPLE_GET_SIZE(_kwNames);
 	AlifUSizeT totalArgCount = _argCount + kwCount;
 	totalArgCount ? totalArgCount : totalArgCount = 1; // alif
@@ -1951,9 +1950,6 @@ static AlifInterpreterFrame* _alifEvalFramePushAndInit_unTagged(AlifThread* _thr
 	AlifInterpreterFrame* res = _alifEval_framePushAndInit(_thread, _func, _locals, (AlifStackRef const*)taggedArgsBuffer, _argCount, _kwNames, _previous);
 	alifMem_dataFree(taggedArgsBuffer);
 	return res;
-#else
-	return _alifEval_framePushAndInit(_thread, _func, _locals, (AlifStackRef const*)_args, _argCount, _kwNames, _previous);
-#endif
 }
 
 

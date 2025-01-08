@@ -75,9 +75,7 @@ static void bind_thread(AlifThread* _thread) { // 245
 	_thread->nativeThreadID = alifThread_getThreadNativeID();
 #endif
 
-#ifdef ALIF_GIL_DISABLED
 	alifBRC_initThread(_thread);
-#endif
 
 	thread_mimallocBind(_thread);
 
@@ -177,9 +175,7 @@ static AlifIntT init_interpreter(AlifInterpreter* _interpreter,
 	alifGC_initState(&_interpreter->gc);
 	alifConfig_initAlifConfig(&_interpreter->config);
 
-#ifdef ALIF_GIL_DISABLED
 	alifBRC_initState(_interpreter);
-#endif
 	llist_init(&_interpreter->memFreeQueue.head);
 
 	_interpreter->initialized = 1;
@@ -356,13 +352,11 @@ static AlifThread* new_thread(AlifInterpreter* _interpreter) { // 1533
 		return nullptr;
 	}
 
-#ifdef ALIF_GIL_DISABLED
 	AlifSizeT qsbrIDx = alifQSBR_reserve(_interpreter);
 	if (qsbrIDx < 0) {
 		alifMem_dataFree(newThread);
 		return nullptr;
 	}
-#endif
 
 	HEAD_LOCK(dureRun);
 
@@ -389,10 +383,8 @@ static AlifThread* new_thread(AlifInterpreter* _interpreter) { // 1533
 		alifMem_dataFree(newThread);
 	}
 
-#ifdef ALIF_GIL_DISABLED
 	// Must be called with lock unlocked to avoid lock ordering deadlocks.
 	alifQSBR_register(thread, _interpreter, qsbrIDx);
-#endif
 
 	return (AlifThread*)thread;
 }
@@ -737,7 +729,6 @@ AlifIntT alifThreadState_mustExit(AlifThread* _thread) { // 3004
 /* mimalloc memory support */
 
 static void thread_mimallocBind(AlifThread* _thread) { // 3037
-#ifdef ALIF_GIL_DISABLED
 	MimallocThreadState* mts = &((AlifThreadImpl*)_thread)->mimalloc;
 
 	mi_tld_t* tld = &mts->tld;
@@ -770,5 +761,4 @@ static void thread_mimallocBind(AlifThread* _thread) { // 3037
 	mts->currentObjectHeap = &mts->heaps[AlifMimallocHeapID_::Alif_Mimalloc_Heap_Object];
 
 	alifAtomic_storeInt(&mts->initialized, 1);
-#endif
 }

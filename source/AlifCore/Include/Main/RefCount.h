@@ -22,9 +22,6 @@
 	(((_refcnt) << ALIF_REF_SHARED_SHIFT) + (_flags)) // 75
 
 static inline AlifSizeT alif_refCnt(AlifObject* _ob) { // 80
-#if !defined(ALIF_GIL_DISABLED)
-	return ob->refCnt;
-#else
 	uint32_t local = alifAtomic_loadUint32Relaxed(&_ob->refLocal);
 	if (local == ALIF_IMMORTAL_REFCNT_LOCAL) {
 		return ALIF_IMMORTAL_REFCNT;
@@ -32,7 +29,6 @@ static inline AlifSizeT alif_refCnt(AlifObject* _ob) { // 80
 	AlifSizeT shared = alifAtomic_loadSizeRelaxed(&_ob->refShared);
 	return ALIF_STATIC_CAST(AlifSizeT, local) +
 		ALIF_ARITHMETIC_RIGHT_SHIFT(AlifSizeT, shared, ALIF_REF_SHARED_SHIFT);
-#endif
 }
 #define ALIF_REFCNT(ob) alif_refCnt(ALIFOBJECT_CAST(ob))
 
@@ -71,7 +67,6 @@ static inline void alifSet_refCount(AlifObject* ob, AlifSizeT refcnt) { // 115
 void alif_dealloc(AlifObject*); // 196
 
 static inline ALIF_ALWAYS_INLINE void alif_incRef(AlifObject* op) { // 211
-#if defined(ALIF_GIL_DISABLED)
 	uint32_t local = alifAtomic_loadUint32Relaxed(&op->refLocal);
 	uint32_t newLocal = local + 1;
 	if (newLocal == 0) {
@@ -85,20 +80,6 @@ static inline ALIF_ALWAYS_INLINE void alif_incRef(AlifObject* op) { // 211
 		alifAtomic_addSize(&op->refShared, (1 << ALIF_REF_SHARED_SHIFT));
 	}
 
-#elif SIZEOF_VOID_P > 4
-	uint32_t curRefCnt = op->refCntSplit[ALIF_BIG_ENDIAN];
-	uint32_t newRefCnt = curRefCnt + 1;
-	if (newRefCnt == 0) {
-		// do nothing
-		return;
-	}
-	op->refCntSplit[ALIF_BIG_ENDIAN] = newRefCnt;
-#else
-	if (ALIF_ISIMMORTAL(op)) {
-		return;
-	}
-	op->refCnt++;
-#endif
 }
 #define ALIF_INCREF(_op) alif_incRef(ALIFOBJECT_CAST(_op))
 

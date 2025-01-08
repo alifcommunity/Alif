@@ -41,7 +41,6 @@ enum AlifMimallocHeapID_ { // 12
 
 
 
-#ifdef ALIF_GIL_DISABLED
 class MimallocInterpState { // 54
 public:
 	mi_abandoned_pool_t abandonedPool{};
@@ -55,7 +54,6 @@ public:
 	AlifIntT initialized{};
 	LListNode pageList{};
 };
-#endif
 
 
 

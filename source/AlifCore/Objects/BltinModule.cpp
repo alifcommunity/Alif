@@ -337,9 +337,7 @@ AlifObject* alifBuiltin_init(AlifInterpreter* _interpreter) { // 3215
 	mod = alifModule_createInitialized(&_alifBuiltinsModule_);
 	if (mod == nullptr) return nullptr;
 
-#ifdef ALIF_GIL_DISABLED
 	alifUnstable_moduleSetGIL(mod, ALIF_MOD_GIL_NOT_USED);
-#endif
 	dict = alifModule_getDict(mod);
 
 #define SETBUILTIN(_name, _object) \

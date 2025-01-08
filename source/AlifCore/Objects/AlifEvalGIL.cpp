@@ -22,9 +22,7 @@ static inline void copy_evalBreakerBits(uintptr_t* _from,
 
 static inline void updateEval_breakerForThread(AlifInterpreter* _interp,
 	AlifThread* _thread) { // 71
-#ifdef ALIF_GIL_DISABLED
 	return;
-#endif
 
 	int32_t npending =
 		alifAtomic_loadInt32Relaxed(&_interp->eval.pending.npending);
@@ -186,11 +184,9 @@ static void take_gil(AlifThread* _thread) { // 284
 
 	AlifInterpreter* interp = _thread->interpreter;
 	GILDureRunState* gil_ = interp->eval.gil_;
-#ifdef ALIF_GIL_DISABLED
 	if (!alifAtomic_loadIntRelaxed(&gil_->enabled)) {
 		return;
 	}
-#endif
 
 	MUTEX_LOCK(gil_->mutex);
 
@@ -264,12 +260,10 @@ static void init_sharedGIL(AlifInterpreter* _interp, GILDureRunState* _gil) { //
 }
 
 static void init_ownGIL(AlifInterpreter* _interp, GILDureRunState* _gil) { // 474
-#ifdef ALIF_GIL_DISABLED
 	const AlifConfig* config = alifInterpreter_getConfig(_interp);
 	_gil->enabled = (config->enableGIL == AlifConfigGIL_::AlifConfig_GIL_Enable)
 		? INT_MAX
 		: 0;
-#endif
 	create_gil(_gil);
 	_interp->eval.gil_ = _gil;
 	_interp->eval.ownGIL = 1;
@@ -433,31 +427,19 @@ static AlifIntT _make_pendingCalls(PendingCalls* _pending, int32_t* _pnPending) 
 
 
 static void signal_pendingCalls(AlifThread* _thread, AlifInterpreter* _interp) { // 877
-#ifdef ALIF_GIL_DISABLED
 	alifSet_evalBreakerBitAll(_interp, ALIF_CALLS_TO_DO_BIT);
-#else
-	alifSet_evalBreakerBit(_thread, ALIF_CALLS_TO_DO_BIT);
-#endif
 }
 
 
 static void unsignal_pendingCalls(AlifThread* _thread, AlifInterpreter* _interp) { // 887
-#ifdef ALIF_GIL_DISABLED
 	alifUnset_evalBreakerBitAll(_interp, ALIF_CALLS_TO_DO_BIT);
-#else
-	alifUnset_evalBreakerBit(_thread, ALIF_CALLS_TO_DO_BIT);
-#endif
 }
 
 
 static void clear_pendingHandlingThread(PendingCalls* pending) { // 897
-#ifdef ALIF_GIL_DISABLED
 	ALIFMUTEX_LOCK(&pending->mutex);
 	pending->handlingThread = nullptr;
 	ALIFMUTEX_UNLOCK(&pending->mutex);
-#else
-	pending->handlingThread = nullptr;
-#endif
 }
 
 

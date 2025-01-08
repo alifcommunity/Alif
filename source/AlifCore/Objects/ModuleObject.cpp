@@ -174,9 +174,7 @@ AlifObject* alifModule_createInitialized(AlifModuleDef* _module) { // 209
 		}
 	}
 	m->def = _module;
-#ifdef ALIF_GIL_DISABLED
 	m->gil = ALIF_MOD_GIL_USED;
-#endif
 
 	return (AlifObject*)m;
 }
@@ -184,7 +182,6 @@ AlifObject* alifModule_createInitialized(AlifModuleDef* _module) { // 209
 
 
 
-#ifdef ALIF_GIL_DISABLED
 AlifIntT alifUnstable_moduleSetGIL(AlifObject* _module, void* _gil) { // 442
 	if (!ALIFMODULE_CHECK(_module)) {
 		//ALIFERR_BADINTERNALCALL();
@@ -193,7 +190,6 @@ AlifIntT alifUnstable_moduleSetGIL(AlifObject* _module, void* _gil) { // 442
 	((AlifModuleObject*)_module)->gil = _gil;
 	return 0;
 }
-#endif
 
 
 

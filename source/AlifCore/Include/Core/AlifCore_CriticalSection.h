@@ -11,7 +11,6 @@
 
 
 // 23
-#ifdef ALIF_GIL_DISABLED
 #define ALIF_BEGIN_CRITICAL_SECTION_MUT(mutex)                           \
     {                                                                   \
         AlifCriticalSection critSec{};                                       \
@@ -38,15 +37,6 @@
         }                                                               \
     }
 
-#else 
-#define ALIF_BEGIN_CRITICAL_SECTION_MUT(mut) {
-#define ALIF_BEGIN_CRITICAL_SECTION2_MUT(m1, m2) {
-#define ALIF_BEGIN_CRITICAL_SECTION_SEQUENCE_FAST(original) {
-#define ALIF_END_CRITICAL_SECTION_SEQUENCE_FAST() }
-#define ALIF_CRITICAL_SECTION_ASSERT_MUTEX_LOCKED(mutex)
-#define ALIF_CRITICAL_SECTION_ASSERT_OBJECT_LOCKED(op)
-#endif
-
 
 
 void alifCriticalSection_resume(AlifThread*); // 89
@@ -56,7 +46,6 @@ void alifCriticalSection2_beginSlow(AlifCriticalSection2*, AlifMutex*, AlifMutex
 void alifCriticalSection_suspendAll(AlifThread*); // 99
 
 
-#ifdef ALIF_GIL_DISABLED
 
 static inline AlifIntT alifCriticalSection_isActive(uintptr_t _tag) { // 103
 	return _tag != 0 and (_tag & ALIF_CRITICAL_SECTION_INACTIVE) == 0;
@@ -149,5 +138,3 @@ static inline void _alifCriticalSection2_beginMutex(AlifCriticalSection2* _c,
 
 
 
-
-#endif

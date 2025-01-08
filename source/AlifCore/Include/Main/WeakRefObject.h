@@ -41,7 +41,5 @@ public:
 	AlifWeakReference* next{};
 	VectorCallFunc vectorCall{};
 
-#ifdef ALIF_GIL_DISABLED
 	AlifMutex* weakRefsLock{};
-#endif
 };

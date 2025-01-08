@@ -32,11 +32,7 @@ union AlifStackRef { // 52
 #define ALIF_TAG_PTR      (0)
 #define ALIF_TAG_BITS     (1)
 
-#ifdef ALIF_GIL_DISABLED // 62
 static const AlifStackRef _alifStackRefNull_ = { .bits = 0 | ALIF_TAG_DEFERRED };
-#else
-static const AlifStackRef _alifStackRefNull_ = { .bits = 0 };
-#endif
 
 #define ALIFSTACKREF_ISNULL(_stackRef) ((_stackRef).bits == _alifStackRefNull_.bits) // 68
 
