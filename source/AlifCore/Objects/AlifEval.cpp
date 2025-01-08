@@ -3,6 +3,7 @@
 #include "AlifCore_Abstract.h"
 #include "AlifCore_Backoff.h"
 #include "AlifCore_Call.h"
+#include "AlifCore_Cell.h"
 #include "AlifCore_Eval.h"
 #include "AlifCore_Code.h"
 
@@ -330,6 +331,21 @@ dispatch_opcode :
 				}
 				bc = ALIFSTACKREF_FROMALIFOBJECTSTEAL(bc_o);
 				stackPointer[0] = bc;
+				stackPointer += 1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
+			TARGET(LOAD_LOCALS) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef locals{};
+				AlifObject* l = LOCALS();
+				if (l == nullptr) {
+					//_alifErr_setString(_thread, _alifExcSystemError_,
+					//	"no locals found");
+					//if (true) goto error;
+				}
+				locals = ALIFSTACKREF_FROMALIFOBJECTNEW(l);
+				stackPointer[0] = locals;
 				stackPointer += 1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
@@ -728,6 +744,27 @@ dispatch_opcode :
 				stackPointer += -1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(DELETE_NAME) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifObject* name = GETITEM(FRAME_CO_NAMES, oparg);
+				AlifObject* ns = LOCALS();
+				AlifIntT err{};
+				if (ns == nullptr) {
+					//_alifErr_format(_thread, _alifExcSystemError_,
+					//	"no locals when deleting %R", name);
+					//goto error;
+				}
+				err = alifObject_delItem(ns, name);
+				// Can't use ERROR_IF here.
+				if (err != 0) {
+					//_alifEval_formatExcCheckArg(_thread, _alifExcNameError_,
+					//	NAME_ERROR_MSG,
+					//	name);
+					//goto error;
+				}
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(FOR_ITER) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 2;
@@ -972,6 +1009,19 @@ dispatch_opcode :
 				stackPointer += 1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(MAKE_CELL) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				// "initial" is probably NULL but not if it's an arg (or set
+				// via the f_locals proxy before MAKE_CELL has run).
+				AlifObject* initial = alifStackRef_asAlifObjectBorrow(GETLOCAL(oparg));
+				AlifObject* cell = alifCell_new(initial);
+				if (cell == nullptr) {
+					//goto error;
+				}
+				SETLOCAL(oparg, ALIFSTACKREF_FROMALIFOBJECTSTEAL(cell));
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(POP_JUMP_IF_FALSE) {
 				AlifCodeUnit* thisInstr = _frame->instrPtr = nextInstr;
 				nextInstr += 2;
@@ -1061,6 +1111,52 @@ dispatch_opcode :
 				stackPointer += -1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(STORE_ATTR) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 5;
+				PREDICTED(STORE_ATTR);
+				AlifCodeUnit* thisInstr = nextInstr - 5;
+				AlifStackRef owner{};
+				AlifStackRef v{};
+				// _SPECIALIZE_STORE_ATTR
+				owner = stackPointer[-1];
+				{
+					uint16_t counter = read_u16(&thisInstr[1].cache);
+#if ENABLE_SPECIALIZATION
+					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
+						AlifObject* name = GETITEM(FRAME_CO_NAMES, oparg);
+						nextInstr = thisInstr;
+						_alifSpecialize_storeAttr(owner, nextInstr, name);
+						DISPATCH_SAME_OPARG();
+					}
+					OPCODE_DEFERRED_INC(STORE_ATTR);
+					ADVANCE_ADAPTIVE_COUNTER(thisInstr[1].counter);
+#endif  /* ENABLE_SPECIALIZATION */
+				}
+				/* Skip 3 cache entries */
+				// _STORE_ATTR
+				v = stackPointer[-2];
+				{
+					AlifObject* name = GETITEM(FRAME_CO_NAMES, oparg);
+					AlifIntT err = alifObject_setAttr(alifStackRef_asAlifObjectBorrow(owner),
+						name, alifStackRef_asAlifObjectBorrow(v));
+					alifStackRef_close(v);
+					alifStackRef_close(owner);
+					//if (err) goto pop_2_error;
+				}
+				stackPointer += -2;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
+			TARGET(STORE_DEREF) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef v{};
+				v = stackPointer[-1];
+				AlifCellObject* cell = (AlifCellObject*)alifStackRef_asAlifObjectBorrow(GETLOCAL(oparg));
+				alifCell_setTakeRef(cell, alifStackRef_asAlifObjectSteal(v));
+				stackPointer += -1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(STORE_FAST) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;
@@ -1102,6 +1198,38 @@ dispatch_opcode :
 				bottom = stackPointer[-2 - (oparg - 2)];
 				stackPointer[-2 - (oparg - 2)] = top;
 				stackPointer[-1] = bottom;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
+			TARGET(UNPACK_SEQUENCE) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 2;
+				PREDICTED(UNPACK_SEQUENCE);
+				AlifCodeUnit* thisInstr = nextInstr - 2;
+				AlifStackRef seq{};
+				AlifStackRef* output{};
+				// _SPECIALIZE_UNPACK_SEQUENCE
+				seq = stackPointer[-1];
+				{
+					uint16_t counter = read_u16(&thisInstr[1].cache);
+#if ENABLE_SPECIALIZATION
+					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
+						nextInstr = thisInstr;
+						_alifSpecialize_UnpackSequence(seq, nextInstr, oparg);
+						DISPATCH_SAME_OPARG();
+					}
+					OPCODE_DEFERRED_INC(UNPACK_SEQUENCE);
+					ADVANCE_ADAPTIVE_COUNTER(thisInstr[1].counter);
+#endif  /* ENABLE_SPECIALIZATION */
+				}
+				// _UNPACK_SEQUENCE
+				{
+					output = &stackPointer[-1];
+					AlifStackRef* top = output + oparg;
+					AlifIntT res = _alifEval_unpackIterableStackRef(_thread, seq, oparg, -1, top);
+					alifStackRef_close(seq);
+					//if (res == 0) goto pop_1_error;
+				}
+				stackPointer += -1 + oparg;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
 			TARGET(RESUME) {
@@ -1714,6 +1842,99 @@ AlifObject* alifEval_vector(AlifThread* _tstate, AlifFunctionObject* _func,
 
 
 
+
+
+AlifIntT _alifEval_unpackIterableStackRef(AlifThread* _thread, AlifStackRef _vStackRef,
+	AlifIntT _argCnt, AlifIntT _argCntAfter, AlifStackRef* _sp) { // 2064
+	AlifIntT i = 0, j = 0;
+	AlifSizeT ll = 0;
+	AlifObject* it;  /* iter(v) */
+	AlifObject* w{};
+	AlifObject* l = nullptr; /* variable list */
+
+	AlifObject* v = alifStackRef_asAlifObjectBorrow(_vStackRef);
+
+	it = alifObject_getIter(v);
+	if (it == nullptr) {
+		//if (_alifErr_exceptionMatches(_thread, _alifExcTypeError_) and
+		//	ALIF_TYPE(v)->iter == nullptr and !alifSequence_check(v))
+		//{
+		//	_alifErr_format(_thread, _alifExcTypeError_,
+		//		"cannot unpack non-iterable %.200s object",
+		//		ALIF_TYPE(v)->name);
+		//}
+		return 0;
+	}
+
+	for (; i < _argCnt; i++) {
+		w = alifIter_next(it);
+		if (w == nullptr) {
+			/* Iterator done, via error or exhaustion. */
+			//if (!_alifErr_occurred(_thread)) {
+			//	if (_argCntAfter == -1) {
+			//		_alifErr_format(_thread, _alifExcValueError_,
+			//			"not enough values to unpack "
+			//			"(expected %d, got %d)",
+			//			_argCnt, i);
+			//	}
+			//	else {
+			//		_alifErr_format(_thread, _alifExcValueError_,
+			//			"not enough values to unpack "
+			//			"(expected at least %d, got %d)",
+			//			_argCnt + _argCntAfter, i);
+			//	}
+			//}
+			goto Error;
+		}
+		*--_sp = ALIFSTACKREF_FROMALIFOBJECTSTEAL(w);
+	}
+
+	if (_argCntAfter == -1) {
+		/* We better have exhausted the iterator now. */
+		w = alifIter_next(it);
+		if (w == nullptr) {
+			//if (_alifErr_occurred(_thread))
+			//	goto Error;
+			ALIF_DECREF(it);
+			return 1;
+		}
+		ALIF_DECREF(w);
+		//_alifErr_format(_thread, _alifExcValueError_,
+		//	"too many values to unpack (expected %d)",
+		//	_argCnt);
+		goto Error;
+	}
+
+	l = alifSequence_list(it);
+	if (l == nullptr)
+		goto Error;
+	*--_sp = ALIFSTACKREF_FROMALIFOBJECTSTEAL(l);
+	i++;
+
+	ll = ALIFLIST_GET_SIZE(l);
+	if (ll < _argCntAfter) {
+		//_alifErr_format(_thread, _alifExcValueError_,
+		//	"not enough values to unpack (expected at least %d, got %zd)",
+		//	_argCnt + _argCntAfter, _argCnt + ll);
+		goto Error;
+	}
+
+	/* Pop the "after-variable" args off the list. */
+	for (j = _argCntAfter; j > 0; j--, i++) {
+		*--_sp = ALIFSTACKREF_FROMALIFOBJECTSTEAL(ALIFLIST_GET_ITEM(l, ll - j));
+	}
+	/* Resize the list. */
+	ALIF_SET_SIZE(l, ll - _argCntAfter);
+	ALIF_DECREF(it);
+	return 1;
+
+Error:
+	for (; i > 0; i--, _sp++) {
+		alifStackRef_close(*_sp);
+	}
+	ALIF_XDECREF(it);
+	return 0;
+}
 
 
 

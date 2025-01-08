@@ -200,7 +200,30 @@ AlifTypeObject _alifClassMethodDescrType_ = { // 756
 
 
 
-static AlifDescrObject* descr_new(AlifTypeObject* descrtype, AlifTypeObject* type, const char* name) { // 905
+
+
+AlifTypeObject _alifWrapperDescrType_ = { // 867
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "واصف_الغلاف",
+	.basicSize = sizeof(AlifWrapperDescrObject),
+	//.dealloc = descr_dealloc,
+	//.repr = wrapperDescr_repr,
+	//.call = wrapperDescr_call,
+	.getAttro = alifObject_genericGetAttr,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
+	ALIF_TPFLAGS_METHOD_DESCRIPTOR,
+	//.traverse = descr_traverse,
+	//.methods = descr_methods,
+	//.members = descr_members,
+	//.getSet = wrapperDescr_getset,
+	//.descrGet = wrapperDescr_get,
+};
+
+
+
+
+static AlifDescrObject* descr_new(AlifTypeObject* descrtype,
+	AlifTypeObject* type, const char* name) { // 905
 	AlifDescrObject* descr{};
 
 	descr = (AlifDescrObject*)alifType_genericAlloc(descrtype, 0);
@@ -275,6 +298,19 @@ AlifObject* alifDescr_newClassMethod(AlifTypeObject* _type, AlifMethodDef* _meth
 }
 
 
+
+AlifObject* alifDescr_newWrapper(AlifTypeObject* type,
+	WrapperBase* base, void* wrapped) { // 1013
+	AlifWrapperDescrObject* descr{};
+
+	descr = (AlifWrapperDescrObject*)descr_new(&_alifWrapperDescrType_,
+		type, base->name);
+	if (descr != nullptr) {
+		descr->base = base;
+		descr->wrapped = wrapped;
+	}
+	return (AlifObject*)descr;
+}
 
 
 AlifIntT alifDescr_isData(AlifObject* _ob) { // 1028

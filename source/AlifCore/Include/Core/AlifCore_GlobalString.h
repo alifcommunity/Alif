@@ -13,6 +13,22 @@
     STRUCT_FOR_ASCII_STR(#_name) alif ## _name;
 
 
+// alif //
+// هذا القسم خاص بالنصوص ذات الترميز الحرفي الثنائي فقط "الاحرف العربية"
+// طول الكلمة يساوي عدد الاحرف زائد 1 لقاطع النص
+// نوع البيانات يجب ان يكون const char16_t لأنه يتم البحث عن الاحرف ك 2 بايت لكل حرف بغض النظر عن النظام المستخدم
+#define STRUCT_FOR_USTR(_litr) \
+    class {							\
+	public:							\
+        AlifASCIIObject ascii{};	\
+        const char16_t data[sizeof(u ## _litr) / 2]; \
+    }
+#define STRUCT_FOR_UID(_name, _litr) \
+    STRUCT_FOR_USTR(#_litr) alif ## _name;
+// alif //
+
+
+
 class AlifGlobalStrings {
 public:
     class {
@@ -32,8 +48,10 @@ public:
 	public:
         STRUCT_FOR_ID(CANCELLED)
         STRUCT_FOR_ID(__abstractMethods__)
+        STRUCT_FOR_ID(__annotate__)
         STRUCT_FOR_ID(__buildClass__)
         STRUCT_FOR_ID(__builtins__)
+		STRUCT_FOR_ID(__call__)
 		STRUCT_FOR_ID(__class__)
 		STRUCT_FOR_ID(__classCell__)
 		STRUCT_FOR_ID(__classDict__)
@@ -47,6 +65,7 @@ public:
 		STRUCT_FOR_ID(__format__)
 		STRUCT_FOR_ID(__getAttr__)
 		STRUCT_FOR_ID(__hash__)
+		STRUCT_FOR_UID(__init__, _تهيئة_)
 		STRUCT_FOR_ID(__initSubclass__)
 		STRUCT_FOR_ID(__lengthHint__)
 		STRUCT_FOR_ID(__loader__)
@@ -100,6 +119,8 @@ public:
 
 #define ALIF_ID(_name) \
      (ALIF_SINGLETON(strings.identifiers.alif ## _name.ascii.objBase))
+#define ALIF_UID(_name) \
+     (ALIF_SINGLETON(strings.identifiers.alif ## _name.unicode.base.base.objBase))
 #define ALIF_STR(_name) \
      (ALIF_SINGLETON(strings.literals.alif ## _name.ascii.objBase))
 #define ALIF_LATIN1_CHR(_ch) \

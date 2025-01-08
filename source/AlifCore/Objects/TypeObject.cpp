@@ -721,7 +721,7 @@ static AlifIntT isSubType_withMro(AlifObject* _methResOrder,
 	AlifTypeObject* _a, AlifTypeObject* _b) { // 2648
 	AlifIntT res{};
 	if (_methResOrder != nullptr) {
-		AlifSizeT i, n;
+		AlifSizeT i{}, n{};
 		n = ALIFTUPLE_GET_SIZE(_methResOrder);
 		res = 0;
 		for (i = 0; i < n; i++) {
@@ -1160,6 +1160,7 @@ static AlifTypeObject* solid_base(AlifTypeObject* _type) { // 3401
 
 
 
+static void fixup_slotDispatchers(AlifTypeObject*); // 3424
 static AlifIntT typeNew_setNames(AlifTypeObject*); // 3425
 static AlifIntT typeNew_initSubclass(AlifTypeObject*, AlifObject*); // 3426
 
@@ -1867,7 +1868,7 @@ static AlifObject* type_newImpl(TypeNewCtx* _ctx) { // 4365
 	}
 
 	// Put the proper slots in place
-	//fixup_slotDispatchers(type);
+	fixup_slotDispatchers(type);
 
 	if (!_alifDict_hasOnlyStringKeys(type->dict)) {
 		//if (alifErr_WarnFormat(
@@ -2700,7 +2701,7 @@ static AlifIntT inherit_slots(AlifTypeObject* _type, AlifTypeObject* _base) { //
 
 
 
-
+static AlifIntT add_operators(AlifTypeObject*, AlifTypeObject*); // 7897
 static AlifIntT add_tpNewWrapper(AlifTypeObject*); // 7898
 
 
@@ -2787,9 +2788,9 @@ static AlifIntT typeReady_setDict(AlifTypeObject* _type) { // 8009
 
 static AlifIntT typeReady_fillDict(AlifTypeObject* type,
 	AlifTypeObject* def) { // 8061
-	//if (add_operators(type, def) < 0) {
-	//	return -1;
-	//}
+	if (add_operators(type, def) < 0) {
+		return -1;
+	}
 	if (type_addMethods(type) < 0) {
 		return -1;
 	}
@@ -3126,6 +3127,15 @@ AlifIntT alifStaticType_initBuiltin(AlifInterpreter* _interp,
 }
 
 
+static AlifObject* wrap_init(AlifObject* _self, AlifObject* _args,
+	void* _wrapped, AlifObject* _kwds) { // 9220
+	InitProc func = (InitProc)_wrapped;
+
+	if (func(_self, _args, _kwds) < 0)
+		return nullptr;
+	return ALIF_NONE;
+}
+
 
 static AlifObject* tpNew_wrapper(AlifObject* _self,
 	AlifObject* _args, AlifObject* _kwds) { // 9230
@@ -3162,7 +3172,7 @@ static AlifObject* tpNew_wrapper(AlifObject* _self,
 		//	subtype->name,
 		//	subtype->name,
 		//	type->name);
-		return NULL;
+		return nullptr;
 	}
 
 	staticbase = subtype;
@@ -3182,6 +3192,8 @@ static AlifObject* tpNew_wrapper(AlifObject* _self,
 	ALIF_DECREF(_args);
 	return res;
 }
+
+
 
 static AlifMethodDef _tpNewMethodDef_[] = { // 9294
 	{"__new__", ALIF_CPPFUNCTION_CAST(tpNew_wrapper), METHOD_VARARGS | METHOD_KEYWORDS
@@ -3214,6 +3226,63 @@ static AlifIntT add_tpNewWrapper(AlifTypeObject* _type) { // 9302
 
 
 
+
+
+static AlifObject* slot_tpCall(AlifObject* self, AlifObject* args, AlifObject* kwds) { // 9740
+	AlifThread* thread = _alifThread_get();
+	int unbound;
+
+	AlifObject* meth = lookup_method(self, &ALIF_ID(__call__), &unbound);
+	if (meth == NULL) {
+		return NULL;
+	}
+
+	AlifObject* res{};
+	if (unbound) {
+		res = _alifObject_callPrepend(thread, meth, self, args, kwds);
+	}
+	else {
+		res = _alifObject_call(thread, meth, args, kwds);
+	}
+
+	ALIF_DECREF(meth);
+	return res;
+}
+
+
+
+static AlifIntT slot_tpInit(AlifObject* _self,
+	AlifObject* _args, AlifObject* _kwds) { // 9986
+	AlifThread* tstate = _alifThread_get();
+
+	AlifIntT unbound{};
+	AlifObject* meth = lookup_method(_self, &ALIF_ID(__init__), &unbound);
+	if (meth == nullptr) {
+		return -1;
+	}
+
+	AlifObject* res{};
+	if (unbound) {
+		res = _alifObject_callPrepend(tstate, meth, _self, _args, _kwds);
+	}
+	else {
+		res = _alifObject_call(tstate, meth, _args, _kwds);
+	}
+	ALIF_DECREF(meth);
+	if (res == nullptr)
+		return -1;
+	if (res != ALIF_NONE) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"__init__() should return None, not '%.200s'",
+		//	ALIF_TYPE(res)->name);
+		ALIF_DECREF(res);
+		return -1;
+	}
+	ALIF_DECREF(res);
+	return 0;
+}
+
+
 static AlifObject* slot_tpNew(AlifTypeObject* _type,
 	AlifObject* _args, AlifObject* _kwds) { // 10018
 	AlifThread* thread = _alifThread_get();
@@ -3229,17 +3298,169 @@ static AlifObject* slot_tpNew(AlifTypeObject* _type,
 	return result;
 }
 
+ // 10381
+#define FLSLOT(_name, _slot, _function, _wrapper, _doc, _flags) \
+    {.name = #_name, .offset = offsetof(AlifTypeObject, _slot), .function = (void *)(_function), .wrapper = _wrapper, \
+     .doc = nullptr, .flags = _flags, .nameStrObj = &ALIF_ID(_name) }
+
+static AlifTypeSlotDef _slotDefs_[] = { // 10416
+	FLSLOT(__init__, init, slot_tpInit, (WrapperFunc)(void(*)(void))wrap_init,
+		   nullptr, ALIFWRAPPERFLAG_KEYWORDS),
 
 
-//static void fixup_slotDispatchers(AlifTypeObject* _type) { // 10920
-//	BEGIN_TYPE_LOCK();
-//
-//	for (AlifTypeSlotDef* p = _slotDefs_; p->name; ) {
-//		p = update_oneSlot(_type, p);
-//	}
-//
-//	END_TYPE_LOCK();
-//}
+	{nullptr}
+};
+
+
+
+static void** slot_ptr(AlifTypeObject* type, AlifIntT ioffset) { // 10618
+	char* ptr{};
+	long offset = ioffset;
+
+	if ((AlifUSizeT)offset >= offsetof(AlifHeapTypeObject, buffer)) {
+		ptr = (char*)type->asBuffer;
+		offset -= offsetof(AlifHeapTypeObject, buffer);
+	}
+	else if ((AlifUSizeT)offset >= offsetof(AlifHeapTypeObject, sequence)) {
+		ptr = (char*)type->asSequence;
+		offset -= offsetof(AlifHeapTypeObject, sequence);
+	}
+	else if ((AlifUSizeT)offset >= offsetof(AlifHeapTypeObject, mapping)) {
+		ptr = (char*)type->asMapping;
+		offset -= offsetof(AlifHeapTypeObject, mapping);
+	}
+	else if ((AlifUSizeT)offset >= offsetof(AlifHeapTypeObject, number)) {
+		ptr = (char*)type->asNumber;
+		offset -= offsetof(AlifHeapTypeObject, number);
+	}
+	//else if ((AlifUSizeT)offset >= offsetof(AlifHeapTypeObject, async)) {
+	//	ptr = (char*)type->asAsync;
+	//	offset -= offsetof(AlifHeapTypeObject, async);
+	//}
+	else {
+		ptr = (char*)type;
+	}
+	if (ptr != nullptr)
+		ptr += offset;
+	return (void**)ptr;
+}
+
+static void** resolve_slotDups(AlifTypeObject* type, AlifObject* name) { // 10657
+	AlifInterpreter* interp = _alifInterpreter_get();
+#define pname ALIF_INTERP_CACHED_OBJECT(interp, typeSlotsPname)
+#define ptrs ALIF_INTERP_CACHED_OBJECT(interp, typeSlotsPtrs)
+	AlifTypeSlotDef* p{}, ** pp{};
+	void** res{}, ** ptr{};
+
+	if (pname != name) {
+		/* Collect all slotdefs that match name into ptrs. */
+		pname = name;
+		pp = ptrs;
+		for (p = _slotDefs_; p->nameStrObj; p++) {
+			if (p->nameStrObj == name)
+				*pp++ = p;
+		}
+		*pp = nullptr;
+	}
+
+	res = nullptr;
+	for (pp = ptrs; *pp; pp++) {
+		ptr = slot_ptr(type, (*pp)->offset);
+		if (ptr == nullptr or *ptr == nullptr)
+			continue;
+		if (res != nullptr)
+			return nullptr;
+		res = ptr;
+	}
+	return res;
+#undef pname
+#undef ptrs
+}
+
+static AlifTypeSlotDef* update_oneSlot(AlifTypeObject* type, AlifTypeSlotDef* p) { // 10752
+	AlifObject* descr{};
+	AlifWrapperDescrObject* d{};
+
+	void* specific = nullptr;
+
+	void* generic = nullptr;
+
+	int use_generic = 0;
+
+	int offset = p->offset;
+	int error;
+	void** ptr = slot_ptr(type, offset);
+
+	if (ptr == nullptr) {
+		do {
+			++p;
+		} while (p->offset == offset);
+		return p;
+	}
+	do {
+		descr = findName_inMro(type, p->nameStrObj, &error);
+		if (descr == nullptr) {
+			if (error == -1) {
+				//alifErr_clear();
+			}
+			if (ptr == (void**)&type->iterNext) {
+				specific = (void*)_alifObject_nextNotImplemented;
+			}
+			continue;
+		}
+		if (ALIF_IS_TYPE(descr, &_alifWrapperDescrType_) and
+			((AlifWrapperDescrObject*)descr)->base->nameStrObj == p->nameStrObj) {
+			void** tptr = resolve_slotDups(type, p->nameStrObj);
+			if (tptr == nullptr or tptr == ptr)
+				generic = p->function;
+			d = (AlifWrapperDescrObject*)descr;
+			if ((specific == nullptr or specific == d->wrapped) and
+				d->base->wrapper == p->wrapper and
+				isSubType_withMro(lookup_tpMro(type), type, ALIFDESCR_TYPE(d)))
+			{
+				specific = d->wrapped;
+			}
+			else {
+				use_generic = 1;
+			}
+		}
+		else if (ALIF_IS_TYPE(descr, &_alifCPPFunctionType_) and
+			ALIFCPPFUNCTION_GET_FUNCTION(descr) ==
+			ALIF_CPPFUNCTION_CAST(tpNew_wrapper) and
+			ptr == (void**)&type->new_)
+		{
+			specific = (void*)type->new_;
+		}
+		else if (descr == ALIF_NONE and
+			ptr == (void**)&type->hash) {
+			specific = (void*)alifObject_hashNotImplemented;
+		}
+		else {
+			use_generic = 1;
+			generic = p->function;
+			if (p->function == slot_tpCall) {
+				type->flags &= ~ALIF_TPFLAGS_HAVE_VECTORCALL;
+			}
+		}
+		ALIF_DECREF(descr);
+	} while ((++p)->offset == offset);
+	if (specific && !use_generic)
+		*ptr = specific;
+	else
+		*ptr = generic;
+	return p;
+}
+
+
+static void fixup_slotDispatchers(AlifTypeObject* _type) { // 10920
+	BEGIN_TYPE_LOCK();
+
+	for (AlifTypeSlotDef* p = _slotDefs_; p->name; ) {
+		p = update_oneSlot(_type, p);
+	}
+
+	END_TYPE_LOCK();
+}
 
 
 static AlifIntT typeNew_setNames(AlifTypeObject* _type) { // 10973
@@ -3310,6 +3531,46 @@ static AlifIntT typeNew_initSubclass(AlifTypeObject* _type, AlifObject* _kwds) {
 	return 0;
 }
 
+
+static AlifIntT add_operators(AlifTypeObject* type, AlifTypeObject* def) { // 11134
+	AlifObject* dict = lookup_tpDict(type);
+	AlifTypeSlotDef* p{};
+	AlifObject* descr{};
+	void** ptr{};
+
+	if (def == nullptr) {
+		def = type;
+	}
+
+	for (p = _slotDefs_; p->name; p++) {
+		if (p->wrapper == nullptr)
+			continue;
+		ptr = slot_ptr(def, p->offset);
+		if (!ptr or !*ptr)
+			continue;
+		AlifIntT r = alifDict_contains(dict, p->nameStrObj);
+		if (r > 0)
+			continue;
+		if (r < 0) {
+			return -1;
+		}
+		if (*ptr == (void*)alifObject_hashNotImplemented) {
+			if (alifDict_setItem(dict, p->nameStrObj, ALIF_NONE) < 0)
+				return -1;
+		}
+		else {
+			descr = alifDescr_newWrapper(type, p, *ptr);
+			if (descr == nullptr)
+				return -1;
+			if (alifDict_setItem(dict, p->nameStrObj, descr) < 0) {
+				ALIF_DECREF(descr);
+				return -1;
+			}
+			ALIF_DECREF(descr);
+		}
+	}
+	return 0;
+}
 
 
 class SuperObject { // 11183

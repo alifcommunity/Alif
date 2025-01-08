@@ -873,8 +873,8 @@ static inline AlifIntT insert_combinedDict(AlifInterpreter* _interp, AlifDictObj
 		}
 	}
 	
-	//uint64_t newVersion = alifDict_notifyEvent(
-		//interp, AlifDictWatchEvent_::AlifDict_Event_Added, _mp, key, value);
+	uint64_t newVersion = _alifDict_notifyEvent(
+		_interp, AlifDictWatchEvent_::AlifDict_Event_Added, _mp, _key, _value);
 	_mp->keys->version = 0;
 
 	AlifSizeT hashpos = find_emptySlot(_mp->keys, _hash);
@@ -893,7 +893,7 @@ static inline AlifIntT insert_combinedDict(AlifInterpreter* _interp, AlifDictObj
 		STORE_VALUE(ep_, _value);
 		STORE_HASH(ep_, _hash);
 	}
-	//_mp->versionTag = newVersion;
+	_mp->versionTag = newVersion;
 	STORE_KEYS_USABLE(_mp->keys, _mp->keys->usable - 1);
 	STORE_KEYS_NENTRIES(_mp->keys, _mp->keys->nentries + 1);
 	return 0;
@@ -982,8 +982,8 @@ static AlifIntT insert_dict(AlifInterpreter* _interp, AlifDictObject* _mp,
 	}
 
 	if (oldValue != _value) {
-		//uint64_t newVersion = alifDict_notifyEvent(
-			//interp, ALIFDICT_EVENT_MODIFIED, _mp, key, value);
+		uint64_t newVersion = _alifDict_notifyEvent(
+			_interp, AlifDictWatchEvent_::AlifDict_Event_Modified, _mp, _key, _value);
 		if (DK_IS_USTR(_mp->keys)) {
 			AlifDictUStrEntry* ep_ = &dk_uStrEntries(_mp->keys)[ix_];
 			STORE_VALUE(ep_, _value);
@@ -992,7 +992,7 @@ static AlifIntT insert_dict(AlifInterpreter* _interp, AlifDictObject* _mp,
 			AlifDictKeyEntry* ep_ = &dk_entries(_mp->keys)[ix_];
 			STORE_VALUE(ep_, _value);
 		}
-		//_mp->versionTag = newVersion;
+		_mp->versionTag = newVersion;
 	}
 	ALIF_XDECREF(oldValue); /* which **CAN** re-enter */
 	ALIF_DECREF(_key);

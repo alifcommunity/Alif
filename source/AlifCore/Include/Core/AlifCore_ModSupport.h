@@ -8,6 +8,10 @@ extern AlifIntT _alifArg_noKwnames(const char*, AlifObject*); // 15
     (_kwnames == nullptr or _alifArg_noKwnames(_funcname, _kwnames))
 
 
+AlifIntT _alifArg_noKeywords(const char*, AlifObject*); // 25
+#define _ALIFARG_NOKEYWORDS(_funcname, _kwargs) \
+    (_kwargs == nullptr or _alifArg_noKeywords(_funcname, _kwargs))
+
 AlifIntT _alifArg_checkPositional(const char*, AlifSizeT,
 	AlifSizeT, AlifSizeT); // 30
 #define _ALIF_ANY_VARARGS(_n) (_n == ALIF_SIZET_MAX)

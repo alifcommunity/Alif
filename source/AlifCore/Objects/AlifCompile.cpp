@@ -51,7 +51,7 @@ typedef AlifInstructionSequence InstrSequence; // 84
 
 static InstrSequence* compiler_instrSequence(AlifCompiler*); // 86
 static AlifSymTable* compiler_symtable(AlifCompiler* c); // 88
-static AlifSTEntryObject* compiler_symtableEntry(AlifCompiler*); // 89
+static SymTableEntry* compiler_symtableEntry(AlifCompiler*); // 89
 
 #define INSTR_SEQUENCE(_c) compiler_instrSequence(_c) // 91
 #define SYMTABLE(_c) compiler_symtable(_c) // 93
@@ -178,7 +178,7 @@ AlifIntT _alifCompile_ensureArrayLargeEnough(AlifIntT _idx, void** _array,
 */
 class CompilerUnit { // 231
 public:
-	AlifSTEntryObject* ste{};
+	SymTableEntry* ste{};
 
 	AlifIntT scopeType{};
 
@@ -1317,10 +1317,10 @@ finally:
 static AlifIntT compiler_getRefType(AlifCompiler* _c, AlifObject* _name) { // 1657
 	if (_c->u_->scopeType == ScopeType_::Compiler_Scope_Class and
 		(alifUStr_equalToASCIIString(_name, "__class__") or
-			alifUStr_equalToASCIIString(_name, "__classdict__"))) {
+			alifUStr_equalToASCIIString(_name, "__classDict__"))) {
 		return CELL;
 	}
-	AlifSTEntryObject* ste = SYMTABLE_ENTRY(_c);
+	SymTableEntry* ste = SYMTABLE_ENTRY(_c);
 	AlifIntT scope = alifST_getScope(ste, _name);
 	if (scope == 0) {
 		//alifErr_format(_alifExcSystemError_,
@@ -1557,7 +1557,7 @@ static AlifIntT codegen_functionBody(AlifCompiler* _c, StmtTy _s,
 
 	NEW_JUMP_TARGET_LABEL(_c, start);
 	USE_LABEL(_c, start);
-	AlifSTEntryObject* ste = SYMTABLE_ENTRY(_c);
+	SymTableEntry* ste = SYMTABLE_ENTRY(_c);
 	bool add_stopiteration_handler = ste->coroutine or ste->generator;
 	if (add_stopiteration_handler) {
 		RETURN_IF_ERROR(
@@ -2174,7 +2174,7 @@ static AlifIntT codegen_return(AlifCompiler* _c, StmtTy _s) { // 3027
 	AlifIntT preserve_tos = ((_s->V.return_.val != nullptr) and
 		(_s->V.return_.val->type != ExprK_::ConstantK));
 
-	AlifSTEntryObject* ste = SYMTABLE_ENTRY(_c);
+	SymTableEntry* ste = SYMTABLE_ENTRY(_c);
 	if (!alifST_isFunctionLike(ste)) {
 		//return compiler_error(_c, loc, "'return' outside function");
 	}
@@ -2268,9 +2268,9 @@ static AlifIntT compiler_visitStmt(AlifCompiler* _c, StmtTy _s) { // 3818
 	//	return codegen_typealias(_c, _s);
 	case StmtK_::ReturnK:
 		return codegen_return(_c, _s);
-	//case StmtK_::DeleteK:
-	//	VISIT_SEQ(_c, expr, _s->v.Delete.targets)
-	//		break;
+	case StmtK_::DeleteK:
+		VISIT_SEQ(_c, Expr, _s->V.delete_.targets)
+			break;
 	case StmtK_::AssignK:
 	{
 		AlifSizeT n = ASDL_SEQ_LEN(_s->V.assign.targets);
@@ -3739,7 +3739,7 @@ static AlifSymTable* compiler_symtable(AlifCompiler* _c) { // 7370
 	return _c->st;
 }
 
-static AlifSTEntryObject* compiler_symtableEntry(AlifCompiler* _c) { // 7376
+static SymTableEntry* compiler_symtableEntry(AlifCompiler* _c) { // 7376
 	return _c->u_->ste;
 }
 
@@ -3750,7 +3750,7 @@ static AlifIntT compiler_optimizationLevel(AlifCompiler* _c) { // 7381
 
 
 static AlifIntT compute_codeFlags(AlifCompiler* _c) { // 7402
-	AlifSTEntryObject* ste = SYMTABLE_ENTRY(_c);
+	SymTableEntry* ste = SYMTABLE_ENTRY(_c);
 	AlifIntT flags = 0;
 	if (alifST_isFunctionLike(ste)) {
 		flags |= CO_NEWLOCALS | CO_OPTIMIZED;

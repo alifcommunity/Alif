@@ -79,6 +79,27 @@ static AlifIntT isBasicRef_orProxy(AlifWeakReference* _wr) { // 362
 }
 
 
+static AlifIntT parseWeakRef_initArgs(const char* funcname,
+	AlifObject* args, AlifObject* kwargs,
+	AlifObject** obp, AlifObject** callbackp) { // 450
+	return alifArg_unpackTuple(args, funcname, 1, 2, obp, callbackp);
+}
+
+
+
+static AlifIntT weakref___init__(AlifObject* _self,
+	AlifObject* _args, AlifObject* _kwargs) { // 467
+	AlifObject* tmp{};
+
+	if (!_ALIFARG_NOKEYWORDS("ref", _kwargs))
+		return -1;
+
+	if (parseWeakRef_initArgs("__init__", _args, _kwargs, &tmp, &tmp))
+		return 0;
+	else
+		return -1;
+}
+
 AlifTypeObject _alifWeakrefRefType_ = { // 493
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "مرجع_ضعيف.نوع_مرجعي",
@@ -95,7 +116,7 @@ AlifTypeObject _alifWeakrefRefType_ = { // 493
 	//.richCompare = weakref_richcompare,
 	//.methods = weakref_methods,
 	//.members = weakref_members,
-	//.init = weakref___init__,
+	.init = weakref___init__,
 	.alloc = alifType_genericAlloc,
 	//.new_ = weakref___new__,
 	.free = alifObject_gcDel,

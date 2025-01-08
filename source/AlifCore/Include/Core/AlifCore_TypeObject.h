@@ -82,6 +82,11 @@ public:
 
 extern AlifIntT alifTypes_initTypes(AlifInterpreter*); // 144
 
+
+#define MAX_EQUIV 10
+
+typedef class WrapperBase AlifTypeSlotDef; // 158
+
 static inline AlifObject** _alifStaticType_getWeakRefsListPtr(ManagedStaticTypeState* _state) { // 161
 	return &_state->weakList;
 }

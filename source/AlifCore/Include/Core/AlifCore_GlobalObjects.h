@@ -3,6 +3,7 @@
 #include "AlifCore_GC.h"
 #include "AlifCore_GlobalString.h"
 #include "AlifCore_HashTable.h"
+#include "AlifCore_TypeObject.h"
 
 
 
@@ -63,4 +64,7 @@ public:
 class AlifInterpCachedObjects { // 66
 public:
 	AlifObject* internedStrings{};
+
+	AlifObject* typeSlotsPname{};
+	AlifTypeSlotDef* typeSlotsPtrs[MAX_EQUIV]{};
 };

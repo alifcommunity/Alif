@@ -8,11 +8,11 @@ public:
 	AlifObject* ref{};
 };
 
-extern AlifTypeObject _alifCellType_; // 18
+extern AlifTypeObject _alifCellType_; // 16
 
 #define ALIFCELL_CHECK(_op) ALIF_IS_TYPE(_op, &_alifCellType_) // 18
 
-//AlifObject* alifCell_new(AlifObject*); // 20
+AlifObject* alifCell_new(AlifObject*); // 20
 //AlifObject* alifCell_get(AlifObject*);
 AlifIntT alifCell_set(AlifObject*, AlifObject*); // 22
 
