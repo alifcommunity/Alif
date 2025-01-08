@@ -50,7 +50,6 @@
 #include "BytesObject.h"
 #include "SliceObject.h"
 #include "CellObject.h"
-//#include "IterObject.h"
 #include "DescrObject.h"
 #include "SetObject.h"
 #include "Code.h"

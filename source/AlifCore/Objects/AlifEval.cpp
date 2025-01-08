@@ -963,6 +963,23 @@ dispatch_opcode :
 				stackPointer += 1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(LOAD_FAST_CHECK) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef value{};
+				AlifStackRef valueS = GETLOCAL(oparg);
+				if (ALIFSTACKREF_ISNULL(valueS)) {
+					//_alifEval_formatExcCheckArg(_thread, alifExcUnboundLocalError_,
+					//	UNBOUNDLOCAL_ERROR_MSG,
+					//	alifTuple_getItem(_alifFrame_getCode(_frame)->localsPlusNames, oparg)
+					//);
+					//if (1) goto error;
+				}
+				value = alifStackRef_dup(valueS);
+				stackPointer[0] = value;
+				stackPointer += 1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(LOAD_GLOBAL) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 5;

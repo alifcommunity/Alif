@@ -3048,15 +3048,15 @@ AlifObject* alifUStr_decodeUStrEscapeInternal(const char* _str, AlifSizeT _size,
 
 #define WRITE_ASCII_CHAR(_ch)                                                  \
             do {                                                              \
-                ALIFUSTR_WRITE(writer.kind, writer.data, writer.pos++, ch);  \
+                ALIFUSTR_WRITE(writer.kind, writer.data, writer.pos++, _ch);  \
             } while(0)
 
 #define WRITE_CHAR(_ch)                                                        \
             do {                                                              \
                 if (ch <= writer.maxChar) {                                   \
-                    ALIFUSTR_WRITE(writer.kind, writer.data, writer.pos++, ch); \
+                    ALIFUSTR_WRITE(writer.kind, writer.data, writer.pos++, _ch); \
                 }                                                             \
-                else if (alifUStrWriter_writeCharInline(&writer, ch) < 0) { \
+                else if (alifUStrWriter_writeCharInline(&writer, _ch) < 0) { \
                     goto onError;                                             \
                 }                                                             \
             } while(0)

@@ -11,16 +11,16 @@
 // Alternate tab spacing
 #define ALTTABSIZE 1
 
-#define IS_IDENTIFIER_START(_c) ((_c >= L'a' and _c <= L'z') \
-								or (_c >= L'A' and _c <= L'Z') /* to exclude nums and symbols */ \
-								or (_c == L'_') \
-								or (_c < L'٠' and _c >= 128) \
-								or (_c > L'٩' and _c >= 128)) /* exclude arabic-indic nums */
+#define IS_IDENTIFIER_START(_c) ((_c >= 'a' and _c <= 'z') \
+								or (_c >= 'A' and _c <= 'Z') /* to exclude nums and symbols */ \
+								or (_c == '_') \
+								or (_c < '٠' and _c >= 128) \
+								or (_c > '٩' and _c >= 128)) /* exclude arabic-indic nums */
 
-#define IS_IDENTIFIER_CHAR(_c) ((_c >= L'a' and _c <= L'z') \
-								or (_c >= L'A' and _c <= L'Z') \
-								or (_c >= L'0' and _c <= L'9') \
-								or (_c == L'_') \
+#define IS_IDENTIFIER_CHAR(_c) ((_c >= 'a' and _c <= 'z') \
+								or (_c >= 'A' and _c <= 'Z') \
+								or (_c >= '0' and _c <= '9') \
+								or (_c == '_') \
 								or (_c >= 128))
 
 #define TOK_GET_MODE(_tokState) (&(_tokState->tokModeStack[_tokState->tokModeStackIndex]))
@@ -89,7 +89,7 @@ static AlifIntT set_fStringExpr(TokenState* _tokState,
 	// Check if there is a # character in the expression
 	AlifIntT hashDetected = 0;
 	for (AlifSizeT i = 0; i < tokMode->lastExprSize - tokMode->lastExprEnd; i++) {
-		if (tokMode->lastExprBuff[i] == L'#') {
+		if (tokMode->lastExprBuff[i] == '#') {
 			hashDetected = 1;
 			break;
 		}
@@ -104,10 +104,10 @@ static AlifIntT set_fStringExpr(TokenState* _tokState,
 		AlifSizeT j = 0;
 
 		for (i = 0, j = 0; i < inputLength; i++) {
-			if (tokMode->lastExprBuff[i] == L'#') {
+			if (tokMode->lastExprBuff[i] == '#') {
 				// Skip characters until newline or end of string
-				while (tokMode->lastExprBuff[i] != L'\0' and i < inputLength) {
-					if (tokMode->lastExprBuff[i] == L'\n') {
+				while (tokMode->lastExprBuff[i] != '\0' and i < inputLength) {
+					if (tokMode->lastExprBuff[i] == '\n') {
 						result[j++] = tokMode->lastExprBuff[i];
 						break;
 					}
@@ -119,7 +119,7 @@ static AlifIntT set_fStringExpr(TokenState* _tokState,
 			}
 		}
 
-		result[j] = L'\0';  // Null-terminate the result string
+		result[j] = '\0';  // Null-terminate the result string
 		res = alifUStr_decodeUTF8(result, j, nullptr);
 		alifMem_dataFree(result);
 	}
@@ -154,7 +154,7 @@ AlifIntT alifLexer_updateFStringExpr(TokenState* _tokState, char _cur) { // 175
 		strncpy(tokMode->lastExprBuff + tokMode->lastExprSize, _tokState->cur, size);
 		tokMode->lastExprSize += size;
 		break;
-	case L'{':
+	case '{':
 		if (tokMode->lastExprBuff != nullptr) {
 			alifMem_dataFree(tokMode->lastExprBuff);
 		}
@@ -166,9 +166,9 @@ AlifIntT alifLexer_updateFStringExpr(TokenState* _tokState, char _cur) { // 175
 		tokMode->lastExprEnd = -1;
 		strncpy(tokMode->lastExprBuff, _tokState->cur, size);
 		break;
-	case L'}':
-	case L'!':
-	case L':':
+	case '}':
+	case '!':
+	case ':':
 		if (tokMode->lastExprEnd == -1) {
 			tokMode->lastExprEnd = strlen(_tokState->start);
 		}
@@ -192,7 +192,7 @@ static AlifIntT tok_decimalTail(TokenState* _tokState) { // 365
 		do {
 			c_ = tok_nextChar(_tokState);
 		} while (ALIF_ISDIGIT(c_));
-		if (c_ != L'_') {
+		if (c_ != '_') {
 			break;
 		}
 		c_ = tok_nextChar(_tokState);
@@ -208,8 +208,8 @@ static AlifIntT tok_decimalTail(TokenState* _tokState) { // 365
 static inline AlifIntT tok_continuationLine(TokenState* _tokState) { // 387
 
 	AlifIntT c_ = tok_nextChar(_tokState);
-	if (c_ == L'\r') c_ = tok_nextChar(_tokState);
-	if (c_ != L'\n') { _tokState->done = E_LINECONT; return -1; }
+	if (c_ == '\r') c_ = tok_nextChar(_tokState);
+	if (c_ != '\n') { _tokState->done = E_LINECONT; return -1; }
 
 	c_ = tok_nextChar(_tokState);
 	if (c_ == EOF) {
@@ -352,19 +352,19 @@ again:
 	// skip spaces
 	do {
 		c_ = tok_nextChar(_tokState);
-	} while (c_ == L' ' or c_ == L'\t' or c_ == L'\014');
+	} while (c_ == ' ' or c_ == '\t' or c_ == '\014');
 
 	// Set start of current token
 	_tokState->start = _tokState->cur == nullptr ? nullptr : _tokState->cur - 1;
 	_tokState->startingColOffset = _tokState->colOffset - 1;
 
 	// Skip comment
-	if (c_ == L'#') {
+	if (c_ == '#') {
 		const char* p{};
 		const char* prefix{}, * typeStart;
 		AlifIntT currentStartingColOffset{};
 
-		while (c_ != EOF and c_ != L'\n' and c_ != L'\r') {
+		while (c_ != EOF and c_ != '\n' and c_ != '\r') {
 			c_ = tok_nextChar(_tokState);
 		}
 
@@ -375,8 +375,8 @@ again:
 		//	currentStartingColOffset = _tokState->startingColOffset;
 		//	prefix = typeCommentPrefix;
 		//	while (*prefix and p < _tokState->cur) {
-		//		if (*prefix == L' ') {
-		//			while (*p == L' ' or *p == L'\t') {
+		//		if (*prefix == ' ') {
+		//			while (*p == ' ' or *p == '\t') {
 		//				p++;
 		//				currentStartingColOffset++;
 		//			}
@@ -471,25 +471,7 @@ again:
 				goto letterQuote;
 			}
 		}
-		while (IS_IDENTIFIER_CHAR(c_)) { // يجب مراجعة وظيفة هذا التحقق
-
-			///* // alif
-			//	هذا النظام تم إنشاءه لحساب عدد الاحرف الحقيقي للنص
-			//	حيث أن النظام القديم كان يعتبر الحرف العربي حرفين في نظام ويندوز واربعة في غيره
-			//	لأنه يقوم بحساب عدد البايتات بدل من حساب الاحرف
-			//	أي أن النظام القديم لا يأخذ الترميز النصي في الحسبان
-			//*/
-			//if (c_ >= 128) {
-			//	nonASCII = 1;
-			//	for (AlifIntT i = 0; i < sizeof(wchar_t); i++) {
-			//		c_ = tok_nextChar(_tokState);
-			//	}
-			//	_tokState->colOffset += 1 - sizeof(wchar_t);
-			//}
-			//else {
-			//	c_ = tok_nextChar(_tokState);
-			//}
-
+		while (IS_IDENTIFIER_CHAR(c_)) {
 			c_ = tok_nextChar(_tokState);
 		}
 		tok_backup(_tokState, c_);
@@ -527,7 +509,7 @@ again:
 		}
 		pStart = _tokState->start;
 		pEnd = _tokState->cur - 1;
-		_tokState->contLine = 0; // Leave L'\n' out of the string
+		_tokState->contLine = 0; // Leave '\n' out of the string
 
 		return MAKE_TOKEN(NEWLINE);
 	}
@@ -549,7 +531,7 @@ again:
 			else {
 				tok_backup(_tokState, c_);
 			}
-			tok_backup(_tokState, L'.');
+			tok_backup(_tokState, '.');
 		}
 		else {
 			tok_backup(_tokState, c_);
@@ -565,7 +547,7 @@ again:
 		if (c_ == '0') {
 			/* Hex or Octal or Binary */
 			c_ = tok_nextChar(_tokState);
-			if (c_ == L'ه') {
+			if (c_ == L'ه') { // need review
 				c_ = tok_nextChar(_tokState);
 				do {
 					if (c_ == '_') {
@@ -573,7 +555,7 @@ again:
 					}
 					if (!ALIF_ISXDIGIT(c_)) {
 						tok_backup(_tokState, c_);
-						//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, L"رقم ستعشري غير صحيح"));
+						//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "رقم ستعشري غير صحيح"));
 					}
 					do {
 						c_ = tok_nextChar(_tokState);
@@ -583,18 +565,18 @@ again:
 				//	return MAKE_TOKEN(ERRORTOKEN);
 				//}
 			}
-			else if (c_ == L'ث') {
+			else if (c_ == L'ث') { // need review
 				// Octal
 				c_ = tok_nextChar(_tokState);
 				do {
 					if (c_ == '_') { c_ = tok_nextChar(_tokState); }
 					if (c_ < '0' or c_ >= '8') {
 						if (ALIF_ISDIGIT(c_)) {
-							//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, L"رقم ثماني غير صحيح '%wcs'", wcs));
+							//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "رقم ثماني غير صحيح '%wcs'", wcs));
 						}
 						else {
 							tok_backup(_tokState, c_);
-							//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, L"رقم ثماني غير صحيح"));
+							//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "رقم ثماني غير صحيح"));
 						}
 					}
 					do {
@@ -602,19 +584,19 @@ again:
 					} while ('0' <= c_ and c_ < '8');
 				} while (c_ == '-');
 				if (ALIF_ISDIGIT(c_)) {
-					//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, L"رقم ثماني غير صحيح '%wcs'", wcs));
+					//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "رقم ثماني غير صحيح '%wcs'", wcs));
 				}
-				//if (!verify_endOfNumber(_tokState, wcs, L"ثماني")) {
+				//if (!verify_endOfNumber(_tokState, c_, "ثماني")) {
 				//	return MAKE_TOKEN(ERRORTOKEN);
 				//}
 			}
-			else if (c_ == L'ن') {
+			else if (c_ == L'ن') { // review - suppose "ن"[0]
 				// Binary
 				c_ = tok_nextChar(_tokState);
 				do {
-					if (c_ == L'_') { c_ = tok_nextChar(_tokState); }
+					if (c_ == '_') { c_ = tok_nextChar(_tokState); }
 
-					if (c_ != L'0' and c_ != L'1') {
+					if (c_ != '0' and c_ != '1') {
 						if (ALIF_ISDIGIT(c_)) {
 							//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, L"رقم ثنائي غير صحيح '%wcs'", wcs));
 						}
@@ -625,22 +607,61 @@ again:
 					}
 					do {
 						c_ = tok_nextChar(_tokState);
-					} while (c_ == L'0' or c_ == L'1');
-				} while (c_ == L'_');
+					} while (c_ == '0' or c_ == '1');
+				} while (c_ == '_');
 
 				if (ALIF_ISDIGIT(c_)) {
 					//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, L"رقم ثنائي غير صحيح '%wcs'", wcs));
 				}
-				//if (!verify_endOfNumber(_tokState, wcs, L"ثنائي")) {
+				//if (!verify_endOfNumber(_tokState, c_, "ثنائي")) {
 				//	return MAKE_TOKEN(ERRORTOKEN);
 				//}
 			}
 			else {
-				/*
-					يجب التأكد من هذه الجزئية وطريقة عملها
-				*/
-
-
+				AlifIntT nonzero = 0;
+				while (1) {
+					if (c_ == '_') {
+						c_ = tok_nextChar(_tokState);
+						if (!ALIF_ISDIGIT(c_)) {
+							tok_backup(_tokState, c_);
+							//return MAKE_TOKEN(_alifTokenizer_syntaxError(tok, "invalid decimal literal"));
+						}
+					}
+					if (c_ != '0') {
+						break;
+					}
+					c_ = tok_nextChar(_tokState);
+				}
+				char* zeros_end = _tokState->cur;
+				if (ALIF_ISDIGIT(c_)) {
+					nonzero = 1;
+					c_ = tok_decimalTail(_tokState);
+					if (c_ == 0) {
+						return MAKE_TOKEN(ERRORTOKEN);
+					}
+				}
+				if (c_ == '.') {
+					c_ = tok_nextChar(_tokState);
+					goto fraction;
+				}
+				//else if (c_ == 'e' or c_ == 'E') {
+				//	goto exponent;
+				//}
+				//else if (c_ == 'j' or c_ == 'J') {
+				//	goto imaginary;
+				//}
+				else if (nonzero and !_tokState->tokExtraTokens) {
+					tok_backup(_tokState, c_);
+					//return MAKE_TOKEN(_alifTokenizer_syntaxErrorKnownRange(
+					//	tok, (AlifIntT)(tok->start + 1 - tok->lineStart),
+					//	(AlifIntT)(zeros_end - tok->line_start),
+					//	"leading zeros in decimal integer "
+					//	"literals are not permitted; "
+					//	"use an 0o prefix for octal integers"));
+				}
+				//if (!verify_endOfNumber(_tokState, c_, "عشري")) {
+				//	return MAKE_TOKEN(ERRORTOKEN);
+				//}
 			}
 		}
 		else {
@@ -658,7 +679,7 @@ again:
 						if (c_ == 0) return MAKE_TOKEN(ERRORTOKEN);
 					}
 				}
-				if (c_ == L'س') { /* exponent */
+				if (c_ == L'س') { /* exponent */ // need review
 					AlifIntT e{};
 				exponent:
 					e = c_;
@@ -683,15 +704,15 @@ again:
 					c_ = tok_decimalTail(_tokState);
 					if (c_ == 0) return MAKE_TOKEN(ERRORTOKEN);
 				}
-				if (c_ == L'ت') {
+				if (c_ == L'ت') { // need review
 					/* Imaginary part */
 				imaginary:
 					c_ = tok_nextChar(_tokState);
-					//if (!verify_endOfNumber(_tokState, c, L"تخيلي")) {
+					//if (!verify_endOfNumber(_tokState, c_, "تخيلي")) {
 					//	return MAKE_TOKEN(ERRORTOKEN);
 					//}
 				}
-				//else if (!verify_endOfNumber(_tokState, c, L"عشري")) {
+				//else if (!verify_endOfNumber(_tokState, c_, "عشري")) {
 				//	return MAKE_TOKEN(ERRORTOKEN);
 				//}
 			}
@@ -706,7 +727,7 @@ again:
 fStringQuote:
 	if ((*(_tokState->start + secondByte) == "م"[secondByte]
 		or (*_tokState->start + secondByte + 2) == "خ"[secondByte]) // alif
-		and (c_ == L'\'' or c_ == L'"')) {
+		and (c_ == '\'' or c_ == '"')) {
 
 		AlifIntT quote = c_;
 		AlifIntT quoteSize = 1;
@@ -765,7 +786,7 @@ fStringQuote:
 	}
 
 letterQuote:
-	if (c_ == L'\'' or c_ == L'"') {
+	if (c_ == '\'' or c_ == '"') {
 		AlifIntT quote = c_;
 		AlifIntT quoteSize = 1;
 		AlifIntT endQuoteSize = 0;
@@ -791,23 +812,6 @@ letterQuote:
 
 		/* the rest of STRING */
 		while (endQuoteSize != quoteSize) {
-
-			///* // alif
-			//	هذا النظام تم إنشاءه لحساب عدد الاحرف الحقيقي للنص
-			//	حيث أن النظام القديم كان يعتبر الحرف العربي حرفين في نظام ويندوز واربعة في غيره
-			//	لأنه يقوم بحساب عدد البايتات بدل من حساب الاحرف
-			//	أي أن النظام القديم لا يأخذ الترميز النصي في الحسبان
-			//*/
-			//if (c_ >= 128) {
-			//	for (AlifIntT i = 0; i < sizeof(wchar_t); i++) {
-			//		c_ = tok_nextChar(_tokState);
-			//	}
-			//	_tokState->colOffset += 1 - sizeof(wchar_t);
-			//}
-			//else {
-			//	c_ = tok_nextChar(_tokState);
-			//}
-
 			c_ = tok_nextChar(_tokState);
 
 			if (_tokState->done == E_ERROR) {
@@ -815,7 +819,7 @@ letterQuote:
 			}
 			if (_tokState->done == E_DECODE) break;
 
-			if (c_ == EOF or (quoteSize == 1 and c_ == L'\n')) {
+			if (c_ == EOF or (quoteSize == 1 and c_ == '\n')) {
 				_tokState->cur = (char*)_tokState->start;
 				_tokState->cur++;
 				_tokState->lineStart = _tokState->multiLineStart;
@@ -832,7 +836,7 @@ letterQuote:
 
 				if (quoteSize == 3) {
 					//alifTokenizer_syntaxError(_tokState, "نص متعدد الاسطر لم يتم إنهاؤه" " في السطر %d", start);
-					if (c_ != L'\n') {
+					if (c_ != '\n') {
 						_tokState->done = E_EOFS;
 					}
 					return MAKE_TOKEN(ERRORTOKEN);
@@ -844,7 +848,7 @@ letterQuote:
 					else {
 						//alifTokenizer_syntaxError(_tokState, "نص لم يتم إنهاؤه" " في السطر %d", start);
 					}
-					if (c_ != L'\n') {
+					if (c_ != '\n') {
 						_tokState->done = E_EOLS;
 					}
 					return MAKE_TOKEN(ERRORTOKEN);
@@ -855,12 +859,12 @@ letterQuote:
 			}
 			else {
 				endQuoteSize = 0;
-				if (c_ == L'/') {
+				if (c_ == '\\') {
 					c_ = tok_nextChar(_tokState);  // skip escape char
 					if (c_ == quote) {	           // record if the escape was a quote
 						hasEscapedQuote = 1;
 					}
-					if (c_ == L'\r') {
+					if (c_ == '\r') {
 						c_ = tok_nextChar(_tokState);
 					}
 				}
@@ -883,9 +887,9 @@ letterQuote:
 
 
 	// Punctuation character
-	AlifIntT isPunctuation = (c_ == L':' or c_ == L'}' or c_ == L'!' or c_ == L'}');
+	AlifIntT isPunctuation = (c_ == ':' or c_ == '}' or c_ == '!' or c_ == '}');
 	if (isPunctuation and INSIDE_FSTRING(_tokState) and INSIDE_FSTRING_EXPR(_currentTok)) {
-		AlifIntT cursor = _currentTok->curlyBracDepth - (c_ != L'{');
+		AlifIntT cursor = _currentTok->curlyBracDepth - (c_ != '{');
 		AlifIntT inFormatSpec = _currentTok->inFormatSpec;
 		AlifIntT cursorInFormatWithDebug =
 			cursor == 1 and (_currentTok->fStringDebug or inFormatSpec);
@@ -893,11 +897,11 @@ letterQuote:
 		if (cursor == 0 and !alifLexer_updateFStringExpr(_tokState, c_)) {
 			return MAKE_TOKEN(ENDMARKER);
 		}
-		if (cursor == 0 and c_ != L'{' and set_fStringExpr(_tokState, _token, c_)) {
+		if (cursor == 0 and c_ != '{' and set_fStringExpr(_tokState, _token, c_)) {
 			return MAKE_TOKEN(ERRORTOKEN);
 		}
 
-		if (c_ == L':' and cursor == _currentTok->curlyBracExprStartDepth) {
+		if (c_ == ':' and cursor == _currentTok->curlyBracExprStartDepth) {
 			_currentTok->type = TokenizerModeType_::Token_FStringMode;
 			_currentTok->inFormatSpec = 1;
 			pStart = _tokState->start;
@@ -928,9 +932,9 @@ letterQuote:
 
 	// keep track of parentheses nesting level
 	switch (c_) {
-	case L'(':
-	case L'[':
-	case L'{':
+	case '(':
+	case '[':
+	case '{':
 		if (_tokState->level >= MAXLEVEL) {
 			//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, L"تم تجاوز الحد الاقصى لتداخل الاقواس"));
 		}
@@ -942,10 +946,10 @@ letterQuote:
 			_currentTok->curlyBracDepth++;
 		}
 		break;
-	case L')':
-	case L']':
-	case L'}':
-		//if (INSIDE_FSTRING(tok) and !_currentTok->curlyBracDepth and c_ == L'}') {
+	case ')':
+	case ']':
+	case '}':
+		//if (INSIDE_FSTRING(tok) and !_currentTok->curlyBracDepth and c_ == '}') {
 		//	return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "f-string: single '}' is not allowed"));
 		//}
 		//if (!tok->tokExtraTokens and !tok->level) {
@@ -956,13 +960,13 @@ letterQuote:
 			AlifIntT opening = _tokState->parenStack[_tokState->level];
 			if (!_tokState->tokExtraTokens
 				and
-				((opening == L'(' and c_ == L')')
+				((opening == '(' and c_ == ')')
 				or
-				(opening == L'[' and c_ == L']')
+				(opening == '[' and c_ == ']')
 				or
-				(opening == L'{' and c_ == L'}')))
+				(opening == '{' and c_ == '}')))
 			{
-				//if (INSIDE_FSTRING(_tokState) and opening == L'{') {
+				//if (INSIDE_FSTRING(_tokState) and opening == '{') {
 				//	AlifIntT previous_bracket = _currentTok->curlyBracDepth - 1;
 				//	if (previous_bracket == _currentTok->curlyBracExprStartDepth) {
 				//		return MAKE_TOKEN(alifTokenizer_syntaxError(tok, "f-string: unmatched '%c'", c));
@@ -988,7 +992,7 @@ letterQuote:
 			if (_currentTok->curlyBracDepth < 0) {
 				//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "f-string: unmatched '%c'", c_));
 			}
-			if (c_ == L'}' and _currentTok->curlyBracDepth == _currentTok->curlyBracExprStartDepth) {
+			if (c_ == '}' and _currentTok->curlyBracDepth == _currentTok->curlyBracExprStartDepth) {
 				_currentTok->curlyBracExprStartDepth--;
 				_currentTok->type = TokenizerModeType_::Token_FStringMode;
 				_currentTok->inFormatSpec = 0;
@@ -1000,11 +1004,11 @@ letterQuote:
 		break;
 	}
 
-	//if (!ALIF_UNICODE_ISPRINTABLE(wcs)) {
-	//	return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, L"حرف غير قابل للطباعة", wcs));
+	//if (!ALIF_UNICODE_ISPRINTABLE(c_)) {
+	//	return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "حرف غير قابل للطباعة", c_));
 	//}
 
-	if (c_ == L'=' and INSIDE_FSTRING_EXPR(_currentTok)) {
+	if (c_ == '=' and INSIDE_FSTRING_EXPR(_currentTok)) {
 		_currentTok->fStringDebug = 1;
 	}
 
@@ -1029,11 +1033,11 @@ static AlifIntT tokGet_fStringMode(TokenState* _tokState,
 	// If we start with a bracket, we defer to the normal mode as there is nothing for us to tokenize
 	// before it.
 	AlifIntT startChar = tok_nextChar(_tokState);
-	if (startChar == L'{') {
+	if (startChar == '{') {
 		AlifIntT peek1 = tok_nextChar(_tokState);
 		tok_backup(_tokState, peek1);
 		tok_backup(_tokState, startChar);
-		if (peek1 != L'{') {
+		if (peek1 != '{') {
 			_currentTok->curlyBracExprStartDepth++;
 			if (_currentTok->curlyBracExprStartDepth >= MAX_EXPR_NESTING) {
 				//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, L"نص منسق:التعبير المتداخل للنص المنسق وصل الحد الاقصى لعدد التداخلات"));
@@ -1080,12 +1084,12 @@ fStringMiddle:
 		AlifIntT inFormatSpec = (_currentTok->inFormatSpec
 			and INSIDE_FSTRING_EXPR(_currentTok));
 
-		if (c_ == EOF or (_currentTok->fStringQuoteSize == 1 and c_ == L'\n')) {
+		if (c_ == EOF or (_currentTok->fStringQuoteSize == 1 and c_ == '\n')) {
 
 			// If we are in a format spec and we found a newline,
 			// it means that the format spec ends here and we should
 			// return to the regular mode.
-			if (inFormatSpec and c_ == L'\n') {
+			if (inFormatSpec and c_ == '\n') {
 				tok_backup(_tokState, c_);
 				TOK_GET_MODE(_tokState)->type = TokenizerModeType_::Token_RegularMode;
 				_currentTok->inFormatSpec = 0;
@@ -1106,8 +1110,8 @@ fStringMiddle:
 			_tokState->lineNo = currentTok->fStringLineStart;
 
 			if (currentTok->fStringQuoteSize == 3) {
-				//alifTokenizer_syntaxError(_tokState, L"نص متعدد الاسطر غير منتهي" L" (السطر %d)", start);
-				if (c_ != L'\n') {
+				//alifTokenizer_syntaxError(_tokState, "نص متعدد الاسطر غير منتهي" L" (السطر %d)", start);
+				if (c_ != '\n') {
 					_tokState->done = E_EOFS;
 				}
 				return MAKE_TOKEN(ERRORTOKEN);
@@ -1125,12 +1129,12 @@ fStringMiddle:
 			endQuoteSize = 0;
 		}
 
-		if (c_ == L'{') {
+		if (c_ == '{') {
 			if (!alifLexer_updateFStringExpr(_tokState, c_)) {
 				return MAKE_TOKEN(ENDMARKER);
 			}
 			AlifIntT peek = tok_nextChar(_tokState);
-			if (peek != L'{' or inFormatSpec) {
+			if (peek != '{' or inFormatSpec) {
 				tok_backup(_tokState, peek);
 				tok_backup(_tokState, c_);
 				_currentTok->curlyBracExprStartDepth++;
@@ -1148,7 +1152,7 @@ fStringMiddle:
 			}
 			return MAKE_TOKEN(FSTRINGMIDDLE);
 		}
-		else if (c_ == L'}') {
+		else if (c_ == '}') {
 			if (unicodeEscape) {
 				pStart = _tokState->start;
 				pEnd = _tokState->cur;
@@ -1161,7 +1165,7 @@ fStringMiddle:
 			// of the bracket stack (-1 is the top level). Since format specifiers can't legally use double
 			// brackets, we can bypass it here.
 			AlifIntT cursor = _currentTok->curlyBracDepth;
-			if (peek == L'}' and !inFormatSpec and cursor == 0) {
+			if (peek == '}' and !inFormatSpec and cursor == 0) {
 				pStart = _tokState->start;
 				pEnd = _tokState->cur - 1;
 			}
@@ -1175,15 +1179,15 @@ fStringMiddle:
 			}
 			return MAKE_TOKEN(FSTRINGMIDDLE);
 		}
-		else if (c_ == L'/') {
+		else if (c_ == '\\') {
 			AlifIntT peek = tok_nextChar(_tokState);
-			if (peek == L'\r') {
+			if (peek == '\r') {
 				peek = tok_nextChar(_tokState);
 			}
 			// Special case when the backslash is right before a curly
 			// brace. We have to restore and return the control back
 			// to the loop for the next iteration.
-			if (peek == L'{' or peek == L'}') {
+			if (peek == '{' or peek == '}') {
 				if (!_currentTok->fStringRaw) {
 					//if (alifTokenizer_warnInvalidEscapeSequence(_tokState, peek)) {
 					//	return MAKE_TOKEN(ERRORTOKEN);
@@ -1194,10 +1198,10 @@ fStringMiddle:
 			}
 
 			if (!_currentTok->fStringRaw) {
-				if (peek == L'N') {
+				if (peek == 'N') {
 					/* Handle named unicode escapes (\N{BULLET}) */
 					peek = tok_nextChar(_tokState);
-					if (peek == L'{') {
+					if (peek == '{') {
 						unicodeEscape = 1;
 					}
 					else {
