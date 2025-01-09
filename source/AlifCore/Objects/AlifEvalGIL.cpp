@@ -261,9 +261,8 @@ static void init_sharedGIL(AlifInterpreter* _interp, GILDureRunState* _gil) { //
 
 static void init_ownGIL(AlifInterpreter* _interp, GILDureRunState* _gil) { // 474
 	const AlifConfig* config = alifInterpreter_getConfig(_interp);
-	_gil->enabled = (config->enableGIL == AlifConfigGIL_::AlifConfig_GIL_Enable)
-		? INT_MAX
-		: 0;
+	//_gil->enabled = (config->enableGIL == AlifConfigGIL_::AlifConfig_GIL_Enable)
+	//	? INT_MAX : 0; //* review //* delete
 	create_gil(_gil);
 	_interp->eval.gil_ = _gil;
 	_interp->eval.ownGIL = 1;
