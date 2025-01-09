@@ -14,8 +14,8 @@
 #define IS_IDENTIFIER_START(_c) ((_c >= 'a' and _c <= 'z') \
 								or (_c >= 'A' and _c <= 'Z') /* to exclude nums and symbols */ \
 								or (_c == '_') \
-								or (_c < '٠' and _c >= 128) \
-								or (_c > '٩' and _c >= 128)) /* exclude arabic-indic nums */
+								or (_c < L'٠' and _c >= 128) \
+								or (_c > L'٩' and _c >= 128)) /* exclude arabic-indic nums */
 
 #define IS_IDENTIFIER_CHAR(_c) ((_c >= 'a' and _c <= 'z') \
 								or (_c >= 'A' and _c <= 'Z') \
