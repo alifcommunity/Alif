@@ -687,6 +687,7 @@
     INIT_ID(CANCELLED), \
     INIT_ID(__abstractMethods__), \
     INIT_ID(__annotate__), \
+    INIT_ID(__bases__), \
     INIT_ID(__buildClass__), \
     INIT_ID(__builtins__), \
     INIT_ID(__call__), \
@@ -711,6 +712,7 @@
 	INIT_ID(__mroEntries__), \
     INIT_ID(__name__), \
     INIT_ID(__new__), \
+    INIT_ID(__notes__), \
     INIT_ID(__origClass__), \
 	INIT_ID(__package__), \
 	INIT_ID(__prepare__), \
@@ -719,6 +721,7 @@
 	INIT_ID(__slots__), \
 	INIT_ID(__spec__), \
 	INIT_ID(__staticAttributes__), \
+	INIT_ID(__subClassCheck__), \
 	INIT_ID(__typeParams__), \
 	INIT_ID(__weakRef__), \
 	INIT_ID(Builtins), \

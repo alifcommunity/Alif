@@ -231,6 +231,11 @@ void alifErr_setString(AlifObject* _exception, const char* _string) { // 296
 }
 
 
+AlifObject* ALIF_HOT_FUNCTION alifErr_occurred(void) { // 304
+	AlifThread* thread = _alifThread_get();
+	return _alifErr_occurred(thread);
+}
+
 
 AlifObject* _alifErr_getRaisedException(AlifThread* _thread) { // 483
 	AlifObject* exc = _thread->currentException;

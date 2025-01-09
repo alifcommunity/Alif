@@ -5,6 +5,9 @@
 void alifErr_setObject(AlifObject*, AlifObject*); // 10
 void alifErr_setString(AlifObject*, const char*); // 11
 
+
+AlifObject* alifErr_occurred(void); // 15
+
 AlifObject* alifException_getTraceback(AlifObject*); // 44
 
 

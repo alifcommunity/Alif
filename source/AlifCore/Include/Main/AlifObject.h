@@ -587,7 +587,10 @@ typedef AlifIntT (*AlifRefTracer)(AlifObject*, AlifRefTracerEvent_ event, void*)
 #define ALIFTYPE_CAST(_op) \
     (ALIF_CAST(AlifTypeObject*, (_op)))
 
-
+static inline AlifIntT alifType_checkExact(AlifObject* _op) { // 778
+	return ALIF_IS_TYPE(_op, &_alifTypeType_);
+}
+#define ALIFTYPE_CHECKEXACT(_op) alifType_checkExact(ALIFOBJECT_CAST(_op))
 
 static inline AlifIntT alifType_hasFeature(AlifTypeObject* _type, unsigned long _feature) { // 749
 	unsigned long flags{};

@@ -97,9 +97,11 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ThreadState.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Time.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Token.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Traceback.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Tuple.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_TypeID.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_TypeObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_UnionObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_UStrObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_WeakRef.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Abstract.h" />
@@ -299,6 +301,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\ParkingLot.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\TypeID.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\TypeObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\UnionObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\UStrCppType.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\UStrObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\WeakRefObject.cpp" />

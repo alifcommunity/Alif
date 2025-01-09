@@ -83,10 +83,20 @@ static inline AlifIntT _alif_enterRecursiveCallThread(AlifThread* _thread,
 	return (alif_makeRecCheck(_thread) and alif_checkRecursiveCall(_thread, where));
 }
 
+static inline AlifIntT _alif_enterRecursiveCall(const char* _where) { // 219
+	AlifThread* thread = _alifThread_get();
+	return _alif_enterRecursiveCallThread(thread, _where);
+}
 
 static inline void _alif_leaveRecursiveCallThread(AlifThread* _thread) { // 224
 	_thread->cppRecursionRemaining++;
 }
+
+static inline void _alif_leaveRecursiveCall(void) { // 228
+	AlifThread* thread = _alifThread_get();
+	_alif_leaveRecursiveCallThread(thread);
+}
+
 
 AlifIntT _alifEval_unpackIterableStackRef(AlifThread*, AlifStackRef, AlifIntT, AlifIntT, AlifStackRef*); // 267
 void _alifEval_frameClearAndPop(AlifThread* _thread, AlifInterpreterFrame*); // 268

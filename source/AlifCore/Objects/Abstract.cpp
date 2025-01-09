@@ -5,8 +5,9 @@
 #include "AlifCore_Eval.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_Long.h"
+#include "AlifCore_Errors.h"
 #include "AlifCore_State.h"
-#include "AlifCore_UStrObject.h"
+#include "AlifCore_UnionObject.h"
 
 
 
@@ -1146,6 +1147,153 @@ AlifObject* alifMapping_keys(AlifObject* _o) { // 2456
 	return methodOutput_asList(_o, &ALIF_ID(keys));
 }
 
+
+static AlifObject* abstract_getBases(AlifObject* _cls) { // 2518
+	AlifObject* bases{};
+
+	(void)alifObject_getOptionalAttr(_cls, &ALIF_ID(__bases__), &bases);
+	if (bases != nullptr and !ALIFTUPLE_CHECK(bases)) {
+		ALIF_DECREF(bases);
+		return nullptr;
+	}
+	return bases;
+}
+
+
+static AlifIntT abstract_isSubclass(AlifObject* _derived, AlifObject* _cls) { // 2532
+	AlifObject* bases = nullptr;
+	AlifSizeT i{}, n{};
+	AlifIntT r = 0;
+
+	while (1) {
+		if (_derived == _cls) {
+			ALIF_XDECREF(bases);
+			return 1;
+		}
+		ALIF_XSETREF(bases, abstract_getBases(_derived));
+		if (bases == nullptr) {
+			if (alifErr_occurred())
+				return -1;
+			return 0;
+		}
+		n = ALIFTUPLE_GET_SIZE(bases);
+		if (n == 0) {
+			ALIF_DECREF(bases);
+			return 0;
+		}
+		if (n == 1) {
+			_derived = ALIFTUPLE_GET_ITEM(bases, 0);
+			continue;
+		}
+		break;
+	}
+	if (_alif_enterRecursiveCall(" in __isSubclass__")) {
+		ALIF_DECREF(bases);
+		return -1;
+	}
+	for (i = 0; i < n; i++) {
+		r = abstract_isSubclass(ALIFTUPLE_GET_ITEM(bases, i), _cls);
+		if (r != 0) {
+			break;
+		}
+	}
+	_alif_leaveRecursiveCall();
+	ALIF_DECREF(bases);
+	return r;
+}
+
+
+static AlifIntT check_class(AlifObject* cls, const char* error) { // 2583
+	AlifObject* bases = abstract_getBases(cls);
+	if (bases == nullptr) {
+		/* Do not mask errors. */
+		AlifThread* tstate = _alifThread_get();
+		if (!_alifErr_occurred(tstate)) {
+			_alifErr_setString(tstate, _alifExcTypeError_, error);
+		}
+		return 0;
+	}
+	ALIF_DECREF(bases);
+	return -1;
+}
+
+
+static  AlifIntT recursive_isSubclass(AlifObject* _derived, AlifObject* _cls) { // 2708
+	if (ALIFTYPE_CHECK(_cls) and ALIFTYPE_CHECK(_derived)) {
+		/* Fast path (non-recursive) */
+		return alifType_isSubType((AlifTypeObject*)_derived, (AlifTypeObject*)_cls);
+	}
+	if (!check_class(_derived,
+		"isSubclass() arg 1 must be a class"))
+		return -1;
+
+	if (!ALIFUNION_CHECK(_cls) and !check_class(_cls,
+		"isSubclass() arg 2 must be a class,"
+		" a tuple of classes, or a union")) {
+		return -1;
+	}
+
+	return abstract_isSubclass(_derived, _cls);
+}
+
+
+static AlifIntT object_isSubclass(AlifThread* _thread,
+	AlifObject* _derived, AlifObject* _cls) { // 2728
+	AlifObject* checker{};
+
+	/* We know what type's __subclasscheck__ does. */
+	if (ALIFTYPE_CHECKEXACT(_cls)) {
+		/* Quick test for an exact match */
+		if (_derived == _cls)
+			return 1;
+		return recursive_isSubclass(_derived, _cls);
+	}
+
+	if (ALIFUNION_CHECK(_cls)) {
+		_cls = _alifUnion_args(_cls);
+	}
+
+	if (ALIFTUPLE_CHECK(_cls)) {
+
+		if (_alif_enterRecursiveCallThread(_thread, " in __subclasscheck__")) {
+			return -1;
+		}
+		AlifSizeT n = ALIFTUPLE_GET_SIZE(_cls);
+		AlifIntT r = 0;
+		for (AlifSizeT i = 0; i < n; ++i) {
+			AlifObject* item = ALIFTUPLE_GET_ITEM(_cls, i);
+			r = object_isSubclass(_thread, _derived, item);
+			if (r != 0)
+				/* either found it, or got an error */
+				break;
+		}
+		_alif_leaveRecursiveCallThread(_thread);
+		return r;
+	}
+
+	checker = alifObject_lookupSpecial(_cls, &ALIF_ID(__subClassCheck__));
+	if (checker != nullptr) {
+		AlifIntT ok = -1;
+		if (_alif_enterRecursiveCallThread(_thread, " in __subClassCheck__")) {
+			ALIF_DECREF(checker);
+			return ok;
+		}
+		AlifObject* res = alifObject_callOneArg(checker, _derived);
+		_alif_leaveRecursiveCallThread(_thread);
+		ALIF_DECREF(checker);
+		if (res != nullptr) {
+			ok = alifObject_isTrue(res);
+			ALIF_DECREF(res);
+		}
+		return ok;
+	}
+	else if (_alifErr_occurred(_thread)) {
+		return -1;
+	}
+
+	/* Can be reached when infinite recursion happens. */
+	return recursive_isSubclass(_derived, _cls);
+}
 
 AlifIntT alifObject_isSubclass(AlifObject* _derived, AlifObject* _cls) { // 2788
 	AlifThread* thread = _alifThread_get();
