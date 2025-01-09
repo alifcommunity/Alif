@@ -1147,7 +1147,10 @@ AlifObject* alifMapping_keys(AlifObject* _o) { // 2456
 }
 
 
-
+AlifIntT alifObject_isSubclass(AlifObject* _derived, AlifObject* _cls) { // 2788
+	AlifThread* thread = _alifThread_get();
+	return object_isSubclass(thread, _derived, _cls);
+}
 
 
 AlifObject* alifObject_getIter(AlifObject* _o) { // 2809

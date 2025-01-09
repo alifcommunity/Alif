@@ -57,6 +57,10 @@ static inline AlifObject* _alifObject_callNoArgsThread(AlifThread* _thread, Alif
 	return alifObject_vectorCallThread(_thread, _func, nullptr, 0, nullptr);
 }
 
+static inline AlifObject* _alifObject_callNoArgs(AlifObject* _func) { // 179
+	AlifThread* thread = _alifThread_get();
+	return alifObject_vectorCallThread(thread, _func, nullptr, 0, nullptr);
+}
 
 
 extern AlifObject* const* _alifStack_unpackDict(AlifThread*,

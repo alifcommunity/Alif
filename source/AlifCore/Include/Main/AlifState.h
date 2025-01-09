@@ -25,6 +25,14 @@ AlifThread* alifThread_get(); // 60
 
 
 
+class AlifErrStackItem { // 32
+public:
+	AlifObject* excValue{};
+	AlifErrStackItem* previousItem{};
+};
+
+
+
 class AlifStackChunk { // 52
 public:
 	AlifStackChunk* previous{};
@@ -70,6 +78,13 @@ public:
 	AlifIntT recursionHeadroom{}; /* Allow 50 more calls to handle any errors. */
 
 	AlifIntT tracing{};
+
+
+	AlifObject* currentException{};
+
+	AlifErrStackItem* excInfo{};
+
+
 
 	AlifUSizeT threadID{};
 

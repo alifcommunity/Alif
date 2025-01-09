@@ -274,6 +274,12 @@
     <ClCompile Include="..\source\AlifCore\Objects\Errors.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\Traceback.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\Exceptions.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">
@@ -833,6 +839,12 @@
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Range.h">
       <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Errors.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\Traceback.h">
+      <Filter>Include\Main</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
