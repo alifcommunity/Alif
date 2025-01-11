@@ -51,7 +51,6 @@ void _alifErr_restore(AlifThread* _thread, AlifObject* _type, AlifObject* _value
 		_alifErr_setRaisedException(_thread, nullptr);
 		return;
 	}
-
 	else {
 		AlifObject* exc = _alifErr_createException(_type, _value);
 		ALIF_XDECREF(_value);
@@ -62,6 +61,7 @@ void _alifErr_restore(AlifThread* _thread, AlifObject* _type, AlifObject* _value
 		}
 		_value = exc;
 	}
+
 	if (_traceback != nullptr and !ALIFTRACEBACK_CHECK(_traceback)) {
 		if (_traceback == ALIF_NONE) {
 			ALIF_DECREF(ALIF_NONE);

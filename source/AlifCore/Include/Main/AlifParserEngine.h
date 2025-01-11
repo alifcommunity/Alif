@@ -142,6 +142,9 @@ AlifIntT alifParserEngine_fillToken(AlifParser*); // 147
 
 
 
+AlifIntT _alifParserEngine_tokenizerError(AlifParser*); // 164
+
+
 
 
 void alifParserEngineError_stackOverflow(AlifParser*); // 171

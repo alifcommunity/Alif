@@ -139,7 +139,6 @@ AlifIntT alifRun_simpleFileObject(FILE* _fp, AlifObject* _filename,
 	}
 	ALIF_DECREF(v);
 	ret = 0;
-
 done:
 	if (setFileName) {
 		if (alifDict_popString(dict, "__file__", nullptr) < 0) {
