@@ -142,7 +142,7 @@ AlifIntT alifImport_init() { // 3954
 
 	if (INITTABLE != nullptr) {
 		// error
-		return -1; // alif
+		return -1; //* alif
 	}
 
 	if (initBuildin_modulesTable() != 0) {

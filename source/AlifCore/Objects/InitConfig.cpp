@@ -392,7 +392,7 @@ AlifIntT alifConfig_write(const AlifConfig* _config, AlifDureRun* _dureRun) { //
 	return 1;
 }
 
-AlifIntT alif_setStdioLocale(const AlifConfig* _config) { // alif
+AlifIntT alif_setStdioLocale(const AlifConfig* _config) { //* alif
 
 	AlifIntT mode = alif_setFileMode(_config);
 	if (!mode) return -1;
@@ -408,7 +408,7 @@ AlifIntT alif_setStdioLocale(const AlifConfig* _config) { // alif
 	return 1;
 }
 
-AlifIntT alif_preInitFromConfig(AlifConfig* _config) { // alif
+AlifIntT alif_preInitFromConfig(AlifConfig* _config) { //* alif
 
 	if (alif_mainMemoryInit() < 1) {
 		return -1;
@@ -572,7 +572,7 @@ static AlifIntT update_argv(AlifConfig* _config, AlifSizeT _index) { // 2803
 }
 
 
-static AlifIntT alif_extension(wchar_t* _filename) { // alif
+static AlifIntT alif_extension(wchar_t* _filename) { //* alif
 	const wchar_t* dotPos = wcschr(_filename, L'.');
 	if (!dotPos) { return 0; }
 

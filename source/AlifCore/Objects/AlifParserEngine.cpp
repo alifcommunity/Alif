@@ -10,7 +10,7 @@
 #include "AlifCore_Memory.h"
 
 
- // alif
+ //* alif
 /*
 	هذا التعريف يستخدم فقط لعد الاحرف والارقام للاسماء
 */
@@ -46,7 +46,7 @@ AlifIntT alifParserEngine_updateMemo(AlifParser* _p,
 }
 
 
-static AlifIntT str_lettersCount(const char* _str) { // alif
+static AlifIntT str_lettersCount(const char* _str) { //* alif
 	AlifIntT len = 0;
 	AlifIntT ch = 0;
 
@@ -62,7 +62,7 @@ static AlifIntT str_lettersCount(const char* _str) { // alif
 
 static AlifIntT get_keywordOrName(AlifParser* _p, AlifToken* _token) { // 158
 	AlifIntT bytesCount = _token->endColOffset - _token->colOffset;
-	AlifIntT lettersCount = str_lettersCount(_token->start); // alif
+	AlifIntT lettersCount = str_lettersCount(_token->start); //* alif
 
 	if (lettersCount >= _p->nKeywordList
 		or _p->keywords[lettersCount] == nullptr

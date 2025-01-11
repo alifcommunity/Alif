@@ -115,7 +115,7 @@ static void object_isNotCallable(AlifThread* _thread, AlifObject* _callable) { /
 	}
 basic_type_error:
 	//alifErr_format(_thread, alifExcTypeError, "'%.200s' object is not callable", ALIF_TYPE(_callable)->name_);
-	return; // alif
+	return; //* alif
 }
 
 AlifObject* alifObject_makeTpCall(AlifThread* _thread, AlifObject* _callable,

@@ -294,7 +294,7 @@ AlifInterpreter* alifInterpreter_get() { // 1331
 #define DATA_STACK_CHUNK_SIZE (16*1024) // 1414
 
 static AlifStackChunk* allocate_chunk(AlifIntT _sizeInBytes, AlifStackChunk* _previous) { // 1417
-	AlifStackChunk* res_ = (AlifStackChunk*)alifMem_dataAlloc(_sizeInBytes); // alif
+	AlifStackChunk* res_ = (AlifStackChunk*)alifMem_dataAlloc(_sizeInBytes); //* alif
 	if (res_ == nullptr) {
 		return nullptr;
 	}
@@ -701,7 +701,7 @@ void _alifThreadState_popFrame(AlifThread* tstate, AlifInterpreterFrame* _frame)
 
 		tstate->dataStackTop = &previous->data[previous->top];
 		tstate->dataStackChunk = previous;
-		alifMem_dataFree(chunk); // alif
+		alifMem_dataFree(chunk); //* alif
 		tstate->dataStackLimit = (AlifObject**)(((char*)previous) + previous->size);
 	}
 	else {

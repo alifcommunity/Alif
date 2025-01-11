@@ -48,7 +48,7 @@ static RangeObject* make_rangeObject(AlifTypeObject* type, AlifObject* start,
 	if (length == nullptr) {
 		return nullptr;
 	}
-	obj = (RangeObject*)alifObject_new(type); // alif
+	obj = (RangeObject*)alifObject_new(type); //* alif
 	if (obj == nullptr) {
 		ALIF_DECREF(length);
 		return nullptr;

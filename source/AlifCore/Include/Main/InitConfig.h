@@ -44,7 +44,7 @@ public:
 };
 
 
-AlifIntT alif_setStdioLocale(const AlifConfig*); // alif
+AlifIntT alif_setStdioLocale(const AlifConfig*); //* alif
 void alifConfig_initAlifConfig(AlifConfig*); // 239
 
 void alifConfig_clear(AlifConfig*); // 241

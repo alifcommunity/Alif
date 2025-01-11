@@ -82,7 +82,7 @@ AlifObject* alifFunction_newWithQualName(AlifObject* _code,
 	AlifObject* _globals, AlifObject* _qualname) { // 140
 	ALIF_INCREF(_globals);
 
-	AlifFunctionObject* op{}; // alif
+	AlifFunctionObject* op{}; //* alif
 
 	AlifThread* thread = _alifThread_get();
 

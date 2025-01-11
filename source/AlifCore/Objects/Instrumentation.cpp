@@ -31,7 +31,7 @@ static AlifIntT instrument_lockHeld(AlifCodeObject* _code, AlifInterpreter* _int
 	//}
 
 	//return forceInstrument_lockHeld(_code, _interp);
-	return 1; // alif
+	return 1; //* alif
 }
 
 AlifIntT _alif_instrument(AlifCodeObject* _code, AlifInterpreter* _interp) { // 1868

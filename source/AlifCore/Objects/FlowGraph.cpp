@@ -34,7 +34,7 @@ public:
 };
 
 
-typedef AlifCFGInstruction CFGInstr; // alif
+typedef AlifCFGInstruction CFGInstr; //* alif
 
 
 class AlifCFGBasicBlock { // 36
@@ -57,7 +57,7 @@ public:
 };
 
 
-typedef AlifCFGBasicBlock BasicBlock; // alif
+typedef AlifCFGBasicBlock BasicBlock; //* alif
 
 
 
@@ -452,7 +452,7 @@ static AlifIntT get_maxLabel(BasicBlock* _entryBlock) { // 622
 static AlifIntT translateJump_labelsToTargets(BasicBlock* _entryBlock) { // 635
 	AlifIntT maxLabel = get_maxLabel(_entryBlock);
 	AlifUSizeT mapSize = sizeof(BasicBlock*) * (maxLabel + 1);
-	BasicBlock** label2block = (BasicBlock**)alifMem_dataAlloc(mapSize ? mapSize : 1); // alif
+	BasicBlock** label2block = (BasicBlock**)alifMem_dataAlloc(mapSize ? mapSize : 1); //* alif
 	if (!label2block) {
 		//alifErr_noMemory();
 		return ERROR;
@@ -1513,7 +1513,7 @@ static AlifIntT remove_unusedConsts(BasicBlock* _entryBlock, AlifObject* _consts
 	AlifSizeT* reverseIndexMap = nullptr;
 	AlifIntT err = ERROR;
 
-	AlifSizeT nUsedConsts{}; // alif
+	AlifSizeT nUsedConsts{}; //* alif
 
 	indexMap = (AlifSizeT*)alifMem_dataAlloc(nconsts * sizeof(AlifSizeT));
 	if (indexMap == nullptr) {
@@ -1910,7 +1910,7 @@ static AlifIntT* build_cellFixedOffsets(AlifCompileCodeUnitMetadata* _umd) { // 
 	AlifIntT nfreevars = (AlifIntT)ALIFDICT_GET_SIZE(_umd->freevars);
 
 	AlifIntT noffsets = ncellvars + nfreevars;
-	noffsets ? noffsets : noffsets = 1; // alif
+	noffsets ? noffsets : noffsets = 1; //* alif
 	AlifIntT* fixed = (AlifIntT*)alifMem_dataAlloc(noffsets * sizeof(AlifIntT));
 	if (fixed == nullptr) {
 		//alifErr_noMemory();

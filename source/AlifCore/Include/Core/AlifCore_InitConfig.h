@@ -41,6 +41,6 @@ enum AlifConfigGIL_ { // 156
 
 extern AlifIntT alifConfig_copy(AlifConfig*, const AlifConfig*); // 171
 
-extern AlifIntT alif_preInitFromConfig(AlifConfig*); // alif
+extern AlifIntT alif_preInitFromConfig(AlifConfig*); //* alif
 extern AlifIntT alifConfig_read(AlifConfig*); // 178
 extern AlifIntT alifConfig_write(const AlifConfig*, class AlifDureRun*); // 179

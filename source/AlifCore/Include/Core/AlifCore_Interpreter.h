@@ -167,7 +167,7 @@ static inline AlifThread* alifInterpreter_getFinalizing(AlifInterpreter* _interp
 
 AlifIntT alifInterpreter_new(AlifThread*, AlifInterpreter**); // 399
 
- // alif
+ //* alif
 #define RARE_EVENT_INTERP_INC(_interp, _name) \
     do { \
         AlifIntT val_ = alifAtomic_loadUint8Relaxed((const uint8_t*)_interp->rareEvents._name); \

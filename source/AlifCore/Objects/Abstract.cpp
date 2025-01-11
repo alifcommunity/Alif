@@ -295,7 +295,7 @@ AlifIntT alifBuffer_fillInfo(AlifBuffer* _view, AlifObject* _obj, void* _buf,
 	_view->itemSize = 1;
 	_view->format = nullptr;
 	if ((_flags & ALIFBUF_FORMAT) == ALIFBUF_FORMAT)
-		_view->format = (char*)"B"; // alif
+		_view->format = (char*)"B"; //* alif
 	_view->nDim = 1;
 	_view->shape = nullptr;
 	if ((_flags & ALIFBUF_ND) == ALIFBUF_ND)
@@ -445,7 +445,7 @@ static AlifObject* binary_op(AlifObject* _v, AlifObject* _w,
 	if (result == ALIF_NOTIMPLEMENTED) {
 		ALIF_DECREF(result);
 		//return binOp_typeError(_v, _w, _opName);
-		return nullptr; // alif
+		return nullptr; //* alif
 	}
 	return result;
 }
@@ -566,7 +566,7 @@ AlifObject* alifNumber_add(AlifObject* _v, AlifObject* _w) { // 1124
 	}
 
 	//return binOp_typeError(_v, _w, "+");
-	return nullptr; // alif
+	return nullptr; //* alif
 }
 
 static AlifObject* sequence_repeat(SizeArgFunc _repeatFunc, AlifObject* _seq, AlifObject* _n) { // 1143
@@ -580,7 +580,7 @@ static AlifObject* sequence_repeat(SizeArgFunc _repeatFunc, AlifObject* _seq, Al
 	else {
 		//return type_error("can't multiply sequence by "
 		//	"non-int of type '%.200s'", _n);
-		return nullptr; // alif
+		return nullptr; //* alif
 	}
 	AlifObject* res = (*_repeatFunc)(_seq, count);
 	return res;
@@ -600,7 +600,7 @@ AlifObject* alifNumber_multiply(AlifObject* _v, AlifObject* _w) { // 1162
 			return sequence_repeat(mw->repeat, _w, _v);
 		}
 		//result = binop_typeError(_v, _w, "*");
-		result = nullptr; // alif
+		result = nullptr; //* alif
 	}
 	return result;
 }
@@ -751,7 +751,7 @@ UNARY_FUNC(alifNumber_negative, negative, __neg__, "unary -")
 UNARY_FUNC(alifNumber_positive, positive, __pos__, "unary +")
 UNARY_FUNC(alifNumber_invert, invert, __invert__, "unary ~")
 UNARY_FUNC(alifNumber_absolute, absolute, __abs__, "abs()")
-UNARY_FUNC(alifNumber_sqrt, sqrt, __sqrt__, "sqrt()") // alif
+UNARY_FUNC(alifNumber_sqrt, sqrt, __sqrt__, "sqrt()") //* alif
 
 
 AlifObject* _alifNumber_index(AlifObject * _item) { // 1397

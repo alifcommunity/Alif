@@ -715,7 +715,7 @@ static AlifIntT listExtendIter_lockHeld(AlifListObject* _self, AlifObject* _iter
 
 		if (ALIF_SIZE(_self) < _self->allocated) {
 			AlifSizeT len = ALIF_SIZE(_self);
-			alifAtomic_storePtrRelease(&_self->item[len], item); // alif
+			alifAtomic_storePtrRelease(&_self->item[len], item); //* alif
 			ALIF_SET_SIZE(_self, len + 1);
 		}
 		else {
@@ -876,7 +876,7 @@ static AlifObject* list_extend(AlifListObject* _self, AlifObject* _iterable) { /
 	if (_list_extend(_self, _iterable) < 0) {
 		return nullptr;
 	}
-	return ALIF_NONE; // alif
+	return ALIF_NONE; //* alif
 }
 
 AlifObject* _alifList_extend(AlifListObject* _self, AlifObject* _iterable) { // 1394

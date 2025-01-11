@@ -497,11 +497,11 @@ static AlifCodeObject* makecode(AlifCompileCodeUnitMetadata* _umd,
 	AlifObject* localsPlusNames = nullptr;
 	AlifObject* localsPlusKinds = nullptr;
 
-	AlifIntT posOnlyArgCount{}; // alif
-	AlifIntT posOrKwArgCount{}; // alif
-	AlifIntT kwOnlyArgCount{}; // alif
+	AlifIntT posOnlyArgCount{}; //* alif
+	AlifIntT posOrKwArgCount{}; //* alif
+	AlifIntT kwOnlyArgCount{}; //* alif
 
-	class AlifCodeConstructor con; // alif
+	class AlifCodeConstructor con; //* alif
 
 	names = dict_keysInorder(_umd->names, 0);
 	if (!names) {

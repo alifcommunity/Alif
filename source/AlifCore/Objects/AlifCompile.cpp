@@ -136,7 +136,7 @@ AlifIntT _alifCompile_ensureArrayLargeEnough(AlifIntT _idx, void** _array,
 		if (_idx >= newAlloc) {
 			newAlloc = _idx + _defaultAlloc;
 		}
-		arr = alifMem_dataAlloc(newAlloc * _itemSize); // alif
+		arr = alifMem_dataAlloc(newAlloc * _itemSize); //* alif
 		if (arr == nullptr) {
 			//alifErr_noMemory();
 			return ERROR;
@@ -232,7 +232,7 @@ static AlifIntT codegen_augAssign(AlifCompiler*, StmtTy); // 316
 static AlifIntT codegen_subScript(AlifCompiler*, ExprTy); // 318
 static AlifIntT codegen_slice(AlifCompiler*, ExprTy); // 319
 
-static AlifIntT codegen_addCompare(AlifCompiler*, Location, CmpOp_); // alif
+static AlifIntT codegen_addCompare(AlifCompiler*, Location, CmpOp_); //* alif
 static bool areAllItems_const(ASDLExprSeq*, AlifSizeT, AlifSizeT); // 321
 
 
@@ -2927,7 +2927,7 @@ static AlifIntT check_caller(AlifCompiler* _c, ExprTy _e) { // 4509
 		//return compiler_warn(_c, loc, "'%.200s' object is not callable; "
 		//	"perhaps you missed a comma?",
 		//	infer_type(_e)->name);
-		return -1; // alif
+		return -1; //* alif
 	}
 	default:
 		return SUCCESS;

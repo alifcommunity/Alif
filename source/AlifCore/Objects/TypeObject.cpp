@@ -1308,7 +1308,7 @@ static AlifObject* typeNew_copySlots(TypeNewCtx* ctx, AlifObject* dict) { // 373
 	AlifObject* slots = ctx->slots;
 	AlifSizeT nslot = ctx->nslot;
 
-	AlifObject* tuple{}; // alif
+	AlifObject* tuple{}; //* alif
 
 	AlifSizeT new_nslot = nslot - ctx->addDict - ctx->addWeak;
 	AlifObject* new_slots = alifList_new(new_nslot);
@@ -3790,11 +3790,11 @@ static AlifTypeObject* super_check(AlifTypeObject* type, AlifObject* obj) { // 1
 	const char* type_or_instance{}, * obj_str{};
 
 	if (ALIFTYPE_CHECK(obj)) {
-		type_or_instance = "نوع"; // alif
+		type_or_instance = "نوع"; //* alif
 		obj_str = ((AlifTypeObject*)obj)->name;
 	}
 	else {
-		type_or_instance = "نسخة_من"; // alif
+		type_or_instance = "نسخة_من"; //* alif
 		obj_str = ALIF_TYPE(obj)->name;
 	}
 

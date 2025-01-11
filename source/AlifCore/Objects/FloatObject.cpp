@@ -125,7 +125,7 @@ static AlifObject* float_repr(AlifFloatObject* _v) { // 341
 		'r', 0, ALIF_DTSF_ADD_DOT_0, nullptr);
 	if (!buf) {
 		//return alifErr_noMemory();
-		return nullptr; // alif
+		return nullptr; //* alif
 	}
 	result = alifUStr_fromASCII(buf, strlen(buf));
 	alifMem_dataFree(buf);
@@ -592,8 +592,8 @@ AlifIntT alifFloat_initTypes(AlifInterpreter* _interp) { // 1951
 	if (_alifStructSequence_initBuiltin(_interp, &_floatInfoType_,
 		nullptr /*&_floatInfoDesc_*/) < 0) {
 		//return ALIFSTATUS_ERR("can't init float info type");
-		return -1; // alif
+		return -1; //* alif
 	}
 
-	return 1; // alif
+	return 1; //* alif
 }

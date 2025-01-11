@@ -86,7 +86,7 @@ static AlifObject* builtin___buildClass__(AlifObject* _self,
 	AlifObject* mkw = nullptr, * bases = nullptr;
 	AlifIntT isclass = 0;   /* initialize to prevent gcc warning */
 
-	AlifThread* thread{}; // alif
+	AlifThread* thread{}; //* alif
 
 	if (_nargs < 2) {
 		//alifErr_setString(_alifExcTypeError_,
@@ -189,7 +189,7 @@ static AlifObject* builtin___buildClass__(AlifObject* _self,
 			//if (alifMapping_setItemString(ns, "__origBases__", orig_bases) < 0) {
 			//	goto error;
 			//}
-			printf("تعليق : BltinModule.cpp - builtin___buildClass__"); // alif
+			printf("تعليق : BltinModule.cpp - builtin___buildClass__"); //* alif
 		}
 		AlifObject* margs[3] = { name, bases, ns };
 		cls = alifObject_vectorCallDict(meta, margs, 3, mkw);

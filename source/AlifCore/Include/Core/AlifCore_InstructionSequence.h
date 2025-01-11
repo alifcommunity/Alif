@@ -48,8 +48,8 @@ public:
 	AlifIntT id{};
 };
 
-typedef AlifInstructionSequence InstrSequence; // alif
-typedef AlifSourceLocation Location; // alif
+typedef AlifInstructionSequence InstrSequence; //* alif
+typedef AlifSourceLocation Location; //* alif
 
 AlifObject* _alifInstructionSequence_new(); // 54
 AlifIntT _alifInstructionSequence_useLabel(InstrSequence*, AlifIntT); // 56

@@ -227,7 +227,7 @@ static inline AlifIntT tok_continuationLine(TokenState* _tokState) { // 387
 static AlifIntT tokGet_normalMode(TokenState* _tokState,
 	TokenizerMode* _currentTok, AlifToken* _token) { // 408
 
-	AlifIntT secondByte = 1; // alif
+	AlifIntT secondByte = 1; //* alif
 	AlifIntT c_{};
 	AlifIntT blankLine{}, nonASCII{};
 
@@ -461,7 +461,7 @@ again:
 			else if (!(r_ or u_) and c_ == (unsigned char)"خ"[secondByte]) r_ = 1; // خ = خام
 			else if (!(f_ or b_ or u_) and c_ == (unsigned char)"م"[secondByte]) f_ = 1; // م = منسق
 			else {
-				//tok_backup(_tokState, c_); // alif
+				//tok_backup(_tokState, c_); //* alif
 				break;
 			}
 
@@ -726,7 +726,7 @@ again:
 
 fStringQuote:
 	if ((*(_tokState->start + secondByte) == "م"[secondByte]
-		or (*_tokState->start + secondByte + 2) == "خ"[secondByte]) // alif
+		or (*_tokState->start + secondByte + 2) == "خ"[secondByte]) //* alif
 		and (c_ == '\'' or c_ == '"')) {
 
 		AlifIntT quote = c_;

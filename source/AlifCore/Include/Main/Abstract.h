@@ -59,7 +59,7 @@ AlifObject* alifNumber_negative(AlifObject*); // 494
 AlifObject* alifNumber_positive(AlifObject*); // 499
 AlifObject* alifNumber_absolute(AlifObject*); // 504
 AlifObject* alifNumber_invert(AlifObject*); // 509
-AlifObject* alifNumber_sqrt(AlifObject*); // alif
+AlifObject* alifNumber_sqrt(AlifObject*); //* alif
 AlifObject* alifNumber_lshift(AlifObject*, AlifObject*); // 514
 AlifObject* alifNumber_rshift(AlifObject*, AlifObject*); // 520
 AlifObject* alifNumber_and(AlifObject*, AlifObject*); // 526

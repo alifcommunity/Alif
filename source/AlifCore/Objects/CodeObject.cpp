@@ -652,7 +652,7 @@ AlifIntT alifCode_init(AlifInterpreter* _interp) { // 2611
 		&destroy_key, nullptr, nullptr);
 	if (state->constants == nullptr) {
 		//return ALIFSTATUS_NO_MEMORY();
-		return -1; // alif
+		return -1; //* alif
 	}
 	return 1;
 }

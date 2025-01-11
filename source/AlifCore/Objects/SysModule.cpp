@@ -89,7 +89,7 @@ AlifIntT alifSys_create(AlifThread* _thread, AlifObject** _sysModP) { // 3779
 		goto error;
 	}
 
-	sysmod = alifModule_createInitialized(&_sysModule_/*, ALIF_API_VERSION*/); // alif
+	sysmod = alifModule_createInitialized(&_sysModule_/*, ALIF_API_VERSION*/); //* alif
 	if (sysmod == nullptr) {
 		//return ALIFSTATUS_ERR("failed to create a module object");
 		return -1; // temp
@@ -141,5 +141,5 @@ AlifIntT alifSys_create(AlifThread* _thread, AlifObject** _sysModP) { // 3779
 
 error:
 	//return ALIFSTATUS_ERR("can't initialize sys module");
-	return -1; // alif
+	return -1; //* alif
 }

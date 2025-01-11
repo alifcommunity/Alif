@@ -152,7 +152,7 @@ AlifObject* alifObject_repr(AlifObject* _v) { // 662
 	}
 #endif
 	if (_v == nullptr)
-		return alifUStr_fromString("<nullptr>"); // alif
+		return alifUStr_fromString("<nullptr>"); //* alif
 	if (ALIF_TYPE(_v)->repr == nullptr)
 		return alifUStr_fromFormat("<%s object at %p>",
 			ALIF_TYPE(_v)->name, _v);
@@ -190,7 +190,7 @@ AlifObject* alifObject_str(AlifObject* _v) { // 711
 	}
 #endif
 	if (_v == nullptr)
-		return alifUStr_fromString("<nullptr>"); // alif
+		return alifUStr_fromString("<nullptr>"); //* alif
 	if (ALIFUSTR_CHECKEXACT(_v)) {
 		return ALIF_NEWREF(_v);
 	}

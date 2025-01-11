@@ -4,7 +4,7 @@
 #include "AlifCore_SetObject.h"
 
 // was static but shows error
-extern AlifObject _dummyStruct_; // 59 // alif
+extern AlifObject _dummyStruct_; // 59 //* alif
 
 #define DUMMY (&_dummyStruct_) // 61
 

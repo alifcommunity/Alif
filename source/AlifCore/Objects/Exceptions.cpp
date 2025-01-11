@@ -221,12 +221,12 @@ AlifObject* _alifExc ## EXCNAME ## _ = (AlifObject *)&_exc ## EXCNAME ## _
 
 
  // 567
-#define COMPLEXEXTENDSEXCEPTION(EXCBASE, EXCNAME, EXCSTORE, EXCNEW, \
+#define COMPLEXEXTENDSEXCEPTION(EXCBASE, EXCNAME, NAME, EXCSTORE, EXCNEW, \
                                 EXCMETHODS, EXCMEMBERS, EXCGETSET, \
                                 EXCSTR, EXCDOC) \
 static AlifTypeObject _exc ## EXCNAME ## _ = { \
     .objBase = ALIFVAROBJECT_HEAD_INIT(nullptr, 0), \
-    .name = # EXCNAME, \
+    .name = # NAME, \
     .basicSize = sizeof(Alif ## EXCSTORE ## Object), \
     /*.dealloc = (Destructor)EXCSTORE ## _dealloc,*/ \
     /*.repr = (ReprFunc)EXCSTR,*/ \
@@ -252,7 +252,7 @@ SIMPLEEXTENDSEXCEPTION(_excBaseException_, Exception,
 
 
 
-COMPLEXEXTENDSEXCEPTION(_excException_, SyntaxError, SyntaxError,
+COMPLEXEXTENDSEXCEPTION(_excException_, SyntaxError, خطأ_نسق, SyntaxError,
 	0, 0, nullptr/*syntaxError_members*/, 0,
 	nullptr/*syntaxError_str*/, "Invalid syntax."); // 2594
 

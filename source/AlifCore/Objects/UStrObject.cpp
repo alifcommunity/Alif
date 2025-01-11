@@ -1217,10 +1217,10 @@ static void* unicode_asKind(AlifIntT _sKind, void const* _data,
 
 	switch (_kind) {
 	case AlifUStrKind_::AlifUStr_2Byte_Kind:
-		result = alifMem_dataAlloc(_len * sizeof(AlifUCS2)); // alif
+		result = alifMem_dataAlloc(_len * sizeof(AlifUCS2)); //* alif
 		if (!result) {
 			//return alifErr_noMemory();
-			return nullptr; // alif
+			return nullptr; //* alif
 		}
 		ALIFUSTR_CONVERT_BYTES(
 			AlifUCS1, AlifUCS2,
@@ -1229,10 +1229,10 @@ static void* unicode_asKind(AlifIntT _sKind, void const* _data,
 			result);
 		return result;
 	case AlifUStrKind_::AlifUStr_4Byte_Kind:
-		result = alifMem_dataAlloc(_len * sizeof(AlifUCS4)); // alif
+		result = alifMem_dataAlloc(_len * sizeof(AlifUCS4)); //* alif
 		if (!result) {
 			//return alifErr_noMemory();
-			return nullptr; // alif
+			return nullptr; //* alif
 		}
 		if (_sKind == AlifUStrKind_::AlifUStr_2Byte_Kind) {
 			ALIFUSTR_CONVERT_BYTES(
@@ -1920,7 +1920,7 @@ AlifIntT _alif_normalizeEncoding(const char* encoding,
 			if (l == l_end) {
 				return 0;
 			}
-			//*l++ = ALIF_TOLOWER(c); // !? // alif
+			//*l++ = ALIF_TOLOWER(c); // !? //* alif
 		}
 		else {
 			punct = 1;

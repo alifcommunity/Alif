@@ -1,6 +1,6 @@
 #include "alif.h"
 
-#include "AlifCore_Abstract.h" // alif
+#include "AlifCore_Abstract.h" //* alif
 #include "AlifCore_BitUtils.h"
 #include "AlifCore_InitConfig.h"
 #include "AlifCore_Call.h"
@@ -2479,7 +2479,7 @@ static AlifIntT alifLong_intDivmod(AlifLongObject* _v, AlifLongObject* _w,
 	//ALIF_DECREF(result);
 	//return 0;
 
-	return -1; // alif
+	return -1; //* alif
 }
 #endif /* WITH_ALIFLONG_MODULE */
 
@@ -3033,7 +3033,7 @@ done:
 }
 
 
-static AlifObject* long_sqrt(AlifObject* _v) { // alif
+static AlifObject* long_sqrt(AlifObject* _v) { //* alif
 	AlifLongObject* a_{}, *res{};
 
 	a_ = (AlifLongObject*)ALIF_NEWREF(_v);

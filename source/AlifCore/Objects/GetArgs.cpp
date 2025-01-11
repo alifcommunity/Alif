@@ -170,7 +170,7 @@ static AlifIntT vGetArgs1_impl(AlifObject* _compatArgs,
 
 	if (max > STATIC_FREELIST_ENTRIES) {
 		freelist.entries = ((AlifUSizeT)max > ALIF_SIZET_MAX / sizeof(FreeListEntryT)) ? nullptr : \
-			(FreeListEntryT*)alifMem_dataAlloc(max * sizeof(FreeListEntryT)); // alif
+			(FreeListEntryT*)alifMem_dataAlloc(max * sizeof(FreeListEntryT)); //* alif
 		if (freelist.entries == nullptr) {
 			//alifErr_noMemory();
 			return 0;
@@ -640,7 +640,7 @@ static const char* convert_simple(AlifObject* _arg, const char** _pFormat, va_li
 			format++;
 		}
 		else {
-			if (strlen((const char*)*p) != (AlifUSizeT)count) { // alif
+			if (strlen((const char*)*p) != (AlifUSizeT)count) { //* alif
 				//alifErr_setString(_alifExcValueError_, "embedded null byte");
 				RETURN_ERR_OCCURRED;
 			}
@@ -810,7 +810,7 @@ static const char* convert_simple(AlifObject* _arg, const char** _pFormat, va_li
 			}
 			if (*buffer == nullptr) {
 				*buffer = (((AlifUSizeT)(size + 1) > ALIF_SIZET_MAX / sizeof(char)) ? nullptr : \
-					((char*)alifMem_dataAlloc((size + 1) * sizeof(char)))); // alif
+					((char*)alifMem_dataAlloc((size + 1) * sizeof(char)))); //* alif
 				if (*buffer == nullptr) {
 					ALIF_DECREF(s);
 					//alifErr_noMemory();
@@ -845,7 +845,7 @@ static const char* convert_simple(AlifObject* _arg, const char** _pFormat, va_li
 				//	_arg, _mSGBuf, _bufSize);
 			}
 			*buffer = (((AlifUSizeT)(size + 1) > ALIF_SIZET_MAX / sizeof(char)) ? nullptr : \
-				((char*)alifMem_dataAlloc((size + 1) * sizeof(char)))); // alif
+				((char*)alifMem_dataAlloc((size + 1) * sizeof(char)))); //* alif
 			if (*buffer == nullptr) {
 				ALIF_DECREF(s);
 				//alifErr_noMemory();
@@ -953,7 +953,7 @@ static const char* convert_simple(AlifObject* _arg, const char** _pFormat, va_li
 
 	default:
 		//return convert_err("(impossible<bad format char>)", _arg, _mSGBuf, _bufSize);
-		return nullptr; // alif
+		return nullptr; //* alif
 
 	}
 
@@ -1156,7 +1156,7 @@ static AlifIntT _parser_init(void* _arg) { // 1944
 	parser->kwTuple = kwtuple;
 	parser->isKwTupleOwned = owned;
 
-	parser->next = (AlifArgParser*)alifAtomic_loadPtr(&_alifDureRun_.getArgs.staticParsers); // alif
+	parser->next = (AlifArgParser*)alifAtomic_loadPtr(&_alifDureRun_.getArgs.staticParsers); //* alif
 	do {
 		// compare-exchange updates parser->next on failure
 	} while (!alifAtomic_compareExchangePtr(&_alifDureRun_.getArgs.staticParsers,

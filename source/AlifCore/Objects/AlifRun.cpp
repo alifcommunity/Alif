@@ -134,6 +134,11 @@ AlifIntT alifRun_simpleFileObject(FILE* _fp, AlifObject* _filename,
 	//flush_io();
 	if (v == nullptr) {
 		ALIF_CLEAR(mainModule);
+		//* alif
+		AlifThread* thread = _alifThread_get();
+		const char* str = thread->currentException->type->name;
+		printf("%s \n", str);
+		//* alif
 		//alifErr_print();
 		goto done;
 	}
