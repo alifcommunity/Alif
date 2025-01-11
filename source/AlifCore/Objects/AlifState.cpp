@@ -321,10 +321,12 @@ static void init_thread(AlifThreadImpl* _thread, AlifInterpreter* _interpreter, 
 	thread->alifRecursionRemaining = _interpreter->eval.recursionLimit,
 	thread->cppRecursionRemaining = ALIFCPP_RECURSION_LIMIT;
 
+	thread->excInfo = &thread->excState;
+
 	thread->currentFrame = nullptr;
-	//thread->dataStackChunk = nullptr;
-	//thread->dataStackTop = nullptr;
-	//thread->dataStackLimit = nullptr;
+	thread->dataStackChunk = nullptr;
+	thread->dataStackTop = nullptr;
+	thread->dataStackLimit = nullptr;
 
 
 	llist_init(&_thread->memFreeQueue);

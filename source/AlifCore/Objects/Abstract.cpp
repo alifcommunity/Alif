@@ -1209,7 +1209,7 @@ static AlifIntT check_class(AlifObject* cls, const char* error) { // 2583
 		/* Do not mask errors. */
 		AlifThread* tstate = _alifThread_get();
 		if (!_alifErr_occurred(tstate)) {
-			_alifErr_setString(tstate, _alifExcTypeError_, error);
+			_alifErr_setString(tstate, nullptr /*_alifExcTypeError_*/, error);
 		}
 		return 0;
 	}

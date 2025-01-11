@@ -198,7 +198,7 @@ static AlifIntT tok_decimalTail(TokenState* _tokState) { // 365
 		c_ = tok_nextChar(_tokState);
 		if (!ALIF_ISDIGIT(c_)) {
 			tok_backup(_tokState, c_);
-			//alifTokenizer_syntaxError(_tokState, "invalid decimal literal");
+			alifTokenizer_syntaxError(_tokState, "invalid decimal literal");
 			return 0;
 		}
 	}

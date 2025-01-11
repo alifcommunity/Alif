@@ -2509,6 +2509,69 @@ static AlifIntT type_addMethods(AlifTypeObject* _type) { // 7557
 
 
 
+static void inherit_special(AlifTypeObject* type, AlifTypeObject* base) { // 7623
+	if (!(type->flags & ALIF_TPFLAGS_HAVE_GC) and
+		(base->flags & ALIF_TPFLAGS_HAVE_GC) and
+		(!type->traverse /*and !type->clear*/)) {
+		type->flags |= ALIF_TPFLAGS_HAVE_GC;
+		if (type->traverse == nullptr)
+			type->traverse = base->traverse;
+		//if (type->clear == nullptr)
+		//	type->clear = base->clear;
+	}
+	type->flags |= (base->flags & ALIF_TPFLAGS_PREHEADER);
+
+	if (type->basicSize == 0)
+		type->basicSize = base->basicSize;
+
+	/* Copy other non-function slots */
+
+#define COPYVAL(SLOT) \
+    if (type->SLOT == 0) { type->SLOT = base->SLOT; }
+
+	COPYVAL(itemSize);
+	COPYVAL(weakListOffset);
+	COPYVAL(dictOffset);
+
+#undef COPYVAL
+
+	/* Setup fast subclass flags */
+	AlifObject* mro = lookup_tpMro(base);
+	if (isSubType_withMro(mro, base, (AlifTypeObject*)_alifExcBaseException_)) {
+		type->flags |= ALIF_TPFLAGS_BASE_EXC_SUBCLASS;
+	}
+	else if (isSubType_withMro(mro, base, &_alifTypeType_)) {
+		type->flags |= ALIF_TPFLAGS_TYPE_SUBCLASS;
+	}
+	else if (isSubType_withMro(mro, base, &_alifLongType_)) {
+		type->flags |= ALIF_TPFLAGS_LONG_SUBCLASS;
+	}
+	else if (isSubType_withMro(mro, base, &_alifBytesType_)) {
+		type->flags |= ALIF_TPFLAGS_BYTES_SUBCLASS;
+	}
+	else if (isSubType_withMro(mro, base, &_alifUStrType_)) {
+		type->flags |= ALIF_TPFLAGS_UNICODE_SUBCLASS;
+	}
+	else if (isSubType_withMro(mro, base, &_alifTupleType_)) {
+		type->flags |= ALIF_TPFLAGS_TUPLE_SUBCLASS;
+	}
+	else if (isSubType_withMro(mro, base, &_alifListType_)) {
+		type->flags |= ALIF_TPFLAGS_LIST_SUBCLASS;
+	}
+	else if (isSubType_withMro(mro, base, &_alifDictType_)) {
+		type->flags |= ALIF_TPFLAGS_DICT_SUBCLASS;
+	}
+
+	/* Setup some inheritable flags */
+	if (alifType_hasFeature(base, _ALIF_TPFLAGS_MATCH_SELF)) {
+		type->flags |= _ALIF_TPFLAGS_MATCH_SELF;
+	}
+	if (alifType_hasFeature(base, ALIF_TPFLAGS_ITEMS_AT_END)) {
+		type->flags |= ALIF_TPFLAGS_ITEMS_AT_END;
+	}
+}
+
+
 static AlifIntT overrides_hash(AlifTypeObject* _type) { // 7688
 	AlifObject* dict = lookup_tpDict(_type);
 
@@ -2868,7 +2931,7 @@ static void inherit_patmaFlags(AlifTypeObject* _type, AlifTypeObject* _base) { /
 static AlifIntT typeReady_inherit(AlifTypeObject* _type) { // 8186
 	AlifTypeObject* base = _type->base;
 	if (base != nullptr) {
-		//inherit_special(_type, base);
+		inherit_special(_type, base);
 	}
 
 	// Inherit slots

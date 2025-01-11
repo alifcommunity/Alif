@@ -597,9 +597,8 @@ static inline AlifIntT alifType_hasFeature(AlifTypeObject* _type, unsigned long 
 	flags = ALIFATOMIC_LOAD_ULONG_RELAXED(&_type->flags);
 	return ((flags & _feature) != 0);
 }
-
-
 #define ALIFTYPE_FASTSUBCLASS(_type, _flag) alifType_hasFeature((_type), (_flag)) // 766
+
 
 static inline AlifIntT alifType_check(AlifObject* _op) { // 768
 	return ALIFTYPE_FASTSUBCLASS(ALIF_TYPE(_op), ALIF_TPFLAGS_TYPE_SUBCLASS);

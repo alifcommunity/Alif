@@ -99,8 +99,10 @@ public:
 	AlifStackChunk* dataStackChunk{};
 	AlifObject** dataStackTop{};
 	AlifObject** dataStackLimit{};
-	uint64_t dictGlobalVersion{};
 
+	AlifErrStackItem excState{};
+
+	uint64_t dictGlobalVersion{};
 };
 
 

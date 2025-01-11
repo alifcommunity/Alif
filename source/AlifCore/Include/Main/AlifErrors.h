@@ -16,14 +16,17 @@ void alifException_setContext(AlifObject*, AlifObject*); // 52
 
 
  // 60
-#define ALIFEXCEPTIONCLASS_CHECK(_x)  (ALIFTYPE_CHECK(_x) and                     \
-     ALIFTYPE_FASTSUBCLASS((AlifTypeObject*)(_x), ALIF_TPFLAGS_BASE_EXC_SUBCLASS))
+#define ALIFEXCEPTIONCLASS_CHECK(_x)  (ALIFTYPE_CHECK(_x)	\
+			and ALIFTYPE_FASTSUBCLASS((AlifTypeObject*)(_x), ALIF_TPFLAGS_BASE_EXC_SUBCLASS))
 
  // 64
 #define ALIFEXCEPTIONINSTANCE_CHECK(_x)                    \
     ALIFTYPE_FASTSUBCLASS(ALIF_TYPE(_x), ALIF_TPFLAGS_BASE_EXC_SUBCLASS)
 
 
+
+extern AlifObject* _alifExcBaseException_; // 76
+extern AlifObject* _alifExcException_; // 77
 
 extern AlifObject* _alifExcIndexError_; // 97
 
@@ -58,3 +61,17 @@ public:
 	ALIFEXCEPTION_HEAD
 };
 
+
+
+class AlifSyntaxErrorObject { // 23
+public:
+	ALIFEXCEPTION_HEAD
+	AlifObject* msg{};
+	AlifObject* filename{};
+	AlifObject* lineno{};
+	AlifObject* offset{};
+	AlifObject* endLineno{};
+	AlifObject* endOffset{};
+	AlifObject* text{};
+	AlifObject* printFileAndLine{};
+};

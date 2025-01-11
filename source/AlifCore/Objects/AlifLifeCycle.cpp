@@ -1,5 +1,7 @@
 #include "alif.h"
 
+
+#include "AlifCore_Exceptions.h"
 #include "AlifCore_FileUtils.h"
 #include "AlifCore_FloatObject.h"
 #include "AlifCore_FreeList.h"
@@ -273,9 +275,10 @@ static AlifIntT alifCore_initTypes(AlifInterpreter* _interp) { // 718
 	//	return status;
 	//}
 
-	//if (alifExc_initTypes(_interp) < 0) {
-	//	return ALIFSTATUS_ERR("failed to initialize an exception type");
-	//}
+	if (_alifExc_initTypes(_interp) < 0) {
+		//return ALIFSTATUS_ERR("failed to initialize an exception type");
+		return -1;
+	}
 
 	//status = alifExc_initGlobalObjects(_interp);
 	//if (status < 0) {

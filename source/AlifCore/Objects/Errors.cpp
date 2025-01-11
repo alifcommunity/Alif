@@ -34,7 +34,7 @@ static AlifObject* _alifErr_createException(AlifObject* _exceptionType,
 	}
 
 	if (exc != nullptr and !ALIFEXCEPTIONINSTANCE_CHECK(exc)) {
-		alifErr_format(_alifExcTypeError_,
+		alifErr_format(nullptr /*_alifExcTypeError_*/,
 			"calling %R should have returned an instance of "
 			"BaseException, not %s",
 			_exceptionType, ALIF_TYPE(exc)->name);
@@ -68,7 +68,7 @@ void _alifErr_restore(AlifThread* _thread, AlifObject* _type, AlifObject* _value
 			_traceback = nullptr;
 		}
 		else {
-			alifErr_setString(_alifExcTypeError_, "traceback must be a Traceback or None");
+			alifErr_setString(nullptr /*_alifExcTypeError_*/, "traceback must be a Traceback or None");
 			ALIF_XDECREF(_value);
 			ALIF_DECREF(_type);
 			ALIF_XDECREF(_traceback);
@@ -134,7 +134,7 @@ void _alifErr_setObject(AlifThread* _thread,
 	AlifObject* tb = nullptr;
 
 	if (_exception != nullptr and
-		!ALIFEXCEPTIONCLASS_CHECK(_exception)) {
+		not ALIFEXCEPTIONCLASS_CHECK(_exception)) {
 		_alifErr_format(_thread, _alifExcSystemError_,
 			"_alifErr_setObject: "
 			"exception %R is not a BaseException subclass",
@@ -170,7 +170,7 @@ void _alifErr_setObject(AlifThread* _thread,
 	}
 
 	excValue = _alifErr_getTopMostException(_thread)->excValue;
-	if (excValue != nullptr && excValue != ALIF_NONE) {
+	if (excValue != nullptr and excValue != ALIF_NONE) {
 		ALIF_INCREF(excValue);
 		if (excValue != _value) {
 			AlifObject* o_ = excValue, * context;

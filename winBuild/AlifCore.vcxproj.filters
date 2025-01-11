@@ -855,6 +855,9 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_UnionObject.h">
       <Filter>Include\Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Exceptions.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Include">

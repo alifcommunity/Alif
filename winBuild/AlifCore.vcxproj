@@ -25,6 +25,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Code.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Codecs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Errors.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Exceptions.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FloatObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FlowGraph.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Frame.h" />

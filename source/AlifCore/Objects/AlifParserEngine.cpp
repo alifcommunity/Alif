@@ -113,7 +113,7 @@ static AlifIntT initialize_token(AlifParser* _p,
 		return -1; // temp
 	}
 
-	return (_tokType == ERRORTOKEN ? -1 /*alifParserEngine_tokenizerError(_p)*/ : 0);
+	return (_tokType == ERRORTOKEN ? -1 alifParserEngine_tokenizerError(_p) : 0);
 }
 
 static AlifIntT resize_tokensArr(AlifParser* _p) { // 218 
