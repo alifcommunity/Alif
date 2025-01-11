@@ -11,6 +11,7 @@
 // Alternate tab spacing
 #define ALTTABSIZE 1
 
+//* review
 #define IS_IDENTIFIER_START(_c) ((_c >= 'a' and _c <= 'z') \
 								or (_c >= 'A' and _c <= 'Z') /* to exclude nums and symbols */ \
 								or (_c == '_') \
@@ -56,7 +57,7 @@ static AlifIntT tok_nextChar(TokenState* _tokState) { // 56
 		}
 		_tokState->lineStart = _tokState->cur;
 		if (contains_nullBytes(_tokState->lineStart, _tokState->inp - _tokState->lineStart)) {
-			//alifTokenizer_syntaxError(_tokState, "source code cannot contain null bytes");
+			alifTokenizer_syntaxError(_tokState, "source code cannot contain null bytes");
 			_tokState->cur = _tokState->inp;
 			return EOF;
 		}
@@ -555,7 +556,7 @@ again:
 					}
 					if (!ALIF_ISXDIGIT(c_)) {
 						tok_backup(_tokState, c_);
-						//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "رقم ستعشري غير صحيح"));
+						return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "رقم ستعشري غير صحيح"));
 					}
 					do {
 						c_ = tok_nextChar(_tokState);
@@ -572,11 +573,11 @@ again:
 					if (c_ == '_') { c_ = tok_nextChar(_tokState); }
 					if (c_ < '0' or c_ >= '8') {
 						if (ALIF_ISDIGIT(c_)) {
-							//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "رقم ثماني غير صحيح '%wcs'", wcs));
+							return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "رقم ثماني غير صحيح '%d'", c_));
 						}
 						else {
 							tok_backup(_tokState, c_);
-							//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "رقم ثماني غير صحيح"));
+							return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "رقم ثماني غير صحيح"));
 						}
 					}
 					do {
@@ -584,7 +585,7 @@ again:
 					} while ('0' <= c_ and c_ < '8');
 				} while (c_ == '-');
 				if (ALIF_ISDIGIT(c_)) {
-					//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "رقم ثماني غير صحيح '%wcs'", wcs));
+					return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "رقم ثماني غير صحيح '%d'", c_));
 				}
 				//if (!verify_endOfNumber(_tokState, c_, "ثماني")) {
 				//	return MAKE_TOKEN(ERRORTOKEN);
@@ -598,11 +599,11 @@ again:
 
 					if (c_ != '0' and c_ != '1') {
 						if (ALIF_ISDIGIT(c_)) {
-							//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, L"رقم ثنائي غير صحيح '%wcs'", wcs));
+							return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "رقم ثنائي غير صحيح '%d'", c_));
 						}
 						else {
 							tok_nextChar(_tokState);
-							//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, L"رقم ثنائي غير صحيح"));
+							return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "رقم ثنائي غير صحيح"));
 						}
 					}
 					do {
@@ -611,7 +612,7 @@ again:
 				} while (c_ == '_');
 
 				if (ALIF_ISDIGIT(c_)) {
-					//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, L"رقم ثنائي غير صحيح '%wcs'", wcs));
+					return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "رقم ثنائي غير صحيح '%d'", c_));
 				}
 				//if (!verify_endOfNumber(_tokState, c_, "ثنائي")) {
 				//	return MAKE_TOKEN(ERRORTOKEN);
@@ -688,7 +689,7 @@ again:
 						c_ = tok_nextChar(_tokState);
 						if (!ALIF_ISDIGIT(c_)) {
 							tok_backup(_tokState, c_);
-							//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, L"رقم عشري غير صحيح"));
+							return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "رقم عشري غير صحيح"));
 						}
 					}
 					else if (!ALIF_ISDIGIT(c_)) {
@@ -753,7 +754,7 @@ fStringQuote:
 		pStart = _tokState->start;
 		pEnd = _tokState->cur;
 		if (_tokState->tokModeStackIndex + 1 >= MAXFSTRING_LEVEL) {
-			//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, L"لقد تجاوزت الحد الاقصى للنص المنسق المتداخل"));
+			return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "لقد تجاوزت الحد الاقصى للنص المنسق المتداخل"));
 		}
 		TokenizerMode* theCurrentTok = TOK_NEXT_MODE(_tokState);
 		theCurrentTok->type = TokenizerModeType_::Token_FStringMode;
@@ -830,12 +831,12 @@ letterQuote:
 					TokenizerMode* currentToken = TOK_GET_MODE(_tokState);
 					if (currentToken->fStringQuote == quote
 						and currentToken->fStringQuoteSize == quoteSize) {
-						//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, L"خطأ في النص المنسق '{'", start));
+						return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "خطأ في النص المنسق '{'", start));
 					}
 				}
 
 				if (quoteSize == 3) {
-					//alifTokenizer_syntaxError(_tokState, "نص متعدد الاسطر لم يتم إنهاؤه" " في السطر %d", start);
+					alifTokenizer_syntaxError(_tokState, "نص متعدد الاسطر لم يتم إنهاؤه" " في السطر %d", start);
 					if (c_ != '\n') {
 						_tokState->done = E_EOFS;
 					}
@@ -843,10 +844,10 @@ letterQuote:
 				}
 				else {
 					if (hasEscapedQuote) {
-						//alifTokenizer_syntaxError(_tokState, "نص لم يتم إنهاؤه" " في السطر %d", start);
+						alifTokenizer_syntaxError(_tokState, "نص لم يتم إنهاؤه" " في السطر %d", start);
 					}
 					else {
-						//alifTokenizer_syntaxError(_tokState, "نص لم يتم إنهاؤه" " في السطر %d", start);
+						alifTokenizer_syntaxError(_tokState, "نص لم يتم إنهاؤه" " في السطر %d", start);
 					}
 					if (c_ != '\n') {
 						_tokState->done = E_EOLS;
@@ -936,7 +937,7 @@ letterQuote:
 	case '[':
 	case '{':
 		if (_tokState->level >= MAXLEVEL) {
-			//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, L"تم تجاوز الحد الاقصى لتداخل الاقواس"));
+			return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "تم تجاوز الحد الاقصى لتداخل الاقواس"));
 		}
 		_tokState->parenStack[_tokState->level] = c_;
 		_tokState->parenLineNoStack[_tokState->level] = _tokState->lineNo;
@@ -949,12 +950,12 @@ letterQuote:
 	case ')':
 	case ']':
 	case '}':
-		//if (INSIDE_FSTRING(tok) and !_currentTok->curlyBracDepth and c_ == '}') {
-		//	return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "f-string: single '}' is not allowed"));
-		//}
-		//if (!tok->tokExtraTokens and !tok->level) {
-		//	return MAKE_TOKEN(alifTokenizer_syntaxError(tok, "unmatched '%c'", c));
-		//}
+		if (INSIDE_FSTRING(_tokState) and !_currentTok->curlyBracDepth and c_ == '}') {
+			return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "f-string: single '}' is not allowed"));
+		}
+		if (!_tokState->tokExtraTokens and !_tokState->level) {
+			return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "unmatched '%c'", c_));
+		}
 		if (_tokState->level > 0) {
 			_tokState->level--;
 			AlifIntT opening = _tokState->parenStack[_tokState->level];
@@ -966,31 +967,31 @@ letterQuote:
 				or
 				(opening == '{' and c_ == '}')))
 			{
-				//if (INSIDE_FSTRING(_tokState) and opening == '{') {
-				//	AlifIntT previous_bracket = _currentTok->curlyBracDepth - 1;
-				//	if (previous_bracket == _currentTok->curlyBracExprStartDepth) {
-				//		return MAKE_TOKEN(alifTokenizer_syntaxError(tok, "f-string: unmatched '%c'", c));
-				//	}
-				//}
-				//if (_tokState->parenLineNoStack[_tokState->level] != _tokState->lineNo) {
-				//	return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState,
-				//		"closing parenthesis '%c' does not match "
-				//		"opening parenthesis '%c' on line %d",
-				//		c_, opening, tok->parenlinenostack[_tokState->level]));
-				//}
-				//else {
-				//	return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState,
-				//		"closing parenthesis '%c' does not match "
-				//		"opening parenthesis '%c'",
-				//		c_, opening));
-				//}
+				if (INSIDE_FSTRING(_tokState) and opening == '{') {
+					AlifIntT previous_bracket = _currentTok->curlyBracDepth - 1;
+					if (previous_bracket == _currentTok->curlyBracExprStartDepth) {
+						return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "f-string: unmatched '%c'", c_));
+					}
+				}
+				if (_tokState->parenLineNoStack[_tokState->level] != _tokState->lineNo) {
+					return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState,
+						"closing parenthesis '%c' does not match "
+						"opening parenthesis '%c' on line %d",
+						c_, opening, _tokState->parenLineNoStack[_tokState->level]));
+				}
+				else {
+					return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState,
+						"closing parenthesis '%c' does not match "
+						"opening parenthesis '%c'",
+						c_, opening));
+				}
 			}
 		}
 
 		if (INSIDE_FSTRING(_tokState)) {
 			_currentTok->curlyBracDepth--;
 			if (_currentTok->curlyBracDepth < 0) {
-				//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "f-string: unmatched '%c'", c_));
+				return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "f-string: unmatched '%c'", c_));
 			}
 			if (c_ == '}' and _currentTok->curlyBracDepth == _currentTok->curlyBracExprStartDepth) {
 				_currentTok->curlyBracExprStartDepth--;
@@ -1040,7 +1041,7 @@ static AlifIntT tokGet_fStringMode(TokenState* _tokState,
 		if (peek1 != '{') {
 			_currentTok->curlyBracExprStartDepth++;
 			if (_currentTok->curlyBracExprStartDepth >= MAX_EXPR_NESTING) {
-				//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, L"نص منسق:التعبير المتداخل للنص المنسق وصل الحد الاقصى لعدد التداخلات"));
+				return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "نص منسق:التعبير المتداخل للنص المنسق وصل الحد الاقصى لعدد التداخلات"));
 			}
 			TOK_GET_MODE(_tokState)->type = TokenizerModeType_::Token_RegularMode;
 			return tokGet_normalMode(_tokState, _currentTok, _token);
@@ -1110,14 +1111,14 @@ fStringMiddle:
 			_tokState->lineNo = currentTok->fStringLineStart;
 
 			if (currentTok->fStringQuoteSize == 3) {
-				//alifTokenizer_syntaxError(_tokState, "نص متعدد الاسطر غير منتهي" L" (السطر %d)", start);
+				alifTokenizer_syntaxError(_tokState, "نص متعدد الاسطر غير منتهي" " (السطر %d)", start);
 				if (c_ != '\n') {
 					_tokState->done = E_EOFS;
 				}
 				return MAKE_TOKEN(ERRORTOKEN);
 			}
 			else {
-				//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, L"نص منسق غير منتهي" L" السطر %d)", start));
+				return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "نص منسق غير منتهي" " السطر %d)", start));
 			}
 		}
 
@@ -1139,7 +1140,7 @@ fStringMiddle:
 				tok_backup(_tokState, c_);
 				_currentTok->curlyBracExprStartDepth++;
 				if (_currentTok->curlyBracExprStartDepth >= MAX_EXPR_NESTING) {
-					//return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "نص منسق:التعبير المتداخل للنص المنسق وصل الحد الاقصى لعدد التداخلات"));
+					return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "نص منسق:التعبير المتداخل للنص المنسق وصل الحد الاقصى لعدد التداخلات"));
 				}
 				TOK_GET_MODE(_tokState)->type = TokenizerModeType_::Token_RegularMode;
 				_currentTok->inFormatSpec = 0;
