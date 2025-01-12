@@ -38,10 +38,10 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 2;
 	//case BINARY_OP_SUBTRACT_INT:
 	//	return 2;
-	//case BINARY_SLICE:
-	//	return 3;
-	//case BINARY_SUBSCR:
-	//	return 2;
+	case BINARY_SLICE:
+		return 3;
+	case BINARY_SUBSCR:
+		return 2;
 	//case BINARY_SUBSCR_DICT:
 	//	return 2;
 	//case BINARY_SUBSCR_GETITEM:
@@ -500,10 +500,10 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 1;
 	//case BINARY_OP_SUBTRACT_INT:
 	//	return 1;
-	//case BINARY_SLICE:
-	//	return 1;
-	//case BINARY_SUBSCR:
-	//	return 1;
+	case BINARY_SLICE:
+		return 1;
+	case BINARY_SUBSCR:
+		return 1;
 	//case BINARY_SUBSCR_DICT:
 	//	return 1;
 	//case BINARY_SUBSCR_GETITEM:
@@ -1322,8 +1322,8 @@ extern const uint8_t _alifOpcodeDeopt_[256]; // 1673
 #ifdef NEED_OPCODE_METADATA
 const uint8_t _alifOpcodeDeopt_[256] = {
 	CACHE, // CACHE // 0
-	0,//BINARY_SLICE, // BINARY_SLICE // 1
-	0,//BINARY_SUBSCR, // BINARY_SUBSCR // 2
+	BINARY_SLICE, // BINARY_SLICE // 1
+	BINARY_SUBSCR, // BINARY_SUBSCR // 2
 	BINARY_OP, // BINARY_OP_INPLACE_ADD_UNICODE // 3
 	0,//CHECK_EG_MATCH, // CHECK_EG_MATCH // 4
 	0,//CHECK_EXC_MATCH, // CHECK_EXC_MATCH // 5
@@ -1448,11 +1448,11 @@ const uint8_t _alifOpcodeDeopt_[256] = {
 	BINARY_OP, // BINARY_OP_MULTIPLY_INT // 154
 	BINARY_OP, // BINARY_OP_SUBTRACT_FLOAT // 155
 	BINARY_OP, // BINARY_OP_SUBTRACT_INT // 156
-	0,//BINARY_SUBSCR, // BINARY_SUBSCR_DICT // 157
-	0,//BINARY_SUBSCR, // BINARY_SUBSCR_GETITEM // 158
-	0,//BINARY_SUBSCR, // BINARY_SUBSCR_LIST_INT // 159
-	0,//BINARY_SUBSCR, // BINARY_SUBSCR_STR_INT // 160
-	0,//BINARY_SUBSCR, // BINARY_SUBSCR_TUPLE_INT // 161
+	BINARY_SUBSCR, // BINARY_SUBSCR_DICT // 157
+	BINARY_SUBSCR, // BINARY_SUBSCR_GETITEM // 158
+	BINARY_SUBSCR, // BINARY_SUBSCR_LIST_INT // 159
+	BINARY_SUBSCR, // BINARY_SUBSCR_STR_INT // 160
+	BINARY_SUBSCR, // BINARY_SUBSCR_TUPLE_INT // 161
 	CALL, // CALL_ALLOC_AND_ENTER_INIT // 162
 	CALL, // CALL_BOUND_METHOD_EXACT_ARGS // 163
 	CALL, // CALL_BOUND_METHOD_GENERAL // 164

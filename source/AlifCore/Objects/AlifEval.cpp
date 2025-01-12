@@ -265,6 +265,43 @@ dispatch_opcode :
 		switch (opcode)
 #endif
 		{
+			TARGET(BINARY_SUBSCR) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 2;
+				PREDICTED(BINARY_SUBSCR);
+				AlifCodeUnit* thisInstr = nextInstr - 2;
+				AlifStackRef container{};
+				AlifStackRef sub{};
+				AlifStackRef res{};
+				// _SPECIALIZE_BINARY_SUBSCR
+				sub = stackPointer[-1];
+				container = stackPointer[-2];
+				{
+					uint16_t counter = read_u16(&thisInstr[1].cache);
+#if ENABLE_SPECIALIZATION
+					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
+						nextInstr = thisInstr;
+						_alifSpecialize_binarySubscr(container, sub, nextInstr);
+						DISPATCH_SAME_OPARG();
+					}
+					OPCODE_DEFERRED_INC(BINARY_SUBSCR);
+					ADVANCE_ADAPTIVE_COUNTER(thisInstr[1].counter);
+#endif  /* ENABLE_SPECIALIZATION */
+				}
+				// _BINARY_SUBSCR
+				{
+					AlifObject* containerObj = alifStackRef_asAlifObjectBorrow(container);
+					AlifObject* subObj = alifStackRef_asAlifObjectBorrow(sub);
+					AlifObject* resObj = alifObject_getItem(containerObj, subObj);
+					alifStackRef_close(container);
+					alifStackRef_close(sub);
+					//if (resObj == nullptr) goto pop_2_error;
+					res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(resObj);
+				}
+				stackPointer[-2] = res;
+				stackPointer += -1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(END_FOR) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;

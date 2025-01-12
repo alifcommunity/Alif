@@ -680,7 +680,7 @@ again:
 						if (c_ == 0) return MAKE_TOKEN(ERRORTOKEN);
 					}
 				}
-				if (c_ == L'س') { /* exponent */ // need review
+				if (c_ == L'س') { /* exponent */ //* review
 					AlifIntT e{};
 				exponent:
 					e = c_;
@@ -941,7 +941,7 @@ letterQuote:
 		}
 		_tokState->parenStack[_tokState->level] = c_;
 		_tokState->parenLineNoStack[_tokState->level] = _tokState->lineNo;
-		_tokState->parenLineNoStack[_tokState->level] = (AlifIntT)(_tokState->start - _tokState->lineStart);
+		_tokState->parenColStack[_tokState->level] = (AlifIntT)(_tokState->start - _tokState->lineStart);
 		_tokState->level++;
 		if (INSIDE_FSTRING(_tokState)) {
 			_currentTok->curlyBracDepth++;
@@ -960,7 +960,7 @@ letterQuote:
 			_tokState->level--;
 			AlifIntT opening = _tokState->parenStack[_tokState->level];
 			if (!_tokState->tokExtraTokens
-				and
+				and not
 				((opening == '(' and c_ == ')')
 				or
 				(opening == '[' and c_ == ']')

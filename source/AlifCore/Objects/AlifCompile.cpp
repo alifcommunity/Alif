@@ -3810,7 +3810,7 @@ static AlifCodeObject* optimizeAndAssemble_codeUnit(CompilerUnit* u, AlifObject*
 	AlifIntT _codeFlags, AlifObject* filename) { // 7464
 	CFGBuilder* g = nullptr;
 	InstrSequence optimizedInstrs{};
-	memset(&optimizedInstrs, 0, sizeof(InstrSequence));
+	memset(&optimizedInstrs, 0, sizeof(InstrSequence)); //* review //* delete
 
 	AlifIntT nlocals{};
 	AlifIntT nparams{};
