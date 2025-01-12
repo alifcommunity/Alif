@@ -9,6 +9,8 @@
 #include "AlifCore_SetObject.h"
 
 
+#include "clinic/ListObject.cpp.h"
+
 class AlifListArray{ // 28
 public:
 	AlifSizeT allocated{};
@@ -636,6 +638,13 @@ static AlifIntT list_assItem(AlifObject* _aa, AlifSizeT _i, AlifObject* _v) { //
 	ret = listAssItem_lockHeld(a, _i, _v);
 	ALIF_END_CRITICAL_SECTION();
 	return ret;
+}
+
+static AlifObject* list_appendImpl(AlifListObject* _self, AlifObject* _object) { // 1109
+	if (alifList_appendTakeRef(_self, ALIF_NEWREF(_object)) < 0) {
+		return nullptr;
+	}
+	return ALIF_NONE;
 }
 
 static AlifIntT list_extendFast(AlifListObject* _self, AlifObject* _iterable) { // 1120
@@ -1750,12 +1759,12 @@ static AlifObject* list_sortImpl(AlifListObject* _self,
 		}
 
 		for (i = 0; i < savedObjSize; i++) {
-			//keys[i] = alifObject_callOneArg(_keyFunc, savedObjItem[i]);
+			keys[i] = alifObject_callOneArg(_keyFunc, savedObjItem[i]);
 			if (keys[i] == nullptr) {
-			//	for (i = i - 1; i >= 0; i--)
-			//		ALIF_DECREF(keys[i]);
-			//	if (savedObjSize >= MERGESTATE_TEMP_SIZE / 2)
-			//		alifMem_dataFree(keys);
+				for (i = i - 1; i >= 0; i--)
+					ALIF_DECREF(keys[i]);
+				if (savedObjSize >= MERGESTATE_TEMP_SIZE / 2)
+					alifMem_dataFree(keys);
 				goto keyFuncFail;
 			}
 		}
@@ -1988,6 +1997,19 @@ AlifObject* _alifList_fromStackRefSteal(const AlifStackRef* _src, AlifSizeT _n) 
 }
 
 
+static AlifMethodDef _listMethods_[] = { // 3445
+	LIST_APPEND_METHODDEF
+	//LIST_INSERT_METHODDEF
+	//LIST_EXTEND_METHODDEF
+	//LIST_POP_METHODDEF
+	//LIST_REMOVE_METHODDEF
+	//LIST_INDEX_METHODDEF
+	//LIST_COUNT_METHODDEF
+	//LIST_REVERSE_METHODDEF
+	//LIST_SORT_METHODDEF
+	{nullptr, nullptr}
+};
+
 
 
 static AlifSequenceMethods _listAsSequence_ = { // 3465
@@ -2007,10 +2029,13 @@ AlifTypeObject _alifListType_ = { // 3737
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "مصفوفة",
 	.basicSize = sizeof(AlifListObject),
-	.itemSize = 0,
 	.dealloc = list_dealloc,
 	.asSequence = &_listAsSequence_,
+	.getAttro = alifObject_genericGetAttr,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
 		ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_LIST_SUBCLASS |
 		_ALIF_TPFLAGS_MATCH_SELF | ALIF_TPFLAGS_SEQUENCE,
+	.methods = _listMethods_,
+	.alloc = alifType_genericAlloc,
+	.free = alifObject_gcDel,
 };
