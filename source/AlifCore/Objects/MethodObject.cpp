@@ -6,8 +6,15 @@
 
 
 
+
+static AlifObject* cfunction_vectorCallFastCall(AlifObject*,
+	AlifObject* const*, AlifUSizeT, AlifObject*); // 18
+
 static AlifObject* cfunction_vectorCallFastCallKeywords(AlifObject*,
 	AlifObject* const*, AlifUSizeT, AlifObject*); // 20
+
+static AlifObject* cfunction_vectorCallFastCallKeyWordsMethod(AlifObject*,
+	AlifObject* const*, AlifUSizeT, AlifObject*); // 22
 
 static AlifObject* cfunction_vectorCallNoArgs(AlifObject*,
 	AlifObject* const*, AlifUSizeT, AlifObject*); // 24
@@ -33,7 +40,7 @@ AlifObject* alifCPPMethod_new(AlifMethodDef* _ml,
 		vectorCall = nullptr;
 		break;
 	case METHOD_FASTCALL:
-		//vectorCall = cfunction_vectorCallFastCall;
+		vectorCall = cfunction_vectorCallFastCall;
 		break;
 	case METHOD_FASTCALL | METHOD_KEYWORDS:
 		vectorCall = cfunction_vectorCallFastCallKeywords;
@@ -45,7 +52,7 @@ AlifObject* alifCPPMethod_new(AlifMethodDef* _ml,
 		vectorCall = cfunction_vectorCallO;
 		break;
 	case METHOD_METHOD | METHOD_FASTCALL | METHOD_KEYWORDS:
-		//vectorCall = cfunction_vectorCallFastCallKeyWordsMethod;
+		vectorCall = cfunction_vectorCallFastCallKeyWordsMethod;
 		break;
 	default:
 		//alifErr_format(_alifExcSystemError_,
@@ -148,6 +155,23 @@ static inline FuncPtr cfunction_enterCall(AlifThread* _thread, AlifObject* _func
 }
 
 
+static AlifObject* cfunction_vectorCallFastCall(AlifObject* _func,
+	AlifObject* const* _args, AlifUSizeT _nargsf, AlifObject* _kwnames) { // 411
+	AlifThread* thread = _alifThread_get();
+	if (cfunction_checkKWArgs(thread, _func, _kwnames)) {
+		return nullptr;
+	}
+	AlifSizeT nargs = ALIFVECTORCALL_NARGS(_nargsf);
+	AlifCPPFunctionFast meth = (AlifCPPFunctionFast)
+		cfunction_enterCall(thread, _func);
+	if (meth == nullptr) {
+		return nullptr;
+	}
+	AlifObject* result = meth(ALIFCPPFUNCTION_GET_SELF(_func), _args, nargs);
+	_alif_leaveRecursiveCallThread(thread);
+	return result;
+}
+
 
 
 static AlifObject* cfunction_vectorCallFastCallKeywords(AlifObject* _func,
@@ -164,6 +188,20 @@ static AlifObject* cfunction_vectorCallFastCallKeywords(AlifObject* _func,
 	return result;
 }
 
+
+static AlifObject* cfunction_vectorCallFastCallKeyWordsMethod(AlifObject* _func,
+	AlifObject* const* _args, AlifUSizeT _nargsf, AlifObject* _kwnames) { // 446
+	AlifThread* thread = _alifThread_get();
+	AlifTypeObject* cls = ALIFCPPFUNCTION_GET_CLASS(_func);
+	AlifSizeT nargs = ALIFVECTORCALL_NARGS(_nargsf);
+	AlifCPPMethod meth = (AlifCPPMethod)cfunction_enterCall(thread, _func);
+	if (meth == nullptr) {
+		return nullptr;
+	}
+	AlifObject* result = meth(ALIFCPPFUNCTION_GET_SELF(_func), cls, _args, nargs, _kwnames);
+	_alif_leaveRecursiveCallThread(thread);
+	return result;
+}
 
 
 static AlifObject* cfunction_vectorCallNoArgs(AlifObject* _func,

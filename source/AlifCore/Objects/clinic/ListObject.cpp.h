@@ -5,10 +5,41 @@
 
 
 
+ // 19
+#define LIST_INSERT_METHODDEF    \
+    {"ادرج", ALIF_CPPFUNCTION_CAST(list_insert), METHOD_FASTCALL /*, list_insert__doc__*/},
 
+static AlifObject* list_insertImpl(AlifListObject*, AlifSizeT, AlifObject*); // 22
 
+static AlifObject* list_insert(AlifListObject* _self,
+	AlifObject* const* _args, AlifSizeT _nargs) { // 25
+	AlifObject* returnValue = nullptr;
+	AlifSizeT index{};
+	AlifObject* object{};
 
+	if (!_ALIFARG_CHECKPOSITIONAL("ادرج", _nargs, 2, 2)) {
+		goto exit;
+	}
+	{
+		AlifSizeT ival = -1;
+		AlifObject* iobj = _alifNumber_index(_args[0]);
+		if (iobj != nullptr) {
+			ival = alifLong_asSizeT(iobj);
+			ALIF_DECREF(iobj);
+		}
+		if (ival == -1 and alifErr_occurred()) {
+			goto exit;
+		}
+		index = ival;
+	}
+	object = _args[1];
+	ALIF_BEGIN_CRITICAL_SECTION(_self);
+	returnValue = list_insertImpl(_self, index, object);
+	ALIF_END_CRITICAL_SECTION();
 
+exit:
+	return returnValue;
+}
 
 
 

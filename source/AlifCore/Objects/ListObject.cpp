@@ -224,6 +224,33 @@ static inline AlifObject* listGet_itemRef(AlifListObject* _op, AlifSizeT _i) { /
 }
 
 
+static AlifIntT ins1(AlifListObject* _self,
+	AlifSizeT _where, AlifObject* _v) { // 424
+	AlifSizeT i{}, n = ALIF_SIZE(_self);
+	AlifObject** items{};
+	if (_v == nullptr) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+
+	if (list_resize(_self, n + 1) < 0)
+		return -1;
+
+	if (_where < 0) {
+		_where += n;
+		if (_where < 0)
+			_where = 0;
+	}
+	if (_where > n)
+		_where = n;
+	items = _self->item;
+	for (i = n; --i >= _where; )
+		items[i + 1] = items[i];
+	items[_where] = ALIF_NEWREF(_v);
+	return 0;
+}
+
+
 AlifIntT alifList_appendTakeRefListResize(AlifListObject* _self,
 	AlifObject* _newItem) { // 468
 	AlifSizeT len_ = ALIF_SIZE(_self);
@@ -638,6 +665,14 @@ static AlifIntT list_assItem(AlifObject* _aa, AlifSizeT _i, AlifObject* _v) { //
 	ret = listAssItem_lockHeld(a, _i, _v);
 	ALIF_END_CRITICAL_SECTION();
 	return ret;
+}
+
+static AlifObject* list_insertImpl(AlifListObject* _self,
+	AlifSizeT _index, AlifObject* _object) { // 1060
+	if (ins1(_self, _index, _object) == 0) {
+		return ALIF_NONE;
+	}
+	return nullptr;
 }
 
 static AlifObject* list_appendImpl(AlifListObject* _self, AlifObject* _object) { // 1109
@@ -1999,7 +2034,7 @@ AlifObject* _alifList_fromStackRefSteal(const AlifStackRef* _src, AlifSizeT _n) 
 
 static AlifMethodDef _listMethods_[] = { // 3445
 	LIST_APPEND_METHODDEF
-	//LIST_INSERT_METHODDEF
+	LIST_INSERT_METHODDEF
 	//LIST_EXTEND_METHODDEF
 	//LIST_POP_METHODDEF
 	//LIST_REMOVE_METHODDEF
@@ -2038,4 +2073,5 @@ AlifTypeObject _alifListType_ = { // 3737
 	.methods = _listMethods_,
 	.alloc = alifType_genericAlloc,
 	.free = alifObject_gcDel,
+	//.vectorCall = list_vectorCall,
 };
