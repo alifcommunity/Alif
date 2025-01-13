@@ -725,6 +725,7 @@
 	INIT_ID(__subClassCheck__), \
 	INIT_ID(__typeParams__), \
 	INIT_ID(__weakRef__), \
+	INIT_ID(_isTextEncoding), \
 	INIT_ID(Builtins), \
 	INIT_ID(Encoding), \
 	INIT_ID(End), \

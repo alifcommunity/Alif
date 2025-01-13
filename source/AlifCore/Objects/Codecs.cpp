@@ -7,38 +7,73 @@
 const char* _alifHexDigits_ = "0123456789abcdef"; // 19 // need review
 
 
+
+extern AlifIntT _alif_normalizeEncoding(const char*, char*, AlifUSizeT); // 85
+
+static AlifObject* normalize_string(const char* string) { // 90
+	AlifUSizeT len = strlen(string);
+	char* encoding;
+	AlifObject* v{};
+
+	if (len > ALIF_SIZET_MAX) {
+		//alifErr_setString(_alifExcOverflowError_, "string is too large");
+		return nullptr;
+	}
+
+	encoding = (char*)alifMem_dataAlloc(len + 1);
+	if (encoding == nullptr)
+		//return alifErr_noMemory();
+
+	if (!_alif_normalizeEncoding(string, encoding, len + 1))
+	{
+		//alifErr_setString(_alifExcRuntimeError_, "_alif_normalizeEncoding() failed");
+		alifMem_dataFree(encoding);
+		return nullptr;
+	}
+
+	v = alifUStr_fromString(encoding);
+	alifMem_dataFree(encoding);
+	return v;
+}
+
+
+
+
 AlifObject* _alifCodec_lookup(const char* encoding) { // 133
-	if (encoding == NULL) {
+
+	AlifSizeT len{}; //* alif
+
+	if (encoding == nullptr) {
 		//ALIFERR_BADARGUMENT();
-		return NULL;
+		return nullptr;
 	}
 
-	AlifInterpreter* interp = alifInterpreter_get();
-	AlifObject* v = normalizestring(encoding);
-	if (v == NULL) {
-		return NULL;
+	AlifInterpreter* interp = _alifInterpreter_get();
+	AlifObject* v = normalize_string(encoding);
+	if (v == nullptr) {
+		return nullptr;
 	}
 
-	_alifUStr_internMortal(interp, &v);
+	alifUStr_internMortal(interp, &v);
 
 	/* First, try to lookup the name in the registry dictionary */
 	AlifObject* result;
 	if (alifDict_getItemRef(interp->codecs.searchCache, v, &result) < 0) {
 		goto onError;
 	}
-	if (result != NULL) {
+	if (result != nullptr) {
 		ALIF_DECREF(v);
 		return result;
 	}
 
 	/* Next, scan the search functions in order of registration */
-	const AlifSizeT len = alifList_size(interp->codecs.search_path);
+	len = alifList_size(interp->codecs.searchPath);
 	if (len < 0)
 		goto onError;
 	if (len == 0) {
-		PyErr_SetString(PyExc_LookupError,
-			"no codec search functions registered: "
-			"can't find encoding");
+		//alifErr_setString(_alifExcLookupError_,
+		//	"no codec search functions registered: "
+		//	"can't find encoding");
 		goto onError;
 	}
 
@@ -46,36 +81,35 @@ AlifObject* _alifCodec_lookup(const char* encoding) { // 133
 	for (i = 0; i < len; i++) {
 		AlifObject* func;
 
-		func = PyList_GetItemRef(interp->codecs.search_path, i);
-		if (func == NULL)
+		func = alifList_getItemRef(interp->codecs.searchPath, i);
+		if (func == nullptr)
 			goto onError;
-		result = PyObject_CallOneArg(func, v);
+		result = alifObject_callOneArg(func, v);
 		ALIF_DECREF(func);
-		if (result == NULL)
+		if (result == nullptr)
 			goto onError;
-		if (result == Py_None) {
-			Py_CLEAR(result);
+		if (result == ALIF_NONE) {
+			ALIF_CLEAR(result);
 			continue;
 		}
-		if (!PyTuple_Check(result) || PyTuple_GET_SIZE(result) != 4) {
-			PyErr_SetString(PyExc_TypeError,
-				"codec search functions must return 4-tuples");
+		if (!ALIFTUPLE_CHECK(result) or ALIFTUPLE_GET_SIZE(result) != 4) {
+			//alifErr_setString(_alifExcTypeError_,
+			//	"codec search functions must return 4-tuples");
 			ALIF_DECREF(result);
 			goto onError;
 		}
 		break;
 	}
-	if (result == NULL) {
-		/* XXX Perhaps we should cache misses too ? */
-		PyErr_Format(PyExc_LookupError,
-			"unknown encoding: %s", encoding);
+	if (result == nullptr) {
+		//alifErr_format(_alifExcLookupError_,
+		//	"unknown encoding: %s", encoding);
 		goto onError;
 	}
 
-	_PyUnicode_InternImmortal(interp, &v);
+	alifUStr_internImmortal(interp, &v);
 
 	/* Cache and return the result */
-	if (PyDict_SetItem(interp->codecs.search_cache, v, result) < 0) {
+	if (alifDict_setItem(interp->codecs.searchCache, v, result) < 0) {
 		ALIF_DECREF(result);
 		goto onError;
 	}
@@ -84,7 +118,7 @@ AlifObject* _alifCodec_lookup(const char* encoding) { // 133
 
 onError:
 	ALIF_DECREF(v);
-	return NULL;
+	return nullptr;
 }
 
 static AlifObject* args_tuple(AlifObject* object,
@@ -147,6 +181,45 @@ onError:
 }
 
 
+
+static AlifObject* _alifCodec_decodeInternal(AlifObject* object, AlifObject* decoder,
+	const char* encoding, const char* errors) { // 443
+	AlifObject* args = nullptr, * result = nullptr;
+	AlifObject* v{};
+
+	args = args_tuple(object, errors);
+	if (args == nullptr)
+		goto onError;
+
+	result = alifObject_call(decoder, args, nullptr);
+	if (result == nullptr) {
+		//_alifErr_formatNote("%s with '%s' codec failed", "decoding", encoding);
+		goto onError;
+	}
+	if (!ALIFTUPLE_CHECK(result) ||
+		ALIFTUPLE_GET_SIZE(result) != 2) {
+		//alifErr_setString(_alifExcTypeError_,
+		//	"decoder must return a tuple (object,integer)");
+		goto onError;
+	}
+	v = ALIF_NEWREF(ALIFTUPLE_GET_ITEM(result, 0));
+	/* We don't check or use the second (integer) entry. */
+
+	ALIF_DECREF(args);
+	ALIF_DECREF(decoder);
+	ALIF_DECREF(result);
+	return v;
+
+onError:
+	ALIF_XDECREF(args);
+	ALIF_XDECREF(decoder);
+	ALIF_XDECREF(result);
+	return nullptr;
+}
+
+
+
+
 AlifObject* _alifCodec_lookupTextEncoding(const char* _encoding,
 	const char* _alternateCommand) { // 510
 	AlifObject* codec{};
@@ -154,15 +227,15 @@ AlifObject* _alifCodec_lookupTextEncoding(const char* _encoding,
 	AlifIntT isTextCodec{};
 
 	codec = _alifCodec_lookup(_encoding);
-	if (codec == NULL)
-		return NULL;
+	if (codec == nullptr)
+		return nullptr;
 
 	if (!ALIFTUPLE_CHECKEXACT(codec)) {
-		if (alifObject_getOptionalAttr(codec, &ALIF_ID(_is_text_encoding), &attr) < 0) {
+		if (alifObject_getOptionalAttr(codec, &ALIF_ID(_isTextEncoding), &attr) < 0) {
 			ALIF_DECREF(codec);
-			return NULL;
+			return nullptr;
 		}
-		if (attr != NULL) {
+		if (attr != nullptr) {
 			isTextCodec = alifObject_isTrue(attr);
 			ALIF_DECREF(attr);
 			if (isTextCodec <= 0) {
@@ -172,7 +245,7 @@ AlifObject* _alifCodec_lookupTextEncoding(const char* _encoding,
 						//"'%.400s' is not a text encoding; "
 						//"use %s to handle arbitrary codecs",
 						//_encoding, _alternateCommand);
-				return NULL;
+				return nullptr;
 			}
 		}
 	}
@@ -181,16 +254,14 @@ AlifObject* _alifCodec_lookupTextEncoding(const char* _encoding,
 }
 
 
-static AlifObject* codec_getitem_checked(const char* _encoding,
-	const char* _alternateCommand,
-	int _index)
-{
+static AlifObject* codec_getItemChecked(const char* _encoding,
+	const char* _alternateCommand, AlifIntT _index) { // 550
 	AlifObject* codec{};
 	AlifObject* v_{};
 
 	codec = _alifCodec_lookupTextEncoding(_encoding, _alternateCommand);
-	if (codec == NULL)
-		return NULL;
+	if (codec == nullptr)
+		return nullptr;
 
 	v_ = ALIF_NEWREF(ALIFTUPLE_GET_ITEM(codec, _index));
 	ALIF_DECREF(codec);
@@ -207,7 +278,7 @@ static AlifObject* _alifCodec_textEncoder(const char* encoding) { // 567
 
 static AlifObject* _alifCodec_textDecoder(const char* _encoding)
 {
-	return codec_getitem_checked(_encoding, "codecs.decode()", 1);
+	return codec_getItemChecked(_encoding, "codecs.decode()", 1);
 }
 
 AlifObject* _alifCodec_encodeText(AlifObject* object,
@@ -223,8 +294,7 @@ AlifObject* _alifCodec_encodeText(AlifObject* object,
 
 
 AlifObject* _alifCodec_decodeText(AlifObject* _object,
-	const char* _encoding,
-	const char* _errors) { // 590
+	const char* _encoding, const char* _errors) { // 590
 	AlifObject* decoder{};
 
 	decoder = _alifCodec_textDecoder(_encoding);

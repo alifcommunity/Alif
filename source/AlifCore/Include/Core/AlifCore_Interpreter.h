@@ -4,6 +4,7 @@
 #include "AlifCore_DictState.h"
 #include "AlifCore_EvalState.h"
 #include "AlifCore_Code.h"
+#include "AlifCore_Codecs.h"
 #include "AlifCore_GC.h"
 #include "AlifCore_TypeID.h"
 #include "AlifCore_DoubleToASCII.h"
@@ -100,6 +101,8 @@ public:
 	ImportState imports{};
 
 	GILDureRunState gil_{};
+
+	CodecsState codecs{};
 
 
 	QSBRShared qsbr{};

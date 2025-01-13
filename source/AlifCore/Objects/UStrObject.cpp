@@ -1994,20 +1994,19 @@ AlifObject* alifUStr_decode(const char* s, AlifSizeT size,
 
 	/* Decode via the codec registry */
 	buffer = nullptr;
-	if (alifBuffer_fillInfo(&info, nullptr, (void*)s, size, 1, ALIFBUF_FULL_RO) < 0)
-		goto onError;
-	buffer = alifMemoryView_fromBuffer(&info);
-	if (buffer == nullptr)
-		goto onError;
+	//if (alifBuffer_fillInfo(&info, nullptr, (void*)s, size, 1, ALIFBUF_FULL_RO) < 0)
+	//	goto onError;
+	//buffer = alifMemoryView_fromBuffer(&info);
+	//if (buffer == nullptr)
+	//	goto onError;
 	unicode = _alifCodec_decodeText(buffer, encoding, errors);
 	if (unicode == nullptr)
 		goto onError;
 	if (!ALIFUSTR_CHECK(unicode)) {
-		alifErr_format(_alifExcTypeError_,
-			"'%.400s' decoder returned '%.400s' instead of 'str'; "
-			"use codecs.decode() to decode to arbitrary types",
-			encoding,
-			ALIF_TYPE(unicode)->name);
+		//alifErr_format(_alifExcTypeError_,
+		//	"'%.400s' decoder returned '%.400s' instead of 'str'; "
+		//	"use codecs.decode() to decode to arbitrary types",
+		//	encoding, ALIF_TYPE(unicode)->name);
 		ALIF_DECREF(unicode);
 		goto onError;
 	}
@@ -2274,16 +2273,13 @@ static AlifIntT uStrDecode_callErrorHandlerWriter(
 	const char* newInptr{};
 
 	if (*_errorHandler == nullptr) {
-		*_errorHandler = alifCodec_lookupError(_errors);
+		//*_errorHandler = alifCodec_lookupError(_errors); //* todo
 		if (*_errorHandler == nullptr)
 			goto onError;
 	}
 
-	make_decodeException(_exceptionObject,
-		_encoding,
-		*_input, *_inend - *_input,
-		*_startinpos, *_endinpos,
-		_reason);
+	//make_decodeException(_exceptionObject, _encoding, *_input,
+	//	*_inend - *_input, *_startinpos, *_endinpos, _reason); //* todo
 	if (*_exceptionObject == nullptr)
 		goto onError;
 
@@ -2297,9 +2293,9 @@ static AlifIntT uStrDecode_callErrorHandlerWriter(
 	if (!alifArg_parseTuple(resTuple, argparse, &repUnicode, &newPos))
 		goto onError;
 
-	inputObj = alifUStrDecodeError_getObject(*_exceptionObject);
-	if (!inputObj)
-		goto onError;
+	//inputObj = alifUStrDecodeError_getObject(*_exceptionObject);
+	//if (!inputObj)
+	//	goto onError;
 	remain = *_inend - *_input - *_endinpos;
 	*_input = ALIFBYTES_AS_STRING(inputObj);
 	inSize = ALIFBYTES_GET_SIZE(inputObj);
@@ -2943,16 +2939,13 @@ AlifObject* alifUStr_decodeUTF32(const char* s, AlifSizeT size,
 	return alifUStr_decodeUTF32Stateful(s, size, errors, byteorder, nullptr);
 }
 
-AlifObject* alifUStr_decodeUTF32Stateful(const char* _s,
-	AlifSizeT _size,
-	const char* _errors,
-	AlifIntT* _byteOrder,
-	AlifSizeT* _consumed) { // 4658
+AlifObject* alifUStr_decodeUTF32Stateful(const char* _s, AlifSizeT _size,
+	const char* _errors, AlifIntT* _byteOrder, AlifSizeT* _consumed) { // 5658
 	const char* starts = _s;
 	AlifSizeT startInPos{};
 	AlifSizeT endInPos{};
-	AlifUStrWriter writer;
-	const unsigned char* q_, * e;
+	AlifUStrWriter writer{};
+	const unsigned char* q_{}, * e{};
 	AlifIntT le_, bo_ = 0;       /* assume native ordering by default */
 	const char* encoding{};
 	const char* errmsg = "";
@@ -2981,7 +2974,7 @@ AlifObject* alifUStr_decodeUTF32Stateful(const char* _s,
 	if (q_ == e) {
 		if (_consumed)
 			*_consumed = _size;
-			//ALIF_RETURN_UNICODE_EMPTY();
+			ALIF_RETURN_UNICODE_EMPTY;
 	}
 
 #ifdef WORDS_BIGENDIAN
@@ -3075,7 +3068,7 @@ onError:
 	alifUStrWriter_dealloc(&writer);
 	ALIF_XDECREF(errorHandler);
 	ALIF_XDECREF(exc_);
-	return NULL;
+	return nullptr;
 }
 
 
@@ -3088,7 +3081,142 @@ AlifObject* alifUStr_decodeUTF16(const char* s, AlifSizeT size,
 	return alifUStr_decodeUTF16Stateful(s, size, errors, byteorder, nullptr);
 }
 
+AlifObject* alifUStr_decodeUTF16Stateful(const char* s, AlifSizeT size,
+	const char* errors, AlifIntT* byteorder, AlifSizeT* consumed) { // 5964
+	const char* starts = s;
+	AlifSizeT startinpos{};
+	AlifSizeT endinpos{};
+	AlifUStrWriter writer{};
+	const unsigned char* q{}, * e{};
+	AlifIntT bo = 0;       /* assume native ordering by default */
+	AlifIntT native_ordering;
+	const char* errmsg = "";
+	AlifObject* errorHandler = nullptr;
+	AlifObject* exc = nullptr;
+	const char* encoding{};
 
+	q = (const unsigned char*)s;
+	e = q + size;
+
+	if (byteorder)
+		bo = *byteorder;
+
+	if (bo == 0 and size >= 2) {
+		const AlifUCS4 bom = (q[1] << 8) | q[0];
+		if (bom == 0xFEFF) {
+			q += 2;
+			bo = -1;
+		}
+		else if (bom == 0xFFFE) {
+			q += 2;
+			bo = 1;
+		}
+		if (byteorder)
+			*byteorder = bo;
+	}
+
+	if (q == e) {
+		if (consumed)
+			*consumed = size;
+		ALIF_RETURN_UNICODE_EMPTY;
+	}
+
+#if ALIF_LITTLE_ENDIAN
+	native_ordering = bo <= 0;
+	encoding = bo <= 0 ? "utf-16-le" : "utf-16-be";
+#else
+	native_ordering = bo >= 0;
+	encoding = bo >= 0 ? "utf-16-be" : "utf-16-le";
+#endif
+
+	alifUStrWriter_init(&writer);
+	writer.minLength = (e - q + 1) / 2;
+	if (ALIFUSTRWRITER_PREPARE(&writer, writer.minLength, 127) == -1)
+		goto onError;
+
+	while (1) {
+		AlifUCS4 ch = 0;
+		if (e - q >= 2) {
+			int kind = writer.kind;
+			if (kind == AlifUStrKind_::AlifUStr_1Byte_Kind) {
+				if (ALIFUSTR_IS_ASCII(writer.buffer))
+					ch = asciiLib_utf16Decode(&q, e,
+						(AlifUCS1*)writer.data, &writer.pos,
+						native_ordering);
+				else
+					ch = ucs1Lib_utf16Decode(&q, e,
+						(AlifUCS1*)writer.data, &writer.pos,
+						native_ordering);
+			}
+			else if (kind == AlifUStrKind_::AlifUStr_2Byte_Kind) {
+				ch = ucs2Lib_utf16Decode(&q, e,
+					(AlifUCS2*)writer.data, &writer.pos,
+					native_ordering);
+			}
+			else {
+				ch = ucs4Lib_utf16Decode(&q, e,
+					(AlifUCS4*)writer.data, &writer.pos,
+					native_ordering);
+			}
+		}
+
+		switch (ch)
+		{
+		case 0:
+			/* remaining byte at the end? (size should be even) */
+			if (q == e or consumed)
+				goto End;
+			errmsg = "truncated data";
+			startinpos = ((const char*)q) - starts;
+			endinpos = ((const char*)e) - starts;
+			break;
+			/* The remaining input chars are ignored if the callback
+			   chooses to skip the input */
+		case 1:
+			q -= 2;
+			if (consumed)
+				goto End;
+			errmsg = "unexpected end of data";
+			startinpos = ((const char*)q) - starts;
+			endinpos = ((const char*)e) - starts;
+			break;
+		case 2:
+			errmsg = "illegal encoding";
+			startinpos = ((const char*)q) - 2 - starts;
+			endinpos = startinpos + 2;
+			break;
+		case 3:
+			errmsg = "illegal UTF-16 surrogate";
+			startinpos = ((const char*)q) - 4 - starts;
+			endinpos = startinpos + 2;
+			break;
+		default:
+			if (alifUStrWriter_writeCharInline(&writer, ch) < 0)
+				goto onError;
+			continue;
+		}
+
+		if (uStrDecode_callErrorHandlerWriter(
+			errors, &errorHandler, encoding, errmsg, &starts,
+			(const char**)&e, &startinpos, &endinpos,
+			&exc, (const char**)&q, &writer))
+			goto onError;
+	}
+
+End:
+	if (consumed)
+		*consumed = (const char*)q - starts;
+
+	ALIF_XDECREF(errorHandler);
+	ALIF_XDECREF(exc);
+	return alifUStrWriter_finish(&writer);
+
+onError:
+	alifUStrWriter_dealloc(&writer);
+	ALIF_XDECREF(errorHandler);
+	ALIF_XDECREF(exc);
+	return nullptr;
+}
 
 
 

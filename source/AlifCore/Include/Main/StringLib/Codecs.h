@@ -442,9 +442,140 @@ error:
 #endif
 }
 
+ // 473
+#if SIZEOF_LONG == 8
+# define UCS2_REPEAT_MASK 0x0001000100010001ul
+#elif SIZEOF_LONG == 4
+# define UCS2_REPEAT_MASK 0x00010001ul
+#else
+# error C 'long' size should be either 4 or 8!
+#endif
+
+/* The mask for fast checking. */
+#if STRINGLIB_SIZEOF_CHAR == 1
+# define FAST_CHAR_MASK         (UCS2_REPEAT_MASK * (0xFFFFu & ~STRINGLIB_MAX_CHAR))
+#else
+
+# define FAST_CHAR_MASK         (UCS2_REPEAT_MASK * 0x8000u)
+#endif
+#define STRIPPED_MASK           (UCS2_REPEAT_MASK * 0x00FFu)
+/* Swap bytes. */
+#define SWAB(value)             ((((value) >> 8) & STRIPPED_MASK) | \
+                                 (((value) & STRIPPED_MASK) << 8))
 
 
+ALIF_LOCAL_INLINE(AlifUCS4)
+STRINGLIB(utf16Decode)(const unsigned char** inptr, const unsigned char* e,
+	STRINGLIB_CHAR* dest, AlifSizeT* outpos,
+	AlifIntT native_ordering) { // 500
+	AlifUCS4 ch{};
+	const unsigned char* q = *inptr;
+	STRINGLIB_CHAR* p = dest + *outpos;
+	/* Offsets from q for retrieving byte pairs in the right order. */
+#if ALIF_LITTLE_ENDIAN
+	AlifIntT ihi = !!native_ordering, ilo = !native_ordering;
+#else
+	AlifIntT ihi = !native_ordering, ilo = !!native_ordering;
+#endif
+	--e;
 
+	while (q < e) {
+		AlifUCS4 ch2;
+		if (ALIF_IS_ALIGNED(q, ALIGNOF_LONG)) {
+			/* Fast path for runs of in-range non-surrogate chars. */
+			const unsigned char* _q = q;
+			while (_q + SIZEOF_LONG <= e) {
+				unsigned long block = *(const unsigned long*)_q;
+				if (native_ordering) {
+					if (block & FAST_CHAR_MASK)
+						break;
+				}
+				else {
+					if (block & SWAB(FAST_CHAR_MASK))
+						break;
+#if STRINGLIB_SIZEOF_CHAR == 1
+					block >>= 8;
+#else
+					block = SWAB(block);
+#endif
+				}
+#if ALIF_LITTLE_ENDIAN
+# if SIZEOF_LONG == 4
+				p[0] = (STRINGLIB_CHAR)(block & 0xFFFFu);
+				p[1] = (STRINGLIB_CHAR)(block >> 16);
+# elif SIZEOF_LONG == 8
+				p[0] = (STRINGLIB_CHAR)(block & 0xFFFFu);
+				p[1] = (STRINGLIB_CHAR)((block >> 16) & 0xFFFFu);
+				p[2] = (STRINGLIB_CHAR)((block >> 32) & 0xFFFFu);
+				p[3] = (STRINGLIB_CHAR)(block >> 48);
+# endif
+#else
+# if SIZEOF_LONG == 4
+				p[0] = (STRINGLIB_CHAR)(block >> 16);
+				p[1] = (STRINGLIB_CHAR)(block & 0xFFFFu);
+# elif SIZEOF_LONG == 8
+				p[0] = (STRINGLIB_CHAR)(block >> 48);
+				p[1] = (STRINGLIB_CHAR)((block >> 32) & 0xFFFFu);
+				p[2] = (STRINGLIB_CHAR)((block >> 16) & 0xFFFFu);
+				p[3] = (STRINGLIB_CHAR)(block & 0xFFFFu);
+# endif
+#endif
+				_q += SIZEOF_LONG;
+				p += SIZEOF_LONG / 2;
+			}
+			q = _q;
+			if (q >= e)
+				break;
+		}
+
+		ch = (q[ihi] << 8) | q[ilo];
+		q += 2;
+		if (!alifUnicode_isSurrogate(ch)) {
+#if STRINGLIB_SIZEOF_CHAR < 2
+			if (ch > STRINGLIB_MAX_CHAR)
+				/* Out-of-range */
+				goto Return;
+#endif
+			* p++ = (STRINGLIB_CHAR)ch;
+			continue;
+		}
+
+		/* UTF-16 code pair: */
+		if (!alifUnicode_isHighSurrogate(ch))
+			goto IllegalEncoding;
+		if (q >= e)
+			goto UnexpectedEnd;
+		ch2 = (q[ihi] << 8) | q[ilo];
+		q += 2;
+		if (!alifUnicode_isLowSurrogate(ch2))
+			goto IllegalSurrogate;
+		ch = alifUnicode_joinSurrogates(ch, ch2);
+#if STRINGLIB_SIZEOF_CHAR < 4
+		/* Out-of-range */
+		goto Return;
+#else
+		* p++ = (STRINGLIB_CHAR)ch;
+#endif
+	}
+	ch = 0;
+Return:
+	*inptr = q;
+	*outpos = p - dest;
+	return ch;
+UnexpectedEnd:
+	ch = 1;
+	goto Return;
+IllegalEncoding:
+	ch = 2;
+	goto Return;
+IllegalSurrogate:
+	ch = 3;
+	goto Return;
+}
+#undef UCS2_REPEAT_MASK
+#undef FAST_CHAR_MASK
+#undef STRIPPED_MASK
+#undef SWAB
 
 
 

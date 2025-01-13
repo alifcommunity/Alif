@@ -73,12 +73,15 @@ const char* alifUStr_asUTF8AndSize(AlifObject*, AlifSizeT*); // 458
 
 AlifObject* alifUStr_decodeUTF32(const char*, AlifSizeT, const char*, AlifIntT*); // 488
 
-
+AlifObject* alifUStr_decodeUTF32Stateful(const char*, AlifSizeT, const char*, AlifIntT*, AlifSizeT*); // 497
 
 
 
 AlifObject* alifUStr_decodeUTF16(const char*, AlifSizeT, const char*, AlifIntT*); // 555
 
+
+
+AlifObject* alifUStr_decodeUTF16Stateful(const char*, AlifSizeT, const char*, AlifIntT*, AlifSizeT*); // 564
 
 
 

@@ -335,13 +335,13 @@ char* alifOS_readline(FILE* sys_stdin,
 		_alifOSReadlineFunctionPointer_ = alifOS_stdioReadline;
 	}
 
-	if (_alifOSReadlineLock_ == nullptr) {
-		//_alifOSReadlineLock_ = alifThread_allocateLock(); //* todo
-		if (_alifOSReadlineLock_ == nullptr) {
-			//alifErr_setString(_alifExcMemoryError_, "can't allocate lock");
-			return nullptr;
-		}
-	}
+	//if (_alifOSReadlineLock_ == nullptr) {  //* todo
+	//	_alifOSReadlineLock_ = alifThread_allocateLock();
+	//	if (_alifOSReadlineLock_ == nullptr) {
+	//		//alifErr_setString(_alifExcMemoryError_, "can't allocate lock");
+	//		return nullptr;
+	//	}
+	//}
 
 	_alifOSReadlineThread_ = tstate;
 	ALIF_BEGIN_ALLOW_THREADS

@@ -4,6 +4,7 @@
 #include "AlifCore_Eval.h"
 #include "AlifCore_Dict.h"
 #include "AlifCore_FreeList.h"
+#include "AlifCore_Interpreter.h"
 #include "AlifCore_List.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_SetObject.h"
@@ -222,6 +223,22 @@ static inline AlifObject* listGet_itemRef(AlifListObject* _op, AlifSizeT _i) { /
 	}
 	return item;
 }
+
+
+
+AlifObject* alifList_getItemRef(AlifObject* op, AlifSizeT i) { // 380
+	if (!ALIFLIST_CHECK(op)) {
+		//alifErr_setString(_alifExcTypeError_, "expected a list");
+		return nullptr;
+	}
+	AlifObject* item = listGet_itemRef((AlifListObject*)op, i);
+	if (item == nullptr) {
+		//alifErr_setObject(_alifExcIndexError_, &ALIF_STR(ListErr));
+		return nullptr;
+	}
+	return item;
+}
+
 
 
 static AlifIntT ins1(AlifListObject* _self,

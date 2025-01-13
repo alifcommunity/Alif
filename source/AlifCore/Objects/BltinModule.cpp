@@ -311,17 +311,43 @@ static AlifObject* builtin_printImpl(AlifObject* _module, AlifObject* _args,
 static AlifObject* builtin_inputImpl(AlifObject* module, AlifObject* prompt) { // 2151
 
 	//* alif
+	AlifObject* res{};
+
+	const char* promptstr = "";
+	char* buff = alifOS_readline(stdin, stdout, promptstr);
 
 
+	if (buff == nullptr) {
+		return ALIF_NONE;
+	}
+
+	AlifSizeT len = strlen(buff);
+	if (len == 0) {
+		res = nullptr;
+	}
+	else {
+		if (len > ALIF_SIZET_MAX) {
+			//alifErr_setString(_alifExcOverflowError_,
+			//	"input: input too long");
+			res = nullptr;
+		}
+		else {
+			len--;   /* strip trailing '\n' */
+			if (len != 0 and buff[len - 1] == '\r')
+				len--;   /* strip trailing '\r' */
+			res = alifUStr_decode(buff, len, nullptr, nullptr);
+		}
+	}
+	alifMem_dataFree(buff);
+
+	return res;
 	//* alif
 
+
 	AlifThread* thread = _alifThread_get();
-	AlifObject* fin = _alifSys_getAttr(
-		thread, &ALIF_ID(Stdin));
-	AlifObject* fout = _alifSys_getAttr(
-		thread, &ALIF_ID(Stdout));
-	AlifObject* ferr = _alifSys_getAttr(
-		thread, &ALIF_ID(Stderr));
+	AlifObject* fin = _alifSys_getAttr(thread, &ALIF_ID(Stdin));
+	AlifObject* fout = _alifSys_getAttr(thread, &ALIF_ID(Stdout));
+	AlifObject* ferr = _alifSys_getAttr(thread, &ALIF_ID(Stderr));
 	AlifObject* tmp{};
 	long fd{};
 	AlifIntT tty{};
