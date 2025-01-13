@@ -99,3 +99,33 @@ exit:
 	ALIF_XDECREF(__clinic_args);
 	return returnValue;
 }
+
+
+
+
+
+
+ // 994
+#define BUILTIN_INPUT_METHODDEF    \
+    {"ادخل", ALIF_CPPFUNCTION_CAST(builtin_input), METHOD_FASTCALL /*, builtin_input__doc__*/}
+
+static AlifObject* builtin_inputImpl(AlifObject*, AlifObject*); // 997
+
+static AlifObject* builtin_input(AlifObject* _module,
+	AlifObject* const* _args, AlifSizeT _nargs) { // 1000
+	AlifObject* return_value = nullptr;
+	AlifObject* prompt = nullptr;
+
+	if (!_ALIFARG_CHECKPOSITIONAL("ادخل", _nargs, 0, 1)) {
+		goto exit;
+	}
+	if (_nargs < 1) {
+		goto skip_optional;
+	}
+	prompt = _args[0];
+skip_optional:
+	return_value = builtin_inputImpl(_module, prompt);
+
+exit:
+	return return_value;
+}

@@ -283,6 +283,15 @@
     <ClCompile Include="..\source\AlifCore\Objects\UnionObject.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\AlifReadline.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\WinConsoleIO.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\SignalModule.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">
@@ -860,6 +869,9 @@
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Objects\clinic\ListObject.cpp.h">
       <Filter>Objects\clinic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Signal.h">
+      <Filter>Include\Core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

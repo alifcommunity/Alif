@@ -50,6 +50,12 @@ void alifBuffer_release(AlifBuffer*); // 102
 
 
 
+
+#define ALIFBUF_FULL_RO (ALIFBUF_INDIRECT | ALIFBUF_FORMAT) // 134
+
+
+
+
  // 137
 #define ALIFBUF_READ  0x100
 #define ALIFBUF_WRITE 0x200

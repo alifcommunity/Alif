@@ -563,3 +563,16 @@ wchar_t* alif_wGetCWD(wchar_t* _buf, AlifUSizeT _bufLen) { // 2620
 	return _buf;
 #endif
 }
+
+
+
+
+
+
+void* _alifGet_osfHandleNoRaise(AlifIntT fd) { // 2836
+	void* handle{};
+	ALIF_BEGIN_SUPPRESS_IPH
+	handle = (void*)_get_osfhandle(fd);
+	ALIF_END_SUPPRESS_IPH
+	return handle;
+}

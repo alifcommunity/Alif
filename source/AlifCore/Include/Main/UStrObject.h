@@ -53,6 +53,9 @@ const char* alifUStr_getDefaultEncoding(void); // 330
 
 
 
+AlifObject* alifUStr_decode(const char*, AlifSizeT, const char*, const char*); // 337
+
+
 AlifObject* alifUStr_asEncodedString(AlifObject*, const char*, const char*); // 387
 
 
@@ -68,10 +71,13 @@ const char* alifUStr_asUTF8AndSize(AlifObject*, AlifSizeT*); // 458
 
 /* --- UTF-32 Codecs --------------------------------------------------- */
 
+AlifObject* alifUStr_decodeUTF32(const char*, AlifSizeT, const char*, AlifIntT*); // 488
 
 
 
 
+
+AlifObject* alifUStr_decodeUTF16(const char*, AlifSizeT, const char*, AlifIntT*); // 555
 
 
 

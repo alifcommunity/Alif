@@ -51,6 +51,26 @@
 
 
 /* ------------------------------------- Windows ------------------------------------- */
+#include <winapifamily.h>
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
+#define MS_WINDOWS_DESKTOP
+#endif
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
+#define MS_WINDOWS_APP
+#endif
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_SYSTEM)
+#define MS_WINDOWS_SYSTEM
+#endif
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_GAMES)
+#define MS_WINDOWS_GAMES
+#endif
+
+#if defined(MS_WINDOWS_DESKTOP) || defined(MS_WINDOWS_APP) || defined(MS_WINDOWS_SYSTEM)
+#define HAVE_WINDOWS_CONSOLE_IO 1
+#endif
+
+
+
 #ifdef _WINDOWS 
 
 #define LONG_BIT    32

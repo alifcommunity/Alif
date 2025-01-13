@@ -1933,6 +1933,93 @@ AlifIntT _alif_normalizeEncoding(const char* encoding,
 }
 
 
+AlifObject* alifUStr_decode(const char* s, AlifSizeT size,
+	const char* encoding, const char* errors) { // 3566
+	AlifObject* buffer = nullptr, * unicode{};
+	AlifBuffer info{};
+	char buflower[11]{};
+
+	//if (uStCheck_encodingErrors(encoding, errors) < 0) {
+	//	return nullptr;
+	//}
+
+	if (size == 0) {
+		ALIF_RETURN_UNICODE_EMPTY;
+	}
+
+	if (encoding == nullptr) {
+		return alifUStr_decodeUTF8Stateful(s, size, errors, nullptr);
+	}
+
+	/* Shortcuts for common default encodings */
+	if (_alif_normalizeEncoding(encoding, buflower, sizeof(buflower))) {
+		char* lower = buflower;
+
+		/* Fast paths */
+		if (lower[0] == 'u' and lower[1] == 't' and lower[2] == 'f') {
+			lower += 3;
+			if (*lower == '_') {
+				/* Match "utf8" and "utf_8" */
+				lower++;
+			}
+
+			if (lower[0] == '8' && lower[1] == 0) {
+				return alifUStr_decodeUTF8Stateful(s, size, errors, nullptr);
+			}
+			else if (lower[0] == '1' and lower[1] == '6' and lower[2] == 0) {
+				return alifUStr_decodeUTF16(s, size, errors, 0);
+			}
+			else if (lower[0] == '3' and lower[1] == '2' and lower[2] == 0) {
+				return alifUStr_decodeUTF32(s, size, errors, 0);
+			}
+		}
+		else {
+			if (strcmp(lower, "ascii") == 0
+				or strcmp(lower, "us_ascii") == 0) {
+				//return alifUStr_decodeASCII(s, size, errors);
+			}
+#ifdef _WINDOWS
+			else if (strcmp(lower, "mbcs") == 0) {
+				//return alifUStr_decodeMBCS(s, size, errors);
+			}
+#endif
+			else if (strcmp(lower, "latin1") == 0
+				or strcmp(lower, "latin_1") == 0
+				or strcmp(lower, "iso_8859_1") == 0
+				or strcmp(lower, "iso8859_1") == 0) {
+				//return alifUStr_decodeLatin1(s, size, errors);
+			}
+		}
+	}
+
+	/* Decode via the codec registry */
+	buffer = nullptr;
+	if (alifBuffer_fillInfo(&info, nullptr, (void*)s, size, 1, ALIFBUF_FULL_RO) < 0)
+		goto onError;
+	buffer = alifMemoryView_fromBuffer(&info);
+	if (buffer == nullptr)
+		goto onError;
+	unicode = _alifCodec_decodeText(buffer, encoding, errors);
+	if (unicode == nullptr)
+		goto onError;
+	if (!ALIFUSTR_CHECK(unicode)) {
+		alifErr_format(_alifExcTypeError_,
+			"'%.400s' decoder returned '%.400s' instead of 'str'; "
+			"use codecs.decode() to decode to arbitrary types",
+			encoding,
+			ALIF_TYPE(unicode)->name);
+		ALIF_DECREF(unicode);
+		goto onError;
+	}
+	ALIF_DECREF(buffer);
+	return uStr_result(unicode);
+
+onError:
+	ALIF_XDECREF(buffer);
+	return nullptr;
+}
+
+
 static AlifObject* uStr_encodeLocale(AlifObject* _uStr,
 	AlifErrorHandler_ _errorHandler, AlifIntT _currentLocale) { // 3749
 	AlifSizeT wlen{};
@@ -2847,6 +2934,25 @@ error:
 	return nullptr;
 }
 
+
+
+
+
+AlifObject* alifUStr_decodeUTF32(const char* s, AlifSizeT size,
+	const char* errors, AlifIntT* byteorder) { // 5648
+	return alifUStr_decodeUTF32Stateful(s, size, errors, byteorder, nullptr);
+}
+
+
+
+
+
+
+
+AlifObject* alifUStr_decodeUTF16(const char* s, AlifSizeT size,
+	const char* errors, AlifIntT* byteorder) { // 5955
+	return alifUStr_decodeUTF16Stateful(s, size, errors, byteorder, nullptr);
+}
 
 
 

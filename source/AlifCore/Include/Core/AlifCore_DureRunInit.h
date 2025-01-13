@@ -726,10 +726,13 @@
 	INIT_ID(__typeParams__), \
 	INIT_ID(__weakRef__), \
 	INIT_ID(Builtins), \
+	INIT_ID(Encoding), \
 	INIT_ID(End), \
+	INIT_ID(Errors), \
 	INIT_ID(False), \
 	INIT_ID(خطأ), \
 	INIT_ID(File), \
+	INIT_ID(Fileno), \
 	INIT_ID(Flush), \
 	INIT_ID(HasLocation), \
 	INIT_ID(Join), \
@@ -738,6 +741,8 @@
 	INIT_ID(Mro), \
 	INIT_ID(Origin), \
 	INIT_ID(Sep), \
+	INIT_ID(Stderr), \
+	INIT_ID(Stdin), \
 	INIT_ID(Stdout), \
 	INIT_ID(Top), \
 	INIT_ID(True), \

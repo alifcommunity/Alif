@@ -28,6 +28,10 @@ public:
 	//AlifIntT configStdio{}; // نظام ألف يستخدم ترميز utf-8 بشكل إفتراضي
 	AlifIntT bufferedStdio{};
 
+#ifdef _WINDOWS
+	AlifIntT legacyWindowsStdio{};
+#endif
+
 	AlifIntT safePath{};
 
 	AlifIntT intMaxStrDigits{};
