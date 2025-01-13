@@ -312,8 +312,19 @@ static AlifObject* builtin_inputImpl(AlifObject* module, AlifObject* prompt) { /
 
 	//* alif
 	AlifObject* res{};
+	const char* promptstr{};
 
-	const char* promptstr = "";
+	if (prompt) { //* review
+		if (alifUStr_isASCII(prompt)) {
+			char* promptstr = (char*)ALIFUSTR_DATA(prompt);
+			printf("%s", promptstr);
+		}
+		else {
+			char* promptstr = (char*)alifUStr_asUTF8(prompt);
+			printf("%s", promptstr);
+		}
+	}
+
 	char* buff = alifOS_readline(stdin, stdout, promptstr);
 
 

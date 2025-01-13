@@ -51,6 +51,9 @@
 
 
 /* ------------------------------------- Windows ------------------------------------- */
+
+#ifdef _WINDOWS
+
 #include <winapifamily.h>
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 #define MS_WINDOWS_DESKTOP
@@ -71,7 +74,6 @@
 
 
 
-#ifdef _WINDOWS 
 
 #define LONG_BIT    32
 

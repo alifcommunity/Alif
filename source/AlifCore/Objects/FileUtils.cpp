@@ -566,8 +566,12 @@ wchar_t* alif_wGetCWD(wchar_t* _buf, AlifUSizeT _bufLen) { // 2620
 
 
 
+#ifndef _WINDOWS // 2717
 
 
+
+
+#else
 
 void* _alifGet_osfHandleNoRaise(AlifIntT fd) { // 2836
 	void* handle{};
@@ -576,3 +580,7 @@ void* _alifGet_osfHandleNoRaise(AlifIntT fd) { // 2836
 	ALIF_END_SUPPRESS_IPH
 	return handle;
 }
+
+
+
+#endif // 2875 
