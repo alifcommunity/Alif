@@ -61,3 +61,27 @@ static AlifObject* list_append(AlifListObject* _self, AlifObject* _object) { // 
 
 	return return_value;
 }
+
+
+
+
+
+
+
+
+
+ // 351
+#define LIST_REMOVE_METHODDEF    \
+    {"امسح", (AlifCPPFunction)list_remove, METHOD_O /*, list_remove__doc__*/},
+
+static AlifObject* list_removeImpl(AlifListObject*, AlifObject*); // 354
+
+static AlifObject* list_remove(AlifListObject* _self, AlifObject* _value) { // 357
+	AlifObject* returnValue = nullptr;
+
+	ALIF_BEGIN_CRITICAL_SECTION(_self);
+	returnValue = list_removeImpl(_self, _value);
+	ALIF_END_CRITICAL_SECTION();
+
+	return returnValue;
+}

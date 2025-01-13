@@ -387,6 +387,7 @@ AlifIntT alifUStrWriter_prepareInternal(AlifUStrWriter*, AlifSizeT, AlifUCS4);
 
 AlifIntT alifUStrWriter_prepareKindInternal(AlifUStrWriter*, AlifIntT); // 557
 
+AlifIntT alifUStrWriter_writeChar(AlifUStrWriter*, AlifUCS4); // 563
 
 AlifIntT alifUStrWriter_writeStr(AlifUStrWriter*, AlifObject*); // 570
 

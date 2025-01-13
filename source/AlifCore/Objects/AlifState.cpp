@@ -397,6 +397,24 @@ AlifThread* alifThreadState_new(AlifInterpreter* _interpreter) { // 1622
 }
 
 
+AlifObject* _alifThreadState_getDict(AlifThread* _thread) { // 1941
+	if (_thread->dict == nullptr) {
+		_thread->dict = alifDict_new();
+		if (_thread->dict == nullptr) {
+			//_alifErr_clear(_thread);
+		}
+	}
+	return _thread->dict;
+}
+
+AlifObject* alifThreadState_getDict() { // 1955
+	AlifThread* thread = current_fastGet();
+	if (thread == nullptr) {
+		return nullptr;
+	}
+	return _alifThreadState_getDict(thread);
+}
+
 
 static inline void thread_activate(AlifThread* _thread) { // 1998
 	if (!_thread->status.boundGILState) {

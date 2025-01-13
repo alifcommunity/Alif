@@ -87,7 +87,7 @@ static inline AlifInterpreter* _alifInterpreter_get() { // 207
 AlifThread* alifThreadState_new(AlifInterpreter*); // 219
 extern void alifThread_bind(AlifThread*); // 222
 
-
+AlifObject* _alifThreadState_getDict(AlifThread*); // 231
 
 extern AlifIntT alifInterpreter_enable(AlifDureRun*); // 245
 

@@ -47,6 +47,7 @@ public:
     class {
 	public:
         STRUCT_FOR_ID(CANCELLED)
+        STRUCT_FOR_ID(AlifRepr)
         STRUCT_FOR_ID(__abstractMethods__)
         STRUCT_FOR_ID(__annotate__)
         STRUCT_FOR_ID(__bases__)

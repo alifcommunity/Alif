@@ -295,6 +295,68 @@ static void list_dealloc(AlifObject* _self) { // 497
 	ALIF_TRASHCAN_END
 }
 
+
+static AlifObject* list_reprImpl(AlifListObject* v) { // 524
+	AlifObject* s{};
+	AlifUStrWriter writer{};
+	AlifSizeT i = alif_reprEnter((AlifObject*)v);
+	if (i != 0) {
+		return i > 0 ? alifUStr_fromString("[...]") : nullptr;
+	}
+
+	alifUStrWriter_init(&writer);
+	writer.overAllocate = 1;
+	/* "[" + "1" + ", 2" * (len - 1) + "]" */
+	writer.minLength = 1 + 1 + (2 + 1) * (ALIF_SIZE(v) - 1) + 1;
+
+	if (alifUStrWriter_writeChar(&writer, '[') < 0)
+		goto error;
+
+	/* Do repr() on each element.  Note that this may mutate the list,
+	   so must refetch the list size on each iteration. */
+	for (i = 0; i < ALIF_SIZE(v); ++i) {
+		if (i > 0) {
+			if (alifUStrWriter_writeASCIIString(&writer, ", ", 2) < 0)
+				goto error;
+		}
+
+		s = alifObject_repr(v->item[i]);
+		if (s == nullptr)
+			goto error;
+
+		if (alifUStrWriter_writeStr(&writer, s) < 0) {
+			ALIF_DECREF(s);
+			goto error;
+		}
+		ALIF_DECREF(s);
+	}
+
+	writer.overAllocate = 0;
+	if (alifUStrWriter_writeChar(&writer, ']') < 0)
+		goto error;
+
+	alif_reprLeave((AlifObject*)v);
+	return alifUStrWriter_finish(&writer);
+
+error:
+	alifUStrWriter_dealloc(&writer);
+	alif_reprLeave((AlifObject*)v);
+	return nullptr;
+}
+
+static AlifObject* list_repr(AlifObject* self) { // 574
+	if (ALIFLIST_GET_SIZE(self) == 0) {
+		return alifUStr_fromString("[]");
+	}
+	AlifListObject* v = (AlifListObject*)self;
+	AlifObject* ret = nullptr;
+	ALIF_BEGIN_CRITICAL_SECTION(v);
+	ret = list_reprImpl(v);
+	ALIF_END_CRITICAL_SECTION();
+	return ret;
+}
+
+
 static AlifSizeT list_length(AlifObject* _a) { // 588
 	return ALIFLIST_GET_SIZE(_a);
 }
@@ -2032,12 +2094,34 @@ AlifObject* _alifList_fromStackRefSteal(const AlifStackRef* _src, AlifSizeT _n) 
 }
 
 
+static AlifObject* list_removeImpl(AlifListObject* _self, AlifObject* _value) { // 3259
+	AlifSizeT i{};
+
+	for (i = 0; i < ALIF_SIZE(_self); i++) {
+		AlifObject* obj = _self->item[i];
+		ALIF_INCREF(obj);
+		AlifIntT cmp = alifObject_richCompareBool(obj, _value, ALIF_EQ);
+		ALIF_DECREF(obj);
+		if (cmp > 0) {
+			if (listAssSlice_lockHeld(_self, i, i + 1, nullptr) == 0)
+				return ALIF_NONE;
+			return nullptr;
+		}
+		else if (cmp < 0)
+			return nullptr;
+	}
+	//alifErr_setString(_alifExcValueError_, "list.remove(x): x not in list");
+	return nullptr;
+}
+
+
+
 static AlifMethodDef _listMethods_[] = { // 3445
 	LIST_APPEND_METHODDEF
 	LIST_INSERT_METHODDEF
 	//LIST_EXTEND_METHODDEF
 	//LIST_POP_METHODDEF
-	//LIST_REMOVE_METHODDEF
+	LIST_REMOVE_METHODDEF
 	//LIST_INDEX_METHODDEF
 	//LIST_COUNT_METHODDEF
 	//LIST_REVERSE_METHODDEF
@@ -2065,6 +2149,7 @@ AlifTypeObject _alifListType_ = { // 3737
 	.name = "مصفوفة",
 	.basicSize = sizeof(AlifListObject),
 	.dealloc = list_dealloc,
+	.repr = list_repr,
 	.asSequence = &_listAsSequence_,
 	.getAttro = alifObject_genericGetAttr,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |

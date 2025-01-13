@@ -4966,6 +4966,11 @@ static inline AlifIntT alifUStrWriter_writeCharInline(AlifUStrWriter* _writer, A
 	return 0;
 }
 
+AlifIntT alifUStrWriter_writeChar(AlifUStrWriter* _writer,
+	AlifUCS4 _ch) { // 13558
+	return alifUStrWriter_writeCharInline(_writer, _ch);
+}
+
 
 AlifIntT alifUStrWriter_writeStr(AlifUStrWriter* _writer, AlifObject* _str) { // 13576
 	AlifUCS4 maxChar{};

@@ -16,7 +16,7 @@ AlifInterpreter* alifInterpreter_get(); // 26
 
 AlifThread* alifThread_get(); // 60
 
-
+AlifObject* alifThreadState_getDict(); // 66
 
 
 
@@ -84,7 +84,7 @@ public:
 
 	AlifErrStackItem* excInfo{};
 
-
+	AlifObject* dict{};
 
 	AlifUSizeT threadID{};
 

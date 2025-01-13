@@ -236,6 +236,12 @@ AlifIntT alifCallable_check(AlifObject*); // 451
 void alifObject_clearWeakRefs(AlifObject*); // 452
 
 
+
+AlifIntT alif_reprEnter(AlifObject*); // 462
+void alif_reprLeave(AlifObject*); // 463
+
+
+
  // 466
 #define ALIF_PRINT_RAW    1
 

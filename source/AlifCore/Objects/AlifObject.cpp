@@ -1138,6 +1138,65 @@ void alifObject_setDeferredRefcount(AlifObject* _op) { // 2472
 }
 
 
+AlifIntT alif_reprEnter(AlifObject* _obj) { // 2690
+	AlifObject* dict{};
+	AlifObject* list{};
+	AlifSizeT i{};
+
+	dict = alifThreadState_getDict();
+	if (dict == nullptr)
+		return 0;
+	list = alifDict_getItemWithError(dict, &ALIF_ID(AlifRepr));
+	if (list == nullptr) {
+		if (alifErr_occurred()) {
+			return -1;
+		}
+		list = alifList_new(0);
+		if (list == nullptr)
+			return -1;
+		if (alifDict_setItem(dict, &ALIF_ID(AlifRepr), list) < 0)
+			return -1;
+		ALIF_DECREF(list);
+	}
+	i = ALIFLIST_GET_SIZE(list);
+	while (--i >= 0) {
+		if (ALIFLIST_GET_ITEM(list, i) == _obj)
+			return 1;
+	}
+	if (alifList_append(list, _obj) < 0)
+		return -1;
+	return 0;
+}
+
+void alif_reprLeave(AlifObject* _obj) { // 2724
+	AlifObject* dict{};
+	AlifObject* list{};
+	AlifSizeT i{};
+
+	//AlifObject* exc = alifErr_getRaisedException();
+
+	dict = alifThreadState_getDict();
+	if (dict == nullptr)
+		goto finally;
+
+	list = alifDict_getItemWithError(dict, &ALIF_ID(AlifRepr));
+	if (list == nullptr or !ALIFLIST_CHECK(list))
+		goto finally;
+
+	i = ALIFLIST_GET_SIZE(list);
+	/* Count backwards because we always expect obj to be list[-1] */
+	while (--i >= 0) {
+		if (ALIFLIST_GET_ITEM(list, i) == _obj) {
+			alifList_setSlice(list, i, i + 1, nullptr);
+			break;
+		}
+	}
+
+finally:
+	//alifErr_setRaisedException(exc);
+	return; //* delete
+}
+
 
 void _alifTrashThread_depositObject(AlifThread* _tstate, AlifObject* _op) { // 2761
 	_op->threadID = (uintptr_t)_tstate->deleteLater;
