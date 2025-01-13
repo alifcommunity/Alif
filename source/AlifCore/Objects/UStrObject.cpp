@@ -2255,95 +2255,95 @@ const char* alifUStr_getDefaultEncoding(void) { // 4277
 }
 
 
-//static AlifIntT unicodeDecode_callErrorHandlerWriter(
-//	const char* errors, AlifObject** errorHandler,
-//	const char* encoding, const char* reason,
-//	const char** input, const char** inend, AlifSizeT* startinpos,
-//	AlifSizeT* endinpos, AlifObject** exceptionObject, const char** inptr,
-//	AlifUStrWriter* writer) { // 4436
-//	static const char* argparse = "Un;decoding error handler must return (str, AlifIntT) tuple";
-//
-//	AlifObject* restuple = nullptr;
-//	AlifObject* repunicode = nullptr;
-//	AlifSizeT insize{};
-//	AlifSizeT newpos{};
-//	AlifSizeT replen{};
-//	AlifSizeT remain{};
-//	AlifObject* inputobj = nullptr;
-//	AlifIntT need_to_grow = 0;
-//	const char* new_inptr{};
-//
-//	if (*errorHandler == nullptr) {
-//		*errorHandler = alifCodec_lookupError(errors);
-//		if (*errorHandler == nullptr)
-//			goto onError;
-//	}
-//
-//	make_decodeException(exceptionObject,
-//		encoding,
-//		*input, *inend - *input,
-//		*startinpos, *endinpos,
-//		reason);
-//	if (*exceptionObject == nullptr)
-//		goto onError;
-//
-//	restuple = alifObject_callOneArg(*errorHandler, *exceptionObject);
-//	if (restuple == nullptr)
-//		goto onError;
-//	if (!ALIFTUPLE_CHECK(restuple)) {
-//		//alifErr_setString(alifExcTypeError, &argparse[3]);
-//		goto onError;
-//	}
-//	if (!alifArg_parseTuple(restuple, argparse, &repunicode, &newpos))
-//		goto onError;
-//
-//	inputobj = alifUStrDecodeError_getObject(*exceptionObject);
-//	if (!inputobj)
-//		goto onError;
-//	remain = *inend - *input - *endinpos;
-//	*input = ALIFBYTES_AS_STRING(inputobj);
-//	insize = ALIFBYTES_GET_SIZE(inputobj);
-//	*inend = *input + insize;
-//
-//	ALIF_DECREF(inputobj);
-//
-//	if (newpos < 0)
-//		newpos = insize + newpos;
-//	if (newpos<0 or newpos>insize) {
-//		//alifErr_format(alifExcIndexError, "position %zd from error handler out of bounds", newpos);
-//		goto onError;
-//	}
-//
-//	replen = ALIFUSTR_GET_LENGTH(repunicode);
-//	if (replen > 1) {
-//		writer->minLength += replen - 1;
-//		need_to_grow = 1;
-//	}
-//	new_inptr = *input + newpos;
-//	if (*inend - new_inptr > remain) {
-//		writer->minLength += *inend - new_inptr - remain;
-//		need_to_grow = 1;
-//	}
-//	if (need_to_grow) {
-//		writer->overAllocate = 1;
-//		if (ALIFUSTRWRITER_PREPARE(writer, writer->minLength - writer->pos,
-//			ALIFUSTR_MAX_CHAR_VALUE(repunicode)) == -1)
-//			goto onError;
-//	}
-//	if (alifUStrWriter_writeStr(writer, repunicode) == -1)
-//		goto onError;
-//
-//	*endinpos = newpos;
-//	*inptr = new_inptr;
-//
-//	/* we made it! */
-//	ALIF_DECREF(restuple);
-//	return 0;
-//
-//onError:
-//	ALIF_XDECREF(restuple);
-//	return -1;
-//}
+static AlifIntT uStrDecode_callErrorHandlerWriter(
+	const char* _errors, AlifObject** _errorHandler,
+	const char* _encoding, const char* _reason,
+	const char** _input, const char** _inend, AlifSizeT* _startinpos,
+	AlifSizeT* _endinpos, AlifObject** _exceptionObject, const char** _inptr,
+	AlifUStrWriter* _writer) { // 4436
+	static const char* argparse = "Un;decoding error handler must return (str, AlifIntT) tuple";
+
+	AlifObject* resTuple = nullptr;
+	AlifObject* repUnicode = nullptr;
+	AlifSizeT inSize{};
+	AlifSizeT newPos{};
+	AlifSizeT replen{};
+	AlifSizeT remain{};
+	AlifObject* inputObj = nullptr;
+	AlifIntT needToGrow = 0;
+	const char* newInptr{};
+
+	if (*_errorHandler == nullptr) {
+		*_errorHandler = alifCodec_lookupError(_errors);
+		if (*_errorHandler == nullptr)
+			goto onError;
+	}
+
+	make_decodeException(_exceptionObject,
+		_encoding,
+		*_input, *_inend - *_input,
+		*_startinpos, *_endinpos,
+		_reason);
+	if (*_exceptionObject == nullptr)
+		goto onError;
+
+	resTuple = alifObject_callOneArg(*_errorHandler, *_exceptionObject);
+	if (resTuple == nullptr)
+		goto onError;
+	if (!ALIFTUPLE_CHECK(resTuple)) {
+		//alifErr_setString(alifExcTypeError, &argparse[3]);
+		goto onError;
+	}
+	if (!alifArg_parseTuple(resTuple, argparse, &repUnicode, &newPos))
+		goto onError;
+
+	inputObj = alifUStrDecodeError_getObject(*_exceptionObject);
+	if (!inputObj)
+		goto onError;
+	remain = *_inend - *_input - *_endinpos;
+	*_input = ALIFBYTES_AS_STRING(inputObj);
+	inSize = ALIFBYTES_GET_SIZE(inputObj);
+	*_inend = *_input + inSize;
+
+	ALIF_DECREF(inputObj);
+
+	if (newPos < 0)
+		newPos = inSize + newPos;
+	if (newPos<0 or newPos>inSize) {
+		//alifErr_format(alifExcIndexError, "position %zd from error handler out of bounds", newpos);
+		goto onError;
+	}
+
+	replen = ALIFUSTR_GET_LENGTH(repUnicode);
+	if (replen > 1) {
+		_writer->minLength += replen - 1;
+		needToGrow = 1;
+	}
+	newInptr = *_input + newPos;
+	if (*_inend - newInptr > remain) {
+		_writer->minLength += *_inend - newInptr - remain;
+		needToGrow = 1;
+	}
+	if (needToGrow) {
+		_writer->overAllocate = 1;
+		if (ALIFUSTRWRITER_PREPARE(_writer, _writer->minLength - _writer->pos,
+			ALIFUSTR_MAX_CHAR_VALUE(repUnicode)) == -1)
+			goto onError;
+	}
+	if (alifUStrWriter_writeStr(_writer, repUnicode) == -1)
+		goto onError;
+
+	*_endinpos = newPos;
+	*_inptr = newInptr;
+
+	/* we made it! */
+	ALIF_DECREF(resTuple);
+	return 0;
+
+onError:
+	ALIF_XDECREF(resTuple);
+	return -1;
+}
 
 
 
@@ -2943,6 +2943,140 @@ AlifObject* alifUStr_decodeUTF32(const char* s, AlifSizeT size,
 	return alifUStr_decodeUTF32Stateful(s, size, errors, byteorder, nullptr);
 }
 
+AlifObject* alifUStr_decodeUTF32Stateful(const char* _s,
+	AlifSizeT _size,
+	const char* _errors,
+	AlifIntT* _byteOrder,
+	AlifSizeT* _consumed) { // 4658
+	const char* starts = _s;
+	AlifSizeT startInPos{};
+	AlifSizeT endInPos{};
+	AlifUStrWriter writer;
+	const unsigned char* q_, * e;
+	AlifIntT le_, bo_ = 0;       /* assume native ordering by default */
+	const char* encoding{};
+	const char* errmsg = "";
+	AlifObject* errorHandler = nullptr;
+	AlifObject* exc_ = nullptr;
+
+	q_ = (const unsigned char*)_s;
+	e = q_ + _size;
+
+	if (_byteOrder)
+		bo_ = *_byteOrder;
+	if (bo_ == 0 and _size >= 4) {
+		AlifUCS4 bom_ = ((unsigned int)q_[3] << 24) | (q_[2] << 16) | (q_[1] << 8) | q_[0];
+		if (bom_ == 0x0000FEFF) {
+			bo_ = -1;
+			q_ += 4;
+		}
+		else if (bom_ == 0xFFFE0000) {
+			bo_ = 1;
+			q_ += 4;
+		}
+		if (_byteOrder)
+			*_byteOrder = bo_;
+	}
+
+	if (q_ == e) {
+		if (_consumed)
+			*_consumed = _size;
+			//ALIF_RETURN_UNICODE_EMPTY();
+	}
+
+#ifdef WORDS_BIGENDIAN
+	le_ = bo_ < 0;
+#else
+	le_ = bo_ <= 0;
+#endif
+	encoding = le_ ? "utf-32-le" : "utf-32-be";
+
+	alifUStrWriter_init(&writer);
+	writer.minLength = (e - q_ + 3) / 4;
+	if (ALIFUSTRWRITER_PREPARE(&writer, writer.minLength, 127) == -1)
+		goto onError;
+
+	while (1) {
+		AlifUCS4 ch_ = 0;
+		AlifUCS4 maxCh = ALIFUSTR_MAX_CHAR_VALUE(writer.buffer);
+
+		if (e - q_ >= 4) {
+			AlifIntT kind = writer.kind;
+			void* data = writer.data;
+			const unsigned char* last = e - 4;
+			AlifSizeT pos_ = writer.pos;
+			if (le_) {
+				do {
+					ch_ = ((unsigned int)q_[3] << 24) | (q_[2] << 16) | (q_[1] << 8) | q_[0];
+					if (ch_ > maxCh)
+						break;
+					if (kind != AlifUStrKind_::AlifUStr_1Byte_Kind and
+						alifUnicode_isSurrogate(ch_))
+						break;
+					ALIFUSTR_WRITE(kind, data, pos_++, ch_);
+					q_ += 4;
+				} while (q_ <= last);
+			}
+			else {
+				do {
+					ch_ = ((unsigned int)q_[0] << 24) | (q_[1] << 16) | (q_[2] << 8) | q_[3];
+					if (ch_ > maxCh)
+						break;
+					if (kind != AlifUStrKind_::AlifUStr_1Byte_Kind and
+						alifUnicode_isSurrogate(ch_))
+						break;
+					ALIFUSTR_WRITE(kind, data, pos_++, ch_);
+					q_ += 4;
+				} while (q_ <= last);
+			}
+			writer.pos = pos_;
+		}
+
+		if (alifUnicode_isSurrogate(ch_)) {
+			errmsg = "code point in surrogate code point range(0xd800, 0xe000)";
+			startInPos = ((const char*)q_) - starts;
+			endInPos = startInPos + 4;
+		}
+		else if (ch_ <= maxCh) {
+			if (q_ == e or _consumed)
+				break;
+			errmsg = "truncated data";
+			startInPos = ((const char*)q_) - starts;
+			endInPos = ((const char*)e) - starts;
+		}
+		else {
+			if (ch_ < 0x110000) {
+				if (alifUStrWriter_writeCharInline(&writer, ch_) < 0)
+					goto onError;
+				q_ += 4;
+				continue;
+			}
+			errmsg = "code point not in range(0x110000)";
+			startInPos = ((const char*)q_) - starts;
+			endInPos = startInPos + 4;
+		}
+
+		if (uStrDecode_callErrorHandlerWriter(
+			_errors, &errorHandler,
+			encoding, errmsg,
+			&starts, (const char**)&e, &startInPos, &endInPos, &exc_, (const char**)&q_,
+			&writer))
+			goto onError;
+	}
+
+	if (_consumed)
+		*_consumed = (const char*)q_ - starts;
+
+	ALIF_XDECREF(errorHandler);
+	ALIF_XDECREF(exc_);
+	return alifUStrWriter_finish(&writer);
+
+onError:
+	alifUStrWriter_dealloc(&writer);
+	ALIF_XDECREF(errorHandler);
+	ALIF_XDECREF(exc_);
+	return NULL;
+}
 
 
 
