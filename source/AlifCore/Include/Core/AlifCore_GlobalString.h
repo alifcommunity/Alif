@@ -92,8 +92,7 @@ public:
      	STRUCT_FOR_ID(Encoding)
      	STRUCT_FOR_ID(End)
      	STRUCT_FOR_ID(Errors)
-     	STRUCT_FOR_ID(False)
-     	STRUCT_FOR_ID(خطأ) //* alif
+     	STRUCT_FOR_UID(False, خطأ) //* alif
      	STRUCT_FOR_ID(File)
      	STRUCT_FOR_ID(Fileno)
      	STRUCT_FOR_ID(Flush)
@@ -108,8 +107,7 @@ public:
      	STRUCT_FOR_ID(Stdin)
      	STRUCT_FOR_ID(Stdout)
      	STRUCT_FOR_ID(Top)
-     	STRUCT_FOR_ID(True)
-     	STRUCT_FOR_ID(صح) //* alif
+     	STRUCT_FOR_UID(True, صح) //* alif
      	STRUCT_FOR_ID(Write)
     } identifiers;
 

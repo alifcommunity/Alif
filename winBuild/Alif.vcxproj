@@ -145,7 +145,8 @@
       <AdditionalDependencies>pathcch.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y /S "$(SolutionDir)$(Platform)\$(Configuration)\alif.exe" "$(SolutionDir)..\test\"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

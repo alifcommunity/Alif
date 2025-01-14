@@ -591,7 +591,7 @@ static AlifIntT listAssSlice_lockHeld(AlifListObject* _a, AlifSizeT _iLow,
 	s_ = norig * sizeof(AlifObject*);
 	if (s_) {
 		if (s_ > sizeof(recycleOnStack)) {
-			recycle = (AlifObject**)alifMem_objAlloc(s_);
+			recycle = (AlifObject**)alifMem_dataAlloc(s_);
 			if (recycle == nullptr) {
 				//alifErr_noMemory();
 				goto Error;
@@ -628,7 +628,7 @@ static AlifIntT listAssSlice_lockHeld(AlifListObject* _a, AlifSizeT _iLow,
 	result = 0;
 Error:
 	if (recycle != recycleOnStack)
-		alifMem_objFree(recycle);
+		alifMem_dataFree(recycle);
 	ALIF_XDECREF(vAsSF);
 	return result;
 #undef b

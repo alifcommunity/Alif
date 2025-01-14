@@ -730,8 +730,7 @@
 	INIT_ID(Encoding), \
 	INIT_ID(End), \
 	INIT_ID(Errors), \
-	INIT_ID(False), \
-	INIT_ID(خطأ), \
+	INIT_UID(False, خطأ), \
 	INIT_ID(File), \
 	INIT_ID(Fileno), \
 	INIT_ID(Flush), \
@@ -746,8 +745,7 @@
 	INIT_ID(Stdin), \
 	INIT_ID(Stdout), \
 	INIT_ID(Top), \
-	INIT_ID(True), \
-	INIT_ID(صح), \
+	INIT_UID(True, صح), \
 	INIT_ID(Write), \
 }
 
