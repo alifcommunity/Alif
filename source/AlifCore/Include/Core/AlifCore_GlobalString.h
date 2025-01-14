@@ -21,7 +21,7 @@
     class {							\
 	public:							\
         AlifASCIIObject ascii{};	\
-        const char16_t data[sizeof(u ## _litr) / 2]; \
+        const char16_t data[sizeof(u ## _litr) / 2]{}; \
     }
 #define STRUCT_FOR_UID(_name, _litr) \
     STRUCT_FOR_USTR(#_litr) alif ## _name;
@@ -127,8 +127,6 @@ public:
 
 #define ALIF_ID(_name) \
      (ALIF_SINGLETON(strings.identifiers.alif ## _name.ascii.objBase))
-#define ALIF_UID(_name) \
-     (ALIF_SINGLETON(strings.identifiers.alif ## _name.unicode.base.base.objBase))
 #define ALIF_STR(_name) \
      (ALIF_SINGLETON(strings.literals.alif ## _name.ascii.objBase))
 #define ALIF_LATIN1_CHR(_ch) \
