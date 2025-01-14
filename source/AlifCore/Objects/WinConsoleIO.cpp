@@ -6,7 +6,7 @@
 
 
 
-
+#ifdef HAVE_WINDOWS_CONSOLE_IO // 14
 
 
 
@@ -27,3 +27,12 @@ char _get_consoleType(HANDLE handle) { // 51
 		return 'r';
 	return 'w';
 }
+
+
+
+
+
+
+
+
+#endif /* HAVE_WINDOWS_CONSOLE_IO */
