@@ -480,6 +480,17 @@ dispatch_opcode :
 				stackPointer[-1] = res;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(UNARY_NOT) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef value{};
+				AlifStackRef res{};
+				value = stackPointer[-1];
+				ALIFSTACKREF_IS(value, ALIFSTACKREF_FALSE)
+					? res = ALIFSTACKREF_TRUE : res = ALIFSTACKREF_FALSE;
+				stackPointer[-1] = res;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(BINARY_OP) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 2;
@@ -903,6 +914,17 @@ dispatch_opcode :
 				}
 				stackPointer[-2] = res;
 				stackPointer += -1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
+			TARGET(COPY) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef bottom{};
+				AlifStackRef top{};
+				bottom = stackPointer[-1 - (oparg - 1)];
+				top = alifStackRef_dup(bottom);
+				stackPointer[0] = top;
+				stackPointer += 1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
 			TARGET(DELETE_NAME) {
