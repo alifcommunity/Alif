@@ -3319,7 +3319,7 @@ static AlifIntT slot_tpInit(AlifObject* _self,
 	AlifThread* tstate = _alifThread_get();
 
 	AlifIntT unbound{};
-	AlifObject* meth = lookup_method(_self, &ALIF_ID(__init__), &unbound);
+	AlifObject* meth = lookup_method(_self, &ALIF_STR(__init__), &unbound);
 	if (meth == nullptr) {
 		return -1;
 	}
@@ -3364,7 +3364,7 @@ static AlifObject* slot_tpNew(AlifTypeObject* _type,
  // 10381
 #define FLSLOT(_name, _slot, _function, _wrapper, _doc, _flags) \
     {.name = #_name, .offset = offsetof(AlifTypeObject, _slot), .function = (void *)(_function), .wrapper = _wrapper, \
-     .doc = nullptr, .flags = _flags, .nameStrObj = &ALIF_ID(_name) }
+     .doc = nullptr, .flags = _flags, .nameStrObj = &ALIF_STR(_name) }
 
 static AlifTypeSlotDef _slotDefs_[] = { // 10416
 	FLSLOT(__init__, init, slot_tpInit, (WrapperFunc)(void(*)(void))wrap_init,

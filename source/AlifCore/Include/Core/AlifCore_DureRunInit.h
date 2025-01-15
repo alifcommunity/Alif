@@ -109,8 +109,10 @@
 
 
 
- //* alif //
-// هذا القسم خاص بالنصوص ذات الترميز الحرفي الثنائي فقط "الاحرف العربية" 
+//* alif //
+// هذا القسم خاص بالنصوص ذات الترميز الحرفي الثنائي
+// فقط "الاحرف العربية" والذي يحتاج الى عملية بحث عنه في القاموس
+// ولكن لا يمكن طباعته قبل تحويله من 16 الى 8
 // طول النص يساوي عدد احرف الكلمة
 // النوع يجب ان يكون 2 لأنه يتم البحث عن الاحرف ك 2 بايت لكل حرف بغض النظر عن النظام المستخدم
 #define ALIFUSTR_USTR_BASE_INIT(_litr) \
@@ -126,18 +128,13 @@
         }, \
     }
 #define ALIFUSTROBJECT_INIT(_litr)								\
-	{																		\
+	{															\
 		.ascii = ALIFUSTR_USTR_BASE_INIT(_litr),				\
-		.data = u ## _litr													\
+		.data = u ## _litr										\
 	}
-#define INIT_UID(_name, _litr) \
-    .alif ## _name = ALIFUSTROBJECT_INIT(#_litr)
-
-/* -------------------------------------------------------------------- */
-
-#define INIT_MBID(_name, _litr) \
-    .alif ## _name = ALIFASCIIOBJECT_INIT(#_litr)
-// alif //
+#define INIT_USTR(_name, _litr) \
+    .alif ## _name = ALIFUSTROBJECT_INIT(_litr)
+//* alif //
 
 
 
@@ -686,6 +683,9 @@
     INIT_STR(GenericBase, ".generic_base"),	\
     INIT_STR(KWDefaults, ".kwdefaults"),	\
     INIT_STR(TypeParams, ".type_params"),	\
+    INIT_STR(True, "صح"), /* //* alif */	\
+    INIT_STR(False, "خطأ"), /* //* alif */	\
+    INIT_USTR(__init__, "_تهيئة_"), /* //* alif */	\
 }
 
 #define ALIF_STR_IDENTIFIERS_INIT { \
@@ -710,7 +710,6 @@
 	INIT_ID(__format__), \
 	INIT_ID(__getAttr__), \
 	INIT_ID(__hash__), \
-	INIT_UID(__init__, _تهيئة_), /* //* alif */ \
 	INIT_ID(__initSubclass__), \
 	INIT_ID(__lengthHint__), \
 	INIT_ID(__loader__), \
@@ -735,7 +734,6 @@
 	INIT_ID(Encoding), \
 	INIT_ID(End), \
 	INIT_ID(Errors), \
-	INIT_MBID(False, خطأ), /* //* alif */ \
 	INIT_ID(File), \
 	INIT_ID(Fileno), \
 	INIT_ID(Flush), \
@@ -750,7 +748,6 @@
 	INIT_ID(Stdin), \
 	INIT_ID(Stdout), \
 	INIT_ID(Top), \
-	INIT_MBID(True, صح), /* //* alif */	\
 	INIT_ID(Write), \
 }
 

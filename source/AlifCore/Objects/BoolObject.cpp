@@ -8,7 +8,7 @@
 
 
 static AlifObject* bool_repr(AlifObject* _self) { // 13
-	return _self == ALIF_TRUE ? &ALIF_ID(True) : &ALIF_ID(False);
+	return _self == ALIF_TRUE ? &ALIF_STR(True) : &ALIF_STR(False);
 }
 
 
