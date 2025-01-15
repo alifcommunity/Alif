@@ -13,7 +13,7 @@
     STRUCT_FOR_ASCII_STR(#_name) alif ## _name;
 
 
-// alif //
+//* alif
 // هذا القسم خاص بالنصوص ذات الترميز الحرفي الثنائي فقط "الاحرف العربية"
 // طول الكلمة يساوي عدد الاحرف زائد 1 لقاطع النص
 // نوع البيانات يجب ان يكون const char16_t لأنه يتم البحث عن الاحرف ك 2 بايت لكل حرف بغض النظر عن النظام المستخدم
@@ -23,9 +23,15 @@
         AlifASCIIObject ascii{};	\
         const char16_t data[sizeof(u ## _litr) / 2]{}; \
     }
+
 #define STRUCT_FOR_UID(_name, _litr) \
     STRUCT_FOR_USTR(#_litr) alif ## _name;
-// alif //
+
+/* ------------------------------------------------------- */
+
+#define STRUCT_FOR_MBID(_name, _litr) \
+    STRUCT_FOR_ASCII_STR(#_litr) alif ## _name;
+//* alif
 
 
 
@@ -67,7 +73,7 @@ public:
 		STRUCT_FOR_ID(__format__)
 		STRUCT_FOR_ID(__getAttr__)
 		STRUCT_FOR_ID(__hash__)
-		STRUCT_FOR_UID(__init__, _تهيئة_)
+		STRUCT_FOR_UID(__init__, _تهيئة_) // تستخدم هذه الماكرو ليتم البحث عن كلمة _تهيئة_ في القاموس  //* alif 
 		STRUCT_FOR_ID(__initSubclass__)
 		STRUCT_FOR_ID(__lengthHint__)
 		STRUCT_FOR_ID(__loader__)
@@ -92,7 +98,7 @@ public:
      	STRUCT_FOR_ID(Encoding)
      	STRUCT_FOR_ID(End)
      	STRUCT_FOR_ID(Errors)
-     	STRUCT_FOR_UID(False, خطأ) //* alif
+     	STRUCT_FOR_MBID(False, خطأ) // تستخدم هذه الماكرو لطباعة الكلمة العربية بشكل صحيح //* alif
      	STRUCT_FOR_ID(File)
      	STRUCT_FOR_ID(Fileno)
      	STRUCT_FOR_ID(Flush)
@@ -107,7 +113,7 @@ public:
      	STRUCT_FOR_ID(Stdin)
      	STRUCT_FOR_ID(Stdout)
      	STRUCT_FOR_ID(Top)
-     	STRUCT_FOR_UID(True, صح) //* alif
+     	STRUCT_FOR_MBID(True, صح) //* alif
      	STRUCT_FOR_ID(Write)
     } identifiers;
 

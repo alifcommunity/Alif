@@ -94,7 +94,7 @@
 #define ALIFUSTR_LATIN1_INIT(_litr, UTF8) \
     { \
         .latin1 = { \
-            .base = ALIFUSTR_ASCII_BASE_INIT((_litr), 0), \
+            .base = ALIFUSTR_ASCII_BASE_INIT(_litr, 0), \
             .utf8Length = sizeof(UTF8) - 1, \
             .utf8 = (char*)(UTF8), /* <<--- casted to (char*) //* alif */ \
         }, \
@@ -110,7 +110,7 @@
 
 
  //* alif //
-// هذا القسم خاص بالنصوص ذات الترميز الحرفي الثنائي فقط "الاحرف العربية"
+// هذا القسم خاص بالنصوص ذات الترميز الحرفي الثنائي فقط "الاحرف العربية" 
 // طول النص يساوي عدد احرف الكلمة
 // النوع يجب ان يكون 2 لأنه يتم البحث عن الاحرف ك 2 بايت لكل حرف بغض النظر عن النظام المستخدم
 #define ALIFUSTR_USTR_BASE_INIT(_litr) \
@@ -132,6 +132,11 @@
 	}
 #define INIT_UID(_name, _litr) \
     .alif ## _name = ALIFUSTROBJECT_INIT(#_litr)
+
+/* -------------------------------------------------------------------- */
+
+#define INIT_MBID(_name, _litr) \
+    .alif ## _name = ALIFASCIIOBJECT_INIT(#_litr)
 // alif //
 
 
@@ -705,7 +710,7 @@
 	INIT_ID(__format__), \
 	INIT_ID(__getAttr__), \
 	INIT_ID(__hash__), \
-	INIT_UID(__init__, _تهيئة_), \
+	INIT_UID(__init__, _تهيئة_), /* //* alif */ \
 	INIT_ID(__initSubclass__), \
 	INIT_ID(__lengthHint__), \
 	INIT_ID(__loader__), \
@@ -730,7 +735,7 @@
 	INIT_ID(Encoding), \
 	INIT_ID(End), \
 	INIT_ID(Errors), \
-	INIT_UID(False, خطأ), \
+	INIT_MBID(False, خطأ), /* //* alif */ \
 	INIT_ID(File), \
 	INIT_ID(Fileno), \
 	INIT_ID(Flush), \
@@ -745,7 +750,7 @@
 	INIT_ID(Stdin), \
 	INIT_ID(Stdout), \
 	INIT_ID(Top), \
-	INIT_UID(True, صح), \
+	INIT_MBID(True, صح), /* //* alif */	\
 	INIT_ID(Write), \
 }
 
