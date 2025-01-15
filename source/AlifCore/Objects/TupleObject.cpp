@@ -127,7 +127,75 @@ static void tuple_dealloc(AlifTupleObject* _op) { // 184
 }
 
 
+static AlifObject* tuple_repr(AlifTupleObject* v) { // 216
+	AlifSizeT i{}, n{};
+	AlifUStrWriter writer{};
 
+	n = ALIF_SIZE(v);
+	if (n == 0)
+		return alifUStr_fromString("()");
+
+	i = alif_reprEnter((AlifObject*)v);
+	if (i != 0) {
+		return i > 0 ? alifUStr_fromString("(...)") : nullptr;
+	}
+
+	alifUStrWriter_init(&writer);
+	writer.overAllocate = 1;
+	if (ALIF_SIZE(v) > 1) {
+		/* "(" + "1" + ", 2" * (len - 1) + ")" */
+		writer.minLength = 1 + 1 + (2 + 1) * (ALIF_SIZE(v) - 1) + 1;
+	}
+	else {
+		/* "(1,)" */
+		writer.minLength = 4;
+	}
+
+	if (alifUStrWriter_writeChar(&writer, '(') < 0)
+		goto error;
+
+	/* Do repr() on each element. */
+	for (i = 0; i < n; ++i) {
+		AlifObject* s{};
+
+		if (i > 0) {
+			if (alifUStrWriter_writeASCIIString(&writer, ", ", 2) < 0)
+				goto error;
+		}
+
+		s = alifObject_repr(v->item[i]);
+		if (s == nullptr)
+			goto error;
+
+		if (alifUStrWriter_writeStr(&writer, s) < 0) {
+			ALIF_DECREF(s);
+			goto error;
+		}
+		ALIF_DECREF(s);
+	}
+
+	writer.overAllocate = 0;
+	if (n > 1) {
+		if (alifUStrWriter_writeChar(&writer, ')') < 0)
+			goto error;
+	}
+	else {
+		if (alifUStrWriter_writeASCIIString(&writer, ",)", 2) < 0)
+			goto error;
+	}
+
+	alif_reprLeave((AlifObject*)v);
+	return alifUStrWriter_finish(&writer);
+
+error:
+	alifUStrWriter_dealloc(&writer);
+	alif_reprLeave((AlifObject*)v);
+	return nullptr;
+}
+
+
+
+ // 304
 #if SIZEOF_ALIF_UHASH_T > 4
 #define ALIFHASH_XXPRIME_1 ((AlifUHashT)11400714785074694791ULL)
 #define ALIFHASH_XXPRIME_2 ((AlifUHashT)14029467366897019727ULL)
@@ -243,16 +311,13 @@ AlifTypeObject _alifTupleType_ = { // 865
 	.basicSize = sizeof(AlifTupleObject) - sizeof(AlifObject*),
 	.itemSize = sizeof(AlifObject*),
 	.dealloc = (Destructor)tuple_dealloc,
+	.repr = (ReprFunc)tuple_repr,
 	.hash = (HashFunc)tuple_hash,
-
 	.getAttro = alifObject_genericGetAttr,
-
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
 		ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_TUPLE_SUBCLASS |
 		_ALIF_TPFLAGS_MATCH_SELF | ALIF_TPFLAGS_SEQUENCE,
-
 	.iter = tuple_iter,
-
 	.free = alifObject_gcDel,
 };
 

@@ -1704,6 +1704,95 @@ static void dict_dealloc(AlifObject* _self) { // 3089
 }
 
 
+static AlifObject* dictRepr_lockHeld(AlifObject* _self) { // 3132
+	AlifDictObject* mp = (AlifDictObject*)_self;
+	AlifSizeT i{};
+	AlifObject* key = nullptr, * value = nullptr;
+	AlifUStrWriter writer{};
+	AlifIntT first{};
+
+	i = alif_reprEnter((AlifObject*)mp);
+	if (i != 0) {
+		return i > 0 ? alifUStr_fromString("{...}") : nullptr;
+	}
+
+	if (mp->used == 0) {
+		alif_reprLeave((AlifObject*)mp);
+		return alifUStr_fromString("{}");
+	}
+
+	alifUStrWriter_init(&writer);
+	writer.overAllocate = 1;
+	/* "{" + "1: 2" + ", 3: 4" * (len - 1) + "}" */
+	writer.minLength = 1 + 4 + (2 + 4) * (mp->used - 1) + 1;
+
+	if (alifUStrWriter_writeChar(&writer, '{') < 0)
+		goto error;
+
+	/* Do repr() on each key+value pair, and insert ": " between them.
+	   Note that repr may mutate the dict. */
+	i = 0;
+	first = 1;
+	while (_alifDict_next((AlifObject*)mp, &i, &key, &value, nullptr)) {
+		AlifObject* s{};
+		AlifIntT res{};
+
+		/* Prevent repr from deleting key or value during key format. */
+		ALIF_INCREF(key);
+		ALIF_INCREF(value);
+
+		if (!first) {
+			if (alifUStrWriter_writeASCIIString(&writer, ", ", 2) < 0)
+				goto error;
+		}
+		first = 0;
+
+		s = alifObject_repr(key);
+		if (s == nullptr)
+			goto error;
+		res = alifUStrWriter_writeStr(&writer, s);
+		ALIF_DECREF(s);
+		if (res < 0)
+			goto error;
+
+		if (alifUStrWriter_writeASCIIString(&writer, ": ", 2) < 0)
+			goto error;
+
+		s = alifObject_repr(value);
+		if (s == nullptr)
+			goto error;
+		res = alifUStrWriter_writeStr(&writer, s);
+		ALIF_DECREF(s);
+		if (res < 0)
+			goto error;
+
+		ALIF_CLEAR(key);
+		ALIF_CLEAR(value);
+	}
+
+	writer.overAllocate = 0;
+	if (alifUStrWriter_writeChar(&writer, '}') < 0)
+		goto error;
+
+	alif_reprLeave((AlifObject*)mp);
+
+	return alifUStrWriter_finish(&writer);
+
+error:
+	alif_reprLeave((AlifObject*)mp);
+	alifUStrWriter_dealloc(&writer);
+	ALIF_XDECREF(key);
+	ALIF_XDECREF(value);
+	return nullptr;
+}
+
+static AlifObject* dict_repr(AlifObject* _self) { // 3218
+	AlifObject* res{};
+	ALIF_BEGIN_CRITICAL_SECTION(_self);
+	res = dictRepr_lockHeld(_self);
+	ALIF_END_CRITICAL_SECTION();
+	return res;
+}
 
 
 static AlifSizeT dict_length(AlifObject* _self) { // 3228
@@ -2285,17 +2374,14 @@ AlifTypeObject _alifDictType_ = { // 4760
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "قاموس",
 	.basicSize = sizeof(AlifDictObject),
-	.itemSize = 0,
-
 	.dealloc = dict_dealloc,
+	.repr = dict_repr,
 	.asSequence = &_dictAsSequence_,
 	.asMapping = &_dictAsMapping_,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
 		ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_DICT_SUBCLASS |
 		_ALIF_TPFLAGS_MATCH_SELF | ALIF_TPFLAGS_MAPPING,
 	.iter = dict_iter,
-
-
 	//.init = dict_init,
 	.alloc = alifType_allocNoTrack,
 	//.new_ = dict_new,
