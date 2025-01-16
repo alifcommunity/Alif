@@ -217,7 +217,7 @@
 
 #define HAVE_SETVBUF
 
-#define ALIF_GIL_DISABLED 1
+//#define ALIF_GIL_DISABLED 1
 
 #define FORCE_SWITCHING
 

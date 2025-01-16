@@ -349,8 +349,11 @@ AlifObject* alifUStr_new(AlifSizeT, AlifUCS4 ); // 386
 
 
 
-AlifSizeT alifUStr_copyCharacters(AlifObject*, AlifSizeT, AlifObject*, AlifSizeT, AlifSizeT); // 416
+AlifSizeT alifUStr_copyCharacters(AlifObject*, AlifSizeT,
+	AlifObject*, AlifSizeT, AlifSizeT); // 416
 
+
+AlifSizeT alifUStr_fill(AlifObject*, AlifSizeT, AlifSizeT, AlifUCS4); // 432
 
 AlifObject* alifUStr_fromKindAndData(AlifIntT, const void*, AlifSizeT); // 441
 

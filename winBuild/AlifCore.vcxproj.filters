@@ -876,6 +876,9 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Signal.h">
       <Filter>Include\Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\DictObject.cpp.h">
+      <Filter>Objects\clinic</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Include">

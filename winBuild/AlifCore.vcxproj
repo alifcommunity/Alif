@@ -209,6 +209,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\UStrTypeDB.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\WeakRefObject.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\BltinModule.cpp.h" />
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\DictObject.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\FloatObject.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\ListObject.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\TypeObject.cpp.h" />
