@@ -39,6 +39,9 @@ extern AlifObject* _alifUStr_asLatin1String(AlifObject*, const char*); // 164
 
 extern AlifObject* _alifUStr_asASCIIString(AlifObject*, const char*); // 170
 
+
+AlifObject* _alifUStr_transformDecimalAndSpaceToASCII(AlifObject*); // 201
+
 AlifObject* alifUStr_joinArray(AlifObject*, AlifObject* const*, AlifSizeT); // 206
 
 

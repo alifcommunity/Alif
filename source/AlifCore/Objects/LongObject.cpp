@@ -778,6 +778,78 @@ long long alifLong_asLongLong(AlifObject* vv) { // 1491
 		return bytes;
 }
 
+AlifObject* alifNumber_long(AlifObject* o) { // 1505
+	AlifObject* result{};
+	AlifNumberMethods* m;
+	AlifBuffer view{};
+
+	if (o == nullptr) {
+		//return null_error();
+	}
+
+	if (ALIFLONG_CHECKEXACT(o)) {
+		return ALIF_NEWREF(o);
+	}
+	m = ALIF_TYPE(o)->asNumber;
+	if (m and m->int_) { /* This should include subclasses of int */
+		result = m->int_(o);
+		if (!result or ALIFLONG_CHECKEXACT(result)) {
+			return result;
+		}
+
+		if (!ALIFLONG_CHECK(result)) {
+			//alifErr_format(_alifExc_typeError,
+			//	"__int__ returned non-int (type %.200s)",
+			//	ALIF_TYPE(result)->name);
+			ALIF_DECREF(result);
+			return nullptr;
+		}
+		//if (alifErr_warnFormat(_alifExcDeprecationWarning_, 1,
+		//	"__int__ returned non-int (type %.200s).  "
+		//	"The ability to return an instance of a strict subclass of int "
+		//	"is deprecated, and may be removed in a future version of Alif.",
+		//	ALIF_TYPE(result)->name)) {
+		//	ALIF_DECREF(result);
+		//	return nullptr;
+		//}
+		ALIF_SETREF(result, _alifLong_copy((AlifLongObject*)result));
+		return result;
+	}
+	if (m and m->index) {
+		return alifNumber_index(o);
+	}
+
+	if (ALIFUSTR_CHECK(o))
+		return alifLong_fromUStrObject(o, 10);
+
+	if (ALIFBYTES_CHECK(o))
+		return _alifLong_fromBytes(ALIFBYTES_AS_STRING(o),
+			ALIFBYTES_GET_SIZE(o), 10);
+
+	if (ALIFBYTEARRAY_CHECK(o))
+		return _alifLong_fromBytes(ALIFBYTEARRAY_AS_STRING(o),
+			ALIFBYTEARRAY_GET_SIZE(o), 10);
+
+	if (alifObject_getBuffer(o, &view, ALIFBUF_SIMPLE) == 0) {
+		AlifObject* bytes{};
+
+		/* Copy to NUL-terminated buffer. */
+		bytes = alifBytes_fromStringAndSize((const char*)view.buf, view.len);
+		if (bytes == nullptr) {
+			alifBuffer_release(&view);
+			return nullptr;
+		}
+		result = _alifLong_fromBytes(ALIFBYTES_AS_STRING(bytes),
+			ALIFBYTES_GET_SIZE(bytes), 10);
+		ALIF_DECREF(bytes);
+		alifBuffer_release(&view);
+		return result;
+	}
+
+	//return type_error("int() argument must be a string, a bytes-like object "
+	//	"or a real number, not '%.200s'", o);
+}
+
 static unsigned long long _alifLong_asUnsignedLongLongMask(AlifObject* _vv) { // 1583
 	AlifLongObject* v_{};
 	unsigned long long x_{};
@@ -1611,6 +1683,53 @@ onError:
 	//	"invalid literal for AlifIntT() with base %d: %.200R",
 	//	_base, strObj);
 	ALIF_DECREF(strObj);
+	return nullptr;
+}
+
+
+
+AlifObject* _alifLong_fromBytes(const char* s, AlifSizeT len, AlifIntT base) { // 3106
+	AlifObject* result{}, * strobj{};
+	char* end{};
+
+	result = alifLong_fromString(s, &end, base);
+	if (end == nullptr || (result != nullptr && end == s + len))
+		return result;
+	ALIF_XDECREF(result);
+	strobj = alifBytes_fromStringAndSize(s, ALIF_MIN(len, 200));
+	if (strobj != nullptr) {
+		//alifErr_format(_alifExcValueError_,
+		//	"invalid literal for int() with base %d: %.200R",
+		//	base, strobj);
+		ALIF_DECREF(strobj);
+	}
+	return nullptr;
+}
+
+
+
+AlifObject* alifLong_fromUStrObject(AlifObject* u, AlifIntT base) { // 3126
+	AlifObject* result{}, * asciidig{};
+	const char* buffer{};
+	char* end = nullptr;
+	AlifSizeT buflen{};
+
+	asciidig = _alifUStr_transformDecimalAndSpaceToASCII(u);
+	if (asciidig == nullptr)
+		return nullptr;
+	/* Simply get a pointer to existing ASCII characters. */
+	buffer = alifUStr_asUTF8AndSize(asciidig, &buflen);
+
+	result = alifLong_fromString(buffer, &end, base);
+	if (end == nullptr or (result != nullptr and end == buffer + buflen)) {
+		ALIF_DECREF(asciidig);
+		return result;
+	}
+	ALIF_DECREF(asciidig);
+	ALIF_XDECREF(result);
+	//alifErr_format(_alifExcValueError_,
+	//	"invalid literal for int() with base %d: %.200R",
+	//	base, u);
 	return nullptr;
 }
 
@@ -3428,6 +3547,27 @@ static AlifObject* long_float(AlifObject* _v) { // 5848
 
 
 
+static AlifObject* long_vectorCall(AlifObject* type, AlifObject* const* args,
+	AlifUSizeT nargsf, AlifObject* kwnames) { // 6479
+	AlifUSizeT nargs = ALIFVECTORCALL_NARGS(nargsf);
+	if (kwnames != nullptr) {
+		AlifThread* thread = alifThread_get();
+		return alifObject_makeTpCall(thread, type, args, nargs, kwnames);
+	}
+	switch (nargs) {
+	case 0:
+		return _alifLong_getZero();
+	case 1:
+		return alifNumber_long(args[0]);
+	//case 2:
+	//	return long_newImpl(ALIFTYPE_CAST(type), args[0], args[1]);
+	//default:
+	//	return alifErr_format(_alifExcTypeError_,
+	//		"int expected at most 2 arguments, got %zd",
+	//		nargs);
+	}
+}
+
 
 
 static AlifNumberMethods _longAsNumber_ = { // 6560
@@ -3488,5 +3628,6 @@ AlifTypeObject _alifLongType_ = { // 6597
 
 	.richCompare = long_richCompare,
                                        
-	.free = alifMem_objFree,                            
+	.free = alifMem_objFree,
+	.vectorCall = long_vectorCall,
 };

@@ -29,7 +29,11 @@ static inline void alifUStrWriter_initWithBuffer(AlifUStrWriter*, AlifObject*);
          ((char*)(ALIFASCIIOBJECT_CAST(_op) + 1)) :       \
          _ALIFUSTR_UTF8(_op))
 
-#define ALIFUSTR_UTF8_LENGTH(_op) ALIFCOMPACTUSTROBJECT_CAST(_op)->utf8Length
+#define _ALIFUSTR_UTF8_LENGTH(_op)                      \
+    (ALIFCOMPACTUSTROBJECT_CAST(_op)->utf8Length)
+#define ALIFUSTR_UTF8_LENGTH(_op) ALIFUSTR_IS_COMPACT_ASCII(_op) ?                   \
+         ALIFASCIIOBJECT_CAST(_op)->length :              \
+         _ALIFUSTR_UTF8_LENGTH(_op)
 
 // 129
 #define ALIFUSTR_LENGTH(_op)                           \
@@ -186,6 +190,40 @@ static inline void uStr_fill(AlifIntT kind, void* data, AlifUCS4 value,
 	default: ALIF_UNREACHABLE();
 	}
 }
+
+
+
+
+const unsigned char _alifASCIIWhitespace_[] = { // 400
+	0, 0, 0, 0, 0, 0, 0, 0,
+	/*     case 0x0009: * CHARACTER TABULATION */
+	/*     case 0x000A: * LINE FEED */
+	/*     case 0x000B: * LINE TABULATION */
+	/*     case 0x000C: * FORM FEED */
+	/*     case 0x000D: * CARRIAGE RETURN */
+	0, 1, 1, 1, 1, 1, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	/*     case 0x001C: * FILE SEPARATOR */
+	/*     case 0x001D: * GROUP SEPARATOR */
+	/*     case 0x001E: * RECORD SEPARATOR */
+	/*     case 0x001F: * UNIT SEPARATOR */
+	0, 0, 0, 0, 1, 1, 1, 1,
+	/*     case 0x0020: * SPACE */
+	1, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0
+};
+
 
 
 
@@ -4321,6 +4359,54 @@ AlifObject* alifUStr_encodeCodePage(AlifIntT code_page,
 
 
 
+
+
+AlifObject* _alifUStr_transformDecimalAndSpaceToASCII(AlifObject* unicode) { // 9269
+	if (!ALIFUSTR_CHECK(unicode)) {
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
+	if (ALIFUSTR_IS_ASCII(unicode)) {
+		/* If the string is already ASCII, just return the same string */
+		return ALIF_NEWREF(unicode);
+	}
+
+	AlifSizeT len = ALIFUSTR_GET_LENGTH(unicode);
+	AlifObject* result = alifUStr_new(len, 127);
+	if (result == nullptr) {
+		return nullptr;
+	}
+
+	AlifUCS1* out = ALIFUSTR_1BYTE_DATA(result);
+	AlifIntT kind = ALIFUSTR_KIND(unicode);
+	const void* data = ALIFUSTR_DATA(unicode);
+	AlifSizeT i{};
+	for (i = 0; i < len; ++i) {
+		AlifUCS4 ch = ALIFUSTR_READ(kind, data, i);
+		if (ch < 127) {
+			out[i] = ch;
+		}
+		else if (alifUStr_isSpace(ch)) {
+			out[i] = ' ';
+		}
+		else {
+			int decimal = ALIF_USTR_TODECIMAL(ch);
+			if (decimal < 0) {
+				out[i] = '?';
+				out[i + 1] = '\0';
+				ALIFUSTR_LENGTH(result) = i + 1;
+				break;
+			}
+			out[i] = '0' + decimal;
+		}
+	}
+
+	return result;
+}
+
+
+
+
 // 9318
 #define ADJUST_INDICES(_start, _end, _len) \
     do {                                \
@@ -5767,9 +5853,18 @@ void alifUStrWriter_dealloc(AlifUStrWriter* _writer) { // 13852
 
 
 
+//static AlifObject* uStr_mod(AlifObject* v, AlifObject* w) { // 13999
+//	if (!ALIFUSTR_CHECK(v))
+//		return ALIF_NOTIMPLEMENTED;
+//	return alifUStr_format(v, w);
+//}
 
-
-
+static AlifNumberMethods _uStrAsNumber_ = { // 14007
+	0,              /*add*/
+	0,              /*subtract*/
+	0,              /*multiply*/
+	//uStr_mod,            /*remainder*/
+};
 
 
 
@@ -5782,6 +5877,7 @@ AlifTypeObject _alifUStrType_ = { // 15235
 	.itemSize = 0,
 	.dealloc = ustr_dealloc,
 	.repr = uStr_repr,
+	.asNumber = &_uStrAsNumber_,
 	.hash = (HashFunc)uStr_hash,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE |
 		ALIF_TPFLAGS_UNICODE_SUBCLASS |

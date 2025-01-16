@@ -48,6 +48,16 @@ long alifOS_strToLong(const char*, char**, AlifIntT); // 103
 
 
 
+
+AlifObject* alifLong_fromUStrObject(AlifObject*, AlifIntT); // 5
+
+
+
+
+
+
+
+
 AlifIntT _alifLong_sign(AlifObject*); // 68
 
 

@@ -413,11 +413,26 @@ void alifUStrWriter_dealloc(AlifUStrWriter*); // 607
 
 const char* alifUStr_asUTF8(AlifObject*); // 625
 
+
+
+AlifIntT _alifUStr_isWhitespace(const AlifUCS4); // 652
+
+
+
 AlifIntT _alifUStr_toDecimalDigit(AlifUCS4); // 672
 
 AlifIntT _alifUStr_isPrintable(AlifUCS4); // 696
 
 
+extern const unsigned char _alifASCIIWhitespace_[]; // 705
+
+
+static inline int alifUStr_isSpace(AlifUCS4 ch) { // 711
+	if (ch < 128) {
+		return _alifASCIIWhitespace_[ch];
+	}
+	return _alifUStr_isWhitespace(ch);
+}
 
 #define ALIF_USTR_ISPRINTABLE(_ch) _alifUStr_isPrintable(_ch) // 730
 #define ALIF_USTR_TODECIMAL(_ch) _alifUStr_toDecimalDigit(_ch) // 732
