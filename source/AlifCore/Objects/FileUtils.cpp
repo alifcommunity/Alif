@@ -73,7 +73,7 @@ static AlifUSizeT alif_mbstowcs(wchar_t* _dest, const char* _src, AlifUSizeT _n)
 }
 
 
-static AlifIntT decode_currentLocale(const char* _arg, wchar_t** _wstr, size_t* _wlen,
+static AlifIntT decode_currentLocale(const char* _arg, wchar_t** _wstr, AlifUSizeT* _wlen,
 	const char** _reason, AlifErrorHandler_ _errors) { // 454
 	wchar_t* res{};
 	AlifUSizeT argSize{};

@@ -548,7 +548,7 @@ static void stop_theWorld(StopTheWorldState* _stw) { // 2239
 	HEAD_LOCK(dureRun);
 	_stw->requested = 1;
 	_stw->threadCountDown = 0;
-	_stw->stopEvent = (AlifEvent)0;
+	_stw->stopEvent = AlifEvent();
 	_stw->requester = _alifThread_get();
 
 	AlifInterpreter* i{};

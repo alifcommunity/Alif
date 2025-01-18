@@ -7,6 +7,20 @@
 
 
 
+ // 15
+#if (defined(HAVE_UNISTD_H) and !defined(_POSIX_THREADS) \
+                            and !defined(_POSIX_SEMAPHORES))
+#  include <unistd.h>             // _POSIX_THREADS, _POSIX_SEMAPHORES
+#endif
+#if (defined(HAVE_PTHREAD_H) and !defined(_POSIX_THREADS) \
+                             and !defined(_POSIX_SEMAPHORES))
+#  include <pthread.h>            // _POSIX_THREADS, _POSIX_SEMAPHORES
+#endif
+#if !defined(_POSIX_THREADS) and defined(__hpux) and defined(_SC_THREADS)
+#  define _POSIX_THREADS
+#endif
+
+
 
 #if defined(HAVE_PTHREAD_STUBS) // 48
 #include "PThreadStubs.h"  // PTHREAD_KEYS_MAX

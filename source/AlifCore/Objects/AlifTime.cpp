@@ -367,9 +367,9 @@ static AlifIntT alifGet_systemClock(AlifTimeT* tp, AlifClockInfoT* info, AlifInt
 			}
 			return -1;
 		}
-		if (alifTime_fromTimeVal(tp, &tv, raise_exc) < 0) {
-			return -1;
-		}
+		//if (alifTime_fromTimeVal(tp, &tv, raise_exc) < 0) {
+		//	return -1;
+		//}
 
 		if (info) {
 			info->implementation = "gettimeofday()";
