@@ -721,6 +721,7 @@
     INIT_ID(__new__), \
     INIT_ID(__notes__), \
     INIT_ID(__origClass__), \
+	INIT_ID(__path__), \
 	INIT_ID(__package__), \
 	INIT_ID(__prepare__), \
 	INIT_ID(__qualname__), \
@@ -731,6 +732,7 @@
 	INIT_ID(__subClassCheck__), \
 	INIT_ID(__typeParams__), \
 	INIT_ID(__weakRef__), \
+	INIT_ID(_initializing), \
 	INIT_ID(_isTextEncoding), \
 	INIT_ID(Builtins), \
 	INIT_ID(Encoding), \

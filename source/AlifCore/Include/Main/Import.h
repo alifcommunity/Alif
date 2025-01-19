@@ -5,7 +5,7 @@
 
 
 
-
+AlifObject* alifImport_getModule(AlifObject*); // 36
 
 
 AlifObject* alifImport_addModuleRef(const char*); // 47

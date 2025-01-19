@@ -39,10 +39,11 @@ InitTable* _alifImportInitTable_ = _alifImportInitTab_; // 59
 // 80
 #define MODULES(_interp) \
     (_interp)->imports.modules
-
-// 94
+#define IMPORTLIB(_interp) \
+    (_interp)->imports.importLib
 #define IMPORT_FUNC(_interp) \
     (_interp)->imports.importFunc
+// 94
 
 
 
@@ -80,6 +81,22 @@ static AlifObject* import_getModule(AlifThread* _thread, AlifObject* _name) { //
 	(void)alifMapping_getOptionalItem(modules, _name, &m);
 	ALIF_DECREF(modules);
 	return m;
+}
+
+
+AlifObject* alifImport_getModule(AlifObject* _name) { // 240
+	AlifThread* thread = _alifThread_get();
+	AlifObject* mod{};
+
+	mod = import_getModule(thread, _name);
+	if (mod != nullptr and mod != ALIF_NONE) {
+		//if (import_ensureInitialized(thread->interpreter, mod, _name) < 0) {
+		//	ALIF_DECREF(mod);
+		//	remove_importLibFrames(thread);
+		//	return nullptr;
+		//}
+	}
+	return mod;
 }
 
 
@@ -368,18 +385,18 @@ AlifObject* alifImport_importModuleLevelObject(AlifObject* name, AlifObject* glo
 		}
 	}
 	else {
-		//AlifIntT has_path = alifObject_hasAttrWithError(mod, &ALIF_ID(__path__));
-		//if (has_path < 0) {
-		//	goto error;
-		//}
-		//if (has_path) {
-		//	final_mod = alifObject_callMethodObjArgs(
-		//		IMPORTLIB(interp), &ALIF_ID(_handle_fromlist),
-		//		mod, fromlist, IMPORT_FUNC(interp), nullptr);
-		//}
-		//else {
-		//	final_mod = ALIF_NEWREF(mod);
-		//}
+		AlifIntT hasPath = alifObject_hasAttrWithError(mod, &ALIF_ID(__path__));
+		if (hasPath < 0) {
+			goto error;
+		}
+		if (hasPath) {
+			//final_mod = alifObject_callMethodObjArgs(
+			//	IMPORTLIB(interp), &ALIF_ID(_handleFromList),
+			//	mod, fromlist, IMPORT_FUNC(interp), nullptr);
+		}
+		else {
+			final_mod = ALIF_NEWREF(mod);
+		}
 	}
 
 error:

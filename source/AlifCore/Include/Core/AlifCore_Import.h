@@ -18,6 +18,7 @@ class ImportState { // 63
 public:
 	AlifObject* modules{};
 
+	AlifObject* importLib{};
 	AlifObject* importFunc{};
 	//class {
 	//public:

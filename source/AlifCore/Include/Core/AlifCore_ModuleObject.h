@@ -5,7 +5,7 @@
 
 
 
-
+extern AlifIntT _alifModuleSpec_isInitializing(AlifObject*); // 13
 
 
 

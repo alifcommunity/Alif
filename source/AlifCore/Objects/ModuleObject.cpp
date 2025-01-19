@@ -248,6 +248,51 @@ error:
 }
 
 
+
+AlifObject* alifModule_getFilenameObject(AlifObject* _mod) { // 602
+	AlifObject* fileobj{};
+
+	if (!ALIFMODULE_CHECK(_mod)) {
+		//ALIFERR_BADARGUMENT();
+		return nullptr;
+	}
+	AlifObject* dict = ((AlifModuleObject*)_mod)->dict;  // borrowed reference
+	if (dict == nullptr) {
+		goto error;
+	}
+	if (alifDict_getItemRef(dict, &ALIF_ID(__file__), &fileobj) <= 0) {
+		// error or not found
+		goto error;
+	}
+	if (!ALIFUSTR_CHECK(fileobj)) {
+		ALIF_DECREF(fileobj);
+		goto error;
+	}
+	return fileobj;
+
+error:
+	if (!alifErr_occurred()) {
+		//alifErr_setString(_alifExcSystemError_, "module filename missing");
+	}
+	return nullptr;
+}
+
+
+AlifIntT _alifModuleSpec_isInitializing(AlifObject* _spec) { // 793
+	if (_spec == nullptr) {
+		return 0;
+	}
+	AlifObject* value{};
+	AlifIntT rc = alifObject_getOptionalAttr(_spec, &ALIF_ID(_initializing), &value);
+	if (rc > 0) {
+		rc = alifObject_isTrue(value);
+		ALIF_DECREF(value);
+	}
+	return rc;
+}
+
+
+
 static AlifIntT getFileOrigin_fromSpec(AlifObject* _spec, AlifObject** _pOrigin) { // 828
 	AlifObject* hasLocation = nullptr;
 	AlifIntT rc_ = alifObject_getOptionalAttr(_spec, &ALIF_ID(HasLocation), &hasLocation);

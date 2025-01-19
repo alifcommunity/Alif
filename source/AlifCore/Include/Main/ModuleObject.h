@@ -18,6 +18,7 @@ AlifObject* alifModule_getDict(AlifObject*); // 23
 
 AlifObject* alifModule_getNameObject(AlifObject*); // 25
 
+AlifObject* alifModule_getFilenameObject(AlifObject*); // 29
 
 class AlifModuleDefBase { // 39
 public:

@@ -1169,6 +1169,27 @@ static AlifIntT symtable_enterTypeParamBlock(AlifSymTable* _st, Identifier _name
         --(_st)->recursionDepth; \
     } while(0)
 
+
+
+
+static AlifIntT check_importFrom(AlifSymTable* st, StmtTy s) { // 1776
+	AlifSourceLocation fut = st->future->location;
+	if (s->V.importFrom.module and s->V.importFrom.level == 0 &&
+		alifUStr_equalToASCIIString(s->V.importFrom.module, "__future__") and
+		((s->lineNo > fut.lineNo) or
+			((s->lineNo == fut.endLineNo) and (s->colOffset > fut.endColOffset))))
+	{
+		//alifErr_setString(_alifExcSyntaxError_,
+		//	"from __future__ imports must occur "
+		//	"at the beginning of the file");
+		//SET_ERROR_LOCATION(st->fileName, LOCATION(s));
+		return 0;
+	}
+	return 1;
+}
+
+
+
 static AlifIntT symtable_visitStmt(AlifSymTable* _st, StmtTy _s) { // 1812
 	ENTER_RECURSIVE(_st);
 	switch (_s->type) {
@@ -1302,6 +1323,12 @@ static AlifIntT symtable_visitStmt(AlifSymTable* _st, StmtTy _s) { // 1812
 		break;
 	case StmtK_::ImportK:
 		VISIT_SEQ(_st, Alias, _s->V.import.names);
+		break;
+	case StmtK_::ImportFromK:
+		VISIT_SEQ(_st, Alias, _s->V.importFrom.names);
+		if (!check_importFrom(_st, _s)) {
+			return 0;
+		}
 		break;
 	case StmtK_::ExprK:
 		VISIT(_st, Expr, _s->V.expression.val);

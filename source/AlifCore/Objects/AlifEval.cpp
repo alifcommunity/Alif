@@ -15,6 +15,7 @@
 #include "AlifCore_OpcodeMetaData.h"
 #include "AlifCore_Optimizer.h"
 #include "AlifCore_OpcodeUtils.h"
+#include "AlifCore_Errors.h"
 
 #include "AlifCore_State.h"
 
@@ -998,6 +999,20 @@ dispatch_opcode :
 				stackPointer += 1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(IMPORT_FROM) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef from{};
+				AlifStackRef res{};
+				from = stackPointer[-1];
+				AlifObject* name = GETITEM(FRAME_CO_NAMES, oparg);
+				AlifObject* res_o = _alifEval_importFrom(_thread, alifStackRef_asAlifObjectBorrow(from), name);
+				//if (res_o == nullptr) goto error;
+				res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(res_o);
+				stackPointer[0] = res;
+				stackPointer += 1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(IMPORT_NAME) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;
@@ -1231,7 +1246,7 @@ dispatch_opcode :
 			TARGET(MAKE_CELL) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;
-				// "initial" is probably NULL but not if it's an arg (or set
+				// "initial" is probably nullptr but not if it's an arg (or set
 				// via the f_locals proxy before MAKE_CELL has run).
 				AlifObject* initial = alifStackRef_asAlifObjectBorrow(GETLOCAL(oparg));
 				AlifObject* cell = alifCell_new(initial);
@@ -1533,7 +1548,7 @@ static void format_missing(AlifThread* _thread, const char* _kind,
 		tail = alifUStr_fromFormat(", %U, and %U",
 			ALIFLIST_GET_ITEM(_names, len - 2),
 			ALIFLIST_GET_ITEM(_names, len - 1));
-		if (tail == NULL)
+		if (tail == nullptr)
 			return;
 
 		err = alifList_setSlice(_names, len - 2, len, nullptr);
@@ -2222,6 +2237,93 @@ AlifObject* _alifEval_importName(AlifThread* _thread, AlifInterpreterFrame* _fra
 	AlifObject* res = alifObject_vectorCall(importFunc, args, 5, nullptr);
 	ALIF_DECREF(importFunc);
 	return res;
+}
+
+AlifObject* _alifEval_importFrom(AlifThread* _thread,
+	AlifObject* _v, AlifObject* _name) { // 2722
+	AlifObject* x{};
+	AlifObject* fullmodname{}, * pkgname{}, * pkgpath{}, * pkgname_or_unknown{}, * errmsg{};
+
+	if (alifObject_getOptionalAttr(_v, _name, &x) != 0) {
+		return x;
+	}
+
+	if (alifObject_getOptionalAttr(_v, &ALIF_ID(__name__), &pkgname) < 0) {
+		return nullptr;
+	}
+	if (pkgname == nullptr or !ALIFUSTR_CHECK(pkgname)) {
+		ALIF_CLEAR(pkgname);
+		goto error;
+	}
+	fullmodname = alifUStr_fromFormat("%U.%U", pkgname, _name);
+	if (fullmodname == nullptr) {
+		ALIF_DECREF(pkgname);
+		return nullptr;
+	}
+	x = alifImport_getModule(fullmodname);
+	ALIF_DECREF(fullmodname);
+	if (x == nullptr and !_alifErr_occurred(_thread)) {
+		goto error;
+	}
+	ALIF_DECREF(pkgname);
+	return x;
+error:
+	if (pkgname == nullptr) {
+		pkgname_or_unknown = alifUStr_fromString("<unknown module name>");
+		if (pkgname_or_unknown == nullptr) {
+			return nullptr;
+		}
+	}
+	else {
+		pkgname_or_unknown = pkgname;
+	}
+
+	pkgpath = nullptr;
+	if (ALIFMODULE_CHECK(_v)) {
+		pkgpath = alifModule_getFilenameObject(_v);
+		if (pkgpath == nullptr) {
+			//if (!alifErr_exceptionMatches(_alifExcSystemError_)) {
+			//	ALIF_DECREF(pkgname_or_unknown);
+			//	return nullptr;
+			//}
+			// module filename missing
+			//_alifErr_clear(tstate);
+		}
+	}
+	if (pkgpath == nullptr or !ALIFUSTR_CHECK(pkgpath)) {
+		ALIF_CLEAR(pkgpath);
+		errmsg = alifUStr_fromFormat(
+			"cannot import name %R from %R (unknown location)",
+			_name, pkgname_or_unknown
+		);
+	}
+	else {
+		AlifObject* spec{};
+		AlifIntT rc = alifObject_getOptionalAttr(_v, &ALIF_ID(__spec__), &spec);
+		if (rc > 0) {
+			rc = _alifModuleSpec_isInitializing(spec);
+			ALIF_DECREF(spec);
+		}
+		if (rc < 0) {
+			ALIF_DECREF(pkgname_or_unknown);
+			ALIF_DECREF(pkgpath);
+			return nullptr;
+		}
+		const char* fmt =
+			rc ?
+			"cannot import name %R from partially initialized module %R "
+			"(most likely due to a circular import) (%S)" :
+			"cannot import name %R from %R (%S)";
+
+		errmsg = alifUStr_fromFormat(fmt, _name, pkgname_or_unknown, pkgpath);
+	}
+
+	//_alifErr_setImportErrorWithNameFrom(errmsg, pkgname, pkgpath, name);
+
+	ALIF_XDECREF(errmsg);
+	ALIF_DECREF(pkgname_or_unknown);
+	ALIF_XDECREF(pkgpath);
+	return nullptr;
 }
 
 

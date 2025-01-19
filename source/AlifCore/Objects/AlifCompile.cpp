@@ -2278,7 +2278,52 @@ static AlifIntT codegen_import(AlifCompiler* c, StmtTy s) { // 3670
 	return SUCCESS;
 }
 
+static AlifIntT codegen_fromImport(AlifCompiler* c, StmtTy s) { // 3716
+	AlifSizeT n = ASDL_SEQ_LEN(s->V.importFrom.names);
 
+	ADDOP_LOAD_CONST_NEW(c, LOC(s), alifLong_fromLong(s->V.importFrom.level));
+
+	AlifObject* names = alifTuple_new(n);
+	if (!names) {
+		return ERROR;
+	}
+
+	/* build up the names */
+	for (AlifSizeT i = 0; i < n; i++) {
+		AliasTy alias = (AliasTy)ASDL_SEQ_GET(s->V.importFrom.names, i);
+		ALIFTUPLE_SET_ITEM(names, i, ALIF_NEWREF(alias->name));
+	}
+
+	ADDOP_LOAD_CONST_NEW(c, LOC(s), names);
+
+	if (s->V.importFrom.module) {
+		ADDOP_NAME(c, LOC(s), IMPORT_NAME, s->V.importFrom.module, names);
+	}
+	else {
+		ADDOP_NAME(c, LOC(s), IMPORT_NAME, &ALIF_STR(Empty), names);
+	}
+	for (AlifSizeT i = 0; i < n; i++) {
+		AliasTy alias = (AliasTy)ASDL_SEQ_GET(s->V.importFrom.names, i);
+		Identifier store_name{};
+
+		if (i == 0 and ALIFUSTR_READ_CHAR(alias->name, 0) == '*') {
+			ADDOP_I(c, LOC(s), CALL_INTRINSIC_1, INTRINSIC_IMPORT_STAR);
+			ADDOP(c, _noLocation_, POP_TOP);
+			return SUCCESS;
+		}
+
+		ADDOP_NAME(c, LOC(s), IMPORT_FROM, alias->name, names);
+		store_name = alias->name;
+		if (alias->asName) {
+			store_name = alias->asName;
+		}
+
+		RETURN_IF_ERROR(compiler_nameOp(c, LOC(s), store_name, ExprContext_::Store));
+	}
+	/* remove imported module */
+	ADDOP(c, LOC(s), POP_TOP);
+	return SUCCESS;
+}
 
 static AlifIntT codegen_stmtExpr(AlifCompiler* _c, Location _loc, ExprTy _value) { // 3797
 	//if (IS_INTERACTIVE(_c) and !IS_NESTED_SCOPE(_c)) {
@@ -2361,8 +2406,8 @@ static AlifIntT compiler_visitStmt(AlifCompiler* _c, StmtTy _s) { // 3818
 	//	return codegen_assert(_c, _s);
 	case StmtK_::ImportK:
 		return codegen_import(_c, _s);
-	//case StmtK_::ImportFromK:
-	//	return codegen_from_import(_c, _s);
+	case StmtK_::ImportFromK:
+		return codegen_fromImport(_c, _s);
 	//case StmtK_::GlobalK:
 	//case StmtK_::NonlocalK:
 	//	break;
