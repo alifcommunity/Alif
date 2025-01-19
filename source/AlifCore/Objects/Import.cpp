@@ -557,33 +557,47 @@ static FILE* get_file(char* pathname, const char* mode) { // 2938
 	return fp;
 }
 
-void add_extension(const char* path, const char* extension, char* new_path) {
-	strcpy(new_path, path);
+void add_extension(char* path, const char* extension) {
+	char newPath[MAXPATHLEN]{};
+	strcpy(newPath, path);
 
 	AlifUSizeT path_len = strlen(path);
 
 	// Check if the path already has an extension
 	const char* dot = strrchr(path, '.');
 	if (dot and dot > strrchr(path, '/') and dot > strrchr(path, '\\')) {
-		strcpy(new_path + (dot - path), extension);
+		strcpy(newPath + (dot - path), extension);
 	}
 	else {
 		// If there is no extension, append it
-		strcat(new_path, ".");
-		strcat(new_path, extension);
+		strcat(newPath, ".");
+		strcat(newPath, extension);
 	}
+
+	strcpy(path, newPath);
 }
 
 
-AlifIntT get_absPath(const char* name, char* pathname, AlifUSizeT pathnameSize) {
+AlifIntT get_absPath(const char* _name, char* _pathname, AlifUSizeT _pathNameSize) {
+	if (_name == nullptr) return -1;
+
 #ifdef _WINDOWS
-	if (_fullpath(pathname, name, pathnameSize) != nullptr) {
+	if (_fullpath(_pathname, _name, _pathNameSize) != nullptr) {
 		return 1;
 	}
 #else
-	if (realpath(name, pathname) != nullptr) {
+	if (getcws(_pathname, _pathNameSize) == nullptr) {
+		printf("لم يستطع جلب مسار الملف خلال الاستيراد");
+		return -1;
+	}
+
+	strcat(_pathname, "/");
+	strcat(_pathname, name);
+
+	if (_pathname != nullptr) {
 		return 1;
 	}
+
 #endif
 	return -1;
 }
@@ -604,13 +618,12 @@ static AlifObject* load_sourceImpl(AlifObject* _absName) { // 3002 // import27.c
 
 	// إضافة لاحقة المكتبة
 	const char* extension = "alifl";
-	char path[MAXPATHLEN + 1]{};
-	add_extension(pathname, extension, path);
+	add_extension(pathname, extension);
 
-	fp = get_file(path, "r");
+	fp = get_file(pathname, "r");
 	if (fp == nullptr) return nullptr;
 
-	m = load_sourceModule(name, path, fp);
+	m = load_sourceModule(name, pathname, fp);
 
 	if (fp != nullptr) fclose(fp);
 
