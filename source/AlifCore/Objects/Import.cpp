@@ -169,6 +169,17 @@ static AlifIntT initBuildin_modulesTable() { // 2419
 }
 
 
+
+AlifIntT _alifImport_initDefaultImportFunc(AlifInterpreter* _interp) { // 3338
+	// Get the __import__ function
+	AlifObject* importFunc{};
+	if (alifDict_getItemStringRef(_interp->builtins, "استورد", &importFunc) <= 0) {
+		return -1;
+	}
+	IMPORT_FUNC(_interp) = importFunc;
+	return 0;
+}
+
 AlifIntT _alifImport_isDefaultImportFunc(AlifInterpreter* _interp, AlifObject* _func) { // 3350
 	return _func == IMPORT_FUNC(_interp);
 }
@@ -445,14 +456,14 @@ AlifObject* alifImport_execCodeModuleEx(const char* name, AlifObject* co, char* 
 	AlifObject* modules = alifImport_getModuleDict();
 	AlifObject* m{}, * d{}, * v{};
 
-	m = alifImport_addModule(name);
-	//m = alifImport_addModuleRef(name);
+	//m = alifImport_addModule(name);
+	m = alifImport_addModuleRef(name);
 	if (m == nullptr)
 		return nullptr;
 
 	d = alifModule_getDict(m);
 	if (alifDict_getItemWithError(d, &ALIF_ID(__builtins__)) == nullptr) {
-		if (alifDict_setItemString(d, "__builtins__",
+		if (alifDict_setItem(d, &ALIF_ID(__builtins__),
 			alifEval_getBuiltins()) != 0)
 			goto error;
 	}
@@ -467,7 +478,7 @@ AlifObject* alifImport_execCodeModuleEx(const char* name, AlifObject* co, char* 
 		v = ((AlifCodeObject*)co)->filename;
 		ALIF_INCREF(v);
 	}
-	if (alifDict_setItemString(d, "__file__", v) != 0) {
+	if (alifDict_setItem(d, &ALIF_ID(__file__), v) != 0) {
 		//alifErr_clear();
 	}
 	ALIF_DECREF(v);
@@ -519,31 +530,16 @@ static AlifCodeObject* parse_sourceModule(const char* pathname, FILE* fp) { // 8
 }
 
 
-static AlifObject* load_sourceModule(wchar_t* _name, wchar_t* _pathname, FILE* _fp) { // 966
+static AlifObject* load_sourceModule(char* _name, char* _pathname, FILE* _fp) { // 966
 	FILE* fpc{};
-	wchar_t buf[MAXPATHLEN + 1];
 	AlifCodeObject* co{};
 	AlifObject* m{};
-	char* path{};
-	char* name{};
 
-	AlifSizeT len = wcstombs(path, _pathname, 0);
-	path = (char*)alifMem_dataAlloc(len + 1);
-	path[len] = '\0';
-	wcstombs(path, _pathname, len);
-
-	co = parse_sourceModule(path, _fp);
+	co = parse_sourceModule(_pathname, _fp);
 	if (co == nullptr)
 		return nullptr;
 
-
-
-	AlifSizeT nameLen = wcstombs(name, _name, 0);
-	name = (char*)alifMem_dataAlloc(nameLen + 1);
-	name[nameLen] = '\0';
-	wcstombs(name, _name, nameLen);
-
-	m = alifImport_execCodeModuleEx(name, (AlifObject*)co, path);
+	m = alifImport_execCodeModuleEx(_name, (AlifObject*)co, _pathname);
 	ALIF_DECREF(co);
 
 	return m;
@@ -552,51 +548,66 @@ static AlifObject* load_sourceModule(wchar_t* _name, wchar_t* _pathname, FILE* _
 
 
 
-static FILE* get_file(wchar_t* pathname, const wchar_t* mode) { // 2938
+static FILE* get_file(char* pathname, const char* mode) { // 2938
 	FILE* fp{};
-	fp = _wfopen(pathname, mode);
+	fp = fopen(pathname, mode);
 	if (fp == nullptr) {
 		//alifErr_setFromErrno(_alifExcIOError_);
 	}
 	return fp;
 }
 
-void add_extension(const wchar_t* path, const wchar_t* extension, wchar_t* new_path) {
-	wcscpy(new_path, path);
+void add_extension(const char* path, const char* extension, char* new_path) {
+	strcpy(new_path, path);
 
-	AlifUSizeT path_len = wcslen(path);
+	AlifUSizeT path_len = strlen(path);
 
 	// Check if the path already has an extension
-	const wchar_t* dot = wcsrchr(path, '.');
-	if (dot and dot > wcsrchr(path, '/') and dot > wcsrchr(path, '\\')) {
-		wcscpy(new_path + (dot - path), extension);
+	const char* dot = strrchr(path, '.');
+	if (dot and dot > strrchr(path, '/') and dot > strrchr(path, '\\')) {
+		strcpy(new_path + (dot - path), extension);
 	}
 	else {
 		// If there is no extension, append it
-		wcscat(new_path, L".");
-		wcscat(new_path, extension);
+		strcat(new_path, ".");
+		strcat(new_path, extension);
 	}
 }
 
 
+AlifIntT get_absPath(const char* name, char* pathname, AlifUSizeT pathnameSize) {
+#ifdef _WINDOWS
+	if (_fullpath(pathname, name, pathnameSize) != nullptr) {
+		return 1;
+	}
+#else
+	if (realpath(name, pathname) != nullptr) {
+		return 1;
+	}
+#endif
+	return -1;
+}
+
+
 static AlifObject* load_sourceImpl(AlifObject* _absName) { // 3002 // import27.c
-	wchar_t* name{};
-	wchar_t* pathname{};
+	char* name{};
+	char pathname[MAXPATHLEN + 1]{};
 	AlifObject* m{};
 	FILE* fp{};
 
-	name = (wchar_t*)alifUStr_asWideCharString(_absName, 0);
+	name = (char*)alifUStr_asUTF8(_absName);
 
-	if (alif_absPath(name, &pathname) < 0) {
+	if (get_absPath(name, pathname, MAXPATHLEN) < 0) {
+		printf("لم يستطع جلب المسار اثناء الاستيراد");
 		return nullptr;
 	}
 
 	// إضافة لاحقة المكتبة
-	const wchar_t* extension = L"alifl";
-	wchar_t path[256]{};
+	const char* extension = "alifl";
+	char path[MAXPATHLEN + 1]{};
 	add_extension(pathname, extension, path);
 
-	fp = get_file(path, L"r");
+	fp = get_file(path, "r");
 	if (fp == nullptr) return nullptr;
 
 	m = load_sourceModule(name, path, fp);

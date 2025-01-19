@@ -2214,9 +2214,8 @@ AlifObject* _alifEval_importName(AlifThread* _thread, AlifInterpreterFrame* _fra
 		if (ilevel == -1 /*and _alifErr_occurred(_thread)*/) {
 			return nullptr;
 		}
-		return alifImport_importModuleLevelObject( _name,
-			_frame->globals, locals,
-			_fromList, ilevel);
+		return alifImport_importModuleLevelObject(_name,
+			_frame->globals, locals, _fromList, ilevel);
 	}
 
 	AlifObject* args[5] = { _name, _frame->globals, locals, _fromList, _level };

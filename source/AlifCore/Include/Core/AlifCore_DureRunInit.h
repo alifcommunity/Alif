@@ -707,6 +707,7 @@
 	INIT_ID(__dict__), \
 	INIT_ID(__doc__), \
 	INIT_ID(__eq__), \
+	INIT_ID(__file__), \
 	INIT_ID(__firstLineno__), \
 	INIT_ID(__format__), \
 	INIT_ID(__getAttr__), \

@@ -483,14 +483,17 @@ AlifTypeObject _alifModuleType_ = { // 1290
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "وحدة",
 	.basicSize = sizeof(AlifModuleObject),
-	.itemSize = 0,                                          
 	//(Destructor)module_dealloc,
+	.getAttro = (GetAttroFunc)alifModule_getAttro,
 	.setAttro = alifObject_genericSetAttr,
 
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
 		ALIF_TPFLAGS_BASETYPE,
-
 	.traverse = (TraverseProc)module_traverse,
+	.weakListOffset = offsetof(AlifModuleObject, weaklist),
 
 	.dictOffset = offsetof(AlifModuleObject, dict),
+
+	//.new_ = new_module,
+	.free = alifObject_gcDel,
 };

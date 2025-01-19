@@ -73,6 +73,7 @@ public:
 		STRUCT_FOR_ID(__dict__)
 		STRUCT_FOR_ID(__doc__)
 		STRUCT_FOR_ID(__eq__)
+		STRUCT_FOR_ID(__file__)
 		STRUCT_FOR_ID(__firstLineno__)
 		STRUCT_FOR_ID(__format__)
 		STRUCT_FOR_ID(__getAttr__)

@@ -326,8 +326,18 @@ static AlifIntT alifCore_builtinsInit(AlifThread* _thread) { // 775
 
 	builtinsDict = alifModule_getDict(biMod);
 	if (builtinsDict == nullptr) goto error;
-
 	interp->builtins = ALIF_NEWREF(builtinsDict);
+
+
+	//interp->builtinsCopy = alifDict_copy(interp->builtins);
+	//if (interp->builtinsCopy == nullptr) {
+	//	goto error;
+	//}
+	//ALIF_DECREF(biMod);
+
+	if (_alifImport_initDefaultImportFunc(interp) < 0) {
+		goto error;
+	}
 
 	return 1;
 

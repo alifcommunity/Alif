@@ -43,7 +43,7 @@ extern const char* alifImport_resolveNameWithPackageContext(const char*);
 
 extern AlifObject* alifImport_initModules(AlifInterpreter*); // 136
 
-
+extern AlifIntT _alifImport_initDefaultImportFunc(AlifInterpreter*); // 142
 extern AlifIntT _alifImport_isDefaultImportFunc(AlifInterpreter*, AlifObject*); // 143
 
 extern AlifIntT alifImport_init(); // 161
