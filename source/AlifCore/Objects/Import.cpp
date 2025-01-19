@@ -586,13 +586,13 @@ AlifIntT get_absPath(const char* _name, char* _pathname, AlifUSizeT _pathNameSiz
 		return 1;
 	}
 #else
-	if (getcws(_pathname, _pathNameSize) == nullptr) {
+	if (getcwd(_pathname, _pathNameSize) == nullptr) {
 		printf("لم يستطع جلب مسار الملف خلال الاستيراد");
 		return -1;
 	}
 
 	strcat(_pathname, "/");
-	strcat(_pathname, name);
+	strcat(_pathname, _name);
 
 	if (_pathname != nullptr) {
 		return 1;
