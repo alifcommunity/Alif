@@ -433,30 +433,10 @@ AlifObject* alifImport_getModuleDict(void) { // 364
 	return interp->imports.modules;
 }
 
-AlifObject* alifImport_addModule(const char* name) { // 603
-	AlifObject* modules = alifImport_getModuleDict();
-	AlifObject* m{};
-
-	if ((alifDict_getItemStringRef(modules, name, &m) < 0) and
-		ALIFMODULE_CHECK(m))
-		return m;
-	m = alifModule_new(name);
-	if (m == nullptr)
-		return nullptr;
-	if (alifDict_setItemString(modules, name, m) != 0) {
-		ALIF_DECREF(m);
-		return nullptr;
-	}
-	ALIF_DECREF(m); /* Yes, it still exists, in modules! */
-
-	return m;
-}
-
 AlifObject* alifImport_execCodeModuleEx(const char* name, AlifObject* co, char* pathname) { // 649
 	AlifObject* modules = alifImport_getModuleDict();
 	AlifObject* m{}, * d{}, * v{};
 
-	//m = alifImport_addModule(name);
 	m = alifImport_addModuleRef(name);
 	if (m == nullptr)
 		return nullptr;
@@ -548,7 +528,7 @@ static AlifObject* load_sourceModule(char* _name, char* _pathname, FILE* _fp) { 
 
 
 
-static FILE* get_file(char* pathname, const char* mode) { // 2938
+static FILE* open_file(char* pathname, const char* mode) { // 2938
 	FILE* fp{};
 	fp = fopen(pathname, mode);
 	if (fp == nullptr) {
@@ -557,7 +537,7 @@ static FILE* get_file(char* pathname, const char* mode) { // 2938
 	return fp;
 }
 
-void add_extension(char* path, const char* extension) {
+static void path_addFile(char* path, const char* extension) {
 	char newPath[MAXPATHLEN]{};
 	strcpy(newPath, path);
 
@@ -577,8 +557,7 @@ void add_extension(char* path, const char* extension) {
 	strcpy(path, newPath);
 }
 
-
-AlifIntT get_absPath(const char* _name, char* _pathname, AlifUSizeT _pathNameSize) {
+static AlifIntT get_absPath(const char* _name, char* _pathname, AlifUSizeT _pathNameSize) {
 	if (_name == nullptr) return -1;
 
 #ifdef _WINDOWS
@@ -602,6 +581,70 @@ AlifIntT get_absPath(const char* _name, char* _pathname, AlifUSizeT _pathNameSiz
 	return -1;
 }
 
+static const char* get_fileExtension(const char* filename) {
+	const char* dot = strrchr(filename, '.');
+	if (!dot or dot == filename) return "";
+	return dot + 1;
+}
+
+static char* get_baseName(const char* filename) {
+	const char* dot = strrchr(filename, '.');
+
+	if (!dot or dot == filename) return strdup(filename);
+	AlifUSizeT len = dot - filename;
+	char* baseName = (char*)alifMem_dataAlloc(len + 1);
+	if (baseName == nullptr) {
+		return nullptr;
+	}
+
+	baseName[len] = '\0';
+	strncpy(baseName, filename, len);
+
+	return baseName;
+}
+
+static AlifIntT find_file(const char* name, char* pathname) {
+	WIN32_FIND_DATAA findFileData;
+	HANDLE hFind = FindFirstFileA("*", &findFileData);
+
+	if (hFind == INVALID_HANDLE_VALUE) {
+		fprintf(stderr, "FindFirstFile failed (%lu)\n", GetLastError());
+		return -1;
+	}
+
+	BOOL bFound = true;
+	do {
+		const char* filename = findFileData.cFileName;
+		char* baseName = get_baseName(filename);
+		if (strcmp(baseName, name) == 0) {
+			const char* extension = get_fileExtension(filename);
+			if (strcmp(extension, "alif") == 0
+				or strcmp(extension, "alifl") == 0
+				or strcmp(extension, "alifm") == 0) {
+				char newFilename[MAXPATHLEN]{};
+				snprintf(newFilename, sizeof(newFilename), "%s.%s", baseName, extension);
+				path_addFile(pathname, extension);
+			}
+			alifMem_dataFree(baseName);
+			FindClose(hFind);
+			return 1;
+		}
+		bFound = FindNextFileA(hFind, &findFileData);
+	} while (bFound);
+
+	DWORD dwError = GetLastError();
+	if (dwError != ERROR_NO_MORE_FILES) {
+		fprintf(stderr, "FindNextFile failed (%lu)\n", dwError);
+		FindClose(hFind);
+		return -1;
+	}
+
+	FindClose(hFind);
+	fprintf(stderr, "File not found: %s\n", name);
+	return -1;
+}
+
+
 
 static AlifObject* load_sourceImpl(AlifObject* _absName) { // 3002 // import27.c
 	char* name{};
@@ -610,17 +653,21 @@ static AlifObject* load_sourceImpl(AlifObject* _absName) { // 3002 // import27.c
 	FILE* fp{};
 
 	name = (char*)alifUStr_asUTF8(_absName);
+	if (name == nullptr) {
+		return nullptr;
+	}
 
 	if (get_absPath(name, pathname, MAXPATHLEN) < 0) {
 		printf("لم يستطع جلب المسار اثناء الاستيراد");
 		return nullptr;
 	}
 
-	// إضافة لاحقة المكتبة
-	const char* extension = "alifl";
-	add_extension(pathname, extension);
+	// البحث عن الملف ضمن الملفات في المسار الحالي وإضافته لمسار
+	if (find_file(name, pathname) < 0) {
+		return nullptr;
+	}
 
-	fp = get_file(pathname, "r");
+	fp = open_file(pathname, "r");
 	if (fp == nullptr) return nullptr;
 
 	m = load_sourceModule(name, pathname, fp);
