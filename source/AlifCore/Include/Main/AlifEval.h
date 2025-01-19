@@ -5,6 +5,7 @@
 
 AlifObject* alifEval_evalCode(AlifObject*, AlifObject*, AlifObject*); // 10
 
+AlifObject* alifEval_getBuiltins(); // 20
 AlifObject* alifEval_getGlobals(); // 21
 
 AlifIntT alif_makePendingCalls(); // 30

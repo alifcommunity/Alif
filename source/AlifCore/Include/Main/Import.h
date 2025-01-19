@@ -12,6 +12,11 @@ AlifObject* alifImport_addModuleRef(const char*); // 47
 
 
 
+AlifObject* alifImport_importModuleLevelObject(AlifObject*, AlifObject*,
+	AlifObject*, AlifObject*, AlifIntT); // 65
+
+
+
 /* --------------------------------------------------------------------------------------- */
 
 

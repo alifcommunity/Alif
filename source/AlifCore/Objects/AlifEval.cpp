@@ -959,7 +959,6 @@ dispatch_opcode :
 				iter = stackPointer[-1];
 				{
 					uint16_t counter = read_u16(&thisInstr[1].cache);
-					(void)counter;
 #if ENABLE_SPECIALIZATION
 					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
 						nextInstr = thisInstr;
@@ -997,6 +996,26 @@ dispatch_opcode :
 				}
 				stackPointer[0] = next;
 				stackPointer += 1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
+			TARGET(IMPORT_NAME) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef level{};
+				AlifStackRef fromlist{};
+				AlifStackRef res{};
+				fromlist = stackPointer[-1];
+				level = stackPointer[-2];
+				AlifObject* name = GETITEM(FRAME_CO_NAMES, oparg);
+				AlifObject* res_o = _alifEval_importName(_thread, _frame, name,
+					alifStackRef_asAlifObjectBorrow(fromlist),
+					alifStackRef_asAlifObjectBorrow(level));
+				alifStackRef_close(level);
+				alifStackRef_close(fromlist);
+				//if (res_o == nullptr) goto pop_2_error;
+				res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(res_o);
+				stackPointer[-2] = res;
+				stackPointer += -1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
 			TARGET(JUMP_BACKWARD) {
@@ -2154,7 +2173,10 @@ AlifObject* _alifEval_getBuiltins(AlifThread* _thread) { // 2444
 }
 
 
-
+AlifObject* alifEval_getBuiltins() { // 2455
+	AlifThread* thread = _alifThread_get();
+	return _alifEval_getBuiltins(thread);
+}
 
 
 
@@ -2166,6 +2188,44 @@ AlifObject* alifEval_getGlobals() { // 2557
 	}
 	return current_frame->globals;
 }
+
+
+
+AlifObject* _alifEval_importName(AlifThread* _thread, AlifInterpreterFrame* _frame,
+	AlifObject* _name, AlifObject* _fromList, AlifObject* _level) { // 2683
+	AlifObject* importFunc{};
+	if (alifMapping_getOptionalItem(_frame->builtins, &ALIF_STR(__import__), &importFunc) < 0) {
+		return nullptr;
+	}
+	if (importFunc == nullptr) {
+		//_alifErr_setString(_thread, _alifExcImportError_, "__import__ not found");
+		return nullptr;
+	}
+
+	AlifObject* locals = _frame->locals;
+	if (locals == nullptr) {
+		locals = ALIF_NONE;
+	}
+
+	/* Fast path for not overloaded __import__. */
+	if (_alifImport_isDefaultImportFunc(_thread->interpreter, importFunc)) {
+		ALIF_DECREF(importFunc);
+		AlifIntT ilevel = alifLong_asInt(_level);
+		if (ilevel == -1 /*and _alifErr_occurred(_thread)*/) {
+			return nullptr;
+		}
+		return alifImport_importModuleLevelObject( _name,
+			_frame->globals, locals,
+			_fromList, ilevel);
+	}
+
+	AlifObject* args[5] = { _name, _frame->globals, locals, _fromList, _level };
+	AlifObject* res = alifObject_vectorCall(importFunc, args, 5, nullptr);
+	ALIF_DECREF(importFunc);
+	return res;
+}
+
+
 
 
 AlifObject* _alifEval_loadGlobal(AlifObject* _globals,

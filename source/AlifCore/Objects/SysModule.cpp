@@ -1,9 +1,12 @@
 #include "alif.h"
 
+#include "AlifCore_Call.h"
+#include "AlifCore_Eval.h"
 #include "AlifCore_Dict.h"
 #include "AlifCore_InitConfig.h"
 #include "AlifCore_ModSupport.h"
 #include "AlifCore_Object.h"
+#include "AlifCore_Errors.h"
 #include "AlifCore_LifeCycle.h"
 #include "AlifCore_State.h"
 #include "AlifCore_SysModule.h"
@@ -73,6 +76,60 @@ static AlifModuleDef _sysModule_ = { // 3447
 };
 
 
+ // 3460
+#define SET_SYS(key, value)                                \
+    do {                                                   \
+        AlifObject *v = (value);                             \
+        if (v == nullptr) {                                   \
+            goto err_occurred;                             \
+        }                                                  \
+        res = alifDict_setItemString(sysdict, key, v);       \
+        ALIF_DECREF(v);                                      \
+        if (res < 0) {                                     \
+            goto err_occurred;                             \
+        }                                                  \
+    } while (0)
+
+#define SET_SYS_FROM_STRING(_key, _value) \
+        SET_SYS(_key, alifUStr_fromString(_value))
+
+static AlifIntT _alifSys_initCore(AlifThread* tstate, AlifObject* sysdict) { // 3476
+	AlifObject* version_info{};
+	AlifIntT res{};
+	AlifInterpreter* interp = tstate->interpreter;
+
+#undef COPY_SYS_ATTR
+
+	SET_SYS_FROM_STRING("version", alif_getVersion());
+	/* initialize hash_info */
+
+	//SET_SYS("builtin_module_names", listBuiltin_moduleNames());
+	//SET_SYS("stdlib_module_names", listStdlib_moduleNames());
+#if ALIF_BIG_ENDIAN
+	SET_SYS_FROM_STRING("byteorder", "big");
+#else
+	SET_SYS_FROM_STRING("byteorder", "little");
+#endif
+
+	/* adding sys.path_hooks and sys.path_importer_cache */
+	SET_SYS("meta_path", alifList_new(0));
+	SET_SYS("path_importer_cache", alifDict_new());
+	SET_SYS("path_hooks", alifList_new(0));
+
+	if (_alifErr_occurred(tstate)) {
+		goto err_occurred;
+	}
+	return 1;
+
+type_init_failed:
+	//return _ALIFSTATUS_ERR("failed to initialize a type");
+	return -1; //* alif
+
+err_occurred:
+	//return _ALIFSTATUS_ERR("can't initialize sys module");
+	return -1; //* alif
+}
+
 
 
 AlifIntT alifSys_create(AlifThread* _thread, AlifObject** _sysModP) { // 3779
@@ -116,10 +173,10 @@ AlifIntT alifSys_create(AlifThread* _thread, AlifObject** _sysModP) { // 3779
 	//	return status;
 	//}
 
-	//status = _alifSys_initCore(_thread, sysdict);
-	//if (status < 1) {
-	//	return status;
-	//}
+	status = _alifSys_initCore(_thread, sysdict);
+	if (status < 1) {
+		return status;
+	}
 
 	//if (_alifImport_fixupBuiltin(_thread, sysmod, "sys", modules) < 0) {
 	//	goto error;

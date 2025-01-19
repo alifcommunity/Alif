@@ -9854,7 +9854,7 @@ static ExprTy dottedName_raw(AlifParser* _p) {
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 	ExprTy res{};
-	AlifIntT mark{};
+	AlifIntT mark = _p->mark;
 
 	{ // اسم_نقطة "." *اسم*
 		if (_p->errorIndicator) { _p->level--; return nullptr; }

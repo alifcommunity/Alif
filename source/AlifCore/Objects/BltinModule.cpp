@@ -228,6 +228,12 @@ error:
 
 
 
+static AlifObject* builtin___import__Impl(AlifObject* module, AlifObject* name, AlifObject* globals,
+	AlifObject* locals, AlifObject* fromlist, AlifIntT level) { // 272
+	return alifImport_importModuleLevelObject(name, globals, locals,
+		fromlist, level);
+}
+
 
 
 
@@ -571,11 +577,10 @@ static AlifObject* builtin_inputImpl(AlifObject* module, AlifObject* prompt) { /
 }
 
 
-
-
-static AlifMethodDef builtinMethods[] = { // 3141
+static AlifMethodDef _builtinMethods_[] = { // 3141
 	{"__buildClass__", ALIF_CPPFUNCTION_CAST(builtin___buildClass__),
 	 METHOD_FASTCALL | METHOD_KEYWORDS},
+	BUILTIN___IMPORT___METHODDEF,
 	BUILTIN_INPUT_METHODDEF,
 	BUILTIN_PRINT_METHODDEF,
 	{nullptr, nullptr},
@@ -587,7 +592,7 @@ static AlifModuleDef _alifBuiltinsModule_ = { // 3202
 	"builtins",
 	nullptr,
 	-1,
-	builtinMethods,
+	_builtinMethods_,
 	nullptr,
 	nullptr,
 	nullptr,

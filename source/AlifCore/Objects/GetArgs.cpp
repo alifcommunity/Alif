@@ -1192,6 +1192,172 @@ static AlifObject* find_keyword(AlifObject* kwnames, AlifObject* const* kwstack,
 
 
 
+AlifObject* const* _alifArg_unpackKeywords(AlifObject* const* args, AlifSizeT nargs,
+	AlifObject* kwargs, AlifObject* kwnames, AlifArgParser* parser,
+	AlifIntT minpos, AlifIntT maxpos, AlifIntT minkw, AlifObject** buf) { // 2313
+	AlifObject* kwtuple{};
+	AlifObject* keyword{};
+	AlifIntT i{}, posonly{}, minposonly{}, maxargs{};
+	AlifIntT reqlimit = minkw ? maxpos + minkw : minpos;
+	AlifSizeT nkwargs{};
+	AlifObject* const* kwstack = nullptr;
+
+	if (parser == nullptr) {
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
+
+	if (kwnames != nullptr and !ALIFTUPLE_CHECK(kwnames)) {
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
+
+	if (args == nullptr and nargs == 0) {
+		args = buf;
+	}
+
+	if (parser_init(parser) < 0) {
+		return nullptr;
+	}
+
+	kwtuple = parser->kwTuple;
+	posonly = parser->pos;
+	minposonly = ALIF_MIN(posonly, minpos);
+	maxargs = posonly + (AlifIntT)ALIFTUPLE_GET_SIZE(kwtuple);
+
+	if (kwargs != nullptr) {
+		nkwargs = ALIFDICT_GET_SIZE(kwargs);
+	}
+	else if (kwnames != nullptr) {
+		nkwargs = ALIFTUPLE_GET_SIZE(kwnames);
+		kwstack = args + nargs;
+	}
+	else {
+		nkwargs = 0;
+	}
+	if (nkwargs == 0 and minkw == 0 and minpos <= nargs and nargs <= maxpos) {
+		/* Fast path. */
+		return args;
+	}
+	if (nargs + nkwargs > maxargs) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"%.200s%s takes at most %d %sargument%s (%zd given)",
+		//	(parser->fname == nullptr) ? "function" : parser->fname,
+		//	(parser->fname == nullptr) ? "" : "()",
+		//	maxargs,
+		//	(nargs == 0) ? "keyword " : "",
+		//	(maxargs == 1) ? "" : "s",
+		//	nargs + nkwargs);
+		return nullptr;
+	}
+	if (nargs > maxpos) {
+		if (maxpos == 0) {
+			//alifErr_format(_alifExcTypeError_,
+			//	"%.200s%s takes no positional arguments",
+			//	(parser->fname == nullptr) ? "function" : parser->fname,
+			//	(parser->fname == nullptr) ? "" : "()");
+		}
+		else {
+			//alifErr_format(_alifExcTypeError_,
+			//	"%.200s%s takes %s %d positional argument%s (%zd given)",
+			//	(parser->fname == nullptr) ? "function" : parser->fname,
+			//	(parser->fname == nullptr) ? "" : "()",
+			//	(minpos < maxpos) ? "at most" : "exactly",
+			//	maxpos,
+			//	(maxpos == 1) ? "" : "s",
+			//	nargs);
+		}
+		return nullptr;
+	}
+	if (nargs < minposonly) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"%.200s%s takes %s %d positional argument%s"
+		//	" (%zd given)",
+		//	(parser->fname == nullptr) ? "function" : parser->fname,
+		//	(parser->fname == nullptr) ? "" : "()",
+		//	minposonly < maxpos ? "at least" : "exactly",
+		//	minposonly,
+		//	minposonly == 1 ? "" : "s",
+		//	nargs);
+		return nullptr;
+	}
+
+	/* copy tuple args */
+	for (i = 0; i < nargs; i++) {
+		buf[i] = args[i];
+	}
+
+	/* copy keyword args using kwtuple to drive process */
+	for (i = ALIF_MAX((int)nargs, posonly); i < maxargs; i++) {
+		AlifObject* current_arg{};
+		if (nkwargs) {
+			keyword = ALIFTUPLE_GET_ITEM(kwtuple, i - posonly);
+			if (kwargs != nullptr) {
+				if (alifDict_getItemRef(kwargs, keyword, &current_arg) < 0) {
+					return nullptr;
+				}
+			}
+			else {
+				current_arg = find_keyword(kwnames, kwstack, keyword);
+			}
+		}
+		else if (i >= reqlimit) {
+			break;
+		}
+		else {
+			current_arg = nullptr;
+		}
+
+		buf[i] = current_arg;
+
+		if (current_arg) {
+			ALIF_DECREF(current_arg);
+			--nkwargs;
+		}
+		else if (i < minpos or (maxpos <= i and i < reqlimit)) {
+			/* Less arguments than required */
+			keyword = ALIFTUPLE_GET_ITEM(kwtuple, i - posonly);
+			//alifErr_format(_alifExcTypeError_, "%.200s%s missing required "
+			//	"argument '%U' (pos %d)",
+			//	(parser->fname == nullptr) ? "function" : parser->fname,
+			//	(parser->fname == nullptr) ? "" : "()",
+			//	keyword, i + 1);
+			return nullptr;
+		}
+	}
+
+	if (nkwargs > 0) {
+		/* make sure there are no arguments given by name and position */
+		for (i = posonly; i < nargs; i++) {
+			AlifObject* current_arg{};
+			keyword = ALIFTUPLE_GET_ITEM(kwtuple, i - posonly);
+			if (kwargs != nullptr) {
+				if (alifDict_getItemRef(kwargs, keyword, &current_arg) < 0) {
+					return nullptr;
+				}
+			}
+			else {
+				current_arg = find_keyword(kwnames, kwstack, keyword);
+			}
+			if (current_arg) {
+				ALIF_DECREF(current_arg);
+				/* arg present in tuple and in dict */
+				//alifErr_format(_alifExcTypeError_,
+				//	"argument for %.200s%s given by name ('%U') "
+				//	"and position (%d)",
+				//	(parser->fname == nullptr) ? "function" : parser->fname,
+				//	(parser->fname == nullptr) ? "" : "()",
+				//	keyword, i + 1);
+				return nullptr;
+			}
+		}
+
+		//errorUnexpected_keywordArg(kwargs, kwnames, kwtuple, parser->fname);
+		return nullptr;
+	}
+
+	return buf;
+}
 
 
 

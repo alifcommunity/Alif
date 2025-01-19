@@ -686,6 +686,7 @@
     INIT_STR(True, "صح"), /* //* alif */	\
     INIT_STR(False, "خطأ"), /* //* alif */	\
     INIT_USTR(__init__, "_تهيئة_"), /* //* alif */	\
+    INIT_USTR(__import__, "استورد"), /* //* alif */	\
 }
 
 #define ALIF_STR_IDENTIFIERS_INIT { \

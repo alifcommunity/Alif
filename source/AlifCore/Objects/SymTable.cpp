@@ -115,6 +115,7 @@ static AlifIntT symtable_visitStmt(AlifSymTable* , StmtTy ); // 237
 static AlifIntT symtable_visitExpr(AlifSymTable* , ExprTy ); // 238
 static AlifIntT symtable_visitTypeParam(AlifSymTable*, TypeParamTy); // 239
 static AlifIntT symtable_visitArguments(AlifSymTable*, ArgumentsTy); // 244
+static AlifIntT symtable_visitAlias(AlifSymTable*, AliasTy); // 246
 static AlifIntT symtable_visitKeyword(AlifSymTable*, KeywordTy); // 248
 static AlifIntT symtable_visitAnnotations(AlifSymTable*, StmtTy, ArgumentsTy, ExprTy, SymTableEntry*); // 253
 static AlifIntT symtable_addDef(AlifSymTable*, AlifObject*, AlifIntT, AlifSourceLocation); // 261
@@ -1299,6 +1300,9 @@ static AlifIntT symtable_visitStmt(AlifSymTable* _st, StmtTy _s) { // 1812
 		if (_s->V.if_.else_)
 			VISIT_SEQ(_st, Stmt, _s->V.if_.else_);
 		break;
+	case StmtK_::ImportK:
+		VISIT_SEQ(_st, Alias, _s->V.import.names);
+		break;
 	case StmtK_::ExprK:
 		VISIT(_st, Expr, _s->V.expression.val);
 		break;
@@ -1531,6 +1535,37 @@ static AlifIntT symtable_visitArguments(AlifSymTable* _st, ArgumentsTy _a) { // 
 	return 1;
 }
 
+
+
+static AlifIntT symtable_visitAlias(AlifSymTable* _st, AliasTy _a) { // 2825
+	AlifObject* storeName{};
+	AlifObject* name = (_a->asName == nullptr) ? _a->name : _a->asName;
+	AlifSizeT dot = alifUStr_findChar(name, '.', 0,
+		ALIFUSTR_GET_LENGTH(name), 1);
+	if (dot != -1) {
+		storeName = alifUStr_subString(name, 0, dot);
+		if (!storeName)
+			return 0;
+	}
+	else {
+		storeName = ALIF_NEWREF(name);
+	}
+	if (!alifUStr_equalToASCIIString(name, "*")) {
+		AlifIntT r = symtable_addDef(_st, storeName, DEF_IMPORT, LOCATION(_a));
+		ALIF_DECREF(storeName);
+		return r;
+	}
+	else {
+		if (_st->cur->type != BlockType_::Module_Block) {
+			//alifErr_setString(_alifExcSyntaxError_, IMPORT_STAR_WARNING);
+			//SET_ERROR_LOCATION(st->filename, LOCATION(a));
+			ALIF_DECREF(storeName);
+			return 0;
+		}
+		ALIF_DECREF(storeName);
+		return 1;
+	}
+}
 
 
 static AlifIntT symtable_visitKeyword(AlifSymTable* _st, KeywordTy _k) { // 2879

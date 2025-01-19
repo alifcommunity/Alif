@@ -98,6 +98,7 @@ static inline void _alif_leaveRecursiveCall(void) { // 228
 }
 
 
+AlifObject* _alifEval_importName(AlifThread*, AlifInterpreterFrame*, AlifObject*, AlifObject*, AlifObject*); // 263
 AlifIntT _alifEval_unpackIterableStackRef(AlifThread*, AlifStackRef, AlifIntT, AlifIntT, AlifStackRef*); // 267
 void _alifEval_frameClearAndPop(AlifThread* _thread, AlifInterpreterFrame*); // 268
 AlifObject** _alifObjectArray_fromStackRefArray(AlifStackRef*, AlifSizeT, AlifObject**); // 269

@@ -204,8 +204,8 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 1;
 	//case IMPORT_FROM:
 	//	return 1;
-	//case IMPORT_NAME:
-	//	return 2;
+	case IMPORT_NAME:
+		return 2;
 	//case INSTRUMENTED_CALL:
 	//	return 2 + _oparg;
 	//case INSTRUMENTED_CALL_FUNCTION_EX:
@@ -666,8 +666,8 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 1;
 	//case IMPORT_FROM:
 	//	return 2;
-	//case IMPORT_NAME:
-	//	return 1;
+	case IMPORT_NAME:
+		return 1;
 	//case INSTRUMENTED_CALL:
 	//	return 1;
 	//case INSTRUMENTED_CALL_FUNCTION_EX:
@@ -1391,7 +1391,7 @@ const uint8_t _alifOpcodeDeopt_[256] = {
 	FOR_ITER, // FOR_ITER // 67
 	GET_AWAITABLE, // GET_AWAITABLE // 68
 	0,//IMPORT_FROM, // IMPORT_FROM // 69
-	0,//IMPORT_NAME, // IMPORT_NAME // 70
+	IMPORT_NAME, // IMPORT_NAME // 70
 	IS_OP, // IS_OP // 71
 	JUMP_BACKWARD, // JUMP_BACKWARD // 72
 	JUMP_BACKWARD_NO_INTERRUPT, // JUMP_BACKWARD_NO_INTERRUPT // 73

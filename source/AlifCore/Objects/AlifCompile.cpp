@@ -10,6 +10,7 @@
 #include "AlifCore_FlowGraph.h"
 #include "AlifCore_InstructionSequence.h"
 #include "AlifCore_Intrinsics.h"
+#include "AlifCore_Long.h"
 #include "AlifCore_State.h"
 #include "AlifCore_SetObject.h"
 #include "AlifCore_SymTable.h"
@@ -2238,6 +2239,47 @@ static AlifIntT codegen_continue(AlifCompiler* _c, Location _loc) { // 3083
 }
 
 
+
+
+static AlifIntT codegen_import(AlifCompiler* c, StmtTy s) { // 3670
+	Location loc = LOC(s);
+	AlifSizeT i, n = ASDL_SEQ_LEN(s->V.import.names);
+
+	AlifObject* zero = _alifLong_getZero();  // borrowed reference
+	for (i = 0; i < n; i++) {
+		AliasTy alias = (AliasTy)ASDL_SEQ_GET(s->V.import.names, i);
+		AlifIntT r{};
+
+		ADDOP_LOAD_CONST(c, loc, zero);
+		ADDOP_LOAD_CONST(c, loc, ALIF_NONE);
+		ADDOP_NAME(c, loc, IMPORT_NAME, alias->name, names);
+
+		if (alias->asName) {
+			//r = codegen_import_as(c, loc, alias->name, alias->asName);
+			RETURN_IF_ERROR(r);
+		}
+		else {
+			Identifier tmp = alias->name;
+			AlifSizeT dot = alifUStr_findChar(
+				alias->name, '.', 0, ALIFUSTR_GET_LENGTH(alias->name), 1);
+			if (dot != -1) {
+				tmp = alifUStr_subString(alias->name, 0, dot);
+				if (tmp == nullptr) {
+					return ERROR;
+				}
+			}
+			r = compiler_nameOp(c, loc, tmp, ExprContext_::Store);
+			if (dot != -1) {
+				ALIF_DECREF(tmp);
+			}
+			RETURN_IF_ERROR(r);
+		}
+	}
+	return SUCCESS;
+}
+
+
+
 static AlifIntT codegen_stmtExpr(AlifCompiler* _c, Location _loc, ExprTy _value) { // 3797
 	//if (IS_INTERACTIVE(_c) and !IS_NESTED_SCOPE(_c)) {
 	//	VISIT(_c, Expr, _value);
@@ -2317,8 +2359,8 @@ static AlifIntT compiler_visitStmt(AlifCompiler* _c, StmtTy _s) { // 3818
 	//	return codegen_try_star(_c, _s);
 	//case StmtK_::AssertK:
 	//	return codegen_assert(_c, _s);
-	//case StmtK_::ImportK:
-	//	return codegen_import(_c, _s);
+	case StmtK_::ImportK:
+		return codegen_import(_c, _s);
 	//case StmtK_::ImportFromK:
 	//	return codegen_from_import(_c, _s);
 	//case StmtK_::GlobalK:

@@ -5,6 +5,92 @@
 
 
 
+
+
+
+#define BUILTIN___IMPORT___METHODDEF    \
+    {"استورد", ALIF_CPPFUNCTION_CAST(builtin___import__), METHOD_FASTCALL | METHOD_KEYWORDS}
+
+static AlifObject* builtin___import__Impl(AlifObject*, AlifObject*, AlifObject*,
+	AlifObject*, AlifObject*, AlifIntT); // 35
+
+
+static AlifObject* builtin___import__(AlifObject *_module, AlifObject *const* _args,
+	AlifSizeT _nargs, AlifObject* _kwNames) { // 39
+    AlifObject *returnValue = nullptr;
+
+    #define NUM_KEYWORDS 5
+    static class {
+	public:
+		AlifGCHead thisIsNotUsed{};
+		ALIFOBJECT_VAR_HEAD;
+		AlifObject* item[NUM_KEYWORDS]{};
+    } _kwtuple = {
+        .objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTupleType_, NUM_KEYWORDS),
+        //.item = { &ALIF_ID(Name), &ALIF_ID(Globals), &ALIF_ID(Locals), &ALIF_ID(Fromlist), &ALIF_ID(Level), },
+    };
+    #undef NUM_KEYWORDS
+    #define KWTUPLE (&_kwtuple.objBase.objBase)
+
+    static const char * const _keywords[] = {"name", "globals", "locals", "fromlist", "level", nullptr};
+    static AlifArgParser _parser = {
+        .keywords = _keywords,
+        .fname = "__import__",
+        .kwTuple = KWTUPLE,
+    };
+    #undef KWTUPLE
+    AlifObject *argsbuf[5];
+    AlifSizeT noptargs = _nargs + (_kwNames ? ALIFTUPLE_GET_SIZE(_kwNames) : 0) - 1;
+    AlifObject *name;
+    AlifObject *globals = nullptr;
+    AlifObject *locals = nullptr;
+    AlifObject *fromlist = nullptr;
+    AlifIntT level = 0;
+
+    _args = ALIFARG_UNPACKKEYWORDS(_args, _nargs, nullptr, _kwNames, &_parser, 1, 5, 0, argsbuf);
+    if (!_args) {
+        goto exit;
+    }
+    name = _args[0];
+    if (!noptargs) {
+        goto skip_optional_pos;
+    }
+    if (_args[1]) {
+        globals = _args[1];
+        if (!--noptargs) {
+            goto skip_optional_pos;
+        }
+    }
+    if (_args[2]) {
+        locals = _args[2];
+        if (!--noptargs) {
+            goto skip_optional_pos;
+        }
+    }
+    if (_args[3]) {
+        fromlist = _args[3];
+        if (!--noptargs) {
+            goto skip_optional_pos;
+        }
+    }
+    level = alifLong_asInt(_args[4]);
+    if (level == -1 and alifErr_occurred()) {
+        goto exit;
+    }
+skip_optional_pos:
+    returnValue = builtin___import__Impl(_module, name, globals, locals, fromlist, level);
+
+exit:
+    return returnValue;
+}
+
+
+
+
+
+
+
+
 #define BUILTIN_PRINT_METHODDEF {"اطبع", ALIF_CPPFUNCTION_CAST(builtin_print), METHOD_FASTCALL | METHOD_KEYWORDS} // 900
 
 
