@@ -543,23 +543,19 @@ static FILE* open_file(char* pathname, const char* mode) { // 2938
 }
 
 static void path_addFile(char* path, const char* extension) {
-	char newPath[MAXPATHLEN]{};
-	strcpy(newPath, path);
-
-	AlifUSizeT path_len = strlen(path);
+	AlifUSizeT pathLen = strlen(path);
 
 	// Check if the path already has an extension
 	const char* dot = strrchr(path, '.');
 	if (dot and dot > strrchr(path, '/') and dot > strrchr(path, '\\')) {
-		strcpy(newPath + (dot - path), extension);
+		// Replace the existing extension with the new one
+		strcpy((char*)dot + 1, extension);
 	}
 	else {
 		// If there is no extension, append it
-		strcat(newPath, ".");
-		strcat(newPath, extension);
+		strcat(path, ".");
+		strcat(path, extension);
 	}
-
-	strcpy(path, newPath);
 }
 
 static AlifIntT get_absPath(const char* _name, char* _pathname, AlifUSizeT _pathNameSize) {
@@ -602,8 +598,8 @@ static char* get_baseName(const char* filename) {
 		return nullptr;
 	}
 
-	baseName[len] = '\0';
 	strncpy(baseName, filename, len);
+	baseName[len] = '\0';
 
 	return baseName;
 }
@@ -623,6 +619,9 @@ static AlifIntT find_file(const char* name, char* pathname) {
 	do {
 		const char* filename = findFileData.cFileName;
 		char* baseName = get_baseName(filename);
+		if (baseName == nullptr) {
+			return -1;
+		}
 		if (strcmp(baseName, name) == 0) {
 			const char* extension = get_fileExtension(filename);
 			if (strcmp(extension, "alif") == 0
@@ -657,12 +656,15 @@ static AlifIntT find_file(const char* name, char* pathname) {
 		return -1;
 	}
 
-	struct dirent* entry;
+	struct dirent* entry{};
 	while ((entry = readdir(dir)) != nullptr) {
 		if (entry->d_type == DT_REG) { // Check if it's a regular file
 			char* baseName = get_baseName(entry->d_name);
+			if (baseName == nullptr) {
+				return -1;
+			}
 			if (strcmp(baseName, name) == 0) {
-				char* extension = get_fileExtension(entry->d_name);
+				const char* extension = get_fileExtension(entry->d_name);
 				if (strcmp(extension, "alif") == 0
 					or strcmp(extension, "alifl") == 0
 					or strcmp(extension, "alifm") == 0) {
@@ -674,7 +676,6 @@ static AlifIntT find_file(const char* name, char* pathname) {
 				closedir(dir);
 				return 1;
 			}
-			alifMem_dataFree(baseName);
 		}
 	}
 
@@ -689,7 +690,7 @@ static AlifIntT find_file(const char* name, char* pathname) {
 
 static AlifObject* load_sourceImpl(AlifObject* _absName) { // 3002 // import27.c
 	char* name{};
-	char pathname[MAXPATHLEN + 1]{};
+	char pathname[MAXPATHLEN]{};
 	AlifObject* m{};
 	FILE* fp{};
 
