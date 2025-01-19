@@ -12,6 +12,11 @@
 //* alif
 #include "AlifCore_Compile.h"
 #include "OSDefs.h"
+#ifndef _WINDOWS
+#include <dirent.h>
+#include <sys/types.h>
+#endif
+
 static AlifObject* load_sourceImpl(AlifObject*); // alif
 
 //* alif
@@ -604,6 +609,8 @@ static char* get_baseName(const char* filename) {
 }
 
 static AlifIntT find_file(const char* name, char* pathname) {
+
+#ifdef _WINDOWS
 	WIN32_FIND_DATAA findFileData;
 	HANDLE hFind = FindFirstFileA("*", &findFileData);
 
@@ -642,6 +649,40 @@ static AlifIntT find_file(const char* name, char* pathname) {
 	FindClose(hFind);
 	fprintf(stderr, "File not found: %s\n", name);
 	return -1;
+
+#else
+	DIR* dir = opendir(".");
+	if (!dir) {
+		perror("opendir");
+		return -1;
+	}
+
+	struct dirent* entry;
+	while ((entry = readdir(dir)) != nullptr) {
+		if (entry->d_type == DT_REG) { // Check if it's a regular file
+			char* baseName = get_baseName(entry->d_name);
+			if (strcmp(baseName, name) == 0) {
+				char* extension = get_fileExtension(entry->d_name);
+				if (strcmp(extension, "alif") == 0
+					or strcmp(extension, "alifl") == 0
+					or strcmp(extension, "alifm") == 0) {
+					char newFilename[MAXPATHLEN]{};
+					snprintf(newFilename, sizeof(newFilename), "%s.%s", baseName, extension);
+					path_addFile(pathname, extension);
+				}
+				alifMem_dataFree(baseName);
+				closedir(dir);
+				return 1;
+			}
+			alifMem_dataFree(baseName);
+		}
+	}
+
+	closedir(dir);
+	fprintf(stderr, "File not found: %s\n", name);
+	return -1;
+
+#endif
 }
 
 
