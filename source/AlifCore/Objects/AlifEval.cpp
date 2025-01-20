@@ -266,6 +266,13 @@ dispatch_opcode :
 		switch (opcode)
 #endif
 		{
+			TARGET(CACHE) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				//ALIF_FATALERROR("Executing a cache.");
+				printf("Executing a cache. error");
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(BINARY_SUBSCR) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 2;
@@ -487,10 +494,10 @@ dispatch_opcode :
 				AlifStackRef value{};
 				AlifStackRef res{};
 				value = stackPointer[-1];
-				AlifObject* res_o = alifNumber_negative(alifStackRef_asAlifObjectBorrow(value));
+				AlifObject* resObj = alifNumber_negative(alifStackRef_asAlifObjectBorrow(value));
 				alifStackRef_close(value);
 				//if (res_o == nullptr) goto pop_1_error;
-				res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(res_o);
+				res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(resObj);
 				stackPointer[-1] = res;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
@@ -1493,6 +1500,19 @@ dispatch_opcode :
 					//if (res == 0) goto pop_1_error;
 				}
 				stackPointer += -1 + oparg;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
+			TARGET(UNARY_SQRT) { //* alif //* review
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef value{};
+				AlifStackRef res{};
+				value = stackPointer[-1];
+				AlifObject* resObj = alifNumber_sqrt(alifStackRef_asAlifObjectBorrow(value));
+				alifStackRef_close(value);
+				//if (res_o == nullptr) goto pop_1_error;
+				res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(resObj);
+				stackPointer[-1] = res;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
 			TARGET(RESUME) {

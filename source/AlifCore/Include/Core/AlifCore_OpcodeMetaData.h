@@ -446,6 +446,8 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 		return 1;
 	case UNARY_NEGATIVE:
 		return 1;
+	case UNARY_SQRT: //* alif
+		return 1;
 	case UNARY_NOT:
 		return 1;
 	case UNPACK_EX:
@@ -908,6 +910,8 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 		return 1;
 	case UNARY_NEGATIVE:
 		return 1;
+	case UNARY_SQRT: //* alif
+		return 1;
 	case UNARY_NOT:
 		return 1;
 	case UNPACK_EX:
@@ -1122,7 +1126,7 @@ const class OpcodeMetadata _alifOpcodeOpcodeMetadata_[264] = {
 	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // UNPACK_SEQUENCE // 114
 	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ESCAPES_FLAG }, // YIELD_VALUE // 115
 	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // _DO_CALL_FUNCTION_EX // 116
-	{false, -1},
+	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // UNARY_SQRT // 117, //* alif
 	{false, -1},
 	{false, -1},
 	{false, -1},
@@ -1438,7 +1442,8 @@ const uint8_t _alifOpcodeDeopt_[256] = {
 	UNPACK_SEQUENCE, // UNPACK_SEQUENCE // 114
 	YIELD_VALUE, // YIELD_VALUE // 115
 	0,//_DO_CALL_FUNCTION_EX, // _DO_CALL_FUNCTION_EX // 116
-	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	UNARY_SQRT, // UNARY_SQRT // 117 //* alif //* review
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 	RESUME, // RESUME // 149
 	BINARY_OP, // BINARY_OP_ADD_FLOAT // 150

@@ -2448,6 +2448,8 @@ static AlifIntT unaryop(UnaryOp_ _op) { // 3916
 		return UNARY_INVERT;
 	case UnaryOp_::USub:
 		return UNARY_NEGATIVE;
+	case UnaryOp_::Sqrt: //* alif
+		return UNARY_SQRT;
 	default:
 		//alifErr_format(_alifExcSystemError_,
 		//	"unary op %d should not be possible", _op);
