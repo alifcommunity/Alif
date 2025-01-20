@@ -29,14 +29,69 @@ static double _alifOS_asciiStrToDouble(const char* _nPtr, char** _endPtr) { // 9
 
 }
 
-//#else
+//#else // 115
 
  // func
 
-//#endif
+//#endif // 272
 
 
+AlifObject* _alifString_toNumberWithUnderscores(const char* _s,
+	AlifSizeT _origLen, const char* _what, AlifObject* _obj, void* _arg,
+	AlifObject* (*_innerFunc)(const char*, AlifSizeT, void*)) { // 344
+	char prev{};
+	const char* p{}, * last{};
+	char* dup{}, * end{};
+	AlifObject* result{};
 
+	if (strchr(_s, '_') == nullptr) {
+		return _innerFunc(_s, _origLen, _arg);
+	}
+
+	dup = (char*)alifMem_dataAlloc(_origLen + 1);
+	if (dup == nullptr) {
+		//return alifErr_noMemory();
+		return nullptr; //* delete
+	}
+	end = dup;
+	prev = '\0';
+	last = _s + _origLen;
+	for (p = _s; *p; p++) {
+		if (*p == '_') {
+			/* Underscores are only allowed after digits. */
+			if (!(prev >= '0' && prev <= '9')) {
+				goto error;
+			}
+		}
+		else {
+			*end++ = *p;
+			/* Underscores are only allowed before digits. */
+			if (prev == '_' && !(*p >= '0' && *p <= '9')) {
+				goto error;
+			}
+		}
+		prev = *p;
+	}
+	/* Underscores are not allowed at the end. */
+	if (prev == '_') {
+		goto error;
+	}
+	/* No embedded NULs allowed. */
+	if (p != last) {
+		goto error;
+	}
+	*end = '\0';
+	result = _innerFunc(dup, end - dup, _arg);
+	alifMem_dataFree(dup);
+	return result;
+
+error:
+	alifMem_dataFree(dup);
+	//alifErr_format(_alifExcValueError_,
+	//	"could not convert string to %s: "
+	//	"%R", what, obj);
+	return nullptr;
+}
 
 
 

@@ -271,7 +271,7 @@ AlifIntT alifBuffer_fillInfo(AlifBuffer* _view, AlifObject* _obj, void* _buf,
 	AlifSizeT _len, AlifIntT _readonly, AlifIntT _flags) { // 760
 	if (_view == nullptr) {
 		//alifErr_setString(_alifExcBufferError_,
-		//	"alifBuffer_fillInfo: view==NULL argument is obsolete");
+		//	"alifBuffer_fillInfo: view==nullptr argument is obsolete");
 		return -1;
 	}
 
@@ -409,7 +409,7 @@ static AlifObject* binary_op1(AlifObject* _v, AlifObject* _w, const AlifIntT _op
 		}
 	}
 	else {
-		slotW = NULL;
+		slotW = nullptr;
 	}
 
 	if (slotV) {
@@ -839,6 +839,62 @@ AlifSizeT alifNumber_asSizeT(AlifObject* _item, AlifObject* _err) { // 1455
 finish:
 	ALIF_DECREF(value);
 	return result;
+}
+
+
+AlifObject* alifNumber_float(AlifObject* _o) { // 1588
+	if (_o == nullptr) {
+		return null_error();
+	}
+
+	if (ALIFFLOAT_CHECKEXACT(_o)) {
+		return ALIF_NEWREF(_o);
+	}
+
+	AlifNumberMethods* m = ALIF_TYPE(_o)->asNumber;
+	if (m and m->float_) {
+		AlifObject* res = m->float_(_o);
+		if (!res or ALIFFLOAT_CHECKEXACT(res)) {
+			return res;
+		}
+
+		if (!ALIFFLOAT_CHECK(res)) {
+			//alifErr_format(_alifExcTypeError_,
+			//	"%.50s.__float__ returned non-float (type %.50s)",
+			//	ALIF_TYPE(o)->name, ALIF_TYPE(res)->name);
+			ALIF_DECREF(res);
+			return nullptr;
+		}
+		//if (alifErr_warnFormat(_alifExcDeprecationWarning_, 1,
+		//	"%.50s.__float__ returned non-float (type %.50s).  "
+		//	"The ability to return an instance of a strict subclass of float "
+		//	"is deprecated, and may be removed in a future version of Alif.",
+		//	ALIF_TYPE(o)->name, ALIF_TYPE(res)->name)) {
+		//	ALIF_DECREF(res);
+		//	return nullptr;
+		//}
+		double val = ALIFFLOAT_AS_DOUBLE(res);
+		ALIF_DECREF(res);
+		return alifFloat_fromDouble(val);
+	}
+
+	if (m and m->index) {
+		AlifObject* res = _alifNumber_index(_o);
+		if (!res) {
+			return nullptr;
+		}
+		double val = alifLong_asDouble(res);
+		ALIF_DECREF(res);
+		if (val == -1.0 and alifErr_occurred()) {
+			return nullptr;
+		}
+		return alifFloat_fromDouble(val);
+	}
+
+	if (ALIFFLOAT_CHECK(_o)) {
+		return alifFloat_fromDouble(ALIFFLOAT_AS_DOUBLE(_o));
+	}
+	return alifFloat_fromString(_o);
 }
 
 

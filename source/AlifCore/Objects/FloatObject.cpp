@@ -35,6 +35,90 @@ AlifObject* alifFloat_fromDouble(double _fVal) { // 123
 	return (AlifObject*)op_;
 }
 
+
+static AlifObject* float_fromStringInner(const char* s, AlifSizeT len, void* obj) { // 137
+	double x{};
+	const char* end{};
+	const char* last = s + len;
+	/* strip leading whitespace */
+	while (s < last and ALIF_ISSPACE(*s)) {
+		s++;
+	}
+	if (s == last) {
+		//alifErr_format(_alifExcValueError_,
+		//	"could not convert string to float: "
+		//	"%R", obj);
+		return nullptr;
+	}
+
+	/* strip trailing whitespace */
+	while (s < last - 1 and ALIF_ISSPACE(last[-1])) {
+		last--;
+	}
+
+	x = alifOS_stringToDouble(s, (char**)&end, nullptr);
+	if (end != last) {
+		//alifErr_format(_alifExcValueError_,
+		//	"could not convert string to float: "
+		//	"%R", obj);
+		return nullptr;
+	}
+	else if (x == -1.0 and alifErr_occurred()) {
+		return nullptr;
+	}
+	else {
+		return alifFloat_fromDouble(x);
+	}
+}
+
+
+AlifObject* alifFloat_fromString(AlifObject* v) { // 177
+	const char* s{};
+	AlifObject* s_buffer = nullptr;
+	AlifSizeT len{};
+	AlifBuffer view = { nullptr, nullptr };
+	AlifObject* result = nullptr;
+
+	if (ALIFUSTR_CHECK(v)) {
+		s_buffer = _alifUStr_transformDecimalAndSpaceToASCII(v);
+		if (s_buffer == nullptr)
+			return nullptr;
+		s = alifUStr_asUTF8AndSize(s_buffer, &len);
+	}
+	else if (ALIFBYTES_CHECK(v)) {
+		s = ALIFBYTES_AS_STRING(v);
+		len = ALIFBYTES_GET_SIZE(v);
+	}
+	else if (ALIFBYTEARRAY_CHECK(v)) {
+		s = ALIFBYTEARRAY_AS_STRING(v);
+		len = ALIFBYTEARRAY_GET_SIZE(v);
+	}
+	else if (alifObject_getBuffer(v, &view, ALIFBUF_SIMPLE) == 0) {
+		s = (const char*)view.buf;
+		len = view.len;
+		/* Copy to NUL-terminated buffer. */
+		s_buffer = alifBytes_fromStringAndSize(s, len);
+		if (s_buffer == nullptr) {
+			alifBuffer_release(&view);
+			return nullptr;
+		}
+		s = ALIFBYTES_AS_STRING(s_buffer);
+	}
+	else {
+		//alifErr_format(_alifExcTypeError_,
+		//	"float() argument must be a string or a real number, not '%.200s'",
+		//	ALIF_TYPE(v)->name);
+		return nullptr;
+	}
+	result = _alifString_toNumberWithUnderscores(s, len, "float", v, v,
+		float_fromStringInner);
+	alifBuffer_release(&view);
+	ALIF_XDECREF(s_buffer);
+	return result;
+}
+
+
+
 double alifFloat_asDouble(AlifObject* _op) { // 250
 	AlifNumberMethods* nb_{};
 	AlifObject* res_{};
@@ -91,6 +175,7 @@ double alifFloat_asDouble(AlifObject* _op) { // 250
 	ALIF_DECREF(res_);
 	return val_;
 }
+
 
  // 314
 #define CONVERT_TO_DOUBLE(_obj, _dbl)                     \
@@ -494,6 +579,57 @@ static AlifObject* float_float(AlifObject* _v) { // 1079
 
 
 
+static AlifObject* float_subTypeNew(AlifTypeObject*, AlifObject*); // 1563
+
+static AlifObject* float_newImpl(AlifTypeObject* _type, AlifObject* _x
+) { // 1575
+	if (_type != &_alifFloatType_) {
+		if (_x == nullptr) {
+			_x = _alifLong_getZero();
+		}
+		return float_subTypeNew(_type, _x); /* Wimp out */
+	}
+
+	if (_x == nullptr) {
+		return alifFloat_fromDouble(0.0);
+	}
+	if (ALIFUSTR_CHECKEXACT(_x))
+		return alifFloat_fromString(_x);
+	return alifNumber_float(_x);
+}
+
+static AlifObject* float_subTypeNew(AlifTypeObject* _type, AlifObject* _x) { // 1610
+	AlifObject* tmp{}, * newobj{};
+
+	tmp = float_newImpl(&_alifFloatType_, _x);
+	if (tmp == nullptr)
+		return nullptr;
+	newobj = _type->alloc(_type, 0);
+	if (newobj == nullptr) {
+		ALIF_DECREF(tmp);
+		return nullptr;
+	}
+	((AlifFloatObject*)newobj)->val = ((AlifFloatObject*)tmp)->val;
+	ALIF_DECREF(tmp);
+	return newobj;
+}
+
+static AlifObject* float_vectorCall(AlifObject* _type, AlifObject* const* _args,
+	AlifUSizeT _nargsf, AlifObject* _kwnames) { // 1621
+	if (!_ALIFARG_NOKWNAMES("عدد_عشري", _kwnames)) {
+		return nullptr;
+	}
+
+	AlifSizeT nargs = ALIFVECTORCALL_NARGS(_nargsf);
+	if (!_ALIFARG_CHECKPOSITIONAL("عدد_عشري", nargs, 0, 1)) {
+		return nullptr;
+	}
+
+	AlifObject* x = nargs >= 1 ? _args[0] : nullptr;
+	return float_newImpl(ALIFTYPE_CAST(_type), x);
+}
+
+
 
 static AlifObject* float___format___impl(AlifObject* _self, AlifObject* _formatSpec) { // 1762
 	AlifUStrWriter writer{};
@@ -576,6 +712,7 @@ AlifTypeObject _alifFloatType_ = { // 1847
 		_ALIF_TPFLAGS_MATCH_SELF,
 	.richCompare = float_richCompare,
 	.methods = _floatMethods_,
+	.vectorCall = (VectorCallFunc)float_vectorCall,
 };
 
 

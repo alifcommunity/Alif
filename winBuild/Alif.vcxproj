@@ -169,7 +169,7 @@
       <AdditionalDependencies>pathcch.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y /S "$(SolutionDir)$(Platform)\$(Configuration)\alif.exe" "$(SolutionDir)..\test\"</Command>
+      <Command>xcopy /Y /S "$(SolutionDir)$(Platform)\$(Configuration)\alif.exe" "$(SolutionDir)..\examples\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
