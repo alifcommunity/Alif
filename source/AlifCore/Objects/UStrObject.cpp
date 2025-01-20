@@ -4483,7 +4483,7 @@ AlifObject* alifUStr_joinArray(AlifObject* _separator,
 	AlifIntT kind = 0;
 
 	if (_seqLen == 0) {
-		return unicode_getEmpty();
+		ALIF_RETURN_UNICODE_EMPTY;
 	}
 
 	lastObj = nullptr;

@@ -326,7 +326,7 @@ void alifBuffer_release(AlifBuffer* _view) { // 803
 
 
 AlifObject* alifObject_format(AlifObject* _obj, AlifObject* _formatSpec) { // 839
-	AlifObject* meth;
+	AlifObject* meth{};
 	AlifObject* empty = nullptr;
 	AlifObject* result = nullptr;
 
@@ -345,6 +345,7 @@ AlifObject* alifObject_format(AlifObject* _obj, AlifObject* _formatSpec) { // 83
 		if (ALIFLONG_CHECKEXACT(_obj)) {
 			return alifObject_str(_obj);
 		}
+		//* todo
 		// لماذا العدد العشري لا يضف الى التنفيذ السريع هنا !!
 	}
 

@@ -129,7 +129,7 @@ _alifFrame_setStackPointer(_frame, stackPointer)
  // 445
 #define STACKREFS_TO_ALIFOBJECTS(_args, _argCount, _name) \
     /* +1 because vectorcall might use -1 to write self */ \
-    AlifObject *_name##_temp[MAX_STACKREF_SCRATCH+1]; \
+    AlifObject *_name##_temp[MAX_STACKREF_SCRATCH+1]{}; \
     AlifObject **_name = _alifObjectArray_fromStackRefArray(_args, _argCount, _name##_temp + 1);
 
  // 456

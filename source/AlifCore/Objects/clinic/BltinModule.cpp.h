@@ -104,7 +104,7 @@ static AlifObject* builtin_print(AlifObject* _module, AlifObject* const* _args,
 	// alif // print
 	ReprFunc func{};
 	for (AlifIntT i = 0; i < _nargs; i++) {
-		func = ALIF_TYPE(*_args)->repr;
+		func = ALIF_TYPE(_args[i])->repr;
 		AlifObject* res = func(_args[i]);
 		if (alifUStr_isASCII(res)) {
 			char* buf = (char*)ALIFUSTR_DATA(res);

@@ -481,6 +481,19 @@ dispatch_opcode :
 				stackPointer[-1] = res;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(UNARY_NEGATIVE) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef value{};
+				AlifStackRef res{};
+				value = stackPointer[-1];
+				AlifObject* res_o = alifNumber_negative(alifStackRef_asAlifObjectBorrow(value));
+				alifStackRef_close(value);
+				//if (res_o == nullptr) goto pop_1_error;
+				res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(res_o);
+				stackPointer[-1] = res;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(UNARY_NOT) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;
@@ -603,6 +616,22 @@ dispatch_opcode :
 				}
 				str = ALIFSTACKREF_FROMALIFOBJECTSTEAL(strO);
 				stackPointer[-oparg] = str;
+				stackPointer += 1 - oparg;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
+			TARGET(BUILD_TUPLE) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef* values{};
+				AlifStackRef tup{};
+				values = &stackPointer[-oparg];
+				AlifObject* tupObj = alifTuple_fromStackRefSteal(values, oparg);
+				if (tupObj == nullptr) {
+					stackPointer += -oparg;
+					//goto error;
+				}
+				tup = ALIFSTACKREF_FROMALIFOBJECTSTEAL(tupObj);
+				stackPointer[-oparg] = tup;
 				stackPointer += 1 - oparg;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
@@ -1186,7 +1215,7 @@ dispatch_opcode :
 				AlifStackRef value{};
 				AlifStackRef valueS = GETLOCAL(oparg);
 				if (ALIFSTACKREF_ISNULL(valueS)) {
-					//_alifEval_formatExcCheckArg(_thread, alifExcUnboundLocalError_,
+					//_alifEval_formatExcCheckArg(_thread, _alifExcUnboundLocalError_,
 					//	UNBOUNDLOCAL_ERROR_MSG,
 					//	alifTuple_getItem(_alifFrame_getCode(_frame)->localsPlusNames, oparg)
 					//);

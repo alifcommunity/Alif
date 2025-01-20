@@ -2409,10 +2409,25 @@ static AlifObject* object_initSubclass(AlifObject* cls, AlifObject* arg) { // 73
 }
 
 
+
+
+static AlifObject* object___format__Impl(AlifObject* self, AlifObject* format_spec) { // 7340
+	if (ALIFUSTR_GET_LENGTH(format_spec) > 0) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"unsupported format string passed to %.200s.__format__",
+		//	ALIF_TYPE(self)->name);
+		return nullptr;
+	}
+	return alifObject_str(self);
+}
+
+
+
+
 static AlifMethodDef _objectMethods_[] = { // 7433
 
-	{"__initSubclass__", object_initSubclass, METHOD_CLASS | METHOD_NOARGS/*,
-	 object_init_subclass_doc*/},
+	{"__initSubclass__", object_initSubclass, METHOD_CLASS | METHOD_NOARGS},
+	OBJECT___FORMAT___METHODDEF,
 	{0}
 };
 
