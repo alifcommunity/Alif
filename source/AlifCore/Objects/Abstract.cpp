@@ -1140,6 +1140,108 @@ AlifObject* alifSequence_fast(AlifObject* _v, const char* _m) { // 2098
 }
 
 
+AlifIntT _alifSequence_iterSearch(AlifObject* seq, AlifObject* obj, AlifIntT operation) { // 2132
+	AlifSizeT n{};
+	AlifIntT wrapped{};
+	AlifObject* it{};  /* iter(seq) */
+
+	if (seq == nullptr or obj == nullptr) {
+		null_error();
+		return -1;
+	}
+
+	it = alifObject_getIter(seq);
+	if (it == nullptr) {
+		//if (alifErr_exceptionMatches(_alifExcTypeError_)) {
+		//	if (operation == ALIF_ITERSEARCH_CONTAINS) {
+		//		type_error(
+		//			"argument of type '%.200s' is not a container or iterable",
+		//			seq
+		//		);
+		//	}
+		//	else {
+		//		type_error("argument of type '%.200s' is not iterable", seq);
+		//	}
+		//}
+		return -1;
+	}
+
+	n = wrapped = 0;
+	for (;;) {
+		int cmp;
+		AlifObject* item = alifIter_next(it);
+		if (item == nullptr) {
+			if (alifErr_occurred())
+				goto Fail;
+			break;
+		}
+
+		cmp = alifObject_richCompareBool(item, obj, ALIF_EQ);
+		ALIF_DECREF(item);
+		if (cmp < 0)
+			goto Fail;
+		if (cmp > 0) {
+			switch (operation) {
+			case ALIF_ITERSEARCH_COUNT:
+				if (n == ALIF_SIZET_MAX) {
+					//alifErr_setString(_alifExcOverflowError_,
+					//	"count exceeds C integer size");
+					goto Fail;
+				}
+				++n;
+				break;
+
+			case ALIF_ITERSEARCH_INDEX:
+				if (wrapped) {
+					//alifErr_setString(_alifExcOverflowError_,
+					//	"index exceeds C integer size");
+					goto Fail;
+				}
+				goto Done;
+
+			case ALIF_ITERSEARCH_CONTAINS:
+				n = 1;
+				goto Done;
+
+			default:
+				ALIF_UNREACHABLE();
+			}
+		}
+
+		if (operation == ALIF_ITERSEARCH_INDEX) {
+			if (n == ALIF_SIZET_MAX)
+				wrapped = 1;
+			++n;
+		}
+	}
+
+	if (operation != ALIF_ITERSEARCH_INDEX)
+		goto Done;
+
+	//alifErr_setString(_alifExcValueError_,
+	//	"sequence.index(x): x not in sequence");
+	/* fall into failure code */
+Fail:
+	n = -1;
+	/* fall through */
+Done:
+	ALIF_DECREF(it);
+	return n;
+
+}
+
+
+AlifIntT alifSequence_contains(AlifObject* _seq, AlifObject* _ob) { // 2234
+	AlifSequenceMethods* sqm = ALIF_TYPE(_seq)->asSequence;
+	if (sqm != nullptr and sqm->contains != nullptr) {
+		AlifIntT res = (*sqm->contains)(_seq, _ob);
+		return res;
+	}
+	AlifSizeT result = _alifSequence_iterSearch(_seq, _ob, ALIF_ITERSEARCH_CONTAINS);
+	return ALIF_SAFE_DOWNCAST(result, AlifSizeT, AlifIntT);
+}
+
+
 AlifIntT alifMapping_check(AlifObject* _o) { // 2263
 	return _o and ALIF_TYPE(_o)->asMapping and
 		ALIF_TYPE(_o)->asMapping->subscript;

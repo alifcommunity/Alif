@@ -112,6 +112,10 @@ AlifObject* alifSequence_fast(AlifObject*, const char*); // 736
     (ALIFLIST_CHECK(sf) ? ((AlifListObject *)(sf))->item \
                       : ((AlifTupleObject *)(sf))->item)
 
+
+AlifIntT alifSequence_contains(AlifObject*, AlifObject*); // 765
+
+
 AlifIntT alifMapping_check(AlifObject*); // 806
 
 AlifSizeT alifMapping_size(AlifObject*); // 810

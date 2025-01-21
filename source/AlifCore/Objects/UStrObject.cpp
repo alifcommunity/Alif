@@ -4366,7 +4366,8 @@ AlifObject* _alifUStr_transformDecimalAndSpaceToASCII(AlifObject* unicode) { // 
 		//ALIFERR_BADINTERNALCALL();
 		return nullptr;
 	}
-	if (ALIFUSTR_IS_ASCII(unicode)) {
+	if (ALIFUSTR_CHECK(unicode) //* alif //* review //* todo
+		or ALIFUSTR_IS_ASCII(unicode)) {
 		/* If the string is already ASCII, just return the same string */
 		return ALIF_NEWREF(unicode);
 	}
@@ -4390,7 +4391,7 @@ AlifObject* _alifUStr_transformDecimalAndSpaceToASCII(AlifObject* unicode) { // 
 			out[i] = ' ';
 		}
 		else {
-			int decimal = ALIF_USTR_TODECIMAL(ch);
+			AlifIntT decimal = ALIF_USTR_TODECIMAL(ch);
 			if (decimal < 0) {
 				out[i] = '?';
 				out[i + 1] = '\0';

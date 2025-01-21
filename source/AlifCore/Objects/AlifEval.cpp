@@ -953,6 +953,43 @@ dispatch_opcode :
 				stackPointer += -1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(CONTAINS_OP) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 2;
+				PREDICTED(CONTAINS_OP);
+				AlifCodeUnit* thisInstr = nextInstr - 2;
+				AlifStackRef left{};
+				AlifStackRef right{};
+				AlifStackRef b{};
+				// _SPECIALIZE_CONTAINS_OP
+				right = stackPointer[-1];
+				{
+					uint16_t counter = read_u16(&thisInstr[1].cache);
+#if ENABLE_SPECIALIZATION
+					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
+						nextInstr = thisInstr;
+						_alifSpecialize_containsOp(right, nextInstr);
+						DISPATCH_SAME_OPARG();
+					}
+					OPCODE_DEFERRED_INC(CONTAINS_OP);
+					ADVANCE_ADAPTIVE_COUNTER(thisInstr[1].counter);
+#endif  /* ENABLE_SPECIALIZATION */
+				}
+				// _CONTAINS_OP
+				left = stackPointer[-2];
+				{
+					AlifObject* left_o = alifStackRef_asAlifObjectBorrow(left);
+					AlifObject* right_o = alifStackRef_asAlifObjectBorrow(right);
+					AlifIntT res = alifSequence_contains(right_o, left_o);
+					alifStackRef_close(left);
+					alifStackRef_close(right);
+					//if (res < 0) goto pop_2_error;
+					b = (res ^ oparg) ? ALIFSTACKREF_TRUE : ALIFSTACKREF_FALSE;
+				}
+				stackPointer[-2] = b;
+				stackPointer += -1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(COPY) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;

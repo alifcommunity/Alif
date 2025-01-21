@@ -14,4 +14,17 @@ AlifObject* _alifNumber_inPlacePowerNoMod(AlifObject*, AlifObject*); // 20
 
 
 extern AlifIntT alifObject_hasLen(AlifObject*); // 22
+
+
+
+
+
+
+#define ALIF_ITERSEARCH_COUNT    1
+#define ALIF_ITERSEARCH_INDEX    2
+#define ALIF_ITERSEARCH_CONTAINS 3
+
+
+
+
 AlifObject* _alifNumber_index(AlifObject*); // 56

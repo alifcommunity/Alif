@@ -6,10 +6,37 @@
 
 
 
+double _alifParse_infOrNan(const char* p, char** endptr) { // 27
+	double retval{};
+	const char* s{};
+	AlifIntT negate = 0;
+
+	s = p;
+	if (*s == '-') {
+		negate = 1;
+		s++;
+	}
+	else if (*s == '+') {
+		s++;
+	}
+	if (strcmp(s, "لانهائي") == 0) { //* alif
+		s += 14;
+		retval = negate ? -ALIF_HUGE_VAL : ALIF_HUGE_VAL;
+	}
+	else if (strcmp(s, "عدم") == 0) { //* alif
+		s += 6;
+		retval = negate ? -fabs(ALIF_NAN) : fabs(ALIF_NAN);
+	}
+	else {
+		s = p;
+		retval = -1.0;
+	}
+	*endptr = (char*)s;
+	return retval;
+}
 
 
-
-//#if ALIF_SHORT_FLOAT_REPR == 1
+//#if ALIF_SHORT_FLOAT_REPR == 1 // 90
 
 static double _alifOS_asciiStrToDouble(const char* _nPtr, char** _endPtr) { // 92
 	double result;
@@ -21,9 +48,9 @@ static double _alifOS_asciiStrToDouble(const char* _nPtr, char** _endPtr) { // 9
 	result = _alif_dgStrToDouble(_nPtr, _endPtr);
 	//_ALIF_SET_53BIT_PRECISION_END;
 
-	//if (*_endPtr == _nPtr)
+	if (*_endPtr == _nPtr)
 		/* string might represent an inf or nan */
-		//result = _alif_parseInfOrNan(_nPtr, _endPtr);
+		result = _alifParse_infOrNan(_nPtr, _endPtr);
 
 	return result;
 
@@ -34,6 +61,42 @@ static double _alifOS_asciiStrToDouble(const char* _nPtr, char** _endPtr) { // 9
  // func
 
 //#endif // 272
+
+
+
+double alifOS_stringToDouble(const char* _s,
+	char** _endPtr, AlifObject* _overflowException) { // 298
+	double x{}, result = -1.0;
+	char* failPos{};
+
+	errno = 0;
+	x = _alifOS_asciiStrToDouble(_s, &failPos);
+
+	if (errno == ENOMEM) {
+		//alifErr_noMemory();
+		failPos = (char*)_s;
+	}
+	else if (!_endPtr and (failPos == _s or *failPos != '\0')) {
+		//alifErr_format(_alifExcValueError_,
+		//	"could not convert string to float: "
+		//	"'%.200s'", _s);
+	}
+	else if (failPos == _s) {
+		//alifErr_format(_alifExcValueError_,
+		//	"could not convert string to float: "
+		//	"'%.200s'", _s);
+	}
+	else if (errno == ERANGE and fabs(x) >= 1.0 && _overflowException) {
+		//alifErr_format(_overflowException,
+		//	"value too large to convert to float: "
+		//	"'%.200s'", _s);
+	}
+	else result = x;
+
+	if (_endPtr != nullptr) *_endPtr = failPos;
+	return result;
+}
+
 
 
 AlifObject* _alifString_toNumberWithUnderscores(const char* _s,
@@ -98,41 +161,6 @@ error:
 
 
 
-
-
-
-double alifOS_stringToDouble(const char* _s,
-	char** _endPtr, AlifObject* _overflowException) { // 298
-	double x{}, result = -1.0;
-	char* failPos{};
-
-	errno = 0;
-	x = _alifOS_asciiStrToDouble(_s, &failPos);
-
-	if (errno == ENOMEM) {
-		//alifErr_noMemory();
-		failPos = (char*)_s;
-	}
-	else if (!_endPtr and (failPos == _s or *failPos != '\0')) {
-		//alifErr_format(_alifExcValueError_,
-		//	"could not convert string to float: "
-		//	"'%.200s'", _s);
-	}
-	else if (failPos == _s) {
-		//alifErr_format(_alifExcValueError_,
-		//	"could not convert string to float: "
-		//	"'%.200s'", _s);
-	}
-	else if (errno == ERANGE and fabs(x) >= 1.0 && _overflowException) {
-		//alifErr_format(_overflowException,
-		//	"value too large to convert to float: "
-		//	"'%.200s'", _s);
-	}
-	else result = x;
-
-	if (_endPtr != nullptr) *_endPtr = failPos;
-	return result;
-}
 
 
 

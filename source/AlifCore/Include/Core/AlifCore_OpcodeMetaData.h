@@ -136,8 +136,8 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 2;
 	//case COMPARE_OP_STR:
 	//	return 2;
-	//case CONTAINS_OP:
-	//	return 2;
+	case CONTAINS_OP:
+		return 2;
 	//case CONTAINS_OP_DICT:
 	//	return 2;
 	//case CONTAINS_OP_SET:
