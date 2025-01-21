@@ -3610,7 +3610,7 @@ static AlifNumberMethods _longAsNumber_ = { // 6560
 
 AlifTypeObject _alifLongType_ = { // 6597
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
-	.name = "عدد_صحيح",                                   
+	.name = "صحيح",                                   
 	.basicSize = offsetof(AlifLongObject, longValue.digit),
 	.itemSize = sizeof(digit),                              
 	.dealloc = long_dealloc,                               

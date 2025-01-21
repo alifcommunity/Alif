@@ -629,10 +629,10 @@ AlifObject* alifBuiltin_init(AlifInterpreter* _interpreter) { // 3215
 	SETBUILTIN("قاموس", &_alifDictType_);
 	//SETBUILTIN("enumerate", &_alifEnumType_);
 	//SETBUILTIN("filter", &_alifFilterType_);
-	SETBUILTIN("عدد_عشري", &_alifFloatType_);
+	SETBUILTIN("عشري", &_alifFloatType_);
 	SETBUILTIN("frozenset", &_alifFrozenSetType_);
 	//SETBUILTIN("property", &_alifPropertyType_);
-	SETBUILTIN("عدد_صحيح", &_alifLongType_);
+	SETBUILTIN("صحيح", &_alifLongType_);
 	SETBUILTIN("list", &_alifListType_);
 	//SETBUILTIN("map", &_alifMapType_);
 	SETBUILTIN("كائن", &_alifBaseObjectType_);

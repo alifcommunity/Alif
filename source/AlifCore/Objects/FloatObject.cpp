@@ -616,12 +616,12 @@ static AlifObject* float_subTypeNew(AlifTypeObject* _type, AlifObject* _x) { // 
 
 static AlifObject* float_vectorCall(AlifObject* _type, AlifObject* const* _args,
 	AlifUSizeT _nargsf, AlifObject* _kwnames) { // 1621
-	if (!_ALIFARG_NOKWNAMES("عدد_عشري", _kwnames)) {
+	if (!_ALIFARG_NOKWNAMES("عشري", _kwnames)) {
 		return nullptr;
 	}
 
 	AlifSizeT nargs = ALIFVECTORCALL_NARGS(_nargsf);
-	if (!_ALIFARG_CHECKPOSITIONAL("عدد_عشري", nargs, 0, 1)) {
+	if (!_ALIFARG_CHECKPOSITIONAL("عشري", nargs, 0, 1)) {
 		return nullptr;
 	}
 
@@ -701,7 +701,7 @@ static AlifNumberMethods _floatAsNumber_ = { // 1811
 
 AlifTypeObject _alifFloatType_ = { // 1847
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
-	.name = "عدد_عشري",
+	.name = "عشري",
 	.basicSize = sizeof(AlifFloatObject),
 	.itemSize = 0,
 	.repr = (ReprFunc)float_repr,

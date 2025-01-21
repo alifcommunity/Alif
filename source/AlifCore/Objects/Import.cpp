@@ -662,9 +662,9 @@ static AlifIntT find_file(const char* name, char* pathname) {
 		}
 		if (strcmp(baseName, name) == 0) {
 			const char* extension = get_fileExtension(filename);
-			if (strcmp(extension, "alif") == 0
-				or strcmp(extension, "alifl") == 0
-				or strcmp(extension, "alifm") == 0) {
+			if (strcmp(extension, "aliflib") == 0
+				/*or strcmp(extension, "alif") == 0
+				or strcmp(extension, "alifm") == 0*/) {
 				char newFilename[MAXPATHLEN]{};
 				snprintf(newFilename, sizeof(newFilename), "%s.%s", baseName, extension);
 				path_addFile(pathname, extension);
@@ -703,9 +703,9 @@ static AlifIntT find_file(const char* name, char* pathname) {
 			}
 			if (strcmp(baseName, name) == 0) {
 				const char* extension = get_fileExtension(entry->d_name);
-				if (strcmp(extension, "alif") == 0
-					or strcmp(extension, "alifl") == 0
-					or strcmp(extension, "alifm") == 0) {
+				if (strcmp(extension, "aliflib") == 0
+					/*or strcmp(extension, "alif") == 0
+					or strcmp(extension, "alifm") == 0*/) {
 					char newFilename[MAXPATHLEN]{};
 					snprintf(newFilename, sizeof(newFilename), "%s.%s", baseName, extension);
 					path_addFile(pathname, extension);
