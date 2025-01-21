@@ -2275,7 +2275,7 @@ AlifObject* _alifEval_importName(AlifThread* _thread, AlifInterpreterFrame* _fra
 	if (_alifImport_isDefaultImportFunc(_thread->interpreter, importFunc)) {
 		ALIF_DECREF(importFunc);
 		AlifIntT ilevel = alifLong_asInt(_level);
-		if (ilevel == -1 /*and _alifErr_occurred(_thread)*/) {
+		if (ilevel == -1 and _alifErr_occurred(_thread)) {
 			return nullptr;
 		}
 		return alifImport_importModuleLevelObject(_name,

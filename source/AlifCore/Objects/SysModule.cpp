@@ -57,7 +57,24 @@ AlifObject* alifSys_getObject(const char* _name) { // 104
 
 
 
+static AlifObject* listBuiltin_moduleNames(void) { // 2628
+	AlifObject* tuple{};
 
+	AlifObject* list = _alifImport_getBuiltinModuleNames();
+	if (list == nullptr) {
+		return nullptr;
+	}
+	if (alifList_sort(list) != 0) {
+		goto error;
+	}
+	tuple = alifList_asTuple(list);
+	ALIF_DECREF(list);
+	return tuple;
+
+error:
+	ALIF_DECREF(list);
+	return nullptr;
+}
 
 
 
@@ -103,7 +120,7 @@ static AlifIntT _alifSys_initCore(AlifThread* tstate, AlifObject* sysdict) { // 
 	SET_SYS_FROM_STRING("version", alif_getVersion());
 	/* initialize hash_info */
 
-	//SET_SYS("builtin_module_names", listBuiltin_moduleNames());
+	SET_SYS("builtin_module_names", listBuiltin_moduleNames()); //* review
 	//SET_SYS("stdlib_module_names", listStdlib_moduleNames());
 #if ALIF_BIG_ENDIAN
 	SET_SYS_FROM_STRING("byteorder", "big");

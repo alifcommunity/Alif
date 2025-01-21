@@ -29,4 +29,4 @@ public:
 };
 
 
-//extern class InitTable* _alifImportInitTab_; // 12
+extern class InitTable* _alifImportInitTable_; // 12

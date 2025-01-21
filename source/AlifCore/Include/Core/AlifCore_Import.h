@@ -48,3 +48,7 @@ extern AlifIntT _alifImport_initDefaultImportFunc(AlifInterpreter*); // 142
 extern AlifIntT _alifImport_isDefaultImportFunc(AlifInterpreter*, AlifObject*); // 143
 
 extern AlifIntT alifImport_init(); // 161
+
+
+
+extern AlifObject* _alifImport_getBuiltinModuleNames(void); // 174

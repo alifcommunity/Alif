@@ -51,7 +51,7 @@ public:
 		STRUCT_FOR_STR(True, "صح") //* alif
 		STRUCT_FOR_STR(False, "خطأ") //* alif
 		STRUCT_FOR_USTR(__init__, "_تهيئة_") //* alif
-		STRUCT_FOR_USTR(__import__, "استورد") //* alif
+		STRUCT_FOR_USTR(__import__, "_استورد_") //* alif
     } literals;
 
     class {

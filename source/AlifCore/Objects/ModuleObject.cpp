@@ -25,13 +25,13 @@ AlifTypeObject _alifModuleDefType_ = { // 24
 
 
 
-AlifObject* alifModuleDef_init(AlifModuleDef* def) { // 45
-	if (def->base.index == 0) {
-		ALIF_SET_REFCNT(def, 1);
-		ALIF_SET_TYPE(def, &_alifModuleDefType_);
-		def->base.index = alifImport_getNextModuleIndex();
+AlifObject* alifModuleDef_init(AlifModuleDef* _def) { // 45
+	if (_def->base.index == 0) {
+		ALIF_SET_REFCNT(_def, 1);
+		ALIF_SET_TYPE(_def, &_alifModuleDefType_);
+		_def->base.index = alifImport_getNextModuleIndex();
 	}
-	return (AlifObject*)def;
+	return (AlifObject*)_def;
 }
 
 

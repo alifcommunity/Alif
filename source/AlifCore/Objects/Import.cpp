@@ -190,12 +190,33 @@ static AlifIntT initBuildin_modulesTable() { // 2419
 	return 0;
 }
 
+AlifObject* _alifImport_getBuiltinModuleNames(void) { // 2445
+	AlifObject* list = alifList_new(0);
+	if (list == nullptr) {
+		return nullptr;
+	}
+	InitTable* inittab = INITTABLE;
+	for (AlifSizeT i = 0; inittab[i].name != nullptr; i++) {
+		AlifObject* name = alifUStr_fromString(inittab[i].name);
+		if (name == nullptr) {
+			ALIF_DECREF(list);
+			return nullptr;
+		}
+		if (alifList_append(list, name) < 0) {
+			ALIF_DECREF(name);
+			ALIF_DECREF(list);
+			return nullptr;
+		}
+		ALIF_DECREF(name);
+	}
+	return list;
+}
 
 
 AlifIntT _alifImport_initDefaultImportFunc(AlifInterpreter* _interp) { // 3338
 	// Get the __import__ function
 	AlifObject* importFunc{};
-	if (alifDict_getItemStringRef(_interp->builtins, "استورد", &importFunc) <= 0) {
+	if (alifDict_getItemStringRef(_interp->builtins, "_استورد_", &importFunc) <= 0) {
 		return -1;
 	}
 	IMPORT_FUNC(_interp) = importFunc;
