@@ -56,8 +56,8 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 		return _oparg;
 	case BUILD_MAP:
 		return _oparg * 2;
-	//case BUILD_SET:
-	//	return _oparg;
+	case BUILD_SET:
+		return _oparg;
 	case BUILD_SLICE:
 		return 2 + ((_oparg == 3) ? 1 : 0);
 	case BUILD_STRING:
@@ -164,8 +164,8 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 5 + (_oparg - 1);
 	case DICT_UPDATE:
 		return 2 + (_oparg - 1);
-	//case END_ASYNC_FOR:
-	//	return 2;
+	case END_ASYNC_FOR:
+		return 2;
 	case END_FOR:
 		return 1;
 	case END_SEND:
@@ -190,10 +190,10 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 1;
 	//case FOR_ITER_TUPLE:
 	//	return 1;
-	//case GET_AITER:
-	//	return 1;
-	//case GET_ANEXT:
-	//	return 1;
+	case GET_AITER:
+		return 1;
+	case GET_ANEXT:
+		return 1;
 	case GET_AWAITABLE:
 		return 1;
 	case GET_ITER:
@@ -520,8 +520,8 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 		return 1;
 	case BUILD_MAP:
 		return 1;
-	//case BUILD_SET:
-	//	return 1;
+	case BUILD_SET:
+		return 1;
 	case BUILD_SLICE:
 		return 1;
 	case BUILD_STRING:
@@ -628,8 +628,8 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 4 + (_oparg - 1);
 	case DICT_UPDATE:
 		return 1 + (_oparg - 1);
-	//case END_ASYNC_FOR:
-	//	return 0;
+	case END_ASYNC_FOR:
+		return 0;
 	case END_FOR:
 		return 0;
 	case END_SEND:
@@ -654,10 +654,10 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 2;
 	//case FOR_ITER_TUPLE:
 	//	return 2;
-	//case GET_AITER:
-	//	return 1;
-	//case GET_ANEXT:
-	//	return 2;
+	case GET_AITER:
+		return 1;
+	case GET_ANEXT:
+		return 2;
 	case GET_AWAITABLE:
 		return 1;
 	case GET_ITER:
@@ -1333,14 +1333,14 @@ const uint8_t _alifOpcodeDeopt_[256] = {
 	0,//CHECK_EXC_MATCH, // CHECK_EXC_MATCH // 5
 	CLEANUP_THROW, // CLEANUP_THROW // 6
 	DELETE_SUBSCR, // DELETE_SUBSCR // 7
-	0,//END_ASYNC_FOR, // END_ASYNC_FOR // 8
+	END_ASYNC_FOR, // END_ASYNC_FOR // 8
 	END_FOR, // END_FOR // 9
 	END_SEND, // END_SEND // 10
 	0,//EXIT_INIT_CHECK, // EXIT_INIT_CHECK // 11
 	FORMAT_SIMPLE, // FORMAT_SIMPLE // 12
 	FORMAT_WITH_SPEC, // FORMAT_WITH_SPEC // 13
-	0,//GET_AITER, // GET_AITER // 14
-	0,//GET_ANEXT, // GET_ANEXT // 15
+	GET_AITER, // GET_AITER // 14
+	GET_ANEXT, // GET_ANEXT // 15
 	GET_ITER, // GET_ITER // 16
 	0,//RESERVED, // RESERVED // 17
 	0,//GET_LEN, // GET_LEN // 18
@@ -1370,7 +1370,7 @@ const uint8_t _alifOpcodeDeopt_[256] = {
 	BINARY_OP, // BINARY_OP // 42
 	BUILD_LIST, // BUILD_LIST // 43
 	BUILD_MAP, // BUILD_MAP // 44
-	0,//BUILD_SET, // BUILD_SET // 45
+	BUILD_SET, // BUILD_SET // 45
 	BUILD_SLICE, // BUILD_SLICE // 46
 	BUILD_STRING, // BUILD_STRING // 47
 	BUILD_TUPLE, // BUILD_TUPLE // 48

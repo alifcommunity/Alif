@@ -225,6 +225,18 @@ static inline AlifObject* listGet_itemRef(AlifListObject* _op, AlifSizeT _i) { /
 }
 
 
+AlifObject* alifList_getItem(AlifObject* _op, AlifSizeT _i) { // 365
+	if (!ALIFLIST_CHECK(_op)) {
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
+	if (!valid_index(_i, ALIF_SIZE(_op))) {
+		//alifErr_setObject(_alifExcIndexError_, &ALIF_STR(ListErr));
+		return nullptr;
+	}
+	return ((AlifListObject*)_op)->item[_i];
+}
+
 
 AlifObject* alifList_getItemRef(AlifObject* op, AlifSizeT i) { // 380
 	if (!ALIFLIST_CHECK(op)) {

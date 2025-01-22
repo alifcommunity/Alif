@@ -1401,6 +1401,7 @@ static void* unicode_asKind(AlifIntT _sKind, void const* _data,
 }
 
 
+#define MAX_INTMAX_CHARS (5 + (sizeof(intmax_t)*8-1) / 3) // 2576
 
 static AlifIntT uStr_fromFormatWriteStr(AlifUStrWriter* writer, AlifObject* str,
 	AlifSizeT width, AlifSizeT precision, AlifIntT flags) { // 2578
@@ -1660,93 +1661,93 @@ static const char* uStr_fromFormatArg(AlifUStrWriter* _writer,
 		break;
 	}
 
-	//case 'd': case 'i':
-	//case 'o': case 'u': case 'x': case 'X':
-	//{
-	//	/* used by sprintf */
-	//	char buffer[MAX_INTMAX_CHARS];
-	//	const char* fmt = nullptr;
-	//	switch (*_f) {
-	//	case 'o': fmt = formats_o[sizemod]; break;
-	//	case 'u': fmt = formats_u[sizemod]; break;
-	//	case 'x': fmt = formats_x[sizemod]; break;
-	//	case 'X': fmt = formats_X[sizemod]; break;
-	//	default: fmt = formats[sizemod]; break;
-	//	}
-	//	int issigned = (*_f == 'd' or *_f == 'i');
-	//	switch (sizemod) {
-	//	case F_LONG:
-	//		len = issigned ?
-	//			sprintf(buffer, fmt, va_arg(*_vargs, long)) :
-	//			sprintf(buffer, fmt, va_arg(*_vargs, unsigned long));
-	//		break;
-	//	case F_LONGLONG:
-	//		len = issigned ?
-	//			sprintf(buffer, fmt, va_arg(*_vargs, long long)) :
-	//			sprintf(buffer, fmt, va_arg(*_vargs, unsigned long long));
-	//		break;
-	//	case F_SIZE:
-	//		len = issigned ?
-	//			sprintf(buffer, fmt, va_arg(*_vargs, AlifSizeT)) :
-	//			sprintf(buffer, fmt, va_arg(*_vargs, AlifUSizeT));
-	//		break;
-	//	case F_PTRDIFF:
-	//		len = sprintf(buffer, fmt, va_arg(*_vargs, ptrdiff_t));
-	//		break;
-	//	case F_INTMAX:
-	//		len = issigned ?
-	//			sprintf(buffer, fmt, va_arg(*_vargs, intmax_t)) :
-	//			sprintf(buffer, fmt, va_arg(*_vargs, uintmax_t));
-	//		break;
-	//	default:
-	//		len = issigned ?
-	//			sprintf(buffer, fmt, va_arg(*_vargs, int)) :
-	//			sprintf(buffer, fmt, va_arg(*_vargs, unsigned int));
-	//		break;
-	//	}
+	case 'd': case 'i':
+	case 'o': case 'u': case 'x': case 'X':
+	{
+		/* used by sprintf */
+		char buffer[MAX_INTMAX_CHARS];
+		const char* fmt = nullptr;
+		switch (*_f) {
+		case 'o': fmt = formats_o[sizemod]; break;
+		case 'u': fmt = formats_u[sizemod]; break;
+		case 'x': fmt = formats_x[sizemod]; break;
+		case 'X': fmt = formats_X[sizemod]; break;
+		default: fmt = formats[sizemod]; break;
+		}
+		int issigned = (*_f == 'd' or *_f == 'i');
+		switch (sizemod) {
+		case F_LONG:
+			len = issigned ?
+				sprintf(buffer, fmt, va_arg(*_vargs, long)) :
+				sprintf(buffer, fmt, va_arg(*_vargs, unsigned long));
+			break;
+		case F_LONGLONG:
+			len = issigned ?
+				sprintf(buffer, fmt, va_arg(*_vargs, long long)) :
+				sprintf(buffer, fmt, va_arg(*_vargs, unsigned long long));
+			break;
+		case F_SIZE:
+			len = issigned ?
+				sprintf(buffer, fmt, va_arg(*_vargs, AlifSizeT)) :
+				sprintf(buffer, fmt, va_arg(*_vargs, AlifUSizeT));
+			break;
+		case F_PTRDIFF:
+			len = sprintf(buffer, fmt, va_arg(*_vargs, ptrdiff_t));
+			break;
+		case F_INTMAX:
+			len = issigned ?
+				sprintf(buffer, fmt, va_arg(*_vargs, intmax_t)) :
+				sprintf(buffer, fmt, va_arg(*_vargs, uintmax_t));
+			break;
+		default:
+			len = issigned ?
+				sprintf(buffer, fmt, va_arg(*_vargs, int)) :
+				sprintf(buffer, fmt, va_arg(*_vargs, unsigned int));
+			break;
+		}
 
-	//	AlifIntT sign = (buffer[0] == '-');
-	//	len -= sign;
+		AlifIntT sign = (buffer[0] == '-');
+		len -= sign;
 
-	//	precision = ALIF_MAX(precision, len);
-	//	width = ALIF_MAX(width, precision + sign);
-	//	if ((flags & F_ZERO) and !(flags & F_LJUST)) {
-	//		precision = width - sign;
-	//	}
+		precision = ALIF_MAX(precision, len);
+		width = ALIF_MAX(width, precision + sign);
+		if ((flags & F_ZERO) and !(flags & F_LJUST)) {
+			precision = width - sign;
+		}
 
-	//	AlifSizeT spacepad = ALIF_MAX(width - precision - sign, 0);
-	//	AlifSizeT zeropad = ALIF_MAX(precision - len, 0);
+		AlifSizeT spacepad = ALIF_MAX(width - precision - sign, 0);
+		AlifSizeT zeropad = ALIF_MAX(precision - len, 0);
 
-	//	if (ALIFUSTRWRITER_PREPARE(_writer, width, 127) == -1)
-	//		return nullptr;
+		if (ALIFUSTRWRITER_PREPARE(_writer, width, 127) == -1)
+			return nullptr;
 
-	//	if (spacepad and !(flags & F_LJUST)) {
-	//		if (alifUStr_fill(_writer->buffer, _writer->pos, spacepad, ' ') == -1)
-	//			return nullptr;
-	//		_writer->pos += spacepad;
-	//	}
+		if (spacepad and !(flags & F_LJUST)) {
+			if (alifUStr_fill(_writer->buffer, _writer->pos, spacepad, ' ') == -1)
+				return nullptr;
+			_writer->pos += spacepad;
+		}
 
-	//	if (sign) {
-	//		if (_alifUStrWriter_writeChar(_writer, '-') == -1)
-	//			return nullptr;
-	//	}
+		if (sign) {
+			if (alifUStrWriter_writeChar(_writer, '-') == -1)
+				return nullptr;
+		}
 
-	//	if (zeropad) {
-	//		if (alifUStr_fill(_writer->buffer, _writer->pos, zeropad, '0') == -1)
-	//			return nullptr;
-	//		_writer->pos += zeropad;
-	//	}
+		if (zeropad) {
+			if (alifUStr_fill(_writer->buffer, _writer->pos, zeropad, '0') == -1)
+				return nullptr;
+			_writer->pos += zeropad;
+		}
 
-	//	if (alifUStrWriter_writeASCIIString(_writer, &buffer[sign], len) < 0)
-	//		return nullptr;
+		if (alifUStrWriter_writeASCIIString(_writer, &buffer[sign], len) < 0)
+			return nullptr;
 
-	//	if (spacepad and (flags & F_LJUST)) {
-	//		if (alifUStr_fill(_writer->buffer, _writer->pos, spacepad, ' ') == -1)
-	//			return nullptr;
-	//		_writer->pos += spacepad;
-	//	}
-	//	break;
-	//}
+		if (spacepad and (flags & F_LJUST)) {
+			if (alifUStr_fill(_writer->buffer, _writer->pos, spacepad, ' ') == -1)
+				return nullptr;
+			_writer->pos += spacepad;
+		}
+		break;
+	}
 
 	//case 'p':
 	//{

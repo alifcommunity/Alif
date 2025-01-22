@@ -8,9 +8,11 @@ extern AlifTypeObject _alifFrozenSetType_; // 10
 AlifObject* alifSet_new(AlifObject*); // 13
 AlifObject* alifFrozenSet_new(AlifObject*); // 14
 
-AlifIntT alifSet_add(AlifObject* , AlifObject* ); // 16
-AlifIntT alifSet_contains(AlifObject* , AlifObject*); // 18
-AlifIntT alifSet_discard(AlifObject* , AlifObject* ); // 19
+AlifIntT alifSet_add(AlifObject* ,AlifObject* ); // 16
+AlifIntT alifSet_contains(AlifObject* ,AlifObject*); // 18
+AlifIntT alifSet_discard(AlifObject* ,AlifObject* ); // 19
+AlifObject* alifSet_pop(AlifObject*); // 20
+AlifSizeT alifSet_size(AlifObject*); // 21
 
 
 #define ALIFFROZENSET_CHECKEXACT(_ob) ALIF_IS_TYPE((_ob), &_alifFrozenSetType_) // 23

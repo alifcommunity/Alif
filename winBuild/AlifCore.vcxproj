@@ -212,6 +212,7 @@
     <ClInclude Include="..\source\AlifCore\Objects\clinic\DictObject.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\FloatObject.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\ListObject.cpp.h" />
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\SetObject.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\TypeObject.cpp.h" />
   </ItemGroup>
   <ItemGroup>

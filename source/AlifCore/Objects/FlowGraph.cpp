@@ -503,6 +503,45 @@ public:
 };
 
 
+static BasicBlock* push_exceptBlock(AlifCFGExceptStack* stack, CFGInstr* setup) { // 693
+	AlifIntT opcode = setup->opcode;
+	BasicBlock* target = setup->target;
+	if (opcode == SETUP_WITH or opcode == SETUP_CLEANUP) {
+		target->preserveLastI = 1;
+	}
+	stack->handlers[++stack->depth] = target;
+	return target;
+}
+
+static BasicBlock* pop_exceptBlock(AlifCFGExceptStack* _stack) { // 706
+	return _stack->handlers[--_stack->depth];
+}
+
+static BasicBlock* except_stackTop(AlifCFGExceptStack* _stack) { // 712
+	return _stack->handlers[_stack->depth];
+}
+
+static AlifCFGExceptStack* make_exceptStack(void) { // 717
+	AlifCFGExceptStack* new_ = (AlifCFGExceptStack*)alifMem_dataAlloc(sizeof(AlifCFGExceptStack));
+	if (new_ == nullptr) {
+		//alifErr_noMemory();
+		return nullptr;
+	}
+	new_->depth = 0;
+	new_->handlers[0] = nullptr;
+	return new_;
+}
+
+static AlifCFGExceptStack* copy_exceptStack(AlifCFGExceptStack* _stack) { // 729
+	AlifCFGExceptStack* copy = (AlifCFGExceptStack*)alifMem_dataAlloc(sizeof(AlifCFGExceptStack));
+	if (copy == nullptr) {
+		//alifErr_noMemory();
+		return nullptr;
+	}
+	memcpy(copy, _stack, sizeof(AlifCFGExceptStack));
+	return copy;
+}
+
 
 static BasicBlock** makeCFG_traversalStack(BasicBlock* _entryBlock) { // 741
 	AlifIntT nBlocks = 0;
@@ -535,7 +574,8 @@ ALIF_LOCAL(AlifIntT) stack_effect(AlifIntT _opcode, AlifIntT _oparg, AlifIntT _j
 	return pushed - popped;
 }
 
-ALIF_LOCAL_INLINE(AlifIntT) stackDepth_push(BasicBlock*** _sp, BasicBlock* _b, AlifIntT _depth) { // 785
+ALIF_LOCAL_INLINE(AlifIntT) stackDepth_push(BasicBlock*** _sp,
+	BasicBlock* _b, AlifIntT _depth) { // 785
 	if (!(_b->startDepth < 0 or _b->startDepth == _depth)) {
 		//alifErr_format(_alifExcValueError_, "Invalid CFG, inconsistent stackdepth");
 		return ERROR;
@@ -622,6 +662,105 @@ static AlifIntT calculate_stackDepth(CFGBuilder* _g) { // 803
 error:
 	alifMem_dataFree(stack);
 	return stackDepth;
+}
+
+
+static AlifIntT label_exceptionTargets(BasicBlock* entryblock) { // 884
+	BasicBlock** todo_stack = makeCFG_traversalStack(entryblock);
+	if (todo_stack == nullptr) {
+		return ERROR;
+	}
+	AlifCFGExceptStack* except_stack = make_exceptStack();
+	if (except_stack == nullptr) {
+		alifMem_dataFree(todo_stack);
+		//alifErr_noMemory();
+		return ERROR;
+	}
+	except_stack->depth = 0;
+	todo_stack[0] = entryblock;
+	entryblock->visited = 1;
+	entryblock->exceptStack = except_stack;
+	BasicBlock** todo = &todo_stack[1];
+	BasicBlock* handler = nullptr;
+	while (todo > todo_stack) {
+		todo--;
+		BasicBlock* b = todo[0];
+		except_stack = b->exceptStack;
+		b->exceptStack = nullptr;
+		handler = except_stackTop(except_stack);
+		AlifIntT last_yield_except_depth = -1;
+		for (AlifIntT i = 0; i < b->iused; i++) {
+			CFGInstr* instr = &b->instr[i];
+			if (is_blockPush(instr)) {
+				if (!instr->target->visited) {
+					AlifCFGExceptStack* copy = copy_exceptStack(except_stack);
+					if (copy == nullptr) {
+						goto error;
+					}
+					instr->target->exceptStack = copy;
+					todo[0] = instr->target;
+					instr->target->visited = 1;
+					todo++;
+				}
+				handler = push_exceptBlock(except_stack, instr);
+			}
+			else if (instr->opcode == POP_BLOCK) {
+				handler = pop_exceptBlock(except_stack);
+				INSTR_SET_OP0(instr, NOP);
+			}
+			else if (is_jump(instr)) {
+				instr->except = handler;
+				if (!instr->target->visited) {
+					if (BB_HAS_FALLTHROUGH(b)) {
+						AlifCFGExceptStack* copy = copy_exceptStack(except_stack);
+						if (copy == nullptr) {
+							goto error;
+						}
+						instr->target->exceptStack = copy;
+					}
+					else {
+						instr->target->exceptStack = except_stack;
+						except_stack = nullptr;
+					}
+					todo[0] = instr->target;
+					instr->target->visited = 1;
+					todo++;
+				}
+			}
+			else if (instr->opcode == YIELD_VALUE) {
+				instr->except = handler;
+				last_yield_except_depth = except_stack->depth;
+			}
+			else if (instr->opcode == RESUME) {
+				instr->except = handler;
+				if (instr->oparg != RESUME_AT_FUNC_START) {
+					if (last_yield_except_depth == 1) {
+						instr->oparg |= RESUME_OPARG_DEPTH1_MASK;
+					}
+					last_yield_except_depth = -1;
+				}
+			}
+			else {
+				instr->except = handler;
+			}
+		}
+		if (BB_HAS_FALLTHROUGH(b) and !b->next->visited) {
+			b->next->exceptStack = except_stack;
+			todo[0] = b->next;
+			b->next->visited = 1;
+			todo++;
+		}
+		else if (except_stack != nullptr) {
+			alifMem_dataFree(except_stack);
+		}
+	}
+
+	alifMem_dataFree(todo_stack);
+	return SUCCESS;
+error:
+	alifMem_dataFree(todo_stack);
+	alifMem_dataFree(except_stack);
+	return ERROR;
 }
 
 
@@ -1888,7 +2027,7 @@ AlifIntT alifCFG_optimizeCodeUnit(CFGBuilder* _g, AlifObject* _consts,
 	AlifIntT _nparams, AlifIntT _firstLineno) { // 2511
 	RETURN_IF_ERROR(translateJump_labelsToTargets(_g->entryBlock));
 	RETURN_IF_ERROR(mark_exceptHandlers(_g->entryBlock));
-	//RETURN_IF_ERROR(labelException_targets(_g->entryBlock));
+	RETURN_IF_ERROR(label_exceptionTargets(_g->entryBlock));
 
 	/** Optimization **/
 	RETURN_IF_ERROR(optimize_cfg(_g, _consts, _constCache, _firstLineno));
@@ -1933,12 +2072,12 @@ static AlifIntT* build_cellFixedOffsets(AlifCompileCodeUnitMetadata* _umd) { // 
 
 		AlifIntT argoffset = alifLong_asInt(varindex);
 		ALIF_DECREF(varindex);
-		if (argoffset == -1 /*and alifErr_occurred()*/) {
+		if (argoffset == -1 and alifErr_occurred()) {
 			goto error;
 		}
 
 		AlifIntT oldindex = alifLong_asInt(cellindex);
-		if (oldindex == -1 /*and alifErr_occurred()*/) {
+		if (oldindex == -1 and alifErr_occurred()) {
 			goto error;
 		}
 		fixed[oldindex] = argoffset;

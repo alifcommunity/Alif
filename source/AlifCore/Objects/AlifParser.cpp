@@ -2726,7 +2726,7 @@ static Comprehension* forIfClause_rule(AlifParser* _p) {
 			(c_ = (ASDLExprSeq*)alif24_loop0(_p)) // ("اذا" انفصال)*
 			)
 		{
-			//res_ = CHECK_VERSION(Comprehension*, 6, L"المزامنة الضمنية", alifAST_comprehension(a_, b_, c, 1, _p->astMem));
+			//res_ = CHECK_VERSION(Comprehension*, 6, "المزامنة الضمنية", alifAST_comprehension(a_, b_, c, 1, _p->astMem));
 			res = alifAST_comprehension(a_, b_, c_, 1, _p->astMem);
 			if (res == nullptr
 				/*and alifErr_occurred()*/)
@@ -2763,8 +2763,7 @@ static Comprehension* forIfClause_rule(AlifParser* _p) {
 			(c_ = (ASDLExprSeq*)alif24_loop0(_p)) // ("اذا" انفصال)*
 			)
 		{
-			//res_ = CHECK_VERSION(Comprehension*, 6, L"المزامنة الضمنية", alifAST_comprehension(a_, b_, c, 1, _p->astMem));
-			res = alifAST_comprehension(a_, b_, c_, 1, _p->astMem);
+			res = alifAST_comprehension(a_, b_, c_, 0, _p->astMem);
 			if (res == nullptr
 				/*and alifErr_occurred()*/)
 			{

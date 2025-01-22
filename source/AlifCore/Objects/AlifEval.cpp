@@ -1155,6 +1155,21 @@ dispatch_opcode :
 				JUMPBY(oparg);
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(LIST_APPEND) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef list{};
+				AlifStackRef v{};
+				v = stackPointer[-1];
+				list = stackPointer[-2 - (oparg - 1)];
+				if (alifList_appendTakeRef((AlifListObject*)alifStackRef_asAlifObjectBorrow(list),
+					alifStackRef_asAlifObjectSteal(v)) < 0)
+				{
+					//goto pop_1_error;
+				}
+				stackPointer += -1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(LIST_EXTEND) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;
@@ -1249,6 +1264,17 @@ dispatch_opcode :
 				nextInstr += 1;
 				AlifStackRef value{};
 				value = alifStackRef_dup(GETLOCAL(oparg));
+				stackPointer[0] = value;
+				stackPointer += 1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
+			TARGET(LOAD_FAST_AND_CLEAR) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef value{};
+				value = GETLOCAL(oparg);
+				// do not use SETLOCAL here, it decrefs the old value
+				GETLOCAL(oparg) = _alifStackRefNull_;
 				stackPointer[0] = value;
 				stackPointer += 1;
 				DISPATCH();

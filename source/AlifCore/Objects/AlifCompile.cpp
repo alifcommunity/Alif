@@ -249,6 +249,11 @@ static bool areAllItems_const(ASDLExprSeq*, AlifSizeT, AlifSizeT); // 321
 static AlifIntT codegen_callSimpleKwHelper(AlifCompiler*, Location, ASDLKeywordSeq*, AlifSizeT); // 327
 static AlifIntT codegen_callHelper(AlifCompiler*, Location, AlifIntT, ASDLExprSeq*, ASDLKeywordSeq*); // 331
 
+static AlifIntT compiler_syncComprehensionGenerator(AlifCompiler*, Location, ASDLComprehensionSeq*,
+	AlifIntT, AlifIntT, ExprTy, ExprTy, AlifIntT, AlifIntT); // 337
+static AlifIntT compiler_asyncComprehensionGenerator(AlifCompiler*, Location, ASDLComprehensionSeq*,
+	AlifIntT, AlifIntT, ExprTy, ExprTy, AlifIntT, AlifIntT); // 344
+
 static AlifCodeObject* optimize_andAssemble(AlifCompiler*, AlifIntT); // 358
 
 #define CAPSULE_NAME "AlifCompile.cpp AlifCompiler unit" // 360
@@ -819,6 +824,9 @@ static AlifIntT codegen_addOpJ(InstrSequence* _seq, Location _loc,
 
 #define ADD_YIELD_FROM(_c, _loc, _await) \
     RETURN_IF_ERROR(codegen_addYieldFrom(_c, _loc, _await)) // 1022
+
+#define ADDOP_YIELD(_c, _loc) \
+    RETURN_IF_ERROR(codegen_addOpYield(_c, _loc)) // 1028
 
  // 1035
 #define VISIT(_c, _type, _v) \
@@ -2520,6 +2528,18 @@ static AlifIntT addop_binary(AlifCompiler* _c, Location _loc,
 
 
 
+static AlifIntT codegen_addOpYield(AlifCompiler* _c, Location _loc) { // 3986
+	SymTableEntry* ste = SYMTABLE_ENTRY(_c);
+	if (ste->generator and ste->coroutine) {
+		ADDOP_I(_c, _loc, CALL_INTRINSIC_1, INTRINSIC_ASYNC_GEN_WRAP);
+	}
+	ADDOP_I(_c, _loc, YIELD_VALUE, 0);
+	ADDOP_I(_c, _loc, RESUME, RESUME_AFTER_YIELD);
+	return SUCCESS;
+}
+
+
+
 static AlifIntT codegen_loadClassDictFreeVar(AlifCompiler* _c, Location _loc) { // 3997
 	ADDOP_N(_c, _loc, LOAD_DEREF, &ALIF_ID(__classDict__), freevars);
 	return SUCCESS;
@@ -3531,21 +3551,21 @@ static AlifIntT compiler_comprehensionGenerator(AlifCompiler* c, Location loc,
 	}
 }
 
-static AlifIntT compiler_syncComprehensionGenerator(AlifCompiler* c, Location loc,
-	ASDLComprehensionSeq* generators, AlifIntT gen_index, AlifIntT depth,
-	ExprTy elt, ExprTy val, AlifIntT type, AlifIntT iter_on_stack) { // 5105
+static AlifIntT compiler_syncComprehensionGenerator(AlifCompiler* _c, Location _loc,
+	ASDLComprehensionSeq* _generators, AlifIntT _genIndex, AlifIntT _depth,
+	ExprTy _elt, ExprTy _val, AlifIntT _type, AlifIntT _iterOnStack) { // 5105
 
-	NEW_JUMP_TARGET_LABEL(c, start);
-	NEW_JUMP_TARGET_LABEL(c, if_cleanup);
-	NEW_JUMP_TARGET_LABEL(c, anchor);
+	NEW_JUMP_TARGET_LABEL(_c, start);
+	NEW_JUMP_TARGET_LABEL(_c, if_cleanup);
+	NEW_JUMP_TARGET_LABEL(_c, anchor);
 
-	ComprehensionTy gen = (ComprehensionTy)ASDL_SEQ_GET(generators,
-		gen_index);
+	ComprehensionTy gen = (ComprehensionTy)ASDL_SEQ_GET(_generators,
+		_genIndex);
 
-	if (!iter_on_stack) {
-		if (gen_index == 0) {
-			c->u_->metadata.argCount = 1;
-			ADDOP_I(c, loc, LOAD_FAST, 0);
+	if (!_iterOnStack) {
+		if (_genIndex == 0) {
+			_c->u_->metadata.argCount = 1;
+			ADDOP_I(_c, _loc, LOAD_FAST, 0);
 		}
 		else {
 			ASDLExprSeq* elts{};
@@ -3562,170 +3582,170 @@ static AlifIntT compiler_syncComprehensionGenerator(AlifCompiler* c, Location lo
 			if (ASDL_SEQ_LEN(elts) == 1) {
 				ExprTy elt = ASDL_SEQ_GET(elts, 0);
 				if (elt->type != ExprK_::StarK) {
-					VISIT(c, Expr, elt);
+					VISIT(_c, Expr, elt);
 					start = _noLabel_;
 				}
 			}
 			if (IS_LABEL(start)) {
-				VISIT(c, Expr, gen->iter);
-				ADDOP(c, LOC(gen->iter), GET_ITER);
+				VISIT(_c, Expr, gen->iter);
+				ADDOP(_c, LOC(gen->iter), GET_ITER);
 			}
 		}
 	}
 
 	if (IS_LABEL(start)) {
-		depth++;
-		USE_LABEL(c, start);
-		ADDOP_JUMP(c, LOC(gen->iter), FOR_ITER, anchor);
+		_depth++;
+		USE_LABEL(_c, start);
+		ADDOP_JUMP(_c, LOC(gen->iter), FOR_ITER, anchor);
 	}
-	VISIT(c, Expr, gen->target);
+	VISIT(_c, Expr, gen->target);
 
 	AlifSizeT n = ASDL_SEQ_LEN(gen->ifs);
 	for (AlifSizeT i = 0; i < n; i++) {
 		ExprTy e = (ExprTy)ASDL_SEQ_GET(gen->ifs, i);
-		RETURN_IF_ERROR(codegen_jumpIf(c, loc, e, if_cleanup, 0));
+		RETURN_IF_ERROR(codegen_jumpIf(_c, _loc, e, if_cleanup, 0));
 	}
 
-	if (++gen_index < ASDL_SEQ_LEN(generators)) {
+	if (++_genIndex < ASDL_SEQ_LEN(_generators)) {
 		RETURN_IF_ERROR(
-			compiler_comprehensionGenerator(c, loc,
-				generators, gen_index, depth,
-				elt, val, type, 0));
+			compiler_comprehensionGenerator(_c, _loc,
+				_generators, _genIndex, _depth,
+				_elt, _val, _type, 0));
 	}
 
-	Location elt_loc = LOC(elt);
+	Location elt_loc = LOC(_elt);
 
-	if (gen_index >= ASDL_SEQ_LEN(generators)) {
-		switch (type) {
+	if (_genIndex >= ASDL_SEQ_LEN(_generators)) {
+		switch (_type) {
 		case COMP_GENEXP:
-			VISIT(c, Expr, elt);
-			ADDOP_YIELD(c, elt_loc);
-			ADDOP(c, elt_loc, POP_TOP);
+			VISIT(_c, Expr, _elt);
+			ADDOP_YIELD(_c, elt_loc);
+			ADDOP(_c, elt_loc, POP_TOP);
 			break;
 		case COMP_LISTCOMP:
-			VISIT(c, Expr, elt);
-			ADDOP_I(c, elt_loc, LIST_APPEND, depth + 1);
+			VISIT(_c, Expr, _elt);
+			ADDOP_I(_c, elt_loc, LIST_APPEND, _depth + 1);
 			break;
 		case COMP_SETCOMP:
-			VISIT(c, Expr, elt);
-			ADDOP_I(c, elt_loc, SET_ADD, depth + 1);
+			VISIT(_c, Expr, _elt);
+			ADDOP_I(_c, elt_loc, SET_ADD, _depth + 1);
 			break;
 		case COMP_DICTCOMP:
-			VISIT(c, Expr, elt);
-			VISIT(c, Expr, val);
-			elt_loc = LOCATION(elt->lineNo,
-				val->endLineNo,
-				elt->colOffset,
-				val->endColOffset);
-			ADDOP_I(c, elt_loc, MAP_ADD, depth + 1);
+			VISIT(_c, Expr, _elt);
+			VISIT(_c, Expr, _val);
+			elt_loc = LOCATION(_elt->lineNo,
+				_val->endLineNo,
+				_elt->colOffset,
+				_val->endColOffset);
+			ADDOP_I(_c, elt_loc, MAP_ADD, _depth + 1);
 			break;
 		default:
 			return ERROR;
 		}
 	}
 
-	USE_LABEL(c, if_cleanup);
+	USE_LABEL(_c, if_cleanup);
 	if (IS_LABEL(start)) {
-		ADDOP_JUMP(c, elt_loc, JUMP, start);
+		ADDOP_JUMP(_c, elt_loc, JUMP, start);
 
-		USE_LABEL(c, anchor);
+		USE_LABEL(_c, anchor);
 		/* It is important for instrumentation that the `END_FOR` comes first.
 		* Iteration over a generator will jump to the first of these instructions,
 		* but a non-generator will jump to a later instruction.
 		*/
-		ADDOP(c, _noLocation_, END_FOR);
-		ADDOP(c, _noLocation_, POP_TOP);
+		ADDOP(_c, _noLocation_, END_FOR);
+		ADDOP(_c, _noLocation_, POP_TOP);
 	}
 
 	return SUCCESS;
 }
 
 
-static AlifIntT compiler_asyncComprehensionGenerator(AlifCompiler* c, Location loc,
-	ASDLComprehensionSeq* generators, AlifIntT gen_index, AlifIntT depth,
-	ExprTy elt, ExprTy val, AlifIntT type, AlifIntT iter_on_stack) { // 5230
-	NEW_JUMP_TARGET_LABEL(c, start);
-	NEW_JUMP_TARGET_LABEL(c, except);
-	NEW_JUMP_TARGET_LABEL(c, if_cleanup);
+static AlifIntT compiler_asyncComprehensionGenerator(AlifCompiler* _c, Location _loc,
+	ASDLComprehensionSeq* _generators, AlifIntT _genIndex, AlifIntT _depth,
+	ExprTy _elt, ExprTy _val, AlifIntT _type, AlifIntT _iterOnStack) { // 5230
+	NEW_JUMP_TARGET_LABEL(_c, start);
+	NEW_JUMP_TARGET_LABEL(_c, except);
+	NEW_JUMP_TARGET_LABEL(_c, if_cleanup);
 
-	ComprehensionTy gen = (ComprehensionTy)ASDL_SEQ_GET(generators,
-		gen_index);
+	ComprehensionTy gen = (ComprehensionTy)ASDL_SEQ_GET(_generators,
+		_genIndex);
 
-	if (!iter_on_stack) {
-		if (gen_index == 0) {
-			c->u_->metadata.argCount = 1;
-			ADDOP_I(c, loc, LOAD_FAST, 0);
+	if (!_iterOnStack) {
+		if (_genIndex == 0) {
+			_c->u_->metadata.argCount = 1;
+			ADDOP_I(_c, _loc, LOAD_FAST, 0);
 		}
 		else {
-			VISIT(c, Expr, gen->iter);
-			ADDOP(c, loc, GET_AITER);
+			VISIT(_c, Expr, gen->iter);
+			ADDOP(_c, _loc, GET_AITER);
 		}
 	}
 
-	USE_LABEL(c, start);
+	USE_LABEL(_c, start);
 	RETURN_IF_ERROR(
-		compiler_pushFBlock(c, loc, ASYNC_COMPREHENSION_GENERATOR,
+		compiler_pushFBlock(_c, _loc, FBlockType_::Async_Comprehension_Generator,
 			start, _noLabel_, nullptr));
 
-	ADDOP_JUMP(c, loc, SETUP_FINALLY, except);
-	ADDOP(c, loc, GET_ANEXT);
-	ADDOP_LOAD_CONST(c, loc, ALIF_NONE);
-	ADD_YIELD_FROM(c, loc, 1);
-	ADDOP(c, loc, POP_BLOCK);
-	VISIT(c, Expr, gen->target);
+	ADDOP_JUMP(_c, _loc, SETUP_FINALLY, except);
+	ADDOP(_c, _loc, GET_ANEXT);
+	ADDOP_LOAD_CONST(_c, _loc, ALIF_NONE);
+	ADD_YIELD_FROM(_c, _loc, 1);
+	ADDOP(_c, _loc, POP_BLOCK);
+	VISIT(_c, Expr, gen->target);
 
 	AlifSizeT n = ASDL_SEQ_LEN(gen->ifs);
 	for (AlifSizeT i = 0; i < n; i++) {
 		ExprTy e = (ExprTy)ASDL_SEQ_GET(gen->ifs, i);
-		RETURN_IF_ERROR(codegen_jumpIf(c, loc, e, if_cleanup, 0));
+		RETURN_IF_ERROR(codegen_jumpIf(_c, _loc, e, if_cleanup, 0));
 	}
 
-	depth++;
-	if (++gen_index < ASDL_SEQ_LEN(generators)) {
+	_depth++;
+	if (++_genIndex < ASDL_SEQ_LEN(_generators)) {
 		RETURN_IF_ERROR(
-			compiler_comprehensionGenerator(c, loc,
-				generators, gen_index, depth,
-				elt, val, type, 0));
+			compiler_comprehensionGenerator(_c, _loc,
+				_generators, _genIndex, _depth,
+				_elt, _val, _type, 0));
 	}
 
-	Location elt_loc = LOC(elt);
-	if (gen_index >= ASDL_SEQ_LEN(generators)) {
-		switch (type) {
+	Location elt_loc = LOC(_elt);
+	if (_genIndex >= ASDL_SEQ_LEN(_generators)) {
+		switch (_type) {
 		case COMP_GENEXP:
-			VISIT(c, Expr, elt);
-			ADDOP_YIELD(c, elt_loc);
-			ADDOP(c, elt_loc, POP_TOP);
+			VISIT(_c, Expr, _elt);
+			ADDOP_YIELD(_c, elt_loc);
+			ADDOP(_c, elt_loc, POP_TOP);
 			break;
 		case COMP_LISTCOMP:
-			VISIT(c, Expr, elt);
-			ADDOP_I(c, elt_loc, LIST_APPEND, depth + 1);
+			VISIT(_c, Expr, _elt);
+			ADDOP_I(_c, elt_loc, LIST_APPEND, _depth + 1);
 			break;
 		case COMP_SETCOMP:
-			VISIT(c, Expr, elt);
-			ADDOP_I(c, elt_loc, SET_ADD, depth + 1);
+			VISIT(_c, Expr, _elt);
+			ADDOP_I(_c, elt_loc, SET_ADD, _depth + 1);
 			break;
 		case COMP_DICTCOMP:
-			VISIT(c, Expr, elt);
-			VISIT(c, Expr, val);
-			elt_loc = LOCATION(elt->lineNo,
-				val->endLineNo,
-				elt->colOffset,
-				val->endColOffset);
-			ADDOP_I(c, elt_loc, MAP_ADD, depth + 1);
+			VISIT(_c, Expr, _elt);
+			VISIT(_c, Expr, _val);
+			elt_loc = LOCATION(_elt->lineNo,
+				_val->endLineNo,
+				_elt->colOffset,
+				_val->endColOffset);
+			ADDOP_I(_c, elt_loc, MAP_ADD, _depth + 1);
 			break;
 		default:
 			return ERROR;
 		}
 	}
 
-	USE_LABEL(c, if_cleanup);
-	ADDOP_JUMP(c, elt_loc, JUMP, start);
+	USE_LABEL(_c, if_cleanup);
+	ADDOP_JUMP(_c, elt_loc, JUMP, start);
 
-	compiler_popFBlock(c, ASYNC_COMPREHENSION_GENERATOR, start);
+	compiler_popFBlock(_c, FBlockType_::Async_Comprehension_Generator, start);
 
-	USE_LABEL(c, except);
+	USE_LABEL(_c, except);
 
-	ADDOP(c, loc, END_ASYNC_FOR);
+	ADDOP(_c, _loc, END_ASYNC_FOR);
 
 	return SUCCESS;
 }
@@ -3858,6 +3878,21 @@ static AlifIntT pushInlined_comprehensionState(AlifCompiler* c, Location loc,
 		compiler_tweakInlinedComprehensionScopes(c, loc, comp, state));
 	RETURN_IF_ERROR(
 		codegen_pushInlinedComprehensionLocals(c, loc, comp, state));
+	return SUCCESS;
+}
+
+static AlifIntT restoreInlined_comprehensionLocals(AlifCompiler* c, Location loc,
+	InlinedComprehensionState* state) { // 5496
+	AlifObject* k{};
+	AlifSizeT npops = ALIFLIST_GET_SIZE(state->pushedLocals);
+	ADDOP_I(c, loc, SWAP, npops + 1);
+	for (AlifSizeT i = npops - 1; i >= 0; --i) {
+		k = alifList_getItem(state->pushedLocals, i);
+		if (k == nullptr) {
+			return ERROR;
+		}
+		ADDOP_NAME(c, loc, STORE_FAST_MAYBE_NULL, k, varnames);
+	}
 	return SUCCESS;
 }
 
@@ -4480,7 +4515,6 @@ static AlifCodeObject* optimizeAndAssemble_codeUnit(CompilerUnit* u, AlifObject*
 		nparams, u->metadata.firstLineno) < 0) {
 		goto error;
 	}
-
 
 	if (alifCFG_optimizedCFGToInstructionSequence(g, &u->metadata, _codeFlags,
 		&stackDepth, &nLocalsPlus, &optimizedInstrs) < 0) {

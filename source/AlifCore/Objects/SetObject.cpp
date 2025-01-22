@@ -3,6 +3,8 @@
 #include "AlifCore_Dict.h"
 #include "AlifCore_SetObject.h"
 
+#include "clinic/SetObject.cpp.h"
+
 // was static but shows error
 extern AlifObject _dummyStruct_; // 59 //* alif
 
@@ -136,7 +138,8 @@ comparisonError:
 	return -1;
 }
 
-static void set_insertClean(SetEntry* _table, AlifUSizeT _mask, AlifObject* _key, AlifHashT _hash) { // 218
+static void set_insertClean(SetEntry* _table, AlifUSizeT _mask,
+	AlifObject* _key, AlifHashT _hash) { // 218
 	SetEntry* entry{};
 	AlifUSizeT perturb = _hash;
 	AlifUSizeT i_ = (AlifUSizeT)_hash & _mask;
@@ -378,6 +381,30 @@ static AlifIntT setMerge_lockHeld(AlifSetObject* _so, AlifObject* _otherSet) { /
 		}
 	}
 	return 0;
+}
+
+
+
+static AlifObject* set_popImpl(AlifSetObject* so) { // 660
+	SetEntry* entry = so->table + (so->finger & so->mask);
+	SetEntry* limit = so->table + so->mask;
+	AlifObject* key{};
+
+	if (so->used == 0) {
+		//alifErr_setString(_alifExcKeyError_, "pop from an empty set");
+		return nullptr;
+	}
+	while (entry->key == nullptr or entry->key == DUMMY) {
+		entry++;
+		if (entry > limit)
+			entry = so->table;
+	}
+	key = entry->key;
+	entry->key = DUMMY;
+	entry->hash = -1;
+	alifAtomic_storeSizeRelaxed(&so->used, so->used - 1);
+	so->finger = entry - so->table + 1;
+	return key;
 }
 
 
@@ -693,6 +720,16 @@ AlifObject* alifFrozenSet_new(AlifObject* _iterable) { // 2594
 }
 
 
+
+AlifSizeT alifSet_size(AlifObject* _anyset) { // 2600
+	if (!ALIFANYSET_CHECK(_anyset)) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+	return set_len((AlifSetObject*)_anyset);
+}
+
+
 AlifIntT alifSet_contains(AlifObject* _anySet, AlifObject* _key) { // 2628
 	if (!ALIFANYSET_CHECK(_anySet)) {
 		//ALIFERR_BADINTERNALCALL();
@@ -733,7 +770,8 @@ AlifIntT alifSet_add(AlifObject* _anySet, AlifObject* _key) { // 2658
 	return rv_;
 }
 
-AlifIntT alifSet_nextEntry(AlifObject* _set, AlifSizeT* _pos, AlifObject** _key, AlifHashT* _hash) { // 2674
+AlifIntT alifSet_nextEntry(AlifObject* _set,
+	AlifSizeT* _pos, AlifObject** _key, AlifHashT* _hash) { // 2674
 	SetEntry* entry{};
 
 	if (!ALIFANYSET_CHECK(_set)) {
@@ -762,6 +800,16 @@ AlifIntT _alifSet_nextEntryRef(AlifObject* _set,
 	*_hash = entry->hash;
 	return 1;
 }
+
+
+AlifObject* alifSet_pop(AlifObject* _set) { // 2706
+	if (!ALIFSET_CHECK(_set)) {
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
+	return set_pop((AlifSetObject*)_set, nullptr);
+}
+
 
 
 static AlifTypeObject _alifSetDummyType_ = { // 2743

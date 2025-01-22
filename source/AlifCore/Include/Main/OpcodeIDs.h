@@ -9,14 +9,14 @@
 //#define CHECK_EXC_MATCH                          5
 #define CLEANUP_THROW                            6
 #define DELETE_SUBSCR                            7
-//#define END_ASYNC_FOR                            8
+#define END_ASYNC_FOR                            8
 #define END_FOR                                  9
 #define END_SEND                                10
 //#define EXIT_INIT_CHECK                         11
 #define FORMAT_SIMPLE                           12
 #define FORMAT_WITH_SPEC                        13
 #define GET_AITER                               14
-//#define GET_ANEXT                               15
+#define GET_ANEXT                               15
 #define GET_ITER                                16
 //#define RESERVED                                17
 //#define GET_LEN                                 18

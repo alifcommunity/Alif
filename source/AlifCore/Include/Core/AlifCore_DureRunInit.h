@@ -745,6 +745,7 @@
 	INIT_ID(HasLocation), \
 	INIT_ID(Join), \
 	INIT_ID(keys), \
+	INIT_ID(ListComp), \
 	INIT_ID(MetaClass), \
 	INIT_ID(Mro), \
 	INIT_ID(Origin), \
