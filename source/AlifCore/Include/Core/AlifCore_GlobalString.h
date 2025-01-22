@@ -39,6 +39,7 @@ class AlifGlobalStrings {
 public:
     class {
 	public:
+		STRUCT_FOR_STR(AnonListComp, "<listcomp>")
 		STRUCT_FOR_STR(AnonModule, "<module>")
         STRUCT_FOR_STR(DblPercent, "%%")
 		STRUCT_FOR_STR(Defaults, ".defaults")

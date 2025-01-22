@@ -15,7 +15,7 @@
 //#define EXIT_INIT_CHECK                         11
 #define FORMAT_SIMPLE                           12
 #define FORMAT_WITH_SPEC                        13
-//#define GET_AITER                               14
+#define GET_AITER                               14
 //#define GET_ANEXT                               15
 #define GET_ITER                                16
 //#define RESERVED                                17
@@ -46,7 +46,7 @@
 #define BINARY_OP                               42
 #define BUILD_LIST                              43
 #define BUILD_MAP                               44
-//#define BUILD_SET                               45
+#define BUILD_SET                               45
 #define BUILD_SLICE                             46
 #define BUILD_STRING                            47
 #define BUILD_TUPLE                             48

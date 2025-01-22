@@ -674,6 +674,7 @@
 
 
 #define ALIF_STR_LITERALS_INIT { \
+	INIT_STR(AnonListComp, "<listcomp>"), \
 	INIT_STR(AnonModule, "<module>"), \
     INIT_STR(DblPercent, "%%"), \
     INIT_STR(Defaults, ".defaults"), \
