@@ -41,6 +41,13 @@ static const char* convert_item(AlifObject*, const char**, va_list*, AlifIntT,
 static AlifSizeT convert_buffer(AlifObject*, const void**, const char**); // 56
 static AlifIntT get_buffer(AlifObject*, AlifBuffer*, const char**); // 57
 
+
+static AlifIntT vGetArgsKeywordsFast_impl(AlifObject* const*, AlifSizeT,
+	AlifObject*, AlifObject*, AlifArgParser*, va_list*, AlifIntT); // 63
+
+static const char* skip_item(const char**, va_list*, AlifIntT); // 67
+
+
 AlifIntT alifArg_parseTuple(AlifObject* _args, const char* _format, ...) { // 94
 	AlifIntT retval{};
 	va_list va{};
@@ -994,7 +1001,16 @@ static AlifIntT get_buffer(AlifObject* arg, AlifBuffer* view, const char** errms
 
 
 
+AlifIntT _alifArg_parseStackAndKeywords(AlifObject* const* _args,
+	AlifSizeT _nargs, AlifObject* _kwnames, AlifArgParser* _parser, ...) { // 1402
+	AlifIntT retval{};
+	va_list va{};
 
+	va_start(va, _parser);
+	retval = vGetArgsKeywordsFast_impl(_args, _nargs, nullptr, _kwnames, _parser, &va, 0);
+	va_end(va);
+	return retval;
+}
 
 
 #define IS_END_OF_FORMAT(_c) (_c == '\0' or _c == ';' or _c == ':') // 1510
@@ -1170,7 +1186,8 @@ static AlifIntT parser_init(AlifArgParser* _parser) { // 2021
 }
 
 
-static AlifObject* find_keyword(AlifObject* kwnames, AlifObject* const* kwstack, AlifObject* key) { // 2048
+static AlifObject* find_keyword(AlifObject* kwnames,
+	AlifObject* const* kwstack, AlifObject* key) { // 2048
 	AlifSizeT i{}, nkwargs{};
 
 	nkwargs = ALIFTUPLE_GET_SIZE(kwnames);
@@ -1188,6 +1205,201 @@ static AlifObject* find_keyword(AlifObject* kwnames, AlifObject* const* kwstack,
 		}
 	}
 	return nullptr;
+}
+
+
+
+static AlifIntT vGetArgsKeywordsFast_impl(AlifObject* const* args, AlifSizeT nargs,
+	AlifObject* kwargs, AlifObject* kwnames, AlifArgParser* parser,
+	va_list* p_va, AlifIntT flags) { // 2074
+	AlifObject* kwtuple{};
+	char msgbuf[512]{};
+	int levels[32]{};
+	const char* format{};
+	const char* msg{};
+	AlifObject* keyword{};
+	AlifSizeT i{};
+	AlifIntT pos{}, len{};
+	AlifSizeT nkwargs{};
+	FreeListEntryT static_entries[STATIC_FREELIST_ENTRIES]{};
+	FreeListT freelist{};
+	AlifObject* const* kwstack = nullptr;
+
+	freelist.entries = static_entries;
+	freelist.first_available = 0;
+	freelist.entries_malloced = 0;
+
+	if (parser == nullptr) {
+		//ALIFERR_BADINTERNALCALL();
+		return 0;
+	}
+
+	if (kwnames != nullptr and !ALIFTUPLE_CHECK(kwnames)) {
+		//ALIFERR_BADINTERNALCALL();
+		return 0;
+	}
+
+	if (parser_init(parser) < 0) {
+		return 0;
+	}
+
+	kwtuple = parser->kwTuple;
+	pos = parser->pos;
+	len = pos + (AlifIntT)ALIFTUPLE_GET_SIZE(kwtuple);
+
+	if (len > STATIC_FREELIST_ENTRIES) {
+		freelist.entries = (AlifUSizeT)(len) > ALIF_SIZET_MAX / sizeof(FreeListEntryT)
+			? nullptr : (FreeListEntryT*)alifMem_dataAlloc(len * sizeof(FreeListEntryT)); //* alif
+		if (freelist.entries == nullptr) {
+			//alifErr_noMemory();
+			return 0;
+		}
+		freelist.entries_malloced = 1;
+	}
+
+	if (kwargs != nullptr) {
+		nkwargs = ALIFDICT_GET_SIZE(kwargs);
+	}
+	else if (kwnames != nullptr) {
+		nkwargs = ALIFTUPLE_GET_SIZE(kwnames);
+		kwstack = args + nargs;
+	}
+	else {
+		nkwargs = 0;
+	}
+	if (nargs + nkwargs > len) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"%.200s%s takes at most %d %sargument%s (%zd given)",
+		//	(parser->fname == nullptr) ? "function" : parser->fname,
+		//	(parser->fname == nullptr) ? "" : "()",
+		//	len,
+		//	(nargs == 0) ? "keyword " : "",
+		//	(len == 1) ? "" : "s",
+		//	nargs + nkwargs);
+		return clean_return(0, &freelist);
+	}
+	if (parser->max < nargs) {
+		if (parser->max == 0) {
+			//alifErr_format(_alifExcTypeError_,
+			//	"%.200s%s takes no positional arguments",
+			//	(parser->fname == nullptr) ? "function" : parser->fname,
+			//	(parser->fname == nullptr) ? "" : "()");
+		}
+		else {
+			//alifErr_format(_alifExcTypeError_,
+			//	"%.200s%s takes %s %d positional argument%s (%zd given)",
+			//	(parser->fname == nullptr) ? "function" : parser->fname,
+			//	(parser->fname == nullptr) ? "" : "()",
+			//	(parser->min < parser->max) ? "at most" : "exactly",
+			//	parser->max,
+			//	parser->max == 1 ? "" : "s",
+			//	nargs);
+		}
+		return clean_return(0, &freelist);
+	}
+
+	format = parser->format;
+	for (i = 0; i < len; i++) {
+		if (*format == '|') {
+			format++;
+		}
+		if (*format == '$') {
+			format++;
+		}
+
+		AlifObject* current_arg{};
+		if (i < nargs) {
+			current_arg = ALIF_NEWREF(args[i]);
+		}
+		else if (nkwargs and i >= pos) {
+			keyword = ALIFTUPLE_GET_ITEM(kwtuple, i - pos);
+			if (kwargs != nullptr) {
+				if (alifDict_getItemRef(kwargs, keyword, &current_arg) < 0) {
+					return clean_return(0, &freelist);
+				}
+			}
+			else {
+				current_arg = find_keyword(kwnames, kwstack, keyword);
+			}
+			if (current_arg) {
+				--nkwargs;
+			}
+		}
+		else {
+			current_arg = nullptr;
+		}
+
+		if (current_arg) {
+			msg = convert_item(current_arg, &format, p_va, flags,
+				levels, msgbuf, sizeof(msgbuf), &freelist);
+			ALIF_DECREF(current_arg);
+			if (msg) {
+				//set_error(i + 1, msg, levels, parser->fname, parser->customMsg);
+				return clean_return(0, &freelist);
+			}
+			continue;
+		}
+
+		if (i < parser->min) {
+			if (i < pos) {
+				AlifSizeT min = ALIF_MIN(pos, parser->min);
+				//alifErr_format(_alifExcTypeError_,
+				//	"%.200s%s takes %s %d positional argument%s"
+				//	" (%zd given)",
+				//	(parser->fname == nullptr) ? "function" : parser->fname,
+				//	(parser->fname == nullptr) ? "" : "()",
+				//	min < parser->max ? "at least" : "exactly",
+				//	min,
+				//	min == 1 ? "" : "s",
+				//	nargs);
+			}
+			else {
+				keyword = ALIFTUPLE_GET_ITEM(kwtuple, i - pos);
+				//alifErr_format(_alifExcTypeError_, "%.200s%s missing required "
+				//	"argument '%U' (pos %d)",
+				//	(parser->fname == nullptr) ? "function" : parser->fname,
+				//	(parser->fname == nullptr) ? "" : "()",
+				//	keyword, i + 1);
+			}
+			return clean_return(0, &freelist);
+		}
+		if (!nkwargs) {
+			return clean_return(1, &freelist);
+		}
+
+		msg = skip_item(&format, p_va, flags);
+	}
+
+	if (nkwargs > 0) {
+		for (i = pos; i < nargs; i++) {
+			AlifObject* current_arg{};
+			keyword = ALIFTUPLE_GET_ITEM(kwtuple, i - pos);
+			if (kwargs != nullptr) {
+				if (alifDict_getItemRef(kwargs, keyword, &current_arg) < 0) {
+					return clean_return(0, &freelist);
+				}
+			}
+			else {
+				current_arg = find_keyword(kwnames, kwstack, keyword);
+			}
+			if (current_arg) {
+				ALIF_DECREF(current_arg);
+				/* arg present in tuple and in dict */
+				//alifErr_format(_alifExcTypeError_,
+				//	"argument for %.200s%s given by name ('%U') "
+				//	"and position (%d)",
+				//	(parser->fname == nullptr) ? "function" : parser->fname,
+				//	(parser->fname == nullptr) ? "" : "()",
+				//	keyword, i + 1);
+				return clean_return(0, &freelist);
+			}
+		}
+
+		//error_unexpectedKeywordArg(kwargs, kwnames, kwtuple, parser->fname);
+		return clean_return(0, &freelist);
+	}
+
+	return clean_return(1, &freelist);
 }
 
 
@@ -1494,6 +1706,140 @@ exit:
 }
 
 
+static const char* skip_item(const char** p_format,
+	va_list* p_va, AlifIntT flags) { // 2640
+	const char* format = *p_format;
+	char c = *format++;
+
+	switch (c) {
+
+		/*
+		 * codes that take a single data pointer as an argument
+		 * (the type of the pointer is irrelevant)
+		 */
+
+	case 'b': /* byte -- very short int */
+	case 'B': /* byte as bitfield */
+	case 'h': /* short int */
+	case 'H': /* short int as bitfield */
+	case 'i': /* int */
+	case 'I': /* int sized bitfield */
+	case 'l': /* long int */
+	case 'k': /* long int sized bitfield */
+	case 'L': /* long long */
+	case 'K': /* long long sized bitfield */
+	case 'n': /* AlifSizeT */
+	case 'f': /* float */
+	case 'd': /* double */
+	case 'D': /* complex double */
+	case 'c': /* char */
+	case 'C': /* unicode char */
+	case 'p': /* boolean predicate */
+	case 'S': /* string object */
+	case 'Y': /* string object */
+	case 'U': /* unicode string object */
+	{
+		if (p_va != nullptr) {
+			(void)va_arg(*p_va, void*);
+		}
+		break;
+	}
+
+	/* string codes */
+
+	case 'e': /* string with encoding */
+	{
+		if (p_va != nullptr) {
+			(void)va_arg(*p_va, const char*);
+		}
+		if (!(*format == 's' || *format == 't'))
+			/* after 'e', only 's' and 't' is allowed */
+			goto err;
+		format++;
+	}
+	ALIF_FALLTHROUGH;
+
+	case 's': /* string */
+	case 'z': /* string or None */
+	case 'y': /* bytes */
+	case 'w': /* buffer, read-write */
+	{
+		if (p_va != nullptr) {
+			(void)va_arg(*p_va, char**);
+		}
+		if (c == 'w' and *format != '*')
+		{
+			/* after 'w', only '*' is allowed */
+			goto err;
+		}
+		if (*format == '#') {
+			if (p_va != nullptr) {
+				(void)va_arg(*p_va, AlifSizeT*);
+			}
+			format++;
+		}
+		else if ((c == 's' or c == 'z' or c == 'y' or c == 'w')
+			and *format == '*')
+		{
+			format++;
+		}
+		break;
+	}
+
+	case 'O': /* object */
+	{
+		if (*format == '!') {
+			format++;
+			if (p_va != nullptr) {
+				(void)va_arg(*p_va, AlifTypeObject*);
+				(void)va_arg(*p_va, AlifObject**);
+			}
+		}
+		else if (*format == '&') {
+			typedef int (*converter)(AlifObject*, void*);
+			if (p_va != nullptr) {
+				(void)va_arg(*p_va, converter);
+				(void)va_arg(*p_va, void*);
+			}
+			format++;
+		}
+		else {
+			if (p_va != nullptr) {
+				(void)va_arg(*p_va, AlifObject**);
+			}
+		}
+		break;
+	}
+
+	case '(':           /* bypass tuple, not handled at all previously */
+	{
+		const char* msg;
+		for (;;) {
+			if (*format == ')')
+				break;
+			if (IS_END_OF_FORMAT(*format))
+				return "Unmatched left paren in format "
+				"string";
+			msg = skip_item(&format, p_va, flags);
+			if (msg)
+				return msg;
+		}
+		format++;
+		break;
+	}
+
+	case ')':
+		return "Unmatched right paren in format string";
+
+	default:
+	err:
+		return "impossible<bad format char>";
+
+	}
+
+	*p_format = format;
+	return nullptr;
+}
 
 
 AlifIntT _alifArg_checkPositional(const char* name, AlifSizeT nargs,

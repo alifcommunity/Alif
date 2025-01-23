@@ -37,7 +37,35 @@ AlifObject* alifSeqIter_new(AlifObject* _seq) { // 15
 
 
 
+static AlifObject* iter_iterNext(AlifObject* iterator) { // 48
+	SeqIterObject* it{};
+	AlifObject* seq{};
+	AlifObject* result{};
 
+	it = (SeqIterObject*)iterator;
+	seq = it->seq;
+	if (seq == nullptr)
+		return nullptr;
+	if (it->index == ALIF_SIZET_MAX) {
+		//alifErr_setString(_alifExcOverflowError_,
+		//	"iter index too large");
+		return nullptr;
+	}
+
+	result = alifSequence_getItem(seq, it->index);
+	if (result != nullptr) {
+		it->index++;
+		return result;
+	}
+	//if (alifErr_exceptionMatches(_alifExcIndexError_) or
+	//	alifErr_exceptionMatches(_alifExcStopIteration_))
+	//{
+	//	alifErr_clear();
+	//	it->seq = nullptr;
+	//	ALIF_DECREF(seq);
+	//}
+	return nullptr;
+}
 
 
 
@@ -54,4 +82,6 @@ AlifTypeObject _alifSeqIterType_ = { // 144
 	.itemSize = 0,                                       
 	.getAttro = alifObject_genericGetAttr,               
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
+
+	.iterNext = iter_iterNext,
 };

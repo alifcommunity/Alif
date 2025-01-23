@@ -1311,6 +1311,15 @@ static AlifIntT symtable_visitStmt(AlifSymTable* _st, StmtTy _s) { // 1812
 		_st->private_ = tmp;
 		break;
 	}
+	case StmtK_::ReturnK:
+		if (_s->V.return_.val) {
+			VISIT(_st, Expr, _s->V.return_.val);
+			_st->cur->returnsValue = 1;
+		}
+		break;
+	case StmtK_::DeleteK:
+		VISIT_SEQ(_st, Expr, _s->V.delete_.targets);
+		break;
 	case StmtK_::AssignK:
 		VISIT_SEQ(_st, Expr, _s->V.assign.targets);
 		VISIT(_st, Expr, _s->V.assign.val);

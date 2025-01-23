@@ -456,6 +456,43 @@ dispatch_opcode :
 				stackPointer += 1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(STORE_SUBSCR) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 2;
+				PREDICTED(STORE_SUBSCR);
+				AlifCodeUnit* thisInstr = nextInstr - 2;
+				AlifStackRef container{};
+				AlifStackRef sub{};
+				AlifStackRef v{};
+				// _SPECIALIZE_STORE_SUBSCR
+				sub = stackPointer[-1];
+				container = stackPointer[-2];
+				{
+					uint16_t counter = read_u16(&thisInstr[1].cache);
+#if ENABLE_SPECIALIZATION
+					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
+						nextInstr = thisInstr;
+						_alifSpecialize_storeSubscr(container, sub, nextInstr);
+						DISPATCH_SAME_OPARG();
+					}
+					OPCODE_DEFERRED_INC(STORE_SUBSCR);
+					ADVANCE_ADAPTIVE_COUNTER(thisInstr[1].counter);
+#endif  /* ENABLE_SPECIALIZATION */
+				}
+				// _STORE_SUBSCR
+				v = stackPointer[-3];
+				{
+					/* container[sub] = v */
+					AlifIntT err = alifObject_setItem(alifStackRef_asAlifObjectBorrow(container),
+						alifStackRef_asAlifObjectBorrow(sub), alifStackRef_asAlifObjectBorrow(v));
+					alifStackRef_close(v);
+					alifStackRef_close(container);
+					alifStackRef_close(sub);
+					//if (err) goto pop_3_error;
+				}
+				stackPointer += -3;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(TO_BOOL) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 4;
@@ -978,9 +1015,9 @@ dispatch_opcode :
 				// _CONTAINS_OP
 				left = stackPointer[-2];
 				{
-					AlifObject* left_o = alifStackRef_asAlifObjectBorrow(left);
-					AlifObject* right_o = alifStackRef_asAlifObjectBorrow(right);
-					AlifIntT res = alifSequence_contains(right_o, left_o);
+					AlifObject* leftObj = alifStackRef_asAlifObjectBorrow(left);
+					AlifObject* rightObj = alifStackRef_asAlifObjectBorrow(right);
+					AlifIntT res = alifSequence_contains(rightObj, leftObj);
 					alifStackRef_close(left);
 					alifStackRef_close(right);
 					//if (res < 0) goto pop_2_error;

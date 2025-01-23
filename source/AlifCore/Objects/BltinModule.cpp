@@ -238,6 +238,141 @@ static AlifObject* builtin___import__Impl(AlifObject* module, AlifObject* name, 
 
 
 
+static AlifObject* min_max(AlifObject* const* args, AlifSizeT nargs,
+	AlifObject* kwnames, AlifIntT op) { // 1795
+	AlifObject* it = nullptr, * item{}, * val{}, * maxitem{}, * maxval{}, * keyfunc = nullptr;
+	AlifObject* defaultval = nullptr;
+	static const char* const keywords[] = { "key", "default", nullptr };
+	static AlifArgParser parserMin = { "|$OO:min", keywords, 0 };
+	static AlifArgParser parserMax = { "|$OO:max", keywords, 0 };
+	const char* name = (op == ALIF_LT) ? "min" : "max";
+	AlifArgParser* parser_ = (op == ALIF_LT) ? &parserMin : &parserMax;
+
+	if (nargs == 0) {
+		//alifErr_format(_alifExcTypeError_, "%s expected at least 1 argument, got 0", name);
+		return nullptr;
+	}
+
+	if (kwnames != nullptr and !_alifArg_parseStackAndKeywords(args + nargs, 0, kwnames, parser_,
+		&keyfunc, &defaultval)) {
+		return nullptr;
+	}
+
+	const AlifIntT positional = nargs > 1;
+	if (positional and defaultval != nullptr) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"Cannot specify a default for %s() with multiple "
+		//	"positional arguments", name);
+		return nullptr;
+	}
+
+	if (!positional) {
+		it = alifObject_getIter(args[0]);
+		if (it == nullptr) {
+			return nullptr;
+		}
+	}
+
+	if (keyfunc == ALIF_NONE) {
+		keyfunc = nullptr;
+	}
+
+	maxitem = nullptr; /* the result */
+	maxval = nullptr;  /* the value associated with the result */
+	while (1) {
+		if (it == nullptr) {
+			if (nargs-- <= 0) {
+				break;
+			}
+			item = *args++;
+			ALIF_INCREF(item);
+		}
+		else {
+			item = alifIter_next(it);
+			if (item == nullptr) {
+				if (alifErr_occurred()) {
+					goto Fail_it;
+				}
+				break;
+			}
+		}
+
+		/* get the value from the key function */
+		if (keyfunc != nullptr) {
+			val = alifObject_callOneArg(keyfunc, item);
+			if (val == nullptr)
+				goto Fail_it_item;
+		}
+		/* no key function; the value is the item */
+		else {
+			val = ALIF_NEWREF(item);
+		}
+
+		/* maximum value and item are unset; set them */
+		if (maxval == nullptr) {
+			maxitem = item;
+			maxval = val;
+		}
+		/* maximum value and item are set; update them as necessary */
+		else {
+			AlifIntT cmp = alifObject_richCompareBool(val, maxval, op);
+			if (cmp < 0)
+				goto Fail_it_item_and_val;
+			else if (cmp > 0) {
+				ALIF_DECREF(maxval);
+				ALIF_DECREF(maxitem);
+				maxval = val;
+				maxitem = item;
+			}
+			else {
+				ALIF_DECREF(item);
+				ALIF_DECREF(val);
+			}
+		}
+	}
+	if (maxval == nullptr) {
+		if (defaultval != nullptr) {
+			maxitem = ALIF_NEWREF(defaultval);
+		}
+		else {
+			//alifErr_format(_alifExcValueError_,
+			//	"%s() iterable argument is empty", name);
+		}
+	}
+	else {
+		ALIF_DECREF(maxval);
+	}
+
+	ALIF_XDECREF(it);
+	return maxitem;
+
+Fail_it_item_and_val:
+	ALIF_DECREF(val);
+Fail_it_item:
+	ALIF_DECREF(item);
+Fail_it:
+	ALIF_XDECREF(maxval);
+	ALIF_XDECREF(maxitem);
+	ALIF_XDECREF(it);
+	return nullptr;
+}
+
+
+
+static AlifObject* builtin_min(AlifObject* _self, AlifObject* const* _args,
+	AlifSizeT _nargs, AlifObject* _kwnames) { // 1914
+	return min_max(_args, _nargs, _kwnames, ALIF_LT);
+}
+
+static AlifObject* builtin_max(AlifObject* _self, AlifObject* const* _args,
+	AlifSizeT _nargs, AlifObject* _kwnames) { // 1931
+	return min_max(_args, _nargs, _kwnames, ALIF_GT);
+}
+
+
+
+
+
 
 static AlifObject* builtin_printImpl(AlifObject* _module, AlifObject* _args,
 	AlifObject* _sep, AlifObject* _end, AlifObject* _file, AlifIntT _flush) { // 2058
@@ -582,6 +717,8 @@ static AlifMethodDef _builtinMethods_[] = { // 3141
 	 METHOD_FASTCALL | METHOD_KEYWORDS},
 	BUILTIN___IMPORT___METHODDEF,
 	BUILTIN_INPUT_METHODDEF,
+	{"اقصى", ALIF_CPPFUNCTION_CAST(builtin_max), METHOD_FASTCALL | METHOD_KEYWORDS},
+	{"ادنى", ALIF_CPPFUNCTION_CAST(builtin_min), METHOD_FASTCALL | METHOD_KEYWORDS},
 	BUILTIN_PRINT_METHODDEF,
 	{nullptr, nullptr},
 };
