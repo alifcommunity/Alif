@@ -1202,7 +1202,7 @@ static AlifIntT codegen_unwindFBlockStack(AlifCompiler* _c, Location* _ploc,
 
 
 
-static AlifIntT compiler_body(AlifCompiler* _c,
+static AlifIntT codegen_body(AlifCompiler* _c,
 	Location _loc, ASDLStmtSeq* _stmts) { // 1507
 	//if ((FUTURE_FEATURES(_c) & CO_FUTURE_ANNOTATIONS) and SYMTABLE_ENTRY(_c)->annotationsUsed) {
 	//	ADDOP(_c, _loc, SETUP_ANNOTATIONS);
@@ -1233,38 +1233,8 @@ static AlifIntT compiler_body(AlifCompiler* _c,
 		VISIT(_c, Stmt, (StmtTy)ASDL_SEQ_GET(_stmts, i));
 	}
 
-	//if (!(FUTURE_FEATURES(_c) & CO_FUTURE_ANNOTATIONS) and
-	//	_c->u_->deferredAnnotations != nullptr) {
-
-	//	AlifSTEntryObject* ste = SYMTABLE_ENTRY(_c);
-	//	AlifObject* deferredAnno = ALIF_NEWREF(_c->u_->deferredAnnotations);
-	//	void* key = (void*)((uintptr_t)ste->id + 1);
-	//	if (codegen_setupAnnotationsScope(_c, _loc, key,
-	//		ste->annotationBlock->name) == -1) {
-	//		ALIF_DECREF(deferredAnno);
-	//		return ERROR;
-	//	}
-	//	AlifSizeT annotations_len = alifList_size(deferredAnno);
-	//	for (AlifSizeT i = 0; i < annotations_len; i++) {
-	//		AlifObject* ptr = ALIFLIST_GET_ITEM(deferredAnno, i);
-	//		StmtTy st = (StmtTy)alifLong_asVoidPtr(ptr);
-	//		if (st == nullptr) {
-	//			compiler_exitScope(_c);
-	//			ALIF_DECREF(deferredAnno);
-	//			return ERROR;
-	//		}
-	//		AlifObject* mangled = compiler_mangle(_c, st->V.annAssign.Target->V.name.id);
-	//		ADDOP_LOAD_CONST_NEW(_c, LOC(st), mangled);
-	//		VISIT(_c, expr, st->V.annAssign.annotation);
-	//	}
-	//	ALIF_DECREF(deferredAnno);
-
-	//	RETURN_IF_ERROR(
-	//		codegen_leaveAnnotationsScope(_c, _loc, annotations_len)
-	//	);
-	//	RETURN_IF_ERROR(
-	//		compiler_nameOp(_c, _loc, &ALIF_ID(__annotate__), ExprContext_::Store)
-	//	);
+	//if (!(FUTURE_FEATURES(c) & CO_FUTURE_ANNOTATIONS)) {
+	//	RETURN_IF_ERROR(codegen_process_deferred_annotations(c, loc));
 	//}
 	return SUCCESS;
 }
@@ -1285,13 +1255,13 @@ static AlifIntT compiler_codegen(AlifCompiler* _c, ModuleTy _mod) { // 1602
 	switch (_mod->type) {
 	case ModK_::ModuleK: {
 		ASDLStmtSeq* stmts = _mod->V.module.body;
-		RETURN_IF_ERROR(compiler_body(_c, start_location(stmts), stmts));
+		RETURN_IF_ERROR(codegen_body(_c, start_location(stmts), stmts));
 		break;
 	}
 	case ModK_::InteractiveK: {
 		_c->interactive = 1;
 		ASDLStmtSeq* stmts = _mod->V.interactive.body;
-		RETURN_IF_ERROR(compiler_body(_c, start_location(stmts), stmts));
+		RETURN_IF_ERROR(codegen_body(_c, start_location(stmts), stmts));
 		break;
 	}
 	case ModK_::ExpressionK: {
@@ -1748,7 +1718,7 @@ static AlifIntT compiler_classBody(AlifCompiler* _c, StmtTy _s, AlifIntT _firstL
 		ADDOP_N_IN_SCOPE(_c, loc, STORE_DEREF, &ALIF_ID(__classDict__), cellvars);
 	}
 	/* compile the body proper */
-	RETURN_IF_ERROR_IN_SCOPE(_c, compiler_body(_c, loc, _s->V.classDef.body));
+	RETURN_IF_ERROR_IN_SCOPE(_c, codegen_body(_c, loc, _s->V.classDef.body));
 	AlifObject* staticAttributes = alifSequence_tuple(_c->u_->staticAttributes);
 	if (staticAttributes == nullptr) {
 		compiler_exitScope(_c);
