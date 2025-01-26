@@ -68,25 +68,29 @@ static SymTableEntry* compiler_symtableEntry(AlifCompiler*); // 89
 #define SYMTABLE_ENTRY(_c) compiler_symtableEntry(_c) // 94
 #define OPTIMIZATION_LEVEL(_c) compiler_optimizationLevel(_c) // 95
 
+#define QUALNAME(_c) compiler_qualname(_c) // 99
 
-typedef AlifSourceLocation Location; // 99
-typedef class AlifCFGBuilder CFGBuilder; // 100
+
+typedef AlifSourceLocation Location; // 101
+typedef class AlifCFGBuilder CFGBuilder; // 102
 
 static AlifObject* compiler_maybeMangle(AlifCompiler*, AlifObject*); // 103
 static AlifIntT compiler_optimizationLevel(AlifCompiler *); // 104
 
-#define LOCATION(_lno, _endLno, _col, _endCol) {_lno, _endLno, _col, _endCol} // 108
+static AlifObject* compiler_qualname(AlifCompiler*); // 110
+
+#define LOCATION(_lno, _endLno, _col, _endCol) {_lno, _endLno, _col, _endCol} // 112
 
 #define LOC(_x) SRC_LOCATION_FROM_AST(_x)
 
-typedef AlifJumpTargetLabel JumpTargetLabel; // 113
+typedef AlifJumpTargetLabel JumpTargetLabel; // 117
 
-static JumpTargetLabel _noLabel_ = { -1 }; // 115
+static JumpTargetLabel _noLabel_ = { -1 }; // 119
 
-#define SAME_LABEL(_l1, _l2) ((_l1).id == (_l2).id) // 117
+#define SAME_LABEL(_l1, _l2) ((_l1).id == (_l2).id) // 121
 #define IS_LABEL(_l) (!SAME_LABEL((_l), (_noLabel_)))
 
- // 120
+ // 1224
 #define NEW_JUMP_TARGET_LABEL(_c, _name) \
     JumpTargetLabel _name = _alifInstructionSequence_newLabel(INSTR_SEQUENCE(_c)); \
     if (!IS_LABEL(_name)) { \
@@ -249,9 +253,9 @@ static bool areAllItems_const(ASDLExprSeq*, AlifSizeT, AlifSizeT); // 321
 static AlifIntT codegen_callSimpleKwHelper(AlifCompiler*, Location, ASDLKeywordSeq*, AlifSizeT); // 327
 static AlifIntT codegen_callHelper(AlifCompiler*, Location, AlifIntT, ASDLExprSeq*, ASDLKeywordSeq*); // 331
 
-static AlifIntT compiler_syncComprehensionGenerator(AlifCompiler*, Location, ASDLComprehensionSeq*,
+static AlifIntT codegen_syncComprehensionGenerator(AlifCompiler*, Location, ASDLComprehensionSeq*,
 	AlifIntT, AlifIntT, ExprTy, ExprTy, AlifIntT, AlifIntT); // 337
-static AlifIntT compiler_asyncComprehensionGenerator(AlifCompiler*, Location, ASDLComprehensionSeq*,
+static AlifIntT codegen_asyncComprehensionGenerator(AlifCompiler*, Location, ASDLComprehensionSeq*,
 	AlifIntT, AlifIntT, ExprTy, ExprTy, AlifIntT, AlifIntT); // 344
 
 static AlifCodeObject* optimize_andAssemble(AlifCompiler*, AlifIntT); // 358
@@ -1332,14 +1336,13 @@ static AlifIntT dict_lookupArg(AlifObject* _dict, AlifObject* _name) { // 1682
 	return alifLong_asLong(v);
 }
 
+
+static AlifIntT compiler_lookupCellVar(AlifCompiler* _c, AlifObject* _name) { // 1719
+	return dict_lookupArg(_c->u_->metadata.cellvars, _name);
+}
+
 static AlifIntT compiler_lookupArg(AlifCompiler* _c,
 	AlifCodeObject* _co, AlifObject* _name) { // 1692
-	/* Special case: If a class contains a method with a
-	 * free variable that has the same name as a method,
-	 * the name will be considered free *and* local in the
-	 * class.  It should be handled by the closure, as
-	 * well as by the normal name lookup logic.
-	 */
 	AlifIntT reftype = compiler_getRefType(_c, _name);
 	if (reftype == -1) {
 		return ERROR;
@@ -1689,7 +1692,12 @@ static AlifIntT codegen_setTypeParamsInClass(AlifCompiler* _c, Location _loc) { 
 	return SUCCESS;
 }
 
-static AlifIntT compiler_classBody(AlifCompiler* _c, StmtTy _s, AlifIntT _firstLineNo) { // 2346
+
+static AlifObject* compiler_staticAttributesTuple(AlifCompiler* _c) { // 2379
+	return alifSequence_tuple(_c->u_->staticAttributes);
+}
+
+static AlifIntT codegen_classBody(AlifCompiler* _c, StmtTy _s, AlifIntT _firstLineNo) { // 2346
 
 	/* 1. compile the class body into a code object */
 	RETURN_IF_ERROR(
@@ -1701,7 +1709,7 @@ static AlifIntT compiler_classBody(AlifCompiler* _c, StmtTy _s, AlifIntT _firstL
 	RETURN_IF_ERROR_IN_SCOPE(_c, compiler_nameOp(_c, loc, &ALIF_ID(__name__), ExprContext_::Load));
 	/* ... and store it as __module__ */
 	RETURN_IF_ERROR_IN_SCOPE(_c, compiler_nameOp(_c, loc, &ALIF_ID(__module__), ExprContext_::Store));
-	ADDOP_LOAD_CONST(_c, loc, _c->u_->metadata.qualname);
+	ADDOP_LOAD_CONST(_c, loc, QUALNAME(_c));
 	RETURN_IF_ERROR_IN_SCOPE(_c, compiler_nameOp(_c, loc, &ALIF_ID(__qualname__), ExprContext_::Store));
 	ADDOP_LOAD_CONST_NEW(_c, loc, alifLong_fromLong(_c->u_->metadata.firstLineno));
 	RETURN_IF_ERROR_IN_SCOPE(_c, compiler_nameOp(_c, loc, &ALIF_ID(__firstLineno__), ExprContext_::Store));
@@ -1719,7 +1727,7 @@ static AlifIntT compiler_classBody(AlifCompiler* _c, StmtTy _s, AlifIntT _firstL
 	}
 	/* compile the body proper */
 	RETURN_IF_ERROR_IN_SCOPE(_c, codegen_body(_c, loc, _s->V.classDef.body));
-	AlifObject* staticAttributes = alifSequence_tuple(_c->u_->staticAttributes);
+	AlifObject* staticAttributes = compiler_staticAttributesTuple(_c);
 	if (staticAttributes == nullptr) {
 		compiler_exitScope(_c);
 		return ERROR;
@@ -1732,7 +1740,7 @@ static AlifIntT compiler_classBody(AlifCompiler* _c, StmtTy _s, AlifIntT _firstL
 	/* Set __classdictcell__ if necessary */
 	if (SYMTABLE_ENTRY(_c)->needsClassDict) {
 		/* Store __classdictcell__ into class namespace */
-		AlifIntT i = dict_lookupArg(_c->u_->metadata.cellvars, &ALIF_ID(__classDict__));
+		AlifIntT i = compiler_lookupCellVar(_c, &ALIF_ID(__classDict__));
 		RETURN_IF_ERROR_IN_SCOPE(_c, i);
 		ADDOP_I(_c, _noLocation_, LOAD_CLOSURE, i);
 		RETURN_IF_ERROR_IN_SCOPE(
@@ -1741,7 +1749,7 @@ static AlifIntT compiler_classBody(AlifCompiler* _c, StmtTy _s, AlifIntT _firstL
 	/* Return __classcell__ if it is referenced, otherwise return None */
 	if (SYMTABLE_ENTRY(_c)->needsClassClosure) {
 		/* Store __classcell__ into class namespace & return it */
-		AlifIntT i = dict_lookupArg(_c->u_->metadata.cellvars, &ALIF_ID(__class__));
+		AlifIntT i = compiler_lookupCellVar(_c, &ALIF_ID(__class__));
 		RETURN_IF_ERROR_IN_SCOPE(_c, i);
 		ADDOP_I(_c, _noLocation_, LOAD_CLOSURE, i);
 		ADDOP_I(_c, _noLocation_, COPY, 1);
@@ -1808,7 +1816,7 @@ static AlifIntT codegen_class(AlifCompiler* _c, StmtTy _s) { // 2452
 	//	RETURN_IF_ERROR_IN_SCOPE(_c, compiler_nameOp(_c, loc, &ALIF_STR(typeParams), ExprContext_::Store));
 	//}
 
-	AlifIntT ret = compiler_classBody(_c, _s, firstlineno);
+	AlifIntT ret = codegen_classBody(_c, _s, firstlineno);
 	if (isGeneric) {
 		RETURN_IF_ERROR_IN_SCOPE(_c, ret);
 	}
@@ -3510,18 +3518,18 @@ static AlifIntT compiler_comprehensionGenerator(AlifCompiler* c, Location loc,
 	ComprehensionTy gen{};
 	gen = (ComprehensionTy)ASDL_SEQ_GET(generators, gen_index);
 	if (gen->isAsync) {
-		return compiler_asyncComprehensionGenerator(
+		return codegen_asyncComprehensionGenerator(
 			c, loc, generators, gen_index, depth, elt, val, type,
 			iter_on_stack);
 	}
 	else {
-		return compiler_syncComprehensionGenerator(
+		return codegen_syncComprehensionGenerator(
 			c, loc, generators, gen_index, depth, elt, val, type,
 			iter_on_stack);
 	}
 }
 
-static AlifIntT compiler_syncComprehensionGenerator(AlifCompiler* _c, Location _loc,
+static AlifIntT codegen_syncComprehensionGenerator(AlifCompiler* _c, Location _loc,
 	ASDLComprehensionSeq* _generators, AlifIntT _genIndex, AlifIntT _depth,
 	ExprTy _elt, ExprTy _val, AlifIntT _type, AlifIntT _iterOnStack) { // 5105
 
@@ -3534,7 +3542,6 @@ static AlifIntT compiler_syncComprehensionGenerator(AlifCompiler* _c, Location _
 
 	if (!_iterOnStack) {
 		if (_genIndex == 0) {
-			_c->u_->metadata.argCount = 1;
 			ADDOP_I(_c, _loc, LOAD_FAST, 0);
 		}
 		else {
@@ -3631,7 +3638,7 @@ static AlifIntT compiler_syncComprehensionGenerator(AlifCompiler* _c, Location _
 }
 
 
-static AlifIntT compiler_asyncComprehensionGenerator(AlifCompiler* _c, Location _loc,
+static AlifIntT codegen_asyncComprehensionGenerator(AlifCompiler* _c, Location _loc,
 	ASDLComprehensionSeq* _generators, AlifIntT _genIndex, AlifIntT _depth,
 	ExprTy _elt, ExprTy _val, AlifIntT _type, AlifIntT _iterOnStack) { // 5230
 	NEW_JUMP_TARGET_LABEL(_c, start);
@@ -3643,7 +3650,6 @@ static AlifIntT compiler_asyncComprehensionGenerator(AlifCompiler* _c, Location 
 
 	if (!_iterOnStack) {
 		if (_genIndex == 0) {
-			_c->u_->metadata.argCount = 1;
 			ADDOP_I(_c, _loc, LOAD_FAST, 0);
 		}
 		else {
@@ -3950,8 +3956,8 @@ static AlifIntT compiler_comprehension(AlifCompiler* _c, ExprTy _e, AlifIntT _ty
 	AlifCodeObject* co = nullptr;
 	InlinedComprehensionState inline_state = { nullptr, nullptr, nullptr, _noLabel_ };
 	ComprehensionTy outermost{};
-	AlifIntT scope_type = _c->u_->scopeType;
-	AlifIntT is_top_level_await = IS_TOP_LEVEL_AWAIT(_c);
+	//AlifIntT scope_type = _c->u_->scopeType; //* review //* delete
+	//AlifIntT is_top_level_await = IS_TOP_LEVEL_AWAIT(_c); //* review //* delete
 	SymTableEntry* entry = _alifSymtable_lookup(SYMTABLE(_c), (void*)_e);
 	if (entry == nullptr) {
 		goto error;
@@ -3971,8 +3977,12 @@ static AlifIntT compiler_comprehension(AlifCompiler* _c, ExprTy _e, AlifIntT _ty
 		}
 	}
 	else {
+		/* Receive outermost iter as an implicit argument */
+		AlifCompileCodeUnitMetadata umd = {
+			.argCount = 1,
+		};
 		if (compiler_enterScope(_c, _name, ScopeType_::Compiler_Scope_Comprehension,
-			(void*)_e, _e->lineNo, nullptr, nullptr) < 0) {
+			(void*)_e, _e->lineNo, nullptr, &umd) < 0) {
 			goto error;
 		}
 	}
@@ -4399,8 +4409,12 @@ static AlifIntT compiler_optimizationLevel(AlifCompiler* _c) { // 7381
 }
 
 
+static AlifObject* compiler_qualname(AlifCompiler* _c) { // 7455
+	return _c->u_->metadata.qualname;
+}
 
-static AlifIntT compute_codeFlags(AlifCompiler* _c) { // 7402
+
+static AlifIntT compute_codeFlags(AlifCompiler* _c) { // 7462
 	SymTableEntry* ste = SYMTABLE_ENTRY(_c);
 	AlifIntT flags = 0;
 	if (alifST_isFunctionLike(ste)) {
@@ -4427,7 +4441,7 @@ static AlifIntT compute_codeFlags(AlifCompiler* _c) { // 7402
 }
 
 AlifIntT _alifCompile_constCacheMergeOne(AlifObject* _constCache,
-	AlifObject** _obj) { // 7433
+	AlifObject** _obj) { // 7493
 
 	AlifObject* key = const_cacheInsert(_constCache, *_obj, false);
 	if (key == nullptr) {
@@ -4444,7 +4458,7 @@ AlifIntT _alifCompile_constCacheMergeOne(AlifObject* _constCache,
 	return SUCCESS;
 }
 
-static AlifIntT addReturn_atEnd(AlifCompiler* _c, AlifIntT _addNone) { // 7451
+static AlifIntT addReturn_atEnd(AlifCompiler* _c, AlifIntT _addNone) { // 7511
 	/* Make sure every instruction stream that falls off the end returns None.
 	 * This also ensures that no jump target offsets are out of bounds.
 	 */
@@ -4458,7 +4472,7 @@ static AlifIntT addReturn_atEnd(AlifCompiler* _c, AlifIntT _addNone) { // 7451
 
 
 static AlifCodeObject* optimizeAndAssemble_codeUnit(CompilerUnit* u, AlifObject* const_cache,
-	AlifIntT _codeFlags, AlifObject* filename) { // 7464
+	AlifIntT _codeFlags, AlifObject* filename) { // 7524
 	CFGBuilder* g = nullptr;
 	InstrSequence optimizedInstrs{};
 	memset(&optimizedInstrs, 0, sizeof(InstrSequence)); //* review //* delete
@@ -4504,7 +4518,7 @@ error:
 }
 
 
-static AlifCodeObject* optimize_andAssemble(AlifCompiler* _c, AlifIntT _addNone) { // 7511
+static AlifCodeObject* optimize_andAssemble(AlifCompiler* _c, AlifIntT _addNone) { // 7517
 	CompilerUnit* u = _c->u_;
 	AlifObject* constCache = _c->constCache;
 	AlifObject* filename = _c->filename;
