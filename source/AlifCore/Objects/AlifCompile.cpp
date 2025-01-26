@@ -239,9 +239,9 @@ public:
 static void compiler_free(AlifCompiler*); // 307
 static AlifIntT compiler_nameOp(AlifCompiler*, Location, Identifier, ExprContext_); // 310
 static AlifCodeObject* compiler_mod(AlifCompiler*, ModuleTy); // 312
-static AlifIntT compiler_visitStmt(AlifCompiler*, StmtTy); // 313
-static AlifIntT compiler_visitKeyword(AlifCompiler*, KeywordTy); // 314
-static AlifIntT compiler_visitExpr(AlifCompiler*, ExprTy); // 315
+static AlifIntT codegen_visitStmt(AlifCompiler*, StmtTy); // 313
+static AlifIntT codegen_visitKeyword(AlifCompiler*, KeywordTy); // 314
+static AlifIntT codegen_visitExpr(AlifCompiler*, ExprTy); // 315
 static AlifIntT codegen_augAssign(AlifCompiler*, StmtTy); // 316
 static AlifIntT codegen_subScript(AlifCompiler*, ExprTy); // 318
 static AlifIntT codegen_slice(AlifCompiler*, ExprTy); // 319
@@ -834,10 +834,10 @@ static AlifIntT codegen_addOpJ(InstrSequence* _seq, Location _loc,
 
  // 1035
 #define VISIT(_c, _type, _v) \
-    RETURN_IF_ERROR(compiler_visit ## _type(_c, _v));
+    RETURN_IF_ERROR(codegen_visit ## _type(_c, _v));
 
 #define VISIT_IN_SCOPE(_c, _type, _v) \
-    RETURN_IF_ERROR_IN_SCOPE(_c, compiler_visit ## _type(_c, _v)) // 1038
+    RETURN_IF_ERROR_IN_SCOPE(_c, codegen_visit ## _type(_c, _v)) // 1038
 
 
  // 1041
@@ -846,7 +846,7 @@ static AlifIntT codegen_addOpJ(InstrSequence* _seq, Location _loc,
     ASDL ## _type ## Seq *_seq = (_sequ); /* avoid variable capture */ \
     for (i_ = 0; i_ < ASDL_SEQ_LEN(_seq); i_++) { \
         _type ## Ty elt = (_type ## Ty)ASDL_SEQ_GET(_seq, i_); \
-        RETURN_IF_ERROR(compiler_visit ## _type(_c, elt)); \
+        RETURN_IF_ERROR(codegen_visit ## _type(_c, elt)); \
     } \
 }
 
@@ -1417,22 +1417,19 @@ static AlifIntT codegen_kwOnlyDefaults(AlifCompiler* _c, Location _loc,
 
 	   Return -1 on error, 0 if no dict pushed, 1 if a dict is pushed.
 	   */
-	AlifIntT i{};
-	AlifObject* keys = nullptr;
+
 	AlifIntT defaultCount = 0;
-	for (i = 0; i < ASDL_SEQ_LEN(_kwOnlyArgs); i++) {
+	for (AlifIntT i = 0; i < ASDL_SEQ_LEN(_kwOnlyArgs); i++) {
 		ArgTy arg = ASDL_SEQ_GET(_kwOnlyArgs, i);
 		ExprTy default_ = ASDL_SEQ_GET(_kwDefaults, i);
 		if (default_) {
 			defaultCount++;
 			AlifObject* mangled = compiler_maybeMangle(_c, arg->arg);
 			if (!mangled) {
-				goto error;
+				return -1;
 			}
 			ADDOP_LOAD_CONST_NEW(_c, _loc, mangled);
-			if (compiler_visitExpr(_c, default_) < 0) {
-				goto error;
-			}
+			VISIT(_c, Expr, default_);
 		}
 	}
 	if (defaultCount) {
@@ -1442,10 +1439,6 @@ static AlifIntT codegen_kwOnlyDefaults(AlifCompiler* _c, Location _loc,
 	else {
 		return 0;
 	}
-
-error:
-	ALIF_XDECREF(keys);
-	return ERROR;
 }
 
 
@@ -2340,7 +2333,7 @@ static AlifIntT codegen_stmtExpr(AlifCompiler* _c, Location _loc, ExprTy _value)
 }
 
 
-static AlifIntT compiler_visitStmt(AlifCompiler* _c, StmtTy _s) { // 3818
+static AlifIntT codegen_visitStmt(AlifCompiler* _c, StmtTy _s) { // 3818
 	switch (_s->type) {
 	case StmtK_::FunctionDefK:
 		return codegen_function(_c, _s, 0);
@@ -4079,13 +4072,13 @@ static AlifIntT codegen_listComp(AlifCompiler* _c, ExprTy _e) { // 5737
 }
 
 
-static AlifIntT compiler_visitKeyword(AlifCompiler* _c, KeywordTy _k) { // 5769
+static AlifIntT codegen_visitKeyword(AlifCompiler* _c, KeywordTy _k) { // 5769
 	VISIT(_c, Expr, _k->val);
 	return SUCCESS;
 }
 
 
-static AlifIntT compiler_visitExpr(AlifCompiler* _c, ExprTy _e) { // 5997
+static AlifIntT codegen_visitExpr(AlifCompiler* _c, ExprTy _e) { // 5997
 	Location loc = LOC(_e);
 	switch (_e->type) {
 	case ExprK_::NamedExprK:
