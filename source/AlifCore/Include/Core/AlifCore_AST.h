@@ -486,7 +486,7 @@ public:
 	ExprTy optionalVars{};
 };
 
-enum TypeParamK { TypeVarK = 1, ParamSpec, TypeVarTupleK }; 
+enum TypeParamK { TypeVarK = 1, ParamSpecK, TypeVarTupleK }; 
 class TypeParam { // 654
 public:
 	enum TypeParamK type{};

@@ -4362,7 +4362,7 @@ AlifObject* alifUStr_encodeCodePage(AlifIntT code_page,
 
 
 
-AlifObject* _alifUStr_transformDecimalAndSpaceToASCII(AlifObject* unicode) { // 9269
+AlifObject* _alifUStr_transformDecimalAndSpaceToASCII(AlifObject* unicode) { // 9285
 	if (!ALIFUSTR_CHECK(unicode)) {
 		//ALIFERR_BADINTERNALCALL();
 		return nullptr;

@@ -373,9 +373,9 @@ static AlifIntT optimize_format(ExprTy _node,
 		if (lit) {
 			ASDL_SEQ_SET(seq, seq->size++, lit);
 		}
-		//else if (alifErr_occurred()) {
-		//	return 0;
-		//}
+		else if (alifErr_occurred()) {
+			return 0;
+		}
 
 		if (pos >= ALIFUSTR_GET_LENGTH(_fmt)) {
 			break;
@@ -388,8 +388,7 @@ static AlifIntT optimize_format(ExprTy _node,
 		ExprTy expr = parse_format(_fmt, &pos, ASDL_SEQ_GET(_elts, cnt), _astMem);
 		cnt++;
 		if (!expr) {
-			//return !alifErr_occurred();
-			return 0; //* alif
+			return !alifErr_occurred();
 		}
 		ASDL_SEQ_SET(seq, seq->size++, expr);
 	}
@@ -457,16 +456,16 @@ static AlifIntT fold_binOp(ExprTy _node,
 		//newval = safe_lshift(lv, rv);
 		break;
 	case Operator_::RShift:
-		//newval = alifNumber_rShift(lv, rv);
+		newval = alifNumber_rshift(lv, rv);
 		break;
 	case Operator_::BitOr:
-		//newval = alifNumber_or(lv, rv);
+		newval = alifNumber_or(lv, rv);
 		break;
 	case Operator_::BitXor:
-		//newval = alifNumber_xor(lv, rv);
+		newval = alifNumber_xor(lv, rv);
 		break;
 	case Operator_::BitAnd:
-		//newval = alifNumber_and(lv, rv);
+		newval = alifNumber_and(lv, rv);
 		break;
 	case Operator_::FloorDiv:
 		newval = alifNumber_floorDivide(lv, rv);
@@ -511,6 +510,24 @@ static AlifIntT fold_tuple(ExprTy _node,
 
 	newVal = make_constTuple(_node->V.tuple.elts);
 	return make_const(_node, newVal, _astMem);
+}
+
+static AlifIntT fold_subScr(ExprTy _node,
+	AlifASTMem* _astMem, AlifASTOptimizeState* _state) { // 569
+	AlifObject* newval{};
+	ExprTy arg{}, idx{};
+
+	arg = _node->V.subScript.val;
+	idx = _node->V.subScript.slice;
+	if (_node->V.subScript.ctx != ExprContext_::Load or
+		arg->type != ExprK_::ConstantK or
+		idx->type != ExprK_::ConstantK)
+	{
+		return 1;
+	}
+
+	newval = alifObject_getItem(arg->V.constant.val, idx->V.constant.val);
+	return make_const(_node, newval, _astMem);
 }
 
 static AlifIntT fold_iter(ExprTy _arg,
@@ -565,7 +582,12 @@ static AlifIntT fold_compare(ExprTy _node,
 static AlifIntT astFold_mod(ModuleTy, AlifASTMem*, AlifASTOptimizeState*); // 644
 static AlifIntT astFold_stmt(StmtTy, AlifASTMem*, AlifASTOptimizeState*);
 static AlifIntT astFold_expr(ExprTy, AlifASTMem*, AlifASTOptimizeState*);
+static AlifIntT astFold_arguments(ArgumentsTy, AlifASTMem*, AlifASTOptimizeState*);
+static AlifIntT astFold_comprehension(ComprehensionTy, AlifASTMem*, AlifASTOptimizeState*); // 648
 static AlifIntT astFold_keyword(KeywordTy, AlifASTMem*, AlifASTOptimizeState*); //  649
+static AlifIntT astFold_arg(ArgTy, AlifASTMem*, AlifASTOptimizeState*); // 650
+static AlifIntT astFold_typeParam(TypeParamTy, AlifASTMem*, AlifASTOptimizeState*); // 655
+
 
 
  // 657
@@ -612,7 +634,8 @@ static AlifIntT astFold_body(ASDLStmtSeq* _stmts,
 }
 
 
-static AlifIntT astfold_mod(ModuleTy _node, AlifASTMem* _ctx, AlifASTOptimizeState* _state) { // 699
+static AlifIntT astfold_mod(ModuleTy _node,
+	AlifASTMem* _ctx, AlifASTOptimizeState* _state) { // 699
 	switch (_node->type) {
 	case ModK_::ModuleK:
 		CALL(astFold_body, ASDLSeq, _node->V.module.body);
@@ -633,7 +656,8 @@ static AlifIntT astfold_mod(ModuleTy _node, AlifASTMem* _ctx, AlifASTOptimizeSta
 }
 
 
-static AlifIntT astFold_expr(ExprTy _node, AlifASTMem* _ctx, AlifASTOptimizeState* _state) { // 721
+static AlifIntT astFold_expr(ExprTy _node,
+	AlifASTMem* _ctx, AlifASTOptimizeState* _state) { // 721
 	ENTER_RECURSIVE(_state);
 	switch (_node->type) {
 	case ExprK_::BoolOpK:
@@ -660,10 +684,10 @@ static AlifIntT astFold_expr(ExprTy _node, AlifASTMem* _ctx, AlifASTOptimizeStat
 	case ExprK_::SetK:
 		CALL_SEQ(astFold_expr, Expr, _node->V.set.elts);
 		break;
-	//case ExprK_::ListCompK:
-	//	CALL(astFold_expr, ExprTy, _node->V.listComp.elt);
-	//	CALL_SEQ(astFold_comprehension, Comprehension, _node->V.listComp.generators);
-	//	break;
+	case ExprK_::ListCompK:
+		CALL(astFold_expr, ExprTy, _node->V.listComp.elt);
+		CALL_SEQ(astFold_comprehension, Comprehension, _node->V.listComp.generators);
+		break;
 	//case ExprK_::SetCompK:
 	//	CALL(astFold_expr, ExprTy, _node->V.setComp.elts);
 	//	CALL_SEQ(astFold_comprehension, Comprehension, _node->V.setComp.generators);
@@ -702,11 +726,11 @@ static AlifIntT astFold_expr(ExprTy _node, AlifASTMem* _ctx, AlifASTOptimizeStat
 	case ExprK_::AttributeK:
 		CALL(astFold_expr, ExprTy, _node->V.attribute.val);
 		break;
-	//case ExprK_::SubScriptK:
-	//	CALL(astFold_expr, ExprTy, _node->V.subScript.val);
-	//	CALL(astFold_expr, ExprTy, _node->V.subScript.slice);
-	//	CALL(fold_subScr, ExprTy, _node);
-	//	break;
+	case ExprK_::SubScriptK:
+		CALL(astFold_expr, ExprTy, _node->V.subScript.val);
+		CALL(astFold_expr, ExprTy, _node->V.subScript.slice);
+		CALL(fold_subScr, ExprTy, _node);
+		break;
 	case ExprK_::StarK:
 		CALL(astFold_expr, ExprTy, _node->V.star.val);
 		break;
@@ -748,18 +772,49 @@ static AlifIntT astFold_keyword(KeywordTy _node,
 	return 1;
 }
 
-static AlifIntT astFold_stmt(StmtTy _node, AlifASTMem* _ctx, AlifASTOptimizeState* _state) { // 880
+static AlifIntT astFold_comprehension(ComprehensionTy _node,
+	AlifASTMem* _ctx, AlifASTOptimizeState* _state) { // 847
+	CALL(astFold_expr, ExprTy, _node->target);
+	CALL(astFold_expr, ExprTy, _node->iter);
+	CALL_SEQ(astFold_expr, Expr, _node->ifs);
+
+	CALL(fold_iter, ExprTy, _node->iter);
+	return 1;
+}
+
+static AlifIntT astFold_arguments(ArgumentsTy _node,
+	AlifASTMem* _ctx, AlifASTOptimizeState* _state) { // 858
+	CALL_SEQ(astFold_arg, Arg, _node->posOnlyArgs);
+	CALL_SEQ(astFold_arg, Arg, _node->args);
+	CALL_OPT(astFold_arg, ArgTy, _node->varArg);
+	CALL_SEQ(astFold_arg, Arg, _node->kwOnlyArgs);
+	CALL_SEQ(astFold_expr, Expr, _node->kwDefaults);
+	CALL_OPT(astFold_arg, ArgTy, _node->kwArg);
+	CALL_SEQ(astFold_expr, Expr, _node->defaults);
+	return 1;
+}
+
+static AlifIntT astFold_arg(ArgTy _node, AlifASTMem* _ctx,
+	AlifASTOptimizeState* _state) { // 871
+	if (!(_state->features & CO_FUTURE_ANNOTATIONS)) {
+		//CALL_OPT(astFold_expr, ExprTy, _node->annotation);
+	}
+	return 1;
+}
+
+static AlifIntT astFold_stmt(StmtTy _node,
+	AlifASTMem* _ctx, AlifASTOptimizeState* _state) { // 880
 	ENTER_RECURSIVE(_state);
 	switch (_node->type) {
-	//case StmtK_::FunctionDefK:
-	//	CALL_SEQ(astFold_typeParam, TypeParam, _node->V.functionDef.typeParams);
-	//	CALL(astFold_arguments, ArgumentsTy, _node->V.functionDef.args);
-	//	CALL(astFold_body, ASDLSeq, _node->V.functionDef.body);
-	//	CALL_SEQ(astFold_expr, Expr, _node->V.functionDef.decoratorList);
-	//	if (!(_state->features & CO_FUTURE_ANNOTATIONS)) {
-	//		CALL_OPT(astFold_expr, ExprTy, _node->V.functionDef.returns);
-	//	}
-	//	break;
+	case StmtK_::FunctionDefK:
+		CALL_SEQ(astFold_typeParam, TypeParam, _node->V.functionDef.typeParams);
+		CALL(astFold_arguments, ArgumentsTy, _node->V.functionDef.args);
+		CALL(astFold_body, ASDLSeq, _node->V.functionDef.body);
+		//CALL_SEQ(astFold_expr, Expr, _node->V.functionDef.decoratorList);
+		if (!(_state->features & CO_FUTURE_ANNOTATIONS)) {
+			CALL_OPT(astFold_expr, ExprTy, _node->V.functionDef.returns);
+		}
+		break;
 	//case StmtK_::AsyncFunctionDefK:
 	//	CALL_SEQ(astfold_typeParam, TypeParam, _node->V.asyncFunctionDef.typeParams);
 	//	CALL(astFold_arguments, ArgumentsTy, _node->V.asyncFunctionDef.args);
@@ -769,13 +824,13 @@ static AlifIntT astFold_stmt(StmtTy _node, AlifASTMem* _ctx, AlifASTOptimizeStat
 	//		CALL_OPT(astFold_expr, ExprTy, _node->V.asyncFunctionDef.returns);
 	//	}
 	//	break;
-	//case StmtK_::ClassDefK:
-	//	CALL_SEQ(astFold_typeParam, TypeParam, _node->V.classDef.typeParams);
-	//	CALL_SEQ(astFold_expr, Expr, _node->V.classDef.bases);
-	//	CALL_SEQ(astFold_keyword, Keyword, _node->V.classDef.keywords);
-	//	CALL(astFold_body, asdl_seq, _node->V.classDef.body);
-	//	CALL_SEQ(astFold_expr, Expr, _node->V.classDef.decoratorList);
-	//	break;
+	case StmtK_::ClassDefK:
+		CALL_SEQ(astFold_typeParam, TypeParam, _node->V.classDef.typeParams);
+		CALL_SEQ(astFold_expr, Expr, _node->V.classDef.bases);
+		CALL_SEQ(astFold_keyword, Keyword, _node->V.classDef.keywords);
+		CALL(astFold_body, asdl_seq, _node->V.classDef.body);
+		//CALL_SEQ(astFold_expr, Expr, _node->V.classDef.decoratorList);
+		break;
 	case StmtK_::ReturnK:
 		CALL_OPT(astFold_expr, ExprTy, _node->V.return_.val);
 		break;
@@ -846,6 +901,32 @@ static AlifIntT astFold_stmt(StmtTy _node, AlifASTMem* _ctx, AlifASTOptimizeStat
 	LEAVE_RECURSIVE(_state);
 	return 1;
 }
+
+
+
+
+static AlifIntT astFold_typeParam(TypeParamTy _node,
+	AlifASTMem* _ctx, AlifASTOptimizeState* _state) { // 1084
+	switch (_node->type) {
+	case TypeParamK::TypeVarK:
+		CALL_OPT(astFold_expr, ExprTy, _node->V.typeVar.bound);
+		//CALL_OPT(astFold_expr, ExprTy, _node->V.typeVar.defaultValue);
+		break;
+	case TypeParamK::ParamSpecK:
+		//CALL_OPT(astFold_expr, ExprTy, _node->V.paramSpec.defaultValue);
+		break;
+	case TypeParamK::TypeVarTupleK:
+		//CALL_OPT(astFold_expr, ExprTy, _node->V.typeVarTuple.defaultValue);
+		break;
+	}
+	return 1;
+}
+
+#undef CALL
+#undef CALL_OPT
+#undef CALL_SEQ
+
+
 
 
 AlifIntT alifAST_optimize(ModuleTy _mod, AlifASTMem* _astMem,
