@@ -43,7 +43,7 @@ public:
 
 
 
-extern AlifDictKeysObject* _alifDict_newKeysForClass(); // 86
+extern AlifDictKeysObject* _alifDict_newKeysForClass(AlifHeapTypeObject*); // 86
 
 extern AlifUSizeT _alifDict_keysSize(AlifDictKeysObject*); // 94
 

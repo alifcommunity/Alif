@@ -262,7 +262,7 @@ AlifObject* alifTuple_fromStackRefSteal(const AlifStackRef* _src, AlifSizeT _n) 
 	AlifTupleObject* tuple = tuple_alloc(_n);
 	if (tuple == nullptr) {
 		for (AlifSizeT i = 0; i < _n; i++) {
-			alifStackRef_close(_src[i]);
+			ALIFSTACKREF_CLOSE(_src[i]);
 		}
 		return nullptr;
 	}

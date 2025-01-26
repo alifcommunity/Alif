@@ -1262,6 +1262,47 @@ AlifObject* _alifDict_fromItems(AlifObject* const* _keys, AlifSizeT _keysOffset,
 }
 
 
+static AlifObject* dict_getItem(AlifObject* _op,
+	AlifObject* _key, const char* _warnmsg) { // 2127
+	if (!ALIFDICT_CHECK(_op)) {
+		return nullptr;
+	}
+	AlifDictObject* mp = (AlifDictObject*)_op;
+
+	AlifHashT hash = alifObject_hashFast(_key);
+	if (hash == -1) {
+		//alifErr_formatUnraisable(warnmsg);
+		return nullptr;
+	}
+
+	AlifThread* tstate = _alifThread_get();
+
+	/* Preserve the existing exception */
+	AlifObject* value{};
+	AlifSizeT ix{}; (void)ix;
+
+	//AlifObject* exc = _alifErr_getRaisedException(tstate);
+
+	ix = alifDict_lookupThreadSafe(mp, _key, hash, &value);
+	ALIF_XDECREF(value);
+
+
+	/* Ignore any exception raised by the lookup */
+	//AlifObject* exc2 = _alifErr_occurred(tstate);
+	//if (exc2 and !alifErr_givenExceptionMatches(exc2, _alifExcKeyError_)) {
+	//	alifErr_formatUnraisable(warnmsg);
+	//}
+	//_alifErr_setRaisedException(tstate, exc);
+
+	return value;  // borrowed reference
+}
+
+AlifObject* alifDict_getItem(AlifObject* _op, AlifObject* _key) { // 2171
+	return dict_getItem(_op, _key,
+		"Exception ignored in alifDict_getItem(); consider using "
+		"alifDict_getItemRef() or alifDict_getItemWithError()");
+}
+
 
 AlifObject* _alifDict_getItemKnownHash(AlifObject* _op,
 	AlifObject* _key, AlifHashT _hash) { // 2200
@@ -2906,7 +2947,7 @@ AlifTypeObject _alifDictValuesType_ = { // 6502
 
 
 
-AlifDictKeysObject* _alifDict_newKeysForClass() { // 6561
+AlifDictKeysObject* _alifDict_newKeysForClass(AlifHeapTypeObject* _cls) { // 6561
 	AlifInterpreter* interp = _alifInterpreter_get();
 	AlifDictKeysObject* keys = new_keysObject(
 		interp, NEXT_LOG2_SHARED_KEYS_MAX_SIZE, 1);
@@ -2917,11 +2958,25 @@ AlifDictKeysObject* _alifDict_newKeysForClass() { // 6561
 		keys->usable = SHARED_KEYS_MAX_SIZE;
 		keys->kind = DictKeysKind_::Dict_Keys_Split;
 	}
+	if (_cls->type.dict) {
+		AlifObject* attrs = alifDict_getItem(_cls->type.dict, &ALIF_ID(__staticAttributes__));
+		if (attrs != nullptr and ALIFTUPLE_CHECK(attrs)) {
+			for (AlifSizeT i = 0; i < ALIFTUPLE_GET_SIZE(attrs); i++) {
+				AlifObject* key = ALIFTUPLE_GET_ITEM(attrs, i);
+				AlifHashT hash{};
+				if (ALIFUSTR_CHECKEXACT(key) and (hash = uStr_getHash(key)) != -1) {
+					if (insert_splitKey(keys, key, hash) == DKIX_EMPTY) {
+						break;
+					}
+				}
+			}
+		}
+	}
 	return keys;
 }
 
 
-void alifObject_initInlineValues(AlifObject* _obj, AlifTypeObject* _tp) {  // 6580
+void alifObject_initInlineValues(AlifObject* _obj, AlifTypeObject* _tp) {  // 6594
 	AlifDictKeysObject* keys = CACHED_KEYS(_tp);
 	AlifSizeT usable = alifAtomic_loadSizeRelaxed(&keys->usable);
 	if (usable > 1) {

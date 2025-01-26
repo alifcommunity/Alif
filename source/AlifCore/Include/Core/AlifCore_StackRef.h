@@ -79,13 +79,14 @@ static inline AlifStackRef _alifStackRef_fromAlifObjectNew(AlifObject* _obj) { /
 
 
 
-
-static inline void alifStackRef_close(AlifStackRef _stackRef) { // 193
-	if (ALIFSTACKREF_ISDEFERRED(_stackRef)) {
-		return;
-	}
-	ALIF_DECREF(alifStackRef_asAlifObjectBorrow(_stackRef));
-}
+ // 193
+#define ALIFSTACKREF_CLOSE(_ref)                                        \
+    do {                                                            \
+        AlifStackRef closeTmp = (_ref);                             \
+        if (!ALIFSTACKREF_ISDEFERRED(closeTmp)) {                   \
+            ALIF_DECREF(alifStackRef_asAlifObjectBorrow(closeTmp));     \
+        }                                                           \
+    } while (0)
 
 
 
@@ -95,14 +96,14 @@ static inline void alifStackRef_close(AlifStackRef _stackRef) { // 193
     do {                            \
         AlifStackRef _tmp = (_stackref); \
         if (!ALIFSTACKREF_ISNULL(_tmp)) { \
-            alifStackRef_close(_tmp); \
+            ALIFSTACKREF_CLOSE(_tmp); \
         } \
     } while (0);
 
 
 
 
-static inline AlifStackRef alifStackRef_dup(AlifStackRef _stackRef) { // 217
+static inline AlifStackRef alifStackRef_dup(AlifStackRef _stackRef) { // 215
 	if (ALIFSTACKREF_ISDEFERRED(_stackRef)) {
 		return _stackRef;
 	}

@@ -2109,7 +2109,7 @@ AlifObject* _alifList_fromStackRefSteal(const AlifStackRef* _src, AlifSizeT _n) 
 	AlifListObject* list = (AlifListObject*)alifList_new(_n);
 	if (list == nullptr) {
 		for (AlifSizeT i = 0; i < _n; i++) {
-			alifStackRef_close(_src[i]);
+			ALIFSTACKREF_CLOSE(_src[i]);
 		}
 		return nullptr;
 	}

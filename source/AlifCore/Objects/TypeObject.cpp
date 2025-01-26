@@ -3044,7 +3044,7 @@ static AlifIntT typeReady_managedDict(AlifTypeObject* _type) { // 8322
 	}
 	AlifHeapTypeObject* et = (AlifHeapTypeObject*)_type;
 	if (et->cachedKeys == nullptr) {
-		et->cachedKeys = _alifDict_newKeysForClass();
+		et->cachedKeys = _alifDict_newKeysForClass(et);
 		if (et->cachedKeys == nullptr) {
 			//alifErr_noMemory();
 			return -1;
