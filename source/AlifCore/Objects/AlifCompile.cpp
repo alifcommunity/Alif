@@ -76,8 +76,8 @@ typedef class AlifCFGBuilder CFGBuilder; // 102
 
 static AlifObject* compiler_maybeMangle(AlifCompiler*, AlifObject*); // 103
 static AlifIntT compiler_optimizationLevel(AlifCompiler *); // 104
-
-static AlifObject* compiler_qualname(AlifCompiler*); // 110
+static AlifIntT compiler_isInInlinedComp(AlifCompiler*); // 110
+static AlifObject* compiler_qualname(AlifCompiler*); // 111
 
 #define LOCATION(_lno, _endLno, _col, _endCol) {_lno, _endLno, _col, _endCol} // 112
 
@@ -237,7 +237,7 @@ public:
 
 
 static void compiler_free(AlifCompiler*); // 307
-static AlifIntT compiler_nameOp(AlifCompiler*, Location, Identifier, ExprContext_); // 310
+static AlifIntT codegen_nameOp(AlifCompiler*, Location, Identifier, ExprContext_); // 310
 static AlifCodeObject* compiler_mod(AlifCompiler*, ModuleTy); // 312
 static AlifIntT codegen_visitStmt(AlifCompiler*, StmtTy); // 313
 static AlifIntT codegen_visitKeyword(AlifCompiler*, KeywordTy); // 314
@@ -1161,8 +1161,8 @@ static AlifIntT codegen_unwindFBlock(AlifCompiler* _c, Location* _ploc,
 		ADDOP(_c, *_ploc, POP_EXCEPT);
 		if (_info->datum) {
 			ADDOP_LOAD_CONST(_c, *_ploc, ALIF_NONE);
-			RETURN_IF_ERROR(compiler_nameOp(_c, *_ploc, (Identifier)_info->datum, ExprContext_::Store));
-			RETURN_IF_ERROR(compiler_nameOp(_c, *_ploc, (Identifier)_info->datum, ExprContext_::Del));
+			RETURN_IF_ERROR(codegen_nameOp(_c, *_ploc, (Identifier)_info->datum, ExprContext_::Store));
+			RETURN_IF_ERROR(codegen_nameOp(_c, *_ploc, (Identifier)_info->datum, ExprContext_::Del));
 		}
 		return SUCCESS;
 	}
@@ -1675,13 +1675,13 @@ static AlifIntT codegen_function(AlifCompiler* _c, StmtTy _s, AlifIntT _isAsync)
 	}
 
 	//RETURN_IF_ERROR(codegen_applyDecorators(_c, decos));
-	return compiler_nameOp(_c, loc, name, ExprContext_::Store);
+	return codegen_nameOp(_c, loc, name, ExprContext_::Store);
 }
 
 
 static AlifIntT codegen_setTypeParamsInClass(AlifCompiler* _c, Location _loc) { // 2337
-	RETURN_IF_ERROR(compiler_nameOp(_c, _loc, &ALIF_STR(TypeParams), ExprContext_::Load));
-	RETURN_IF_ERROR(compiler_nameOp(_c, _loc, &ALIF_ID(__typeParams__), ExprContext_::Store));
+	RETURN_IF_ERROR(codegen_nameOp(_c, _loc, &ALIF_STR(TypeParams), ExprContext_::Load));
+	RETURN_IF_ERROR(codegen_nameOp(_c, _loc, &ALIF_ID(__typeParams__), ExprContext_::Store));
 	return SUCCESS;
 }
 
@@ -1699,13 +1699,13 @@ static AlifIntT codegen_classBody(AlifCompiler* _c, StmtTy _s, AlifIntT _firstLi
 
 	Location loc = LOCATION(_firstLineNo, _firstLineNo, 0, 0);
 	/* load (global) __name__ ... */
-	RETURN_IF_ERROR_IN_SCOPE(_c, compiler_nameOp(_c, loc, &ALIF_ID(__name__), ExprContext_::Load));
+	RETURN_IF_ERROR_IN_SCOPE(_c, codegen_nameOp(_c, loc, &ALIF_ID(__name__), ExprContext_::Load));
 	/* ... and store it as __module__ */
-	RETURN_IF_ERROR_IN_SCOPE(_c, compiler_nameOp(_c, loc, &ALIF_ID(__module__), ExprContext_::Store));
+	RETURN_IF_ERROR_IN_SCOPE(_c, codegen_nameOp(_c, loc, &ALIF_ID(__module__), ExprContext_::Store));
 	ADDOP_LOAD_CONST(_c, loc, QUALNAME(_c));
-	RETURN_IF_ERROR_IN_SCOPE(_c, compiler_nameOp(_c, loc, &ALIF_ID(__qualname__), ExprContext_::Store));
+	RETURN_IF_ERROR_IN_SCOPE(_c, codegen_nameOp(_c, loc, &ALIF_ID(__qualname__), ExprContext_::Store));
 	ADDOP_LOAD_CONST_NEW(_c, loc, alifLong_fromLong(_c->u_->metadata.firstLineno));
-	RETURN_IF_ERROR_IN_SCOPE(_c, compiler_nameOp(_c, loc, &ALIF_ID(__firstLineno__), ExprContext_::Store));
+	RETURN_IF_ERROR_IN_SCOPE(_c, codegen_nameOp(_c, loc, &ALIF_ID(__firstLineno__), ExprContext_::Store));
 	ASDLTypeParamSeq* typeParams = _s->V.classDef.typeParams;
 	if (ASDL_SEQ_LEN(typeParams) > 0) {
 		RETURN_IF_ERROR_IN_SCOPE(_c, codegen_setTypeParamsInClass(_c, loc));
@@ -1713,8 +1713,8 @@ static AlifIntT codegen_classBody(AlifCompiler* _c, StmtTy _s, AlifIntT _firstLi
 	if (SYMTABLE_ENTRY(_c)->needsClassDict) {
 		ADDOP(_c, loc, LOAD_LOCALS);
 
-		// We can't use compiler_nameop here because we need to generate a
-		// STORE_DEREF in a class namespace, and compiler_nameOp() won't do
+		// We can't use codegen_nameOp here because we need to generate a
+		// STORE_DEREF in a class namespace, and codegen_nameOp() won't do
 		// that by default.
 		ADDOP_N_IN_SCOPE(_c, loc, STORE_DEREF, &ALIF_ID(__classDict__), cellvars);
 	}
@@ -1728,7 +1728,7 @@ static AlifIntT codegen_classBody(AlifCompiler* _c, StmtTy _s, AlifIntT _firstLi
 	ADDOP_LOAD_CONST(_c, _noLocation_, staticAttributes);
 	ALIF_CLEAR(staticAttributes);
 	RETURN_IF_ERROR_IN_SCOPE(
-		_c, compiler_nameOp(_c, _noLocation_, &ALIF_ID(__staticAttributes__), ExprContext_::Store));
+		_c, codegen_nameOp(_c, _noLocation_, &ALIF_ID(__staticAttributes__), ExprContext_::Store));
 	/* The following code is artificial */
 	/* Set __classdictcell__ if necessary */
 	if (SYMTABLE_ENTRY(_c)->needsClassDict) {
@@ -1737,7 +1737,7 @@ static AlifIntT codegen_classBody(AlifCompiler* _c, StmtTy _s, AlifIntT _firstLi
 		RETURN_IF_ERROR_IN_SCOPE(_c, i);
 		ADDOP_I(_c, _noLocation_, LOAD_CLOSURE, i);
 		RETURN_IF_ERROR_IN_SCOPE(
-			_c, compiler_nameOp(_c, _noLocation_, &ALIF_ID(__classDictCell__), ExprContext_::Store));
+			_c, codegen_nameOp(_c, _noLocation_, &ALIF_ID(__classDictCell__), ExprContext_::Store));
 	}
 	/* Return __classcell__ if it is referenced, otherwise return None */
 	if (SYMTABLE_ENTRY(_c)->needsClassClosure) {
@@ -1747,7 +1747,7 @@ static AlifIntT codegen_classBody(AlifCompiler* _c, StmtTy _s, AlifIntT _firstLi
 		ADDOP_I(_c, _noLocation_, LOAD_CLOSURE, i);
 		ADDOP_I(_c, _noLocation_, COPY, 1);
 		RETURN_IF_ERROR_IN_SCOPE(
-			_c, compiler_nameOp(_c, _noLocation_, &ALIF_ID(__classCell__), ExprContext_::Store));
+			_c, codegen_nameOp(_c, _noLocation_, &ALIF_ID(__classCell__), ExprContext_::Store));
 	}
 	else {
 		/* No methods referenced __class__, so just return None */
@@ -1820,9 +1820,9 @@ static AlifIntT codegen_class(AlifCompiler* _c, StmtTy _s) { // 2452
 	/* generate the rest of the code for the call */
 
 	if (isGeneric) {
-		RETURN_IF_ERROR_IN_SCOPE(_c, compiler_nameOp(_c, loc, &ALIF_STR(TypeParams), ExprContext_::Load));
+		RETURN_IF_ERROR_IN_SCOPE(_c, codegen_nameOp(_c, loc, &ALIF_STR(TypeParams), ExprContext_::Load));
 		ADDOP_I_IN_SCOPE(_c, loc, CALL_INTRINSIC_1, INTRINSIC_SUBSCRIPT_GENERIC);
-		RETURN_IF_ERROR_IN_SCOPE(_c, compiler_nameOp(_c, loc, &ALIF_STR(GenericBase), ExprContext_::Store));
+		RETURN_IF_ERROR_IN_SCOPE(_c, codegen_nameOp(_c, loc, &ALIF_STR(GenericBase), ExprContext_::Store));
 
 		AlifSizeT originalLen = ASDL_SEQ_LEN(_s->V.classDef.bases);
 		ASDLExprSeq* bases = alifNew_exprSeq(
@@ -1869,7 +1869,7 @@ static AlifIntT codegen_class(AlifCompiler* _c, StmtTy _s) { // 2452
 	//RETURN_IF_ERROR(codegen_applyDecorators(_c, decos));
 
 	/* 7. store into <name> */
-	RETURN_IF_ERROR(compiler_nameOp(_c, loc, _s->V.classDef.name, ExprContext_::Store));
+	RETURN_IF_ERROR(codegen_nameOp(_c, loc, _s->V.classDef.name, ExprContext_::Store));
 	return SUCCESS;
 }
 
@@ -2256,7 +2256,7 @@ static AlifIntT codegen_import(AlifCompiler* c, StmtTy s) { // 3670
 					return ERROR;
 				}
 			}
-			r = compiler_nameOp(c, loc, tmp, ExprContext_::Store);
+			r = codegen_nameOp(c, loc, tmp, ExprContext_::Store);
 			if (dot != -1) {
 				ALIF_DECREF(tmp);
 			}
@@ -2306,7 +2306,7 @@ static AlifIntT codegen_fromImport(AlifCompiler* c, StmtTy s) { // 3716
 			store_name = alias->asName;
 		}
 
-		RETURN_IF_ERROR(compiler_nameOp(c, LOC(s), store_name, ExprContext_::Store));
+		RETURN_IF_ERROR(codegen_nameOp(c, LOC(s), store_name, ExprContext_::Store));
 	}
 	/* remove imported module */
 	ADDOP(c, LOC(s), POP_TOP);
@@ -2517,78 +2517,91 @@ static AlifIntT codegen_loadClassDictFreeVar(AlifCompiler* _c, Location _loc) { 
 }
 
 
-static AlifIntT compiler_nameOp(AlifCompiler* _c, Location _loc,
-	Identifier _name, ExprContext_ _ctx) { // 4004
-	AlifIntT op{}, scope{};
-	AlifSizeT arg{};
-	enum OpType_ { OP_FAST, OP_GLOBAL, OP_DEREF, OP_NAME } optype;
+enum CompilerOpType { OP_FAST, OP_GLOBAL, OP_DEREF, OP_NAME }; // 4031
 
+static AlifIntT compiler_resolveNameOp(AlifCompiler* _c, AlifObject* _mangled,
+	AlifIntT _scope, CompilerOpType* _optype, AlifSizeT* _arg) { // 4033
 	AlifObject* dict = _c->u_->metadata.names;
-	AlifObject* mangled{};
+	*_optype = CompilerOpType::OP_NAME;
 
-	mangled = compiler_maybeMangle(_c, _name);
-	if (!mangled) {
-		return ERROR;
-	}
-
-	op = 0;
-	optype = OpType_::OP_NAME;
-	scope = alifST_getScope(SYMTABLE_ENTRY(_c), mangled);
-	switch (scope) {
+	switch (_scope) {
 	case FREE:
 		dict = _c->u_->metadata.freevars;
-		optype = OpType_::OP_DEREF;
+		*_optype = CompilerOpType::OP_DEREF;
 		break;
 	case CELL:
 		dict = _c->u_->metadata.cellvars;
-		optype = OpType_::OP_DEREF;
+		*_optype = CompilerOpType::OP_DEREF;
 		break;
 	case LOCAL:
 		if (alifST_isFunctionLike(SYMTABLE_ENTRY(_c))) {
-			optype = OpType_::OP_FAST;
+			*_optype = CompilerOpType::OP_FAST;
 		}
 		else {
 			AlifObject* item{};
-			if (alifDict_getItemRef(_c->u_->metadata.fasthidden, mangled,
-				&item) < 0) {
-				goto error;
-			}
+			RETURN_IF_ERROR(alifDict_getItemRef(_c->u_->metadata.fasthidden, _mangled,
+				&item));
 			if (item == ALIF_TRUE) {
-				optype = OpType_::OP_FAST;
+				*_optype = CompilerOpType::OP_FAST;
 			}
 			ALIF_XDECREF(item);
 		}
 		break;
 	case GLOBAL_IMPLICIT:
-		if (alifST_isFunctionLike(SYMTABLE_ENTRY(_c)))
-			optype = OpType_::OP_GLOBAL;
+		if (alifST_isFunctionLike(SYMTABLE_ENTRY(_c))) {
+			*_optype = CompilerOpType::OP_GLOBAL;
+		}
 		break;
 	case GLOBAL_EXPLICIT:
-		optype = OpType_::OP_GLOBAL;
+		*_optype = CompilerOpType::OP_GLOBAL;
 		break;
-	case -1:
-		goto error;
 	default:
 		/* scope can be 0 */
 		break;
 	}
+	if (*_optype != CompilerOpType::OP_FAST) {
+		*_arg = dict_addO(dict, _mangled);
+		RETURN_IF_ERROR(*_arg);
+	}
+	return SUCCESS;
+}
 
+
+static AlifIntT codegen_nameOp(AlifCompiler* c, Location loc,
+	Identifier name, ExprContext_ ctx) { // 4083
+
+	AlifObject* mangled = compiler_maybeMangle(c, name);
+	if (!mangled) {
+		return ERROR;
+	}
+
+	AlifIntT scope = alifST_getScope(SYMTABLE_ENTRY(c), mangled);
+	RETURN_IF_ERROR(scope);
+	CompilerOpType optype{};
+	AlifSizeT arg = 0;
+	if (compiler_resolveNameOp(c, mangled, scope, &optype, &arg) < 0) {
+		ALIF_DECREF(mangled);
+		return ERROR;
+	}
+
+
+	AlifIntT op = 0;
 	switch (optype) {
-	case OpType_::OP_DEREF:
-		switch (_ctx) {
-		case Load:
-			if (SYMTABLE_ENTRY(_c)->type == BlockType_::Class_Block
-				and !_c->u_->inInlinedComp) {
+	case CompilerOpType::OP_DEREF:
+		switch (ctx) {
+		case ExprContext_::Load:
+			if (SYMTABLE_ENTRY(c)->type == BlockType_::Class_Block
+				and !compiler_isInInlinedComp(c)) {
 				op = LOAD_FROM_DICT_OR_DEREF;
 				// First load the locals
-				if (codegen_addOpNoArg(INSTR_SEQUENCE(_c), LOAD_LOCALS, _loc) < 0) {
+				if (codegen_addOpNoArg(INSTR_SEQUENCE(c), LOAD_LOCALS, loc) < 0) {
 					goto error;
 				}
 			}
-			else if (SYMTABLE_ENTRY(_c)->canSeeClassScope) {
+			else if (SYMTABLE_ENTRY(c)->canSeeClassScope) {
 				op = LOAD_FROM_DICT_OR_DEREF;
 				// First load the classdict
-				if (codegen_loadClassDictFreeVar(_c, _loc) < 0) {
+				if (codegen_loadClassDictFreeVar(c, loc) < 0) {
 					goto error;
 				}
 			}
@@ -2596,26 +2609,25 @@ static AlifIntT compiler_nameOp(AlifCompiler* _c, Location _loc,
 				op = LOAD_DEREF;
 			}
 			break;
-		case Store: op = STORE_DEREF; break;
-		case Del: op = DELETE_DEREF; break;
+		case ExprContext_::Store: op = STORE_DEREF; break;
+		case ExprContext_::Del: op = DELETE_DEREF; break;
 		}
 		break;
-	case OpType_::OP_FAST:
-		switch (_ctx) {
-		case Load: op = LOAD_FAST; break;
-		case Store: op = STORE_FAST; break;
-		case Del: op = DELETE_FAST; break;
+	case CompilerOpType::OP_FAST:
+		switch (ctx) {
+		case ExprContext_::Load: op = LOAD_FAST; break;
+		case ExprContext_::Store: op = STORE_FAST; break;
+		case ExprContext_::Del: op = DELETE_FAST; break;
 		}
-		ADDOP_N(_c, _loc, op, mangled, varnames);
+		ADDOP_N(c, loc, op, mangled, varnames);
 		return SUCCESS;
-	case OpType_::OP_GLOBAL:
-		switch (_ctx) {
-		case Load:
-			if (SYMTABLE_ENTRY(_c)->canSeeClassScope
-				and scope == GLOBAL_IMPLICIT) {
+	case CompilerOpType::OP_GLOBAL:
+		switch (ctx) {
+		case ExprContext_::Load:
+			if (SYMTABLE_ENTRY(c)->canSeeClassScope and scope == GLOBAL_IMPLICIT) {
 				op = LOAD_FROM_DICT_OR_GLOBALS;
 				// First load the classdict
-				if (codegen_loadClassDictFreeVar(_c, _loc) < 0) {
+				if (codegen_loadClassDictFreeVar(c, loc) < 0) {
 					goto error;
 				}
 			}
@@ -2623,33 +2635,29 @@ static AlifIntT compiler_nameOp(AlifCompiler* _c, Location _loc,
 				op = LOAD_GLOBAL;
 			}
 			break;
-		case Store: op = STORE_GLOBAL; break;
-		case Del: op = DELETE_GLOBAL; break;
+		case ExprContext_::Store: op = STORE_GLOBAL; break;
+		case ExprContext_::Del: op = DELETE_GLOBAL; break;
 		}
 		break;
-	case OpType_::OP_NAME:
-		switch (_ctx) {
-		case Load:
-			op = (SYMTABLE_ENTRY(_c)->type == BlockType_::Class_Block
-				and _c->u_->inInlinedComp)
+	case CompilerOpType::OP_NAME:
+		switch (ctx) {
+		case ExprContext_::Load:
+			op = (SYMTABLE_ENTRY(c)->type == BlockType_::Class_Block
+				and compiler_isInInlinedComp(c))
 				? LOAD_GLOBAL
 				: LOAD_NAME;
 			break;
-		case Store: op = STORE_NAME; break;
-		case Del: op = DELETE_NAME; break;
+		case ExprContext_::Store: op = STORE_NAME; break;
+		case ExprContext_::Del: op = DELETE_NAME; break;
 		}
 		break;
 	}
 
-	arg = dict_addO(dict, mangled);
 	ALIF_DECREF(mangled);
-	if (arg < 0) {
-		return ERROR;
-	}
 	if (op == LOAD_GLOBAL) {
 		arg <<= 1;
 	}
-	ADDOP_I(_c, _loc, op, arg);
+	ADDOP_I(c, loc, op, arg);
 	return SUCCESS;
 
 error:
@@ -3159,7 +3167,7 @@ static AlifIntT loadArgs_forSuper(AlifCompiler* _c, ExprTy _e) { // 4672
 
 	// load super() global
 	AlifObject* super_name = _e->V.call.func->V.name.name;
-	RETURN_IF_ERROR(compiler_nameOp(_c, LOC(_e->V.call.func), super_name, ExprContext_::Load));
+	RETURN_IF_ERROR(codegen_nameOp(_c, LOC(_e->V.call.func), super_name, ExprContext_::Load));
 
 	if (ASDL_SEQ_LEN(_e->V.call.args) == 2) {
 		VISIT(_c, Expr, ASDL_SEQ_GET(_e->V.call.args, 0));
@@ -3169,7 +3177,7 @@ static AlifIntT loadArgs_forSuper(AlifCompiler* _c, ExprTy _e) { // 4672
 
 	// load __class__ cell
 	AlifObject* name = &ALIF_ID(__class__);
-	RETURN_IF_ERROR(compiler_nameOp(_c, loc, name, ExprContext_::Load));
+	RETURN_IF_ERROR(codegen_nameOp(_c, loc, name, ExprContext_::Load));
 
 	// load self (first argument)
 	AlifSizeT i = 0;
@@ -3177,7 +3185,7 @@ static AlifIntT loadArgs_forSuper(AlifCompiler* _c, ExprTy _e) { // 4672
 	if (!alifDict_next(_c->u_->metadata.varnames, &i, &key, &value)) {
 		return ERROR;
 	}
-	RETURN_IF_ERROR(compiler_nameOp(_c, loc, key, ExprContext_::Load));
+	RETURN_IF_ERROR(codegen_nameOp(_c, loc, key, ExprContext_::Load));
 
 	return SUCCESS;
 }
@@ -4216,7 +4224,7 @@ static AlifIntT codegen_visitExpr(AlifCompiler* _c, ExprTy _e) { // 5997
 		break;
 	}
 	case ExprK_::NameK:
-		return compiler_nameOp(_c, loc, _e->V.name.name, _e->V.name.ctx);
+		return codegen_nameOp(_c, loc, _e->V.name.name, _e->V.name.ctx);
 		/* child nodes of List and Tuple will have expr_context set */
 	case ExprK_::ListK:
 		return codegen_list(_c, _e);
@@ -4260,7 +4268,7 @@ static AlifIntT codegen_augAssign(AlifCompiler* _c, StmtTy _s) { // 6159
 		}
 		break;
 	case ExprK_::NameK:
-		RETURN_IF_ERROR(compiler_nameOp(_c, loc, e->V.name.name, ExprContext_::Load));
+		RETURN_IF_ERROR(codegen_nameOp(_c, loc, e->V.name.name, ExprContext_::Load));
 		break;
 	default:
 		//alifErr_format(_alifExcSystemError_,
@@ -4296,7 +4304,7 @@ static AlifIntT codegen_augAssign(AlifCompiler* _c, StmtTy _s) { // 6159
 		}
 		break;
 	case ExprK_::NameK:
-		return compiler_nameOp(_c, loc, e->V.name.name, ExprContext_::Store);
+		return codegen_nameOp(_c, loc, e->V.name.name, ExprContext_::Store);
 	default:
 		ALIF_UNREACHABLE();
 	}
@@ -4401,6 +4409,9 @@ static AlifIntT compiler_optimizationLevel(AlifCompiler* _c) { // 7381
 	return _c->optimize;
 }
 
+static AlifIntT compiler_isInInlinedComp(AlifCompiler* _c) { // 7449
+	return _c->u_->inInlinedComp;
+}
 
 static AlifObject* compiler_qualname(AlifCompiler* _c) { // 7455
 	return _c->u_->metadata.qualname;
