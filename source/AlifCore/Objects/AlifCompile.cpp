@@ -62,9 +62,9 @@ static SymTableEntry* compiler_symtableEntry(AlifCompiler*); // 85
 #define SYMTABLE(_c) compiler_symtable(_c) // 93
 #define SYMTABLE_ENTRY(_c) compiler_symtableEntry(_c) // 94
 #define OPTIMIZATION_LEVEL(_c) compiler_optimizationLevel(_c) // 95
-
-#define QUALNAME(_c) compiler_qualname(_c) // 99
-#define METADATA(_c) compiler_unitMetadata(_c)
+#define QUALNAME(_c) compiler_qualname(_c) // 96
+#define METADATA(_c) compiler_unitMetadata(_c) // 97
+#define ASTMEM(_c) compiler_astMem(_c) // 98
 
 typedef AlifSourceLocation Location; // 99
 typedef class AlifCFGBuilder CFGBuilder; // 100
@@ -91,6 +91,7 @@ static AlifSizeT compiler_addConst(AlifCompiler*, AlifObject*); // 129
 static void compiler_exitScope(AlifCompiler*);
 static AlifIntT compiler_maybeAddStaticAttributeToClass(AlifCompiler*, ExprTy); // 130
 static AlifCompileCodeUnitMetadata* compiler_unitMetadata(AlifCompiler*); // 131
+static AlifASTMem* compiler_astMem(AlifCompiler*); // 135
 
 #define LOCATION(_lno, _endLno, _col, _endCol) {_lno, _endLno, _col, _endCol} // 112
 
@@ -195,56 +196,6 @@ AlifIntT _alifCompile_ensureArrayLargeEnough(AlifIntT _idx, void** _array,
 	*_array = arr;
 	return SUCCESS;
 }
-
-
-
-/*
-	The following items change on entry and exit of code blocks.
-	They must be saved and restored when returning to a block.
-*/
-class CompilerUnit { // 231
-public:
-	SymTableEntry* ste{};
-
-	AlifIntT scopeType{};
-
-	AlifObject* private_{};            /* for private name mangling */
-	AlifObject* staticAttributes{};  /* for class: attributes accessed via self.X */
-	AlifObject* deferredAnnotations{}; /* AnnAssign nodes deferred to the end of compilation */
-
-	InstrSequence* instrSequence{}; /* codegen output */
-
-	AlifIntT nfBlocks{};
-	AlifIntT inInlinedComp{};
-
-	FBlockInfo fBlock[MAXBLOCKS]{};
-
-	AlifCompileCodeUnitMetadata metadata{};
-};
-
-class AlifCompiler { // 262
-public:
-	AlifObject* filename{};
-	AlifSymTable* st{};
-	AlifFutureFeatures future{};		/* module's __future__ */
-	AlifCompilerFlags flags{};
-
-	AlifIntT optimize{};				/* optimization level */
-	AlifIntT interactive{};				/* true if in interactive mode */
-	AlifObject* constCache{};			/* Alif dict holding all constants,
-											including names tuple */
-	CompilerUnit* u_{};					/* compiler state for current block */
-	AlifObject* stack{};				/* Alif list holding compiler_unit ptrs */
-	AlifASTMem* astMem{};				/* pointer to memory allocation astMem */
-
-	bool saveNestedSeqs{};				/* if true, construct recursive instruction sequences
-											* (including instructions for nested code objects)
-										*/
-};
-
-
-
-
 
 
 
@@ -423,6 +374,20 @@ static AlifObject* const_cacheInsert(AlifObject* _constCache,
 
 static AlifObject* merge_constsRecursive(AlifObject* _constCache, AlifObject* _o) { // 876
 	return const_cacheInsert(_constCache, _o, true);
+}
+
+
+static AlifIntT codegen_enterScope(AlifCompiler* _c, Identifier _name,
+	AlifIntT _scopeType, void* _key, AlifIntT _lineno,
+	AlifObject* _private, AlifCompileCodeUnitMetadata* _umd) { // 868
+	RETURN_IF_ERROR(
+		compiler_enterScope(_c, _name, _scopeType, _key, _lineno, _private, _umd));
+	Location loc = LOCATION(_lineno, _lineno, 0, 0);
+	if (_scopeType == ScopeType_::Compiler_Scope_Module) {
+		loc.lineNo = 0;
+	}
+	ADDOP_I(_c, loc, RESUME, RESUME_AT_FUNC_START);
+	return SUCCESS;
 }
 
 
@@ -734,11 +699,14 @@ static AlifIntT codegen_unwindFBlockStack(AlifCompiler* _c, Location* _ploc,
 }
 
 
-
+static AlifIntT codegen_expression(AlifCompiler* _c, ExprTy _e) { // 972
+	VISIT(_c, Expr, _e);
+	return SUCCESS;
+}
 
 
 static AlifIntT codegen_body(AlifCompiler* _c,
-	Location _loc, ASDLStmtSeq* _stmts) { // 1507
+	Location _loc, ASDLStmtSeq* _stmts) { // 983
 	//if ((FUTURE_FEATURES(_c) & CO_FUTURE_ANNOTATIONS) and SYMTABLE_ENTRY(_c)->annotationsUsed) {
 	//	ADDOP(_c, _loc, SETUP_ANNOTATIONS);
 	//}
@@ -785,8 +753,8 @@ static Location start_location(ASDLStmtSeq* stmts) { // 1587
 }
 
 
-static AlifIntT codegenEnter_anonymousScope(AlifCompiler* _c, ModuleTy _mod) { // 1631
-	RETURN_IF_ERROR(compiler_enterScope(_c, &ALIF_STR(AnonModule),
+static AlifIntT codegen_enterAnonymousScope(AlifCompiler* _c, ModuleTy _mod) { // 1631
+	RETURN_IF_ERROR(codegen_enterScope(_c, &ALIF_STR(AnonModule),
 		ScopeType_::Compiler_Scope_Module, _mod, 1, nullptr, nullptr));
 
 	return SUCCESS;
@@ -913,7 +881,7 @@ static AlifIntT codegen_wrapInStopIterationHandler(AlifCompiler* _c) { // 1997
 
 
 static AlifIntT codegen_functionBody(AlifCompiler* _c, StmtTy _s,
-	AlifIntT _isAsync, AlifSizeT _funcFlags, AlifIntT _firstLineNo) { // 2132
+	AlifIntT _isAsync, AlifSizeT _funcFlags, AlifIntT _firstLineNo) { // 1445
 	ArgumentsTy args{};
 	Identifier name{};
 	ASDLStmtSeq* body{};
@@ -940,7 +908,7 @@ static AlifIntT codegen_functionBody(AlifCompiler* _c, StmtTy _s,
 		.kwOnlyArgCount = ASDL_SEQ_LEN(args->kwOnlyArgs),
 	};
 	RETURN_IF_ERROR(
-		compiler_enterScope(_c, name, scopeType, (void*)_s, _firstLineNo, nullptr, &umd));
+		codegen_enterScope(_c, name, scopeType, (void*)_s, _firstLineNo, nullptr, &umd));
 
 	AlifSizeT first_instr = 0;
 	AlifObject* docstring = alifAST_getDocString(body);
@@ -991,7 +959,7 @@ static AlifIntT codegen_functionBody(AlifCompiler* _c, StmtTy _s,
 }
 
 
-static AlifIntT codegen_function(AlifCompiler* _c, StmtTy _s, AlifIntT _isAsync) { // 2220
+static AlifIntT codegen_function(AlifCompiler* _c, StmtTy _s, AlifIntT _isAsync) { // 1529
 	ArgumentsTy args{};
 	ExprTy returns{};
 	Identifier name{};
@@ -1048,7 +1016,7 @@ static AlifIntT codegen_function(AlifCompiler* _c, StmtTy _s, AlifIntT _isAsync)
 		AlifCompileCodeUnitMetadata umd = {
 			.argCount = numTypeParamArgs,
 		};
-		AlifIntT ret = compiler_enterScope(_c, typeParamsName, ScopeType_::Compiler_Scope_Annotations,
+		AlifIntT ret = codegen_enterScope(_c, typeParamsName, ScopeType_::Compiler_Scope_Annotations,
 			(void*)typeParams, firstlineno, nullptr, &umd);
 		ALIF_DECREF(typeParamsName);
 		RETURN_IF_ERROR(ret);
@@ -1108,11 +1076,11 @@ static AlifIntT codegen_setTypeParamsInClass(AlifCompiler* _c, Location _loc) { 
 	return SUCCESS;
 }
 
-static AlifIntT codegen_classBody(AlifCompiler* _c, StmtTy _s, AlifIntT _firstLineNo) { // 2346
+static AlifIntT codegen_classBody(AlifCompiler* _c, StmtTy _s, AlifIntT _firstLineNo) { // 1654
 
 	/* 1. compile the class body into a code object */
 	RETURN_IF_ERROR(
-		compiler_enterScope(_c, _s->V.classDef.name, ScopeType_::Compiler_Scope_Class,
+		codegen_enterScope(_c, _s->V.classDef.name, ScopeType_::Compiler_Scope_Class,
 			(void*)_s, _firstLineNo, _s->V.classDef.name, nullptr));
 
 	Location loc = LOCATION(_firstLineNo, _firstLineNo, 0, 0);
@@ -1200,7 +1168,7 @@ static AlifIntT codegen_classBody(AlifCompiler* _c, StmtTy _s, AlifIntT _firstLi
 	return SUCCESS;
 }
 
-static AlifIntT codegen_class(AlifCompiler* _c, StmtTy _s) { // 2452
+static AlifIntT codegen_class(AlifCompiler* _c, StmtTy _s) { // 1758
 	//ASDLExprSeq* decos = _s->V.classDef.decoratorList;
 
 	//RETURN_IF_ERROR(codegen_decorators(_c, decos));
@@ -1219,7 +1187,7 @@ static AlifIntT codegen_class(AlifCompiler* _c, StmtTy _s) { // 2452
 	//	if (!type_params_name) {
 	//		return ERROR;
 	//	}
-	//	AlifIntT ret = compiler_enterScope(_c, type_params_name, COMPILER_SCOPE_ANNOTATIONS,
+	//	AlifIntT ret = codegen_enterScope(_c, type_params_name, COMPILER_SCOPE_ANNOTATIONS,
 	//		(void*)typeParams, firstlineno, _s->V.classDef.name, nullptr);
 	//	ALIF_DECREF(type_params_name);
 	//	RETURN_IF_ERROR(ret);
@@ -1244,7 +1212,7 @@ static AlifIntT codegen_class(AlifCompiler* _c, StmtTy _s) { // 2452
 
 		AlifSizeT originalLen = ASDL_SEQ_LEN(_s->V.classDef.bases);
 		ASDLExprSeq* bases = alifNew_exprSeq(
-			originalLen + 1, _c->astMem);
+			originalLen + 1, ASTMEM(_c));
 		if (bases == nullptr) {
 			compiler_exitScope(_c);
 			return ERROR;
@@ -1254,7 +1222,7 @@ static AlifIntT codegen_class(AlifCompiler* _c, StmtTy _s) { // 2452
 		}
 		ExprTy nameNode = alifAST_name(
 			&ALIF_STR(GenericBase), ExprContext_::Load,
-			loc.lineNo, loc.colOffset, loc.endLineNo, loc.endColOffset, _c->astMem
+			loc.lineNo, loc.colOffset, loc.endLineNo, loc.endColOffset, ASTMEM(_c)
 		);
 		if (nameNode == nullptr) {
 			compiler_exitScope(_c);
@@ -3214,7 +3182,6 @@ static AlifIntT compiler_revertInlinedComprehensionScopes(AlifCompiler*, Locatio
 
 static AlifIntT popInlined_comprehensionState(AlifCompiler* c,
 	Location loc, InlinedComprehensionState* state) { // 5576
-	c->u_->inInlinedComp--;
 	RETURN_IF_ERROR(codegen_popInlinedComprehensionLocals(c, loc, state));
 	RETURN_IF_ERROR(compiler_revertInlinedComprehensionScopes(c, loc, state));
 	return SUCCESS;
@@ -3234,8 +3201,8 @@ static inline AlifIntT codegen_comprehensionIter(AlifCompiler* c, Location loc,
 }
 
 
-static AlifIntT compiler_comprehension(AlifCompiler* _c, ExprTy _e, AlifIntT _type, Identifier _name,
-	ASDLComprehensionSeq* _generators, ExprTy _elt, ExprTy _val) { // 5600
+static AlifIntT codegen_comprehension(AlifCompiler* _c, ExprTy _e, AlifIntT _type, Identifier _name,
+	ASDLComprehensionSeq* _generators, ExprTy _elt, ExprTy _val) { // 4757
 
 	AlifIntT isInlined{}; //* alif
 	AlifIntT isAsyncComprehension{}; //* alif
@@ -3267,7 +3234,7 @@ static AlifIntT compiler_comprehension(AlifCompiler* _c, ExprTy _e, AlifIntT _ty
 		AlifCompileCodeUnitMetadata umd = {
 			.argCount = 1,
 		};
-		if (compiler_enterScope(_c, _name, ScopeType_::Compiler_Scope_Comprehension,
+		if (codegen_enterScope(_c, _name, ScopeType_::Compiler_Scope_Comprehension,
 			(void*)_e, _e->lineNo, nullptr, &umd) < 0) {
 			goto error;
 		}
@@ -3337,7 +3304,7 @@ static AlifIntT compiler_comprehension(AlifCompiler* _c, ExprTy _e, AlifIntT _ty
 
 	ADDOP_I(_c, loc, CALL, 0);
 
-	if (isAsyncComprehension && _type != COMP_GENEXP) {
+	if (isAsyncComprehension and _type != COMP_GENEXP) {
 		ADDOP_I(_c, loc, GET_AWAITABLE, 0);
 		ADDOP_LOAD_CONST(_c, loc, ALIF_NONE);
 		ADD_YIELD_FROM(_c, loc, 1);
@@ -3359,7 +3326,7 @@ error:
 
 
 static AlifIntT codegen_listComp(AlifCompiler* _c, ExprTy _e) { // 5737
-	return compiler_comprehension(_c, _e, COMP_LISTCOMP, &ALIF_STR(AnonListComp),
+	return codegen_comprehension(_c, _e, COMP_LISTCOMP, &ALIF_STR(AnonListComp),
 		_e->V.listComp.generators,
 		_e->V.listComp.elt, nullptr);
 }
@@ -3664,8 +3631,74 @@ static AlifIntT codegen_addReturnAtEnd(AlifCompiler* _c, AlifIntT _addNone) { //
 }
 
 
+#undef ADDOP_I
+#undef ADDOP_I_IN_SCOPE
+#undef ADDOP
+#undef ADDOP_IN_SCOPE
+#undef ADDOP_LOAD_CONST
+#undef ADDOP_LOAD_CONST_IN_SCOPE
+#undef ADDOP_LOAD_CONST_NEW
+#undef ADDOP_N
+#undef ADDOP_N_IN_SCOPE
+#undef ADDOP_NAME
+#undef ADDOP_JUMP
+#undef ADDOP_COMPARE
+#undef ADDOP_BINARY
+#undef ADDOP_INPLACE
+#undef ADD_YIELD_FROM
+#undef POP_EXCEPT_AND_RERAISE
+#undef ADDOP_YIELD
+#undef VISIT
+#undef VISIT_IN_SCOPE
+#undef VISIT_SEQ
+#undef VISIT_SEQ_IN_SCOPE
+
+
 /*** end of CODEGEN, start of compiler implementation ***/
 
+/*
+	The following items change on entry and exit of code blocks.
+	They must be saved and restored when returning to a block.
+*/
+class CompilerUnit { // 6442
+public:
+	SymTableEntry* ste{};
+
+	AlifIntT scopeType{};
+
+	AlifObject* private_{};            /* for private name mangling */
+	AlifObject* staticAttributes{};  /* for class: attributes accessed via self.X */
+	AlifObject* deferredAnnotations{}; /* AnnAssign nodes deferred to the end of compilation */
+
+	InstrSequence* instrSequence{}; /* codegen output */
+
+	AlifIntT nfBlocks{};
+	AlifIntT inInlinedComp{};
+
+	FBlockInfo fBlock[MAXBLOCKS]{};
+
+	AlifCompileCodeUnitMetadata metadata{};
+};
+
+class AlifCompiler { // 6473
+public:
+	AlifObject* filename{};
+	AlifSymTable* st{};
+	AlifFutureFeatures future{};		/* module's __future__ */
+	AlifCompilerFlags flags{};
+
+	AlifIntT optimize{};				/* optimization level */
+	AlifIntT interactive{};				/* true if in interactive mode */
+	AlifObject* constCache{};			/* Alif dict holding all constants,
+											including names tuple */
+	CompilerUnit* u_{};					/* compiler state for current block */
+	AlifObject* stack{};				/* Alif list holding compiler_unit ptrs */
+	AlifASTMem* astMem{};				/* pointer to memory allocation astMem */
+
+	bool saveNestedSeqs{};				/* if true, construct recursive instruction sequences
+											* (including instructions for nested code objects)
+										*/
+};
 
 
 static AlifIntT compiler_setup(AlifCompiler* _c, ModuleTy _mod, AlifObject* _filename,
@@ -3957,7 +3990,6 @@ static AlifObject* dict_byType(AlifObject* _src, AlifIntT _scopeType,
 static AlifIntT compiler_enterScope(AlifCompiler* _c, Identifier _name,
 	AlifIntT _scopeType, void* _key, AlifIntT _lineno,
 	AlifObject* _private, AlifCompileCodeUnitMetadata* _umd) { // 6797
-	Location loc = LOCATION(_lineno, _lineno, 0, 0);
 
 	CompilerUnit* u{};
 
@@ -4071,13 +4103,9 @@ static AlifIntT compiler_enterScope(AlifCompiler* _c, Identifier _name,
 
 	_c->u_ = u;
 
-	if (u->scopeType == ScopeType_::Compiler_Scope_Module) {
-		loc.lineNo = 0;
-	}
-	else {
+	if (_scopeType != ScopeType_::Compiler_Scope_Module) {
 		RETURN_IF_ERROR(compiler_setQualname(_c));
 	}
-	ADDOP_I(_c, loc, RESUME, RESUME_AT_FUNC_START);
 
 	return SUCCESS;
 }
@@ -4165,7 +4193,7 @@ static AlifIntT compiler_codegen(AlifCompiler* _c, ModuleTy _mod) { // 7017
 		break;
 	}
 	case ModK_::ExpressionK: {
-		VISIT(_c, Expr, _mod->V.expression.body);
+		RETURN_IF_ERROR(codegen_expression(_c, _mod->V.expression.body));
 		break;
 	}
 	default: {
@@ -4181,7 +4209,7 @@ static AlifIntT compiler_codegen(AlifCompiler* _c, ModuleTy _mod) { // 7017
 static AlifCodeObject* compiler_mod(AlifCompiler* _c, ModuleTy _mod) { // 7046
 	AlifCodeObject* co = nullptr;
 	AlifIntT addNone = _mod->type != ModK_::ExpressionK;
-	if (codegenEnter_anonymousScope(_c, _mod) < 0) {
+	if (codegen_enterAnonymousScope(_c, _mod) < 0) {
 		return nullptr;
 	}
 	if (compiler_codegen(_c, _mod) < 0) {
@@ -4370,7 +4398,8 @@ static AlifIntT compiler_tweakInlinedComprehensionScopes(AlifCompiler* c, Locati
 }
 
 static AlifIntT compiler_revertInlinedComprehensionScopes(AlifCompiler* _c, Location _loc,
-	InlinedComprehensionState* _state) { // 7280
+	InlinedComprehensionState* _state) { // 7319
+	_c->u_->inInlinedComp--;
 	if (_state->tempSymbols) {
 		AlifObject* k{}, * v{};
 		AlifSizeT pos = 0;
@@ -4448,9 +4477,12 @@ static AlifObject* compiler_qualname(AlifCompiler* _c) { // 7455
 	return _c->u_->metadata.qualname;
 }
 
-
 static AlifCompileCodeUnitMetadata* compiler_unitMetadata(AlifCompiler* _c) { // 7473
 	return &_c->u_->metadata;
+}
+
+static AlifASTMem* compiler_astMem(AlifCompiler* _c) { // 7519
+	return _c->astMem;
 }
 
 AlifIntT _alifCompile_constCacheMergeOne(AlifObject* _constCache,
