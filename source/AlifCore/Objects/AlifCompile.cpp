@@ -58,7 +58,6 @@ static InstrSequence* compiler_instrSequence(AlifCompiler*); // 82
 static AlifSymTable* compiler_symtable(AlifCompiler* c); // 84
 static SymTableEntry* compiler_symtableEntry(AlifCompiler*); // 85
 
-#define IS_TOP_LEVEL_AWAIT(C) compiler_isTopLevelAwait(C); // 87
 #define INSTR_SEQUENCE(_c) compiler_instrSequence(_c) // 91
 #define SYMTABLE(_c) compiler_symtable(_c) // 93
 #define SYMTABLE_ENTRY(_c) compiler_symtableEntry(_c) // 94
@@ -3245,8 +3244,6 @@ static AlifIntT compiler_comprehension(AlifCompiler* _c, ExprTy _e, AlifIntT _ty
 	AlifCodeObject* co = nullptr;
 	InlinedComprehensionState inline_state = { nullptr, nullptr, nullptr, _noLabel_ };
 	ComprehensionTy outermost{};
-	//AlifIntT scope_type = _c->u_->scopeType; //* review //* delete
-	//AlifIntT is_top_level_await = IS_TOP_LEVEL_AWAIT(_c); //* review //* delete
 	SymTableEntry* entry = _alifSymtable_lookup(SYMTABLE(_c), (void*)_e);
 	if (entry == nullptr) {
 		goto error;
@@ -4243,7 +4240,7 @@ static AlifIntT compiler_lookupArg(AlifCompiler* _c,
 	else {
 		arg = dict_lookupArg(_c->u_->metadata.freevars, _name);
 	}
-	if (arg == -1 /*and !alifErr_occurred()*/) {
+	if (arg == -1 and !alifErr_occurred()) {
 		//AlifObject* freevars = _alifCode_getFreeVars(_co);
 		//if (freevars == nullptr) {
 		//	alifErr_clear();
@@ -4454,11 +4451,6 @@ static AlifObject* compiler_qualname(AlifCompiler* _c) { // 7455
 
 static AlifCompileCodeUnitMetadata* compiler_unitMetadata(AlifCompiler* _c) { // 7473
 	return &_c->u_->metadata;
-}
-
-static AlifIntT compiler_isTopLevelAwait(AlifCompiler* _c) { // 7479
-	return _c->flags.flags & ALIFCF_ALLOW_TOP_LEVEL_AWAIT and
-		_c->u_->ste->type == BlockType_::Module_Block;
 }
 
 AlifIntT _alifCompile_constCacheMergeOne(AlifObject* _constCache,

@@ -1233,10 +1233,10 @@ const class OpcodeMetadata _alifOpcodeOpcodeMetadata_[264] = {
 	{ true, InstructionFormat::Instr_FMT_IXC, HAS_DEOPT_FLAG }, // STORE_SUBSCR_LIST_INT
 	{ true, InstructionFormat::Instr_FMT_IXC00, HAS_EXIT_FLAG }, // TO_BOOL_ALWAYS_TRUE
 	{ true, InstructionFormat::Instr_FMT_IXC00, HAS_EXIT_FLAG }, // TO_BOOL_BOOL
-	{ true, InstructionFormat::Instr_FMT_IXC00, HAS_EXIT_FLAG }, // TO_BOOL_INT
+	{ true, InstructionFormat::Instr_FMT_IXC00, HAS_EXIT_FLAG | HAS_ESCAPES_FLAG }, // TO_BOOL_INT
 	{ true, InstructionFormat::Instr_FMT_IXC00, HAS_EXIT_FLAG }, // TO_BOOL_LIST
 	{ true, InstructionFormat::Instr_FMT_IXC00, HAS_EXIT_FLAG }, // TO_BOOL_NONE
-	{ true, InstructionFormat::Instr_FMT_IXC00, HAS_EXIT_FLAG }, // TO_BOOL_STR
+	{ true, InstructionFormat::Instr_FMT_IXC00, HAS_EXIT_FLAG | HAS_ESCAPES_FLAG }, // TO_BOOL_STR
 	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_DEOPT_FLAG }, // UNPACK_SEQUENCE_LIST
 	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_DEOPT_FLAG }, // UNPACK_SEQUENCE_TUPLE
 	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_DEOPT_FLAG }, // UNPACK_SEQUENCE_TWO_TUPLE // 226
