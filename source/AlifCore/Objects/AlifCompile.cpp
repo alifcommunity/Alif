@@ -3655,7 +3655,7 @@ static AlifIntT codegen_asyncComprehensionGenerator(AlifCompiler* _c, Location _
 		}
 		else {
 			VISIT(_c, Expr, gen->iter);
-			ADDOP(_c, _loc, GET_AITER);
+			ADDOP(_c, LOC(gen->iter), GET_AITER);
 		}
 	}
 

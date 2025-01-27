@@ -148,9 +148,9 @@ static AlifSizeT check_complexity(AlifObject* _obj, AlifSizeT _limit) { // 147
 static AlifObject* safe_multiply(AlifObject* _v, AlifObject* _w) { // 166
 	if (ALIFLONG_CHECK(_v) and ALIFLONG_CHECK(_w) and
 		!_alifLong_isZero((AlifLongObject*)_v) and !_alifLong_isZero((AlifLongObject*)_w)) {
-		AlifUSizeT vBits = _alifLong_numBits(_v);
-		AlifUSizeT wBits = _alifLong_numBits(_w);
-		if (vBits == (AlifUSizeT)-1 or wBits == (AlifUSizeT)-1) {
+		uint64_t vBits = _alifLong_numBits(_v);
+		uint64_t wBits = _alifLong_numBits(_w);
+		if (vBits == (uint64_t)-1 or wBits == (uint64_t)-1) {
 			return nullptr;
 		}
 		if (vBits + wBits > MAX_INT_SIZE) {
@@ -194,9 +194,9 @@ static AlifObject* safe_multiply(AlifObject* _v, AlifObject* _w) { // 166
 static AlifObject* safe_power(AlifObject* _v, AlifObject* _w) { // 212
 	if (ALIFLONG_CHECK(_v) and ALIFLONG_CHECK(_w) and
 		!_alifLong_isZero((AlifLongObject*)_v) and _alifLong_isPositive((AlifLongObject*)_w)) {
-		AlifUSizeT vBits = _alifLong_numBits(_v);
+		uint64_t vBits = _alifLong_numBits(_v);
 		AlifUSizeT wBits = alifLong_asSizeT(_w);
-		if (vBits == (AlifUSizeT)-1 or wBits == (AlifUSizeT)-1) {
+		if (vBits == (uint64_t)-1 or wBits == (AlifUSizeT)-1) {
 			return nullptr;
 		}
 		if (vBits > MAX_INT_SIZE / wBits) {

@@ -27,7 +27,7 @@ extern AlifObject* _alifLong_fromBytes(const char*, AlifSizeT, AlifIntT); // 91
 
 
 
-AlifObject* _alifLong_lShift(AlifObject*, AlifUSizeT); // 111
+AlifObject* _alifLong_lShift(AlifObject*, uint64_t); // 111
 
 
 AlifObject* _alifLong_add(AlifLongObject*, AlifLongObject*); // 113

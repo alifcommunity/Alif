@@ -61,4 +61,4 @@ AlifObject* alifLong_fromUStrObject(AlifObject*, AlifIntT); // 5
 AlifIntT _alifLong_sign(AlifObject*); // 68
 
 
-AlifUSizeT _alifLong_numBits(AlifObject*); // 77
+uint64_t _alifLong_numBits(AlifObject*); // 77

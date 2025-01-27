@@ -236,7 +236,6 @@ static AlifObject* float_richCompare(AlifObject* _v, AlifObject* _w, AlifIntT _o
 	else if (ALIFLONG_CHECK(_w)) {
 		AlifIntT vsign = i == 0.0 ? 0 : i < 0.0 ? -1 : 1;
 		AlifIntT wsign = _alifLong_sign(_w);
-		size_t nbits{};
 		AlifIntT exponent{};
 
 		if (vsign != wsign) {
@@ -245,13 +244,16 @@ static AlifObject* float_richCompare(AlifObject* _v, AlifObject* _w, AlifIntT _o
 			goto Compare;
 		}
 
-		nbits = _alifLong_numBits(_w);
-		if (nbits == (AlifUSizeT)-1/* and alifErr_occurred()*/) {
-			//alifErr_clear();
+		uint64_t nbits64 = _alifLong_numBits(_w);
+		if (nbits64 > (unsigned int)DBL_MAX_EXP) {
+			if (nbits64 == (uint64_t)-1 and alifErr_occurred()) {
+				//alifErr_clear();
+			}
 			i = (double)vsign;
 			j = wsign * 2.0;
 			goto Compare;
 		}
+		AlifIntT nbits = (AlifIntT)nbits64;
 		if (nbits <= 48) {
 			j = alifLong_asDouble(_w);
 			goto Compare;
@@ -261,12 +263,12 @@ static AlifObject* float_richCompare(AlifObject* _v, AlifObject* _w, AlifIntT _o
 			_op = _alifSwappedOp_[_op];
 		}
 		(void)frexp(i, &exponent);
-		if (exponent < 0 or (AlifUSizeT)exponent < nbits) {
+		if (exponent < nbits) {
 			i = 1.0;
 			j = 2.0;
 			goto Compare;
 		}
-		if ((AlifUSizeT)exponent > nbits) {
+		if (exponent > nbits) {
 			i = 2.0;
 			j = 1.0;
 			goto Compare;
