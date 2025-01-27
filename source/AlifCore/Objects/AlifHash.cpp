@@ -76,8 +76,8 @@ AlifHashT alifObject_genericHash(AlifObject* _obj) { // 142
 
 
 
-AlifHashT alif_hashBytes(const void* _src, AlifSizeT _len) { // 148
-	AlifHashT x;
+AlifHashT alif_hashBuffer(const void* _ptr, AlifSizeT _len) { // 148
+	AlifHashT x{};
 	/*
 	  We make the hash of the empty string be 0, rather than using
 	  (prefix ^ suffix), since this slightly obfuscates the hash secret
@@ -94,7 +94,7 @@ AlifHashT alif_hashBytes(const void* _src, AlifSizeT _len) { // 148
 	if (_len < ALIF_HASH_CUTOFF) {
 		/* Optimize hashing of very small strings with inline DJBX33A. */
 		AlifUHashT hash;
-		const unsigned char* p = _src;
+		const unsigned char* p = _ptr;
 		hash = 5381;
 
 		switch (_len) {
@@ -115,10 +115,13 @@ AlifHashT alif_hashBytes(const void* _src, AlifSizeT _len) { // 148
 	}
 	else
 #endif
-		x = _alifHashFunc_.hash(_src, _len);
+	{
+		x = _alifHashFunc_.hash(_ptr, _len);
+	}
 
-	if (x == -1)
+	if (x == -1) {
 		return -2;
+	}
 	return x;
 }
 

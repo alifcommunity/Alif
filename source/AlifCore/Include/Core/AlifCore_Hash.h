@@ -18,7 +18,7 @@ static inline AlifHashT alif_hashPointerRaw(const void* _ptr) { // 9
 
 
 
-AlifHashT alif_hashBytes(const void*, AlifSizeT); // 24
+AlifHashT alif_hashBuffer(const void*, AlifSizeT); // 24
 
 
 

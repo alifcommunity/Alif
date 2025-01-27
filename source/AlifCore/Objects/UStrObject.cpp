@@ -5415,7 +5415,7 @@ static AlifHashT uStr_hash(AlifObject* _self) { // 11663
 	if (hash != -1) {
 		return hash;
 	}
-	x = alif_hashBytes(ALIFUSTR_DATA(_self),
+	x = alif_hashBuffer(ALIFUSTR_DATA(_self),
 		ALIFUSTR_GET_LENGTH(_self) * ALIFUSTR_KIND(_self));
 
 	alifAtomic_storeSizeRelaxed(&ALIFUSTR_HASH(_self), x);

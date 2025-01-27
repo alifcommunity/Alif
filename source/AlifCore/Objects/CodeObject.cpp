@@ -624,12 +624,12 @@ static AlifUHashT hash_const(const void* _key) { // 2557
 	if (ALIFSLICE_CHECK(op)) {
 		AlifSliceObject* s = (AlifSliceObject*)op;
 		AlifObject* data[3] = { s->start, s->stop, s->step };
-		return alif_hashBytes(&data, sizeof(data));
+		return alif_hashBuffer(&data, sizeof(data));
 	}
 	else if (ALIFTUPLE_CHECKEXACT(op)) {
 		AlifSizeT size = ALIFTUPLE_GET_SIZE(op);
 		AlifObject** data = ALIFTUPLE_ITEMS(op);
-		return alif_hashBytes(data, sizeof(AlifObject*) * size);
+		return alif_hashBuffer(data, sizeof(AlifObject*) * size);
 	}
 	AlifHashT h = alifObject_hash(op);
 	if (h == -1) {
