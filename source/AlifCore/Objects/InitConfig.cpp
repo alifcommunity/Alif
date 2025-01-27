@@ -20,9 +20,16 @@
 #endif
 
 
+
+typedef AlifObject* (*ConfigSysFlagSetter) (AlifIntT);
+
+
+
+
+
 /* ---------------------------------------------- AlifConfig spec ---------------------------------------------- */
 
-enum AlifConfigMemberType_ {
+enum AlifConfigMemberType_ { // 49
 	Alif_Config_Member_INT = 0,
 	Alif_Config_Member_UINT = 1,
 	Alif_Config_Member_ULONG = 2,
@@ -32,35 +39,93 @@ enum AlifConfigMemberType_ {
 	Alif_Config_Member_WSTR_LIST = 12,
 };
 
-class AlifConfigSpec { // 43
-public:
-	const char* name;
-	AlifUSizeT offset;
-	AlifConfigMemberType_ type;
+enum AlifConfigMemberVisibility { // 60
+	Alif_Config_Member_Init_Only = 0,
+	Alif_Config_Member_Read_Only = 1,
+	Alif_Config_Member_Public = 2,
 };
 
-#define SPEC(_member, _type) \
-    {#_member, offsetof(AlifConfig, _member), Alif_Config_Member_##_type}
+class AlifConfigSysSpec { // 71
+public:
+	const char* attr{};
+	AlifIntT flagIndex{};
+	ConfigSysFlagSetter flagSetter{};
+};
 
-static const AlifConfigSpec _alifConfigSpec_[] = { // 53
-	SPEC(tracemalloc, UINT),
-	SPEC(parseArgv, BOOL),
-	SPEC(origArgv, WSTR_LIST),
-	SPEC(argv, WSTR_LIST),
-	SPEC(interactive, BOOL),
-	SPEC(optimizationLevel, UINT),
-	SPEC(bufferedStdio, BOOL),
+class AlifConfigSpec { // 43
+public:
+	const char* name{};
+	AlifUSizeT offset{};
+	AlifConfigMemberType_ type{};
+	AlifConfigMemberVisibility visibility{};
+	AlifConfigSysSpec sys{};
+};
 
-	SPEC(programName, WSTR),
-	SPEC(skipFirstLine, BOOL),
-	SPEC(runCommand, WSTR_OPT),
-	SPEC(runModule, WSTR_OPT),
-	SPEC(runFilename, WSTR_OPT),
-	SPEC(initMain, BOOL),
-	{nullptr, 0},
+ // 85
+#define SPEC(_member, _type, _visibility, _sys) \
+    {#_member, offsetof(AlifConfig, _member), \
+     Alif_Config_Member_##_type, Alif_Config_Member_##_visibility, _sys}
+
+#define SYS_ATTR(name) {name, -1, nullptr}
+#define SYS_FLAG_SETTER(index, setter) {nullptr, index, setter}
+#define SYS_FLAG(index) SYS_FLAG_SETTER(index, nullptr)
+#define NO_SYS SYS_ATTR(nullptr)
+
+static const AlifConfigSpec _alifConfigSpec_[] = { // 95
+
+	// --- Public options -----------
+    SPEC(argv, WSTR_LIST, Public, SYS_ATTR("argv")),
+    //SPEC(executable, WSTR_OPT, Public, SYS_ATTR("executable")),
+    SPEC(interactive, BOOL, Public, SYS_FLAG(2)),
+    //SPEC(moduleSearchPaths, WSTR_LIST, Public, SYS_ATTR("path")),
+    SPEC(optimizationLevel, UINT, Public, SYS_FLAG(3)),
+
+
+	// --- Read-only options -----------
+
+	SPEC(bufferedStdio, BOOL, Read_Only, NO_SYS),
+
+
+	//SPEC(isolated, BOOL, Read_Only, NO_SYS),  // sys.flags.isolated
+#ifdef _WINDOWS
+	SPEC(legacyWindowsStdio, BOOL, Read_Only, NO_SYS),
+#endif
+	SPEC(origArgv, WSTR_LIST, Read_Only, SYS_ATTR("orig_argv")),
+	SPEC(parseArgv, BOOL, Read_Only, NO_SYS),
+	SPEC(programName, WSTR, Read_Only, NO_SYS),
+	SPEC(runCommand, WSTR_OPT, Read_Only, NO_SYS),
+	SPEC(runFilename, WSTR_OPT, Read_Only, NO_SYS),
+	SPEC(runModule, WSTR_OPT, Read_Only, NO_SYS),
+	{nullptr, 0, AlifConfigMemberType_::Alif_Config_Member_INT},
+
+	SPEC(safePath, BOOL, Read_Only, NO_SYS),
+	//SPEC(skipSourceFirstLine, BOOL, Read_Only, NO_SYS),
+	SPEC(tracemalloc, UINT, Read_Only, NO_SYS),
+
+	// --- Init-only options -----------
+
+	SPEC(configInit, UINT, Init_Only, NO_SYS),
+	SPEC(initMain, BOOL, Init_Only, NO_SYS),
+	//SPEC(installImportLib, BOOL, Init_Only, NO_SYS),
+	SPEC(sysPath0, WSTR_OPT, Init_Only, NO_SYS),
+
+	// Array terminator
+	{nullptr, 0, AlifConfigMemberType_::Alif_Config_Member_INT,
+	AlifConfigMemberVisibility::Alif_Config_Member_Init_Only, NO_SYS},
 };
 
 #undef SPEC
+#define SPEC(_member, _type, _visibility) \
+    {#_member, offsetof(AlifPreConfig, _member), AlifConfig_Member_##_type, \
+     Alif_Config_Member_##_visibility, NO_SYS}
+
+
+#undef SPEC
+#undef SYS_ATTR
+#undef SYS_FLAG_SETTER
+#undef SYS_FLAG
+#undef NO_SYS
+
 
 
 /* --------------------------------------- Command line options --------------------------------------- */
