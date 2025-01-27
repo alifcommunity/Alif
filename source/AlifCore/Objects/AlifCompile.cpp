@@ -48,42 +48,55 @@
     } \
 }
 
- // 77
-#define IS_TOP_LEVEL_AWAIT(_c) ( \
-        ((_c)->flags.flags & ALIFCF_ALLOW_TOP_LEVEL_AWAIT) \
-        and ((_c)->u_->ste->type == BlockType_::Module_Block))
+
+class AlifCompiler; // 77
 
 
-class AlifCompiler; // 81
+typedef AlifInstructionSequence InstrSequence; // 80
 
+static InstrSequence* compiler_instrSequence(AlifCompiler*); // 82
+static AlifSymTable* compiler_symtable(AlifCompiler* c); // 84
+static SymTableEntry* compiler_symtableEntry(AlifCompiler*); // 85
 
-typedef AlifInstructionSequence InstrSequence; // 84
-
-static InstrSequence* compiler_instrSequence(AlifCompiler*); // 86
-static AlifSymTable* compiler_symtable(AlifCompiler* c); // 88
-static SymTableEntry* compiler_symtableEntry(AlifCompiler*); // 89
-
+#define IS_TOP_LEVEL_AWAIT(C) compiler_isTopLevelAwait(C); // 87
 #define INSTR_SEQUENCE(_c) compiler_instrSequence(_c) // 91
 #define SYMTABLE(_c) compiler_symtable(_c) // 93
 #define SYMTABLE_ENTRY(_c) compiler_symtableEntry(_c) // 94
 #define OPTIMIZATION_LEVEL(_c) compiler_optimizationLevel(_c) // 95
 
 #define QUALNAME(_c) compiler_qualname(_c) // 99
+#define METADATA(_c) compiler_unitMetadata(_c)
 
+typedef AlifSourceLocation Location; // 99
+typedef class AlifCFGBuilder CFGBuilder; // 100
+typedef AlifJumpTargetLabel JumpTargetLabel; // 101
 
-typedef AlifSourceLocation Location; // 101
-typedef class AlifCFGBuilder CFGBuilder; // 102
+enum FBlockType_; // 103
 
-static AlifObject* compiler_maybeMangle(AlifCompiler*, AlifObject*); // 103
-static AlifIntT compiler_optimizationLevel(AlifCompiler *); // 104
+static AlifIntT compiler_isTopLevelAwait(AlifCompiler*); // 105
+static AlifObject* compiler_maybeMangle(AlifCompiler*, AlifObject*); // 107
+static AlifIntT compiler_optimizationLevel(AlifCompiler *); // 108
 static AlifIntT compiler_isInInlinedComp(AlifCompiler*); // 110
 static AlifObject* compiler_qualname(AlifCompiler*); // 111
+static AlifObject* compiler_staticAttributesTuple(AlifCompiler*); // 114
+static AlifIntT compiler_lookupArg(AlifCompiler*, AlifCodeObject*, AlifObject*); // 115
+static AlifIntT compiler_getRefType(AlifCompiler*, AlifObject*); // 116
+static AlifIntT compiler_lookupCellVar(AlifCompiler*, AlifObject*); // 117
+static AlifIntT compiler_pushFBlock(AlifCompiler*, Location,
+	FBlockType_, JumpTargetLabel, JumpTargetLabel, void*); // 119
+static void compiler_popFBlock(AlifCompiler*, FBlockType_, JumpTargetLabel); // 122
+static class FBlockInfo* compiler_topFBlock(AlifCompiler*); // 124
+static AlifIntT compiler_enterScope(AlifCompiler*, Identifier, AlifIntT,
+	void*, AlifIntT, AlifObject*, AlifCompileCodeUnitMetadata*); // 125
+static AlifSizeT compiler_addConst(AlifCompiler*, AlifObject*); // 129
+static void compiler_exitScope(AlifCompiler*);
+static AlifIntT compiler_maybeAddStaticAttributeToClass(AlifCompiler*, ExprTy); // 130
+static AlifCompileCodeUnitMetadata* compiler_unitMetadata(AlifCompiler*); // 131
 
 #define LOCATION(_lno, _endLno, _col, _endCol) {_lno, _endLno, _col, _endCol} // 112
 
 #define LOC(_x) SRC_LOCATION_FROM_AST(_x)
 
-typedef AlifJumpTargetLabel JumpTargetLabel; // 117
 
 static JumpTargetLabel _noLabel_ = { -1 }; // 119
 
@@ -260,286 +273,9 @@ static AlifIntT codegen_asyncComprehensionGenerator(AlifCompiler*, Location, ASD
 
 static AlifCodeObject* optimize_andAssemble(AlifCompiler*, AlifIntT); // 358
 
-#define CAPSULE_NAME "AlifCompile.cpp AlifCompiler unit" // 360
-
-static AlifIntT compiler_setup(AlifCompiler* _c, ModuleTy _mod, AlifObject* _filename,
-	AlifCompilerFlags* _flags, AlifIntT _optimize, AlifASTMem* _astMem) { // 363
-	AlifCompilerFlags localFlags = ALIFCOMPILERFLAGS_INIT;
-
-	_c->constCache = alifDict_new();
-	if (!_c->constCache) {
-		return ERROR;
-	}
-
-	_c->stack = alifList_new(0);
-	if (!_c->stack) {
-		return ERROR;
-	}
-
-	_c->filename = ALIF_NEWREF(_filename);
-	_c->astMem = _astMem;
-	if (!alifFuture_fromAST(_mod, _filename, &_c->future)) {
-		return ERROR;
-	}
-	if (!_flags) {
-		_flags = &localFlags;
-	}
-	AlifIntT merged = _c->future.features | _flags->flags;
-	_c->future.features = merged;
-	_flags->flags = merged;
-	_c->flags = *_flags;
-	_c->optimize = (_optimize == -1) ? alif_getConfig()->optimizationLevel : _optimize;
-	_c->saveNestedSeqs = false;
-
-	if (!alifAST_optimize(_mod, _astMem, _c->optimize, merged)) {
-		return ERROR;
-	}
-	_c->st = alifSymtable_build(_mod, _filename, &_c->future);
-	if (_c->st == nullptr) {
-		//if (!alifErr_occurred()) {
-		//	alifErr_setString(_alifExcSystemError_, "no symtable");
-		//}
-		return ERROR;
-	}
-	return SUCCESS;
-}
 
 
 
-
-static AlifCompiler* new_compiler(ModuleTy mod, AlifObject* filename,
-	AlifCompilerFlags* pflags, AlifIntT optimize, AlifASTMem* arena) { // 407
-	AlifCompiler* compiler = (AlifCompiler*)alifMem_dataAlloc(sizeof(AlifCompiler));
-	if (compiler == nullptr) {
-		return nullptr;
-	}
-	if (compiler_setup(compiler, mod, filename, pflags, optimize, arena) < 0) {
-		compiler_free(compiler);
-		return nullptr;
-	}
-	return compiler;
-}
-
-
-
-
-
-AlifCodeObject* alifAST_compile(ModuleTy _mod, AlifObject* _filename,
-	AlifCompilerFlags* _pFlags, AlifIntT _optimize, AlifASTMem* _astMem) { // 422
-
-	AlifCompiler* compiler = new_compiler(_mod, _filename, _pFlags, _optimize, _astMem);
-	if (compiler == nullptr) {
-		return nullptr;
-	}
-
-	AlifCodeObject* co = compiler_mod(compiler, _mod);
-	compiler_free(compiler);
-	return co;
-}
-
-
-
-static void compiler_free(AlifCompiler* _c) { // 456
-	if (_c->st) alifSymtable_free(_c->st);
-	ALIF_XDECREF(_c->filename);
-	ALIF_XDECREF(_c->constCache);
-	ALIF_XDECREF(_c->stack);
-	alifMem_dataFree(_c);
-}
-
-static AlifObject* list2dict(AlifObject* _list) { // 467
-	AlifSizeT i{}, n{};
-	AlifObject* v{}, * k{};
-	AlifObject* dict = alifDict_new();
-	if (!dict) return nullptr;
-
-	n = alifList_size(_list);
-	for (i = 0; i < n; i++) {
-		v = alifLong_fromSizeT(i);
-		if (!v) {
-			ALIF_DECREF(dict);
-			return nullptr;
-		}
-		k = ALIFLIST_GET_ITEM(_list, i);
-		if (alifDict_setItem(dict, k, v) < 0) {
-			ALIF_DECREF(v);
-			ALIF_DECREF(dict);
-			return nullptr;
-		}
-		ALIF_DECREF(v);
-	}
-	return dict;
-}
-
-static AlifObject* dict_byType(AlifObject* _src, AlifIntT _scopeType,
-	AlifIntT _flag, AlifSizeT _offset) { // 501
-	AlifSizeT i = _offset, numKeys, keyI;
-	AlifObject* k, * v, * dest = alifDict_new();
-	AlifObject* sortedKeys;
-
-	if (dest == nullptr) return nullptr;
-
-	sortedKeys = alifDict_keys(_src);
-	if (sortedKeys == nullptr) {
-		ALIF_DECREF(dest);
-		return nullptr;
-	}
-	if (alifList_sort(sortedKeys) != 0) {
-		ALIF_DECREF(sortedKeys);
-		ALIF_DECREF(dest);
-		return nullptr;
-	}
-	numKeys = ALIFLIST_GET_SIZE(sortedKeys);
-
-	for (keyI = 0; keyI < numKeys; keyI++) {
-		k = ALIFLIST_GET_ITEM(sortedKeys, keyI);
-		v = alifDict_getItemWithError(_src, k);
-		if (!v) {
-			//if (!alifErr_occurred()) {
-			//	alifErr_SetObject(_alifExcKeyError_, k);
-			//}
-			ALIF_DECREF(sortedKeys);
-			ALIF_DECREF(dest);
-			return nullptr;
-		}
-		long vi = alifLong_asLong(v);
-		if (vi == -1 /*and alifErr_occurred()*/) {
-			ALIF_DECREF(sortedKeys);
-			ALIF_DECREF(dest);
-			return nullptr;
-		}
-		if (SYMBOL_TO_SCOPE(vi) == _scopeType or vi & _flag) {
-			AlifObject* item = alifLong_fromSizeT(i);
-			if (item == nullptr) {
-				ALIF_DECREF(sortedKeys);
-				ALIF_DECREF(dest);
-				return nullptr;
-			}
-			i++;
-			if (alifDict_setItem(dest, k, item) < 0) {
-				ALIF_DECREF(sortedKeys);
-				ALIF_DECREF(item);
-				ALIF_DECREF(dest);
-				return nullptr;
-			}
-			ALIF_DECREF(item);
-		}
-	}
-	ALIF_DECREF(sortedKeys);
-	return dest;
-}
-
-static void compiler_unitFree(CompilerUnit* _u) { // 567
-	ALIF_CLEAR(_u->instrSequence);
-	ALIF_CLEAR(_u->ste);
-	ALIF_CLEAR(_u->metadata.name);
-	ALIF_CLEAR(_u->metadata.qualname);
-	ALIF_CLEAR(_u->metadata.consts);
-	ALIF_CLEAR(_u->metadata.names);
-	ALIF_CLEAR(_u->metadata.varnames);
-	ALIF_CLEAR(_u->metadata.freevars);
-	ALIF_CLEAR(_u->metadata.cellvars);
-	ALIF_CLEAR(_u->metadata.fasthidden);
-	ALIF_CLEAR(_u->private_);
-	ALIF_CLEAR(_u->staticAttributes);
-	ALIF_CLEAR(_u->deferredAnnotations);
-	alifMem_dataFree(_u);
-}
-
-static AlifIntT compiler_maybeAddStaticAttributeToClass(AlifCompiler* _c, ExprTy _e) { // 586
-	ExprTy attr_value = _e->V.attribute.val;
-	if (attr_value->type != ExprK_::NameK or
-		_e->V.attribute.ctx != ExprContext_::Store or
-		!alifUStr_equalToASCIIString(attr_value->V.name.name, "self"))
-	{
-		return SUCCESS;
-	}
-	AlifSizeT stackSize = ALIFLIST_GET_SIZE(_c->stack);
-	for (AlifSizeT i = stackSize - 1; i >= 0; i--) {
-		AlifObject* capsule = ALIFLIST_GET_ITEM(_c->stack, i);
-		CompilerUnit* u = (CompilerUnit*)alifCapsule_getPointer(
-			capsule, CAPSULE_NAME);
-		if (u->scopeType == ScopeType_::Compiler_Scope_Class) {
-			RETURN_IF_ERROR(alifSet_add(u->staticAttributes, _e->V.attribute.attr));
-			break;
-		}
-	}
-	return SUCCESS;
-}
-
-
-static AlifIntT compiler_setQualname(AlifCompiler* _c) { // 612
-	AlifSizeT stackSize{};
-	CompilerUnit* u = _c->u_;
-	AlifObject* name{}, * base{};
-
-	base = nullptr;
-	stackSize = ALIFLIST_GET_SIZE(_c->stack);
-	if (stackSize > 1) {
-		AlifIntT scope, forceGlobal = 0;
-		CompilerUnit* parent{};
-		AlifObject* mangled{}, * capsule{};
-
-		capsule = ALIFLIST_GET_ITEM(_c->stack, stackSize - 1);
-		parent = (CompilerUnit*)alifCapsule_getPointer(capsule, CAPSULE_NAME);
-		if (parent->scopeType == ScopeType_::Compiler_Scope_Annotations) {
-			if (stackSize == 2) {
-				u->metadata.qualname = ALIF_NEWREF(u->metadata.name);
-				return SUCCESS;
-			}
-			capsule = ALIFLIST_GET_ITEM(_c->stack, stackSize - 2);
-			parent = (CompilerUnit*)alifCapsule_getPointer(capsule, CAPSULE_NAME);
-		}
-
-		if (u->scopeType == ScopeType_::Compiler_Scope_Function
-			or u->scopeType == ScopeType_::Compiler_Scope_Async_Function
-			or u->scopeType == ScopeType_::Compiler_Scope_Class) {
-			mangled = alif_mangle(parent->private_, u->metadata.name);
-			if (!mangled) {
-				return ERROR;
-			}
-
-			scope = alifST_getScope(parent->ste, mangled);
-			ALIF_DECREF(mangled);
-			RETURN_IF_ERROR(scope);
-			if (scope == GLOBAL_EXPLICIT) forceGlobal = 1;
-		}
-
-		if (!forceGlobal) {
-			if (parent->scopeType == ScopeType_::Compiler_Scope_Function
-				or parent->scopeType == ScopeType_::Compiler_Scope_Async_Function
-				or parent->scopeType == ScopeType_::Compiler_Scope_Lambda)
-			{
-				base = alifUStr_concat(parent->metadata.qualname,
-					&ALIF_STR(DotLocals));
-				if (base == nullptr) {
-					return ERROR;
-				}
-			}
-			else {
-				base = ALIF_NEWREF(parent->metadata.qualname);
-			}
-		}
-	}
-
-	if (base != nullptr) {
-		name = alifUStr_concat(base, ALIF_LATIN1_CHR('.'));
-		ALIF_DECREF(base);
-		if (name == nullptr) {
-			return ERROR;
-		}
-		alifUStr_append(&name, u->metadata.name);
-		if (name == nullptr) {
-			return ERROR;
-		}
-	}
-	else {
-		name = ALIF_NEWREF(u->metadata.name);
-	}
-	u->metadata.qualname = name;
-
-	return SUCCESS;
-}
 
 
 static AlifIntT codegen_addOpI(InstrSequence* seq,
@@ -690,16 +426,6 @@ static AlifObject* merge_constsRecursive(AlifObject* _constCache, AlifObject* _o
 	return const_cacheInsert(_constCache, _o, true);
 }
 
-static AlifSizeT compiler_addConst(AlifCompiler* _c, AlifObject* _o) { // 882
-	AlifObject* key = merge_constsRecursive(_c->constCache, _o);
-	if (key == nullptr) {
-		return ERROR;
-	}
-
-	AlifSizeT arg = dict_addO(_c->u_->metadata.consts, key);
-	ALIF_DECREF(key);
-	return arg;
-}
 
 static AlifIntT codegen_addOpLoadConst(AlifCompiler* _c,
 	Location _loc, AlifObject* _o) { // 895
@@ -740,14 +466,14 @@ static AlifIntT codegen_addOpO(AlifCompiler* _c, Location _loc,
 
  // 935
 #define ADDOP_N(_c, _loc, _op, _o, _type) { \
-    AlifIntT ret = codegen_addOpO(_c, _loc, _op, _c->u_->metadata._type, _o); \
+    AlifIntT ret = codegen_addOpO(_c, _loc, _op, METADATA(_c)->_type, _o); \
     ALIF_DECREF(_o); \
     RETURN_IF_ERROR(ret); \
 }
 
  // 942
 #define ADDOP_N_IN_SCOPE(_c, _loc, _op, _o, _type) { \
-    AlifIntT ret = codegen_addOpO(_c, _loc, _op, _c->u_->metadata._type, _o); \
+    AlifIntT ret = codegen_addOpO(_c, _loc, _op, METADATA(_c)->_type, _o); \
     ALIF_DECREF(_o); \
     RETURN_IF_ERROR_IN_SCOPE(_c, ret); \
 }
@@ -803,7 +529,7 @@ static AlifIntT codegen_addOpName(AlifCompiler* _c, Location _loc,
 
 
 #define ADDOP_NAME(_c, _loc, _op, _o, _type) \
-    RETURN_IF_ERROR(codegen_addOpName(_c, _loc, _op, _c->u_->metadata._type, _o)) // 997
+    RETURN_IF_ERROR(codegen_addOpName(_c, _loc, _op, METADATA(_c)->_type, _o)) // 997
 
 
 
@@ -850,200 +576,6 @@ static AlifIntT codegen_addOpJ(InstrSequence* _seq, Location _loc,
     } \
 }
 
-
-static AlifIntT compiler_enterScope(AlifCompiler* _c, Identifier _name,
-	AlifIntT _scopeType, void* _key, AlifIntT _lineno,
-	AlifObject* _private, AlifCompileCodeUnitMetadata* _umd) { // 1063
-	Location loc = LOCATION(_lineno, _lineno, 0, 0);
-
-	CompilerUnit* u{};
-
-	u = (CompilerUnit*)alifMem_dataAlloc(sizeof(CompilerUnit));
-	if (!u) {
-		//alifErr_noMemory();
-		return ERROR;
-	}
-	u->scopeType = _scopeType;
-	if (_umd != nullptr) {
-		u->metadata = *_umd;
-	}
-	else {
-		u->metadata.argCount = 0;
-		u->metadata.posOnlyArgCount = 0;
-		u->metadata.kwOnlyArgCount = 0;
-	}
-	u->ste = _alifSymtable_lookup(_c->st, _key);
-	if (!u->ste) {
-		compiler_unitFree(u);
-		return ERROR;
-	}
-	u->metadata.name = ALIF_NEWREF(_name);
-	u->metadata.varnames = list2dict(u->ste->varNames);
-	if (!u->metadata.varnames) {
-		compiler_unitFree(u);
-		return ERROR;
-	}
-	u->metadata.cellvars = dict_byType(u->ste->symbols, CELL, DEF_COMP_CELL, 0);
-	if (!u->metadata.cellvars) {
-		compiler_unitFree(u);
-		return ERROR;
-	}
-	if (u->ste->needsClassClosure) {
-		AlifSizeT res{};
-		res = dict_addO(u->metadata.cellvars, &ALIF_ID(__class__));
-		if (res < 0) {
-			compiler_unitFree(u);
-			return ERROR;
-		}
-	}
-	if (u->ste->needsClassDict) {
-		AlifSizeT res{};
-		res = dict_addO(u->metadata.cellvars, &ALIF_ID(__classDict__));
-		if (res < 0) {
-			compiler_unitFree(u);
-			return ERROR;
-		}
-	}
-
-	u->metadata.freevars = dict_byType(u->ste->symbols, FREE, DEF_FREE_CLASS,
-		ALIFDICT_GET_SIZE(u->metadata.cellvars));
-	if (!u->metadata.freevars) {
-		compiler_unitFree(u);
-		return ERROR;
-	}
-
-	u->metadata.fasthidden = alifDict_new();
-	if (!u->metadata.fasthidden) {
-		compiler_unitFree(u);
-		return ERROR;
-	}
-
-	u->nfBlocks = 0;
-	u->inInlinedComp = 0;
-	u->metadata.firstLineno = _lineno;
-	u->metadata.consts = alifDict_new();
-	if (!u->metadata.consts) {
-		compiler_unitFree(u);
-		return ERROR;
-	}
-	u->metadata.names = alifDict_new();
-	if (!u->metadata.names) {
-		compiler_unitFree(u);
-		return ERROR;
-	}
-
-	u->deferredAnnotations = nullptr;
-	if (_scopeType == ScopeType_::Compiler_Scope_Class) {
-		u->staticAttributes = alifSet_new(0);
-		if (!u->staticAttributes) {
-			compiler_unitFree(u);
-			return ERROR;
-		}
-	}
-	else {
-		u->staticAttributes = nullptr;
-	}
-
-	u->instrSequence = (InstrSequence*)_alifInstructionSequence_new();
-	if (!u->instrSequence) {
-		compiler_unitFree(u);
-		return ERROR;
-	}
-
-	/* Push the old compiler_unit on the stack. */
-	if (_c->u_) {
-		AlifObject* capsule = alifCapsule_new(_c->u_, CAPSULE_NAME, nullptr);
-		if (!capsule or alifList_append(_c->stack, capsule) < 0) {
-			ALIF_XDECREF(capsule);
-			compiler_unitFree(u);
-			return ERROR;
-		}
-		ALIF_DECREF(capsule);
-		if (_private == nullptr) {
-			_private = _c->u_->private_;
-		}
-	}
-
-	u->private_ = ALIF_XNEWREF(_private);
-
-	_c->u_ = u;
-
-	if (u->scopeType == ScopeType_::Compiler_Scope_Module) {
-		loc.lineNo = 0;
-	}
-	else {
-		RETURN_IF_ERROR(compiler_setQualname(_c));
-	}
-	ADDOP_I(_c, loc, RESUME, RESUME_AT_FUNC_START);
-
-	return SUCCESS;
-}
-
-
-
-
-static void compiler_exitScope(AlifCompiler* _c) { // 1197
-	//AlifObject* exc = alifErr_getRaisedException();
-
-	InstrSequence* nestedSeq = nullptr;
-	if (_c->saveNestedSeqs) {
-		nestedSeq = _c->u_->instrSequence;
-		ALIF_INCREF(nestedSeq);
-	}
-	compiler_unitFree(_c->u_);
-	AlifSizeT n = ALIFLIST_GET_SIZE(_c->stack) - 1;
-	if (n >= 0) {
-		AlifObject* capsule = ALIFLIST_GET_ITEM(_c->stack, n);
-		_c->u_ = (CompilerUnit*)alifCapsule_getPointer(capsule, CAPSULE_NAME);
-		if (alifSequence_delItem(_c->stack, n) < 0) {
-			//alifErr_formatUnraisable("Exception ignored on removing "
-			//	"the last compiler stack item");
-		}
-		if (nestedSeq != nullptr) {
-			if (_alifInstructionSequence_addNested(_c->u_->instrSequence, nestedSeq) < 0) {
-				//alifErr_formatUnraisable("Exception ignored on appending "
-				//	"nested instruction sequence");
-			}
-		}
-	}
-	else {
-		_c->u_ = nullptr;
-	}
-	ALIF_XDECREF(nestedSeq);
-
-	//alifErr_setRaisedException(exc);
-}
-
-
-
-static AlifIntT compiler_pushFBlock(AlifCompiler* _c, Location _loc,
-	FBlockType_ _t, JumpTargetLabel _blockLabel,
-	JumpTargetLabel _exit, void* _datum) { // 1239
-	FBlockInfo* f{};
-	if (_c->u_->nfBlocks >= MAXBLOCKS) {
-		//return compiler_error(_c, _loc, "too many statically nested blocks");
-	}
-	f = &_c->u_->fBlock[_c->u_->nfBlocks++];
-	f->type = _t;
-	f->block = _blockLabel;
-	f->loc = _loc;
-	f->exit = _exit;
-	f->datum = _datum;
-	return SUCCESS;
-}
-
-static void compiler_popFBlock(AlifCompiler* _c,
-	FBlockType_ _t, JumpTargetLabel _blockLabel) { // 1257
-	CompilerUnit* u = _c->u_;
-	u->nfBlocks--;
-}
-
-static FBlockInfo* compiler_topFBlock(AlifCompiler* _c) { // 1267
-	if (_c->u_->nfBlocks == 0) {
-		return nullptr;
-	}
-	return &_c->u_->fBlock[_c->u_->nfBlocks - 1];
-}
 
 static AlifIntT codegen_callExitWithNones(AlifCompiler* _c, Location _loc) { // 1276
 	ADDOP_LOAD_CONST(_c, _loc, ALIF_NONE);
@@ -1254,119 +786,11 @@ static Location start_location(ASDLStmtSeq* stmts) { // 1587
 }
 
 
-
-static AlifIntT compiler_codegen(AlifCompiler* _c, ModuleTy _mod) { // 1602
-	switch (_mod->type) {
-	case ModK_::ModuleK: {
-		ASDLStmtSeq* stmts = _mod->V.module.body;
-		RETURN_IF_ERROR(codegen_body(_c, start_location(stmts), stmts));
-		break;
-	}
-	case ModK_::InteractiveK: {
-		_c->interactive = 1;
-		ASDLStmtSeq* stmts = _mod->V.interactive.body;
-		RETURN_IF_ERROR(codegen_body(_c, start_location(stmts), stmts));
-		break;
-	}
-	case ModK_::ExpressionK: {
-		VISIT(_c, Expr, _mod->V.expression.body);
-		break;
-	}
-	default: {
-		//alifErr_format(_alifExcSystemError_,
-		//	"module kind %d should not be possible",
-		//	_mod->type);
-		return ERROR;
-	}
-	}
-	return SUCCESS;
-}
-
-
 static AlifIntT codegenEnter_anonymousScope(AlifCompiler* _c, ModuleTy _mod) { // 1631
 	RETURN_IF_ERROR(compiler_enterScope(_c, &ALIF_STR(AnonModule),
 		ScopeType_::Compiler_Scope_Module, _mod, 1, nullptr, nullptr));
 
 	return SUCCESS;
-}
-
-
-static AlifCodeObject* compiler_mod(AlifCompiler* _c, ModuleTy _mod) { // 1641
-	AlifCodeObject* co = nullptr;
-	AlifIntT addNone = _mod->type != ModK_::ExpressionK;
-	if (codegenEnter_anonymousScope(_c, _mod) < 0) {
-		return nullptr;
-	}
-	if (compiler_codegen(_c, _mod) < 0) {
-		goto finally;
-	}
-	co = optimize_andAssemble(_c, addNone);
-finally:
-	compiler_exitScope(_c);
-	return co;
-}
-
-static AlifIntT compiler_getRefType(AlifCompiler* _c, AlifObject* _name) { // 1657
-	if (_c->u_->scopeType == ScopeType_::Compiler_Scope_Class and
-		(alifUStr_equalToASCIIString(_name, "__class__") or
-			alifUStr_equalToASCIIString(_name, "__classDict__"))) {
-		return CELL;
-	}
-	SymTableEntry* ste = SYMTABLE_ENTRY(_c);
-	AlifIntT scope = alifST_getScope(ste, _name);
-	if (scope == 0) {
-		//alifErr_format(_alifExcSystemError_,
-		//	"alifST_getScope(name=%R) failed: "
-		//	"unknown scope in unit %S (%R); "
-		//	"symbols: %R; locals: %R; "
-		//	"globals: %R",
-		//	_name, _c->u_->metadata.name, ste->id,
-		//	ste->symbols, _c->u_->metadata.varnames,
-		//	_c->u_->metadata.names);
-		return ERROR;
-	}
-	return scope;
-}
-
-static AlifIntT dict_lookupArg(AlifObject* _dict, AlifObject* _name) { // 1682
-	AlifObject* v = alifDict_getItemWithError(_dict, _name);
-	if (v == nullptr) {
-		return ERROR;
-	}
-	return alifLong_asLong(v);
-}
-
-
-static AlifIntT compiler_lookupCellVar(AlifCompiler* _c, AlifObject* _name) { // 1719
-	return dict_lookupArg(_c->u_->metadata.cellvars, _name);
-}
-
-static AlifIntT compiler_lookupArg(AlifCompiler* _c,
-	AlifCodeObject* _co, AlifObject* _name) { // 1692
-	AlifIntT reftype = compiler_getRefType(_c, _name);
-	if (reftype == -1) {
-		return ERROR;
-	}
-	AlifIntT arg{};
-	if (reftype == CELL) {
-		arg = dict_lookupArg(_c->u_->metadata.cellvars, _name);
-	}
-	else {
-		arg = dict_lookupArg(_c->u_->metadata.freevars, _name);
-	}
-	if (arg == -1 /*and !alifErr_occurred()*/) {
-		//AlifObject* freevars = _alifCode_getFreeVars(_co);
-		//if (freevars == nullptr) {
-		//	alifErr_clear();
-		//}
-		//alifErr_format(_alifExcSystemError_,
-		//	"compiler_lookup_arg(name=%R) with reftype=%d failed in %S; "
-		//	"freevars of code %S: %R",
-		//	_name, reftype, _c->u_->metadata.name, _co->name, freevars);
-		//ALIF_DECREF(freevars);
-		return ERROR;
-	}
-	return arg;
 }
 
 
@@ -1685,11 +1109,6 @@ static AlifIntT codegen_setTypeParamsInClass(AlifCompiler* _c, Location _loc) { 
 	return SUCCESS;
 }
 
-
-static AlifObject* compiler_staticAttributesTuple(AlifCompiler* _c) { // 2379
-	return alifSequence_tuple(_c->u_->staticAttributes);
-}
-
 static AlifIntT codegen_classBody(AlifCompiler* _c, StmtTy _s, AlifIntT _firstLineNo) { // 2346
 
 	/* 1. compile the class body into a code object */
@@ -1704,7 +1123,7 @@ static AlifIntT codegen_classBody(AlifCompiler* _c, StmtTy _s, AlifIntT _firstLi
 	RETURN_IF_ERROR_IN_SCOPE(_c, codegen_nameOp(_c, loc, &ALIF_ID(__module__), ExprContext_::Store));
 	ADDOP_LOAD_CONST(_c, loc, QUALNAME(_c));
 	RETURN_IF_ERROR_IN_SCOPE(_c, codegen_nameOp(_c, loc, &ALIF_ID(__qualname__), ExprContext_::Store));
-	ADDOP_LOAD_CONST_NEW(_c, loc, alifLong_fromLong(_c->u_->metadata.firstLineno));
+	ADDOP_LOAD_CONST_NEW(_c, loc, alifLong_fromLong(METADATA(_c)->firstLineno));
 	RETURN_IF_ERROR_IN_SCOPE(_c, codegen_nameOp(_c, loc, &ALIF_ID(__firstLineno__), ExprContext_::Store));
 	ASDLTypeParamSeq* typeParams = _s->V.classDef.typeParams;
 	if (ASDL_SEQ_LEN(typeParams) > 0) {
@@ -2519,52 +1938,8 @@ static AlifIntT codegen_loadClassDictFreeVar(AlifCompiler* _c, Location _loc) { 
 
 enum CompilerOpType { OP_FAST, OP_GLOBAL, OP_DEREF, OP_NAME }; // 4031
 
-static AlifIntT compiler_resolveNameOp(AlifCompiler* _c, AlifObject* _mangled,
-	AlifIntT _scope, CompilerOpType* _optype, AlifSizeT* _arg) { // 4033
-	AlifObject* dict = _c->u_->metadata.names;
-	*_optype = CompilerOpType::OP_NAME;
-
-	switch (_scope) {
-	case FREE:
-		dict = _c->u_->metadata.freevars;
-		*_optype = CompilerOpType::OP_DEREF;
-		break;
-	case CELL:
-		dict = _c->u_->metadata.cellvars;
-		*_optype = CompilerOpType::OP_DEREF;
-		break;
-	case LOCAL:
-		if (alifST_isFunctionLike(SYMTABLE_ENTRY(_c))) {
-			*_optype = CompilerOpType::OP_FAST;
-		}
-		else {
-			AlifObject* item{};
-			RETURN_IF_ERROR(alifDict_getItemRef(_c->u_->metadata.fasthidden, _mangled,
-				&item));
-			if (item == ALIF_TRUE) {
-				*_optype = CompilerOpType::OP_FAST;
-			}
-			ALIF_XDECREF(item);
-		}
-		break;
-	case GLOBAL_IMPLICIT:
-		if (alifST_isFunctionLike(SYMTABLE_ENTRY(_c))) {
-			*_optype = CompilerOpType::OP_GLOBAL;
-		}
-		break;
-	case GLOBAL_EXPLICIT:
-		*_optype = CompilerOpType::OP_GLOBAL;
-		break;
-	default:
-		/* scope can be 0 */
-		break;
-	}
-	if (*_optype != CompilerOpType::OP_FAST) {
-		*_arg = dict_addO(dict, _mangled);
-		RETURN_IF_ERROR(*_arg);
-	}
-	return SUCCESS;
-}
+static AlifIntT compiler_resolveNameOp(AlifCompiler*, AlifObject*,
+	AlifIntT, CompilerOpType*, AlifSizeT*); // 4033
 
 
 static AlifIntT codegen_nameOp(AlifCompiler* c, Location loc,
@@ -3151,8 +2526,8 @@ static AlifIntT canOptimize_superCall(AlifCompiler* _c, ExprTy _attr) { // 4617
 	// we need the following for zero-arg super():
 
 	// enclosing function should have at least one argument
-	if (_c->u_->metadata.argCount == 0 and
-		_c->u_->metadata.posOnlyArgCount == 0) {
+	if (METADATA(_c)->argCount == 0 and
+		METADATA(_c)->posOnlyArgCount == 0) {
 		return 0;
 	}
 	// __class__ cell should be available
@@ -3182,7 +2557,7 @@ static AlifIntT loadArgs_forSuper(AlifCompiler* _c, ExprTy _e) { // 4672
 	// load self (first argument)
 	AlifSizeT i = 0;
 	AlifObject* key{}, * value{};
-	if (!alifDict_next(_c->u_->metadata.varnames, &i, &key, &value)) {
+	if (!alifDict_next(METADATA(_c)->varnames, &i, &key, &value)) {
 		return ERROR;
 	}
 	RETURN_IF_ERROR(codegen_nameOp(_c, loc, key, ExprContext_::Load));
@@ -3736,74 +3111,11 @@ public:
 	JumpTargetLabel cleanup{};
 };
 
-static AlifIntT compiler_tweakInlinedComprehensionScopes(AlifCompiler* c, Location loc,
-	SymTableEntry* entry, InlinedComprehensionState* state) { // 5337
-	AlifIntT in_class_block = (SYMTABLE_ENTRY(c)->type == BlockType_::Class_Block)
-		and !c->u_->inInlinedComp;
-	c->u_->inInlinedComp++;
-
-	AlifObject* k{}, * v{};
-	AlifSizeT pos = 0;
-	while (alifDict_next(entry->symbols, &pos, &k, &v)) {
-		long symbol = alifLong_asLong(v);
-		RETURN_IF_ERROR(symbol);
-		long scope = SYMBOL_TO_SCOPE(symbol);
-
-		long outsymbol = alifST_getSymbol(SYMTABLE_ENTRY(c), k);
-		RETURN_IF_ERROR(outsymbol);
-		long outsc = SYMBOL_TO_SCOPE(outsymbol);
-
-		if ((scope != outsc && scope != FREE && !(scope == CELL && outsc == FREE))
-			|| in_class_block) {
-			if (state->tempSymbols == nullptr) {
-				state->tempSymbols = alifDict_new();
-				if (state->tempSymbols == nullptr) {
-					return ERROR;
-				}
-			}
-
-			if (alifDict_setItem(SYMTABLE_ENTRY(c)->symbols, k, v) < 0) {
-				return ERROR;
-			}
-			AlifObject* outv = alifLong_fromLong(outsymbol);
-			if (outv == nullptr) {
-				return ERROR;
-			}
-			AlifIntT res = alifDict_setItem(state->tempSymbols, k, outv);
-			ALIF_DECREF(outv);
-			RETURN_IF_ERROR(res);
-		}
-		if ((symbol & DEF_LOCAL and !(symbol & DEF_NONLOCAL)) or in_class_block) {
-			if (!alifST_isFunctionLike(SYMTABLE_ENTRY(c))) {
-				AlifObject* orig{};
-				if (alifDict_getItemRef(c->u_->metadata.fasthidden, k, &orig) < 0) {
-					return ERROR;
-				}
-				if (orig != ALIF_TRUE) {
-					if (alifDict_setItem(c->u_->metadata.fasthidden, k, ALIF_TRUE) < 0) {
-						return ERROR;
-					}
-					if (state->fastHidden == nullptr) {
-						state->fastHidden = alifSet_new(nullptr);
-						if (state->fastHidden == nullptr) {
-							return ERROR;
-						}
-					}
-					if (alifSet_add(state->fastHidden, k) < 0) {
-						return ERROR;
-					}
-				}
-			}
-		}
-	}
-	return SUCCESS;
-}
-
 
 static AlifIntT codegen_pushInlinedComprehensionLocals(AlifCompiler* c, Location loc,
 	SymTableEntry* comp, InlinedComprehensionState* state) { // 5417
 	AlifIntT in_class_block = (SYMTABLE_ENTRY(c)->type == BlockType_::Class_Block)
-		and !c->u_->inInlinedComp;
+		and !compiler_isInInlinedComp(c);
 	SymTableEntry* outer = SYMTABLE_ENTRY(c);
 	AlifObject* k{}, * v{};
 	AlifSizeT pos = 0;
@@ -3848,6 +3160,8 @@ static AlifIntT codegen_pushInlinedComprehensionLocals(AlifCompiler* c, Location
 	return SUCCESS;
 }
 
+static AlifIntT compiler_tweakInlinedComprehensionScopes(AlifCompiler*, Location,
+	SymTableEntry*, InlinedComprehensionState*); // 4696
 
 static AlifIntT pushInlined_comprehensionState(AlifCompiler* c, Location loc,
 	SymTableEntry* comp, InlinedComprehensionState* state) { // 5484
@@ -3896,34 +3210,8 @@ static AlifIntT codegen_popInlinedComprehensionLocals(AlifCompiler* c, Location 
 	return SUCCESS;
 }
 
-static AlifIntT compiler_revertInlinedComprehensionScopes(AlifCompiler* c, Location loc,
-	InlinedComprehensionState* state) { // 5543
-	if (state->tempSymbols) {
-		AlifObject* k{}, * v{};
-		AlifSizeT pos = 0;
-		while (alifDict_next(state->tempSymbols, &pos, &k, &v)) {
-			if (alifDict_setItem(SYMTABLE_ENTRY(c)->symbols, k, v)) {
-				return ERROR;
-			}
-		}
-		ALIF_CLEAR(state->tempSymbols);
-	}
-	if (state->fastHidden) {
-		while (alifSet_size(state->fastHidden) > 0) {
-			AlifObject* k = alifSet_pop(state->fastHidden);
-			if (k == nullptr) {
-				return ERROR;
-			}
-			if (alifDict_setItem(c->u_->metadata.fasthidden, k, ALIF_FALSE)) {
-				ALIF_DECREF(k);
-				return ERROR;
-			}
-			ALIF_DECREF(k);
-		}
-		ALIF_CLEAR(state->fastHidden);
-	}
-	return SUCCESS;
-}
+static AlifIntT compiler_revertInlinedComprehensionScopes(AlifCompiler*, Location,
+	InlinedComprehensionState*); // 5543
 
 static AlifIntT popInlined_comprehensionState(AlifCompiler* c,
 	Location loc, InlinedComprehensionState* state) { // 5576
@@ -4146,7 +3434,7 @@ static AlifIntT codegen_visitExpr(AlifCompiler* _c, ExprTy _e) { // 5997
 	//	if (!alifST_isFunctionLike(SYMTABLE_ENTRY(_c))) {
 	//		return compiler_error(_c, loc, "'yield from' outside function");
 	//	}
-	//	if (_c->u_->scopeType == COMPILER_SCOPE_ASYNC_FUNCTION) {
+	//	if (SCOPE_TYPE(_c) == COMPILER_SCOPE_ASYNC_FUNCTION) {
 	//		return compiler_error(_c, loc, "'yield from' inside async function");
 	//	}
 	//	VISIT(_c, Expr, _e->V.yieldFrom.val);
@@ -4367,6 +3655,752 @@ static AlifIntT codegen_slice(AlifCompiler* _c, ExprTy _s) { // 6465
 	return n;
 }
 
+static AlifIntT codegen_addReturnAtEnd(AlifCompiler* _c, AlifIntT _addNone) { // 6429
+	/* Make sure every instruction stream that falls off the end returns None.
+	 * This also ensures that no jump target offsets are out of bounds.
+	 */
+	if (_addNone) {
+		ADDOP_LOAD_CONST(_c, _noLocation_, ALIF_NONE);
+	}
+	ADDOP(_c, _noLocation_, RETURN_VALUE);
+	return SUCCESS;
+}
+
+
+/*** end of CODEGEN, start of compiler implementation ***/
+
+
+
+static AlifIntT compiler_setup(AlifCompiler* _c, ModuleTy _mod, AlifObject* _filename,
+	AlifCompilerFlags* _flags, AlifIntT _optimize, AlifASTMem* _astMem) { // 6445
+	AlifCompilerFlags localFlags = ALIFCOMPILERFLAGS_INIT;
+
+	_c->constCache = alifDict_new();
+	if (!_c->constCache) {
+		return ERROR;
+	}
+
+	_c->stack = alifList_new(0);
+	if (!_c->stack) {
+		return ERROR;
+	}
+
+	_c->filename = ALIF_NEWREF(_filename);
+	_c->astMem = _astMem;
+	if (!alifFuture_fromAST(_mod, _filename, &_c->future)) {
+		return ERROR;
+	}
+	if (!_flags) {
+		_flags = &localFlags;
+	}
+	AlifIntT merged = _c->future.features | _flags->flags;
+	_c->future.features = merged;
+	_flags->flags = merged;
+	_c->flags = *_flags;
+	_c->optimize = (_optimize == -1) ? alif_getConfig()->optimizationLevel : _optimize;
+	_c->saveNestedSeqs = false;
+
+	if (!alifAST_optimize(_mod, _astMem, _c->optimize, merged)) {
+		return ERROR;
+	}
+	_c->st = alifSymtable_build(_mod, _filename, &_c->future);
+	if (_c->st == nullptr) {
+		if (!alifErr_occurred()) {
+			//alifErr_setString(_alifExcSystemError_, "no symtable");
+		}
+		return ERROR;
+	}
+	return SUCCESS;
+}
+
+static AlifCompiler* new_compiler(ModuleTy _mod, AlifObject* _filename,
+	AlifCompilerFlags* _pflags, AlifIntT _optimize, AlifASTMem* _astMem) { // 6489
+	AlifCompiler* compiler = (AlifCompiler*)alifMem_dataAlloc(sizeof(AlifCompiler));
+	if (compiler == nullptr) {
+		return nullptr;
+	}
+	if (compiler_setup(compiler, _mod, _filename, _pflags, _optimize, _astMem) < 0) {
+		compiler_free(compiler);
+		return nullptr;
+	}
+	return compiler;
+}
+
+
+AlifCodeObject* alifAST_compile(ModuleTy _mod, AlifObject* _filename,
+	AlifCompilerFlags* _pFlags, AlifIntT _optimize, AlifASTMem* _astMem) { // 6505
+
+	AlifCompiler* compiler = new_compiler(_mod, _filename, _pFlags, _optimize, _astMem);
+	if (compiler == nullptr) {
+		return nullptr;
+	}
+
+	AlifCodeObject* co = compiler_mod(compiler, _mod);
+	compiler_free(compiler);
+	return co;
+}
+
+
+
+static void compiler_free(AlifCompiler* _c) { // 6540
+	if (_c->st) alifSymtable_free(_c->st);
+	ALIF_XDECREF(_c->filename);
+	ALIF_XDECREF(_c->constCache);
+	ALIF_XDECREF(_c->stack);
+	alifMem_dataFree(_c);
+}
+
+static void compiler_unitFree(CompilerUnit* _u) { // 6551
+	ALIF_CLEAR(_u->instrSequence);
+	ALIF_CLEAR(_u->ste);
+	ALIF_CLEAR(_u->metadata.name);
+	ALIF_CLEAR(_u->metadata.qualname);
+	ALIF_CLEAR(_u->metadata.consts);
+	ALIF_CLEAR(_u->metadata.names);
+	ALIF_CLEAR(_u->metadata.varnames);
+	ALIF_CLEAR(_u->metadata.freevars);
+	ALIF_CLEAR(_u->metadata.cellvars);
+	ALIF_CLEAR(_u->metadata.fasthidden);
+	ALIF_CLEAR(_u->private_);
+	ALIF_CLEAR(_u->staticAttributes);
+	ALIF_CLEAR(_u->deferredAnnotations);
+	alifMem_dataFree(_u);
+}
+
+#define CAPSULE_NAME "AlifCompile.cpp AlifCompiler unit" // 6570
+
+static AlifIntT compiler_maybeAddStaticAttributeToClass(AlifCompiler* _c, ExprTy _e) { // 6572
+	ExprTy attr_value = _e->V.attribute.val;
+	if (attr_value->type != ExprK_::NameK or
+		_e->V.attribute.ctx != ExprContext_::Store or
+		!alifUStr_equalToASCIIString(attr_value->V.name.name, "self"))
+	{
+		return SUCCESS;
+	}
+	AlifSizeT stackSize = ALIFLIST_GET_SIZE(_c->stack);
+	for (AlifSizeT i = stackSize - 1; i >= 0; i--) {
+		AlifObject* capsule = ALIFLIST_GET_ITEM(_c->stack, i);
+		CompilerUnit* u = (CompilerUnit*)alifCapsule_getPointer(
+			capsule, CAPSULE_NAME);
+		if (u->scopeType == ScopeType_::Compiler_Scope_Class) {
+			RETURN_IF_ERROR(alifSet_add(u->staticAttributes, _e->V.attribute.attr));
+			break;
+		}
+	}
+	return SUCCESS;
+}
+
+static AlifIntT compiler_setQualname(AlifCompiler* _c) { // 6598
+	AlifSizeT stackSize{};
+	CompilerUnit* u = _c->u_;
+	AlifObject* name{}, * base{};
+
+	base = nullptr;
+	stackSize = ALIFLIST_GET_SIZE(_c->stack);
+	if (stackSize > 1) {
+		AlifIntT scope, forceGlobal = 0;
+		CompilerUnit* parent{};
+		AlifObject* mangled{}, * capsule{};
+
+		capsule = ALIFLIST_GET_ITEM(_c->stack, stackSize - 1);
+		parent = (CompilerUnit*)alifCapsule_getPointer(capsule, CAPSULE_NAME);
+		if (parent->scopeType == ScopeType_::Compiler_Scope_Annotations) {
+			if (stackSize == 2) {
+				u->metadata.qualname = ALIF_NEWREF(u->metadata.name);
+				return SUCCESS;
+			}
+			capsule = ALIFLIST_GET_ITEM(_c->stack, stackSize - 2);
+			parent = (CompilerUnit*)alifCapsule_getPointer(capsule, CAPSULE_NAME);
+		}
+
+		if (u->scopeType == ScopeType_::Compiler_Scope_Function
+			or u->scopeType == ScopeType_::Compiler_Scope_Async_Function
+			or u->scopeType == ScopeType_::Compiler_Scope_Class) {
+			mangled = alif_mangle(parent->private_, u->metadata.name);
+			if (!mangled) {
+				return ERROR;
+			}
+
+			scope = alifST_getScope(parent->ste, mangled);
+			ALIF_DECREF(mangled);
+			RETURN_IF_ERROR(scope);
+			if (scope == GLOBAL_EXPLICIT) forceGlobal = 1;
+		}
+
+		if (!forceGlobal) {
+			if (parent->scopeType == ScopeType_::Compiler_Scope_Function
+				or parent->scopeType == ScopeType_::Compiler_Scope_Async_Function
+				or parent->scopeType == ScopeType_::Compiler_Scope_Lambda)
+			{
+				base = alifUStr_concat(parent->metadata.qualname,
+					&ALIF_STR(DotLocals));
+				if (base == nullptr) {
+					return ERROR;
+				}
+			}
+			else {
+				base = ALIF_NEWREF(parent->metadata.qualname);
+			}
+		}
+	}
+
+	if (base != nullptr) {
+		name = alifUStr_concat(base, ALIF_LATIN1_CHR('.'));
+		ALIF_DECREF(base);
+		if (name == nullptr) {
+			return ERROR;
+		}
+		alifUStr_append(&name, u->metadata.name);
+		if (name == nullptr) {
+			return ERROR;
+		}
+	}
+	else {
+		name = ALIF_NEWREF(u->metadata.name);
+	}
+	u->metadata.qualname = name;
+
+	return SUCCESS;
+}
+
+
+static AlifSizeT compiler_addConst(AlifCompiler* _c, AlifObject* _o) { // 6684
+	AlifObject* key = merge_constsRecursive(_c->constCache, _o);
+	if (key == nullptr) {
+		return ERROR;
+	}
+
+	AlifSizeT arg = dict_addO(_c->u_->metadata.consts, key);
+	ALIF_DECREF(key);
+	return arg;
+}
+
+static AlifObject* list2dict(AlifObject* _list) { // 6697
+	AlifSizeT i{}, n{};
+	AlifObject* v{}, * k{};
+	AlifObject* dict = alifDict_new();
+	if (!dict) return nullptr;
+
+	n = alifList_size(_list);
+	for (i = 0; i < n; i++) {
+		v = alifLong_fromSizeT(i);
+		if (!v) {
+			ALIF_DECREF(dict);
+			return nullptr;
+		}
+		k = ALIFLIST_GET_ITEM(_list, i);
+		if (alifDict_setItem(dict, k, v) < 0) {
+			ALIF_DECREF(v);
+			ALIF_DECREF(dict);
+			return nullptr;
+		}
+		ALIF_DECREF(v);
+	}
+	return dict;
+}
+
+static AlifObject* dict_byType(AlifObject* _src, AlifIntT _scopeType,
+	AlifIntT _flag, AlifSizeT _offset) { // 6731
+	AlifSizeT i = _offset, numKeys, keyI;
+	AlifObject* k, * v, * dest = alifDict_new();
+	AlifObject* sortedKeys;
+
+	if (dest == nullptr) return nullptr;
+
+	sortedKeys = alifDict_keys(_src);
+	if (sortedKeys == nullptr) {
+		ALIF_DECREF(dest);
+		return nullptr;
+	}
+	if (alifList_sort(sortedKeys) != 0) {
+		ALIF_DECREF(sortedKeys);
+		ALIF_DECREF(dest);
+		return nullptr;
+	}
+	numKeys = ALIFLIST_GET_SIZE(sortedKeys);
+
+	for (keyI = 0; keyI < numKeys; keyI++) {
+		k = ALIFLIST_GET_ITEM(sortedKeys, keyI);
+		v = alifDict_getItemWithError(_src, k);
+		if (!v) {
+			//if (!alifErr_occurred()) {
+			//	alifErr_SetObject(_alifExcKeyError_, k);
+			//}
+			ALIF_DECREF(sortedKeys);
+			ALIF_DECREF(dest);
+			return nullptr;
+		}
+		long vi = alifLong_asLong(v);
+		if (vi == -1 /*and alifErr_occurred()*/) {
+			ALIF_DECREF(sortedKeys);
+			ALIF_DECREF(dest);
+			return nullptr;
+		}
+		if (SYMBOL_TO_SCOPE(vi) == _scopeType or vi & _flag) {
+			AlifObject* item = alifLong_fromSizeT(i);
+			if (item == nullptr) {
+				ALIF_DECREF(sortedKeys);
+				ALIF_DECREF(dest);
+				return nullptr;
+			}
+			i++;
+			if (alifDict_setItem(dest, k, item) < 0) {
+				ALIF_DECREF(sortedKeys);
+				ALIF_DECREF(item);
+				ALIF_DECREF(dest);
+				return nullptr;
+			}
+			ALIF_DECREF(item);
+		}
+	}
+	ALIF_DECREF(sortedKeys);
+	return dest;
+}
+
+static AlifIntT compiler_enterScope(AlifCompiler* _c, Identifier _name,
+	AlifIntT _scopeType, void* _key, AlifIntT _lineno,
+	AlifObject* _private, AlifCompileCodeUnitMetadata* _umd) { // 6797
+	Location loc = LOCATION(_lineno, _lineno, 0, 0);
+
+	CompilerUnit* u{};
+
+	u = (CompilerUnit*)alifMem_dataAlloc(sizeof(CompilerUnit));
+	if (!u) {
+		//alifErr_noMemory();
+		return ERROR;
+	}
+	u->scopeType = _scopeType;
+	if (_umd != nullptr) {
+		u->metadata = *_umd;
+	}
+	else {
+		u->metadata.argCount = 0;
+		u->metadata.posOnlyArgCount = 0;
+		u->metadata.kwOnlyArgCount = 0;
+	}
+	u->ste = _alifSymtable_lookup(_c->st, _key);
+	if (!u->ste) {
+		compiler_unitFree(u);
+		return ERROR;
+	}
+	u->metadata.name = ALIF_NEWREF(_name);
+	u->metadata.varnames = list2dict(u->ste->varNames);
+	if (!u->metadata.varnames) {
+		compiler_unitFree(u);
+		return ERROR;
+	}
+	u->metadata.cellvars = dict_byType(u->ste->symbols, CELL, DEF_COMP_CELL, 0);
+	if (!u->metadata.cellvars) {
+		compiler_unitFree(u);
+		return ERROR;
+	}
+	if (u->ste->needsClassClosure) {
+		AlifSizeT res{};
+		res = dict_addO(u->metadata.cellvars, &ALIF_ID(__class__));
+		if (res < 0) {
+			compiler_unitFree(u);
+			return ERROR;
+		}
+	}
+	if (u->ste->needsClassDict) {
+		AlifSizeT res{};
+		res = dict_addO(u->metadata.cellvars, &ALIF_ID(__classDict__));
+		if (res < 0) {
+			compiler_unitFree(u);
+			return ERROR;
+		}
+	}
+
+	u->metadata.freevars = dict_byType(u->ste->symbols, FREE, DEF_FREE_CLASS,
+		ALIFDICT_GET_SIZE(u->metadata.cellvars));
+	if (!u->metadata.freevars) {
+		compiler_unitFree(u);
+		return ERROR;
+	}
+
+	u->metadata.fasthidden = alifDict_new();
+	if (!u->metadata.fasthidden) {
+		compiler_unitFree(u);
+		return ERROR;
+	}
+
+	u->nfBlocks = 0;
+	u->inInlinedComp = 0;
+	u->metadata.firstLineno = _lineno;
+	u->metadata.consts = alifDict_new();
+	if (!u->metadata.consts) {
+		compiler_unitFree(u);
+		return ERROR;
+	}
+	u->metadata.names = alifDict_new();
+	if (!u->metadata.names) {
+		compiler_unitFree(u);
+		return ERROR;
+	}
+
+	u->deferredAnnotations = nullptr;
+	if (_scopeType == ScopeType_::Compiler_Scope_Class) {
+		u->staticAttributes = alifSet_new(0);
+		if (!u->staticAttributes) {
+			compiler_unitFree(u);
+			return ERROR;
+		}
+	}
+	else {
+		u->staticAttributes = nullptr;
+	}
+
+	u->instrSequence = (InstrSequence*)_alifInstructionSequence_new();
+	if (!u->instrSequence) {
+		compiler_unitFree(u);
+		return ERROR;
+	}
+
+	/* Push the old compiler_unit on the stack. */
+	if (_c->u_) {
+		AlifObject* capsule = alifCapsule_new(_c->u_, CAPSULE_NAME, nullptr);
+		if (!capsule or alifList_append(_c->stack, capsule) < 0) {
+			ALIF_XDECREF(capsule);
+			compiler_unitFree(u);
+			return ERROR;
+		}
+		ALIF_DECREF(capsule);
+		if (_private == nullptr) {
+			_private = _c->u_->private_;
+		}
+	}
+
+	u->private_ = ALIF_XNEWREF(_private);
+
+	_c->u_ = u;
+
+	if (u->scopeType == ScopeType_::Compiler_Scope_Module) {
+		loc.lineNo = 0;
+	}
+	else {
+		RETURN_IF_ERROR(compiler_setQualname(_c));
+	}
+	ADDOP_I(_c, loc, RESUME, RESUME_AT_FUNC_START);
+
+	return SUCCESS;
+}
+
+
+static void compiler_exitScope(AlifCompiler* _c) { // 6931
+	//AlifObject* exc = alifErr_getRaisedException();
+
+	InstrSequence* nestedSeq = nullptr;
+	if (_c->saveNestedSeqs) {
+		nestedSeq = _c->u_->instrSequence;
+		ALIF_INCREF(nestedSeq);
+	}
+	compiler_unitFree(_c->u_);
+	AlifSizeT n = ALIFLIST_GET_SIZE(_c->stack) - 1;
+	if (n >= 0) {
+		AlifObject* capsule = ALIFLIST_GET_ITEM(_c->stack, n);
+		_c->u_ = (CompilerUnit*)alifCapsule_getPointer(capsule, CAPSULE_NAME);
+		if (alifSequence_delItem(_c->stack, n) < 0) {
+			//alifErr_formatUnraisable("Exception ignored on removing "
+			//	"the last compiler stack item");
+		}
+		if (nestedSeq != nullptr) {
+			if (_alifInstructionSequence_addNested(_c->u_->instrSequence, nestedSeq) < 0) {
+				//alifErr_formatUnraisable("Exception ignored on appending "
+				//	"nested instruction sequence");
+			}
+		}
+	}
+	else {
+		_c->u_ = nullptr;
+	}
+	ALIF_XDECREF(nestedSeq);
+
+	//alifErr_setRaisedException(exc);
+}
+
+
+/*
+ * Frame block handling functions
+ */
+
+ static AlifIntT compiler_pushFBlock(AlifCompiler* _c, Location _loc,
+ 	FBlockType_ _t, JumpTargetLabel _blockLabel,
+ 	JumpTargetLabel _exit, void* _datum) { // 6974
+ 	FBlockInfo* f{};
+ 	if (_c->u_->nfBlocks >= MAXBLOCKS) {
+ 		//return compiler_error(_c, _loc, "too many statically nested blocks");
+ 	}
+ 	f = &_c->u_->fBlock[_c->u_->nfBlocks++];
+ 	f->type = _t;
+ 	f->block = _blockLabel;
+ 	f->loc = _loc;
+ 	f->exit = _exit;
+ 	f->datum = _datum;
+ 	return SUCCESS;
+ }
+
+static void compiler_popFBlock(AlifCompiler* _c,
+	FBlockType_ _t, JumpTargetLabel _blockLabel) { // 6991
+	CompilerUnit* u = _c->u_;
+	u->nfBlocks--;
+}
+
+static FBlockInfo* compiler_topFBlock(AlifCompiler* _c) { // 7001
+	if (_c->u_->nfBlocks == 0) {
+		return nullptr;
+	}
+	return &_c->u_->fBlock[_c->u_->nfBlocks - 1];
+}
+
+
+
+static AlifIntT compiler_codegen(AlifCompiler* _c, ModuleTy _mod) { // 7017
+	switch (_mod->type) {
+	case ModK_::ModuleK: {
+		ASDLStmtSeq* stmts = _mod->V.module.body;
+		RETURN_IF_ERROR(codegen_body(_c, start_location(stmts), stmts));
+		break;
+	}
+	case ModK_::InteractiveK: {
+		_c->interactive = 1;
+		ASDLStmtSeq* stmts = _mod->V.interactive.body;
+		RETURN_IF_ERROR(codegen_body(_c, start_location(stmts), stmts));
+		break;
+	}
+	case ModK_::ExpressionK: {
+		VISIT(_c, Expr, _mod->V.expression.body);
+		break;
+	}
+	default: {
+		//alifErr_format(_alifExcSystemError_,
+		//	"module kind %d should not be possible",
+		//	_mod->type);
+		return ERROR;
+	}
+	}
+	return SUCCESS;
+}
+
+static AlifCodeObject* compiler_mod(AlifCompiler* _c, ModuleTy _mod) { // 7046
+	AlifCodeObject* co = nullptr;
+	AlifIntT addNone = _mod->type != ModK_::ExpressionK;
+	if (codegenEnter_anonymousScope(_c, _mod) < 0) {
+		return nullptr;
+	}
+	if (compiler_codegen(_c, _mod) < 0) {
+		goto finally;
+	}
+	co = optimize_andAssemble(_c, addNone);
+	finally:
+	compiler_exitScope(_c);
+	return co;
+}
+
+static AlifIntT compiler_getRefType(AlifCompiler* _c, AlifObject* _name) { // 7062
+	if (_c->u_->scopeType == ScopeType_::Compiler_Scope_Class and
+		(alifUStr_equalToASCIIString(_name, "__class__") or
+			alifUStr_equalToASCIIString(_name, "__classDict__"))) {
+		return CELL;
+	}
+	SymTableEntry* ste = SYMTABLE_ENTRY(_c);
+	AlifIntT scope = alifST_getScope(ste, _name);
+	if (scope == 0) {
+		//alifErr_format(_alifExcSystemError_,
+		//	"alifST_getScope(name=%R) failed: "
+		//	"unknown scope in unit %S (%R); "
+		//	"symbols: %R; locals: %R; "
+		//	"globals: %R",
+		//	_name, _c->u_->metadata.name, ste->id,
+		//	ste->symbols, _c->u_->metadata.varnames,
+		//	_c->u_->metadata.names);
+		return ERROR;
+	}
+	return scope;
+}
+
+static AlifIntT dict_lookupArg(AlifObject* _dict, AlifObject* _name) { // 7088
+	AlifObject* v = alifDict_getItemWithError(_dict, _name);
+	if (v == nullptr) {
+		return ERROR;
+	}
+	return alifLong_asLong(v);
+}
+
+static AlifIntT compiler_lookupCellVar(AlifCompiler* _c, AlifObject* _name) { // 7098
+	return dict_lookupArg(_c->u_->metadata.cellvars, _name);
+}
+
+static AlifIntT compiler_lookupArg(AlifCompiler* _c,
+	AlifCodeObject* _co, AlifObject* _name) { // 7104
+	AlifIntT reftype = compiler_getRefType(_c, _name);
+	if (reftype == -1) {
+		return ERROR;
+	}
+	AlifIntT arg{};
+	if (reftype == CELL) {
+		arg = dict_lookupArg(_c->u_->metadata.cellvars, _name);
+	}
+	else {
+		arg = dict_lookupArg(_c->u_->metadata.freevars, _name);
+	}
+	if (arg == -1 /*and !alifErr_occurred()*/) {
+		//AlifObject* freevars = _alifCode_getFreeVars(_co);
+		//if (freevars == nullptr) {
+		//	alifErr_clear();
+		//}
+		//alifErr_format(_alifExcSystemError_,
+		//	"compiler_lookupArg(name=%R) with reftype=%d failed in %S; "
+		//	"freevars of code %S: %R",
+		//	_name, reftype, _c->u_->metadata.name, _co->name, freevars);
+		//ALIF_DECREF(freevars);
+		return ERROR;
+	}
+	return arg;
+}
+
+static AlifObject* compiler_staticAttributesTuple(AlifCompiler* _c) { // 7144
+	return alifSequence_tuple(_c->u_->staticAttributes);
+}
+
+static AlifIntT compiler_resolveNameOp(AlifCompiler* _c, AlifObject* _mangled,
+	AlifIntT _scope, CompilerOpType* _optype, AlifSizeT* _arg) { // 7150
+	AlifObject* dict = _c->u_->metadata.names;
+	*_optype = CompilerOpType::OP_NAME;
+
+	switch (_scope) {
+	case FREE:
+		dict = _c->u_->metadata.freevars;
+		*_optype = CompilerOpType::OP_DEREF;
+		break;
+	case CELL:
+		dict = _c->u_->metadata.cellvars;
+		*_optype = CompilerOpType::OP_DEREF;
+		break;
+	case LOCAL:
+		if (alifST_isFunctionLike(SYMTABLE_ENTRY(_c))) {
+			*_optype = CompilerOpType::OP_FAST;
+		}
+		else {
+			AlifObject* item{};
+			RETURN_IF_ERROR(alifDict_getItemRef(_c->u_->metadata.fasthidden, _mangled,
+				&item));
+			if (item == ALIF_TRUE) {
+				*_optype = CompilerOpType::OP_FAST;
+			}
+			ALIF_XDECREF(item);
+		}
+		break;
+	case GLOBAL_IMPLICIT:
+		if (alifST_isFunctionLike(SYMTABLE_ENTRY(_c))) {
+			*_optype = CompilerOpType::OP_GLOBAL;
+		}
+		break;
+	case GLOBAL_EXPLICIT:
+		*_optype = CompilerOpType::OP_GLOBAL;
+		break;
+	default:
+		/* scope can be 0 */
+		break;
+	}
+	if (*_optype != CompilerOpType::OP_FAST) {
+		*_arg = dict_addO(dict, _mangled);
+		RETURN_IF_ERROR(*_arg);
+	}
+	return SUCCESS;
+}
+
+static AlifIntT compiler_tweakInlinedComprehensionScopes(AlifCompiler* c, Location loc,
+	SymTableEntry* entry, InlinedComprehensionState* state) { // 7200
+	AlifIntT in_class_block = (SYMTABLE_ENTRY(c)->type == BlockType_::Class_Block)
+		and !c->u_->inInlinedComp;
+	c->u_->inInlinedComp++;
+
+	AlifObject* k{}, * v{};
+	AlifSizeT pos = 0;
+	while (alifDict_next(entry->symbols, &pos, &k, &v)) {
+		long symbol = alifLong_asLong(v);
+		RETURN_IF_ERROR(symbol);
+		long scope = SYMBOL_TO_SCOPE(symbol);
+
+		long outsymbol = alifST_getSymbol(SYMTABLE_ENTRY(c), k);
+		RETURN_IF_ERROR(outsymbol);
+		long outsc = SYMBOL_TO_SCOPE(outsymbol);
+
+		if ((scope != outsc && scope != FREE && !(scope == CELL && outsc == FREE))
+			|| in_class_block) {
+			if (state->tempSymbols == nullptr) {
+				state->tempSymbols = alifDict_new();
+				if (state->tempSymbols == nullptr) {
+					return ERROR;
+				}
+			}
+
+			if (alifDict_setItem(SYMTABLE_ENTRY(c)->symbols, k, v) < 0) {
+				return ERROR;
+			}
+			AlifObject* outv = alifLong_fromLong(outsymbol);
+			if (outv == nullptr) {
+				return ERROR;
+			}
+			AlifIntT res = alifDict_setItem(state->tempSymbols, k, outv);
+			ALIF_DECREF(outv);
+			RETURN_IF_ERROR(res);
+		}
+		if ((symbol & DEF_LOCAL and !(symbol & DEF_NONLOCAL)) or in_class_block) {
+			if (!alifST_isFunctionLike(SYMTABLE_ENTRY(c))) {
+				AlifObject* orig{};
+				if (alifDict_getItemRef(c->u_->metadata.fasthidden, k, &orig) < 0) {
+					return ERROR;
+				}
+				if (orig != ALIF_TRUE) {
+					if (alifDict_setItem(c->u_->metadata.fasthidden, k, ALIF_TRUE) < 0) {
+						return ERROR;
+					}
+					if (state->fastHidden == nullptr) {
+						state->fastHidden = alifSet_new(nullptr);
+						if (state->fastHidden == nullptr) {
+							return ERROR;
+						}
+					}
+					if (alifSet_add(state->fastHidden, k) < 0) {
+						return ERROR;
+					}
+				}
+			}
+		}
+	}
+	return SUCCESS;
+}
+
+static AlifIntT compiler_revertInlinedComprehensionScopes(AlifCompiler* _c, Location _loc,
+	InlinedComprehensionState* _state) { // 7280
+	if (_state->tempSymbols) {
+		AlifObject* k{}, * v{};
+		AlifSizeT pos = 0;
+		while (alifDict_next(_state->tempSymbols, &pos, &k, &v)) {
+			if (alifDict_setItem(SYMTABLE_ENTRY(_c)->symbols, k, v)) {
+				return ERROR;
+			}
+		}
+		ALIF_CLEAR(_state->tempSymbols);
+	}
+	if (_state->fastHidden) {
+		while (alifSet_size(_state->fastHidden) > 0) {
+			AlifObject* k = alifSet_pop(_state->fastHidden);
+			if (k == nullptr) {
+				return ERROR;
+			}
+			if (alifDict_setItem(_c->u_->metadata.fasthidden, k, ALIF_FALSE)) {
+				ALIF_DECREF(k);
+				return ERROR;
+			}
+			ALIF_DECREF(k);
+		}
+		ALIF_CLEAR(_state->fastHidden);
+	}
+	return SUCCESS;
+}
+
 
 static AlifObject* constsDict_keysInorder(AlifObject* _dict) { // 7321
 	AlifObject* consts{}, * k{}, * v{};
@@ -4418,30 +4452,13 @@ static AlifObject* compiler_qualname(AlifCompiler* _c) { // 7455
 }
 
 
-static AlifIntT compute_codeFlags(AlifCompiler* _c) { // 7462
-	SymTableEntry* ste = SYMTABLE_ENTRY(_c);
-	AlifIntT flags = 0;
-	if (alifST_isFunctionLike(ste)) {
-		flags |= CO_NEWLOCALS | CO_OPTIMIZED;
-		if (ste->nested)
-			flags |= CO_NESTED;
-		if (ste->generator and !ste->coroutine)
-			flags |= CO_GENERATOR;
-		if (ste->generator and ste->coroutine)
-			flags |= CO_ASYNC_GENERATOR;
-		if (ste->varArgs)
-			flags |= CO_VARARGS;
-		if (ste->varKeywords)
-			flags |= CO_VARKEYWORDS;
-	}
+static AlifCompileCodeUnitMetadata* compiler_unitMetadata(AlifCompiler* _c) { // 7473
+	return &_c->u_->metadata;
+}
 
-	if (ste->coroutine and !ste->generator) {
-		flags |= CO_COROUTINE;
-	}
-
-	flags |= (_c->flags.flags & ALIFCF_MASK);
-
-	return flags;
+static AlifIntT compiler_isTopLevelAwait(AlifCompiler* _c) { // 7479
+	return _c->flags.flags & ALIFCF_ALLOW_TOP_LEVEL_AWAIT and
+		_c->u_->ste->type == BlockType_::Module_Block;
 }
 
 AlifIntT _alifCompile_constCacheMergeOne(AlifObject* _constCache,
@@ -4462,21 +4479,9 @@ AlifIntT _alifCompile_constCacheMergeOne(AlifObject* _constCache,
 	return SUCCESS;
 }
 
-static AlifIntT addReturn_atEnd(AlifCompiler* _c, AlifIntT _addNone) { // 7511
-	/* Make sure every instruction stream that falls off the end returns None.
-	 * This also ensures that no jump target offsets are out of bounds.
-	 */
-	if (_addNone) {
-		ADDOP_LOAD_CONST(_c, _noLocation_, ALIF_NONE);
-	}
-	ADDOP(_c, _noLocation_, RETURN_VALUE);
-	return SUCCESS;
-}
-
-
 
 static AlifCodeObject* optimizeAndAssemble_codeUnit(CompilerUnit* u, AlifObject* const_cache,
-	AlifIntT _codeFlags, AlifObject* filename) { // 7524
+	AlifIntT _codeFlags, AlifObject* filename) { // 7530
 	CFGBuilder* g = nullptr;
 	InstrSequence optimizedInstrs{};
 	memset(&optimizedInstrs, 0, sizeof(InstrSequence)); //* review //* delete
@@ -4522,7 +4527,33 @@ error:
 }
 
 
-static AlifCodeObject* optimize_andAssemble(AlifCompiler* _c, AlifIntT _addNone) { // 7517
+static AlifIntT compute_codeFlags(AlifCompiler* _c) { // 7577
+	SymTableEntry* ste = SYMTABLE_ENTRY(_c);
+	AlifIntT flags = 0;
+	if (alifST_isFunctionLike(ste)) {
+		flags |= CO_NEWLOCALS | CO_OPTIMIZED;
+		if (ste->nested)
+			flags |= CO_NESTED;
+		if (ste->generator and !ste->coroutine)
+			flags |= CO_GENERATOR;
+		if (ste->generator and ste->coroutine)
+			flags |= CO_ASYNC_GENERATOR;
+		if (ste->varArgs)
+			flags |= CO_VARARGS;
+		if (ste->varKeywords)
+			flags |= CO_VARKEYWORDS;
+	}
+
+	if (ste->coroutine and !ste->generator) {
+		flags |= CO_COROUTINE;
+	}
+
+	flags |= (_c->flags.flags & ALIFCF_MASK);
+
+	return flags;
+}
+
+static AlifCodeObject* optimize_andAssemble(AlifCompiler* _c, AlifIntT _addNone) { // 7608
 	CompilerUnit* u = _c->u_;
 	AlifObject* constCache = _c->constCache;
 	AlifObject* filename = _c->filename;
@@ -4532,7 +4563,7 @@ static AlifCodeObject* optimize_andAssemble(AlifCompiler* _c, AlifIntT _addNone)
 		return nullptr;
 	}
 
-	if (addReturn_atEnd(_c, _addNone) < 0) {
+	if (codegen_addReturnAtEnd(_c, _addNone) < 0) {
 		return nullptr;
 	}
 
