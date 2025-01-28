@@ -13,7 +13,7 @@
 #include "AlifCore_SymTable.h"
 
 #define NEED_OPCODE_METADATA
-#include "AlifCore_opcodeMetaData.h"
+#include "AlifCore_OpcodeMetaData.h"
 #undef NEED_OPCODE_METADATA
 
 
