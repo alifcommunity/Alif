@@ -310,14 +310,21 @@ AlifIntT alifConfig_setString(AlifConfig* _config, wchar_t** _configStr, const w
 	return 1;
 }
 
+
+static inline void* config_getSpecMember(const AlifConfig* _config,
+	const AlifConfigSpec* _spec) { // 1117
+	return (char*)_config + _spec->offset;
+}
+
+
 AlifIntT alifConfig_copy(AlifConfig* _config, const AlifConfig* _config2) { // 1003
 	alifConfig_clear(_config);
 
-	AlifIntT status;
+	AlifIntT status{};
 	const AlifConfigSpec* spec = _alifConfigSpec_;
 	for (; spec->name != nullptr; spec++) {
-		char* member = (char*)_config + spec->offset;
-		char* member2 = (char*)_config2 + spec->offset;
+		void* member = config_getSpecMember(_config, spec);
+		const void* member2 = config_getSpecMember((AlifConfig*)_config2, spec);
 		switch (spec->type) {
 		case Alif_Config_Member_INT:
 		case Alif_Config_Member_UINT:
