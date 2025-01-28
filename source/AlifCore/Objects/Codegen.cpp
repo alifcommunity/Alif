@@ -1,6 +1,6 @@
 #include "alif.h"
 
-#include "opcode.h"
+#include "Opcode.h"
 #include "AlifCore_AST.h"
 #define NEED_OPCODE_TABLES
 #include "AlifCore_OpcodeUtils.h"
