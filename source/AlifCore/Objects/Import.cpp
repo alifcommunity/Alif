@@ -546,7 +546,7 @@ static AlifCodeObject* parse_sourceModule(const char* pathname, FILE* fp) { // 8
 	if (mod) {
 		AlifSizeT len = strlen(pathname);
 		AlifObject* pathObj = alifUStr_fromStringAndSize(pathname, len);
-		co = alifAST_compile(mod, pathObj, &flags, 0, astMem);
+		co = _alifAST_compile(mod, pathObj, &flags, 0, astMem);
 	}
 	alifASTMem_free(astMem);
 	return co;

@@ -48,6 +48,11 @@ public:
 	AlifIntT id{};
 };
 
+#define NO_LABEL (const AlifJumpTargetLabel(-1))
+
+#define SAME_JUMP_TARGET_LABEL(_l1, _l2) ((_l1).id == (_l2).id)
+#define IS_JUMP_TARGET_LABEL(_l) (!SAME_JUMP_TARGET_LABEL(_l, NO_LABEL))
+
 typedef AlifInstructionSequence InstrSequence; //* alif
 typedef AlifSourceLocation Location; //* alif
 

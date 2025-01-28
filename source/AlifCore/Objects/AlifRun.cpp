@@ -249,7 +249,7 @@ static AlifObject* run_mod(ModuleTy _mod, AlifObject* _filename,
 		}
 	}
 
-	AlifCodeObject* co = alifAST_compile(_mod, interactiveFilename, _flags, -1, _astMem);
+	AlifCodeObject* co = _alifAST_compile(_mod, interactiveFilename, _flags, -1, _astMem);
 	if (co == nullptr) {
 		if (_interactiveSrc) {
 			ALIF_DECREF(interactiveFilename);

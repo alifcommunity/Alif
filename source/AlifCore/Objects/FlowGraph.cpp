@@ -83,11 +83,10 @@ public:
 
 typedef AlifCFGBuilder CFGBuilder; // 87
 
-static const JumpTargetLabel _noLable_ = { -1 }; // 89
 
 // 91
 #define SAME_LABEL(_l1, _l2) ((_l1).id == (_l2).id)
-#define IS_LABEL(_l) (!SAME_LABEL((_l), (_noLable_)))
+#define IS_LABEL(_l) (!SAME_LABEL((_l), (NO_LABEL)))
 
 #define LOCATION(_lno, _endLno, _col, _endCol) {_lno, _endLno, _col, _endCol} // 94
 
@@ -123,7 +122,7 @@ static inline AlifIntT is_jump(CFGInstr* _i) { // 105
 
 static AlifIntT basicBlock_nextInstr(BasicBlock* _b) { // 135
 	RETURN_IF_ERROR(
-		_alifCompile_ensureArrayLargeEnough(
+		_alifCompiler_ensureArrayLargeEnough(
 			_b->iused + 1,
 			(void**)&_b->instr,
 			&_b->ialloc,
@@ -147,7 +146,7 @@ static BasicBlock* cfgBuilder_newBlock(CFGBuilder* _g) { // 163
 	}
 	b_->list = _g->blockList;
 	_g->blockList = b_;
-	b_->label = _noLable_;
+	b_->label = NO_LABEL;
 	return b_;
 }
 
@@ -257,7 +256,7 @@ static bool cfgBuilder_currentBlockIsTerminated(CFGBuilder* _g) { // 346
 		}
 		else {
 			_g->curBlock->label = _g->currentLabel;
-			_g->currentLabel = _noLable_;
+			_g->currentLabel = NO_LABEL;
 		}
 	}
 	return false;
@@ -270,7 +269,7 @@ static AlifIntT cfgBuilder_maybeStartNewBlock(CFGBuilder* _g) { // 366
 			return ERROR;
 		}
 		b->label = _g->currentLabel;
-		_g->currentLabel = _noLable_;
+		_g->currentLabel = NO_LABEL;
 		cfgBuilder_useNextBlock(_g, b);
 	}
 	return SUCCESS;
@@ -289,7 +288,7 @@ static AlifIntT init_cfgBuilder(CFGBuilder* _g) { // 402
 		return ERROR;
 	}
 	_g->curBlock = _g->entryBlock = block;
-	_g->currentLabel = _noLable_;
+	_g->currentLabel = NO_LABEL;
 	return SUCCESS;
 }
 
@@ -1030,7 +1029,7 @@ static AlifObject* get_constValue(AlifIntT _opcode, AlifIntT _oparg, AlifObject*
 }
 
 static AlifIntT add_const(AlifObject* _newConst, AlifObject* _consts, AlifObject* _constCache) { // 1302
-	if (_alifCompile_constCacheMergeOne(_constCache, &_newConst) < 0) {
+	if (_alifCompiler_constCacheMergeOne(_constCache, &_newConst) < 0) {
 		ALIF_DECREF(_newConst);
 		return -1;
 	}

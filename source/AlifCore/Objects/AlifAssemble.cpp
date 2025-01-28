@@ -384,13 +384,13 @@ static AlifIntT assemble_emit(AlifAssembler* _a, InstrSequence* _instrs,
 	RETURN_IF_ERROR(assemble_exceptionTable(_a, _instrs));
 
 	RETURN_IF_ERROR(alifBytes_resize(&_a->exceptTable, _a->exceptTableOff));
-	RETURN_IF_ERROR(_alifCompile_constCacheMergeOne(_constCache, &_a->exceptTable));
+	RETURN_IF_ERROR(_alifCompiler_constCacheMergeOne(_constCache, &_a->exceptTable));
 
 	RETURN_IF_ERROR(alifBytes_resize(&_a->lineTable, _a->locationOff));
-	RETURN_IF_ERROR(_alifCompile_constCacheMergeOne(_constCache, &_a->lineTable));
+	RETURN_IF_ERROR(_alifCompiler_constCacheMergeOne(_constCache, &_a->lineTable));
 
 	RETURN_IF_ERROR(alifBytes_resize(&_a->bytecode, _a->offset * sizeof(AlifCodeUnit)));
-	RETURN_IF_ERROR(_alifCompile_constCacheMergeOne(_constCache, &_a->bytecode));
+	RETURN_IF_ERROR(_alifCompiler_constCacheMergeOne(_constCache, &_a->bytecode));
 	return SUCCESS;
 }
 
@@ -507,7 +507,7 @@ static AlifCodeObject* makecode(AlifCompileCodeUnitMetadata* _umd,
 	if (!names) {
 		goto error;
 	}
-	if (_alifCompile_constCacheMergeOne(_constCache, &names) < 0) {
+	if (_alifCompiler_constCacheMergeOne(_constCache, &names) < 0) {
 		goto error;
 	}
 
@@ -515,7 +515,7 @@ static AlifCodeObject* makecode(AlifCompileCodeUnitMetadata* _umd,
 	if (consts == nullptr) {
 		goto error;
 	}
-	if (_alifCompile_constCacheMergeOne(_constCache, &consts) < 0) {
+	if (_alifCompiler_constCacheMergeOne(_constCache, &consts) < 0) {
 		goto error;
 	}
 
@@ -565,7 +565,7 @@ static AlifCodeObject* makecode(AlifCompileCodeUnitMetadata* _umd,
 		goto error;
 	}
 
-	if (_alifCompile_constCacheMergeOne(_constCache, &localsPlusNames) < 0) {
+	if (_alifCompiler_constCacheMergeOne(_constCache, &localsPlusNames) < 0) {
 		goto error;
 	}
 	con.localsPlusNames = localsPlusNames;

@@ -23,7 +23,6 @@ public:
 		class {
 		public:
 			AlifTypeObject* type{};
-			AlifTypeObject def{};
 			int64_t interpCount{};
 		} types[ALIF_MAX_MANAGED_STATIC_TYPES];
 	} managedStatic;

@@ -253,7 +253,7 @@ SymTableEntry* _alifSymtable_lookup(AlifSymTable* _st, void* _key) { // 493
 }
 
 
-long alifST_getSymbol(SymTableEntry* _ste, AlifObject* _name) { // 527
+long _alifST_getSymbol(SymTableEntry* _ste, AlifObject* _name) { // 527
 	AlifObject* v_{};
 	if (alifDict_getItemRef(_ste->symbols, _name, &v_) < 0) {
 		return -1;
@@ -273,7 +273,7 @@ long alifST_getSymbol(SymTableEntry* _ste, AlifObject* _name) { // 527
 }
 
 AlifIntT alifST_getScope(SymTableEntry* _ste, AlifObject* _name) { // 548
-	long symbol = alifST_getSymbol(_ste, _name);
+	long symbol = _alifST_getSymbol(_ste, _name);
 	if (symbol < 0) {
 		return -1;
 	}
@@ -386,7 +386,7 @@ static AlifIntT analyze_name(SymTableEntry* _ste, AlifObject* _scopes, AlifObjec
 		return 1;
 	}
 	if (_classEntry != nullptr) {
-		long class_flags = alifST_getSymbol(_classEntry, _name);
+		long class_flags = _alifST_getSymbol(_classEntry, _name);
 		if (class_flags < 0) {
 			return 0;
 		}

@@ -255,6 +255,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\CellObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ClassObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Codecs.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\Codegen.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\CodeObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ComplexObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Config.cpp" />

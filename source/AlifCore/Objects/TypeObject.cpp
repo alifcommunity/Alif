@@ -143,15 +143,6 @@ static void managedStatic_typeStateInit(AlifInterpreter* _interp,
 
 
 
-static AlifTypeObject* managedStatic_typeGetDef(AlifTypeObject* _self,
-	AlifIntT _isBuiltin) { // 317
-	AlifUSizeT index = managedStatic_typeIndexGet(_self);
-	AlifUSizeT fullIndex = _isBuiltin
-		? index
-		: index + ALIFMAX_MANAGED_STATIC_BUILTIN_TYPES;
-	return &_alifDureRun_.types.managedStatic.types[fullIndex].def;
-}
-
 
 static inline void start_readying(AlifTypeObject* _type) { // 356
 	if (_type->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
@@ -2779,7 +2770,7 @@ static AlifIntT inherit_slots(AlifTypeObject* _type, AlifTypeObject* _base) { //
 
 
 
-static AlifIntT add_operators(AlifTypeObject*, AlifTypeObject*); // 7897
+static AlifIntT add_operators(AlifTypeObject*); // 7897
 static AlifIntT add_tpNewWrapper(AlifTypeObject*); // 7898
 
 
@@ -2864,9 +2855,8 @@ static AlifIntT typeReady_setDict(AlifTypeObject* _type) { // 8009
 
 
 
-static AlifIntT typeReady_fillDict(AlifTypeObject* type,
-	AlifTypeObject* def) { // 8061
-	if (add_operators(type, def) < 0) {
+static AlifIntT typeReady_fillDict(AlifTypeObject* type) { // 8061
+	if (add_operators(type) < 0) {
 		return -1;
 	}
 	if (type_addMethods(type) < 0) {
@@ -3083,8 +3073,7 @@ static AlifIntT typeReady_postChecks(AlifTypeObject* type) { // 8349
 	return 0;
 }
 
-static AlifIntT type_ready(AlifTypeObject* _type,
-	AlifTypeObject* _def, AlifIntT _initial) { // 8383
+static AlifIntT type_ready(AlifTypeObject* _type, AlifIntT _initial) { // 8383
 
 	start_readying(_type);
 
@@ -3110,7 +3099,7 @@ static AlifIntT type_ready(AlifTypeObject* _type,
 	if (typeReady_setNew(_type, _initial) < 0) {
 		goto error;
 	}
-	if (typeReady_fillDict(_type, _def) < 0) {
+	if (typeReady_fillDict(_type) < 0) {
 		goto error;
 	}
 	if (_initial) {
@@ -3159,7 +3148,7 @@ AlifIntT alifType_ready(AlifTypeObject* _type) { // 8462
 	AlifIntT res{};
 	BEGIN_TYPE_LOCK();
 	if (!(_type->flags & ALIF_TPFLAGS_READY)) {
-		res = type_ready(_type, nullptr, 1);
+		res = type_ready(_type, 1);
 	}
 	else {
 		res = 0;
@@ -3181,14 +3170,9 @@ static AlifIntT init_staticType(AlifInterpreter* _interp, AlifTypeObject* _self,
 
 	managedStatic_typeStateInit(_interp, _self, _isBuiltin, _initial);
 
-	AlifTypeObject* def = managedStatic_typeGetDef(_self, _isBuiltin);
-	if (_initial) {
-		memcpy(def, _self, sizeof(AlifTypeObject));
-	}
-
 	AlifIntT res{};
 	BEGIN_TYPE_LOCK();
-	res = type_ready(_self, def, _initial);
+	res = type_ready(_self, _initial);
 	END_TYPE_LOCK();
 	if (res < 0) {
 		//alifStaticType_clearWeakRefs(_interp, _self);
@@ -3610,22 +3594,44 @@ static AlifIntT typeNew_initSubclass(AlifTypeObject* _type, AlifObject* _kwds) {
 }
 
 
-static AlifIntT add_operators(AlifTypeObject* type, AlifTypeObject* def) { // 11134
-	AlifObject* dict = lookup_tpDict(type);
+
+static AlifIntT slot_inherited(AlifTypeObject* _type,
+	AlifTypeSlotDef* _slotdef, void** _slot) { // 11171
+	void** slotBase = slot_ptr(_type->base, _slotdef->offset);
+	if (slotBase == nullptr or *_slot != *slotBase) {
+		return 0;
+	}
+
+	/* Some slots are inherited in pairs. */
+	if (_slot == (void*)&_type->hash) {
+		return (_type->richCompare == _type->base->richCompare);
+	}
+	else if (_slot == (void*)&_type->richCompare) {
+		return (_type->hash == _type->base->hash);
+	}
+
+	return 1;
+}
+
+
+static AlifIntT add_operators(AlifTypeObject* _type) { // 11134
+	AlifObject* dict = lookup_tpDict(_type);
 	AlifTypeSlotDef* p{};
 	AlifObject* descr{};
 	void** ptr{};
 
-	if (def == nullptr) {
-		def = type;
-	}
 
 	for (p = _slotDefs_; p->name; p++) {
 		if (p->wrapper == nullptr)
 			continue;
-		ptr = slot_ptr(def, p->offset);
+		ptr = slot_ptr(_type, p->offset);
 		if (!ptr or !*ptr)
 			continue;
+		if (_type->flags & ALIF_TPFLAGS_STATIC_BUILTIN
+			and _type->base != nullptr
+			and slot_inherited(_type, p, ptr)) {
+			continue;
+		}
 		AlifIntT r = alifDict_contains(dict, p->nameStrObj);
 		if (r > 0)
 			continue;
@@ -3637,7 +3643,7 @@ static AlifIntT add_operators(AlifTypeObject* type, AlifTypeObject* def) { // 11
 				return -1;
 		}
 		else {
-			descr = alifDescr_newWrapper(type, p, *ptr);
+			descr = alifDescr_newWrapper(_type, p, *ptr);
 			if (descr == nullptr)
 				return -1;
 			if (alifDict_setItem(dict, p->nameStrObj, descr) < 0) {

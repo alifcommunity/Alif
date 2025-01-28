@@ -8,7 +8,7 @@
 extern AlifThread* _alifOSReadlineThread_; // 28
 AlifThread* _alifOSReadlineThread_ = nullptr;
 
-static AlifThreadTypeLock _alifOSReadlineLock_ = nullptr;
+static AlifMutex _alifOSReadlineLock_;
 
 
 AlifIntT (*_alifOSInputHook_)(void) = nullptr; // 33
@@ -323,43 +323,33 @@ char* alifOS_readline(FILE* sys_stdin,
 	char* rv{}, * res{};
 	AlifUSizeT len{};
 
-	AlifThread* tstate = _alifThread_get();
-	if (_alifOSReadlineThread_ == tstate) {
+	AlifThread* thread = _alifThread_get();
+	if (alifAtomic_loadPtrRelaxed(&_alifOSReadlineThread_) == thread) {
 		//alifErr_setString(_alifExcRuntimeError_,
 		//	"can't re-enter readline");
 		return nullptr;
 	}
 
-
+	ALIF_BEGIN_ALLOW_THREADS
+	alifMutex_lock(&_alifOSReadlineLock_);
+	alifAtomic_storePtrRelaxed(&_alifOSReadlineThread_, thread);
 	if (_alifOSReadlineFunctionPointer_ == nullptr) {
 		_alifOSReadlineFunctionPointer_ = alifOS_stdioReadline;
 	}
 
-	//if (_alifOSReadlineLock_ == nullptr) {  //* todo
-	//	_alifOSReadlineLock_ = alifThread_allocateLock();
-	//	if (_alifOSReadlineLock_ == nullptr) {
-	//		//alifErr_setString(_alifExcMemoryError_, "can't allocate lock");
-	//		return nullptr;
-	//	}
-	//}
-
-	_alifOSReadlineThread_ = tstate;
-	ALIF_BEGIN_ALLOW_THREADS
-	alifThread_acquireLock(_alifOSReadlineLock_, 1);
 
 	if (!isatty(fileno(sys_stdin)) or !isatty(fileno(sys_stdout)) ||
-		!alif_isMainInterpreter(tstate->interpreter))
+		!alif_isMainInterpreter(thread->interpreter))
 	{
 		rv = alifOS_stdioReadline(sys_stdin, sys_stdout, prompt);
 	}
 	else {
 		rv = (*_alifOSReadlineFunctionPointer_)(sys_stdin, sys_stdout, prompt);
 	}
+
+	alifAtomic_storePtrRelaxed(&_alifOSReadlineThread_, nullptr);
+	alifMutex_unlock(&_alifOSReadlineLock_);
 	ALIF_END_ALLOW_THREADS
-
-	//alifThread_releaseLock(_alifOSReadlineLock_); //* todo
-
-	_alifOSReadlineThread_ = nullptr;
 
 	if (rv == nullptr)
 		return nullptr;

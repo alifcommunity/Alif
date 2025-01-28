@@ -30,7 +30,7 @@ typedef AlifSourceLocation Location;
 
 static AlifIntT instrSequence_nextInst(InstrSequence * _seq) { // 35
 	RETURN_IF_ERROR(
-		_alifCompile_ensureArrayLargeEnough(_seq->used + 1,
+		_alifCompiler_ensureArrayLargeEnough(_seq->used + 1,
 			(void**)&_seq->instrs, &_seq->allocated,
 			INITIAL_INSTR_SEQUENCE_SIZE, sizeof(Instruction)));
 	return _seq->used++;
@@ -46,7 +46,7 @@ AlifJumpTargetLabel _alifInstructionSequence_newLabel(InstrSequence* _seq) { // 
 AlifIntT _alifInstructionSequence_useLabel(InstrSequence* _seq, AlifIntT _lbl) { // 57
 	AlifIntT oldSize = _seq->labelMapSize;
 	RETURN_IF_ERROR(
-		_alifCompile_ensureArrayLargeEnough(_lbl,
+		_alifCompiler_ensureArrayLargeEnough(_lbl,
 			(void**)&_seq->labelMap,
 			&_seq->labelMapSize,
 			INITIAL_INSTR_SEQUENCE_LABELS_MAP_SIZE,
