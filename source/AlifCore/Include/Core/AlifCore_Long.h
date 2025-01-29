@@ -68,7 +68,7 @@ static inline bool _alifLong_isPositive(const AlifLongObject* op) { // 217
 }
 
 static inline AlifSizeT alifLong_digitCount(const AlifLongObject* _op) { // 223
-	return _op->longValue.tag >> NON_SIZE_BITS;
+	return (AlifSizeT)(_op->longValue.tag >> NON_SIZE_BITS);
 }
 
 static inline AlifSizeT _alifLong_signedDigitCount(const AlifLongObject* _op) { // 232
@@ -90,11 +90,11 @@ static inline AlifIntT _alifLong_sameSign(const AlifLongObject* _a,
 }
 
 
-#define TAG_FROM_SIGN_AND_SIZE(_sign, _size) ((1 - (_sign)) | ((_size) << NON_SIZE_BITS)) // 262
+#define TAG_FROM_SIGN_AND_SIZE(_sign, _size) ((uintptr_t)(1 - (_sign)) | ((uintptr_t)(_size) << NON_SIZE_BITS)) // 262
 
 static inline void _alifLong_setSignAndDigitCount(AlifLongObject* _op,
 	AlifIntT _sign, AlifSizeT _size) { // 264
-	_op->longValue.tag = TAG_FROM_SIGN_AND_SIZE(_sign, (AlifUSizeT)_size);
+	_op->longValue.tag = TAG_FROM_SIGN_AND_SIZE(_sign, _size);
 }
 
 static inline void _alifLong_setDigitCount(AlifLongObject* _op, AlifSizeT _size) { // 273
@@ -102,7 +102,7 @@ static inline void _alifLong_setDigitCount(AlifLongObject* _op, AlifSizeT _size)
 }
 
 
-#define NON_SIZE_MASK ~((1 << NON_SIZE_BITS) - 1) // 280
+#define NON_SIZE_MASK ~(uintptr_t)((1 << NON_SIZE_BITS) - 1) // 280
 
 static inline void _alifLong_flipSign(AlifLongObject* op) { // 282
 	AlifUIntT flippedSign = 2 - (op->longValue.tag & SIGN_MASK);

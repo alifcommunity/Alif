@@ -118,7 +118,7 @@ static AlifIntT initialize_token(AlifParser* _p,
 
 static AlifIntT resize_tokensArr(AlifParser* _p) { // 218 
 	AlifIntT newSize = _p->size * 2;
-	AlifPToken** newTokens = (AlifPToken**)alifMem_dataRealloc(_p->tokens, newSize * sizeof(AlifPToken*));
+	AlifPToken** newTokens = (AlifPToken**)alifMem_dataRealloc(_p->tokens, (AlifUSizeT)newSize * sizeof(AlifPToken*));
 	if (newTokens == nullptr) {
 		//alifErr_noMemory();
 		return -1;
@@ -147,7 +147,7 @@ AlifIntT alifParserEngine_fillToken(AlifParser* _p) { // 240
 	//while (type == TYPEIGNORE) {
 	//	AlifSizeT len = newToken.endColOffset - newToken.colOffset;
 	//	char* tag = (char*)alifMem_dataAlloc(len + 1);
-	//	strncpy(tag, newToken.start, len);
+	//	strncpy(tag, newToken.start, (AlifUSizeT)len);
 	//	tag[len] = L'0';
 	//	if (!growableComment_arrayAdd(&_p->typeIgnoreComments, _p->tok->lineNo, tag)) {
 	//		//alifErr_noMemory();
@@ -273,7 +273,7 @@ AlifPToken* alifParserEngine_getLastNonWhitespaceToken(AlifParser* _p) { // 491
 
 AlifObject* alifParserEngine_newIdentifier(AlifParser* _p, const char* _s) { // 505
 	AlifInterpreter* interp{};
-	AlifObject* id = alifUStr_decodeUTF8(_s, strlen(_s), nullptr);
+	AlifObject* id = alifUStr_decodeUTF8(_s, (AlifSizeT)strlen(_s), nullptr);
 	if (!id) {
 		goto error;
 	}

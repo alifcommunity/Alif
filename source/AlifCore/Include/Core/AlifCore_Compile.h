@@ -133,6 +133,7 @@ AlifIntT _alifCompiler_resolveNameOp(AlifCompiler*, AlifObject*, AlifIntT,
 
 
 
+
 AlifIntT _alifCompiler_isInInlinedComp(AlifCompiler*);
 
 AlifIntT _alifCompiler_optimizationLevel(AlifCompiler*);

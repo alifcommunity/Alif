@@ -258,7 +258,7 @@ static inline AlifHashT alifObject_hashFast(AlifObject* _op) { // 724
 
 
 static inline AlifUSizeT alifType_preHeaderSize(AlifTypeObject* _tp) { // 740 
-	return (alifType_hasFeature(_tp, ALIF_TPFLAGS_PREHEADER) * 2 * sizeof(AlifObject*));
+	return (AlifUSizeT)(alifType_hasFeature(_tp, ALIF_TPFLAGS_PREHEADER) * 2 * sizeof(AlifObject*));
 }
 
 void alifObject_gcLink(AlifObject*); // 750

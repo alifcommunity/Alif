@@ -29,8 +29,8 @@ union AlifStackRef { // 52
  // 57
 #define ALIF_TAG_DEFERRED (1)
 
-#define ALIF_TAG_PTR      (0)
-#define ALIF_TAG_BITS     (1)
+#define ALIF_TAG_PTR      ((uintptr_t)0)
+#define ALIF_TAG_BITS     ((uintptr_t)1)
 
 static const AlifStackRef _alifStackRefNull_ = { .bits = 0 | ALIF_TAG_DEFERRED };
 
@@ -47,7 +47,7 @@ static const AlifStackRef _alifStackRefNull_ = { .bits = 0 | ALIF_TAG_DEFERRED }
 #define ALIFSTACKREF_ISDEFERRED(ref) (((ref).bits & ALIF_TAG_BITS) == ALIF_TAG_DEFERRED) // 93
 
 static inline AlifObject* alifStackRef_asAlifObjectBorrow(AlifStackRef _stackRef) { // 99
-	AlifObject* cleared = ((AlifObject*)((_stackRef).bits & (~ALIF_TAG_BITS)));
+	AlifObject* cleared = ((AlifObject*)((_stackRef).bits & (~(uintptr_t)ALIF_TAG_BITS)));
 	return cleared;
 }
 
@@ -63,7 +63,7 @@ static inline AlifObject* alifStackRef_asAlifObjectSteal(AlifStackRef _stackRef)
 #define ALIFSTACKREF_TYPE(_stackref) ALIF_TYPE(alifStackRef_asAlifObjectBorrow(_stackref)) // 127
 
 static inline AlifStackRef _alifStackRef_fromAlifObjectSteal(AlifObject* _obj) { // 131
-	AlifIntT tag = (_obj == nullptr or ALIF_ISIMMORTAL(_obj)) ? (ALIF_TAG_DEFERRED) : ALIF_TAG_PTR;
+	AlifUIntT tag = (_obj == nullptr or ALIF_ISIMMORTAL(_obj)) ? (ALIF_TAG_DEFERRED) : ALIF_TAG_PTR;
 	return { .bits = ((uintptr_t)(_obj)) | tag };
 }
 #define ALIFSTACKREF_FROMALIFOBJECTSTEAL(_obj) _alifStackRef_fromAlifObjectSteal(ALIFOBJECT_CAST(_obj))
