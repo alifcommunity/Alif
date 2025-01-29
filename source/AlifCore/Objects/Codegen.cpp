@@ -76,7 +76,6 @@ class AlifCompiler;
 
 #define QUALNAME(_c) _alifCompiler_qualname(_c)
 #define METADATA(_c) _alifCompiler_metadata(_c)
-#define ASTMEM(_c) _alifCompiler_astMem(_c) 
 
 
 typedef AlifInstructionSequence InstrSequence;
@@ -207,6 +206,11 @@ static bool areAllItems_const(ASDLExprSeq*, AlifSizeT, AlifSizeT);
 
 static AlifIntT codegen_callSimpleKwHelper(AlifCompiler*, Location,
 	ASDLKeywordSeq*, AlifSizeT);
+
+
+static AlifIntT codegen_callHelperImpl(AlifCompiler*, Location,
+	AlifIntT, ASDLExprSeq*, AlifObject*, ASDLKeywordSeq*);
+
 
 
 static AlifIntT codegen_callHelper(AlifCompiler*, Location,
@@ -1544,27 +1548,9 @@ static AlifIntT codegen_class(AlifCompiler* _c, StmtTy _s) {
 		ADDOP_I_IN_SCOPE(_c, loc, CALL_INTRINSIC_1, INTRINSIC_SUBSCRIPT_GENERIC);
 		RETURN_IF_ERROR_IN_SCOPE(_c, codegen_nameOp(_c, loc, &ALIF_STR(GenericBase), ExprContext_::Store));
 
-		AlifSizeT originalLen = ASDL_SEQ_LEN(_s->V.classDef.bases);
-		ASDLExprSeq* bases = alifNew_exprSeq(
-			originalLen + 1, ASTMEM(_c));
-		if (bases == nullptr) {
-			_alifCompiler_exitScope(_c);
-			return ERROR;
-		}
-		for (AlifSizeT i = 0; i < originalLen; i++) {
-			ASDL_SEQ_SET(bases, i, ASDL_SEQ_GET(_s->V.classDef.bases, i));
-		}
-		ExprTy nameNode = alifAST_name(
-			&ALIF_STR(GenericBase), ExprContext_::Load,
-			loc.lineNo, loc.colOffset, loc.endLineNo, loc.endColOffset, ASTMEM(_c)
-		);
-		if (nameNode == nullptr) {
-			_alifCompiler_exitScope(_c);
-			return ERROR;
-		}
-		ASDL_SEQ_SET(bases, originalLen, nameNode);
-		RETURN_IF_ERROR_IN_SCOPE(_c, codegen_callHelper(_c, loc, 2,
-			bases,
+		RETURN_IF_ERROR_IN_SCOPE(_c, codegen_callHelperImpl(_c, loc, 2,
+			_s->V.classDef.bases,
+			&ALIF_STR(GenericBase),
 			_s->V.classDef.keywords));
 
 		AlifCodeObject* co = _alifCompiler_optimizeAndAssemble(_c, 0);
@@ -3186,18 +3172,18 @@ static AlifIntT codegen_boolOp(AlifCompiler* _c, ExprTy _e) {
 
 
 
-static AlifIntT starUnpack_helper(AlifCompiler* _c, Location _loc,
-	ASDLExprSeq* _elts, AlifIntT _pushed, AlifIntT _build,
+static AlifIntT starUnpack_helperImpl(AlifCompiler* _c, Location _loc,
+	ASDLExprSeq* _elts, AlifObject* _injectedArg, AlifIntT _pushed, AlifIntT _build,
 	AlifIntT _add, AlifIntT _extend, AlifIntT _tuple) {
 	AlifSizeT n = ASDL_SEQ_LEN(_elts);
-	if (n > 2 and areAllItems_const(_elts, 0, n)) {
+	if (!_injectedArg and n > 2 and areAllItems_const(_elts, 0, n)) {
 		AlifObject* folded = alifTuple_new(n);
 		if (folded == nullptr) {
 			return ERROR;
 		}
-		AlifObject* val{};
+
 		for (AlifSizeT i = 0; i < n; i++) {
-			val = ((ExprTy)ASDL_SEQ_GET(_elts, i))->V.constant.val;
+			AlifObject* val = ((ExprTy)ASDL_SEQ_GET(_elts, i))->V.constant.val;
 			ALIFTUPLE_SET_ITEM(folded, i, ALIF_NEWREF(val));
 		}
 		if (_tuple and !_pushed) {
@@ -3220,7 +3206,7 @@ static AlifIntT starUnpack_helper(AlifCompiler* _c, Location _loc,
 		return SUCCESS;
 	}
 
-	AlifIntT big = n + _pushed > STACK_USE_GUIDELINE;
+	AlifIntT big = n + _pushed + (_injectedArg ? 1 : 0) > STACK_USE_GUIDELINE;
 	AlifIntT seenStar = 0;
 	for (AlifSizeT i = 0; i < n; i++) {
 		ExprTy elt = ASDL_SEQ_GET(_elts, i);
@@ -3233,6 +3219,10 @@ static AlifIntT starUnpack_helper(AlifCompiler* _c, Location _loc,
 		for (AlifSizeT i = 0; i < n; i++) {
 			ExprTy elt = ASDL_SEQ_GET(_elts, i);
 			VISIT(_c, Expr, elt);
+		}
+		if (_injectedArg) {
+			RETURN_IF_ERROR(codegen_nameOp(_c, _loc, _injectedArg, ExprContext_::Load));
+			n++;
 		}
 		if (_tuple) {
 			ADDOP_I(_c, _loc, BUILD_TUPLE, n + _pushed);
@@ -3264,11 +3254,23 @@ static AlifIntT starUnpack_helper(AlifCompiler* _c, Location _loc,
 			}
 		}
 	}
+	if (_injectedArg) {
+		RETURN_IF_ERROR(codegen_nameOp(_c, _loc, _injectedArg, ExprContext_::Load));
+		ADDOP_I(_c, _loc, _add, 1);
+	}
 	if (_tuple) {
 		ADDOP_I(_c, _loc, CALL_INTRINSIC_1, INTRINSIC_LIST_TO_TUPLE);
 	}
 	return SUCCESS;
 }
+
+static AlifIntT starUnpack_helper(AlifCompiler* _c, Location _loc,
+	ASDLExprSeq* _elts, AlifIntT _pushed, AlifIntT _build,
+	AlifIntT _add, AlifIntT _extend, AlifIntT _tuple) {
+	return starUnpack_helperImpl(_c, _loc, _elts, nullptr, _pushed,
+		_build, _add, _extend, _tuple);
+}
+
 
 
 static AlifIntT unpack_helper(AlifCompiler* _c, Location _loc, ASDLExprSeq* _elts) {
@@ -3974,10 +3976,9 @@ static AlifIntT codegen_callSimpleKwHelper(AlifCompiler* _c, Location _loc,
 
 
 
-
-static AlifIntT codegen_callHelper(AlifCompiler* _c, Location _loc,
+static AlifIntT codegen_callHelperImpl(AlifCompiler* _c, Location _loc,
 	AlifIntT _n, /* Args already pushed */ ASDLExprSeq* _args,
-	ASDLKeywordSeq* _keywords) {
+	AlifObject* _injectedArg, ASDLKeywordSeq* _keywords) {
 	AlifSizeT i{}, nseen{}, nelts{}, nkwelts{};
 
 	RETURN_IF_ERROR(codegen_validateKeywords(_c, _keywords));
@@ -4006,6 +4007,10 @@ static AlifIntT codegen_callHelper(AlifCompiler* _c, Location _loc,
 		ExprTy elt = ASDL_SEQ_GET(_args, i);
 		VISIT(_c, Expr, elt);
 	}
+	if (_injectedArg) {
+		RETURN_IF_ERROR(codegen_nameOp(_c, _loc, _injectedArg, ExprContext_::Load));
+		nelts++;
+	}
 	if (nkwelts) {
 		VISIT_SEQ(_c, Keyword, _keywords);
 		RETURN_IF_ERROR(
@@ -4024,7 +4029,7 @@ ex_call:
 		VISIT(_c, Expr, ((ExprTy)ASDL_SEQ_GET(_args, 0))->V.star.val);
 	}
 	else {
-		RETURN_IF_ERROR(starUnpack_helper(_c, _loc, _args, _n, BUILD_LIST,
+		RETURN_IF_ERROR(starUnpack_helperImpl(_c, _loc, _args, _injectedArg, _n, BUILD_LIST,
 			LIST_APPEND, LIST_EXTEND, 1));
 	}
 	/* Then keyword arguments */
@@ -4071,6 +4076,15 @@ ex_call:
 
 
 
+
+
+
+
+static AlifIntT codegen_callHelper(AlifCompiler* _c, Location _loc,
+	AlifIntT _n, /* Args already pushed */ ASDLExprSeq* _args,
+	ASDLKeywordSeq* _keywords) {
+	return codegen_callHelperImpl(_c, _loc, _n, _args, NULL, _keywords);
+}
 
 
 

@@ -2195,7 +2195,13 @@ AlifObject* alifDict_copy(AlifObject* _o) { // 3963
 	return res;
 }
 
-
+AlifSizeT alifDict_size(AlifObject* _mp) { // 3980
+	if (_mp == nullptr or !ALIFDICT_CHECK(_mp)) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+	return alifAtomic_loadSizeRelaxed(&((AlifDictObject*)_mp)->used);
+}
 
 static AlifIntT dictSetDefault_refLockHeld(AlifObject* _d, AlifObject* _key, AlifObject* _defaultValue,
 	AlifObject** _result, AlifIntT _incRefResult) { // 4145

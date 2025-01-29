@@ -18,6 +18,7 @@ AlifIntT alifDict_delItem(AlifObject*, AlifObject*); // 25
 AlifIntT alifDict_next(AlifObject* , AlifSizeT* , AlifObject** , AlifObject** ); // 27
 
 AlifObject* alifDict_keys(AlifObject*); // 29
+AlifSizeT alifDict_size(AlifObject*); // 32
 AlifObject* alifDict_copy(AlifObject*); // 33
 AlifIntT alifDict_contains(AlifObject*, AlifObject*); // 34
 

@@ -88,7 +88,6 @@ public:
 	AlifObject* constCache{};
 	CompilerUnit* u_{};
 	AlifObject* stack{};
-	AlifASTMem* astMem{};
 
 	bool saveNestedSeqs{};
 };
@@ -110,7 +109,6 @@ static AlifIntT compiler_setup(AlifCompiler* _c, ModuleTy _mod, AlifObject* _fil
 	}
 
 	_c->filename = ALIF_NEWREF(_filename);
-	_c->astMem = _astMem;
 	if (!alifFuture_fromAST(_mod, _filename, &_c->future)) {
 		return ERROR;
 	}
@@ -1240,12 +1238,6 @@ AlifObject* _alifCompiler_qualname(AlifCompiler* _c) {
 
 AlifCompileCodeUnitMetadata* _alifCompiler_metadata(AlifCompiler* _c) {
 	return &_c->u_->metadata;
-}
-
-
-
-AlifASTMem* _alifCompiler_astMem(AlifCompiler* _c) {
-	return _c->astMem;
 }
 
 

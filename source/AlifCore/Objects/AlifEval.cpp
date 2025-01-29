@@ -2260,7 +2260,7 @@ AlifIntT _alifEval_unpackIterableStackRef(AlifThread* _thread, AlifStackRef _vSt
 	AlifIntT _argCnt, AlifIntT _argCntAfter, AlifStackRef* _sp) { // 2064
 	AlifIntT i = 0, j = 0;
 	AlifSizeT ll = 0;
-	AlifObject* it;  /* iter(v) */
+	AlifObject* it{};  /* iter(v) */
 	AlifObject* w{};
 	AlifObject* l = nullptr; /* variable list */
 
@@ -2282,20 +2282,20 @@ AlifIntT _alifEval_unpackIterableStackRef(AlifThread* _thread, AlifStackRef _vSt
 		w = alifIter_next(it);
 		if (w == nullptr) {
 			/* Iterator done, via error or exhaustion. */
-			//if (!_alifErr_occurred(_thread)) {
-			//	if (_argCntAfter == -1) {
-			//		_alifErr_format(_thread, _alifExcValueError_,
-			//			"not enough values to unpack "
-			//			"(expected %d, got %d)",
-			//			_argCnt, i);
-			//	}
-			//	else {
-			//		_alifErr_format(_thread, _alifExcValueError_,
-			//			"not enough values to unpack "
-			//			"(expected at least %d, got %d)",
-			//			_argCnt + _argCntAfter, i);
-			//	}
-			//}
+			if (!_alifErr_occurred(_thread)) {
+				if (_argCntAfter == -1) {
+					//_alifErr_format(_thread, _alifExcValueError_,
+					//	"not enough values to unpack "
+					//	"(expected %d, got %d)",
+					//	_argCnt, i);
+				}
+				else {
+					//_alifErr_format(_thread, _alifExcValueError_,
+					//	"not enough values to unpack "
+					//	"(expected at least %d, got %d)",
+					//	_argCnt + _argCntAfter, i);
+				}
+			}
 			goto Error;
 		}
 		*--_sp = ALIFSTACKREF_FROMALIFOBJECTSTEAL(w);
@@ -2305,12 +2305,23 @@ AlifIntT _alifEval_unpackIterableStackRef(AlifThread* _thread, AlifStackRef _vSt
 		/* We better have exhausted the iterator now. */
 		w = alifIter_next(it);
 		if (w == nullptr) {
-			//if (_alifErr_occurred(_thread))
-			//	goto Error;
+			if (_alifErr_occurred(_thread))
+				goto Error;
 			ALIF_DECREF(it);
 			return 1;
 		}
 		ALIF_DECREF(w);
+
+		if (ALIFLIST_CHECKEXACT(v) or ALIFTUPLE_CHECKEXACT(v)
+			or ALIFDICT_CHECKEXACT(v)) {
+			ll = ALIFDICT_CHECKEXACT(v) ? alifDict_size(v) : ALIF_SIZE(v);
+			if (ll > _argCnt) {
+				//_alifErr_format(_thread, _alifExcValueError_,
+				//	"too many values to unpack (expected %d, got %zd)",
+				//	_argCnt, ll);
+				goto Error;
+			}
+		}
 		//_alifErr_format(_thread, _alifExcValueError_,
 		//	"too many values to unpack (expected %d)",
 		//	_argCnt);

@@ -136,7 +136,6 @@ AlifIntT _alifCompiler_resolveNameOp(AlifCompiler*, AlifObject*, AlifIntT,
 AlifIntT _alifCompiler_isInInlinedComp(AlifCompiler*);
 
 AlifIntT _alifCompiler_optimizationLevel(AlifCompiler*);
-AlifASTMem* _alifCompiler_astMem(AlifCompiler*);
 AlifIntT _alifCompiler_lookupArg(AlifCompiler*, AlifCodeObject*, AlifObject*);
 AlifObject* _alifCompiler_qualname(AlifCompiler*);
 AlifCompileCodeUnitMetadata* _alifCompiler_metadata(AlifCompiler*);
