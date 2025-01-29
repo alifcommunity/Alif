@@ -539,7 +539,7 @@ AlifSizeT alifDictKeys_stringLookup(AlifDictKeysObject* _dk, AlifObject* _key) {
 	return uStrKeys_lookupUStr(_dk, _key, hash);
 }
 
-static AlifSizeT uStrKeysLookup_uStrThreadSafe(AlifDictKeysObject*, AlifObject*, AlifHashT); // 1153
+static AlifSizeT uStrKeys_lookupUStrThreadSafe(AlifDictKeysObject*, AlifObject*, AlifHashT); // 1153
 
 AlifSizeT alifDict_lookup(AlifDictObject* _mp, AlifObject* _key,
 	AlifHashT _hash, AlifObject** _valueAddr) { // 1173
@@ -554,7 +554,7 @@ start:
 	if (kind != DictKeysKind_::Dict_Keys_General) {
 		if (ALIFUSTR_CHECKEXACT(_key)) {
 			if (kind == DictKeysKind_::Dict_Keys_Split) {
-				ix_ = uStrKeysLookup_uStrThreadSafe(dk_, _key, _hash);
+				ix_ = uStrKeys_lookupUStrThreadSafe(dk_, _key, _hash);
 				if (ix_ == DKIX_KEY_CHANGED) {
 					LOCK_KEYS(dk_);
 					ix_ = uStrKeys_lookupUStr(dk_, _key, _hash);
@@ -689,7 +689,7 @@ static inline ALIF_ALWAYS_INLINE AlifIntT compareUStr_uStrThreadSafe(AlifDictObj
 	return 0;
 }
 
-static AlifSizeT ALIF_HOT_FUNCTION uStrKeysLookup_uStrThreadSafe(AlifDictKeysObject* _dk,
+static AlifSizeT ALIF_HOT_FUNCTION uStrKeys_lookupUStrThreadSafe(AlifDictKeysObject* _dk,
 	AlifObject* _key, AlifHashT _hash) { // 1359
 	return do_lookup(nullptr, _dk, _key, _hash, compareUStr_uStrThreadSafe);
 }
@@ -742,7 +742,7 @@ AlifSizeT alifDict_lookupThreadSafe(AlifDictObject* _mp,
 
 	if (kind != DictKeysKind_::Dict_Keys_General) {
 		if (ALIFUSTR_CHECKEXACT(_key)) {
-			ix_ = uStrKeysLookup_uStrThreadSafe(dk_, _key, _hash);
+			ix_ = uStrKeys_lookupUStrThreadSafe(dk_, _key, _hash);
 		}
 		else {
 			ix_ = uStrKeys_lookupGenericThreadSafe(_mp, dk_, _key, _hash);
@@ -820,6 +820,44 @@ read_failed:
 	return ix_;
 }
 
+
+AlifSizeT _alifDict_lookupThreadSafeStackRef(AlifDictObject* _mp, AlifObject* _key,
+	AlifHashT _hash, AlifStackRef* _valueAddr) { // 1499
+	AlifDictKeysObject* dk = (AlifDictKeysObject*)alifAtomic_loadPtr(&_mp->keys);
+	if (dk->kind == DictKeysKind_::Dict_Keys_UStr and ALIFUSTR_CHECKEXACT(_key)) {
+		AlifSizeT ix = uStrKeys_lookupUStrThreadSafe(dk, _key, _hash);
+		if (ix == DKIX_EMPTY) {
+			*_valueAddr = _alifStackRefNull_;
+			return ix;
+		}
+		else if (ix >= 0) {
+			AlifObject** addr_of_value = &dk_uStrEntries(dk)[ix].value;
+			AlifObject* value = (AlifObject*)alifAtomic_loadPtr(addr_of_value);
+			if (value == nullptr) {
+				*_valueAddr = _alifStackRefNull_;
+				return DKIX_EMPTY;
+			}
+			if (ALIF_ISIMMORTAL(value) or _alifObject_hasDeferredRefCount(value)) {
+				*_valueAddr = AlifStackRef({ .bits = (uintptr_t)value | ALIF_TAG_DEFERRED });
+				return ix;
+			}
+			if (alif_tryIncRefCompare(addr_of_value, value)) {
+				*_valueAddr = ALIFSTACKREF_FROMALIFOBJECTSTEAL(value);
+				return ix;
+			}
+		}
+	}
+
+	AlifObject* obj{};
+	AlifSizeT ix = alifDict_lookupThreadSafe(_mp, _key, _hash, &obj);
+	if (ix >= 0 and obj != nullptr) {
+		*_valueAddr = ALIFSTACKREF_FROMALIFOBJECTSTEAL(obj);
+	}
+	else {
+		*_valueAddr = _alifStackRefNull_;
+	}
+	return ix;
+}
 
 
 AlifIntT _alifDict_hasOnlyStringKeys(AlifObject* _dict) { // 1511
@@ -905,7 +943,7 @@ static AlifSizeT insert_splitKey(AlifDictKeysObject* _keys,
 	AlifObject* _key, AlifHashT _hash) { // 1658
 	AlifSizeT ix_{};
 
-	ix_ = uStrKeysLookup_uStrThreadSafe(_keys, _key, _hash);
+	ix_ = uStrKeys_lookupUStrThreadSafe(_keys, _key, _hash);
 	if (ix_ >= 0) {
 		return ix_;
 	}
@@ -1440,6 +1478,30 @@ AlifIntT alifDict_setItem(AlifObject* _op,
 	}
 	return alifDict_setItemTake2((AlifDictObject*)_op,
 		ALIF_NEWREF(_key), ALIF_NEWREF(_value));
+}
+
+void _alifDict_loadGlobalStackRef(AlifDictObject* _globals, AlifDictObject* _builtins,
+	AlifObject* _key, AlifStackRef* _res) { // 2471
+	AlifSizeT ix{};
+	AlifHashT hash{};
+
+	hash = alifObject_hashFast(_key);
+	if (hash == -1) {
+		*_res = _alifStackRefNull_;
+		return;
+	}
+
+	/* namespace 1: globals */
+	ix = _alifDict_lookupThreadSafeStackRef(_globals, _key, hash, _res);
+	if (ix == DKIX_ERROR) {
+		return;
+	}
+	if (ix != DKIX_EMPTY and !ALIFSTACKREF_ISNULL(*_res)) {
+		return;
+	}
+
+	/* namespace 2: builtins */
+	ix = _alifDict_lookupThreadSafeStackRef(_builtins, _key, hash, _res);
 }
 
 static AlifIntT setItem_lockHeld(AlifDictObject* _mp,

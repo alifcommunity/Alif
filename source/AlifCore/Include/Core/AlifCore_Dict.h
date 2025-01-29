@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AlifCore_Object.h"
-
+#include "AlifCore_StackRef.h"
 
 
 extern AlifObject* _alifDict_getItemWithError(AlifObject*, AlifObject*); // 15
@@ -50,7 +50,7 @@ extern AlifUSizeT _alifDict_keysSize(AlifDictKeysObject*); // 94
 extern void alifDictKeys_decRef(AlifDictKeysObject*); // 96
 
 AlifObject* _alifDict_loadGlobal(AlifDictObject*, AlifDictObject*, AlifObject*); // 106
-
+void _alifDict_loadGlobalStackRef(AlifDictObject*, AlifDictObject*, AlifObject*, AlifStackRef*); // 109
 extern AlifIntT alifDict_setItemLockHeld(AlifDictObject*, AlifObject*, AlifObject*); // 110
 
 extern AlifIntT alifDict_getItemRefKnownHash(AlifDictObject* , AlifObject* , AlifHashT , AlifObject** ); // 116

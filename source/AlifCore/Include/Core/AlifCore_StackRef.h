@@ -39,6 +39,8 @@ static const AlifStackRef _alifStackRefNull_ = { .bits = 0 | ALIF_TAG_DEFERRED }
 #define ALIFSTACKREF_TRUE AlifStackRef({.bits = ((uintptr_t)&_alifTrueClass_) | ALIF_TAG_DEFERRED }) // 72
 #define ALIFSTACKREF_FALSE AlifStackRef({.bits = ((uintptr_t)&_alifFalseClass_) | ALIF_TAG_DEFERRED }) // 78
 
+#define ALIFSTACKREF_NONE AlifStackRef({.bits = ((uintptr_t)&_alifNoneClass_) | ALIF_TAG_DEFERRED }) // 84
+
 #define ALIFSTACKREF_IS(_a, _b) (_a.bits == _b.bits) // 91
 
 
@@ -78,6 +80,15 @@ static inline AlifStackRef _alifStackRef_fromAlifObjectNew(AlifObject* _obj) { /
 #define ALIFSTACKREF_FROMALIFOBJECTNEW(_obj) _alifStackRef_fromAlifObjectNew(ALIFOBJECT_CAST(_obj))
 
 
+#define ALIFSTACKREF_CLEAR(_op) \
+    do { \
+        AlifStackRef *_tmp_op_ptr = &(_op); \
+        AlifStackRef _tmp_old_op = (*_tmp_op_ptr); \
+        if (!ALIFSTACKREF_ISNULL(_tmp_old_op)) { \
+            *_tmp_op_ptr = _alifStackRefNull_; \
+            ALIFSTACKREF_CLOSE(_tmp_old_op); \
+        } \
+    } while (0)
 
  // 193
 #define ALIFSTACKREF_CLOSE(_ref)                                        \
@@ -110,3 +121,5 @@ static inline AlifStackRef alifStackRef_dup(AlifStackRef _stackRef) { // 215
 	ALIF_INCREF(alifStackRef_asAlifObjectBorrow(_stackRef));
 	return _stackRef;
 }
+
+

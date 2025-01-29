@@ -45,7 +45,7 @@ enum FrameOwner { // 55
 
 class AlifInterpreterFrame { // 62
 public:
-	AlifObject* executable{};
+	AlifStackRef executable{};
 	AlifInterpreterFrame* previous{};
 	AlifObject* funcObj{};
 	AlifObject* globals{};
@@ -65,7 +65,8 @@ public:
     ((AlifIntT)((_if)->instrPtr - ALIFCODE_CODE(_alifFrame_getCode(_if))))
 
 static inline AlifCodeObject* _alifFrame_getCode(AlifInterpreterFrame* _f) { // 81
-	return (AlifCodeObject*)_f->executable;
+	AlifObject* executable = alifStackRef_asAlifObjectBorrow(_f->executable);
+	return (AlifCodeObject*)executable;
 }
 
 
@@ -76,26 +77,26 @@ static inline AlifCodeObject* _alifFrame_getCode(AlifInterpreterFrame* _f) { // 
 
 
 static inline void _alifFrame_initialize(AlifInterpreterFrame* _frame,
-	AlifFunctionObject* func, AlifObject* _locals, AlifCodeObject* code,
+	AlifFunctionObject* func, AlifObject* _locals, AlifCodeObject* _code,
 	AlifIntT _nullLocalsFrom, AlifInterpreterFrame* _previous) { // 144
 
 	_frame->previous = _previous;
 	_frame->funcObj = (AlifObject*)func;
-	_frame->executable = ALIF_NEWREF(code);
+	_frame->executable = ALIFSTACKREF_FROMALIFOBJECTNEW(_code);
 	_frame->builtins = func->builtins;
 	_frame->globals = func->globals;
 	_frame->locals = _locals;
-	_frame->stackPointer = _frame->localsPlus + code->nLocalsPlus;
+	_frame->stackPointer = _frame->localsPlus + _code->nLocalsPlus;
 	_frame->frameObj = nullptr;
-	_frame->instrPtr = ALIFCODE_CODE(code);
+	_frame->instrPtr = ALIFCODE_CODE(_code);
 	_frame->returnOffset = 0;
 	_frame->owner = FrameOwner::FRAME_OWNED_BY_THREAD;
 
-	for (AlifIntT i = _nullLocalsFrom; i < code->nLocalsPlus; i++) {
+	for (AlifIntT i = _nullLocalsFrom; i < _code->nLocalsPlus; i++) {
 		_frame->localsPlus[i] = _alifStackRefNull_;
 	}
 
-	for (AlifIntT i = code->nLocalsPlus; i < code->nLocalsPlus + code->stackSize; i++) {
+	for (AlifIntT i = _code->nLocalsPlus; i < _code->nLocalsPlus + _code->stackSize; i++) {
 		_frame->localsPlus[i] = _alifStackRefNull_;
 	}
 

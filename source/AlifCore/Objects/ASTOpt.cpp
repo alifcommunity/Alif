@@ -611,9 +611,29 @@ static AlifIntT astFold_typeParam(TypeParamTy, AlifASTMem*, AlifASTOptimizeState
 
 
 
+static AlifIntT stmtSeq_removeItem(ASDLStmtSeq* _stmts, AlifSizeT _idx) { // 676
+	if (_idx >= ASDL_SEQ_LEN(_stmts)) {
+		return 0;
+	}
+	for (AlifSizeT i = _idx; i < ASDL_SEQ_LEN(_stmts) - 1; i++) {
+		StmtTy st = (StmtTy)ASDL_SEQ_GET(_stmts, i + 1);
+		ASDL_SEQ_SET(_stmts, i, st);
+	}
+	_stmts->size--;
+	return 1;
+}
+
+
 static AlifIntT astFold_body(ASDLStmtSeq* _stmts,
-	AlifASTMem* _ctx, AlifASTOptimizeState* _state) { // 676
+	AlifASTMem* _ctx, AlifASTOptimizeState* _state) { // 690
 	AlifIntT docstring = alifAST_getDocString(_stmts) != nullptr;
+	if (docstring and (_state->optimize >= 2)) {
+		/* remove the docstring */
+		if (!stmtSeq_removeItem(_stmts, 0)) {
+			return 0;
+		}
+		docstring = 0;
+	}
 	CALL_SEQ(astFold_stmt, Stmt, _stmts);
 	if (!docstring and alifAST_getDocString(_stmts) != nullptr) {
 		StmtTy st = (StmtTy)ASDL_SEQ_GET(_stmts, 0);

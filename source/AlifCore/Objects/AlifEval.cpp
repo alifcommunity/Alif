@@ -238,7 +238,7 @@ AlifObject* ALIF_HOT_FUNCTION alifEval_evalFrameDefault(AlifThread* _thread,
 
 	AlifInterpreterFrame  entryFrame{};
 
-	entryFrame.executable = ALIF_NONE;
+	entryFrame.executable = ALIFSTACKREF_NONE;
 	entryFrame.instrPtr = (AlifCodeUnit*)_alifInterpreterTrampolineInstructions_ + 1;
 	entryFrame.stackPointer = entryFrame.localsPlus;
 	entryFrame.owner = FrameOwner::FRAME_OWNED_BY_CSTACK;
@@ -712,22 +712,22 @@ dispatch_opcode :
 				_frame->instrPtr = nextInstr;
 				nextInstr += 4;
 				PREDICTED(CALL);
-				AlifCodeUnit* this_instr = nextInstr - 4;
+				AlifCodeUnit* thisInstr = nextInstr - 4;
 				AlifStackRef callable{};
-				AlifStackRef selfOrNull{};
+				AlifStackRef *selfOrNull{};
 				AlifStackRef* args{};
 				AlifStackRef func{};
-				AlifStackRef maybe_self{};
+				AlifStackRef *maybeSelf{};
 				AlifStackRef res{};
 				// _SPECIALIZE_CALL
-				selfOrNull = stackPointer[-1 - oparg];
+				selfOrNull = &stackPointer[-1 - oparg];
 				callable = stackPointer[-2 - oparg];
 				{
-					uint16_t counter = read_u16(&this_instr[1].cache);
+					uint16_t counter = read_u16(&thisInstr[1].cache);
 #if ENABLE_SPECIALIZATION
 					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
 						nextInstr = this_instr;
-						_alifSpecialize_call(callable, nextInstr, oparg + !ALIFSTACKREF_ISNULL(self_or_null));
+						_alifSpecialize_call(callable, nextInstr, oparg + !ALIFSTACKREF_ISNULL(self_or_null[0]));
 						DISPATCH_SAME_OPARG();
 					}
 					OPCODE_DEFERRED_INC(CALL);
@@ -738,33 +738,28 @@ dispatch_opcode :
 				// _MAYBE_EXPAND_METHOD
 				args = &stackPointer[-oparg];
 				{
-					args = &stackPointer[-oparg];
-					if (ALIFSTACKREF_TYPE(callable) == &_alifMethodType_ and ALIFSTACKREF_ISNULL(selfOrNull)) {
+					maybeSelf = &stackPointer[-1 - oparg];
+					if (ALIFSTACKREF_TYPE(callable) == &_alifMethodType_ and ALIFSTACKREF_ISNULL(selfOrNull[0])) {
 						AlifObject* callable_o = alifStackRef_asAlifObjectBorrow(callable);
 						AlifObject* self = ((AlifMethodObject*)callable_o)->self;
-						maybe_self = ALIFSTACKREF_FROMALIFOBJECTNEW(self);
-						stackPointer[-1 - oparg] = maybe_self;
+						maybeSelf[0] = ALIFSTACKREF_FROMALIFOBJECTNEW(self);
 						AlifObject* method = ((AlifMethodObject*)callable_o)->func;
 						func = ALIFSTACKREF_FROMALIFOBJECTNEW(method);
 						stackPointer[-2 - oparg] = func;
-						/* Make sure that callable and all args are in memory */
-						args[-2] = func;
-						args[-1] = maybe_self;
 						ALIFSTACKREF_CLOSE(callable);
 					}
 					else {
 						func = callable;
-						maybe_self = selfOrNull;
 					}
 				}
 				// _DO_CALL
-				selfOrNull = maybe_self;
+				selfOrNull = maybeSelf;
 				callable = func;
 				{
 					AlifObject* callableObj = alifStackRef_asAlifObjectBorrow(callable);
 					// oparg counts all of the args, but *not* self:
 					AlifIntT totalArgs = oparg;
-					if (!ALIFSTACKREF_ISNULL(selfOrNull)) {
+					if (!ALIFSTACKREF_ISNULL(selfOrNull[0])) {
 						args--;
 						totalArgs++;
 					}
@@ -786,7 +781,7 @@ dispatch_opcode :
 						if (newFrame == nullptr) {
 							//goto error;
 						}
-						_frame->returnOffset = (uint16_t)(nextInstr - this_instr);
+						_frame->returnOffset = (uint16_t)(nextInstr - thisInstr);
 						DISPATCH_INLINED(newFrame);
 					}
 					/* Callable is not a normal Alif function */
@@ -856,19 +851,19 @@ dispatch_opcode :
 				PREDICTED(CALL_KW);
 				AlifCodeUnit* thisInstr = nextInstr - 4;
 				AlifStackRef callable{};
-				AlifStackRef self_or_null{};
+				AlifStackRef* selfOrNull{};
 				AlifStackRef* args{};
 				AlifStackRef kwnames{};
 				AlifStackRef res{};
 				// _SPECIALIZE_CALL_KW
-				self_or_null = stackPointer[-2 - oparg];
+				selfOrNull = &stackPointer[-2 - oparg];
 				callable = stackPointer[-3 - oparg];
 				{
 					uint16_t counter = read_u16(&thisInstr[1].cache);
 #if ENABLE_SPECIALIZATION
 					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
 						nextInstr = thisInstr;
-						_alifSpecialize_callKw(callable, nextInstr, oparg + !ALIFSTACKREF_ISNULL(self_or_null));
+						_alifSpecialize_callKw(callable, nextInstr, oparg + !ALIFSTACKREF_ISNULL(self_or_null[0]));
 						DISPATCH_SAME_OPARG();
 					}
 					OPCODE_DEFERRED_INC(CALL_KW);
@@ -881,15 +876,14 @@ dispatch_opcode :
 				args = &stackPointer[-1 - oparg];
 				{
 					AlifObject* callableObj = alifStackRef_asAlifObjectBorrow(callable);
-					AlifObject* selfOrNullObj = alifStackRef_asAlifObjectBorrow(self_or_null);
 					AlifObject* kwNamesObj = alifStackRef_asAlifObjectBorrow(kwnames);
 					// oparg counts all of the args, but *not* self:
 					AlifIntT totalArgs = oparg;
-					if (selfOrNullObj != nullptr) {
+					if (!ALIFSTACKREF_ISNULL(selfOrNull[0])) {
 						args--;
 						totalArgs++;
 					}
-					if (selfOrNullObj == nullptr and ALIF_TYPE(callableObj) == &_alifMethodType_) {
+					else if (ALIF_TYPE(callableObj) == &_alifMethodType_) {
 						args--;
 						totalArgs++;
 						AlifObject* self = ((AlifMethodObject*)callableObj)->self;
@@ -923,11 +917,11 @@ dispatch_opcode :
 						_frame->returnOffset = 1 + INLINE_CACHE_ENTRIES_CALL_KW;
 						DISPATCH_INLINED(new_frame);
 					}
-					/* Callable is not a normal Python function */
+					/* Callable is not a normal Alif function */
 					STACKREFS_TO_ALIFOBJECTS(args, totalArgs, argsObj);
 					if (CONVERSION_FAILED(argsObj)) {
 						ALIFSTACKREF_CLOSE(callable);
-						ALIFSTACKREF_CLOSE(self_or_null);
+						ALIFSTACKREF_CLOSE(selfOrNull[0]);
 						for (AlifIntT _i = oparg; --_i >= 0;) {
 							ALIFSTACKREF_CLOSE(args[_i]);
 						}
@@ -1367,7 +1361,7 @@ dispatch_opcode :
 				nextInstr += 5;
 				PREDICTED(LOAD_GLOBAL);
 				AlifCodeUnit* thisInstr = nextInstr - 5;
-				AlifStackRef res{};
+				AlifStackRef* res{};
 				AlifStackRef null = _alifStackRefNull_;
 				// _SPECIALIZE_LOAD_GLOBAL
 				{
@@ -1385,13 +1379,12 @@ dispatch_opcode :
 				}
 				// _LOAD_GLOBAL
 				{
+					res = &stackPointer[0];
 					AlifObject* name = GETITEM(FRAME_CO_NAMES, oparg >> 1);
-					AlifObject* resObj = _alifEval_loadGlobal(GLOBALS(), BUILTINS(), name);
-					//if (resObj == nullptr) goto error;
+					_alifEval_loadGlobalStackRef(GLOBALS(), BUILTINS(), name, res);
+					//if (ALIFSTACKREF_ISNULL(*res)) goto error;
 					null = _alifStackRefNull_;
-					res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(resObj);
 				}
-				stackPointer[0] = res;
 				if (oparg & 1) stackPointer[1] = null;
 				stackPointer += 1 + (oparg & 1);
 				DISPATCH();
@@ -2152,7 +2145,7 @@ fail_post_args:
 static void clear_threadFrame(AlifThread* _thread, AlifInterpreterFrame* _frame) { // 1644
 	_thread->cppRecursionRemaining--;
 	_alifFrame_clearExceptCode(_frame);
-	ALIF_DECREF(_frame->executable);
+	ALIFSTACKREF_CLEAR(_frame->executable);
 	_thread->cppRecursionRemaining++;
 	_alifThreadState_popFrame(_thread, _frame);
 }
@@ -2518,25 +2511,28 @@ error:
 
 
 
-AlifObject* _alifEval_loadGlobal(AlifObject* _globals,
-	AlifObject* _builtins, AlifObject* _name) { // 3073
+void _alifEval_loadGlobalStackRef(AlifObject* _globals, AlifObject* _builtins,
+	AlifObject* _name, AlifStackRef* _writeto) { // 3073
 	AlifObject* res{};
 	if (ALIFDICT_CHECKEXACT(_globals) and ALIFDICT_CHECKEXACT(_builtins)) {
-		res = _alifDict_loadGlobal((AlifDictObject*)_globals,
-			(AlifDictObject*)_builtins, _name);
-		if (res == nullptr /*and !alifErr_occurred()*/) {
+		_alifDict_loadGlobalStackRef((AlifDictObject*)_globals,
+			(AlifDictObject*)_builtins, _name, _writeto);
+		if (ALIFSTACKREF_ISNULL(*_writeto) and !alifErr_occurred()) {
 			//_alifEval_formatExcCheckArg(ALIFTHREADSTATE_GET(), _alifExcNameError_,
 			//	NAME_ERROR_MSG, _name);
 		}
 	}
 	else {
+		AlifObject* res{};
 		if (alifMapping_getOptionalItem(_globals, _name, &res) < 0) {
-			return nullptr;
+			*_writeto = _alifStackRefNull_;
+			return;
 		}
 		if (res == nullptr) {
 			/* namespace 2: builtins */
 			if (alifMapping_getOptionalItem(_builtins, _name, &res) < 0) {
-				return nullptr;
+				*_writeto = _alifStackRefNull_;
+				return;
 			}
 			if (res == nullptr) {
 				//_alifEval_formatExcCheckArg(
@@ -2544,8 +2540,8 @@ AlifObject* _alifEval_loadGlobal(AlifObject* _globals,
 				//	NAME_ERROR_MSG, _name);
 			}
 		}
+		*_writeto = ALIFSTACKREF_FROMALIFOBJECTSTEAL(res);
 	}
-	return res;
 }
 
 

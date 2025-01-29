@@ -782,19 +782,18 @@ static Location start_location(ASDLStmtSeq* _stmts) {
 
 
 
-
 static AlifIntT compiler_codegen(AlifCompiler* _c, ModuleTy _mod) {
 	RETURN_IF_ERROR(_alifCodegen_enterAnonymousScope(_c, _mod));
 	switch (_mod->type) {
 	case ModK_::ModuleK: {
 		ASDLStmtSeq* stmts = _mod->V.module.body;
-		RETURN_IF_ERROR(_alifCodegen_body(_c, start_location(stmts), stmts));
+		RETURN_IF_ERROR(_alifCodegen_body(_c, start_location(stmts), stmts, false));
 		break;
 	}
 	case ModK_::InteractiveK: {
 		_c->interactive = 1;
 		ASDLStmtSeq* stmts = _mod->V.interactive.body;
-		RETURN_IF_ERROR(_alifCodegen_body(_c, start_location(stmts), stmts));
+		RETURN_IF_ERROR(_alifCodegen_body(_c, start_location(stmts), stmts, true));
 		break;
 	}
 	case ModK_::ExpressionK: {
@@ -810,6 +809,7 @@ static AlifIntT compiler_codegen(AlifCompiler* _c, ModuleTy _mod) {
 	}
 	return SUCCESS;
 }
+
 
 
 static AlifCodeObject* compiler_mod(AlifCompiler* _c, ModuleTy _mod) {

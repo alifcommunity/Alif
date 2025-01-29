@@ -747,7 +747,7 @@ AlifIntT _alifCodegen_expression(AlifCompiler* _c, ExprTy _e) {
 
 
 AlifIntT _alifCodegen_body(AlifCompiler* _c,
-	Location _loc, ASDLStmtSeq* _stmts) {
+	Location _loc, ASDLStmtSeq* _stmts, bool _isInteractive) {
 	//if ((FUTURE_FEATURES(_c) & CO_FUTURE_ANNOTATIONS) and SYMTABLE_ENTRY(_c)->annotationsUsed) {
 	//	ADDOP(_c, _loc, SETUP_ANNOTATIONS);
 	//}
@@ -755,24 +755,23 @@ AlifIntT _alifCodegen_body(AlifCompiler* _c,
 		return SUCCESS;
 	}
 	AlifSizeT firstInstr = 0;
-	//if (!IS_INTERACTIVE(_c)) {
+	//if (!_isInteractive) {
 	//	AlifObject* docString = alifAST_getDocString(_stmts);
 	//	if (docString) {
 	//		firstInstr = 1;
-	//		/* if not -OO mode, set docstring */
-	//		if (OPTIMIZATION_LEVEL(_c) < 2) {
-	//			AlifObject* cleanDoc = alifCompile_cleanDoc(docString);
-	//			if (cleanDoc == nullptr) {
-	//				return ERROR;
-	//			}
-	//			StmtTy st = (StmtTy)ASDL_SEQ_GET(_stmts, 0);
-	//			Location loc = LOC(st->V.expression.val);
-	//			ADDOP_LOAD_CONST(_c, loc, cleanDoc);
-	//			ALIF_DECREF(cleanDoc);
-	//			RETURN_IF_ERROR(compiler_nameOp(_c, NO_LOCATION, &ALIF_ID(__doc__), ExprContext_::Store));
+	//		/* set docstring */
+	//		AlifObject* cleanDoc = alifCompile_cleanDoc(docString);
+	//		if (cleanDoc == nullptr) {
+	//			return ERROR;
+	//		}
+	//		StmtTy st = (StmtTy)ASDL_SEQ_GET(_stmts, 0);
+	//		Location loc = LOC(st->V.expression.val);
+	//		ADDOP_LOAD_CONST(_c, loc, cleanDoc);
+	//		ALIF_DECREF(cleanDoc);
+	//		RETURN_IF_ERROR(compiler_nameOp(_c, NO_LOCATION, &ALIF_ID(__doc__), ExprContext_::Store));
 	//		}
 	//	}
-	//}
+
 	for (AlifSizeT i = firstInstr; i < ASDL_SEQ_LEN(_stmts); i++) {
 		VISIT(_c, Stmt, (StmtTy)ASDL_SEQ_GET(_stmts, i));
 	}
@@ -1227,18 +1226,14 @@ static AlifIntT codegen_functionBody(AlifCompiler* _c, StmtTy _s,
 	AlifObject* docstring = alifAST_getDocString(body);
 	if (docstring) {
 		first_instr = 1;
-		/* if not -OO mode, add docstring */
-		if (OPTIMIZATION_LEVEL(_c) < 2) {
-			//docstring = _alifCompile_cleanDoc(docstring);
-			//if (docstring == nullptr) {
-			//	compiler_exitScope(_c);
-			//	return ERROR;
-			//}
-		}
-		else {
-			docstring = nullptr;
-		}
+		/* add docstring */
+		//docstring = _alifCompile_cleanDoc(docstring);
+		//if (docstring == nullptr) {
+		//	compiler_exitScope(_c);
+		//	return ERROR;
+		//}
 	}
+
 	AlifSizeT idx = _alifCompiler_addConst(_c, docstring ? docstring : ALIF_NONE);
 	ALIF_XDECREF(docstring);
 	RETURN_IF_ERROR_IN_SCOPE(_c, idx < 0 ? ERROR : SUCCESS);
@@ -1271,7 +1266,6 @@ static AlifIntT codegen_functionBody(AlifCompiler* _c, StmtTy _s,
 	ALIF_DECREF(co);
 	return ret;
 }
-
 
 
 
@@ -1432,7 +1426,7 @@ static AlifIntT codegen_classBody(AlifCompiler* _c,
 		ADDOP_N_IN_SCOPE(_c, loc, STORE_DEREF, &ALIF_ID(__classDict__), cellvars);
 	}
 	/* compile the body proper */
-	RETURN_IF_ERROR_IN_SCOPE(_c, _alifCodegen_body(_c, loc, _s->V.classDef.body));
+	RETURN_IF_ERROR_IN_SCOPE(_c, _alifCodegen_body(_c, loc, _s->V.classDef.body, false));
 	AlifObject* staticAttributes = _alifCompiler_staticAttributesTuple(_c);
 	if (staticAttributes == nullptr) {
 		_alifCompiler_exitScope(_c);

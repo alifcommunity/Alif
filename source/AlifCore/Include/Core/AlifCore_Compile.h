@@ -141,10 +141,6 @@ AlifObject* _alifCompiler_qualname(AlifCompiler*);
 AlifCompileCodeUnitMetadata* _alifCompiler_metadata(AlifCompiler*);
 AlifObject* _alifCompiler_staticAttributesTuple(AlifCompiler*);
 
-
-
-
-
 AlifSymTable* _alifCompiler_symTable(AlifCompiler*);
 SymTableEntry* _alifCompiler_symTableEntry(AlifCompiler*);
 
@@ -176,7 +172,8 @@ AlifIntT _alifCompiler_revertInlinedComprehensionScopes(AlifCompiler*,
 AlifIntT _alifCodegen_addReturnAtEnd(AlifCompiler*, AlifIntT);
 AlifIntT _alifCodegen_enterAnonymousScope(AlifCompiler*, ModuleTy);
 AlifIntT _alifCodegen_expression(AlifCompiler*, ExprTy);
-AlifIntT _alifCodegen_body(AlifCompiler*, AlifSourceLocation, ASDLStmtSeq*);
+AlifIntT _alifCodegen_body(AlifCompiler*, AlifSourceLocation, ASDLStmtSeq*, bool);
+
 
 
 AlifIntT _alifCompiler_ensureArrayLargeEnough(AlifIntT,

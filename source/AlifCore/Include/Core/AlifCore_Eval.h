@@ -107,7 +107,7 @@ AlifObject** _alifObjectArray_fromStackRefArray(AlifStackRef*, AlifSizeT, AlifOb
 
 void _alifObjectArray_free(AlifObject**, AlifObject**); // 271
 
-AlifObject* _alifEval_loadGlobal(AlifObject*, AlifObject*, AlifObject*); // 274
+void _alifEval_loadGlobalStackRef(AlifObject*, AlifObject*, AlifObject*, AlifStackRef*); // 274
 
 AlifObject* _alifEval_loadName(AlifThread*, AlifInterpreterFrame*, AlifObject*); // 276
 
