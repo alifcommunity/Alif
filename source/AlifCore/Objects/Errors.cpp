@@ -68,7 +68,7 @@ void _alifErr_restore(AlifThread* _thread, AlifObject* _type, AlifObject* _value
 			_traceback = nullptr;
 		}
 		else {
-			alifErr_setString(nullptr /*_alifExcTypeError_*/, "traceback must be a Traceback or None");
+			//alifErr_setString(_alifExcTypeError_, "traceback must be a Traceback or None");
 			ALIF_XDECREF(_value);
 			ALIF_DECREF(_type);
 			ALIF_XDECREF(_traceback);
@@ -135,10 +135,10 @@ void _alifErr_setObject(AlifThread* _thread,
 
 	if (_exception != nullptr and
 		not ALIFEXCEPTIONCLASS_CHECK(_exception)) {
-		_alifErr_format(_thread, _alifExcSystemError_,
-			"_alifErr_setObject: "
-			"exception %R is not a BaseException subclass",
-			_exception);
+		//_alifErr_format(_thread, _alifExcSystemError_,
+		//	"_alifErr_setObject: "
+		//	"exception %R is not a BaseException subclass",
+		//	_exception);
 		return;
 	}
 	/* Normalize the exception */
@@ -234,6 +234,45 @@ void alifErr_setString(AlifObject* _exception, const char* _string) { // 296
 AlifObject* ALIF_HOT_FUNCTION alifErr_occurred(void) { // 304
 	AlifThread* thread = _alifThread_get();
 	return _alifErr_occurred(thread);
+}
+
+
+AlifIntT alifErr_givenExceptionMatches(AlifObject* _err, AlifObject* _exc) { // 315
+	if (_err == nullptr or _exc == nullptr) {
+		return 0;
+	}
+	if (ALIFTUPLE_CHECK(_exc)) {
+		AlifSizeT i{}, n{};
+		n = alifTuple_size(_exc);
+		for (i = 0; i < n; i++) {
+			/* Test recursively */
+			if (alifErr_givenExceptionMatches(
+				_err, ALIFTUPLE_GET_ITEM(_exc, i)))
+			{
+				return 1;
+			}
+		}
+		return 0;
+	}
+	/* err might be an instance, so check its class. */
+	if (ALIFEXCEPTIONINSTANCE_CHECK(_err))
+		_err = ALIFEXCEPTIONINSTANCE_CLASS(_err);
+
+	if (ALIFEXCEPTIONCLASS_CHECK(_err) and ALIFEXCEPTIONCLASS_CHECK(_exc)) {
+		return alifType_isSubType((AlifTypeObject*)_err, (AlifTypeObject*)_exc);
+	}
+
+	return _err == _exc;
+}
+
+AlifIntT _alifErr_exceptionMatches(AlifThread* _thread, AlifObject* _exc) { // 347
+	return alifErr_givenExceptionMatches(_alifErr_occurred(_thread), _exc);
+}
+
+
+AlifIntT alifErr_exceptionMatches(AlifObject* _exc) { // 354
+	AlifThread* thread = _alifThread_get();
+	return _alifErr_exceptionMatches(thread, _exc);
 }
 
 

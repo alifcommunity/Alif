@@ -557,9 +557,9 @@ void* alifParserEngine_runParser(AlifParser* _p) { // 883
 		//	alifErr_clear();
 		//	return alifParserEngine_raiseError(_p, ALIFEXC_INCOMPLETEINPUTERROR, 0, "incomplete input");
 		//}
-		//if (alifErr_occurred() and !alifErr_exceptionMatches(_alifExcSyntaxError_)) {
-		//	return nullptr;
-		//}
+		if (alifErr_occurred() and !alifErr_exceptionMatches(_alifExcSyntaxError_)) {
+			return nullptr;
+		}
 		AlifPToken* lastToken = _p->tokens[_p->fill - 1];
 		//reset_parserStateForErrorPass(_p);
 		alifParserEngine_parse(_p);
