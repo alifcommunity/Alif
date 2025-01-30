@@ -2,7 +2,7 @@
 
 
 
-#ifdef WITH_FREELISTS
+
 #  define ALIFTUPLE_MAXSAVESIZE 20     // Largest tuple to save on freelist
 #  define ALIFTUPLE_MAXFREELIST 2000  // Maximum number of tuples of each size to save
 #  define ALIFLISTS_MAXFREELIST 80
@@ -15,11 +15,9 @@
 #  define ALIFASYNC_GEN_ASENDS_MAXFREELIST 80
 #  define ALIFFUTUREITERS_MAXFREELIST 255
 #  define ALIFOBJECT_STACK_CHUNKS_MAXFREELIST 4
-#else
-#  define ALIFTUPLE_MAXSAVESIZE 0
-#endif
 
-class AlifFreeList { // 30
+
+class AlifFreeList { // 25
 public:
 	void* freeList{};
 	AlifSizeT size{};
@@ -29,7 +27,6 @@ public:
 
 class AlifFreeLists { // 40
 public:
-#ifdef WITH_FREELISTS
 	AlifFreeList floats{};
 	AlifFreeList tuples[ALIFTUPLE_MAXSAVESIZE];
 	AlifFreeList lists{};
@@ -41,8 +38,5 @@ public:
 	AlifFreeList asyncGenAsends{};
 	AlifFreeList futureIters{};
 	AlifFreeList objectStackChunks{};
-#else
-	char unused{};  // Empty structs are not allowed.
-#endif
 };
 

@@ -80,7 +80,6 @@
 #define WITH_THREAD
 #define SIZEOF_WCHAR_T 2
 #define NT_THREADS
-#define WITH_FREELISTS 1
 #define SIZEOF_LONG 4
 #define SIZEOF_LONG_LONG 8
 #define SIZEOF_INT 4 //* review
@@ -214,11 +213,8 @@
 
 /* ------------------------------------- Public ------------------------------------- */
 
-#define WITH_FREELISTS 1
 
 #define HAVE_SETVBUF
-
-//#define ALIF_GIL_DISABLED 1
 
 #define FORCE_SWITCHING
 

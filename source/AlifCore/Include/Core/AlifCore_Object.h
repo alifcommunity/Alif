@@ -238,15 +238,16 @@ static inline AlifObject** _alifObject_getWeakRefsListPtr(AlifObject* _op) { // 
 }
 
 
+// Fast inlined version of ALIFTYPE_IS_GC()
+#define _ALIFTYPE_IS_GC(_t) _alifType_hasFeature(_t, ALIF_TPFLAGS_HAVE_GC) // 735
 
-
-static inline AlifIntT _alifObject_isGC(AlifObject* obj) { // 714
+static inline AlifIntT _alifObject_isGC(AlifObject* obj) { // 739
 	AlifTypeObject* type = ALIF_TYPE(obj);
-	return (ALIFTYPE_IS_GC(type) and (type->isGC == nullptr or type->isGC(obj)));
+	return (_ALIFTYPE_IS_GC(type) and (type->isGC == nullptr or type->isGC(obj)));
 }
 
 
-static inline AlifHashT alifObject_hashFast(AlifObject* _op) { // 724 
+static inline AlifHashT alifObject_hashFast(AlifObject* _op) { // 784 
 	if (ALIFUSTR_CHECKEXACT(_op)) {
 		AlifHashT hash = alifAtomic_loadSizeRelaxed(&ALIFASCIIOBJECT_CAST(_op)->hash);
 		if (hash != -1) {
@@ -257,7 +258,7 @@ static inline AlifHashT alifObject_hashFast(AlifObject* _op) { // 724
 }
 
 
-static inline AlifUSizeT alifType_preHeaderSize(AlifTypeObject* _tp) { // 740 
+static inline AlifUSizeT alifType_preHeaderSize(AlifTypeObject* _tp) { // 761 
 	return (AlifUSizeT)(alifType_hasFeature(_tp, ALIF_TPFLAGS_PREHEADER) * 2 * sizeof(AlifObject*));
 }
 
