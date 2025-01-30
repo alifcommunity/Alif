@@ -146,7 +146,7 @@ AlifIntT _alifParserEngine_tokenizerError(AlifParser*); // 164
 
 
 
-
+void _alifParserEngine_setSyntaxError(AlifParser*, AlifPToken*); // 170
 void alifParserEngineError_stackOverflow(AlifParser*); // 171
 
 

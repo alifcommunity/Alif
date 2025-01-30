@@ -123,3 +123,4 @@ AlifIntT alifLexer_setupToken(TokenState*, AlifToken*, AlifIntT, const char*, co
 
 TokenState* alifTokenizer_tokNew(); // 136
 void alifTokenizer_free(TokenState*); // 137
+void _alifToken_free(AlifToken*); // 138

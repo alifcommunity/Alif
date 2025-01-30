@@ -400,7 +400,7 @@ dispatch_opcode :
 				{ /*goto error;*/ }
 				if (bc_o == nullptr) {
 					//_alifErr_setString(_thread, _alifExcNameError_,
-					//	"__build_class__ not found");
+					//	"__buildClass__ not found");
 					//if (true) goto error;
 				}
 				bc = ALIFSTACKREF_FROMALIFOBJECTSTEAL(bc_o);
@@ -2395,7 +2395,7 @@ AlifObject* _alifEval_importName(AlifThread* _thread, AlifInterpreterFrame* _fra
 		return nullptr;
 	}
 	if (importFunc == nullptr) {
-		//_alifErr_setString(_thread, _alifExcImportError_, "__import__ not found");
+		_alifErr_setString(_thread, _alifExcImportError_, "لم يتم العثور على _استورد_");
 		return nullptr;
 	}
 

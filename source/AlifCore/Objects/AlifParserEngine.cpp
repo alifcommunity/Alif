@@ -176,7 +176,7 @@ AlifIntT alifParserEngine_fillToken(AlifParser* _p) { // 240
 	return initialize_token(_p, pT, &newToken, type);
 
 error:
-	//alifToken_free(&newToken);
+	_alifToken_free(&newToken);
 	return -1;
 }
 
@@ -424,7 +424,7 @@ ExprTy alifParserEngine_numberToken(AlifParser* _p) { // 684
 	if (_p->featureVersion < 6 and strchr(rawNum, L'_') != nullptr) {
 		_p->errorIndicator = 1;
 		//return RAISE_SYNTAX_ERROR("Underscores in numeric literals are only supported "
-		//	"in Alif 5 and greater");
+		//	"in Alif5"); //* todo
 		return nullptr; // temp
 	}
 
@@ -564,7 +564,7 @@ void* alifParserEngine_runParser(AlifParser* _p) { // 883
 		//reset_parserStateForErrorPass(_p);
 		alifParserEngine_parse(_p);
 
-		//alifParserEngine_setSyntaxError(_p, lastToken);
+		_alifParserEngine_setSyntaxError(_p, lastToken);
 		return nullptr;
 	}
 

@@ -135,9 +135,29 @@ AlifIntT alifRun_simpleFileObject(FILE* _fp, AlifObject* _filename,
 	if (v == nullptr) {
 		ALIF_CLEAR(mainModule);
 		//* alif
+		const char* str{};
 		AlifThread* thread = _alifThread_get();
-		const char* str = thread->currentException->type->name;
-		printf("%s \n", str);
+		AlifObject* errorExc = thread->currentException;
+		if (errorExc) {
+			AlifBaseExceptionObject* exc = (AlifBaseExceptionObject*)errorExc;
+			AlifTupleObject* errArgs = (AlifTupleObject*)exc->args;
+			AlifObject* args = ALIFTUPLE_GET_ITEM(errArgs, 0);
+			AlifObject* arg = ALIFTUPLE_GET_ITEM(args, 0);
+
+			AlifObject* errMsg = ALIFTUPLE_GET_ITEM(arg, 0);
+
+			AlifObject* errSecArg = ALIFTUPLE_GET_ITEM(arg, 1);
+			AlifObject* errLineNum = ALIFTUPLE_GET_ITEM(errSecArg, 1);
+
+			const char* errorType = ALIF_TYPE(errorExc)->name;
+			AlifSizeT lineNum = alifLong_asSizeT(errLineNum);
+			str = alifUStr_asUTF8(errMsg);
+			printf("%s: %s , السطر: %d \n", errorType, str, lineNum);
+		}
+		else {
+			str = "خطأ غير معروف";
+			printf("%s \n", str);
+		}
 		//* alif
 		//alifErr_print();
 		goto done;
@@ -195,7 +215,7 @@ static AlifObject* alifRun_file(FILE* _fp, AlifObject* _filename,
 	else {
 		ret = nullptr;
 	}
-	//alifASTMem_free(astMem); // لا تعمل بشكل صحيح وتحتاج مراجعة
+	alifASTMem_free(astMem);
 
 	return ret;
 }

@@ -185,6 +185,55 @@ error:
 	return 0;
 }
 
+//* alif
+static AlifIntT verify_endOfNumber(TokenState* _tok,
+	AlifIntT _c, const char* _kind) { // 251
+	if (_tok->tokExtraTokens) {
+		return 1;
+	}
+	AlifIntT r = 0;
+	//if (_c == 'a') {
+	//	r = lookahead(_tok, "nd");
+	//}
+	//else if (_c == 'e') {
+	//	r = lookahead(_tok, "lse");
+	//}
+	//else if (_c == 'f') {
+	//	r = lookahead(_tok, "or");
+	//}
+	//else if (_c == 'i') {
+	//	int c2 = tok_nextc(_tok);
+	//	if (c2 == 'f' || c2 == 'n' || c2 == 's') {
+	//		r = 1;
+	//	}
+	//	tok_backup(_tok, c2);
+	//}
+	//else if (_c == 'o') {
+	//	r = lookahead(_tok, "r");
+	//}
+	//else if (_c == 'n') {
+	//	r = lookahead(_tok, "ot");
+	//}
+	if (r) {
+		tok_backup(_tok, _c);
+		//if (_alifTokenizer_parserWarn(_tok, _alifExcSyntaxWarning_,
+		//	"invalid %s literal", _kind))
+		//{
+		//	return 0;
+		//}
+		tok_nextChar(_tok);
+	}
+	else /* In future releases, only error will remain. */
+	{
+		if (/*_c < 128 and */IS_IDENTIFIER_CHAR(_c)) {
+			tok_backup(_tok, _c);
+			alifTokenizer_syntaxError(_tok, "تركيب %s غير صحيح", _kind);
+			return 0;
+		}
+	}
+	return 1;
+}
+
 
 static AlifIntT tok_decimalTail(TokenState* _tokState) { // 365
 	AlifIntT c_{};
@@ -199,7 +248,7 @@ static AlifIntT tok_decimalTail(TokenState* _tokState) { // 365
 		c_ = tok_nextChar(_tokState);
 		if (!ALIF_ISDIGIT(c_)) {
 			tok_backup(_tokState, c_);
-			alifTokenizer_syntaxError(_tokState, "invalid decimal literal");
+			alifTokenizer_syntaxError(_tokState, "رقم عشري غير صحيح");
 			return 0;
 		}
 	}
@@ -625,7 +674,7 @@ again:
 						c_ = tok_nextChar(_tokState);
 						if (!ALIF_ISDIGIT(c_)) {
 							tok_backup(_tokState, c_);
-							//return MAKE_TOKEN(_alifTokenizer_syntaxError(tok, "invalid decimal literal"));
+							return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "رقم ثنائي غير صحيح"));
 						}
 					}
 					if (c_ != '0') {
@@ -713,9 +762,9 @@ again:
 					//	return MAKE_TOKEN(ERRORTOKEN);
 					//}
 				}
-				//else if (!verify_endOfNumber(_tokState, c_, "عشري")) {
-				//	return MAKE_TOKEN(ERRORTOKEN);
-				//}
+				else if (!verify_endOfNumber(_tokState, c_, "عشري")) {
+					return MAKE_TOKEN(ERRORTOKEN);
+				}
 			}
 		}
 
@@ -951,10 +1000,10 @@ letterQuote:
 	case ']':
 	case '}':
 		if (INSIDE_FSTRING(_tokState) and !_currentTok->curlyBracDepth and c_ == '}') {
-			return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "f-string: single '}' is not allowed"));
+			return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "نص_منسق: إشارة '}' غير مسموحة"));
 		}
 		if (!_tokState->tokExtraTokens and !_tokState->level) {
-			return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "unmatched '%c'", c_));
+			return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "عدم تطابق '%c'", c_));
 		}
 		if (_tokState->level > 0) {
 			_tokState->level--;
@@ -970,19 +1019,19 @@ letterQuote:
 				if (INSIDE_FSTRING(_tokState) and opening == '{') {
 					AlifIntT previous_bracket = _currentTok->curlyBracDepth - 1;
 					if (previous_bracket == _currentTok->curlyBracExprStartDepth) {
-						return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "f-string: unmatched '%c'", c_));
+						return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "نص_منسق: عدم تطابق '%c'", c_));
 					}
 				}
 				if (_tokState->parenLineNoStack[_tokState->level] != _tokState->lineNo) {
 					return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState,
-						"closing parenthesis '%c' does not match "
-						"opening parenthesis '%c' on line %d",
+						"الاقواس الغالقة '%c' لم تطابق "
+						"الاقواس البادئة '%c' في السطر %d",
 						c_, opening, _tokState->parenLineNoStack[_tokState->level]));
 				}
 				else {
 					return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState,
-						"closing parenthesis '%c' does not match "
-						"opening parenthesis '%c'",
+						"الاقواس الغالقة '%c' لم تطابق "
+						"الاقواس البادئة '%c'",
 						c_, opening));
 				}
 			}
@@ -991,7 +1040,7 @@ letterQuote:
 		if (INSIDE_FSTRING(_tokState)) {
 			_currentTok->curlyBracDepth--;
 			if (_currentTok->curlyBracDepth < 0) {
-				return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "f-string: unmatched '%c'", c_));
+				return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "نص_منسق: عدم تطابق '%c'", c_));
 			}
 			if (c_ == '}' and _currentTok->curlyBracDepth == _currentTok->curlyBracExprStartDepth) {
 				_currentTok->curlyBracExprStartDepth--;

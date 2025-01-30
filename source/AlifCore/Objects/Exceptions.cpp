@@ -78,6 +78,18 @@ static AlifObject* baseException_vectorCall(AlifObject* type_obj, AlifObject* co
 
 
 
+static AlifObject* baseException_str(AlifBaseExceptionObject* _self) { // 152
+	switch (ALIFTUPLE_GET_SIZE(_self->args)) {
+	case 0:
+		return alifUStr_fromString("");
+	case 1:
+		return alifObject_str(ALIFTUPLE_GET_ITEM(_self->args, 0));
+	default:
+		return alifObject_str(_self->args);
+	}
+}
+
+
 
 static inline AlifBaseExceptionObject* _alifBaseExceptionObject_cast(AlifObject* _exc) { // 228
 	return (AlifBaseExceptionObject*)_exc;
@@ -142,8 +154,25 @@ void alifException_setContext(AlifObject* _self, AlifObject* _context) { // 449
 
 
 
+ // 548
+#define MIDDLINGEXTENDSEXCEPTIONEX(EXCBASE, EXCNAME, ALIFEXCNAME, EXCSTORE, EXCDOC) \
+AlifTypeObject _exc ## EXCNAME ## _ = { \
+    .objBase = ALIFVAROBJECT_HEAD_INIT(nullptr, 0), \
+    .name = #ALIFEXCNAME, \
+    .basicSize = sizeof(Alif ## EXCSTORE ## Object), \
+    /*.dealloc = (destructor)EXCSTORE ## _dealloc,*/ \
+    .flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_HAVE_GC, \
+    /*.traverse = (traverseproc)EXCSTORE ## _traverse,*/ \
+    /*(Inquiry)EXCSTORE ## _clear,*/		\
+	.base = &EXCBASE, \
+    .dictOffset = offsetof(Alif ## EXCSTORE ## Object, dict), \
+    /*.init = (InitProc)EXCSTORE ## _init,*/ \
+};
 
-
+#define MIDDLINGEXTENDSEXCEPTION(EXCBASE, EXCNAME, EXCSTORE, EXCDOC) \
+    static MIDDLINGEXTENDSEXCEPTIONEX( \
+        EXCBASE, EXCNAME, EXCNAME, EXCSTORE, EXCDOC); \
+    AlifObject *_alifExc ## EXCNAME ## _ = (AlifObject *)&_exc ## EXCNAME ## _
 
 
 
@@ -251,10 +280,32 @@ SIMPLEEXTENDSEXCEPTION(_excBaseException_, Exception,
 
 
 
+static AlifObject* importError_str(AlifImportErrorObject* _self) { // 1623
+	if (_self->msg and ALIFUSTR_CHECKEXACT(_self->msg)) {
+		return ALIF_NEWREF(_self->msg);
+	}
+	else {
+		return baseException_str((AlifBaseExceptionObject*)_self);
+	}
+}
+
+ // 1699
+COMPLEXEXTENDSEXCEPTION(_excException_, ImportError,
+	خطأ_استيراد, ImportError, 0 /* new */,
+	nullptr /*_importErrorMethods_*/, nullptr /*_importErrorMembers_*/,
+	0 /* getset */, importError_str,
+	"لا يمكن إيجاد وحدة الاستيراد, او لا يمكن إيجاد الاسم في الوحدة ");
+
+ // 1710
+MIDDLINGEXTENDSEXCEPTION(_excImportError_, ModuleNotFoundError, ImportError,
+	"Module not found.");
+
+
+
 
 COMPLEXEXTENDSEXCEPTION(_excException_, SyntaxError, خطأ_نسق, SyntaxError,
 	0, 0, nullptr/*syntaxError_members*/, 0,
-	nullptr/*syntaxError_str*/, "Invalid syntax."); // 2594
+	nullptr/*syntaxError_str*/, "خطأ في النسق"); // 2594
 
 
 
@@ -291,7 +342,7 @@ static StaticException _staticExceptions_[] = { // 3615
 	//ITEM(BufferError),
 	//ITEM(EOFError),
 	//ITEM(ExceptionGroup),
-	//ITEM(ImportError),
+	ITEM(ImportError),
 	//ITEM(LookupError),
 	//ITEM(MemoryError),
 	//ITEM(NameError),

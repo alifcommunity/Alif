@@ -1943,15 +1943,15 @@ static AlifIntT uStr_fromFormat(AlifUStrWriter* _writer,
 	va_copy(vargs2, _vargs);
 
 	AlifIntT isAscii = (ucs1Lib_findMaxChar((AlifUCS1*)_format, (AlifUCS1*)_format + len) < 128);
-	if (!isAscii) {
-		AlifSizeT i{};
-		for (i = 0; i < len and (unsigned char)_format[i] <= 127; i++);
-		//alifErr_format(_alifExcValueError_,
-		//	"alifUStr_fromFormatV() expects an ASCII-encoded format "
-		//	"string, got a non-ASCII byte: 0x%02x",
-		//	(unsigned char)_format[i]);
-		goto fail;
-	}
+	//if (!isAscii) { //* alif //* review //* todo
+	//	AlifSizeT i{};
+	//	for (i = 0; i < len and (unsigned char)_format[i] <= 127; i++);
+	//	//alifErr_format(_alifExcValueError_,
+	//	//	"alifUStr_fromFormatV() expects an ASCII-encoded format "
+	//	//	"string, got a non-ASCII byte: 0x%02x",
+	//	//	(unsigned char)_format[i]);
+	//	goto fail;
+	//}
 
 	for (const char* f = _format; *f; ) {
 		if (*f == '%') {
@@ -5766,7 +5766,8 @@ AlifIntT alifUStrWriter_writeASCIIString(AlifUStrWriter* _writer,
 	if (_writer->buffer == nullptr and !_writer->overAllocate) {
 		AlifObject* str;
 
-		str = alifUStr_fromASCII(_ascii, _len);
+		//str = alifUStr_fromASCII(_ascii, _len);
+		str = alifUStr_fromString(_ascii); //* alif //* review
 		if (str == nullptr)
 			return -1;
 
@@ -5834,7 +5835,7 @@ AlifObject* alifUStrWriter_finish(AlifUStrWriter* _writer) { // 13809
 	}
 
 	if (ALIFUSTR_GET_LENGTH(str) != _writer->pos) {
-		AlifObject* str2;
+		AlifObject* str2{};
 		str2 = resize_compact(str, _writer->pos);
 		if (str2 == nullptr) {
 			ALIF_DECREF(str);

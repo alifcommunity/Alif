@@ -80,6 +80,12 @@ void alifTokenizer_free(TokenState* _tokState) { // 83
 	alifMem_dataFree(_tokState);
 }
 
+
+void _alifToken_free(AlifToken* _token) { // 107
+	ALIF_XDECREF(_token->data);
+}
+
+
 AlifIntT alifLexer_setupToken(TokenState* _tokState,
 	AlifToken* _token, AlifIntT _type, const char* _pStart,
 	const char* _pEnd) { // 129

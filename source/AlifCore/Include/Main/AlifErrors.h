@@ -28,6 +28,8 @@ void alifException_setContext(AlifObject*, AlifObject*); // 52
 extern AlifObject* _alifExcBaseException_; // 76
 extern AlifObject* _alifExcException_; // 77
 
+
+extern AlifObject* _alifExcImportError_; // 93
 extern AlifObject* _alifExcIndexError_; // 97
 
 
@@ -74,4 +76,15 @@ public:
 	AlifObject* endOffset{};
 	AlifObject* text{};
 	AlifObject* printFileAndLine{};
+};
+
+
+
+class AlifImportErrorObject { // 35
+public:
+	ALIFEXCEPTION_HEAD;
+	AlifObject* msg{};
+	AlifObject* name{};
+	AlifObject* path{};
+	AlifObject* nameFrom{};
 };
