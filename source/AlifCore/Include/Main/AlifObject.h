@@ -119,10 +119,10 @@ alif_isOwnedByCurrentThread(AlifObject* ob) { // 232
 	return ob->threadID == alif_threadID();
 }
 
-static inline AlifTypeObject* alif_type(AlifObject* _ob) { // 250
+static inline AlifTypeObject* _alif_type(AlifObject* _ob) { // 250
 	return _ob->type;
 }
-#define ALIF_TYPE(_ob) alif_type(ALIFOBJECT_CAST(_ob))
+#define ALIF_TYPE(_ob) _alif_type(ALIFOBJECT_CAST(_ob))
 
 extern AlifTypeObject _alifLongType_; // 261
 extern AlifTypeObject _alifBoolType_; // 262

@@ -47,7 +47,7 @@ class AlifInterpreterFrame { // 62
 public:
 	AlifStackRef executable{};
 	AlifInterpreterFrame* previous{};
-	AlifObject* funcObj{};
+	AlifStackRef funcObj{};
 	AlifObject* globals{};
 	AlifObject* builtins{};
 	AlifObject* locals{};
@@ -64,9 +64,16 @@ public:
 #define ALIFINTERPRETERFRAME_LASTI(_if) \
     ((AlifIntT)((_if)->instrPtr - ALIFCODE_CODE(_alifFrame_getCode(_if))))
 
+
 static inline AlifCodeObject* _alifFrame_getCode(AlifInterpreterFrame* _f) { // 81
 	AlifObject* executable = alifStackRef_asAlifObjectBorrow(_f->executable);
 	return (AlifCodeObject*)executable;
+}
+
+
+static inline AlifFunctionObject* _alifFrame_getFunction(AlifInterpreterFrame* _f) { // 87
+	AlifObject* func = alifStackRef_asAlifObjectBorrow(_f->funcObj);
+	return (AlifFunctionObject*)func;
 }
 
 
@@ -77,14 +84,15 @@ static inline AlifCodeObject* _alifFrame_getCode(AlifInterpreterFrame* _f) { // 
 
 
 static inline void _alifFrame_initialize(AlifInterpreterFrame* _frame,
-	AlifFunctionObject* func, AlifObject* _locals, AlifCodeObject* _code,
+	AlifStackRef _func, AlifObject* _locals, AlifCodeObject* _code,
 	AlifIntT _nullLocalsFrom, AlifInterpreterFrame* _previous) { // 144
 
 	_frame->previous = _previous;
-	_frame->funcObj = (AlifObject*)func;
+	_frame->funcObj = _func;
 	_frame->executable = ALIFSTACKREF_FROMALIFOBJECTNEW(_code);
-	_frame->builtins = func->builtins;
-	_frame->globals = func->globals;
+	AlifFunctionObject* funcObj = (AlifFunctionObject*)alifStackRef_asAlifObjectBorrow(_func);
+	_frame->builtins = funcObj->builtins;
+	_frame->globals = funcObj->globals;
 	_frame->locals = _locals;
 	_frame->stackPointer = _frame->localsPlus + _code->nLocalsPlus;
 	_frame->frameObj = nullptr;
@@ -171,5 +179,5 @@ void _alifThreadState_popFrame(AlifThread*, AlifInterpreterFrame*); // 296
 
 
 
-AlifInterpreterFrame* _alifEval_framePushAndInit(AlifThread* _thread, AlifFunctionObject*,
+AlifInterpreterFrame* _alifEval_framePushAndInit(AlifThread* _thread, AlifStackRef,
 	AlifObject*, AlifStackRef const*, AlifUSizeT, AlifObject*, AlifInterpreterFrame*); // 347

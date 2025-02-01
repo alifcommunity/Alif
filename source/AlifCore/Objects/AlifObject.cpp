@@ -1203,19 +1203,19 @@ void _alifTrashThread_depositObject(AlifThread* _tstate, AlifObject* _op) { // 2
 	_tstate->deleteLater = _op;
 }
 
-void _alifTrashThread_destroyChain(AlifThread* tstate) { // 2777
-	tstate->cppRecursionRemaining--;
-	while (tstate->deleteLater) {
-		AlifObject* op = tstate->deleteLater;
+void _alifTrashThread_destroyChain(AlifThread* _thread) { // 2777
+	_thread->cppRecursionRemaining--;
+	while (_thread->deleteLater) {
+		AlifObject* op = _thread->deleteLater;
 		Destructor dealloc = ALIF_TYPE(op)->dealloc;
 
-		tstate->deleteLater = (AlifObject*)op->threadID;
+		_thread->deleteLater = (AlifObject*)op->threadID;
 		op->threadID = 0;
 		alifAtomic_storeSizeRelaxed(&op->refShared, ALIF_REF_MERGED);
 
 		(*dealloc)(op);
 	}
-	tstate->cppRecursionRemaining++;
+	_thread->cppRecursionRemaining++;
 }
 
 
@@ -1230,4 +1230,22 @@ void alif_dealloc(AlifObject* _op) { // 2868
 	}
 
 	(*dealloc)(_op);
+}
+
+
+
+
+
+
+
+
+#undef ALIF_TYPE
+AlifTypeObject* ALIF_TYPE(AlifObject* _ob) { // 3042
+	return _alif_type(_ob);
+}
+
+
+#undef ALIF_REFCNT
+AlifSizeT ALIF_REFCNT(AlifObject* _ob) { // 3051
+	return _alif_refCnt(_ob);
 }

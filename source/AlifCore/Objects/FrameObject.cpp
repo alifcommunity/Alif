@@ -75,9 +75,9 @@ AlifObject* _alifEval_builtinsFromGlobals(AlifThread* _thread, AlifObject* _glob
 		}
 		return builtins;
 	}
-	//if (alifErr_occurred()) {
-	//	return nullptr;
-	//}
+	if (alifErr_occurred()) {
+		return nullptr;
+	}
 
 	return _alifEval_getBuiltins(_thread);
 }

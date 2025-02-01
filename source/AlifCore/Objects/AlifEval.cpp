@@ -771,7 +771,7 @@ dispatch_opcode :
 						AlifIntT codeFlags = ((AlifCodeObject*)ALIFFUNCTION_GET_CODE(callableObj))->flags;
 						AlifObject* locals = codeFlags & CO_OPTIMIZED ? nullptr : ALIF_NEWREF(ALIFFUNCTION_GET_GLOBALS(callableObj));
 						AlifInterpreterFrame* newFrame = _alifEval_framePushAndInit(
-							_thread, (AlifFunctionObject*)alifStackRef_asAlifObjectSteal(callable), locals,
+							_thread, callable, locals,
 							args, totalArgs, nullptr, _frame
 						);
 						// Manipulate stack directly since we leave using DISPATCH_INLINED().
@@ -903,7 +903,7 @@ dispatch_opcode :
 						AlifIntT code_flags = ((AlifCodeObject*)ALIFFUNCTION_GET_CODE(callableObj))->flags;
 						AlifObject* locals = code_flags & CO_OPTIMIZED ? nullptr : ALIF_NEWREF(ALIFFUNCTION_GET_GLOBALS(callableObj));
 						AlifInterpreterFrame* new_frame = _alifEval_framePushAndInit(
-							_thread, (AlifFunctionObject*)alifStackRef_asAlifObjectSteal(callable), locals,
+							_thread, callable, locals,
 							args, positionalArgs, kwNamesObj, _frame
 						);
 						ALIFSTACKREF_CLOSE(kwnames);
@@ -2160,22 +2160,23 @@ void _alifEval_frameClearAndPop(AlifThread* _thread, AlifInterpreterFrame* _fram
 }
 
 AlifInterpreterFrame* _alifEval_framePushAndInit(AlifThread* _thread,
-	AlifFunctionObject* _func, AlifObject* _locals, AlifStackRef const* _args,
+	AlifStackRef _func, AlifObject* _locals, AlifStackRef const* _args,
 	AlifUSizeT _argCount, AlifObject* _kwNames, AlifInterpreterFrame* _previous) { // 1689
-	AlifCodeObject* code = (AlifCodeObject*)_func->code;
+	AlifFunctionObject* funcObj = (AlifFunctionObject*)alifStackRef_asAlifObjectBorrow(_func);
+	AlifCodeObject* code = (AlifCodeObject*)funcObj->code;
 	AlifInterpreterFrame* frame = _alifThreadState_pushFrame(_thread, code->frameSize);
 	if (frame == nullptr) {
 		goto fail;
 	}
 	_alifFrame_initialize(frame, _func, _locals, code, 0, _previous);
-	if (initialize_locals(_thread, _func, frame->localsPlus, _args, _argCount, _kwNames)) {
+	if (initialize_locals(_thread, funcObj, frame->localsPlus, _args, _argCount, _kwNames)) {
 		clear_threadFrame(_thread, frame);
 		return nullptr;
 	}
 	return frame;
 fail:
 	/* Consume the references */
-	ALIF_DECREF(_func);
+	ALIFSTACKREF_CLOSE(_func);
 	ALIF_XDECREF(_locals);
 	for (size_t i = 0; i < _argCount; i++) {
 		ALIFSTACKREF_CLOSE(_args[i]);
@@ -2195,7 +2196,7 @@ fail:
 
 
 static AlifInterpreterFrame* _alifEvalFramePushAndInit_unTagged(AlifThread* _thread,
-	AlifFunctionObject* _func, AlifObject* _locals, AlifObject* const* _args,
+	AlifStackRef _func, AlifObject* _locals, AlifObject* const* _args,
 	AlifUSizeT _argCount, AlifObject* _kwNames, AlifInterpreterFrame* _previous) { // 1724
 	AlifUSizeT kwCount = _kwNames == nullptr ? 0 : ALIFTUPLE_GET_SIZE(_kwNames);
 	AlifUSizeT totalArgCount = _argCount + kwCount;
@@ -2223,7 +2224,6 @@ static AlifInterpreterFrame* _alifEvalFramePushAndInit_unTagged(AlifThread* _thr
 AlifObject* alifEval_vector(AlifThread* _tstate, AlifFunctionObject* _func,
 	AlifObject* _locals, AlifObject* const* _args, AlifUSizeT _argCount,
 	AlifObject* _kwNames) { // 1794
-	ALIF_INCREF(_func);
 	ALIF_XINCREF(_locals);
 	for (AlifUSizeT i = 0; i < _argCount; i++) {
 		ALIF_INCREF(_args[i]);
@@ -2235,7 +2235,7 @@ AlifObject* alifEval_vector(AlifThread* _tstate, AlifFunctionObject* _func,
 		}
 	}
 	AlifInterpreterFrame* frame = _alifEvalFramePushAndInit_unTagged(
-		_tstate, _func, _locals, _args, _argCount, _kwNames, nullptr);
+		_tstate, ALIFSTACKREF_FROMALIFOBJECTNEW(_func), _locals, _args, _argCount, _kwNames, nullptr);
 	if (frame == nullptr) {
 		return nullptr;
 	}

@@ -81,5 +81,5 @@ void _alifFrame_clearExceptCode(AlifInterpreterFrame* _frame) { // 105
 		ALIF_DECREF(f);
 	}
 	_alifFrame_clearLocals(_frame);
-	ALIF_DECREF(_frame->funcObj);
+	ALIFSTACKREF_CLEAR(_frame->funcObj);
 }
