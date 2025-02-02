@@ -7,6 +7,7 @@
 #include "AlifCore_Math.h"
 #include "AlifCore_StructSeq.h"
 
+#include <float.h>
 
 #include "clinic/FloatObject.cpp.h"
 
