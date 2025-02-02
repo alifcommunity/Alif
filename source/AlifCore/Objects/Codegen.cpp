@@ -3143,16 +3143,14 @@ static AlifIntT codegen_boolOp(AlifCompiler* _c, ExprTy _e) {
 
 	Location loc = LOC(_e);
 	if (_e->V.boolOp.op == BoolOp_::And)
-		jumpi = POP_JUMP_IF_FALSE;
+		jumpi = JUMP_IF_FALSE;
 	else
-		jumpi = POP_JUMP_IF_TRUE;
+		jumpi = JUMP_IF_TRUE;
 	NEW_JUMP_TARGET_LABEL(_c, _end);
 	s = _e->V.boolOp.vals;
 	n = ASDL_SEQ_LEN(s) - 1;
 	for (i = 0; i < n; ++i) {
 		VISIT(_c, Expr, (ExprTy)ASDL_SEQ_GET(s, i));
-		ADDOP_I(_c, loc, COPY, 1);
-		ADDOP(_c, loc, TO_BOOL);
 		ADDOP_JUMP(_c, loc, jumpi, _end);
 		ADDOP(_c, loc, POP_TOP);
 	}

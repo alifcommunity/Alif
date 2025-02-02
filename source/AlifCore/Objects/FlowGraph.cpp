@@ -1260,6 +1260,8 @@ static AlifIntT basicBlock_optimizeLoadConst(AlifObject* const_cache,
 		switch (nextop) {
 		case POP_JUMP_IF_FALSE:
 		case POP_JUMP_IF_TRUE:
+		case JUMP_IF_FALSE:
+		case JUMP_IF_TRUE:
 		{
 			AlifObject* cnt = get_constValue(opcode, oparg, consts);
 			if (cnt == nullptr) {
@@ -1270,8 +1272,10 @@ static AlifIntT basicBlock_optimizeLoadConst(AlifObject* const_cache,
 			if (isTrue == -1) {
 				return ERROR;
 			}
-			INSTR_SET_OP0(inst, NOP);
-			AlifIntT jumpIfTrue = nextop == POP_JUMP_IF_TRUE;
+			if (alifCompile_opcodeStackEffect(nextop, 0) == -1) {
+				INSTR_SET_OP0(inst, NOP);
+			}
+			AlifIntT jumpIfTrue = (nextop == POP_JUMP_IF_TRUE or nextop == JUMP_IF_TRUE);
 			if (isTrue == jumpIfTrue) {
 				bb->instr[i + 1].opcode = JUMP;
 			}
@@ -1408,6 +1412,30 @@ static AlifIntT optimize_basicBlock(AlifObject* _constCache,
 			switch (target->opcode) {
 			case JUMP:
 				i -= jump_thread(_bb, inst, target, POP_JUMP_IF_TRUE);
+			}
+			break;
+		case JUMP_IF_FALSE:
+			switch (target->opcode) {
+			case JUMP:
+			case JUMP_IF_FALSE:
+				i -= jump_thread(_bb, inst, target, JUMP_IF_FALSE);
+				continue;
+			case JUMP_IF_TRUE:
+				inst->target = inst->target->next;
+				i--;
+				continue;
+			}
+			break;
+		case JUMP_IF_TRUE:
+			switch (target->opcode) {
+			case JUMP:
+			case JUMP_IF_TRUE:
+				i -= jump_thread(_bb, inst, target, JUMP_IF_TRUE);
+				continue;
+			case JUMP_IF_FALSE:
+				inst->target = inst->target->next;
+				i--;
+				continue;
 			}
 			break;
 		case JUMP:
@@ -1909,6 +1937,36 @@ static AlifIntT push_coldBlocksToEnd(CFGBuilder* g) { // 2291
 
 
 
+static AlifIntT convert_pseudoConditionalJumps(CFGBuilder* g) { // 2405
+	BasicBlock* entryblock = g->entryBlock;
+	for (BasicBlock* b = entryblock; b != nullptr; b = b->next) {
+		for (AlifIntT i = 0; i < b->iused; i++) {
+			CFGInstr* instr = &b->instr[i];
+			if (instr->opcode == JUMP_IF_FALSE or instr->opcode == JUMP_IF_TRUE) {
+				instr->opcode = instr->opcode == JUMP_IF_FALSE ?
+					POP_JUMP_IF_FALSE : POP_JUMP_IF_TRUE;
+				Location loc = instr->loc;
+				CFGInstr copy = {
+							.opcode = COPY,
+							.oparg = 1,
+							.loc = loc,
+							.target = nullptr,
+				};
+				RETURN_IF_ERROR(basicBlock_insertInstruction(b, i++, &copy));
+				CFGInstr toBool = {
+							.opcode = TO_BOOL,
+							.oparg = 0,
+							.loc = loc,
+							.target = nullptr,
+				};
+				RETURN_IF_ERROR(basicBlock_insertInstruction(b, i++, &toBool));
+			}
+		}
+	}
+	return SUCCESS;
+}
+
+
 static AlifIntT convert_pseudoOps(CFGBuilder* _g) { // 2372
 	BasicBlock* entryblock = _g->entryBlock;
 	for (BasicBlock* b = entryblock; b != nullptr; b = b->next) {
@@ -2311,6 +2369,9 @@ AlifIntT alifCFG_toInstructionSequence(CFGBuilder* _g, AlifInstructionSequence* 
 AlifIntT alifCFG_optimizedCFGToInstructionSequence(CFGBuilder* _g,
 	AlifCompileCodeUnitMetadata* _umd, AlifIntT _codeFlags, AlifIntT* _stackDepth,
 	AlifIntT* _nLocalsPlus, AlifInstructionSequence* _seq) { // 2825
+
+	RETURN_IF_ERROR(convert_pseudoConditionalJumps(_g));
+
 	*_stackDepth = calculate_stackDepth(_g);
 	if (*_stackDepth < 0) {
 		return ERROR;
@@ -2333,4 +2394,16 @@ AlifIntT alifCFG_optimizedCFGToInstructionSequence(CFGBuilder* _g,
 	}
 
 	return SUCCESS;
+}
+
+
+
+
+
+
+
+
+
+AlifIntT alifCompile_opcodeStackEffect(AlifIntT _opcode, AlifIntT _oparg) { // 2951
+	return stack_effect(_opcode, _oparg, -1);
 }

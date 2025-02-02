@@ -56,3 +56,5 @@ public:
 #define FUTURE_ANNOTATIONS "annotations"
 
 #define ALIF_INVALID_STACK_EFFECT INT_MAX // 48
+
+AlifIntT alifCompile_opcodeStackEffect(AlifIntT, AlifIntT); // 49

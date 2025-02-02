@@ -64,6 +64,12 @@ static inline uintptr_t alif_threadID(void) { // 173
 	threadID = __readfsdword(24);
 #elif defined(_MSC_VER) and defined(_M_ARM64)
 	threadID = __getReg(18);
+#elif defined(__MINGW32__) && defined(_M_X64)
+	tid = __readgsqword(48);
+#elif defined(__MINGW32__) && defined(_M_IX86)
+	tid = __readfsdword(24);
+#elif defined(__MINGW32__) && defined(_M_ARM64)
+	tid = __getReg(18);
 #elif defined(__i386__)
 	__asm__("movl %%gs:0, %0" : "=r" (threadID));  // 32-bit always uses GS
 #elif defined(__MACH__) and defined(__x86_64__)

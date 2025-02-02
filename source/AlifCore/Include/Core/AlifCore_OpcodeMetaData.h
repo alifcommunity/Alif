@@ -9,6 +9,8 @@
     ((_op) == STORE_FAST_MAYBE_NULL) or \
     ((_op) == JUMP) or \
     ((_op) == JUMP_NO_INTERRUPT) or \
+    ((_op) == JUMP_IF_FALSE) or \
+    ((_op) == JUMP_IF_TRUE) or \
     ((_op) == SETUP_FINALLY) or \
     ((_op) == SETUP_CLEANUP) or \
     ((_op) == SETUP_WITH) or \
@@ -256,6 +258,10 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 		return 0;
 	case JUMP_FORWARD:
 		return 0;
+	case JUMP_IF_FALSE:
+		return 1;
+	case JUMP_IF_TRUE:
+		return 1;
 	case JUMP_NO_INTERRUPT:
 		return 0;
 	case LIST_APPEND:
@@ -722,6 +728,10 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 		return 0;
 	case JUMP_FORWARD:
 		return 0;
+	case JUMP_IF_FALSE:
+		return 1;
+	case JUMP_IF_TRUE:
+		return 1;
 	case JUMP_NO_INTERRUPT:
 		return 0;
 	case LIST_APPEND:
@@ -1010,9 +1020,9 @@ public:
 	int16_t flags{};
 };
 
-extern const OpcodeMetadata _alifOpcodeOpcodeMetadata_[264]; // 1004
+extern const OpcodeMetadata _alifOpcodeOpcodeMetadata_[266]; // 1004
 #ifdef NEED_OPCODE_METADATA
-const class OpcodeMetadata _alifOpcodeOpcodeMetadata_[264] = {
+const class OpcodeMetadata _alifOpcodeOpcodeMetadata_[266] = {
 	{ true, InstructionFormat::Instr_FMT_IX, 0 }, // CACHE // 0
 	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // BINARY_SLICE // 1
 	{ true, InstructionFormat::Instr_FMT_IXC, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // BINARY_SUBSCR // 2
@@ -1270,13 +1280,15 @@ const class OpcodeMetadata _alifOpcodeOpcodeMetadata_[264] = {
 	{ true, InstructionFormat::Instr_FMT_IX, HAS_ESCAPES_FLAG }, // INSTRUMENTED_LINE // 254
 	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG }, // ENTER_EXECUTOR // 255
 	{ true, -1, HAS_ARG_FLAG | HAS_JUMP_FLAG | HAS_EVAL_BREAK_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // JUMP // 256
-	{ true, -1, HAS_ARG_FLAG | HAS_JUMP_FLAG }, // JUMP_NO_INTERRUPT // 257
-	{ true, -1, HAS_ARG_FLAG | HAS_LOCAL_FLAG | HAS_PURE_FLAG }, // LOAD_CLOSURE // 258
-	{ true, -1, HAS_PURE_FLAG }, // POP_BLOCK // 259
-	{ true, -1, HAS_PURE_FLAG | HAS_ARG_FLAG }, // SETUP_CLEANUP // 260
-	{ true, -1, HAS_PURE_FLAG | HAS_ARG_FLAG }, // SETUP_FINALLY // 261
-	{ true, -1, HAS_PURE_FLAG | HAS_ARG_FLAG }, // SETUP_WITH // 262
-	{ true, -1, HAS_ARG_FLAG | HAS_LOCAL_FLAG }, // STORE_FAST_MAYBE_NULL // 263
+	{ true, -1, HAS_ARG_FLAG | HAS_JUMP_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // JUMP_IF_FALSE // 257
+	{ true, -1, HAS_ARG_FLAG | HAS_JUMP_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // JUMP_IF_TRUE // 258
+	{ true, -1, HAS_ARG_FLAG | HAS_JUMP_FLAG }, // JUMP_NO_INTERRUPT // 259
+	{ true, -1, HAS_ARG_FLAG | HAS_LOCAL_FLAG | HAS_PURE_FLAG }, // LOAD_CLOSURE // 260
+	{ true, -1, HAS_PURE_FLAG }, // POP_BLOCK // 261
+	{ true, -1, HAS_PURE_FLAG | HAS_ARG_FLAG }, // SETUP_CLEANUP // 262
+	{ true, -1, HAS_PURE_FLAG | HAS_ARG_FLAG }, // SETUP_FINALLY // 263
+	{ true, -1, HAS_PURE_FLAG | HAS_ARG_FLAG }, // SETUP_WITH // 264
+	{ true, -1, HAS_ARG_FLAG | HAS_LOCAL_FLAG }, // STORE_FAST_MAYBE_NULL // 265
 };
 #endif
 
