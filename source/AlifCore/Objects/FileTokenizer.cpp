@@ -9,14 +9,14 @@
 #include "Helpers.h"
 #include "AlifTokenState.h"
 #include "AlifLexer.h"
-//#include "Buffer.h"
+#include "Buffer.h"
 
 
 static AlifIntT tok_readlineRaw(TokenState* _tokState) { // 55
 	do {
-		//if (!alifLexer_tokReserveBuf(_tokState, BUFSIZ)) {
-		//	return 0;
-		//}
+		if (!_alifLexerTok_reserveBuf(_tokState, BUFSIZ)) {
+			return 0;
+		}
 		AlifIntT nChars = (AlifIntT)(_tokState->end - _tokState->inp);
 		AlifUSizeT lineSize{};
 

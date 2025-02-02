@@ -139,6 +139,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomicMSC.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\BoolObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\BltinModule.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\Buffer.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\ByteArrayObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\BytesObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\CellObject.h" />
@@ -248,6 +249,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\BiaseRefCount.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\BoolObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\BltinModule.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\Buffer.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ByteArrayObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\BytesObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Call.cpp" />

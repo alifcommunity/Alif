@@ -57,7 +57,7 @@ static AlifIntT tok_nextChar(TokenState* _tokState) { // 56
 		}
 		_tokState->lineStart = _tokState->cur;
 		if (contains_nullBytes(_tokState->lineStart, _tokState->inp - _tokState->lineStart)) {
-			alifTokenizer_syntaxError(_tokState, "source code cannot contain null bytes");
+			alifTokenizer_syntaxError(_tokState, "لا يجب للشفرة المصدرية أن تحتوي على محارف من نوع عدم او فراغ");
 			_tokState->cur = _tokState->inp;
 			return EOF;
 		}
@@ -709,9 +709,9 @@ again:
 					//	"literals are not permitted; "
 					//	"use an 0o prefix for octal integers"));
 				}
-				//if (!verify_endOfNumber(_tokState, c_, "عشري")) {
-				//	return MAKE_TOKEN(ERRORTOKEN);
-				//}
+				if (!verify_endOfNumber(_tokState, c_, "عشري")) {
+					return MAKE_TOKEN(ERRORTOKEN);
+				}
 			}
 		}
 		else {

@@ -583,10 +583,10 @@ ModuleTy alifParser_astFromFile(FILE* _fp, AlifIntT _startRule,
 
 	TokenState* tokState = alifTokenizerInfo_fromFile(_fp, _enc, _ps1, _ps2);
 	if (tokState == nullptr) {
-		//if (alifErr_occurred()) {
-		//	alifParserEngine_raiseTokenizerInitError(_fn);
-		//	return nullptr;
-		//}
+		if (alifErr_occurred()) {
+			//alifParserEngine_raiseTokenizerInitError(_fn);
+			return nullptr;
+		}
 		return nullptr;
 	}
 	if (!tokState->fp or _ps1 != nullptr or _ps2 != nullptr
