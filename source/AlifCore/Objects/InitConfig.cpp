@@ -90,7 +90,7 @@ static const AlifConfigSpec _alifConfigSpec_[] = { // 95
 #ifdef _WINDOWS
 	SPEC(legacyWindowsStdio, BOOL, Read_Only, NO_SYS),
 #endif
-	SPEC(origArgv, WSTR_LIST, Read_Only, SYS_ATTR("orig_argv")),
+	SPEC(origArgv, WSTR_LIST, Read_Only, SYS_ATTR("origArgv")),
 	SPEC(parseArgv, BOOL, Read_Only, NO_SYS),
 	SPEC(programName, WSTR, Read_Only, NO_SYS),
 	SPEC(runCommand, WSTR_OPT, Read_Only, NO_SYS),

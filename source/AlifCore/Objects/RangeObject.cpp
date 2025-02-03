@@ -120,13 +120,13 @@ static AlifObject* range_fromArray(AlifTypeObject* type,
 
 
 
-static AlifObject* range_vectorCall(AlifTypeObject* type, AlifObject* const* args,
+static AlifObject* range_vectorCall(AlifObject* rangeType, AlifObject* const* args,
 	AlifUSizeT nargsf, AlifObject* kwnames) { // 145
 	AlifSizeT nargs = ALIFVECTORCALL_NARGS(nargsf);
 	if (!_ALIFARG_NOKWNAMES("مدى", kwnames)) {
 		return nullptr;
 	}
-	return range_fromArray(type, args, nargs);
+	return range_fromArray((AlifTypeObject*)rangeType, args, nargs);
 }
 
 
@@ -279,7 +279,7 @@ AlifTypeObject _alifRangeType_ = { // 767
 		//.methods = range_methods,
 		//.members = range_members,
 		//.new_ = range_new,
-		.vectorCall = (VectorCallFunc)range_vectorCall
+		.vectorCall = range_vectorCall
 };
 
 

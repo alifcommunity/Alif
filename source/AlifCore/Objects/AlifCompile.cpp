@@ -908,7 +908,17 @@ AlifIntT _alifCompiler_lookupArg(AlifCompiler* _c,
 
 
 AlifObject* _alifCompiler_staticAttributesTuple(AlifCompiler* _c) {
-	return alifSequence_tuple(_c->u_->staticAttributes);
+	AlifObject* staticAttributesUnsorted = alifSequence_list(_c->u_->staticAttributes);
+	if (staticAttributesUnsorted == nullptr) {
+		return nullptr;
+	}
+	if (alifList_sort(staticAttributesUnsorted) != 0) {
+		ALIF_DECREF(staticAttributesUnsorted);
+		return nullptr;
+	}
+	AlifObject* static_attributes = alifSequence_tuple(staticAttributesUnsorted);
+	ALIF_DECREF(staticAttributesUnsorted);
+	return static_attributes;
 }
 
 

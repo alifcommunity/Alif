@@ -30,6 +30,8 @@ unsigned long alifLong_asUnsignedLongMask(AlifObject*); // 27
 AlifIntT alifLong_asInt(AlifObject*); // 30
 
 
+AlifIntT alifLong_asInt64(AlifObject*, int64_t*); // 41
+
 double alifLong_asDouble(AlifObject*); // 86
 AlifObject* alifLong_fromVoidPtr(void*); // 87
 AlifObject* alifLong_fromUnsignedLongLong(unsigned long long); // 91
@@ -51,8 +53,14 @@ long alifOS_strToLong(const char*, char**, AlifIntT); // 103
 
 AlifObject* alifLong_fromUStrObject(AlifObject*, AlifIntT); // 5
 
-
-
+ // 7
+#define ALIF_ASNATIVEBYTES_DEFAULTS -1
+#define ALIF_ASNATIVEBYTES_BIG_ENDIAN 0
+#define ALIF_ASNATIVEBYTES_LITTLE_ENDIAN 1
+#define ALIF_ASNATIVEBYTES_NATIVE_ENDIAN 3
+#define ALIF_ASNATIVEBYTES_UNSIGNED_BUFFER 4
+#define ALIF_ASNATIVEBYTES_REJECT_NEGATIVE 8
+#define ALIF_ASNATIVEBYTES_ALLOW_INDEX 16
 
 
 
@@ -61,4 +69,4 @@ AlifObject* alifLong_fromUStrObject(AlifObject*, AlifIntT); // 5
 AlifIntT _alifLong_sign(AlifObject*); // 68
 
 
-uint64_t _alifLong_numBits(AlifObject*); // 77
+int64_t _alifLong_numBits(AlifObject*); // 77

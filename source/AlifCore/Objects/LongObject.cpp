@@ -79,8 +79,12 @@ static AlifLongObject* long_normalize(AlifLongObject* _v) { // 114
 }
 
  // 136
-#define MAX_LONG_DIGITS \
-    ((ALIF_SIZET_MAX - offsetof(AlifLongObject, longValue.digit))/sizeof(digit))
+#if SIZEOF_SIZE_T < 8
+	#define MAX_LONG_DIGITS \
+		((ALIF_SIZET_MAX - offsetof(AlifLongObject, longValue.digit))/sizeof(digit))
+#else
+	#define MAX_LONG_DIGITS ((INT64_MAX-1) / ALIFLONG_SHIFT)
+#endif
 
 AlifLongObject* alifLong_new(AlifSizeT _size) { // 139
 	AlifLongObject* result{};
@@ -547,29 +551,20 @@ static AlifIntT bit_lengthDigit(digit _x) { // 797
 	return alifBit_length((unsigned long)_x);
 }
 
-uint64_t _alifLong_numBits(AlifObject* _vv) { // 807
+int64_t _alifLong_numBits(AlifObject* _vv) { // 807
 	AlifLongObject* v_ = (AlifLongObject*)_vv;
-	uint64_t result = 0;
+	int64_t result = 0;
 	AlifSizeT ndigits{};
 	AlifIntT msdBits{};
 
 	ndigits = alifLong_digitCount(v_);
 	if (ndigits > 0) {
 		digit msd = v_->longValue.digit[ndigits - 1];
-		if ((uint64_t)(ndigits - 1) > UINT64_MAX / (uint64_t)ALIFLONG_SHIFT)
-			goto Overflow;
-		result = (uint64_t)(ndigits - 1) * (uint64_t)ALIFLONG_SHIFT;
+		result = (int64_t)(ndigits - 1) * ALIFLONG_SHIFT;
 		msdBits = bit_lengthDigit(msd);
-		if (UINT64_MAX - msdBits < result)
-			goto Overflow;
 		result += msdBits;
 	}
 	return result;
-
-Overflow:
-	//alifErr_setString(_alifExcOverflowError_, "AlifIntT has too many bits "
-	//	"to express in a platform AlifUSizeT");
-	return (uint64_t)-1;
 }
 
 AlifIntT _alifLong_asByteArray(AlifLongObject* _v,
@@ -680,6 +675,193 @@ Overflow:
 	return -1;
 
 }
+
+
+static inline AlifIntT fits_inNBits(AlifSizeT v, AlifSizeT n) { // 1095
+	if (n >= (AlifSizeT)sizeof(AlifSizeT) * 8) {
+		return 1;
+	}
+	AlifSizeT v_extended = v >> ((int)n - 1);
+	return v_extended == 0 or v_extended == -1;
+}
+
+static inline AlifIntT _resolve_endianness(AlifIntT* endianness) { // 1107
+	if (*endianness == -1 || (*endianness & 2)) {
+		*endianness = ALIF_LITTLE_ENDIAN;
+	}
+	else {
+		*endianness &= 1;
+	}
+	return 0;
+}
+
+AlifSizeT alifLong_asNativeBytes(AlifObject* vv,
+	void* buffer, AlifSizeT n, AlifIntT flags) { // 1119
+	AlifLongObject* v{};
+	union {
+		AlifSizeT v;
+		unsigned char b[sizeof(AlifSizeT)];
+	} cv{};
+	AlifIntT do_decref = 0;
+	AlifSizeT res = 0;
+
+	if (vv == nullptr or n < 0) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+
+	AlifIntT little_endian = flags;
+	if (_resolve_endianness(&little_endian) < 0) {
+		return -1;
+	}
+
+	if (ALIFLONG_CHECK(vv)) {
+		v = (AlifLongObject*)vv;
+	}
+	else if (flags != -1 and (flags & ALIF_ASNATIVEBYTES_ALLOW_INDEX)) {
+		v = (AlifLongObject*)_alifNumber_index(vv);
+		if (v == nullptr) {
+			return -1;
+		}
+		do_decref = 1;
+	}
+	else {
+		//alifErr_format(_alifExcTypeError_, "expect int, got %T", vv);
+		return -1;
+	}
+
+	if ((flags != -1 and (flags & ALIF_ASNATIVEBYTES_REJECT_NEGATIVE))
+		and _alifLong_isNegative(v)) {
+		//alifErr_setString(_alifExcValueError_, "Cannot convert negative int");
+		if (do_decref) {
+			ALIF_DECREF(v);
+		}
+		return -1;
+	}
+
+	if (alifLong_isCompact(v)) {
+		res = 0;
+		cv.v = alifLong_compactValue(v);
+		res = sizeof(cv.b);
+		if (n <= 0) {
+			// nothing to do!
+		}
+		else if (n <= (AlifSizeT)sizeof(cv.b)) {
+#if ALIF_LITTLE_ENDIAN
+			if (little_endian) {
+				memcpy(buffer, cv.b, n);
+			}
+			else {
+				for (AlifSizeT i = 0; i < n; ++i) {
+					((unsigned char*)buffer)[n - i - 1] = cv.b[i];
+				}
+			}
+#else
+			if (little_endian) {
+				for (AlifSizeT i = 0; i < n; ++i) {
+					((unsigned char*)buffer)[i] = cv.b[sizeof(cv.b) - i - 1];
+				}
+			}
+			else {
+				memcpy(buffer, &cv.b[sizeof(cv.b) - n], n);
+			}
+#endif
+
+			/* If we fit, return the requested number of bytes */
+			if (fits_inNBits(cv.v, n * 8)) {
+				res = n;
+			}
+			else if (cv.v > 0 and fits_inNBits(cv.v, n * 8 + 1)) {
+				if (flags == -1 or (flags & ALIF_ASNATIVEBYTES_UNSIGNED_BUFFER)) {
+					res = n;
+				}
+				else {
+					res = n + 1;
+				}
+			}
+		}
+		else {
+			unsigned char fill = cv.v < 0 ? 0xFF : 0x00;
+#if ALIF_LITTLE_ENDIAN
+			if (little_endian) {
+				memcpy(buffer, cv.b, sizeof(cv.b));
+				memset((char*)buffer + sizeof(cv.b), fill, n - sizeof(cv.b));
+			}
+			else {
+				unsigned char* b = (unsigned char*)buffer;
+				for (AlifSizeT i = 0; i < n - (int)sizeof(cv.b); ++i) {
+					*b++ = fill;
+				}
+				for (AlifSizeT i = sizeof(cv.b); i > 0; --i) {
+					*b++ = cv.b[i - 1];
+				}
+			}
+#else
+			if (little_endian) {
+				unsigned char* b = (unsigned char*)buffer;
+				for (AlifSizeT i = sizeof(cv.b); i > 0; --i) {
+					*b++ = cv.b[i - 1];
+				}
+				for (AlifSizeT i = 0; i < n - (int)sizeof(cv.b); ++i) {
+					*b++ = fill;
+				}
+			}
+			else {
+				memset(buffer, fill, n - sizeof(cv.b));
+				memcpy((char*)buffer + n - sizeof(cv.b), cv.b, sizeof(cv.b));
+			}
+#endif
+		}
+	}
+	else {
+		if (n > 0) {
+			_alifLong_asByteArray(v, (unsigned char*)buffer, (size_t)n, little_endian, 1, 0);
+		}
+
+		int64_t nb = _alifLong_numBits((AlifObject*)v);
+		res = (AlifSizeT)(nb / 8) + 1;
+
+		if (n > 0 && res == n + 1 && nb % 8 == 0) {
+			if (_alifLong_isNegative(v)) {
+				int is_edge_case = 1;
+				unsigned char* b = (unsigned char*)buffer;
+				for (AlifSizeT i = 0; i < n && is_edge_case; ++i, ++b) {
+					if (i == 0) {
+						is_edge_case = (*b == (little_endian ? 0 : 0x80));
+					}
+					else if (i < n - 1) {
+						is_edge_case = (*b == 0);
+					}
+					else {
+						is_edge_case = (*b == (little_endian ? 0x80 : 0));
+					}
+				}
+				if (is_edge_case) {
+					res = n;
+				}
+			}
+			else {
+				unsigned char* b = (unsigned char*)buffer;
+				if (b[little_endian ? n - 1 : 0] & 0x80) {
+					if (flags == -1 or (flags & ALIF_ASNATIVEBYTES_UNSIGNED_BUFFER)) {
+						res = n;
+					}
+					else {
+						res = n + 1;
+					}
+				}
+			}
+		}
+	}
+
+	if (do_decref) {
+		ALIF_DECREF(v);
+	}
+
+	return res;
+}
+
+
 
 AlifObject* alifLong_fromVoidPtr(void* _p) { // 1349
 #if SIZEOF_VOID_P <= SIZEOF_LONG
@@ -1936,7 +2118,8 @@ static AlifLongObject* x_divrem(AlifLongObject* _v1,
 #endif
 
 double _alifLong_frexp(AlifLongObject* a, int64_t* e) { // 3414
-	AlifSizeT aSize{}, shiftDigits{}, shiftBits{}, xSize{};
+	AlifSizeT aSize{}, shiftDigits{}, xSize{};
+	AlifIntT shiftBits{};
 	int64_t aBits{};
 	digit rem{};
 	digit xDigits[2 + (DBL_MANT_DIG + 1) / ALIFLONG_SHIFT] = { 0, };
@@ -1948,27 +2131,22 @@ double _alifLong_frexp(AlifLongObject* a, int64_t* e) { // 3414
 		*e = 0;
 		return 0.0;
 	}
-	AlifIntT msdBits = bit_lengthDigit(a->longValue.digit[aSize - 1]);
-	if (aSize >= (INT64_MAX - 1) / ALIFLONG_SHIFT + 1 and
-		(aSize > (INT64_MAX - 1) / ALIFLONG_SHIFT + 1 or
-			msdBits > (INT64_MAX - 1) % ALIFLONG_SHIFT + 1))
-		goto overflow;
-	aBits = (int64_t)(aSize - 1) * ALIFLONG_SHIFT + msdBits;
+	aBits = _alifLong_numBits((AlifObject*)a);
 
 	if (aBits <= DBL_MANT_DIG + 2) {
 		shiftDigits = (DBL_MANT_DIG + 2 - (AlifSizeT)aBits) / ALIFLONG_SHIFT;
-		shiftBits = (DBL_MANT_DIG + 2 - (AlifSizeT)aBits) % ALIFLONG_SHIFT;
+		shiftBits = (DBL_MANT_DIG + 2 - (AlifIntT)aBits) % ALIFLONG_SHIFT;
 		xSize = shiftDigits;
 		rem = v_lShift(xDigits + xSize, a->longValue.digit, aSize,
-			(AlifIntT)shiftBits);
+			shiftBits);
 		xSize += aSize;
 		xDigits[xSize++] = rem;
 	}
 	else {
 		shiftDigits = (AlifSizeT)(aBits - DBL_MANT_DIG - 2) / ALIFLONG_SHIFT;
-		shiftBits = (AlifSizeT)(aBits - DBL_MANT_DIG - 2) % ALIFLONG_SHIFT;
+		shiftBits = (AlifIntT)(aBits - DBL_MANT_DIG - 2) % ALIFLONG_SHIFT;
 		rem = v_rShift(xDigits, a->longValue.digit + shiftDigits,
-			aSize - shiftDigits, (AlifIntT)shiftBits);
+			aSize - shiftDigits, shiftBits);
 		xSize = aSize - shiftDigits;
 		if (rem)
 			xDigits[0] |= 1;
@@ -1989,20 +2167,12 @@ double _alifLong_frexp(AlifLongObject* a, int64_t* e) { // 3414
 	/* Rescale;  make correction if result is 1.0. */
 	dx /= 4.0 * EXP2_DBL_MANT_DIG;
 	if (dx == 1.0) {
-		if (aBits == INT64_MAX)
-			goto overflow;
 		dx = 0.5;
 		aBits += 1;
 	}
 
 	*e = aBits;
 	return _alifLong_isNegative(a) ? -dx : dx;
-
-overflow:
-	//alifErr_setString(_alifExcOverflowError_,
-	//	"huge integer: number of bits overflows a AlifSizeT");
-	*e = 0;
-	return -1.0;
 }
 
 
@@ -2028,7 +2198,7 @@ double alifLong_asDouble(AlifObject* _v) { // 3526
 		return (double)MEDIUM_VALUE((AlifLongObject*)_v);
 	}
 	x = _alifLong_frexp((AlifLongObject*)_v, &exponent);
-	if ((x == -1.0 /*and alifErr_occurred()*/) or exponent > DBL_MAX_EXP) {
+	if (exponent > DBL_MAX_EXP) {
 		//alifErr_setString(_alifExcOverflowError_,
 		//	"AlifIntT too large to convert to float");
 		return -1.0;
@@ -3212,30 +3382,7 @@ static AlifIntT long_bool(AlifLongObject* _v) { // 5212
 	return !_alifLong_isZero(_v);
 }
 
-static AlifIntT divmod_shift(AlifObject* _shiftBy, AlifSizeT* _wordShift, digit* _remShift) { // 5219
-	AlifSizeT lShiftBy = alifLong_asSizeT((AlifObject*)_shiftBy);
-	if (lShiftBy >= 0) {
-		*_wordShift = lShiftBy / ALIFLONG_SHIFT;
-		*_remShift = lShiftBy % ALIFLONG_SHIFT;
-		return 0;
-	}
 
-	//alifErr_clear();
-	AlifLongObject* wordShiftObj = divrem1((AlifLongObject*)_shiftBy, ALIFLONG_SHIFT, _remShift);
-	if (wordShiftObj == nullptr) {
-		return -1;
-	}
-	*_wordShift = alifLong_asSizeT((AlifObject*)wordShiftObj);
-	ALIF_DECREF(wordShiftObj);
-	if (*_wordShift >= 0 and *_wordShift < ALIF_SIZET_MAX / (AlifSizeT)sizeof(digit)) {
-		return 0;
-	}
-	//alifErr_clear();
-
-	*_wordShift = ALIF_SIZET_MAX / sizeof(digit);
-	*_remShift = 0;
-	return 0;
-}
 
 static AlifObject* long_rShift1(AlifLongObject* _a,
 	AlifSizeT _wordShift, digit _remShift) { // 5256
@@ -3301,9 +3448,8 @@ static AlifObject* long_rShift1(AlifLongObject* _a,
 	return (AlifObject*)z_;
 }
 
-static AlifObject* long_rShift(AlifObject* _a, AlifObject* _b) { // 5342
-	AlifSizeT wordShift{};
-	digit remShift{};
+static AlifObject* long_rShift(AlifObject* _a, AlifObject* _b) { // 5294
+	int64_t shiftBy{};
 
 	CHECK_BINOP(_a, _b);
 
@@ -3314,11 +3460,42 @@ static AlifObject* long_rShift(AlifObject* _a, AlifObject* _b) { // 5342
 	if (_alifLong_isZero((AlifLongObject*)_a)) {
 		return alifLong_fromLong(0);
 	}
-	if (divmod_shift(_b, &wordShift, &remShift) < 0)
-		return nullptr;
-	return long_rShift1((AlifLongObject*)_a, wordShift, remShift);
+	if (alifLong_asInt64(_b, &shiftBy) < 0) {
+		//if (!alifErr_exceptionMatches(_alifExcOverflowError_)) {
+		//	return nullptr;
+		//}
+		//alifErr_clear();
+		if (_alifLong_isNegative((AlifLongObject*)_a)) {
+			return alifLong_fromLong(-1);
+		}
+		else {
+			return alifLong_fromLong(0);
+		}
+	}
+	return _alifLong_rShift(_a, shiftBy);
 }
 
+AlifObject* _alifLong_rShift(AlifObject* _a, int64_t _shiftBy) { // 5324
+	AlifSizeT wordshift{};
+	digit remshift{};
+
+	if (_alifLong_isZero((AlifLongObject*)_a)) {
+		return alifLong_fromLong(0);
+	}
+#if PY_SSIZE_T_MAX <= INT64_MAX / ALIFLONG_SHIFT
+	if (_shiftBy > (int64_t)ALIF_SIZET_MAX * ALIFLONG_SHIFT) {
+		if (_alifLong_isNegative((AlifLongObject*)_a)) {
+			return alifLong_fromLong(-1);
+		}
+		else {
+			return alifLong_fromLong(0);
+		}
+	}
+#endif
+	wordshift = (AlifSizeT)(_shiftBy / ALIFLONG_SHIFT);
+	remshift = (digit)(_shiftBy % ALIFLONG_SHIFT);
+	return long_rShift1((AlifLongObject*)_a, wordshift, remshift);
+}
 
 static AlifObject* long_lShift1(AlifLongObject* _a, AlifSizeT _wordShift, digit _remShift) { // 5377
 	AlifLongObject* z_ = nullptr;
@@ -3357,8 +3534,7 @@ static AlifObject* long_lShift1(AlifLongObject* _a, AlifSizeT _wordShift, digit 
 }
 
 static AlifObject* long_lShift(AlifObject* _a, AlifObject* _b) { // 5419
-	AlifSizeT wordShift{};
-	digit remShift{};
+	int64_t shiftBy{};
 
 	CHECK_BINOP(_a, _b);
 
@@ -3369,20 +3545,25 @@ static AlifObject* long_lShift(AlifObject* _a, AlifObject* _b) { // 5419
 	if (_alifLong_isZero((AlifLongObject*)_a)) {
 		return alifLong_fromLong(0);
 	}
-	if (divmod_shift(_b, &wordShift, &remShift) < 0)
+	if (alifLong_asInt64(_b, &shiftBy) < 0) {
+		//if (alifErr_exceptionMatches(_alifExcOverflowError_)) {
+		//	alifErr_setString(_alifExcOverflowError_,
+		//		"too many digits in integer");
+		//}
 		return nullptr;
-	return long_lShift1((AlifLongObject*)_a, wordShift, remShift);
+	}
+	return _alifLong_lShift(_a, shiftBy);
 }
 
-AlifObject* _alifLong_lShift(AlifObject* _a, uint64_t _shiftby) { // 5439
+AlifObject* _alifLong_lShift(AlifObject* _a, int64_t _shiftby) { // 5439
 	AlifSizeT wordshift{};
 	digit remshift{};
 
 	if (_alifLong_isZero((AlifLongObject*)_a)) {
 		return alifLong_fromLong(0);
 	}
-#if ALIF_SIZET_MAX <= UINT64_MAX / ALIFLONG_SHIFT
-	if (_shiftby > (uint64_t)ALIF_SIZET_MAX * ALIFLONG_SHIFT) {
+#if ALIF_SIZET_MAX <= INT64_MAX / ALIFLONG_SHIFT
+	if (_shiftby > (int64_t)ALIF_SIZET_MAX * ALIFLONG_SHIFT) {
 		//alifErr_setString(_alifExcOverflowError_,
 		//	"too many digits in integer");
 		return nullptr;
@@ -3549,7 +3730,7 @@ static AlifObject* long_long(AlifObject* _v) { // 5630
 static AlifObject* long_float(AlifObject* _v) { // 5848
 	double result{};
 	result = alifLong_asDouble(_v);
-	if (result == -1.0 /*and alifErr_occurred()*/) return nullptr;
+	if (result == -1.0 and alifErr_occurred()) return nullptr;
 	return alifFloat_fromDouble(result);
 }
 
@@ -3641,3 +3822,26 @@ AlifTypeObject _alifLongType_ = { // 6597
 	.free = alifMem_objFree,
 	.vectorCall = long_vectorCall,
 };
+
+
+
+ // 6661
+#define LONG_TO_INT(obj, value, type_name) \
+    do { \
+        AlifIntT flags = (ALIF_ASNATIVEBYTES_NATIVE_ENDIAN \
+                     | ALIF_ASNATIVEBYTES_ALLOW_INDEX); \
+        AlifSizeT bytes = alifLong_asNativeBytes(obj, value, sizeof(*value), flags); \
+        if (bytes < 0) { \
+            return -1; \
+        } \
+        if ((AlifUSizeT)bytes > sizeof(*value)) { \
+            /*alifErr_setString(_alfiExcOverflowError_, \
+                            "Alif int too large to convert to " type_name);*/ \
+            return -1; \
+        } \
+        return 0; \
+    } while (0)
+
+AlifIntT alifLong_asInt64(AlifObject* _obj, int64_t* _value) { // 6682
+	LONG_TO_INT(_obj, _value, "CPP int64_t");
+}

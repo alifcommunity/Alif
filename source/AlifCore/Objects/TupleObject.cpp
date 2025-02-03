@@ -385,21 +385,22 @@ static void tupleIter_dealloc(AlifTupleIterObject* _it) { // 986
 	alifObject_gcDel(_it);
 }
 
-static AlifObject* tupleIter_next(AlifTupleIterObject* _it) { // 1001
+static AlifObject* tupleIter_next(AlifObject* _obj) { // 1001
+	AlifTupleIterObject* it = (AlifTupleIterObject*)_obj;
 	AlifTupleObject* seq{};
 	AlifObject* item{};
 
-	seq = _it->seq;
+	seq = it->seq;
 	if (seq == nullptr)
 		return nullptr;
 
-	if (_it->index < ALIFTUPLE_GET_SIZE(seq)) {
-		item = ALIFTUPLE_GET_ITEM(seq, _it->index);
-		++_it->index;
+	if (it->index < ALIFTUPLE_GET_SIZE(seq)) {
+		item = ALIFTUPLE_GET_ITEM(seq, it->index);
+		++it->index;
 		return ALIF_NEWREF(item);
 	}
 
-	_it->seq = nullptr;
+	it->seq = nullptr;
 	ALIF_DECREF(seq);
 	return nullptr;
 }
@@ -414,7 +415,7 @@ AlifTypeObject _alifTupleIterType_ = { // 1076
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
 	//.traverse = (TraverseProc)tupleIter_traverse,
 	.iter = alifObject_selfIter,
-	.iterNext = (IterNextFunc)tupleIter_next,
+	.iterNext = tupleIter_next,
 	//.methods = tupleIter_methods,
 };
 

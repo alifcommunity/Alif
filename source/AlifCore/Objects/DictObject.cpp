@@ -2073,7 +2073,8 @@ static AlifIntT dict_dictMerge(AlifInterpreter* interp, AlifDictObject* mp, Alif
 	return 0;
 }
 
-static AlifIntT dict_merge(AlifInterpreter* interp, AlifObject* a, AlifObject* b, AlifIntT override) { // 3720
+static AlifIntT dict_merge(AlifInterpreter* interp,
+	AlifObject* a, AlifObject* b, AlifIntT override) { // 3720
 	AlifDictObject* mp{}, * other{};
 
 	if (a == nullptr or !ALIFDICT_CHECK(a) or b == nullptr) {
@@ -2163,7 +2164,6 @@ static AlifIntT dict_merge(AlifInterpreter* interp, AlifObject* a, AlifObject* b
 static AlifDictValues* copy_values(AlifDictValues* values) { // 3857
 	AlifDictValues* newvalues = new_values(values->capacity);
 	if (newvalues == nullptr) {
-		//alifErr_noMemory();
 		return nullptr;
 	}
 	newvalues->size = values->size;

@@ -245,11 +245,8 @@ static AlifObject* float_richCompare(AlifObject* _v, AlifObject* _w, AlifIntT _o
 			goto Compare;
 		}
 
-		uint64_t nbits64 = _alifLong_numBits(_w);
-		if (nbits64 > (unsigned int)DBL_MAX_EXP) {
-			if (nbits64 == (uint64_t)-1 and alifErr_occurred()) {
-				//alifErr_clear();
-			}
+		int64_t nbits64 = _alifLong_numBits(_w);
+		if (nbits64 > DBL_MAX_EXP) {
 			i = (double)vsign;
 			j = wsign * 2.0;
 			goto Compare;
