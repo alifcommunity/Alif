@@ -213,6 +213,51 @@ AlifObject* _alifImport_getBuiltinModuleNames(void) { // 2445
 }
 
 
+static AlifIntT init_importLib(AlifThread* tstate, AlifObject* sysmod) { // 3150
+	AlifInterpreter* interp = tstate->interpreter;
+	//AlifIntT verbose = alifInterpreter_getConfig(interp)->verbose;
+
+	// Import _importlib through its frozen version, _frozen_importlib.
+	//if (verbose) {
+	//	alifSys_formatStderr("import _frozen_importlib # frozen\n");
+	//}
+	if (alifImport_importFrozenModule("_frozen_importlib") <= 0) {
+		return -1;
+	}
+
+	AlifObject* importlib = alifImport_addModuleRef("_frozen_importlib");
+	if (importlib == nullptr) {
+		return -1;
+	}
+	IMPORTLIB(interp) = importlib;
+
+	// Import the _imp module
+	//if (verbose) {
+	//	alifSys_formatStderr("import _imp # builtin\n");
+	//}
+	AlifObject* imp_mod = bootstrap_imp(tstate);
+	if (imp_mod == nullptr) {
+		return -1;
+	}
+	if (_alifImport_setModuleString("_imp", imp_mod) < 0) {
+		ALIF_DECREF(imp_mod);
+		return -1;
+	}
+
+	// Install importlib as the implementation of import
+	AlifObject* value = alifObject_callMethod(importlib, "_install",
+		"OO", sysmod, imp_mod);
+	ALIF_DECREF(imp_mod);
+	if (value == nullptr) {
+		return -1;
+	}
+	ALIF_DECREF(value);
+
+	return 0;
+}
+
+
+
 AlifIntT _alifImport_initDefaultImportFunc(AlifInterpreter* _interp) { // 3338
 	// Get the __import__ function
 	AlifObject* importFunc{};
@@ -457,7 +502,19 @@ AlifIntT alifImport_init() { // 3954
 
 
 
+AlifIntT _alifImport_initCore(AlifThread* _thread,
+	AlifObject* _sysmod, AlifIntT _importLib) { // 4026
+	// XXX Initialize here: interp->modules and interp->importFunc.
+	// XXX Initialize here: sys.modules and sys.meta_path.
 
+	if (_importLib) {
+		if (init_importLib(_thread, _sysmod) < 0) {
+			return -1;
+		}
+	}
+
+	return 1;
+}
 
 
 

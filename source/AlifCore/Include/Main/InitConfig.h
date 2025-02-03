@@ -47,6 +47,8 @@ public:
 	wchar_t* runFilename{};
 	wchar_t* sysPath0{};
 
+	AlifIntT installImportLib{};
+
 	AlifIntT initMain{};
 };
 

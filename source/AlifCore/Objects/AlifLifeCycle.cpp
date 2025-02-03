@@ -378,7 +378,7 @@ static AlifIntT alifCore_interpreterInit(AlifThread* _thread) { // 843
 
 	config = &interpreter->config;
 
-	//status = alifImport_initCore(thread, sysMod, config_->installImportLib);
+	status = _alifImport_initCore(_thread, sysMod, config->installImportLib);
 	if (status < 0) goto done;
 
 done:
@@ -424,9 +424,9 @@ static AlifIntT alifInit_core(AlifDureRun* _dureRun,
 	if (!_dureRun->coreInitialized) {
 		status = alifInit_config(_dureRun, _threadPtr, &config);
 	}
-	//else {
-	//	//status = alifInit_coreReconfig(_dureRun, _tStateP, &config_);
-	//}
+	else {
+		//status = alifInit_coreReconfig(_dureRun, _threadPtr, &config);
+	}
 	if (status < 1) goto done;
 
 done:
