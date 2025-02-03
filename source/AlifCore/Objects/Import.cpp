@@ -238,13 +238,13 @@ static AlifObject* import_findAndLoad(AlifThread* tstate, AlifObject* abs_name) 
 
 	//AlifTimeT t1 = 0, accumulated_copy = accumulated;
 
-	AlifObject* sys_path = alifSys_getObject("path");
-	AlifObject* sys_meta_path = alifSys_getObject("meta_path");
-	AlifObject* sys_path_hooks = alifSys_getObject("path_hooks");
+	AlifObject* sysPath = alifSys_getObject("path");
+	AlifObject* sysMetaPath = alifSys_getObject("meta_path");
+	AlifObject* sysPathHooks = alifSys_getObject("path_hooks");
 	//if (_alifSys_audit(tstate, "import", "OOOOO",
-	//	abs_name, ALIF_NONE, sys_path ? sys_path : ALIF_NONE,
-	//	sys_meta_path ? sys_meta_path : ALIF_NONE,
-	//	sys_path_hooks ? sys_path_hooks : ALIF_NONE) < 0) {
+	//	abs_name, ALIF_NONE, sysPath ? sysPath : ALIF_NONE,
+	//	sysMetaPath ? sysMetaPath : ALIF_NONE,
+	//	sysPathHooks ? sysPathHooks : ALIF_NONE) < 0) {
 	//	return nullptr;
 	//}
 
@@ -264,8 +264,8 @@ static AlifObject* import_findAndLoad(AlifThread* tstate, AlifObject* abs_name) 
 //		accumulated = 0;
 //	}
 
-	//mod = alifObject_callMethodObjArgs(IMPORTLIB(interp), &ALIF_ID(_find_and_load),
-	//	abs_name, IMPORT_FUNC(interp), nullptr);
+	mod = alifObject_callMethodObjArgs(IMPORTLIB(interp), &ALIF_ID(_findAndLoad),
+		abs_name, IMPORT_FUNC(interp), nullptr);
 
 	//if (import_time) {
 	//	AlifTimeT t2;
@@ -314,7 +314,7 @@ AlifObject* alifImport_importModuleLevelObject(AlifObject* name, AlifObject* glo
 	}
 
 	if (level > 0) {
-		//abs_name = resolve_name(tstate, name, globals, level);
+		//absName = resolve_name(tstate, name, globals, level);
 		if (absName == nullptr)
 			goto error;
 	}

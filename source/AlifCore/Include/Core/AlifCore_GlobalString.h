@@ -99,6 +99,7 @@ public:
         STRUCT_FOR_ID(__subClassCheck__)
 		STRUCT_FOR_ID(__typeParams__)
 		STRUCT_FOR_ID(__weakRef__)
+		STRUCT_FOR_ID(_findAndLoad)
 		STRUCT_FOR_ID(_initializing)
 		STRUCT_FOR_ID(_isTextEncoding)
 		STRUCT_FOR_ID(Builtins)

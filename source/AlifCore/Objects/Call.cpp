@@ -455,6 +455,28 @@ AlifObject* alifObject_vectorCallMethod(AlifObject* _name, AlifObject* const* _a
 }
 
 
+AlifObject* alifObject_callMethodObjArgs(AlifObject* _obj, AlifObject* _name, ...) { // 863
+	AlifThread* tstate = _alifThread_get();
+	if (_obj == nullptr or _name == nullptr) {
+		return null_error(tstate);
+	}
+
+	AlifObject* callable = nullptr;
+	AlifIntT isMethod = _alifObject_getMethod(_obj, _name, &callable);
+	if (callable == nullptr) {
+		return nullptr;
+	}
+	_obj = isMethod ? _obj : nullptr;
+
+	va_list vargs;
+	va_start(vargs, _name);
+	AlifObject* result = object_vacall(tstate, _obj, callable, vargs);
+	va_end(vargs);
+
+	ALIF_DECREF(callable);
+	return result;
+}
+
 
 AlifObject* alifObject_callFunctionObjArgs(AlifObject* _callable, ...) { // 918
 	AlifThread* thread = _alifThread_get();

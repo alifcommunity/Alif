@@ -8,7 +8,7 @@ AlifObject* alifObject_call(AlifObject*, AlifObject*, AlifObject*); // 201
 
 AlifObject* alifObject_callFunctionObjArgs(AlifObject* _callable, ...); // 249
 
-
+AlifObject* alifObject_callMethodObjArgs(AlifObject*, AlifObject*, ...); // 260
 
  // 276
 #define ALIF_VECTORCALL_ARGUMENTS_OFFSET \
