@@ -38,6 +38,9 @@ public:
 
 	wchar_t* programName{};
 
+	AlifIntT moduleSearchPathsSet{};
+	AlifWStringList moduleSearchPaths{};
+
 	AlifIntT skipFirstLine{};
 	wchar_t* runCommand{};
 	wchar_t* runModule{};
@@ -53,3 +56,10 @@ void alifConfig_initAlifConfig(AlifConfig*); // 239
 
 void alifConfig_clear(AlifConfig*); // 241
 AlifIntT alifConfig_setString(AlifConfig*, wchar_t**, const wchar_t*);
+
+
+
+//typedef AlifInitConfig AlifInitConfig; // 281
+
+
+//AlifIntT alifInitConfig_setStrList(AlifInitConfig*, const char*, AlifUSizeT, char* const*); // 311

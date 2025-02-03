@@ -291,12 +291,12 @@ static AlifObject* import_findAndLoad(AlifThread* tstate, AlifObject* abs_name) 
 AlifObject* alifImport_importModuleLevelObject(AlifObject* name, AlifObject* globals,
 	AlifObject* locals, AlifObject* fromlist, AlifIntT level) { // 3688
 	AlifThread* thread = _alifThread_get();
-	AlifObject* abs_name = nullptr;
-	AlifObject* final_mod = nullptr;
+	AlifObject* absName = nullptr;
+	AlifObject* finalMod = nullptr;
 	AlifObject* mod = nullptr;
 	AlifObject* package = nullptr;
 	AlifInterpreter* interp = thread->interpreter;
-	AlifIntT has_from{};
+	AlifIntT hasFrom{};
 
 	if (name == nullptr) {
 		//_alifErr_setString(tstate, _alifExcValueError_, "Empty module name");
@@ -315,7 +315,7 @@ AlifObject* alifImport_importModuleLevelObject(AlifObject* name, AlifObject* glo
 
 	if (level > 0) {
 		//abs_name = resolve_name(tstate, name, globals, level);
-		if (abs_name == nullptr)
+		if (absName == nullptr)
 			goto error;
 	}
 	else {  /* level == 0 */
@@ -323,10 +323,10 @@ AlifObject* alifImport_importModuleLevelObject(AlifObject* name, AlifObject* glo
 			//_alifErr_setString(tstate, _alifExcValueError_, "Empty module name");
 			goto error;
 		}
-		abs_name = ALIF_NEWREF(name);
+		absName = ALIF_NEWREF(name);
 	}
 
-	mod = import_getModule(thread, abs_name);
+	mod = import_getModule(thread, absName);
 	if (mod == nullptr and _alifErr_occurred(thread)) {
 		goto error;
 	}
@@ -338,10 +338,10 @@ AlifObject* alifImport_importModuleLevelObject(AlifObject* name, AlifObject* glo
 	}
 	else {
 		ALIF_XDECREF(mod);
-		//mod = import_findAndLoad(tstate, abs_name);
+		//mod = import_findAndLoad(thread, absName);
 
 		//* alif
-		mod = load_sourceImpl(abs_name);
+		mod = load_sourceImpl(absName);
 		//* alif
 
 		if (mod == nullptr) {
@@ -349,13 +349,13 @@ AlifObject* alifImport_importModuleLevelObject(AlifObject* name, AlifObject* glo
 		}
 	}
 
-	has_from = 0;
+	hasFrom = 0;
 	if (fromlist != nullptr and fromlist != ALIF_NONE) {
-		has_from = alifObject_isTrue(fromlist);
-		if (has_from < 0)
+		hasFrom = alifObject_isTrue(fromlist);
+		if (hasFrom < 0)
 			goto error;
 	}
-	if (!has_from) {
+	if (!hasFrom) {
 		AlifSizeT len = ALIFUSTR_GET_LENGTH(name);
 		if (level == 0 or len > 0) {
 			AlifSizeT dot{};
@@ -367,7 +367,7 @@ AlifObject* alifImport_importModuleLevelObject(AlifObject* name, AlifObject* glo
 
 			if (dot == -1) {
 				/* No dot in module name, simple exit */
-				final_mod = ALIF_NEWREF(mod);
+				finalMod = ALIF_NEWREF(mod);
 				goto error;
 			}
 
@@ -377,21 +377,21 @@ AlifObject* alifImport_importModuleLevelObject(AlifObject* name, AlifObject* glo
 					goto error;
 				}
 
-				final_mod = alifImport_importModuleLevelObject(front, nullptr, nullptr, nullptr, 0);
+				finalMod = alifImport_importModuleLevelObject(front, nullptr, nullptr, nullptr, 0);
 				ALIF_DECREF(front);
 			}
 			else {
 				AlifSizeT cut_off = len - dot;
-				AlifSizeT abs_name_len = ALIFUSTR_GET_LENGTH(abs_name);
-				AlifObject* to_return = alifUStr_subString(abs_name, 0,
+				AlifSizeT abs_name_len = ALIFUSTR_GET_LENGTH(absName);
+				AlifObject* to_return = alifUStr_subString(absName, 0,
 					abs_name_len - cut_off);
 				if (to_return == nullptr) {
 					goto error;
 				}
 
-				final_mod = import_getModule(thread, to_return);
+				finalMod = import_getModule(thread, to_return);
 				ALIF_DECREF(to_return);
-				if (final_mod == nullptr) {
+				if (finalMod == nullptr) {
 					//if (!_alifErr_occurred(tstate)) {
 					//	_alifErr_format(tstate, _alifExcKeyError_,
 					//		"%R not in sys.modules as expected",
@@ -402,7 +402,7 @@ AlifObject* alifImport_importModuleLevelObject(AlifObject* name, AlifObject* glo
 			}
 		}
 		else {
-			final_mod = ALIF_NEWREF(mod);
+			finalMod = ALIF_NEWREF(mod);
 		}
 	}
 	else {
@@ -416,18 +416,18 @@ AlifObject* alifImport_importModuleLevelObject(AlifObject* name, AlifObject* glo
 			//	mod, fromlist, IMPORT_FUNC(interp), nullptr);
 		}
 		else {
-			final_mod = ALIF_NEWREF(mod);
+			finalMod = ALIF_NEWREF(mod);
 		}
 	}
 
 error:
-	ALIF_XDECREF(abs_name);
+	ALIF_XDECREF(absName);
 	ALIF_XDECREF(mod);
 	ALIF_XDECREF(package);
-	if (final_mod == nullptr) {
+	if (finalMod == nullptr) {
 		//remove_importLibFrames(tstate);
 	}
-	return final_mod;
+	return finalMod;
 }
 
 

@@ -12,7 +12,7 @@ extern void alifWStringList_clear(AlifWStringList*); // 59
 extern AlifIntT alifWStringList_copy(AlifWStringList*, const AlifWStringList*); // 60
 
 
-
+extern AlifObject* _alifWStringList_asList(const AlifWStringList*); // 64
 
 /* ------------------------------------------- AlifArgv ------------------------------------------- */
 

@@ -748,6 +748,8 @@
 	INIT_ID(ListComp), \
 	INIT_ID(MetaClass), \
 	INIT_ID(Mro), \
+	INIT_ID(NFields), \
+	INIT_ID(NSequenceFields), \
 	INIT_ID(Origin), \
 	INIT_ID(Sep), \
 	INIT_ID(Stderr), \

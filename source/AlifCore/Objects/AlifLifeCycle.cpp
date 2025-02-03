@@ -6,6 +6,7 @@
 #include "AlifCore_FloatObject.h"
 #include "AlifCore_FreeList.h"
 #include "AlifCore_Import.h"
+#include "AlifCore_PathConfig.h"
 #include "AlifCore_InitConfig.h"
 #include "AlifCore_LifeCycle.h"
 #include "AlifCore_Memory.h"
@@ -76,7 +77,8 @@ char* alif_setLocale(AlifIntT category) {  // 332
 }
 
 
-static AlifIntT interpreter_updateConfig(AlifThread* tstate, AlifIntT _onlyUpdatePathConfig) { // 391
+static AlifIntT interpreter_updateConfig(AlifThread* tstate,
+	AlifIntT _onlyUpdatePathConfig) { // 391
 	const AlifConfig* config = &tstate->interpreter->config;
 
 	if (!_onlyUpdatePathConfig) {
@@ -87,20 +89,20 @@ static AlifIntT interpreter_updateConfig(AlifThread* tstate, AlifIntT _onlyUpdat
 		}
 	}
 
-	//if (alif_isMainInterpreter(tstate->interpreter)) {
-	//	AlifIntT status = _alifPathConfig_updateGlobal(config);
-	//	if (status < 1) {
-	//		//_alifErr_setFromalifStatus(status);
-	//		return -1;
-	//	}
-	//}
+	if (alif_isMainInterpreter(tstate->interpreter)) {
+		AlifIntT status = _alifPathConfig_updateGlobal(config);
+		if (status < 1) {
+			//_alifErr_setFromalifStatus(status);
+			return -1;
+		}
+	}
 
 	tstate->interpreter->longState.maxStrDigits = config->intMaxStrDigits;
 
 	// Update the sys module for the new configuration
-	//if (_alifSys_updateConfig(tstate) < 0) {
-	//	return -1;
-	//}
+	if (_alifSys_updateConfig(tstate) < 0) {
+		return -1;
+	}
 	return 0;
 }
 

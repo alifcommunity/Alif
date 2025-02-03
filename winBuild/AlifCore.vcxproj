@@ -84,6 +84,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Optimizer.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ParkingLot.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Parser.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_PathConfig.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_QSBR.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Range.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Run.h" />
@@ -297,6 +298,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\ModSupport.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ModuleObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ObjectStack.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\PathConfig.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\PosixModule.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\QuiescentStatesBiaseRef.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\RangeObject.cpp" />

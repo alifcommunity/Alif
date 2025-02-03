@@ -1155,13 +1155,13 @@ dispatch_opcode :
 				fromlist = stackPointer[-1];
 				level = stackPointer[-2];
 				AlifObject* name = GETITEM(FRAME_CO_NAMES, oparg);
-				AlifObject* res_o = _alifEval_importName(_thread, _frame, name,
+				AlifObject* resObj = _alifEval_importName(_thread, _frame, name,
 					alifStackRef_asAlifObjectBorrow(fromlist),
 					alifStackRef_asAlifObjectBorrow(level));
 				ALIFSTACKREF_CLOSE(level);
 				ALIFSTACKREF_CLOSE(fromlist);
 				//if (res_o == nullptr) goto pop_2_error;
-				res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(res_o);
+				res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(resObj);
 				stackPointer[-2] = res;
 				stackPointer += -1;
 				DISPATCH();

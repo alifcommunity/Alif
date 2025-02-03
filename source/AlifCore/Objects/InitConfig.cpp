@@ -77,7 +77,7 @@ static const AlifConfigSpec _alifConfigSpec_[] = { // 95
     SPEC(argv, WSTR_LIST, Public, SYS_ATTR("argv")),
     //SPEC(executable, WSTR_OPT, Public, SYS_ATTR("executable")),
     SPEC(interactive, BOOL, Public, SYS_FLAG(2)),
-    //SPEC(moduleSearchPaths, WSTR_LIST, Public, SYS_ATTR("path")),
+    SPEC(moduleSearchPaths, WSTR_LIST, Public, SYS_ATTR("path")),
     SPEC(optimizationLevel, UINT, Public, SYS_FLAG(3)),
 
 
@@ -107,6 +107,7 @@ static const AlifConfigSpec _alifConfigSpec_[] = { // 95
 	SPEC(configInit, UINT, Init_Only, NO_SYS),
 	SPEC(initMain, BOOL, Init_Only, NO_SYS),
 	//SPEC(installImportLib, BOOL, Init_Only, NO_SYS),
+	SPEC(moduleSearchPathsSet, BOOL, Init_Only, NO_SYS),
 	SPEC(sysPath0, WSTR_OPT, Init_Only, NO_SYS),
 
 	// Array terminator
@@ -259,6 +260,24 @@ static AlifIntT alif_setArgcArgv(AlifSizeT _argc, wchar_t* const* _argv) { // 67
 	return res;
 }
 
+
+AlifObject* _alifWStringList_asList(const AlifWStringList* _list) { // 729
+	AlifObject* alifList = alifList_new(_list->length);
+	if (alifList == nullptr) {
+		return nullptr;
+	}
+
+	for (AlifSizeT i = 0; i < _list->length; i++) {
+		AlifObject* item = alifUStr_fromWideChar(_list->items[i], -1);
+		if (item == nullptr) {
+			ALIF_DECREF(alifList);
+			return nullptr;
+		}
+		ALIFLIST_SET_ITEM(alifList, i, item);
+	}
+	return alifList;
+}
+
 void alifConfig_clear(AlifConfig* _config) { // 773
 #define CLEAR(_ATTR)							\
     do {										\
@@ -269,6 +288,8 @@ void alifConfig_clear(AlifConfig* _config) { // 773
 	//CLEAR(_config->programName);
 
 	alifWStringList_clear(&_config->argv);
+	alifWStringList_clear(&_config->moduleSearchPaths);
+	_config->moduleSearchPathsSet = 0;
 
 	CLEAR(_config->runCommand);
 	CLEAR(_config->runModule);
@@ -742,6 +763,43 @@ AlifIntT alifConfig_read(AlifConfig* _config) { // 3047
 
 	return 1;
 }
+
+
+
+//struct AlifInitConfig { // 3427
+//public:
+//	//AlifPreConfig preConfig{};
+//	AlifConfig config{};
+//	InitTable* initTable{};
+//	AlifSizeT initTabSize{};
+//	AlifIntT status{};
+//	char* errMsg{};
+//};
+
+
+
+//AlifIntT alifInitConfig_setStrList(AlifInitConfig* _config, const char* _name,
+//	AlifUSizeT _length, char* const* _items) { // 3856
+//	void* rawMember{};
+//	const AlifConfigSpec* spec = initConfig_prepare(_config, _name, &rawMember);
+//	if (spec == nullptr) {
+//		return -1;
+//	}
+//
+//	if (spec->type != AlifConfigMemberType_::Alif_Config_Member_WSTR_LIST) {
+//		//initConfig_setError(config, "config option type is not strings list");
+//		return -1;
+//	}
+//	AlifWStringList* list = (AlifWStringList*)rawMember;
+//	if (_alifWideStringList_fromUTF8(_config, list, _length, _items) < 0) {
+//		return -1;
+//	}
+//
+//	if (strcmp(_name, "module_search_paths") == 0) {
+//		_config->config.moduleSearchPathsSet = 1;
+//	}
+//	return 0;
+//}
 
 
 

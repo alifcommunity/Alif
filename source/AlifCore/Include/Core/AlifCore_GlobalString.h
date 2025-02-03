@@ -114,6 +114,8 @@ public:
      	STRUCT_FOR_ID(ListComp)
      	STRUCT_FOR_ID(MetaClass)
      	STRUCT_FOR_ID(Mro)
+		STRUCT_FOR_ID(NFields)
+		STRUCT_FOR_ID(NSequenceFields)
      	STRUCT_FOR_ID(Origin)
      	STRUCT_FOR_ID(Sep)
      	STRUCT_FOR_ID(Stderr)
