@@ -276,6 +276,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\FormatterUStr.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Frame.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\FrameObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\Frozen.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\FuncObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Future.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GCFreeThreading.cpp" />

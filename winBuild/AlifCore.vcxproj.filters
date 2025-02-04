@@ -304,6 +304,9 @@
     <ClCompile Include="..\source\AlifCore\Objects\PathConfig.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\Frozen.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">

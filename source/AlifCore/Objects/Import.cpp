@@ -213,6 +213,205 @@ AlifObject* _alifImport_getBuiltinModuleNames(void) { // 2445
 }
 
 
+enum FrozenStatus { // 2820
+	Frozen_Okay,
+	Frozen_Bad_Name,
+	Frozen_Not_Found,
+	Frozen_Disabled,
+	Frozen_Excluded,
+
+	Frozen_Invalid,  
+};
+
+
+static const Frozen* lookUp_frozen(const char* name) { // 2865
+	const Frozen* p{};
+	for (p = _alifImportFrozenBootstrap_; ; p++) {
+		if (p->name == nullptr) {
+			// We hit the end-of-list sentinel value.
+			break;
+		}
+		if (strcmp(name, p->name) == 0) {
+			return p;
+		}
+	}
+	// Prefer custom modules, if any.  Frozen stdlib modules can be
+	// disabled here by setting "code" to NULL in the array entry.
+	if (_alifImportFrozenModules_ != nullptr) {
+		for (p = _alifImportFrozenModules_; ; p++) {
+			if (p->name == nullptr) {
+				break;
+			}
+			if (strcmp(name, p->name) == 0) {
+				return p;
+			}
+		}
+	}
+	// Frozen stdlib modules may be disabled.
+	if (use_frozen()) {
+		for (p = _alifImportFrozenStdlib_; ; p++) {
+			if (p->name == nullptr) {
+				break;
+			}
+			if (strcmp(name, p->name) == 0) {
+				return p;
+			}
+		}
+		for (p = _alifImportFrozenTest_; ; p++) {
+			if (p->name == nullptr) {
+				break;
+			}
+			if (strcmp(name, p->name) == 0) {
+				return p;
+			}
+		}
+	}
+	return nullptr;
+}
+
+
+class FrozenInfo { // 2913
+public:
+	AlifObject* nameobj{};
+	const char* data{};
+	AlifSizeT size{};
+	bool isPackage{};
+	bool isAlias{};
+	const char* origname{};
+};
+
+
+static FrozenStatus find_frozen(AlifObject* nameobj, FrozenInfo* info) { // 2922
+	if (info != nullptr) {
+		memset(info, 0, sizeof(*info));
+	}
+
+	if (nameobj == nullptr or nameobj == ALIF_NONE) {
+		return FrozenStatus::Frozen_Bad_Name;
+	}
+	const char* name = alifUStr_asUTF8(nameobj);
+	if (name == nullptr) {
+		//alifErr_clear();
+		return FrozenStatus::Frozen_Bad_Name;
+	}
+
+	const Frozen* p = lookUp_frozen(name);
+	if (p == nullptr) {
+		return FrozenStatus::Frozen_Not_Found;
+	}
+	if (info != nullptr) {
+		info->nameobj = nameobj;  // borrowed
+		info->data = (const char*)p->code;
+		info->size = p->size;
+		info->isPackage = p->isPackage;
+		if (p->size < 0) {
+			// backward compatibility with negative size values
+			info->size = -(p->size);
+			info->isPackage = true;
+		}
+		info->origname = name;
+		info->isAlias = resolve_moduleAlias(name, _alifImportFrozenAliases_,
+			&info->origname);
+	}
+	if (p->code == nullptr) {
+		/* It is frozen but marked as un-importable. */
+		return FrozenStatus::Frozen_Excluded;
+	}
+	if (p->code[0] == '\0' or p->size == 0) {
+		/* Does not contain executable code. */
+		return FrozenStatus::Frozen_Invalid;
+	}
+	return FrozenStatus::Frozen_Okay;
+}
+
+
+AlifIntT alifImport_importFrozenModuleObject(AlifObject* name) { // 2998
+	AlifThread* tstate = _alifThread_get();
+	AlifObject* co{}, * m{}, * d = nullptr;
+	AlifIntT err{};
+
+	FrozenInfo info{};
+	FrozenStatus status = find_frozen(name, &info);
+	if (status == FrozenStatus::Frozen_Not_Found or status == FrozenStatus::Frozen_Disabled) {
+		return 0;
+	}
+	else if (status == FrozenStatus::Frozen_Bad_Name) {
+		return 0;
+	}
+	else if (status != FrozenStatus::Frozen_Okay) {
+		//set_frozenError(status, name);
+		return -1;
+	}
+	co = unmarshal_frozenCode(tstate->interpreter, &info);
+	if (co == nullptr) {
+		return -1;
+	}
+	if (info.isPackage) {
+		/* Set __path__ to the empty list */
+		AlifObject* l{};
+		m = import_addModule(tstate, name);
+		if (m == nullptr)
+			goto err_return;
+		d = alifModule_getDict(m);
+		l = alifList_new(0);
+		if (l == nullptr) {
+			ALIF_DECREF(m);
+			goto err_return;
+		}
+		err = alifDict_setItemString(d, "__path__", l);
+		ALIF_DECREF(l);
+		ALIF_DECREF(m);
+		if (err != 0)
+			goto err_return;
+	}
+	d = moduleDict_forExec(tstate, name);
+	if (d == nullptr) {
+		goto err_return;
+	}
+	m = execCode_inModule(tstate, name, d, co);
+	if (m == nullptr) {
+		goto err_return;
+	}
+	ALIF_DECREF(m);
+	/* Set __origname__ . */
+	AlifObject* origname;
+	if (info.origname) {
+		origname = alifUStr_fromString(info.origname);
+		if (origname == nullptr) {
+			goto err_return;
+		}
+	}
+	else {
+		origname = ALIF_NEWREF(ALIF_NONE);
+	}
+	err = alifDict_setItemString(d, "__origname__", origname);
+	ALIF_DECREF(origname);
+	if (err != 0) {
+		goto err_return;
+	}
+	ALIF_DECREF(d);
+	ALIF_DECREF(co);
+	return 1;
+
+err_return:
+	ALIF_XDECREF(d);
+	ALIF_DECREF(co);
+	return -1;
+}
+
+
+AlifIntT alifImport_importFrozenModule(const char* _name) { // 3074
+	AlifObject* nameobj{};
+	AlifIntT ret{};
+	nameobj = alifUStr_internFromString(_name);
+	if (nameobj == nullptr)
+		return -1;
+	ret = alifImport_importFrozenModuleObject(nameobj);
+	ALIF_DECREF(nameobj);
+	return ret;
+}
+
+
 static AlifIntT init_importLib(AlifThread* tstate, AlifObject* sysmod) { // 3150
 	AlifInterpreter* interp = tstate->interpreter;
 	//AlifIntT verbose = alifInterpreter_getConfig(interp)->verbose;
@@ -232,26 +431,24 @@ static AlifIntT init_importLib(AlifThread* tstate, AlifObject* sysmod) { // 3150
 	IMPORTLIB(interp) = importlib;
 
 	// Import the _imp module
-	//if (verbose) {
-	//	alifSys_formatStderr("import _imp # builtin\n");
+
+	//AlifObject* imp_mod = bootstrap_imp(tstate);
+	//if (imp_mod == nullptr) {
+	//	return -1;
 	//}
-	AlifObject* imp_mod = bootstrap_imp(tstate);
-	if (imp_mod == nullptr) {
-		return -1;
-	}
-	if (_alifImport_setModuleString("_imp", imp_mod) < 0) {
-		ALIF_DECREF(imp_mod);
-		return -1;
-	}
+	//if (_alifImport_setModuleString("_imp", imp_mod) < 0) {
+	//	ALIF_DECREF(imp_mod);
+	//	return -1;
+	//}
 
 	// Install importlib as the implementation of import
-	AlifObject* value = alifObject_callMethod(importlib, "_install",
-		"OO", sysmod, imp_mod);
-	ALIF_DECREF(imp_mod);
-	if (value == nullptr) {
-		return -1;
-	}
-	ALIF_DECREF(value);
+	//AlifObject* value = alifObject_callMethod(importlib, "_install",
+	//	"OO", sysmod, imp_mod);
+	//ALIF_DECREF(imp_mod);
+	//if (value == nullptr) {
+	//	return -1;
+	//}
+	//ALIF_DECREF(value);
 
 	return 0;
 }
