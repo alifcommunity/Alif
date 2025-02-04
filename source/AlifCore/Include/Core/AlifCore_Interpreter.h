@@ -6,7 +6,7 @@
 #include "AlifCore_Code.h"
 #include "AlifCore_Codecs.h"
 #include "AlifCore_GC.h"
-#include "AlifCore_TypeID.h"
+#include "AlifCore_UniqueID.h"
 #include "AlifCore_DoubleToASCII.h"
 #include "AlifCore_Function.h"
 #include "AlifCore_GenObject.h"
@@ -109,7 +109,7 @@ public:
 
 	MimallocInterpState mimalloc{};
 	BRCState brc{};  // biased reference counting state
-	AlifTypeIDPool typeIDs{};
+	AlifUniqueIDPool uniqueIDs{};
 	AlifMutex weakrefLocks[NUM_WEAKREF_LIST_LOCKS];
 
 	StopTheWorldState stopTheWorld{};

@@ -320,7 +320,7 @@ static AlifObject* new_dict(AlifInterpreter* _interp,
 	mp_->keys = _keys;
 	mp_->values = _values;
 	mp_->used = _used;
-	mp_->versionTag = DICT_NEXT_VERSION(_interp);
+	mp_->watcherTag = 0;
 	return (AlifObject*)mp_;
 }
 
@@ -814,7 +814,7 @@ read_failed:
 	ix_ = alifDict_lookup(_mp, _key, _hash, &value);
 	*_valueAddr = value;
 	if (value != nullptr) {
-		ALIF_INCREF(value);
+		_alif_newRefWithLock(value);
 	}
 	ALIF_END_CRITICAL_SECTION();
 	return ix_;
@@ -913,8 +913,7 @@ static inline AlifIntT insert_combinedDict(AlifInterpreter* _interp, AlifDictObj
 		}
 	}
 	
-	uint64_t newVersion = _alifDict_notifyEvent(
-		_interp, AlifDictWatchEvent_::AlifDict_Event_Added, _mp, _key, _value);
+	_alifDict_notifyEvent(_interp, AlifDictWatchEvent_::AlifDict_Event_Added, _mp, _key, _value);
 	_mp->keys->version = 0;
 
 	AlifSizeT hashpos = find_emptySlot(_mp->keys, _hash);
@@ -933,7 +932,7 @@ static inline AlifIntT insert_combinedDict(AlifInterpreter* _interp, AlifDictObj
 		STORE_VALUE(ep_, _value);
 		STORE_HASH(ep_, _hash);
 	}
-	_mp->versionTag = newVersion;
+
 	STORE_KEYS_USABLE(_mp->keys, _mp->keys->usable - 1);
 	STORE_KEYS_NENTRIES(_mp->keys, _mp->keys->nentries + 1);
 	return 0;
@@ -970,16 +969,14 @@ static void insert_splitValue(AlifInterpreter* _interp,
 	MAINTAIN_TRACKING(_mp, _key, _value);
 	AlifObject* oldValue = _mp->values->values[ix_];
 	if (oldValue == nullptr) {
-		//uint64_t newVersion = alifDict_notifyEvent(interp, ALIFDICT_EVENT_ADDED, _mp, _key, _value);
+		_alifDict_notifyEvent(_interp, AlifDictWatchEvent_::AlifDict_Event_Added, _mp, _key, _value);
 		STORE_SPLIT_VALUE(_mp, ix_, ALIF_NEWREF(_value));
 		alifDictValues_addToInsertionOrder(_mp->values, ix_);
 		STORE_USED(_mp, _mp->used + 1);
-		//_mp->versionTag = newVersion;
 	}
 	else {
-		//uint64_t newVersion = alifDict_notifyEvent(interp, ALIFDICT_EVENT_MODIFIED, _mp, _key, _value);
+		_alifDict_notifyEvent(_interp, AlifDictWatchEvent_::AlifDict_Event_Modified, _mp, _key, _value);
 		STORE_SPLIT_VALUE(_mp, ix_, ALIF_NEWREF(_value));
-		//_mp->versionTag = newVersion;
 		ALIF_DECREF(oldValue);
 	}
 }
@@ -1022,7 +1019,7 @@ static AlifIntT insert_dict(AlifInterpreter* _interp, AlifDictObject* _mp,
 	}
 
 	if (oldValue != _value) {
-		uint64_t newVersion = _alifDict_notifyEvent(
+		_alifDict_notifyEvent(
 			_interp, AlifDictWatchEvent_::AlifDict_Event_Modified, _mp, _key, _value);
 		if (DK_IS_USTR(_mp->keys)) {
 			AlifDictUStrEntry* ep_ = &dk_uStrEntries(_mp->keys)[ix_];
@@ -1032,7 +1029,6 @@ static AlifIntT insert_dict(AlifInterpreter* _interp, AlifDictObject* _mp,
 			AlifDictKeyEntry* ep_ = &dk_entries(_mp->keys)[ix_];
 			STORE_VALUE(ep_, _value);
 		}
-		_mp->versionTag = newVersion;
 	}
 	ALIF_XDECREF(oldValue); /* which **CAN** re-enter */
 	ALIF_DECREF(_key);
@@ -1055,9 +1051,7 @@ static AlifIntT insertTo_emptyDict(AlifInterpreter* _interp, AlifDictObject* _mp
 		ALIF_DECREF(_value);
 		return -1;
 	}
-	uint64_t newVersion = _alifDict_notifyEvent(
-		_interp, AlifDict_Event_Added, _mp, _key, _value);
-
+	_alifDict_notifyEvent(_interp, AlifDictWatchEvent_::AlifDict_Event_Added, _mp, _key, _value);
 
 	MAINTAIN_TRACKING(_mp, _key, _value);
 
@@ -1075,7 +1069,6 @@ static AlifIntT insertTo_emptyDict(AlifInterpreter* _interp, AlifDictObject* _mp
 		STORE_VALUE(ep_, _value);
 	}
 	STORE_USED(_mp, _mp->used + 1);
-	_mp->versionTag = newVersion;
 	newKeys->usable--;
 	newKeys->nentries++;
 	alifAtomic_storePtrRelease(&_mp->keys, newKeys);
@@ -1527,13 +1520,12 @@ static void deleteIndex_fromValues(AlifDictValues* _values, AlifSizeT _ix) { // 
 
 
 static void delItem_common(AlifDictObject* _mp, AlifHashT _hash, AlifSizeT _ix,
-	AlifObject* _old_value /*, uint64_t new_version*/) { // 2536
+	AlifObject* _old_value) { // 2536
 	AlifObject* oldKey{};
 
 	AlifSizeT hashPos = lookDict_index(_mp->keys, _hash, _ix);
 
 	STORE_USED(_mp, _mp->used - 1);
-	//mp_->versionTag = _newVersion;
 	if (ALIFDICT_HASSPLITTABLE(_mp)) {
 		STORE_SPLIT_VALUE(_mp, _ix, nullptr);
 		deleteIndex_fromValues(_mp->values, _ix);
@@ -1591,9 +1583,8 @@ static AlifIntT delItem_knownHashLockHeld(AlifObject* _op,
 	}
 
 	AlifInterpreter* interp = _alifInterpreter_get();
-	//uint64_t newVersion = alifDict_notifyEvent(
-	//	interp, AlifDict_Event_Deleted, mp_, key, nullptr);
-	delItem_common(mp_, _hash, ix_, oldValue/*, newVersion*/);
+	_alifDict_notifyEvent(interp, AlifDictWatchEvent_::AlifDict_Event_Deleted, mp_, _key, nullptr);
+	delItem_common(mp_, _hash, ix_, oldValue);
 	return 0;
 }
 
@@ -1698,9 +1689,8 @@ AlifIntT alifDict_popKnownHash(AlifDictObject* _mp, AlifObject* _key,
 	}
 
 	AlifInterpreter* interp = _alifInterpreter_get();
-	//uint64_t newVersion = _alifDict_notifyEvent(
-	//	interp, alifDict_Event_Deleted, mp, key, nullptr);
-	delItem_common(_mp, _hash, ix, ALIF_NEWREF(oldValue)/*, newVersion*/);
+	_alifDict_notifyEvent(interp, AlifDictWatchEvent_::AlifDict_Event_Deleted, _mp, _key, nullptr);
+	delItem_common(_mp, _hash, ix, ALIF_NEWREF(oldValue));
 
 	if (_result) {
 		*_result = oldValue;
@@ -2000,8 +1990,8 @@ static AlifIntT dict_dictMerge(AlifInterpreter* interp, AlifDictObject* mp, Alif
 			(DK_LOG_SIZE(okeys) == ALIFDICT_LOG_MINSIZE or
 				USABLE_FRACTION(DK_SIZE(okeys) / 2) < other->used)
 			) {
-			uint64_t new_version = _alifDict_notifyEvent(
-				interp, AlifDictWatchEvent_::AlifDict_Event_Cloned, mp, (AlifObject*)other, nullptr);
+			_alifDict_notifyEvent(interp, AlifDictWatchEvent_::AlifDict_Event_Cloned,
+				mp, (AlifObject*)other, nullptr);
 			AlifDictKeysObject* keys = cloneCombined_dictKeys(other);
 			if (keys == nullptr)
 				return -1;
@@ -2010,7 +2000,6 @@ static AlifIntT dict_dictMerge(AlifInterpreter* interp, AlifDictObject* mp, Alif
 			dictKeys_decRef(interp, mp->keys, IS_DICT_SHARED(mp));
 			mp->keys = keys;
 			STORE_USED(mp, other->used);
-			mp->versionTag = new_version;
 
 			if (ALIFOBJECT_GC_IS_TRACKED(other) and !ALIFOBJECT_GC_IS_TRACKED(mp)) {
 				/* Maintain tracking. */
@@ -2204,7 +2193,7 @@ static AlifObject* copy_lockHeld(AlifObject* o) { // 3876
 		split_copy->values = newvalues;
 		split_copy->keys = mp->keys;
 		split_copy->used = mp->used;
-		split_copy->versionTag = DICT_NEXT_VERSION(interp);
+		split_copy->watcherTag = 0;
 		dictKeys_incRef(mp->keys);
 		if (ALIFOBJECT_GC_IS_TRACKED(mp))
 			ALIFOBJECT_GC_TRACK(split_copy);
@@ -3252,7 +3241,8 @@ AlifIntT alifObject_storeInstanceAttribute(AlifObject* _obj,
 	return storeInstance_attrDict(_obj, dict, _name, _value);
 }
 
-bool alifObject_tryGetInstanceAttribute(AlifObject* _obj, AlifObject* _name, AlifObject** _attr) { // 6891
+bool alifObject_tryGetInstanceAttribute(AlifObject* _obj,
+	AlifObject* _name, AlifObject** _attr) { // 6891
 	AlifDictValues* values = alifObject_inlineValues(_obj);
 	if (!alifAtomic_loadUint8(&values->valid)) {
 		return false;
@@ -3310,7 +3300,8 @@ bool alifObject_tryGetInstanceAttribute(AlifObject* _obj, AlifObject* _name, Ali
 
 
 
-AlifIntT alifDict_setItemLockHeld(AlifDictObject* _dict, AlifObject* _name, AlifObject* _value) { // 6685
+AlifIntT alifDict_setItemLockHeld(AlifDictObject* _dict,
+	AlifObject* _name, AlifObject* _value) { // 6685
 	if (_value == nullptr) {
 		AlifHashT hash = alifObject_hashFast(_name);
 		if (hash == -1) {
@@ -3356,7 +3347,7 @@ static inline AlifObject* ensure_nonManagedDict(AlifObject* obj,
 			dict = alifDict_new();
 		}
 		alifAtomic_storePtrRelease(&*dictptr, dict);
-		done :
+done:
 		ALIF_END_CRITICAL_SECTION();
 	}
 	return dict;

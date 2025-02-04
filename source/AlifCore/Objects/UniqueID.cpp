@@ -3,7 +3,7 @@
 #include "AlifCore_Lock.h"
 #include "AlifCore_State.h"
 #include "AlifCore_Object.h"
-#include "AlifCore_TypeID.h"
+#include "AlifCore_UniqueID.h"
 
 
 
@@ -14,7 +14,7 @@
 #define UNLOCK_POOL(_pool) ALIFMUTEX_UNLOCK(&_pool->mutex)
 
 
-static AlifIntT resizeInterp_typeIDPool(AlifTypeIDPool* pool) { // 20
+static AlifIntT resizeInterp_typeIDPool(AlifUniqueIDPool* pool) { // 20
 	if ((size_t)pool->size > ALIF_SIZET_MAX / (2 * sizeof(*pool->table))) {
 		return -1;
 	}
@@ -24,7 +24,7 @@ static AlifIntT resizeInterp_typeIDPool(AlifTypeIDPool* pool) { // 20
 		new_size = POOL_MIN_SIZE;
 	}
 
-	AlifTypeIDEntry* table = (AlifTypeIDEntry*)alifMem_dataRealloc(pool->table, new_size * sizeof(*pool->table));
+	AlifUniqueIDEntry* table = (AlifUniqueIDEntry*)alifMem_dataRealloc(pool->table, new_size * sizeof(*pool->table));
 
 	if (table == nullptr) {
 		return -1;
@@ -45,65 +45,64 @@ static AlifIntT resizeInterp_typeIDPool(AlifTypeIDPool* pool) { // 20
 
 
 static AlifIntT resize_localRefCounts(AlifThreadImpl* _thread) { // 50
-	if (_thread->types.isFinalized) return -1;
+	if (_thread->refCounts.isFinalized) return -1;
 
-	AlifTypeIDPool* pool = &_thread->base.interpreter->typeIDs;
+	AlifUniqueIDPool* pool = &_thread->base.interpreter->uniqueIDs;
 	AlifSizeT size = alifAtomic_loadSize(&pool->size);
 
-	AlifSizeT* refCnts = (AlifSizeT*)alifMem_dataRealloc(_thread->types.refCounts, size * sizeof(AlifSizeT));
+	AlifSizeT* refCnts = (AlifSizeT*)alifMem_dataRealloc(_thread->refCounts.vals, size * sizeof(AlifSizeT));
 	if (refCnts == nullptr)	return -1;
 
-	AlifSizeT oldSize = _thread->types.size;
+	AlifSizeT oldSize = _thread->refCounts.size;
 	if (oldSize < size) {
 		memset(refCnts + oldSize, 0, (size - oldSize) * sizeof(AlifSizeT));
 	}
 
-	_thread->types.refCounts = refCnts;
-	_thread->types.size = size;
+	_thread->refCounts.vals = refCnts;
+	_thread->refCounts.size = size;
 	return 0;
 }
 
 
 
-void _alifType_assignId(AlifHeapTypeObject* type) { // 76
+AlifSizeT _alifObject_assignUniqueId(AlifObject* _obj) { // 76
 	AlifInterpreter* interp = _alifInterpreter_get();
-	AlifTypeIDPool* pool = &interp->typeIDs;
+	AlifUniqueIDPool* pool = &interp->uniqueIDs;
 
 	LOCK_POOL(pool);
 	if (pool->freelist == nullptr) {
 		if (resizeInterp_typeIDPool(pool) < 0) {
-			type->uniqueID = -1;
 			UNLOCK_POOL(pool);
-			return;
+			return -1;
 		}
 	}
 
-	AlifTypeIDEntry* entry = pool->freelist;
+	AlifUniqueIDEntry* entry = pool->freelist;
 	pool->freelist = entry->next;
-	entry->type = type;
-	alifObject_setDeferredRefcount((AlifObject*)type);
-	type->uniqueID = (entry - pool->table);
+	entry->obj = _obj;
+	alifObject_setDeferredRefcount(_obj);
+	AlifSizeT unicodeID = (entry - pool->table);
 	UNLOCK_POOL(pool);
+	return unicodeID;
 }
 
 
 
 
 
-void alifType_releaseID(AlifHeapTypeObject* type) { // 99
+void _alifObject_releaseUniqueId(AlifSizeT _uniqueID) { // 99
 	AlifInterpreter* interp = _alifInterpreter_get();
-	AlifTypeIDPool* pool = &interp->typeIDs;
+	AlifUniqueIDPool* pool = &interp->uniqueIDs;
 
-	if (type->uniqueID < 0) {
+	if (_uniqueID < 0) {
 		return;
 	}
 
 	LOCK_POOL(pool);
-	AlifTypeIDEntry* entry = &pool->table[type->uniqueID];
+	AlifUniqueIDEntry* entry = &pool->table[_uniqueID];
 	entry->next = pool->freelist;
 	pool->freelist = entry;
 
-	type->uniqueID = -1;
 	UNLOCK_POOL(pool);
 }
 
@@ -117,5 +116,5 @@ void alifType_incRefSlow(AlifHeapTypeObject* type) { // 120
 		ALIF_INCREF(type);
 		return;
 	}
-	thread->types.refCounts[type->uniqueID]++;
+	thread->refCounts.vals[type->uniqueID]++;
 }

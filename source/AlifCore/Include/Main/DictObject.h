@@ -67,12 +67,9 @@ typedef class DictValues AlifDictValues; // 6
 class AlifDictObject { // 11
 public:
 	ALIFOBJECT_HEAD{};
-
 	AlifSizeT used{};
-	uint64_t versionTag{};
-
+	uint64_t watcherTag{};
 	AlifDictKeysObject* keys{};
-
 	AlifDictValues* values{};
 };
 

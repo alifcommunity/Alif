@@ -102,7 +102,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Token.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Traceback.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Tuple.h" />
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_TypeID.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_UniqueID.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_TypeObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_UnionObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_UStrObject.h" />
@@ -313,7 +313,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\Traceback.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\TupleObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ParkingLot.cpp" />
-    <ClCompile Include="..\source\AlifCore\Objects\TypeID.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\UniqueID.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\TypeObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\UnionObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\UStrCppType.cpp" />

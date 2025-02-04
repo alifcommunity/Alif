@@ -131,22 +131,6 @@ static inline AlifDictUStrEntry* dk_uStrEntries(AlifDictKeysObject* _dk) { // 21
 
 
 
-#define THREAD_LOCAL_DICT_VERSION_COUNT 256
-#define THREAD_LOCAL_DICT_VERSION_BATCH THREAD_LOCAL_DICT_VERSION_COUNT * DICT_VERSION_INCREMENT
-
-
-static inline uint64_t dict_nextVersion(AlifInterpreter* _interp) { // 235
-	AlifThread* tstate = alifThread_get();
-	uint64_t curProgress = (tstate->dictGlobalVersion &
-		(THREAD_LOCAL_DICT_VERSION_BATCH - 1));
-	if (curProgress == 0) {
-		uint64_t next = alifAtomic_addUint64(&_interp->dictState.globalVersion,
-			THREAD_LOCAL_DICT_VERSION_BATCH);
-		tstate->dictGlobalVersion = next;
-	}
-	return tstate->dictGlobalVersion += DICT_VERSION_INCREMENT;
-}
-#define DICT_NEXT_VERSION(_interp) dict_nextVersion(_interp)
 
 
 
@@ -154,14 +138,13 @@ void _alifDict_sendEvent(AlifIntT, AlifDictWatchEvent_,
 	AlifDictObject*, AlifObject*, AlifObject*); // 256
 
 
-static inline uint64_t _alifDict_notifyEvent(AlifInterpreter* _interp,
+static inline void _alifDict_notifyEvent(AlifInterpreter* _interp,
 	AlifDictWatchEvent_ _event, AlifDictObject* _mp, AlifObject* _key,
 	AlifObject* _value) { // 264
-	AlifIntT watcherBits = _mp->versionTag & DICT_WATCHER_MASK;
+	AlifIntT watcherBits = _mp->watcherTag & DICT_WATCHER_MASK;
 	if (watcherBits) {
 		_alifDict_sendEvent(watcherBits, _event, _mp, _key, _value);
 	}
-	return DICT_NEXT_VERSION(_interp) | (_mp->versionTag & DICT_WATCHER_AND_MODIFICATION_MASK);
 }
 
 

@@ -1485,7 +1485,7 @@ static AlifTypeObject* typeNew_alloc(TypeNewCtx* _ctx) { // 3898
 	et->module_ = nullptr;
 	//et->tpName = nullptr;
 
-	_alifType_assignId(et);
+	et->uniqueID = _alifObject_assignUniqueId((AlifObject*)et);
 
 	return type;
 }
@@ -2240,7 +2240,7 @@ static void type_dealloc(AlifObject* self) { // 5911
 	ALIF_XDECREF(et->module_);
 	alifMem_objFree(et->name);
 
-	alifType_releaseID(et);
+	_alifObject_releaseUniqueId(et->uniqueID);
 
 	ALIF_TYPE(type)->free((AlifObject*)type);
 }

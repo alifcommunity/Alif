@@ -21,9 +21,9 @@ public:
 
 	class {
 	public:
-		AlifSizeT* refCounts{};
+		AlifSizeT* vals{};
 		AlifSizeT size{};
 		AlifIntT isFinalized{};
-	}types{};
+	}refCounts{};
 
 };

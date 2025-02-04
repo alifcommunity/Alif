@@ -11,7 +11,6 @@
 
 class AlifDictState { // 14
 public:
-	uint64_t globalVersion{};
 	uint32_t nextKeysVersion{};
 	AlifDictWatchCallback watchers[DICT_MAX_WATCHERS]{};
 };

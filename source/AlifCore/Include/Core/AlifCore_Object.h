@@ -3,7 +3,7 @@
 #include "AlifCore_GC.h"
 #include "AlifCore_Interpreter.h"
 #include "AlifCore_State.h"
-#include "AlifCore_TypeID.h"
+#include "AlifCore_UniqueID.h"
 
 
 
@@ -91,8 +91,8 @@ static inline void alif_increaseRefType(AlifTypeObject* type) { // 296
 	AlifThreadImpl* thread = (AlifThreadImpl*)_alifThread_get();
 	AlifHeapTypeObject* ht = (AlifHeapTypeObject*)type;
 
-	if ((AlifUSizeT)ht->uniqueID < (AlifUSizeT)thread->types.size) {
-		thread->types.refCounts[ht->uniqueID]++;
+	if ((AlifUSizeT)ht->uniqueID < (AlifUSizeT)thread->refCounts.size) {
+		thread->refCounts.vals[ht->uniqueID]++;
 	}
 	else {
 		alifType_incRefSlow(ht);
@@ -111,8 +111,8 @@ static inline void alif_decreaseRefType(AlifTypeObject* _type) { // 336
 	AlifThreadImpl* thread = (AlifThreadImpl*)_alifThread_get();
 	AlifHeapTypeObject* ht = (AlifHeapTypeObject*)_type;
 
-	if ((AlifUSizeT)ht->uniqueID < (AlifUSizeT)thread->types.size) {
-		thread->types.refCounts[ht->uniqueID]--;
+	if ((AlifUSizeT)ht->uniqueID < (AlifUSizeT)thread->refCounts.size) {
+		thread->refCounts.vals[ht->uniqueID]--;
 	}
 	else {
 		ALIF_DECREF(_type);
