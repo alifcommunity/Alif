@@ -8,6 +8,8 @@
 #include "AlifCore_Object.h"
 
 
+#include "Marshal.h"
+
 
 //* alif
 #include "AlifCore_Compile.h"
@@ -224,7 +226,7 @@ enum FrozenStatus { // 2820
 };
 
 
-static const Frozen* lookUp_frozen(const char* name) { // 2865
+static const Frozen* lookup_frozen(const char* name) { // 2865
 	const Frozen* p{};
 	for (p = _alifImportFrozenBootstrap_; ; p++) {
 		if (p->name == nullptr) {
@@ -235,37 +237,38 @@ static const Frozen* lookUp_frozen(const char* name) { // 2865
 			return p;
 		}
 	}
+
 	// Prefer custom modules, if any.  Frozen stdlib modules can be
 	// disabled here by setting "code" to NULL in the array entry.
-	if (_alifImportFrozenModules_ != nullptr) {
-		for (p = _alifImportFrozenModules_; ; p++) {
-			if (p->name == nullptr) {
-				break;
-			}
-			if (strcmp(name, p->name) == 0) {
-				return p;
-			}
-		}
-	}
-	// Frozen stdlib modules may be disabled.
-	if (use_frozen()) {
-		for (p = _alifImportFrozenStdlib_; ; p++) {
-			if (p->name == nullptr) {
-				break;
-			}
-			if (strcmp(name, p->name) == 0) {
-				return p;
-			}
-		}
-		for (p = _alifImportFrozenTest_; ; p++) {
-			if (p->name == nullptr) {
-				break;
-			}
-			if (strcmp(name, p->name) == 0) {
-				return p;
-			}
-		}
-	}
+	//if (_alifImportFrozenModules_ != nullptr) { //* todo
+	//	for (p = _alifImportFrozenModules_; ; p++) {
+	//		if (p->name == nullptr) {
+	//			break;
+	//		}
+	//		if (strcmp(name, p->name) == 0) {
+	//			return p;
+	//		}
+	//	}
+	//}
+	//// Frozen stdlib modules may be disabled.
+	//if (use_frozen()) {
+	//	for (p = _alifImportFrozenStdlib_; ; p++) {
+	//		if (p->name == nullptr) {
+	//			break;
+	//		}
+	//		if (strcmp(name, p->name) == 0) {
+	//			return p;
+	//		}
+	//	}
+	//	for (p = _alifImportFrozenTest_; ; p++) {
+	//		if (p->name == nullptr) {
+	//			break;
+	//		}
+	//		if (strcmp(name, p->name) == 0) {
+	//			return p;
+	//		}
+	//	}
+	//}
 	return nullptr;
 }
 
@@ -295,7 +298,7 @@ static FrozenStatus find_frozen(AlifObject* nameobj, FrozenInfo* info) { // 2922
 		return FrozenStatus::Frozen_Bad_Name;
 	}
 
-	const Frozen* p = lookUp_frozen(name);
+	const Frozen* p = lookup_frozen(name);
 	if (p == nullptr) {
 		return FrozenStatus::Frozen_Not_Found;
 	}
@@ -310,8 +313,8 @@ static FrozenStatus find_frozen(AlifObject* nameobj, FrozenInfo* info) { // 2922
 			info->isPackage = true;
 		}
 		info->origname = name;
-		info->isAlias = resolve_moduleAlias(name, _alifImportFrozenAliases_,
-			&info->origname);
+		//info->isAlias = resolve_moduleAlias(name, _alifImportFrozenAliases_,
+		//	&info->origname); //* todo
 	}
 	if (p->code == nullptr) {
 		/* It is frozen but marked as un-importable. */
@@ -324,6 +327,25 @@ static FrozenStatus find_frozen(AlifObject* nameobj, FrozenInfo* info) { // 2922
 	return FrozenStatus::Frozen_Okay;
 }
 
+static AlifObject* unmarshal_frozenCode(AlifInterpreter* _interp,
+	FrozenInfo* _info) { // 2971
+	AlifObject* co = alifMarshal_readObjectFromString(_info->data, _info->size);
+	if (co == nullptr) {
+		/* Does not contain executable code. */
+		//alifErr_clear();
+		//set_frozenError(FROZEN_INVALID, _info->nameobj);
+		return nullptr;
+	}
+	if (!ALIFCODE_CHECK(co)) {
+		// We stick with TypeError for backward compatibility.
+		//alifErr_format(_alifExcTypeError_,
+		//	"frozen object %R is not a code object",
+		//	_info->nameobj);
+		ALIF_DECREF(co);
+		return nullptr;
+	}
+	return co;
+}
 
 AlifIntT alifImport_importFrozenModuleObject(AlifObject* name) { // 2998
 	AlifThread* tstate = _alifThread_get();
@@ -364,14 +386,14 @@ AlifIntT alifImport_importFrozenModuleObject(AlifObject* name) { // 2998
 		if (err != 0)
 			goto err_return;
 	}
-	d = moduleDict_forExec(tstate, name);
+	d = moduleDict_forExec(tstate, name); //* todo
 	if (d == nullptr) {
 		goto err_return;
 	}
-	m = execCode_inModule(tstate, name, d, co);
-	if (m == nullptr) {
-		goto err_return;
-	}
+	//m = execCode_inModule(tstate, name, d, co); //* todo
+	//if (m == nullptr) {
+	//	goto err_return;
+	//}
 	ALIF_DECREF(m);
 	/* Set __origname__ . */
 	AlifObject* origname;

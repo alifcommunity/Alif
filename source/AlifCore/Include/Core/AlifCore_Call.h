@@ -17,6 +17,7 @@ extern AlifObject* _alifObject_callPrepend(AlifThread*, AlifObject*,
 extern AlifObject* _alifObject_call(AlifThread*, AlifObject*, AlifObject*, AlifObject*); // 47
 
 
+AlifObject* _alifObject_callMethod(AlifObject*, AlifObject*, const char*, ...); // 60
 
 
 AlifObject* alifObject_makeTpCall(AlifThread*, AlifObject*, AlifObject* const*, AlifSizeT, AlifObject*); // 106

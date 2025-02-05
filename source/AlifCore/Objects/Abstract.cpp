@@ -805,7 +805,7 @@ AlifSizeT alifNumber_asSizeT(AlifObject* _item, AlifObject* _err) { // 1455
 	AlifSizeT result{};
 	AlifObject* runErr{};
 	AlifObject* value = _alifNumber_index(_item);
-	AlifThread* tState = alifThread_get();
+	AlifThread* thread = alifThread_get();
 
 	if (value == nullptr)
 		return -1;
@@ -814,8 +814,8 @@ AlifSizeT alifNumber_asSizeT(AlifObject* _item, AlifObject* _err) { // 1455
 	if (result != -1)
 		goto finish;
 
-	tState = _alifThread_get();
-	//runErr = alifErr_occurred(tState);
+	thread = _alifThread_get();
+	runErr = _alifErr_occurred(thread);
 	if (!runErr) {
 		goto finish;
 	}

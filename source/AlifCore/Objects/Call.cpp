@@ -350,7 +350,8 @@ static AlifObject* call_method(AlifThread* _tstate, AlifObject* _callable, const
 	return alifObject_callFunctionVa(_tstate, _callable, _format, _va);
 }
 
-AlifObject* alifObject_callMethod(AlifObject* _obj, const char* _name, const char* _format, ...) { // 630
+AlifObject* alifObject_callMethod(AlifObject* _obj,
+	const char* _name, const char* _format, ...) { // 630
 	AlifThread* thread = _alifThread_get();
 
 	if (_obj == nullptr or _name == nullptr) {
@@ -366,6 +367,28 @@ AlifObject* alifObject_callMethod(AlifObject* _obj, const char* _name, const cha
 	va_start(va_, _format);
 	AlifObject* retval = call_method(thread, callable, _format, va_);
 	va_end(va_);
+
+	ALIF_DECREF(callable);
+	return retval;
+}
+
+
+AlifObject* _alifObject_callMethod(AlifObject* obj, AlifObject* name,
+	const char* format, ...) { // 678
+	AlifThread* tstate = _alifThread_get();
+	if (obj == nullptr or name == nullptr) {
+		return null_error(tstate);
+	}
+
+	AlifObject* callable = alifObject_getAttr(obj, name);
+	if (callable == nullptr) {
+		return nullptr;
+	}
+
+	va_list va{};
+	va_start(va, format);
+	AlifObject* retval = call_method(tstate, callable, format, va);
+	va_end(va);
 
 	ALIF_DECREF(callable);
 	return retval;

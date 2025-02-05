@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AlifCore_Interpreter.h"
+#include "AlifCore_FloatObject.h"
 #include "AlifCore_Parser.h"
 #include "AlifCore_Hash.h"
 #include "AlifCore_Thread.h"
@@ -72,6 +73,8 @@ public:
 	AlifRWMutex stopTheWorldMutex{};
 	StopTheWorldState stopTheWorld{};
 
+
+	AlifFloatRuntimeState floatState{};
 	TypesDureRunState types{};
 
 	AlifCachedObjects cachedObjects{};

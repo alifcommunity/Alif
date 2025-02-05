@@ -752,6 +752,7 @@
 	INIT_ID(NFields), \
 	INIT_ID(NSequenceFields), \
 	INIT_ID(Origin), \
+	INIT_ID(ReadInto), \
 	INIT_ID(Sep), \
 	INIT_ID(Stderr), \
 	INIT_ID(Stdin), \

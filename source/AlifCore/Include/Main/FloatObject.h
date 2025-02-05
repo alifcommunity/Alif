@@ -38,6 +38,9 @@ static inline double _alifFloat_asDouble(AlifObject* _op) { // 15
 
 
 
+double alifFloat_unpack8(const char*, AlifIntT); // 27
+
+
 
 
 

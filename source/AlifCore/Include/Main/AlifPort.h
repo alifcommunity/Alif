@@ -97,6 +97,17 @@ typedef AlifUSizeT AlifUHashT;
 
 
 
+#if defined(__GNUC__) or defined(__clang__) or defined(__INTEL_COMPILER)
+#  define ALIF_NO_INLINE __attribute__ ((noinline))
+#elif defined(_MSC_VER)
+#  define ALIF_NO_INLINE __declspec(noinline)
+#else
+#  define ALIF_NO_INLINE
+#endif
+
+
+
+
 #ifdef WORDS_BIGENDIAN
 #  define ALIF_BIG_ENDIAN 1
 #  define ALIF_LITTLE_ENDIAN 0

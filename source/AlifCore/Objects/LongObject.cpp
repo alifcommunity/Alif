@@ -572,6 +572,115 @@ int64_t _alifLong_numBits(AlifObject* _vv) { // 807
 	return result;
 }
 
+AlifObject* _alifLong_fromByteArray(const unsigned char* _bytes, AlifUSizeT _n,
+	AlifIntT _littleEndian, AlifIntT _isSigned) { // 844
+	const unsigned char* pstartbyte{};    /* LSB of bytes */
+	AlifIntT incr{};                           /* direction to move pstartbyte */
+	const unsigned char* pendbyte;      /* MSB of bytes */
+	AlifUSizeT numsignificantbytes;         /* number of bytes that matter */
+	AlifSizeT ndigits{};                 /* number of Alif int digits */
+	AlifLongObject* v{};                    /* result */
+	AlifSizeT idigit = 0;              /* next free index in v->longValue.digit */
+
+	if (_n == 0)
+		return alifLong_fromLong(0L);
+
+	if (_littleEndian) {
+		pstartbyte = _bytes;
+		pendbyte = _bytes + _n - 1;
+		incr = 1;
+	}
+	else {
+		pstartbyte = _bytes + _n - 1;
+		pendbyte = _bytes;
+		incr = -1;
+	}
+
+	if (_isSigned)
+		_isSigned = *pendbyte >= 0x80;
+
+	/* Compute numsignificantbytes.  This consists of finding the most
+	   significant byte.  Leading 0 bytes are insignificant if the number
+	   is positive, and leading 0xff bytes if negative. */
+	{
+		AlifUSizeT i;
+		const unsigned char* p = pendbyte;
+		const AlifIntT pincr = -incr;  /* search MSB to LSB */
+		const unsigned char insignificant = _isSigned ? 0xff : 0x00;
+
+		for (i = 0; i < _n; ++i, p += pincr) {
+			if (*p != insignificant)
+				break;
+		}
+		numsignificantbytes = _n - i;
+		/* 2's-comp is a bit tricky here, e.g. 0xff00 == -0x0100, so
+		   actually has 2 significant bytes.  OTOH, 0xff0001 ==
+		   -0x00ffff, so we wouldn't *need* to bump it there; but we
+		   do for 0xffff = -0x0001.  To be safe without bothering to
+		   check every case, bump it regardless. */
+		if (_isSigned and numsignificantbytes < _n)
+			++numsignificantbytes;
+	}
+
+	/* How many Alif int digits do we need?  We have
+	   8*numsignificantbytes bits, and each Alif int digit has
+	   ALIFLONG_SHIFT bits, so it's the ceiling of the quotient. */
+	   /* catch overflow before it happens */
+	if (numsignificantbytes > (ALIF_SIZET_MAX - ALIFLONG_SHIFT) / 8) {
+		//alifErr_setString(_alifExcOverflowError_,
+		//	"byte array too long to convert to int");
+		return nullptr;
+	}
+	ndigits = (numsignificantbytes * 8 + ALIFLONG_SHIFT - 1) / ALIFLONG_SHIFT;
+	v = alifLong_new(ndigits);
+	if (v == nullptr)
+		return nullptr;
+
+	/* Copy the bits over.  The tricky parts are computing 2's-comp on
+	   the fly for signed numbers, and dealing with the mismatch between
+	   8-bit bytes and (probably) 15-bit Alif digits.*/
+	{
+		AlifUSizeT i{};
+		twodigits carry = 1;                    /* for 2's-comp calculation */
+		twodigits accum = 0;                    /* sliding register */
+		AlifUIntT accumbits = 0;             /* number of bits in accum */
+		const unsigned char* p = pstartbyte;
+
+		for (i = 0; i < numsignificantbytes; ++i, p += incr) {
+			twodigits thisbyte = *p;
+			/* Compute correction for 2's comp, if needed. */
+			if (_isSigned) {
+				thisbyte = (0xff ^ thisbyte) + carry;
+				carry = thisbyte >> 8;
+				thisbyte &= 0xff;
+			}
+			/* Because we're going LSB to MSB, thisbyte is
+			   more significant than what's already in accum,
+			   so needs to be prepended to accum. */
+			accum |= thisbyte << accumbits;
+			accumbits += 8;
+			if (accumbits >= ALIFLONG_SHIFT) {
+				/* There's enough to fill a Alif digit. */
+				v->longValue.digit[idigit] = (digit)(accum & ALIFLONG_MASK);
+				++idigit;
+				accum >>= ALIFLONG_SHIFT;
+				accumbits -= ALIFLONG_SHIFT;
+			}
+		}
+		if (accumbits) {
+			v->longValue.digit[idigit] = (digit)accum;
+			++idigit;
+		}
+	}
+
+	int sign = _isSigned ? -1 : 1;
+	if (idigit == 0) {
+		sign = 0;
+	}
+	_alifLong_setSignAndDigitCount(v, sign, idigit);
+	return (AlifObject*)maybe_smallLong(long_normalize(v));
+}
+
 AlifIntT _alifLong_asByteArray(AlifLongObject* _v,
 	unsigned char* _bytes, AlifUSizeT _n,
 	AlifIntT _littleEndian, AlifIntT _isSigned,
@@ -820,7 +929,7 @@ AlifSizeT alifLong_asNativeBytes(AlifObject* vv,
 	}
 	else {
 		if (n > 0) {
-			_alifLong_asByteArray(v, (unsigned char*)buffer, (size_t)n, little_endian, 1, 0);
+			_alifLong_asByteArray(v, (unsigned char*)buffer, (AlifUSizeT)n, little_endian, 1, 0);
 		}
 
 		int64_t nb = _alifLong_numBits((AlifObject*)v);

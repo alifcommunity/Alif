@@ -307,6 +307,9 @@
     <ClCompile Include="..\source\AlifCore\Objects\Frozen.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\Marshal.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">
@@ -900,6 +903,12 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_PathConfig.h">
       <Filter>Include\Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\Frozen\Importlib._bootstrap.h">
+      <Filter>Include\Main\FrozenModules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\Marshal.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Include">
@@ -928,6 +937,9 @@
     </Filter>
     <Filter Include="Objects\clinic">
       <UniqueIdentifier>{cc031cc4-6eb8-4646-aee7-345e533a37d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Include\Main\FrozenModules">
+      <UniqueIdentifier>{7ede3554-5da9-4008-b770-938a0c3443dc}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

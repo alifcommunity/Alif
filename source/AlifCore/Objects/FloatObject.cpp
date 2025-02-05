@@ -631,6 +631,15 @@ static AlifObject* float_vectorCall(AlifObject* _type, AlifObject* const* _args,
 
 
 
+#define UNKNOWN_FORMAT AlifFloatFormatType::Alif_Float_Format_Unknown
+#define IEEE_BIG_ENDIAN_FORMAT AlifFloatFormatType::Alif_Float_Format_IEEE_Big_Endian
+#define IEEE_LITTLE_ENDIAN_FORMAT AlifFloatFormatType::Alif_Float_Format_IEEE_Little_Endian
+
+#define FLOAT_FORMAT (_alifDureRun_.floatState.floatFormat)
+#define DOUBLE_FORMAT (_alifDureRun_.floatState.doubleFormat)
+
+
+
 static AlifObject* float___format___impl(AlifObject* _self, AlifObject* _formatSpec) { // 1762
 	AlifUStrWriter writer{};
 	AlifIntT ret{};
@@ -733,4 +742,106 @@ AlifIntT alifFloat_initTypes(AlifInterpreter* _interp) { // 1951
 	}
 
 	return 1; //* alif
+}
+
+
+
+
+
+
+
+
+
+double alifFloat_unpack8(const char* data, AlifIntT le) { // 2462
+	unsigned char* p = (unsigned char*)data;
+	if (DOUBLE_FORMAT == UNKNOWN_FORMAT) {
+		unsigned char sign{};
+		AlifIntT e{};
+		AlifUIntT fhi{}, flo{};
+		double x{};
+		AlifIntT incr = 1;
+
+		if (le) {
+			p += 7;
+			incr = -1;
+		}
+
+		/* First byte */
+		sign = (*p >> 7) & 1;
+		e = (*p & 0x7F) << 4;
+
+		p += incr;
+
+		/* Second byte */
+		e |= (*p >> 4) & 0xF;
+		fhi = (*p & 0xF) << 24;
+		p += incr;
+
+		if (e == 2047) {
+			//alifErr_setString(
+			//	_alifExcValueError_,
+			//	"can't unpack IEEE 754 special value "
+			//	"on non-IEEE platform");
+			return -1.0;
+		}
+
+		/* Third byte */
+		fhi |= *p << 16;
+		p += incr;
+
+		/* Fourth byte */
+		fhi |= *p << 8;
+		p += incr;
+
+		/* Fifth byte */
+		fhi |= *p;
+		p += incr;
+
+		/* Sixth byte */
+		flo = *p << 16;
+		p += incr;
+
+		/* Seventh byte */
+		flo |= *p << 8;
+		p += incr;
+
+		/* Eighth byte */
+		flo |= *p;
+
+		x = (double)fhi + (double)flo / 16777216.0; /* 2**24 */
+		x /= 268435456.0; /* 2**28 */
+
+		if (e == 0)
+			e = -1022;
+		else {
+			x += 1.0;
+			e -= 1023;
+		}
+		x = ldexp(x, e);
+
+		if (sign)
+			x = -x;
+
+		return x;
+	}
+	else {
+		double x{};
+
+		if ((DOUBLE_FORMAT == IEEE_LITTLE_ENDIAN_FORMAT && !le)
+			or (DOUBLE_FORMAT == IEEE_BIG_ENDIAN_FORMAT && le)) {
+			char buf[8];
+			char* d = &buf[7];
+			AlifIntT i{};
+
+			for (i = 0; i < 8; i++) {
+				*d-- = *p++;
+			}
+			memcpy(&x, buf, 8);
+		}
+		else {
+			memcpy(&x, p, 8);
+		}
+
+		return x;
+	}
 }

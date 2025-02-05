@@ -157,6 +157,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\Codecs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\FloatObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\FrameObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\Frozen\Importlib._bootstrap.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\FuncObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\GenericAliasObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Helpers.h" />
@@ -167,6 +168,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\Lock.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\LongIntRepr.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\LongObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\Marshal.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\MethodObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\mimalloc\mimalloc.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\mimalloc\mimalloc\atomic.h" />
@@ -295,6 +297,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\ListObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Lock.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\LongObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\Marshal.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\MethodObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ModSupport.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ModuleObject.cpp" />

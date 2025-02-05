@@ -61,5 +61,7 @@ public:
 };
 
 
+extern const Frozen* _alifImportFrozenBootstrap_; // 182
+
 
 extern const ModuleAlias* _alifImportFrozenAliases_; // 186
