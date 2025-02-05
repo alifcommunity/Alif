@@ -31,4 +31,4 @@ static inline AlifObject* _alifModule_getDict(AlifObject* mod) { // 40
 
 
 AlifObject* alifModule_getAttroImpl(AlifModuleObject*, AlifObject*, AlifIntT); // 48
-AlifObject* alifModule_getAttro(AlifModuleObject*, AlifObject*); // 49
+AlifObject* alifModule_getAttro(AlifObject*, AlifObject*); // 49

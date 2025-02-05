@@ -304,27 +304,29 @@ static AlifIntT set_next(AlifSetObject* so,
 	return 1;
 }
 
-static void set_dealloc(AlifSetObject* _so) { // 492
+static void set_dealloc(AlifObject* _self) { // 492
+	AlifSetObject* so = ALIFSET_CAST(_self);
 	SetEntry* entry{};
-	AlifSizeT used = _so->used;
+	AlifSizeT used = so->used;
 
-	alifObject_gcUnTrack(_so);
-	ALIF_TRASHCAN_BEGIN(_so, set_dealloc);
-	if(_so->weakRefList != nullptr) alifObject_clearWeakRefs((AlifObject*)_so);
+	alifObject_gcUnTrack(so);
+	ALIF_TRASHCAN_BEGIN(so, set_dealloc);
+	if(so->weakRefList != nullptr) alifObject_clearWeakRefs((AlifObject*)so);
 
-	for (entry = _so->table; used > 0; entry++) {
+	for (entry = so->table; used > 0; entry++) {
 		if (entry->key and entry->key != DUMMY) {
 			used--;
 			ALIF_DECREF(entry->key);
 		}
 	}
-	if (_so->table != _so->smallTable) alifMem_dataFree(_so->table);
-	ALIF_TYPE(_so)->free(_so);
+	if (so->table != so->smallTable) alifMem_dataFree(so->table);
+	ALIF_TYPE(so)->free(so);
 	ALIF_TRASHCAN_END;
 }
 
-static AlifSizeT set_len(AlifSetObject* _so) { // 571
-	return alifAtomic_loadSizeRelaxed(&_so->used);
+static AlifSizeT set_len(AlifObject* _self) { // 571
+	AlifSetObject* so = ALIFSET_CAST(_self);
+	return alifAtomic_loadSizeRelaxed(&so->used);
 }
 
 static AlifIntT setMerge_lockHeld(AlifSetObject* _so, AlifObject* _otherSet) { // 578
@@ -334,7 +336,7 @@ static AlifIntT setMerge_lockHeld(AlifSetObject* _so, AlifObject* _otherSet) { /
 	SetEntry* soEntry{};
 	SetEntry* otherEntry{};
 
-	other = (AlifSetObject*)_otherSet;
+	other = ALIFSET_CAST(_otherSet);
 	if (other == _so or other->used == 0)
 		return 0;
 	if ((_so->fill + other->used) * 5 >= _so->mask * 3) {
@@ -419,33 +421,35 @@ public:
 	AlifSizeT len{};
 };
 
-static void setIter_dealloc(SetIterObject* _si) { // 786
-	ALIFOBJECT_GC_UNTRACK(_si);
-	ALIF_XDECREF(_si->set);
-	alifObject_gcDel(_si);
+static void setIter_dealloc(AlifObject* _self) { // 786
+	SetIterObject* si = (SetIterObject*)_self;
+	ALIFOBJECT_GC_UNTRACK(si);
+	ALIF_XDECREF(si->set);
+	alifObject_gcDel(si);
 }
 
 
-static AlifObject* setIter_iterNext(SetIterObject* _si) { // 839
+static AlifObject* setIter_iterNext(AlifObject* _self) { // 839
+	SetIterObject* si = (SetIterObject*)_self;
 	AlifObject* key = nullptr;
 	AlifSizeT i{}, mask{};
 	SetEntry* entry{};
-	AlifSetObject* so = _si->set;
+	AlifSetObject* so = si->set;
 
 	if (so == nullptr)
 		return nullptr;
 
 	AlifSizeT soUsed = alifAtomic_loadSize(&so->used);
-	AlifSizeT siUsed = alifAtomic_loadSize(&_si->used);
+	AlifSizeT siUsed = alifAtomic_loadSize(&si->used);
 	if (siUsed != soUsed) {
 		//alifErr_setString(_alifExcRuntimeError_,
 		//	"Set changed size during iteration");
-		_si->used = -1;
+		si->used = -1;
 		return nullptr;
 	}
 
 	ALIF_BEGIN_CRITICAL_SECTION(so);
-	i = _si->pos;
+	i = si->pos;
 	entry = so->table;
 	mask = so->mask;
 	while (i <= mask and (entry[i].key == nullptr or entry[i].key == DUMMY)) {
@@ -455,13 +459,13 @@ static AlifObject* setIter_iterNext(SetIterObject* _si) { // 839
 		key = ALIF_NEWREF(entry[i].key);
 	}
 	ALIF_END_CRITICAL_SECTION();
-	_si->pos = i + 1;
+	si->pos = i + 1;
 	if (key == nullptr) {
-		_si->set = nullptr;
+		si->set = nullptr;
 		ALIF_DECREF(so);
 		return nullptr;
 	}
-	_si->len--;
+	si->len--;
 	return key;
 }
 
@@ -471,7 +475,7 @@ AlifTypeObject _alifSetIterType_ = { // 881
 	.basicSize = sizeof(SetIterObject),
 	.itemSize = 0,
 	/* methods */
-	.dealloc = (Destructor)setIter_dealloc,
+	.dealloc = setIter_dealloc,
 	.vectorCallOffset = 0,
 	.getAttr = 0,
 	.setAttr = 0,
@@ -484,15 +488,15 @@ AlifTypeObject _alifSetIterType_ = { // 881
 	.setAttro = 0,
 	.asBuffer = 0,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
-	//.traverse = (TraverseProc)setIter_traverse,
+	//.traverse = setIter_traverse,
 	.richCompare = 0,
 	.weakListOffset = 0,
 	.iter = alifObject_selfIter,
-	.iterNext = (IterNextFunc)setIter_iterNext,
+	.iterNext = setIter_iterNext,
 };
 
 
-static AlifObject* set_iter(AlifSetObject* _so) { // 914
+static AlifObject* set_iter(AlifObject* _so) { // 914
 	AlifSizeT size = set_len(_so);
 	SetIterObject* si = ALIFOBJECT_GC_NEW(SetIterObject, &_alifSetIterType_);
 	if (si == nullptr) return nullptr;
@@ -635,21 +639,22 @@ static AlifObject* set_new(AlifTypeObject* _type,
 }
 
 
-static AlifObject* set_ior(AlifSetObject* _so, AlifObject* _other) { // 1331
+static AlifObject* set_ior(AlifObject* _self, AlifObject* _other) { // 1331
 	if (!ALIFANYSET_CHECK(_other))
 		return ALIF_NOTIMPLEMENTED;
 
-	if (set_updateInternal(_so, _other)) {
+	AlifSetObject* so = ALIFSET_CAST(_self);
+	if (set_updateInternal(so, _other)) {
 		return nullptr;
 	}
-	return ALIF_NEWREF(_so);
+	return ALIF_NEWREF(so);
 }
 
 
 
 static AlifNumberMethods _asNumber_ = { // 2411
 	.add_ = 0,
-	//.subtract = (BinaryFunc)set_sub,
+	//.subtract = set_sub,
 	//0,                                  /*multiply*/
 	//0,                                  /*remainder*/
 	//0,                                  /*divmod*/
@@ -661,22 +666,22 @@ static AlifNumberMethods _asNumber_ = { // 2411
 	//0,                                  /*invert*/
 	//0,                                  /*lshift*/
 	//0,                                  /*rshift*/
-	//.and_ = (BinaryFunc)set_and,
-	//.xor_ = (BinaryFunc)set_xor,
-	//.or_ = (BinaryFunc)set_or,
+	//.and_ = set_and,
+	//.xor_ = set_xor,
+	//.or_ = set_or,
 	//0,                                  /*int*/
 	//0,                                  /*reserved*/
 	//0,                                  /*float*/
 	//0,                                  /*inplace_add*/
-	//.inplaceSubtract = (BinaryFunc)set_isub,
+	//.inplaceSubtract = set_isub,
 	//0,                                  /*inplace_multiply*/
 	//0,                                  /*inplace_remainder*/
 	//0,                                  /*inplace_power*/
 	//0,                                  /*inplace_lshift*/
 	//0,                                  /*inplace_rshift*/
-	//.inplaceAnd = (BinaryFunc)set_iand,
-	//.inplaceXor = (BinaryFunc)set_ixor,
-	.inplaceOr = (BinaryFunc)set_ior,
+	//.inplaceAnd = set_iand,
+	//.inplaceXor = set_ixor,
+	.inplaceOr = set_ior,
 };
 
 
@@ -685,7 +690,7 @@ AlifTypeObject _alifSetType_ = { // 2449
 	.name = "مميزة",
 	.basicSize = sizeof(AlifSetObject),
 	.itemSize = 0,
-	.dealloc = (Destructor)set_dealloc,
+	.dealloc = set_dealloc,
 
 	.asNumber = &_asNumber_,
 
@@ -694,7 +699,7 @@ AlifTypeObject _alifSetType_ = { // 2449
 		ALIF_TPFLAGS_BASETYPE | _ALIF_TPFLAGS_MATCH_SELF,
 
 
-	.iter = (GetIterFunc)set_iter,
+	.iter = set_iter,
 
 	.alloc = alifType_genericAlloc,
 	.new_ = set_new,
@@ -726,7 +731,7 @@ AlifSizeT alifSet_size(AlifObject* _anyset) { // 2600
 		//ALIFERR_BADINTERNALCALL();
 		return -1;
 	}
-	return set_len((AlifSetObject*)_anyset);
+	return set_len(_anyset);
 }
 
 

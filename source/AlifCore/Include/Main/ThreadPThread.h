@@ -5,6 +5,8 @@
 #include "AlifCore_Time.h"
 
 
+#include <unistd.h>
+
 
  // 20
 #if defined(__linux__)
@@ -13,8 +15,6 @@
 #   include <pthread_np.h>      /* pthread_getthreadid_np() */
 #elif defined(__FreeBSD_kernel__)
 #   include <sys/syscall.h>     /* syscall(SYS_thr_self) */
-#elif defined(__OpenBSD__)
-#   include <unistd.h>          /* getthrid() */
 #elif defined(_AIX)
 #   include <sys/thread.h>      /* thread_self() */
 #elif defined(__NetBSD__)
@@ -103,16 +103,17 @@ unsigned long alifThread_getThreadNativeID() { // 372
 
 
 
-void ALIF_NO_RETURN alifThread_exitThread(void) { // 406
-	if (!INITIALIZED)
-		exit(0);
-#if defined(__wasi__)
-	abort();
-#else
-	pthread_exit(0);
-#endif
-}
 
+
+void ALIF_NO_RETURN alifThread_hangThread(void) { // 421
+	while (1) {
+#if defined(__wasi__)
+		sleep(9999999);  // WASI doesn't have pause() ?!
+#else
+		pause();
+#endif
+	}
+}
 
 
 

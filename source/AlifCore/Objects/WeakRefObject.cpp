@@ -108,11 +108,11 @@ AlifTypeObject _alifWeakrefRefType_ = { // 493
 	.vectorCallOffset = offsetof(AlifWeakReference, vectorCall),
 	//.call = alifVectorCall_call,
 	//.repr = weakref_repr,
-	//.hash = (HashFunc)weakref_hash,
+	//.hash = weakref_hash,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
 				ALIF_TPFLAGS_HAVE_VECTORCALL | ALIF_TPFLAGS_BASETYPE,
-	//.traverse = (TraverseProc)gc_traverse,
-	//.clear = (Inquiry)gc_clear,
+	//.traverse = gc_traverse,
+	//.clear = gc_clear,
 	//.richCompare = weakref_richcompare,
 	//.methods = weakref_methods,
 	//.members = weakref_members,
@@ -161,10 +161,12 @@ AlifTypeObject _alifWeakrefCallableProxyType_ = { // 881
 
 
 static void handle_callback(AlifWeakReference* ref, AlifObject* callback) { // 967
-	//AlifObject* cbResult = alifObject_callOneArg(callback, (AlifObject*)ref);
+	AlifObject* cbResult = alifObject_callOneArg(callback, (AlifObject*)ref);
 
-	//if (cbResult == nullptr) alifErr_writeUnraisable(callback);
-	//else ALIF_DECREF(cbResult);
+	if (cbResult == nullptr) {
+		//alifErr_writeUnraisable(callback);
+	}
+	else ALIF_DECREF(cbResult);
 }
 
 

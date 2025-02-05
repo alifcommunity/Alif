@@ -9,6 +9,9 @@
 #include "OSDefs.h"
 
 
+// 18
+#define ALIFMODULE_CAST(_op) \
+    (ALIF_CAST(AlifModuleObject*, _op))
 
 
 AlifTypeObject _alifModuleDefType_ = { // 24
@@ -376,10 +379,10 @@ AlifObject* alifModule_getAttroImpl(AlifModuleObject* _m,
 		return attr;
 	}
 	if (_suppress == 1) {
-		//if (alifErr_occurred()) {
-			// pass up non-AttributeError exception
-			//return nullptr;
-		//}
+		if (alifErr_occurred()) {
+			 // pass up non-AttributeError exception
+			return nullptr;
+		}
 	}
 	else {
 		//if (!alifErr_exceptionMatches(_alfiExcAttributeError_)) {
@@ -392,15 +395,15 @@ AlifObject* alifModule_getAttroImpl(AlifModuleObject* _m,
 		return nullptr;
 	}
 	if (getAttr) {
-		//AlifObject* result = alifObject_callOneArg(getAttr, _name);
+		AlifObject* result = alifObject_callOneArg(getAttr, _name);
 		//if (result == nullptr and _suppress == 1
-		//	//and alifErr_exceptionMatches(exception)
+		//	and alifErr_exceptionMatches(exception)
 		//	) {
-		//	//alifErr_clear();
+		//	alifErr_clear();
 		//	return nullptr;
 		//}
-		//ALIF_DECREF(getAttr);
-		//return result;
+		ALIF_DECREF(getAttr);
+		return result;
 	}
 	if (_suppress == 1) {
 		return nullptr;
@@ -504,13 +507,15 @@ done:
 }
 
 
-AlifObject* alifModule_getAttro(AlifModuleObject* _m, AlifObject* _name) { // 1065
-	return alifModule_getAttroImpl(_m, _name, 0);
+AlifObject* alifModule_getAttro(AlifObject* _self, AlifObject* _name) { // 1065
+	AlifModuleObject* m = ALIFMODULE_CAST(_self);
+	return alifModule_getAttroImpl(m, _name, 0);
 }
 
 
-static AlifIntT module_traverse(AlifModuleObject* m,
+static AlifIntT module_traverse(AlifObject* _self,
 	VisitProc visit, void* arg) { // 1070
+	AlifModuleObject* m = ALIFMODULE_CAST(_self);
 	if (m->def and m->def->traverse
 		and (m->def->size <= 0 or m->state != nullptr))
 	{

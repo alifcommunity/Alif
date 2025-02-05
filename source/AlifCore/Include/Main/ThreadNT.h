@@ -34,10 +34,12 @@ unsigned long alifThread_getThreadNativeID() { // 273
 
 
 
-void ALIF_NO_RETURN alifThread_exitThread(void) { // 286
-	if (!INITIALIZED)
-		exit(0);
-	_endthreadex(0);
+
+
+void ALIF_NO_RETURN alifThread_hangThread(void) { // 294
+	while (1) {
+		SleepEx(INFINITE, TRUE);
+	}
 }
 
 

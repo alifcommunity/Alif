@@ -105,46 +105,47 @@ AlifObject* alifTuple_pack(AlifSizeT _n, ...) { // 153
 
 
 
-static void tuple_dealloc(AlifTupleObject* _op) { // 184
-	if (ALIF_SIZE(_op) == 0) {
-		if (_op == &ALIF_SINGLETON(tupleEmpty)) {
+static void tuple_dealloc(AlifObject** _self) { // 184
+	AlifTupleObject* op = ALIFTUPLE_CAST(_self);
+	if (ALIF_SIZE(op) == 0) {
+		if (op == &ALIF_SINGLETON(tupleEmpty)) {
 			return;
 		}
 	}
 
-	alifObject_gcUnTrack(_op);
-	ALIF_TRASHCAN_BEGIN(_op, tuple_dealloc)
+	alifObject_gcUnTrack(op);
+	ALIF_TRASHCAN_BEGIN(op, tuple_dealloc)
 
-		AlifSizeT i = ALIF_SIZE(_op);
+		AlifSizeT i = ALIF_SIZE(op);
 	while (--i >= 0) {
-		ALIF_XDECREF(_op->item[i]);
+		ALIF_XDECREF(op->item[i]);
 	}
-	if (!maybe_freeListPush(_op)) {
-		ALIF_TYPE(_op)->free((AlifObject*)_op);
+	if (!maybe_freeListPush(op)) {
+		ALIF_TYPE(op)->free((AlifObject*)op);
 	}
 
 	ALIF_TRASHCAN_END
 }
 
 
-static AlifObject* tuple_repr(AlifTupleObject* v) { // 216
-	AlifSizeT i{}, n{};
-	AlifUStrWriter writer{};
-
-	n = ALIF_SIZE(v);
-	if (n == 0)
+static AlifObject* tuple_repr(AlifObject* _self) { // 216
+	AlifTupleObject* v = ALIFTUPLE_CAST(_self);
+	AlifSizeT n = ALIFTUPLE_GET_SIZE(v);
+	if (n == 0) {
 		return alifUStr_fromString("()");
-
-	i = alif_reprEnter((AlifObject*)v);
-	if (i != 0) {
-		return i > 0 ? alifUStr_fromString("(...)") : nullptr;
 	}
 
+	AlifIntT res = alif_reprEnter((AlifObject*)v);
+	if (res != 0) {
+		return res > 0 ? alifUStr_fromString("(...)") : nullptr;
+	}
+
+	AlifUStrWriter writer{};
 	alifUStrWriter_init(&writer);
 	writer.overAllocate = 1;
-	if (ALIF_SIZE(v) > 1) {
+	if (n > 1) {
 		/* "(" + "1" + ", 2" * (len - 1) + ")" */
-		writer.minLength = 1 + 1 + (2 + 1) * (ALIF_SIZE(v) - 1) + 1;
+		writer.minLength = 1 + 1 + (2 + 1) * (n - 1) + 1;
 	}
 	else {
 		/* "(1,)" */
@@ -155,7 +156,7 @@ static AlifObject* tuple_repr(AlifTupleObject* v) { // 216
 		goto error;
 
 	/* Do repr() on each element. */
-	for (i = 0; i < n; ++i) {
+	for (AlifSizeT i = 0; i < n; ++i) {
 		AlifObject* s{};
 
 		if (i > 0) {
@@ -209,12 +210,13 @@ error:
 #endif
 
 
-static AlifHashT tuple_hash(AlifTupleObject* _v) { // 318
-	AlifSizeT i{}, len = ALIF_SIZE(_v);
-	AlifObject** item = _v->item;
+static AlifHashT tuple_hash(AlifObject* _op) { // 318
+	AlifTupleObject* v = ALIFTUPLE_CAST(_op);
+	AlifSizeT len = ALIF_SIZE(v);
+	AlifObject** item = v->item;
 
 	AlifUHashT acc = ALIFHASH_XXPRIME_5;
-	for (i = 0; i < len; i++) {
+	for (AlifSizeT i = 0; i < len; i++) {
 		AlifUHashT lane = alifObject_hash(item[i]);
 		if (lane == (AlifUHashT)-1) {
 			return -1;
@@ -311,8 +313,8 @@ AlifTypeObject _alifTupleType_ = { // 865
 	.basicSize = sizeof(AlifTupleObject) - sizeof(AlifObject*),
 	.itemSize = sizeof(AlifObject*),
 	.dealloc = (Destructor)tuple_dealloc,
-	.repr = (ReprFunc)tuple_repr,
-	.hash = (HashFunc)tuple_hash,
+	.repr = tuple_repr,
+	.hash = tuple_hash,
 	.getAttro = alifObject_genericGetAttr,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
 		ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_TUPLE_SUBCLASS |
@@ -329,7 +331,7 @@ AlifIntT alifTuple_resize(AlifObject** _pv, AlifSizeT _newSize) { // 918
 	AlifSizeT oldSize{};
 
 	v_ = (AlifTupleObject*)*_pv;
-	if (v_ == nullptr or !ALIF_IS_TYPE(v_, &_alifTupleType_) ||
+	if (v_ == nullptr or !ALIF_IS_TYPE(v_, &_alifTupleType_) or
 		(ALIF_SIZE(v_) != 0 and ALIF_REFCNT(v_) != 1)) {
 		*_pv = 0;
 		ALIF_XDECREF(v_);

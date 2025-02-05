@@ -3,6 +3,7 @@
 #include "AlifCore_Eval.h"
 #include "AlifCore_InitConfig.h"
 #include "AlifCore_State.h"
+#include "AlifCore_Thread.h"
 
 
 static inline void copy_evalBreakerBits(uintptr_t* _from,
@@ -179,7 +180,7 @@ static void take_gil(AlifThread* _thread) { // 284
 	AlifIntT err = errno;
 
 	if (alifThreadState_mustExit(_thread)) {
-		alifThread_exitThread();
+		alifThread_hangThread();
 	}
 
 	AlifInterpreter* interp = _thread->interpreter;
@@ -209,7 +210,7 @@ static void take_gil(AlifThread* _thread) { // 284
 				if (dropRequested) {
 					alifUnset_evalBreakerBit(holderThread, ALIF_GIL_DROP_REQUEST_BIT);
 				}
-				alifThread_exitThread();
+				alifThread_hangThread();
 			}
 
 			alifSet_evalBreakerBit(holderThread, ALIF_GIL_DROP_REQUEST_BIT);
@@ -241,7 +242,7 @@ static void take_gil(AlifThread* _thread) { // 284
 		MUTEX_UNLOCK(gil_->mutex);
 
 		drop_gil(interp, nullptr, 1);
-		alifThread_exitThread();
+		alifThread_hangThread();
 	}
 
 	_thread->status.holdsGIL = 1;

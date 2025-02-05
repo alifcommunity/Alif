@@ -70,3 +70,8 @@ public:
     { \
         .handles = LLIST_INIT(_threads.handles), \
     }
+
+
+
+
+void ALIF_NO_RETURN alifThread_hangThread(void); // 167

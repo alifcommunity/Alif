@@ -4,8 +4,9 @@
 
 
 
-
-
+ // 5
+#define ALIFLONG_CAST(_op) \
+    (ALIF_CAST(AlifLongObject*, _op))
 
 
  // 12
