@@ -2148,6 +2148,10 @@ static AlifIntT dict_merge(AlifInterpreter* interp,
 }
 
 
+AlifIntT alifDict_update(AlifObject* _a, AlifObject* _b) { // 3881
+	AlifInterpreter* interp = _alifInterpreter_get();
+	return dict_merge(interp, _a, _b, 1);
+}
 
 
 static AlifDictValues* copy_values(AlifDictValues* values) { // 3857

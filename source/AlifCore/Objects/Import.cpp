@@ -5,6 +5,7 @@
 #include "AlifCore_Interpreter.h"
 #include "AlifCore_State.h"
 #include "AlifCore_Errors.h"
+#include "AlifCore_Namespace.h"
 #include "AlifCore_Object.h"
 
 
@@ -141,6 +142,22 @@ AlifObject* alifImport_addModuleRef(const char* _name) { // 288
 	return module;
 }
 
+static void remove_module(AlifThread* _thread, AlifObject* _name) { // 357
+	//AlifObject* exc = _alifErr_getRaisedException(_thread);
+
+	AlifObject* modules = get_modulesDict(_thread, true);
+	if (ALIFDICT_CHECKEXACT(modules)) {
+		// Error is reported to the caller
+		(void)alifDict_pop(modules, _name, nullptr);
+	}
+	else if (ALIFMAPPING_DELITEM(modules, _name) < 0) {
+		//if (_alifErr_exceptionMatches(_thread, _alifExcKeyError_)) {
+		//	_alifErr_clear(_thread);
+		//}
+	}
+
+	//_alifErr_chainExceptions1(exc);
+}
 
 
 AlifSizeT alifImport_getNextModuleIndex() { // 381
@@ -215,6 +232,51 @@ AlifObject* _alifImport_getBuiltinModuleNames(void) { // 2445
 }
 
 
+static AlifObject* moduleDict_forExec(AlifThread* _thread, AlifObject* _name) { // 2580
+	AlifObject* m{}, * d{};
+
+	m = import_addModule(_thread, _name);
+	if (m == nullptr)
+		return nullptr;
+	/* If the module is being reloaded, we get the old module back
+	   and re-use its dict to exec the new code. */
+	d = alifModule_getDict(m);
+	AlifIntT r = alifDict_contains(d, &ALIF_ID(__builtins__));
+	if (r == 0) {
+		r = alifDict_setItem(d, &ALIF_ID(__builtins__), alifEval_getBuiltins());
+	}
+	if (r < 0) {
+		remove_module(_thread, _name);
+		ALIF_DECREF(m);
+		return nullptr;
+	}
+
+	ALIF_INCREF(d);
+	ALIF_DECREF(m);
+	return d;
+}
+
+static AlifObject* execCode_inModule(AlifThread* _thread, AlifObject* _name,
+	AlifObject* _moduleDict, AlifObject* _codeObject) { // 2606
+	AlifObject* v{}, * m{};
+
+	v = alifEval_evalCode(_codeObject, _moduleDict, _moduleDict);
+	if (v == nullptr) {
+		remove_module(_thread, _name);
+		return nullptr;
+	}
+	ALIF_DECREF(v);
+
+	m = import_getModule(_thread, _name);
+	if (m == nullptr and !_alifErr_occurred(_thread)) {
+		//_alifErr_format(_thread, _alifExcImportError_,
+		//	"Loaded module %R not found in sys.modules",
+		//	_name);
+	}
+
+	return m;
+}
+
 enum FrozenStatus { // 2820
 	Frozen_Okay,
 	Frozen_Bad_Name,
@@ -239,8 +301,8 @@ static const Frozen* lookup_frozen(const char* name) { // 2865
 	}
 
 	// Prefer custom modules, if any.  Frozen stdlib modules can be
-	// disabled here by setting "code" to NULL in the array entry.
-	//if (_alifImportFrozenModules_ != nullptr) { //* todo
+	// disabled here by setting "code" to nullptr in the array entry.
+	//if (_alifImportFrozenModules_ != nullptr) { 
 	//	for (p = _alifImportFrozenModules_; ; p++) {
 	//		if (p->name == nullptr) {
 	//			break;
@@ -386,14 +448,14 @@ AlifIntT alifImport_importFrozenModuleObject(AlifObject* name) { // 2998
 		if (err != 0)
 			goto err_return;
 	}
-	d = moduleDict_forExec(tstate, name); //* todo
+	d = moduleDict_forExec(tstate, name);
 	if (d == nullptr) {
 		goto err_return;
 	}
-	//m = execCode_inModule(tstate, name, d, co); //* todo
-	//if (m == nullptr) {
-	//	goto err_return;
-	//}
+	m = execCode_inModule(tstate, name, d, co);
+	if (m == nullptr) {
+		goto err_return;
+	}
 	ALIF_DECREF(m);
 	/* Set __origname__ . */
 	AlifObject* origname;
@@ -434,6 +496,46 @@ AlifIntT alifImport_importFrozenModule(const char* _name) { // 3074
 }
 
 
+static AlifObject* bootstrap_imp(AlifThread* _thread) { // 3096
+	AlifObject* spec{}; //* alif
+	AlifObject* mod{}; //* alif
+
+	AlifObject* name = alifUStr_fromString("_imp");
+	if (name == nullptr) {
+		return nullptr;
+	}
+
+	AlifObject* attrs = alif_buildValue("{sO}", "name", name);
+	if (attrs == nullptr) {
+		goto error;
+	}
+	spec = alifNamespace_new(attrs);
+	ALIF_DECREF(attrs);
+	if (spec == nullptr) {
+		goto error;
+	}
+
+	// Create the _imp module from its definition.
+	//mod = create_builtin(_thread, name, spec); //* uncomment
+	//ALIF_CLEAR(name);
+	//ALIF_DECREF(spec);
+	//if (mod == nullptr) {
+	//	goto error;
+	//}
+
+	// Execute the _imp module: call imp_module_exec().
+	//if (exec_builtinOrDynamic(mod) < 0) { //* uncomment
+	//	ALIF_DECREF(mod);
+	//	goto error;
+	//}
+	return mod;
+
+error:
+	ALIF_XDECREF(name);
+	return nullptr;
+}
+
+
 static AlifIntT init_importLib(AlifThread* tstate, AlifObject* sysmod) { // 3150
 	AlifInterpreter* interp = tstate->interpreter;
 	//AlifIntT verbose = alifInterpreter_getConfig(interp)->verbose;
@@ -454,18 +556,18 @@ static AlifIntT init_importLib(AlifThread* tstate, AlifObject* sysmod) { // 3150
 
 	// Import the _imp module
 
-	//AlifObject* imp_mod = bootstrap_imp(tstate);
-	//if (imp_mod == nullptr) {
-	//	return -1;
-	//}
-	//if (_alifImport_setModuleString("_imp", imp_mod) < 0) {
+	AlifObject* imp_mod = bootstrap_imp(tstate);
+	if (imp_mod == nullptr) {
+		return -1;
+	}
+	//if (_alifImport_setModuleString("_imp", imp_mod) < 0) { //* uncomment
 	//	ALIF_DECREF(imp_mod);
 	//	return -1;
 	//}
 
 	// Install importlib as the implementation of import
 	//AlifObject* value = alifObject_callMethod(importlib, "_install",
-	//	"OO", sysmod, imp_mod);
+	//	"OO", sysmod, imp_mod); //* uncomment
 	//ALIF_DECREF(imp_mod);
 	//if (value == nullptr) {
 	//	return -1;
@@ -727,9 +829,9 @@ AlifIntT _alifImport_initCore(AlifThread* _thread,
 	// XXX Initialize here: sys.modules and sys.meta_path.
 
 	if (_importLib) {
-		if (init_importLib(_thread, _sysmod) < 0) {
-			return -1;
-		}
+		//if (init_importLib(_thread, _sysmod) < 0) { //* uncomment
+		//	return -1;
+		//}
 	}
 
 	return 1;

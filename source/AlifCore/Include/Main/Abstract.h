@@ -122,6 +122,8 @@ AlifIntT alifMapping_check(AlifObject*); // 806
 
 AlifSizeT alifMapping_size(AlifObject*); // 810
 
+#define ALIFMAPPING_DELITEM(_o, _k) alifObject_delItem(_o, _k) // 836
+
 AlifObject* alifMapping_keys(AlifObject*); // 867
 
 AlifIntT alifMapping_getOptionalItem(AlifObject*, AlifObject*, AlifObject**); // 895
