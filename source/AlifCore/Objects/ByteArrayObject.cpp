@@ -42,7 +42,7 @@ AlifObject* alifByteArray_fromStringAndSize(const char* _bytes, AlifSizeT _size)
 	/* Prevent buffer overflow when setting alloc to size+1. */
 	if (_size == ALIF_SIZET_MAX) {
 		//return alifErr_noMemory();
-		return nullptr; // temp
+		return nullptr; //* alif
 	}
 
 	new_ = ALIFOBJECT_NEW(AlifByteArrayObject, &_alifByteArrayType_);
@@ -59,7 +59,7 @@ AlifObject* alifByteArray_fromStringAndSize(const char* _bytes, AlifSizeT _size)
 		if (new_->bytes == nullptr) {
 			ALIF_DECREF(new_);
 			//return alifErr_noMemory();
-			return nullptr; // temp
+			return nullptr; //* alif
 		}
 		if (_bytes != nullptr and _size > 0)
 			memcpy(new_->bytes, _bytes, _size);

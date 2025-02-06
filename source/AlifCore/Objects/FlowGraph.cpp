@@ -774,12 +774,13 @@ static AlifIntT remove_unreachable(BasicBlock* _entryBlock) { // 995
 	BasicBlock** sp_ = stack;
 	_entryBlock->predecessors = 1;
 	*sp_++ = _entryBlock;
+	_entryBlock->visited = 1;
 	while (sp_ > stack) {
 		BasicBlock* b_ = *(--sp_);
-		b_->visited = 1;
 		if (b_->next and BB_HAS_FALLTHROUGH(b_)) {
 			if (!b_->next->visited) {
 				*sp_++ = b_->next;
+				b_->next->visited = 1;
 			}
 			b_->next->predecessors++;
 		}
@@ -790,6 +791,7 @@ static AlifIntT remove_unreachable(BasicBlock* _entryBlock) { // 995
 				target = instr->target;
 				if (!target->visited) {
 					*sp_++ = target;
+					target->visited = 1;
 				}
 				target->predecessors++;
 			}
