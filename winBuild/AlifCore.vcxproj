@@ -31,6 +31,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Frame.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Function.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GenObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ImportDL.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Instruments.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Intrinsics.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Math.h" />
@@ -290,6 +291,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\HashTable.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Helpers.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Import.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\ImportDL.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\InitConfig.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\InstructionSequence.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Instrumentation.cpp" />

@@ -270,9 +270,7 @@ static AlifObject* codec_getItemChecked(const char* _encoding,
 
 
 static AlifObject* _alifCodec_textEncoder(const char* encoding) { // 567
-	//return codec_getItemChecked(encoding, "codecs.encode()", 0);
-	printf("تعليق: _alifCodec_textEncoder() - Codecs.cpp");
-	return nullptr;
+	return codec_getItemChecked(encoding, "codecs.encode()", 0);
 }
 
 

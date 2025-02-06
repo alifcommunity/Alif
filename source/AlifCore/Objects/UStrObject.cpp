@@ -2229,7 +2229,8 @@ AlifIntT _alif_normalizeEncoding(const char* encoding,
 			if (l == l_end) {
 				return 0;
 			}
-			//*l++ = ALIF_TOLOWER(c); // !? //* alif
+			//*l++ = ALIF_TOLOWER(c);
+			*l++ = c; //* alif
 		}
 		else {
 			punct = 1;

@@ -185,6 +185,195 @@ AlifObject* alifModule_createInitialized(AlifModuleDef* _module) { // 209
 
 
 
+
+
+
+AlifObject* alifModule_fromDefAndSpec2(AlifModuleDef* _def,
+	AlifObject* _spec, AlifIntT _moduleApiVersion) { // 266
+	AlifModuleDefSlot* cur_slot{};
+	AlifObject* (*create)(AlifObject*, AlifModuleDef*) = nullptr;
+	AlifObject* nameobj{};
+	AlifObject* m = nullptr;
+	AlifIntT has_multiple_interpreters_slot = 0;
+	void* multiple_interpreters = (void*)0;
+	AlifIntT has_gil_slot = 0;
+	void* gil_slot = ALIF_MOD_GIL_USED;
+	AlifIntT has_execution_slots = 0;
+	const char* name{};
+	AlifIntT ret{};
+	AlifInterpreter* interp = _alifInterpreter_get();
+
+	alifModuleDef_init(_def);
+
+	nameobj = alifObject_getAttrString(_spec, "name");
+	if (nameobj == nullptr) {
+		return nullptr;
+	}
+	name = alifUStr_asUTF8(nameobj);
+	if (name == nullptr) {
+		goto error;
+	}
+
+	//if (!check_apiVersion(name, module_api_version)) {
+	//	goto error;
+	//}
+
+	if (_def->size < 0) {
+		//alifErr_format(
+		//	_alifExcSystemError_,
+		//	"module %s: m_size may not be negative for multi-phase initialization",
+		//	name);
+		goto error;
+	}
+
+	for (cur_slot = _def->slots; cur_slot and cur_slot->slot; cur_slot++) {
+		switch (cur_slot->slot) {
+		case ALIF_MOD_CREATE:
+			if (create) {
+				//alifErr_format(
+				//	_alifExcSystemError_,
+				//	"module %s has multiple create slots",
+				//	name);
+				goto error;
+			}
+			create = (AlifObject* (*)(AlifObject*, AlifModuleDef*))cur_slot->value; //* alif
+
+			break;
+		case ALIF_MOD_EXEC:
+			has_execution_slots = 1;
+			break;
+		case ALIF_MOD_MULTIPLE_INTERPRETERS:
+			if (has_multiple_interpreters_slot) {
+				//alifErr_format(
+				//	_alifExcSystemError_,
+				//	"module %s has more than one 'multiple interpreters' slots",
+				//	name);
+				goto error;
+			}
+			multiple_interpreters = cur_slot->value;
+			has_multiple_interpreters_slot = 1;
+			break;
+		case ALIF_MOD_GIL:
+			if (has_gil_slot) {
+				//alifErr_format(
+				//	_alifExcSystemError_,
+				//	"module %s has more than one 'gil' slot",
+				//	name);
+				goto error;
+			}
+			gil_slot = cur_slot->value;
+			has_gil_slot = 1;
+			break;
+		default:
+			//alifErr_format(
+			//	_alifExcSystemError_,
+			//	"module %s uses unknown slot ID %i",
+			//	name, cur_slot->slot);
+			goto error;
+		}
+	}
+
+	if (!has_multiple_interpreters_slot) {
+		multiple_interpreters = ALIF_MOD_MULTIPLE_INTERPRETERS_SUPPORTED;
+	}
+	//if (multiple_interpreters == ALIF_MOD_MULTIPLE_INTERPRETERS_NOT_SUPPORTED) {
+	//	if (!alif_isMainInterpreter(interp)
+	//		and _alifImport_checkSubinterpIncompatibleExtensionAllowed(name) < 0)
+	//	{
+	//		goto error;
+	//	}
+	//}
+	//else if (multiple_interpreters != ALIF_MOD_PER_INTERPRETER_GIL_SUPPORTED
+	//	and interp->eval.ownGil
+	//	and !alif_isMainInterpreter(interp)
+	//	and _alifImport_checkSubinterpIncompatibleExtensionAllowed(name) < 0)
+	//{
+	//	goto error;
+	//}
+
+	if (create) {
+		m = create(_spec, _def);
+		if (m == nullptr) {
+			if (!alifErr_occurred()) {
+				//alifErr_format(
+				//	_alifExcSystemError_,
+				//	"creation of module %s failed without setting an exception",
+				//	name);
+			}
+			goto error;
+		}
+		else {
+			if (alifErr_occurred()) {
+				//_alifErr_formatFromCause(
+				//	_alifExcSystemError_,
+				//	"creation of module %s raised unreported exception",
+				//	name);
+				goto error;
+			}
+		}
+	}
+	else {
+		m = alifModule_newObject(nameobj);
+		if (m == nullptr) {
+			goto error;
+		}
+	}
+
+	if (ALIFMODULE_CHECK(m)) {
+		((AlifModuleObject*)m)->state = nullptr;
+		((AlifModuleObject*)m)->def = _def;
+		((AlifModuleObject*)m)->gil = gil_slot;
+	}
+	else {
+		if (_def->size > 0 or _def->traverse or _def->clear or _def->free) {
+			//alifErr_format(
+			//	_alifExcSystemError_,
+			//	"module %s is not a module object, but requests module state",
+			//	name);
+			goto error;
+		}
+		if (has_execution_slots) {
+			//alifErr_format(
+			//	_alifExcSystemError_,
+			//	"module %s specifies execution slots, but did not create "
+			//	"a ModuleType instance",
+			//	name);
+			goto error;
+		}
+	}
+
+	if (_def->methods != nullptr) {
+		ret = addMethods_toObject(m, nameobj, _def->methods);
+		if (ret != 0) {
+			goto error;
+		}
+	}
+
+	//if (def->doc != nullptr) {
+	//	ret = alifModule_setDocString(m, def->doc);
+	//	if (ret != 0) {
+	//		goto error;
+	//	}
+	//}
+
+	ALIF_DECREF(nameobj);
+	return m;
+
+error:
+	ALIF_DECREF(nameobj);
+	ALIF_XDECREF(m);
+	return nullptr;
+}
+
+
+
+
+
+
+
+
+
+
 AlifIntT alifUnstable_moduleSetGIL(AlifObject* _module, void* _gil) { // 442
 	if (!ALIFMODULE_CHECK(_module)) {
 		//ALIFERR_BADINTERNALCALL();

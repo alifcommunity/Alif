@@ -9,7 +9,7 @@ AlifIntT alifArg_unpackTuple(AlifObject*, const char*, AlifSizeT, AlifSizeT, ...
 AlifObject* alif_buildValue(const char*, ...); // 19
 
 
-
+AlifIntT alifModule_addObjectRef(AlifObject*, const char*, AlifObject*); // 26
 
 
 
@@ -26,6 +26,12 @@ AlifIntT alifModule_addFunctions(AlifObject*, AlifMethodDef*); // 53
 #define ALIF_API_VERSION 5
 #define ALIF_API_STRING "5"
 
+
+AlifObject* alifModule_fromDefAndSpec2(AlifModuleDef*, AlifObject*, AlifIntT); // 123
+
+// 131
+#define ALIFMODULE_FROMDEFANDSPEC(_module, _spec) \
+    alifModule_fromDefAndSpec2((_module), (_spec), ALIF_API_VERSION)
 
 
 /* ----------------------------------------------------------------------------------------------------------- */

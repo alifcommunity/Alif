@@ -20,7 +20,7 @@ AlifObject* alifImport_importModuleLevelObject(AlifObject*, AlifObject*,
 /* --------------------------------------------------------------------------------------- */
 
 
-
+AlifObject* alifInit__imp(void); // 5
 
 class InitTable { // 7
 public:

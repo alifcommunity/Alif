@@ -22,6 +22,10 @@ public:
 };
 
 
+static inline AlifModuleDef* _alifModule_getDef(AlifObject* mod) { // 30
+	return ((AlifModuleObject*)mod)->def;
+}
+
 
 
 static inline AlifObject* _alifModule_getDict(AlifObject* mod) { // 40

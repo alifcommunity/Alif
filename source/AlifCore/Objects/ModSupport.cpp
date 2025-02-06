@@ -503,3 +503,31 @@ AlifObject** _alif_vaBuildStack(AlifObject** _smallStack, AlifSizeT _smallStackL
 	return stack;
 }
 
+
+
+AlifIntT alifModule_addObjectRef(AlifObject* _mod,
+	const char* _name, AlifObject* _value) { // 581
+	if (!ALIFMODULE_CHECK(_mod)) {
+		//alifErr_setString(_alifExcTypeError_,
+		//	"alifModule_addObjectRef() first argument "
+		//	"must be a module");
+		return -1;
+	}
+	if (!_value) {
+		if (!alifErr_occurred()) {
+			//alifErr_setString(_alifExcSystemError_,
+			//	"alifModule_addObjectRef() must be called "
+			//	"with an exception raised if value is NULL");
+		}
+		return -1;
+	}
+
+	AlifObject* dict = alifModule_getDict(_mod);
+	if (dict == nullptr) {
+		/* Internal error -- modules must have a dict! */
+		//alifErr_format(_alifExcSystemError_, "module '%s' has no __dict__",
+		//	alifModule_getName(mod));
+		return -1;
+	}
+	return alifDict_setItemString(dict, _name, _value);
+}
