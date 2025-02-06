@@ -19,6 +19,7 @@ AlifIntT alifModule_addObjectRef(AlifObject*, const char*, AlifObject*); // 26
 
 
 AlifIntT alifModule_addFunctions(AlifObject*, AlifMethodDef*); // 53
+AlifIntT alifModule_execDef(AlifObject*, AlifModuleDef*); // 54
 
 #define ALIF_CLEANUP_SUPPORTED 0x20000 // 57
 

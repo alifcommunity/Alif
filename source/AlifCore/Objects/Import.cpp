@@ -73,6 +73,12 @@ static inline AlifObject* get_modulesDict(AlifThread* tstate, bool fatal) { // 1
 }
 
 
+AlifIntT _alifImport_setModuleString(const char* name, AlifObject* m) { // 187
+	AlifThread* thread = _alifThread_get();
+	AlifObject* modules = get_modulesDict(thread, true);
+	return alifMapping_setItemString(modules, name, m);
+}
+
 static AlifObject* import_getModule(AlifThread* _thread, AlifObject* _name) { // 195
 	AlifObject* modules = get_modulesDict(_thread, false);
 	if (modules == nullptr) {
@@ -200,6 +206,28 @@ const char* _alifImport_swapPackageContext(const char* newcontext) { // 759
 	return oldcontext;
 }
 
+
+static AlifIntT exec_builtinOrDynamic(AlifObject* mod) { // 790
+	AlifModuleDef* def{};
+	void* state{};
+
+	if (!ALIFMODULE_CHECK(mod)) {
+		return 0;
+	}
+
+	def = alifModule_getDef(mod);
+	if (def == nullptr) {
+		return 0;
+	}
+
+	state = alifModule_getState(mod);
+	if (state) {
+		/* Already initialized; skip reload */
+		return 0;
+	}
+
+	return alifModule_execDef(mod, def);
+}
 
 
 static AlifThread* switchTo_mainInterpreter(AlifThread* _thread) { // 1523
@@ -723,7 +751,7 @@ static AlifObject* bootstrap_imp(AlifThread* _thread) { // 3096
 	}
 
 	// Create the _imp module from its definition.
-	mod = create_builtin(_thread, name, spec); //* uncomment
+	mod = create_builtin(_thread, name, spec);
 	ALIF_CLEAR(name);
 	ALIF_DECREF(spec);
 	if (mod == nullptr) {
@@ -731,10 +759,10 @@ static AlifObject* bootstrap_imp(AlifThread* _thread) { // 3096
 	}
 
 	// Execute the _imp module: call imp_module_exec().
-	//if (exec_builtinOrDynamic(mod) < 0) { //* uncomment
-	//	ALIF_DECREF(mod);
-	//	goto error;
-	//}
+	if (exec_builtinOrDynamic(mod) < 0) {
+		ALIF_DECREF(mod);
+		goto error;
+	}
 	return mod;
 
 error:
@@ -763,18 +791,18 @@ static AlifIntT init_importLib(AlifThread* tstate, AlifObject* sysmod) { // 3150
 
 	// Import the _imp module
 
-	AlifObject* imp_mod = bootstrap_imp(tstate);
-	if (imp_mod == nullptr) {
+	AlifObject* impMod = bootstrap_imp(tstate);
+	if (impMod == nullptr) {
 		return -1;
 	}
-	if (_alifImport_setModuleString("_imp", imp_mod) < 0) {
-		ALIF_DECREF(imp_mod);
+	if (_alifImport_setModuleString("_imp", impMod) < 0) {
+		ALIF_DECREF(impMod);
 		return -1;
 	}
 
 	// Install importlib as the implementation of import
 	//AlifObject* value = alifObject_callMethod(importlib, "_install",
-	//	"OO", sysmod, imp_mod); //* uncomment
+	//	"OO", sysmod, imp_mod); //* todo
 	//ALIF_DECREF(imp_mod);
 	//if (value == nullptr) {
 	//	return -1;
@@ -1036,7 +1064,7 @@ AlifIntT _alifImport_initCore(AlifThread* _thread,
 	// XXX Initialize here: sys.modules and sys.meta_path.
 
 	if (_importLib) {
-		if (init_importLib(_thread, _sysmod) < 0) { //* uncomment
+		if (init_importLib(_thread, _sysmod) < 0) {
 			return -1;
 		}
 	}
@@ -1067,7 +1095,7 @@ static AlifMethodDef _impMethods_[] = { // 4788
 	//_IMP_EXEC_BUILTIN_METHODDEF
 	//_IMP__FIX_CO_FILENAME_METHODDEF
 	//_IMP_SOURCE_HASH_METHODDEF
-	{NULL, NULL}  /* sentinel */
+	{nullptr, nullptr}  /* sentinel */
 };
 
 

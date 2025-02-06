@@ -18,7 +18,11 @@ AlifObject* alifModule_getDict(AlifObject*); // 23
 
 AlifObject* alifModule_getNameObject(AlifObject*); // 25
 
+const char* alifModule_getName(AlifObject*); // 27
+
 AlifObject* alifModule_getFilenameObject(AlifObject*); // 29
+AlifModuleDef* alifModule_getDef(AlifObject*); // 30
+void* alifModule_getState(AlifObject*); // 31
 
 AlifObject* alifModuleDef_init(AlifModuleDef*); // 35
 extern AlifTypeObject _alifModuleDefType_; // 36

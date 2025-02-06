@@ -190,7 +190,7 @@ AlifObject* alifModule_createInitialized(AlifModuleDef* _module) { // 209
 
 AlifObject* alifModule_fromDefAndSpec2(AlifModuleDef* _def,
 	AlifObject* _spec, AlifIntT _moduleApiVersion) { // 266
-	AlifModuleDefSlot* cur_slot{};
+	AlifModuleDefSlot* curSlot{};
 	AlifObject* (*create)(AlifObject*, AlifModuleDef*) = nullptr;
 	AlifObject* nameobj{};
 	AlifObject* m = nullptr;
@@ -221,13 +221,13 @@ AlifObject* alifModule_fromDefAndSpec2(AlifModuleDef* _def,
 	if (_def->size < 0) {
 		//alifErr_format(
 		//	_alifExcSystemError_,
-		//	"module %s: m_size may not be negative for multi-phase initialization",
+		//	"module %s: size may not be negative for multi-phase initialization",
 		//	name);
 		goto error;
 	}
 
-	for (cur_slot = _def->slots; cur_slot and cur_slot->slot; cur_slot++) {
-		switch (cur_slot->slot) {
+	for (curSlot = _def->slots; curSlot and curSlot->slot; curSlot++) {
+		switch (curSlot->slot) {
 		case ALIF_MOD_CREATE:
 			if (create) {
 				//alifErr_format(
@@ -236,7 +236,7 @@ AlifObject* alifModule_fromDefAndSpec2(AlifModuleDef* _def,
 				//	name);
 				goto error;
 			}
-			create = (AlifObject* (*)(AlifObject*, AlifModuleDef*))cur_slot->value; //* alif
+			create = (AlifObject* (*)(AlifObject*, AlifModuleDef*))curSlot->value; //* alif
 
 			break;
 		case ALIF_MOD_EXEC:
@@ -250,7 +250,7 @@ AlifObject* alifModule_fromDefAndSpec2(AlifModuleDef* _def,
 				//	name);
 				goto error;
 			}
-			multiple_interpreters = cur_slot->value;
+			multiple_interpreters = curSlot->value;
 			has_multiple_interpreters_slot = 1;
 			break;
 		case ALIF_MOD_GIL:
@@ -261,7 +261,7 @@ AlifObject* alifModule_fromDefAndSpec2(AlifModuleDef* _def,
 				//	name);
 				goto error;
 			}
-			gil_slot = cur_slot->value;
+			gil_slot = curSlot->value;
 			has_gil_slot = 1;
 			break;
 		default:
@@ -384,6 +384,71 @@ AlifIntT alifUnstable_moduleSetGIL(AlifObject* _module, void* _gil) { // 442
 }
 
 
+AlifIntT alifModule_execDef(AlifObject* _module, AlifModuleDef* _def) { // 460
+	AlifModuleDefSlot* curSlot{};
+	const char* name{};
+	AlifIntT ret{};
+
+	name = alifModule_getName(_module);
+	if (name == nullptr) {
+		return -1;
+	}
+
+	if (_def->size >= 0) {
+		AlifModuleObject* md = (AlifModuleObject*)_module;
+		if (md->state == nullptr) {
+			md->state = alifMem_dataAlloc(_def->size ? _def->size : 1); //* alif
+			if (!md->state) {
+				//alifErr_noMemory();
+				return -1;
+			}
+			memset(md->state, 0, _def->size);
+		}
+	}
+
+	if (_def->slots == nullptr) {
+		return 0;
+	}
+
+	for (curSlot = _def->slots; curSlot and curSlot->slot; curSlot++) {
+		switch (curSlot->slot) {
+		case ALIF_MOD_CREATE:
+			/* handled in alifModule_fromDefAndSpec2 */
+			break;
+		case ALIF_MOD_EXEC:
+			ret = ((AlifIntT (*)(AlifObject*))curSlot->value)(_module);
+			if (ret != 0) {
+				if (!alifErr_occurred()) {
+					//alifErr_format(
+					//	_alifExcSystemError_,
+					//	"execution of module %s failed without setting an exception",
+					//	name);
+				}
+				return -1;
+			}
+			if (alifErr_occurred()) {
+				//_alifErr_formatFromCause(
+				//	_alifExcSystemError_,
+				//	"execution of module %s raised unreported exception",
+				//	name);
+				return -1;
+			}
+			break;
+		case ALIF_MOD_MULTIPLE_INTERPRETERS:
+		case ALIF_MOD_GIL:
+			/* handled in alifModule_fromDefAndSpec2 */
+			break;
+		default:
+			//alifErr_format(
+			//	_alifExcSystemError_,
+			//	"module %s initialized with unknown slot %i",
+			//	name, curSlot->slot);
+			return -1;
+		}
+	}
+	return 0;
+}
+
 
 
 
@@ -440,6 +505,15 @@ error:
 }
 
 
+const char* alifModule_getName(AlifObject* _m) { // 596
+	AlifObject* name = alifModule_getNameObject(_m);
+	if (name == nullptr) {
+		return nullptr;
+	}
+	ALIF_DECREF(name);   /* module dict has still a reference */
+	return alifUStr_asUTF8(name);
+}
+
 
 AlifObject* alifModule_getFilenameObject(AlifObject* _mod) { // 602
 	AlifObject* fileobj{};
@@ -467,6 +541,23 @@ error:
 		//alifErr_setString(_alifExcSystemError_, "module filename missing");
 	}
 	return nullptr;
+}
+
+
+AlifModuleDef* alifModule_getDef(AlifObject* m) { // 650
+	if (!ALIFMODULE_CHECK(m)) {
+		//ALIFERR_BADARGUMENT();
+		return nullptr;
+	}
+	return _alifModule_getDef(m);
+}
+
+void* alifModule_getState(AlifObject* m) { // 660
+	if (!ALIFMODULE_CHECK(m)) {
+		//ALIFERR_BADARGUMENT();
+		return nullptr;
+	}
+	return _alifModule_getState(m);
 }
 
 
@@ -632,7 +723,7 @@ AlifObject* alifModule_getAttroImpl(AlifModuleObject* _m,
 	if (isPossiblyShadowing) {
 		AlifObject* stdlibModules = alifSys_getObject("stdlib_module_names");
 		if (stdlibModules and ALIFANYSET_CHECK(stdlibModules)) {
-			//isPossiblyShadowingStdLib = alifSet_contains(stdlibModules, modName);
+			isPossiblyShadowingStdLib = alifSet_contains(stdlibModules, modName);
 			if (isPossiblyShadowingStdLib < 0) {
 				goto done;
 			}

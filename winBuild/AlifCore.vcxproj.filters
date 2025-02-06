@@ -909,9 +909,6 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_PathConfig.h">
       <Filter>Include\Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Main\Frozen\Importlib._bootstrap.h">
-      <Filter>Include\Main\FrozenModules</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Main\Marshal.h">
       <Filter>Include\Main</Filter>
     </ClInclude>
@@ -920,6 +917,9 @@
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ImportDL.h">
       <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\FrozenModules\Importlib._bootstrap.h">
+      <Filter>Include\Main\FrozenModules</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

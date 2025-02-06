@@ -1268,6 +1268,24 @@ AlifSizeT alifMapping_size(AlifObject* _o) { // 2270
 	return -1;
 }
 
+AlifIntT alifMapping_setItemString(AlifObject* o,
+	const char* key, AlifObject* value) { // 2337
+	AlifObject* okey{};
+	AlifIntT r{};
+
+	if (key == nullptr) {
+		null_error();
+		return -1;
+	}
+
+	okey = alifUStr_fromString(key);
+	if (okey == nullptr)
+		return -1;
+	r = alifObject_setItem(o, okey, value);
+	ALIF_DECREF(okey);
+	return r;
+}
+
 
 static AlifObject* methodOutput_asList(AlifObject* o, AlifObject* meth) { // 2427
 	AlifObject* it{}, * result{}, * meth_output{};
