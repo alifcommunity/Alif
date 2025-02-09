@@ -17,6 +17,8 @@ class AlifConfig { // 134
 public:
 	AlifIntT configInit{};
 
+	AlifIntT installSignalHandlers{};
+
 	AlifIntT tracemalloc{};
 	AlifIntT parseArgv{};
 

@@ -196,6 +196,53 @@ static AlifIntT _alifTime_asTimeT(AlifTimeT t, time_t* t2) { // 244
 }
 
 
+#ifdef _WINDOWS
+static AlifIntT _alifTime_asCLong(AlifTimeT t, long* t2) { // 265
+#if SIZEOF_LONG < _SIZEOF_ALIFTIME_T
+	if ((AlifTimeT)LONG_MAX < t) {
+		*t2 = LONG_MAX;
+		return -1;
+	}
+	if (t < (AlifTimeT)LONG_MIN) {
+		*t2 = LONG_MIN;
+		return -1;
+	}
+#endif
+	* t2 = (long)t;
+	return 0;
+}
+#endif
+
+
+static double alifTime_roundHalfEven(double x) { // 286
+	double rounded = round(x);
+	if (fabs(x - rounded) == 0.5) {
+		/* halfway case: round to even */
+		rounded = 2.0 * round(x / 2.0);
+	}
+	return rounded;
+}
+
+static double alifTime_round(double x, AlifTimeRoundT round) { // 298
+	volatile double d{};
+
+	d = x;
+	if (round == AlifTimeRoundT::AlifTime_Round_HALF_EVEN) {
+		d = alifTime_roundHalfEven(d);
+	}
+	else if (round == AlifTimeRoundT::AlifTime_Round_CEILING) {
+		d = ceil(d);
+	}
+	else if (round == AlifTimeRoundT::AlifTime_Round_FLOOR) {
+		d = floor(d);
+	}
+	else {
+		d = (d >= 0.0) ? ceil(d) : floor(d);
+	}
+	return d;
+}
+
+
 
 AlifTimeT _alifTime_fromMicrosecondsClamp(AlifTimeT _us) { // 465
 	AlifTimeT ns_ = _alifTime_mul(_us, US_TO_NS);
@@ -233,6 +280,123 @@ AlifIntT _alifTime_fromTimeSpec(AlifTimeT* tp, const struct timespec* ts) { // 5
 #endif
 
 
+static AlifIntT alifTime_fromDouble(AlifTimeT* tp,
+	double value, AlifTimeRoundT round, long unit_to_ns) { // 565
+	volatile double d{};
+
+	d = value;
+	d *= (double)unit_to_ns;
+	d = alifTime_round(d, round);
+
+	if (!((double)ALIFTIME_MIN <= d and d < -(double)ALIFTIME_MIN)) {
+		alifTime_timeTOverflow();
+		*tp = 0;
+		return -1;
+	}
+	AlifTimeT ns = (AlifTimeT)d;
+
+	*tp = ns;
+	return 0;
+}
+
+
+static AlifIntT alifTime_fromObject(AlifTimeT* tp,
+	AlifObject* obj, AlifTimeRoundT round, long unit_to_ns) { // 590
+	if (ALIFFLOAT_CHECK(obj)) {
+		double d{};
+		d = alifFloat_asDouble(obj);
+		if (isnan(d)) {
+			//alifErr_setString(_alifExcValueError_, "Invalid value NaN (not a number)");
+			return -1;
+		}
+		return alifTime_fromDouble(tp, d, round, unit_to_ns);
+	}
+	else {
+		long long sec = alifLong_asLongLong(obj);
+		if (sec == -1 and alifErr_occurred()) {
+			//if (alifErr_exceptionMatches(_alifExcOverflowError_)) {
+			//	alifTime_overflow();
+			//}
+			return -1;
+		}
+
+		static_assert(sizeof(long long) <= sizeof(AlifTimeT),
+			"AlifTimeT is smaller than long long");
+		AlifTimeT ns = (AlifTimeT)sec;
+		if (alifTime_mul(&ns, unit_to_ns) < 0) {
+			//alifTime_overflow();
+			return -1;
+		}
+
+		*tp = ns;
+		return 0;
+	}
+}
+
+AlifIntT _alifTime_fromSecondsObject(AlifTimeT* _tp,
+	AlifObject* _obj, AlifTimeRoundT _round) { // 626
+	return alifTime_fromObject(_tp, _obj, _round, SEC_TO_NS);
+}
+
+
+
+static AlifTimeT alifTime_divideRoundUp(const AlifTimeT t, const AlifTimeT k) { // 675
+	if (t >= 0) {
+		AlifTimeT q = t / k;
+		if (t % k) {
+			q += 1;
+		}
+		return q;
+	}
+	else {
+		AlifTimeT q = t / k;
+		if (t % k) {
+			q -= 1;
+		}
+		return q;
+	}
+}
+
+
+
+
+static AlifTimeT alifTime_divide(const AlifTimeT t, const AlifTimeT k,
+	const AlifTimeRoundT round) { // 700
+	if (round == AlifTimeRoundT::AlifTime_Round_HALF_EVEN) {
+		AlifTimeT x = t / k;
+		AlifTimeT r = t % k;
+		AlifTimeT abs_r = ALIF_ABS(r);
+		if (abs_r > k / 2 or (abs_r == k / 2 and (ALIF_ABS(x) & 1))) {
+			if (t >= 0) {
+				x++;
+			}
+			else {
+				x--;
+			}
+		}
+		return x;
+	}
+	else if (round == AlifTimeRoundT::AlifTime_Round_CEILING) {
+		if (t >= 0) {
+			return alifTime_divideRoundUp(t, k);
+		}
+		else {
+			return t / k;
+		}
+	}
+	else if (round == AlifTimeRoundT::AlifTime_Round_FLOOR) {
+		if (t >= 0) {
+			return t / k;
+		}
+		else {
+			return alifTime_divideRoundUp(t, k);
+		}
+	}
+	else {
+		return alifTime_divideRoundUp(t, k);
+	}
+}
+
 
 static AlifIntT alifTime_divMod(const AlifTimeT _t, const AlifTimeT _k,
 	AlifTimeT* _pq, AlifTimeT* _pr) { // 742
@@ -252,6 +416,64 @@ static AlifIntT alifTime_divMod(const AlifTimeT _t, const AlifTimeT _k,
 	*_pr = r;
 	return 0;
 }
+
+
+#ifdef _WINDOWS
+AlifTimeT _alifTime_as100Nanoseconds(AlifTimeT _ns,
+	AlifTimeRoundT _round) { // 771
+	return alifTime_divide(_ns, NS_TO_100NS, _round);
+}
+#endif
+
+
+AlifTimeT _alifTime_asMilliseconds(AlifTimeT _ns, AlifTimeRoundT _round) { // 786
+	return alifTime_divide(_ns, NS_TO_MS, _round);
+}
+
+
+
+
+static AlifIntT alifTime_asTimEval(AlifTimeT _ns, AlifTimeT* _ptvSec,
+	AlifIntT* _ptvUsec, AlifTimeRoundT _round) { // 793
+	AlifTimeT us = alifTime_divide(_ns, US_TO_NS, _round);
+
+	AlifTimeT tvSec{}, tvUsec{};
+	AlifIntT res = alifTime_divMod(us, SEC_TO_US, &tvSec, &tvUsec);
+	*_ptvSec = tvSec;
+	*_ptvUsec = (int)tvUsec;
+	return res;
+}
+
+static AlifIntT alifTime_asTimEvalStruct(AlifTimeT t, struct timeval* tv,
+	AlifTimeRoundT round, AlifIntT raise_exc) { // 807
+	AlifTimeT tv_sec{};
+	AlifIntT tv_usec{};
+	AlifIntT res = alifTime_asTimEval(t, &tv_sec, &tv_usec, round);
+	AlifIntT res2{};
+#ifdef _WINDOWS
+	// On Windows, timeval.tv_sec type is long
+	res2 = _alifTime_asCLong(tv_sec, &tv->tv_sec);
+#else
+	res2 = _alifTime_asTimeT(tv_sec, &tv->tv_sec);
+#endif
+	if (res2 < 0) {
+		tv_usec = 0;
+	}
+	tv->tv_usec = tv_usec;
+
+	if (raise_exc and (res < 0 or res2 < 0)) {
+		alifTime_timeTOverflow();
+		return -1;
+	}
+	return 0;
+}
+
+
+AlifIntT _alifTime_asTimeval(AlifTimeT t,
+	struct timeval* tv, AlifTimeRoundT round) { // 834
+	return alifTime_asTimEvalStruct(t, tv, round, 1);
+}
+
 
 
 #if defined(HAVE_CLOCK_GETTIME) or defined(HAVE_KQUEUE) // 862
@@ -275,6 +497,10 @@ static AlifIntT alifTime_asTimeSpec(AlifTimeT ns, timespec* ts, AlifIntT raise_e
 
 void _alifTime_asTimeSpecClamp(AlifTimeT t, timespec* ts) { // 882
 	alifTime_asTimeSpec(t, ts, 0);
+}
+
+AlifIntT _alifTime_asTimeSpec(AlifTimeT t, struct timespec* ts) { // 892
+	return alifTime_asTimeSpec(t, ts, 1);
 }
 
 #endif // 893
@@ -568,6 +794,14 @@ static AlifIntT alifGet_monotonicClock(AlifTimeT* _tp,
 }
 
 
+
+AlifIntT alifTime_monotonic(AlifTimeT* result) { // 1239
+	if (alifGet_monotonicClock(result, nullptr, 1) < 0) {
+		*result = 0;
+		return -1;
+	}
+	return 0;
+}
 
 
 AlifIntT alifTime_monotonicRaw(AlifTimeT* _result) { // 1246

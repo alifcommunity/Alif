@@ -15,6 +15,7 @@
 		.interpreters = {.nextID = -1},												\
 		.mainThreadID = 0,															\
 		.threads = ALIFTHREAD_DURERUN_INIT(dureRun.threads),						\
+		.signals = SIGNALS_RUNTIME_INIT,											\
 		.autoTSSKey = 0,															\
 		.trashTSSKey = 0,															\
 		.parser = PARSER_DURERUN_STATE_INIT,										\

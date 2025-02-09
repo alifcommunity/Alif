@@ -9,7 +9,7 @@ using AlifTimeT = int64_t;
 
 
 
-
+AlifIntT alifTime_monotonic(AlifTimeT*); // 15
 
 AlifIntT alifTime_monotonicRaw(AlifTimeT*); // 19
 

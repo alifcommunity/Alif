@@ -439,7 +439,7 @@ static AlifIntT initInterpreter_main(AlifThread* _thread) { // 1156
 	AlifIntT status{};
 	AlifIntT isMainInterpreter = alif_isMainInterpreter(_thread->interpreter);
 	AlifInterpreter* interpreter = _thread->interpreter;
-	const AlifConfig* config_ = alifInterpreter_getConfig(interpreter);
+	const AlifConfig* config = alifInterpreter_getConfig(interpreter);
 
 	//if (!config_->installImportLib) {
 	//	if (isMainInterpreter) {
@@ -461,13 +461,17 @@ static AlifIntT initInterpreter_main(AlifThread* _thread) { // 1156
 	//status = alifUnicode_initEncoding(_thread);
 	//if (status < 1) return status;
 
-	//if (isMainInterpreter) {
-	//	if (config_->tracemalloc) {
-	//		if (alifTraceMalloc_start(config_->tracemalloc) < 0) {
-	//			return -1;
-	//		}
-	//	}
-	//}
+	if (isMainInterpreter) {
+		if (_alifSignal_init(config->installSignalHandlers) < 0) {
+			//return _ALIFSTATUS_ERR("can't initialize signals");
+		}
+
+		//if (config_->tracemalloc) {
+		//	if (alifTraceMalloc_start(config_->tracemalloc) < 0) {
+		//		return -1;
+		//	}
+		//}
+	}
 
 	//status = init_sysStream(_thread);
 	//if (status < 1) return status;

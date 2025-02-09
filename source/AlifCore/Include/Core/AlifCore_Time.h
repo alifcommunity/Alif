@@ -15,7 +15,24 @@ enum AlifTimeRoundT { // 67
 AlifTimeT _alifTime_fromMicrosecondsClamp(AlifTimeT); // 147
 
 
+AlifIntT _alifTime_fromSecondsObject(AlifTimeT*, AlifObject*, AlifTimeRoundT); // 157
+
+
+AlifTimeT _alifTime_asMilliseconds(AlifTimeT, AlifTimeRoundT); // 170
+
+
+#ifdef _WINDOWS
+extern AlifTimeT _alifTime_as100Nanoseconds(AlifTimeT, AlifTimeRoundT); // 180
+#endif
+
+
+AlifIntT _alifTime_asTimeval(AlifTimeT, struct timeval*, AlifTimeRoundT); // 199
+
+
 #if defined(HAVE_CLOCK_GETTIME) or defined(HAVE_KQUEUE)
+
+AlifIntT _alifTime_asTimeSpec(AlifTimeT, struct timespec*); // 232
+
 void _alifTime_asTimeSpecClamp(AlifTimeT, timespec*); // 237
 #endif
 

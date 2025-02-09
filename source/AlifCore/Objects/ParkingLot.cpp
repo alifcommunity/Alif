@@ -96,7 +96,13 @@ static AlifIntT alifSemaphore_platformWait(AlifSemaphore* sema, AlifTimeT timeou
 		millis = INFINITE;
 	}
 	else {
-		millis = (DWORD)(timeout / 1000000);
+		AlifTimeT div = _alifTime_asMilliseconds(timeout, AlifTimeRoundT::AlifTime_Round_TIMEOUT);
+		if ((AlifTimeT)ALIF_DWORD_MAX < div) {
+			millis = ALIF_DWORD_MAX;
+		}
+		else {
+			millis = (DWORD)div;
+		}
 	}
 	wait = WaitForSingleObjectEx(sema->platformSem, millis, FALSE);
 	if (wait == WAIT_OBJECT_0) {

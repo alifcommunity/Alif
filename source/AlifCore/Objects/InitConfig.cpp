@@ -302,6 +302,7 @@ void alifConfig_clear(AlifConfig* _config) { // 773
 
 void alifConfig_initAlifConfig(AlifConfig* _config) { // 897
 	_config->configInit = ConfigInitEnum_::AlifConfig_Init_Alif;
+	_config->installSignalHandlers = 1;
 	_config->tracemalloc = -1;
 	_config->parseArgv = 1;
 	_config->interactive = 0;

@@ -289,9 +289,6 @@
     <ClCompile Include="..\source\AlifCore\Objects\WinConsoleIO.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\SignalModule.cpp">
-      <Filter>Objects</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\InvalidParameterHandler.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
@@ -317,6 +314,9 @@
       <Filter>Objects</Filter>
     </ClCompile>
     <ClCompile Include="..\source\Modules\TimeModule.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Modules\SignalModule.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
   </ItemGroup>

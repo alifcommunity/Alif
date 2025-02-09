@@ -312,7 +312,6 @@
     <ClCompile Include="..\source\AlifCore\Objects\QuiescentStatesBiaseRef.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\RangeObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\SetObject.cpp" />
-    <ClCompile Include="..\source\AlifCore\Objects\SignalModule.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\SliceObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\StringParser.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\StructSeq.cpp" />
@@ -328,6 +327,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\UStrObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\WeakRefObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\WinConsoleIO.cpp" />
+    <ClCompile Include="..\source\Modules\SignalModule.cpp" />
     <ClCompile Include="..\source\Modules\TimeModule.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

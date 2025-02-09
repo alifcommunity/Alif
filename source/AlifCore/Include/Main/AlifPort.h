@@ -117,6 +117,8 @@ typedef AlifUSizeT AlifUHashT;
 #endif
 
 
+#define ALIF_DWORD_MAX 4294967295U
+
 
 
 #ifndef WITH_THREAD

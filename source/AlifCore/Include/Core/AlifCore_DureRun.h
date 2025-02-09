@@ -57,6 +57,9 @@ public:
 	AlifThread* mainThread{};
 
 	AlifThreadDureRunState threads{};
+	SignalsDureRunState signals{};
+
+
 
 	AlifTssT autoTSSKey{};
 	AlifTssT trashTSSKey{};
