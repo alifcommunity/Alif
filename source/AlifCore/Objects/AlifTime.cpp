@@ -469,7 +469,7 @@ static AlifIntT alifTime_asTimEvalStruct(AlifTimeT t, struct timeval* tv,
 }
 
 
-AlifIntT _alifTime_asTimeval(AlifTimeT t,
+AlifIntT _alifTime_asTimEval(AlifTimeT t,
 	struct timeval* tv, AlifTimeRoundT round) { // 834
 	return alifTime_asTimEvalStruct(t, tv, round, 1);
 }

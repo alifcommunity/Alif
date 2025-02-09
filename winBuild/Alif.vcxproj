@@ -135,7 +135,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib;..\source\AlifCore\Include\Main\FrozenModules</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
@@ -157,7 +157,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib;..\source\AlifCore\Include\Main\FrozenModules</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>

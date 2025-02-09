@@ -754,7 +754,7 @@ static AlifObject* r_object(RFILE* p) { // 1004
 		AlifObject* filename = nullptr;
 		AlifObject* name = nullptr;
 		AlifObject* qualname = nullptr;
-		AlifIntT firstlineno;
+		AlifIntT firstlineno{};
 		AlifObject* linetable = nullptr;
 		AlifObject* exceptiontable = nullptr;
 

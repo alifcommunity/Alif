@@ -221,3 +221,6 @@
 #define FORCE_SWITCHING
 
 #define	WITH_MIMALLOC
+
+
+#define HAVE_SIGNAL_H 1

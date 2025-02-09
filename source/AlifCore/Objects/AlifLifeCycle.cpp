@@ -16,6 +16,11 @@
 
 
 
+#ifdef HAVE_SIGNAL_H
+#  include <signal.h>             // SIG_IGN
+#endif
+
+
 
 AlifDureRun _alifDureRun_ = ALIF_DURERUNSTATE_INIT(_alifDureRun_); // 103
 
@@ -532,4 +537,37 @@ AlifIntT alif_initFromConfig(const AlifConfig* _config) { // 1383
 	}
 
 	return 1;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+AlifOSSigHandlerT alifOS_setSig(AlifIntT sig, AlifOSSigHandlerT handler) { // 3475
+#ifdef HAVE_SIGACTION
+	sigaction context, ocontext;
+	context.sa_handler = handler;
+	sigemptyset(&context.sa_mask);
+	context.sa_flags = SA_ONSTACK;
+	if (sigaction(sig, &context, &ocontext) == -1)
+		return SIG_ERR;
+	return ocontext.sa_handler;
+#else
+	AlifOSSigHandlerT oldhandler{};
+	oldhandler = signal(sig, handler);
+#ifdef HAVE_SIGINTERRUPT
+	siginterrupt(sig, 1);
+#endif
+	return oldhandler;
+#endif
 }

@@ -14,6 +14,9 @@ const char* alif_getVersion(); // 52
 
 
 
+typedef void (*AlifOSSigHandlerT)(int); // 59
+AlifOSSigHandlerT alifOS_setSig(AlifIntT, AlifOSSigHandlerT); // 61
+
 
 
 

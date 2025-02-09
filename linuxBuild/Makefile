@@ -13,6 +13,7 @@ TARGET = $(BUILD_DIR)/alif
 SOURCES = 	$(wildcard $(SOURCE_DIR)/Alif/*.cpp)					\
 			$(wildcard $(SOURCE_DIR)/AlifCore/Objects/*.cpp)		\
 			$(wildcard $(SOURCE_DIR)/AlifCore/Objects/dtoa/*.cpp)	\
+			$(wildcard $(SOURCE_DIR)/Modules/*.cpp)	\
 
 INCLUDES =  -I$(SOURCE_DIR)/Alif									\
 			-I$(SOURCE_DIR)/AlifCore/Include/Core					\
@@ -20,6 +21,7 @@ INCLUDES =  -I$(SOURCE_DIR)/Alif									\
 			-I$(SOURCE_DIR)/AlifCore/Include/Main/Atomics			\
 			-I$(SOURCE_DIR)/AlifCore/Include/Main/mimalloc			\
 			-I$(SOURCE_DIR)/AlifCore/Include/Main/StringLib			\
+			-I$(SOURCE_DIR)/AlifCore/Include/Main/FrozenModules		\
 			-I$(SOURCE_DIR)/AlifCore/Objects/clinic					\
 
 # مرحلة إنشاء الملفات المطلوبة

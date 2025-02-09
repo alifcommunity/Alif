@@ -26,7 +26,7 @@ extern AlifTimeT _alifTime_as100Nanoseconds(AlifTimeT, AlifTimeRoundT); // 180
 #endif
 
 
-AlifIntT _alifTime_asTimeval(AlifTimeT, struct timeval*, AlifTimeRoundT); // 199
+AlifIntT _alifTime_asTimEval(AlifTimeT, struct timeval*, AlifTimeRoundT); // 199
 
 
 #if defined(HAVE_CLOCK_GETTIME) or defined(HAVE_KQUEUE)
