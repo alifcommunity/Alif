@@ -41,8 +41,13 @@ public:
 
 #define ALIF_T_OBJECT_EX 16 // 75
 
+#define ALIF_T_ALIFSIZET  19 // 79
+
+
 #define ALIF_READONLY	1 // 83
 
+
+#define ALIF_RELATIVE_OFFSET  8 //86
 
 
 

@@ -368,6 +368,22 @@ error:
 
 
 
+static AlifIntT is_builtin(AlifObject* _name) { // 2254
+	AlifIntT i{};
+	InitTable* inittab = INITTABLE;
+	for (i = 0; inittab[i].name != nullptr; i++) {
+		//if (alifUStr_equalToASCIIString(_name, inittab[i].name)) {
+		if (alifUStr_equalToUTF8(_name, inittab[i].name)) { //* alif
+			if (inittab[i].initFunc == nullptr)
+				return -1;
+			else
+				return 1;
+		}
+	}
+	return 0;
+}
+
+
 static AlifObject* create_builtin(AlifThread* _thread,
 	AlifObject* _name, AlifObject* _spec) { // 2270
 	AlifExtModuleLoaderInfo info{};
@@ -395,7 +411,8 @@ static AlifObject* create_builtin(AlifThread* _thread,
 
 	
 	for (InitTable* p = INITTABLE; p->name != nullptr; p++) {
-		if (alifUStr_equalToASCIIString(info.name, p->name)) {
+		//if (alifUStr_equalToASCIIString(info.name, p->name)) {
+		if (alifUStr_equalToUTF8(info.name, p->name)) { //* alif
 			found = p;
 		}
 	}
@@ -1389,6 +1406,34 @@ static AlifObject* load_sourceImpl(AlifObject* _absName) { // 3002 // import27.c
 	if (name == nullptr) {
 		return nullptr;
 	}
+
+	if (is_builtin(_absName)) {
+		AlifThread* thread = _alifThread_get();
+
+		AlifObject* attrs = alif_buildValue("{sO}", "name", _absName);
+		if (attrs == nullptr) {
+			return nullptr;
+		}
+		AlifObject* spec = alifNamespace_new(attrs);
+		ALIF_DECREF(attrs);
+		if (spec == nullptr) {
+			return nullptr;
+		}
+
+		AlifObject* mod = create_builtin(thread, _absName, spec);
+		ALIF_DECREF(spec);
+		if (mod == nullptr) {
+			return nullptr;
+		}
+
+		if (exec_builtinOrDynamic(mod) < 0) {
+			ALIF_DECREF(mod);
+			return nullptr;
+		}
+
+		return mod;
+	}
+
 
 	if (get_absPath(name, pathname, MAXPATHLEN) < 0) {
 		printf("لم يستطع جلب المسار اثناء الاستيراد");

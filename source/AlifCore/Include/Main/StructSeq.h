@@ -20,7 +20,7 @@ public:
 
 
 
-
+AlifTypeObject* alifStructSequence_newType(AlifStructSequenceDesc*); // 30
 
 AlifObject* alifStructSequence_new(AlifTypeObject*); // 32
 

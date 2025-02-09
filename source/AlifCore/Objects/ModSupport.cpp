@@ -531,3 +531,15 @@ AlifIntT alifModule_addObjectRef(AlifObject* _mod,
 	}
 	return alifDict_setItemString(dict, _name, _value);
 }
+
+
+
+AlifIntT alifModule_addType(AlifObject* _module, AlifTypeObject* _type) { // 639
+	if (!alifType_isReady(_type) and alifType_ready(_type) < 0) {
+		return -1;
+	}
+
+	const char* name = _alifType_name(_type);
+
+	return alifModule_addObjectRef(_module, name, (AlifObject*)_type);
+}

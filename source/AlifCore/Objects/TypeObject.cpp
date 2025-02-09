@@ -440,6 +440,19 @@ static AlifIntT assign_versionTag(AlifInterpreter* interp, AlifTypeObject* type)
 }
 
 
+const char* _alifType_name(AlifTypeObject* _type) { // 1308
+	const char* s = strrchr(_type->name, '.');
+	if (s == nullptr) {
+		s = _type->name;
+	}
+	else {
+		s++;
+	}
+	return s;
+}
+
+
+
 static AlifObject* type_abstractMethods(AlifTypeObject* type, void* context) { // 1491
 	AlifObject* mod = nullptr;
 	if (type == &_alifTypeType_) {
@@ -2005,6 +2018,456 @@ static AlifObject* type_vectorCall(AlifObject* metatype, AlifObject* const* args
 }
 
 
+static AlifSizeT _align_up(AlifSizeT size) { // 4557
+	return (size + ALIGNOF_MAX_ALIGN_T - 1) & ~(ALIGNOF_MAX_ALIGN_T - 1);
+}
+
+
+inline static AlifObject* get_basesTuple(AlifObject* bases_in, AlifTypeSpec* spec) { // 4566
+	if (!bases_in) {
+		AlifTypeObject* base = &_alifBaseObjectType_;  // borrowed ref
+		AlifObject* bases = nullptr;  // borrowed ref
+		const AlifTypeSlot* slot{};
+		for (slot = spec->slots; slot->slot; slot++) {
+			switch (slot->slot) {
+			case ALIF_TP_BASE:
+				base = (AlifTypeObject*)slot->pfunc;
+				break;
+			case ALIF_TP_BASES:
+				bases = (AlifObject*)slot->pfunc;
+				break;
+			}
+		}
+		if (!bases) {
+			return alifTuple_pack(1, base);
+		}
+		if (ALIFTUPLE_CHECK(bases)) {
+			return ALIF_NEWREF(bases);
+		}
+		//alifErr_setString(_alifExcSystemError_, "ALIF_TP_BASES is not a tuple");
+		return nullptr;
+	}
+	if (ALIFTUPLE_CHECK(bases_in)) {
+		return ALIF_NEWREF(bases_in);
+	}
+	return alifTuple_pack(1, bases_in);
+}
+
+
+static inline AlifIntT specialOffset_fromMember(
+	const AlifMemberDef* memb /* may be nullptr */,
+	AlifSizeT type_data_offset,
+	AlifSizeT* dest /* not nullptr */) { // 4643
+	if (memb == nullptr) {
+		*dest = 0;
+		return 0;
+	}
+	if (memb->type != ALIF_T_ALIFSIZET) {
+		//alifErr_format(
+		//	_alifExcSystemError_,
+		//	"type of %s must be ALIF_T_ALIFSIZET",
+		//	memb->name);
+		return -1;
+	}
+	if (memb->flags == ALIF_READONLY) {
+		*dest = memb->offset;
+		return 0;
+	}
+	else if (memb->flags == (ALIF_READONLY | ALIF_RELATIVE_OFFSET)) {
+		*dest = memb->offset + type_data_offset;
+		return 0;
+	}
+	//alifErr_format(
+	//	_alifExcSystemError_,
+	//	"flags for %s must be ALIF_READONLY or (ALIF_READONLY | ALIF_RELATIVE_OFFSET)",
+	//	memb->name);
+	return -1;
+}
+
+
+AlifObject* alifType_fromMetaclass(AlifTypeObject* metaclass, AlifObject* module,
+	AlifTypeSpec* spec, AlifObject* bases_in) { // 4675
+	AlifHeapTypeObject* res = nullptr;
+	AlifTypeObject* type{};
+	AlifObject* bases = nullptr;
+	char* tp_doc = nullptr;
+	AlifObject* ht_name = nullptr;
+	char* _ht_tpname = nullptr;
+
+	AlifIntT r{};
+
+	const AlifTypeSlot* slot{};
+	AlifSizeT nmembers = 0;
+	const AlifMemberDef* weaklistoffset_member = nullptr;
+	const AlifMemberDef* dictoffset_member = nullptr;
+	const AlifMemberDef* vectorcalloffset_member = nullptr;
+	char* res_start{};
+
+	//for (slot = spec->slots; slot->slot; slot++) {
+	//	if (slot->slot < 0
+	//		or (AlifUSizeT)slot->slot >= ALIF_ARRAY_LENGTH(_alifSlotoffsets_)) {
+	//		alifErr_setString(_alifExcRuntimeError_, "invalid slot offset");
+	//		goto finally;
+	//	}
+	//	switch (slot->slot) {
+	//	case ALIF_TP_MEMBERS:
+	//		if (nmembers != 0) {
+	//			alifErr_setString(
+	//				_alifExcSystemError_,
+	//				"Multiple ALIF_TP_MEMBERS slots are not supported.");
+	//			goto finally;
+	//		}
+	//		for (const AlifMemberDef* memb = slot->pfunc; memb->name != nullptr; memb++) {
+	//			nmembers++;
+	//			if (memb->flags & ALIF_RELATIVE_OFFSET) {
+	//				if (spec->basicsize > 0) {
+	//					alifErr_setString(
+	//						_alifExcSystemError_,
+	//						"With ALIF_RELATIVE_OFFSET, basicsize must be negative.");
+	//					goto finally;
+	//				}
+	//				if (memb->offset < 0 or memb->offset >= -spec->basicsize) {
+	//					alifErr_setString(
+	//						_alifExcSystemError_,
+	//						"Member offset out of range (0..-basicsize)");
+	//					goto finally;
+	//				}
+	//			}
+	//			if (strcmp(memb->name, "__weaklistoffset__") == 0) {
+	//				weaklistoffset_member = memb;
+	//			}
+	//			if (strcmp(memb->name, "__dictoffset__") == 0) {
+	//				dictoffset_member = memb;
+	//			}
+	//			if (strcmp(memb->name, "__vectorcalloffset__") == 0) {
+	//				vectorcalloffset_member = memb;
+	//			}
+	//		}
+	//		break;
+	//	case ALIF_TP_DOC:
+	//		if (tp_doc != nullptr) {
+	//			_alifErr_setString(
+	//				_alifExcSystemError_,
+	//				"Multiple ALIF_TP_DOC slots are not supported.");
+	//			goto finally;
+	//		}
+	//		if (slot->pfunc == nullptr) {
+	//			alifMem_dataFree(tp_doc);
+	//			tp_doc = nullptr;
+	//		}
+	//		else {
+	//			AlifUSizeT len = strlen((const char*)slot->pfunc) + 1;
+	//			tp_doc = (char*)alifMem_dataAlloc(len);
+	//			if (tp_doc == nullptr) {
+	//				//alifErr_noMemory();
+	//				goto finally;
+	//			}
+	//			memcpy(tp_doc, slot->pfunc, len);
+	//		}
+	//		break;
+	//	}
+	//}
+
+	/* Prepare the type name and qualname */
+
+	if (spec->name == nullptr) {
+		//alifErr_setString(_alifExcSystemError_,
+		//	"Type spec does not define the name field.");
+		goto finally;
+	}
+
+	const char* s;
+	s = strrchr(spec->name, '.'); //* alif
+	if (s == nullptr) {
+		s = spec->name;
+	}
+	else {
+		s++;
+	}
+
+	ht_name = alifUStr_fromString(s);
+	if (!ht_name) {
+		goto finally;
+	}
+
+	AlifSizeT name_buf_len;
+	name_buf_len = strlen(spec->name) + 1; //* alif
+	_ht_tpname = (char*)alifMem_dataAlloc(name_buf_len);
+	if (_ht_tpname == nullptr) {
+		goto finally;
+	}
+	memcpy(_ht_tpname, spec->name, name_buf_len);
+
+	bases = get_basesTuple(bases_in, spec);
+	if (!bases) {
+		goto finally;
+	}
+
+	if (spec->flags & ALIF_TPFLAGS_IMMUTABLETYPE) {
+		for (int i = 0; i < ALIFTUPLE_GET_SIZE(bases); i++) {
+			AlifTypeObject* b = (AlifTypeObject*)ALIFTUPLE_GET_ITEM(bases, i);
+			if (!b) {
+				goto finally;
+			}
+			if (!_alifType_hasFeature(b, ALIF_TPFLAGS_IMMUTABLETYPE)) {
+				//alifErr_format(
+				//	_alifExcTypeError_,
+				//	"Creating immutable type %s from mutable base %N",
+				//	spec->name, b
+				//);
+				goto finally;
+			}
+		}
+	}
+
+	/* Calculate the metaclass */
+
+	if (!metaclass) {
+		metaclass = &_alifTypeType_;
+	}
+	metaclass = _alifType_calculateMetaclass(metaclass, bases);
+	if (metaclass == nullptr) {
+		goto finally;
+	}
+	if (!ALIFTYPE_CHECK(metaclass)) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"Metaclass '%R' is not a subclass of 'type'.",
+		//	metaclass);
+		goto finally;
+	}
+	if (metaclass->new_ and metaclass->new_ != _alifTypeType_.new_) {
+		//alifErr_setString(
+		//	_alifExcTypeError_,
+		//	"Metaclasses with custom new_ are not supported.");
+		goto finally;
+	}
+
+	AlifTypeObject* base;
+	base = best_base(bases);  // borrowed ref //* alif
+	if (base == nullptr) {
+		goto finally;
+	}
+
+	AlifSizeT basicsize;
+	basicsize = spec->basicsize; //* alif
+	AlifSizeT type_data_offset;
+	type_data_offset = spec->basicsize; //* alif
+	if (basicsize == 0) {
+		/* Inherit */
+		basicsize = base->basicSize;
+	}
+	else if (basicsize < 0) {
+		/* Extend */
+		type_data_offset = _align_up(base->basicSize);
+		basicsize = type_data_offset + _align_up(-spec->basicsize);
+
+		/* Inheriting variable-sized types is limited */
+		if (base->itemSize
+			and !((base->flags | spec->flags) & ALIF_TPFLAGS_ITEMS_AT_END))
+		{
+			//alifErr_setString(
+			//	_alifExcSystemError_,
+			//	"Cannot extend variable-size class without ALIF_TPFLAGS_ITEMS_AT_END.");
+			goto finally;
+		}
+	}
+
+	AlifSizeT itemsize;
+	itemsize = spec->itemsize; //* alif
+
+	//AlifSizeT weaklistoffset = 0;
+	//if (specialOffset_fromMember(weaklistoffset_member, type_data_offset,
+	//	&weaklistoffset) < 0) {
+	//	goto finally;
+	//}
+	AlifSizeT dictoffset;
+	dictoffset = 0; //* alif
+	if (specialOffset_fromMember(dictoffset_member, type_data_offset,
+		&dictoffset) < 0) {
+		goto finally;
+	}
+	AlifSizeT vectorcalloffset;
+	vectorcalloffset = 0; //* alif
+	if (specialOffset_fromMember(vectorcalloffset_member, type_data_offset,
+		&vectorcalloffset) < 0) {
+		goto finally;
+	}
+
+	res = (AlifHeapTypeObject*)metaclass->alloc(metaclass, nmembers);
+	if (res == nullptr) {
+		goto finally;
+	}
+	res_start = (char*)res;
+
+	type = &res->type;
+	type->flags = spec->flags | ALIF_TPFLAGS_HEAPTYPE;
+
+	res->module_ = ALIF_XNEWREF(module);
+
+	//type->asAsync = &res->async;
+	type->asNumber = &res->number;
+	type->asSequence = &res->sequence;
+	type->asMapping = &res->mapping;
+	type->asBuffer = &res->buffer;
+
+	type->base = (AlifTypeObject*)ALIF_NEWREF(base);
+	set_tpBases(type, bases, 1);
+	bases = nullptr;  // We give our reference to bases to the type
+
+	//type->doc = tp_doc;
+	//tp_doc = nullptr;  // Give ownership of the allocated memory to the type
+
+	res->qualname = ALIF_NEWREF(ht_name);
+	res->name = ht_name;
+	ht_name = nullptr;  // Give our reference to the type
+
+	type->name = _ht_tpname;
+	res->tpName_ = _ht_tpname;
+	_ht_tpname = nullptr;  // Give ownership to the type
+
+	/* Copy the sizes */
+
+	type->basicSize = basicsize;
+	type->itemSize = itemsize;
+
+	//for (slot = spec->slots; slot->slot; slot++) {
+	//	switch (slot->slot) {
+	//	case ALIF_TP_BASE:
+	//	case ALIF_TP_BASES:
+	//	case ALIF_TP_DOC:
+	//		/* Processed above */
+	//		break;
+	//	case ALIF_TP_MEMBERS:
+	//	{
+	//		/* Move the slots to the heap type itself */
+	//		AlifUSizeT len = ALIF_TYPE(type)->itemSize * nmembers;
+	//		memcpy(_alifHeapType_getMembers(res), slot->pfunc, len);
+	//		type->members = _alifHeapType_getMembers(res);
+	//		AlifMemberDef* memb{};
+	//		AlifSizeT i{};
+	//		for (memb = _alifHeapType_getMembers(res), i = nmembers;
+	//			i > 0; ++memb, --i)
+	//		{
+	//			if (memb->flags & ALIF_RELATIVE_OFFSET) {
+	//				memb->flags &= ~ALIF_RELATIVE_OFFSET;
+	//				memb->offset += type_data_offset;
+	//			}
+	//		}
+	//	}
+	//	break;
+	//	case ALIF_TP_TOKEN:
+	//	{
+	//		res->token = slot->pfunc == ALIF_TP_USE_SPEC ? spec : slot->pfunc;
+	//	}
+	//	break;
+	//	default:
+	//	{
+	//		AlifSlotOffset slotoffsets = _alifSlotOffsets_[slot->slot];
+	//		short slot_offset = slotoffsets.slotOffset;
+	//		if (slotoffsets.subslot_offset == -1) {
+	//			*(void**)((char*)res_start + slot_offset) = slot->pfunc;
+	//		}
+	//		else {
+	//			void* procs = *(void**)((char*)res_start + slot_offset);
+	//			short subslot_offset = slotoffsets.subslot_offset;
+	//			*(void**)((char*)procs + subslot_offset) = slot->pfunc;
+	//		}
+	//	}
+	//	break;
+	//	}
+	//}
+	if (type->dealloc == nullptr) {
+		type->dealloc = subtype_dealloc;
+	}
+
+	/* Set up offsets */
+
+	type->vectorCallOffset = vectorcalloffset;
+	//type->weakListOffset = weaklistoffset;
+	type->dictOffset = dictoffset;
+
+	//_alifType_assignId(res);
+
+	if (alifType_ready(type) < 0) {
+		goto finally;
+	}
+
+	//if (!checkBasicSize_includesSizeAndOffsets(type)) {
+	//	goto finally;
+	//}
+
+	AlifObject* dict;
+	dict = lookup_tpDict(type); //* alif
+	//if (type->doc) {
+	//	AlifObject* __doc__ = alifUStr_fromString(_alifType_docWithoutSignature(type->name, type->doc));
+	//	if (!__doc__) {
+	//		goto finally;
+	//	}
+	//	r = alifDict_setItem(dict, &ALIF_ID(__doc__), __doc__);
+	//	ALIF_DECREF(__doc__);
+	//	if (r < 0) {
+	//		goto finally;
+	//	}
+	//}
+
+	//if (weaklistoffset) {
+	//	if (alifDict_delItem(dict, &ALIF_ID(__weakListOffset__)) < 0) {
+	//		goto finally;
+	//	}
+	//}
+	//if (dictoffset) {
+	//	if (alifDict_delItem(dict, &ALIF_ID(__dictOffset__)) < 0) {
+	//		goto finally;
+	//	}
+	//}
+
+	/* Set type.__module__ */
+	r = alifDict_contains(dict, &ALIF_ID(__module__));
+	if (r < 0) {
+		goto finally;
+	}
+	if (r == 0) {
+		s = strrchr(spec->name, '.');
+		if (s != nullptr) {
+			AlifObject* modname = alifUStr_fromStringAndSize(
+				spec->name, (AlifSizeT)(s - spec->name));
+			if (modname == nullptr) {
+				goto finally;
+			}
+			r = alifDict_setItem(dict, &ALIF_ID(__module__), modname);
+			ALIF_DECREF(modname);
+			if (r != 0) {
+				goto finally;
+			}
+		}
+		else {
+			//if (alifErr_warnFormat(_alifExcDeprecationWarning_, 1,
+			//	"builtin type %.200s has no __module__ attribute",
+			//	spec->name))
+				goto finally;
+		}
+	}
+
+	finally:
+	if (alifErr_occurred()) {
+		ALIF_CLEAR(res);
+	}
+	ALIF_XDECREF(bases);
+	alifMem_dataFree(tp_doc);
+	ALIF_XDECREF(ht_name);
+	alifMem_dataFree(_ht_tpname);
+	return (AlifObject*)res;
+}
+
+
+
+AlifObject* alifType_fromSpecWithBases(AlifTypeSpec* _spec, AlifObject* _bases) { // 5116
+	return alifType_fromMetaclass(nullptr, nullptr, _spec, _bases);
+}
+
+
+
+
 void* alifObject_getItemData(AlifObject* _obj) { // 5276
 	if (!alifType_hasFeature(ALIF_TYPE(_obj), ALIF_TPFLAGS_ITEMS_AT_END)) {
 		//alifErr_format(_alifExcTypeError_,
@@ -3295,8 +3758,8 @@ static AlifObject* slot_tpCall(AlifObject* self, AlifObject* args, AlifObject* k
 	int unbound;
 
 	AlifObject* meth = lookup_method(self, &ALIF_ID(__call__), &unbound);
-	if (meth == NULL) {
-		return NULL;
+	if (meth == nullptr) {
+		return nullptr;
 	}
 
 	AlifObject* res{};

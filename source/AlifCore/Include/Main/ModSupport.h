@@ -14,7 +14,7 @@ AlifIntT alifModule_addObjectRef(AlifObject*, const char*, AlifObject*); // 26
 
 
 
-
+AlifIntT alifModule_addType(AlifObject*, AlifTypeObject*); // 44
 
 
 

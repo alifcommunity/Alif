@@ -30,7 +30,7 @@ void _alifExtModule_loaderInfoClear(AlifExtModuleLoaderInfo* info) { // 103
 
 AlifIntT _alifExtModule_loaderInfoInitForBuiltin(AlifExtModuleLoaderInfo* _info,
 	AlifObject* _name) { // 172
-	AlifObject* name_encoded = alifUStr_asEncodedString(_name, "ascii", nullptr);
+	AlifObject* name_encoded = alifUStr_asEncodedString(_name, "utf8", nullptr); //* alif
 	if (name_encoded == nullptr) {
 		return -1;
 	}

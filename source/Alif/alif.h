@@ -28,6 +28,7 @@
 #include "Lock.h"
 #include "AlifObject.h"
 #include "RefCount.h"
+#include "TypeSlots.h"
 #include "ObjImpl.h"
 #include "AlifHash.h"
 #include "ByteArrayObject.h"

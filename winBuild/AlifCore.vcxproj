@@ -211,6 +211,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\Tokenizer.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Traceback.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\TupleObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\TypeSlots.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\UStrObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\UStrTypeDB.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\WeakRefObject.h" />
@@ -327,6 +328,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\UStrObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\WeakRefObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\WinConsoleIO.cpp" />
+    <ClCompile Include="..\source\Modules\TimeModule.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

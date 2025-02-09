@@ -4,6 +4,13 @@
 
 #define _SIZEOF_ALIFTIME_T 8 // 65
 
+enum AlifTimeRoundT { // 67
+	AlifTime_Round_FLOOR = 0,
+	AlifTime_Round_CEILING = 1,
+	AlifTime_Round_HALF_EVEN = 2,
+	AlifTime_Round_UP = 3,
+	AlifTime_Round_TIMEOUT = AlifTime_Round_UP
+};
 
 AlifTimeT _alifTime_fromMicrosecondsClamp(AlifTimeT); // 147
 

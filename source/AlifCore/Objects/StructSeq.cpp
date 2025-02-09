@@ -238,3 +238,55 @@ error:
 	}
 	return -1;
 }
+
+
+AlifTypeObject* _alifStructSequence_newType(AlifStructSequenceDesc* desc, unsigned long tp_flags) { // 748
+	AlifMemberDef* members{};
+	AlifTypeObject* type{};
+	AlifTypeSlot slots[8]{};
+	AlifTypeSpec spec{};
+	AlifSizeT n_members{}, n_unnamed_members{};
+
+	/* Initialize MemberDefs */
+	n_members = count_members(desc, &n_unnamed_members);
+	members = initialize_members(desc, n_members, n_unnamed_members);
+	if (members == nullptr) {
+		return nullptr;
+	}
+
+	/* Initialize Slots */
+	slots[0] = {0, 0}; // { ALIF_TP_DEALLOC, (destructor)structseq_dealloc };
+	slots[1] = {0, 0}; // { ALIF_TP_REPR, (reprfunc)structseq_repr };
+	slots[2] = {0, 0}; // { ALIF_TP_DOC, (void*)desc->doc };
+	slots[3] = {0, 0}; // { ALIF_TP_METHODS, structseq_methods };
+	slots[4] = {0, 0}; // { ALIF_TP_NEW, structseq_new };
+	slots[5] = {0, 0}; // { ALIF_TP_MEMBERS, members };
+	slots[6] = {0, 0}; // { ALIF_TP_TRAVERSE, (traverseproc)structseq_traverse };
+	slots[7] = { 0, 0 };
+
+	/* Initialize Spec */
+	spec.name = desc->name;
+	AlifSizeT hidden = n_members - desc->nInSequence;
+	spec.basicsize = (AlifIntT)(sizeof(AlifStructSequence) + (hidden - 1) * sizeof(AlifObject*));
+	spec.itemsize = sizeof(AlifObject*);
+	spec.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC | tp_flags;
+	spec.slots = slots;
+
+	type = (AlifTypeObject*)alifType_fromSpecWithBases(&spec, (AlifObject*)&_alifTupleType_);
+	alifMem_dataFree(members);
+	if (type == nullptr) {
+		return nullptr;
+	}
+
+	if (initialize_structSeqDict(
+		desc, alifType_getDict(type), n_members, n_unnamed_members) < 0) {
+		ALIF_DECREF(type);
+		return nullptr;
+	}
+
+	return type;
+}
+
+AlifTypeObject* alifStructSequence_newType(AlifStructSequenceDesc* desc) { // 800
+	return _alifStructSequence_newType(desc, 0);
+}

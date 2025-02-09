@@ -189,6 +189,26 @@ typedef AlifObject* (*VectorCallFunc)(AlifObject*, AlifObject* const*, AlifUSize
 
 
 
+class AlifTypeSlot { // 362
+public:
+	AlifIntT slot{};    /* slot id, see below */
+	void* pfunc{}; /* function pointer */
+};
+
+class AlifTypeSpec { // 367
+public:
+	const char* name{};
+	AlifIntT basicsize{};
+	AlifIntT itemsize{};
+	AlifUIntT flags{};
+	AlifTypeSlot* slots{}; /* terminated by slot==0. */
+};
+
+
+AlifObject* alifType_fromSpecWithBases(AlifTypeSpec*, AlifObject*); // 377
+
+
+
 // 360
 #define ALIF_XSETREF(_dst, _src) \
     do { \
@@ -513,12 +533,13 @@ public:
 	AlifObject* name{}, * slots{}, * qualname{};
 	class DictKeysObject* cachedKeys{};
 	AlifObject* module_{};
+	char* tpName_{};
 	SpecializationCache specCache{};
 	AlifSizeT uniqueID{};
 };
 
 
-
+const char* _alifType_name(AlifTypeObject*); // 280
 AlifObject* alifType_lookupRef(AlifTypeObject*, AlifObject*); // 281
 
 void alifObject_callFinalizer(AlifObject*); // 291
