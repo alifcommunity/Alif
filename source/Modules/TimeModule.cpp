@@ -65,6 +65,7 @@ static AlifStructSequenceDesc _structTimeTypeDesc_ = { // 433
 	0,
 };
 
+ // 446
 #if defined(_WINDOWS)
 #ifndef CREATE_WAITABLE_TIMER_HIGH_RESOLUTION
 #define CREATE_WAITABLE_TIMER_HIGH_RESOLUTION 0x00000002
@@ -75,8 +76,10 @@ static DWORD _timerFlags_ = (DWORD)-1;
 
 
 
-
-
+ // 594
+#if defined(__linux__) && !defined(__GLIBC__)
+static const char* _utcString_ = nullptr;
+#endif
 
 
 
@@ -96,7 +99,7 @@ static AlifIntT time_exec(AlifObject* module) { // 1942
 	struct tm tm;
 	const time_t zero = 0;
 	if (gmtime_r(&zero, &tm) != NULL)
-		utc_string = tm.tm_zone;
+		_utcString_ = tm.tm_zone;
 #endif
 
 #if defined(_WINDOWS)
