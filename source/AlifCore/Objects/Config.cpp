@@ -1,10 +1,11 @@
 #include "alif.h"
 
-
+extern AlifObject* alifInit_math(void); // 16
 extern AlifObject* alifInit_time(void);
 
 class InitTable _alifImportInitTab_[] = { // 87
 
+	{"الرياضيات", alifInit_math}, // 96
 
 	{"الزمن", alifInit_time},
 

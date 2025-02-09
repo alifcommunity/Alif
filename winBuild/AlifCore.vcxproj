@@ -327,6 +327,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\UStrObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\WeakRefObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\WinConsoleIO.cpp" />
+    <ClCompile Include="..\source\Modules\MathModule.cpp" />
     <ClCompile Include="..\source\Modules\SignalModule.cpp" />
     <ClCompile Include="..\source\Modules\TimeModule.cpp" />
   </ItemGroup>

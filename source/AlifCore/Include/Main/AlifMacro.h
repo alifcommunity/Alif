@@ -19,6 +19,15 @@
 
 #define ALIF_ARRAY_LENGTH(array) (sizeof(array) / sizeof((array)[0]))
 
+#define ALIFDOC_VAR(name) static const char name[] // 110
+#define ALIFDOC_STRVAR(name,str) ALIFDOC_VAR(name) = ALIFDOC_STR(str) // 111
+//#ifdef WITH_DOC_STRINGS
+#define ALIFDOC_STR(str) str
+//#else
+//#define ALIFDOC_STR(str) ""
+//#endif
+
+
 /* Below "a" is a power of 2. */
 /* Round down size "n" to be a multiple of "a". */
 #define ALIF_SIZE_ROUND_DOWN(_n, _a) ((size_t)(_n) & ~(size_t)((_a) - 1))
