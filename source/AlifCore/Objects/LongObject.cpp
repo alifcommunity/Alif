@@ -3606,7 +3606,7 @@ AlifObject* _alifLong_rShift(AlifObject* _a, int64_t _shiftBy) { // 5324
 	if (_alifLong_isZero((AlifLongObject*)_a)) {
 		return alifLong_fromLong(0);
 	}
-#if PY_SSIZE_T_MAX <= INT64_MAX / ALIFLONG_SHIFT
+#if ALIF_SIZET_MAX <= INT64_MAX / ALIFLONG_SHIFT
 	if (_shiftBy > (int64_t)ALIF_SIZET_MAX * ALIFLONG_SHIFT) {
 		if (_alifLong_isNegative((AlifLongObject*)_a)) {
 			return alifLong_fromLong(-1);

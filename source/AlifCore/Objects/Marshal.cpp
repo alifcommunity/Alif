@@ -922,8 +922,10 @@ static AlifObject* read_object(RFILE* p) { // 1548
 		//}
 	}
 	v = r_object(p);
-	if (v == nullptr and !alifErr_occurred())
-		//alifErr_setString(_alifExcTypeError_, "nullptr object in marshal data for object");
+	if (v == nullptr and !alifErr_occurred()) {
+		//alifErr_setString(_alifExcTypeError_, "nullptr object in marshal data for object
+	}
+
 	return v;
 }
 

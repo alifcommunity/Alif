@@ -125,7 +125,7 @@ static AlifMethodDef _timeMethods_[] = {
 };
 
 static AlifModuleDefSlot _timeSlots_[] = {
-	{ALIF_MOD_EXEC, time_exec},
+	{ALIF_MOD_EXEC, (void*)time_exec},
 	{ALIF_MOD_MULTIPLE_INTERPRETERS, ALIF_MOD_PER_INTERPRETER_GIL_SUPPORTED},
 	{ALIF_MOD_GIL, ALIF_MOD_GIL_NOT_USED},
 	{0, nullptr}

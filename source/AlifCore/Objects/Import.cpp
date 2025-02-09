@@ -243,6 +243,7 @@ static AlifThread* switchTo_mainInterpreter(AlifThread* _thread) { // 1523
 	//}
 	//(void)alifThread_swap(main_tstate);
 	//return main_tstate;
+	return _thread; //* alif //* delete
 }
 
 
