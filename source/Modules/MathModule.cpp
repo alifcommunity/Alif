@@ -1,43 +1,34 @@
 #include "alif.h"
 
 
-static AlifObject* math_1(AlifObject* _arg, double (*_func) (double), AlifIntT _canOverflow,
-	const char* _errMsg) { // 924
+static AlifObject* math_1(AlifObject* _arg, double (*_func) (double), AlifIntT _canOverFlow) { // 924
 	double x{}, r{};
 	x = alifFloat_asDouble(_arg);
 	if (x == -1.0 and alifErr_occurred())
 		return nullptr;
 	errno = 0;
 	r = (*_func)(x);
-	if (isnan(r) and !isnan(x))
-		goto domain_err; /* domain error */
+	if (isnan(r) and !isnan(x)) {
+		//alifErr_setString(_alifExcValueError_,
+			//"math domain error"); /* invalid arg */
+		return nullptr;
+	}
 	if (isinf(r) and isfinite(x)) {
-		//if (_canOverflow)
+		if (_canOverFlow)
 			//alifErr_setString(_alifExcOverflowError_,
 				//"math range error"); /* overflow */
 		//else
-			//goto domain_err; /* singularity */
+			//alifErr_setString(_alifExcValueError_,
+				//"math domain error"); /* singularity */
 		return nullptr;
 	}
 	if (isfinite(r) and errno
-		// and is_error(r, 1)
+		//and is_error(r)
 		)
+		/* this branch unnecessary on most platforms */
 		return nullptr;
 
 	return alifFloat_fromDouble(r);
-
-domain_err:
-	if (_errMsg) {
-		char* buf = alifOS_doubleToString(x, 'r', 0, ALIF_DTSF_ADD_DOT_0, nullptr);
-		if (buf) {
-			//alifErr_format(_alifExcValueError_, _errMsg, buf);
-			alifMem_dataFree(buf);
-		}
-	}
-	else {
-		//alifErr_setString(_alifExcValueError_, "math domain error");
-	}
-	return nullptr;
 }
 
 // 1033
