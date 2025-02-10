@@ -65,7 +65,6 @@ FUNC1(tan, tan, 0,
 		"Return the tangent of x (measured in radians).") // 1211
 
 static AlifMethodDef _alifMathMethods_[] = { // 4087
-	{"جذر_تربيعي",            math_sqrt,      METHOD_O},
 	{"تجيب",             math_cos,       METHOD_O},
 	{"جيب",             math_sin,       METHOD_O},
 	{"ظل",             math_tan,       METHOD_O},
