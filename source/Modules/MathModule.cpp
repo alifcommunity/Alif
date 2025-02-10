@@ -1,0 +1,66 @@
+#include "alif.h"
+
+
+static AlifObject* math_1(AlifObject* _arg, double (*_func) (double), AlifIntT _canOverFlow) { // 924
+	double x{}, r{};
+	x = alifFloat_asDouble(_arg);
+	if (x == -1.0 and alifErr_occurred())
+		return nullptr;
+	errno = 0;
+	r = (*_func)(x);
+	if (isnan(r) and !isnan(x)) {
+		//alifErr_setString(_alifExcValueError_,
+			//"math domain error"); /* invalid arg */
+		return nullptr;
+	}
+	if (isinf(r) and isfinite(x)) {
+		//if (_canOverFlow)
+			//alifErr_setString(_alifExcOverflowError_,
+				//"math range error"); /* overflow */
+		//else
+			//alifErr_setString(_alifExcValueError_,
+				//"math domain error"); /* singularity */
+		//return nullptr;
+	}
+	//if (isfinite(r) and errno and is_error(r))
+		/* this branch unnecessary on most platforms */
+		//return nullptr;
+
+	return alifFloat_fromDouble(r);
+}
+
+// 1033
+#define FUNC1(_funcName, _func, _canOverflow, _docString)                  \
+    static AlifObject * math_##_funcName(AlifObject *self, AlifObject *args) { \
+        return math_1(args, _func, _canOverflow, nullptr);                  \
+    }\
+    ALIFDOC_STRVAR(math_##_funcName##_doc, _docString);
+
+FUNC1(cos, cos, 0,
+	"cos($module, x, /)\n--\n\n"
+	"Return the cosine of x (measured in radians).") // 1122
+
+FUNC1(sin, sin, 0,
+		"sin($module, x, /)\n--\n\n"
+		"Return the sine of x (measured in radians).") // 1202
+
+FUNC1(tan, tan, 0,
+		"tan($module, x, /)\n--\n\n"
+		"Return the tangent of x (measured in radians).") // 1211
+
+static AlifMethodDef _alifMathMethods_[] = { // 4087
+	{"تجيب",             math_cos,       METHOD_O},
+	{"جيب",             math_sin,       METHOD_O},
+	{"ظل",             math_tan,       METHOD_O},
+	{nullptr,              nullptr}           /* sentinel */
+};
+
+static class AlifModuleDef _alifMathModule_ = { // 4159
+	.base = ALIFMODULEDEF_HEAD_INIT,
+	.name = "الرياضيات",
+	.methods = _alifMathMethods_
+};
+
+AlifObject* alifInit_math(void) { // 4171
+	return alifModuleDef_init(&_alifMathModule_);
+}

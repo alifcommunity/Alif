@@ -319,6 +319,9 @@
     <ClCompile Include="..\source\Modules\SignalModule.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\Modules\MathModule.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">
