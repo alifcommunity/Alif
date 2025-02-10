@@ -21,11 +21,11 @@
 
 #define ALIFDOC_VAR(name) static const char name[] // 110
 #define ALIFDOC_STRVAR(name,str) ALIFDOC_VAR(name) = ALIFDOC_STR(str) // 111
-//#ifdef WITH_DOC_STRINGS
+#ifdef WITH_DOC_STRINGS
 #define ALIFDOC_STR(str) str
-//#else
-//#define ALIFDOC_STR(str) ""
-//#endif
+#else
+#define ALIFDOC_STR(str) ""
+#endif
 
 
 /* Below "a" is a power of 2. */

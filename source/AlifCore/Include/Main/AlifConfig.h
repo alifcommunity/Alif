@@ -220,7 +220,10 @@
 
 #define FORCE_SWITCHING
 
+#define WITH_DOC_STRINGS 1 
+
 #define	WITH_MIMALLOC
 
 
 #define HAVE_SIGNAL_H 1
+
