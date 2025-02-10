@@ -55,11 +55,6 @@ FUNC1(sin, sin, 0,
 		"sin($module, x, /)\n--\n\n"
 		"Return the sine of x (measured in radians).") // 1202
 
-FUNC1(sqrt, sqrt, 0,
-	"sqrt($module, x, /)\n--\n\n"
-	"Return the square root of x.",
-	"expected a nonnegative input, got %s") // 1208
-
 FUNC1(tan, tan, 0,
 		"tan($module, x, /)\n--\n\n"
 		"Return the tangent of x (measured in radians).") // 1211
