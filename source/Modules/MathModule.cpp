@@ -22,11 +22,11 @@ static AlifObject* math_1(AlifObject* _arg, double (*_func) (double), AlifIntT _
 				//"math domain error"); /* singularity */
 		//return nullptr;
 	}
-	if (isfinite(r) and errno
+	//if (isfinite(r) and errno
 		//and is_error(r)
-		)
+		//)
 		/* this branch unnecessary on most platforms */
-		return nullptr;
+		//return nullptr;
 
 	return alifFloat_fromDouble(r);
 }
