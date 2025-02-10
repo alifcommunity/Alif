@@ -98,16 +98,16 @@ static AlifIntT time_exec(AlifObject* module) { // 1942
 #if defined(__linux__) && !defined(__GLIBC__)
 	struct tm tm;
 	const time_t zero = 0;
-	if (gmtime_r(&zero, &tm) != NULL)
+	if (gmtime_r(&zero, &tm) != nullptr)
 		_utcString_ = tm.tm_zone;
 #endif
 
 #if defined(_WINDOWS)
 	if (_timerFlags_ == (DWORD)-1) {
 		DWORD test_flags = CREATE_WAITABLE_TIMER_HIGH_RESOLUTION;
-		HANDLE timer = CreateWaitableTimerExW(NULL, NULL, test_flags,
+		HANDLE timer = CreateWaitableTimerExW(nullptr, nullptr, test_flags,
 			TIMER_ALL_ACCESS);
-		if (timer == NULL) {
+		if (timer == nullptr) {
 			// CREATE_WAITABLE_TIMER_HIGH_RESOLUTION is not supported.
 			_timerFlags_ = 0;
 		}
