@@ -19,12 +19,12 @@
 
 #define ALIF_ARRAY_LENGTH(array) (sizeof(array) / sizeof((array)[0]))
 
-#define ALIFDOC_VAR(name) static const char name[] // 110
-#define ALIFDOC_STRVAR(name,str) ALIFDOC_VAR(name) = ALIFDOC_STR(str) // 111
+#define ALIFDOC_VAR(_name) static const char _name[] // 110
+#define ALIFDOC_STRVAR(_name,_str) ALIFDOC_VAR(_name) = ALIFDOC_STR(_str) // 111
 #ifdef WITH_DOC_STRINGS
-#define ALIFDOC_STR(str) str
+#define ALIFDOC_STR(_str) _str
 #else
-#define ALIFDOC_STR(str) ""
+#define ALIFDOC_STR(_str) ""
 #endif
 
 

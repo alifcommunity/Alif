@@ -2,7 +2,7 @@
 
 
 static AlifObject* math_1(AlifObject* _arg, double (*_func) (double), AlifIntT _canOverflow,
-	const char* _errMsg) { // 934
+	const char* _errMsg) { // 924
 	double x{}, r{};
 	x = alifFloat_asDouble(_arg);
 	if (x == -1.0 and alifErr_occurred())
@@ -40,52 +40,44 @@ domain_err:
 	return nullptr;
 }
 
-// 1062
+// 1033
 #define FUNC1(_funcName, _func, _canOverflow, _docString)                  \
     static AlifObject * math_##_funcName(AlifObject *self, AlifObject *args) { \
         return math_1(args, _func, _canOverflow, nullptr);                  \
     }\
     ALIFDOC_STRVAR(math_##_funcName##_doc, _docString);
 
-// 1068
-#define FUNC1D(_funcName, _func, _canOverflow, _docString, _errMsg)        \
-    static AlifObject * math_##_funcName(AlifObject *self, AlifObject *args) { \
-        return math_1(args, _func, _canOverflow, _errMsg);               \
-    }\
-    ALIFDOC_STRVAR(math_##_funcName##_doc, _docString);
-
-
 FUNC1(cos, cos, 0,
 	"cos($module, x, /)\n--\n\n"
-	"Return the cosine of x (measured in radians).") // 1164
+	"Return the cosine of x (measured in radians).") // 1122
 
 FUNC1(sin, sin, 0,
 		"sin($module, x, /)\n--\n\n"
-		"Return the sine of x (measured in radians).") // 1245
+		"Return the sine of x (measured in radians).") // 1202
 
-FUNC1D(sqrt, sqrt, 0,
+FUNC1(sqrt, sqrt, 0,
 	"sqrt($module, x, /)\n--\n\n"
 	"Return the square root of x.",
-	"expected a nonnegative input, got %s") // 1251
+	"expected a nonnegative input, got %s") // 1208
 
 FUNC1(tan, tan, 0,
 		"tan($module, x, /)\n--\n\n"
-		"Return the tangent of x (measured in radians).") // 1255
+		"Return the tangent of x (measured in radians).") // 1211
 
-static AlifMethodDef _alifMathMethods_[] = { // 4135
-	{"الجذر_التربيعي",            math_sqrt,      METHOD_O},
-	{"التجيب",             math_cos,       METHOD_O},
-	{"الجيب",             math_sin,       METHOD_O},
-	{"الظل",             math_tan,       METHOD_O},
+static AlifMethodDef _alifMathMethods_[] = { // 4087
+	{"جذر_تربيعي",            math_sqrt,      METHOD_O},
+	{"تجيب",             math_cos,       METHOD_O},
+	{"جيب",             math_sin,       METHOD_O},
+	{"ظل",             math_tan,       METHOD_O},
 	{nullptr,              nullptr}           /* sentinel */
 };
 
-static class AlifModuleDef _alifMathModule_ = { // 4207
+static class AlifModuleDef _alifMathModule_ = { // 4159
 	.base = ALIFMODULEDEF_HEAD_INIT,
-	.name = "الرياضيات",
+	.name = "رياضيات",
 	.methods = _alifMathMethods_
 };
 
-AlifObject* alifInit_math(void) { // 4219
+AlifObject* alifInit_math(void) { // 4171
 	return alifModuleDef_init(&_alifMathModule_);
 }
