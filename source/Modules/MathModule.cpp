@@ -1,7 +1,5 @@
 #include "alif.h"
 
-#include "AlifMemory.h"
-
 
 static AlifObject* math_1(AlifObject* _arg, double (*_func) (double), AlifIntT _canOverflow,
 	const char* _errMsg) { // 934
