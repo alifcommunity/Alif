@@ -14,13 +14,13 @@ static AlifObject* math_1(AlifObject* _arg, double (*_func) (double), AlifIntT _
 		return nullptr;
 	}
 	if (isinf(r) and isfinite(x)) {
-		if (_canOverFlow)
+		//if (_canOverFlow)
 			//alifErr_setString(_alifExcOverflowError_,
 				//"math range error"); /* overflow */
 		//else
 			//alifErr_setString(_alifExcValueError_,
 				//"math domain error"); /* singularity */
-		return nullptr;
+		//return nullptr;
 	}
 	if (isfinite(r) and errno
 		//and is_error(r)
