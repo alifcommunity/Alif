@@ -68,7 +68,7 @@ static AlifMethodDef _alifMathMethods_[] = { // 4087
 
 static class AlifModuleDef _alifMathModule_ = { // 4159
 	.base = ALIFMODULEDEF_HEAD_INIT,
-	.name = "رياضيات",
+	.name = "الرياضيات",
 	.methods = _alifMathMethods_
 };
 
