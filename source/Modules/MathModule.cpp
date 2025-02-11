@@ -25,10 +25,10 @@ static double m_log(double _x) { // 641
 	}
 }
 
-static AlifObject* math_gCD(AlifObject* _module, AlifObject* const* _args, AlifSizeT _nArgs) { // 723
+static AlifObject* math_gcd(AlifObject* _module, AlifObject* const* _args, AlifSizeT _nArgs) { // 723
 	if (_nArgs == 2 and ALIFLONG_CHECKEXACT(_args[0]) and ALIFLONG_CHECKEXACT(_args[1]))
 	{
-		return alifLong_gCD(_args[0], _args[1]);
+		return alifLong_gcd(_args[0], _args[1]);
 	}
 
 	if (_nArgs == 0) {
@@ -52,11 +52,10 @@ static AlifObject* math_gCD(AlifObject* _module, AlifObject* const* _args, AlifS
 			return nullptr;
 		}
 		if (res == one) {
-
 			ALIF_DECREF(x);
 			continue;
 		}
-		ALIF_SETREF(res, alifLong_gCD(res, x));
+		ALIF_SETREF(res, alifLong_gcd(res, x));
 		ALIF_DECREF(x);
 		if (res == nullptr) {
 			return nullptr;
@@ -72,7 +71,7 @@ static AlifObject* long_lcm(AlifObject* _a, AlifObject* _b) { // 774
 	if (_alifLong_isZero((AlifLongObject*)_a) or _alifLong_isZero((AlifLongObject*)_b)) {
 		return alifLong_fromLong(0);
 	}
-	g = alifLong_gCD(_a, _b);
+	g = alifLong_gcd(_a, _b);
 	if (g == nullptr) {
 		return nullptr;
 	}
@@ -91,7 +90,7 @@ static AlifObject* long_lcm(AlifObject* _a, AlifObject* _b) { // 774
 	return ab;
 }
 
-static AlifObject* math_lCM(AlifObject* _module, AlifObject* const* _args, AlifSizeT _nArgs) { // 802
+static AlifObject* math_lcm(AlifObject* _module, AlifObject* const* _args, AlifSizeT _nArgs) { // 802
 	AlifObject* res{}, * x{};
 	AlifSizeT i{};
 
@@ -289,7 +288,7 @@ static AlifObject* math_factorial(AlifObject* _module, AlifObject* _arg) { // 19
 			//LONG_MAX);
 		return nullptr;
 	}
-	else if (overflow == -1 || x < 0) {
+	else if (overflow == -1 or x < 0) {
 		//alifErr_setString(_alifExcValueError_,
 			//"factorial() not defined for negative values");
 		return nullptr;
@@ -309,7 +308,7 @@ static AlifObject* math_factorial(AlifObject* _module, AlifObject* _arg) { // 19
 
 // in file MathModule.c.h line 61
 #define MATH_FACTORIAL_METHODDEF    \
-    {"مضروب", (AlifCPPFunction)math_factorial, METHOD_O},
+    {"المضروب", (AlifCPPFunction)math_factorial, METHOD_O},
 
 
 static AlifObject* logHelper(AlifObject* _arg, double (*_func)(double)) { // 2182
@@ -368,17 +367,54 @@ static AlifObject* math_log(AlifObject* _module, AlifObject* const* _args, AlifS
 	return ans;
 }
 
+static const double _alifDegToRad_ = ALIF_MATH_PI / 180.0; // 3009
+static const double _alifRadToDeg_ = 180.0 / ALIF_MATH_PI; // 3010
+
+
+
+static AlifObject* math_radiansImpl(AlifObject* _module, double _x) { // 3039
+	return alifFloat_fromDouble(_x * _alifDegToRad_);
+}
+
+// in file MathModule.c.h 
+static AlifObject* math_radians(AlifObject* _module, AlifObject* _arg) { // 486
+	AlifObject* returnValue = nullptr;
+	double x{};
+
+	if (ALIFFLOAT_CHECKEXACT(_arg)) {
+		x = ALIFFLOAT_AS_DOUBLE(_arg);
+	}
+	else
+	{
+		x = alifFloat_asDouble(_arg);
+		if (x == -1.0 and alifErr_occurred()) {
+			goto exit;
+		}
+	}
+	returnValue = math_radiansImpl(_module, x);
+
+exit:
+	return returnValue;
+}
+
+#define MATH_RADIANS_METHODDEF    \
+    {"راديان", (AlifCPPFunction)math_radians, METHOD_O},
+
+
 static AlifMethodDef _alifMathMethods_[] = { // 4087
 	{"تجيب",            math_cos,       METHOD_O},
-	{"قيمة_مطلقة",            math_fabs,      METHOD_O},
+	{"قيمة_مطلقة",      math_fabs,      METHOD_O},
 	MATH_FACTORIAL_METHODDEF
-	{"القاسم_المشترك_الاكبر", ALIF_CPPFUNCTION_CAST(math_gCD),       METHOD_FASTCALL},
-	{"القاسم_المشترك_الاصغر", ALIF_CPPFUNCTION_CAST(math_lCM),       METHOD_FASTCALL},
-	{"لوغاريتم",        ALIF_CPPFUNCTION_CAST(math_log),       METHOD_FASTCALL},
+	{"قم_اكبر", ALIF_CPPFUNCTION_CAST(math_gcd),       METHOD_FASTCALL},
+	{"قم_اصغر", ALIF_CPPFUNCTION_CAST(math_lcm),       METHOD_FASTCALL},
+	{"لوغا",        ALIF_CPPFUNCTION_CAST(math_log),       METHOD_FASTCALL},
+	MATH_RADIANS_METHODDEF
 	{"جيب",             math_sin,       METHOD_O},
 	{"ظل",              math_tan,       METHOD_O},
 	{nullptr,              nullptr}           /* sentinel */
 };
+
+
 
 static class AlifModuleDef _alifMathModule_ = { // 4159
 	.base = ALIFMODULEDEF_HEAD_INIT,

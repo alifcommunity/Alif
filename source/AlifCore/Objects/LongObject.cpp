@@ -1035,7 +1035,7 @@ long long alifLong_asLongLong(AlifObject* vv) { // 1491
 	AlifLongObject* v{};
 	long long bytes{};
 	AlifIntT res{};
-	AlifIntT do_decref = 0; /* if PyNumber_Index was called */
+	AlifIntT do_decref = 0; /* if alifNumber_Index was called */
 
 	if (vv == nullptr) {
 		//ALIFERR_BADINTERNALCALL();
@@ -1700,7 +1700,7 @@ static AlifIntT long_fromNonBinaryBase(const char* _start,
 
 	double fsize_z = (double)_digits * log_base_BASE[_base] + 1.0;
 	if (fsize_z > (double)MAX_LONG_DIGITS) {
-		/* The same exception as in _PyLong_New(). */
+		/* The same exception as in _alifLong_New(). */
 		//alifErr_setString(_alifExcOverflowError_,
 		//	"too many digits in integer");
 		*_res = nullptr;
@@ -3852,7 +3852,7 @@ static AlifObject* long_long(AlifObject* _v) { // 5630
 	}
 }
 
-AlifObject* alifLong_gCD(AlifObject* _aArg, AlifObject* _bArg) { // 5668
+AlifObject* alifLong_gcd(AlifObject* _aArg, AlifObject* _bArg) { // 5668
 	AlifLongObject* a{}, * b{}, * c = nullptr, * d = nullptr, * r;
 	stwodigits x{}, y{}, q{}, s{}, t{}, cCarry{}, dCarry{};
 	stwodigits A{}, B{}, C{}, D{}, T{};
@@ -3889,7 +3889,7 @@ AlifObject* alifLong_gCD(AlifObject* _aArg, AlifObject* _bArg) { // 5668
 	/* reduce until a fits into 2 digits */
 	while ((sizeA = alifLong_digitCount(a)) > 2) {
 		nBits = bit_lengthDigit(a->longValue.digit[sizeA - 1]);
-		/* extract top 2*PyLong_SHIFT bits of a into x, along with
+		/* extract top 2*ALIFLONG_SHIFT bits of a into x, along with
 		   corresponding bits of b into y */
 		sizeB = alifLong_digitCount(b);
 		if (sizeB == 0) {
@@ -4032,7 +4032,7 @@ simple:
 		x = t;
 	}
 #if LONG_MAX >> ALIFLONG_SHIFT >> ALIFLONG_SHIFT
-	return PyLong_FromLong(x);
+	return alifLong_fromLong(x);
 #elif LLONG_MAX >> ALIFLONG_SHIFT >> ALIFLONG_SHIFT
 	return alifLong_fromLong(x);
 #else
