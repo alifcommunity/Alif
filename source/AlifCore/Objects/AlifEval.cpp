@@ -128,6 +128,17 @@ const BinaryFunc _alifEvalBinaryOps_[] = { // 307
 
 
 
+const AlifUSizeT _alifFunctionAttributeOffsets_[] = { // 396 //* alif
+	0,
+	offsetof(AlifFunctionObject, defaults), // MAKE_FUNCTION_DEFAULTS
+	offsetof(AlifFunctionObject, kwDefaults), // MAKE_FUNCTION_KWDEFAULTS
+	0,
+	offsetof(AlifFunctionObject, annotations), // MAKE_FUNCTION_ANNOTATIONS
+	0,0,0,
+	offsetof(AlifFunctionObject, closure), // MAKE_FUNCTION_CLOSURE
+	0,
+	offsetof(AlifFunctionObject, annotate), // MAKE_FUNCTION_ANNOTATE
+};
 
 
 
@@ -311,14 +322,16 @@ dispatch_opcode :
 				AlifStackRef sub{};
 				AlifStackRef res{};
 				// _SPECIALIZE_BINARY_SUBSCR
-				sub = stackPointer[-1];
-				container = stackPointer[-2];
 				{
-					uint16_t counter = read_u16(&thisInstr[1].cache);
+					sub = stackPointer[-1];
+					container = stackPointer[-2];
+					//uint16_t counter = read_u16(&thisInstr[1].cache);
 #if ENABLE_SPECIALIZATION
 					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
 						nextInstr = thisInstr;
+						_alifFrame_setStackPointer(_frame, stackPointer);
 						_alifSpecialize_binarySubscr(container, sub, nextInstr);
+						stackPointer = _alifFrame_getStackPointer(_frame);
 						DISPATCH_SAME_OPARG();
 					}
 					OPCODE_DEFERRED_INC(BINARY_SUBSCR);
@@ -329,7 +342,9 @@ dispatch_opcode :
 				{
 					AlifObject* containerObj = alifStackRef_asAlifObjectBorrow(container);
 					AlifObject* subObj = alifStackRef_asAlifObjectBorrow(sub);
+					_alifFrame_setStackPointer(_frame, stackPointer);
 					AlifObject* resObj = alifObject_getItem(containerObj, subObj);
+					stackPointer = _alifFrame_getStackPointer(_frame);
 					ALIFSTACKREF_CLOSE(container);
 					ALIFSTACKREF_CLOSE(sub);
 					//if (resObj == nullptr) goto pop_2_error;
@@ -358,7 +373,9 @@ dispatch_opcode :
 				/* If value is a UStr object, then we know the result
 					* of format(value) is value itself. */
 				if (!ALIFUSTR_CHECKEXACT(valueObj)) {
+					_alifFrame_setStackPointer(_frame, stackPointer);
 					res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(alifObject_format(valueObj, nullptr));
+					stackPointer = _alifFrame_getStackPointer(_frame);
 					ALIFSTACKREF_CLOSE(value);
 					//if (ALIFSTACKREF_ISNULL(res)) goto pop_1_error;
 				}
@@ -375,7 +392,9 @@ dispatch_opcode :
 				AlifStackRef iter{};
 				iterable = stackPointer[-1];
 				/* before: [obj]; after [getiter(obj)] */
+				_alifFrame_setStackPointer(_frame, stackPointer);
 				iter = ALIFSTACKREF_FROMALIFOBJECTSTEAL(alifObject_getIter(alifStackRef_asAlifObjectBorrow(iterable)));
+				stackPointer = _alifFrame_getStackPointer(_frame);
 				ALIFSTACKREF_CLOSE(iterable);
 				//if (ALIFSTACKREF_ISNULL(iter)) goto pop_1_error;
 				stackPointer[-1] = iter;
@@ -390,17 +409,22 @@ dispatch_opcode :
 				_thread->currentFrame = _frame->previous;
 				_thread->cppRecursionRemaining += ALIF_EVAL_CPP_STACK_UNITS;
 				return alifStackRef_asAlifObjectSteal(retval);
+				stackPointer += -1; //* review
 			} // ------------------------------------------------------------ //
 			TARGET(LOAD_BUILD_CLASS) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;
 				AlifStackRef bc{};
 				AlifObject* bc_o{};
-				if (alifMapping_getOptionalItem(BUILTINS(), &ALIF_ID(__buildClass__), &bc_o) < 0)
-				{ /*goto error;*/ }
+				_alifFrame_setStackPointer(_frame, stackPointer);
+				AlifIntT err = alifMapping_getOptionalItem(BUILTINS(), &ALIF_ID(__buildClass__), &bc_o);
+				stackPointer = _alifFrame_getStackPointer(_frame);
+				//if (err < 0) goto error;
 				if (bc_o == nullptr) {
+					_alifFrame_setStackPointer(_frame, stackPointer);
 					//_alifErr_setString(_thread, _alifExcNameError_,
 					//	"__buildClass__ not found");
+					stackPointer = _alifFrame_getStackPointer(_frame);
 					//if (true) goto error;
 				}
 				bc = ALIFSTACKREF_FROMALIFOBJECTSTEAL(bc_o);
@@ -414,8 +438,10 @@ dispatch_opcode :
 				AlifStackRef locals{};
 				AlifObject* l = LOCALS();
 				if (l == nullptr) {
+					_alifFrame_setStackPointer(_frame, stackPointer);
 					//_alifErr_setString(_thread, _alifExcSystemError_,
 					//	"no locals found");
+					stackPointer = _alifFrame_getStackPointer(_frame);
 					//if (true) goto error;
 				}
 				locals = ALIFSTACKREF_FROMALIFOBJECTNEW(l);
@@ -430,12 +456,12 @@ dispatch_opcode :
 				AlifStackRef func{};
 				codeObjSt = stackPointer[-1];
 				AlifObject* codeobj = alifStackRef_asAlifObjectBorrow(codeObjSt);
+				_alifFrame_setStackPointer(_frame, stackPointer);
 				AlifFunctionObject* funcObj = (AlifFunctionObject*)
 					alifFunction_new(codeobj, GLOBALS());
+				stackPointer = _alifFrame_getStackPointer(_frame);
 				ALIFSTACKREF_CLOSE(codeObjSt);
-				if (funcObj == nullptr) {
-					//goto error;
-				}
+				//if (funcObj == nullptr) goto pop_1_error;
 				_alifFunction_setVersion(
 					funcObj, ((AlifCodeObject*)codeobj)->version);
 				func = ALIFSTACKREF_FROMALIFOBJECTSTEAL((AlifObject*)funcObj);
@@ -471,15 +497,16 @@ dispatch_opcode :
 				AlifStackRef retval{};
 				AlifStackRef res{};
 				retval = stackPointer[-1];
+				AlifStackRef temp = retval;
 				stackPointer += -1;
 				_alifFrame_setStackPointer(_frame, stackPointer);
 				_alif_leaveRecursiveCallAlif(_thread);
 				AlifInterpreterFrame* dying = _frame;
 				_frame = _thread->currentFrame = dying->previous;
 				_alifEval_frameClearAndPop(_thread, dying);
-				LOAD_SP();
+				stackPointer = _alifFrame_getStackPointer(_frame);
 				LOAD_IP(_frame->returnOffset);
-				res = retval;
+				res = temp;
 				//LLTRACE_RESUME_FRAME();
 				stackPointer[0] = res;
 				stackPointer += 1;
@@ -494,14 +521,16 @@ dispatch_opcode :
 				AlifStackRef sub{};
 				AlifStackRef v{};
 				// _SPECIALIZE_STORE_SUBSCR
-				sub = stackPointer[-1];
-				container = stackPointer[-2];
 				{
-					uint16_t counter = read_u16(&thisInstr[1].cache);
+					sub = stackPointer[-1];
+					container = stackPointer[-2];
+					//uint16_t counter = read_u16(&thisInstr[1].cache);
 #if ENABLE_SPECIALIZATION
 					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
 						nextInstr = thisInstr;
+						_alifFrame_setStackPointer(_frame, stackPointer);
 						_alifSpecialize_storeSubscr(container, sub, nextInstr);
+						stackPointer = _alifFrame_getStackPointer(_frame);
 						DISPATCH_SAME_OPARG();
 					}
 					OPCODE_DEFERRED_INC(STORE_SUBSCR);
@@ -509,11 +538,13 @@ dispatch_opcode :
 #endif  /* ENABLE_SPECIALIZATION */
 				}
 				// _STORE_SUBSCR
-				v = stackPointer[-3];
 				{
+					v = stackPointer[-3];
 					/* container[sub] = v */
+					_alifFrame_setStackPointer(_frame, stackPointer);
 					AlifIntT err = alifObject_setItem(alifStackRef_asAlifObjectBorrow(container),
 						alifStackRef_asAlifObjectBorrow(sub), alifStackRef_asAlifObjectBorrow(v));
+					stackPointer = _alifFrame_getStackPointer(_frame);
 					ALIFSTACKREF_CLOSE(v);
 					ALIFSTACKREF_CLOSE(container);
 					ALIFSTACKREF_CLOSE(sub);
@@ -530,13 +561,15 @@ dispatch_opcode :
 				AlifStackRef value{};
 				AlifStackRef res{};
 				// _SPECIALIZE_TO_BOOL
-				value = stackPointer[-1];
 				{
-					uint16_t counter = read_u16(&thisInstr[1].cache);
+					value = stackPointer[-1];
+					//uint16_t counter = read_u16(&thisInstr[1].cache);
 #if ENABLE_SPECIALIZATION
 					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
 						nextInstr = thisInstr;
+						_alifFrame_setStackPointer(_frame, stackPointer);
 						_alifSpecialize_toBool(value, nextInstr);
+						stackPointer = _alifFrame_getStackPointer(_frame);
 						DISPATCH_SAME_OPARG();
 					}
 					OPCODE_DEFERRED_INC(TO_BOOL);
@@ -546,7 +579,9 @@ dispatch_opcode :
 				/* Skip 2 cache entries */
 				// _TO_BOOL
 				{
+					_alifFrame_setStackPointer(_frame, stackPointer);
 					AlifIntT err = alifObject_isTrue(alifStackRef_asAlifObjectBorrow(value));
+					stackPointer = _alifFrame_getStackPointer(_frame);
 					ALIFSTACKREF_CLOSE(value);
 					//if (err < 0) goto pop_1_error;
 					err ? res = ALIFSTACKREF_TRUE : res = ALIFSTACKREF_FALSE;
@@ -560,7 +595,9 @@ dispatch_opcode :
 				AlifStackRef value{};
 				AlifStackRef res{};
 				value = stackPointer[-1];
+				_alifFrame_setStackPointer(_frame, stackPointer);
 				AlifObject* resObj = alifNumber_negative(alifStackRef_asAlifObjectBorrow(value));
+				stackPointer = _alifFrame_getStackPointer(_frame);
 				ALIFSTACKREF_CLOSE(value);
 				//if (res_o == nullptr) goto pop_1_error;
 				res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(resObj);
@@ -587,14 +624,16 @@ dispatch_opcode :
 				AlifStackRef rhs{};
 				AlifStackRef res{};
 				// _SPECIALIZE_BINARY_OP
-				rhs = stackPointer[-1];
-				lhs = stackPointer[-2];
 				{
-					uint16_t counter = read_u16(&this_instr[1].cache);
+					rhs = stackPointer[-1];
+					lhs = stackPointer[-2];
+					//uint16_t counter = read_u16(&this_instr[1].cache);
 #if ENABLE_SPECIALIZATION
 					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
 						nextInstr = this_instr;
+						_alifFrame_setStackPointer(_frame, stackPointer);
 						_alifSpecialize_binaryOp(lhs, rhs, nextInstr, oparg, LOCALS_ARRAY);
+						stackPointer = _alifFrame_getStackPointer(_frame);
 						DISPATCH_SAME_OPARG();
 					}
 					OPCODE_DEFERRED_INC(BINARY_OP);
@@ -605,7 +644,9 @@ dispatch_opcode :
 				{
 					AlifObject* lhsObj = alifStackRef_asAlifObjectBorrow(lhs);
 					AlifObject* rhsObj = alifStackRef_asAlifObjectBorrow(rhs);
+					_alifFrame_setStackPointer(_frame, stackPointer);
 					AlifObject* resObj = _alifEvalBinaryOps_[oparg](lhsObj, rhsObj);
+					stackPointer = _alifFrame_getStackPointer(_frame);
 					ALIFSTACKREF_CLOSE(lhs);
 					ALIFSTACKREF_CLOSE(rhs);
 					//if (resObj == nullptr) goto pop_2_error;
@@ -647,8 +688,10 @@ dispatch_opcode :
 						//goto error;
 					}
 				}
+				_alifFrame_setStackPointer(_frame, stackPointer);
 				AlifObject* mapObj = _alifDict_fromItems(
 					valuesObj, 2, valuesObj + 1, 2, oparg);
+				stackPointer = _alifFrame_getStackPointer(_frame);
 				STACKREFS_TO_ALIFOBJECTS_CLEANUP(valuesObj);
 				for (AlifIntT _i = oparg * 2; --_i >= 0;) {
 					ALIFSTACKREF_CLOSE(values[_i]);
@@ -713,21 +756,23 @@ dispatch_opcode :
 				nextInstr += 4;
 				PREDICTED(CALL);
 				AlifCodeUnit* thisInstr = nextInstr - 4;
-				AlifStackRef callable{};
-				AlifStackRef *selfOrNull{};
+				AlifStackRef* callable{};
+				AlifStackRef* selfOrNull{};
 				AlifStackRef* args{};
-				AlifStackRef func{};
-				AlifStackRef *maybeSelf{};
+				AlifStackRef* func{};
+				AlifStackRef* maybeSelf{};
 				AlifStackRef res{};
 				// _SPECIALIZE_CALL
-				selfOrNull = &stackPointer[-1 - oparg];
-				callable = stackPointer[-2 - oparg];
 				{
-					uint16_t counter = read_u16(&thisInstr[1].cache);
+					selfOrNull = &stackPointer[-1 - oparg];
+					callable = &stackPointer[-2 - oparg];
+					//uint16_t counter = read_u16(&thisInstr[1].cache);
 #if ENABLE_SPECIALIZATION
 					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
-						nextInstr = this_instr;
-						_alifSpecialize_call(callable, nextInstr, oparg + !ALIFSTACKREF_ISNULL(self_or_null[0]));
+						nextInstr = thisInstr;
+						_alifFrame_setStackPointer(_frame, stackPointer);
+						_alifSpecialize_call(callable[0], nextInstr, oparg + !ALIFSTACKREF_ISNULL(self_or_null[0]));
+						stackPointer = _alifFrame_getStackPointer(_frame);
 						DISPATCH_SAME_OPARG();
 					}
 					OPCODE_DEFERRED_INC(CALL);
@@ -736,27 +781,26 @@ dispatch_opcode :
 				}
 				/* Skip 2 cache entries */
 				// _MAYBE_EXPAND_METHOD
-				args = &stackPointer[-oparg];
 				{
+					args = &stackPointer[-oparg];
+					func = &stackPointer[-2 - oparg];
 					maybeSelf = &stackPointer[-1 - oparg];
-					if (ALIFSTACKREF_TYPE(callable) == &_alifMethodType_ and ALIFSTACKREF_ISNULL(selfOrNull[0])) {
-						AlifObject* callable_o = alifStackRef_asAlifObjectBorrow(callable);
-						AlifObject* self = ((AlifMethodObject*)callable_o)->self;
+					if (ALIFSTACKREF_TYPE(callable[0]) == &_alifMethodType_ and ALIFSTACKREF_ISNULL(selfOrNull[0])) {
+						AlifObject* callableObj = alifStackRef_asAlifObjectBorrow(callable[0]);
+						AlifObject* self = ((AlifMethodObject*)callableObj)->self;
 						maybeSelf[0] = ALIFSTACKREF_FROMALIFOBJECTNEW(self);
-						AlifObject* method = ((AlifMethodObject*)callable_o)->func;
-						func = ALIFSTACKREF_FROMALIFOBJECTNEW(method);
-						stackPointer[-2 - oparg] = func;
-						ALIFSTACKREF_CLOSE(callable);
-					}
-					else {
-						func = callable;
+						AlifObject* method = ((AlifMethodObject*)callableObj)->func;
+						AlifStackRef temp = callable[0];
+						func[0] = ALIFSTACKREF_FROMALIFOBJECTNEW(method);
+						ALIFSTACKREF_CLOSE(temp);
 					}
 				}
 				// _DO_CALL
-				selfOrNull = maybeSelf;
-				callable = func;
 				{
-					AlifObject* callableObj = alifStackRef_asAlifObjectBorrow(callable);
+					args = &stackPointer[-oparg];
+					selfOrNull = &stackPointer[-1 - oparg];
+					callable = &stackPointer[-2 - oparg];
+					AlifObject* callableObj = alifStackRef_asAlifObjectBorrow(callable[0]);
 					// oparg counts all of the args, but *not* self:
 					AlifIntT totalArgs = oparg;
 					if (!ALIFSTACKREF_ISNULL(selfOrNull[0])) {
@@ -770,12 +814,13 @@ dispatch_opcode :
 					{
 						AlifIntT codeFlags = ((AlifCodeObject*)ALIFFUNCTION_GET_CODE(callableObj))->flags;
 						AlifObject* locals = codeFlags & CO_OPTIMIZED ? nullptr : ALIF_NEWREF(ALIFFUNCTION_GET_GLOBALS(callableObj));
+						_alifFrame_setStackPointer(_frame, stackPointer);
 						AlifInterpreterFrame* newFrame = _alifEval_framePushAndInit(
-							_thread, callable, locals,
-							args, totalArgs, nullptr, _frame
-						);
+							_thread, callable[0], locals,
+							args, totalArgs, nullptr, _frame);
+						stackPointer = _alifFrame_getStackPointer(_frame);
 						// Manipulate stack directly since we leave using DISPATCH_INLINED().
-						STACK_SHRINK(oparg + 2);
+						stackPointer += -2 - oparg;
 						// The frame has stolen all the arguments from the stack,
 						// so there is no need to clean them up.
 						if (newFrame == nullptr) {
@@ -787,7 +832,7 @@ dispatch_opcode :
 					/* Callable is not a normal Alif function */
 					STACKREFS_TO_ALIFOBJECTS(args, totalArgs, argsObj);
 					if (CONVERSION_FAILED(argsObj)) {
-						ALIFSTACKREF_CLOSE(callable);
+						ALIFSTACKREF_CLOSE(callable[0]);
 						for (AlifIntT i = 0; i < totalArgs; i++) {
 							ALIFSTACKREF_CLOSE(args[i]);
 						}
@@ -796,29 +841,35 @@ dispatch_opcode :
 							//goto error;
 						}
 					}
+					_alifFrame_setStackPointer(_frame, stackPointer);
 					AlifObject* resObj = alifObject_vectorCall(
 						callableObj, argsObj,
 						totalArgs | ALIF_VECTORCALL_ARGUMENTS_OFFSET,
 						nullptr);
+					stackPointer = _alifFrame_getStackPointer(_frame);
 					STACKREFS_TO_ALIFOBJECTS_CLEANUP(argsObj);
 					if (opcode == INSTRUMENTED_CALL) {
 						AlifObject* arg = totalArgs == 0 ?
 							&_alifInstrumentationMissing_ : alifStackRef_asAlifObjectBorrow(args[0]);
 						if (resObj == nullptr) {
+							_alifFrame_setStackPointer(_frame, stackPointer);
 							//_alifCall_instrumentationExc2(
 							//	_thread, ALIF_MONITORING_EVENT_C_RAISE,
 							//	_frame, this_instr, callable_o, arg);
+							stackPointer = _alifFrame_getStackPointer(_frame);
 						}
 						else {
+							_alifFrame_setStackPointer(_frame, stackPointer);
 							//AlifIntT err = _alifCall_instrumentation2Args(
 							//	_thread, ALIF_MONITORING_EVENT_C_RETURN,
 							//	_frame, this_instr, callable_o, arg);
 							//if (err < 0) {
 							//	ALIF_CLEAR(res_o);
 							//}
+							stackPointer = _alifFrame_getStackPointer(_frame);
 						}
 					}
-					ALIFSTACKREF_CLOSE(callable);
+					ALIFSTACKREF_CLOSE(callable[0]);
 					for (AlifIntT i = 0; i < totalArgs; i++) {
 						ALIFSTACKREF_CLOSE(args[i]);
 					}
@@ -831,15 +882,16 @@ dispatch_opcode :
 				// _CHECK_PERIODIC
 				{
 					//ALIF_CHECK_EMSCRIPTEN_SIGNALS_PERIODICALLY();
-					QSBR_QUIESCENT_STATE(_thread); \
-						if (alifAtomic_loadUintptrRelaxed(&_thread->evalBreaker) & ALIF_EVAL_EVENTS_MASK) {
-							//AlifIntT err = _alif_handlePending(_thread);
-							//if (err != 0) {
-							//	stackPointer[-2 - oparg] = res;
-							//	stackPointer += -1 - oparg;
-							//	goto error;
-							//}
-						}
+					QSBR_QUIESCENT_STATE(_thread);
+					if (alifAtomic_loadUintptrRelaxed(&_thread->evalBreaker) & ALIF_EVAL_EVENTS_MASK) {
+						stackPointer[-2 - oparg] = res;
+						stackPointer += -1 - oparg;
+						_alifFrame_setStackPointer(_frame, stackPointer);
+						//AlifIntT err = _alif_handlePending(_thread);
+						stackPointer = _alifFrame_getStackPointer(_frame);
+						//if (err != 0) goto error;
+						stackPointer += 1 + oparg;
+					}
 				}
 				stackPointer[-2 - oparg] = res;
 				stackPointer += -1 - oparg;
@@ -850,20 +902,26 @@ dispatch_opcode :
 				nextInstr += 4;
 				PREDICTED(CALL_KW);
 				AlifCodeUnit* thisInstr = nextInstr - 4;
-				AlifStackRef callable{};
+				AlifStackRef* callable{};
 				AlifStackRef* selfOrNull{};
 				AlifStackRef* args{};
 				AlifStackRef kwnames{};
+				AlifStackRef kwnames_in{};
+				AlifStackRef* func{};
+				AlifStackRef* maybe_self{};
+				AlifStackRef kwnames_out{};
 				AlifStackRef res{};
 				// _SPECIALIZE_CALL_KW
-				selfOrNull = &stackPointer[-2 - oparg];
-				callable = stackPointer[-3 - oparg];
 				{
-					uint16_t counter = read_u16(&thisInstr[1].cache);
+					selfOrNull = &stackPointer[-2 - oparg];
+					callable = &stackPointer[-3 - oparg];
+					//uint16_t counter = read_u16(&thisInstr[1].cache);
 #if ENABLE_SPECIALIZATION
 					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
 						nextInstr = thisInstr;
-						_alifSpecialize_callKw(callable, nextInstr, oparg + !ALIFSTACKREF_ISNULL(self_or_null[0]));
+						_alifFrame_setStackPointer(_frame, stackPointer);
+						_alifSpecialize_callKw(callable[0], nextInstr, oparg + !ALIFSTACKREF_ISNULL(self_or_null[0]));
+						stackPointer = _alifFrame_getStackPointer(_frame);
 						DISPATCH_SAME_OPARG();
 					}
 					OPCODE_DEFERRED_INC(CALL_KW);
@@ -871,28 +929,36 @@ dispatch_opcode :
 #endif  /* ENABLE_SPECIALIZATION */
 				}
 				/* Skip 2 cache entries */
-				// _DO_CALL_KW
-				kwnames = stackPointer[-1];
-				args = &stackPointer[-1 - oparg];
+				// _MAYBE_EXPAND_METHOD_KW
 				{
-					AlifObject* callableObj = alifStackRef_asAlifObjectBorrow(callable);
+					kwnames_in = stackPointer[-1];
+					args = &stackPointer[-1 - oparg];
+					func = &stackPointer[-3 - oparg];
+					maybe_self = &stackPointer[-2 - oparg];
+					if (ALIFSTACKREF_TYPE(callable[0]) == &_alifMethodType_ and ALIFSTACKREF_ISNULL(selfOrNull[0])) {
+						AlifObject* callable_o = alifStackRef_asAlifObjectBorrow(callable[0]);
+						AlifObject* self = ((AlifMethodObject*)callable_o)->self;
+						maybe_self[0] = ALIFSTACKREF_FROMALIFOBJECTNEW(self);
+						AlifObject* method = ((AlifMethodObject*)callable_o)->func;
+						AlifStackRef temp = callable[0];
+						func[0] = ALIFSTACKREF_FROMALIFOBJECTNEW(method);
+						ALIFSTACKREF_CLOSE(temp);
+					}
+					kwnames_out = kwnames_in;
+				}
+				// _DO_CALL_KW
+				{
+					kwnames = kwnames_out;
+					args = &stackPointer[-1 - oparg];
+					selfOrNull = &stackPointer[-2 - oparg];
+					callable = &stackPointer[-3 - oparg];
+					AlifObject* callableObj = alifStackRef_asAlifObjectBorrow(callable[0]);
 					AlifObject* kwNamesObj = alifStackRef_asAlifObjectBorrow(kwnames);
 					// oparg counts all of the args, but *not* self:
 					AlifIntT totalArgs = oparg;
 					if (!ALIFSTACKREF_ISNULL(selfOrNull[0])) {
 						args--;
 						totalArgs++;
-					}
-					else if (ALIF_TYPE(callableObj) == &_alifMethodType_) {
-						args--;
-						totalArgs++;
-						AlifObject* self = ((AlifMethodObject*)callableObj)->self;
-						args[0] = ALIFSTACKREF_FROMALIFOBJECTNEW(self);
-						AlifObject* method = ((AlifMethodObject*)callableObj)->func;
-						args[-1] = ALIFSTACKREF_FROMALIFOBJECTNEW(method);
-						ALIFSTACKREF_CLOSE(callable);
-						callableObj = method;
-						callable = args[-1];
 					}
 					AlifIntT positionalArgs = totalArgs - (AlifIntT)ALIFTUPLE_GET_SIZE(kwNamesObj);
 					// Check if the call can be inlined or not
@@ -902,13 +968,15 @@ dispatch_opcode :
 					{
 						AlifIntT code_flags = ((AlifCodeObject*)ALIFFUNCTION_GET_CODE(callableObj))->flags;
 						AlifObject* locals = code_flags & CO_OPTIMIZED ? nullptr : ALIF_NEWREF(ALIFFUNCTION_GET_GLOBALS(callableObj));
+						stackPointer[-1] = kwnames;
+						_alifFrame_setStackPointer(_frame, stackPointer);
 						AlifInterpreterFrame* new_frame = _alifEval_framePushAndInit(
-							_thread, callable, locals,
-							args, positionalArgs, kwNamesObj, _frame
-						);
+							_thread, callable[0], locals,
+							args, positionalArgs, kwNamesObj, _frame);
+						stackPointer = _alifFrame_getStackPointer(_frame);
 						ALIFSTACKREF_CLOSE(kwnames);
-						// Manipulate stack directly since we leave using DISPATCH_INLINED().
-						STACK_SHRINK(oparg + 3);
+						// Sync stack explicitly since we leave using DISPATCH_INLINED().
+						stackPointer += -3 - oparg;
 						// The frame has stolen all the arguments from the stack,
 						// so there is no need to clean them up.
 						//if (new_frame == nullptr) {
@@ -920,7 +988,7 @@ dispatch_opcode :
 					/* Callable is not a normal Alif function */
 					STACKREFS_TO_ALIFOBJECTS(args, totalArgs, argsObj);
 					if (CONVERSION_FAILED(argsObj)) {
-						ALIFSTACKREF_CLOSE(callable);
+						ALIFSTACKREF_CLOSE(callable[0]);
 						ALIFSTACKREF_CLOSE(selfOrNull[0]);
 						for (AlifIntT _i = oparg; --_i >= 0;) {
 							ALIFSTACKREF_CLOSE(args[_i]);
@@ -931,30 +999,37 @@ dispatch_opcode :
 							//goto error;
 						}
 					}
+					stackPointer[-1] = kwnames;
+					_alifFrame_setStackPointer(_frame, stackPointer);
 					AlifObject* resObj = alifObject_vectorCall(
 						callableObj, argsObj,
 						positionalArgs | ALIF_VECTORCALL_ARGUMENTS_OFFSET,
 						kwNamesObj);
+					stackPointer = _alifFrame_getStackPointer(_frame);
 					STACKREFS_TO_ALIFOBJECTS_CLEANUP(argsObj);
 					if (opcode == INSTRUMENTED_CALL_KW) {
 						AlifObject* arg = totalArgs == 0 ?
 							&_alifInstrumentationMissing_ : alifStackRef_asAlifObjectBorrow(args[0]);
 						//if (resObj == nullptr) {
+						// _alifFrame_setStackPointer(_frame, stackPointer);
 						//	_alifCall_instrumentationExc2(
 						//		_thread, ALIF_MONITORING_EVENT_CPP_RAISE,
 						//		_frame, thisInstr, callableObj, arg);
+						// stackPointer = _alifFrame_getStackPointer(_frame);
 						//}
 						//else {
+						// _alifFrame_setStackPointer(_frame, stackPointer);
 						//	AlifIntT err = _alifCall_instrumentation2Args(
 						//		_thread, ALIF_MONITORING_EVENT_CPP_RETURN,
 						//		_frame, thisInstr, callableObj, arg);
+						// stackPointer = _alifFrame_getStackPointer(_frame);
 						//	if (err < 0) {
 						//		ALIF_CLEAR(resObj);
 						//	}
 						//}
 					}
 					ALIFSTACKREF_CLOSE(kwnames);
-					ALIFSTACKREF_CLOSE(callable);
+					ALIFSTACKREF_CLOSE(callable[0]);
 					for (int i = 0; i < totalArgs; i++) {
 						ALIFSTACKREF_CLOSE(args[i]);
 					}
@@ -977,14 +1052,16 @@ dispatch_opcode :
 				AlifStackRef right{};
 				AlifStackRef res{};
 				// _SPECIALIZE_COMPARE_OP
-				right = stackPointer[-1];
-				left = stackPointer[-2];
 				{
-					uint16_t counter = read_u16(&thisInstr[1].cache);
+					right = stackPointer[-1];
+					left = stackPointer[-2];
+					//uint16_t counter = read_u16(&thisInstr[1].cache);
 #if ENABLE_SPECIALIZATION
 					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
 						nextOnstr = thisInstr;
+						_alifFrame_setStackPointer(_frame, stackPointer);
 						_alifSpecialize_compareOp(left, right, nextInstr, oparg);
+						stackPointer = _alifFrame_getStackPointer(_frame);
 						DISPATCH_SAME_OPARG();
 					}
 					OPCODE_DEFERRED_INC(COMPARE_OP);
@@ -995,22 +1072,28 @@ dispatch_opcode :
 				{
 					AlifObject* leftObj = alifStackRef_asAlifObjectBorrow(left);
 					AlifObject* rightObj = alifStackRef_asAlifObjectBorrow(right);
+					_alifFrame_setStackPointer(_frame, stackPointer);
 					AlifObject* resObj = alifObject_richCompare(leftObj, rightObj, oparg >> 5);
+					stackPointer = _alifFrame_getStackPointer(_frame);
 					ALIFSTACKREF_CLOSE(left);
 					ALIFSTACKREF_CLOSE(right);
 					//if (res_o == nullptr) goto pop_2_error;
 					if (oparg & 16) {
+						stackPointer += -2;
+						_alifFrame_setStackPointer(_frame, stackPointer);
 						AlifIntT resBool = alifObject_isTrue(resObj);
+						stackPointer = _alifFrame_getStackPointer(_frame);
 						ALIF_DECREF(resObj);
-						//if (res_bool < 0) goto pop_2_error;
+						//if (res_bool < 0) goto error;
 						resBool ? res = ALIFSTACKREF_TRUE : res = ALIFSTACKREF_FALSE;
 					}
 					else {
 						res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(resObj);
+						stackPointer += -2;
 					}
 				}
-				stackPointer[-2] = res;
-				stackPointer += -1;
+				stackPointer[0] = res;
+				stackPointer += 1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
 			TARGET(CONTAINS_OP) {
@@ -1022,13 +1105,15 @@ dispatch_opcode :
 				AlifStackRef right{};
 				AlifStackRef b{};
 				// _SPECIALIZE_CONTAINS_OP
-				right = stackPointer[-1];
 				{
-					uint16_t counter = read_u16(&thisInstr[1].cache);
+					right = stackPointer[-1];
+					//uint16_t counter = read_u16(&thisInstr[1].cache);
 #if ENABLE_SPECIALIZATION
 					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
 						nextInstr = thisInstr;
+						_alifFrame_setStackPointer(_frame, stackPointer);
 						_alifSpecialize_containsOp(right, nextInstr);
+						stackPointer = _alifFrame_getStackPointer(_frame);
 						DISPATCH_SAME_OPARG();
 					}
 					OPCODE_DEFERRED_INC(CONTAINS_OP);
@@ -1036,11 +1121,13 @@ dispatch_opcode :
 #endif  /* ENABLE_SPECIALIZATION */
 				}
 				// _CONTAINS_OP
-				left = stackPointer[-2];
 				{
+					left = stackPointer[-2];
 					AlifObject* leftObj = alifStackRef_asAlifObjectBorrow(left);
 					AlifObject* rightObj = alifStackRef_asAlifObjectBorrow(right);
+					_alifFrame_setStackPointer(_frame, stackPointer);
 					AlifIntT res = alifSequence_contains(rightObj, leftObj);
+					stackPointer = _alifFrame_getStackPointer(_frame);
 					ALIFSTACKREF_CLOSE(left);
 					ALIFSTACKREF_CLOSE(right);
 					//if (res < 0) goto pop_2_error;
@@ -1068,16 +1155,22 @@ dispatch_opcode :
 				AlifObject* ns = LOCALS();
 				AlifIntT err{};
 				if (ns == nullptr) {
+					_alifFrame_setStackPointer(_frame, stackPointer);
 					//_alifErr_format(_thread, _alifExcSystemError_,
 					//	"no locals when deleting %R", name);
+					stackPointer = _alifFrame_getStackPointer(_frame);
 					//goto error;
 				}
+				_alifFrame_setStackPointer(_frame, stackPointer);
 				err = alifObject_delItem(ns, name);
+				stackPointer = _alifFrame_getStackPointer(_frame);
 				// Can't use ERROR_IF here.
 				if (err != 0) {
+					_alifFrame_setStackPointer(_frame, stackPointer);
 					//_alifEval_formatExcCheckArg(_thread, _alifExcNameError_,
 					//	NAME_ERROR_MSG,
 					//	name);
+					stackPointer = _alifFrame_getStackPointer(_frame);
 					//goto error;
 				}
 				DISPATCH();
@@ -1090,13 +1183,15 @@ dispatch_opcode :
 				AlifStackRef iter{};
 				AlifStackRef next{};
 				// _SPECIALIZE_FOR_ITER
-				iter = stackPointer[-1];
 				{
-					uint16_t counter = read_u16(&thisInstr[1].cache);
+					iter = stackPointer[-1];
+					//uint16_t counter = read_u16(&thisInstr[1].cache);
 #if ENABLE_SPECIALIZATION
 					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
 						nextInstr = thisInstr;
+						_alifFrame_setStackPointer(_frame, stackPointer);
 						_alifSpecialize_forIter(iter, nextInstr, oparg);
+						stackPointer = _alifFrame_getStackPointer(_frame);
 						DISPATCH_SAME_OPARG();
 					}
 					OPCODE_DEFERRED_INC(FOR_ITER);
@@ -1107,16 +1202,21 @@ dispatch_opcode :
 				{
 					/* before: [iter]; after: [iter, iter()] *or* [] (and jump over END_FOR.) */
 					AlifObject* iterObj = alifStackRef_asAlifObjectBorrow(iter);
+					_alifFrame_setStackPointer(_frame, stackPointer);
 					AlifObject* nextObj = (*ALIF_TYPE(iterObj)->iterNext)(iterObj);
+					stackPointer = _alifFrame_getStackPointer(_frame);
 					if (nextObj == nullptr) {
-						next = _alifStackRefNull_;
 						//if (_alifErr_occurred(_thread)) {
+						//	_alifFrame_setStackPointer(_frame, stackPointer);
 						//	AlifIntT matches = _alifErr_exceptionMatches(_thread, _alifExcStopIteration_);
+						//	stackPointer = _alifFrame_getStackPointer(_frame);
 						//	if (!matches) {
 						//		goto error;
 						//	}
+						// _alifFrame_setStackPointer(_frame, stackPointer);
 						//	_alifEval_monitorRaise(_thread, _frame, thisInstr);
 						//	_alifErr_clear(_thread);
+						//	stackPointer = _alifFrame_getStackPointer(_frame);
 						//}
 						/* iterator ended normally */
 						ALIFSTACKREF_CLOSE(iter);
@@ -1139,9 +1239,11 @@ dispatch_opcode :
 				AlifStackRef res{};
 				from = stackPointer[-1];
 				AlifObject* name = GETITEM(FRAME_CO_NAMES, oparg);
-				AlifObject* res_o = _alifEval_importFrom(_thread, alifStackRef_asAlifObjectBorrow(from), name);
-				//if (res_o == nullptr) goto error;
-				res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(res_o);
+				_alifFrame_setStackPointer(_frame, stackPointer);
+				AlifObject* resObj = _alifEval_importFrom(_thread, alifStackRef_asAlifObjectBorrow(from), name);
+				stackPointer = _alifFrame_getStackPointer(_frame);
+				//if (resObj == nullptr) goto error;
+				res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(resObj);
 				stackPointer[0] = res;
 				stackPointer += 1;
 				DISPATCH();
@@ -1155,9 +1257,11 @@ dispatch_opcode :
 				fromlist = stackPointer[-1];
 				level = stackPointer[-2];
 				AlifObject* name = GETITEM(FRAME_CO_NAMES, oparg);
+				_alifFrame_setStackPointer(_frame, stackPointer);
 				AlifObject* resObj = _alifEval_importName(_thread, _frame, name,
 					alifStackRef_asAlifObjectBorrow(fromlist),
 					alifStackRef_asAlifObjectBorrow(level));
+				stackPointer = _alifFrame_getStackPointer(_frame);
 				ALIFSTACKREF_CLOSE(level);
 				ALIFSTACKREF_CLOSE(fromlist);
 				//if (res_o == nullptr) goto pop_2_error;
@@ -1171,11 +1275,13 @@ dispatch_opcode :
 				nextInstr += 2;
 				// _CHECK_PERIODIC
 				{
-					QSBR_QUIESCENT_STATE(_thread); \
-						if (alifAtomic_loadUintptrRelaxed(&_thread->evalBreaker) & ALIF_EVAL_EVENTS_MASK) {
-							//AlifIntT err = _alif_handlePending(_thread);
-							//if (err != 0) goto error;
-						}
+					QSBR_QUIESCENT_STATE(_thread);
+					if (alifAtomic_loadUintptrRelaxed(&_thread->evalBreaker) & ALIF_EVAL_EVENTS_MASK) {
+						_alifFrame_setStackPointer(_frame, stackPointer);
+						//AlifIntT err = _alif_handlePending(_thread);
+						stackPointer = _alifFrame_getStackPointer(_frame);
+						//if (err != 0) goto error;
+					}
 				}
 				// _JUMP_BACKWARD
 				{
@@ -1191,7 +1297,9 @@ dispatch_opcode :
 							start--;
 						}
 						AlifExecutorObject* executor{};
+						_alifFrame_setStackPointer(_frame, stackPointer);
 						AlifIntT optimized = _alifOptimizer_optimize(_frame, start, stackPointer, &executor, 0);
+						stackPointer = _alifFrame_getStackPointer(_frame);
 						if (optimized < 0) goto error;
 						if (optimized) {
 							_thread->previousExecutor = ALIF_NONE;
@@ -1222,11 +1330,9 @@ dispatch_opcode :
 				AlifStackRef v{};
 				v = stackPointer[-1];
 				list = stackPointer[-2 - (oparg - 1)];
-				if (alifList_appendTakeRef((AlifListObject*)alifStackRef_asAlifObjectBorrow(list),
-					alifStackRef_asAlifObjectSteal(v)) < 0)
-				{
-					//goto pop_1_error;
-				}
+				AlifIntT err = alifList_appendTakeRef((AlifListObject*)alifStackRef_asAlifObjectBorrow(list),
+					alifStackRef_asAlifObjectSteal(v));
+				//if (err < 0) goto pop_1_error;
 				stackPointer += -1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
@@ -1239,16 +1345,22 @@ dispatch_opcode :
 				listSt = stackPointer[-2 - (oparg - 1)];
 				AlifObject* list = alifStackRef_asAlifObjectBorrow(listSt);
 				AlifObject* iterable = alifStackRef_asAlifObjectBorrow(iterableSt);
+				_alifFrame_setStackPointer(_frame, stackPointer);
 				AlifObject* none_val = _alifList_extend((AlifListObject*)list, iterable);
+				stackPointer = _alifFrame_getStackPointer(_frame);
 				if (none_val == nullptr) {
+					_alifFrame_setStackPointer(_frame, stackPointer);
 					//AlifIntT matches = _alifErr_exceptionMatches(_thread, _alifExcTypeError_);
+					stackPointer = _alifFrame_getStackPointer(_frame);
 					//if (matches and
 					//	(ALIF_TYPE(iterable)->iter == nullptr and !alifSequence_check(iterable)))
 					//{
+					// _alifFrame_setStackPointer(_frame, stackPointer);
 					//	_alifErr_clear(_thread);
 					//	_alifErr_format(_thread, _alifExcTypeError_,
 					//		"Value after * must be an iterable, not %.200s",
 					//		ALIF_TYPE(iterable)->name);
+					// stackPointer = _alifFrame_getStackPointer(_frame);
 					//}
 					ALIFSTACKREF_CLOSE(iterableSt);
 					//if (true) goto pop_1_error;
@@ -1264,16 +1376,18 @@ dispatch_opcode :
 				AlifCodeUnit* thisInstr = nextInstr - 10;
 				AlifStackRef owner{};
 				AlifStackRef attr{};
-				AlifStackRef self_or_null = _alifStackRefNull_;
+				AlifStackRef selfOrNull = _alifStackRefNull_;
 				// _SPECIALIZE_LOAD_ATTR
-				owner = stackPointer[-1];
 				{
-					uint16_t counter = read_u16(&thisInstr[1].cache);
+					owner = stackPointer[-1];
+					//uint16_t counter = read_u16(&thisInstr[1].cache);
 #if ENABLE_SPECIALIZATION
 					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
 						AlifObject* name = GETITEM(FRAME_CO_NAMES, oparg >> 1);
 						nextInstr = thisInstr;
+						_alifFrame_setStackPointer(_frame, stackPointer);
 						_alifSpecialize_loadAttr(owner, nextInstr, name);
+						stackPointer = _alifFrame_getStackPointer(_frame);
 						DISPATCH_SAME_OPARG();
 					}
 					OPCODE_DEFERRED_INC(LOAD_ATTR);
@@ -1287,26 +1401,33 @@ dispatch_opcode :
 					AlifObject* attrObj{};
 					if (oparg & 1) {
 						attrObj = nullptr;
+						_alifFrame_setStackPointer(_frame, stackPointer);
 						AlifIntT is_meth = _alifObject_getMethod(alifStackRef_asAlifObjectBorrow(owner), name, &attrObj);
+						stackPointer = _alifFrame_getStackPointer(_frame);
 						if (is_meth) {
-							self_or_null = owner;  // Transfer ownership
+							selfOrNull = owner;  // Transfer ownership
 						}
 						else {
 							ALIFSTACKREF_CLOSE(owner);
 							//if (attrObj == nullptr) goto pop_1_error;
-							self_or_null = _alifStackRefNull_;
+							selfOrNull = _alifStackRefNull_;
 						}
 					}
 					else {
 						/* Classic, pushes one value. */
+						_alifFrame_setStackPointer(_frame, stackPointer);
 						attrObj = alifObject_getAttr(alifStackRef_asAlifObjectBorrow(owner), name);
+						stackPointer = _alifFrame_getStackPointer(_frame);
 						ALIFSTACKREF_CLOSE(owner);
 						//if (attrObj == nullptr) goto pop_1_error;
+
+						/* We need to define selfOrNull on all paths */
+						selfOrNull = _alifStackRefNull_;
 					}
 					attr = ALIFSTACKREF_FROMALIFOBJECTSTEAL(attrObj);
 				}
 				stackPointer[-1] = attr;
-				if (oparg & 1) stackPointer[0] = self_or_null;
+				if (oparg & 1) stackPointer[0] = selfOrNull;
 				stackPointer += (oparg & 1);
 				DISPATCH();
 			} // ------------------------------------------------------------ //
@@ -1345,10 +1466,12 @@ dispatch_opcode :
 				AlifStackRef value{};
 				AlifStackRef valueS = GETLOCAL(oparg);
 				if (ALIFSTACKREF_ISNULL(valueS)) {
+					_alifFrame_setStackPointer(_frame, stackPointer);
 					//_alifEval_formatExcCheckArg(_thread, _alifExcUnboundLocalError_,
 					//	UNBOUNDLOCAL_ERROR_MSG,
 					//	alifTuple_getItem(_alifFrame_getCode(_frame)->localsPlusNames, oparg)
 					//);
+					// stackPointer = _alifFrame_getStackPointer(_frame);
 					//if (1) goto error;
 				}
 				value = alifStackRef_dup(valueS);
@@ -1365,12 +1488,14 @@ dispatch_opcode :
 				AlifStackRef null = _alifStackRefNull_;
 				// _SPECIALIZE_LOAD_GLOBAL
 				{
-					uint16_t counter = read_u16(&thisInstr[1].cache);
+					//uint16_t counter = read_u16(&thisInstr[1].cache);
 #if ENABLE_SPECIALIZATION
 					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
 						AlifObject* name = GETITEM(FRAME_CO_NAMES, oparg >> 1);
 						nextInstr = thisInstr;
+						_alifFrame_setStackPointer(_frame, stackPointer);
 						_alifSpecialize_loadGlobal(GLOBALS(), BUILTINS(), nextInstr, name);
+						stackPointer = _alifFrame_getStackPointer(_frame);
 						DISPATCH_SAME_OPARG();
 					}
 					OPCODE_DEFERRED_INC(LOAD_GLOBAL);
@@ -1381,7 +1506,9 @@ dispatch_opcode :
 				{
 					res = &stackPointer[0];
 					AlifObject* name = GETITEM(FRAME_CO_NAMES, oparg >> 1);
+					_alifFrame_setStackPointer(_frame, stackPointer);
 					_alifEval_loadGlobalStackRef(GLOBALS(), BUILTINS(), name, res);
+					stackPointer = _alifFrame_getStackPointer(_frame);
 					//if (ALIFSTACKREF_ISNULL(*res)) goto error;
 					null = _alifStackRefNull_;
 				}
@@ -1394,7 +1521,9 @@ dispatch_opcode :
 				nextInstr += 1;
 				AlifStackRef v{};
 				AlifObject* name = GETITEM(FRAME_CO_NAMES, oparg);
+				_alifFrame_setStackPointer(_frame, stackPointer);
 				AlifObject* vObj = _alifEval_loadName(_thread, _frame, name);
+				stackPointer = _alifFrame_getStackPointer(_frame);
 				//if (vObj == nullptr) goto error;
 				v = ALIFSTACKREF_FROMALIFOBJECTSTEAL(vObj);
 				stackPointer[0] = v;
@@ -1451,19 +1580,19 @@ dispatch_opcode :
 				// _LOAD_CONST
 				{
 					value = ALIFSTACKREF_FROMALIFOBJECTNEW(GETITEM(FRAME_CO_CONSTS, oparg));
-					stackPointer[0] = value;
 				}
 				// _RETURN_VALUE
-				retval = value;
 				{
+					retval = value;
+					AlifStackRef temp = retval;
 					_alifFrame_setStackPointer(_frame, stackPointer);
 					_alif_leaveRecursiveCallAlif(_thread);
 					AlifInterpreterFrame* dying = _frame;
 					_frame = _thread->currentFrame = dying->previous;
 					_alifEval_frameClearAndPop(_thread, dying);
-					LOAD_SP();
+					stackPointer = _alifFrame_getStackPointer(_frame);
 					LOAD_IP(_frame->returnOffset);
-					res = retval;
+					res = temp;
 					//LLTRACE_RESUME_FRAME();
 				}
 				stackPointer[0] = res;
@@ -1474,32 +1603,17 @@ dispatch_opcode :
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;
 				AlifStackRef attrSt{};
-				AlifStackRef funcSt{};
-				funcSt = stackPointer[-1];
+				AlifStackRef funcIn{};
+				AlifStackRef funcOut{};
+				funcIn = stackPointer[-1];
 				attrSt = stackPointer[-2];
-				AlifObject* func = alifStackRef_asAlifObjectBorrow(funcSt);
-				AlifObject* attr = alifStackRef_asAlifObjectBorrow(attrSt);
-				AlifFunctionObject* funcObj = (AlifFunctionObject*)func;
-				switch (oparg) {
-				case MAKE_FUNCTION_CLOSURE:
-					funcObj->closure = attr;
-					break;
-				case MAKE_FUNCTION_ANNOTATIONS:
-					funcObj->annotations = attr;
-					break;
-				case MAKE_FUNCTION_KWDEFAULTS:
-					funcObj->kwDefaults = attr;
-					break;
-				case MAKE_FUNCTION_DEFAULTS:
-					funcObj->defaults = attr;
-					break;
-				case MAKE_FUNCTION_ANNOTATE:
-					funcObj->annotate = attr;
-					break;
-				default:
-					ALIF_UNREACHABLE();
-				}
-				stackPointer[-2] = funcSt;
+				AlifObject* func = alifStackRef_asAlifObjectBorrow(funcIn);
+				AlifObject* attr = alifStackRef_asAlifObjectSteal(attrSt);
+				funcOut = funcIn;
+				AlifUSizeT offset = _alifFunctionAttributeOffsets_[oparg];
+				AlifObject** ptr = (AlifObject**)(((char*)func) + offset);
+				*ptr = attr;
+				stackPointer[-2] = funcOut;
 				stackPointer += -1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
@@ -1511,14 +1625,16 @@ dispatch_opcode :
 				AlifStackRef owner{};
 				AlifStackRef v{};
 				// _SPECIALIZE_STORE_ATTR
-				owner = stackPointer[-1];
 				{
-					uint16_t counter = read_u16(&thisInstr[1].cache);
+					owner = stackPointer[-1];
+					//uint16_t counter = read_u16(&thisInstr[1].cache);
 #if ENABLE_SPECIALIZATION
 					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
 						AlifObject* name = GETITEM(FRAME_CO_NAMES, oparg);
 						nextInstr = thisInstr;
+						_alifFrame_setStackPointer(_frame, stackPointer);
 						_alifSpecialize_storeAttr(owner, nextInstr, name);
+						stackPointer = _alifFrame_getStackPointer(_frame);
 						DISPATCH_SAME_OPARG();
 					}
 					OPCODE_DEFERRED_INC(STORE_ATTR);
@@ -1527,11 +1643,13 @@ dispatch_opcode :
 				}
 				/* Skip 3 cache entries */
 				// _STORE_ATTR
-				v = stackPointer[-2];
 				{
+					v = stackPointer[-2];
 					AlifObject* name = GETITEM(FRAME_CO_NAMES, oparg);
+					_alifFrame_setStackPointer(_frame, stackPointer);
 					AlifIntT err = alifObject_setAttr(alifStackRef_asAlifObjectBorrow(owner),
 						name, alifStackRef_asAlifObjectBorrow(v));
+					stackPointer = _alifFrame_getStackPointer(_frame);
 					ALIFSTACKREF_CLOSE(v);
 					ALIFSTACKREF_CLOSE(owner);
 					//if (err) goto pop_2_error;
@@ -1545,7 +1663,9 @@ dispatch_opcode :
 				AlifStackRef v{};
 				v = stackPointer[-1];
 				AlifCellObject* cell = (AlifCellObject*)alifStackRef_asAlifObjectBorrow(GETLOCAL(oparg));
+				_alifFrame_setStackPointer(_frame, stackPointer);
 				alifCell_setTakeRef(cell, alifStackRef_asAlifObjectSteal(v));
+				stackPointer = _alifFrame_getStackPointer(_frame);
 				stackPointer += -1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
@@ -1567,15 +1687,23 @@ dispatch_opcode :
 				AlifObject* ns = LOCALS();
 				AlifIntT err{};
 				if (ns == nullptr) {
+					_alifFrame_setStackPointer(_frame, stackPointer);
 					//_alifErr_format(_thread, _alifExcSystemError_,
 					//	"no locals found when storing %R", name);
+					stackPointer = _alifFrame_getStackPointer(_frame);
 					ALIFSTACKREF_CLOSE(v);
 					//if (true) goto pop_1_error;
 				}
-				if (ALIFDICT_CHECKEXACT(ns))
+				if (ALIFDICT_CHECKEXACT(ns)) {
+					_alifFrame_setStackPointer(_frame, stackPointer);
 					err = alifDict_setItem(ns, name, alifStackRef_asAlifObjectBorrow(v));
-				else
+					stackPointer = _alifFrame_getStackPointer(_frame);
+				}
+				else {
+					_alifFrame_setStackPointer(_frame, stackPointer);
 					err = alifObject_setItem(ns, name, alifStackRef_asAlifObjectBorrow(v));
+					stackPointer = _alifFrame_getStackPointer(_frame);
+				}
 				ALIFSTACKREF_CLOSE(v);
 				//if (err) goto pop_1_error;
 				stackPointer += -1;
@@ -1584,12 +1712,16 @@ dispatch_opcode :
 			TARGET(SWAP) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;
-				AlifStackRef bottom{};
-				AlifStackRef top{};
-				top = stackPointer[-1];
-				bottom = stackPointer[-2 - (oparg - 2)];
-				stackPointer[-2 - (oparg - 2)] = top;
-				stackPointer[-1] = bottom;
+				AlifStackRef bottomIn{};
+				AlifStackRef bottomOut{};
+				AlifStackRef topIn{};
+				AlifStackRef topOut{};
+				topIn = stackPointer[-1];
+				bottomIn = stackPointer[-2 - (oparg - 2)];
+				topOut = topIn;
+				bottomOut = bottomIn;
+				stackPointer[-2 - (oparg - 2)] = topOut;
+				stackPointer[-1] = bottomOut;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
 			TARGET(UNPACK_SEQUENCE) {
@@ -1600,13 +1732,15 @@ dispatch_opcode :
 				AlifStackRef seq{};
 				AlifStackRef* output{};
 				// _SPECIALIZE_UNPACK_SEQUENCE
-				seq = stackPointer[-1];
 				{
-					uint16_t counter = read_u16(&thisInstr[1].cache);
+					seq = stackPointer[-1];
+					//uint16_t counter = read_u16(&thisInstr[1].cache);
 #if ENABLE_SPECIALIZATION
 					if (ADAPTIVE_COUNTER_TRIGGERS(counter)) {
 						nextInstr = thisInstr;
+						_alifFrame_setStackPointer(_frame, stackPointer);
 						_alifSpecialize_UnpackSequence(seq, nextInstr, oparg);
+						stackPointer = _alifFrame_getStackPointer(_frame);
 						DISPATCH_SAME_OPARG();
 					}
 					OPCODE_DEFERRED_INC(UNPACK_SEQUENCE);
@@ -1617,7 +1751,9 @@ dispatch_opcode :
 				{
 					output = &stackPointer[-1];
 					AlifStackRef* top = output + oparg;
+					_alifFrame_setStackPointer(_frame, stackPointer);
 					AlifIntT res = _alifEval_unpackIterableStackRef(_thread, seq, oparg, -1, top);
+					stackPointer = _alifFrame_getStackPointer(_frame);
 					ALIFSTACKREF_CLOSE(seq);
 					//if (res == 0) goto pop_1_error;
 				}
@@ -1648,7 +1784,9 @@ dispatch_opcode :
 						uintptr_t globalVersion = alifAtomic_loadUintptrRelaxed(&_thread->evalBreaker) & ~ALIF_EVAL_EVENTS_MASK;
 						uintptr_t codeVersion = alifAtomic_loadUintptrAcquire(&_alifFrame_getCode(_frame)->instrumentationVersion);
 						if (codeVersion != globalVersion) {
+							_alifFrame_setStackPointer(_frame, stackPointer);
 							AlifIntT err = _alif_instrument(_alifFrame_getCode(_frame), _thread->interpreter);
+							stackPointer = _alifFrame_getStackPointer(_frame);
 							if (err) {
 								//goto error;
 							}
@@ -1671,7 +1809,9 @@ dispatch_opcode :
 						//ALIF_CHECK_EMSCRIPTEN_SIGNALS_PERIODICALLY();
 						QSBR_QUIESCENT_STATE(_thread); \
 							if (alifAtomic_loadUintptrRelaxed(&_thread->evalBreaker) & ALIF_EVAL_EVENTS_MASK) {
+								_alifFrame_setStackPointer(_frame, stackPointer);
 								//AlifIntT err = _alif_handlePending(_thread);
+								stackPointer = _alifFrame_getStackPointer(_frame);
 								//if (err != 0) goto error;
 							}
 					}

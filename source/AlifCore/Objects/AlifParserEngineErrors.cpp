@@ -108,7 +108,7 @@ void _alifParserEngine_setSyntaxError(AlifParser* _p, AlifPToken* _lastToken) { 
 	}
 	// Unknown error (generic case)
 
-	//RAISE_SYNTAX_ERROR_KNOWN_LOCATION(_lastToken, "invalid syntax");
+	//RAISE_SYNTAX_ERROR_KNOWN_LOCATION(_lastToken, "خطأ في النسق");
 
 	//_alifParserEngine_tokenizeFullSourceToCheckForErrors(_p);
 }

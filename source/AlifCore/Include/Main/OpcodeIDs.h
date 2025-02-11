@@ -117,8 +117,8 @@
 #define UNPACK_EX                              113
 #define UNPACK_SEQUENCE                        114
 #define YIELD_VALUE                            115
-//#define _DO_CALL_FUNCTION_EX                   116
-#define UNARY_SQRT							   117 //* alif //* review
+#define UNARY_SQRT							   116 //* alif //* review
+
 #define RESUME                                 149
 //#define BINARY_OP_ADD_FLOAT                    150
 //#define BINARY_OP_ADD_INT                      151
@@ -197,6 +197,7 @@
 //#define UNPACK_SEQUENCE_LIST                   224
 //#define UNPACK_SEQUENCE_TUPLE                  225
 //#define UNPACK_SEQUENCE_TWO_TUPLE              226
+
 //#define INSTRUMENTED_END_FOR                   236
 //#define INSTRUMENTED_END_SEND                  237
 //#define INSTRUMENTED_LOAD_SUPER_ATTR           238
@@ -227,7 +228,7 @@
 #define SETUP_FINALLY                          263
 #define SETUP_WITH                             264
 #define STORE_FAST_MAYBE_NULL                  265
-//
+
 //#define HAVE_ARGUMENT                           41
 //#define MIN_SPECIALIZED_OPCODE                 150
 //#define MIN_INSTRUMENTED_OPCODE                236

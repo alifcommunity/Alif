@@ -472,8 +472,6 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 5;
 	//case YIELD_VALUE:
 	//	return 1;
-	//case _DO_CALL_FUNCTION_EX:
-	//	return 3 + (_oparg & 1);
 	default:
 		return -1;
 	}
@@ -942,8 +940,6 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 6;
 	//case YIELD_VALUE:
 	//	return 1;
-	//case _DO_CALL_FUNCTION_EX:
-	//	return 1;
 	default:
 		return -1;
 	}
@@ -1026,7 +1022,7 @@ const class OpcodeMetadata _alifOpcodeOpcodeMetadata_[266] = {
 	{ true, InstructionFormat::Instr_FMT_IX, 0 }, // CACHE // 0
 	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // BINARY_SLICE // 1
 	{ true, InstructionFormat::Instr_FMT_IXC, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // BINARY_SUBSCR // 2
-	{ true, InstructionFormat::Instr_FMT_IXC, HAS_LOCAL_FLAG | HAS_DEOPT_FLAG | HAS_EXIT_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // BINARY_OP_INPLACE_ADD_UNICODE // 3
+	{ true, InstructionFormat::Instr_FMT_IXC, HAS_LOCAL_FLAG | HAS_DEOPT_FLAG | HAS_EXIT_FLAG | HAS_ERROR_FLAG }, // BINARY_OP_INPLACE_ADD_UNICODE // 3
 	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // CHECK_EG_MATCH // 4
 	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // CHECK_EXC_MATCH // 5
 	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // CLEANUP_THROW // 6
@@ -1043,10 +1039,10 @@ const class OpcodeMetadata _alifOpcodeOpcodeMetadata_[266] = {
 	{ true, InstructionFormat::Instr_FMT_IX, 0 }, // RESERVED // 17
 	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // GET_LEN // 18
 	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // GET_YIELD_FROM_ITER // 19
-	{ true, InstructionFormat::Instr_FMT_IX, HAS_ESCAPES_FLAG }, // INTERPRETER_EXIT // 20
+	{ true, InstructionFormat::Instr_FMT_IX, 0 }, // INTERPRETER_EXIT // 20
 	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // LOAD_BUILD_CLASS // 21
 	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // LOAD_LOCALS // 22
-	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // MAKE_FUNCTION // 23
+	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // MAKE_FUNCTION // 23
 	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // MATCH_KEYS // 24
 	{ true, InstructionFormat::Instr_FMT_IX, 0 }, // MATCH_MAPPING // 25
 	{ true, InstructionFormat::Instr_FMT_IX, 0 }, // MATCH_SEQUENCE // 26
@@ -1055,7 +1051,7 @@ const class OpcodeMetadata _alifOpcodeOpcodeMetadata_[266] = {
 	{ true, InstructionFormat::Instr_FMT_IX, HAS_PURE_FLAG }, // POP_TOP // 29
 	{ true, InstructionFormat::Instr_FMT_IX, 0 }, // PUSH_EXC_INFO // 30
 	{ true, InstructionFormat::Instr_FMT_IX, HAS_PURE_FLAG }, // PUSH_NULL // 31
-	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // RETURN_GENERATOR // 32
+	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // RETURN_GENERATOR // 32
 	{ true, InstructionFormat::Instr_FMT_IX, 0 }, // RETURN_VALUE // 33
 	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // SETUP_ANNOTATIONS // 34
 	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // STORE_SLICE // 35
@@ -1079,7 +1075,7 @@ const class OpcodeMetadata _alifOpcodeOpcodeMetadata_[266] = {
 	{ true, InstructionFormat::Instr_FMT_IBC00, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // CALL_KW // 53
 	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // COMPARE_OP // 54
 	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // CONTAINS_OP // 55
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG }, // CONVERT_VALUE // 56
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // CONVERT_VALUE // 56
 	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_PURE_FLAG }, // COPY // 57
 	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG }, // COPY_FREE_VARS // 58
 	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // DELETE_ATTR // 59
@@ -1124,9 +1120,9 @@ const class OpcodeMetadata _alifOpcodeOpcodeMetadata_[266] = {
 	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // RAISE_VARARGS // 98
 	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // RERAISE // 99
 	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_CONST_FLAG }, // RETURN_CONST // 100
-	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_JUMP_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // SEND // 101
+	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_JUMP_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // SEND // 101
 	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // SET_ADD // 102
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ESCAPES_FLAG }, // SET_FUNCTION_ATTRIBUTE // 103
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG }, // SET_FUNCTION_ATTRIBUTE // 103
 	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // SET_UPDATE // 104
 	{ true, InstructionFormat::Instr_FMT_IBC000, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // STORE_ATTR // 105
 	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_FREE_FLAG | HAS_ESCAPES_FLAG }, // STORE_DEREF // 106
@@ -1138,9 +1134,9 @@ const class OpcodeMetadata _alifOpcodeOpcodeMetadata_[266] = {
 	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_PURE_FLAG }, // SWAP // 112
 	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // UNPACK_EX // 113
 	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // UNPACK_SEQUENCE // 114
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ESCAPES_FLAG }, // YIELD_VALUE // 115
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // _DO_CALL_FUNCTION_EX // 116
-	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // UNARY_SQRT // 117, //* alif
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG }, // YIELD_VALUE // 115
+	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // UNARY_SQRT // 116, //* alif
+	{false, -1},
 	{false, -1},
 	{false, -1},
 	{false, -1},
@@ -1181,7 +1177,7 @@ const class OpcodeMetadata _alifOpcodeOpcodeMetadata_[266] = {
 	{ true, InstructionFormat::Instr_FMT_IXC, HAS_EXIT_FLAG }, // BINARY_OP_SUBTRACT_FLOAT
 	{ true, InstructionFormat::Instr_FMT_IXC, HAS_EXIT_FLAG | HAS_ERROR_FLAG }, // BINARY_OP_SUBTRACT_INT
 	{ true, InstructionFormat::Instr_FMT_IXC, HAS_DEOPT_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // BINARY_SUBSCR_DICT
-	{ true, InstructionFormat::Instr_FMT_IXC, HAS_DEOPT_FLAG | HAS_ESCAPES_FLAG }, // BINARY_SUBSCR_GETITEM
+	{ true, InstructionFormat::Instr_FMT_IXC, HAS_DEOPT_FLAG }, // BINARY_SUBSCR_GETITEM
 	{ true, InstructionFormat::Instr_FMT_IXC, HAS_DEOPT_FLAG }, // BINARY_SUBSCR_LIST_INT
 	{ true, InstructionFormat::Instr_FMT_IXC, HAS_DEOPT_FLAG }, // BINARY_SUBSCR_STR_INT
 	{ true, InstructionFormat::Instr_FMT_IXC, HAS_DEOPT_FLAG }, // BINARY_SUBSCR_TUPLE_INT
@@ -1219,7 +1215,7 @@ const class OpcodeMetadata _alifOpcodeOpcodeMetadata_[266] = {
 	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_JUMP_FLAG | HAS_EXIT_FLAG }, // FOR_ITER_TUPLE
 	{ true, InstructionFormat::Instr_FMT_IBC00000000, HAS_ARG_FLAG | HAS_EXIT_FLAG }, // LOAD_ATTR_CLASS
 	{ true, Instr_FMT_IBC00000000, HAS_ARG_FLAG | HAS_EXIT_FLAG }, // LOAD_ATTR_CLASS_WITH_METACLASS_CHECK
-	{ true, InstructionFormat::Instr_FMT_IBC00000000, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_DEOPT_FLAG | HAS_ESCAPES_FLAG }, // LOAD_ATTR_GETATTRIBUTE_OVERRIDDEN
+	{ true, InstructionFormat::Instr_FMT_IBC00000000, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_DEOPT_FLAG }, // LOAD_ATTR_GETATTRIBUTE_OVERRIDDEN
 	{ true, InstructionFormat::Instr_FMT_IBC00000000, HAS_ARG_FLAG | HAS_DEOPT_FLAG | HAS_EXIT_FLAG }, // LOAD_ATTR_INSTANCE_VALUE
 	{ true, InstructionFormat::Instr_FMT_IBC00000000, HAS_ARG_FLAG | HAS_DEOPT_FLAG | HAS_EXIT_FLAG }, // LOAD_ATTR_METHOD_LAZY_DICT
 	{ true, InstructionFormat::Instr_FMT_IBC00000000, HAS_ARG_FLAG | HAS_EXIT_FLAG }, // LOAD_ATTR_METHOD_NO_DICT
@@ -1227,7 +1223,7 @@ const class OpcodeMetadata _alifOpcodeOpcodeMetadata_[266] = {
 	{ true, Instr_FMT_IBC00000000, HAS_ARG_FLAG | HAS_DEOPT_FLAG }, // LOAD_ATTR_MODULE
 	{ true, Instr_FMT_IBC00000000, HAS_ARG_FLAG | HAS_EXIT_FLAG }, // LOAD_ATTR_NONDESCRIPTOR_NO_DICT
 	{ true, Instr_FMT_IBC00000000, HAS_ARG_FLAG | HAS_DEOPT_FLAG | HAS_EXIT_FLAG }, // LOAD_ATTR_NONDESCRIPTOR_WITH_VALUES
-	{ true, InstructionFormat::Instr_FMT_IBC00000000, HAS_ARG_FLAG | HAS_DEOPT_FLAG | HAS_EXIT_FLAG | HAS_ESCAPES_FLAG }, // LOAD_ATTR_PROPERTY
+	{ true, InstructionFormat::Instr_FMT_IBC00000000, HAS_ARG_FLAG | HAS_DEOPT_FLAG | HAS_EXIT_FLAG }, // LOAD_ATTR_PROPERTY
 	{ true, InstructionFormat::Instr_FMT_IBC00000000, HAS_ARG_FLAG | HAS_DEOPT_FLAG | HAS_EXIT_FLAG }, // LOAD_ATTR_SLOT
 	{ true, InstructionFormat::Instr_FMT_IBC00000000, HAS_ARG_FLAG | HAS_NAME_FLAG | HAS_DEOPT_FLAG | HAS_EXIT_FLAG }, // LOAD_ATTR_WITH_HINT
 	{ true, InstructionFormat::Instr_FMT_IBC000, HAS_ARG_FLAG | HAS_DEOPT_FLAG }, // LOAD_GLOBAL_BUILTIN
@@ -1243,10 +1239,10 @@ const class OpcodeMetadata _alifOpcodeOpcodeMetadata_[266] = {
 	{ true, InstructionFormat::Instr_FMT_IXC, HAS_DEOPT_FLAG }, // STORE_SUBSCR_LIST_INT
 	{ true, InstructionFormat::Instr_FMT_IXC00, HAS_EXIT_FLAG }, // TO_BOOL_ALWAYS_TRUE
 	{ true, InstructionFormat::Instr_FMT_IXC00, HAS_EXIT_FLAG }, // TO_BOOL_BOOL
-	{ true, InstructionFormat::Instr_FMT_IXC00, HAS_EXIT_FLAG | HAS_ESCAPES_FLAG }, // TO_BOOL_INT
+	{ true, InstructionFormat::Instr_FMT_IXC00, HAS_EXIT_FLAG }, // TO_BOOL_INT
 	{ true, InstructionFormat::Instr_FMT_IXC00, HAS_EXIT_FLAG }, // TO_BOOL_LIST
 	{ true, InstructionFormat::Instr_FMT_IXC00, HAS_EXIT_FLAG }, // TO_BOOL_NONE
-	{ true, InstructionFormat::Instr_FMT_IXC00, HAS_EXIT_FLAG | HAS_ESCAPES_FLAG }, // TO_BOOL_STR
+	{ true, InstructionFormat::Instr_FMT_IXC00, HAS_EXIT_FLAG }, // TO_BOOL_STR
 	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_DEOPT_FLAG }, // UNPACK_SEQUENCE_LIST
 	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_DEOPT_FLAG }, // UNPACK_SEQUENCE_TUPLE
 	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_DEOPT_FLAG }, // UNPACK_SEQUENCE_TWO_TUPLE // 226
@@ -1259,8 +1255,8 @@ const class OpcodeMetadata _alifOpcodeOpcodeMetadata_[266] = {
 	{ false, -1 },
 	{ false, -1 },
 	{ false, -1 },
-	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG }, // INSTRUMENTED_END_FOR // 236
-	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG }, // INSTRUMENTED_END_SEND
+	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // INSTRUMENTED_END_FOR // 236
+	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // INSTRUMENTED_END_SEND
 	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG }, // INSTRUMENTED_LOAD_SUPER_ATTR
 	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // INSTRUMENTED_FOR_ITER
 	{ true, InstructionFormat::Instr_FMT_IBC00, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // INSTRUMENTED_CALL_KW
@@ -1272,8 +1268,8 @@ const class OpcodeMetadata _alifOpcodeOpcodeMetadata_[266] = {
 	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG }, // INSTRUMENTED_POP_JUMP_IF_NONE
 	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG }, // INSTRUMENTED_POP_JUMP_IF_NOT_NONE
 	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_EVAL_BREAK_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // INSTRUMENTED_RESUME
-	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // INSTRUMENTED_RETURN_VALUE
-	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_CONST_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // INSTRUMENTED_RETURN_CONST
+	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // INSTRUMENTED_RETURN_VALUE
+	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_CONST_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // INSTRUMENTED_RETURN_CONST
 	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // INSTRUMENTED_YIELD_VALUE
 	{ true, InstructionFormat::Instr_FMT_IBC00, HAS_ARG_FLAG | HAS_EVAL_BREAK_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // INSTRUMENTED_CALL
 	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_EVAL_BREAK_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // INSTRUMENTED_JUMP_BACKWARD
@@ -1457,9 +1453,8 @@ const uint8_t _alifOpcodeDeopt_[256] = {
 	UNPACK_EX, // UNPACK_EX // 113
 	UNPACK_SEQUENCE, // UNPACK_SEQUENCE // 114
 	YIELD_VALUE, // YIELD_VALUE // 115
-	0,//_DO_CALL_FUNCTION_EX, // _DO_CALL_FUNCTION_EX // 116
-	UNARY_SQRT, // UNARY_SQRT // 117 //* alif //* review
-	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	UNARY_SQRT, // UNARY_SQRT // 116 //* alif //* review
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 	RESUME, // RESUME // 149
 	BINARY_OP, // BINARY_OP_ADD_FLOAT // 150
