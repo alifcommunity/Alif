@@ -160,9 +160,9 @@ static AlifObject* math_1(AlifObject* _arg,
 }
 
 // 1033
-#define FUNC1(_funcName, _func, _canOverflow, _docString)                 
+#define FUNC1(_funcName, _func, _canOverflow, _docString)                  \
     static AlifObject * math_##_funcName(AlifObject *_self, AlifObject *_args) { \
-        return math_1(_args, _func, _canOverflow);                  \
+        return math_1(_args, _func, _canOverflow);                            \
     }\
     ALIFDOC_STRVAR(math_##_funcName##_doc, _docString);
 
