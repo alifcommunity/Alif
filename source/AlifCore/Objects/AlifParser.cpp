@@ -175,7 +175,7 @@ static ExprTy delTAtom_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_setExprContext(_p, a_, ExprContext_::Del);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -201,7 +201,7 @@ static ExprTy delTAtom_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_setExprContext(_p, a_, ExprContext_::Del);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -232,7 +232,7 @@ static ExprTy delTAtom_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_tuple(a_, ExprContext_::Del, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -263,7 +263,7 @@ static ExprTy delTAtom_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token_->endColOffset;
 			res = alifAST_list(a_, ExprContext_::Del, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -332,7 +332,7 @@ static ExprTy delTarget_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_attribute(a_, b_->V.name.name, ExprContext_::Del, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -368,7 +368,7 @@ static ExprTy delTarget_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_subScript(a_, b_, ExprContext_::Del, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -428,7 +428,7 @@ static ASDLSeq* alif31_loop0(AlifParser* _p) {
 		{
 			res = element;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -516,7 +516,7 @@ static ASDLExprSeq* delTargets_rule(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -625,7 +625,7 @@ static ExprTy tPrimary_raw(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_attribute(a_, b_->V.name.name, ExprContext_::Load, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -661,7 +661,7 @@ static ExprTy tPrimary_raw(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_subScript(a_, b_, ExprContext_::Load, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -697,7 +697,7 @@ static ExprTy tPrimary_raw(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_call(a_, b_ ? b_->V.call.args : nullptr, b_ ? b_->V.call.keywords : nullptr, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -719,7 +719,7 @@ static ExprTy tPrimary_raw(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -822,7 +822,7 @@ static ExprTy singleSubScriptAttributeTarget_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_attribute(a_, b_->V.name.name, ExprContext_::Store, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -858,7 +858,7 @@ static ExprTy singleSubScriptAttributeTarget_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_subScript(a_, b_, ExprContext_::Store, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -904,7 +904,7 @@ static ExprTy singleTarget_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_setExprContext(_p, a_, ExprContext_::Store);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -930,7 +930,7 @@ static ExprTy singleTarget_rule(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1023,7 +1023,7 @@ static ExprTy starTarget_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_star((ExprTy)alifParserEngine_setExprContext(_p, a_, ExprContext_::Store), ExprContext_::Store, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1083,7 +1083,7 @@ static ASDLSeq* alif30_loop0(AlifParser* _p) {
 		{
 			res = element;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1173,7 +1173,7 @@ static ASDLExprSeq* starTargetsListSeq_rule(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1213,7 +1213,7 @@ static void* alif26(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1312,7 +1312,7 @@ static ASDLExprSeq* starTargetsTupleSeq_rule(AlifParser* _p) {
 		{
 			res = (ASDLExprSeq*)alifParserEngine_seqInsertInFront(_p, a_, b_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1335,7 +1335,7 @@ static ASDLExprSeq* starTargetsTupleSeq_rule(AlifParser* _p) {
 		{
 			res = (ASDLExprSeq*)alifParserEngine_singletonSeq(_p, a_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1386,7 +1386,7 @@ static ExprTy starAtom_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_setExprContext(_p, a_, ExprContext_::Store);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1412,7 +1412,7 @@ static ExprTy starAtom_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_setExprContext(_p, a_, ExprContext_::Store);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1443,7 +1443,7 @@ static ExprTy starAtom_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token_->endColOffset;
 			res = alifAST_tuple(a_, ExprContext_::Store, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1474,7 +1474,7 @@ static ExprTy starAtom_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_list(a_, ExprContext_::Store, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1544,7 +1544,7 @@ static ExprTy targetWithStarAtom_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_attribute(a_, b_->V.name.name, ExprContext_::Store, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1580,7 +1580,7 @@ static ExprTy targetWithStarAtom_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_subScript(a_, b_, ExprContext_::Store, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1632,7 +1632,7 @@ static void* alif25(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1734,7 +1734,7 @@ static ExprTy starTargets_rule(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1767,7 +1767,7 @@ static ExprTy starTargets_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_tuple((ASDLExprSeq*)alifParserEngine_seqInsertInFront(_p, a_, b_), ExprContext_::Store, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1826,7 +1826,7 @@ static KeywordOrStar* kwArgOrDoubleStar_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifParserEngine_keywordOrStarred(_p, (Keyword*)alifAST_keyword(a_->V.name.name, b_, EXTRA), 1);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1854,7 +1854,7 @@ static KeywordOrStar* kwArgOrDoubleStar_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifParserEngine_keywordOrStarred(_p, (Keyword*)alifAST_keyword(nullptr, a_, EXTRA), 1);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1913,7 +1913,7 @@ static KeywordOrStar* kwArgOrStar_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifParserEngine_keywordOrStarred(_p, (Keyword*)alifAST_keyword(a_->V.name.name, b_, EXTRA), 1);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1933,7 +1933,7 @@ static KeywordOrStar* kwArgOrStar_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_keywordOrStarred(_p, a_, 0);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1981,7 +1981,7 @@ static ASDLSeq* alif27_loop0(AlifParser* _p) {
 		{
 			res = element;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -2079,7 +2079,7 @@ static ASDLSeq* alif26_loop0(AlifParser* _p) {
 		{
 			res = element;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -2177,7 +2177,7 @@ static ASDLSeq* kwArgs_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_joinSequences(_p, a_, b_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -2258,7 +2258,7 @@ static ExprTy starredExpression_rule(AlifParser* _p) {
 			AlifIntT endColOffset = _token->endColOffset;
 			res = alifAST_star(a, Load, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -2299,7 +2299,7 @@ static void* alif24(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -2348,7 +2348,7 @@ static ASDLSeq* alif25_loop0(AlifParser* _p) {
 		{
 			res = element;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -2502,7 +2502,7 @@ static ExprTy args_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifParserEngine_collectCallSeqs(_p, a_, (ASDLSeq*)b_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -2527,7 +2527,7 @@ static ExprTy args_rule(AlifParser* _p) {
 				(ASDLExprSeq*)alifParserEngine_seqExtractStarExprs(_p, a_),
 				(ASDLKeywordSeq*)alifParserEngine_seqDeleteStarExprs(_p, a_), EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -2573,7 +2573,7 @@ static ExprTy arguments_rule(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -2615,7 +2615,7 @@ static void* alif22(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -2729,7 +2729,7 @@ static Comprehension* forIfClause_rule(AlifParser* _p) {
 			//res_ = CHECK_VERSION(Comprehension*, 6, "المزامنة الضمنية", alifAST_comprehension(a_, b_, c, 1, _p->astMem));
 			res = alifAST_comprehension(a_, b_, c_, 1, _p->astMem);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -2765,7 +2765,7 @@ static Comprehension* forIfClause_rule(AlifParser* _p) {
 		{
 			res = alifAST_comprehension(a_, b_, c_, 0, _p->astMem);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -2855,7 +2855,7 @@ static ASDLComprehensionSeq* forIfClauses_rule(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -2917,7 +2917,7 @@ static ExprTy dictComp_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_dictComp(a_->key, a_->val, b_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -2979,7 +2979,7 @@ static ExprTy listComp_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_listComp(a_, b_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -3022,7 +3022,7 @@ static KeyValuePair* kvPair_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_keyValuePair(_p, a_, b_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -3063,7 +3063,7 @@ static KeyValuePair* doubleStarKVPair_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_keyValuePair(_p, nullptr, a_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -3210,7 +3210,7 @@ static ASDLSeq* doubleStarKVPairs_rule(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -3269,7 +3269,7 @@ static ExprTy dict_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_dict((ASDLExprSeq*)alifParserEngine_getKeys(_p, a_), (ASDLExprSeq*)alifParserEngine_getValues(_p, a_), EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -3328,7 +3328,7 @@ static ExprTy list_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_list(a_, ExprContext_::Load, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -3362,7 +3362,7 @@ static ExprTy fStringFormatSpec_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_decodeConstantFromToken(_p, a_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -3480,7 +3480,7 @@ static ResultTokenWithMetadata* fStringFullFormatSpec_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifParserEngine_setupFullFormatSpec(_p, literal, (ASDLExprSeq*)a_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -3519,7 +3519,7 @@ static ResultTokenWithMetadata* fStringConversion_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_checkFStringConversion(_p, literal, a_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -3626,7 +3626,7 @@ static ExprTy fStringReplacementField_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifParserEngine_formattedValue(_p, a_, d_, c_, b_, literal1, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -3672,7 +3672,7 @@ static ExprTy fStringMiddle_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_constantFromToken(_p, a_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -3767,7 +3767,7 @@ static ExprTy fString_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_joinedStr(_p, a_, (ASDLExprSeq*)b_, c_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -3802,7 +3802,7 @@ static ExprTy string_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_constantFromString(_p, a_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -3954,7 +3954,7 @@ static ExprTy strings_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifParserEngine_concatenateStrings(_p, a_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -3999,7 +3999,7 @@ static ASDLExprSeq* alif21(AlifParser* _p) {
 		{
 			res = (ASDLExprSeq*)alifParserEngine_seqInsertInFront(_p, a_, (ASDLSeq*)b_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -4059,7 +4059,7 @@ static ExprTy tuple_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_tuple(a_, ExprContext_::Load, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -4144,7 +4144,7 @@ static ExprTy group_rule(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -4376,7 +4376,7 @@ static ExprTy atom_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_constant(ALIF_TRUE, nullptr, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -4399,7 +4399,7 @@ static ExprTy atom_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_constant(ALIF_FALSE, nullptr, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -4422,7 +4422,7 @@ static ExprTy atom_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_constant(ALIF_NONE, nullptr, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -4532,7 +4532,7 @@ static ExprTy alif15(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -4595,7 +4595,7 @@ static ExprTy slice_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_slice(a_, b_, c_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -4613,7 +4613,7 @@ static ExprTy slice_rule(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -4798,7 +4798,7 @@ static ExprTy slices_rule(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -4826,7 +4826,7 @@ static ExprTy slices_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_tuple(a_, ExprContext_::Load, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -4885,7 +4885,7 @@ static ExprTy primary_raw(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_attribute(a_, b_->V.name.name, ExprContext_::Load, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -4920,7 +4920,7 @@ static ExprTy primary_raw(AlifParser* _p) {
 			res = alifAST_call(a_, b_ ? ((ExprTy)b_)->V.call.args : nullptr,
 				b_ ? ((ExprTy)b_)->V.call.keywords : nullptr, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -4954,7 +4954,7 @@ static ExprTy primary_raw(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_subScript(a_, b_, ExprContext_::Load, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5075,7 +5075,7 @@ static ExprTy awaitPrimary_rule(AlifParser* _p) {
 			//res = CHECK_VERSION(ExprTy, 5, L"تعبير إنتظر", alifAST_await(a_, EXTRA)); // تمت إضافته فقط للإستفادة منه في المستقبل في حال الحاجة
 			res = alifAST_await(a_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5141,7 +5141,7 @@ static ExprTy sqrt_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token_->endColOffset;
 			res = alifAST_unaryOp(UnaryOp_::Sqrt, a_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5210,7 +5210,7 @@ static ExprTy power_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_binOp(a_, Operator_::Pow, b_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5279,7 +5279,7 @@ static ExprTy factor_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_unaryOp(UnaryOp_::UAdd, a_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5307,7 +5307,7 @@ static ExprTy factor_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_unaryOp(UnaryOp_::USub, a_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5375,7 +5375,7 @@ static ExprTy term_raw(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_binOp(a_, Operator_::Mult, b_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5406,7 +5406,7 @@ static ExprTy term_raw(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_binOp(a_, Operator_::Div, b_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5437,7 +5437,7 @@ static ExprTy term_raw(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_binOp(a_, Operator_::FloorDiv, b_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5468,7 +5468,7 @@ static ExprTy term_raw(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_binOp(a_, Operator_::Mod, b_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5583,7 +5583,7 @@ static ExprTy sum_raw(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_binOp(a_, Operator_::Add, b_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5616,7 +5616,7 @@ static ExprTy sum_raw(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_binOp(a_, Operator_::Sub, b_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5726,7 +5726,7 @@ static ExprTy shiftExpr_raw(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_binOp(a_, Operator_::LShift, b_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5757,7 +5757,7 @@ static ExprTy shiftExpr_raw(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_binOp(a_, Operator_::RShift, b_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5867,7 +5867,7 @@ static ExprTy bitwiseAnd_raw(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_binOp(a_, Operator_::BitAnd, b_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5977,7 +5977,7 @@ static ExprTy bitwiseXOr_raw(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_binOp(a_, Operator_::BitXor, b_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6087,7 +6087,7 @@ static ExprTy bitwiseOr_raw(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_binOp(a_, Operator_::BitOr, b_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6179,7 +6179,7 @@ static CompExprPair* isBitwiseOr_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_compExprPair(_p, CmpOp_::Is, a_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6222,7 +6222,7 @@ static CompExprPair* isNotBitwiseOr_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_compExprPair(_p, CmpOp_::IsNot, a_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6262,7 +6262,7 @@ static CompExprPair* inBitwiseOr_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_compExprPair(_p, CmpOp_::In, a_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6305,7 +6305,7 @@ static CompExprPair* notInBitwiseOr_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_compExprPair(_p, CmpOp_::NotIn, a_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6345,7 +6345,7 @@ static CompExprPair* greaterThanBitwiseOr_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_compExprPair(_p, CmpOp_::GreaterThan, a_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6385,7 +6385,7 @@ static CompExprPair* greaterThanEqBitwiseOr_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_compExprPair(_p, CmpOp_::GreaterThanEq, a_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6425,7 +6425,7 @@ static CompExprPair* lessThanBitwiseOr_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_compExprPair(_p, CmpOp_::LessThan, a_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6465,7 +6465,7 @@ static CompExprPair* lessThanEqBitwiseOr_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_compExprPair(_p, CmpOp_::LessThanEq, a_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6505,7 +6505,7 @@ static CompExprPair* notEqBitwiseOr_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_compExprPair(_p, CmpOp_::NotEq, a_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6545,7 +6545,7 @@ static CompExprPair* eqBitwiseOr_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_compExprPair(_p, CmpOp_::Equal, a_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6806,7 +6806,7 @@ static ExprTy comparison_rule(AlifParser* _p) {
 			res = alifAST_compare(a_, (ASDLIntSeq*)alifParserEngine_getCmpOps(_p, b_),
 				alifParserEngine_getExprs(_p, b_), EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6877,7 +6877,7 @@ static ExprTy inversion_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_unaryOp(UnaryOp_::Not, a_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6929,7 +6929,7 @@ static void* alif13(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -7046,7 +7046,7 @@ static ExprTy conjuction_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_boolOp(BoolOp_::And, (ASDLExprSeq*)alifParserEngine_seqInsertInFront(_p, a_, b_), EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -7098,7 +7098,7 @@ static void* alif12(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -7215,7 +7215,7 @@ static ExprTy disjunction_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_boolOp(BoolOp_::Or, (ASDLExprSeq*)alifParserEngine_seqInsertInFront(_p, a_, b_), EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -7300,7 +7300,7 @@ static ExprTy expression_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_ifExpr(b_, a_, c_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -7352,7 +7352,7 @@ static void* alif11(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -7467,7 +7467,7 @@ static ExprTy expressions_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_tuple((ASDLExprSeq*)alifParserEngine_seqInsertInFront(_p, a_, b_), Load, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -7495,7 +7495,7 @@ static ExprTy expressions_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_tuple((ASDLExprSeq*)alifParserEngine_singletonSeq(_p, a_), ExprContext_::Load, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -7563,7 +7563,7 @@ static ExprTy starSubExpression_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_star(a_, ExprContext_::Load, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -7622,7 +7622,7 @@ static ASDLSeq* alif13_loop0(AlifParser* _p) {
 		{
 			res = element_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -7711,7 +7711,7 @@ static ASDLExprSeq* starSubExpressions_rule(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -7771,7 +7771,7 @@ static ExprTy starExpression_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token_->endColOffset;
 			res = alifAST_star(a_, ExprContext_::Load, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -7824,7 +7824,7 @@ static void* alif10(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -7944,7 +7944,7 @@ static ExprTy starExpressions_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_tuple((ASDLExprSeq*)alifParserEngine_seqInsertInFront(_p, a_, b_), ExprContext_::Load, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -7972,7 +7972,7 @@ static ExprTy starExpressions_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_tuple((ASDLExprSeq*)alifParserEngine_singletonSeq(_p, a_), ExprContext_::Load, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8041,7 +8041,7 @@ static ExprTy yieldExpr_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token_->endColOffset;
 			res = alifAST_yieldFrom(a_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8069,7 +8069,7 @@ static ExprTy yieldExpr_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_yield(a_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8169,7 +8169,7 @@ static WithItemTy withItem_rule(AlifParser* _p) {
 		{
 			res_ = alifAST_withItem(a_, b_, _p->astMem);
 			if (res_ == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8187,7 +8187,7 @@ static WithItemTy withItem_rule(AlifParser* _p) {
 		{
 			res_ = alifAST_withItem(a_, nullptr, _p->astMem);
 			if (res_ == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8235,7 +8235,7 @@ static ASDLSeq* alif11_loop0(AlifParser* _p) {
 		{
 			res = element_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8360,7 +8360,7 @@ static StmtTy withStmt_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_with(a_, b_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8394,7 +8394,7 @@ static StmtTy withStmt_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_with(a_, b_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8440,7 +8440,7 @@ static StmtTy withStmt_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token_->endColOffset;
 			res = alifAST_asyncWith(a_, b_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8477,7 +8477,7 @@ static StmtTy withStmt_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token_->endColOffset;
 			res = alifAST_asyncWith(a_, b_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8551,7 +8551,7 @@ static StmtTy forStmt_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_for(a_, b_, c_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8598,7 +8598,7 @@ static StmtTy forStmt_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_asyncFor(a_, b_, c_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8660,7 +8660,7 @@ static StmtTy whileStmt_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_while(a_, b_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8703,7 +8703,7 @@ static ASDLStmtSeq* elseBlock_rule(AlifParser* _p) {
 		{
 			res = b_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8771,7 +8771,7 @@ static StmtTy elifStmt_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_if(a_, b_, (ASDLStmtSeq*)alifParserEngine_singletonSeq(_p, c_), EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8808,7 +8808,7 @@ static StmtTy elifStmt_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token_->endColOffset;
 			res = alifAST_if(a_, b_, c_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8877,7 +8877,7 @@ static StmtTy ifStmt_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token_->endColOffset;
 			res_ = alifAST_if(a_, b_, (ASDLStmtSeq*)alifParserEngine_singletonSeq(_p, c_), EXTRA);
 			if (res_ == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8915,7 +8915,7 @@ static StmtTy ifStmt_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token_->endColOffset;
 			res_ = alifAST_if(a_, b_, c_, EXTRA);
 			if (res_ == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8955,7 +8955,7 @@ static ExprTy default_rule(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9005,7 +9005,7 @@ static ArgTy param_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_arg(a_->V.name.name, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9052,7 +9052,7 @@ static NameDefaultPair* paramMaybeDefault_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_nameDefaultPair(_p, a_, b_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9077,7 +9077,7 @@ static NameDefaultPair* paramMaybeDefault_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_nameDefaultPair(_p, a_, b_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9120,7 +9120,7 @@ static NameDefaultPair* paramWithDefault_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_nameDefaultPair(_p, a_, b_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9145,7 +9145,7 @@ static NameDefaultPair* paramWithDefault_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_nameDefaultPair(_p, a_, b_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9201,7 +9201,7 @@ static ArgTy paramNoDefault_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token_->endColOffset;
 			res = alifAST_arg(a_->arg, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9228,7 +9228,7 @@ static ArgTy paramNoDefault_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_arg(a_->arg, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9269,7 +9269,7 @@ static ArgTy kwds_rule(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9428,7 +9428,7 @@ static StarEtc* starEtc_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_starEtc(_p, a_, b_, c_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9457,7 +9457,7 @@ static StarEtc* starEtc_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_starEtc(_p, nullptr, a_, b_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9475,7 +9475,7 @@ static StarEtc* starEtc_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_starEtc(_p, nullptr, nullptr, a_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9686,7 +9686,7 @@ static ArgumentsTy parameters_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_makeArguments(_p, nullptr, nullptr, a_, b_, c_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9709,7 +9709,7 @@ static ArgumentsTy parameters_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_makeArguments(_p, nullptr, nullptr, nullptr, a_, b_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9727,7 +9727,7 @@ static ArgumentsTy parameters_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_makeArguments(_p, nullptr, nullptr, nullptr, nullptr, a_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9817,7 +9817,7 @@ static ASDLStmtSeq* block_rule(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9872,7 +9872,7 @@ static ExprTy dottedName_raw(AlifParser* _p) {
 		{
 			res = alifParserEngine_joinNamesWithDot(_p, a_, b_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9972,7 +9972,7 @@ static AliasTy dottedAsName_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_alias(a_->V.name.name, b_ ? b_->V.name.name : nullptr, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10020,7 +10020,7 @@ static ASDLSeq* alif5_loop0(AlifParser* _p) {
 		{
 			res = element_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10104,7 +10104,7 @@ static ASDLAliasSeq* dottedAsNames_rule(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10144,7 +10144,7 @@ static ExprTy alif7(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10201,7 +10201,7 @@ static AliasTy importFromAsName_rule(AlifParser* _p) {
 
 			res = alifAST_alias(a_->V.name.name, b_ ? b_->V.name.name : nullptr, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10249,7 +10249,7 @@ static ASDLSeq* alif4_loop0(AlifParser* _p) {
 		{
 			res = element;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10334,7 +10334,7 @@ static ASDLAliasSeq* importFromAsNames_rule(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10395,7 +10395,7 @@ static ASDLAliasSeq* importFromTargets_rule(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10417,7 +10417,7 @@ static ASDLAliasSeq* importFromTargets_rule(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10441,7 +10441,7 @@ static ASDLAliasSeq* importFromTargets_rule(AlifParser* _p) {
 
 			res = (ASDLAliasSeq*)alifParserEngine_singletonSeq(_p, (AliasTy)alifParserEngine_aliasForStar(_p, EXTRA));
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10502,7 +10502,7 @@ static StmtTy importFrom_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_importFrom(a_->V.name.name, b_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10557,7 +10557,7 @@ static StmtTy importName_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_import(a_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10645,7 +10645,7 @@ static StmtTy yieldStmt_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token_->endColOffset;
 			res = alifAST_expr(a_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10702,7 +10702,7 @@ static StmtTy delStmt_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token_->endColOffset;
 			res = alifAST_delete(a_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10750,7 +10750,7 @@ static ASDLSeq* alif3_loop0(AlifParser* _p) {
 		{
 			res = element_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10852,7 +10852,7 @@ static StmtTy globalStmt_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_global((ASDLIdentifierSeq*)alifParserEngine_mapNamesToIds(_p, a_), EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10906,7 +10906,7 @@ static StmtTy nonlocalStmt_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token_->endColOffset;
 			res = alifAST_nonlocal((ASDLIdentifierSeq*)alifParserEngine_mapNamesToIds(_p, a_), EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10960,7 +10960,7 @@ static StmtTy returnStmt_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token_->endColOffset;
 			res = alifAST_return(a_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11007,7 +11007,7 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_augOperator(_p, Operator_::Add);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11025,7 +11025,7 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_augOperator(_p, Operator_::Sub);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11043,7 +11043,7 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_augOperator(_p, Operator_::Mult);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11061,7 +11061,7 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_augOperator(_p, Operator_::Div);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11079,7 +11079,7 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_augOperator(_p, Operator_::Pow);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11097,7 +11097,7 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_augOperator(_p, Operator_::FloorDiv);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11115,7 +11115,7 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_augOperator(_p, Operator_::Mod);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11133,7 +11133,7 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_augOperator(_p, Operator_::BitAnd);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11151,7 +11151,7 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_augOperator(_p, Operator_::BitOr);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11169,7 +11169,7 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_augOperator(_p, Operator_::BitXor);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11187,7 +11187,7 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_augOperator(_p, Operator_::LShift);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11205,7 +11205,7 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_augOperator(_p, Operator_::RShift);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11246,7 +11246,7 @@ static void* alif6(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11405,7 +11405,7 @@ static StmtTy assignment_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token_->endColOffset;
 			res = alifAST_assign(a_, b_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11439,7 +11439,7 @@ static StmtTy assignment_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token_->endColOffset;
 			res = alifAST_augAssign(a_, b_->type, c_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11515,7 +11515,7 @@ static StmtTy functionDef_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token_->endColOffset;
 			res = alifAST_functionDef(a_->V.name.name, b_ ? b_ : (ArgumentsTy)alifParserEngine_emptyArguments(_p), c_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11562,7 +11562,7 @@ static StmtTy functionDef_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token_->endColOffset;
 			res = alifAST_asyncFunctionDef(a_->V.name.name, b_ ? b_ : (ArgumentsTy)alifParserEngine_emptyArguments(_p), c_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11606,7 +11606,7 @@ static ExprTy alif4(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11676,7 +11676,7 @@ static StmtTy classDef_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token_->endColOffset;
 			res_ = alifAST_classDef(a_->V.name.name, b_ ? b_->V.call.args : nullptr, b_ ? b_->V.call.keywords : nullptr, c_, EXTRA);
 			if (res_ == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11756,7 +11756,7 @@ static StmtTy simpleStmt_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_expr(a_, EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11809,7 +11809,7 @@ static StmtTy simpleStmt_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token_->endColOffset;
 			res = alifAST_pass(EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11862,7 +11862,7 @@ static StmtTy simpleStmt_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token_->endColOffset;
 			res = alifAST_break(EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11885,7 +11885,7 @@ static StmtTy simpleStmt_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token_->endColOffset;
 			res = alifAST_continue(EXTRA);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11957,7 +11957,7 @@ static ASDLStmtSeq* simpleStmts_rule(AlifParser* _p) {
 		{
 			res = (ASDLStmtSeq*)alifParserEngine_singletonSeq(_p, a_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -12223,7 +12223,7 @@ static ASDLStmtSeq* statement_rule(AlifParser* _p) {
 		{
 			res = (ASDLStmtSeq*)alifParserEngine_singletonSeq(_p, a_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -12241,7 +12241,7 @@ static ASDLStmtSeq* statement_rule(AlifParser* _p) {
 		{
 			res = a_;
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -12329,7 +12329,7 @@ static ASDLStmtSeq* statements_rule(AlifParser* _p) {
 		{
 			res = (ASDLStmtSeq*)alifParserEngine_seqFlatten(_p, a_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -12364,7 +12364,7 @@ static ModuleTy interactiveRun_rule(AlifParser* _p) {
 		//{
 		//	res_ = alifAST_interactive(a_, _p->astMem);
 		//	if (res_ == nullptr
-		//		/*and alifErr_occurred()*/)
+		//		and alifErr_occurred())
 		//	{
 		//		_p->errorIndicator = 1;
 		//		_p->level--;
@@ -12410,7 +12410,7 @@ static ModuleTy fileRun_rule(AlifParser* _p) {
 		{
 			res = alifParserEngine_makeModule(_p, a_);
 			if (res == nullptr
-				/*and alifErr_occurred()*/)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
