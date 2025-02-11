@@ -31,7 +31,6 @@ AlifObject* alifUStr_fromString(const char*); // 129
 
 AlifObject* alifUStr_subString(AlifObject*, AlifSizeT, AlifSizeT); // 134
 
-AlifObject* alifUStr_fromFormatVFroError(const char*, va_list); //*alif //* todo
 AlifObject* alifUStr_fromFormatV(const char*, va_list); // 237
 
 AlifObject* alifUStr_fromFormat(const char*, ...); // 241

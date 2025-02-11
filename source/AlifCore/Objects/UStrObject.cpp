@@ -1965,17 +1965,7 @@ fail:
 	va_end(vargs);
 	return -1;
 }
-//* alif //* review //* todo
-AlifObject* alifUStr_fromFormatVFroError(const char* _format, va_list _vargs) { //* alif
-	AlifUStrWriter writer{};
-	alifUStrWriter_init(&writer);
 
-	if (uStr_fromFormatForError(&writer, _format, _vargs) < 0) {
-		alifUStrWriter_dealloc(&writer);
-		return nullptr;
-	}
-	return alifUStrWriter_finish(&writer);
-}
 
 
 static AlifIntT uStr_fromFormat(AlifUStrWriter* _writer,
@@ -1989,13 +1979,14 @@ static AlifIntT uStr_fromFormat(AlifUStrWriter* _writer,
 
 	AlifIntT isAscii = (ucs1Lib_findMaxChar((AlifUCS1*)_format, (AlifUCS1*)_format + len) < 128);
 	if (!isAscii) {
-		AlifSizeT i{};
-		for (i = 0; i < len and (unsigned char)_format[i] <= 127; i++);
+		return uStr_fromFormatForError(_writer, _format, _vargs); //* alif //* review
+		//AlifSizeT i{};
+		//for (i = 0; i < len and (unsigned char)_format[i] <= 127; i++);
 		//alifErr_format(_alifExcValueError_,
 		//	"alifUStr_fromFormatV() expects an ASCII-encoded format "
 		//	"string, got a non-ASCII byte: 0x%02x",
 		//	(unsigned char)_format[i]);
-		goto fail;
+		//goto fail;
 	}
 
 	for (const char* f = _format; *f; ) {

@@ -18,7 +18,7 @@ static AlifIntT _syntaxError_range(TokenState* _tok, const char* _format,
 		return ERRORTOKEN;
 	}
 	AlifObject* errmsg{}, * errtext{}, * args{};
-	errmsg = alifUStr_fromFormatVFroError(_format, _vargs); //* alif //* todo
+	errmsg = alifUStr_fromFormatV(_format, _vargs);
 	if (!errmsg) {
 		goto error;
 	}
