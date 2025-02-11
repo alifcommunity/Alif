@@ -547,24 +547,21 @@ AlifIntT _alifLong_sign(AlifObject* _vv) { // 772
 	return alifLong_nonCompactSign(v);
 }
 
-
-static AlifIntT bit_lengthDigit(digit _x) { // 797
-	// digit can be larger than unsigned long, but only ALIFLONG_SHIFT bits
-	// of it will be ever used.
+static AlifIntT bit_lengthDigit(digit _x) { // 813
 	static_assert(ALIFLONG_SHIFT <= sizeof(unsigned long) * 8,
 		"digit is larger than unsigned long");
 	return alifBit_length((unsigned long)_x);
 }
 
-int64_t _alifLong_numBits(AlifObject* _vv) { // 807
-	AlifLongObject* v_ = (AlifLongObject*)_vv;
+int64_t _alifLong_numBits(AlifObject* _vv) { // 823
+	AlifLongObject* v = (AlifLongObject*)_vv;
 	int64_t result = 0;
 	AlifSizeT ndigits{};
 	AlifIntT msdBits{};
 
-	ndigits = alifLong_digitCount(v_);
+	ndigits = alifLong_digitCount(v);
 	if (ndigits > 0) {
-		digit msd = v_->longValue.digit[ndigits - 1];
+		digit msd = v->longValue.digit[ndigits - 1];
 		result = (int64_t)(ndigits - 1) * ALIFLONG_SHIFT;
 		msdBits = bit_lengthDigit(msd);
 		result += msdBits;
@@ -685,7 +682,7 @@ AlifIntT _alifLong_asByteArray(AlifLongObject* _v,
 	unsigned char* _bytes, AlifUSizeT _n,
 	AlifIntT _littleEndian, AlifIntT _isSigned,
 	AlifIntT _withExceptions) { // 953
-	AlifSizeT i_{};               /* index into v->long_value.ob_digit */
+	AlifSizeT i_{};               /* index into v->longValue.digit */
 	AlifSizeT nDigits{};         /* number of digits */
 	twodigits accum{};            /* sliding register */
 	AlifUIntT accumBits{};     /* # bits in accum */
@@ -3853,6 +3850,201 @@ static AlifObject* long_long(AlifObject* _v) { // 5630
 	else {
 		return _alifLong_copy((AlifLongObject*)_v);
 	}
+}
+
+AlifObject* alifLong_gCD(AlifObject* _aArg, AlifObject* _bArg) { // 5668
+	AlifLongObject* a{}, * b{}, * c = nullptr, * d = nullptr, * r;
+	stwodigits x{}, y{}, q{}, s{}, t{}, cCarry{}, dCarry{};
+	stwodigits A{}, B{}, C{}, D{}, T{};
+	AlifIntT nBits{}, k{};
+	digit* aDigit{}, * bDigit{}, * cDigit{}, * dDigit{}, * aEnd{}, * bEnd{};
+	AlifSizeT sizeA{}, sizeB{}, allocA{}, allocB{};
+
+	a = (AlifLongObject*)_aArg;
+	b = (AlifLongObject*)_bArg;
+	if (alifLong_digitCount(a) <= 2 and alifLong_digitCount(b) <= 2) {
+		ALIF_INCREF(a);
+		ALIF_INCREF(b);
+		goto simple;
+	}
+
+	/* Initial reduction: make sure that 0 <= b <= a. */
+	a = long_abs(a);
+	if (a == nullptr)
+		return nullptr;
+	b = long_abs(b);
+	if (b == nullptr) {
+		ALIF_DECREF(a);
+		return nullptr;
+	}
+	if (long_compare(a, b) < 0) {
+		r = a;
+		a = b;
+		b = r;
+	}
+	/* We now own references to a and b */
+
+	allocA = alifLong_digitCount(a);
+	allocB = alifLong_digitCount(b);
+	/* reduce until a fits into 2 digits */
+	while ((sizeA = alifLong_digitCount(a)) > 2) {
+		nBits = bit_lengthDigit(a->longValue.digit[sizeA - 1]);
+		/* extract top 2*PyLong_SHIFT bits of a into x, along with
+		   corresponding bits of b into y */
+		sizeB = alifLong_digitCount(b);
+		if (sizeB == 0) {
+			if (sizeA < allocA) {
+				r = (AlifLongObject*)_alifLong_copy(a);
+				ALIF_DECREF(a);
+			}
+			else
+				r = a;
+			ALIF_DECREF(b);
+			ALIF_XDECREF(c);
+			ALIF_XDECREF(d);
+			return (AlifObject*)r;
+		}
+		x = (((twodigits)a->longValue.digit[sizeA - 1] << (2 * ALIFLONG_SHIFT - nBits)) |
+			((twodigits)a->longValue.digit[sizeA - 2] << (ALIFLONG_SHIFT - nBits)) |
+			(a->longValue.digit[sizeA - 3] >> nBits));
+
+		y = ((sizeB >= sizeA - 2 ? b->longValue.digit[sizeA - 3] >> nBits : 0) |
+			(sizeB >= sizeA - 1 ? (twodigits)b->longValue.digit[sizeA - 2] << (ALIFLONG_SHIFT - nBits) : 0) |
+			(sizeB >= sizeA ? (twodigits)b->longValue.digit[sizeA - 1] << (2 * ALIFLONG_SHIFT - nBits) : 0));
+
+		/* inner loop of Lehmer's algorithm; A, B, C, D never grow
+		   larger than ALIFLONG_MASK during the algorithm. */
+		A = 1; B = 0; C = 0; D = 1;
+		for (k = 0;; k++) {
+			if (y - C == 0)
+				break;
+			q = (x + (A - 1)) / (y - C);
+			s = B + q * D;
+			t = x - q * y;
+			if (s > t)
+				break;
+			x = y; y = t;
+			t = A + q * C; A = D; B = C; C = s; D = t;
+		}
+
+		if (k == 0) {
+			/* no progress; do a Euclidean step */
+			if (l_mod(a, b, &r) < 0)
+				goto error;
+			ALIF_SETREF(a, b);
+			b = r;
+			allocA = allocB;
+			allocB = alifLong_digitCount(b);
+			continue;
+		}
+
+		/*
+		  a, b = A*b-B*a, D*a-C*b if k is odd
+		  a, b = A*a-B*b, D*b-C*a if k is even
+		*/
+		if (k & 1) {
+			T = -A; A = -B; B = T;
+			T = -C; C = -D; D = T;
+		}
+		if (c != nullptr) {
+			_alifLong_setSignAndDigitCount(c, 1, sizeA);
+		}
+		else if (ALIF_REFCNT(a) == 1) {
+			c = (AlifLongObject*)ALIF_NEWREF(a);
+		}
+		else {
+			allocA = sizeA;
+			c = alifLong_new(sizeA);
+			if (c == nullptr)
+				goto error;
+		}
+
+		if (d != nullptr) {
+			_alifLong_setSignAndDigitCount(d, 1, sizeA);
+		}
+		else if (ALIF_REFCNT(b) == 1 and sizeA <= allocB) {
+			d = (AlifLongObject*)ALIF_NEWREF(b);
+			_alifLong_setSignAndDigitCount(d, 1, sizeA);
+		}
+		else {
+			allocB = sizeA;
+			d = alifLong_new(sizeA);
+			if (d == nullptr)
+				goto error;
+		}
+		aEnd = a->longValue.digit + sizeA;
+		bEnd = b->longValue.digit + sizeB;
+
+		/* compute new a and new b in parallel */
+		aDigit = a->longValue.digit;
+		bDigit = b->longValue.digit;
+		cDigit = c->longValue.digit;
+		dDigit = d->longValue.digit;
+		cCarry = 0;
+		dCarry = 0;
+		while (bDigit < bEnd) {
+			cCarry += (A * *aDigit) - (B * *bDigit);
+			dCarry += (D * *bDigit++) - (C * *aDigit++);
+			*cDigit++ = (digit)(cCarry & ALIFLONG_MASK);
+			*dDigit++ = (digit)(dCarry & ALIFLONG_MASK);
+			cCarry >>= ALIFLONG_SHIFT;
+			dCarry >>= ALIFLONG_SHIFT;
+		}
+		while (aDigit < aEnd) {
+			cCarry += A * *aDigit;
+			dCarry -= C * *aDigit++;
+			*cDigit++ = (digit)(cCarry & ALIFLONG_MASK);
+			*dDigit++ = (digit)(dCarry & ALIFLONG_MASK);
+			cCarry >>= ALIFLONG_SHIFT;
+			dCarry >>= ALIFLONG_SHIFT;
+		}
+
+		ALIF_INCREF(c);
+		ALIF_INCREF(d);
+		ALIF_DECREF(a);
+		ALIF_DECREF(b);
+		a = long_normalize(c);
+		b = long_normalize(d);
+	}
+	ALIF_XDECREF(c);
+	ALIF_XDECREF(d);
+
+simple:
+#if LONG_MAX >> ALIFLONG_SHIFT >> ALIFLONG_SHIFT
+	   /* a fits into a long, so b must too */
+	x = alifLong_asLong((AlifObject*)a);
+	y = alifLong_asLong((AlifObject*)b);
+#elif LLONG_MAX >> ALIFLONG_SHIFT >> ALIFLONG_SHIFT
+	x = alifLong_asLong((AlifObject*)a);
+	y = alifLong_asLong((AlifObject*)b);
+#else
+# error "_alifLong_GCD"
+#endif
+	x = ALIF_ABS(x);
+	y = ALIF_ABS(y);
+	ALIF_DECREF(a);
+	ALIF_DECREF(b);
+
+	/* usual Euclidean algorithm for longs */
+	while (y != 0) {
+		t = y;
+		y = x % y;
+		x = t;
+	}
+#if LONG_MAX >> ALIFLONG_SHIFT >> ALIFLONG_SHIFT
+	return PyLong_FromLong(x);
+#elif LLONG_MAX >> ALIFLONG_SHIFT >> ALIFLONG_SHIFT
+	return alifLong_fromLong(x);
+#else
+# error "_alifLong_GCD"
+#endif
+
+error:
+	ALIF_DECREF(a);
+	ALIF_DECREF(b);
+	ALIF_XDECREF(c);
+	ALIF_XDECREF(d);
+	return nullptr;
 }
 
 
