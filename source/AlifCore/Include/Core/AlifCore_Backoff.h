@@ -3,14 +3,7 @@
 
 
 
-class AlifBackoffCounter {
+class AlifBackoffCounter { // 17
 public:
-	union {
-		class {
-		public:
-			uint16_t backoff : 4;
-			uint16_t value : 12;
-		};
-		uint16_t asCounter{};  // For printf("%#x", ...)
-	};
+	uint16_t valueAndBackoff{};
 };

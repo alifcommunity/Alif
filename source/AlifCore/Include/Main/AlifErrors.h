@@ -45,7 +45,7 @@ extern AlifObject* _alifExcSyntaxError_; // 108
 extern AlifObject* _alifExcSystemError_; // 112
 extern AlifObject* _alifExcTypeError_; // 114
 
-
+extern AlifObject* _alifExcValueError_; // 120
 
 
 AlifObject* alifErr_format(AlifObject*, const char*, ...); // 180

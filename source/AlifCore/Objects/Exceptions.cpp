@@ -310,6 +310,12 @@ COMPLEXEXTENDSEXCEPTION(_excException_, SyntaxError, خطأ_نسق, SyntaxError,
 
 
 
+SIMPLEEXTENDSEXCEPTION(_excException_, ValueError, خطأ_قيمة
+	"Inappropriate argument value (of correct type)."); // 2660
+
+
+
+
  // 3310
 SIMPLEEXTENDSEXCEPTION(_excException_, SystemError,
 	"Internal error in the Alif interpreter.\n");

@@ -35,8 +35,8 @@ StmtTy alifAST_assign(ASDLExprSeq* _targets, ExprTy _val,
 	AlifIntT _endColOffset, AlifASTMem* _astMem) { // 6869
 	StmtTy p{};
 	if (!_val) {
-		//alifErr_setString(_alifExcValueError_,
-		//	"field 'value' is required for Assign");
+		alifErr_setString(_alifExcValueError_,
+			"الاسناد يحتاج الى قيمة");
 		return nullptr;
 	}
 	p = (StmtTy)alifASTMem_malloc(_astMem, sizeof(*p));

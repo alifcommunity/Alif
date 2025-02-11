@@ -129,7 +129,9 @@ static AlifObject* math_lCM(AlifObject* _module, AlifObject* const* _args, AlifS
 	return res;
 }
 
-static AlifObject* math_1(AlifObject* _arg, double (*_func) (double), AlifIntT _canOverFlow) { // 924
+static AlifObject* math_1(AlifObject* _arg,
+	double (*_func) (double), AlifIntT _canOverFlow) { // 924
+
 	double x{}, r{};
 	x = alifFloat_asDouble(_arg);
 	if (x == -1.0 and alifErr_occurred())
@@ -158,13 +160,13 @@ static AlifObject* math_1(AlifObject* _arg, double (*_func) (double), AlifIntT _
 }
 
 // 1033
-#define FUNC1(_funcName, _func, _canOverflow, _docString)                  \
+#define FUNC1(_funcName, _func, _canOverflow, _docString)                 
     static AlifObject * math_##_funcName(AlifObject *_self, AlifObject *_args) { \
         return math_1(_args, _func, _canOverflow);                  \
     }\
     ALIFDOC_STRVAR(math_##_funcName##_doc, _docString);
 
-FUNC1(cos, cos, 0,
+FUNC1(cos, cos, 0 ,
 	"cos($module, x, /)\n--\n\n"
 	"Return the cosine of x (measured in radians).") // 1122
 
