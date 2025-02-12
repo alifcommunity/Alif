@@ -52,7 +52,7 @@ static inline AlifObject* alifStackRef_asAlifObjectBorrow(AlifStackRef _stackRef
 }
 
 static inline AlifObject* alifStackRef_asAlifObjectSteal(AlifStackRef _stackRef) { // 112
-	if (!ALIFSTACKREF_ISNULL(_stackRef) and ALIFSTACKREF_ISDEFERRED(_stackRef)) {
+	if (ALIFSTACKREF_ISDEFERRED(_stackRef)) {
 		return ALIF_NEWREF(alifStackRef_asAlifObjectBorrow(_stackRef));
 	}
 	return alifStackRef_asAlifObjectBorrow(_stackRef);
@@ -63,7 +63,7 @@ static inline AlifObject* alifStackRef_asAlifObjectSteal(AlifStackRef _stackRef)
 #define ALIFSTACKREF_TYPE(_stackref) ALIF_TYPE(alifStackRef_asAlifObjectBorrow(_stackref)) // 127
 
 static inline AlifStackRef _alifStackRef_fromAlifObjectSteal(AlifObject* _obj) { // 131
-	AlifUIntT tag = (_obj == nullptr or ALIF_ISIMMORTAL(_obj)) ? (ALIF_TAG_DEFERRED) : ALIF_TAG_PTR;
+	AlifUIntT tag = ALIF_ISIMMORTAL(_obj) ? (ALIF_TAG_DEFERRED) : ALIF_TAG_PTR;
 	return { .bits = ((uintptr_t)(_obj)) | tag };
 }
 #define ALIFSTACKREF_FROMALIFOBJECTSTEAL(_obj) _alifStackRef_fromAlifObjectSteal(ALIFOBJECT_CAST(_obj))
