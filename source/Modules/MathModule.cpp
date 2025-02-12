@@ -3,7 +3,8 @@
 #include "AlifCore_BitUtils.h"
 #include "AlifCore_Long.h"
 
-#include "AlifCore_ModSupport.h"
+
+#include "../clinic/MathModule.cpp.h"
 
 static double m_log(double _x) { // 641
 	if (isfinite(_x)) {
@@ -306,9 +307,6 @@ static AlifObject* math_factorial(AlifObject* _module, AlifObject* _arg) { // 19
 	return result;
 }
 
-// in file MathModule.c.h line 61
-#define MATH_FACTORIAL_METHODDEF    \
-    {"المضروب", (AlifCPPFunction)math_factorial, METHOD_O},
 
 
 static AlifObject* logHelper(AlifObject* _arg, double (*_func)(double)) { // 2182
@@ -370,35 +368,9 @@ static AlifObject* math_log(AlifObject* _module, AlifObject* const* _args, AlifS
 static const double _alifDegToRad_ = ALIF_MATH_PI / 180.0; // 3009
 static const double _alifRadToDeg_ = 180.0 / ALIF_MATH_PI; // 3010
 
-
-
 static AlifObject* math_radiansImpl(AlifObject* _module, double _x) { // 3039
 	return alifFloat_fromDouble(_x * _alifDegToRad_);
 }
-
-// in file MathModule.c.h 
-static AlifObject* math_radians(AlifObject* _module, AlifObject* _arg) { // 486
-	AlifObject* returnValue = nullptr;
-	double x{};
-
-	if (ALIFFLOAT_CHECKEXACT(_arg)) {
-		x = ALIFFLOAT_AS_DOUBLE(_arg);
-	}
-	else
-	{
-		x = alifFloat_asDouble(_arg);
-		if (x == -1.0 and alifErr_occurred()) {
-			goto exit;
-		}
-	}
-	returnValue = math_radiansImpl(_module, x);
-
-exit:
-	return returnValue;
-}
-
-#define MATH_RADIANS_METHODDEF    \
-    {"راديان", (AlifCPPFunction)math_radians, METHOD_O},
 
 
 static AlifMethodDef _alifMathMethods_[] = { // 4087
@@ -407,7 +379,7 @@ static AlifMethodDef _alifMathMethods_[] = { // 4087
 	MATH_FACTORIAL_METHODDEF
 	{"قم_اكبر", ALIF_CPPFUNCTION_CAST(math_gcd),       METHOD_FASTCALL},
 	{"قم_اصغر", ALIF_CPPFUNCTION_CAST(math_lcm),       METHOD_FASTCALL},
-	{"لوغا",        ALIF_CPPFUNCTION_CAST(math_log),       METHOD_FASTCALL},
+	{"لوغ",        ALIF_CPPFUNCTION_CAST(math_log),       METHOD_FASTCALL},
 	MATH_RADIANS_METHODDEF
 	{"جيب",             math_sin,       METHOD_O},
 	{"ظل",              math_tan,       METHOD_O},

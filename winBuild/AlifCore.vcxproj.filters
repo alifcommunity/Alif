@@ -930,6 +930,9 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\TypeSlots.h">
       <Filter>Include\Main</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\MathModule.cpp.h">
+      <Filter>Objects\clinic</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Include">
