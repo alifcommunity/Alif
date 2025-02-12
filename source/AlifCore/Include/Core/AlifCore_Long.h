@@ -21,6 +21,7 @@ static inline AlifObject* _alifLong_getOne(void) { // 73
 	return (AlifObject*)&ALIFLONG_SMALL_INTS[ALIF_NSMALLNEGINTS + 1];
 }
 
+double _alifLong_frexp(AlifLongObject* , int64_t* ); // 88
 
 
 extern AlifObject* _alifLong_fromBytes(const char*, AlifSizeT, AlifIntT); // 91
