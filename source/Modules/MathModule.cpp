@@ -1,10 +1,58 @@
 #include "alif.h"
 
 #include "AlifCore_BitUtils.h"
+#include "AlifCore_Call.h"
 #include "AlifCore_Long.h"
+#include "AlifCore_Object.h"
 
 
 #include "../clinic/MathModule.cpp.h"
+
+
+
+class MathModuleState { // 81
+public:
+	AlifObject* str___ceil__;
+	AlifObject* str___floor__;
+	AlifObject* str___trunc__;
+};
+
+static inline MathModuleState* getMath_moduleState(AlifObject* _module) { // 88
+	void* state = _alifModule_getState(_module);
+	return (MathModuleState*)state;
+}
+
+class DoubleLength { public: double hi{}; double lo{}; }; // 105
+
+static DoubleLength dl_fastSum(double _a, double _b) { // 108
+    double x = _a + _b;
+    double y = (_a - x) + _b;
+    return {x, y};
+}
+
+static DoubleLength dl_mul(double _x, double _y) { // 130
+	double z = _x * _y;
+	double zz = fma(_x, _y, -z);
+	return { z, zz };
+}
+
+// 217
+#define ASSIGN_DOUBLE(_targetVar, _obj, _errorLabel)        \
+    if (ALIFFLOAT_CHECKEXACT(_obj)) {                         \
+        _targetVar = ALIFFLOAT_AS_DOUBLE(_obj);               \
+    }                                                      \
+    else if (ALIFLONG_CHECKEXACT(_obj)) {                     \
+        _targetVar = alifLong_asDouble(_obj);                 \
+        if (_targetVar == -1.0 and alifErr_occurred()) {      \
+            goto _errorLabel;                              \
+        }                                                  \
+    }                                                      \
+    else {                                                 \
+        _targetVar = alifFloat_asDouble(_obj);                \
+        if (_targetVar == -1.0 and alifErr_occurred()) {      \
+            goto _errorLabel;                              \
+        }                                                  \
+    }
 
 static double m_log(double _x) { // 641
 	if (isfinite(_x)) {
@@ -165,6 +213,53 @@ static AlifObject* math_1(AlifObject* _arg,
         return math_1(_args, _func, _canOverflow);                            \
     }\
     ALIFDOC_STRVAR(math_##_funcName##_doc, _docString);
+
+
+
+static AlifObject* math_ceil(AlifObject* _module, AlifObject* _number) { // 1091
+	double x{};
+	if (ALIFFLOAT_CHECKEXACT(_number)) {
+		x = ALIFFLOAT_AS_DOUBLE(_number);
+	}
+	else {
+		MathModuleState* state = getMath_moduleState(_module);
+		AlifObject* method = alifObject_lookupSpecial(_number, state->str___ceil__);
+		if (method != nullptr) {
+			AlifObject* result = _alifObject_callNoArgs(method);
+			ALIF_DECREF(method);
+			return result;
+		}
+		if (alifErr_occurred())
+			return nullptr;
+		x = alifFloat_asDouble(_number);
+		if (x == -1.0 and alifErr_occurred())
+			return nullptr;
+	}
+	return alifLong_fromDouble(ceil(x));
+}
+
+static AlifObject* math_floor(AlifObject* _module, AlifObject* _number) { // 1161
+	double x{};
+	if (ALIFFLOAT_CHECKEXACT(_number)) {
+		x = ALIFFLOAT_AS_DOUBLE(_number);
+	}
+	else {
+		MathModuleState* state = getMath_moduleState(_module);
+		AlifObject* method = alifObject_lookupSpecial(_number, state->str___ceil__);
+		if (method != nullptr) {
+			AlifObject* result = _alifObject_callNoArgs(method);
+			ALIF_DECREF(method);
+			return result;
+		}
+		if (alifErr_occurred())
+			return nullptr;
+		x = alifFloat_asDouble(_number);
+		if (x == -1.0 and alifErr_occurred())
+			return nullptr;
+	}
+	return alifLong_fromDouble(floor(x));
+}
+
 
 FUNC1(cos, cos, 0 ,
 	"cos($module, x, /)\n--\n\n"
@@ -365,8 +460,138 @@ static AlifObject* math_log(AlifObject* _module, AlifObject* const* _args, AlifS
 	return ans;
 }
 
+
+static inline double vector_norm(AlifSizeT _n, double* _vec, double _max, int _foundNan) { // 2474
+	double x{}, h{}, scale{}, csum = 1.0, frac1 = 0.0, frac2 = 0.0;
+	DoubleLength pr{}, sm{};
+	AlifIntT maxE{};
+	AlifSizeT i{};
+
+	if (isinf(_max)) {
+		return _max;
+	}
+	if (_foundNan) {
+		return ALIF_NAN;
+	}
+	if (_max == 0.0 or _n <= 1) {
+		return _max;
+	}
+	frexp(_max, &maxE);
+	if (maxE < -1023) {
+		/* When max_e < -1023, ldexp(1.0, -max_e) would overflow. */
+		for (i = 0; i < _n; i++) {
+			_vec[i] /= DBL_MIN;          // convert subnormals to normals
+		}
+		return DBL_MIN * vector_norm(_n, _vec, _max / DBL_MIN, _foundNan);
+	}
+	scale = ldexp(1.0, -maxE);
+	for (i = 0; i < _n; i++) {
+		x = _vec[i];
+		x *= scale;                     // lossless scaling
+		pr = dl_mul(x, x);              // lossless squaring
+		sm = dl_fastSum(csum, pr.hi);  // lossless addition
+		csum = sm.hi;
+		frac1 += pr.lo;                 // lossy addition
+		frac2 += sm.lo;                 // lossy addition
+	}
+	h = sqrt(csum - 1.0 + (frac1 + frac2));
+	pr = dl_mul(-h, h);
+	sm = dl_fastSum(csum, pr.hi);
+	csum = sm.hi;
+	frac1 += pr.lo;
+	frac2 += sm.lo;
+	x = csum - 1.0 + (frac1 + frac2);
+	h += x / (2.0 * h);                 // differential correction
+	return h / scale;
+}
+
+#define NUM_STACK_ELEMS 16 // 2525
+
+
+static AlifObject* math_distImpl(AlifObject* _module, AlifObject* _p, AlifObject* _q) { // 2544
+	AlifObject* item{};
+	double max = 0.0;
+	double x{}, px{}, qx{}, result{};
+	AlifSizeT i{}, m{}, n{};
+	AlifIntT foundNan = 0, pAllocated = 0, qAllocated = 0;
+	double diffsOnStack[NUM_STACK_ELEMS];
+	double* diffs = diffsOnStack;
+
+	if (!ALIFTUPLE_CHECK(_p)) {
+		_p = alifSequence_tuple(_p);
+		if (_p == nullptr) {
+			return nullptr;
+		}
+		pAllocated = 1;
+	}
+	if (!ALIFTUPLE_CHECK(_q)) {
+		_q = alifSequence_tuple(_q);
+		if (_q == nullptr) {
+			if (pAllocated) {
+				ALIF_DECREF(_p);
+			}
+			return nullptr;
+		}
+		qAllocated = 1;
+	}
+
+	m = ALIFTUPLE_GET_SIZE(_p);
+	n = ALIFTUPLE_GET_SIZE(_q);
+	if (m != n) {
+		//alifErr_setString(_alifExcValueError_,
+			//"both points must have the same number of dimensions");
+		goto errorExit;
+	}
+	if (n > NUM_STACK_ELEMS) {
+		diffs = (double*)alifMem_dataAlloc(n * sizeof(double));
+		if (diffs == nullptr) {
+			//alifErr_noMemory();
+			goto errorExit;
+		}
+	}
+	for (i = 0; i < n; i++) {
+		item = ALIFTUPLE_GET_ITEM(_p, i);
+		ASSIGN_DOUBLE(px, item, errorExit);
+		item = ALIFTUPLE_GET_ITEM(_q, i);
+		ASSIGN_DOUBLE(qx, item, errorExit);
+		x = fabs(px - qx);
+		diffs[i] = x;
+		foundNan |= isnan(x);
+		if (x > max) {
+			max = x;
+		}
+	}
+	result = vector_norm(n, diffs, max, foundNan);
+	if (diffs != diffsOnStack) {
+		alifMem_dataFree(diffs);
+	}
+	if (pAllocated) {
+		ALIF_DECREF(_p);
+	}
+	if (qAllocated) {
+		ALIF_DECREF(_q);
+	}
+	return alifFloat_fromDouble(result);
+
+errorExit:
+	if (diffs != diffsOnStack) {
+		alifMem_dataFree(diffs);
+	}
+	if (pAllocated) {
+		ALIF_DECREF(_p);
+	}
+	if (qAllocated) {
+		ALIF_DECREF(_q);
+	}
+	return nullptr;
+}
+
 static const double _alifDegToRad_ = ALIF_MATH_PI / 180.0; // 3009
 static const double _alifRadToDeg_ = 180.0 / ALIF_MATH_PI; // 3010
+
+static AlifObject* math_degreesImpl(AlifObject* _module, double _x) { // 3022
+	return alifFloat_fromDouble(_x * _alifRadToDeg_);
+}
 
 static AlifObject* math_radiansImpl(AlifObject* _module, double _x) { // 3039
 	return alifFloat_fromDouble(_x * _alifDegToRad_);
@@ -374,7 +599,11 @@ static AlifObject* math_radiansImpl(AlifObject* _module, double _x) { // 3039
 
 
 static AlifMethodDef _alifMathMethods_[] = { // 4087
+	MATH_CEIL_METHODDEF
+	MATH_FLOOR_METHODDEF
 	{"تجيب",            math_cos,       METHOD_O},
+    MATH_DEGREES_METHODDEF
+	MATH_DIST_METHODDEF
 	{"قيمة_مطلقة",      math_fabs,      METHOD_O},
 	MATH_FACTORIAL_METHODDEF
 	{"قم_اكبر", ALIF_CPPFUNCTION_CAST(math_gcd),       METHOD_FASTCALL},
