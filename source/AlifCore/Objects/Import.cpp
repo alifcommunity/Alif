@@ -1082,9 +1082,9 @@ AlifIntT _alifImport_initCore(AlifThread* _thread,
 	// XXX Initialize here: sys.modules and sys.meta_path.
 
 	if (_importLib) {
-		if (init_importLib(_thread, _sysmod) < 0) {
-			return -1;
-		}
+		//if (init_importLib(_thread, _sysmod) < 0) { //* todo
+		//	return -1;
+		//}
 	}
 
 	return 1;

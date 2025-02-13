@@ -3160,18 +3160,10 @@ static AlifObject* long_divmod(AlifObject* _a, AlifObject* _b) { // 4781
 }
 
 static AlifLongObject* long_invmod(AlifLongObject* _a, AlifLongObject* _n) { // 4825
-	AlifLongObject* b_{}, * c_{};
 
-	b_ = (AlifLongObject*)alifLong_fromLong(1L);
-	if (b_ == nullptr) {
-		return nullptr;
-	}
-	c_ = (AlifLongObject*)alifLong_fromLong(0L);
-	if (c_ == nullptr) {
-		ALIF_DECREF(b_);
-		return nullptr;
-	}
 	ALIF_INCREF(_a);
+	AlifLongObject* b = (AlifLongObject*)ALIF_NEWREF(_alifLong_getOne());
+	AlifLongObject* c = (AlifLongObject*)ALIF_NEWREF(_alifLong_getZero());
 	ALIF_INCREF(_n);
 
 	while (!_alifLong_isZero(_n)) {
@@ -3182,38 +3174,38 @@ static AlifLongObject* long_invmod(AlifLongObject* _a, AlifLongObject* _n) { // 
 		}
 		ALIF_SETREF(_a, _n);
 		_n = r_;
-		t_ = (AlifLongObject*)long_mul(q_, c_);
+		t_ = (AlifLongObject*)long_mul(q_, c);
 		ALIF_DECREF(q_);
 		if (t_ == nullptr) {
 			goto Error;
 		}
-		s_ = long_sub(b_, t_);
+		s_ = long_sub(b, t_);
 		ALIF_DECREF(t_);
 		if (s_ == nullptr) {
 			goto Error;
 		}
-		ALIF_SETREF(b_, c_);
-		c_ = s_;
+		ALIF_SETREF(b, c);
+		c = s_;
 	}
 
-	ALIF_DECREF(c_);
+	ALIF_DECREF(c);
 	ALIF_DECREF(_n);
 	if (long_compare(_a, (AlifLongObject*)_alifLong_getOne())) {
 		ALIF_DECREF(_a);
-		ALIF_DECREF(b_);
+		ALIF_DECREF(b);
 		//alifErr_setString(_alifExcValueError_,
 			//"base is not invertible for the given modulus");
 		return nullptr;
 	}
 	else {
 		ALIF_DECREF(_a);
-		return b_;
+		return b;
 	}
 
 Error:
 	ALIF_DECREF(_a);
-	ALIF_DECREF(b_);
-	ALIF_DECREF(c_);
+	ALIF_DECREF(b);
+	ALIF_DECREF(c);
 	ALIF_DECREF(_n);
 	return nullptr;
 }
