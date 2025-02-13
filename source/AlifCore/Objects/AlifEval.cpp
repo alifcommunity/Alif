@@ -374,10 +374,11 @@ dispatch_opcode :
 					* of format(value) is value itself. */
 				if (!ALIFUSTR_CHECKEXACT(valueObj)) {
 					_alifFrame_setStackPointer(_frame, stackPointer);
-					res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(alifObject_format(valueObj, nullptr));
+					AlifObject* resObj = alifObject_format(valueObj, nullptr);
 					stackPointer = _alifFrame_getStackPointer(_frame);
 					ALIFSTACKREF_CLOSE(value);
-					//if (ALIFSTACKREF_ISNULL(res)) goto pop_1_error;
+					//if (resObj == nullptr) goto pop_1_error;
+					res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(resObj);
 				}
 				else {
 					res = value;
@@ -393,10 +394,11 @@ dispatch_opcode :
 				iterable = stackPointer[-1];
 				/* before: [obj]; after [getiter(obj)] */
 				_alifFrame_setStackPointer(_frame, stackPointer);
-				iter = ALIFSTACKREF_FROMALIFOBJECTSTEAL(alifObject_getIter(alifStackRef_asAlifObjectBorrow(iterable)));
+				AlifObject* iterObj = alifObject_getIter(alifStackRef_asAlifObjectBorrow(iterable));
 				stackPointer = _alifFrame_getStackPointer(_frame);
 				ALIFSTACKREF_CLOSE(iterable);
-				//if (ALIFSTACKREF_ISNULL(iter)) goto pop_1_error;
+				//if (iterObj == nullptr) goto pop_1_error;
+				iter = ALIFSTACKREF_FROMALIFOBJECTSTEAL(iterObj);
 				stackPointer[-1] = iter;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
