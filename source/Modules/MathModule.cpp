@@ -519,18 +519,18 @@ static AlifObject* math_distImpl(AlifObject* _module, AlifObject* _p, AlifObject
 
 	if (!ALIFTUPLE_CHECK(_p)) {
 		_p = alifSequence_tuple(_p);
-		if (_p == NULL) {
-			return NULL;
+		if (_p == nullptr) {
+			return nullptr;
 		}
 		pAllocated = 1;
 	}
 	if (!ALIFTUPLE_CHECK(_q)) {
 		_q = alifSequence_tuple(_q);
-		if (_q == NULL) {
+		if (_q == nullptr) {
 			if (pAllocated) {
 				ALIF_DECREF(_p);
 			}
-			return NULL;
+			return nullptr;
 		}
 		qAllocated = 1;
 	}
@@ -544,7 +544,7 @@ static AlifObject* math_distImpl(AlifObject* _module, AlifObject* _p, AlifObject
 	}
 	if (n > NUM_STACK_ELEMS) {
 		diffs = (double*)alifMem_dataAlloc(n * sizeof(double));
-		if (diffs == NULL) {
+		if (diffs == nullptr) {
 			//alifErr_noMemory();
 			goto errorExit;
 		}
@@ -583,7 +583,7 @@ errorExit:
 	if (qAllocated) {
 		ALIF_DECREF(_q);
 	}
-	return NULL;
+	return nullptr;
 }
 
 static const double _alifDegToRad_ = ALIF_MATH_PI / 180.0; // 3009
@@ -600,6 +600,7 @@ static AlifObject* math_radiansImpl(AlifObject* _module, double _x) { // 3039
 
 static AlifMethodDef _alifMathMethods_[] = { // 4087
 	MATH_CEIL_METHODDEF
+	MATH_FLOOR_METHODDEF
 	{"تجيب",            math_cos,       METHOD_O},
     MATH_DEGREES_METHODDEF
 	MATH_DIST_METHODDEF

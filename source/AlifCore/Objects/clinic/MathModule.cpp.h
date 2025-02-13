@@ -3,11 +3,11 @@
 
 // 19
 #define MATH_CEIL_METHODDEF    \
-    {"اعلى", (AlifCPPFunction)math_ceil, METHOD_O},
+    {"حد_اعلى", (AlifCPPFunction)math_ceil, METHOD_O},
 
 // 30
 #define MATH_FLOOR_METHODDEF    \
-    {"ادنى", (AlifCPPFunction)math_floor, METHOD_O},
+    {"حد_ادنى", (AlifCPPFunction)math_floor, METHOD_O},
 
 
 // 61
@@ -38,7 +38,7 @@ exit:
 
 // 445
 #define MATH_DEGREES_METHODDEF    \
-    {"درجات", (AlifCPPFunction)math_degrees, METHOD_O},
+    {"درجة", (AlifCPPFunction)math_degrees, METHOD_O},
 
 static AlifObject* math_degreesImpl(AlifObject* , double ); // 449
 
