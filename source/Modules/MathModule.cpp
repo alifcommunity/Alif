@@ -330,7 +330,7 @@ static AlifObject* logHelper(AlifObject* _arg, double (*_func)(double)) { // 218
 			   to compute the log anyway.  Clear the exception and continue. */
 			//alifErr_clear();
 			x = _alifLong_frexp((AlifLongObject*)_arg, &e);
-			/* Value is ~= x * 2**e, so the log ~= log(x) + log(2) * e. */
+			/* Value is ~= x * 2^e, so the log ~= log(x) + log(2) * e. */
 			result = _func(x) + _func(2.0) * e;
 		}
 		else
@@ -346,7 +346,7 @@ static AlifObject* math_log(AlifObject* _module, AlifObject* const* _args, AlifS
 	AlifObject* num{}, * den{};
 	AlifObject* ans{};
 
-	if (!_ALIFARG_CHECKPOSITIONAL("log", _nArgs, 1, 2))
+	if (!_ALIFARG_CHECKPOSITIONAL("لوغ", _nArgs, 1, 2))
 		return nullptr;
 
 	num = logHelper(_args[0], m_log);
