@@ -245,7 +245,7 @@ static AlifObject* math_floor(AlifObject* _module, AlifObject* _number) { // 116
 	}
 	else {
 		MathModuleState* state = getMath_moduleState(_module);
-		AlifObject* method = alifObject_lookupSpecial(_number, state->str___ceil__);
+		AlifObject* method = alifObject_lookupSpecial(_number, state->str___floor__);
 		if (method != nullptr) {
 			AlifObject* result = _alifObject_callNoArgs(method);
 			ALIF_DECREF(method);
@@ -601,7 +601,9 @@ static AlifObject* math_radiansImpl(AlifObject* _module, double _x) { // 3039
 static AlifMethodDef _alifMathMethods_[] = { // 4087
 	MATH_CEIL_METHODDEF
 	MATH_FLOOR_METHODDEF
+	{"جيب",             math_sin,       METHOD_O},
 	{"تجيب",            math_cos,       METHOD_O},
+	{"ظل",              math_tan,       METHOD_O},
     MATH_DEGREES_METHODDEF
 	MATH_DIST_METHODDEF
 	{"قيمة_مطلقة",      math_fabs,      METHOD_O},
@@ -610,8 +612,6 @@ static AlifMethodDef _alifMathMethods_[] = { // 4087
 	{"قم_اصغر", ALIF_CPPFUNCTION_CAST(math_lcm),       METHOD_FASTCALL},
 	{"لوغ",        ALIF_CPPFUNCTION_CAST(math_log),       METHOD_FASTCALL},
 	MATH_RADIANS_METHODDEF
-	{"جيب",             math_sin,       METHOD_O},
-	{"ظل",              math_tan,       METHOD_O},
 	{nullptr,              nullptr}           /* sentinel */
 };
 
