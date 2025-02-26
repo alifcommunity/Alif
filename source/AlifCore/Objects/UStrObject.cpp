@@ -2311,7 +2311,7 @@ AlifObject* alifUStr_decode(const char* s, AlifSizeT size,
 		ALIF_DECREF(unicode);
 		goto onError;
 	}
-	ALIF_DECREF(buffer);
+	// ALIF_DECREF(buffer);
 	return uStr_result(unicode);
 
 onError:

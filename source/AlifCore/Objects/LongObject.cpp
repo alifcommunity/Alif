@@ -1078,6 +1078,7 @@ AlifObject* alifNumber_long(AlifObject* o) { // 1505
 
 	if (o == nullptr) {
 		//return null_error();
+		return nullptr; //* alif
 	}
 
 	if (ALIFLONG_CHECKEXACT(o)) {
@@ -1141,6 +1142,7 @@ AlifObject* alifNumber_long(AlifObject* o) { // 1505
 
 	//return type_error("int() argument must be a string, a bytes-like object "
 	//	"or a real number, not '%.200s'", o);
+	return nullptr; //* alif
 }
 
 static unsigned long long _alifLong_asUnsignedLongLongMask(AlifObject* _vv) { // 1583
@@ -1354,18 +1356,18 @@ static AlifIntT alifLong_intToDecimalString(AlifObject* _aa,
 		goto success;
 	}
 	else {
-		*_pOutput = ALIF_NEWREF(s_);
+		// *_pOutput = ALIF_NEWREF(s_);
 		goto success;
 	}
 
 error:
 	//ALIF_DECREF(mod_);
-	ALIF_XDECREF(s_);
+	// ALIF_XDECREF(s_);
 	return -1;
 
 success:
 	//ALIF_DECREF(mod_);
-	ALIF_XDECREF(s_);
+	// ALIF_XDECREF(s_);
 	return 0;
 }
 #endif /* WITH_ALIFLONG_MODULE */
@@ -4065,10 +4067,11 @@ static AlifObject* long_vectorCall(AlifObject* type, AlifObject* const* args,
 		return alifNumber_long(args[0]);
 	//case 2:
 	//	return long_newImpl(ALIFTYPE_CAST(type), args[0], args[1]);
-	//default:
-	//	return alifErr_format(_alifExcTypeError_,
-	//		"int expected at most 2 arguments, got %zd",
-	//		nargs);
+	default:
+		// return alifErr_format(_alifExcTypeError_,
+		// 	"int expected at most 2 arguments, got %zd",
+		// 	nargs);
+		return nullptr; //* alif
 	}
 }
 
