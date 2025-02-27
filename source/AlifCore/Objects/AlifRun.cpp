@@ -152,7 +152,7 @@ AlifIntT alifRun_simpleFileObject(FILE* _fp, AlifObject* _filename,
 			const char* errorType = ALIF_TYPE(errorExc)->name;
 			AlifSizeT lineNum = alifLong_asSizeT(errLineNum);
 			str = alifUStr_asUTF8(errMsg);
-			printf("%s: %s , السطر: %d \n", errorType, str, lineNum);
+			printf("%s: %s , السطر: %ld \n", errorType, str, lineNum);
 		}
 		else {
 			str = "خطأ غير معروف";
