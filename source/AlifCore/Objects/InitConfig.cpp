@@ -668,12 +668,10 @@ static AlifIntT update_argv(AlifConfig* _config, AlifSizeT _index) { // 2803
 
 
 static AlifIntT alif_extension(wchar_t* _filename) { //* alif
-	const wchar_t* dotPos = wcschr(_filename, L'.');
-	if (!dotPos) { return 0; }
+	const wchar_t* dotSuffix = wcsrchr(_filename, L'.');
+	if (!dotSuffix) { return 0; }
 
-	const wchar_t* suffix = wcsstr(_filename, dotPos + 1);
-	if (suffix) { return wcscmp(suffix, L"alif") == 0; }
-	else { return 0; }
+	return wcscmp(dotSuffix, L".alif") == 0;
 }
 
 static AlifIntT run_absPathFilename(AlifConfig* _config) { // 2888
