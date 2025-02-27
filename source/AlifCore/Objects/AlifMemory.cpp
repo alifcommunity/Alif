@@ -494,7 +494,7 @@ void* alifMem_objAlloc(AlifUSizeT _size) {
 }
 
 
-inline void alifMem_dataFree(void* _ptr) {
+void alifMem_dataFree(void* _ptr) {
 	/*
 		يجب إضافة تحذير يظهر عند وضع التصحيح Debug
 		حيث أنه لا يجب أن يتم عمل تحرير لمؤشر فارغ
@@ -503,7 +503,7 @@ inline void alifMem_dataFree(void* _ptr) {
 	ALIFMEM_FREEDSEGMS->dealloc_(_ptr);
 }
 
-inline void alifMem_objFree(void* _ptr) {
+void alifMem_objFree(void* _ptr) {
 	/*
 		يجب إضافة تحذير يظهر عند وضع التصحيح Debug
 		حيث أنه لا يجب أن يتم عمل تحرير لمؤشر فارغ

@@ -6,6 +6,8 @@
 #include "AlifCore_Object.h"
 
 
+#include "float.h"
+
 #include "../clinic/MathModule.cpp.h"
 
 

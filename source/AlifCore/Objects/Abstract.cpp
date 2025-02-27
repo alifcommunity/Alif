@@ -69,34 +69,34 @@ AlifSizeT alifObject_lengthHint(AlifObject* _o,
 	}
 	hint = alifObject_lookupSpecial(_o, &ALIF_ID(__lengthHint__));
 	if (hint == nullptr) {
-		//if (alifErr_occurred()) {
-		//	return -1;
-		//}
+		if (alifErr_occurred()) {
+			return -1;
+		}
 		return _defaultValue;
 	}
-	//result = alifObject_callNoArgs(hint);
-	//ALIF_DECREF(hint);
-	//if (result == nullptr) {
+	result = _alifObject_callNoArgs(hint);
+	ALIF_DECREF(hint);
+	if (result == nullptr) {
 	//	AlifThread* tstate = _alifThread_get();
 	//	//if (alifErr_exceptionMatches(tstate, _alifExcTypeError_)) {
 	//	//	alifErr_clear(tstate);
 	//	//	return _defaultValue;
 	//	//}
-	//	return -1;
-	//}
+		return -1;
+	}
 	else if (result == ALIF_NOTIMPLEMENTED) {
 		ALIF_DECREF(result);
 		return _defaultValue;
 	}
 	if (!ALIFLONG_CHECK(result)) {
-		//alifErr_format(_alifExcTypeError_, "__length_hint__ must be an integer, not %.100s",
+		//alifErr_format(_alifExcTypeError_, "__lengthHint__ must be an integer, not %.100s",
 		//	ALIF_TYPE(result)->name);
 		ALIF_DECREF(result);
 		return -1;
 	}
 	res = alifLong_asSizeT(result);
 	ALIF_DECREF(result);
-	if (res < 0 /*and alifErr_occurred()*/) {
+	if (res < 0 and alifErr_occurred()) {
 		return -1;
 	}
 	if (res < 0) {

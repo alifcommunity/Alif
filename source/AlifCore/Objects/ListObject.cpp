@@ -1194,7 +1194,7 @@ static AlifIntT binarySort(MergeState* _ms, const SortSlice* _ss, AlifSizeT _n, 
 			v_[l_] = pivot;
 		}
 	}
-#endif /
+#endif
 	return 0;
 
 fail:

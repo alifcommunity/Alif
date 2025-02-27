@@ -28,7 +28,7 @@ static void notify_funcWatchers(AlifInterpreter* _interp, AlifFunctionWatchEvent
 
 static inline void handle_funcEvent(AlifFunctionWatchEvent _event, AlifFunctionObject* _func,
 	AlifObject* _newValue) { // 48
-	AlifInterpreter* interp = alifInterpreter_get();
+	AlifInterpreter* interp = _alifInterpreter_get();
 	if (interp->activeFuncWatchers) {
 		notify_funcWatchers(interp, _event, _func, _newValue);
 	}
