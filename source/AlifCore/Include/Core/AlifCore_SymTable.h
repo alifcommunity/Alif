@@ -30,11 +30,7 @@ public:
 
 
 // 53
-#define SRC_LOCATION_FROM_AST(_n) { \
-               .lineNo = (_n)->lineNo, \
-               .endLineNo = (_n)->endLineNo, \
-               .colOffset = (_n)->colOffset, \
-               .endColOffset = (_n)->endColOffset }
+#define SRC_LOCATION_FROM_AST(_n) AlifSourceLocation({(_n)->lineNo, (_n)->endLineNo, (_n)->colOffset, (_n)->endColOffset })
 
 
 static const AlifSourceLocation _noLocation_ = { -1, -1, -1, -1 }; // 60

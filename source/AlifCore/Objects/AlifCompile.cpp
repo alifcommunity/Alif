@@ -772,7 +772,7 @@ static Location start_location(ASDLStmtSeq* _stmts) {
 		StmtTy st = (StmtTy)ASDL_SEQ_GET(_stmts, 0);
 		return SRC_LOCATION_FROM_AST(st);
 	}
-	return AlifSourceLocation( 1, 1, 0, 0 );
+	return AlifSourceLocation({1, 1, 0, 0});
 }
 
 

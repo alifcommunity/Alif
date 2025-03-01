@@ -85,7 +85,7 @@ typedef AlifJumpTargetLabel JumpTargetLabel;
 typedef AlifCompileFBlockInfo FBlockInfo;
 
 #define LOCATION(_lno, _endLno, _col, _endCol)	\
-	AlifSourceLocation(_lno, _endLno, _col, _endCol)
+	AlifSourceLocation({_lno, _endLno, _col, _endCol})
 
 #define LOC(_x) SRC_LOCATION_FROM_AST(_x)
 
