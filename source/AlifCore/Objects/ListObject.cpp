@@ -280,6 +280,21 @@ static AlifIntT ins1(AlifListObject* _self,
 }
 
 
+AlifIntT alifList_insert(AlifObject* _op,
+	AlifSizeT _where, AlifObject* _newItem) { // 450
+	if (!ALIFLIST_CHECK(_op)) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+	AlifListObject* self = (AlifListObject*)_op;
+	AlifIntT err{};
+	ALIF_BEGIN_CRITICAL_SECTION(self);
+	err = ins1(self, _where, _newItem);
+	ALIF_END_CRITICAL_SECTION();
+	return err;
+}
+
+
 AlifIntT alifList_appendTakeRefListResize(AlifListObject* _self,
 	AlifObject* _newItem) { // 468
 	AlifSizeT len_ = ALIF_SIZE(_self);

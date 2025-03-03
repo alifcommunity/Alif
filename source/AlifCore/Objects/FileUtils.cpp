@@ -384,6 +384,29 @@ static AlifIntT encode_localeEX(const wchar_t* _text, char** _str, AlifUSizeT* _
 }
 
 
+
+
+static char* encode_locale(const wchar_t* _text, AlifUSizeT* _errorPos,
+	AlifIntT _rawMalloc, AlifIntT _currentLocale) { // 836
+	char* str{};
+	AlifIntT res = encode_localeEX(_text, &str, _errorPos, nullptr,
+		_rawMalloc, _currentLocale,
+		AlifErrorHandler_::Alif_Error_SurrogateEscape);
+	if (res != -2 and _errorPos) {
+		*_errorPos = (AlifUSizeT)-1;
+	}
+	if (res != 0) {
+		return nullptr;
+	}
+	return str;
+}
+
+
+char* _alif_encodeLocaleRaw(const wchar_t* text, AlifUSizeT* error_pos) { // 874
+	return encode_locale(text, error_pos, 1, 0);
+}
+
+
 AlifIntT _alif_encodeLocaleEx(const wchar_t* _text, char** _str,
 	AlifUSizeT* _error_pos, const char** _reason,
 	AlifIntT _currentLocale, AlifErrorHandler_ _errors) { // 881
@@ -458,6 +481,87 @@ FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) { // 1764
 	//}
 	return f;
 }
+
+
+
+#ifdef HAVE_READLINK
+
+AlifIntT alif_wReadLink(const wchar_t* path, wchar_t* buf, AlifUSizeT buflen) { // 2061
+	char* cpath{};
+	char cbuf[MAXPATHLEN]{};
+	AlifUSizeT cbuf_len = ALIF_ARRAY_LENGTH(cbuf);
+	wchar_t* wbuf{};
+	AlifSizeT res{};
+	AlifUSizeT r1{};
+
+	cpath = _alif_encodeLocaleRaw(path, NULL);
+	if (cpath == nullptr) {
+		errno = EINVAL;
+		return -1;
+	}
+	res = readlink(cpath, cbuf, cbuf_len);
+	alifMem_dataFree(cpath);
+	if (res == -1) {
+		return -1;
+	}
+	if ((AlifUSizeT)res == cbuf_len) {
+		errno = EINVAL;
+		return -1;
+	}
+	cbuf[res] = '\0'; /* buf will be null terminated */
+	wbuf = alif_decodeLocale(cbuf, &r1);
+	if (wbuf == nullptr) {
+		errno = EINVAL;
+		return -1;
+	}
+	/* wbuf must have space to store the trailing NUL character */
+	if (buflen <= r1) {
+		alifMem_dataFree(wbuf);
+		errno = EINVAL;
+		return -1;
+	}
+	wcsncpy(buf, wbuf, buflen);
+	alifMem_dataFree(wbuf);
+	return (AlifIntT)r1;
+}
+#endif
+
+
+#ifdef HAVE_REALPATH
+wchar_t* alif_wRealPath(const wchar_t* _path,
+	wchar_t* resolvedPath, AlifUSizeT _resolvedPathLen) { // 2110
+	char* cpath{};
+	char cresolved_path[MAXPATHLEN]{};
+	wchar_t* wresolved_path{};
+	char* res{};
+	AlifUSizeT r{};
+	cpath = _alif_encodeLocaleRaw(_path, nullptr);
+	if (cpath == nullptr) {
+		errno = EINVAL;
+		return nullptr;
+	}
+	res = realpath(cpath, cresolved_path);
+	alifMem_dataFree(cpath);
+	if (res == nullptr)
+		return nullptr;
+
+	wresolved_path = alif_decodeLocale(cresolved_path, &r);
+	if (wresolved_path == nullptr) {
+		errno = EINVAL;
+		return nullptr;
+	}
+	/* wresolved_path must have space to store the trailing NUL character */
+	if (_resolvedPathLen <= r) {
+		alifMem_dataFree(wresolved_path);
+		errno = EINVAL;
+		return nullptr;
+	}
+	wcsncpy(resolvedPath, wresolved_path, _resolvedPathLen);
+	alifMem_dataFree(wresolved_path);
+	return resolvedPath;
+}
+#endif
+
 
 
 

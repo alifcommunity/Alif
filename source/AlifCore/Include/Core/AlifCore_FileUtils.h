@@ -23,8 +23,18 @@ AlifIntT alif_decodeLocaleEx(const char*, wchar_t**, AlifUSizeT*,
 	const char**, AlifIntT, AlifErrorHandler_); // 42
 
 
-AlifIntT _alif_encodeLocaleEx(const wchar_t*, char**, AlifUSizeT*, const char**, AlifIntT, AlifErrorHandler_);
+AlifIntT _alif_encodeLocaleEx(const wchar_t*, char**,
+	AlifUSizeT*, const char**, AlifIntT, AlifErrorHandler_); // 51
 
+
+
+#ifdef HAVE_READLINK
+extern int alif_wReadLink(const wchar_t*, wchar_t*, AlifUSizeT); // 151
+#endif
+
+#ifdef HAVE_REALPATH
+extern wchar_t* alif_wRealPath(const wchar_t*, wchar_t*, AlifUSizeT); // 160
+#endif
 
 extern wchar_t* alif_wGetCWD(wchar_t* , AlifUSizeT ); // 168
 

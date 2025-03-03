@@ -77,7 +77,7 @@ static const AlifConfigSpec _alifConfigSpec_[] = { // 95
     SPEC(argv, WSTR_LIST, Public, SYS_ATTR("argv")),
     //SPEC(executable, WSTR_OPT, Public, SYS_ATTR("executable")),
     SPEC(interactive, BOOL, Public, SYS_FLAG(2)),
-    SPEC(moduleSearchPaths, WSTR_LIST, Public, SYS_ATTR("path")),
+    SPEC(moduleSearchPaths, WSTR_LIST, Public, SYS_ATTR("Path")),
     SPEC(optimizationLevel, UINT, Public, SYS_FLAG(3)),
 
 

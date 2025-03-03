@@ -56,6 +56,24 @@ AlifObject* alifSys_getObject(const char* _name) { // 104
 }
 
 
+static AlifIntT sys_setObject(AlifInterpreter* _interp,
+	AlifObject* _key, AlifObject* _v) { // 120
+	if (_key == nullptr) {
+		return -1;
+	}
+	AlifObject* sd = _interp->sysDict;
+	if (_v == nullptr) {
+		if (alifDict_pop(sd, _key, nullptr) < 0) {
+			return -1;
+		}
+		return 0;
+	}
+	else {
+		return alifDict_setItem(sd, _key, _v);
+	}
+}
+
+
 
 
 static AlifObject* listBuiltin_moduleNames(void) { // 2628
@@ -263,7 +281,7 @@ AlifIntT _alifSys_updateConfig(AlifThread* _thread) { // 3645
     }
 
 	if (config->moduleSearchPathsSet) {
-		COPY_LIST("path", config->moduleSearchPaths);
+		COPY_LIST("Path", config->moduleSearchPaths);
 	}
 
 	//COPY_WSTR("executable", config->executable);

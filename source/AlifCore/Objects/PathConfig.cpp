@@ -1,7 +1,7 @@
 #include "alif.h"
 
 #include "AlifCore_InitConfig.h"
-
+#include "AlifCore_FileUtils.h"
 #include "AlifCore_Memory.h"
 
 
@@ -104,4 +104,136 @@ AlifIntT _alifPathConfig_updateGlobal(const AlifConfig* _config) { // 126
 
 error:
 	return -1;
+}
+
+
+
+
+
+
+
+
+
+AlifIntT _alifPathConfig_computeSysPath0(const AlifWStringList* _argv,
+	AlifObject** _path0P) { // 370
+	if (_argv->length == 0) {
+		return 0;
+	}
+
+	wchar_t* argv0 = _argv->items[0];
+	AlifIntT haveModuleArg = (wcscmp(argv0, L"-m") == 0); //* todo
+	AlifIntT haveScriptArg = (!haveModuleArg and (wcscmp(argv0, L"-c") != 0)); //* todo
+
+	wchar_t* path0 = argv0;
+	AlifSizeT n = 0;
+
+#ifdef HAVE_REALPATH
+	wchar_t fullpath[MAXPATHLEN];
+#elif defined(_WINDOWS)
+	wchar_t fullpath[MAX_PATH];
+#endif
+
+	if (haveModuleArg) {
+#if defined(HAVE_REALPATH) or defined(_WINDOWS)
+		if (!alif_wGetCWD(fullpath, ALIF_ARRAY_LENGTH(fullpath))) {
+			return 0;
+		}
+		path0 = fullpath;
+#else
+		path0 = L".";
+#endif
+		n = wcslen(path0);
+	}
+
+#ifdef HAVE_READLINK
+	wchar_t link[MAXPATHLEN + 1];
+	int nr = 0;
+	wchar_t path0copy[2 * MAXPATHLEN + 1];
+
+	if (haveScriptArg) {
+		nr = alif_wReadLink(path0, link, ALIF_ARRAY_LENGTH(link));
+	}
+	if (nr > 0) {
+		/* It's a symlink */
+		link[nr] = '\0';
+		if (link[0] == SEP) {
+			path0 = link; /* Link to absolute path */
+		}
+		else if (wcschr(link, SEP) == nullptr) {
+			/* Link without path */
+		}
+		else {
+			/* Must join(dirname(path0), link) */
+			wchar_t* q = wcsrchr(path0, SEP);
+			if (q == nullptr) {
+				/* path0 without path */
+				path0 = link;
+			}
+			else {
+				/* Must make a copy, path0copy has room for 2 * MAXPATHLEN */
+				wcsncpy(path0copy, path0, MAXPATHLEN);
+				q = wcsrchr(path0copy, SEP);
+				wcsncpy(q + 1, link, MAXPATHLEN);
+				q[MAXPATHLEN + 1] = L'\0';
+				path0 = path0copy;
+			}
+		}
+	}
+#endif /* HAVE_READLINK */
+
+	wchar_t* p = nullptr;
+
+#if SEP == '\\'
+	/* Special case for Microsoft filename syntax */
+	if (haveScriptArg) {
+		wchar_t* q{};
+#if defined(_WINDOWS)
+		/* Replace the first element in argv with the full path. */
+		wchar_t* ptemp;
+		if (GetFullPathNameW(path0,
+			ALIF_ARRAY_LENGTH(fullpath),
+			fullpath,
+			&ptemp)) {
+			path0 = fullpath;
+		}
+#endif
+		p = wcsrchr(path0, SEP);
+		/* Test for alternate separator */
+		q = wcsrchr(p ? p : path0, '/');
+		if (q != nullptr)
+			p = q;
+		if (p != nullptr) {
+			n = p + 1 - path0;
+			if (n > 1 and p[-1] != ':')
+				n--; /* Drop trailing separator */
+		}
+	}
+#else
+	/* All other filename syntaxes */
+	if (haveScriptArg) {
+#if defined(HAVE_REALPATH)
+		if (alif_wRealPath(path0, fullpath, ALIF_ARRAY_LENGTH(fullpath))) {
+			path0 = fullpath;
+		}
+#endif
+		p = wcsrchr(path0, SEP);
+	}
+	if (p != nullptr) {
+		n = p + 1 - path0;
+#if SEP == '/' /* Special case for Unix filename syntax */
+		if (n > 1) {
+			/* Drop trailing separator */
+			n--;
+		}
+#endif /* Unix */
+	}
+#endif /* All others */
+
+	AlifObject* path0_obj = alifUStr_fromWideChar(path0, n);
+	if (path0_obj == nullptr) {
+		return -1;
+	}
+
+	*_path0P = path0_obj;
+	return 1;
 }

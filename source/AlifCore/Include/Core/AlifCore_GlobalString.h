@@ -118,6 +118,7 @@ public:
 		STRUCT_FOR_ID(NFields)
 		STRUCT_FOR_ID(NSequenceFields)
      	STRUCT_FOR_ID(Origin)
+     	STRUCT_FOR_ID(Path)
      	STRUCT_FOR_ID(ReadInto)
      	STRUCT_FOR_ID(Sep)
      	STRUCT_FOR_ID(Stderr)

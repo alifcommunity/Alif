@@ -1,6 +1,7 @@
 #include "alif.h"
 
 #include "AlifCore_InitConfig.h"
+#include "AlifCore_PathConfig.h"
 #include "AlifCore_LifeCycle.h"
 #include "AlifCore_State.h"
 #include "AlifCore_Run.h"
@@ -103,6 +104,30 @@ static AlifIntT alifMain_runFile(const AlifConfig* _config) { // 414
 
 
 
+
+static AlifIntT alifMain_sysPathAddPath0(AlifInterpreter* interp, AlifObject* path0) { // 156
+	AlifObject* sysPath{};
+	AlifObject* sysdict = interp->sysDict;
+	if (sysdict != nullptr) {
+		sysPath = alifDict_getItemWithError(sysdict, &ALIF_ID(Path));
+		if (sysPath == nullptr and alifErr_occurred()) {
+			return -1;
+		}
+	}
+	else {
+		sysPath = nullptr;
+	}
+	if (sysPath == nullptr) {
+		//alifErr_setString(_alifExc_runtimeError_, "unable to get sys.path");
+		return -1;
+	}
+
+	if (alifList_insert(sysPath, 0, path0)) {
+		return -1;
+	}
+	return 0;
+}
+
 static void alifMain_header(const AlifConfig* _config) { // 183
 	//if (_config->quiet) {
 	//	return;
@@ -124,12 +149,14 @@ static void alifMain_runAlif(AlifIntT* _exitcode) { // 614
 	AlifInterpreter* interp = _alifInterpreter_get();
 	AlifConfig* config = (AlifConfig*)alifInterpreter_getConfig(interp);
 
-	//if (ALIFSTATUS_EXCEPTION(_alifPathConfig_updateGlobal(config))) {
-	//	goto error;
-	//}
+	AlifObject* path0{}; //* alif
+
+	if (_alifPathConfig_updateGlobal(config) != 1) {
+		goto error;
+	}
 
 	//if (config->runFilename != nullptr) {
-	//	if (alifMain_getImporter(config->runFilename, &main_importer_path,
+	//	if (alifMain_getImporter(config->runFilename, &mainImporterPath,
 	//		_exitcode)) {
 	//		return;
 	//	}
@@ -137,26 +164,26 @@ static void alifMain_runAlif(AlifIntT* _exitcode) { // 614
 
 	//alifMain_importReadline(config);
 
-	//AlifObject* path0 = nullptr;
-	//if (mainImporterPath != nullptr) {
-	//	path0 = ALIF_NEWREF(mainImporterPath);
-	//}
-	//else if (!config->safePath) {
-	//	AlifIntT res = alifPathConfig_computeSysPath0(&config->argv, &path0);
-	//	if (res < 0) {
-	//		goto error;
-	//	}
-	//	else if (res == 0) {
-	//		ALIF_CLEAR(path0);
-	//	}
-	//}
+	path0 = nullptr;
+	if (mainImporterPath != nullptr) {
+		path0 = ALIF_NEWREF(mainImporterPath);
+	}
+	else if (!config->safePath) {
+		AlifIntT res = _alifPathConfig_computeSysPath0(&config->argv, &path0);
+		if (res < 0) {
+			goto error;
+		}
+		else if (res == 0) {
+			ALIF_CLEAR(path0);
+		}
+	}
 	//if (path0 != nullptr) {
 	//	wchar_t* wstr = alifUStr_asWideCharString(path0, nullptr);
 	//	if (wstr == nullptr) {
 	//		ALIF_DECREF(path0);
 	//		goto error;
 	//	}
-	//	config->sysPath0 = alifMem_rawWcsdup(wstr);
+	//	config->sysPath0 = alifMem_wcsDup(wstr);
 	//	alifMem_dataFree(wstr);
 	//	if (config->sysPath0 == nullptr) {
 	//		ALIF_DECREF(path0);
