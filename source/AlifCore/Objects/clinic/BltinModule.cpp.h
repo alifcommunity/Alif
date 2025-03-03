@@ -87,6 +87,12 @@ exit:
 
 
 
+#define BUILTIN_LEN_METHODDEF {"طول", (AlifCPPFunction)builtin_len, METHOD_O} // 771
+
+
+
+
+
 
 
 

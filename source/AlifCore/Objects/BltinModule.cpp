@@ -238,6 +238,21 @@ static AlifObject* builtin___import__Impl(AlifObject* module, AlifObject* name, 
 
 
 
+static AlifObject* builtin_len(AlifObject* _module, AlifObject* _obj) { // 1762
+	AlifSizeT res{};
+
+	res = alifObject_size(_obj);
+	if (res < 0) {
+		return nullptr;
+	}
+	return alifLong_fromSizeT(res);
+}
+
+
+
+
+
+
 static AlifObject* min_max(AlifObject* const* args, AlifSizeT nargs,
 	AlifObject* kwnames, AlifIntT op) { // 1795
 	AlifObject* it = nullptr, * item{}, * val{}, * maxitem{}, * maxval{}, * keyfunc = nullptr;
@@ -717,6 +732,7 @@ static AlifMethodDef _builtinMethods_[] = { // 3141
 	 METHOD_FASTCALL | METHOD_KEYWORDS},
 	BUILTIN___IMPORT___METHODDEF,
 	BUILTIN_INPUT_METHODDEF,
+	BUILTIN_LEN_METHODDEF,
 	{"اقصى", ALIF_CPPFUNCTION_CAST(builtin_max), METHOD_FASTCALL | METHOD_KEYWORDS},
 	{"ادنى", ALIF_CPPFUNCTION_CAST(builtin_min), METHOD_FASTCALL | METHOD_KEYWORDS},
 	BUILTIN_PRINT_METHODDEF,

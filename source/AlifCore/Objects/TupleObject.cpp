@@ -237,6 +237,22 @@ static AlifHashT tuple_hash(AlifObject* _op) { // 318
 
 
 
+static AlifSizeT tuple_length(AlifObject* self) { // 346
+	AlifTupleObject* a = ALIFTUPLE_CAST(self);
+	return ALIF_SIZE(a);
+}
+
+
+static AlifObject* tuple_item(AlifObject* _op, AlifSizeT _i) { // 364
+	AlifTupleObject* a = ALIFTUPLE_CAST(_op);
+	if (_i < 0 or _i >= ALIF_SIZE(a)) {
+		//alifErr_setString(_alifExcIndexError_, "tuple index out of range");
+		return nullptr;
+	}
+	return ALIF_NEWREF(a->item[_i]);
+}
+
+
 AlifObject* alifTuple_fromArray(AlifObject* const* _src, AlifSizeT _n) { // 371
 	if (_n == 0) {
 		return tuple_getEmpty();
@@ -305,6 +321,21 @@ AlifObject* alifTuple_getSlice(AlifObject* _op,
 
 
 
+
+
+static AlifSequenceMethods tupleAsSequence = { // 777
+	tuple_length,
+	0,//tuple_concat,
+	0,//tuple_repeat,
+	tuple_item,
+	0,
+	0,
+	0,
+	0,//tuple_contains,
+};
+
+
+
 static AlifObject* tuple_iter(AlifObject* _seq); // 863
 
 AlifTypeObject _alifTupleType_ = { // 865
@@ -314,6 +345,7 @@ AlifTypeObject _alifTupleType_ = { // 865
 	.itemSize = sizeof(AlifObject*),
 	.dealloc = (Destructor)tuple_dealloc,
 	.repr = tuple_repr,
+	.asSequence = &tupleAsSequence,
 	.hash = tuple_hash,
 	.getAttro = alifObject_genericGetAttr,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
