@@ -11,3 +11,19 @@ static inline void _alif_adjustErange1(double _x) { // 33
 		errno = 0;
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+// 197
+#ifndef _ALIF_SHORT_FLOAT_REPR
+	#define _ALIF_SHORT_FLOAT_REPR 1
+#endif

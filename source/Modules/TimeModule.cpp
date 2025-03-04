@@ -31,6 +31,20 @@ static inline TimeModuleState* get_timeState(AlifObject* module) { // 90
 }
 
 
+static AlifObject* _alifFloat_fromAlifTime(AlifTimeT _t) { // 99
+	double d = alifTime_asSecondsDouble(_t);
+	return alifFloat_fromDouble(d);
+}
+
+static AlifObject* time_time(AlifObject* _self, AlifObject* _unused) { // 107
+	AlifTimeT t{};
+	if (alifTime_time(&t) < 0) {
+		return nullptr;
+	}
+	return _alifFloat_fromAlifTime(t);
+}
+
+
 static AlifObject* time_sleep(AlifObject* _self, AlifObject* _timeoutObj) { // 391
 	//if (alifSys_audit("time.sleep", "O", timeout_obj) < 0) {
 	//	return nullptr;
@@ -123,6 +137,7 @@ static AlifIntT time_exec(AlifObject* module) { // 1942
 }
 
 static AlifMethodDef _timeMethods_[] = {
+	{"الوقت", time_time, METHOD_NOARGS},
 	{"غفوة", time_sleep, METHOD_O},
 	{nullptr, nullptr}           /* sentinel */
 };
@@ -136,7 +151,7 @@ static AlifModuleDefSlot _timeSlots_[] = {
 
 static AlifModuleDef _timeModule_ = {
 	.base = ALIFMODULEDEF_HEAD_INIT,
-	.name = "الزمن",
+	.name = "الوقت",
 	//.size = sizeof(TimeModuleState),
 	.methods = _timeMethods_,
 	.slots = _timeSlots_,

@@ -1,6 +1,7 @@
 #pragma once
 
 
+#include "AlifCore_Math.h"
 
 
 typedef uint32_t ULong; // 14
@@ -42,3 +43,6 @@ public:
 extern double _alif_dgStrToDouble(const char*, char**); // 62
 extern char* _alif_dgDoubletoASCII(double, int, int, int*, int*, char**); // 63
 extern void _alif_dgFreeDoubleToASCII(char*); // 65
+
+
+extern AlifIntT _alifDtoa_init(AlifInterpreter*); // 68

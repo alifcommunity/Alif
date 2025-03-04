@@ -8,8 +8,10 @@ using AlifTimeT = int64_t;
 
 
 
-
+double alifTime_asSecondsDouble(AlifTimeT); // 14
 AlifIntT alifTime_monotonic(AlifTimeT*); // 15
+
+AlifIntT alifTime_time(AlifTimeT*); // 17
 
 AlifIntT alifTime_monotonicRaw(AlifTimeT*); // 19
 

@@ -1070,42 +1070,6 @@ double _alif_dgStrToDouble(const char* s00, char** se) { // 1383
 	if (nd0 > nd)
 		nd0 = nd;
 
-	/* Summary of parsing results.  After parsing, and dealing with zero
-	 * inputs, we have values s0, nd0, nd, e, sign, where:
-	 *
-	 *  - s0 points to the first significant digit of the input string
-	 *
-	 *  - nd is the total number of significant digits (here, and
-	 *    below, 'significant digits' means the set of digits of the
-	 *    significand of the input that remain after ignoring leading
-	 *    and trailing zeros).
-	 *
-	 *  - nd0 indicates the position of the decimal point, if present; it
-	 *    satisfies 1 <= nd0 <= nd.  The nd significant digits are in
-	 *    s0[0:nd0] and s0[nd0+1:nd+1] using the usual Python half-open slice
-	 *    notation.  (If nd0 < nd, then s0[nd0] contains a '.'  character; if
-	 *    nd0 == nd, then s0[nd0] could be any non-digit character.)
-	 *
-	 *  - e is the adjusted exponent: the absolute value of the number
-	 *    represented by the original input string is n * 10**e, where
-	 *    n is the integer represented by the concatenation of
-	 *    s0[0:nd0] and s0[nd0+1:nd+1]
-	 *
-	 *  - sign gives the sign of the input:  1 for negative, 0 for positive
-	 *
-	 *  - the first and last significant digits are nonzero
-	 */
-
-	 /* put first DBL_DIG+1 digits into integer y and z.
-	  *
-	  *  - y contains the value represented by the first min(9, nd)
-	  *    significant digits
-	  *
-	  *  - if nd > 9, z contains the value represented by significant digits
-	  *    with indices in [9, min(16, nd)).  So y * 10**(min(16, nd) - 9) + z
-	  *    gives the value represented by the first min(16, nd) sig. digits.
-	  */
-
 	bc.e0 = e1 = e;
 	y = z = 0;
 	for (i = 0; i < nd; i++) {
@@ -2010,9 +1974,6 @@ char* _alif_dgDoubletoASCII(double dd, int mode, int ndigits,
 					++ * s++;
 				}
 				else {
-					/* Strip trailing zeros. This branch was missing from the
-					   original dtoa.c, leading to surplus trailing zeros in
-					   some cases. See bugs.python.org/issue40780. */
 					while (s > s0 && s[-1] == '0') {
 						--s;
 					}
@@ -2294,4 +2255,44 @@ failed_malloc:
 	if (s0)
 		_alif_dgFreeDoubleToASCII(s0);
 	return NULL;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+AlifIntT _alifDtoa_init(AlifInterpreter* interp) { // 2804
+#if _ALIF_SHORT_FLOAT_REPR == 1 and !defined(ALIF_USING_MEMORY_DEBUGGER)
+	Bigint** p5s = interp->dtoa.p5s;
+
+	// 5**4 = 625
+	Bigint* p5 = i2b(625);
+	if (p5 == nullptr) {
+		//return alifStatus_noMemory();
+		return -1;
+	}
+	p5s[0] = p5;
+
+	// compute 5**8, 5**16, 5**32, ..., 5**512
+	for (AlifSizeT i = 1; i < BIGINT_POW5SIZE; i++) {
+		p5 = mult(p5, p5);
+		if (p5 == nullptr) {
+			//return alifStatus_noMemory();
+			return -1;
+		}
+		p5s[i] = p5;
+	}
+
+#endif
+	return 1;
 }

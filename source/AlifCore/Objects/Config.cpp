@@ -7,7 +7,7 @@ class InitTable _alifImportInitTab_[] = { // 87
 
 	{"الرياضيات", alifInit_math}, // 96
 
-	{"الزمن", alifInit_time},
+	{"الوقت", alifInit_time},
 
 
 	{"_imp", alifInit__imp},
