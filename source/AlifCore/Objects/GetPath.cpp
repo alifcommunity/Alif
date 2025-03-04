@@ -53,7 +53,7 @@ AlifIntT _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePathCo
 #else
 	// POSIX-specific code (Linux, macOS, etc.)
 	char cwd[PATH_MAX]{};
-	if (getcwd(cwd, sizeof(cwd)) {
+	if (getcwd(cwd, sizeof(cwd))) {
 		// Convert the current directory to a wide string
 		AlifUSizeT len = mbstowcs(nullptr, cwd, 0) + 1;
 		buffer = (wchar_t*)alifMem_dataAlloc(len * sizeof(wchar_t));
