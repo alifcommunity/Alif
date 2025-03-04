@@ -453,11 +453,16 @@ static AlifIntT initInterpreter_main(AlifThread* _thread) { // 1156
 	//	return 1;
 	//}
 
-	//status = alifConfig_initImportConfig(&interpreter->config);
-	//if (status < 1) return status;
+	status = _alifConfig_initImportConfig(&interpreter->config);
+	if (status < 1) return status;
 
 	if (interpreter_updateConfig(_thread, 1) < 0) {
 		return -1;
+	}
+
+	if (interpreter_updateConfig(_thread, 1) < 0) {
+		//return _ALIFSTATUS_ERR("failed to update the Alif config");
+		return -1; //* alif
 	}
 
 	//status = alifImport_initExternal(_thread);

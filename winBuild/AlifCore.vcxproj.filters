@@ -322,6 +322,9 @@
     <ClCompile Include="..\source\Modules\MathModule.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\GetPath.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">

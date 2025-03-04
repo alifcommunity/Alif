@@ -177,24 +177,24 @@ static void alifMain_runAlif(AlifIntT* _exitcode) { // 614
 			ALIF_CLEAR(path0);
 		}
 	}
-	//if (path0 != nullptr) {
-	//	wchar_t* wstr = alifUStr_asWideCharString(path0, nullptr);
-	//	if (wstr == nullptr) {
-	//		ALIF_DECREF(path0);
-	//		goto error;
-	//	}
-	//	config->sysPath0 = alifMem_wcsDup(wstr);
-	//	alifMem_dataFree(wstr);
-	//	if (config->sysPath0 == nullptr) {
-	//		ALIF_DECREF(path0);
-	//		goto error;
-	//	}
-	//	AlifIntT res = alifMain_sysPathAddPath0(interp, path0);
-	//	ALIF_DECREF(path0);
-	//	if (res < 0) {
-	//		goto error;
-	//	}
-	//}
+	if (path0 != nullptr) {
+		wchar_t* wstr = alifUStr_asWideCharString(path0, nullptr);
+		if (wstr == nullptr) {
+			ALIF_DECREF(path0);
+			goto error;
+		}
+		config->sysPath0 = alifMem_wcsDup(wstr);
+		alifMem_dataFree(wstr);
+		if (config->sysPath0 == nullptr) {
+			ALIF_DECREF(path0);
+			goto error;
+		}
+		AlifIntT res = alifMain_sysPathAddPath0(interp, path0);
+		ALIF_DECREF(path0);
+		if (res < 0) {
+			goto error;
+		}
+	}
 
 	alifMain_header(config);
 

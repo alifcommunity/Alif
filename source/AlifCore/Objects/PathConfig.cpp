@@ -29,7 +29,48 @@ public:
 AlifPathConfig _alifPathConfig_ = ALIFPATHCONFIG_INIT;
 
 
+AlifIntT _alifPathConfig_readGlobal(AlifConfig* _config) { // 81
+	AlifIntT status = 1;
 
+#define COPY(ATTR) \
+    do { \
+        if (_alifPathConfig_.ATTR and !_config->ATTR) { \
+            status = alifConfig_setString(_config, &_config->ATTR, _alifPathConfig_.ATTR); \
+            if (status < 1) goto done; \
+        } \
+    } while (0)
+
+#define COPY2(ATTR, SRCATTR) \
+    do { \
+        if (_alifPathConfig_.SRCATTR and !_config->ATTR) { \
+            status = alifConfig_setString(_config, &_config->ATTR, _alifPathConfig_.SRCATTR); \
+            if (status < 1) goto done; \
+        } \
+    } while (0)
+
+#define COPY_INT(ATTR) \
+    do { \
+        assert(_alifPathConfig_.ATTR >= 0); \
+        if ((_alifPathConfig_.ATTR >= 0) and (_config->ATTR <= 0)) { \
+            _config->ATTR = _alifPathConfig_.ATTR; \
+        } \
+    } while (0)
+
+	//COPY(prefix);
+	//COPY(exec_prefix);
+	//COPY(stdlib_dir);
+	COPY(programName);
+	//COPY(home);
+	//COPY2(executable, programFullPath);
+	//COPY_INT(_isAlifBuild);
+	// module_search_path must be initialised - not read
+#undef COPY
+#undef COPY2
+#undef COPY_INT
+
+	done :
+	return status;
+}
 
 
 

@@ -8,7 +8,7 @@
 
 
 
-
+extern AlifIntT _alifPathConfig_readGlobal(AlifConfig*); // 14
 extern AlifIntT _alifPathConfig_updateGlobal(const AlifConfig* _config); // 15
 
 

@@ -289,6 +289,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\GenericAliasObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GetArgs.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GetOption.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\GetPath.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GetVersion.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\HashTable.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Helpers.cpp" />

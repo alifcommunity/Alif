@@ -385,6 +385,55 @@ AlifIntT alifConfig_copy(AlifConfig* _config, const AlifConfig* _config2) { // 1
 	return 1;
 }
 
+
+
+static AlifIntT config_initImport(AlifConfig* _config, AlifIntT _computePathConfig) { // 2321
+	AlifIntT status{};
+
+	status = _alifConfig_initPathConfig(_config, _computePathConfig); //* todo
+	if (status != 1) {
+		return status;
+	}
+
+	//const char* env = config_getEnv(_config, "ALIF_FROZEN_MODULES");
+	//if (env == nullptr) {
+	//}
+	//else if (strcmp(env, "on") == 0) {
+	//	_config->useFrozenModules = 1;
+	//}
+	//else if (strcmp(env, "off") == 0) {
+	//	_config->useFrozenModules = 0;
+	//}
+	//else {
+	//	return alifStatus_error("bad value for ALIF_FROZEN_MODULES "
+	//		"(expected \"on\" or \"off\")");
+	//}
+
+	//const wchar_t* value = config_getXoptionValue(_config, L"frozen_modules");
+	//if (value == nullptr) {
+	//}
+	//else if (wcscmp(value, L"on") == 0) {
+	//	_config->useFrozenModules = 1;
+	//}
+	//else if (wcscmp(value, L"off") == 0) {
+	//	_config->useFrozenModules = 0;
+	//}
+	//else if (wcslen(value) == 0) {
+	//	_config->useFrozenModules = 1;
+	//}
+	//else {
+	//	return alifStatus_Error("bad value for option -X frozen_modules "
+	//		"(expected \"on\" or \"off\")");
+	//}
+
+	return 1;
+}
+
+AlifIntT _alifConfig_initImportConfig(AlifConfig* _config) { // 2367
+	return config_initImport(_config, 1);
+}
+
+
 static AlifIntT config_read(AlifConfig* _config) { // 2215
 	AlifIntT status{};
 
@@ -581,7 +630,7 @@ static AlifIntT parse_consoleLine(AlifConfig* _config, AlifSizeT* _index) { // 2
 			break;
 		}
 		else {
-			// فشلت عملية تحلل سطر الاوامر
+			// فشلت عملية تحليل سطر الاوامر
 			config_usage(1, program);
 			exit(1);
 		}
@@ -609,8 +658,6 @@ static AlifIntT parse_consoleLine(AlifConfig* _config, AlifSizeT* _index) { // 2
 		_config->runModule != nullptr) {
 		_optIdx_--;
 	}
-
-	//_config->programName = (wchar_t*)program; // يحتاج مراجعة - لا يتم إسناده هنا
 
 	*_index = _optIdx_;
 
