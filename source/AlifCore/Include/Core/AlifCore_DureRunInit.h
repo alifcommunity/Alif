@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AlifCore_EvalState.h"
+#include "AlifCore_Function.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_Eval.h" // remove if include other hreader with AlifCore_Eval.h inside it
 #include "AlifCore_Long.h" // remove if include other hreader with AlifCore_Long.h inside it
@@ -51,6 +52,9 @@
 		.qsbr = {													\
 			.wrSeq = QSBR_INITIAL,									\
 			.rdSeq = QSBR_INITIAL,									\
+		},															\
+		.funcState = {												\
+			.nextVersion = FUNC_VERSION_FIRST_VALID,				\
 		},															\
 		.types = {													\
 			.nextVersionTag = _ALIF_TYPE_BASE_VERSION_TAG,			\

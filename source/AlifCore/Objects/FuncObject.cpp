@@ -71,7 +71,7 @@ AlifFunctionObject* _alifFunction_fromConstructor(AlifFrameConstructor* _constr)
 	op_->annotate = nullptr;
 	op_->typeParams = nullptr;
 	op_->vectorCall = alifFunction_vectorCall;
-	op_->version = 0;
+	op_->version = FUNC_VERSION_UNSET;
 
 	ALIFOBJECT_GC_TRACK(op_);
 	handle_funcEvent(AlifFunction_Event_Create, op_, nullptr);
@@ -144,7 +144,7 @@ AlifObject* alifFunction_newWithQualName(AlifObject* _code,
 	op->annotate = nullptr;
 	op->typeParams = nullptr;
 	op->vectorCall = alifFunction_vectorCall;
-	op->version = 0;
+	op->version = FUNC_VERSION_UNSET;
 	if ((codeObj->flags & CO_NESTED) == 0) {
 		alifObject_setDeferredRefcount((AlifObject*)op);
 	}
@@ -167,8 +167,16 @@ error:
 
 
 void _alifFunction_setVersion(AlifFunctionObject* _func,
-	uint32_t _version) { // 290
+	uint32_t _version) { // 297
 	_func->version = _version;
+}
+
+static void func_clearVersion(AlifInterpreter* interp, AlifFunctionObject* func) { // 313
+	if (func->version < FUNC_VERSION_FIRST_VALID) {
+		// Version was never set or has already been cleared.
+		return;
+	}
+	func->version = FUNC_VERSION_CLEARED;
 }
 
 
@@ -178,9 +186,9 @@ AlifObject* alifFunction_new(AlifObject* _code, AlifObject* _globals) { // 370
 
 
 
-static AlifIntT func_clear(AlifObject* _self) { // 1019
+static AlifIntT func_clear(AlifObject* _self) { // 1053
 	AlifFunctionObject* op = ALIFFUNCTION_CAST(_self);
-	_alifFunction_setVersion(op, 0);
+	func_clearVersion(_alifInterpreter_get(), op);
 	ALIF_CLEAR(op->globals);
 	ALIF_CLEAR(op->builtins);
 	ALIF_CLEAR(op->module);
@@ -197,7 +205,7 @@ static AlifIntT func_clear(AlifObject* _self) { // 1019
 	return 0;
 }
 
-static void func_dealloc(AlifObject* _self) { // 1044
+static void func_dealloc(AlifObject* _self) { // 1079
 	AlifFunctionObject* op = ALIFFUNCTION_CAST(_self);
 	ALIF_SET_REFCNT(op, 1);
 	handle_funcEvent(AlifFunctionWatchEvent::AlifFunction_Event_Destroy, op, nullptr);
@@ -210,7 +218,6 @@ static void func_dealloc(AlifObject* _self) { // 1044
 	if (op->weakRefList != nullptr) {
 		alifObject_clearWeakRefs((AlifObject*)op);
 	}
-	_alifFunction_setVersion(op, 0);
 	(void)func_clear((AlifObject*)op);
 	// These aren't cleared by func_clear().
 	ALIF_DECREF(op->code);

@@ -7,18 +7,22 @@ extern AlifObject* alifFunction_vectorCall(AlifObject*, AlifObject* const* ,
 // 19
 #define FUNC_MAX_WATCHERS 8
 
-
 // 21
+#define FUNC_VERSION_UNSET 0
+#define FUNC_VERSION_CLEARED 1
+#define FUNC_VERSION_FIRST_VALID 2
+
+// 25
 #define FUNC_VERSION_CACHE_SIZE (1<<12)  /* Must be a power of 2 */
 
 
-class FuncVersionCacheItem { // 23
+class FuncVersionCacheItem { // 27
 public:
 	AlifFunctionObject* func{};
 	AlifObject* code{};
 };
 
-class AlifFuncState { // 28
+class AlifFuncState { // 32
 	public:
 	AlifMutex mutex{};
 
@@ -31,9 +35,9 @@ class AlifFuncState { // 28
 
 
 
-extern AlifFunctionObject* _alifFunction_fromConstructor(AlifFrameConstructor*); // 42
+extern AlifFunctionObject* _alifFunction_fromConstructor(AlifFrameConstructor*); // 54
 
-void _alifFunction_setVersion(AlifFunctionObject*, uint32_t); // 45
+void _alifFunction_setVersion(AlifFunctionObject*, uint32_t); // 55
 
 
 
