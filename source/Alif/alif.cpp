@@ -55,6 +55,11 @@ done:
 
 
 /* ----------------------------------- تشغيل اللغة ----------------------------------- */
+
+static AlifIntT stdin_isInteractive(const AlifConfig* config) { // 90
+	return (isatty(fileno(stdin)) or config->interactive);
+}
+
 static AlifIntT alifMain_runFileObj(AlifObject* _pn, AlifObject* _fn, AlifIntT _skipFirstLine) { // 365
 	FILE* fp_ = alif_fOpenObj(_fn, "rb");
 
@@ -144,6 +149,102 @@ static void alifMain_header(const AlifConfig* _config) { // 183
 }
 
 
+static AlifIntT alifMain_runStartup(AlifConfig* _config, AlifIntT* _exitcode) { // 436
+	AlifIntT ret{};
+	AlifCompilerFlags cf{}; //* alif
+	FILE* fp{}; //* alif
+
+	if (!_config->useEnvironment) {
+		return 0;
+	}
+	AlifObject* startup = nullptr;
+#ifdef _WINDOWS
+	const wchar_t* env = _wgetenv(L"ALIFSTARTUP");
+	if (env == nullptr or env[0] == L'\0') {
+		return 0;
+	}
+	startup = alifUStr_fromWideChar(env, wcslen(env));
+	if (startup == nullptr) {
+		goto error;
+	}
+#else
+	const char* env = _alif_getEnv(_config->useEnvironment, "ALIFSTARTUP");
+	if (env == nullptr) {
+		return 0;
+	}
+	startup = alifUStr_decodeFSDefault(env);
+	if (startup == nullptr) {
+		goto error;
+	}
+#endif
+	//if (alifSys_audit("alif.run_startup", "O", startup) < 0) {
+	//	goto error;
+	//}
+
+	fp = alif_fOpenObj(startup, "r");
+	if (fp == nullptr) {
+		AlifIntT save_errno = errno;
+		//alifErr_clear();
+		//alifSys_writeStderr("Could not open ALIFSTARTUP\n");
+
+		errno = save_errno;
+		//alifErr_setFromErrnoWithFilenameObjects(_alifExcOSError_, startup, nullptr);
+		goto error;
+	}
+
+	cf = ALIFCOMPILERFLAGS_INIT;
+	(void)alifRun_simpleFileObject(fp, startup, 0, &cf);
+	//alifErr_clear();
+	fclose(fp);
+	ret = 0;
+
+done:
+	ALIF_XDECREF(startup);
+	return ret;
+
+error:
+	//ret = alifMain_errPrint(_exitcode);
+	goto done;
+}
+
+
+static AlifIntT alifMain_runStdin(AlifConfig* _config) { // 542
+	if (stdin_isInteractive(_config)) {
+		// do exit on SystemExit
+		//alifMain_setInspect(_config, 0);
+
+		AlifIntT exitcode{};
+		if (alifMain_runStartup(_config, &exitcode)) {
+			return exitcode;
+		}
+
+		//if (alifMain_runInteractiveHook(&exitcode)) {
+		//	return exitcode;
+		//}
+	}
+
+	/* call pending calls like signal handlers (SIGINT) */
+	//if (alif_makePendingCalls() == -1) {
+	//	return alifMain_exitErrPrint();
+	//}
+
+	////if (alifSys_audit("alif.run_stdin", nullptr) < 0) {
+	////	return alifMain_exitErrPrint();
+	////}
+
+	//if (!isatty(fileno(stdin))
+	//	or _alif_getEnv(_config->useEnvironment, "ALIF_BASIC_REPL")) {
+	//	AlifCompilerFlags cf = ALIFCOMPILERFLAGS_INIT;
+	//	AlifIntT run = alifRun_anyFileExFlags(stdin, "<stdin>", 0, &cf);
+	//	return (run != 0);
+	//}
+	//AlifIntT run = alifMain_runModule(L"_alifRepl", 0);
+	//return (run != 0);
+
+	return 2; //* alif //* delete
+}
+
+
 static void alifMain_runAlif(AlifIntT* _exitcode) { // 614
 	AlifObject* mainImporterPath = nullptr;
 	AlifInterpreter* interp = _alifInterpreter_get();
@@ -213,7 +314,7 @@ static void alifMain_runAlif(AlifIntT* _exitcode) { // 614
 		*_exitcode = alifMain_runFile(config);
 	}
 	else {
-		//*_exitcode = alifMain_runStdin(config);
+		*_exitcode = alifMain_runStdin(config);
 	}
 
 	//alifMain_repl(config, _exitcode);

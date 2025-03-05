@@ -27,6 +27,15 @@ public:
 AlifIntT alifArgv_asWStringList(AlifConfig*, AlifArgv*); // 76
 
 
+
+
+/* --------------------------------------- Helper functions --------------------------------------- */
+
+extern const char* _alif_getEnv(AlifIntT, const char*); // 88
+
+
+
+
 /* ------------------------------------------ AlifConfig ------------------------------------------- */
 
 enum ConfigInitEnum_ { // 149

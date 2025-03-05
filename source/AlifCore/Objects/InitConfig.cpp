@@ -870,3 +870,19 @@ AlifIntT alifArgv_asWStringList(AlifConfig* _config, AlifArgv* _args) { // 78 in
 
 	return 1;
 }
+
+
+
+const char* _alif_getEnv(AlifIntT useEnvironment, const char* name) { // 526 in preconfig file
+	if (!useEnvironment) {
+		return nullptr;
+	}
+
+	const char* var = getenv(name);
+	if (var and var[0] != '\0') {
+		return var;
+	}
+	else {
+		return nullptr;
+	}
+}

@@ -30,7 +30,7 @@ AlifIntT _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePathCo
 		return status;
 	}
 
-	//* alif
+	//* alif //* delete
 
 	const wchar_t* folderName = L"lib";
 
