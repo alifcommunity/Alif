@@ -1517,7 +1517,7 @@ static FileDescr* find_module(const char* _fullname, const char* _subname, AlifO
 			//else {
 			//	char warnstr[MAXPATHLEN + 80];
 			//	sprintf(warnstr, "Not importing directory "
-			//		"'%.*s': missing __init__.py",
+			//		"'%.*s': missing __تهيئة__.aliflib",
 			//		MAXPATHLEN, buf);
 			//	if (alifErr_warn(_alifExcImportWarning_,
 			//		warnstr)) {
