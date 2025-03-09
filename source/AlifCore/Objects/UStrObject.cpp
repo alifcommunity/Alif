@@ -2481,6 +2481,41 @@ AlifObject* alifUStr_asEncodedString(AlifObject* unicode,
 
 
 
+//AlifObject* alifUStr_decodeFSDefault(const char* _s) { // 4029
+//	AlifSizeT size = (AlifSizeT)strlen(_s);
+//	return alifUStr_decodeFSDefaultAndSize(_s, size);
+//}
+//
+//AlifObject* alifUStr_decodeFSDefaultAndSize(const char* s, AlifSizeT size) { // 4035
+//	AlifInterpreter* interp = _alifInterpreter_get();
+//	AlifUStrFSCodec* fs_codec = &interp->unicode.fs_codec;
+//	if (fs_codec->utf8) {
+//		return uStr_decodeUTF8(s, size,
+//			fs_codec->error_handler,
+//			fs_codec->errors,
+//			nullptr);
+//	}
+//#ifndef _ALIF_FORCE_UTF8_FS_ENCODING
+//	else if (fs_codec->encoding) {
+//		return alifUStr_decode(s, size,
+//			fs_codec->encoding,
+//			fs_codec->errors);
+//	}
+//#endif
+//	else {
+//		const AlifConfig* config = alifInterpreter_getConfig(interp);
+//		const wchar_t* filesystem_errors = config->fileSystemErrors;
+//		AlifErrorHandler errors = get_error_handler_wide(filesystem_errors);
+//#ifdef _ALIF_FORCE_UTF8_FS_ENCODING
+//		return uStr_decodeUTF8(s, size, errors, nullptr, nullptr);
+//#else
+//		return uStr_decodeLocale(s, size, errors, 0);
+//#endif
+//	}
+//}
+
+
+
 AlifIntT alifUStr_fsConverter(AlifObject* _arg, void* _addr) { // 4079
 	AlifObject* path = nullptr;
 	AlifObject* output = nullptr;

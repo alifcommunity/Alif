@@ -94,6 +94,8 @@ AlifObject* alifUStr_encodeCodePage(AlifIntT, AlifObject*, const char*); // 695
 AlifIntT alifUStr_fsConverter(AlifObject*, void*); // 743
 
 
+AlifObject* alifUStr_decodeFSDefault(const char*); // 754
+
 AlifObject* alifUStr_encodeFSDefault(AlifObject*); // 766
 
 AlifObject* alifUStr_concat(AlifObject*, AlifObject*); // 778

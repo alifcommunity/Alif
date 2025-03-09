@@ -1138,7 +1138,7 @@ AlifObject* alifInit__imp(void) { // 4847
 #include "AlifCore_UStrObject.h"
 #include "OSDefs.h"
 #ifndef _WINDOWS
-#include <dirent.h> //* delete
+#include <sys/stat.h>
 #include <sys/types.h>
 #endif
 

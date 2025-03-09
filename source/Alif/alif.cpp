@@ -158,25 +158,25 @@ static AlifIntT alifMain_runStartup(AlifConfig* _config, AlifIntT* _exitcode) { 
 		return 0;
 	}
 	AlifObject* startup = nullptr;
-#ifdef _WINDOWS
-	const wchar_t* env = _wgetenv(L"ALIFSTARTUP");
-	if (env == nullptr or env[0] == L'\0') {
-		return 0;
-	}
-	startup = alifUStr_fromWideChar(env, wcslen(env));
-	if (startup == nullptr) {
-		goto error;
-	}
-#else
-	const char* env = _alif_getEnv(_config->useEnvironment, "ALIFSTARTUP");
-	if (env == nullptr) {
-		return 0;
-	}
-	startup = alifUStr_decodeFSDefault(env);
-	if (startup == nullptr) {
-		goto error;
-	}
-#endif
+//#ifdef _WINDOWS
+//	const wchar_t* env = _wgetenv(L"ALIFSTARTUP");
+//	if (env == nullptr or env[0] == L'\0') {
+//		return 0;
+//	}
+//	startup = alifUStr_fromWideChar(env, wcslen(env));
+//	if (startup == nullptr) {
+//		goto error;
+//	}
+//#else
+//	const char* env = _alif_getEnv(_config->useEnvironment, "ALIFSTARTUP");
+//	if (env == nullptr) {
+//		return 0;
+//	}
+//	startup = alifUStr_decodeFSDefault(env);
+//	if (startup == nullptr) {
+//		goto error;
+//	}
+//#endif
 	//if (alifSys_audit("alif.run_startup", "O", startup) < 0) {
 	//	goto error;
 	//}
