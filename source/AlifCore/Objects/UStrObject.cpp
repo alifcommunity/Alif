@@ -1790,14 +1790,14 @@ static const char* uStr_fromFormatArg(AlifUStrWriter* _writer,
 		break;
 	}
 
-	//case 'U':
-	//{
-	//	AlifObject* obj = va_arg(*_vargs, AlifObject*);
+	case 'U':
+	{
+		AlifObject* obj = va_arg(*_vargs, AlifObject*);
 
-	//	if (uStr_fromFormatWriteStr(_writer, obj, width, precision, flags) == -1)
-	//		return nullptr;
-	//	break;
-	//}
+		if (uStr_fromFormatWriteStr(_writer, obj, width, precision, flags) == -1)
+			return nullptr;
+		break;
+	}
 
 	//case 'V':
 	//{

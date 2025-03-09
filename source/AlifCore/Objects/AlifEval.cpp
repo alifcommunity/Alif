@@ -1530,7 +1530,7 @@ dispatch_opcode :
 				_alifFrame_setStackPointer(_frame, stackPointer);
 				AlifObject* vObj = _alifEval_loadName(_thread, _frame, name);
 				stackPointer = _alifFrame_getStackPointer(_frame);
-				//if (vObj == nullptr) goto error;
+				if (vObj == nullptr) goto error;
 				v = ALIFSTACKREF_FROMALIFOBJECTSTEAL(vObj);
 				stackPointer[0] = v;
 				stackPointer += 1;
@@ -1900,6 +1900,7 @@ exit_unwind:
 	//}
 
 
+	printf("\n\nحدث خطأ في المفسر \nيرجى مراجعة فريق لغة ألف لتحديد سبب الخطأ\n\n"); //* delete
 	return ALIF_NONE; //* alif //* delete
 }
 

@@ -12,18 +12,6 @@
 #include "Marshal.h"
 #include "AlifCore_ImportDL.h"
 
-//* alif
-#include "AlifCore_Compile.h"
-#include "OSDefs.h"
-#ifndef _WINDOWS
-#include <dirent.h>
-#include <sys/types.h>
-#endif
-
-static AlifObject* load_sourceImpl(AlifObject*); // alif
-
-//* alif
-
 
 
 
@@ -857,9 +845,9 @@ static AlifObject* import_findAndLoad(AlifThread* tstate, AlifObject* abs_name) 
 
 	//AlifTimeT t1 = 0, accumulated_copy = accumulated;
 
-	AlifObject* sysPath = alifSys_getObject("path");
-	AlifObject* sysMetaPath = alifSys_getObject("meta_path");
-	AlifObject* sysPathHooks = alifSys_getObject("path_hooks");
+	AlifObject* sysPath = alifSys_getObject("Path");
+	//AlifObject* sysMetaPath = alifSys_getObject("meta_path");
+	//AlifObject* sysPathHooks = alifSys_getObject("path_hooks");
 	//if (_alifSys_audit(tstate, "import", "OOOOO",
 	//	abs_name, ALIF_NONE, sysPath ? sysPath : ALIF_NONE,
 	//	sysMetaPath ? sysMetaPath : ALIF_NONE,
@@ -907,153 +895,150 @@ static AlifObject* import_findAndLoad(AlifThread* tstate, AlifObject* abs_name) 
 
 
 
-AlifObject* alifImport_importModuleLevelObject(AlifObject* name, AlifObject* globals,
-	AlifObject* locals, AlifObject* fromlist, AlifIntT level) { // 3688
-	AlifThread* thread = _alifThread_get();
-	AlifObject* absName = nullptr;
-	AlifObject* finalMod = nullptr;
-	AlifObject* mod = nullptr;
-	AlifObject* package = nullptr;
-	AlifInterpreter* interp = thread->interpreter;
-	AlifIntT hasFrom{};
-
-	if (name == nullptr) {
-		//_alifErr_setString(tstate, _alifExcValueError_, "Empty module name");
-		goto error;
-	}
-
-	if (!ALIFUSTR_CHECK(name)) {
-		//_alifErr_setString(tstate, _alifExcTypeError_,
-		//	"module name must be a string");
-		goto error;
-	}
-	if (level < 0) {
-		//_alifErr_setString(tstate, _alifExcValueError_, "level must be >= 0");
-		goto error;
-	}
-
-	if (level > 0) {
-		//absName = resolve_name(tstate, name, globals, level);
-		if (absName == nullptr)
-			goto error;
-	}
-	else {  /* level == 0 */
-		if (ALIFUSTR_GET_LENGTH(name) == 0) {
-			//_alifErr_setString(tstate, _alifExcValueError_, "Empty module name");
-			goto error;
-		}
-		absName = ALIF_NEWREF(name);
-	}
-
-	mod = import_getModule(thread, absName);
-	if (mod == nullptr and _alifErr_occurred(thread)) {
-		goto error;
-	}
-
-	if (mod != nullptr and mod != ALIF_NONE) {
-		//if (import_ensureInitialized(thread->interpreter, mod, abs_name) < 0) {
-		//	goto error;
-		//}
-	}
-	else {
-		ALIF_XDECREF(mod);
-		//mod = import_findAndLoad(thread, absName);
-
-		//* alif
-		mod = load_sourceImpl(absName);
-		//* alif
-
-		if (mod == nullptr) {
-			goto error;
-		}
-	}
-
-	hasFrom = 0;
-	if (fromlist != nullptr and fromlist != ALIF_NONE) {
-		hasFrom = alifObject_isTrue(fromlist);
-		if (hasFrom < 0)
-			goto error;
-	}
-	if (!hasFrom) {
-		AlifSizeT len = ALIFUSTR_GET_LENGTH(name);
-		if (level == 0 or len > 0) {
-			AlifSizeT dot{};
-
-			dot = alifUStr_findChar(name, '.', 0, len, 1);
-			if (dot == -2) {
-				goto error;
-			}
-
-			if (dot == -1) {
-				/* No dot in module name, simple exit */
-				finalMod = ALIF_NEWREF(mod);
-				goto error;
-			}
-
-			if (level == 0) {
-				AlifObject* front = alifUStr_subString(name, 0, dot);
-				if (front == nullptr) {
-					goto error;
-				}
-
-				finalMod = alifImport_importModuleLevelObject(front, nullptr, nullptr, nullptr, 0);
-				ALIF_DECREF(front);
-			}
-			else {
-				AlifSizeT cut_off = len - dot;
-				AlifSizeT abs_name_len = ALIFUSTR_GET_LENGTH(absName);
-				AlifObject* to_return = alifUStr_subString(absName, 0,
-					abs_name_len - cut_off);
-				if (to_return == nullptr) {
-					goto error;
-				}
-
-				finalMod = import_getModule(thread, to_return);
-				ALIF_DECREF(to_return);
-				if (finalMod == nullptr) {
-					//if (!_alifErr_occurred(tstate)) {
-					//	_alifErr_format(tstate, _alifExcKeyError_,
-					//		"%R not in sys.modules as expected",
-					//		to_return);
-					//}
-					goto error;
-				}
-			}
-		}
-		else {
-			finalMod = ALIF_NEWREF(mod);
-		}
-	}
-	else {
-		AlifIntT hasPath = alifObject_hasAttrWithError(mod, &ALIF_ID(__path__));
-		if (hasPath < 0) {
-			goto error;
-		}
-		if (hasPath) {
-			//final_mod = alifObject_callMethodObjArgs(
-			//	IMPORTLIB(interp), &ALIF_ID(_handleFromList),
-			//	mod, fromlist, IMPORT_FUNC(interp), nullptr);
-		}
-		else {
-			finalMod = ALIF_NEWREF(mod);
-		}
-	}
-
-error:
-	ALIF_XDECREF(absName);
-	ALIF_XDECREF(mod);
-	ALIF_XDECREF(package);
-	if (finalMod == nullptr) {
-		//remove_importLibFrames(tstate);
-	}
-	return finalMod;
-}
+//AlifObject* alifImport_importModuleLevelObject(AlifObject* name, AlifObject* globals,
+//	AlifObject* locals, AlifObject* fromlist, AlifIntT level) { // 3688
+//	AlifThread* thread = _alifThread_get();
+//	AlifObject* absName = nullptr;
+//	AlifObject* finalMod = nullptr;
+//	AlifObject* mod = nullptr;
+//	AlifObject* package = nullptr;
+//	AlifInterpreter* interp = thread->interpreter;
+//	AlifIntT hasFrom{};
+//
+//	if (name == nullptr) {
+//		//_alifErr_setString(tstate, _alifExcValueError_, "Empty module name");
+//		goto error;
+//	}
+//
+//	if (!ALIFUSTR_CHECK(name)) {
+//		//_alifErr_setString(tstate, _alifExcTypeError_,
+//		//	"module name must be a string");
+//		goto error;
+//	}
+//	if (level < 0) {
+//		//_alifErr_setString(tstate, _alifExcValueError_, "level must be >= 0");
+//		goto error;
+//	}
+//
+//	if (level > 0) {
+//		//absName = resolve_name(tstate, name, globals, level);
+//		if (absName == nullptr)
+//			goto error;
+//	}
+//	else {  /* level == 0 */
+//		if (ALIFUSTR_GET_LENGTH(name) == 0) {
+//			//_alifErr_setString(tstate, _alifExcValueError_, "Empty module name");
+//			goto error;
+//		}
+//		absName = ALIF_NEWREF(name);
+//	}
+//
+//	mod = import_getModule(thread, absName);
+//	if (mod == nullptr and _alifErr_occurred(thread)) {
+//		goto error;
+//	}
+//
+//	if (mod != nullptr and mod != ALIF_NONE) {
+//		//if (import_ensureInitialized(thread->interpreter, mod, abs_name) < 0) {
+//		//	goto error;
+//		//}
+//	}
+//	else {
+//		ALIF_XDECREF(mod);
+//		mod = import_findAndLoad(thread, absName);
+//
+//		if (mod == nullptr) {
+//			goto error;
+//		}
+//	}
+//
+//	hasFrom = 0;
+//	if (fromlist != nullptr and fromlist != ALIF_NONE) {
+//		hasFrom = alifObject_isTrue(fromlist);
+//		if (hasFrom < 0)
+//			goto error;
+//	}
+//	if (!hasFrom) {
+//		AlifSizeT len = ALIFUSTR_GET_LENGTH(name);
+//		if (level == 0 or len > 0) {
+//			AlifSizeT dot{};
+//
+//			dot = alifUStr_findChar(name, '.', 0, len, 1);
+//			if (dot == -2) {
+//				goto error;
+//			}
+//
+//			if (dot == -1) {
+//				/* No dot in module name, simple exit */
+//				finalMod = ALIF_NEWREF(mod);
+//				goto error;
+//			}
+//
+//			if (level == 0) {
+//				AlifObject* front = alifUStr_subString(name, 0, dot);
+//				if (front == nullptr) {
+//					goto error;
+//				}
+//
+//				finalMod = alifImport_importModuleLevelObject(front, nullptr, nullptr, nullptr, 0);
+//				ALIF_DECREF(front);
+//			}
+//			else {
+//				AlifSizeT cut_off = len - dot;
+//				AlifSizeT abs_name_len = ALIFUSTR_GET_LENGTH(absName);
+//				AlifObject* to_return = alifUStr_subString(absName, 0,
+//					abs_name_len - cut_off);
+//				if (to_return == nullptr) {
+//					goto error;
+//				}
+//
+//				finalMod = import_getModule(thread, to_return);
+//				ALIF_DECREF(to_return);
+//				if (finalMod == nullptr) {
+//					//if (!_alifErr_occurred(tstate)) {
+//					//	_alifErr_format(tstate, _alifExcKeyError_,
+//					//		"%R not in sys.modules as expected",
+//					//		to_return);
+//					//}
+//					goto error;
+//				}
+//			}
+//		}
+//		else {
+//			finalMod = ALIF_NEWREF(mod);
+//		}
+//	}
+//	else {
+//		AlifIntT hasPath = alifObject_hasAttrWithError(mod, &ALIF_ID(__path__));
+//		if (hasPath < 0) {
+//			goto error;
+//		}
+//		if (hasPath) {
+//			//final_mod = alifObject_callMethodObjArgs(
+//			//	IMPORTLIB(interp), &ALIF_ID(_handleFromList),
+//			//	mod, fromlist, IMPORT_FUNC(interp), nullptr);
+//		}
+//		else {
+//			finalMod = ALIF_NEWREF(mod);
+//		}
+//	}
+//
+//error:
+//	ALIF_XDECREF(absName);
+//	ALIF_XDECREF(mod);
+//	ALIF_XDECREF(package);
+//	if (finalMod == nullptr) {
+//		//remove_importLibFrames(tstate);
+//	}
+//	return finalMod;
+//}
 
 
 
 
 
 // alif
+static void init_importFileTab(); //* delete
 AlifIntT alifImport_init() { // 3954
 
 	if (INITTABLE != nullptr) {
@@ -1064,6 +1049,8 @@ AlifIntT alifImport_init() { // 3954
 	if (initBuildin_modulesTable() != 0) {
 		return -1;
 	}
+
+	init_importFileTab(); //* alif //* delete
 
 	return 1;
 }
@@ -1136,7 +1123,97 @@ AlifObject* alifInit__imp(void) { // 4847
 
 
 
+
+
+
+
+
+
 /* --------------------------------------------------- alif import impl --------------------------------------------------- */
+
+// IMPORTANT!: ALIFUSTR_GET_LENGTH return num of letters but we need num of bytes in this sys
+
+//* alif
+#include "AlifCore_Compile.h"
+#include "AlifCore_UStrObject.h"
+#include "OSDefs.h"
+#ifndef _WINDOWS
+#include <dirent.h> //* delete
+#include <sys/types.h>
+#endif
+
+static AlifIntT case_ok(char*, AlifSizeT, AlifSizeT, char*);
+static AlifIntT init_builtin(const char*);
+static AlifIntT mark_miss(char*);
+static AlifIntT find_initModule(char*);
+static AlifIntT ensure_fromList(AlifObject*, AlifObject*, char*, AlifSizeT, AlifIntT);
+static AlifObject* load_next(AlifObject*, AlifObject*, const char**, char*, AlifSizeT*);
+static AlifObject* get_parent(AlifObject*, char*, AlifSizeT*, AlifIntT);
+static AlifObject* import_submodule(AlifObject*, const char*, char*);
+static class FileDescr* find_module(const char*, const char*, AlifObject*, char*, AlifUSizeT, FILE**, AlifObject**);
+static AlifObject* load_module(const char*, FILE*, char*, AlifIntT, AlifObject*);
+
+#define S_ISDIR(x) (((x) & S_IFMT) == S_IFDIR)
+
+//* alif
+
+enum FileType { // 10
+	SEARCH_ERROR,
+	ALIF_SOURCE,
+	ALIF_COMPILED,
+	C_EXTENSION,
+	ALIF_RESOURCE, /* Mac only */
+	PKG_DIRECTORY,
+	CPP_BUILTIN,
+	ALIF_CODERESOURCE, /* Mac only */
+};
+
+class FileDescr { // 23
+public:
+	const char* suffix{};
+	const char* mode{};
+	FileType type{};
+};
+extern FileDescr* _alifImportFileTab_;
+
+
+static AlifObject* extensions = nullptr; // 90
+
+FileDescr* _alifImportFileTab_ = nullptr; // 98
+
+
+static const FileDescr _alifImportStandardFileTab_[] = { // 107
+	{".aliflib", "U", ALIF_SOURCE},
+#ifdef _WINDOWS
+	{".alifw", "U", ALIF_SOURCE},
+#endif
+	{".alifc", "rb", ALIF_COMPILED},
+	{0, 0}
+};
+
+
+static void init_importFileTab() { //* alif
+	const FileDescr* scan{};
+	FileDescr* filetab{};
+	AlifIntT countD = 0;
+	AlifIntT countS = 0;
+
+	for (scan = _alifImportStandardFileTab_; scan->suffix != nullptr; ++scan)
+		++countS;
+	filetab = (((AlifUSizeT)(countD + countS + 1) > ALIF_SIZET_MAX / sizeof(FileDescr)) ? nullptr : \
+		((FileDescr*)alifMem_dataAlloc((countD + countS + 1) * sizeof(FileDescr))));
+
+	if (filetab == nullptr) {
+		//alif_fatalError("Can't initialize import file table.");
+	}
+
+	memcpy(filetab + countD, _alifImportStandardFileTab_,
+		countS * sizeof(FileDescr));
+	filetab[countD + countS].suffix = nullptr;
+
+	_alifImportFileTab_ = filetab;
+
+}
 
 
 AlifObject* alifImport_getModuleDict(void) { // 364
@@ -1147,7 +1224,56 @@ AlifObject* alifImport_getModuleDict(void) { // 364
 	return interp->imports.modules;
 }
 
-AlifObject* alifImport_execCodeModuleEx(const char* name, AlifObject* co, char* pathname) { // 649
+
+AlifObject* _alifImport_fixupExtension(const char* _name) { // 546
+	AlifObject* modules{}, * mod{}, * dict{}, * copy{};
+	if (extensions == nullptr) {
+		extensions = alifDict_new();
+		if (extensions == nullptr)
+			return nullptr;
+	}
+
+	modules = alifImport_getModuleDict();
+	AlifObject* name = alifUStr_fromString(_name); //* alif
+	mod = alifDict_getItemWithError(modules, name);
+	if (mod == nullptr or !ALIFMODULE_CHECK(mod)) {
+		//alifErr_format(_alifExcSystemError_,
+		//	"_alifImport_fixupExtension: module %.200s not loaded", name);
+		return nullptr;
+	}
+	dict = alifModule_getDict(mod);
+	if (dict == nullptr)
+		return nullptr;
+	copy = alifDict_copy(dict);
+	if (copy == nullptr)
+		return nullptr;
+	alifDict_setItemString(extensions, _name, copy);
+	ALIF_DECREF(copy);
+	return copy;
+}
+
+AlifObject* _alifImport_findExtension(const char* _name) { // 573
+	AlifObject* dict{}, * mod{}, * mdict{};
+	if (extensions == nullptr)
+		return nullptr;
+
+	AlifObject* name = alifUStr_fromString(_name); //* alif
+	dict = alifDict_getItemWithError(extensions, name);
+	if (dict == nullptr)
+		return nullptr;
+	mod = alifImport_addModuleRef(_name);
+	if (mod == nullptr)
+		return nullptr;
+	mdict = alifModule_getDict(mod);
+	if (mdict == nullptr)
+		return nullptr;
+	if (alifDict_update(mdict, dict))
+		return nullptr;
+	return mod;
+}
+
+
+AlifObject* alifImport_execCodeModuleEx(const char* name, AlifObject* co, const char* pathname) { // 649
 	AlifObject* modules = alifImport_getModuleDict();
 	AlifObject* m{}, * d{}, * v{};
 
@@ -1161,7 +1287,7 @@ AlifObject* alifImport_execCodeModuleEx(const char* name, AlifObject* co, char* 
 			alifEval_getBuiltins()) != 0)
 			goto error;
 	}
-	/* Remember the filename as the __file__ attribute */
+
 	if (pathname != nullptr) {
 		v = alifUStr_fromString(pathname);
 		if (v == nullptr) {
@@ -1199,7 +1325,7 @@ error:
 }
 
 
-static AlifCodeObject* parse_sourceModule(const char* pathname, FILE* fp) { // 817 // import27.c
+static AlifCodeObject* parse_sourceModule(const char* pathname, FILE* fp) { // 817
 	AlifCodeObject* co = nullptr;
 	ModuleTy mod{};
 	AlifCompilerFlags flags{};
@@ -1215,17 +1341,16 @@ static AlifCodeObject* parse_sourceModule(const char* pathname, FILE* fp) { // 8
 	mod = alifParser_astFromFile(fp, ALIF_FILE_INPUT, fn, nullptr, nullptr, nullptr, &flags,
 		nullptr, nullptr, astMem);
 	if (mod) {
-		AlifSizeT len = strlen(pathname);
-		AlifObject* pathObj = alifUStr_fromStringAndSize(pathname, len);
-		co = _alifAST_compile(mod, pathObj, &flags, 0, astMem);
+		co = _alifAST_compile(mod, fn, &flags, 0, astMem);
 	}
 	alifASTMem_free(astMem);
 	return co;
 }
 
 
-static AlifObject* load_sourceModule(char* _name, char* _pathname, FILE* _fp) { // 966
+static AlifObject* load_sourceModule(const char* _name, const char* _pathname, FILE* _fp) { // 966
 	FILE* fpc{};
+	char buf[MAXPATHLEN + 1]{};
 	AlifCodeObject* co{};
 	AlifObject* m{};
 
@@ -1240,221 +1365,880 @@ static AlifObject* load_sourceModule(char* _name, char* _pathname, FILE* _fp) { 
 }
 
 
+static AlifObject* load_package(const char* name, char* pathname) { // 1035
+	AlifObject* m{}, * d{};
+	AlifObject* file = nullptr;
+	AlifObject* path = nullptr;
+	AlifIntT err{};
+	char buf[MAXPATHLEN + 1];
+	FILE* fp = nullptr;
+	FileDescr* fdp{};
 
+	m = alifImport_addModuleRef(name);
+	if (m == nullptr)
+		return nullptr;
 
-static FILE* open_file(char* pathname, const char* mode) { // 2938
-	FILE* fp{};
-	fp = fopen(pathname, mode);
-	if (fp == nullptr) {
-		//alifErr_setFromErrno(_alifExcIOError_);
+	d = alifModule_getDict(m);
+	file = alifUStr_fromString(pathname);
+	if (file == nullptr)
+		goto error;
+	path = alif_buildValue("[O]", file);
+	if (path == nullptr)
+		goto error;
+	err = alifDict_setItemString(d, "__file__", file);
+	if (err == 0)
+		err = alifDict_setItemString(d, "__path__", path);
+	if (err != 0)
+		goto error;
+	buf[0] = '\0';
+	fdp = find_module(name, "_تهيئة_", path, buf, sizeof(buf), &fp, nullptr);
+	if (fdp == nullptr) {
+		//if (alifErr_exceptionMatches(_alifExcImportError_)) {
+		//	alifErr_clear();
+		//	ALIF_INCREF(m);
+		//}
+		//else {
+			m = nullptr;
+		//}
+		goto cleanup;
 	}
-	return fp;
+	m = load_module(name, fp, buf, fdp->type, nullptr);
+	if (fp != nullptr)
+		fclose(fp);
+	goto cleanup;
+
+error:
+	m = nullptr;
+cleanup:
+	ALIF_XDECREF(path);
+	ALIF_XDECREF(file);
+	return m;
 }
 
-static void path_addFile(char* path, const char* extension) {
-	AlifUSizeT pathLen = strlen(path);
 
-	// Check if the path already has an extension
-	const char* dot = strrchr(path, '.');
-	if (dot and dot > strrchr(path, '/') and dot > strrchr(path, '\\')) {
-		// Replace the existing extension with the new one
-		strcpy((char*)dot + 1, extension);
+
+static FileDescr* find_module(const char* _fullname, const char* _subname, AlifObject* _path, char* _buf,
+	AlifUSizeT _buflen, FILE** _pFP, AlifObject** _pLoader) { // 1198
+	AlifSizeT i{}, npath{};
+	AlifUSizeT len{}, namelen{};
+	FileDescr* fdp = nullptr;
+	const char* filemode{};
+	FILE* fp = nullptr;
+
+	struct stat statbuf {};
+
+	static FileDescr fd_builtin = { "", "", CPP_BUILTIN };
+	static FileDescr fd_package = { "", "", PKG_DIRECTORY };
+	char name[MAXPATHLEN + 1]{};
+
+	if (strlen(_subname) > MAXPATHLEN) {
+		//alifErr_setString(_alifExcOverflowError_,
+		//	"module name is too long");
+		return nullptr;
+	}
+	strcpy(name, _subname);
+
+	//if (_path != nullptr and ALIFUSTR_CHECK(_path)) {
+	//	/* The only type of submodule allowed inside a "frozen"
+	//	   package are other frozen modules or packages. */
+	//	if (ALIFUSTR_GET_LENGTH(_path) + 1 + strlen(name) >= (AlifUSizeT)_buflen) {
+	//		//alifErr_setString(_alifExcImportError_,
+	//		//	"full frozen module name too long");
+	//		return nullptr;
+	//	}
+	//	strcpy(_buf, alifUStr_asUTF8(_path));
+	//	strcat(_buf, ".");
+	//	strcat(_buf, name);
+	//	strcpy(name, _buf);
+	//	if (find_frozen(name) != nullptr) {
+	//		strcpy(_buf, name);
+	//		return &fd_frozen;
+	//	}
+	//	alifErr_format(_alifExcImportError_,
+	//		"No frozen submodule named %.200s", name);
+	//	return nullptr;
+	//}
+	if (_path == nullptr) {
+		AlifObject* biltinName = alifUStr_fromString(name);
+		if (is_builtin(biltinName)) {
+			strcpy(_buf, name);
+			return &fd_builtin;
+		}
+
+		_path = alifSys_getObject("Path");
+	}
+
+	if (_path == nullptr or !ALIFLIST_CHECK(_path)) {
+		//alifErr_setString(_alifExcRuntimeError_,
+		//	"sys.path must be a list of directory names");
+		return nullptr;
+	}
+
+	npath = ALIFLIST_GET_SIZE(_path);
+	namelen = strlen(name);
+	for (i = 0; i < npath; i++) {
+		AlifObject* copy = nullptr;
+		AlifObject* v = alifList_getItem(_path, i);
+		if (!v)
+			return nullptr;
+
+		if (!ALIFUSTR_CHECK(v))
+			continue;
+
+		len = strlen(alifUStr_asUTF8(v));
+		if (len + 7 + namelen + 12 >= _buflen) {
+			ALIF_XDECREF(copy);
+			continue; /* Too long */
+		}
+		strcpy(_buf, alifUStr_asUTF8(v));
+		if (strlen(_buf) != len) {
+			ALIF_XDECREF(copy);
+			continue; /* v contains '\0' */
+		}
+
+		/* no hook was found, use builtin import */
+
+		if (len > 0 and _buf[len - 1] != SEP
+#ifdef ALTSEP
+			and _buf[len - 1] != ALTSEP
+#endif
+			)
+			_buf[len++] = SEP;
+		strcpy(_buf + len, name);
+		len += namelen;
+
+		if (stat(_buf, &statbuf) == 0 and         /* it exists */
+			S_ISDIR(statbuf.st_mode) and         /* it's a directory */
+			case_ok(_buf, len, namelen, name)) { /* case matches */
+			if (find_initModule(_buf)) { /* and has _تهيئة_.aliflib */
+				ALIF_XDECREF(copy);
+				return &fd_package;
+			}
+			//else {
+			//	char warnstr[MAXPATHLEN + 80];
+			//	sprintf(warnstr, "Not importing directory "
+			//		"'%.*s': missing __init__.py",
+			//		MAXPATHLEN, buf);
+			//	if (alifErr_warn(_alifExcImportWarning_,
+			//		warnstr)) {
+			//		ALIF_XDECREF(copy);
+			//		return nullptr;
+			//	}
+			//}
+		}
+
+		for (fdp = _alifImportFileTab_; fdp->suffix != nullptr; fdp++) {
+			strcpy(_buf + len, fdp->suffix);
+			filemode = fdp->mode;
+			if (filemode[0] == 'U')
+				filemode = "r"; // "b";
+			fp = fopen(_buf, filemode);
+			if (fp != nullptr) {
+					break;
+			}
+		}
+		ALIF_XDECREF(copy);
+		if (fp != nullptr)
+			break;
+	}
+	if (fp == nullptr) {
+		//alifErr_format(_alifExcImportError_,
+		//	"No module named %.200s", name);
+		return nullptr;
+	}
+	*_pFP = fp;
+	return fdp;
+}
+
+
+
+
+
+static AlifIntT case_ok(char* _buf, AlifSizeT _len, AlifSizeT _namelen, char* _name) { // 1577
+	/* Pick a platform-specific implementation; the sequence of #if's here should
+	 * match the sequence just above.
+	 */
+
+	 /* _WINDOWS */
+#if defined(_WINDOWS)
+	WIN32_FIND_DATA data;
+	HANDLE h;
+
+	//* alif
+	wchar_t str[MAXPATHLEN]{};
+	AlifSizeT len = strlen(_buf);
+	mbstowcs(str, _buf, len);
+	//* alif
+
+	h = FindFirstFile(str, &data);
+	if (h == INVALID_HANDLE_VALUE) {
+		//alifErr_format(_alifExcNameError_,
+		//	"Can't find file for module %.100s\n(filename %.300s)",
+		//	name, buf);
+		return 0;
+	}
+	FindClose(h);
+
+	//* alif
+	wchar_t name[MAXPATHLEN]{};
+	AlifSizeT namelen = strlen(_name);
+	mbstowcs(name, _name, namelen);
+	//* alif
+
+	return wcsncmp(data.cFileName, name, namelen) == 0;
+
+
+
+	/* new-fangled macintosh (macosx) or Cygwin */
+#elif (defined(__MACH__) && defined(__APPLE__) || defined(__CYGWIN__)) && defined(HAVE_DIRENT_H)
+	DIR* dirp;
+	struct dirent* dp;
+	char dirname[MAXPATHLEN + 1];
+	const int dirlen = len - namelen - 1; /* don't want trailing SEP */
+
+	/* Copy the dir component into dirname; substitute "." if empty */
+	if (dirlen <= 0) {
+		dirname[0] = '.';
+		dirname[1] = '\0';
 	}
 	else {
-		// If there is no extension, append it
-		strcat(path, ".");
-		strcat(path, extension);
+		memcpy(dirname, buf, dirlen);
+		dirname[dirlen] = '\0';
 	}
-}
-
-static AlifIntT get_absPath(const char* _name, char* _pathname, AlifUSizeT _pathNameSize) {
-	if (_name == nullptr) return -1;
-
-#ifdef _WINDOWS
-	if (_fullpath(_pathname, _name, _pathNameSize) != nullptr) {
-		return 1;
-	}
+	/* Open the directory and search the entries for an exact match. */
+	dirp = opendir(dirname);
+	if (dirp) {
+		char* nameWithExt = buf + len - namelen;
+		while ((dp = readdir(dirp)) != nullptr) {
+			const int thislen =
+#ifdef _DIRENT_HAVE_D_NAMELEN
+				dp->d_namlen;
 #else
-	if (getcwd(_pathname, _pathNameSize) == nullptr) {
-		printf("لم يستطع جلب مسار الملف خلال الاستيراد");
-		return -1;
+				strlen(dp->d_name);
+#endif
+			if (thislen >= namelen &&
+				strcmp(dp->d_name, nameWithExt) == 0) {
+				(void)closedir(dirp);
+				return 1; /* Found */
+			}
+		}
+		(void)closedir(dirp);
 	}
-
-	strcat(_pathname, "/");
-	strcat(_pathname, _name);
-
-	if (_pathname != nullptr) {
-		return 1;
-	}
+	return 0; /* Not found */
 
 #endif
-	return -1;
 }
 
-static const char* get_fileExtension(const char* filename) {
-	const char* dot = strrchr(filename, '.');
-	if (!dot or dot == filename) return "";
-	return dot + 1;
-}
 
-static char* get_baseName(const char* filename) {
-	const char* dot = strrchr(filename, '.');
+static AlifIntT find_initModule(char* buf) { // 1715
+	const AlifUSizeT save_len = strlen(buf);
+	AlifUSizeT i = save_len;
+	char* pname{};  /* pointer to start of _تهيئة_ */
+	struct stat statbuf;
 
-	if (!dot or dot == filename) return strdup(filename);
-	AlifUSizeT len = dot - filename;
-	char* baseName = (char*)alifMem_dataAlloc(len + 1);
-	if (baseName == nullptr) {
-		return nullptr;
-	}
-
-	strncpy(baseName, filename, len);
-	baseName[len] = '\0';
-
-	return baseName;
-}
-
-static AlifIntT find_file(const char* name, char* pathname) {
-
-#ifdef _WINDOWS
-	WIN32_FIND_DATAA findFileData;
-	HANDLE hFind = FindFirstFileA("*", &findFileData);
-
-	if (hFind == INVALID_HANDLE_VALUE) {
-		fprintf(stderr, "FindFirstFile failed (%lu)\n", GetLastError());
-		return -1;
-	}
-
-	BOOL bFound = true;
-	do {
-		const char* filename = findFileData.cFileName;
-		char* baseName = get_baseName(filename);
-		if (baseName == nullptr) {
-			return -1;
-		}
-		if (strcmp(baseName, name) == 0) {
-			const char* extension = get_fileExtension(filename);
-			if (strcmp(extension, "aliflib") == 0
-				/*or strcmp(extension, "alif") == 0
-				or strcmp(extension, "alifm") == 0*/) {
-				char newFilename[MAXPATHLEN]{};
-				snprintf(newFilename, sizeof(newFilename), "%s.%s", baseName, extension);
-				path_addFile(pathname, extension);
-			}
-			alifMem_dataFree(baseName);
-			FindClose(hFind);
+	/*      For calling case_ok(buf, len, namelen, name):
+	 *      /a/b/c/d/e/f/g/h/i/j/k/some_long_module_name.aliflib\0
+	 *      ^                      ^                   ^    ^
+	 *      |--------------------- buf ---------------------|
+	 *      |------------------- len ------------------|
+	 *                             |------ name -------|
+	 *                             |----- namelen -----|
+	 */
+	if (save_len + 15 >= MAXPATHLEN)
+		return 0;
+	buf[i++] = SEP;
+	pname = buf + i;
+	strcpy(pname, "_تهيئة_.aliflib");
+	if (stat(buf, &statbuf) == 0) {
+		if (case_ok(buf,
+			save_len + 9,               /* len("/_تهيئة_") */
+			8,                              /* len("_تهيئة_") */
+			pname)) {
+			buf[save_len] = '\0';
 			return 1;
 		}
-		bFound = FindNextFileA(hFind, &findFileData);
-	} while (bFound);
-
-	DWORD dwError = GetLastError();
-	if (dwError != ERROR_NO_MORE_FILES) {
-		fprintf(stderr, "FindNextFile failed (%lu)\n", dwError);
-		FindClose(hFind);
-		return -1;
 	}
-
-	FindClose(hFind);
-	fprintf(stderr, "File not found: %s\n", name);
-	return -1;
-
-#else
-	DIR* dir = opendir(".");
-	if (!dir) {
-		perror("opendir");
-		return -1;
-	}
-
-	struct dirent* entry{};
-	while ((entry = readdir(dir)) != nullptr) {
-		if (entry->d_type == DT_REG) { // Check if it's a regular file
-			char* baseName = get_baseName(entry->d_name);
-			if (baseName == nullptr) {
-				return -1;
-			}
-			if (strcmp(baseName, name) == 0) {
-				const char* extension = get_fileExtension(entry->d_name);
-				if (strcmp(extension, "aliflib") == 0
-					/*or strcmp(extension, "alif") == 0
-					or strcmp(extension, "alifm") == 0*/) {
-					char newFilename[MAXPATHLEN]{};
-					snprintf(newFilename, sizeof(newFilename), "%s.%s", baseName, extension);
-					path_addFile(pathname, extension);
-				}
-				alifMem_dataFree(baseName);
-				closedir(dir);
-				return 1;
-			}
-		}
-	}
-
-	closedir(dir);
-	fprintf(stderr, "File not found: %s\n", name);
-	return -1;
-
-#endif
+	return 0;
 }
 
 
-
-static AlifObject* load_sourceImpl(AlifObject* _absName) { // 3002 // import27.c
-	char* name{};
-	char pathname[MAXPATHLEN]{};
+static AlifObject* load_module(const char* _name, FILE* fp, char* pathname, AlifIntT type, AlifObject* loader) { // 1800
+	AlifObject* modules{};
 	AlifObject* m{};
-	FILE* fp{};
+	AlifObject* spec{}; //* alif
+	AlifObject* attrs{}; //* alif
+	AlifIntT err{};
 
-	name = (char*)alifUStr_asUTF8(_absName);
-	if (name == nullptr) {
-		return nullptr;
+	AlifThread* thread = _alifThread_get(); //* alif
+	AlifObject* name = alifUStr_fromString(_name); //* alif
+
+
+	/* First check that there's an open file (if we need one)  */
+	switch (type) {
+	case ALIF_SOURCE:
+	case ALIF_COMPILED:
+		if (fp == nullptr) {
+			//alifErr_format(_alifExcValueError_,
+			//	"file object required for import (type code %d)",
+			//	type);
+			return nullptr;
+		}
 	}
 
-	if (is_builtin(_absName)) {
-		AlifThread* thread = _alifThread_get();
+	switch (type) {
 
-		AlifObject* attrs = alif_buildValue("{sO}", "name", _absName);
+	case ALIF_SOURCE:
+		m = load_sourceModule(_name, pathname, fp);
+		break;
+	//case ALIF_COMPILED:
+	//	m = load_compiled_module(name, pathname, fp);
+	//	break;
+	case PKG_DIRECTORY:
+		m = load_package(_name, pathname);
+		break;
+	case CPP_BUILTIN:
+		if (pathname != nullptr and pathname[0] != '\0')
+			_name = pathname;
+
+		//* alif
+		attrs = alif_buildValue("{sO}", "name", name);
 		if (attrs == nullptr) {
 			return nullptr;
 		}
-		AlifObject* spec = alifNamespace_new(attrs);
+		spec = alifNamespace_new(attrs);
 		ALIF_DECREF(attrs);
 		if (spec == nullptr) {
 			return nullptr;
 		}
 
-		AlifObject* mod = create_builtin(thread, _absName, spec);
+		m = create_builtin(thread, name, spec);
 		ALIF_DECREF(spec);
-		if (mod == nullptr) {
+		if (m == nullptr) {
 			return nullptr;
 		}
 
-		if (exec_builtinOrDynamic(mod) < 0) {
-			ALIF_DECREF(mod);
+		if (exec_builtinOrDynamic(m) < 0) {
+			ALIF_DECREF(m);
 			return nullptr;
 		}
 
-		return mod;
+		ALIF_INCREF(m);
+		//* alif
+		break;
+	default:
+		//alifErr_format(_alifExcImportError_,
+		//	"Don't know how to import %.200s (type code %d)",
+		//	name, type);
+		m = nullptr;
 	}
-
-
-	if (get_absPath(name, pathname, MAXPATHLEN) < 0) {
-		printf("لم يستطع جلب المسار اثناء الاستيراد");
-		return nullptr;
-	}
-
-	// البحث عن الملف ضمن الملفات في المسار الحالي وإضافته لمسار
-	if (find_file(name, pathname) < 0) {
-		return nullptr;
-	}
-
-	fp = open_file(pathname, "r");
-	if (fp == nullptr) return nullptr;
-
-	m = load_sourceModule(name, pathname, fp);
-
-	if (fp != nullptr) fclose(fp);
 
 	return m;
 }
+
+
+
+
+static AlifIntT init_builtin(const char* name) { // 1897
+	InitTable* p{};
+
+	if (_alifImport_findExtension(name) != nullptr)
+		return 1;
+
+	for (p = _alifImportInitTab_; p->name != nullptr; p++) {
+		if (strcmp(name, p->name) == 0) {
+			if (p->initFunc == nullptr) {
+				//alifErr_format(_alifExcImportError_,
+				//	"Cannot re-init internal module %.200s",
+				//	name);
+				return -1;
+			}
+			alifImport_addModuleRef(name); // to add the lib to main import in thread //* alif
+			(*p->initFunc)();
+			if (alifErr_occurred())
+				return -1;
+			if (_alifImport_fixupExtension(name) == nullptr)
+				return -1;
+			return 1;
+		}
+	}
+	return 0;
+}
+
+
+
+
+
+static AlifObject* import_moduleLevel(const char* _name, AlifObject* _globals, AlifObject* _locals,
+	AlifObject* _fromlist, AlifIntT _level) { // 2114
+	char buf[MAXPATHLEN + 1]{};
+	AlifSizeT buflen = 0;
+	AlifObject* parent{}, * head{}, * next{}, * tail{};
+
+	if (strchr(_name, '/') != nullptr
+#ifdef _WINDOWS
+		or strchr(_name, '\\') != nullptr
+#endif
+		) {
+		//alifErr_setString(_alifExcImportError_,
+		//	"Import by filename is not supported.");
+		return nullptr;
+	}
+
+	parent = get_parent(_globals, buf, &buflen, _level);
+	if (parent == nullptr)
+		return nullptr;
+
+	head = load_next(parent, _level < 0 ? ALIF_NONE : parent, &_name, buf,
+		&buflen);
+	if (head == nullptr)
+		return nullptr;
+
+	tail = head;
+	ALIF_INCREF(tail);
+	while (_name) {
+		next = load_next(tail, tail, &_name, buf, &buflen);
+		ALIF_DECREF(tail);
+		if (next == nullptr) {
+			ALIF_DECREF(head);
+			return nullptr;
+		}
+		tail = next;
+	}
+	if (tail == ALIF_NONE) {
+		ALIF_DECREF(tail);
+		ALIF_DECREF(head);
+		//alifErr_setString(_alifExcValueError_,
+		//	"Empty module name");
+		return nullptr;
+	}
+
+	if (_fromlist != nullptr) {
+		if (_fromlist == ALIF_NONE or !alifObject_isTrue(_fromlist))
+			_fromlist = nullptr;
+	}
+
+	if (_fromlist == nullptr) {
+		ALIF_DECREF(tail);
+		return head;
+	}
+
+	ALIF_DECREF(head);
+	if (!ensure_fromList(tail, _fromlist, buf, buflen, 0)) {
+		ALIF_DECREF(tail);
+		return nullptr;
+	}
+
+	return tail;
+}
+
+
+AlifObject* alifImport_importModuleLevelObject(AlifObject* name, AlifObject* globals,
+	AlifObject* locals, AlifObject*  fromlist, AlifIntT level) { // 2182
+	AlifObject* result{};
+	//_alifImport_acquireLock();
+	level = -1; //* alif
+	result = import_moduleLevel(alifUStr_asUTF8(name), globals, locals, fromlist, level);
+	//if (_alifImport_releaseLock() < 0) {
+	//	ALIF_XDECREF(result);
+	//	alifErr_setString(_alifExcRuntimeError_,
+	//		"not holding the import lock");
+	//	return nullptr;
+	//}
+	return result;
+}
+
+
+
+
+static AlifObject* get_parent(AlifObject* globals, char* buf,
+	AlifSizeT* p_buflen, AlifIntT level) { // 2209
+	static AlifObject* namestr = nullptr;
+	static AlifObject* pathstr = nullptr;
+	static AlifObject* pkgstr = nullptr;
+	AlifObject* pkgname{}, * modname{}, * modpath{}, * modules{}, * parent{};
+	AlifIntT orig_level = level;
+
+	if (globals == nullptr or !ALIFDICT_CHECK(globals) or !level)
+		return ALIF_NONE;
+
+	if (namestr == nullptr) {
+		namestr = alifUStr_internFromString("__name__");
+		if (namestr == nullptr)
+			return nullptr;
+	}
+	if (pathstr == nullptr) {
+		pathstr = alifUStr_internFromString("__path__");
+		if (pathstr == nullptr)
+			return nullptr;
+	}
+	if (pkgstr == nullptr) {
+		pkgstr = alifUStr_internFromString("__package__");
+		if (pkgstr == nullptr)
+			return nullptr;
+	}
+
+	*buf = '\0';
+	*p_buflen = 0;
+	pkgname = alifDict_getItemWithError(globals, pkgstr);
+
+	if ((pkgname != nullptr) and (pkgname != ALIF_NONE)) {
+		/* __package__ is set, so use it */
+		AlifSizeT len{};
+		if (!ALIFUSTR_CHECK(pkgname)) {
+			//alifErr_setString(_alifExcValueError_,
+			//	"__package__ set to non-string");
+			return nullptr;
+		}
+		//len = ALIFUSTR_GET_LENGTH(pkgname);
+		len = strlen(alifUStr_asUTF8(pkgname)); //* alif
+		if (len == 0) {
+			if (level > 0) {
+				//alifErr_setString(_alifExcValueError_,
+				//	"Attempted relative import in non-package");
+				return nullptr;
+			}
+			return ALIF_NONE;
+		}
+		if (len > MAXPATHLEN) {
+			//alifErr_setString(_alifExcValueError_,
+			//	"Package name too long");
+			return nullptr;
+		}
+		strcpy(buf, alifUStr_asUTF8(pkgname));
+	}
+	else {
+		/* __package__ not set, so figure it out and set it */
+		modname = alifDict_getItemWithError(globals, namestr);
+		if (modname == nullptr or !ALIFUSTR_CHECK(modname))
+			return ALIF_NONE;
+
+		modpath = alifDict_getItemWithError(globals, pathstr);
+		if (modpath != nullptr) {
+			/* __path__ is set, so modname is already the package name */
+			//AlifSizeT len = ALIFUSTR_GET_LENGTH(modname); // ALIFUSTR_GET_LENGTH return num of letters and we need num of bytes in this sys
+			AlifSizeT len = strlen(alifUStr_asUTF8(modname)); //* alif
+			int error{};
+			if (len > MAXPATHLEN) {
+				//alifErr_setString(_alifExcValueError_,
+				//	"Module name too long");
+				return nullptr;
+			}
+			strcpy(buf, alifUStr_asUTF8(modname));
+			error = alifDict_setItem(globals, pkgstr, modname);
+			if (error) {
+				//alifErr_setString(_alifExcValueError_,
+				//	"Could not set __package__");
+				return nullptr;
+			}
+		}
+		else {
+			/* Normal module, so work out the package name if any */
+			const char* start = alifUStr_asUTF8(modname);
+			const char* lastdot = strrchr(start, '.');
+			AlifUSizeT len{};
+			AlifIntT error{};
+			if (lastdot == nullptr and level > 0) {
+				//alifErr_setString(_alifExcValueError_,
+				//	"Attempted relative import in non-package");
+				return nullptr;
+			}
+			if (lastdot == nullptr) {
+				error = alifDict_setItem(globals, pkgstr, ALIF_NONE);
+				if (error) {
+					//alifErr_setString(_alifExcValueError_,
+					//	"Could not set __package__");
+					return nullptr;
+				}
+				return ALIF_NONE;
+			}
+			len = lastdot - start;
+			if (len >= MAXPATHLEN) {
+				//alifErr_setString(_alifExcValueError_,
+				//	"Module name too long");
+				return nullptr;
+			}
+			strncpy(buf, start, len);
+			buf[len] = '\0';
+			pkgname = alifUStr_fromString(buf);
+			if (pkgname == nullptr) {
+				return nullptr;
+			}
+			error = alifDict_setItem(globals, pkgstr, pkgname);
+			ALIF_DECREF(pkgname);
+			if (error) {
+				//alifErr_setString(_alifExcValueError_,
+				//	"Could not set __package__");
+				return nullptr;
+			}
+		}
+	}
+	while (--level > 0) {
+		char* dot = strrchr(buf, '.');
+		if (dot == nullptr) {
+			//alifErr_setString(_alifExcValueError_,
+			//	"Attempted relative import beyond "
+			//	"toplevel package");
+			return nullptr;
+		}
+		*dot = '\0';
+	}
+	*p_buflen = strlen(buf);
+
+	modules = alifImport_getModuleDict();
+	parent = alifDict_getItemWithError(modules, alifUStr_fromString(buf));
+	if (parent == nullptr) {
+		if (orig_level < 1) {
+			//AlifObject* err_msg = alifString_fromFormat(
+			//	"Parent module '%.200s' not found "
+			//	"while handling absolute import", buf);
+			//if (err_msg == nullptr) {
+			//	return nullptr;
+			//}
+			//if (!alifErr_warnEx(_alifExcRuntimeWarning_,
+			//	alifUStr_asUTF8(err_msg), 1)) {
+			//	*buf = '\0';
+			//	*p_buflen = 0;
+			//	parent = ALIF_NONE;
+			//}
+			//ALIF_DECREF(err_msg);
+		}
+		else {
+			//alifErr_format(_alifExcSystemError_,
+			//	"Parent module '%.200s' not loaded, "
+			//	"cannot perform relative import", buf);
+		}
+	}
+	return parent;
+}
+
+
+static AlifObject* load_next(AlifObject* mod, AlifObject* altmod,
+	const char** p_name, char* buf, AlifSizeT* p_buflen) { // 2371
+	const char* name = *p_name;
+	const char* dot = strchr(name, '.');
+	AlifUSizeT len{};
+	char* p{};
+	AlifObject* result{};
+
+	if (strlen(name) == 0) {
+		/* completely empty module name should only happen in
+		   'من . استورد' (or '_استورد_("")')*/
+		ALIF_INCREF(mod);
+		*p_name = nullptr;
+		return mod;
+	}
+
+	if (dot == nullptr) {
+		*p_name = nullptr;
+		len = strlen(name);
+	}
+	else {
+		*p_name = dot + 1;
+		len = dot - name;
+	}
+	if (len == 0) {
+		//alifErr_setString(_alifExcValueError_,
+		//	"Empty module name");
+		return nullptr;
+	}
+
+	p = buf + *p_buflen;
+	if (p != buf) {
+		*p++ = '.';
+	}
+	if (p + len - buf >= MAXPATHLEN) {
+		//alifErr_setString(_alifExcValueError_,
+		//	"Module name too long");
+		return nullptr;
+	}
+	strncpy(p, name, len);
+	p[len] = '\0';
+	*p_buflen = p + len - buf;
+
+	result = import_submodule(mod, p, buf);
+	if (result == ALIF_NONE and altmod != mod) {
+		ALIF_DECREF(result);
+		/* Here, altmod must be None and mod must not be None */
+		result = import_submodule(altmod, p, p);
+		if (result != nullptr and result != ALIF_NONE) {
+			if (mark_miss(buf) != 0) {
+				ALIF_DECREF(result);
+				return nullptr;
+			}
+			strncpy(buf, name, len);
+			buf[len] = '\0';
+			*p_buflen = len;
+		}
+	}
+	if (result == nullptr)
+		return nullptr;
+
+	if (result == ALIF_NONE) {
+		ALIF_DECREF(result);
+		//alifErr_format(_alifExcImportError_,
+		//	"No module named %.200s", name);
+		return nullptr;
+	}
+
+	return result;
+}
+
+
+static AlifIntT mark_miss(char* name) { // 2443
+	AlifObject* modules = alifImport_getModuleDict();
+	return alifDict_setItemString(modules, name, ALIF_NONE);
+}
+
+static AlifIntT ensure_fromList(AlifObject* mod, AlifObject* fromlist,
+	char* buf, AlifSizeT buflen, AlifIntT recursive) { // 2450
+	AlifIntT i{};
+
+	if (!alifObject_hasAttrWithError(mod, &ALIF_ID(__path__)))
+		return 1;
+
+	for (i = 0; ; i++) {
+		AlifObject* item = alifSequence_getItem(fromlist, i);
+		AlifIntT hasit{};
+		if (item == nullptr) {
+			//if (alifErr_exceptionMatches(_alifExcIndexError_)) {
+			//	alifErr_clear();
+			//	return 1;
+			//}
+			return 0;
+		}
+		if (!ALIFUSTR_CHECK(item)) {
+			//alifErr_setString(_alifExcTypeError_,
+			//	"Item in ``from list'' not a string");
+			ALIF_DECREF(item);
+			return 0;
+		}
+		if (alifUStr_asUTF8(item)[0] == '*') {
+			AlifObject* all{};
+			ALIF_DECREF(item);
+			/* See if the package defines __all__ */
+			if (recursive)
+				continue; /* Avoid endless recursion */
+			all = alifObject_getAttrString(mod, "__all__");
+			if (all == nullptr) {
+				//alifErr_clear();
+			}
+			else {
+				int ret = ensure_fromList(mod, all, buf, buflen, 1);
+				ALIF_DECREF(all);
+				if (!ret)
+					return 0;
+			}
+			continue;
+		}
+		hasit = alifObject_hasAttrWithError(mod, item);
+		if (!hasit) {
+			const char* subname = alifUStr_asUTF8(item);
+			AlifObject* submod{};
+			char* p;
+			if (buflen + strlen(subname) >= MAXPATHLEN) {
+				//alifErr_setString(_alifExcValueError_,
+				//	"Module name too long");
+				ALIF_DECREF(item);
+				return 0;
+			}
+			p = buf + buflen;
+			*p++ = '.';
+			strcpy(p, subname);
+			submod = import_submodule(mod, subname, buf);
+			ALIF_XDECREF(submod);
+			if (submod == nullptr) {
+				ALIF_DECREF(item);
+				return 0;
+			}
+		}
+		ALIF_DECREF(item);
+	}
+
+	/* NOTREACHED */
+}
+
+
+static AlifIntT add_submodule(AlifObject* mod, AlifObject* submod,
+	char* fullname, const char* subname, AlifObject* modules) { // 2519
+	if (mod == ALIF_NONE)
+		return 1;
+	if (submod == nullptr) {
+		submod = alifDict_getItemWithError(modules, alifUStr_fromString(fullname));
+		if (submod == nullptr)
+			return 1;
+	}
+
+	if (ALIFMODULE_CHECK(mod)) {
+		/* We can't use setattr here since it can give a
+		 * spurious warning if the submodule name shadows a
+		 * builtin name */
+		AlifObject* dict = alifModule_getDict(mod);
+		if (!dict)
+			return 0;
+		if (alifDict_setItemString(dict, subname, submod) < 0)
+			return 0;
+	}
+	else {
+		if (alifObject_setAttrString(mod, subname, submod) < 0)
+			return 0;
+	}
+	return 1;
+}
+
+static AlifObject* import_submodule(AlifObject* mod,
+	const char* subname, char* fullname) { // 2553
+	AlifObject* modules = alifImport_getModuleDict();
+	AlifObject* m = nullptr;
+
+	/* Require:
+	   if mod == None: subname == fullname
+	   else: mod.__name__ + "." + subname == fullname
+	*/
+
+	if ((m = alifDict_getItemWithError(modules, alifUStr_fromString(fullname))) != nullptr) {
+		ALIF_INCREF(m);
+	}
+	else {
+		AlifObject* path, * loader = nullptr;
+		char buf[MAXPATHLEN + 1]{};
+		FileDescr* fdp{};
+		FILE* fp = nullptr;
+
+		if (mod == ALIF_NONE)
+			path = nullptr;
+		else {
+			path = alifObject_getAttrString(mod, "__path__");
+			if (path == nullptr) {
+				//alifErr_clear();
+				ALIF_INCREF(ALIF_NONE);
+				return ALIF_NONE;
+			}
+		}
+
+		buf[0] = '\0';
+		fdp = find_module(fullname, subname, path, buf, MAXPATHLEN + 1,
+			&fp, &loader);
+		ALIF_XDECREF(path);
+		if (fdp == nullptr) {
+			if (!alifErr_exceptionMatches(_alifExcImportError_))
+				return nullptr;
+			//alifErr_clear();
+			ALIF_INCREF(ALIF_NONE);
+			return ALIF_NONE;
+		}
+		m = load_module(fullname, fp, buf, fdp->type, loader);
+		ALIF_XDECREF(loader);
+		if (fp)
+			fclose(fp);
+		if (!add_submodule(mod, m, fullname, subname, modules)) {
+			ALIF_XDECREF(m);
+			m = nullptr;
+		}
+	}
+
+	return m;
+}
+
 
 
 
