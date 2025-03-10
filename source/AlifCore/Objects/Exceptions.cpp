@@ -310,7 +310,7 @@ COMPLEXEXTENDSEXCEPTION(_excException_, SyntaxError, خطأ_نسق, SyntaxError,
 
 
 
-SIMPLEEXTENDSEXCEPTION(_excException_, LookupError,
+SIMPLEEXTENDSEXCEPTION(_excException_, LookupError, خطأ_بحث
 	"Base class for lookup errors."); // 2621
 
 SIMPLEEXTENDSEXCEPTION(_excLookupError_, IndexError, خطأ_مؤشر
@@ -359,7 +359,7 @@ static StaticException _staticExceptions_[] = { // 3615
 	//ITEM(EOFError),
 	//ITEM(ExceptionGroup),
 	ITEM(ImportError),
-	//ITEM(LookupError),
+	ITEM(LookupError),
 	//ITEM(MemoryError),
 	//ITEM(NameError),
 	//ITEM(OSError),

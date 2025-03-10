@@ -1626,6 +1626,8 @@ static AlifIntT case_ok(char* _buf, AlifSizeT _len, AlifSizeT _namelen, char* _n
 	}
 	return 0; /* Not found */
 
+#else
+	return 1;
 #endif
 }
 
