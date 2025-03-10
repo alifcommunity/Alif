@@ -63,7 +63,7 @@ static inline void alifUStrWriter_initWithBuffer(AlifUStrWriter*, AlifObject*);
         const from_type* _iter = (const from_type*)(begin);\
         const from_type* _end = (const from_type*)(end);\
         AlifSizeT n = (_end) - (_iter);                \
-        const from_type *_unrolled_end =                \
+        const from_type* _unrolled_end =                \
             _iter + ALIF_SIZE_ROUND_DOWN(n, 4);          \
         while (_iter < (_unrolled_end)) {               \
             to_[0] = (to_type) _iter[0];                \
@@ -1230,8 +1230,9 @@ static AlifObject* _alifUStr_fromUCS2(const AlifUCS2* _u, AlifSizeT _size) { // 
 	res = alifUStr_new(_size, maxChar);
 	if (!res)
 		return nullptr;
-	if (maxChar >= 256)
+	if (maxChar >= 256) {
 		memcpy(ALIFUSTR_2BYTE_DATA(res), _u, sizeof(AlifUCS2) * _size);
+	}
 	else {
 		ALIFUSTR_CONVERT_BYTES(AlifUCS2, AlifUCS1,
 			_u, _u + _size, ALIFUSTR_1BYTE_DATA(res));
