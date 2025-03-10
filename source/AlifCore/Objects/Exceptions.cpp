@@ -310,6 +310,16 @@ COMPLEXEXTENDSEXCEPTION(_excException_, SyntaxError, خطأ_نسق, SyntaxError,
 
 
 
+SIMPLEEXTENDSEXCEPTION(_excException_, LookupError,
+	"Base class for lookup errors."); // 2621
+
+SIMPLEEXTENDSEXCEPTION(_excLookupError_, IndexError, خطأ_مؤشر
+	"Sequence index out of range."); // 2628
+
+
+
+
+
 SIMPLEEXTENDSEXCEPTION(_excException_, ValueError, خطأ_قيمة
 	"Inappropriate argument value (of correct type)."); // 2660
 
@@ -397,7 +407,7 @@ static StaticException _staticExceptions_[] = { // 3615
 	// Level 4: Other subclasses
 	//ITEM(IndentationError), // base: SyntaxError(Exception)
 	//{&_alifExcIncompleteInputError_, "_IncompleteInputError"}, // base: SyntaxError(Exception)
-	//ITEM(IndexError),  // base: LookupError(Exception)
+	ITEM(IndexError),  // base: LookupError(Exception)
 	//ITEM(KeyError),  // base: LookupError(Exception)
 	//ITEM(ModuleNotFoundError), // base: ImportError(Exception)
 	//ITEM(NotImplementedError),  // base: RuntimeError(Exception)

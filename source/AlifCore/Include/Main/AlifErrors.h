@@ -7,7 +7,7 @@ void alifErr_setString(AlifObject*, const char*); // 11
 
 
 AlifObject* alifErr_occurred(void); // 15
-
+void alifErr_clear(void); // 16
 
 
 AlifIntT alifErr_exceptionMatches(AlifObject*); // 39

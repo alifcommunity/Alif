@@ -289,6 +289,10 @@ void _alifErr_clear(AlifThread* _thread) { // 522
 }
 
 
+void alifErr_clear(void) { // 529
+	AlifThread* tstate = _alifThread_get();
+	_alifErr_clear(tstate);
+}
 
 
 

@@ -246,7 +246,7 @@ static AlifSizeT tuple_length(AlifObject* self) { // 346
 static AlifObject* tuple_item(AlifObject* _op, AlifSizeT _i) { // 364
 	AlifTupleObject* a = ALIFTUPLE_CAST(_op);
 	if (_i < 0 or _i >= ALIF_SIZE(a)) {
-		//alifErr_setString(_alifExcIndexError_, "tuple index out of range");
+		alifErr_setString(_alifExcIndexError_, "tuple index out of range");
 		return nullptr;
 	}
 	return ALIF_NEWREF(a->item[_i]);

@@ -2100,10 +2100,10 @@ static AlifIntT ensure_fromList(AlifObject* mod, AlifObject* fromlist,
 		AlifObject* item = alifSequence_getItem(fromlist, i);
 		AlifIntT hasit{};
 		if (item == nullptr) {
-			//if (alifErr_exceptionMatches(_alifExcIndexError_)) {
-			//	alifErr_clear();
-			//	return 1;
-			//}
+			if (alifErr_exceptionMatches(_alifExcIndexError_)) {
+				alifErr_clear();
+				return 1;
+			}
 			return 0;
 		}
 		if (!ALIFUSTR_CHECK(item)) {
