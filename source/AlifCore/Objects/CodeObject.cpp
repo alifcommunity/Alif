@@ -434,6 +434,7 @@ AlifObject* alifCode_constantKey(AlifObject* _op) { // 2331
 	if (_op == ALIF_NONE or _op == ALIF_ELLIPSIS
 		or ALIFLONG_CHECKEXACT(_op)
 		or ALIFUSTR_CHECKEXACT(_op)
+		or ALIFSLICE_CHECK(_op)
 		or ALIFCODE_CHECK(_op))
 	{
 		key_ = ALIF_NEWREF(_op);

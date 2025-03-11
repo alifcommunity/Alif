@@ -186,8 +186,6 @@ AlifIntT _alifCompiler_ensureArrayLargeEnough(AlifIntT _idx, void** _array,
 
 
 
-
-
 static AlifIntT codegen_nameOp(AlifCompiler*, Location, Identifier, ExprContext_);
 
 static AlifIntT codegen_visitStmt(AlifCompiler*, StmtTy);
@@ -196,6 +194,7 @@ static AlifIntT codegen_visitExpr(AlifCompiler*, ExprTy);
 static AlifIntT codegen_augAssign(AlifCompiler*, StmtTy);
 
 static AlifIntT codegen_subScript(AlifCompiler*, ExprTy);
+static AlifIntT codegen_sliceTwoParts(AlifCompiler*, ExprTy);
 static AlifIntT codegen_slice(AlifCompiler*, ExprTy);
 
 static bool areAllItems_const(ASDLExprSeq*, AlifSizeT, AlifSizeT);
@@ -4069,7 +4068,7 @@ ex_call:
 static AlifIntT codegen_callHelper(AlifCompiler* _c, Location _loc,
 	AlifIntT _n, /* Args already pushed */ ASDLExprSeq* _args,
 	ASDLKeywordSeq* _keywords) {
-	return codegen_callHelperImpl(_c, _loc, _n, _args, NULL, _keywords);
+	return codegen_callHelperImpl(_c, _loc, _n, _args, nullptr, _keywords);
 }
 
 
@@ -4873,15 +4872,6 @@ static AlifIntT codegen_visitKeyword(AlifCompiler* _c, KeywordTy _k) {
 
 
 
-
-
-
-
-
-
-
-
-
 static AlifIntT codegen_visitExpr(AlifCompiler* _c, ExprTy _e) {
 	Location loc = LOC(_e);
 	switch (_e->type) {
@@ -5014,9 +5004,7 @@ static AlifIntT codegen_visitExpr(AlifCompiler* _c, ExprTy _e) {
 		//	break;
 	case ExprK_::SliceK:
 	{
-		AlifIntT n = codegen_slice(_c, _e);
-		RETURN_IF_ERROR(n);
-		ADDOP_I(_c, loc, BUILD_SLICE, n);
+		RETURN_IF_ERROR(codegen_slice(_c, _e));
 		break;
 	}
 	case ExprK_::NameK:
@@ -5030,15 +5018,21 @@ static AlifIntT codegen_visitExpr(AlifCompiler* _c, ExprTy _e) {
 	return SUCCESS;
 }
 
-
-
-
-
-
-
-
-static bool is_twoElementSlice(ExprTy _s) {
+static bool is_constantSlice(ExprTy _s) {
 	return _s->type == ExprK_::SliceK and
+		(_s->V.slice.lower == nullptr or
+			_s->V.slice.lower->type == ExprK_::ConstantK) and
+		(_s->V.slice.upper == nullptr or
+			_s->V.slice.upper->type == ExprK_::ConstantK) and
+		(_s->V.slice.step == nullptr or
+			_s->V.slice.step->type == ExprK_::ConstantK);
+}
+
+
+
+static bool shouldApplyTwoElement_sliceOptimization(ExprTy _s) {
+	return !is_constantSlice(_s) and
+		_s->type == ExprK_::SliceK and
 		_s->V.slice.step == nullptr;
 }
 
@@ -5058,8 +5052,8 @@ static AlifIntT codegen_augAssign(AlifCompiler* _c, StmtTy _s) {
 		break;
 	case ExprK_::SubScriptK:
 		VISIT(_c, Expr, e->V.subScript.val);
-		if (is_twoElementSlice(e->V.subScript.slice)) {
-			RETURN_IF_ERROR(codegen_slice(_c, e->V.subScript.slice));
+		if (shouldApplyTwoElement_sliceOptimization(e->V.subScript.slice)) {
+			RETURN_IF_ERROR(codegen_sliceTwoParts(_c, e->V.subScript.slice));
 			ADDOP_I(_c, loc, COPY, 3);
 			ADDOP_I(_c, loc, COPY, 3);
 			ADDOP_I(_c, loc, COPY, 3);
@@ -5096,7 +5090,7 @@ static AlifIntT codegen_augAssign(AlifCompiler* _c, StmtTy _s) {
 		ADDOP_NAME(_c, loc, STORE_ATTR, e->V.attribute.attr, names);
 		break;
 	case ExprK_::SubScriptK:
-		if (is_twoElementSlice(e->V.subScript.slice)) {
+		if (shouldApplyTwoElement_sliceOptimization(e->V.subScript.slice)) {
 			ADDOP_I(_c, loc, SWAP, 4);
 			ADDOP_I(_c, loc, SWAP, 3);
 			ADDOP_I(_c, loc, SWAP, 2);
@@ -5244,8 +5238,9 @@ static AlifIntT codegen_subScript(AlifCompiler* _c, ExprTy _e) {
 	}
 
 	VISIT(_c, Expr, _e->V.subScript.val);
-	if (is_twoElementSlice(_e->V.subScript.slice) and ctx != ExprContext_::Del) {
-		RETURN_IF_ERROR(codegen_slice(_c, _e->V.subScript.slice));
+	if (shouldApplyTwoElement_sliceOptimization(_e->V.subScript.slice)
+		and ctx != ExprContext_::Del) {
+		RETURN_IF_ERROR(codegen_sliceTwoParts(_c, _e->V.subScript.slice));
 		if (ctx == ExprContext_::Load) {
 			ADDOP(_c, loc, BINARY_SLICE);
 		}
@@ -5270,10 +5265,7 @@ static AlifIntT codegen_subScript(AlifCompiler* _c, ExprTy _e) {
 
 
 
-
-static AlifIntT codegen_slice(AlifCompiler* _c, ExprTy _s) {
-	AlifIntT n = 2;
-
+static AlifIntT codegen_sliceTwoParts(AlifCompiler* _c, ExprTy _s) {
 	if (_s->V.slice.lower) {
 		VISIT(_c, Expr, _s->V.slice.lower);
 	}
@@ -5288,13 +5280,45 @@ static AlifIntT codegen_slice(AlifCompiler* _c, ExprTy _s) {
 		ADDOP_LOAD_CONST(_c, LOC(_s), ALIF_NONE);
 	}
 
+	return 0;
+}
+
+
+
+static AlifIntT codegen_slice(AlifCompiler* _c, ExprTy _s) {
+	AlifIntT n = 2;
+
+	if (is_constantSlice(_s)) {
+		AlifObject* start = nullptr;
+		if (_s->V.slice.lower) {
+			start = _s->V.slice.lower->V.constant.val;
+		}
+		AlifObject* stop = nullptr;
+		if (_s->V.slice.upper) {
+			stop = _s->V.slice.upper->V.constant.val;
+		}
+		AlifObject* step = nullptr;
+		if (_s->V.slice.step) {
+			step = _s->V.slice.step->V.constant.val;
+		}
+		AlifObject* slice = alifSlice_new(start, stop, step);
+		if (slice == nullptr) {
+			return ERROR;
+		}
+		ADDOP_LOAD_CONST_NEW(_c, LOC(_s), slice);
+		return SUCCESS;
+	}
+
+	RETURN_IF_ERROR(codegen_sliceTwoParts(_c, _s));
+
 	if (_s->V.slice.step) {
 		n++;
 		VISIT(_c, Expr, _s->V.slice.step);
 	}
-	return n;
-}
 
+	ADDOP_I(_c, LOC(_s), BUILD_SLICE, n);
+	return SUCCESS;
+}
 
 
 
