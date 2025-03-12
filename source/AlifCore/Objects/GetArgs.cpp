@@ -1200,7 +1200,7 @@ static AlifObject* find_keyword(AlifObject* kwnames,
 
 	for (i = 0; i < nkwargs; i++) {
 		AlifObject* kwname = ALIFTUPLE_GET_ITEM(kwnames, i);
-		if (alifUStr_eq(kwname, key)) {
+		if (_alifUStr_equal(kwname, key)) {
 			return ALIF_NEWREF(kwstack[i]);
 		}
 	}

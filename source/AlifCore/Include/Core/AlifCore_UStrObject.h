@@ -48,13 +48,12 @@ AlifObject* alifUStr_joinArray(AlifObject*, AlifObject* const*, AlifSizeT); // 2
 AlifIntT alifUStr_equalToASCIIString(AlifObject* , const char* ); // 224
 
 
-extern AlifIntT alifUStr_eq(AlifObject*, AlifObject*); // 257
 
-AlifIntT _alifUStr_equal(AlifObject*, AlifObject*); // 261
+AlifIntT _alifUStr_equal(AlifObject*, AlifObject*); // 257
 
-AlifSizeT _alifUStr_scanIdentifier(AlifObject*); // 267
+AlifSizeT _alifUStr_scanIdentifier(AlifObject*); // 263
 
-extern AlifIntT alifUStr_initGlobalObjects(AlifInterpreter*); // 272
+extern AlifIntT alifUStr_initGlobalObjects(AlifInterpreter*); // 268
 
-void alifUStr_internMortal(AlifInterpreter*, AlifObject**); // 284
-void alifUStr_internImmortal(AlifInterpreter*, AlifObject**); // 285
+void alifUStr_internMortal(AlifInterpreter*, AlifObject**); // 280
+void alifUStr_internImmortal(AlifInterpreter*, AlifObject**); // 281

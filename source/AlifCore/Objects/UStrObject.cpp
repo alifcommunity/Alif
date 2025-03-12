@@ -105,7 +105,6 @@ static inline AlifObject* get_internedDict(AlifInterpreter* _interp) { // 223
 #define INTERNED_STRINGS _alifDureRun_.cachedObjects.internedStrings // 231
 
 static AlifHashT uStr_hash(AlifObject*); // 263
-static AlifIntT uStr_compareEq(AlifObject*, AlifObject*);
 
 static AlifUHashT hashTable_uStrHash(const void* _key) { // 266
 	return uStr_hash((AlifObject*)_key);
@@ -116,7 +115,7 @@ static AlifIntT hashTable_uStrCompare(const void* _key1, const void* _key2) { //
 	AlifObject* obj1 = (AlifObject*)_key1;
 	AlifObject* obj2 = (AlifObject*)_key2;
 	if (obj1 != nullptr and obj2 != nullptr) {
-		return uStr_compareEq(obj1, obj2);
+		return uStr_eq(obj1, obj2);
 	}
 	else {
 		return obj1 == obj2;
@@ -5162,31 +5161,13 @@ static AlifIntT uStr_compare(AlifObject* _str1, AlifObject* _str2) { // 10847
 
 
 
-static AlifIntT uStr_compareEq(AlifObject* _str1, AlifObject* _str2) { // 10963
-	AlifIntT kind{};
-	const void* data1{}, * data2{};
-	AlifSizeT len_{};
-	AlifIntT cmp_{};
-
-	len_ = ALIFUSTR_GET_LENGTH(_str1);
-	if (ALIFUSTR_GET_LENGTH(_str2) != len_)
-		return 0;
-	kind = ALIFUSTR_KIND(_str1);
-	if (ALIFUSTR_KIND(_str2) != kind)
-		return 0;
-	data1 = ALIFUSTR_DATA(_str1);
-	data2 = ALIFUSTR_DATA(_str2);
-
-	cmp_ = memcmp(data1, data2, len_ * kind);
-	return (cmp_ == 0);
-}
 
 
 AlifIntT _alifUStr_equal(AlifObject* _str1, AlifObject* _str2) { // 10984
 	if (_str1 == _str2) {
 		return 1;
 	}
-	return uStr_compareEq(_str1, _str2);
+	return uStr_eq(_str1, _str2);
 }
 
 
@@ -5347,7 +5328,7 @@ AlifObject* alifUStr_richCompare(AlifObject* _left, AlifObject* _right, AlifIntT
 		}
 	}
 	else if (_op == ALIF_EQ or _op == ALIF_NE) {
-		result = uStr_compareEq(_left, _right);
+		result = uStr_eq(_left, _right);
 		result ^= (_op == ALIF_NE);
 		return alifBool_fromLong(result);
 	}

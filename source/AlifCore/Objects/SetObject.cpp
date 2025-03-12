@@ -3,6 +3,7 @@
 #include "AlifCore_Dict.h"
 #include "AlifCore_SetObject.h"
 
+#include "StringLib/Equal.h"
 #include "clinic/SetObject.cpp.h"
 
 // was static but shows error
@@ -36,7 +37,7 @@ static SetEntry* set_lookKey(AlifSetObject* _so, AlifObject* _key, AlifHashT _ha
 					return entry;
 				if (ALIFUSTR_CHECKEXACT(startKey)
 					and ALIFUSTR_CHECKEXACT(_key)
-					and alifUStr_eq(startKey, _key))
+					and uStr_eq(startKey, _key))
 					return entry;
 				table = _so->table;
 				ALIF_INCREF(startKey);
@@ -89,7 +90,7 @@ restart:
 				if (startKey == _key)
 					goto foundActive;
 				if (ALIFUSTR_CHECKEXACT(startKey)
-					and ALIFUSTR_CHECKEXACT(_key) and alifUStr_eq(startKey, _key) )
+					and ALIFUSTR_CHECKEXACT(_key) and uStr_eq(startKey, _key) )
 					goto foundActive;
 				table = _so->table;
 				ALIF_INCREF(startKey);

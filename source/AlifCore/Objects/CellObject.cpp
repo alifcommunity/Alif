@@ -5,8 +5,9 @@
 #include "AlifCore_Object.h"
 
 
+#define ALIFCELL_CAST(_op) ALIF_CAST(AlifCellObject*, _op)
 
-AlifObject* alifCell_new(AlifObject* _obj) { // 8
+AlifObject* alifCell_new(AlifObject* _obj) { // 10
 	AlifCellObject* op{};
 
 	op = (AlifCellObject*)ALIFOBJECT_GC_NEW(AlifCellObject, &_alifCellType_);
