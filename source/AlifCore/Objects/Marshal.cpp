@@ -575,7 +575,7 @@ static AlifObject* r_object(RFILE* p) { // 1004
 			v = alifUStr_decodeUTF8(buffer, n, "surrogatepass");
 		}
 		else {
-			v = alifUStr_new(0, 0);
+			v = alif_getConstant(ALIF_CONSTANT_EMPTY_STR);
 		}
 		if (v == nullptr)
 			break;

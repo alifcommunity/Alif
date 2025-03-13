@@ -415,7 +415,7 @@ AlifCodeObject* alifCode_new(AlifCodeConstructor* _con) { // 647
 
 
 
-AlifTypeObject _alifCodeType_ = { // 2276
+AlifTypeObject _alifCodeType_ = { // 2292
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "شفرة",
 	.basicSize = offsetof(AlifCodeObject, codeAdaptive),

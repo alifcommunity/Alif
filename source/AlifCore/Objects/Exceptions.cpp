@@ -81,7 +81,7 @@ static AlifObject* baseException_vectorCall(AlifObject* type_obj, AlifObject* co
 static AlifObject* baseException_str(AlifBaseExceptionObject* _self) { // 152
 	switch (ALIFTUPLE_GET_SIZE(_self->args)) {
 	case 0:
-		return alifUStr_fromString("");
+		return alif_getConstant(ALIF_CONSTANT_EMPTY_STR);
 	case 1:
 		return alifObject_str(ALIFTUPLE_GET_ITEM(_self->args, 0));
 	default:

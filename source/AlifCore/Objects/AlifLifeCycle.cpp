@@ -252,7 +252,7 @@ static AlifIntT alifCore_initGlobalObjects(AlifInterpreter* _interp) { // 696
 	//alifUStr_initState(_interp);
 
 	if (alif_isMainInterpreter(_interp)) {
-		//alif_getConstantInit();
+		_alif_getConstantInit();
 	}
 
 	return 1;

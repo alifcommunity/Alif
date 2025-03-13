@@ -351,7 +351,7 @@ AlifObject* alifObject_format(AlifObject* _obj, AlifObject* _formatSpec) { // 83
 
 	/* If no format_spec is provided, use an empty string */
 	if (_formatSpec == nullptr) {
-		empty = alifUStr_new(0, 0);
+		empty = alif_getConstant(ALIF_CONSTANT_EMPTY_STR);
 		_formatSpec = empty;
 	}
 

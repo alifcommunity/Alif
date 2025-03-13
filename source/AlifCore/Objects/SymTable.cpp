@@ -1760,6 +1760,7 @@ AlifObject* alif_mangle(AlifObject* _privateObj, AlifObject* _ident) { // 3090
 		alifUStr_findChar(_ident, '.', 0, nLen, 1) != -1) {
 		return ALIF_NEWREF(_ident); /* Don't mangle __whatever__ */
 	}
+
 	AlifUSizeT iPriv = 0;
 	while (ALIFUSTR_READ_CHAR(_privateObj, iPriv) == '_') {
 		iPriv++;
@@ -1767,31 +1768,32 @@ AlifObject* alif_mangle(AlifObject* _privateObj, AlifObject* _ident) { // 3090
 	if (iPriv == pLen) {
 		return ALIF_NEWREF(_ident); /* Don't mangle if class is just underscores */
 	}
-	pLen -= iPriv;
 
-	if (pLen + nLen >= ALIF_SIZET_MAX - 1) {
+	if (nLen + (pLen - iPriv) >= ALIF_SIZET_MAX - 1) {
 		//alifErr_setString(_alifExcOverflowError_,
 			//"private identifier too large to be mangled");
 		return nullptr;
 	}
 
-	AlifUCS4 maxChar = ALIFUSTR_MAX_CHAR_VALUE(_ident);
-	if (ALIFUSTR_MAX_CHAR_VALUE(_privateObj) > maxChar) {
-		maxChar = ALIFUSTR_MAX_CHAR_VALUE(_privateObj);
+	AlifUStrWriter* writer = alifUStrWriter_create(1 + nLen + (pLen - iPriv));
+	if (!writer) {
+		return nullptr;
 	}
 
-	AlifObject* result = alifUStr_new(1 + nLen + pLen, maxChar);
-	if (!result) {
-		return nullptr;
+	// ident = "_" + priv[ipriv:] + ident
+	if (alifUStrWriter_writeChar(writer, '_') < 0) {
+		goto error;
 	}
-	ALIFUSTR_WRITE(ALIFUSTR_KIND(result), ALIFUSTR_DATA(result), 0, '_');
-	if (alifUStr_copyCharacters(result, 1, _privateObj, iPriv, pLen) < 0) {
-		ALIF_DECREF(result);
-		return nullptr;
+	if (alifUStrWriter_writeSubString(writer, _privateObj, iPriv, pLen) < 0) {
+		goto error;
 	}
-	if (alifUStr_copyCharacters(result, pLen + 1, _ident, 0, nLen) < 0) {
-		ALIF_DECREF(result);
-		return nullptr;
+
+	if (alifUStrWriter_writeStr(writer, _ident) < 0) {
+		goto error;
 	}
-	return result;
+	return alifUStrWriter_finish(writer);
+
+error:
+	alifUStrWriter_discard(writer);
+	return nullptr;
 }

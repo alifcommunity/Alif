@@ -320,3 +320,7 @@ extern AlifTypeObject _alifNoneType_; // 851
 
 
 extern AlifIntT _alifSwappedOp_[]; // 856
+
+
+
+extern void _alif_getConstantInit(void); // 880

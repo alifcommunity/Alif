@@ -360,6 +360,18 @@ AlifSizeT alifUStr_fill(AlifObject*, AlifSizeT, AlifSizeT, AlifUCS4); // 432
 AlifObject* alifUStr_fromKindAndData(AlifIntT, const void*, AlifSizeT); // 441
 
 
+
+
+typedef class AlifUStrWriter AlifUStrWriter; // 449
+
+AlifUStrWriter* alifUStrWriter_create(AlifSizeT); // 451
+void alifUStrWriter_discard(AlifUStrWriter*); // 452
+
+
+AlifIntT alifUStrWriter_writeSubString(AlifUStrWriter*, AlifObject*, AlifSizeT, AlifSizeT); // 477
+
+
+
 class AlifUStrWriter { // 496
 public:
 	AlifObject* buffer{};
@@ -404,6 +416,8 @@ AlifIntT alifUStrWriter_prepareKindInternal(AlifUStrWriter*, AlifIntT); // 557
 AlifIntT alifUStrWriter_writeChar(AlifUStrWriter*, AlifUCS4); // 563
 
 AlifIntT alifUStrWriter_writeStr(AlifUStrWriter*, AlifObject*); // 570
+
+AlifIntT _alifUStrWriter_writeSubString(AlifUStrWriter*, AlifObject*, AlifSizeT, AlifSizeT);
 
 AlifIntT alifUStrWriter_writeASCIIString(AlifUStrWriter*, const char*, AlifSizeT); // 586
 

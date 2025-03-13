@@ -5676,12 +5676,42 @@ static inline void alifUStrWriter_update(AlifUStrWriter* _writer) { // 13364
 }
 
 
-void alifUStrWriter_init(AlifUStrWriter* _writer) { // 13388
+void alifUStrWriter_init(AlifUStrWriter* _writer) { // 13414
 	memset(_writer, 0, sizeof(*_writer));
 	/* ASCII is the bare minimum */
 	_writer->minChar = 127;
 }
 
+
+AlifUStrWriter* alifUStrWriter_create(AlifSizeT _length) { // 13429
+	if (_length < 0) {
+		//alifErr_setString(_alifExcValueError_,
+		//	"length must be positive");
+		return nullptr;
+	}
+
+	const AlifUSizeT size = sizeof(AlifUStrWriter);
+	AlifUStrWriter* pub_writer = (AlifUStrWriter*)alifMem_dataAlloc(size);
+	if (pub_writer == nullptr) {
+		//return (AlifUStrWriter*)alifErr_noMemory();
+	}
+	AlifUStrWriter* writer = (AlifUStrWriter*)pub_writer;
+
+	alifUStrWriter_init(writer);
+	if (ALIFUSTRWRITER_PREPARE(writer, _length, 127) < 0) {
+		alifUStrWriter_discard(pub_writer);
+		return nullptr;
+	}
+	writer->overAllocate = 1;
+
+	return pub_writer;
+}
+
+
+void alifUStrWriter_discard(AlifUStrWriter* _writer) { // 13456
+	alifUStrWriter_dealloc((AlifUStrWriter*)_writer);
+	alifMem_dataFree(_writer);
+}
 
 
 
@@ -5810,6 +5840,53 @@ AlifIntT alifUStrWriter_writeStr(AlifUStrWriter* _writer, AlifObject* _str) { //
 	return 0;
 }
 
+
+AlifIntT _alifUStrWriter_writeSubString(AlifUStrWriter* writer, AlifObject* str,
+	AlifSizeT start, AlifSizeT end) { // 13660
+	if (start == 0 and end == ALIFUSTR_GET_LENGTH(str))
+		return alifUStrWriter_writeStr(writer, str);
+
+	AlifSizeT len = end - start;
+	if (len == 0) {
+		return 0;
+	}
+
+	AlifUCS4 maxchar{};
+	if (ALIFUSTR_MAX_CHAR_VALUE(str) > writer->maxChar) {
+		maxchar = alifUStr_findMaxChar(str, start, end);
+	}
+	else {
+		maxchar = writer->maxChar;
+	}
+	if (ALIFUSTRWRITER_PREPARE(writer, len, maxchar) < 0) {
+		return -1;
+	}
+
+	alifUStr_fastCopyCharacters(writer->buffer, writer->pos,
+		str, start, len);
+	writer->pos += len;
+	return 0;
+}
+
+
+AlifIntT alifUStrWriter_writeSubString(AlifUStrWriter* writer, AlifObject* str,
+	AlifSizeT start, AlifSizeT end) { // 13694
+	if (!ALIFUSTR_CHECK(str)) {
+		//alifErr_format(_alifExcTypeError_, "expect str, not %T", str);
+		return -1;
+	}
+	if (start < 0 or start > end) {
+		//alifErr_format(_alifExcValueError_, "invalid start argument");
+		return -1;
+	}
+	if (end > ALIFUSTR_GET_LENGTH(str)) {
+		//alifErr_format(_alifExcValueError_, "invalid end argument");
+		return -1;
+	}
+
+	return _alifUStrWriter_writeSubString((AlifUStrWriter*)writer, str,
+		start, end);
+}
 
 
 AlifIntT alifUStrWriter_writeASCIIString(AlifUStrWriter* _writer,

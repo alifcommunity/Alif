@@ -307,6 +307,21 @@ void alif_reprLeave(AlifObject*); // 463
 #define ALIF_TPFLAGS_DEFAULT  (ALIF_TPFLAGS_HAVE_STACKLESS_EXTENSION | 0)
 
 
+// 612
+#define ALIF_CONSTANT_NONE 0
+#define ALIF_CONSTANT_FALSE 1
+#define ALIF_CONSTANT_TRUE 2
+#define ALIF_CONSTANT_ELLIPSIS 3
+#define ALIF_CONSTANT_NOT_IMPLEMENTED 4
+#define ALIF_CONSTANT_ZERO 5
+#define ALIF_CONSTANT_ONE 6
+#define ALIF_CONSTANT_EMPTY_STR 7
+#define ALIF_CONSTANT_EMPTY_BYTES 8
+#define ALIF_CONSTANT_EMPTY_TUPLE 9
+
+AlifObject* alif_getConstant(AlifUIntT); // 624
+
+
 
 extern AlifObject _alifNoneClass_; // 623
 

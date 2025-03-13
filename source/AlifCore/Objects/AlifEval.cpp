@@ -2036,7 +2036,7 @@ static void tooMany_positional(AlifThread* _thread, AlifCodeObject* _co,
 	}
 	else {
 		/* This will not fail. */
-		kwOnlySig = alifUStr_fromString("");
+		kwOnlySig = alif_getConstant(ALIF_CONSTANT_EMPTY_STR);
 	}
 	//_alifErr_format(_thread, _alifExcTypeError_,
 	//	"%U() takes %U positional argument%s but %zd%U %s given",

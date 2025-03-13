@@ -1249,3 +1249,39 @@ AlifTypeObject* ALIF_TYPE(AlifObject* _ob) { // 3042
 AlifSizeT ALIF_REFCNT(AlifObject* _ob) { // 3051
 	return _alif_refCnt(_ob);
 }
+
+
+
+
+
+
+static AlifObject* constants[] = { // 3026
+	&_alifNoneClass_,                   // ALIF_CONSTANT_NONE
+	(AlifObject*)(&_alifFalseClass_),     // ALIF_CONSTANT_FALSE
+	(AlifObject*)(&_alifTrueClass_),      // ALIF_CONSTANT_TRUE
+	&_alifEllipsisObject_,               // ALIF_CONSTANT_ELLIPSIS
+	&_alifNotImplementedClass_,         // ALIF_CONSTANT_NOT_IMPLEMENTED
+	nullptr,  // ALIF_CONSTANT_ZERO
+	nullptr,  // ALIF_CONSTANT_ONE
+	nullptr,  // ALIF_CONSTANT_EMPTY_STR
+	nullptr,  // ALIF_CONSTANT_EMPTY_BYTES
+	nullptr,  // ALIF_CONSTANT_EMPTY_TUPLE
+};
+
+void _alif_getConstantInit(void) { // 3039
+	constants[ALIF_CONSTANT_ZERO] = _alifLong_getZero();
+	constants[ALIF_CONSTANT_ONE] = _alifLong_getOne();
+	constants[ALIF_CONSTANT_EMPTY_STR] = alifUStr_new(0, 0);
+	constants[ALIF_CONSTANT_EMPTY_BYTES] = alifBytes_fromStringAndSize(nullptr, 0);
+	constants[ALIF_CONSTANT_EMPTY_TUPLE] = alifTuple_new(0);
+}
+
+AlifObject* alif_getConstant(AlifUIntT _constantId) { // 3055
+	if (_constantId < ALIF_ARRAY_LENGTH(constants)) {
+		return constants[_constantId];
+	}
+	else {
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
+}
