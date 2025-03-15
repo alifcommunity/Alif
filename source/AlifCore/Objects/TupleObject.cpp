@@ -135,61 +135,63 @@ static AlifObject* tuple_repr(AlifObject* _self) { // 216
 		return alifUStr_fromString("()");
 	}
 
-	AlifIntT res = alif_reprEnter((AlifObject*)v);
+	/* While not mutable, it is still possible to end up with a cycle in a
+	   tuple through an object that stores itself within a tuple (and thus
+	   infinitely asks for the repr of itself). This should only be
+	   possible within a type. */
+	int res = alif_reprEnter((AlifObject*)v);
 	if (res != 0) {
 		return res > 0 ? alifUStr_fromString("(...)") : nullptr;
 	}
 
-	AlifUStrWriter writer{};
-	alifUStrWriter_init(&writer);
-	writer.overAllocate = 1;
+	AlifSizeT prealloc{};
 	if (n > 1) {
-		/* "(" + "1" + ", 2" * (len - 1) + ")" */
-		writer.minLength = 1 + 1 + (2 + 1) * (n - 1) + 1;
+		// "(" + "1" + ", 2" * (len - 1) + ")"
+		prealloc = 1 + 1 + (2 + 1) * (n - 1) + 1;
 	}
 	else {
-		/* "(1,)" */
-		writer.minLength = 4;
+		// "(1,)"
+		prealloc = 4;
+	}
+	AlifUStrWriter* writer = alifUStrWriter_create(prealloc);
+	if (writer == nullptr) {
+		goto error;
 	}
 
-	if (alifUStrWriter_writeChar(&writer, '(') < 0)
+	if (alifUStrWriter_writeChar(writer, '(') < 0) {
 		goto error;
+	}
 
 	/* Do repr() on each element. */
 	for (AlifSizeT i = 0; i < n; ++i) {
-		AlifObject* s{};
-
 		if (i > 0) {
-			if (alifUStrWriter_writeASCIIString(&writer, ", ", 2) < 0)
+			if (alifUStrWriter_writeChar(writer, ',') < 0) {
 				goto error;
+			}
+			if (alifUStrWriter_writeChar(writer, ' ') < 0) {
+				goto error;
+			}
 		}
 
-		s = alifObject_repr(v->item[i]);
-		if (s == nullptr)
-			goto error;
-
-		if (alifUStrWriter_writeStr(&writer, s) < 0) {
-			ALIF_DECREF(s);
+		if (alifUStrWriter_writeRepr(writer, v->item[i]) < 0) {
 			goto error;
 		}
-		ALIF_DECREF(s);
 	}
 
-	writer.overAllocate = 0;
-	if (n > 1) {
-		if (alifUStrWriter_writeChar(&writer, ')') < 0)
+	if (n == 1) {
+		if (alifUStrWriter_writeChar(writer, ',') < 0) {
 			goto error;
+		}
 	}
-	else {
-		if (alifUStrWriter_writeASCIIString(&writer, ",)", 2) < 0)
-			goto error;
+	if (alifUStrWriter_writeChar(writer, ')') < 0) {
+		goto error;
 	}
 
 	alif_reprLeave((AlifObject*)v);
-	return alifUStrWriter_finish(&writer);
+	return alifUStrWriter_finish(writer);
 
 error:
-	alifUStrWriter_dealloc(&writer);
+	alifUStrWriter_discard(writer);
 	alif_reprLeave((AlifObject*)v);
 	return nullptr;
 }

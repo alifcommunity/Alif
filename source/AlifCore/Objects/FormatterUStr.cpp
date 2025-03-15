@@ -237,7 +237,7 @@ static AlifIntT format_obj(AlifObject* _obj, AlifUStrWriter* _writer) { // 1436
 	str = alifObject_str(_obj);
 	if (str == nullptr)
 		return -1;
-	err = alifUStrWriter_writeStr(_writer, str);
+	err = _alifUStrWriter_writeStr(_writer, str);
 	ALIF_DECREF(str);
 	return err;
 }

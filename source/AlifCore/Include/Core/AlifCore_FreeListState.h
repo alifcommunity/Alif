@@ -15,7 +15,7 @@
 #  define ALIFASYNC_GEN_ASENDS_MAXFREELIST 80
 #  define ALIFFUTUREITERS_MAXFREELIST 255
 #  define ALIFOBJECT_STACK_CHUNKS_MAXFREELIST 4
-
+#  define ALIFUSTR_WRITERS_MAXFREELIST 1
 
 class AlifFreeList { // 25
 public:
@@ -38,5 +38,6 @@ public:
 	AlifFreeList asyncGenAsends{};
 	AlifFreeList futureIters{};
 	AlifFreeList objectStackChunks{};
+	AlifFreeList uStrWriters{};
 };
 

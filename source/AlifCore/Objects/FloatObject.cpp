@@ -640,7 +640,7 @@ static AlifObject* float_vectorCall(AlifObject* _type, AlifObject* const* _args,
 
 
 
-static AlifObject* float___format___impl(AlifObject* _self, AlifObject* _formatSpec) { // 1762
+static AlifObject* float___format___impl(AlifObject* _self, AlifObject* _formatSpec) { // 1758
 	AlifUStrWriter writer{};
 	AlifIntT ret{};
 
@@ -651,7 +651,7 @@ static AlifObject* float___format___impl(AlifObject* _self, AlifObject* _formatS
 		alifUStrWriter_dealloc(&writer);
 		return nullptr;
 	}
-	return alifUStrWriter_finish(&writer);
+	return _alifUStrWriter_finish(&writer);
 }
 
 static AlifMethodDef _floatMethods_[] = { // 1781

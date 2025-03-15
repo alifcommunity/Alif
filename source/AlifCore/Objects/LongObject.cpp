@@ -1334,7 +1334,7 @@ static AlifIntT alifLong_intToDecimalString(AlifObject* _aa,
 		if (ALIFUSTRWRITER_PREPARE(_writer, size, '9') == -1) {
 			goto error;
 		}
-		if (alifUStrWriter_writeStr(_writer, s_) < 0) {
+		if (_alifUStrWriter_writeStr(_writer, s_) < 0) {
 			goto error;
 		}
 		goto success;
@@ -1552,7 +1552,166 @@ static AlifObject* longTo_decimalString(AlifObject* _aa) { // 2294
 	return v;
 }
 
+static AlifIntT long_formatBinary(AlifObject* aa, AlifIntT base, AlifIntT alternate,
+	AlifObject** p_output, AlifUStrWriter* writer,
+	AlifBytesWriter* bytes_writer, char** bytes_str) { // 2312
+	AlifLongObject* a = (AlifLongObject*)aa;
+	AlifObject* v = nullptr;
+	AlifSizeT sz{};
+	AlifSizeT size_a{};
+	AlifIntT negative{};
+	AlifIntT bits{};
 
+	if (a == nullptr or !ALIFLONG_CHECK(a)) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+	size_a = alifLong_digitCount(a);
+	negative = _alifLong_isNegative(a);
+
+	/* Compute a rough upper bound for the length of the string */
+	switch (base) {
+	case 16:
+		bits = 4;
+		break;
+	case 8:
+		bits = 3;
+		break;
+	case 2:
+		bits = 1;
+		break;
+	default:
+		ALIF_UNREACHABLE();
+	}
+
+	/* Compute exact length 'sz' of output string. */
+	if (size_a == 0) {
+		sz = 1;
+	}
+	else {
+		AlifSizeT size_a_in_bits{};
+		/* Ensure overflow doesn't occur during computation of sz. */
+		if (size_a > (ALIF_SIZET_MAX - 3) / ALIFLONG_SHIFT) {
+			//alifErr_setString(_alifExcOverflowError_,
+			//	"int too large to format");
+			return -1;
+		}
+		size_a_in_bits = (size_a - 1) * ALIFLONG_SHIFT +
+			bit_lengthDigit(a->longValue.digit[size_a - 1]);
+		/* Allow 1 character for a '-' sign. */
+		sz = negative + (size_a_in_bits + (bits - 1)) / bits;
+	}
+	if (alternate) {
+		/* 2 characters for prefix  */
+		sz += 2;
+	}
+
+	if (writer) {
+		if (ALIFUSTRWRITER_PREPARE(writer, sz, 'x') == -1)
+			return -1;
+	}
+	else if (bytes_writer) {
+		*bytes_str = (char*)alifBytesWriter_prepare(bytes_writer, *bytes_str, sz);
+		if (*bytes_str == nullptr)
+			return -1;
+	}
+	else {
+		v = alifUStr_new(sz, 'x');
+		if (v == nullptr)
+			return -1;
+	}
+
+#define WRITE_DIGITS(p)                                                 \
+    do {                                                                \
+        if (size_a == 0) {                                              \
+            *--p = '0';                                                 \
+        }                                                               \
+        else {                                                          \
+            /* JRH: special case for power-of-2 bases */                \
+            twodigits accum = 0;                                        \
+            AlifIntT accumbits = 0;   /* # of bits in accum */               \
+            AlifSizeT i{};                                               \
+            for (i = 0; i < size_a; ++i) {                              \
+                accum |= (twodigits)a->longValue.digit[i] << accumbits;        \
+                accumbits += ALIFLONG_SHIFT;                              \
+                do {                                                    \
+                    char cdigit;                                        \
+                    cdigit = (char)(accum & (base - 1));                \
+                    cdigit += (cdigit < 10) ? '0' : 'a'-10;             \
+                    *--p = cdigit;                                      \
+                    accumbits -= bits;                                  \
+                    accum >>= bits;                                     \
+                } while (i < size_a-1 ? accumbits >= bits : accum > 0); \
+            }                                                           \
+        }                                                               \
+                                                                        \
+        if (alternate) {                                                \
+            if (base == 16)                                             \
+                *--p = 'x';                                             \
+            else if (base == 8)                                         \
+                *--p = 'o';                                             \
+            else /* (base == 2) */                                      \
+                *--p = 'b';                                             \
+            *--p = '0';                                                 \
+        }                                                               \
+        if (negative)                                                   \
+            *--p = '-';                                                 \
+    } while (0)
+
+#define WRITE_UNICODE_DIGITS(_type)                                      \
+    do {                                                                \
+        if (writer)                                                     \
+            p = (_type*)ALIFUSTR_DATA(writer->buffer) + writer->pos + sz; \
+        else                                                            \
+            p = (_type*)ALIFUSTR_DATA(v) + sz;                          \
+                                                                        \
+        WRITE_DIGITS(p);                                                \
+    } while (0)
+
+	if (bytes_writer) {
+		char* p = *bytes_str + sz;
+		WRITE_DIGITS(p);
+	}
+	else {
+		AlifIntT kind = writer ? writer->kind : ALIFUSTR_KIND(v);
+		if (kind == AlifUStrKind_::AlifUStr_1Byte_Kind) {
+			AlifUCS1* p{};
+			WRITE_UNICODE_DIGITS(AlifUCS1);
+		}
+		else if (kind == AlifUStrKind_::AlifUStr_2Byte_Kind) {
+			AlifUCS2* p{};
+			WRITE_UNICODE_DIGITS(AlifUCS2);
+		}
+		else {
+			AlifUCS4* p{};
+			WRITE_UNICODE_DIGITS(AlifUCS4);
+		}
+	}
+
+#undef WRITE_DIGITS
+#undef WRITE_UNICODE_DIGITS
+
+	if (writer) {
+		writer->pos += sz;
+	}
+	else if (bytes_writer) {
+		(*bytes_str) += sz;
+	}
+	else {
+		*p_output = v;
+	}
+	return 0;
+}
+
+AlifIntT _alifLong_formatWriter(AlifUStrWriter* _writer, AlifObject* _obj,
+	AlifIntT _base, AlifIntT _alternate) { // 2491
+	if (_base == 10)
+		return longTo_decimalStringInternal(_obj, nullptr, _writer,
+			nullptr, nullptr);
+	else
+		return long_formatBinary(_obj, _base, _alternate, nullptr, _writer,
+			nullptr, nullptr);
+}
 
 
 unsigned char _alifLongDigitValue_[256] = { // 2527

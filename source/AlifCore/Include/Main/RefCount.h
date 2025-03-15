@@ -2,12 +2,15 @@
 
 
 
+#if SIZEOF_VOID_P > 4
+#define ALIF_IMMORTAL_INITIAL_REFCNT ((AlifSizeT)(3UL << 30)) // 42
+#else
+#define ALIF_IMMORTAL_INITIAL_REFCNT ((AlifSizeT)(3L << 29)) // 57
+#define ALIF_IMMORTAL_MINIMUM_REFCNT ((AlifSizeT)(1L << 30))
+#endif
 
-#define ALIF_IMMORTAL_REFCNT ALIF_CAST(AlifSizeT, UINT_MAX) // 37
 
-
-
-#define ALIF_IMMORTAL_REFCNT_LOCAL UINT32_MAX // 58
+#define ALIF_IMMORTAL_REFCNT_LOCAL UINT32_MAX // 64
 
 
 #define ALIF_REF_SHARED_SHIFT		2 // 65
@@ -24,7 +27,7 @@
 static inline AlifSizeT _alif_refCnt(AlifObject* _ob) { // 80
 	uint32_t local = alifAtomic_loadUint32Relaxed(&_ob->refLocal);
 	if (local == ALIF_IMMORTAL_REFCNT_LOCAL) {
-		return ALIF_IMMORTAL_REFCNT;
+		return ALIF_IMMORTAL_INITIAL_REFCNT;
 	}
 	AlifSizeT shared = alifAtomic_loadSizeRelaxed(&_ob->refShared);
 	return ALIF_STATIC_CAST(AlifSizeT, local) +

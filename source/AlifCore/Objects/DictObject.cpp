@@ -87,21 +87,24 @@ static inline AlifUSizeT uStr_getHash(AlifObject* _o) { // 399
 	return alifAtomic_loadSizeRelaxed(&ALIFASCIIOBJECT_CAST(_o)->hash);
 }
 
-#define DK_MASK(_dk) (DK_SIZE(_dk)-1) // 419
+#define DK_MASK(_dk) (DK_SIZE(_dk)-1) // 417
+
+#define ALIF_DICT_IMMORTAL_INITIAL_REFCNT ALIF_SIZET_MIN // 419
 
 static void free_keysObject(AlifDictKeysObject*, bool); // 421
 
 
 static inline void dictKeys_incRef(AlifDictKeysObject* _dk) { // 430
-	if (alifAtomic_loadSizeRelaxed(&_dk->refCnt) == ALIF_IMMORTAL_REFCNT) {
+	if (alifAtomic_loadSizeRelaxed(&_dk->refCnt) < 0) {
 		return;
 	}
+
 	INCREF_KEYS(_dk);
 }
 
 static inline void dictKeys_decRef(AlifInterpreter* _interp,
 	AlifDictKeysObject* _dk, bool _useqsbr) { // 442
-	if (alifAtomic_loadSizeRelaxed(&_dk->refCnt) == ALIF_IMMORTAL_REFCNT) {
+	if (alifAtomic_loadSizeRelaxed(&_dk->refCnt) < 0) {
 		return;
 	}
 	if (DECREF_KEYS(_dk) == 1) {
@@ -193,7 +196,7 @@ static inline uint8_t estimate_log2Keysize(AlifSizeT _n) { // 569
 #define GROWTH_RATE(_d) ((_d)->used*3) // 585
 
 static AlifDictKeysObject _emptyKeysStruct_ = { // 590
-		.refCnt = ALIF_IMMORTAL_REFCNT,
+		.refCnt = ALIF_DICT_IMMORTAL_INITIAL_REFCNT,
 		.log2Size = 0,
 		.log2IndexBytes = 0,
 		.kind = DictKeysKind_::Dict_Keys_UStr,
@@ -1801,14 +1804,14 @@ static void dict_dealloc(AlifObject* _self) { // 3089
 
 static AlifObject* dictRepr_lockHeld(AlifObject* _self) { // 3132
 	AlifDictObject* mp = (AlifDictObject*)_self;
-	AlifSizeT i{};
 	AlifObject* key = nullptr, * value = nullptr;
-	AlifUStrWriter writer{};
-	AlifIntT first{};
 
-	i = alif_reprEnter((AlifObject*)mp);
-	if (i != 0) {
-		return i > 0 ? alifUStr_fromString("{...}") : nullptr;
+	AlifSizeT i = 0; //* alif
+	AlifIntT first = 1;
+
+	AlifIntT res = alif_reprEnter((AlifObject*)mp);
+	if (res != 0) {
+		return (res > 0 ? alifUStr_fromString("{...}") : nullptr);
 	}
 
 	if (mp->used == 0) {
@@ -1816,66 +1819,70 @@ static AlifObject* dictRepr_lockHeld(AlifObject* _self) { // 3132
 		return alifUStr_fromString("{}");
 	}
 
-	alifUStrWriter_init(&writer);
-	writer.overAllocate = 1;
-	/* "{" + "1: 2" + ", 3: 4" * (len - 1) + "}" */
-	writer.minLength = 1 + 4 + (2 + 4) * (mp->used - 1) + 1;
-
-	if (alifUStrWriter_writeChar(&writer, '{') < 0)
+	// "{" + "1: 2" + ", 3: 4" * (len - 1) + "}"
+	AlifSizeT prealloc = 1 + 4 + 6 * (mp->used - 1) + 1;
+	AlifUStrWriter* writer = alifUStrWriter_create(prealloc);
+	if (writer == nullptr) {
 		goto error;
+	}
+
+	if (alifUStrWriter_writeChar(writer, '{') < 0) {
+		goto error;
+	}
 
 	/* Do repr() on each key+value pair, and insert ": " between them.
 	   Note that repr may mutate the dict. */
 	i = 0;
 	first = 1;
 	while (_alifDict_next((AlifObject*)mp, &i, &key, &value, nullptr)) {
-		AlifObject* s{};
-		AlifIntT res{};
-
-		/* Prevent repr from deleting key or value during key format. */
+		// Prevent repr from deleting key or value during key format.
 		ALIF_INCREF(key);
 		ALIF_INCREF(value);
 
 		if (!first) {
-			if (alifUStrWriter_writeASCIIString(&writer, ", ", 2) < 0)
+			// Write ", "
+			if (alifUStrWriter_writeChar(writer, ',') < 0) {
 				goto error;
+			}
+			if (alifUStrWriter_writeChar(writer, ' ') < 0) {
+				goto error;
+			}
 		}
 		first = 0;
 
-		s = alifObject_repr(key);
-		if (s == nullptr)
+		// Write repr(key)
+		if (alifUStrWriter_writeRepr(writer, key) < 0) {
 			goto error;
-		res = alifUStrWriter_writeStr(&writer, s);
-		ALIF_DECREF(s);
-		if (res < 0)
-			goto error;
+		}
 
-		if (alifUStrWriter_writeASCIIString(&writer, ": ", 2) < 0)
+		// Write ": "
+		if (alifUStrWriter_writeChar(writer, ':') < 0) {
 			goto error;
+		}
+		if (alifUStrWriter_writeChar(writer, ' ') < 0) {
+			goto error;
+		}
 
-		s = alifObject_repr(value);
-		if (s == nullptr)
+		// Write repr(value)
+		if (alifUStrWriter_writeRepr(writer, value) < 0) {
 			goto error;
-		res = alifUStrWriter_writeStr(&writer, s);
-		ALIF_DECREF(s);
-		if (res < 0)
-			goto error;
+		}
 
 		ALIF_CLEAR(key);
 		ALIF_CLEAR(value);
 	}
 
-	writer.overAllocate = 0;
-	if (alifUStrWriter_writeChar(&writer, '}') < 0)
+	if (alifUStrWriter_writeChar(writer, '}') < 0) {
 		goto error;
+	}
 
 	alif_reprLeave((AlifObject*)mp);
 
-	return alifUStrWriter_finish(&writer);
+	return alifUStrWriter_finish(writer);
 
 error:
 	alif_reprLeave((AlifObject*)mp);
-	alifUStrWriter_dealloc(&writer);
+	alifUStrWriter_discard(writer);
 	ALIF_XDECREF(key);
 	ALIF_XDECREF(value);
 	return nullptr;

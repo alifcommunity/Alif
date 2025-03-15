@@ -996,7 +996,7 @@ ExprTy alifParserEngine_concatenateStrings(AlifParser* _p, ASDLExprSeq* _strings
 				for (j = i; j < nFlattenedElems; j++) {
 					ExprTy currentElem = ASDL_SEQ_GET(flattened, j);
 					if (currentElem->type == ExprK_::ConstantK) {
-						if (alifUStrWriter_writeStr(
+						if (_alifUStrWriter_writeStr(
 							&writer, currentElem->V.constant.val)) {
 							alifUStrWriter_dealloc(&writer);
 							return nullptr;
@@ -1009,16 +1009,16 @@ ExprTy alifParserEngine_concatenateStrings(AlifParser* _p, ASDLExprSeq* _strings
 				}
 				i = j - 1;
 
-				AlifObject* concat_str = alifUStrWriter_finish(&writer);
-				if (concat_str == nullptr) {
+				AlifObject* concatStr = _alifUStrWriter_finish(&writer);
+				if (concatStr == nullptr) {
 					alifUStrWriter_dealloc(&writer);
 					return nullptr;
 				}
-				if (alifASTMem_listAddAlifObj(_p->astMem, concat_str) < 0) {
-					ALIF_DECREF(concat_str);
+				if (alifASTMem_listAddAlifObj(_p->astMem, concatStr) < 0) {
+					ALIF_DECREF(concatStr);
 					return nullptr;
 				}
-				elem = alifAST_constant(concat_str, kind, firstElem->lineNo,
+				elem = alifAST_constant(concatStr, kind, firstElem->lineNo,
 					firstElem->colOffset,
 					lastElem->endLineNo,
 					lastElem->endColOffset, _p->astMem);

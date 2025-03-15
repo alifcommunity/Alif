@@ -341,49 +341,48 @@ static void list_dealloc(AlifObject* _self) { // 497
 
 
 static AlifObject* list_reprImpl(AlifListObject* v) { // 524
-	AlifObject* s{};
-	AlifUStrWriter writer{};
-	AlifSizeT i = alif_reprEnter((AlifObject*)v);
-	if (i != 0) {
-		return i > 0 ? alifUStr_fromString("[...]") : nullptr;
+	AlifIntT res = alif_reprEnter((AlifObject*)v);
+	if (res != 0) {
+		return (res > 0 ? alifUStr_fromString("[...]") : nullptr);
 	}
 
-	alifUStrWriter_init(&writer);
-	writer.overAllocate = 1;
 	/* "[" + "1" + ", 2" * (len - 1) + "]" */
-	writer.minLength = 1 + 1 + (2 + 1) * (ALIF_SIZE(v) - 1) + 1;
-
-	if (alifUStrWriter_writeChar(&writer, '[') < 0)
+	AlifSizeT prealloc = 1 + 1 + (2 + 1) * (ALIF_SIZE(v) - 1) + 1;
+	AlifUStrWriter* writer = alifUStrWriter_create(prealloc);
+	if (writer == nullptr) {
 		goto error;
+	}
+
+	if (alifUStrWriter_writeChar(writer, '[') < 0) {
+		goto error;
+	}
 
 	/* Do repr() on each element.  Note that this may mutate the list,
 	   so must refetch the list size on each iteration. */
-	for (i = 0; i < ALIF_SIZE(v); ++i) {
+	for (AlifSizeT i = 0; i < ALIF_SIZE(v); ++i) {
 		if (i > 0) {
-			if (alifUStrWriter_writeASCIIString(&writer, ", ", 2) < 0)
+			if (alifUStrWriter_writeChar(writer, ',') < 0) {
 				goto error;
+			}
+			if (alifUStrWriter_writeChar(writer, ' ') < 0) {
+				goto error;
+			}
 		}
 
-		s = alifObject_repr(v->item[i]);
-		if (s == nullptr)
-			goto error;
-
-		if (alifUStrWriter_writeStr(&writer, s) < 0) {
-			ALIF_DECREF(s);
+		if (alifUStrWriter_writeRepr(writer, v->item[i]) < 0) {
 			goto error;
 		}
-		ALIF_DECREF(s);
 	}
 
-	writer.overAllocate = 0;
-	if (alifUStrWriter_writeChar(&writer, ']') < 0)
+	if (alifUStrWriter_writeChar(writer, ']') < 0) {
 		goto error;
+	}
 
 	alif_reprLeave((AlifObject*)v);
-	return alifUStrWriter_finish(&writer);
+	return alifUStrWriter_finish(writer);
 
 error:
-	alifUStrWriter_dealloc(&writer);
+	alifUStrWriter_discard(writer);
 	alif_reprLeave((AlifObject*)v);
 	return nullptr;
 }
