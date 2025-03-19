@@ -325,6 +325,9 @@
     <ClCompile Include="..\source\AlifCore\Objects\GetPath.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\Modules\_io\TextIO.cpp">
+      <Filter>Modules\_io</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">
@@ -936,6 +939,12 @@
     <ClInclude Include="..\source\AlifCore\Objects\clinic\MathModule.cpp.h">
       <Filter>Objects\clinic</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\TextIO.cpp.h">
+      <Filter>Modules\_io\clinic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Modules\_io\_IOModule.h">
+      <Filter>Modules\_io</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Include">
@@ -970,6 +979,12 @@
     </Filter>
     <Filter Include="Modules">
       <UniqueIdentifier>{440aef4b-677e-44a2-a713-3eb813efa223}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\_io">
+      <UniqueIdentifier>{d2b91df0-c9f2-4999-bdbf-864f7f02fc7d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\_io\clinic">
+      <UniqueIdentifier>{4b2ba0db-4351-4b78-ba78-961557be8fd8}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
