@@ -2900,9 +2900,9 @@ static AlifIntT codegen_visitStmt(AlifCompiler* _c, StmtTy _s) {
 		return codegen_import(_c, _s);
 	case StmtK_::ImportFromK:
 		return codegen_fromImport(_c, _s);
-	//case StmtK_::GlobalK:
-	//case StmtK_::NonlocalK:
-	//	break;
+	case StmtK_::GlobalK:
+	case StmtK_::NonlocalK:
+		break;
 	case StmtK_::ExprK:
 	{
 		return codegen_stmtExpr(_c, LOC(_s), _s->V.expression.val);

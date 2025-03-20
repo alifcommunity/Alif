@@ -436,6 +436,7 @@ StmtTy alifAST_global(ASDLIdentifierSeq* _names,
 		return nullptr;
 
 	p_->type = StmtK_::GlobalK;
+	p_->V.global.names = _names;
 	p_->lineNo = _lineNo;
 	p_->colOffset = _colOffset;
 	p_->endLineNo = _endLineNo;

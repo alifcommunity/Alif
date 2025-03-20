@@ -6,6 +6,75 @@
 #include "AlifCore_SymTable.h"
 
 
+// 10
+/* error strings used for warnings */
+#define GLOBAL_PARAM \
+"name '%U' is parameter and global"
+
+#define NONLOCAL_PARAM \
+"name '%U' is parameter and nonlocal"
+
+#define GLOBAL_AFTER_ASSIGN \
+"name '%U' is assigned to before global declaration"
+
+#define NONLOCAL_AFTER_ASSIGN \
+"name '%U' is assigned to before nonlocal declaration"
+
+#define GLOBAL_AFTER_USE \
+"name '%U' is used prior to global declaration"
+
+#define NONLOCAL_AFTER_USE \
+"name '%U' is used prior to nonlocal declaration"
+
+#define GLOBAL_ANNOT \
+"annotated name '%U' can't be global"
+
+#define NONLOCAL_ANNOT \
+"annotated name '%U' can't be nonlocal"
+
+#define IMPORT_STAR_WARNING "import * only allowed at module level"
+
+#define NAMED_EXPR_COMP_IN_CLASS \
+"assignment expression within a comprehension cannot be used in a class body"
+
+#define NAMED_EXPR_COMP_IN_TYPEVAR_BOUND \
+"assignment expression within a comprehension cannot be used in a TypeVar bound"
+
+#define NAMED_EXPR_COMP_IN_TYPEALIAS \
+"assignment expression within a comprehension cannot be used in a type alias"
+
+#define NAMED_EXPR_COMP_IN_TYPEPARAM \
+"assignment expression within a comprehension cannot be used within the definition of a generic"
+
+#define NAMED_EXPR_COMP_CONFLICT \
+"assignment expression cannot rebind comprehension iteration variable '%U'"
+
+#define NAMED_EXPR_COMP_INNER_LOOP_CONFLICT \
+"comprehension inner loop cannot rebind assignment expression target '%U'"
+
+#define NAMED_EXPR_COMP_ITER_EXPR \
+"assignment expression cannot be used in a comprehension iterable expression"
+
+#define ANNOTATION_NOT_ALLOWED \
+"%s cannot be used within an annotation"
+
+#define EXPR_NOT_ALLOWED_IN_TYPE_VARIABLE \
+"%s cannot be used within %s"
+
+#define EXPR_NOT_ALLOWED_IN_TYPE_ALIAS \
+"%s cannot be used within a type alias"
+
+#define EXPR_NOT_ALLOWED_IN_TYPE_PARAMETERS \
+"%s cannot be used within the definition of a generic"
+
+#define DUPLICATE_TYPE_PARAM \
+"duplicate type parameter '%U'"
+
+#define ASYNC_WITH_OUTSIDE_ASYNC_FUNC \
+"'async with' outside async function"
+
+#define ASYNC_FOR_OUTSIDE_ASYNC_FUNC \
+"'async for' outside async function"
 
 #define LOCATION(x) SRC_LOCATION_FROM_AST(x) // 79
 
@@ -952,6 +1021,24 @@ static AlifIntT symtable_enterBlock(AlifSymTable* _st, AlifObject* _name, BlockT
 	return result;
 }
 
+
+static long symtable_lookupEntry(AlifSymTable* _st,
+	SymTableEntry* _ste, AlifObject* _name) { // 1442
+	AlifObject* mangled = alif_maybeMangle(_st->private_, _ste, _name);
+	if (!mangled)
+		return -1;
+	long ret = _alifST_getSymbol(_ste, mangled);
+	ALIF_DECREF(mangled);
+	if (ret < 0) {
+		return -1;
+	}
+	return ret;
+}
+
+static long symtable_lookup(AlifSymTable* _st, AlifObject* _name) { // 1456
+	return symtable_lookupEntry(_st, _st->cur, _name);
+}
+
 static AlifIntT symtable_addDefHelper(AlifSymTable* _st,
 	AlifObject* _name, AlifIntT _flag, SymTableEntry* _ste,
 	AlifSourceLocation _loc) { // 1463
@@ -965,7 +1052,7 @@ static AlifIntT symtable_addDefHelper(AlifSymTable* _st,
 	dict = _ste->symbols;
 	if ((o_ = alifDict_getItemWithError(dict, mangled))) {
 		val_ = alifLong_asLong(o_);
-		if (val_ == -1 /*and alifErr_occurred()*/) {
+		if (val_ == -1 and alifErr_occurred()) {
 			goto error;
 		}
 		if ((_flag & DEF_PARAM) and (val_ & DEF_PARAM)) {
@@ -1186,6 +1273,27 @@ static AlifIntT symtable_enterTypeParamBlock(AlifSymTable* _st, Identifier _name
 
 
 
+static AlifIntT symtable_recordDirective(AlifSymTable* _st,
+	Identifier _name, AlifSourceLocation _loc) { // 1742
+	AlifObject* data{}, * mangled{};
+	AlifIntT res{};
+	if (!_st->cur->directives) {
+		_st->cur->directives = alifList_new(0);
+		if (!_st->cur->directives)
+			return 0;
+	}
+	mangled = alif_maybeMangle(_st->private_, _st->cur, _name);
+	if (!mangled)
+		return 0;
+	data = alif_buildValue("(Niiii)", mangled, _loc.lineNo, _loc.colOffset,
+		_loc.endLineNo, _loc.endColOffset);
+	if (!data)
+		return 0;
+	res = alifList_append(_st->cur->directives, data);
+	ALIF_DECREF(data);
+	return res == 0;
+}
+
 
 static AlifIntT check_importFrom(AlifSymTable* st, StmtTy s) { // 1776
 	AlifSourceLocation fut = st->future->location;
@@ -1357,6 +1465,42 @@ static AlifIntT symtable_visitStmt(AlifSymTable* _st, StmtTy _s) { // 1812
 			return 0;
 		}
 		break;
+	case GlobalK: {
+		AlifSizeT i{};
+		ASDLIdentifierSeq* seq = _s->V.global.names;
+		for (i = 0; i < ASDL_SEQ_LEN(seq); i++) {
+			Identifier name = (Identifier)ASDL_SEQ_GET(seq, i);
+			long cur = symtable_lookup(_st, name);
+			if (cur < 0)
+				return 0;
+			if (cur & (DEF_PARAM | DEF_LOCAL | USE | DEF_ANNOT)) {
+				const char* msg;
+				if (cur & DEF_PARAM) {
+					msg = GLOBAL_PARAM;
+				}
+				else if (cur & USE) {
+					msg = GLOBAL_AFTER_USE;
+				}
+				else if (cur & DEF_ANNOT) {
+					msg = GLOBAL_ANNOT;
+				}
+				else {  /* DEF_LOCAL */
+					msg = GLOBAL_AFTER_ASSIGN;
+				}
+				alifErr_format(_alifExcSyntaxError_,
+					msg, name);
+				//SET_ERROR_LOCATION(_st->fileName, LOCATION(_s));
+				return 0;
+			}
+			if (!symtable_addDef(_st, name, DEF_GLOBAL, LOCATION(_s))) {
+				return 0;
+			}
+			if (!symtable_recordDirective(_st, name, LOCATION(_s))) {
+				return 0;
+			}
+		}
+		break;
+	}
 	case StmtK_::ExprK:
 		VISIT(_st, Expr, _s->V.expression.val);
 		break;

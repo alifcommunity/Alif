@@ -848,7 +848,7 @@ dispatch_opcode :
 						// The frame has stolen all the arguments from the stack,
 						// so there is no need to clean them up.
 						if (newFrame == nullptr) {
-							//goto error;
+							goto error;
 						}
 						_frame->returnOffset = (uint16_t)(nextInstr - thisInstr);
 						DISPATCH_INLINED(newFrame);
