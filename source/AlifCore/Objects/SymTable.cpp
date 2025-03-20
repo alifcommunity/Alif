@@ -720,7 +720,7 @@ static AlifIntT analyze_block(SymTableEntry* _ste, AlifObject* _bound, AlifObjec
 
 	while (alifDict_next(_ste->symbols, &pos_, &name, &v_)) {
 		long flags = alifLong_asLong(v_);
-		if (flags == -1 /*and alifErr_occurred()*/) {
+		if (flags == -1 and alifErr_occurred()) {
 			goto error;
 		}
 		if (!analyze_name(_ste, scopes, name, flags,
@@ -981,9 +981,9 @@ static AlifIntT symtable_addDefHelper(AlifSymTable* _st,
 		}
 		val_ |= _flag;
 	}
-	//else if (alifErr_occurred()) {
-		//goto error;
-	//}
+	else if (alifErr_occurred()) {
+		goto error;
+	}
 	else {
 		val_ = _flag;
 	}
@@ -1015,13 +1015,13 @@ static AlifIntT symtable_addDefHelper(AlifSymTable* _st,
 		val_ = 0;
 		if ((o_ = alifDict_getItemWithError(_st->global, mangled))) {
 			val_ = alifLong_asLong(o_);
-			//if (val_ == -1 and alifErr_occurred()) {
-				//goto error;
-			//}
+			if (val_ == -1 and alifErr_occurred()) {
+				goto error;
+			}
 		}
-		//else if (alifErr_occurred()) {
-			//goto error;
-		//}
+		else if (alifErr_occurred()) {
+			goto error;
+		}
 		val_ |= _flag;
 		o_ = alifLong_fromLong(val_);
 		if (o_ == nullptr)
