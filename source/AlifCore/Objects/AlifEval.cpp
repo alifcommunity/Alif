@@ -358,6 +358,24 @@ dispatch_opcode :
 				stackPointer += -1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(DELETE_SUBSCR) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef container{};
+				AlifStackRef sub{};
+				sub = stackPointer[-1];
+				container = stackPointer[-2];
+				/* del container[sub] */
+				_alifFrame_setStackPointer(_frame, stackPointer);
+				AlifIntT err = alifObject_delItem(alifStackRef_asAlifObjectBorrow(container),
+					alifStackRef_asAlifObjectBorrow(sub));
+				stackPointer = _alifFrame_getStackPointer(_frame);
+				ALIFSTACKREF_CLOSE(container);
+				ALIFSTACKREF_CLOSE(sub);
+				if (err) goto pop_2_error;
+				stackPointer += -2;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(END_FOR) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;
