@@ -109,9 +109,17 @@ static AlifObject* builtin_print(AlifObject* _module, AlifObject* const* _args,
 
 	// alif // print
 	ReprFunc func{};
+	AlifObject* res{};
 	for (AlifIntT i = 0; i < _nargs; i++) {
-		func = ALIF_TYPE(_args[i])->repr;
-		AlifObject* res = func(_args[i]);
+		res = _args[i];
+		if (!ALIFUSTR_CHECK(res)) {
+			func = ALIF_TYPE(res)->repr;
+			if (func == nullptr) {
+				printf("%s \n", "العنصر غير قابل للطباعة في الوقت الحالي");
+				return ALIF_NONE;
+			}
+			res = func(res);
+		}
 		if (alifUStr_isASCII(res)) {
 			char* buf = (char*)ALIFUSTR_DATA(res);
 			printf("%s \n", buf);
