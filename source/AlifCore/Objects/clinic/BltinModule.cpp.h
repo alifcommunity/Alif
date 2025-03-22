@@ -107,30 +107,16 @@ static AlifObject* builtin_printImpl(AlifObject*, AlifObject*,
 static AlifObject* builtin_print(AlifObject* _module, AlifObject* const* _args,
 	AlifSizeT _nargs, AlifObject* _kwnames) { // 907
 
-	// alif // print
+	//* alif // print
 	ReprFunc func{};
 	AlifObject* res{};
 	for (AlifIntT i = 0; i < _nargs; i++) {
-		res = _args[i];
-		if (!ALIFUSTR_CHECK(res)) {
-			func = ALIF_TYPE(res)->repr;
-			if (func == nullptr) {
-				printf("%s \n", "العنصر غير قابل للطباعة في الوقت الحالي");
-				return ALIF_NONE;
-			}
-			res = func(res);
-		}
-		if (alifUStr_isASCII(res)) {
-			char* buf = (char*)ALIFUSTR_DATA(res);
-			printf("%s \n", buf);
-		}
-		else {
-			char* buf = (char*)alifUStr_asUTF8(res);
-			printf("%s \n", buf);
-		}
+		res = alifObject_str(_args[i]);
+		char* buf = (char*)alifUStr_asUTF8(res);
+		printf("%s \n", buf);
 	}
 	return ALIF_NONE;
-	// alif
+	//* alif
 
 	AlifObject* returnValue = nullptr;
 #define NUM_KEYWORDS 4
