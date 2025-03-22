@@ -166,7 +166,7 @@ static AlifIntT init_interpreter(AlifInterpreter* _interpreter,
 
 	if (_interpreter->initialized) {
 		// error
-		return -1;
+		return -1; //* alif //* delete
 	}
 
 	_interpreter->dureRun = _dureRun;
@@ -286,7 +286,7 @@ AlifInterpreter* alifInterpreter_get() { // 1331
 	AlifInterpreter* interp = tstate->interpreter;
 	if (interp == nullptr) {
 		//alif_fatalError("no current interpreter");
-		return nullptr; // temp
+		return nullptr; //* alif //* delete
 	}
 	return interp;
 }
