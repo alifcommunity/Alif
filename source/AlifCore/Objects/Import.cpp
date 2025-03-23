@@ -25,11 +25,13 @@ InitTable* _alifImportInitTable_ = _alifImportInitTab_; // 59
 
 #define INITTABLE _alifDureRun_.imports.initTable // 69
 #define LAST_MODULE_INDEX _alifDureRun_.imports.lastModuleIndex // 70
-//#define EXTENSIONS _alifDureRun_.imports.extensions // 71
+#define EXTENSIONS _alifDureRun_.imports.extensions // 71
 
 // 80
 #define MODULES(_interp) \
     (_interp)->imports.modules
+#define MODULES_BY_INDEX(interp) \
+    (interp)->imports.modulesByIndex
 #define IMPORTLIB(_interp) \
     (_interp)->imports.importLib
 #define IMPORT_FUNC(_interp) \
@@ -44,6 +46,11 @@ AlifObject* alifImport_initModules(AlifInterpreter* _interp) { // 129
 	if (MODULES(_interp) == nullptr) {
 		return nullptr;
 	}
+	return MODULES(_interp);
+}
+
+
+AlifObject* _alifImport_getModules(AlifInterpreter* _interp) { // 140
 	return MODULES(_interp);
 }
 
@@ -158,6 +165,39 @@ AlifSizeT alifImport_getNextModuleIndex() { // 381
 	return alifAtomic_addSize(&LAST_MODULE_INDEX, 1) + 1;
 }
 
+static void _set_moduleIndex(AlifModuleDef* def, AlifSizeT index) { // 404
+	if (index == def->base.index) {
+		/* There's nothing to do. */
+	}
+	else if (def->base.index == 0) {
+		def->base.index = index;
+	}
+	else {
+		def->base.index = index;
+	}
+}
+
+static AlifIntT _modulesByIndex_set(AlifInterpreter* interp,
+	AlifSizeT index, AlifObject* module) { // 450
+	if (MODULES_BY_INDEX(interp) == nullptr) {
+		MODULES_BY_INDEX(interp) = alifList_new(0);
+		if (MODULES_BY_INDEX(interp) == nullptr) {
+			return -1;
+		}
+	}
+
+	while (ALIFLIST_GET_SIZE(MODULES_BY_INDEX(interp)) <= index) {
+		if (alifList_append(MODULES_BY_INDEX(interp), ALIF_NONE) < 0) {
+			return -1;
+		}
+	}
+
+	return alifList_setItem(MODULES_BY_INDEX(interp), index, ALIF_NEWREF(module));
+}
+
+
+
+
 
 #ifdef HAVE_LOCAL_THREAD
 ALIF_LOCAL_THREAD const char* _pkgcontext_ = nullptr;
@@ -218,6 +258,339 @@ static AlifIntT exec_builtinOrDynamic(AlifObject* mod) { // 790
 }
 
 
+
+static inline void extensions_lockAcquire(void) { // 914
+	ALIFMUTEX_LOCK(&_alifDureRun_.imports.extensions.mutex);
+}
+
+static inline void extensions_lockRelease(void) { // 920
+	ALIFMUTEX_UNLOCK(&_alifDureRun_.imports.extensions.mutex);
+}
+
+
+
+typedef class CachedMDict { // 935
+public:
+	AlifObject* copied{};
+	int64_t interpid{};
+} *CachedMDictT;
+
+class ExtensionsCacheValue { // 942
+public:
+	AlifModuleDef* def{};
+	AlifModInitFunction init{};
+	AlifSizeT index{};
+	CachedMDictT dict{};
+	CachedMDict mDict{};
+	AlifExtModuleOrigin origin{};
+	void* gil{};
+};
+
+
+
+static ExtensionsCacheValue* allocExtensions_cacheValue(void) { // 973
+	ExtensionsCacheValue* value
+		= (ExtensionsCacheValue*)alifMem_dataAlloc(sizeof(ExtensionsCacheValue));
+	if (value == nullptr) {
+		//alifErr_noMemory();
+		return nullptr;
+	}
+	*value = { 0 };
+	return value;
+}
+
+
+static void freeExtensions_cacheValue(ExtensionsCacheValue* _value) { // 986
+	alifMem_dataFree(_value);
+}
+
+static AlifSizeT _getCached_moduleIndex(ExtensionsCacheValue* _cached) { // 992
+	return _cached->index;
+}
+
+
+static void fixup_cachedDef(ExtensionsCacheValue* value) { // 999
+	AlifModuleDef* def = value->def;
+
+	alif_setImmortalUntracked((AlifObject*)def);
+
+	def->base.init = value->init;
+
+	_set_moduleIndex(def, value->index);
+
+	if (value->dict != nullptr) {
+		def->base.copy = ALIF_NEWREF(value->dict->copied);
+	}
+}
+
+
+static void restore_oldCachedDef(AlifModuleDef* def, AlifModuleDefBase* oldbase) { // 1035
+	def->base = *oldbase;
+}
+
+static void cleanup_oldCachedDef(AlifModuleDefBase* oldbase) { // 1041
+	ALIF_XDECREF(oldbase->copy);
+}
+
+static void del_cachedDef(ExtensionsCacheValue* _value) { // 1047
+	ALIF_XDECREF(_value->def->base.copy);
+	_value->def->base.copy = nullptr;
+}
+
+static AlifIntT init_cachedMDict(ExtensionsCacheValue* value, AlifObject* m_dict) { // 1060
+	if (m_dict == nullptr) {
+		return 0;
+	}
+	AlifInterpreter* interp = _alifInterpreter_get();
+
+	AlifObject* copied = alifDict_copy(m_dict);
+	if (copied == nullptr) {
+		return -1;
+	}
+
+	value->mDict = {
+		.copied = copied,
+		.interpid = alifInterpreter_getID(interp),
+	};
+
+	value->dict = &value->mDict;
+	return 0;
+}
+
+static void del_cachedMDict(ExtensionsCacheValue* _value) { // 1105
+	if (_value->dict != nullptr) {
+		ALIF_XDECREF(_value->dict->copied);
+		_value->dict = nullptr;
+	}
+}
+
+static AlifObject* getCore_moduleDict(AlifInterpreter*, AlifObject*, AlifObject*); // 1126
+
+static AlifObject* get_cachedMDict(ExtensionsCacheValue* value,
+	AlifObject* name, AlifObject* path) { // 1129
+	AlifInterpreter* interp = _alifInterpreter_get();
+	if (value->origin == AlifExtModuleOrigin::Alif_Ext_Module_Origin_CORE) {
+		return getCore_moduleDict(interp, name, path);
+	}
+	AlifObject* dict = value->def->base.copy;
+	ALIF_XINCREF(dict);
+	return dict;
+}
+
+static void delExtensions_cacheValue(ExtensionsCacheValue* _value) { // 1139
+	if (_value != nullptr) {
+		del_cachedMDict(_value);
+		del_cachedDef(_value);
+		freeExtensions_cacheValue(_value);
+	}
+}
+
+static void* hashtableKey_from2Strings(AlifObject* _str1, AlifObject* _str2, const char _sep) { // 1149
+	AlifSizeT str1_len{}, str2_len{};
+	const char* str1_data = alifUStr_asUTF8AndSize(_str1, &str1_len);
+	const char* str2_data = alifUStr_asUTF8AndSize(_str2, &str2_len);
+	if (str1_data == nullptr or str2_data == nullptr) {
+		return nullptr;
+	}
+	/* Make sure sep and the nullptr byte won't cause an overflow. */
+	AlifUSizeT size = str1_len + 1 + str2_len + 1;
+
+	// XXX Use a buffer if it's a temp value (every case but "set").
+	char* key = (char*)alifMem_dataAlloc(size);
+	if (key == nullptr) {
+		//alifErr_noMemory();
+		return nullptr;
+	}
+
+	strncpy(key, str1_data, str1_len);
+	key[str1_len] = _sep;
+	strncpy(key + str1_len + 1, str2_data, str2_len + 1);
+	return key;
+}
+
+
+static AlifUHashT hashtable_hashStr(const void* _key) { // 1176
+	return alif_hashBuffer(_key, strlen((const char*)_key));
+}
+
+static AlifIntT hashtable_compareStr(const void* _key1, const void* _key2) { // 1182
+	return strcmp((const char*)_key1, (const char*)_key2) == 0;
+}
+
+static void hashtable_destroyStr(void* _ptr) { // 1188
+	alifMem_dataFree(_ptr);
+}
+
+
+#define HTSEP ':' // 1229
+
+static AlifIntT _extensions_cacheInit(void) { // 1231
+	AlifHashTableAllocatorT alloc = { alifMem_dataAlloc, alifMem_dataFree };
+	EXTENSIONS.hashtable = alifHashTable_newFull(
+		hashtable_hashStr,
+		hashtable_compareStr,
+		hashtable_destroyStr,  // key
+		(AlifHashTableDestroyFunc)delExtensions_cacheValue,  // value
+		&alloc
+	);
+	if (EXTENSIONS.hashtable == nullptr) {
+		//alifErr_noMemory();
+		return -1;
+	}
+	return 0;
+}
+
+static AlifHashTableEntryT* _extensionsCache_findUnlocked(AlifObject* _path,
+	AlifObject* _name, void** _pKey) { // 1249
+	if (EXTENSIONS.hashtable == nullptr) {
+		return nullptr;
+	}
+	void* key = hashtableKey_from2Strings(_path, _name, HTSEP);
+	if (key == nullptr) {
+		return nullptr;
+	}
+	AlifHashTableEntryT* entry = _alifHashTable_getEntry(EXTENSIONS.hashtable, key);
+	if (_pKey != nullptr) {
+		*_pKey = key;
+	}
+	else {
+		hashtable_destroyStr(key);
+	}
+	return entry;
+}
+
+static ExtensionsCacheValue* _extensions_cacheGet(AlifObject* _path, AlifObject* _name) { // 1272
+	ExtensionsCacheValue* value = nullptr;
+	extensions_lockAcquire();
+
+	AlifHashTableEntryT* entry =
+		_extensionsCache_findUnlocked(_path, _name, nullptr);
+	if (entry == nullptr) {
+		/* It was never added. */
+		goto finally;
+	}
+	value = (ExtensionsCacheValue*)entry->value;
+
+	finally:
+	extensions_lockRelease();
+	return value;
+}
+
+static ExtensionsCacheValue* _extensions_cacheSet(AlifObject* path,
+	AlifObject* name, AlifModuleDef* def, AlifModInitFunction m_init, AlifSizeT m_index,
+	AlifObject* m_dict, AlifExtModuleOrigin origin, void* md_gil) { // 1292
+	ExtensionsCacheValue* value = nullptr;
+	void* key = nullptr;
+	ExtensionsCacheValue* newvalue = nullptr;
+	AlifModuleDefBase olddefbase = def->base;
+
+	extensions_lockAcquire();
+
+	if (EXTENSIONS.hashtable == nullptr) {
+		if (_extensions_cacheInit() < 0) {
+			goto finally;
+		}
+	}
+
+	/* Create a cached value to populate for the module. */
+	AlifHashTableEntryT* entry;
+	entry = _extensionsCache_findUnlocked(path, name, &key);
+	value = entry == nullptr
+		? nullptr
+		: (ExtensionsCacheValue*)entry->value;
+	if (value != nullptr) {
+		goto finally_oldvalue;
+	}
+	newvalue = allocExtensions_cacheValue();
+	if (newvalue == nullptr) {
+		goto finally;
+	}
+
+	/* Populate the new cache value data. */
+	*newvalue = {
+		.def = def,
+		.init = m_init,
+		.index = m_index,
+		.origin = origin,
+		.gil = md_gil,
+	};
+
+	if (init_cachedMDict(newvalue, m_dict) < 0) {
+		goto finally;
+	}
+	fixup_cachedDef(newvalue);
+
+	if (entry == nullptr) {
+		/* It was never added. */
+		if (alifHashTable_set(EXTENSIONS.hashtable, key, newvalue) < 0) {
+			//alifErr_noMemory();
+			goto finally;
+		}
+		/* The hashtable owns the key now. */
+		key = nullptr;
+	}
+	else if (value == nullptr) {
+		/* It was previously deleted. */
+		entry->value = newvalue;
+	}
+	else {
+		/* This shouldn't ever happen. */
+		ALIF_UNREACHABLE();
+	}
+
+	value = newvalue;
+
+	finally:
+	if (value == nullptr) {
+		restore_oldCachedDef(def, &olddefbase);
+		if (newvalue != nullptr) {
+			delExtensions_cacheValue(newvalue);
+		}
+	}
+	else {
+		cleanup_oldCachedDef(&olddefbase);
+	}
+
+finally_oldvalue:
+	extensions_lockRelease();
+	if (key != nullptr) {
+		hashtable_destroyStr(key);
+	}
+
+	return value;
+}
+
+
+
+static void _extensions_cacheDelete(AlifObject* path, AlifObject* name) { // 1418
+	extensions_lockAcquire();
+
+	if (EXTENSIONS.hashtable == nullptr) {
+		goto finally;
+	}
+
+	AlifHashTableEntryT* entry;
+	entry = _extensionsCache_findUnlocked(path, name, nullptr);
+	if (entry == nullptr) {
+		/* It was never added. */
+		goto finally;
+	}
+	if (entry->value == nullptr) {
+		/* It was already removed. */
+		goto finally;
+	}
+	ExtensionsCacheValue* value;
+	value = (ExtensionsCacheValue*)entry->value;
+	entry->value = nullptr;
+
+	delExtensions_cacheValue(value);
+
+	finally:
+	extensions_lockRelease();
+}
+
+
+
 static AlifThread* switchTo_mainInterpreter(AlifThread* _thread) { // 1523
 	if (alif_isMainInterpreter(_thread->interpreter)) {
 		return _thread;
@@ -235,6 +608,189 @@ static AlifThread* switchTo_mainInterpreter(AlifThread* _thread) { // 1523
 }
 
 
+static AlifObject* getCore_moduleDict(AlifInterpreter* _interp,
+	AlifObject* _name, AlifObject* _path) { // 1580
+	/* Only builtin modules are core. */
+	if (_path == _name) {
+		if (alifUStr_compareWithASCIIString(_name, "sys") == 0) {
+			return ALIF_NEWREF(_interp->sysdictCopy);
+		}
+		if (alifUStr_compareWithASCIIString(_name, "builtins") == 0) {
+			return ALIF_NEWREF(_interp->builtinsCopy);
+		}
+	}
+	return nullptr;
+}
+
+
+class SinglephaseGlobalUpdate { // 1666
+public:
+	AlifModInitFunction init{};
+	AlifSizeT index{};
+	AlifObject* dict{};
+	AlifExtModuleOrigin origin{};
+	void* gil{};
+};
+
+static ExtensionsCacheValue* updateGlobalState_forExtension(AlifThread* tstate,
+	AlifObject* path, AlifObject* name, AlifModuleDef* def,
+	SinglephaseGlobalUpdate* singlephase) { // 1674
+	ExtensionsCacheValue* cached = nullptr;
+	AlifModInitFunction m_init = nullptr;
+	AlifObject* m_dict = nullptr;
+
+	/* Set up for _extensions_cache_set(). */
+	if (singlephase == nullptr) {
+		// nothing for now
+	}
+	else {
+		if (singlephase->init != nullptr) {
+			m_init = singlephase->init;
+		}
+		else if (singlephase->dict == nullptr) {
+			/* It must be a core builtin module. */
+		}
+		else {
+			m_dict = singlephase->dict;
+		}
+	}
+
+	if (alif_isMainInterpreter(tstate->interpreter) or def->size == -1) {
+		cached = _extensions_cacheSet(
+			path, name, def, m_init, singlephase->index, m_dict,
+			singlephase->origin, singlephase->gil);
+		if (cached == nullptr) {
+			return nullptr;
+		}
+	}
+
+	return cached;
+}
+
+
+
+static AlifIntT finish_singlephaseExtension(AlifThread* tstate,
+	AlifObject* mod, ExtensionsCacheValue* cached,
+	AlifObject* name, AlifObject* modules) { // 1743
+	AlifSizeT index = _getCached_moduleIndex(cached);
+	if (_modulesByIndex_set(tstate->interpreter, index, mod) < 0) {
+		return -1;
+	}
+
+	if (modules != nullptr) {
+		if (alifObject_setItem(modules, name, mod) < 0) {
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+
+
+static AlifObject* reload_singlephaseExtension(AlifThread* _thread,
+	ExtensionsCacheValue* cached, AlifExtModuleLoaderInfo* info) { // 1774
+	AlifModuleDef* def = cached->def;
+	AlifObject* mod = nullptr;
+
+	const char* name_buf = alifUStr_asUTF8(info->name);
+	//if (_alifImport_checkSubinterpIncompatibleExtensionAllowed(name_buf) < 0) {
+	//	return nullptr;
+	//}
+
+	AlifObject* modules = get_modulesDict(_thread, true);
+	if (def->size == -1) {
+		AlifObject* m_copy = get_cachedMDict(cached, info->name, info->path);
+		if (m_copy == nullptr) {
+			return nullptr;
+		}
+		mod = import_addModule(_thread, info->name);
+		if (mod == nullptr) {
+			ALIF_DECREF(m_copy);
+			return nullptr;
+		}
+		AlifObject* mdict = alifModule_getDict(mod);
+		if (mdict == nullptr) {
+			ALIF_DECREF(m_copy);
+			ALIF_DECREF(mod);
+			return nullptr;
+		}
+		AlifIntT rc = alifDict_update(mdict, m_copy);
+		ALIF_DECREF(m_copy);
+		if (rc < 0) {
+			ALIF_DECREF(mod);
+			return nullptr;
+		}
+		if (def->base.copy != nullptr) {
+			((AlifModuleObject*)mod)->gil = cached->gil;
+		}
+	}
+	else {
+		AlifModInitFunction p0 = def->base.init;
+		if (p0 == nullptr) {
+			return nullptr;
+		}
+		AlifExtModuleLoaderResult res{};
+		if (_alifImport_runModInitFunc(p0, info, &res) < 0) {
+			//_alifExtModule_loaderResultApplyError(&res, name_buf);
+			return nullptr;
+		}
+		mod = res.module;
+		_alifExtModule_loaderResultClear(&res);
+
+		if (info->filename != nullptr) {
+			if (alifModule_addObjectRef(mod, "__file__", info->filename) < 0) {
+				alifErr_clear(); /* Not important enough to report */
+			}
+		}
+
+		if (alifObject_setItem(modules, info->name, mod) == -1) {
+			ALIF_DECREF(mod);
+			return nullptr;
+		}
+	}
+
+	AlifSizeT index = _getCached_moduleIndex(cached);
+	if (_modulesByIndex_set(_thread->interpreter, index, mod) < 0) {
+		ALIFMAPPING_DELITEM(modules, info->name);
+		ALIF_DECREF(mod);
+		return nullptr;
+	}
+
+	return mod;
+}
+
+
+
+static AlifObject* import_findExtension(AlifThread* tstate,
+	AlifExtModuleLoaderInfo* info, ExtensionsCacheValue** p_cached) { // 1885
+	/* Only single-phase init modules will be in the cache. */
+	ExtensionsCacheValue* cached
+		= _extensions_cacheGet(info->path, info->name);
+	if (cached == nullptr) {
+		return nullptr;
+	}
+
+	*p_cached = cached;
+
+	const char* name_buf = alifUStr_asUTF8(info->name);
+	//if (_alifImport_checkSubinterpIncompatibleExtensionAllowed(name_buf) < 0) {
+	//	return nullptr;
+	//}
+
+	AlifObject* mod = reload_singlephaseExtension(tstate, cached, info);
+	if (mod == nullptr) {
+		return nullptr;
+	}
+
+	//AlifIntT verbose = alifInterpreter_getConfig(tstate->interpreter)->verbose;
+	//if (verbose) {
+	//	alifSys_formatStderr("import %U # previously loaded (%R)\n",
+	//		info->name, info->path);
+	//}
+
+	return mod;
+}
 
 
 static AlifObject* import_runExtension(AlifThread* tstate, AlifModInitFunction p0,
@@ -242,7 +798,7 @@ static AlifObject* import_runExtension(AlifThread* tstate, AlifModInitFunction p
 
 	AlifObject* mod = nullptr;
 	AlifModuleDef* def = nullptr;
-	//ExtensionsCacheValue* cached = nullptr;
+	ExtensionsCacheValue* cached = nullptr;
 	const char* name_buf = ALIFBYTES_AS_STRING(info->nameEncoded);
 
 	bool switched = false;
@@ -285,22 +841,22 @@ static AlifObject* import_runExtension(AlifThread* tstate, AlifModInitFunction p
 				}
 			}
 
-			//SinglephaseGlobalUpdate singlephase = {
-			//	.index = def->base.index,
-			//	.origin = info->origin,
-			//	.gil = ((AlifModuleObject*)mod)->gil,
-			//};
-			//if (def->size == -1) {
-			//	singlephase.dict = alifModule_getDict(mod);
-			//}
-			//else {
-			//	singlephase.m_init = p0;
-			//}
-			//cached = updateGlobalState_forExtension(
-			//	main_tstate, info->path, info->name, def, &singlephase);
-			//if (cached == nullptr) {
-			//	goto main_finally;
-			//}
+			SinglephaseGlobalUpdate singlephase = {
+				.index = def->base.index,
+				.origin = info->origin,
+				.gil = ((AlifModuleObject*)mod)->gil,
+			};
+			if (def->size == -1) {
+				singlephase.dict = alifModule_getDict(mod);
+			}
+			else {
+				singlephase.init = p0;
+			}
+			cached = updateGlobalState_forExtension(
+				main_tstate, info->path, info->name, def, &singlephase);
+			if (cached == nullptr) {
+				goto main_finally;
+			}
 		}
 	}
 
@@ -315,7 +871,7 @@ main_finally:
 	/*****************************************************************/
 
 	if (rc < 0) {
-		//alifExtModuleLoader_resultApplyError(&res, name_buf);
+		//alifExtModule_loaderResultApplyError(&res, name_buf);
 		goto error;
 	}
 
@@ -330,20 +886,20 @@ main_finally:
 		//	goto error;
 		//}
 
-		//if (switched) {
-		//	mod = reload_singlephaseExtension(tstate, cached, info);
-		//	if (mod == nullptr) {
-		//		goto error;
-		//	}
-		//}
-		//else {
-		//	AlifObject* modules = get_modulesDict(tstate, true);
-		//	if (finish_singlephaseExtension(
-		//		tstate, mod, cached, info->name, modules) < 0)
-		//	{
-		//		goto error;
-		//	}
-		//}
+		if (switched) {
+			mod = reload_singlephaseExtension(tstate, cached, info);
+			if (mod == nullptr) {
+				goto error;
+			}
+		}
+		else {
+			AlifObject* modules = get_modulesDict(tstate, true);
+			if (finish_singlephaseExtension(
+				tstate, mod, cached, info->name, modules) < 0)
+			{
+				goto error;
+			}
+		}
 	}
 
 	_alifExtModule_loaderResultClear(&res);
@@ -355,6 +911,50 @@ error:
 	return nullptr;
 }
 
+
+
+AlifIntT _alifImport_fixupBuiltin(AlifThread* _thread, AlifObject* _mod,
+	const char* _name, AlifObject* _modules) { // 2188
+	AlifIntT res = -1;
+
+	AlifObject* nameobj{};
+	nameobj = alifUStr_internFromString(_name);
+	if (nameobj == nullptr) {
+		return -1;
+	}
+
+	AlifModuleDef* def = alifModule_getDef(_mod);
+	if (def == nullptr) {
+		//ALIFERR_BADINTERNALCALL();
+		goto finally;
+	}
+
+	ExtensionsCacheValue* cached;
+	cached = _extensions_cacheGet(nameobj, nameobj);
+	if (cached == nullptr) {
+		SinglephaseGlobalUpdate singlephase = {
+			.index = def->base.index,
+			.dict = nullptr,
+			.origin = AlifExtModuleOrigin::Alif_Ext_Module_Origin_CORE,
+			.gil = nullptr,
+		};
+		cached = updateGlobalState_forExtension(
+			_thread, nameobj, nameobj, def, &singlephase);
+		if (cached == nullptr) {
+			goto finally;
+		}
+	}
+
+	if (finish_singlephaseExtension(_thread, _mod, cached, nameobj, _modules) < 0) {
+		goto finally;
+	}
+
+	res = 0;
+
+	finally:
+	ALIF_DECREF(nameobj);
+	return res;
+}
 
 
 static AlifIntT is_builtin(AlifObject* _name) { // 2254
@@ -376,7 +976,6 @@ static AlifIntT is_builtin(AlifObject* _name) { // 2254
 static AlifObject* create_builtin(AlifThread* _thread,
 	AlifObject* _name, AlifObject* _spec) { // 2270
 	AlifExtModuleLoaderInfo info{};
-	AlifObject* mod{}; //* alif
 	InitTable* found = nullptr; //* alif
 	AlifModInitFunction p0{}; //* alif
 
@@ -385,18 +984,18 @@ static AlifObject* create_builtin(AlifThread* _thread,
 		return nullptr;
 	}
 
-	//ExtensionsCacheValue* cached = nullptr;
-	//AlifObject* mod = import_findExtension(_thread, &info, &cached);
-	//if (mod != nullptr) {
-	//	goto finally;
-	//}
-	/*else */if (_alifErr_occurred(_thread)) {
+	ExtensionsCacheValue* cached = nullptr;
+	AlifObject* mod = import_findExtension(_thread, &info, &cached);
+	if (mod != nullptr) {
+		goto finally;
+	}
+	else if (_alifErr_occurred(_thread)) {
 		goto finally;
 	}
 
-	//if (cached != nullptr) {
-	//	_extensions_cacheDelete(info.path, info.name);
-	//}
+	if (cached != nullptr) {
+		_extensions_cacheDelete(info.path, info.name);
+	}
 
 	
 	for (InitTable* p = INITTABLE; p->name != nullptr; p++) {
@@ -1035,6 +1634,88 @@ static AlifObject* import_findAndLoad(AlifThread* tstate, AlifObject* abs_name) 
 
 
 
+AlifObject* alifImport_importModuleLevel(const char* name, AlifObject* globals,
+	AlifObject* locals, AlifObject* fromlist, AlifIntT level) { // 3839
+	AlifObject* nameobj{}, * mod{};
+	nameobj = alifUStr_fromString(name);
+	if (nameobj == nullptr)
+		return nullptr;
+	mod = alifImport_importModuleLevelObject(nameobj, globals, locals,
+		fromlist, level);
+	ALIF_DECREF(nameobj);
+	return mod;
+}
+
+
+
+AlifObject* alifImport_import(AlifObject* module_name) { // 3888
+	AlifThread* tstate = _alifThread_get();
+	AlifObject* globals = nullptr;
+	AlifObject* import = nullptr;
+	AlifObject* builtins = nullptr;
+	AlifObject* r = nullptr;
+
+	AlifObject* from_list = alifList_new(0);
+	if (from_list == nullptr) {
+		goto err;
+	}
+
+	/* Get the builtins from current globals */
+	globals = alifEval_getGlobals();
+	if (globals != nullptr) {
+		ALIF_INCREF(globals);
+		builtins = alifObject_getItem(globals, &ALIF_ID(__builtins__));
+		if (builtins == nullptr)
+			goto err;
+	}
+	else {
+		/* No globals -- use standard builtins, and fake globals */
+		builtins = alifImport_importModuleLevel("builtins",
+			nullptr, nullptr, nullptr, 0);
+		if (builtins == nullptr) {
+			goto err;
+		}
+		globals = alif_buildValue("{OO}", &ALIF_ID(__builtins__), builtins);
+		if (globals == nullptr)
+			goto err;
+	}
+
+	/* Get the __import__ function from the builtins */
+	if (ALIFDICT_CHECK(builtins)) {
+		import = alifObject_getItem(builtins, &ALIF_STR(__import__));
+		if (import == nullptr) {
+			//_alifErr_setObject(tstate, _alifExcKeyError_, &ALIF_STR(__import__));
+		}
+	}
+	else {
+		import = alifObject_getAttr(builtins, &ALIF_STR(__import__));
+	}
+	if (import == nullptr)
+		goto err;
+
+	/* Call the __import__ function with the proper argument list
+	   Always use absolute import here.
+	   Calling for side-effect of import. */
+	r = alifObject_callFunction(import, "OOOOi", module_name, globals,
+		globals, from_list, 0, nullptr);
+	if (r == nullptr)
+		goto err;
+	ALIF_DECREF(r);
+
+	r = import_getModule(tstate, module_name);
+	if (r == nullptr and !_alifErr_occurred(tstate)) {
+		//_alifErr_setObject(tstate, _alifExcKeyError_, module_name);
+	}
+
+err:
+	ALIF_XDECREF(globals);
+	ALIF_XDECREF(builtins);
+	ALIF_XDECREF(import);
+	ALIF_XDECREF(from_list);
+
+	return r;
+}
+
 
 
 // alif
@@ -1672,7 +2353,7 @@ static AlifObject* load_module(const char* _name, FILE* fp, char* pathname, Alif
 	AlifIntT err{};
 
 	AlifThread* thread = _alifThread_get(); //* alif
-	AlifObject* name = alifUStr_fromString(_name); //* alif
+
 
 
 	/* First check that there's an open file (if we need one)  */
@@ -1703,6 +2384,9 @@ static AlifObject* load_module(const char* _name, FILE* fp, char* pathname, Alif
 			_name = pathname;
 
 		//* alif
+		AlifObject* name;
+		name = alifUStr_fromString(_name);
+
 		attrs = alif_buildValue("{sO}", "name", name);
 		if (attrs == nullptr) {
 			return nullptr;
@@ -1768,6 +2452,17 @@ static AlifIntT init_builtin(const char* name) { // 1897
 
 
 
+
+AlifObject* alifImport_importModule(const char* _name) { // 2036
+	AlifObject* pname{};
+	AlifObject* result{};
+
+	pname = alifUStr_fromString(_name);
+	if (pname == nullptr) return nullptr;
+	result = alifImport_import(pname);
+	ALIF_DECREF(pname);
+	return result;
+}
 
 
 static AlifObject* import_moduleLevel(const char* _name, AlifObject* _globals, AlifObject* _locals,
@@ -1835,7 +2530,7 @@ static AlifObject* import_moduleLevel(const char* _name, AlifObject* _globals, A
 
 
 AlifObject* alifImport_importModuleLevelObject(AlifObject* name, AlifObject* globals,
-	AlifObject* locals, AlifObject*  fromlist, AlifIntT level) { // 2182
+	AlifObject* locals, AlifObject* fromlist, AlifIntT level) { // 2182
 	AlifObject* result{};
 	//_alifImport_acquireLock();
 	level = -1; //* alif
@@ -2246,3 +2941,68 @@ static AlifObject* import_submodule(AlifObject* mod,
 
 
 
+//AlifObject* alifImport_import(AlifObject* _moduleName) { // 2717
+//	static AlifObject* silly_list = nullptr;
+//	static AlifObject* builtins_str = nullptr;
+//	static AlifObject* import_str = nullptr;
+//	AlifObject* globals = nullptr;
+//	AlifObject* import = nullptr;
+//	AlifObject* builtins = nullptr;
+//	AlifObject* r = nullptr;
+//
+//	/* Initialize constant string objects */
+//	if (silly_list == nullptr) {
+//		import_str = alifUStr_internFromString("__import__");
+//		if (import_str == nullptr)
+//			return nullptr;
+//		builtins_str = alifUStr_internFromString("__builtins__");
+//		if (builtins_str == nullptr)
+//			return nullptr;
+//		silly_list = alif_buildValue("[s]", "__doc__");
+//		if (silly_list == nullptr)
+//			return nullptr;
+//	}
+//
+//	/* Get the builtins from current globals */
+//	globals = alifEval_getGlobals();
+//	if (globals != nullptr) {
+//		ALIF_INCREF(globals);
+//		builtins = alifObject_getItem(globals, builtins_str);
+//		if (builtins == nullptr)
+//			goto err;
+//	}
+//	else {
+//		/* No globals -- use standard builtins, and fake globals */
+//		builtins = alifImport_importModuleLevel("__builtin__",
+//			nullptr, nullptr, nullptr, 0);
+//		if (builtins == nullptr)
+//			return nullptr;
+//		globals = alif_buildValue("{OO}", builtins_str, builtins);
+//		if (globals == nullptr)
+//			goto err;
+//	}
+//
+//	/* Get the __import__ function from the builtins */
+//	if (ALIFDICT_CHECK(builtins)) {
+//		import = alifObject_getItem(builtins, import_str);
+//		if (import == nullptr) {
+//			//alifErr_setObject(_alifExcKeyError_, import_str);
+//		}
+//	}
+//	else {
+//		import = alifObject_getAttr(builtins, import_str);
+//	}
+//		if (import == nullptr) goto err;
+//
+//	/* Call the __import__ function with the proper argument list
+//	 * Always use absolute import here. */
+//	r = alifObject_callFunction(import, "OOOOi", _moduleName, globals,
+//		globals, silly_list, 0, nullptr);
+//
+//err:
+//	ALIF_XDECREF(globals);
+//	ALIF_XDECREF(builtins);
+//	ALIF_XDECREF(import);
+//
+//	return r;
+//}
