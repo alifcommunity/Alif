@@ -279,6 +279,14 @@ AlifIntT alifInterpreter_failIfRunningMain(AlifInterpreter* _interp) { // 1105
 }
 
 
+int64_t alifInterpreter_getID(AlifInterpreter* _interp) { // 1226
+	if (_interp == nullptr) {
+		//alifErr_setString(_alifExcDureRunError_, "no interpreter provided");
+		return -1;
+	}
+	return _interp->id_;
+}
+
 
 AlifInterpreter* alifInterpreter_get() { // 1331
 	AlifThread* tstate = current_fastGet();

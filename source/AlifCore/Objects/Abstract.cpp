@@ -77,11 +77,11 @@ AlifSizeT alifObject_lengthHint(AlifObject* _o,
 	result = _alifObject_callNoArgs(hint);
 	ALIF_DECREF(hint);
 	if (result == nullptr) {
-	//	AlifThread* tstate = _alifThread_get();
-	//	//if (alifErr_exceptionMatches(tstate, _alifExcTypeError_)) {
-	//	//	alifErr_clear(tstate);
-	//	//	return _defaultValue;
-	//	//}
+		AlifThread* tstate = _alifThread_get();
+		//if (alifErr_exceptionMatches(tstate, _alifExcTypeError_)) {
+		//	alifErr_clear(tstate);
+		//	return _defaultValue;
+		//}
 		return -1;
 	}
 	else if (result == ALIF_NOTIMPLEMENTED) {
