@@ -34,6 +34,13 @@ static AlifObject* namespace_new(AlifTypeObject* type,
 
 
 
+static void namespace_dealloc(AlifNamespaceObject* _ns) { // 78
+	alifObject_gcUnTrack(_ns);
+	ALIF_CLEAR(_ns->dict);
+	ALIF_TYPE(_ns)->free((AlifObject*)_ns);
+}
+
+
 
 
 
@@ -46,7 +53,7 @@ AlifTypeObject _alifNamespaceType_ = { // 252
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "أنواع.نطاق_اسماء",
 	.basicSize = sizeof(AlifNamespaceObject),
-	//.dealloc = (Destructor)namespace_dealloc,
+	.dealloc = (Destructor)namespace_dealloc,
 	.getAttro = alifObject_genericGetAttr,
 	.setAttro = alifObject_genericSetAttr,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
