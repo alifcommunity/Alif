@@ -328,6 +328,9 @@
     <ClCompile Include="..\source\Modules\_io\TextIO.cpp">
       <Filter>Modules\_io</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\Modules\_io\_IOModule.cpp">
+      <Filter>Modules\_io</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">
@@ -944,6 +947,9 @@
     </ClInclude>
     <ClInclude Include="..\source\Modules\_io\_IOModule.h">
       <Filter>Modules\_io</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Modules\_io\clinic\_IOModule.cpp.h">
+      <Filter>Modules\_io\clinic</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

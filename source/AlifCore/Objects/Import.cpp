@@ -223,13 +223,13 @@ const char* alifImport_resolveNameWithPackageContext(const char* name) { // 740
 }
 
 const char* _alifImport_swapPackageContext(const char* newcontext) { // 759
-#ifndef HAVE_THREAD_LOCAL
-	//alifThread_acquireLock(EXTENSIONS.mutex, WAIT_LOCK);
+#ifndef HAVE_LOCAL_THREAD
+	alifThread_acquireLock(EXTENSIONS.mutex, WAIT_LOCK);
 #endif
 	const char* oldcontext = PKGCONTEXT;
 	PKGCONTEXT = newcontext;
-#ifndef HAVE_THREAD_LOCAL
-	//alifThread_releaseLock(EXTENSIONS.mutex);
+#ifndef HAVE_LOCAL_THREAD
+	alifThread_releaseLock(EXTENSIONS.mutex);
 #endif
 	return oldcontext;
 }
@@ -639,7 +639,7 @@ static ExtensionsCacheValue* updateGlobalState_forExtension(AlifThread* tstate,
 	AlifModInitFunction m_init = nullptr;
 	AlifObject* m_dict = nullptr;
 
-	/* Set up for _extensions_cache_set(). */
+	/* Set up for _extensions_cacheSet(). */
 	if (singlephase == nullptr) {
 		// nothing for now
 	}
@@ -1972,7 +1972,7 @@ AlifObject* alifImport_execCodeModuleEx(const char* name, AlifObject* co, const 
 	if (pathname != nullptr) {
 		v = alifUStr_fromString(pathname);
 		if (v == nullptr) {
-			//alifErr_clear();
+			alifErr_clear();
 		}
 	}
 	if (v == nullptr) {
@@ -1980,7 +1980,7 @@ AlifObject* alifImport_execCodeModuleEx(const char* name, AlifObject* co, const 
 		ALIF_INCREF(v);
 	}
 	if (alifDict_setItem(d, &ALIF_ID(__file__), v) != 0) {
-		//alifErr_clear();
+		alifErr_clear();
 	}
 	ALIF_DECREF(v);
 
@@ -2382,34 +2382,21 @@ static AlifObject* load_module(const char* _name, FILE* fp, char* pathname, Alif
 	case CPP_BUILTIN:
 		if (pathname != nullptr and pathname[0] != '\0')
 			_name = pathname;
-
-		//* alif
-		AlifObject* name;
-		name = alifUStr_fromString(_name);
-
-		attrs = alif_buildValue("{sO}", "name", name);
-		if (attrs == nullptr) {
-			return nullptr;
-		}
-		spec = alifNamespace_new(attrs);
-		ALIF_DECREF(attrs);
-		if (spec == nullptr) {
+		err = init_builtin(_name);
+		if (err < 0) {
 			return nullptr;
 		}
 
-		m = create_builtin(thread, name, spec);
-		ALIF_DECREF(spec);
+		modules = alifImport_getModuleDict();
+		alifDict_getItemStringRef(modules, _name, &m);
 		if (m == nullptr) {
+			//alifErr_format(_alifExcImportError_,
+			//	"%s module %.200s not properly initialized",
+			//	type == CPP_BUILTIN ?
+			//	"builtin" : "frozen", name);
 			return nullptr;
 		}
-
-		if (exec_builtinOrDynamic(m) < 0) {
-			ALIF_DECREF(m);
-			return nullptr;
-		}
-
 		ALIF_INCREF(m);
-		//* alif
 		break;
 	default:
 		//alifErr_format(_alifExcImportError_,
