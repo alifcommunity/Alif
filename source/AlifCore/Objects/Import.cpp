@@ -2345,16 +2345,11 @@ static AlifIntT find_initModule(char* buf) { // 1715
 }
 
 
-static AlifObject* load_module(const char* _name, FILE* fp, char* pathname, AlifIntT type, AlifObject* loader) { // 1800
+static AlifObject* load_module(const char* _name, FILE* fp,
+	char* pathname, AlifIntT type, AlifObject* loader) { // 1800
 	AlifObject* modules{};
 	AlifObject* m{};
-	AlifObject* spec{}; //* alif
-	AlifObject* attrs{}; //* alif
 	AlifIntT err{};
-
-	AlifThread* thread = _alifThread_get(); //* alif
-
-
 
 	/* First check that there's an open file (if we need one)  */
 	switch (type) {
@@ -2382,20 +2377,57 @@ static AlifObject* load_module(const char* _name, FILE* fp, char* pathname, Alif
 	case CPP_BUILTIN:
 		if (pathname != nullptr and pathname[0] != '\0')
 			_name = pathname;
-		err = init_builtin(_name);
-		if (err < 0) {
+		//err = init_builtin(_name);
+		//if (err < 0) {
+		//	return nullptr;
+		//}
+
+		//modules = alifImport_getModuleDict();
+		//alifDict_getItemStringRef(modules, _name, &m);
+		//if (m == nullptr) {
+		//	alifErr_format(_alifExcImportError_,
+		//		"%s module %.200s not properly initialized",
+		//		type == CPP_BUILTIN ?
+		//		"builtin" : "frozen", _name);
+		//	return nullptr;
+		//}
+
+		//* alif
+		AlifThread* thread;
+		thread = _alifThread_get();
+		AlifObject* name;
+		name = alifUStr_fromString(_name);
+
+		AlifObject* attrs;
+		attrs = alif_buildValue("{sO}", "name", name);
+		if (attrs == nullptr) {
+			return nullptr;
+		}
+		AlifObject* spec;
+		spec = alifNamespace_new(attrs);
+		ALIF_DECREF(attrs);
+		if (spec == nullptr) {
 			return nullptr;
 		}
 
-		modules = alifImport_getModuleDict();
-		alifDict_getItemStringRef(modules, _name, &m);
+		m = create_builtin(thread, name, spec);
+		ALIF_DECREF(spec);
 		if (m == nullptr) {
-			//alifErr_format(_alifExcImportError_,
-			//	"%s module %.200s not properly initialized",
-			//	type == CPP_BUILTIN ?
-			//	"builtin" : "frozen", name);
 			return nullptr;
 		}
+
+		if (exec_builtinOrDynamic(m) < 0) {
+			ALIF_DECREF(m);
+			return nullptr;
+		}
+
+		// to add the lib to main import in thread
+			//alifImport_addModuleRef(_name); //* alif
+			modules = alifImport_getModuleDict(); //* alif // under test
+			alifDict_setItemString(modules, _name, m); //* alif // under test
+
+		//* alif
+
 		ALIF_INCREF(m);
 		break;
 	default:
@@ -2411,25 +2443,24 @@ static AlifObject* load_module(const char* _name, FILE* fp, char* pathname, Alif
 
 
 
-static AlifIntT init_builtin(const char* name) { // 1897
+static AlifIntT init_builtin(const char* _name) { // 1897
 	InitTable* p{};
 
-	if (_alifImport_findExtension(name) != nullptr)
+	if (_alifImport_findExtension(_name) != nullptr)
 		return 1;
 
 	for (p = _alifImportInitTab_; p->name != nullptr; p++) {
-		if (strcmp(name, p->name) == 0) {
+		if (strcmp(_name, p->name) == 0) {
 			if (p->initFunc == nullptr) {
 				//alifErr_format(_alifExcImportError_,
 				//	"Cannot re-init internal module %.200s",
 				//	name);
 				return -1;
 			}
-			alifImport_addModuleRef(name); // to add the lib to main import in thread //* alif
 			(*p->initFunc)();
 			if (alifErr_occurred())
 				return -1;
-			if (_alifImport_fixupExtension(name) == nullptr)
+			if (_alifImport_fixupExtension(_name) == nullptr)
 				return -1;
 			return 1;
 		}
