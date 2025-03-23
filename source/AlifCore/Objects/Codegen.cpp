@@ -2866,8 +2866,6 @@ static AlifIntT codegen_visitStmt(AlifCompiler* _c, StmtTy _s) {
 	}
 	case StmtK_::AugAssignK:
 		return codegen_augAssign(_c, _s);
-		//case StmtK_::AnnAssignK:
-		//	return compiler_annassign(_c, _s);
 	case StmtK_::ForK:
 		return codegen_for(_c, _s);
 	case StmtK_::WhileK:
@@ -2902,9 +2900,9 @@ static AlifIntT codegen_visitStmt(AlifCompiler* _c, StmtTy _s) {
 		return codegen_import(_c, _s);
 	case StmtK_::ImportFromK:
 		return codegen_fromImport(_c, _s);
-	//case StmtK_::GlobalK:
-	//case StmtK_::NonlocalK:
-	//	break;
+	case StmtK_::GlobalK:
+	case StmtK_::NonlocalK:
+		break;
 	case StmtK_::ExprK:
 	{
 		return codegen_stmtExpr(_c, LOC(_s), _s->V.expression.val);
@@ -5017,6 +5015,9 @@ static AlifIntT codegen_visitExpr(AlifCompiler* _c, ExprTy _e) {
 	}
 	return SUCCESS;
 }
+
+
+
 
 static bool is_constantSlice(ExprTy _s) {
 	return _s->type == ExprK_::SliceK and

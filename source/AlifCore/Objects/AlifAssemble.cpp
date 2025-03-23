@@ -414,7 +414,7 @@ static AlifObject* dict_keysInorder(AlifObject* _dict, AlifSizeT _offset) { // 4
 
 
 extern void alifSet_localsPlusInfo(AlifIntT, AlifObject*,
-	unsigned char, AlifObject*, AlifObject*); // 471
+	AlifLocalsKind, AlifObject*, AlifObject*); // 471
 
 
 static AlifIntT compute_localsPlusInfo(AlifCompileCodeUnitMetadata* _umd,
@@ -423,7 +423,7 @@ static AlifIntT compute_localsPlusInfo(AlifCompileCodeUnitMetadata* _umd,
 	AlifSizeT pos = 0;
 	while (alifDict_next(_umd->varnames, &pos, &k, &v)) {
 		AlifIntT offset = alifLong_asInt(v);
-		if (offset == -1 /*and alifErr_occurred()*/) {
+		if (offset == -1 and alifErr_occurred()) {
 			return ERROR;
 		}
 
@@ -458,7 +458,7 @@ static AlifIntT compute_localsPlusInfo(AlifCompileCodeUnitMetadata* _umd,
 		}
 
 		AlifIntT offset = alifLong_asInt(v);
-		if (offset == -1 /*and alifErr_occurred()*/) {
+		if (offset == -1 and alifErr_occurred()) {
 			return ERROR;
 		}
 		offset += nlocals - numdropped;
@@ -468,7 +468,7 @@ static AlifIntT compute_localsPlusInfo(AlifCompileCodeUnitMetadata* _umd,
 	pos = 0;
 	while (alifDict_next(_umd->freevars, &pos, &k, &v)) {
 		AlifIntT offset = alifLong_asInt(v);
-		if (offset == -1 /*and alifErr_occurred()*/) {
+		if (offset == -1 and alifErr_occurred()) {
 			return ERROR;
 		}
 		offset += nlocals - numdropped;

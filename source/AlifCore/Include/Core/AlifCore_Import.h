@@ -1,10 +1,10 @@
 #pragma once
 
+#include "AlifCore_HashTable.h"
 
 
 
-
-
+extern AlifIntT _alifImport_fixupBuiltin(AlifThread*, AlifObject*, const char*, AlifObject*); // 26
 
 
 class ImportDureRunState { // 40
@@ -12,11 +12,18 @@ public:
 	class InitTable* initTable{};
 
 	AlifSizeT lastModuleIndex{};
+	class {
+	public:
+		AlifMutex mutex{};
+		AlifHashTableT* hashtable{};
+	} extensions;
 };
 
 class ImportState { // 63
 public:
 	AlifObject* modules{};
+
+	AlifObject* modulesByIndex{};
 
 	AlifObject* importLib{};
 	AlifObject* importFunc{};
@@ -45,6 +52,7 @@ extern const char* _alifImport_swapPackageContext(const char* newcontext); // 13
 
 
 extern AlifObject* alifImport_initModules(AlifInterpreter*); // 136
+extern AlifObject* _alifImport_getModules(AlifInterpreter*); // 137
 
 extern AlifIntT _alifImport_initDefaultImportFunc(AlifInterpreter*); // 142
 extern AlifIntT _alifImport_isDefaultImportFunc(AlifInterpreter*, AlifObject*); // 143

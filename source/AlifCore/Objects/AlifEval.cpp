@@ -358,6 +358,24 @@ dispatch_opcode :
 				stackPointer += -1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(DELETE_SUBSCR) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef container{};
+				AlifStackRef sub{};
+				sub = stackPointer[-1];
+				container = stackPointer[-2];
+				/* del container[sub] */
+				_alifFrame_setStackPointer(_frame, stackPointer);
+				AlifIntT err = alifObject_delItem(alifStackRef_asAlifObjectBorrow(container),
+					alifStackRef_asAlifObjectBorrow(sub));
+				stackPointer = _alifFrame_getStackPointer(_frame);
+				ALIFSTACKREF_CLOSE(container);
+				ALIFSTACKREF_CLOSE(sub);
+				if (err) goto pop_2_error;
+				stackPointer += -2;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(END_FOR) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;
@@ -671,7 +689,7 @@ dispatch_opcode :
 				AlifObject* listObj = _alifList_fromStackRefSteal(values, oparg);
 				if (listObj == nullptr) {
 					stackPointer += -oparg;
-					//goto error;
+					goto error;
 				}
 				list = ALIFSTACKREF_FROMALIFOBJECTSTEAL(listObj);
 				stackPointer[-oparg] = list;
@@ -691,7 +709,7 @@ dispatch_opcode :
 					}
 					if (true) {
 						stackPointer += -oparg * 2;
-						//goto error;
+						goto error;
 					}
 				}
 				_alifFrame_setStackPointer(_frame, stackPointer);
@@ -704,7 +722,7 @@ dispatch_opcode :
 				}
 				if (mapObj == nullptr) {
 					stackPointer += -oparg * 2;
-					//goto error;
+					goto error;
 				}
 				map = ALIFSTACKREF_FROMALIFOBJECTSTEAL(mapObj);
 				stackPointer[-oparg * 2] = map;
@@ -724,7 +742,7 @@ dispatch_opcode :
 					}
 					if (true) {
 						stackPointer += -oparg;
-						//goto error;
+						goto error;
 					}
 				}
 				AlifObject* strO = alifUStr_joinArray(&ALIF_STR(Empty), piecesO, oparg);
@@ -734,7 +752,7 @@ dispatch_opcode :
 				}
 				if (strO == nullptr) {
 					stackPointer += -oparg;
-					//goto error;
+					goto error;
 				}
 				str = ALIFSTACKREF_FROMALIFOBJECTSTEAL(strO);
 				stackPointer[-oparg] = str;
@@ -750,7 +768,7 @@ dispatch_opcode :
 				AlifObject* tupObj = alifTuple_fromStackRefSteal(values, oparg);
 				if (tupObj == nullptr) {
 					stackPointer += -oparg;
-					//goto error;
+					goto error;
 				}
 				tup = ALIFSTACKREF_FROMALIFOBJECTSTEAL(tupObj);
 				stackPointer[-oparg] = tup;
@@ -830,7 +848,7 @@ dispatch_opcode :
 						// The frame has stolen all the arguments from the stack,
 						// so there is no need to clean them up.
 						if (newFrame == nullptr) {
-							//goto error;
+							goto error;
 						}
 						_frame->returnOffset = (uint16_t)(nextInstr - thisInstr);
 						DISPATCH_INLINED(newFrame);
@@ -844,7 +862,7 @@ dispatch_opcode :
 						}
 						if (true) {
 							stackPointer += -2 - oparg;
-							//goto error;
+							goto error;
 						}
 					}
 					_alifFrame_setStackPointer(_frame, stackPointer);
@@ -881,7 +899,7 @@ dispatch_opcode :
 					}
 					if (resObj == nullptr) {
 						stackPointer += -2 - oparg;
-						//goto error;
+						goto error;
 					}
 					res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(resObj);
 				}
@@ -985,9 +1003,9 @@ dispatch_opcode :
 						stackPointer += -3 - oparg;
 						// The frame has stolen all the arguments from the stack,
 						// so there is no need to clean them up.
-						//if (new_frame == nullptr) {
-						//	goto error;
-						//}
+						if (new_frame == nullptr) {
+							goto error;
+						}
 						_frame->returnOffset = 1 + INLINE_CACHE_ENTRIES_CALL_KW;
 						DISPATCH_INLINED(new_frame);
 					}
@@ -1002,7 +1020,7 @@ dispatch_opcode :
 						ALIFSTACKREF_CLOSE(kwnames);
 						if (true) {
 							stackPointer += -3 - oparg;
-							//goto error;
+							goto error;
 						}
 					}
 					stackPointer[-1] = kwnames;
@@ -1041,7 +1059,7 @@ dispatch_opcode :
 					}
 					if (resObj == nullptr) {
 						stackPointer += -3 - oparg;
-						//goto error;
+						goto error;
 					}
 					res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(resObj);
 				}
@@ -1165,7 +1183,7 @@ dispatch_opcode :
 					//_alifErr_format(_thread, _alifExcSystemError_,
 					//	"no locals when deleting %R", name);
 					stackPointer = _alifFrame_getStackPointer(_frame);
-					//goto error;
+					goto error;
 				}
 				_alifFrame_setStackPointer(_frame, stackPointer);
 				err = alifObject_delItem(ns, name);
@@ -1177,7 +1195,7 @@ dispatch_opcode :
 					//	NAME_ERROR_MSG,
 					//	name);
 					stackPointer = _alifFrame_getStackPointer(_frame);
-					//goto error;
+					goto error;
 				}
 				DISPATCH();
 			} // ------------------------------------------------------------ //
@@ -1477,8 +1495,8 @@ dispatch_opcode :
 					//	UNBOUNDLOCAL_ERROR_MSG,
 					//	alifTuple_getItem(_alifFrame_getCode(_frame)->localsPlusNames, oparg)
 					//);
-					// stackPointer = _alifFrame_getStackPointer(_frame);
-					//if (1) goto error;
+					stackPointer = _alifFrame_getStackPointer(_frame);
+					if (1) goto error;
 				}
 				value = alifStackRef_dup(valueS);
 				stackPointer[0] = value;
@@ -1515,7 +1533,7 @@ dispatch_opcode :
 					_alifFrame_setStackPointer(_frame, stackPointer);
 					_alifEval_loadGlobalStackRef(GLOBALS(), BUILTINS(), name, res);
 					stackPointer = _alifFrame_getStackPointer(_frame);
-					//if (ALIFSTACKREF_ISNULL(*res)) goto error;
+					if (ALIFSTACKREF_ISNULL(*res)) goto error;
 					null = _alifStackRefNull_;
 				}
 				if (oparg & 1) stackPointer[1] = null;
@@ -1544,7 +1562,7 @@ dispatch_opcode :
 				AlifObject* initial = alifStackRef_asAlifObjectBorrow(GETLOCAL(oparg));
 				AlifObject* cell = alifCell_new(initial);
 				if (cell == nullptr) {
-					//goto error;
+					goto error;
 				}
 				SETLOCAL(oparg, ALIFSTACKREF_FROMALIFOBJECTSTEAL(cell));
 				DISPATCH();

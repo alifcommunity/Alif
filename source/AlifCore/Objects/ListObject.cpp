@@ -252,6 +252,32 @@ AlifObject* alifList_getItemRef(AlifObject* op, AlifSizeT i) { // 380
 }
 
 
+AlifIntT alifList_setItem(AlifObject* _op, AlifSizeT _i,
+	AlifObject* _newitem) { // 394
+	AlifObject** p{};
+	if (!ALIFLIST_CHECK(_op)) {
+		ALIF_XDECREF(_newitem);
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+	AlifIntT ret{};
+	AlifListObject* self = ((AlifListObject*)_op);
+	ALIF_BEGIN_CRITICAL_SECTION(self);
+	if (!valid_index(_i, ALIF_SIZE(self))) {
+		ALIF_XDECREF(_newitem);
+		alifErr_setString(_alifExcIndexError_,
+			"list assignment index out of range");
+		ret = -1;
+		goto end;
+	}
+	p = self->item + _i;
+	ALIF_XSETREF(*p, _newitem);
+	ret = 0;
+end:;
+	ALIF_END_CRITICAL_SECTION();
+	return ret;
+}
+
 
 static AlifIntT ins1(AlifListObject* _self,
 	AlifSizeT _where, AlifObject* _v) { // 424

@@ -244,6 +244,11 @@ public:
 
 		class {
 		public:
+			ASDLIdentifierSeq* names{};
+		}global;
+
+		class {
+		public:
 			ExprTy val{};
 		}expression;
 

@@ -973,7 +973,6 @@ ExprTy alifParserEngine_concatenateStrings(AlifParser* _p, ASDLExprSeq* _strings
 	if (values == nullptr) return nullptr;
 
 	/* build folded list */
-	AlifUStrWriter writer{};
 	currentPos = 0;
 	for (i = 0; i < nFlattenedElems; i++) {
 		ExprTy elem = ASDL_SEQ_GET(flattened, i);
@@ -991,14 +990,17 @@ ExprTy alifParserEngine_concatenateStrings(AlifParser* _p, ASDLExprSeq* _strings
 				   "abc" u"abc" ->  "abcabc" */
 				AlifObject* kind = elem->V.constant.type;
 
-				alifUStrWriter_init(&writer);
+				AlifUStrWriter* writer = alifUStrWriter_create(0);
+				if (writer == nullptr) {
+					return nullptr;
+				}
 				ExprTy lastElem = elem;
 				for (j = i; j < nFlattenedElems; j++) {
 					ExprTy currentElem = ASDL_SEQ_GET(flattened, j);
 					if (currentElem->type == ExprK_::ConstantK) {
-						if (_alifUStrWriter_writeStr(
-							&writer, currentElem->V.constant.val)) {
-							alifUStrWriter_dealloc(&writer);
+						if (alifUStrWriter_writeStr(writer,
+							currentElem->V.constant.val)) {
+							alifUStrWriter_discard(writer);
 							return nullptr;
 						}
 						lastElem = currentElem;
@@ -1009,9 +1011,8 @@ ExprTy alifParserEngine_concatenateStrings(AlifParser* _p, ASDLExprSeq* _strings
 				}
 				i = j - 1;
 
-				AlifObject* concatStr = _alifUStrWriter_finish(&writer);
+				AlifObject* concatStr = alifUStrWriter_finish(writer);
 				if (concatStr == nullptr) {
-					alifUStrWriter_dealloc(&writer);
 					return nullptr;
 				}
 				if (alifASTMem_listAddAlifObj(_p->astMem, concatStr) < 0) {

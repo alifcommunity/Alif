@@ -4,6 +4,7 @@
 #include "AlifCore_Exceptions.h"
 #include "AlifCore_FileUtils.h"
 #include "AlifCore_FloatObject.h"
+#include "AlifCore_Import.h"
 #include "AlifCore_FreeList.h"
 #include "AlifCore_Import.h"
 #include "AlifCore_PathConfig.h"
@@ -19,6 +20,13 @@
 #ifdef HAVE_SIGNAL_H
 #  include <signal.h>             // SIG_IGN
 #endif
+
+
+
+
+
+static AlifIntT init_sysStreams(AlifThread* _thread); // 73
+
 
 
 
@@ -326,21 +334,21 @@ static AlifIntT alifCore_builtinsInit(AlifThread* _thread) { // 775
 	AlifObject* biMod = alifBuiltin_init(interp);
 	if (biMod == nullptr) goto error;
 
-	//modules = interp->imports.modules_; // alifImport_getModule
-	//if (alifImport_fixupBuiltin(_thread, biMod, "builtins", modules) < 0) {
-	//	goto error;
-	//}
+	modules = _alifImport_getModules(interp);
+	if (_alifImport_fixupBuiltin(_thread, biMod, "builtins", modules) < 0) {
+		goto error;
+	}
 
 	builtinsDict = alifModule_getDict(biMod);
 	if (builtinsDict == nullptr) goto error;
 	interp->builtins = ALIF_NEWREF(builtinsDict);
 
 
-	//interp->builtinsCopy = alifDict_copy(interp->builtins);
-	//if (interp->builtinsCopy == nullptr) {
-	//	goto error;
-	//}
-	//ALIF_DECREF(biMod);
+	interp->builtinsCopy = alifDict_copy(interp->builtins);
+	if (interp->builtinsCopy == nullptr) {
+		goto error;
+	}
+	ALIF_DECREF(biMod);
 
 	if (_alifImport_initDefaultImportFunc(interp) < 0) {
 		goto error;
@@ -486,8 +494,8 @@ static AlifIntT initInterpreter_main(AlifThread* _thread) { // 1156
 		//}
 	}
 
-	//status = init_sysStream(_thread);
-	//if (status < 1) return status;
+	status = init_sysStreams(_thread);
+	if (status < 1) return status;
 
 	//status = init_setBuiltinsOpen();
 	//if (status < 1) return status;
@@ -552,6 +560,106 @@ AlifIntT alif_initFromConfig(const AlifConfig* _config) { // 1383
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+static AlifIntT init_sysStreams(AlifThread* _thread) { // 2742
+	AlifObject* iomod = nullptr;
+	AlifObject* std = nullptr;
+	AlifIntT fd{};
+	AlifObject* encoding_attr;
+	AlifIntT res = 1;
+	const AlifConfig* config = alifInterpreter_getConfig(_thread->interpreter);
+
+#ifndef _WINDOWS
+	struct AlifStatStruct sb {};
+	if (_alifFStat_noraise(fileno(stdin), &sb) == 0 and
+		S_ISDIR(sb.mode)) {
+		//return ALIFSTATUS_ERR("<stdin> is a directory, cannot continue");
+		return -1; //* alif //* delete
+	}
+#endif
+
+	if (!(iomod = alifImport_importModule("io"))) {
+		goto error;
+	}
+
+	/* Set sys.stdin */
+	fd = fileno(stdin);
+	//std = create_stdio(config, iomod, fd, 0, "<stdin>",
+	//	config->stdioEncoding,
+	//	config->stdioErrors);
+	//if (std == nullptr)
+	//	goto error;
+	//alifSys_setObject("__stdin__", std);
+	//_alifSys_setAttr(&ALIF_ID(stdin), std);
+	//ALIF_DECREF(std);
+
+	///* Set sys.stdout */
+	//fd = fileno(stdout);
+	//std = create_stdio(config, iomod, fd, 1, "<stdout>",
+	//	config->stdioEncoding,
+	//	config->stdioErrors);
+	//if (std == nullptr)
+	//	goto error;
+	//alifSys_setObject("__stdout__", std);
+	//_alifSys_setAttr(&ALIF_ID(stdout), std);
+	//ALIF_DECREF(std);
+
+	///* Set sys.stderr, replaces the preliminary stderr */
+	//fd = fileno(stderr);
+	//std = create_stdio(config, iomod, fd, 1, "<stderr>",
+	//	config->stdioEncoding,
+	//	L"backslashreplace");
+	//if (std == nullptr)
+	//	goto error;
+
+	//encoding_attr = alifObject_getAttrString(std, "encoding");
+	//if (encoding_attr != nullptr) {
+	//	const char* std_encoding = alifUStr_asUTF8(encoding_attr);
+	//	if (std_encoding != nullptr) {
+	//		AlifObject* codec_info = _alifCodec_lookup(std_encoding);
+	//		ALIF_XDECREF(codec_info);
+	//	}
+	//	ALIF_DECREF(encoding_attr);
+	//}
+	//_alifErr_clear(_thread);  /* Not a fatal error if codec isn't available */
+
+	//if (alifSys_setObject("__stderr__", std) < 0) {
+	//	ALIF_DECREF(std);
+	//	goto error;
+	//}
+	//if (_alifSys_setAttr(&ALIF_ID(stderr), std) < 0) {
+	//	ALIF_DECREF(std);
+	//	goto error;
+	//}
+	//ALIF_DECREF(std);
+
+	goto done;
+
+error:
+	//res = ALIFSTATUS_ERR("can't initialize sys standard streams");
+
+done:
+	ALIF_XDECREF(iomod);
+	return res;
+}
 
 
 

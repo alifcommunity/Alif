@@ -77,11 +77,11 @@ AlifSizeT alifObject_lengthHint(AlifObject* _o,
 	result = _alifObject_callNoArgs(hint);
 	ALIF_DECREF(hint);
 	if (result == nullptr) {
-	//	AlifThread* tstate = _alifThread_get();
-	//	//if (alifErr_exceptionMatches(tstate, _alifExcTypeError_)) {
-	//	//	alifErr_clear(tstate);
-	//	//	return _defaultValue;
-	//	//}
+		AlifThread* tstate = _alifThread_get();
+		//if (alifErr_exceptionMatches(tstate, _alifExcTypeError_)) {
+		//	alifErr_clear(tstate);
+		//	return _defaultValue;
+		//}
 		return -1;
 	}
 	else if (result == ALIF_NOTIMPLEMENTED) {
@@ -225,8 +225,8 @@ AlifIntT alifObject_delItem(AlifObject* _o, AlifObject* _key) { // 256
 	if (ALIF_TYPE(_o)->asSequence) {
 		if (alifIndex_check(_key)) {
 			AlifSizeT keyValue{};
-			keyValue = alifNumber_asSizeT(_key, nullptr/*_alifExcIndexError_*/);
-			if (keyValue == -1 /*and alifErr_occurred()*/)
+			keyValue = alifNumber_asSizeT(_key, _alifExcIndexError_);
+			if (keyValue == -1 and alifErr_occurred())
 				return -1;
 			return alifSequence_delItem(_o, keyValue);
 		}
