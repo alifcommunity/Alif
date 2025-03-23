@@ -158,7 +158,9 @@ AlifObject* alifModule_createInitialized(AlifModuleDef* _module) { // 209
 		return nullptr;
 	}
 	name = alifImport_resolveNameWithPackageContext(name);
-	if ((m = (AlifModuleObject*)alifModule_new(name)) == nullptr) return nullptr;
+
+	m = (AlifModuleObject*)alifModule_new(name);
+	if (m == nullptr) return nullptr;
 
 	if (_module->size > 0) {
 		m->state = alifMem_dataAlloc(_module->size);

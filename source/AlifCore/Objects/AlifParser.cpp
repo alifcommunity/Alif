@@ -10688,7 +10688,7 @@ static StmtTy delStmt_rule(AlifParser* _p) {
 		AlifPToken* keyword{};
 		ASDLExprSeq* a_{};
 		if (
-			(keyword = alifParserEngine_expectToken(_p, DEL_KW)) // "حذف"
+			(keyword = alifParserEngine_expectToken(_p, DEL_KW)) // "احذف"
 			and
 			(a_ = delTargets_rule(_p)) // حذف_أهداف
 			and

@@ -12,7 +12,7 @@
 
 AlifInterpreter* alifInterpreter_get(); // 26
 
-
+int64_t alifInterpreter_getID(AlifInterpreter*); // 36
 
 AlifThread* alifThread_get(); // 60
 

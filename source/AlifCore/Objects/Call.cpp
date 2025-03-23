@@ -339,6 +339,28 @@ static AlifObject* alifObject_callFunctionVa(AlifThread* _thread, AlifObject* _c
 	return result;
 }
 
+
+
+AlifObject* alifObject_callFunction(AlifObject* _callable, const char* _format, ...) { // 566
+	va_list va{};
+	AlifObject* result{};
+	AlifThread* thread = _alifThread_get();
+
+	va_start(va, _format);
+	result = alifObject_callFunctionVa(thread, _callable, _format, va);
+	va_end(va);
+
+	return result;
+}
+
+
+
+
+
+
+
+
+
 static AlifObject* call_method(AlifThread* _tstate, AlifObject* _callable, const char* _format, va_list _va) { // 616
 	if (!alifCallable_check(_callable)) {
 		//alifErr_format(tstate, _alifExcTypeError_,

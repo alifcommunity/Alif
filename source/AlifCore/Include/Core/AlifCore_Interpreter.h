@@ -104,6 +104,9 @@ public:
 
 	CodecsState codecs{};
 
+	AlifObject* sysdictCopy{};
+	AlifObject* builtinsCopy{};
+
 
 	QSBRShared qsbr{};
 
