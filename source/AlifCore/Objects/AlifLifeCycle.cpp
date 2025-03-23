@@ -655,7 +655,6 @@ static AlifIntT init_sysStreams(AlifThread* _thread) { // 2742
 
 error:
 	//res = ALIFSTATUS_ERR("can't initialize sys standard streams");
-	res = -1; //* alif //* delete
 
 done:
 	ALIF_XDECREF(iomod);
