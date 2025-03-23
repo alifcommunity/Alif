@@ -17,6 +17,7 @@ AlifObject* alifList_getItem(AlifObject*, AlifSizeT); // 31
 
 AlifObject* alifList_getItemRef(AlifObject*, AlifSizeT); // 33
 
+AlifIntT alifList_setItem(AlifObject*, AlifSizeT, AlifObject*); // 35
 AlifIntT alifList_insert(AlifObject*, AlifSizeT, AlifObject*); // 36
 AlifIntT alifList_append(AlifObject*, AlifObject*); // 37
 
@@ -51,11 +52,11 @@ static inline AlifSizeT _alifList_getSize(AlifObject* _op) { // 30
 
 
 
-static inline void alifList_setItem(AlifObject* _op,
+static inline void _alifList_setItem(AlifObject* _op,
 	AlifSizeT _index, AlifObject* _value) { // 42
 	AlifListObject* list = ALIFLIST_CAST(_op);
 	list->item[_index] = _value;
 }
 #define ALIFLIST_SET_ITEM(_op, _index, _value) \
-    alifList_setItem(ALIFOBJECT_CAST(_op), (_index), ALIFOBJECT_CAST(_value))
+    _alifList_setItem(ALIFOBJECT_CAST(_op), (_index), ALIFOBJECT_CAST(_value))
 
