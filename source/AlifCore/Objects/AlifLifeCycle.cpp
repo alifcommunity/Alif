@@ -588,7 +588,7 @@ static AlifIntT init_sysStreams(AlifThread* _thread) { // 2742
 #ifndef _WINDOWS
 	class AlifStatStruct sb;
 	if (_alifFStat_noraise(fileno(stdin), &sb) == 0 and
-		S_ISDIR(sb.mode)) {
+		S_ISDIR(sb.st_mode)) {
 		//return ALIFSTATUS_ERR("<stdin> is a directory, cannot continue");
 		return -1; //* alif //* delete
 	}

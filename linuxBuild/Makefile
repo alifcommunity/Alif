@@ -37,6 +37,7 @@ $(BUILD_DIR):
 	mkdir -p $(OBJ_DIR)/AlifCore/Objects
 	mkdir -p $(OBJ_DIR)/AlifCore/Objects/dtoa
 	mkdir -p $(OBJ_DIR)/Modules
+	mkdir -p $(OBJ_DIR)/Modules/_io
 endif
 
 # تقوم هذه التعليمة بأخذ كل ملفات المصدر المنتهية ب .cpp 
