@@ -2377,63 +2377,26 @@ static AlifObject* load_module(const char* _name, FILE* fp,
 	case CPP_BUILTIN:
 		if (pathname != nullptr and pathname[0] != '\0')
 			_name = pathname;
-		//err = init_builtin(_name);
-		//if (err < 0) {
-		//	return nullptr;
-		//}
-
-		//modules = alifImport_getModuleDict();
-		//alifDict_getItemStringRef(modules, _name, &m);
-		//if (m == nullptr) {
-		//	alifErr_format(_alifExcImportError_,
-		//		"%s module %.200s not properly initialized",
-		//		type == CPP_BUILTIN ?
-		//		"builtin" : "frozen", _name);
-		//	return nullptr;
-		//}
-
-		//* alif
-		AlifThread* thread;
-		thread = _alifThread_get();
-		AlifObject* name;
-		name = alifUStr_fromString(_name);
-
-		AlifObject* attrs;
-		attrs = alif_buildValue("{sO}", "name", name);
-		if (attrs == nullptr) {
-			return nullptr;
-		}
-		AlifObject* spec;
-		spec = alifNamespace_new(attrs);
-		ALIF_DECREF(attrs);
-		if (spec == nullptr) {
+		err = init_builtin(_name);
+		if (err < 0) {
 			return nullptr;
 		}
 
-		m = create_builtin(thread, name, spec);
-		ALIF_DECREF(spec);
+		modules = alifImport_getModuleDict();
+		alifDict_getItemStringRef(modules, _name, &m);
 		if (m == nullptr) {
+			alifErr_format(_alifExcImportError_,
+				"%s module %.200s not properly initialized",
+				"builtin", _name);
 			return nullptr;
 		}
-
-		if (exec_builtinOrDynamic(m) < 0) {
-			ALIF_DECREF(m);
-			return nullptr;
-		}
-
-		// to add the lib to main import in thread
-			//alifImport_addModuleRef(_name); //* alif
-			modules = alifImport_getModuleDict(); //* alif // under test
-			alifDict_setItemString(modules, _name, m); //* alif // under test
-
-		//* alif
 
 		ALIF_INCREF(m);
 		break;
 	default:
-		//alifErr_format(_alifExcImportError_,
-		//	"Don't know how to import %.200s (type code %d)",
-		//	name, type);
+		alifErr_format(_alifExcImportError_,
+			"Don't know how to import %.200s (type code %d)",
+			_name, type);
 		m = nullptr;
 	}
 
@@ -2457,7 +2420,41 @@ static AlifIntT init_builtin(const char* _name) { // 1897
 				//	name);
 				return -1;
 			}
-			(*p->initFunc)();
+			//(*p->initFunc)();
+
+			//* alif
+			AlifObject* modules{};
+			AlifObject* m{};
+			AlifThread* thread = _alifThread_get();
+			AlifObject* name = alifUStr_fromString(_name);
+
+			AlifObject* attrs = alif_buildValue("{sO}", "name", name);
+			if (attrs == nullptr) {
+				return -1;
+			}
+			AlifObject* spec = alifNamespace_new(attrs);
+			ALIF_DECREF(attrs);
+			if (spec == nullptr) {
+				return -1;
+			}
+
+			m = create_builtin(thread, name, spec);
+			ALIF_DECREF(spec);
+			if (m == nullptr) {
+				return -1;
+			}
+
+			if (exec_builtinOrDynamic(m) < 0) {
+				ALIF_DECREF(m);
+				return -1;
+			}
+
+			// to add the lib to main import in thread
+			modules = alifImport_getModuleDict();
+			alifDict_setItemString(modules, _name, m);
+			//* alif
+
+
 			if (alifErr_occurred())
 				return -1;
 			if (_alifImport_fixupExtension(_name) == nullptr)

@@ -951,6 +951,9 @@
     <ClInclude Include="..\source\Modules\_io\clinic\_IOModule.cpp.h">
       <Filter>Modules\_io\clinic</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\Windows\errmap.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Include">
@@ -991,6 +994,9 @@
     </Filter>
     <Filter Include="Modules\_io\clinic">
       <UniqueIdentifier>{4b2ba0db-4351-4b78-ba78-961557be8fd8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Windows">
+      <UniqueIdentifier>{ad259c6f-d04c-4407-92f3-d8a92a2067d0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

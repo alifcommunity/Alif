@@ -13,6 +13,7 @@
 
 #ifdef _WINDOWS
 #include <pathcch.h>
+extern int winerror_to_errno(int);
 #endif
 
 
@@ -414,6 +415,145 @@ AlifIntT _alif_encodeLocaleEx(const wchar_t* _text, char** _str,
 		_currentLocale, _errors);
 }
 
+
+// 1049
+#ifdef _WINDOWS
+static __int64 secs_between_epochs = 11644473600; /* Seconds between 1.1.1601 and 1.1.1970 */
+
+static void FILE_TIME_to_time_t_nsec(FILETIME* in_ptr, time_t* time_out, int* nsec_out) { // 1052
+	__int64 in;
+	memcpy(&in, in_ptr, sizeof(in));
+	*nsec_out = (int)(in % 10000000) * 100; /* FILETIME is in units of 100 nsec. */
+	*time_out = ALIF_SAFE_DOWNCAST((in / 10000000) - secs_between_epochs, __int64, time_t);
+}
+
+static void LARGE_INTEGER_to_time_t_nsec(LARGE_INTEGER* in_ptr, time_t* time_out, int* nsec_out)
+{ // 1065
+	*nsec_out = (int)(in_ptr->QuadPart % 10000000) * 100; /* FILETIME is in units of 100 nsec. */
+	*time_out = ALIF_SAFE_DOWNCAST((in_ptr->QuadPart / 10000000) - secs_between_epochs, __int64, time_t);
+}
+
+static int attributes_to_mode(DWORD attr) { // 1085
+	int m = 0;
+	if (attr & FILE_ATTRIBUTE_DIRECTORY)
+		m |= _S_IFDIR | 0111; /* IFEXEC for user,group,other */
+	else
+		m |= _S_IFREG;
+	if (attr & FILE_ATTRIBUTE_READONLY)
+		m |= 0444;
+	else
+		m |= 0666;
+	return m;
+}
+
+typedef union {
+	FILE_ID_128 id;
+	struct {
+		uint64_t ino;
+		uint64_t inoHigh;
+	};
+} id_128_to_ino;
+
+void _alifAttribute_dataToStat(BY_HANDLE_FILE_INFORMATION* info, ULONG reparse_tag,
+	FILE_BASIC_INFO* basic_info, FILE_ID_INFO* id_info,
+	class AlifStatStruct* result) { // 1110
+	memset(result, 0, sizeof(*result));
+	result->mode = attributes_to_mode(info->dwFileAttributes);
+	result->size = (((__int64)info->nFileSizeHigh) << 32) + info->nFileSizeLow;
+	result->dev = id_info ? id_info->VolumeSerialNumber : info->dwVolumeSerialNumber;
+	result->rdev = 0;
+	/* st_ctime is deprecated, but we preserve the legacy value in our caller, not here */
+	if (basic_info) {
+		LARGE_INTEGER_to_time_t_nsec(&basic_info->CreationTime, &result->birthtime, &result->birthtimeNSec);
+		LARGE_INTEGER_to_time_t_nsec(&basic_info->ChangeTime, &result->ctime, &result->ctimeNSec);
+		LARGE_INTEGER_to_time_t_nsec(&basic_info->LastWriteTime, &result->mtime, &result->mtimeNSec);
+		LARGE_INTEGER_to_time_t_nsec(&basic_info->LastAccessTime, &result->atime, &result->atimeNSec);
+	}
+	else {
+		FILE_TIME_to_time_t_nsec(&info->ftCreationTime, &result->birthtime, &result->birthtimeNSec);
+		FILE_TIME_to_time_t_nsec(&info->ftLastWriteTime, &result->mtime, &result->mtimeNSec);
+		FILE_TIME_to_time_t_nsec(&info->ftLastAccessTime, &result->atime, &result->atimeNSec);
+	}
+	result->nlink = info->nNumberOfLinks;
+
+	if (id_info) {
+		id_128_to_ino file_id;
+		file_id.id = id_info->FileId;
+		result->ino = file_id.ino;
+		result->inoHigh = file_id.inoHigh;
+	}
+	if (!result->ino and !result->inoHigh) {
+		result->ino = (((uint64_t)info->nFileIndexHigh) << 32) + info->nFileIndexLow;
+	}
+
+	result->reparseTag = reparse_tag;
+	if (info->dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT &&
+		reparse_tag == IO_REPARSE_TAG_SYMLINK) {
+		/* set the bits that make this a symlink */
+		result->mode = (result->mode & ~S_IFMT) | S_IFLNK;
+	}
+	result->fileAttributes = info->dwFileAttributes;
+}
+
+
+
+#endif // 1221
+
+
+AlifIntT _alifFStat_noraise(AlifIntT fd, class AlifStatStruct* status) { // 1235
+#ifdef _WINDOWS
+	BY_HANDLE_FILE_INFORMATION info;
+	FILE_BASIC_INFO basicInfo;
+	FILE_ID_INFO idInfo;
+	FILE_ID_INFO* pIdInfo = &idInfo;
+	HANDLE h;
+	AlifIntT type;
+
+	h = _alifGet_osfHandleNoRaise(fd);
+
+	if (h == INVALID_HANDLE_VALUE) {
+		SetLastError(ERROR_INVALID_HANDLE);
+		return -1;
+	}
+	memset(status, 0, sizeof(*status));
+
+	type = GetFileType(h);
+	if (type == FILE_TYPE_UNKNOWN) {
+		DWORD error = GetLastError();
+		if (error != 0) {
+			errno = winerror_to_errno(error);
+			return -1;
+		}
+		/* else: valid but unknown file */
+	}
+
+	if (type != FILE_TYPE_DISK) {
+		if (type == FILE_TYPE_CHAR)
+			status->mode = _S_IFCHR;
+		else if (type == FILE_TYPE_PIPE)
+			status->mode = _S_IFIFO;
+		return 0;
+	}
+
+	if (!GetFileInformationByHandle(h, &info) ||
+		!GetFileInformationByHandleEx(h, FileBasicInfo, &basicInfo, sizeof(basicInfo))) {
+		/* The Win32 error is already set, but we also set errno for
+		   callers who expect it */
+		errno = winerror_to_errno(GetLastError());
+		return -1;
+	}
+
+	if (!GetFileInformationByHandleEx(h, FileIdInfo, &idInfo, sizeof(idInfo))) {
+		/* Failed to get FileIdInfo, so do not pass it along */
+		pIdInfo = NULL;
+	}
+
+	_alifAttribute_dataToStat(&info, 0, &basicInfo, pIdInfo, status);
+	return 0;
+#else
+	return fstat(fd, status);
+#endif
+}
 
 
 

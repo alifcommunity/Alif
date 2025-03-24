@@ -4,7 +4,6 @@
 #include "AlifCore_Exceptions.h"
 #include "AlifCore_FileUtils.h"
 #include "AlifCore_FloatObject.h"
-#include "AlifCore_Import.h"
 #include "AlifCore_FreeList.h"
 #include "AlifCore_Import.h"
 #include "AlifCore_PathConfig.h"
@@ -588,7 +587,7 @@ static AlifIntT init_sysStreams(AlifThread* _thread) { // 2742
 	const AlifConfig* config = alifInterpreter_getConfig(_thread->interpreter);
 
 #ifndef _WINDOWS
-	struct AlifStatStruct sb {};
+	class AlifStatStruct sb;
 	if (_alifFStat_noraise(fileno(stdin), &sb) == 0 and
 		S_ISDIR(sb.mode)) {
 		//return ALIFSTATUS_ERR("<stdin> is a directory, cannot continue");
@@ -655,6 +654,7 @@ static AlifIntT init_sysStreams(AlifThread* _thread) { // 2742
 
 error:
 	//res = ALIFSTATUS_ERR("can't initialize sys standard streams");
+	//res = -1; //* alif //* delete
 
 done:
 	ALIF_XDECREF(iomod);
