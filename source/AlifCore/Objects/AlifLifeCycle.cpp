@@ -1,6 +1,5 @@
 #include "alif.h"
 
-
 #include "AlifCore_Exceptions.h"
 #include "AlifCore_FileUtils.h"
 #include "AlifCore_FloatObject.h"
