@@ -687,12 +687,18 @@
     INIT_STR(Empty, ""), \
     INIT_STR(Format, ".format"), \
     INIT_STR(GenericBase, ".generic_base"),	\
+    INIT_STR(IsAtty, "isatty"),	\
     INIT_STR(KWDefaults, ".kwdefaults"),	\
     INIT_STR(TypeParams, ".type_params"),	\
     INIT_STR(True, "صح"), /* //* alif */	\
     INIT_STR(False, "خطأ"), /* //* alif */	\
+    INIT_STR(Mode, "mode"), /* //* alif */	\
+    INIT_STR(Name, "name"), /* //* alif */	\
+	INIT_USTR(Open, "فتح"), /* //* alif */	\
+	INIT_STR(Raw, "raw"), /* //* alif */	\
     INIT_USTR(__init__, "_تهيئة_"), /* //* alif */	\
     INIT_USTR(__import__, "_استورد_"), /* //* alif */	\
+    INIT_USTR(_io, "تبادل"), /* //* alif */	\
 }
 
 #define ALIF_STR_IDENTIFIERS_INIT { \
@@ -741,6 +747,7 @@
 	INIT_ID(_findAndLoad), \
 	INIT_ID(_initializing), \
 	INIT_ID(_isTextEncoding), \
+	INIT_ID(_WindowsConsoleIO), \
 	INIT_ID(Builtins), \
 	INIT_ID(Encoding), \
 	INIT_ID(End), \
@@ -763,6 +770,7 @@
 	INIT_ID(Stderr), \
 	INIT_ID(Stdin), \
 	INIT_ID(Stdout), \
+	INIT_ID(TextIOWrapper), \
 	INIT_ID(Top), \
 	INIT_ID(Write), \
 }

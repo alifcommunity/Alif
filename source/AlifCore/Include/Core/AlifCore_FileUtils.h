@@ -109,3 +109,7 @@ extern AlifIntT alifOS_getFullPathName(const wchar_t*, wchar_t**); // 270
 
 
 char* alifUniversal_newLineFGetsWithSize(char*, AlifIntT, FILE*, AlifObject*, AlifUSizeT*); // 321
+
+
+
+AlifIntT _alif_isValidFD(AlifIntT); // 330

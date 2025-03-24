@@ -196,6 +196,30 @@ static AlifObject* _alifVectorCall_call(AlifThread* tstate, VectorCallFunc func,
 	return _alif_checkFunctionResult(tstate, callable, result, nullptr);
 }
 
+AlifObject* alifVectorCall_call(AlifObject* _callable,
+	AlifObject* _tuple, AlifObject* _kwargs) { // 293
+	AlifThread* tstate = _alifThread_get();
+
+	AlifSizeT offset = ALIF_TYPE(_callable)->vectorCallOffset;
+	if (offset <= 0) {
+		//_alifErr_format(tstate, _alifExcTypeError_,
+		//	"'%.200s' object does not support vectorcall",
+		//	ALIF_TYPE(_callable)->name);
+		return nullptr;
+	}
+
+	VectorCallFunc func{};
+	memcpy(&func, (char*)_callable + offset, sizeof(func));
+	if (func == nullptr) {
+		//_alifErr_format(tstate, _alifExcTypeError_,
+		//	"'%.200s' object does not support vectorcall",
+		//	ALIF_TYPE(_callable)->name);
+		return nullptr;
+	}
+
+	return _alifVectorCall_call(tstate, func, _callable, _tuple, _kwargs);
+}
+
 AlifObject* alifObject_vectorCall(AlifObject* _callable, AlifObject* const* _args,
 	AlifUSizeT _nArgsF, AlifObject* _kwNames) { // 322
 	AlifThread* thread = _alifThread_get();

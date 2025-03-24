@@ -44,7 +44,7 @@ static AlifMethodDef _moduleMethods_[] = { // 630
 
 AlifModuleDef _alifIOModule_ = { // 724
 	.base = ALIFMODULEDEF_HEAD_INIT,
-	.name = "io",
+	.name = "تبادل",
 	//.doc = module_doc,
 	.size = sizeof(AlifIOState),
 	.methods = _moduleMethods_,

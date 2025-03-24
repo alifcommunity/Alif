@@ -1761,6 +1761,21 @@ AlifIntT _alifImport_initCore(AlifThread* _thread,
 
 
 
+
+
+AlifObject* _alifImport_getModuleAttr(AlifObject* _modName,
+	AlifObject* _attrName) { // 4173
+	AlifObject* mod = alifImport_import(_modName);
+	if (mod == nullptr) {
+		return nullptr;
+	}
+	AlifObject* result = alifObject_getAttr(mod, _attrName);
+	ALIF_DECREF(mod);
+	return result;
+}
+
+
+
 static AlifMethodDef _impMethods_[] = { // 4788
 	//_IMP_EXTENSION_SUFFIXES_METHODDEF
 	//_IMP_LOCK_HELD_METHODDEF

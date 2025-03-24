@@ -21,7 +21,7 @@ class InitTable _alifImportInitTab_[] = { // 87
 	{"sys", nullptr},
 
 
-	{"_io", alifInit__io},
+	{"_تبادل", alifInit__io},
 
 	/* Sentinel */
 	{0, 0}

@@ -107,6 +107,11 @@ static inline AlifObject* alifCPPFunction_getSelf(AlifObject* _funcObj) { // 45
 #define ALIFCPPFUNCTION_GET_SELF(_func) alifCPPFunction_getSelf(ALIFOBJECT_CAST(_func))
 
 
+static inline AlifIntT _alifCPPFunction_getFlags(AlifObject* func) { // 54
+	return ALIFCPPFUNCTIONOBJECT_CAST(func)->ml_->flags;
+}
+#define ALIFCPPFUNCTION_GET_FLAGS(func) _alifCPPFunction_getFlags(ALIFOBJECT_CAST(func))
+
 
 static inline AlifTypeObject* _alifCPPFunction_getClass(AlifObject* _funcObj) { // 59
 	AlifCPPFunctionObject* func = ALIFCPPFUNCTIONOBJECT_CAST(_funcObj);

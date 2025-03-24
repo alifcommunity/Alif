@@ -828,3 +828,37 @@ void* _alifGet_osfHandleNoRaise(AlifIntT fd) { // 2836
 
 
 #endif // 2875 
+
+
+
+
+
+
+
+AlifIntT _alif_isValidFD(AlifIntT fd) { // 3059
+	if (fd < 0) {
+		return 0;
+	}
+#if defined(F_GETFD) and ( \
+        defined(__linux__) or \
+        defined(__APPLE__) or \
+        (defined(__wasm__) and !defined(__wasi__)))
+	return fcntl(fd, F_GETFD) >= 0;
+#elif defined(__linux__)
+	int fd2 = dup(fd);
+	if (fd2 >= 0) {
+		close(fd2);
+	}
+	return (fd2 >= 0);
+#elif defined(_WINDOWS)
+	HANDLE hfile;
+	ALIF_BEGIN_SUPPRESS_IPH
+		hfile = (HANDLE)_get_osfhandle(fd);
+	ALIF_END_SUPPRESS_IPH
+		return (hfile != INVALID_HANDLE_VALUE
+			and GetFileType(hfile) != FILE_TYPE_UNKNOWN);
+#else
+	struct stat st;
+	return (fstat(fd, &st) == 0);
+#endif
+}
