@@ -3401,10 +3401,10 @@ static AlifIntT typeReady_fillDict(AlifTypeObject* type) { // 8061
 static AlifIntT typeReady_preheader(AlifTypeObject* _type) { // 8172
 	if (_type->flags & ALIF_TPFLAGS_MANAGED_DICT) {
 		if (_type->dictOffset > 0 or _type->dictOffset < -1) {
-			alifErr_format(_alifExcTypeError_,
-				"type %s has the ALIF_TPFLAGS_MANAGED_DICT flag "
-				"but tp_dictoffset is set",
-				_type->name);
+			//alifErr_format(_alifExcTypeError_,
+			//	"type %s has the ALIF_TPFLAGS_MANAGED_DICT flag "
+			//	"but tp_dictoffset is set",
+			//	_type->name);
 			return -1;
 		}
 		_type->dictOffset = -1;
@@ -3413,10 +3413,10 @@ static AlifIntT typeReady_preheader(AlifTypeObject* _type) { // 8172
 		if (_type->weakListOffset != 0 and
 			_type->weakListOffset != MANAGED_WEAKREF_OFFSET)
 		{
-			alifErr_format(_alifExcTypeError_,
-				"type %s has the ALIF_TPFLAGS_MANAGED_WEAKREF flag "
-				"but weakListOffset is set",
-				_type->name);
+			//alifErr_format(_alifExcTypeError_,
+			//	"type %s has the ALIF_TPFLAGS_MANAGED_WEAKREF flag "
+			//	"but weakListOffset is set",
+			//	_type->name);
 			return -1;
 		}
 		_type->weakListOffset = MANAGED_WEAKREF_OFFSET;

@@ -327,9 +327,16 @@ AlifTypeObject _alifClassMethodDescrType_ = { // 756
 	.descrGet = classMethod_get,
 };
 
+AlifTypeObject _alifMemberDescrType_ = { // 793
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "واصف_عنصر",
+	.basicSize = sizeof(AlifMemberDescrObject),
+	//.dealloc = descr_dealloc,
+	.getAttro = alifObject_genericGetAttr,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
+};
 
-
-AlifTypeObject _alifGetSetDescrType_ = {
+AlifTypeObject _alifGetSetDescrType_ = { // 830
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "واصف_جلب_ضبط",
 	.basicSize = sizeof(AlifGetSetDescrObject),

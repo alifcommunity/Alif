@@ -202,9 +202,9 @@ static AlifWeakReference* allocate_weakRef(AlifTypeObject* type, AlifObject* obj
 static AlifWeakReference* getOrCreate_weakRef(AlifTypeObject* type,
 	AlifObject* obj, AlifObject* callback) { // 410
 	if (!_alifType_supportsWeakRefs(ALIF_TYPE(obj))) {
-		alifErr_format(_alifExcTypeError_,
-			"cannot create weak reference to '%s' object",
-			ALIF_TYPE(obj)->name);
+		//alifErr_format(_alifExcTypeError_,
+		//	"cannot create weak reference to '%s' object",
+		//	ALIF_TYPE(obj)->name);
 		return nullptr;
 	}
 	if (callback == ALIF_NONE)
