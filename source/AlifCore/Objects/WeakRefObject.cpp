@@ -25,7 +25,7 @@ AlifSizeT _alifWeakref_getWeakrefCount(AlifObject* _obj) { // 41
 	LOCK_WEAKREFS(_obj);
 	AlifSizeT count = 0;
 	AlifWeakReference* head = *GET_WEAKREFS_LISTPTR(_obj);
-	while (head != NULL) {
+	while (head != nullptr) {
 		++count;
 		head = head->next;
 	}
@@ -79,6 +79,50 @@ static AlifIntT isBasicRef_orProxy(AlifWeakReference* _wr) { // 362
 }
 
 
+static AlifWeakReference* getOrCreate_weakRef(AlifTypeObject* type,
+	AlifObject* obj, AlifObject* callback) { // 410
+	if (!_alifType_supportsWeakRefs(ALIF_TYPE(obj))) {
+		alifErr_format(_alifExcTypeError_,
+			"cannot create weak reference to '%s' object",
+			ALIF_TYPE(obj)->name);
+		return nullptr;
+	}
+	if (callback == ALIF_NONE)
+		callback = nullptr;
+
+	AlifWeakReference** list = GET_WEAKREFS_LISTPTR(obj);
+	if ((type == &_alifWeakrefRefType_) or
+		(type == &_alifWeakrefProxyType_) or
+		(type == &_alifWeakrefCallableProxyType_))
+	{
+		LOCK_WEAKREFS(obj);
+		AlifWeakReference* basic_ref = tryReuse_basicRef(*list, type, callback);
+		if (basic_ref != nullptr) {
+			UNLOCK_WEAKREFS(obj);
+			return basic_ref;
+		}
+		AlifWeakReference* newref = allocate_weakRef(type, obj, callback);
+		if (newref == nullptr) {
+			UNLOCK_WEAKREFS(obj);
+			return nullptr;
+		}
+		insert_weakref(newref, list);
+		UNLOCK_WEAKREFS(obj);
+		return newref;
+	}
+	else {
+		AlifWeakReference* newref = allocate_weakref(type, obj, callback);
+		if (newref == nullptr) {
+			return nullptr;
+		}
+		LOCK_WEAKREFS(obj);
+		insert_weakref(newref, list);
+		UNLOCK_WEAKREFS(obj);
+		return newref;
+	}
+}
+
+
 static AlifIntT parseWeakRef_initArgs(const char* funcname,
 	AlifObject* args, AlifObject* kwargs,
 	AlifObject** obp, AlifObject** callbackp) { // 450
@@ -106,7 +150,7 @@ AlifTypeObject _alifWeakrefRefType_ = { // 493
 	.basicSize = sizeof(AlifWeakReference),
 	//.dealloc = weakref_dealloc,
 	.vectorCallOffset = offsetof(AlifWeakReference, vectorCall),
-	//.call = alifVectorCall_call,
+	.call = alifVectorCall_call,
 	//.repr = weakref_repr,
 	//.hash = weakref_hash,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
@@ -157,6 +201,10 @@ AlifTypeObject _alifWeakrefCallableProxyType_ = { // 881
 
 
 
+AlifObject* alifWeakRef_newRef(AlifObject* _ob, AlifObject* _callback) { // 918
+	return (AlifObject*)getOrCreate_weakRef(&_alifWeakrefRefType_, _ob,
+		_callback);
+}
 
 
 

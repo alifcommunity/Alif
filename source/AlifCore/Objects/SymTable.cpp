@@ -1593,7 +1593,7 @@ static AlifIntT symtable_visitExpr(AlifSymTable* _st, ExprTy _e) { // 2334
 		}
 		if (_e->V.name.ctx == ExprContext_::Load and
 			alifST_isFunctionLike(_st->cur) and
-			alifUStr_equalToASCIIString(_e->V.name.name, "super")) {
+			alifUStr_equalToUTF8(_e->V.name.name, "اصل")) {
 			if (!symtable_addDef(_st, &ALIF_ID(__class__), USE, LOCATION(_e)))
 				return 0;
 		}

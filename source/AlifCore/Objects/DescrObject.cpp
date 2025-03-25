@@ -309,16 +309,11 @@ AlifTypeObject _alifMethodDescrType_ = { // 716
 	.basicSize = sizeof(AlifMethodDescrObject),
 	//.dealloc = descr_dealloc,
 	.vectorCallOffset = offsetof(AlifMethodDescrObject, vectorCall),
-	//.repr = method_repr,
-	//.call = alifVectorCall_call,
+	.call = alifVectorCall_call,
 	.getAttro = alifObject_genericGetAttr,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
 	ALIF_TPFLAGS_HAVE_VECTORCALL |
 	ALIF_TPFLAGS_METHOD_DESCRIPTOR,
-	//.traverse = descr_traverse,
-	//.methods = descr_methods,
-	//.members = descr_members,
-	//.getSet = method_getset,
 	.descrGet = method_get,
 };
 
@@ -327,36 +322,29 @@ AlifTypeObject _alifClassMethodDescrType_ = { // 756
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "معرف_صفة_صنف",
 	.basicSize = sizeof(AlifMethodDescrObject),
-	//descr_dealloc,                              /* dealloc */
-	//method_repr,                                /* repr */
-	//classmethoddescr_call,                      /* call */
 	.getAttro = alifObject_genericGetAttr,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
-	//.traverse = descr_traverse,
-	//descr_members,                              /* members */
-	//method_getset,                              /* getset */
 	.descrGet = classMethod_get,
 };
 
 
 
-
+AlifTypeObject _alifGetSetDescrType_ = {
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "واصف_جلب_ضبط",
+	.basicSize = sizeof(AlifGetSetDescrObject),
+	//.dealloc = descr_dealloc,
+	.getAttro = alifObject_genericGetAttr,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
+};
 
 AlifTypeObject _alifWrapperDescrType_ = { // 867
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "واصف_الغلاف",
 	.basicSize = sizeof(AlifWrapperDescrObject),
-	//.dealloc = descr_dealloc,
-	//.repr = wrapperDescr_repr,
-	//.call = wrapperDescr_call,
 	.getAttro = alifObject_genericGetAttr,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
 	ALIF_TPFLAGS_METHOD_DESCRIPTOR,
-	//.traverse = descr_traverse,
-	//.methods = descr_methods,
-	//.members = descr_members,
-	//.getSet = wrapperDescr_getset,
-	//.descrGet = wrapperDescr_get,
 };
 
 
@@ -438,6 +426,31 @@ AlifObject* alifDescr_newClassMethod(AlifTypeObject* _type, AlifMethodDef* _meth
 }
 
 
+AlifObject* alifDescr_newMember(AlifTypeObject* _type, AlifMemberDef* _member) { // 983
+	AlifMemberDescrObject* descr{};
+
+	if (_member->flags & ALIF_RELATIVE_OFFSET) {
+		//alifErr_setString(
+		//	_alifExcSystemError_,
+		//	"alifDescr_newMember used with ALIF_RELATIVE_OFFSET");
+		return nullptr;
+	}
+	descr = (AlifMemberDescrObject*)descr_new(&_alifMemberDescrType_,
+		_type, _member->name);
+	if (descr != nullptr)
+		descr->member = _member;
+	return (AlifObject*)descr;
+}
+
+AlifObject* alifDescr_newGetSet(AlifTypeObject* _type, AlifGetSetDef* _getset) { // 1001
+	AlifGetSetDescrObject* descr{};
+
+	descr = (AlifGetSetDescrObject*)descr_new(&_alifGetSetDescrType_,
+		_type, _getset->name);
+	if (descr != nullptr)
+		descr->getSet = _getset;
+	return (AlifObject*)descr;
+}
 
 AlifObject* alifDescr_newWrapper(AlifTypeObject* type,
 	WrapperBase* base, void* wrapped) { // 1013

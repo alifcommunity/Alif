@@ -189,7 +189,7 @@ AlifIntT _alifCompiler_maybeAddStaticAttributeToClass(AlifCompiler* _c, ExprTy _
 	ExprTy attr_value = _e->V.attribute.val;
 	if (attr_value->type != ExprK_::NameK or
 		_e->V.attribute.ctx != ExprContext_::Store or
-		!alifUStr_equalToASCIIString(attr_value->V.name.name, "self"))
+		!alifUStr_equalToUTF8(attr_value->V.name.name, "هذا"))
 	{
 		return SUCCESS;
 	}

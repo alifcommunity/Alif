@@ -16,11 +16,14 @@ public:
 
 
 extern AlifTypeObject _alifClassMethodDescrType_; // 19
+extern AlifTypeObject _alifGetSetDescrType_;
 extern AlifTypeObject _alifMemberDescrType_; // 21
 extern AlifTypeObject _alifWrapperDescrType_; // 23
 
 AlifObject* alifDescr_newMethod(AlifTypeObject*, AlifMethodDef*); // 27
 AlifObject* alifDescr_newClassMethod(AlifTypeObject*, AlifMethodDef*); // 28
+AlifObject* alifDescr_newMember(AlifTypeObject*, AlifMemberDef*); // 29
+AlifObject* alifDescr_newGetSet(AlifTypeObject*, AlifGetSetDef*); // 30
 
 class AlifMemberDef { // 41
 public:
@@ -98,6 +101,17 @@ public:
 	VectorCallFunc vectorCall{};
 };
 
+class AlifMemberDescrObject {
+public:
+	ALIFDESCR_COMMON;
+	AlifMemberDef* member{};
+};
+
+class AlifGetSetDescrObject {
+public:
+	ALIFDESCR_COMMON;
+	AlifGetSetDef* getSet{};
+};
 
 
 class AlifWrapperDescrObject { // 54

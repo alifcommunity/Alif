@@ -3611,7 +3611,7 @@ static AlifIntT canOptimize_superCall(AlifCompiler* _c, ExprTy _attr) { // 4617
 	ExprTy e = _attr->V.attribute.val;
 	if (e->type != ExprK_::CallK or
 		e->V.call.func->type != ExprK_::NameK or
-		!alifUStr_equalToASCIIString(e->V.call.func->V.name.name, "super") or
+		!alifUStr_equalToUTF8(e->V.call.func->V.name.name, "اصل") or
 		alifUStr_equalToASCIIString(_attr->V.attribute.attr, "__class__") or
 		ASDL_SEQ_LEN(e->V.call.keywords) != 0) {
 		return 0;
@@ -3619,7 +3619,7 @@ static AlifIntT canOptimize_superCall(AlifCompiler* _c, ExprTy _attr) { // 4617
 	AlifSizeT num_args = ASDL_SEQ_LEN(e->V.call.args);
 
 	AlifObject* super_name = e->V.call.func->V.name.name;
-	// detect statically-visible shadowing of 'super' name
+	// detect statically-visible shadowing of 'اصل' name
 	AlifIntT scope = alifST_getScope(SYMTABLE_ENTRY(_c), super_name);
 	RETURN_IF_ERROR(scope);
 	if (scope != GLOBAL_IMPLICIT) {
@@ -3646,7 +3646,7 @@ static AlifIntT canOptimize_superCall(AlifCompiler* _c, ExprTy _attr) { // 4617
 	if (num_args != 0) {
 		return 0;
 	}
-	// we need the following for zero-arg super():
+	// we need the following for zero-arg اصل():
 
 	// enclosing function should have at least one argument
 	if (METADATA(_c)->argCount == 0 and
@@ -3666,7 +3666,7 @@ static AlifIntT canOptimize_superCall(AlifCompiler* _c, ExprTy _attr) { // 4617
 static AlifIntT loadArgs_forSuper(AlifCompiler* _c, ExprTy _e) {
 	Location loc = LOC(_e);
 
-	// load super() global
+	// load اصل() global
 	AlifObject* super_name = _e->V.call.func->V.name.name;
 	RETURN_IF_ERROR(codegen_nameOp(_c, LOC(_e->V.call.func), super_name, ExprContext_::Load));
 

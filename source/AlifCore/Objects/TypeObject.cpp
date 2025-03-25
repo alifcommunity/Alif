@@ -229,6 +229,20 @@ static inline void set_tpMro(AlifTypeObject* _self,
 	_self->mro = _mro;
 }
 
+static AlifObject* init_tpSubClasses(AlifTypeObject* _self) { // 572
+	AlifObject* subclasses = alifDict_new();
+	if (subclasses == nullptr) {
+		return nullptr;
+	}
+	if (_self->flags & ALIF_TPFLAGS_STATIC_BUILTIN) {
+		AlifInterpreter* interp = _alifInterpreter_get();
+		ManagedStaticTypeState* state = _alifStaticType_getState(interp, _self);
+		state->subclasses = subclasses;
+		return subclasses;
+	}
+	_self->subclasses = (void*)subclasses;
+	return subclasses;
+}
 
 
 static inline AlifObject* lookup_tpSubClasses(AlifTypeObject* self) { // 613
@@ -288,23 +302,23 @@ static void setVersion_unlocked(AlifTypeObject* tp, AlifUIntT version) { // 999
 
 
 static void typeModified_unlocked(AlifTypeObject* _type) { // 1031
-	//if (_type->versionTag == 0) {
-	//	return;
-	//}
+	if (_type->versionTag == 0) {
+		return;
+	}
 
-	//AlifObject* subClasses = lookup_tpSubClasses(_type);
-	//if (subClasses != nullptr) {
-	//	AlifSizeT i = 0;
-	//	AlifObject* ref{};
-	//	while (alifDict_next(subClasses, &i, nullptr, &ref)) {
-	//		AlifTypeObject* subClass = type_fromRef(ref);
-	//		if (subClass == nullptr) {
-	//			continue;
-	//		}
-	//		typeModified_unlocked(subClass);
-	//		ALIF_DECREF(subClass);
-	//	}
-	//}
+	AlifObject* subClasses = lookup_tpSubClasses(_type);
+	if (subClasses != nullptr) {
+		AlifSizeT i = 0;
+		AlifObject* ref{};
+		while (alifDict_next(subClasses, &i, nullptr, &ref)) {
+			AlifTypeObject* subClass = type_fromRef(ref);
+			if (subClass == nullptr) {
+				continue;
+			}
+			typeModified_unlocked(subClass);
+			ALIF_DECREF(subClass);
+		}
+	}
 
 	//if (_type->watched) {
 	//	AlifInterpreter* interp = _alifInterpreter_get();
@@ -1603,9 +1617,9 @@ static AlifIntT typeNew_classMethod(AlifTypeObject* _type, AlifObject* _attr) { 
 	AlifObject* dict = lookup_tpDict(_type);
 	AlifObject* func = alifDict_getItemWithError(dict, _attr);
 	if (func == nullptr) {
-		//if (alifErr_occurred()) {
-		//	return -1;
-		//}
+		if (alifErr_occurred()) {
+			return -1;
+		}
 		return 0;
 	}
 	if (!ALIFFUNCTION_CHECK(func)) {
@@ -1694,16 +1708,16 @@ static AlifIntT typeNew_setClassCell(AlifTypeObject* _type) { // 4193
 	AlifObject* dict = lookup_tpDict(_type);
 	AlifObject* cell = alifDict_getItemWithError(dict, &ALIF_ID(__classCell__));
 	if (cell == nullptr) {
-		//if (alifErr_occurred()) {
-		//	return -1;
-		//}
+		if (alifErr_occurred()) {
+			return -1;
+		}
 		return 0;
 	}
 
 	/* At least one method requires a reference to its defining class */
 	if (!ALIFCELL_CHECK(cell)) {
 		//alifErr_format(_alifExcTypeError_,
-		//	"__classcell__ must be a nonlocal cell, not %.200R",
+		//	"__classCell__ must be a nonlocal cell, not %.200R",
 		//	ALIF_TYPE(cell));
 		return -1;
 	}
@@ -1720,9 +1734,9 @@ static AlifIntT typeNew_setClassDictCell(AlifTypeObject* _type) { // 4220
 	AlifObject* dict = lookup_tpDict(_type);
 	AlifObject* cell = alifDict_getItemWithError(dict, &ALIF_ID(__classDictCell__));
 	if (cell == nullptr) {
-		//if (alifErr_occurred()) {
-		//	return -1;
-		//}
+		if (alifErr_occurred()) {
+			return -1;
+		}
 		return 0;
 	}
 
@@ -2708,16 +2722,16 @@ static void type_dealloc(AlifObject* self) { // 5911
 	ALIF_TYPE(type)->free((AlifObject*)type);
 }
 
-static AlifObject* type___subclasses___impl(AlifTypeObject* _self) { // 5960
+static AlifObject* type___subclasses___impl(AlifTypeObject* _self) { // 6059
 	return _alifType_getSubClasses(_self);
 }
 
 static AlifObject* type_prepare(AlifObject* self, AlifObject* const* args,
-	AlifSizeT nargs, AlifObject* kwnames) { // 5967
+	AlifSizeT nargs, AlifObject* kwnames) { // 6066
 	return alifDict_new();
 }
 
-static AlifMethodDef _typeMethods_[] = { // 6083
+static AlifMethodDef _typeMethods_[] = { // 6182
 	//TYPE_MRO_METHODDEF
 	TYPE___SUBCLASSES___METHODDEF
 	{"__prepare__", ALIF_CPPFUNCTION_CAST(type_prepare),
@@ -2962,7 +2976,7 @@ static AlifIntT type_addMethod(AlifTypeObject* type, AlifMethodDef* meth) { // 7
 	return 0;
 }
 
-static AlifIntT type_addMethods(AlifTypeObject* _type) { // 7557
+static AlifIntT type_addMethods(AlifTypeObject* _type) { // 7646
 	AlifMethodDef* meth = _type->methods;
 	if (meth == nullptr) {
 		return 0;
@@ -2977,8 +2991,52 @@ static AlifIntT type_addMethods(AlifTypeObject* _type) { // 7557
 }
 
 
+static AlifIntT type_addMembers(AlifTypeObject* type) { // 7663
+	AlifMemberDef* memb = type->members;
+	if (memb == nullptr) {
+		return 0;
+	}
 
-static void inherit_special(AlifTypeObject* type, AlifTypeObject* base) { // 7623
+	AlifObject* dict = lookup_tpDict(type);
+	for (; memb->name != nullptr; memb++) {
+		AlifObject* descr = alifDescr_newMember(type, memb);
+		if (descr == nullptr)
+			return -1;
+
+		if (alifDict_setDefaultRef(dict, ALIFDESCR_NAME(descr), descr, nullptr) < 0) {
+			ALIF_DECREF(descr);
+			return -1;
+		}
+		ALIF_DECREF(descr);
+	}
+	return 0;
+}
+
+
+static AlifIntT type_addGetSet(AlifTypeObject* _type) { // 7687
+	AlifGetSetDef* gsp = _type->getSet;
+	if (gsp == nullptr) {
+		return 0;
+	}
+
+	AlifObject* dict = lookup_tpDict(_type);
+	for (; gsp->name != nullptr; gsp++) {
+		AlifObject* descr = alifDescr_newGetSet(_type, gsp);
+		if (descr == nullptr) {
+			return -1;
+		}
+
+		if (alifDict_setDefaultRef(dict, ALIFDESCR_NAME(descr), descr, nullptr) < 0) {
+			ALIF_DECREF(descr);
+			return -1;
+		}
+		ALIF_DECREF(descr);
+	}
+	return 0;
+}
+
+
+static void inherit_special(AlifTypeObject* type, AlifTypeObject* base) { // 7712
 	if (!(type->flags & ALIF_TPFLAGS_HAVE_GC) and
 		(base->flags & ALIF_TPFLAGS_HAVE_GC) and
 		(!type->traverse /*and !type->clear*/)) {
@@ -3325,18 +3383,43 @@ static AlifIntT typeReady_fillDict(AlifTypeObject* type) { // 8061
 	if (type_addMethods(type) < 0) {
 		return -1;
 	}
-	//if (type_addMembers(type) < 0) {
-	//	return -1;
-	//}
-	//if (type_addGetSet(type) < 0) {
-	//	return -1;
-	//}
+	if (type_addMembers(type) < 0) {
+		return -1;
+	}
+	if (type_addGetSet(type) < 0) {
+		return -1;
+	}
 	//if (type_dictSetDoc(type) < 0) {
 	//	return -1;
 	//}
 	return 0;
 }
 
+static AlifIntT typeReady_preheader(AlifTypeObject* _type) { // 8172
+	if (_type->flags & ALIF_TPFLAGS_MANAGED_DICT) {
+		if (_type->dictOffset > 0 or _type->dictOffset < -1) {
+			alifErr_format(_alifExcTypeError_,
+				"type %s has the ALIF_TPFLAGS_MANAGED_DICT flag "
+				"but tp_dictoffset is set",
+				_type->name);
+			return -1;
+		}
+		_type->dictOffset = -1;
+	}
+	if (_type->flags & ALIF_TPFLAGS_MANAGED_WEAKREF) {
+		if (_type->weakListOffset != 0 and
+			_type->weakListOffset != MANAGED_WEAKREF_OFFSET)
+		{
+			alifErr_format(_alifExcTypeError_,
+				"type %s has the ALIF_TPFLAGS_MANAGED_WEAKREF flag "
+				"but weakListOffset is set",
+				_type->name);
+			return -1;
+		}
+		_type->weakListOffset = MANAGED_WEAKREF_OFFSET;
+	}
+	return 0;
+}
 
 
 static AlifIntT typeReady_mro(AlifTypeObject* _type, AlifIntT _initial) { // 8112
@@ -3456,8 +3539,20 @@ static AlifIntT typeReady_setHash(AlifTypeObject* type) { // 8237
 	return 0;
 }
 
+static AlifIntT typeReady_addSubClasses(AlifTypeObject* _type) { // 8350
+	AlifObject* bases = lookup_tpBases(_type);
+	AlifSizeT nbase = ALIFTUPLE_GET_SIZE(bases);
+	for (AlifSizeT i = 0; i < nbase; i++) {
+		AlifObject* b = ALIFTUPLE_GET_ITEM(bases, i);
+		if (ALIFTYPE_CHECK(b) and add_subClass((AlifTypeObject*)b, _type) < 0) {
+			return -1;
+		}
+	}
+	return 0;
+}
 
-static AlifIntT typeReady_setNew(AlifTypeObject* _type, AlifIntT _initial) { // 8279
+
+static AlifIntT typeReady_setNew(AlifTypeObject* _type, AlifIntT _initial) { // 8368
 	AlifTypeObject* base = _type->base;
 	if (_type->new_ == nullptr
 		and base == &_alifBaseObjectType_
@@ -3569,16 +3664,16 @@ static AlifIntT type_ready(AlifTypeObject* _type, AlifIntT _initial) { // 8383
 		if (typeReady_inherit(_type) < 0) {
 			goto error;
 		}
-		//if (typeReady_preheader(_type) < 0) {
-		//	goto error;
-		//}
+		if (typeReady_preheader(_type) < 0) {
+			goto error;
+		}
 	}
 	if (typeReady_setHash(_type) < 0) {
 		goto error;
 	}
-	//if (typeReady_addSubclasses(_type) < 0) {
-	//	goto error;
-	//}
+	if (typeReady_addSubClasses(_type) < 0) {
+		goto error;
+	}
 	if (_initial) {
 		if (typeReady_managedDict(_type) < 0) {
 			goto error;
@@ -3647,8 +3742,36 @@ static AlifIntT init_staticType(AlifInterpreter* _interp, AlifTypeObject* _self,
 
 
 AlifIntT alifStaticType_initBuiltin(AlifInterpreter* _interp,
-	AlifTypeObject* _self) { // 8539
+	AlifTypeObject* _self) { // 8622
 	return init_staticType(_interp, _self, 1, alif_isMainInterpreter(_interp));
+}
+
+
+static AlifIntT add_subClass(AlifTypeObject* _base, AlifTypeObject* _type) { // 8629
+	AlifObject* key = alifLong_fromVoidPtr((void*)_type);
+	if (key == nullptr)
+		return -1;
+
+	AlifObject* ref = alifWeakRef_newRef((AlifObject*)_type, nullptr);
+	if (ref == nullptr) {
+		ALIF_DECREF(key);
+		return -1;
+	}
+
+	AlifObject* subclasses = lookup_tpSubClasses(_base);
+	if (subclasses == nullptr) {
+		subclasses = init_tpSubClasses(_base);
+		if (subclasses == nullptr) {
+			ALIF_DECREF(key);
+			ALIF_DECREF(ref);
+			return -1;
+		}
+	}
+
+	AlifIntT result = alifDict_setItem(subclasses, key, ref);
+	ALIF_DECREF(ref);
+	ALIF_DECREF(key);
+	return result;
 }
 
 
@@ -4388,11 +4511,11 @@ static inline AlifIntT super_initImpl(AlifObject* self,
 
 static AlifObject* super_vectorCall(AlifObject* self, AlifObject* const* args,
 	AlifUSizeT nargsf, AlifObject* kwnames) { // 11611
-	if (!_ALIFARG_NOKWNAMES("super", kwnames)) {
+	if (!_ALIFARG_NOKWNAMES("اصل", kwnames)) {
 		return nullptr;
 	}
 	AlifSizeT nargs = ALIFVECTORCALL_NARGS(nargsf);
-	if (!_ALIFARG_CHECKPOSITIONAL("super()", nargs, 0, 2)) {
+	if (!_ALIFARG_CHECKPOSITIONAL("اصل()", nargs, 0, 2)) {
 		return nullptr;
 	}
 	AlifTypeObject* type = nullptr;
@@ -4428,7 +4551,7 @@ fail:
 
 AlifTypeObject _alifSuperType_ = { // 11652
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
-	.name = "super",
+	.name = "اصل",
 	.basicSize = sizeof(SuperObject),
 	/* methods */
 	.dealloc = super_dealloc,
