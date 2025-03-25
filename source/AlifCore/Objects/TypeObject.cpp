@@ -483,6 +483,9 @@ static AlifObject* type_abstractMethods(AlifTypeObject* type, void* context) { /
 
 
 
+static AlifIntT add_subClass(AlifTypeObject*, AlifTypeObject*); // 1569
+
+
 static AlifObject* type_call(AlifObject* _self, AlifObject* _args, AlifObject* _kwds) { // 2136
 	AlifTypeObject* type = (AlifTypeObject*)_self;
 	AlifObject* obj{};

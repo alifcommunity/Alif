@@ -33,6 +33,7 @@ AlifSizeT _alifWeakref_getWeakrefCount(AlifObject* _obj) { // 41
 	return count;
 }
 
+static AlifObject* weakRef_vectorCall(AlifObject*, AlifObject* const*, AlifUSizeT, AlifObject*); // 59
 
 static void init_weakRef(AlifWeakReference* self, AlifObject* ob, AlifObject* callback) { // 61
 	self->hash = -1;
