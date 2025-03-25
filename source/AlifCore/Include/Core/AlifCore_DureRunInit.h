@@ -717,6 +717,7 @@
     INIT_ID(__classGetItem__), \
     INIT_ID(__complex__), \
 	INIT_ID(__dict__), \
+	INIT_ID(__dictOffset__), \
 	INIT_ID(__doc__), \
 	INIT_ID(__eq__), \
 	INIT_ID(__file__), \
@@ -743,6 +744,7 @@
 	INIT_ID(__staticAttributes__), \
 	INIT_ID(__subClassCheck__), \
 	INIT_ID(__typeParams__), \
+	INIT_ID(__weakListOffset__), \
 	INIT_ID(__weakRef__), \
 	INIT_ID(_findAndLoad), \
 	INIT_ID(_initializing), \

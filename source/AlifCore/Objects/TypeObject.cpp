@@ -2194,7 +2194,7 @@ AlifObject* alifType_fromMetaclass(AlifTypeObject* metaclass, AlifObject* module
 	}
 
 	const char* s;
-	s = strrchr(spec->name, '.'); //* alif
+	s = strrchr(spec->name, '.');
 	if (s == nullptr) {
 		s = spec->name;
 	}
@@ -2208,7 +2208,7 @@ AlifObject* alifType_fromMetaclass(AlifTypeObject* metaclass, AlifObject* module
 	}
 
 	AlifSizeT name_buf_len;
-	name_buf_len = strlen(spec->name) + 1; //* alif
+	name_buf_len = strlen(spec->name) + 1;
 	_ht_tpname = (char*)alifMem_dataAlloc(name_buf_len);
 	if (_ht_tpname == nullptr) {
 		goto finally;
@@ -2260,15 +2260,15 @@ AlifObject* alifType_fromMetaclass(AlifTypeObject* metaclass, AlifObject* module
 	}
 
 	AlifTypeObject* base;
-	base = best_base(bases);  // borrowed ref //* alif
+	base = best_base(bases);  // borrowed ref
 	if (base == nullptr) {
 		goto finally;
 	}
 
 	AlifSizeT basicsize;
-	basicsize = spec->basicsize; //* alif
+	basicsize = spec->basicsize;
 	AlifSizeT type_data_offset;
-	type_data_offset = spec->basicsize; //* alif
+	type_data_offset = spec->basicsize;
 	if (basicsize == 0) {
 		/* Inherit */
 		basicsize = base->basicSize;
@@ -2290,21 +2290,22 @@ AlifObject* alifType_fromMetaclass(AlifTypeObject* metaclass, AlifObject* module
 	}
 
 	AlifSizeT itemsize;
-	itemsize = spec->itemsize; //* alif
+	itemsize = spec->itemsize;
 
-	//AlifSizeT weaklistoffset = 0;
-	//if (specialOffset_fromMember(weaklistoffset_member, type_data_offset,
-	//	&weaklistoffset) < 0) {
-	//	goto finally;
-	//}
+	AlifSizeT weaklistoffset;
+	weaklistoffset = 0;
+	if (specialOffset_fromMember(weaklistoffset_member, type_data_offset,
+		&weaklistoffset) < 0) {
+		goto finally;
+	}
 	AlifSizeT dictoffset;
-	dictoffset = 0; //* alif
+	dictoffset = 0;
 	if (specialOffset_fromMember(dictoffset_member, type_data_offset,
 		&dictoffset) < 0) {
 		goto finally;
 	}
 	AlifSizeT vectorcalloffset;
-	vectorcalloffset = 0; //* alif
+	vectorcalloffset = 0;
 	if (specialOffset_fromMember(vectorcalloffset_member, type_data_offset,
 		&vectorcalloffset) < 0) {
 		goto finally;
@@ -2427,16 +2428,16 @@ AlifObject* alifType_fromMetaclass(AlifTypeObject* metaclass, AlifObject* module
 	//	}
 	//}
 
-	//if (weaklistoffset) {
-	//	if (alifDict_delItem(dict, &ALIF_ID(__weakListOffset__)) < 0) {
-	//		goto finally;
-	//	}
-	//}
-	//if (dictoffset) {
-	//	if (alifDict_delItem(dict, &ALIF_ID(__dictOffset__)) < 0) {
-	//		goto finally;
-	//	}
-	//}
+	if (weaklistoffset) {
+		if (alifDict_delItem(dict, &ALIF_ID(__weakListOffset__)) < 0) {
+			goto finally;
+		}
+	}
+	if (dictoffset) {
+		if (alifDict_delItem(dict, &ALIF_ID(__dictOffset__)) < 0) {
+			goto finally;
+		}
+	}
 
 	/* Set type.__module__ */
 	r = alifDict_contains(dict, &ALIF_ID(__module__));
@@ -2496,7 +2497,8 @@ void* alifObject_getItemData(AlifObject* _obj) { // 5276
 }
 
 
-static AlifObject* findName_inMro(AlifTypeObject* _type, AlifObject* _name, AlifIntT* _error) { //  5291
+static AlifObject* findName_inMro(AlifTypeObject* _type,
+	AlifObject* _name, AlifIntT* _error) { //  5291
 	AlifHashT hash = alifObject_hashFast(_name);
 	if (hash == -1) {
 		*_error = -1;
@@ -2766,6 +2768,8 @@ AlifTypeObject _alifTypeType_ = { // 6195
 	ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_TYPE_SUBCLASS |
 	ALIF_TPFLAGS_HAVE_VECTORCALL |
 	ALIF_TPFLAGS_ITEMS_AT_END,
+
+	.weakListOffset = offsetof(AlifTypeObject, weakList),
 
 	.methods = _typeMethods_,
 	.dictOffset = offsetof(AlifTypeObject, dict),
@@ -4335,9 +4339,9 @@ static AlifObject* do_superLookup(SuperObject* _su, AlifTypeObject* _suType,
 
 		return res;
 	}
-	//else if (alifErr_occurred()) {
-	//	return nullptr;
-	//}
+	else if (alifErr_occurred()) {
+		return nullptr;
+	}
 
 skip:
 	if (_su == nullptr) {
@@ -4358,7 +4362,6 @@ skip:
 
 static AlifObject* super_getAttro(AlifObject* self, AlifObject* name) { // 11334
 	SuperObject* su = (SuperObject*)self;
-
 	if (ALIFUSTR_CHECK(name) and
 		ALIFUSTR_GET_LENGTH(name) == 9 and
 		_alifUStr_equal(name, &ALIF_ID(__class__)))
@@ -4477,16 +4480,35 @@ static AlifIntT super_initWithoutArgs(AlifInterpreterFrame* cframe, AlifCodeObje
 }
 
 
+static AlifIntT super_initImpl(AlifObject* self, AlifTypeObject* type, AlifObject* obj); // 11672
+
+static AlifIntT super_init(AlifObject* self,
+	AlifObject* args, AlifObject* kwds) { // 11674
+	AlifTypeObject* type = nullptr;
+	AlifObject* obj = nullptr;
+
+	if (!_ALIFARG_NOKEYWORDS("اصل", kwds))
+		return -1;
+	if (!alifArg_parseTuple(args, "|O!O:اصل", &_alifTypeType_, &type, &obj))
+		return -1;
+	if (super_initImpl(self, type, obj) < 0) {
+		return -1;
+	}
+	return 0;
+}
+
 static inline AlifIntT super_initImpl(AlifObject* self,
-	AlifTypeObject* type, AlifObject* obj) { // 11549
+	AlifTypeObject* type, AlifObject* obj) { // 11690
 	SuperObject* su = (SuperObject*)self;
 	AlifTypeObject* obj_type = nullptr;
 	if (type == nullptr) {
+		/* Call super(), without args -- fill in from __class__
+		   and first local variable on the stack. */
 		AlifThread* tstate = _alifThread_get();
 		AlifInterpreterFrame* frame = _alifThreadState_getFrame(tstate);
 		if (frame == nullptr) {
 			//alifErr_setString(_alifExcRuntimeError_,
-			//	"super(): no current frame");
+			//	"اصل(): no current frame");
 			return -1;
 		}
 		AlifIntT res = super_initWithoutArgs(frame, _alifFrame_getCode(frame), &type, &obj);
@@ -4562,7 +4584,7 @@ AlifTypeObject _alifSuperType_ = { // 11652
 	.getAttro = super_getAttro,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
 		ALIF_TPFLAGS_BASETYPE,
-	//.init = super_init,
+	.init = super_init,
 	.alloc = alifType_genericAlloc,
 	//.new_ = alifType_genericNew,
 	.free = alifObject_gcDel,

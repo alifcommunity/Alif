@@ -231,9 +231,15 @@ static void func_dealloc(AlifObject* _self) { // 1079
 
 
 
+static AlifObject* func_descrGet(AlifObject* _func,
+	AlifObject* _obj, AlifObject* _type) { // 1133
+	if (_obj == ALIF_NONE or _obj == nullptr) {
+		return ALIF_NEWREF(_func);
+	}
+	return alifMethod_new(_func, _obj);
+}
 
-
-AlifTypeObject _alifFunctionType_ = { // 1105
+AlifTypeObject _alifFunctionType_ = { // 1142
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "دالة",
 	.basicSize = sizeof(AlifFunctionObject),
@@ -243,6 +249,9 @@ AlifTypeObject _alifFunctionType_ = { // 1105
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
 	ALIF_TPFLAGS_HAVE_VECTORCALL |
 	ALIF_TPFLAGS_METHOD_DESCRIPTOR,
+
+	.descrGet = func_descrGet,
+	.dictOffset = offsetof(AlifFunctionObject, dict),
 };
 
 
