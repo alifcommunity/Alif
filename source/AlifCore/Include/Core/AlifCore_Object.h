@@ -220,6 +220,24 @@ static inline AlifObject* _alif_newRefWithLock(AlifObject* _op) { // 586
 	}
 }
 
+
+static inline void _alifObject_setMaybeWeakRef(AlifObject* _op) { // 621
+	if (ALIF_ISIMMORTAL(_op)) {
+		return;
+	}
+	for (;;) {
+		AlifSizeT shared = alifAtomic_loadSizeRelaxed(&_op->refShared);
+		if ((shared & ALIFREF_SHARED_FLAG_MASK) != 0) {
+			return;
+		}
+		if (alifAtomic_compareExchangeSize(
+			&_op->refShared, &shared, shared | ALIF_REF_MAYBE_WEAKREF)) {
+			return;
+		}
+	}
+}
+
+
 static inline AlifIntT alif_tryIncRef(AlifObject* _op) { // 641
 	return alif_tryIncrefFast(_op) or alif_tryIncRefShared(_op);
 }
