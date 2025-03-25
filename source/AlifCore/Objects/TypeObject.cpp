@@ -965,7 +965,8 @@ static AlifObject* mro_implementationUnlocked(AlifTypeObject* _type) { // 3052
 		return nullptr;
 	}
 
-	AlifObject** toMerge = (AlifObject**)alifMem_dataAlloc(n + 1);
+	AlifObject** toMerge = (AlifUSizeT)(n + 1) > ALIF_SIZET_MAX / sizeof(AlifObject*) ? nullptr : \
+		(AlifObject**)alifMem_dataAlloc((n + 1) * sizeof(AlifObject*));
 	if (toMerge == nullptr) {
 		//alifErr_noMemory();
 		return nullptr;
