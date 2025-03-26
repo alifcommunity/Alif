@@ -107,7 +107,7 @@ static AlifIntT _ioTextIOWrapper_init_impl(TextIO* _self, AlifObject* _buffer,
 	const char* _encoding, AlifObject* _errors,
 	const char* _newLine, AlifIntT _lineBuffering,
 	AlifIntT _writeThrough) { // 1088
-	AlifObject* raw, * codeAlifInfo = nullptr;
+	AlifObject* raw{}, * codecInfo = nullptr;
 	AlifObject* res{};
 	AlifIntT r{};
 
@@ -127,7 +127,6 @@ static AlifIntT _ioTextIOWrapper_init_impl(TextIO* _self, AlifObject* _buffer,
 		_errors = &ALIF_ID(strict);
 	}
 	else if (!ALIFUSTR_CHECK(_errors)) {
-
 		//alifErr_format(
 			//_alifExcTypeError_,
 			//"TextIOWrapper() argument 'errors' must be str or None, not %.50s",
@@ -164,7 +163,7 @@ static AlifIntT _ioTextIOWrapper_init_impl(TextIO* _self, AlifObject* _buffer,
 		_self->encoding = &ALIF_STR(utf8);
 	}
 	if (_encoding == nullptr or (strcmp(_encoding, "locale") == 0)) {
-		_self->encoding = alif_getLocaleEncodingObject();
+		_self->encoding = _alif_getLocaleEncodingObject();
 		if (_self->encoding == nullptr) {
 			goto error;
 		}
@@ -185,8 +184,8 @@ static AlifIntT _ioTextIOWrapper_init_impl(TextIO* _self, AlifObject* _buffer,
 		goto error;
 	}
 
-	codeAlifInfo = _alifCodec_lookupTextEncoding(_encoding, "codecs.open()");
-	if (codeAlifInfo == nullptr) {
+	codecInfo = _alifCodec_lookupTextEncoding(_encoding, "codecs.open()");
+	if (codecInfo == nullptr) {
 		ALIF_CLEAR(_self->encoding);
 		goto error;
 	}
@@ -203,22 +202,22 @@ static AlifIntT _ioTextIOWrapper_init_impl(TextIO* _self, AlifObject* _buffer,
 
 	_PyIO_State* state = findIO_stateByDef(ALIF_TYPE(_self));
 	_self->state = state;
-	if (textIOWrapper_setDecoder(_self, codeAlifInfo, errorsStr) != 0)
+	if (textIOWrapper_setDecoder(_self, codecInfo, errorsStr) != 0)
 		goto error;
 
-	if (textIOWrapper_setEncoder(_self, codeAlifInfo, errorsStr) != 0)
+	if (textIOWrapper_setEncoder(_self, codecInfo, errorsStr) != 0)
 		goto error;
 
-	ALIF_CLEAR(codeAlifInfo);
+	ALIF_CLEAR(codecInfo);
 
 	if (ALIF_IS_TYPE(_buffer, state->alifBufferedReaderType) or
 		ALIF_IS_TYPE(_buffer, state->alifBufferedWriterType) or
 		ALIF_IS_TYPE(_buffer, state->alifBufferedRandomType))
 	{
-		if (alifObject_getOptionalAttr(_buffer, &ALIF_ID(raw), &raw) < 0)
+		if (alifObject_getOptionalAttr(_buffer, &ALIF_ID(Raw), &raw) < 0)
 			goto error;
 		if (raw != nullptr) {
-			if (ALIF_IS_TYPE(raw, state->PyFileIO_Type))
+			if (ALIF_IS_TYPE(raw, state->alifFileIOType))
 				_self->raw = raw;
 			else
 				ALIF_DECREF(raw);
@@ -241,7 +240,7 @@ static AlifIntT _ioTextIOWrapper_init_impl(TextIO* _self, AlifObject* _buffer,
 	_self->has_read1 = r;
 
 	_self->encodingStartOfStream = 0;
-	if (textIOWrapper_fixEncoderState(_self) < 0) {
+	if (_textIOWrapper_fixEncoderState(_self) < 0) {
 		goto error;
 	}
 
@@ -249,6 +248,6 @@ static AlifIntT _ioTextIOWrapper_init_impl(TextIO* _self, AlifObject* _buffer,
 	return 0;
 
 error:
-	ALIF_XDECREF(codeAlifInfo);
+	ALIF_XDECREF(codecInfo);
 	return -1;
 }
