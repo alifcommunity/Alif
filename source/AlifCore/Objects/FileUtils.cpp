@@ -605,7 +605,7 @@ FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) { // 1764
 		ALIF_END_ALLOW_THREADS
 	} while (f == nullptr and errno == EINTR /*and !(async_err = alifErr_checkSignals())*/);
 	AlifIntT savedErrNo = errno;
-	//ALIF_DECREF(bytes); // كائن بايت لا يملك dealloc - يجب مراجعة المشكلة
+	ALIF_DECREF(bytes);
 #endif
 	if (asyncErr) return nullptr;
 
