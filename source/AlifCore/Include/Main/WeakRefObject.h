@@ -19,6 +19,7 @@ extern AlifTypeObject _alifWeakrefCallableProxyType_;
 
 
 
+AlifObject* alifWeakRef_newRef(AlifObject*, AlifObject*); // 26
 
 
 

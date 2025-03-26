@@ -47,12 +47,18 @@ public:
         STRUCT_FOR_STR(Empty, "")
 		STRUCT_FOR_STR(Format, ".format")
 		STRUCT_FOR_STR(GenericBase, ".generic_base")
+		STRUCT_FOR_STR(IsAtty, "isatty") //* alif
 		STRUCT_FOR_STR(KWDefaults, ".kwdefaults")
 		STRUCT_FOR_STR(TypeParams, ".type_params")
 		STRUCT_FOR_STR(True, "صح") //* alif
 		STRUCT_FOR_STR(False, "خطأ") //* alif
+		STRUCT_FOR_STR(Mode, "mode") //* alif
+		STRUCT_FOR_STR(Name, "name") //* alif
+		STRUCT_FOR_USTR(Open, "فتح") //* alif
+		STRUCT_FOR_STR(Raw, "raw") //* alif
 		STRUCT_FOR_USTR(__init__, "_تهيئة_") //* alif
 		STRUCT_FOR_USTR(__import__, "_استورد_") //* alif
+		STRUCT_FOR_USTR(_io, "تبادل") //* alif
     } literals;
 
     class {
@@ -72,6 +78,7 @@ public:
         STRUCT_FOR_ID(__classGetItem__)
 		STRUCT_FOR_ID(__complex__)
 		STRUCT_FOR_ID(__dict__)
+		STRUCT_FOR_ID(__dictOffset__)
 		STRUCT_FOR_ID(__doc__)
 		STRUCT_FOR_ID(__eq__)
 		STRUCT_FOR_ID(__file__)
@@ -98,10 +105,12 @@ public:
 		STRUCT_FOR_ID(__staticAttributes__)
         STRUCT_FOR_ID(__subClassCheck__)
 		STRUCT_FOR_ID(__typeParams__)
+		STRUCT_FOR_ID(__weakListOffset__)
 		STRUCT_FOR_ID(__weakRef__)
 		STRUCT_FOR_ID(_findAndLoad)
 		STRUCT_FOR_ID(_initializing)
 		STRUCT_FOR_ID(_isTextEncoding)
+		STRUCT_FOR_ID(_WindowsConsoleIO)
 		STRUCT_FOR_ID(Builtins)
      	STRUCT_FOR_ID(Encoding)
      	STRUCT_FOR_ID(End)
@@ -124,6 +133,7 @@ public:
      	STRUCT_FOR_ID(Stderr)
      	STRUCT_FOR_ID(Stdin)
      	STRUCT_FOR_ID(Stdout)
+     	STRUCT_FOR_ID(TextIOWrapper)
      	STRUCT_FOR_ID(Top)
      	STRUCT_FOR_ID(Write)
     } identifiers;

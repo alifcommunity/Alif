@@ -7,6 +7,9 @@
 extern AlifIntT _alifImport_fixupBuiltin(AlifThread*, AlifObject*, const char*, AlifObject*); // 26
 
 
+AlifObject* _alifImport_getModuleAttr(AlifObject*, AlifObject*); // 34
+
+
 class ImportDureRunState { // 40
 public:
 	class InitTable* initTable{};

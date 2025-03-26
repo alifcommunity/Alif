@@ -22,7 +22,7 @@
 typedef class TextIO TextIO;
 
 
-#include "clinic/textio.cpp.h" // 33
+#include "clinic/TextIO.cpp.h" // 33
 
 
 

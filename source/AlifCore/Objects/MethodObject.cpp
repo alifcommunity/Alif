@@ -1,5 +1,6 @@
 #include "alif.h"
 
+#include "AlifCore_Call.h"
 #include "AlifCore_Eval.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_State.h"
@@ -22,7 +23,8 @@ static AlifObject* cfunction_vectorCallNoArgs(AlifObject*,
 static AlifObject* cfunction_vectorCallO(AlifObject*,
 	AlifObject* const*, AlifUSizeT, AlifObject*); // 26
 
-
+static AlifObject* cfunction_call(AlifObject*,
+	AlifObject*, AlifObject*); // 28
 
 
 
@@ -114,7 +116,7 @@ AlifTypeObject _alifCPPFunctionType_ = { // 332
 	.name = "دالة_او_صفة_مضمنة",
 	.basicSize = sizeof(AlifCPPFunctionObject),
 	.vectorCallOffset = offsetof(AlifCPPFunctionObject, vectorCall),
-
+	.call = cfunction_call,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
 	ALIF_TPFLAGS_HAVE_VECTORCALL,
 };
@@ -257,4 +259,38 @@ static AlifObject* cfunction_vectorCallO(AlifObject* _func, AlifObject* const* _
 		meth, ALIFCPPFUNCTION_GET_SELF(_func), _args[0]);
 	_alif_leaveRecursiveCallThread(thread);
 	return result;
+}
+
+
+
+
+
+static AlifObject* cfunction_call(AlifObject* func,
+	AlifObject* args, AlifObject* kwargs) { // 530
+	AlifThread* tstate = _alifThread_get();
+
+	AlifIntT flags = ALIFCPPFUNCTION_GET_FLAGS(func);
+	if (!(flags & METHOD_VARARGS)) {
+		return alifVectorCall_call(func, args, kwargs);
+	}
+
+	AlifCPPFunction meth = ALIFCPPFUNCTION_GET_FUNCTION(func);
+	AlifObject* self = ALIFCPPFUNCTION_GET_SELF(func);
+
+	AlifObject* result{};
+	if (flags & METHOD_KEYWORDS) {
+		result = ALIFCPPFUNCTIONWITHKEYWORDS_TRAMPOLINECALL(
+			(*(AlifCPPFunctionWithKeywords)(void(*)(void))meth),
+			self, args, kwargs);
+	}
+	else {
+		if (kwargs != nullptr and ALIFDICT_GET_SIZE(kwargs) != 0) {
+			//_alifErr_format(tstate, _alifExcTypeError_,
+			//	"%.200s() takes no keyword arguments",
+			//	((AlifCPPFunctionObject*)func)->ml_->name);
+			return nullptr;
+		}
+		result = ALIFCPPFUNCTION_TRAMPOLINECALL(meth, self, args);
+	}
+	return _alif_checkFunctionResult(tstate, func, result, nullptr);
 }

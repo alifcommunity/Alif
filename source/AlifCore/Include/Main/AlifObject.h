@@ -515,7 +515,7 @@ public:
 	AlifObject* bases{};
 	AlifObject* mro{}; // MethodResolutionOrder
 	void* subclasses{};
-
+	AlifObject* weakList{};
 	Destructor del{};
 
 	AlifUIntT versionTag{};

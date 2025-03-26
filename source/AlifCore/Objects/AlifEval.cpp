@@ -443,13 +443,13 @@ dispatch_opcode :
 				_alifFrame_setStackPointer(_frame, stackPointer);
 				AlifIntT err = alifMapping_getOptionalItem(BUILTINS(), &ALIF_ID(__buildClass__), &bc_o);
 				stackPointer = _alifFrame_getStackPointer(_frame);
-				//if (err < 0) goto error;
+				if (err < 0) goto error;
 				if (bc_o == nullptr) {
 					_alifFrame_setStackPointer(_frame, stackPointer);
 					//_alifErr_setString(_thread, _alifExcNameError_,
 					//	"__buildClass__ not found");
 					stackPointer = _alifFrame_getStackPointer(_frame);
-					//if (true) goto error;
+					if (true) goto error;
 				}
 				bc = ALIFSTACKREF_FROMALIFOBJECTSTEAL(bc_o);
 				stackPointer[0] = bc;
@@ -1170,6 +1170,20 @@ dispatch_opcode :
 				top = alifStackRef_dup(bottom);
 				stackPointer[0] = top;
 				stackPointer += 1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
+			TARGET(COPY_FREE_VARS) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				/* Copy closure variables to free variables */
+				AlifCodeObject* co = _alifFrame_getCode(_frame);
+				AlifFunctionObject* func = (AlifFunctionObject*)alifStackRef_asAlifObjectBorrow(_frame->funcObj);
+				AlifObject* closure = func->closure;
+				AlifIntT offset = co->nLocalsPlus - oparg;
+				for (AlifIntT i = 0; i < oparg; ++i) {
+					AlifObject* o = ALIFTUPLE_GET_ITEM(closure, i);
+					_frame->localsPlus[offset + i] = ALIFSTACKREF_FROMALIFOBJECTNEW(o);
+				}
 				DISPATCH();
 			} // ------------------------------------------------------------ //
 			TARGET(DELETE_NAME) {

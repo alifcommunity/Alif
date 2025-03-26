@@ -19,7 +19,7 @@
 #define ALIF_REF_SHARED_INIT	0x0 // 69
 #define ALIF_REF_MAYBE_WEAKREF	0x1
 #define ALIF_REF_QUEUED			0x2
-#define ALIF_REF_MERGED			0x3 // 72
+#define ALIF_REF_MERGED			0x3 // 79
 
 #define ALIF_REF_SHARED(_refcnt, _flags)	\
 	(((_refcnt) << ALIF_REF_SHARED_SHIFT) + (_flags)) // 75

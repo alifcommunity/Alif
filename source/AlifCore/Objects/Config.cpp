@@ -3,6 +3,10 @@
 extern AlifObject* alifInit_math(void); // 16
 extern AlifObject* alifInit_time(void);
 
+extern AlifObject* alifInit__io(void);
+
+
+
 class InitTable _alifImportInitTab_[] = { // 87
 
 	{"الرياضيات", alifInit_math}, // 96
@@ -15,6 +19,9 @@ class InitTable _alifImportInitTab_[] = { // 87
 	/* These entries are here for sys.builtin_module_names */
 	{"builtins", nullptr},
 	{"sys", nullptr},
+
+
+	{"_تبادل", alifInit__io},
 
 	/* Sentinel */
 	{0, 0}

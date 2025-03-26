@@ -27,6 +27,39 @@ AlifIntT _alif_encodeLocaleEx(const wchar_t*, char**,
 	AlifUSizeT*, const char**, AlifIntT, AlifErrorHandler_); // 51
 
 
+// 78
+#ifdef _WINDOWS
+class AlifStatStruct {
+public:
+	uint64_t dev{};
+	uint64_t ino{};
+	unsigned short mode{};
+	AlifIntT nlink{};
+	AlifIntT uid{};
+	AlifIntT gid{};
+	unsigned long rdev{};
+	__int64 size{};
+	time_t atime{};
+	AlifIntT atimeNSec{};
+	time_t mtime{};
+	AlifIntT mtimeNSec{};
+	time_t ctime{};
+	AlifIntT ctimeNSec{};
+	time_t birthtime{};
+	AlifIntT birthtimeNSec{};
+	unsigned long fileAttributes{};
+	unsigned long reparseTag{};
+	uint64_t inoHigh{};
+};
+#else
+	#define AlifStatStruct stat
+#endif
+
+
+
+AlifIntT _alifFStat_noraise(AlifIntT, class AlifStatStruct*); // 110
+
+
 
 #ifdef HAVE_READLINK
 extern int alif_wReadLink(const wchar_t*, wchar_t*, AlifUSizeT); // 151
@@ -76,3 +109,7 @@ extern AlifIntT alifOS_getFullPathName(const wchar_t*, wchar_t**); // 270
 
 
 char* alifUniversal_newLineFGetsWithSize(char*, AlifIntT, FILE*, AlifObject*, AlifUSizeT*); // 321
+
+
+
+AlifIntT _alif_isValidFD(AlifIntT); // 330

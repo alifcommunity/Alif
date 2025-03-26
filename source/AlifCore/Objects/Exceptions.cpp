@@ -301,6 +301,12 @@ MIDDLINGEXTENDSEXCEPTION(_excImportError_, ModuleNotFoundError, ImportError,
 	"Module not found.");
 
 
+// 1717
+#ifdef _WINDOWS
+#include "errmap.h"
+#endif
+
+
 
 
 COMPLEXEXTENDSEXCEPTION(_excException_, SyntaxError, خطأ_نسق, SyntaxError,

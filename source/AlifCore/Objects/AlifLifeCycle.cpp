@@ -1,10 +1,9 @@
 #include "alif.h"
 
-
+#include "AlifCore_Call.h"
 #include "AlifCore_Exceptions.h"
 #include "AlifCore_FileUtils.h"
 #include "AlifCore_FloatObject.h"
-#include "AlifCore_Import.h"
 #include "AlifCore_FreeList.h"
 #include "AlifCore_Import.h"
 #include "AlifCore_PathConfig.h"
@@ -570,7 +569,133 @@ AlifIntT alif_initFromConfig(const AlifConfig* _config) { // 1383
 
 
 
+static AlifObject* create_stdio(const AlifConfig* config, AlifObject* io,
+	AlifIntT fd, AlifIntT write_mode, const char* name,
+	const wchar_t* encoding, const wchar_t* errors) { // 2568
+	AlifObject* buf = nullptr, * stream = nullptr, * text = nullptr, * raw = nullptr, * res;
+	const char* mode{};
+	const char* newline{};
+	AlifObject* line_buffering{}, * write_through{};
+	AlifIntT buffering{}, isatty{};
+	const AlifIntT buffered_stdio = config->bufferedStdio;
 
+	if (!_alif_isValidFD(fd)) {
+		return ALIF_NONE;
+	}
+
+	if (!buffered_stdio && write_mode)
+		buffering = 0;
+	else
+		buffering = -1;
+	if (write_mode)
+		mode = "wb";
+	else
+		mode = "rb";
+	buf = _alifObject_callMethod(io, &ALIF_STR(Open), "isiOOOO",
+		fd, mode, buffering,
+		ALIF_NONE, ALIF_NONE, /* encoding, errors */
+		ALIF_NONE, ALIF_FALSE); /* newline, closefd */
+	if (buf == nullptr)
+		goto error;
+
+	if (buffering) {
+		raw = alifObject_getAttr(buf, &ALIF_STR(Raw));
+		if (raw == nullptr)
+			goto error;
+	}
+	else {
+		raw = ALIF_NEWREF(buf);
+	}
+
+#ifdef HAVE_WINDOWS_CONSOLE_IO
+	/* Windows console IO is always UTF-8 encoded */
+	AlifTypeObject* winconsoleio_type;
+	winconsoleio_type = (AlifTypeObject*)_alifImport_getModuleAttr(
+		&ALIF_STR(_io), &ALIF_ID(_WindowsConsoleIO));
+	if (winconsoleio_type == nullptr) {
+		goto error;
+	}
+	AlifIntT is_subclass;
+	is_subclass = alifObject_typeCheck(raw, winconsoleio_type);
+	ALIF_DECREF(winconsoleio_type);
+	if (is_subclass) {
+		encoding = L"utf-8";
+	}
+#endif
+
+	text = alifUStr_fromString(name);
+	if (text == nullptr or alifObject_setAttr(raw, &ALIF_STR(Name), text) < 0)
+		goto error;
+	res = alifObject_callMethodNoArgs(raw, &ALIF_STR(IsAtty));
+	if (res == nullptr)
+		goto error;
+	isatty = alifObject_isTrue(res);
+	ALIF_DECREF(res);
+	if (isatty == -1)
+		goto error;
+	if (!buffered_stdio)
+		write_through = ALIF_TRUE;
+	else
+		write_through = ALIF_FALSE;
+	if (buffered_stdio and (isatty or fd == fileno(stderr)))
+		line_buffering = ALIF_TRUE;
+	else
+		line_buffering = ALIF_FALSE;
+
+	ALIF_CLEAR(raw);
+	ALIF_CLEAR(text);
+
+#ifdef _WINDOWS
+	newline = nullptr;
+#else
+	newline = "\n";
+#endif
+
+	AlifObject* encoding_str;
+	encoding_str = alifUStr_fromWideChar(encoding, -1);
+	if (encoding_str == nullptr) {
+		ALIF_CLEAR(buf);
+		goto error;
+	}
+
+	AlifObject* errors_str;
+	errors_str = alifUStr_fromWideChar(errors, -1);
+	if (errors_str == nullptr) {
+		ALIF_CLEAR(buf);
+		ALIF_CLEAR(encoding_str);
+		goto error;
+	}
+
+	stream = _alifObject_callMethod(io, &ALIF_ID(TextIOWrapper), "OOOsOO",buf,
+		encoding_str, errors_str, newline, line_buffering, write_through);
+	ALIF_CLEAR(buf);
+	ALIF_CLEAR(encoding_str);
+	ALIF_CLEAR(errors_str);
+	if (stream == nullptr)
+		goto error;
+
+	if (write_mode)
+		mode = "w";
+	else
+		mode = "r";
+	text = alifUStr_fromString(mode);
+	if (!text or alifObject_setAttr(stream, &ALIF_STR(Mode), text) < 0)
+		goto error;
+	ALIF_CLEAR(text);
+	return stream;
+
+error:
+	ALIF_XDECREF(buf);
+	ALIF_XDECREF(stream);
+	ALIF_XDECREF(text);
+	ALIF_XDECREF(raw);
+
+	//if (alifErr_exceptionMatches(_alifExcOSError_) and !_alif_isValidFD(fd)) {
+	//	alifErr_clear();
+	//	return ALIF_NONE;
+	//}
+	return nullptr;
+}
 
 
 
@@ -588,9 +713,9 @@ static AlifIntT init_sysStreams(AlifThread* _thread) { // 2742
 	const AlifConfig* config = alifInterpreter_getConfig(_thread->interpreter);
 
 #ifndef _WINDOWS
-	struct AlifStatStruct sb {};
+	class AlifStatStruct sb;
 	if (_alifFStat_noraise(fileno(stdin), &sb) == 0 and
-		S_ISDIR(sb.mode)) {
+		S_ISDIR(sb.st_mode)) {
 		//return ALIFSTATUS_ERR("<stdin> is a directory, cannot continue");
 		return -1; //* alif //* delete
 	}
@@ -602,11 +727,11 @@ static AlifIntT init_sysStreams(AlifThread* _thread) { // 2742
 
 	/* Set sys.stdin */
 	fd = fileno(stdin);
-	//std = create_stdio(config, iomod, fd, 0, "<stdin>",
-	//	config->stdioEncoding,
-	//	config->stdioErrors);
-	//if (std == nullptr)
-	//	goto error;
+	std = create_stdio(config, iomod, fd, 0, "<stdin>",
+		config->stdioEncoding,
+		config->stdioErrors);
+	if (std == nullptr)
+		goto error;
 	//alifSys_setObject("__stdin__", std);
 	//_alifSys_setAttr(&ALIF_ID(stdin), std);
 	//ALIF_DECREF(std);
@@ -655,6 +780,7 @@ static AlifIntT init_sysStreams(AlifThread* _thread) { // 2742
 
 error:
 	//res = ALIFSTATUS_ERR("can't initialize sys standard streams");
+	//res = -1; //* alif //* delete
 
 done:
 	ALIF_XDECREF(iomod);

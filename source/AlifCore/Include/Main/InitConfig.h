@@ -31,7 +31,8 @@ public:
 	AlifIntT optimizationLevel{};
 	//AlifIntT configStdio{}; // نظام ألف يستخدم ترميز utf-8 بشكل إفتراضي
 	AlifIntT bufferedStdio{};
-
+	wchar_t* stdioEncoding{};
+	wchar_t* stdioErrors{};
 #ifdef _WINDOWS
 	AlifIntT legacyWindowsStdio{};
 #endif

@@ -786,7 +786,7 @@ AlifObject* alifBuiltin_init(AlifInterpreter* _interpreter) { // 3215
 	SETBUILTIN("frozenset", &_alifFrozenSetType_);
 	//SETBUILTIN("property", &_alifPropertyType_);
 	SETBUILTIN("صحيح", &_alifLongType_);
-	SETBUILTIN("list", &_alifListType_);
+	SETBUILTIN("مصفوفة", &_alifListType_);
 	//SETBUILTIN("map", &_alifMapType_);
 	SETBUILTIN("كائن", &_alifBaseObjectType_);
 	SETBUILTIN("مدى", &_alifRangeType_);
@@ -795,7 +795,7 @@ AlifObject* alifBuiltin_init(AlifInterpreter* _interpreter) { // 3215
 	SETBUILTIN("slice", &_alifSliceType_);
 	//SETBUILTIN("staticmethod", &_alifStaticMethodType_);
 	SETBUILTIN("نص", &_alifUStrType_);
-	SETBUILTIN("super", &_alifSuperType_);
+	SETBUILTIN("اصل", &_alifSuperType_);
 	SETBUILTIN("مترابطة", &_alifTupleType_);
 	SETBUILTIN("نوع", &_alifTypeType_);
 	debug = alifBool_fromLong(config->optimizationLevel == 0);
