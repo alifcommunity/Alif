@@ -6,6 +6,10 @@
 
 
 
+#define ALIF_TLS_ENTRIES (_alifDureRun_.threads.stubs.tlsEntries) // 5
+
+
+
 AlifIntT pthread_condInit(pthread_cond_t* restrict cond,
 	const pthread_condattr_t* restrict attr) { // 36
 	return 0;
@@ -20,7 +24,7 @@ AlifIntT pthread_cond_timedwait(pthread_cond_t* restrict cond,
 
 
 
-#define ALIF_TLS_ENTRIES (_alifDureRun_.threads.stubs.tlsEntries) // 139
+
 
 
 AlifIntT pthread_key_create(pthread_key_t* _key, void (*destr_function)(void*)) { // 141

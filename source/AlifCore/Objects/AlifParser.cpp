@@ -23,8 +23,8 @@ static const AlifIntT nKeywordList = 7;
 static KeywordToken* reservedKeywords[7] = {
 	new (KeywordToken[1])  { {nullptr, -1} },  // 0 char
 	new (KeywordToken[3])  { {"ك", 501}, {"و", 502}, {nullptr, -1} },  // 1 char
-	new (KeywordToken[8])  { {"في", 511}, {"او", 512}, {"أو", 512}, {"من", 513},  {"مع", 514}, {"صح", 515}, {"هل", 516}, {nullptr, -1} },  // 2 chars
-	new (KeywordToken[11]) { {"اذا", 521}, {"إذا", 521}, {"ليس", 522}, {"مرر", 523}, {"عدم", 524}, {"ولد", 525},  {"صنف", 526}, {"خطا", 527}, {"خطأ", 527},  {"عام", 528}, {nullptr, -1} },  // 3 chars
+	new (KeywordToken[8])  { {"في", 511}, {"او", 512}, {"أو", 512}, {"من", 513}, {"صح", 514}, {"هل", 515}, {nullptr, -1} },  // 2 chars
+	new (KeywordToken[12]) { {"اذا", 521}, {"إذا", 521}, {"ليس", 522}, {"مرر", 523}, {"عدم", 524}, {"ولد", 525},  {"صنف", 526}, {"خطا", 527}, {"خطأ", 527}, {"عام", 528}, {"عند", 529}, {nullptr, -1} },  // 3 chars
 	new (KeywordToken[10]) { {"احذف", 531}, {"دالة", 532}, {"لاجل", 533}, {"لأجل", 533},  {"والا", 534}, {"وإلا", 534}, {"توقف", 535}, {"نطاق", 536}, {"ارجع", 537}, {nullptr, -1}},  // 4 chars
 	new (KeywordToken[6])  { {"اواذا", 541}, {"أوإذا", 541}, {"بينما", 542},  {"انتظر", 543}, {"استمر", 544}, {nullptr, -1}},  // 5 chars
 	new (KeywordToken[3])  { {"مزامنة", 551}, {"استورد", 552}, {nullptr, -1}}  // 6 chars
@@ -37,9 +37,8 @@ static KeywordToken* reservedKeywords[7] = {
 #define IN_KW 511
 #define OR_KW 512
 #define FROM_KW 513
-#define WITH_KW 514
-#define TRUE_KW 515
-#define IS_KW 516
+#define TRUE_KW 514
+#define IS_KW 515
 #define IF_KW 521
 #define NOT_KW 522
 #define PASS_KW 523
@@ -48,6 +47,7 @@ static KeywordToken* reservedKeywords[7] = {
 #define CLASS_KW 526
 #define FALSE_KW 527
 #define GLOBAL_KW 528
+#define WITH_KW 529
 #define DEL_KW 531
 #define FUNC_KW 532
 #define FOR_KW 533
