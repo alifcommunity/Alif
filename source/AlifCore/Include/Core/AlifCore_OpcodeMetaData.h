@@ -1169,12 +1169,12 @@ const class OpcodeMetadata _alifOpcodeOpcodeMetadata_[266] = {
 	{false, -1},
 	{false, -1},
 	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_EVAL_BREAK_FLAG | HAS_ERROR_FLAG | HAS_ERROR_NO_POP_FLAG | HAS_ESCAPES_FLAG }, // RESUME // 149
-	{ true, InstructionFormat::Instr_FMT_IXC, HAS_EXIT_FLAG }, // BINARY_OP_ADD_FLOAT
+	{ true, InstructionFormat::Instr_FMT_IXC, HAS_EXIT_FLAG | HAS_ERROR_FLAG }, // BINARY_OP_ADD_FLOAT
 	{ true, InstructionFormat::Instr_FMT_IXC, HAS_EXIT_FLAG | HAS_ERROR_FLAG }, // BINARY_OP_ADD_INT
 	{ true, InstructionFormat::Instr_FMT_IXC, HAS_EXIT_FLAG | HAS_ERROR_FLAG }, // BINARY_OP_ADD_UNICODE
-	{ true, InstructionFormat::Instr_FMT_IXC, HAS_EXIT_FLAG }, // BINARY_OP_MULTIPLY_FLOAT
+	{ true, InstructionFormat::Instr_FMT_IXC, HAS_EXIT_FLAG | HAS_ERROR_FLAG }, // BINARY_OP_MULTIPLY_FLOAT
 	{ true, InstructionFormat::Instr_FMT_IXC, HAS_EXIT_FLAG | HAS_ERROR_FLAG }, // BINARY_OP_MULTIPLY_INT
-	{ true, InstructionFormat::Instr_FMT_IXC, HAS_EXIT_FLAG }, // BINARY_OP_SUBTRACT_FLOAT
+	{ true, InstructionFormat::Instr_FMT_IXC, HAS_EXIT_FLAG | HAS_ERROR_FLAG }, // BINARY_OP_SUBTRACT_FLOAT
 	{ true, InstructionFormat::Instr_FMT_IXC, HAS_EXIT_FLAG | HAS_ERROR_FLAG }, // BINARY_OP_SUBTRACT_INT
 	{ true, InstructionFormat::Instr_FMT_IXC, HAS_DEOPT_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // BINARY_SUBSCR_DICT
 	{ true, InstructionFormat::Instr_FMT_IXC, HAS_DEOPT_FLAG }, // BINARY_SUBSCR_GETITEM
