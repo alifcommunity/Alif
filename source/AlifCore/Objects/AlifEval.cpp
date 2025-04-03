@@ -1213,6 +1213,14 @@ dispatch_opcode :
 				}
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(EXTENDED_ARG) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				opcode = nextInstr->op.code;
+				oparg = oparg << 8 | nextInstr->op.arg;
+				PRE_DISPATCH_GOTO();
+				DISPATCH_GOTO();
+			} // ------------------------------------------------------------ //
 			TARGET(FOR_ITER) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 2;
