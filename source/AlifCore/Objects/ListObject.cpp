@@ -2184,6 +2184,43 @@ static AlifObject* list_removeImpl(AlifListObject* _self, AlifObject* _value) { 
 }
 
 
+static AlifIntT list___init__Impl(AlifListObject* _self, AlifObject* _iterable) { // 3375
+	/* Empty previous contents */
+	if (_self->item != nullptr) {
+		list_clear(_self);
+	}
+	if (_iterable != nullptr) {
+		if (_list_extend(_self, _iterable) < 0) {
+			return -1;
+		}
+	}
+	return 0;
+}
+
+static AlifObject* list_vectorCall(AlifObject* _type, AlifObject* const* _args,
+	AlifUSizeT _nargsf, AlifObject* _kwnames) { // 3397
+	if (!_ALIFARG_NOKWNAMES("مصفوفة", _kwnames)) {
+		return nullptr;
+	}
+	AlifSizeT nargs = ALIFVECTORCALL_NARGS(_nargsf);
+	if (!_ALIFARG_CHECKPOSITIONAL("مصفوفة", nargs, 0, 1)) {
+		return nullptr;
+	}
+
+	AlifObject* list = alifType_genericAlloc(ALIFTYPE_CAST(_type), 0);
+	if (list == nullptr) {
+		return nullptr;
+	}
+	if (nargs) {
+		if (list___init__Impl((AlifListObject*)list, _args[0])) {
+			ALIF_DECREF(list);
+			return nullptr;
+		}
+	}
+	return list;
+}
+
+
 
 static AlifMethodDef _listMethods_[] = { // 3445
 	LIST_APPEND_METHODDEF
@@ -2227,5 +2264,5 @@ AlifTypeObject _alifListType_ = { // 3737
 	.methods = _listMethods_,
 	.alloc = alifType_genericAlloc,
 	.free = alifObject_gcDel,
-	//.vectorCall = list_vectorCall,
+	.vectorCall = list_vectorCall,
 };

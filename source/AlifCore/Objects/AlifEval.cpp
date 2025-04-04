@@ -1108,7 +1108,7 @@ dispatch_opcode :
 						AlifIntT resBool = alifObject_isTrue(resObj);
 						stackPointer = _alifFrame_getStackPointer(_frame);
 						ALIF_DECREF(resObj);
-						//if (res_bool < 0) goto error;
+						if (resBool < 0) goto error;
 						resBool ? res = ALIFSTACKREF_TRUE : res = ALIFSTACKREF_FALSE;
 					}
 					else {
@@ -1212,6 +1212,14 @@ dispatch_opcode :
 					goto error;
 				}
 				DISPATCH();
+			} // ------------------------------------------------------------ //
+			TARGET(EXTENDED_ARG) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				opcode = nextInstr->op.code;
+				oparg = oparg << 8 | nextInstr->op.arg;
+				PRE_DISPATCH_GOTO();
+				DISPATCH_GOTO();
 			} // ------------------------------------------------------------ //
 			TARGET(FOR_ITER) {
 				_frame->instrPtr = nextInstr;

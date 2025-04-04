@@ -17,6 +17,14 @@
 #endif
 
 
+#ifdef LLTRACE
+#define PRE_DISPATCH_GOTO() if (lltrace >= 5) { \
+    lltrace_instruction(frame, stackPointer, nextInstr, opcode, oparg); }
+#else
+#define PRE_DISPATCH_GOTO() ((void)0)
+#endif
+
+
  // 101
 #define QSBR_QUIESCENT_STATE(_thread) _alifQSBR_quiescentState(((AlifThreadImpl*)_thread)->qsbr)
 
