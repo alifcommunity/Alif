@@ -278,6 +278,9 @@ AlifObject* _alifExc ## EXCNAME ## _ = (AlifObject*)&_exc ## EXCNAME ## _
 SIMPLEEXTENDSEXCEPTION(_excBaseException_, Exception,
 	"Common base class for all non-exit exceptions.");
 
+// 596
+SIMPLEEXTENDSEXCEPTION(_excException_, TypeError, خطأ_نوع, 
+	"Inappropriate argument type.");
 
 
 static AlifObject* importError_str(AlifImportErrorObject* _self) { // 1623
@@ -375,7 +378,7 @@ static StaticException _staticExceptions_[] = { // 3615
 	//ITEM(StopIteration),
 	ITEM(SyntaxError),
 	ITEM(SystemError),
-	//ITEM(TypeError),
+	ITEM(TypeError),
 	//ITEM(ValueError),
 	//ITEM(Warning),
 

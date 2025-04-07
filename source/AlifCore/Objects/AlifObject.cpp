@@ -1,9 +1,11 @@
 #include "alif.h"
 
 #include "AlifCore_BiaseRefCount.h"
+#include "AlifCore_Call.h"
 #include "AlifCore_Eval.h"
 #include "AlifCore_CriticalSection.h"
 #include "AlifCore_Dict.h"
+#include "AlifCore_FloatObject.h"
 #include "AlifCore_FreeList.h"
 #include "AlifCore_InitConfig.h"
 #include "AlifCore_HashTable.h"
@@ -13,6 +15,8 @@
 #include "AlifCore_Memory.h"
 #include "AlifCore_State.h"
 #include "AlifCore_TypeObject.h"
+#include "AlifCore_UStrObject.h"
+#include "AlifCore_Errors.h" //* delete
 
 
 
@@ -294,10 +298,10 @@ static AlifObject* do_richCompare(AlifThread* _thread,
 		res_ = (_v != _w) ? ALIF_TRUE : ALIF_FALSE;
 		break;
 	default:
-		//alifErr_format(_thread, _alifExctypeError_,
-		//	"'%s' ليس مدعوم بين حالات من '%.100 s' و '%.100 s'",
-		//	_opStrings_[_op],
-		//	ALIF_TYPE(_v)->name, ALIF_TYPE(_w)->name);
+		_alifErr_format(_thread, _alifExcTypeError_,
+			"'%s' ليس مدعوم بين حالات من '%.100 s' و '%.100 s'",
+			_opStrings_[_op],
+			ALIF_TYPE(_v)->name, ALIF_TYPE(_w)->name);
 		return nullptr;
 	}
 	return ALIF_NEWREF(res_);
