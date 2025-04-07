@@ -279,7 +279,7 @@ SIMPLEEXTENDSEXCEPTION(_excBaseException_, Exception,
 	"Common base class for all non-exit exceptions.");
 
 // 596
-SIMPLEEXTENDSEXCEPTION(_excException_, TypeError, خطأ_نوع, 
+SIMPLEEXTENDSEXCEPTION(_excException_, TypeError, 
 	"Inappropriate argument type.");
 
 
