@@ -690,8 +690,8 @@
     INIT_STR(IsAtty, "isatty"),	\
     INIT_STR(KWDefaults, ".kwdefaults"),	\
     INIT_STR(TypeParams, ".type_params"),	\
-    INIT_STR(True, "صح"), /* //* alif */	\
-    INIT_STR(False, "خطأ"), /* //* alif */	\
+    INIT_USTR(True, "صح"), /* //* alif */	\
+    INIT_USTR(False, "خطأ"), /* //* alif */	\
     INIT_STR(Mode, "mode"), /* //* alif */	\
     INIT_STR(Name, "name"), /* //* alif */	\
 	INIT_USTR(Open, "فتح"), /* //* alif */	\

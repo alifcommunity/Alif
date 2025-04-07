@@ -50,8 +50,8 @@ public:
 		STRUCT_FOR_STR(IsAtty, "isatty") //* alif
 		STRUCT_FOR_STR(KWDefaults, ".kwdefaults")
 		STRUCT_FOR_STR(TypeParams, ".type_params")
-		STRUCT_FOR_STR(True, "صح") //* alif
-		STRUCT_FOR_STR(False, "خطأ") //* alif
+		STRUCT_FOR_USTR(True, "صح") //* alif
+		STRUCT_FOR_USTR(False, "خطأ") //* alif
 		STRUCT_FOR_STR(Mode, "mode") //* alif
 		STRUCT_FOR_STR(Name, "name") //* alif
 		STRUCT_FOR_USTR(Open, "فتح") //* alif
