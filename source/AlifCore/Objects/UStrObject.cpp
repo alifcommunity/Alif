@@ -5875,7 +5875,8 @@ AlifIntT alifUStrWriter_writeRepr(AlifUStrWriter* _writer, AlifObject* _obj) { /
 		س = {"ص": صح} مثال
 		اطبع(س) مثال
 	*/
-	repr = alifUStr_fromString(alifUStr_asUTF8(repr)); //*review //*todo
+	//repr = alifUStr_fromString(alifUStr_asUTF8(repr)); //*review //*todo
+	repr = alifUStr_decodeUTF8(alifUStr_asUTF8(repr), ALIFUSTR_GET_LENGTH(repr), nullptr); //*review //*todo
 	//* alif
 
 	if (repr == nullptr) {
