@@ -108,6 +108,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_TypeObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_UnionObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_UStrObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_UStrObjectStaticStrInit.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_WeakRef.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Abstract.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\AlifBuffer.h" />

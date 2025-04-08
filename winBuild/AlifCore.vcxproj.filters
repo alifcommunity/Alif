@@ -954,6 +954,9 @@
     <ClInclude Include="..\source\Windows\errmap.h">
       <Filter>Windows</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_UStrObjectStaticStrInit.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Include">

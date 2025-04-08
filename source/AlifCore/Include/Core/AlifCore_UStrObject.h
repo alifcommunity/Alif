@@ -57,3 +57,6 @@ extern AlifIntT alifUStr_initGlobalObjects(AlifInterpreter*); // 268
 
 void alifUStr_internMortal(AlifInterpreter*, AlifObject**); // 280
 void alifUStr_internImmortal(AlifInterpreter*, AlifObject**); // 281
+
+
+extern void _alifUStr_internStatic(AlifInterpreter*, AlifObject**); // 285

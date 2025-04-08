@@ -11,6 +11,7 @@
 #include "AlifCore_BytesObject.h"
 #include "AlifCore_CriticalSection.h"
 #include "AlifCore_Format.h"
+#include "AlifCore_UStrObjectStaticStrInit.h"
 
 
 #include <Equal.h> // 61
@@ -163,11 +164,11 @@ static AlifIntT initGlobal_internedStrings(AlifInterpreter* _interp) { // 308
 		return -1;
 	}
 
-	//alifUStr_initStaticStrings(_interp);
+	_alifUStr_initStaticStrings(_interp);
 
 	for (AlifIntT i = 0; i < 256; i++) {
 		AlifObject* s = LATIN1(i);
-		//alifUnicode_internStatic(_interp, &s);
+		_alifUStr_internStatic(_interp, &s);
 	}
 	return 1;
 }
@@ -5866,6 +5867,17 @@ AlifIntT alifUStrWriter_writeRepr(AlifUStrWriter* _writer, AlifObject* _obj) { /
 	}
 
 	AlifObject* repr = alifObject_repr(_obj);
+
+	//* alif
+	/*
+		تمت إضافة هذه السطر لضمان تحويل النصوص الثابتة مثل صح وخطأ إلى
+		ترميز صحيح ليتمكن من طباعتها بشكل صحيح ضمن الفهرس
+		س = {"ص": صح} مثال
+		اطبع(س) مثال
+	*/
+	repr = alifUStr_fromString(alifUStr_asUTF8(repr)); //*review //*todo
+	//* alif
+
 	if (repr == nullptr) {
 		return -1;
 	}
@@ -6076,6 +6088,28 @@ AlifIntT alifUStr_initGlobalObjects(AlifInterpreter* _interp) { // 15318
 	}
 	 
 	return 1;
+}
+
+
+
+
+static AlifObject* intern_static(AlifInterpreter* interp, AlifObject* s /* stolen */) { // 15398
+	AlifObject* r = (AlifObject*)alifHashTable_get(INTERNED_STRINGS, s);
+	if (r != nullptr and r != s) {
+		ALIF_DECREF(s);
+		return ALIF_NEWREF(r);
+	}
+
+	if (alifHashTable_set(INTERNED_STRINGS, s, s) < -1) {
+		//alif_fatalError("failed to intern static string");
+	}
+
+	ALIFUSTR_STATE(s).interned = SSTATE_INTERNED_IMMORTAL_STATIC;
+	return s;
+}
+
+void _alifUStr_internStatic(AlifInterpreter* interp, AlifObject** p) { // 15437
+	*p = intern_static(interp, *p);
 }
 
 
