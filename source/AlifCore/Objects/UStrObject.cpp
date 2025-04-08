@@ -5867,18 +5867,6 @@ AlifIntT alifUStrWriter_writeRepr(AlifUStrWriter* _writer, AlifObject* _obj) { /
 	}
 
 	AlifObject* repr = alifObject_repr(_obj);
-
-	//* alif
-	/*
-		تمت إضافة هذه السطر لضمان تحويل النصوص الثابتة مثل صح وخطأ إلى
-		ترميز صحيح ليتمكن من طباعتها بشكل صحيح ضمن الفهرس
-		س = {"ص": صح} مثال
-		اطبع(س) مثال
-	*/
-	//repr = alifUStr_fromString(alifUStr_asUTF8(repr)); //*review //*todo
-	repr = alifUStr_decodeUTF8(alifUStr_asUTF8(repr), ALIFUSTR_GET_LENGTH(repr), nullptr); //*review //*todo
-	//* alif
-
 	if (repr == nullptr) {
 		return -1;
 	}
