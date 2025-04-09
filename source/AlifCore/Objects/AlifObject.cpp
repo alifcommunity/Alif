@@ -177,7 +177,7 @@ AlifObject* alifObject_repr(AlifObject* _v) { // 662
 		س = م"صح" مثال
 		اطبع(س) مثال
 	*/
-	res = alifUStr_fromString(alifUStr_asUTF8(res)); //* alif //* review //* todo
+	res = alifUStr_fromString(alifUStr_asUTF8(res)); //* review //* todo
 	//* alif
 
 	_alif_leaveRecursiveCallThread(thread);
