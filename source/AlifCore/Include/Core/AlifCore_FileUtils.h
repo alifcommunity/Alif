@@ -26,6 +26,8 @@ AlifIntT alif_decodeLocaleEx(const char*, wchar_t**, AlifUSizeT*,
 AlifIntT _alif_encodeLocaleEx(const wchar_t*, char**,
 	AlifUSizeT*, const char**, AlifIntT, AlifErrorHandler_); // 51
 
+extern char* _alif_encodeLocaleRaw(const wchar_t*, AlifUSizeT*); // 59
+
 
 // 78
 #ifdef _WINDOWS

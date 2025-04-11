@@ -3,6 +3,7 @@
 #include "AlifCore_InitConfig.h"
 #include "AlifCore_FileUtils.h"
 #include "AlifCore_Memory.h"
+#include "AlifCore_PathConfig.h"
 
 
 #include "OSDefs.h"
@@ -14,7 +15,7 @@ public:
 	wchar_t* programFullPath{};
 	wchar_t* prefix{};
 	wchar_t* execPrefix{};
-	wchar_t* stdlibDir{};
+	wchar_t* stdLibDir{};
 	wchar_t* moduleSearchPath{};
 	wchar_t* calculatedModuleSearchPath{};
 	wchar_t* programName{};
@@ -50,18 +51,17 @@ AlifIntT _alifPathConfig_readGlobal(AlifConfig* _config) { // 81
 
 #define COPY_INT(ATTR) \
     do { \
-        assert(_alifPathConfig_.ATTR >= 0); \
         if ((_alifPathConfig_.ATTR >= 0) and (_config->ATTR <= 0)) { \
             _config->ATTR = _alifPathConfig_.ATTR; \
         } \
     } while (0)
 
-	//COPY(prefix);
-	//COPY(exec_prefix);
-	//COPY(stdlib_dir);
+	COPY(prefix);
+	COPY(execPrefix);
+	COPY(stdLibDir);
 	COPY(programName);
-	//COPY(home);
-	//COPY2(executable, programFullPath);
+	COPY(home);
+	COPY2(executable, programFullPath);
 	//COPY_INT(_isAlifBuild);
 	// module_search_path must be initialised - not read
 #undef COPY
@@ -101,12 +101,12 @@ AlifIntT _alifPathConfig_updateGlobal(const AlifConfig* _config) { // 126
         } \
     } while (0)
 
-	//COPY(prefix);
-	//COPY(execPrefix);
-	//COPY(stdlibDir);
+	COPY(prefix);
+	COPY(execPrefix);
+	COPY(stdLibDir);
 	COPY(programName);
-	//COPY(home);
-	//COPY2(programFullPath, executable);
+	COPY(home);
+	COPY2(programFullPath, executable);
 	//COPY_INT(isAlifBuild);
 #undef COPY
 #undef COPY2
