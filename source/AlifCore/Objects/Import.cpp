@@ -612,7 +612,7 @@ static AlifObject* getCore_moduleDict(AlifInterpreter* _interp,
 	AlifObject* _name, AlifObject* _path) { // 1580
 	/* Only builtin modules are core. */
 	if (_path == _name) {
-		if (alifUStr_compareWithASCIIString(_name, "sys") == 0) {
+		if (alifUStr_compareWithASCIIString(_name, "النظام") == 0) {
 			return ALIF_NEWREF(_interp->sysdictCopy);
 		}
 		if (alifUStr_compareWithASCIIString(_name, "builtins") == 0) {

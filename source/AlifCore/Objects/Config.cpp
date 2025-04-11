@@ -18,10 +18,10 @@ class InitTable _alifImportInitTab_[] = { // 87
 
 	/* These entries are here for sys.builtin_module_names */
 	{"builtins", nullptr},
-	{"sys", nullptr},
+	{"النظام", nullptr},
 
 
-	{"_تبادل", alifInit__io},
+	{"تبادل", alifInit__io},
 
 	/* Sentinel */
 	{0, 0}

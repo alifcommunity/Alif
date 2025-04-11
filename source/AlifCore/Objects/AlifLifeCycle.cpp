@@ -456,12 +456,12 @@ static AlifIntT initInterpreter_main(AlifThread* _thread) { // 1156
 	AlifInterpreter* interpreter = _thread->interpreter;
 	const AlifConfig* config = alifInterpreter_getConfig(interpreter);
 
-	//if (!config_->installImportLib) {
-	//	if (isMainInterpreter) {
-	//		interpreter->dureRun->initialized = 1;
-	//	}
-	//	return 1;
-	//}
+	if (!config->installImportLib) {
+		if (isMainInterpreter) {
+			interpreter->dureRun->initialized = 1;
+		}
+		return 1;
+	}
 
 	status = _alifConfig_initImportConfig(&interpreter->config);
 	if (status < 1) return status;

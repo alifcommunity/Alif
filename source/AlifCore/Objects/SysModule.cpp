@@ -110,7 +110,7 @@ static AlifStructSequenceField _flagsFields_[] = {
 #define SYS_FLAGS_INT_MAX_STR_DIGITS 17
 
 static AlifStructSequenceDesc _flagsDesc_ = {
-	.name = "sys.flags",        /* name */
+	.name = "النظام.اعلام",        /* name */
 	.fields = _flagsFields_,       /* fields */
 	.nInSequence = 4,
 };
@@ -179,7 +179,7 @@ static AlifObject* make_flags(AlifInterpreter* interp) { // 3225
 
 static AlifModuleDef _sysModule_ = { // 3447
 	ALIFMODULEDEF_HEAD_INIT,
-	"sys",
+	"النظام",
 	0, //_sysDoc_
 	-1, /* multiple "initialization" just copies the module dict. */
 	0, //_sysMethods_,
@@ -392,9 +392,9 @@ AlifIntT alifSys_create(AlifThread* _thread, AlifObject** _sysModP) { // 3779
 		return status;
 	}
 
-	//if (_alifImport_fixupBuiltin(_thread, sysmod, "sys", modules) < 0) {
-	//	goto error;
-	//}
+	if (_alifImport_fixupBuiltin(_thread, sysmod, "النظام", modules) < 0) {
+		goto error;
+	}
 
 //	monitoring = _alif_createMonitoringObject();
 //	if (monitoring == nullptr) {

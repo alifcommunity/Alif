@@ -41,10 +41,22 @@ public:
 
 	AlifIntT intMaxStrDigits{};
 
+	/* ------- path config inputs ------- */
 	wchar_t* programName{};
+	wchar_t* alifPathEnv{};
+	wchar_t* home{};
+	wchar_t* platLibDir{};
 
+	/* ------- path config outputs ------- */
 	AlifIntT moduleSearchPathsSet{};
 	AlifWStringList moduleSearchPaths{};
+	wchar_t* stdLibDir{};
+	wchar_t* executable{};
+	wchar_t* baseExecutable{};
+	wchar_t* prefix{};
+	wchar_t* basePrefix{};
+	wchar_t* execPrefix{};
+	wchar_t* baseExecPrefix{};
 
 	AlifIntT skipFirstLine{};
 	wchar_t* runCommand{};

@@ -103,17 +103,17 @@ public:
 };
 
 
-static AlifIntT _ioTextIOWrapper_init_impl(TextIO* _self, AlifObject* _buffer,
+static AlifIntT _ioTextIOWrapper___init__Impl(TextIO* _self, AlifObject* _buffer,
 	const char* _encoding, AlifObject* _errors,
 	const char* _newLine, AlifIntT _lineBuffering,
 	AlifIntT _writeThrough) { // 1088
-//	AlifObject* raw{}, * codecInfo = nullptr;
-//	AlifObject* res{};
-//	AlifIntT r{};
-//
-//	_self->ok = 0;
-//	_self->detached = 0;
-//
+	AlifObject* raw{}, * codecInfo = nullptr;
+	AlifObject* res{};
+	AlifIntT r{};
+
+	_self->ok = 0;
+	_self->detached = 0;
+
 //	if (_encoding == nullptr) {
 //		AlifInterpreter* interp = _alifInterpreter_get();
 //		if (alifInterpreter_getConfig(interp)->warnDefaultEncoding) {
