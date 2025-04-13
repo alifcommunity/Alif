@@ -728,7 +728,7 @@ wchar_t* alif_wRealPath(const wchar_t* _path,
 
 
 
-AlifIntT alif_isAbs(const wchar_t* _path) { // 2147
+AlifIntT _alif_isAbs(const wchar_t* _path) { // 2147
 #ifdef _WINDOWS
 	const wchar_t* tail{};
 	HRESULT hr = PathCchSkipRoot(_path, &tail); // تمت إضافة مكتبة pathcch.lib; الى Linker->Input
@@ -762,7 +762,7 @@ AlifIntT _alif_absPath(const wchar_t* _path, wchar_t** _absPathP) { // 2176
 		return 0;
 	}
 
-	if (alif_isAbs(_path)) {
+	if (_alif_isAbs(_path)) {
 		*_absPathP = alifMem_wcsDup(_path);
 		return 0;
 	}
@@ -803,6 +803,259 @@ AlifIntT _alif_absPath(const wchar_t* _path, wchar_t** _absPathP) { // 2176
 	*abspath = 0;
 	return 0;
 #endif
+}
+
+void _alif_skipRoot(const wchar_t* path, AlifSizeT size,
+	AlifSizeT* drvsize, AlifSizeT* rootsize) { // 2300
+#ifndef _WINDOWS
+#define IS_SEP(x) (*(x) == SEP)
+	* drvsize = 0;
+	if (!IS_SEP(&path[0])) {
+		// Relative path, e.g.: 'foo'
+		*rootsize = 0;
+	}
+	else if (!IS_SEP(&path[1]) || IS_SEP(&path[2])) {
+		// Absolute path, e.g.: '/foo', '///foo', '////foo', etc.
+		*rootsize = 1;
+	}
+	else {
+		*rootsize = 2;
+	}
+#undef IS_SEP
+#else
+	const wchar_t* pEnd = size >= 0 ? &path[size] : NULL;
+#define IS_END(x) (pEnd ? (x) == pEnd : !*(x))
+#define IS_SEP(x) (*(x) == SEP || *(x) == ALTSEP)
+#define SEP_OR_END(x) (IS_SEP(x) || IS_END(x))
+	if (IS_SEP(&path[0])) {
+		if (IS_SEP(&path[1])) {
+			// Device drives, e.g. \\.\device or \\?\device
+			// UNC drives, e.g. \\server\share or \\?\UNC\server\share
+			AlifSizeT idx{};
+			if (path[2] == L'?' and IS_SEP(&path[3]) and
+				(path[4] == L'U' or path[4] == L'u') and
+				(path[5] == L'N' or path[5] == L'n') and
+				(path[6] == L'C' or path[6] == L'c') and
+				IS_SEP(&path[7]))
+			{
+				idx = 8;
+			}
+			else {
+				idx = 2;
+			}
+			while (!SEP_OR_END(&path[idx])) {
+				idx++;
+			}
+			if (IS_END(&path[idx])) {
+				*drvsize = idx;
+				*rootsize = 0;
+			}
+			else {
+				idx++;
+				while (!SEP_OR_END(&path[idx])) {
+					idx++;
+				}
+				*drvsize = idx;
+				if (IS_END(&path[idx])) {
+					*rootsize = 0;
+				}
+				else {
+					*rootsize = 1;
+				}
+			}
+		}
+		else {
+			// Relative path with root, e.g. \Windows
+			*drvsize = 0;
+			*rootsize = 1;
+		}
+	}
+	else if (!IS_END(&path[0]) and path[1] == L':') {
+		*drvsize = 2;
+		if (IS_SEP(&path[2])) {
+			// Absolute drive-letter path, e.g. X:\Windows
+			*rootsize = 1;
+		}
+		else {
+			// Relative path with drive, e.g. X:Windows
+			*rootsize = 0;
+		}
+	}
+	else {
+		// Relative path, e.g. Windows
+		*drvsize = 0;
+		*rootsize = 0;
+	}
+#undef SEP_OR_END
+#undef IS_SEP
+#undef IS_END
+#endif
+}
+
+
+static AlifIntT join_relfile(wchar_t* buffer, AlifUSizeT bufsize,
+	const wchar_t* dirname, const wchar_t* relfile) { // 2394
+#ifdef _WINDOWS
+	if (FAILED(PathCchCombineEx(buffer, bufsize, dirname, relfile,
+		PATHCCH_ALLOW_LONG_PATHS))) {
+		return -1;
+	}
+#else
+	AlifUSizeT dirlen = wcslen(dirname);
+	AlifUSizeT rellen = wcslen(relfile);
+	AlifUSizeT maxlen = bufsize - 1;
+	if (maxlen > MAXPATHLEN || dirlen >= maxlen || rellen >= maxlen - dirlen) {
+		return -1;
+	}
+	if (dirlen == 0) {
+		// We do not add a leading separator.
+		wcscpy(buffer, relfile);
+	}
+	else {
+		if (dirname != buffer) {
+			wcscpy(buffer, dirname);
+		}
+		AlifUSizeT relstart = dirlen;
+		if (dirlen > 1 && dirname[dirlen - 1] != SEP) {
+			buffer[dirlen] = SEP;
+			relstart += 1;
+		}
+		wcscpy(&buffer[relstart], relfile);
+	}
+#endif
+	return 0;
+}
+
+AlifIntT _alif_addRelfile(wchar_t* dirname,
+	const wchar_t* relfile, AlifUSizeT bufsize) { // 2461
+	return join_relfile(dirname, bufsize, dirname, relfile);
+}
+
+
+wchar_t* _alif_normPathAndSize(wchar_t* path,
+	AlifSizeT size, AlifSizeT* normsize) { // 2487
+	if ((size < 0 and !path[0]) or size == 0) {
+		*normsize = 0;
+		return path;
+	}
+	wchar_t* pEnd = size >= 0 ? &path[size] : NULL;
+	wchar_t* p1 = path;     // sequentially scanned address in the path
+	wchar_t* p2 = path;     // destination of a scanned character to be ljusted
+	wchar_t* minP2 = path;  // the beginning of the destination range
+	wchar_t lastC = L'\0';  // the last ljusted character, p2[-1] in most cases
+
+#define IS_END(x) (pEnd ? (x) == pEnd : !*(x))
+#ifdef ALTSEP
+#define IS_SEP(x) (*(x) == SEP || *(x) == ALTSEP)
+#else
+#define IS_SEP(x) (*(x) == SEP)
+#endif
+#define SEP_OR_END(x) (IS_SEP(x) || IS_END(x))
+
+	if (p1[0] == L'.' && IS_SEP(&p1[1])) {
+		// Skip leading '.\'
+		path = &path[2];
+		while (IS_SEP(path)) {
+			path++;
+		}
+		p1 = p2 = minP2 = path;
+		lastC = SEP;
+	}
+	else {
+		AlifSizeT drvsize, rootsize;
+		_alif_skipRoot(path, size, &drvsize, &rootsize);
+		if (drvsize || rootsize) {
+			// Skip past root and update minP2
+			p1 = &path[drvsize + rootsize];
+#ifndef ALTSEP
+			p2 = p1;
+#else
+			for (; p2 < p1; ++p2) {
+				if (*p2 == ALTSEP) {
+					*p2 = SEP;
+				}
+			}
+#endif
+			minP2 = p2 - 1;
+			lastC = *minP2;
+#ifdef MS_WINDOWS
+			if (lastC != SEP) {
+				minP2++;
+			}
+#endif
+		}
+	}
+
+	/* if pEnd is specified, check that. Else, check for null terminator */
+	for (; !IS_END(p1); ++p1) {
+		wchar_t c = *p1;
+#ifdef ALTSEP
+		if (c == ALTSEP) {
+			c = SEP;
+		}
+#endif
+		if (lastC == SEP) {
+			if (c == L'.') {
+				int sep_at_1 = SEP_OR_END(&p1[1]);
+				int sep_at_2 = !sep_at_1 && SEP_OR_END(&p1[2]);
+				if (sep_at_2 && p1[1] == L'.') {
+					wchar_t* p3 = p2;
+					while (p3 != minP2 && *--p3 == SEP) {}
+					while (p3 != minP2 && *(p3 - 1) != SEP) { --p3; }
+					if (p2 == minP2
+						|| (p3[0] == L'.' && p3[1] == L'.' && IS_SEP(&p3[2])))
+					{
+						// Previous segment is also ../, so append instead.
+						// Relative path does not absorb ../ at minP2 as well.
+						*p2++ = L'.';
+						*p2++ = L'.';
+						lastC = L'.';
+					}
+					else if (p3[0] == SEP) {
+						// Absolute path, so absorb segment
+						p2 = p3 + 1;
+					}
+					else {
+						p2 = p3;
+					}
+					p1 += 1;
+				}
+				else if (sep_at_1) {
+				}
+				else {
+					*p2++ = lastC = c;
+				}
+			}
+			else if (c == SEP) {
+			}
+			else {
+				*p2++ = lastC = c;
+			}
+		}
+		else {
+			*p2++ = lastC = c;
+		}
+	}
+	*p2 = L'\0';
+	if (p2 != minP2) {
+		while (--p2 != minP2 && *p2 == SEP) {
+			*p2 = L'\0';
+		}
+	}
+	else {
+		--p2;
+	}
+	*normsize = p2 - path + 1;
+#undef SEP_OR_END
+#undef IS_SEP
+#undef IS_END
+	return path;
+}
+
+
+wchar_t* _alif_normPath(wchar_t* path, AlifSizeT size) { // 2606
+	AlifSizeT norm_length{};
+	return _alif_normPathAndSize(path, size, &norm_length);
 }
 
 

@@ -102,6 +102,148 @@ static AlifObject* getPath_isXFile(AlifObject* ALIF_UNUSED(self), AlifObject* ar
 
 
 
+static AlifObject* getPath_joinPath(AlifObject* ALIF_UNUSED(self), AlifObject* args) { // 252
+	if (!ALIFTUPLE_CHECK(args)) {
+		alifErr_setString(_alifExcTypeError_, "requires tuple of arguments");
+		return nullptr;
+	}
+	AlifSizeT n = ALIFTUPLE_GET_SIZE(args);
+	if (n == 0) {
+		return alifUStr_fromStringAndSize(nullptr, 0);
+	}
+	/* Convert all parts to wchar and accumulate max final length */
+	wchar_t** parts = (wchar_t**)alifMem_dataAlloc(n * sizeof(wchar_t*));
+	if (parts == nullptr) {
+		//alifErr_noMemory();
+		return nullptr;
+	}
+	memset(parts, 0, n * sizeof(wchar_t*));
+	AlifSizeT cchFinal = 0;
+	AlifSizeT first = 0;
+
+	for (AlifSizeT i = 0; i < n; ++i) {
+		AlifObject* s = ALIFTUPLE_GET_ITEM(args, i);
+		AlifSizeT cch;
+		if (s == ALIF_NONE) {
+			cch = 0;
+		}
+		else if (ALIFUSTR_CHECK(s)) {
+			parts[i] = alifUStr_asWideCharString(s, &cch);
+			if (!parts[i]) {
+				cchFinal = -1;
+				break;
+			}
+			if (_alif_isAbs(parts[i])) {
+				first = i;
+			}
+		}
+		else {
+			alifErr_setString(_alifExcTypeError_, "all arguments to joinpath() must be str or None");
+			cchFinal = -1;
+			break;
+		}
+		cchFinal += cch + 1;
+	}
+
+	wchar_t* final = cchFinal > 0 ? (wchar_t*)alifMem_dataAlloc(cchFinal * sizeof(wchar_t)) : nullptr;
+	if (!final) {
+		for (AlifSizeT i = 0; i < n; ++i) {
+			alifMem_dataFree(parts[i]);
+		}
+		alifMem_dataFree(parts);
+		if (cchFinal) {
+			//alifErr_noMemory();
+			return nullptr;
+		}
+		return alifUStr_fromStringAndSize(nullptr, 0);
+	}
+
+	final[0] = '\0';
+	/* Now join all the paths. The final result should be shorter than the buffer */
+	for (AlifSizeT i = 0; i < n; ++i) {
+		if (!parts[i]) {
+			continue;
+		}
+		if (i >= first and final) {
+			if (!final[0]) {
+				/* final is definitely long enough to fit any individual part */
+				wcscpy(final, parts[i]);
+			}
+			else if (_alif_addRelfile(final, parts[i], cchFinal) < 0) {
+				/* if we fail, keep iterating to free memory, but stop adding parts */
+				alifMem_dataFree(final);
+				final = nullptr;
+			}
+		}
+		alifMem_dataFree(parts[i]);
+	}
+	alifMem_dataFree(parts);
+	if (!final) {
+		//alifErr_setString(_alifExcSystemError_, "failed to join paths");
+		return nullptr;
+	}
+	AlifObject* r = alifUStr_fromWideChar(_alif_normPath(final, -1), -1);
+	alifMem_dataFree(final);
+	return r;
+}
+
+
+
+
+
+
+
+static AlifIntT env_toDict(AlifObject* dict,
+	const char* key, AlifIntT andClear) { // 678
+	AlifObject* u = nullptr;
+	AlifIntT r = 0;
+#ifdef _WINDOWS
+	wchar_t wkey[64];
+	// Quick convert to wchar_t, since we know key is ASCII
+	wchar_t* wp = wkey;
+	for (const char* p = &key[4]; *p; ++p) {
+		*wp++ = *p;
+	}
+	*wp = L'\0';
+	const wchar_t* v = _wgetenv(wkey);
+	if (v) {
+		u = alifUStr_fromWideChar(v, -1);
+		if (!u) {
+			alifErr_clear();
+		}
+	}
+#else
+	const char* v = getenv(&key[4]);
+	if (v) {
+		AlifUSizeT len{};
+		const wchar_t* w = alif_decodeLocale(v, &len);
+		if (w) {
+			u = alifUStr_fromWideChar(w, len);
+			if (!u) {
+				alifErr_clear();
+			}
+			alifMem_dataFree((void*)w);
+		}
+	}
+#endif
+	if (u) {
+		r = alifDict_setItemString(dict, key, u) == 0;
+		ALIF_DECREF(u);
+	}
+	else {
+		r = alifDict_setItemString(dict, key, ALIF_NONE) == 0;
+	}
+	if (r and andClear) {
+#ifdef _WINDOWS
+		_wputenv_s(wkey, L"");
+#else
+		unsetenv(&key[4]);
+#endif
+	}
+	return r;
+}
+
+
 
 //static AlifIntT progname_toDict(AlifObject* dict, const char* key) { // 770
 //#ifdef _WINDOWS
@@ -336,6 +478,109 @@ static bool is_xFile(wchar_t* _path) { // 220
 }
 
 
+static wchar_t* join_paths(AlifIntT n, ...) { // 252
+	/* Convert all parts to wchar and accumulate max final length */
+	wchar_t** parts = (wchar_t**)alifMem_dataAlloc(n * sizeof(wchar_t*));
+	if (parts == nullptr) {
+		//alifErr_noMemory();
+		return nullptr;
+	}
+	AlifSizeT cchFinal = 0;
+	AlifSizeT first = 0;
+
+	va_list args;
+	va_start(args, n);
+
+	for (AlifSizeT i = 0; i < n; ++i) {
+		wchar_t* s = va_arg(args, wchar_t*);
+		AlifSizeT cch{};
+		if (s == nullptr) {
+			cch = 0;
+		}
+		cch = wcslen(s);
+		parts[i] = s;
+		if (!parts[i]) {
+			cchFinal = -1;
+			break;
+		}
+		if (_alif_isAbs(parts[i])) {
+			first = i;
+		}
+		cchFinal += cch + 1;
+	}
+
+	wchar_t* final = cchFinal > 0 ? (wchar_t*)alifMem_dataAlloc(cchFinal * sizeof(wchar_t)) : nullptr;
+	if (!final) {
+		//alifErr_noMemory();
+		return nullptr;
+	}
+
+	final[0] = '\0';
+	/* Now join all the paths. The final result should be shorter than the buffer */
+	for (AlifSizeT i = 0; i < n; ++i) {
+		if (!parts[i]) {
+			continue;
+		}
+		if (i >= first and final) {
+			if (!final[0]) {
+				/* final is definitely long enough to fit any individual part */
+				wcscpy(final, parts[i]);
+			}
+			else if (_alif_addRelfile(final, parts[i], cchFinal) < 0) {
+				/* if we fail, keep iterating to free memory, but stop adding parts */
+				alifMem_dataFree(final);
+				final = nullptr;
+			}
+		}
+	}
+	alifMem_dataFree(parts);
+	if (!final) {
+		//alifErr_setString(_alifExcSystemError_, "failed to join paths");
+		return nullptr;
+	}
+	final = alifMem_wcsDup(_alif_normPath(final, -1));
+	return final;
+}
+
+
+
+
+static AlifIntT alif_env(wchar_t** _buf, const char* _env, AlifIntT _andClear) { // 678
+	AlifIntT r = 0;
+#ifdef _WINDOWS
+	wchar_t wkey[64]{};
+	// Quick convert to wchar_t, since we know key is ASCII
+	wchar_t* wp = wkey;
+	for (const char* p = &_env[4]; *p; ++p) {
+		*wp++ = *p;
+	}
+	*wp = L'\0';
+	const wchar_t* v = _wgetenv(wkey);
+	if (v) {
+		*_buf = alifMem_wcsDup(v);
+		r = 1;
+	}
+#else
+	const char* v = getenv(&_env[4]);
+	if (v) {
+		AlifUSizeT len{};
+		const wchar_t* w = alif_decodeLocale(v, &len);
+		if (w) {
+			*_buf = alifMem_wcsDup(w);
+			r = 1;
+		}
+	}
+#endif
+	if (r and _andClear) {
+#ifdef _WINDOWS
+		_wputenv_s(wkey, L"");
+#else
+		unsetenv(&_env[4]);
+#endif
+	}
+	return r;
+}
+
 
 static AlifIntT prog_name(AlifConfig* _config) { // 770
 #ifdef _WINDOWS
@@ -438,6 +683,8 @@ static AlifIntT alifConfig_initPathConfigAlif(AlifConfig* _config, AlifIntT _com
 	}
 
 
+	wchar_t* executableDir{};
+	wchar_t* realExecutableDir{};
 	if (_alifPathConfig_getGlobalModuleSearchPath()) {
 		if (!_config->executable) {
 			status = prog_name(_config);
@@ -449,7 +696,32 @@ static AlifIntT alifConfig_initPathConfigAlif(AlifConfig* _config, AlifIntT _com
 	if (!_config->executable) {
 		status = prog_name(_config);
 	}
+	wchar_t* env{};
+	status = alif_env(&env, "ENV_PATH", 0);
+	if (status < 1) {
+		return status;
+	}
+	if (!_config->executable and _config->programName and env) {
+		wchar_t* context{};
+		for (wchar_t* p = wcstok(env, L";", &context);
+			p != nullptr;
+			p = wcstok(nullptr, L";", &context))
+		{
+			p = join_paths(2, p, _config->programName);
+			if (is_xFile(p)) {
+				_config->executable = p;
+				break;
+			}
+			continue;
+		}
+	}
+	if (!_config->executable) {
+		_config->executable = (wchar_t*)alifMem_dataAlloc(sizeof(wchar_t));
 
+		status = _alif_absPath(L".", &executableDir);
+		realExecutableDir = alifMem_wcsDup(executableDir);
+	}
+	
 
 
 	return 1;

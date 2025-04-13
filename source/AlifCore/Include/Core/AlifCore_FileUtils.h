@@ -86,13 +86,15 @@ extern AlifIntT _alif_wStat(const wchar_t*, struct stat*); // 231
 //wchar_t* alifUniversal_newLineFGetsWithSize(wchar_t*, int, FILE*, AlifSizeT*);
 
 
-extern AlifIntT alif_isAbs(const wchar_t*); // 267
+extern AlifIntT _alif_isAbs(const wchar_t*); // 267
 extern AlifIntT _alif_absPath(const wchar_t*, wchar_t**); // 268
 #ifdef _WINDOWS
 extern AlifIntT alifOS_getFullPathName(const wchar_t*, wchar_t**); // 270
 #endif
 
+extern AlifIntT _alif_addRelfile(wchar_t*, const wchar_t*, AlifUSizeT); // 274
 
+wchar_t* _alif_normPath(wchar_t*, AlifSizeT); // 280
 
  // 302
 #if defined _MSC_VER && _MSC_VER >= 1900
