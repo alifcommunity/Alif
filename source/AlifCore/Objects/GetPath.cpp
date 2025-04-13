@@ -3,22 +3,134 @@
 #include "AlifCore_FileUtils.h"
 #include "AlifCore_InitConfig.h"
 #include "AlifCore_PathConfig.h"
-
+#include "AlifCore_Memory.h"
 #include "AlifCore_State.h"
 
+#include "osdefs.h"
+
+#ifdef _WINDOWS
+	#include <windows.h>
+	#include <pathcch.h>
+#endif
+
+#ifdef __APPLE__
+#  include <dlfcn.h>
+#  include <mach-o/dyld.h>
+#endif
+
+
+
+#if !defined(EXE_SUFFIX)
+#if defined(_WINDOWS) or defined(__CYGWIN__) or defined(__MINGW32__)
+#define EXE_SUFFIX L".exe"
+#else
+#define EXE_SUFFIX nullptr
+#endif
+#endif
 
 
 
 
+static AlifIntT alifConfig_initPathConfigAlif(AlifConfig*, AlifIntT); //* alif
 
 
 
 
+static AlifObject* getPath_hasSuffix(AlifObject* ALIF_UNUSED(self), AlifObject* args) { // 135
+	AlifObject* r = nullptr;
+	AlifObject* pathobj{};
+	AlifObject* suffixobj{};
+	const wchar_t* path{};
+	const wchar_t* suffix{};
+	if (!alifArg_parseTuple(args, "UU", &pathobj, &suffixobj)) {
+		return nullptr;
+	}
+	AlifSizeT len{}, suffixLen{};
+	path = alifUStr_asWideCharString(pathobj, &len);
+	if (path) {
+		suffix = alifUStr_asWideCharString(suffixobj, &suffixLen);
+		if (suffix) {
+			if (suffixLen > len or
+#ifdef _WINDOWS
+				wcsicmp(&path[len - suffixLen], suffix) != 0
+#else
+				wcscmp(&path[len - suffixLen], suffix) != 0
+#endif
+				) {
+				r = ALIF_NEWREF(ALIF_FALSE);
+			}
+			else {
+				r = ALIF_NEWREF(ALIF_TRUE);
+			}
+			alifMem_dataFree((void*)suffix);
+		}
+		alifMem_dataFree((void*)path);
+	}
+	return r;
+}
+
+
+
+static AlifObject* getPath_isXFile(AlifObject* ALIF_UNUSED(self), AlifObject* args) { // 220
+	AlifObject* r = nullptr;
+	AlifObject* pathobj{};
+	const wchar_t* path{};
+	AlifSizeT cchPath{};
+	if (!alifArg_parseTuple(args, "U", &pathobj)) {
+		return nullptr;
+	}
+	path = alifUStr_asWideCharString(pathobj, &cchPath);
+	if (path) {
+#ifdef _WINDOWS
+		DWORD attr = GetFileAttributesW(path);
+		r = (attr != INVALID_FILE_ATTRIBUTES) &&
+			!(attr & FILE_ATTRIBUTE_DIRECTORY) &&
+			(cchPath >= 4) &&
+			(CompareStringOrdinal(path + cchPath - 4, -1, L".exe", -1, 1 /* ignore case */) == CSTR_EQUAL)
+			? ALIF_TRUE : ALIF_FALSE;
+#else
+		struct stat st;
+		r = (_alif_wStat(path, &st) == 0) and
+			S_ISREG(st.st_mode) and
+			(st.st_mode & 0111)
+			? ALIF_TRUE : ALIF_FALSE;
+#endif
+		alifMem_dataFree((void*)path);
+	}
+	return ALIF_XNEWREF(r);
+}
 
 
 
 
-
+//static AlifIntT progname_toDict(AlifObject* dict, const char* key) { // 770
+//#ifdef _WINDOWS
+//	return winModule_toDict(dict, key, nullptr);
+//#elif defined(__APPLE__)
+//	char* path;
+//	uint32_t pathLen = 256;
+//	while (pathLen) {
+//		path = (char*)alifMem_dataAlloc((pathLen + 1) * sizeof(char));
+//		if (!path) {
+//			return 0;
+//		}
+//		if (_NSGetExecutablePath(path, &pathLen) != 0) {
+//			alifMem_dataFree(path);
+//			continue;
+//		}
+//		// Only keep if the path is absolute
+//		if (path[0] == SEP) {
+//			AlifintT r = decode_toDict(dict, key, path);
+//			alifMem_dataFree(path);
+//			return r;
+//		}
+//		// Fall back and store None
+//		alifMem_dataFree(path);
+//		break;
+//	}
+//#endif
+//	return alifDict_setItemString(dict, key, ALIF_NONE) == 0;
+//}
 
 
 
@@ -30,77 +142,9 @@ AlifIntT _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePathCo
 		return status;
 	}
 
-	//* alif //* delete
-
-	const wchar_t* folderName = L"lib";
-
-	wchar_t* buffer = nullptr;
-
-#ifdef _WINDOWS
-	// Windows-specific code
-	DWORD size = GetCurrentDirectoryW(0, nullptr);
-	if (size == 0) {
-		return -1;
-	}
-	buffer = (wchar_t*)alifMem_dataAlloc(size * sizeof(wchar_t));
-	if (buffer == nullptr) {
-		return -1;
-	}
-	if (GetCurrentDirectoryW(size, buffer) == 0) {
-		free(buffer);
-		return -1;
-	}
-#else
-	// POSIX-specific code (Linux, macOS, etc.)
-	char cwd[PATH_MAX]{};
-	if (getcwd(cwd, sizeof(cwd))) {
-		// Convert the current directory to a wide string
-		AlifUSizeT len = mbstowcs(nullptr, cwd, 0) + 1;
-		buffer = (wchar_t*)alifMem_dataAlloc(len * sizeof(wchar_t));
-		if (buffer == nullptr) {
-			return -1;
-		}
-		mbstowcs(buffer, cwd, len);
-	}
-	else {
-		return -1;
-	}
-#endif
-
-
-	wchar_t* current_dir = buffer;
-	if (current_dir == nullptr) {
-		return -1;
-	}
-
-	// Calculate the length of the final path
-	size_t current_dir_len = wcslen(current_dir);
-	size_t folder_name_len = wcslen(folderName);
-	size_t total_len = current_dir_len + folder_name_len + 2; // +2 for '/' and '\0'
-
-	// Allocate memory for the final path
-	wchar_t* full_path = (wchar_t*)malloc(total_len * sizeof(wchar_t));
-	if (full_path == nullptr) {
-		alifMem_dataFree(current_dir);
-		return -1;
-	}
-
-	// Construct the full path
-	wcscpy(full_path, current_dir);
-	wcscat(full_path, L"/");
-	wcscat(full_path, folderName);
-
-
-
-	AlifWStringList paths{};
-	paths.length = 1;
-	paths.items = (wchar_t**)alifMem_dataAlloc(1);
-	paths.items[0] = full_path;
-
-	_config->moduleSearchPathsSet = 1;
-	_config->moduleSearchPaths = paths;
-
-	//* alif
+	/* -------------- alif path config -------------- */
+	alifConfig_initPathConfigAlif(_config, _computePathConfig);	//* alif
+	/* ------------- !alif path config! ------------- */
 
 //	if (!_alifThread_get()) {
 //		//return alifStatus_error("cannot calculate path configuration");
@@ -217,6 +261,196 @@ AlifIntT _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePathCo
 //	}
 //
 //	ALIF_DECREF(dict);
+
+	return 1;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ----------------------------------------------- alif path config ----------------------------------------------- */
+
+#define DEFAULT_PROGRAM_NAME L"alif"
+
+
+
+
+static bool has_suffix(wchar_t* _path, const wchar_t* _suffix) { // 135
+	bool r{};
+	const wchar_t* path = _path;
+	const wchar_t* suffix = _suffix;
+
+	AlifSizeT len{}, suffixLen{};
+	if (path) {
+		len = wcslen(_path);
+		if (suffix) {
+			suffixLen = wcslen(_suffix);
+			if (suffixLen > len or
+#ifdef _WINDOWS
+				wcsicmp(&path[len - suffixLen], suffix) != 0
+#else
+				wcscmp(&path[len - suffixLen], suffix) != 0
+#endif
+				) {
+				r = false;
+			}
+			else {
+				r = true;
+			}
+		}
+	}
+	return r;
+}
+
+static bool is_xFile(wchar_t* _path) { // 220
+	bool r{};
+	const wchar_t* path = _path;
+	AlifSizeT cchPath{};
+	if (path) {
+		cchPath = wcslen(_path);
+#ifdef _WINDOWS
+		DWORD attr = GetFileAttributesW(path);
+		r = (attr != INVALID_FILE_ATTRIBUTES) and
+			!(attr & FILE_ATTRIBUTE_DIRECTORY) and
+			(cchPath >= 4) and
+			(CompareStringOrdinal(path + cchPath - 4, -1, L".exe", -1, 1 /* ignore case */) == CSTR_EQUAL)
+			? true : false;
+#else
+		struct stat st;
+		r = (_alif_wStat(path, &st) == 0) and
+			S_ISREG(st.st_mode) and
+			(st.st_mode & 0111)
+			? true : false;
+#endif
+	}
+	return r;
+}
+
+
+
+static AlifIntT prog_name(AlifConfig* _config) { // 770
+#ifdef _WINDOWS
+	wchar_t* buffer = nullptr;
+	for (DWORD cch = 256; buffer == nullptr and cch < (1024 * 1024); cch *= 2) {
+		buffer = (wchar_t*)alifMem_dataAlloc(cch * sizeof(wchar_t));
+		if (buffer) {
+			if (GetModuleFileNameW(nullptr, buffer, cch) == cch) {
+				alifMem_dataFree(buffer);
+				buffer = nullptr;
+			}
+		}
+	}
+	_config->executable = (wchar_t*)alifMem_dataAlloc(wcslen(buffer) * sizeof(wchar_t));
+	wcscpy(_config->executable, buffer);
+	alifMem_dataFree(buffer);
+	return 1;
+#elif defined(__APPLE__)
+	char* path{};
+	uint32_t pathLen = 256;
+	while (pathLen) {
+		path = (char*)alifMem_dataAlloc((pathLen + 1) * sizeof(char));
+		if (!path) {
+			return 0;
+		}
+		if (_NSGetExecutablePath(path, &pathLen) != 0) {
+			alifMem_dataFree(path);
+			continue;
+		}
+		// Only keep if the path is absolute
+		if (path[0] == SEP) {
+			if (path and path[0]) {
+				AlifUSizeT len{};
+				const wchar_t* w = alif_decodeLocale(path, &len);
+				if (w) {
+					_config->executable = w;
+				}
+			}
+			alifMem_dataFree(path);
+			return 1;
+		}
+		// Fall back and store None
+		alifMem_dataFree(path);
+		break;
+	}
+#endif
+
+	_config->executable = nullptr;
+	return 1;
+}
+
+
+static wchar_t* add_string(const wchar_t* str1,const wchar_t* str2) {
+	AlifUSizeT len1 = (str1 != nullptr) ? wcslen(str1) : 0;
+	AlifUSizeT len2 = (str2 != nullptr) ? wcslen(str2) : 0;
+	wchar_t* res = (wchar_t*)alifMem_dataAlloc((len1 + len2 + 1) * sizeof(wchar_t));
+	if (str1 != nullptr) {
+		wmemcpy(res, str1, len1);
+	}
+	if (str2 != nullptr) {
+		wmemcpy(res + len1, str2, len2);
+	}
+	res[len1 + len2] = L'\0';
+
+	return res;
+}
+
+static AlifIntT set_programName(AlifConfig* _config) {
+	if (!_config->programName) {
+		_config->programName = _config->origArgv.items[0];
+	}
+	if (!_config->programName) {
+		_config->programName = (wchar_t*)alifMem_dataAlloc(sizeof(DEFAULT_PROGRAM_NAME));
+		_config->programName = (wchar_t*)DEFAULT_PROGRAM_NAME;
+	}
+
+	if (EXE_SUFFIX and !has_suffix(_config->programName, EXE_SUFFIX)) {
+		wchar_t* programNameSuffix = add_string(_config->programName, EXE_SUFFIX);
+		if (is_xFile(programNameSuffix)) {
+			_config->programName = programNameSuffix;
+			return 1;
+		}
+		alifMem_dataFree(programNameSuffix);
+	}
+
+	if (!_config->programName) {
+		return -1;
+	}
+
+	return 1;
+}
+
+
+static AlifIntT alifConfig_initPathConfigAlif(AlifConfig* _config, AlifIntT _computePathConfig) {
+	AlifIntT status{};
+
+	status = set_programName(_config);
+	if (status < 1) {
+		return status;
+	}
+
+
+	if (_alifPathConfig_getGlobalModuleSearchPath()) {
+		if (!_config->executable) {
+			status = prog_name(_config);
+		}
+	}
+	if (!_config->executable and wcschr(_config->programName, SEP)) {
+		status = _alif_absPath(_config->programName, &_config->executable);
+	}
+	if (!_config->executable) {
+		status = prog_name(_config);
+	}
+
+
 
 	return 1;
 }

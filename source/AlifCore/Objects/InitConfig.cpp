@@ -74,11 +74,18 @@ public:
 static const AlifConfigSpec _alifConfigSpec_[] = { // 95
 
 	// --- Public options -----------
-    SPEC(argv, WSTR_LIST, Public, SYS_ATTR("argv")),
-    //SPEC(executable, WSTR_OPT, Public, SYS_ATTR("executable")),
-    SPEC(interactive, BOOL, Public, SYS_FLAG(2)),
-    SPEC(moduleSearchPaths, WSTR_LIST, Public, SYS_ATTR("Path")),
-    SPEC(optimizationLevel, UINT, Public, SYS_FLAG(3)),
+	SPEC(argv, WSTR_LIST, Public, SYS_ATTR("argv")),
+	SPEC(baseExecPrefix, WSTR_OPT, Public, SYS_ATTR("baseExecPrefix")),
+	SPEC(baseExecutable, WSTR_OPT, Public, SYS_ATTR("_baseExecutable")),
+	SPEC(basePrefix, WSTR_OPT, Public, SYS_ATTR("basePrefix")),
+	SPEC(execPrefix, WSTR_OPT, Public, SYS_ATTR("execPrefix")),
+	SPEC(executable, WSTR_OPT, Public, SYS_ATTR("executable")),
+	SPEC(intMaxStrDigits, UINT, Public, NO_SYS),
+	SPEC(interactive, BOOL, Public, SYS_FLAG(2)),
+	SPEC(moduleSearchPaths, WSTR_LIST, Public, SYS_ATTR("Path")),
+	SPEC(optimizationLevel, UINT, Public, SYS_FLAG(3)),
+	SPEC(platLibDir, WSTR, Public, SYS_ATTR("platLibDir")),
+	SPEC(prefix, WSTR_OPT, Public, SYS_ATTR("prefix")),
 
 
 	// --- Read-only options -----------
@@ -106,7 +113,7 @@ static const AlifConfigSpec _alifConfigSpec_[] = { // 95
 
 	SPEC(configInit, UINT, Init_Only, NO_SYS),
 	SPEC(initMain, BOOL, Init_Only, NO_SYS),
-	//SPEC(installImportLib, BOOL, Init_Only, NO_SYS),
+	SPEC(installImportLib, BOOL, Init_Only, NO_SYS),
 	SPEC(moduleSearchPathsSet, BOOL, Init_Only, NO_SYS),
 	SPEC(sysPath0, WSTR_OPT, Init_Only, NO_SYS),
 
@@ -285,7 +292,7 @@ void alifConfig_clear(AlifConfig* _config) { // 773
 		_ATTR = nullptr;						\
     } while (0)
 
-	//CLEAR(_config->programName);
+	CLEAR(_config->programName);
 
 	alifWStringList_clear(&_config->argv);
 	alifWStringList_clear(&_config->moduleSearchPaths);
@@ -742,7 +749,7 @@ static AlifIntT run_absPathFilename(AlifConfig* _config) { // 2888
 #endif
 
 	wchar_t* absFilename{};
-	if (alif_absPath(filename, &absFilename) < 0) {
+	if (_alif_absPath(filename, &absFilename) < 0) {
 		/* failed to get the absolute path of the command line filename:
 		   ignore the error, keep the relative path */
 		return 1;
@@ -842,14 +849,6 @@ AlifIntT alifArgv_asWStringList(AlifConfig* _config, AlifArgv* _args) { // 78 in
 
 		alifWStringList_clear(&_config->argv);
 		_config->argv = wArgv;
-
-		/*
-			تم إسناد اسم البرنامج هنا مؤقتاُ
-			موقع الإسناد يتم خلال الدوال -
-			alifInit_main -> init_interpMain -> _alifConfig_initImportConfig -> config_initImport ->
-			_alifConfig_initPathConfig -> alifEval_evalCode ...
-		*/
-		_config->programName = wArgv.items[0]; // مؤقت
 	}
 	else {
 		wArgv.length = _args->argc;
@@ -858,14 +857,6 @@ AlifIntT alifArgv_asWStringList(AlifConfig* _config, AlifArgv* _args) { // 78 in
 			// memory error
 			return -1;
 		}
-		/*
-			تم إسناد اسم البرنامج هنا مؤقتاُ
-			موقع الإسناد يتم خلال الدوال -
-			alifInit_main -> init_interpMain -> _alifConfig_initImportConfig -> config_initImport ->
-			_alifConfig_initPathConfig -> alifEval_evalCode ...
-
-		*/
-		_config->programName = wArgv.items[0]; // مؤقت
 	}
 
 	return 1;

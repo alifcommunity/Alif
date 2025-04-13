@@ -557,6 +557,29 @@ AlifIntT _alifFStat_noraise(AlifIntT fd, class AlifStatStruct* status) { // 1235
 
 
 
+AlifIntT _alif_wStat(const wchar_t* path, struct stat* buf) { // 1332
+	AlifIntT err{};
+#ifdef _WINDOWS
+	struct _stat wstatbuf;
+	err = _wstat(path, &wstatbuf);
+	if (!err) {
+		buf->st_mode = wstatbuf.st_mode;
+	}
+#else
+	char* fname;
+	fname = _alif_encodeLocaleRaw(path, nullptr);
+	if (fname == nullptr) {
+		errno = EINVAL;
+		return -1;
+	}
+	err = stat(fname, buf);
+	alifMem_dataFree(fname);
+#endif
+	return err;
+}
+
+
+
 
 FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) { // 1764
 	FILE* f{};
@@ -727,7 +750,7 @@ AlifIntT alif_isAbs(const wchar_t* _path) { // 2147
 }
 
 
-AlifIntT alif_absPath(const wchar_t* _path, wchar_t** _absPathP) { // 2176
+AlifIntT _alif_absPath(const wchar_t* _path, wchar_t** _absPathP) { // 2176
 	if (_path[0] == '\0' or !wcscmp(_path, L".")) {
 		wchar_t cwd[MAXPATHLEN + 1]{};
 		cwd[ALIF_ARRAY_LENGTH(cwd) - 1] = 0;

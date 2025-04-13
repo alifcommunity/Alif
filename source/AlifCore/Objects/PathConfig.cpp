@@ -29,6 +29,10 @@ public:
 
 AlifPathConfig _alifPathConfig_ = ALIFPATHCONFIG_INIT;
 
+const wchar_t* _alifPathConfig_getGlobalModuleSearchPath(void) { // 47
+	return _alifPathConfig_.moduleSearchPath;
+}
+
 
 AlifIntT _alifPathConfig_readGlobal(AlifConfig* _config) { // 81
 	AlifIntT status = 1;
