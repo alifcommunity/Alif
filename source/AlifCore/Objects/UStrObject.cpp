@@ -2367,7 +2367,7 @@ static AlifObject* uStr_encodeLocale(AlifObject* _uStr,
 	}
 
 	AlifObject* bytes = alifBytes_fromString(str);
-	free(str); // need review
+	alifMem_dataFree(str); //* alif
 	return bytes;
 }
 

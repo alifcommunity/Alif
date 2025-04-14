@@ -404,14 +404,14 @@ static char* encode_locale(const wchar_t* _text, AlifUSizeT* _errorPos,
 
 
 char* _alif_encodeLocaleRaw(const wchar_t* text, AlifUSizeT* error_pos) { // 874
-	return encode_locale(text, error_pos, 1, 0);
+	return encode_locale(text, error_pos, 0, 0);
 }
 
 
 AlifIntT _alif_encodeLocaleEx(const wchar_t* _text, char** _str,
 	AlifUSizeT* _error_pos, const char** _reason,
 	AlifIntT _currentLocale, AlifErrorHandler_ _errors) { // 881
-	return encode_localeEX(_text, _str, _error_pos, _reason, 1,
+	return encode_localeEX(_text, _str, _error_pos, _reason, 0,
 		_currentLocale, _errors);
 }
 
