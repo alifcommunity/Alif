@@ -437,8 +437,20 @@ AlifIntT _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePathCo
 /* ----------------------------------------------- alif path config ----------------------------------------------- */
 
 #define DEFAULT_PROGRAM_NAME L"alif"
+#define STDLIB_SUBDIR L"library"
+
+#ifdef _WINDOWS
+#define STDLIB_LANDMARKS L"library\\نظام_التشغيل.aliflib"
+#else
+#define STDLIB_LANDMARKS L"library/نظام_التشغيل.aliflib"
+#endif
 
 
+#ifdef _WINDOWS
+#define DELIM L";"
+#else
+#define DELIM L":"
+#endif
 
 
 
@@ -479,6 +491,22 @@ static bool has_suffix(wchar_t* _path, const wchar_t* _suffix) { // 135
 				r = true;
 			}
 		}
+	}
+	return r;
+}
+
+static bool is_file(wchar_t* _path) { // 195
+	bool r{};
+	const wchar_t* path = _path;
+	if (path) {
+#ifdef _WINDOWS
+		DWORD attr = GetFileAttributesW(path);
+		r = (attr != INVALID_FILE_ATTRIBUTES) and
+			!(attr & FILE_ATTRIBUTE_DIRECTORY) ? true : false;
+#else
+		struct stat st;
+		r = (_alif_wStat(path, &st) == 0) and S_ISREG(st.st_mode) ? true : false;
+#endif
 	}
 	return r;
 }
@@ -704,7 +732,43 @@ static AlifIntT set_programName(AlifConfig* _config) {
 }
 
 
+static AlifIntT is_sep(wchar_t ch) {
+#ifdef ALTSEP
+	return ch == SEP || ch == ALTSEP;
+#else
+	return ch == SEP;
+#endif
+}
+static void reduce(wchar_t* dir) {
+	AlifUSizeT i = wcsnlen_s(dir, MAXPATHLEN + 1);
+	if (i >= MAXPATHLEN + 1) {
+		exit(-12);
+	}
+
+	while (i > 0 and !is_sep(dir[i]))
+		--i;
+	dir[i] = '\0';
+}
+static AlifIntT got_landmark(const wchar_t* prefix, const wchar_t* landmark) {
+	wchar_t filename[MAXPATHLEN + 1]{};
+	wcscpy(filename, prefix);
+	wchar_t* fileName = join_paths(2, filename, landmark);
+	return is_file(fileName);
+}
+static wchar_t* search_up(wchar_t* prefix, const wchar_t* landmark) {
+	do {
+		if (got_landmark(prefix, landmark)) {
+			return prefix;
+		}
+		reduce(prefix);
+	} while (prefix[0]);
+	return nullptr;
+}
+
+
 static AlifIntT alifConfig_initPathConfigAlif(AlifConfig* _config, AlifIntT _computePathConfig) {
+	//* todo
+
 	AlifIntT status{};
 
 	status = set_programName(_config);
@@ -733,9 +797,9 @@ static AlifIntT alifConfig_initPathConfigAlif(AlifConfig* _config, AlifIntT _com
 	}
 	if (!_config->executable and _config->programName and env) {
 		wchar_t* context{};
-		for (wchar_t* p = wcstok(env, L";", &context);
+		for (wchar_t* p = wcstok(env, DELIM, &context);
 			p != nullptr;
-			p = wcstok(nullptr, L";", &context))
+			p = wcstok(nullptr, DELIM, &context))
 		{
 			p = join_paths(2, p, _config->programName);
 			if (is_xFile(p)) {
@@ -753,9 +817,6 @@ static AlifIntT alifConfig_initPathConfigAlif(AlifConfig* _config, AlifIntT _com
 	}
 
 
-	// CALCULATE home
-
-
 	// CALCULATE base_executable, real_executable AND executable_dir
 	if (!_config->baseExecutable) {
 		if (_config->executable) {
@@ -771,9 +832,66 @@ static AlifIntT alifConfig_initPathConfigAlif(AlifConfig* _config, AlifIntT _com
 	}
 
 
+	// CALCULATE home
+	if (_config->home == nullptr or *_config->home == '\0') {
+		_config->home = search_up(wcsdup(executableDir), STDLIB_LANDMARKS);
+	}
+	else {
+		wcscpy(_config->prefix, _config->home);
+	}
+
 	// CALCULATE prefix AND exec_prefix
+	if (_alifPathConfig_getGlobalModuleSearchPath()) {
+		_config->prefix = _config->execPrefix = nullptr;
+	}
+	else {
+		if (_config->home) {
+			const wchar_t* delimPtr = wcsstr(_config->home, DELIM);
+			if (delimPtr == nullptr) {
+				// Delimiter not found
+				_config->prefix = (wchar_t*)alifMem_dataAlloc((wcslen(_config->home) + 1) * sizeof(wchar_t));
+				_config->prefix = _config->home;
+				_config->execPrefix = _config->prefix;
+			}
+			else {
+				// Delimiter found
+				AlifUSizeT prefixLen = delimPtr - _config->home;
+				AlifUSizeT delimLen = 1;
+				AlifUSizeT suffixLen = wcslen(delimPtr + delimLen);
+
+				_config->prefix = (wchar_t*)alifMem_dataAlloc(prefixLen + 1);
+				if (_config->prefix == nullptr) {
+					perror("Memory allocation failed");
+					exit(EXIT_FAILURE);
+				}
+				wcsncpy(_config->prefix, _config->home, prefixLen);
+
+				_config->execPrefix = (wchar_t*)alifMem_dataAlloc(suffixLen + 1);
+				if (_config->execPrefix == nullptr) {
+					perror("Memory allocation failed");
+					alifMem_dataFree(_config->prefix);
+					exit(EXIT_FAILURE);
+				}
+				wcscpy(_config->execPrefix, delimPtr + delimLen);
+			}
+		}
 
 
+		if (STDLIB_SUBDIR and STDLIB_LANDMARKS and executableDir) {
+			if (not _config->prefix) {
+				_config->prefix = search_up(wcsdup(executableDir), STDLIB_LANDMARKS);
+			}
+			if (_config->prefix and not _config->stdLibDir) {
+				_config->stdLibDir = join_paths(2, _config->prefix, STDLIB_SUBDIR);
+			}
+		}
+	}
+
+	_config->moduleSearchPaths.items = (wchar_t**)alifMem_dataAlloc(1);
+	_config->moduleSearchPaths.length = 1;
+	_config->moduleSearchPathsSet = 1;
+
+	_config->moduleSearchPaths.items[0] = _config->stdLibDir;
 
 	return 1;
 }
