@@ -36,6 +36,21 @@ static AlifIntT alifConfig_initPathConfigAlif(AlifConfig*, AlifIntT); //* alif
 
 
 
+static AlifObject* getPath_dirName(AlifObject* ALIF_UNUSED(self), AlifObject* args) { // 101
+	AlifObject* path{};
+	if (!alifArg_parseTuple(args, "U", &path)) {
+		return nullptr;
+	}
+	AlifSizeT end = ALIFUSTR_GET_LENGTH(path);
+	AlifSizeT pos = alifUStr_findChar(path, SEP, 0, end, -1);
+	if (pos < 0) {
+		return alifUStr_fromStringAndSize(nullptr, 0);
+	}
+	return alifUStr_subString(path, 0, pos);
+}
+
+
+
 static AlifObject* getPath_hasSuffix(AlifObject* ALIF_UNUSED(self), AlifObject* args) { // 135
 	AlifObject* r = nullptr;
 	AlifObject* pathobj{};
@@ -426,6 +441,21 @@ AlifIntT _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePathCo
 
 
 
+
+static wchar_t* dir_name(wchar_t* _path) { // 101
+	AlifSizeT end = wcslen(_path);
+	wchar_t* charPos = wcsrchr(_path, SEP);
+	AlifIntT pos = (AlifIntT)(charPos - _path);
+	if (pos < 0) {
+		return (wchar_t*)alifMem_dataAlloc(sizeof(wchar_t));
+	}
+
+	wchar_t* res = (wchar_t*)alifMem_dataAlloc((pos + 1) * sizeof(wchar_t));
+	wcsncpy(res, _path, pos);
+	return res;
+}
+
+
 static bool has_suffix(wchar_t* _path, const wchar_t* _suffix) { // 135
 	bool r{};
 	const wchar_t* path = _path;
@@ -682,7 +712,7 @@ static AlifIntT alifConfig_initPathConfigAlif(AlifConfig* _config, AlifIntT _com
 		return status;
 	}
 
-
+	// CALCULATE executable
 	wchar_t* executableDir{};
 	wchar_t* realExecutableDir{};
 	if (_alifPathConfig_getGlobalModuleSearchPath()) {
@@ -721,7 +751,28 @@ static AlifIntT alifConfig_initPathConfigAlif(AlifConfig* _config, AlifIntT _com
 		status = _alif_absPath(L".", &executableDir);
 		realExecutableDir = alifMem_wcsDup(executableDir);
 	}
-	
+
+
+	// CALCULATE home
+
+
+	// CALCULATE base_executable, real_executable AND executable_dir
+	if (!_config->baseExecutable) {
+		if (_config->executable) {
+			_config->baseExecutable = _config->executable;
+		}
+		else {
+			_config->baseExecutable = (wchar_t*)alifMem_dataAlloc(sizeof(wchar_t));
+		}
+	}
+
+	if (!executableDir and _config->executable) {
+		executableDir = realExecutableDir = dir_name(_config->executable);
+	}
+
+
+	// CALCULATE prefix AND exec_prefix
+
 
 
 	return 1;
