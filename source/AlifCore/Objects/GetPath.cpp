@@ -6,7 +6,7 @@
 #include "AlifCore_Memory.h"
 #include "AlifCore_State.h"
 
-#include "osdefs.h"
+#include "OSDefs.h"
 
 #ifdef _WINDOWS
 	#include <windows.h>
@@ -740,7 +740,7 @@ static AlifIntT is_sep(wchar_t ch) {
 #endif
 }
 static void reduce(wchar_t* dir) {
-	AlifUSizeT i = wcsnlen_s(dir, MAXPATHLEN + 1);
+	AlifUSizeT i = wcsnlen(dir, MAXPATHLEN + 1);
 	if (i >= MAXPATHLEN + 1) {
 		exit(-12);
 	}
@@ -810,7 +810,7 @@ static AlifIntT alifConfig_initPathConfigAlif(AlifConfig* _config, AlifIntT _com
 		}
 	}
 	if (!_config->executable) {
-		_config->executable = (wchar_t*)alifMem_dataAlloc(sizeof(wchar_t));
+		_config->executable = nullptr;
 
 		status = _alif_absPath(L".", &executableDir);
 		realExecutableDir = alifMem_wcsDup(executableDir);
@@ -823,7 +823,7 @@ static AlifIntT alifConfig_initPathConfigAlif(AlifConfig* _config, AlifIntT _com
 			_config->baseExecutable = _config->executable;
 		}
 		else {
-			_config->baseExecutable = (wchar_t*)alifMem_dataAlloc(sizeof(wchar_t));
+			_config->baseExecutable = nullptr;
 		}
 	}
 
