@@ -896,7 +896,7 @@ static AlifIntT alifConfig_initPathConfigAlif(AlifConfig* _config, AlifIntT _com
 	wchar_t* executable = _config->executable;
 	wchar_t* home = _config->home;
 	wchar_t* baseExecutable = _config->baseExecutable;
-	wchar_t* strLibDir = _config->stdLibDir;
+	wchar_t* stdLibDir = _config->stdLibDir;
 	wchar_t* prefix = _config->prefix;
 	wchar_t* execPrefix = _config->execPrefix;
 	wchar_t* library = nullptr;
@@ -1036,10 +1036,10 @@ static AlifIntT alifConfig_initPathConfigAlif(AlifConfig* _config, AlifIntT _com
 
 		if (not strLibDirWasSetInConfig) {
 			if (buildStdlibPrefix) {
-				strLibDir = join_paths(2, buildStdlibPrefix, L"Lib");
+				stdLibDir = join_paths(2, buildStdlibPrefix, L"Lib");
 			}
 			else {
-				strLibDir = join_paths(2, buildPrefix, L"Lib");
+				stdLibDir = join_paths(2, buildPrefix, L"Lib");
 			}
 		}
 
@@ -1063,54 +1063,62 @@ static AlifIntT alifConfig_initPathConfigAlif(AlifConfig* _config, AlifIntT _com
 	//	wcscpy(_config->prefix, _config->home);
 	//}
 
-	// CALCULATE prefix AND exec_prefix
-	if (_alifPathConfig_getGlobalModuleSearchPath()) {
-		_config->prefix = _config->execPrefix = nullptr;
+	// CALCULATE prefix AND execPrefix
+	if (alifSetPath) {
+		prefix = execPrefix = (wchar_t*)alifMem_dataAlloc(sizeof(wchar_t));
 	}
 	else {
-		if (_config->home) {
-			const wchar_t* delimPtr = wcsstr(_config->home, DELIM);
+		if (home) {
+			const wchar_t* delimPtr = wcsstr(home, DELIM);
 			if (delimPtr == nullptr) {
 				// Delimiter not found
-				_config->prefix = (wchar_t*)alifMem_dataAlloc((wcslen(_config->home) + 1) * sizeof(wchar_t));
-				_config->prefix = _config->home;
-				_config->execPrefix = _config->prefix;
+				prefix = (wchar_t*)alifMem_dataAlloc((wcslen(home) + 1) * sizeof(wchar_t));
+				prefix = home;
+				execPrefix = prefix;
 			}
 			else {
 				// Delimiter found
-				AlifUSizeT prefixLen = delimPtr - _config->home;
+				AlifUSizeT prefixLen = delimPtr - home;
 				AlifUSizeT delimLen = 1;
 				AlifUSizeT suffixLen = wcslen(delimPtr + delimLen);
 
-				_config->prefix = (wchar_t*)alifMem_dataAlloc(prefixLen + 1);
-				if (_config->prefix == nullptr) {
+				prefix = (wchar_t*)alifMem_dataAlloc(prefixLen + 1);
+				if (prefix == nullptr) {
 					perror("Memory allocation failed");
 					exit(EXIT_FAILURE);
 				}
-				wcsncpy(_config->prefix, _config->home, prefixLen);
+				wcsncpy(prefix, home, prefixLen);
 
-				_config->execPrefix = (wchar_t*)alifMem_dataAlloc(suffixLen + 1);
-				if (_config->execPrefix == nullptr) {
+				execPrefix = (wchar_t*)alifMem_dataAlloc(suffixLen + 1);
+				if (execPrefix == nullptr) {
 					perror("Memory allocation failed");
-					alifMem_dataFree(_config->prefix);
+					alifMem_dataFree(prefix);
 					exit(EXIT_FAILURE);
 				}
-				wcscpy(_config->execPrefix, delimPtr + delimLen);
+				wcscpy(execPrefix, delimPtr + delimLen);
 			}
 		}
 
 
-		if (STDLIB_SUBDIR and STDLIB_LANDMARKS and executableDir) {
-			if (not _config->prefix) {
-				_config->prefix = search_up(wcsdup(executableDir), STDLIB_LANDMARKS);
+
+		if (STDLIB_SUBDIR and STDLIB_LANDMARKS and executableDir and not prefix) {
+			prefix = search_up(wcsdup(executableDir), STDLIB_LANDMARKS);
+			if (prefix and not stdLibDir) {
+				stdLibDir = join_paths(2, prefix, STDLIB_SUBDIR);
 			}
-			if (_config->prefix and not _config->stdLibDir) {
-				_config->stdLibDir = join_paths(2, _config->prefix, STDLIB_SUBDIR);
-			}
+		}
+
+
+		if (not prefix) {
+			prefix = abs_path((wchar_t*)L"");
 		}
 	}
 
-	_config->moduleSearchPaths.items = (wchar_t**)alifMem_dataAlloc(1);
+
+
+
+
+	_config->moduleSearchPaths.items = (wchar_t**)alifMem_dataAlloc(sizeof(wchar_t*) * 1);
 	_config->moduleSearchPaths.length = 1;
 	_config->moduleSearchPathsSet = 1;
 
