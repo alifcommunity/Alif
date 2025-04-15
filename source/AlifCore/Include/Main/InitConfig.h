@@ -67,6 +67,8 @@ public:
 	AlifIntT installImportLib{};
 
 	AlifIntT initMain{};
+
+	AlifIntT isAlifBuild{};
 };
 
 
