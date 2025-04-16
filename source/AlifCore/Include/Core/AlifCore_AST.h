@@ -63,6 +63,11 @@ public:
 	ComprehensionTy typedElements[1]{};
 };
 
+class ASDLExcepthandlerSeq { // 86
+	ASDL_SEQ_HEAD;
+	ExcepthandlerTy typedElements[1]{};
+};
+
 class ASDLArgumentsSeq { // 94
 	ASDL_SEQ_HEAD;
 	ArgumentsTy typedElements[1]{};
@@ -133,7 +138,7 @@ public:
 enum StmtK_ { // 187
 	ClassDefK = 1, FunctionDefK, AsyncFunctionDefK, ReturnK,
 	DeleteK, AssignK, AugAssignK, ForK, AsyncForK, WhileK,
-	IfK, WithK, AsyncWithK, TryK, ImportK, ImportFromK,
+	IfK, WithK, AsyncWithK, TryK, TryStarK, ImportK, ImportFromK,
 	ExprK, PassK, BreakK, ContinueK, GlobalK, NonlocalK,
 }; 
 class Stmt { // 196
@@ -148,7 +153,7 @@ public:
 			ASDLKeywordSeq* keywords{};
 			ASDLStmtSeq* body{};
 			ASDLTypeParamSeq* typeParams{};
-		}classDef;
+		} classDef;
 
 		class {
 		public:
@@ -157,7 +162,7 @@ public:
 			ASDLStmtSeq* body{};
 			ASDLTypeParamSeq* typeParams{};
 			ExprTy returns{};
-		}functionDef;
+		} functionDef;
 
 		class {
 		public:
@@ -165,92 +170,108 @@ public:
 			ArgumentsTy args{};
 			ASDLStmtSeq* body{};
 			ASDLTypeParamSeq* typeParams{};
-		}asyncFunctionDef;
+		} asyncFunctionDef;
 
 		class {
 		public:
 			ExprTy val{};
-		}return_;
+		} return_;
 
 		class {
 		public:
 			ASDLExprSeq* targets{};
-		}delete_;
+		} delete_;
 
 		class {
 		public:
 			ASDLExprSeq* targets{};
 			ExprTy val{};
-		}assign;
+		} assign;
 
 		class {
 		public:
 			ExprTy target{};
 			Operator_ op{};
 			ExprTy val{};
-		}augAssign;
+		} augAssign;
 
 		class {
 		public:
 			ExprTy target{};
 			ExprTy iter{};
 			ASDLStmtSeq* body{};
-		}for_;
+		} for_;
 
 		class {
 		public:
 			ExprTy target{};
 			ExprTy iter{};
 			ASDLStmtSeq* body{};
-		}asyncFor;
+		} asyncFor;
 
 		class {
 		public:
 			ExprTy condition{};
 			ASDLStmtSeq* body{};
-		}while_;
+		} while_;
 
 		class {
 		public:
 			ExprTy condition{};
 			ASDLStmtSeq* body{};
 			ASDLStmtSeq* else_{};
-		}if_;
+		} if_;
 
 		class {
 		public:
 			ASDLWithItemSeq* items{};
 			ASDLStmtSeq* body{};
-		}with_;
+		} with_;
 
 		class {
 		public:
 			ASDLWithItemSeq* items{};
 			ASDLStmtSeq* body{};
 			String comment{};
-		}asyncWith;
+		} asyncWith;
+
+		class {
+		public:
+			ASDLStmtSeq* body{};
+			ASDLExcepthandlerSeq* handlers{};
+			ASDLStmtSeq* else_{};
+			ASDLStmtSeq* finalBody{};
+		} try_;
+
+		class  {
+		public:
+			ASDLStmtSeq* body{};
+			ASDLExcepthandlerSeq* handlers{};
+			ASDLStmtSeq* else_{};
+			ASDLStmtSeq* finalBody{};
+		} tryStar;
 
 		class {
 		public:
 			ASDLAliasSeq* names{};
-		}import;
+		} import;
 
 		class {
 		public:
 			Identifier module{};
 			ASDLAliasSeq* names{};
 			AlifIntT level{};
-		}importFrom;
+		} importFrom;
 
 		class {
 		public:
 			ASDLIdentifierSeq* names{};
-		}global;
+		} global;
 
 		class {
 		public:
 			ExprTy val{};
-		}expression;
+		} expression;
 
 	} V{};
 
@@ -539,6 +560,8 @@ StmtTy alifAST_while(ExprTy, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifInt
 StmtTy alifAST_if(ExprTy, ASDLStmtSeq*, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_with(ASDLWithItemSeq*, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_asyncWith(ASDLWithItemSeq*, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
+StmtTy alifAST_try(ASDLStmtSeq*, ASDLExcepthandlerSeq*, ASDLStmtSeq*, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
+StmtTy alifAST_tryStar(ASDLStmtSeq*, ASDLExcepthandlerSeq*, ASDLStmtSeq*, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_import(ASDLAliasSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_importFrom(Identifier, ASDLAliasSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_global(ASDLIdentifierSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);

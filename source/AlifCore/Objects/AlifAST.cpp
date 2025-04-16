@@ -352,6 +352,44 @@ StmtTy alifAST_if(ExprTy _condition, ASDLStmtSeq* _body, ASDLStmtSeq* _else,
 	return p_;
 }
 
+StmtTy alifAST_try(ASDLStmtSeq* _body, ASDLExcepthandlerSeq* _handlers,
+	ASDLStmtSeq* _else, ASDLStmtSeq* _finalBody, AlifIntT _lineNo, AlifIntT
+	_colOffset, AlifIntT _endLineNo, AlifIntT _endColOffset, AlifASTMem* _astMem) { // 7407
+	StmtTy p{};
+	p = (StmtTy)alifASTMem_malloc(_astMem, sizeof(*p));
+	if (!p)
+		return nullptr;
+	p->type = TryK;
+	p->V.try_.body = _body;
+	p->V.try_.handlers = _handlers;
+	p->V.try_.else_ = _else;
+	p->V.try_.finalBody = _finalBody;
+	p->lineNo = _lineNo;
+	p->colOffset = _colOffset;
+	p->endLineNo = _endLineNo;
+	p->endColOffset = _endColOffset;
+	return p;
+}
+
+StmtTy alifAST_tryStar(ASDLStmtSeq* _body, ASDLExcepthandlerSeq* _handlers, ASDLStmtSeq* _else,
+	ASDLStmtSeq* _finalBody, AlifIntT _lineNo, AlifIntT _colOffset,
+	AlifIntT _endLineNo, AlifIntT _endColOffset, AlifASTMem *_astMem) { // 7428
+	StmtTy p{};
+	p = (StmtTy)alifASTMem_malloc(_astMem, sizeof(*p));
+	if (!p)
+		return nullptr;
+	p->type = TryStarK;
+	p->V.tryStar.body = _body;
+	p->V.tryStar.handlers = _handlers;
+	p->V.tryStar.else_ = _else;
+	p->V.tryStar.finalBody = _finalBody;
+	p->lineNo = _lineNo;
+	p->colOffset = _colOffset;
+	p->endLineNo = _endLineNo;
+	p->endColOffset = _endColOffset;
+	return p;
+}
+
 StmtTy alifAST_with(ASDLWithItemSeq* _items, ASDLStmtSeq* _body,
 	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo, AlifIntT _endColOffset, AlifASTMem* _astMem) {
 
