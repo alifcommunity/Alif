@@ -773,7 +773,6 @@ static wchar_t* alif_env(const char* _env, AlifIntT _andClear) { // 678
 		const wchar_t* w = alif_decodeLocale(v, &len);
 		if (w) {
 			buffer = alifMem_wcsDup(w);
-			alifMem_dataFree(w);
 		}
 	}
 #endif
