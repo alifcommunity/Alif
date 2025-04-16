@@ -899,6 +899,7 @@ static AlifIntT alifConfig_initPathConfigAlif(AlifConfig* _config, AlifIntT _com
 	wchar_t* stdLibDir = _config->stdLibDir;
 	wchar_t* prefix = _config->prefix;
 	wchar_t* execPrefix = _config->execPrefix;
+	wchar_t* platLibDir = _config->platLibDir;
 	wchar_t* library = nullptr;
 	wchar_t* platStdLibDir = nullptr;
 
@@ -1013,6 +1014,7 @@ static AlifIntT alifConfig_initPathConfigAlif(AlifConfig* _config, AlifIntT _com
 #endif
 
 
+	// CHECK FOR BUILD DIRECTORY
 	if (not executableDir and realExecutable) {
 		executableDir = realExecutableDir = dir_name(realExecutable);
 	}
@@ -1027,41 +1029,34 @@ static AlifIntT alifConfig_initPathConfigAlif(AlifConfig* _config, AlifIntT _com
 		buildPrefix = join_paths(2, realExecutableDir, VPATH);
 
 		wchar_t* buildStdlibPrefix{};
-		if (buildPrefix)
-#ifdef _WINDOWS
-			buildStdlibPrefix = buildPrefix;
-#else
+		if (buildPrefix) {
+		//#ifdef _WINDOWS
+			//buildStdlibPrefix = buildPrefix;
+		//#else
 			buildStdlibPrefix = search_up(buildPrefix, BUILDSTDLIB_LANDMARKS);
-#endif
+		//#endif
 
-		if (not strLibDirWasSetInConfig) {
-			if (buildStdlibPrefix) {
-				stdLibDir = join_paths(2, buildStdlibPrefix, L"Lib");
+			if (not strLibDirWasSetInConfig) {
+				if (buildStdlibPrefix) {
+					stdLibDir = join_paths(2, buildStdlibPrefix, L"Lib");
+				}
+				else {
+					stdLibDir = join_paths(2, buildPrefix, L"Lib");
+				}
 			}
-			else {
-				stdLibDir = join_paths(2, buildPrefix, L"Lib");
+
+			if (not prefix) {
+				prefix = buildStdlibPrefix;
 			}
-		}
 
-		if (not prefix) {
-			prefix = buildStdlibPrefix;
-		}
+			if (not execPrefix) {
+				execPrefix = buildPrefix;
+			}
 
-		if (not execPrefix) {
-			execPrefix = buildPrefix;
+			_config->isAlifBuild = 1;
 		}
-
-		_config->isAlifBuild = 1;
 	}
 
-
-	//// CALCULATE home
-	//if (_config->home == nullptr or *_config->home == '\0') {
-	//	_config->home = search_up(wcsdup(executableDir), STDLIB_LANDMARKS);
-	//}
-	//else {
-	//	wcscpy(_config->prefix, _config->home);
-	//}
 
 	// CALCULATE prefix AND execPrefix
 	if (alifSetPath) {
@@ -1115,14 +1110,26 @@ static AlifIntT alifConfig_initPathConfigAlif(AlifConfig* _config, AlifIntT _com
 	}
 
 
-
-
-
-	_config->moduleSearchPaths.items = (wchar_t**)alifMem_dataAlloc(sizeof(wchar_t*) * 1);
-	_config->moduleSearchPaths.length = 1;
+	// UPDATE sys.path
+	_config->moduleSearchPaths.items = (wchar_t**)alifMem_dataAlloc(sizeof(wchar_t*) * 2);
+	_config->moduleSearchPaths.items[0] = stdLibDir;
+	_config->moduleSearchPaths.items[1] = executableDir;
+	_config->moduleSearchPaths.length = 2;
 	_config->moduleSearchPathsSet = 1;
 
-	_config->moduleSearchPaths.items[0] = _config->stdLibDir;
+
+	// UPDATE config FROM CALCULATED VALUES
+	_config->programName = programName;
+	_config->home = home;
+	_config->executable = executable;
+	_config->baseExecutable = baseExecutable;
+	_config->prefix = prefix;
+	_config->execPrefix = execPrefix;
+	_config->basePrefix = prefix;
+	_config->baseExecPrefix = execPrefix;
+
+	_config->platLibDir = platLibDir;
+	_config->stdLibDir = stdLibDir;
 
 	return 1;
 }
