@@ -462,6 +462,26 @@ public:
 	AlifIntT isAsync{};
 };
 
+enum ExcepthandlerK_ { ExceptHandlerK = 1 };
+class Excepthandler { // 524
+public:
+	ExcepthandlerK_ type{};
+	union {
+		class {
+		public:
+			ExprTy type;
+			Identifier name;
+			ASDLStmtSeq* body;
+		} exceptHandler{};
+
+	} V{};
+
+	AlifIntT lineNo{};
+	AlifIntT colOffset{};
+	AlifIntT endLineNo{};
+	AlifIntT endColOffset{};
+};
+
 class Arguments { // 540
 public:
 	ASDLArgSeq* posOnlyArgs{};
@@ -591,6 +611,7 @@ ExprTy alifAST_list(ASDLExprSeq*, ExprContext_, AlifIntT, AlifIntT, AlifIntT, Al
 ExprTy alifAST_tuple(ASDLExprSeq*, ExprContext_, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 ExprTy alifAST_slice(ExprTy, ExprTy, ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 ComprehensionTy alifAST_comprehension(ExprTy, ExprTy, ASDLExprSeq*, AlifIntT, AlifASTMem*);
+ExcepthandlerTy alifAST_exceptHandler(ExprTy, Identifier, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 ArgumentsTy alifAST_arguments(ASDLArgSeq*, ASDLArgSeq*, ArgTy, ASDLArgSeq*, ASDLExprSeq*, Arg*, ASDLExprSeq*, AlifASTMem*);
 ArgTy alifAST_arg(Identifier, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 KeywordTy alifAST_keyword(Identifier, ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);

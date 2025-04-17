@@ -329,8 +329,28 @@ StmtTy alifAST_while(ExprTy _condetion, ASDLStmtSeq* _body,
 	return p_;
 }
 
+ExcepthandlerTy alifAST_exceptHandler(ExprTy _type, Identifier _name,
+	ASDLStmtSeq* _body, AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo,
+	AlifIntT _endColOffset, AlifASTMem* _astMem) { // 8318
+
+	ExcepthandlerTy p{};
+	p = (ExcepthandlerTy)alifASTMem_malloc(_astMem, sizeof(*p));
+	if (!p)
+		return nullptr;
+	p->type = ExceptHandlerK;
+	p->V.exceptHandler.type = _type;
+	p->V.exceptHandler.name = _name;
+	p->V.exceptHandler.body = _body;
+	p->lineNo = _lineNo;
+	p->colOffset = _colOffset;
+	p->endLineNo = _endLineNo;
+	p->endColOffset = _endColOffset;
+	return p;
+}
+
 StmtTy alifAST_if(ExprTy _condition, ASDLStmtSeq* _body, ASDLStmtSeq* _else,
-	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo, AlifIntT _endColOffset, AlifASTMem* _astMem) {
+	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo,
+	AlifIntT _endColOffset, AlifASTMem* _astMem) {
 
 	StmtTy p_{};
 	if (!_condition) {
@@ -391,7 +411,8 @@ StmtTy alifAST_tryStar(ASDLStmtSeq* _body, ASDLExcepthandlerSeq* _handlers, ASDL
 }
 
 StmtTy alifAST_with(ASDLWithItemSeq* _items, ASDLStmtSeq* _body,
-	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo, AlifIntT _endColOffset, AlifASTMem* _astMem) {
+	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo,
+	AlifIntT _endColOffset, AlifASTMem* _astMem) {
 
 	StmtTy p_{};
 	p_ = (StmtTy)alifASTMem_malloc(_astMem, sizeof(*p_));
@@ -429,7 +450,8 @@ StmtTy alifAST_asyncWith(ASDLWithItemSeq* _items, ASDLStmtSeq* _body,
 }
 
 StmtTy alifAST_import(ASDLAliasSeq* _names,
-	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo, AlifIntT _endColOffset, AlifASTMem* _astMem) {
+	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo,
+	AlifIntT _endColOffset, AlifASTMem* _astMem) {
 
 	StmtTy p_{};
 	p_ = (StmtTy)alifASTMem_malloc(_astMem, sizeof(*p_));
@@ -447,7 +469,8 @@ StmtTy alifAST_import(ASDLAliasSeq* _names,
 }
 
 StmtTy alifAST_importFrom(AlifObject* _module, ASDLAliasSeq* _names,
-	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo, AlifIntT _endColOffset, AlifASTMem* _astMem) {
+	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo,
+	AlifIntT _endColOffset, AlifASTMem* _astMem) {
 
 	StmtTy p_{};
 	p_ = (StmtTy)alifASTMem_malloc(_astMem, sizeof(*p_));
