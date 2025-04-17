@@ -583,6 +583,7 @@ static AlifIntT astFold_arguments(ArgumentsTy, AlifASTMem*, AlifASTOptimizeState
 static AlifIntT astFold_comprehension(ComprehensionTy, AlifASTMem*, AlifASTOptimizeState*); // 648
 static AlifIntT astFold_keyword(KeywordTy, AlifASTMem*, AlifASTOptimizeState*); //  649
 static AlifIntT astFold_arg(ArgTy, AlifASTMem*, AlifASTOptimizeState*); // 650
+static AlifIntT astFold_exceptHandler(ExcepthandlerTy, AlifASTMem*, AlifASTOptimizeState*); // 653
 static AlifIntT astFold_typeParam(TypeParamTy, AlifASTMem*, AlifASTOptimizeState*); // 655
 
 
@@ -894,12 +895,18 @@ static AlifIntT astFold_stmt(StmtTy _node,
 	//	CALL_SEQ(astFold_withItem, withitem, _node->V.asyncWith.items);
 	//	CALL_SEQ(astFold_stmt, stmt, _node->v.AsyncWith.body);
 	//	break;
-	//case StmtK_::TryK:
-	//	CALL_SEQ(astFold_stmt, stmt, _node->v.Try.body);
-	//	CALL_SEQ(astfold_excepthandler, excepthandler, _node->v.Try.handlers);
-	//	CALL_SEQ(astFold_stmt, stmt, _node->v.Try.orelse);
-	//	CALL_SEQ(astFold_stmt, stmt, _node->v.Try.finalbody);
-	//	break;
+	case StmtK_::TryK:
+		CALL_SEQ(astFold_stmt, Stmt, _node->V.try_.body);
+		CALL_SEQ(astFold_exceptHandler, Excepthandler, _node->V.try_.handlers);
+		CALL_SEQ(astFold_stmt, Stmt, _node->V.try_.else_);
+		CALL_SEQ(astFold_stmt, Stmt, _node->V.try_.finalBody);
+		break;
+	case TryStarK:
+		CALL_SEQ(astFold_stmt, Stmt, _node->V.tryStar.body);
+		CALL_SEQ(astFold_exceptHandler, Excepthandler, _node->V.tryStar.handlers);
+		CALL_SEQ(astFold_stmt, Stmt, _node->V.tryStar.else_);
+		CALL_SEQ(astFold_stmt, Stmt, _node->V.tryStar.finalBody);
+		break;
 	case StmtK_::ExprK:
 		CALL(astFold_expr, ExprTy, _node->V.expression.val);
 		break;
@@ -918,6 +925,22 @@ static AlifIntT astFold_stmt(StmtTy _node,
 	LEAVE_RECURSIVE(_state);
 	return 1;
 }
+
+
+static AlifIntT astFold_exceptHandler(ExcepthandlerTy _node,
+	AlifASTMem* _ctx, AlifASTOptimizeState* _state) { // 1033
+	switch (_node->type) {
+	case ExceptHandlerK:
+		CALL_OPT(astFold_expr, ExprTy, _node->V.exceptHandler.type);
+		CALL_SEQ(astFold_stmt, Stmt, _node->V.exceptHandler.body);
+		break;
+		// No default case, so the compiler will emit a warning if new handler
+		// kinds are added without being handled here
+	}
+	return 1;
+}
+
+
 
 
 

@@ -64,6 +64,7 @@ public:
 };
 
 class ASDLExcepthandlerSeq { // 86
+public:
 	ASDL_SEQ_HEAD;
 	ExcepthandlerTy typedElements[1]{};
 };

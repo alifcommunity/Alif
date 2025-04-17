@@ -188,6 +188,7 @@ static AlifIntT symtable_visitExpr(AlifSymTable* , ExprTy ); // 238
 static AlifIntT symtable_visitTypeParam(AlifSymTable*, TypeParamTy); // 239
 static AlifIntT symtable_visitListComp(AlifSymTable*, ExprTy); // 241
 static AlifIntT symtable_visitArguments(AlifSymTable*, ArgumentsTy); // 244
+static AlifIntT symtable_visitExcepthandler(AlifSymTable*, ExcepthandlerTy); // 245
 static AlifIntT symtable_visitAlias(AlifSymTable*, AliasTy); // 246
 static AlifIntT symtable_visitKeyword(AlifSymTable*, KeywordTy); // 248
 static AlifIntT symtable_visitAnnotations(AlifSymTable*, StmtTy, ArgumentsTy, ExprTy, SymTableEntry*); // 253
@@ -1456,6 +1457,18 @@ static AlifIntT symtable_visitStmt(AlifSymTable* _st, StmtTy _s) { // 1812
 		if (_s->V.if_.else_)
 			VISIT_SEQ(_st, Stmt, _s->V.if_.else_);
 		break;
+	case TryK:
+		VISIT_SEQ(_st, Stmt, _s->V.try_.body);
+		VISIT_SEQ(_st, Excepthandler, _s->V.try_.handlers);
+		VISIT_SEQ(_st, Stmt, _s->V.try_.else_);
+		VISIT_SEQ(_st, Stmt, _s->V.try_.finalBody);
+		break;
+	case TryStarK:
+		VISIT_SEQ(_st, Stmt, _s->V.tryStar.body);
+		VISIT_SEQ(_st, Excepthandler, _s->V.tryStar.handlers);
+		VISIT_SEQ(_st, Stmt, _s->V.tryStar.else_);
+		VISIT_SEQ(_st, Stmt, _s->V.tryStar.finalBody);
+		break;
 	case StmtK_::ImportK:
 		VISIT_SEQ(_st, Alias, _s->V.import.names);
 		break;
@@ -1750,7 +1763,15 @@ static AlifIntT symtable_visitArguments(AlifSymTable* _st, ArgumentsTy _a) { // 
 	return 1;
 }
 
-
+static AlifIntT symtable_visitExcepthandler(AlifSymTable* _st, ExcepthandlerTy _eh) { // 2792
+	if (_eh->V.exceptHandler.type)
+		VISIT(_st, Expr, _eh->V.exceptHandler.type);
+	if (_eh->V.exceptHandler.name)
+		if (!symtable_addDef(_st, _eh->V.exceptHandler.name, DEF_LOCAL, LOCATION(_eh)))
+			return 0;
+	VISIT_SEQ(_st, Stmt, _eh->V.exceptHandler.body);
+	return 1;
+}
 
 static AlifIntT symtable_visitAlias(AlifSymTable* _st, AliasTy _a) { // 2825
 	AlifObject* storeName{};

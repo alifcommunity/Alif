@@ -5,8 +5,8 @@
 #define BINARY_SLICE                             1
 #define BINARY_SUBSCR                            2
 //#define BINARY_OP_INPLACE_ADD_UNICODE            3
-//#define CHECK_EG_MATCH                           4
-//#define CHECK_EXC_MATCH                          5
+#define CHECK_EG_MATCH                           4
+#define CHECK_EXC_MATCH                          5
 #define CLEANUP_THROW                            6
 #define DELETE_SUBSCR                            7
 #define END_ASYNC_FOR                            8
@@ -31,7 +31,7 @@
 #define NOP                                     27
 #define POP_EXCEPT                              28
 #define POP_TOP                                 29
-//#define PUSH_EXC_INFO                           30
+#define PUSH_EXC_INFO                           30
 #define PUSH_NULL                               31
 #define RETURN_GENERATOR                        32
 #define RETURN_VALUE                            33

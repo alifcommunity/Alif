@@ -407,8 +407,8 @@ static AlifIntT codegen_addOpJ(InstrSequence* _seq, Location _loc,
 #define ADD_YIELD_FROM(_c, _loc, _await) \
     RETURN_IF_ERROR(codegen_addYieldFrom(_c, _loc, _await))
 
-
-
+#define POP_EXCEPT_AND_RERAISE(_c, _loc) \
+    RETURN_IF_ERROR(codegen_popExceptAndReraise(_c, _loc))
 
 #define ADDOP_YIELD(_c, _loc) \
     RETURN_IF_ERROR(codegen_addOpYield(_c, _loc))
@@ -479,19 +479,19 @@ static AlifIntT codegen_addYieldFrom(AlifCompiler* _c,
 
 
 
+static AlifIntT codegen_popExceptAndReraise(AlifCompiler* _c, Location _loc) {
+	/* Stack contents
+	 * [exc_info, lasti, exc]            COPY        3
+	 * [exc_info, lasti, exc, exc_info]  POP_EXCEPT
+	 * [exc_info, lasti, exc]            RERAISE      1
+	 * (exception_unwind clears the stack)
+	 */
 
-
-
-
-
-
-
-
-
-
-
-
-
+	ADDOP_I(_c, _loc, COPY, 3);
+	ADDOP(_c, _loc, POP_EXCEPT);
+	ADDOP_I(_c, _loc, RERAISE, 1);
+	return SUCCESS;
+}
 
 
 
@@ -2151,30 +2151,106 @@ static AlifIntT codegen_continue(AlifCompiler* _c, Location _loc) {
 
 
 
+static AlifIntT codegen_tryFinally(AlifCompiler* _c, StmtTy _s) {
+	Location loc = LOC(_s);
 
+	NEW_JUMP_TARGET_LABEL(_c, body);
+	NEW_JUMP_TARGET_LABEL(_c, end);
+	NEW_JUMP_TARGET_LABEL(_c, exit);
+	NEW_JUMP_TARGET_LABEL(_c, cleanup);
 
+	/* `try` block */
+	ADDOP_JUMP(_c, loc, SETUP_FINALLY, end);
 
+	USE_LABEL(_c, body);
+	RETURN_IF_ERROR(
+		_alifCompiler_pushFBlock(_c, loc, AlifCompileFBlockType::Compiler_FBlock_Finally_Try, body, end,
+			_s->V.try_.finalBody));
 
+	if (_s->V.try_.handlers and ASDL_SEQ_LEN(_s->V.try_.handlers)) {
+		RETURN_IF_ERROR(codegen_tryExcept(_c, _s));
+	}
+	else {
+		VISIT_SEQ(_c, Stmt, _s->V.try_.body);
+	}
+	ADDOP(_c, _noLocation_, POP_BLOCK);
+	_alifCompiler_popFBlock(_c, AlifCompileFBlockType::Compiler_FBlock_Finally_Try, body);
+	VISIT_SEQ(_c, Stmt, _s->V.try_.finalBody);
 
+	ADDOP_JUMP(_c, _noLocation_, JUMP_NO_INTERRUPT, exit);
+	/* `finally` block */
 
+	USE_LABEL(_c, end);
 
+	loc = _noLocation_;
+	ADDOP_JUMP(_c, loc, SETUP_CLEANUP, cleanup);
+	ADDOP(_c, loc, PUSH_EXC_INFO);
+	RETURN_IF_ERROR(
+		_alifCompiler_pushFBlock(_c, loc, AlifCompileFBlockType::Compiler_FBlock_Finally_End, end, NO_LABEL, NULL));
+	VISIT_SEQ(_c, Stmt, _s->V.try_.finalBody);
+	_alifCompiler_popFBlock(_c, AlifCompileFBlockType::Compiler_FBlock_Finally_End, end);
 
+	loc = _noLocation_;
+	ADDOP_I(_c, loc, RERAISE, 0);
 
+	USE_LABEL(_c, cleanup);
+	POP_EXCEPT_AND_RERAISE(_c, loc);
 
+	USE_LABEL(_c, exit);
+	return SUCCESS;
+}
 
 
 
+static AlifIntT codegen_tryStarFinally(AlifCompiler* _c, StmtTy _s) {
+	Location loc = LOC(_s);
 
+	NEW_JUMP_TARGET_LABEL(_c, body);
+	NEW_JUMP_TARGET_LABEL(_c, end);
+	NEW_JUMP_TARGET_LABEL(_c, exit);
+	NEW_JUMP_TARGET_LABEL(_c, cleanup);
 
+	/* `try` block */
+	ADDOP_JUMP(_c, loc, SETUP_FINALLY, end);
 
+	USE_LABEL(_c, body);
+	RETURN_IF_ERROR(
+		_alifCompiler_pushFBlock(_c, loc, AlifCompileFBlockType::Compiler_FBlock_Finally_Try, body, end,
+			_s->V.tryStar.finalBody));
 
+	if (_s->V.tryStar.handlers and ASDL_SEQ_LEN(_s->V.tryStar.handlers)) {
+		RETURN_IF_ERROR(codegen_tryStarExcept(_c, _s));
+	}
+	else {
+		VISIT_SEQ(_c, Stmt, _s->V.tryStar.body);
+	}
+	ADDOP(_c, _noLocation_, POP_BLOCK);
+	_alifCompiler_popFBlock(_c, AlifCompileFBlockType::Compiler_FBlock_Finally_Try, body);
+	VISIT_SEQ(_c, Stmt, _s->V.tryStar.finalBody);
 
+	ADDOP_JUMP(_c, _noLocation_, JUMP_NO_INTERRUPT, exit);
+	/* `finally` block */
 
+	USE_LABEL(_c, end);
 
+	loc = _noLocation_;
+	ADDOP_JUMP(_c, loc, SETUP_CLEANUP, cleanup);
+	ADDOP(_c, loc, PUSH_EXC_INFO);
+	RETURN_IF_ERROR(
+		_alifCompiler_pushFBlock(_c, loc, AlifCompileFBlockType::Compiler_FBlock_Finally_End, end, NO_LABEL, NULL));
 
+	VISIT_SEQ(_c, Stmt, _s->V.tryStar.finalBody);
 
+	_alifCompiler_popFBlock(_c, AlifCompileFBlockType::Compiler_FBlock_Finally_End, end);
+	loc = _noLocation_;
+	ADDOP_I(_c, loc, RERAISE, 0);
 
+	USE_LABEL(_c, cleanup);
+	POP_EXCEPT_AND_RERAISE(_c, loc);
 
+	USE_LABEL(_c, exit);
+	return SUCCESS;
+}
 
 
 
@@ -2207,27 +2283,135 @@ static AlifIntT codegen_continue(AlifCompiler* _c, Location _loc) {
 
 
 
+static AlifIntT codegen_tryExcept(AlifCompiler* _c, StmtTy _s) {
+	Location loc = LOC(_s);
+	AlifSizeT i{}, n{};
 
+	NEW_JUMP_TARGET_LABEL(_c, body);
+	NEW_JUMP_TARGET_LABEL(_c, except);
+	NEW_JUMP_TARGET_LABEL(_c, end);
+	NEW_JUMP_TARGET_LABEL(_c, cleanup);
 
+	ADDOP_JUMP(_c, loc, SETUP_FINALLY, except);
 
+	USE_LABEL(_c, body);
+	RETURN_IF_ERROR(
+		_alifCompiler_pushFBlock(_c, loc, AlifCompileFBlockType::Compiler_FBlock_Try_Except, body, NO_LABEL, nullptr));
+	VISIT_SEQ(_c, Stmt, _s->V.try_.body);
+	_alifCompiler_popFBlock(_c, AlifCompileFBlockType::Compiler_FBlock_Try_Except, body);
+	ADDOP(_c, _noLocation_, POP_BLOCK);
+	if (_s->V.try_.else_ and ASDL_SEQ_LEN(_s->V.try_.else_)) {
+		VISIT_SEQ(_c, Stmt, _s->V.try_.else_);
+	}
+	ADDOP_JUMP(_c, _noLocation_, JUMP_NO_INTERRUPT, end);
+	n = ASDL_SEQ_LEN(_s->V.try_.handlers);
 
+	USE_LABEL(_c, except);
 
+	ADDOP_JUMP(_c, _noLocation_, SETUP_CLEANUP, cleanup);
+	ADDOP(_c, _noLocation_, PUSH_EXC_INFO);
 
+	/* Runtime will push a block here, so we need to account for that */
+	RETURN_IF_ERROR(
+		_alifCompiler_pushFBlock(_c, loc, AlifCompileFBlockType::Compiler_FBlock_Exception_Handler,
+			NO_LABEL, NO_LABEL, nullptr));
 
+	for (i = 0; i < n; i++) {
+		ExcepthandlerTy handler = (ExcepthandlerTy)ASDL_SEQ_GET(
+			_s->V.try_.handlers, i);
+		Location loc = LOC(handler);
+		if (!handler->V.exceptHandler.type and i < n - 1) {
+			//return _alifCompiler_error(_c, loc, "default 'except:' must be last");
+			return -1; //* alif
+		}
+		NEW_JUMP_TARGET_LABEL(_c, next_except);
+		except = next_except;
+		if (handler->V.exceptHandler.type) {
+			VISIT(_c, Expr, handler->V.exceptHandler.type);
+			ADDOP(_c, loc, CHECK_EXC_MATCH);
+			ADDOP_JUMP(_c, loc, POP_JUMP_IF_FALSE, except);
+		}
+		if (handler->V.exceptHandler.name) {
+			NEW_JUMP_TARGET_LABEL(_c, cleanup_end);
+			NEW_JUMP_TARGET_LABEL(_c, cleanup_body);
 
+			RETURN_IF_ERROR(
+				codegen_nameOp(_c, loc, handler->V.exceptHandler.name, ExprContext_::Store));
 
+			/*
+			  حاول:
+				  # كتلة
+			  خلل نوع ك اسم:
+				  حاول:
+					  # كتلة
+				  نهاية:
+					  اسم = عدم # في حال الكتلة تحتوي على "احذف اسم"
+					  احذف اسم
+			*/
 
+			/* second try: */
+			ADDOP_JUMP(_c, loc, SETUP_CLEANUP, cleanup_end);
 
+			USE_LABEL(_c, cleanup_body);
+			RETURN_IF_ERROR(
+				_alifCompiler_pushFBlock(_c, loc, AlifCompileFBlockType::Compiler_FBlock_Handler_Cleanup, cleanup_body,
+					NO_LABEL, handler->V.exceptHandler.name));
 
+			/* second # body */
+			VISIT_SEQ(_c, Stmt, handler->V.exceptHandler.body);
+			_alifCompiler_popFBlock(_c, AlifCompileFBlockType::Compiler_FBlock_Handler_Cleanup, cleanup_body);
+			/* name = None; del name; # Mark as artificial */
+			ADDOP(_c, _noLocation_, POP_BLOCK);
+			ADDOP(_c, _noLocation_, POP_BLOCK);
+			ADDOP(_c, _noLocation_, POP_EXCEPT);
+			ADDOP_LOAD_CONST(_c, _noLocation_, ALIF_NONE);
+			RETURN_IF_ERROR(
+				codegen_nameOp(_c, _noLocation_, handler->V.exceptHandler.name, ExprContext_::Store));
+			RETURN_IF_ERROR(
+				codegen_nameOp(_c, _noLocation_, handler->V.exceptHandler.name, ExprContext_::Del));
+			ADDOP_JUMP(_c, _noLocation_, JUMP_NO_INTERRUPT, end);
 
+			/* except: */
+			USE_LABEL(_c, cleanup_end);
 
+			/* name = None; del name; # artificial */
+			ADDOP_LOAD_CONST(_c, _noLocation_, ALIF_NONE);
+			RETURN_IF_ERROR(
+				codegen_nameOp(_c, _noLocation_, handler->V.exceptHandler.name, ExprContext_::Store));
+			RETURN_IF_ERROR(
+				codegen_nameOp(_c, _noLocation_, handler->V.exceptHandler.name, ExprContext_::Del));
 
+			ADDOP_I(_c, _noLocation_, RERAISE, 1);
+		}
+		else {
+			NEW_JUMP_TARGET_LABEL(_c, cleanup_body);
 
+			ADDOP(_c, loc, POP_TOP); /* exc_value */
 
+			USE_LABEL(_c, cleanup_body);
+			RETURN_IF_ERROR(
+				_alifCompiler_pushFBlock(_c, loc, AlifCompileFBlockType::Compiler_FBlock_Handler_Cleanup, cleanup_body,
+					NO_LABEL, nullptr));
 
+			VISIT_SEQ(_c, Stmt, handler->V.exceptHandler.body);
+			_alifCompiler_popFBlock(_c, AlifCompileFBlockType::Compiler_FBlock_Handler_Cleanup, cleanup_body);
+			ADDOP(_c, _noLocation_, POP_BLOCK);
+			ADDOP(_c, _noLocation_, POP_EXCEPT);
+			ADDOP_JUMP(_c, _noLocation_, JUMP_NO_INTERRUPT, end);
+		}
 
+		USE_LABEL(_c, except);
+	}
+	/* artificial */
+	_alifCompiler_popFBlock(_c, AlifCompileFBlockType::Compiler_FBlock_Exception_Handler, NO_LABEL);
+	ADDOP_I(_c, _noLocation_, RERAISE, 0);
 
+	USE_LABEL(_c, cleanup);
+	POP_EXCEPT_AND_RERAISE(_c, _noLocation_);
 
+	USE_LABEL(_c, end);
+	return SUCCESS;
+}
 
 
 
@@ -2281,31 +2465,161 @@ static AlifIntT codegen_continue(AlifCompiler* _c, Location _loc) {
 
 
 
+static AlifIntT codegen_tryStarExcept(AlifCompiler* _c, StmtTy _s) {
+	Location loc = LOC(_s);
 
+	NEW_JUMP_TARGET_LABEL(_c, body);
+	NEW_JUMP_TARGET_LABEL(_c, except);
+	NEW_JUMP_TARGET_LABEL(_c, orelse);
+	NEW_JUMP_TARGET_LABEL(_c, end);
+	NEW_JUMP_TARGET_LABEL(_c, cleanup);
+	NEW_JUMP_TARGET_LABEL(_c, reraise_star);
 
+	ADDOP_JUMP(_c, loc, SETUP_FINALLY, except);
 
+	USE_LABEL(_c, body);
+	RETURN_IF_ERROR(
+		_alifCompiler_pushFBlock(_c, loc, AlifCompileFBlockType::Compiler_FBlock_Try_Except, body, NO_LABEL, NULL));
+	VISIT_SEQ(_c, Stmt, _s->V.tryStar.body);
+	_alifCompiler_popFBlock(_c, AlifCompileFBlockType::Compiler_FBlock_Try_Except, body);
+	ADDOP(_c, _noLocation_, POP_BLOCK);
+	ADDOP_JUMP(_c, _noLocation_, JUMP_NO_INTERRUPT, orelse);
+	AlifSizeT n = ASDL_SEQ_LEN(_s->V.tryStar.handlers);
 
+	USE_LABEL(_c, except);
 
+	ADDOP_JUMP(_c, _noLocation_, SETUP_CLEANUP, cleanup);
+	ADDOP(_c, _noLocation_, PUSH_EXC_INFO);
 
+	/* Runtime will push a block here, so we need to account for that */
+	RETURN_IF_ERROR(
+		_alifCompiler_pushFBlock(_c, loc, AlifCompileFBlockType::Compiler_FBlock_Exception_Group_Handler,
+			NO_LABEL, NO_LABEL, "except handler"));
 
+	for (AlifSizeT i = 0; i < n; i++) {
+		ExcepthandlerTy handler = (ExcepthandlerTy)ASDL_SEQ_GET(
+			_s->V.tryStar.handlers, i);
+		Location loc = LOC(handler);
+		NEW_JUMP_TARGET_LABEL(_c, next_except);
+		except = next_except;
+		NEW_JUMP_TARGET_LABEL(_c, except_with_error);
+		NEW_JUMP_TARGET_LABEL(_c, no_match);
+		if (i == 0) {
+			ADDOP_I(_c, loc, BUILD_LIST, 0);
+			ADDOP_I(_c, loc, COPY, 2);
+		}
+		if (handler->V.exceptHandler.type) {
+			VISIT(_c, Expr, handler->V.exceptHandler.type);
+			ADDOP(_c, loc, CHECK_EG_MATCH);
+			ADDOP_I(_c, loc, COPY, 1);
+			ADDOP_JUMP(_c, loc, POP_JUMP_IF_NONE, no_match);
+		}
 
+		NEW_JUMP_TARGET_LABEL(_c, cleanup_end);
+		NEW_JUMP_TARGET_LABEL(_c, cleanup_body);
 
+		if (handler->V.exceptHandler.name) {
+			RETURN_IF_ERROR(
+				codegen_nameOp(_c, loc, handler->V.exceptHandler.name, ExprContext_::Store));
+		}
+		else {
+			ADDOP(_c, loc, POP_TOP);  // match
+		}
 
+		/*
+		  حاول:
+			  # كتلة
+		  خلل نوع ك اسم:
+			  حاول:
+				  # كتلة
+			  نهاية:
+				  اسم = عدم # في حال الكتلة تحتوي على "احذف اسم"
+				  احذف اسم
+		*/
+		/* second try: */
+		ADDOP_JUMP(_c, loc, SETUP_CLEANUP, cleanup_end);
 
+		USE_LABEL(_c, cleanup_body);
+		RETURN_IF_ERROR(
+			_alifCompiler_pushFBlock(_c, loc, AlifCompileFBlockType::Compiler_FBlock_Handler_Cleanup, cleanup_body,
+				NO_LABEL, handler->V.exceptHandler.name));
 
+		/* second # body */
+		VISIT_SEQ(_c, Stmt, handler->V.exceptHandler.body);
+		_alifCompiler_popFBlock(_c, AlifCompileFBlockType::Compiler_FBlock_Handler_Cleanup, cleanup_body);
+		/* name = None; del name; # artificial */
+		ADDOP(_c, _noLocation_, POP_BLOCK);
+		if (handler->V.exceptHandler.name) {
+			ADDOP_LOAD_CONST(_c, _noLocation_, ALIF_NONE);
+			RETURN_IF_ERROR(
+				codegen_nameOp(_c, _noLocation_, handler->V.exceptHandler.name, ExprContext_::Store));
+			RETURN_IF_ERROR(
+				codegen_nameOp(_c, _noLocation_, handler->V.exceptHandler.name, ExprContext_::Del));
+		}
+		ADDOP_JUMP(_c, _noLocation_, JUMP_NO_INTERRUPT, except);
 
+		/* except: */
+		USE_LABEL(_c, cleanup_end);
 
+		/* name = None; del name; # artificial */
+		if (handler->V.exceptHandler.name) {
+			ADDOP_LOAD_CONST(_c, _noLocation_, ALIF_NONE);
+			RETURN_IF_ERROR(
+				codegen_nameOp(_c, _noLocation_, handler->V.exceptHandler.name, ExprContext_::Store));
+			RETURN_IF_ERROR(
+				codegen_nameOp(_c, _noLocation_, handler->V.exceptHandler.name, ExprContext_::Del));
+		}
 
+		/* add exception raised to the res list */
+		ADDOP_I(_c, _noLocation_, LIST_APPEND, 3); // exc
+		ADDOP(_c, _noLocation_, POP_TOP); // lasti
+		ADDOP_JUMP(_c, _noLocation_, JUMP_NO_INTERRUPT, except_with_error);
 
+		USE_LABEL(_c, except);
+		ADDOP(_c, _noLocation_, NOP);  // to hold a propagated location info
+		ADDOP_JUMP(_c, _noLocation_, JUMP_NO_INTERRUPT, except_with_error);
 
+		USE_LABEL(_c, no_match);
+		ADDOP(_c, loc, POP_TOP);  // match (None)
 
+		USE_LABEL(_c, except_with_error);
 
+		if (i == n - 1) {
+			/* Add exc to the list (if not None it's the unhandled part of the EG) */
+			ADDOP_I(_c, _noLocation_, LIST_APPEND, 1);
+			ADDOP_JUMP(_c, _noLocation_, JUMP_NO_INTERRUPT, reraise_star);
+		}
+	}
+	/* artificial */
+	_alifCompiler_popFBlock(_c, AlifCompileFBlockType::Compiler_FBlock_Exception_Group_Handler, NO_LABEL);
+	NEW_JUMP_TARGET_LABEL(_c, reraise);
 
+	USE_LABEL(_c, reraise_star);
+	ADDOP_I(_c, _noLocation_, CALL_INTRINSIC_2, INTRINSIC_PREP_RERAISE_STAR);
+	ADDOP_I(_c, _noLocation_, COPY, 1);
+	ADDOP_JUMP(_c, _noLocation_, POP_JUMP_IF_NOT_NONE, reraise);
 
+	/* Nothing to reraise */
+	ADDOP(_c, _noLocation_, POP_TOP);
+	ADDOP(_c, _noLocation_, POP_BLOCK);
+	ADDOP(_c, _noLocation_, POP_EXCEPT);
+	ADDOP_JUMP(_c, _noLocation_, JUMP_NO_INTERRUPT, end);
 
+	USE_LABEL(_c, reraise);
+	ADDOP(_c, _noLocation_, POP_BLOCK);
+	ADDOP_I(_c, _noLocation_, SWAP, 2);
+	ADDOP(_c, _noLocation_, POP_EXCEPT);
+	ADDOP_I(_c, _noLocation_, RERAISE, 0);
 
+	USE_LABEL(_c, cleanup);
+	POP_EXCEPT_AND_RERAISE(_c, _noLocation_);
 
+	USE_LABEL(_c, orelse);
+	VISIT_SEQ(_c, Stmt, _s->V.tryStar.else_);
 
+	USE_LABEL(_c, end);
+	return SUCCESS;
+}
 
 
 
@@ -2318,334 +2632,22 @@ static AlifIntT codegen_continue(AlifCompiler* _c, Location _loc) {
 
 
 
+static AlifIntT codegen_try(AlifCompiler* _c, StmtTy _s) {
+	if (_s->V.try_.finalBody and ASDL_SEQ_LEN(_s->V.try_.finalBody))
+		return codegen_tryFinally(_c, _s);
+	else
+		return codegen_tryExcept(_c, _s);
+}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+static AlifIntT codegen_tryStar(AlifCompiler* _c, StmtTy _s) {
+	if (_s->V.tryStar.finalBody and ASDL_SEQ_LEN(_s->V.tryStar.finalBody)) {
+		return codegen_tryStarFinally(_c, _s);
+	}
+	else {
+		return codegen_tryStarExcept(_c, _s);
+	}
+}
 
 
 
@@ -2890,10 +2892,10 @@ static AlifIntT codegen_visitStmt(AlifCompiler* _c, StmtTy _s) {
 	//	ADDOP_I(_c, LOC(_s), RAISE_VARARGS, (AlifIntT)n);
 	//	break;
 	//}
-	//case StmtK_::TryK:
-	//	return codegen_try(_c, _s);
-	//case StmtK_::TryStarK:
-	//	return codegen_try_star(_c, _s);
+	case StmtK_::TryK:
+		return codegen_try(_c, _s);
+	case StmtK_::TryStarK:
+		return codegen_tryStar(_c, _s);
 	//case StmtK_::AssertK:
 	//	return codegen_assert(_c, _s);
 	case StmtK_::ImportK:
