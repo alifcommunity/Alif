@@ -33,18 +33,35 @@ public:
 	AlifIntT flags{};
 };
 
+// 52
+/* Types */
+#define ALIF_T_SHORT     0
+#define ALIF_T_INT       1
+#define ALIF_T_LONG      2
+#define ALIF_T_FLOAT     3
+#define ALIF_T_DOUBLE    4
+#define ALIF_T_STRING    5
+#define _ALIF_T_OBJECT   6  // Deprecated, use ALIF_T_OBJECT_EX instead
+/* the ordering here is weird for binary compatibility */
+#define ALIF_T_CHAR      7   /* 1-character string */
+#define ALIF_T_BYTE      8   /* 8-bit signed int */
+/* unsigned variants: */
+#define ALIF_T_UBYTE     9
+#define ALIF_T_USHORT    10
+#define ALIF_T_UINT      11
+#define ALIF_T_ULONG     12
 
+#define ALIF_T_STRING_INPLACE    13
 
+/* Added by Lillo: bools contained in the structure (assumed char) */
+#define ALIF_T_BOOL      14
 
-#define ALIF_T_OBJECT   6  // 59
+#define ALIF_T_OBJECT_EX 16
+#define ALIF_T_LONGLONG  17
+#define ALIF_T_ULONGLONG 18
 
-
-
-
-
-#define ALIF_T_OBJECT_EX 16 // 75
-
-#define ALIF_T_ALIFSIZET  19 // 79
+#define ALIF_T_ALIFSIZET  19      /* AlifSizeT */
+#define _ALIF_T_NONE     20 // Deprecated. Value is always None.
 
 
 #define ALIF_READONLY	1 // 83
