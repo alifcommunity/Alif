@@ -779,7 +779,7 @@ AlifObject* alifObject_genericGetAttrWithDict(AlifObject* _obj, AlifObject* _nam
 			if (_suppress
 				/*and alifErr_exceptionMatches(alifExcAttributeError)*/
 				) {
-				//alifErr_clear();
+				alifErr_clear();
 			}
 			else {
 				goto done;
@@ -792,7 +792,7 @@ AlifObject* alifObject_genericGetAttrWithDict(AlifObject* _obj, AlifObject* _nam
 		if (res == nullptr and _suppress
 			/*and alifErr_exceptionMatches(alifExAttributeError)*/
 			) {
-			//alifErr_clear();
+			alifErr_clear();
 		}
 		goto done;
 	}
@@ -808,7 +808,7 @@ AlifObject* alifObject_genericGetAttrWithDict(AlifObject* _obj, AlifObject* _nam
 		//	"'%.100s' object has no attribute '%U'",
 		//	tp->name, _name);
 
-		//alifObject_setAttributeErrorContext(_obj, _name);
+		alifObject_setAttributeErrorContext(_obj, _name);
 	}
 done:
 	ALIF_XDECREF(descr);

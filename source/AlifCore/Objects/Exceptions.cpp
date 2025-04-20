@@ -454,8 +454,21 @@ static AlifIntT syntaxError_init(AlifSyntaxErrorObject* self,
 	return 0;
 }
 
+static AlifMemberDef _syntaxErrorMembers_[] = {
+	{"msg", ALIF_T_OBJECT, offsetof(AlifSyntaxErrorObject, msg), 0},
+	{"Filename", ALIF_T_OBJECT, offsetof(AlifSyntaxErrorObject, filename), 0},
+	{"lineno", ALIF_T_OBJECT, offsetof(AlifSyntaxErrorObject, lineno), 0},
+	{"offset", ALIF_T_OBJECT, offsetof(AlifSyntaxErrorObject, offset), 0},
+	{"text", ALIF_T_OBJECT, offsetof(AlifSyntaxErrorObject, text), 0},
+	{"endLineno", ALIF_T_OBJECT, offsetof(AlifSyntaxErrorObject, endLineno), 0},
+	{"endOffset", ALIF_T_OBJECT, offsetof(AlifSyntaxErrorObject, endOffset), 0},
+	{"printFileAndLine", ALIF_T_OBJECT,
+		offsetof(AlifSyntaxErrorObject, printFileAndLine), 0},
+	{nullptr}  /* Sentinel */
+};
+
 COMPLEXEXTENDSEXCEPTION(_excException_, SyntaxError, خطأ_نسق, syntaxError,
-	0, 0, nullptr/*syntaxError_members*/, 0,
+	0, 0, _syntaxErrorMembers_, 0,
 	nullptr/*syntaxError_str*/, "خطأ في النسق"); // 2594
 
 

@@ -48,7 +48,7 @@ public:
 
 
 #define ALIF_READONLY	1 // 83
-
+#define ALIF_AUDIT_READ   2 // 84
 
 #define ALIF_RELATIVE_OFFSET  8 //86
 

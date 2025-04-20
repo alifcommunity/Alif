@@ -92,6 +92,25 @@ static AlifObject* method_get(AlifObject* self, AlifObject* obj, AlifObject* typ
 }
 
 
+static AlifObject* member_get(AlifObject* self, AlifObject* obj, AlifObject* type) { // 161
+	AlifMemberDescrObject* descr = (AlifMemberDescrObject*)self;
+	if (obj == nullptr) {
+		return ALIF_NEWREF(descr);
+	}
+	if (descr_check((AlifDescrObject*)descr, obj) < 0) {
+		return nullptr;
+	}
+
+	if (descr->member->flags & ALIF_AUDIT_READ) {
+		//if (alifSys_audit("object.__getattr__", "Os",
+		//	obj ? obj : ALIF_NONE, descr->member->name) < 0) {
+		//	return nullptr;
+		//}
+	}
+
+	return alifMember_getOne((char*)obj, descr->member);
+}
+
 
 static inline AlifIntT method_checkArgs(AlifObject* func,
 	AlifObject* const* args, AlifSizeT nargs, AlifObject* kwnames) { // 265
@@ -334,6 +353,8 @@ AlifTypeObject _alifMemberDescrType_ = { // 793
 	//.dealloc = descr_dealloc,
 	.getAttro = alifObject_genericGetAttr,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
+
+	.descrGet = member_get;
 };
 
 AlifTypeObject _alifGetSetDescrType_ = { // 830

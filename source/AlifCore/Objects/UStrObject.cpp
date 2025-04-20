@@ -1828,20 +1828,20 @@ static const char* uStr_fromFormatArg(AlifUStrWriter* _writer,
 	//	break;
 	//}
 
-	//case 'S':
-	//{
-	//	AlifObject* obj = va_arg(*_vargs, AlifObject*);
-	//	AlifObject* str;
-	//	str = alifObject_str(obj);
-	//	if (!str)
-	//		return nullptr;
-	//	if (unicode_fromFormatWriteStr(_writer, str, width, precision, flags) == -1) {
-	//		ALIF_DECREF(str);
-	//		return nullptr;
-	//	}
-	//	ALIF_DECREF(str);
-	//	break;
-	//}
+	case 'S':
+	{
+		AlifObject* obj = va_arg(*_vargs, AlifObject*);
+		AlifObject* str;
+		str = alifObject_str(obj);
+		if (!str)
+			return nullptr;
+		if (uStr_fromFormatWriteStr(_writer, str, width, precision, flags) == -1) {
+			ALIF_DECREF(str);
+			return nullptr;
+		}
+		ALIF_DECREF(str);
+		break;
+	}
 
 	case 'R':
 	{
