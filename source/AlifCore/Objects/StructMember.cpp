@@ -16,7 +16,15 @@
 
 
 
-
+static inline AlifObject* member_getObject(const char* addr, const char* obj_addr, AlifMemberDef* l) { // 11
+	AlifObject* v = (AlifObject*)alifAtomic_loadPtr(&(*(AlifObject**)addr)); //* alif
+	if (v == nullptr) {
+		//alifErr_format(_alifExcAttributeError_,
+		//	"'%T' object has no attribute '%s'",
+		//	(AlifObject*)obj_addr, l->name);
+	}
+	return v;
+}
 
 
 

@@ -70,7 +70,7 @@ public:
 #define ALIF_RELATIVE_OFFSET  8 //86
 
 
-
+AlifObject* alifMember_getOne(const char*, AlifMemberDef*); // 88
 
 
 

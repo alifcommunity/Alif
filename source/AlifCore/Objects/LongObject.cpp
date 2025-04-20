@@ -989,6 +989,44 @@ AlifObject* alifLong_fromVoidPtr(void* _p) { // 1349
 
 
 
+AlifObject* alifLong_fromLongLong(long long ival) { // 1410
+	AlifLongObject* v{};
+	unsigned long long abs_ival{}, t{};
+	AlifIntT ndigits{};
+
+	/* Handle small and medium cases. */
+	if (IS_SMALL_INT(ival)) {
+		return get_smallInt((sdigit)ival);
+	}
+	if (-(long long)ALIFLONG_MASK <= ival && ival <= (long long)ALIFLONG_MASK) {
+		return _alifLong_fromMedium((sdigit)ival);
+	}
+
+	/* Count digits (at least two - smaller cases were handled above). */
+	abs_ival = ival < 0 ? 0U - (unsigned long long)ival : (unsigned long long)ival;
+	/* Do shift in two steps to avoid possible undefined behavior. */
+	t = abs_ival >> ALIFLONG_SHIFT >> ALIFLONG_SHIFT;
+	ndigits = 2;
+	while (t) {
+		++ndigits;
+		t >>= ALIFLONG_SHIFT;
+	}
+
+	/* Construct output value. */
+	v = alifLong_new(ndigits);
+	if (v != nullptr) {
+		digit* p = v->longValue.digit;
+		_alifLong_setSignAndDigitCount(v, ival < 0 ? -1 : 1, ndigits);
+		t = abs_ival;
+		while (t) {
+			*p++ = (digit)(t & ALIFLONG_MASK);
+			t >>= ALIFLONG_SHIFT;
+		}
+	}
+	return (AlifObject*)v;
+}
+
+
 AlifObject* alifLong_fromSizeT(AlifSizeT _iVal) { // 1447
 	AlifLongObject* v{};
 	AlifUSizeT absIVal{};

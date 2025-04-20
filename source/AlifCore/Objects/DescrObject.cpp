@@ -354,7 +354,7 @@ AlifTypeObject _alifMemberDescrType_ = { // 793
 	.getAttro = alifObject_genericGetAttr,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
 
-	.descrGet = member_get;
+	.descrGet = member_get,
 };
 
 AlifTypeObject _alifGetSetDescrType_ = { // 830
