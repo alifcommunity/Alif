@@ -8,9 +8,10 @@
 
 void alifErr_print(void); // 12
 void alifErr_printEx(AlifIntT);
-//void alifErr_display(AlifObject*, AlifObject*, AlifObject*); // 14
+void alifErr_display(AlifObject*, AlifObject*, AlifObject*); // 14
 
 
+void alifErr_displayException(AlifObject* exc); // 17
 
 
 

@@ -63,7 +63,10 @@ AlifFrameObject* _alifFrame_newNoTrack(AlifCodeObject* _code) { // 1802
 
 
 
-
+AlifCodeObject* alifFrame_getCode(AlifFrameObject* _frame) { // 2074
+	AlifCodeObject* code = _alifFrame_getCode(_frame->frame);
+	return (AlifCodeObject*)ALIF_NEWREF(code);
+}
 
 
 

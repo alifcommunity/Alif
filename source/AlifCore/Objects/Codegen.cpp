@@ -215,8 +215,8 @@ static AlifIntT codegen_callHelperImpl(AlifCompiler*, Location,
 static AlifIntT codegen_callHelper(AlifCompiler*, Location,
 	AlifIntT, ASDLExprSeq*, ASDLKeywordSeq*);
 
-
-
+static AlifIntT codegen_tryExcept(AlifCompiler*, StmtTy);
+static AlifIntT codegen_tryStarExcept(AlifCompiler*, StmtTy);
 
 static AlifIntT codegen_syncComprehensionGenerator(AlifCompiler*,
 	Location, ASDLComprehensionSeq*, AlifIntT, AlifIntT,
@@ -2494,7 +2494,7 @@ static AlifIntT codegen_tryStarExcept(AlifCompiler* _c, StmtTy _s) {
 	/* Runtime will push a block here, so we need to account for that */
 	RETURN_IF_ERROR(
 		_alifCompiler_pushFBlock(_c, loc, AlifCompileFBlockType::Compiler_FBlock_Exception_Group_Handler,
-			NO_LABEL, NO_LABEL, "except handler"));
+			NO_LABEL, NO_LABEL, (void*)"except handler"));
 
 	for (AlifSizeT i = 0; i < n; i++) {
 		ExcepthandlerTy handler = (ExcepthandlerTy)ASDL_SEQ_GET(

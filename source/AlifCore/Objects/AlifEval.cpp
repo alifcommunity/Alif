@@ -73,6 +73,10 @@
 
 
 
+static AlifIntT get_exceptionHandler(AlifCodeObject*, AlifIntT, AlifIntT*, AlifIntT*, AlifIntT*); // 277
+
+
+
 AlifIntT alif_checkRecursiveCall(AlifThread* _thread, const char* _where) { // 305
 #ifdef USE_STACKCHECK
 	if (alifOS_checkStack()) {

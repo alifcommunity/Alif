@@ -791,7 +791,17 @@ done:
 
 
 
+void ALIF_NO_RETURN alif_exit(AlifIntT _sts) { // 3383
+	AlifThread* thread = _alifThread_get();
+	if (thread != nullptr and _alifThread_isRunningMain(thread)) {
+		_alifInterpreter_setNotRunningMain(thread->interpreter);
+	}
+	//if (_alif_finalize(&_alifDureRun_) < 0) {
+	//	_sts = 120;
+	//}
 
+	exit(_sts);
+}
 
 
 

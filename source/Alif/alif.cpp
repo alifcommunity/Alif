@@ -324,7 +324,7 @@ error:
 	//*_exitcode = alifMain_exitErrPrint();
 
 done:
-	alifInterpreter_setNotRunningMain(interp);
+	_alifInterpreter_setNotRunningMain(interp);
 	ALIF_XDECREF(mainImporterPath);
 }
 

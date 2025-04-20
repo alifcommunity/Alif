@@ -466,6 +466,16 @@ const char* _alifType_name(AlifTypeObject* _type) { // 1308
 }
 
 
+static AlifObject* type_qualname(AlifTypeObject* type, void* context) { // 1335
+	if (type->flags & ALIF_TPFLAGS_HEAPTYPE) {
+		AlifHeapTypeObject* et = (AlifHeapTypeObject*)type;
+		return ALIF_NEWREF(et->qualname);
+	}
+	else {
+		return alifUStr_fromString(_alifType_name(type));
+	}
+}
+
 
 static AlifObject* type_abstractMethods(AlifTypeObject* type, void* context) { // 1491
 	AlifObject* mod = nullptr;
@@ -2485,6 +2495,9 @@ AlifObject* alifType_fromSpecWithBases(AlifTypeSpec* _spec, AlifObject* _bases) 
 }
 
 
+AlifObject* alifType_getQualName(AlifTypeObject* type) { // 5134
+	return type_qualname(type, nullptr);
+}
 
 
 void* alifObject_getItemData(AlifObject* _obj) { // 5276

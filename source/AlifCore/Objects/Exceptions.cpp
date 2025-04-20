@@ -152,7 +152,7 @@ static AlifIntT baseException_setTB(AlifBaseExceptionObject* self, AlifObject* t
 }
 
 
-AlifObject* alifException_getTraaliferceback(AlifObject* _self) { // 411
+AlifObject* alifException_getTraceback(AlifObject* _self) { // 411
 	AlifBaseExceptionObject* baseSelf = _alifBaseExceptionObject_cast(_self);
 	return ALIF_XNEWREF(baseSelf->traceback);
 }
@@ -273,7 +273,7 @@ AlifObject* _alifExc ## EXCNAME ## _ = (AlifObject *)&_exc ## EXCNAME ## _
 static AlifTypeObject _exc ## EXCNAME ## _ = { \
     .objBase = ALIFVAROBJECT_HEAD_INIT(nullptr, 0), \
     .name = # NAME, \
-    .basicSize = sizeof(Alif ## EXCSTORE ## Object), \
+    .basicSize = sizeof(Alif ## EXCNAME ## Object), \
     /*.dealloc = (Destructor)EXCSTORE ## _dealloc,*/ \
     /*.repr = (ReprFunc)EXCSTR,*/ \
     .flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_HAVE_GC, \
@@ -283,8 +283,8 @@ static AlifTypeObject _exc ## EXCNAME ## _ = { \
     .members = EXCMEMBERS,	\
 	.getSet = EXCGETSET,	\
 	.base = &EXCBASE, \
-    .dictOffset = offsetof(Alif ## EXCSTORE ## Object, dict), \
-    /*.init = (InitProc)EXCSTORE ## _init,*/	\
+    .dictOffset = offsetof(Alif ## EXCNAME ## Object, dict), \
+    .init = (InitProc)EXCSTORE ## _init,	\
 	/*.new_ = EXCNEW,*/	\
 }; \
 AlifObject* _alifExc ## EXCNAME ## _ = (AlifObject*)&_exc ## EXCNAME ## _
@@ -305,8 +305,26 @@ SIMPLEEXTENDSEXCEPTION(_excException_, StopAsyncIteration,
 	"Signal the end from iterator.__anext__().");
 
 
+
+
+static AlifIntT stopIteration_init(AlifStopIterationObject* self,
+	AlifObject* args, AlifObject* kwds) { // 617
+	AlifSizeT size = ALIFTUPLE_GET_SIZE(args);
+	AlifObject* value{};
+
+	if (baseException_init((AlifBaseExceptionObject*)self, args, kwds) == -1)
+		return -1;
+	ALIF_CLEAR(self->value);
+	if (size > 0)
+		value = ALIFTUPLE_GET_ITEM(args, 0);
+	else
+		value = ALIF_NONE;
+	self->value = ALIF_NEWREF(value);
+	return 0;
+}
+
 // 656
-COMPLEXEXTENDSEXCEPTION(_excException_, StopIteration, خطأ_تكرار_توقف, StopIteration,
+COMPLEXEXTENDSEXCEPTION(_excException_, StopIteration, خطأ_تكرار_توقف, stopIteration,
 	0, 0, nullptr/*_stopIterationMembers_*/, 0, 0,
 	"Signal the end from iterator.__next__().");
 
@@ -318,11 +336,20 @@ static inline AlifBaseExceptionGroupObject* _alifBaseExceptionGroupObject_cast(A
 
 
 
-
+static AlifIntT baseExceptionGroup_init(AlifBaseExceptionGroupObject* self,
+	AlifObject* args, AlifObject* kwds) { // 866
+	if (!_ALIFARG_NOKEYWORDS(ALIF_TYPE(self)->name, kwds)) {
+		return -1;
+	}
+	if (baseException_init((AlifBaseExceptionObject*)self, args, kwds) == -1) {
+		return -1;
+	}
+	return 0;
+}
 
 
 COMPLEXEXTENDSEXCEPTION(_excBaseException_, BaseExceptionGroup, خطأ_اساس_مجموعة,
-	BaseExceptionGroup, baseExceptionGroup_new /* new */,
+	baseExceptionGroup, baseExceptionGroup_new /* new */,
 	nullptr/*_baseExceptionGroupMethods_*/, nullptr/*_baseExceptionGroupMembers_*/,
 	0 /* getset */, nullptr/*baseExceptionGroup_str*/,
 	"A combination of multiple unrelated exceptions.");
@@ -347,6 +374,12 @@ AlifObject* _alifExc_createExceptionGroup(const char* _msgStr, AlifObject* _excs
 }
 
 
+static AlifIntT importError_init(AlifImportErrorObject* self,
+	AlifObject* args, AlifObject* kwds) { // 1560
+	//* todo
+	return 0;
+}
+
 
 static AlifObject* importError_str(AlifImportErrorObject* _self) { // 1623
 	if (_self->msg and ALIFUSTR_CHECKEXACT(_self->msg)) {
@@ -359,7 +392,7 @@ static AlifObject* importError_str(AlifImportErrorObject* _self) { // 1623
 
  // 1699
 COMPLEXEXTENDSEXCEPTION(_excException_, ImportError,
-	خطأ_استيراد, ImportError, 0 /* new */,
+	خطأ_استيراد, importError, 0 /* new */,
 	nullptr /*_importErrorMethods_*/, nullptr /*_importErrorMembers_*/,
 	0 /* getset */, importError_str,
 	"لا يمكن إيجاد وحدة الاستيراد, او لا يمكن إيجاد الاسم في الوحدة ");
@@ -377,7 +410,51 @@ MIDDLINGEXTENDSEXCEPTION(_excImportError_, ModuleNotFoundError, ImportError,
 
 
 
-COMPLEXEXTENDSEXCEPTION(_excException_, SyntaxError, خطأ_نسق, SyntaxError,
+static AlifIntT syntaxError_init(AlifSyntaxErrorObject* self,
+	AlifObject* args, AlifObject* kwds) { // 2421
+	AlifObject* info = nullptr;
+	AlifSizeT lenargs = ALIFTUPLE_GET_SIZE(args);
+
+	if (baseException_init((AlifBaseExceptionObject*)self, args, kwds) == -1)
+		return -1;
+
+	if (lenargs >= 1) {
+		ALIF_XSETREF(self->msg, ALIF_NEWREF(ALIFTUPLE_GET_ITEM(args, 0)));
+	}
+	if (lenargs == 2) {
+		info = ALIFTUPLE_GET_ITEM(args, 1);
+		info = alifSequence_tuple(info);
+		if (!info) {
+			return -1;
+		}
+
+		self->endLineno = nullptr;
+		self->endOffset = nullptr;
+		if (!alifArg_parseTuple(info, "OOOO|OO",
+			&self->filename, &self->lineno,
+			&self->offset, &self->text,
+			&self->endLineno, &self->endOffset)) {
+			ALIF_DECREF(info);
+			return -1;
+		}
+
+		ALIF_INCREF(self->filename);
+		ALIF_INCREF(self->lineno);
+		ALIF_INCREF(self->offset);
+		ALIF_INCREF(self->text);
+		ALIF_XINCREF(self->endLineno);
+		ALIF_XINCREF(self->endOffset);
+		ALIF_DECREF(info);
+
+		if (self->endLineno != nullptr and self->endOffset == nullptr) {
+			alifErr_setString(_alifExcTypeError_, "endOffset must be provided when endLineno is provided");
+			return -1;
+		}
+	}
+	return 0;
+}
+
+COMPLEXEXTENDSEXCEPTION(_excException_, SyntaxError, خطأ_نسق, syntaxError,
 	0, 0, nullptr/*syntaxError_members*/, 0,
 	nullptr/*syntaxError_str*/, "خطأ في النسق"); // 2594
 

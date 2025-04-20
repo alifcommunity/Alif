@@ -223,6 +223,7 @@
     <ClInclude Include="..\source\AlifCore\Objects\clinic\ListObject.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\MathModule.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\SetObject.cpp.h" />
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\SysModule.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\TextIO.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\TypeObject.cpp.h" />
     <ClInclude Include="..\source\Modules\_io\clinic\_IOModule.cpp.h" />

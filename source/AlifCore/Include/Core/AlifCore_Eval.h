@@ -98,6 +98,11 @@ static inline void _alif_leaveRecursiveCall(void) { // 228
 }
 
 
+
+AlifIntT _alifEval_checkExceptStarTypeValid(AlifThread*, AlifObject*); // 256
+AlifIntT _alifEval_checkExceptTypeValid(AlifThread*, AlifObject*); // 257
+AlifIntT _alifEval_exceptionGroupMatch(AlifObject*, AlifObject*, AlifObject**, AlifObject**); // 258
+
 AlifObject* _alifEval_importFrom(AlifThread*, AlifObject*, AlifObject*); // 262
 AlifObject* _alifEval_importName(AlifThread*, AlifInterpreterFrame*, AlifObject*, AlifObject*, AlifObject*); // 263
 AlifIntT _alifEval_unpackIterableStackRef(AlifThread*, AlifStackRef, AlifIntT, AlifIntT, AlifStackRef*); // 267

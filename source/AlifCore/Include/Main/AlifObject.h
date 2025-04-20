@@ -208,6 +208,8 @@ public:
 AlifObject* alifType_fromSpecWithBases(AlifTypeSpec*, AlifObject*); // 377
 
 
+AlifObject* alifType_getQualName(AlifTypeObject*); // 389
+
 
 // 360
 #define ALIF_XSETREF(_dst, _src) \

@@ -348,6 +348,48 @@ static void init_code(AlifCodeObject* _co, AlifCodeConstructor* _con) { // 452
 }
 
 
+static AlifIntT scan_varint(const uint8_t* ptr) { // 525
+	unsigned int read = *ptr++;
+	unsigned int val = read & 63;
+	unsigned int shift = 0;
+	while (read & 64) {
+		read = *ptr++;
+		shift += 6;
+		val |= (read & 63) << shift;
+	}
+	return val;
+}
+
+static AlifIntT scan_signedVarint(const uint8_t* ptr) { // 539
+	unsigned int uval = scan_varint(ptr);
+	if (uval & 1) {
+		return -(int)(uval >> 1);
+	}
+	else {
+		return uval >> 1;
+	}
+}
+
+static AlifIntT get_lineDelta(const uint8_t* _ptr) { // 551
+	AlifIntT code = ((*_ptr) >> 3) & 15;
+	switch (code) {
+	case AlifCodeLocationInfoKind::AlifCode_Location_Info_None:
+		return 0;
+	case AlifCodeLocationInfoKind::AlifCode_Location_Info_No_Columns:
+	case AlifCodeLocationInfoKind::AlifCode_Location_Info_Long:
+		return scan_signedVarint(_ptr + 1);
+	case AlifCodeLocationInfoKind::AlifCode_Location_Info_One_Line0:
+		return 0;
+	case AlifCodeLocationInfoKind::AlifCode_Location_Info_One_Line1:
+		return 1;
+	case AlifCodeLocationInfoKind::AlifCode_Location_Info_One_Line2:
+		return 2;
+	default:
+		/* Same line */
+		return 0;
+	}
+}
+
 
 
 static AlifIntT intern_codeConstants(AlifCodeConstructor* _con) { // 616
@@ -410,6 +452,120 @@ AlifCodeObject* alifCode_new(AlifCodeConstructor* _con) { // 647
 
 
 
+AlifIntT alifCode_addr2Line(AlifCodeObject* co, AlifIntT addrq) { // 941
+	if (addrq < 0) {
+		return co->firstLineno;
+	}
+	AlifCodeAddressRange bounds{};
+	_alifCode_initAddressRange(co, &bounds);
+	return _alifCode_checkLineNumber(addrq, &bounds);
+}
+
+void _alifLineTable_initAddressRange(const char* linetable, AlifSizeT length,
+	AlifIntT firstlineno, AlifCodeAddressRange* range) { // 953
+	range->opaque.loNext = (const uint8_t*)linetable;
+	range->opaque.limit = range->opaque.loNext + length;
+	range->start = -1;
+	range->end = 0;
+	range->opaque.computedLine = firstlineno;
+	range->line = -1;
+}
+
+AlifIntT _alifCode_initAddressRange(AlifCodeObject* co,
+	AlifCodeAddressRange* bounds) { // 964
+	const char* linetable = ALIFBYTES_AS_STRING(co->lineTable);
+	AlifSizeT length = ALIFBYTES_GET_SIZE(co->lineTable);
+	_alifLineTable_initAddressRange(linetable, length, co->firstLineno, bounds);
+	return bounds->line;
+}
+
+
+AlifIntT _alifCode_checkLineNumber(AlifIntT lasti,
+	AlifCodeAddressRange* bounds) { // 976
+	while (bounds->end <= lasti) {
+		if (!_alifLineTable_nextAddressRange(bounds)) {
+			return -1;
+		}
+	}
+	while (bounds->start > lasti) {
+		if (!_alifLineTable_previousAddressRange(bounds)) {
+			return -1;
+		}
+	}
+	return bounds->line;
+}
+
+
+static AlifIntT is_noLineMarker(uint8_t b) { // 992
+	return (b >> 3) == 0x1f;
+}
+
+static AlifIntT next_codeDelta(AlifCodeAddressRange* bounds) { // 1005
+	return (((*bounds->opaque.loNext) & 7) + 1) * sizeof(AlifCodeUnit);
+}
+
+
+static AlifIntT previous_codeDelta(AlifCodeAddressRange* bounds) { // 1012
+	if (bounds->start == 0) {
+		return 1;
+	}
+	const uint8_t* ptr = bounds->opaque.loNext - 1;
+	while (((*ptr) & 128) == 0) {
+		ptr--;
+	}
+	return (((*ptr) & 7) + 1) * sizeof(AlifCodeUnit);
+}
+
+static void retreat(AlifCodeAddressRange* bounds) { // 1059
+	do {
+		bounds->opaque.loNext--;
+	} while (((*bounds->opaque.loNext) & 128) == 0);
+	bounds->opaque.computedLine -= get_lineDelta(bounds->opaque.loNext);
+	bounds->end = bounds->start;
+	bounds->start -= previous_codeDelta(bounds);
+	if (is_noLineMarker(bounds->opaque.loNext[-1])) {
+		bounds->line = -1;
+	}
+	else {
+		bounds->line = bounds->opaque.computedLine;
+	}
+}
+
+static void advance(AlifCodeAddressRange* bounds) { // 1079
+	bounds->opaque.computedLine += get_lineDelta(bounds->opaque.loNext);
+	if (is_noLineMarker(*bounds->opaque.loNext)) {
+		bounds->line = -1;
+	}
+	else {
+		bounds->line = bounds->opaque.computedLine;
+	}
+	bounds->start = bounds->end;
+	bounds->end += next_codeDelta(bounds);
+	do {
+		bounds->opaque.loNext++;
+	} while (bounds->opaque.loNext < bounds->opaque.limit &&
+		((*bounds->opaque.loNext) & 128) == 0);
+}
+
+static inline AlifIntT at_end(AlifCodeAddressRange* bounds) { // 1174
+	return bounds->opaque.loNext >= bounds->opaque.limit;
+}
+
+AlifIntT _alifLineTable_previousAddressRange(AlifCodeAddressRange* range) { // 1179
+	if (range->start <= 0) {
+		return 0;
+	}
+	retreat(range);
+	return 1;
+}
+
+AlifIntT _alifLineTable_nextAddressRange(AlifCodeAddressRange* range) { // 1190
+	if (at_end(range)) {
+		return 0;
+	}
+	advance(range);
+	return 1;
+}
 
 
 

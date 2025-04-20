@@ -100,8 +100,10 @@ static inline AlifIntT alifUnstableCode_getFirstFree(AlifCodeObject* _op) { // 1
 }
 
 
+AlifIntT alifCode_addr2Line(AlifCodeObject*, AlifIntT); // 243
 
- // 243
+
+ // 247
 #define ALIF_FOREACH_CODE_EVENT(_v) \
     _v(Create)                 \
     _v(Destroy)
@@ -116,6 +118,25 @@ enum AlifCodeEvent { // 274
 
 typedef AlifIntT (*AlifCodeWatchCallback)(AlifCodeEvent _event, AlifCodeObject* _co); // 263
 
+
+class Opaque {
+public:
+	AlifIntT computedLine{};
+	const uint8_t* loNext{};
+	const uint8_t* limit{};
+};
+
+class AlifCodeAddressRange { // 294
+public:
+	AlifIntT start{};
+	AlifIntT end{};
+	AlifIntT line{};
+	Opaque opaque{};
+};
+typedef AlifCodeAddressRange LineOffsets;
+
+
+AlifIntT _alifCode_checkLineNumber(AlifIntT, AlifCodeAddressRange*); // 304
 
 
 AlifObject* alifCode_constantKey(AlifObject*); // 309

@@ -681,10 +681,12 @@
 #define ALIF_STR_LITERALS_INIT { \
 	INIT_STR(AnonListComp, "<listcomp>"), \
 	INIT_STR(AnonModule, "<module>"), \
+	INIT_STR(AnonString, "<string>"), \
     INIT_STR(DblPercent, "%%"), \
     INIT_STR(Defaults, ".defaults"), \
     INIT_STR(DotLocals, ".<locals>"), \
     INIT_STR(Empty, ""), \
+    INIT_USTR(Excepthook, "خطاف_الخلل"), \
     INIT_STR(Format, ".format"), \
     INIT_STR(GenericBase, ".generic_base"),	\
     INIT_STR(IsAtty, "isatty"),	\
@@ -728,6 +730,7 @@
 	INIT_ID(__initSubclass__), \
 	INIT_ID(__lengthHint__), \
 	INIT_ID(__loader__), \
+	INIT_ID(__main__), \
 	INIT_ID(__module__), \
 	INIT_ID(__mroEntries__), \
     INIT_ID(__name__), \
@@ -754,8 +757,9 @@
 	INIT_ID(Encoding), \
 	INIT_ID(End), \
 	INIT_ID(Errors), \
-	INIT_ID(Excepthook), \
+	/*INIT_ID(Excepthook),*/ \
 	INIT_ID(File), \
+	INIT_ID(Filename), \
 	INIT_ID(Fileno), \
 	INIT_ID(Flush), \
 	INIT_ID(HasLocation), \

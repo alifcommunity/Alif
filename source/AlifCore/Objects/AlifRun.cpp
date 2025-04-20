@@ -11,6 +11,7 @@
 #include "AlifCore_Errors.h"
 #include "AlifCore_Run.h"
 #include "AlifCore_SysModule.h"
+#include "AlifCore_Traceback.h"
 
 
 #ifdef _WINDOWS
@@ -163,7 +164,57 @@ done:
 
 
 
+AlifIntT _alif_handleSystemExit(AlifIntT* _exitcodeP) { // 566
+	//AlifIntT inspect = alif_getConfig()->inspect;
+	//if (inspect) {
+	//	return 0;
+	//}
 
+	//if (!alifErr_exceptionMatches(_alifExcSystemExit_)) {
+	//	return 0;
+	//}
+
+	//fflush(stdout);
+
+	//AlifIntT exitcode = 0;
+
+	//AlifObject* exc = alifErr_getRaisedException();
+	//if (exc == nullptr) {
+	//	goto done;
+	//}
+
+	//AlifObject* code = alifObject_getAttr(exc, &ALIF_ID(Code));
+	//if (code) {
+	//	ALIF_SETREF(exc, code);
+	//	if (exc == ALIF_NONE) {
+	//		goto done;
+	//	}
+	//}
+
+	//if (ALIFLONG_CHECK(exc)) {
+	//	exitcode = (AlifIntT)alifLong_asLong(exc);
+	//}
+	//else {
+	//	AlifThread* tstate = _alifThread_get();
+	//	AlifObject* sys_stderr = _alifSys_getAttr(tstate, &ALIF_ID(Stderr));
+	//	alifErr_clear();
+	//	if (sys_stderr != nullptr and sys_stderr != ALIF_NONE) {
+	//		alifFile_writeObject(exc, sys_stderr, ALIF_PRINT_RAW);
+	//	}
+	//	else {
+	//		alifObject_print(exc, stderr, ALIF_PRINT_RAW);
+	//		fflush(stderr);
+	//	}
+	//	alifSys_writeStderr("\n");
+	//	exitcode = 1;
+	//}
+
+done:
+	//ALIF_CLEAR(exc);
+	//*_exitcodeP = exitcode;
+	//return 1;
+	return 0; //* alif
+}
 
 
 
@@ -206,7 +257,7 @@ static void _alifErr_printEx(AlifThread* _thread, AlifIntT _setSysLastVars) { //
 		}
 	}
 	AlifObject* hook;
-	hook = _alifSys_getAttr(_thread, &ALIF_ID(Excepthook));
+	hook = _alifSys_getAttr(_thread, &ALIF_STR(Excepthook));
 	//if (_alifSys_audit(_thread, "sys.excepthook", "OOOO", hook ? hook : ALIF_NONE,
 	//	typ, exc, tb) < 0) {
 	//	if (alifErr_exceptionMatches(_alifExcRuntimeError_)) {
@@ -265,6 +316,20 @@ public:
 };
 
 
+static AlifIntT printException_traceback(ExceptionPrintContext* ctx,
+	AlifObject* value) { // 755
+	AlifObject* f = ctx->file;
+	AlifIntT err = 0;
+
+	AlifObject* tb = alifException_getTraceback(value);
+	if (tb and tb != ALIF_NONE) {
+		const char* header = EXCEPTION_TB_HEADER;
+		err = _alifTraceBack_print(tb, header, f);
+	}
+	ALIF_XDECREF(tb);
+	return err;
+}
+
 
 static AlifIntT printException_fileAndLine(ExceptionPrintContext* ctx,
 	AlifObject** value_p) { // 770
@@ -280,7 +345,7 @@ static AlifIntT printException_fileAndLine(ExceptionPrintContext* ctx,
 	//}
 	//ALIF_DECREF(tmp);
 
-	AlifObject* filename = NULL;
+	AlifObject* filename = nullptr;
 	AlifSizeT lineno = 0;
 	AlifObject* v = alifObject_getAttr(*value_p, &ALIF_ID(Filename));
 	if (!v) {
@@ -314,12 +379,90 @@ error:
 }
 
 
+static AlifIntT printException_message(ExceptionPrintContext* ctx, AlifObject* type,
+	AlifObject* value) { // 821
+	AlifObject* f = ctx->file;
+
+	//if (alifErr_givenExceptionMatches(value, _alifExcMemoryError_)) {
+	//	return -1;
+	//}
+
+	AlifObject* modulename = alifObject_getAttr(type, &ALIF_ID(__module__));
+	if (modulename == nullptr or !ALIFUSTR_CHECK(modulename)) {
+		ALIF_XDECREF(modulename);
+		alifErr_clear();
+		if (alifFile_writeString("<unknown>.", f) < 0) {
+			return -1;
+		}
+	}
+	else {
+		if (!_alifUStr_equal(modulename, &ALIF_ID(Builtins)) and
+			!_alifUStr_equal(modulename, &ALIF_ID(__main__)))
+		{
+			AlifIntT res = alifFile_writeObject(modulename, f, ALIF_PRINT_RAW);
+			ALIF_DECREF(modulename);
+			if (res < 0) {
+				return -1;
+			}
+			if (alifFile_writeString(".", f) < 0) {
+				return -1;
+			}
+		}
+		else {
+			ALIF_DECREF(modulename);
+		}
+	}
+
+	AlifObject* qualname = alifType_getQualName((AlifTypeObject*)type);
+	if (qualname == nullptr or !ALIFUSTR_CHECK(qualname)) {
+		ALIF_XDECREF(qualname);
+		alifErr_clear();
+		if (alifFile_writeString("<unknown>", f) < 0) {
+			return -1;
+		}
+	}
+	else {
+		AlifIntT res = alifFile_writeObject(qualname, f, ALIF_PRINT_RAW);
+		ALIF_DECREF(qualname);
+		if (res < 0) {
+			return -1;
+		}
+	}
+
+	if (ALIF_ISNONE(value)) {
+		return 0;
+	}
+
+	AlifObject* s = alifObject_str(value);
+	if (s == nullptr) {
+		alifErr_clear();
+		if (alifFile_writeString(": <exception str() failed>", f) < 0) {
+			return -1;
+		}
+	}
+	else {
+		if (!ALIFUSTR_CHECK(s) or alifUStr_getLength(s) != 0) {
+			if (alifFile_writeString(": ", f) < 0) {
+				ALIF_DECREF(s);
+				return -1;
+			}
+		}
+		AlifIntT res = alifFile_writeObject(s, f, ALIF_PRINT_RAW);
+		ALIF_DECREF(s);
+		if (res < 0) {
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
 
 static AlifIntT print_exception(ExceptionPrintContext* ctx, AlifObject* value) { // 908
 	AlifObject* f = ctx->file;
 
 	if (!ALIFEXCEPTIONINSTANCE_CHECK(value)) {
-		return printException_invalidType(ctx, value);
+		//return printException_invalidType(ctx, value);
 	}
 
 	ALIF_INCREF(value);
@@ -363,27 +506,27 @@ static AlifIntT printException_causeAndContext(ExceptionPrintContext* ctx,
 		return 0;
 	}
 
-	AlifObject* cause = alifException_getCause(value);
-	if (cause) {
-		int err = 0;
-		if (!printException_seenLookup(ctx, cause)) {
-			err = print_chained(ctx, cause, _causeMessage_, "cause");
-		}
-		ALIF_DECREF(cause);
-		return err;
-	}
-	if (((AlifBaseExceptionObject*)value)->suppressContext) {
-		return 0;
-	}
-	AlifObject* context = alifException_getContext(value);
-	if (context) {
-		AlifIntT err = 0;
-		if (!printException_seenLookup(ctx, context)) {
-			err = print_chained(ctx, context, _contextMessage_, "context");
-		}
-		ALIF_DECREF(context);
-		return err;
-	}
+	//AlifObject* cause = alifException_getCause(value);
+	//if (cause) {
+	//	int err = 0;
+	//	if (!printException_seenLookup(ctx, cause)) {
+	//		err = print_chained(ctx, cause, _causeMessage_, "cause");
+	//	}
+	//	ALIF_DECREF(cause);
+	//	return err;
+	//}
+	//if (((AlifBaseExceptionObject*)value)->suppressContext) {
+	//	return 0;
+	//}
+	//AlifObject* context = alifException_getContext(value);
+	//if (context) {
+	//	AlifIntT err = 0;
+	//	if (!printException_seenLookup(ctx, context)) {
+	//		err = print_chained(ctx, context, _contextMessage_, "context");
+	//	}
+	//	ALIF_DECREF(context);
+	//	return err;
+	//}
 	return 0;
 }
 
@@ -479,14 +622,14 @@ void alifErr_display(AlifObject* unused, AlifObject* value, AlifObject* tb) { //
 	//if (file == ALIF_NONE) {
 	//	return;
 	//}
-	ALIF_INCREF(file);
+	//ALIF_INCREF(file);
 	_alifErr_display(file, nullptr, value, tb);
-	ALIF_DECREF(file);
+	//ALIF_DECREF(file);
 }
 
 
-void alifErr_displayException(AlifObject* exc) { // 1174
-	alifErr_display(nullptr, exc, nullptr);
+void alifErr_displayException(AlifObject* _exc) { // 1174
+	alifErr_display(nullptr, _exc, nullptr);
 }
 
 

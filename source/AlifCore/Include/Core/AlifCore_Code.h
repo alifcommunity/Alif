@@ -113,6 +113,12 @@ extern AlifIntT _alifCode_validate(AlifCodeConstructor*); // 287
 extern AlifCodeObject* alifCode_new(AlifCodeConstructor*); // 288
 
 
+extern AlifIntT _alifCode_initAddressRange(AlifCodeObject*, AlifCodeAddressRange*); // 300
+
+
+extern AlifIntT _alifLineTable_nextAddressRange(AlifCodeAddressRange*); // 310
+extern AlifIntT _alifLineTable_previousAddressRange(AlifCodeAddressRange*); // 311
+
 
 static inline uint16_t read_u16(uint16_t* _p) { // 439
 	return *_p;

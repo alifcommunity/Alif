@@ -264,10 +264,14 @@ AlifIntT alifInterpreter_setRunningMain(AlifInterpreter* _interp) { // 1056
 	return 0;
 }
 
-void alifInterpreter_setNotRunningMain(AlifInterpreter* _interp) { // 1074
+void _alifInterpreter_setNotRunningMain(AlifInterpreter* _interp) { // 1074
 	set_mainThread(_interp, nullptr);
 }
 
+AlifIntT _alifThread_isRunningMain(AlifThread* _thread) { // 1092
+	AlifInterpreter* interp = _thread->interpreter;
+	return get_mainThread(interp) == _thread;
+}
 
 AlifIntT alifInterpreter_failIfRunningMain(AlifInterpreter* _interp) { // 1105
 	if (get_mainThread(_interp) != nullptr) {

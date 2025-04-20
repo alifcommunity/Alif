@@ -14,7 +14,7 @@
 
 
 
-
+#include "clinic/SysModule.cpp.h"
 
 AlifObject* _alifSys_getAttr(AlifThread* _thread, AlifObject* _name) { // 73
 	AlifObject* sd = _thread->interpreter->sysDict;
@@ -77,6 +77,24 @@ AlifIntT _alifSys_setAttr(AlifObject* _key, AlifObject* _v) {
 	AlifInterpreter* interp = _alifInterpreter_get();
 	return sys_setObject(interp, _key, _v);
 }
+
+
+
+
+static AlifObject* sys_excepthookImpl(AlifObject* module, AlifObject* exctype,
+	AlifObject* value, AlifObject* traceback) { // 791
+	alifErr_display(nullptr, value, traceback);
+	return ALIF_NONE;
+}
+
+
+
+
+static AlifMethodDef _sysMethods_[] = { // 2550
+	SYS_EXCEPTHOOK_METHODDEF,
+	{nullptr, nullptr}  // sentinel
+};
+
 
 
 static AlifObject* listBuiltin_moduleNames(void) { // 2628
@@ -185,7 +203,7 @@ static AlifModuleDef _sysModule_ = { // 3447
 	"النظام",
 	0, //_sysDoc_
 	-1, /* multiple "initialization" just copies the module dict. */
-	0, //_sysMethods_,
+	_sysMethods_,
 	nullptr,
 	nullptr,
 	nullptr,
