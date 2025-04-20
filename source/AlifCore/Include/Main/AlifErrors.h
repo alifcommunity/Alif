@@ -12,7 +12,7 @@ void alifErr_clear(void); // 16
 
 AlifIntT alifErr_exceptionMatches(AlifObject*); // 39
 
-
+AlifIntT alifException_setTraceback(AlifObject*, AlifObject*); // 43
 AlifObject* alifException_getTraceback(AlifObject*); // 44
 
 

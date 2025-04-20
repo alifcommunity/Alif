@@ -754,6 +754,7 @@
 	INIT_ID(Encoding), \
 	INIT_ID(End), \
 	INIT_ID(Errors), \
+	INIT_ID(Excepthook), \
 	INIT_ID(File), \
 	INIT_ID(Fileno), \
 	INIT_ID(Flush), \
@@ -761,6 +762,10 @@
 	INIT_ID(Join), \
 	INIT_ID(keys), \
 	INIT_ID(ListComp), \
+    INIT_ID(LastExc), \
+	INIT_ID(LastTraceback), \
+	INIT_ID(LastType), \
+	INIT_ID(LastValue), \
 	INIT_ID(MetaClass), \
 	INIT_ID(Mro), \
 	INIT_ID(NFields), \

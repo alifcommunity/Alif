@@ -45,13 +45,13 @@ static AlifObject* _alifSys_getObject(AlifInterpreter* _interp, const char* _nam
 AlifObject* alifSys_getObject(const char* _name) { // 104
 	AlifThread* thread = _alifThread_get();
 
-	//AlifObject* exc_ = alifErr_getRaisedException(threadState);
+	AlifObject* exc_ = _alifErr_getRaisedException(thread);
 	AlifObject* value = _alifSys_getObject(thread->interpreter, _name);
 
 	if (_alifErr_occurred(thread)) {
 		//alifErr_formatUnraisable("Exception ignored in alifSys_getObject()");
 	}
-	//alifErr_setRaisedException(threadState, exc_);
+	_alifErr_setRaisedException(thread, exc_);
 	return value;
 }
 
@@ -73,7 +73,10 @@ static AlifIntT sys_setObject(AlifInterpreter* _interp,
 	}
 }
 
-
+AlifIntT _alifSys_setAttr(AlifObject* _key, AlifObject* _v) {
+	AlifInterpreter* interp = _alifInterpreter_get();
+	return sys_setObject(interp, _key, _v);
+}
 
 
 static AlifObject* listBuiltin_moduleNames(void) { // 2628

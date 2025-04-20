@@ -317,6 +317,51 @@ dispatch_opcode :
 				printf("Executing a cache. error");
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(BINARY_SLICE) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef container{};
+				AlifStackRef start{};
+				AlifStackRef stop{};
+				AlifStackRef res{};
+				// _SPECIALIZE_BINARY_SLICE
+				{
+					// Placeholder until we implement BINARY_SLICE specialization
+#if ENABLE_SPECIALIZATION
+					OPCODE_DEFERRED_INC(BINARY_SLICE);
+#endif  /* ENABLE_SPECIALIZATION */
+				}
+				// _BINARY_SLICE
+				{
+					stop = stackPointer[-1];
+					start = stackPointer[-2];
+					container = stackPointer[-3];
+					_alifFrame_setStackPointer(_frame, stackPointer);
+					AlifObject* slice = _alifBuildSlice_consumeRefs(alifStackRef_asAlifObjectSteal(start),
+						alifStackRef_asAlifObjectSteal(stop));
+					stackPointer = _alifFrame_getStackPointer(_frame);
+					AlifObject* resObj{};
+					// Can't use ERROR_IF() here, because we haven't
+					// DECREF'ed container yet, and we still own slice.
+					if (slice == nullptr) {
+						resObj = nullptr;
+					}
+					else {
+						stackPointer += -2;
+						_alifFrame_setStackPointer(_frame, stackPointer);
+						resObj = alifObject_getItem(alifStackRef_asAlifObjectBorrow(container), slice);
+						stackPointer = _alifFrame_getStackPointer(_frame);
+						ALIF_DECREF(slice);
+						stackPointer += 2;
+					}
+					ALIFSTACKREF_CLOSE(container);
+					if (resObj == nullptr) goto pop_3_error;
+					res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(resObj);
+				}
+				stackPointer[-3] = res;
+				stackPointer += -2;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(BINARY_SUBSCR) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 2;
@@ -358,6 +403,107 @@ dispatch_opcode :
 				stackPointer += -1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(CHECK_EG_MATCH) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef excValueSt{};
+				AlifStackRef matchTypeSt{};
+				AlifStackRef rest{};
+				AlifStackRef match{};
+				matchTypeSt = stackPointer[-1];
+				excValueSt = stackPointer[-2];
+				AlifObject* exc_value = alifStackRef_asAlifObjectBorrow(excValueSt);
+				AlifObject* match_type = alifStackRef_asAlifObjectBorrow(matchTypeSt);
+				_alifFrame_setStackPointer(_frame, stackPointer);
+				AlifIntT err = _alifEval_checkExceptStarTypeValid(_thread, match_type);
+				stackPointer = _alifFrame_getStackPointer(_frame);
+				if (err < 0) {
+					ALIFSTACKREF_CLOSE(excValueSt);
+					ALIFSTACKREF_CLOSE(matchTypeSt);
+					if (true) goto pop_2_error;
+				}
+				AlifObject* matchObj = nullptr;
+				AlifObject* restObj = nullptr;
+				_alifFrame_setStackPointer(_frame, stackPointer);
+				AlifIntT res = _alifEval_exceptionGroupMatch(exc_value, match_type,
+					&matchObj, &restObj);
+				stackPointer = _alifFrame_getStackPointer(_frame);
+				ALIFSTACKREF_CLOSE(excValueSt);
+				ALIFSTACKREF_CLOSE(matchTypeSt);
+				if (res < 0) goto pop_2_error;
+				if (matchObj == nullptr) goto pop_2_error;
+				if (!ALIF_ISNONE(matchObj)) {
+					stackPointer += -2;
+					_alifFrame_setStackPointer(_frame, stackPointer);
+					alifErr_setHandledException(matchObj);
+					stackPointer = _alifFrame_getStackPointer(_frame);
+					stackPointer += 2;
+				}
+				rest = ALIFSTACKREF_FROMALIFOBJECTSTEAL(restObj);
+				match = ALIFSTACKREF_FROMALIFOBJECTSTEAL(matchObj);
+				stackPointer[-2] = rest;
+				stackPointer[-1] = match;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
+			TARGET(CHECK_EXC_MATCH) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef left{};
+				AlifStackRef right{};
+				AlifStackRef b{};
+				right = stackPointer[-1];
+				left = stackPointer[-2];
+				AlifObject* leftObj = alifStackRef_asAlifObjectBorrow(left);
+				AlifObject* rightObj = alifStackRef_asAlifObjectBorrow(right);
+				_alifFrame_setStackPointer(_frame, stackPointer);
+				AlifIntT err = _alifEval_checkExceptTypeValid(_thread, rightObj);
+				stackPointer = _alifFrame_getStackPointer(_frame);
+				if (err < 0) {
+					ALIFSTACKREF_CLOSE(right);
+					if (true) goto pop_1_error;
+				}
+				_alifFrame_setStackPointer(_frame, stackPointer);
+				AlifIntT res = alifErr_givenExceptionMatches(leftObj, rightObj);
+				stackPointer = _alifFrame_getStackPointer(_frame);
+				ALIFSTACKREF_CLOSE(right);
+				b = res ? ALIFSTACKREF_TRUE : ALIFSTACKREF_FALSE;
+				stackPointer[-1] = b;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
+			TARGET(CLEANUP_THROW) {
+				AlifCodeUnit* const thisInstr = _frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef subIterSt{};
+				AlifStackRef lastSentValSt{};
+				AlifStackRef excValueSt{};
+				AlifStackRef none{};
+				AlifStackRef value{};
+				excValueSt = stackPointer[-1];
+				lastSentValSt = stackPointer[-2];
+				subIterSt = stackPointer[-3];
+				AlifObject* excValue = alifStackRef_asAlifObjectBorrow(excValueSt);
+				_alifFrame_setStackPointer(_frame, stackPointer);
+				AlifIntT matches = alifErr_givenExceptionMatches(excValue, _alifExcStopIteration_);
+				stackPointer = _alifFrame_getStackPointer(_frame);
+				if (matches) {
+					none = ALIFSTACKREF_NONE;
+					value = ALIFSTACKREF_FROMALIFOBJECTNEW(((AlifStopIterationObject*)excValue)->value);
+					ALIFSTACKREF_CLOSE(subIterSt);
+					ALIFSTACKREF_CLOSE(lastSentValSt);
+					ALIFSTACKREF_CLOSE(excValueSt);
+				}
+				else {
+					_alifFrame_setStackPointer(_frame, stackPointer);
+					_alifErr_setRaisedException(_thread, ALIF_NEWREF(excValue));
+					monitor_reraise(_thread, _frame, thisInstr);
+					stackPointer = _alifFrame_getStackPointer(_frame);
+					goto exception_unwind;
+				}
+				stackPointer[-3] = none;
+				stackPointer[-2] = value;
+				stackPointer += -1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(DELETE_SUBSCR) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;
@@ -376,12 +522,52 @@ dispatch_opcode :
 				stackPointer += -2;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(END_ASYNC_FOR) {
+				AlifCodeUnit* const thisInstr = _frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef awaitableSt{};
+				AlifStackRef excSt{};
+				excSt = stackPointer[-1];
+				awaitableSt = stackPointer[-2];
+				AlifObject* exc = alifStackRef_asAlifObjectBorrow(excSt);
+				_alifFrame_setStackPointer(_frame, stackPointer);
+				AlifIntT matches = alifErr_givenExceptionMatches(exc, _alifExcStopAsyncIteration_);
+				stackPointer = _alifFrame_getStackPointer(_frame);
+				if (matches) {
+					ALIFSTACKREF_CLOSE(awaitableSt);
+					ALIFSTACKREF_CLOSE(excSt);
+				}
+				else {
+					ALIF_INCREF(exc);
+					_alifFrame_setStackPointer(_frame, stackPointer);
+					_alifErr_setRaisedException(_thread, exc);
+					monitor_reraise(_thread, _frame, thisInstr);
+					stackPointer = _alifFrame_getStackPointer(_frame);
+					goto exception_unwind;
+				}
+				stackPointer += -2;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(END_FOR) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;
 				AlifStackRef value{};
 				value = stackPointer[-1];
 				ALIFSTACKREF_CLOSE(value);
+				stackPointer += -1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
+			TARGET(END_SEND) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef receiver{};
+				AlifStackRef value{};
+				AlifStackRef val{};
+				value = stackPointer[-1];
+				receiver = stackPointer[-2];
+				val = value;
+				ALIFSTACKREF_CLOSE(receiver);
+				stackPointer[-2] = val;
 				stackPointer += -1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
@@ -504,6 +690,27 @@ dispatch_opcode :
 				value = stackPointer[-1];
 				ALIFSTACKREF_CLOSE(value);
 				stackPointer += -1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
+			TARGET(PUSH_EXC_INFO) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef exc{};
+				AlifStackRef prevExc{};
+				AlifStackRef newExc{};
+				exc = stackPointer[-1];
+				AlifErrStackItem* excInfo = _thread->excInfo;
+				if (excInfo->excValue != nullptr) {
+					prevExc = ALIFSTACKREF_FROMALIFOBJECTSTEAL(excInfo->excValue);
+				}
+				else {
+					prevExc = ALIFSTACKREF_NONE;
+				}
+				excInfo->excValue = ALIFSTACKREF_ASALIFOBJECTNEW(exc);
+				newExc = exc;
+				stackPointer[-1] = prevExc;
+				stackPointer[0] = newExc;
+				stackPointer += 1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
 			TARGET(PUSH_NULL) {

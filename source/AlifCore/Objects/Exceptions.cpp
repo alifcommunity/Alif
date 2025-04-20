@@ -132,14 +132,34 @@ static AlifObject* baseException_addNote(AlifObject* self, AlifObject* note) { /
 }
 
 
+static AlifIntT baseException_setTB(AlifBaseExceptionObject* self, AlifObject* tb, void* ALIF_UNUSED(ignored)) { // 319
+	if (tb == nullptr) {
+		alifErr_setString(_alifExcTypeError_, "__traceback__ may not be deleted");
+		return -1;
+	}
+	if (ALIFTRACEBACK_CHECK(tb)) {
+		ALIF_XSETREF(self->traceback, ALIF_NEWREF(tb));
+	}
+	else if (tb == ALIF_NONE) {
+		ALIF_CLEAR(self->traceback);
+	}
+	else {
+		alifErr_setString(_alifExcTypeError_,
+			"__traceback__ must be a traceback or None");
+		return -1;
+	}
+	return 0;
+}
 
 
-
-AlifObject* alifException_getTraceback(AlifObject* _self) { // 411
+AlifObject* alifException_getTraaliferceback(AlifObject* _self) { // 411
 	AlifBaseExceptionObject* baseSelf = _alifBaseExceptionObject_cast(_self);
 	return ALIF_XNEWREF(baseSelf->traceback);
 }
 
+AlifIntT alifException_setTraceback(AlifObject* self, AlifObject* tb) { // 419
+	return baseException_setTB(_alifBaseExceptionObject_cast(self), tb, nullptr);
+}
 
 
 AlifObject* alifException_getContext(AlifObject* _self) { // 441
