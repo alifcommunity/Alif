@@ -88,7 +88,7 @@ AlifObject* alifMember_getOne(const char* obj_addr, AlifMemberDef* l) { // 23
 	case ALIF_T_CHAR:
 		v = alifUStr_fromStringAndSize((char*)addr, 1);
 		break;
-	case _ALIF_T_OBJECT:
+	case ALIF_T_OBJECT:
 		v = *(AlifObject**)addr;
 		if (v == nullptr)
 			v = ALIF_NONE;

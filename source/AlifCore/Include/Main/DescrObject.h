@@ -41,7 +41,7 @@ public:
 #define ALIF_T_FLOAT     3
 #define ALIF_T_DOUBLE    4
 #define ALIF_T_STRING    5
-#define _ALIF_T_OBJECT   6  // Deprecated, use ALIF_T_OBJECT_EX instead
+#define ALIF_T_OBJECT   6  // Deprecated, use ALIF_T_OBJECT_EX instead
 /* the ordering here is weird for binary compatibility */
 #define ALIF_T_CHAR      7   /* 1-character string */
 #define ALIF_T_BYTE      8   /* 8-bit signed int */
@@ -53,7 +53,7 @@ public:
 
 #define ALIF_T_STRING_INPLACE    13
 
-/* Added by Lillo: bools contained in the structure (assumed char) */
+/* bools contained in the structure (assumed char) */
 #define ALIF_T_BOOL      14
 
 #define ALIF_T_OBJECT_EX 16
