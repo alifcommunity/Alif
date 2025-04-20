@@ -118,6 +118,18 @@ static inline uint16_t read_u16(uint16_t* _p) { // 439
 	return *_p;
 }
 
+
+static inline unsigned char* parse_varint(unsigned char* _p, AlifIntT* _result) { // 471
+	AlifIntT val = _p[0] & 63;
+	while (_p[0] & 64) {
+		_p++;
+		val = (val << 6) | (_p[0] & 63);
+	}
+	*_result = val;
+	return _p + 1;
+}
+
+
 static inline AlifIntT write_varint(uint8_t* _ptr, AlifUIntT _val) { // 482
 	AlifIntT written = 1;
 	while (_val >= 64) {

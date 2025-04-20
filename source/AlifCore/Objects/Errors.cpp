@@ -295,6 +295,14 @@ void alifErr_clear(void) { // 529
 }
 
 
+void _alifErr_setHandledException(AlifThread* _thread, AlifObject* _exc) { // 593
+	ALIF_XSETREF(_thread->excInfo->excValue, ALIF_XNEWREF(_exc == ALIF_NONE ? nullptr : _exc));
+}
+
+void alifErr_setHandledException(AlifObject* _exc) { // 599
+	AlifThread* thread = _alifThread_get();
+	_alifErr_setHandledException(thread, _exc);
+}
 
 
 static AlifObject* _alifErr_formatV(AlifThread* _thread, AlifObject* _exception,

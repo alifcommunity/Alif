@@ -9,7 +9,9 @@ void alifErr_setString(AlifObject*, const char*); // 11
 AlifObject* alifErr_occurred(void); // 15
 void alifErr_clear(void); // 16
 
+void alifErr_setHandledException(AlifObject*); // 23
 
+AlifIntT alifErr_givenExceptionMatches(AlifObject*, AlifObject*); // 38
 AlifIntT alifErr_exceptionMatches(AlifObject*); // 39
 
 AlifIntT alifException_setTraceback(AlifObject*, AlifObject*); // 43
@@ -30,9 +32,17 @@ void alifException_setContext(AlifObject*, AlifObject*); // 52
 
 #define ALIFEXCEPTIONINSTANCE_CLASS(_x) ALIFOBJECT_CAST(ALIF_TYPE(_x))
 
+// 71
+#define ALIFBASEEXCEPTIONGROUP_CHECK(x)                   \
+    ALIFOBJECT_TYPECHECK((x), (AlifTypeObject*)_alifExcBaseExceptionGroup_)
+
 extern AlifObject* _alifExcBaseException_; // 76
 extern AlifObject* _alifExcException_; // 77
+extern AlifObject* _alifExcBaseExceptionGroup_; // 77
 
+extern AlifObject* _alifExcStopAsyncIteration_; // 80
+
+extern AlifObject* _alifExcStopIteration_; // 82
 
 extern AlifObject* _alifExcImportError_; // 93
 extern AlifObject* _alifExcIndexError_; // 97
@@ -65,14 +75,19 @@ AlifObject* alifErr_format(AlifObject*, const char*, ...); // 180
 
 class AlifBaseExceptionObject { // 13
 public:
-	ALIFEXCEPTION_HEAD
+	ALIFEXCEPTION_HEAD;
 };
 
-
+class AlifBaseExceptionGroupObject { // 17
+public:
+	ALIFEXCEPTION_HEAD;
+	AlifObject* msg{};
+	AlifObject* excs{};
+};
 
 class AlifSyntaxErrorObject { // 23
 public:
-	ALIFEXCEPTION_HEAD
+	ALIFEXCEPTION_HEAD;
 	AlifObject* msg{};
 	AlifObject* filename{};
 	AlifObject* lineno{};
@@ -92,4 +107,14 @@ public:
 	AlifObject* name{};
 	AlifObject* path{};
 	AlifObject* nameFrom{};
+};
+
+
+
+
+
+class AlifStopIterationObject { // 69
+public:
+	ALIFEXCEPTION_HEAD;
+	AlifObject* value{};
 };

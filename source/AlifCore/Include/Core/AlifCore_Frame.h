@@ -77,6 +77,10 @@ static inline AlifFunctionObject* _alifFrame_getFunction(AlifInterpreterFrame* _
 }
 
 
+static inline AlifStackRef* _alifFrame_stackBase(AlifInterpreterFrame* _f) { // 93
+	return (_f->localsPlus + _alifFrame_getCode(_f)->nLocalsPlus);
+}
+
 
 #define FRAME_SPECIALS_SIZE ((AlifIntT)((sizeof(AlifInterpreterFrame)-1)/sizeof(AlifObject*))) // 107
 

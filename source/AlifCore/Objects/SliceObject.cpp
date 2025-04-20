@@ -24,7 +24,8 @@ AlifObject _alifEllipsisObject_ = ALIFOBJECT_HEAD_INIT(&_alifEllipsisType_); // 
 
 
 
-static AlifSliceObject* _alifBuildSlice_consume2(AlifObject* _start, AlifObject* _stop, AlifObject* _step) { // 117
+static AlifSliceObject* _alifBuildSlice_consume2(AlifObject* _start,
+	AlifObject* _stop, AlifObject* _step) { // 117
 	AlifSliceObject* obj_ = ALIF_FREELIST_POP(AlifSliceObject, slices);
 	if (obj_ == nullptr) {
 		obj_ = ALIFOBJECT_GC_NEW(AlifSliceObject, &_alifSliceType_);
@@ -64,7 +65,9 @@ AlifObject* alifSlice_new(AlifObject* _start, AlifObject* _stop, AlifObject* _st
 
 
 
-
+AlifObject* _alifBuildSlice_consumeRefs(AlifObject* _start, AlifObject* _stop) { // 156
+	return (AlifObject*)_alifBuildSlice_consume2(_start, _stop, ALIF_NONE);
+}
 
 
 

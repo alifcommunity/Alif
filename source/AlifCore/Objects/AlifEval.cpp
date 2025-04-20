@@ -18,7 +18,7 @@
 #include "AlifCore_Errors.h"
 
 #include "AlifCore_State.h"
-
+#include "AlifCore_SliceObject.h"
 
 #include "AlifCore_Dict.h"
 
@@ -495,7 +495,7 @@ dispatch_opcode :
 				else {
 					_alifFrame_setStackPointer(_frame, stackPointer);
 					_alifErr_setRaisedException(_thread, ALIF_NEWREF(excValue));
-					monitor_reraise(_thread, _frame, thisInstr);
+					//monitor_reraise(_thread, _frame, thisInstr);
 					stackPointer = _alifFrame_getStackPointer(_frame);
 					goto exception_unwind;
 				}
@@ -541,7 +541,7 @@ dispatch_opcode :
 					ALIF_INCREF(exc);
 					_alifFrame_setStackPointer(_frame, stackPointer);
 					_alifErr_setRaisedException(_thread, exc);
-					monitor_reraise(_thread, _frame, thisInstr);
+					//monitor_reraise(_thread, _frame, thisInstr);
 					stackPointer = _alifFrame_getStackPointer(_frame);
 					goto exception_unwind;
 				}
@@ -2088,7 +2088,6 @@ dispatch_opcode :
 				DISPATCH();
 			} // ------------------------------------------------------------ //
 		}
-	}
 
 
 	/* يجب أن لا يتم الوصول لهذه الحالة مطلقا.
@@ -2125,7 +2124,47 @@ error:
 
 
 
+exception_unwind:
+		{
+			/* We can't use frame->instr_ptr here, as RERAISE may have set it */
+			AlifIntT offset = INSTR_OFFSET() - 1;
+			AlifIntT level, handler, lasti;
+			if (get_exceptionHandler(_alifFrame_getCode(_frame), offset, &level, &handler, &lasti) == 0) {
+				/* Pop remaining stack entries. */
+				AlifStackRef* stackbase = _alifFrame_stackBase(_frame);
+				while (stackPointer > stackbase) {
+					ALIFSTACKREF_XCLOSE(POP());
+				}
+				_alifFrame_setStackPointer(_frame, stackPointer);
+				//monitor_unwind(_thread, _frame, nextInstr - 1);
+				goto exit_unwind;
+			}
 
+			AlifStackRef* new_top = _alifFrame_stackBase(_frame) + level;
+			while (stackPointer > new_top) {
+				ALIFSTACKREF_XCLOSE(POP());
+			}
+			if (lasti) {
+				AlifIntT frame_lasti = ALIFINTERPRETERFRAME_LASTI(_frame);
+				AlifObject* lasti = alifLong_fromLong(frame_lasti);
+				if (lasti == nullptr) {
+					goto exception_unwind;
+				}
+				PUSH(ALIFSTACKREF_FROMALIFOBJECTSTEAL(lasti));
+			}
+
+			AlifObject* exc = _alifErr_getRaisedException(_thread);
+			PUSH(ALIFSTACKREF_FROMALIFOBJECTSTEAL(exc));
+			nextInstr = ALIFCODE_CODE(_alifFrame_getCode(_frame)) + handler;
+
+			//if (monitor_handled(_thread, _frame, nextInstr, exc) < 0) {
+			//	goto exception_unwind;
+			//}
+
+			/* Resume normal execution */
+			DISPATCH();
+		}
+	}
 
 
 
@@ -2354,6 +2393,67 @@ fail:
 	ALIF_DECREF(posOnlyNames);
 	return 1;
 
+}
+
+
+static inline unsigned char*
+scanBack_toEntryStart(unsigned char* _p) { // 1370
+	for (; (_p[0] & 128) == 0; _p--);
+	return _p;
+}
+
+static inline unsigned char*
+skipTo_nextEntry(unsigned char* _p, unsigned char* _end) {
+	while (_p < _end and ((_p[0] & 128) == 0)) {
+		_p++;
+	}
+	return _p;
+}
+
+#define MAX_LINEAR_SEARCH 40
+
+static AlifIntT get_exceptionHandler(AlifCodeObject* code, AlifIntT index,
+	AlifIntT* level, AlifIntT* handler, AlifIntT* lasti) { // 1387
+	unsigned char* start = (unsigned char*)ALIFBYTES_AS_STRING(code->exceptiontable);
+	unsigned char* end = start + ALIFBYTES_GET_SIZE(code->exceptiontable);
+	if (end - start > MAX_LINEAR_SEARCH) {
+		AlifIntT offset;
+		parse_varint(start, &offset);
+		if (offset > index) {
+			return 0;
+		}
+		do {
+			unsigned char* mid = start + ((end - start) >> 1);
+			mid = scanBack_toEntryStart(mid);
+			parse_varint(mid, &offset);
+			if (offset > index) {
+				end = mid;
+			}
+			else {
+				start = mid;
+			}
+
+		} while (end - start > MAX_LINEAR_SEARCH);
+	}
+	unsigned char* scan = start;
+	while (scan < end) {
+		AlifIntT start_offset, size;
+		scan = parse_varint(scan, &start_offset);
+		if (start_offset > index) {
+			break;
+		}
+		scan = parse_varint(scan, &size);
+		if (start_offset + size > index) {
+			scan = parse_varint(scan, handler);
+			int depth_and_lasti;
+			parse_varint(scan, &depth_and_lasti);
+			*level = depth_and_lasti >> 1;
+			*lasti = depth_and_lasti & 1;
+			return 1;
+		}
+		scan = skipTo_nextEntry(scan, end);
+	}
+	return 0;
 }
 
 
@@ -2698,7 +2798,56 @@ AlifObject* alifEval_vector(AlifThread* _tstate, AlifFunctionObject* _func,
 
 
 
+AlifIntT _alifEval_exceptionGroupMatch(AlifObject* _excValue, AlifObject* _matchType,
+	AlifObject** _match, AlifObject** _rest) { // 2040
+	if (ALIF_ISNONE(_excValue)) {
+		*_match = ALIF_NEWREF(ALIF_NONE);
+		*_rest = ALIF_NEWREF(ALIF_NONE);
+		return 0;
+	}
 
+	if (alifErr_givenExceptionMatches(_excValue, _matchType)) {
+		/* Full match of exc itself */
+		bool is_eg = ALIFBASEEXCEPTIONGROUP_CHECK(_excValue);
+		if (is_eg) {
+			*_match = ALIF_NEWREF(_excValue);
+		}
+		else {
+			/* naked exception - wrap it */
+			AlifObject* excs = alifTuple_pack(1, _excValue);
+			if (excs == nullptr) {
+				return -1;
+			}
+			AlifObject* wrapped = _alifExc_createExceptionGroup("", excs);
+			ALIF_DECREF(excs);
+			if (wrapped == nullptr) {
+				return -1;
+			}
+			*_match = wrapped;
+		}
+		*_rest = ALIF_NEWREF(ALIF_NONE);
+		return 0;
+	}
+
+	/* exc_value does not match match_type.
+	 * Check for partial match if it's an exception group.
+	 */
+	if (ALIFBASEEXCEPTIONGROUP_CHECK(_excValue)) {
+		AlifObject* pair = alifObject_callMethod(_excValue, "split", "(O)",
+			_matchType);
+		if (pair == nullptr) {
+			return -1;
+		}
+		*_match = ALIF_NEWREF(ALIFTUPLE_GET_ITEM(pair, 0));
+		*_rest = ALIF_NEWREF(ALIFTUPLE_GET_ITEM(pair, 1));
+		ALIF_DECREF(pair);
+		return 0;
+	}
+	/* no match */
+	*_match = ALIF_NEWREF(ALIF_NONE);
+	*_rest = ALIF_NEWREF(_excValue);
+	return 0;
+}
 
 
 
@@ -2961,7 +3110,70 @@ error:
 	return nullptr;
 }
 
+// 2861 
+#define CANNOT_CATCH_MSG "catching classes that do not inherit from "\
+                         "BaseException is not allowed"
 
+#define CANNOT_EXCEPT_STAR_EG "catching ExceptionGroup with except* "\
+                              "is not allowed. Use except instead."
+
+AlifIntT _alifEval_checkExceptTypeValid(AlifThread* _thread, AlifObject* _right) { // 2867
+	if (ALIFTUPLE_CHECK(_right)) {
+		AlifSizeT i{}, length{};
+		length = ALIFTUPLE_GET_SIZE(_right);
+		for (i = 0; i < length; i++) {
+			AlifObject* exc = ALIFTUPLE_GET_ITEM(_right, i);
+			if (!ALIFEXCEPTIONCLASS_CHECK(exc)) {
+				_alifErr_setString(_thread, _alifExcTypeError_,
+					CANNOT_CATCH_MSG);
+				return -1;
+			}
+		}
+	}
+	else {
+		if (!ALIFEXCEPTIONCLASS_CHECK(_right)) {
+			_alifErr_setString(_thread, _alifExcTypeError_,
+				CANNOT_CATCH_MSG);
+			return -1;
+		}
+	}
+	return 0;
+}
+
+AlifIntT _alifEval_checkExceptStarTypeValid(AlifThread* _thread, AlifObject* _right) { // 2892
+	if (_alifEval_checkExceptTypeValid(_thread, _right) < 0) {
+		return -1;
+	}
+
+	/* reject except *ExceptionGroup */
+
+	AlifIntT isSubclass = 0;
+	if (ALIFTUPLE_CHECK(_right)) {
+		AlifSizeT length = ALIFTUPLE_GET_SIZE(_right);
+		for (AlifSizeT i = 0; i < length; i++) {
+			AlifObject* exc = ALIFTUPLE_GET_ITEM(_right, i);
+			isSubclass = alifObject_isSubclass(exc, _alifExcBaseExceptionGroup_);
+			if (isSubclass < 0) {
+				return -1;
+			}
+			if (isSubclass) {
+				break;
+			}
+		}
+	}
+	else {
+		isSubclass = alifObject_isSubclass(_right, _alifExcBaseExceptionGroup_);
+		if (isSubclass < 0) {
+			return -1;
+		}
+	}
+	if (isSubclass) {
+		_alifErr_setString(_thread, _alifExcTypeError_,
+			CANNOT_EXCEPT_STAR_EG);
+		return -1;
+	}
+	return 0;
+}
 
 
 void _alifEval_loadGlobalStackRef(AlifObject* _globals, AlifObject* _builtins,

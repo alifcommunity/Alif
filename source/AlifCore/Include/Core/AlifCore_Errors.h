@@ -25,9 +25,15 @@ static inline AlifObject* _alifErr_occurred(AlifThread* _thread) { // 73
 extern AlifObject* _alifErr_getRaisedException(AlifThread*); // 96
 
 
+extern void _alifErr_setRaisedException(AlifThread*, AlifObject*); // 102
+
 void _alifErr_clear(AlifThread*); // 117
 
 
 void _alifErr_setString(AlifThread*, AlifObject*, const char*); // 123
 
 AlifObject* _alifErr_format(AlifThread*, AlifObject*, const char*, ...); // 128
+
+
+
+extern AlifObject* _alifExc_createExceptionGroup(const char*, AlifObject*); // 151

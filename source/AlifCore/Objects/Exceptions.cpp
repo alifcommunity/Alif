@@ -201,9 +201,6 @@ AlifTypeObject _exc ## EXCNAME ## _ = { \
 
 
 
-
-
-
 AlifIntT _alifException_addNote(AlifObject* _exc, AlifObject* _note) { // 3866
 	if (!ALIFEXCEPTIONINSTANCE_CHECK(_exc)) {
 		alifErr_format(nullptr /*_alifExcTypeError_*/,
@@ -303,6 +300,54 @@ SIMPLEEXTENDSEXCEPTION(_excException_, TypeError,
 	"Inappropriate argument type.");
 
 
+// 603
+SIMPLEEXTENDSEXCEPTION(_excException_, StopAsyncIteration,
+	"Signal the end from iterator.__anext__().");
+
+
+// 656
+COMPLEXEXTENDSEXCEPTION(_excException_, StopIteration, خطأ_تكرار_توقف, StopIteration,
+	0, 0, nullptr/*_stopIterationMembers_*/, 0, 0,
+	"Signal the end from iterator.__next__().");
+
+
+
+static inline AlifBaseExceptionGroupObject* _alifBaseExceptionGroupObject_cast(AlifObject* _exc) { // 729
+	return (AlifBaseExceptionGroupObject*)_exc;
+}
+
+
+
+
+
+
+COMPLEXEXTENDSEXCEPTION(_excBaseException_, BaseExceptionGroup, خطأ_اساس_مجموعة,
+	BaseExceptionGroup, baseExceptionGroup_new /* new */,
+	nullptr/*_baseExceptionGroupMethods_*/, nullptr/*_baseExceptionGroupMembers_*/,
+	0 /* getset */, nullptr/*baseExceptionGroup_str*/,
+	"A combination of multiple unrelated exceptions.");
+
+
+
+
+
+AlifObject* _alifExc_createExceptionGroup(const char* _msgStr, AlifObject* _excs) { // 849
+	AlifObject* msg = alifUStr_fromString(_msgStr);
+	if (!msg) {
+		return nullptr;
+	}
+	AlifObject* args = alifTuple_pack(2, msg, _excs);
+	ALIF_DECREF(msg);
+	if (!args) {
+		return nullptr;
+	}
+	AlifObject* result = alifObject_callObject(_alifExcBaseExceptionGroup_, args);
+	ALIF_DECREF(args);
+	return result;
+}
+
+
+
 static AlifObject* importError_str(AlifImportErrorObject* _self) { // 1623
 	if (_self->msg and ALIFUSTR_CHECKEXACT(_self->msg)) {
 		return ALIF_NEWREF(_self->msg);
@@ -374,7 +419,7 @@ static StaticException _staticExceptions_[] = { // 3615
 	ITEM(BaseException),
 
 	// Level 2: BaseException subclasses
-	//ITEM(BaseExceptionGroup),
+	ITEM(BaseExceptionGroup),
 	ITEM(Exception),
 	//ITEM(GeneratorExit),
 	//ITEM(KeyboardInterrupt),
@@ -394,8 +439,8 @@ static StaticException _staticExceptions_[] = { // 3615
 	//ITEM(OSError),
 	//ITEM(ReferenceError),
 	//ITEM(RuntimeError),
-	//ITEM(StopAsyncIteration),
-	//ITEM(StopIteration),
+	ITEM(StopAsyncIteration),
+	ITEM(StopIteration),
 	ITEM(SyntaxError),
 	ITEM(SystemError),
 	ITEM(TypeError),

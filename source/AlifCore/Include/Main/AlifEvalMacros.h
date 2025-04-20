@@ -53,8 +53,8 @@
 
 
 
-
- // 154
+#define INSTR_OFFSET() ((AlifIntT)(nextInstr - ALIFCODE_CODE(_alifFrame_getCode(_frame)))) // 154
+ // 155
 #define NEXTOPARG()  do { \
         AlifCodeUnit word  = {.cache = alifAtomic_loadUint16Relaxed(&*(uint16_t*)nextInstr)}; \
         opcode = word.op.code; \
@@ -75,12 +75,20 @@
 
 
 #define BASIC_STACKADJ(_n) (stackPointer += _n) // 212
-
+// 214
+#define BASIC_PUSH(v)     (*stackPointer++ = (v))
+#define BASIC_POP()       (*--stackPointer)
 
  // 227
 #define STACK_SHRINK(_n) do { \
                             BASIC_STACKADJ(-(_n)); \
                         } while (0)
+
+// 234
+#define PUSH(v)                BASIC_PUSH(v)
+#define POP()                  BASIC_POP()
+#define STACK_GROW(n)          BASIC_STACKADJ(n)
+#define STACK_SHRINK(n)        BASIC_STACKADJ(-(n))
 
 
 /* Data access macros */

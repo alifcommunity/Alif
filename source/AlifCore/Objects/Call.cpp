@@ -8,6 +8,7 @@
 #include "AlifCore_Tuple.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_Eval.h"
+#include "AlifCore_Errors.h"
 
 
 
@@ -286,6 +287,18 @@ AlifObject* alifFunction_vectorCall(AlifObject* _func, AlifObject* const* _stack
 	}
 }
 
+AlifObject* alifObject_callObject(AlifObject* _callable, AlifObject* _args) { // 459
+	AlifThread* thread = _alifThread_get();
+	if (_args == nullptr) {
+		return _alifObject_callNoArgsThread(thread, _callable);
+	}
+	if (!ALIFTUPLE_CHECK(_args)) {
+		_alifErr_setString(thread, _alifExcTypeError_,
+			"argument list must be a tuple");
+		return nullptr;
+	}
+	return _alifObject_call(thread, _callable, _args, nullptr);
+}
 
 AlifObject* _alifObject_callPrepend(AlifThread* _thread, AlifObject* _callable,
 	AlifObject* _obj, AlifObject* _args, AlifObject* _kwargs) { // 477

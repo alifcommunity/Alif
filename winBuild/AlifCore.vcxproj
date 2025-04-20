@@ -93,6 +93,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Semaphore.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_SetObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Signal.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_SliceObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_StackRef.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_State.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_StructSeq.h" />
