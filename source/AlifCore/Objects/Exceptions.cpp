@@ -522,7 +522,7 @@ static AlifObject* syntaxError_str(AlifSyntaxErrorObject* self) { // 2530
 		return alifObject_str(self->msg ? self->msg : ALIF_NONE);
 
 	if (filename and have_lineno)
-		result = alifUStr_fromFormat("%S (%U, line %ld)",
+		result = alifUStr_fromFormat("%S (%U, السطر %ld)",
 			self->msg ? self->msg : ALIF_NONE,
 			filename,
 			alifLong_asLongAndOverflow(self->lineno, &overflow));
@@ -531,7 +531,7 @@ static AlifObject* syntaxError_str(AlifSyntaxErrorObject* self) { // 2530
 			self->msg ? self->msg : ALIF_NONE,
 			filename);
 	else /* only have_lineno */
-		result = alifUStr_fromFormat("%S (line %ld)",
+		result = alifUStr_fromFormat("%S (السطر %ld)",
 			self->msg ? self->msg : ALIF_NONE,
 			alifLong_asLongAndOverflow(self->lineno, &overflow));
 	ALIF_XDECREF(filename);

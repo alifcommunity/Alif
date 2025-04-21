@@ -425,6 +425,7 @@ AlifIntT _alifUStrWriter_writeStr(AlifUStrWriter*, AlifObject*); // 570
 AlifIntT _alifUStrWriter_writeSubString(AlifUStrWriter*, AlifObject*, AlifSizeT, AlifSizeT);
 
 AlifIntT alifUStrWriter_writeASCIIString(AlifUStrWriter*, const char*, AlifSizeT); // 586
+AlifIntT alifUStrWriter_writeString(AlifUStrWriter*, const char*, AlifSizeT); //* alif
 
 AlifObject* _alifUStrWriter_finish(AlifUStrWriter*); // 602
 

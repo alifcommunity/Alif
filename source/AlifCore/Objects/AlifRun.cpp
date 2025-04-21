@@ -387,31 +387,31 @@ static AlifIntT printException_message(ExceptionPrintContext* ctx, AlifObject* t
 	//	return -1;
 	//}
 
-	AlifObject* modulename = alifObject_getAttr(type, &ALIF_ID(__module__));
-	if (modulename == nullptr or !ALIFUSTR_CHECK(modulename)) {
-		ALIF_XDECREF(modulename);
-		alifErr_clear();
-		if (alifFile_writeString("<unknown>.", f) < 0) {
-			return -1;
-		}
-	}
-	else {
-		if (!_alifUStr_equal(modulename, &ALIF_ID(Builtins)) and
-			!_alifUStr_equal(modulename, &ALIF_ID(__main__)))
-		{
-			AlifIntT res = alifFile_writeObject(modulename, f, ALIF_PRINT_RAW);
-			ALIF_DECREF(modulename);
-			if (res < 0) {
-				return -1;
-			}
-			if (alifFile_writeString(".", f) < 0) {
-				return -1;
-			}
-		}
-		else {
-			ALIF_DECREF(modulename);
-		}
-	}
+	//AlifObject* modulename = alifObject_getAttr(type, &ALIF_ID(__module__));
+	//if (modulename == nullptr or !ALIFUSTR_CHECK(modulename)) {
+	//	ALIF_XDECREF(modulename);
+	//	alifErr_clear();
+	//	if (alifFile_writeString("<unknown>.", f) < 0) {
+	//		return -1;
+	//	}
+	//}
+	//else {
+	//	if (!_alifUStr_equal(modulename, &ALIF_ID(Builtins)) and
+	//		!_alifUStr_equal(modulename, &ALIF_ID(__main__)))
+	//	{
+	//		AlifIntT res = alifFile_writeObject(modulename, f, ALIF_PRINT_RAW);
+	//		ALIF_DECREF(modulename);
+	//		if (res < 0) {
+	//			return -1;
+	//		}
+	//		if (alifFile_writeString(".", f) < 0) {
+	//			return -1;
+	//		}
+	//	}
+	//	else {
+	//		ALIF_DECREF(modulename);
+	//	}
+	//}
 
 	AlifObject* qualname = alifType_getQualName((AlifTypeObject*)type);
 	if (qualname == nullptr or !ALIFUSTR_CHECK(qualname)) {
