@@ -30,26 +30,26 @@ AlifIntT alifFile_writeObject(AlifObject* _v, AlifObject* _f, AlifIntT _flags) {
 	//result = alifObject_callOneArg(writer, value);
 	//* alif //* todo
 	char* buf = (char*)alifUStr_asUTF8(value);
-	printf("%s \n", buf);
+	printf("%s", buf);
 	result = ALIF_NONE;
 	//* alif
 	ALIF_DECREF(value);
-	ALIF_DECREF(writer);
+	//ALIF_DECREF(writer);
 	if (result == nullptr)
 		return -1;
-	ALIF_DECREF(result);
+	//ALIF_DECREF(result);
 	return 0;
 }
 
 
 AlifIntT alifFile_writeString(const char* _s, AlifObject* _f) { // 134
-	if (_f == nullptr) {
-		/* Should be caused by a pre-existing error */
-		//if (!alifErr_occurred())
-		//	alifErr_setString(_alifExcSystemError_,
-		//		"null file for alifFile_writeString");
-		return -1;
-	}
+	//if (_f == nullptr) {
+	//	/* Should be caused by a pre-existing error */
+	//	if (!alifErr_occurred())
+	//		alifErr_setString(_alifExcSystemError_,
+	//			"null file for alifFile_writeString");
+	//	return -1;
+	//}
 	//else if (!alifErr_occurred()) {
 		AlifObject* v = alifUStr_fromString(_s);
 		AlifIntT err{};

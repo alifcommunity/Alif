@@ -360,7 +360,7 @@ static AlifIntT printException_fileAndLine(ExceptionPrintContext* ctx,
 		filename = v;
 	}
 
-	AlifObject* line = alifUStr_fromFormat("  File \"%S\", line %zd\n",
+	AlifObject* line = alifUStr_fromFormat("  الملف \"%S\", السطر %zd\n",
 		filename, lineno);
 	ALIF_DECREF(filename);
 	if (line == nullptr) {
