@@ -220,10 +220,33 @@ AlifIntT _alifException_addNote(AlifObject* _exc, AlifObject* _note) { // 3866
 
 
 
+static AlifObject* baseException_getArgs(AlifBaseExceptionObject* self,
+	void* ALIF_UNUSED(ignored)) { // 286
+	if (self->args == nullptr) {
+		return ALIF_NONE;
+	}
+	return ALIF_NEWREF(self->args);
+}
+
+static AlifIntT baseException_setArgs(AlifBaseExceptionObject* self,
+	AlifObject* val, void* ALIF_UNUSED(ignored)) { // 295
+	AlifObject* seq{};
+	if (val == nullptr) {
+		alifErr_setString(_alifExcTypeError_, "args may not be deleted");
+		return -1;
+	}
+	seq = alifSequence_tuple(val);
+	if (!seq)
+		return -1;
+	ALIF_XSETREF(self->args, seq);
+	return 0;
+}
 
 
-
-
+static AlifGetSetDef _baseExceptionGetSet_[] = { // 399
+	{"args", (Getter)baseException_getArgs, (Setter)baseException_setArgs},
+	{nullptr},
+};
 
 
 static AlifTypeObject _excBaseException_ = { // 483
@@ -241,7 +264,7 @@ static AlifTypeObject _excBaseException_ = { // 483
 	//(Inquiry)baseException_clear,
 	//.methods = baseException_methods,
 	//.members = baseException_members,
-	//.getSet = baseException_getset,
+	.getSet = _baseExceptionGetSet_,
 	.dictOffset = offsetof(AlifBaseExceptionObject, dict),
 	.init = (InitProc)baseException_init,
 	.new_ = baseException_new,

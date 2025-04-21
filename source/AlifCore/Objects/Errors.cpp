@@ -51,6 +51,9 @@ void _alifErr_restore(AlifThread* _thread, AlifObject* _type, AlifObject* _value
 		_alifErr_setRaisedException(_thread, nullptr);
 		return;
 	}
+	if (_value != nullptr and _type == (AlifObject*)ALIF_TYPE(_value)) {
+		/* Already normalized */
+	}
 	else {
 		AlifObject* exc = _alifErr_createException(_type, _value);
 		ALIF_XDECREF(_value);
@@ -198,8 +201,9 @@ void _alifErr_setObject(AlifThread* _thread,
 			ALIF_DECREF(excValue);
 		}
 	}
-	if (ALIFEXCEPTIONINSTANCE_CHECK(_value))
+	if (ALIFEXCEPTIONINSTANCE_CHECK(_value)) {
 		tb = alifException_getTraceback(_value);
+	}
 	_alifErr_restore(_thread, ALIF_NEWREF(ALIF_TYPE(_value)), _value, tb);
 }
 
