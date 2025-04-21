@@ -916,9 +916,11 @@ static const char* convert_simple(AlifObject* _arg, const char** _pFormat, va_li
 			void* addr = va_arg(*_pVa, void*);
 			AlifIntT res{};
 			format++;
-			//if (!(res = (*convert)(_arg, addr)))
-			//	return convert_err("(unspecified)",
-			//		_arg, _mSGBuf, _bufSize);
+			if (!(res = (*convert)(_arg, addr))) {
+				/*return convert_err("(unspecified)",
+					_arg, _mSGBuf, _bufSize);*/
+				return nullptr; //* alif
+			}
 			if (res == ALIF_CLEANUP_SUPPORTED and
 				add_cleanup(addr, _freeList, convert) == -1)
 			{
