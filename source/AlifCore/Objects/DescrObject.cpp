@@ -112,6 +112,29 @@ static AlifObject* member_get(AlifObject* self, AlifObject* obj, AlifObject* typ
 }
 
 
+
+static AlifIntT descr_setCheck(AlifDescrObject* descr,
+	AlifObject* obj, AlifObject* value) { // 215
+	if (!ALIFOBJECT_TYPECHECK(obj, descr->type)) {
+		alifErr_format(_alifExcTypeError_,
+			"descriptor '%V' for '%.100s' objects "
+			"doesn't apply to a '%.100s' object",
+			/*descr_name(descr),*/ "?",
+			descr->type->name,
+			ALIF_TYPE(obj)->name);
+		return -1;
+	}
+	return 0;
+}
+
+static AlifIntT member_set(AlifObject* self, AlifObject* obj, AlifObject* value) { // 231
+	AlifMemberDescrObject* descr = (AlifMemberDescrObject*)self;
+	if (descr_setCheck((AlifDescrObject*)descr, obj, value) < 0) {
+		return -1;
+	}
+	return alifMember_setOne((char*)obj, descr->member, value);
+}
+
 static inline AlifIntT method_checkArgs(AlifObject* func,
 	AlifObject* const* args, AlifSizeT nargs, AlifObject* kwnames) { // 265
 	if (nargs < 1) {
@@ -355,6 +378,7 @@ AlifTypeObject _alifMemberDescrType_ = { // 793
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
 
 	.descrGet = member_get,
+	.descrSet = member_set,
 };
 
 AlifTypeObject _alifGetSetDescrType_ = { // 830

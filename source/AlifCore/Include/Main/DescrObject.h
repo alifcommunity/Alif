@@ -71,7 +71,7 @@ public:
 
 
 AlifObject* alifMember_getOne(const char*, AlifMemberDef*); // 88
-
+AlifIntT alifMember_setOne(char*, AlifMemberDef*, AlifObject*); //89
 
 
 

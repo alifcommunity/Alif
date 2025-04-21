@@ -6,6 +6,8 @@
 #include "AlifCore_ModSupport.h"
 #include "AlifCore_Errors.h"
 
+#include "OSDefs.h"
+
 
 
 /*
@@ -260,8 +262,8 @@ static AlifTypeObject _exc ## EXCNAME ## _ = { \
     /*.clear = (Inquiry)baseException_clear,*/	\
 	.base = &EXCBASE, \
     .dictOffset = offsetof(AlifBaseExceptionObject, dict), \
-    /*.init = (InitProc)baseException_init,*/	\
-	/*.new_ = baseException_new,*/	\
+    .init = (InitProc)baseException_init,	\
+	.new_ = baseException_new,	\
 }; \
 AlifObject* _alifExc ## EXCNAME ## _ = (AlifObject *)&_exc ## EXCNAME ## _
 
@@ -275,7 +277,7 @@ static AlifTypeObject _exc ## EXCNAME ## _ = { \
     .name = # NAME, \
     .basicSize = sizeof(Alif ## EXCNAME ## Object), \
     /*.dealloc = (Destructor)EXCSTORE ## _dealloc,*/ \
-    /*.repr = (ReprFunc)EXCSTR,*/ \
+    .repr = (ReprFunc)EXCSTR, \
     .flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_HAVE_GC, \
     /*.traverse = (TraverseProc)EXCSTORE ## _traverse,*/ \
     /*.clear = (Inquiry)EXCSTORE ## _clear,*/	\
@@ -285,7 +287,7 @@ static AlifTypeObject _exc ## EXCNAME ## _ = { \
 	.base = &EXCBASE, \
     .dictOffset = offsetof(Alif ## EXCNAME ## Object, dict), \
     .init = (InitProc)EXCSTORE ## _init,	\
-	/*.new_ = EXCNEW,*/	\
+	.new_ = EXCNEW,	\
 }; \
 AlifObject* _alifExc ## EXCNAME ## _ = (AlifObject*)&_exc ## EXCNAME ## _
 
@@ -349,7 +351,7 @@ static AlifIntT baseExceptionGroup_init(AlifBaseExceptionGroupObject* self,
 
 
 COMPLEXEXTENDSEXCEPTION(_excBaseException_, BaseExceptionGroup, خطأ_اساس_مجموعة,
-	baseExceptionGroup, baseExceptionGroup_new /* new */,
+	baseExceptionGroup, nullptr/*baseExceptionGroup_new*/ /* new */,
 	nullptr/*_baseExceptionGroupMethods_*/, nullptr/*_baseExceptionGroupMembers_*/,
 	0 /* getset */, nullptr/*baseExceptionGroup_str*/,
 	"A combination of multiple unrelated exceptions.");
@@ -454,7 +456,66 @@ static AlifIntT syntaxError_init(AlifSyntaxErrorObject* self,
 	return 0;
 }
 
-static AlifMemberDef _syntaxErrorMembers_[] = {
+
+static AlifObject* my_basename(AlifObject* name) { // 2505
+	AlifSizeT i{}, size{}, offset{};
+	AlifIntT kind{};
+	const void* data{};
+
+	kind = ALIFUSTR_KIND(name);
+	data = ALIFUSTR_DATA(name);
+	size = ALIFUSTR_GET_LENGTH(name);
+	offset = 0;
+	for (i = 0; i < size; i++) {
+		if (ALIFUSTR_READ(kind, data, i) == SEP) {
+			offset = i + 1;
+		}
+	}
+	if (offset != 0) {
+		return alifUStr_subString(name, offset, size);
+	}
+	else {
+		return ALIF_NEWREF(name);
+	}
+}
+
+static AlifObject* syntaxError_str(AlifSyntaxErrorObject* self) { // 2530
+	AlifIntT have_lineno = 0;
+	AlifObject* filename{};
+	AlifObject* result{};
+	AlifIntT overflow{};
+
+	if (self->filename and ALIFUSTR_CHECK(self->filename)) {
+		filename = my_basename(self->filename);
+		if (filename == nullptr)
+			return nullptr;
+	}
+	else {
+		filename = nullptr;
+	}
+	have_lineno = (self->lineno != nullptr) and ALIFLONG_CHECKEXACT(self->lineno);
+
+	if (!filename and !have_lineno)
+		return alifObject_str(self->msg ? self->msg : ALIF_NONE);
+
+	if (filename and have_lineno)
+		result = alifUStr_fromFormat("%S (%U, line %ld)",
+			self->msg ? self->msg : ALIF_NONE,
+			filename,
+			alifLong_asLongAndOverflow(self->lineno, &overflow));
+	else if (filename)
+		result = alifUStr_fromFormat("%S (%U)",
+			self->msg ? self->msg : ALIF_NONE,
+			filename);
+	else /* only have_lineno */
+		result = alifUStr_fromFormat("%S (line %ld)",
+			self->msg ? self->msg : ALIF_NONE,
+			alifLong_asLongAndOverflow(self->lineno, &overflow));
+	ALIF_XDECREF(filename);
+	return result;
+}
+
+static AlifMemberDef _syntaxErrorMembers_[] = { // 2573
 	{"msg", ALIF_T_OBJECT, offsetof(AlifSyntaxErrorObject, msg), 0},
 	{"Filename", ALIF_T_OBJECT, offsetof(AlifSyntaxErrorObject, filename), 0},
 	{"lineno", ALIF_T_OBJECT, offsetof(AlifSyntaxErrorObject, lineno), 0},
@@ -469,7 +530,7 @@ static AlifMemberDef _syntaxErrorMembers_[] = {
 
 COMPLEXEXTENDSEXCEPTION(_excException_, SyntaxError, خطأ_نسق, syntaxError,
 	0, 0, _syntaxErrorMembers_, 0,
-	nullptr/*syntaxError_str*/, "خطأ في النسق"); // 2594
+	syntaxError_str, "خطأ في النسق"); // 2594
 
 
 

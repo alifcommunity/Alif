@@ -477,9 +477,9 @@ AlifIntT alifObject_getOptionalAttr(AlifObject* _v,
 		if (*_result != nullptr) {
 			return 1;
 		}
-		//if (alifErr_occurred()) {
-			//return -1;
-		//}
+		if (alifErr_occurred()) {
+			return -1;
+		}
 		return 0;
 	}
 	if (tp_->getAttro == alifType_getAttro) {
@@ -494,9 +494,9 @@ AlifIntT alifObject_getOptionalAttr(AlifObject* _v,
 		if (*_result != nullptr) {
 			return 1;
 		}
-		//if (alifErr_occurred()) {
-			//return -1;
-		//}
+		if (alifErr_occurred()) {
+			return -1;
+		}
 		return 0;
 	}
 	else if (tp_->getAttro != nullptr) {
@@ -521,7 +521,7 @@ AlifIntT alifObject_getOptionalAttr(AlifObject* _v,
 	//if (!alifErr_exceptionMatches(_alifExcAttributeError_)) {
 		//return -1;
 	//}
-	//alifErr_clear();
+	alifErr_clear();
 	return 0;
 }
 
@@ -737,7 +737,7 @@ AlifObject* alifObject_genericGetAttrWithDict(AlifObject* _obj, AlifObject* _nam
 			if (res == nullptr and _suppress
 				/*and alifErr_exceptionMatches(alifExcAttributeError)*/
 				) {
-				//alifErr_clear();
+				alifErr_clear();
 			}
 			goto done;
 		}

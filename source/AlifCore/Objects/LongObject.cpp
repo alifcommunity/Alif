@@ -487,6 +487,56 @@ overflow:
 }
 
 
+unsigned long alifLong_asUnsignedLong(AlifObject* vv) { // 639
+	AlifLongObject* v{};
+	unsigned long x{}, prev{};
+	AlifSizeT i{};
+
+	if (vv == nullptr) {
+		//ALIFERR_BADINTERNALCALL();
+		return (unsigned long)-1;
+	}
+	if (!ALIFLONG_CHECK(vv)) {
+		alifErr_setString(_alifExcTypeError_, "an integer is required");
+		return (unsigned long)-1;
+	}
+
+	v = (AlifLongObject*)vv;
+	if (_alifLong_isNonNegativeCompact(v)) {
+#if SIZEOF_LONG < SIZEOF_SIZE_T
+		AlifUSizeT tmp = (AlifUSizeT)alifLong_compactValue(v);
+		unsigned long res = (unsigned long)tmp;
+		if (res != tmp) {
+			goto overflow;
+		}
+		return res;
+#else
+		return (unsigned long)(AlifUSizeT)alifLong_compactValue(v);
+#endif
+	}
+	if (_alifLong_isNegative(v)) {
+		//alifErr_setString(_alifExcOverflowError_,
+		//	"can't convert negative value to unsigned int");
+		return (unsigned long)-1;
+	}
+	i = alifLong_digitCount(v);
+	x = 0;
+	while (--i >= 0) {
+		prev = x;
+		x = (x << ALIFLONG_SHIFT) | v->longValue.digit[i];
+		if ((x >> ALIFLONG_SHIFT) != prev) {
+			goto overflow;
+		}
+	}
+	return x;
+overflow:
+	//alifErr_setString(_alifExcOverflowError_,
+	//	"Alif int too large to convert "
+	//	"to C unsigned long");
+	return (unsigned long)-1;
+}
+
+
 static unsigned long _alifLong_asUnsignedLongMask(AlifObject* _vv) { // 721
 	AlifLongObject* v_{};
 	unsigned long x_{};
@@ -1181,6 +1231,48 @@ AlifObject* alifNumber_long(AlifObject* o) { // 1505
 	//return type_error("int() argument must be a string, a bytes-like object "
 	//	"or a real number, not '%.200s'", o);
 	return nullptr; //* alif
+}
+
+unsigned long long alifLong_asUnsignedLongLong(AlifObject* vv) { // 1540
+	AlifLongObject* v{};
+	unsigned long long bytes{};
+	AlifIntT res{};
+
+	if (vv == nullptr) {
+		//ALIFERR_BADINTERNALCALL();
+		return (unsigned long long) - 1;
+	}
+	if (!ALIFLONG_CHECK(vv)) {
+		alifErr_setString(_alifExcTypeError_, "an integer is required");
+		return (unsigned long long) - 1;
+	}
+
+	v = (AlifLongObject*)vv;
+	if (_alifLong_isNonNegativeCompact(v)) {
+		res = 0;
+#if SIZEOF_LONG_LONG < SIZEOF_SIZE_T
+		AlifUSizeT tmp = (AlifUSizeT)alifLong_compactValue(v);
+		bytes = (unsigned long long)tmp;
+		if (bytes != tmp) {
+			//alifErr_setString(_alifExcOverflowError_,
+			//	"Alif int too large to convert "
+			//	"to C unsigned long long");
+			res = -1;
+		}
+#else
+		bytes = (unsigned long long)(AlifUSizeT)alifLong_compactValue(v);
+#endif
+	}
+	else {
+		res = _alifLong_asByteArray((AlifLongObject*)vv, (unsigned char*)&bytes,
+			SIZEOF_LONG_LONG, ALIF_LITTLE_ENDIAN, 0, 1);
+	}
+
+	/* Plan 9 can't handle long long in ? : expressions */
+	if (res < 0)
+		return (unsigned long long)res;
+	else
+		return bytes;
 }
 
 static unsigned long long _alifLong_asUnsignedLongLongMask(AlifObject* _vv) { // 1583

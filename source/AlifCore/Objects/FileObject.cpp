@@ -11,13 +11,13 @@
 AlifIntT alifFile_writeObject(AlifObject* _v, AlifObject* _f, AlifIntT _flags) { // 104
 	AlifObject* writer{}, * value{}, * result{};
 
-	if (_f == nullptr) {
-		//alifErr_setString(_alifExcTypeError_, "writeobject with nullptr file");
-		return -1;
-	}
-	writer = alifObject_getAttr(_f, &ALIF_ID(Write));
-	if (writer == nullptr)
-		return -1;
+	//if (_f == nullptr) {
+	//	alifErr_setString(_alifExcTypeError_, "writeobject with nullptr file");
+	//	return -1;
+	//}
+	//writer = alifObject_getAttr(_f, &ALIF_ID(Write));
+	//if (writer == nullptr)
+	//	return -1;
 	if (_flags & ALIF_PRINT_RAW) {
 		value = alifObject_str(_v);
 	}
@@ -27,7 +27,12 @@ AlifIntT alifFile_writeObject(AlifObject* _v, AlifObject* _f, AlifIntT _flags) {
 		ALIF_DECREF(writer);
 		return -1;
 	}
-	result = alifObject_callOneArg(writer, value);
+	//result = alifObject_callOneArg(writer, value);
+	//* alif //* todo
+	char* buf = (char*)alifUStr_asUTF8(value);
+	printf("%s \n", buf);
+	result = ALIF_NONE;
+	//* alif
 	ALIF_DECREF(value);
 	ALIF_DECREF(writer);
 	if (result == nullptr)

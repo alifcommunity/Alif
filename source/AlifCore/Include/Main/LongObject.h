@@ -26,6 +26,7 @@ long alifLong_asLongAndOverflow(AlifObject*, AlifIntT*); // 23
 
 AlifSizeT alifLong_asSizeT(AlifObject*); // 24
 
+unsigned long alifLong_asUnsignedLong(AlifObject*); // 26
 unsigned long alifLong_asUnsignedLongMask(AlifObject*); // 27
 
 AlifIntT alifLong_asInt(AlifObject*); // 30
@@ -43,6 +44,7 @@ AlifObject* alifLong_fromString(const char*, char**, AlifIntT); // 97
 AlifObject* alifLong_fromLongLong(long long); // 102
 
 
+unsigned long long alifLong_asUnsignedLongLong(AlifObject*); // 105
 
 
 unsigned long alifOS_strToULong(const char*, char**, AlifIntT); // 102
