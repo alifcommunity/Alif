@@ -16,6 +16,11 @@
 extern int winerror_to_errno(int);
 #endif
 
+// 36
+#ifdef HAVE_FCNTL_H
+#  include <fcntl.h>              // fcntl(F_GETFD)
+#endif
+
 
 #define MAX_UNICODE 0x10ffff // 53
 
@@ -1117,25 +1122,25 @@ AlifIntT _alif_dup(AlifIntT fd) { // 2651
 	//}
 #elif defined(HAVE_FCNTL_H) and defined(F_DUPFD_CLOEXEC)
 	ALIF_BEGIN_ALLOW_THREADS
-		ALIF_BEGIN_SUPPRESS_IPH
-		fd = fcntl(fd, F_DUPFD_CLOEXEC, 0);
+	ALIF_BEGIN_SUPPRESS_IPH
+	fd = fcntl(fd, F_DUPFD_CLOEXEC, 0);
 	ALIF_END_SUPPRESS_IPH
-		ALIF_END_ALLOW_THREADS
-		if (fd < 0) {
-			//alifErr_setFromErrno(_alifExcOSError_);
-			return -1;
-		}
+	ALIF_END_ALLOW_THREADS
+	if (fd < 0) {
+		//alifErr_setFromErrno(_alifExcOSError_);
+		return -1;
+	}
 
 #elif HAVE_DUP
 	ALIF_BEGIN_ALLOW_THREADS
 	ALIF_BEGIN_SUPPRESS_IPH
-		fd = dup(fd);
+	fd = dup(fd);
 	ALIF_END_SUPPRESS_IPH
 	ALIF_END_ALLOW_THREADS
-		if (fd < 0) {
-			alifErr_setFromErrno(_alifExcOSError_);
-			return -1;
-		}
+	if (fd < 0) {
+		// alifErr_setFromErrno(_alifExcOSError_);
+		return -1;
+	}
 
 	if (_alif_setInheritable(fd, 0, nullptr) < 0) {
 		ALIF_BEGIN_SUPPRESS_IPH
@@ -1145,7 +1150,7 @@ AlifIntT _alif_dup(AlifIntT fd) { // 2651
 	}
 #else
 	errno = ENOTSUP;
-	alifErr_setFromErrno(_alifExcOSError_);
+	// alifErr_setFromErrno(_alifExcOSError_);
 	return -1;
 #endif
 	return fd;

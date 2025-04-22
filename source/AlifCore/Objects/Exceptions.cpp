@@ -317,7 +317,7 @@ AlifObject* _alifExc ## EXCNAME ## _ = (AlifObject*)&_exc ## EXCNAME ## _
 
 
  // 586
-SIMPLEEXTENDSEXCEPTION(_excBaseException_, Exception,
+SIMPLEEXTENDSEXCEPTION(_excBaseException_, Exception, خطأ_اساس,
 	"Common base class for all non-exit exceptions.");
 
 // 596
@@ -564,17 +564,17 @@ MIDDLINGEXTENDSEXCEPTION(_excIndentationError_, TabError, خطأ_مسافة, Syn
 	"Improper mixture of spaces and tabs."); // 2609
 
 
-SIMPLEEXTENDSEXCEPTION(_excException_, LookupError, خطأ_بحث
+SIMPLEEXTENDSEXCEPTION(_excException_, LookupError, خطأ_بحث,
 	"Base class for lookup errors."); // 2621
 
-SIMPLEEXTENDSEXCEPTION(_excLookupError_, IndexError, خطأ_مؤشر
+SIMPLEEXTENDSEXCEPTION(_excLookupError_, IndexError, خطأ_مؤشر,
 	"Sequence index out of range."); // 2628
 
 
 
 
 
-SIMPLEEXTENDSEXCEPTION(_excException_, ValueError, خطأ_قيمة
+SIMPLEEXTENDSEXCEPTION(_excException_, ValueError, خطأ_قيمة,
 	"Inappropriate argument value (of correct type)."); // 2660
 
 
