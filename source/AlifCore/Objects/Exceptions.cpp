@@ -191,9 +191,9 @@ AlifTypeObject _exc ## EXCNAME ## _ = { \
     /*.init = (InitProc)EXCSTORE ## _init,*/ \
 };
 
-#define MIDDLINGEXTENDSEXCEPTION(EXCBASE, EXCNAME, EXCSTORE, EXCDOC) \
+#define MIDDLINGEXTENDSEXCEPTION(EXCBASE, EXCNAME, ALIFEXCNAME, EXCSTORE, EXCDOC) \
     static MIDDLINGEXTENDSEXCEPTIONEX( \
-        EXCBASE, EXCNAME, EXCNAME, EXCSTORE, EXCDOC); \
+        EXCBASE, EXCNAME, ALIFEXCNAME, EXCSTORE, EXCDOC); \
     AlifObject *_alifExc ## EXCNAME ## _ = (AlifObject *)&_exc ## EXCNAME ## _
 
 
@@ -423,7 +423,7 @@ COMPLEXEXTENDSEXCEPTION(_excException_, ImportError,
 	"لا يمكن إيجاد وحدة الاستيراد, او لا يمكن إيجاد الاسم في الوحدة ");
 
  // 1710
-MIDDLINGEXTENDSEXCEPTION(_excImportError_, ModuleNotFoundError, ImportError,
+MIDDLINGEXTENDSEXCEPTION(_excImportError_, ModuleNotFoundError, خطأ_استيراد, ImportError,
 	"Module not found.");
 
 
@@ -556,6 +556,9 @@ COMPLEXEXTENDSEXCEPTION(_excException_, SyntaxError, خطأ_نسق, syntaxError,
 	syntaxError_str, "خطأ في النسق"); // 2594
 
 
+
+MIDDLINGEXTENDSEXCEPTION(_excSyntaxError_, IndentationError, خطأ_مسافة, SyntaxError,
+	"مسافة طويلة 'tab' غير صحيحة"); // 2602
 
 
 SIMPLEEXTENDSEXCEPTION(_excException_, LookupError, خطأ_بحث
