@@ -8923,6 +8923,138 @@ done:
 }
 
 
+static void* invalid_forTargetRule(AlifParser* _p) {
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	void* res = nullptr;
+	AlifIntT mark = _p->mark;
+	{ // "مزامنة"? "لاجل" تعبيرات_نجمة
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+		AlifPToken* keyword{};
+		void* optVar{};
+		ExprTy a{};
+		if (
+			(optVar = alifParserEngine_expectToken(_p, ASYNC_KW), !_p->errorIndicator)  // "مزامنة"?
+			and
+			(keyword = alifParserEngine_expectToken(_p, FOR_KW))  // "لاجل"
+			and
+			(a = starExpressions_rule(_p))  // تعبيرات_نجمة
+			)
+		{
+			res = RAISE_SYNTAX_ERROR_INVALID_TARGET(TargetsType_::For_Targets, a);
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+
+	res = nullptr;
+done:
+	_p->level--;
+	return res;
+}
+//	^
+//	|
+//	|
+static void* invalid_forStmtRule(AlifParser* _p) {
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	void* res = nullptr;
+	AlifIntT mark = _p->mark;
+	{ // "مزامنة"? "لاجل اهداف_نجمة "في" تعبيرات_نجمة سطر
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		AlifPToken* keyword{};
+		AlifPToken* keyword1{};
+		void* optVar{};
+		AlifPToken* newlineVar{};
+		ExprTy starExpressionsVar{};
+		ExprTy starTargetsVar{};
+		if (
+			(optVar = alifParserEngine_expectToken(_p, ASYNC_KW), !_p->errorIndicator)  // "مزامنة"?
+			and
+			(keyword = alifParserEngine_expectToken(_p, FOR_KW))  // "لاجل"
+			and
+			(starTargetsVar = starTargets_rule(_p))  // اهداف_نجمة
+			and
+			(keyword1 = alifParserEngine_expectToken(_p, IN_KW))  // "في"
+			and
+			(starExpressionsVar = starExpressions_rule(_p))  // تعبيرات_نجمة
+			and
+			(newlineVar = alifParserEngine_expectToken(_p, NEWLINE))  // سطر
+			)
+		{
+			res = RAISE_SYNTAX_ERROR("نسيت ':'");
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+	{ // "مزامنة"? "لاجل اهداف_نجمة "في" تعبيرات_نجمة ":" سطر !مسافة_طويلة
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		AlifPToken* _keyword{};
+		AlifPToken* _literal{};
+		void* _opt_var;
+		AlifPToken* a{};
+		AlifPToken* newline_var{};
+		ExprTy star_expressions_var{};
+		ExprTy star_targets_var{};
+		if (
+			(_opt_var = alifParserEngine_expectToken(_p, ASYNC_KW), !_p->errorIndicator)  // "مزامنة"?
+			and
+			(a = alifParserEngine_expectToken(_p, FOR_KW))  // "لاجل"
+			and
+			(star_targets_var = starTargets_rule(_p))  // اهداف_نجمة
+			and
+			(_keyword = alifParserEngine_expectToken(_p, IN_KW))  // "في"
+			and
+			(star_expressions_var = starExpressions_rule(_p))  // تعبيرات_نجمة
+			and
+			(_literal = alifParserEngine_expectToken(_p, COLON))  // ":"
+			and
+			(newline_var = alifParserEngine_expectToken(_p, NEWLINE))  // سطر
+			and
+			alifParserEngine_lookaheadWithInt(0, alifParserEngine_expectToken, _p, INDENT)  // مسافة_طويلة
+			)
+		{
+			res = RAISE_INDENTATION_ERROR("نسيت إضافة مسافة طويلة 'tab' ضمن حالة 'لاجل في السطر' %d", a->lineNo);
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+
+	res = nullptr;
+done:
+	_p->level--;
+	return res;
+}
+//	^
+//	|
+//	|
 /*
 	حالة_لاجل:
 		> "لاجل" أهداف_نجمة "في" ~ تعبيرات_نجمة ":" كتلة
@@ -8946,6 +9078,19 @@ static StmtTy forStmt_rule(AlifParser* _p) {
 	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
 	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
+	if (_p->callInvalidRules) { // حالة_لاجل_خاطئة
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		void* invalidForStmtVar{};
+		if (
+			(invalidForStmtVar = invalid_forStmtRule(_p))  // invalid_for_stmt
+			)
+		{
+			res = (StmtTy)invalidForStmtVar;
+			goto done;
+		}
+		_p->mark = mark;
+	}
 	{ // "لاجل" أهداف_نجمة "في" ~ تعبيرات_نجمة ":" كتلة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
@@ -9036,6 +9181,21 @@ static StmtTy forStmt_rule(AlifParser* _p) {
 		}
 		_p->mark = mark;
 		if (cutVar) { _p->level--; return nullptr; }
+	}
+	if (_p->callInvalidRules) { // invalid_for_target
+		if (_p->errorIndicator) {
+			_p->level--;
+			return nullptr;
+		}
+		void* invalidForTargetVar;
+		if (
+			(invalidForTargetVar = invalid_forTargetRule(_p))  // حالة_لاجل_خاطئة
+			)
+		{
+			res = (StmtTy)invalidForTargetVar;
+			goto done;
+		}
+		_p->mark = mark;
 	}
 
 	res = nullptr;

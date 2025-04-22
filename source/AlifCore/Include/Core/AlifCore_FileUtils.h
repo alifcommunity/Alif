@@ -73,6 +73,8 @@ extern wchar_t* alif_wRealPath(const wchar_t*, wchar_t*, AlifUSizeT); // 160
 
 extern wchar_t* alif_wGetCWD(wchar_t* , AlifUSizeT ); // 168
 
+AlifIntT _alif_dup(AlifIntT); // 185
+
 #ifdef _WINDOWS
 extern void* _alifGet_osfHandleNoRaise(AlifIntT); // 192
 

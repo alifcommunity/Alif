@@ -560,6 +560,9 @@ COMPLEXEXTENDSEXCEPTION(_excException_, SyntaxError, خطأ_نسق, syntaxError,
 MIDDLINGEXTENDSEXCEPTION(_excSyntaxError_, IndentationError, خطأ_مسافة, SyntaxError,
 	"مسافة طويلة 'tab' غير صحيحة"); // 2602
 
+MIDDLINGEXTENDSEXCEPTION(_excIndentationError_, TabError, خطأ_مسافة, SyntaxError,
+	"Improper mixture of spaces and tabs."); // 2609
+
 
 SIMPLEEXTENDSEXCEPTION(_excException_, LookupError, خطأ_بحث
 	"Base class for lookup errors."); // 2621
@@ -656,7 +659,7 @@ static StaticException _staticExceptions_[] = { // 3615
 	//ITEM(TimeoutError),
 
 	// Level 4: Other subclasses
-	//ITEM(IndentationError), // base: SyntaxError(Exception)
+	ITEM(IndentationError), // base: SyntaxError(Exception)
 	//{&_alifExcIncompleteInputError_, "_IncompleteInputError"}, // base: SyntaxError(Exception)
 	ITEM(IndexError),  // base: LookupError(Exception)
 	//ITEM(KeyError),  // base: LookupError(Exception)

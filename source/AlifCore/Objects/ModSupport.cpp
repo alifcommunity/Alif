@@ -258,12 +258,12 @@ static AlifObject* do_mkValue(const char** _pFormat, va_list* _pVa) { // 272
 			return alifLong_fromUnsignedLong(n);
 		}
 
-//		case 'n':
-//#if SIZEOF_SIZE_T!=SIZEOF_LONG
-//			return alifLong_fromSizeT(va_arg(*_pVa, AlifSizeT));
-//#endif
-//			/* Fall through from 'n' to 'l' if AlifSizeT is long */
-//			ALIF_FALLTHROUGH;
+		case 'n':
+#if SIZEOF_SIZE_T!=SIZEOF_LONG
+			return alifLong_fromSizeT(va_arg(*_pVa, AlifSizeT));
+#endif
+			/* Fall through from 'n' to 'l' if AlifSizeT is long */
+			ALIF_FALLTHROUGH;
 		case 'l':
 			return alifLong_fromLong(va_arg(*_pVa, long));
 

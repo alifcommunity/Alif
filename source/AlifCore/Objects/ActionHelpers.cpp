@@ -637,6 +637,78 @@ ResultTokenWithMetadata* alifParserEngine_setupFullFormatSpec(AlifParser* _p,
 	return resultToken_withMetadata(_p, res, _lit->data);
 }
 
+const char* _alifParserEngine_getExprName(ExprTy _e) { // 1028
+	switch (_e->type) {
+	case AttributeK:
+		return "صفة";
+	case SubScriptK:
+		return "subscript";
+	case StarK:
+		return "نجمي";
+	case NameK:
+		return "اسم";
+	case ListK:
+		return "مصفوفة";
+	case TupleK:
+		return "مترابطة";
+	//case LambdaK:
+	//	return "lambda";
+	case CallK:
+		return "استدعاء دالة";
+	case BoolOpK:
+	case BinOpK:
+	case UnaryOpK:
+		return "تعبير";
+	case GeneratorExprK:
+		return "تعبير توليدي";
+	case YieldK:
+	case YieldFromK:
+		return "تعبير ولد";
+	case AwaitK:
+		return "تعبير انتظر";
+	case ListCompK:
+		return "مصفوفة ضمنية";
+	case SetCompK:
+		return "تشكيلة ضمنية";
+	case DictCompK:
+		return "فهرس ضمني";
+	case DictK:
+		return "فهرس";
+	case SetK:
+		return "عرض تشكيلة";
+	case JoinStrK:
+	case FormattedValK:
+		return "تعبير نص منسق";
+	case ConstantK: {
+		AlifObject* value = _e->V.constant.val;
+		if (value == ALIF_NONE) {
+			return "عدم";
+		}
+		if (value == ALIF_FALSE) {
+			return "خطأ";
+		}
+		if (value == ALIF_TRUE) {
+			return "صح";
+		}
+		if (value == ALIF_ELLIPSIS) {
+			return "ellipsis";
+		}
+		return "حرف";
+	}
+	case CompareK:
+		return "مقارنة";
+	case IfExprK:
+		return "تعبير شرطي";
+	case NamedExprK:
+		return "تعبير اسمي";
+	default:
+		//alifErr_format(_alifExcSystemError_,
+		//	"unexpected expression in assignment %d (line %d)",
+		//	e->type, e->lineNo);
+		return nullptr;
+	}
+}
+
 ExprTy alifParserEngine_collectCallSeqs(AlifParser* _p, ASDLExprSeq* _a, ASDLSeq* _b,
 	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo,
 	AlifIntT _endColOffset, AlifASTMem* _astMem) { // 1111
@@ -666,6 +738,52 @@ ExprTy alifParserEngine_collectCallSeqs(AlifParser* _p, ASDLExprSeq* _a, ASDLSeq
 
 	return alifAST_call((ExprTy)alifParserEngine_dummyName(_p), args, keywords,
 		_lineNo, _colOffset, _endLineNo, _endColOffset, _astMem);
+}
+
+ExprTy _alifParserEngine_getInvalidTarget(ExprTy e, TargetsType_ targets_type) { // 1146
+	if (e == nullptr) {
+		return nullptr;
+	}
+
+#define VISIT_CONTAINER(CONTAINER, TYPE) do { \
+        AlifSizeT len = ASDL_SEQ_LEN((CONTAINER)->V.TYPE.elts);\
+        for (AlifSizeT i = 0; i < len; i++) {\
+            ExprTy other = ASDL_SEQ_GET((CONTAINER)->V.TYPE.elts, i);\
+            ExprTy child = _alifParserEngine_getInvalidTarget(other, targets_type);\
+            if (child != nullptr) {\
+                return child;\
+            }\
+        }\
+    } while (0)
+
+	switch (e->type) {
+	case ListK:
+		VISIT_CONTAINER(e, list);
+		return nullptr;
+	case TupleK:
+		VISIT_CONTAINER(e, tuple);
+		return nullptr;
+	case StarK:
+		if (targets_type == TargetsType_::Del_Targets) {
+			return e;
+		}
+		return _alifParserEngine_getInvalidTarget(e->V.star.val, targets_type);
+	case CompareK:
+		if (targets_type == TargetsType_::For_Targets) {
+			CmpOp_ cmpop = (CmpOp_)ASDL_SEQ_GET(e->V.compare.ops, 0);
+			if (cmpop == In) {
+				return _alifParserEngine_getInvalidTarget(e->V.compare.left, targets_type);
+			}
+			return nullptr;
+		}
+		return e;
+	case NameK:
+	case SubScriptK:
+	case AttributeK:
+		return nullptr;
+	default:
+		return e;
+	}
 }
 
 static ExprTy alifParserEngine_decodeFStringPart(AlifParser* _p, AlifIntT _isRaw,

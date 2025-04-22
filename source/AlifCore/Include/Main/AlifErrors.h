@@ -53,6 +53,7 @@ extern AlifObject* _alifExcIndexError_; // 97
 extern AlifObject* _alifExcOverflowError_; // 102
 
 extern AlifObject* _alifExcSyntaxError_; // 108
+extern AlifObject* _alifExcIndentationError_; // 109
 extern AlifObject* _alifExcSystemError_; // 112
 extern AlifObject* _alifExcTypeError_; // 114
 

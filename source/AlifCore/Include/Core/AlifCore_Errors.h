@@ -12,6 +12,7 @@ extern AlifErrStackItem* _alifErr_getTopmostException(AlifThread*); // 14
 extern AlifIntT _alifException_addNote(AlifObject*, AlifObject*); // 32
 
 
+AlifObject* _alifErr_programDecodedTextObject(AlifObject*, AlifIntT, const char*); // 41
 
 
 static inline AlifObject* _alifErr_occurred(AlifThread* _thread) { // 73

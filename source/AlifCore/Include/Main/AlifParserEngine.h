@@ -144,10 +144,15 @@ AlifSizeT _alifParserEngine_byteOffsetToCharacterOffset(AlifObject*, AlifSizeT);
 AlifIntT alifParserEngine_fillToken(AlifParser*); // 147
 
 
+enum TargetsType_ { // 156
+	Star_Targets,
+	Del_Targets,
+	For_Targets
+};
 
 
 AlifIntT _alifParserEngine_tokenizerError(AlifParser*); // 164
-
+void* _alifParserEngine_raiseError(AlifParser*, AlifObject*, AlifIntT, const char*, ...); // 165
 void* _alifParserEngine_raiseErrorKnownLocation(AlifParser*, AlifObject*, AlifSizeT,
 	AlifSizeT, AlifSizeT, AlifSizeT, const char*, va_list); // 166
 
@@ -155,7 +160,7 @@ void _alifParserEngine_setSyntaxError(AlifParser*, AlifPToken*); // 170
 void alifParserEngineError_stackOverflow(AlifParser*); // 171
 
 
-ALIF_LOCAL_INLINE(void*) _raiseRrror_knownLocation(AlifParser* _p, AlifObject* _errtype,
+ALIF_LOCAL_INLINE(void*) _raiseError_knownLocation(AlifParser* _p, AlifObject* _errtype,
 	AlifSizeT _lineno, AlifSizeT _colOffset,
 	AlifSizeT _endLineno, AlifSizeT _endColOffset,
 	const char* _errmsg, ...) { // 173
@@ -165,8 +170,51 @@ ALIF_LOCAL_INLINE(void*) _raiseRrror_knownLocation(AlifParser* _p, AlifObject* _
 	AlifSizeT _end_col_offset = (_endColOffset == CURRENT_POS ? CURRENT_POS : _endColOffset + 1);
 	_alifParserEngine_raiseErrorKnownLocation(_p, _errtype, _lineno, _col_offset, _endLineno, _end_col_offset, _errmsg, va);
 	va_end(va);
-	return NULL;
+	return nullptr;
 }
+
+
+#define RAISE_SYNTAX_ERROR(msg, ...) _alifParserEngine_raiseError(_p, _alifExcSyntaxError_, 0, msg, ##__VA_ARGS__) // 186
+#define RAISE_INDENTATION_ERROR(msg, ...) _alifParserEngine_raiseError(_p, _alifExcIndentationError_, 0, msg, ##__VA_ARGS__) // 188
+
+#define RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, msg, ...) \
+    _raiseError_knownLocation(_p, _alifExcSyntaxError_, (a)->lineNo, (a)->colOffset, (a)->endLineNo, (a)->endColOffset, msg, ##__VA_ARGS__)
+#define RAISE_SYNTAX_ERROR_INVALID_TARGET(_type, _e) _raiseSyntaxError_invalidTarget(_p, _type, _e) // 196
+
+
+
+
+ALIF_LOCAL_INLINE(void*) _checkCall_nullAllowed(AlifParser* p, void* result) { // 210
+	if (result == nullptr and alifErr_occurred()) {
+		p->errorIndicator = 1;
+	}
+	return result;
+}
+
+#define CHECK_NULL_ALLOWED(_type, _result) ((_type) _checkCall_nullAllowed(_p, _result)) // 220
+
+ExprTy _alifParserEngine_getInvalidTarget(ExprTy, TargetsType_); // 222
+const char* _alifParserEngine_getExprName(ExprTy); // 223
+ALIF_LOCAL_INLINE(void*) _raiseSyntaxError_invalidTarget(AlifParser* _p,
+	TargetsType_ _type, ExprTy _e) { // 224
+	ExprTy invalid_target = CHECK_NULL_ALLOWED(ExprTy, _alifParserEngine_getInvalidTarget(_e, _type));
+	if (invalid_target != nullptr) {
+		const char* msg;
+		if (_type == TargetsType_::Star_Targets or _type == TargetsType_::For_Targets) {
+			msg = "cannot assign to %s";
+		}
+		else {
+			msg = "cannot delete %s";
+		}
+		return RAISE_SYNTAX_ERROR_KNOWN_LOCATION(
+			invalid_target, msg,
+			_alifParserEngine_getExprName(invalid_target)
+		);
+		return RAISE_SYNTAX_ERROR_KNOWN_LOCATION(invalid_target, "خطأ في النسق");
+	}
+	return nullptr;
+}
+
 
 
 void* alifParserEngine_dummyName(AlifParser*, ...); // 248

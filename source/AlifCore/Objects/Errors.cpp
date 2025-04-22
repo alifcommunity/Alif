@@ -368,5 +368,77 @@ AlifObject* alifErr_format(AlifObject* _exception,
 	va_start(vargs, _format);
 	_alifErr_formatV(thread, _exception, _format, vargs);
 	va_end(vargs);
-	return NULL;
+	return nullptr;
+}
+
+
+
+
+static AlifObject* err_programText(FILE* _fp, AlifIntT _lineno, const char* _encoding) { // 1905
+	char linebuf[1000]{};
+	size_t line_size = 0;
+
+	for (AlifIntT i = 0; i < _lineno; ) {
+		line_size = 0;
+		if (alifUniversal_newLineFGetsWithSize(linebuf, sizeof(linebuf),
+			_fp, nullptr, &line_size) == nullptr)
+		{
+			/* Error or EOF. */
+			return nullptr;
+		}
+		if (i + 1 < _lineno
+			and line_size == sizeof(linebuf) - 1
+			and linebuf[sizeof(linebuf) - 2] != '\n')
+		{
+			continue;
+		}
+		i++;
+	}
+
+	const char* line = linebuf;
+	/* Skip BOM. */
+	if (_lineno == 1 and line_size >= 3 and memcmp(line, "\xef\xbb\xbf", 3) == 0) {
+		line += 3;
+		line_size -= 3;
+	}
+	AlifObject* res = alifUStr_decode(line, line_size, _encoding, "replace");
+	if (res == nullptr) {
+		alifErr_clear();
+	}
+	return res;
+}
+
+extern char* _alifTokenizer_findEncodingFilename(AlifIntT, AlifObject*); // 1964
+
+AlifObject* _alifErr_programDecodedTextObject(AlifObject* filename, AlifIntT lineno,
+	const char* encoding) { // 1966
+	char* found_encoding = nullptr;
+	if (filename == nullptr or lineno <= 0) {
+		return nullptr;
+	}
+
+	FILE* fp = alif_fOpenObj(filename, "r");
+	if (fp == nullptr) {
+		alifErr_clear();
+		return nullptr;
+	}
+	if (encoding == nullptr) {
+		AlifIntT fd = fileno(fp);
+		found_encoding = _alifTokenizer_findEncodingFilename(fd, filename);
+		encoding = found_encoding;
+		if (encoding == nullptr) {
+			alifErr_clear();
+			encoding = "utf-8";
+		}
+		/* Reset position */
+		if (lseek(fd, 0, SEEK_SET) == (off_t)-1) {
+			fclose(fp);
+			alifMem_dataFree(found_encoding);
+			return nullptr;
+		}
+	}
+	AlifObject* res = err_programText(fp, lineno, encoding);
+	fclose(fp);
+	alifMem_dataFree(found_encoding);
+	return res;
 }

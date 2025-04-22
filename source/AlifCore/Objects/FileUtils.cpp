@@ -579,6 +579,10 @@ AlifIntT _alif_wStat(const wchar_t* path, struct stat* buf) { // 1332
 }
 
 
+//AlifIntT _alif_setInheritable(AlifIntT fd,
+//	AlifIntT inheritable, AlifIntT* atomic_flag_works) { // 1604
+//	return set_inheritable(fd, inheritable, 1, atomic_flag_works);
+//}
 
 
 FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) { // 1764
@@ -1084,6 +1088,68 @@ wchar_t* alif_wGetCWD(wchar_t* _buf, AlifUSizeT _bufLen) { // 2620
 #endif
 }
 
+
+AlifIntT _alif_dup(AlifIntT fd) { // 2651
+#ifdef _WINDOWS
+	HANDLE handle;
+#endif
+
+#ifdef _WINDOWS
+	handle = _alifGet_osfHandleNoRaise(fd);
+	if (handle == INVALID_HANDLE_VALUE)
+		return -1;
+
+	ALIF_BEGIN_ALLOW_THREADS
+	ALIF_BEGIN_SUPPRESS_IPH
+		fd = dup(fd);
+	ALIF_END_SUPPRESS_IPH
+	ALIF_END_ALLOW_THREADS
+		if (fd < 0) {
+			//alifErr_setFromErrno(_alifExcOSError_);
+			return -1;
+		}
+
+	//if (_alif_setInheritable(fd, 0, nullptr) < 0) {
+	//	ALIF_BEGIN_SUPPRESS_IPH
+	//		close(fd);
+	//	ALIF_END_SUPPRESS_IPH
+	//		return -1;
+	//}
+#elif defined(HAVE_FCNTL_H) and defined(F_DUPFD_CLOEXEC)
+	ALIF_BEGIN_ALLOW_THREADS
+		ALIF_BEGIN_SUPPRESS_IPH
+		fd = fcntl(fd, F_DUPFD_CLOEXEC, 0);
+	ALIF_END_SUPPRESS_IPH
+		ALIF_END_ALLOW_THREADS
+		if (fd < 0) {
+			//alifErr_setFromErrno(_alifExcOSError_);
+			return -1;
+		}
+
+#elif HAVE_DUP
+	ALIF_BEGIN_ALLOW_THREADS
+	ALIF_BEGIN_SUPPRESS_IPH
+		fd = dup(fd);
+	ALIF_END_SUPPRESS_IPH
+	ALIF_END_ALLOW_THREADS
+		if (fd < 0) {
+			alifErr_setFromErrno(_alifExcOSError_);
+			return -1;
+		}
+
+	if (_alif_setInheritable(fd, 0, nullptr) < 0) {
+		ALIF_BEGIN_SUPPRESS_IPH
+			close(fd);
+		ALIF_END_SUPPRESS_IPH
+			return -1;
+	}
+#else
+	errno = ENOTSUP;
+	alifErr_setFromErrno(_alifExcOSError_);
+	return -1;
+#endif
+	return fd;
+}
 
 
 #ifndef _WINDOWS // 2717
