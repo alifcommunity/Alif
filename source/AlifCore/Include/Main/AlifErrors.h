@@ -8,7 +8,8 @@ void alifErr_setString(AlifObject*, const char*); // 11
 
 AlifObject* alifErr_occurred(void); // 15
 void alifErr_clear(void); // 16
-
+void alifErr_fetch(AlifObject**, AlifObject**, AlifObject**); // 17
+void alifErr_restore(AlifObject*, AlifObject*, AlifObject*); // 18
 void alifErr_setHandledException(AlifObject*); // 23
 
 AlifIntT alifErr_givenExceptionMatches(AlifObject*, AlifObject*); // 38

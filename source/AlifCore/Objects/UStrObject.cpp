@@ -81,36 +81,39 @@ static inline void alifUStrWriter_initWithBuffer(AlifUStrWriter*, AlifObject*);
 //	|
 //	|
 //* alif
-#define _ALIFUSTR_CONVERT_BYTES(from_type, to_type, begin, end, to, writen) \
+#define _ALIFUSTR_CONVERT_BYTES(_fromType, _toType, _begin, _end, _to, _written) \
     do { \
-        const from_type *_src = (const from_type*)(begin); \
-        const from_type *_end = (const from_type*)(end); \
-        to_type *_dst = (to_type*)(to); \
-        to_type *_start_dst = _dst; \
-        while (_src < _end) { \
+        const _fromType *_src = (const _fromType*)(_begin); \
+        const _fromType *_srcEnd = (const _fromType*)(_end); \
+        _toType *_dst = (_toType*)(_to); \
+        _toType *_startDst = _dst; \
+        while (_src < _srcEnd) { \
             unsigned char c = *_src; \
             if (c < 0x80) { \
                 *_dst++ = c; \
                 _src++; \
-            } else if ((c & 0xE0) == 0xC0) { \
-                if (_src + 1 >= _end) break; \
+            } else if ((c & 0xE0) == 0xC0 and _src +1 < _srcEnd) { \
                 *_dst++ = ((c & 0x1F) << 6) | (_src[1] & 0x3F); \
                 _src += 2; \
-            } else if ((c & 0xF0) == 0xE0) { \
-                if (_src + 2 >= _end) break; \
+            } else if ((c & 0xF0) == 0xE0 and _src +2 < _srcEnd) { \
                 *_dst++ = ((c & 0x0F) << 12) | ((_src[1] & 0x3F) << 6) | (_src[2] & 0x3F); \
                 _src += 3; \
+            } else if ((c & 0xF8) == 0xF0 and _src +3 < _srcEnd) { \
+                uint32_t cp = ((c & 0x07) << 18) | ((_src[1] & 0x3F) << 12) \
+                            | ((_src[2] & 0x3F) << 6) | (_src[3] & 0x3F); \
+                cp -= 0x10000; \
+                *_dst++ = 0xD800 | (cp >> 10); \
+                *_dst++ = 0xDC00 | (cp & 0x3FF); \
+                _src += 4; \
             } else { \
-                *_dst++ = 0xFFFD; /* � */ \
+                /* Invalid sequence */ \
+                *_dst++ = 0xFFFD; \
                 _src++; \
             } \
         } \
-        /* Handle remaining bytes if any */ \
-        while (_src < _end) { \
-            *_dst++ = 0xFFFD; \
-            _src++; \
-        } \
-        writen = (_dst - _start_dst); \
+        /* Handle remaining bytes */ \
+        while (_src < _srcEnd) { *_dst++ = 0xFFFD; _src++; } \
+        _written = (_dst - _startDst); \
     } while(0)
 
 
@@ -6006,17 +6009,17 @@ AlifIntT alifUStrWriter_writeString(AlifUStrWriter* _writer,
 		return 0;
 	}
 
-	if (ALIFUSTRWRITER_PREPARE(_writer, _len, 127) == -1)
+	if (ALIFUSTRWRITER_PREPARE(_writer, _len, 256) == -1)
 		return -1;
 
 	switch (_writer->kind)
 	{
 	case AlifUStrKind_::AlifUStr_1Byte_Kind:
 	{
-		const AlifUCS1* str = (const AlifUCS1*)_str;
-		AlifUCS1* data = (AlifUCS1*)_writer->data;
-
-		memcpy(data + _writer->pos, str, _len);
+		_ALIFUSTR_CONVERT_BYTES(
+			AlifUCS1, AlifUCS1,
+			_str, _str + _len,
+			(AlifUCS1*)_writer->data + _writer->pos, _len);
 		break;
 	}
 	case AlifUStrKind_::AlifUStr_2Byte_Kind:

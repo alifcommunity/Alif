@@ -90,6 +90,12 @@ void _alifErr_restore(AlifThread* _thread, AlifObject* _type, AlifObject* _value
 
 
 
+void alifErr_restore(AlifObject* _type,
+	AlifObject* _value, AlifObject* _traceback) { // 104
+	AlifThread* tstate = _alifThread_get();
+	_alifErr_restore(tstate, _type, _value, _traceback);
+}
+
 
 
 
@@ -286,6 +292,26 @@ AlifObject* _alifErr_getRaisedException(AlifThread* _thread) { // 483
 	return exc;
 }
 
+
+void _alifErr_fetch(AlifThread* tstate, AlifObject** p_type, AlifObject** p_value,
+	AlifObject** p_traceback) { // 497
+	AlifObject* exc = _alifErr_getRaisedException(tstate);
+	*p_value = exc;
+	if (exc == nullptr) {
+		*p_type = nullptr;
+		*p_traceback = nullptr;
+	}
+	else {
+		*p_type = ALIF_NEWREF(ALIF_TYPE(exc));
+		*p_traceback = ALIF_XNEWREF(((AlifBaseExceptionObject*)exc)->traceback);
+	}
+}
+
+void alifErr_fetch(AlifObject** _pType, AlifObject** _pValue,
+	AlifObject** _pTraceback) { // 514
+	AlifThread* tstate = _alifThread_get();
+	_alifErr_fetch(tstate, _pType, _pValue, _pTraceback);
+}
 
 
 void _alifErr_clear(AlifThread* _thread) { // 522

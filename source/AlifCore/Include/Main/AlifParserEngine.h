@@ -16,6 +16,8 @@
 #define ALIFPARSE_ALLOW_INCOMPLETE_INPUT 0x0100
 
 
+#define CURRENT_POS (-5) // 25
+
 
 class Memo { // 27
 public:
@@ -61,7 +63,7 @@ public:
 	AlifIntT errorIndicator{};
 	AlifIntT flags{};
 	AlifIntT featureVersion{};
-	AlifPToken* KnownErrToken{};
+	AlifPToken* knownErrToken{};
 	AlifIntT level{};
 	AlifIntT callInvalidRules{};
 	//AlifIntT debug{};
@@ -137,6 +139,8 @@ ExprTy alifParserEngine_nameToken(AlifParser*); // 148
 ExprTy alifParserEngine_numberToken(AlifParser*); // 149
 void* alifParserEngine_stringToken(AlifParser*); // 150
 
+AlifSizeT _alifParserEngine_byteOffsetToCharacterOffset(AlifObject*, AlifSizeT); // 152
+
 AlifIntT alifParserEngine_fillToken(AlifParser*); // 147
 
 
@@ -144,10 +148,25 @@ AlifIntT alifParserEngine_fillToken(AlifParser*); // 147
 
 AlifIntT _alifParserEngine_tokenizerError(AlifParser*); // 164
 
-
+void* _alifParserEngine_raiseErrorKnownLocation(AlifParser*, AlifObject*, AlifSizeT,
+	AlifSizeT, AlifSizeT, AlifSizeT, const char*, va_list); // 166
 
 void _alifParserEngine_setSyntaxError(AlifParser*, AlifPToken*); // 170
 void alifParserEngineError_stackOverflow(AlifParser*); // 171
+
+
+ALIF_LOCAL_INLINE(void*) _raiseRrror_knownLocation(AlifParser* _p, AlifObject* _errtype,
+	AlifSizeT _lineno, AlifSizeT _colOffset,
+	AlifSizeT _endLineno, AlifSizeT _endColOffset,
+	const char* _errmsg, ...) { // 173
+	va_list va;
+	va_start(va, _errmsg);
+	AlifSizeT _col_offset = (_colOffset == CURRENT_POS ? CURRENT_POS : _colOffset + 1);
+	AlifSizeT _end_col_offset = (_endColOffset == CURRENT_POS ? CURRENT_POS : _endColOffset + 1);
+	_alifParserEngine_raiseErrorKnownLocation(_p, _errtype, _lineno, _col_offset, _endLineno, _end_col_offset, _errmsg, va);
+	va_end(va);
+	return NULL;
+}
 
 
 void* alifParserEngine_dummyName(AlifParser*, ...); // 248

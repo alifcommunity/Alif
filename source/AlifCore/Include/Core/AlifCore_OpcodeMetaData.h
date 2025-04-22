@@ -124,10 +124,10 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 3;
 	//case CALL_TYPE_1:
 	//	return 3;
-	//case CHECK_EG_MATCH:
-	//	return 2;
-	//case CHECK_EXC_MATCH:
-	//	return 2;
+	case CHECK_EG_MATCH:
+		return 2;
+	case CHECK_EXC_MATCH:
+		return 2;
 	case CLEANUP_THROW:
 		return 3;
 	case COMPARE_OP:
@@ -366,8 +366,8 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 		return 1;
 	case POP_TOP:
 		return 1;
-	//case PUSH_EXC_INFO:
-	//	return 1;
+	case PUSH_EXC_INFO:
+		return 1;
 	case PUSH_NULL:
 		return 0;
 	case RAISE_VARARGS:
@@ -592,10 +592,10 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 	//	return 1;
 	//case CALL_TYPE_1:
 	//	return 1;
-	//case CHECK_EG_MATCH:
-	//	return 2;
-	//case CHECK_EXC_MATCH:
-	//	return 2;
+	case CHECK_EG_MATCH:
+		return 2;
+	case CHECK_EXC_MATCH:
+		return 2;
 	case CLEANUP_THROW:
 		return 2;
 	case COMPARE_OP:
@@ -834,8 +834,8 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 		return 0;
 	case POP_TOP:
 		return 0;
-	//case PUSH_EXC_INFO:
-	//	return 2;
+	case PUSH_EXC_INFO:
+		return 2;
 	case PUSH_NULL:
 		return 1;
 	case RAISE_VARARGS:
@@ -1341,8 +1341,8 @@ const uint8_t _alifOpcodeDeopt_[256] = {
 	BINARY_SLICE, // BINARY_SLICE // 1
 	BINARY_SUBSCR, // BINARY_SUBSCR // 2
 	BINARY_OP, // BINARY_OP_INPLACE_ADD_UNICODE // 3
-	0,//CHECK_EG_MATCH, // CHECK_EG_MATCH // 4
-	0,//CHECK_EXC_MATCH, // CHECK_EXC_MATCH // 5
+	CHECK_EG_MATCH, // CHECK_EG_MATCH // 4
+	CHECK_EXC_MATCH, // CHECK_EXC_MATCH // 5
 	CLEANUP_THROW, // CLEANUP_THROW // 6
 	DELETE_SUBSCR, // DELETE_SUBSCR // 7
 	END_ASYNC_FOR, // END_ASYNC_FOR // 8
@@ -1367,7 +1367,7 @@ const uint8_t _alifOpcodeDeopt_[256] = {
 	NOP, // NOP // 27
 	POP_EXCEPT, // POP_EXCEPT // 28
 	POP_TOP, // POP_TOP // 29
-	0,//PUSH_EXC_INFO, // PUSH_EXC_INFO // 30
+	PUSH_EXC_INFO, // PUSH_EXC_INFO // 30
 	PUSH_NULL, // PUSH_NULL // 31
 	RETURN_GENERATOR, // RETURN_GENERATOR // 32
 	RETURN_VALUE, // RETURN_VALUE // 33

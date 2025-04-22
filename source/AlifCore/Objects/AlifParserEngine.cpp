@@ -22,7 +22,32 @@
 
 
 
-AlifIntT alifParserEngine_insertMemo(AlifParser* _p, AlifIntT _mark, AlifIntT _type, void* _node) { // 76
+AlifSizeT _alifParserEngine_byteOffsetToCharacterOffsetRaw(const char* _str,
+	AlifSizeT _colOffset) { // 47
+	AlifSizeT len = (AlifSizeT)strlen(_str);
+	if (_colOffset > len + 1) {
+		_colOffset = len + 1;
+	}
+	AlifObject* text = alifUStr_decodeUTF8(_str, _colOffset, "replace");
+	if (!text) {
+		return -1;
+	}
+	AlifSizeT size = ALIFUSTR_GET_LENGTH(text);
+	ALIF_DECREF(text);
+	return size;
+}
+
+AlifSizeT _alifParserEngine_byteOffsetToCharacterOffset(AlifObject* _line,
+	AlifSizeT _colOffset) { // 64
+	const char* str = alifUStr_asUTF8(_line);
+	if (!str) {
+		return -1;
+	}
+	return _alifParserEngine_byteOffsetToCharacterOffsetRaw(str, _colOffset);
+}
+
+AlifIntT alifParserEngine_insertMemo(AlifParser* _p,
+	AlifIntT _mark, AlifIntT _type, void* _node) { // 76
 	Memo* m = (Memo*)alifASTMem_malloc(_p->astMem, sizeof(Memo));
 	if (m == nullptr) return -1;
 	m->type = _type;
@@ -531,7 +556,7 @@ AlifParser* alifParserEngine_parserNew(TokenState* _tokState,
 	p_->startingColOffset = 0;
 	p_->flags = _flags;
 	p_->featureVersion = _featureVersion;
-	p_->KnownErrToken = nullptr;
+	p_->knownErrToken = nullptr;
 	p_->level = 0;
 	p_->callInvalidRules = 0;
 
@@ -548,6 +573,16 @@ void alifParserEngine_parserFree(AlifParser* _p) { // 852
 	alifMem_dataFree(_p);
 }
 
+static void resetParserState_forErrorPass(AlifParser* _p) { // 864
+	for (AlifIntT i = 0; i < _p->fill; i++) {
+		_p->tokens[i]->memo = nullptr;
+	}
+	_p->mark = 0;
+	_p->callInvalidRules = 1;
+	// Don't try to get extra tokens in interactive mode when trying to
+	// raise specialized errors in the second pass.
+	_p->tok->interactiveUnderflow = InteractiveUnderflow_::IUnderflow_Stop;
+}
 
 void* alifParserEngine_runParser(AlifParser* _p) { // 883
 
@@ -561,7 +596,7 @@ void* alifParserEngine_runParser(AlifParser* _p) { // 883
 			return nullptr;
 		}
 		AlifPToken* lastToken = _p->tokens[_p->fill - 1];
-		//reset_parserStateForErrorPass(_p);
+		resetParserState_forErrorPass(_p);
 		alifParserEngine_parse(_p);
 
 		_alifParserEngine_setSyntaxError(_p, lastToken);
