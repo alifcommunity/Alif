@@ -13,7 +13,47 @@
 
 
 
+#include "clinic/Traceback.cpp.h"
 
+
+
+
+
+static AlifObject* tb_createRaw(AlifTracebackObject* next, AlifFrameObject* frame,
+	AlifIntT lasti, AlifIntT lineno) { // 43
+	AlifTracebackObject* tb{};
+	if ((next != nullptr and !ALIFTRACEBACK_CHECK(next)) or
+		frame == nullptr or !ALIFFRAME_CHECK(frame)) {
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
+	tb = ALIFOBJECT_GC_NEW(AlifTracebackObject, &_alifTraceBackType_);
+	if (tb != nullptr) {
+		tb->next = (AlifTracebackObject*)ALIF_XNEWREF(next);
+		tb->frame = (AlifFrameObject*)ALIF_XNEWREF(frame);
+		tb->lasti = lasti;
+		tb->lineno = lineno;
+		alifObject_gcTrack(tb);
+	}
+	return (AlifObject*)tb;
+}
+
+
+
+static AlifObject* tb_newImpl(AlifTypeObject* _type, AlifObject* _tbNext, AlifFrameObject* _tbFrame,
+	AlifIntT _tbLasti, AlifIntT _tbLineno) { // 76
+	if (_tbNext == ALIF_NONE) {
+		_tbNext = nullptr;
+	}
+	else if (!ALIFTRACEBACK_CHECK(_tbNext)) {
+		return alifErr_format(_alifExcTypeError_,
+			"expected traceback object or None, got '%s'",
+			ALIF_TYPE(_tbNext)->name);
+	}
+
+	return tb_createRaw((AlifTracebackObject*)_tbNext, _tbFrame, _tbLasti,
+		_tbLineno);
+}
 
 
 
@@ -38,9 +78,29 @@ AlifTypeObject _alifTraceBackType_ = { // 209
 	//.methods = tb_methods,
 	//.members = tb_memberlist,
 	//.getSet = tb_getsetters,
-	//.new_ = tb_new,
+	.new_ = tb_new,
 };
 
+
+AlifObject* _alifTraceBack_fromFrame(AlifObject* _tbNext, AlifFrameObject* _frame) { // 251
+	AlifIntT addr = ALIFINTERPRETERFRAME_LASTI(_frame->frame) * sizeof(AlifCodeUnit);
+	return tb_createRaw((AlifTracebackObject*)_tbNext, _frame, addr, -1);
+}
+
+AlifIntT alifTraceBack_here(AlifFrameObject* _frame) { // 261
+	AlifObject* exc = alifErr_getRaisedException();
+	AlifObject* tb = alifException_getTraceback(exc);
+	AlifObject* newtb = _alifTraceBack_fromFrame(tb, _frame);
+	ALIF_XDECREF(tb);
+	if (newtb == nullptr) {
+		_alifErr_chainExceptions1(exc);
+		return -1;
+	}
+	alifException_setTraceback(exc, newtb);
+	ALIF_XDECREF(newtb);
+	alifErr_setRaisedException(exc);
+	return 0;
+}
 
 
 

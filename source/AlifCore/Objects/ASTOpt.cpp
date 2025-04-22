@@ -39,7 +39,7 @@ static AlifIntT make_const(ExprTy _node,
 		//if (alifErr_exceptionMatches(_alifExcKeyboardInterrupt_)) {
 		//	return 0;
 		//}
-		//alifErr_clear();
+		alifErr_clear();
 		return 1;
 	}
 	if (alifASTMem_listAddAlifObj(_astMem, _val) < 0) {

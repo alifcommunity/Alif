@@ -687,6 +687,20 @@ dispatch_opcode :
 				nextInstr += 1;
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(POP_EXCEPT) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				AlifStackRef exc_value{};
+				exc_value = stackPointer[-1];
+				AlifErrStackItem* exc_info = _thread->excInfo;
+				_alifFrame_setStackPointer(_frame, stackPointer);
+				ALIF_XSETREF(exc_info->excValue,
+					ALIFSTACKREF_IS(exc_value, ALIFSTACKREF_NONE)
+					? nullptr : alifStackRef_asAlifObjectSteal(exc_value));
+				stackPointer = _alifFrame_getStackPointer(_frame);
+				stackPointer += -1;
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(POP_TOP) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;
@@ -1574,6 +1588,12 @@ dispatch_opcode :
 				}
 				DISPATCH();
 			} // ------------------------------------------------------------ //
+			TARGET(JUMP_BACKWARD_NO_INTERRUPT) {
+				_frame->instrPtr = nextInstr;
+				nextInstr += 1;
+				JUMPBY(-oparg);
+				DISPATCH();
+			} // ------------------------------------------------------------ //
 			TARGET(JUMP_FORWARD) {
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;
@@ -2119,14 +2139,14 @@ pop_1_error:
 	STACK_SHRINK(1);
 error:
 
-	//if (!_alifFrame_isIncomplete(_frame)) {
-	//	AlifFrameObject* f = _alifFrame_getFrameObject(_frame);
-	//	if (f != nullptr) {
-	//		alifTraceBack_here(f);
-	//	}
-	//}
+	if (!_alifFrame_isIncomplete(_frame)) {
+		AlifFrameObject* f = _alifFrame_getFrameObject(_frame);
+		if (f != nullptr) {
+			alifTraceBack_here(f);
+		}
+	}
 
-
+	//_alifEval_monitorRaise(_thread, _frame, nextInstr - 1);
 
 exception_unwind:
 		{

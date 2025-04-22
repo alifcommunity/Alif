@@ -966,6 +966,9 @@
     <ClInclude Include="..\source\AlifCore\Objects\clinic\SysModule.cpp.h">
       <Filter>Objects\clinic</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\Traceback.cpp.h">
+      <Filter>Objects\clinic</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Include">

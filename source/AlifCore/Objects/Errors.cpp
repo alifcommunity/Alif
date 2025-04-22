@@ -97,7 +97,10 @@ void alifErr_restore(AlifObject* _type,
 }
 
 
-
+void alifErr_setRaisedException(AlifObject* _exc) { // 111
+	AlifThread* thread = _alifThread_get();
+	_alifErr_setRaisedException(thread, _exc);
+}
 
 
 AlifErrStackItem* _alifErr_getTopMostException(AlifThread* _thread) { // 118
@@ -292,6 +295,11 @@ AlifObject* _alifErr_getRaisedException(AlifThread* _thread) { // 483
 	return exc;
 }
 
+AlifObject* alifErr_getRaisedException(void) { // 490
+	AlifThread* tstate = _alifThread_get();
+	return _alifErr_getRaisedException(tstate);
+}
+
 
 void _alifErr_fetch(AlifThread* tstate, AlifObject** p_type, AlifObject** p_value,
 	AlifObject** p_traceback) { // 497
@@ -333,6 +341,24 @@ void alifErr_setHandledException(AlifObject* _exc) { // 599
 	AlifThread* thread = _alifThread_get();
 	_alifErr_setHandledException(thread, _exc);
 }
+
+
+void _alifErr_chainExceptions1(AlifObject* _exc) { // 686
+	if (_exc == nullptr) {
+		return;
+	}
+	AlifThread* thread = _alifThread_get();
+	if (_alifErr_occurred(thread)) {
+		AlifObject* exc2 = _alifErr_getRaisedException(thread);
+		alifException_setContext(exc2, _exc);
+		_alifErr_setRaisedException(thread, exc2);
+	}
+	else {
+		_alifErr_setRaisedException(thread, _exc);
+	}
+}
+
+
 
 
 static AlifObject* _alifErr_formatV(AlifThread* _thread, AlifObject* _exception,

@@ -10,6 +10,8 @@ AlifObject* alifErr_occurred(void); // 15
 void alifErr_clear(void); // 16
 void alifErr_fetch(AlifObject**, AlifObject**, AlifObject**); // 17
 void alifErr_restore(AlifObject*, AlifObject*, AlifObject*); // 18
+AlifObject* alifErr_getRaisedException(void); // 19
+void alifErr_setRaisedException(AlifObject*); // 20
 void alifErr_setHandledException(AlifObject*); // 23
 
 AlifIntT alifErr_givenExceptionMatches(AlifObject*, AlifObject*); // 38
@@ -120,3 +122,10 @@ public:
 	ALIFEXCEPTION_HEAD;
 	AlifObject* value{};
 };
+
+
+
+
+
+
+void _alifErr_chainExceptions1(AlifObject*); // 93

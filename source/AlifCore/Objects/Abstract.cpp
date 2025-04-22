@@ -440,13 +440,22 @@ static AlifObject* binary_op1(AlifObject* _v, AlifObject* _w, const AlifIntT _op
 
 #define BINARY_OP1(_v, _w, _opSlot) binary_op1(_v, _w, _opSlot) // 980
 
+static AlifObject* binOp_typeError(AlifObject* _v, AlifObject* _w, const char* _opName) { // 985
+	alifErr_format(_alifExcTypeError_,
+		"عملية غير مدعومة %.100s: "
+		"'%.100s' و '%.100s'",
+		_opName,
+		ALIF_TYPE(_v)->name,
+		ALIF_TYPE(_w)->name);
+	return nullptr;
+}
+
 static AlifObject* binary_op(AlifObject* _v, AlifObject* _w,
-	const AlifIntT _opSlot) { // 997
+	const AlifIntT _opSlot, const char* _opName) { // 997
 	AlifObject* result = BINARY_OP1(_v, _w, _opSlot);
 	if (result == ALIF_NOTIMPLEMENTED) {
 		ALIF_DECREF(result);
-		//return binOp_typeError(_v, _w, _opName);
-		return nullptr; //* alif
+		return binOp_typeError(_v, _w, _opName);
 	}
 	return result;
 }
@@ -539,18 +548,18 @@ static AlifObject* ternary_op(AlifObject* _v, AlifObject* _w, AlifObject* _z,
 
 
  // 1110
-#define BINARY_FUNC(_func, _op) \
+#define BINARY_FUNC(_func, _op, _opName) \
     AlifObject* _func(AlifObject *_v, AlifObject *_w) { \
-        return binary_op(_v, _w, NB_SLOT(_op)); \
+        return binary_op(_v, _w, NB_SLOT(_op), _opName); \
     }
 
-BINARY_FUNC(alifNumber_or, or_) // 1116
-BINARY_FUNC(alifNumber_xor, xor_)
-BINARY_FUNC(alifNumber_and, and_)
-BINARY_FUNC(alifNumber_lshift, lshift)
-BINARY_FUNC(alifNumber_rshift, rshift)
-BINARY_FUNC(alifNumber_subtract, subtract)
-BINARY_FUNC(alifNumber_divmod, divmod)
+BINARY_FUNC(alifNumber_or, or_, "|") // 1116
+BINARY_FUNC(alifNumber_xor, xor_, "^^")
+BINARY_FUNC(alifNumber_and, and_, "&")
+BINARY_FUNC(alifNumber_lshift, lshift, "<<")
+BINARY_FUNC(alifNumber_rshift, rshift, ">>")
+BINARY_FUNC(alifNumber_subtract, subtract, "_")
+BINARY_FUNC(alifNumber_divmod, divmod, "قسمة بدون باقي")
 
 
 AlifObject* alifNumber_add(AlifObject* _v, AlifObject* _w) { // 1124
@@ -566,8 +575,7 @@ AlifObject* alifNumber_add(AlifObject* _v, AlifObject* _w) { // 1124
 		return result;
 	}
 
-	//return binOp_typeError(_v, _w, "+");
-	return nullptr; //* alif
+	return binOp_typeError(_v, _w, "+");
 }
 
 static AlifObject* sequence_repeat(SizeArgFunc _repeatFunc, AlifObject* _seq, AlifObject* _n) { // 1143
@@ -600,16 +608,15 @@ AlifObject* alifNumber_multiply(AlifObject* _v, AlifObject* _w) { // 1162
 		else if (mw and mw->repeat) {
 			return sequence_repeat(mw->repeat, _w, _v);
 		}
-		//result = binop_typeError(_v, _w, "*");
-		result = nullptr; //* alif
+		result = binOp_typeError(_v, _w, "*");
 	}
 	return result;
 }
 
 
-BINARY_FUNC(alifNumber_floorDivide, floorDivide) // 1182
-BINARY_FUNC(alifNumber_trueDivide, trueDivide) // 1183
-BINARY_FUNC(alifNumber_remainder, remainder)
+BINARY_FUNC(alifNumber_floorDivide, floorDivide, "//") // 1182
+BINARY_FUNC(alifNumber_trueDivide, trueDivide, "/") // 1183
+BINARY_FUNC(alifNumber_remainder, remainder, "/*")
 
 AlifObject* alifNumber_power(AlifObject* _v, AlifObject* _w, AlifObject* _z) { // 1186
 	return ternary_op(_v, _w, _z, NB_SLOT(power));
@@ -695,7 +702,7 @@ AlifObject* alifNumber_inPlaceAdd(AlifObject* _v, AlifObject* _w) { // 1293
 				return result;
 			}
 		}
-		//result = binOp_typeError(_v, _w, "+=");
+		result = binOp_typeError(_v, _w, "+=");
 	}
 	return result;
 }
@@ -718,7 +725,7 @@ AlifObject* alifNumber_inPlaceMultiply(AlifObject* _v, AlifObject* _w) { // 1316
 			if (mw->repeat)
 				return sequence_repeat(mw->repeat, _w, _v);
 		}
-		//result = binOp_typeError(_v, _w, "*=");
+		result = binOp_typeError(_v, _w, "*=");
 	}
 	return result;
 }

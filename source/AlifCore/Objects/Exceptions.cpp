@@ -100,7 +100,7 @@ static inline AlifBaseExceptionObject* _alifBaseExceptionObject_cast(AlifObject*
 
 static AlifObject* baseException_addNote(AlifObject* self, AlifObject* note) { // 235
 	if (!ALIFUSTR_CHECK(note)) {
-		alifErr_format(nullptr /*_alifExcTypeError_*/,
+		alifErr_format(_alifExcTypeError_,
 			"note must be a str, not '%s'",
 			ALIF_TYPE(note)->name);
 		return nullptr;
@@ -122,7 +122,7 @@ static AlifObject* baseException_addNote(AlifObject* self, AlifObject* note) { /
 	}
 	else if (!ALIFLIST_CHECK(notes)) {
 		ALIF_DECREF(notes);
-		alifErr_setString(nullptr /*_alifExcTypeError_*/, "Cannot add note: __notes__ is not a list");
+		alifErr_setString(_alifExcTypeError_, "Cannot add note: __notes__ is not a list");
 		return nullptr;
 	}
 	if (alifList_append(notes, note) < 0) {
@@ -205,7 +205,7 @@ AlifTypeObject _exc ## EXCNAME ## _ = { \
 
 AlifIntT _alifException_addNote(AlifObject* _exc, AlifObject* _note) { // 3866
 	if (!ALIFEXCEPTIONINSTANCE_CHECK(_exc)) {
-		alifErr_format(nullptr /*_alifExcTypeError_*/,
+		alifErr_format(_alifExcTypeError_,
 			"exc must be an exception, not '%s'",
 			ALIF_TYPE(_exc)->name);
 		return -1;
@@ -274,10 +274,10 @@ static AlifTypeObject _excBaseException_ = { // 483
 AlifObject* _alifExcBaseException_ = (AlifObject*)&_excBaseException_; // 528
 
  // 533
-#define SIMPLEEXTENDSEXCEPTION(EXCBASE, EXCNAME, EXCDOC) \
+#define SIMPLEEXTENDSEXCEPTION(EXCBASE, EXCNAME, ALIFNAME, EXCDOC) \
 static AlifTypeObject _exc ## EXCNAME ## _ = { \
     .objBase = ALIFVAROBJECT_HEAD_INIT(nullptr, 0), \
-    .name = # EXCNAME, \
+    .name = # ALIFNAME, \
     .basicSize = sizeof(AlifBaseExceptionObject), \
     /*.dealloc = (Destructor)baseException_dealloc,*/ \
     .flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_HAVE_GC, \
@@ -321,12 +321,12 @@ SIMPLEEXTENDSEXCEPTION(_excBaseException_, Exception,
 	"Common base class for all non-exit exceptions.");
 
 // 596
-SIMPLEEXTENDSEXCEPTION(_excException_, TypeError, 
+SIMPLEEXTENDSEXCEPTION(_excException_, TypeError, خطأ_نوع,
 	"Inappropriate argument type.");
 
 
 // 603
-SIMPLEEXTENDSEXCEPTION(_excException_, StopAsyncIteration,
+SIMPLEEXTENDSEXCEPTION(_excException_, StopAsyncIteration, خطأ_تكرار_متزامن,
 	"Signal the end from iterator.__anext__().");
 
 
@@ -581,7 +581,7 @@ SIMPLEEXTENDSEXCEPTION(_excException_, ValueError, خطأ_قيمة
 
 
  // 3310
-SIMPLEEXTENDSEXCEPTION(_excException_, SystemError,
+SIMPLEEXTENDSEXCEPTION(_excException_, SystemError, خطأ_نظام,
 	"Internal error in the Alif interpreter.\n");
 
 
