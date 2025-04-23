@@ -9034,7 +9034,7 @@ static void* invalid_forStmtRule(AlifParser* _p) {
 			alifParserEngine_lookaheadWithInt(0, alifParserEngine_expectToken, _p, INDENT)  // مسافة_طويلة
 			)
 		{
-			res = RAISE_INDENTATION_ERROR("نسيت إضافة مسافة طويلة 'tab' ضمن حالة 'لاجل في السطر' %d", a->lineNo);
+			res = RAISE_INDENTATION_ERROR("نسيت إضافة مسافة طويلة 'tab' ضمن حالة 'لاجل' في السطر %d", a->lineNo);
 			if (res == nullptr
 				and alifErr_occurred())
 			{
@@ -9182,7 +9182,7 @@ static StmtTy forStmt_rule(AlifParser* _p) {
 		_p->mark = mark;
 		if (cutVar) { _p->level--; return nullptr; }
 	}
-	if (_p->callInvalidRules) { // invalid_for_target
+	if (_p->callInvalidRules) { // حالة_لاجل_خاطئة
 		if (_p->errorIndicator) {
 			_p->level--;
 			return nullptr;
@@ -9204,7 +9204,79 @@ done:
 	return res;
 }
 
+static void* invalid_whileStmtRule(AlifParser* _p) {
 
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	void* res{};
+	AlifIntT mark = _p->mark;
+	{ // بينما تعبير سطر
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		AlifPToken* keyword{};
+		ExprTy namedExpressionVar{};
+		AlifPToken* newlineVar{};
+		if (
+			(keyword = alifParserEngine_expectToken(_p, WHILE_KW))  // بينما
+			and
+			(namedExpressionVar = expression_rule(_p))  // تعبير
+			and
+			(newlineVar = alifParserEngine_expectToken(_p, NEWLINE))  // سطر
+			)
+		{
+			res = RAISE_SYNTAX_ERROR("نسيت ':'");
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+	{ // بينما تعبير سطر !مسافة_طويلة
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		AlifPToken* literal{};
+		AlifPToken* a{};
+		ExprTy namedExpressionVar{};
+		AlifPToken* newlineVar{};
+		if (
+			(a = alifParserEngine_expectToken(_p, WHILE_KW))  // بينما
+			and
+			(namedExpressionVar = expression_rule(_p))  // تعبير
+			and
+			(literal = alifParserEngine_expectToken(_p, COLON))  // ":"
+			and
+			(newlineVar = alifParserEngine_expectToken(_p, NEWLINE))  // سطر
+			and
+			alifParserEngine_lookaheadWithInt(0, alifParserEngine_expectToken, _p, INDENT)  // مسافة_طويلة
+			)
+		{
+			res = RAISE_INDENTATION_ERROR("نسيت إضافة مسافة طويلة 'tab' ضمن حالة 'بينما' في السطر %d", a->lineNo);
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+
+	res = nullptr;
+done:
+	_p->level--;
+	return res;
+}
+// ^
+// |
+// |
 // حالة_بينما: "بينما" تعبير ":" كتلة
 static StmtTy whileStmt_rule(AlifParser* _p) { 
 
@@ -9224,6 +9296,19 @@ static StmtTy whileStmt_rule(AlifParser* _p) {
 	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
 	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
+	if (_p->callInvalidRules) { // حالة_بينما_خاطئة
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		void* invalidWhileStmtVar{};
+		if (
+			(invalidWhileStmtVar = invalid_whileStmtRule(_p)) // حالة_بينما_خاطئة
+			)
+		{
+			res = (StmtTy)invalidWhileStmtVar;
+			goto done;
+		}
+		_p->mark = mark;
+	}
 	{ // "بينما" تعبير ":" كتلة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
