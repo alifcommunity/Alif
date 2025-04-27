@@ -12792,7 +12792,7 @@ static ASDLStmtSeq* simpleStmts_rule(AlifParser* _p) {
 		if (
 			(a = (ASDLStmtSeq*)alif13_gather(_p))  // "؛".حالة_بسيطة+
 			and
-			(optVar = alifParserEngine_expectToken(_p, 13), !_p->errorIndicator)  // "؛"?
+			(optVar = alifParserEngine_expectToken(_p, SEMI), !_p->errorIndicator)  // "؛"?
 			and
 			(newlineVar = alifParserEngine_expectToken(_p, NEWLINE))  // سطر
 			)

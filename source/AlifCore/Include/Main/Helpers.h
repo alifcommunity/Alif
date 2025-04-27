@@ -9,4 +9,6 @@
 
 AlifIntT alifTokenizer_syntaxError(TokenState*, const char*, ...); // 12
 
+AlifIntT _alifTokenizer_indentError(TokenState*); // 14
+
 char* alifTokenizer_newString(const char*, AlifSizeT, TokenState*); // 19
