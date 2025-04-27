@@ -15,14 +15,18 @@
 #define IS_IDENTIFIER_START(_c) ((_c >= 'a' and _c <= 'z') \
 								or (_c >= 'A' and _c <= 'Z') /* to exclude nums and symbols */ \
 								or (_c == '_') \
-								or (_c < L'٠' and _c >= 128) \
-								or (_c > L'٩' and _c >= 128)) /* exclude arabic-indic nums */
+								or (_c >= 161 and _c <= 191)	\
+								or (_c >= 128 and _c <= 138)) /* الاحرف العربية - البايت الثاني منها */
 
 #define IS_IDENTIFIER_CHAR(_c) ((_c >= 'a' and _c <= 'z') \
 								or (_c >= 'A' and _c <= 'Z') \
 								or (_c >= '0' and _c <= '9') \
 								or (_c == '_') \
 								or (_c >= 128))
+
+
+#define IS_2BYTE_IDENTIFIER(_c) (_c == 216 or _c == 217)
+
 
 #define TOK_GET_MODE(_tokState) (&(_tokState->tokModeStack[_tokState->tokModeStackIndex]))
 #define TOK_NEXT_MODE(_tokState) (&(_tokState->tokModeStack[++_tokState->tokModeStackIndex]))
@@ -225,7 +229,7 @@ static AlifIntT verify_endOfNumber(TokenState* _tok,
 	}
 	else /* In future releases, only error will remain. */
 	{
-		if (/*_c < 128 and */IS_IDENTIFIER_CHAR(_c)) {
+		if (_c < 128 and IS_IDENTIFIER_CHAR(_c)) {
 			tok_backup(_tok, _c);
 			alifTokenizer_syntaxError(_tok, "تركيب %s غير صحيح", _kind);
 			return 0;
@@ -502,16 +506,15 @@ again:
 
 	/* Identifier */
 	nonASCII = 0;
+	if (IS_2BYTE_IDENTIFIER(c_)) { c_ = tok_nextChar(_tokState); }
 	if (IS_IDENTIFIER_START(c_)) {
 		AlifIntT b_ = 0, r_ = 0, u_ = 0, f_ = 0;
 		while (true) {
-			if (c_ >= 128) { c_ = tok_nextChar(_tokState); }
 			if (!(b_ or u_ or f_) and c_ == (unsigned char)"ب"[secondByte]) b_ = 1; // ب = بايت
 			else if (!(b_ or u_ or r_) and c_ == (unsigned char)"ت"[secondByte]) u_ = 1; // ت = ترميز
 			else if (!(r_ or u_) and c_ == (unsigned char)"خ"[secondByte]) r_ = 1; // خ = خام
 			else if (!(f_ or b_ or u_) and c_ == (unsigned char)"م"[secondByte]) f_ = 1; // م = منسق
 			else {
-				//tok_backup(_tokState, c_); //* alif
 				break;
 			}
 
@@ -611,9 +614,9 @@ again:
 						c_ = tok_nextChar(_tokState);
 					} while (ALIF_ISXDIGIT(c_));
 				} while (c_ == '_');
-				//if (!verify_endOfNumber(_tokState, c_, L"ستعشري")) {
-				//	return MAKE_TOKEN(ERRORTOKEN);
-				//}
+				if (!verify_endOfNumber(_tokState, c_, "ستعشري")) {
+					return MAKE_TOKEN(ERRORTOKEN);
+				}
 			}
 			else if (c_ == L'ث') { // need review
 				// Octal
@@ -636,9 +639,9 @@ again:
 				if (ALIF_ISDIGIT(c_)) {
 					return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "رقم ثماني غير صحيح '%d'", c_));
 				}
-				//if (!verify_endOfNumber(_tokState, c_, "ثماني")) {
-				//	return MAKE_TOKEN(ERRORTOKEN);
-				//}
+				if (!verify_endOfNumber(_tokState, c_, "ثماني")) {
+					return MAKE_TOKEN(ERRORTOKEN);
+				}
 			}
 			else if (c_ == L'ن') { // review - suppose "ن"[0]
 				// Binary
@@ -663,9 +666,9 @@ again:
 				if (ALIF_ISDIGIT(c_)) {
 					return MAKE_TOKEN(alifTokenizer_syntaxError(_tokState, "رقم ثنائي غير صحيح '%d'", c_));
 				}
-				//if (!verify_endOfNumber(_tokState, c_, "ثنائي")) {
-				//	return MAKE_TOKEN(ERRORTOKEN);
-				//}
+				if (!verify_endOfNumber(_tokState, c_, "ثنائي")) {
+					return MAKE_TOKEN(ERRORTOKEN);
+				}
 			}
 			else {
 				AlifIntT nonzero = 0;
@@ -743,9 +746,9 @@ again:
 					}
 					else if (!ALIF_ISDIGIT(c_)) {
 						tok_backup(_tokState, c_);
-						//if (!verify_endOfNumber(_tokState, e, L"عشري")) {
-						//	return MAKE_TOKEN(ERRORTOKEN);
-						//}
+						if (!verify_endOfNumber(_tokState, e, "عشري")) {
+							return MAKE_TOKEN(ERRORTOKEN);
+						}
 						tok_backup(_tokState, e);
 						pStart = _tokState->start;
 						pEnd = _tokState->cur;
@@ -758,9 +761,9 @@ again:
 					/* Imaginary part */
 				imaginary:
 					c_ = tok_nextChar(_tokState);
-					//if (!verify_endOfNumber(_tokState, c_, "تخيلي")) {
-					//	return MAKE_TOKEN(ERRORTOKEN);
-					//}
+					if (!verify_endOfNumber(_tokState, c_, "تخيلي")) {
+						return MAKE_TOKEN(ERRORTOKEN);
+					}
 				}
 				else if (!verify_endOfNumber(_tokState, c_, "عشري")) {
 					return MAKE_TOKEN(ERRORTOKEN);
@@ -1065,6 +1068,8 @@ letterQuote:
 	// punctuation character
 	pStart = _tokState->start;
 	pEnd = _tokState->cur;
+
+	if (IS_2BYTE_IDENTIFIER(c_)) { c_ = tok_nextChar(_tokState); }
 	return MAKE_TOKEN(alifToken_oneChar(c_));
 }
 

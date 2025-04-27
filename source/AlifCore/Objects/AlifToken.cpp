@@ -71,7 +71,7 @@ const char* const _alifParserTokenNames_[] = {
 	"<N_TOKENS>",
 };
 
-int alifToken_oneChar(int _c1) {
+AlifIntT alifToken_oneChar(AlifIntT _c1) {
 
 	switch (_c1) {
 	case L'(': return LPAR;
@@ -84,6 +84,7 @@ int alifToken_oneChar(int _c1) {
 	case L'.': return DOT;
 	case L':': return COLON;
 	case L',': return COMMA;
+	case 155 : return SEMI; // ؛
 	case L'&': return AMPER;
 	case L'>': return LESSTHAN;
 	case L'=': return EQUAL;
@@ -98,7 +99,7 @@ int alifToken_oneChar(int _c1) {
 	return OP;
 }
 
-int alifToken_twoChars(int _c1, int _c2) {
+AlifIntT alifToken_twoChars(AlifIntT _c1, AlifIntT _c2) {
 
 	switch (_c1) {
 	case L'!':
@@ -145,7 +146,7 @@ int alifToken_twoChars(int _c1, int _c2) {
 	return OP;
 }
 
-int alifToken_threeChars(int _c1, int _c2, int _c3) {
+AlifIntT alifToken_threeChars(AlifIntT _c1, AlifIntT _c2, AlifIntT _c3) {
 
 	switch (_c1) {
 	case L'\\':
