@@ -12,17 +12,15 @@
 #define ALTTABSIZE 1
 
 //* review
-#define IS_IDENTIFIER_START(_c) ((_c >= 'a' and _c <= 'z') \
-								or (_c >= 'A' and _c <= 'Z') /* to exclude nums and symbols */ \
-								or (_c == '_') \
-								or (_c >= 161 and _c <= 191)	\
-								or (_c >= 128 and _c <= 138)) /* الاحرف العربية - البايت الثاني منها */
+#define IS_IDENTIFIER_START(_c) ((_c >= 161 and _c <= 191)	\
+								or (_c >= 128 and _c <= 138) /* الاحرف العربية - البايت الثاني منها */	\
+								or (_c == '_')) \
 
-#define IS_IDENTIFIER_CHAR(_c) ((_c >= 'a' and _c <= 'z') \
-								or (_c >= 'A' and _c <= 'Z') \
+
+#define IS_IDENTIFIER_CHAR(_c) ((_c >= 161 and _c <= 191)	\
+								or (_c >= 128 and _c <= 138) /* الاحرف العربية - البايت الثاني منها */	\
 								or (_c >= '0' and _c <= '9') \
-								or (_c == '_') \
-								or (_c >= 128))
+								or (_c == '_')) \
 
 
 #define IS_2BYTE_IDENTIFIER(_c) (_c == 216 or _c == 217)
@@ -523,11 +521,22 @@ again:
 				if (f_) goto fStringQuote;
 				goto letterQuote;
 			}
+			if (IS_2BYTE_IDENTIFIER(c_)) { c_ = tok_nextChar(_tokState); }
 		}
 		while (IS_IDENTIFIER_CHAR(c_)) {
 			c_ = tok_nextChar(_tokState);
+			if (IS_2BYTE_IDENTIFIER(c_)) { c_ = tok_nextChar(_tokState); }
 		}
 		tok_backup(_tokState, c_);
+
+		/*
+			هذا الإجراء للرجوع خطوتين الى الوراء في حال
+			كان الحرف التالي مكون من 2 بايت
+			مثل الفاصلة والفاصلة المنقوطة العربية
+		*/
+		if (c_ > 126) { //* alif
+			tok_backup(_tokState, c_);
+		}
 		//if (nonASCII and !verify_identifier(_tokState)) {
 		//	return MAKE_TOKEN(ERRORTOKEN);
 		//}
