@@ -335,7 +335,7 @@ nextline:
 			if (col == _tokState->indStack[_tokState->indent])
 			{
 				if (altCol != _tokState->alterIndStack[_tokState->indent]) {
-					//return MAKE_TOKEN(alifTokenizer_indentError(_tokState)); // indent error
+					return MAKE_TOKEN(_alifTokenizer_indentError(_tokState)); // indent error
 				}
 			}
 			else if (col > _tokState->indStack[_tokState->indent]) {
@@ -346,7 +346,7 @@ nextline:
 					return MAKE_TOKEN(ERRORTOKEN);
 				}
 				if (altCol <= _tokState->alterIndStack[_tokState->indent]) {
-					//return MAKE_TOKEN(alifTokenizer_indentError(_tokState)); // indent error
+					return MAKE_TOKEN(_alifTokenizer_indentError(_tokState)); // indent error
 				}
 				_tokState->pendInd++;
 				_tokState->indStack[++_tokState->indent] = col;
@@ -367,7 +367,7 @@ nextline:
 					return MAKE_TOKEN(ERRORTOKEN);
 				}
 				if (altCol != _tokState->alterIndStack[_tokState->indent]) {
-					//return MAKE_TOKEN(alifTokenizer_indentError(_tokState)); // indent error
+					return MAKE_TOKEN(_alifTokenizer_indentError(_tokState)); // indent error
 				}
 			}
 		}

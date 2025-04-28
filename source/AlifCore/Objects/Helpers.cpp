@@ -71,6 +71,22 @@ AlifIntT alifTokenizer_syntaxError(TokenState* tok, const char* format, ...) { /
 
 
 
+
+
+
+AlifIntT _alifTokenizer_indentError(TokenState* _tok) { // 86
+	_tok->done = E_TABSPACE;
+	_tok->cur = _tok->inp;
+	return ERRORTOKEN;
+}
+
+
+
+
+
+
+
+
 /* ----------------- String Manipulation ----------------- */
 
 char* alifTokenizer_newString(const char* _s, AlifSizeT _len, TokenState* _tok) { // 180
