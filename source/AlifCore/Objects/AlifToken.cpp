@@ -84,7 +84,8 @@ AlifIntT alifToken_oneChar(AlifIntT _c1) {
 	case L'.': return DOT;
 	case L':': return COLON;
 	case L',': return COMMA;
-	case 155 : return SEMI; // ؛
+	case 140: return COMMA; // Arabic COMMA ،
+	case 155 : return SEMI; // Arabic SEMI ؛
 	case L'&': return AMPER;
 	case L'>': return LESSTHAN;
 	case L'=': return EQUAL;

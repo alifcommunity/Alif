@@ -14,12 +14,13 @@
 /*
 	هذا التعريف يستخدم فقط لعد الاحرف والارقام للاسماء
 */
-#define IS_IDENTIFIER_START(_c) ((_c >= L'a' and _c <= L'z') \
-								or (_c >= L'A' and _c <= L'Z') /* to exclude nums and symbols */ \
-								or (_c == L'_') \
-								or (_c < L'٠' and _c >= 128) \
-								or (_c > L'٩' and _c >= 128)) /* exclude arabic-indic nums */
+#define IS_IDENTIFIER_CHAR(_c) ((_c >= 161 and _c <= 191)	\
+								or (_c >= 128 and _c <= 138) /* الاحرف العربية - البايت الثاني منها */	\
+								or (_c >= '0' and _c <= '9') \
+								or (_c == '_')	\
+								or (_c == 216 or _c == 217))
 
+#define IS_2BYTE_IDENTIFIER(_c) (_c == 216 or _c == 217)
 
 
 AlifSizeT _alifParserEngine_byteOffsetToCharacterOffsetRaw(const char* _str,
@@ -75,8 +76,8 @@ static AlifIntT str_lettersCount(const char* _str) { //* alif
 	AlifIntT len = 0;
 	AlifIntT ch = 0;
 
-	while (IS_IDENTIFIER_START((unsigned char)_str[len])) {
-		if (iswalpha((unsigned char)_str[len])) {
+	while (IS_IDENTIFIER_CHAR((unsigned char)_str[len])) {
+		if (IS_2BYTE_IDENTIFIER((unsigned char)_str[len])) {
 			len++;
 		}
 		ch++;
