@@ -2,9 +2,9 @@
 
 /*
 	ذاكرة ألف، هي ذاكرة خاصة بلغة ألف النسخة الخامسة 5،
-	تم إنشاؤها من قبل مجتمع ألف
+	تم إنشاؤها من قبل عبدالرحمن ومحمد الخطيب - سوريا
 	https://www.aliflang.org
-	وتخضع لترخيص ألف 2023.
+	وتخضع لترخيص برمجيات ألف 2025.
 
 	مخططات الذاكرة متوفرة في ملف ../documents/AlifMemory
 
@@ -38,6 +38,11 @@
 #define BLOCK_NUMS         64
 
 #define FSEGS_SIZE         512
+#else
+#define BLOCK_SIZE         1024
+#define BLOCK_NUMS         128
+
+#define FSEGS_SIZE         1024
 #endif
 
 #define FRAGS_NUM              (BLOCK_SIZE / ALIGNMENT - 1)

@@ -364,34 +364,34 @@ static AlifIntT alifMain_main(AlifArgv* _args) {
 	return alif_runMain();
 }
 
-AlifIntT alif_mainWchar(AlifIntT _argc, wchar_t** _argv) {
+static int alif_mainWchar(int _argc, wchar_t** _argv) {
 	AlifArgv args_ = {
-		.argc = _argc,
+		.argc = (AlifIntT)_argc,
 		.useBytesArgv = 0,
 		.bytesArgv = nullptr,
 		.wcharArgv = _argv
 	};
-	return alifMain_main(&args_);
+	return (int)alifMain_main(&args_);
 }
 
-AlifIntT alif_mainBytes(AlifIntT _argc, char** _argv) {
+static int alif_mainBytes(int _argc, char** _argv) {
 	AlifArgv args_ = {
-		.argc = _argc,
+		.argc = (AlifIntT)_argc,
 		.useBytesArgv = 1,
 		.bytesArgv = _argv,
 		.wcharArgv = nullptr
 	};
-	return alifMain_main(&args_);
+	return (int)alifMain_main(&args_);
 }
 
 #ifdef _WINDOWS
-AlifIntT wmain(AlifIntT _argc, wchar_t** _argv)
+AlifIntT wmain(int _argc, wchar_t** _argv)
 {
 	//wchar_t* argsv[] = { (wchar_t*)L"alif", (wchar_t*)L"example.alif" }; //* alif //* delete
 	return alif_mainWchar(_argc, _argv);
 }
 #else
-AlifIntT main(AlifIntT _argc, char** _argv)
+AlifIntT main(int _argc, char** _argv)
 {
 	//char* argsv[] = { (char*)"alif", (char*)"example.alif" }; // alif
 	return alif_mainBytes(_argc, _argv);

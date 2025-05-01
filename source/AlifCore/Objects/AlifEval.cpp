@@ -66,10 +66,6 @@
 
 
 
-#define STACK_SHRINK(_n) do { \
-                            BASIC_STACKADJ(-(_n)); \
-                        } while (0)
-
 
 
 
@@ -2469,10 +2465,10 @@ static AlifIntT get_exceptionHandler(AlifCodeObject* code, AlifIntT index,
 		scan = parse_varint(scan, &size);
 		if (start_offset + size > index) {
 			scan = parse_varint(scan, handler);
-			int depth_and_lasti;
-			parse_varint(scan, &depth_and_lasti);
-			*level = depth_and_lasti >> 1;
-			*lasti = depth_and_lasti & 1;
+			AlifIntT depthAndLasti{};
+			parse_varint(scan, &depthAndLasti);
+			*level = depthAndLasti >> 1;
+			*lasti = depthAndLasti & 1;
 			return 1;
 		}
 		scan = skipTo_nextEntry(scan, end);

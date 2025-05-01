@@ -79,10 +79,6 @@
 #define BASIC_PUSH(v)     (*stackPointer++ = (v))
 #define BASIC_POP()       (*--stackPointer)
 
- // 227
-#define STACK_SHRINK(_n) do { \
-                            BASIC_STACKADJ(-(_n)); \
-                        } while (0)
 
 // 234
 #define PUSH(v)                BASIC_PUSH(v)
