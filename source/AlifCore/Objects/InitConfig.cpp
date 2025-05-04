@@ -737,7 +737,7 @@ static AlifIntT run_absPathFilename(AlifConfig* _config) { // 2888
 
 	// يتم التحقق من لاحقة الملف والتي يجب ان تكون .alif
 	if (!alif_extension(filename)) {
-		printf("%s", "تأكد من لاحقة الملف \n يجب ان ينتهي اسم الملف بـ .alif");
+		printf("%s \n\n", "تأكد من لاحقة الملف \n يجب ان ينتهي اسم الملف بـ .alif");
 		exit(-1);
 	}
 
