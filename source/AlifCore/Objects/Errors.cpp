@@ -402,7 +402,7 @@ AlifObject* alifErr_format(AlifObject* _exception,
 
 static AlifObject* err_programText(FILE* _fp, AlifIntT _lineno, const char* _encoding) { // 1905
 	char linebuf[1000]{};
-	size_t line_size = 0;
+	AlifUSizeT line_size = 0;
 
 	for (AlifIntT i = 0; i < _lineno; ) {
 		line_size = 0;

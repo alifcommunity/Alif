@@ -1,7 +1,7 @@
 CPP = c++ # المترجم
-# CPPFLAGS = -Wall -std=c++23 # معاملات الترجمة
-CPPFLAGS = -w -O3 -std=c++23 # بدون تحذيرات، مع التشغيل على نظام aarch64a
-# CPPFLAGS = -O3 -std=c++23
+# CPPFLAGS = -Wall -std=c++20 # معاملات الترجمة
+CPPFLAGS = -w -O3 -std=c++20 # بدون تحذيرات، مع التشغيل على نظام aarch64a
+# CPPFLAGS = -O3 -std=c++20
 # -g تخزين معلومات debug
 # -Wall طباعة معظم التنبيهات
 # -w عدم طباعة التنبيهات
