@@ -83,7 +83,7 @@ public:
 	uint32_t version{};
 	AlifSizeT usable{};
 	AlifSizeT nentries{};
-	char indices[8];
+	int8_t indices[8]{};
 };
 
 
