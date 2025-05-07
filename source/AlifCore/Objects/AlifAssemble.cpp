@@ -552,7 +552,7 @@ static AlifCodeObject* makecode(AlifCompileCodeUnitMetadata* _umd,
 		.localsPlusNames = localsPlusNames,
 		.localsPlusKinds = localsPlusKinds,
 
-		.argCount = posOnlyArgCount + posOrKwArgCount,
+		.argCount = ALIF_STATIC_CAST(AlifIntT, posOnlyArgCount + posOrKwArgCount),
 		.posOnlyArgCount = posOnlyArgCount,
 		.kwOnlyArgCount = kwOnlyArgCount,
 

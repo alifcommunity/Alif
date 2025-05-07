@@ -341,7 +341,7 @@ void _alifParserEngine_setSyntaxError(AlifParser* _p, AlifPToken* _lastToken) { 
 	}
 
 	if (_lastToken->type == INDENT or _lastToken->type == DEDENT) {
-		//RAISE_INDENTATION_ERROR(last_token->type == INDENT ? "unexpected indent" : "unexpected unindent");
+		RAISE_INDENTATION_ERROR(_lastToken->type == INDENT ? "مسافة_طويلة غير صحيحة" : "مسافة_راجعة غير صحيحة");
 		return;
 	}
 	// Unknown error (generic case)

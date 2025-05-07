@@ -9009,27 +9009,27 @@ static void* invalid_forStmtRule(AlifParser* _p) {
 	{ // "مزامنة"? "لاجل اهداف_نجمة "في" تعبيرات_نجمة ":" سطر !مسافة_طويلة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* _keyword{};
-		AlifPToken* _literal{};
-		void* _opt_var;
+		AlifPToken* keyword{};
+		AlifPToken* literal{};
+		void* optVar{};
 		AlifPToken* a{};
-		AlifPToken* newline_var{};
-		ExprTy star_expressions_var{};
-		ExprTy star_targets_var{};
+		AlifPToken* newlineVar{};
+		ExprTy starExpressionsVar{};
+		ExprTy starTargetsVar{};
 		if (
-			(_opt_var = alifParserEngine_expectToken(_p, ASYNC_KW), !_p->errorIndicator)  // "مزامنة"?
+			(optVar = alifParserEngine_expectToken(_p, ASYNC_KW), !_p->errorIndicator)  // "مزامنة"?
 			and
 			(a = alifParserEngine_expectToken(_p, FOR_KW))  // "لاجل"
 			and
-			(star_targets_var = starTargets_rule(_p))  // اهداف_نجمة
+			(starTargetsVar = starTargets_rule(_p))  // اهداف_نجمة
 			and
-			(_keyword = alifParserEngine_expectToken(_p, IN_KW))  // "في"
+			(keyword = alifParserEngine_expectToken(_p, IN_KW))  // "في"
 			and
-			(star_expressions_var = starExpressions_rule(_p))  // تعبيرات_نجمة
+			(starExpressionsVar = starExpressions_rule(_p))  // تعبيرات_نجمة
 			and
-			(_literal = alifParserEngine_expectToken(_p, COLON))  // ":"
+			(literal = alifParserEngine_expectToken(_p, COLON))  // ":"
 			and
-			(newline_var = alifParserEngine_expectToken(_p, NEWLINE))  // سطر
+			(newlineVar = alifParserEngine_expectToken(_p, NEWLINE))  // سطر
 			and
 			alifParserEngine_lookaheadWithInt(0, alifParserEngine_expectToken, _p, INDENT)  // مسافة_طويلة
 			)
@@ -9083,7 +9083,7 @@ static StmtTy forStmt_rule(AlifParser* _p) {
 
 		void* invalidForStmtVar{};
 		if (
-			(invalidForStmtVar = invalid_forStmtRule(_p))  // invalid_for_stmt
+			(invalidForStmtVar = invalid_forStmtRule(_p))  // حالة_لاجل_خاطئة
 			)
 		{
 			res = (StmtTy)invalidForStmtVar;
