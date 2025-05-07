@@ -327,15 +327,15 @@ void _alifParserEngine_setSyntaxError(AlifParser* _p, AlifPToken* _lastToken) { 
 	}
 	// Initialization error
 	if (_p->fill == 0) {
-		//RAISE_SYNTAX_ERROR("error at start before reading any input");
+		RAISE_SYNTAX_ERROR("حدث خطأ قبل البدأ بعملية المطابقة");
 	}
 
 	if (_lastToken->type == ERRORTOKEN and _p->tok->done == E_EOF) {
 		if (_p->tok->level) {
-			//raise_unclosedParenthesesError(p);
+			raise_unclosedParenthesesError(_p);
 		}
 		else {
-			//RAISE_SYNTAX_ERROR("unexpected EOF while parsing");
+			RAISE_SYNTAX_ERROR("نهاية الملف غير صحيحة اثناء عملية المطابقة");
 		}
 		return;
 	}
@@ -346,7 +346,7 @@ void _alifParserEngine_setSyntaxError(AlifParser* _p, AlifPToken* _lastToken) { 
 	}
 	// Unknown error (generic case)
 
-	//RAISE_SYNTAX_ERROR_KNOWN_LOCATION(_lastToken, "خطأ في النسق");
+	RAISE_SYNTAX_ERROR_KNOWN_LOCATION(_lastToken, "خطأ في النسق");
 
 	_alifParserEngine_tokenizeFullSourceToCheckForErrors(_p);
 }
