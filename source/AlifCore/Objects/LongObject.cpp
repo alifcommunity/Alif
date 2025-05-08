@@ -322,7 +322,7 @@ AlifObject* alifLong_fromDouble(double _dVal) { // 382
 		neg = 1;
 		_dVal = -_dVal;
 	}
-	frac = frexp(_dVal, &expo); /* dval = frac*2**expo; 0.0 <= frac < 1.0 */
+	frac = frexp(_dVal, (int*)&expo); /* dval = frac*2**expo; 0.0 <= frac < 1.0 */
 	ndig = (expo - 1) / ALIFLONG_SHIFT + 1; /* Number of 'digits' in result */
 	v = alifLong_new(ndig);
 	if (v == nullptr) return nullptr;

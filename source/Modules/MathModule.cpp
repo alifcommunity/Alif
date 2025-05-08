@@ -478,7 +478,7 @@ static inline double vector_norm(AlifSizeT _n, double* _vec, double _max, int _f
 	if (_max == 0.0 or _n <= 1) {
 		return _max;
 	}
-	frexp(_max, &maxE);
+	frexp(_max, (int*)&maxE);
 	if (maxE < -1023) {
 		/* When max_e < -1023, ldexp(1.0, -max_e) would overflow. */
 		for (i = 0; i < _n; i++) {

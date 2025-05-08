@@ -260,7 +260,7 @@ static AlifObject* float_richCompare(AlifObject* _v, AlifObject* _w, AlifIntT _o
 			i = -i;
 			_op = _alifSwappedOp_[_op];
 		}
-		(void)frexp(i, &exponent);
+		(void)frexp(i, (int*)&exponent);
 		if (exponent < nbits) {
 			i = 1.0;
 			j = 2.0;

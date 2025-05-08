@@ -29,7 +29,7 @@ AlifHashT _alif_hashDouble(AlifObject* _inst, double _v) { // 86
 			return alifObject_genericHash(_inst);
 	}
 
-	m = frexp(_v, &e);
+	m = frexp(_v, (int*)&e);
 
 	sign = 1;
 	if (m < 0) {
