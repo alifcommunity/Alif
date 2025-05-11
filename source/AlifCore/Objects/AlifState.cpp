@@ -530,7 +530,7 @@ static bool park_detachedThreads(StopTheWorldState* stw) { // 2214
 	AlifInterpreter* i{};
 	AlifThread* t{};
 	ALIF_FOR_EACH_THREAD(stw, i, t) {
-		int state = alifAtomic_loadIntRelaxed(&t->state);
+		AlifIntT state = alifAtomic_loadIntRelaxed(&t->state);
 		if (state == ALIF_THREAD_DETACHED) {
 			if (alifAtomic_compareExchangeInt(&t->state,
 				&state, ALIF_THREAD_SUSPENDED)) {
