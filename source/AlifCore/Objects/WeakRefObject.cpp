@@ -371,12 +371,12 @@ void alifObject_clearWeakRefs(AlifObject* _object) { // 984
 		return;
 	}
 
-	//AlifObject* exc = alifErr_getRaisedException();
+	AlifObject* exc = alifErr_getRaisedException();
 	AlifObject* tuple = alifTuple_new(numWeakrefs * 2);
 	if (tuple == nullptr) {
 		//_alifWeakref_clearWeakRefsNoCallbacks(_object);
 		//alifErr_writeUnraisable(nullptr);
-		//alifErr_setRaisedException(exc);
+		alifErr_setRaisedException(exc);
 		return;
 	}
 
@@ -410,5 +410,5 @@ void alifObject_clearWeakRefs(AlifObject* _object) { // 984
 
 	ALIF_DECREF(tuple);
 
-	//alifErr_setRaisedException(exc);
+	alifErr_setRaisedException(exc);
 }

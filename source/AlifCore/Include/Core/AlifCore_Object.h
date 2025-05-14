@@ -76,54 +76,67 @@ static inline AlifIntT _alifType_hasFeature(AlifTypeObject* _type, unsigned long
 
 
 
+static inline void _alif_threadIncRefObject(AlifObject* _obj, AlifSizeT _uniqueID) { // 297
+	AlifThreadImpl* tstate = (AlifThreadImpl*)_alifThread_get();
 
+	if ((AlifUSizeT)_uniqueID < (AlifUSizeT)tstate->refCounts.size) {
+		//_ALIF_INCREF_STAT_INC();
+		tstate->refCounts.vals[_uniqueID]++;
+	}
+	else {
+		_alifObject_threadIncrefSlow(_obj, _uniqueID);
+	}
+}
 
-static inline void alif_increaseRefType(AlifTypeObject* type) { // 296
+static inline void _alif_incRefType(AlifTypeObject* type) { // 319
 	if (!_alifType_hasFeature(type, ALIF_TPFLAGS_HEAPTYPE)) {
+		//_ALIF_INCREF_IMMORTAL_STAT_INC();
 		return;
 	}
 
-#if defined(__GNUC__) && __GNUC__ >= 11
+#if defined(__GNUC__) and __GNUC__ >= 11
 #  pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Warray-bounds"
 #endif
-
-	AlifThreadImpl* thread = (AlifThreadImpl*)_alifThread_get();
-	AlifHeapTypeObject* ht = (AlifHeapTypeObject*)type;
-
-	if ((AlifUSizeT)ht->uniqueID < (AlifUSizeT)thread->refCounts.size) {
-		thread->refCounts.vals[ht->uniqueID]++;
-	}
-	else {
-		alifType_incRefSlow(ht);
-	}
-
-#if defined(__GNUC__) && __GNUC__ >= 11
+	_alif_threadIncRefObject((AlifObject*)type, ((AlifHeapTypeObject*)type)->uniqueID);
+#if defined(__GNUC__) and __GNUC__ >= 11
 #  pragma GCC diagnostic pop
 #endif
 }
 
-static inline void alif_decreaseRefType(AlifTypeObject* _type) { // 336
-	if (!_alifType_hasFeature(_type, ALIF_TPFLAGS_HEAPTYPE)) {
-		return;
-	}
+static inline void _alif_incRefCode(AlifCodeObject* _co)
+{
+	_alif_threadIncRefObject((AlifObject*)_co, _co->uniqueID);
+}
 
+
+static inline void _alif_threadDecRefObject(AlifObject* _obj, AlifSizeT _uniqueID) { // 347
 	AlifThreadImpl* thread = (AlifThreadImpl*)_alifThread_get();
-	AlifHeapTypeObject* ht = (AlifHeapTypeObject*)_type;
-
-	if ((AlifUSizeT)ht->uniqueID < (AlifUSizeT)thread->refCounts.size) {
-		thread->refCounts.vals[ht->uniqueID]--;
+	if ((AlifUSizeT)_uniqueID < (AlifUSizeT)thread->refCounts.size) {
+		thread->refCounts.vals[_uniqueID]--;
 	}
 	else {
-		ALIF_DECREF(_type);
+		ALIF_DECREF(_obj);
 	}
+}
+
+static inline void _alif_decRefType(AlifTypeObject* type) { // 369
+	if (!_alifType_hasFeature(type, ALIF_TPFLAGS_HEAPTYPE)) {
+		return;
+	}
+	AlifHeapTypeObject* ht = (AlifHeapTypeObject*)type;
+	_alif_threadDecRefObject((AlifObject*)type, ht->uniqueID);
+}
+
+static inline void _alif_decRefCode(AlifCodeObject* _co) { // 381
+	_alif_threadDecRefObject((AlifObject*)_co, _co->uniqueID);
 }
 
 
 
 static inline void _alifObject_init(AlifObject* _op, AlifTypeObject* _typeObj) { // 370
 	ALIF_SET_TYPE(_op, _typeObj);
-	alif_increaseRefType(_typeObj);
+	_alif_incRefType(_typeObj);
 	alif_newReference(_op);
 }
 

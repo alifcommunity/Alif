@@ -59,7 +59,8 @@ AlifFunctionObject* _alifFunction_fromConstructor(AlifFrameConstructor* _constr)
 	op_->builtins = ALIF_NEWREF(_constr->builtins);
 	op_->name = ALIF_NEWREF(_constr->name);
 	op_->qualname = ALIF_NEWREF(_constr->qualname);
-	op_->code = ALIF_NEWREF(_constr->code);
+	_alif_incRefCode((AlifCodeObject*)_constr->code);
+	op_->code = _constr->code;
 	op_->defaults = ALIF_XNEWREF(_constr->defaults);
 	op_->kwDefaults = ALIF_XNEWREF(_constr->kwDefaults);
 	op_->closure = ALIF_XNEWREF(_constr->closure);
@@ -86,7 +87,8 @@ AlifObject* alifFunction_newWithQualName(AlifObject* _code,
 
 	AlifThread* thread = _alifThread_get();
 
-	AlifCodeObject* codeObj = (AlifCodeObject*)ALIF_NEWREF(_code);
+	AlifCodeObject* codeObj = (AlifCodeObject*)_code;
+	_alif_incRefCode(codeObj);
 
 	AlifObject* name = ALIF_NEWREF(codeObj->name);
 
@@ -220,7 +222,7 @@ static void func_dealloc(AlifObject* _self) { // 1079
 	}
 	(void)func_clear((AlifObject*)op);
 	// These aren't cleared by func_clear().
-	ALIF_DECREF(op->code);
+	_alif_decRefCode((AlifCodeObject*)op->code);
 	ALIF_DECREF(op->name);
 	ALIF_DECREF(op->qualname);
 	alifObject_gcDel(op);

@@ -23,10 +23,10 @@ public:
 
 extern AlifSizeT _alifObject_assignUniqueId(AlifObject*); // 52
 
-extern void _alifObject_releaseUniqueId(AlifSizeT); // 55
+extern void _alifObject_disablePerThreadRefcounting(AlifObject*); // 55
 
 
 
 
 
-void alifType_incRefSlow(AlifHeapTypeObject*); // 68
+void _alifObject_threadIncrefSlow(AlifObject*, AlifSizeT); // 68

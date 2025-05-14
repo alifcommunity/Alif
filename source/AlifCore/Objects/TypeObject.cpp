@@ -649,7 +649,7 @@ static void subtype_dealloc(AlifObject* self) { // 2442
 		basedealloc(self);
 
 		if (type_needs_decref) {
-			alif_decreaseRefType(type);
+			_alif_decRefType(type);
 		}
 
 		/* Done */
@@ -727,7 +727,7 @@ static void subtype_dealloc(AlifObject* self) { // 2442
 	basedealloc(self);
 
 	if (typeNeedsDecref) {
-		alif_decreaseRefType(type);
+		_alif_decRefType(type);
 	}
 
 endlabel:
@@ -2717,7 +2717,7 @@ static void type_dealloc(AlifObject* self) { // 5911
 	ALIFOBJECT_GC_UNTRACK(type);
 	//type_deallocCommon(type);
 
-	//alifObject_clearWeakRefs((AlifObject*)type);
+	alifObject_clearWeakRefs((AlifObject*)type);
 
 	ALIF_XDECREF(type->base);
 	ALIF_XDECREF(type->dict);
@@ -2735,8 +2735,6 @@ static void type_dealloc(AlifObject* self) { // 5911
 	}
 	ALIF_XDECREF(et->module_);
 	alifMem_objFree(et->name);
-
-	_alifObject_releaseUniqueId(et->uniqueID);
 
 	ALIF_TYPE(type)->free((AlifObject*)type);
 }

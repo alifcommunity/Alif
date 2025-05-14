@@ -10,6 +10,7 @@
 #include "AlifCore_State.h"
 #include "AlifCore_SetObject.h"
 #include "AlifCore_Tuple.h"
+#include "AlifCore_UniqueID.h"
 
 
 
@@ -438,8 +439,7 @@ AlifCodeObject* alifCode_new(AlifCodeConstructor* _con) { // 647
 		return nullptr;
 	}
 	init_code(co, _con);
-	alifObject_setDeferredRefcount((AlifObject*)co);
-	ALIFOBJECT_GC_TRACK(co);
+	co->uniqueID = _alifObject_assignUniqueId((AlifObject*)co);	ALIFOBJECT_GC_TRACK(co);
 	ALIF_XDECREF(replacementLocations);
 	return co;
 }

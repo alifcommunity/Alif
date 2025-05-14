@@ -90,13 +90,9 @@ AlifSizeT _alifObject_assignUniqueId(AlifObject* _obj) { // 76
 
 
 
-void _alifObject_releaseUniqueId(AlifSizeT _uniqueID) { // 99
+static void release_unique_id(AlifSizeT _uniqueID) { // 99
 	AlifInterpreter* interp = _alifInterpreter_get();
 	AlifUniqueIDPool* pool = &interp->uniqueIDs;
-
-	if (_uniqueID < 0) {
-		return;
-	}
 
 	LOCK_POOL(pool);
 	AlifUniqueIDEntry* entry = &pool->table[_uniqueID];
@@ -107,14 +103,38 @@ void _alifObject_releaseUniqueId(AlifSizeT _uniqueID) { // 99
 }
 
 
+static AlifSizeT clear_uniqueID(AlifObject* _obj) { // 115
+	AlifSizeT id = -1;
+	if (ALIFTYPE_CHECK(_obj)) {
+		if (alifType_hasFeature((AlifTypeObject*)_obj, ALIF_TPFLAGS_HEAPTYPE)) {
+			AlifHeapTypeObject* ht = (AlifHeapTypeObject*)_obj;
+			id = ht->uniqueID;
+			ht->uniqueID = -1;
+		}
+	}
+	else if (ALIFCODE_CHECK(_obj)) {
+		AlifCodeObject* co = (AlifCodeObject*)_obj;
+		id = co->uniqueID;
+		co->uniqueID = -1;
+	}
+	return id;
+}
 
 
-void alifType_incRefSlow(AlifHeapTypeObject* type) { // 120
+void _alifObject_disablePerThreadRefcounting(AlifObject* _obj) { // 134
+	AlifSizeT id = clear_uniqueID(_obj);
+	if (id >= 0) {
+		release_unique_id(id);
+	}
+}
+
+
+
+void _alifObject_threadIncrefSlow(AlifObject* _obj, AlifSizeT _uniqueID) { // 143
 	AlifThreadImpl* thread = (AlifThreadImpl*)_alifThread_get();
-	if (type->uniqueID < 0 or resize_localRefCounts(thread) < 0) {
-		// just incref the type directly.
-		ALIF_INCREF(type);
+	if (_uniqueID < 0 or resize_localRefCounts(thread) < 0) {
+		ALIF_INCREF(_obj);
 		return;
 	}
-	thread->refCounts.vals[type->uniqueID]++;
+	thread->refCounts.vals[_uniqueID]++;
 }

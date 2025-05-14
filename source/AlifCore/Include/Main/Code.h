@@ -52,6 +52,7 @@ public:																			\
     AlifCoCached *cached{};      /* cached co_* attributes */                 \
     uintptr_t instrumentationVersion{}; /* current instrumentation version */ \
     /*AlifCoMonitoringData *monitoring{};*/ /* Monitoring data */                 \
+    AlifSizeT uniqueID{};     /* ID used for per-thread refcounting */   \
     AlifIntT firstTraceable{};       /* index of first traceable instruction */   \
     void *extra{};                                                            \
     char codeAdaptive[(_size)]{};                                             \
