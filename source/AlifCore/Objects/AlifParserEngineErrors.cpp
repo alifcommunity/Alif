@@ -15,7 +15,7 @@ static inline void raise_unclosedParenthesesError(AlifParser* p) { // 51
 	AlifIntT errorCol = p->tok->parenColStack[p->tok->level - 1];
 	_raiseError_knownLocation(p, _alifExcSyntaxError_,
 		errorLineno, errorCol, errorLineno, -1,
-		"'%c' was never closed",
+		"'%c' لم يتم إغلاق القوس",
 		p->tok->parenStack[p->tok->level - 1]);
 }
 
