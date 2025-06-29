@@ -6098,13 +6098,24 @@ void alifUStrWriter_dealloc(AlifUStrWriter* _writer) { // 13852
 //	return alifUStr_format(v, w);
 //}
 
-static AlifNumberMethods _uStrAsNumber_ = { // 14007
+static AlifNumberMethods _uStrAsNumber_ = { // 14049
 	0,              /*add*/
 	0,              /*subtract*/
 	0,              /*multiply*/
 	//uStr_mod,            /*remainder*/
 };
 
+
+static AlifSequenceMethods _uStrAsSequence_ = { // 14056
+	0, // (LenFunc)uStr_length,       /* length */
+	alifUStr_concat,           /* concat */
+	0, // (SizeArgFunc)uStr_repeat,  /* repeat */
+	0, // (SizeArgFunc)uStr_getItem,     /* item */
+	0,                  /* slice */
+	0,                  /* assItem */
+	0,                  /* assSlice */
+	0, // alifUStr_contains,         /* contains */
+};
 
 
 
@@ -6117,6 +6128,7 @@ AlifTypeObject _alifUStrType_ = { // 15235
 	.dealloc = ustr_dealloc,
 	.repr = uStr_repr,
 	.asNumber = &_uStrAsNumber_,
+	.asSequence = &_uStrAsSequence_,
 	.hash = (HashFunc)uStr_hash,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE |
 		ALIF_TPFLAGS_UNICODE_SUBCLASS |
