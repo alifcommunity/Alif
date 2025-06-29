@@ -4,8 +4,11 @@
 
 extern AlifTypeObject _alifCapsuleType_;
 
-typedef void (*AlifCapsuleDestructor)(AlifObject*);
+typedef void (*AlifCapsuleDestructor)(AlifObject*); // 23
 
-AlifObject* alifCapsule_new(void*, const wchar_t*, AlifCapsuleDestructor);
+#define ALIFCAPSULE_CHECKEXACT(_op) ALIF_IS_TYPE((_op), &_alifCapsuleType_) // 25
 
-void* alifCapsule_getPointer(AlifObject*, const wchar_t*);
+AlifObject* alifCapsule_new(void*, const char*, AlifCapsuleDestructor); // 28
+
+
+void* alifCapsule_getPointer(AlifObject*, const char*); // 33

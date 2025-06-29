@@ -1,60 +1,108 @@
 #pragma once
 
 #include "AlifCore_Interpreter.h"
-#include "AlifCore_AlifThread.h"
+#include "AlifCore_FloatObject.h"
+#include "AlifCore_Parser.h"
+#include "AlifCore_Hash.h"
+#include "AlifCore_Thread.h"
+#include "AlifCore_Signal.h"
 #include "AlifCore_Import.h"
-#include "AlifCore_UString.h"
+#include "AlifCore_UStrObject.h"
 
 
-class {
+
+
+
+class GetArgsDureRunState {
 public:
-	uint64_t filename;
-	uint64_t name;
-	uint64_t lineTable;
-	uint64_t firstLineNo;
-	uint64_t argCount;
-	uint64_t localsPlusNames;
-	uint64_t localsPlusKinds;
-	uint64_t codeAdaptive;
-} codeObject;
+	AlifArgParser* staticParsers{};
+};
 
-class AlifDureRun {
+struct GILStateDureRunState { // 34
+public:
+	AlifIntT checkEnabled{};
+	AlifInterpreter* autoInterpreterState{};
+};
+
+
+
+
+class RefTracerDureRunState { // 198
+public:
+	AlifRefTracer tracerFunc{};
+	void* tracerData{};
+};
+
+class AlifDureRun { // 159
 public:
 	AlifIntT selfInitialized{};
-
-	//AlifIntT preInitializing{};
-	//AlifIntT preInitialized{};
 
 	AlifIntT coreInitialized{};
 
 	AlifIntT initialized{};
 
+	AlifThread* finalizing_{};
+
+	unsigned long finalizingID{};
+
 	class AlifInterpreters {
 	public:
+		AlifMutex mutex{};
 		AlifInterpreter* head{};
 		AlifInterpreter* main{};
 		AlifIntT nextID{};
-	} interpreters;
+	}interpreters;
 
-	AlifIntT mainThreadID{}; // not working in macos it's return pthread_t
+	AlifIntT mainThreadID{};
 	AlifThread* mainThread{};
 
-	AlifIntT autoTSSKey{};
-	AlifIntT trashTSSKey{};
+	AlifThreadDureRunState threads{};
+	SignalsDureRunState signals{};
+
+
+
+	AlifTssT autoTSSKey{};
+	AlifTssT trashTSSKey{};
 
 	AlifWStringList origArgv{};
 
-	ImportDureRun imports;
+	AlifParserDureRunState parser{};
+	ImportDureRunState imports{};
+	EvalDureRunState eval{};
+	GILStateDureRunState gilState{};
+	GetArgsDureRunState getArgs{};
+	RefTracerDureRunState refTracer{};
 
-	class TypesRuntimeState types;
+	AlifRWMutex stopTheWorldMutex{};
+	StopTheWorldState stopTheWorld{};
 
+
+	AlifFloatRuntimeState floatState{};
+	TypesDureRunState types{};
+
+	AlifCachedObjects cachedObjects{};
 	AlifStaticObjects staticObjects{};
 
 	AlifInterpreter mainInterpreter{};
 };
 
-extern AlifDureRun _alifDureRun_;
+extern AlifDureRun _alifDureRun_; // 318
 
-extern AlifIntT alifDureRunState_init(AlifDureRun*);
+extern AlifIntT alifDureRunState_init(AlifDureRun*); // 320
+extern void alifDureRunState_fini(AlifDureRun*); // 321
 
-extern AlifIntT alifDureRun_initialize();
+
+extern AlifIntT alifDureRun_initialize(); // 329
+
+
+
+
+
+
+static inline AlifThread* alifDureRunState_getFinalizing(AlifDureRun* _dureRun) { // 383
+	return (AlifThread*)alifAtomic_loadPtrRelaxed(&_dureRun->finalizing_);
+}
+
+static inline unsigned long alifDureRunState_getFinalizingID(AlifDureRun* _dureRun) { // 388
+	return ALIFATOMIC_LOAD_ULONG_RELAXED(&_dureRun->finalizingID);
+}

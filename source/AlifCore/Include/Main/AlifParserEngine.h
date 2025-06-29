@@ -3,18 +3,32 @@
 #include "alif.h"
 
 #include "AlifCore_AST.h"
-#include "AlifCore_AlifToken.h"
+#include "AlifCore_Token.h"
+#include "AlifCore_Array.h"
 
 
-class Memo {
+ // 12
+#define ALIFPARSE_DONT_IMPLY_DEDENT 0x0002
+
+#define ALIFPARSE_IGNORE_COOKIE 0x0010
+#define ALIFPARSE_BARRY_AS_BDFL 0x0020
+#define ALIFPARSE_TYPE_COMMENTS 0x0040
+#define ALIFPARSE_ALLOW_INCOMPLETE_INPUT 0x0100
+
+
+#define CURRENT_POS (-5) // 25
+
+
+class Memo { // 27
 public:
 	int type{};
 	void* node{};
-	AlifIntT mark_{};
+	AlifIntT mark{};
 	Memo* next{};
 };
 
-class AlifPToken { // Token
+// Token
+class AlifPToken {  // 34
 public:
 	AlifIntT type{};
 	AlifObject* bytes{};
@@ -24,80 +38,81 @@ public:
 	AlifObject* data{};
 };
 
-class KeywordToken {
+class KeywordToken { // 43
 public:
-	const wchar_t* str{};
+	const char* str{};
 	AlifIntT type{};
 };
 
-class AlifParser {
+class AlifParser { // 58
 public:
-	class TokenInfo* tok{};
+	class TokenState* tok{};
 	AlifPToken** tokens{};
-	AlifIntT mark_{};
-	AlifIntT fill_{}, size_{};
+	AlifIntT mark{};
+	AlifIntT fill{}, size{};
 	AlifASTMem* astMem{};
 	KeywordToken** keywords{};
-	wchar_t** softKeyword{};
-	int nKeywordList{};
-	int startRule{};
-	int* errorCode{};
-	int parsingStarted{};
+	char** softKeyword{};
+	AlifIntT nKeywordList{};
+	AlifIntT startRule{};
+	AlifIntT* errorCode{};
+	AlifIntT parsingStarted{};
 	AlifObject* normalize{};
-	int startingLineNo{};
-	int startingColOffset{};
-	int errorIndicator{};
-	int flags{};
-	int featureVersion{};
-	AlifPToken* KnownErrToken{};
-	int level{};
-	//int callInvalidRules{}; // we'll need it
+	AlifIntT startingLineNo{};
+	AlifIntT startingColOffset{};
+	AlifIntT errorIndicator{};
+	AlifIntT flags{};
+	AlifIntT featureVersion{};
+	AlifPToken* knownErrToken{};
+	AlifIntT level{};
+	AlifIntT callInvalidRules{};
+	//AlifIntT debug{};
 };
 
-class CompExprPair {
+class CompExprPair { // 83
 public:
-	CmpOp cmpOp{};
-	Expression* expr_{};
+	CmpOp_ cmpOp{};
+	ExprTy expr{};
 };
 
-class KeyValuePair {
+class KeyValuePair { // 88
 public:
-	Expression* key_{};
-	Expression* val_{};
+	ExprTy key{};
+	ExprTy val{};
 };
 
-class NameDefaultPair {
+class NameDefaultPair { // 98
 public:
-	Arg* arg_{};
-	Expression* value_{};
+	ArgTy arg{};
+	ExprTy value{};
 };
 
-class SlashWithDefault {
+class SlashWithDefault { // 103
 public:
-	ArgSeq* plainNames{};
-	Seq* namesWithDefaults{};
+	ASDLArgSeq* plainNames{};
+	ASDLSeq* namesWithDefaults{};
 };
 
-class StarEtc {
+class StarEtc { // 108
 public:
-	Arg* varArg{};
-	Seq* kwOnlyArgs{};
-	Arg* kwArg{};
+	ArgTy varArg{};
+	ASDLSeq* kwOnlyArgs{};
+	ArgTy kwArg{};
 };
 
 
-class AugOperator {
+class AugOperator { // 114
 public:
-	Operator type{};
+	Operator_ type{};
 };
 
-class KeywordOrStar {
+class KeywordOrStar { // 115
 public:
 	void* element{};
 	AlifIntT isKeyword{};
 };
 
-class ResultTokenWithMetadata {
+class ResultTokenWithMetadata { // 120
 public:
 	void* result{};
 	AlifObject* metadata{};
@@ -105,72 +120,113 @@ public:
 
 
 
-// يجب إيجاد الملف المناسب لنقل هذا الصنف له
-class AlifPArray {
-public:
-	void** data_{};
-	AlifSizeT size_{};
-	AlifSizeT capacity_{};
 
-	AlifPArray() {
-		capacity_ = 4;
-		size_ = 0;
-		data_ = (void**)alifMem_dataAlloc(capacity_ * sizeof(void**));
-	}
 
-	~AlifPArray() {
-		alifMem_dataFree(data_);
-	}
 
-	void push_back(void*& value) {
-		if (size_ == capacity_) {
-			capacity_ *= 2;
-			data_ = (void**)alifMem_dataRealloc(data_, capacity_ * sizeof(void**));
-			if (data_ == nullptr) return;
-		}
-		data_[size_++] = value;
-	}
 
-	void* operator[](AlifUSizeT _index) const {
-		return data_[_index];
-	}
+
+AlifIntT alifParserEngine_insertMemo(AlifParser*, AlifIntT, AlifIntT, void*); // 131
+AlifIntT alifParserEngine_updateMemo(AlifParser*, AlifIntT, AlifIntT, void*); // 132
+AlifIntT alifParserEngine_isMemorized(AlifParser*, AlifIntT, void*);
+
+AlifIntT alifParserEngine_lookaheadWithInt(AlifIntT, AlifPToken* (_func)(AlifParser*, AlifIntT), AlifParser*, AlifIntT); // 136
+AlifIntT alifParserEngine_lookahead(AlifIntT, void* (_func)(AlifParser*), AlifParser*); // 138
+
+AlifPToken* alifParserEngine_expectToken(AlifParser*, AlifIntT); // 140
+AlifPToken* alifParserEngine_expectTokenForced(AlifParser*, AlifIntT, const char*); // 142
+AlifPToken* alifParserEngine_getLastNonWhitespaceToken(AlifParser*); // 146
+ExprTy alifParserEngine_nameToken(AlifParser*); // 148
+ExprTy alifParserEngine_numberToken(AlifParser*); // 149
+void* alifParserEngine_stringToken(AlifParser*); // 150
+
+AlifSizeT _alifParserEngine_byteOffsetToCharacterOffset(AlifObject*, AlifSizeT); // 152
+
+AlifIntT alifParserEngine_fillToken(AlifParser*); // 147
+
+
+enum TargetsType_ { // 156
+	Star_Targets,
+	Del_Targets,
+	For_Targets
 };
 
 
+AlifIntT _alifParserEngine_tokenizerError(AlifParser*); // 164
+void* _alifParserEngine_raiseError(AlifParser*, AlifObject*, AlifIntT, const char*, ...); // 165
+void* _alifParserEngine_raiseErrorKnownLocation(AlifParser*, AlifObject*, AlifSizeT,
+	AlifSizeT, AlifSizeT, AlifSizeT, const char*, va_list); // 166
+
+void _alifParserEngine_setSyntaxError(AlifParser*, AlifPToken*); // 170
+void alifParserEngineError_stackOverflow(AlifParser*); // 171
+
+
+ALIF_LOCAL_INLINE(void*) _raiseError_knownLocation(AlifParser* _p, AlifObject* _errtype,
+	AlifSizeT _lineno, AlifSizeT _colOffset,
+	AlifSizeT _endLineno, AlifSizeT _endColOffset,
+	const char* _errmsg, ...) { // 173
+	va_list va;
+	va_start(va, _errmsg);
+	AlifSizeT _col_offset = (_colOffset == CURRENT_POS ? CURRENT_POS : _colOffset + 1);
+	AlifSizeT _end_col_offset = (_endColOffset == CURRENT_POS ? CURRENT_POS : _endColOffset + 1);
+	_alifParserEngine_raiseErrorKnownLocation(_p, _errtype, _lineno, _col_offset, _endLineno, _end_col_offset, _errmsg, va);
+	va_end(va);
+	return nullptr;
+}
+
+
+#define RAISE_SYNTAX_ERROR(msg, ...) _alifParserEngine_raiseError(_p, _alifExcSyntaxError_, 0, msg, ##__VA_ARGS__) // 186
+#define RAISE_INDENTATION_ERROR(msg, ...) _alifParserEngine_raiseError(_p, _alifExcIndentationError_, 0, msg, ##__VA_ARGS__) // 188
+
+#define RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, msg, ...) \
+    _raiseError_knownLocation(_p, _alifExcSyntaxError_, (a)->lineNo, (a)->colOffset, (a)->endLineNo, (a)->endColOffset, msg, ##__VA_ARGS__)
+#define RAISE_SYNTAX_ERROR_INVALID_TARGET(_type, _e) _raiseSyntaxError_invalidTarget(_p, _type, _e) // 196
+
+
+
+
+ALIF_LOCAL_INLINE(void*) _checkCall_nullAllowed(AlifParser* p, void* result) { // 210
+	if (result == nullptr and alifErr_occurred()) {
+		p->errorIndicator = 1;
+	}
+	return result;
+}
+
+#define CHECK_NULL_ALLOWED(_type, _result) ((_type) _checkCall_nullAllowed(_p, _result)) // 220
+
+ExprTy _alifParserEngine_getInvalidTarget(ExprTy, TargetsType_); // 222
+const char* _alifParserEngine_getExprName(ExprTy); // 223
+ALIF_LOCAL_INLINE(void*) _raiseSyntaxError_invalidTarget(AlifParser* _p,
+	TargetsType_ _type, ExprTy _e) { // 224
+	ExprTy invalid_target = CHECK_NULL_ALLOWED(ExprTy, _alifParserEngine_getInvalidTarget(_e, _type));
+	if (invalid_target != nullptr) {
+		const char* msg;
+		if (_type == TargetsType_::Star_Targets or _type == TargetsType_::For_Targets) {
+			msg = "cannot assign to %s";
+		}
+		else {
+			msg = "cannot delete %s";
+		}
+		return RAISE_SYNTAX_ERROR_KNOWN_LOCATION(
+			invalid_target, msg,
+			_alifParserEngine_getExprName(invalid_target)
+		);
+		return RAISE_SYNTAX_ERROR_KNOWN_LOCATION(invalid_target, "خطأ في النسق");
+	}
+	return nullptr;
+}
+
+
+
+void* alifParserEngine_dummyName(AlifParser*, ...); // 248
+
+#define EXTRA_EXPR(_head, _tail) (_head)->lineNo, (_head)->colOffset, (_tail)->endLineNo, (_tail)->endColOffset, _p->astMem // 254
+
+#define EXTRA startLineNo, startColOffset, endLineNo, endColOffset, _p->astMem // 255
 
 
 
 
 
-int alifParserEngine_insertMemo(AlifParser*, int, int, void*);
-int alifParserEngine_updateMemo(AlifParser*, int, int, void*);
-int alifParserEngine_isMemorized(AlifParser*, int, void*);
-
-int alifParserEngine_lookaheadWithInt(int, AlifPToken* (_func)(AlifParser*, AlifIntT), AlifParser*, int);
-int alifParserEngine_lookahead(int, void* (_func)(AlifParser*), AlifParser*);
-
-AlifPToken* alifParserEngine_expectToken(AlifParser*, AlifIntT);
-AlifPToken* alifParserEngine_expectTokenForced(AlifParser*, int, const wchar_t*);
-AlifPToken* alifParserEngine_getLastNonWhitespaceToken(AlifParser*);
-Expression* alifParserEngine_nameToken(AlifParser*);
-void* alifParserEngine_stringToken(AlifParser*);
-Expression* alifParserEngine_numberToken(AlifParser*);
-
-int alifParserEngine_fillToken(AlifParser*);
-
-
-
-
-
-
-void alifParserEngineError_stackOverflow(AlifParser*);
-
-
-
-
-#define EXTRA_EXPR(head, tail) (head)->lineNo, (head)->colOffset, (tail)->endLineNo, (tail)->endColOffset, _p->astMem
-
-#define EXTRA startLineNo, startColOffset, endLineNo, endColOffset, _p->astMem
 
 
 
@@ -180,51 +236,51 @@ void alifParserEngineError_stackOverflow(AlifParser*);
 
 
 
+AlifObject* alifParserEngine_newIdentifier(AlifParser*, const char*); // 296
+ASDLSeq* alifParserEngine_singletonSeq(AlifParser*, void*); // 297
+ASDLSeq* alifParserEngine_seqInsertInFront(AlifParser*, void*, ASDLSeq*); // 298
+ASDLSeq* alifParserEngine_seqFlatten(AlifParser*, ASDLSeq*); // 300
+ExprTy alifParserEngine_joinNamesWithDot(AlifParser*, ExprTy, ExprTy); // 301
+AliasTy alifParserEngine_aliasForStar(AlifParser*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*); // 303
+ASDLIdentifierSeq* alifParserEngine_mapNamesToIds(AlifParser*, ASDLExprSeq*); // 304
+CompExprPair* alifParserEngine_compExprPair(AlifParser*, CmpOp_, ExprTy); // 305
+ASDLIntSeq* alifParserEngine_getCmpOps(AlifParser*, ASDLSeq*); // 306
+ASDLExprSeq* alifParserEngine_getExprs(AlifParser*, ASDLSeq*); // 307
+ExprTy alifParserEngine_setExprContext(AlifParser*, ExprTy, ExprContext_); // 308
+KeyValuePair* alifParserEngine_keyValuePair(AlifParser*, ExprTy, ExprTy); // 309
+ASDLExprSeq* alifParserEngine_getKeys(AlifParser*, ASDLSeq*); // 310
+ASDLExprSeq* alifParserEngine_getValues(AlifParser*, ASDLSeq*); // 311
+NameDefaultPair* alifParserEngine_nameDefaultPair(AlifParser*, Arg*, ExprTy); // 315
+StarEtc* alifParserEngine_starEtc(AlifParser*, ArgTy, ASDLSeq*, ArgTy); // 317
+ArgumentsTy alifParserEngine_makeArguments(AlifParser*, ASDLArgSeq*, SlashWithDefault*, ASDLArgSeq*, ASDLSeq*, StarEtc*); // 318
+ArgumentsTy alifParserEngine_emptyArguments(AlifParser*); // 320
+ExprTy alifParserEngine_formattedValue(AlifParser*, ExprTy, AlifPToken*,
+	ResultTokenWithMetadata*, ResultTokenWithMetadata*, AlifPToken*, AlifIntT,
+	AlifIntT, AlifIntT, AlifIntT, AlifASTMem*); // 321
+AugOperator* alifParserEngine_augOperator(AlifParser*, Operator_); // 323
+KeywordOrStar* alifParserEngine_keywordOrStarred(AlifParser*, void*, AlifIntT); // 326
+ASDLExprSeq* alifParserEngine_seqExtractStarExprs(AlifParser*, ASDLSeq*); // 327
+ASDLKeywordSeq* alifParserEngine_seqDeleteStarExprs(AlifParser*, ASDLSeq*); // 328
+ExprTy alifParserEngine_collectCallSeqs(AlifParser*, ASDLExprSeq*, ASDLSeq*,AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*); // 329
+ExprTy alifParserEngine_constantFromToken(AlifParser*, AlifPToken*); // 332
+ExprTy alifParserEngine_decodeConstantFromToken(AlifParser*, AlifPToken*); // 333
+ExprTy alifParserEngine_constantFromString(AlifParser*, AlifPToken*); // 334
+ExprTy alifParserEngine_concatenateStrings(AlifParser*, ASDLExprSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*); // 335
+ASDLSeq* alifParserEngine_joinSequences(AlifParser*, ASDLSeq*, ASDLSeq*); // 339
+ResultTokenWithMetadata* alifParserEngine_checkFStringConversion(AlifParser*, AlifPToken*, ExprTy); // 342
+ResultTokenWithMetadata* alifParserEngine_setupFullFormatSpec(AlifParser*, AlifPToken*,
+	ASDLExprSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*); // 343
 
+ModuleTy alifParserEngine_makeModule(AlifParser* p, ASDLStmtSeq* a); // 345
 
+AlifParser* alifParserEngine_parserNew(TokenState*, AlifIntT,
+	AlifIntT, AlifIntT, AlifIntT*, AlifASTMem*); // 352
+void alifParserEngine_parserFree(AlifParser*); // 353
+//void alifParserEngine_parserFree(AlifParser*);
+//Module* alifParser_astFromFile(FILE*, AlifObject*, int, AlifASTMem*);
 
+//void* alifParserEngine_runParser(AlifParser*);
 
+ExprTy alifParserEngine_joinedStr(AlifParser*, AlifPToken*, ASDLExprSeq*, AlifPToken*); // 362
 
-AlifObject* alifParserEngine_newIdentifier(AlifParser*, const wchar_t*);
-Seq* alifParserEngine_singletonSeq(AlifParser*, void*);
-Seq* alifParserEngine_seqInsertInFront(AlifParser*, void*, Seq*);
-Seq* alifParserEngine_seqFlatten(AlifParser*, Seq*);
-Expression* alifParserEngine_joinNamesWithDot(AlifParser*, Expression*, Expression*);
-Alias* alifParserEngine_aliasForStar(AlifParser*, int, int, int, int, AlifASTMem*);
-IdentifierSeq* alifParserEngine_mapNamesToIds(AlifParser*, ExprSeq*);
-CompExprPair* alifParserEngine_compExprPair(AlifParser*, CmpOp, Expression*);
-IntSeq* alifParserEngine_getCmpOps(AlifParser*, Seq*);
-ExprSeq* alifParserEngine_getExprs(AlifParser*, Seq*);
-Expression* alifParserEngine_setExprContext(AlifParser*, Expression*, ExprCTX);
-KeyValuePair* alifParserEngine_keyValuePair(AlifParser*, Expression*, Expression*);
-ExprSeq* alifParserEngine_getKeys(AlifParser*, Seq*);
-ExprSeq* alifParserEngine_getValues(AlifParser*, Seq*);
-NameDefaultPair* alifParserEngine_nameDefaultPair(AlifParser*, Arg*, Expression*);
-StarEtc* alifParserEngine_starEtc(AlifParser*, Arg*, Seq*, Arg*);
-Arguments* alifParserEngine_makeArguments(AlifParser*, ArgSeq*, SlashWithDefault*, ArgSeq*, Seq*, StarEtc*);
-Arguments* alifParserEngine_emptyArguments(AlifParser*);
-Expression* alifParserEngine_formattedValue(AlifParser*, Expression*, AlifPToken*,
-	ResultTokenWithMetadata*, ResultTokenWithMetadata*, AlifPToken*, int, int, int, int, AlifASTMem*);
-AugOperator* alifParserEngine_augOperator(AlifParser*, Operator);
-KeywordOrStar* alifParserEngine_keywordOrStarred(AlifParser*, void*, AlifIntT);
-ExprSeq* alifParserEngine_seqExtractStarExprs(AlifParser*, Seq*);
-KeywordSeq* alifParserEngine_seqDeleteStarExprs(AlifParser*, Seq*);
-Expression* alifParserEngine_collectCallSeqs(AlifParser*, ExprSeq*, Seq*,int, int, int, int, AlifASTMem*);
-Expression* alifParserEngine_constantFromToken(AlifParser*, AlifPToken*);
-Expression* alifParserEngine_decodeConstantFromToken(AlifParser*, AlifPToken*);
-Expression* alifParserEngine_constantFromString(AlifParser*, AlifPToken*);
-Expression* alifParserEngine_combineStrings(AlifParser*, ExprSeq*, int, int, int, int, AlifASTMem*);
-Seq* alifParserEngine_joinSequences(AlifParser*, Seq*, Seq*);
-ResultTokenWithMetadata* alifParserEngine_checkFStringConversion(AlifParser*, AlifPToken*, Expression*);
-ResultTokenWithMetadata* alifParserEngine_setupFullFormatSpec(AlifParser*, AlifPToken*, ExprSeq*, int, int, int, int, AlifASTMem*);
-
-
-AlifParser* alifParserEngine_newParser(class TokenInfo*, int, AlifASTMem*);
-void alifParserEngine_parserFree(AlifParser*);
-Module* alifParser_astFromFile(FILE*, AlifObject*, int, AlifASTMem*);
-
-void* alifParserEngine_runParser(AlifParser*);
-
-Expression* alifParserEngine_joinedStr(AlifParser*, AlifPToken*, ExprSeq*, AlifPToken*);
-
-void* alifParserEngine_parse(AlifParser*);
+void* alifParserEngine_parse(AlifParser*); // 365

@@ -1,0 +1,414 @@
+#include "alif.h"
+
+#include "AlifCore_CriticalSection.h"
+#include "AlifCore_Lock.h"
+#include "AlifCore_ModSupport.h"
+#include "AlifCore_Object.h"
+#include "AlifCore_State.h"
+#include "AlifCore_WeakRef.h"
+
+
+
+
+ // 37
+#define GET_WEAKREFS_LISTPTR(_o) \
+        ((AlifWeakReference **) _alifObject_getWeakRefsListPtr(_o))
+
+
+
+
+AlifSizeT _alifWeakref_getWeakrefCount(AlifObject* _obj) { // 41
+	if (!_alifType_supportsWeakRefs(ALIF_TYPE(_obj))) {
+		return 0;
+	}
+
+	LOCK_WEAKREFS(_obj);
+	AlifSizeT count = 0;
+	AlifWeakReference* head = *GET_WEAKREFS_LISTPTR(_obj);
+	while (head != nullptr) {
+		++count;
+		head = head->next;
+	}
+	UNLOCK_WEAKREFS(_obj);
+	return count;
+}
+
+static AlifObject* weakRef_vectorCall(AlifObject*, AlifObject* const*, AlifUSizeT, AlifObject*); // 59
+
+static void init_weakRef(AlifWeakReference* self, AlifObject* ob, AlifObject* callback) { // 61
+	self->hash = -1;
+	self->object = ob;
+	self->prev = nullptr;
+	self->next = nullptr;
+	self->callback = ALIF_XNEWREF(callback);
+	self->vectorCall = weakRef_vectorCall;
+	self->weakRefsLock = &WEAKREF_LIST_LOCK(ob);
+	_alifObject_setMaybeWeakRef(ob);
+	_alifObject_setMaybeWeakRef((AlifObject*)self);
+}
+
+
+static void clearWeakRef_lockHeld(AlifWeakReference* _self, AlifObject** _callback) { // 78
+	if (_self->object != ALIF_NONE) {
+		AlifWeakReference** list = GET_WEAKREFS_LISTPTR(_self->object);
+		if (*list == _self) {
+			alifAtomic_storePtr(&*list, _self->next);
+		}
+		alifAtomic_storePtr(&_self->object, ALIF_NONE);
+		if (_self->prev != nullptr) {
+			_self->prev->next = _self->next;
+		}
+		if (_self->next != nullptr) {
+			_self->next->prev = _self->prev;
+		}
+		_self->prev = nullptr;
+		_self->next = nullptr;
+	}
+	if (_callback != nullptr) {
+		*_callback = _self->callback;
+		_self->callback = nullptr;
+	}
+}
+
+
+static AlifObject* weakRef_vectorCall(AlifObject* self, AlifObject* const* args,
+	AlifUSizeT nargsf, AlifObject* kwnames) { // 171
+	if (!_ALIFARG_NOKWNAMES("weakref", kwnames)) {
+		return nullptr;
+	}
+	AlifSizeT nargs = ALIFVECTORCALL_NARGS(nargsf);
+	if (!_ALIFARG_CHECKPOSITIONAL("weakref", nargs, 0, 0)) {
+		return nullptr;
+	}
+	AlifObject* obj = _alifWeakRef_getRef(self);
+	if (obj == nullptr) {
+		return ALIF_NONE;
+	}
+	return obj;
+}
+
+
+
+static void get_basicRefs(AlifWeakReference* head,
+	AlifWeakReference** refp, AlifWeakReference** proxyp) { // 276
+	*refp = nullptr;
+	*proxyp = nullptr;
+
+	if (head != nullptr and head->callback == nullptr) {
+		if (ALIFWEAKREF_CHECKREFEXACT(head)) {
+			*refp = head;
+			head = head->next;
+		}
+		if (head != nullptr
+			and head->callback == nullptr
+			and ALIFWEAKREF_CHECKPROXY(head)) {
+			*proxyp = head;
+			/* head = head->wr_next; */
+		}
+	}
+}
+
+
+static void insert_after(AlifWeakReference* newref,
+	AlifWeakReference* prev) { // 301
+	newref->prev = prev;
+	newref->next = prev->next;
+	if (prev->next != nullptr)
+		prev->next->prev = newref;
+	prev->next = newref;
+}
+
+static void insert_head(AlifWeakReference* newref,
+	AlifWeakReference** list) { // 314
+	AlifWeakReference* next = *list;
+
+	newref->prev = nullptr;
+	newref->next = next;
+	if (next != nullptr)
+		next->prev = newref;
+	*list = newref;
+}
+
+
+static AlifWeakReference* tryReuse_basicRef(AlifWeakReference* list,
+	AlifTypeObject* type, AlifObject* callback) { // 329
+	if (callback != nullptr) {
+		return nullptr;
+	}
+
+	AlifWeakReference* ref{}, * proxy{};
+	get_basicRefs(list, &ref, &proxy);
+
+	AlifWeakReference* cand = nullptr;
+	if (type == &_alifWeakrefRefType_) {
+		cand = ref;
+	}
+	if ((type == &_alifWeakrefProxyType_) or
+		(type == &_alifWeakrefCallableProxyType_)) {
+		cand = proxy;
+	}
+
+	if (cand != nullptr and alif_tryIncRef((AlifObject*)cand)) {
+		return cand;
+	}
+	return nullptr;
+}
+
+
+static AlifIntT is_basicRef(AlifWeakReference* _ref) { // 350
+	return (_ref->callback == nullptr) and ALIFWEAKREF_CHECKREFEXACT(_ref);
+}
+
+static AlifIntT is_basicProxy(AlifWeakReference* _proxy) { // 356
+	return (_proxy->callback == nullptr) and ALIFWEAKREF_CHECKPROXY(_proxy);
+}
+
+static AlifIntT isBasicRef_orProxy(AlifWeakReference* _wr) { // 362
+	return is_basicRef(_wr) or is_basicProxy(_wr);
+}
+
+static void insert_weakRef(AlifWeakReference* newref, AlifWeakReference** list) { // 374
+	AlifWeakReference* ref{}, * proxy{};
+	get_basicRefs(*list, &ref, &proxy);
+
+	AlifWeakReference* prev{};
+	if (is_basicRef(newref)) {
+		prev = nullptr;
+	}
+	else if (is_basicProxy(newref)) {
+		prev = ref;
+	}
+	else {
+		prev = (proxy == nullptr) ? ref : proxy;
+	}
+
+	if (prev == nullptr) {
+		insert_head(newref, list);
+	}
+	else {
+		insert_after(newref, prev);
+	}
+}
+
+static AlifWeakReference* allocate_weakRef(AlifTypeObject* type, AlifObject* obj, AlifObject* callback) { // 399
+	AlifWeakReference* newref = (AlifWeakReference*)type->alloc(type, 0);
+	if (newref == nullptr) {
+		return nullptr;
+	}
+	init_weakRef(newref, obj, callback);
+	return newref;
+}
+
+static AlifWeakReference* getOrCreate_weakRef(AlifTypeObject* type,
+	AlifObject* obj, AlifObject* callback) { // 410
+	if (!_alifType_supportsWeakRefs(ALIF_TYPE(obj))) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"cannot create weak reference to '%s' object",
+		//	ALIF_TYPE(obj)->name);
+		return nullptr;
+	}
+	if (callback == ALIF_NONE)
+		callback = nullptr;
+
+	AlifWeakReference** list = GET_WEAKREFS_LISTPTR(obj);
+	if ((type == &_alifWeakrefRefType_) or
+		(type == &_alifWeakrefProxyType_) or
+		(type == &_alifWeakrefCallableProxyType_))
+	{
+		LOCK_WEAKREFS(obj);
+		AlifWeakReference* basic_ref = tryReuse_basicRef(*list, type, callback);
+		if (basic_ref != nullptr) {
+			UNLOCK_WEAKREFS(obj);
+			return basic_ref;
+		}
+		AlifWeakReference* newref = allocate_weakRef(type, obj, callback);
+		if (newref == nullptr) {
+			UNLOCK_WEAKREFS(obj);
+			return nullptr;
+		}
+		insert_weakRef(newref, list);
+		UNLOCK_WEAKREFS(obj);
+		return newref;
+	}
+	else {
+		AlifWeakReference* newref = allocate_weakRef(type, obj, callback);
+		if (newref == nullptr) {
+			return nullptr;
+		}
+		LOCK_WEAKREFS(obj);
+		insert_weakRef(newref, list);
+		UNLOCK_WEAKREFS(obj);
+		return newref;
+	}
+}
+
+
+static AlifIntT parseWeakRef_initArgs(const char* funcname,
+	AlifObject* args, AlifObject* kwargs,
+	AlifObject** obp, AlifObject** callbackp) { // 450
+	return alifArg_unpackTuple(args, funcname, 1, 2, obp, callbackp);
+}
+
+
+
+static AlifIntT weakref___init__(AlifObject* _self,
+	AlifObject* _args, AlifObject* _kwargs) { // 467
+	AlifObject* tmp{};
+
+	if (!_ALIFARG_NOKEYWORDS("ref", _kwargs))
+		return -1;
+
+	if (parseWeakRef_initArgs("__init__", _args, _kwargs, &tmp, &tmp))
+		return 0;
+	else
+		return -1;
+}
+
+AlifTypeObject _alifWeakrefRefType_ = { // 493
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "مرجع_ضعيف.نوع_مرجعي",
+	.basicSize = sizeof(AlifWeakReference),
+	//.dealloc = weakref_dealloc,
+	.vectorCallOffset = offsetof(AlifWeakReference, vectorCall),
+	.call = alifVectorCall_call,
+	//.repr = weakref_repr,
+	//.hash = weakref_hash,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
+				ALIF_TPFLAGS_HAVE_VECTORCALL | ALIF_TPFLAGS_BASETYPE,
+	//.traverse = gc_traverse,
+	//.clear = gc_clear,
+	//.richCompare = weakref_richcompare,
+	//.methods = weakref_methods,
+	//.members = weakref_members,
+	.init = weakref___init__,
+	.alloc = alifType_genericAlloc,
+	//.new_ = weakref___new__,
+	.free = alifObject_gcDel,
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+AlifTypeObject _alifWeakrefProxyType_ = { // 846
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "مرجع_ضعيف.نوع_وكيل",
+	.basicSize = sizeof(AlifWeakReference),
+	.itemSize = 0,
+	/* methods */
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
+};
+
+
+AlifTypeObject _alifWeakrefCallableProxyType_ = { // 881
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "مرجع_ضعيف.نوع_وكيل_قابل_للاستدعاء",
+	.basicSize = sizeof(AlifWeakReference),
+	.itemSize = 0,
+	/* methods */
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
+};
+
+
+
+AlifObject* alifWeakRef_newRef(AlifObject* _ob, AlifObject* _callback) { // 918
+	return (AlifObject*)getOrCreate_weakRef(&_alifWeakrefRefType_, _ob,
+		_callback);
+}
+
+
+
+static void handle_callback(AlifWeakReference* ref, AlifObject* callback) { // 967
+	AlifObject* cbResult = alifObject_callOneArg(callback, (AlifObject*)ref);
+
+	if (cbResult == nullptr) {
+		//alifErr_writeUnraisable(callback);
+	}
+	else ALIF_DECREF(cbResult);
+}
+
+
+
+
+void alifObject_clearWeakRefs(AlifObject* _object) { // 984
+	AlifWeakReference** list{};
+
+	if (_object == nullptr
+		or !_alifType_supportsWeakRefs(ALIF_TYPE(_object))
+		or ALIF_REFCNT(_object) != 0)
+	{
+		//ALIFERR_BADINTERNALCALL();
+		return;
+	}
+
+	list = GET_WEAKREFS_LISTPTR(_object);
+	if (alifAtomic_loadPtr(&*list) == nullptr) {
+		return;
+	}
+
+	for (int done = 0; !done;) {
+		LOCK_WEAKREFS(_object);
+		if (*list != nullptr and isBasicRef_orProxy(*list)) {
+			AlifObject* callback;
+			clearWeakRef_lockHeld(*list, &callback);
+		}
+		done = (*list == nullptr) or !isBasicRef_orProxy(*list);
+		UNLOCK_WEAKREFS(_object);
+	}
+
+	AlifSizeT numWeakrefs = _alifWeakref_getWeakrefCount(_object);
+	if (numWeakrefs == 0) {
+		return;
+	}
+
+	AlifObject* exc = alifErr_getRaisedException();
+	AlifObject* tuple = alifTuple_new(numWeakrefs * 2);
+	if (tuple == nullptr) {
+		//_alifWeakref_clearWeakRefsNoCallbacks(_object);
+		//alifErr_writeUnraisable(nullptr);
+		alifErr_setRaisedException(exc);
+		return;
+	}
+
+	AlifSizeT num_items = 0;
+	for (AlifIntT done = 0; !done;) {
+		AlifObject* callback = nullptr;
+		LOCK_WEAKREFS(_object);
+		AlifWeakReference* cur = *list;
+		if (cur != nullptr) {
+			clearWeakRef_lockHeld(cur, &callback);
+			if (alif_tryIncRef((AlifObject*)cur)) {
+				ALIFTUPLE_SET_ITEM(tuple, num_items, (AlifObject*)cur);
+				ALIFTUPLE_SET_ITEM(tuple, num_items + 1, callback);
+				num_items += 2;
+				callback = nullptr;
+			}
+		}
+		done = (*list == nullptr);
+		UNLOCK_WEAKREFS(_object);
+
+		ALIF_XDECREF(callback);
+	}
+
+	for (AlifSizeT i = 0; i < num_items; i += 2) {
+		AlifObject* callback = ALIFTUPLE_GET_ITEM(tuple, i + 1);
+		if (callback != nullptr) {
+			AlifObject* weakref = ALIFTUPLE_GET_ITEM(tuple, i);
+			handle_callback((AlifWeakReference*)weakref, callback);
+		}
+	}
+
+	ALIF_DECREF(tuple);
+
+	alifErr_setRaisedException(exc);
+}

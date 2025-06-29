@@ -2,5 +2,5 @@
 
 #include "AlifTokenState.h"
 
-int alifLexer_updateFStringExpr(TokenInfo*, wchar_t);
-int alifTokenizer_get(TokenInfo*, AlifToken*);
+AlifIntT alifLexer_updateFStringExpr(TokenState*, char);
+AlifIntT alifTokenizer_get(TokenState*, AlifToken*);

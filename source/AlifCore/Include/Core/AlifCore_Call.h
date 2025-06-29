@@ -1,18 +1,32 @@
 #pragma once
 
 
+#include "AlifCore_State.h"
 
 
-AlifObject* alif_checkFunctionResult(AlifThread*, AlifObject*, AlifObject*, const wchar_t*); 
+#define ALIF_FASTCALL_SMALL_STACK 5 // 22
 
 
-AlifObject* alifObject_makeTpCall(AlifThread*, AlifObject*, AlifObject* const*, AlifSizeT, AlifObject*);
+AlifObject* _alif_checkFunctionResult(AlifThread*, AlifObject*, AlifObject*, const wchar_t*); // 27 
 
 
-static inline VectorCallFunc alifVectorCall_functionInline(AlifObject* callable) { 
+extern AlifObject* _alifObject_callPrepend(AlifThread*, AlifObject*,
+	AlifObject*, AlifObject*, AlifObject*); // 33
+
+
+extern AlifObject* _alifObject_call(AlifThread*, AlifObject*, AlifObject*, AlifObject*); // 47
+
+
+AlifObject* _alifObject_callMethod(AlifObject*, AlifObject*, const char*, ...); // 60
+
+
+AlifObject* alifObject_makeTpCall(AlifThread*, AlifObject*, AlifObject* const*, AlifSizeT, AlifObject*); // 106
+
+
+static inline VectorCallFunc _alifVectorCall_functionInline(AlifObject* callable) { // 113 
 
 	AlifTypeObject* tp = ALIF_TYPE(callable);
-	if (!alifType_hasFeature(tp, ALIFTPFLAGS_HAVE_VECTORCALL)) {
+	if (!alifType_hasFeature(tp, ALIF_TPFLAGS_HAVE_VECTORCALL)) {
 		return nullptr;
 	}
 
@@ -25,20 +39,37 @@ static inline VectorCallFunc alifVectorCall_functionInline(AlifObject* callable)
 
 
 
-static inline AlifObject* alifObject_vectorCallThread(AlifThread* tstate, AlifObject* callable,
-	AlifObject* const* args, AlifUSizeT nargsf,
-	AlifObject* kwnames) { 
-	VectorCallFunc func;
-	AlifObject* res;
+static inline AlifObject* alifObject_vectorCallThread(AlifThread* _thread,
+	AlifObject* _callable, AlifObject* const* _args,
+	AlifUSizeT _nArgsF, AlifObject* _kWNames) {  // 151
+	VectorCallFunc func{};
+	AlifObject* res_{};
 
-	func = alifVectorCall_functionInline(callable);
+	func = _alifVectorCall_functionInline(_callable);
 	if (func == nullptr) {
-		AlifSizeT nargs = ALIFVECTORCALL_NARGS(nargsf);
-		return alifObject_makeTpCall(tstate, callable, args, nargs, kwnames);
+		AlifSizeT nargs = ALIFVECTORCALL_NARGS(_nArgsF);
+		return alifObject_makeTpCall(_thread, _callable, _args, nargs, _kWNames);
 	}
-	res = func(callable, args, nargsf, kwnames);
-	return alif_checkFunctionResult(tstate, callable, res, nullptr);
+	res_ = func(_callable, _args, _nArgsF, _kWNames);
+	return _alif_checkFunctionResult(_thread, _callable, res_, nullptr);
+}
+
+static inline AlifObject* _alifObject_callNoArgsThread(AlifThread* _thread, AlifObject* _func) { // 172
+	return alifObject_vectorCallThread(_thread, _func, nullptr, 0, nullptr);
+}
+
+static inline AlifObject* _alifObject_callNoArgs(AlifObject* _func) { // 179
+	AlifThread* thread = _alifThread_get();
+	return alifObject_vectorCallThread(thread, _func, nullptr, 0, nullptr);
 }
 
 
-AlifObject* const* alifStack_unpackDict(AlifObject* const* args, int64_t nArgs, AlifObject* kwArgs, AlifObject** p_kwnames);
+extern AlifObject* const* _alifStack_unpackDict(AlifThread*,
+	AlifObject* const*, AlifSizeT, AlifObject*, AlifObject**); // 187
+
+extern void _alifStack_unpackDictFree(AlifObject* const*, AlifSizeT, AlifObject*); // 192
+
+extern void _alifStack_unpackDictFreeNoDecRef(AlifObject* const*, AlifObject*); // 197
+
+
+

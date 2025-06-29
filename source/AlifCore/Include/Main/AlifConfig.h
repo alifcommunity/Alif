@@ -4,7 +4,6 @@
 	هذا الملف يعمل على تحديد بعض المعلوامات الخاصة بنظام التشغيل
 */
 
-#define WITH_THREAD
 
 #ifdef _WIN32
 	#define _WINDOWS
@@ -16,6 +15,15 @@
 		#define _OS32
 	#endif
 #elif defined(__linux__)
+	#ifdef __ARM_ARCH
+		#if __ARM_ARCH >= 8
+			#define _ARM64
+			#define _OS64
+		#else
+			#define _ARM32
+			#define _OS32
+		#endif
+	#endif
 	#ifdef __x86_64__
 		#define _LINUX64
 		#define _OS64
@@ -35,21 +43,51 @@
 		#define _MAC64_ARM
 		#define _OS64
 	#endif 
-#elif defined(__ARM_ARCH) // يحتاج مراجعة
-	#if __ARM_ARCH >= 8
-		#define _ARM64
-		#define _OS64
-	#else
-		#define _ARM32
-		#define _OS32
-	#endif
 #else
-	#error L"منصة تشغيل غير معروفة"
+	#error "منصة تشغيل غير معروفة"
 #endif
 
 
 
-/* --------------------------------- مترجم مايكروسوفت --------------------------------- */
+
+/* ------------------------------------- Windows ------------------------------------- */
+
+#ifdef _WINDOWS
+
+#include <winapifamily.h>
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
+#define MS_WINDOWS_DESKTOP
+#endif
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
+#define MS_WINDOWS_APP
+#endif
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_SYSTEM)
+#define MS_WINDOWS_SYSTEM
+#endif
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_GAMES)
+#define MS_WINDOWS_GAMES
+#endif
+
+#if defined(MS_WINDOWS_DESKTOP) || defined(MS_WINDOWS_APP) || defined(MS_WINDOWS_SYSTEM)
+#define HAVE_WINDOWS_CONSOLE_IO 1
+#endif
+
+
+
+
+#define LONG_BIT    32
+
+#define WITH_THREAD
+#define SIZEOF_WCHAR_T 2
+#define NT_THREADS
+#define SIZEOF_LONG 4
+#define SIZEOF_LONG_LONG 8
+#define SIZEOF_INT 4 //* review
+#define ALIGNOF_LONG 4
+
+#define HAVE_WCHAR_H 1
+
+/* ------------------------------ مترجم مايكروسوفت ------------------------------ */
 #ifdef _MSC_VER
 
 	#define ALIF_COMPILER_VERSION(SUFFIX) \
@@ -105,41 +143,89 @@
 
 
 
-#if defined(_OS64)
-	using AlifSizeT = int64_t;
-	using AlifUSizeT = uint64_t;
-	using AlifIntT = int32_t;
-	using AlifUIntT = uint32_t;
-	#define ALIF_SIZET_MAX LLONG_MAX
-	#define ALIF_SIZET_MIN (-ALIF_SIZET_MAX-1)
-	#define SIZEOF_VOID_P 8
-#else
-	using AlifSizeT = int32_t;
-	using AlifUSizeT = uint32_t;
-	using AlifIntT = int16_t;
-	using AlifUIntT = uint16_t;
-	#define ALIF_SIZET INT_MAX
-	#define ALIF_SIZET_MAX LLONG_MAX
-	#define ALIF_SIZET_MIN (-ALIF_SIZET_MAX-1)
-	#define SIZEOF_VOID_P 4
+/* -------------------------------------- GNUC LCC ------------------------------------*/
+/* egcs/gnu-win32 defines __GNUC__ and _WIN32 */
+#if defined(__GNUC__) and defined(_WIN32)
+#if (__GNUC__==2) and (__GNUC_MINOR__<=91)
+#warning "Please use an up-to-date version of gcc! (>2.91 recommended)"
+#endif
+
+#define COMPILER "[gcc]"
+
+/* lcc-win32 defines __LCC__ */
+#elif defined(__LCC__)
+#define COMPILER "[lcc-win32]"
 #endif
 
 
 
-#ifdef _WINDOWS
-	#include <io.h>
-	#define SIZEOF_WCHART 2
-	#define NT_THREADS
+
 #else
-	#include <cstring>
-	#define SIZEOF_WCHART 4
-	#define _USE_PTHREADS
-#endif // _WINDOWS
+
+
+#define SIZEOF_WCHAR_T 4
+#define USE_PTHREADS
+#define HAVE_PTHREAD_H 1
+#define SIZEOF_LONG 8
+#define ALIGNOF_LONG 4 //* review
+
+#define HAVE_UNISTD_H 1
+
+#define HAVE_SYS_TIME_H 1 // 46
+#define HAVE_CLOCK_GETTIME 1
+
+#define HAVE_WCHAR_H 1
+
+#endif
+
+
+/* ------------------------------------- X86_X64 OS ------------------------------------- */
+#if defined(_OS64)
+	using AlifIntT = int32_t;
+	using AlifUIntT = uint32_t;
+	using AlifSizeT = int64_t;
+	using AlifUSizeT = uint64_t;
+	#define ALIF_SIZET_MAX LLONG_MAX
+	#define ALIF_SIZET_MIN LLONG_MIN
+	#define SIZEOF_SIZE_T 8
+	#define ALIGNOF_SIZE_T 8
+	#define SIZEOF_VOID_P 8
+	#define SIZEOF_TIME_T 8
+	#define SIZEOF_LONG_LONG 8 //* alif
+	#define ALIGNOF_MAX_ALIGN_T 8
+#else
+	using AlifIntT = int16_t;
+	using AlifUIntT = uint16_t;
+	using AlifSizeT = int32_t;
+	using AlifUSizeT = uint32_t;
+	#define ALIF_SIZET INT_MAX
+	#define ALIF_SIZET_MAX LLONG_MAX
+	#define ALIF_SIZET_MIN LLONG_MIN
+	#define SIZEOF_VOID_P 4
+	#define ALIGNOF_SIZE_T 4
+	#define SIZEOF_SIZE_T 4
+	#define SIZEOF_TIME_T 4
+	#define SIZEOF_LONG_LONG 4 //* alif
+	#define ALIGNOF_MAX_ALIGN_T 4
+#endif
 
 
 
-#define WITH_FREELISTS 1
 
+
+/* ------------------------------------- Public ------------------------------------- */
 
 
 #define HAVE_SETVBUF
+
+#define FORCE_SWITCHING
+
+#define WITH_DOC_STRINGS 1 
+
+#define	WITH_MIMALLOC
+
+#define HAVE_FCNTL_H 1
+
+#define HAVE_SIGNAL_H 1
+
+#define HAVE_SYS_STAT_H 1

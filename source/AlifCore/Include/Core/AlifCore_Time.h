@@ -1,17 +1,67 @@
 #pragma once
 
-enum AlifSubTimeRoundT {
-    AlifSubTime_Round_Floor = 0,
 
-    AlifSubTime_Round_Ceiling = 1,
 
-    AlifSubTime_Round_Half_Even = 2,
+#define _SIZEOF_ALIFTIME_T 8 // 65
 
-    AlifSubTime_Round_Up = 3,
+enum AlifTimeRoundT { // 67
+	AlifTime_Round_FLOOR = 0,
+	AlifTime_Round_CEILING = 1,
+	AlifTime_Round_HALF_EVEN = 2,
+	AlifTime_Round_UP = 3,
+	AlifTime_Round_TIMEOUT = AlifTime_Round_UP
+};
 
-    AlifSubTime_Round_Timeout = AlifSubTime_Round_Up
-} ;
+AlifTimeT _alifTime_fromMicrosecondsClamp(AlifTimeT); // 147
 
-int alifSubTime_fromSecondsObject(AlifTimeT* , AlifObject*, AlifSubTimeRoundT);
 
-AlifTimeT alifSubTime_asMicroseconds(AlifTimeT , AlifSubTimeRoundT );
+AlifIntT _alifTime_fromSecondsObject(AlifTimeT*, AlifObject*, AlifTimeRoundT); // 157
+
+
+AlifTimeT _alifTime_asMilliseconds(AlifTimeT, AlifTimeRoundT); // 170
+
+
+#ifdef _WINDOWS
+extern AlifTimeT _alifTime_as100Nanoseconds(AlifTimeT, AlifTimeRoundT); // 180
+#endif
+
+
+AlifIntT _alifTime_asTimEval(AlifTimeT, struct timeval*, AlifTimeRoundT); // 199
+
+
+#if defined(HAVE_CLOCK_GETTIME) or defined(HAVE_KQUEUE)
+
+AlifIntT _alifTime_asTimeSpec(AlifTimeT, struct timespec*); // 232
+
+void _alifTime_asTimeSpecClamp(AlifTimeT, timespec*); // 237
+#endif
+
+extern AlifTimeT _alifTime_add(AlifTimeT, AlifTimeT);
+
+class AlifClockInfoT { // 245
+public:
+	const char* implementation{};
+	AlifIntT monotonic{};
+	AlifIntT adjustable{};
+	double resolution{};
+};
+
+
+
+
+
+
+AlifTimeT alifDeadline_get(AlifTimeT); // 305
+
+
+class AlifTimeFraction { // 310
+public:
+	AlifTimeT numer{};
+	AlifTimeT denom{};
+};
+
+
+extern AlifIntT alifTimeFraction_set(AlifTimeFraction*, AlifTimeT, AlifTimeT); // 318
+
+extern AlifTimeT alifTimeFraction_mul(AlifTimeT, const AlifTimeFraction*); // 325
+extern double alifTimeFraction_resolution(const AlifTimeFraction*); // 330

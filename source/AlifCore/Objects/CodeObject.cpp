@@ -1,43 +1,205 @@
 #include "alif.h"
-#include "OpCode.h"
+#include "Opcode.h"
 
 #include "AlifCore_Code.h"
 #include "AlifCore_Frame.h"
 #include "AlifCore_InitConfig.h"
-#include "AlifCore_Interpreter.h"
 #include "AlifCore_Object.h"
-#include "AlifCore_OpCodeData.h"
-#include "AlifCore_OpCodeUtils.h"
-#include "AlifCore_AlifState.h"
+#include "AlifCore_OpcodeUtils.h"
+#include "AlifCore_OpcodeMetaData.h"
+#include "AlifCore_State.h"
+#include "AlifCore_SetObject.h"
+#include "AlifCore_Tuple.h"
+#include "AlifCore_UniqueID.h"
 
 
 
 
 
+static const char* code_eventName(AlifCodeEvent _event) { // 20
+	switch (_event) {
+		#define CASE(_op)                \
+        case Alif_Code_Event_##_op:         \
+            return "Alif_Code_Event_" #_op;
+		ALIF_FOREACH_CODE_EVENT(CASE)
+		#undef CASE
+	}
+	ALIF_UNREACHABLE();
+}
+
+static void notify_codeWatchers(AlifCodeEvent _event, AlifCodeObject* _co) { // 32
+	AlifInterpreter* interp = _alifInterpreter_get();
+	uint8_t bits = interp->activeCodeWatchers;
+	AlifIntT i = 0;
+	while (bits) {
+		if (bits & 1) {
+			AlifCodeWatchCallback cb = interp->codeWatchers[i];
+			if (cb(_event, _co) < 0) {
+				//alifErr_formatUnraisable(
+					//"Exception ignored in %s watcher callback for %R",
+					//code_eventName(event), co);
+			}
+		}
+		i++;
+		bits >>= 1;
+	}
+}
+
+static AlifIntT should_internString(AlifObject* _o) { // 106
+	AlifInterpreter* interp = _alifInterpreter_get();
+	if (alifAtomic_loadInt(&interp->gc.immortalize) < 0) {
+		return 1;
+	}
+
+	const unsigned char* s_{}, * e_{};
+
+	if (!ALIFUSTR_IS_ASCII(_o))
+		return 0;
+
+	s_ = ALIFUSTR_1BYTE_DATA(_o);
+	e_ = s_ + ALIFUSTR_GET_LENGTH(_o);
+	for (; s_ != e_; s_++) {
+		if (!ALIF_ISALNUM(*s_) and *s_ != '_')
+			return 0;
+	}
+	return 1;
+}
+
+static AlifObject* intern_oneConstant(AlifObject*); // 133
+
+static AlifIntT intern_strings(AlifObject* _tuple) { // 137
+	AlifInterpreter* interp = _alifInterpreter_get();
+	AlifSizeT i{};
+
+	for (i = ALIFTUPLE_GET_SIZE(_tuple); --i >= 0; ) {
+		AlifObject* v = ALIFTUPLE_GET_ITEM(_tuple, i);
+		if (v == nullptr or !ALIFUSTR_CHECKEXACT(v)) {
+			//alifErr_setString(_alifExcSystemError_,
+			//	"non-string found in code slot");
+			return -1;
+		}
+		alifUStr_internImmortal(interp, &ALIFTUPLE_ITEMS(_tuple)[i]);
+	}
+	return 0;
+}
+
+
+static AlifIntT intern_constants(AlifObject* _tuple, AlifIntT* _modified) { // 158
+	AlifInterpreter* interp = _alifInterpreter_get();
+	for (AlifSizeT i = ALIFTUPLE_GET_SIZE(_tuple); --i >= 0; ) {
+		AlifObject* v = ALIFTUPLE_GET_ITEM(_tuple, i);
+		if (ALIFUSTR_CHECKEXACT(v)) {
+			if (should_internString(v)) {
+				AlifObject* w = v;
+				alifUStr_internMortal(interp, &v);
+				if (w != v) {
+					ALIFTUPLE_SET_ITEM(_tuple, i, v);
+					if (_modified) {
+						*_modified = 1;
+					}
+				}
+			}
+		}
+		else if (ALIFTUPLE_CHECKEXACT(v)) {
+			if (intern_constants(v, nullptr) < 0) {
+				return -1;
+			}
+		}
+		else if (ALIFFROZENSET_CHECKEXACT(v)) {
+			AlifObject* w = v;
+			AlifObject* tmp = alifSequence_tuple(v);
+			if (tmp == nullptr) {
+				return -1;
+			}
+			AlifIntT tmpModified = 0;
+			if (intern_constants(tmp, &tmpModified) < 0) {
+				ALIF_DECREF(tmp);
+				return -1;
+			}
+			if (tmpModified) {
+				v = alifFrozenSet_new(tmp);
+				if (v == nullptr) {
+					ALIF_DECREF(tmp);
+					return -1;
+				}
+
+				ALIFTUPLE_SET_ITEM(_tuple, i, v);
+				ALIF_DECREF(w);
+				if (_modified) {
+					*_modified = 1;
+				}
+			}
+			ALIF_DECREF(tmp);
+		}
+		else if (ALIFSLICE_CHECK(v)) {
+			AlifSliceObject* slice = (AlifSliceObject*)v;
+			AlifObject* tmp = alifTuple_new(3);
+			if (tmp == nullptr) {
+				return -1;
+			}
+			ALIFTUPLE_SET_ITEM(tmp, 0, ALIF_NEWREF(slice->start));
+			ALIFTUPLE_SET_ITEM(tmp, 1, ALIF_NEWREF(slice->stop));
+			ALIFTUPLE_SET_ITEM(tmp, 2, ALIF_NEWREF(slice->step));
+			AlifIntT tmpModified = 0;
+			if (intern_constants(tmp, &tmpModified) < 0) {
+				ALIF_DECREF(tmp);
+				return -1;
+			}
+			if (tmpModified) {
+				v = alifSlice_new(ALIFTUPLE_GET_ITEM(tmp, 0),
+					ALIFTUPLE_GET_ITEM(tmp, 1),
+					ALIFTUPLE_GET_ITEM(tmp, 2));
+				if (v == nullptr) {
+					ALIF_DECREF(tmp);
+					return -1;
+				}
+				ALIFTUPLE_SET_ITEM(_tuple, i, v);
+				ALIF_DECREF(slice);
+				if (_modified) {
+					*_modified = 1;
+				}
+			}
+			ALIF_DECREF(tmp);
+		}
+
+		AlifThread* tstate = alifThread_get();
+		if (!ALIF_ISIMMORTAL(v) and !ALIFCODE_CHECK(v) and
+			!ALIFUSTR_CHECKEXACT(v) and
+			alifAtomic_loadInt(&tstate->interpreter->gc.immortalize) >= 0)
+		{
+			AlifObject* interned = intern_oneConstant(v);
+			if (interned == nullptr) {
+				return -1;
+			}
+			else if (interned != v) {
+				ALIFTUPLE_SET_ITEM(_tuple, i, interned);
+				ALIF_SETREF(v, interned);
+				if (_modified) {
+					*_modified = 1;
+				}
+			}
+		}
+	}
+	return 0;
+}
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+void alifSet_localsPlusInfo(AlifIntT _offset, AlifObject* _name,
+	AlifLocalsKind _kind, AlifObject* _names, AlifObject* _kinds) { // 327
+	ALIFTUPLE_SET_ITEM(_names, _offset, ALIF_NEWREF(_name));
+	_alifLocals_setKind(_kinds, _offset, _kind);
+}
 
 static void get_localsPlusCounts(AlifObject* _names, AlifObject* _kinds,
-	AlifIntT* _pnLocals, AlifIntT* _pnCellVars, AlifIntT* _pnFreeVars) { 
+	AlifIntT* pnlocals, AlifIntT* pncellvars,
+	AlifIntT* pnfreevars) { // 335
 	AlifIntT nlocals = 0;
 	AlifIntT ncellvars = 0;
 	AlifIntT nfreevars = 0;
 	AlifSizeT nlocalsplus = ALIFTUPLE_GET_SIZE(_names);
 	for (AlifIntT i = 0; i < nlocalsplus; i++) {
-		wchar_t kind = alifLocals_getKind(_kinds, i); // <-- need review
+		AlifLocalsKind kind = _alifLocals_getKind(_kinds, i);
 		if (kind & CO_FAST_LOCAL) {
 			nlocals += 1;
 			if (kind & CO_FAST_CELL) {
@@ -51,14 +213,14 @@ static void get_localsPlusCounts(AlifObject* _names, AlifObject* _kinds,
 			nfreevars += 1;
 		}
 	}
-	if (_pnLocals != nullptr) {
-		*_pnLocals = nlocals;
+	if (pnlocals != nullptr) {
+		*pnlocals = nlocals;
 	}
-	if (_pnCellVars != nullptr) {
-		*_pnCellVars = ncellvars;
+	if (pncellvars != nullptr) {
+		*pncellvars = ncellvars;
 	}
-	if (_pnFreeVars != nullptr) {
-		*_pnFreeVars = nfreevars;
+	if (pnfreevars != nullptr) {
+		*pnfreevars = nfreevars;
 	}
 }
 
@@ -66,82 +228,218 @@ static void get_localsPlusCounts(AlifObject* _names, AlifObject* _kinds,
 
 
 
-extern void alifCode_quicken(AlifCodeObject*); 
 
-static void init_code(AlifCodeObject* _co, AlifCodeConstructor* _cons) { 
-
-	AlifIntT nLocalsPlus = ALIFTUPLE_GET_SIZE(_cons->localsPlusNames);
-	AlifIntT nLocals{}, nCellVars{}, nFreeVars{};
-	get_localsPlusCounts(_cons->localsPlusNames, _cons->localsPlusKinds, &nLocals, &nCellVars, &nFreeVars);
-	if (_cons->stacksize == 0) {
-		_cons->stacksize = 1;
+AlifIntT _alifCode_validate(AlifCodeConstructor* _con) { // 392
+	/* Check argument types */
+	if (_con->argCount < _con->posOnlyArgCount or _con->posOnlyArgCount < 0 or
+		_con->kwOnlyArgCount < 0 or
+		_con->stackSize < 0 or _con->flags < 0 or
+		_con->code == nullptr or !ALIFBYTES_CHECK(_con->code) or
+		_con->consts == nullptr or !ALIFTUPLE_CHECK(_con->consts) or
+		_con->names == nullptr or !ALIFTUPLE_CHECK(_con->names) or
+		_con->localsPlusNames == nullptr or !ALIFTUPLE_CHECK(_con->localsPlusNames) or
+		_con->localsPlusKinds == nullptr or !ALIFBYTES_CHECK(_con->localsPlusKinds) or
+		ALIFTUPLE_GET_SIZE(_con->localsPlusNames)
+		!= ALIFBYTES_GET_SIZE(_con->localsPlusKinds) or
+		_con->name == nullptr or !ALIFUSTR_CHECK(_con->name) or
+		_con->qualname == nullptr or !ALIFUSTR_CHECK(_con->qualname) or
+		_con->filename == nullptr or !ALIFUSTR_CHECK(_con->filename) or
+		_con->lineTable == nullptr or !ALIFBYTES_CHECK(_con->lineTable) or
+		_con->exceptionTable == nullptr or !ALIFBYTES_CHECK(_con->exceptionTable)
+		) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
 	}
 
-	_co->fileName = ALIF_NEWREF(_cons->fileName);
-	_co->name = ALIF_NEWREF(_cons->name);
-	_co->qualName = ALIF_NEWREF(_cons->qualName);
+	if (ALIFBYTES_GET_SIZE(_con->code) > INT_MAX) {
+		//alifErr_setString(_alifExcOverflowError_,
+		//	"code: code larger than INT_MAX");
+		return -1;
+	}
+	if (ALIFBYTES_GET_SIZE(_con->code) % sizeof(AlifCodeUnit) != 0 or
+		!ALIF_IS_ALIGNED(ALIFBYTES_AS_STRING(_con->code), sizeof(AlifCodeUnit))
+		) {
+		//alifErr_setString(_alifExcValueError_, "code: co_code is malformed");
+		return -1;
+	}
 
-	
+	AlifIntT nlocals{};
+	get_localsPlusCounts(_con->localsPlusNames, _con->localsPlusKinds,
+		&nlocals, nullptr, nullptr);
+	AlifIntT nplainlocals = nlocals -
+		_con->argCount -
+		_con->kwOnlyArgCount -
+		((_con->flags & CO_VARARGS) != 0) -
+		((_con->flags & CO_VARKEYWORDS) != 0);
+	if (nplainlocals < 0) {
+		//alifErr_setString(_alifExcValueError_, "code: varnames is too small");
+		return -1;
+	}
 
-	_co->firstLineNo = _cons->firstlineno;
-	_co->lineTable = ALIF_NEWREF(_cons->lineTable);
+	return 0;
+}
 
-	_co->consts = ALIF_NEWREF(_cons->consts);
-	_co->names = ALIF_NEWREF(_cons->names);
 
-	_co->localsPlusNames = ALIF_NEWREF(_cons->localsPlusNames);
-	_co->localsPlusKinds = ALIF_NEWREF(_cons->localsPlusKinds);
-	
-	_co->args = _cons->argCount;
-	_co->posOnlyArgCount = _cons->posOnlyArgCount;
-	_co->kwOnlyArgCount = _cons->kwOnlyArgCount;
 
-	_co->stackSize = _cons->stacksize;
+static void init_code(AlifCodeObject* _co, AlifCodeConstructor* _con) { // 452
+	AlifIntT nlocalsplus = (AlifIntT)ALIFTUPLE_GET_SIZE(_con->localsPlusNames);
+	AlifIntT nlocals, ncellvars, nfreevars;
+	get_localsPlusCounts(_con->localsPlusNames, _con->localsPlusKinds,
+		&nlocals, &ncellvars, &nfreevars);
+	if (_con->stackSize == 0) {
+		_con->stackSize = 1;
+	}
 
-	_co->nLocalsPlus = nLocalsPlus;
-	_co->nLocals = nLocals;
-	_co->frameSize = nLocalsPlus + _cons->stacksize + FRAME_SPECIALS_SIZE;
-	
-	memcpy(ALIFCODE_CODE(_co), ALIFWBYTES_AS_STRING(_cons->code), ALIFWBYTES_GET_SIZE(_cons->code));
+	AlifInterpreter* interp = _alifInterpreter_get();
+	_co->filename = ALIF_NEWREF(_con->filename);
+	_co->name = ALIF_NEWREF(_con->name);
+	_co->qualname = ALIF_NEWREF(_con->qualname);
+	alifUStr_internMortal(interp, &_co->filename);
+	alifUStr_internMortal(interp, &_co->name);
+	alifUStr_internMortal(interp, &_co->qualname);
+	_co->flags = _con->flags;
+
+	_co->firstLineno = _con->firstLineno;
+	_co->lineTable = ALIF_NEWREF(_con->lineTable);
+
+	_co->consts = ALIF_NEWREF(_con->consts);
+	_co->names = ALIF_NEWREF(_con->names);
+
+	_co->localsPlusNames = ALIF_NEWREF(_con->localsPlusNames);
+	_co->localsPlusKinds = ALIF_NEWREF(_con->localsPlusKinds);
+
+	_co->argCount = _con->argCount;
+	_co->posOnlyArgCount = _con->posOnlyArgCount;
+	_co->kwOnlyArgCount = _con->kwOnlyArgCount;
+
+	_co->stackSize = _con->stackSize;
+
+	_co->exceptiontable = ALIF_NEWREF(_con->exceptionTable);
+
+	/* derived values */
+	_co->nLocalsPlus = nlocalsplus;
+	_co->nLocals = nlocals;
+	_co->frameSize = nlocalsplus + _con->stackSize + FRAME_SPECIALS_SIZE;
+	_co->nCellVars = ncellvars;
+	_co->nFreeVars = nfreevars;
+	ALIFMUTEX_LOCK(&interp->funcState.mutex);
+	_co->version = interp->funcState.nextVersion;
+	if (interp->funcState.nextVersion != 0) {
+		interp->funcState.nextVersion++;
+	}
+	ALIFMUTEX_UNLOCK(&interp->funcState.mutex);
+	//_co->monitoring = nullptr;
+	//_co->instrumentationVersion = 0;
+	/* not set */
+	_co->weakRefList = nullptr;
+	_co->extra = nullptr;
+	_co->cached = nullptr;
+	_co->executors = nullptr;
+
+	memcpy(ALIFCODE_CODE(_co), ALIFBYTES_AS_STRING(_con->code),
+		ALIFBYTES_GET_SIZE(_con->code));
 	AlifIntT entryPoint = 0;
-	while (entryPoint < ALIF_SIZE(_co) 
-		and 
-		ALIFCODE_CODE(_co)[entryPoint].op.code != RESUME)
-	{
+	while (entryPoint < ALIF_SIZE(_co) and
+		ALIFCODE_CODE(_co)[entryPoint].op.code != RESUME) {
 		entryPoint++;
 	}
 	_co->firstTraceable = entryPoint;
-	alifCode_quicken(_co);
+	//alifCode_quicken(_co);
+	notify_codeWatchers(AlifCodeEvent::Alif_Code_Event_Create, _co);
 }
 
-static AlifIntT internCode_constants(AlifCodeConstructor* _cons) { 
-	
-	//if (intern_string(_cons->names) < 0) goto error;
-	//if (intern_constants(_cons->consts, nullptr) < 0) goto error;
-	//if (intern_string(_cons->localsPlusNames) < 0) goto error;
-	
+
+static AlifIntT scan_varint(const uint8_t* ptr) { // 525
+	unsigned int read = *ptr++;
+	unsigned int val = read & 63;
+	unsigned int shift = 0;
+	while (read & 64) {
+		read = *ptr++;
+		shift += 6;
+		val |= (read & 63) << shift;
+	}
+	return val;
+}
+
+static AlifIntT scan_signedVarint(const uint8_t* ptr) { // 539
+	unsigned int uval = scan_varint(ptr);
+	if (uval & 1) {
+		return -(int)(uval >> 1);
+	}
+	else {
+		return uval >> 1;
+	}
+}
+
+static AlifIntT get_lineDelta(const uint8_t* _ptr) { // 551
+	AlifIntT code = ((*_ptr) >> 3) & 15;
+	switch (code) {
+	case AlifCodeLocationInfoKind::AlifCode_Location_Info_None:
+		return 0;
+	case AlifCodeLocationInfoKind::AlifCode_Location_Info_No_Columns:
+	case AlifCodeLocationInfoKind::AlifCode_Location_Info_Long:
+		return scan_signedVarint(_ptr + 1);
+	case AlifCodeLocationInfoKind::AlifCode_Location_Info_One_Line0:
+		return 0;
+	case AlifCodeLocationInfoKind::AlifCode_Location_Info_One_Line1:
+		return 1;
+	case AlifCodeLocationInfoKind::AlifCode_Location_Info_One_Line2:
+		return 2;
+	default:
+		/* Same line */
+		return 0;
+	}
+}
+
+
+
+static AlifIntT intern_codeConstants(AlifCodeConstructor* _con) { // 616
+	AlifInterpreter* interp = _alifInterpreter_get();
+	AlifCodeState* state = &interp->codeState;
+	ALIFMUTEX_LOCK(&state->mutex);
+	if (intern_strings(_con->names) < 0) {
+		goto error;
+	}
+	if (intern_constants(_con->consts, nullptr) < 0) {
+		goto error;
+	}
+	if (intern_strings(_con->localsPlusNames) < 0) {
+		goto error;
+	}
+	ALIFMUTEX_UNLOCK(&state->mutex);
 	return 0;
 
 error:
+	ALIFMUTEX_UNLOCK(&state->mutex);
 	return -1;
 }
 
 
-AlifCodeObject* alifCode_new(AlifCodeConstructor* _cons) { 
-
-	if (internCode_constants(_cons) < 0) return nullptr;
+AlifCodeObject* alifCode_new(AlifCodeConstructor* _con) { // 647
+	if (intern_codeConstants(_con) < 0) {
+		return nullptr;
+	}
 
 	AlifObject* replacementLocations = nullptr;
 
-	AlifSizeT size = ALIFWBYTES_GET_SIZE(_cons->code) / sizeof(AlifCodeUnit);
-	AlifCodeObject* co = ALIFOBJECT_NEW_VAR(AlifCodeObject, &_alifCodeType_, size);
+	//if (!alif_getConfig()->codeDebugRanges) {
+	//	replacementLocations = remove_columnInfo(_con->lineTable);
+	//	if (replacementLocations == nullptr) {
+	//		return nullptr;
+	//	}
+	//	_con->lineTable = replacementLocations;
+	//}
+
+	AlifSizeT size = ALIFBYTES_GET_SIZE(_con->code) / sizeof(AlifCodeUnit);
+	AlifCodeObject* co{};
+	co = ALIFOBJECT_GC_NEWVAR(AlifCodeObject, &_alifCodeType_, size);
 	if (co == nullptr) {
 		ALIF_XDECREF(replacementLocations);
-		// memory error
+		//alifErr_noMemory();
 		return nullptr;
 	}
-	init_code(co, _cons);
-
+	init_code(co, _con);
+	co->uniqueID = _alifObject_assignUniqueId((AlifObject*)co);	ALIFOBJECT_GC_TRACK(co);
 	ALIF_XDECREF(replacementLocations);
 	return co;
 }
@@ -154,17 +452,378 @@ AlifCodeObject* alifCode_new(AlifCodeConstructor* _cons) {
 
 
 
+AlifIntT alifCode_addr2Line(AlifCodeObject* co, AlifIntT addrq) { // 941
+	if (addrq < 0) {
+		return co->firstLineno;
+	}
+	AlifCodeAddressRange bounds{};
+	_alifCode_initAddressRange(co, &bounds);
+	return _alifCode_checkLineNumber(addrq, &bounds);
+}
+
+void _alifLineTable_initAddressRange(const char* linetable, AlifSizeT length,
+	AlifIntT firstlineno, AlifCodeAddressRange* range) { // 953
+	range->opaque.loNext = (const uint8_t*)linetable;
+	range->opaque.limit = range->opaque.loNext + length;
+	range->start = -1;
+	range->end = 0;
+	range->opaque.computedLine = firstlineno;
+	range->line = -1;
+}
+
+AlifIntT _alifCode_initAddressRange(AlifCodeObject* co,
+	AlifCodeAddressRange* bounds) { // 964
+	const char* linetable = ALIFBYTES_AS_STRING(co->lineTable);
+	AlifSizeT length = ALIFBYTES_GET_SIZE(co->lineTable);
+	_alifLineTable_initAddressRange(linetable, length, co->firstLineno, bounds);
+	return bounds->line;
+}
 
 
-AlifTypeObject _alifCodeType_ = {
-	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0)
-	L"شفرة",
-	offsetof(AlifCodeObject, codeAdaptive),
-	sizeof(AlifCodeUnit),
+AlifIntT _alifCode_checkLineNumber(AlifIntT lasti,
+	AlifCodeAddressRange* bounds) { // 976
+	while (bounds->end <= lasti) {
+		if (!_alifLineTable_nextAddressRange(bounds)) {
+			return -1;
+		}
+	}
+	while (bounds->start > lasti) {
+		if (!_alifLineTable_previousAddressRange(bounds)) {
+			return -1;
+		}
+	}
+	return bounds->line;
+}
+
+
+static AlifIntT is_noLineMarker(uint8_t b) { // 992
+	return (b >> 3) == 0x1f;
+}
+
+static AlifIntT next_codeDelta(AlifCodeAddressRange* bounds) { // 1005
+	return (((*bounds->opaque.loNext) & 7) + 1) * sizeof(AlifCodeUnit);
+}
+
+
+static AlifIntT previous_codeDelta(AlifCodeAddressRange* bounds) { // 1012
+	if (bounds->start == 0) {
+		return 1;
+	}
+	const uint8_t* ptr = bounds->opaque.loNext - 1;
+	while (((*ptr) & 128) == 0) {
+		ptr--;
+	}
+	return (((*ptr) & 7) + 1) * sizeof(AlifCodeUnit);
+}
+
+static void retreat(AlifCodeAddressRange* bounds) { // 1059
+	do {
+		bounds->opaque.loNext--;
+	} while (((*bounds->opaque.loNext) & 128) == 0);
+	bounds->opaque.computedLine -= get_lineDelta(bounds->opaque.loNext);
+	bounds->end = bounds->start;
+	bounds->start -= previous_codeDelta(bounds);
+	if (is_noLineMarker(bounds->opaque.loNext[-1])) {
+		bounds->line = -1;
+	}
+	else {
+		bounds->line = bounds->opaque.computedLine;
+	}
+}
+
+static void advance(AlifCodeAddressRange* bounds) { // 1079
+	bounds->opaque.computedLine += get_lineDelta(bounds->opaque.loNext);
+	if (is_noLineMarker(*bounds->opaque.loNext)) {
+		bounds->line = -1;
+	}
+	else {
+		bounds->line = bounds->opaque.computedLine;
+	}
+	bounds->start = bounds->end;
+	bounds->end += next_codeDelta(bounds);
+	do {
+		bounds->opaque.loNext++;
+	} while (bounds->opaque.loNext < bounds->opaque.limit &&
+		((*bounds->opaque.loNext) & 128) == 0);
+}
+
+static inline AlifIntT at_end(AlifCodeAddressRange* bounds) { // 1174
+	return bounds->opaque.loNext >= bounds->opaque.limit;
+}
+
+AlifIntT _alifLineTable_previousAddressRange(AlifCodeAddressRange* range) { // 1179
+	if (range->start <= 0) {
+		return 0;
+	}
+	retreat(range);
+	return 1;
+}
+
+AlifIntT _alifLineTable_nextAddressRange(AlifCodeAddressRange* range) { // 1190
+	if (at_end(range)) {
+		return 0;
+	}
+	advance(range);
+	return 1;
+}
 
 
 
 
 
+AlifTypeObject _alifCodeType_ = { // 2292
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "شفرة",
+	.basicSize = offsetof(AlifCodeObject, codeAdaptive),
+	.itemSize = sizeof(AlifCodeUnit),
 
+
+	.getAttro = alifObject_genericGetAttr,
+
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
 };
+
+
+AlifObject* alifCode_constantKey(AlifObject* _op) { // 2331
+	AlifObject* key_{};
+
+	if (_op == ALIF_NONE or _op == ALIF_ELLIPSIS
+		or ALIFLONG_CHECKEXACT(_op)
+		or ALIFUSTR_CHECKEXACT(_op)
+		or ALIFSLICE_CHECK(_op)
+		or ALIFCODE_CHECK(_op))
+	{
+		key_ = ALIF_NEWREF(_op);
+	}
+	else if (ALIFBOOL_CHECK(_op) or ALIFBYTES_CHECKEXACT(_op)) {
+		key_ = alifTuple_pack(2, ALIF_TYPE(_op), _op);
+	}
+	else if (ALIFFLOAT_CHECKEXACT(_op)) {
+		double d_ = ALIFFLOAT_AS_DOUBLE(_op);
+		if (d_ == 0.0 and copysign(1.0, d_) < 0.0)
+			key_ = alifTuple_pack(3, ALIF_TYPE(_op), _op, ALIF_NONE);
+		else
+			key_ = alifTuple_pack(2, ALIF_TYPE(_op), _op);
+	}
+	else if (ALIFCOMPLEX_CHECKEXACT(_op)) {
+		AlifComplex z_{};
+		AlifIntT realNegZero{}, imagNegZero{};
+		z_ = alifComplex_asCComplex(_op);
+		realNegZero = z_.real == 0.0 and copysign(1.0, z_.real) < 0.0;
+		imagNegZero = z_.imag == 0.0 and copysign(1.0, z_.imag) < 0.0;
+		if (realNegZero and imagNegZero) {
+			key_ = alifTuple_pack(3, ALIF_TYPE(_op), _op, ALIF_TRUE);
+		}
+		else if (imagNegZero) {
+			key_ = alifTuple_pack(3, ALIF_TYPE(_op), _op, ALIF_FALSE);
+		}
+		else if (realNegZero) {
+			key_ = alifTuple_pack(3, ALIF_TYPE(_op), _op, ALIF_NONE);
+		}
+		else {
+			key_ = alifTuple_pack(2, ALIF_TYPE(_op), _op);
+		}
+	}
+	else if (ALIFTUPLE_CHECKEXACT(_op)) {
+		AlifSizeT i_{}, len_{};
+		AlifObject* tuple{};
+
+		len_ = ALIFTUPLE_GET_SIZE(_op);
+		tuple = alifTuple_new(len_);
+		if (tuple == nullptr)
+			return nullptr;
+
+		for (i_ = 0; i_ < len_; i_++) {
+			AlifObject* item{}, * itemKey{};
+
+			item = ALIFTUPLE_GET_ITEM(_op, i_);
+			itemKey = alifCode_constantKey(item);
+			if (itemKey == nullptr) {
+				ALIF_DECREF(tuple);
+				return nullptr;
+			}
+
+			ALIFTUPLE_SET_ITEM(tuple, i_, itemKey);
+		}
+
+		key_ = alifTuple_pack(2, tuple, _op);
+		ALIF_DECREF(tuple);
+	}
+	else if (ALIFFROZENSET_CHECKEXACT(_op)) {
+		AlifSizeT pos_ = 0;
+		AlifObject* item{};
+		AlifHashT hash{};
+		AlifSizeT i_{}, len_{};
+		AlifObject* tuple{}, * set_{};
+
+		len_ = ALIFSET_GET_SIZE(_op);
+		tuple = alifTuple_new(len_);
+		if (tuple == nullptr)
+			return nullptr;
+
+		i_ = 0;
+		while (alifSet_nextEntry(_op, &pos_, &item, &hash)) {
+			AlifObject* itemKey{};
+
+			itemKey = alifCode_constantKey(item);
+			if (itemKey == nullptr) {
+				ALIF_DECREF(tuple);
+				return nullptr;
+			}
+			ALIFTUPLE_SET_ITEM(tuple, i_, itemKey);
+			i_++;
+		}
+		set_ = alifFrozenSet_new(tuple);
+		ALIF_DECREF(tuple);
+		if (set_ == nullptr)
+			return nullptr;
+
+		key_ = alifTuple_pack(2, set_, _op);
+		ALIF_DECREF(set_);
+		return key_;
+	}
+	else {
+		AlifObject* objID = alifLong_fromVoidPtr(_op);
+		if (objID == nullptr)
+			return nullptr;
+
+		key_ = alifTuple_pack(2, objID, _op);
+		ALIF_DECREF(objID);
+	}
+	return key_;
+}
+
+
+
+
+static AlifObject* intern_oneConstant(AlifObject* _op) { // 2461
+	AlifInterpreter* interp = _alifInterpreter_get();
+	AlifHashTableT* consts = interp->codeState.constants;
+	AlifHashTableEntryT* entry = _alifHashTable_getEntry(consts, _op);
+	if (entry == nullptr) {
+		if (alifHashTable_set(consts, _op, _op) != 0) {
+			return nullptr;
+		}
+
+
+		alif_setImmortal(_op);
+		return _op;
+	}
+	return (AlifObject*)entry->value;
+}
+
+static AlifIntT compare_constants(const void* _key1, const void* _key2) { // 2491
+	AlifObject* op1 = (AlifObject*)_key1;
+	AlifObject* op2 = (AlifObject*)_key2;
+	if (op1 == op2) {
+		return 1;
+	}
+	if (ALIF_TYPE(op1) != ALIF_TYPE(op2)) {
+		return 0;
+	}
+
+	if (ALIFTUPLE_CHECKEXACT(op1)) {
+		AlifSizeT size = ALIFTUPLE_GET_SIZE(op1);
+		if (size != ALIFTUPLE_GET_SIZE(op2)) {
+			return 0;
+		}
+		for (AlifSizeT i = 0; i < size; i++) {
+			if (ALIFTUPLE_GET_ITEM(op1, i) != ALIFTUPLE_GET_ITEM(op2, i)) {
+				return 0;
+			}
+		}
+		return 1;
+	}
+	else if (ALIFFROZENSET_CHECKEXACT(op1)) {
+		if (ALIFSET_GET_SIZE(op1) != ALIFSET_GET_SIZE(op2)) {
+			return 0;
+		}
+		AlifSizeT pos1 = 0, pos2 = 0;
+		AlifObject* obj1{}, * obj2{};
+		AlifHashT hash1{}, hash2{};
+		while ((alifSet_nextEntry(op1, &pos1, &obj1, &hash1)) and
+			(alifSet_nextEntry(op2, &pos2, &obj2, &hash2)))
+		{
+			if (obj1 != obj2) {
+				return 0;
+			}
+		}
+		return 1;
+	}
+	else if (ALIFSLICE_CHECK(op1)) {
+		AlifSliceObject* s1 = (AlifSliceObject*)op1;
+		AlifSliceObject* s2 = (AlifSliceObject*)op2;
+		return (s1->start == s2->start and
+			s1->stop == s2->stop and
+			s1->step == s2->step);
+	}
+	else if (ALIFBYTES_CHECKEXACT(op1) or ALIFLONG_CHECKEXACT(op1)) {
+		return alifObject_richCompareBool(op1, op2, ALIF_EQ);
+	}
+	else if (ALIFFLOAT_CHECKEXACT(op1)) {
+		// Ensure that, for example, +0.0 and -0.0 are distinct
+		double f1 = ALIFFLOAT_AS_DOUBLE(op1);
+		double f2 = ALIFFLOAT_AS_DOUBLE(op2);
+		return memcmp(&f1, &f2, sizeof(double)) == 0;
+	}
+	else if (ALIFCOMPLEX_CHECKEXACT(op1)) {
+		AlifComplex c1 = ((AlifComplexObject*)op1)->cVal;
+		AlifComplex c2 = ((AlifComplexObject*)op2)->cVal;
+		return memcmp(&c1, &c2, sizeof(AlifComplex)) == 0;
+	}
+	//alif_fatalErrorFormat("unexpected type in compare_constants: %s",
+	//	ALIF_TYPE(op1)->name);
+	return 0;
+}
+
+static AlifUHashT hash_const(const void* _key) { // 2557
+	AlifObject* op = (AlifObject*)_key;
+	if (ALIFSLICE_CHECK(op)) {
+		AlifSliceObject* s = (AlifSliceObject*)op;
+		AlifObject* data[3] = { s->start, s->stop, s->step };
+		return alif_hashBuffer(&data, sizeof(data));
+	}
+	else if (ALIFTUPLE_CHECKEXACT(op)) {
+		AlifSizeT size = ALIFTUPLE_GET_SIZE(op);
+		AlifObject** data = ALIFTUPLE_ITEMS(op);
+		return alif_hashBuffer(data, sizeof(AlifObject*) * size);
+	}
+	AlifHashT h = alifObject_hash(op);
+	if (h == -1) {
+		//alif_fatalError("code: hash failed");
+	}
+	return (AlifUHashT)h;
+}
+
+
+
+static void destroy_key(void* _key) { // 2604
+	ALIF_CLEARIMMORTAL(_key);
+}
+
+
+
+AlifIntT alifCode_init(AlifInterpreter* _interp) { // 2611
+	AlifCodeState* state = &_interp->codeState;
+	state->constants = alifHashTable_newFull(&hash_const, &compare_constants,
+		&destroy_key, nullptr, nullptr);
+	if (state->constants == nullptr) {
+		//return ALIFSTATUS_NO_MEMORY();
+		return -1; //* alif
+	}
+	return 1;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

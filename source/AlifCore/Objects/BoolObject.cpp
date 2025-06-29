@@ -1,127 +1,48 @@
 #include "alif.h"
 
+#include "AlifCore_Long.h"
 #include "AlifCore_ModSupport.h"
+#include "AlifCore_Object.h"
 
-static AlifObject* bool_repr(AlifObject* self) {
 
-    const wchar_t* boolean = self == ALIF_TRUE ? L"True" : L"False";
 
-    return alifUStr_objFromWChar((wchar_t*)boolean);
 
+static AlifObject* bool_repr(AlifObject* _self) { // 13
+	return _self == ALIF_TRUE ? &ALIF_STR(True) : &ALIF_STR(False);
 }
 
-AlifObject* alifBool_fromInteger(long boolean) {
 
-    return boolean ? ALIF_TRUE : ALIF_FALSE;
-
+AlifObject* alifBool_fromLong(long _ok) { // 21
+	return _ok ? ALIF_TRUE : ALIF_FALSE;
 }
 
-AlifObject* bool_and(AlifObject* a, AlifObject* b) {
 
-    return alifBool_fromInteger((a == ALIF_TRUE) & (b == ALIF_TRUE));
 
-}
 
-AlifObject* bool_or(AlifObject* a, AlifObject* b) {
 
-    return alifBool_fromInteger((a == ALIF_TRUE) | (b == ALIF_TRUE));
 
-}
 
-AlifObject* bool_xor(AlifObject* a, AlifObject* b) {
-
-    return alifBool_fromInteger((a == ALIF_TRUE) ^ (b == ALIF_TRUE));
-
-}
-
-static AlifNumberMethods boolAsNumber = {
-    0,                         
-    0,                          
-    0,                          
-    0,                          
-    0,                          
-    0,                        
-    0,                         
-    0,                          
-    0,                        
-    0,                          
-    0,                          
-    0,                         
-    0,                         
-    bool_and,                   
-    bool_xor,                  
-    bool_or,                    
-    0,                         
-    0,                          
-    0,                       
-    0,                     
-    0,                          
-    0,                         
-    0,                       
-    0,                          
-    0,                        
-    0,                        
-    0,                         
-    0,                          
-    0,                       
-    0,                         
-    0,                         
-    0,                         
-    0,                          
-    0,                          
+AlifTypeObject _alifBoolType_ = { // 171
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "منطق",
+	.basicSize = offsetof(AlifLongObject, longValue.digit),
+	.itemSize = sizeof(digit),
+	.repr = bool_repr,
+	.flags = ALIF_TPFLAGS_DEFAULT,
 };
 
-AlifInitObject _alifBoolType_ = {
-    ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0)
-    L"bool",
-    sizeof(size_t),
-    sizeof(size_t),
-    0,                              
-    0,                                        
-    0,                              
-    0,                           
-    bool_repr,
-    &boolAsNumber,                     
-    0,                                          
-    0,                                       
-    0,                                        
-    0,        
-    0,
-    0,                                        
-    0,                                          
-    0,                                         
-    0,                        
-    0,                                
-    0,                                        
-    0,                                       
-    0,                                        
-    0,                                          
-    0,                                      
-    0,                                          
-    0,                                         
-    0,                                        
-    0,                                        
-    &_alifIntegerType_,                           
-    0,                                      
-    0,                                         
-    0,                                         
-    0,                                          
-    0,                                    
-    0,                                     
-    0,                                  
-    0,
+AlifLongObject _alifFalseClass_ = { // 215
+	ALIFOBJECT_HEAD_INIT(&_alifBoolType_),
+	{
+		.tag = ALIFLONG_FALSE_TAG,
+		.digit = {0},
+	}
 };
 
-class AlifIntegerObject alifFalse = {
-    0, // ref of object
-    &_alifBoolType_,
-    0,
-    1
-};
-
-class AlifIntegerObject alifTrue = {
-    0, // ref of object
-    &_alifBoolType_,
-    1,
-    1
+AlifLongObject _alifTrueClass_ = { // 222
+	ALIFOBJECT_HEAD_INIT(&_alifBoolType_),
+	{
+		.tag = ALIFLONG_TRUE_TAG,
+		.digit = {1},
+	}
 };

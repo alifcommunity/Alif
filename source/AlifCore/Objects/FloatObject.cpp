@@ -1,692 +1,847 @@
 #include "alif.h"
 
-#include "AlifCore_ModSupport.h"
-#include "AlifCore_Object.h"
-#include "AlifCore_Memory.h"
+#include "AlifCore_Abstract.h"
+#include "AlifCore_FloatObject.h"
+#include "AlifCore_FreeList.h"
+#include "AlifCore_Long.h"
+#include "AlifCore_Math.h"
+#include "AlifCore_StructSeq.h"
 
-#include <math.h> // need review
+#include <float.h>
 
-long double alifFloat_getMax(void)
-{
-	return FLOAT_MAX;
-}
+#include "clinic/FloatObject.cpp.h"
 
-long double alifFloat_getMin(void)
-{
-	return FLOAT_MIN;
-}
 
-AlifObject* alifNew_float(long double _value) {
 
-	AlifFloatObject* object_ = (AlifFloatObject*)alifMem_objAlloc(sizeof(AlifFloatObject));
 
-	alifSubObject_init((AlifObject*)object_, &_alifFloatType);
 
-	object_->digits_ = _value;
 
-	return (AlifObject*)object_;
-}
+static AlifTypeObject _floatInfoType_; // 42
 
-AlifObject* alifFloat_fromDouble(long double _floatValue) {
 
-	AlifFloatObject* object_ = (AlifFloatObject*)alifMem_objAlloc(sizeof(AlifFloatObject));
-	
-	alifSubObject_init((AlifObject*)object_, &_alifFloatType);
-	object_->digits_ = _floatValue;
-	return (AlifObject*)object_;
 
-}
 
-long double digit_strToDouble(const wchar_t* _str) {
-	bool negative_ = false, isE_ = false;
-	double whole_ = 0.0;
-	long double fraction_ = 0.0;
-	int exponent_ = 0;
-	double _base_ = 10.0;
 
-	// Skip leading whitespace
-	while (std::isspace(*_str)) ++_str;
-
-	if (*_str == L'-') {
-		negative_ = true;
-		++_str;
-	}
-	else if (*_str == L'+') {
-		++_str;
-	}
-
-	if (*_str == L'0') {
-		return negative_ ? -0.0 : 0.0;
-	}
-
-	while (std::isdigit(*_str) && *_str != L'0') {
-		whole_ = whole_ * _base_ + (*_str - L'0');
-		++_str;
-	}
-
-	int64_t divisor = 10;
-	if (*_str == '.') {
-		++_str;
-
-		// Read fractional part
-		while (std::isdigit(*_str)) {
-			// fraction type_ long double to get high res precition
-			fraction_ = fraction_ + (*_str - L'0') / (long double)divisor;
-			divisor *= _base_;
-			++_str;
+AlifObject* alifFloat_fromDouble(double _fVal) { // 123
+	AlifFloatObject* op_ = ALIF_FREELIST_POP(AlifFloatObject, floats);
+	if (op_ == nullptr) {
+		op_ = (AlifFloatObject*)alifMem_objAlloc(sizeof(AlifFloatObject));
+		if (!op_) {
+			//return alifErr_noMemory();
+			return nullptr; // temp
 		}
+		_alifObject_init((AlifObject*)op_, &_alifFloatType_);
 	}
-
-	// Handle exponent
-	if (*_str == L'e' or *_str == L'E') {
-		++_str;
-		isE_ = true;
-		bool expNegative = false;
-		if (*_str == L'-') {
-			expNegative = true;
-			++_str;
-		}
-		else if (*_str == L'+') {
-			++_str;
-		}
-
-		// Read exponent value
-		while (std::isdigit(*_str)) {
-			exponent_ = exponent_ * 10 + (*_str - L'0');
-			++_str;
-		}
-
-		exponent_ = expNegative ? -exponent_ : exponent_;
-		_base_ = pow(10.0, exponent_);
-	}
-
-	long double result_ = whole_ + (long double)fraction_;
-	result_ = negative_ ? -result_ : result_;
-
-	if (isE_) {
-		result_ *= _base_;
-	}
-
-	if (result_ > FLOAT_MAX ||
-		result_ < FLOAT_MIN) {
-		return 0;
-	}
-
-	return result_;
+	op_->val = _fVal;
+	return (AlifObject*)op_;
 }
 
-AlifObject* alifFloat_fromString(AlifObject* _str) {
 
-	if (_str->type_ != &_alifUStrType_) {
-		std::wcout << L"يجب ان يكون نوع المدخل نص للتحويل الى عدد عشري\n" << std::endl;
-		exit(-1);
+static AlifObject* float_fromStringInner(const char* s, AlifSizeT len, void* obj) { // 137
+	double x{};
+	const char* end{};
+	const char* last = s + len;
+	/* strip leading whitespace */
+	while (s < last and ALIF_ISSPACE(*s)) {
+		s++;
+	}
+	if (s == last) {
+		//alifErr_format(_alifExcValueError_,
+		//	"could not convert string to float: "
+		//	"%R", obj);
+		return nullptr;
 	}
 
-	AlifUStrObject* string_ = (AlifUStrObject*)_str;
-	if (string_->kind_ == 4) {
-		std::wcout << L"نوع الترميز غير صحيح في النص للتحويل الى عدد عشري\n" << std::endl;
-		exit(-1);
+	/* strip trailing whitespace */
+	while (s < last - 1 and ALIF_ISSPACE(last[-1])) {
+		last--;
 	}
 
-	const wchar_t* number_ = (const wchar_t*)string_->UTF;
-
-	long double value_ = digit_strToDouble(number_);
-
-	return alifFloat_fromDouble(value_);
-
+	x = alifOS_stringToDouble(s, (char**)&end, nullptr);
+	if (end != last) {
+		//alifErr_format(_alifExcValueError_,
+		//	"could not convert string to float: "
+		//	"%R", obj);
+		return nullptr;
+	}
+	else if (x == -1.0 and alifErr_occurred()) {
+		return nullptr;
+	}
+	else {
+		return alifFloat_fromDouble(x);
+	}
 }
 
-long double alifFloat_asLongDouble(AlifObject* _object) {
 
-	if (_object == nullptr) {
-		std::wcout << L"لا يمكن ادخال كائن فارغ\n" << std::endl;
-		exit(-1);
+AlifObject* alifFloat_fromString(AlifObject* v) { // 177
+	const char* s{};
+	AlifObject* s_buffer = nullptr;
+	AlifSizeT len{};
+	AlifBuffer view = { nullptr, nullptr };
+	AlifObject* result = nullptr;
+
+	if (ALIFUSTR_CHECK(v)) {
+		s_buffer = _alifUStr_transformDecimalAndSpaceToASCII(v);
+		if (s_buffer == nullptr)
+			return nullptr;
+		s = alifUStr_asUTF8AndSize(s_buffer, &len);
 	}
-
-	if (_object->type_ == &_alifFloatType) {
-		return ((AlifFloatObject*)_object)->digits_;
+	else if (ALIFBYTES_CHECK(v)) {
+		s = ALIFBYTES_AS_STRING(v);
+		len = ALIFBYTES_GET_SIZE(v);
 	}
+	else if (ALIFBYTEARRAY_CHECK(v)) {
+		s = ALIFBYTEARRAY_AS_STRING(v);
+		len = ALIFBYTEARRAY_GET_SIZE(v);
+	}
+	else if (alifObject_getBuffer(v, &view, ALIFBUF_SIMPLE) == 0) {
+		s = (const char*)view.buf;
+		len = view.len;
+		/* Copy to NUL-terminated buffer. */
+		s_buffer = alifBytes_fromStringAndSize(s, len);
+		if (s_buffer == nullptr) {
+			alifBuffer_release(&view);
+			return nullptr;
+		}
+		s = ALIFBYTES_AS_STRING(s_buffer);
+	}
+	else {
+		//alifErr_format(_alifExcTypeError_,
+		//	"float() argument must be a string or a real number, not '%.200s'",
+		//	ALIF_TYPE(v)->name);
+		return nullptr;
+	}
+	result = _alifString_toNumberWithUnderscores(s, len, "float", v, v,
+		float_fromStringInner);
+	alifBuffer_release(&view);
+	ALIF_XDECREF(s_buffer);
+	return result;
+}
 
-	AlifObject* result_ = (_object->type_->asNumber->float_)(_object);
-	if (result_ == nullptr) {
+
+
+double alifFloat_asDouble(AlifObject* _op) { // 250
+	AlifNumberMethods* nb_{};
+	AlifObject* res_{};
+	double val_{};
+
+	if (_op == nullptr) {
+		//alifErr_badArgument();
 		return -1;
 	}
-	long double value_ = ((AlifFloatObject*)result_)->digits_;
-	return value_;
 
-}
-
-wchar_t* longDouble_toWchar_t(long double _value) {
-
-	int bufferSize = snprintf(nullptr, 0, "%.17Le", _value);
-	wchar_t* str_ = (wchar_t*)alifMem_dataAlloc(bufferSize + 1);
-	swprintf(str_, bufferSize + 1, L"%.17Le", _value);
-
-	return str_;
-}
-
-static AlifObject* float_repr(AlifFloatObject* _object) {
-
-	wchar_t* buffer_ = longDouble_toWchar_t(_object->digits_);
-
-	AlifObject* result_ = alifUStr_objFromWChar(buffer_);
-	alifMem_dataFree(buffer_);
-	return result_;
-}
-
-static AlifObject* float_add(AlifFloatObject* _a, AlifFloatObject* _b) {
-
-	long double v_, w_;
-
-	v_ = _a->digits_;
-	w_ = _b->digits_;
-	if (v_ && w_ > (FLOAT_MAX / 2)) {
-		std::wcout << L"ناتج جمع رقمين عشريين اكبر من المتوقع\n" << std::endl;
-		exit(-1);
-	}
-	v_ = v_ + w_;
-	return (AlifObject*)alifNew_float(v_);
-}
-
-static AlifObject* float_sub(AlifFloatObject* _a, AlifFloatObject* _b) {
-
-	long double v_, w_;
-
-	v_ = _a->digits_;
-	w_ = _b->digits_;
-	v_ = v_ - w_;
-	return (AlifObject*)alifNew_float(v_);
-}
-
-static AlifObject* float_mul(AlifFloatObject* _a, AlifFloatObject* _b) {
-
-	long double v_, w_;
-
-	v_ = _a->digits_;
-	w_ = _b->digits_;
-	v_ = v_ * w_;
-	return (AlifObject*)alifNew_float(v_);
-}
-
-static AlifObject* float_div(AlifFloatObject* _a, AlifFloatObject* _b) {
-
-	long double v_, w_;
-
-	v_ = _a->digits_;
-	w_ = _b->digits_;
-	if (w_ == 0.0) {
-		std::wcout << L"لا يمكن القسمة على صفر في رقم عشري\n" << std::endl;
-		exit(-1);
-	}
-	v_ = v_ / w_;
-	return (AlifObject*)alifNew_float(v_);
-}
-
-static AlifObject* float_rem(AlifFloatObject* _a, AlifFloatObject* _b) {
-
-	long double v_, w_;
-	long double mod_;
-
-	v_ = _a->digits_;
-	w_ = _b->digits_;
-	if (w_ == 0.0) {
-		std::wcout << L"لا يمكن القسمة على صفر في رقم عشري\n" << std::endl;
-		exit(-1);
+	if (ALIFFLOAT_CHECK(_op)) {
+		return ALIFFLOAT_AS_DOUBLE(_op);
 	}
 
-	mod_ = fmod(v_, w_);
-	if (mod_) {
-		if ((w_ < 0) != (mod_ < 0)) {
-			mod_ += w_;
+	nb_ = ALIF_TYPE(_op)->asNumber;
+	if (nb_ == nullptr or nb_->float_ == nullptr) {
+		if (nb_ and nb_->index) {
+			AlifObject* res = _alifNumber_index(_op);
+			if (!res) {
+				return -1;
+			}
+			double val_ = alifLong_asDouble(res);
+			ALIF_DECREF(res);
+			return val_;
+		}
+		//alifErr_format(_alifExcTypeError_, "must be real number, not %.50s",
+			//ALIF_TYPE(_op)->name);
+		return -1;
+	}
+
+	res_ = (*nb_->float_) (_op);
+	if (res_ == nullptr) {
+		return -1;
+	}
+	if (!ALIFFLOAT_CHECKEXACT(res_)) {
+		if (!ALIFFLOAT_CHECK(res_)) {
+			//alifErr_format(_alifExcTypeError_,
+				//"%.50s.__float__ returned non-float (type %.50s)",
+				//ALIF_TYPE(_op)->tp_name, ALIF_TYPE(res_)->tp_name);
+			ALIF_DECREF(res_);
+			return -1;
+		}
+		//if (alifErr_warnFormat(_alifExcDeprecationWarning_, 1,
+			//"%.50s.__float__ returned non-float (type %.50s).  "
+			//"The ability to return an instance of a strict subclass of float "
+			//"is deprecated, and may be removed in a future version of alif.",
+			//ALIF_TYPE(_op)->tp_name, ALIF_TYPE(res_)->tp_name)) {
+			//ALIF_DECREF(res_);
+			//return -1;
+		//}
+	}
+
+	val_ = ALIFFLOAT_AS_DOUBLE(res_);
+	ALIF_DECREF(res_);
+	return val_;
+}
+
+
+ // 314
+#define CONVERT_TO_DOUBLE(_obj, _dbl)                     \
+    if (ALIFFLOAT_CHECK(_obj))                             \
+        _dbl = ALIFFLOAT_AS_DOUBLE(_obj);                   \
+    else if (convert_toDouble(&(_obj), &(_dbl)) < 0)     \
+        return _obj;
+
+
+static AlifIntT convert_toDouble(AlifObject** _v, double* _dbl) { // 322
+	AlifObject* obj = *_v;
+
+	if (ALIFLONG_CHECK(obj)) {
+		*_dbl = alifLong_asDouble(obj);
+		if (*_dbl == -1.0 /*and alifErr_occurred()*/) {
+			*_v = nullptr;
+			return -1;
 		}
 	}
 	else {
-		mod_ = copysign(0.0, w_);
+		*_v = ALIF_NEWREF(ALIF_NOTIMPLEMENTED);
+		return -1;
+	}
+	return 0;
+}
+
+static AlifObject* float_repr(AlifFloatObject* _v) { // 341
+	AlifObject* result{};
+	char* buf{};
+
+	buf = alifOS_doubleToString(ALIFFLOAT_AS_DOUBLE(_v),
+		'r', 0, ALIF_DTSF_ADD_DOT_0, nullptr);
+	if (!buf) {
+		//return alifErr_noMemory();
+		return nullptr; //* alif
+	}
+	result = alifUStr_fromASCII(buf, strlen(buf));
+	alifMem_dataFree(buf);
+	return result;
+}
+
+static AlifObject* float_richCompare(AlifObject* _v, AlifObject* _w, AlifIntT _op) { // 373
+	double i{}, j{};
+	AlifIntT r = 0;
+
+	i = ALIFFLOAT_AS_DOUBLE(_v);
+
+	if (ALIFFLOAT_CHECK(_w))
+		j = ALIFFLOAT_AS_DOUBLE(_w);
+
+	else if (!isfinite(i)) {
+		if (ALIFLONG_CHECK(_w))
+			j = 0.0;
+		else
+			goto Unimplemented;
 	}
 
-	v_ = v_ * w_;
-	return (AlifObject*)alifNew_float(v_);
-}
+	else if (ALIFLONG_CHECK(_w)) {
+		AlifIntT vsign = i == 0.0 ? 0 : i < 0.0 ? -1 : 1;
+		AlifIntT wsign = _alifLong_sign(_w);
+		AlifIntT exponent{};
 
-static AlifObject* float_neg(AlifFloatObject* _a) {
-	return (AlifObject*)alifNew_float(-_a->digits_);
-}
-
-static AlifObject* float_abs(AlifFloatObject* _a) {
-	return (AlifObject*)alifNew_float(fabs(_a->digits_));
-}
-
-static bool float_bool(AlifFloatObject* _a) {
-	return _a->digits_ != 0.0;
-}
-
-static AlifObject* float_pow(AlifFloatObject* _a, AlifFloatObject* _b) {
-
-	long double v_, w_;
-	
-	v_ = _a->digits_;
-	w_ = _b->digits_;
-
-	return (AlifObject*)alifNew_float(std::pow(v_,w_));
-
-}
-
-static size_t float_hash(AlifFloatObject* _a) {
-
-	size_t hash_ = 0;
-
-	hash_ ^= std::hash<long double>{}(_a->digits_) + 0x9e3779b9 + (hash_ << 6) + (hash_ >> 2);
-
-	return hash_;
-}
-
-//static AlifObject* float_compare(AlifObject* a, AlifObject* b, int op) {
-//
-//	long result;
-//	AlifFloatObject* v = (AlifFloatObject*)a;
-//	AlifFloatObject* w = (AlifFloatObject*)b;
-//
-//	switch (op) {
-//	case ALIF_LT:
-//		return v->digits_ < w->digits_ ? ALIF_TRUE : ALIF_FALSE;
-//
-//	case ALIF_LE:
-//		return v->digits_ < w->digits_ ? ALIF_TRUE : ALIF_FALSE;
-//
-//	case ALIF_EQ:
-//		return v->digits_ == w->digits_ ? ALIF_TRUE : ALIF_FALSE;
-//
-//	case ALIF_NE:
-//		return v->digits_ != w->digits_ ? ALIF_TRUE : ALIF_FALSE;
-//
-//	case ALIF_GT:
-//		return v->digits_ > w->digits_ ? ALIF_TRUE : ALIF_FALSE;
-//
-//	case ALIF_GE:
-//		return v->digits_ > w->digits_ ? ALIF_TRUE : ALIF_FALSE;
-//
-//	default:
-//		std::wcout << L"عملية المقارنة غير صحيحة في كائن رقم عشري\n" << std::endl;
-//		exit(-1);
-//	}
-//}
-
-static AlifObject* float_compare(AlifObject* _v, AlifObject* _w, int _op)
-{
-	long double i_, j_;
-	int r_ = 0;
-
-	i_ = ((AlifFloatObject*)_v)->digits_;
-
-	/* Switch on the type of w.  Set i and j to doubles to be compared,
-	 * and op to the richcomp to use.
-	 */
-	if (((AlifFloatObject*)_w)->_base_.type_ == &_alifFloatType)
-		j_ = ((AlifFloatObject*)_w)->digits_;
-
-	else if (!isfinite(i_)) {
-		if (((AlifIntegerObject*)_w)->_base_.type_ == &_alifIntegerType_)
-			/* If i is an infinity, its magnitude exceeds any
-			 * finite integer, so it doesn't matter which int we
-			 * compare i with.  If i is a NaN, similarly.
-			 */
-			j_ = 0.0;
-		//else
-			//goto Unimplemented;
-	}
-
-	else if (((AlifIntegerObject*)_w)->_base_.type_ == &_alifIntegerType_) {
-		int vSign = i_ == 0.0 ? 0 : i_ < 0.0 ? -1 : 1;
-		int wSign = ((AlifIntegerObject*)_w)->sign_;
-		size_t nBits{};
-		int exponent_{};
-
-		if (vSign != wSign) {
-			/* Magnitudes are irrelevant -- the signs alone
-			 * determine the outcome.
-			 */
-			i_ = (double)vSign;
-			j_ = (double)wSign;
+		if (vsign != wsign) {
+			i = (double)vsign;
+			j = (double)wsign;
 			goto Compare;
 		}
-		/* The signs are the same. */
-		/* Convert w to a double if it fits.  In particular, 0 fits. */
-		//nBits = _PyLong_NumBits(w);
-		//if (nBits == (size_t)-1 && PyErr_Occurred()) {
-		//	/* This long is so large that size_t isn't big enough
-		//	 * to hold the # of bits.  Replace with little doubles
-		//	 * that give the same outcome -- w is so large that
-		//	 * its magnitude must exceed the magnitude of any
-		//	 * finite float.
-		//	 */
-		//	PyErr_Clear();
-		//	i = (double)vsign;
-		//	j = wsign * 2.0;
-		//	goto Compare;
-		//}
-		//if (nbits <= 48) {
-		//	j = PyLong_AsDouble(w);
-		//	/* It's impossible that <= 48 bits overflowed. */
-		//	goto Compare;
-		//}
 
-		//if (vsign < 0) {
-		//	/* "Multiply both sides" by -1; this also swaps the
-		//	 * comparator.
-		//	 */
-		//	i = -i;
-		//	op = _Py_SwappedOp[op];
-		//}
-		//(void)frexp(i, &exponent);
-		/* exponent is the # of bits in v before the radix point;
-		 * we know that nbits (the # of bits in w) > 48 at this point
-		 */
-		if (exponent_ < 0 || (size_t)exponent_ < nBits) {
-			i_ = 1.0;
-			j_ = 2.0;
+		int64_t nbits64 = _alifLong_numBits(_w);
+		if (nbits64 > DBL_MAX_EXP) {
+			i = (double)vsign;
+			j = wsign * 2.0;
 			goto Compare;
 		}
-		if ((size_t)exponent_ > nBits) {
-			i_ = 2.0;
-			j_ = 1.0;
+		AlifIntT nbits = (AlifIntT)nbits64;
+		if (nbits <= 48) {
+			j = alifLong_asDouble(_w);
 			goto Compare;
 		}
-		/* v and w have the same number of bits before the radix
-		 * point.  Construct two ints that have the same comparison
-		 * outcome.
-		 */
+		if (vsign < 0) {
+			i = -i;
+			_op = _alifSwappedOp_[_op];
+		}
+		(void)frexp(i, (int*)&exponent);
+		if (exponent < nbits) {
+			i = 1.0;
+			j = 2.0;
+			goto Compare;
+		}
+		if (exponent > nbits) {
+			i = 2.0;
+			j = 1.0;
+			goto Compare;
+		}
+
 		{
-			double fracPart;
-			double intPart;
-			AlifObject* result_ = nullptr;
-			AlifObject* vv_ = nullptr;
-			AlifObject* ww_ = _w;
+			double fracpart;
+			double intpart;
+			AlifObject* result = nullptr;
+			AlifObject* vv = nullptr;
+			AlifObject* ww = _w;
 
-			if (wSign < 0) {
-				//ww_ = PyNumber_Negative(w);
-				if (ww_ == nullptr)
+			if (wsign < 0) {
+				ww = alifNumber_negative(_w);
+				if (ww == nullptr)
 					goto Error;
 			}
 			else
-				ALIF_INCREF(ww_);
+				ALIF_INCREF(ww);
 
-			fracPart = modf(i_, &intPart);
-			vv_ = alifInteger_fromDouble(intPart);
-			if (vv_ == nullptr)
+			fracpart = modf(i, &intpart);
+			vv = alifLong_fromDouble(intpart);
+			if (vv == nullptr)
 				goto Error;
 
-			if (fracPart != 0.0) {
-				/* Shift left, and or a 1 bit into vv
-				 * to represent the lost fraction.
-				 */
-				AlifObject* temp_{};
+			if (fracpart != 0.0) {
+				AlifObject* temp{};
 
-				//temp_ = _PyLong_Lshift(ww, 1);
-				if (temp_ == nullptr)
+				temp = _alifLong_lShift(ww, 1);
+				if (temp == nullptr)
 					goto Error;
-				ALIF_SETREF(ww_, temp_);
+				ALIF_SETREF(ww, temp);
 
-				//temp_ = _PyLong_Lshift(vv_, 1);
-				if (temp_ == nullptr)
+				temp = _alifLong_lShift(vv, 1);
+				if (temp == nullptr)
 					goto Error;
-				ALIF_SETREF(vv_, temp_);
+				ALIF_SETREF(vv, temp);
 
-				//temp_ = PyNumber_Or(vv, _PyLong_GetOne());
-				if (temp_ == nullptr)
+				temp = alifNumber_or(vv, _alifLong_getOne());
+				if (temp == nullptr)
 					goto Error;
-				ALIF_SETREF(vv_, temp_);
+				ALIF_SETREF(vv, temp);
 			}
 
-			r_ = alifObject_richCompareBool(vv_, ww_, _op);
-			if (r_ < 0)
+			r = alifObject_richCompareBool(vv, ww, _op);
+			if (r < 0)
 				goto Error;
-			result_ = alifBool_fromInteger(r_);
+			result = alifBool_fromLong(r);
 		Error:
-			ALIF_XDECREF(vv_);
-			ALIF_XDECREF(ww_);
-			return result_;
+			ALIF_XDECREF(vv);
+			ALIF_XDECREF(ww);
+			return result;
 		}
 	}
 
-	//else        /* w isn't float or int */
-		//goto Unimplemented;
+	else        /* w isn't float or int */
+		goto Unimplemented;
 
 Compare:
 	switch (_op) {
 	case ALIF_EQ:
-		r_ = i_ == j_;
+		r = i == j;
 		break;
 	case ALIF_NE:
-		r_ = i_ != j_;
+		r = i != j;
 		break;
 	case ALIF_LE:
-		r_ = i_ <= j_;
+		r = i <= j;
 		break;
 	case ALIF_GE:
-		r_ = i_ >= j_;
+		r = i >= j;
 		break;
 	case ALIF_LT:
-		r_ = i_ < j_;
+		r = i < j;
 		break;
 	case ALIF_GT:
-		r_ = i_ > j_;
+		r = i > j;
 		break;
 	}
-	return alifBool_fromInteger(r_);
+	return alifBool_fromLong(r);
 
-//Unimplemented:
-	//ALIF_RETURN_NOTIMPLEMENTED;
+Unimplemented:
+	return ALIF_NOTIMPLEMENTED;
 }
 
-static void float_dealloc(AlifObject* object) {
-
-	alifMem_objFree(object);
-
+static AlifHashT float_hash(AlifFloatObject* _v) { // 549
+	return _alif_hashDouble((AlifObject*)_v, _v->val);
 }
 
-static AlifObject* float_is_integer_(AlifObject* self) {
 
-	long double value = ((AlifFloatObject*)self)->digits_;
+static AlifObject* float_add(AlifObject* _v, AlifObject* _w) { // 555
+	double a{}, b{};
+	CONVERT_TO_DOUBLE(_v, a);
+	CONVERT_TO_DOUBLE(_w, b);
+	a = a + b;
+	return alifFloat_fromDouble(a);
+}
 
-	if (isfinite(value)) {
+static AlifObject* float_sub(AlifObject* _v, AlifObject* _w) { // 565
+	double a{}, b{};
+	CONVERT_TO_DOUBLE(_v, a);
+	CONVERT_TO_DOUBLE(_w, b);
+	a = a - b;
+	return alifFloat_fromDouble(a);
+}
+
+static AlifObject* float_mul(AlifObject* _v, AlifObject* _w) { // 575
+	double a{}, b{};
+	CONVERT_TO_DOUBLE(_v, a);
+	CONVERT_TO_DOUBLE(_w, b);
+	a = a * b;
+	return alifFloat_fromDouble(a);
+}
+
+static AlifObject* float_div(AlifObject* _v, AlifObject* _w) { // 585
+	double a{}, b{};
+	CONVERT_TO_DOUBLE(_v, a);
+	CONVERT_TO_DOUBLE(_w, b);
+	if (b == 0.0) {
+		//alifErr_setString(_alifExcZeroDivisionError_,
+		//	"division by zero");
+		return nullptr;
+	}
+	a = a / b;
+	return alifFloat_fromDouble(a);
+}
+
+static AlifObject* float_rem(AlifObject* _v, AlifObject* _w) { // 601
+	double vx_{}, wx_{};
+	double mod_{};
+	CONVERT_TO_DOUBLE(_v, vx_);
+	CONVERT_TO_DOUBLE(_w, wx_);
+	if (wx_ == 0.0) {
+		//alifErr_setString(_alifExcZeroDivisionError_,
+			//"division by zero");
+		return nullptr;
+	}
+	mod_ = fmod(vx_, wx_);
+	if (mod_) {
+		if ((wx_ < 0) != (mod_ < 0)) {
+			mod_ += wx_;
+		}
+	}
+	else {
+		mod_ = copysign(0.0, wx_);
+	}
+	return alifFloat_fromDouble(mod_);
+}
+
+static void _float_divMod(double _vx, double _wx, double* _floorDiv, double* _mod) { // 629
+	double div_{};
+	*_mod = fmod(_vx, _wx);
+	div_ = (_vx - *_mod) / _wx;
+	if (*_mod) {
+		if ((_wx < 0) != (*_mod < 0)) {
+			*_mod += _wx;
+			div_ -= 1.0;
+		}
+	}
+	else {
+		*_mod = copysign(0.0, _wx);
+	}
+	if (div_) {
+		*_floorDiv = floor(div_);
+		if (div_ - *_floorDiv > 0.5) {
+			*_floorDiv += 1.0;
+		}
+	}
+	else {
+		*_floorDiv = copysign(0.0, _vx / _wx); 
+	}
+}
+
+static AlifObject* float_divmod(AlifObject* _v, AlifObject* _w) { // 667
+	double vx_{}, wx_{};
+	double mod_{}, floorDiv{};
+	CONVERT_TO_DOUBLE(_v, vx_);
+	CONVERT_TO_DOUBLE(_w, wx_);
+	if (wx_ == 0.0) {
+		//alifErr_setString(_alifExcZeroDivisionError_, "division by zero");
+		return nullptr;
+	}
+	_float_divMod(vx_, wx_, &floorDiv, &mod_);
+	return alif_buildValue("(dd)", floorDiv, mod_);
+}
+
+static AlifObject* float_floorDiv(AlifObject* _v, AlifObject* _w) { // 682
+	double vx_{}, wx_{};
+	double mod_{}, floorDiv{};
+	CONVERT_TO_DOUBLE(_v, vx_);
+	CONVERT_TO_DOUBLE(_w, wx_);
+	if (wx_ == 0.0) {
+		//alifErr_setString(_alifExcZeroDivisionError_, "division by zero");
+		return nullptr;
+	}
+	_float_divMod(vx_, wx_, &floorDiv, &mod_);
+	return alifFloat_fromDouble(floorDiv);
+}
+
+#define DOUBLE_IS_ODD_INTEGER(_x) (fmod(fabs(_x), 2.0) == 1.0) // 698
+
+
+static AlifObject* float_pow(AlifObject* _v,
+	AlifObject* _w, AlifObject* _z) { // 701
+	double iv_{}, iw_{}, ix_{};
+	AlifIntT negateResult = 0;
+
+	if ((AlifObject*)_z != ALIF_NONE) {
+		//alifErr_setString(_alifExcTypeError_, "pow() 3rd argument not "
+			//"allowed unless all arguments are integers");
 		return nullptr;
 	}
 
-	AlifObject* object = (floor(value) == value) ? ALIF_TRUE : ALIF_FALSE;
-	return object;
+	CONVERT_TO_DOUBLE(_v, iv_);
+	CONVERT_TO_DOUBLE(_w, iw_);
+	if (iw_ == 0) {             
+		return alifFloat_fromDouble(1.0);
+	}
+	if (isnan(iv_)) {        
+		return alifFloat_fromDouble(iv_);
+	}
+	if (isnan(iw_)) {        
+		return alifFloat_fromDouble(iv_ == 1.0 ? 1.0 : iw_);
+	}
+	if (isinf(iw_)) {
+		iv_ = fabs(iv_);
+		if (iv_ == 1.0)
+			return alifFloat_fromDouble(1.0);
+		else if ((iw_ > 0.0) == (iv_ > 1.0))
+			return alifFloat_fromDouble(fabs(iw_));
+		else
+			return alifFloat_fromDouble(0.0);
+	}
+	if (isinf(iv_)) {
+		AlifIntT iw_is_odd = DOUBLE_IS_ODD_INTEGER(iw_);
+		if (iw_ > 0.0)
+			return alifFloat_fromDouble(iw_is_odd ? iv_ : fabs(iv_));
+		else
+			return alifFloat_fromDouble(iw_is_odd ?
+				copysign(0.0, iv_) : 0.0);
+	}
+	if (iv_ == 0.0) { 
+		AlifIntT iw_is_odd = DOUBLE_IS_ODD_INTEGER(iw_);
+		if (iw_ < 0.0) {
+			//alifErr_setString(_alifExcZeroDivisionError_,
+				//"zero to a negative power");
+			return nullptr;
+		}
+		return alifFloat_fromDouble(iw_is_odd ? iv_ : 0.0);
+	}
 
+	if (iv_ < 0.0) {
+
+		if (iw_ != floor(iw_)) {
+			//return _alifComplexType_.asNumber->power(_v, _w, _z);
+		}
+		iv_ = -iv_;
+		negateResult = DOUBLE_IS_ODD_INTEGER(iw_);
+	}
+
+	if (iv_ == 1.0) {
+		return alifFloat_fromDouble(negateResult ? -1.0 : 1.0);
+	}
+
+	errno = 0;
+	ix_ = pow(iv_, iw_);
+	_alif_adjustErange1(ix_);
+	if (negateResult)
+		ix_ = -ix_;
+
+	if (errno != 0) {
+		//alifErr_setFromErrno(errno == ERANGE ? _alifExcOverflowError_ :
+			//_alifExcValueError_);
+		return nullptr;
+	}
+	return alifFloat_fromDouble(ix_);
 }
 
-static AlifObject* float__ceil__(AlifObject* self) {
 
-	long double value = ((AlifFloatObject*)self)->digits_;
+#undef DOUBLE_IS_ODD_INTEGER // 819
 
-	return alifInteger_fromDouble(ceil(value));
-
+static AlifObject* float_neg(AlifFloatObject* _v) { // 821
+	return alifFloat_fromDouble(-_v->val);
 }
 
-static AlifObject* float__floor__(AlifObject* self) {
-
-	long double value = ((AlifFloatObject*)self)->digits_;
-
-	return alifInteger_fromDouble(floor(value));
-
+static AlifObject* float_abs(AlifFloatObject* _v) { // 827
+	return alifFloat_fromDouble(fabs(_v->val));
 }
 
-static AlifObject* float_float(AlifObject* _v)
-{
-	if (_v->type_ == &_alifFloatType) {
+static AlifIntT float_bool(AlifFloatObject* _v) { // 833
+	return _v->val != 0.0;
+}
+
+
+
+static AlifObject* float___trunc__Impl(AlifObject* _self) { // 872
+	return alifLong_fromDouble(ALIFFLOAT_AS_DOUBLE(_self));
+}
+
+
+
+static AlifObject* float_float(AlifObject* _v) { // 1079
+	if (ALIFFLOAT_CHECKEXACT(_v)) {
 		return ALIF_NEWREF(_v);
 	}
 	else {
-		return alifFloat_fromDouble(((AlifFloatObject*)_v)->digits_);
+		return alifFloat_fromDouble(((AlifFloatObject*)_v)->val);
 	}
 }
 
-static AlifObject* float_subtype_new(AlifTypeObject* , AlifObject*);
 
-static AlifObject* float_new_impl(AlifTypeObject* _type, AlifObject* _x)
-{
-	if (_type != &_alifFloatType) {
-		//if (_x == nullptr) {
-		//	_x = alifSubLong_GetZero();
-		//}
-		return float_subtype_new(_type, _x); /* Wimp out */
+
+static AlifObject* float_subTypeNew(AlifTypeObject*, AlifObject*); // 1563
+
+static AlifObject* float_newImpl(AlifTypeObject* _type, AlifObject* _x
+) { // 1575
+	if (_type != &_alifFloatType_) {
+		if (_x == nullptr) {
+			_x = _alifLong_getZero();
+		}
+		return float_subTypeNew(_type, _x); /* Wimp out */
 	}
 
 	if (_x == nullptr) {
 		return alifFloat_fromDouble(0.0);
 	}
-
-	if (_x->type_ == &_alifUStrType_)
+	if (ALIFUSTR_CHECKEXACT(_x))
 		return alifFloat_fromString(_x);
-	return alifInteger_float(_x);
+	return alifNumber_float(_x);
 }
 
-static AlifObject* float_subtype_new(AlifTypeObject* _type, AlifObject* _x)
-{
-	AlifObject* tmp_{}, * newObj{};
+static AlifObject* float_subTypeNew(AlifTypeObject* _type, AlifObject* _x) { // 1610
+	AlifObject* tmp{}, * newobj{};
 
-	tmp_ = float_new_impl(&_alifFloatType, _x);
-	if (tmp_ == nullptr)
+	tmp = float_newImpl(&_alifFloatType_, _x);
+	if (tmp == nullptr)
 		return nullptr;
-	newObj = _type->alloc_(_type, 0);
-	if (newObj == nullptr) {
-		ALIF_DECREF(tmp_);
+	newobj = _type->alloc(_type, 0);
+	if (newobj == nullptr) {
+		ALIF_DECREF(tmp);
 		return nullptr;
 	}
-	((AlifFloatObject*)newObj)->digits_ = ((AlifFloatObject*)tmp_)->digits_;
-	ALIF_DECREF(tmp_);
-	return newObj;
+	((AlifFloatObject*)newobj)->val = ((AlifFloatObject*)tmp)->val;
+	ALIF_DECREF(tmp);
+	return newobj;
 }
 
-static AlifObject* float_vectorcall(AlifObject* _type, AlifObject* const* _args,
-	AlifUSizeT _nargsf, AlifObject* _kwnames)
-{
-	if (!ALIFSUBARG_NOKWNAMES(L"float", _kwnames)) {
-		return nullptr;
-	}
-	
-	int64_t nArgs = ALIFVECTORCALL_NARGS(_nargsf);
-	if (!ALIFARG_CHECKPOSITIONAL(L"float", nArgs, 0, 1)) {
+static AlifObject* float_vectorCall(AlifObject* _type, AlifObject* const* _args,
+	AlifUSizeT _nargsf, AlifObject* _kwnames) { // 1621
+	if (!_ALIFARG_NOKWNAMES("عشري", _kwnames)) {
 		return nullptr;
 	}
 
-	AlifObject* x_ = nArgs >= 1 ? _args[0] : nullptr;
-	return float_new_impl((AlifTypeObject*)_type, x_);
+	AlifSizeT nargs = ALIFVECTORCALL_NARGS(_nargsf);
+	if (!_ALIFARG_CHECKPOSITIONAL("عشري", nargs, 0, 1)) {
+		return nullptr;
+	}
+
+	AlifObject* x = nargs >= 1 ? _args[0] : nullptr;
+	return float_newImpl(ALIFTYPE_CAST(_type), x);
 }
 
-static AlifObject* float_getReal(AlifObject* _v, void* _closure)
-{
-	return float_float(_v);
+
+
+#define UNKNOWN_FORMAT AlifFloatFormatType::Alif_Float_Format_Unknown
+#define IEEE_BIG_ENDIAN_FORMAT AlifFloatFormatType::Alif_Float_Format_IEEE_Big_Endian
+#define IEEE_LITTLE_ENDIAN_FORMAT AlifFloatFormatType::Alif_Float_Format_IEEE_Little_Endian
+
+#define FLOAT_FORMAT (_alifDureRun_.floatState.floatFormat)
+#define DOUBLE_FORMAT (_alifDureRun_.floatState.doubleFormat)
+
+
+
+static AlifObject* float___format___impl(AlifObject* _self, AlifObject* _formatSpec) { // 1758
+	AlifUStrWriter writer{};
+	AlifIntT ret{};
+
+	alifUStrWriter_init(&writer);
+	ret = _alifFloat_formatAdvancedWriter( &writer, _self,
+		_formatSpec, 0, ALIFUSTR_GET_LENGTH(_formatSpec));
+	if (ret == -1) {
+		alifUStrWriter_dealloc(&writer);
+		return nullptr;
+	}
+	return _alifUStrWriter_finish(&writer);
 }
 
-static AlifObject* float_getImag(AlifObject* _v, void* _closure)
-{
-	return alifFloat_fromDouble(0.0);
+static AlifMethodDef _floatMethods_[] = { // 1781
+	//FLOAT_FROM_NUMBER_METHODDEF
+	//FLOAT_CONJUGATE_METHODDEF
+	//FLOAT___TRUNC___METHODDEF
+	//FLOAT___FLOOR___METHODDEF
+	//FLOAT___CEIL___METHODDEF
+	//FLOAT___ROUND___METHODDEF
+	//FLOAT_AS_INTEGER_RATIO_METHODDEF
+	//FLOAT_FROMHEX_METHODDEF
+	//FLOAT_HEX_METHODDEF
+	//FLOAT_IS_INTEGER_METHODDEF
+	//FLOAT___GETNEWARGS___METHODDEF
+	//FLOAT___GETFORMAT___METHODDEF
+	FLOAT___FORMAT___METHODDEF
+	{nullptr,              nullptr}           /* sentinel */
+};
+
+
+static AlifNumberMethods _floatAsNumber_ = { // 1811
+	.add_ = float_add,
+	.subtract = float_sub,
+	.multiply = float_mul,
+	.remainder = float_rem,
+	.divmod = float_divmod,
+	.power = float_pow,
+	.negative = (UnaryFunc)float_neg,
+	.positive = float_float,
+	.absolute = (UnaryFunc)float_abs,
+	.bool_ = (Inquiry)float_bool,
+	.invert = 0,
+	.lshift = 0,
+	.rshift = 0,
+	.and_ = 0,
+	.xor_ = 0,
+	.or_ = 0,
+	.int_ = float___trunc__Impl,
+	.reserved = 0,
+	.float_ = float_float,
+	.inplaceAdd = 0,
+	.inplaceSubtract = 0,
+	.inplaceMultiply = 0,
+	.inplaceRemainder = 0,
+	.inplacePower = 0,
+	.inplaceLshift = 0,
+	.inplaceRshift = 0,
+	.inplaceAnd = 0,
+	.inplaceXor = 0,
+	.inplaceOr = 0,
+	.floorDivide = float_floorDiv,
+	.trueDivide = float_div,
+	.inplaceFloorDivide = 0,     
+	.inplaceTrueDivide = 0,       
+};
+
+AlifTypeObject _alifFloatType_ = { // 1847
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "عشري",
+	.basicSize = sizeof(AlifFloatObject),
+	.itemSize = 0,
+	.repr = (ReprFunc)float_repr,
+	.asNumber = &_floatAsNumber_,
+	.hash = (HashFunc)float_hash,
+	.getAttro = alifObject_genericGetAttr,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE |
+		_ALIF_TPFLAGS_MATCH_SELF,
+	.richCompare = float_richCompare,
+	.methods = _floatMethods_,
+	.vectorCall = (VectorCallFunc)float_vectorCall,
+};
+
+
+
+
+
+
+
+
+
+
+AlifIntT alifFloat_initTypes(AlifInterpreter* _interp) { // 1951
+	/* Init float info */
+	if (_alifStructSequence_initBuiltin(_interp, &_floatInfoType_,
+		nullptr /*&_floatInfoDesc_*/) < 0) {
+		//return ALIFSTATUS_ERR("can't init float info type");
+		return -1; //* alif
+	}
+
+	return 1; //* alif
 }
 
-static AlifMethodDef _floatMethod_[] = {
-	{L"__floor__", (AlifCFunction)float__floor__, METHOD_NOARGS},
-	{L"__ceil__", (AlifCFunction)float__ceil__, METHOD_NOARGS},
-	{L"is_integer", (AlifCFunction)float_is_integer_, METHOD_NOARGS},
-	{nullptr,             nullptr}
-};
 
-static AlifGetSetDef _floatGetSet_[] = {
-	{L"real",
-	 float_getReal, (Setter)nullptr,
-	 L"the real part of a complex number",
-	 nullptr},
-	{L"imag",
-	 float_getImag, (Setter)nullptr,
-	 L"the imaginary part of a complex number",
-	 nullptr},
-	{nullptr}  /* Sentinel */
-};
 
-static AlifNumberMethods _floatAsNumber_ = {
-	(BinaryFunc)float_add,          
-	(BinaryFunc)float_sub,          
-	(BinaryFunc)float_mul,          
-	(BinaryFunc)float_rem,          
-	0,     
-	(BinaryFunc)float_pow,          
-	(UnaryFunc)float_neg, 
-	float_float,        
-	(UnaryFunc)float_abs, 
-	(Inquiry)float_bool, 
-	0,                  
-	0,                  
-	0,                  
-	0,                  
-	0,                  
-	0,                
-	0, 
-	0,                  
-	float_float,       
-	0,                  
-	0,                  
-	0,                  
-	0,                 
-	0,                 
-	0,                  
-	0,                  
-	0,               
-	0,               
-	0,              
-	0,    
-	(BinaryFunc)float_div,                
-};
 
-AlifTypeObject _alifFloatType = {
-	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_ ,0)
-	L"float",
-	sizeof(AlifFloatObject),
-	0,
-	float_dealloc,                  
-	0,                                          
-	0,                                          
-	0,                                         
-	(ReprFunc)float_repr,
-	&_floatAsNumber_,                          
-	0,                      
-	0,                                          
-	(HashFunc)float_hash,                       
-	0,                                         
-	0,                                  
-	alifObject_genericGetAttr,
-	0,                                       
-	0,              
-	ALIFTPFLAGS_DEFAULT | ALIFTPFLAGS_BASETYPE |
-	ALIFSUBTPFLAGS_MATCH_SELF,
-	0,                                         
-	0,
-	0,                                         
-	(RichCmpFunc)float_compare,                      
-	0,                                       
-	0,             
-	0,                                      
-	_floatMethod_,
-	0,                                          
-	_floatGetSet_,                               
-	0,                                          
-	0,                                         
-	0,                                          
-	0,                                         
-	0,                                         
-	0,                                          
-	0,                                        
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	(VectorCallFunc)float_vectorcall,
-};
+
+
+
+
+
+double alifFloat_unpack8(const char* data, AlifIntT le) { // 2462
+	unsigned char* p = (unsigned char*)data;
+	if (DOUBLE_FORMAT == UNKNOWN_FORMAT) {
+		unsigned char sign{};
+		AlifIntT e{};
+		AlifUIntT fhi{}, flo{};
+		double x{};
+		AlifIntT incr = 1;
+
+		if (le) {
+			p += 7;
+			incr = -1;
+		}
+
+		/* First byte */
+		sign = (*p >> 7) & 1;
+		e = (*p & 0x7F) << 4;
+
+		p += incr;
+
+		/* Second byte */
+		e |= (*p >> 4) & 0xF;
+		fhi = (*p & 0xF) << 24;
+		p += incr;
+
+		if (e == 2047) {
+			//alifErr_setString(
+			//	_alifExcValueError_,
+			//	"can't unpack IEEE 754 special value "
+			//	"on non-IEEE platform");
+			return -1.0;
+		}
+
+		/* Third byte */
+		fhi |= *p << 16;
+		p += incr;
+
+		/* Fourth byte */
+		fhi |= *p << 8;
+		p += incr;
+
+		/* Fifth byte */
+		fhi |= *p;
+		p += incr;
+
+		/* Sixth byte */
+		flo = *p << 16;
+		p += incr;
+
+		/* Seventh byte */
+		flo |= *p << 8;
+		p += incr;
+
+		/* Eighth byte */
+		flo |= *p;
+
+		x = (double)fhi + (double)flo / 16777216.0; /* 2**24 */
+		x /= 268435456.0; /* 2**28 */
+
+		if (e == 0)
+			e = -1022;
+		else {
+			x += 1.0;
+			e -= 1023;
+		}
+		x = ldexp(x, e);
+
+		if (sign)
+			x = -x;
+
+		return x;
+	}
+	else {
+		double x{};
+
+		if ((DOUBLE_FORMAT == IEEE_LITTLE_ENDIAN_FORMAT && !le)
+			or (DOUBLE_FORMAT == IEEE_BIG_ENDIAN_FORMAT && le)) {
+			char buf[8];
+			char* d = &buf[7];
+			AlifIntT i{};
+
+			for (i = 0; i < 8; i++) {
+				*d-- = *p++;
+			}
+			memcpy(&x, buf, 8);
+		}
+		else {
+			memcpy(&x, p, 8);
+		}
+
+		return x;
+	}
+}

@@ -1,291 +1,445 @@
 #include "alif.h"
 
+#include "AlifCore_Abstract.h"
+#include "AlifCore_Eval.h"
 #include "AlifCore_Dict.h"
+#include "AlifCore_FreeList.h"
+#include "AlifCore_Interpreter.h"
 #include "AlifCore_List.h"
-#include "AlifCore_ModSupport.h"
 #include "AlifCore_Object.h"
-#include "AlifCore_Tuple.h"
-#include "AlifCore_Memory.h"
+#include "AlifCore_SetObject.h"
 
 
-#ifdef WITH_FREELISTS
-static AlifListFreeList* getList_freeList() {
-	AlifObjectFreeLists* freelists = alifObject_freeListsGet();
-	return &freelists->lists;
+#include "clinic/ListObject.cpp.h"
+
+class AlifListArray{ // 28
+public:
+	AlifSizeT allocated{};
+	AlifObject* item[0];
+};
+static AlifListArray* list_allocateArray(AlifUSizeT _capacity) { // 34
+	if (_capacity > ALIF_SIZET_MAX / sizeof(AlifObject*) - 1) {
+		return nullptr;
+	}
+	AlifListArray* array = (AlifListArray*)alifMem_objAlloc(sizeof(AlifListArray) + _capacity * sizeof(AlifObject*));
+	if (array == nullptr) {
+		return nullptr;
+	}
+	array->allocated = _capacity;
+	return array;
 }
-#endif
+
+static AlifSizeT list_capacity(AlifObject** _items) { // 48
+	AlifListArray* array = ALIF_CONTAINER_OF(_items, AlifListArray, item);
+	return array->allocated;
+}
 
 
-static int list_resize(AlifListObject* _list, size_t _newSize) {
 
-	size_t newAllocated{}, targetBytes{};
-	uint64_t allocated_ = _list->allocated_;
+static void free_listItems(AlifObject** _items, bool _useQSBR) { // 55
+	AlifListArray* array = ALIF_CONTAINER_OF(_items, AlifListArray, item);
+	if (_useQSBR) {
+		alifMem_freeDelayed(array);
+	}
+	else {
+		alifMem_objFree(array);
+	}
+}
 
-	if (allocated_ >= _newSize and _newSize >= (allocated_ >> 1)) {
-		ALIFSET_SIZE(_list, _newSize);
+
+
+
+
+
+static AlifIntT list_resize(AlifListObject* _self, AlifSizeT _newSize) { // 84
+	AlifUSizeT newAllocated{}, targetBytes{};
+	AlifSizeT allocated = _self->allocated;
+
+	if (allocated >= _newSize and _newSize >= (allocated >> 1)) {
+		ALIF_SET_SIZE(_self, _newSize);
 		return 0;
 	}
 
-	//The growth pattern is : 0, 4, 8, 16, 24, 32, 40, 52, 64, ...
-	newAllocated = ((size_t)_newSize + (_newSize >> 3) + 6) & ~(size_t)3;
+	newAllocated = ((AlifUSizeT)_newSize + (_newSize >> 3) + 6) & ~(AlifUSizeT)3;
+	if (_newSize - ALIF_SIZE(_self) > (AlifSizeT)(newAllocated - _newSize))
+		newAllocated = ((AlifUSizeT)_newSize + 3) & ~(AlifUSizeT)3;
 
-	if (_newSize - ALIF_SIZE(_list) > (AlifSizeT)(newAllocated - _newSize))
-		newAllocated = ((size_t)_newSize + 3) & ~(size_t)3;
-
-	if (_newSize == 0) {
+	if (_newSize == 0)
 		newAllocated = 0;
-	}
 
-	AlifObject** items_{};
-	if (_list->items_ == nullptr) {
-		items_ = (AlifObject**)alifMem_dataAlloc(sizeof(AlifObject*) * newAllocated);
-	}
-	else if (newAllocated <= (size_t)LLONG_MAX / sizeof(AlifObject*)) {
-		targetBytes = newAllocated * sizeof(AlifObject*);
-		items_ = (AlifObject**)alifMem_objRealloc(_list->items_, targetBytes);
-	}
-	else {
-		items_ = nullptr;
-	}
-	if (items_ == nullptr) {
-		// memory error
+	AlifListArray* array = list_allocateArray(newAllocated);
+	if (array == nullptr) {
+		//alifErr_noMemory();
 		return -1;
 	}
-	_list->items_ = items_;
-	ALIFSET_SIZE(_list, _newSize);
-	_list->allocated_ = newAllocated;
-
-	return 1;
-}
-
-static int list_preallocate_exact(AlifListObject* _self, int64_t _size)
-{
-	_size = (_size + 1) & ~(size_t)1;
-
-	AlifObject** items_ = (AlifObject**)alifMem_dataAlloc(_size);
-	if (items_ == nullptr) {
-		return -1;
+	AlifObject** oldItems = _self->item;
+	if (_self->item) {
+		if (newAllocated < (AlifUSizeT)allocated) {
+			targetBytes = newAllocated * sizeof(AlifObject*);
+		}
+		else {
+			targetBytes = allocated * sizeof(AlifObject*);
+		}
+		memcpy(array->item, _self->item, targetBytes);
 	}
-	_self->items_ = items_;
-	_self->allocated_ = _size;
+	if (newAllocated > (AlifUSizeT)allocated) {
+		memset(array->item + allocated, 0, sizeof(AlifObject*) * (newAllocated - allocated));
+	}
+	alifAtomic_storePtrRelease(&_self->item, &array->item);
+	_self->allocated = newAllocated;
+	ALIF_SET_SIZE(_self, _newSize);
+	if (oldItems != nullptr) {
+		free_listItems(oldItems, ALIFOBJECT_GC_IS_SHARED(_self));
+	}
 	return 0;
 }
 
-AlifObject* alifNew_list(AlifSizeT _size) {
-
-	AlifListObject* object{};
-
-	if (_size < 0) {
-		// error
-		return nullptr;
+static AlifIntT list_preallocateExact(AlifListObject* _self,
+	AlifSizeT _size) { //167
+	AlifObject** items{};
+	_size = (_size + 1) & ~(size_t)1;
+	AlifListArray* array = list_allocateArray(_size);
+	if (array == nullptr) {
+		//alifErr_noMemory();
+		return -1;
 	}
-
-#ifdef WITH_FREELISTS
-	AlifListFreeList* listFreeList = getList_freeList();
-	if (ALIFLIST_MAXFREELIST and listFreeList->numfree > 0) {
-		listFreeList->numfree--;
-		object = listFreeList->items[listFreeList->numfree];
-		alif_newRef((AlifObject*)object);
-	}
-	else
-#endif // WITH_FREELISTS
-	{
-		object = ALIFOBJECT_GC_NEW(AlifListObject, &_alifListType_);
-		if (object == nullptr) return nullptr;
-	}
-
-	if (_size <= 0) {
-		object->items_ = nullptr;
-	}
-	else {
-		object->items_ = (AlifObject**)alifMem_objAlloc(_size * sizeof(AlifObject*));
-		if (object == nullptr) {
-			ALIF_DECREF(object);
-			// memory error
-			return nullptr;
-		}
-
-	}
-	ALIFSET_SIZE(object, _size);
-	object->allocated_ = _size;
-	ALIFOBJECT_GC_TRACK(object);
-	return (AlifObject*)object;
+	items = array->item;
+	memset(items, 0, _size * sizeof(AlifObject*));
+	alifAtomic_storePtrRelaxed(&_self->item, items);
+	_self->allocated = _size;
+	return 0;
 }
 
-static AlifObject* list_new_prealloc(int64_t _size)
-{
-	AlifListObject* op_ = (AlifListObject*)alifNew_list(0);
+
+AlifObject* alifList_new(AlifSizeT _size) { // 212 
+	if (_size < 0) {
+		//alifErr_badInternalCall();
+		return nullptr;
+	}
+
+	AlifListObject* op_ = ALIF_FREELIST_POP(AlifListObject, lists);
 	if (op_ == nullptr) {
-		return nullptr;
+		op_ = ALIFOBJECT_GC_NEW(AlifListObject, &_alifListType_);
+		if (op_ == nullptr) {
+			return nullptr;
+		}
 	}
-	op_->items_ = (AlifObject**)alifMem_dataAlloc(_size);
-	if (op_->items_ == nullptr) {
-		ALIF_DECREF(op_);
-		return nullptr;
+	if (_size <= 0) {
+		op_->item = nullptr;
 	}
-	op_->allocated_ = _size;
+	else {
+		AlifListArray* array = list_allocateArray(_size);
+		if (array == nullptr) {
+			ALIF_DECREF(op_);
+			return nullptr;
+			//return alifErr_noMemory();
+		}
+		memset(&array->item, 0, _size * sizeof(AlifObject*));
+		op_->item = array->item;
+		if (op_->item == nullptr) {
+			ALIF_DECREF(op_);
+			return nullptr;
+			//return alifErr_noMemory();
+		}
+	}
+	ALIF_SET_SIZE(op_, _size);
+	op_->allocated = _size;
+	ALIFOBJECT_GC_TRACK(op_);
 	return (AlifObject*)op_;
 }
 
-size_t alifList_size(AlifObject* _list) {
-
-	return ALIF_SIZE(_list);
-
+static AlifObject* list_newPrealloc(AlifSizeT _size) { // 252
+	AlifListObject* op_ = (AlifListObject*)alifList_new(0);
+	if (op_ == nullptr) {
+		return nullptr;
+	}
+	AlifListArray* array = list_allocateArray(_size);
+	if (array == nullptr) {
+		ALIF_DECREF(op_);
+		//return alifErr_noMemory();
+	}
+	op_->item = array->item;
+	op_->allocated = _size;
+	return (AlifObject*)op_;
 }
 
-static inline int valid_index(size_t index, size_t limit)
-{
-	return (size_t)index < (size_t)limit;
+AlifSizeT alifList_size(AlifObject* _op) { // 279
+	if (!ALIFLIST_CHECK(_op)) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+	else {
+		return ALIFLIST_GET_SIZE(_op);
+	}
 }
 
-static inline AlifObject* listGet_itemRef(AlifListObject* _op, int64_t _i)
-{
+static inline AlifIntT valid_index(AlifSizeT i, AlifSizeT limit) { // 291
+	/* The cast to AlifUSizeT lets us use just a single comparison
+	   to check whether i is in the range: 0 <= i < limit.
+
+	   See:  Section 14.2 "Bounds Checking" in the Agner Fog
+	   optimization manual found at:
+	   https://www.agner.org/optimize/optimizing_cpp.pdf
+	*/
+	return (AlifUSizeT)i < (AlifUSizeT)limit;
+}
+
+
+static AlifObject* list_itemImpl(AlifListObject* _self, AlifSizeT _idx) { // 307
+	AlifObject* item = nullptr;
+	ALIF_BEGIN_CRITICAL_SECTION(_self);
+	if (!ALIFOBJECT_GC_IS_SHARED(_self)) {
+		ALIFOBJECT_GC_SET_SHARED(_self);
+	}
+	AlifSizeT size = ALIF_SIZE(_self);
+	if (!valid_index(_idx, size)) {
+		goto exit;
+	}
+	item = _alif_newRefWithLock(_self->item[_idx]);
+exit:
+	ALIF_END_CRITICAL_SECTION();
+	return item;
+}
+
+static inline AlifObject* listGet_itemRef(AlifListObject* _op, AlifSizeT _i) { // 329
+	if (!alif_isOwnedByCurrentThread((AlifObject*)_op) and !ALIFOBJECT_GC_IS_SHARED(_op)) {
+		return list_itemImpl(_op, _i);
+	}
+	AlifSizeT size = ALIFLIST_GET_SIZE(_op);
+	if (!valid_index(_i, size)) {
+		return nullptr;
+	}
+	AlifObject** obItem = (AlifObject**)alifAtomic_loadPtr(&_op->item);
+	if (obItem == nullptr) {
+		return nullptr;
+	}
+	AlifSizeT cap_ = list_capacity(obItem);
+	if (!valid_index(_i, cap_)) {
+		return nullptr;
+	}
+	AlifObject* item = alif_tryXGetRef(&obItem[_i]);
+	if (item == nullptr) {
+		return list_itemImpl(_op, _i);
+	}
+	return item;
+}
+
+
+AlifObject* alifList_getItem(AlifObject* _op, AlifSizeT _i) { // 365
+	if (!ALIFLIST_CHECK(_op)) {
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
 	if (!valid_index(_i, ALIF_SIZE(_op))) {
+		//alifErr_setObject(_alifExcIndexError_, &ALIF_STR(ListErr));
 		return nullptr;
 	}
-	return ALIF_NEWREF(ALIFLIST_GET_ITEM(_op, _i));
+	return ((AlifListObject*)_op)->item[_i];
 }
 
-AlifObject* alifList_getItem(AlifObject* _op, size_t _i) {
 
-	if (!(_op->type_ == &_alifListType_)) {
+AlifObject* alifList_getItemRef(AlifObject* op, AlifSizeT i) { // 380
+	if (!ALIFLIST_CHECK(op)) {
+		//alifErr_setString(_alifExcTypeError_, "expected a list");
 		return nullptr;
 	}
-	if (!valid_index(_i, ALIF_SIZE(_op))) {
-		//ALIFSUB_DECLARE_STR(list_err, L"list index out of range");
-		//ALIFErr_SetObject(alifExc_IndexError, &ALIFSUB_STR(list_err));
+	AlifObject* item = listGet_itemRef((AlifListObject*)op, i);
+	if (item == nullptr) {
+		//alifErr_setObject(_alifExcIndexError_, &ALIF_STR(ListErr));
 		return nullptr;
 	}
-	return ((AlifListObject*)_op)->items_[_i];
+	return item;
 }
 
-#define ALIFLIST_GETITEM(_list, _index) (((AlifListObject*)_list)->items_[(_index)])
 
-static int ins1(AlifListObject* _self, int64_t _where, AlifObject* _v)
-{
-	int64_t i_, n_ = ALIF_SIZE(_self);
-	AlifObject** items_;
+AlifIntT alifList_setItem(AlifObject* _op, AlifSizeT _i,
+	AlifObject* _newitem) { // 394
+	AlifObject** p{};
+	if (!ALIFLIST_CHECK(_op)) {
+		ALIF_XDECREF(_newitem);
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+	AlifIntT ret{};
+	AlifListObject* self = ((AlifListObject*)_op);
+	ALIF_BEGIN_CRITICAL_SECTION(self);
+	if (!valid_index(_i, ALIF_SIZE(self))) {
+		ALIF_XDECREF(_newitem);
+		alifErr_setString(_alifExcIndexError_,
+			"list assignment index out of range");
+		ret = -1;
+		goto end;
+	}
+	p = self->item + _i;
+	ALIF_XSETREF(*p, _newitem);
+	ret = 0;
+end:;
+	ALIF_END_CRITICAL_SECTION();
+	return ret;
+}
+
+
+static AlifIntT ins1(AlifListObject* _self,
+	AlifSizeT _where, AlifObject* _v) { // 424
+	AlifSizeT i{}, n = ALIF_SIZE(_self);
+	AlifObject** items{};
 	if (_v == nullptr) {
+		//ALIFERR_BADINTERNALCALL();
 		return -1;
 	}
 
-	if (list_resize(_self, n_ + 1) < 0)
+	if (list_resize(_self, n + 1) < 0)
 		return -1;
 
 	if (_where < 0) {
-		_where += n_;
+		_where += n;
 		if (_where < 0)
 			_where = 0;
 	}
-	if (_where > n_)
-		_where = n_;
-	items_ = _self->items_;
-	for (i_ = n_; --i_ >= _where; )
-		items_[i_ + 1] = items_[i_];
-	items_[_where] = (_v);
+	if (_where > n)
+		_where = n;
+	items = _self->item;
+	for (i = n; --i >= _where; )
+		items[i + 1] = items[i];
+	items[_where] = ALIF_NEWREF(_v);
 	return 0;
 }
 
-int alifList_setItem(AlifObject* _list, size_t _index, AlifObject* _newItem) {
 
-	AlifObject** p_;
-	if (!(_list->type_ == &_alifListType_)) {
-		ALIF_XDECREF(_newItem);
+AlifIntT alifList_insert(AlifObject* _op,
+	AlifSizeT _where, AlifObject* _newItem) { // 450
+	if (!ALIFLIST_CHECK(_op)) {
+		//ALIFERR_BADINTERNALCALL();
 		return -1;
 	}
-
-	int ret_;
-	AlifListObject* self_ = ((AlifListObject*)_list);
-	//ALIF_BEGIN_CRITICAL_SECTION(self_);
-	if (!valid_index(_index, ALIF_SIZE(self_))) {
-		ALIF_XDECREF(_newItem);
-
-		ret_ = -1;
-		goto end;
-	}
-	p_ = self_->items_ + _index;
-	ALIF_XSETREF(*p_, _newItem);
-	ret_ = 0;
-end:
-	//ALIF_END_CRITICAL_SECTION();
-	return ret_;
+	AlifListObject* self = (AlifListObject*)_op;
+	AlifIntT err{};
+	ALIF_BEGIN_CRITICAL_SECTION(self);
+	err = ins1(self, _where, _newItem);
+	ALIF_END_CRITICAL_SECTION();
+	return err;
 }
 
-int alifList_insert(AlifObject* _list, size_t _where, AlifObject* _newItem)
-{
-	if (!(_list->type_ == &_alifListType_)) {
-		return -1;
-	}
-	AlifListObject* self_ = (AlifListObject*)_list;
-	//ALIF_BEGIN_CRITICAL_SECTION(self);
-	int err_ = ins1(self_, _where, _newItem);
-	//ALIF_END_CRITICAL_SECTION();
-	return err_;
-}
 
-int alifSubList_appendTakeRefListResize(AlifListObject* _self, AlifObject* _newItem)
-{
-	int64_t len_ = ALIF_SIZE(_self);
+AlifIntT alifList_appendTakeRefListResize(AlifListObject* _self,
+	AlifObject* _newItem) { // 468
+	AlifSizeT len_ = ALIF_SIZE(_self);
 	if (list_resize(_self, len_ + 1) < 0) {
 		ALIF_DECREF(_newItem);
 		return -1;
 	}
-	//alifList_setItem((AlifObject*)_self, len_, _newItem);
-	_self->items_[len_] = _newItem;
+	alifAtomic_storePtrRelease(&_self->item[len_], _newItem);
 	return 0;
 }
 
-int alifList_append(AlifObject* _list, AlifObject* _newItem)
-{
-	if (ALIFLIST_CHECK(_list) and (_newItem != nullptr)) {
-		int res_;
-		//ALIF_BEGIN_CRITICAL_SECTION(_op);
-		res_ = alifSubList_appendTakeRef((AlifListObject*)_list, ALIF_NEWREF(_newItem));
-		//ALIF_END_CRITICAL_SECTION();
-		return res_;
+AlifIntT alifList_append(AlifObject* _op, AlifObject* _newItem) { // 481
+	if (ALIFLIST_CHECK(_op) and (_newItem != nullptr)) {
+		AlifIntT ret_{};
+		ALIF_BEGIN_CRITICAL_SECTION(_op);
+		ret_ = alifList_appendTakeRef((AlifListObject*)_op, ALIF_NEWREF(_newItem));
+		ALIF_END_CRITICAL_SECTION();
+		return ret_;
 	}
+	//ALIFERR_BADINTERNALCALL();
 	return -1;
 }
 
-static void list_dealloc(AlifObject* _self)
-{
+static void list_dealloc(AlifObject* _self) { // 497
 	AlifListObject* op_ = (AlifListObject*)_self;
-	AlifSizeT i_;
-    alifObject_gcUnTrack(op_);
-	//ALIF_TRASHCAN_BEGIN(op_, list_dealloc);
-	if (op_->items_ != nullptr) {
+	AlifSizeT i_{};
+	ALIFOBJECT_GC_UNTRACK(op_);
+	ALIF_TRASHCAN_BEGIN(op_, list_dealloc)
+		if (op_->item != nullptr) {
+			i_ = ALIF_SIZE(op_);
+			while (--i_ >= 0) {
+				ALIF_XDECREF(op_->item[i_]);
+			}
+			free_listItems(op_->item, false);
+		}
+	if (ALIFLIST_CHECKEXACT(op_)) {
+		ALIF_FREELIST_FREE(lists, LISTS, op_, alifObject_gcDel);
+	}
+	else {
+		alifObject_gcDel(op_);
+	}
+	ALIF_TRASHCAN_END
+}
 
-		i_ = ALIF_SIZE(op_);
-		while (--i_ >= 0) {
-			ALIF_XDECREF(op_->items_[i_]);
+
+static AlifObject* list_reprImpl(AlifListObject* v) { // 524
+	AlifIntT res = alif_reprEnter((AlifObject*)v);
+	if (res != 0) {
+		return (res > 0 ? alifUStr_fromString("[...]") : nullptr);
+	}
+
+	/* "[" + "1" + ", 2" * (len - 1) + "]" */
+	AlifSizeT prealloc = 1 + 1 + (2 + 1) * (ALIF_SIZE(v) - 1) + 1;
+	AlifUStrWriter* writer = alifUStrWriter_create(prealloc);
+	if (writer == nullptr) {
+		goto error;
+	}
+
+	if (alifUStrWriter_writeChar(writer, '[') < 0) {
+		goto error;
+	}
+
+	/* Do repr() on each element.  Note that this may mutate the list,
+	   so must refetch the list size on each iteration. */
+	for (AlifSizeT i = 0; i < ALIF_SIZE(v); ++i) {
+		if (i > 0) {
+			if (alifUStrWriter_writeChar(writer, ',') < 0) {
+				goto error;
+			}
+			if (alifUStrWriter_writeChar(writer, ' ') < 0) {
+				goto error;
+			}
+		}
+
+		if (alifUStrWriter_writeRepr(writer, v->item[i]) < 0) {
+			goto error;
 		}
 	}
-#ifdef WITH_FREELISTS
-	AlifListFreeList* listFreeList = getList_freeList();
-	if (listFreeList->numfree < ALIFLIST_MAXFREELIST && listFreeList->numfree >= 0 && ALIFLIST_CHECKEXACT(op_)) {
-		listFreeList->items[listFreeList->numfree++] = op_;
+
+	if (alifUStrWriter_writeChar(writer, ']') < 0) {
+		goto error;
 	}
-	else
-#endif
-	{
-		ALIF_TYPE(op_)->free_((AlifObject*)op_);
-	}
-	//ALIF_TRASHCAN_END;
+
+	alif_reprLeave((AlifObject*)v);
+	return alifUStrWriter_finish(writer);
+
+error:
+	alifUStrWriter_discard(writer);
+	alif_reprLeave((AlifObject*)v);
+	return nullptr;
 }
 
-static size_t list_length(AlifListObject* _list) {
-	return ALIF_SIZE(_list);
+static AlifObject* list_repr(AlifObject* self) { // 574
+	if (ALIFLIST_GET_SIZE(self) == 0) {
+		return alifUStr_fromString("[]");
+	}
+	AlifListObject* v = (AlifListObject*)self;
+	AlifObject* ret = nullptr;
+	ALIF_BEGIN_CRITICAL_SECTION(v);
+	ret = list_reprImpl(v);
+	ALIF_END_CRITICAL_SECTION();
+	return ret;
 }
 
-static int list_contains(AlifListObject* _aa, AlifObject* _el) {
 
-	for (int64_t i = 0; ; i++) {
-		AlifObject* item_ = listGet_itemRef((AlifListObject*)_aa, i);
-		if (item_ == nullptr) {
+static AlifSizeT list_length(AlifObject* _a) { // 588
+	return ALIFLIST_GET_SIZE(_a);
+}
+
+static AlifIntT list_contains(AlifObject* _aa, AlifObject* _el) { // 594
+
+	for (AlifSizeT i = 0; ; i++) {
+		AlifObject* item = listGet_itemRef((AlifListObject*)_aa, i);
+		if (item == nullptr) {
+			// out-of-bounds
 			return 0;
 		}
-		int cmp = alifObject_richCompareBool(item_, _el, ALIF_EQ);
-		ALIF_DECREF(item_);
+		AlifIntT cmp = alifObject_richCompareBool(item, _el, ALIF_EQ);
+		ALIF_DECREF(item);
 		if (cmp != 0) {
 			return cmp;
 		}
@@ -293,313 +447,180 @@ static int list_contains(AlifListObject* _aa, AlifObject* _el) {
 	return 0;
 }
 
-static AlifObject* list_extend(AlifListObject* _self, AlifObject* _iterable)
-{
-	AlifObject* it_;
-	int64_t m_;
-	int64_t n_{};
-	int64_t i_;
-	AlifObject* (*IterNext)(AlifObject*);
-
-	if ((_iterable->type_ == &_alifListType_) || (_iterable->type_ == &_alifTupleType_) ||
-		(AlifObject*)_self == _iterable) {
-		AlifObject** src_, ** dest_;
-		_iterable = alifSequence_fast(_iterable, L"argument must be _iterable");
-		if (!_iterable)
-			return nullptr;
-		n_ = ALIFSEQUENCE_FAST_GETSIZE(_iterable);
-		if (n_ == 0) {
-			return ALIF_NONE;
-		}
-		m_ = ALIF_SIZE(_self);
-		if (_self->items_ == nullptr) {
-			if (list_preallocate_exact(_self, n_) < 0) {
-				return nullptr;
-			}
-			ALIFSET_SIZE(_self, n_);
-		}
-		else if (list_resize(_self, m_ + n_) < 0) {
-			return nullptr;
-		}
-		src_ = ALIFSEQUENCE_FAST_ITEMS(_iterable);
-		dest_ = _self->items_ + m_;
-		for (i_ = 0; i_ < n_; i_++) {
-			AlifObject* o = src_[i_];
-			dest_[i_] = o;
-		}
-		return ALIF_NONE;
-	}
-
-	it_ = alifObject_getIter(_iterable);
-	if (it_ == nullptr)
-		return nullptr;
-	IterNext = *(it_)->type_->iterNext;
-
-	//n_ = AlifObj_LengthHint(_iterable, 8);
-	if (n_ < 0) {
+static AlifObject* list_item(AlifObject* _aa, AlifSizeT _i) { // 613
+	AlifListObject* a = (AlifListObject*)_aa;
+	if (!valid_index(_i, ALIFLIST_GET_SIZE(a))) {
+		//alifErr_setObject(_alifExcIndexError_, &ALIF_STR(ListErr));
 		return nullptr;
 	}
-	m_ = ALIF_SIZE(_self);
-	if (m_ > LLONG_MAX - n_) {
-
-	}
-	else if (_self->items_ == nullptr) {
-		if (n_ && list_preallocate_exact(_self, n_) < 0)
-			goto error;
-	}
-	else {
-
-		if (list_resize(_self, m_ + n_) < 0)
-			goto error;
-		(_self, m_);
-	}
-
-	for (;;) {
-		AlifObject* item_ = IterNext(it_);
-		if (item_ == nullptr)
-		{
-			break;
-		}
-		if (ALIF_SIZE(_self) < _self->allocated_) {
-			int64_t len_ = ALIF_SIZE(_self);
-			ALIFSET_SIZE(_self, len_ + 1);
-			alifList_setItem((AlifObject*)_self, len_, (AlifObject*)item_);
-		}
-		else {
-			if (alifSubList_appendTakeRef(_self, item_) < 0)
-				goto error;
-		}
-	}
-
-	if (ALIF_SIZE(_self) < _self->allocated_) {
-		if (list_resize(_self, ALIF_SIZE(_self)) < 0)
-			goto error;
-	}
-
-
-	return ALIF_NONE;
-
-error:
-	return nullptr;
-}
-
-AlifObject* alifList_extend(AlifListObject* _self, AlifObject* _iterable)
-{
-	return list_extend(_self, _iterable);
-}
-
-static AlifObject* list_item(AlifObject* _aa, int64_t _i)
-{
-	AlifListObject* a_ = (AlifListObject*)_aa;
-	if (!valid_index(_i, ALIFLIST_GET_SIZE(a_))) {
+	AlifObject* item{};
+	item = listGet_itemRef(a, _i);
+	if (item == nullptr) {
+		//alifErr_setObject(_alifExcIndexError_, &ALIF_STR(ListErr));
 		return nullptr;
 	}
-	AlifObject* item_;
-	//ALIF_BEGIN_CRITICAL_SECTION(_a);
-#ifdef ALIF_GIL_DISABLED
-	if (!alifSub_IsOwnedByCurrentThread((AlifObject*)_a) && !alifSubObject_GC_IS_SHARED(_a)) {
-		alifSubObject_GC_SET_SHARED(_a);
-	}
-#endif
-	item_ = ALIF_NEWREF(a_->items_[_i]);
-	//ALIF_END_CRITICAL_SECTION();
-	return item_;
+	return item;
 }
 
-static AlifObject* listSlice_lockHeld(AlifListObject* _a, int64_t _iLow, int64_t _iHigh)
-{
-	AlifListObject* np_;
-	AlifObject** src_, ** dest_;
-	int64_t i_, len_;
+
+static AlifObject* listSlice_lockHeld(AlifListObject* _a,
+	AlifSizeT _iLow, AlifSizeT _iHigh) { // 635
+	AlifListObject* np_{};
+	AlifObject** src_{}, ** dest{};
+	AlifSizeT i_{}, len_{};
 	len_ = _iHigh - _iLow;
 	if (len_ <= 0) {
-		return alifNew_list(0);
+		return alifList_new(0);
 	}
-	np_ = (AlifListObject*)list_new_prealloc(len_);
+	np_ = (AlifListObject*)list_newPrealloc(len_);
 	if (np_ == nullptr)
 		return nullptr;
 
-	src_ = _a->items_ + _iLow;
-	dest_ = np_->items_;
+	src_ = _a->item + _iLow;
+	dest = np_->item;
 	for (i_ = 0; i_ < len_; i_++) {
 		AlifObject* _v = src_[i_];
-		dest_[i_] = ALIF_NEWREF(_v);
+		dest[i_] = ALIF_NEWREF(_v);
 	}
-	ALIFSET_SIZE(np_, len_);
+	ALIF_SET_SIZE(np_, len_);
 	return (AlifObject*)np_;
 }
 
-AlifObject* alifList_getSlice(AlifObject* _a, int64_t _iLow, int64_t _iHigh)
-{
-	if (!(_a->type_ == &_alifListType_)) {
-		return nullptr;
+static AlifObject* listConcat_lockHeld(AlifListObject* _a, AlifListObject* _b) { // 685
+	AlifSizeT size{};
+	AlifSizeT i_{};
+	AlifObject** src_{}, ** dest{};
+	AlifListObject* np_{};
+	size = ALIF_SIZE(_a) + ALIF_SIZE(_b);
+	if (size == 0) {
+		return alifList_new(0);
 	}
-	AlifObject* ret_;
-	//ALIF_BEGIN_CRITICAL_SECTION(_a);
-	if (_iLow < 0) {
-		_iLow = 0;
-	}
-	else if (_iLow > ALIF_SIZE(_a)) {
-		_iLow = ALIF_SIZE(_a);
-	}
-	if (_iHigh < _iLow) {
-		_iHigh = _iLow;
-	}
-	else if (_iHigh > ALIF_SIZE(_a)) {
-		_iHigh = ALIF_SIZE(_a);
-	}
-	ret_ = listSlice_lockHeld((AlifListObject*)_a, _iLow, _iHigh);
-	//ALIF_END_CRITICAL_SECTION();
-	return ret_;
-}
-
-static AlifObject* listConcat_lockHeld(AlifListObject* _a, AlifListObject* _b)
-{
-	int64_t size_;
-	int64_t i_;
-	AlifObject** src_, ** dest_;
-	AlifListObject* np_;
-	size_ = ALIF_SIZE(_a) + ALIF_SIZE(_b);
-	if (size_ == 0) {
-		return alifNew_list(0);
-	}
-	np_ = (AlifListObject*)list_new_prealloc(size_);
+	np_ = (AlifListObject*)list_newPrealloc(size);
 	if (np_ == nullptr) {
 		return nullptr;
 	}
-	src_ = _a->items_;
-	dest_ = np_->items_;
+	src_ = _a->item;
+	dest = np_->item;
 	for (i_ = 0; i_ < ALIF_SIZE(_a); i_++) {
 		AlifObject* v_ = src_[i_];
-		dest_[i_] = ALIF_NEWREF(v_);
+		dest[i_] = ALIF_NEWREF(v_);
 	}
-	src_ = _b->items_;
-	dest_ = np_->items_ + ALIF_SIZE(_a);
+	src_ = _b->item;
+	dest = np_->item + ALIF_SIZE(_a);
 	for (i_ = 0; i_ < ALIF_SIZE(_b); i_++) {
 		AlifObject* v_ = src_[i_];
-		dest_[i_] = ALIF_NEWREF(v_);
+		dest[i_] = ALIF_NEWREF(v_);
 	}
-	ALIFSET_SIZE(np_, size_);
+	ALIF_SET_SIZE(np_, size);
 	return (AlifObject*)np_;
 }
 
-static AlifObject* list_concat(AlifObject* _aa, AlifObject* _bb)
-{
-	if (!(_bb->type_ == &_alifListType_)) {
+static AlifObject* list_concat(AlifObject* aa, AlifObject* bb) { // 716
+	if (!ALIFLIST_CHECK(bb)) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"can only concatenate list (not \"%.200s\") to list",
+		//	ALIF_TYPE(bb)->name);
 		return nullptr;
 	}
-	AlifListObject* a_ = (AlifListObject*)_aa;
-	AlifListObject* b_ = (AlifListObject*)_bb;
-	AlifObject* ret_;
-	//ALIF_BEGIN_CRITICAL_SECTION2(_a, _b);
-	ret_ = listConcat_lockHeld(a_, b_);
-	//ALIF_END_CRITICAL_SECTION2();
-	return ret_;
+	AlifListObject* a = (AlifListObject*)aa;
+	AlifListObject* b = (AlifListObject*)bb;
+	AlifObject* ret{};
+	ALIF_BEGIN_CRITICAL_SECTION2(a, b);
+	ret = listConcat_lockHeld(a, b);
+	ALIF_END_CRITICAL_SECTION2();
+	return ret;
 }
 
-static AlifObject* listRepeat_lockHeld(AlifListObject* _a, int64_t _n)
-{
-	const int64_t inputSize = ALIF_SIZE(_a);
-	if (inputSize == 0 || _n <= 0)
-		return alifNew_list(0);
+static AlifObject* listRepeat_lockHeld(AlifListObject* _a, AlifSizeT _n) { // 735
+	const AlifSizeT inputSize = ALIF_SIZE(_a);
+	if (inputSize == 0 or _n <= 0)
+		return alifList_new(0);
 
-	if (inputSize > LLONG_MAX / _n)
-		return nullptr;
-	int64_t outputSize = inputSize * _n;
+	//if (inputSize > ALIF_SIZET_MAX / _n)
+		//return alifErr_noMemory();
+	AlifSizeT outputSize = inputSize * _n;
 
-	AlifListObject* np_ = (AlifListObject*)list_new_prealloc(outputSize);
+	AlifListObject* np_ = (AlifListObject*)list_newPrealloc(outputSize);
 	if (np_ == nullptr)
 		return nullptr;
 
-	AlifObject** dest_ = np_->items_;
+	AlifObject** dest = np_->item;
 	if (inputSize == 1) {
-		AlifObject* elem_ = _a->items_[0];
-		ALIFSUB_REFCNTADD(elem_, _n);
-		AlifObject** destEnd = dest_ + outputSize;
-		while (dest_ < destEnd) {
-			*dest_++ = elem_;
+		AlifObject* elem = _a->item[0];
+		ALIF_REFCNTADD(elem, _n);
+		AlifObject** destEnd = dest + outputSize;
+		while (dest < destEnd) {
+			*dest++ = elem;
 		}
 	}
 	else {
-		AlifObject** src_ = _a->items_;
+		AlifObject** src_ = _a->item;
 		AlifObject** srcEnd = src_ + inputSize;
 		while (src_ < srcEnd) {
-			ALIFSUB_REFCNTADD(*src_, _n);
-			*dest_++ = *src_++;
+			ALIF_REFCNTADD(*src_, _n);
+			*dest++ = *src_++;
 		}
 
-		alifSub_memoryRepeat((char*)np_->items_, sizeof(AlifObject*) * outputSize,
+		alif_memoryRepeat((char*)np_->item, sizeof(AlifObject*) * outputSize,
 			sizeof(AlifObject*) * inputSize);
 	}
 
-	ALIFSET_SIZE(np_, outputSize);
+	ALIF_SET_SIZE(np_, outputSize);
 	return (AlifObject*)np_;
 }
 
-static AlifObject* list_repeat(AlifObject* _aa, int64_t _n)
-{
-	AlifObject* ret_;
-	AlifListObject* a_ = (AlifListObject*)_aa;
-	//ALIF_BEGIN_CRITICAL_SECTION(_a);
-	ret_ = listRepeat_lockHeld(a_, _n);
-	//ALIF_END_CRITICAL_SECTION();
-	return ret_;
+static AlifObject* list_repeat(AlifObject* _aa, AlifSizeT _n) { // 775
+	AlifObject* ret{};
+	AlifListObject* a = (AlifListObject*)_aa;
+	ALIF_BEGIN_CRITICAL_SECTION(a);
+	ret = listRepeat_lockHeld(a, _n);
+	ALIF_END_CRITICAL_SECTION();
+	return ret;
 }
 
-static void list_clear_impl(AlifListObject* _a, bool _isResize)
-{
-	AlifObject** items_ = _a->items_;
-	if (items_ == nullptr) {
+static void list_clearImpl(AlifListObject* _a, bool _isResize) { // 787
+	AlifObject** items = _a->item;
+	if (items == nullptr) {
 		return;
 	}
 
-	int64_t i_ = ALIF_SIZE(_a);
-	ALIFSET_SIZE(_a, 0);
-	_a->allocated_ = 0;
+	AlifSizeT i_ = ALIF_SIZE(_a);
+	ALIF_SET_SIZE(_a, 0);
+	alifAtomic_storePtrRelease(&_a->item, nullptr);
+	_a->allocated = 0;
 	while (--i_ >= 0) {
-		ALIF_XDECREF(items_[i_]);
+		ALIF_XDECREF(items[i_]);
 	}
-#ifdef ALIF_GIL_DISABLED
-	bool useQsbr = _isResize && alifSubObject_GC_IS_SHARED(_a);
-#else
-	bool useQsbr = false;
-#endif
-
+	bool useQsbr = _isResize and ALIFOBJECT_GC_IS_SHARED(_a);
+	free_listItems(items, useQsbr);
 }
 
-static void list_clear(AlifListObject* _a)
-{
-	list_clear_impl(_a, true);
+static void list_clear(AlifListObject* _a) { // 814
+	list_clearImpl(_a, true);
 }
 
-static int list_clear_slot(AlifObject* _self)
-{
-	list_clear_impl((AlifListObject*)_self, false);
-	return 0;
-}
-
-static int listAss_slice_lockHeld(AlifListObject* _a, int64_t _iLow, int64_t _iHigh, AlifObject* _v)
-{
-	AlifObject* recycleOnStack[8];
-	AlifObject** recycle_ = recycleOnStack; /* will allocate_ more if needed */
-	AlifObject** item_;
-	AlifObject** vItem = nullptr;
-	AlifObject* vAsSF = nullptr; /* ALIFSequence_Fast(_v) */
-	int64_t n_; /* # of elements in replacement list */
-	int64_t norig_; /* # of elements in list getting replaced */
-	int64_t d_; /* Change in size */
-	int64_t k_;
-	size_t s_;
-	int result_ = -1;            /* guilty until proved innocent */
+static AlifIntT listAssSlice_lockHeld(AlifListObject* _a, AlifSizeT _iLow,
+	AlifSizeT _iHigh, AlifObject* _v) { // 833 
+	AlifObject* recycleOnStack[8]{};
+	AlifObject** recycle = recycleOnStack; /* will allocate more if needed */
+	AlifObject** item{};
+	AlifObject** vitem = nullptr;
+	AlifObject* vAsSF = nullptr;	/* alifSequence_fast(_v) */
+	AlifSizeT n_{};					/* # of elements in replacement list */
+	AlifSizeT norig{};				/* # of elements in list getting replaced */
+	AlifSizeT d_{};					/* Change in size */
+	AlifSizeT k_{};
+	AlifUSizeT s_{};
+	AlifIntT result = -1;            /* guilty until proved innocent */
 #define b ((AlifListObject *)_v)
 	if (_v == nullptr)
 		n_ = 0;
 	else {
-		vAsSF = alifSequence_fast(_v, L"can only assign an iterable");
+		vAsSF = alifSequence_fast(_v, "can only assign an iterable");
 		if (vAsSF == nullptr)
 			goto Error;
-		n_ = ALIFSEQUENCE_FAST_GETSIZE(vAsSF);
-		vItem = ALIFSEQUENCE_FAST_ITEMS(vAsSF);
+		n_ = ALIFSEQUENCE_FAST_GET_SIZE(vAsSF);
+		vitem = ALIFSEQUENCE_FAST_ITEMS(vAsSF);
 	}
 	if (_iLow < 0)
 		_iLow = 0;
@@ -611,493 +632,670 @@ static int listAss_slice_lockHeld(AlifListObject* _a, int64_t _iLow, int64_t _iH
 	else if (_iHigh > ALIF_SIZE(_a))
 		_iHigh = ALIF_SIZE(_a);
 
-	norig_ = _iHigh - _iLow;
-	d_ = n_ - norig_;
+	norig = _iHigh - _iLow;
+	d_ = n_ - norig;
 	if (ALIF_SIZE(_a) + d_ == 0) {
 		ALIF_XDECREF(vAsSF);
 		list_clear(_a);
 		return 0;
 	}
-	item_ = _a->items_;
-	s_ = norig_ * sizeof(AlifObject*);
+	item = _a->item;
+	s_ = norig * sizeof(AlifObject*);
 	if (s_) {
 		if (s_ > sizeof(recycleOnStack)) {
-			recycle_ = (AlifObject**)alifMem_objAlloc(s_);
-			if (recycle_ == nullptr) {
+			recycle = (AlifObject**)alifMem_dataAlloc(s_);
+			if (recycle == nullptr) {
+				//alifErr_noMemory();
 				goto Error;
 			}
 		}
-		memcpy(recycle_, &item_[_iLow], s_);
+		memcpy(recycle, &item[_iLow], s_);
 	}
 
-	if (d_ < 0) { /* Delete -d_ items_ */
-		int64_t tail_;
-		tail_ = (ALIF_SIZE(_a) - _iHigh) * sizeof(AlifObject*);
-		memmove(&item_[_iHigh + d_], &item_[_iHigh], tail_);
+	if (d_ < 0) { /* Delete -d_ items */
+		AlifSizeT tail{};
+		tail = (ALIF_SIZE(_a) - _iHigh) * sizeof(AlifObject*);
+		memmove(&item[_iHigh + d_], &item[_iHigh], tail);
 		if (list_resize(_a, ALIF_SIZE(_a) + d_) < 0) {
-			memmove(&item_[_iHigh], &item_[_iHigh + d_], tail_);
-			memcpy(&item_[_iLow], recycle_, s_);
+			memmove(&item[_iHigh], &item[_iHigh + d_], tail);
+			memcpy(&item[_iLow], recycle, s_);
 			goto Error;
 		}
-		item_ = _a->items_;
+		item = _a->item;
 	}
-	else if (d_ > 0) { /* Insert d_ items_ */
+	else if (d_ > 0) { /* Insert d_ items */
 		k_ = ALIF_SIZE(_a);
 		if (list_resize(_a, k_ + d_) < 0)
 			goto Error;
-		item_ = _a->items_;
-		memmove(&item_[_iHigh + d_], &item_[_iHigh],
+		item = _a->item;
+		memmove(&item[_iHigh + d_], &item[_iHigh],
 			(k_ - _iHigh) * sizeof(AlifObject*));
 	}
 	for (k_ = 0; k_ < n_; k_++, _iLow++) {
-		AlifObject* w_ = vItem[k_];
-		item_[_iLow] = ALIF_XNEWREF(w_);
+		AlifObject* w_ = vitem[k_];
+		item[_iLow] = ALIF_XNEWREF(w_);
 	}
-	for (k_ = norig_ - 1; k_ >= 0; --k_)
-		ALIF_XDECREF(recycle_[k_]);
-	result_ = 0;
+	for (k_ = norig - 1; k_ >= 0; --k_)
+		ALIF_XDECREF(recycle[k_]);
+	result = 0;
 Error:
-	if (recycle_ != recycleOnStack)
-		alifMem_objFree(recycle_);
+	if (recycle != recycleOnStack)
+		alifMem_dataFree(recycle);
 	ALIF_XDECREF(vAsSF);
-	return result_;
+	return result;
 #undef b
 }
 
-static int list_ass_slice(AlifListObject* _a, int64_t _iLow, int64_t _iHigh, AlifObject* _v)
-{
-	int ret_;
+
+static AlifIntT list_assSlice(AlifListObject* _a, AlifSizeT _iLow,
+	AlifSizeT _iHigh, AlifObject* _v) { // 930
+	AlifIntT ret_{};
 	if (_a == (AlifListObject*)_v) {
-		//ALIF_BEGIN_CRITICAL_SECTION(_a);
-		int64_t n_ = ALIFLIST_GET_SIZE(_a);
+		ALIF_BEGIN_CRITICAL_SECTION(_a);
+		AlifSizeT n_ = ALIFLIST_GET_SIZE(_a);
 		AlifObject* copy = listSlice_lockHeld(_a, 0, n_);
 		if (copy == nullptr) {
 			return -1;
 		}
-		ret_ = listAss_slice_lockHeld(_a, _iLow, _iHigh, copy);
+		ret_ = listAssSlice_lockHeld(_a, _iLow, _iHigh, copy);
 		ALIF_DECREF(copy);
-		//ALIF_END_CRITICAL_SECTION();
+		ALIF_END_CRITICAL_SECTION();
 	}
-	else if (_v != nullptr && (_v->type_ == &_alifListType_)) {
-		//ALIF_BEGIN_CRITICAL_SECTION2(_a, _v);
-		ret_ = listAss_slice_lockHeld(_a, _iLow, _iHigh, _v);
-		//ALIF_END_CRITICAL_SECTION2();
+	else if (_v != nullptr and ALIFLIST_CHECKEXACT(_v)) {
+		ALIF_BEGIN_CRITICAL_SECTION2(_a, _v);
+		ret_ = listAssSlice_lockHeld(_a, _iLow, _iHigh, _v);
+		ALIF_END_CRITICAL_SECTION2();
 	}
 	else {
-		//ALIF_BEGIN_CRITICAL_SECTION(_a);
-		ret_ = listAss_slice_lockHeld(_a, _iLow, _iHigh, _v);
-		//ALIF_END_CRITICAL_SECTION();
+		ALIF_BEGIN_CRITICAL_SECTION(_a);
+		ret_ = listAssSlice_lockHeld(_a, _iLow, _iHigh, _v);
+		ALIF_END_CRITICAL_SECTION();
 	}
 	return ret_;
 }
 
-int alifList_setSlice(AlifObject* _a, int64_t _iLow, int64_t _iHigh, AlifObject* _v)
-{
-	if (!(_a->type_ == &_alifListType_)) {
+AlifIntT alifList_setSlice(AlifObject* _a, AlifSizeT _iLow,
+	AlifSizeT _iHigh, AlifObject* _v) { // 958
+	if (!ALIFLIST_CHECK(_a)) {
+		//ALIFERR_BADINTERNALCALL();
 		return -1;
 	}
-	return list_ass_slice((AlifListObject*)_a, _iLow, _iHigh, _v);
+	return list_assSlice((AlifListObject*)_a, _iLow, _iHigh, _v);
 }
 
-static int listAss_item_lockHeld(AlifListObject* a, int64_t i, AlifObject* v)
-{
-	if (!valid_index(i, ALIF_SIZE(a))) {
+
+static AlifIntT listInplaceRepeat_lockHeld(AlifListObject* _self, AlifSizeT _n) { // 968
+	AlifSizeT inputSize = ALIFLIST_GET_SIZE(_self);
+	if (inputSize == 0 or _n == 1) {
+		return 0;
+	}
+
+	if (_n < 1) {
+		list_clear(_self);
+		return 0;
+	}
+
+	if (inputSize > ALIF_SIZET_MAX / _n) {
+		//alifErr_noMemory();
 		return -1;
 	}
-	AlifObject* tmp = a->items_[i];
-	if (v == nullptr) {
-		int64_t size = ALIF_SIZE(a);
-		for (int64_t idx = i; idx < size - 1; idx++) {
-			a->items_[idx] = a->items_[idx + 1];
-		}
-		ALIFSET_SIZE(a, size - 1);
+	AlifSizeT outputSize = inputSize * _n;
+
+	if (list_resize(_self, outputSize) < 0) {
+		return -1;
+	}
+
+	AlifObject** items = _self->item;
+	for (AlifSizeT j = 0; j < inputSize; j++) {
+		ALIF_REFCNTADD(items[j], _n - 1);
+	}
+	alif_memoryRepeat((char*)items, sizeof(AlifObject*) * outputSize,
+		sizeof(AlifObject*) * inputSize);
+	return 0;
+}
+
+static AlifObject* list_inplaceRepeat(AlifObject* _self, AlifSizeT n) { // 999
+	AlifObject* ret{};
+	AlifListObject* self = (AlifListObject*)_self;
+	ALIF_BEGIN_CRITICAL_SECTION(self);
+	if (listInplaceRepeat_lockHeld(self, n) < 0) {
+		ret = nullptr;
 	}
 	else {
-		a->items_[i] = ALIF_NEWREF(v);
+		ret = ALIF_NEWREF(self);
+	}
+	ALIF_END_CRITICAL_SECTION();
+	return ret;
+}
+
+static AlifIntT listAssItem_lockHeld(AlifListObject* a, AlifSizeT i, AlifObject* v) { // 1015
+	if (!valid_index(i, ALIF_SIZE(a))) {
+		//alifErr_setString(_alifExcIndexError_,
+		//	"list assignment index out of range");
+		return -1;
+	}
+	AlifObject* tmp = a->item[i];
+	if (v == nullptr) {
+		AlifSizeT size = ALIF_SIZE(a);
+		for (AlifSizeT idx = i; idx < size - 1; idx++) {
+			alifAtomic_storePtrRelaxed(&a->item[idx], a->item[idx + 1]);
+		}
+		ALIF_SET_SIZE(a, size - 1);
+	}
+	else {
+		alifAtomic_storePtrRelease(&a->item[i], ALIF_NEWREF(v));
 	}
 	ALIF_DECREF(tmp);
 	return 0;
 }
 
-static int list_ass_item(AlifObject* _aa, int64_t _i, AlifObject* _v)
-{
-	int ret_;
-	AlifListObject* a_ = (AlifListObject*)_aa;
-	//ALIF_BEGIN_CRITICAL_SECTION(a);
-	ret_ = listAss_item_lockHeld(a_, _i, _v);
-	//ALIF_END_CRITICAL_SECTION();
-	return ret_;
+static AlifIntT list_assItem(AlifObject* _aa, AlifSizeT _i, AlifObject* _v) { // 1038
+	AlifIntT ret{};
+	AlifListObject* a = (AlifListObject*)_aa;
+	ALIF_BEGIN_CRITICAL_SECTION(a);
+	ret = listAssItem_lockHeld(a, _i, _v);
+	ALIF_END_CRITICAL_SECTION();
+	return ret;
 }
 
-static AlifObject* list_insert_impl(AlifListObject* _self, int64_t index, AlifObject* object)
-{
-	if (ins1(_self, index, object) == 0)
+static AlifObject* list_insertImpl(AlifListObject* _self,
+	AlifSizeT _index, AlifObject* _object) { // 1060
+	if (ins1(_self, _index, _object) == 0) {
 		return ALIF_NONE;
+	}
 	return nullptr;
 }
 
-static AlifObject* list_append(AlifListObject* _self, AlifObject* _object)
-{
-	if (alifSubList_appendTakeRef(_self, (_object)) < 0) {
+static AlifObject* list_appendImpl(AlifListObject* _self, AlifObject* _object) { // 1109
+	if (alifList_appendTakeRef(_self, ALIF_NEWREF(_object)) < 0) {
 		return nullptr;
 	}
 	return ALIF_NONE;
 }
 
-//static AlifObject* list_pop_impl(AlifListObject* _self, int64_t index)
-//{
-//    AlifObject* _v;
-//    int status;
-//
-//    if (ALIF_SIZE(_self) == 0) {
-//        return nullptr;
-//    }
-//    if (index < 0)
-//        index += ALIF_SIZE(_self);
-//    if (!valid_index(index, ALIF_SIZE(_self))) {
-//        return nullptr;
-//    }
-//
-//    AlifObject** items_ = _self->items_;
-//    _v = items_[index];
-//    const int64_t size_after_pop = ALIF_SIZE(_self) - 1;
-//    if (size_after_pop == 0) {
-//        status = list_clear_slot(_self);
-//    }
-//    else {
-//        if ((size_after_pop - index) > 0) {
-//            memmove(&items_[index], &items_[index + 1], (size_after_pop - index) * sizeof(AlifObject*));
-//        }
-//        status = list_resize(_self, size_after_pop);
-//    }
-//    if (status >= 0) {
-//        return _v; 
-//    }
-//    else {
-//        memmove(&items_[index + 1], &items_[index], (size_after_pop - index) * sizeof(AlifObject*));
-//        items_[index] = _v;
-//        return nullptr;
-//    }
-//}
-//
-//static AlifObject* list_pop(AlifListObject* _self, AlifObject* const* args, int64_t nargs)
-//{
-//    AlifObject* return_value = nullptr;
-//    int64_t index = -1;
-//
-//    if (!_alifArg_checkPositional(L"pop", nargs, 0, 1)) {
-//        goto exit;
-//    }
-//    if (nargs < 1) {
-//        goto skip_optional;
-//    }
-//    {
-//        int64_t ival = -1;
-//        AlifObject* iobj = args[0];
-//        if (iobj != nullptr) {
-//            ival = alifInteger_asLongLong(iobj);
-//        }
-//
-//        index = ival;
-//    }
-//skip_optional:
-//    return_value = list_pop_impl(_self, index);
-//
-//exit:
-//    return return_value;
-//}
-
-static AlifObject* list_insert(AlifListObject* _self, AlifObject* const* _args, int64_t _nArgs)
-{
-	AlifObject* returnValue = nullptr;
-	int64_t index_;
-	AlifObject* object_;
-
-	if (!_alifArg_checkPositional(L"insert", _nArgs, 2, 2)) {
-		goto exit;
+static AlifIntT list_extendFast(AlifListObject* _self, AlifObject* _iterable) { // 1120
+	AlifSizeT n_ = ALIFSEQUENCE_FAST_GET_SIZE(_iterable);
+	if (n_ == 0) {
+		return 0;
 	}
-	{
-		int64_t iVal = -1;
-		AlifObject* iObj = _args[0];
-		if (iObj != nullptr) {
-			iVal = alifInteger_asLongLong(iObj);
+
+	AlifSizeT m_ = ALIF_SIZE(_self);
+	if (_self->item == nullptr) {
+		if (list_preallocateExact(_self, n_) < 0) {
+			return -1;
 		}
-		index_ = iVal;
+		ALIF_SET_SIZE(_self, n_);
 	}
-	object_ = _args[1];
-	returnValue = list_insert_impl(_self, index_, object_);
-
-exit:
-	return returnValue;
+	else if (list_resize(_self, m_ + n_) < 0) {
+		return -1;
+	}
+	AlifObject** src_ = ALIFSEQUENCE_FAST_ITEMS(_iterable);
+	AlifObject** dest = _self->item + m_;
+	for (AlifSizeT i_ = 0; i_ < n_; i_++) {
+		AlifObject* o_ = src_[i_];
+		alifAtomic_storePtrRelaxed(&dest[i_], ALIF_NEWREF(o_));
+	}
+	return 0;
 }
 
-int list_setSlice(AlifObject* _a, int64_t _iLow, int64_t _iHigh, AlifObject* _v)
-{
-	return list_ass_slice((AlifListObject*)_a, _iLow, _iHigh, _v);
+
+
+static AlifIntT listExtendIter_lockHeld(AlifListObject* _self, AlifObject* _iterable) { // 1157
+	AlifObject* it = alifObject_getIter(_iterable);
+	if (it == nullptr) {
+		return -1;
+	}
+	AlifObject* (*iternext)(AlifObject*) = *ALIF_TYPE(it)->iterNext;
+
+	/* Guess a result list size. */
+	AlifSizeT n = alifObject_lengthHint(_iterable, 8);
+	if (n < 0) {
+		ALIF_DECREF(it);
+		return -1;
+	}
+
+	AlifSizeT m = ALIF_SIZE(_self);
+	if (m > ALIF_SIZET_MAX - n) {
+		/* m + n overflowed; on the chance that n lied, and there really
+		 * is enough room, ignore it.  If n was telling the truth, we'll
+		 * eventually run out of memory during the loop.
+		 */
+	}
+	else if (_self->item == nullptr) {
+		if (n and list_preallocateExact(_self, n) < 0)
+			goto error;
+	}
+	else {
+		/* Make room. */
+		if (list_resize(_self, m + n) < 0) {
+			goto error;
+		}
+
+		/* Make the list sane again. */
+		ALIF_SET_SIZE(_self, m);
+	}
+
+	/* Run iterator to exhaustion. */
+	for (;;) {
+		AlifObject* item = iternext(it);
+		if (item == nullptr) {
+			//if (alifErr_occurred()) {
+			//	if (alifErr_exceptionMatches(_alifExcStopIteration_))
+			//		alifErr_clear();
+			//	else
+			//		goto error;
+			//}
+			break;
+		}
+
+		if (ALIF_SIZE(_self) < _self->allocated) {
+			AlifSizeT len = ALIF_SIZE(_self);
+			alifAtomic_storePtrRelease(&_self->item[len], item); //* alif
+			ALIF_SET_SIZE(_self, len + 1);
+		}
+		else {
+			if (alifList_appendTakeRef(_self, item) < 0)
+				goto error;
+		}
+	}
+
+	/* Cut back result list if initial guess was too large. */
+	if (ALIF_SIZE(_self) < _self->allocated) {
+		if (list_resize(_self, ALIF_SIZE(_self)) < 0)
+			goto error;
+	}
+
+	ALIF_DECREF(it);
+	return 0;
+
+error:
+	ALIF_DECREF(it);
+	return -1;
 }
 
-static void reverse_slice(AlifObject** lo, AlifObject** hi)
-{
 
-	--hi;
-	while (lo < hi) {
-		AlifObject* t_ = *lo;
-		*lo = *hi;
-		*hi = t_;
-		++lo;
-		--hi;
+static AlifIntT listExtend_lockHeld(AlifListObject* _self, AlifObject* _iterable) { // 1233
+	AlifObject* seq_ = alifSequence_fast(_iterable, "argument must be iterable");
+	if (!seq_) {
+		return -1;
+	}
+
+	AlifIntT res_ = list_extendFast(_self, seq_);
+	ALIF_DECREF(seq_);
+	return res_;
+}
+
+static AlifIntT listExtend_set(AlifListObject* _self, AlifSetObject* _other) { // 1245
+	AlifSizeT m_ = ALIF_SIZE(_self);
+	AlifSizeT n_ = ALIFSET_GET_SIZE(_other);
+	if (list_resize(_self, m_ + n_) < 0) {
+		return -1;
+	}
+	/* populate the end of self with iterable's items */
+	AlifSizeT setpos = 0;
+	AlifHashT hash{};
+	AlifObject* key{};
+	AlifObject** dest = _self->item + m_;
+	while (_alifSet_nextEntryRef((AlifObject*)_other, &setpos, &key, &hash)) {
+		alifAtomic_storePtrRelease(&*dest, key);
+		dest++;
+	}
+	ALIF_SET_SIZE(_self, m_ + n_);
+	return 0;
+}
+
+static AlifIntT listExtend_dict(AlifListObject* _self, AlifDictObject* _dict, AlifIntT _whichItem) { // 1267
+	AlifSizeT m_ = ALIF_SIZE(_self);
+	AlifSizeT n_ = ALIFDICT_GET_SIZE(_dict);
+	if (list_resize(_self, m_ + n_) < 0) {
+		return -1;
+	}
+
+	AlifObject** dest = _self->item + m_;
+	AlifSizeT pos_ = 0;
+	AlifObject* keyValue[2]{};
+	while (_alifDict_next((AlifObject*)_dict, &pos_, &keyValue[0], &keyValue[1], nullptr)) {
+		AlifObject* obj = keyValue[_whichItem];
+		ALIF_INCREF(obj);
+		alifAtomic_storePtrRelaxed(&*dest, obj);
+		dest++;
+	}
+
+	ALIF_SET_SIZE(_self, m_ + n_);
+	return 0;
+}
+
+static AlifIntT listExtend_dictItems(AlifListObject* _self, AlifDictObject* _dict) { // 1291
+	AlifSizeT m_ = ALIF_SIZE(_self);
+	AlifSizeT n_ = ALIFDICT_GET_SIZE(_dict);
+	if (list_resize(_self, m_ + n_) < 0) {
+		return -1;
+	}
+
+	AlifObject** dest = _self->item + m_;
+	AlifSizeT pos_ = 0;
+	AlifSizeT i_ = 0;
+	AlifObject* key_{}, * value{};
+	while (_alifDict_next((AlifObject*)_dict, &pos_, &key_, &value, nullptr)) {
+		AlifObject* item = alifTuple_pack(2, key_, value);
+		if (item == nullptr) {
+			ALIF_SET_SIZE(_self, m_ + i_);
+			return -1;
+		}
+		alifAtomic_storePtrRelaxed(&*dest, item);
+		dest++;
+		i_++;
+	}
+
+	ALIF_SET_SIZE(_self, m_ + n_);
+	return 0;
+}
+
+
+static AlifIntT _list_extend(AlifListObject* _self, AlifObject* _iterable) { // 1318
+	// Special case:
+	// lists and tuples which can use alifSequence_fast ops
+	AlifIntT res = -1;
+	if ((AlifObject*)_self == _iterable) {
+		ALIF_BEGIN_CRITICAL_SECTION(_self);
+		res = listInplaceRepeat_lockHeld(_self, 2);
+		ALIF_END_CRITICAL_SECTION();
+	}
+	else if (ALIFLIST_CHECKEXACT(_iterable)) {
+		ALIF_BEGIN_CRITICAL_SECTION2(_self, _iterable);
+		res = listExtend_lockHeld(_self, _iterable);
+		ALIF_END_CRITICAL_SECTION2();
+	}
+	else if (ALIFTUPLE_CHECKEXACT(_iterable)) {
+		ALIF_BEGIN_CRITICAL_SECTION(_self);
+		res = listExtend_lockHeld(_self, _iterable);
+		ALIF_END_CRITICAL_SECTION();
+	}
+	else if (ALIFANYSET_CHECKEXACT(_iterable)) {
+		ALIF_BEGIN_CRITICAL_SECTION2(_self, _iterable);
+		res = listExtend_set(_self, (AlifSetObject*)_iterable);
+		ALIF_END_CRITICAL_SECTION2();
+	}
+	else if (ALIFDICT_CHECKEXACT(_iterable)) {
+		ALIF_BEGIN_CRITICAL_SECTION2(_self, _iterable);
+		res = listExtend_dict(_self, (AlifDictObject*)_iterable, 0 /*keys*/);
+		ALIF_END_CRITICAL_SECTION2();
+	}
+	else if (ALIF_IS_TYPE(_iterable, &_alifDictKeysType_)) {
+		AlifDictObject* dict = ((AlifDictViewObject*)_iterable)->dict;
+		ALIF_BEGIN_CRITICAL_SECTION2(_self, dict);
+		res = listExtend_dict(_self, dict, 0 /*keys*/);
+		ALIF_END_CRITICAL_SECTION2();
+	}
+	else if (ALIF_IS_TYPE(_iterable, &_alifDictValuesType_)) {
+		AlifDictObject* dict = ((AlifDictViewObject*)_iterable)->dict;
+		ALIF_BEGIN_CRITICAL_SECTION2(_self, dict);
+		res = listExtend_dict(_self, dict, 1 /*values*/);
+		ALIF_END_CRITICAL_SECTION2();
+	}
+	else if (ALIF_IS_TYPE(_iterable, &_alifDictItemsType_)) {
+		AlifDictObject* dict = ((AlifDictViewObject*)_iterable)->dict;
+		ALIF_BEGIN_CRITICAL_SECTION2(_self, dict);
+		res = listExtend_dictItems(_self, dict);
+		ALIF_END_CRITICAL_SECTION2();
+	}
+	else {
+		ALIF_BEGIN_CRITICAL_SECTION(_self);
+		res = listExtendIter_lockHeld(_self, _iterable);
+		ALIF_END_CRITICAL_SECTION();
+	}
+	return res;
+}
+
+static AlifObject* list_extend(AlifListObject* _self, AlifObject* _iterable) { // 1384
+	if (_list_extend(_self, _iterable) < 0) {
+		return nullptr;
+	}
+	return ALIF_NONE; //* alif
+}
+
+AlifObject* _alifList_extend(AlifListObject* _self, AlifObject* _iterable) { // 1394
+	return list_extend(_self, _iterable);
+}
+
+static AlifObject* list_inplaceConcat(AlifObject* _self, AlifObject* other) { // 1423
+	AlifListObject* self = (AlifListObject*)_self;
+	if (_list_extend(self, other) < 0) {
+		return nullptr;
+	}
+	return ALIF_NEWREF(self);
+}
+
+static void reverse_slice(AlifObject** _lo, AlifObject** _hi) { // 1491
+	--_hi;
+	while (_lo < _hi) {
+		AlifObject* t_ = *_lo;
+		*_lo = *_hi;
+		*_hi = t_;
+		++_lo;
+		--_hi;
 	}
 }
 
-class SortSlice {
+class SortSlice { // 1518
 public:
-	AlifObject** keys_;
-	AlifObject** values_;
+	AlifObject** keys{};
+	AlifObject** values{};
 };
 
-static __inline void
-#ifdef _WINDOWS64
-__fastcall
-#endif
-sortSlice_copy(SortSlice* _s1, int64_t _i, SortSlice* _s2, int64_t _j)
-{
-	_s1->keys_[_i] = _s2->keys_[_j];
-	if (_s1->values_ != nullptr)
-		_s1->values_[_i] = _s2->values_[_j];
+
+ALIF_LOCAL_INLINE(void) sortSlice_copy(SortSlice* _s1, AlifSizeT _i, SortSlice* _s2, AlifSizeT _j) { // 1524
+	_s1->keys[_i] = _s2->keys[_j];
+	if (_s1->values != nullptr)
+		_s1->values[_i] = _s2->values[_j];
 }
 
-static __inline void
-#ifdef _WINDOWS64
-__fastcall
-#endif
-sortSlice_copy_incr(SortSlice* _dst, SortSlice* _src)
-{
-	*_dst->keys_++ = *_src->keys_++;
-	if (_dst->values_ != nullptr)
-		*_dst->values_++ = *_src->values_++;
+ALIF_LOCAL_INLINE(void) sortSlice_copyIncr(SortSlice* _dst, SortSlice* _src) { // 1532
+	*_dst->keys++ = *_src->keys++;
+	if (_dst->values != nullptr)
+		*_dst->values++ = *_src->values++;
 }
 
-static __inline void
-#ifdef _WINDOWS64
-__fastcall
-#endif
-sortSlice_copy_decr(SortSlice* _dst, SortSlice* _src)
-{
-	*_dst->keys_-- = *_src->keys_--;
-	if (_dst->values_ != nullptr)
-		*_dst->values_-- = *_src->values_--;
+ALIF_LOCAL_INLINE(void) sortSlice_copyDecr(SortSlice* _dst, SortSlice* _src) { // 1540
+	*_dst->keys-- = *_src->keys--;
+	if (_dst->values != nullptr)
+		*_dst->values-- = *_src->values--;
 }
 
-static __inline void
-#ifdef _WINDOWS64
-__fastcall
-#endif
-sortSlice_memcpy(SortSlice* _s1, int64_t _i, SortSlice* _s2, int64_t _j, int64_t _n)
-{
-	memcpy(&_s1->keys_[_i], &_s2->keys_[_j], sizeof(AlifObject*) * _n);
-	if (_s1->values_ != nullptr)
-		memcpy(&_s1->values_[_i], &_s2->values_[_j], sizeof(AlifObject*) * _n);
+ALIF_LOCAL_INLINE(void) sortSlice_memcpy(SortSlice* _s1, AlifSizeT _i, SortSlice* _s2, AlifSizeT _j,
+	AlifSizeT _n) { // 1549
+	memcpy(&_s1->keys[_i], &_s2->keys[_j], sizeof(AlifObject*) * _n);
+	if (_s1->values != nullptr)
+		memcpy(&_s1->values[_i], &_s2->values[_j], sizeof(AlifObject*) * _n);
 }
 
-static __inline void
-#ifdef _WINDOWS64
-__fastcall
-#endif
-sortSlice_memmove(SortSlice* _s1, int64_t _i, SortSlice* _s2, int64_t _j,
-	int64_t _n)
-{
-	memmove(&_s1->keys_[_i], &_s2->keys_[_j], sizeof(AlifObject*) * _n);
-	if (_s1->values_ != nullptr)
-		memmove(&_s1->values_[_i], &_s2->values_[_j], sizeof(AlifObject*) * _n);
+ALIF_LOCAL_INLINE(void) sortSlice_memMove(SortSlice* _s1, AlifSizeT _i, SortSlice* _s2, AlifSizeT _j,
+	AlifSizeT _n) { //  1558
+	memmove(&_s1->keys[_i], &_s2->keys[_j], sizeof(AlifObject*) * _n);
+	if (_s1->values != nullptr)
+		memmove(&_s1->values[_i], &_s2->values[_j], sizeof(AlifObject*) * _n);
 }
 
-static __inline void
-#ifdef _WINDOWS64
-__fastcall
-#endif
-sortSlice_advance(SortSlice* _slice, int64_t _n)
-{
-	_slice->keys_ += _n;
-	if (_slice->values_ != nullptr)
-		_slice->values_ += _n;
+ALIF_LOCAL_INLINE(void) sortSlice_advance(SortSlice* _slice, AlifSizeT _n) { // 1566
+	_slice->keys += _n;
+	if (_slice->values != nullptr)
+		_slice->values += _n;
 }
 
-#define ISLT(_X, _Y) (*(_ms->KeyCompare))(_X, _Y, _ms)
 
-#define IFLT(_X, _Y) if ((k_ = ISLT(_X, _Y)) < 0) goto fail; if (k_)
+#define ISLT(_x, _y) (*(_ms->KeyCompare))(_x, _y, _ms) // 1579
 
-#define MAX_MERGE_PENDING (sizeof(size_t) * 8)
 
-#define MERGESTATE_TEMP_SIZE 256
+#define IFLT(_x, _y) if ((k_ = ISLT(_x, _y)) < 0) goto fail;  \
+           if (k_) // 1585
 
-#define MAX_MINRUN 64
+#define MAX_MERGE_PENDING (SIZEOF_SIZE_T * 8) // 1593
+#define MIN_GALLOP 7 // 1598
+#define MERGESTATE_TEMP_SIZE 256 // 1601
 
-#define MIN_GALLOP 7
+#define MAX_MINRUN 64 // 1607
 
-class SSlice {
+class SSlice { // 1615
 public:
-	SortSlice base_;
-	int64_t len_;   /* length of run */
-	int power_; /* node "level" for powersort merge strategy */
+	SortSlice base{};
+	AlifSizeT len_{};   /* length of run */
+	AlifIntT power{}; /* node "level" for powersort merge strategy */
 };
 
-typedef class SMergeState MergeState;
-struct SMergeState {
+typedef class SMergeState MergeState; // 1621
+class SMergeState { // 1622
 public:
-	int64_t minGallop;
+	AlifSizeT minGallop{};
 
-	int64_t listLen;
-	AlifObject** baseKeys;
+	AlifSizeT listLen{};
+	AlifObject** baseKeys{};
+	SortSlice a_{};
+	AlifSizeT alloced{};
 
-	SortSlice a_;
-	int64_t alloced_;
+	AlifIntT n_{};
+	SSlice pending[MAX_MERGE_PENDING]{};
 
-	int n_;
-	class SSlice pending_[MAX_MERGE_PENDING];
+	AlifObject* temparray[MERGESTATE_TEMP_SIZE]{};
 
-	AlifObject* tempArray[MERGESTATE_TEMP_SIZE];
+	AlifIntT(*KeyCompare)(AlifObject*, AlifObject*, MergeState*);
 
-	int (*KeyCompare)(AlifObject*, AlifObject*, MergeState*);
+	AlifObject* (*KeyRichcompare)(AlifObject*, AlifObject*, AlifIntT);
 
-	AlifObject* (*KeyRichcompare)(AlifObject*, AlifObject*, int);
-
-	int (*TupleElemCompare)(AlifObject*, AlifObject*, MergeState*);
+	AlifIntT(*TupleElemCompare)(AlifObject*, AlifObject*, MergeState*);
 };
 
-static int binarysort(MergeState* _ms, const SortSlice* _ss, int64_t _n, int64_t _ok)
-{
-	int64_t k_;
-	AlifObject** const a_ = _ss->keys_;
-	AlifObject** const v_ = _ss->values_;
+static AlifIntT binarySort(MergeState* _ms, const SortSlice* _ss, AlifSizeT _n, AlifSizeT _ok) { // 1681
+	AlifSizeT k_{};
+	AlifObject** const a_ = _ss->keys;
+	AlifObject** const v_ = _ss->values;
 	const bool hasValues = v_ != nullptr;
-	AlifObject* pivot_;
-	int64_t m_;
+	AlifObject* pivot{};
+	AlifSizeT m_{};
 
 	if (!_ok)
 		++_ok;
 
 #if 0 
 	AlifObject* vPivot = nullptr;
-	for (; _ok < _n; ++_ok) {
-		pivot_ = a_[_ok];
+	for (; ok < n; ++ok) {
+		pivot = a[ok];
 		if (hasValues)
-			vPivot = v_[_ok];
-		for (m_ = _ok - 1; m_ >= 0; --m_) {
-			k_ = ISLT(pivot_, a_[m_]);
-			if (k_ < 0) {
-				a_[m_ + 1] = pivot_;
+			vPivot = v[ok];
+		for (M = ok - 1; M >= 0; --M) {
+			k = ISLT(pivot, a[M]);
+			if (k < 0) {
+				a[M + 1] = pivot;
 				if (hasValues)
-					v_[m_ + 1] = vPivot;
+					v[M + 1] = vPivot;
 				goto fail;
 			}
-			else if (k_) {
-				a_[m_ + 1] = a_[m_];
+			else if (k) {
+				a[M + 1] = a[M];
 				if (hasValues)
-					v_[m_ + 1] = v_[m_];
+					v[M + 1] = v[M];
 			}
 			else
 				break;
 		}
-		a_[m_ + 1] = pivot_;
+		a[M + 1] = pivot;
 		if (hasValues)
-			v_[m_ + 1] = vPivot;
+			v[M + 1] = vPivot;
 	}
-#else 
-	int64_t L_, R_;
+#else // binary insertion sort
+	AlifSizeT l_{}, r_{};
 	for (; _ok < _n; ++_ok) {
-		L_ = 0;
-		R_ = _ok;
-		pivot_ = a_[_ok];
-
+		l_ = 0;
+		r_ = _ok;
+		pivot = a_[_ok];
 		do {
 
-			m_ = (L_ + R_) >> 1;
-#if 1
-			IFLT(pivot_, a_[m_])
-				R_ = m_;
+			m_ = (l_ + r_) >> 1;
+#if 1 
+			IFLT(pivot, a_[m_])
+				r_ = m_;
 	else
-		L_ = m_ + 1;
+		l_ = m_ + 1;
 #else
-
-			k_ = ISLT(pivot_, a_[m_]);
-			if (k_ < 0)
+			k = ISLT(pivot, a[M]);
+			if (k < 0)
 				goto fail;
-			int64_t mP1 = m_ + 1;
-			R_ = k_ ? m_ : R_;
-			L_ = k_ ? L : mP1;
+			AlifSizeT Mp1 = M + 1;
+			R = k ? M : R;
+			L = k ? L : Mp1;
 #endif
-		} while (L_ < R_);
-		for (m_ = _ok; m_ > L_; --m_)
+		} while (l_ < r_);
+		for (m_ = _ok; m_ > l_; --m_)
 			a_[m_] = a_[m_ - 1];
-		a_[L_] = pivot_;
+		a_[l_] = pivot;
 		if (hasValues) {
-			pivot_ = v_[_ok];
-			for (m_ = _ok; m_ > L_; --m_)
+			pivot = v_[_ok];
+			for (m_ = _ok; m_ > l_; --m_)
 				v_[m_] = v_[m_ - 1];
-			v_[L_] = pivot_;
+			v_[l_] = pivot;
 		}
 	}
-#endif 
+#endif
 	return 0;
 
 fail:
 	return -1;
 }
 
-static void sortSlice_reverse(SortSlice* _s, int64_t _n)
-{
-	reverse_slice(_s->keys_, &_s->keys_[_n]);
-	if (_s->values_ != nullptr)
-		reverse_slice(_s->values_, &_s->values_[_n]);
+static void sortSlice_reverse(SortSlice* _s, AlifSizeT _n) { // 1803
+	reverse_slice(_s->keys, &_s->keys[_n]);
+	if (_s->values != nullptr)
+		reverse_slice(_s->values, &_s->values[_n]);
 }
 
-static int64_t count_run(MergeState* _ms, SortSlice* _sLo, int64_t _nRemaining)
-{
-	int64_t k_;
-	int64_t n_;
-	AlifObject** const lo_ = _sLo->keys_;
+static AlifSizeT count_run(MergeState* _ms, SortSlice* _slo, AlifSizeT _nremaining) { // 1819
+	AlifSizeT k_{};
+	AlifSizeT n_{};
+	AlifObject** const lo_ = _slo->keys;
+	AlifSizeT neq_{};
 
-	int64_t neq_ = 0;
 #define REVERSE_LAST_NEQ                        \
     if (neq_) {                                  \
-        SortSlice slice_ = *_sLo;                 \
+        SortSlice slice = *_slo;                 \
         ++neq_;                                  \
-        sortSlice_advance(&slice_, n_ - neq_);     \
-        sortSlice_reverse(&slice_, neq_);         \
+        sortSlice_advance(&slice, n_ - neq_);     \
+        sortSlice_reverse(&slice, neq_);         \
         neq_ = 0;                                \
     }
+
 
 #define IF_NEXT_LARGER  IFLT(lo_[n_-1], lo_[n_])
 #define IF_NEXT_SMALLER IFLT(lo_[n_], lo_[n_-1])
 
-	for (n_ = 1; n_ < _nRemaining; ++n_) {
-		IF_NEXT_SMALLER;
-		break;
+	for (n_ = 1; n_ < _nremaining; ++n_) {
+		IF_NEXT_SMALLER
+			break;
 	}
-	if (n_ == _nRemaining)
+	if (n_ == _nremaining)
 		return n_;
 
 	if (n_ > 1) {
 		IFLT(lo_[0], lo_[n_ - 1])
 			return n_;
-		sortSlice_reverse(_sLo, n_);
+		sortSlice_reverse(_slo, n_);
 	}
 	++n_;
-	for (; n_ < _nRemaining; ++n_) {
+
+	neq_ = 0;
+	for (; n_ < _nremaining; ++n_) {
 		IF_NEXT_SMALLER{
 
 			REVERSE_LAST_NEQ
 		}
 	else {
-		IF_NEXT_LARGER
+		IF_NEXT_LARGER /* descending run is over */
 			break;
-	else
+	else /* not x < y and not y < x implies x == y */
 		++neq_;
 	}
 	}
 	REVERSE_LAST_NEQ
-		sortSlice_reverse(_sLo, n_);
-	for (; n_ < _nRemaining; ++n_) {
+		sortSlice_reverse(_slo, n_);
+	for (; n_ < _nremaining; ++n_) {
 		IF_NEXT_SMALLER
 			break;
 	}
@@ -1111,191 +1309,185 @@ fail:
 #undef IF_NEXT_LARGER
 }
 
-static int64_t gallop_left(MergeState* _ms, AlifObject* _key, AlifObject** _a, int64_t _n, int64_t _hInt)
-{
-	int64_t ofs_;
-	int64_t lastOfs;
-	int64_t k_;
+static AlifSizeT gallop_left(MergeState* _ms, AlifObject* _key, AlifObject** _a, AlifSizeT _n, AlifSizeT _hint) { // 1935
+	AlifSizeT ofs_{};
+	AlifSizeT lastOfS{};
+	AlifSizeT k_{};
 
-	_a += _hInt;
-	lastOfs = 0;
+	_a += _hint;
+	lastOfS = 0;
 	ofs_ = 1;
 	IFLT(*_a, _key) {
-
-		const int64_t maxOfs = _n - _hInt;
-		while (ofs_ < maxOfs) {
+		const AlifSizeT maxofs = _n - _hint;             
+		while (ofs_ < maxofs) {
 			IFLT(_a[ofs_], _key) {
-				lastOfs = ofs_;
+				lastOfS = ofs_;
 				ofs_ = (ofs_ << 1) + 1;
 			}
-		   else
-	break;
+		   else              
+			   break;
 		}
-		if (ofs_ > maxOfs)
-			ofs_ = maxOfs;
-		lastOfs += _hInt;
-		ofs_ += _hInt;
-	}
-		   else {
-
-			   const int64_t maxOfs = _hInt + 1;
-			   while (ofs_ < maxOfs) {
-				   IFLT(*(_a - ofs_), _key)
-					   break;
-				   lastOfs = ofs_;
-				   ofs_ = (ofs_ << 1) + 1;
-			   }
-			   if (ofs_ > maxOfs)
-				   ofs_ = maxOfs;
-			   k_ = lastOfs;
-			   lastOfs = _hInt - ofs_;
-			   ofs_ = _hInt - k_;
-		   }
-_a -= _hInt;
-
-
-++lastOfs;
-while (lastOfs < ofs_) {
-	int64_t m_ = lastOfs + ((ofs_ - lastOfs) >> 1);
-
-	IFLT(_a[m_], _key)
-		lastOfs = m_ + 1;
-else
-ofs_ = m_;
-}
-return ofs_;
-
-fail:
-return -1;
-}
-
-static int64_t gallop_right(MergeState* _ms, AlifObject* _key, AlifObject** _a, int64_t _n, int64_t _hInt)
-{
-	int64_t ofs_;
-	int64_t lastOfs;
-	int64_t k_;
-
-	_a += _hInt;
-	lastOfs = 0;
-	ofs_ = 1;
-	IFLT(_key, *_a) {
-
-		const int64_t maxOfs = _hInt + 1;
-		while (ofs_ < maxOfs) {
-			IFLT(_key, *(_a - ofs_)) {
-				lastOfs = ofs_;
-				ofs_ = (ofs_ << 1) + 1;
-			}
-		   else
-	break;
-		}
-		if (ofs_ > maxOfs)
-			ofs_ = maxOfs;
-		k_ = lastOfs;
-		lastOfs = _hInt - ofs_;
-		ofs_ = _hInt - k_;
-	}
-		   else {
-
-			   const int64_t maxOfs = _n - _hInt;
-			   while (ofs_ < maxOfs) {
-				   IFLT(_key, _a[ofs_])
-					   break;
-				   lastOfs = ofs_;
-				   ofs_ = (ofs_ << 1) + 1;
-			   }
-			   if (ofs_ > maxOfs)
-				   ofs_ = maxOfs;
-			   lastOfs += _hInt;
-			   ofs_ += _hInt;
-		   }
-_a -= _hInt;
-
-++lastOfs;
-while (lastOfs < ofs_) {
-	int64_t m_ = lastOfs + ((ofs_ - lastOfs) >> 1);
-
-	IFLT(_key, _a[m_])
-		ofs_ = m_;
-else
-lastOfs = m_ + 1;
-}
-return ofs_;
-
-fail:
-return -1;
-}
-
-static void merge_init(MergeState* _ms, int64_t _listSize, int _hasKeyFunc,
-	SortSlice* lo)
-{
-	if (_hasKeyFunc) {
-		_ms->alloced_ = (_listSize + 1) / 2;
-
-		if (MERGESTATE_TEMP_SIZE / 2 < _ms->alloced_)
-			_ms->alloced_ = MERGESTATE_TEMP_SIZE / 2;
-		_ms->a_.values_ = &_ms->tempArray[_ms->alloced_];
+		if (ofs_ > maxofs)
+			ofs_ = maxofs;
+		lastOfS += _hint;
+		ofs_ += _hint;
 	}
 	else {
-		_ms->alloced_ = MERGESTATE_TEMP_SIZE;
-		_ms->a_.values_ = nullptr;
+		const AlifSizeT maxofs = _hint + 1;           
+		while (ofs_ < maxofs) {
+			IFLT(*(_a - ofs_), _key)
+				break;
+			lastOfS = ofs_;
+			ofs_ = (ofs_ << 1) + 1;
+		}
+		if (ofs_ > maxofs)
+			ofs_ = maxofs;
+		k_ = lastOfS;
+		lastOfS = _hint - ofs_;
+		ofs_ = _hint - k_;
 	}
-	_ms->a_.keys_ = _ms->tempArray;
-	_ms->n_ = 0;
-	_ms->minGallop = 7;
-	_ms->listLen = _listSize;
-	_ms->baseKeys = lo->keys_;
-}
+	_a -= _hint;
 
-static void merge_freemem(MergeState* _ms)
-{
-	if (_ms->a_.keys_ != _ms->tempArray) {
-		alifMem_objFree(_ms->a_.keys_);
-		_ms->a_.keys_ = nullptr;
+	++lastOfS;
+	while (lastOfS < ofs_) {
+		AlifSizeT m = lastOfS + ((ofs_ - lastOfS) >> 1);
+
+		IFLT(_a[m], _key)
+			lastOfS = m + 1;              
+		else
+			ofs_ = m;                    
 	}
-}
+	return ofs_;
 
-static int merge_getmem(MergeState* _ms, int64_t _need)
-{
-	int multiplier_;
-
-	if (_need <= _ms->alloced_)
-		return 0;
-
-	multiplier_ = _ms->a_.values_ != nullptr ? 2 : 1;
-	merge_freemem(_ms);
-	if ((size_t)_need > LLONG_MAX / sizeof(AlifObject*) / multiplier_) {
-		return -1;
-	}
-	_ms->a_.keys_ = (AlifObject**)alifMem_objAlloc(multiplier_ * _need
-		* sizeof(AlifObject*));
-	if (_ms->a_.keys_ != nullptr) {
-		_ms->alloced_ = _need;
-		if (_ms->a_.values_ != nullptr)
-			_ms->a_.values_ = &_ms->a_.keys_[_need];
-		return 0;
-	}
+fail:
 	return -1;
 }
-#define MERGE_GETMEM(_MS, _NEED) ((_NEED) <= (_MS)->alloced_ ? 0 :   \
-                                merge_getmem(_MS, _NEED))
+
+static AlifSizeT gallop_right(MergeState * _ms, AlifObject* _key,
+	AlifObject* *_a, AlifSizeT _n, AlifSizeT _hint) { // 2024
+	AlifSizeT ofs_{};
+	AlifSizeT lastOfS{};
+	AlifSizeT k_{};
 
 
-static int64_t merge_lo(MergeState* _ms, SortSlice _sSa, int64_t _na,
-	SortSlice _sSb, int64_t _nb)
-{
-	int64_t k_;
-	SortSlice dest_;
-	int result_ = -1;
-	int64_t minGallop;
+	_a += _hint;
+	lastOfS = 0;
+	ofs_ = 1;
+	IFLT(_key, *_a) {
+		const AlifSizeT maxofs = _hint + 1;             
+		while (ofs_ < maxofs) {
+			IFLT(_key, *(_a - ofs_)) {
+				lastOfS = ofs_;
+				ofs_ = (ofs_ << 1) + 1;
+			}
+			else               
+				break;
+		}
+		if (ofs_ > maxofs)
+			ofs_ = maxofs;
+		k_ = lastOfS;
+		lastOfS = _hint - ofs_;
+		ofs_ = _hint - k_;
+	}
+	else {
+		const AlifSizeT maxOfS = _n - _hint;             /* &a[n-1] is highest */
+		while (ofs_ < maxOfS) {
+			IFLT(_key, _a[ofs_])
+				break;
+			lastOfS = ofs_;
+			ofs_ = (ofs_ << 1) + 1;
+		}
+		if (ofs_ > maxOfS)
+			ofs_ = maxOfS;
+		lastOfS += _hint;
+		ofs_ += _hint;
+	}
+	_a -= _hint;
+
+	++lastOfS;
+	while (lastOfS < ofs_) {
+		AlifSizeT m_ = lastOfS + ((ofs_ - lastOfS) >> 1);
+
+		IFLT(_key, _a[m_])
+			ofs_ = m_;                    /* key < a[m] */
+		else
+			lastOfS = m_ + 1;             
+	}
+	return ofs_;
+
+fail:
+	return -1;
+}
+
+static void merge_init(MergeState* _ms, AlifSizeT _listSize, AlifIntT _hasKeyFunc,
+	SortSlice* _lo) { // 2099
+	if (_hasKeyFunc) {
+
+		_ms->alloced = (_listSize + 1) / 2;
+
+		if (MERGESTATE_TEMP_SIZE / 2 < _ms->alloced)
+			_ms->alloced = MERGESTATE_TEMP_SIZE / 2;
+		_ms->a_.values = &_ms->temparray[_ms->alloced];
+	}
+	else {
+		_ms->alloced = MERGESTATE_TEMP_SIZE;
+		_ms->a_.values = nullptr;
+	}
+	_ms->a_.keys = _ms->temparray;
+	_ms->n_ = 0;
+	_ms->minGallop = MIN_GALLOP;
+	_ms->listLen = _listSize;
+	_ms->baseKeys = _lo->keys;
+}
+
+static void merge_freeMem(MergeState* _ms) { // 2135
+	if (_ms->a_.keys != _ms->temparray) {
+		alifMem_dataAlloc((AlifUSizeT)_ms->a_.keys);
+		_ms->a_.keys = nullptr;
+	}
+}
+
+static AlifIntT merge_getMem(MergeState* _ms, AlifSizeT _need) { // 2147
+	AlifIntT multiplier{};
+
+	if (_need <= _ms->alloced)
+		return 0;
+
+	multiplier = _ms->a_.values != nullptr ? 2 : 1;
+
+	merge_freeMem(_ms);
+	if ((AlifUSizeT)_need > ALIF_SIZET_MAX / sizeof(AlifObject*) / multiplier) {
+		//alifErr_noMemory();
+		return -1;
+	}
+	_ms->a_.keys = (AlifObject**)alifMem_dataAlloc(multiplier * _need
+		* sizeof(AlifObject*));
+	if (_ms->a_.keys != nullptr) {
+		_ms->alloced = _need;
+		if (_ms->a_.values != nullptr)
+			_ms->a_.values = &_ms->a_.keys[_need];
+		return 0;
+	}
+	//alifErr_noMemory();
+	return -1;
+}
+#define MERGE_GETMEM(_ms, _need) ((_need) <= (_ms)->alloced ? 0 :   \
+                                merge_getMem(_ms, _need))
+
+static AlifSizeT merge_lo(MergeState* _ms, SortSlice _ssa, AlifSizeT _na,
+	SortSlice _ssb, AlifSizeT _nb) { // 2186
+	AlifSizeT k_{};
+	SortSlice dest_{};
+	AlifIntT result = -1;            
+	AlifSizeT minGallop{};
 
 	if (MERGE_GETMEM(_ms, _na) < 0)
 		return -1;
-	sortSlice_memcpy(&_ms->a_, 0, &_sSa, 0, _na);
-	dest_ = _sSa;
-	_sSa = _ms->a_;
+	sortSlice_memcpy(&_ms->a_, 0, &_ssa, 0, _na);
+	dest_ = _ssa;
+	_ssa = _ms->a_;
 
-	sortSlice_copy_incr(&dest_, &_sSb);
+	sortSlice_copyIncr(&dest_, &_ssb);
 	--_nb;
 	if (_nb == 0)
 		goto Succeed;
@@ -1304,14 +1496,14 @@ static int64_t merge_lo(MergeState* _ms, SortSlice _sSa, int64_t _na,
 
 	minGallop = _ms->minGallop;
 	for (;;) {
-		int64_t aCount = 0;
-		int64_t bCount = 0;
+		AlifSizeT aCount = 0;          /* # of times A won in a row */
+		AlifSizeT bCount = 0;          /* # of times B won in a row */
 		for (;;) {
-			k_ = ISLT(_sSb.keys_[0], _sSa.keys_[0]);
+			k_ = ISLT(_ssb.keys[0], _ssa.keys[0]);
 			if (k_) {
 				if (k_ < 0)
 					goto Fail;
-				sortSlice_copy_incr(&dest_, &_sSb);
+				sortSlice_copyIncr(&dest_, &_ssb);
 				++bCount;
 				aCount = 0;
 				--_nb;
@@ -1321,7 +1513,7 @@ static int64_t merge_lo(MergeState* _ms, SortSlice _sSa, int64_t _na,
 					break;
 			}
 			else {
-				sortSlice_copy_incr(&dest_, &_sSa);
+				sortSlice_copyIncr(&dest_, &_ssa);
 				++aCount;
 				bCount = 0;
 				--_na;
@@ -1336,14 +1528,14 @@ static int64_t merge_lo(MergeState* _ms, SortSlice _sSa, int64_t _na,
 		do {
 			minGallop -= minGallop > 1;
 			_ms->minGallop = minGallop;
-			k_ = gallop_right(_ms, _sSb.keys_[0], _sSa.keys_, _na, 0);
+			k_ = gallop_right(_ms, _ssb.keys[0], _ssa.keys, _na, 0);
 			aCount = k_;
 			if (k_) {
 				if (k_ < 0)
 					goto Fail;
-				sortSlice_memcpy(&dest_, 0, &_sSa, 0, k_);
+				sortSlice_memcpy(&dest_, 0, &_ssa, 0, k_);
 				sortSlice_advance(&dest_, k_);
-				sortSlice_advance(&_sSa, k_);
+				sortSlice_advance(&_ssa, k_);
 				_na -= k_;
 				if (_na == 1)
 					goto CopyB;
@@ -1351,66 +1543,64 @@ static int64_t merge_lo(MergeState* _ms, SortSlice _sSa, int64_t _na,
 				if (_na == 0)
 					goto Succeed;
 			}
-			sortSlice_copy_incr(&dest_, &_sSb);
+			sortSlice_copyIncr(&dest_, &_ssb);
 			--_nb;
 			if (_nb == 0)
 				goto Succeed;
 
-			k_ = gallop_left(_ms, _sSa.keys_[0], _sSb.keys_, _nb, 0);
+			k_ = gallop_left(_ms, _ssa.keys[0], _ssb.keys, _nb, 0);
 			bCount = k_;
 			if (k_) {
 				if (k_ < 0)
 					goto Fail;
-				sortSlice_memmove(&dest_, 0, &_sSb, 0, k_);
+				sortSlice_memMove(&dest_, 0, &_ssb, 0, k_);
 				sortSlice_advance(&dest_, k_);
-				sortSlice_advance(&_sSb, k_);
+				sortSlice_advance(&_ssb, k_);
 				_nb -= k_;
 				if (_nb == 0)
 					goto Succeed;
 			}
-			sortSlice_copy_incr(&dest_, &_sSa);
+			sortSlice_copyIncr(&dest_, &_ssa);
 			--_na;
 			if (_na == 1)
 				goto CopyB;
-		} while (aCount >= MIN_GALLOP || bCount >= MIN_GALLOP);
-		++minGallop;
+		} while (aCount >= MIN_GALLOP or bCount >= MIN_GALLOP);
+		++minGallop;          
 		_ms->minGallop = minGallop;
 	}
 Succeed:
-	result_ = 0;
+	result = 0;
 Fail:
 	if (_na)
-		sortSlice_memcpy(&dest_, 0, &_sSa, 0, _na);
-	return result_;
+		sortSlice_memcpy(&dest_, 0, &_ssa, 0, _na);
+	return result;
 CopyB:
-
-	sortSlice_memmove(&dest_, 0, &_sSb, 0, _nb);
-	sortSlice_copy(&dest_, _nb, &_sSa, 0);
+	sortSlice_memMove(&dest_, 0, &_ssb, 0, _nb);
+	sortSlice_copy(&dest_, _nb, &_ssa, 0);
 	return 0;
 }
 
-static int64_t merge_hi(MergeState* _ms, SortSlice _sSa, int64_t _na,
-	SortSlice _sSb, int64_t _nb)
-{
-	int64_t k_;
-	SortSlice dest_, basea_, baseb_;
-	int result_ = -1;
-	int64_t minGallop;
+static AlifSizeT merge_hi(MergeState* _ms, SortSlice _ssa, AlifSizeT _na,
+	SortSlice _ssb, AlifSizeT _nb) { // 2319
+	AlifSizeT k_{};
+	SortSlice dest{}, basea{}, baseb{};
+	AlifIntT result = -1;            /* guilty until proved innocent */
+	AlifSizeT minGallop{};
 
-
+	
 	if (MERGE_GETMEM(_ms, _nb) < 0)
 		return -1;
-	dest_ = _sSb;
-	sortSlice_advance(&dest_, _nb - 1);
-	sortSlice_memcpy(&_ms->a_, 0, &_sSb, 0, _nb);
-	basea_ = _sSa;
-	baseb_ = _ms->a_;
-	_sSb.keys_ = _ms->a_.keys_ + _nb - 1;
-	if (_sSb.values_ != nullptr)
-		_sSb.values_ = _ms->a_.values_ + _nb - 1;
-	sortSlice_advance(&_sSa, _na - 1);
+	dest = _ssb;
+	sortSlice_advance(&dest, _nb - 1);
+	sortSlice_memcpy(&_ms->a_, 0, &_ssb, 0, _nb);
+	basea = _ssa;
+	baseb = _ms->a_;
+	_ssb.keys = _ms->a_.keys + _nb - 1;
+	if (_ssb.values != nullptr)
+		_ssb.values = _ms->a_.values + _nb - 1;
+	sortSlice_advance(&_ssa, _na - 1);
 
-	sortSlice_copy_decr(&dest_, &_sSa);
+	sortSlice_copyDecr(&dest, &_ssa);
 	--_na;
 	if (_na == 0)
 		goto Succeed;
@@ -1419,15 +1609,15 @@ static int64_t merge_hi(MergeState* _ms, SortSlice _sSa, int64_t _na,
 
 	minGallop = _ms->minGallop;
 	for (;;) {
-		int64_t aCount = 0;
-		int64_t bCount = 0;
+		AlifSizeT aCount = 0;          /* # of times A won in a row */
+		AlifSizeT bCount = 0;          /* # of times B won in a row */
 
 		for (;;) {
-			k_ = ISLT(_sSb.keys_[0], _sSa.keys_[0]);
+			k_ = ISLT(_ssb.keys[0], _ssa.keys[0]);
 			if (k_) {
 				if (k_ < 0)
 					goto Fail;
-				sortSlice_copy_decr(&dest_, &_sSa);
+				sortSlice_copyDecr(&dest, &_ssa);
 				++aCount;
 				bCount = 0;
 				--_na;
@@ -1437,7 +1627,7 @@ static int64_t merge_hi(MergeState* _ms, SortSlice _sSa, int64_t _na,
 					break;
 			}
 			else {
-				sortSlice_copy_decr(&dest_, &_sSb);
+				sortSlice_copyDecr(&dest, &_ssb);
 				++bCount;
 				aCount = 0;
 				--_nb;
@@ -1452,138 +1642,136 @@ static int64_t merge_hi(MergeState* _ms, SortSlice _sSa, int64_t _na,
 		do {
 			minGallop -= minGallop > 1;
 			_ms->minGallop = minGallop;
-			k_ = gallop_right(_ms, _sSb.keys_[0], basea_.keys_, _na, _na - 1);
+			k_ = gallop_right(_ms, _ssb.keys[0], basea.keys, _na, _na - 1);
 			if (k_ < 0)
 				goto Fail;
 			k_ = _na - k_;
 			aCount = k_;
 			if (k_) {
-				sortSlice_advance(&dest_, -k_);
-				sortSlice_advance(&_sSa, -k_);
-				sortSlice_memmove(&dest_, 1, &_sSa, 1, k_);
+				sortSlice_advance(&dest, -k_);
+				sortSlice_advance(&_ssa, -k_);
+				sortSlice_memMove(&dest, 1, &_ssa, 1, k_);
 				_na -= k_;
 				if (_na == 0)
 					goto Succeed;
 			}
-			sortSlice_copy_decr(&dest_, &_sSb);
+			sortSlice_copyDecr(&dest, &_ssb);
 			--_nb;
 			if (_nb == 1)
 				goto CopyA;
 
-			k_ = gallop_left(_ms, _sSa.keys_[0], baseb_.keys_, _nb, _nb - 1);
+			k_ = gallop_left(_ms, _ssa.keys[0], baseb.keys, _nb, _nb - 1);
 			if (k_ < 0)
 				goto Fail;
 			k_ = _nb - k_;
 			bCount = k_;
 			if (k_) {
-				sortSlice_advance(&dest_, -k_);
-				sortSlice_advance(&_sSb, -k_);
-				sortSlice_memcpy(&dest_, 1, &_sSb, 1, k_);
+				sortSlice_advance(&dest, -k_);
+				sortSlice_advance(&_ssb, -k_);
+				sortSlice_memcpy(&dest, 1, &_ssb, 1, k_);
 				_nb -= k_;
 				if (_nb == 1)
 					goto CopyA;
 				if (_nb == 0)
 					goto Succeed;
 			}
-			sortSlice_copy_decr(&dest_, &_sSa);
+			sortSlice_copyDecr(&dest, &_ssa);
 			--_na;
 			if (_na == 0)
 				goto Succeed;
-		} while (aCount >= MIN_GALLOP || bCount >= MIN_GALLOP);
-		++minGallop;
+		} while (aCount >= MIN_GALLOP or bCount >= MIN_GALLOP);
+		++minGallop;           /* penalize it for leaving galloping mode */
 		_ms->minGallop = minGallop;
 	}
 Succeed:
-	result_ = 0;
+	result = 0;
 Fail:
 	if (_nb)
-		sortSlice_memcpy(&dest_, -(_nb - 1), &baseb_, 0, _nb);
-	return result_;
+		sortSlice_memcpy(&dest, -(_nb - 1), &baseb, 0, _nb);
+	return result;
 CopyA:
-
-	sortSlice_memmove(&dest_, 1 - _na, &_sSa, 1 - _na, _na);
-	sortSlice_advance(&dest_, -_na);
-	sortSlice_advance(&_sSa, -_na);
-	sortSlice_copy(&dest_, 0, &_sSb, 0);
+	sortSlice_memMove(&dest, 1 - _na, &_ssa, 1 - _na, _na);
+	sortSlice_advance(&dest, -_na);
+	sortSlice_advance(&_ssa, -_na);
+	sortSlice_copy(&dest, 0, &_ssb, 0);
 	return 0;
 }
 
-static int64_t merge_at(MergeState* _ms, int64_t _i)
-{
-	SortSlice sSa, sSb;
-	int64_t na_, nb_;
-	int64_t k_;
 
-	sSa = _ms->pending_[_i].base_;
-	na_ = _ms->pending_[_i].len_;
-	sSb = _ms->pending_[_i + 1].base_;
-	nb_ = _ms->pending_[_i + 1].len_;
+static AlifSizeT merge_at(MergeState* _ms, AlifSizeT _i) { // 2458
+	SortSlice ssa_{}, ssb_{};
+	AlifSizeT na_{}, nb_{};
+	AlifSizeT k_{};
 
-	_ms->pending_[_i].len_ = na_ + nb_;
+	ssa_ = _ms->pending[_i].base;
+	na_ = _ms->pending[_i].len_;
+	ssb_ = _ms->pending[_i + 1].base;
+	nb_ = _ms->pending[_i + 1].len_;
+
+	_ms->pending[_i].len_ = na_ + nb_;
 	if (_i == _ms->n_ - 3)
-		_ms->pending_[_i + 1] = _ms->pending_[_i + 2];
+		_ms->pending[_i + 1] = _ms->pending[_i + 2];
 	--_ms->n_;
 
-	k_ = gallop_right(_ms, *sSb.keys_, sSa.keys_, na_, 0);
+	k_ = gallop_right(_ms, *ssb_.keys, ssa_.keys, na_, 0);
 	if (k_ < 0)
 		return -1;
-	sortSlice_advance(&sSa, k_);
+	sortSlice_advance(&ssa_, k_);
 	na_ -= k_;
 	if (na_ == 0)
 		return 0;
 
-	nb_ = gallop_left(_ms, sSa.keys_[na_ - 1], sSb.keys_, nb_, nb_ - 1);
+
+	nb_ = gallop_left(_ms, ssa_.keys[na_ - 1], ssb_.keys, nb_, nb_ - 1);
 	if (nb_ <= 0)
 		return nb_;
+
 	if (na_ <= nb_)
-		return merge_lo(_ms, sSa, na_, sSb, nb_);
+		return merge_lo(_ms, ssa_, na_, ssb_, nb_);
 	else
-		return merge_hi(_ms, sSa, na_, sSb, nb_);
+		return merge_hi(_ms, ssa_, na_, ssb_, nb_);
 }
 
-static int powerLoop(int64_t _s1, int64_t _n1, int64_t _n2, int64_t _n)
-{
-	int result_ = 0;
-	int64_t a_ = 2 * _s1 + _n1;
-	int64_t b_ = a_ + _n1 + _n2;
+static AlifIntT powerLoop(AlifSizeT _s1, AlifSizeT _n1, AlifSizeT _n2, AlifSizeT _n) { // 2518
+	AlifIntT result = 0;
+	AlifSizeT a_ = 2 * _s1 + _n1;  /* 2*a */
+	AlifSizeT b_ = a_ + _n1 + _n2;  /* 2*b */
 	for (;;) {
-		++result_;
-		if (a_ >= _n) {
+		++result;
+		if (a_ >= _n) {  /* both quotient bits are 1 */
 			a_ -= _n;
 			b_ -= _n;
 		}
-		else if (b_ >= _n) {
+		else if (b_ >= _n) {  /* a/n bit is 0, b/n bit is 1 */
 			break;
-		}
+		} /* else both quotient bits are 0 */
 		a_ <<= 1;
 		b_ <<= 1;
 	}
-	return result_;
+	return result;
 }
 
-static int found_new_run(MergeState* _ms, int64_t _n2)
-{
+static AlifIntT found_newRun(MergeState* _ms, AlifSizeT _n2) { // 2565
 	if (_ms->n_) {
-		class SSlice* p_ = _ms->pending_;
-		int64_t s1_ = p_[_ms->n_ - 1].base_.keys_ - _ms->baseKeys; /* start index */
-		int64_t n1_ = p_[_ms->n_ - 1].len_;
-		int power_ = powerLoop(s1_, n1_, _n2, _ms->listLen);
-		while (_ms->n_ > 1 && p_[_ms->n_ - 2].power_ > power_) {
+		SSlice* p_ = _ms->pending;
+		AlifSizeT s1_ = p_[_ms->n_ - 1].base.keys - _ms->baseKeys; 
+		AlifSizeT n1_ = p_[_ms->n_ - 1].len_;
+		AlifIntT power = powerLoop(s1_, n1_, _n2, _ms->listLen);
+		while (_ms->n_ > 1 and p_[_ms->n_ - 2].power > power) {
 			if (merge_at(_ms, _ms->n_ - 2) < 0)
 				return -1;
 		}
-		p_[_ms->n_ - 1].power_ = power_;
+		p_[_ms->n_ - 1].power = power;
 	}
 	return 0;
 }
 
-static int merge_force_collapse(MergeState* _ms)
-{
-	class SSlice* p = _ms->pending_;
 
+static AlifIntT merge_forceCollapse(MergeState* _ms) { // 2590
+	SSlice* p_ = _ms->pending;
 	while (_ms->n_ > 1) {
-		int64_t n_ = _ms->n_ - 2;
-		if (n_ > 0 && p[n_ - 1].len_ < p[n_ + 1].len_)
+		AlifSizeT n_ = _ms->n_ - 2;
+		if (n_ > 0 and p_[n_ - 1].len_ < p_[n_ + 1].len_)
 			--n_;
 		if (merge_at(_ms, n_) < 0)
 			return -1;
@@ -1591,27 +1779,22 @@ static int merge_force_collapse(MergeState* _ms)
 	return 0;
 }
 
-static int64_t merge_compute_minrun(int64_t _n)
-{
-	int64_t r = 0;
+static AlifSizeT merge_computeMinRun(AlifSizeT _n) { // 2616
+	AlifSizeT r_ = 0;         
 
 	while (_n >= MAX_MINRUN) {
-		r |= _n & 1;
+		r_ |= _n & 1;
 		_n >>= 1;
 	}
-	return _n + r;
+	return _n + r_;
 }
 
 
-static int safe_object_compare(AlifObject* _v, AlifObject* w_, MergeState* _ms)
-{
-	return alifObject_richCompareBool(_v, w_, ALIF_LT);
+static AlifIntT safe_objectCompare(AlifObject* _v, AlifObject* _w, MergeState* _ms) { // 2639
+	return alifObject_richCompareBool(_v, _w, ALIF_LT);
 }
-
-static int unsafe_object_compare(AlifObject* _v, AlifObject* _w, MergeState* _ms)
-{
-	AlifObject* resObj{};
-	int res_{};
+static AlifIntT unsafe_objectCompare(AlifObject* _v, AlifObject* _w, MergeState* _ms) { // 2650
+	AlifObject* resObj{}; AlifIntT res_{};
 
 	if (ALIF_TYPE(_v)->richCompare != _ms->KeyRichcompare)
 		return alifObject_richCompareBool(_v, _w, ALIF_LT);
@@ -1622,9 +1805,8 @@ static int unsafe_object_compare(AlifObject* _v, AlifObject* _w, MergeState* _ms
 		ALIF_DECREF(resObj);
 		return alifObject_richCompareBool(_v, _w, ALIF_LT);
 	}
-	if (resObj == nullptr) return -1;
-
-	std::wcout << resObj->type_->name_ << std::endl << std::endl;
+	if (resObj == nullptr)
+		return -1;
 
 	if (ALIFBOOL_CHECK(resObj)) {
 		res_ = (resObj == ALIF_TRUE);
@@ -1634,147 +1816,157 @@ static int unsafe_object_compare(AlifObject* _v, AlifObject* _w, MergeState* _ms
 	}
 	ALIF_DECREF(resObj);
 
-	return res_;
-}
-
-static int unsafe_string_compare(AlifObject* v, AlifObject* w, MergeState* ms)
-{
-	AlifSizeT len{};
-	int res{};
-
-	len = ((ALIFUSTR_GET_LENGTH(v) < ALIFUSTR_GET_LENGTH(w)) ? ALIFUSTR_GET_LENGTH(v) : ALIFUSTR_GET_LENGTH(v));
-	res = memcmp(ALIFUSTR_DATA(v), ALIFUSTR_DATA(w), len);
-
-	res = (res != 0 ? res < 0 :
-		ALIFUSTR_GET_LENGTH(v) < ALIFUSTR_GET_LENGTH(w));
-
-	return res;
-}
-
-static int unsafe_long_compare(AlifObject* _v, AlifObject* _w, MergeState* _ms)
-{
-	AlifIntegerObject* vl_, * wl_;
-	intptr_t v0_, w0_;
-	int res_;
-
-	vl_ = (AlifIntegerObject*)_v;
-	wl_ = (AlifIntegerObject*)_w;
-
-	res_ = alifObject_richCompareBool(_v, _w, ALIF_LT);
 
 	return res_;
 }
 
-static int unsafe_float_compare(AlifObject* _v, AlifObject* _w, MergeState* _ms)
-{
-	int res_;
-	res_ = alifFloat_asLongDouble(_v) < alifFloat_asLongDouble(_w);
+
+static AlifIntT unsafe_latinCompare(AlifObject* _v, AlifObject* _w, MergeState* _ms) { // 2686
+	AlifSizeT len_{};
+	AlifIntT res_{};
+
+	len_ = ALIF_MIN(ALIFUSTR_GET_LENGTH(_v), ALIFUSTR_GET_LENGTH(_w));
+	res_ = memcmp(ALIFUSTR_DATA(_v), ALIFUSTR_DATA(_w), len_);
+
+	res_ = (res_ != 0 ?
+		res_ < 0 :
+		ALIFUSTR_GET_LENGTH(_v) < ALIFUSTR_GET_LENGTH(_w));
+
 	return res_;
 }
 
-static int unsafe_tuple_compare(AlifObject* _v, AlifObject* _w, MergeState* _ms)
-{
-	AlifTupleObject* vt_, * wt_;
-	int64_t i_, vLen, wLen;
-	int k_;
+static AlifIntT unsafe_longCompare(AlifObject* _v, AlifObject* _w, MergeState* _ms) { // 2710
+	AlifLongObject* vl_{}, * wl_{};
+	intptr_t v0_{}, w0_{};
+	AlifIntT res_{};
+
+	vl_ = (AlifLongObject*)_v;
+	wl_ = (AlifLongObject*)_w;
+
+	v0_ = alifLong_compactValue(vl_);
+	w0_ = alifLong_compactValue(wl_);
+
+	res_ = v0_ < w0_;
+	return res_;
+}
+
+static AlifIntT unsafe_floatCompare(AlifObject* _v, AlifObject* _w, MergeState* _ms) { // 2735
+	AlifIntT res_{};
+	res_ = ALIFFLOAT_AS_DOUBLE(_v) < ALIFFLOAT_AS_DOUBLE(_w);
+	return res_;
+}
+
+
+static AlifIntT unsafe_tupleCompare(AlifObject* _v, AlifObject* _w, MergeState* _ms) { // 2755
+	AlifTupleObject* vt_{}, * wt_{};
+	AlifSizeT i_{}, vLen{}, wLen{};
+	AlifIntT k_{};
+
 	vt_ = (AlifTupleObject*)_v;
 	wt_ = (AlifTupleObject*)_w;
 
-	vLen = ((AlifVarObject*)vt_)->size_;
-	wLen = ((AlifVarObject*)wt_)->size_;
+	vLen = ALIF_SIZE(vt_);
+	wLen = ALIF_SIZE(wt_);
 
-	for (i_ = 0; i_ < vLen && i_ < wLen; i_++) {
-		k_ = alifObject_richCompareBool(vt_->items_[i_], wt_->items_[i_], ALIF_EQ);
+	for (i_ = 0; i_ < vLen and i_ < wLen; i_++) {
+		k_ = alifObject_richCompareBool(vt_->item[i_], wt_->item[i_], ALIF_EQ);
 		if (k_ < 0)
 			return -1;
 		if (!k_)
 			break;
 	}
 
-	if (i_ >= vLen || i_ >= wLen)
+	if (i_ >= vLen or i_ >= wLen)
 		return vLen < wLen;
 
 	if (i_ == 0)
-		return _ms->TupleElemCompare(vt_->items_[i_], wt_->items_[i_], _ms);
+		return _ms->TupleElemCompare(vt_->item[i_], wt_->item[i_], _ms);
 	else
-		return alifObject_richCompareBool(vt_->items_[i_], wt_->items_[i_], ALIF_LT);
+		return alifObject_richCompareBool(vt_->item[i_], wt_->item[i_], ALIF_LT);
 }
 
-static AlifObject* list_sort_impl(AlifListObject* _self, AlifObject* _keyFunc, int _reverse)
-{
-	MergeState ms_{};
-	int64_t nRemaining{};
-	int64_t minRun{};
-	SortSlice lo_{};
-	int64_t savedObSize{}, savedAllocated{};
-	AlifObject** savedObItem{};
-	AlifObject** finalObItem{};
-	AlifObject* result_ = nullptr;
-	int64_t i_{};
-	AlifObject** keys_{};
+static AlifObject* list_sortImpl(AlifListObject* _self,
+	AlifObject* _keyFunc, AlifIntT _reverse) { // 2814
+	MergeState ms{};
+	AlifSizeT nremaining{};
+	AlifSizeT minrun{};
+	SortSlice lo{};
+	AlifSizeT savedObjSize{}, savedAllocated{};
+	AlifObject** savedObjItem{};
+	AlifObject** finalObjItem{};
+	AlifObject* result = nullptr;            /* guilty until proved innocent */
+	AlifSizeT i{};
+	AlifObject** keys{};
 
-	if (_keyFunc == ALIF_NONE)
-		_keyFunc = nullptr;
+	if (_keyFunc == ALIF_NONE) _keyFunc = nullptr;
 
-	savedObSize = ALIF_SIZE(_self);
-	savedObItem = _self->items_;
-	savedAllocated = _self->allocated_;
-	ALIFSET_SIZE(_self, 0);
-	_self->items_ = nullptr;
-	_self->allocated_ = -1;
+	savedObjSize = ALIF_SIZE(_self);
+	savedObjItem = _self->item;
+	savedAllocated = _self->allocated;
+	ALIF_SET_SIZE(_self, 0);
+	alifAtomic_storePtrRelease(&_self->item, nullptr);
+	_self->allocated = -1; /* any operation will reset it to >= 0 */
 
 	if (_keyFunc == nullptr) {
-		keys_ = nullptr;
-		lo_.keys_ = savedObItem;
-		lo_.values_ = nullptr;
+		keys = nullptr;
+		lo.keys = savedObjItem;
+		lo.values = nullptr;
 	}
 	else {
-		if (savedObSize < MERGESTATE_TEMP_SIZE / 2)
-			keys_ = &ms_.tempArray[savedObSize + 1];
+		if (savedObjSize < MERGESTATE_TEMP_SIZE / 2)
+			/* Leverage stack space we allocated but won't otherwise use */
+			keys = &ms.temparray[savedObjSize + 1];
 		else {
-			keys_ = (AlifObject**)alifMem_objAlloc(sizeof(AlifObject*) * savedObSize);
-			if (keys_ == nullptr) {
-				goto keyfunc_fail;
+			keys = (AlifObject**)alifMem_dataAlloc(sizeof(AlifObject*) * savedObjSize);
+			if (keys == nullptr) {
+				//alifErr_noMemory();
+				goto keyFuncFail;
 			}
 		}
 
-		for (i_ = 0; i_ < savedObSize; i_++) {
-			keys_[i_] = alifObject_callOneArg(_keyFunc, savedObItem[i_]);
-			if (keys_[i_] == nullptr) {
-				for (i_ = i_ - 1; i_ >= 0; i_--)
-					ALIF_DECREF(keys_[i_]);
-				if (savedObSize >= MERGESTATE_TEMP_SIZE / 2)
-					alifMem_objFree(keys_);
-				goto keyfunc_fail;
+		for (i = 0; i < savedObjSize; i++) {
+			keys[i] = alifObject_callOneArg(_keyFunc, savedObjItem[i]);
+			if (keys[i] == nullptr) {
+				for (i = i - 1; i >= 0; i--)
+					ALIF_DECREF(keys[i]);
+				if (savedObjSize >= MERGESTATE_TEMP_SIZE / 2)
+					alifMem_dataFree(keys);
+				goto keyFuncFail;
 			}
 		}
 
-		lo_.keys_ = keys_;
-		lo_.values_ = savedObItem;
+		lo.keys = keys;
+		lo.values = savedObjItem;
 	}
-	if (savedObSize > 1) {
-		int keysAreInTuples = (ALIF_IS_TYPE(lo_.keys_[0], &_alifTupleType_) and
-			ALIF_SIZE(lo_.keys_[0]) > 0);
+
+
+	if (savedObjSize > 1) {
+		/* Assume the first element is representative of the whole list. */
+		AlifIntT keysAreInTuples = (ALIF_IS_TYPE(lo.keys[0], &_alifTupleType_) and
+			ALIF_SIZE(lo.keys[0]) > 0);
 
 		AlifTypeObject* keyType = (keysAreInTuples ?
-			ALIF_TYPE(ALIFTUPLE_GET_ITEM(lo_.keys_[0], 0)) :
-			ALIF_TYPE(lo_.keys_[0]));
+			ALIF_TYPE(ALIFTUPLE_GET_ITEM(lo.keys[0], 0)) :
+			ALIF_TYPE(lo.keys[0]));
 
-		int keysAreAllSameType = 1;
-		int intsAreBounded = 1;
+		AlifIntT keysAreAllSameType = 1;
+		AlifIntT stringsAreLatin = 1;
+		AlifIntT intsAreBounded = 1;
 
-		for (i_ = 0; i_ < savedObSize; i_++) {
+		/* Prove that assumption by checking every key. */
+		for (i = 0; i < savedObjSize; i++) {
 
-			if (keysAreInTuples &&
-				!(ALIF_IS_TYPE(lo_.keys_[i_], &_alifTupleType_) && ALIF_SIZE(lo_.keys_[i_]) != 0)) {
+			if (keysAreInTuples and
+				!(ALIF_IS_TYPE(lo.keys[i], &_alifTupleType_)
+					and ALIF_SIZE(lo.keys[i]) != 0)) {
 				keysAreInTuples = 0;
 				keysAreAllSameType = 0;
 				break;
 			}
 
 			AlifObject* key = (keysAreInTuples ?
-				ALIFTUPLE_GET_ITEM(lo_.keys_[i_], 0) :
-				lo_.keys_[i_]);
+				ALIFTUPLE_GET_ITEM(lo.keys[i], 0) :
+				lo.keys[i]);
 
 			if (!ALIF_IS_TYPE(key, keyType)) {
 				keysAreAllSameType = 0;
@@ -1784,520 +1976,293 @@ static AlifObject* list_sort_impl(AlifListObject* _self, AlifObject* _keyFunc, i
 			}
 
 			if (keysAreAllSameType) {
-				if (keyType == &_alifIntegerType_ &&
-					intsAreBounded) {
+				if (keyType == &_alifLongType_ and
+					intsAreBounded and
+					!alifLong_isCompact((AlifLongObject*)key)) {
+
 					intsAreBounded = 0;
+				}
+				else if (keyType == &_alifUStrType_ and
+					stringsAreLatin and
+					ALIFUSTR_KIND(key) != AlifUStrKind_::AlifUStr_1Byte_Kind) {
+
+					stringsAreLatin = 0;
 				}
 			}
 		}
 
+		/* Choose the best compare, given what we now know about the keys. */
 		if (keysAreAllSameType) {
-			if (keyType == &_alifUStrType_) {
-				ms_.KeyCompare = unsafe_string_compare;
+
+			if (keyType == &_alifUStrType_ and stringsAreLatin) {
+				ms.KeyCompare = unsafe_latinCompare;
 			}
-			else if (keyType == &_alifIntegerType_ and intsAreBounded) {
-				ms_.KeyCompare = unsafe_long_compare;
+			else if (keyType == &_alifLongType_ and intsAreBounded) {
+				ms.KeyCompare = unsafe_longCompare;
 			}
-			else if (keyType == &_alifFloatType) {
-				ms_.KeyCompare = unsafe_float_compare;
+			else if (keyType == &_alifFloatType_) {
+				ms.KeyCompare = unsafe_floatCompare;
 			}
-			else if ((ms_.KeyRichcompare = keyType->richCompare) != nullptr) {
-				ms_.KeyCompare = unsafe_object_compare;
+			else if ((ms.KeyRichcompare = keyType->richCompare) != nullptr) {
+				ms.KeyCompare = unsafe_objectCompare;
 			}
 			else {
-				ms_.KeyCompare = safe_object_compare;
+				ms.KeyCompare = safe_objectCompare;
 			}
 		}
 		else {
-			ms_.KeyCompare = safe_object_compare;
+			ms.KeyCompare = safe_objectCompare;
 		}
 
 		if (keysAreInTuples) {
+			/* Make sure we're not dealing with tuples of tuples
+			 * (remember: here, key_type refers list [key[0] for key in keys]) */
 			if (keyType == &_alifTupleType_) {
-				ms_.TupleElemCompare = safe_object_compare;
+				ms.TupleElemCompare = safe_objectCompare;
 			}
 			else {
-				ms_.TupleElemCompare = ms_.KeyCompare;
+				ms.TupleElemCompare = ms.KeyCompare;
 			}
 
-			ms_.KeyCompare = unsafe_tuple_compare;
+			ms.KeyCompare = unsafe_tupleCompare;
 		}
 	}
-	merge_init(&ms_, savedObSize, keys_ != nullptr, &lo_);
 
-	nRemaining = savedObSize;
-	if (nRemaining < 2)
-		goto succeed;
+	merge_init(&ms, savedObjSize, keys != nullptr, &lo);
+
+	nremaining = savedObjSize;
+	if (nremaining < 2) goto succeed;
 
 	if (_reverse) {
-		if (keys_ != nullptr)
-			reverse_slice(&keys_[0], &keys_[savedObSize]);
-		reverse_slice(&savedObItem[0], &savedObItem[savedObSize]);
+		if (keys != nullptr)
+			reverse_slice(&keys[0], &keys[savedObjSize]);
+		reverse_slice(&savedObjItem[0], &savedObjItem[savedObjSize]);
 	}
 
-	minRun = merge_compute_minrun(nRemaining);
+	minrun = merge_computeMinRun(nremaining);
 	do {
-		int64_t n_;
+		AlifSizeT n{};
 
-		n_ = count_run(&ms_, &lo_, nRemaining);
-		if (n_ < 0)
-			goto fail;
-		if (n_ < minRun) {
-			const int64_t force = nRemaining <= minRun ?
-				nRemaining : minRun;
-			if (binarysort(&ms_, &lo_, force, n_) < 0)
+		/* Identify next run. */
+		n = count_run(&ms, &lo, nremaining);
+		if (n < 0) goto fail;
+		/* If short, extend to min(minrun, nremaining). */
+		if (n < minrun) {
+			const AlifSizeT force = nremaining <= minrun ?
+				nremaining : minrun;
+			if (binarySort(&ms, &lo, force, n) < 0)
 				goto fail;
-			n_ = force;
+			n = force;
 		}
-
-		if (found_new_run(&ms_, n_) < 0)
+		/* Maybe merge pending runs. */
+		if (found_newRun(&ms, n) < 0)
 			goto fail;
-		ms_.pending_[ms_.n_].base_ = lo_;
-		ms_.pending_[ms_.n_].len_ = n_;
-		++ms_.n_;
-		sortSlice_advance(&lo_, n_);
-		nRemaining -= n_;
-	} while (nRemaining);
+		/* Push new run on stack. */
+		ms.pending[ms.n_].base = lo;
+		ms.pending[ms.n_].len_ = n;
+		++ms.n_;
+		/* Advance to find next run. */
+		sortSlice_advance(&lo, n);
+		nremaining -= n;
+	} while (nremaining);
 
-	if (merge_force_collapse(&ms_) < 0)
+	if (merge_forceCollapse(&ms) < 0)
 		goto fail;
-	lo_ = ms_.pending_[0].base_;
+	lo = ms.pending[0].base;
 
 succeed:
-	result_ = ALIF_NONE;
+	result = ALIF_NONE;
 fail:
-	if (keys_ != nullptr) {
-		for (i_ = 0; i_ < savedObSize; i_++)
-			ALIF_DECREF(keys_[i_]);
-		if (savedObSize >= MERGESTATE_TEMP_SIZE / 2)
-			alifMem_objFree(keys_);
+	if (keys != nullptr) {
+		for (i = 0; i < savedObjSize; i++)
+			ALIF_DECREF(keys[i]);
+		if (savedObjSize >= MERGESTATE_TEMP_SIZE / 2)
+			alifMem_dataFree(keys);
 	}
 
-	if (_self->allocated_ != -1 && result_ != nullptr) {
-		result_ = nullptr;
+	if (_self->allocated != -1 and result != nullptr) {
+		//alifErr_setString(_alifExcValueError_, "list modified during sort");
+		result = nullptr;
 	}
 
-	if (_reverse && savedObSize > 1)
-		reverse_slice(savedObItem, savedObItem + savedObSize);
+	if (_reverse and savedObjSize > 1)
+		reverse_slice(savedObjItem, savedObjItem + savedObjSize);
 
-	merge_freemem(&ms_);
+	merge_freeMem(&ms);
 
-keyfunc_fail:
-	finalObItem = _self->items_;
-	i_ = ALIF_SIZE(_self);
-	ALIFSET_SIZE(_self, savedObSize);
-	_self->items_ = savedObItem;
-	_self->allocated_ = savedAllocated;
-	if (finalObItem != nullptr) {
-		while (--i_ >= 0) {
-			ALIF_XDECREF(finalObItem[i_]);
+keyFuncFail:
+	finalObjItem = _self->item;
+	i = ALIF_SIZE(_self);
+	ALIF_SET_SIZE(_self, savedObjSize);
+	alifAtomic_storePtrRelease(&_self->item, savedObjItem);
+	alifAtomic_storeSizeRelaxed(&_self->allocated, savedAllocated);
+	if (finalObjItem != nullptr) {
+		/* we cannot use list_clear() for this because it does not
+		   guarantee that the list is really empty when it returns */
+		while (--i >= 0) {
+			ALIF_XDECREF(finalObjItem[i]);
 		}
-#ifdef ALIF_GIL_DISABLED
-		bool useQSbr = alifSubObject_GC_is_shared(_self);
-#else
-		bool useQSbr = false;
-#endif
-		//free_list_items(finalObItem, useQSbr);
+		bool use_qsbr = ALIFOBJECT_GC_IS_SHARED(_self);
+		free_listItems(finalObjItem, use_qsbr);
 	}
-	return ALIF_XNEWREF(result_);
+	return ALIF_XNEWREF(result);
 }
+#undef IFLT
+#undef ISLT
 
-
-int alifList_sort(AlifObject* _v)
-{
+AlifIntT alifList_sort(AlifObject* _v) { // 3080
 	if (_v == nullptr or !ALIFLIST_CHECK(_v)) {
+		//ALIFERR_BADINTERNALCALL();
 		return -1;
 	}
-	//ALIF_BEGIN_CRITICAL_SECTION(_v);
-	_v = list_sort_impl((AlifListObject*)_v, nullptr, 0);
-	//ALIF_END_CRITICAL_SECTION();
-	if (_v == nullptr)
-		return -1;
+	ALIF_BEGIN_CRITICAL_SECTION(_v);
+	_v = list_sortImpl((AlifListObject*)_v, nullptr, 0);
+	ALIF_END_CRITICAL_SECTION();
+	if (_v == nullptr) return -1;
 	ALIF_DECREF(_v);
 	return 0;
 }
 
-AlifObject* alifList_asTuple(AlifObject* _v) {
 
-	if (_v == nullptr or !(_v->type_ == &_alifListType_)) {
-		//Err_BadInternalCall();
+
+
+
+AlifObject* alifList_asTuple(AlifObject* _v) { // 3129
+	if (_v == nullptr or !ALIFLIST_CHECK(_v)) {
+		//ALIFERR_BADINTERNALCALL();
 		return nullptr;
 	}
-	AlifObject* ret_;
-	AlifListObject* self_ = (AlifListObject*)_v;
-	//ALIF_BEGIN_CRITICAL_SECTION(_self);
-	ret_ = alifSubTuple_fromArray(self_->items_, ALIF_SIZE(_v));
-	//ALIF_END_CRITICAL_SECTION();
+	AlifObject* ret_{};
+	AlifListObject* self = (AlifListObject*)_v;
+	ALIF_BEGIN_CRITICAL_SECTION(self);
+	ret_ = alifTuple_fromArray(self->item, ALIF_SIZE(_v));
+	ALIF_END_CRITICAL_SECTION();
 	return ret_;
 }
 
-//static AlifObject* list_count(AlifListObject* _self, AlifObject* _value)
-//{
-//    int64_t count = 0;
-//    int64_t i_;
-//
-//    for (i_ = 0; i_ < ALIF_SIZE(_self); i_++) {
-//        AlifObject* obj = _self->items_[i_];
-//        if (obj == _value) {
-//            count++;
-//            continue;
-//        }
-//        int cmp = alifObject_richCompareBool(obj, _value, ALIF_EQ);
-//        if (cmp > 0)
-//            count++;
-//        else if (cmp < 0)
-//            return nullptr;
-//    }
-//    return alifInteger_fromLongLong(count);
-//}
 
-//static AlifObject* list_remove(AlifListObject* _self, AlifObject* _value)
-//{
-//    int64_t i_;
-//
-//    for (i_ = 0; i_ < ALIF_SIZE(_self); i_++) {
-//        AlifObject* obj = _self->items_[i_];
-//        int cmp = alifObject_richCompareBool(obj, _value, ALIF_EQ);
-//        if (cmp > 0) {
-//            if (list_ass_slice(_self, i_, i_ + 1,
-//                (AlifObject*)nullptr) == 0)
-//                return ALIF_NONE;
-//            return nullptr;
-//        }
-//        else if (cmp < 0)
-//            return nullptr;
-//    }
-//    return nullptr;
-//}
-
-static AlifObject* list_compare(AlifObject* _v, AlifObject* w_, int _op)
-{
-	AlifListObject* vl_, * wl_;
-	int64_t i_;
-
-	if (!(_v->type_ == &_alifListType_) || !(w_->type_ == &_alifListType_))
-		return ALIF_NOTIMPLEMENTED;
-
-	vl_ = (AlifListObject*)_v;
-	wl_ = (AlifListObject*)w_;
-
-	if (ALIF_SIZE(vl_) != ALIF_SIZE(wl_) && (_op == ALIF_EQ || _op == ALIF_NE)) {
-		if (_op == ALIF_EQ)
-			return ALIF_FALSE;
-		else
-			return ALIF_TRUE;
+AlifObject* _alifList_fromStackRefSteal(const AlifStackRef* _src, AlifSizeT _n) { // 3144
+	if (_n == 0) {
+		return alifList_new(0);
 	}
 
-	for (i_ = 0; i_ < ALIF_SIZE(vl_) && i_ < ALIF_SIZE(wl_); i_++) {
-		AlifObject* vItem = vl_->items_[i_];
-		AlifObject* wItem = wl_->items_[i_];
-		if (vItem == wItem) {
-			continue;
+	AlifListObject* list = (AlifListObject*)alifList_new(_n);
+	if (list == nullptr) {
+		for (AlifSizeT i = 0; i < _n; i++) {
+			ALIFSTACKREF_CLOSE(_src[i]);
 		}
-
-		int k_ = alifObject_richCompareBool(vItem, wItem, ALIF_EQ);
-		if (k_ < 0)
-			return nullptr;
-		if (!k_)
-			break;
-	}
-
-	if (i_ >= ALIF_SIZE(vl_) || i_ >= ALIF_SIZE(wl_)) {
-		ALIF_RETURN_RICHCOMPARE(ALIF_SIZE(vl_), ALIF_SIZE(wl_), _op);
-	}
-
-	if (_op == ALIF_EQ) {
-		return ALIF_FALSE;
-	}
-	if (_op == ALIF_NE) {
-		return ALIF_TRUE;
-	}
-
-	return alifObject_richCompare(vl_->items_[i_], wl_->items_[i_], _op);
-}
-
-static AlifObject* list___sizeof___impl(AlifListObject* _self)
-{
-	size_t res_ = _self->_base_._base_.type_->basicSize;
-	res_ += (size_t)_self->allocated_ * sizeof(void*);
-	return alifInteger_fromSizeT(res_, true);
-}
-
-static AlifObject* list___sizeof__(AlifListObject* _self)
-{
-	return list___sizeof___impl(_self);
-}
-
-static AlifObject* list_subscript(AlifObject*, AlifObject*);
-
-static AlifMethodDef _listMethods_[] = {
-	{L"__getItem__", (AlifCFunction)list_subscript, METHOD_O | METHOD_COEXIST,},
-	{L"__sizeof__", (AlifCFunction)list___sizeof__, METHOD_NOARGS},
-	{L"clear", (AlifCFunction)list_clear, METHOD_NOARGS},
-	{L"append", (AlifCFunction)list_append, METHOD_O},
-	{L"insert", ALIF_CPPFUNCTION_CAST(list_insert), METHOD_FASTCALL,},
-	//{L"extend", (AlifCFunction)list_extend, METHOD_O},
-	//{L"pop", ALIFCFunction_CAST(list_pop), METHOD_FASTCALL},
-	//{L"remove", (AlifCFunction)list_remove, METHOD_O},
-	//{L"count", (AlifCFunction)list_count, METHOD_O},
-	{nullptr,              nullptr}
-};
-
-AlifSequenceMethods _listAsSeq_ = {
-	(LenFunc)list_length,
-	(BinaryFunc)list_concat,
-	(SSizeArgFunc)list_repeat,
-	(SSizeArgFunc)list_item,
-	0,
-	(SSizeObjArgProc)list_ass_item,
-	0,
-	(ObjObjProc)list_contains,
-	0,
-	0,
-};
-
-static inline AlifObject* list_slice_step_lock_held(AlifListObject* a, int64_t start, int64_t step, int64_t len)
-{
-	AlifListObject* np_ = (AlifListObject*)list_new_prealloc(len);
-	if (np_ == nullptr) {
 		return nullptr;
 	}
-	size_t cur_;
-	int64_t i_;
-	AlifObject** src_ = a->items_;
-	AlifObject** dest_ = np_->items_;
-	for (cur_ = start, i_ = 0; i_ < len;
-		cur_ += (size_t)step, i_++) {
-		AlifObject* v = src_[cur_];
-		dest_[i_] = ALIF_NEWREF(v);
+
+	AlifObject** dst = list->item;
+	for (AlifSizeT i = 0; i < _n; i++) {
+		dst[i] = alifStackRef_asAlifObjectSteal(_src[i]);
 	}
-	ALIFSET_SIZE(np_, len);
-	return (AlifObject*)np_;
+
+	return (AlifObject*)list;
 }
 
-static AlifObject*
-list_slice_wrap(AlifListObject* aa, int64_t start, int64_t stop, int64_t step)
-{
-	AlifObject* res_ = nullptr;
-	//ALIF_BEGIN_CRITICAL_SECTION(aa);
-	int64_t len = alifSlice_adjustIndices(ALIF_SIZE(aa), &start, &stop, step);
-	if (len <= 0) {
-		res_ = alifNew_list(0);
-	}
-	else if (step == 1) {
-		res_ = listSlice_lockHeld(aa, start, stop);
-	}
-	else {
-		res_ = list_slice_step_lock_held(aa, start, step, len);
-	}
-	//ALIF_END_CRITICAL_SECTION();
-	return res_;
-}
 
-static AlifObject*
-list_subscript(AlifObject* _self, AlifObject* _item)
-{
-	AlifListObject* self = (AlifListObject*)_self;
-	if ((_item->type_->asNumber != nullptr && _item->type_->asNumber->index_ != nullptr)) {
-		int64_t i_;
-		i_ = alifInteger_asSizeT(_item);
-		if (i_ == -1)
-			return nullptr;
-		if (i_ < 0)
-			i_ += ALIFLIST_GET_SIZE(self);
-		return list_item((AlifObject*)self, i_);
-	}
-	else if (ALIFSLICE_CHECK(_item)) {
-		int64_t start, stop, step;
-		if (slice_unpack((AlifSliceObject*)_item, &start, &stop, &step) < 0) {
+static AlifObject* list_removeImpl(AlifListObject* _self, AlifObject* _value) { // 3259
+	AlifSizeT i{};
+
+	for (i = 0; i < ALIF_SIZE(_self); i++) {
+		AlifObject* obj = _self->item[i];
+		ALIF_INCREF(obj);
+		AlifIntT cmp = alifObject_richCompareBool(obj, _value, ALIF_EQ);
+		ALIF_DECREF(obj);
+		if (cmp > 0) {
+			if (listAssSlice_lockHeld(_self, i, i + 1, nullptr) == 0)
+				return ALIF_NONE;
 			return nullptr;
 		}
-		return list_slice_wrap(self, start, stop, step);
+		else if (cmp < 0)
+			return nullptr;
 	}
-	else {
-		return nullptr;
-	}
+	//alifErr_setString(_alifExcValueError_, "list.remove(x): x not in list");
+	return nullptr;
 }
 
-static int list_ass_subscript(AlifObject* _self, AlifObject* _item, AlifObject* _value)
-{
-	AlifListObject* self_ = (AlifListObject*)_self;
 
-	if ((_item)->type_->asNumber != nullptr) {
-		int64_t i_ = alifInteger_asSizeT(_item);
-
-		if (i_ < 0)
-			i_ += ALIF_SIZE(self_);
-		return list_ass_item((AlifObject*)self_, i_, _value);
+static AlifIntT list___init__Impl(AlifListObject* _self, AlifObject* _iterable) { // 3375
+	/* Empty previous contents */
+	if (_self->item != nullptr) {
+		list_clear(_self);
 	}
-	else if (ALIFSLICE_CHECK(_item)) {
-		int64_t start_, stop_, step_, slicelength;
-
-		if (slice_unpack((AlifSliceObject*)_item, &start_, &stop_, &step_) < 0) {
+	if (_iterable != nullptr) {
+		if (_list_extend(_self, _iterable) < 0) {
 			return -1;
 		}
-		slicelength = alifSlice_adjustIndices(ALIF_SIZE(self_), &start_, &stop_,
-			step_);
-
-		if (step_ == 1)
-			return list_ass_slice(self_, start_, stop_, _value);
-
-		/* Make sure s_[5:2] = [..] inserts at the right place:
-		   before 5, not before 2. */
-		if ((step_ < 0 && start_ < stop_) ||
-			(step_ > 0 && start_ > stop_))
-			stop_ = start_;
-
-		if (_value == nullptr) {
-			/* delete slice */
-			AlifObject** garbage_;
-			size_t cur_;
-			int64_t i_;
-			int res_;
-
-			if (slicelength <= 0)
-				return 0;
-
-			if (step_ < 0) {
-				stop_ = start_ + 1;
-				start_ = stop_ + step_ * (slicelength - 1) - 1;
-				step_ = -step_;
-			}
-
-			garbage_ = (AlifObject**)
-				alifMem_dataAlloc(slicelength * sizeof(AlifObject*));
-			if (!garbage_) {
-
-				return -1;
-			}
-			for (cur_ = start_, i_ = 0;
-				cur_ < (size_t)stop_;
-				cur_ += step_, i_++) {
-				int64_t lim_ = step_ - 1;
-
-				garbage_[i_] = ((AlifListObject*)self_)->items_[cur_];
-
-				if (cur_ + step_ >= (size_t)ALIF_SIZE(self_)) {
-					lim_ = ALIF_SIZE(self_) - cur_ - 1;
-				}
-
-				memmove(self_->items_ + cur_ - i_,
-					self_->items_ + cur_ + 1,
-					lim_ * sizeof(AlifObject*));
-			}
-			cur_ = start_ + (size_t)slicelength * step_;
-			if (cur_ < (size_t)ALIF_SIZE(self_)) {
-				memmove(self_->items_ + cur_ - slicelength,
-					self_->items_ + cur_,
-					(ALIF_SIZE(self_) - cur_) *
-					sizeof(AlifObject*));
-			}
-
-			ALIFSET_SIZE(self_, ALIF_SIZE(self_) - slicelength);
-			res_ = list_resize(self_, ALIF_SIZE(self_));
-
-			alifMem_dataFree(garbage_);
-
-			return res_;
-		}
-		else {
-			AlifObject* ins_, * seq_;
-			AlifObject** garbage_, ** seqItems, ** selfItems;
-			int64_t i_;
-			size_t cur_;
-
-			if (self_ == (AlifListObject*)_value) {
-				seq_ = listSlice_lockHeld((AlifListObject*)_value, 0,
-					ALIF_SIZE(_value));
-			}
-			else {
-				seq_ = alifSequence_fast(_value,
-					L"must assign iterable "
-					"to extended slice");
-			}
-			if (!seq_)
-				return -1;
-
-			if (ALIFSEQUENCE_FAST_GETSIZE(seq_) != slicelength) {
-
-				return -1;
-			}
-
-			if (!slicelength) {
-				return 0;
-			}
-
-			garbage_ = (AlifObject**)
-				alifMem_dataAlloc(slicelength * sizeof(AlifObject*));
-			if (!garbage_) {
-
-				return -1;
-			}
-
-			selfItems = self_->items_;
-			seqItems = ALIFSEQUENCE_FAST_ITEMS(seq_);
-			for (cur_ = start_, i_ = 0; i_ < slicelength;
-				cur_ += (size_t)step_, i_++) {
-				garbage_[i_] = selfItems[cur_];
-				ins_ = seqItems[i_];
-				selfItems[cur_] = ins_;
-			}
-
-			alifMem_dataFree(garbage_);
-
-			return 0;
-		}
 	}
-	else {
-		return -1;
-	}
+	return 0;
 }
 
-AlifMappingMethods _listAsMap_ = {
-	(LenFunc)list_length,
-	(BinaryFunc)list_subscript,
-	(ObjObjArgProc)list_ass_subscript
+static AlifObject* list_vectorCall(AlifObject* _type, AlifObject* const* _args,
+	AlifUSizeT _nargsf, AlifObject* _kwnames) { // 3397
+	if (!_ALIFARG_NOKWNAMES("مصفوفة", _kwnames)) {
+		return nullptr;
+	}
+	AlifSizeT nargs = ALIFVECTORCALL_NARGS(_nargsf);
+	if (!_ALIFARG_CHECKPOSITIONAL("مصفوفة", nargs, 0, 1)) {
+		return nullptr;
+	}
+
+	AlifObject* list = alifType_genericAlloc(ALIFTYPE_CAST(_type), 0);
+	if (list == nullptr) {
+		return nullptr;
+	}
+	if (nargs) {
+		if (list___init__Impl((AlifListObject*)list, _args[0])) {
+			ALIF_DECREF(list);
+			return nullptr;
+		}
+	}
+	return list;
+}
+
+
+
+static AlifMethodDef _listMethods_[] = { // 3445
+	LIST_APPEND_METHODDEF
+	LIST_INSERT_METHODDEF
+	//LIST_EXTEND_METHODDEF
+	//LIST_POP_METHODDEF
+	LIST_REMOVE_METHODDEF
+	//LIST_INDEX_METHODDEF
+	//LIST_COUNT_METHODDEF
+	//LIST_REVERSE_METHODDEF
+	//LIST_SORT_METHODDEF
+	{nullptr, nullptr}
 };
 
-AlifTypeObject _alifListType_ = {
-	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0)
-	L"list",
-	sizeof(AlifListObject),
-	0,
-	list_dealloc,
-	0,
-	0,
-	0,
-	0,
-	0,
-	&_listAsSeq_,
-	&_listAsMap_,
-	(HashFunc)alifObject_hashNotImplemented,
-	0,
-	0,
-	alifObject_genericGetAttr,
-	0,
-	0,
-	ALIFTPFLAGS_DEFAULT | ALIFTPFLAGS_HAVE_GC | ALIFTPFLAGS_BASETYPE |
-	ALIFTPFLAGS_LIST_SUBCLASS | ALIFSUBTPFLAGS_MATCH_SELF | ALIFTPFLAGS_SEQUENCE,
-	0,
-	0,
-	list_clear_slot,
-	list_compare,
-	0,
-	0,
-	0,
-	_listMethods_,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	alifObject_gcDel,
-	0,
+
+
+static AlifSequenceMethods _listAsSequence_ = { // 3465
+	.length = list_length,
+	.concat = list_concat,
+	.repeat = list_repeat,
+	.item = list_item,
+	.assItem = list_assItem,
+	.contains = list_contains,
+	.inplaceConcat = list_inplaceConcat,
+	.inplaceRepeat = list_inplaceRepeat,
+};
+
+
+
+AlifTypeObject _alifListType_ = { // 3737
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "مصفوفة",
+	.basicSize = sizeof(AlifListObject),
+	.dealloc = list_dealloc,
+	.repr = list_repr,
+	.asSequence = &_listAsSequence_,
+	.getAttro = alifObject_genericGetAttr,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
+		ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_LIST_SUBCLASS |
+		_ALIF_TPFLAGS_MATCH_SELF | ALIF_TPFLAGS_SEQUENCE,
+	.methods = _listMethods_,
+	.alloc = alifType_genericAlloc,
+	.free = alifObject_gcDel,
+	.vectorCall = list_vectorCall,
 };

@@ -1,527 +1,636 @@
 #include "alif.h"
 
-#include "AlifCore_Memory.h"
+#include "AlifCore_Abstract.h"
 #include "AlifCore_BytesObject.h"
 #include "AlifCore_GlobalObjects.h"
+#include "AlifCore_Long.h"
 #include "AlifCore_Object.h"
 
-static AlifObject* alifSubBytes_fromSize(int64_t _size) {
+
+
+
+
+
+
+
+#define ALIFBYTESOBJECT_SIZE (offsetof(AlifBytesObject, val) + 1) // 32
+
+// 39
+#define CHARACTERS ALIF_SINGLETON(bytesCharacters)
+#define CHARACTER(ch) \
+     ((AlifBytesObject *)&(CHARACTERS[ch]));
+#define EMPTY (&ALIF_SINGLETON(bytesEmpty)) // 42
+
+
+static inline AlifObject* bytes_getEmpty(void) { // 46
+	AlifObject* empty = &EMPTY->objBase.objBase;
+	return empty;
+}
+
+
+
+static AlifObject* alifBytes_fromSize(AlifSizeT _size, AlifIntT _useCalloc) { // 76
+	AlifBytesObject* op{};
 
 	if (_size == 0) {
-		// return empty _object
+		return bytes_getEmpty();
 	}
 
-	AlifWBytesObject* _object = (AlifWBytesObject*)alifMem_objAlloc(ALIFBYTESOBJECT_SIZE + _size);
+	if ((AlifUSizeT)_size > (AlifUSizeT)ALIF_SIZET_MAX - ALIFBYTESOBJECT_SIZE) {
+		//alifErr_SetString(_alifExcOverflowError_,
+		//	"byte string is too large");
+		return nullptr;
+	}
 
-	alifSubObject_initVar((AlifVarObject*)_object, &_typeBytes_, _size);
-
-	ALIF_INCREF(_object);
-
-    //_object->value_[_size] = '\0'; // alifMem_objAlloc reset all bytes of allocated var
-
-    return (AlifObject*)_object;
-
+	if (_useCalloc) {
+		op = (AlifBytesObject*)alifMem_objAlloc(ALIFBYTESOBJECT_SIZE + _size); // this calloc and need review
+	} else {
+		op = (AlifBytesObject*)alifMem_objAlloc(ALIFBYTESOBJECT_SIZE + _size);
+	}
+	if (op == nullptr) {
+		//return alifErr_noMemory();
+		return nullptr; // temp
+	}
+	alifObject_initVar((AlifVarObject*)op, &_alifBytesType_, _size);
+	op->hash = -1;
+	if (!_useCalloc) {
+		op->val[_size] = '\0';
+	}
+	return (AlifObject*)op;
 }
 
-AlifObject* alifBytes_fromStringAndSize(const wchar_t* _str, int64_t _size)
-{
-    AlifWBytesObject* op_{};
-    if (_size < 0) {
-        return nullptr;
-    }
-    if (_size == 1 && _str != nullptr) {
-        //op_ = CHARACTER(*_str & 255);
-        return (AlifObject*)op_;
-    }
-    if (_size == 0) {
-        //return bytes_get_empty();
-    }
 
-    op_ = (AlifWBytesObject*)alifSubBytes_fromSize(_size);
-    if (op_ == nullptr)
-        return nullptr;
-    if (_str == nullptr)
-        return (AlifObject*)op_;
+AlifObject* alifBytes_fromStringAndSize(const char* _str, AlifSizeT _size) { // 111
+	AlifBytesObject* op{};
+	if (_size < 0) {
+		//alifErr_setString(_alifExcSystemError_,
+		//	"Negative size passed to alifBytes_fromStringAndSize");
+		return nullptr;
+	}
+	if (_size == 1 and _str != nullptr) {
+		op = CHARACTER(*_str & 255);
+		return (AlifObject*)op;
+	}
+	if (_size == 0) {
+		return bytes_getEmpty();
+	}
 
-    memcpy(op_->value_, _str, _size);
-    return (AlifObject*)op_;
+	op = (AlifBytesObject*)alifBytes_fromSize(_size, 0);
+	if (op == nullptr)
+		return nullptr;
+	if (_str == nullptr)
+		return (AlifObject*)op;
+
+	memcpy(op->val, _str, _size);
+	return (AlifObject*)op;
 }
 
-AlifObject* alifBytes_fromString(const wchar_t* _str){
 
-    size_t size_ = wcslen(_str);
+AlifObject* alifBytes_fromString(const char* _str) { // 139
+	AlifUSizeT size{};
+	AlifBytesObject* op{};
 
-    if (size_ == 0) {
-        // return empty _object
-    }
+	size = strlen(_str);
+	if (size > ALIF_SIZET_MAX - ALIFBYTESOBJECT_SIZE) {
+		//alifErr_setString(_alifExcOverflowError_,
+		//	"byte string is too long");
+		return nullptr;
+	}
 
-    AlifWBytesObject* _object = (AlifWBytesObject*)alifMem_objAlloc(ALIFBYTESOBJECT_SIZE + size_);
+	if (size == 0) {
+		return bytes_getEmpty();
+	}
+	else if (size == 1) {
+		op = CHARACTER(*_str & 255);
+		return (AlifObject*)op;
+	}
 
-    alifSubObject_initVar((AlifVarObject*)_object, &_typeBytes_, size_);
-	ALIF_INCREF(_object);
-    memcpy(_object->value_, _str, size_ + 1);
-    return (AlifObject*)_object;
+	/* Inline AlifObject_NewVar */
+	op = (AlifBytesObject*)alifMem_objAlloc(ALIFBYTESOBJECT_SIZE + size);
+	if (op == nullptr) {
+		//return alifErr_noMemory();
+		return nullptr; // temp
+	}
+	_alifObject_initVar((AlifVarObject*)op, &_alifBytesType_, size);
+	op->hash = -1;
+	memcpy(op->val, _str, size + 1);
+	return (AlifObject*)op;
 }
 
-int64_t alifBytes_size(AlifObject* _object) {
 
-    if (_object->type_ != &_typeBytes_) {
-        std::wcout << L"متوقع تمرير كائن بايت\n" << std::endl;
-        exit(-1);
-    }
-    return ALIF_SIZE(_object);
-}
 
-int alifWBytes_asStringAndSize(AlifObject* _obj, wchar_t** _s, AlifSizeT* _len)
-{
-    if (_s == nullptr) return -1;
 
-    if (!(_obj->type_ == &_typeBytes_)) return -1;
 
-    *_s = ALIFWBYTES_AS_STRING(_obj);
-    if (_len != nullptr) {
-        *_len = ALIF_SIZE(_obj);
-    }
-    else if (wcslen(*_s) != (AlifUSizeT)ALIF_SIZE(_obj)) {
-        return -1;
-    }
-    return 0;
-}
 
-static AlifObject* bytes_concat(AlifObject* _a, AlifObject* _b)
-{
-    AlifBuffer va_{}, vb_{};
-    AlifObject* result_ = nullptr;
 
-    va_.len = -1;
-    vb_.len = -1;
-    if (alifObject_getBuffer(_a, &va_, 0) != 0 or alifObject_getBuffer(_b, &vb_, 0) != 0) {
-        goto done;
-    }
 
-    /* Optimize end cases */
-    if (va_.len == 0 && (_b->type_ == &_typeBytes_)) {
-        result_ = ALIF_NEWREF(_b);
-        goto done;
-    }
-    if (vb_.len == 0 && (_a->type_ == &_typeBytes_)) {
-        result_ = ALIF_NEWREF(_a);
-        goto done;
-    }
 
-    if (va_.len > LLONG_MAX - vb_.len) {
-        goto done;
-    }
 
-    result_ = alifBytes_fromStringAndSize(nullptr, va_.len + vb_.len);
-    if (result_ != nullptr) {
-        memcpy(ALIFWBYTES_AS_STRING(result_), va_.buf, va_.len);
-        memcpy(ALIFWBYTES_AS_STRING(result_) + va_.len, vb_.buf, vb_.len);
-    }
+AlifObject* _alifBytes_decodeEscape(const char* _str, AlifSizeT _len, const char* _errors,
+	const char** _firstInvalidEscape) { // 1058
+	AlifIntT c_{};
+	char* p_{};
+	const char* end{};
+	AlifBytesWriter writer{};
 
-done:
-    if (va_.len != -1)
-        alifBuffer_release(&va_);
-    if (vb_.len != -1)
-        alifBuffer_release(&vb_);
-    return result_;
-}
+	alifBytesWriter_init(&writer);
 
-// in file codecs.c_
-const char* alif_hexdigits = "0123456789abcdef";
+	p_ = (char*)alifBytesWriter_alloc(&writer, _len);
+	if (p_ == nullptr)
+		return nullptr;
+	writer.overAllocate = 1;
 
-AlifObject* alifBytes_repr(AlifObject* _obj, int _smartQuotes)
-{
-    AlifWBytesObject* op_ = (AlifWBytesObject*)_obj;
-    int64_t i_, length_ = ((AlifVarObject*)op_)->size_;
-    int64_t newSize, squotes_, dquotes_;
-    AlifObject* v_;
-    unsigned char quote_;
-    const unsigned char* s_;
-    uint8_t* p_;
+	*_firstInvalidEscape = nullptr;
 
-    /* Compute size_ of output string */
-    squotes_ = dquotes_ = 0;
-    newSize = 3;
-    s_ = (const unsigned char*)op_->value_;
-    for (i_ = 0; i_ < length_; i_++) {
-        int64_t incr_ = 1;
-        switch (s_[i_]) {
-        case '\'': squotes_++; break;
-        case '"':  dquotes_++; break;
-        case '\\': case '\t': case '\n': case '\r':
-            incr_ = 2; break; 
-        default:
-            if (s_[i_] < ' ' || s_[i_] >= 0x7f)
-                incr_ = 4; 
-        }
-        if (newSize > LLONG_MAX - incr_)
-            goto overflow;
-        newSize += incr_;
-    }
-    quote_ = '\'';
-    if (_smartQuotes && squotes_ && !dquotes_)
-        quote_ = '"';
-    if (squotes_ && quote_ == '\'') {
-        if (newSize > LLONG_MAX - squotes_)
-            goto overflow;
-        newSize += squotes_;
-    }
+	end = _str + _len;
+	while (_str < end) {
+		if (*_str != '\\') {
+			*p_++ = *_str++;
+			continue;
+		}
 
-    v_ = alifNew_uStr(newSize, 127);
-    if (v_ == nullptr) {
-        return nullptr;
-    }
-    p_ = (uint8_t*)((AlifUStrObject*)v_)->UTF;
+		_str++;
+		if (_str == end) {
+			//alifErr_setString(_alifExcValueError_,
+			//	"Trailing \\ in string");
+			goto failed;
+		}
 
-    *p_++ = 'b', *p_++ = quote_;
-    for (i_ = 0; i_ < length_; i_++) {
-        unsigned char c_ = op_->value_[i_];
-        if (c_ == quote_ || c_ == '\\')
-            *p_++ = '\\', *p_++ = c_;
-        else if (c_ == '\t')
-            *p_++ = '\\', *p_++ = 't';
-        else if (c_ == '\n')
-            *p_++ = '\\', *p_++ = 'n';
-        else if (c_ == '\r')
-            *p_++ = '\\', *p_++ = 'r';
-        else if (c_ < ' ' || c_ >= 0x7f) {
-            *p_++ = '\\';
-            *p_++ = 'x';
-            *p_++ = alif_hexdigits[(c_ & 0xf0) >> 4];
-            *p_++ = alif_hexdigits[c_ & 0xf];
-        }
-        else
-            *p_++ = c_;
-    }
-    *p_++ = quote_;
-    return v_;
+		switch (*_str++) {
+			/* XXX This assumes ASCII! */
+		case '\n': break;
+		case '\\': *p_++ = '\\'; break;
+		case '\'': *p_++ = '\''; break;
+		case '\"': *p_++ = '\"'; break;
+		case 'b': *p_++ = '\b'; break;
+		case 'f': *p_++ = '\014'; break; /* FF */
+		case 't': *p_++ = '\t'; break;
+		case 'n': *p_++ = '\n'; break;
+		case 'r': *p_++ = '\r'; break;
+		case 'v': *p_++ = '\013'; break; /* VT */
+		case 'a': *p_++ = '\007'; break; /* BEL, not classic C */
+		case '0': case '1': case '2': case '3':
+		case '4': case '5': case '6': case '7':
+			c_ = _str[-1] - '0';
+			if (_str < end and '0' <= *_str and *_str <= '7') {
+				c_ = (c_ << 3) + *_str++ - '0';
+				if (_str < end and '0' <= *_str and *_str <= '7')
+					c_ = (c_ << 3) + *_str++ - '0';
+			}
+			if (c_ > 0377) {
+				if (*_firstInvalidEscape == NULL) {
+					*_firstInvalidEscape = _str - 3; /* Back up 3 chars, since we've
+													already incremented s. */
+				}
+			}
+			*p_++ = c_;
+			break;
+		case 'x':
+			if (_str + 1 < end) {
+				int digit1, digit2;
+				digit1 = _alifLongDigitValue_[ALIF_CHARMASK(_str[0])];
+				digit2 = _alifLongDigitValue_[ALIF_CHARMASK(_str[1])];
+				if (digit1 < 16 and digit2 < 16) {
+					*p_++ = (unsigned char)((digit1 << 4) + digit2);
+					_str += 2;
+					break;
+				}
+			}
+			/* invalid hexadecimal digits */
 
-overflow:
-    std::wcout << L"كائن البايت كبير جدا لعمل تمثيل نصي\n" << std::endl;
-    exit(-1);
-    return nullptr;
-}
+			if (!_errors or strcmp(_errors, "strict") == 0) {
+				//alifErr_format(_alifExcValueError_,
+				//	"invalid \\x escape at position %zd",
+				//	_str - 2 - (end - _len));
+				goto failed;
+			}
+			if (strcmp(_errors, "replace") == 0) {
+				*p_++ = '?';
+			}
+			else if (strcmp(_errors, "ignore") == 0)
+				/* do nothing */;
+			else {
+				//alifErr_format(_alifExcValueError_,
+				//	"decoding error; unknown "
+				//	"error handling code: %.400s",
+				//	_errors);
+				goto failed;
+			}
+			/* skip \x */
+			if (_str < end and ALIF_ISXDIGIT(_str[0]))
+				_str++; /* and a hexdigit */
+			break;
 
-static AlifObject* bytes_repr(AlifObject* _object)
-{
-    return alifBytes_repr(_object, 1);
-}
+		default:
+			if (*_firstInvalidEscape == nullptr) {
+				*_firstInvalidEscape = _str - 1; /* Back up one char, since we've
+												already incremented s. */
+			}
+			*p_++ = '\\';
+			_str--;
+		}
+	}
 
-static int64_t bytes_length(AlifWBytesObject* _value) {
+	return alifBytesWriter_finish(&writer, p_);
 
-    return ALIF_SIZE(_value);
-
-}
-
-static AlifObject* bytes_repeat(AlifWBytesObject* _object, int64_t _repeat) {
-
-    if (_repeat < 0){
-        _repeat = 0;
-    }
-
-    int64_t size_ = ((AlifVarObject*)_object)->size_ * _repeat;
-    if (size_ == ((AlifVarObject*)_object)->size_ && 
-        ((AlifObject*)_object)->type_ == &_typeBytes_) {
-        return (AlifObject*)_object;
-    }
-    size_t numberBytes = (size_t)size_;
-
-    AlifWBytesObject* bytesObject = (AlifWBytesObject*)alifMem_objAlloc(ALIFBYTESOBJECT_SIZE + numberBytes);
-
-    alifSubObject_initVar((AlifVarObject*)bytesObject, &_typeBytes_, size_);
-    bytesObject->value_[size_] = '\0';
-
-    bytes_subRepeat(bytesObject->value_, size_, _object->value_, ((AlifVarObject*)_object)->size_);
-
-    return (AlifObject*)bytesObject;
-
-}
-
-static AlifObject* bytes_item(AlifWBytesObject* _object, int64_t _index) {
-
-    if (_index < 0 || ((AlifVarObject*)_object)->size_ <= _index) {
-        std::wcout << L"مؤشر البايت خارج النطاق\n" << std::endl;
-        exit(-1);
-    }
-
-    return alifInteger_fromLongLong((unsigned char)_object->value_[_index]);
-
-}
-
-static int bytes_compare_eq(AlifWBytesObject* _a, AlifWBytesObject* _b)
-{
-    int cmp;
-    int64_t len;
-
-    len = ((AlifVarObject*)_a)->size_;
-    if (((AlifVarObject*)_b)->size_ != len)
-        return 0;
-
-    if (_a->value_[0] != _b->value_[0])
-        return 0;
-
-    cmp = memcmp(_a->value_, _b->value_, len);
-    return (cmp == 0);
-}
-
-static AlifObject* bytes_richcompare(AlifWBytesObject* _a, AlifWBytesObject* _b, int _op)
-{
-    int c_;
-    int64_t lenA, lenB;
-    int64_t minLen;
-
-    //if (!(Bytes_Check(_a) && Bytes_Check(_b))) {
-    //    if (__GetConfig()->bytes_warning && (_op == _EQ || _op == _NE)) {
-    //        if (Unicode_Check(_a) || Unicode_Check(_b)) {
-    //            if (Err_WarnEx(Exc_BytesWarning,
-    //                "Comparison between bytes and string", 1))
-    //                return nullptr;
-    //        }
-    //        if (Long_Check(_a) || Long_Check(_b)) {
-    //            if (Err_WarnEx(Exc_BytesWarning,
-    //                "Comparison between bytes and int", 1))
-    //                return nullptr;
-    //        }
-    //    }
-    //    ALIF_RETURN_NOTIMPLEMENTED;
-    //}
-    if (_a == _b) {
-        switch (_op) {
-        case ALIF_EQ:
-        case ALIF_LE:
-        case ALIF_GE:
-            return ALIF_TRUE;
-        case ALIF_NE:
-        case ALIF_LT:
-        case ALIF_GT:
-            return ALIF_FALSE;
-        default:
-            return nullptr;
-        }
-    }
-    else if (_op == ALIF_EQ || _op == ALIF_NE) {
-        int eq_ = bytes_compare_eq(_a, _b);
-        eq_ ^= (_op == ALIF_NE);
-        return alifBool_fromInteger(eq_);
-    }
-    else {
-        lenA = ((AlifVarObject*)_a)->size_;
-        lenB = ((AlifVarObject*)_b)->size_;
-        minLen = ALIF_MIN(lenA, lenB);
-        if (minLen > 0) {
-            c_ = ALIF_WCHARMASK(*_a->value_) - ALIF_WCHARMASK(*_b->value_);
-            if (c_ == 0)
-                c_ = memcmp(_a->value_, _b->value_, minLen);
-        }
-        else
-            c_ = 0;
-        if (c_ != 0)
-            ALIF_RETURN_RICHCOMPARE(c_, 0, _op);
-        ALIF_RETURN_RICHCOMPARE(lenA, lenB, _op);
-    }
-
+failed:
+	alifBytesWriter_dealloc(&writer);
 	return nullptr;
 }
 
-// in file bytes_methods.c_
-int alif_bytes_contain(const wchar_t *_str, int64_t _length, AlifObject* _arg) { 
 
-    int64_t value = alifInteger_asLong(_arg);
-
-    if (value < 0 || value >= 256) {
-        std::wcout << L"يجب ان يكون البايت ضمن نطاق (0, 256)\n" << std::endl;
-        exit(-1);
-    }
-
-    return memchr(_str, (int)value, _length) != nullptr;
+AlifSizeT alifBytes_size(AlifObject* op) { // 1211
+	if (!ALIFBYTES_CHECK(op)) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"expected bytes, %.200s found", ALIF_TYPE(op)->name);
+		return -1;
+	}
+	return ALIF_SIZE(op);
 }
 
-static int bytes_contains(AlifObject* _self, AlifObject * _arg) {
 
-    return alif_bytes_contain(((AlifWBytesObject*)_self)->value_, ((AlifVarObject*)_self)->size_, _arg);
+char* alifBytes_asString(AlifObject* _op) { // 1221
+	if (!ALIFBYTES_CHECK(_op)) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"expected bytes, %.200s found", ALIF_TYPE(_op)->name);
+		return nullptr;
+	}
+	return ((AlifBytesObject*)_op)->val;
 }
 
-void alifBytes_dealloc(AlifObject* _object) {
-    
-    alifMem_objFree(_object);
 
+AlifIntT alifBytes_asStringAndSize(AlifObject* _obj,
+	char** _str, AlifSizeT* _len) { // 1232
+	if (_str == nullptr) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+
+	if (!ALIFBYTES_CHECK(_obj)) {
+		//alifErr_format(_alifExcTypeError_,
+		//	"expected bytes, %.200s found", ALIF_TYPE(_obj)->name);
+		return -1;
+	}
+
+	*_str = ALIFBYTES_AS_STRING(_obj);
+	if (_len != nullptr)
+		*_len = ALIFBYTES_GET_SIZE(_obj);
+	else if (strlen(*_str) != (AlifUSizeT)ALIFBYTES_GET_SIZE(_obj)) {
+		//alifErr_setString(_alifExcValueError_,
+		//	"embedded null byte");
+		return -1;
+	}
+	return 0;
 }
 
-static AlifSequenceMethods _bytesAsSequence_ = {
-    (LenFunc)bytes_length, 
-    (BinaryFunc)bytes_concat, 
-    (SSizeArgFunc)bytes_repeat, 
-    (SSizeArgFunc)bytes_item, 
-    0,                  
-    0,                  
-    0,                  
-    (ObjObjProc)bytes_contains 
+
+
+static AlifObject* bytes_concat(AlifObject* _a, AlifObject* _b) { // 1414
+	AlifBuffer va{}, vb{};
+	AlifObject* result = nullptr;
+
+	va.len = -1;
+	vb.len = -1;
+	if (alifObject_getBuffer(_a, &va, ALIFBUF_SIMPLE) != 0 or
+		alifObject_getBuffer(_b, &vb, ALIFBUF_SIMPLE) != 0) {
+		//alifErr_format(_alifExcTypeError_, "can't concat %.100s to %.100s",
+		//	ALIF_TYPE(_b)->name, ALIF_TYPE(_a)->name);
+		goto done;
+	}
+
+	/* Optimize end cases */
+	if (va.len == 0 and ALIFBYTES_CHECKEXACT(_b)) {
+		result = ALIF_NEWREF(_b);
+		goto done;
+	}
+	if (vb.len == 0 and ALIFBYTES_CHECKEXACT(_a)) {
+		result = ALIF_NEWREF(_a);
+		goto done;
+	}
+
+	if (va.len > ALIF_SIZET_MAX - vb.len) {
+		//alifErr_noMemory();
+		goto done;
+	}
+
+	result = alifBytes_fromStringAndSize(nullptr, va.len + vb.len);
+	if (result != nullptr) {
+		memcpy(ALIFBYTES_AS_STRING(result), va.buf, va.len);
+		memcpy(ALIFBYTES_AS_STRING(result) + va.len, vb.buf, vb.len);
+	}
+
+done:
+	if (va.len != -1)
+		alifBuffer_release(&va);
+	if (vb.len != -1)
+		alifBuffer_release(&vb);
+	return result;
+}
+
+
+
+
+
+
+
+
+AlifTypeObject _alifBytesType_ = { // 3028
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "بايت",
+	.basicSize = ALIFBYTESOBJECT_SIZE,
+	.itemSize = sizeof(char),
+	.dealloc = 0,
+	.getAttro = alifObject_genericGetAttr,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE |
+		ALIF_TPFLAGS_BYTES_SUBCLASS | _ALIF_TPFLAGS_MATCH_SELF,
+	.free = alifMem_objFree,
 };
 
-static AlifMappingMethods _bytesAsmapping_ = {
-    (LenFunc)bytes_length,
-    //(BinaryFunc)bytes_subscript,
-    0,
-};
+void alifBytes_concat(AlifObject** _pv, AlifObject* _w) { // 3072
+	if (*_pv == nullptr) return;
+	if (_w == nullptr) {
+		ALIF_CLEAR(*_pv);
+		return;
+	}
 
-AlifTypeObject _typeBytes_ = {
-    0,
-    0,
-    0,
-    L"bytes",
-    ALIFBYTESOBJECT_SIZE,
-    sizeof(char),
-    0,                                
-    0,                                          
-    0,                                
-    0,                                
-    bytes_repr,
-    0,                   
-    &_bytesAsSequence_,                   
-    &_bytesAsmapping_,                   
-    0,         
-    0,                             
-    0,                    
-    alifObject_genericGetAttr,           
-    0,                                 
-    0,      
-    0,                       
-    0,                                    
-    0,
-    0,
-    (RichCmpFunc)bytes_richcompare,          
-    0,                                          
-    0, //bytes_iter,                       
-    0,                                    
-    0, //bytes_methods,                          
-    0,                                      
-    0,                                     
-    0,                                   
-    0,                                   
-    0,                                        
-    0,                                        
-    0,                                         
-    0,                                   
-    0, //bytes_alloc,                          
-    0, //bytes_new,                                   
-    (FreeFunc)alifBytes_dealloc,                               
-};
+	if (ALIF_REFCNT(*_pv) == 1 and ALIFBYTES_CHECKEXACT(*_pv)) {
+		/* Only one reference, so we can resize in place */
+		AlifSizeT oldsize{};
+		AlifBuffer wb{};
 
-void alifBytes_concat(AlifObject** _pv, AlifObject* _w)
-{
-    if (*_pv == nullptr)
-        return;
-    if (_w == nullptr) {
-        ALIF_CLEAR(*_pv);
-        return;
-    }
+		if (alifObject_getBuffer(_w, &wb, ALIFBUF_SIMPLE) != 0) {
+			//alifErr_format(_alifExcTypeError_, "can't concat %.100s to %.100s",
+			//	ALIF_TYPE(_w)->name, ALIF_TYPE(*_pv)->name);
+			ALIF_CLEAR(*_pv);
+			return;
+		}
 
-    if (ALIF_REFCNT(*_pv) == 1 && ((*_pv)->type_ == &_typeBytes_)) {
-        int64_t oldSize;
-        AlifBuffer wb_;
+		oldsize = ALIFBYTES_GET_SIZE(*_pv);
+		if (oldsize > ALIF_SIZET_MAX - wb.len) {
+			//alifErr_noMemory();
+			goto error;
+		}
+		if (alifBytes_resize(_pv, oldsize + wb.len) < 0)
+			goto error;
 
-        if (alifObject_getBuffer(_w, &wb_, 0) != 0) {
-            ALIF_CLEAR(*_pv);
-            return;
-        }
+		memcpy(ALIFBYTES_AS_STRING(*_pv) + oldsize, wb.buf, wb.len);
+		alifBuffer_release(&wb);
+		return;
 
-        oldSize = ((AlifVarObject*)*_pv)->size_;
-        if (oldSize > LLONG_MAX - wb_.len) {
-       
-            goto error;
-        }
-        if (alifSubBytes_resize(_pv, oldSize + wb_.len) < 0)
-            goto error;
+	error:
+		alifBuffer_release(&wb);
+		ALIF_CLEAR(*_pv);
+		return;
+	}
 
-        //memcpy(ALIFWBYTES_AS_STRING(*_pv) + oldSize, wb_.buf, wb_.len);
-        alifBuffer_release(&wb_);
-        return;
-
-    error:
-        alifBuffer_release(&wb_);
-        ALIF_CLEAR(*_pv);
-        return;
-    }
-
-    else {
-        /* Multiple references, need to create new _object */
-        AlifObject* v_;
-        v_ = bytes_concat(*_pv, _w);
-        ALIF_SETREF(*_pv, v_);
-    }
+	else {
+		/* Multiple references, need to create new object */
+		AlifObject* v{};
+		v = bytes_concat(*_pv, _w);
+		ALIF_SETREF(*_pv, v);
+	}
 }
 
-int alifSubBytes_resize(AlifObject** _pv, int64_t _newSize)
-{
-    AlifObject* v_;
-    AlifWBytesObject* sv_;
-    v_ = *_pv;
-    if (!(v_->type_ == &_typeBytes_) || _newSize < 0) {
-        *_pv = 0;
-        ALIF_DECREF(v_);
-        return -1;
-    }
-    int64_t oldSize = ((AlifVarObject*)v_)->size_;
-    if (oldSize == _newSize) {
-        /* return early if newsize equals to v_->ob_size */
-        return 0;
-    }
-    if (oldSize == 0) {
-        *_pv = alifSubBytes_fromSize(_newSize);
-        ALIF_DECREF(v_);
-        return (*_pv == nullptr) ? -1 : 0;
-    }
-    if (_newSize == 0) {
-        //*_pv = bytes_get_empty();
-        ALIF_DECREF(v_);
-        return 0;
-    }
-    if (ALIF_REFCNT(v_) != 1) {
-        if (oldSize < _newSize) {
-            *_pv = alifSubBytes_fromSize(_newSize);
-            if (*_pv) {
-                memcpy(ALIFWBYTES_AS_STRING(*_pv), ALIFWBYTES_AS_STRING(v_), oldSize);
-            }
-        }
-        else {
-            *_pv = alifBytes_fromStringAndSize(ALIFWBYTES_AS_STRING(v_), _newSize);
-        }
-        ALIF_DECREF(v_);
-        return (*_pv == nullptr) ? -1 : 0;
-    }
 
+AlifIntT alifBytes_resize(AlifObject** _pv, AlifSizeT _newSize) { // 3141
+	AlifObject* v{};
+	AlifBytesObject* sv{};
+	v = *_pv;
+	if (!ALIFBYTES_CHECK(v) or _newSize < 0) {
+		*_pv = 0;
+		ALIF_DECREF(v);
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+	AlifSizeT oldsize = ALIFBYTES_GET_SIZE(v);
+	if (oldsize == _newSize) {
+		/* return early if newsize equals to v->size */
+		return 0;
+	}
+	if (oldsize == 0) {
+		*_pv = alifBytes_fromSize(_newSize, 0);
+		ALIF_DECREF(v);
+		return (*_pv == nullptr) ? -1 : 0;
+	}
+	if (_newSize == 0) {
+		*_pv = bytes_getEmpty();
+		ALIF_DECREF(v);
+		return 0;
+	}
+	if (ALIF_REFCNT(v) != 1) {
+		if (oldsize < _newSize) {
+			*_pv = alifBytes_fromSize(_newSize, 0);
+			if (*_pv) {
+				memcpy(ALIFBYTES_AS_STRING(*_pv), ALIFBYTES_AS_STRING(v), oldsize);
+			}
+		}
+		else {
+			*_pv = alifBytes_fromStringAndSize(ALIFBYTES_AS_STRING(v), _newSize);
+		}
+		ALIF_DECREF(v);
+		return (*_pv == nullptr) ? -1 : 0;
+	}
 
-    * _pv = (AlifObject*)
-        alifMem_objRealloc(v_, ALIFBYTESOBJECT_SIZE + _newSize);
-    if (*_pv == nullptr) {
-        alifMem_objFree(v_);
-        return -1;
-    }
-    sv_ = (AlifWBytesObject*)*_pv;
-    ALIFSET_SIZE(sv_, _newSize);
-    sv_->value_[_newSize] = '\0';
-    return 0;
+	* _pv = (AlifObject*)
+		alifMem_objRealloc(v, ALIFBYTESOBJECT_SIZE + _newSize);
+	if (*_pv == NULL) {
+		alifMem_objFree(v);
+		//alifErr_noMemory();
+		return -1;
+	}
+	alif_newReferenceNoTotal(*_pv);
+	sv = (AlifBytesObject*)*_pv;
+	ALIF_SET_SIZE(sv, _newSize);
+	sv->val[_newSize] = '\0';
+	sv->hash = -1;          /* invalidate cached hash value */
+	return 0;
 }
 
-void bytes_subRepeat(wchar_t* _destinaion, int64_t _lengthDest,
-    const wchar_t* _source, int64_t _lengthSrc)
-{
-    if (_lengthDest == 0) {
-        return;
-    }
-    if (_lengthSrc == 1) {
-        memset(_destinaion, _source[0], _lengthDest);
-    }
-    else {
-        if (_source != _destinaion) {
-            memcpy(_destinaion, _source, _lengthSrc);
-        }
-        int64_t copied_ = _lengthSrc;
-        while (copied_ < _lengthDest) {
-            int64_t bytesToCopy = ALIF_MIN(copied_, _lengthDest - copied_);
-            memcpy(_destinaion + copied_, _destinaion, bytesToCopy);
-            copied_ += bytesToCopy;
-        }
-    }
+
+
+
+
+/* AlifBytesWriter API */
+
+#ifdef _WINDOWS // 3363
+   /* On Windows, overallocate by 50% is the best factor */
+#  define OVERALLOCATE_FACTOR 2
+#else
+   /* On Linux, overallocate by 25% is the best factor */
+#  define OVERALLOCATE_FACTOR 4
+#endif
+
+
+void alifBytesWriter_init(AlifBytesWriter* _writer) { // 3371
+	memset(_writer, 0, offsetof(AlifBytesWriter, smallBuffer));
+}
+
+
+
+void alifBytesWriter_dealloc(AlifBytesWriter* _writer) { // 3382
+	ALIF_CLEAR(_writer->buffer);
+}
+
+ALIF_LOCAL_INLINE(char*)
+alifBytesWriter_asString(AlifBytesWriter* _writer) { // 3388
+	if (_writer->useSmallBuffer) {
+		return _writer->smallBuffer;
+	}
+	else if (_writer->useByteArray) {
+		return ALIFBYTEARRAY_AS_STRING(_writer->buffer);
+	}
+	else {
+		return ALIFBYTES_AS_STRING(_writer->buffer);
+	}
+}
+
+ALIF_LOCAL_INLINE(AlifSizeT)
+alifBytesWriter_getSize(AlifBytesWriter* _writer, char* _str) { // 3405
+	const char* start = alifBytesWriter_asString(_writer);
+	return _str - start;
+}
+
+void* alifBytesWriter_resize(AlifBytesWriter* _writer, void* _str, AlifSizeT _size) { // 3452
+	AlifSizeT allocated{}, pos{};
+
+	allocated = _size;
+	if (_writer->overAllocate
+		and allocated <= (ALIF_SIZET_MAX - allocated / OVERALLOCATE_FACTOR)) {
+		/* overallocate to limit the number of realloc() */
+		allocated += allocated / OVERALLOCATE_FACTOR;
+	}
+
+	pos = alifBytesWriter_getSize(_writer, (char*)_str);
+	if (!_writer->useSmallBuffer) {
+		if (_writer->useByteArray) {
+			if (alifByteArray_resize(_writer->buffer, allocated))
+				goto error;
+		}
+		else {
+			if (alifBytes_resize(&_writer->buffer, allocated))
+				goto error;
+		}
+	}
+	else {
+		/* convert from stack buffer to bytes object buffer */
+
+		if (_writer->useByteArray)
+			_writer->buffer = alifByteArray_fromStringAndSize(nullptr, allocated);
+		else
+			_writer->buffer = alifBytes_fromStringAndSize(nullptr, allocated);
+		if (_writer->buffer == nullptr)
+			goto error;
+
+		if (pos != 0) {
+			char* dest;
+			if (_writer->useByteArray)
+				dest = ALIFBYTEARRAY_AS_STRING(_writer->buffer);
+			else
+				dest = ALIFBYTES_AS_STRING(_writer->buffer);
+			memcpy(dest,
+				_writer->smallBuffer,
+				pos);
+		}
+
+		_writer->useSmallBuffer = 0;
+	}
+	_writer->allocated = allocated;
+
+	_str = alifBytesWriter_asString(_writer) + pos;
+	return _str;
+
+error:
+	alifBytesWriter_dealloc(_writer);
+	return NULL;
+}
+
+
+
+
+void* alifBytesWriter_prepare(AlifBytesWriter* _writer, void* _str, AlifSizeT _size) { // 3522
+	AlifSizeT newMinSize{};
+
+	if (_size == 0) {
+		/* nothing to do */
+		return _str;
+	}
+
+	if (_writer->minSize > ALIF_SIZET_MAX - _size) {
+		//alifErr_noMemory();
+		alifBytesWriter_dealloc(_writer);
+		return nullptr;
+	}
+	newMinSize = _writer->minSize + _size;
+
+	if (newMinSize > _writer->allocated)
+		_str = alifBytesWriter_resize(_writer, _str, newMinSize);
+
+	_writer->minSize = newMinSize;
+	return _str;
+}
+
+
+void* alifBytesWriter_alloc(AlifBytesWriter* writer, AlifSizeT size) { // 3552
+	writer->useSmallBuffer = 1;
+	writer->allocated = sizeof(writer->smallBuffer);
+	return alifBytesWriter_prepare(writer, writer->smallBuffer, size);
+}
+
+
+
+AlifObject* alifBytesWriter_finish(AlifBytesWriter* _writer, void* _str) { // 3582
+	AlifSizeT size{};
+	AlifObject* result{};
+
+	size = alifBytesWriter_getSize(_writer, (char*)_str);
+	if (size == 0 and !_writer->useByteArray) {
+		ALIF_CLEAR(_writer->buffer);
+		/* Get the empty byte string singleton */
+		result = alifBytes_fromStringAndSize(nullptr, 0);
+	}
+	else if (_writer->useSmallBuffer) {
+		if (_writer->useByteArray) {
+			result = alifByteArray_fromStringAndSize(_writer->smallBuffer, size);
+		}
+		else {
+			result = alifBytes_fromStringAndSize(_writer->smallBuffer, size);
+		}
+	}
+	else {
+		result = _writer->buffer;
+		_writer->buffer = nullptr;
+
+		if (size != _writer->allocated) {
+			if (_writer->useByteArray) {
+				if (alifByteArray_resize(result, size)) {
+					ALIF_DECREF(result);
+					return nullptr;
+				}
+			}
+			else {
+				if (alifBytes_resize(&result, size)) {
+					return nullptr;
+				}
+			}
+		}
+	}
+	return result;
+}
+
+
+
+
+
+void* alifBytesWriter_writeBytes(AlifBytesWriter* _writer, void* _ptr,
+	const void* _bytes, AlifSizeT _size) { // 3626
+	char* str = (char*)_ptr;
+
+	str = (char*)alifBytesWriter_prepare(_writer, str, _size);
+	if (str == nullptr)
+		return nullptr;
+
+	memcpy(str, _bytes, _size);
+	str += _size;
+
+	return str;
 }

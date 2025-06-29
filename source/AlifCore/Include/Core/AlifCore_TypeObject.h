@@ -1,61 +1,110 @@
 #pragma once
 
 
-#define ALIFTYPE_BASE_VERSIONTAG (2<<16)
-#define ALIFMAX_GLOBALTYPE_VERSIONTAG (ALIFTYPE_BASE_VERSIONTAG - 1)
+#include "AlifCore_ModuleObject.h"
+#include "AlifCore_Lock.h"
 
 
-class TypesRuntimeState {
+ // 17
+#define _ALIF_TYPE_BASE_VERSION_TAG (2<<16)
+#define ALIF_MAX_GLOBAL_TYPE_VERSION_TAG (_ALIF_TYPE_BASE_VERSION_TAG - 1)
+
+#define ALIFMAX_MANAGED_STATIC_BUILTIN_TYPES 200 // 22
+#define ALIFMAX_MANAGED_STATIC_EXT_TYPES 10 // 23
+#define ALIF_MAX_MANAGED_STATIC_TYPES \
+    (ALIFMAX_MANAGED_STATIC_BUILTIN_TYPES + ALIFMAX_MANAGED_STATIC_EXT_TYPES)
+
+
+class TypesDureRunState { // 27
 public:
-	unsigned int nextVersionTag;
+	AlifUIntT nextVersionTag{};
+	class {
+	public:
+		class {
+		public:
+			AlifTypeObject* type{};
+			int64_t interpCount{};
+		} types[ALIF_MAX_MANAGED_STATIC_TYPES];
+	} managedStatic;
 };
 
-class TypeCacheEntry {
+class TypeCacheEntry { // 45
 public:
-	unsigned int version_;  
-	AlifObject* name_;        
-	AlifObject* value_;       
+	AlifUIntT version{};
+	AlifSeqLock sequence{};
+	AlifObject* name{};        // reference to exactly a str or None
+	AlifObject* value{};       // borrowed reference or nullptr
 };
 
 #define MCACHE_SIZE_EXP 12
 
-class TypeCache {
+class TypeCache { // 56
 public:
-	class TypeCacheEntry hashtable[1 << MCACHE_SIZE_EXP];
+	TypeCacheEntry hashTable[1 << MCACHE_SIZE_EXP]{};
 };
 
 
-#define ALIFMAX_STATIC_BUILTINTYPES 200
 
-class StaticBuiltinState {
-public:
-	AlifTypeObject* type;
-	int readying;
-	int ready;
-	AlifObject* dict;
-	AlifObject* subclasses;
-	AlifObject* weaklist;
-} ;
 
-class TypesState {
+
+class ManagedStaticTypeState { // 60
 public:
-	unsigned int nextVersionTag;
-	class TypeCache typeCache;
-	size_t numBuiltinsInitialized;
-	StaticBuiltinState builtins[ALIFMAX_STATIC_BUILTINTYPES];
-	uint8_t mutex;
+	AlifTypeObject* type{};
+	AlifIntT isBuiltin{};
+	AlifIntT readying{};
+	AlifIntT ready{};
+
+	AlifObject* dict{};
+	AlifObject* subclasses{};
+	AlifObject* weakList{};
 };
 
-AlifObject* alifSubType_getDict(AlifTypeObject* );
+class TypesState { // 78
+public:
+	AlifUIntT nextVersionTag{};
+	TypeCache typeCache{};
+	class {
+	public:
+		AlifUSizeT numInitialized{};
+		ManagedStaticTypeState initialized[ALIFMAX_MANAGED_STATIC_BUILTIN_TYPES]{};
+	} builtins;
+	class {
+	public:
+		AlifUSizeT numInitialized{};
+		AlifUSizeT nextIndex{};
+		ManagedStaticTypeState initialized[ALIFMAX_MANAGED_STATIC_EXT_TYPES]{};
+	} forExtensions;
+	AlifMutex mutex{};
+};
 
-static inline int alifType_isReady(AlifTypeObject* _type)
-{
-	return alifSubType_getDict(_type) != nullptr;
+
+
+extern AlifIntT alifTypes_initTypes(AlifInterpreter*); // 144
+
+
+#define MAX_EQUIV 10
+
+typedef class WrapperBase AlifTypeSlotDef; // 158
+
+static inline AlifObject** _alifStaticType_getWeakRefsListPtr(ManagedStaticTypeState* _state) { // 161
+	return &_state->weakList;
 }
 
-AlifObject* alifType_getAttroImpl(AlifTypeObject*, AlifObject* , AlifIntT* );
-AlifObject* alifType_getAttro(AlifObject* , AlifObject*);
+extern AlifIntT alifStaticType_initBuiltin(AlifInterpreter*, AlifTypeObject*); // 168
 
 
-extern AlifObject* alifType_getAttroImpl(AlifTypeObject*, AlifObject*, AlifIntT*);
-extern AlifObject* alifType_getAttro(AlifObject*, AlifObject*); 
+extern ManagedStaticTypeState* _alifStaticType_getState(AlifInterpreter*, AlifTypeObject*); // 177
+
+AlifObject* alifType_getDict(AlifTypeObject*); // 207
+
+static inline AlifIntT alifType_isReady(AlifTypeObject* _type) { // 221
+	return alifType_getDict(_type) != nullptr;
+}
+
+extern AlifObject* alifType_getAttroImpl(AlifTypeObject* , AlifObject* , AlifIntT* ); // 226
+
+extern AlifObject* alifType_getAttro(AlifObject* , AlifObject* ); // 228
+
+
+
+void alifType_setVersion(AlifTypeObject*, AlifUIntT); // 255

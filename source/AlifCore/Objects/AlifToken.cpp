@@ -1,77 +1,77 @@
-
 #include "alif.h"
-#include "AlifCore_AlifToken.h"
+
+#include "AlifCore_Token.h"
 
 
 
 
 /* Token names */
 
-const wchar_t* const alifParserTokenNames[] = {
-	L"ENDMARKER",
-	L"NAME",
-	L"NUMBER",
-	L"STRING",
-	L"NEWLINE",
-	L"INDENT",
-	L"DEDENT",
-	L"LPAR",
-	L"RPAR",
-	L"LSQB",
-	L"RSQB",
-	L"COLON",
-	L"COMMA",
-	L"PLUS",
-	L"MINUS",
-	L"STAR",
-	L"DOT",
-	L"SQRT",
-	L"EQUAL",
-	L"AMPER",
-	L"LEFTSHIFTEQUAL",
-	L"RIGHTSHIFTEQUAL",
-	L"DOUBLECIRCUMFLEXEQUAL",
-	L"VBAREQUAL",
-	L"AMPEREQUAL",
-	L"DOUBLESLASHEQUAL",
-	L"SLASHSTAREQUAL",
-	L"SLASHEQUAL",
-	L"STAREQUAL",
-	L"MINEQUAL",
-	L"PLUSEQUAL",
-	L"DOUBLESTAR",
-	L"EQEQUAL",
-	L"NOTEQUAL",
-	L"LESSEQUAL",
-	L"LESS",
-	L"GREATEREQUAL",
-	L"GREATER",
-	L"VBAR",
-	L"STARVBAR",
-	L"RIGHTSHIFT",
-	L"LEFTSHIFT",
-	L"DOUBLESLASH",
-	L"SLASH",
-	L"SLASHSTAR",
-	L"CIRCUMFLEX",
-	L"SLASHCIRCUMFLEX",
-	L"LBRACE",
-	L"RBRACE",
-	L"EXCLAMATION",
-	L"OP",
-	L"COMMENT",
-	L"FSTRING_START",
-	L"FSTRING_MIDDLE",
-	L"FSTRING_END",
-	L"NL",
-	L"<ERRORTOKEN>",
+const char* const _alifParserTokenNames_[] = {
+	"ENDMARKER",
+	"NAME",
+	"NUMBER",
+	"STRING",
+	"NEWLINE",
+	"INDENT",
+	"DEDENT",
+	"LPAR",
+	"RPAR",
+	"LSQB",
+	"RSQB",
+	"COLON",
+	"COMMA",
+	"PLUS",
+	"MINUS",
+	"STAR",
+	"DOT",
+	"SQRT",
+	"EQUAL",
+	"AMPER",
+	"LEFTSHIFTEQUAL",
+	"RIGHTSHIFTEQUAL",
+	"DOUBLECIRCUMFLEXEQUAL",
+	"VBAREQUAL",
+	"AMPEREQUAL",
+	"DOUBLESLASHEQUAL",
+	"SLASHSTAREQUAL",
+	"SLASHEQUAL",
+	"STAREQUAL",
+	"MINEQUAL",
+	"PLUSEQUAL",
+	"DOUBLESTAR",
+	"EQEQUAL",
+	"NOTEQUAL",
+	"LESSEQUAL",
+	"LESS",
+	"GREATEREQUAL",
+	"GREATER",
+	"VBAR",
+	"STARVBAR",
+	"RIGHTSHIFT",
+	"LEFTSHIFT",
+	"DOUBLESLASH",
+	"SLASH",
+	"SLASHSTAR",
+	"CIRCUMFLEX",
+	"SLASHCIRCUMFLEX",
+	"LBRACE",
+	"RBRACE",
+	"EXCLAMATION",
+	"OP",
+	"COMMENT",
+	"FSTRING_START",
+	"FSTRING_MIDDLE",
+	"FSTRING_END",
+	"NL",
+	"<ERRORTOKEN>",
 
-	L"SOFT_KEYWORD",
-	L"<ENCODING>",
-	L"<N_TOKENS>",
+	"SOFT_KEYWORD",
+	"<ENCODING>",
+	"<N_TOKENS>",
 };
 
-int alifToken_oneChar(int _c1) {
+AlifIntT alifToken_oneChar(AlifIntT _c1) {
 
 	switch (_c1) {
 	case L'(': return LPAR;
@@ -84,12 +84,15 @@ int alifToken_oneChar(int _c1) {
 	case L'.': return DOT;
 	case L':': return COLON;
 	case L',': return COMMA;
+	case L';': return SEMI;
+	case 140: return COMMA; // Arabic COMMA ،
+	case 155 : return SEMI; // Arabic SEMI ؛
 	case L'&': return AMPER;
-	case L'<': return LESSTHAN;
+	case L'>': return LESSTHAN;
 	case L'=': return EQUAL;
-	case L'>': return GREATERTHAN;
+	case L'<': return GREATERTHAN;
 	case L'!': return EXCLAMATION;
-	case L'/': return SLASH;
+	case L'\\': return SLASH;
 	case L'^': return CIRCUMFLEX;
 	case L'{': return LBRACE;
 	case L'}': return RBRACE;
@@ -98,7 +101,7 @@ int alifToken_oneChar(int _c1) {
 	return OP;
 }
 
-int alifToken_twoChars(int _c1, int _c2) {
+AlifIntT alifToken_twoChars(AlifIntT _c1, AlifIntT _c2) {
 
 	switch (_c1) {
 	case L'!':
@@ -118,8 +121,8 @@ int alifToken_twoChars(int _c1, int _c2) {
 	case L'-':
 		if (_c2 == L'=') return MINUSEQUAL;
 		break;
-	case L'/':
-		if (_c2 == L'/') return DOUBLESLASH;
+	case L'\\':
+		if (_c2 == L'\\') return DOUBLESLASH;
 		else if (_c2 == L'=') return SLASHEQUAL;
 		else if (_c2 == L'^') return SLASHCIRCUMFLEX;
 		else if (_c2 == L'*') return SLASHSTAR;
@@ -145,11 +148,11 @@ int alifToken_twoChars(int _c1, int _c2) {
 	return OP;
 }
 
-int alifToken_threeChars(int _c1, int _c2, int _c3) {
+AlifIntT alifToken_threeChars(AlifIntT _c1, AlifIntT _c2, AlifIntT _c3) {
 
 	switch (_c1) {
-	case L'/':
-		if (_c2 == L'/') { if (_c3 == L'=') return DOUBLESLASHEQUAL; }
+	case L'\\':
+		if (_c2 == L'\\') { if (_c3 == L'=') return DOUBLESLASHEQUAL; }
 		else if (_c2 == L'*') { if (_c3 == L'=') return SLASHSTAREQUAL; }
 		break;
 	case L'<':

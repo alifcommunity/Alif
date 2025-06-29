@@ -1,9 +1,10 @@
+#include "alif.h"
+
 /*
 يقوم بإرجاع قيمة النسخة الحالية
 بالإضافة الى المترجم المستخدم في بناء اللغة
 */
 
-#include "alif.h"
 
 #ifndef COMPILER
 #if defined(__clang__)
@@ -22,8 +23,7 @@ static const char* alif_getCompiler() { return COMPILER; }
 static char version[100]{};
 
 const char* alif_getVersion() {
-	sprintf(version,
-		"%s %s", ALIF_VERSION, alif_getCompiler());
+	sprintf(version, "%s %s\n", ALIF_VERSION, alif_getCompiler());
 	return version;
 }
 

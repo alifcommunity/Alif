@@ -29,4 +29,4 @@
 
 
 
-const char* alif_getVersion();
+//const char* alif_getVersion();

@@ -19,15 +19,15 @@
 #define MAXSTACK 6000
 
 
-static const int nKeywordList = 7;
+static const AlifIntT nKeywordList = 7;
 static KeywordToken* reservedKeywords[7] = {
-	new (KeywordToken[1]) { {nullptr, -1} },  // 0 char
-	new (KeywordToken[3]) { {L"ك", 501}, {L"و", 502}, {nullptr, -1} },  // 1 char
-	new (KeywordToken[7]) { {L"في", 511}, {L"او", 512}, {L"من", 513},  {L"مع", 514}, {L"صح", 515}, {L"هل", 516}, {nullptr, -1} },  // 2 chars
-	new (KeywordToken[9]) { {L"إذا", 521}, {L"ليس", 522}, {L"مرر", 523}, {L"عدم", 524}, {L"ولد", 525},  {L"صنف", 526},  {L"خطا", 527},  {L"عام", 528}, {nullptr, -1} },  // 3 chars
-	new (KeywordToken[8]) { {L"احذف", 531}, {L"دالة", 532}, {L"لاجل", 533},  {L"والا", 534}, {L"توقف", 535}, {L"نطاق", 536}, {L"ارجع", 537}, {nullptr, -1}},  // 4 chars
-	new (KeywordToken[5]) { {L"اواذا", 541}, {L"بينما", 542},  {L"انتظر", 543}, {L"استمر", 544}, {nullptr, -1}},  // 5 chars
-	new (KeywordToken[3]) { {L"مزامنة", 551}, {L"استورد", 552}, {nullptr, -1}}  // 6 chars
+	new (KeywordToken[1])  { {nullptr, -1} },  // 0 char
+	new (KeywordToken[3])  { {"ك", 501}, {"و", 502}, {nullptr, -1} },  // 1 char
+	new (KeywordToken[8])  { {"في", 511}, {"او", 512}, {"أو", 512}, {"من", 513}, {"صح", 514}, {"هل", 515}, {nullptr, -1} },  // 2 chars
+	new (KeywordToken[13]) { {"اذا", 521}, {"إذا", 521}, {"ليس", 522}, {"مرر", 523}, {"عدم", 524}, {"ولد", 525},  {"صنف", 526}, {"خطا", 527}, {"خطأ", 527}, {"عام", 528}, {"عند", 529}, {"خلل", 530}, { nullptr, -1 }},  // 3 chars
+	new (KeywordToken[11]) { {"احذف", 531}, {"دالة", 532}, {"لاجل", 533}, {"لأجل", 533},  {"والا", 534}, {"وإلا", 534}, {"توقف", 535}, {"نطاق", 536}, {"ارجع", 537}, {"حاول", 538}, {nullptr, -1}},  // 4 chars
+	new (KeywordToken[7])  { {"اواذا", 541}, {"أوإذا", 541}, {"بينما", 542},  {"انتظر", 543}, {"استمر", 544}, {"نهاية", 545}, {nullptr, -1}},  // 5 chars
+	new (KeywordToken[3])  { {"مزامنة", 551}, {"استورد", 552}, {nullptr, -1}}  // 6 chars
 };
 // ^
 // |
@@ -37,9 +37,8 @@ static KeywordToken* reservedKeywords[7] = {
 #define IN_KW 511
 #define OR_KW 512
 #define FROM_KW 513
-#define WITH_KW 514
-#define TRUE_KW 515
-#define IS_KW 516
+#define TRUE_KW 514
+#define IS_KW 515
 #define IF_KW 521
 #define NOT_KW 522
 #define PASS_KW 523
@@ -48,6 +47,8 @@ static KeywordToken* reservedKeywords[7] = {
 #define CLASS_KW 526
 #define FALSE_KW 527
 #define GLOBAL_KW 528
+#define WITH_KW 529
+#define EXCEPT_KW 530
 #define DEL_KW 531
 #define FUNC_KW 532
 #define FOR_KW 533
@@ -55,17 +56,19 @@ static KeywordToken* reservedKeywords[7] = {
 #define BREAK_KW 535
 #define NONLOCALE_KW 536
 #define RETURN_KW 537
+#define TRY_KW 538
 #define ELIF_KW 541
 #define WHILE_KW 542
 #define AWAIT_KW 543
 #define CONTINUE_KW 544
+#define FINALLY_KW 545
 #define ASYNC_KW 551
 #define IMPORT_KW 552
 
 
 // الكلمات المفتاحية السياقية: هي الكلمة المفتاحية التي يمكن إستخدامها كاسم متغير
-static wchar_t* softKeywords[] = { 
-	(wchar_t*)L"_", (wchar_t*)L"نوع", nullptr,
+static char* softKeywords[] = { 
+	(char*)"_", (char*)"نوع", nullptr,
 };
 
 
@@ -104,82 +107,41 @@ static wchar_t* softKeywords[] = {
 
 
 
-int alifParserEngine_fillToken(AlifParser*);
-Expression* alifParserEngine_nameToken(AlifParser*);
-AlifObject* alifParserEngine_newIdentifier(AlifParser*, const wchar_t*);
-AlifPToken* alifParserEngine_getLastNonWhitespaceToken(AlifParser*);
-Expression* alifParserEngine_numberToken(AlifParser*);
-int alifParserEngine_insertMemo(AlifParser*, int, int, void*);
-void* alifParserEngine_stringToken(AlifParser*);
-int alifParserEngine_isMemorized(AlifParser*, int, void*);
-int alifParserEngine_lookahead(int, void* (_func)(AlifParser*), AlifParser*);
-int alifParserEngine_updateMemo(AlifParser*, int, int, void*);
-AlifPToken* alifParserEngine_expectTokenForced(AlifParser*, int, const wchar_t*);
 
-static Expression* expression_rule(AlifParser*);
-static Expression* disjunction_rule(AlifParser*);
-static Expression* sum_rule(AlifParser*);
-static Expression* starExpression_rule(AlifParser*);
-static Expression* starSubExpression_rule(AlifParser*);
-static ExprSeq* starSubExpressions_rule(AlifParser*);
-static Expression* primary_rule(AlifParser*);
-static Expression* atom_rule(AlifParser*);
-static Expression* slices_rule(AlifParser*);
-static Expression* targetWithStarAtom_rule(AlifParser*);
-static Expression* arguments_rule(AlifParser*);
-static Expression* tPrimary_rule(AlifParser*);
-static Expression* starTarget_rule(AlifParser*);
-static Expression* alif7(AlifParser*);
-static Expression* dottedName_rule(AlifParser*);
-static StmtSeq* simpleStmts_rule(AlifParser*);
-static StmtSeq* statements_rule(AlifParser*);
-static StmtSeq* block_rule(AlifParser*);
-static Expression* bitwiseOr_rule(AlifParser*);
-static Expression* bitwiseXOr_rule(AlifParser*);
-static Expression* shiftExpr_rule(AlifParser*);
-static Expression* term_rule(AlifParser*);
-static Expression* factor_rule(AlifParser*);
-static Expression* starExpressions_rule(AlifParser*);
-static Expression* yieldExpr_rule(AlifParser*);
-static Expression* fStringReplacementField_rule(AlifParser*);
+static ExprTy expression_rule(AlifParser*);
+static ExprTy disjunction_rule(AlifParser*);
+static ExprTy sum_rule(AlifParser*);
+static ExprTy starExpression_rule(AlifParser*);
+static ExprTy starredExpression_rule(AlifParser*);
+static ExprTy starSubExpression_rule(AlifParser*);
+static ASDLExprSeq* starSubExpressions_rule(AlifParser*);
+static ExprTy primary_rule(AlifParser*);
+static ExprTy atom_rule(AlifParser*);
+static ExprTy slices_rule(AlifParser*);
+static ExprTy targetWithStarAtom_rule(AlifParser*);
+static ExprTy arguments_rule(AlifParser*);
+static ExprTy tPrimary_rule(AlifParser*);
+static ExprTy starTarget_rule(AlifParser*);
+static ExprTy alif7(AlifParser*);
+static ExprTy dottedName_rule(AlifParser*);
+static ASDLStmtSeq* simpleStmts_rule(AlifParser*);
+static ASDLStmtSeq* statements_rule(AlifParser*);
+static ASDLStmtSeq* block_rule(AlifParser*);
+static ExprTy bitwiseOr_rule(AlifParser*);
+static ExprTy bitwiseXOr_rule(AlifParser*);
+static ExprTy shiftExpr_rule(AlifParser*);
+static ExprTy term_rule(AlifParser*);
+static ExprTy factor_rule(AlifParser*);
+static ExprTy starExpressions_rule(AlifParser*);
+static ExprTy yieldExpr_rule(AlifParser*);
+static ExprTy fStringReplacementField_rule(AlifParser*);
 static KeyValuePair* kvPair_rule(AlifParser*);
 static void* alif23(AlifParser*);
 static void* tLookahead_rule(AlifParser*);
-static ExprSeq* delTargets_rule(AlifParser*);
-static Expression* delTarget_rule(AlifParser*);
-
-
-
-
-
-
-
-//////////////////////////////////////////////////// مؤقت
-/*
-	هذه الدالة مؤقتة
-	حيث تقوم بإرجاع اسم فارغ
-	يتم إستخدامه مؤقتاً حتى يتوفر الأسم الحقيقي
-	--> مثال: تستخدم مع استدعاء الدوال
-*/
-AlifObject* theName = new AlifObject{};
-
-Expression* dummyName = new Expression{};
-#define INIT_DUMMY_NAME { \
-	dummyName->type = NameK; \
-	dummyName->V.name.name = theName; \
-	dummyName->V.name.ctx = Load; \
-	dummyName->lineNo = 1; \
-	dummyName->colOffset = 0; \
-	dummyName->endLineNo = 1; \
-	dummyName->endColOffset = 0; \
-} \
-
-static Expression* alifParserEngine_dummyName() {
-	INIT_DUMMY_NAME;
-	return dummyName;
-	//return &_alifRuntime_.parser.dummyName;
-}
-//////////////////////////////////////////////////// مؤقت
+static ASDLExprSeq* delTargets_rule(AlifParser*);
+static ExprTy delTarget_rule(AlifParser*);
+static ASDLStmtSeq* finallyBlock_rule(AlifParser*);
+static ASDLStmtSeq* elseBlock_rule(AlifParser*);
 
 
 
@@ -190,16 +152,15 @@ static Expression* alifParserEngine_dummyName() {
 
 
 
-
-// del_t_atom: NAME > "(" del_target ")" > "(" del_targets? ")" > "[" del_targets? "]"
-static Expression* delTAtom_rule(AlifParser* _p) {
+// حذف_هدف_جزء: *اسم* > "(" حذف_هدف ")" > "(" حذف_اهداف? ")" > "[" حذف_اهداف? "]"
+static ExprTy delTAtom_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -207,19 +168,18 @@ static Expression* delTAtom_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // NAME
+	{ // *اسم*
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
+		ExprTy a_{};
 		if ((a_ = alifParserEngine_nameToken(_p)))
 		{
-			res_ = alifParserEngine_setExprContext(_p, a_, ExprCTX::Del);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_setExprContext(_p, a_, ExprContext_::Del);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -227,26 +187,25 @@ static Expression* delTAtom_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // "(" del_target ")"
+	{ // "(" حذف_هدف ")"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		AlifPToken* literal_1{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		ExprTy a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, LPAR)) // "("
+			(literal = alifParserEngine_expectToken(_p, LPAR)) // "("
 			and
-			(a_ = delTarget_rule(_p)) // del_target
+			(a_ = delTarget_rule(_p)) // حذف_هدف
 			and
-			(literal_1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
+			(literal1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
 			)
 		{
-			res_ = alifParserEngine_setExprContext(_p, a_, ExprCTX::Del);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_setExprContext(_p, a_, ExprContext_::Del);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -254,20 +213,51 @@ static Expression* delTAtom_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // "(" del_target? ")"
+	{ // "(" حذف_هدف? ")"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		AlifPToken* literal_1{};
-		ExprSeq* a_{};
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		ASDLExprSeq* a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, LPAR)) // "("
+			(literal = alifParserEngine_expectToken(_p, LPAR)) // "("
 			and
 			(a_ = delTargets_rule(_p), !_p->errorIndicator) // del_targeta?
 			and
-			(literal_1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
+			(literal1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
+			)
+		{
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
+
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_tuple(a_, ExprContext_::Del, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+	{ // "(" حذف_هدف? ")"
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		ASDLExprSeq* a_{};
+		if (
+			(literal = alifParserEngine_expectToken(_p, LSQR)) // "["
+			and
+			(a_ = delTargets_rule(_p), !_p->errorIndicator) // del_targeta?
+			and
+			(literal1 = alifParserEngine_expectToken(_p, RSQR)) // "["
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -275,10 +265,9 @@ static Expression* delTAtom_rule(AlifParser* _p) {
 
 			AlifIntT endLineNo = token_->endLineNo;
 			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_tuple(a_, ExprCTX::Del, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_list(a_, ExprContext_::Del, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -286,67 +275,34 @@ static Expression* delTAtom_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
-	}
-	{ // "(" del_target? ")"
-		if (_p->errorIndicator) { _p->level--; return nullptr; }
-
-		AlifPToken* literal_{};
-		AlifPToken* literal_1{};
-		ExprSeq* a_{};
-		if (
-			(literal_ = alifParserEngine_expectToken(_p, LSQR)) // "["
-			and
-			(a_ = delTargets_rule(_p), !_p->errorIndicator) // del_targeta?
-			and
-			(literal_1 = alifParserEngine_expectToken(_p, RSQR)) // "["
-			)
-		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
-
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_list(a_, ExprCTX::Del, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
-			{
-				_p->errorIndicator = 1;
-				_p->level--;
-				return nullptr;
-			}
-			goto done;
-		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
 /*
-	del_target:
-		> t_primary "." NAME !t_lookahead
-		> t_primary "[" slices "]" !t_lookahead
-		> del_t_atom
+	حذف_هدف:
+		> هدف_اولي "." *اسم* !هدف_تالي
+		> هدف_اولي "[" قواطع "]" !هدف_تالي
+		> حذف_هدف_جزء
 */
-static Expression* delTarget_rule(AlifParser* _p) {
+static ExprTy delTarget_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	if (alifParserEngine_isMemorized(_p, DEL_TARGET_TYPE, &res_)) {
+	ExprTy res{};
+	if (alifParserEngine_isMemorized(_p, DEL_TARGET_TYPE, &res)) {
 		_p->level--;
-		return res_;
+		return res;
 	}
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -354,34 +310,33 @@ static Expression* delTarget_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // t_primary "." NAME !t_lookahead
+	{ // هدف_اولي "." *اسم* !هدف_تالي
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = tPrimary_rule(_p)) // t_primary
+			(a_ = tPrimary_rule(_p)) // هدف_اولي
 			and
-			(literal_ = alifParserEngine_expectToken(_p, DOT)) // "."
+			(literal = alifParserEngine_expectToken(_p, DOT)) // "."
 			and
-			(b_ = alifParserEngine_nameToken(_p)) // NAME
+			(b_ = alifParserEngine_nameToken(_p)) // *اسم*
 			and
-			alifParserEngine_lookahead(0, tLookahead_rule, _p) // !t_lookahead
+			alifParserEngine_lookahead(0, tLookahead_rule, _p) // !هدف_تالي
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_attribute(a_, b_->V.name.name, ExprCTX::Del, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_attribute(a_, b_->V.name.name, ExprContext_::Del, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -389,36 +344,35 @@ static Expression* delTarget_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // t_primary "[" slices "]" !t_lookahead
+	{ // هدف_اولي "[" قواطع "]" !هدف_تالي
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		AlifPToken* literal_1{};
-		Expression* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = tPrimary_rule(_p)) // t_primary
+			(a_ = tPrimary_rule(_p)) // هدف_اولي
 			and
-			(literal_ = alifParserEngine_expectToken(_p, LSQR)) // "["
+			(literal = alifParserEngine_expectToken(_p, LSQR)) // "["
 			and
-			(b_ = slices_rule(_p)) // slices
+			(b_ = slices_rule(_p)) // قواطع
 			and
-			(literal_ = alifParserEngine_expectToken(_p, RSQR)) // "]"
+			(literal = alifParserEngine_expectToken(_p, RSQR)) // "]"
 			and
-			alifParserEngine_lookahead(0, tLookahead_rule, _p) // !t_lookahead
+			alifParserEngine_lookahead(0, tLookahead_rule, _p) // !هدف_تالي
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_subScript(a_, b_, ExprCTX::Del, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_subScript(a_, b_, ExprContext_::Del, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -426,160 +380,147 @@ static Expression* delTarget_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // del_t_atom
+	{ // حذف_هدف_جزء
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
+		ExprTy a_{};
 		if ((a_ = delTAtom_rule(_p)))
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
-	alifParserEngine_insertMemo(_p, mark_, DEL_TARGET_TYPE, res_);
+	alifParserEngine_insertMemo(_p, mark, DEL_TARGET_TYPE, res);
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif31_loop0: "," del_target
-static Seq* alif31_loop0(AlifParser* _p) {
+// ألف31_حلقة0: "," حذف_هدف
+static ASDLSeq* alif31_loop0(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	void* res{};
+	AlifIntT mark = _p->mark;
+
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
 
-	{ // "," del_target
+	{ // "," حذف_هدف
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* element_{};
+		AlifPToken* literal{};
+		ExprTy element{};
 		while (
-			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
+			(literal = alifParserEngine_expectToken(_p, COMMA)) // ","
 			and
-			(element_ = delTarget_rule(_p)) // del_target
+			(element = delTarget_rule(_p)) // حذف_هدف
 			)
 		{
-			res_ = element_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = element;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
-				alifMem_dataFree(children_);
 				_p->level--;
 				return nullptr;
 			}
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (int i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 // ^
 // |
 // |
-// alif12_gather: del_target alif31_loop0
-static Seq* alif12_gather(AlifParser* _p) {
+// ألف12_تجميع: حذف_هدف ألف31_حلقة0
+static ASDLSeq* alif12_gather(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Seq* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ASDLSeq* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // del_target alif31_loop0
-		Expression* element_{};
-		Seq* seq_{};
+	{ // حذف_هدف ألف31_حلقة0
+		ExprTy element_{};
+		ASDLSeq* seq_{};
 		if (
-			(element_ = delTarget_rule(_p)) // del_target
+			(element_ = delTarget_rule(_p)) // حذف_هدف
 			and
-			(seq_ = alif31_loop0(_p)) // alif31_loop0
+			(seq_ = alif31_loop0(_p)) // ألف31_حلقة0
 			)
 		{
-			res_ = alifParserEngine_seqInsertInFront(_p, element_, seq_);
+			res = alifParserEngine_seqInsertInFront(_p, element_, seq_);
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 // ^
 // |
 // |
-// del_targets: ",".del_target+ ","?
-static ExprSeq* delTargets_rule(AlifParser* _p) {
+// حذف_اهداف: ",".حذف_هدف+ ","?
+static ASDLExprSeq* delTargets_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	ExprSeq* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ASDLExprSeq* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // ",".del_target+ ","?
+	{ // ",".حذف_هدف+ ","?
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		void* literal_{};
-		ExprSeq* a_{};
+		void* literal{};
+		ASDLExprSeq* a_{};
 		if (
-			(a_ = (ExprSeq*)alif12_gather(_p)) // ",".del_target+
+			(a_ = (ASDLExprSeq*)alif12_gather(_p)) // ",".حذف_هدف+
 			and
-			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","?
+			(literal = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
 			)
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -587,76 +528,74 @@ static ExprSeq* delTargets_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// t_lookahead: "(" > "[" > "."
+// هدف_تالي: "(" > "[" > "."
 static void* tLookahead_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
 	{ // "("
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		if ((literal_ = alifParserEngine_expectToken(_p, LPAR))) // "("
+		AlifPToken* literal{};
+		if ((literal = alifParserEngine_expectToken(_p, LPAR))) // "("
 		{
-			res_ = literal_;
+			res = literal;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 	{ // "["
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		if ((literal_ = alifParserEngine_expectToken(_p, LSQR))) // "["
+		AlifPToken* literal{};
+		if ((literal = alifParserEngine_expectToken(_p, LSQR))) // "["
 		{
-			res_ = literal_;
+			res = literal;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 	{ // "."
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		if ((literal_ = alifParserEngine_expectToken(_p, DOT))) // "."
+		AlifPToken* literal{};
+		if ((literal = alifParserEngine_expectToken(_p, DOT))) // "."
 		{
-			res_ = literal_;
+			res = literal;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-static Expression* tPrimary_raw(AlifParser* _p) {
+static ExprTy tPrimary_raw(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -664,34 +603,33 @@ static Expression* tPrimary_raw(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // t_primary "." NAME &t_lookahead
+	{ // هدف_اولي "." *اسم* &هدف_تالي
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = tPrimary_rule(_p)) // t_primary
+			(a_ = tPrimary_rule(_p)) // هدف_اولي
 			and
-			(literal_ = alifParserEngine_expectToken(_p, DOT)) // "."
+			(literal = alifParserEngine_expectToken(_p, DOT)) // "."
 			and
-			(b_ = alifParserEngine_nameToken(_p)) // NAME
+			(b_ = alifParserEngine_nameToken(_p)) // *اسم*
 			and
 			alifParserEngine_lookahead(1, tLookahead_rule, _p)
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_attribute(a_, b_->V.name.name, ExprCTX::Load, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_attribute(a_, b_->V.name.name, ExprContext_::Load, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -699,36 +637,35 @@ static Expression* tPrimary_raw(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // t_primary "[" slices "]" &t_lookahead
+	{ // هدف_اولي "[" قواطع "]" &هدف_تالي
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		AlifPToken* literal_1{};
-		Expression* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = tPrimary_rule(_p)) // t_primary
+			(a_ = tPrimary_rule(_p)) // هدف_اولي
 			and
-			(literal_ = alifParserEngine_expectToken(_p, LSQR)) // "["
+			(literal = alifParserEngine_expectToken(_p, LSQR)) // "["
 			and
-			(b_ = slices_rule(_p)) // slices
+			(b_ = slices_rule(_p)) // قواطع
 			and
-			(literal_1 = alifParserEngine_expectToken(_p, RSQR)) // "]"
+			(literal1 = alifParserEngine_expectToken(_p, RSQR)) // "]"
 			and
 			alifParserEngine_lookahead(1, tLookahead_rule, _p)
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_subScript(a_, b_, ExprCTX::Load, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_subScript(a_, b_, ExprContext_::Load, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -736,36 +673,35 @@ static Expression* tPrimary_raw(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // t_primary "(" arguments? ")" &t_lookahead
+	{ // هدف_اولي "(" الوسيطات? ")" &هدف_تالي
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		AlifPToken* literal_1{};
-		Expression* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = tPrimary_rule(_p)) // t_primary
+			(a_ = tPrimary_rule(_p)) // هدف_اولي
 			and
-			(literal_ = alifParserEngine_expectToken(_p, LPAR)) // "("
+			(literal = alifParserEngine_expectToken(_p, LPAR)) // "("
 			and
-			(b_ = arguments_rule(_p), !_p->errorIndicator) // arguments?
+			(b_ = arguments_rule(_p), !_p->errorIndicator) // الوسيطات?
 			and
-			(literal_1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
+			(literal1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
 			and
 			alifParserEngine_lookahead(1, tLookahead_rule, _p)
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_call(a_, b_ ? b_->V.call.args : nullptr, b_ ? b_->V.call.keywords : nullptr, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_call(a_, b_ ? b_->V.call.args : nullptr, b_ ? b_->V.call.keywords : nullptr, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -773,22 +709,21 @@ static Expression* tPrimary_raw(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // atom &t_lookahead
+	{ // جزء &هدف_تالي
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
+		ExprTy a_{};
 		if (
-			(a_ = atom_rule(_p)) // atom
+			(a_ = atom_rule(_p)) // جزء
 			and
-			alifParserEngine_lookahead(1, tLookahead_rule, _p) // &t_lookahead
+			alifParserEngine_lookahead(1, tLookahead_rule, _p) // &هدف_تالي
 			)
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -796,69 +731,68 @@ static Expression* tPrimary_raw(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 /*
 	Left-recursive
-	t_primary:
-		> t_primary "." NAME &t_lookahead
-		> t_primary "[" slices "]" &t_lookahead
-		> t_primary "(" arguments? ")" &t_lookahead
-		> atom &t_lookahead
+	هدف_اولي:
+		> هدف_اولي "." *اسم* &هدف_تالي
+		> هدف_اولي "[" قواطع "]" &هدف_تالي
+		> هدف_اولي "(" الوسيطات? ")" &هدف_تالي
+		> جزء &هدف_تالي
 */
-static Expression* tPrimary_rule(AlifParser* _p) {
+static ExprTy tPrimary_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 
-	Expression* res_{};
-	if (alifParserEngine_isMemorized(_p, T_PRIMARY_TYPE, &res_)) {
+	ExprTy res{};
+	if (alifParserEngine_isMemorized(_p, T_PRIMARY_TYPE, &res)) {
 		_p->level--;
-		return res_;
+		return res;
 	}
-	AlifIntT mark_ = _p->mark_;
-	int resMark = _p->mark_;
+	AlifIntT mark = _p->mark;
+	AlifIntT resMark = _p->mark;
 
 	while (true) {
-		int var = alifParserEngine_updateMemo(_p, mark_, T_PRIMARY_TYPE, res_);
-		if (var) { _p->level--; return res_; }
+		AlifIntT var = alifParserEngine_updateMemo(_p, mark, T_PRIMARY_TYPE, res);
+		if (var) { _p->level--; return res; }
 
-		_p->mark_ = mark_;
-		Expression* raw = tPrimary_raw(_p);
+		_p->mark = mark;
+		ExprTy raw = tPrimary_raw(_p);
 
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
-		if (raw == nullptr or _p->mark_ <= resMark)  break;
+		if (raw == nullptr or _p->mark <= resMark)  break;
 
-		resMark = _p->mark_;
-		res_ = raw;
+		resMark = _p->mark;
+		res = raw;
 	}
 
-	_p->mark_ = resMark;
+	_p->mark = resMark;
 	_p->level--;
 
-	return res_;
+	return res;
 }
 
 
 /*
-	single_subscript_attribute_target:
-		> t_primary "." NAME !t_lookahead
-		> t_primary "[" slices "]" !t_lookahead
+	هدف_صفة:
+		> هدف_اولي "." *اسم* !هدف_تالي
+		> هدف_اولي "[" قواطع "]" !هدف_تالي
 */
-static Expression* singleSubScriptAttributeTarget_rule(AlifParser* _p) {
+static ExprTy singleSubScriptAttributeTarget_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -866,34 +800,33 @@ static Expression* singleSubScriptAttributeTarget_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // t_primary "." NAME !t_lookahead
+	{ // هدف_اولي "." *اسم* !هدف_تالي
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = tPrimary_rule(_p)) // t_primary
+			(a_ = tPrimary_rule(_p)) // هدف_اولي
 			and
-			(literal_ = alifParserEngine_expectToken(_p, DOT)) // "."
+			(literal = alifParserEngine_expectToken(_p, DOT)) // "."
 			and
-			(b_ = alifParserEngine_nameToken(_p)) // NAME
+			(b_ = alifParserEngine_nameToken(_p)) // *اسم*
 			and
-			alifParserEngine_lookahead(0, tLookahead_rule, _p) // !t_lookahead
+			alifParserEngine_lookahead(0, tLookahead_rule, _p) // !هدف_تالي
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_attribute(a_, b_->V.name.name, ExprCTX::Store, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_attribute(a_, b_->V.name.name, ExprContext_::Store, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -901,36 +834,35 @@ static Expression* singleSubScriptAttributeTarget_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // t_primary "[" slices "]" !t_lookahead
+	{ // هدف_اولي "[" قواطع "]" !هدف_تالي
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		AlifPToken* literal_1{};
-		Expression* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = tPrimary_rule(_p)) // t_primary
+			(a_ = tPrimary_rule(_p)) // هدف_اولي
 			and
-			(literal_ = alifParserEngine_expectToken(_p, LSQR)) // "["
+			(literal = alifParserEngine_expectToken(_p, LSQR)) // "["
 			and
-			(b_ = slices_rule(_p)) // slices
+			(b_ = slices_rule(_p)) // قواطع
 			and
-			(literal_ = alifParserEngine_expectToken(_p, RSQR)) // "]"
+			(literal = alifParserEngine_expectToken(_p, RSQR)) // "]"
 			and
-			alifParserEngine_lookahead(0, tLookahead_rule, _p) // !t_lookahead
+			alifParserEngine_lookahead(0, tLookahead_rule, _p) // !هدف_تالي
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_subScript(a_, b_, ExprCTX::Store, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_subScript(a_, b_, ExprContext_::Store, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -938,47 +870,45 @@ static Expression* singleSubScriptAttributeTarget_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// single_target: single_subscript_attribute_target > NAME > "(" single_target ")"
-static Expression* singleTarget_rule(AlifParser* _p) {
+// هدف: هدف_صفة > *اسم* > "(" هدف ")"
+static ExprTy singleTarget_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
 
-	{ // single_subscript_attribute_target
+	{ // هدف_صفة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
+		ExprTy a_{};
 		if ((a_ = singleSubScriptAttributeTarget_rule(_p)))
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // NAME
+	{ // *اسم*
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
+		ExprTy a_{};
 		if ((a_ = alifParserEngine_nameToken(_p)))
 		{
-			res_ = alifParserEngine_setExprContext(_p, a_, ExprCTX::Store);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_setExprContext(_p, a_, ExprContext_::Store);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -986,26 +916,25 @@ static Expression* singleTarget_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // "(" single_target ")"
+	{ // "(" هدف ")"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		AlifPToken* literal_1{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		ExprTy a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, LPAR)) // "("
+			(literal = alifParserEngine_expectToken(_p, LPAR)) // "("
 			and
-			(a_ = singleTarget_rule(_p)) // single_target
+			(a_ = singleTarget_rule(_p)) // هدف
 			and
-			(literal_1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
+			(literal1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
 			)
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1013,65 +942,63 @@ static Expression* singleTarget_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif27: !"*" star_target
-static Expression* alif27(AlifParser* _p) {
+// ألف27: !"*" هدف_نجمة
+static ExprTy alif27(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
 
-	{ // !"*" star_target
+	{ // !"*" هدف_نجمة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
+		ExprTy a_{};
 		if (
 			alifParserEngine_lookaheadWithInt(0, alifParserEngine_expectToken, _p, STAR) // "*"
 			and
-			(a_ = starTarget_rule(_p)) // star_target
+			(a_ = starTarget_rule(_p)) // هدف_نجمة
 			)
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 // ^
 // |
 // |
-// star_target: "*" (!"*" star_target) > target_with_star_atom
-static Expression* starTarget_rule(AlifParser* _p) {
+// هدف_نجمة: "*" (!"*" هدف_نجمة) > هدف_مع_جزء_نجمة
+static ExprTy starTarget_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	if (alifParserEngine_isMemorized(_p, STAR_TARGET_TYPE, &res_)) {
+	ExprTy res{};
+	if (alifParserEngine_isMemorized(_p, STAR_TARGET_TYPE, &res)) {
 		_p->level--;
-		return res_;
+		return res;
 	}
 
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -1079,29 +1006,28 @@ static Expression* starTarget_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // "*" (!"*" star_target)
+	{ // "*" (!"*" هدف_نجمة)
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, STAR)) // "*"
+			(literal = alifParserEngine_expectToken(_p, STAR)) // "*"
 			and
-			(a_ = alif27(_p)) // !"*" star_target
+			(a_ = alif27(_p)) // !"*" هدف_نجمة
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_star((Expression*)alifParserEngine_setExprContext(_p, a_, ExprCTX::Store), ExprCTX::Store, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_star((ExprTy)alifParserEngine_setExprContext(_p, a_, ExprContext_::Store), ExprContext_::Store, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1109,162 +1035,149 @@ static Expression* starTarget_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // target_with_star_atom
+	{ // هدف_مع_جزء_نجمة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
+		ExprTy a_{};
 		if ((a_ = targetWithStarAtom_rule(_p)))
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
-	alifParserEngine_insertMemo(_p, mark_, STAR_TARGET_TYPE, res_);
+	alifParserEngine_insertMemo(_p, mark, STAR_TARGET_TYPE, res);
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif30_loop0: "," star_target
-static Seq* alif30_loop0(AlifParser* _p) {
+// ألف30_حلقة0: "," هدف_نجمة
+static ASDLSeq* alif30_loop0(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	void* res{};
+	AlifIntT mark = _p->mark;
+
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
 
-	{ // "," star_target
+	{ // "," هدف_نجمة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* element_{};
+		AlifPToken* literal{};
+		ExprTy element{};
 		while (
-			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
+			(literal = alifParserEngine_expectToken(_p, COMMA)) // ","
 			and
-			(element_ = starTarget_rule(_p)) // star_target
+			(element = starTarget_rule(_p)) // هدف_نجمة
 			)
 		{
-			res_ = element_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = element;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
-				alifMem_dataFree(children_);
 				_p->level--;
 				return nullptr;
 			}
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (int i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 // ^
 // |
 // |
-// alif11_gather: star_target alif30_loop0
-static Seq* alif11_gather(AlifParser* _p) {
+// ألف11_تجميع: هدف_نجمة ألف30_حلقة0
+static ASDLSeq* alif11_gather(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Seq* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ASDLSeq* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // star_target alif30_loop0
+	{ // هدف_نجمة ألف30_حلقة0
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* element_{};
-		Seq* seq_{};
+		ExprTy element{};
+		ASDLSeq* seq{};
 		if (
-			(element_ = starTarget_rule(_p)) // star_target
+			(element = starTarget_rule(_p)) // هدف_نجمة
 			and
-			(seq_ = alif30_loop0(_p)) // alif30_loop0
+			(seq = alif30_loop0(_p)) // ألف30_حلقة0
 			)
 		{
-			res_ = alifParserEngine_seqInsertInFront(_p, element_, seq_);
+			res = alifParserEngine_seqInsertInFront(_p, element, seq);
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 // ^
 // |
 // |
-// star_targets_list_seq: ",".star_target+ ","?
-static ExprSeq* starTargetsListSeq_rule(AlifParser* _p) {
+// تتالي_اهداف_مصفوفة_نجمة: ",".هدف_نجمة+ ","?
+static ASDLExprSeq* starTargetsListSeq_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	ExprSeq* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ASDLExprSeq* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // ",".star_target+ ","?
+	{ // ",".هدف_نجمة+ ","?
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		void* literal_{};
-		ExprSeq* a_{};
+		void* literal{};
+		ASDLExprSeq* a_{};
 		if (
-			(a_ = (ExprSeq*)alif11_gather(_p)) // ",".star_target+
+			(a_ = (ASDLExprSeq*)alif11_gather(_p)) // ",".هدف_نجمة+
 			and
-			(literal_ = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
+			(literal = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
 			)
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1272,41 +1185,39 @@ static ExprSeq* starTargetsListSeq_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif26: "," star_target
+// ألف26: "," هدف_نجمة
 static void* alif26(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "," star_target
+	{ // "," هدف_نجمة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
+			(literal = alifParserEngine_expectToken(_p, COMMA)) // ","
 			and
-			(a_ = starTarget_rule(_p)) // star_target
+			(a_ = starTarget_rule(_p)) // هدف_نجمة
 			)
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1314,109 +1225,98 @@ static void* alif26(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 // ^
 // |
 // |
-// alif29_loop1: ("," star_target)
-static Seq* alif29_loop1(AlifParser* _p) {
+// ألف29_حلقة1: ("," هدف_نجمة)
+static ASDLSeq* alif29_loop1(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	void* res{};
+	AlifIntT mark = _p->mark;
+
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
 
-	{ // ("," star_target)
+	{ // ("," هدف_نجمة)
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		void* var_{};
-		while (var_ = alif26(_p))
+		void* var{};
+		while (var = alif26(_p))
 		{
-			res_ = var_;
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+			res = var;
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	if (n_ == 0 or _p->errorIndicator) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	if (size == 0 or _p->errorIndicator) {
 		_p->level--;
 		return nullptr;
 	}
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (int i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 // ^
 // |
 // |
-// star_targets_tuple_seq: star_target ("," star_target)+ ","? > star_target ","
-static ExprSeq* starTargetsTupleSeq_rule(AlifParser* _p) {
+// تتالي_اهداف_مترابطة_نجمة: هدف_نجمة ("," هدف_نجمة)+ ","? > هدف_نجمة ","
+static ASDLExprSeq* starTargetsTupleSeq_rule(AlifParser* _p) {
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	ExprSeq* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ASDLExprSeq* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // star_target ("," star_target)+ ","?
+	{ // هدف_نجمة ("," هدف_نجمة)+ ","?
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		void* literal_{};
-		Expression* a_{};
-		Seq* b_{};
+		void* literal{};
+		ExprTy a_{};
+		ASDLSeq* b_{};
 		if (
-			(a_ = starTarget_rule(_p)) // star_target
+			(a_ = starTarget_rule(_p)) // هدف_نجمة
 			and
-			(b_ = alif29_loop1(_p)) // ("," star_target)+
+			(b_ = alif29_loop1(_p)) // ("," هدف_نجمة)+
 			and
-			(literal_ = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
+			(literal = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
 			)
 		{
-			res_ = (ExprSeq*)alifParserEngine_seqInsertInFront(_p, a_, b_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = (ASDLExprSeq*)alifParserEngine_seqInsertInFront(_p, a_, b_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1424,23 +1324,22 @@ static ExprSeq* starTargetsTupleSeq_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // star_target ","
+	{ // هدف_نجمة ","
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
 		if (
-			(a_ = starTarget_rule(_p)) // star_target
+			(a_ = starTarget_rule(_p)) // هدف_نجمة
 			and
-			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
+			(literal = alifParserEngine_expectToken(_p, COMMA)) // ","
 			)
 		{
-			res_ = (ExprSeq*)alifParserEngine_singletonSeq(_p, a_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = (ASDLExprSeq*)alifParserEngine_singletonSeq(_p, a_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1448,32 +1347,31 @@ static ExprSeq* starTargetsTupleSeq_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
 /*
-	star_atom:
-		> NAME
-		> "(" target_with_star_atom ")"
-		> "(" star_targets_tuple_seq? ")"
-		> "[" star_targets_list_seq? "]"
+	جزء_نجمة:
+		> *اسم*
+		> "(" هدف_مع_جزء_نجمة ")"
+		> "(" تتالي_اهداف_مترابطة_نجمة? ")"
+		> "[" تتالي_اهداف_مصفوفة_نجمة? "]"
 */
-static Expression* starAtom_rule(AlifParser* _p) {
+static ExprTy starAtom_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -1481,19 +1379,18 @@ static Expression* starAtom_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // NAME
+	{ // *اسم*
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
-		if ((a_ = alifParserEngine_nameToken(_p))) // NAME
+		ExprTy a_{};
+		if ((a_ = alifParserEngine_nameToken(_p))) // *اسم*
 		{
-			res_ = alifParserEngine_setExprContext(_p, a_, ExprCTX::Store);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_setExprContext(_p, a_, ExprContext_::Store);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1501,26 +1398,25 @@ static Expression* starAtom_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // "(" target_with_star_atom ")"
+	{ // "(" هدف_مع_جزء_نجمة ")"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		AlifPToken* literal_1{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		ExprTy a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, LPAR)) // "("
+			(literal = alifParserEngine_expectToken(_p, LPAR)) // "("
 			and
-			(a_ = targetWithStarAtom_rule(_p)) // target_with_star_atom
+			(a_ = targetWithStarAtom_rule(_p)) // هدف_مع_جزء_نجمة
 			and
-			(literal_1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
+			(literal1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
 			)
 		{
-			res_ = alifParserEngine_setExprContext(_p, a_, ExprCTX::Store);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_setExprContext(_p, a_, ExprContext_::Store);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1528,20 +1424,20 @@ static Expression* starAtom_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // "(" star_targets_tuple_seq? ")"
+	{ // "(" تتالي_اهداف_مترابطة_نجمة? ")"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		AlifPToken* literal_1{};
-		ExprSeq* a_{};
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		ASDLExprSeq* a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, LPAR)) // "("
+			(literal = alifParserEngine_expectToken(_p, LPAR)) // "("
 			and
-			(a_ = starTargetsTupleSeq_rule(_p), !_p->errorIndicator) // star_targets_tuple_seq?
+			(a_ = starTargetsTupleSeq_rule(_p), !_p->errorIndicator) // تتالي_اهداف_مترابطة_نجمة?
 			and
-			(literal_1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
+			(literal1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -1549,10 +1445,9 @@ static Expression* starAtom_rule(AlifParser* _p) {
 
 			AlifIntT endLineNo = token_->endLineNo;
 			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_tuple(a_, ExprCTX::Store, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_tuple(a_, ExprContext_::Store, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1560,20 +1455,20 @@ static Expression* starAtom_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // "[" star_targets_list_seq? "]"
+	{ // "[" تتالي_اهداف_مصفوفة_نجمة? "]"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		AlifPToken* literal_1{};
-		ExprSeq* a_{};
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		ASDLExprSeq* a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, LSQR)) // "["
+			(literal = alifParserEngine_expectToken(_p, LSQR)) // "["
 			and
-			(a_ = starTargetsListSeq_rule(_p), !_p->errorIndicator) // star_targets_list_seq?
+			(a_ = starTargetsListSeq_rule(_p), !_p->errorIndicator) // تتالي_اهداف_مصفوفة_نجمة?
 			and
-			(literal_1 = alifParserEngine_expectToken(_p, RSQR)) // "]"
+			(literal1 = alifParserEngine_expectToken(_p, RSQR)) // "]"
 			)
 		{
 			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -1581,10 +1476,9 @@ static Expression* starAtom_rule(AlifParser* _p) {
 
 			AlifIntT endLineNo = token->endLineNo;
 			AlifIntT endColOffset = token->endColOffset;
-			res_ = alifAST_list(a_, ExprCTX::Store, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_list(a_, ExprContext_::Store, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1592,35 +1486,35 @@ static Expression* starAtom_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
 /*
-	target_with_star_atom:
-		> t_primary "." NAME !t_lookahead
-		> t_primary "[" slices "]" !t_lookahead
-		> star_atom
+	هدف_مع_جزء_نجمة:
+		> هدف_اولي "." *اسم* !هدف_تالي
+		> هدف_اولي "[" قواطع "]" !هدف_تالي
+		> جزء_نجمة
 */
-static Expression* targetWithStarAtom_rule(AlifParser* _p) {
+static ExprTy targetWithStarAtom_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	if (alifParserEngine_isMemorized(_p, TARGETWITH_STARATOM_TYPE, &res_)) {
+	ExprTy res{};
+	if (alifParserEngine_isMemorized(_p, TARGETWITH_STARATOM_TYPE, &res)) {
 		_p->level--;
-		return res_;
+		return res;
 	}
 
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -1628,60 +1522,23 @@ static Expression* targetWithStarAtom_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // t_primary "." NAME !t_lookahead
+	{ // هدف_اولي "." *اسم* !هدف_تالي
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = tPrimary_rule(_p)) // t_primary
+			(a_ = tPrimary_rule(_p)) // هدف_اولي
 			and
 			(alifParserEngine_expectToken(_p, DOT)) // "."
 			and
-			(b_ = alifParserEngine_nameToken(_p)) // NAME
+			(b_ = alifParserEngine_nameToken(_p)) // *اسم*
 			and
-			alifParserEngine_lookahead(0, tLookahead_rule, _p) // !t_lookahead
-			)
-		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
-
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_attribute(a_, b_->V.name.name, ExprCTX::Store, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
-			{
-				_p->errorIndicator = 1;
-				_p->level--;
-				return nullptr;
-			}
-			goto done;
-		}
-		_p->mark_ = mark_;
-	}
-	{ // t_primary "[" slices "]" !t_lookahead
-		if (_p->errorIndicator) { _p->level--; return nullptr; }
-
-		AlifPToken* literal_{};
-		AlifPToken* literal_1{};
-		Expression* a_{};
-		Expression* b_{};
-		if (
-			(a_ = tPrimary_rule(_p)) // t_primary
-			and
-			(literal_ = alifParserEngine_expectToken(_p, LSQR)) // "["
-			and
-			(b_ = slices_rule(_p)) // slices
-			and
-			(literal_1 = alifParserEngine_expectToken(_p, RSQR)) // "]"
-			and
-			alifParserEngine_lookahead(0, tLookahead_rule, _p) // !t_lookahead
+			alifParserEngine_lookahead(0, tLookahead_rule, _p) // !هدف_تالي
 			)
 		{
 			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -1689,10 +1546,9 @@ static Expression* targetWithStarAtom_rule(AlifParser* _p) {
 
 			AlifIntT endLineNo = token->endLineNo;
 			AlifIntT endColOffset = token->endColOffset;
-			res_ = alifAST_subScript(a_, b_, ExprCTX::Store, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_attribute(a_, b_->V.name.name, ExprContext_::Store, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1700,53 +1556,87 @@ static Expression* targetWithStarAtom_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // star_atom
+	{ // هدف_اولي "[" قواطع "]" !هدف_تالي
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* starAtomVar{};
-		if ((starAtomVar = starAtom_rule(_p))) // star_atom
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		ExprTy a_{};
+		ExprTy b_{};
+		if (
+			(a_ = tPrimary_rule(_p)) // هدف_اولي
+			and
+			(literal = alifParserEngine_expectToken(_p, LSQR)) // "["
+			and
+			(b_ = slices_rule(_p)) // قواطع
+			and
+			(literal1 = alifParserEngine_expectToken(_p, RSQR)) // "]"
+			and
+			alifParserEngine_lookahead(0, tLookahead_rule, _p) // !هدف_تالي
+			)
 		{
-			res_ = starAtomVar;
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
+
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_subScript(a_, b_, ExprContext_::Store, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
+	}
+	{ // جزء_نجمة
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		ExprTy starAtomVar{};
+		if ((starAtomVar = starAtom_rule(_p))) // جزء_نجمة
+		{
+			res = starAtomVar;
+			goto done;
+		}
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
-	alifParserEngine_insertMemo(_p, mark_, TARGETWITH_STARATOM_TYPE, res_);
+	alifParserEngine_insertMemo(_p, mark, TARGETWITH_STARATOM_TYPE, res);
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif25: "," star_target
+// ألف25: "," هدف_نجمة
 static void* alif25(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "," star_target
+	{ // "," هدف_نجمة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
+			(literal = alifParserEngine_expectToken(_p, COMMA)) // ","
 			and
-			(a_ = starTarget_rule(_p)) // star_target
+			(a_ = starTarget_rule(_p)) // هدف_نجمة
 			)
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1754,86 +1644,78 @@ static void* alif25(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 // ^
 // |
 // |
-// alif28_loop0: ("," star_target)
-static Seq* alif28_loop0(AlifParser* _p) {
+// ألف28_حلقة0: ("," هدف_نجمة)
+static ASDLSeq* alif28_loop0(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	void* res{};
+	AlifIntT mark = _p->mark;
+
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
 
-	{ // ("," star_target)
+	{ // ("," هدف_نجمة)
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		void* var_{};
-		while ((var_ = alif25(_p)))
+		void* var{};
+		while ((var = alif25(_p)))
 		{
-			res_ = var_;
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+			res = var;
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (int i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 // ^
 // |
 // |
-// star_targets: star_target !"," > star_target ("," star_target)* ","?
-static Expression* starTargets_rule(AlifParser* _p) {
+// أهداف_نجمة: هدف_نجمة !"," > هدف_نجمة ("," هدف_نجمة)* ","?
+static ExprTy starTargets_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -1841,23 +1723,22 @@ static Expression* starTargets_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // star_target !","
+	{ // هدف_نجمة !","
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
+		ExprTy a_{};
 		if (
-			(a_ = starTarget_rule(_p)) // star_target
+			(a_ = starTarget_rule(_p)) // هدف_نجمة
 			and
 			alifParserEngine_lookaheadWithInt(0, alifParserEngine_expectToken, _p, COMMA) // !","
 			)
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1865,20 +1746,20 @@ static Expression* starTargets_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // star_target ("," star_target)* ","?
+	{ // هدف_نجمة ("," هدف_نجمة)* ","?
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		void* literal_{};
-		Expression* a_{};
-		Seq* b_{};
+		void* literal{};
+		ExprTy a_{};
+		ASDLSeq* b_{};
 		if (
-			(a_ = starTarget_rule(_p)) // star_target
+			(a_ = starTarget_rule(_p)) // هدف_نجمة
 			and
-			(b_ = alif28_loop0(_p)) // ("," star_target)*
+			(b_ = alif28_loop0(_p)) // ("," هدف_نجمة)*
 			and
-			(literal_ = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
+			(literal = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
 			)
 		{
 			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -1888,10 +1769,9 @@ static Expression* starTargets_rule(AlifParser* _p) {
 			}
 			AlifIntT endLineNo = token->endLineNo;
 			AlifIntT endColOffset = token->endColOffset;
-			res_ = alifAST_tuple((ExprSeq*)alifParserEngine_seqInsertInFront(_p, a_, b_), ExprCTX::Store, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_tuple((ASDLExprSeq*)alifParserEngine_seqInsertInFront(_p, a_, b_), ExprContext_::Store, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1899,26 +1779,25 @@ static Expression* starTargets_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// kwarg_or_double_starred: NAME "=" expression > "**" expression
+// وسيط_مفتاحي_او_نجمة_مضاعفة: *اسم* "=" تعبير > "**" تعبير
 static KeywordOrStar* kwArgOrDoubleStar_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	KeywordOrStar* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	KeywordOrStar* res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -1927,32 +1806,31 @@ static KeywordOrStar* kwArgOrDoubleStar_rule(AlifParser* _p) {
 		return nullptr;
 	}
 
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // NAME "=" expression
+	{ // *اسم* "=" تعبير
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = alifParserEngine_nameToken(_p)) // NAME
+			(a_ = alifParserEngine_nameToken(_p)) // *اسم*
 			and
-			(literal_ = alifParserEngine_expectToken(_p, EQUAL)) // "="
+			(literal = alifParserEngine_expectToken(_p, EQUAL)) // "="
 			and
-			(b_ = expression_rule(_p)) // expression
+			(b_ = expression_rule(_p)) // تعبير
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifParserEngine_keywordOrStarred(_p, (Keyword*)alifAST_keyword(a_->V.name.name, b_, EXTRA), 1);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifParserEngine_keywordOrStarred(_p, (Keyword*)alifAST_keyword(a_->V.name.name, b_, EXTRA), 1);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1960,28 +1838,27 @@ static KeywordOrStar* kwArgOrDoubleStar_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // "**" expression
+	{ // "**" تعبير
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, DOUBLESTAR)) // "**"
+			(literal = alifParserEngine_expectToken(_p, DOUBLESTAR)) // "**"
 			and
-			(a_ = expression_rule(_p)) // expression
+			(a_ = expression_rule(_p)) // تعبير
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifParserEngine_keywordOrStarred(_p, (Keyword*)alifAST_keyword(nullptr, a_, EXTRA), 1);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifParserEngine_keywordOrStarred(_p, (Keyword*)alifAST_keyword(nullptr, a_, EXTRA), 1);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -1989,26 +1866,25 @@ static KeywordOrStar* kwArgOrDoubleStar_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// kwarg_or_starred: NAME "=" expression > starred_expression
+// وسيط_مفتاحي_او_نجمة: *اسم* "=" تعبير > تعبير_نجمة
 static KeywordOrStar* kwArgOrStar_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	KeywordOrStar* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	KeywordOrStar* res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -2017,32 +1893,31 @@ static KeywordOrStar* kwArgOrStar_rule(AlifParser* _p) {
 		return nullptr;
 	}
 
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // NAME "=" expression
+	{ // *اسم* "=" تعبير
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = alifParserEngine_nameToken(_p)) // NAME
+			(a_ = alifParserEngine_nameToken(_p)) // *اسم*
 			and
-			(literal_ = alifParserEngine_expectToken(_p, EQUAL)) // "="
+			(literal = alifParserEngine_expectToken(_p, EQUAL)) // "="
 			and
-			(b_ = expression_rule(_p)) // expression
+			(b_ = expression_rule(_p)) // تعبير
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifParserEngine_keywordOrStarred(_p, (Keyword*)alifAST_keyword(a_->V.name.name, b_, EXTRA), 1);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifParserEngine_keywordOrStarred(_p, (Keyword*)alifAST_keyword(a_->V.name.name, b_, EXTRA), 1);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -2050,27 +1925,19 @@ static KeywordOrStar* kwArgOrStar_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // star_expression
+	{ // تعبير_نجمي_
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
+		ExprTy a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, STAR)) // "*"
-			and
-			(a_ = expression_rule(_p))) // expression
+			(a_ = starredExpression_rule(_p)) // تعبير_نجمي_
+			) 
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
-
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifParserEngine_keywordOrStarred(_p, alifAST_star(a_, ExprCTX::Load, EXTRA), 0);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_keywordOrStarred(_p, a_, 0);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -2078,267 +1945,243 @@ static KeywordOrStar* kwArgOrStar_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif27_loop0: "," kwarg_or_double_star
-static Seq* alif27_loop0(AlifParser* _p) {
+// ألف27_حلقة0: "," وسيط_مفتاحي_او_نجمة_مضاعفة
+static ASDLSeq* alif27_loop0(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	void* res{};
+	AlifIntT mark = _p->mark;
+
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
 
-	{ // "," kwarg_or_double_star
+	{ // "," وسيط_مفتاحي_او_نجمة_مضاعفة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		KeywordOrStar* element_{};
+		AlifPToken* literal{};
+		KeywordOrStar* element{};
 		while (
-			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
+			(literal = alifParserEngine_expectToken(_p, COMMA)) // ","
 			and
-			(element_ = kwArgOrDoubleStar_rule(_p)) // kwarg_or_double_star
+			(element = kwArgOrDoubleStar_rule(_p)) // وسيط_مفتاحي_او_نجمة_مضاعفة
 			)
 		{
-			res_ = element_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = element;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
-				alifMem_dataFree(children_);
 				_p->level--;
 				return nullptr;
 			}
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (int i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 // ^
 // |
 // |
-// alif10_gather: kwarg_or_double_star alif27_loop0
-static Seq* alif10_gather(AlifParser* _p) {
+// ألف10_تجميع: وسيط_مفتاحي_او_نجمة_مضاعفة alif27_loop0
+static ASDLSeq* alif10_gather(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Seq* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ASDLSeq* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // kwarg_or_double_star alif27_loop0
+	{ // وسيط_مفتاحي_او_نجمة_مضاعفة ألف27_حلقة0
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		KeywordOrStar* element_{};
-		Seq* seq_{};
+		KeywordOrStar* element{};
+		ASDLSeq* seq{};
 		if (
-			(element_ = kwArgOrDoubleStar_rule(_p)) // kwarg_or_double_star
+			(element = kwArgOrDoubleStar_rule(_p)) // وسيط_مفتاحي_او_نجمة_مضاعفة
 			and
-			(seq_ = alif27_loop0(_p)) // alif27_loop0
+			(seq = alif27_loop0(_p)) // ألف27_حلقة0
 			)
 		{
-			res_ = alifParserEngine_seqInsertInFront(_p, element_, seq_);
+			res = alifParserEngine_seqInsertInFront(_p, element, seq);
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 // ^
 // |
 // |
-// alif26_loop0: "," kwarg_or_star
-static Seq* alif26_loop0(AlifParser* _p) {
+// ألف26_حلقة0: "," وسيط_مفتاحي_او_نجمة
+static ASDLSeq* alif26_loop0(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	void* res{};
+	AlifIntT mark = _p->mark;
+
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
 
-	{ // "," kwarg_or_star
+	{ // "," وسيط_مفتاحي_او_نجمة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		KeywordOrStar* element_{};
+		AlifPToken* literal{};
+		KeywordOrStar* element{};
 		while (
-			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
+			(literal = alifParserEngine_expectToken(_p, COMMA)) // ","
 			and
-			(element_ = kwArgOrStar_rule(_p)) // kwarg_or_star
+			(element = kwArgOrStar_rule(_p)) // وسيط_مفتاحي_او_نجمة
 			)
 		{
-			res_ = element_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = element;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
-				alifMem_dataFree(children_);
 				_p->level--;
 				return nullptr;
 			}
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (int i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 // ^
 // |
 // |
-// alif9_gather: kwarg_or_star alif26_loop0
-static Seq* alif9_gather(AlifParser* _p) {
+// ألف9_تجميع: وسيط_مفتاحي_او_نجمة ألف26_حلقة0
+static ASDLSeq* alif9_gather(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Seq* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ASDLSeq* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // kwarg_or_starred alif26_loop0
+	{ // وسيط_مفتاحي_او_نجمة ألف26_حلقة0
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		KeywordOrStar* element_{};
-		Seq* seq_{};
+		KeywordOrStar* element{};
+		ASDLSeq* seq{};
 		if (
-			(element_ = kwArgOrStar_rule(_p)) // kwarg_or_star
+			(element = kwArgOrStar_rule(_p)) // وسيط_مفتاحي_او_نجمة
 			and
-			(seq_ = alif26_loop0(_p)) // alif26_loop0
+			(seq = alif26_loop0(_p)) // ألف26_حلقة0
 			)
 		{
-			res_ = alifParserEngine_seqInsertInFront(_p, element_, seq_);
+			res = alifParserEngine_seqInsertInFront(_p, element, seq);
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 // ^
 // |
 // |
 /*
-	kwargs:
-		> ",".kwarg_or_starred+ "," ",".kwarg_or_double_starred+
-		> ",".kwarg_or_starred+
-		> ",".kwarg_or_double_starred+
+	وسيطات_مفتاحية:
+		> ",".وسيط_مفتاحي_او_نجمة+ "," ",".وسيط_مفتاحي_او_نجمة_مضاعفة+
+		> ",".وسيط_مفتاحي_او_نجمة+
+		> ",".وسيط_مفتاحي_او_نجمة_مضاعفة+
 */
-static Seq* kwArgs_rule(AlifParser* _p) {
+static ASDLSeq* kwArgs_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Seq* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ASDLSeq* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // ",".kwarg_or_starred+ "," ",".kwarg_or_double_starred+
+	{ // ",".وسيط_مفتاحي_او_نجمة+ "," ",".وسيط_مفتاحي_او_نجمة_مضاعفة+
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Seq* a_{};
-		Seq* b_{};
+		AlifPToken* literal{};
+		ASDLSeq* a_{};
+		ASDLSeq* b_{};
 		if (
-			(a_ = alif9_gather(_p)) // ",".kwarg_or_starred+
+			(a_ = alif9_gather(_p)) // ",".وسيط_مفتاحي_او_نجمة+
 			and
-			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
+			(literal = alifParserEngine_expectToken(_p, COMMA)) // ","
 			and
-			(b_ = alif10_gather(_p)) // ",".kwarg_or_double_starred+
+			(b_ = alif10_gather(_p)) // ",".وسيط_مفتاحي_او_نجمة_مضاعفة+
 			)
 		{
-			res_ = alifParserEngine_joinSequences(_p, a_, b_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_joinSequences(_p, a_, b_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -2346,63 +2189,121 @@ static Seq* kwArgs_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // ",".kwarg_or_starred+
+	{ // ",".وسيط_مفتاحي_او_نجمة+
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Seq* a_{};
+		ASDLSeq* a_{};
 		if ((a_ = alif9_gather(_p)))
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // ",".kwarg_or_double_starred+
+	{ // ",".وسيط_مفتاحي_او_نجمة_مضاعفة+
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Seq* a_{};
+		ASDLSeq* a_{};
 		if ((a_ = alif10_gather(_p)))
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif24: "," kwargs
+
+// تعبير_نجمي_: '*' تعبير
+static ExprTy starredExpression_rule(AlifParser* _p) {
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
+		and
+		alifParserEngine_fillToken(_p) < 0)
+	{
+		_p->errorIndicator = 1;
+		_p->level--;
+		return nullptr;
+	}
+
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
+
+	{ // '*' تعبير
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		AlifPToken* literal{};
+		ExprTy a{};
+		if (
+			(literal = alifParserEngine_expectToken(_p, STAR))  // token='*'
+			and
+			(a = expression_rule(_p))  // تعبير
+			)
+		{
+			AlifPToken* _token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (_token == nullptr) {
+				_p->level--;
+				return nullptr;
+			}
+			AlifIntT endLineNo = _token->endLineNo;
+			AlifIntT endColOffset = _token->endColOffset;
+			res = alifAST_star(a, Load, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+
+	res = nullptr;
+done:
+	_p->level--;
+	return res;
+}
+// ^
+// |
+// |
+// ألف24: "," وسيطات_مفتاحية
 static void* alif24(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "," kwArgs
+	{ // "," وسيطات_مفتاحية
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifPToken* literal_{};
-		Seq* a_{};
+		ASDLSeq* a_{};
 		if (
 			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
 			and
-			(a_ = kwArgs_rule(_p)) // kwargs
+			(a_ = kwArgs_rule(_p)) // وسيطات_مفتاحية
 			)
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -2410,185 +2311,172 @@ static void* alif24(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 // ^
 // |
 // |
-// alif25_loop0: "," (starred_expression > expression !"=")
-static Seq* alif25_loop0(AlifParser* _p) {
+// ألف25_حلقة0: "," (تعبير_نجمة > تعبير !"=")
+static ASDLSeq* alif25_loop0(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	void* res{};
+	AlifIntT mark = _p->mark;
+
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
 
-	{ // "," (starred_expression > expression !"=")
+	{ // "," (تعبير_نجمة > تعبير !"=")
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		void* element_{};
+		AlifPToken* literal{};
+		void* element{};
 		while (
-			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
+			(literal = alifParserEngine_expectToken(_p, COMMA)) // ","
 			and
-			(element_ = alif23(_p)) // (starred_expression > expression !"=")
+			(element = alif23(_p)) // (تعبير_نجمة > تعبير !"=")
 			)
 		{
-			res_ = element_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = element;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
-				alifMem_dataFree(children_);
 				_p->level--;
 				return nullptr;
 			}
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (int i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 // ^
 // |
 // |
-// alif23: starred_expression > expression !"="
+// ألف23: تعبير_نجمي_ > تعبير !"="
 static void* alif23(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // starred_expression
+	{ // تعبير_نجمي_
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
-		if ((a_ = starExpression_rule(_p)))
+		ExprTy a_{};
+		if ((a_ = starredExpression_rule(_p))) // تعبير_نجمي_
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // expression !"="
+	{ // تعبير !"="
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
+		ExprTy a_{};
 		if (
-			(a_ = expression_rule(_p)) // expression
+			(a_ = expression_rule(_p)) // تعبير
 			and
-			alifParserEngine_lookaheadWithInt(0, alifParserEngine_expectToken, _p, NOTEQUAL) // !"="
+			alifParserEngine_lookaheadWithInt(0, alifParserEngine_expectToken, _p, EQUAL) // !"="
 			)
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 // ^
 // |
 // |
-// alif8_gather: (starred_expression > expression !"=") alif25_loop0
-static Seq* alif8_gather(AlifParser* _p) {
+// ألف8_تجميع: (تعبير_نجمة > تعبير !"=") ألف25_حلقة0
+static ASDLSeq* alif8_gather(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Seq* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ASDLSeq* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // (starred_expression > expression !"=") alif25_loop0
+	{ // (تعبير_نجمة > تعبير !"=") ألف25_حلقة0
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		void* element_{};
-		Seq* seq_{};
+		void* element{};
+		ASDLSeq* seq{};
 		if (
-			(element_ = alif23(_p)) // (starred_expression > expression !"=")
+			(element = alif23(_p)) // (تعبير_نجمة > تعبير !"=")
 			and
-			(seq_ = alif25_loop0(_p)) // alif25_loop0
+			(seq = alif25_loop0(_p)) // ألف25_حلقة0
 			)
 		{
-			res_ = alifParserEngine_seqInsertInFront(_p, element_, seq_);
+			res = alifParserEngine_seqInsertInFront(_p, element, seq);
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 // ^
 // |
 // |
 /*
-	args:
-		> ",".(star_expression > expression !"=")+ ["," kwargs]
-		> kwargs
+	وسيطات:
+		> ",".(تعبير_نجمة > تعبير !"=")+ ["," وسيطات_مفتاحية]
+		> وسيطات_مفتاحية
 */
-static Expression* args_rule(AlifParser* _p) {
+static ExprTy args_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -2597,29 +2485,28 @@ static Expression* args_rule(AlifParser* _p) {
 		return nullptr;
 	}
 
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // ",".(star_expression > expression !"=")+ ["," kwargs]
+	{ // ",".(تعبير_نجمة > تعبير !"=")+ ["," وسيطات_مفتاحية]
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		ExprSeq* a_{};
+		ASDLExprSeq* a_{};
 		void* b_{};
 		if (
-			(a_ = (ExprSeq*)alif8_gather(_p)) // ",".(star_expression > expression !"=")+
+			(a_ = (ASDLExprSeq*)alif8_gather(_p)) // ",".(تعبير_نجمة > تعبير !"=")+
 			and
-			(b_ = alif24(_p), !_p->errorIndicator) // ["," kwargs]
+			(b_ = alif24(_p), !_p->errorIndicator) // ["," وسيطات_مفتاحية]
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifParserEngine_collectCallSeqs(_p, a_, (Seq*)b_, EXTRA); // b_ casted to Seq*
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifParserEngine_collectCallSeqs(_p, a_, (ASDLSeq*)b_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -2627,23 +2514,24 @@ static Expression* args_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // kwargs
+	{ // وسيطات_مفتاحية
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Seq* a_{};
+		ASDLSeq* a_{};
 		if ((a_ = kwArgs_rule(_p)))
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_call(alifParserEngine_dummyName(), (ExprSeq*)alifParserEngine_seqExtractStarExprs(_p, a_), (KeywordSeq*)alifParserEngine_seqDeleteStarExprs(_p, a_), EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_call((ExprTy)alifParserEngine_dummyName(_p),
+				(ASDLExprSeq*)alifParserEngine_seqExtractStarExprs(_p, a_),
+				(ASDLKeywordSeq*)alifParserEngine_seqDeleteStarExprs(_p, a_), EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -2651,47 +2539,45 @@ static Expression* args_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// arguments: args ","? &")"
-static Expression* arguments_rule(AlifParser* _p) {
+// الوسيطات: وسيطات ","? &")"
+static ExprTy arguments_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	if (alifParserEngine_isMemorized(_p, ARGUMENTS_TYPE, &res_)) {
+	ExprTy res{};
+	if (alifParserEngine_isMemorized(_p, ARGUMENTS_TYPE, &res)) {
 		_p->level--;
-		return res_;
+		return res;
 	}
-	AlifIntT mark_ = _p->mark_;
+	AlifIntT mark = _p->mark;
 
-	{ // args ","? &")"
+	{ // وسيطات ","? &")"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		void* optVar{};
-		Expression* a_{};
+		ExprTy a_{};
 		if (
-			(a_ = args_rule(_p)) // args
+			(a_ = args_rule(_p)) // وسيطات
 			and
 			(optVar = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
 			and
 			alifParserEngine_lookaheadWithInt(1, alifParserEngine_expectToken, _p, RPAR) // ")"
 			)
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -2699,43 +2585,41 @@ static Expression* arguments_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	// error
 
-	res_ = nullptr;
+	res = nullptr;
 
 done:
-	alifParserEngine_insertMemo(_p, mark_, ARGUMENTS_TYPE, res_);
+	alifParserEngine_insertMemo(_p, mark, ARGUMENTS_TYPE, res);
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif22: "if" disjuction
+// alif22: "اذا" انفصال
 static void* alif22(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "if" disjuction
+	{ // "اذا" انفصال
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		Expression* a_{};
+		AlifPToken* keyword{};
+		ExprTy a_{};
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, IF_KW)) // "if"
+			(keyword = alifParserEngine_expectToken(_p, IF_KW)) // "اذا"
 			and
-			(a_ = disjunction_rule(_p)) // disjuction
+			(a_ = disjunction_rule(_p)) // انفصال
 			)
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -2743,71 +2627,63 @@ static void* alif22(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 // ^
 // |
 // |
-// alif24_loop0: ("if" disjunction)
-static Seq* alif24_loop0(AlifParser* _p) {
+// ألف24_حلقة0: ("اذا" انفصال)
+static ASDLSeq* alif24_loop0(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	void* res{};
+	AlifIntT mark = _p->mark;
+
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
-	{ // ("if" disjunction)
+
+	{ // ("اذا" انفصال)
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		void* var_{};
-		while ((var_ = alif22(_p)))
+		void* var{};
+		while ((var = alif22(_p)))
 		{
-			res_ = var_;
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+			res = var;
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	Seq* seq = (Seq*)alifNew_genericSeq(n_, _p->astMem);
+	AlifSizeT size = children.size;
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
 	if (!seq) {
-		alifMem_dataFree(children_);
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (int i = 0; i < n_; i++) SEQ_SETUNTYPED(seq, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
 	return seq;
 }
@@ -2815,50 +2691,49 @@ static Seq* alif24_loop0(AlifParser* _p) {
 // |
 // |
 /*
-	for_if_clause:
-		> "async" "for" star_targets "in" ~ disjunction ("if" disjunction)*
-		> "for" star_targets "in" ~ disjunction ("if" disjunction)*
-		> "async"? "for" (bitwise_or ("," bitwise_or)* ","?) !"in"
+	لاجل_اذا_بند:
+		> "مزامنة" "لاجل" اهداف_نجمة "في" ~ انفصال ("اذا" انفصال)*
+		> "لاجل" اهداف_نجمة "في" ~ انفصال ("اذا" انفصال)*
+		> "مزامنة"? "لاجل" (وحدة_او ("," وحدة_او)* ","?) !"في"
 */
 static Comprehension* forIfClause_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Comprehension* res_{};
-	AlifIntT mark_ = _p->mark_;
+	Comprehension* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "async" "for" star_targets "in" ~ disjunction ("if" disjunction)*
+	{ // "مزامنة" "لاجل" اهداف_نجمة "في" ~ انفصال ("اذا" انفصال)*
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		int cutVar = 0;
+		AlifIntT cutVar = 0;
 		AlifPToken* keyword{};
-		AlifPToken* keyword_1{};
-		AlifPToken* keyword_2{};
-		Expression* a_{};
-		Expression* b_{};
-		ExprSeq* c_{};
+		AlifPToken* keyword1{};
+		AlifPToken* keyword2{};
+		ExprTy a_{};
+		ExprTy b_{};
+		ASDLExprSeq* c_{};
 		if (
-			(keyword = alifParserEngine_expectToken(_p, ASYNC_KW)) // "async"
+			(keyword = alifParserEngine_expectToken(_p, ASYNC_KW)) // "مزامنة"
 			and
-			(keyword_1 = alifParserEngine_expectToken(_p, FOR_KW)) // "for"
+			(keyword1 = alifParserEngine_expectToken(_p, FOR_KW)) // "لاجل"
 			and
-			(a_ = starTargets_rule(_p)) // star_targets
+			(a_ = starTargets_rule(_p)) // اهداف_نجمة
 			and
-			(keyword_2 = alifParserEngine_expectToken(_p, IN_KW)) // "in"
+			(keyword2 = alifParserEngine_expectToken(_p, IN_KW)) // "في"
 			and
 			(cutVar = 1)
 			and
-			(b_ = disjunction_rule(_p)) // disjunction
+			(b_ = disjunction_rule(_p)) // انفصال
 			and
-			(c_ = (ExprSeq*)alif24_loop0(_p)) // ("if" disjunction)*
+			(c_ = (ASDLExprSeq*)alif24_loop0(_p)) // ("اذا" انفصال)*
 			)
 		{
-			//res_ = CHECK_VERSION(Comprehension*, 6, L"المزامنة الضمنية", alifAST_comprehension(a_, b_, c, 1, _p->astMem));
-			res_ = alifAST_comprehension(a_, b_, c_, 1, _p->astMem);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			//res_ = CHECK_VERSION(Comprehension*, 6, "المزامنة الضمنية", alifAST_comprehension(a_, b_, c, 1, _p->astMem));
+			res = alifAST_comprehension(a_, b_, c_, 1, _p->astMem);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -2866,37 +2741,35 @@ static Comprehension* forIfClause_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 		if (cutVar) { _p->level--; return nullptr; }
 	}
-	{ // "for" star_targets "in" ~ disjunction ("if" disjunction)*
+	{ // "لاجل" اهداف_نجمة "في" ~ انفصال ("اذا" انفصال)*
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		int cutVar = 0;
+		AlifIntT cutVar = 0;
 		AlifPToken* keyword{};
-		AlifPToken* keyword_1{};
-		Expression* a_{};
-		Expression* b_{};
-		ExprSeq* c_{};
+		AlifPToken* keyword1{};
+		ExprTy a_{};
+		ExprTy b_{};
+		ASDLExprSeq* c_{};
 		if (
-			(keyword = alifParserEngine_expectToken(_p, FOR_KW)) // "for"
+			(keyword = alifParserEngine_expectToken(_p, FOR_KW)) // "لاجل"
 			and
-			(a_ = starTargets_rule(_p)) // star_targets
+			(a_ = starTargets_rule(_p)) // اهداف_نجمة
 			and
-			(keyword_1 = alifParserEngine_expectToken(_p, IN_KW)) // "in"
+			(keyword1 = alifParserEngine_expectToken(_p, IN_KW)) // "في"
 			and
 			(cutVar = 1)
 			and
-			(b_ = disjunction_rule(_p)) // disjunction
+			(b_ = disjunction_rule(_p)) // انفصال
 			and
-			(c_ = (ExprSeq*)alif24_loop0(_p)) // ("if" disjunction)*
+			(c_ = (ASDLExprSeq*)alif24_loop0(_p)) // ("اذا" انفصال)*
 			)
 		{
-			//res_ = CHECK_VERSION(Comprehension*, 6, L"المزامنة الضمنية", alifAST_comprehension(a_, b_, c, 1, _p->astMem));
-			res_ = alifAST_comprehension(a_, b_, c_, 1, _p->astMem);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_comprehension(a_, b_, c_, 0, _p->astMem);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -2904,133 +2777,89 @@ static Comprehension* forIfClause_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 		if (cutVar) { _p->level--; return nullptr; }
 	}
-	/*
-		هذا القسم لا يرجع أي قيم
-		يبدو أنه لا يزال قيد التطوير
-	*/
-	//{ // "async"? "for" (bitwise_or ("," bitwise_or)* ","?) !"in"
-	//	if (_p->errorIndicator) { _p->level--; return nullptr; }
-	// 
-	//	AlifPToken* keyword{};
-	//	void* optVar{};
-	//	void* a_{};
-	//	if (
-	//		(optVar = alifParserEngine_expectToken(_p, 673), !_p->errorIndicator) // "async"?
-	//		and
-	//		(keyword = alifParserEngine_expectToken(_p, 671)) // "for"
-	//		and
-	//		(a_ = alif122(_p)) // (bitwise_or ("," bitwise_or)* ","?)
-	//		and
-	//		(alifParserEngine_lookaheadWithInt(0, alifParserEngine_expectToken, _p, 672)) // "in"
-	//		)
-	//	{
-	//		res_ = RAISE_SYNTAX_ERROR(L"يتوقع وجود 'في' بعد متغيرات حلقة لاجل");
-	//		if (res_ == nullptr
-	//			/* and
-	//			error occurred and stored in ThreadState->currentException */)
-	//		{
-	//			_p->errorIndicator = 1;
-	//			_p->level--;
-	//			return nullptr;
-	//		}
-	//		goto done;
-	//	}
-	//	_p->mark_ = mark_;
-	//}
 
-
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif23_loop1: for_if_clause
-static Seq* alif23_loop1(AlifParser* _p) {
+// ألف23_حلقة1: لاجل_اذا_بند
+static ASDLSeq* alif23_loop1(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	void* res{};
+	AlifIntT mark = _p->mark;
+
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
-	{ // for_if_clause
+
+	{ // لاجل_اذا_بند
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		Comprehension* a_{};
 		while ((a_ = forIfClause_rule(_p)))
 		{
-			res_ = a_;
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+			res = a_;
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	if (n_ == 0 or _p->errorIndicator) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	if (size == 0 or _p->errorIndicator) {
 		_p->level--;
 		return nullptr;
 	}
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (int i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 // ^
 // |
 // |
-// for_if_clauses: for_if_clause+
-static CompSeq* forIfClauses_rule(AlifParser* _p) {
+// لاجل_اذا_بنود: لاجل_اذا_بند+
+static ASDLComprehensionSeq* forIfClauses_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	CompSeq* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ASDLComprehensionSeq* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // for_if_clause+
-		CompSeq* a_{};
-		if ((a_ = (CompSeq*)alif23_loop1(_p)))
+	{ // لاجل_اذا_بند+
+		ASDLComprehensionSeq* a_{};
+		if ((a_ = (ASDLComprehensionSeq*)alif23_loop1(_p)))
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -3038,26 +2867,25 @@ static CompSeq* forIfClauses_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// dictcomp: "{" kvpair for_if_clauses "}"
-static Expression* dictComp_rule(AlifParser* _p) {
+// فهرس_ضمني: "{" زوج لاجل_اذا_بنود "}"
+static ExprTy dictComp_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -3066,35 +2894,34 @@ static Expression* dictComp_rule(AlifParser* _p) {
 		return nullptr;
 	}
 
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // "{" kvpair for_if_clauses "}"
+	{ // "{" زوج لاجل_اذا_بنود "}"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		AlifPToken* literal_1{};
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
 		KeyValuePair* a_{};
-		CompSeq* b_{};
+		ASDLComprehensionSeq* b_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, LBRACE)) // "{"
+			(literal = alifParserEngine_expectToken(_p, LBRACE)) // "{"
 			and
-			(a_ = kvPair_rule(_p)) // kvpair
+			(a_ = kvPair_rule(_p)) // زوج
 			and
-			(b_ = forIfClauses_rule(_p)) // for_if_clauses
+			(b_ = forIfClauses_rule(_p)) // لاجل_اذا_بنود
 			and
-			(literal_1 = alifParserEngine_expectToken(_p, RBRACE)) // "}"
+			(literal1 = alifParserEngine_expectToken(_p, RBRACE)) // "}"
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_dictComp(a_->key_, a_->val_, b_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_dictComp(a_->key, a_->val, b_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -3102,26 +2929,25 @@ static Expression* dictComp_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// listcomp: "[" expression for_if_clauses "]"
-static Expression* listComp_rule(AlifParser* _p) {
+// مصفوفة_ضمنية: "[" تعبير لاجل_اذا_بنود "]"
+static ExprTy listComp_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -3130,35 +2956,34 @@ static Expression* listComp_rule(AlifParser* _p) {
 		return nullptr;
 	}
 
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // "[" expression for_if_clauses "]"
+	{ // "[" تعبير لاجل_اذا_بنود "]"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		AlifPToken* literal_1{};
-		Expression* a_{};
-		CompSeq* b_{};
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		ExprTy a_{};
+		ASDLComprehensionSeq* b_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, LSQR)) // "["
+			(literal = alifParserEngine_expectToken(_p, LSQR)) // "["
 			and
-			(a_ = expression_rule(_p)) // expression
+			(a_ = expression_rule(_p)) // تعبير
 			and
-			(b_ = forIfClauses_rule(_p)) // for_if_clauses
+			(b_ = forIfClauses_rule(_p)) // لاجل_اذا_بنود
 			and
-			(literal_1 = alifParserEngine_expectToken(_p, RSQR)) // "]"
+			(literal1 = alifParserEngine_expectToken(_p, RSQR)) // "]"
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_listComp(a_, b_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_listComp(a_, b_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -3166,44 +2991,42 @@ static Expression* listComp_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// kvpair: expression ":" expression
+// زوج: تعبير ":" تعبير
 static KeyValuePair* kvPair_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	KeyValuePair* res_{};
-	AlifIntT mark_ = _p->mark_;
+	KeyValuePair* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // expression ":" expression
+	{ // تعبير ":" تعبير
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = expression_rule(_p)) // expression
+			(a_ = expression_rule(_p)) // تعبير
 			and
-			(literal_ = alifParserEngine_expectToken(_p, COLON)) // ":"
+			(literal = alifParserEngine_expectToken(_p, COLON)) // ":"
 			and
-			(b_ = expression_rule(_p)) // expression
+			(b_ = expression_rule(_p)) // تعبير
 			)
 		{
-			res_ = alifParserEngine_keyValuePair(_p, a_, b_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_keyValuePair(_p, a_, b_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -3211,42 +3034,40 @@ static KeyValuePair* kvPair_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// double_starred_kvpair: "**" bitwise_or > kvpair
+// زوج_نجمة_مضاعفة: "**" وحدة_او > زوج
 static KeyValuePair* doubleStarKVPair_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	KeyValuePair* res_{};
-	AlifIntT mark_ = _p->mark_;
+	KeyValuePair* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "**" bitwise_or
+	{ // "**" وحدة_او
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
 
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, DOUBLESTAR)) // "**"
+			(literal = alifParserEngine_expectToken(_p, DOUBLESTAR)) // "**"
 			and
-			(a_ = bitwiseOr_rule(_p)) // bitwise_or
+			(a_ = bitwiseOr_rule(_p)) // وحدة_او
 			)
 		{
-			res_ = alifParserEngine_keyValuePair(_p, nullptr, a_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_keyValuePair(_p, nullptr, a_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -3254,159 +3075,146 @@ static KeyValuePair* doubleStarKVPair_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // kvpair
+	{ // زوج
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		KeyValuePair* a_{};
 		if ((a_ = kvPair_rule(_p)))
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif22_loop0: "," double_starred_kvpair
-static Seq* alif22_loop0(AlifParser* _p) {
+// ألف22_حلقة0: "," زوج_نجمة_مضاعفة
+static ASDLSeq* alif22_loop0(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
 
-	{ // "," double_starred_kvpair
+	{ // "," زوج_نجمة_مضاعفة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		KeyValuePair* element_{};
+		AlifPToken* literal{};
+		KeyValuePair* element{};
 		while (
-			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
+			(literal = alifParserEngine_expectToken(_p, COMMA)) // ","
 			and
-			(element_ = doubleStarKVPair_rule(_p)) // double_starred_kvpair
+			(element = doubleStarKVPair_rule(_p)) // زوج_نجمة_مضاعفة
 			)
 		{
-			res_ = element_;
-			if (!res_) {
+			res = element;
+			if (!res) {
 				_p->errorIndicator = 1;
-				alifMem_dataFree(children_);
 				_p->level--;
 				return nullptr;
 			}
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (AlifIntT i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 // ^
 // |
 // |
-// alif7_gather: double_starred_kvpair alif22_loop0
-static Seq* alif7_gather(AlifParser* _p) {
+// ألف7_تجميع: زوج_نجمة_مضاعفة ألف22_حلقة0
+static ASDLSeq* alif7_gather(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Seq* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ASDLSeq* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // double_starred_kvpair alif22_loop0
+	{ // زوج_نجمة_مضاعفة ألف22_حلقة0
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		KeyValuePair* element_{};
-		Seq* seq_{};
+		KeyValuePair* element{};
+		ASDLSeq* seq{};
 		if (
-			(element_ = doubleStarKVPair_rule(_p)) // double_starred_kvpair
+			(element = doubleStarKVPair_rule(_p)) // زوج_نجمة_مضاعفة
 			and
-			(seq_ = alif22_loop0(_p)) // alif22_loop0
+			(seq = alif22_loop0(_p)) // ألف22_حلقة0
 			)
 		{
-			res_ = alifParserEngine_seqInsertInFront(_p, element_, seq_);
+			res = alifParserEngine_seqInsertInFront(_p, element, seq);
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 // ^
 // |
 // |
-// double_starred_kvpairs: ",".double_starred_kvpair+ ","?
-static Seq* doubleStarKVPairs_rule(AlifParser* _p) {
+// زوج_نجمة_مضاعفة: ",".ازواج_نجمة_مضاعفة+ ","?
+static ASDLSeq* doubleStarKVPairs_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Seq* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ASDLSeq* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // ",".double_starred_kvpair+ ","?
+	{ // ",".زوج_نجمة_مضاعفة+ ","?
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		void* literal_{};
-		Seq* a_{};
+		void* literal{};
+		ASDLSeq* a_{};
 		if (
-			(a_ = alif7_gather(_p)) // ",".double_starred_kvpair+
+			(a_ = alif7_gather(_p)) // ",".زوج_نجمة_مضاعفة+
 			and
-			(literal_ = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
+			(literal = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
 			)
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -3414,26 +3222,25 @@ static Seq* doubleStarKVPairs_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// dict: "{" double_starred_kvpairs? "}"
-static Expression* dict_rule(AlifParser* _p) {
+// فهرس: "{" ازواج_نجمة_مضاعفة? "}"
+static ExprTy dict_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -3442,21 +3249,21 @@ static Expression* dict_rule(AlifParser* _p) {
 		return nullptr;
 	}
 
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // "{" double_starred_kvpairs? "}"
+	{ // "{" ازواج_نجمة_مضاعفة? "}"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		AlifPToken* literal_1{};
-		Seq* a_{};
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		ASDLSeq* a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, LBRACE)) // "{"
+			(literal = alifParserEngine_expectToken(_p, LBRACE)) // "{"
 			and
-			(a_ = doubleStarKVPairs_rule(_p), !_p->errorIndicator) // double_starred_kvpairs?
+			(a_ = doubleStarKVPairs_rule(_p), !_p->errorIndicator) // ازواج_نجمة_مضاعفة?
 			and
-			(literal_ = alifParserEngine_expectToken(_p, RBRACE)) // "}"
+			(literal = alifParserEngine_expectToken(_p, RBRACE)) // "}"
 			)
 		{
 			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -3464,10 +3271,9 @@ static Expression* dict_rule(AlifParser* _p) {
 
 			AlifIntT endLineNo = token->endLineNo;
 			AlifIntT endColOffset = token->endColOffset;
-			res_ = alifAST_dict((ExprSeq*)alifParserEngine_getKeys(_p, a_), (ExprSeq*)alifParserEngine_getValues(_p, a_), EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_dict((ASDLExprSeq*)alifParserEngine_getKeys(_p, a_), (ASDLExprSeq*)alifParserEngine_getValues(_p, a_), EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -3475,72 +3281,25 @@ static Expression* dict_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif21: star_sub_expression "," star_sub_expressions?
-static ExprSeq* alif21(AlifParser* _p) {
+// مصفوفة: "[" تعبيرات_فرعية_نجمة? "]"
+static ExprTy list_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	ExprSeq* res_{};
-	AlifIntT mark_ = _p->mark_;
-
-	{ // star_sub_Expressions "," star_sub_Expressions?
-		if (_p->errorIndicator) { _p->level--; return nullptr; }
-
-		AlifPToken* literal_{};
-		Expression* a_{};
-		ExprSeq* b_{};
-		if (
-			(a_ = starSubExpression_rule(_p)) // star_sub_expression
-			and
-			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
-			and
-			(b_ = starSubExpressions_rule(_p), !_p->errorIndicator) // star_sub_expression?
-			)
-		{
-			res_ = (ExprSeq*)alifParserEngine_seqInsertInFront(_p, a_, (Seq*)b_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
-			{
-				_p->errorIndicator = 1;
-				_p->level--;
-				return nullptr;
-			}
-			goto done;
-		}
-		_p->mark_ = mark_;
-	}
-
-	res_ = nullptr;
-
-done:
-	_p->level--;
-	return res_;
-}
-// ^
-// |
-// |
-// tuple: "(" [star_sub_expression "," star_sub_expressions?] ")"
-static Expression* tuple_rule(AlifParser* _p) {
-
-	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
-	if (_p->errorIndicator) { _p->level--; return nullptr; }
-
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -3549,80 +3308,21 @@ static Expression* tuple_rule(AlifParser* _p) {
 		return nullptr;
 	}
 
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // "(" [star_sub_expression "," star_sub_expression?] ")"
-		AlifPToken* literal_{};
-		AlifPToken* literal_1{};
-		ExprSeq* a_{}; // casted to ExprSeq* from void*
-		if (
-			(literal_ = alifParserEngine_expectToken(_p, LPAR)) // "("
-			and
-			(a_ = alif21(_p), !_p->errorIndicator) // [starSubExpression ',' starSubExpressions?] // casted to ExpreSeq* from void*
-			and
-			(literal_1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
-			)
-		{
-			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token == nullptr) { _p->level--; return nullptr; }
-
-			AlifIntT endLineNo = token->endLineNo;
-			AlifIntT endColOffset = token->endColOffset;
-			res_ = alifAST_tuple(a_, ExprCTX::Load, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
-			{
-				_p->errorIndicator = 1;
-				_p->level--;
-				return nullptr;
-			}
-			goto done;
-		}
-		_p->mark_ = mark_;
-	}
-
-	res_ = nullptr;
-
-done:
-	_p->level--;
-	return res_;
-}
-
-
-// list: "[" star_sub_expressions? "]"
-static Expression* list_rule(AlifParser* _p) {
-
-	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
-	if (_p->errorIndicator) { _p->level--; return nullptr; }
-
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
-		and
-		alifParserEngine_fillToken(_p) < 0)
-	{
-		_p->errorIndicator = 1;
-		_p->level--;
-		return nullptr;
-	}
-
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
-
-	{ // "[" star_sub_expressions? "]"
+	{ // "[" تعبيرات_فرعية_نجمة? "]"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		AlifPToken* literal_1{};
-		ExprSeq* a_{};
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		ASDLExprSeq* a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, LSQR)) // "["
+			(literal = alifParserEngine_expectToken(_p, LSQR)) // "["
 			and
-			(a_ = starSubExpressions_rule(_p), !_p->errorIndicator)
+			(a_ = starSubExpressions_rule(_p), !_p->errorIndicator) // تعبيرات_فرعية_نجمة
 			and
-			(literal_1 = alifParserEngine_expectToken(_p, RSQR)) // "]"
+			(literal1 = alifParserEngine_expectToken(_p, RSQR)) // "]"
 			)
 		{
 			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -3630,10 +3330,9 @@ static Expression* list_rule(AlifParser* _p) {
 
 			AlifIntT endLineNo = token->endLineNo;
 			AlifIntT endColOffset = token->endColOffset;
-			res_ = alifAST_list(a_, ExprCTX::Load, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_list(a_, ExprContext_::Load, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -3641,35 +3340,33 @@ static Expression* list_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// fstring_format_spec: FSTRING_MIDDLE > fstring_replacement_field
-static Expression* fStringFormatSpec_rule(AlifParser* _p) {
+// نص_تنفيذي_تنسيق: *نص_تنفيذي_وسط* > نص_تنفيذي_مجال  
+static ExprTy fStringFormatSpec_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
 
-	{ // FSTRING_MIDDLE
+	{ // *نص_تنفيذي_وسط*
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 		AlifPToken* a_{};
 		if ((a_ = alifParserEngine_expectToken(_p, FSTRINGMIDDLE)))
 		{
-			res_ = alifParserEngine_decodeConstantFromToken(_p, a_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_decodeConstantFromToken(_p, a_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -3677,98 +3374,88 @@ static Expression* fStringFormatSpec_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // fstring_replacement_field
+	{ // نص_تنفيذي_مجال  
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
+		ExprTy a_{};
 		if ((a_ = fStringReplacementField_rule(_p)))
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif21_loop0: fstring_format_spec
-static Seq* alif21_loop0(AlifParser* _p) {
+// ألف21حلقة0: نص_تنفيذي_تنسيق
+static ASDLSeq* alif21_loop0(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
 
-	{ // fstring_format_spec
+	{ // نص_تنفيذي_تنسيق
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* var_1{};
-		while ((var_1 = fStringFormatSpec_rule(_p)))
+		ExprTy var1{};
+		while ((var1 = fStringFormatSpec_rule(_p)))
 		{
-			res_ = var_1;
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+			res = var1;
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (AlifIntT i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 // ^
 // |
 // |
-// fstring_full_format_spec: ":" fstring_format_spec*
+// نص_تنفيذي_تنسيق_كامل: ":" نص_تنفيذي_تنسيق*
 static ResultTokenWithMetadata* fStringFullFormatSpec_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	ResultTokenWithMetadata* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ResultTokenWithMetadata* res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -3776,29 +3463,28 @@ static ResultTokenWithMetadata* fStringFullFormatSpec_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // ":" fstring_format_spec*
+	{ // ":" نص_تنفيذي_تنسيق*
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Seq* a_{};
+		AlifPToken* literal{};
+		ASDLSeq* a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, COLON)) // ":"
+			(literal = alifParserEngine_expectToken(_p, COLON)) // ":"
 			and
-			(a_ = alif21_loop0(_p)) // // fstring_format_spec*
+			(a_ = alif21_loop0(_p)) // // نص_تنفيذي_تنسيق*
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifParserEngine_setupFullFormatSpec(_p, literal_, (ExprSeq*)a_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifParserEngine_setupFullFormatSpec(_p, literal, (ASDLExprSeq*)a_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -3806,40 +3492,38 @@ static ResultTokenWithMetadata* fStringFullFormatSpec_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// fstring_conversion: "!" NAME
+// نص_تنفيذي_تحويل: "!" *اسم*
 static ResultTokenWithMetadata* fStringConversion_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	ResultTokenWithMetadata* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ResultTokenWithMetadata* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "!" NAME
+	{ // "!" *اسم*
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
-		AlifPToken* literal_{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, EXCLAMATION)) // "!"
+			(literal = alifParserEngine_expectToken(_p, EXCLAMATION)) // "!"
 			and
-			(a_ = alifParserEngine_nameToken(_p)) // NAME
+			(a_ = alifParserEngine_nameToken(_p)) // *اسم*
 			)
 		{
-			res_ = alifParserEngine_checkFStringConversion(_p, literal_, a_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_checkFStringConversion(_p, literal, a_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -3847,67 +3531,65 @@ static ResultTokenWithMetadata* fStringConversion_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif20: yield_expr > star_expressions
-static Expression* alif20(AlifParser* _p) {
+// ألف20: تعبير_ولد > تعبيرات_نجمة
+static ExprTy alif20(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
 
-	{ // yield_expr
+	{ // تعبير_ولد
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
+		ExprTy a_{};
 		if ((a_ = yieldExpr_rule(_p)))
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // star_expressions
+	{ // تعبيرات_نجمة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
+		ExprTy a_{};
 		if ((a_ = starExpressions_rule(_p)))
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 // ^
 // |
 // |
-// fstring_replacement_field: "{" (yield_expr > star_expressions) "="? fstring_conversion? fstring_full_format_spec? "}"
-static Expression* fStringReplacementField_rule(AlifParser* _p) {
+// نص_تنفيذي_مجال  : "{" (تعبير_ولد > تعبيرات_نجمة) "="? نص_تنفيذي_تحويل? نص_تنفيذي_تنسيق_كامل? "}"
+static ExprTy fStringReplacementField_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -3915,41 +3597,40 @@ static Expression* fStringReplacementField_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // "{" (yield_expr > star_expressions) "="? fstring_conversion? fstring_full_format_spec? "}"
+	{ // "{" (تعبير_ولد > تعبيرات_نجمة) "="? نص_تنفيذي_تحويل? نص_تنفيذي_تنسيق_كامل? "}"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		AlifPToken* literal_1{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		ExprTy a_{};
 		ResultTokenWithMetadata* b_{};
 		ResultTokenWithMetadata* c_{};
 		AlifPToken* d_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, LBRACE)) // "{"
+			(literal = alifParserEngine_expectToken(_p, LBRACE)) // "{"
 			and
-			(a_ = alif20(_p)) // yield_expr > star_expression
+			(a_ = alif20(_p)) // تعبير_ولد > تعبير_نجمة
 			and
 			(d_ = alifParserEngine_expectToken(_p, EQUAL), !_p->errorIndicator) // "="?
 			and
-			(c_ = fStringConversion_rule(_p), !_p->errorIndicator) // fstring_conversion?
+			(c_ = fStringConversion_rule(_p), !_p->errorIndicator) // نص_تنفيذي_تحويل?
 			and
-			(b_ = fStringFullFormatSpec_rule(_p), !_p->errorIndicator) // fstring_full_format_spec?
+			(b_ = fStringFullFormatSpec_rule(_p), !_p->errorIndicator) // نص_تنفيذي_تنسيق_كامل?
 			and
-			(literal_1 = alifParserEngine_expectToken(_p, RBRACE)) // "}"
+			(literal1 = alifParserEngine_expectToken(_p, RBRACE)) // "}"
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifParserEngine_formattedValue(_p, a_, d_, c_, b_, literal_1, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifParserEngine_formattedValue(_p, a_, d_, c_, b_, literal1, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -3957,47 +3638,45 @@ static Expression* fStringReplacementField_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// fstring_middle: fstring_replacement_field > FSTRING_MIDDLE
-static Expression* fStringMiddle_rule(AlifParser* _p) {
+// نص_تنفيذي_وسط: نص_تنفيذي_مجال   > *نص_تنفيذي_وسط*
+static ExprTy fStringMiddle_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
 
-	{ // fstring_replacement_field
+	{ // نص_تنفيذي_مجال  
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
+		ExprTy a_{};
 		if ((a_ = fStringReplacementField_rule(_p)))
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // FSTRING_MIDDLE
+	{ // *نص_تنفيذي_وسط*
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifPToken* a_{};
 		if ((a_ = alifParserEngine_expectToken(_p, FSTRINGMIDDLE)))
 		{
-			res_ = alifParserEngine_constantFromToken(_p, a_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_constantFromToken(_p, a_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -4005,105 +3684,94 @@ static Expression* fStringMiddle_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif20_loop0: fstring_middle
-static Seq* alif20_loop0(AlifParser* _p) {
+// ألف20_حلقة0: نص_تنفيذي_وسط
+static ASDLSeq* alif20_loop0(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
 
-	{ // (fstring > string)
+	{ // (نص_تنفيذي > نص)
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* var_1{};
-		while ((var_1 = fStringMiddle_rule(_p)))
+		ExprTy var1{};
+		while ((var1 = fStringMiddle_rule(_p)))
 		{
-			res_ = var_1;
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+			res = var1;
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (AlifIntT i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 // ^
 // |
 // |
-// fstring: FSTRING_START fstring_middle* FSTRING_END
-static Expression* fString_rule(AlifParser* _p) {
+// نص_تنفيذي: *نص_تنفيذي_بداية* نص_تنفيذي_وسط* *نص_تنفيذي_نهاية
+static ExprTy fString_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
 
-	{ // FSTRING_START fstring_middle* FSTRING_END
+	{ // *نص_تنفيذي_بداية* نص_تنفيذي_وسط* *نص_تنفيذي_نهاية*
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifPToken* a_{};
-		Seq* b_{};
+		ASDLSeq* b_{};
 		AlifPToken* c_{};
 		if (
-			(a_ = alifParserEngine_expectToken(_p, FSTRINGSTART)) // "FSTRING_START"
+			(a_ = alifParserEngine_expectToken(_p, FSTRINGSTART)) // "*نص_تنفيذي_بداية*"
 			and
-			(b_ = alif20_loop0(_p)) // fstring_middle*
+			(b_ = alif20_loop0(_p)) // نص_تنفيذي_وسط*
 			and
-			(c_ = alifParserEngine_expectToken(_p, FSTRINGEND)) // "FSTRING_END"
+			(c_ = alifParserEngine_expectToken(_p, FSTRINGEND)) // "*نص_تنفيذي_نهاية*"
 			)
 		{
-			res_ = alifParserEngine_joinedStr(_p, a_, (ExprSeq*)b_, c_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_joinedStr(_p, a_, (ASDLExprSeq*)b_, c_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -4111,36 +3779,34 @@ static Expression* fString_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// string: STRING
-static Expression* string_rule(AlifParser* _p) { 
+// نص: *نص*
+static ExprTy string_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
 
-	{ // STRING
+	{ // *نص*
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifPToken* a_{};
 		if ((a_ = (AlifPToken*)alifParserEngine_stringToken(_p)))
 		{
-			res_ = alifParserEngine_constantFromString(_p, a_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_constantFromString(_p, a_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -4148,138 +3814,126 @@ static Expression* string_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif19: fstring > string
+// ألف19: نص_تنفيذي > نص
 static void* alif19(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // fstring
+	{ // نص_تنفيذي
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
+		ExprTy a_{};
 		if ((a_ = fString_rule(_p)))
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // string
+	{ // نص
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
+		ExprTy a_{};
 		if ((a_ = string_rule(_p)))
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 // ^
 // |
 // |
-// alif19_loop1: (fstring > string)
-static Seq* alif19_loop1(AlifParser* _p) { 
+// ألف19_حلقة1: (نص_تنفيذي > نص)
+static ASDLSeq* alif19_loop1(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
 
-	{ // (fstring > string)
+	{ // (نص_تنفيذي > نص)
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		void* var_1{};
-		while ((var_1 = alif19(_p)))
+		void* var1{};
+		while ((var1 = alif19(_p)))
 		{
-			res_ = var_1;
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+			res = var1;
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	if (n_ == 0 or _p->errorIndicator) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	if (size == 0 or _p->errorIndicator) {
 		_p->level--;
 		return nullptr;
 	}
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (AlifIntT i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 // ^
 // |
 // |
-// strings: (fstring > string)+
-static Expression* strings_rule(AlifParser* _p) { 
+// نصوص: (نص_تنفيذي > نص)+
+static ExprTy strings_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	if (alifParserEngine_isMemorized(_p, STRINGS_TYPE, &res_)) {
+	ExprTy res{};
+	if (alifParserEngine_isMemorized(_p, STRINGS_TYPE, &res)) {
 		_p->level--;
-		return res_;
+		return res;
 	}
 
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -4288,24 +3942,23 @@ static Expression* strings_rule(AlifParser* _p) {
 		return nullptr;
 	}
 
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // (fstring > string)+
+	{ // (نص_تنفيذي > نص)+
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		ExprSeq* a_{};
-		if ((a_ = (ExprSeq*)alif19_loop1(_p)))
+		ASDLExprSeq* a_{};
+		if ((a_ = (ASDLExprSeq*)alif19_loop1(_p)))
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifParserEngine_combineStrings(_p, a_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifParserEngine_concatenateStrings(_p, a_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -4313,160 +3966,385 @@ static Expression* strings_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	res_ = nullptr;
 
+	res = nullptr;
 done:
-	alifParserEngine_insertMemo(_p, mark_, STRINGS_TYPE, res_);
+	alifParserEngine_insertMemo(_p, mark, STRINGS_TYPE, res);
 	_p->level--;
-	return res_;
+	return res;
 
 }
 
 
-// alif18: dict > dictcomp
-static Expression* alif18(AlifParser* _p) { 
+// ألف21: تعبير_فرعي_نجمة "," تعبيرات_فرعية_نجمة?
+static ASDLExprSeq* alif21(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	{ // dict
+	ASDLExprSeq* res{};
+	AlifIntT mark = _p->mark;
+
+	{ // تعبيرات_فرعية_نجمة "," تعبيرات_فرعية_نجمة?
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* dictVar{};
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ASDLExprSeq* b_{};
+		if (
+			(a_ = starSubExpression_rule(_p)) // تعبير_فرعي_نجمة
+			and
+			(literal = alifParserEngine_expectToken(_p, COMMA)) // ","
+			and
+			(b_ = starSubExpressions_rule(_p), !_p->errorIndicator) // تعبيرات_فرعية_نجمة?
+			)
+		{
+			res = (ASDLExprSeq*)alifParserEngine_seqInsertInFront(_p, a_, (ASDLSeq*)b_);
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+
+	res = nullptr;
+done:
+	_p->level--;
+	return res;
+}
+// ^
+// |
+// |
+// مترابطة: "(" [تعبير_فرعي_نجمة "," تعبيرات_فرعية_نجمة?] ")"
+static ExprTy tuple_rule(AlifParser* _p) {
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
+		and
+		alifParserEngine_fillToken(_p) < 0)
+	{
+		_p->errorIndicator = 1;
+		_p->level--;
+		return nullptr;
+	}
+
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
+
+	{ // "(" [تعبير_فرعي_نجمة "," تعبير_فرعي_نجمة?] ")"
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		ASDLExprSeq* a_{}; // casted to ASDLExprSeq*
+		if (
+			(literal = alifParserEngine_expectToken(_p, LPAR)) // "("
+			and
+			(a_ = alif21(_p), !_p->errorIndicator) // [تعبير_فرعي_نجمة ',' تعبيرات_فرعية_نجمة?]
+			and
+			(literal1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
+			)
+		{
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
+
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_tuple(a_, ExprContext_::Load, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+
+	res = nullptr;
+done:
+	_p->level--;
+	return res;
+}
+
+// ألف29: تعبير_ولد > تعبير
+static ExprTy alif29(AlifParser* _p) {
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+
+	{ // تعبير_ولد
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		ExprTy a_{};
+		if (
+			(a_ = yieldExpr_rule(_p)) // تعبير_ولد
+			)
+		{
+			res = a_;
+			goto done;
+		}
+		_p->mark = mark;
+	}
+	{ // تعبير
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		ExprTy a_{};
+		if (
+			(a_ = expression_rule(_p)) // تعبير
+			)
+		{
+			res = a_;
+			goto done;
+		}
+		_p->mark = mark;
+	}
+
+	res = nullptr;
+done:
+	_p->level--;
+	return res;
+}
+// ^
+// |
+// |
+// مجموعة: "(" تعبير_ولد > تعبير ")"
+static ExprTy group_rule(AlifParser* _p) {
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	{ // "(" تعبير_ولد > تعبير ")"
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		ExprTy a_{};
+		if (
+			(literal = alifParserEngine_expectToken(_p, LPAR)) // "("
+			and
+			(a_ = alif29(_p)) // تعبير_ولد > تعبير
+			and
+			(literal1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
+			)
+		{
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+
+	res = nullptr;
+done:
+	_p->level--;
+	return res;
+}
+// ^
+// |
+// |
+// ألف28: مترابطة > مجموعة
+static ExprTy alif28(AlifParser* _p) {
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	{ // مترابطة
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		ExprTy tupleVar{};
+		if ((tupleVar = tuple_rule(_p)))
+		{
+			res = tupleVar;
+			goto done;
+		}
+		_p->mark = mark;
+	}
+	{ // مجموعة
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		ExprTy groupVar{};
+		if ((groupVar = group_rule(_p)))
+		{
+			res = groupVar;
+			goto done;
+		}
+		_p->mark = mark;
+	}
+
+	res = nullptr;
+done:
+	_p->level--;
+	return res;
+}
+// ^
+// |
+// |
+// ألف18: فهرس > فهرس_ضمني
+static ExprTy alif18(AlifParser* _p) { 
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	{ // فهرس
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		ExprTy dictVar{};
 		if ((dictVar = dict_rule(_p)))
 		{
-			res_ = dictVar;
+			res = dictVar;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // dictcomp
+	{ // فهرس_ضمني
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* dictCompVar{};
+		ExprTy dictCompVar{};
 		if ((dictCompVar = dictComp_rule(_p)))
 		{
-			res_ = dictCompVar;
+			res = dictCompVar;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 // ^
 // |
 // |
-// alif17: list > listcomp
-static Expression* alif17(AlifParser* _p) { 
+// ألف17: مصفوفة > مصفوفة_ضمنية
+static ExprTy alif17(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	{ // list
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	{ // مصفوفة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* listVar{};
+		ExprTy listVar{};
 		if ((listVar = list_rule(_p)))
 		{
-			res_ = listVar;
+			res = listVar;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // listcomp
+	{ // مصفوفة_ضمنية
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* listCompVar{};
+		ExprTy listCompVar{};
 		if ((listCompVar = listComp_rule(_p)))
 		{
-			res_ = listCompVar;
+			res = listCompVar;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 // ^
 // |
 // |
-// alif16 : STRING > FSTRING_START
+// ألف16 : *نص* > *نص_تنفيذي_بداية*
 static void* alif16(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // STRING
+	{ // *نص*
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		void* stringVar{};
 		if (stringVar = alifParserEngine_stringToken(_p))
 		{
-			res_ = stringVar;
+			res = stringVar;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // FSTRING_START
+	{ // *نص_تنفيذي_بداية*
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifPToken* fStringStart{};
 		if ((fStringStart = alifParserEngine_expectToken(_p, FSTRINGSTART)))
 		{
-			res_ = fStringStart;
+			res = fStringStart;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 // ^
 // |
 // |
 /*
-	atom:
-		> NAME
-		> "True"
-		> "False"
-		> "None"
-		> &(STRING > FSTRING_START) string
-		> NUMBER
-		> &"(" tuble
-		> &"[" (list > listcomp)
-		> &"{" (dict > dictcomp)
+	جزء:
+		> *اسم*
+		> "صح"
+		> "خطأ"
+		> "عدم"
+		> &(*نصوص* > *نص_تنفيذي_بداية*) نص
+		> *عدد*
+		> &"(" مترابطة
+		> &"[" (مصفوفة > مصفوفة_ضمنية)
+		> &"{" (فهرس > فهرس_ضمني)
 */
-static Expression* atom_rule(AlifParser* _p) { 
+static ExprTy atom_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
 
-	if (_p->mark_ == _p->fill_
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -4475,35 +4353,34 @@ static Expression* atom_rule(AlifParser* _p) {
 		return nullptr;
 	}
 
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // NAME
+	{ // *اسم*
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* nameVar{};
+		ExprTy nameVar{};
 		if ((nameVar = alifParserEngine_nameToken(_p)))
 		{
-			res_ = nameVar;
+			res = nameVar;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // "True"
+	{ // "صح"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		if ((keyword_ = alifParserEngine_expectToken(_p, TRUE_KW)))
+		AlifPToken* keyword{};
+		if ((keyword = alifParserEngine_expectToken(_p, TRUE_KW)))
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_constant(ALIF_TRUE, nullptr, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_constant(ALIF_TRUE, nullptr, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -4511,23 +4388,22 @@ static Expression* atom_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // "False"
+	{ // "خطأ"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		if ((keyword_ = alifParserEngine_expectToken(_p, FALSE_KW)))
+		AlifPToken* keyword{};
+		if ((keyword = alifParserEngine_expectToken(_p, FALSE_KW)))
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_constant(ALIF_FALSE, nullptr, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_constant(ALIF_FALSE, nullptr, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -4535,23 +4411,22 @@ static Expression* atom_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // "None"
+	{ // "عدم"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		if ((keyword_ = alifParserEngine_expectToken(_p, NONE_KW)))
+		AlifPToken* keyword{};
+		if ((keyword = alifParserEngine_expectToken(_p, NONE_KW)))
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_constant(ALIF_NONE, nullptr, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_constant(ALIF_NONE, nullptr, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -4559,113 +4434,109 @@ static Expression* atom_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // &(STRING > FSTRING_START) strings
+	{ // &(*نصوص* > *نص_تنفيذي_بداية*) نص
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* stringsVar{};
+		ExprTy stringsVar{};
 		if (
 			alifParserEngine_lookahead(1, alif16, _p)
 			and
-			(stringsVar = strings_rule(_p)) // strings
+			(stringsVar = strings_rule(_p)) // نصوص
 			)
 		{
-			res_ = stringsVar;
+			res = stringsVar;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // NUMBER
+	{ // *عدد*
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* numberVar{};
+		ExprTy numberVar{};
 		if ((numberVar = alifParserEngine_numberToken(_p)))
 		{
-			res_ = numberVar;
+			res = numberVar;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // &"(" tuple
+	{ // &"(" (مترابطة > مجموعة)
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* tupleVar{}; // casted to Expression* from void*
+		ExprTy val{};
 		if (
 			alifParserEngine_lookaheadWithInt(1, alifParserEngine_expectToken, _p, LPAR) // "("
 			and
-			(tupleVar = tuple_rule(_p)) // tuple
+			(val = alif28(_p)) // مترابطة > مجموعة
 			)
 		{
-			res_ = tupleVar;
+			res = val;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // &"[" (list > listcomp)
+	{ // &"[" (مصفوفة > مصفوفة_ضمنية)
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* listVar{}; // casted to Expression* from void*
+		ExprTy listVar{};
 		if (
 			alifParserEngine_lookaheadWithInt(1, alifParserEngine_expectToken, _p, LSQR) // "["
 			and
-			(listVar = alif17(_p)) // list > listcomp
+			(listVar = alif17(_p)) // مصفوفة > مصفوفة_ضمنية
 			)
 		{
-			res_ = listVar;
+			res = listVar;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // &"{" (dict > dictcomp)
+	{ // &"{" (فهرس > فهرس_ضمني)
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* dictVar{}; // casted to Expression* from void*
+		ExprTy dictVar{};
 		if (
 			alifParserEngine_lookaheadWithInt(1, alifParserEngine_expectToken, _p, LBRACE) // "{"
 			and
-			(dictVar = alif18(_p)) // dict > dictcomp
+			(dictVar = alif18(_p)) // فهرس > فهرس_ضمني
 			)
 		{
-			res_ = dictVar;
+			res = dictVar;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 
 }
 
 
-// alif15: ":" expression?
-static Expression* alif15(AlifParser* _p) { 
-	// return type is changed to Expression from void*
-
+// ألف15: ":" تعبير?
+static ExprTy alif15(AlifParser* _p) { 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{}; // changed to Expression from void*
-	AlifIntT mark_ = _p->mark_;
-	{ // ":" expression
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	{ // ":" تعبير
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{}; // changed to Expression from void*
+		AlifPToken* literal{};
+		ExprTy a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, COLON)) // ":"
+			(literal = alifParserEngine_expectToken(_p, COLON)) // ":"
 			and
-			(a_ = expression_rule(_p), !_p->errorIndicator) // expression?
+			(a_ = expression_rule(_p), !_p->errorIndicator) // تعبير?
 			)
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -4673,28 +4544,26 @@ static Expression* alif15(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 // ^
 // |
 // |
-// slice: expression? ":" expression? [":" expression?] > expression
-static Expression* slice_rule(AlifParser* _p) { 
+// قاطع: تعبير? ":" تعبير? [":" تعبير?] > تعبير
+static ExprTy slice_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -4703,35 +4572,34 @@ static Expression* slice_rule(AlifParser* _p) {
 		return nullptr;
 	}
 
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
 	{
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{}; // changed to Expression* from void*
-		Expression* b_{}; // changed to Expression* from void*
-		Expression* c_{}; // changed to Expression* from void*
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ExprTy b_{};
+		ExprTy c_{};
 		if (
-			(a_ = expression_rule(_p), !_p->errorIndicator) // expression?
+			(a_ = expression_rule(_p), !_p->errorIndicator) // تعبير?
 			and
-			(literal_ = alifParserEngine_expectToken(_p, COLON)) // ":"
+			(literal = alifParserEngine_expectToken(_p, COLON)) // ":"
 			and
-			(b_ = expression_rule(_p), !_p->errorIndicator) // expression?
+			(b_ = expression_rule(_p), !_p->errorIndicator) // تعبير?
 			and
-			(c_ = alif15(_p), !_p->errorIndicator) // [":" expression?]
+			(c_ = alif15(_p), !_p->errorIndicator) // [":" تعبير?]
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_slice(a_, b_, c_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_slice(a_, b_, c_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -4739,18 +4607,17 @@ static Expression* slice_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // expression
+	{ // تعبير
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
+		ExprTy a_{};
 		if ((a_ = expression_rule(_p)))
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -4758,171 +4625,160 @@ static Expression* slice_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif14: slice > starred_expression
+// ألف14: قاطع > تعبير_نجمي_
 static void* alif14(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // slice
+	{ // قاطع
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
+		ExprTy a_{};
 		if ((a_ = slice_rule(_p)))
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // star_expression
+	{ // تعبير_نجمي_
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
-		if ((a_ = starExpression_rule(_p)))
+		ExprTy a_{};
+		if ((a_ = starredExpression_rule(_p)))
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 // ^
 // |
 // |
-// alif18_loop0: "," (slice > starred_expression)
-static Seq* alif18_loop0(AlifParser* _p) { 
+// ألف18_حلقة0: "," (قاطع > تعبير_نجمة)
+static ASDLSeq* alif18_loop0(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	void* res{};
+	AlifIntT mark = _p->mark;
+
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// error
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
-	{ // "," (slice > star_expression)
+
+	{ // "," (قاطع > تعبير_نجمة)
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		void* element_{};
+		AlifPToken* literal{};
+		void* element{};
 		while (
-			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
+			(literal = alifParserEngine_expectToken(_p, COMMA)) // ","
 			and
-			(element_ = alif14(_p)) // slice > star_expression
+			(element = alif14(_p)) // قاطع > تعبير_نجمة
 			)
 		{
-			res_ = element_;
-			if (res_ == nullptr) {
+			res = element;
+			if (res == nullptr) {
 				_p->errorIndicator = 1;
-				alifMem_dataFree(children_);
 				_p->level--;
 				return nullptr;
 			}
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// error
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// error
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (AlifIntT i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 // ^
 // |
 // |
-// alif6_gather: (slice > starred_expression) alif18_loop0
-static Seq* alif6_gather(AlifParser* _p) { 
+// ألف6_تجميع: (قاطع > تعبير_نجمة) ألف18_حلقة0
+static ASDLSeq* alif6_gather(AlifParser* _p) { 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Seq* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ASDLSeq* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // (slice > starred_expression) alif18_loop0
+	{ // (قاطع > تعبير_نجمة) ألف18_حلقة0
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		void* element_{};
-		Seq* seq_{};
+		void* element{};
+		ASDLSeq* seq{};
 		if (
-			(element_ = alif14(_p)) // slice > star_expression
+			(element = alif14(_p)) // قاطع > تعبير_نجمة
 			and
-			(seq_ = alif18_loop0(_p)) // alif18_loop0
+			(seq = alif18_loop0(_p)) // ألف18_حلقة0
 			)
 		{
-			res_ = alifParserEngine_seqInsertInFront(_p, element_, seq_);
+			res = alifParserEngine_seqInsertInFront(_p, element, seq);
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 // ^
 // |
 // |
-// slices: slice !"," > ",".(slice > starred_expression)+ ","?
-static Expression* slices_rule(AlifParser* _p) { 
+// قواطع: قاطع !"," > ",".(قاطع > تعبير_نجمة)+ ","?
+static ExprTy slices_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -4931,23 +4787,22 @@ static Expression* slices_rule(AlifParser* _p) {
 		return nullptr;
 	}
 
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // slice !","
+	{ // قاطع !","
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
+		ExprTy a_{};
 		if (
-			(a_ = slice_rule(_p)) // slice
+			(a_ = slice_rule(_p)) // قاطع
 			and
 			alifParserEngine_lookaheadWithInt(0, alifParserEngine_expectToken, _p, COMMA) // ","
 			)
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -4955,15 +4810,15 @@ static Expression* slices_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // ",".(slice > starred_expression)+ ","?
+	{ // ",".(قاطع > تعبير_نجمة)+ ","?
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		void* optVar{};
-		ExprSeq* a_{};
+		ASDLExprSeq* a_{};
 		if (
-			(a_ = (ExprSeq*)alif6_gather(_p)) // ",".(slice > starred_expression)+
+			(a_ = (ASDLExprSeq*)alif6_gather(_p)) // ",".(قاطع > تعبير_نجمة)+
 			and
 			(optVar = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
 			)
@@ -4973,10 +4828,9 @@ static Expression* slices_rule(AlifParser* _p) {
 
 			AlifIntT endLineNo = token->endLineNo;
 			AlifIntT endColOffset = token->endColOffset;
-			res_ = alifAST_tuple(a_, ExprCTX::Load, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_tuple(a_, ExprContext_::Load, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -4984,26 +4838,25 @@ static Expression* slices_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 
 }
 
 
-static Expression* primary_raw(AlifParser* _p) { 
+static ExprTy primary_raw(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -5012,32 +4865,31 @@ static Expression* primary_raw(AlifParser* _p) {
 		return nullptr;
 	}
 
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // primary "." NAME
+	{ // اولي "." *اسم*
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = primary_rule(_p)) // primary
+			(a_ = primary_rule(_p)) // اولي
 			and
-			(literal_ = alifParserEngine_expectToken(_p, DOT)) // "."
+			(literal = alifParserEngine_expectToken(_p, DOT)) // "."
 			and
-			(b_ = alifParserEngine_nameToken(_p)) // NAME
+			(b_ = alifParserEngine_nameToken(_p)) // *اسم*
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_attribute(a_, b_->V.name.name, ExprCTX::Load, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_attribute(a_, b_->V.name.name, ExprContext_::Load, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5045,35 +4897,34 @@ static Expression* primary_raw(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // primary "(" arguments? ")"
+	{ // اولي "(" وسيطات? ")"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		AlifPToken* literal_1{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		ExprTy a_{};
 		void* b_{};
 		if (
-			(a_ = primary_rule(_p)) // primary
+			(a_ = primary_rule(_p)) // اولي
 			and
-			(literal_ = alifParserEngine_expectToken(_p, LPAR)) // "("
+			(literal = alifParserEngine_expectToken(_p, LPAR)) // "("
 			and
-			(b_ = arguments_rule(_p), !_p->errorIndicator) // arguments?
+			(b_ = arguments_rule(_p), !_p->errorIndicator) // وسيطات?
 			and
-			(literal_1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
+			(literal1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_call(a_, b_ ? ((Expression*)b_)->V.call.args : nullptr,
-				b_ ? ((Expression*)b_)->V.call.keywords : nullptr, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_call(a_, b_ ? ((ExprTy)b_)->V.call.args : nullptr,
+				b_ ? ((ExprTy)b_)->V.call.keywords : nullptr, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5081,34 +4932,33 @@ static Expression* primary_raw(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // primary "[" slices "]"
+	{ // اولي "[" قواطع "]"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		AlifPToken* literal_1{};
-		Expression* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = primary_rule(_p)) // primary
+			(a_ = primary_rule(_p)) // اولي
 			and
-			(literal_ = alifParserEngine_expectToken(_p, LSQR)) // "["
+			(literal = alifParserEngine_expectToken(_p, LSQR)) // "["
 			and
-			(b_ = slices_rule(_p)) // slices
+			(b_ = slices_rule(_p)) // قواطع
 			and
-			(literal_1 = alifParserEngine_expectToken(_p, RSQR)) // "]"
+			(literal1 = alifParserEngine_expectToken(_p, RSQR)) // "]"
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_subScript(a_, b_, ExprCTX::Load, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_subScript(a_, b_, ExprContext_::Load, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5116,46 +4966,45 @@ static Expression* primary_raw(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // atom
+	{ // جزء
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* atom{};
+		ExprTy atom{};
 		if (atom = atom_rule(_p)) {
-			res_ = atom;
+			res = atom;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 /*
 	Left-recursive
-	primary:
-		> primary "." NAME
-		> primary "(" arguments? ")"
-		> primary "[" slices "]"
-		> atom
+	اولي:
+		> اولي "." *اسم*
+		> اولي "(" وسيطات? ")"
+		> اولي "[" قواطع "]"
+		> جزء
 */
-static Expression* primary_rule(AlifParser* _p) { 
+static ExprTy primary_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 
-	Expression* res_{};
-	if (alifParserEngine_isMemorized(_p, PRIMARY_TYPE, &res_)) {
+	ExprTy res{};
+	if (alifParserEngine_isMemorized(_p, PRIMARY_TYPE, &res)) {
 		_p->level--;
-		return res_;
+		return res;
 	}
 
-	AlifIntT mark_ = _p->mark_;
-	AlifIntT resMark = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	AlifIntT mark = _p->mark;
+	AlifIntT resMark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -5166,40 +5015,40 @@ static Expression* primary_rule(AlifParser* _p) {
 
 	while (true)
 	{
-		int var_1 = alifParserEngine_updateMemo(_p, mark_, PRIMARY_TYPE, res_);
-		if (var_1) { _p->level--; return res_; }
+		AlifIntT var1 = alifParserEngine_updateMemo(_p, mark, PRIMARY_TYPE, res);
+		if (var1) { _p->level--; return res; }
 
-		_p->mark_ = mark_;
-		Expression* raw_ = primary_raw(_p);
+		_p->mark = mark;
+		ExprTy raw = primary_raw(_p);
 
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
-		if (raw_ == nullptr or _p->mark_ <= resMark) break;
+		if (raw == nullptr or _p->mark <= resMark) break;
 
-		resMark = _p->mark_;
-		res_ = raw_;
+		resMark = _p->mark;
+		res = raw;
 	}
 
-	_p->mark_ = resMark;
+	_p->mark = resMark;
 	_p->level--;
 
-	return res_;
+	return res;
 }
 
 
-// await_primary: "await" primary > primary
-static Expression* awaitPrimary_rule(AlifParser* _p) { 
+// اولي_انتظر: "انتظر" اولي > اولي
+static ExprTy awaitPrimary_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	if (alifParserEngine_isMemorized(_p, AWAIT_PRIMARY_TYPE, &res_)) {
+	ExprTy res{};
+	if (alifParserEngine_isMemorized(_p, AWAIT_PRIMARY_TYPE, &res)) {
 		_p->level--;
-		return res_;
+		return res;
 	}
 
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -5207,31 +5056,30 @@ static Expression* awaitPrimary_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // "await" primary
+	{ // "انتظر" اولي
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		Expression* a_{};
+		AlifPToken* keyword{};
+		ExprTy a_{};
 
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, AWAIT_KW)) // "await"
+			(keyword = alifParserEngine_expectToken(_p, AWAIT_KW)) // "انتظر"
 			and
-			(a_ = primary_rule(_p)) // primary
+			(a_ = primary_rule(_p)) // اولي
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			//res_ = CHECK_VERSION(Expression*, 5, L"تعبير إنتظر", alifAST_await(a_, EXTRA)); // تمت إضافته فقط للإستفادة منه في المستقبل في حال الحاجة
-			res_ = alifAST_await(a_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			//res = CHECK_VERSION(ExprTy, 5, L"تعبير إنتظر", alifAST_await(a_, EXTRA)); // تمت إضافته فقط للإستفادة منه في المستقبل في حال الحاجة
+			res = alifAST_await(a_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5239,37 +5087,36 @@ static Expression* awaitPrimary_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // primary
+	{ // اولي
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* primaryVar{};
+		ExprTy primaryVar{};
 		if (primaryVar = primary_rule(_p)) {
-			res_ = primaryVar;
+			res = primaryVar;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
-	alifParserEngine_insertMemo(_p, mark_, AWAIT_PRIMARY_TYPE, res_);
+	alifParserEngine_insertMemo(_p, mark, AWAIT_PRIMARY_TYPE, res);
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// sqrt: "/^" sqrt > await_primary
-static Expression* sqrt_rule(AlifParser* _p) {
+// جذر: "/^" جذر > اولي_انتظر
+static ExprTy sqrt_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -5277,18 +5124,18 @@ static Expression* sqrt_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // "/^" sqrt
+	{ // "/^" جذر
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, SLASHCIRCUMFLEX)) // "/^"
+			(literal = alifParserEngine_expectToken(_p, SLASHCIRCUMFLEX)) // "/^"
 			and
-			(a_ = sqrt_rule(_p)) // sqrt
+			(a_ = sqrt_rule(_p)) // جذر
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -5296,10 +5143,9 @@ static Expression* sqrt_rule(AlifParser* _p) {
 
 			AlifIntT endLineNo = token_->endLineNo;
 			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_unaryOp(UnaryOp::Sqrt, a_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_unaryOp(UnaryOp_::Sqrt, a_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5307,37 +5153,36 @@ static Expression* sqrt_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 
 	}
-	{ // await_primary
+	{ // اولي_انتظر
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* awaitPrimary{};
+		ExprTy awaitPrimary{};
 		if (awaitPrimary = awaitPrimary_rule(_p)) {
-			res_ = awaitPrimary;
+			res = awaitPrimary;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// power: sqrt "^" factor > sqrt
-static Expression* power_rule(AlifParser* _p) { 
+// أس: جذر "^" معامل > جذر
+static ExprTy power_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -5345,32 +5190,31 @@ static Expression* power_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // sqrt "^" factor
+	{ // جذر "^" معامل
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = sqrt_rule(_p)) // sqrt
+			(a_ = sqrt_rule(_p)) // جذر
 			and
-			(literal_ = alifParserEngine_expectToken(_p, CIRCUMFLEX)) // "^"
+			(literal = alifParserEngine_expectToken(_p, CIRCUMFLEX)) // "^"
 			and
-			(b_ = factor_rule(_p)) // factor
+			(b_ = factor_rule(_p)) // معامل
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_binOp(a_, Operator::Pow, b_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_binOp(a_, Operator_::Pow, b_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5378,40 +5222,39 @@ static Expression* power_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // sqrt
+	{ // جذر
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* sqrtVar{};
+		ExprTy sqrtVar{};
 		if (sqrtVar = sqrt_rule(_p)) {
-			res_ = sqrtVar;
+			res = sqrtVar;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// factor: "+" factor > "-" factor > power
-static Expression* factor_rule(AlifParser* _p) { 
+// معامل: "+" معامل > "-" معامل > أس
+static ExprTy factor_rule(AlifParser* _p) { 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	if (alifParserEngine_isMemorized(_p, FACTOR_TYPE, &res_)) {
+	ExprTy res{};
+	if (alifParserEngine_isMemorized(_p, FACTOR_TYPE, &res)) {
 		_p->level--;
-		return res_;
+		return res;
 	}
 
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -5419,29 +5262,28 @@ static Expression* factor_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // "+" factor
+	{ // "+" معامل
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, PLUS)) // "+"
+			(literal = alifParserEngine_expectToken(_p, PLUS)) // "+"
 			and
-			(a_ = factor_rule(_p)) // factor
+			(a_ = factor_rule(_p)) // معامل
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_unaryOp(UnaryOp::UAdd, a_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_unaryOp(UnaryOp_::UAdd, a_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5449,28 +5291,27 @@ static Expression* factor_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // "-" factor
+	{ // "-" معامل
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, MINUS)) // "-"
+			(literal = alifParserEngine_expectToken(_p, MINUS)) // "-"
 			and
-			(a_ = factor_rule(_p)) // factor
+			(a_ = factor_rule(_p)) // معامل
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_unaryOp(UnaryOp::USub, a_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_unaryOp(UnaryOp_::USub, a_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5478,35 +5319,35 @@ static Expression* factor_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // power
+	{ // أس
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* power{};
+		ExprTy power{};
 		if (power = power_rule(_p)) {
-			res_ = power;
+			res = power;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
+	res = nullptr;
 done:
-	alifParserEngine_insertMemo(_p, mark_, FACTOR_TYPE, res_);
+	alifParserEngine_insertMemo(_p, mark, FACTOR_TYPE, res);
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-static Expression* term_raw(AlifParser* _p) { 
+static ExprTy term_raw(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -5514,32 +5355,31 @@ static Expression* term_raw(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // term "*" factor
+	{ // حد "*" معامل
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = term_rule(_p)) // term
+			(a_ = term_rule(_p)) // حد
 			and
-			(literal_ = alifParserEngine_expectToken(_p, STAR)) // "*"
+			(literal = alifParserEngine_expectToken(_p, STAR)) // "*"
 			and
-			(b_ = factor_rule(_p)) // factor
+			(b_ = factor_rule(_p)) // معامل
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_binOp(a_, Operator::Mult, b_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_binOp(a_, Operator_::Mult, b_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5547,31 +5387,30 @@ static Expression* term_raw(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // term "/" factor
+	{ // حد "/" معامل
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = term_rule(_p)) // term
+			(a_ = term_rule(_p)) // حد
 			and
-			(literal_ = alifParserEngine_expectToken(_p, SLASH)) // "/"
+			(literal = alifParserEngine_expectToken(_p, SLASH)) // "/"
 			and
-			(b_ = factor_rule(_p)) // factor
+			(b_ = factor_rule(_p)) // معامل
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_binOp(a_, Operator::Div, b_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_binOp(a_, Operator_::Div, b_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5579,31 +5418,30 @@ static Expression* term_raw(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // term "/*" factor
+	{ // حد "/*" معامل
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = term_rule(_p)) // term
+			(a_ = term_rule(_p)) // حد
 			and
-			(literal_ = alifParserEngine_expectToken(_p, SLASHSTAR)) // "/*"
+			(literal = alifParserEngine_expectToken(_p, SLASHSTAR)) // "/*"
 			and
-			(b_ = factor_rule(_p)) // factor
+			(b_ = factor_rule(_p)) // معامل
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_binOp(a_, Operator::FloorDiv, b_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_binOp(a_, Operator_::FloorDiv, b_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5611,31 +5449,30 @@ static Expression* term_raw(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // term "//" factor
+	{ // حد "//" معامل
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = term_rule(_p)) // term
+			(a_ = term_rule(_p)) // حد
 			and
-			(literal_ = alifParserEngine_expectToken(_p, DOUBLESLASH)) // "//"
+			(literal = alifParserEngine_expectToken(_p, DOUBLESLASH)) // "//"
 			and
-			(b_ = factor_rule(_p)) // factor
+			(b_ = factor_rule(_p)) // معامل
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_binOp(a_, Operator::Mod, b_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_binOp(a_, Operator_::Mod, b_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5643,46 +5480,45 @@ static Expression* term_raw(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // factor
+	{ // معامل
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* factorVar{};
+		ExprTy factorVar{};
 		if (factorVar = factor_rule(_p)) {
-			res_ = factorVar;
+			res = factorVar;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 /*
 	Left-recursive
-	term:
-		> term "*" factor
-		> term "/" factor
-		> term "/*" factor
-		> term "//" factor
-		> factor
+	حد:
+		> حد "*" معامل
+		> حد "/" معامل
+		> حد "/*" معامل
+		> حد "//" معامل
+		> معامل
 */
-static Expression* term_rule(AlifParser* _p) { 
+static ExprTy term_rule(AlifParser* _p) { 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 
-	Expression* res_{};
-	if (alifParserEngine_isMemorized(_p, TERM_TYPE, &res_)) {
+	ExprTy res{};
+	if (alifParserEngine_isMemorized(_p, TERM_TYPE, &res)) {
 		_p->level--;
-		return res_;
+		return res;
 	}
 
-	AlifIntT mark_ = _p->mark_;
-	AlifIntT resMark = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	AlifIntT mark = _p->mark;
+	AlifIntT resMark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -5692,34 +5528,34 @@ static Expression* term_rule(AlifParser* _p) {
 	}
 
 	while (true) {
-		int var_1 = alifParserEngine_updateMemo(_p, mark_, TERM_TYPE, res_);
-		if (var_1) { _p->level--; return res_; }
+		AlifIntT var1 = alifParserEngine_updateMemo(_p, mark, TERM_TYPE, res);
+		if (var1) { _p->level--; return res; }
 
-		_p->mark_ = mark_;
-		Expression* raw_ = term_raw(_p);
+		_p->mark = mark;
+		ExprTy raw = term_raw(_p);
 
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
-		if (raw_ == nullptr or _p->mark_ <= resMark) break;
+		if (raw == nullptr or _p->mark <= resMark) break;
 
-		resMark = _p->mark_;
-		res_ = raw_;
+		resMark = _p->mark;
+		res = raw;
 	}
 
-	_p->mark_ = resMark;
+	_p->mark = resMark;
 	_p->level--;
 
-	return res_;
+	return res;
 }
 
 
-static Expression* sum_raw(AlifParser* _p) { 
+static ExprTy sum_raw(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -5727,32 +5563,31 @@ static Expression* sum_raw(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // sum "+" term
+	{ // جمع "+" حد
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = sum_rule(_p)) // sum
+			(a_ = sum_rule(_p)) // جمع
 			and
-			(literal_ = alifParserEngine_expectToken(_p, PLUS))  // "+"
+			(literal = alifParserEngine_expectToken(_p, PLUS))  // "+"
 			and
-			(b_ = term_rule(_p)) // term
+			(b_ = term_rule(_p)) // حد
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_binOp(a_, Operator::Add, b_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_binOp(a_, Operator_::Add, b_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5760,33 +5595,32 @@ static Expression* sum_raw(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // sum "-" term
+	{ // جمع "-" حد
 		if (_p->errorIndicator) {
 			_p->level--;
 			return nullptr;
 		}
-		AlifPToken* literal_{};
-		Expression* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = sum_rule(_p)) // sum
+			(a_ = sum_rule(_p)) // جمع
 			and
-			(literal_ = alifParserEngine_expectToken(_p, MINUS))  // "-"
+			(literal = alifParserEngine_expectToken(_p, MINUS))  // "-"
 			and
-			(b_ = term_rule(_p)) // term
+			(b_ = term_rule(_p)) // حد
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_binOp(a_, Operator::Sub, b_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_binOp(a_, Operator_::Sub, b_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5794,41 +5628,40 @@ static Expression* sum_raw(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // term
+	{ // حد
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* termVar{};
+		ExprTy termVar{};
 		if (termVar = term_rule(_p))
 		{
-			res_ = termVar;
+			res = termVar;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 // Left-recursive
-// sum: sum "+" term > sum "-" term > term
-static Expression* sum_rule(AlifParser* _p) { 
+// جمع: جمع "+" حد > جمع "-" حد > حد
+static ExprTy sum_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 
-	Expression* res_{};
-	if (alifParserEngine_isMemorized(_p, SUM_TYPE, &res_)) {
+	ExprTy res{};
+	if (alifParserEngine_isMemorized(_p, SUM_TYPE, &res)) {
 		_p->level--;
-		return res_;
+		return res;
 	}
 
-	AlifIntT mark_ = _p->mark_;
-	AlifIntT resMark = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	AlifIntT mark = _p->mark;
+	AlifIntT resMark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -5838,34 +5671,34 @@ static Expression* sum_rule(AlifParser* _p) {
 	}
 
 	while (true) {
-		int var_1 = alifParserEngine_updateMemo(_p, mark_, SUM_TYPE, res_);
-		if (var_1) { _p->level--; return res_; }
+		AlifIntT var1 = alifParserEngine_updateMemo(_p, mark, SUM_TYPE, res);
+		if (var1) { _p->level--; return res; }
 
-		_p->mark_ = mark_;
-		Expression* raw_ = sum_raw(_p);
+		_p->mark = mark;
+		ExprTy raw = sum_raw(_p);
 
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
-		if (raw_ == nullptr or _p->mark_ <= resMark) break;
+		if (raw == nullptr or _p->mark <= resMark) break;
 
-		resMark = _p->mark_;
-		res_ = raw_;
+		resMark = _p->mark;
+		res = raw;
 	}
 
-	_p->mark_ = resMark;
+	_p->mark = resMark;
 	_p->level--;
 
-	return res_;
+	return res;
 }
 
 
-static Expression* shiftExpr_raw(AlifParser* _p) { 
+static ExprTy shiftExpr_raw(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -5873,32 +5706,31 @@ static Expression* shiftExpr_raw(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // shift_expr "<<" sum
+	{ // تعبير_ازاحة "<<" جمع
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = shiftExpr_rule(_p)) // shift_expr
+			(a_ = shiftExpr_rule(_p)) // تعبير_ازاحة
 			and
-			(literal_ = alifParserEngine_expectToken(_p, LSHIFT))  // "<<"
+			(literal = alifParserEngine_expectToken(_p, LSHIFT))  // "<<"
 			and
-			(b_ = sum_rule(_p)) // sum
+			(b_ = sum_rule(_p)) // جمع
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_binOp(a_, Operator::LShift, b_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_binOp(a_, Operator_::LShift, b_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5906,31 +5738,30 @@ static Expression* shiftExpr_raw(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // shift_expr ">>" sum
+	{ // تعبير_ازاحة ">>" جمع
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = shiftExpr_rule(_p)) // shift_expr
+			(a_ = shiftExpr_rule(_p)) // تعبير_ازاحة
 			and
-			(literal_ = alifParserEngine_expectToken(_p, RSHIFT))  // ">>"
+			(literal = alifParserEngine_expectToken(_p, RSHIFT))  // ">>"
 			and
-			(b_ = sum_rule(_p)) // sum
+			(b_ = sum_rule(_p)) // جمع
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_binOp(a_, Operator::RShift, b_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_binOp(a_, Operator_::RShift, b_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -5938,41 +5769,40 @@ static Expression* shiftExpr_raw(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // sum
+	{ // جمع
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* sumVar{};
+		ExprTy sumVar{};
 		if (sumVar = sum_rule(_p))
 		{
-			res_ = sumVar;
+			res = sumVar;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 // Left-recursive
-// shift_expr: shift_expr "<<" sum > shift_expr ">>" sum > sum
-static Expression* shiftExpr_rule(AlifParser* _p) { 
+// تعبير_ازاحة: تعبير_ازاحة "<<" جمع > تعبير_ازاحة ">>" جمع > جمع
+static ExprTy shiftExpr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 
-	Expression* res_{};
-	if (alifParserEngine_isMemorized(_p, SHIFT_EXPR_TYPE, &res_)) {
+	ExprTy res{};
+	if (alifParserEngine_isMemorized(_p, SHIFT_EXPR_TYPE, &res)) {
 		_p->level--;
-		return res_;
+		return res;
 	}
 
-	AlifIntT mark_ = _p->mark_;
-	AlifIntT resMark = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	AlifIntT mark = _p->mark;
+	AlifIntT resMark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -5982,34 +5812,34 @@ static Expression* shiftExpr_rule(AlifParser* _p) {
 	}
 
 	while (true) {
-		int var_1 = alifParserEngine_updateMemo(_p, mark_, SHIFT_EXPR_TYPE, res_);
-		if (var_1) { _p->level--; return res_; }
+		AlifIntT var1 = alifParserEngine_updateMemo(_p, mark, SHIFT_EXPR_TYPE, res);
+		if (var1) { _p->level--; return res; }
 
-		_p->mark_ = mark_;
-		Expression* raw_ = shiftExpr_raw(_p);
+		_p->mark = mark;
+		ExprTy raw = shiftExpr_raw(_p);
 
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
-		if (raw_ == nullptr or _p->mark_ <= resMark) break;
+		if (raw == nullptr or _p->mark <= resMark) break;
 
-		resMark = _p->mark_;
-		res_ = raw_;
+		resMark = _p->mark;
+		res = raw;
 	}
 
-	_p->mark_ = resMark;
+	_p->mark = resMark;
 	_p->level--;
 
-	return res_;
+	return res;
 }
 
 
-static Expression* bitwiseAnd_raw(AlifParser* _p) { 
+static ExprTy bitwiseAnd_raw(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -6017,32 +5847,31 @@ static Expression* bitwiseAnd_raw(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // bitwise_and "&" shift_expr
+	{ // وحدة_و "&" تعبير_ازاحة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = shiftExpr_rule(_p)) // bitwise_and
+			(a_ = shiftExpr_rule(_p)) // وحدة_و
 			and
-			(literal_ = alifParserEngine_expectToken(_p, AMPER))  // "&"
+			(literal = alifParserEngine_expectToken(_p, AMPER))  // "&"
 			and
-			(b_ = shiftExpr_rule(_p)) // shift_expr
+			(b_ = shiftExpr_rule(_p)) // تعبير_ازاحة
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_binOp(a_, Operator::BitAnd, b_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_binOp(a_, Operator_::BitAnd, b_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6050,41 +5879,40 @@ static Expression* bitwiseAnd_raw(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // shift_expr
+	{ // تعبير_ازاحة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* shiftExpr{};
+		ExprTy shiftExpr{};
 		if (shiftExpr = shiftExpr_rule(_p))
 		{
-			res_ = shiftExpr;
+			res = shiftExpr;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 // Left-recursive
-// bitwise_and: bitwise_and "&" shift_expr > shift_expr
-static Expression* bitwiseAnd_rule(AlifParser* _p) { 
+// وحدة_و: وحدة_و "&" تعبير_ازاحة > تعبير_ازاحة
+static ExprTy bitwiseAnd_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 
-	Expression* res_{};
-	if (alifParserEngine_isMemorized(_p, BITWISE_AND_TYPE, &res_)) {
+	ExprTy res{};
+	if (alifParserEngine_isMemorized(_p, BITWISE_AND_TYPE, &res)) {
 		_p->level--;
-		return res_;
+		return res;
 	}
 
-	AlifIntT mark_ = _p->mark_;
-	AlifIntT resMark = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	AlifIntT mark = _p->mark;
+	AlifIntT resMark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -6094,34 +5922,34 @@ static Expression* bitwiseAnd_rule(AlifParser* _p) {
 	}
 
 	while (true) {
-		int var_1 = alifParserEngine_updateMemo(_p, mark_, BITWISE_AND_TYPE, res_);
-		if (var_1) { _p->level--; return res_; }
+		AlifIntT var1 = alifParserEngine_updateMemo(_p, mark, BITWISE_AND_TYPE, res);
+		if (var1) { _p->level--; return res; }
 
-		_p->mark_ = mark_;
-		Expression* raw_ = bitwiseAnd_raw(_p);
+		_p->mark = mark;
+		ExprTy raw = bitwiseAnd_raw(_p);
 
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
-		if (raw_ == nullptr or _p->mark_ <= resMark) break;
+		if (raw == nullptr or _p->mark <= resMark) break;
 
-		resMark = _p->mark_;
-		res_ = raw_;
+		resMark = _p->mark;
+		res = raw;
 	}
 
-	_p->mark_ = resMark;
+	_p->mark = resMark;
 	_p->level--;
 
-	return res_;
+	return res;
 }
 
 
-static Expression* bitwiseXOr_raw(AlifParser* _p) { 
+static ExprTy bitwiseXOr_raw(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -6129,32 +5957,31 @@ static Expression* bitwiseXOr_raw(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // bitwise_xor "*|" bitwise_and
+	{ // وحدة_او_فقط "*|" وحدة_و
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = bitwiseXOr_rule(_p)) // bitwise_xor
+			(a_ = bitwiseXOr_rule(_p)) // وحدة_او_فقط
 			and
-			(literal_ = alifParserEngine_expectToken(_p, STARVBAR))  // "*|"
+			(literal = alifParserEngine_expectToken(_p, STARVBAR))  // "*|"
 			and
-			(b_ = bitwiseAnd_rule(_p)) // bitwise_and
+			(b_ = bitwiseAnd_rule(_p)) // وحدة_و
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_binOp(a_, Operator::BitXor, b_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_binOp(a_, Operator_::BitXor, b_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6162,41 +5989,40 @@ static Expression* bitwiseXOr_raw(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // bitwise_and
+	{ // وحدة_و
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* bitwiseAnd{};
+		ExprTy bitwiseAnd{};
 		if (bitwiseAnd = bitwiseAnd_rule(_p))
 		{
-			res_ = bitwiseAnd;
+			res = bitwiseAnd;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 // Left-recursive
-// bitwise_xor: bitwise_xor "*|" bitwise_and > bitwise_and
-static Expression* bitwiseXOr_rule(AlifParser* _p) { 
+// وحدة_او_فقط: وحدة_او_فقط "*|" وحدة_و > وحدة_و
+static ExprTy bitwiseXOr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 
-	Expression* res_{};
-	if (alifParserEngine_isMemorized(_p, BITWISE_XOR_TYPE, &res_)) {
+	ExprTy res{};
+	if (alifParserEngine_isMemorized(_p, BITWISE_XOR_TYPE, &res)) {
 		_p->level--;
-		return res_;
+		return res;
 	}
 
-	AlifIntT mark_ = _p->mark_;
-	AlifIntT resMark = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	AlifIntT mark = _p->mark;
+	AlifIntT resMark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -6206,34 +6032,34 @@ static Expression* bitwiseXOr_rule(AlifParser* _p) {
 	}
 
 	while (true) {
-		int var_1 = alifParserEngine_updateMemo(_p, mark_, BITWISE_XOR_TYPE, res_);
-		if (var_1) { _p->level--; return res_; }
+		AlifIntT var1 = alifParserEngine_updateMemo(_p, mark, BITWISE_XOR_TYPE, res);
+		if (var1) { _p->level--; return res; }
 
-		_p->mark_ = mark_;
-		Expression* raw_ = bitwiseXOr_raw(_p);
+		_p->mark = mark;
+		ExprTy raw_ = bitwiseXOr_raw(_p);
 
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
-		if (raw_ == nullptr or _p->mark_ <= resMark) break;
+		if (raw_ == nullptr or _p->mark <= resMark) break;
 
-		resMark = _p->mark_;
-		res_ = raw_;
+		resMark = _p->mark;
+		res = raw_;
 	}
 
-	_p->mark_ = resMark;
+	_p->mark = resMark;
 	_p->level--;
 
-	return res_;
+	return res;
 }
 
 
-static Expression* bitwiseOr_raw(AlifParser* _p) { 
+static ExprTy bitwiseOr_raw(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -6241,32 +6067,31 @@ static Expression* bitwiseOr_raw(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // bitwise_or "|" bitwise_xor
+	{ // وحدة_او "|" وحدة_او_فقط
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = bitwiseOr_rule(_p)) // bitwise_or
+			(a_ = bitwiseOr_rule(_p)) // وحدة_او
 			and
-			(literal_ = alifParserEngine_expectToken(_p, VBAR))  // "|"
+			(literal = alifParserEngine_expectToken(_p, VBAR))  // "|"
 			and
-			(b_ = bitwiseXOr_rule(_p)) // bitwise_xor
+			(b_ = bitwiseXOr_rule(_p)) // وحدة_او_فقط
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_binOp(a_, Operator::BitOr, b_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_binOp(a_, Operator_::BitOr, b_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6274,40 +6099,39 @@ static Expression* bitwiseOr_raw(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // bitwise_xor
+	{ // وحدة_او_فقط
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* bitwiseXOr{};
+		ExprTy bitwiseXOr{};
 		if (bitwiseXOr = bitwiseXOr_rule(_p)) {
-			res_ = bitwiseXOr;
+			res = bitwiseXOr;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 // Left-recursive
-// bitwise_or: bitwise_or "|" bitwise_xor > bitwise_xor
-static Expression* bitwiseOr_rule(AlifParser* _p) { 
+// وحدة_او: وحدة_او "|" وحدة_او_فقط > وحدة_او_فقط
+static ExprTy bitwiseOr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 
-	Expression* res_{};
-	if (alifParserEngine_isMemorized(_p, BITWISE_OR_TYPE, &res_)) {
+	ExprTy res{};
+	if (alifParserEngine_isMemorized(_p, BITWISE_OR_TYPE, &res)) {
 		_p->level--;
-		return res_;
+		return res;
 	}
 
-	AlifIntT mark_ = _p->mark_;
-	AlifIntT resMark = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	AlifIntT mark = _p->mark;
+	AlifIntT resMark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -6317,50 +6141,49 @@ static Expression* bitwiseOr_rule(AlifParser* _p) {
 	}
 
 	while (true) {
-		int var_1 = alifParserEngine_updateMemo(_p, mark_, BITWISE_OR_TYPE, res_);
-		if (var_1) { _p->level--; return res_; }
+		AlifIntT var1 = alifParserEngine_updateMemo(_p, mark, BITWISE_OR_TYPE, res);
+		if (var1) { _p->level--; return res; }
 
-		_p->mark_ = mark_;
-		Expression* raw_ = bitwiseOr_raw(_p);
+		_p->mark = mark;
+		ExprTy raw = bitwiseOr_raw(_p);
 
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
-		if (raw_ == nullptr or _p->mark_ <= resMark) break;
+		if (raw == nullptr or _p->mark <= resMark) break;
 
-		resMark = _p->mark_;
-		res_ = raw_;
+		resMark = _p->mark;
+		res = raw;
 	}
 
-	_p->mark_ = resMark;
+	_p->mark = resMark;
 	_p->level--;
 
-	return res_;
+	return res;
 }
 
 
-// is_bitwise_or: "is" bitwise_or
+// وحدة_او_هل: "هل" وحدة_او
 static CompExprPair* isBitwiseOr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	CompExprPair* res_{};
-	AlifIntT mark_ = _p->mark_;
+	CompExprPair* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "is" bitwise_or
+	{ // "هل" وحدة_او
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		Expression* a_{};
+		AlifPToken* keyword{};
+		ExprTy a_{};
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, IS_KW))  // "is"
+			(keyword = alifParserEngine_expectToken(_p, IS_KW))  // "هل"
 			and
-			(a_ = bitwiseOr_rule(_p)) // bitwise_or
+			(a_ = bitwiseOr_rule(_p)) // وحدة_او
 			)
 		{
-			res_ = alifParserEngine_compExprPair(_p, CmpOp::Is, a_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_compExprPair(_p, CmpOp_::Is, a_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6368,44 +6191,42 @@ static CompExprPair* isBitwiseOr_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// is_bitwise_or: "is" "not" bitwise_or
+// وحدة_او_هل_ليس: "هل" "ليس" وحدة_او
 static CompExprPair* isNotBitwiseOr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	CompExprPair* res_{};
-	AlifIntT mark_ = _p->mark_;
+	CompExprPair* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "is" "not" bitwise_or
+	{ // "هل" "ليس" وحدة_او
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		AlifPToken* keyword_1{};
-		Expression* a_{};
+		AlifPToken* keyword{};
+		AlifPToken* keyword1{};
+		ExprTy a_{};
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, IS_KW))  // "is"
+			(keyword = alifParserEngine_expectToken(_p, IS_KW))  // "هل"
 			and
-			(keyword_1 = alifParserEngine_expectToken(_p, NOT_KW))  // "not"
+			(keyword1 = alifParserEngine_expectToken(_p, NOT_KW))  // "ليس"
 			and
-			(a_ = bitwiseOr_rule(_p)) // bitwise_or
+			(a_ = bitwiseOr_rule(_p)) // وحدة_او
 			)
 		{
-			res_ = alifParserEngine_compExprPair(_p, CmpOp::IsNot, a_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_compExprPair(_p, CmpOp_::IsNot, a_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6413,41 +6234,39 @@ static CompExprPair* isNotBitwiseOr_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// in_bitwise_or: "in" bitwise_or
+// وحدة_او_في: "في" وحدة_او
 static CompExprPair* inBitwiseOr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	CompExprPair* res_{};
-	AlifIntT mark_ = _p->mark_;
+	CompExprPair* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "in" bitwise_or
+	{ // "في" وحدة_او
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		Expression* a_{};
+		AlifPToken* keyword{};
+		ExprTy a_{};
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, IN_KW))  // "in"
+			(keyword = alifParserEngine_expectToken(_p, IN_KW))  // "في"
 			and
-			(a_ = bitwiseOr_rule(_p)) // bitwise_or
+			(a_ = bitwiseOr_rule(_p)) // وحدة_او
 			)
 		{
-			res_ = alifParserEngine_compExprPair(_p, CmpOp::In, a_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_compExprPair(_p, CmpOp_::In, a_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6455,44 +6274,42 @@ static CompExprPair* inBitwiseOr_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// notin_bitwise_or: "not" "in" bitwise_or
+// وحدة_او_ليس_في: "ليس" "في" وحدة_او
 static CompExprPair* notInBitwiseOr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	CompExprPair* res_{};
-	AlifIntT mark_ = _p->mark_;
+	CompExprPair* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "not" "in" bitwise_or
+	{ // "ليس" "في" وحدة_او
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		AlifPToken* keyword_1{};
-		Expression* a_{};
+		AlifPToken* keyword{};
+		AlifPToken* keyword1{};
+		ExprTy a_{};
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, NOT_KW))  // "not"
+			(keyword = alifParserEngine_expectToken(_p, NOT_KW))  // "ليس"
 			and
-			(keyword_1 = alifParserEngine_expectToken(_p, IN_KW))  // "in"
+			(keyword1 = alifParserEngine_expectToken(_p, IN_KW))  // "في"
 			and
-			(a_ = bitwiseOr_rule(_p)) // bitwise_or
+			(a_ = bitwiseOr_rule(_p)) // وحدة_او
 			)
 		{
-			res_ = alifParserEngine_compExprPair(_p, CmpOp::NotIn, a_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_compExprPair(_p, CmpOp_::NotIn, a_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6500,41 +6317,39 @@ static CompExprPair* notInBitwiseOr_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// gt_bitwise_or: ">" bitwise_or
+// وحدة_او_اكبر_من: ">" وحدة_او
 static CompExprPair* greaterThanBitwiseOr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	CompExprPair* res_{};
-	AlifIntT mark_ = _p->mark_;
+	CompExprPair* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // ">" bitwise_or
+	{ // ">" وحدة_او
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, LESSTHAN))  // ">"
+			(literal = alifParserEngine_expectToken(_p, LESSTHAN))  // ">"
 			and
-			(a_ = bitwiseOr_rule(_p)) // bitwise_or
+			(a_ = bitwiseOr_rule(_p)) // وحدة_او
 			)
 		{
-			res_ = alifParserEngine_compExprPair(_p, CmpOp::GreaterThan, a_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_compExprPair(_p, CmpOp_::GreaterThan, a_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6542,41 +6357,39 @@ static CompExprPair* greaterThanBitwiseOr_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// gte_bitwise_or: ">=" bitwise_or
+// وحدة_او_اكبر_من_يساوي: ">=" وحدة_او
 static CompExprPair* greaterThanEqBitwiseOr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	CompExprPair* res_{};
-	AlifIntT mark_ = _p->mark_;
+	CompExprPair* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // ">=" bitwise_or
+	{ // ">=" وحدة_او
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifPToken* literal_{};
-		Expression* a_{};
+		ExprTy a_{};
 		if (
 			(literal_ = alifParserEngine_expectToken(_p, GREATEREQUAL))  // ">="
 			and
-			(a_ = bitwiseOr_rule(_p)) // bitwise_or
+			(a_ = bitwiseOr_rule(_p)) // وحدة_او
 			)
 		{
-			res_ = alifParserEngine_compExprPair(_p, CmpOp::GreaterThanEq, a_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_compExprPair(_p, CmpOp_::GreaterThanEq, a_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6584,41 +6397,39 @@ static CompExprPair* greaterThanEqBitwiseOr_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// lt_bitwise_or: "<" bitwise_or
+// وحدة_او_اصغر_من: "<" وحدة_او
 static CompExprPair* lessThanBitwiseOr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	CompExprPair* res_{};
-	AlifIntT mark_ = _p->mark_;
+	CompExprPair* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "<" bitwise_or
+	{ // "<" وحدة_او
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, GREATERTHAN))  // "<"
+			(literal = alifParserEngine_expectToken(_p, GREATERTHAN))  // "<"
 			and
-			(a_ = bitwiseOr_rule(_p)) // bitwise_or
+			(a_ = bitwiseOr_rule(_p)) // وحدة_او
 			)
 		{
-			res_ = alifParserEngine_compExprPair(_p, CmpOp::LessThan, a_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_compExprPair(_p, CmpOp_::LessThan, a_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6626,41 +6437,39 @@ static CompExprPair* lessThanBitwiseOr_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// lte_bitwise_or: "<=" bitwise_or
+// وحدة_او_اصغر_من_يساوي: "<=" وحدة_او
 static CompExprPair* lessThanEqBitwiseOr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	CompExprPair* res_{};
-	AlifIntT mark_ = _p->mark_;
+	CompExprPair* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "<=" bitwise_or
+	{ // "<=" وحدة_او
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, LESSEQUAL))  // "<="
+			(literal = alifParserEngine_expectToken(_p, LESSEQUAL))  // "<="
 			and
-			(a_ = bitwiseOr_rule(_p)) // bitwise_or
+			(a_ = bitwiseOr_rule(_p)) // وحدة_او
 			)
 		{
-			res_ = alifParserEngine_compExprPair(_p, CmpOp::LessThanEq, a_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_compExprPair(_p, CmpOp_::LessThanEq, a_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6668,41 +6477,39 @@ static CompExprPair* lessThanEqBitwiseOr_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// noteq_bitwise_or: "!=" bitwise_or
+// وحدة_او_لا_يساوي: "!=" وحدة_او
 static CompExprPair* notEqBitwiseOr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	CompExprPair* res_{};
-	AlifIntT mark_ = _p->mark_;
+	CompExprPair* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "!=" bitwise_or
+	{ // "!=" وحدة_او
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, NOTEQUAL))  // "!=" // from _tmp_89_rule but it's not nessesary
+			(literal = alifParserEngine_expectToken(_p, NOTEQUAL))  // "!=" // from _tmp_89_rule but it's not nessesary
 			and
-			(a_ = bitwiseOr_rule(_p)) // bitwise_or
+			(a_ = bitwiseOr_rule(_p)) // وحدة_او
 			)
 		{
-			res_ = alifParserEngine_compExprPair(_p, CmpOp::NotEq, a_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_compExprPair(_p, CmpOp_::NotEq, a_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6710,41 +6517,39 @@ static CompExprPair* notEqBitwiseOr_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// eq_bitwise_or: "==" bitwise_or
+// وحدة_او_يساوي: "==" وحدة_او
 static CompExprPair* eqBitwiseOr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	CompExprPair* res_{};
-	AlifIntT mark_ = _p->mark_;
+	CompExprPair* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "==" bitwise_or
+	{ // "==" وحدة_او
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, EQUALEQUAL))  // "=="
+			(literal = alifParserEngine_expectToken(_p, EQUALEQUAL))  // "=="
 			and
-			(a_ = bitwiseOr_rule(_p)) // bitwise_or
+			(a_ = bitwiseOr_rule(_p)) // وحدة_او
 			)
 		{
-			res_ = alifParserEngine_compExprPair(_p, CmpOp::Equal, a_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_compExprPair(_p, CmpOp_::Equal, a_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -6752,38 +6557,37 @@ static CompExprPair* eqBitwiseOr_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
 /*
-	compare_op_bitwise_or_pair:
-		> eq_bitwise_or
-		> noteq_bitwise_or
-		> lte_bitwise_or
-		> lt_bitwise_or
-		> gte_bitwise_or
-		> gt_bitwise_or
-		> notin_bitwise_or
-		> in_bitwise_or
-		> isnot_bitwise_or
-		> is_bitwise_or
+	عملية_مقارنة_وحدة:
+		> وحدة_او_مساوي
+		> وحدة_او_لا_يساوي
+		> وحدة_او_اصغر_من_يساوي
+		> وحدة_او_اصغر_من
+		> وحدة_او_اكبر_من_يساوي
+		> وحدة_او_اكبر_من
+		> وحدة_او_ليس_في
+		> وحدة_او_في
+		> وحدة_او_هل_ليس
+		> وحدة_او_هل
 */
 static CompExprPair* compareOpBitwiseOrPair_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	CompExprPair* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	CompExprPair* res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -6791,203 +6595,192 @@ static CompExprPair* compareOpBitwiseOrPair_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // eq_bitwise_or
+	{ // وحدة_او_مساوي
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		CompExprPair* eqBitwise{};
 		if ((eqBitwise = eqBitwiseOr_rule(_p)))
 		{
-			res_ = eqBitwise;
+			res = eqBitwise;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // noteq_bitwise_or
+	{ // وحدة_او_لا_يساوي
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		CompExprPair* notEqBitwise{};
 		if ((notEqBitwise = notEqBitwiseOr_rule(_p)))
 		{
-			res_ = notEqBitwise;
+			res = notEqBitwise;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // lte_bitwise_or
+	{ // وحدة_او_اصغر_من_يساوي
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		CompExprPair* lteBitwise{};
 		if ((lteBitwise = lessThanEqBitwiseOr_rule(_p)))
 		{
-			res_ = lteBitwise;
+			res = lteBitwise;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // lt_bitwise_or
+	{ // وحدة_او_اصغر_من
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		CompExprPair* ltBitwise{};
 		if ((ltBitwise = lessThanBitwiseOr_rule(_p)))
 		{
-			res_ = ltBitwise;
+			res = ltBitwise;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // gte_bitwise_or
+	{ // وحدة_او_اكبر_من_يساوي
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		CompExprPair* gteBitwise{};
 		if ((gteBitwise = greaterThanEqBitwiseOr_rule(_p)))
 		{
-			res_ = gteBitwise;
+			res = gteBitwise;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // gt_bitwise_or
+	{ // وحدة_او_اكبر_من
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		CompExprPair* gtBitwise{};
 		if ((gtBitwise = greaterThanBitwiseOr_rule(_p)))
 		{
-			res_ = gtBitwise;
+			res = gtBitwise;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // notin_bitwise_or
+	{ // وحدة_او_ليس_في
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		CompExprPair* notInBitwise{};
 		if ((notInBitwise = notInBitwiseOr_rule(_p)))
 		{
-			res_ = notInBitwise;
+			res = notInBitwise;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // in_bitwise_or
+	{ // وحدة_او_في
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		CompExprPair* inBitwise{};
 		if ((inBitwise = inBitwiseOr_rule(_p)))
 		{
-			res_ = inBitwise;
+			res = inBitwise;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // isnot_bitwise_or
+	{ // وحدة_او_هل_ليس
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		CompExprPair* isNotBitwise{};
 		if ((isNotBitwise = isNotBitwiseOr_rule(_p)))
 		{
-			res_ = isNotBitwise;
+			res = isNotBitwise;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // is_bitwise_or
+	{ // وحدة_او_هل
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		CompExprPair* isBitwise{};
 		if ((isBitwise = isBitwiseOr_rule(_p)))
 		{
-			res_ = isBitwise;
+			res = isBitwise;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif17_loop1: compare_op_bitwise_or_pair
-static Seq* alif17_loop1(AlifParser* _p) { 
+// ألف17_حلقة1: عملية_مقارنة_وحدة
+static ASDLSeq* alif17_loop1(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	CompExprPair* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
 
-	{ // compare_op_bitwise_or_pair
+	{ // عملية_مقارنة_وحدة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		CompExprPair* coboPair{};
 		while ((coboPair = compareOpBitwiseOrPair_rule(_p)))
 		{
-			res_ = coboPair;
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+			res = coboPair;
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	if (n_ == 0 or _p->errorIndicator) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	if (size == 0 or _p->errorIndicator) {
 		_p->level--;
 		return nullptr;
 	}
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (AlifIntT i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 //	^
 //	|
 //	|
-// comparison: bitwise_or compare_op_bitwise_or_pair+ > bitwise_or
-static Expression* comparison_rule(AlifParser* _p) { 
+// مقارنة: وحدة_او عملية_مقارنة_وحدة+ > وحدة_او
+static ExprTy comparison_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -6995,30 +6788,29 @@ static Expression* comparison_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // bitwise_or compare_op_bitwise_or_pair+
+	{ // وحدة_او عملية_مقارنة_وحدة+
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
-		Seq* b_{};
+		ExprTy a_{};
+		ASDLSeq* b_{};
 		if (
-			(a_ = bitwiseOr_rule(_p)) // bitwise_or
+			(a_ = bitwiseOr_rule(_p)) // وحدة_او
 			and
-			(b_ = alif17_loop1(_p)) // bitwise_or compare_op_bitwise_or_pair+
+			(b_ = alif17_loop1(_p)) // وحدة_او عملية_مقارنة_وحدة+
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_compare(a_, (IntSeq*)alifParserEngine_getCmpOps(_p, b_),
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_compare(a_, (ASDLIntSeq*)alifParserEngine_getCmpOps(_p, b_),
 				alifParserEngine_getExprs(_p, b_), EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -7026,42 +6818,41 @@ static Expression* comparison_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // bitwise_or
+	{ // وحدة_او
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* bitwiseOr{};
+		ExprTy bitwiseOr{};
 		if ((bitwiseOr = bitwiseOr_rule(_p)))
 		{
-			res_ = bitwiseOr;
+			res = bitwiseOr;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// inversion: "not" inversion > comparison
-static Expression* inversion_rule(AlifParser* _p) { 
+// عكس: "ليس" عكس > مقارنة
+static ExprTy inversion_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	if (alifParserEngine_isMemorized(_p, INVERSION_TYPE, &res_)) {
+	ExprTy res{};
+	if (alifParserEngine_isMemorized(_p, INVERSION_TYPE, &res)) {
 		_p->level--;
-		return res_;
+		return res;
 	}
 
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -7069,29 +6860,28 @@ static Expression* inversion_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // "not" inversion
+	{ // "ليس" عكس
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		Expression* a_{};
+		AlifPToken* keyword{};
+		ExprTy a_{};
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, NOT_KW)) // "not"
+			(keyword = alifParserEngine_expectToken(_p, NOT_KW)) // "ليس"
 			and
-			(a_ = inversion_rule(_p)) // inversion
+			(a_ = inversion_rule(_p)) // عكس
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_unaryOp(UnaryOp::Not, a_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_unaryOp(UnaryOp_::Not, a_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -7099,53 +6889,51 @@ static Expression* inversion_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // compression
+	{ // مقارنة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* comparisonVar{};
+		ExprTy comparisonVar{};
 		if (comparisonVar = comparison_rule(_p))
 		{
-			res_ = comparisonVar;
+			res = comparisonVar;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
-	alifParserEngine_insertMemo(_p, mark_, INVERSION_TYPE, res_);
+	alifParserEngine_insertMemo(_p, mark, INVERSION_TYPE, res);
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif13: "and" inversion
+// ألف13: "," عكس
 static void* alif13(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark_ = _p->mark;
 
-	{ // "and" inversion
+	{ // "و" عكس
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifPToken* keyword_{};
-		Expression* a_{};
+		ExprTy a_{};
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, AND_KW)) // "and"
+			(keyword_ = alifParserEngine_expectToken(_p, AND_KW)) // "و"
 			and
-			(a_ = inversion_rule(_p)) // inversion
+			(a_ = inversion_rule(_p)) // عكس
 			)
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -7153,98 +6941,87 @@ static void* alif13(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark_;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 //	^
 //	|
 //	|
-// alif16_loop1: ("and" inversion)
-static Seq* alif16_loop1(AlifParser* _p) { 
+// ألف16_حلقة1: ("و" عكس)
+static ASDLSeq* alif16_loop1(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
 
-	{ // ("and" inversion)
+	{ // ("و" عكس)
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		void* var_1{};
-		while ((var_1 = alif13(_p)))
+		void* var1{};
+		while ((var1 = alif13(_p)))
 		{
-			res_ = var_1;
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+			res = var1;
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	if (n_ == 0 or _p->errorIndicator) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	if (size == 0 or _p->errorIndicator) {
 		_p->level--;
 		return nullptr;
 	}
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (AlifIntT i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 //	^
 //	|
 //	|
-// conjunction: inversion ("and" inversion)+ > inversion
-static Expression* conjuction_rule(AlifParser* _p) { 
+// اتصال: عكس ("و" عكس)+ > عكس
+static ExprTy conjuction_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	if (alifParserEngine_isMemorized(_p, CONJUCTION_TYPE, &res_)) {
+	ExprTy res{};
+	if (alifParserEngine_isMemorized(_p, CONJUCTION_TYPE, &res)) {
 		_p->level--;
-		return res_;
+		return res;
 	}
 
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -7252,29 +7029,28 @@ static Expression* conjuction_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // inversion ("and" inversion)+
+	{ // عكس ("و" عكس)+
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
-		Seq* b_{};
+		ExprTy a_{};
+		ASDLSeq* b_{};
 		if (
-			(a_ = inversion_rule(_p)) // inversion
+			(a_ = inversion_rule(_p)) // عكس
 			and
-			(b_ = alif16_loop1(_p)) // ("and" inversion)+
+			(b_ = alif16_loop1(_p)) // ("و" عكس)+
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_boolOp(BoolOp::And, (ExprSeq*)alifParserEngine_seqInsertInFront(_p, a_, b_), EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_boolOp(BoolOp_::And, (ASDLExprSeq*)alifParserEngine_seqInsertInFront(_p, a_, b_), EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -7282,53 +7058,51 @@ static Expression* conjuction_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // inversion
+	{ // عكس
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* inversionVar{};
+		ExprTy inversionVar{};
 		if (inversionVar = inversion_rule(_p))
 		{
-			res_ = inversionVar;
+			res = inversionVar;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
-	alifParserEngine_insertMemo(_p, mark_, CONJUCTION_TYPE, res_);
+	alifParserEngine_insertMemo(_p, mark, CONJUCTION_TYPE, res);
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif12: "or" conjuction
+// ألف12: "او" اتصال
 static void* alif12(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "or" conjuction
+	{ // "او" اتصال
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifPToken* keyword_{};
-		Expression* a_{};
+		ExprTy a_{};
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, OR_KW)) // "or"
+			(keyword_ = alifParserEngine_expectToken(_p, OR_KW)) // "او"
 			and
-			(a_ = conjuction_rule(_p)) // conjuction
+			(a_ = conjuction_rule(_p)) // اتصال
 			)
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -7336,98 +7110,87 @@ static void* alif12(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 //	^
 //	|
 //	|
-// alif15_loop1: ("or" conjuction)
-static Seq* alif15_loop1(AlifParser* _p) { 
+// ألف15_حلقة1: ("او" اتصال)
+static ASDLSeq* alif15_loop1(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
 
-	{ // ("or" conjuction)
+	{ // ("او" اتصال)
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		void* var_1{};
-		while ((var_1 = alif12(_p)))
+		void* var1{};
+		while ((var1 = alif12(_p)))
 		{
-			res_ = var_1;
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+			res = var1;
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	if (n_ == 0 or _p->errorIndicator) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	if (size == 0 or _p->errorIndicator) {
 		_p->level--;
 		return nullptr;
 	}
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (AlifIntT i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 //	^
 //	|
 //	|
-// disjunction: conjunction ("or" conjunction)+ > conjunction
-static Expression* disjunction_rule(AlifParser* _p) { 
+// انفصال: اتصال ("او" اتصال)+ > اتصال
+static ExprTy disjunction_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	if (alifParserEngine_isMemorized(_p, DISJUCTION_TYPE, &res_)) {
+	ExprTy res{};
+	if (alifParserEngine_isMemorized(_p, DISJUCTION_TYPE, &res)) {
 		_p->level--;
-		return res_;
+		return res;
 	}
 
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -7435,29 +7198,28 @@ static Expression* disjunction_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // conjuction ("or" conjuction)+
+	{ // اتصال ("او" اتصال)+
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
-		Seq* b_{};
+		ExprTy a_{};
+		ASDLSeq* b_{};
 		if (
-			(a_ = conjuction_rule(_p)) // conjuction
+			(a_ = conjuction_rule(_p)) // اتصال
 			and
-			(b_ = alif15_loop1(_p)) // ("or" conjuction)+
+			(b_ = alif15_loop1(_p)) // ("او" اتصال)+
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_boolOp(BoolOp::Or, (ExprSeq*)alifParserEngine_seqInsertInFront(_p, a_, b_), EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_boolOp(BoolOp_::Or, (ASDLExprSeq*)alifParserEngine_seqInsertInFront(_p, a_, b_), EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -7465,47 +7227,46 @@ static Expression* disjunction_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // conjuction
+	{ // اتصال
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* conjuctionVar{};
+		ExprTy conjuctionVar{};
 		if (conjuctionVar = conjuction_rule(_p))
 		{
-			res_ = conjuctionVar;
+			res = conjuctionVar;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
-	alifParserEngine_insertMemo(_p, mark_, DISJUCTION_TYPE, res_);
+	alifParserEngine_insertMemo(_p, mark, DISJUCTION_TYPE, res);
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
 /*
-	expression:
-		> disjunction "if" disjunction "else" expression
-		> disjunction
+	تعبير:
+		> انفصال "اذا" انفصال "والا" تعبير
+		> انفصال
 */
-static Expression* expression_rule(AlifParser* _p) { 
+static ExprTy expression_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	if (alifParserEngine_isMemorized(_p, EXPRESSION_TYPE, &res_)) {
+	ExprTy res{};
+	if (alifParserEngine_isMemorized(_p, EXPRESSION_TYPE, &res)) {
 		_p->level--;
-		return res_;
+		return res;
 	}
 
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -7513,38 +7274,37 @@ static Expression* expression_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // disjunction "if" disjunction "else" expression
+	{ // انفصال "اذا" انفصال "والا" تعبير
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		AlifPToken* keyword_1{};
-		Expression* a_{};
-		Expression* b_{};
-		Expression* c_{};
+		AlifPToken* keyword{};
+		AlifPToken* keyword1{};
+		ExprTy a_{};
+		ExprTy b_{};
+		ExprTy c_{};
 		if (
-			(a_ = disjunction_rule(_p)) // disjunction
+			(a_ = disjunction_rule(_p)) // انفصال
 			and
-			(keyword_ = alifParserEngine_expectToken(_p, IF_KW)) // "if"
+			(keyword = alifParserEngine_expectToken(_p, IF_KW)) // "اذا"
 			and
-			(b_ = disjunction_rule(_p)) // disjunction
+			(b_ = disjunction_rule(_p)) // انفصال
 			and
-			(keyword_1 = alifParserEngine_expectToken(_p, ELSE_KW)) // "else"
+			(keyword1 = alifParserEngine_expectToken(_p, ELSE_KW)) // "والا"
 			and
-			(c_ = expression_rule(_p)) // expression
+			(c_ = expression_rule(_p)) // تعبير
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_ifExpr(b_, a_, c_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_ifExpr(b_, a_, c_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -7552,53 +7312,51 @@ static Expression* expression_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // disjunction
+	{ // انفصال
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* disjunctionVar{};
+		ExprTy disjunctionVar{};
 		if (disjunctionVar = disjunction_rule(_p)) {
-			res_ = disjunctionVar;
+			res = disjunctionVar;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
-	alifParserEngine_insertMemo(_p, mark_, EXPRESSION_TYPE, res_);
+	alifParserEngine_insertMemo(_p, mark, EXPRESSION_TYPE, res);
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif11: "," expression
+// ألف11: "," تعبير
 static void* alif11(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "," expression
+	{ // "," تعبير
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
 
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
+			(literal = alifParserEngine_expectToken(_p, COMMA)) // ","
 			and
-			(a_ = expression_rule(_p)) // expression
+			(a_ = expression_rule(_p)) // تعبير
 			)
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -7606,93 +7364,82 @@ static void* alif11(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 //	^
 //	|
 //	|
-// alif14_loop1: ("," expression)
-static Seq* alif14_loop1(AlifParser* _p) { 
+// ألف14_حلقة1: ("," تعبير)
+static ASDLSeq* alif14_loop1(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
 
-	{ // ("," expression)
+	{ // ("," تعبير)
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		void* var_1{};
-		while ((var_1 = alif11(_p)))
+		void* var1{};
+		while ((var1 = alif11(_p)))
 		{
-			res_ = var_1;
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+			res = var1;
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	if (n_ == 0 or _p->errorIndicator) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	if (size == 0 or _p->errorIndicator) {
 		_p->level--;
 		return nullptr;
 	}
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (AlifIntT i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 //	^
 //	|
 //	|
-// expressions: expression ("," expression)+ ","? > expression "," > expression
-static Expression* expressions_rule(AlifParser* _p) { 
+// تعبيرات: تعبير ("," تعبير)+ ","? > تعبير "," > تعبير
+static ExprTy expressions_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -7700,32 +7447,31 @@ static Expression* expressions_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // expression("," expression)+ ","?
+	{ // تعبير("," تعبير)+ ","?
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		void* optVar{};
-		Expression* a_{};
-		Seq* b_{};
+		ExprTy a_{};
+		ASDLSeq* b_{};
 		if (
-			(a_ = expression_rule(_p)) // expression
+			(a_ = expression_rule(_p)) // تعبير
 			and
-			(b_ = alif14_loop1(_p)) // ("," expression)+
+			(b_ = alif14_loop1(_p)) // ("," تعبير)+
 			and
 			(optVar = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_tuple((ExprSeq*)alifParserEngine_seqInsertInFront(_p, a_, b_), Load, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_tuple((ASDLExprSeq*)alifParserEngine_seqInsertInFront(_p, a_, b_), Load, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -7733,28 +7479,27 @@ static Expression* expressions_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // expression ","
+	{ // تعبير ","
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifPToken* literal_{};
-		Expression* a_{};
+		ExprTy a_{};
 		if (
-			(a_ = expression_rule(_p)) // expression
+			(a_ = expression_rule(_p)) // تعبير
 			and
 			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_tuple((ExprSeq*)alifParserEngine_singletonSeq(_p, a_), ExprCTX::Load, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_tuple((ASDLExprSeq*)alifParserEngine_singletonSeq(_p, a_), ExprContext_::Load, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -7762,39 +7507,38 @@ static Expression* expressions_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // expression
+	{ // تعبير
 		if (_p->errorIndicator) {
 			_p->level--;
 			return nullptr;
 		}
-		Expression* expressionVar{};
-		if ((expressionVar = expression_rule(_p))) // expression
+		ExprTy expressionVar{};
+		if ((expressionVar = expression_rule(_p))) // تعبير
 		{
-			res_ = expressionVar;
+			res = expressionVar;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// star_sub_expression: "*" bitwise_or > expression
-static Expression* starSubExpression_rule(AlifParser* _p) { 
+// تعبير_فرعي_نجمة: "*" وحدة_او > تعبير
+static ExprTy starSubExpression_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -7802,29 +7546,28 @@ static Expression* starSubExpression_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // "*" bitwise_or
+	{ // "*" وحدة_او
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, STAR)) // "*"
+			(literal = alifParserEngine_expectToken(_p, STAR)) // "*"
 			and
-			(a_ = bitwiseOr_rule(_p)) // bitwise_or
+			(a_ = bitwiseOr_rule(_p)) // وحدة_او
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_star(a_, ExprCTX::Load, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_star(a_, ExprContext_::Load, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -7832,162 +7575,147 @@ static Expression* starSubExpression_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // expression
+	{ // تعبير
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* exprVar{};
+		ExprTy exprVar{};
 		if ((exprVar = expression_rule(_p)))
 		{
-			res_ = exprVar;
+			res = exprVar;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif13_loop0: "," star_sub_expression
-static Seq* alif13_loop0(AlifParser* _p) { 
+// ألف13_حلقة0: "," تعبير_فرعي_نجمة
+static ASDLSeq* alif13_loop0(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
 
-	{ // "," star_sub_expression
+	{ // "," تعبير_فرعي_نجمة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifPToken* literal_{};
-		Expression* element_{};
+		ExprTy element_{};
 		while (
 			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
 			and
-			(element_ = starSubExpression_rule(_p)) // star_sub_expression
+			(element_ = starSubExpression_rule(_p)) // تعبير_فرعي_نجمة
 			)
 		{
-			res_ = element_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = element_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
-				alifMem_dataFree(children_);
 				_p->level--;
 				return nullptr;
 			}
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (AlifIntT i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 //	^
 //	|
 //	|
-// alif5_gather: star_sub_expression alif13_loop0
-static Seq* alif5_gather(AlifParser* _p) { 
+// ألف5_تجميع: تعبير_فرعي_نجمة ألف13_حلقة0
+static ASDLSeq* alif5_gather(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Seq* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ASDLSeq* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // star_sub_expression alif13_loop0
+	{ // تعبير_فرعي_نجمة ألف13_حلقة0
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* element_{};
-		Seq* seq_{};
+		ExprTy element{};
+		ASDLSeq* seq{};
 		if (
-			(element_ = starSubExpression_rule(_p)) // star_sub_expression
+			(element = starSubExpression_rule(_p)) // تعبير_فرعي_نجمة
 			and
-			(seq_ = alif13_loop0(_p)) // alif13_loop0
+			(seq = alif13_loop0(_p)) // ألف13_حلقة0
 			)
 		{
-			res_ = alifParserEngine_seqInsertInFront(_p, element_, seq_);
+			res = alifParserEngine_seqInsertInFront(_p, element, seq);
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 //	^
 //	|
 //	|
-// star_sub_expressions: ",".star_sub_expression+ ","?
-static ExprSeq* starSubExpressions_rule(AlifParser* _p) { 
+// تعبيرات_فرعية_نجمة: ",".تعبير_فرعي_نجمة+ ","?
+static ASDLExprSeq* starSubExpressions_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	ExprSeq* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ASDLExprSeq* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // ",".star_sub_expression+ ","?
+	{ // ",".تعبير_فرعي_نجمة+ ","?
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		void* optVar{};
-		ExprSeq* a_{};
+		ASDLExprSeq* a_{};
 		if (
-			(a_ = (ExprSeq*)alif5_gather(_p)) // ",".starSubExpression+
+			(a_ = (ASDLExprSeq*)alif5_gather(_p)) // ",".تعبير_فرعي_نجمة+
 			and
 			(optVar = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
 			)
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -7995,31 +7723,30 @@ static ExprSeq* starSubExpressions_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// star_expression: "*" bitwise_or > expression
-static Expression* starExpression_rule(AlifParser* _p) { 
+// تعبير_نجمة: "*" وحدة_او > تعبير
+static ExprTy starExpression_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	if (alifParserEngine_isMemorized(_p, STAR_EXPRESSION_TYPE, &res_)) {
+	ExprTy res{};
+	if (alifParserEngine_isMemorized(_p, STAR_EXPRESSION_TYPE, &res)) {
 		_p->level--;
-		return res_;
+		return res;
 	}
 
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -8027,18 +7754,18 @@ static Expression* starExpression_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // "*" bitwise_or
+	{ // "*" وحدة_او
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, STAR)) // "*"
+			(literal = alifParserEngine_expectToken(_p, STAR)) // "*"
 			and
-			(a_ = bitwiseOr_rule(_p)) // bitwise_or
+			(a_ = bitwiseOr_rule(_p)) // وحدة_او
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -8046,10 +7773,9 @@ static Expression* starExpression_rule(AlifParser* _p) {
 
 			AlifIntT endLineNo = token_->endLineNo;
 			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_star(a_, ExprCTX::Load, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_star(a_, ExprContext_::Load, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8057,54 +7783,52 @@ static Expression* starExpression_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // expression
+	{ // تعبير
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* expressionVar{};
+		ExprTy expressionVar{};
 		if (expressionVar = expression_rule(_p))
 		{
-			res_ = expressionVar;
+			res = expressionVar;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
-	alifParserEngine_insertMemo(_p, mark_, STAR_EXPRESSION_TYPE, res_);
+	alifParserEngine_insertMemo(_p, mark, STAR_EXPRESSION_TYPE, res);
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif10: "," star_expression
+// ألف10: "," تعبير_نجمة
 static void* alif10(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "," star_expression
+	{ // "," تعبير_نجمة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
 
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
+			(literal = alifParserEngine_expectToken(_p, COMMA)) // ","
 			and
-			(a_ = starExpression_rule(_p)) // star_expression
+			(a_ = starExpression_rule(_p)) // تعبير_نجمة
 			)
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8112,98 +7836,87 @@ static void* alif10(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 //	^
 //	|
 //	|
-// alif12_loop1: ("," star_expression)
-static Seq* alif12_loop1(AlifParser* _p) { 
+// ألف12_حلقة1: ("," تعبير_نجمة)
+static ASDLSeq* alif12_loop1(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
 
-	{ // ("," star_expression)
+	{ // ("," تعبير_نجمة)
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		void* var_1{};
-		while ((var_1 = alif10(_p)))
+		void* var1{};
+		while ((var1 = alif10(_p)))
 		{
-			res_ = var_1;
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+			res = var1;
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	if (n_ == 0 or _p->errorIndicator) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	if (size == 0 or _p->errorIndicator) {
 		_p->level--;
 		return nullptr;
 	}
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (AlifIntT i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 //	^
 //	|
 //	|
 /*
-	star_expressions:
-		> star_expression ("," star_expression)+ ","?
-		> star_expression ","
-		> star_expression
+	تعبيرات_نجمة:
+		> تعبير_نجمة ("," تعبير_نجمة)+ ","?
+		> تعبير_نجمة ","
+		> تعبير_نجمة
 */
-static Expression* starExpressions_rule(AlifParser* _p) { 
+static ExprTy starExpressions_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -8211,32 +7924,31 @@ static Expression* starExpressions_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // star_expression ("," star_expression)+ ","?
+	{ // تعبير_نجمة ("," تعبير_نجمة)+ ","?
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		void* optVar{};
-		Expression* a_{};
-		Seq* b_{};
+		ExprTy a_{};
+		ASDLSeq* b_{};
 		if (
-			(a_ = starExpression_rule(_p)) // star_expression
+			(a_ = starExpression_rule(_p)) // تعبير_نجمة
 			and
-			(b_ = alif12_loop1(_p)) // ("," star_expression)+
+			(b_ = alif12_loop1(_p)) // ("," تعبير_نجمة)+
 			and
 			(optVar = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_tuple((ExprSeq*)alifParserEngine_seqInsertInFront(_p, a_, b_), ExprCTX::Load, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_tuple((ASDLExprSeq*)alifParserEngine_seqInsertInFront(_p, a_, b_), ExprContext_::Load, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8244,28 +7956,27 @@ static Expression* starExpressions_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // star_expression ","
+	{ // تعبير_نجمة ","
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
 		if (
-			(a_ = starExpression_rule(_p)) // star_expression
+			(a_ = starExpression_rule(_p)) // تعبير_نجمة
 			and
-			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
+			(literal = alifParserEngine_expectToken(_p, COMMA)) // ","
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_tuple((ExprSeq*)alifParserEngine_singletonSeq(_p, a_), ExprCTX::Load, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_tuple((ASDLExprSeq*)alifParserEngine_singletonSeq(_p, a_), ExprContext_::Load, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8273,37 +7984,36 @@ static Expression* starExpressions_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // star_expression
+	{ // تعبير_نجمة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* starExpression{};
+		ExprTy starExpression{};
 		if (starExpression = starExpression_rule(_p))
 		{
-			res_ = starExpression;
+			res = starExpression;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// yield_expr: "yield" "from" expression > "yield" star_expressions?
-static Expression* yieldExpr_rule(AlifParser* _p) { 
+// تعبير_ولد: "ولد" "من" تعبير > "ولد" تعبيرات_نجمة?
+static ExprTy yieldExpr_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -8311,21 +8021,21 @@ static Expression* yieldExpr_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // "yield" "from" expression
+	{ // "ولد" "من" تعبير
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		AlifPToken* keyword_1{};
-		Expression* a_{};
+		AlifPToken* keyword{};
+		AlifPToken* keyword1{};
+		ExprTy a_{};
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, YIELD_KW)) // "yield"
+			(keyword = alifParserEngine_expectToken(_p, YIELD_KW)) // "ولد"
 			and
-			(keyword_ = alifParserEngine_expectToken(_p, FROM_KW)) // "from"
+			(keyword = alifParserEngine_expectToken(_p, FROM_KW)) // "من"
 			and
-			(a_ = expression_rule(_p)) // expression
+			(a_ = expression_rule(_p)) // تعبير
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -8333,10 +8043,9 @@ static Expression* yieldExpr_rule(AlifParser* _p) {
 
 			AlifIntT endLineNo = token_->endLineNo;
 			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_yieldFrom(a_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_yieldFrom(a_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8344,28 +8053,27 @@ static Expression* yieldExpr_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // "yield" star_expressions?
+	{ // "ولد" تعبيرات_نجمة?
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		Expression* a_{};
+		AlifPToken* keyword{};
+		ExprTy a_{};
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, YIELD_KW)) // "yield"
+			(keyword = alifParserEngine_expectToken(_p, YIELD_KW)) // "ولد"
 			and
-			(a_ = starExpressions_rule(_p), !_p->errorIndicator) // star_expressions?
+			(a_ = starExpressions_rule(_p), !_p->errorIndicator) // تعبيرات_نجمة?
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_yield(a_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_yield(a_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8373,102 +8081,99 @@ static Expression* yieldExpr_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif9: "," > ")" > ":"
+// ألف9: "," > ")" > ":"
 static void* alif9(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	AlifPToken* res_{};
-	AlifIntT mark_ = _p->mark_;
+	AlifPToken* res{};
+	AlifIntT mark = _p->mark;
 
 	{ // ","
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		if ((literal_ = alifParserEngine_expectToken(_p, COMMA)))
+		AlifPToken* literal{};
+		if ((literal = alifParserEngine_expectToken(_p, COMMA)))
 		{
-			res_ = literal_;
+			res = literal;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 	{ // ")"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		if ((literal_ = alifParserEngine_expectToken(_p, RPAR)))
+		AlifPToken* literal{};
+		if ((literal = alifParserEngine_expectToken(_p, RPAR)))
 		{
-			res_ = literal_;
+			res = literal;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 	{ // ":"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		if ((literal_ = alifParserEngine_expectToken(_p, COLON)))
+		AlifPToken* literal{};
+		if ((literal = alifParserEngine_expectToken(_p, COLON)))
 		{
-			res_ = literal_;
+			res = literal;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 //	^
 //	|
 //	|
 /*
-	with_item:
-		> expression "as" star_target &("," > ")" > ":")
-		> expression
+	عند_عنصر:
+		> تعبير "ك" هدف_نجمة &("," > ")" > ":")
+		> تعبير
 */
-static WithItem* withItem_rule(AlifParser* _p) { 
+static WithItemTy withItem_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	WithItem* res_{};
-	AlifIntT mark_ = _p->mark_;
+	WithItemTy res_{};
+	AlifIntT mark_ = _p->mark;
 
-	{ // expression "as" star_target &("," > ")" > ":")
+	{ // تعبير "ك" هدف_نجمة &("," > ")" > ":")
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		Expression* a_{};
-		Expression* b_{};
+		AlifPToken* keyword{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = expression_rule(_p)) // expression
+			(a_ = expression_rule(_p)) // تعبير
 			and
-			(keyword_ = alifParserEngine_expectToken(_p, AS_KW)) // "as"
+			(keyword = alifParserEngine_expectToken(_p, AS_KW)) // "ك"
 			and
-			(b_ = starTarget_rule(_p)) // star_target
+			(b_ = starTarget_rule(_p)) // هدف_نجمة
 			and
 			alifParserEngine_lookahead(1, alif9, _p)
 			)
 		{
 			res_ = alifAST_withItem(a_, b_, _p->astMem);
 			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8476,18 +8181,17 @@ static WithItem* withItem_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark_;
 	}
-	{ // expression
+	{ // تعبير
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
+		ExprTy a_{};
 		if ((a_ = expression_rule(_p)))
 		{
 			res_ = alifAST_withItem(a_, nullptr, _p->astMem);
 			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8495,142 +8199,128 @@ static WithItem* withItem_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark_;
 	}
 
 	res_ = nullptr;
-
 done:
 	_p->level--;
 	return res_;
 }
 
 
-// alif11_loop0: "," with_item
-static Seq* alif11_loop0(AlifParser* _p) { 
+// ألف11_حلقة0: "," عند_عنصر
+static ASDLSeq* alif11_loop0(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
 
-	{ // "," with_item
+	{ // "," عند_عنصر
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifPToken* literal_{};
-		WithItem* element_{};
+		WithItemTy element_{};
 		while (
 			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
 			and
-			(element_ = withItem_rule(_p)) // with_item
+			(element_ = withItem_rule(_p)) // عند_عنصر
 			)
 		{
-			res_ = element_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = element_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
-				alifMem_dataFree(children_);
 				_p->level--;
 				return nullptr;
 			}
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (AlifIntT i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 //	^
 //	|
 //	|
-// alif4_gather: with_item alif11_loop0
-static Seq* alif4_gather(AlifParser* _p) { 
+// ألف4_تجميع: عند_عنصر ألف11_حلقة0
+static ASDLSeq* alif4_gather(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Seq* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ASDLSeq* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // with_item alif11_loop0
+	{ // عند_عنصر ألف11_حلقة0
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		WithItem* element_{};
-		Seq* seq_{};
+		WithItemTy element{};
+		ASDLSeq* seq{};
 		if (
-			(element_ = withItem_rule(_p)) // with_item
+			(element = withItem_rule(_p)) // عند_عنصر
 			and
-			(seq_ = alif11_loop0(_p))
+			(seq = alif11_loop0(_p)) // ألف11_حلقة0
 			)
 		{
-			res_ = alifParserEngine_seqInsertInFront(_p, element_, seq_);
+			res = alifParserEngine_seqInsertInFront(_p, element, seq);
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 //	^
 //	|
 //	|
 /*
-	with_stmt:
-		> "with" "(" ",".with_item+ ","? ")" ":" block
-		> "with" ",".with_item+ ":" block
-		> "async" "with" "(" ",".with_item+ ","? ")" ":" block
-		> "async" "with" ",".with_item+ ":" block
+	حالة_عند:
+		> "عند" "(" ",".عند_عنصر+ ","? ")" ":" كتلة
+		> "عند" ",".عند_عنصر+ ":" كتلة
+		> "مزامنة" "عند" "(" ",".عند_عنصر+ ","? ")" ":" كتلة
+		> "مزامنة" "عند" ",".عند_عنصر+ ":" كتلة
 */
-static Statement* withStmt_rule(AlifParser* _p) { 
+static StmtTy withStmt_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Statement* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	StmtTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -8638,25 +8328,25 @@ static Statement* withStmt_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // "with" "(" ",".with_item+ ","? ")" ":" block
+	{ // "عند" "(" ",".عند_عنصر+ ","? ")" ":" كتلة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
-		AlifPToken* keyword_{};
-		AlifPToken* literal_{};
+		AlifPToken* keyword{};
+		AlifPToken* literal{};
 		AlifPToken* literal1{};
 		AlifPToken* literal2{};
 		void* optVar;
-		WithItemSeq* a_{};
-		StmtSeq* b_{};
+		ASDLWithItemSeq* a_{};
+		ASDLStmtSeq* b_{};
 
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, WITH_KW)) // "with"
+			(keyword = alifParserEngine_expectToken(_p, WITH_KW)) // "عند"
 			and
-			(literal_ = alifParserEngine_expectToken(_p, LPAR)) // "("
+			(literal = alifParserEngine_expectToken(_p, LPAR)) // "("
 			and
-			(a_ = (WithItemSeq*)alif4_gather(_p)) // ",".with_item+
+			(a_ = (ASDLWithItemSeq*)alif4_gather(_p)) // ",".عند_عنصر+
 			and
 			(optVar = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
 			and
@@ -8664,18 +8354,17 @@ static Statement* withStmt_rule(AlifParser* _p) {
 			and
 			(literal2 = alifParserEngine_expectToken(_p, COLON)) // ":"
 			and
-			(b_ = block_rule(_p)) // block
+			(b_ = block_rule(_p)) // كتلة
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_with(a_, b_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_with(a_, b_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8683,34 +8372,33 @@ static Statement* withStmt_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // "with" ",".with_item+ ":" block
+	{ // "عند" ",".عند_عنصر+ ":" كتلة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
-		AlifPToken* keyword_{};
-		AlifPToken* literal_{};
-		WithItemSeq* a_{};
-		StmtSeq* b_{};
+		AlifPToken* keyword{};
+		AlifPToken* literal{};
+		ASDLWithItemSeq* a_{};
+		ASDLStmtSeq* b_{};
 
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, WITH_KW)) // "with"
+			(keyword = alifParserEngine_expectToken(_p, WITH_KW)) // "عند"
 			and
-			(a_ = (WithItemSeq*)alif4_gather(_p)) // ",".with_item+
+			(a_ = (ASDLWithItemSeq*)alif4_gather(_p)) // ",".عند_عنصر+
 			and
-			(literal_ = alifParserEngine_expectToken(_p, COLON)) // ":"
+			(literal = alifParserEngine_expectToken(_p, COLON)) // ":"
 			and
-			(b_ = block_rule(_p)) // block
+			(b_ = block_rule(_p)) // كتلة
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_with(a_, b_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_with(a_, b_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8718,27 +8406,27 @@ static Statement* withStmt_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // "async" "with" "(" ",".with_item+ ","? ")" ":" block
+	{ // "مزامنة" "عند" "(" ",".عند_عنصر+ ","? ")" ":" كتلة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
-		AlifPToken* keyword_{};
-		AlifPToken* keyword_1{};
-		AlifPToken* literal_{};
+		AlifPToken* keyword{};
+		AlifPToken* keyword1{};
+		AlifPToken* literal{};
 		AlifPToken* literal1{};
 		AlifPToken* literal2{};
 		void* optVar;
-		WithItemSeq* a_{};
-		StmtSeq* b_{};
+		ASDLWithItemSeq* a_{};
+		ASDLStmtSeq* b_{};
 
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, ASYNC_KW)) // "async"
+			(keyword = alifParserEngine_expectToken(_p, ASYNC_KW)) // "مزامنة"
 			and
-			(keyword_1 = alifParserEngine_expectToken(_p, WITH_KW)) // "with"
+			(keyword1 = alifParserEngine_expectToken(_p, WITH_KW)) // "عند"
 			and
-			(literal_ = alifParserEngine_expectToken(_p, LPAR)) // "("
+			(literal = alifParserEngine_expectToken(_p, LPAR)) // "("
 			and
-			(a_ = (WithItemSeq*)alif4_gather(_p)) // ",".with_item+
+			(a_ = (ASDLWithItemSeq*)alif4_gather(_p)) // ",".عند_عنصر+
 			and
 			(optVar = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
 			and
@@ -8746,7 +8434,7 @@ static Statement* withStmt_rule(AlifParser* _p) {
 			and
 			(literal2 = alifParserEngine_expectToken(_p, COLON)) // ":"
 			and
-			(b_ = block_rule(_p)) // block
+			(b_ = block_rule(_p)) // كتلة
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -8754,10 +8442,9 @@ static Statement* withStmt_rule(AlifParser* _p) {
 
 			AlifIntT endLineNo = token_->endLineNo;
 			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_asyncWith(a_, b_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_asyncWith(a_, b_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8765,26 +8452,26 @@ static Statement* withStmt_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // "async" "with" ",".with_item+ ":" block
+	{ // "مزامنة" "عند" ",".عند_عنصر+ ":" كتلة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
-		AlifPToken* keyword_{};
-		AlifPToken* keyword_1{};
-		AlifPToken* literal_{};
-		WithItemSeq* a_{};
-		StmtSeq* b_{};
+		AlifPToken* keyword{};
+		AlifPToken* keyword1{};
+		AlifPToken* literal{};
+		ASDLWithItemSeq* a_{};
+		ASDLStmtSeq* b_{};
 
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, ASYNC_KW)) // "async"
+			(keyword = alifParserEngine_expectToken(_p, ASYNC_KW)) // "مزامنة"
 			and
-			(keyword_1 = alifParserEngine_expectToken(_p, WITH_KW)) // "with"
+			(keyword1 = alifParserEngine_expectToken(_p, WITH_KW)) // "عند"
 			and
-			(a_ = (WithItemSeq*)alif4_gather(_p)) // ",".with_item+
+			(a_ = (ASDLWithItemSeq*)alif4_gather(_p)) // ",".عند_عنصر+
 			and
-			(literal_ = alifParserEngine_expectToken(_p, COLON)) // ":"
+			(literal = alifParserEngine_expectToken(_p, COLON)) // ":"
 			and
-			(b_ = block_rule(_p)) // block
+			(b_ = block_rule(_p)) // كتلة
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -8792,10 +8479,9 @@ static Statement* withStmt_rule(AlifParser* _p) {
 
 			AlifIntT endLineNo = token_->endLineNo;
 			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_asyncWith(a_, b_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_asyncWith(a_, b_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8803,30 +8489,27 @@ static Statement* withStmt_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
-
 /*
-	for_stmt:
-		> "for" star_targets "in" ~ star_expressions ":" block
-		> "async" "for" star_targets "in" ~ star_expressions ":" block
+	كتلة_خلل_نجمة:
+		| "خلل" "*" تعبير ["ك" اسم] ":" كتلة
 */
-static Statement* forStmt_rule(AlifParser* _p) { 
+static ExcepthandlerTy exceptStarBlock_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Statement* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ExcepthandlerTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -8834,44 +8517,614 @@ static Statement* forStmt_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // "for" star_targets "in" ~ star_expressions ":" block
+	{ // "خلل" "*" تعبير ["ك" اسم] ":" كتلة
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		AlifPToken* keyword{};
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		ASDLStmtSeq* b{};
+		ExprTy e{};
+		void* t{};
+		if (
+			(keyword = alifParserEngine_expectToken(_p, EXCEPT_KW))  // "خلل"
+			and
+			(literal = alifParserEngine_expectToken(_p, STAR))  // "*"
+			and
+			(e = expression_rule(_p))  // تعبير
+			and
+			(t = alif7(_p), !_p->errorIndicator)  // ["ك" اسم]
+			and
+			(literal1 = alifParserEngine_expectToken(_p, COLON))  // ":"
+			and
+			(b = block_rule(_p))  // block
+			)
+		{
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
+
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_exceptHandler(e, (t) ? ((ExprTy)t)->V.name.name : nullptr, b, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+
+	res = nullptr;
+done:
+	_p->level--;
+	return res;
+}
+// ^
+// |
+// |
+// ألف31_حلقة1: كتلة_خلل_نجمة
+static ASDLSeq* alif31_loop1(AlifParser* _p) {
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	void* res{};
+	AlifIntT mark = _p->mark;
+
+	AlifPArray children{};
+	if (!children.data) {
+		_p->errorIndicator = 1;
+		// alifErr_noMemory();
+		_p->level--;
+		return nullptr;
+	}
+
+	{ // كتلة_خلل_نجمة
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		ExcepthandlerTy var1{};
+		while ((var1 = exceptStarBlock_rule(_p)))
+		{
+			res = var1;
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
+			}
+			mark = _p->mark;
+		}
+		_p->mark = mark;
+	}
+
+	AlifSizeT size = children.size;
+	if (size == 0 or _p->errorIndicator) {
+		_p->level--;
+		return nullptr;
+	}
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
+		_p->errorIndicator = 1;
+		// alifErr_noMemory();
+		_p->level--;
+		return nullptr;
+	}
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
+
+	_p->level--;
+	return seq;
+}
+// ^
+// |
+// |
+/*
+// كتلة_خلل:
+	| "خلل" تعبير ["ك" اسم] ":" كتلة
+	| "خلل" ":" كتلة
+*/
+static ExcepthandlerTy exceptBlock_rule(AlifParser* _p) {
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	ExcepthandlerTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
+		and
+		alifParserEngine_fillToken(_p) < 0)
+	{
+		_p->errorIndicator = 1;
+		_p->level--;
+		return nullptr;
+	}
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
+
+	{ // "خلل" تعبير ["ك" اسم] ":" كتلة
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		AlifPToken* keyword{};
+		AlifPToken* literal{};
+		ASDLStmtSeq* b{};
+		ExprTy e{};
+		void* t{};
+		if (
+			(keyword = alifParserEngine_expectToken(_p, EXCEPT_KW))  // "خلل"
+			and
+			(e = expression_rule(_p))  // تعبير
+			and
+			(t = alif7(_p), !_p->errorIndicator)  // ["ك" اسم]
+			and
+			(literal = alifParserEngine_expectToken(_p, COLON))  // ":"
+			and
+			(b = block_rule(_p))  // كتلة
+			)
+		{
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
+
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_exceptHandler(e, (t) ? ((ExprTy)t)->V.name.name : nullptr, b, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+	{ // "خلل" ":" كتلة
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		AlifPToken* keyword{};
+		AlifPToken* literal{};
+		ASDLStmtSeq* b{};
+		if (
+			(keyword = alifParserEngine_expectToken(_p, EXCEPT_KW))  // "خلل"
+			and
+			(literal = alifParserEngine_expectToken(_p, COLON))  // ":"
+			and
+			(b = block_rule(_p))  // كتلة
+			)
+		{
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_exceptHandler(nullptr, nullptr, b, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+
+	res = nullptr;
+done:
+	_p->level--;
+	return res;
+}
+// ^
+// |
+// |
+// ألف30_حلقة1: كتلة_خلل
+static ASDLSeq* alif30_loop1(AlifParser* _p) {
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	void* res{};
+	AlifIntT mark = _p->mark;
+
+	AlifPArray children{};
+	if (!children.data) {
+		_p->errorIndicator = 1;
+		// alifErr_noMemory();
+		_p->level--;
+		return nullptr;
+	}
+
+	{ // كتلة_خلل_نجمة
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		ExcepthandlerTy var1{};
+		while ((var1 = exceptBlock_rule(_p)))
+		{
+			res = var1;
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
+			}
+			mark = _p->mark;
+		}
+		_p->mark = mark;
+	}
+
+	AlifSizeT size = children.size;
+	if (size == 0 or _p->errorIndicator) {
+		_p->level--;
+		return nullptr;
+	}
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
+		_p->errorIndicator = 1;
+		// alifErr_noMemory();
+		_p->level--;
+		return nullptr;
+	}
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
+
+	_p->level--;
+	return seq;
+}
+// ^
+// |
+// |
+/*
+حالة_حاول:
+    | "حاول" ":" كتلة كتلة_النهاية
+    | "حاول" ":" كتلة كتلة_خلل+ كتلة_والا? كتلة_النهاية?
+    | "حاول" ":" كتلة كتلة_خلل_نجمة+ كتلة_والا? كتلة_النهاية?
+*/
+static StmtTy tryStmt_rule(AlifParser* _p) {
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	StmtTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
+		and
+		alifParserEngine_fillToken(_p) < 0)
+	{
+		_p->errorIndicator = 1;
+		_p->level--;
+		return nullptr;
+	}
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
+
+	{ // "حاول" ":" كتلة كتلة_النهاية
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		AlifPToken* keyword{};
+		AlifPToken* literal{};
+		ASDLStmtSeq* b{};
+		ASDLStmtSeq* f{};
+		if (
+			(keyword = alifParserEngine_expectToken(_p, TRY_KW))  // "حاول"
+			and
+			(literal = alifParserEngine_expectTokenForced(_p, COLON, ":"))  // ":"
+			and
+			(b = block_rule(_p))  // كتلة
+			and
+			(f = finallyBlock_rule(_p))  // كتلة_النهاية
+			)
+		{
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_try(b, nullptr, nullptr, f, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+	{ // "حاول" ":" كتلة كتلة_خلل+ كتلة_والا? كتلة_النهاية?
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		AlifPToken* keyword{};
+		AlifPToken* literal{};
+		ASDLStmtSeq* b{};
+		ASDLStmtSeq* el{};
+		ASDLExcepthandlerSeq* ex{};
+		ASDLStmtSeq* f{};
+		if (
+			(keyword = alifParserEngine_expectToken(_p, TRY_KW))  // "حاول"
+			and
+			(literal = alifParserEngine_expectTokenForced(_p, COLON, ":"))  // ":"
+			and
+			(b = block_rule(_p))  // كتلة
+			and
+			(ex = (ASDLExcepthandlerSeq*)alif30_loop1(_p))  // كتلة_خلل+
+			and
+			(el = elseBlock_rule(_p), !_p->errorIndicator)  // كتلة_والا?
+			and
+			(f = finallyBlock_rule(_p), !_p->errorIndicator)  // كتلة_النهاية?
+			)
+		{
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_try(b, ex, el, f, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+	{ // "حاول" ":" كتلة كتلة_خلل_نجمة+ كتلة_والا? كتلة_النهاية?
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		AlifPToken* keyword{};
+		AlifPToken* literal{};
+		ASDLStmtSeq* b{};
+		ASDLStmtSeq* el{};
+		ASDLExcepthandlerSeq* ex{};
+		ASDLStmtSeq* f{};
+		if (
+			(keyword = alifParserEngine_expectToken(_p, TRY_KW))  // "حاول"
+			and
+			(literal = alifParserEngine_expectTokenForced(_p, COLON, ":"))  // ":"
+			and
+			(b = block_rule(_p))  // كتلة
+			and
+			(ex = (ASDLExcepthandlerSeq*)alif31_loop1(_p))  // كتلة_خلل_نجمة+
+			and
+			(el = elseBlock_rule(_p), !_p->errorIndicator)  // كتلة_والا?
+			and
+			(f = finallyBlock_rule(_p), !_p->errorIndicator)  // كتلة_النهاية?
+			)
+		{
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_tryStar(b, ex, el, f, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+
+	res = nullptr;
+done:
+	_p->level--;
+	return res;
+}
+
+
+static void* invalid_forTargetRule(AlifParser* _p) {
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	void* res = nullptr;
+	AlifIntT mark = _p->mark;
+	{ // "مزامنة"? "لاجل" تعبيرات_نجمة
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+		AlifPToken* keyword{};
+		void* optVar{};
+		ExprTy a{};
+		if (
+			(optVar = alifParserEngine_expectToken(_p, ASYNC_KW), !_p->errorIndicator)  // "مزامنة"?
+			and
+			(keyword = alifParserEngine_expectToken(_p, FOR_KW))  // "لاجل"
+			and
+			(a = starExpressions_rule(_p))  // تعبيرات_نجمة
+			)
+		{
+			res = RAISE_SYNTAX_ERROR_INVALID_TARGET(TargetsType_::For_Targets, a);
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+
+	res = nullptr;
+done:
+	_p->level--;
+	return res;
+}
+//	^
+//	|
+//	|
+static void* invalid_forStmtRule(AlifParser* _p) {
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	void* res = nullptr;
+	AlifIntT mark = _p->mark;
+	{ // "مزامنة"? "لاجل اهداف_نجمة "في" تعبيرات_نجمة سطر
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		AlifPToken* keyword{};
+		AlifPToken* keyword1{};
+		void* optVar{};
+		AlifPToken* newlineVar{};
+		ExprTy starExpressionsVar{};
+		ExprTy starTargetsVar{};
+		if (
+			(optVar = alifParserEngine_expectToken(_p, ASYNC_KW), !_p->errorIndicator)  // "مزامنة"?
+			and
+			(keyword = alifParserEngine_expectToken(_p, FOR_KW))  // "لاجل"
+			and
+			(starTargetsVar = starTargets_rule(_p))  // اهداف_نجمة
+			and
+			(keyword1 = alifParserEngine_expectToken(_p, IN_KW))  // "في"
+			and
+			(starExpressionsVar = starExpressions_rule(_p))  // تعبيرات_نجمة
+			and
+			(newlineVar = alifParserEngine_expectToken(_p, NEWLINE))  // سطر
+			)
+		{
+			res = RAISE_SYNTAX_ERROR("نسيت ':'");
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+	{ // "مزامنة"? "لاجل اهداف_نجمة "في" تعبيرات_نجمة ":" سطر !مسافة_طويلة
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		AlifPToken* keyword{};
+		AlifPToken* literal{};
+		void* optVar{};
+		AlifPToken* a{};
+		AlifPToken* newlineVar{};
+		ExprTy starExpressionsVar{};
+		ExprTy starTargetsVar{};
+		if (
+			(optVar = alifParserEngine_expectToken(_p, ASYNC_KW), !_p->errorIndicator)  // "مزامنة"?
+			and
+			(a = alifParserEngine_expectToken(_p, FOR_KW))  // "لاجل"
+			and
+			(starTargetsVar = starTargets_rule(_p))  // اهداف_نجمة
+			and
+			(keyword = alifParserEngine_expectToken(_p, IN_KW))  // "في"
+			and
+			(starExpressionsVar = starExpressions_rule(_p))  // تعبيرات_نجمة
+			and
+			(literal = alifParserEngine_expectToken(_p, COLON))  // ":"
+			and
+			(newlineVar = alifParserEngine_expectToken(_p, NEWLINE))  // سطر
+			and
+			alifParserEngine_lookaheadWithInt(0, alifParserEngine_expectToken, _p, INDENT)  // مسافة_طويلة
+			)
+		{
+			res = RAISE_INDENTATION_ERROR("نسيت إضافة مسافة طويلة 'tab' ضمن حالة 'لاجل' في السطر %d", a->lineNo);
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+
+	res = nullptr;
+done:
+	_p->level--;
+	return res;
+}
+//	^
+//	|
+//	|
+/*
+	حالة_لاجل:
+		> "لاجل" أهداف_نجمة "في" ~ تعبيرات_نجمة ":" كتلة
+		> "مزامنة" "لاجل" أهداف_نجمة "في" ~ تعبيرات_نجمة ":" كتلة
+*/
+static StmtTy forStmt_rule(AlifParser* _p) { 
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	StmtTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
+		and
+		alifParserEngine_fillToken(_p) < 0)
+	{
+		_p->errorIndicator = 1;
+		_p->level--;
+		return nullptr;
+	}
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
+
+	if (_p->callInvalidRules) { // حالة_لاجل_خاطئة
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		void* invalidForStmtVar{};
+		if (
+			(invalidForStmtVar = invalid_forStmtRule(_p))  // حالة_لاجل_خاطئة
+			)
+		{
+			res = (StmtTy)invalidForStmtVar;
+			goto done;
+		}
+		_p->mark = mark;
+	}
+	{ // "لاجل" أهداف_نجمة "في" ~ تعبيرات_نجمة ":" كتلة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifIntT cutVar = 0;
-		AlifPToken* keyword_{};
-		AlifPToken* keyword_1{};
-		AlifPToken* literal_{};
-		Expression* a_{};
-		Expression* b_{};
-		StmtSeq* c_{};
+		AlifPToken* keyword{};
+		AlifPToken* keyword1{};
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ExprTy b_{};
+		ASDLStmtSeq* c_{};
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, FOR_KW)) // "for"
+			(keyword = alifParserEngine_expectToken(_p, FOR_KW)) // "لاجل"
 			and
-			(a_ = starTargets_rule(_p)) // star_targets
+			(a_ = starTargets_rule(_p)) // أهداف_نجمة
 			and
-			(keyword_1 = alifParserEngine_expectToken(_p, IN_KW)) // "in"
+			(keyword1 = alifParserEngine_expectToken(_p, IN_KW)) // "في"
 			and
 			(cutVar = 1)
 			and
-			(b_ = starExpressions_rule(_p)) // star_expressions
+			(b_ = starExpressions_rule(_p)) // تعبيرات_نجمة
 			and
-			(literal_ = alifParserEngine_expectToken(_p, COLON)) // ":"
+			(literal = alifParserEngine_expectToken(_p, COLON)) // ":"
 			and
-			(c_ = block_rule(_p)) // block
+			(c_ = block_rule(_p)) // كتلة
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_for(a_, b_, c_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_for(a_, b_, c_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8879,47 +9132,46 @@ static Statement* forStmt_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 		if (cutVar) { _p->level--; return nullptr; }
 	}
-	{ // "async" "for" star_targets "in" ~ star_expressions ":" block
+	{ // "مزامنة" "لاجل" أهداف_نجمة "في" ~ تعبيرات_نجمة ":" كتلة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifIntT cutVar = 0;
-		AlifPToken* keyword_{};
-		AlifPToken* keyword_1{};
-		AlifPToken* keyword_2{};
+		AlifPToken* keyword{};
+		AlifPToken* keyword1{};
+		AlifPToken* keyword2{};
 		AlifPToken* literal_{};
-		Expression* a_{};
-		Expression* b_{};
-		StmtSeq* c_{};
+		ExprTy a_{};
+		ExprTy b_{};
+		ASDLStmtSeq* c_{};
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, ASYNC_KW)) // "async"
+			(keyword = alifParserEngine_expectToken(_p, ASYNC_KW)) // "مزامنة"
 			and
-			(keyword_1 = alifParserEngine_expectToken(_p, FOR_KW)) // "for"
+			(keyword1 = alifParserEngine_expectToken(_p, FOR_KW)) // "لاجل"
 			and
-			(a_ = starTargets_rule(_p)) // star_targets
+			(a_ = starTargets_rule(_p)) // أهداف_نجمة
 			and
-			(keyword_2 = alifParserEngine_expectToken(_p, IN_KW)) // "in"
+			(keyword2 = alifParserEngine_expectToken(_p, IN_KW)) // "في"
 			and
 			(cutVar = 1)
 			and
-			(b_ = starExpressions_rule(_p)) // star_expressions
+			(b_ = starExpressions_rule(_p)) // تعبيرات_نجمة
 			and
 			(literal_ = alifParserEngine_expectToken(_p, COLON)) // ":"
 			and
-			(c_ = block_rule(_p)) // block
+			(c_ = block_rule(_p)) // كتلة
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_asyncFor(a_, b_, c_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_asyncFor(a_, b_, c_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8927,27 +9179,113 @@ static Statement* forStmt_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 		if (cutVar) { _p->level--; return nullptr; }
 	}
+	if (_p->callInvalidRules) { // حالة_لاجل_خاطئة
+		if (_p->errorIndicator) {
+			_p->level--;
+			return nullptr;
+		}
+		void* invalidForTargetVar;
+		if (
+			(invalidForTargetVar = invalid_forTargetRule(_p))  // حالة_لاجل_خاطئة
+			)
+		{
+			res = (StmtTy)invalidForTargetVar;
+			goto done;
+		}
+		_p->mark = mark;
+	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
-
-// while_stmt: "while" expression ":" block
-static Statement* whileStmt_rule(AlifParser* _p) { 
+static void* invalid_whileStmtRule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Statement* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	void* res{};
+	AlifIntT mark = _p->mark;
+	{ // بينما تعبير سطر
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		AlifPToken* keyword{};
+		ExprTy namedExpressionVar{};
+		AlifPToken* newlineVar{};
+		if (
+			(keyword = alifParserEngine_expectToken(_p, WHILE_KW))  // بينما
+			and
+			(namedExpressionVar = expression_rule(_p))  // تعبير
+			and
+			(newlineVar = alifParserEngine_expectToken(_p, NEWLINE))  // سطر
+			)
+		{
+			res = RAISE_SYNTAX_ERROR("نسيت ':'");
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+	{ // بينما تعبير سطر !مسافة_طويلة
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		AlifPToken* literal{};
+		AlifPToken* a{};
+		ExprTy namedExpressionVar{};
+		AlifPToken* newlineVar{};
+		if (
+			(a = alifParserEngine_expectToken(_p, WHILE_KW))  // بينما
+			and
+			(namedExpressionVar = expression_rule(_p))  // تعبير
+			and
+			(literal = alifParserEngine_expectToken(_p, COLON))  // ":"
+			and
+			(newlineVar = alifParserEngine_expectToken(_p, NEWLINE))  // سطر
+			and
+			alifParserEngine_lookaheadWithInt(0, alifParserEngine_expectToken, _p, INDENT)  // مسافة_طويلة
+			)
+		{
+			res = RAISE_INDENTATION_ERROR("نسيت إضافة مسافة طويلة 'tab' ضمن حالة 'بينما' في السطر %d", a->lineNo);
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+
+	res = nullptr;
+done:
+	_p->level--;
+	return res;
+}
+// ^
+// |
+// |
+// حالة_بينما: "بينما" تعبير ":" كتلة
+static StmtTy whileStmt_rule(AlifParser* _p) { 
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	StmtTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -8955,35 +9293,47 @@ static Statement* whileStmt_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // "while" expression ":" block
+	if (_p->callInvalidRules) { // حالة_بينما_خاطئة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		AlifPToken* literal_{};
-		Expression* a_{};
-		StmtSeq* b_{};
+		void* invalidWhileStmtVar{};
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, WHILE_KW)) // "while"
-			and
-			(a_ = expression_rule(_p)) // expression
-			and
-			(literal_ = alifParserEngine_expectToken(_p, COLON)) // ":"
-			and
-			(b_ = block_rule(_p)) // block
+			(invalidWhileStmtVar = invalid_whileStmtRule(_p)) // حالة_بينما_خاطئة
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			res = (StmtTy)invalidWhileStmtVar;
+			goto done;
+		}
+		_p->mark = mark;
+	}
+	{ // "بينما" تعبير ":" كتلة
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_while(a_, b_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+		AlifPToken* keyword{};
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ASDLStmtSeq* b_{};
+		if (
+			(keyword = alifParserEngine_expectToken(_p, WHILE_KW)) // "بينما"
+			and
+			(a_ = expression_rule(_p)) // تعبير
+			and
+			(literal = alifParserEngine_expectToken(_p, COLON)) // ":"
+			and
+			(b_ = block_rule(_p)) // كتلة
+			)
+		{
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
+
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_while(a_, b_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -8991,44 +9341,42 @@ static Statement* whileStmt_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// else_block: "else" &&":" block
-static StmtSeq* elseBlock_rule(AlifParser* _p) { 
+// حالة_والا: "والا" &":" كتلة
+static ASDLStmtSeq* elseBlock_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	StmtSeq* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ASDLStmtSeq* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "else" &&":" block
+	{ // "والا" &":" كتلة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		AlifPToken* literal_{};
-		StmtSeq* b_{};
+		AlifPToken* keyword{};
+		AlifPToken* literal{};
+		ASDLStmtSeq* b_{};
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, ELSE_KW)) // "else"
+			(keyword = alifParserEngine_expectToken(_p, ELSE_KW)) // "والا"
 			and
-			(literal_ = alifParserEngine_expectTokenForced(_p, COLON, L":")) // ":"
+			(literal = alifParserEngine_expectTokenForced(_p, COLON, ":")) // ":"
 			and
-			(b_ = block_rule(_p)) // block
+			(b_ = block_rule(_p)) // كتلة
 			)
 		{
-			res_ = b_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = b_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9036,30 +9384,29 @@ static StmtSeq* elseBlock_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
 /*
-	elif_stmt:
-		> "elif" expression ":" block elif_stmt
-		> "elif" expression ":" block else_block?
+	حالة_اواذا:
+		> "اواذا" تعبير ":" كتلة حالة_اواذا
+		> "اواذا" تعبير ":" كتلة حالة_والا?
 */
-static Statement* elifStmt_rule(AlifParser* _p) { 
+static StmtTy elifStmt_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Statement* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	StmtTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -9067,38 +9414,37 @@ static Statement* elifStmt_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // "elif" expression ":" block elif_stmt
+	{ // "اواذا" تعبير ":" كتلة حالة_اواذا
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		AlifPToken* literal_{};
-		Expression* a_{};
-		StmtSeq* b_{};
-		Statement* c_{};
+		AlifPToken* keyword{};
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ASDLStmtSeq* b_{};
+		StmtTy c_{};
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, ELIF_KW)) // "elif"
+			(keyword = alifParserEngine_expectToken(_p, ELIF_KW)) // "اواذا"
 			and
-			(a_ = expression_rule(_p)) // expression
+			(a_ = expression_rule(_p)) // تعبير
 			and
-			(literal_ = alifParserEngine_expectToken(_p, COLON)) // ":"
+			(literal = alifParserEngine_expectToken(_p, COLON)) // ":"
 			and
-			(b_ = block_rule(_p)) // block
+			(b_ = block_rule(_p)) // كتلة
 			and
-			(c_ = elifStmt_rule(_p)) // elif_stmt
+			(c_ = elifStmt_rule(_p)) // حالة_اواذا
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			alifAST_if(a_, b_, (StmtSeq*)alifParserEngine_singletonSeq(_p, c_), EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_if(a_, b_, (ASDLStmtSeq*)alifParserEngine_singletonSeq(_p, c_), EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9106,26 +9452,26 @@ static Statement* elifStmt_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // "elif" expression ":" block else_stmt?
+	{ // "اواذا" تعبير ":" كتلة حالة_والا?
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		AlifPToken* literal_{};
-		Expression* a_{};
-		StmtSeq* b_{};
-		StmtSeq* c_{};
+		AlifPToken* keyword{};
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ASDLStmtSeq* b_{};
+		ASDLStmtSeq* c_{};
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, ELIF_KW)) // "elif"
+			(keyword = alifParserEngine_expectToken(_p, ELIF_KW)) // "اواذا"
 			and
-			(a_ = expression_rule(_p)) // expression
+			(a_ = expression_rule(_p)) // تعبير
 			and
-			(literal_ = alifParserEngine_expectToken(_p, COLON)) // ":"
+			(literal = alifParserEngine_expectToken(_p, COLON)) // ":"
 			and
-			(b_ = block_rule(_p)) // block
+			(b_ = block_rule(_p)) // كتلة
 			and
-			(c_ = elseBlock_rule(_p), !_p->errorIndicator) // else_block?
+			(c_ = elseBlock_rule(_p), !_p->errorIndicator) // حالة_والا?
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -9133,10 +9479,9 @@ static Statement* elifStmt_rule(AlifParser* _p) {
 
 			AlifIntT endLineNo = token_->endLineNo;
 			AlifIntT endColOffset = token_->endColOffset;
-			alifAST_if(a_, b_, c_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_if(a_, b_, c_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9144,30 +9489,29 @@ static Statement* elifStmt_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
 /*
-	if_stmt:
-		> "if" expression ":" block elif_stmt
-		> "if" expression ":" block else_block?
+	حالة_اذا:
+		> "اذا" تعبير ":" كتلة حالة_اواذا
+		> "اذا" تعبير ":" كتلة حالة_والا?
 */
-static Statement* ifStmt_rule(AlifParser* _p) {  
+static StmtTy ifStmt_rule(AlifParser* _p) {  
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Statement* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	StmtTy res_{};
+	AlifIntT mark_ = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -9178,25 +9522,25 @@ static Statement* ifStmt_rule(AlifParser* _p) {
 	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
 	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
 
-	{ // "if" expression ":" block elif_stmt
+	{ // "اذا" تعبير ":" كتلة حالة_اواذا
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifPToken* keyword_{};
 		AlifPToken* literal_{};
-		Expression* a_{};
-		StmtSeq* b_{};
-		Statement* c_{};
+		ExprTy a_{};
+		ASDLStmtSeq* b_{};
+		StmtTy c_{};
 
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, IF_KW)) // "if"
+			(keyword_ = alifParserEngine_expectToken(_p, IF_KW)) // "اذا"
 			and
-			(a_ = expression_rule(_p)) // expression
+			(a_ = expression_rule(_p)) // تعبير
 			and
 			(literal_ = alifParserEngine_expectToken(_p, COLON)) // ":"
 			and
-			(b_ = block_rule(_p)) // block
+			(b_ = block_rule(_p)) // كتلة
 			and
-			(c_ = elifStmt_rule(_p)) // elif_stmt
+			(c_ = elifStmt_rule(_p)) // حالة_اواذا
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -9204,10 +9548,9 @@ static Statement* ifStmt_rule(AlifParser* _p) {
 
 			AlifIntT endLineNo = token_->endLineNo;
 			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_if(a_, b_, (StmtSeq*)alifParserEngine_singletonSeq(_p, c_), EXTRA);
+			res_ = alifAST_if(a_, b_, (ASDLStmtSeq*)alifParserEngine_singletonSeq(_p, c_), EXTRA);
 			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9215,27 +9558,27 @@ static Statement* ifStmt_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark_;
 	}
-	{ // "if" expression ":" block else_block?
+	{ // "اذا" تعبير ":" كتلة حالة_والا?
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifPToken* keyword_{};
 		AlifPToken* literal_{};
-		Expression* a_{};
-		StmtSeq* b_{};
-		StmtSeq* c_{};
+		ExprTy a_{};
+		ASDLStmtSeq* b_{};
+		ASDLStmtSeq* c_{};
 
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, IF_KW)) // "if"
+			(keyword_ = alifParserEngine_expectToken(_p, IF_KW)) // "اذا"
 			and
-			(a_ = expression_rule(_p)) // expression
+			(a_ = expression_rule(_p)) // تعبير
 			and
 			(literal_ = alifParserEngine_expectToken(_p, COLON)) // ":"
 			and
-			(b_ = block_rule(_p)) // block
+			(b_ = block_rule(_p)) // كتلة
 			and
-			(c_ = elseBlock_rule(_p), !_p->errorIndicator) // else_block?
+			(c_ = elseBlock_rule(_p), !_p->errorIndicator) // حالة_والا?
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -9245,8 +9588,7 @@ static Statement* ifStmt_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token_->endColOffset;
 			res_ = alifAST_if(a_, b_, c_, EXTRA);
 			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9254,41 +9596,39 @@ static Statement* ifStmt_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark_;
 	}
 
 	res_ = nullptr;
-
 done:
 	_p->level--;
 	return res_;
 }
 
 
-// default: "=" expression
-static Expression* default_rule(AlifParser* _p) { 
+// قيمة_افتراضية: "=" تعبير
+static ExprTy default_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "=" expression
+	{ // "=" تعبير
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, EQUAL)) // "="
+			(literal = alifParserEngine_expectToken(_p, EQUAL)) // "="
 			and
-			(a_ = expression_rule(_p)) // expression
+			(a_ = expression_rule(_p)) // تعبير
 			)
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9296,26 +9636,25 @@ static Expression* default_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// param: NAME
-static Arg* param_rule(AlifParser* _p) { 
+// معامل_وسيط: *اسم*
+static ArgTy param_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Arg* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ArgTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -9323,24 +9662,23 @@ static Arg* param_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // NAME
+	{ // *اسم*
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
+		ExprTy a_{};
 		if ((a_ = alifParserEngine_nameToken(_p)))
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_arg(a_->V.name.name, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_arg(a_->V.name.name, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9348,48 +9686,46 @@ static Arg* param_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
 /*
-	param_maybe_default:
-		> param default? ","
-		> param default? &")"
+	معامل_ربما_قيمة:
+		> معامل_وسيط قيمة_افتراضية? ","
+		> معامل_وسيط قيمة_افتراضية? &")"
 */
 static NameDefaultPair* paramMaybeDefault_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	NameDefaultPair* res_{};
-	AlifIntT mark_ = _p->mark_;
+	NameDefaultPair* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // param default? ","
+	{ // معامل_وسيط قيمة_افتراضية? ","
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Arg* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		ArgTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = param_rule(_p)) // param
+			(a_ = param_rule(_p)) // معامل_وسيط
 			and
-			(b_ = default_rule(_p), !_p->errorIndicator) // default?
+			(b_ = default_rule(_p), !_p->errorIndicator) // قيمة_افتراضية?
 			and
-			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
+			(literal = alifParserEngine_expectToken(_p, COMMA)) // ","
 			)
 		{
-			res_ = alifParserEngine_nameDefaultPair(_p, a_, b_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_nameDefaultPair(_p, a_, b_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9397,25 +9733,24 @@ static NameDefaultPair* paramMaybeDefault_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // param default? &")"
+	{ // معامل_وسيط قيمة_افتراضية? &")"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Arg* a_{};
-		Expression* b_{};
+		ArgTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = param_rule(_p)) // param
+			(a_ = param_rule(_p)) // معامل_وسيط
 			and
-			(b_ = default_rule(_p), !_p->errorIndicator) // default?
+			(b_ = default_rule(_p), !_p->errorIndicator) // قيمة_افتراضية?
 			and
 			alifParserEngine_lookaheadWithInt(1, alifParserEngine_expectToken, _p, RPAR) // ")"
 			)
 		{
-			res_ = alifParserEngine_nameDefaultPair(_p, a_, b_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_nameDefaultPair(_p, a_, b_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9423,44 +9758,42 @@ static NameDefaultPair* paramMaybeDefault_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// param_with_default: param default "," > param default &")"
+// معاملات_مع_قيمة: معامل_وسيط قيمة_افتراضية "," > معامل_وسيط قيمة_افتراضية &")"
 static NameDefaultPair* paramWithDefault_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	NameDefaultPair* res_{};
-	AlifIntT mark_ = _p->mark_;
+	NameDefaultPair* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // param default ","
+	{ // معامل_وسيط قيمة_افتراضية ","
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Arg* a_{};
-		Expression* b_{};
+		AlifPToken* literal{};
+		ArgTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = param_rule(_p)) // param
+			(a_ = param_rule(_p)) // معامل_وسيط
 			and
-			(b_ = default_rule(_p)) // default
+			(b_ = default_rule(_p)) // قيمة_افتراضية
 			and
-			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
+			(literal = alifParserEngine_expectToken(_p, COMMA)) // ","
 			)
 		{
-			res_ = alifParserEngine_nameDefaultPair(_p, a_, b_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_nameDefaultPair(_p, a_, b_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9468,25 +9801,24 @@ static NameDefaultPair* paramWithDefault_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // param default &")"
+	{ // معامل_وسيط قيمة_افتراضية &")"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Arg* a_{};
-		Expression* b_{};
+		ArgTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = param_rule(_p)) // param
+			(a_ = param_rule(_p)) // معامل_وسيط
 			and
-			(b_ = default_rule(_p)) // default
+			(b_ = default_rule(_p)) // قيمة_افتراضية
 			and
 			alifParserEngine_lookaheadWithInt(1, alifParserEngine_expectToken, _p, RPAR) // ")"
 			)
 		{
-			res_ = alifParserEngine_nameDefaultPair(_p, a_, b_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_nameDefaultPair(_p, a_, b_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9494,27 +9826,26 @@ static NameDefaultPair* paramWithDefault_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// param_no_default: param "," > param &")"
-static Arg* paramNoDefault_rule(AlifParser* _p) { 
+// معاملات_بدون_قيمة: معامل_وسيط "," > معامل_وسيط &")"
+static ArgTy paramNoDefault_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Arg* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ArgTy res{};
+	AlifIntT mark = _p->mark;
 
-	if (_p->mark_ == _p->fill_
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -9522,18 +9853,18 @@ static Arg* paramNoDefault_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // param ","
+	{ // معامل_وسيط ","
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Arg* a_{};
+		AlifPToken* literal{};
+		ArgTy a_{};
 		if (
-			(a_ = param_rule(_p)) // param
+			(a_ = param_rule(_p)) // معامل_وسيط
 			and
-			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
+			(literal = alifParserEngine_expectToken(_p, COMMA)) // ","
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -9541,10 +9872,9 @@ static Arg* paramNoDefault_rule(AlifParser* _p) {
 
 			AlifIntT endLineNo = token_->endLineNo;
 			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_arg(a_->arg, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_arg(a_->arg, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9552,27 +9882,26 @@ static Arg* paramNoDefault_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // param &")"
+	{ // معامل_وسيط &")"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Arg* a_{};
+		ArgTy a_{};
 		if (
-			(a_ = param_rule(_p)) // param
+			(a_ = param_rule(_p)) // معامل_وسيط
 			and
 			alifParserEngine_lookaheadWithInt(1, alifParserEngine_expectToken, _p, RPAR) // ")"
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_arg(a_->arg, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_arg(a_->arg, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9580,42 +9909,40 @@ static Arg* paramNoDefault_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// kwds: "**" param_no_default
-static Arg* kwds_rule(AlifParser* _p) { 
+// معامل_كلمات_مفتاحية: "**" معاملات_بدون_قيمة
+static ArgTy kwds_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Arg* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ArgTy res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "**" param_no_default
+	{ // "**" معاملات_بدون_قيمة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Arg* a_{};
+		AlifPToken* literal{};
+		ArgTy a_{};
 
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, DOUBLESTAR)) // "**"
+			(literal = alifParserEngine_expectToken(_p, DOUBLESTAR)) // "**"
 			and
-			(a_ = paramNoDefault_rule(_p)) // param_no_default
+			(a_ = paramNoDefault_rule(_p)) // معاملات_بدون_قيمة
 			)
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9623,179 +9950,158 @@ static Arg* kwds_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif10_loop1: param_maybe_default
-static Seq* alif10_loop1(AlifParser* _p) { 
+// ألف10_حلقة1: معامل_ربما_قيمة
+static ASDLSeq* alif10_loop1(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
 
-	{ // param_with_default
+	{ // معاملات_مع_قيمة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		NameDefaultPair* var_1{};
-		while ((var_1 = paramWithDefault_rule(_p)))
+		NameDefaultPair* var1{};
+		while ((var1 = paramWithDefault_rule(_p)))
 		{
-			res_ = var_1;
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+			res = var1;
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	if (n_ == 0 or _p->errorIndicator) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	if (size == 0 or _p->errorIndicator) {
 		_p->level--;
 		return nullptr;
 	}
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (AlifIntT i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 // ^
 // |
 // |
-// alif9_loop0: param_maybe_default
-static Seq* alif9_loop0(AlifParser* _p) { 
+// ألف9_حلقة0: معامل_ربما_قيمة
+static ASDLSeq* alif9_loop0(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
 
-	{ // param_maybe_default
+	{ // معامل_ربما_قيمة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		NameDefaultPair* var_1{};
-		while ((var_1 = paramMaybeDefault_rule(_p)))
+		NameDefaultPair* var1{};
+		while ((var1 = paramMaybeDefault_rule(_p)))
 		{
-			res_ = var_1;
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+			res = var1;
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (AlifIntT i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 // ^
 // |
 // |
 /*
-	star_etc:
-		> "*" param_no_default param_maybe_default* kwds?
-		> "*" "," param_maybe_default+ kwds?
-		> kwds
+	الباقي_نجمة:
+		> "*" معاملات_بدون_قيمة معامل_ربما_قيمة* معامل_كلمات_مفتاحية?
+		> "*" "," معامل_ربما_قيمة+ معامل_كلمات_مفتاحية?
+		> معامل_كلمات_مفتاحية
 */
 static StarEtc* starEtc_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	StarEtc* res_{};
-	AlifIntT mark_ = _p->mark_;
+	StarEtc* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "*" param_no_default param_maybe_default* kwds?
+	{ // "*" معاملات_بدون_قيمة معامل_ربما_قيمة* معامل_كلمات_مفتاحية?
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Arg* a_{};
-		Seq* b_{};
-		Arg* c_{};
+		AlifPToken* literal{};
+		ArgTy a_{};
+		ASDLSeq* b_{};
+		ArgTy c_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, STAR)) // "*"
+			(literal = alifParserEngine_expectToken(_p, STAR)) // "*"
 			and
-			(a_ = paramNoDefault_rule(_p)) // param_no_default
+			(a_ = paramNoDefault_rule(_p)) // معاملات_بدون_قيمة
 			and
-			(b_ = alif9_loop0(_p)) // param_maybe_default*
+			(b_ = alif9_loop0(_p)) // معامل_ربما_قيمة*
 			and
-			(c_ = kwds_rule(_p), !_p->errorIndicator) // kwds?
+			(c_ = kwds_rule(_p), !_p->errorIndicator) // معامل_كلمات_مفتاحية?
 			)
 		{
-			res_ = alifParserEngine_starEtc(_p, a_, b_, c_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_starEtc(_p, a_, b_, c_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9803,29 +10109,28 @@ static StarEtc* starEtc_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // "*" param_maybe_default+ kwds?
+	{ // "*" معامل_ربما_قيمة+ معامل_كلمات_مفتاحية?
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		AlifPToken* literal_1{};
-		Seq* a_{};
-		Arg* b_{};
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		ASDLSeq* a_{};
+		ArgTy b_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, STAR)) // "*"
+			(literal = alifParserEngine_expectToken(_p, STAR)) // "*"
 			and
-			(literal_1 = alifParserEngine_expectToken(_p, COMMA)) // ","
+			(literal1 = alifParserEngine_expectToken(_p, COMMA)) // ","
 			and
-			(a_ = alif10_loop1(_p)) // param_maybe_default+
+			(a_ = alif10_loop1(_p)) // معامل_ربما_قيمة+
 			and
-			(b_ = kwds_rule(_p), !_p->errorIndicator) // kwds?
+			(b_ = kwds_rule(_p), !_p->errorIndicator) // معامل_كلمات_مفتاحية?
 			)
 		{
-			res_ = alifParserEngine_starEtc(_p, nullptr, a_, b_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_starEtc(_p, nullptr, a_, b_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9833,18 +10138,17 @@ static StarEtc* starEtc_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // kwds
+	{ // معامل_كلمات_مفتاحية
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Arg* a_{};
+		ArgTy a_{};
 		if ((a_ = kwds_rule(_p)))
 		{
-			res_ = alifParserEngine_starEtc(_p, nullptr, nullptr, a_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_starEtc(_p, nullptr, nullptr, a_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -9852,242 +10156,210 @@ static StarEtc* starEtc_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif8_loop1: param_with_default
-static Seq* alif8_loop1(AlifParser* _p) { 
+// ألف8_حلقة1: معاملات_مع_قيمة
+static ASDLSeq* alif8_loop1(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
 
-	{ // param_with_default
+	{ // معاملات_مع_قيمة
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		NameDefaultPair* var1{};
+		while ((var1 = paramWithDefault_rule(_p)))
+		{
+			res = var1;
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
+			}
+			mark = _p->mark;
+		}
+		_p->mark = mark;
+	}
+
+	AlifSizeT size = children.size;
+	if (size == 0 or _p->errorIndicator) {
+		_p->level--;
+		return nullptr;
+	}
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
+		_p->errorIndicator = 1;
+		// alifErr_noMemory();
+		_p->level--;
+		return nullptr;
+	}
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
+
+	_p->level--;
+	return seq;
+}
+// ^
+// |
+// |
+// ألف7_حلقة0: معاملات_مع_قيمة
+static ASDLSeq* alif7_loop0(AlifParser* _p) { 
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	void* res{};
+	AlifIntT mark = _p->mark;
+
+	AlifPArray children{};
+	if (!children.data) {
+		_p->errorIndicator = 1;
+		// alifErr_noMemory();
+		_p->level--;
+		return nullptr;
+	}
+
+	{ // معاملات_مع_قيمة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		NameDefaultPair* var_1{};
 		while ((var_1 = paramWithDefault_rule(_p)))
 		{
-			res_ = var_1;
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+			res = var_1;
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	if (n_ == 0 or _p->errorIndicator) {
-		alifMem_dataFree(children_);
-		_p->level--;
-		return nullptr;
-	}
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (AlifIntT i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 // ^
 // |
 // |
-// alif7_loop0: param_with_default
-static Seq* alif7_loop0(AlifParser* _p) { 
+// ألف6_حلقة1: معاملات_بدون_قيمة
+static ASDLSeq* alif6_loop1(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
 
-	{ // param_with_default
+	{ // معاملات_بدون_قيمة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		NameDefaultPair* var_1{};
-		while ((var_1 = paramWithDefault_rule(_p)))
+		ArgTy var1{};
+		while ((var1 = paramNoDefault_rule(_p)))
 		{
-			res_ = var_1;
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+			res = var1;
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
-		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+	AlifSizeT size = children.size;
+	if (size == 0 or _p->errorIndicator) {
 		_p->level--;
 		return nullptr;
 	}
-	for (AlifIntT i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
+		_p->errorIndicator = 1;
+		// alifErr_noMemory();
+		_p->level--;
+		return nullptr;
+	}
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
-}
-// ^
-// |
-// |
-// alif6_loop1: param_no_default
-static Seq* alif6_loop1(AlifParser* _p) { 
-
-	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
-	if (_p->errorIndicator) { _p->level--; return nullptr; }
-
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
-
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
-		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
-		_p->level--;
-		return nullptr;
-	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
-
-	{ // param_no_default
-		if (_p->errorIndicator) { _p->level--; return nullptr; }
-
-		Arg* var_1{};
-		while ((var_1 = paramNoDefault_rule(_p)))
-		{
-			res_ = var_1;
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
-			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
-		}
-		_p->mark_ = mark_;
-	}
-
-	if (n_ == 0 or _p->errorIndicator) {
-		alifMem_dataFree(children_);
-		_p->level--;
-		return nullptr;
-	}
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
-		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
-		_p->level--;
-		return nullptr;
-	}
-	for (AlifIntT i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
-
-	alifMem_dataFree(children_);
-	_p->level--;
-	return seq_;
+	return seq;
 }
 // ^
 // |
 // |
 /*
-parameters:
-	> param_no_default+ param_with_default* star_etc?
-	> param_with_default+ star_etc?
-	> star_etc
+معاملات:
+	> معاملات_بدون_قيمة+ معاملات_مع_قيمة* الباقي_نجمة؟
+	> معاملات_مع_قيمة+ الباقي_نجمة؟
+	> الباقي_نجمة
 */
-static Arguments* parameters_rule(AlifParser* _p) { 
+static ArgumentsTy parameters_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Arguments* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ArgumentsTy res{};
+	AlifIntT mark = _p->mark;
 
-	{ // param_no_default+ param_with_default* star_etc?
+	{ // معاملات_بدون_قيمة+ معاملات_مع_قيمة* الباقي_نجمة؟
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		ArgSeq* a_{};
-		Seq* b_{};
+		ASDLArgSeq* a_{};
+		ASDLSeq* b_{};
 		StarEtc* c_{};
 		if (
-			(a_ = (ArgSeq*)alif6_loop1(_p)) // param_no_default+
+			(a_ = (ASDLArgSeq*)alif6_loop1(_p)) // معاملات_بدون_قيمة+
 			and
-			(b_ = alif7_loop0(_p)) // param_with_default*
+			(b_ = alif7_loop0(_p)) // معاملات_مع_قيمة*
 			and
-			(c_ = starEtc_rule(_p), !_p->errorIndicator) // star_etc? 
+			(c_ = starEtc_rule(_p), !_p->errorIndicator) // الباقي_نجمة؟ 
 			)
 		{
-			res_ = alifParserEngine_makeArguments(_p, nullptr, nullptr, a_, b_, c_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_makeArguments(_p, nullptr, nullptr, a_, b_, c_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10095,23 +10367,22 @@ static Arguments* parameters_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // param_with_default+ star_etc?
+	{ // معاملات_مع_قيمة+ الباقي_نجمة؟
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Seq* a_{};
+		ASDLSeq* a_{};
 		StarEtc* b_{};
 		if (
-			(a_ = alif8_loop1(_p)) // param_with_default+
+			(a_ = alif8_loop1(_p)) // معاملات_مع_قيمة+
 			and
-			(b_ = starEtc_rule(_p), !_p->errorIndicator) // star_etc? 
+			(b_ = starEtc_rule(_p), !_p->errorIndicator) // الباقي_نجمة؟ 
 			)
 		{
-			res_ = alifParserEngine_makeArguments(_p, nullptr, nullptr, nullptr, a_, b_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_makeArguments(_p, nullptr, nullptr, nullptr, a_, b_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10119,18 +10390,17 @@ static Arguments* parameters_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // star_etc?
+	{ // الباقي_نجمة؟
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		StarEtc* a_{};
 		if ((a_ = starEtc_rule(_p), !_p->errorIndicator))
 		{
-			res_ = alifParserEngine_makeArguments(_p, nullptr, nullptr, nullptr, nullptr, a_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_makeArguments(_p, nullptr, nullptr, nullptr, nullptr, a_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10138,92 +10408,88 @@ static Arguments* parameters_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif8: "import" > "from"
+// ألف8: "استورد" > "من"
 static void* alif8(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "import"
+	{ // "استورد"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		if ((keyword_ = alifParserEngine_expectToken(_p, IMPORT_KW)))
+		AlifPToken* keyword{};
+		if ((keyword = alifParserEngine_expectToken(_p, IMPORT_KW)))
 		{
-			res_ = keyword_;
+			res = keyword;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // "from"
+	{ // "من"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		if ((keyword_ = alifParserEngine_expectToken(_p, FROM_KW)))
+		AlifPToken* keyword{};
+		if ((keyword = alifParserEngine_expectToken(_p, FROM_KW)))
 		{
-			res_ = keyword_;
+			res = keyword;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
-
-// block: NEWLINE INDENT statements DEDENT > simple_stmts
-static StmtSeq* block_rule(AlifParser* _p) { 
+// كتلة: *سطر* *مسافة_طويلة* حالات *مسافة_راجعة* > حالات_بسيطة
+static ASDLStmtSeq* block_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	StmtSeq* res_{};
-	if (alifParserEngine_isMemorized(_p, BLOCK_TYPE, &res_)) {
+	ASDLStmtSeq* res{};
+	if (alifParserEngine_isMemorized(_p, BLOCK_TYPE, &res)) {
 		_p->level--;
-		return res_;
+		return res;
 	}
 
-	AlifIntT mark_ = _p->mark_;
+	AlifIntT mark = _p->mark;
 
-	{ // NEWLINE INDENT statements DEDENT
+	{ // *سطر* *مسافة_طويلة* حالات *مسافة_راجعة*
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		StmtSeq* a_{};
-		AlifPToken* newline_{};
-		AlifPToken* indent_{};
-		AlifPToken* dedent_{};
+		ASDLStmtSeq* a_{};
+		AlifPToken* newline{};
+		AlifPToken* indent{};
+		AlifPToken* dedent{};
 		if (
-			(newline_ = alifParserEngine_expectToken(_p, NEWLINE)) // "NEWLINE"
+			(newline = alifParserEngine_expectToken(_p, NEWLINE)) // "*سطر*"
 			and
-			(indent_ = alifParserEngine_expectToken(_p, INDENT)) // "INDENT"
+			(indent = alifParserEngine_expectToken(_p, INDENT)) // "*مسافة_طويلة*"
 			and
-			(a_ = statements_rule(_p)) // statements
+			(a_ = statements_rule(_p)) // حالات
 			and
-			(dedent_ = alifParserEngine_expectToken(_p, DEDENT)) // "DEDENT"
+			(dedent = alifParserEngine_expectToken(_p, DEDENT)) // "*مسافة_راجعة*"
 			)
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10231,56 +10497,53 @@ static StmtSeq* block_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // simple_stmts
+	{ // حالات_بسيطة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		StmtSeq* a_{};
+		ASDLStmtSeq* a_{};
 		if ((a_ = simpleStmts_rule(_p)))
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
-	alifParserEngine_insertMemo(_p, mark_, BLOCK_TYPE, res_);
+	alifParserEngine_insertMemo(_p, mark, BLOCK_TYPE, res);
 	_p->level--;
-	return res_;
+	return res;
 }
 
-
-static Expression* dottedName_raw(AlifParser* _p) { 
+/*
+	كتلة_النهاية: "نهاية" ":" كتلة
+*/
+static ASDLStmtSeq* finallyBlock_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_{};
-
-	{ // dotted_name "." NAME
+	ASDLStmtSeq* res{};
+	AlifIntT mark = _p->mark;
+	{ // كتلة_النهاية: "نهاية" ":" كتلة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
-
-		AlifPToken* literal_{};
-		Expression* a_{};
-		Expression* b_{};
-
+		AlifPToken* keyword{};
+		AlifPToken* literal{};
+		ASDLStmtSeq* a{};
 		if (
-			(a_ = dottedName_rule(_p)) // dotted_name
+			(keyword = alifParserEngine_expectToken(_p, FINALLY_KW))  // "نهاية"
 			and
-			(literal_ = alifParserEngine_expectToken(_p, DOT)) // "."
+			(literal = alifParserEngine_expectTokenForced(_p, COLON, ":"))  // ":"
 			and
-			(b_ = alifParserEngine_nameToken(_p)) // NAME
+			(a = block_rule(_p))  // block
 			)
 		{
-			res_ = alifParserEngine_joinNamesWithDot(_p, a_, b_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10288,72 +10551,112 @@ static Expression* dottedName_raw(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
-	}
-	{ // NAME
-		if (_p->errorIndicator) { _p->level--; return nullptr; }
-
-		Expression* a_{};
-
-		if ((a_ = alifParserEngine_nameToken(_p)))
-		{
-			res_ = a_;
-			goto done;
-		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
+}
+
+static ExprTy dottedName_raw(AlifParser* _p) { 
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+
+	{ // اسم_نقطة "." *اسم*
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		AlifPToken* literal{};
+		ExprTy a_{};
+		ExprTy b_{};
+
+		if (
+			(a_ = dottedName_rule(_p)) // اسم_نقطة
+			and
+			(literal = alifParserEngine_expectToken(_p, DOT)) // "."
+			and
+			(b_ = alifParserEngine_nameToken(_p)) // *اسم*
+			)
+		{
+			res = alifParserEngine_joinNamesWithDot(_p, a_, b_);
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+	{ // *اسم*
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		ExprTy a_{};
+		if ((a_ = alifParserEngine_nameToken(_p)))
+		{
+			res = a_;
+			goto done;
+		}
+		_p->mark = mark;
+	}
+
+	res = nullptr;
+done:
+	_p->level--;
+	return res;
 }
 
 // Left-recursive
-// dotted_name: dotted_name "." NAME > NAME
-static Expression* dottedName_rule(AlifParser* _p) { 
+// اسم_نقطة: اسم_نقطة "." *اسم* > *اسم*
+static ExprTy dottedName_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	if (alifParserEngine_isMemorized(_p, DOTTED_NAME_TYPE, &res_)) {
+	ExprTy res{};
+	if (alifParserEngine_isMemorized(_p, DOTTED_NAME_TYPE, &res)) {
 		_p->level--;
-		return res_;
+		return res;
 	}
 
-	AlifIntT mark_ = _p->mark_;
-	AlifIntT resMark = _p->mark_;
+	AlifIntT mark = _p->mark;
+	AlifIntT resMar = _p->mark;
 
 	while (true) {
-		AlifIntT var_1 = alifParserEngine_updateMemo(_p, mark_, DOTTED_NAME_TYPE, res_);
-		if (var_1) { _p->level--; return res_; }
+		AlifIntT var1 = alifParserEngine_updateMemo(_p, mark, DOTTED_NAME_TYPE, res);
+		if (var1) { _p->level--; return res; }
 
-		_p->mark_ = mark_;
-		Expression* raw_ = dottedName_raw(_p); // casted to Expression* from void*
+		_p->mark = mark;
+		ExprTy raw = dottedName_raw(_p);
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
-		if (raw_ == nullptr or _p->mark_ <= resMark) break;
+		if (raw == nullptr or _p->mark <= resMar) break;
 
-		resMark = _p->mark_;
-		res_ = raw_;
+		resMar = _p->mark;
+		res = raw;
 	}
 
-	_p->mark_ = resMark;
+	_p->mark = resMar;
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// dotted_as_name: dotted_name ["as" NAME]
-static Alias* dottedAsName_rule(AlifParser* _p) { 
+// اسماء_كـ_نقطة: اسم_نقطة ["ك" *اسم*]
+static AliasTy dottedAsName_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Alias* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	AliasTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -10361,29 +10664,28 @@ static Alias* dottedAsName_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // dotted_name ["as" NAME]
+	{ // اسم_نقطة ["ك" *اسم*]
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
-		Expression* b_{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = dottedName_rule(_p)) // dotted_name
+			(a_ = dottedName_rule(_p)) // اسم_نقطة
 			and
-			(b_ = alif7(_p), !_p->errorIndicator) // ["as" NAME] // _tmp_31_rule same _tmp_28_rule!
+			(b_ = alif7(_p), !_p->errorIndicator) // ["ك" *اسم*] // _tmp_31_rule same _tmp_28_rule!
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_alias(a_->V.name.name, b_ ? b_->V.name.name : nullptr, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_alias(a_->V.name.name, b_ ? b_->V.name.name : nullptr, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10391,146 +10693,131 @@ static Alias* dottedAsName_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif5_loop0: "," dotted_as_name
-static Seq* alif5_loop0(AlifParser* _p) { 
+// ألف5_حلقة0: "," اسم_كـ_نقطة
+static ASDLSeq* alif5_loop0(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
 
-	{ // "," dotted_as_name
+	{ // "," اسم_كـ_نقطة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifPToken* literal_{};
-		Alias* element_{};
+		AliasTy element_{};
 		while (
 			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
 			and
-			(element_ = dottedAsName_rule(_p)) // dotted_as_name
+			(element_ = dottedAsName_rule(_p)) // اسم_كـ_نقطة
 			)
 		{
-			res_ = element_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = element_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
-				alifMem_dataFree(children_);
 				_p->level--;
 				return nullptr;
 			}
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (AlifIntT i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 //	^
 //	|
 //	|
-// alif3_gather: dotted_as_name alif5_loop0
-static Seq* alif3_gather(AlifParser* _p) { 
+// ألف3_تجميع: اسم_كـ_نقطة ألف5_حلقة0
+static ASDLSeq* alif3_gather(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Seq* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ASDLSeq* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // dotted_as_name alif5_loop0
+	{ // اسم_كـ_نقطة ألف5_حلقة0
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Alias* element_{};
-		Seq* seq_{};
+		AliasTy element_{};
+		ASDLSeq* seq_{};
 		if (
-			(element_ = dottedAsName_rule(_p)) // dotted_as_name
+			(element_ = dottedAsName_rule(_p)) // اسم_كـ_نقطة
 			and
-			(seq_ = alif5_loop0(_p)) // alif5_loop0
+			(seq_ = alif5_loop0(_p)) // ألف5_حلقة0
 			)
 		{
-			res_ = alifParserEngine_seqInsertInFront(_p, element_, seq_);
+			res = alifParserEngine_seqInsertInFront(_p, element_, seq_);
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 //	^
 //	|
 //	|
-// dotted_as_names: ",".dotted_as_name+
-static AliasSeq* dottedAsNames_rule(AlifParser* _p) { 
+// اسماء_كـ_نقطة: ",".اسم_كـ_نقطة+
+static ASDLAliasSeq* dottedAsNames_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	AliasSeq* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ASDLAliasSeq* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // ",".dotted_as_name+
+	{ // ",".اسماء_كـ_نقطة+
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AliasSeq* a_{};
-		if ((a_ = (AliasSeq*)alif3_gather(_p)))
+		ASDLAliasSeq* a_{};
+		if ((a_ = (ASDLAliasSeq*)alif3_gather(_p)))
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10538,41 +10825,39 @@ static AliasSeq* dottedAsNames_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif7: "as" NAME
-static Expression* alif7(AlifParser* _p) { 
+// ألف7: "ك" *اسم*
+static ExprTy alif7(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "as" NAME
+	{ // "ك" *اسم*
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		Expression* a_{};
+		AlifPToken* keyword{};
+		ExprTy a_{};
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, AS_KW)) // "as"
+			(keyword = alifParserEngine_expectToken(_p, AS_KW)) // "ك"
 			and
-			(a_ = alifParserEngine_nameToken(_p)) // NAME
+			(a_ = alifParserEngine_nameToken(_p)) // *اسم*
 			)
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10580,27 +10865,26 @@ static Expression* alif7(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 //	^
 //	|
 //	|
-// import_from_as_name: NAME ["as" NAME]
-static Alias* importFromAsName_rule(AlifParser* _p) { 
+// استورد_كـ_اسم_من: *اسم* ["ك" *اسم*]
+static AliasTy importFromAsName_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Alias* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	AliasTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -10608,18 +10892,18 @@ static Alias* importFromAsName_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // NAME["as" NAME]
+	{ // *اسم*["ك" *اسم*]
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
-		Expression* b_{};
+		ExprTy a_{};
+		ExprTy b_{};
 		if (
-			(a_ = alifParserEngine_nameToken(_p)) // NAME
+			(a_ = alifParserEngine_nameToken(_p)) // *اسم*
 			and
-			(b_ = alif7(_p), !_p->errorIndicator) // ["as" NAME]
+			(b_ = alif7(_p), !_p->errorIndicator) // ["ك" *اسم*]
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -10628,10 +10912,9 @@ static Alias* importFromAsName_rule(AlifParser* _p) {
 			AlifIntT endLineNo = token_->endLineNo;
 			AlifIntT endColOffset = token_->endColOffset;
 
-			res_ = alifAST_alias(a_->V.name.name, b_ ? b_->V.name.name : nullptr, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_alias(a_->V.name.name, b_ ? b_->V.name.name : nullptr, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10639,147 +10922,132 @@ static Alias* importFromAsName_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif4_loop0: "," import_from_as_name
-static Seq* alif4_loop0(AlifParser* _p) { 
+// ألف4_حلقة0: "," استورد_كـ_اسم_من
+static ASDLSeq* alif4_loop0(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
 
-	{ // "," import_from_as_name
+	{ // "," استورد_كـ_اسم_من
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Alias* element_{};
+		AlifPToken* literal{};
+		AliasTy element{};
 		while (
-			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
+			(literal = alifParserEngine_expectToken(_p, COMMA)) // ","
 			and
-			(element_ = importFromAsName_rule(_p)) // import_from_as_name
+			(element = importFromAsName_rule(_p)) // استورد_كـ_اسم_من
 			)
 		{
-			res_ = element_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = element;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
-				alifMem_dataFree(children_);
 				_p->level--;
 				return nullptr;
 			}
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (AlifIntT i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 //	^
 //	|
 //	|
-// alif2_gather: import_from_as_name alif4_loop0
-static Seq* alif2_gather(AlifParser* _p) { 
+// ألف2_تجميع: استورد_كـ_اسم_من ألف4_حلقة0
+static ASDLSeq* alif2_gather(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Seq* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ASDLSeq* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // import_from_as_name alif4_loop0
+	{ // استورد_كـ_اسم_من ألف4_حلقة0
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Alias* element_{};
-		Seq* seq_{};
+		AliasTy element{};
+		ASDLSeq* seq_{};
 
 		if (
-			(element_ = importFromAsName_rule(_p)) // import_from_as_name
+			(element = importFromAsName_rule(_p)) // استورد_كـ_اسم_من
 			and
-			(seq_ = alif4_loop0(_p)) // alif4_loop0
+			(seq_ = alif4_loop0(_p)) // ألف4_حلقة0
 			)
 		{
-			res_ = alifParserEngine_seqInsertInFront(_p, element_, seq_);
+			res = alifParserEngine_seqInsertInFront(_p, element, seq_);
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 //	^
 //	|
 //	|
-// import_from_as_names: ",".import_from_as_name+
-static AliasSeq* importFromAsNames_rule(AlifParser* _p) { 
+// استورد_كـ_اسماء_من: ",".استورد_كـ_اسم_من+
+static ASDLAliasSeq* importFromAsNames_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	AliasSeq* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ASDLAliasSeq* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // ",".import_from_as_name+
+	{ // ",".استورد_كـ_اسم_من+
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AliasSeq* a_{};
-		if ((a_ = (AliasSeq*)alif2_gather(_p)))
+		ASDLAliasSeq* a_{};
+		if ((a_ = (ASDLAliasSeq*)alif2_gather(_p)))
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10787,31 +11055,30 @@ static AliasSeq* importFromAsNames_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
 /*
-	import_from_targets:
-		> "(" import_from_as_names ","? ")"
-		> import_from_as_names !","
+	استورد_من_أهداف:
+		> "(" استورد_كـ_اسماء_من ","? ")"
+		> استورد_كـ_اسماء_من !","
 		> "*"
 */
-static AliasSeq* importFromTargets_rule(AlifParser* _p) { 
+static ASDLAliasSeq* importFromTargets_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	AliasSeq* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	ASDLAliasSeq* res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -10819,30 +11086,29 @@ static AliasSeq* importFromTargets_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // "(" import_from_as_names ","? ")"
+	{ // "(" استورد_كـ_اسماء_من ","? ")"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		AlifPToken* literal_1{};
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
 		void* optVar{};
-		AliasSeq* a_{};
+		ASDLAliasSeq* a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, LPAR)) // "("
+			(literal = alifParserEngine_expectToken(_p, LPAR)) // "("
 			and
-			(a_ = importFromAsNames_rule(_p)) // import_from_as_names
+			(a_ = importFromAsNames_rule(_p)) // استورد_كـ_اسماء_من
 			and
 			(optVar = alifParserEngine_expectToken(_p, COMMA), !_p->errorIndicator) // ","?
 			and
-			(literal_1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
+			(literal1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
 			)
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10850,22 +11116,21 @@ static AliasSeq* importFromTargets_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // import_from_as_names !","
+	{ // استورد_كـ_اسماء_من !","
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AliasSeq* a_{};
+		ASDLAliasSeq* a_{};
 		if (
-			(a_ = importFromAsNames_rule(_p)) // import_from_as_names
+			(a_ = importFromAsNames_rule(_p)) // استورد_كـ_اسماء_من
 			and
 			alifParserEngine_lookaheadWithInt(0, alifParserEngine_expectToken, _p, COMMA) // ","?
 			)
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10873,13 +11138,13 @@ static AliasSeq* importFromTargets_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 	{ // "*"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		if ((literal_ = alifParserEngine_expectToken(_p, STAR))) // "*"
+		AlifPToken* literal{};
+		if ((literal = alifParserEngine_expectToken(_p, STAR))) // "*"
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
 			if (token_ == nullptr) { _p->level--; return nullptr; }
@@ -10887,10 +11152,9 @@ static AliasSeq* importFromTargets_rule(AlifParser* _p) {
 			AlifIntT endLineNo = token_->endLineNo;
 			AlifIntT endColOffset = token_->endColOffset;
 
-			res_ = (AliasSeq*)alifParserEngine_singletonSeq(_p, (Alias*)alifParserEngine_aliasForStar(_p, EXTRA));
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = (ASDLAliasSeq*)alifParserEngine_singletonSeq(_p, (AliasTy)alifParserEngine_aliasForStar(_p, EXTRA));
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10898,26 +11162,25 @@ static AliasSeq* importFromTargets_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// import_from: "from" dotted_name "import" import_from_targets
-static Statement* importFrom_rule(AlifParser* _p) { 
+// استورد_من: "من" اسم_نقطة "استورد" استورد_من_أهداف
+static StmtTy importFrom_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Statement* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	StmtTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -10925,35 +11188,34 @@ static Statement* importFrom_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // "from" dotted_name "import" import_from_targets
+	{ // "من" اسم_نقطة "استورد" استورد_من_أهداف
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		AlifPToken* keyword_1{};
-		Expression* a_{};
-		AliasSeq* b_{};
+		AlifPToken* keyword{};
+		AlifPToken* keyword1{};
+		ExprTy a_{};
+		ASDLAliasSeq* b_{};
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, FROM_KW)) // "from"
+			(keyword = alifParserEngine_expectToken(_p, FROM_KW)) // "من"
 			and
-			(a_ = dottedName_rule(_p)) // dotted_name
+			(a_ = dottedName_rule(_p)) // اسم_نقطة
 			and
-			(keyword_1 = alifParserEngine_expectToken(_p, IMPORT_KW)) // "import"
+			(keyword1 = alifParserEngine_expectToken(_p, IMPORT_KW)) // "استورد"
 			and
-			(b_ = importFromTargets_rule(_p)) // import_from_targets
+			(b_ = importFromTargets_rule(_p)) // استورد_من_أهداف
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_importFrom(a_->V.name.name, b_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_importFrom(a_->V.name.name, b_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -10961,26 +11223,25 @@ static Statement* importFrom_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// import_name: "import" dotted_as_names
-static Statement* importName_rule(AlifParser* _p) { 
+// استورد_اسم: "استورد" اسماء_كـ_نقطة
+static StmtTy importName_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Statement* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	StmtTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -10988,29 +11249,28 @@ static Statement* importName_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // "import" dotted_as_names
+	{ // "استورد" اسماء_نقطة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		AliasSeq* a_{};
+		AlifPToken* keyword{};
+		ASDLAliasSeq* a_{};
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, IMPORT_KW)) // "import"
+			(keyword = alifParserEngine_expectToken(_p, IMPORT_KW)) // "استورد"
 			and
-			(a_ = dottedAsNames_rule(_p)) // dotted_as_names
+			(a_ = dottedAsNames_rule(_p)) // اسماء_كـ_نقطة
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_import(a_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_import(a_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11018,65 +11278,63 @@ static Statement* importName_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// import_stmt: > import_name > import_from
-static Statement* importStmt_rule(AlifParser* _p) { 
+// حالة_استورد: > استورد_اسم > استورد_من
+static StmtTy importStmt_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Statement* res_{};
-	AlifIntT mark_ = _p->mark_;
-	{ // import_name
+	StmtTy res{};
+	AlifIntT mark = _p->mark;
+	{ // استورد_اسم
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Statement* a_{};
+		StmtTy a_{};
 		if ((a_ = importName_rule(_p)))
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // import_from
+	{ // استورد_من
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Statement* a_{};
+		StmtTy a_{};
 		if ((a_ = importFrom_rule(_p)))
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// yield_stmt: yield_expr
-static Statement* yieldStmt_rule(AlifParser* _p) { 
+// حالة_ولد: تعبير_ولد
+static StmtTy yieldStmt_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Statement* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	StmtTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -11084,13 +11342,13 @@ static Statement* yieldStmt_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // yield_expr
+	{ // تعبير_ولد
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
+		ExprTy a_{};
 		if ((a_ = yieldExpr_rule(_p)))
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -11098,10 +11356,9 @@ static Statement* yieldStmt_rule(AlifParser* _p) {
 
 			AlifIntT endLineNo = token_->endLineNo;
 			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_expr(a_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_expr(a_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11109,26 +11366,25 @@ static Statement* yieldStmt_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// del_stmt: "del" del_targets &(NEWLINE)
-static Statement* delStmt_rule(AlifParser* _p) { 
+// حالة_حذف: "حذف" حذف_أهداف &(*سطر*)
+static StmtTy delStmt_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Statement* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	StmtTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -11136,20 +11392,20 @@ static Statement* delStmt_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // "del" del_targets &(NEWLINE)
+	{ // "حذف" حذف_أهداف &(*سطر* )
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		ExprSeq* a_{};
+		AlifPToken* keyword{};
+		ASDLExprSeq* a_{};
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, DEL_KW)) // "del"
+			(keyword = alifParserEngine_expectToken(_p, DEL_KW)) // "احذف"
 			and
-			(a_ = delTargets_rule(_p)) // del_targets
+			(a_ = delTargets_rule(_p)) // حذف_أهداف
 			and
-			alifParserEngine_lookaheadWithInt(1, alifParserEngine_expectToken, _p, NEWLINE) // "NEWLINE" // instade of _tmp_22_rule that return ";" or "NEWLINE"
+			alifParserEngine_lookaheadWithInt(1, alifParserEngine_expectToken, _p, NEWLINE) // "*سطر*" // instade of _tmp_22_rule that return ";" or "NEWLINE"
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -11157,10 +11413,9 @@ static Statement* delStmt_rule(AlifParser* _p) {
 
 			AlifIntT endLineNo = token_->endLineNo;
 			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_delete(a_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_delete(a_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11168,134 +11423,120 @@ static Statement* delStmt_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif3_loop0: "," NAME
-static Seq* alif3_loop0(AlifParser* _p) { 
+// ألف3_حلقة0: "," *اسم*
+static ASDLSeq* alif3_loop0(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
 
-	{ // "," NAME
+	{ // "," *اسم*
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifPToken* literal_{};
-		Expression* element_{};
+		ExprTy element_{};
 		while (
 			(literal_ = alifParserEngine_expectToken(_p, COMMA)) // ","
 			and
-			(element_ = alifParserEngine_nameToken(_p)) // NAME
+			(element_ = alifParserEngine_nameToken(_p)) // *اسم*
 			)
 		{
-			res_ = element_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = element_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
-				alifMem_dataFree(children_);
 				_p->level--;
 				return nullptr;
 			}
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (AlifIntT i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 //	^
 //	|
 //	|
-static Seq* alif1_gather(AlifParser* _p) { 
+static ASDLSeq* alif1_gather(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Seq* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ASDLSeq* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // NAME alif3_loop0
+	{ // *اسم* ألف3_حلقة0
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
-		Expression* element_{};
-		Seq* seq_{};
+		ExprTy element{};
+		ASDLSeq* seq{};
 		if (
-			(element_ = alifParserEngine_nameToken(_p)) // NAME
+			(element = alifParserEngine_nameToken(_p)) // *اسم*
 			and
-			(seq_ = alif3_loop0(_p)) // alif3_loop0
+			(seq = alif3_loop0(_p)) // ألف3_حلقة0
 			)
 		{
-			res_ = alifParserEngine_seqInsertInFront(_p, element_, seq_);
+			res = alifParserEngine_seqInsertInFront(_p, element, seq);
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 //	^
 //	|
 //	|
-// global_stmt: "global" ",".NAME+
-static Statement* globalStmt_rule(AlifParser* _p) { 
+// حالة_عام: "عام" ",".*اسم*+
+static StmtTy globalStmt_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Statement* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	StmtTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -11303,29 +11544,28 @@ static Statement* globalStmt_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // "global" ",".NAME+
+	{ // "عام" ",".*اسم*+
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		ExprSeq* a_{};
+		AlifPToken* keyword{};
+		ASDLExprSeq* a_{};
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, GLOBAL_KW)) // "global"
+			(keyword = alifParserEngine_expectToken(_p, GLOBAL_KW)) // "عام"
 			and
-			(a_ = (ExprSeq*)alif1_gather(_p)) // ",".NAME+
+			(a_ = (ASDLExprSeq*)alif1_gather(_p)) // ",".*اسم*+
 			)
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_global((IdentifierSeq*)alifParserEngine_mapNamesToIds(_p, a_), EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_global((ASDLIdentifierSeq*)alifParserEngine_mapNamesToIds(_p, a_), EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11333,25 +11573,24 @@ static Statement* globalStmt_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
-// nonlocal_stmt: "nonlocal" ",".NAME+
-static Statement* nonlocalStmt_rule(AlifParser* _p) { 
+// حالة_نطاق: "نطاق" ",".*اسم*+
+static StmtTy nonlocalStmt_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Statement* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	StmtTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -11359,18 +11598,18 @@ static Statement* nonlocalStmt_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // "nonlocal" ",".NAME+
+	{ // "نطاق" ",".*اسم*+
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifPToken* keyword_{};
-		ExprSeq* a_{};
+		ASDLExprSeq* a_{};
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, NONLOCALE_KW)) // "nonlocal"
+			(keyword_ = alifParserEngine_expectToken(_p, NONLOCALE_KW)) // "نطاق"
 			and
-			(a_ = (ExprSeq*)alif1_gather(_p)) // ",".NAME+
+			(a_ = (ASDLExprSeq*)alif1_gather(_p)) // ",".*اسم*+
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -11378,10 +11617,9 @@ static Statement* nonlocalStmt_rule(AlifParser* _p) {
 
 			AlifIntT endLineNo = token_->endLineNo;
 			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_nonlocal((IdentifierSeq*)alifParserEngine_mapNamesToIds(_p, a_), EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_nonlocal((ASDLIdentifierSeq*)alifParserEngine_mapNamesToIds(_p, a_), EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11389,25 +11627,24 @@ static Statement* nonlocalStmt_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
-// return_stmt: "return" star_expressions?
-static Statement* returnStmt_rule(AlifParser* _p) { 
+// حالة_ارجع: "ارجع" تعبيرات_نجمة?
+static StmtTy returnStmt_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Statement* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	StmtTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -11415,18 +11652,18 @@ static Statement* returnStmt_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // "return" star_expression?
+	{ // "ارجع" تعبيرات_نجمة?
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifPToken* keyword_{};
-		Expression* a_{}; // casted to Expression*
+		ExprTy a_{};
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, RETURN_KW)) // "return"
+			(keyword_ = alifParserEngine_expectToken(_p, RETURN_KW)) // "ارجع"
 			and
-			(a_ = starExpressions_rule(_p), !_p->errorIndicator) // star_expressions?
+			(a_ = starExpressions_rule(_p), !_p->errorIndicator) // تعبيرات_نجمة?
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -11434,10 +11671,9 @@ static Statement* returnStmt_rule(AlifParser* _p) {
 
 			AlifIntT endLineNo = token_->endLineNo;
 			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_return(a_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_return(a_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11445,18 +11681,17 @@ static Statement* returnStmt_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 /*
-	augassign:
+	إسناد_رجعي:
 		> "+="
 		> "-="
 		> "*="
@@ -11474,19 +11709,18 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	AugOperator* res_{};
-	AlifIntT mark_ = _p->mark_;
+	AugOperator* res{};
+	AlifIntT mark = _p->mark;
 
 	{ // "+="
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		if ((literal_ = alifParserEngine_expectToken(_p, PLUSEQUAL))) // "+="
+		AlifPToken* literal{};
+		if ((literal = alifParserEngine_expectToken(_p, PLUSEQUAL))) // "+="
 		{
-			res_ = alifParserEngine_augOperator(_p, Operator::Add);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_augOperator(_p, Operator_::Add);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11494,18 +11728,17 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 	{ // "-="
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		if ((literal_ = alifParserEngine_expectToken(_p, MINUSEQUAL))) // "-="
+		AlifPToken* literal{};
+		if ((literal = alifParserEngine_expectToken(_p, MINUSEQUAL))) // "-="
 		{
-			res_ = alifParserEngine_augOperator(_p, Operator::Sub);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_augOperator(_p, Operator_::Sub);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11513,18 +11746,17 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 	{ // "*="
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		if ((literal_ = alifParserEngine_expectToken(_p, STAREQUAL))) // "*="
+		AlifPToken* literal{};
+		if ((literal = alifParserEngine_expectToken(_p, STAREQUAL))) // "*="
 		{
-			res_ = alifParserEngine_augOperator(_p, Operator::Mult);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_augOperator(_p, Operator_::Mult);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11532,18 +11764,17 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 	{ // "/="
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		if ((literal_ = alifParserEngine_expectToken(_p, SLASHEQUAL))) // "/="
+		AlifPToken* literal{};
+		if ((literal = alifParserEngine_expectToken(_p, SLASHEQUAL))) // "/="
 		{
-			res_ = alifParserEngine_augOperator(_p, Operator::Div);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_augOperator(_p, Operator_::Div);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11551,18 +11782,17 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 	{ // "^="
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		if ((literal_ = alifParserEngine_expectToken(_p, CIRCUMFLEXEQUAL))) // "^="
+		AlifPToken* literal{};
+		if ((literal = alifParserEngine_expectToken(_p, CIRCUMFLEXEQUAL))) // "^="
 		{
-			res_ = alifParserEngine_augOperator(_p, Operator::Pow);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_augOperator(_p, Operator_::Pow);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11570,18 +11800,17 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 	{ // "/*="
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		if ((literal_ = alifParserEngine_expectToken(_p, SLASHSTAREQUAL))) // "/*="
+		AlifPToken* literal{};
+		if ((literal = alifParserEngine_expectToken(_p, SLASHSTAREQUAL))) // "/*="
 		{
-			res_ = alifParserEngine_augOperator(_p, Operator::Mod);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_augOperator(_p, Operator_::FloorDiv);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11589,18 +11818,17 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 	{ // "//="
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		if ((literal_ = alifParserEngine_expectToken(_p, DOUBLESLASHEQUAL))) // "//="
+		AlifPToken* literal{};
+		if ((literal = alifParserEngine_expectToken(_p, DOUBLESLASHEQUAL))) // "//="
 		{
-			res_ = alifParserEngine_augOperator(_p, Operator::FloorDiv);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_augOperator(_p, Operator_::Mod);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11608,18 +11836,17 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 	{ // "&="
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		if ((literal_ = alifParserEngine_expectToken(_p, AMPEREQUAL))) // "&="
+		AlifPToken* literal{};
+		if ((literal = alifParserEngine_expectToken(_p, AMPEREQUAL))) // "&="
 		{
-			res_ = alifParserEngine_augOperator(_p, Operator::BitAnd);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_augOperator(_p, Operator_::BitAnd);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11627,18 +11854,17 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 	{ // "|="
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		if ((literal_ = alifParserEngine_expectToken(_p, VBAREQUAL))) // "|="
+		AlifPToken* literal{};
+		if ((literal = alifParserEngine_expectToken(_p, VBAREQUAL))) // "|="
 		{
-			res_ = alifParserEngine_augOperator(_p, Operator::BitOr);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_augOperator(_p, Operator_::BitOr);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11646,18 +11872,17 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 	{ // "^^="
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		if ((literal_ = alifParserEngine_expectToken(_p, DOUBLECIRCUMFLEXEQUAL))) // "^^="
+		AlifPToken* literal{};
+		if ((literal = alifParserEngine_expectToken(_p, DOUBLECIRCUMFLEXEQUAL))) // "^^="
 		{
-			res_ = alifParserEngine_augOperator(_p, Operator::BitXor);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_augOperator(_p, Operator_::BitXor);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11665,18 +11890,17 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 	{ // "<<="
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		if ((literal_ = alifParserEngine_expectToken(_p, LSHIFTEQUAL))) // "<<="
+		AlifPToken* literal{};
+		if ((literal = alifParserEngine_expectToken(_p, LSHIFTEQUAL))) // "<<="
 		{
-			res_ = alifParserEngine_augOperator(_p, Operator::LShift);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_augOperator(_p, Operator_::LShift);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11684,18 +11908,17 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 	{ // ">>="
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		if ((literal_ = alifParserEngine_expectToken(_p, RSHIFTEQUAL))) // ">>="
+		AlifPToken* literal{};
+		if ((literal = alifParserEngine_expectToken(_p, RSHIFTEQUAL))) // ">>="
 		{
-			res_ = alifParserEngine_augOperator(_p, Operator::RShift);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifParserEngine_augOperator(_p, Operator_::RShift);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11703,41 +11926,40 @@ static AugOperator* augAssign_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
+	res = nullptr;
 
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif6: star_targets "="
+// ألف6: أهداف_نجمة "="
 static void* alif6(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // star_targets "="
+	{ // أهداف_نجمة "="
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		ExprTy a_{};
 		if (
-			(a_ = starTargets_rule(_p)) // star_targets
+			(a_ = starTargets_rule(_p)) // أهداف_نجمة
 			and
-			(literal_ = alifParserEngine_expectToken(_p, EQUAL)) // "="
+			(literal = alifParserEngine_expectToken(_p, EQUAL)) // "="
 			)
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11745,138 +11967,127 @@ static void* alif6(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
+	res = nullptr;
 
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 //	^
 //	|
 //	|
-// alif2_loop1: (star_targets "=")
-static Seq* alif2_loop1(AlifParser* _p) { 
+// ألف2_حلقة1: (أهداف_نجمة "=")
+static ASDLSeq* alif2_loop1(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	void** children_ = (void**)alifMem_dataAlloc(sizeof(void*));
-	if (!children_) {
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	AlifUSizeT capacity_ = 1;
-	AlifUSizeT n_ = 0;
 
-	{ // (star_targets "=")
+	{ // (أهداف_نجمة "=")
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		void* var_1{};
-		while ((var_1 = alif6(_p))) // star_targets "="
+		void* var1{};
+		while ((var1 = alif6(_p))) // أهداف_نجمة "="
 		{
-			res_ = var_1;
-			if (n_ == capacity_) {
-				capacity_ *= 2;
-				void** newChildren = (void**)alifMem_dataRealloc(children_, capacity_ * sizeof(void*));
-				if (!newChildren) {
-					alifMem_dataFree(children_);
-					_p->errorIndicator = 1;
-					// Memory Error - No Memory alifError_noMemory
-					_p->level--;
-					return nullptr;
-				}
-				children_ = newChildren;
+			res = var1;
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
 			}
-			children_[n_++] = res_;
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	if (n_ == 0 or _p->errorIndicator) {
-		alifMem_dataFree(children_);
+	AlifSizeT size = children.size;
+	if (size == 0 or _p->errorIndicator) {
 		_p->level--;
 		return nullptr;
 	}
-	Seq* seq_ = (Seq*)alifNew_genericSeq(n_, _p->astMem);
-	if (!seq_) {
-		alifMem_dataFree(children_);
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (AlifIntT i = 0; i < n_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
-	alifMem_dataFree(children_);
 	_p->level--;
-	return seq_;
+	return seq;
 }
 //	^
 //	|
 //	|
-// alif5: yield_expr > star_expressions
-static Expression* alif5(AlifParser* _p) { 
+// ألف5: تعبير_ولد > تعبيرات_نجمة
+static ExprTy alif5(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
 
-	{ // yield_expr
+	{ // تعبير_ولد
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
+		ExprTy a_{};
 		if ((a_ = yieldExpr_rule(_p)))
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // star_expressions
+	{ // تعبيرات_نجمة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
+		ExprTy a_{};
 		if ((a_ = starExpressions_rule(_p)))
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 //	^
 //	|
 //	|
 /*
-assignment:
-	> (star_targets "=")+ (yield_expr > star_expressions) !"="
-	> single_target augassign ~ (yield_expr > star_expressions)
+إسناد:
+	> (أهداف_نجمة "=")+ (تعبير_ولد > تعبيرات_نجمة) !"="
+	> هدف إسناد_رجعي ~ (تعبير_ولد > تعبيرات_نجمة)
 */
-static Statement* assignment_rule(AlifParser* _p) { 
+static StmtTy assignment_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Statement* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	StmtTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -11884,18 +12095,18 @@ static Statement* assignment_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // (star_targets "=") + (yield_expr > star_expressions) !"="
+	{ // (تعبيرات_نجمة "=") + (تعبير_ولد > تعبيرات_نجمة) !"="
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		ExprSeq* a_{};
-		Expression* b_{}; // casted to Expression*
+		ASDLExprSeq* a_{};
+		ExprTy b_{};
 		if (
-			(a_ = (ExprSeq*)alif2_loop1(_p)) // (star_targets "=")+ // casted to ExprSeq*
+			(a_ = (ASDLExprSeq*)alif2_loop1(_p)) // (أهداف_نجمة "=")+
 			and
-			(b_ = alif5(_p)) // // yield_expr > star_expressions
+			(b_ = alif5(_p)) // تعبير_ولد > تعبيرات_نجمة
 			and
 			alifParserEngine_lookaheadWithInt(0, alifParserEngine_expectToken, _p, EQUAL) // !"="
 			)
@@ -11905,10 +12116,9 @@ static Statement* assignment_rule(AlifParser* _p) {
 
 			AlifIntT endLineNo = token_->endLineNo;
 			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_assign(a_, b_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_assign(a_, b_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11916,23 +12126,23 @@ static Statement* assignment_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // single_target augassign ~ (yield_expr > star_expressions)
+	{ // هدف إسناد_رجعي ~ (تعبير_ولد > تعبيرات_نجمة)
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifIntT cutVar = 0;
-		Expression* a_{};
+		ExprTy a_{};
 		AugOperator* b_{};
-		Expression* c_{}; // casted to Expression*
+		ExprTy c_{};
 		if (
-			(a_ = singleTarget_rule(_p)) // single_target
+			(a_ = singleTarget_rule(_p)) // هدف
 			and
-			(b_ = augAssign_rule(_p)) // augassign
+			(b_ = augAssign_rule(_p)) // إسناد_رجعي
 			and
 			(cutVar = 1)
 			and
-			(c_ = alif5(_p)) // yield_expr > star_expression // _tmp_16_rule same _tmp_15_rule !?
+			(c_ = alif5(_p)) // تعبير_ولد > تعبير_نجمة
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -11940,10 +12150,9 @@ static Statement* assignment_rule(AlifParser* _p) {
 
 			AlifIntT endLineNo = token_->endLineNo;
 			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_augAssign(a_, b_->type, c_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_augAssign(a_, b_->type, c_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -11951,30 +12160,30 @@ static Statement* assignment_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
+	res = nullptr;
 
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
 /*
-	function_def_raw:
-		> "def" NAME "(" params? ")" ":" block
-		> "async" "def" NAME "(" params? ")" ":" block
+	تعريف_دالة:
+		> "دالة" *اسم* "(" معاملات_? ")" ":" كتلة
+		> "مزامنة" "دالة" *اسم* "(" معاملات_? ")" ":" كتلة
 */
-static Statement* functionDef_rule(AlifParser* _p) { 
+static StmtTy functionDef_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Statement* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	StmtTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -11982,34 +12191,34 @@ static Statement* functionDef_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // "def" NAME "(" params? ")" ":" block
+	{ // "دالة" *اسم* "(" معاملات_? ")" ":" كتلة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		AlifPToken* literal_{};
-		AlifPToken* literal_1{};
-		AlifPToken* literal_2{};
-		Expression* a_{};
-		Arguments* b_{};
-		StmtSeq* c_{};
+		AlifPToken* keyword{};
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		AlifPToken* literal2{};
+		ExprTy a_{};
+		ArgumentsTy b_{};
+		ASDLStmtSeq* c_{};
 
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, FUNC_KW)) // "def"
+			(keyword = alifParserEngine_expectToken(_p, FUNC_KW)) // "دالة"
 			and
-			(a_ = alifParserEngine_nameToken(_p)) // NAME
+			(a_ = alifParserEngine_nameToken(_p)) // *اسم*
 			and
-			(literal_ = alifParserEngine_expectTokenForced(_p, LPAR, L"(")) // "("
+			(literal = alifParserEngine_expectTokenForced(_p, LPAR, "(")) // "("
 			and
-			(b_ = parameters_rule(_p)) // parameters?
+			(b_ = parameters_rule(_p)) // معاملات?
 			and
-			(literal_1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
+			(literal1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
 			and
-			(literal_2 = alifParserEngine_expectTokenForced(_p, COLON, L":")) // ":"
+			(literal2 = alifParserEngine_expectTokenForced(_p, COLON, ":")) // ":"
 			and
-			(c_ = block_rule(_p)) // block
+			(c_ = block_rule(_p)) // كتلة
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -12017,10 +12226,9 @@ static Statement* functionDef_rule(AlifParser* _p) {
 
 			AlifIntT endLineNo = token_->endLineNo;
 			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_functionDef(a_->V.name.name, b_ ? b_ : (Arguments*)alifParserEngine_emptyArguments(_p), c_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_functionDef(a_->V.name.name, b_ ? b_ : (ArgumentsTy)alifParserEngine_emptyArguments(_p), c_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -12028,9 +12236,9 @@ static Statement* functionDef_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // "async" "def" NAME "(" params? ")" ":" block
+	{ // "مزامنة" "دالة" *اسم* "(" معاملات_؟ ")" ":" كتلة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifPToken* keyword_{};
@@ -12038,26 +12246,26 @@ static Statement* functionDef_rule(AlifParser* _p) {
 		AlifPToken* literal_{};
 		AlifPToken* literal_1{};
 		AlifPToken* literal_2{};
-		Expression* a_{};
-		Arguments* b_{};
-		StmtSeq* c_{};
+		ExprTy a_{};
+		ArgumentsTy b_{};
+		ASDLStmtSeq* c_{};
 
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, CLASS_KW)) // "async"
+			(keyword_ = alifParserEngine_expectToken(_p, CLASS_KW)) // "مزامنة"
 			and
-			(keyword_1 = alifParserEngine_expectToken(_p, FUNC_KW)) // "def"
+			(keyword_1 = alifParserEngine_expectToken(_p, FUNC_KW)) // "دالة"
 			and
-			(a_ = alifParserEngine_nameToken(_p)) // NAME
+			(a_ = alifParserEngine_nameToken(_p)) // *اسم*
 			and
-			(literal_ = alifParserEngine_expectTokenForced(_p, LPAR, L"(")) // "("
+			(literal_ = alifParserEngine_expectTokenForced(_p, LPAR, "(")) // "("
 			and
-			(b_ = parameters_rule(_p)) // parameters?
+			(b_ = parameters_rule(_p)) // معاملات؟
 			and
 			(literal_1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
 			and
-			(literal_2 = alifParserEngine_expectTokenForced(_p, COLON, L":")) // ":"
+			(literal_2 = alifParserEngine_expectTokenForced(_p, COLON, ":")) // ":"
 			and
-			(c_ = block_rule(_p)) // block
+			(c_ = block_rule(_p)) // كتلة
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -12065,10 +12273,9 @@ static Statement* functionDef_rule(AlifParser* _p) {
 
 			AlifIntT endLineNo = token_->endLineNo;
 			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_asyncFunctionDef(a_->V.name.name, b_ ? b_ : (Arguments*)alifParserEngine_emptyArguments(_p), c_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_asyncFunctionDef(a_->V.name.name, b_ ? b_ : (ArgumentsTy)alifParserEngine_emptyArguments(_p), c_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -12076,44 +12283,43 @@ static Statement* functionDef_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
+	res = nullptr;
 
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif4: "(" arguments? ")"
-static Expression* alif4(AlifParser* _p) { 
+// ألف4: "(" وسيطات? ")"
+static ExprTy alif4(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Expression* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "(" arguments? ")"
+	{ // "(" وسيطات? ")"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* literal_{};
-		AlifPToken* literal_1{};
-		Expression* a_{};
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		ExprTy a_{};
 		if (
-			(literal_ = alifParserEngine_expectToken(_p, LPAR)) // "("
+			(literal = alifParserEngine_expectToken(_p, LPAR)) // "("
 			and
-			(a_ = arguments_rule(_p), !_p->errorIndicator) // arguments?
+			(a_ = arguments_rule(_p), !_p->errorIndicator) // وسيطات?
 			and
-			(literal_1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
+			(literal1 = alifParserEngine_expectToken(_p, RPAR)) // ")"
 			)
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -12121,30 +12327,30 @@ static Expression* alif4(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
+	res = nullptr;
 
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 //	^
 //	|
 //	|
 /*
-	class_def_raw:
-		> "class" NAME ["(" arguments? ")"] ":" block
+	تعريف_صنف:
+		> "صنف" *اسم* ["(" وسيطات? ")"] ":" كتلة
 */
-static Statement* classDef_rule(AlifParser* _p) { 
+static StmtTy classDef_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Statement* res_{};
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	StmtTy res_{};
+	AlifIntT mark_ = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -12155,25 +12361,25 @@ static Statement* classDef_rule(AlifParser* _p) {
 	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
 	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
 
-	{ // "class" NAME ["(" arguments? ")"] ":" block
+	{ // "صنف" *اسم* ["(" وسيطات? ")"] ":" كتلة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifPToken* keyword_{};
 		AlifPToken* literal_{};
-		Expression* a_{};
-		Expression* b_{};
-		StmtSeq* c_{};
+		ExprTy a_{};
+		ExprTy b_{};
+		ASDLStmtSeq* c_{};
 
 		if (
-			(keyword_ = alifParserEngine_expectToken(_p, CLASS_KW)) // "class"
+			(keyword_ = alifParserEngine_expectToken(_p, CLASS_KW)) // "صنف"
 			and
-			(a_ = alifParserEngine_nameToken(_p)) // NAME
+			(a_ = alifParserEngine_nameToken(_p)) // *اسم*
 			and
-			(b_ = alif4(_p), !_p->errorIndicator) // ["(" arguments? ")"]
+			(b_ = alif4(_p), !_p->errorIndicator) // ["(" وسيطات? ")"]
 			and
 			(literal_ = alifParserEngine_expectToken(_p, COLON)) // ":"
 			and
-			(c_ = block_rule(_p), !_p->errorIndicator) // block
+			(c_ = block_rule(_p), !_p->errorIndicator) // كتلة
 			)
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -12183,8 +12389,7 @@ static Statement* classDef_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token_->endColOffset;
 			res_ = alifAST_classDef(a_->V.name.name, b_ ? b_->V.call.args : nullptr, b_ ? b_->V.call.keywords : nullptr, c_, EXTRA);
 			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -12192,7 +12397,7 @@ static Statement* classDef_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark_;
 	}
 
 	res_ = nullptr;
@@ -12204,32 +12409,32 @@ done:
 
 
 /*
-	simple_statement:
-		> assignment
-		> star_expressions
-		> &"return" return_stmt
-		> &("import" > "from") import_stmt
-		> "pass"
-		> &"del" del_stmt
-		> &"yield" yield_stmt
-		> "brak"
-		> "continue"
-		> &"global" global_stmt
-		> &"nonlocal" nonlocal_stmt
+	حالة_بسيطة:
+		> إسناد
+		> تعبيرات_نجمة
+		> &"ارجع" حالة_ارجع
+		> &("استورد" > "من") حالة_استورد
+		> "مرر"
+		> &"حذف" حالة_حذف
+		> &"ولد" حالة_ولد
+		> "توقف"
+		> "استمر"
+		> &"عام" حالة_عام
+		> &"نطاق" حالة_نطاق
 */
-static Statement* simpleStmt_rule(AlifParser* _p) { 
+static StmtTy simpleStmt_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Statement* res_{};
-	if (alifParserEngine_isMemorized(_p, SIMPLE_STMT_TYPE, &res_)) {
+	StmtTy res{};
+	if (alifParserEngine_isMemorized(_p, SIMPLE_STMT_TYPE, &res)) {
 		_p->level--;
-		return res_;
+		return res;
 	}
 
-	AlifIntT mark_ = _p->mark_;
-	if (_p->mark_ == _p->fill_
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
 		and
 		alifParserEngine_fillToken(_p) < 0)
 	{
@@ -12237,35 +12442,34 @@ static Statement* simpleStmt_rule(AlifParser* _p) {
 		_p->level--;
 		return nullptr;
 	}
-	AlifIntT startLineNo = _p->tokens[mark_]->lineNo;
-	AlifIntT startColOffset = _p->tokens[mark_]->colOffset;
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // assignment
+	{ // إسناد
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Statement* assignmentVar{};
+		StmtTy assignmentVar{};
 		if ((assignmentVar = assignment_rule(_p)))
 		{
-			res_ = assignmentVar;
+			res = assignmentVar;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // star_expressions
+	{ // تعبيرات_نجمة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Expression* a_{};
+		ExprTy a_{};
 		if ((a_ = starExpressions_rule(_p)))
 		{
-			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
-			if (token_ == nullptr) { _p->level--; return nullptr; }
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
 
-			AlifIntT endLineNo = token_->endLineNo;
-			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_expr(a_, EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_expr(a_, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -12273,53 +12477,52 @@ static Statement* simpleStmt_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // &"return" return_stmt
+	{ // &"ارجع" حالة_ارجع
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Statement* a_{};
+		StmtTy a_{};
 		if (
 			alifParserEngine_lookaheadWithInt(1, alifParserEngine_expectToken, _p, RETURN_KW) // "return"
 			and
-			(a_ = returnStmt_rule(_p)) // return_stmt
+			(a_ = returnStmt_rule(_p)) // حالة_ارجع
 			)
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // &("import" > "from") import_stmt
+	{ // &("استورد" > "من") حالة_استورد
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Statement* a_{};
+		StmtTy a_{};
 		if (
 			alifParserEngine_lookahead(1, alif8, _p)
 			and
-			(a_ = importStmt_rule(_p)) // import_stmt
+			(a_ = importStmt_rule(_p)) // حالة_استورد
 			)
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // "pass"
+	{ // "مرر"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifPToken* a_{};
-		if ((a_ = alifParserEngine_expectToken(_p, PASS_KW))) // "pass"
+		if ((a_ = alifParserEngine_expectToken(_p, PASS_KW))) // "مرر"
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
 			if (token_ == nullptr) { _p->level--; return nullptr; }
 
 			AlifIntT endLineNo = token_->endLineNo;
 			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_pass(EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_pass(EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -12327,53 +12530,52 @@ static Statement* simpleStmt_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // &"del" del_stmt
+	{ // &"حذف" حالة_حذف
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Statement* a_{};
+		StmtTy a_{};
 		if (
 			alifParserEngine_lookaheadWithInt(1, alifParserEngine_expectToken, _p, DEL_KW) // "del"
 			and
-			(a_ = delStmt_rule(_p)) // del_stmt
+			(a_ = delStmt_rule(_p)) // حالة_حذف
 			)
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // &"yield" yield_stmt
+	{ // &"ولد" حالة_ولد
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Statement* a_{};
+		StmtTy a_{};
 		if (
 			alifParserEngine_lookaheadWithInt(1, alifParserEngine_expectToken, _p, YIELD_KW) // "yield"
 			and
-			(a_ = yieldStmt_rule(_p)) // yield_stmt
+			(a_ = yieldStmt_rule(_p)) // حالة_ولد
 			)
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // "break"
+	{ // "توقف"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifPToken* a_{};
-		if ((a_ = alifParserEngine_expectToken(_p, BREAK_KW))) // "break"
+		if ((a_ = alifParserEngine_expectToken(_p, BREAK_KW))) // "توقف"
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
 			if (token_ == nullptr) { _p->level--; return nullptr; }
 
 			AlifIntT endLineNo = token_->endLineNo;
 			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_break(EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_break(EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -12381,23 +12583,22 @@ static Statement* simpleStmt_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // "continue"
+	{ // "استمر"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifPToken* a_{};
-		if ((a_ = alifParserEngine_expectToken(_p, CONTINUE_KW))) // "continue"
+		if ((a_ = alifParserEngine_expectToken(_p, CONTINUE_KW))) // "استمر"
 		{
 			AlifPToken* token_ = alifParserEngine_getLastNonWhitespaceToken(_p);
 			if (token_ == nullptr) { _p->level--; return nullptr; }
 
 			AlifIntT endLineNo = token_->endLineNo;
 			AlifIntT endColOffset = token_->endColOffset;
-			res_ = alifAST_continue(EXTRA);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = alifAST_continue(EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -12405,72 +12606,174 @@ static Statement* simpleStmt_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // &"global" global_stmt
+	{ // &"عام" حالة_عام
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Statement* a_{};
+		StmtTy a_{};
 		if (
 			alifParserEngine_lookaheadWithInt(1, alifParserEngine_expectToken, _p, GLOBAL_KW) // "global"
 			and
-			(a_ = globalStmt_rule(_p)) // global_stmt
+			(a_ = globalStmt_rule(_p)) // حالة_عام
 			)
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // &"nonlocal" nonlocal_stmt
+	{ // &"نطاق" حالة_نطاق
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Statement* a_{};
+		StmtTy a_{};
 		if (
 			alifParserEngine_lookaheadWithInt(1, alifParserEngine_expectToken, _p, NONLOCALE_KW) // "nonlocal"
 			and
-			(a_ = nonlocalStmt_rule(_p)) // nonlocal_stmt
+			(a_ = nonlocalStmt_rule(_p)) // حالة_نطاق
 			)
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
+	res = nullptr;
 
 done:
-	alifParserEngine_insertMemo(_p, mark_, SIMPLE_STMT_TYPE, res_);
+	alifParserEngine_insertMemo(_p, mark, SIMPLE_STMT_TYPE, res);
 	_p->level--;
-	return res_;
+	return res;
 }
 
-
-// simple_stmts: simple_stmt NEWLINE
-static StmtSeq* simpleStmts_rule(AlifParser* _p) { 
+// ألف32_حلقة0: "؛" حالة_بسيطة
+static ASDLSeq* alif32_loop0(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	StmtSeq* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // simple_stmt NEWLINE
+	AlifPArray children{};
+	if (!children.data) {
+		_p->errorIndicator = 1;
+		// alifErr_noMemory();
+		_p->level--;
+		return nullptr;
+	}
+
+	{ // "؛" حالة_بسيطة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Statement* a_{};
-		AlifPToken* newline_{};
-		if (
-			(a_ = simpleStmt_rule(_p)) // simple_stmt
+		AlifPToken* literal{};
+		StmtTy element{};
+		while (
+			(literal = alifParserEngine_expectToken(_p, SEMI))  // "؛"
 			and
-			(newline_ = alifParserEngine_expectToken(_p, NEWLINE)) // NEWLINE
+			(element = simpleStmt_rule(_p))  // حالة_بسيطة
 			)
 		{
-			res_ = (StmtSeq*)alifParserEngine_singletonSeq(_p, a_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = element;
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
+			}
+			mark = _p->mark;
+		}
+		_p->mark = mark;
+	}
+
+	AlifSizeT size = children.size;
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
+		_p->errorIndicator = 1;
+		// alifErr_noMemory();
+		_p->level--;
+		return nullptr;
+	}
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
+
+	_p->level--;
+	return seq;
+}
+//	^
+//	|
+//	|
+// ألف13_تجميع: حالة_بسيطة ألف32_حلقة0
+static ASDLSeq* alif13_gather(AlifParser* _p) {
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	ASDLSeq* res{};
+	AlifIntT mark = _p->mark;
+
+	{ // حالة_بسيطة ألف32_حلقة0
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		StmtTy elem{};
+		ASDLSeq* seq{};
+		if (
+			(elem = simpleStmt_rule(_p))  // حالة_بسيطة
+			and
+			(seq = alif32_loop0(_p))  // ألف32_حلقة0
+			)
+		{
+			res = alifParserEngine_seqInsertInFront(_p, elem, seq);
+			goto done;
+		}
+		_p->mark = mark;
+	}
+
+	res = nullptr;
+done:
+	_p->level--;
+	return res;
+}
+// ^
+// |
+// |
+/*
+	حالات بسيطة:
+		| حالة_بسيطة !"؛" سطر
+		| "؛".حالة_بسيطة+ "؛"؟ سطر
+*/
+static ASDLStmtSeq* simpleStmts_rule(AlifParser* _p) { 
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	ASDLStmtSeq* res{};
+	AlifIntT mark = _p->mark;
+
+	{ // حالة_بسيطة *سطر*
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		StmtTy a_{};
+		AlifPToken* newline{};
+		if (
+			(a_ = simpleStmt_rule(_p)) // حالة_بسيطة
+			and
+			alifParserEngine_lookaheadWithInt(0, alifParserEngine_expectToken, _p, SEMI)  // "؛"
+			and
+			(newline = alifParserEngine_expectToken(_p, NEWLINE)) // سطر
+			)
+		{
+			res = (ASDLStmtSeq*)alifParserEngine_singletonSeq(_p, a_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -12478,266 +12781,307 @@ static StmtSeq* simpleStmts_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
+	}
+	{ // "؛".حالة_بسيطة+ ";"? سطر
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		void* optVar{};
+		ASDLStmtSeq* a{};
+		AlifPToken* newlineVar{};
+		if (
+			(a = (ASDLStmtSeq*)alif13_gather(_p))  // "؛".حالة_بسيطة+
+			and
+			(optVar = alifParserEngine_expectToken(_p, SEMI), !_p->errorIndicator)  // "؛"?
+			and
+			(newlineVar = alifParserEngine_expectToken(_p, NEWLINE))  // سطر
+			)
+		{
+			res = a;
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
+	res = nullptr;
 
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// alif3: "def" > "async"
+// ألف3: "دالة" > "مزامنة"
 static void* alif3(AlifParser* _p) { 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "def"
+	{ // "دالة"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		if ((keyword_ = alifParserEngine_expectToken(_p, FUNC_KW))) // "def"
+		AlifPToken* keyword{};
+		if ((keyword = alifParserEngine_expectToken(_p, FUNC_KW))) // "دالة"
 		{
-			res_ = keyword_;
+			res = keyword;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // "async"
+	{ // "مزامنة"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		if ((keyword_ = alifParserEngine_expectToken(_p, ASYNC_KW))) // "async"
+		AlifPToken* keyword{};
+		if ((keyword = alifParserEngine_expectToken(_p, ASYNC_KW))) // "مزامنة"
 		{
-			res_ = keyword_;
+			res = keyword;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
+	res = nullptr;
 
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
-// alif2: "with" > "async"
+// ألف2: "عند" > "مزامنة"
 static void* alif2(AlifParser* _p) { 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "with"
+	{ // "عند"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		if ((keyword_ = alifParserEngine_expectToken(_p, WITH_KW))) // "with"
+		AlifPToken* keyword{};
+		if ((keyword = alifParserEngine_expectToken(_p, WITH_KW))) // "عند"
 		{
-			res_ = keyword_;
+			res = keyword;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // "async"
+	{ // "مزامنة"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		AlifPToken* keyword_{};
-		if ((keyword_ = alifParserEngine_expectToken(_p, ASYNC_KW))) // "async"
+		AlifPToken* keyword{};
+		if ((keyword = alifParserEngine_expectToken(_p, ASYNC_KW))) // "مزامنة"
 		{
-			res_ = keyword_;
+			res = keyword;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
+	res = nullptr;
 
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
-// alif1: "for" > "async"
+// ألف1: "لاجل" > "مزامنة"
 static void* alif1(AlifParser* _p) { 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
+	void* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // "for"
+	{ // "لاجل"
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		AlifPToken* keyword{};
+		if ((keyword = alifParserEngine_expectToken(_p, FOR_KW))) // "لاجل"
+		{
+			res = keyword;
+			goto done;
+		}
+		_p->mark = mark;
+	}
+	{ // "مزامنة"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifPToken* keyword_{};
-		if ((keyword_ = alifParserEngine_expectToken(_p, FOR_KW))) // "for"
+		if ((keyword_ = alifParserEngine_expectToken(_p, ASYNC_KW))) // "مزامنة"
 		{
-			res_ = keyword_;
+			res = keyword_;
 			goto done;
 		}
-		_p->mark_ = mark_;
-	}
-	{ // "async"
-		if (_p->errorIndicator) { _p->level--; return nullptr; }
-
-		AlifPToken* keyword_{};
-		if ((keyword_ = alifParserEngine_expectToken(_p, ASYNC_KW))) // "async"
-		{
-			res_ = keyword_;
-			goto done;
-		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
+	res = nullptr;
 
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
 /*
-	compound_stmt:
-		> &("def" > "async") function_def
-		> &"if" if_stmt
-		> &"class" class_def
-		> &("with" > "async") with_stmt
-		> &("for" > "async") for_stmt
-		> &'while' while_stmt
+	حالة_مركبة:
+		| &("دالة" > "مزامنة") تعريف_دالة
+		| &"اذا" حالة_اذا
+		| &"صنف" تعريف_صنف
+		| &("عند" > "مزامنة") حالة_عند
+		| &"حاول" حالة_حاول
+		| &("لاجل" > "مزامنة") حالة_لاجل
+		| &'بينما' حالة_بينما
 */
-static Statement* compoundStmt_rule(AlifParser* _p) { 
+static StmtTy compoundStmt_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Statement* res_{};
-	AlifIntT mark_ = _p->mark_;
+	StmtTy res{};
+	AlifIntT mark = _p->mark;
 
-	{ // &("def" > "async") function_def
+	{ // &("دالة" > "مزامنة") تعريف_دالة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Statement* a_{};
+		StmtTy a_{};
 		if (
 			alifParserEngine_lookahead(1, alif3, _p)
 			and
-			(a_ = functionDef_rule(_p)) // function_def
+			(a_ = functionDef_rule(_p)) // تعريف_دالة
 			)
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // &"if" if_stmt
+	{ // &"اذا" حالة_اذا
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Statement* a_{};
+		StmtTy a_{};
 		if (
 			alifParserEngine_lookaheadWithInt(1, alifParserEngine_expectToken, _p, IF_KW) // "if"
 			and
-			(a_ = ifStmt_rule(_p)) // if_stmt
+			(a_ = ifStmt_rule(_p)) // حالة_اذا
 			)
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // &"class" class_def
+	{ // &"صنف" تعريف_صنف
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Statement* a_{};
+		StmtTy a_{};
 		if (
 			alifParserEngine_lookaheadWithInt(1, alifParserEngine_expectToken, _p, CLASS_KW) // "class"
 			and
-			(a_ = classDef_rule(_p)) // class_def
+			(a_ = classDef_rule(_p)) // تعريف_صنف
 			)
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // &("with" > "async") with_stmt
+	{ // &("عند" > "مزامنة") حالة_عند
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Statement* a_{};
+		StmtTy a_{};
 		if (
 			alifParserEngine_lookahead(1, alif2, _p)
 			and
-			(a_ = withStmt_rule(_p)) // with_stmt
+			(a_ = withStmt_rule(_p)) // حالة_عند
 			)
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // &("for" > "async") for_stmt
+	{ // &("لاجل" > "مزامنة") حالة_لاجل
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Statement* a_{};
+		StmtTy a_{};
 		if (
 			alifParserEngine_lookahead(1, alif1, _p)
 			and
-			(a_ = forStmt_rule(_p)) // for_stmt
+			(a_ = forStmt_rule(_p)) // حالة_لاجل
 			)
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // &"while" while_stmt
+	{ // &"حاول" حالة_حاول
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Statement* a_{};
+		StmtTy a_{};
+		if (
+			alifParserEngine_lookaheadWithInt(1, alifParserEngine_expectToken, _p, TRY_KW)
+			and
+			(a_ = tryStmt_rule(_p)) // حالة_حاول
+			)
+		{
+			res = a_;
+			goto done;
+		}
+		_p->mark = mark;
+	}
+	{ // &"بينما" حالة_بينما
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		StmtTy a_{};
 		if (
 			alifParserEngine_lookaheadWithInt(1, alifParserEngine_expectToken, _p, WHILE_KW) // "while"
 			and
-			(a_ = whileStmt_rule(_p)) // while_stmt
+			(a_ = whileStmt_rule(_p)) // حالة_بينما
 			)
 		{
-			res_ = a_;
+			res = a_;
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
+	res = nullptr;
 
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
-// statement: compound_stmt > simple_stmts
-static StmtSeq* statement_rule(AlifParser* _p) { 
+// حالة: حالة_مركبة > حالة_بسيطة
+static ASDLStmtSeq* statement_rule(AlifParser* _p) { 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	StmtSeq* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ASDLStmtSeq* res{};
+	AlifIntT mark = _p->mark;
 
-	{ // compound_stmt
+	{ // حالة_مركبة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		Statement* a_{};
+		StmtTy a_{};
 		if ((a_ = compoundStmt_rule(_p)))
 		{
-			res_ = (StmtSeq*)alifParserEngine_singletonSeq(_p, a_);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = (ASDLStmtSeq*)alifParserEngine_singletonSeq(_p, a_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -12745,18 +13089,17 @@ static StmtSeq* statement_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
-	{ // simple_stmt
+	{ // حالات_بسيطة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		StmtSeq* a_{};
-		if ((a_ = (StmtSeq*)simpleStmts_rule(_p)))
+		ASDLStmtSeq* a_{};
+		if ((a_ = (ASDLStmtSeq*)simpleStmts_rule(_p)))
 		{
-			res_ = a_;
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in ThreadState->currentException */)
+			res = a_;
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -12764,29 +13107,28 @@ static StmtSeq* statement_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
-
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 
 // ألف1_حلقة1: حالة
-static Seq* alif1_loop1(AlifParser* _p) { 
-
+static ASDLSeq* alif1_loop1(AlifParser* _p) { 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	void* res_{};
-	AlifIntT mark_ = _p->mark_;
-	AlifPArray children_{};
-	if (!children_.data_) {
+	void* res{};
+	AlifIntT mark = _p->mark;
+
+	AlifPArray children{};
+	if (!children.data) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
@@ -12794,59 +13136,59 @@ static Seq* alif1_loop1(AlifParser* _p) {
 	{ // حالة
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		StmtSeq* statementVar{};
+		ASDLStmtSeq* statementVar{};
 		while ((statementVar = statement_rule(_p))) // حالة
 		{
-			res_ = statementVar;
-			children_.push_back(res_);
+			res = statementVar;
 
-			if (!children_.data_) {
+			if (!children.push_back(res)) {
 				_p->errorIndicator = 1;
-				// Memory Error - No Memory alifError_noMemory
+				// alifErr_noMemory();
 				_p->level--;
 				return nullptr;
 			}
-			mark_ = _p->mark_;
+			mark = _p->mark;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	AlifUSizeT size_ = children_.size_;
-	if (size_ == 0 or _p->errorIndicator) {
+	AlifSizeT size = children.size;
+	if (size == 0 or _p->errorIndicator) {
 		_p->level--;
 		return nullptr;
 	}
-	Seq* seq_ = (Seq*)alifNew_genericSeq(size_, _p->astMem);
-	if (!seq_) {
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
 		_p->errorIndicator = 1;
-		// Memory Error - No Memory alifError_noMemory
+		// alifErr_noMemory();
 		_p->level--;
 		return nullptr;
 	}
-	for (int i = 0; i < size_; i++) SEQ_SETUNTYPED(seq_, i, children_[i]);
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
 
 	_p->level--;
-	return seq_;
+	return seq;
 }
 //	^
 //	|
 //	|
 // حالات: حالة+ـ
-static StmtSeq* statements_rule(AlifParser* _p) { 
+static ASDLStmtSeq* statements_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	StmtSeq* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ASDLStmtSeq* res{};
+	AlifIntT mark = _p->mark;
 	{ // حالات: حالة+ـ
-		Seq* a_{};
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		ASDLSeq* a_{};
 		if (a_ = alif1_loop1(_p)) // حالة+ـ
 		{
-			res_ = (StmtSeq*)alifParserEngine_seqFlatten(_p, a_);
-			if (res_ == nullptr
-				/* and
-				error occurred */)
+			res = (ASDLStmtSeq*)alifParserEngine_seqFlatten(_p, a_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -12854,35 +13196,34 @@ static StmtSeq* statements_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
 // طرفية: حالة_سطر
-static Module* interactiveRun_rule(AlifParser* _p) { 
+static ModuleTy interactiveRun_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Module* res_ = nullptr;
-	AlifIntT mark_ = _p->mark_;
+	ModuleTy res = nullptr;
+	AlifIntT mark = _p->mark;
 	{ // طرفية: حالة_سطر
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		StmtSeq* a_;
+		ASDLStmtSeq* a_{};
 		//if (
 		//	(a_ = statementNewline_rule(_p))  // طرفية: حالة_سطر
 		//	)
 		//{
 		//	res_ = alifAST_interactive(a_, _p->astMem);
 		//	if (res_ == nullptr
-		//		/* and
-		//		error occurred and stored in Thread->currentException */)
+		//		and alifErr_occurred())
 		//	{
 		//		_p->errorIndicator = 1;
 		//		_p->level--;
@@ -12890,46 +13231,45 @@ static Module* interactiveRun_rule(AlifParser* _p) {
 		//	}
 		//	goto done;
 		//}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
 
-static Module* evalRun_rule(AlifParser* _p) {
+static ModuleTy evalRun_rule(AlifParser* _p) {
 	return nullptr;//
 }
-static Module* funcRun_rule(AlifParser* _p) {
+static ModuleTy funcRun_rule(AlifParser* _p) {
 	return nullptr;//
 }
 
 
 // ملف: حالات؟ $ـ
-static Module* fileRun_rule(AlifParser* _p) { 
+static ModuleTy fileRun_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-	Module* res_{};
-	AlifIntT mark_ = _p->mark_;
+	ModuleTy res{};
+	AlifIntT mark = _p->mark;
 	{ // ملف: حالات؟ $ـ
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
-		StmtSeq* a_{};
+		ASDLStmtSeq* a_{};
 		AlifPToken* endMarkerVar{};
 		if (
 			(a_ = statements_rule(_p), !_p->errorIndicator)  // حالات؟
 			and
-			(endMarkerVar = alifParserEngine_expectToken(_p, ENDMARKER)) // ENDMARKER
+			(endMarkerVar = alifParserEngine_expectToken(_p, ENDMARKER)) // نهاية
 			)
 		{
-			res_ = alifAST_module(a_, _p->astMem);
-			if (res_ == nullptr
-				/* and
-				error occurred and stored in Thread->currentException */)
+			res = alifParserEngine_makeModule(_p, a_);
+			if (res == nullptr
+				and alifErr_occurred())
 			{
 				_p->errorIndicator = 1;
 				_p->level--;
@@ -12937,15 +13277,14 @@ static Module* fileRun_rule(AlifParser* _p) {
 			}
 			goto done;
 		}
-		_p->mark_ = mark_;
+		_p->mark = mark;
 	}
 
-	res_ = nullptr;
+	res = nullptr;
 done:
 	_p->level--;
-	return res_;
+	return res;
 }
-
 
 void* alifParserEngine_parse(AlifParser* _p) { 
 	// تهيئة الكلمات المفتاحية
@@ -12956,18 +13295,22 @@ void* alifParserEngine_parse(AlifParser* _p) {
 	// بدأ تحليل النص
 	void* result{};
 
-	if (_p->startRule == ALIFFILE_INPUT) {
+	if (_p->startRule == ALIF_FILE_INPUT) {
 		result = fileRun_rule(_p);
 	}
-	else if (_p->startRule == ALIFSINGLE_INPUT) {
+	else if (_p->startRule == ALIF_SINGLE_INPUT) {
 		result = interactiveRun_rule(_p);
 	}
-	else if (_p->startRule == ALIFEVAL_INPUT) {
+	else if (_p->startRule == ALIF_EVAL_INPUT) {
 		result = evalRun_rule(_p);
 	}
-	else if (_p->startRule == ALIFFUNCTYPE_INPUT) {
+	else if (_p->startRule == ALIF_FUNC_TYPE_INPUT) {
 		result = funcRun_rule(_p);
 	}
 
 	return result;
 }
+
+
+
+//* assignment_rule

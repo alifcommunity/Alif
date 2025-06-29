@@ -1,49 +1,43 @@
 #include "alif.h"
-#include "OpCodeIDs.h"
 
-#include "AlifCore_Code.h"
+#include "AlifCore_Call.h"
+#include "AlifCore_Eval.h"
+#include "AlifCore_Call.h"
+#include "AlifCore_CriticalSection.h"
+#include "AlifCore_Frame.h"
+#include "AlifCore_Interpreter.h"
 
-#include "AlifCore_OpCodeData.h"
-
-
-
-
-static const uint8_t deInstrument[256] = { 
-    RESUME,
-    RETURN_VALUE,
-    RETURN_CONST,
-    //CALL,
-    //CALL_KW,
-    //CALL_FUNCTION_EX,
-    //YIELD_VALUE,
-    JUMP_FORWARD,
-    JUMP_BACKWARD,
-    POP_JUMPIF_FALSE,
-    POP_JUMPIF_TRUE,
-    POP_JUMPIF_NONE,
-    POP_JUMPIF_NOTNONE,
-    //FOR_ITER,
-    //END_FOR,
-    //END_SEND,
-    //LOAD_SUPER_ATTR,
-};
+#include "AlifCore_OpcodeMetaData.h"
 
 
 
-AlifIntT alif_getBaseOpCode(AlifCodeObject* _code, AlifIntT _i)
-{
-    AlifIntT opcode = ALIFCODE_CODE(_code)[_i].op.code;
-    if (opcode == INSTRUMENTED_LINE) {
-        //opcode = _code->monitoring->lines[_i].originalOpCode;
-    }
-    if (opcode == INSTRUMENTED_INSTRUCTION) {
-        //opcode = _code->monitoring->perInstructionOpCodes[_i];
-    }
+ // 41
+#define LOCK_CODE(_code)                                             \
+    ALIF_BEGIN_CRITICAL_SECTION(_code)
 
-    AlifIntT deinstrumented = deInstrument[opcode];
-    if (deinstrumented) {
-        return deinstrumented;
-    }
-    return alifOpCode_deOpt[opcode];
+#define UNLOCK_CODE()   ALIF_END_CRITICAL_SECTION()
+
+
+AlifObject _alifInstrumentationDisable_ = ALIFOBJECT_HEAD_INIT(&_alifBaseObjectType_);
+
+AlifObject _alifInstrumentationMissing_ = ALIFOBJECT_HEAD_INIT(&_alifBaseObjectType_);
+
+
+
+
+static AlifIntT instrument_lockHeld(AlifCodeObject* _code, AlifInterpreter* _interp) { // 1852
+	//if (isVersion_upToDate(_code, _interp)) {
+	//	return 0;
+	//}
+
+	//return forceInstrument_lockHeld(_code, _interp);
+	return 1; //* alif
 }
 
+AlifIntT _alif_instrument(AlifCodeObject* _code, AlifInterpreter* _interp) { // 1868
+	AlifIntT res{};
+	LOCK_CODE(_code);
+	res = instrument_lockHeld(_code, _interp);
+	UNLOCK_CODE();
+	return res;
+}

@@ -1,112 +1,187 @@
 #pragma once
 
-#include "AlifCore_Code.h"
 
-class AlifFrameObject {
+
+
+#include "AlifCore_Code.h"
+#include "AlifCore_StackRef.h"
+
+
+
+
+
+
+class Frame { // 21
 public:
 	ALIFOBJECT_HEAD;
-	AlifFrameObject* back;      /* previous frame, or nullptr */
-	class AlifInterpreterFrame* frame; /* points to the frame data */
-	AlifObject* trace;          /* Trace function */
-	int lineNo;               /* Current line number. Only valid if non-zero */
-	char traceLines;         /* Emit per-line trace events? */
-	char traceOpCodes;       /* Emit per-opcode trace events? */
-	AlifObject* extraLocals;   /* Dict for locals set by users using f_locals, could be nullptr */
-	/* The frame data, if this frame object owns the frame */
-	AlifObject* frameData[1];
+	AlifFrameObject* back{};
+	AlifInterpreterFrame* frame{};
+	AlifObject* trace{};
+	AlifIntT lineno{};
+	char traceLines{};
+	char traceOpcodes{};
+	AlifObject* extraLocals{};
+	AlifObject* localsCache{};
+	AlifObject* frameData[1]{};
 };
 
 
 
+extern AlifFrameObject* _alifFrame_newNoTrack(AlifCodeObject*); // 38
 
 
-class AlifInterpreterFrame {
-public:
-	AlifObject* executable; /* Strong reference (code object or None) */
-	AlifInterpreterFrame* previous;
-	AlifObject* funcobj; /* Strong reference. Only valid if not on C stack */
-	AlifObject* globals; /* Borrowed reference. Only valid if not on C stack */
-	AlifObject* builtins; /* Borrowed reference. Only valid if not on C stack */
-	AlifObject* locals; /* Strong reference, may be nullptr. Only valid if not on C stack */
-	AlifFrameObject* frameObj; /* Strong reference, may be nullptr. Only valid if not on C stack */
-	AlifCodeUnit* instrPtr; /* Instruction currently executing (or about to begin) */
-	int stacktop;  /* Offset of TOS from localsplus  */
-	uint16_t returnOffset;  /* Only relevant during a function call */
-	char owner;
-	/* Locals and stack */
-	AlifObject* localsPlus[1];
-};
 
-enum FrameOwner {
+enum FrameOwner { // 55
 	FRAME_OWNED_BY_THREAD = 0,
-	FRAME_OWNED_BY_GENERATOR ,
-	FRAME_OWNED_BY_FRAME_OBJECT,
-	FRAME_OWNED_BY_CSTACK,
+	FRAME_OWNED_BY_GENERATOR = 1,
+	FRAME_OWNED_BY_FRAME_OBJECT = 2,
+	FRAME_OWNED_BY_CSTACK = 3,
 };
 
-static inline AlifCodeObject* alifFrame_getCode(AlifInterpreterFrame* _f) { 
-	return (AlifCodeObject*)_f->executable;
+
+
+
+
+
+class AlifInterpreterFrame { // 62
+public:
+	AlifStackRef executable{};
+	AlifInterpreterFrame* previous{};
+	AlifStackRef funcObj{};
+	AlifObject* globals{};
+	AlifObject* builtins{};
+	AlifObject* locals{};
+	AlifFrameObject* frameObj{};
+	AlifCodeUnit* instrPtr{};
+	AlifStackRef* stackPointer{};
+	uint16_t returnOffset{};
+	char owner{};
+	/* Locals and stack */
+	AlifStackRef localsPlus[1]{};
+};
+
+ // 78
+#define ALIFINTERPRETERFRAME_LASTI(_if) \
+    ((AlifIntT)((_if)->instrPtr - ALIFCODE_CODE(_alifFrame_getCode(_if))))
+
+
+static inline AlifCodeObject* _alifFrame_getCode(AlifInterpreterFrame* _f) { // 81
+	AlifObject* executable = alifStackRef_asAlifObjectBorrow(_f->executable);
+	return (AlifCodeObject*)executable;
 }
 
-static inline void alifFrame_stackPush(AlifInterpreterFrame* _f, AlifObject* _value) { 
-	_f->localsPlus[_f->stacktop] = _value;
-	_f->stacktop++;
+
+static inline AlifFunctionObject* _alifFrame_getFunction(AlifInterpreterFrame* _f) { // 87
+	AlifObject* func = alifStackRef_asAlifObjectBorrow(_f->funcObj);
+	return (AlifFunctionObject*)func;
 }
 
-#define FRAME_SPECIALS_SIZE ((AlifIntT)((sizeof(AlifInterpreterFrame)-1)/sizeof(AlifObject *)))
 
-static inline void alifFrame_initialize(AlifInterpreterFrame* _frame, AlifFunctionObject* _func,
-	AlifObject* _locals, AlifCodeObject* _code, AlifIntT _nullLocalsFrom) { 
-	_frame->funcobj = (AlifObject*)_func;
-	_frame->executable = ALIF_NEWREF(_code);
-	_frame->builtins = _func->funcBuiltins;
-	_frame->globals = _func->funcGlobals;
+static inline AlifStackRef* _alifFrame_stackBase(AlifInterpreterFrame* _f) { // 93
+	return (_f->localsPlus + _alifFrame_getCode(_f)->nLocalsPlus);
+}
+
+
+#define FRAME_SPECIALS_SIZE ((AlifIntT)((sizeof(AlifInterpreterFrame)-1)/sizeof(AlifObject*))) // 107
+
+
+
+
+static inline void _alifFrame_initialize(AlifInterpreterFrame* _frame,
+	AlifStackRef _func, AlifObject* _locals, AlifCodeObject* _code,
+	AlifIntT _nullLocalsFrom, AlifInterpreterFrame* _previous) { // 144
+
+	_frame->previous = _previous;
+	_frame->funcObj = _func;
+	_frame->executable = ALIFSTACKREF_FROMALIFOBJECTNEW(_code);
+	AlifFunctionObject* funcObj = (AlifFunctionObject*)alifStackRef_asAlifObjectBorrow(_func);
+	_frame->builtins = funcObj->builtins;
+	_frame->globals = funcObj->globals;
 	_frame->locals = _locals;
-	_frame->stacktop = _code->nLocalsPlus;
+	_frame->stackPointer = _frame->localsPlus + _code->nLocalsPlus;
 	_frame->frameObj = nullptr;
 	_frame->instrPtr = ALIFCODE_CODE(_code);
 	_frame->returnOffset = 0;
 	_frame->owner = FrameOwner::FRAME_OWNED_BY_THREAD;
 
-	for (int i = _nullLocalsFrom; i < _code->nLocalsPlus; i++) {
-		_frame->localsPlus[i] = nullptr;
+	for (AlifIntT i = _nullLocalsFrom; i < _code->nLocalsPlus; i++) {
+		_frame->localsPlus[i] = _alifStackRefNull_;
 	}
+
+	for (AlifIntT i = _code->nLocalsPlus; i < _code->nLocalsPlus + _code->stackSize; i++) {
+		_frame->localsPlus[i] = _alifStackRefNull_;
+	}
+
 }
 
-static inline bool alifFrame_isIncomplete(AlifInterpreterFrame* _frame) { 
-	if (_frame->owner == FRAME_OWNED_BY_CSTACK) {
+
+
+static inline AlifStackRef* _alifFrame_getLocalsArray(AlifInterpreterFrame* _frame) { // 179
+	return _frame->localsPlus;
+}
+
+
+static inline AlifStackRef* _alifFrame_getStackPointer(AlifInterpreterFrame* _frame) { // 188
+	AlifStackRef* sp = _frame->stackPointer;
+	_frame->stackPointer = nullptr;
+	return sp;
+}
+
+
+static inline void _alifFrame_setStackPointer(AlifInterpreterFrame* _frame,
+	AlifStackRef* _stackPointer) { // 197
+	_frame->stackPointer = _stackPointer;
+}
+
+
+
+
+static inline bool _alifFrame_isIncomplete(AlifInterpreterFrame* _frame) { // 212
+	if (_frame->owner == FrameOwner::FRAME_OWNED_BY_CSTACK) {
 		return true;
 	}
-	return _frame->owner != FRAME_OWNED_BY_GENERATOR and
-		_frame->instrPtr < ALIFCODE_CODE(alifFrame_getCode(_frame)) + alifFrame_getCode(_frame)->firstTraceable;
+	return _frame->owner != FrameOwner::FRAME_OWNED_BY_GENERATOR and
+		_frame->instrPtr < ALIFCODE_CODE(_alifFrame_getCode(_frame)) + _alifFrame_getCode(_frame)->firstTraceable;
 }
 
-static inline AlifInterpreterFrame* alifFrame_getFirstComplete(AlifInterpreterFrame* _frame) { 
-	while (_frame and alifFrame_isIncomplete(_frame)) {
+static inline AlifInterpreterFrame* _alifFrame_getFirstComplete(AlifInterpreterFrame* _frame) { // 222
+	while (_frame and _alifFrame_isIncomplete(_frame)) {
 		_frame = _frame->previous;
 	}
 	return _frame;
 }
 
-static inline AlifInterpreterFrame* alifThread_getFrame(AlifThread* _thread) { 
-	return alifFrame_getFirstComplete(_thread->currentFrame);
+
+static inline AlifInterpreterFrame* _alifThreadState_getFrame(AlifThread* _thread) { // 231
+	return _alifFrame_getFirstComplete(_thread->currentFrame);
 }
 
-static inline AlifObject** alifFrame_getStackPointer(AlifInterpreterFrame* _frame)
-{
-	AlifObject** sp = _frame->localsPlus + _frame->stacktop;
-	_frame->stacktop = -1;
-	return sp;
+AlifFrameObject* _alifFrame_makeAndSetFrameObject(AlifInterpreterFrame*); // 240
+
+static inline AlifFrameObject* _alifFrame_getFrameObject(AlifInterpreterFrame* _frame) { // 245
+
+	AlifFrameObject* res = _frame->frameObj;
+	if (res != nullptr) {
+		return res;
+	}
+	return _alifFrame_makeAndSetFrameObject(_frame);
 }
 
-static inline bool alifThread_hasStackSpace(AlifThread* _thread, AlifIntT _size) { 
-	return _thread->dataStackTop != nullptr and _size < _thread->dataStackLimit - _thread->dataStackTop;
+
+void _alifFrame_clearExceptCode(AlifInterpreterFrame*); // 269
+
+static inline bool _alifThreadState_hasStackSpace(AlifThread* _tState, AlifIntT _size) { // 282
+	return _tState->dataStackTop != nullptr and
+		_size < _tState->dataStackLimit - _tState->dataStackTop;
 }
 
 
+extern AlifInterpreterFrame* _alifThreadState_pushFrame(AlifThread*, AlifUSizeT); // 294
 
-extern AlifInterpreterFrame* alifThread_pushFrame(AlifThread*, AlifUSizeT);
+void _alifThreadState_popFrame(AlifThread*, AlifInterpreterFrame*); // 296
 
 
-AlifInterpreterFrame* alifEvalFrame_initAndPush(AlifThread*, AlifFunctionObject*,
-	AlifObject*, AlifObject* const*, AlifUSizeT, AlifObject*);
+
+
+AlifInterpreterFrame* _alifEval_framePushAndInit(AlifThread* _thread, AlifStackRef,
+	AlifObject*, AlifStackRef const*, AlifUSizeT, AlifObject*, AlifInterpreterFrame*); // 347

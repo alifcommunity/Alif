@@ -2,9 +2,9 @@
 
 /*
 	ذاكرة ألف، هي ذاكرة خاصة بلغة ألف النسخة الخامسة 5،
-	تم إنشاؤها من قبل مجتمع ألف
+	تم إنشاؤها من قبل عبدالرحمن ومحمد الخطيب - سوريا
 	https://www.aliflang.org
-	وتخضع لترخيص ألف 2023.
+	وتخضع لترخيص برمجيات ألف 2025.
 
 	مخططات الذاكرة متوفرة في ملف ../documents/AlifMemory
 
@@ -16,11 +16,14 @@
 */
 
 
+#include "AlifCore_LList.h"
+#include "AlifCore_Lock.h"
+
 /* ------------------------------------ التعريفات ------------------------------------ */
 
 
 #define ALIGNMENT		sizeof(AlifUSizeT)
-#define ALIGN_UP(_size) ((_size + (ALIGNMENT - 1)) & ~(ALIGNMENT - 1))
+#define MEMORY_ALIGN_UP(_size) ((_size + (ALIGNMENT - 1)) & ~(ALIGNMENT - 1))
 
 
 /* ------------------------------------ ذاكرة ألف ------------------------------------ */
@@ -35,6 +38,11 @@
 #define BLOCK_NUMS         64
 
 #define FSEGS_SIZE         512
+#else
+#define BLOCK_SIZE         1024
+#define BLOCK_NUMS         128
+
+#define FSEGS_SIZE         1024
 #endif
 
 #define FRAGS_NUM              (BLOCK_SIZE / ALIGNMENT - 1)
@@ -75,7 +83,7 @@ public:
 	void dealloc_(void*);
 	void freeSeg_dealloc(Frag*);
 
-	AlifArray return_freeSegs(AlifUSizeT);
+	AlifArray return_freeSegs(unsigned long);
 };
 
 /* -------------------------------------- الكتلة ------------------------------------- */
@@ -110,12 +118,6 @@ public:
 	AlifUSizeT objNums{};
 };
 
-/*
-	يجب نقل الذاكرة الى المفسر وعدم تركها ذاكرة عامة
-	لأنه سيتم عمل ذاكرة خاصة بكل مسار او "ثريد" لمنع تداهل البيانات
-*/
-extern AlifMemory _alifMem_;
-
 
 AlifIntT alif_mainMemoryInit();
 AlifMemory* alif_memoryInit();
@@ -125,19 +127,7 @@ inline void* alif_rawAlloc(AlifUSizeT);
 inline void alif_rawDelete(void*);
 inline void* alif_rawRealloc(void*, AlifUSizeT);
 
-void* alifMem_objAlloc(AlifUSizeT);
-void* alifMem_dataAlloc(AlifUSizeT);
-
-inline void alifMem_objFree(void*);
-inline void alifMem_dataFree(void*);
-
-void* alifMem_objRealloc(void*, AlifUSizeT);
-void* alifMem_dataRealloc(void*, AlifUSizeT);
-
-
-AlifIntT alifInterpreterMem_init(AlifInterpreter*);
-
-const void alif_getMemState();
+extern AlifIntT alifInterpreterMem_init(AlifInterpreter*);
 
 
 
@@ -162,13 +152,34 @@ public:
 
 class AlifASTMem {
 public:
-	AlifASTBlock* head_{};
-	AlifASTBlock* current_{};
-	AlifObject* objects_{};
+	AlifASTBlock* head{};
+	AlifASTBlock* current{};
+	AlifObject* objects{};
 };
 
 
 AlifASTBlock* block_new(AlifUSizeT);
 AlifASTMem* alifASTMem_new();
 void* alifASTMem_malloc(AlifASTMem*, AlifUSizeT);
-int alifASTMem_listAddAlifObj(AlifASTMem*, AlifObject*);
+AlifIntT alifASTMem_listAddAlifObj(AlifASTMem*, AlifObject*);
+void alifASTMem_free(AlifASTMem*);
+
+
+
+
+/* --------------------------------- ادوات ذاكرة ألف --------------------------------- */
+
+extern wchar_t* alifMem_wcsDup(const wchar_t*);
+
+
+/* ---------------------------------------AlifCore_Mem-----------------------------------------------------------------*/
+
+class AlifMemInterpFreeQueue { // 52
+public:
+	AlifIntT hasWork{};
+	AlifMutex mutex{};
+	class LListNode head {};
+};
+
+
+

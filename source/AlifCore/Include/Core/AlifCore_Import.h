@@ -1,68 +1,80 @@
 #pragma once
 
+#include "AlifCore_HashTable.h"
 
 
 
+extern AlifIntT _alifImport_fixupBuiltin(AlifThread*, AlifObject*, const char*, AlifObject*); // 26
 
 
+AlifObject* _alifImport_getModuleAttr(AlifObject*, AlifObject*); // 34
 
 
-class ImportDureRun {
+class ImportDureRunState { // 40
 public:
-	class InitTable* initTable;
+	class InitTable* initTable{};
 
-
-};
-
-class ImportState {
-public:
-	AlifObject* modules_;
-
-	AlifObject* modulesByIndex;
-	AlifObject* importLib;
-
-	int overrideFrozenModules;
-	int overrideMultiInterpExtensionsCheck;
-//#ifdef HAVE_DLOPEN
-	//int dlopenflags;
-//#endif
-	AlifObject* importFunc;
+	AlifSizeT lastModuleIndex{};
 	class {
 	public:
-		void* mutex_;
-		long thread_;
-		int level_;
-	} lock_;
-	class {
-	public:
-		int importLevel;
-		AlifTimeT accumulated_;
-		int header_;
-	} findAndLoad;
+		AlifMutex mutex{};
+		AlifHashTableT* hashtable{};
+	} extensions;
 };
 
-#  define ALIF_DLOPEN_FLAGS 0
-#  define DLOPENFLAGS_INIT
+class ImportState { // 63
+public:
+	AlifObject* modules{};
 
+	AlifObject* modulesByIndex{};
+
+	AlifObject* importLib{};
+	AlifObject* importFunc{};
+	//class {
+	//public:
+	//	AlifIntT importLevel{};
+	//	AlifTimeT accumulated{};
+	//	AlifIntT header{};
+	//} findAndLoad;
+};
+
+// 119
+/*
 #define IMPORTS_INIT \
     { \
-        nullptr, \
-        nullptr, \
-        nullptr, \
-        0, \
-        0, \
-        nullptr, \
-        { \
-            nullptr, \
-            -1, \
-            0, \
-        }, \
-        { \
-            1, \
+        .findAndLoad = { \
+            .header = 1, \
         }, \
     }
+*/
 
-AlifObject* alifImport_initModules(AlifInterpreter* );
+
+AlifSizeT alifImport_getNextModuleIndex(); // 129
+extern const char* alifImport_resolveNameWithPackageContext(const char*);
+extern const char* _alifImport_swapPackageContext(const char* newcontext); // 131
 
 
-extern AlifIntT alifImport_init();
+extern AlifObject* alifImport_initModules(AlifInterpreter*); // 136
+extern AlifObject* _alifImport_getModules(AlifInterpreter*); // 137
+
+extern AlifIntT _alifImport_initDefaultImportFunc(AlifInterpreter*); // 142
+extern AlifIntT _alifImport_isDefaultImportFunc(AlifInterpreter*, AlifObject*); // 143
+
+extern AlifIntT alifImport_init(); // 161
+
+extern AlifIntT _alifImport_initCore(AlifThread*, AlifObject*, AlifIntT); // 165
+
+extern AlifObject* _alifImport_getBuiltinModuleNames(void); // 174
+
+
+class ModuleAlias { // 176
+public:
+	const char* name{};                 /* ASCII encoded string */
+	const char* orig{};                 /* ASCII encoded string */
+};
+
+
+extern const Frozen* _alifImportFrozenBootstrap_; // 182
+
+
+extern const ModuleAlias* _alifImportFrozenAliases_; // 186

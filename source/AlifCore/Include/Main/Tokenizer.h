@@ -3,4 +3,4 @@
 #include "alif.h"
 
 
-TokenInfo* alifTokenizerInfo_fromFile(FILE*);
+TokenState* alifTokenizerInfo_fromFile(FILE*, const char*, const char*, const char*);

@@ -1,119 +1,98 @@
 #include "alif.h"
-#include "AlifCore_Object.h"
-#include "AlifCore_Memory.h"
+#include "AlifCore_ObjectAlloc.h"
+#include "AlifCore_Dict.h"
+#include "AlifCore_SetObject.h"
+
+#include "StringLib/Equal.h"
+#include "clinic/SetObject.cpp.h"
+
+// was static but shows error
+extern AlifObject _dummyStruct_; // 59 //* alif
+
+#define DUMMY (&_dummyStruct_) // 61
 
 
-extern AlifObject _dummyStruct_; // need review يجب ان تكون static وليس extern
+#define LINEAR_PROBES 9 // 69
 
-#define dummy (&_dummyStruct_)
+#define PERTURB_SHIFT 5 // 73
 
-#define SET_COPY_METHODDEF    \
-    {L"copy", (AlifCFunction)set_copy, METHOD_NOARGS},
-
-static AlifObject*
-set_copy_impl(AlifSetObject*);
-
-static AlifObject* set_copy(AlifSetObject* _so, AlifObject* ALIF_UNUSED(ignored))
-{
-	AlifObject* return_value = nullptr;
-
-	//ALIF_BEGIN_CRITICAL_SECTION(_so);
-	return_value = set_copy_impl(_so);
-	//ALIF_END_CRITICAL_SECTION();
-
-	return return_value;
-}
-
-#define LINEAR_PROBES 9
-#define PERTURB_SHIFT 5
-
-
-
-// Forward
-static int set_table_resize(AlifSetObject*, int64_t);
-static AlifObject* set_copy(AlifSetObject*, AlifObject*);
-
-
-
-static SetEntry* set_lookKey(AlifSetObject* _so, AlifObject* _key, size_t _hash)
-{
-	SetEntry* table_;
-	SetEntry* entry_;
-	size_t perTurb = _hash;
-	size_t mask_ = _so->mask_;
-	size_t i_ = (size_t)_hash & mask_; /* Unsigned for defined overflow behavior */
-	int probes_;
-	int cmp_;
+static SetEntry* set_lookKey(AlifSetObject* _so, AlifObject* _key, AlifHashT _hash) { // 76
+	SetEntry* table{};
+	SetEntry* entry{};
+	AlifUSizeT perturb = _hash;
+	AlifUSizeT mask = _so->mask;
+	AlifUSizeT i_ = (AlifUSizeT)_hash & mask; /* Unsigned for defined overflow behavior */
+	AlifIntT probes{};
+	AlifIntT cmp_{};
 
 	while (1) {
-		entry_ = &_so->table_[i_];
-		probes_ = (i_ + LINEAR_PROBES <= mask_) ? LINEAR_PROBES : 0;
+		entry = &_so->table[i_];
+		probes = (i_ + LINEAR_PROBES <= mask) ? LINEAR_PROBES : 0;
 		do {
-			if (entry_->hash_ == 0 && entry_->key_ == nullptr)
-				return entry_;
-			if (entry_->hash_ == _hash) {
-				AlifObject* startKey = entry_->key_;
+			if (entry->hash == 0 and entry->key == nullptr)
+				return entry;
+			if (entry->hash == _hash) {
+				AlifObject* startKey = entry->key;
 				if (startKey == _key)
-					return entry_;
-				if ((startKey->type_ == &_alifUStrType_)
-					&& (_key->type_ == &_alifUStrType_)
-					&& uStr_eq(startKey, _key))
-					return entry_;
-				table_ = _so->table_;
+					return entry;
+				if (ALIFUSTR_CHECKEXACT(startKey)
+					and ALIFUSTR_CHECKEXACT(_key)
+					and uStr_eq(startKey, _key))
+					return entry;
+				table = _so->table;
 				ALIF_INCREF(startKey);
 				cmp_ = alifObject_richCompareBool(startKey, _key, ALIF_EQ);
 				ALIF_DECREF(startKey);
 				if (cmp_ < 0)
 					return nullptr;
-				if (table_ != _so->table_ || entry_->key_ != startKey)
+				if (table != _so->table or entry->key != startKey)
 					return set_lookKey(_so, _key, _hash);
 				if (cmp_ > 0)
-					return entry_;
-				mask_ = _so->mask_;
+					return entry;
+				mask = _so->mask;
 			}
-			entry_++;
-		} while (probes_--);
-		perTurb >>= PERTURB_SHIFT;
-		i_ = (i_ * 5 + 1 + perTurb) & mask_;
+			entry++;
+		} while (probes--);
+		perturb >>= PERTURB_SHIFT;
+		i_ = (i_ * 5 + 1 + perturb) & mask;
 	}
 }
 
+static AlifIntT set_tableResize(AlifSetObject*, AlifSizeT); // 120
 
-static int set_add_entry(AlifSetObject* _so, AlifObject* _key, size_t _hash)
-{
-	SetEntry* table_;
-	SetEntry* freeSlot;
-	SetEntry* entry_;
-	size_t perTurb;
-	size_t mask_;
-	size_t i_;
-	int probes_;
-	int cmp_;
+static AlifIntT set_addEntry(AlifSetObject* _so, AlifObject* _key, AlifHashT _hash) { // 123
+	SetEntry* table{};
+	SetEntry* freesLot{};
+	SetEntry* entry{};
+	AlifUSizeT perturb{};
+	AlifUSizeT mask{};
+	AlifUSizeT i_{};                       /* Unsigned for defined overflow behavior */
+	AlifIntT probes{};
+	AlifIntT cmp_{};
 
 	ALIF_INCREF(_key);
 
 restart:
 
-	mask_ = _so->mask_;
-	i_ = (size_t)_hash & mask_;
-	freeSlot = nullptr;
-	perTurb = _hash;
+	mask = _so->mask;
+	i_ = (AlifUSizeT)_hash & mask;
+	freesLot = nullptr;
+	perturb = _hash;
 
 	while (1) {
-		entry_ = &_so->table_[i_];
-		probes_ = (i_ + LINEAR_PROBES <= mask_) ? LINEAR_PROBES : 0;
+		entry = &_so->table[i_];
+		probes = (i_ + LINEAR_PROBES <= mask) ? LINEAR_PROBES : 0;
 		do {
-			if (entry_->hash_ == 0 && entry_->key_ == nullptr)
-				goto foundUnusedOrBummy;
-			if (entry_->hash_ == _hash) {
-				AlifObject* startKey = entry_->key_;
+			if (entry->hash == 0 and entry->key == nullptr)
+				goto foundUnusedOrDummy;
+			if (entry->hash == _hash) {
+				AlifObject* startKey = entry->key;
 				if (startKey == _key)
 					goto foundActive;
-				if ((startKey->type_ == &_alifUStrType_)
-					&& (_key->type_ == &_alifUStrType_)
-					&& uStr_eq(startKey, _key))
+				if (ALIFUSTR_CHECKEXACT(startKey)
+					and ALIFUSTR_CHECKEXACT(_key) and uStr_eq(startKey, _key) )
 					goto foundActive;
-				table_ = _so->table_;
+				table = _so->table;
 				ALIF_INCREF(startKey);
 				cmp_ = alifObject_richCompareBool(startKey, _key, ALIF_EQ);
 				ALIF_DECREF(startKey);
@@ -121,35 +100,35 @@ restart:
 					goto foundActive;
 				if (cmp_ < 0)
 					goto comparisonError;
-				if (table_ != _so->table_ || entry_->key_ != startKey)
+				if (table != _so->table or entry->key != startKey)
 					goto restart;
-				mask_ = _so->mask_;
+				mask = _so->mask;
 			}
-			else if (entry_->hash_ == -1) {
-				freeSlot = entry_;
+			else if (entry->hash == -1) {
+				freesLot = entry;
 			}
-			entry_++;
-		} while (probes_--);
-		perTurb >>= PERTURB_SHIFT;
-		i_ = (i_ * 5 + 1 + perTurb) & mask_;
+			entry++;
+		} while (probes--);
+		perturb >>= PERTURB_SHIFT;
+		i_ = (i_ * 5 + 1 + perturb) & mask;
 	}
 
-foundUnusedOrBummy:
-	if (freeSlot == nullptr)
+foundUnusedOrDummy:
+	if (freesLot == nullptr)
 		goto foundUnused;
-	_so->used_++;
-	freeSlot->key_ = _key;
-	freeSlot->hash_ = _hash;
+	alifAtomic_storeSizeRelaxed(&_so->used, _so->used + 1);
+	freesLot->key = _key;
+	freesLot->hash = _hash;
 	return 0;
 
 foundUnused:
-	_so->fill_++;
-	_so->used_++;
-	entry_->key_ = _key;
-	entry_->hash_ = _hash;
-	if ((size_t)_so->fill_ * 5 < mask_ * 3)
+	_so->fill++;
+	alifAtomic_storeSizeRelaxed(&_so->used, _so->used + 1);
+	entry->key = _key;
+	entry->hash = _hash;
+	if ((AlifUSizeT)_so->fill * 5 < mask * 3)
 		return 0;
-	return set_table_resize(_so, _so->used_ > 50000 ? _so->used_ * 2 : _so->used_ * 4);
+	return set_tableResize(_so, _so->used > 50000 ? _so->used * 2 : _so->used * 4);
 
 foundActive:
 	ALIF_DECREF(_key);
@@ -160,466 +139,493 @@ comparisonError:
 	return -1;
 }
 
-static void set_insert_clean(SetEntry* _table, size_t _mask, AlifObject* _key, size_t _hash)
-{
-	SetEntry* entry_;
-	size_t perTurb = _hash;
-	size_t i_ = (size_t)_hash & _mask;
-	size_t j_;
+static void set_insertClean(SetEntry* _table, AlifUSizeT _mask,
+	AlifObject* _key, AlifHashT _hash) { // 218
+	SetEntry* entry{};
+	AlifUSizeT perturb = _hash;
+	AlifUSizeT i_ = (AlifUSizeT)_hash & _mask;
+	AlifUSizeT j_{};
 
 	while (1) {
-		entry_ = &_table[i_];
-		if (entry_->key_ == nullptr)
+		entry = &_table[i_];
+		if (entry->key == nullptr)
 			goto foundNull;
 		if (i_ + LINEAR_PROBES <= _mask) {
 			for (j_ = 0; j_ < LINEAR_PROBES; j_++) {
-				entry_++;
-				if (entry_->key_ == nullptr)
+				entry++;
+				if (entry->key == nullptr)
 					goto foundNull;
 			}
 		}
-		perTurb >>= PERTURB_SHIFT;
-		i_ = (i_ * 5 + 1 + perTurb) & _mask;
+		perturb >>= PERTURB_SHIFT;
+		i_ = (i_ * 5 + 1 + perturb) & _mask;
 	}
 foundNull:
-	entry_->key_ = _key;
-	entry_->hash_ = _hash;
+	entry->key = _key;
+	entry->hash = _hash;
 }
 
-static int set_table_resize(AlifSetObject* _so, int64_t _minUsed)
-{
-	SetEntry* oldTable, * newTable, * entry_;
-	int64_t oldMask = _so->mask_;
-	size_t newMask;
-	int isOldTableMalloced;
+static AlifIntT set_tableResize(AlifSetObject* _so, AlifSizeT _minUsed) { // 253
+	SetEntry* oldTable{}, * newTable{}, * entry{};
+	AlifSizeT oldMask = _so->mask;
+	AlifUSizeT newMask{};
+	AlifIntT isOldTableMalloced{};
 	SetEntry smallCopy[ALIFSET_MINSIZE];
-	size_t newSize = ALIFSET_MINSIZE;
-	while (newSize <= (size_t)_minUsed) {
-		newSize <<= 1;
+
+
+	/* Find the smallest table size > minused. */
+	/* XXX speed-up with intrinsics */
+	AlifUSizeT newSize = ALIFSET_MINSIZE;
+	while (newSize <= (AlifUSizeT)_minUsed) {
+		newSize <<= 1; // The largest possible value is ALIF_SIZET_MAX + 1.
 	}
 
-	oldTable = _so->table_;
+	/* Get space for a new table. */
+	oldTable = _so->table;
 	isOldTableMalloced = oldTable != _so->smallTable;
 
 	if (newSize == ALIFSET_MINSIZE) {
+		/* A large table is shrinking, or we can't get any smaller. */
 		newTable = _so->smallTable;
 		if (newTable == oldTable) {
-			if (_so->fill_ == _so->used_) {
+			if (_so->fill == _so->used) {
 				return 0;
 			}
-
 			memcpy(smallCopy, oldTable, sizeof(smallCopy));
 			oldTable = smallCopy;
 		}
 	}
 	else {
-		newTable = (SetEntry*)alifMem_objAlloc(newSize);
+		newTable = (SetEntry*)alifMem_dataAlloc(newSize * sizeof(SetEntry));
 		if (newTable == nullptr) {
+			//alifErr_noMemory();
 			return -1;
 		}
 	}
 
+	/* Make the set empty, using the new table. */
 	memset(newTable, 0, sizeof(SetEntry) * newSize);
-	_so->mask_ = newSize - 1;
-	_so->table_ = newTable;
+	_so->mask = newSize - 1;
+	_so->table = newTable;
 
-	newMask = (size_t)_so->mask_;
-	if (_so->fill_ == _so->used_) {
-		for (entry_ = oldTable; entry_ <= oldTable + oldMask; entry_++) {
-			if (entry_->key_ != nullptr) {
-				set_insert_clean(newTable, newMask, entry_->key_, entry_->hash_);
+	/* Copy the data over; this is refcount-neutral for active entries;
+	   dummy entries aren't copied over, of course */
+	newMask = (AlifUSizeT)_so->mask;
+	if (_so->fill == _so->used) {
+		for (entry = oldTable; entry <= oldTable + oldMask; entry++) {
+			if (entry->key != nullptr) {
+				set_insertClean(newTable, newMask, entry->key, entry->hash);
 			}
 		}
 	}
 	else {
-		_so->fill_ = _so->used_;
-		for (entry_ = oldTable; entry_ <= oldTable + oldMask; entry_++) {
-			if (entry_->key_ != nullptr
-				&& entry_->key_ != dummy
-				) {
-				set_insert_clean(newTable, newMask, entry_->key_, entry_->hash_);
+		_so->fill = _so->used;
+		for (entry = oldTable; entry <= oldTable + oldMask; entry++) {
+			if (entry->key != nullptr and entry->key != DUMMY) {
+				set_insertClean(newTable, newMask, entry->key, entry->hash);
 			}
 		}
 	}
 
-	if (isOldTableMalloced)
-		alifMem_objFree(oldTable);
+	if (isOldTableMalloced) alifMem_dataFree(oldTable);
 	return 0;
 }
 
-static int set_contains_entry(AlifSetObject* _so, AlifObject* _key, size_t _hash)
-{
-	SetEntry* entry_;
+static AlifIntT set_containsEntry(AlifSetObject* _so, AlifObject* _key, AlifHashT _hash) { // 333
+	SetEntry* entry{};
 
-	entry_ = set_lookKey(_so, _key, _hash);
-	if (entry_ != nullptr)
-		return entry_->key_ != nullptr;
+	entry = set_lookKey(_so, _key, _hash);
+	if (entry != nullptr)
+		return entry->key != nullptr;
 	return -1;
 }
 
 #define DISCARD_NOTFOUND 0
 #define DISCARD_FOUND 1
 
-static int set_discard_entry(AlifSetObject* _so, AlifObject* _key, size_t _hash)
-{
-	SetEntry* entry_;
-	AlifObject* oldKey;
+static AlifIntT set_discardEntry(AlifSetObject* _so, AlifObject* _key, AlifHashT _hash) { // 347
+	SetEntry* entry{};
+	AlifObject* oldKey{};
 
-	entry_ = set_lookKey(_so, _key, _hash);
-	if (entry_ == nullptr)
+	entry = set_lookKey(_so, _key, _hash);
+	if (entry == nullptr)
 		return -1;
-	if (entry_->key_ == nullptr)
+	if (entry->key == nullptr)
 		return DISCARD_NOTFOUND;
-	oldKey = entry_->key_;
-	entry_->key_ = dummy;
-	entry_->hash_ = -1;
-	_so->used_--;
+	oldKey = entry->key;
+	entry->key = DUMMY;
+	entry->hash = -1;
+	alifAtomic_storeSizeRelaxed(&_so->used, _so->used - 1);
 	ALIF_DECREF(oldKey);
 	return DISCARD_FOUND;
 }
 
-static void set_dealloc(AlifSetObject* _so)
-{
-	SetEntry* entry_;
-	int64_t used_ = _so->used_;
-
-	//alifObject_GC_UnTrack(_so);
-	//ALIF_TRASHCAN_BEGIN(_so, set_dealloc)
-		//if (_so->weakRefList != nullptr)
-			//Object_ClearWeakRefs((AlifObject*)_so);
-
-	for (entry_ = _so->table_; used_ > 0; entry_++) {
-		if (entry_->key_ && entry_->key_ != dummy) {
-			used_--;
-			ALIF_DECREF(entry_->key_);
-		}
+static AlifIntT set_addKey(AlifSetObject* _so, AlifObject* _key) { // 366
+	AlifHashT hash = alifObject_hashFast(_key);
+	if (hash == -1) {
+		return -1;
 	}
-	if (_so->table_ != _so->smallTable)
-		alifMem_objFree(_so->table_);
-	//ALIF_TYPE(_so)->free_(_so);
-	//ALIF_TRASHCAN_END
-	alifMem_objFree(_so);
+	return set_addEntry(_so, _key, hash);
 }
 
-static int set_merge_lock_held(AlifSetObject* _so, AlifObject* _otherSet)
-{
-	AlifSetObject* other_;
-	AlifObject* key_;
-	int64_t i_;
-	SetEntry* soEntry;
-	SetEntry* otherEntry;
+static AlifIntT set_containsKey(AlifSetObject* _so, AlifObject* _key) { // 376
+	AlifHashT hash = alifObject_hashFast(_key);
+	if (hash == -1) {
+		return -1;
+	}
+	return set_containsEntry(_so, _key, hash);
+}
 
-	other_ = (AlifSetObject*)_otherSet;
-	if (other_ == _so || other_->used_ == 0)
+static AlifIntT set_discardKey(AlifSetObject* _so, AlifObject* _key) { // 386
+	AlifHashT hash = alifObject_hashFast(_key);
+	if (hash == -1) {
+		return -1;
+	}
+	return set_discardEntry(_so, _key, hash);
+}
+
+
+
+static AlifIntT set_next(AlifSetObject* so,
+	AlifSizeT* pos_ptr, SetEntry** entry_ptr) { // 468
+	AlifSizeT i{};
+	AlifSizeT mask{};
+	SetEntry* entry{};
+
+	i = *pos_ptr;
+	mask = so->mask;
+	entry = &so->table[i];
+	while (i <= mask and (entry->key == nullptr or entry->key == DUMMY)) {
+		i++;
+		entry++;
+	}
+	*pos_ptr = i + 1;
+	if (i > mask) return 0;
+	*entry_ptr = entry;
+	return 1;
+}
+
+static void set_dealloc(AlifObject* _self) { // 492
+	AlifSetObject* so = ALIFSET_CAST(_self);
+	SetEntry* entry{};
+	AlifSizeT used = so->used;
+
+	alifObject_gcUnTrack(so);
+	ALIF_TRASHCAN_BEGIN(so, set_dealloc);
+	if(so->weakRefList != nullptr) alifObject_clearWeakRefs((AlifObject*)so);
+
+	for (entry = so->table; used > 0; entry++) {
+		if (entry->key and entry->key != DUMMY) {
+			used--;
+			ALIF_DECREF(entry->key);
+		}
+	}
+	if (so->table != so->smallTable) alifMem_dataFree(so->table);
+	ALIF_TYPE(so)->free(so);
+	ALIF_TRASHCAN_END;
+}
+
+static AlifSizeT set_len(AlifObject* _self) { // 571
+	AlifSetObject* so = ALIFSET_CAST(_self);
+	return alifAtomic_loadSizeRelaxed(&so->used);
+}
+
+static AlifIntT setMerge_lockHeld(AlifSetObject* _so, AlifObject* _otherSet) { // 578
+	AlifSetObject* other{};
+	AlifObject* key{};
+	AlifSizeT i_{};
+	SetEntry* soEntry{};
+	SetEntry* otherEntry{};
+
+	other = ALIFSET_CAST(_otherSet);
+	if (other == _so or other->used == 0)
 		return 0;
-
-	if ((_so->fill_ + other_->used_) * 5 >= _so->mask_ * 3) {
-		if (set_table_resize(_so, (_so->used_ + other_->used_) * 2) != 0)
+	if ((_so->fill + other->used) * 5 >= _so->mask * 3) {
+		if (set_tableResize(_so, (_so->used + other->used) * 2) != 0)
 			return -1;
 	}
-	soEntry = _so->table_;
-	otherEntry = other_->table_;
+	soEntry = _so->table;
+	otherEntry = other->table;
 
-	if (_so->fill_ == 0 && _so->mask_ == other_->mask_ && other_->fill_ == other_->used_) {
-		for (i_ = 0; i_ <= other_->mask_; i_++, soEntry++, otherEntry++) {
-			key_ = otherEntry->key_;
-			if (key_ != nullptr) {
-				soEntry->key_ = ALIF_NEWREF(key_);
-				soEntry->hash_ = otherEntry->hash_;
+	if (_so->fill == 0 and _so->mask == other->mask and other->fill == other->used) {
+		for (i_ = 0; i_ <= other->mask; i_++, soEntry++, otherEntry++) {
+			key = otherEntry->key;
+			if (key != nullptr) {
+				soEntry->key = ALIF_NEWREF(key);
+				soEntry->hash = otherEntry->hash;
 			}
 		}
-		_so->fill_ = other_->fill_;
-		_so->used_ = other_->used_;
+		_so->fill = other->fill;
+		alifAtomic_storeSizeRelaxed(&_so->used, other->used);
 		return 0;
 	}
 
-	if (_so->fill_ == 0) {
-		SetEntry* newTable = _so->table_;
-		size_t newMask = (size_t)_so->mask_;
-		_so->fill_ = other_->used_;
-		_so->used_ = other_->used_;
-		for (i_ = other_->mask_ + 1; i_ > 0; i_--, otherEntry++) {
-			key_ = otherEntry->key_;
-			if (key_ != nullptr
-				&& key_ != dummy
-				) {
-				set_insert_clean(newTable, newMask, ALIF_NEWREF(key_),
-					otherEntry->hash_);
+	if (_so->fill == 0) {
+		SetEntry* newtable = _so->table;
+		AlifUSizeT newMask = (AlifUSizeT)_so->mask;
+		_so->fill = other->used;
+		alifAtomic_storeSizeRelaxed(&_so->used, other->used);
+		for (i_ = other->mask + 1; i_ > 0; i_--, otherEntry++) {
+			key = otherEntry->key;
+			if (key != nullptr and key != DUMMY) {
+				set_insertClean(newtable, newMask, ALIF_NEWREF(key),
+					otherEntry->hash);
 			}
 		}
 		return 0;
 	}
 
-	for (i_ = 0; i_ <= other_->mask_; i_++) {
-		otherEntry = &other_->table_[i_];
-		key_ = otherEntry->key_;
-		if (key_ != nullptr
-			&& key_ != dummy
-			) {
-			if (set_add_entry(_so, key_, otherEntry->hash_))
+	for (i_ = 0; i_ <= other->mask; i_++) {
+		otherEntry = &other->table[i_];
+		key = otherEntry->key;
+		if (key != nullptr and key != DUMMY) {
+			if (set_addEntry(_so, key, otherEntry->hash))
 				return -1;
 		}
 	}
 	return 0;
 }
 
-class AlifSetIterObject {
-public:
-	ALIFOBJECT_HEAD
-	AlifSetObject* sISet; /* Set to nullptr when iterator is exhausted */
-	int64_t sIUsed;
-	int64_t sIPos;
-	int64_t len_;
-} ;
 
-static void setIter_dealloc(AlifSetIterObject* _si)
-{
-	ALIF_XDECREF(_si->sISet);
-	alifMem_objFree(_si);
+
+static AlifObject* set_popImpl(AlifSetObject* so) { // 660
+	SetEntry* entry = so->table + (so->finger & so->mask);
+	SetEntry* limit = so->table + so->mask;
+	AlifObject* key{};
+
+	if (so->used == 0) {
+		//alifErr_setString(_alifExcKeyError_, "pop from an empty set");
+		return nullptr;
+	}
+	while (entry->key == nullptr or entry->key == DUMMY) {
+		entry++;
+		if (entry > limit)
+			entry = so->table;
+	}
+	key = entry->key;
+	entry->key = DUMMY;
+	entry->hash = -1;
+	alifAtomic_storeSizeRelaxed(&so->used, so->used - 1);
+	so->finger = entry - so->table + 1;
+	return key;
 }
 
-static AlifObject* setIter_iterNext(AlifSetIterObject* _si)
-{
-	AlifObject* key;
-	int64_t i, mask;
-	SetEntry* entry;
-	AlifSetObject* so = _si->sISet;
+
+
+
+class SetIterObject { // 778
+public:
+	ALIFOBJECT_HEAD;
+	AlifSetObject* set{};
+	AlifSizeT used{};
+	AlifSizeT pos{};
+	AlifSizeT len{};
+};
+
+static void setIter_dealloc(AlifObject* _self) { // 786
+	SetIterObject* si = (SetIterObject*)_self;
+	ALIFOBJECT_GC_UNTRACK(si);
+	ALIF_XDECREF(si->set);
+	alifObject_gcDel(si);
+}
+
+
+static AlifObject* setIter_iterNext(AlifObject* _self) { // 839
+	SetIterObject* si = (SetIterObject*)_self;
+	AlifObject* key = nullptr;
+	AlifSizeT i{}, mask{};
+	SetEntry* entry{};
+	AlifSetObject* so = si->set;
 
 	if (so == nullptr)
 		return nullptr;
 
-	if (_si->sIUsed != so->used_) {
-		// error
-		_si->sIUsed = -1; /* Make this state sticky */
+	AlifSizeT soUsed = alifAtomic_loadSize(&so->used);
+	AlifSizeT siUsed = alifAtomic_loadSize(&si->used);
+	if (siUsed != soUsed) {
+		//alifErr_setString(_alifExcRuntimeError_,
+		//	"Set changed size during iteration");
+		si->used = -1;
 		return nullptr;
 	}
 
-	i = _si->sIPos;
-	entry = so->table_;
-	mask = so->mask_;
-	while (i <= mask
-		&&
-		(entry[i].key_ == nullptr || entry[i].key_ == dummy)
-		 )
+	ALIF_BEGIN_CRITICAL_SECTION(so);
+	i = si->pos;
+	entry = so->table;
+	mask = so->mask;
+	while (i <= mask and (entry[i].key == nullptr or entry[i].key == DUMMY)) {
 		i++;
-	_si->sIPos = i + 1;
-	if (i > mask)
-		goto fail;
-	_si->len_--;
-	key = entry[i].key_;
-	return ALIF_NEWREF(key);
-
-fail:
-	_si->sISet = nullptr;
-	ALIF_DECREF(so);
-	return nullptr;
+	}
+	if (i <= mask) {
+		key = ALIF_NEWREF(entry[i].key);
+	}
+	ALIF_END_CRITICAL_SECTION();
+	si->pos = i + 1;
+	if (key == nullptr) {
+		si->set = nullptr;
+		ALIF_DECREF(so);
+		return nullptr;
+	}
+	si->len--;
+	return key;
 }
 
-AlifTypeObject _alifSetIterType_ = {
-	0,
-	0,
-	0,
-	L"set_iterator",                             /* tp_name */
-	sizeof(AlifSetIterObject),                      /* tp_basicsize */
-	0,                                          /* tp_itemsize */
-	(Destructor)setIter_dealloc,                /* tp_dealloc */
-	0,                                          /* tp_vectorcall_offset */
-	0,                                          /* tp_getattr */
-	0,                                          /* tp_setattr */
-	0,                                          /* tp_as_async */
-	0,                                          /* tp_repr */
-	0,                                          /* tp_as_number */
-	0,                                          /* tp_as_sequence */
-	0,                                          /* tp_as_mapping */
-	0,                                          /* tp_call */
-	0,                                          /* tp_str */
-	alifObject_genericGetAttr,                    /* tp_getattro */
-	0,                                          /* tp_setattro */
-	0,                                          /* tp_as_buffer */
-	0, //ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,    /* tp_flags */
-	0,                                          /* tp_doc */
-	0, //(traverseproc)setiter_traverse,             /* tp_traverse */
-	0,                                          /* tp_clear */
-	0,                                          /* tp_richcompare */
-	0,                                          /* tp_weaklistoffset */
-	0,//ALIFObject_SelfIter,                          /* tp_iter */
-	(IterNextFunc)setIter_iterNext,             /* tp_iternext */
-	0, //setiter_methods,                            /* tp_methods */
-	0,
+AlifTypeObject _alifSetIterType_ = { // 881
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "مميزة_تكرار",
+	.basicSize = sizeof(SetIterObject),
+	.itemSize = 0,
+	/* methods */
+	.dealloc = setIter_dealloc,
+	.vectorCallOffset = 0,
+	.getAttr = 0,
+	.setAttr = 0,
+	.repr = 0,
+	.asNumber = 0,
+	.asSequence = 0,
+	.asMapping = 0,
+	.hash = 0,
+	.getAttro = alifObject_genericGetAttr,
+	.setAttro = 0,
+	.asBuffer = 0,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
+	//.traverse = setIter_traverse,
+	.richCompare = 0,
+	.weakListOffset = 0,
+	.iter = alifObject_selfIter,
+	.iterNext = setIter_iterNext,
 };
 
-static AlifObject* set_iter(AlifSetObject* _so)
-{
-	//int64_t size = set_len(_so);
-	int64_t size = _so->used_; // هنا يتم عمل نفس الامر 
-	//SetIterObject* si_ = ALIFObject_GC_New(setiterobject, &_alifSetIterType_);
-	AlifSetIterObject* si_{};
-	si_ = (AlifSetIterObject*)alifMem_objAlloc(alifSubObject_varSize(&_alifSetIterType_, 1));
-	alifSubObject_initVar((AlifVarObject*)si_, &_alifSetIterType_, alifSubObject_varSize(&_alifSetIterType_, 1));
-	if (si_ == nullptr)
-		return nullptr;
-	si_->sISet = (AlifSetObject*)ALIF_NEWREF(_so);
-	si_->sIUsed = size;
-	si_->sIPos = 0;
-	si_->len_ = size;
-	//ALIFSUBObject_GC_TRACK(si_);
-	return (AlifObject*)si_;
+
+static AlifObject* set_iter(AlifObject* _so) { // 914
+	AlifSizeT size = set_len(_so);
+	SetIterObject* si = ALIFOBJECT_GC_NEW(SetIterObject, &_alifSetIterType_);
+	if (si == nullptr) return nullptr;
+	si->set = (AlifSetObject*)ALIF_NEWREF(_so);
+	si->used = size;
+	si->pos = 0;
+	si->len = size;
+	ALIFOBJECT_GC_TRACK(si);
+	return (AlifObject*)si;
 }
 
-static int set_add_key(AlifSetObject* _so, AlifObject* _key)
-{
-	size_t hash_{};
-
-	if (!(_key->type_ == &_alifUStrType_)) {
-		hash_ = alifObject_hash(_key);
-		if (hash_ == -1)
-			return -1;
-	}
-	return set_add_entry(_so, _key, hash_);
-}
-
-static int set_contains_key(AlifSetObject* _so, AlifObject* _key)
-{
-	size_t hash_{};
-
-	if (!(_key->type_ == &_alifUStrType_)
-		//|| (hash_ = ALIFUNICODE_CAST(key)->hash) == -1
-		) {
-		hash_ = alifObject_hash(_key);
-		if (hash_ == -1)
-			return -1;
-	}
-	return set_contains_entry(_so, _key, hash_);
-}
-
-static int set_discard_key(AlifSetObject* _so, AlifObject* _key)
-{
-	size_t hash_{};
-
-	if (!(_key->type_ == &_alifUStrType_)
-		//||
-		//(hash_ = ALIFUNICODE_CAST(_key)->hash_) == -1) 
-		)
-	{
-		hash_ = alifObject_hash(_key);
-		if (hash_ == -1)
-			return -1;
-	}
-	return set_discard_entry(_so, _key, hash_);
-}
-
-static int set_update_dict_lock_held(AlifSetObject* _so, AlifObject* _other)
-{
-
-	int64_t dictSize = ((AlifDictObject*)_other)->used;
-	if ((_so->fill_ + dictSize) * 5 >= _so->mask_ * 3) {
-		if (set_table_resize(_so, (_so->used_ + dictSize) * 2) != 0) {
+static AlifIntT setUpdateDict_lockHeld(AlifSetObject* _so, AlifObject* _other) { // 930
+	AlifSizeT dictSize = ALIFDICT_GET_SIZE(_other);
+	if ((_so->fill + dictSize) * 5 >= _so->mask * 3) {
+		if (set_tableResize(_so, (_so->used + dictSize) * 2) != 0) {
 			return -1;
 		}
 	}
 
-	AlifSizeT pos_ = 0;
-	AlifObject* key_;
-	AlifObject* value_;
-	size_t hash_{};
-	while (alifDict_next(_other, &pos_, &key_, &value_)) {
-		if (set_add_entry(_so, key_, hash_)) {
+	AlifSizeT pos = 0;
+	AlifObject* key{};
+	AlifObject* value{};
+	AlifHashT hash{};
+	while (_alifDict_next(_other, &pos, &key, &value, &hash)) {
+		if (set_addEntry(_so, key, hash)) {
 			return -1;
 		}
 	}
 	return 0;
 }
 
-static int set_update_iterable_lock_held(AlifSetObject* _so, AlifObject* _other)
-{
+static AlifIntT setUpdateIterable_lockHeld(AlifSetObject *_so, AlifObject *_other) { // 961
 
 	AlifObject* it_ = alifObject_getIter(_other);
-	if (it_ == nullptr) {
-		return -1;
-	}
+    if (it_ == nullptr) {
+        return -1;
+    }
 
-	AlifObject* key_;
-	while ((key_ = alifIter_next(it_)) != nullptr) {
-		if (set_add_key(_so, key_)) {
-			ALIF_DECREF(it_);
-			ALIF_DECREF(key_);
-			return -1;
-		}
-		ALIF_DECREF(key_);
-	}
-	ALIF_DECREF(it_);
-	return 0;
+	AlifObject* key_{};
+    while ((key_ = alifIter_next(it_)) != nullptr) {
+        if (set_addKey(_so, key_)) {
+            ALIF_DECREF(it_);
+            ALIF_DECREF(key_);
+            return -1;
+        }
+        ALIF_DECREF(key_);
+    }
+    ALIF_DECREF(it_);
+    //if (alifErr_occurred())
+        //return -1;
+    return 0;
 }
 
-static int set_update_local(AlifSetObject* _so, AlifObject* _other)
-{
-	if ((_other->type_ == &_alifSetType_)) {
-		int rv{};
-		//ALIF_BEGIN_CRITICAL_SECTION(other);
-		rv = set_merge_lock_held(_so, _other);
-		//ALIF_END_CRITICAL_SECTION();
-		return rv;
-	}
-	else if ((_other->type_ == &_alifDictType_)) {
-		int rv;
-		//ALIF_BEGIN_CRITICAL_SECTION(_other);
-		rv = set_update_dict_lock_held(_so, _other);
-		//ALIF_END_CRITICAL_SECTION();
-		return rv;
-	}
-	return set_update_iterable_lock_held(_so, _other);
+static AlifIntT setUpdate_lockHeld(AlifSetObject *_so, AlifObject *_other) { // 986
+    if (ALIFANYSET_CHECK(_other)) {
+        return setMerge_lockHeld(_so, _other);
+    }
+    else if (ALIFDICT_CHECKEXACT(_other)) {
+        return setUpdateDict_lockHeld(_so, _other);
+    }
+    return setUpdateIterable_lockHeld(_so, _other);
 }
 
-static int set_update_internal(AlifSetObject* _so, AlifObject* _other)
-{
-	if ((_other->type_ == &_alifSetType_)) {
+// set_update for a `_so` that is only visible to the current thread
+static AlifIntT set_updateLocal(AlifSetObject *_so, AlifObject *_other) { // 999
+    if (ALIFANYSET_CHECK(_other)) {
+		AlifIntT rv_{};
+        ALIF_BEGIN_CRITICAL_SECTION(_other);
+        rv_ = setMerge_lockHeld(_so, _other);
+        ALIF_END_CRITICAL_SECTION();
+        return rv_;
+    }
+    else if (ALIFDICT_CHECKEXACT(_other)) {
+		AlifIntT rv_{};
+        ALIF_BEGIN_CRITICAL_SECTION(_other);
+        rv_ = setUpdateDict_lockHeld(_so, _other);
+        ALIF_END_CRITICAL_SECTION();
+        return rv_;
+    }
+    return setUpdateIterable_lockHeld(_so, _other);
+}
+
+
+static AlifIntT set_updateInternal(AlifSetObject* _so, AlifObject* _other) { // 1019
+	if (ALIFANYSET_CHECK(_other)) {
 		if (ALIF_IS((AlifObject*)_so, _other)) {
 			return 0;
 		}
-		int rv;
-		//ALIF_BEGIN_CRITICAL_SECTION2(_so, _other);
-		rv = set_merge_lock_held(_so, _other);
-		//ALIF_END_CRITICAL_SECTION2();
+		AlifIntT rv{};
+		ALIF_BEGIN_CRITICAL_SECTION2(_so, _other);
+		rv = setMerge_lockHeld(_so, _other);
+		ALIF_END_CRITICAL_SECTION2();
 		return rv;
 	}
-	else if ((_other->type_ == &_alifDictType_)) {
-		int rv;
-		//ALIF_BEGIN_CRITICAL_SECTION2(_so, _other);
-		rv = set_update_dict_lock_held(_so, _other);
-		//ALIF_END_CRITICAL_SECTION2();
+	else if (ALIFDICT_CHECKEXACT(_other)) {
+		AlifIntT rv{};
+		ALIF_BEGIN_CRITICAL_SECTION2(_so, _other);
+		rv = setUpdateDict_lockHeld(_so, _other);
+		ALIF_END_CRITICAL_SECTION2();
 		return rv;
 	}
 	else {
-		int rv;
-		//ALIF_BEGIN_CRITICAL_SECTION(_so);
-		rv = set_update_iterable_lock_held(_so, _other);
-		//ALIF_END_CRITICAL_SECTION();
+		AlifIntT rv{};
+		ALIF_BEGIN_CRITICAL_SECTION(_so);
+		rv = setUpdateIterable_lockHeld(_so, _other);
+		ALIF_END_CRITICAL_SECTION();
 		return rv;
 	}
 }
 
 
-static AlifObject* make_new_set(AlifTypeObject* _type, AlifObject* _iterable)
-{
+static AlifObject* make_newSet(AlifTypeObject* _type, AlifObject* _iterable) { // 1077
 	AlifSetObject* so_{};
 
-	//so_ = (AlifSetObject*)(_type->alloc_(_type, 0));
-	so_ = (AlifSetObject*)alifMem_objAlloc(alifSubObject_varSize(&_alifSetType_, 1));
-	alifSubObject_initVar((AlifVarObject*)so_ , &_alifSetType_, alifSubObject_varSize(&_alifSetType_, 1));
-
+	so_ = (AlifSetObject*)_type->alloc(_type, 0);
 	if (so_ == nullptr)
 		return nullptr;
 
-	so_->fill_ = 0;
-	so_->used_ = 0;
-	so_->mask_ = ALIFSET_MINSIZE - 1;
-	so_->table_ = so_->smallTable;
-	so_->hash_ = -1;
-	so_->finger_ = 0;
+	so_->fill = 0;
+	so_->used = 0;
+	so_->mask = ALIFSET_MINSIZE - 1;
+	so_->table = so_->smallTable;
+	so_->hash = -1;
+	so_->finger = 0;
 	so_->weakRefList = nullptr;
 
 	if (_iterable != nullptr) {
-		if (set_update_local(so_, _iterable)) {
+		if (set_updateLocal(so_, _iterable)) {
 			ALIF_DECREF(so_);
 			return nullptr;
 		}
@@ -628,210 +634,196 @@ static AlifObject* make_new_set(AlifTypeObject* _type, AlifObject* _iterable)
 	return (AlifObject*)so_;
 }
 
-static AlifObject* make_new_set_baseType(AlifTypeObject* type, AlifObject* iterable)
-{
-	//if (type != &AlifSet_Type && type != &AlifFrozenSet_Type) {
-		//if (alifType_IsSubtype(type, &_alifSetType_))
-	type = &_alifSetType_;
-	//else
-		//type = &AlifFrozenSet_Type;
-//}
-	return make_new_set(type, iterable);
+static AlifObject* set_new(AlifTypeObject* _type,
+	AlifObject* _args, AlifObject* _kwds) { // 1166
+	return make_newSet(_type, nullptr);
 }
 
-static AlifObject* set_or(AlifSetObject* _so, AlifObject* _other)
-{
-	AlifSetObject* result_;
 
-	if (!(((AlifObject*)_so)->type_ == &_alifSetType_) || !(_other->type_ == &_alifSetType_))
+static AlifObject* set_ior(AlifObject* _self, AlifObject* _other) { // 1331
+	if (!ALIFANYSET_CHECK(_other))
 		return ALIF_NOTIMPLEMENTED;
 
-	result_ = (AlifSetObject*)set_copy(_so, nullptr);
-	if (result_ == nullptr) {
+	AlifSetObject* so = ALIFSET_CAST(_self);
+	if (set_updateInternal(so, _other)) {
 		return nullptr;
 	}
-	if (ALIF_IS((AlifObject*)_so, _other)) {
-		return (AlifObject*)result_;
-	}
-	if (set_update_local(result_, _other)) {
-		ALIF_DECREF(result_);
-		return nullptr;
-	}
-	return (AlifObject*)result_;
+	return ALIF_NEWREF(so);
 }
 
-static AlifObject* set_ior(AlifSetObject* _so, AlifObject* _other)
-{
-	if (!(_other->type_ == &_alifSetType_))
-		return ALIF_NOTIMPLEMENTED;
 
-	if (set_update_internal(_so, _other)) {
-		return nullptr;
-	}
-	return ALIF_NEWREF(_so);
-}
 
-static AlifMethodDef _alifSetMethods_[] = {
-	SET_COPY_METHODDEF
-	{nullptr,              nullptr}   /* sentinel */
+static AlifNumberMethods _asNumber_ = { // 2411
+	.add_ = 0,
+	//.subtract = set_sub,
+	//0,                                  /*multiply*/
+	//0,                                  /*remainder*/
+	//0,                                  /*divmod*/
+	//0,                                  /*power*/
+	//0,                                  /*negative*/
+	//0,                                  /*positive*/
+	//0,                                  /*absolute*/
+	//0,                                  /*bool*/
+	//0,                                  /*invert*/
+	//0,                                  /*lshift*/
+	//0,                                  /*rshift*/
+	//.and_ = set_and,
+	//.xor_ = set_xor,
+	//.or_ = set_or,
+	//0,                                  /*int*/
+	//0,                                  /*reserved*/
+	//0,                                  /*float*/
+	//0,                                  /*inplace_add*/
+	//.inplaceSubtract = set_isub,
+	//0,                                  /*inplace_multiply*/
+	//0,                                  /*inplace_remainder*/
+	//0,                                  /*inplace_power*/
+	//0,                                  /*inplace_lshift*/
+	//0,                                  /*inplace_rshift*/
+	//.inplaceAnd = set_iand,
+	//.inplaceXor = set_ixor,
+	.inplaceOr = set_ior,
 };
 
-static AlifNumberMethods _alifSetAsNumber_ = {
-	0,                                  /*nb_add*/
-	0, //(binaryfunc)set_sub,                /*nb_subtract*/
-	0,                                  /*nb_multiply*/
-	0,                                  /*nb_remainder*/
-	0,                                  /*nb_divmod*/
-	0,                                  /*nb_power*/
-	0,                                  /*nb_negative*/
-	0,                                  /*nb_positive*/
-	0,                                  /*nb_absolute*/
-	0,                                  /*nb_bool*/
-	0,                                  /*nb_invert*/
-	0,                                  /*nb_lshift*/
-	0,                                  /*nb_rshift*/
-	0, //(binaryfunc)set_and,                /*nb_and*/
-	0, //(binaryfunc)set_xor,                /*nb_xor*/
-	(BinaryFunc)set_or,                 /*nb_or*/
-	0,                                  /*nb_int*/
-	0,                                  /*nb_reserved*/
-	0,                                  /*nb_float*/
-	0,                                  /*nb_inplace_add*/
-	0, //(binaryfunc)set_isub,               /*nb_inplace_subtract*/
-	0,                                  /*nb_inplace_multiply*/
-	0,                                  /*nb_inplace_remainder*/
-	0,                                  /*nb_inplace_power*/
-	0,                                  /*nb_inplace_lshift*/
-	0,                                  /*nb_inplace_rshift*/
-	0, // (binaryfunc)set_iand,               /*nb_inplace_and*/
-	0, //(binaryfunc)set_ixor,               /*nb_inplace_xor*/
-	(BinaryFunc)set_ior,                /*nb_inplace_or*/
+
+AlifTypeObject _alifSetType_ = { // 2449
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "مميزة",
+	.basicSize = sizeof(AlifSetObject),
+	.itemSize = 0,
+	.dealloc = set_dealloc,
+
+	.asNumber = &_asNumber_,
+
+
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
+		ALIF_TPFLAGS_BASETYPE | _ALIF_TPFLAGS_MATCH_SELF,
+
+
+	.iter = set_iter,
+
+	.alloc = alifType_genericAlloc,
+	.new_ = set_new,
+	.free = alifObject_gcDel,
 };
 
-AlifTypeObject _alifSetType_ = {
-	0,
-	0,
-	0,
-	L"set",                              /* tp_name */
-	sizeof(AlifSetObject),                /* tp_basicsize */
-	0,                                  /* tp_itemsize */
-	/* methods */
-	(Destructor)set_dealloc,            /* tp_dealloc */
-	0,                                  /* tp_vectorcall_offset */
-	0,                                  /* tp_getattr */
-	0,                                  /* tp_setattr */
-	0, // (reprfunc)set_repr,                 /* tp_repr */
-	&_alifSetAsNumber_,                     /* tp_as_number */
-	0, //&set_as_sequence,                   /* tp_as_sequence */
-	0,                                  /* tp_as_mapping */
-	0, // Object_HashNotImplemented,        /* tp_hash */
-	0,                                  /* tp_call */
-	0,                                  /* tp_str */
-	0, //yObject_GenericGetAttr,            /* tp_getattro */
-	0,                                  /* tp_setattro */
-	0,                                  /* tp_as_buffer */
-	0,       /* tp_flags */
-	0, //set_doc,                            /* tp_doc */
-	0, //(traverseproc)set_traverse,         /* tp_traverse */
-	0, //(inquiry)set_clear_internal,        /* tp_clear */
-	0, //(richcmpfunc)set_richcompare,       /* tp_richcompare */
-	offsetof(AlifSetObject, weakRefList), /* tp_weaklistoffset */
-	(GetIterFunc)set_iter,              /* tp_iter */
-	0,                                  /* tp_iternext */
-	_alifSetMethods_,                        /* tp_methods */
-	0,                                  /* tp_members */
-	0,                                  /* tp_getset */
-	0,                                  /* tp_base */
-	0,                                  /* tp_dict */
-	0,                                  /* tp_descr_get */
-	0,                                  /* tp_descr_set */
-	0,                                  /* tp_dictoffset */
-	0, //(initproc)set_init,                 /* tp_init */
-	0, //Type_GenericAlloc,                /* tp_alloc */
-	0, //set_new,                            /* tp_new */
-	0, //Object_GC_Del,                    /* tp_free */
-	0, //.tp_vectorcall = set_vectorcall,
+
+
+AlifTypeObject _alifFrozenSetType_ = { // 2539
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "مميزة_مجمدة",
+	.basicSize = sizeof(AlifSetObject),
+	.itemSize = 0,
 };
 
-AlifObject* alifNew_set(AlifObject* _iterable)
-{
-	return make_new_set(&_alifSetType_, _iterable);
+
+AlifObject* alifSet_new(AlifObject* _iterable) { // 2588
+	return make_newSet(&_alifSetType_, _iterable);
 }
 
-static AlifObject* set_copy_impl(AlifSetObject* _so)
-{
-	AlifObject* copy_ = make_new_set_baseType(ALIF_TYPE(_so), nullptr);
-	if (copy_ == nullptr) {
-		return nullptr;
-	}
-	if (set_merge_lock_held((AlifSetObject*)copy_, (AlifObject*)_so) < 0) {
-		ALIF_DECREF(copy_);
-		return nullptr;
-	}
-	return copy_;
+AlifObject* alifFrozenSet_new(AlifObject* _iterable) { // 2594
+	return make_newSet(&_alifFrozenSetType_, _iterable);
 }
 
-int alifSet_discard(AlifObject* _set, AlifObject* _key)
-{
-	if (!(_set->type_ == &_alifSetType_)) {
+
+
+AlifSizeT alifSet_size(AlifObject* _anyset) { // 2600
+	if (!ALIFANYSET_CHECK(_anyset)) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+	return set_len(_anyset);
+}
+
+
+AlifIntT alifSet_contains(AlifObject* _anySet, AlifObject* _key) { // 2628
+	if (!ALIFANYSET_CHECK(_anySet)) {
+		//ALIFERR_BADINTERNALCALL();
 		return -1;
 	}
 
-	int rv;
-	//ALIF_BEGIN_CRITICAL_SECTION(set);
-	rv = set_discard_key((AlifSetObject*)_set, _key);
-	//ALIF_END_CRITICAL_SECTION();
-	return rv;
+	AlifIntT rv_{};
+	ALIF_BEGIN_CRITICAL_SECTION(_anySet);
+	rv_ = set_containsKey((AlifSetObject*)_anySet, _key);
+	ALIF_END_CRITICAL_SECTION();
+	return rv_;
 }
 
-int alifSet_contains(AlifObject* _anySet, AlifObject* _key)
-{
-	if (!(_anySet->type_ == &_alifSetType_)) {
+AlifIntT alifSet_discard(AlifObject* _set, AlifObject* _key) { // 2643
+ 	if (!ALIFSET_CHECK(_set)) {
+		//ALIFERR_BADINTERNALCALL();
 		return -1;
 	}
 
-	int rv;
-	//ALIF_BEGIN_CRITICAL_SECTION(anyset);
-	rv = set_contains_key((AlifSetObject*)_anySet, _key);
-	//ALIF_END_CRITICAL_SECTION();
-	return rv;
+	AlifIntT rv_{};
+	ALIF_BEGIN_CRITICAL_SECTION(_set);
+	rv_ = set_discardKey((AlifSetObject*)_set, _key);
+	ALIF_END_CRITICAL_SECTION();
+	return rv_;
 }
 
-int alifSet_add(AlifObject* _anySet, AlifObject* _key)
-{
-	if (!(_anySet->type_ == &_alifSetType_) &&
-		(ALIF_REFCNT(_anySet) != 1)) {
+AlifIntT alifSet_add(AlifObject* _anySet, AlifObject* _key) { // 2658
+	if (!ALIFSET_CHECK(_anySet) and
+		(!ALIFFROZENSET_CHECK(_anySet) or ALIF_REFCNT(_anySet) != 1)) {
+		//ALIFERR_BADINTERNALCALL();
 		return -1;
 	}
 
-	int rv;
-	//ALIF_BEGIN_CRITICAL_SECTION(anyset);
-	rv = set_add_key((AlifSetObject*)_anySet, _key);
-	//ALIF_END_CRITICAL_SECTION();
-	return rv;
+	AlifIntT rv_{};
+	ALIF_BEGIN_CRITICAL_SECTION(_anySet);
+	rv_ = set_addKey((AlifSetObject*)_anySet, _key);
+	ALIF_END_CRITICAL_SECTION();
+	return rv_;
 }
 
-static AlifTypeObject _alifSetDummyType_ = {
-	ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0)
-	L"<dummy key> type",
-	0,
-	0,
-	0, //dummy_dealloc,      /*tp_dealloc*/ /*never called*/
-	0,                  /*tp_vectorcall_offset*/
-	0,                  /*tp_getattr*/
-	0,                  /*tp_setattr*/
-	0,                  /*tp_as_async*/
-	0, //dummy_repr,         /*tp_repr*/
-	0,                  /*tp_as_number*/
-	0,                  /*tp_as_sequence*/
-	0,                  /*tp_as_mapping*/
-	0,                  /*tp_hash */
-	0,                  /*tp_call */
-	0,                  /*tp_str */
-	0,                  /*tp_getattro */
-	0,                  /*tp_setattro */
-	0,                  /*tp_as_buffer */
-	0, //ALIF_TPFLAGS_DEFAULT, /*tp_flags */
+AlifIntT alifSet_nextEntry(AlifObject* _set,
+	AlifSizeT* _pos, AlifObject** _key, AlifHashT* _hash) { // 2674
+	SetEntry* entry{};
+
+	if (!ALIFANYSET_CHECK(_set)) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+	if (set_next((AlifSetObject*)_set, _pos, &entry) == 0)
+		return 0;
+	*_key = entry->key;
+	*_hash = entry->hash;
+	return 1;
+}
+
+
+AlifIntT _alifSet_nextEntryRef(AlifObject* _set,
+	AlifSizeT* _pos, AlifObject** _key, AlifHashT* _hash) { // 2689
+	SetEntry* entry{};
+
+	if (!ALIFANYSET_CHECK(_set)) {
+		//ALIFERR_BADINTERNALCALL();
+		return -1;
+	}
+	if (set_next((AlifSetObject*)_set, _pos, &entry) == 0)
+		return 0;
+	*_key = ALIF_NEWREF(entry->key);
+	*_hash = entry->hash;
+	return 1;
+}
+
+
+AlifObject* alifSet_pop(AlifObject* _set) { // 2706
+	if (!ALIFSET_CHECK(_set)) {
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
+	return set_pop((AlifSetObject*)_set, nullptr);
+}
+
+
+
+static AlifTypeObject _alifSetDummyType_ = { // 2743
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "<مفتاح_وهمي> نوع",
+	.basicSize = 0,
+	.itemSize = 0,
+	.flags = ALIF_TPFLAGS_DEFAULT, /*tp_flags */
 };
 
-AlifObject _dummyStruct_ = ALIFSUBOBJECT_HEAD_INIT(&_alifSetDummyType_);
+AlifObject _dummyStruct_ = ALIFOBJECT_HEAD_INIT(&_alifSetDummyType_); // 2766

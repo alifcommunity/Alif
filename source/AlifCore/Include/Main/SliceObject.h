@@ -1,32 +1,21 @@
 #pragma once
 
 
-class  AlifSliceObject {
+extern AlifObject _alifEllipsisObject_; // 9
+
+
+#define ALIF_ELLIPSIS (&_alifEllipsisObject_) // 14
+
+
+
+class AlifSliceObject { // 26
 public:
-    ALIFOBJECT_HEAD;
-    AlifObject* start_{}; /* not nullptr */
-    AlifObject* stop_{}; /* not nullptr */
-    AlifObject* step_{}; /* not nullptr */
+	ALIFOBJECT_HEAD{};
+	AlifObject* start{}, * stop{}, * step{};
 };
 
-extern AlifInitObject _typeSlice_;
+extern AlifTypeObject _alifSliceType_; // 32
 
-#define ALIFSLICE_CHECK(op) ALIF_IS_TYPE((op), &_typeSlice_)
+#define ALIFSLICE_CHECK(_op) ALIF_IS_TYPE((_op), &_alifSliceType_) // 35
 
-
-AlifObject* alifNew_slice(AlifObject* , AlifObject* , AlifObject* );
-
-int slice_getIndices(AlifSliceObject* , int64_t , int64_t* , int64_t* , int64_t* );
-
-int slice_getIndicesEx(AlifObject* , int64_t , int64_t* , int64_t* , int64_t* ,int64_t* );
-
-
-#define ALIFSLICE_GETINDICESEX(slice, length, start_, stop_, step_, sliceLen) (  \
-    slice_unpack((slice), (start_), (stop_), (step_)) < 0 ? ((*(sliceLen) = 0), -1) :     \
-    ((*(sliceLen) = alifSlice_adjustIndices((length), (start_), (stop_), *(step_))), 0))
-
-
-
-int slice_unpack(AlifSliceObject* ,int64_t* , int64_t* , int64_t* );
-
-int64_t alifSlice_adjustIndices(int64_t , int64_t* , int64_t* , int64_t );
+AlifObject* alifSlice_new(AlifObject* , AlifObject* , AlifObject* ); // 37

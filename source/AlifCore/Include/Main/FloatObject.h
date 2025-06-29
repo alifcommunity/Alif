@@ -1,21 +1,61 @@
 #pragma once
 
-class AlifFloatObject {
+
+
+extern AlifTypeObject _alifFloatType_; // 14
+
+ // 16
+#define ALIFFLOAT_CHECK(_op) ALIFOBJECT_TYPECHECK(_op, &_alifFloatType_)
+#define ALIFFLOAT_CHECKEXACT(_op) ALIF_IS_TYPE((_op), &_alifFloatType_)
+
+
+
+AlifObject* alifFloat_fromString(AlifObject*); // 36
+
+AlifObject* alifFloat_fromDouble(double); // 39
+
+
+
+
+
+
+double alifFloat_asDouble(AlifObject* ); // 43
+/*----------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+class AlifFloatObject { // 5
 public:
-	ALIFOBJECT_HEAD
-	long double digits_{};
+	ALIFOBJECT_HEAD;
+	double val{};
 };
 
-extern AlifInitObject _alifFloatType;
 
-#define FLOAT_MAX 1.7976931348623157e308
-#define FLOAT_MIN 2.2250738585072014e-308
+#define ALIFFLOAT_CAST(_op) (ALIF_CAST(AlifFloatObject*, _op)) // 10
 
-long double alifFloat_getMax();
-long double alifFloat_getMin();
+static inline double _alifFloat_asDouble(AlifObject* _op) { // 15
+	return ALIFFLOAT_CAST(_op)->val;
+}
+#define ALIFFLOAT_AS_DOUBLE(_op) _alifFloat_asDouble(ALIFOBJECT_CAST(_op))
 
 
-AlifObject* alifFloat_fromString(AlifObject*);
-AlifObject* alifFloat_fromDouble(long double);
 
-long double alifFloat_asLongDouble(AlifObject*);
+double alifFloat_unpack8(const char*, AlifIntT); // 27
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

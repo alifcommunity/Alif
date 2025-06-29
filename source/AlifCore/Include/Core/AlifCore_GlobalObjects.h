@@ -1,43 +1,70 @@
 #pragma once
 
-#include "AlifCore_Context.h"
 #include "AlifCore_GC.h"
 #include "AlifCore_GlobalString.h"
-#include "AlifCore_HashArrayMapTree.h"
+#include "AlifCore_HashTable.h"
+#include "AlifCore_TypeObject.h"
 
 
 
-#define ALIF_NSMALLPOSINTS           257
-#define ALIF_NSMALLNEGINTS           5
+
+
+#define ALIF_NSMALLPOSINTS           257 // 20
+#define ALIF_NSMALLNEGINTS           5 // 21
 
 
 
-#define ALIF_GLOBAL_OBJECT(NAME) \
-    _alifDureRun_.staticObjects.NAME
-#define ALIF_SINGLETON(NAME) \
-    ALIF_GLOBAL_OBJECT(singletons.NAME)
+// 27
+#define ALIF_GLOBAL_OBJECT(_name) \
+    _alifDureRun_.staticObjects._name
+#define ALIF_SINGLETON(_name) \
+    ALIF_GLOBAL_OBJECT(singletons._name)
+
+class AlifCachedObjects { // 32
+public:
+	AlifHashTableT* internedStrings{};
+};
 
 
-class AlifStaticObjects {
+
+
+
+
+
+
+
+
+
+
+class AlifStaticObjects { // 37
 public:
 	class {
 	public:
-		AlifIntegerObject smallInts[ALIF_NSMALLNEGINTS + ALIF_NSMALLPOSINTS];
+		AlifLongObject smallInts[ALIF_NSMALLNEGINTS + ALIF_NSMALLPOSINTS]{};
 
-		AlifWBytesObject bytesEmpty;
-		struct {
+		AlifBytesObject bytesEmpty{};
+		class {
 		public:
-			AlifWBytesObject ob{};
+			AlifBytesObject ob{};
 			char eos{};
 		} bytesCharacters[256];
 
-		//AlifGlobalStrings strings{};
+		AlifGlobalStrings strings{};
 
-		ALIFGC_HEAD_UNUSED tupleEmptyGCNotUsed{};
-		AlifTupleObject tupleEmpty{LONG_MAX, &_alifTupleType_}; // فكرة خرافية ولكن يجب مراجعتها
-
-		ALIFGC_HEAD_UNUSED hamtBitmapNodeEmptyGCNotUsed{};
-		AlifHamtNodeBitmap hamtBitmapNodeEmpty{};
-		AlifContextTokenMissing contextTokenMissing;
+		AlifTupleObject tupleEmpty{};
 	} singletons;
+};
+
+
+// 63
+#define ALIF_INTERP_CACHED_OBJECT(_interp, _name) \
+    (_interp)->cachedObjects._name
+
+
+class AlifInterpCachedObjects { // 66
+public:
+	AlifObject* internedStrings{};
+
+	AlifObject* typeSlotsPname{};
+	AlifTypeSlotDef* typeSlotsPtrs[MAX_EQUIV]{};
 };

@@ -1,7 +1,7 @@
 #include "alif.h"
 
-//#include "AlifCore_AlifState.h"
-#include "AlifCore_AlifToken.h"
+#include "AlifCore_State.h"
+#include "AlifCore_Token.h"
 #include "ErrorCode.h"
 
 
@@ -9,59 +9,101 @@
 #include "AlifCore_Memory.h"
 
 
-#define TABSIZE 8
+#define TABSIZE 8 // 9
 
-TokenInfo* alifTokenizer_newTokenInfo() {
-	TokenInfo* tokInfo = (TokenInfo*)alifMem_dataAlloc(sizeof(TokenInfo));
-	if (tokInfo == nullptr) return nullptr;
+TokenState* alifTokenizer_tokNew() { // 12
+	TokenState* tokState = (TokenState*)alifMem_dataAlloc(sizeof(TokenState));
+	if (tokState == nullptr) return nullptr;
 
-	tokInfo->buf = tokInfo->cur = tokInfo->inp = nullptr;
-	tokInfo->start = nullptr;
-	tokInfo->end = nullptr;
-	tokInfo->done = E_OK;
-	tokInfo->fp = nullptr;
-	tokInfo->input = nullptr;
-	tokInfo->tabSize = TABSIZE;
-	tokInfo->indent = 0;
-	tokInfo->indStack[0] = 0;
-	tokInfo->atBeginOfLine = 1;
-	tokInfo->pendInd = 0;
-	tokInfo->prompt = tokInfo->nextPrompt = nullptr;
-	tokInfo->lineNo = 0;
-	tokInfo->startingColOffset = -1;
-	tokInfo->colOffset = -1;
-	tokInfo->level = 0;
-	tokInfo->alterIndStack[0] = 0;
-	tokInfo->countLine = 0;
-	tokInfo->fn = nullptr;
-	//tokInfo->comment = 0;
-	tokInfo->underflow = nullptr;
-	tokInfo->string = nullptr;
-	tokInfo->tokExtraTokens = 0;
-	tokInfo->commentNewline = 0;
-	tokInfo->implicitNewline = 0;
-	tokInfo->tokModeStackIndex = 0;
-	tokInfo->tokModeStack[0] = { Token_RegularMode, 0, 0, '\0', 0, 0 };
+	tokState->buf = tokState->cur = tokState->inp = nullptr;
+	tokState->interactive = 0;
+	tokState->interactiveSrcStart = nullptr;
+	tokState->interactiveSrcEnd = nullptr;
+	tokState->start = nullptr;
+	tokState->end = nullptr;
+	tokState->done = E_OK;
+	tokState->fp = nullptr;
+	tokState->input = nullptr;
+	tokState->tabSize = TABSIZE;
+	tokState->indent = 0;
+	tokState->indStack[0] = 0;
+	tokState->atBeginOfLine = 1;
+	tokState->pendInd = 0;
+	tokState->prompt = tokState->nextPrompt = nullptr;
+	tokState->lineNo = 0;
+	tokState->startingColOffset = -1;
+	tokState->colOffset = -1;
+	tokState->level = 0;
+	tokState->alterIndStack[0] = 0;
+	tokState->decodingState = DecodingState_::State_Init;
+	tokState->decodingErred = 0;
+	tokState->enc = nullptr;
+	tokState->encoding = nullptr;
+	tokState->contLine = 0;
+	tokState->fn = nullptr;
+	tokState->decodingReadline = nullptr;
+	tokState->decodingBuffer = nullptr;
+	tokState->readline = nullptr;
+	tokState->comment = 0;
+	tokState->interactiveUnderflow = InteractiveUnderflow_::IUnderflow_Normal;
+	tokState->underflow = nullptr;
+	tokState->string = nullptr;
+	tokState->tokExtraTokens = 0;
+	tokState->commentNewline = 0;
+	tokState->implicitNewline = 0;
+	tokState->tokModeStackIndex = 0;
+	tokState->tokModeStack[0] = { .type = TokenizerModeType_::Token_RegularMode,
+		.fStringQuote = '\0', .fStringQuoteSize = 0, .fStringDebug = 0};
 
-	return tokInfo;
+	return tokState;
 }
 
-int alifLexer_setupToken(TokenInfo* _tokInfo, AlifToken* _token, int _type, const wchar_t* _pStart, const wchar_t* _pEnd) {
-	_token->level = _tokInfo->level;
-	if (ISSTRINGLITT(_type)) {
-		_token->lineNo = _tokInfo->firstLineNo;
+void alifTokenizer_free(TokenState* _tokState) { // 83
+	if (_tokState->encoding != nullptr) {
+		alifMem_dataFree(_tokState->encoding);
+	}
+	ALIF_XDECREF(_tokState->decodingReadline);
+	ALIF_XDECREF(_tokState->decodingBuffer);
+	ALIF_XDECREF(_tokState->readline);
+	ALIF_XDECREF(_tokState->fn);
+	if ((_tokState->readline != nullptr or _tokState->fp != nullptr)
+		and _tokState->buf != nullptr) {
+		alifMem_dataFree(_tokState->buf);
+	}
+	if (_tokState->input) {
+		alifMem_dataFree(_tokState->input);
+	}
+	if (_tokState->interactiveSrcStart != nullptr) {
+		alifMem_dataFree(_tokState->interactiveSrcStart);
+	}
+	//free_fstringExpressions(_tokState);
+	alifMem_dataFree(_tokState);
+}
+
+
+void _alifToken_free(AlifToken* _token) { // 107
+	ALIF_XDECREF(_token->data);
+}
+
+
+AlifIntT alifLexer_setupToken(TokenState* _tokState,
+	AlifToken* _token, AlifIntT _type, const char* _pStart,
+	const char* _pEnd) { // 129
+	_token->level = _tokState->level;
+	if (ISSTRINGLIT(_type)) {
+		_token->lineNo = _tokState->firstLineNo;
 	}
 	else {
-		_token->lineNo = _tokInfo->lineNo;
+		_token->lineNo = _tokState->lineNo;
 	}
-	_token->endLineNo = _tokInfo->lineNo;
+	_token->endLineNo = _tokState->lineNo;
 	_token->colOffset = _token->endColOffset = -1;
 	_token->start = _pStart;
 	_token->end = _pEnd;
 
 	if (_pStart != nullptr and _pEnd != nullptr) {
-		_token->colOffset = _tokInfo->startingColOffset;
-		_token->endColOffset = _tokInfo->colOffset;
+		_token->colOffset = _tokState->startingColOffset;
+		_token->endColOffset = _tokState->colOffset;
 	}
 
 	return _type;

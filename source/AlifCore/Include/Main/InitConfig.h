@@ -2,17 +2,24 @@
 
 
 /* --------------------------------- AlifWStringList --------------------------------- */
-class AlifWStringList {
+class AlifWStringList { // 31
 public:
-	AlifSizeT length;
-	wchar_t** items;
+	AlifSizeT length{};
+	wchar_t** items{};
 };
 
+// لماذا يوجد append و insert وتقومان بنفس الوظيفة ??
+AlifIntT alifWStringList_append(AlifWStringList*, const wchar_t*); // 38
+AlifIntT alifWStringList_insert(AlifWStringList*, AlifSizeT, const wchar_t*);
 
 /* ----------------------------------- AlifConfig ------------------------------------ */
-class AlifConfig {
+class AlifConfig { // 134
 public:
 	AlifIntT configInit{};
+
+	AlifIntT useEnvironment{};
+
+	AlifIntT installSignalHandlers{};
 
 	AlifIntT tracemalloc{};
 	AlifIntT parseArgv{};
@@ -22,21 +29,53 @@ public:
 
 	AlifIntT interactive{};
 	AlifIntT optimizationLevel{};
-	AlifIntT configStdio{};
+	//AlifIntT configStdio{}; // نظام ألف يستخدم ترميز utf-8 بشكل إفتراضي
 	AlifIntT bufferedStdio{};
+	wchar_t* stdioEncoding{};
+	wchar_t* stdioErrors{};
+#ifdef _WINDOWS
+	AlifIntT legacyWindowsStdio{};
+#endif
 
-	AlifIntT quite{};
+	AlifIntT safePath{};
 
+	AlifIntT intMaxStrDigits{};
+
+	/* ------- path config inputs ------- */
 	wchar_t* programName{};
+	wchar_t* alifPathEnv{};
+	wchar_t* home{};
+	wchar_t* platLibDir{};
+
+	/* ------- path config outputs ------- */
+	AlifIntT moduleSearchPathsSet{};
+	AlifWStringList moduleSearchPaths{};
+	wchar_t* stdLibDir{};
+	wchar_t* executable{};
+	wchar_t* baseExecutable{};
+	wchar_t* prefix{};
+	wchar_t* basePrefix{};
+	wchar_t* execPrefix{};
+	wchar_t* baseExecPrefix{};
 
 	AlifIntT skipFirstLine{};
 	wchar_t* runCommand{};
 	wchar_t* runModule{};
 	wchar_t* runFilename{};
+	wchar_t* sysPath0{};
+
+	AlifIntT installImportLib{};
 
 	AlifIntT initMain{};
+
+	AlifIntT isAlifBuild{};
 };
 
 
-AlifIntT alif_setStdioLocale(const AlifConfig*);
-void alifConfig_initAlifConfig(AlifConfig*);
+AlifIntT alif_setStdioLocale(const AlifConfig*); //* alif
+void alifConfig_initAlifConfig(AlifConfig*); // 239
+
+void alifConfig_clear(AlifConfig*); // 241
+AlifIntT alifConfig_setString(AlifConfig*, wchar_t**, const wchar_t*);
+
+

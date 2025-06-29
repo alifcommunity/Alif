@@ -1,12 +1,7 @@
 #pragma once
 
-class SeqIterObject {
-public:
-    AlifObject* object{};
-    int64_t index{};
-    AlifObject* iterSeq{};
-};
 
-extern AlifInitObject typeSeqIter;
 
-AlifObject* alifNew_seqIter(AlifObject* );
+extern AlifTypeObject _alifSeqIterType_; // 8
+
+AlifObject* alifSeqIter_new(AlifObject*); // 13

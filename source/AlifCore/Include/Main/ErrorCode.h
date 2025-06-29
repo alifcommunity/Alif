@@ -2,7 +2,7 @@
 
 
 #define E_OK             10      // No error
-#define E_WEOF           11      // End Of File
+#define E_EOF            11		 // End Of File
 #define E_INTR           12      // Interrupted
 #define E_TOKEN          13      // Bad token
 #define E_SYNTAX         14      // Syntax error
