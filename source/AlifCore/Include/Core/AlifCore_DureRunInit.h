@@ -764,6 +764,7 @@
 	INIT_ID(Flush), \
 	INIT_ID(HasLocation), \
 	INIT_ID(Join), \
+	INIT_ID(Key), \
 	INIT_ID(keys), \
 	INIT_ID(ListComp), \
     INIT_ID(LastExc), \
@@ -777,6 +778,7 @@
 	INIT_ID(Origin), \
 	INIT_ID(Path), \
 	INIT_ID(ReadInto), \
+	INIT_ID(Reverse), \
 	INIT_ID(Sep), \
 	INIT_ID(Stderr), \
 	INIT_ID(Stdin), \

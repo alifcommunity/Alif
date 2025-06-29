@@ -71,20 +71,20 @@ static AlifObject* list_sortImpl(AlifListObject* , AlifObject* , AlifIntT);
 static AlifObject* list_sort(AlifListObject* _self, AlifObject* const* _args, AlifSizeT _nArgs, AlifObject* _kwNames) { // 205
 	AlifObject* returnValue = nullptr;
 
-	//#define NUM_KEYWORDS 2
-	//	static class {
-	//	public:
-	//		AlifGCHead thisIsNotUsed{};
-	//		ALIFOBJECT_VAR_HEAD;
-	//		AlifObject* item[NUM_KEYWORDS];
-	//	} kwTuple = {
-	//		.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTupleType_, NUM_KEYWORDS),
-	//		.item = { &ALIF_ID(key), &ALIF_ID(reverse), },
-	//	};
-	//#undef NUM_KEYWORDS
-	//#define KWTUPLE (&kwTuple.objBase.objBase)
+	#define NUM_KEYWORDS 2
+		static class {
+		public:
+			AlifGCHead thisIsNotUsed{};
+			ALIFOBJECT_VAR_HEAD;
+			AlifObject* item[NUM_KEYWORDS];
+		} kwTuple = {
+			.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTupleType_, NUM_KEYWORDS),
+			.item = { &ALIF_ID(Key), &ALIF_ID(Reverse), },
+		};
+	#undef NUM_KEYWORDS
+	#define KWTUPLE (&kwTuple.objBase.objBase)
 
-	#  define KWTUPLE nullptr
+	//#define KWTUPLE nullptr
 
 	static const char* const _keywords[] = { "مفتاح", "معكوس", nullptr };
 	static AlifArgParser _parser = {
