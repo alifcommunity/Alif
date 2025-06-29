@@ -2231,7 +2231,7 @@ static AlifMethodDef _listMethods_[] = { // 3445
 	//LIST_INDEX_METHODDEF
 	//LIST_COUNT_METHODDEF
 	//LIST_REVERSE_METHODDEF
-	//LIST_SORT_METHODDEF
+	LIST_SORT_METHODDEF
 	{nullptr, nullptr}
 };
 
