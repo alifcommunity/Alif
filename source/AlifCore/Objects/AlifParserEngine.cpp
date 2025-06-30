@@ -189,9 +189,9 @@ AlifIntT alifParserEngine_fillToken(AlifParser* _p) { // 240
 			_p->tok->pendInd = -_p->tok->indent;
 			_p->tok->indent = 0;
 		}
-		else {
-			_p->parsingStarted = 1;
-		}
+	}
+	else {
+		_p->parsingStarted = 1;
 	}
 
 	if ((_p->fill == _p->size) and (resize_tokensArr(_p)) != 0) {
