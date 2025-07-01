@@ -69,6 +69,17 @@ static AlifObject* time_sleep(AlifObject* _self, AlifObject* _timeoutObj) { // 3
 
 
 static AlifStructSequenceField _structTimeTypeFields_[] = { // 418
+	{"السنة", "year, for example, 1993"},
+	{"الشهر", "month of year, range [1, 12]"},
+	{"اليوم", "day of month, range [1, 31]"},
+	{"الساعة", "hours, range [0, 23]"},
+	{"الدقيقة", "minutes, range [0, 59]"},
+	{"الثانية", "seconds, range [0, 61])"},
+	{"اليوم_من_الاسبوع", "day of week, range [0, 6], Monday is 0"},
+	{"اليو_من_السنة", "day of year, range [1, 366]"},
+	{"النظام_الصيفي", "1 if summer time is in effect, 0 if not, and -1 if unknown"},
+	{"tm_zone", "abbreviation of timezone name"},
+	{"tm_gmtoff", "offset from UTC in seconds"},
 	{0}
 };
 
@@ -76,7 +87,7 @@ static AlifStructSequenceDesc _structTimeTypeDesc_ = { // 433
 	"time.struct_time",
 	"",
 	_structTimeTypeFields_,
-	0,
+	9,
 };
 
  // 446
@@ -87,6 +98,104 @@ static AlifStructSequenceDesc _structTimeTypeDesc_ = { // 433
 
 static DWORD _timerFlags_ = (DWORD)-1;
 #endif
+
+
+static AlifObject* tmtotuple(TimeModuleState* _state, struct tm* _p
+#ifndef HAVE_STRUCT_TM_TM_ZONE
+	, const char* _zone, time_t _gmtoff
+#endif
+) { // 454
+	AlifObject* v = alifStructSequence_new(_state->structTimeType);
+	if (v == nullptr) return nullptr;
+
+#define SET_ITEM(_index, _call)							\
+    do {												\
+        AlifObject *obj = (_call);						\
+        if (obj == nullptr) {							\
+            ALIF_DECREF(v);								\
+            return nullptr;								\
+        }												\
+        ALIFSTRUCTSEQUENCE_SET_ITEM(v, (_index), obj);	\
+    } while (0)
+
+#define SET(_index, _val) \
+    SET_ITEM((_index), alifLong_fromLong((long)(_val)))
+
+	SET(0, _p->tm_year + 1900);
+	SET(1, _p->tm_mon + 1);         /* Want January == 1 */
+	SET(2, _p->tm_mday);
+	SET(3, _p->tm_hour);
+	SET(4, _p->tm_min);
+	SET(5, _p->tm_sec);
+	SET(6, (_p->tm_wday + 6) % 7); /* Want Monday == 0 */
+	SET(7, _p->tm_yday + 1);        /* Want January, 1 == 1 */
+	SET(8, _p->tm_isdst);
+#ifdef HAVE_STRUCT_TM_TM_ZONE
+	SET_ITEM(9, alifUStr_decodeLocale(_p->tm_zone, "surrogateescape"));
+	SET(10, _p->tm_gmtoff);
+#else
+	SET_ITEM(9, alifUStr_decodeLocale(_zone, "surrogateescape"));
+	SET_ITEM(10, _alifLong_fromTimeT(_gmtoff));
+#endif /* HAVE_STRUCT_TM_TM_ZONE */
+
+#undef SET
+#undef SET_ITEM
+
+	return v;
+}
+
+static AlifIntT parse_timeTArgs(AlifObject* _args, const char* _format, time_t* _pwhen) { // 505
+	AlifObject* ot = nullptr;
+	time_t whent{};
+
+	if (!alifArg_parseTuple(_args, _format, &ot))
+		return 0;
+	if (ot == nullptr or ot == ALIF_NONE) {
+		whent = time(nullptr);
+	}
+	else {
+		if (_alifTime_objectToTimeT(ot, &whent, AlifTimeRoundT::AlifTime_Round_FLOOR) == -1)
+			return 0;
+	}
+	*_pwhen = whent;
+	return 1;
+}
+
+#ifndef HAVE_TIMEGM
+static time_t timegm(struct tm* p) { // 545
+	return p->tm_sec + p->tm_min * 60 + p->tm_hour * 3600 + p->tm_yday * 86400 +
+		(p->tm_year - 70) * 31536000 + ((p->tm_year - 69) / 4) * 86400 -
+		((p->tm_year - 1) / 100) * 86400 + ((p->tm_year + 299) / 400) * 86400;
+}
+#endif
+
+
+static AlifObject* time_localtime(AlifObject* _module, AlifObject* _args) { // 568
+	time_t when{};
+	struct tm buf{};
+
+	if (!parse_timeTArgs(_args, "|O:localtime", &when))
+		return nullptr;
+	if (_alifTime_localtime(when, &buf) != 0)
+		return nullptr;
+
+	TimeModuleState* state = get_timeState(_module);
+#ifdef HAVE_STRUCT_TM_TM_ZONE
+	return tmtotuple(state, &buf);
+#else
+	{
+		struct tm local = buf;
+		char zone[100]{};
+		time_t gmtoff{};
+		strftime(zone, sizeof(zone), "%Z", &buf);
+		gmtoff = timegm(&buf) - when;
+		return tmtotuple(state, &local, zone, gmtoff);
+	}
+#endif
+}
+
+
+
 
 
 
@@ -136,9 +245,10 @@ static AlifIntT time_exec(AlifObject* module) { // 1942
 	return 0;
 }
 
-static AlifMethodDef _timeMethods_[] = {
-	{"الوقت", time_time, METHOD_NOARGS},
+static AlifMethodDef _timeMethods_[] = { // 1870
+	{"الان", time_time, METHOD_NOARGS},
 	{"غفوة", time_sleep, METHOD_O},
+	{"التوقيت_المحلي", time_localtime, METHOD_VARARGS},
 	{nullptr, nullptr}           /* sentinel */
 };
 
@@ -263,9 +373,9 @@ static AlifIntT alif_sleep(AlifTimeT timeout) { // 2181
 			return 0;
 	}
 
-	LARGE_INTEGER relative_timeout{};
+	LARGE_INTEGER relativeTimeout{};
 	// SetWaitableTimer(): a negative due time indicates relative time
-	relative_timeout.QuadPart = -timeout_100ns;
+	relativeTimeout.QuadPart = -timeout_100ns;
 
 	HANDLE timer = CreateWaitableTimerExW(nullptr, nullptr, _timerFlags_,
 		TIMER_ALL_ACCESS);
@@ -274,7 +384,7 @@ static AlifIntT alif_sleep(AlifTimeT timeout) { // 2181
 		return -1;
 	}
 
-	if (!SetWaitableTimerEx(timer, &relative_timeout,
+	if (!SetWaitableTimerEx(timer, &relativeTimeout,
 		0, // no period; the timer is signaled once
 		nullptr, nullptr, // no completion routine
 		nullptr,  // no wake context; do not resume from suspend

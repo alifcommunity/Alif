@@ -286,7 +286,7 @@ static AlifObject* uStr_encodeCallErrorhandler(const char*,
 	AlifObject**, const char*, const char*, AlifObject*,
 	AlifObject**, AlifSizeT, AlifSizeT, AlifSizeT*); // 443
 
-AlifErrorHandler_ alif_getErrorHandler(const char* _errors) { // 488
+AlifErrorHandler_ alif_getErrorHandler(const char* _errors) { // 516
 	if (_errors == nullptr or strcmp(_errors, "strict") == 0) {
 		return AlifErrorHandler_::Alif_Error_Strict;
 	}
@@ -2489,6 +2489,44 @@ AlifObject* alifUStr_asEncodedString(AlifObject* unicode,
 }
 
 
+static AlifObject* uStr_decodeLocale(const char* _str, AlifSizeT _len,
+	AlifErrorHandler_ _errors, AlifIntT _currentLocale) { // 3998
+	if (_str[_len] != '\0' or (AlifUSizeT)_len != strlen(_str)) {
+		alifErr_setString(_alifExcValueError_, "يحتوي على بايت فارغ");
+		return nullptr;
+	}
+
+	wchar_t* wstr{};
+	AlifUSizeT wlen{};
+	const char* reason{};
+	AlifIntT res = alif_decodeLocaleEx(_str, &wstr, &wlen, &reason,
+		_currentLocale, _errors);
+	if (res != 0) {
+		if (res == -2) {
+			AlifObject* exc{};
+			//exc = alifObject_callFunction(_alifExcUStrDecodeError_, "sy#nns",
+			//	"locale", str, len,
+			//	(AlifSizeT)wlen,
+			//	(AlifSizeT)(wlen + 1),
+			//	reason);
+			if (exc != nullptr) {
+				//alifCodec_strictErrors(exc);
+				ALIF_DECREF(exc);
+			}
+		}
+		else if (res == -3) {
+			alifErr_setString(_alifExcValueError_, "معالج خطأ غير مدعوم");
+		}
+		else {
+			//alifErr_noMemory();
+		}
+		return nullptr;
+	}
+
+	AlifObject* unicode = alifUStr_fromWideChar(wstr, wlen);
+	alifMem_dataFree(wstr);
+	return unicode;
+}
 
 
 //AlifObject* alifUStr_decodeFSDefault(const char* _s) { // 4029
@@ -2524,6 +2562,13 @@ AlifObject* alifUStr_asEncodedString(AlifObject* unicode,
 //	}
 //}
 
+
+
+AlifObject* alifUStr_decodeLocale(const char* _str, const char* _errors) { // 4047
+	AlifSizeT size = (AlifSizeT)strlen(_str);
+	AlifErrorHandler_ error_handler = alif_getErrorHandler(_errors);
+	return uStr_decodeLocale(_str, size, error_handler, 1);
+}
 
 
 AlifIntT alifUStr_fsConverter(AlifObject* _arg, void* _addr) { // 4079

@@ -88,7 +88,7 @@ AlifObject* alifUStr_decodeUTF16Stateful(const char*, AlifSizeT, const char*, Al
 AlifObject* alifUStr_encodeCodePage(AlifIntT, AlifObject*, const char*); // 695
 
 
-
+AlifObject* alifUStr_decodeLocale(const char*, const char*); // 723
 
 
 AlifIntT alifUStr_fsConverter(AlifObject*, void*); // 743

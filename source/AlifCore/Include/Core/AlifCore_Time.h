@@ -12,6 +12,16 @@ enum AlifTimeRoundT { // 67
 	AlifTime_Round_TIMEOUT = AlifTime_Round_UP
 };
 
+
+
+AlifObject* _alifLong_fromTimeT(time_t); // 96
+
+
+time_t _alifLong_asTimeT(AlifObject*); // 100
+
+AlifIntT _alifTime_objectToTimeT(AlifObject*, time_t*, AlifTimeRoundT); // 104
+
+
 AlifTimeT _alifTime_fromMicrosecondsClamp(AlifTimeT); // 147
 
 
@@ -48,6 +58,7 @@ public:
 
 
 
+AlifIntT _alifTime_localtime(time_t, struct tm*); // 276
 
 
 

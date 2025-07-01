@@ -180,6 +180,34 @@ AlifTimeT alifTimeFraction_mul(AlifTimeT _ticks,
 }
 
 
+time_t _alifLong_asTimeT(AlifObject* _obj) { // 209
+#if SIZEOF_TIME_T == SIZEOF_LONG_LONG
+	long long val = alifLong_asLongLong(_obj);
+#elif SIZEOF_TIME_T <= SIZEOF_LONG
+	long val = alifLong_asLong(_obj);
+#else
+#   error "unsupported time_t size"
+#endif
+	if (val == -1 and alifErr_occurred()) {
+		//if (alifErr_exceptionMatches(_alifExcOverflowError_)) {
+		//	alifTime_timeTOverflow();
+		//}
+		return -1;
+	}
+	return (time_t)val;
+}
+
+
+AlifObject* _alifLong_fromTimeT(time_t _t) { // 229
+#if SIZEOF_TIME_T == SIZEOF_LONG_LONG
+	return alifLong_fromLongLong((long long)_t);
+#elif SIZEOF_TIME_T <= SIZEOF_LONG
+	return alifLong_fromLong((long)_t);
+#else
+#   error "unsupported time_t size"
+#endif
+}
+
 static AlifIntT _alifTime_asTimeT(AlifTimeT t, time_t* t2) { // 244
 #if SIZEOF_TIME_T < _SIZEOF_ALIFTIME_T
 	if ((AlifTimeT)ALIF_TIMET_MAX < t) {
@@ -240,6 +268,42 @@ static double alifTime_round(double x, AlifTimeRoundT round) { // 298
 		d = (d >= 0.0) ? ceil(d) : floor(d);
 	}
 	return d;
+}
+
+
+
+
+
+
+AlifIntT _alifTime_objectToTimeT(AlifObject* _obj,
+	time_t* _sec, AlifTimeRoundT _round) { // 401
+	if (ALIFFLOAT_CHECK(_obj)) {
+		double intpart{};
+		volatile double d{};
+
+		d = alifFloat_asDouble(_obj);
+		if (isnan(d)) {
+			alifErr_setString(_alifExcValueError_, "قيمة غير صحيحة - ليست رقم");
+			return -1;
+		}
+
+		d = alifTime_round(d, _round);
+		(void)modf(d, &intpart);
+
+		if (!((double)ALIF_TIMET_MIN <= intpart and intpart < -(double)ALIF_TIMET_MIN)) {
+			alifTime_timeTOverflow();
+			return -1;
+		}
+		*_sec = (time_t)intpart;
+		return 0;
+	}
+	else {
+		*_sec = _alifLong_asTimeT(_obj);
+		if (*_sec == (time_t)-1 and alifErr_occurred()) {
+			return -1;
+		}
+		return 0;
+	}
 }
 
 
@@ -836,6 +900,40 @@ AlifIntT alifTime_monotonicRaw(AlifTimeT* _result) { // 1246
 }
 
 
+AlifIntT _alifTime_localtime(time_t _t, struct tm* _tm) { // 1289
+#ifdef _WINDOWS
+	AlifIntT error;
+
+	error = localtime_s(_tm, &_t);
+	if (error != 0) {
+		errno = error;
+		//alifErr_setFromErrno(_alifExcOSError_);
+		return -1;
+	}
+	return 0;
+#else /* !MS_WINDOWS */
+
+#if defined(_AIX) && (SIZEOF_TIME_T < 8)
+	if (_t < -2145916800 /* 1902-01-01 */
+		or _t > 2145916800 /* 2038-01-01 */) {
+		errno = EINVAL;
+		alifErr_setString(_alifExcOverflowError_,
+			"معاملات التوقيت_المحلي خارج النطاق");
+		return -1;
+	}
+#endif
+
+	errno = 0;
+	if (localtime_r(&_t, _tm) == nullptr) {
+		if (errno == 0) {
+			errno = EINVAL;
+		}
+		//alifErr_setFromErrno(_alifExcOSError_);
+		return -1;
+	}
+	return 0;
+#endif /* _WINDOWS */
+}
 
 
 AlifTimeT alifDeadline_get(AlifTimeT _deadline) { // 1362
