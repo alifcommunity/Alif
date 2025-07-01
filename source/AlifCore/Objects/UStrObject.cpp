@@ -2816,7 +2816,7 @@ static AlifIntT unicode_decodeUTF8Impl(AlifUStrWriter* writer, const char* start
 				/* Truncated surrogate code in range D800-DFFF */
 				goto End;
 			}
-			//ALIF_FALLTHROUGH;
+			ALIF_FALLTHROUGH;
 		case 3:
 		case 4:
 			errMsg = "امتداد بايت غير صحيح";
@@ -2859,13 +2859,13 @@ static AlifIntT unicode_decodeUTF8Impl(AlifUStrWriter* writer, const char* start
 		}
 
 		default:
-			//if (unicodeDecode_callErrorHandlerWriter(
-			//	errors, &errorHandlerObj,
-			//	"utf-8", errMsg,
-			//	&starts, &end, &startInPos, &endInpos, &exc, &_s,
-			//	writer)) {
-			//	goto onError;
-			//}
+			if (uStrDecode_callErrorHandlerWriter(
+				errors, &errorHandlerObj,
+				"utf-8", errMsg,
+				&starts, &end, &startInPos, &endInpos, &exc, &_s,
+				writer)) {
+				goto onError;
+			}
 
 			if (ALIFUSTRWRITER_PREPARE(writer, end - _s, 127) < 0) {
 				return -1;
@@ -3772,6 +3772,7 @@ AlifObject* alifUStr_decodeUStrEscapeInternal(const char* _str, AlifSizeT _size,
 	AlifObject* errorHandler = nullptr;
 	AlifObject* exc = nullptr;
 	//AlifUStrNameCAPI* ucnhash_capi{};
+	bool escape = false; //* alif
 
 	// so we can remember if we've seen an invalid escape char or not
 	*_firstInvalidEscape = nullptr;
@@ -3910,6 +3911,18 @@ AlifObject* alifUStr_decodeUStrEscapeInternal(const char* _str, AlifSizeT _size,
 				goto error;
 			}
 
+			//* alif
+			if (ch == 92) { // تخطى حرف '\\'
+				escape = true;
+				continue;
+			}
+			if (ch == 1587 and escape) { // اذا \س قم بحقن سطر جديد
+				escape = false;
+				WRITE_ASCII_CHAR('\n');
+				continue;
+			}
+			//* alif
+
 			WRITE_CHAR(ch);
 			continue;
 
@@ -3954,7 +3967,7 @@ AlifObject* alifUStr_decodeUStrEscapeInternal(const char* _str, AlifSizeT _size,
 		default:
 			if (*_firstInvalidEscape == nullptr) {
 				*_firstInvalidEscape = _str - 1; /* Back up one char, since we've
-												already incremented _s. */
+												already incremented _str. */
 			}
 			WRITE_ASCII_CHAR('\\');
 			WRITE_CHAR(c);
@@ -3966,16 +3979,16 @@ AlifObject* alifUStr_decodeUStrEscapeInternal(const char* _str, AlifSizeT _size,
 			*_consumed = startinpos;
 			break;
 		}
-	error:;
+	error:
 		AlifSizeT endinpos = _str - starts;
 		writer.minLength = end - _str + writer.pos;
-		//if (uStr_decodeCallErrorhandlerWriter(
-		//	_errors, &errorHandler,
-		//	"unicodeescape", message,
-		//	&starts, &end, &startinpos, &endinpos, &exc, &_str,
-		//	&writer)) {
-		//	goto onError;
-		//}
+		if (uStrDecode_callErrorHandlerWriter(
+			_errors, &errorHandler,
+			"unicodeescape", message,
+			&starts, &end, &startinpos, &endinpos, &exc, &_str,
+			&writer)) {
+			goto onError;
+		}
 
 #undef WRITE_ASCII_CHAR
 #undef WRITE_CHAR

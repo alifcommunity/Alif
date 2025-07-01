@@ -48,7 +48,7 @@ static AlifObject* decode_uStrWithEscapes(AlifParser* _parser,
 	}
 	end = _str + _len;
 	while (_str < end) {
-		if (*_str == L'\\') {
+		if (*_str == '\\') {
 			*p_++ = *_str++;
 			if (_str >= end or *_str & 0x80) {
 				strcpy(p_, "u005c");
@@ -87,7 +87,7 @@ static AlifObject* decode_uStrWithEscapes(AlifParser* _parser,
 	_len = (AlifUSizeT)(p_ - buf);
 	_str = buf;
 
-	const char* firstInvalidEscape;
+	const char* firstInvalidEscape{};
 	v_ = alifUStr_decodeUStrEscapeInternal(_str, (AlifSizeT)_len, nullptr, nullptr, &firstInvalidEscape);
 	// HACK: later we can simply pass the line no, since we don't preserve the tokens
 	// when we are decoding the string but we preserve the line numbers.
@@ -185,7 +185,7 @@ AlifObject* alifParserEngine_parseString(AlifParser* _p, AlifPToken* _t) { // 19
 		}
 	}
 
-	rawMode = rawMode or strchr(s, L'\\') == nullptr;
+	rawMode = rawMode or strchr(s, '\\') == nullptr;
 	if (bytesMode) {
 		/* Disallow non-ASCII characters. */
 		const char* ch{};
