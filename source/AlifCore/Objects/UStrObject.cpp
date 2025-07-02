@@ -2250,7 +2250,7 @@ AlifObject* alifUStr_decode(const char* s, AlifSizeT size,
 	AlifBuffer info{};
 	char buflower[11]{};
 
-	//if (uStCheck_encodingErrors(encoding, errors) < 0) {
+	//if (uStr_checkEncodingErrors(encoding, errors) < 0) {
 	//	return nullptr;
 	//}
 
