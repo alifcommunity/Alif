@@ -533,6 +533,17 @@ AlifIntT alifModule_addObjectRef(AlifObject* _mod,
 }
 
 
+AlifIntT alifModule_add(AlifObject* _mod, const char* _name, AlifObject* _value) { // 609
+	AlifIntT res = alifModule_addObjectRef(_mod, _name, _value);
+	ALIF_XDECREF(_value);
+	return res;
+}
+
+
+AlifIntT alifModule_addIntConstant(AlifObject* _m, const char* _name, long _value) { // 627
+	return alifModule_add(_m, _name, alifLong_fromLong(_value));
+}
+
 
 AlifIntT alifModule_addType(AlifObject* _module, AlifTypeObject* _type) { // 639
 	if (!alifType_isReady(_type) and alifType_ready(_type) < 0) {

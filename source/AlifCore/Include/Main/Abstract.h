@@ -51,6 +51,8 @@ AlifIntT alifIter_check(AlifObject*); // 393
 AlifObject* alifIter_next(AlifObject* ); // 417
 
 
+AlifIntT alifNumber_check(AlifObject*); // 438
+
 AlifObject* alifNumber_add(AlifObject*, AlifObject*); // 443
 AlifObject* alifNumber_subtract(AlifObject*, AlifObject*); // 448
 

@@ -186,6 +186,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\Opcode.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\OpcodeIDs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\OSDefs.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\OSModule.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\PThreadStubs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\RangeObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\RefCount.h" />

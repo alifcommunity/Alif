@@ -385,6 +385,13 @@ done:
 }
 
 
+AlifIntT alifNumber_check(AlifObject* _o) { // 899
+	if (_o == nullptr)
+		return 0;
+	AlifNumberMethods* nb = ALIF_TYPE(_o)->asNumber;
+	return nb and (nb->index or nb->int_ or nb->float_ or ALIFCOMPLEX_CHECK(_o));
+}
+
 #define NB_SLOT(_x) offsetof(AlifNumberMethods, _x) // 910
 #define NB_BINOP(_methods, _slot) \
         (*(BinaryFunc*)(& ((char*)_methods)[_slot]))

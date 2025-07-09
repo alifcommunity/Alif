@@ -70,6 +70,7 @@
 #include "Abstract.h"
 #include "AlifCppType.h"
 #include "SysModule.h"
+#include "OSModule.h"
 #include "Import.h"
 #include "BltinModule.h"
 #include "CriticalSection.h"
