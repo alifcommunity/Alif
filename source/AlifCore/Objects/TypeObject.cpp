@@ -2488,7 +2488,10 @@ AlifObject* alifType_fromMetaclass(AlifTypeObject* metaclass, AlifObject* module
 	return (AlifObject*)res;
 }
 
-
+AlifObject* alifType_fromModuleAndSpec(AlifObject* _module,
+	AlifTypeSpec* _spec, AlifObject* _bases) { // 5110
+	return alifType_fromMetaclass(nullptr, _module, _spec, _bases);
+}
 
 AlifObject* alifType_fromSpecWithBases(AlifTypeSpec* _spec, AlifObject* _bases) { // 5116
 	return alifType_fromMetaclass(nullptr, nullptr, _spec, _bases);

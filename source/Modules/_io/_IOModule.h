@@ -57,3 +57,10 @@ public:
 	AlifTypeObject* alifWindowsConsoleIOType{};
 #endif
 };
+
+
+
+static inline AlifIOState* get_ioState(AlifObject* _module) { // 169
+	void* state = _alifModule_getState(_module);
+	return (AlifIOState*)state;
+}
