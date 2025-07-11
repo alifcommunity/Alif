@@ -29,11 +29,11 @@ char _get_consoleType(HANDLE handle) { // 51
 }
 
 
-char _alifIO_getConsoleType(AlifObject* _pathOrFd) {
+char _alifIO_getConsoleType(AlifObject* _pathOrFd) { // 66
 	AlifIntT fd = alifLong_asLong(_pathOrFd);
 	alifErr_clear();
 	if (fd >= 0) {
-		HANDLE handle = _alif_getOSfhandleNoRaise(fd);
+		HANDLE handle = _alifGet_osfHandleNoRaise(fd);
 		if (handle == INVALID_HANDLE_VALUE)
 			return '\0';
 		return _get_consoleType(handle);
@@ -73,7 +73,8 @@ char _alifIO_getConsoleType(AlifObject* _pathOrFd) {
 
 	length = GetFullPathNameW(decodedWstr, MAX_PATH, pnameBuf, NULL);
 	if (length > MAX_PATH) {
-		pnameBuf = ALIFMEM_NEW(wchar_t, length);
+		pnameBuf = (AlifUSizeT)(length) > ALIF_SIZET_MAX / sizeof(wchar_t) ? nullptr : \
+			(wchar_t*)alifMem_dataAlloc((length) * sizeof(length));
 		if (pnameBuf)
 			length = GetFullPathNameW(decodedWstr, length, pnameBuf, NULL);
 		else

@@ -160,7 +160,7 @@ static AlifObject* _io_openImpl(AlifObject* _module, AlifObject* _file, const ch
 
 	/* buffering */
 	if (_buffering < 0) {
-		AlifObject* res = alifObject_callMethodNoArgs(raw, &ALIF_ID(_isattyOpenOnly));
+		AlifObject* res = alifObject_callMethodNoArgs(raw, &ALIF_ID(_isAttyOpenOnly));
 		if (res == nullptr)
 			goto error;
 		isatty = alifObject_isTrue(res);
@@ -178,7 +178,7 @@ static AlifObject* _io_openImpl(AlifObject* _module, AlifObject* _file, const ch
 
 	if (_buffering < 0) {
 		AlifObject* blkSizeObj{};
-		blkSizeObj = alifObject_getAttr(raw, &ALIF_ID(_blksize));
+		blkSizeObj = alifObject_getAttr(raw, &ALIF_ID(_blkSize));
 		if (blkSizeObj == nullptr)
 			goto error;
 		_buffering = alifLong_asLong(blkSizeObj);
@@ -292,7 +292,7 @@ static AlifMethodDef _moduleMethods_[] = { // 630
 do {                                                                     \
     _type = (AlifTypeObject *)alifType_fromModuleAndSpec(_module, _spec,        \
                                                     (AlifObject *)_base);   \
-    if (type == nullptr) {                                                  \
+    if (_type == nullptr) {                                                  \
         return -1;                                                       \
     }                                                                    \
     if (alifModule_addType(_module, _type) < 0) {                            \
@@ -309,59 +309,59 @@ static AlifIntT iomodule_exec(AlifObject* m) { // 650
 	if (ALIFMODULE_ADDINTMACRO(m, DEFAULT_BUFFER_SIZE) < 0)
 		return -1;
 
-	//state->unsupportedOperation = alifObject_callFunction(
-	//	(AlifObject*)&_alifTypeType_, "s(OO){}",
-	//	"UnsupportedOperation", _alifExcOSError_, _alifExcValueError_);
-	//if (state->unsupportedOperation == nullptr)
-	//	return -1;
-	//if (alifModule_addObjectRef(m, "UnsupportedOperation",
-	//	state->unsupportedOperation) < 0)
-	//{
-	//	return -1;
-	//}
+	state->unsupportedOperation = alifObject_callFunction(
+		(AlifObject*)&_alifTypeType_, "s(OO){}",
+		"UnsupportedOperation", _alifExcOSError_, _alifExcValueError_);
+	if (state->unsupportedOperation == nullptr)
+		return -1;
+	if (alifModule_addObjectRef(m, "UnsupportedOperation",
+		state->unsupportedOperation) < 0)
+	{
+		return -1;
+	}
 
 	/* BlockingIOError, for compatibility */
-	//if (alifModule_addObjectRef(m, "BlockingIOError",
-	//	(AlifObject*)_alifExcBlockingIOError_) < 0) {
-	//	return -1;
-	//}
+	if (alifModule_addObjectRef(m, "BlockingIOError",
+		(AlifObject*)_alifExcBlockingIOError_) < 0) {
+		return -1;
+	}
 
 	// Base classes
-	ADD_TYPE(m, state->alifIncrementalNewlineDecoderType, &nldecoder_spec, nullptr);
-	ADD_TYPE(m, state->alifBytesIOBufferType, &bytesiobuf_spec, nullptr);
-	ADD_TYPE(m, state->alifIOBaseType, &iobase_spec, nullptr);
+	//ADD_TYPE(m, state->alifIncrementalNewlineDecoderType, &_nlDecoderSpec_, nullptr);
+	//ADD_TYPE(m, state->alifBytesIOBufferType, &_bytesIOBufSpec_, nullptr);
+	ADD_TYPE(m, state->alifIOBaseType, &_ioBaseSpec_, nullptr);
 
 	// alifIOBaseType subclasses
-	ADD_TYPE(m, state->alifTextIOBaseType, &textiobase_spec,
-		state->alifIOBaseType);
-	ADD_TYPE(m, state->alifBufferedIOBaseType, &bufferediobase_spec,
-		state->alifIOBaseType);
-	ADD_TYPE(m, state->alifRawIOBaseType, &rawiobase_spec,
+	//ADD_TYPE(m, state->alifTextIOBaseType, &_textIOBaseSpec_,
+	//	state->alifIOBaseType);
+	//ADD_TYPE(m, state->alifBufferedIOBaseType, &_bufferedIOBaseSpec_,
+	//	state->alifIOBaseType);
+	ADD_TYPE(m, state->alifRawIOBaseType, &_rawIOBaseSpec_,
 		state->alifIOBaseType);
 
 	// alifBufferedIOBaseType(alifIOBaseType) subclasses
-	ADD_TYPE(m, state->alifBytesIOType, &bytesio_spec, state->alifBufferedIOBaseType);
-	ADD_TYPE(m, state->alifBufferedWriterType, &bufferedwriter_spec,
-		state->alifBufferedIOBaseType);
-	ADD_TYPE(m, state->alifBufferedReaderType, &bufferedreader_spec,
-		state->alifBufferedIOBaseType);
-	ADD_TYPE(m, state->alifBufferedRWPairType, &bufferedrwpair_spec,
-		state->alifBufferedIOBaseType);
-	ADD_TYPE(m, state->alifBufferedRandomType, &bufferedrandom_spec,
-		state->alifBufferedIOBaseType);
+	//ADD_TYPE(m, state->alifBytesIOType, &_bytesIOSpec_, state->alifBufferedIOBaseType);
+	//ADD_TYPE(m, state->alifBufferedWriterType, &_bufferedWriterSpec_,
+	//	state->alifBufferedIOBaseType);
+	//ADD_TYPE(m, state->alifBufferedReaderType, &_bufferedReaderSpec_,
+	//	state->alifBufferedIOBaseType);
+	//ADD_TYPE(m, state->alifBufferedRWPairType, &_bufferedRWPairSpec_,
+	//	state->alifBufferedIOBaseType);
+	//ADD_TYPE(m, state->alifBufferedRandomType, &_bufferedRandomSpec_,
+	//	state->alifBufferedIOBaseType);
 
 	// alifRawIOBaseType(alifIOBaseType) subclasses
-	ADD_TYPE(m, state->alifFileIOType, &fileio_spec, state->alifRawIOBaseType);
+	ADD_TYPE(m, state->alifFileIOType, &_fileIOSpec_, state->alifRawIOBaseType);
 
 #ifdef HAVE_WINDOWS_CONSOLE_IO
-	ADD_TYPE(m, state->alifWindowsConsoleIOType, &winconsoleio_spec,
-		state->alifRawIOBaseType);
+	//ADD_TYPE(m, state->alifWindowsConsoleIOType, &_winConsoleIOSpec_,
+	//	state->alifRawIOBaseType);
 #endif
 
 	// alifTextIOBaseType(alifIOBaseType) subclasses
-	ADD_TYPE(m, state->alifStringIOType, &stringio_spec, state->alifTextIOBaseType);
-	ADD_TYPE(m, state->alifTextIOWrapperType, &textiowrapper_spec,
-		state->alifTextIOBaseType);
+	//ADD_TYPE(m, state->alifStringIOType, &_stringIOSpec_, state->alifTextIOBaseType);
+	//ADD_TYPE(m, state->alifTextIOWrapperType, &_textIOWrapperSpec_,
+	//	state->alifTextIOBaseType);
 
 #undef ADD_TYPE
 	return 0;
@@ -369,7 +369,7 @@ static AlifIntT iomodule_exec(AlifObject* m) { // 650
 
 
 
-static AlifModuleDefSlot _iomoduleSlots_[] = { // 717
+static AlifModuleDefSlot _ioModuleSlots_[] = { // 717
 	{ALIF_MOD_EXEC, iomodule_exec},
 	{ALIF_MOD_MULTIPLE_INTERPRETERS, ALIF_MOD_PER_INTERPRETER_GIL_SUPPORTED},
 	{ALIF_MOD_GIL, ALIF_MOD_GIL_NOT_USED},
@@ -385,7 +385,7 @@ AlifModuleDef _alifIOModule_ = { // 724
 	//.traverse = iomodule_traverse,
 	//.clear = iomodule_clear,
 	//.free = iomodule_free,
-	.slots = _iomoduleSlots_,
+	.slots = _ioModuleSlots_,
 };
 
 AlifObject* alifInit__io(void) { // 736

@@ -721,7 +721,7 @@ static AlifIntT init_sysStreams(AlifThread* _thread) { // 2742
 	}
 #endif
 
-	if (!(iomod = alifImport_importModule("io"))) {
+	if (!(iomod = alifImport_importModule("التبادل"))) {
 		goto error;
 	}
 

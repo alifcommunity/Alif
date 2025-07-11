@@ -1037,10 +1037,10 @@ static AlifIntT alifConfig_initPathConfigAlif(AlifConfig* _config, AlifIntT _com
 
 			if (not strLibDirWasSetInConfig) {
 				if (buildStdlibPrefix) {
-					stdLibDir = join_paths(2, buildStdlibPrefix, L"Lib");
+					stdLibDir = join_paths(2, buildStdlibPrefix, L"library");
 				}
 				else {
-					stdLibDir = join_paths(2, buildPrefix, L"Lib");
+					stdLibDir = join_paths(2, buildPrefix, L"library");
 				}
 			}
 

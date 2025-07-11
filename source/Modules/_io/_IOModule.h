@@ -4,9 +4,10 @@
 
 
 
+extern AlifTypeSpec _fileIOSpec_;
+extern AlifTypeSpec _ioBaseSpec_; // 20
 
-
-
+extern AlifTypeSpec _rawIOBaseSpec_;
 
 
 

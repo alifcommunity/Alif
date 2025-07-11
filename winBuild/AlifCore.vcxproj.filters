@@ -334,6 +334,12 @@
     <ClCompile Include="..\source\AlifCore\Objects\StructMember.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\Modules\_io\IOBase.cpp">
+      <Filter>Modules\_io</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Modules\_io\FileIO.cpp">
+      <Filter>Modules\_io</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">

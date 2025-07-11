@@ -749,11 +749,16 @@
 	INIT_ID(__typeParams__), \
 	INIT_ID(__weakListOffset__), \
 	INIT_ID(__weakRef__), \
+	INIT_ID(_blkSize), \
 	INIT_ID(_findAndLoad), \
 	INIT_ID(_initializing), \
 	INIT_ID(_isTextEncoding), \
+	INIT_ID(_isAttyOpenOnly), \
 	INIT_ID(_WindowsConsoleIO), \
+	INIT_ID(Buffering), \
 	INIT_ID(Builtins), \
+	INIT_ID(Close), \
+	INIT_ID(CloseFD), \
 	INIT_ID(Encoding), \
 	INIT_ID(End), \
 	INIT_ID(Errors), \
@@ -772,9 +777,12 @@
 	INIT_ID(LastType), \
 	INIT_ID(LastValue), \
 	INIT_ID(MetaClass), \
+	INIT_ID(Mode), \
 	INIT_ID(Mro), \
+	INIT_ID(Newline), \
 	INIT_ID(NFields), \
 	INIT_ID(NSequenceFields), \
+	INIT_ID(Opener), \
 	INIT_ID(Origin), \
 	INIT_ID(Path), \
 	INIT_ID(ReadInto), \

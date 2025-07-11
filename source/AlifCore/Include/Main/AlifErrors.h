@@ -46,7 +46,7 @@ extern AlifObject* _alifExcBaseExceptionGroup_; // 77
 extern AlifObject* _alifExcStopAsyncIteration_; // 80
 
 extern AlifObject* _alifExcStopIteration_; // 82
-
+extern AlifObject* _alifExcOSError_; // 92
 extern AlifObject* _alifExcImportError_; // 93
 extern AlifObject* _alifExcIndexError_; // 97
 
@@ -60,6 +60,8 @@ extern AlifObject* _alifExcSystemError_; // 112
 extern AlifObject* _alifExcTypeError_; // 114
 
 extern AlifObject* _alifExcValueError_; // 120
+
+extern AlifObject* _alifExcBlockingIOError_; // 124
 
 
 AlifObject* alifErr_format(AlifObject*, const char*, ...); // 180
@@ -114,7 +116,18 @@ public:
 };
 
 
-
+class AlifOSErrorObject { // 57
+public:
+	ALIFEXCEPTION_HEAD;
+	AlifObject* myErrno{};
+	AlifObject* strError{};
+	AlifObject* fileName{};
+	AlifObject* fileName2{};
+#ifdef _WINDOWS
+	AlifObject* winError{};
+#endif
+	AlifSizeT written{};
+};
 
 
 class AlifStopIterationObject { // 69
