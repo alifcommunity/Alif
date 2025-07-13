@@ -850,12 +850,17 @@ SIMPLEEXTENDSEXCEPTION(_excException_, ValueError, خطأ_قيمة,
 	"Inappropriate argument value (of correct type)."); // 2660
 
 
-
+SIMPLEEXTENDSEXCEPTION(_excException_, ArithmeticError, خطأ_حساب
+	"Base class for arithmetic errors.");
 
  // 3310
 SIMPLEEXTENDSEXCEPTION(_excException_, SystemError, خطأ_نظام,
 	"Internal error in the Alif interpreter.\n");
 
+
+
+SIMPLEEXTENDSEXCEPTION(_excArithmeticError_, OverflowError, خطأ_فائض
+	"Result too large to be represented.");
 
 
 
@@ -878,7 +883,7 @@ static StaticException _staticExceptions_[] = { // 3615
 	//ITEM(SystemExit),
 
 	// Level 3: Exception(BaseException) subclasses
-	//ITEM(ArithmeticError),
+	ITEM(ArithmeticError),
 	//ITEM(AssertionError),
 	//ITEM(AttributeError),
 	//ITEM(BufferError),
@@ -901,7 +906,7 @@ static StaticException _staticExceptions_[] = { // 3615
 
 	// Level 4: ArithmeticError(Exception) subclasses
 	//ITEM(FloatingPointError),
-	//ITEM(OverflowError),
+	ITEM(OverflowError),
 	//ITEM(ZeroDivisionError),
 
 	// Level 4: Warning(Exception) subclasses

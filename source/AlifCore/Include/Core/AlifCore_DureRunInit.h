@@ -687,6 +687,7 @@
     INIT_STR(Defaults, ".defaults"), \
     INIT_STR(DotLocals, ".<locals>"), \
     INIT_STR(Empty, ""), \
+    INIT_STR(utf_8, "utf-8"), \
     INIT_USTR(Excepthook, "خطاف_الخلل"), \
     INIT_STR(Format, ".format"), \
     INIT_STR(GenericBase, ".generic_base"),	\
@@ -699,6 +700,7 @@
     INIT_STR(Name, "name"), /* //* alif */	\
 	INIT_USTR(Open, "فتح"), /* //* alif */	\
 	INIT_STR(Raw, "raw"), /* //* alif */	\
+	INIT_USTR(TextIOWrapper, "غلاف_النص"), /* //* alif */	\
     INIT_USTR(__init__, "_تهيئة_"), /* //* alif */	\
     INIT_USTR(__import__, "_استورد_"), /* //* alif */	\
     INIT_STR(_io, "تبادل"), /* //* alif // Important! don't use STRUCT_FOR_USTR here because it's lead to wrong unicode in import.cpp alifImport_importModuleLevelObject() */	\
@@ -756,6 +758,7 @@
 	INIT_ID(_isTextEncoding), \
 	INIT_ID(_isAttyOpenOnly), \
 	INIT_ID(_WindowsConsoleIO), \
+	INIT_ID(Buffer), \
 	INIT_ID(Buffering), \
 	INIT_ID(buffersize), \
 	INIT_ID(Builtins), \
@@ -773,11 +776,12 @@
 	INIT_ID(Join), \
 	INIT_ID(Key), \
 	INIT_ID(keys), \
-	INIT_ID(ListComp), \
     INIT_ID(LastExc), \
 	INIT_ID(LastTraceback), \
 	INIT_ID(LastType), \
 	INIT_ID(LastValue), \
+	INIT_ID(LineBuffering), \
+	INIT_ID(ListComp), \
 	INIT_ID(MetaClass), \
 	INIT_ID(Mode), \
 	INIT_ID(Mro), \
@@ -788,15 +792,19 @@
 	INIT_ID(Origin), \
 	INIT_ID(Path), \
 	INIT_ID(readable), \
+	INIT_ID(read1), \
 	INIT_ID(ReadInto), \
 	INIT_ID(Reverse), \
+	INIT_ID(seekable), \
 	INIT_ID(Sep), \
 	INIT_ID(Stderr), \
 	INIT_ID(Stdin), \
 	INIT_ID(Stdout), \
+	INIT_ID(strict), \
 	INIT_ID(TextIOWrapper), \
 	INIT_ID(Top), \
 	INIT_ID(Write), \
+	INIT_ID(WriteThrough), \
 }
 
 

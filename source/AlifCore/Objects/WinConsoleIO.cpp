@@ -403,7 +403,7 @@ static AlifMethodDef _winConsoleIOMethods_[] = { // 1121
 	_IO__WINDOWSCONSOLEIO_READABLE_METHODDEF
 	//_IO__WINDOWSCONSOLEIO_WRITABLE_METHODDEF
 	//_IO__WINDOWSCONSOLEIO_FILENO_METHODDEF
-	//_IO__WINDOWSCONSOLEIO_ISATTY_METHODDEF
+	_IO__WINDOWSCONSOLEIO_ISATTY_METHODDEF
 	{"_isAttyOpenOnly", (AlifCPPFunction)_io_windowsConsoleIOIsAtty, METHOD_NOARGS},
 	{nullptr, nullptr}             /* sentinel */
 };

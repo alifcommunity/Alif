@@ -47,6 +47,7 @@ public:
 		STRUCT_FOR_STR(Defaults, ".defaults")
 		STRUCT_FOR_STR(DotLocals, ".<locals>")
         STRUCT_FOR_STR(Empty, "")
+		STRUCT_FOR_STR(utf_8, "utf-8")
         STRUCT_FOR_USTR(Excepthook, "خطاف_الخلل")
 		STRUCT_FOR_STR(Format, ".format")
 		STRUCT_FOR_STR(GenericBase, ".generic_base")
@@ -59,6 +60,7 @@ public:
 		STRUCT_FOR_STR(Name, "name") //* alif
 		STRUCT_FOR_USTR(Open, "فتح") //* alif
 		STRUCT_FOR_STR(Raw, "raw") //* alif
+		STRUCT_FOR_USTR(TextIOWrapper, "غلاف_النص") //* alif
 		STRUCT_FOR_USTR(__init__, "_تهيئة_") //* alif
 		STRUCT_FOR_USTR(__import__, "_استورد_") //* alif
 		STRUCT_FOR_STR(_io, "تبادل") //* alif //* review // Important! don't use STRUCT_FOR_USTR here because it's lead to wrong unicode in import.cpp alifImport_importModuleLevelObject()
@@ -117,6 +119,7 @@ public:
 		STRUCT_FOR_ID(_isTextEncoding)
 		STRUCT_FOR_ID(_isAttyOpenOnly)
 		STRUCT_FOR_ID(_WindowsConsoleIO)
+		STRUCT_FOR_ID(Buffer)
 		STRUCT_FOR_ID(Buffering)
 		STRUCT_FOR_ID(buffersize)
 		STRUCT_FOR_ID(Builtins)
@@ -134,11 +137,12 @@ public:
      	STRUCT_FOR_ID(Join)
      	STRUCT_FOR_ID(Key)
      	STRUCT_FOR_ID(keys)
-     	STRUCT_FOR_ID(ListComp)
      	STRUCT_FOR_ID(LastExc)
      	STRUCT_FOR_ID(LastTraceback)
      	STRUCT_FOR_ID(LastType)
      	STRUCT_FOR_ID(LastValue)
+     	STRUCT_FOR_ID(LineBuffering)
+     	STRUCT_FOR_ID(ListComp)
      	STRUCT_FOR_ID(MetaClass)
      	STRUCT_FOR_ID(Mode)
      	STRUCT_FOR_ID(Mro)
@@ -149,15 +153,19 @@ public:
      	STRUCT_FOR_ID(Origin)
      	STRUCT_FOR_ID(Path)
      	STRUCT_FOR_ID(readable)
+     	STRUCT_FOR_ID(read1)
      	STRUCT_FOR_ID(ReadInto)
      	STRUCT_FOR_ID(Reverse)
+     	STRUCT_FOR_ID(seekable)
      	STRUCT_FOR_ID(Sep)
      	STRUCT_FOR_ID(Stderr)
      	STRUCT_FOR_ID(Stdin)
      	STRUCT_FOR_ID(Stdout)
+     	STRUCT_FOR_ID(strict)
      	STRUCT_FOR_ID(TextIOWrapper)
      	STRUCT_FOR_ID(Top)
      	STRUCT_FOR_ID(Write)
+     	STRUCT_FOR_ID(WriteThrough)
     } identifiers;
 
 	class {

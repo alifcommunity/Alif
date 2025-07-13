@@ -271,22 +271,22 @@ error:
 
 static AlifIntT ioModule_traverse(AlifObject* mod, VisitProc visit, void* arg) { // 564
 	AlifIOState* state = get_ioState(mod);
-	//ALIF_VISIT(state->unsupportedOperation);
+	ALIF_VISIT(state->unsupportedOperation);
 
 	ALIF_VISIT(state->alifIOBaseType);
-	//ALIF_VISIT(state->alifIncrementalNewlineDecoderType);
+	ALIF_VISIT(state->alifIncrementalNewlineDecoderType);
 	ALIF_VISIT(state->alifRawIOBaseType);
-	//ALIF_VISIT(state->alifBufferedIOBaseType);
-	//ALIF_VISIT(state->alifBufferedRWPairType);
-	//ALIF_VISIT(state->alifBufferedRandomType);
-	//ALIF_VISIT(state->alifBufferedReaderType);
-	//ALIF_VISIT(state->alifBufferedWriterType);
-	//ALIF_VISIT(state->alifBytesIOBufferType);
-	//ALIF_VISIT(state->alifBytesIOType);
+	ALIF_VISIT(state->alifBufferedIOBaseType);
+	ALIF_VISIT(state->alifBufferedRWPairType);
+	ALIF_VISIT(state->alifBufferedRandomType);
+	ALIF_VISIT(state->alifBufferedReaderType);
+	ALIF_VISIT(state->alifBufferedWriterType);
+	ALIF_VISIT(state->alifBytesIOBufferType);
+	ALIF_VISIT(state->alifBytesIOType);
 	ALIF_VISIT(state->alifFileIOType);
-	//ALIF_VISIT(state->alifStringIOType);
-	//ALIF_VISIT(state->alifTextIOBaseType);
-	//ALIF_VISIT(state->alifTextIOWrapperType);
+	ALIF_VISIT(state->alifStringIOType);
+	ALIF_VISIT(state->alifTextIOBaseType);
+	ALIF_VISIT(state->alifTextIOWrapperType);
 #ifdef HAVE_WINDOWS_CONSOLE_IO
 	ALIF_VISIT(state->alifWindowsConsoleIOType);
 #endif
@@ -354,8 +354,8 @@ static AlifIntT iomodule_exec(AlifObject* m) { // 650
 	ADD_TYPE(m, state->alifIOBaseType, &_ioBaseSpec_, nullptr);
 
 	// alifIOBaseType subclasses
-	//ADD_TYPE(m, state->alifTextIOBaseType, &_textIOBaseSpec_,
-	//	state->alifIOBaseType);
+	ADD_TYPE(m, state->alifTextIOBaseType, &_textIOBaseSpec_,
+		state->alifIOBaseType);
 	ADD_TYPE(m, state->alifBufferedIOBaseType, &_bufferedIOBaseSpec_,
 		state->alifIOBaseType);
 	ADD_TYPE(m, state->alifRawIOBaseType, &_rawIOBaseSpec_,
@@ -382,8 +382,8 @@ static AlifIntT iomodule_exec(AlifObject* m) { // 650
 
 	// alifTextIOBaseType(alifIOBaseType) subclasses
 	//ADD_TYPE(m, state->alifStringIOType, &_stringIOSpec_, state->alifTextIOBaseType);
-	//ADD_TYPE(m, state->alifTextIOWrapperType, &_textIOWrapperSpec_,
-	//	state->alifTextIOBaseType);
+	ADD_TYPE(m, state->alifTextIOWrapperType, &_textIOWrapperSpec_,
+		state->alifTextIOBaseType);
 
 #undef ADD_TYPE
 	return 0;

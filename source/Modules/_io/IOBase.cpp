@@ -77,9 +77,12 @@ AlifTypeSpec _ioBaseSpec_ = { // 880
 };
 
 
-
+static AlifMethodDef _rawIOBaseMethods_[] = { // 1021
+	{nullptr, nullptr}
+};
 
 static AlifTypeSlot _rawIOBaseSlots_[] = { // 1029
+	{ALIF_TP_METHODS, _rawIOBaseMethods_},
 	{0, nullptr},
 };
 

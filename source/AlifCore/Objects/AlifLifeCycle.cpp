@@ -658,19 +658,19 @@ static AlifObject* create_stdio(const AlifConfig* config, AlifObject* io,
 		goto error;
 	}
 
-	AlifObject* errors_str;
-	errors_str = alifUStr_fromWideChar(errors, -1);
-	if (errors_str == nullptr) {
-		ALIF_CLEAR(buf);
-		ALIF_CLEAR(encoding_str);
-		goto error;
-	}
+	//AlifObject* errors_str;
+	//errors_str = alifUStr_fromWideChar(errors, -1);
+	//if (errors_str == nullptr) {
+	//	ALIF_CLEAR(buf);
+	//	ALIF_CLEAR(encoding_str);
+	//	goto error;
+	//}
 
-	stream = _alifObject_callMethod(io, &ALIF_ID(TextIOWrapper), "OOOsOO",buf,
-		encoding_str, errors_str, newline, line_buffering, write_through);
+	stream = _alifObject_callMethod(io, &ALIF_STR(TextIOWrapper), "OOOsOO",buf,
+		encoding_str, nullptr/*errors_str*/, newline, line_buffering, write_through);
 	ALIF_CLEAR(buf);
 	ALIF_CLEAR(encoding_str);
-	ALIF_CLEAR(errors_str);
+	//ALIF_CLEAR(errors_str);
 	if (stream == nullptr)
 		goto error;
 
@@ -727,22 +727,22 @@ static AlifIntT init_sysStreams(AlifThread* _thread) { // 2742
 
 	/* Set sys.stdin */
 	fd = fileno(stdin);
-	std = create_stdio(config, iomod, fd, 0, "<stdin>",
-		config->stdioEncoding,
-		config->stdioErrors);
-	if (std == nullptr)
-		goto error;
+	//std = create_stdio(config, iomod, fd, 0, "<stdin>",
+	//	config->stdioEncoding,
+	//	config->stdioErrors);
+	//if (std == nullptr)
+	//	goto error;
 	//alifSys_setObject("__stdin__", std);
 	//_alifSys_setAttr(&ALIF_ID(Stdin), std);
 	//ALIF_DECREF(std);
 
 	///* Set sys.stdout */
 	fd = fileno(stdout);
-	std = create_stdio(config, iomod, fd, 1, "<stdout>",
-		config->stdioEncoding,
-		config->stdioErrors);
-	if (std == nullptr)
-		goto error;
+	//std = create_stdio(config, iomod, fd, 1, "<stdout>",
+	//	config->stdioEncoding,
+	//	config->stdioErrors);
+	//if (std == nullptr)
+	//	goto error;
 	//alifSys_setObject("__stdout__", std);
 	//_alifSys_setAttr(&ALIF_ID(stdout), std);
 	//ALIF_DECREF(std);
@@ -755,7 +755,7 @@ static AlifIntT init_sysStreams(AlifThread* _thread) { // 2742
 	//if (std == nullptr)
 	//	goto error;
 
-	encoding_attr = alifObject_getAttrString(std, "encoding");
+	//encoding_attr = alifObject_getAttrString(std, "encoding");
 	//if (encoding_attr != nullptr) {
 	//	const char* std_encoding = alifUStr_asUTF8(encoding_attr);
 	//	if (std_encoding != nullptr) {

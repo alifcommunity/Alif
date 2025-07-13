@@ -9,6 +9,9 @@ extern AlifTypeSpec _ioBaseSpec_; // 20
 
 extern AlifTypeSpec _rawIOBaseSpec_;
 
+extern AlifTypeSpec _textIOBaseSpec_;
+extern AlifTypeSpec _textIOWrapperSpec_; // 25
+
 #ifdef HAVE_WINDOWS_CONSOLE_IO
 extern AlifTypeSpec _winConsoleIOSpec_;
 #endif

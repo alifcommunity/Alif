@@ -1,0 +1,93 @@
+#include "AlifCore_Gc.h"         
+#include "AlifCore_DureRun.h"    
+#include "AlifCore_Abstract.h"   
+#include "AlifCore_Modsupport.h" 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+static AlifIntT _ioFileIO___init__Impl(FileIO*, AlifObject*, const char*, AlifIntT, AlifObject*); // 55
+
+static AlifIntT _ioFileIO___init__(AlifObject* self, AlifObject* args, AlifObject* kwargs) { // 60
+	AlifIntT return_value = -1;
+#define NUM_KEYWORDS 4
+	static struct {
+		AlifGCHead thisNotUsed;
+		ALIFOBJECT_VAR_HEAD;
+		AlifObject* item[NUM_KEYWORDS];
+	} _kwtuple = {
+		.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTupleType_, NUM_KEYWORDS),
+		.item = { &ALIF_ID(File), &ALIF_ID(Mode), &ALIF_ID(CloseFD), &ALIF_ID(Opener), },
+	};
+#undef NUM_KEYWORDS
+#define KWTUPLE (&_kwtuple.objBase.objBase)
+
+
+	static const char* const _keywords[] = { "file", "mode", "closefd", "opener", nullptr };
+	static AlifArgParser _parser = {
+		.keywords = _keywords,
+		.fname = "FileIO",
+		.kwTuple = KWTUPLE,
+	};
+#undef KWTUPLE
+	AlifObject* argsbuf[4];
+	AlifObject* const* fastargs{};
+	AlifSizeT nargs = ALIFTUPLE_GET_SIZE(args);
+	AlifSizeT noptargs = nargs + (kwargs ? ALIFDICT_GET_SIZE(kwargs) : 0) - 1;
+	AlifObject* nameobj{};
+	const char* mode = "r";
+	int closefd = 1;
+	AlifObject* opener = ALIF_NONE;
+
+	fastargs = ALIFARG_UNPACKKEYWORDS(ALIFTUPLE_CAST(args)->item, nargs, kwargs, nullptr, &_parser, 1, 4, 0, argsbuf);
+	if (!fastargs) {
+		goto exit;
+	}
+	nameobj = fastargs[0];
+	if (!noptargs) {
+		goto skip_optional_pos;
+	}
+	if (fastargs[1]) {
+		if (!ALIFUSTR_CHECK(fastargs[1])) {
+			//_alifArg_badArgument("FileIO", "argument 'mode'", "str", fastargs[1]);
+			goto exit;
+		}
+		AlifSizeT mode_length{};
+		mode = alifUStr_asUTF8AndSize(fastargs[1], &mode_length);
+		if (mode == nullptr) {
+			goto exit;
+		}
+		if (strlen(mode) != (size_t)mode_length) {
+			alifErr_setString(_alifExcValueError_, "embedded null character");
+			goto exit;
+		}
+		if (!--noptargs) {
+			goto skip_optional_pos;
+		}
+	}
+	if (fastargs[2]) {
+		closefd = alifObject_isTrue(fastargs[2]);
+		if (closefd < 0) {
+			goto exit;
+		}
+		if (!--noptargs) {
+			goto skip_optional_pos;
+		}
+	}
+	opener = fastargs[3];
+skip_optional_pos:
+	return_value = _ioFileIO___init__Impl((FileIO*)self, nameobj, mode, closefd, opener);
+
+exit:
+	return return_value;
+}

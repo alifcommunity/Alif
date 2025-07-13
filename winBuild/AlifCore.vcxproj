@@ -230,6 +230,7 @@
     <ClInclude Include="..\source\AlifCore\Objects\clinic\TypeObject.cpp.h" />
     <ClInclude Include="..\source\Modules\clinic\_abc.cpp.h" />
     <ClInclude Include="..\source\Modules\_io\clinic\BufferedIO.cpp.h" />
+    <ClInclude Include="..\source\Modules\_io\clinic\FileIO.cpp.h" />
     <ClInclude Include="..\source\Modules\_io\clinic\WinConsoleIO.cpp.h" />
     <ClInclude Include="..\source\Modules\_io\clinic\_IOModule.cpp.h" />
     <ClInclude Include="..\source\Modules\_io\_IOModule.h" />

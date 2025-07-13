@@ -993,6 +993,9 @@
     <ClInclude Include="..\source\Modules\_io\clinic\BufferedIO.cpp.h">
       <Filter>Modules\_io\clinic</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\Modules\_io\clinic\FileIO.cpp.h">
+      <Filter>Modules\_io\clinic</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Include">
