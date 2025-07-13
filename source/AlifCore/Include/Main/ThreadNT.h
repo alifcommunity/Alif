@@ -1,11 +1,51 @@
 #pragma once
 
+
+#include "AlifCore_Interpreter.h"
+#include "AlifCore_Time.h"          
+
 #include <windows.h>
 #include <limits.h>
 //#ifdef HAVE_PROCESS_H
 #include <process.h>
 //#endif
 
+
+#include "CondVar.h" // 26
+
+typedef struct _NRMUTEX { // 28
+	AlifMutexT cs{};
+	AlifCondT cv{};
+	AlifIntT locked{};
+} NRMUTEX;
+typedef NRMUTEX* PNRMUTEX;
+
+
+static PNRMUTEX AllocNonRecursiveMutex(void) { // 36
+	PNRMUTEX m = (PNRMUTEX)alifMem_dataAlloc(sizeof(NRMUTEX));
+	if (!m)
+		return NULL;
+	if (alifCond_INIT(&m->cv))
+		goto fail;
+	if (alifMutex_INIT(&m->cs)) {
+		alifCond_FINI(&m->cv);
+		goto fail;
+	}
+	m->locked = 0;
+	return m;
+fail:
+	alifMem_dataFree(m);
+	return nullptr;
+}
+
+
+static VOID FreeNonRecursiveMutex(PNRMUTEX mutex) { // 55
+	if (mutex) {
+		alifCond_FINI(&mutex->cv);
+		alifMutex_FINI(&mutex->cs);
+		alifMem_dataFree(mutex);
+	}
+}
 
 AlifUIntT alifThread_getThreadID() { // 260
 
@@ -40,6 +80,24 @@ void ALIF_NO_RETURN alifThread_hangThread(void) { // 294
 	while (1) {
 		SleepEx(INFINITE, TRUE);
 	}
+}
+
+
+AlifThreadTypeLock alifThread_allocateLock(void) { // 307
+	PNRMUTEX mutex{};
+
+	//if (!INITIALIZED)
+	//	alifThread_initThread();
+
+	mutex = AllocNonRecursiveMutex();
+
+	AlifThreadTypeLock aLock = (AlifThreadTypeLock)mutex;
+
+	return aLock;
+}
+
+void alifThread_freeLock(AlifThreadTypeLock aLock) { // 323
+	FreeNonRecursiveMutex((PNRMUTEX)aLock);
 }
 
 

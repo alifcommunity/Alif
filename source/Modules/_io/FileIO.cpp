@@ -46,10 +46,17 @@ public:
 
 
 
+static AlifMemberDef _fileIOMembers_[] = {
+	{"__weaklistoffset__", ALIF_T_ALIFSIZET, offsetof(FileIO, weakRefList), ALIF_READONLY},
+	{"__dictoffset__", ALIF_T_ALIFSIZET, offsetof(FileIO, dict), ALIF_READONLY},
+	{nullptr}
+};
 
 
-
-
+static AlifTypeSlot _fileIOSlots_[] = { // 1310
+	//{ALIF_TP_NEW, fileio_new},
+	{0, nullptr},
+};
 
 
 
@@ -58,5 +65,5 @@ AlifTypeSpec _fileIOSpec_ = { // 1324
 	.basicsize = sizeof(FileIO),
 	.flags = (ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_HAVE_GC |
 			  ALIF_TPFLAGS_IMMUTABLETYPE),
-	//.slots = _fileIOSlots_,
+	.slots = _fileIOSlots_,
 };

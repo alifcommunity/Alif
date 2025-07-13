@@ -94,7 +94,11 @@ AlifObject* alifUStr_decodeLocale(const char*, const char*); // 723
 AlifIntT alifUStr_fsConverter(AlifObject*, void*); // 743
 
 
+AlifIntT alifUStr_fsDecoder(AlifObject*, void*); // 748
+
 AlifObject* alifUStr_decodeFSDefault(const char*); // 754
+
+AlifObject* alifUStr_decodeFSDefaultAndSize(const char*, AlifSizeT); // 759
 
 AlifObject* alifUStr_encodeFSDefault(AlifObject*); // 766
 

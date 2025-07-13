@@ -1173,6 +1173,15 @@ void* _alifGet_osfHandleNoRaise(AlifIntT fd) { // 2836
 }
 
 
+AlifIntT _alifOpen_osfHandleNoRaise(void* handle, int flags) { // 2856
+	AlifIntT fd{};
+	ALIF_BEGIN_SUPPRESS_IPH
+	fd = _open_osfhandle((intptr_t)handle, flags);
+	ALIF_END_SUPPRESS_IPH
+		return fd;
+}
+
+
 
 #endif // 2875 
 

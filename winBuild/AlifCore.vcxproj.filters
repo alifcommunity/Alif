@@ -340,6 +340,12 @@
     <ClCompile Include="..\source\Modules\_io\FileIO.cpp">
       <Filter>Modules\_io</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\Modules\_abc.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Modules\_io\BufferedIO.cpp">
+      <Filter>Modules\_io</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">
@@ -978,6 +984,15 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\OSModule.h">
       <Filter>Include\Main</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\Modules\clinic\_abc.cpp.h">
+      <Filter>Modules\clinic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Modules\_io\clinic\WinConsoleIO.cpp.h">
+      <Filter>Modules\_io\clinic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Modules\_io\clinic\BufferedIO.cpp.h">
+      <Filter>Modules\_io\clinic</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Include">
@@ -1021,6 +1036,9 @@
     </Filter>
     <Filter Include="Windows">
       <UniqueIdentifier>{ad259c6f-d04c-4407-92f3-d8a92a2067d0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\clinic">
+      <UniqueIdentifier>{04ed949e-85a7-49fc-847b-7c16c928f1b6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -30,7 +30,7 @@ static AlifObject* tryComplex_specialMethod(AlifObject* _op) { // 328
 		//if (alifErr_warnFormat(_alifExcDeprecationWarning_, 1,
 			//"__complex__ returned non-complex (type %.200s).  "
 			//"The ability to return an instance of a strict subclass of complex "
-			//"is deprecated, and may be removed in a future version of Python.",
+			//"is deprecated, and may be removed in a future version of Alif.",
 			//ALIF_TYPE(res)->name)) {
 			//ALIF_DECREF(res);
 			//return nullptr;

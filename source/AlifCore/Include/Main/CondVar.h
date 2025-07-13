@@ -141,7 +141,7 @@ ALIF_LOCAL_INLINE(AlifIntT) alifCond_INIT(AlifCondT* _cv) { // 263
 	return 0;
 }
 
-ALIF_LOCAL_INLINE(AlifIntT) alifCond_FINI(AlifCondT* _cv) { // 276
+ALIF_LOCAL_INLINE(AlifIntT) alifCond_FINI(AlifCondT* _cv) { // 270
 	return 0;
 }
 

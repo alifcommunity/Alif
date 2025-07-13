@@ -46,6 +46,11 @@
 #define END_TYPE_DICT_LOCK() ALIF_END_CRITICAL_SECTION2()
 
 
+typedef struct AlifSlotOffset { // 87
+	short subSlotOffset{};
+	short slotOffset{};
+};
+
 
 static AlifObject* slot_tpNew(AlifTypeObject*, AlifObject*, AlifObject*); // 99
 
@@ -2046,6 +2051,85 @@ static AlifObject* type_vectorCall(AlifObject* metatype, AlifObject* const* args
 }
 
 
+static const AlifSlotOffset _alifSlotOffsets_[] = { // 4549
+	{0, 0},
+//#include "typeslots.inc" //* alif //* review
+	{offsetof(AlifBufferProcs, getBuffer), offsetof(AlifTypeObject, asBuffer)},
+	{offsetof(AlifBufferProcs, releaseBuffer), offsetof(AlifTypeObject, asBuffer)},
+	{offsetof(AlifMappingMethods, assSubscript), offsetof(AlifTypeObject, asMapping)},
+	{offsetof(AlifMappingMethods, length), offsetof(AlifTypeObject, asMapping)},
+	{offsetof(AlifMappingMethods, subscript), offsetof(AlifTypeObject, asMapping)},
+	{offsetof(AlifNumberMethods, absolute), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, add_), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, and_), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, bool_), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, divmod), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, float_), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, floorDivide), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, index), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, inplaceAdd), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, inplaceAnd), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, inplaceFloorDivide), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, inplaceLshift), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, inplaceMultiply), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, inplaceOr), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, inplacePower), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, inplaceRemainder), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, inplaceRshift), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, inplaceSubtract), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, inplaceTrueDivide), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, inplaceXor), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, int_), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, invert), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, lshift), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, multiply), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, negative), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, or_), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, positive), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, power), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, remainder), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, rshift), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, subtract), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, trueDivide), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifNumberMethods, xor_), offsetof(AlifTypeObject, asNumber)},
+	{offsetof(AlifSequenceMethods, assItem), offsetof(AlifTypeObject, asSequence)},
+	{offsetof(AlifSequenceMethods, concat), offsetof(AlifTypeObject, asSequence)},
+	{offsetof(AlifSequenceMethods, contains), offsetof(AlifTypeObject, asSequence)},
+	{offsetof(AlifSequenceMethods, inplaceConcat), offsetof(AlifTypeObject, asSequence)},
+	{offsetof(AlifSequenceMethods, inplaceRepeat), offsetof(AlifTypeObject, asSequence)},
+	{offsetof(AlifSequenceMethods, item), offsetof(AlifTypeObject, asSequence)},
+	{offsetof(AlifSequenceMethods, length), offsetof(AlifTypeObject, asSequence)},
+	{offsetof(AlifSequenceMethods, repeat), offsetof(AlifTypeObject, asSequence)},
+	{-1, offsetof(AlifTypeObject, alloc)},
+	{-1, offsetof(AlifTypeObject, base)},
+	{-1, offsetof(AlifTypeObject, bases)},
+	{-1, offsetof(AlifTypeObject, call)},
+	{-1, offsetof(AlifTypeObject, clear)},
+	{-1, offsetof(AlifTypeObject, dealloc)},
+	{-1, offsetof(AlifTypeObject, del)},
+	{-1, offsetof(AlifTypeObject, descrGet)},
+	{-1, offsetof(AlifTypeObject, descrSet)},
+	{-1, offsetof(AlifTypeObject, doc)},
+	{-1, offsetof(AlifTypeObject, getAttr)},
+	{-1, offsetof(AlifTypeObject, getAttro)},
+	{-1, offsetof(AlifTypeObject, hash)},
+	{-1, offsetof(AlifTypeObject, init)},
+	{-1, offsetof(AlifTypeObject, isGC)},
+	{-1, offsetof(AlifTypeObject, iter)},
+	{-1, offsetof(AlifTypeObject, iterNext)},
+	{-1, offsetof(AlifTypeObject, methods)},
+	{-1, offsetof(AlifTypeObject, new_)},
+	{-1, offsetof(AlifTypeObject, repr)},
+	{-1, offsetof(AlifTypeObject, richCompare)},
+	{-1, offsetof(AlifTypeObject, setAttr)},
+	{-1, offsetof(AlifTypeObject, setAttro)},
+	{-1, offsetof(AlifTypeObject, str)},
+	{-1, offsetof(AlifTypeObject, traverse)},
+	{-1, offsetof(AlifTypeObject, members)},
+	{-1, offsetof(AlifTypeObject, getSet)},
+	{-1, offsetof(AlifTypeObject, free)},
+};
+
 static AlifSizeT _align_up(AlifSizeT size) { // 4557
 	return (size + ALIGNOF_MAX_ALIGN_T - 1) & ~(ALIGNOF_MAX_ALIGN_T - 1);
 }
@@ -2131,70 +2215,70 @@ AlifObject* alifType_fromMetaclass(AlifTypeObject* metaclass, AlifObject* module
 	const AlifMemberDef* vectorcalloffset_member = nullptr;
 	char* res_start{};
 
-	//for (slot = spec->slots; slot->slot; slot++) {
-	//	if (slot->slot < 0
-	//		or (AlifUSizeT)slot->slot >= ALIF_ARRAY_LENGTH(_alifSlotoffsets_)) {
-	//		alifErr_setString(_alifExcRuntimeError_, "invalid slot offset");
-	//		goto finally;
-	//	}
-	//	switch (slot->slot) {
-	//	case ALIF_TP_MEMBERS:
-	//		if (nmembers != 0) {
-	//			alifErr_setString(
-	//				_alifExcSystemError_,
-	//				"Multiple ALIF_TP_MEMBERS slots are not supported.");
-	//			goto finally;
-	//		}
-	//		for (const AlifMemberDef* memb = slot->pfunc; memb->name != nullptr; memb++) {
-	//			nmembers++;
-	//			if (memb->flags & ALIF_RELATIVE_OFFSET) {
-	//				if (spec->basicsize > 0) {
-	//					alifErr_setString(
-	//						_alifExcSystemError_,
-	//						"With ALIF_RELATIVE_OFFSET, basicsize must be negative.");
-	//					goto finally;
-	//				}
-	//				if (memb->offset < 0 or memb->offset >= -spec->basicsize) {
-	//					alifErr_setString(
-	//						_alifExcSystemError_,
-	//						"Member offset out of range (0..-basicsize)");
-	//					goto finally;
-	//				}
-	//			}
-	//			if (strcmp(memb->name, "__weaklistoffset__") == 0) {
-	//				weaklistoffset_member = memb;
-	//			}
-	//			if (strcmp(memb->name, "__dictoffset__") == 0) {
-	//				dictoffset_member = memb;
-	//			}
-	//			if (strcmp(memb->name, "__vectorcalloffset__") == 0) {
-	//				vectorcalloffset_member = memb;
-	//			}
-	//		}
-	//		break;
-	//	case ALIF_TP_DOC:
-	//		if (tp_doc != nullptr) {
-	//			_alifErr_setString(
-	//				_alifExcSystemError_,
-	//				"Multiple ALIF_TP_DOC slots are not supported.");
-	//			goto finally;
-	//		}
-	//		if (slot->pfunc == nullptr) {
-	//			alifMem_dataFree(tp_doc);
-	//			tp_doc = nullptr;
-	//		}
-	//		else {
-	//			AlifUSizeT len = strlen((const char*)slot->pfunc) + 1;
-	//			tp_doc = (char*)alifMem_dataAlloc(len);
-	//			if (tp_doc == nullptr) {
-	//				//alifErr_noMemory();
-	//				goto finally;
-	//			}
-	//			memcpy(tp_doc, slot->pfunc, len);
-	//		}
-	//		break;
-	//	}
-	//}
+	for (slot = spec->slots; slot->slot; slot++) {
+		if (slot->slot < 0
+			or (AlifUSizeT)slot->slot >= ALIF_ARRAY_LENGTH(_alifSlotOffsets_)) {
+			//alifErr_setString(_alifExcRuntimeError_, "invalid slot offset");
+			goto finally;
+		}
+		switch (slot->slot) {
+		case ALIF_TP_MEMBERS:
+			if (nmembers != 0) {
+				alifErr_setString(
+					_alifExcSystemError_,
+					"Multiple ALIF_TP_MEMBERS slots are not supported.");
+				goto finally;
+			}
+			for (const AlifMemberDef* memb = (AlifMemberDef*)slot->pfunc; memb->name != nullptr; memb++) {
+				nmembers++;
+				if (memb->flags & ALIF_RELATIVE_OFFSET) {
+					if (spec->basicsize > 0) {
+						alifErr_setString(
+							_alifExcSystemError_,
+							"With ALIF_RELATIVE_OFFSET, basicsize must be negative.");
+						goto finally;
+					}
+					if (memb->offset < 0 or memb->offset >= -spec->basicsize) {
+						alifErr_setString(
+							_alifExcSystemError_,
+							"Member offset out of range (0..-basicsize)");
+						goto finally;
+					}
+				}
+				if (strcmp(memb->name, "__weaklistoffset__") == 0) {
+					weaklistoffset_member = memb;
+				}
+				if (strcmp(memb->name, "__dictoffset__") == 0) {
+					dictoffset_member = memb;
+				}
+				if (strcmp(memb->name, "__vectorcalloffset__") == 0) {
+					vectorcalloffset_member = memb;
+				}
+			}
+			break;
+		case ALIF_TP_DOC:
+			if (tp_doc != nullptr) {
+				//_alifErr_setString(
+				//	_alifExcSystemError_,
+				//	"Multiple ALIF_TP_DOC slots are not supported.");
+				goto finally;
+			}
+			if (slot->pfunc == nullptr) {
+				alifMem_dataFree(tp_doc);
+				tp_doc = nullptr;
+			}
+			else {
+				AlifUSizeT len = strlen((const char*)slot->pfunc) + 1;
+				tp_doc = (char*)alifMem_dataAlloc(len);
+				if (tp_doc == nullptr) {
+					//alifErr_noMemory();
+					goto finally;
+				}
+				memcpy(tp_doc, slot->pfunc, len);
+			}
+			break;
+		}
+	}
 
 	/* Prepare the type name and qualname */
 
@@ -2232,7 +2316,7 @@ AlifObject* alifType_fromMetaclass(AlifTypeObject* metaclass, AlifObject* module
 	}
 
 	if (spec->flags & ALIF_TPFLAGS_IMMUTABLETYPE) {
-		for (int i = 0; i < ALIFTUPLE_GET_SIZE(bases); i++) {
+		for (AlifIntT i = 0; i < ALIFTUPLE_GET_SIZE(bases); i++) {
 			AlifTypeObject* b = (AlifTypeObject*)ALIFTUPLE_GET_ITEM(bases, i);
 			if (!b) {
 				goto finally;
@@ -2359,52 +2443,52 @@ AlifObject* alifType_fromMetaclass(AlifTypeObject* metaclass, AlifObject* module
 	type->basicSize = basicsize;
 	type->itemSize = itemsize;
 
-	//for (slot = spec->slots; slot->slot; slot++) {
-	//	switch (slot->slot) {
-	//	case ALIF_TP_BASE:
-	//	case ALIF_TP_BASES:
-	//	case ALIF_TP_DOC:
-	//		/* Processed above */
-	//		break;
-	//	case ALIF_TP_MEMBERS:
-	//	{
-	//		/* Move the slots to the heap type itself */
-	//		AlifUSizeT len = ALIF_TYPE(type)->itemSize * nmembers;
-	//		memcpy(_alifHeapType_getMembers(res), slot->pfunc, len);
-	//		type->members = _alifHeapType_getMembers(res);
-	//		AlifMemberDef* memb{};
-	//		AlifSizeT i{};
-	//		for (memb = _alifHeapType_getMembers(res), i = nmembers;
-	//			i > 0; ++memb, --i)
-	//		{
-	//			if (memb->flags & ALIF_RELATIVE_OFFSET) {
-	//				memb->flags &= ~ALIF_RELATIVE_OFFSET;
-	//				memb->offset += type_data_offset;
-	//			}
-	//		}
-	//	}
-	//	break;
-	//	case ALIF_TP_TOKEN:
-	//	{
-	//		res->token = slot->pfunc == ALIF_TP_USE_SPEC ? spec : slot->pfunc;
-	//	}
-	//	break;
-	//	default:
-	//	{
-	//		AlifSlotOffset slotoffsets = _alifSlotOffsets_[slot->slot];
-	//		short slot_offset = slotoffsets.slotOffset;
-	//		if (slotoffsets.subslot_offset == -1) {
-	//			*(void**)((char*)res_start + slot_offset) = slot->pfunc;
-	//		}
-	//		else {
-	//			void* procs = *(void**)((char*)res_start + slot_offset);
-	//			short subslot_offset = slotoffsets.subslot_offset;
-	//			*(void**)((char*)procs + subslot_offset) = slot->pfunc;
-	//		}
-	//	}
-	//	break;
-	//	}
-	//}
+	for (slot = spec->slots; slot->slot; slot++) {
+		switch (slot->slot) {
+		case ALIF_TP_BASE:
+		case ALIF_TP_BASES:
+		case ALIF_TP_DOC:
+			/* Processed above */
+			break;
+		case ALIF_TP_MEMBERS:
+		{
+			/* Move the slots to the heap type itself */
+			AlifUSizeT len = ALIF_TYPE(type)->itemSize * nmembers;
+			memcpy(_alifHeapType_getMembers(res), slot->pfunc, len);
+			type->members = _alifHeapType_getMembers(res);
+			AlifMemberDef* memb{};
+			AlifSizeT i{};
+			for (memb = _alifHeapType_getMembers(res), i = nmembers;
+				i > 0; ++memb, --i)
+			{
+				if (memb->flags & ALIF_RELATIVE_OFFSET) {
+					memb->flags &= ~ALIF_RELATIVE_OFFSET;
+					memb->offset += type_data_offset;
+				}
+			}
+		}
+		break;
+		//case ALIF_TP_TOKEN:
+		//{
+		//	res->token = slot->pfunc == ALIF_TP_USE_SPEC ? spec : slot->pfunc;
+		//}
+		//break;
+		default:
+		{
+			AlifSlotOffset slotoffsets = _alifSlotOffsets_[slot->slot];
+			short slot_offset = slotoffsets.slotOffset;
+			if (slotoffsets.subSlotOffset == -1) {
+				*(void**)((char*)res_start + slot_offset) = slot->pfunc;
+			}
+			else {
+				void* procs = *(void**)((char*)res_start + slot_offset);
+				short subslot_offset = slotoffsets.subSlotOffset;
+				*(void**)((char*)procs + subslot_offset) = slot->pfunc;
+			}
+		}
+		break;
+		}
+	}
 	if (type->dealloc == nullptr) {
 		type->dealloc = subtype_dealloc;
 	}
@@ -2412,7 +2496,7 @@ AlifObject* alifType_fromMetaclass(AlifTypeObject* metaclass, AlifObject* module
 	/* Set up offsets */
 
 	type->vectorCallOffset = vectorcalloffset;
-	//type->weakListOffset = weaklistoffset;
+	type->weakListOffset = weaklistoffset;
 	type->dictOffset = dictoffset;
 
 	//_alifType_assignId(res);
@@ -2501,6 +2585,52 @@ AlifObject* alifType_fromSpecWithBases(AlifTypeSpec* _spec, AlifObject* _bases) 
 AlifObject* alifType_getQualName(AlifTypeObject* type) { // 5134
 	return type_qualname(type, nullptr);
 }
+
+
+
+AlifObject* alifType_getModuleByDef(AlifTypeObject* type, AlifModuleDef* def) { // 5213
+	if (!_alifType_hasFeature(type, ALIF_TPFLAGS_HEAPTYPE)) {
+		return nullptr;
+	}
+	else {
+		AlifHeapTypeObject* ht = (AlifHeapTypeObject*)type;
+		AlifObject* module = ht->module_;
+		if (module and _alifModule_getDef(module) == def) {
+			return module;
+		}
+	}
+
+	AlifObject* res = nullptr;
+	BEGIN_TYPE_LOCK();
+
+	AlifObject* mro = lookup_tpMro(type);
+
+	AlifSizeT n = ALIFTUPLE_GET_SIZE(mro);
+	for (AlifSizeT i = 1; i < n; i++) {
+		AlifObject* super = ALIFTUPLE_GET_ITEM(mro, i);
+		if (!_alifType_hasFeature((AlifTypeObject*)super, ALIF_TPFLAGS_HEAPTYPE)) {
+			// Static types in the MRO need to be skipped
+			continue;
+		}
+
+		AlifHeapTypeObject* ht = (AlifHeapTypeObject*)super;
+		AlifObject* module = ht->module_;
+		if (module and _alifModule_getDef(module) == def) {
+			res = module;
+			break;
+		}
+	}
+	END_TYPE_LOCK();
+
+	if (res == nullptr) {
+		alifErr_format(
+			_alifExcTypeError_,
+			"alifType_getModuleByDef: No superclass of '%s' has the given module",
+			type->name);
+	}
+	return res;
+}
+
 
 
 void* alifObject_getItemData(AlifObject* _obj) { // 5276
@@ -2931,6 +3061,9 @@ AlifTypeObject _alifBaseObjectType_ = { // 7453
 	.itemSize = 0,
 	.dealloc = object_dealloc,
 	.hash = alifObject_genericHash,
+	//.str = object_str,
+	.getAttro = alifObject_genericGetAttr,
+	.setAttro = alifObject_genericSetAttr,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE,
 	.methods = _objectMethods_,
 	.init = object_init,

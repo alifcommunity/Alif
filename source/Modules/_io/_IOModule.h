@@ -2,18 +2,21 @@
 
 
 
-
-
+extern AlifTypeSpec _bufferedIOBaseSpec_; // 12
+extern AlifTypeSpec _bufferedReaderSpec_; // 14
 extern AlifTypeSpec _fileIOSpec_;
 extern AlifTypeSpec _ioBaseSpec_; // 20
 
 extern AlifTypeSpec _rawIOBaseSpec_;
 
+#ifdef HAVE_WINDOWS_CONSOLE_IO
+extern AlifTypeSpec _winConsoleIOSpec_;
+#endif
 
 
 
 typedef class IOState AlifIOState; // 35
-
+extern AlifObject* _alifIOBase_checkReadable(AlifIOState*, AlifObject*, AlifObject*); // 36
 
 
 
@@ -24,13 +27,13 @@ typedef class IOState AlifIOState; // 35
 
 
 
+typedef long long AlifOffT; // 98
 
 
 
 
 
-
-
+extern AlifModuleDef _alifIOModule_; // 143
 
 
 
@@ -66,6 +69,14 @@ static inline AlifIOState* get_ioState(AlifObject* _module) { // 169
 	return (AlifIOState*)state;
 }
 
+
+
+
+
+static inline AlifIOState* findIOState_byDef(AlifTypeObject* type) { // 185
+	AlifObject* mod = alifType_getModuleByDef(type, &_alifIOModule_);
+	return get_ioState(mod);
+}
 
 
 

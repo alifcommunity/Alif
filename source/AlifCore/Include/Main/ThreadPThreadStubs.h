@@ -8,13 +8,18 @@
 
 #define ALIF_TLS_ENTRIES (_alifDureRun_.threads.stubs.tlsEntries) // 5
 
-
+AlifIntT pthread_mutexDestroy(pthread_mutex_t* mutex) { // 15
+	return 0;
+}
 
 AlifIntT pthread_condInit(pthread_cond_t* restrict cond,
 	const pthread_condattr_t* restrict attr) { // 36
 	return 0;
 }
 
+AlifIntT pthread_condDestroy(pthread_cond_t* cond) { // 47
+	return 0;
+}
 
 AlifIntT pthread_cond_timedwait(pthread_cond_t* restrict cond,
 	pthread_mutex_t* restrict mutex,

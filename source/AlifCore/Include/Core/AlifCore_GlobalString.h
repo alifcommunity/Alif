@@ -39,6 +39,7 @@ class AlifGlobalStrings {
 public:
     class {
 	public:
+		STRUCT_FOR_USTR(_windowsConsoleIO, "طرفية_ويندوز")
 		STRUCT_FOR_STR(AnonListComp, "<listcomp>")
 		STRUCT_FOR_STR(AnonModule, "<module>")
 		STRUCT_FOR_STR(AnonString, "<string>")
@@ -60,7 +61,7 @@ public:
 		STRUCT_FOR_STR(Raw, "raw") //* alif
 		STRUCT_FOR_USTR(__init__, "_تهيئة_") //* alif
 		STRUCT_FOR_USTR(__import__, "_استورد_") //* alif
-		STRUCT_FOR_USTR(_io, "تبادل") //* alif
+		STRUCT_FOR_STR(_io, "تبادل") //* alif //* review // Important! don't use STRUCT_FOR_USTR here because it's lead to wrong unicode in import.cpp alifImport_importModuleLevelObject()
     } literals;
 
     class {
@@ -110,13 +111,14 @@ public:
 		STRUCT_FOR_ID(__typeParams__)
 		STRUCT_FOR_ID(__weakListOffset__)
 		STRUCT_FOR_ID(__weakRef__)
-		STRUCT_FOR_ID(_blkSize)
+		STRUCT_FOR_ID(_blksize)
 		STRUCT_FOR_ID(_findAndLoad)
 		STRUCT_FOR_ID(_initializing)
 		STRUCT_FOR_ID(_isTextEncoding)
 		STRUCT_FOR_ID(_isAttyOpenOnly)
 		STRUCT_FOR_ID(_WindowsConsoleIO)
 		STRUCT_FOR_ID(Buffering)
+		STRUCT_FOR_ID(buffersize)
 		STRUCT_FOR_ID(Builtins)
 		STRUCT_FOR_ID(Close)
 		STRUCT_FOR_ID(CloseFD)
@@ -146,6 +148,7 @@ public:
      	STRUCT_FOR_ID(Opener)
      	STRUCT_FOR_ID(Origin)
      	STRUCT_FOR_ID(Path)
+     	STRUCT_FOR_ID(readable)
      	STRUCT_FOR_ID(ReadInto)
      	STRUCT_FOR_ID(Reverse)
      	STRUCT_FOR_ID(Sep)

@@ -679,6 +679,7 @@
 
 
 #define ALIF_STR_LITERALS_INIT { \
+	INIT_USTR(_windowsConsoleIO, "طرفية_ويندوز"), \
 	INIT_STR(AnonListComp, "<listcomp>"), \
 	INIT_STR(AnonModule, "<module>"), \
 	INIT_STR(AnonString, "<string>"), \
@@ -700,7 +701,7 @@
 	INIT_STR(Raw, "raw"), /* //* alif */	\
     INIT_USTR(__init__, "_تهيئة_"), /* //* alif */	\
     INIT_USTR(__import__, "_استورد_"), /* //* alif */	\
-    INIT_USTR(_io, "تبادل"), /* //* alif */	\
+    INIT_STR(_io, "تبادل"), /* //* alif // Important! don't use STRUCT_FOR_USTR here because it's lead to wrong unicode in import.cpp alifImport_importModuleLevelObject() */	\
 }
 
 #define ALIF_STR_IDENTIFIERS_INIT { \
@@ -749,13 +750,14 @@
 	INIT_ID(__typeParams__), \
 	INIT_ID(__weakListOffset__), \
 	INIT_ID(__weakRef__), \
-	INIT_ID(_blkSize), \
+	INIT_ID(_blksize), \
 	INIT_ID(_findAndLoad), \
 	INIT_ID(_initializing), \
 	INIT_ID(_isTextEncoding), \
 	INIT_ID(_isAttyOpenOnly), \
 	INIT_ID(_WindowsConsoleIO), \
 	INIT_ID(Buffering), \
+	INIT_ID(buffersize), \
 	INIT_ID(Builtins), \
 	INIT_ID(Close), \
 	INIT_ID(CloseFD), \
@@ -785,6 +787,7 @@
 	INIT_ID(Opener), \
 	INIT_ID(Origin), \
 	INIT_ID(Path), \
+	INIT_ID(readable), \
 	INIT_ID(ReadInto), \
 	INIT_ID(Reverse), \
 	INIT_ID(Sep), \

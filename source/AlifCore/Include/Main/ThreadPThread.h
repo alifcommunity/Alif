@@ -56,6 +56,17 @@ void alifThread_condAfter(long long us, struct timespec* abs) { // 154
 }
 
 
+class pthread_lock { // 189
+	char locked; /* 0=unlocked, 1=locked */
+	/* a <cond, mutex> pair to handle an acquire of a locked lock */
+	pthread_cond_t   lock_released{};
+	pthread_mutex_t  mut{};
+};
+
+#define CHECK_STATUS(name)  if (status != 0) { perror(name); error = 1; }
+#define CHECK_STATUS_PTHREAD(name)  if (status != 0) { fprintf(stderr, \
+    "%s: %s\n", name, strerror(status)); error = 1; }
+
 
 
 AlifUIntT alifThread_getThreadID() { // 365
@@ -114,6 +125,79 @@ void ALIF_NO_RETURN alifThread_hangThread(void) { // 421
 #endif
 	}
 }
+
+
+
+#ifdef USE_SEMAPHORES // 433
+
+
+void alifThread_freeLock(AlifThreadTypeLock lock) { // 463
+	SemT* thelock = (SemT*)lock;
+	AlifIntT status{}, error = 0;
+
+	(void)error; /* silence unused-but-set-variable warning */
+
+	if (!thelock)
+		return;
+
+	status = sem_destroy(thelock);
+	CHECK_STATUS("sem_destroy");
+
+	alifMem_dataFree((void*)thelock);
+}
+
+
+#else /* USE_SEMAPHORES */ // 622
+
+AlifThreadTypeLock alifThread_allocateLock(void) { // 627
+	pthread_lock* lock{};
+	AlifIntT status{}, error = 0;
+
+	//if (!INITIALIZED)
+	//	alifThread_initThread();
+
+	lock = (pthread_lock*)alifMem_dataAlloc(sizeof(pthread_lock));
+	if (lock) {
+		lock->locked = 0;
+
+		status = pthread_mutexInit(&lock->mut, NULL);
+		CHECK_STATUS_PTHREAD("pthread_mutex_init");
+
+		//_ALIF_ANNOTATE_PURE_HAPPENS_BEFORE_MUTEX(&lock->mut);
+
+		status = alifThread_condInit(&lock->lock_released);
+		CHECK_STATUS_PTHREAD("pthread_cond_init");
+
+		if (error) {
+			alifMem_dataFree((void*)lock);
+			lock = 0;
+		}
+	}
+
+	return (AlifThreadTypeLock)lock;
+}
+
+
+void alifThread_freeLock(AlifThreadTypeLock lock) { // 661
+	pthread_lock* thelock = (PThreadLock*)lock;
+	AlifIntT status{}, error = 0;
+
+	(void)error; /* silence unused-but-set-variable warning */
+
+	status = pthread_condDestroy(&thelock->lockReleased);
+	CHECK_STATUS_PTHREAD("pthread_cond_destroy");
+
+	status = pthread_mutexDestroy(&thelock->mut);
+	CHECK_STATUS_PTHREAD("pthread_mutex_destroy");
+
+	alifMem_dataFree((void*)thelock);
+}
+
+
+
+
+#endif /* USE_SEMAPHORES */ // 788
+
 
 
 

@@ -64,9 +64,22 @@ extern AlifObject* _alifExcValueError_; // 120
 extern AlifObject* _alifExcBlockingIOError_; // 124
 
 
+AlifObject* alifErr_setFromErrnoWithFilenameObject(AlifObject*, AlifObject*);
+AlifObject* alifErr_setFromErrnoWithFilenameObjects(AlifObject*, AlifObject*, AlifObject*);
+
+
 AlifObject* alifErr_format(AlifObject*, const char*, ...); // 180
 
 
+
+#ifdef _WINDOWS // 192
+
+AlifObject* alifErr_setExcFromWindowsErrWithFilenameObject(
+	AlifObject*, AlifIntT, AlifObject*);
+AlifObject* alifErr_setExcFromWindowsErrWithFilenameObjects(
+	AlifObject*, AlifIntT, AlifObject*, AlifObject*);
+
+#endif /* _WINDOWS */ // 210
 
 
 

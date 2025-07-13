@@ -2529,11 +2529,11 @@ static AlifObject* uStr_decodeLocale(const char* _str, AlifSizeT _len,
 }
 
 
-//AlifObject* alifUStr_decodeFSDefault(const char* _s) { // 4029
-//	AlifSizeT size = (AlifSizeT)strlen(_s);
-//	return alifUStr_decodeFSDefaultAndSize(_s, size);
-//}
-//
+AlifObject* alifUStr_decodeFSDefault(const char* _s) { // 4029
+	AlifSizeT size = (AlifSizeT)strlen(_s);
+	return alifUStr_decodeFSDefaultAndSize(_s, size);
+}
+
 //AlifObject* alifUStr_decodeFSDefaultAndSize(const char* s, AlifSizeT size) { // 4035
 //	AlifInterpreter* interp = _alifInterpreter_get();
 //	AlifUStrFSCodec* fs_codec = &interp->unicode.fs_codec;
@@ -2571,6 +2571,37 @@ AlifObject* alifUStr_decodeLocale(const char* _str, const char* _errors) { // 40
 }
 
 
+AlifObject* alifUStr_decodeFSDefaultAndSize(const char* s, AlifSizeT size) { // 4062
+	AlifInterpreter* interp = _alifInterpreter_get();
+//	AlifUStrFSCodec* fs_codec = &interp->unicode.fs_codec;
+//	if (fs_codec->utf8) {
+//		return unicode_decodeUTF8(s, size,
+//			fs_codec->error_handler,
+//			fs_codec->errors,
+//			nullptr);
+//	}
+//#ifndef ALIF_FORCE_UTF8_FS_ENCODING
+//	else if (fs_codec->encoding) {
+//		return alifUStr_decode(s, size,
+//			fs_codec->encoding,
+//			fs_codec->errors);
+//	}
+//#endif
+//	else {
+		const AlifConfig* config = alifInterpreter_getConfig(interp);
+		//const wchar_t* filesystem_errors = config->fileSystemErrors;
+		const wchar_t* filesystem_errors = nullptr; //* delete
+		AlifErrorHandler_ errors = get_errorHandlerWide(filesystem_errors);
+#ifdef ALIF_FORCE_UTF8_FS_ENCODING
+//		return unicode_decodeUTF8(s, size, errors, nullptr, nullptr);
+#else
+		return uStr_decodeLocale(s, size, errors, 0);
+#endif
+	//}
+}
+
+
+
 AlifIntT alifUStr_fsConverter(AlifObject* _arg, void* _addr) { // 4079
 	AlifObject* path = nullptr;
 	AlifObject* output = nullptr;
@@ -2601,6 +2632,49 @@ AlifIntT alifUStr_fsConverter(AlifObject* _arg, void* _addr) { // 4079
 	data = ALIFBYTES_AS_STRING(output);
 	if ((AlifUSizeT)size != strlen(data)) {
 		//alifErr_setString(_alifExcValueError_, "embedded null byte");
+		ALIF_DECREF(output);
+		return 0;
+	}
+	*(AlifObject**)_addr = output;
+	return ALIF_CLEANUP_SUPPORTED;
+}
+
+
+AlifIntT alifUStr_fsDecoder(AlifObject* _arg, void* _addr) { // 4138
+	if (_arg == nullptr) {
+		ALIF_DECREF(*(AlifObject**)_addr);
+		*(AlifObject**)_addr = nullptr;
+		return 1;
+	}
+
+	AlifObject* path = alifOS_fsPath(_arg);
+	if (path == nullptr) {
+		return 0;
+	}
+
+	AlifObject* output = nullptr;
+	if (ALIFUSTR_CHECK(path)) {
+		output = path;
+	}
+	else if (ALIFBYTES_CHECK(path)) {
+		output = alifUStr_decodeFSDefaultAndSize(ALIFBYTES_AS_STRING(path),
+			ALIFBYTES_GET_SIZE(path));
+		ALIF_DECREF(path);
+		if (!output) {
+			return 0;
+		}
+	}
+	else {
+		//alifErr_format(_alifExcTypeError_,
+		//	"path should be string, bytes, or os.PathLike, not %.200s",
+		//	ALIF_TYPE(_arg)->name);
+		ALIF_DECREF(path);
+		return 0;
+	}
+
+	if (findChar(ALIFUSTR_DATA(output), ALIFUSTR_KIND(output),
+		ALIFUSTR_GET_LENGTH(output), 0, 1) >= 0) {
+		alifErr_setString(_alifExcValueError_, "embedded null character");
 		ALIF_DECREF(output);
 		return 0;
 	}

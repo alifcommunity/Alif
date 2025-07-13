@@ -78,6 +78,9 @@ AlifIntT _alif_dup(AlifIntT); // 185
 #ifdef _WINDOWS
 extern void* _alifGet_osfHandleNoRaise(AlifIntT); // 192
 
+
+extern AlifIntT _alifOpen_osfHandleNoRaise(void*, AlifIntT); // 197
+
 #endif  /* _WINDOWS */
 
 extern AlifIntT alif_decodeUTF8Ex(const char*, AlifSizeT,

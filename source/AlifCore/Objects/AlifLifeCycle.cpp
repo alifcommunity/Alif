@@ -577,13 +577,13 @@ static AlifObject* create_stdio(const AlifConfig* config, AlifObject* io,
 	const char* newline{};
 	AlifObject* line_buffering{}, * write_through{};
 	AlifIntT buffering{}, isatty{};
-	const AlifIntT buffered_stdio = config->bufferedStdio;
+	const AlifIntT bufferedStdio = config->bufferedStdio;
 
 	if (!_alif_isValidFD(fd)) {
 		return ALIF_NONE;
 	}
 
-	if (!buffered_stdio && write_mode)
+	if (!bufferedStdio and write_mode)
 		buffering = 0;
 	else
 		buffering = -1;
@@ -611,7 +611,7 @@ static AlifObject* create_stdio(const AlifConfig* config, AlifObject* io,
 	/* Windows console IO is always UTF-8 encoded */
 	AlifTypeObject* winconsoleio_type;
 	winconsoleio_type = (AlifTypeObject*)_alifImport_getModuleAttr(
-		&ALIF_STR(_io), &ALIF_ID(_WindowsConsoleIO));
+		&ALIF_STR(_io), &ALIF_STR(_windowsConsoleIO));
 	if (winconsoleio_type == nullptr) {
 		goto error;
 	}
@@ -633,11 +633,11 @@ static AlifObject* create_stdio(const AlifConfig* config, AlifObject* io,
 	ALIF_DECREF(res);
 	if (isatty == -1)
 		goto error;
-	if (!buffered_stdio)
+	if (!bufferedStdio)
 		write_through = ALIF_TRUE;
 	else
 		write_through = ALIF_FALSE;
-	if (buffered_stdio and (isatty or fd == fileno(stderr)))
+	if (bufferedStdio and (isatty or fd == fileno(stderr)))
 		line_buffering = ALIF_TRUE;
 	else
 		line_buffering = ALIF_FALSE;
@@ -733,16 +733,16 @@ static AlifIntT init_sysStreams(AlifThread* _thread) { // 2742
 	if (std == nullptr)
 		goto error;
 	//alifSys_setObject("__stdin__", std);
-	//_alifSys_setAttr(&ALIF_ID(stdin), std);
+	//_alifSys_setAttr(&ALIF_ID(Stdin), std);
 	//ALIF_DECREF(std);
 
 	///* Set sys.stdout */
-	//fd = fileno(stdout);
-	//std = create_stdio(config, iomod, fd, 1, "<stdout>",
-	//	config->stdioEncoding,
-	//	config->stdioErrors);
-	//if (std == nullptr)
-	//	goto error;
+	fd = fileno(stdout);
+	std = create_stdio(config, iomod, fd, 1, "<stdout>",
+		config->stdioEncoding,
+		config->stdioErrors);
+	if (std == nullptr)
+		goto error;
 	//alifSys_setObject("__stdout__", std);
 	//_alifSys_setAttr(&ALIF_ID(stdout), std);
 	//ALIF_DECREF(std);
@@ -755,7 +755,7 @@ static AlifIntT init_sysStreams(AlifThread* _thread) { // 2742
 	//if (std == nullptr)
 	//	goto error;
 
-	//encoding_attr = alifObject_getAttrString(std, "encoding");
+	encoding_attr = alifObject_getAttrString(std, "encoding");
 	//if (encoding_attr != nullptr) {
 	//	const char* std_encoding = alifUStr_asUTF8(encoding_attr);
 	//	if (std_encoding != nullptr) {

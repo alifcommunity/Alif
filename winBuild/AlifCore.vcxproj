@@ -228,6 +228,9 @@
     <ClInclude Include="..\source\AlifCore\Objects\clinic\TextIO.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\Traceback.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\TypeObject.cpp.h" />
+    <ClInclude Include="..\source\Modules\clinic\_abc.cpp.h" />
+    <ClInclude Include="..\source\Modules\_io\clinic\BufferedIO.cpp.h" />
+    <ClInclude Include="..\source\Modules\_io\clinic\WinConsoleIO.cpp.h" />
     <ClInclude Include="..\source\Modules\_io\clinic\_IOModule.cpp.h" />
     <ClInclude Include="..\source\Modules\_io\_IOModule.h" />
     <ClInclude Include="..\source\Windows\errmap.h" />
@@ -342,6 +345,8 @@
     <ClCompile Include="..\source\Modules\MathModule.cpp" />
     <ClCompile Include="..\source\Modules\SignalModule.cpp" />
     <ClCompile Include="..\source\Modules\TimeModule.cpp" />
+    <ClCompile Include="..\source\Modules\_abc.cpp" />
+    <ClCompile Include="..\source\Modules\_io\BufferedIO.cpp" />
     <ClCompile Include="..\source\Modules\_io\FileIO.cpp" />
     <ClCompile Include="..\source\Modules\_io\IOBase.cpp" />
     <ClCompile Include="..\source\Modules\_io\TextIO.cpp" />

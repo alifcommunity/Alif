@@ -178,7 +178,7 @@ static AlifObject* _io_openImpl(AlifObject* _module, AlifObject* _file, const ch
 
 	if (_buffering < 0) {
 		AlifObject* blkSizeObj{};
-		blkSizeObj = alifObject_getAttr(raw, &ALIF_ID(_blkSize));
+		blkSizeObj = alifObject_getAttr(raw, &ALIF_ID(_blksize));
 		if (blkSizeObj == nullptr)
 			goto error;
 		_buffering = alifLong_asLong(blkSizeObj);
@@ -269,7 +269,29 @@ error:
 
 
 
+static AlifIntT ioModule_traverse(AlifObject* mod, VisitProc visit, void* arg) { // 564
+	AlifIOState* state = get_ioState(mod);
+	//ALIF_VISIT(state->unsupportedOperation);
 
+	ALIF_VISIT(state->alifIOBaseType);
+	//ALIF_VISIT(state->alifIncrementalNewlineDecoderType);
+	ALIF_VISIT(state->alifRawIOBaseType);
+	//ALIF_VISIT(state->alifBufferedIOBaseType);
+	//ALIF_VISIT(state->alifBufferedRWPairType);
+	//ALIF_VISIT(state->alifBufferedRandomType);
+	//ALIF_VISIT(state->alifBufferedReaderType);
+	//ALIF_VISIT(state->alifBufferedWriterType);
+	//ALIF_VISIT(state->alifBytesIOBufferType);
+	//ALIF_VISIT(state->alifBytesIOType);
+	ALIF_VISIT(state->alifFileIOType);
+	//ALIF_VISIT(state->alifStringIOType);
+	//ALIF_VISIT(state->alifTextIOBaseType);
+	//ALIF_VISIT(state->alifTextIOWrapperType);
+#ifdef HAVE_WINDOWS_CONSOLE_IO
+	ALIF_VISIT(state->alifWindowsConsoleIOType);
+#endif
+	return 0;
+}
 
 
 
@@ -334,8 +356,8 @@ static AlifIntT iomodule_exec(AlifObject* m) { // 650
 	// alifIOBaseType subclasses
 	//ADD_TYPE(m, state->alifTextIOBaseType, &_textIOBaseSpec_,
 	//	state->alifIOBaseType);
-	//ADD_TYPE(m, state->alifBufferedIOBaseType, &_bufferedIOBaseSpec_,
-	//	state->alifIOBaseType);
+	ADD_TYPE(m, state->alifBufferedIOBaseType, &_bufferedIOBaseSpec_,
+		state->alifIOBaseType);
 	ADD_TYPE(m, state->alifRawIOBaseType, &_rawIOBaseSpec_,
 		state->alifIOBaseType);
 
@@ -343,8 +365,8 @@ static AlifIntT iomodule_exec(AlifObject* m) { // 650
 	//ADD_TYPE(m, state->alifBytesIOType, &_bytesIOSpec_, state->alifBufferedIOBaseType);
 	//ADD_TYPE(m, state->alifBufferedWriterType, &_bufferedWriterSpec_,
 	//	state->alifBufferedIOBaseType);
-	//ADD_TYPE(m, state->alifBufferedReaderType, &_bufferedReaderSpec_,
-	//	state->alifBufferedIOBaseType);
+	ADD_TYPE(m, state->alifBufferedReaderType, &_bufferedReaderSpec_,
+		state->alifBufferedIOBaseType);
 	//ADD_TYPE(m, state->alifBufferedRWPairType, &_bufferedRWPairSpec_,
 	//	state->alifBufferedIOBaseType);
 	//ADD_TYPE(m, state->alifBufferedRandomType, &_bufferedRandomSpec_,
@@ -354,8 +376,8 @@ static AlifIntT iomodule_exec(AlifObject* m) { // 650
 	ADD_TYPE(m, state->alifFileIOType, &_fileIOSpec_, state->alifRawIOBaseType);
 
 #ifdef HAVE_WINDOWS_CONSOLE_IO
-	//ADD_TYPE(m, state->alifWindowsConsoleIOType, &_winConsoleIOSpec_,
-	//	state->alifRawIOBaseType);
+	ADD_TYPE(m, state->alifWindowsConsoleIOType, &_winConsoleIOSpec_,
+		state->alifRawIOBaseType);
 #endif
 
 	// alifTextIOBaseType(alifIOBaseType) subclasses
@@ -382,10 +404,10 @@ AlifModuleDef _alifIOModule_ = { // 724
 	//.doc = module_doc,
 	.size = sizeof(AlifIOState),
 	.methods = _moduleMethods_,
-	//.traverse = iomodule_traverse,
 	//.clear = iomodule_clear,
 	//.free = iomodule_free,
 	.slots = _ioModuleSlots_,
+	.traverse = ioModule_traverse,
 };
 
 AlifObject* alifInit__io(void) { // 736
