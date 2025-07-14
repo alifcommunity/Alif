@@ -375,6 +375,19 @@ done:
 
 
 
+
+
+static AlifIntT fileIO_traverse(AlifObject* op, VisitProc visit, void* arg) { // 539
+	FileIO* self = ALIFFILEIO_CAST(op);
+	ALIF_VISIT(ALIF_TYPE(self));
+	ALIF_VISIT(self->dict);
+	return 0;
+}
+
+
+
+
+
 static AlifObject* _ioFileIO_isAttyImpl(FileIO* self) { // 1202
 	long res{};
 
@@ -407,13 +420,14 @@ static AlifMethodDef _fileIOMethods_[] = { // 1238
 
 static AlifMemberDef _fileIOMembers_[] = { // 1303
 	{"_finalizing", ALIF_T_BOOL, offsetof(FileIO, finalizing), 0},
-	{"__weaklistoffset__", ALIF_T_ALIFSIZET, offsetof(FileIO, weakRefList), ALIF_READONLY},
-	{"__dictoffset__", ALIF_T_ALIFSIZET, offsetof(FileIO, dict), ALIF_READONLY},
+	{"__weakListOffset__", ALIF_T_ALIFSIZET, offsetof(FileIO, weakRefList), ALIF_READONLY},
+	{"__dictOffset__", ALIF_T_ALIFSIZET, offsetof(FileIO, dict), ALIF_READONLY},
 	{nullptr}
 };
 
 
 static AlifTypeSlot _fileIOSlots_[] = { // 1310
+	{ALIF_TP_TRAVERSE, fileIO_traverse},
 	{ALIF_TP_INIT, _ioFileIO___init__},
 	{ALIF_TP_NEW, fileio_new},
 	{0, nullptr},

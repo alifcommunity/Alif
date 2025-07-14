@@ -54,8 +54,8 @@ static AlifGetSetDef _ioBaseGetSet_[] = { // 853
 };
 
 static AlifMemberDef _ioBaseMembers_[] = { // 859
-	{"__weaklistoffset__", ALIF_T_ALIFSIZET, offsetof(IOBase, weakRefList), ALIF_READONLY},
-	{"__dictoffset__", ALIF_T_ALIFSIZET, offsetof(IOBase, dict), ALIF_READONLY},
+	{"__weakListOffset__", ALIF_T_ALIFSIZET, offsetof(IOBase, weakRefList), ALIF_READONLY},
+	{"__dictOffset__", ALIF_T_ALIFSIZET, offsetof(IOBase, dict), ALIF_READONLY},
 	{nullptr},
 };
 

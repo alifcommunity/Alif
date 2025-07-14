@@ -353,8 +353,8 @@ static AlifMemberDef _textIOWrapperMembers_[] = { // 3358
 	{"encoding", ALIF_T_OBJECT, offsetof(TextIO, encoding), ALIF_READONLY},
 	{"buffer", ALIF_T_OBJECT, offsetof(TextIO, buffer), ALIF_READONLY},
 	{"line_buffering", ALIF_T_BOOL, offsetof(TextIO, lineBuffering), ALIF_READONLY},
-	{"__weaklistoffset__", ALIF_T_ALIFSIZET, offsetof(TextIO, weakRefList), ALIF_READONLY},
-	{"__dictoffset__", ALIF_T_ALIFSIZET, offsetof(TextIO, dict), ALIF_READONLY},
+	{"__weakListOffset__", ALIF_T_ALIFSIZET, offsetof(TextIO, weakRefList), ALIF_READONLY},
+	{"__dictOffset__", ALIF_T_ALIFSIZET, offsetof(TextIO, dict), ALIF_READONLY},
 	{nullptr}
 };
 

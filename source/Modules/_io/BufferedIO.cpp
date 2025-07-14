@@ -161,8 +161,8 @@ AlifTypeSpec _bufferedIOBaseSpec_ = { // 2504
 static AlifMemberDef _bufferedReaderMembers_[] = { // 2538
 	{"raw", ALIF_T_OBJECT, offsetof(Buffered, raw), ALIF_READONLY},
 	{"_finalizing", ALIF_T_BOOL, offsetof(Buffered, finalizing), 0},
-	{"__weaklistoffset__", ALIF_T_ALIFSIZET, offsetof(Buffered, weakRefList), ALIF_READONLY},
-	{"__dictoffset__", ALIF_T_ALIFSIZET, offsetof(Buffered, dict), ALIF_READONLY},
+	{"__weakListOffset__", ALIF_T_ALIFSIZET, offsetof(Buffered, weakRefList), ALIF_READONLY},
+	{"__dictOffset__", ALIF_T_ALIFSIZET, offsetof(Buffered, dict), ALIF_READONLY},
 	{nullptr}
 };
 

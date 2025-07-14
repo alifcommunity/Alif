@@ -2245,13 +2245,13 @@ AlifObject* alifType_fromMetaclass(AlifTypeObject* metaclass, AlifObject* module
 						goto finally;
 					}
 				}
-				if (strcmp(memb->name, "__weaklistoffset__") == 0) {
+				if (strcmp(memb->name, "__weakListOffset__") == 0) {
 					weaklistoffset_member = memb;
 				}
-				if (strcmp(memb->name, "__dictoffset__") == 0) {
+				if (strcmp(memb->name, "__dictOffset__") == 0) {
 					dictoffset_member = memb;
 				}
-				if (strcmp(memb->name, "__vectorcalloffset__") == 0) {
+				if (strcmp(memb->name, "__vectorCallOffset__") == 0) {
 					vectorcalloffset_member = memb;
 				}
 			}
@@ -2499,7 +2499,7 @@ AlifObject* alifType_fromMetaclass(AlifTypeObject* metaclass, AlifObject* module
 	type->weakListOffset = weaklistoffset;
 	type->dictOffset = dictoffset;
 
-	//_alifType_assignId(res);
+	res->uniqueID = _alifObject_assignUniqueId((AlifObject*)res);
 
 	if (alifType_ready(type) < 0) {
 		goto finally;

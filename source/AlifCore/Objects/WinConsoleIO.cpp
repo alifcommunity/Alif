@@ -412,8 +412,8 @@ static AlifMethodDef _winConsoleIOMethods_[] = { // 1121
 static AlifMemberDef _winConsoleIOMembers_[] = { // 1163
 	{"_blksize", ALIF_T_UINT, offsetof(WinConsoleIO, blkSize), 0},
 	{"_finalizing", ALIF_T_BOOL, offsetof(WinConsoleIO, finalizing), 0},
-	{"__weaklistoffset__", ALIF_T_ALIFSIZET, offsetof(WinConsoleIO, weakRefList), ALIF_READONLY},
-	{"__dictoffset__", ALIF_T_ALIFSIZET, offsetof(WinConsoleIO, dict), ALIF_READONLY},
+	{"__weakListOffset__", ALIF_T_ALIFSIZET, offsetof(WinConsoleIO, weakRefList), ALIF_READONLY},
+	{"__dictOffset__", ALIF_T_ALIFSIZET, offsetof(WinConsoleIO, dict), ALIF_READONLY},
 	{nullptr}
 };
 
