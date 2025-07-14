@@ -162,4 +162,12 @@ static inline AlifObject* alifObject_callMethodNoArgs(AlifObject* _self, AlifObj
 	return alifObject_vectorCallMethod(_name, &_self, nargsf, nullptr);
 }
 
+static inline AlifObject* alifObject_callMethodOneArg(AlifObject* _self,
+	AlifObject* _name, AlifObject* _arg) { // 68
+	AlifObject* args[2] = { _self, _arg };
+	AlifUSizeT nargsf = 2 | ALIF_VECTORCALL_ARGUMENTS_OFFSET;
+	return alifObject_vectorCallMethod(_name, args, nargsf, nullptr);
+}
+
+
 AlifSizeT alifObject_lengthHint(AlifObject*, AlifSizeT); // 80

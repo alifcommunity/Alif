@@ -55,6 +55,27 @@ public:
 };
 
 
+// 324
+#define ENTER_BUFFERED(self) \
+    ( (alifThread_acquireLock(self->lock, 0) ? \
+       1 : _enterBuffered_busy(self)) \
+     and (self->owner = alifThread_getThreadIdent(), 1) )
+
+#define LEAVE_BUFFERED(self) \
+    do { \
+        self->owner = 0; \
+        alifThread_releaseLock(self->lock); \
+    } while(0);
+
+
+#define VALID_READ_BUFFER(self) \
+    (self->readable and self->readEnd != -1) // 371
+
+#define READAHEAD(self) \
+    ((self->readable and VALID_READ_BUFFER(self)) \
+        ? (self->readEnd - self->pos) : 0) // 384
+
+
 
 
 static AlifIntT buffered_traverse(Buffered* self, VisitProc visit, void* arg) { // 450
@@ -65,6 +86,22 @@ static AlifIntT buffered_traverse(Buffered* self, VisitProc visit, void* arg) { 
 }
 
 
+static AlifObject* _io_Buffered_seekableImpl(Buffered* self) { // 624
+	//CHECK_INITIALIZED(self)
+	return alifObject_callMethodNoArgs(self->raw, &ALIF_ID(seekable));
+}
+
+
+static AlifObject* _io_Buffered_readableImpl(Buffered* self) { // 637
+	//CHECK_INITIALIZED(self)
+	return alifObject_callMethodNoArgs(self->raw, &ALIF_ID(readable));
+}
+
+
+
+static void _bufferedReader_resetBuf(Buffered*); // 720
+static AlifObject* _bufferedReader_readFast(Buffered*, AlifSizeT); // 728
+static AlifSizeT _bufferedReader_rawRead(Buffered*, char*, AlifSizeT); // 732
 
 
 static AlifIntT _buffered_init(Buffered* self) { // 822
@@ -102,7 +139,56 @@ static AlifIntT _buffered_init(Buffered* self) { // 822
 	return 0;
 }
 
+static AlifObject* _io_Buffered_read1Impl(Buffered* self, AlifSizeT n) { // 1018
+	AlifSizeT have{}, r{};
+	AlifObject* res = nullptr;
 
+	//CHECK_INITIALIZED(self)
+	if (n < 0) {
+		n = self->bufferSize;
+	}
+
+	//CHECK_CLOSED(self, "read of closed file")
+
+		if (n == 0)
+			return alifBytes_fromStringAndSize(nullptr, 0);
+
+	have = ALIF_SAFE_DOWNCAST(READAHEAD(self), AlifOffT, AlifSizeT);
+	if (have > 0) {
+		n = ALIF_MIN(have, n);
+		res = _bufferedReader_readFast(self, n);
+		return res;
+	}
+	res = alifBytes_fromStringAndSize(nullptr, n);
+	if (res == nullptr)
+		return nullptr;
+	//if (!ENTER_BUFFERED(self)) {
+	//	ALIF_DECREF(res);
+	//	return nullptr;
+	//}
+	/* Flush the write buffer if necessary */
+	//if (self->writable) {
+	//	AlifObject* r = buffered_flushAndRewindUnlocked(self);
+	//	if (r == nullptr) {
+	//		LEAVE_BUFFERED(self)
+	//		ALIF_DECREF(res);
+	//		return nullptr;
+	//	}
+	//	ALIF_DECREF(r);
+	//}
+	_bufferedReader_resetBuf(self);
+	r = _bufferedReader_rawRead(self, ALIFBYTES_AS_STRING(res), n);
+	//LEAVE_BUFFERED(self)
+		if (r == -1) {
+			ALIF_DECREF(res);
+			return nullptr;
+		}
+	if (r == -2)
+		r = 0;
+	if (n > r)
+		alifBytes_resize(&res, r);
+	return res;
+}
 
 static void _bufferedReader_resetBuf(Buffered* self) { // 1556
 	self->readEnd = -1;
@@ -140,6 +226,66 @@ static AlifIntT _ioBufferedReader___init__Impl(Buffered* self, AlifObject* raw,
 
 
 
+static AlifSizeT _bufferedReader_rawRead(Buffered* self, char* start, AlifSizeT len) { // 1600
+	AlifBuffer buf{};
+	AlifObject* memobj{}, * res{};
+	AlifSizeT n{};
+	if (alifBuffer_fillInfo(&buf, nullptr, start, len, 0, ALIFBUF_CONTIG) == -1)
+		return -1;
+	memobj = alifMemoryView_fromBuffer(&buf);
+	if (memobj == nullptr)
+		return -1;
+	do {
+		res = alifObject_callMethodOneArg(self->raw, &ALIF_ID(readinto), memobj);
+	} while (res == nullptr and _alifIO_trapEintr());
+	ALIF_DECREF(memobj);
+	if (res == nullptr)
+		return -1;
+	if (res == ALIF_NONE) {
+		/* Non-blocking stream would have blocked. Special return code! */
+		ALIF_DECREF(res);
+		return -2;
+	}
+	n = alifNumber_asSizeT(res, _alifExcValueError_);
+	ALIF_DECREF(res);
+
+	if (n == -1 and alifErr_occurred()) {
+		//_alifErr_formatFromCause(
+		//	_alifExcOSError_,
+		//	"raw readinto() failed"
+		//);
+		return -1;
+	}
+
+	if (n < 0 or n > len) {
+		alifErr_format(_alifExcOSError_,
+			"raw readinto() returned invalid length %zd "
+			"(should have been between 0 and %zd)", n, len);
+		return -1;
+	}
+	if (n > 0 and self->absPos != -1)
+		self->absPos += n;
+	return n;
+}
+
+
+
+static AlifObject* _bufferedReader_readFast(Buffered* self, AlifSizeT n) { // 1759
+	AlifSizeT current_size{};
+
+	current_size = ALIF_SAFE_DOWNCAST(READAHEAD(self), AlifOffT, AlifSizeT);
+	if (n <= current_size) {
+		AlifObject* res = alifBytes_fromStringAndSize(self->buffer + self->pos, n);
+		if (res != nullptr)
+			self->pos += n;
+		return res;
+	}
+	return ALIF_NONE;
+}
+
+
+
+
 #include "clinic/BufferedIO.cpp.h" // 2484
 
 
@@ -158,6 +304,13 @@ AlifTypeSpec _bufferedIOBaseSpec_ = { // 2504
 };
 
 
+static AlifMethodDef _bufferedReaderMethods_[] = { // 2511
+	_IO__BUFFERED_SEEKABLE_METHODDEF
+	_IO__BUFFERED_READ1_METHODDEF
+	{nullptr, nullptr}
+};
+
+
 static AlifMemberDef _bufferedReaderMembers_[] = { // 2538
 	{"raw", ALIF_T_OBJECT, offsetof(Buffered, raw), ALIF_READONLY},
 	{"_finalizing", ALIF_T_BOOL, offsetof(Buffered, finalizing), 0},
@@ -169,6 +322,7 @@ static AlifMemberDef _bufferedReaderMembers_[] = { // 2538
 
 static AlifTypeSlot _bufferedReaderSlots_[] = { // 2554
 	{ALIF_TP_TRAVERSE, buffered_traverse},
+	{ALIF_TP_METHODS, _bufferedReaderMethods_},
 	{ALIF_TP_MEMBERS, _bufferedReaderMembers_},
 
 	{ALIF_TP_INIT, _ioBufferedReader___init__},

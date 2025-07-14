@@ -1,4 +1,8 @@
-#include "AlifCore_ModSupport.h"
+#include "AlifCore_Gc.h"          
+#include "AlifCore_DureRun.h"     
+#include "AlifCore_Abstract.h"    
+#include "AlifCore_CriticalSection.h"
+#include "AlifCore_Modsupport.h"    
 
 
 
@@ -6,8 +10,74 @@
 
 
 
+#define _IO__BUFFERED_SEEKABLE_METHODDEF    \
+    {"seekable", (AlifCPPFunction)_io_Buffered_seekable, METHOD_NOARGS}, // 408
+
+static AlifObject* _io_Buffered_seekableImpl(Buffered*);
+
+static AlifObject* _io_Buffered_seekable(Buffered* self, AlifObject* ALIF_UNUSED(ignored)) { // 414
+	AlifObject* return_value = nullptr;
+
+	ALIF_BEGIN_CRITICAL_SECTION(self);
+	return_value = _io_Buffered_seekableImpl(self);
+	ALIF_END_CRITICAL_SECTION();
+
+	return return_value;
+}
 
 
+#define _IO__BUFFERED_READABLE_METHODDEF    \
+    {"readable", (AlifCPPFunction)_io_Buffered_readable, METHOD_NOARGS}, // 431
+
+static AlifObject* _io_Buffered_readableImpl(Buffered*);
+
+static AlifObject* _io_Buffered_readable(Buffered* self, AlifObject* ALIF_UNUSED(ignored)) { // 437
+	AlifObject* return_value = nullptr;
+
+	ALIF_BEGIN_CRITICAL_SECTION(self);
+	return_value = _io_Buffered_readableImpl(self);
+	ALIF_END_CRITICAL_SECTION();
+
+	return return_value;
+}
+
+// 679
+#define _IO__BUFFERED_READ1_METHODDEF    \
+    {"read1", ALIF_CPPFUNCTION_CAST(_io_Buffered_read1), METHOD_FASTCALL},
+
+static AlifObject* _io_Buffered_read1Impl(Buffered*, AlifSizeT);
+
+static AlifObject* _io_Buffered_read1(Buffered* self,
+	AlifObject* const* args, AlifSizeT nargs) { // 685
+	AlifObject* return_value = nullptr;
+	AlifSizeT n = -1;
+
+	if (!_alifArg_checkPositional("read1", nargs, 0, 1)) {
+		goto exit;
+	}
+	if (nargs < 1) {
+		goto skip_optional;
+	}
+	{
+		AlifSizeT ival = -1;
+		AlifObject* iobj = alifNumber_index(args[0]);
+		if (iobj != nullptr) {
+			ival = alifLong_asSizeT(iobj);
+			ALIF_DECREF(iobj);
+		}
+		if (ival == -1 and alifErr_occurred()) {
+			goto exit;
+		}
+		n = ival;
+	}
+skip_optional:
+	ALIF_BEGIN_CRITICAL_SECTION(self);
+	return_value = _io_Buffered_read1Impl(self, n);
+	ALIF_END_CRITICAL_SECTION();
+
+exit:
+	return return_value;
+}
 
 
 

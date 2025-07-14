@@ -9,6 +9,12 @@
 #include "AlifCore_Tuple.h"
 
 
+// 73 // alifCore_EmscriptenTrampoline
+#define DESCR_SET_TRAMPOLINE_CALL(set, obj, value, closure) \
+    (set)((obj), (value), (closure))
+
+#define DESCR_GET_TRAMPOLINE_CALL(get, obj, closure) \
+    (get)((obj), (closure))
 
 
 
@@ -112,6 +118,24 @@ static AlifObject* member_get(AlifObject* self, AlifObject* obj, AlifObject* typ
 }
 
 
+static AlifObject* getset_get(AlifObject* self, AlifObject* obj, AlifObject* type) { // 182
+	AlifGetSetDescrObject* descr = (AlifGetSetDescrObject*)self;
+	if (obj == nullptr) {
+		return ALIF_NEWREF(descr);
+	}
+	if (descr_check((AlifDescrObject*)descr, obj) < 0) {
+		return nullptr;
+	}
+	if (descr->getSet->get != nullptr)
+		return DESCR_GET_TRAMPOLINE_CALL(
+			descr->getSet->get, obj, descr->getSet->closure);
+	//alifErr_format(_alifExcAttributeError_,
+	//	"attribute '%V' of '%.100s' objects is not readable",
+	//	descr_name((AlifDescrObject*)descr), "?",
+	//	ALIFDESCR_TYPE(descr)->name);
+	return nullptr;
+}
+
 
 static AlifIntT descr_setCheck(AlifDescrObject* descr,
 	AlifObject* obj, AlifObject* value) { // 215
@@ -133,6 +157,24 @@ static AlifIntT member_set(AlifObject* self, AlifObject* obj, AlifObject* value)
 		return -1;
 	}
 	return alifMember_setOne((char*)obj, descr->member, value);
+}
+
+
+static AlifIntT getset_set(AlifObject* self, AlifObject* obj, AlifObject* value) { // 241
+	AlifGetSetDescrObject* descr = (AlifGetSetDescrObject*)self;
+	if (descr_setCheck((AlifDescrObject*)descr, obj, value) < 0) {
+		return -1;
+	}
+	if (descr->getSet->set != nullptr) {
+		return DESCR_SET_TRAMPOLINE_CALL(
+			descr->getSet->set, obj, value,
+			descr->getSet->closure);
+	}
+	//alifErr_format(_alifExcAttributeError_,
+	//	"attribute '%V' of '%.100s' objects is not writable",
+	//	descr_name((AlifDescrObject*)descr), "?",
+	//	ALIFDESCR_TYPE(descr)->name);
+	return -1;
 }
 
 static inline AlifIntT method_checkArgs(AlifObject* func,
@@ -388,6 +430,8 @@ AlifTypeObject _alifGetSetDescrType_ = { // 830
 	//.dealloc = descr_dealloc,
 	.getAttro = alifObject_genericGetAttr,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
+	.descrGet = getset_get,
+	.descrSet = getset_set,                                
 };
 
 AlifTypeObject _alifWrapperDescrType_ = { // 867

@@ -16,9 +16,11 @@
 
 
 
-static AlifIntT _ioFileIO___init__Impl(FileIO*, AlifObject*, const char*, AlifIntT, AlifObject*); // 55
+static AlifIntT _ioFileIO___init__Impl(FileIO*, AlifObject*,
+	const char*, AlifIntT, AlifObject*); // 55
 
-static AlifIntT _ioFileIO___init__(AlifObject* self, AlifObject* args, AlifObject* kwargs) { // 60
+static AlifIntT _ioFileIO___init__(AlifObject* self,
+	AlifObject* args, AlifObject* kwargs) { // 60
 	AlifIntT return_value = -1;
 #define NUM_KEYWORDS 4
 	static struct {
@@ -90,4 +92,19 @@ skip_optional_pos:
 
 exit:
 	return return_value;
+}
+
+
+
+
+
+
+// 164
+#define _IO_FILEIO_READABLE_METHODDEF    \
+    {"readable", (AlifCPPFunction)_ioFileIO_readable, METHOD_NOARGS},
+
+static AlifObject* _ioFileIO_readableImpl(FileIO*);
+
+static AlifObject* _ioFileIO_readable(FileIO* self, AlifObject* ALIF_UNUSED(ignored)) { // 170
+	return _ioFileIO_readableImpl(self);
 }
