@@ -778,9 +778,9 @@ AlifObject* _alifNumber_index(AlifObject * _item) { // 1397
 		return ALIF_NEWREF(_item);
 	}
 	if (!alifIndex_check(_item)) {
-		//alifErr_format(_alifExcTypeError_,
-			//"'%.200s' object cannot be interpreted "
-			//"as an integer", ALIF_TYPE(_item)->name);
+		alifErr_format(_alifExcTypeError_,
+			"'%.200s' object cannot be interpreted "
+			"as an integer", ALIF_TYPE(_item)->name);
 		return nullptr;
 	}
 

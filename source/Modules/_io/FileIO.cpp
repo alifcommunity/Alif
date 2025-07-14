@@ -301,8 +301,7 @@ static AlifIntT _ioFileIO___init__Impl(FileIO* self, AlifObject* nameobj, const 
 	}
 
 	alifMem_dataFree(self->statAtOpen);
-	self->statAtOpen = ((AlifUSizeT)(1) > ALIF_SIZET_MAX / sizeof(AlifStatStruct)) ? nullptr : \
-		((AlifStatStruct*)alifMem_dataAlloc((1) * sizeof(AlifStatStruct)));
+	self->statAtOpen = (AlifStatStruct*)alifMem_dataAlloc(sizeof(AlifStatStruct));
 	if (self->statAtOpen == nullptr) {
 		//alifErr_noMemory();
 		goto error;
@@ -418,6 +417,22 @@ static AlifMethodDef _fileIOMethods_[] = { // 1238
 };
 
 
+
+static AlifObject* fileIO_getBlkSize(AlifObject* op, void* closure) { // 1282
+	FileIO* self = ALIFFILEIO_CAST(op);
+#ifdef HAVE_STRUCT_STAT_ST_BLKSIZE
+	if (self->statAtOpen != nullptr and self->statAtOpen->blkSize > 1) {
+		return alifLong_fromLong(self->statAtOpen->blkSize);
+	}
+#endif /* HAVE_STRUCT_STAT_ST_BLKSIZE */
+	return alifLong_fromLong(DEFAULT_BUFFER_SIZE);
+}
+
+static AlifGetSetDef _fileIOGetSetList_[] = { // 1294
+	{"_blksize", fileIO_getBlkSize, nullptr, "Stat blksize if available"},
+	{nullptr},
+};
+
 static AlifMemberDef _fileIOMembers_[] = { // 1303
 	{"_finalizing", ALIF_T_BOOL, offsetof(FileIO, finalizing), 0},
 	{"__weakListOffset__", ALIF_T_ALIFSIZET, offsetof(FileIO, weakRefList), ALIF_READONLY},
@@ -428,6 +443,9 @@ static AlifMemberDef _fileIOMembers_[] = { // 1303
 
 static AlifTypeSlot _fileIOSlots_[] = { // 1310
 	{ALIF_TP_TRAVERSE, fileIO_traverse},
+	{ALIF_TP_METHODS, _fileIOMethods_},
+	{ALIF_TP_MEMBERS, _fileIOMembers_},
+	{ALIF_TP_GETSET, _fileIOGetSetList_},
 	{ALIF_TP_INIT, _ioFileIO___init__},
 	{ALIF_TP_NEW, fileio_new},
 	{0, nullptr},
