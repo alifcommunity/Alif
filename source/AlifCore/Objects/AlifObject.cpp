@@ -1069,7 +1069,7 @@ static AlifTypeObject* staticTypes[] = {
 	//&_alifInstructionSequenceType_,
 	//&_alifLegacyEventHandlerType_,
 	//&_alifLineIterator_,
-	//&_alifManagedBufferType_,
+	&_alifManagedBufferType_,
 	//&_alifMemoryIterType_,
 	//&_alifMethodWrapperType_,
 	//&_alifNamespaceType_,

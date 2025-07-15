@@ -43,7 +43,10 @@ public:
 };
 
 
-#define ALIFFILEIO_CAST(_op) ALIF_CAST(FileIO*, (_op))
+#define ALIFFILEIO_CAST(_op) ALIF_CAST(FileIO*, (_op)) // 86
+
+static AlifObject* portable_lseek(FileIO* _self, AlifObject* _posObj,
+	AlifIntT _whence, bool _suppressPipeError); // 89
 
 
 static AlifIntT internal_close(FileIO* self) { // 117
@@ -397,6 +400,87 @@ static AlifObject* _ioFileIO_readableImpl(FileIO* self) { // 615
 	return alifBool_fromLong((long)self->readable);
 }
 
+static AlifObject* _ioFileIO_seekableImpl(FileIO* self) { // 645
+	if (self->fd < 0)
+		return err_closed();
+	if (self->seekable < 0) {
+		AlifObject* pos = portable_lseek(self, NULL, SEEK_CUR, false);
+		if (pos == nullptr) {
+			alifErr_clear();
+		}
+		else {
+			ALIF_DECREF(pos);
+		}
+	}
+	return alifBool_fromLong((long)self->seekable);
+}
+
+
+
+
+static AlifObject* portable_lseek(FileIO* _self, AlifObject* _posObj,
+	AlifIntT _whence, bool _suppressPipeError) { // 947
+	AlifOffT pos{}, res{};
+	AlifIntT fd = _self->fd;
+
+#ifdef SEEK_SET
+	/* Turn 0, 1, 2 into SEEK_{SET,CUR,END} */
+	switch (_whence) {
+#if SEEK_SET != 0
+	case 0: _whence = SEEK_SET; break;
+#endif
+#if SEEK_CUR != 1
+	case 1: _whence = SEEK_CUR; break;
+#endif
+#if SEEK_END != 2
+	case 2: _whence = SEEK_END; break;
+#endif
+	}
+#endif /* SEEK_SET */
+
+	if (_posObj == nullptr) {
+		pos = 0;
+	}
+	else {
+#if defined(HAVE_LARGEFILE_SUPPORT)
+		pos = alifLong_asLongLong(_posObj);
+#else
+		pos = alifLong_asLong(_posObj);
+#endif
+		if (alifErr_occurred())
+			return nullptr;
+	}
+
+	ALIF_BEGIN_ALLOW_THREADS
+	ALIF_BEGIN_SUPPRESS_IPH
+#ifdef _WINDOWS
+		res = _lseeki64(fd, pos, _whence);
+#else
+		res = lseek(fd, pos, _whence);
+#endif
+	ALIF_END_SUPPRESS_IPH
+	ALIF_END_ALLOW_THREADS
+
+		if (_self->seekable < 0) {
+			_self->seekable = (res >= 0);
+		}
+
+	if (res < 0) {
+		if (_suppressPipeError and errno == ESPIPE) {
+			res = 0;
+		}
+		else {
+			//return alifErr_setFromErrno(_alifExcOSError_);
+		}
+	}
+
+#if defined(HAVE_LARGEFILE_SUPPORT)
+	return alifLong_fromLongLong(res);
+#else
+	return alifLong_fromLong(res);
+#endif
+}
+
 
 static AlifObject* _ioFileIO_isAttyImpl(FileIO* self) { // 1202
 	long res{};
@@ -423,6 +507,7 @@ static AlifObject* _ioFileIO_isAttyOpenOnly(AlifObject* op, AlifObject* ALIF_UNU
 #include "clinic/FileIO.cpp.h" // 1236
 
 static AlifMethodDef _fileIOMethods_[] = { // 1238
+	_IO_FILEIO_SEEKABLE_METHODDEF
 	_IO_FILEIO_READABLE_METHODDEF
 	{"_isAttyOpenOnly", _ioFileIO_isAttyOpenOnly, METHOD_NOARGS},
 	{nullptr, nullptr}             /* sentinel */

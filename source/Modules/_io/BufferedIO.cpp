@@ -139,6 +139,27 @@ static AlifIntT _buffered_init(Buffered* self) { // 822
 	return 0;
 }
 
+
+AlifIntT _alifIO_trapEintr(void) { // 863
+	if (!alifErr_exceptionMatches(_alifExcOSError_)) {
+		return 0;
+	}
+	AlifObject* exc = alifErr_getRaisedException();
+	AlifOSErrorObject* env_err = (AlifOSErrorObject*)exc;
+	if (env_err->myErrno != nullptr) {
+		AlifIntT overflow;
+		AlifIntT myerrno = alifLong_asLongAndOverflow(env_err->myErrno, &overflow);
+		alifErr_clear();
+		if (myerrno == EINTR) {
+			ALIF_DECREF(exc);
+			return 1;
+		}
+	}
+	alifErr_setRaisedException(exc);
+	return 0;
+}
+
+
 static AlifObject* _io_Buffered_read1Impl(Buffered* self, AlifSizeT n) { // 1018
 	AlifSizeT have{}, r{};
 	AlifObject* res = nullptr;
@@ -236,7 +257,7 @@ static AlifSizeT _bufferedReader_rawRead(Buffered* self, char* start, AlifSizeT 
 	if (memobj == nullptr)
 		return -1;
 	do {
-		res = alifObject_callMethodOneArg(self->raw, &ALIF_ID(readinto), memobj);
+		res = alifObject_callMethodOneArg(self->raw, &ALIF_ID(ReadInto), memobj);
 	} while (res == nullptr and _alifIO_trapEintr());
 	ALIF_DECREF(memobj);
 	if (res == nullptr)

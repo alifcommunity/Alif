@@ -27,3 +27,50 @@ void* alifMem_dataRealloc(void*, AlifUSizeT);
 
 const void alif_getMemState();
 
+
+
+
+
+
+
+
+
+
+
+/* ------------------------------------ ذاكرة المخزن ----------------------------------- */
+
+extern AlifTypeObject _alifManagedBufferType_;
+extern AlifTypeObject _alifMemoryViewType_;
+
+
+AlifObject* alifMemoryView_fromBuffer(const AlifBuffer*);
+
+
+class AlifManagedBufferObject {
+public:
+	ALIFOBJECT_HEAD;
+	AlifIntT flags{};
+	AlifSizeT exports;
+	AlifBuffer master{};
+};
+
+class AlifMemoryViewObject{
+public:
+	ALIFOBJECT_VAR_HEAD;
+	AlifManagedBufferObject* mbuf{};
+	AlifHashT hash{};
+	AlifIntT flags{};
+	AlifSizeT exports{};
+	AlifBuffer view{};
+	AlifObject* weakRefList{};
+	AlifSizeT array[1]{};
+};
+
+
+/* memoryview state flags */
+#define ALIF_MEMORYVIEW_RELEASED    0x001
+#define ALIF_MEMORYVIEW_C           0x002
+#define ALIF_MEMORYVIEW_FORTRAN     0x004
+#define ALIF_MEMORYVIEW_SCALAR      0x008
+#define ALIF_MEMORYVIEW_PIL         0x010
+#define ALIF_MEMORYVIEW_RESTRICTED  0x020

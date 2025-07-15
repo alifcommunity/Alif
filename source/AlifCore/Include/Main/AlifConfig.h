@@ -193,6 +193,8 @@
 	#define SIZEOF_TIME_T 8
 	#define SIZEOF_LONG_LONG 8 //* alif
 	#define ALIGNOF_MAX_ALIGN_T 8
+
+	#define HAVE_LARGEFILE_SUPPORT
 #else
 	using AlifIntT = int16_t;
 	using AlifUIntT = uint16_t;

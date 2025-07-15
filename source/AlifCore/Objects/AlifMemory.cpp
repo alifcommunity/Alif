@@ -4,6 +4,7 @@
 #include "AlifCore_State.h"
 #include "AlifCore_Memory.h"
 #include "AlifCore_QSBR.h" // for class QsbrThreadState
+#include "AlifCore_Object.h"
 
 
 #define ALIFMEM_FRAGIDX (_alifMem_.fragIdx)
@@ -1016,7 +1017,233 @@ const void alif_getMemState()
 	/* ملاحظة: حرف ال "أ" الإنكليزي المستخدم في الطباعة فقط لموازنة الطباعة في الطرفية التي لا تدعم العربية */
 }
 
-/* ----------------------------------------------------------------------------------- */
+
+
+/* ------------------------------------ ذاكرة المخزن ----------------------------------- */
+
+
+#define MV_CONTIGUOUS_NDIM1(_view) \
+    ((_view)->shape[0] == 1 or (_view)->strides[0] == (_view)->itemSize)
+
+
+static inline void initStrides_fromShape(AlifBuffer* view) {
+	AlifSizeT i{};
+
+	view->strides[view->nDim - 1] = view->itemSize;
+	for (i = view->nDim - 2; i >= 0; i--)
+		view->strides[i] = view->strides[i + 1] * view->shape[i + 1];
+}
+
+static inline void init_sharedValues(AlifBuffer* dest, const AlifBuffer* src) {
+	dest->obj = src->obj;
+	dest->buf = src->buf;
+	dest->len = src->len;
+	dest->itemSize = src->itemSize;
+	dest->readonly = src->readonly;
+	src->format ? dest->format = src->format : dest->format = (char*)"B";
+	dest->internal = src->internal;
+}
+
+static void init_shapeStrides(AlifBuffer* dest, const AlifBuffer* src) {
+	AlifSizeT i{};
+
+	if (src->nDim == 0) {
+		dest->shape = nullptr;
+		dest->strides = nullptr;
+		return;
+	}
+	if (src->nDim == 1) {
+		dest->shape[0] = src->shape ? src->shape[0] : src->len / src->itemSize;
+		dest->strides[0] = src->strides ? src->strides[0] : src->itemSize;
+		return;
+	}
+
+	for (i = 0; i < src->nDim; i++)
+		dest->shape[i] = src->shape[i];
+	if (src->strides) {
+		for (i = 0; i < src->nDim; i++)
+			dest->strides[i] = src->strides[i];
+	}
+	else {
+		initStrides_fromShape(dest);
+	}
+}
+
+static inline void init_suboffsets(AlifBuffer* dest, const AlifBuffer* src) {
+	AlifSizeT i{};
+
+	if (src->subOffsets == nullptr) {
+		dest->subOffsets = nullptr;
+		return;
+	}
+	for (i = 0; i < src->nDim; i++)
+		dest->subOffsets[i] = src->subOffsets[i];
+}
+
+static void init_flags(AlifMemoryViewObject* _mv) {
+	const AlifBuffer* view = &_mv->view;
+	AlifIntT flags = 0;
+
+	switch (view->nDim) {
+	case 0:
+		flags |= (ALIF_MEMORYVIEW_SCALAR | ALIF_MEMORYVIEW_C |
+			ALIF_MEMORYVIEW_FORTRAN);
+		break;
+	case 1:
+		if (MV_CONTIGUOUS_NDIM1(view))
+			flags |= (ALIF_MEMORYVIEW_C | ALIF_MEMORYVIEW_FORTRAN);
+		break;
+	default:
+		if (alifBuffer_isContiguous(view, 'C'))
+			flags |= ALIF_MEMORYVIEW_C;
+		if (alifBuffer_isContiguous(view, 'F'))
+			flags |= ALIF_MEMORYVIEW_FORTRAN;
+		break;
+	}
+
+	if (view->subOffsets) {
+		flags |= ALIF_MEMORYVIEW_PIL;
+		flags &= ~(ALIF_MEMORYVIEW_C | ALIF_MEMORYVIEW_FORTRAN);
+	}
+
+	_mv->flags = flags;
+}
+
+static inline AlifMemoryViewObject* memory_alloc(AlifIntT ndim) {
+	AlifMemoryViewObject* mv{};
+
+	mv = (AlifMemoryViewObject*)
+		ALIFOBJECT_GC_NEWVAR(AlifMemoryViewObject, &_alifMemoryViewType_, 3 * ndim);
+	if (mv == nullptr)
+		return nullptr;
+
+	mv->mbuf = nullptr;
+	mv->hash = -1;
+	mv->flags = 0;
+	mv->exports = 0;
+	mv->view.nDim = ndim;
+	mv->view.shape = mv->array;
+	mv->view.strides = mv->array + ndim;
+	mv->view.subOffsets = mv->array + 2 * ndim;
+	mv->weakRefList = nullptr;
+
+	ALIFOBJECT_GC_TRACK(mv);
+	return mv;
+}
+
+static AlifObject* mbuf_addView(AlifManagedBufferObject* _mbuf, const AlifBuffer* _src) {
+	AlifMemoryViewObject* mv{};
+	AlifBuffer* dest{};
+
+	if (_src == nullptr)
+		_src = &_mbuf->master;
+
+	if (_src->nDim > ALIFBUF_MAX_NDIM) {
+		alifErr_setString(_alifExcValueError_,
+			"memoryview: number of dimensions must not exceed "
+			ALIF_STRINGIFY(ALIFBUF_MAX_NDIM));
+		return nullptr;
+	}
+
+	mv = memory_alloc(_src->nDim);
+	if (mv == nullptr)
+		return nullptr;
+
+	dest = &mv->view;
+	init_sharedValues(dest, _src);
+	init_shapeStrides(dest, _src);
+	init_suboffsets(dest, _src);
+	init_flags(mv);
+
+	mv->mbuf = (AlifManagedBufferObject*)ALIF_NEWREF(_mbuf);
+	_mbuf->exports++;
+
+	return (AlifObject*)mv;
+}
+
+
+static inline AlifManagedBufferObject* mbuf_alloc(void) {
+	AlifManagedBufferObject* mbuf{};
+
+	mbuf = (AlifManagedBufferObject*)
+		ALIFOBJECT_GC_NEW(AlifManagedBufferObject, &_alifManagedBufferType_);
+	if (mbuf == nullptr)
+		return nullptr;
+	mbuf->flags = 0;
+	mbuf->exports = 0;
+	mbuf->master.obj = nullptr;
+	ALIFOBJECT_GC_TRACK(mbuf);
+
+	return mbuf;
+}
+
+AlifObject* alifMemoryView_fromBuffer(const AlifBuffer* _info) {
+	AlifManagedBufferObject* mbuf{};
+	AlifObject* mv{};
+
+	if (_info->buf == nullptr) {
+		alifErr_setString(_alifExcValueError_,
+			"alifMemoryView_fromBuffer(): info->buf يجب أن لا تكون فارغة");
+		return nullptr;
+	}
+
+	mbuf = mbuf_alloc();
+	if (mbuf == nullptr)
+		return nullptr;
+
+	mbuf->master = *_info;
+	mbuf->master.obj = nullptr;
+
+	mv = mbuf_addView(mbuf, nullptr);
+	ALIF_DECREF(mbuf);
+
+	return mv;
+}
 
 
 
+
+
+
+
+
+
+AlifTypeObject _alifManagedBufferType_ = {
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "managedbuffer",
+	.basicSize = sizeof(AlifManagedBufferObject),
+	//.dealloc = mbuf_dealloc,
+	.getAttro = alifObject_genericGetAttr,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
+	//.traverse = mbuf_traverse,
+	//.clear = mbuf_clear,
+};
+
+
+
+
+
+
+AlifTypeObject _alifMemoryViewType_ = {
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "مشهد_ذاكرة",
+	.basicSize = offsetof(AlifMemoryViewObject, array),
+	.itemSize = sizeof(AlifSizeT),                   
+	//.dealloc = memory_dealloc,
+	//.repr = memory_repr,
+	//.asSequence = &_memoryAsSequence_,
+	//.asMapping = &_memoryAsMapping_,
+	//.hash = memory_hash,
+	.getAttro = alifObject_genericGetAttr,
+	//.asBuffer = &_memoryAsBuffer_,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
+	   ALIF_TPFLAGS_SEQUENCE,
+	//.traverse = memory_traverse,
+	//.clear = memory_clear,  
+	//.richCompare = memory_richcompare,
+	.weakListOffset = offsetof(AlifMemoryViewObject, weakRefList),
+	//.iter = memory_iter,
+	//.methods = _memoryMethods_,
+	//.getSet = _memoryGetSetList_,
+	//.new_ = memory_view,
+};

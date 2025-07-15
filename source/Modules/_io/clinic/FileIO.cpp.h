@@ -108,3 +108,14 @@ static AlifObject* _ioFileIO_readableImpl(FileIO*);
 static AlifObject* _ioFileIO_readable(FileIO* self, AlifObject* ALIF_UNUSED(ignored)) { // 170
 	return _ioFileIO_readableImpl(self);
 }
+
+
+// 200
+#define _IO_FILEIO_SEEKABLE_METHODDEF    \
+    {"seekable", (AlifCPPFunction)_ioFileIO_seekable, METHOD_NOARGS},
+
+static AlifObject* _ioFileIO_seekableImpl(FileIO*);
+
+static AlifObject* _ioFileIO_seekable(FileIO* self, AlifObject* ALIF_UNUSED(ignored)) { // 206
+	return _ioFileIO_seekableImpl(self);
+}
