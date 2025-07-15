@@ -25,6 +25,6 @@ extern AlifIntT alifObject_hasLen(AlifObject*); // 22
 #define ALIF_ITERSEARCH_CONTAINS 3
 
 
-
+AlifIntT _alifConvertOptional_toSizeT(AlifObject*, void*); // 52
 
 AlifObject* _alifNumber_index(AlifObject*); // 56

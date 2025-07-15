@@ -28,6 +28,14 @@ AlifIntT _alif_encodeLocaleEx(const wchar_t*, char**,
 
 extern char* _alif_encodeLocaleRaw(const wchar_t*, AlifUSizeT*); // 59
 
+// 65
+#if defined(_WINDOWS) or defined(__APPLE__)
+#   define ALIF_READ_MAX  INT_MAX
+#   define ALIF_WRITE_MAX INT_MAX
+#else
+#   define ALIF_READ_MAX  ALIF_SIZET_MAX
+#   define ALIF_WRITE_MAX ALIF_SIZET_MAX
+#endif
 
 // 78
 #ifdef _WINDOWS
@@ -61,7 +69,7 @@ public:
 
 AlifIntT _alifFStat_noraise(AlifIntT, class AlifStatStruct*); // 110
 
-
+extern AlifSizeT _alif_read(AlifIntT, void*, AlifUSizeT); // 133
 
 #ifdef HAVE_READLINK
 extern int alif_wReadLink(const wchar_t*, wchar_t*, AlifUSizeT); // 151

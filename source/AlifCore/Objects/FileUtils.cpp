@@ -654,9 +654,50 @@ FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) { // 1764
 	return f;
 }
 
+AlifSizeT _alif_read(AlifIntT fd, void* buf, AlifUSizeT count) { // 1858
+	AlifSizeT n{};
+	AlifIntT err{};
+	AlifIntT asyncErr = 0;
 
+	if (count > ALIF_READ_MAX) {
+		count = ALIF_READ_MAX;
+	}
 
-#ifdef HAVE_READLINK
+	ALIF_BEGIN_SUPPRESS_IPH
+		do {
+			ALIF_BEGIN_ALLOW_THREADS
+				errno = 0;
+#ifdef _WINDOWS
+			_doserrno = 0;
+			n = read(fd, buf, (AlifIntT)count);
+			if (n < 0 and errno == EINVAL) {
+				if (_doserrno == ERROR_NO_DATA) {
+					errno = EAGAIN;
+				}
+			}
+#else
+			n = read(fd, buf, count);
+#endif
+			err = errno;
+			ALIF_END_ALLOW_THREADS
+		} while (n < 0 and err == EINTR /*and
+			!(asyncErr = alifErr_checkSignals())*/);
+		ALIF_END_SUPPRESS_IPH
+
+		if (asyncErr) {
+			errno = err;
+			return -1;
+		}
+		if (n < 0) {
+			//alifErr_setFromErrno(_alifExcOSError_);
+			errno = err;
+			return -1;
+		}
+
+		return n;
+}
+
+#ifdef HAVE_READLINK // 2054
 
 AlifIntT alif_wReadLink(const wchar_t* path, wchar_t* buf, AlifUSizeT buflen) { // 2061
 	char* cpath{};

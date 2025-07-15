@@ -95,6 +95,14 @@ extern AlifIntT alifStaticType_initBuiltin(AlifInterpreter*, AlifTypeObject*); /
 
 extern ManagedStaticTypeState* _alifStaticType_getState(AlifInterpreter*, AlifTypeObject*); // 177
 
+
+static inline void* _alifType_getModuleState(AlifTypeObject* _type) { // 191
+	AlifHeapTypeObject* et = (AlifHeapTypeObject*)_type;
+	AlifModuleObject* mod = (AlifModuleObject*)(et->module_);
+	return mod->state;
+}
+
+
 AlifObject* alifType_getDict(AlifTypeObject*); // 207
 
 static inline AlifIntT alifType_isReady(AlifTypeObject* _type) { // 221

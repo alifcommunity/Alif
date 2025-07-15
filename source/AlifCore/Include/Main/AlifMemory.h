@@ -39,6 +39,11 @@ const void alif_getMemState();
 
 /* ------------------------------------ ذاكرة المخزن ----------------------------------- */
 
+
+#define ALIF_MANAGED_BUFFER_RELEASED    0x001 
+#define ALIF_MANAGED_BUFFER_FREE_FORMAT 0x002  
+
+
 extern AlifTypeObject _alifManagedBufferType_;
 extern AlifTypeObject _alifMemoryViewType_;
 

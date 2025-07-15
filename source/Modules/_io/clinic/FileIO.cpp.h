@@ -119,3 +119,46 @@ static AlifObject* _ioFileIO_seekableImpl(FileIO*);
 static AlifObject* _ioFileIO_seekable(FileIO* self, AlifObject* ALIF_UNUSED(ignored)) { // 206
 	return _ioFileIO_seekableImpl(self);
 }
+
+
+// 218
+#define _IO_FILEIO_READINTO_METHODDEF    \
+    {"ReadInto", ALIF_CPPFUNCTION_CAST(_ioFileIO_readinto), METHOD_METHOD|METHOD_FASTCALL|METHOD_KEYWORDS},
+
+static AlifObject* _ioFileIO_readintoImpl(FileIO*, AlifTypeObject*, AlifBuffer*);
+
+static AlifObject* _ioFileIO_readinto(FileIO* self, AlifTypeObject* cls,
+	AlifObject* const* args, AlifSizeT nargs, AlifObject* kwnames) { // 224
+	AlifObject* returnValue = nullptr;
+
+#define KWTUPLE (AlifObject *)&ALIF_SINGLETON(tupleEmpty)
+
+
+	static const char* const _keywords[] = { "", nullptr };
+	static AlifArgParser _parser = {
+		.keywords = _keywords,
+		.fname = "ReadInto",
+		.kwTuple = KWTUPLE,
+	};
+#undef KWTUPLE
+	AlifObject* argsbuf[1];
+	AlifBuffer buffer = { nullptr, nullptr };
+
+	args = ALIFARG_UNPACKKEYWORDS(args, nargs, nullptr, kwnames, &_parser, 1, 1, 0, argsbuf);
+	if (!args) {
+		goto exit;
+	}
+	if (alifObject_getBuffer(args[0], &buffer, ALIFBUF_WRITABLE) < 0) {
+		//_alifArg_badArgument("readinto", "argument 1", "read-write bytes-like object", args[0]);
+		goto exit;
+	}
+	returnValue = _ioFileIO_readintoImpl(self, cls, &buffer);
+
+exit:
+	/* Cleanup for buffer */
+	if (buffer.obj) {
+		alifBuffer_release(&buffer);
+	}
+
+	return returnValue;
+}

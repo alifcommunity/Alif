@@ -31,7 +31,8 @@ static AlifIntT ioBase_traverse(IOBase* self, VisitProc visit, void* arg) { // 3
 
 
 
-AlifObject* _alifIOBase_checkReadable(AlifIOState* state, AlifObject* self, AlifObject* args) { // 437
+AlifObject* _alifIOBase_checkReadable(AlifIOState* state,
+	AlifObject* self, AlifObject* args) { // 437
 	AlifObject* res = alifObject_callMethodNoArgs(self, &ALIF_ID(readable));
 	if (res == nullptr)
 		return nullptr;
@@ -47,6 +48,117 @@ AlifObject* _alifIOBase_checkReadable(AlifIOState* state, AlifObject* self, Alif
 }
 
 
+
+static AlifObject* _io_IOBase_readlineImpl(AlifObject* self, AlifSizeT limit) { // 559
+	AlifObject* peek{}, * buffer{}, * result{};
+	AlifSizeT oldSize = -1;
+
+	if (alifObject_getOptionalAttr(self, &ALIF_ID(Peek), &peek) < 0) {
+		return nullptr;
+	}
+
+	buffer = alifByteArray_fromStringAndSize(nullptr, 0);
+	if (buffer == nullptr) {
+		ALIF_XDECREF(peek);
+		return nullptr;
+	}
+
+	while (limit < 0 or ALIFBYTEARRAY_GET_SIZE(buffer) < limit) {
+		AlifSizeT nreadahead = 1;
+		AlifObject* b{};
+
+		if (peek != nullptr) {
+			AlifObject* readahead = alifObject_callOneArg(peek, _alifLong_getOne());
+			if (readahead == nullptr) {
+				if (_alifIO_trapEintr()) {
+					continue;
+				}
+				goto fail;
+			}
+			if (!ALIFBYTES_CHECK(readahead)) {
+				//alifErr_format(_alifExcOSError_,
+				//	"peek() should have returned a bytes object, "
+				//	"not '%.200s'", ALIF_TYPE(readahead)->name);
+				ALIF_DECREF(readahead);
+				goto fail;
+			}
+			if (ALIFBYTES_GET_SIZE(readahead) > 0) {
+				AlifSizeT n = 0;
+				const char* buf = ALIFBYTES_AS_STRING(readahead);
+				if (limit >= 0) {
+					do {
+						if (n >= ALIFBYTES_GET_SIZE(readahead) || n >= limit)
+							break;
+						if (buf[n++] == '\n')
+							break;
+					} while (1);
+				}
+				else {
+					do {
+						if (n >= ALIFBYTES_GET_SIZE(readahead))
+							break;
+						if (buf[n++] == '\n')
+							break;
+					} while (1);
+				}
+				nreadahead = n;
+			}
+			ALIF_DECREF(readahead);
+		}
+
+		b = _alifObject_callMethod(self, &ALIF_STR(Read), "n", nreadahead);
+		if (b == nullptr) {
+			if (_alifIO_trapEintr()) {
+				continue;
+			}
+			goto fail;
+		}
+		if (!ALIFBYTES_CHECK(b)) {
+			//alifErr_format(_alifExcOSError_,
+			//	"read() should have returned a bytes object, "
+			//	"not '%.200s'", ALIF_TYPE(b)->name);
+			ALIF_DECREF(b);
+			goto fail;
+		}
+		if (ALIFBYTES_GET_SIZE(b) == 0) {
+			ALIF_DECREF(b);
+			break;
+		}
+
+		oldSize = ALIFBYTEARRAY_GET_SIZE(buffer);
+		if (alifByteArray_resize(buffer, oldSize + ALIFBYTES_GET_SIZE(b)) < 0) {
+			ALIF_DECREF(b);
+			goto fail;
+		}
+		memcpy(ALIFBYTEARRAY_AS_STRING(buffer) + oldSize,
+			ALIFBYTES_AS_STRING(b), ALIFBYTES_GET_SIZE(b));
+
+		ALIF_DECREF(b);
+
+		if (ALIFBYTEARRAY_AS_STRING(buffer)[ALIFBYTEARRAY_GET_SIZE(buffer) - 1] == '\n')
+			break;
+	}
+
+	result = alifBytes_fromStringAndSize(ALIFBYTEARRAY_AS_STRING(buffer),
+		ALIFBYTEARRAY_GET_SIZE(buffer));
+	ALIF_XDECREF(peek);
+	ALIF_DECREF(buffer);
+	return result;
+fail:
+	ALIF_XDECREF(peek);
+	ALIF_DECREF(buffer);
+	return nullptr;
+}
+
+
+
+#include "clinic/IOBase.cpp.h"
+
+static AlifMethodDef _ioBaseMethods_[] = { // 824
+	_IO__IOBASE_READLINE_METHODDEF
+	//_IO__IOBASE_READLINES_METHODDEF
+	{nullptr, nullptr}
+};
 
 static AlifGetSetDef _ioBaseGetSet_[] = { // 853
 	{"__dict__", alifObject_genericGetDict, nullptr, nullptr},
@@ -64,6 +176,7 @@ static AlifMemberDef _ioBaseMembers_[] = { // 859
 
 static AlifTypeSlot _ioBaseSlots_[] = { // 866
 	{ALIF_TP_TRAVERSE, ioBase_traverse},
+	{ALIF_TP_METHODS, _ioBaseMethods_},
 	{ALIF_TP_MEMBERS, _ioBaseMembers_},
 	{ALIF_TP_GETSET, _ioBaseGetSet_},
 	{0, nullptr},

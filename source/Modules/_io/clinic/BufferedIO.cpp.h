@@ -49,7 +49,7 @@ static AlifObject* _io_Buffered_read1Impl(Buffered*, AlifSizeT);
 
 static AlifObject* _io_Buffered_read1(Buffered* self,
 	AlifObject* const* args, AlifSizeT nargs) { // 685
-	AlifObject* return_value = nullptr;
+	AlifObject* returnValue = nullptr;
 	AlifSizeT n = -1;
 
 	if (!_alifArg_checkPositional("read1", nargs, 0, 1)) {
@@ -72,11 +72,11 @@ static AlifObject* _io_Buffered_read1(Buffered* self,
 	}
 skip_optional:
 	ALIF_BEGIN_CRITICAL_SECTION(self);
-	return_value = _io_Buffered_read1Impl(self, n);
+	returnValue = _io_Buffered_read1Impl(self, n);
 	ALIF_END_CRITICAL_SECTION();
 
 exit:
-	return return_value;
+	return returnValue;
 }
 
 

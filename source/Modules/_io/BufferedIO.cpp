@@ -171,8 +171,8 @@ static AlifObject* _io_Buffered_read1Impl(Buffered* self, AlifSizeT n) { // 1018
 
 	//CHECK_CLOSED(self, "read of closed file")
 
-		if (n == 0)
-			return alifBytes_fromStringAndSize(nullptr, 0);
+	if (n == 0)
+		return alifBytes_fromStringAndSize(nullptr, 0);
 
 	have = ALIF_SAFE_DOWNCAST(READAHEAD(self), AlifOffT, AlifSizeT);
 	if (have > 0) {
@@ -200,10 +200,10 @@ static AlifObject* _io_Buffered_read1Impl(Buffered* self, AlifSizeT n) { // 1018
 	_bufferedReader_resetBuf(self);
 	r = _bufferedReader_rawRead(self, ALIFBYTES_AS_STRING(res), n);
 	//LEAVE_BUFFERED(self)
-		if (r == -1) {
-			ALIF_DECREF(res);
-			return nullptr;
-		}
+	if (r == -1) {
+		ALIF_DECREF(res);
+		return nullptr;
+	}
 	if (r == -2)
 		r = 0;
 	if (n > r)

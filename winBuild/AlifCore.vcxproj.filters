@@ -957,9 +957,6 @@
     <ClInclude Include="..\source\AlifCore\Objects\clinic\MathModule.cpp.h">
       <Filter>Objects\clinic</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Objects\clinic\TextIO.cpp.h">
-      <Filter>Modules\_io\clinic</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\Modules\_io\_IOModule.h">
       <Filter>Modules\_io</Filter>
     </ClInclude>
@@ -994,6 +991,12 @@
       <Filter>Modules\_io\clinic</Filter>
     </ClInclude>
     <ClInclude Include="..\source\Modules\_io\clinic\FileIO.cpp.h">
+      <Filter>Modules\_io\clinic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Modules\_io\clinic\IOBase.cpp.h">
+      <Filter>Modules\_io\clinic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Modules\_io\clinic\TextIO.cpp.h">
       <Filter>Modules\_io\clinic</Filter>
     </ClInclude>
   </ItemGroup>

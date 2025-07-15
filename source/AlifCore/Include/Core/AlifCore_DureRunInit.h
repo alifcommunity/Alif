@@ -699,6 +699,7 @@
     INIT_STR(Mode, "mode"), /* //* alif */	\
     INIT_STR(Name, "name"), /* //* alif */	\
 	INIT_USTR(Open, "فتح"), /* //* alif */	\
+	INIT_USTR(Read, "اقرأ"), /* //* alif */	\
 	INIT_STR(Raw, "raw"), /* //* alif */	\
 	INIT_USTR(TextIOWrapper, "غلاف_النص"), /* //* alif */	\
     INIT_USTR(__init__, "_تهيئة_"), /* //* alif */	\
@@ -764,6 +765,7 @@
 	INIT_ID(Builtins), \
 	INIT_ID(Close), \
 	INIT_ID(CloseFD), \
+	INIT_ID(Decode), \
 	INIT_ID(Encoding), \
 	INIT_ID(End), \
 	INIT_ID(Errors), \
@@ -772,6 +774,7 @@
 	INIT_ID(Filename), \
 	INIT_ID(Fileno), \
 	INIT_ID(Flush), \
+	INIT_ID(GetState), \
 	INIT_ID(HasLocation), \
 	INIT_ID(Join), \
 	INIT_ID(Key), \
@@ -791,7 +794,9 @@
 	INIT_ID(Opener), \
 	INIT_ID(Origin), \
 	INIT_ID(Path), \
+	INIT_ID(Peek), \
 	INIT_ID(readable), \
+	INIT_ID(Read), \
 	INIT_ID(read1), \
 	INIT_ID(ReadInto), \
 	INIT_ID(Reverse), \

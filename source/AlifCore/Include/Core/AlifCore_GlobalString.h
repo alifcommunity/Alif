@@ -59,6 +59,7 @@ public:
 		STRUCT_FOR_STR(Mode, "mode") //* alif
 		STRUCT_FOR_STR(Name, "name") //* alif
 		STRUCT_FOR_USTR(Open, "فتح") //* alif
+		STRUCT_FOR_USTR(Read, "اقرأ") //* alif
 		STRUCT_FOR_STR(Raw, "raw") //* alif
 		STRUCT_FOR_USTR(TextIOWrapper, "غلاف_النص") //* alif
 		STRUCT_FOR_USTR(__init__, "_تهيئة_") //* alif
@@ -125,6 +126,7 @@ public:
 		STRUCT_FOR_ID(Builtins)
 		STRUCT_FOR_ID(Close)
 		STRUCT_FOR_ID(CloseFD)
+		STRUCT_FOR_ID(Decode)
      	STRUCT_FOR_ID(Encoding)
      	STRUCT_FOR_ID(End)
      	STRUCT_FOR_ID(Errors)
@@ -133,6 +135,7 @@ public:
      	STRUCT_FOR_ID(Filename)
      	STRUCT_FOR_ID(Fileno)
      	STRUCT_FOR_ID(Flush)
+     	STRUCT_FOR_ID(GetState)
      	STRUCT_FOR_ID(HasLocation)
      	STRUCT_FOR_ID(Join)
      	STRUCT_FOR_ID(Key)
@@ -152,7 +155,9 @@ public:
      	STRUCT_FOR_ID(Opener)
      	STRUCT_FOR_ID(Origin)
      	STRUCT_FOR_ID(Path)
+     	STRUCT_FOR_ID(Peek)
      	STRUCT_FOR_ID(readable)
+     	STRUCT_FOR_ID(Read)
      	STRUCT_FOR_ID(read1)
      	STRUCT_FOR_ID(ReadInto)
      	STRUCT_FOR_ID(Reverse)

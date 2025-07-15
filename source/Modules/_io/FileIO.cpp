@@ -415,7 +415,31 @@ static AlifObject* _ioFileIO_seekableImpl(FileIO* self) { // 645
 	return alifBool_fromLong((long)self->seekable);
 }
 
+static AlifObject* _ioFileIO_readintoImpl(FileIO* self,
+	AlifTypeObject* cls, AlifBuffer* buffer) { // 674
+	AlifSizeT n{};
+	AlifIntT err{};
 
+	if (self->fd < 0)
+		return err_closed();
+	if (!self->readable) {
+		AlifIOState* state = getIOState_byCls(cls);
+		//return err_mode(state, "reading");
+	}
+
+	n = _alif_read(self->fd, buffer->buf, buffer->len);
+	err = errno;
+
+	if (n == -1) {
+		if (err == EAGAIN) {
+			alifErr_clear();
+			return ALIF_NONE;
+		}
+		return nullptr;
+	}
+
+	return alifLong_fromSizeT(n);
+}
 
 
 static AlifObject* portable_lseek(FileIO* _self, AlifObject* _posObj,
@@ -507,6 +531,7 @@ static AlifObject* _ioFileIO_isAttyOpenOnly(AlifObject* op, AlifObject* ALIF_UNU
 #include "clinic/FileIO.cpp.h" // 1236
 
 static AlifMethodDef _fileIOMethods_[] = { // 1238
+	_IO_FILEIO_READINTO_METHODDEF
 	_IO_FILEIO_SEEKABLE_METHODDEF
 	_IO_FILEIO_READABLE_METHODDEF
 	{"_isAttyOpenOnly", _ioFileIO_isAttyOpenOnly, METHOD_NOARGS},

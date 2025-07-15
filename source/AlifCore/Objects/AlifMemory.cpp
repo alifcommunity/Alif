@@ -1019,11 +1019,33 @@ const void alif_getMemState()
 
 
 
+
+
+
+
 /* ------------------------------------ ذاكرة المخزن ----------------------------------- */
 
 
+#define MV_C_CONTIGUOUS(flags) (flags&(ALIF_MEMORYVIEW_SCALAR|ALIF_MEMORYVIEW_C))
+#define MV_F_CONTIGUOUS(flags) \
+    (flags&(ALIF_MEMORYVIEW_SCALAR|ALIF_MEMORYVIEW_FORTRAN))
+#define MV_ANY_CONTIGUOUS(flags) \
+    (flags&(ALIF_MEMORYVIEW_SCALAR|ALIF_MEMORYVIEW_C|ALIF_MEMORYVIEW_FORTRAN))
+
 #define MV_CONTIGUOUS_NDIM1(_view) \
     ((_view)->shape[0] == 1 or (_view)->strides[0] == (_view)->itemSize)
+
+
+#define REQ_INDIRECT(flags) ((flags&ALIFBUF_INDIRECT) == ALIFBUF_INDIRECT)
+#define REQ_C_CONTIGUOUS(flags) ((flags&ALIFBUF_C_CONTIGUOUS) == ALIFBUF_C_CONTIGUOUS)
+#define REQ_F_CONTIGUOUS(flags) ((flags&ALIFBUF_F_CONTIGUOUS) == ALIFBUF_F_CONTIGUOUS)
+#define REQ_ANY_CONTIGUOUS(flags) ((flags&ALIFBUF_ANY_CONTIGUOUS) == ALIFBUF_ANY_CONTIGUOUS)
+#define REQ_STRIDES(flags) ((flags&ALIFBUF_STRIDES) == ALIFBUF_STRIDES)
+#define REQ_SHAPE(flags) ((flags&ALIFBUF_ND) == ALIFBUF_ND)
+#define REQ_WRITABLE(flags) (flags&ALIFBUF_WRITABLE)
+#define REQ_FORMAT(flags) (flags&ALIFBUF_FORMAT)
+
+
 
 
 static inline void initStrides_fromShape(AlifBuffer* view) {
@@ -1203,6 +1225,116 @@ AlifObject* alifMemoryView_fromBuffer(const AlifBuffer* _info) {
 
 
 
+static void mbuf_release(AlifManagedBufferObject* _self) {
+	if (_self->flags & ALIF_MANAGED_BUFFER_RELEASED)
+		return;
+
+	_self->flags |= ALIF_MANAGED_BUFFER_RELEASED;
+
+	ALIFOBJECT_GC_UNTRACK(_self);
+	alifBuffer_release(&_self->master);
+}
+
+static void _memory_release(AlifMemoryViewObject* _self) {
+	if (_self->flags & ALIF_MEMORYVIEW_RELEASED)
+		return;
+
+	_self->flags |= ALIF_MEMORYVIEW_RELEASED;
+	if (--_self->mbuf->exports == 0) {
+		mbuf_release(_self->mbuf);
+	}
+}
+
+static void memory_dealloc(AlifObject* _self) {
+	AlifMemoryViewObject* self = (AlifMemoryViewObject*)_self;
+	ALIFOBJECT_GC_UNTRACK(self);
+	_memory_release(self);
+	ALIF_CLEAR(self->mbuf);
+	if (self->weakRefList != nullptr)
+		alifObject_clearWeakRefs((AlifObject*)self);
+	alifObject_gcDel(self);
+}
+
+
+
+static AlifIntT memory_getBuf(AlifObject* _self, AlifBuffer* _view, AlifIntT _flags) {
+	AlifMemoryViewObject* self = (AlifMemoryViewObject*)_self;
+	AlifBuffer* base = &self->view;
+	AlifIntT baseflags = self->flags;
+
+	//CHECK_RELEASED_INT(self);
+	//CHECK_RESTRICTED_INT(self);
+
+	*_view = *base;
+	_view->obj = nullptr;
+
+	if (REQ_WRITABLE(_flags) and base->readonly) {
+		//alifErr_setString(_alifExcBufferError_,
+		//	"memoryview: underlying buffer is not writable");
+		return -1;
+	}
+	if (!REQ_FORMAT(_flags)) {
+		_view->format = nullptr;
+	}
+
+	if (REQ_C_CONTIGUOUS(_flags) and !MV_C_CONTIGUOUS(baseflags)) {
+		//alifErr_setString(_alifExcBufferError_,
+		//	"memoryview: underlying buffer is not C-contiguous");
+		return -1;
+	}
+	if (REQ_F_CONTIGUOUS(_flags) and !MV_F_CONTIGUOUS(baseflags)) {
+		//alifErr_setString(_alifExcBufferError_,
+		//	"memoryview: underlying buffer is not Fortran contiguous");
+		return -1;
+	}
+	if (REQ_ANY_CONTIGUOUS(_flags) and !MV_ANY_CONTIGUOUS(baseflags)) {
+		//alifErr_setString(_alifExcBufferError_,
+		//	"memoryview: underlying buffer is not contiguous");
+		return -1;
+	}
+	if (!REQ_INDIRECT(_flags) and (baseflags & ALIF_MEMORYVIEW_PIL)) {
+		//alifErr_setString(_alifExcBufferError_,
+		//	"memoryview: underlying buffer requires suboffsets");
+		return -1;
+	}
+	if (!REQ_STRIDES(_flags)) {
+		if (!MV_C_CONTIGUOUS(baseflags)) {
+			//alifErr_setString(_alifExcBufferError_,
+			//	"memoryview: underlying buffer is not C-contiguous");
+			return -1;
+		}
+		_view->strides = nullptr;
+	}
+	if (!REQ_SHAPE(_flags)) {
+		if (_view->format != nullptr) {
+			//alifErr_format(_alifExcBufferError_,
+			//	"memoryview: cannot cast to unsigned bytes if the format flag "
+			//	"is present");
+			return -1;
+		}
+		_view->nDim = 1;
+		_view->shape = nullptr;
+	}
+
+
+	_view->obj = ALIF_NEWREF(self);
+	self->exports++;
+
+	return 0;
+}
+
+static void memory_releaseBuf(AlifObject* _self, AlifBuffer* _view) {
+	AlifMemoryViewObject* self = (AlifMemoryViewObject*)_self;
+	self->exports--;
+	return;
+}
+
+static AlifBufferProcs _memoryAsBuffer_ = {
+	.getBuffer = memory_getBuf,
+	.releaseBuffer = memory_releaseBuf,
+};
+
+
 
 
 
@@ -1221,21 +1353,18 @@ AlifTypeObject _alifManagedBufferType_ = {
 
 
 
-
-
-
 AlifTypeObject _alifMemoryViewType_ = {
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "مشهد_ذاكرة",
 	.basicSize = offsetof(AlifMemoryViewObject, array),
 	.itemSize = sizeof(AlifSizeT),                   
-	//.dealloc = memory_dealloc,
+	.dealloc = memory_dealloc,
 	//.repr = memory_repr,
 	//.asSequence = &_memoryAsSequence_,
 	//.asMapping = &_memoryAsMapping_,
 	//.hash = memory_hash,
 	.getAttro = alifObject_genericGetAttr,
-	//.asBuffer = &_memoryAsBuffer_,
+	.asBuffer = &_memoryAsBuffer_,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
 	   ALIF_TPFLAGS_SEQUENCE,
 	//.traverse = memory_traverse,

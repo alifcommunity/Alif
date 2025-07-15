@@ -167,3 +167,71 @@ static AlifObject* _ioTextIOWrapper_write(TextIO* self, AlifObject* arg) { // 75
 exit:
 	return returnValue;
 }
+
+// 783
+#define _IO_TEXTIOWRAPPER_READ_METHODDEF    \
+    {"اقرأ", ALIF_CPPFUNCTION_CAST(_ioTextIOWrapper_read), METHOD_FASTCALL},
+
+static AlifObject* _ioTextIOWrapper_readImpl(TextIO*, AlifSizeT);
+
+static AlifObject* _ioTextIOWrapper_read(TextIO* self,
+	AlifObject* const* args, AlifSizeT nargs) { // 789
+	AlifObject* returnValue = nullptr;
+	AlifSizeT n = -1;
+
+	if (!_ALIFARG_CHECKPOSITIONAL("اقرأ", nargs, 0, 1)) {
+		goto exit;
+	}
+	if (nargs < 1) {
+		goto skip_optional;
+	}
+	if (!_alifConvertOptional_toSizeT(args[0], &n)) {
+		goto exit;
+	}
+skip_optional:
+	ALIF_BEGIN_CRITICAL_SECTION(self);
+	returnValue = _ioTextIOWrapper_readImpl(self, n);
+	ALIF_END_CRITICAL_SECTION();
+
+exit:
+	return returnValue;
+}
+
+
+
+// 818
+#define _IO_TEXTIOWRAPPER_READLINE_METHODDEF    \
+    {"قراءة_سطر", ALIF_CPPFUNCTION_CAST(_ioTextIOWrapper_readline), METHOD_FASTCALL},
+
+static AlifObject* _ioTextIOWrapper_readlineImpl(TextIO*, AlifSizeT);
+
+static AlifObject* _ioTextIOWrapper_readline(TextIO* self, AlifObject* const* args, AlifSizeT nargs) { // 824
+	AlifObject* returnValue = nullptr;
+	AlifSizeT size = -1;
+
+	if (!_ALIFARG_CHECKPOSITIONAL("قراءة_سطر", nargs, 0, 1)) {
+		goto exit;
+	}
+	if (nargs < 1) {
+		goto skip_optional;
+	}
+	{
+		AlifSizeT ival = -1;
+		AlifObject* iobj = alifNumber_index(args[0]);
+		if (iobj != nullptr) {
+			ival = alifLong_asSizeT(iobj);
+			ALIF_DECREF(iobj);
+		}
+		if (ival == -1 and alifErr_occurred()) {
+			goto exit;
+		}
+		size = ival;
+	}
+skip_optional:
+	ALIF_BEGIN_CRITICAL_SECTION(self);
+	returnValue = _ioTextIOWrapper_readlineImpl(self, size);
+	ALIF_END_CRITICAL_SECTION();
+
+exit:
+	return returnValue;
+}

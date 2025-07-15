@@ -23,7 +23,7 @@ extern AlifObject* _alifIOBase_checkReadable(AlifIOState*, AlifObject*, AlifObje
 
 
 
-
+extern AlifIntT _alifIO_trapEintr(void); // 79
 
 // 81
 #define DEFAULT_BUFFER_SIZE (8 * 1024)  /* bytes */
@@ -72,7 +72,10 @@ static inline AlifIOState* get_ioState(AlifObject* _module) { // 169
 	return (AlifIOState*)state;
 }
 
-
+static inline AlifIOState* getIOState_byCls(AlifTypeObject* _cls) { // 177
+	void* state = _alifType_getModuleState(_cls);
+	return (AlifIOState*)state;
+}
 
 
 
