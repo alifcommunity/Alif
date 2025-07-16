@@ -801,7 +801,7 @@
 	INIT_ID(read1), \
 	INIT_ID(ReadInto), \
 	INIT_ID(Reverse), \
-	INIT_ID(seekable), \
+	INIT_ID(Seekable), \
 	INIT_ID(Sep), \
 	INIT_ID(Stderr), \
 	INIT_ID(Stdin), \

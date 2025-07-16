@@ -11,7 +11,7 @@
 
 
 #define _IO__BUFFERED_SEEKABLE_METHODDEF    \
-    {"seekable", (AlifCPPFunction)_io_Buffered_seekable, METHOD_NOARGS}, // 408
+    {"Seekable", (AlifCPPFunction)_io_Buffered_seekable, METHOD_NOARGS}, // 408
 
 static AlifObject* _io_Buffered_seekableImpl(Buffered*);
 

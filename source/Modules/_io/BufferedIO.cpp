@@ -88,7 +88,7 @@ static AlifIntT buffered_traverse(Buffered* self, VisitProc visit, void* arg) { 
 
 static AlifObject* _io_Buffered_seekableImpl(Buffered* self) { // 624
 	//CHECK_INITIALIZED(self)
-	return alifObject_callMethodNoArgs(self->raw, &ALIF_ID(seekable));
+	return alifObject_callMethodNoArgs(self->raw, &ALIF_ID(Seekable));
 }
 
 

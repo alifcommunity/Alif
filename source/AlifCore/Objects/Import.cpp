@@ -1650,15 +1650,15 @@ AlifObject* alifImport_importModuleLevel(const char* name, AlifObject* globals,
 
 
 
-AlifObject* alifImport_import(AlifObject* module_name) { // 3888
+AlifObject* alifImport_import(AlifObject* _moduleName) { // 3888
 	AlifThread* tstate = _alifThread_get();
 	AlifObject* globals = nullptr;
 	AlifObject* import = nullptr;
 	AlifObject* builtins = nullptr;
 	AlifObject* r = nullptr;
 
-	AlifObject* from_list = alifList_new(0);
-	if (from_list == nullptr) {
+	AlifObject* fromList = alifList_new(0);
+	if (fromList == nullptr) {
 		goto err;
 	}
 
@@ -1698,13 +1698,13 @@ AlifObject* alifImport_import(AlifObject* module_name) { // 3888
 	/* Call the __import__ function with the proper argument list
 	   Always use absolute import here.
 	   Calling for side-effect of import. */
-	r = alifObject_callFunction(import, "OOOOi", module_name, globals,
-		globals, from_list, 0, nullptr);
+	r = alifObject_callFunction(import, "OOOOi", _moduleName, globals,
+		globals, fromList, 0, nullptr);
 	if (r == nullptr)
 		goto err;
 	ALIF_DECREF(r);
 
-	r = import_getModule(tstate, module_name);
+	r = import_getModule(tstate, _moduleName);
 	if (r == nullptr and !_alifErr_occurred(tstate)) {
 		//_alifErr_setObject(tstate, _alifExcKeyError_, module_name);
 	}
@@ -1713,7 +1713,7 @@ err:
 	ALIF_XDECREF(globals);
 	ALIF_XDECREF(builtins);
 	ALIF_XDECREF(import);
-	ALIF_XDECREF(from_list);
+	ALIF_XDECREF(fromList);
 
 	return r;
 }

@@ -162,7 +162,7 @@ public:
      	STRUCT_FOR_ID(read1)
      	STRUCT_FOR_ID(ReadInto)
      	STRUCT_FOR_ID(Reverse)
-     	STRUCT_FOR_ID(seekable)
+     	STRUCT_FOR_ID(Seekable)
      	STRUCT_FOR_ID(Sep)
      	STRUCT_FOR_ID(Stderr)
      	STRUCT_FOR_ID(Stdin)
