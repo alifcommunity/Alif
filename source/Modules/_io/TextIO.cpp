@@ -124,38 +124,48 @@ AlifObject* _alifIncrementalNewlineDecoder_decode(AlifObject* _mySelf,
 	AlifSizeT outputLen{};
 	NLDecoderObject* self = (NLDecoderObject*)_mySelf;
 
-	CHECK_INITIALIZED_DECODER(self);
+	//* alif //* todo
+	AlifBuffer* data = (AlifBuffer*)alifMem_dataAlloc(sizeof(AlifBuffer));
+	AlifSizeT consumed = data->len;
+	if (alifObject_getBuffer(_input, data, ALIFBUF_SIMPLE) != 0) {
+		return nullptr;
+	}
+	output = alifUStr_decodeUTF8Stateful((const char*)data->buf, data->len,
+		nullptr, _final ? nullptr : &consumed);
+	//* alif
+
+	//CHECK_INITIALIZED_DECODER(self);
 
 	/* decode input (with the eventual \r from a previous pass) */
-	if (self->decoder != ALIF_NONE) {
-		output = alifObject_callMethodObjArgs(self->decoder,
-			&ALIF_ID(Decode), _input, _final ? ALIF_TRUE : ALIF_FALSE, nullptr);
-	}
-	else {
-		output = ALIF_NEWREF(_input);
-	}
+	//if (self->decoder != ALIF_NONE) {
+	//	output = alifObject_callMethodObjArgs(self->decoder,
+	//		&ALIF_ID(Decode), _input, _final ? ALIF_TRUE : ALIF_FALSE, nullptr);
+	//}
+	//else {
+		//output = ALIF_NEWREF(_input);
+	//}
 
 	if (check_decoded(output) < 0)
 		return nullptr;
 
 	outputLen = ALIFUSTR_GET_LENGTH(output);
-	if (self->pendingcr and (_final or outputLen > 0)) {
-		AlifIntT kind{};
-		AlifObject* modified{};
-		char* out{};
+	//if (self->pendingcr and (_final or outputLen > 0)) {
+	//	AlifIntT kind{};
+	//	AlifObject* modified{};
+	//	char* out{};
 
-		modified = alifUStr_new(outputLen + 1,
-			ALIFUSTR_MAX_CHAR_VALUE(output));
-		if (modified == nullptr)
-			goto error;
-		kind = ALIFUSTR_KIND(modified);
-		out = (char*)ALIFUSTR_DATA(modified);
-		ALIFUSTR_WRITE(kind, out, 0, '\r');
-		memcpy(out + kind, ALIFUSTR_DATA(output), kind * outputLen);
-		ALIF_SETREF(output, modified); /* output remains ready */
-		self->pendingcr = 0;
-		outputLen++;
-	}
+	//	modified = alifUStr_new(outputLen + 1,
+	//		ALIFUSTR_MAX_CHAR_VALUE(output));
+	//	if (modified == nullptr)
+	//		goto error;
+	//	kind = ALIFUSTR_KIND(modified);
+	//	out = (char*)ALIFUSTR_DATA(modified);
+	//	ALIFUSTR_WRITE(kind, out, 0, '\r');
+	//	memcpy(out + kind, ALIFUSTR_DATA(output), kind * outputLen);
+	//	ALIF_SETREF(output, modified); /* output remains ready */
+	//	self->pendingcr = 0;
+	//	outputLen++;
+	//}
 
 	if (!_final) {
 		if (outputLen > 0
@@ -451,6 +461,7 @@ static AlifObject* _textIOWrapper_decode(AlifIOState* state,
 	AlifObject* chars{};
 
 	//if (ALIF_IS_TYPE(decoder, state->alifIncrementalNewlineDecoderType))
+		decoder = (AlifObject*)state->alifIncrementalNewlineDecoderType; //* delete //* alif //* review //* todo
 		chars = _alifIncrementalNewlineDecoder_decode(decoder, bytes, eof);
 	//else
 	//	chars = alifObject_callMethodObjArgs(decoder, &ALIF_ID(Decode), bytes,
@@ -627,7 +638,7 @@ static AlifIntT _ioTextIOWrapper___init__Impl(TextIO* _self, AlifObject* _buffer
 		}
 	}
 
-	res = alifObject_callMethodNoArgs(_buffer, &ALIF_ID(seekable));
+	res = alifObject_callMethodNoArgs(_buffer, &ALIF_ID(Seekable));
 	if (res == nullptr)
 		goto error;
 	r = alifObject_isTrue(res);
@@ -772,20 +783,20 @@ static AlifIntT textIOWrapper_readChunk(TextIO* self, AlifSizeT size_hint) { // 
 	if (nchars > 0)
 		eof = 0;
 
-	if (self->telling) {
-		AlifObject* next_input = decBuffer;
-		alifBytes_concat(&next_input, inputChunk);
-		decBuffer = nullptr;
-		if (next_input == nullptr) {
-			goto fail;
-		}
-		AlifObject* snapshot = alif_buildValue("NN", decFlags, next_input);
-		if (snapshot == nullptr) {
-			decFlags = nullptr;
-			goto fail;
-		}
-		ALIF_XSETREF(self->snapshot, snapshot);
-	}
+	//if (self->telling) {
+	//	AlifObject* next_input = decBuffer;
+	//	alifBytes_concat(&next_input, inputChunk);
+	//	decBuffer = nullptr;
+	//	if (next_input == nullptr) {
+	//		goto fail;
+	//	}
+	//	AlifObject* snapshot = alif_buildValue("NN", decFlags, next_input);
+	//	if (snapshot == nullptr) {
+	//		decFlags = nullptr;
+	//		goto fail;
+	//	}
+	//	ALIF_XSETREF(self->snapshot, snapshot);
+	//}
 	ALIF_DECREF(inputChunk);
 
 	return (eof == 0);
@@ -1055,14 +1066,14 @@ static AlifObject* _textIOWrapper_readline(TextIO* self, AlifSizeT limit) { // 2
 			&consumed);
 		if (endpos >= 0) {
 			endpos += start;
-			if (limit >= 0 && (endpos - start) + chunked >= limit)
+			if (limit >= 0 and (endpos - start) + chunked >= limit)
 				endpos = start + limit - chunked;
 			break;
 		}
 
 		/* We can put aside up to `endpos` */
 		endpos = consumed + start;
-		if (limit >= 0 && (endpos - start) + chunked >= limit) {
+		if (limit >= 0 and (endpos - start) + chunked >= limit) {
 			endpos = start + limit - chunked;
 			break;
 		}

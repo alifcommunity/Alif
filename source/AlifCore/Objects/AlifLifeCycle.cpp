@@ -23,7 +23,7 @@
 
 
 
-
+static AlifIntT init_setBuiltinsOpen(void); // 72
 static AlifIntT init_sysStreams(AlifThread* _thread); // 73
 
 
@@ -496,8 +496,8 @@ static AlifIntT initInterpreter_main(AlifThread* _thread) { // 1156
 	status = init_sysStreams(_thread);
 	if (status < 1) return status;
 
-	//status = init_setBuiltinsOpen();
-	//if (status < 1) return status;
+	status = init_setBuiltinsOpen();
+	if (status < 1) return status;
 
 	//status = add_mainmodule(interpreter);
 	//if (status < 1) return status;
@@ -700,7 +700,35 @@ error:
 
 
 
+static AlifIntT init_setBuiltinsOpen(void) { // 2709
+	AlifObject* wrapper;
+	AlifObject* bimod = nullptr;
+	AlifIntT res = 1;
 
+	if (!(bimod = alifImport_importModule("builtins"))) {
+		goto error;
+	}
+
+	if (!(wrapper = _alifImport_getModuleAttrString("التبادل", "فتح"))) {
+		goto error;
+	}
+
+	/* Set builtins.open */
+	if (alifObject_setAttrString(bimod, "فتح", wrapper) == -1) {
+		ALIF_DECREF(wrapper);
+		goto error;
+	}
+	ALIF_DECREF(wrapper);
+	goto done;
+
+error:
+	//res = _alifStatus_ERR("can't initialize io.open");
+	res = -1;
+
+done:
+	ALIF_XDECREF(bimod);
+	return res;
+}
 
 
 

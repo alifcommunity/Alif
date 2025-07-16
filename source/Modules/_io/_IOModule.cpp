@@ -45,14 +45,18 @@ static AlifObject* _io_openImpl(AlifObject* _module, AlifObject* _file, const ch
 	}
 
 	/* Decode mode */
+	//* alif
 	for (i = 0; i < strlen(_mode); i++) {
-		char c = _mode[i];
+		unsigned char c = (unsigned char)_mode[i];
+		if (c == 216 or c == 217) {
+			continue;
+		}
 
 		switch (c) {
 		case 'x':
 			creating = 1;
 			break;
-		case 'r':
+		case 130: // 'ق'
 			reading = 1;
 			break;
 		case 'w':
@@ -80,8 +84,46 @@ static AlifObject* _io_openImpl(AlifObject* _module, AlifObject* _file, const ch
 			alifErr_format(_alifExcValueError_, "invalid mode: '%s'", _mode);
 			goto error;
 		}
-
 	}
+	//* alif
+
+	//for (i = 0; i < strlen(_mode); i++) {
+	//	char c = _mode[i];
+
+	//	switch (c) {
+	//	case 'x':
+	//		creating = 1;
+	//		break;
+	//	case 'r':
+	//		reading = 1;
+	//		break;
+	//	case 'w':
+	//		writing = 1;
+	//		break;
+	//	case 'a':
+	//		appending = 1;
+	//		break;
+	//	case '+':
+	//		updating = 1;
+	//		break;
+	//	case 't':
+	//		text = 1;
+	//		break;
+	//	case 'b':
+	//		binary = 1;
+	//		break;
+	//	default:
+	//		goto invalid_mode;
+	//	}
+
+	//	/* c must not be duplicated */
+	//	if (strchr(_mode + i + 1, c)) {
+	//	invalid_mode:
+	//		alifErr_format(_alifExcValueError_, "invalid mode: '%s'", _mode);
+	//		goto error;
+	//	}
+
+	//}
 
 	m = rawmode;
 	if (creating)  *(m++) = 'x';

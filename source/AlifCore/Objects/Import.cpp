@@ -1776,6 +1776,21 @@ AlifObject* _alifImport_getModuleAttr(AlifObject* _modName,
 	return result;
 }
 
+AlifObject* _alifImport_getModuleAttrString(const char* _modName, const char* _attrName) { // 4177
+	AlifObject* pmodname = alifUStr_fromString(_modName);
+	if (pmodname == nullptr) {
+		return nullptr;
+	}
+	AlifObject* pattrname = alifUStr_fromString(_attrName);
+	if (pattrname == nullptr) {
+		ALIF_DECREF(pmodname);
+		return nullptr;
+	}
+	AlifObject* result = _alifImport_getModuleAttr(pmodname, pattrname);
+	ALIF_DECREF(pattrname);
+	ALIF_DECREF(pmodname);
+	return result;
+}
 
 
 static AlifMethodDef _impMethods_[] = { // 4788
