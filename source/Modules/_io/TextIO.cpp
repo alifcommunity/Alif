@@ -106,11 +106,195 @@ static AlifIntT check_decoded(AlifObject* _decoded) { // 293
 }
 
 
+#define CHECK_INITIALIZED_DECODER(self) \
+    if (self->errors == nullptr) { \
+        alifErr_setString(_alifExcValueError_, \
+                        "IncrementalNewlineDecoder.__init__() not called"); \
+        return nullptr; \
+    }
 
+#define SEEN_CR   1
+#define SEEN_LF   2
+#define SEEN_CRLF 4
+#define SEEN_ALL (SEEN_CR | SEEN_LF | SEEN_CRLF)
 
+AlifObject* _alifIncrementalNewlineDecoder_decode(AlifObject* _mySelf,
+	AlifObject* _input, AlifIntT _final) { // 320
+	AlifObject* output{};
+	AlifSizeT outputLen{};
+	NLDecoderObject* self = (NLDecoderObject*)_mySelf;
 
+	CHECK_INITIALIZED_DECODER(self);
 
+	/* decode input (with the eventual \r from a previous pass) */
+	if (self->decoder != ALIF_NONE) {
+		output = alifObject_callMethodObjArgs(self->decoder,
+			&ALIF_ID(Decode), _input, _final ? ALIF_TRUE : ALIF_FALSE, nullptr);
+	}
+	else {
+		output = ALIF_NEWREF(_input);
+	}
 
+	if (check_decoded(output) < 0)
+		return nullptr;
+
+	outputLen = ALIFUSTR_GET_LENGTH(output);
+	if (self->pendingcr and (_final or outputLen > 0)) {
+		AlifIntT kind{};
+		AlifObject* modified{};
+		char* out{};
+
+		modified = alifUStr_new(outputLen + 1,
+			ALIFUSTR_MAX_CHAR_VALUE(output));
+		if (modified == nullptr)
+			goto error;
+		kind = ALIFUSTR_KIND(modified);
+		out = (char*)ALIFUSTR_DATA(modified);
+		ALIFUSTR_WRITE(kind, out, 0, '\r');
+		memcpy(out + kind, ALIFUSTR_DATA(output), kind * outputLen);
+		ALIF_SETREF(output, modified); /* output remains ready */
+		self->pendingcr = 0;
+		outputLen++;
+	}
+
+	if (!_final) {
+		if (outputLen > 0
+			and ALIFUSTR_READ_CHAR(output, outputLen - 1) == '\r')
+		{
+			AlifObject* modified = alifUStr_subString(output, 0, outputLen - 1);
+			if (modified == nullptr)
+				goto error;
+			ALIF_SETREF(output, modified);
+			self->pendingcr = 1;
+		}
+	}
+
+	{
+		const void* inStr{};
+		AlifSizeT len{};
+		AlifIntT seennl = self->seennl;
+		AlifIntT onlyIf = 0;
+		AlifIntT kind{};
+
+		inStr = ALIFUSTR_DATA(output);
+		len = ALIFUSTR_GET_LENGTH(output);
+		kind = ALIFUSTR_KIND(output);
+
+		if (len == 0)
+			return output;
+		if (seennl == SEEN_LF or seennl == 0) {
+			onlyIf = (memchr(inStr, '\r', kind * len) == nullptr);
+		}
+
+		if (onlyIf) {
+			if (seennl == 0 and
+				memchr(inStr, '\n', kind * len) != nullptr) {
+				if (kind == AlifUStr_1Byte_Kind)
+					seennl |= SEEN_LF;
+				else {
+					AlifSizeT i = 0;
+					for (;;) {
+						AlifUCS4 c;
+						while (ALIFUSTR_READ(kind, inStr, i) > '\n')
+							i++;
+						c = ALIFUSTR_READ(kind, inStr, i++);
+						if (c == '\n') {
+							seennl |= SEEN_LF;
+							break;
+						}
+						if (i >= len)
+							break;
+					}
+				}
+			}
+			/* Finished: we have scanned for newlines, and none of them
+			   need translating */
+		}
+		else if (!self->translate) {
+			AlifSizeT i = 0;
+			/* We have already seen all newline types, no need to scan again */
+			if (seennl == SEEN_ALL)
+				goto endScan;
+			for (;;) {
+				AlifUCS4 c;
+				/* Fast loop for non-control characters */
+				while (ALIFUSTR_READ(kind, inStr, i) > '\r')
+					i++;
+				c = ALIFUSTR_READ(kind, inStr, i++);
+				if (c == '\n')
+					seennl |= SEEN_LF;
+				else if (c == '\r') {
+					if (ALIFUSTR_READ(kind, inStr, i) == '\n') {
+						seennl |= SEEN_CRLF;
+						i++;
+					}
+					else
+						seennl |= SEEN_CR;
+				}
+				if (i >= len)
+					break;
+				if (seennl == SEEN_ALL)
+					break;
+			}
+		endScan:
+			;
+		}
+		else {
+			void* translated{};
+			AlifIntT kind = ALIFUSTR_KIND(output);
+			const void* inStr = ALIFUSTR_DATA(output);
+			AlifSizeT in{}, out{};
+
+			translated = alifMem_dataAlloc(kind * len);
+			if (translated == nullptr) {
+				//alifErr_noMemory();
+				goto error;
+			}
+			in = out = 0;
+			for (;;) {
+				AlifUCS4 c;
+				/* Fast loop for non-control characters */
+				while ((c = ALIFUSTR_READ(kind, inStr, in++)) > '\r')
+					ALIFUSTR_WRITE(kind, translated, out++, c);
+				if (c == '\n') {
+					ALIFUSTR_WRITE(kind, translated, out++, c);
+					seennl |= SEEN_LF;
+					continue;
+				}
+				if (c == '\r') {
+					if (ALIFUSTR_READ(kind, inStr, in) == '\n') {
+						in++;
+						seennl |= SEEN_CRLF;
+					}
+					else
+						seennl |= SEEN_CR;
+					ALIFUSTR_WRITE(kind, translated, out++, '\n');
+					continue;
+				}
+				if (in > len)
+					break;
+				ALIFUSTR_WRITE(kind, translated, out++, c);
+			}
+			ALIF_DECREF(output);
+			output = alifUStr_fromKindAndData(kind, translated, out);
+			alifMem_dataFree(translated);
+			if (!output)
+				return nullptr;
+		}
+		self->seennl |= seennl;
+	}
+
+	return output;
+
+error:
+	ALIF_DECREF(output);
+	return nullptr;
+}
+
+static AlifObject* _io_incrementalNewlineDecoderDecodeImpl(NLDecoderObject* _self,
+	AlifObject* _input, AlifIntT _final) { // 521
+	return _alifIncrementalNewlineDecoder_decode((AlifObject*)_self, _input, _final);
+}
 
 
 /* TextIOWrapper */
