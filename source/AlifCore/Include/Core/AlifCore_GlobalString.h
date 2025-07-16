@@ -127,6 +127,7 @@ public:
 		STRUCT_FOR_ID(Close)
 		STRUCT_FOR_ID(CloseFD)
 		STRUCT_FOR_ID(Decode)
+		STRUCT_FOR_ID(Decoder)
      	STRUCT_FOR_ID(Encoding)
      	STRUCT_FOR_ID(End)
      	STRUCT_FOR_ID(Errors)
@@ -156,7 +157,7 @@ public:
      	STRUCT_FOR_ID(Origin)
      	STRUCT_FOR_ID(Path)
      	STRUCT_FOR_ID(Peek)
-     	STRUCT_FOR_ID(readable)
+     	STRUCT_FOR_ID(Readable)
      	STRUCT_FOR_ID(Read)
      	STRUCT_FOR_ID(read1)
      	STRUCT_FOR_ID(ReadInto)
@@ -169,7 +170,9 @@ public:
      	STRUCT_FOR_ID(strict)
      	STRUCT_FOR_ID(TextIOWrapper)
      	STRUCT_FOR_ID(Top)
+     	STRUCT_FOR_ID(Translate)
      	STRUCT_FOR_ID(Write)
+     	STRUCT_FOR_ID(Writable)
      	STRUCT_FOR_ID(WriteThrough)
     } identifiers;
 

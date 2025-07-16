@@ -349,7 +349,7 @@ static AlifIntT iomodule_exec(AlifObject* m) { // 650
 	}
 
 	// Base classes
-	//ADD_TYPE(m, state->alifIncrementalNewlineDecoderType, &_nlDecoderSpec_, nullptr);
+	ADD_TYPE(m, state->alifIncrementalNewlineDecoderType, &_nlDecoderSpec_, nullptr);
 	//ADD_TYPE(m, state->alifBytesIOBufferType, &_bytesIOBufSpec_, nullptr);
 	ADD_TYPE(m, state->alifIOBaseType, &_ioBaseSpec_, nullptr);
 

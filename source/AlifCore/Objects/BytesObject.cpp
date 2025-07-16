@@ -329,6 +329,17 @@ done:
 
 
 
+static AlifIntT bytesBuffer_getBuffer(AlifObject* op, AlifBuffer* view, AlifIntT flags) { // 1676
+	AlifBytesObject* self = ALIFBYTES_CAST(op);
+	return alifBuffer_fillInfo(view, (AlifObject*)self, (void*)self->val, ALIF_SIZE(self),
+		1, flags);
+}
+
+
+static AlifBufferProcs _bytesAsBuffer_ = { // 1701
+	bytesBuffer_getBuffer,
+	nullptr,
+};
 
 
 
@@ -339,8 +350,8 @@ AlifTypeObject _alifBytesType_ = { // 3028
 	.name = "بايت",
 	.basicSize = ALIFBYTESOBJECT_SIZE,
 	.itemSize = sizeof(char),
-	.dealloc = 0,
 	.getAttro = alifObject_genericGetAttr,
+	.asBuffer = &_bytesAsBuffer_,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE |
 		ALIF_TPFLAGS_BYTES_SUBCLASS | _ALIF_TPFLAGS_MATCH_SELF,
 	.free = alifMem_objFree,

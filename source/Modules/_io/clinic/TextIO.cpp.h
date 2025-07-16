@@ -14,8 +14,59 @@
 
 
 
+// 300
+static AlifIntT _ioIncrementalNewlineDecoder___init__Impl(NLDecoderObject*,
+	AlifObject*, AlifIntT, AlifObject*);
 
+static AlifIntT _ioIncrementalNewlineDecoder___init__(AlifObject* self,
+	AlifObject* args, AlifObject* kwargs) { // 305
+	AlifIntT return_value = -1;
+#define NUM_KEYWORDS 3
+	static struct {
+		AlifGCHead _thisNotUsed{};
+		ALIFOBJECT_VAR_HEAD{};
+		AlifObject* item[NUM_KEYWORDS]{};
+	} _kwtuple = {
+		.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTupleType_, NUM_KEYWORDS),
+		.item = { &ALIF_ID(Decoder), &ALIF_ID(Translate), &ALIF_ID(Errors), },
+	};
+#undef NUM_KEYWORDS
+#define KWTUPLE (&_kwtuple.objBase.objBase)
 
+	static const char* const _keywords[] = { "decoder", "translate", "errors", nullptr };
+	static AlifArgParser _parser = {
+		.keywords = _keywords,
+		.fname = "IncrementalNewlineDecoder",
+		.kwTuple = KWTUPLE,
+	};
+#undef KWTUPLE
+	AlifObject* argsbuf[3];
+	AlifObject* const* fastargs;
+	AlifSizeT nargs = ALIFTUPLE_GET_SIZE(args);
+	AlifSizeT noptargs = nargs + (kwargs ? ALIFDICT_GET_SIZE(kwargs) : 0) - 2;
+	AlifObject* decoder{};
+	AlifIntT translate{};
+	AlifObject* errors = nullptr;
+
+	fastargs = ALIFARG_UNPACKKEYWORDS(ALIFTUPLE_CAST(args)->item, nargs, kwargs, nullptr, &_parser, 2, 3, 0, argsbuf);
+	if (!fastargs) {
+		goto exit;
+	}
+	decoder = fastargs[0];
+	translate = alifObject_isTrue(fastargs[1]);
+	if (translate < 0) {
+		goto exit;
+	}
+	if (!noptargs) {
+		goto skip_optional_pos;
+	}
+	errors = fastargs[2];
+skip_optional_pos:
+	return_value = _ioIncrementalNewlineDecoder___init__Impl((NLDecoderObject*)self, decoder, translate, errors);
+
+exit:
+	return return_value;
+}
 
 
 

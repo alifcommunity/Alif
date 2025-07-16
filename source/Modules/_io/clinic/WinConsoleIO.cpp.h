@@ -85,7 +85,7 @@ exit:
 #if defined(HAVE_WINDOWS_CONSOLE_IO) // 163
 
 #define _IO__WINDOWSCONSOLEIO_READABLE_METHODDEF    \
-    {"readable", (AlifCPPFunction)_io_windowsConsoleIO_readable, METHOD_NOARGS},
+    {"Readable", (AlifCPPFunction)_io_windowsConsoleIO_readable, METHOD_NOARGS},
 
 static AlifObject* _io_windowsConsoleIO_readableImpl(WinConsoleIO*);
 

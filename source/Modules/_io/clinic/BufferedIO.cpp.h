@@ -27,7 +27,7 @@ static AlifObject* _io_Buffered_seekable(Buffered* self, AlifObject* ALIF_UNUSED
 
 
 #define _IO__BUFFERED_READABLE_METHODDEF    \
-    {"readable", (AlifCPPFunction)_io_Buffered_readable, METHOD_NOARGS}, // 431
+    {"Readable", (AlifCPPFunction)_io_Buffered_readable, METHOD_NOARGS}, // 431
 
 static AlifObject* _io_Buffered_readableImpl(Buffered*);
 

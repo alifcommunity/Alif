@@ -766,6 +766,7 @@
 	INIT_ID(Close), \
 	INIT_ID(CloseFD), \
 	INIT_ID(Decode), \
+	INIT_ID(Decoder), \
 	INIT_ID(Encoding), \
 	INIT_ID(End), \
 	INIT_ID(Errors), \
@@ -795,7 +796,7 @@
 	INIT_ID(Origin), \
 	INIT_ID(Path), \
 	INIT_ID(Peek), \
-	INIT_ID(readable), \
+	INIT_ID(Readable), \
 	INIT_ID(Read), \
 	INIT_ID(read1), \
 	INIT_ID(ReadInto), \
@@ -808,7 +809,9 @@
 	INIT_ID(strict), \
 	INIT_ID(TextIOWrapper), \
 	INIT_ID(Top), \
+	INIT_ID(Translate), \
 	INIT_ID(Write), \
+	INIT_ID(Writable), \
 	INIT_ID(WriteThrough), \
 }
 

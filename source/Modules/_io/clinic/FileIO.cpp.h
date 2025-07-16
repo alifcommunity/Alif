@@ -101,7 +101,7 @@ exit:
 
 // 164
 #define _IO_FILEIO_READABLE_METHODDEF    \
-    {"readable", (AlifCPPFunction)_ioFileIO_readable, METHOD_NOARGS},
+    {"Readable", (AlifCPPFunction)_ioFileIO_readable, METHOD_NOARGS},
 
 static AlifObject* _ioFileIO_readableImpl(FileIO*);
 

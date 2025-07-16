@@ -6,7 +6,7 @@ extern AlifTypeSpec _bufferedIOBaseSpec_; // 12
 extern AlifTypeSpec _bufferedReaderSpec_; // 14
 extern AlifTypeSpec _fileIOSpec_;
 extern AlifTypeSpec _ioBaseSpec_; // 20
-
+extern AlifTypeSpec _nlDecoderSpec_;
 extern AlifTypeSpec _rawIOBaseSpec_;
 
 extern AlifTypeSpec _textIOBaseSpec_;

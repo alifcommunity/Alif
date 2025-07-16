@@ -94,7 +94,7 @@ static AlifObject* _io_Buffered_seekableImpl(Buffered* self) { // 624
 
 static AlifObject* _io_Buffered_readableImpl(Buffered* self) { // 637
 	//CHECK_INITIALIZED(self)
-	return alifObject_callMethodNoArgs(self->raw, &ALIF_ID(readable));
+	return alifObject_callMethodNoArgs(self->raw, &ALIF_ID(Readable));
 }
 
 
@@ -327,6 +327,7 @@ AlifTypeSpec _bufferedIOBaseSpec_ = { // 2504
 
 static AlifMethodDef _bufferedReaderMethods_[] = { // 2511
 	_IO__BUFFERED_SEEKABLE_METHODDEF
+	_IO__BUFFERED_READABLE_METHODDEF
 	_IO__BUFFERED_READ1_METHODDEF
 	{nullptr, nullptr}
 };

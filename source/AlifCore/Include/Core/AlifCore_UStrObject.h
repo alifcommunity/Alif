@@ -60,3 +60,8 @@ void alifUStr_internImmortal(AlifInterpreter*, AlifObject**); // 281
 
 
 extern void _alifUStr_internStatic(AlifInterpreter*, AlifObject**); // 285
+
+
+
+
+const char* _alifUStr_asUTF8NoNUL(AlifObject*); // 327

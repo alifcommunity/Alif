@@ -18,7 +18,7 @@
 
 
 
-
+typedef class NLDecoderObject NLDecoderObject;
 typedef class TextIO TextIO;
 
 
@@ -60,8 +60,36 @@ AlifTypeSpec _textIOBaseSpec_ = { // 208
 };
 
 
+class NLDecoderObject { // 217
+public:
+	ALIFOBJECT_HEAD;
+	AlifObject* decoder{};
+	AlifObject* errors{};
+	AlifUIntT pendingcr : 1;
+	AlifUIntT translate : 1;
+	AlifUIntT seennl : 3;
+};
 
 
+
+static AlifIntT _ioIncrementalNewlineDecoder___init__Impl(NLDecoderObject* _self,
+	AlifObject* _decoder, AlifIntT _translate, AlifObject* _errors) { // 242
+
+	if (_errors == nullptr) {
+		_errors = &ALIF_ID(strict);
+	}
+	else {
+		_errors = ALIF_NEWREF(_errors);
+	}
+
+	ALIF_XSETREF(_self->errors, _errors);
+	ALIF_XSETREF(_self->decoder, ALIF_NEWREF(_decoder));
+	_self->translate = _translate ? 1 : 0;
+	_self->seennl = 0;
+	_self->pendingcr = 0;
+
+	return 0;
+}
 
 
 static AlifIntT check_decoded(AlifObject* _decoded) { // 293
@@ -130,6 +158,26 @@ public:
 
 
 
+class EncodeFunCentry { // 812
+public:
+	const char* name{};
+	EncodeFuncT encodeFunc{};
+};
+
+static const EncodeFunCentry encodefuncs[] = { // 817
+	//{"ascii",       (EncodeFuncT)ascii_encode},
+	//{"iso8859-1",   (EncodeFuncT)latin1_encode},
+	//{"utf-8",       (EncodeFuncT)utf8_encode},
+	//{"utf-16-be",   (EncodeFuncT)utf16be_encode},
+	//{"utf-16-le",   (EncodeFuncT)utf16le_encode},
+	//{"utf-16",      (EncodeFuncT)utf16_encode},
+	//{"utf-32-be",   (EncodeFuncT)utf32be_encode},
+	//{"utf-32-le",   (EncodeFuncT)utf32le_encode},
+	//{"utf-32",      (EncodeFuncT)utf32_encode},
+	{nullptr, nullptr}
+};
+
+
 
 static AlifIntT validate_newline(const char* newline) { // 830
 	if (newline and newline[0] != '\0'
@@ -178,12 +226,48 @@ static AlifIntT set_newline(TextIO* self, const char* newline) { // 844
 }
 
 
+static AlifIntT _textIOWrapper_setDecoder(TextIO* _self, AlifObject* _codecInfo,
+	const char* _errors) { // 880
+	AlifObject* res{};
+	AlifIntT r{};
+
+	res = alifObject_callMethodNoArgs(_self->buffer, &ALIF_ID(Readable));
+	if (res == nullptr)
+		return -1;
+
+	r = alifObject_isTrue(res);
+	ALIF_DECREF(res);
+	if (r == -1)
+		return -1;
+
+	if (r != 1)
+		return 0;
+
+	ALIF_CLEAR(_self->decoder);
+	//_self->decoder = _alifCodecInfo_getIncrementalDecoder(_codecInfo, _errors);
+	//if (_self->decoder == nullptr)
+	//	return -1;
+
+	//if (_self->readuniversal) {
+	//	AlifIOState* state = _self->state;
+	//	AlifObject* incrementalDecoder = alifObject_callFunctionObjArgs(
+	//		(AlifObject*)state->alifIncrementalNewlineDecoderType,
+	//		_self->decoder, _self->readtranslate ? ALIF_TRUE : ALIF_FALSE, nullptr);
+	//	if (incrementalDecoder == nullptr)
+	//		return -1;
+	//	ALIF_XSETREF(_self->decoder, incrementalDecoder);
+	//}
+
+	return 0;
+}
+
+
 static AlifObject* _textIOWrapper_decode(AlifIOState* state,
 	AlifObject* decoder, AlifObject* bytes, AlifIntT eof) { // 917
 	AlifObject* chars{};
 
 	//if (ALIF_IS_TYPE(decoder, state->alifIncrementalNewlineDecoderType))
-	//	chars = _alifIncrementalNewlineDecoder_decode(decoder, bytes, eof);
+		chars = _alifIncrementalNewlineDecoder_decode(decoder, bytes, eof);
 	//else
 	//	chars = alifObject_callMethodObjArgs(decoder, &ALIF_ID(Decode), bytes,
 	//		eof ? ALIF_TRUE : ALIF_FALSE, nullptr);
@@ -193,6 +277,48 @@ static AlifObject* _textIOWrapper_decode(AlifIOState* state,
 		return nullptr;
 
 	return chars;
+}
+
+static AlifIntT _textIOWrapper_setEncoder(TextIO* self, AlifObject* codec_info,
+	const char* errors) { // 936
+	AlifObject* res{};
+	AlifIntT r{};
+
+	res = alifObject_callMethodNoArgs(self->buffer, &ALIF_ID(Writable));
+	if (res == nullptr)
+		return -1;
+
+	r = alifObject_isTrue(res);
+	ALIF_DECREF(res);
+	if (r == -1)
+		return -1;
+
+	if (r != 1)
+		return 0;
+
+	ALIF_CLEAR(self->encoder);
+	self->encodeFunc = nullptr;
+	//self->encoder = _alifCodecInfo_getIncrementalEncoder(codec_info, errors);
+	if (self->encoder == nullptr)
+		return -1;
+
+	/* Get the normalized named of the codec */
+	if (alifObject_getOptionalAttr(codec_info, &ALIF_STR(Name), &res) < 0) {
+		return -1;
+	}
+	if (res != nullptr and ALIFUSTR_CHECK(res)) {
+		const EncodeFunCentry* e = encodefuncs;
+		while (e->name != nullptr) {
+			if (alifUStr_equalToASCIIString(res, e->name)) {
+				self->encodeFunc = e->encodeFunc;
+				break;
+			}
+			e++;
+		}
+	}
+	ALIF_XDECREF(res);
+
+	return 0;
 }
 
 static AlifIntT _ioTextIOWrapper___init__Impl(TextIO* _self, AlifObject* _buffer,
@@ -228,10 +354,10 @@ static AlifIntT _ioTextIOWrapper___init__Impl(TextIO* _self, AlifObject* _buffer
 	//else if (io_checkErrors(_errors)) {
 	//	return -1;
 	//}
-	//const char* errorsStr = _alifUStr_asUTF8NoNUL(_errors);
-	//if (errorsStr == nullptr) {
-	//	return -1;
-	//}
+	const char* errorsStr = _alifUStr_asUTF8NoNUL(_errors);
+	if (errorsStr == nullptr) {
+		return -1;
+	}
 	if (validate_newline(_newLine) < 0) {
 		return -1;
 	}
@@ -298,8 +424,8 @@ static AlifIntT _ioTextIOWrapper___init__Impl(TextIO* _self, AlifObject* _buffer
 	//if (_textIOWrapper_setDecoder(_self, codecInfo, errorsStr) != 0)
 	//	goto error;
 
-	//if (_textIOWrapper_setEncoder(_self, codecInfo, errorsStr) != 0)
-	//	goto error;
+	if (_textIOWrapper_setEncoder(_self, codecInfo, errorsStr) != 0)
+		goto error;
 
 	ALIF_CLEAR(codecInfo);
 
@@ -386,39 +512,39 @@ static AlifIntT textIOWrapper_readChunk(TextIO* self, AlifSizeT size_hint) { // 
 	AlifIntT eof{};
 
 	//if (self->decoder == nullptr) {
-	//	//_unsupported(self->state, "not readable");
+	//	_unsupported(self->state, "not readable");
 	//	return -1;
 	//}
 
 	if (self->telling) {
-		AlifObject* state = alifObject_callMethodNoArgs(self->decoder,
-			&ALIF_ID(GetState));
-		if (state == nullptr)
-			return -1;
-		if (!ALIFTUPLE_CHECK(state)) {
-			alifErr_setString(_alifExcTypeError_,
-				"illegal decoder state");
-			ALIF_DECREF(state);
-			return -1;
-		}
-		if (!alifArg_parseTuple(state,
-			"OO;illegal decoder state", &decBuffer, &decFlags))
-		{
-			ALIF_DECREF(state);
-			return -1;
-		}
+		//AlifObject* state = alifObject_callMethodNoArgs(self->decoder,
+		//	&ALIF_ID(GetState));
+		//if (state == nullptr)
+		//	return -1;
+		//if (!ALIFTUPLE_CHECK(state)) {
+		//	alifErr_setString(_alifExcTypeError_,
+		//		"illegal decoder state");
+		//	ALIF_DECREF(state);
+		//	return -1;
+		//}
+		//if (!alifArg_parseTuple(state,
+		//	"OO;illegal decoder state", &decBuffer, &decFlags))
+		//{
+		//	ALIF_DECREF(state);
+		//	return -1;
+		//}
 
-		if (!ALIFBYTES_CHECK(decBuffer)) {
-			alifErr_format(_alifExcTypeError_,
-				"illegal decoder state: the first item should be a "
-				"bytes object, not '%.200s'",
-				ALIF_TYPE(decBuffer)->name);
-			ALIF_DECREF(state);
-			return -1;
-		}
-		ALIF_INCREF(decBuffer);
-		ALIF_INCREF(decFlags);
-		ALIF_DECREF(state);
+		//if (!ALIFBYTES_CHECK(decBuffer)) {
+		//	alifErr_format(_alifExcTypeError_,
+		//		"illegal decoder state: the first item should be a "
+		//		"bytes object, not '%.200s'",
+		//		ALIF_TYPE(decBuffer)->name);
+		//	ALIF_DECREF(state);
+		//	return -1;
+		//}
+		//ALIF_INCREF(decBuffer);
+		//ALIF_INCREF(decFlags);
+		//ALIF_DECREF(state);
 	}
 
 	/* Read a chunk, decode it, and put the result in self._decoded_chars. */
@@ -834,6 +960,31 @@ static AlifObject* _ioTextIOWrapper_readlineImpl(TextIO* self, AlifSizeT size) {
 }
 
 
+static AlifMethodDef _incrementalNewlineDecoderMethods_[] = {
+	//_IO_INCREMENTALNEWLINEDECODER_DECODE_METHODDEF
+	//_IO_INCREMENTALNEWLINEDECODER_GETSTATE_METHODDEF
+	//_IO_INCREMENTALNEWLINEDECODER_SETSTATE_METHODDEF
+	//_IO_INCREMENTALNEWLINEDECODER_RESET_METHODDEF
+	{nullptr}
+};
+
+static AlifTypeSlot _nlDecoderSlots_[] = { // 3314
+	//{ALIF_TP_DEALLOC, incrementalnewlinedecoder_dealloc},
+	{ALIF_TP_METHODS, _incrementalNewlineDecoderMethods_},
+	//{ALIF_TP_GETSET, _incrementalNewlineDecoderGetset_},
+	//{ALIF_TP_CLEAR, incrementalnewlinedecoder_clear},
+	{ALIF_TP_INIT, _ioIncrementalNewlineDecoder___init__},
+	{0, nullptr},
+};
+
+
+AlifTypeSpec _nlDecoderSpec_ = { // 3325
+	.name = "تبادل.فك_ترميز_السطر_المتزايد",
+	.basicsize = sizeof(NLDecoderObject),
+	.flags = (ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_HAVE_GC |
+			  ALIF_TPFLAGS_IMMUTABLETYPE),
+	.slots = _nlDecoderSlots_,
+};
 
 static AlifMethodDef _textIOWrapperMethods_[] = { // 3334
 	_IO_TEXTIOWRAPPER_READ_METHODDEF

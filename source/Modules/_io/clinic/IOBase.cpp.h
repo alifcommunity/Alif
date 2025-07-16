@@ -16,8 +16,15 @@
 
 
 
+// 239
+#define _IO__IOBASE_WRITABLE_METHODDEF    \
+    {"Writable", (AlifCPPFunction)_io_IOBase_writable, METHOD_NOARGS},
 
+static AlifObject* _io_IOBase_writableImpl(AlifObject*);
 
+static AlifObject* _io_IOBase_writable(AlifObject* self, AlifObject* ALIF_UNUSED(ignored)) { // 245
+	return _io_IOBase_writableImpl(self);
+}
 
 
 

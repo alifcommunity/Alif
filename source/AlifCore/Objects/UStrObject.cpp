@@ -2714,6 +2714,17 @@ const char* alifUStr_asUTF8(AlifObject* _uStr) { // 4193
 }
 
 
+const char* _alifUStr_asUTF8NoNUL(AlifObject* _unicode) { // 4217
+	AlifSizeT size{};
+	const char* s = alifUStr_asUTF8AndSize(_unicode, &size);
+	if (s and strlen(s) != (AlifUSizeT)size) {
+		alifErr_setString(_alifExcValueError_, "embedded null character");
+		return nullptr;
+	}
+	return s;
+}
+
+
 const char* alifUStr_getDefaultEncoding(void) { // 4277
 	return "utf-8";
 }

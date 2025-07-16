@@ -33,7 +33,7 @@ static AlifIntT ioBase_traverse(IOBase* self, VisitProc visit, void* arg) { // 3
 
 AlifObject* _alifIOBase_checkReadable(AlifIOState* state,
 	AlifObject* self, AlifObject* args) { // 437
-	AlifObject* res = alifObject_callMethodNoArgs(self, &ALIF_ID(readable));
+	AlifObject* res = alifObject_callMethodNoArgs(self, &ALIF_ID(Readable));
 	if (res == nullptr)
 		return nullptr;
 	if (res != ALIF_TRUE) {
@@ -47,6 +47,10 @@ AlifObject* _alifIOBase_checkReadable(AlifIOState* state,
 	return res;
 }
 
+
+static AlifObject* _io_IOBase_writableImpl(AlifObject* self) { // 462
+	ALIF_RETURN_FALSE;
+}
 
 
 static AlifObject* _io_IOBase_readlineImpl(AlifObject* self, AlifSizeT limit) { // 559
@@ -157,6 +161,7 @@ fail:
 static AlifMethodDef _ioBaseMethods_[] = { // 824
 	_IO__IOBASE_READLINE_METHODDEF
 	//_IO__IOBASE_READLINES_METHODDEF
+	_IO__IOBASE_WRITABLE_METHODDEF
 	{nullptr, nullptr}
 };
 
