@@ -850,7 +850,7 @@ SIMPLEEXTENDSEXCEPTION(_excException_, ValueError, خطأ_قيمة,
 	"Inappropriate argument value (of correct type)."); // 2660
 
 
-SIMPLEEXTENDSEXCEPTION(_excException_, ArithmeticError, خطأ_حساب
+SIMPLEEXTENDSEXCEPTION(_excException_, ArithmeticError, خطأ_حساب,
 	"Base class for arithmetic errors.");
 
  // 3310
@@ -859,7 +859,7 @@ SIMPLEEXTENDSEXCEPTION(_excException_, SystemError, خطأ_نظام,
 
 
 
-SIMPLEEXTENDSEXCEPTION(_excArithmeticError_, OverflowError, خطأ_فائض
+SIMPLEEXTENDSEXCEPTION(_excArithmeticError_, OverflowError, خطأ_فائض,
 	"Result too large to be represented.");
 
 
