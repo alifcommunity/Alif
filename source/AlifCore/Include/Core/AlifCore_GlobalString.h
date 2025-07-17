@@ -58,8 +58,9 @@ public:
 		STRUCT_FOR_STR(False, "خطأ") //* alif
 		STRUCT_FOR_STR(Mode, "mode") //* alif
 		STRUCT_FOR_STR(Name, "name") //* alif
-		STRUCT_FOR_USTR(Open, "فتح") //* alif
-		STRUCT_FOR_USTR(Read, "اقرأ") //* alif
+		STRUCT_FOR_USTR(Open, "افتح") //* alif
+		STRUCT_FOR_USTR(Read, "اقرا") //* alif
+		STRUCT_FOR_USTR(Close, "اغلق") //* alif
 		STRUCT_FOR_STR(Raw, "raw") //* alif
 		STRUCT_FOR_USTR(TextIOWrapper, "غلاف_النص") //* alif
 		STRUCT_FOR_USTR(__init__, "_تهيئة_") //* alif
@@ -93,6 +94,7 @@ public:
 		STRUCT_FOR_ID(__getAttr__)
 		STRUCT_FOR_ID(__hash__)
 		STRUCT_FOR_ID(__initSubclass__)
+		STRUCT_FOR_ID(__IOBaseClosed)
 		STRUCT_FOR_ID(__lengthHint__)
 		STRUCT_FOR_ID(__loader__)
 		STRUCT_FOR_ID(__main__)
@@ -115,6 +117,7 @@ public:
 		STRUCT_FOR_ID(__weakListOffset__)
 		STRUCT_FOR_ID(__weakRef__)
 		STRUCT_FOR_ID(_blksize)
+		STRUCT_FOR_ID(_deallocWarn)
 		STRUCT_FOR_ID(_findAndLoad)
 		STRUCT_FOR_ID(_initializing)
 		STRUCT_FOR_ID(_isTextEncoding)
@@ -125,6 +128,7 @@ public:
 		STRUCT_FOR_ID(buffersize)
 		STRUCT_FOR_ID(Builtins)
 		STRUCT_FOR_ID(Close)
+		STRUCT_FOR_ID(Closed)
 		STRUCT_FOR_ID(CloseFD)
 		STRUCT_FOR_ID(Decode)
 		STRUCT_FOR_ID(Decoder)
@@ -159,7 +163,8 @@ public:
      	STRUCT_FOR_ID(Peek)
      	STRUCT_FOR_ID(Readable)
      	STRUCT_FOR_ID(Read)
-     	STRUCT_FOR_ID(read1)
+     	STRUCT_FOR_ID(Read1)
+     	STRUCT_FOR_ID(ReadAll)
      	STRUCT_FOR_ID(ReadInto)
      	STRUCT_FOR_ID(Reverse)
      	STRUCT_FOR_ID(Seekable)

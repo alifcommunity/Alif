@@ -9,7 +9,7 @@
 
 // 130
 #define _IO_OPEN_METHODDEF    \
-    {"فتح", ALIF_CPPFUNCTION_CAST(_io_open), METHOD_FASTCALL|METHOD_KEYWORDS}
+    {"افتح", ALIF_CPPFUNCTION_CAST(_io_open), METHOD_FASTCALL|METHOD_KEYWORDS}
 
 static AlifObject* _io_openImpl(AlifObject*, AlifObject*, const char*, AlifIntT,
 	const char*, const char*, const char*, AlifIntT, AlifObject*); // 133
@@ -33,7 +33,7 @@ static AlifObject* _io_open(AlifObject* module, AlifObject* const* args,
 	static const char* const _keywords[] = { "file", "mode", "buffering", "encoding", "errors", "newline", "closefd", "opener", nullptr };
 	static AlifArgParser _parser = {
 		.keywords = _keywords,
-		.fname = "فتح",
+		.fname = "افتح",
 		.kwTuple = KWTUPLE,
 	};
 #undef KWTUPLE

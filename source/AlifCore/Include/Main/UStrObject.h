@@ -106,6 +106,8 @@ AlifObject* alifUStr_concat(AlifObject*, AlifObject*); // 778
 
 void alifUStr_append(AlifObject**, AlifObject*); // 786
 
+void alifUStr_appendAndDel(AlifObject**, AlifObject*); // 794
+
 AlifObject* alifUStr_join(AlifObject* , AlifObject* ); // 881
 
 

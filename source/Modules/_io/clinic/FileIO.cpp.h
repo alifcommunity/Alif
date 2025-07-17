@@ -1,4 +1,4 @@
-#include "AlifCore_Gc.h"         
+#include "AlifCore_GC.h"         
 #include "AlifCore_DureRun.h"    
 #include "AlifCore_Abstract.h"   
 #include "AlifCore_Modsupport.h" 
@@ -7,8 +7,20 @@
 
 
 
+// 21
+#define _IO_FILEIO_CLOSE_METHODDEF    \
+    {"اغلق", ALIF_CPPFUNCTION_CAST(_ioFileIO_close), METHOD_METHOD|METHOD_FASTCALL|METHOD_KEYWORDS},
 
+static AlifObject* _ioFileIO_closeImpl(FileIO*, AlifTypeObject*);
 
+static AlifObject* _ioFileIO_close(FileIO* self, AlifTypeObject* cls,
+	AlifObject* const* args, AlifSizeT nargs, AlifObject* kwnames) { // 27
+	if (nargs or (kwnames and ALIFTUPLE_GET_SIZE(kwnames))) {
+		alifErr_setString(_alifExcTypeError_, "close() takes no arguments");
+		return nullptr;
+	}
+	return _ioFileIO_closeImpl(self, cls);
+}
 
 
 
@@ -161,4 +173,15 @@ exit:
 	}
 
 	return returnValue;
+}
+
+
+// 272
+#define _IO_FILEIO_READALL_METHODDEF    \
+    {"ReadAll", (AlifCPPFunction)_ioFileIO_readall, METHOD_NOARGS},
+
+static AlifObject* _ioFileIO_readallImpl(FileIO*);
+
+static AlifObject* _ioFileIO_readall(FileIO* self, AlifObject* ALIF_UNUSED(ignored)) { // 278
+	return _ioFileIO_readallImpl(self);
 }

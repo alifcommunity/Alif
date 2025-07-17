@@ -22,6 +22,8 @@ typedef class IOState AlifIOState; // 35
 extern AlifObject* _alifIOBase_checkReadable(AlifIOState*, AlifObject*, AlifObject*); // 36
 
 
+extern AlifObject* _alifIOBase_checkClosed(AlifObject*, AlifObject*); // 42
+extern AlifIntT _alifFileIO_closed(AlifObject*); // 52
 
 extern AlifIntT _alifIO_trapEintr(void); // 79
 

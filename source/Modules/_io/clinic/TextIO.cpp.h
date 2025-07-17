@@ -221,7 +221,7 @@ exit:
 
 // 783
 #define _IO_TEXTIOWRAPPER_READ_METHODDEF    \
-    {"اقرأ", ALIF_CPPFUNCTION_CAST(_ioTextIOWrapper_read), METHOD_FASTCALL},
+    {"اقرا", ALIF_CPPFUNCTION_CAST(_ioTextIOWrapper_read), METHOD_FASTCALL},
 
 static AlifObject* _ioTextIOWrapper_readImpl(TextIO*, AlifSizeT);
 
@@ -230,7 +230,7 @@ static AlifObject* _ioTextIOWrapper_read(TextIO* self,
 	AlifObject* returnValue = nullptr;
 	AlifSizeT n = -1;
 
-	if (!_ALIFARG_CHECKPOSITIONAL("اقرأ", nargs, 0, 1)) {
+	if (!_ALIFARG_CHECKPOSITIONAL("اقرا", nargs, 0, 1)) {
 		goto exit;
 	}
 	if (nargs < 1) {
@@ -252,7 +252,7 @@ exit:
 
 // 818
 #define _IO_TEXTIOWRAPPER_READLINE_METHODDEF    \
-    {"قراءة_سطر", ALIF_CPPFUNCTION_CAST(_ioTextIOWrapper_readline), METHOD_FASTCALL},
+    {"اقرا_سطر", ALIF_CPPFUNCTION_CAST(_ioTextIOWrapper_readline), METHOD_FASTCALL},
 
 static AlifObject* _ioTextIOWrapper_readlineImpl(TextIO*, AlifSizeT);
 
@@ -260,7 +260,7 @@ static AlifObject* _ioTextIOWrapper_readline(TextIO* self, AlifObject* const* ar
 	AlifObject* returnValue = nullptr;
 	AlifSizeT size = -1;
 
-	if (!_ALIFARG_CHECKPOSITIONAL("قراءة_سطر", nargs, 0, 1)) {
+	if (!_ALIFARG_CHECKPOSITIONAL("اقرا_سطر", nargs, 0, 1)) {
 		goto exit;
 	}
 	if (nargs < 1) {
@@ -284,5 +284,23 @@ skip_optional:
 	ALIF_END_CRITICAL_SECTION();
 
 exit:
+	return returnValue;
+}
+
+
+
+// 1116
+#define _IO_TEXTIOWRAPPER_CLOSE_METHODDEF    \
+    {"اغلق", (AlifCPPFunction)_ioTextIOWrapper_close, METHOD_NOARGS},
+
+static AlifObject* _ioTextIOWrapper_closeImpl(TextIO*);
+
+static AlifObject* _ioTextIOWrapper_close(TextIO* self, AlifObject* ALIF_UNUSED(ignored)) { // 1122
+	AlifObject* returnValue = nullptr;
+
+	ALIF_BEGIN_CRITICAL_SECTION(self);
+	returnValue = _ioTextIOWrapper_closeImpl(self);
+	ALIF_END_CRITICAL_SECTION();
+
 	return returnValue;
 }

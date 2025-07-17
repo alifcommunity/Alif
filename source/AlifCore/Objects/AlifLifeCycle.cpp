@@ -709,12 +709,12 @@ static AlifIntT init_setBuiltinsOpen(void) { // 2709
 		goto error;
 	}
 
-	if (!(wrapper = _alifImport_getModuleAttrString("التبادل", "فتح"))) {
+	if (!(wrapper = _alifImport_getModuleAttrString("التبادل", "افتح"))) {
 		goto error;
 	}
 
 	/* Set builtins.open */
-	if (alifObject_setAttrString(bimod, "فتح", wrapper) == -1) {
+	if (alifObject_setAttrString(bimod, "افتح", wrapper) == -1) {
 		ALIF_DECREF(wrapper);
 		goto error;
 	}

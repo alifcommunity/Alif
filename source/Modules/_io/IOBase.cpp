@@ -18,8 +18,55 @@ public:
 };
 
 
+static AlifIntT ioBase_isClosed(AlifObject* self) { // 76
+	return alifObject_hasAttrWithError(self, &ALIF_ID(__IOBaseClosed));
+}
 
+static AlifIntT iobase_checkClosed(AlifObject* self) { // 191
+	AlifObject* res{};
+	AlifIntT closed{};
+	closed = alifObject_getOptionalAttr(self, &ALIF_ID(Closed), &res);
+	if (closed > 0) {
+		closed = alifObject_isTrue(res);
+		ALIF_DECREF(res);
+		if (closed > 0) {
+			alifErr_setString(_alifExcValueError_, "عملية تبادل على ملف مغلق");
+			return -1;
+		}
+	}
+	return closed;
+}
 
+AlifObject* _alifIOBase_checkClosed(AlifObject* self, AlifObject* args) { // 210
+	if (iobase_checkClosed(self)) {
+		return nullptr;
+	}
+	if (args == ALIF_TRUE) {
+		return ALIF_NONE;
+	}
+	return ALIF_NONE;
+}
+
+static AlifObject* _io_IOBase_closeImpl(AlifObject* self) { // 263
+	AlifIntT rc1{}, rc2{}, closed = ioBase_isClosed(self);
+
+	if (closed < 0) {
+		return nullptr;
+	}
+	if (closed) {
+		return ALIF_NONE;
+	}
+
+	//rc1 = _alifFile_flush(self);
+	AlifObject* exc = alifErr_getRaisedException();
+	rc2 = alifObject_setAttr(self, &ALIF_ID(__IOBaseClosed), ALIF_TRUE);
+	_alifErr_chainExceptions1(exc);
+	if (rc1 < 0 or rc2 < 0) {
+		return nullptr;
+	}
+
+	return ALIF_NONE;
+}
 
 
 static AlifIntT ioBase_traverse(IOBase* self, VisitProc visit, void* arg) { // 344
@@ -159,6 +206,8 @@ fail:
 #include "clinic/IOBase.cpp.h"
 
 static AlifMethodDef _ioBaseMethods_[] = { // 824
+	_IO__IOBASE_CLOSE_METHODDEF
+
 	_IO__IOBASE_READLINE_METHODDEF
 	//_IO__IOBASE_READLINES_METHODDEF
 	_IO__IOBASE_WRITABLE_METHODDEF

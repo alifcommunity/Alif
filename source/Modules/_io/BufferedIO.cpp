@@ -56,24 +56,60 @@ public:
 
 
 // 324
-#define ENTER_BUFFERED(self) \
-    ( (alifThread_acquireLock(self->lock, 0) ? \
-       1 : _enterBuffered_busy(self)) \
-     and (self->owner = alifThread_getThreadIdent(), 1) )
+#define ENTER_BUFFERED(_self) \
+    ( (alifThread_acquireLock(_self->lock, 0) ? \
+       1 : _enterBuffered_busy(_self)) \
+     and (_self->owner = alifThread_getThreadIdent(), 1) )
 
-#define LEAVE_BUFFERED(self) \
+#define LEAVE_BUFFERED(_self) \
     do { \
-        self->owner = 0; \
-        alifThread_releaseLock(self->lock); \
+        _self->owner = 0; \
+        alifThread_releaseLock(_self->lock); \
     } while(0);
 
+#define CHECK_INITIALIZED(_self) \
+    if (_self->ok <= 0) { \
+        if (_self->detached) { \
+            alifErr_setString(_alifExcValueError_, \
+                 "التدفق الخام للنص قد تم فصله"); \
+        } else { \
+            alifErr_setString(_alifExcValueError_, \
+                "عمليات بتادل على كائن غير مهيئ"); \
+        } \
+        return nullptr; \
+    }
+// 347
+#define CHECK_INITIALIZED_INT(_self) \
+    if (_self->ok <= 0) { \
+        if (_self->detached) { \
+            alifErr_setString(_alifExcValueError_, \
+                 "التدفق الخام للنص قد تم فصله"); \
+        } else { \
+            alifErr_setString(_alifExcValueError_, \
+                "عمليات بتادل على كائن غير مهيئ"); \
+        } \
+        return -1; \
+    }
 
-#define VALID_READ_BUFFER(self) \
-    (self->readable and self->readEnd != -1) // 371
+// 359
+#define IS_CLOSED(_self) \
+    (!_self->buffer or \
+    (_self->fastClosedChecks \
+     ? _alifFileIO_closed(_self->raw) \
+     : buffered_closed(_self)))
+// 365
+#define CHECK_CLOSED(_self, _errorMsg) \
+    if (IS_CLOSED(_self) and (ALIF_SAFE_DOWNCAST(READAHEAD(_self), AlifOffT, AlifSizeT) == 0)) { \
+        alifErr_setString(_alifExcValueError_, _errorMsg); \
+        return nullptr; \
+    } \
 
-#define READAHEAD(self) \
-    ((self->readable and VALID_READ_BUFFER(self)) \
-        ? (self->readEnd - self->pos) : 0) // 384
+#define VALID_READ_BUFFER(_self) \
+    (_self->readable and self->readEnd != -1) // 371
+
+#define READAHEAD(_self) \
+    ((self->readable and VALID_READ_BUFFER(_self)) \
+        ? (_self->readEnd - _self->pos) : 0) // 384
 
 
 
@@ -85,21 +121,109 @@ static AlifIntT buffered_traverse(Buffered* self, VisitProc visit, void* arg) { 
 	return 0;
 }
 
+static AlifObject* _io_Buffered__deallocWarn(Buffered* self, AlifObject* source) { // 470
+	if (self->ok and self->raw) {
+		AlifObject* r{};
+		r = alifObject_callMethodOneArg(self->raw, &ALIF_ID(_deallocWarn), source);
+		if (r)
+			ALIF_DECREF(r);
+		else
+			alifErr_clear();
+	}
+	return ALIF_NONE;
+}
+
+
+static AlifIntT buffered_closed(Buffered* _self) { // 505
+	AlifIntT closed{};
+	AlifObject* res{};
+	CHECK_INITIALIZED_INT(_self);
+	res = alifObject_getAttr(_self->raw, &ALIF_ID(Closed));
+	if (res == nullptr)
+		return -1;
+	closed = alifObject_isTrue(res);
+	ALIF_DECREF(res);
+	return closed;
+}
+
+
+static AlifObject* _io_Buffered_closedGetImpl(Buffered* self) { // 525
+	CHECK_INITIALIZED(self)
+	return alifObject_getAttr(self->raw, &ALIF_ID(Closed));
+}
+
+
+static AlifObject* _io_Buffered_closeImpl(Buffered* self) { // 538
+	AlifObject* res = nullptr;
+	AlifIntT r{};
+
+	CHECK_INITIALIZED(self);
+	//if (!ENTER_BUFFERED(self)) {
+	//	return nullptr;
+	//}
+
+	r = buffered_closed(self);
+	if (r < 0)
+		goto end;
+	if (r > 0) {
+		res = ALIF_NEWREF(ALIF_NONE);
+		goto end;
+	}
+
+	if (self->finalizing) {
+		AlifObject* r = _io_Buffered__deallocWarn(self, (AlifObject*)self);
+		if (r)
+			ALIF_DECREF(r);
+		else
+			alifErr_clear();
+	}
+	/* flush() will most probably re-take the lock, so drop it first */
+	//LEAVE_BUFFERED(self)
+	//r = _alifFile_flush((AlifObject*)self);
+	//if (!ENTER_BUFFERED(self)) {
+	//	return nullptr;
+	//}
+	AlifObject* exc; exc = nullptr;
+	if (r < 0) {
+		exc = alifErr_getRaisedException();
+	}
+
+	res = alifObject_callMethodNoArgs(self->raw, &ALIF_STR(Close));
+
+	if (self->buffer) {
+		alifMem_dataFree(self->buffer);
+		self->buffer = nullptr;
+	}
+
+	if (exc != nullptr) {
+		_alifErr_chainExceptions1(exc);
+		ALIF_CLEAR(res);
+	}
+
+	self->readEnd = 0;
+	self->pos = 0;
+
+end:
+	//LEAVE_BUFFERED(self)
+	return res;
+}
+
 
 static AlifObject* _io_Buffered_seekableImpl(Buffered* self) { // 624
-	//CHECK_INITIALIZED(self)
+	CHECK_INITIALIZED(self);
 	return alifObject_callMethodNoArgs(self->raw, &ALIF_ID(Seekable));
 }
 
 
 static AlifObject* _io_Buffered_readableImpl(Buffered* self) { // 637
-	//CHECK_INITIALIZED(self)
+	CHECK_INITIALIZED(self);
 	return alifObject_callMethodNoArgs(self->raw, &ALIF_ID(Readable));
 }
 
 
 
 static void _bufferedReader_resetBuf(Buffered*); // 720
+static AlifObject* _bufferedReader_readAll(Buffered*); // 727
 static AlifObject* _bufferedReader_readFast(Buffered*, AlifSizeT); // 728
 static AlifSizeT _bufferedReader_rawRead(Buffered*, char*, AlifSizeT); // 732
 
@@ -160,16 +284,50 @@ AlifIntT _alifIO_trapEintr(void) { // 863
 }
 
 
+
+static AlifObject* _io_Buffered_readImpl(Buffered* self, AlifSizeT n) { // 976
+	AlifObject* res{};
+
+	CHECK_INITIALIZED(self)
+	if (n < -1) {
+		alifErr_setString(_alifExcValueError_,
+			"read length must be non-negative or -1");
+		return nullptr;
+	}
+
+	CHECK_CLOSED(self, "محاولة قراءة ملف مغلق");
+
+	if (n == -1) {
+		/* The number of bytes is unspecified, read until the end of stream */
+		//if (!ENTER_BUFFERED(self))
+		//	return nullptr;
+		res = _bufferedReader_readAll(self);
+	}
+	else {
+		res = _bufferedReader_readFast(self, n);
+		if (res != ALIF_NONE)
+			return res;
+		ALIF_DECREF(res);
+		//if (!ENTER_BUFFERED(self))
+		//	return nullptr;
+		//res = _bufferedReader_readGeneric(self, n);
+	}
+
+	//LEAVE_BUFFERED(self)
+	return res;
+}
+
+
 static AlifObject* _io_Buffered_read1Impl(Buffered* self, AlifSizeT n) { // 1018
 	AlifSizeT have{}, r{};
 	AlifObject* res = nullptr;
 
-	//CHECK_INITIALIZED(self)
+	CHECK_INITIALIZED(self)
 	if (n < 0) {
 		n = self->bufferSize;
 	}
 
-	//CHECK_CLOSED(self, "read of closed file")
+	CHECK_CLOSED(self, "read of closed file");
 
 	if (n == 0)
 		return alifBytes_fromStringAndSize(nullptr, 0);
@@ -290,6 +448,95 @@ static AlifSizeT _bufferedReader_rawRead(Buffered* self, char* start, AlifSizeT 
 }
 
 
+static AlifObject* _bufferedReader_readAll(Buffered* self) { // 1667
+	AlifSizeT currentSize{};
+	AlifObject* res = nullptr, * data = nullptr, * tmp = nullptr, * chunks = nullptr, * readall{};
+
+	/* First copy what we have in the current buffer. */
+	currentSize = ALIF_SAFE_DOWNCAST(READAHEAD(self), AlifOffT, AlifSizeT);
+	if (currentSize) {
+		data = alifBytes_fromStringAndSize(
+			self->buffer + self->pos, currentSize);
+		if (data == nullptr)
+			return nullptr;
+		self->pos += currentSize;
+	}
+	/* We're going past the buffer's bounds, flush it */
+	//if (self->writable) {
+	//	tmp = buffered_flushAndRewindUnlocked(self);
+	//	if (tmp == nullptr)
+	//		goto cleanup;
+	//	ALIF_CLEAR(tmp);
+	//}
+	_bufferedReader_resetBuf(self);
+
+	if (alifObject_getOptionalAttr(self->raw, &ALIF_ID(ReadAll), &readall) < 0) {
+		goto cleanup;
+	}
+	if (readall) {
+		tmp = _alifObject_callNoArgs(readall);
+		ALIF_DECREF(readall);
+		if (tmp == nullptr)
+			goto cleanup;
+		if (tmp != ALIF_NONE and !ALIFBYTES_CHECK(tmp)) {
+			alifErr_setString(_alifExcTypeError_, "readall() should return bytes");
+			goto cleanup;
+		}
+		if (currentSize == 0) {
+			res = tmp;
+		}
+		else {
+			if (tmp != ALIF_NONE) {
+				alifBytes_concat(&data, tmp);
+			}
+			res = data;
+		}
+		goto cleanup;
+	}
+
+	chunks = alifList_new(0);
+	if (chunks == nullptr)
+		goto cleanup;
+
+	while (1) {
+		if (data) {
+			if (alifList_append(chunks, data) < 0)
+				goto cleanup;
+			ALIF_CLEAR(data);
+		}
+
+		/* Read until EOF or until read() would block. */
+		data = alifObject_callMethodNoArgs(self->raw, &ALIF_ID(Read));
+		if (data == nullptr)
+			goto cleanup;
+		if (data != ALIF_NONE and !ALIFBYTES_CHECK(data)) {
+			alifErr_setString(_alifExcTypeError_, "read() should return bytes");
+			goto cleanup;
+		}
+		if (data == ALIF_NONE or ALIFBYTES_GET_SIZE(data) == 0) {
+			if (currentSize == 0) {
+				res = data;
+				goto cleanup;
+			}
+			else {
+				//tmp = alifBytes_join((AlifObject*)&ALIF_SINGLETON(bytesEmpty), chunks);
+				res = tmp;
+				goto cleanup;
+			}
+		}
+		currentSize += ALIFBYTES_GET_SIZE(data);
+		if (self->absPos != -1)
+			self->absPos += ALIFBYTES_GET_SIZE(data);
+	}
+cleanup:
+	/* res is either nullptr or a borrowed ref */
+	ALIF_XINCREF(res);
+	ALIF_XDECREF(data);
+	ALIF_XDECREF(tmp);
+	ALIF_XDECREF(chunks);
+	return res;
+}
+
 
 static AlifObject* _bufferedReader_readFast(Buffered* self, AlifSizeT n) { // 1759
 	AlifSizeT current_size{};
@@ -326,8 +573,11 @@ AlifTypeSpec _bufferedIOBaseSpec_ = { // 2504
 
 
 static AlifMethodDef _bufferedReaderMethods_[] = { // 2511
+	_IO__BUFFERED_CLOSE_METHODDEF
 	_IO__BUFFERED_SEEKABLE_METHODDEF
 	_IO__BUFFERED_READABLE_METHODDEF
+
+	_IO__BUFFERED_READ_METHODDEF
 	_IO__BUFFERED_READ1_METHODDEF
 	{nullptr, nullptr}
 };
@@ -341,12 +591,16 @@ static AlifMemberDef _bufferedReaderMembers_[] = { // 2538
 	{nullptr}
 };
 
+static AlifGetSetDef _bufferedReaderGetSet_[] = {
+	_IO__BUFFERED_CLOSED_GETSETDEF
+	{nullptr}
+};
 
 static AlifTypeSlot _bufferedReaderSlots_[] = { // 2554
 	{ALIF_TP_TRAVERSE, buffered_traverse},
 	{ALIF_TP_METHODS, _bufferedReaderMethods_},
 	{ALIF_TP_MEMBERS, _bufferedReaderMembers_},
-
+	{ALIF_TP_GETSET, _bufferedReaderGetSet_},
 	{ALIF_TP_INIT, _ioBufferedReader___init__},
 
 	{0, nullptr},

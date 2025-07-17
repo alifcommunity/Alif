@@ -647,7 +647,7 @@ static AlifIntT _ioTextIOWrapper___init__Impl(TextIO* _self, AlifObject* _buffer
 		goto error;
 	_self->seekable = _self->telling = r;
 
-	r = alifObject_hasAttrWithError(_buffer, &ALIF_ID(read1));
+	r = alifObject_hasAttrWithError(_buffer, &ALIF_ID(Read1));
 	if (r < 0) {
 		goto error;
 	}
@@ -689,12 +689,68 @@ static AlifIntT textIOWrapper_traverse(TextIO* self, VisitProc visit, void* arg)
 	return 0;
 }
 
+static AlifObject* _ioTextIOWrapper_closedGetImpl(TextIO*); // 1489
+
+#define CHECK_CLOSED(self) \
+    do { \
+        AlifIntT r{}; \
+        AlifObject *_res; \
+        if (ALIF_IS_TYPE(self, self->state->alifTextIOWrapperType)) { \
+            if (self->raw != nullptr) \
+                r = _alifFileIO_closed(self->raw); \
+            else { \
+                _res = _ioTextIOWrapper_closedGetImpl(self); \
+                if (_res == nullptr) \
+                    return nullptr; \
+                r = alifObject_isTrue(_res); \
+                ALIF_DECREF(_res); \
+                if (r < 0) \
+                    return nullptr; \
+            } \
+            if (r > 0) { \
+                alifErr_setString(_alifExcValueError_, \
+                                "عملية تبادل على ملف مغلق"); \
+                return nullptr; \
+            } \
+        } \
+        else if (_alifIOBase_checkClosed((AlifObject *)self, ALIF_TRUE) == nullptr) \
+            return nullptr; \
+    } while (0)
 
 
 
 static void textIOWrapper_setDecodedChars(TextIO* _self, AlifObject* _chars) { // 1795
 	ALIF_XSETREF(_self->decodedChars, _chars);
 	_self->decodedCharsUsed = 0;
+}
+
+static AlifObject* textIOWrapper_getDecodedChars(TextIO* _self, AlifSizeT _n) { // 1802
+	AlifObject* chars{};
+	AlifSizeT avail{};
+
+	if (_self->decodedChars == nullptr)
+		return alifUStr_fromStringAndSize(nullptr, 0);
+
+	/* decodedChars is guaranteed to be "ready". */
+	avail = (ALIFUSTR_GET_LENGTH(_self->decodedChars)
+		- _self->decodedCharsUsed);
+
+	if (_n < 0 or _n > avail)
+		_n = avail;
+
+	if (_self->decodedCharsUsed > 0 or _n < avail) {
+		chars = alifUStr_subString(_self->decodedChars,
+			_self->decodedCharsUsed,
+			_self->decodedCharsUsed + _n);
+		if (chars == nullptr)
+			return nullptr;
+	}
+	else {
+		chars = ALIF_NEWREF(_self->decodedChars);
+	}
+
+	_self->decodedCharsUsed += _n;
+	return chars;
 }
 
 static AlifIntT textIOWrapper_readChunk(TextIO* self, AlifSizeT size_hint) { // 1837
@@ -751,7 +807,7 @@ static AlifIntT textIOWrapper_readChunk(TextIO* self, AlifSizeT size_hint) { // 
 		goto fail;
 
 	inputChunk = alifObject_callMethodOneArg(self->buffer,
-		(self->hasRead1 ? &ALIF_ID(read1) : &ALIF_ID(Read)),
+		(self->hasRead1 ? &ALIF_ID(Read1) : &ALIF_ID(Read)),
 		chunkSize);
 	ALIF_DECREF(chunkSize);
 	if (inputChunk == nullptr)
@@ -812,93 +868,94 @@ static AlifObject* _ioTextIOWrapper_readImpl(TextIO* self, AlifSizeT n) { // 197
 	AlifObject* result = nullptr, * chunks = nullptr;
 
 	//CHECK_ATTACHED(self);
-	//CHECK_CLOSED(self);
+	CHECK_CLOSED(self);
 
 	//if (self->decoder == nullptr) {
-	//	//return _unsupported(self->state, "not readable");
+	//	return _unsupported(self->state, "not readable");
 	//}
 
 	//if (_textIOWrapper_writeFlush(self) < 0)
 	//	return nullptr;
 
-	//if (n < 0) {
-	//	/* Read everything */
-	//	AlifObject* bytes = alifObject_callMethodNoArgs(self->buffer, &ALIF_ID(Read));
-	//	AlifObject* decoded;
-	//	if (bytes == nullptr)
-	//		goto fail;
+	if (n < 0) {
+		/* Read everything */
+		AlifObject* bytes = alifObject_callMethodNoArgs(self->buffer, &ALIF_STR(Read));
+		AlifObject* decoded;
+		if (bytes == nullptr)
+			goto fail;
 
-	//	AlifIOState* state = self->state;
-	//	if (ALIF_IS_TYPE(self->decoder, state->alifIncrementalNewlineDecoderType))
-	//		decoded = _alifIncrementalNewlineDecoder_decode(self->decoder,
-	//			bytes, 1);
-	//	else
-	//		decoded = alifObject_callMethodObjArgs(
-	//			self->decoder, &ALIF_ID(Decode), bytes, ALIF_TRUE, nullptr);
-	//	ALIF_DECREF(bytes);
-	//	if (check_decoded(decoded) < 0)
-	//		goto fail;
+		AlifIOState* state = self->state;
+		//if (ALIF_IS_TYPE(self->decoder, state->alifIncrementalNewlineDecoderType))
+			self->decoder = (AlifObject*)state->alifIncrementalNewlineDecoderType; //* alif //* delete
+			decoded = _alifIncrementalNewlineDecoder_decode(self->decoder,
+				bytes, 1);
+		//else
+		//	decoded = alifObject_callMethodObjArgs(
+		//		self->decoder, &ALIF_ID(Decode), bytes, ALIF_TRUE, nullptr);
+		ALIF_DECREF(bytes);
+		if (check_decoded(decoded) < 0)
+			goto fail;
 
-	//	result = textIOWrapper_getDecodedChars(self, -1);
+		result = textIOWrapper_getDecodedChars(self, -1);
 
-	//	if (result == nullptr) {
-	//		ALIF_DECREF(decoded);
-	//		return nullptr;
-	//	}
+		if (result == nullptr) {
+			ALIF_DECREF(decoded);
+			return nullptr;
+		}
 
-	//	alifUStr_appendAndDel(&result, decoded);
-	//	if (result == nullptr)
-	//		goto fail;
+		alifUStr_appendAndDel(&result, decoded);
+		if (result == nullptr)
+			goto fail;
 
-	//	if (self->snapshot != nullptr) {
-	//		textIOWrapper_setDecodedChars(self, nullptr);
-	//		ALIF_CLEAR(self->snapshot);
-	//	}
-	//	return result;
-	//}
-	//else {
-	//	AlifIntT res = 1;
-	//	AlifSizeT remaining = n;
+		if (self->snapshot != nullptr) {
+			textIOWrapper_setDecodedChars(self, nullptr);
+			ALIF_CLEAR(self->snapshot);
+		}
+		return result;
+	}
+	else {
+		AlifIntT res = 1;
+		AlifSizeT remaining = n;
 
-	//	result = textIOWrapper_getDecodedChars(self, n);
-	//	if (result == nullptr)
-	//		goto fail;
-	//	remaining -= ALIFUSTR_GET_LENGTH(result);
+		result = textIOWrapper_getDecodedChars(self, n);
+		if (result == nullptr)
+			goto fail;
+		remaining -= ALIFUSTR_GET_LENGTH(result);
 
-	//	while (remaining > 0) {
-	//		res = textIOWrapper_readChunk(self, remaining);
-	//		if (res < 0) {
-	//			if (_alifIO_trapEintr()) {
-	//				continue;
-	//			}
-	//			goto fail;
-	//		}
-	//		if (res == 0)  /* EOF */
-	//			break;
-	//		if (chunks == nullptr) {
-	//			chunks = alifList_new(0);
-	//			if (chunks == nullptr)
-	//				goto fail;
-	//		}
-	//		if (ALIFUSTR_GET_LENGTH(result) > 0 &&
-	//			alifList_append(chunks, result) < 0)
-	//			goto fail;
-	//		ALIF_DECREF(result);
-	//		result = textIOWrapper_getDecodedChars(self, remaining);
-	//		if (result == nullptr)
-	//			goto fail;
-	//		remaining -= ALIFUSTR_GET_LENGTH(result);
-	//	}
-	//	if (chunks != nullptr) {
-	//		if (result != nullptr and alifList_append(chunks, result) < 0)
-	//			goto fail;
-	//		ALIF_XSETREF(result, alifUStr_join(&ALIF_STR(Empty), chunks));
-	//		if (result == nullptr)
-	//			goto fail;
-	//		ALIF_CLEAR(chunks);
-	//	}
-	//	return result;
-	//}
+		while (remaining > 0) {
+			res = textIOWrapper_readChunk(self, remaining);
+			if (res < 0) {
+				if (_alifIO_trapEintr()) {
+					continue;
+				}
+				goto fail;
+			}
+			if (res == 0)  /* EOF */
+				break;
+			if (chunks == nullptr) {
+				chunks = alifList_new(0);
+				if (chunks == nullptr)
+					goto fail;
+			}
+			if (ALIFUSTR_GET_LENGTH(result) > 0 and
+				alifList_append(chunks, result) < 0)
+				goto fail;
+			ALIF_DECREF(result);
+			result = textIOWrapper_getDecodedChars(self, remaining);
+			if (result == nullptr)
+				goto fail;
+			remaining -= ALIFUSTR_GET_LENGTH(result);
+		}
+		if (chunks != nullptr) {
+			if (result != nullptr and alifList_append(chunks, result) < 0)
+				goto fail;
+			ALIF_XSETREF(result, alifUStr_join(&ALIF_STR(Empty), chunks));
+			if (result == nullptr)
+				goto fail;
+			ALIF_CLEAR(chunks);
+		}
+		return result;
+	}
 fail:
 	ALIF_XDECREF(result);
 	ALIF_XDECREF(chunks);
@@ -1005,7 +1062,7 @@ static AlifObject* _textIOWrapper_readline(TextIO* self, AlifSizeT limit) { // 2
 	AlifSizeT start{}, endpos{}, chunked{}, offset_to_buffer{};
 	AlifIntT res{};
 
-	//CHECK_CLOSED(self);
+	CHECK_CLOSED(self);
 
 	//if (_textIOWrapper_writeFlush(self) < 0)
 	//	return nullptr;
@@ -1155,6 +1212,58 @@ static AlifObject* _ioTextIOWrapper_readlineImpl(TextIO* self, AlifSizeT size) {
 }
 
 
+
+static AlifObject* _ioTextIOWrapper_closeImpl(TextIO* self) { // 3115
+	AlifObject* res{};
+	AlifIntT r{};
+	//CHECK_ATTACHED(self);
+
+	res = _ioTextIOWrapper_closedGetImpl(self);
+	if (res == nullptr)
+		return nullptr;
+	r = alifObject_isTrue(res);
+	ALIF_DECREF(res);
+	if (r < 0)
+		return nullptr;
+
+	if (r > 0) {
+		return ALIF_NONE; /* stream already closed */
+	}
+	else {
+		AlifObject* exc = nullptr;
+		if (self->finalizing) {
+			res = alifObject_callMethodOneArg(self->buffer, &ALIF_ID(_deallocWarn),
+				(AlifObject*)self);
+			if (res) {
+				ALIF_DECREF(res);
+			}
+			else {
+				alifErr_clear();
+			}
+		}
+		//if (_alifFile_flush((AlifObject*)self) < 0) {
+		//	exc = alifErr_getRaisedException();
+		//}
+
+		res = alifObject_callMethodNoArgs(self->buffer, &ALIF_STR(Close));
+		if (exc != nullptr) {
+			_alifErr_chainExceptions1(exc);
+			ALIF_CLEAR(res);
+		}
+		return res;
+	}
+}
+
+
+
+static AlifObject* _ioTextIOWrapper_closedGetImpl(TextIO* self) { // 3217
+	//CHECK_ATTACHED(self);
+	return alifObject_getAttr(self->buffer, &ALIF_ID(Closed));
+}
+
+
+
+
 static AlifMethodDef _incrementalNewlineDecoderMethods_[] = {
 	//_IO_INCREMENTALNEWLINEDECODER_DECODE_METHODDEF
 	//_IO_INCREMENTALNEWLINEDECODER_GETSTATE_METHODDEF
@@ -1184,6 +1293,8 @@ AlifTypeSpec _nlDecoderSpec_ = { // 3325
 static AlifMethodDef _textIOWrapperMethods_[] = { // 3334
 	_IO_TEXTIOWRAPPER_READ_METHODDEF
 	_IO_TEXTIOWRAPPER_READLINE_METHODDEF
+	_IO_TEXTIOWRAPPER_CLOSE_METHODDEF
+
 	{nullptr, nullptr}
 };
 

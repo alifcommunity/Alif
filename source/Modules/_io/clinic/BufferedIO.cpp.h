@@ -8,6 +8,38 @@
 
 
 
+// 339
+#define _IO__BUFFERED_CLOSED_GETSETDEF \
+	{"Closed", (Getter)_io_Buffered_closedGet, nullptr},
+
+static AlifObject* _io_Buffered_closedGetImpl(Buffered*);
+
+static AlifObject* _io_Buffered_closedGet(Buffered* self, void* ALIF_UNUSED(context)) { // 345
+	AlifObject* returnValue = nullptr;
+
+	ALIF_BEGIN_CRITICAL_SECTION(self);
+	returnValue = _io_Buffered_closedGetImpl(self);
+	ALIF_END_CRITICAL_SECTION();
+
+	return returnValue;
+}
+
+
+// 362
+#define _IO__BUFFERED_CLOSE_METHODDEF    \
+    {"اغلق", (AlifCPPFunction)_io_Buffered_close, METHOD_NOARGS},
+
+static AlifObject* _io_Buffered_closeImpl(Buffered*);
+
+static AlifObject* _io_Buffered_close(Buffered* self, AlifObject* ALIF_UNUSED(ignored)) { // 368
+	AlifObject* returnValue = nullptr;
+
+	ALIF_BEGIN_CRITICAL_SECTION(self);
+	returnValue = _io_Buffered_closeImpl(self);
+	ALIF_END_CRITICAL_SECTION();
+
+	return returnValue;
+}
 
 
 #define _IO__BUFFERED_SEEKABLE_METHODDEF    \
@@ -43,7 +75,7 @@ static AlifObject* _io_Buffered_readable(Buffered* self, AlifObject* ALIF_UNUSED
 
 // 679
 #define _IO__BUFFERED_READ1_METHODDEF    \
-    {"read1", ALIF_CPPFUNCTION_CAST(_io_Buffered_read1), METHOD_FASTCALL},
+    {"Read1", ALIF_CPPFUNCTION_CAST(_io_Buffered_read1), METHOD_FASTCALL},
 
 static AlifObject* _io_Buffered_read1Impl(Buffered*, AlifSizeT);
 
@@ -52,7 +84,7 @@ static AlifObject* _io_Buffered_read1(Buffered* self,
 	AlifObject* returnValue = nullptr;
 	AlifSizeT n = -1;
 
-	if (!_alifArg_checkPositional("read1", nargs, 0, 1)) {
+	if (!_alifArg_checkPositional("Read1", nargs, 0, 1)) {
 		goto exit;
 	}
 	if (nargs < 1) {
@@ -73,6 +105,35 @@ static AlifObject* _io_Buffered_read1(Buffered* self,
 skip_optional:
 	ALIF_BEGIN_CRITICAL_SECTION(self);
 	returnValue = _io_Buffered_read1Impl(self, n);
+	ALIF_END_CRITICAL_SECTION();
+
+exit:
+	return returnValue;
+}
+
+
+// 644
+#define _IO__BUFFERED_READ_METHODDEF    \
+    {"اقرا", ALIF_CPPFUNCTION_CAST(_io_Buffered_read), METHOD_FASTCALL},
+
+static AlifObject* _io_Buffered_readImpl(Buffered*, AlifSizeT);
+
+static AlifObject* _io_Buffered_read(Buffered* self, AlifObject* const* args, AlifSizeT nargs) { // 650
+	AlifObject* returnValue = nullptr;
+	AlifSizeT n = -1;
+
+	if (!_ALIFARG_CHECKPOSITIONAL("اقرا", nargs, 0, 1)) {
+		goto exit;
+	}
+	if (nargs < 1) {
+		goto skip_optional;
+	}
+	if (!_alifConvertOptional_toSizeT(args[0], &n)) {
+		goto exit;
+	}
+skip_optional:
+	ALIF_BEGIN_CRITICAL_SECTION(self);
+	returnValue = _io_Buffered_readImpl(self, n);
 	ALIF_END_CRITICAL_SECTION();
 
 exit:

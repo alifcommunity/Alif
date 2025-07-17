@@ -11,8 +11,15 @@
 
 
 
+// 178
+#define _IO__IOBASE_CLOSE_METHODDEF    \
+    {"اغلق", (AlifCPPFunction)_io_IOBase_close, METHOD_NOARGS},
 
+static AlifObject* _io_IOBase_closeImpl(AlifObject*);
 
+static AlifObject* _io_IOBase_close(AlifObject* self, AlifObject* ALIF_UNUSED(ignored)) { // 184
+	return _io_IOBase_closeImpl(self);
+}
 
 
 
@@ -33,7 +40,7 @@ static AlifObject* _io_IOBase_writable(AlifObject* self, AlifObject* ALIF_UNUSED
 
 // 307
 #define _IO__IOBASE_READLINE_METHODDEF    \
-    {"قراءة_سطر", ALIF_CPPFUNCTION_CAST(_io_IOBase_readline), METHOD_FASTCALL},
+    {"اقرا_سطر", ALIF_CPPFUNCTION_CAST(_io_IOBase_readline), METHOD_FASTCALL},
 
 static AlifObject* _io_IOBase_readlineImpl(AlifObject*, AlifSizeT);
 
@@ -42,7 +49,7 @@ static AlifObject* _io_IOBase_readline(AlifObject* self,
 	AlifObject* returnValue = nullptr;
 	AlifSizeT limit = -1;
 
-	if (!_ALIFARG_CHECKPOSITIONAL("قراءة_سطر", nargs, 0, 1)) {
+	if (!_ALIFARG_CHECKPOSITIONAL("اقرا_سطر", nargs, 0, 1)) {
 		goto exit;
 	}
 	if (nargs < 1) {

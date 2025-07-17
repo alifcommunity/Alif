@@ -5615,6 +5615,12 @@ error:
 }
 
 
+void alifUStr_appendAndDel(AlifObject** _pleft, AlifObject* _right) { // 11448
+	alifUStr_append(_pleft, _right);
+	ALIF_XDECREF(_right);
+}
+
+
 static AlifHashT uStr_hash(AlifObject* _self) { // 11663
 	AlifUHashT x{};  /* Unsigned for defined overflow behavior. */
 

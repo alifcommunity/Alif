@@ -698,8 +698,9 @@
     INIT_STR(False, "خطأ"), /* //* alif */	\
     INIT_STR(Mode, "mode"), /* //* alif */	\
     INIT_STR(Name, "name"), /* //* alif */	\
-	INIT_USTR(Open, "فتح"), /* //* alif */	\
-	INIT_USTR(Read, "اقرأ"), /* //* alif */	\
+	INIT_USTR(Open, "افتح"), /* //* alif */	\
+	INIT_USTR(Read, "اقرا"), /* //* alif */	\
+	INIT_USTR(Close, "اغلق"), /* //* alif */	\
 	INIT_STR(Raw, "raw"), /* //* alif */	\
 	INIT_USTR(TextIOWrapper, "غلاف_النص"), /* //* alif */	\
     INIT_USTR(__init__, "_تهيئة_"), /* //* alif */	\
@@ -732,6 +733,7 @@
 	INIT_ID(__getAttr__), \
 	INIT_ID(__hash__), \
 	INIT_ID(__initSubclass__), \
+	INIT_ID(__IOBaseClosed), \
 	INIT_ID(__lengthHint__), \
 	INIT_ID(__loader__), \
 	INIT_ID(__main__), \
@@ -754,6 +756,7 @@
 	INIT_ID(__weakListOffset__), \
 	INIT_ID(__weakRef__), \
 	INIT_ID(_blksize), \
+	INIT_ID(_deallocWarn), \
 	INIT_ID(_findAndLoad), \
 	INIT_ID(_initializing), \
 	INIT_ID(_isTextEncoding), \
@@ -764,6 +767,7 @@
 	INIT_ID(buffersize), \
 	INIT_ID(Builtins), \
 	INIT_ID(Close), \
+	INIT_ID(Closed), \
 	INIT_ID(CloseFD), \
 	INIT_ID(Decode), \
 	INIT_ID(Decoder), \
@@ -798,7 +802,8 @@
 	INIT_ID(Peek), \
 	INIT_ID(Readable), \
 	INIT_ID(Read), \
-	INIT_ID(read1), \
+	INIT_ID(Read1), \
+	INIT_ID(ReadAll), \
 	INIT_ID(ReadInto), \
 	INIT_ID(Reverse), \
 	INIT_ID(Seekable), \

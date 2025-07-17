@@ -22,8 +22,16 @@
 
 
 
+// 46
+#if BUFSIZ < (8*1024)
+#  define SMALLCHUNK (8*1024)
+#elif (BUFSIZ >= (2 << 25))
+#  error "unreasonable BUFSIZ > 64 MiB defined"
+#else
+#  define SMALLCHUNK BUFSIZ
+#endif
 
-
+#define LARGE_BUFFER_CUTOFF_SIZE 65536
 
 
 class FileIO { // 64
@@ -49,6 +57,23 @@ static AlifObject* portable_lseek(FileIO* _self, AlifObject* _posObj,
 	AlifIntT _whence, bool _suppressPipeError); // 89
 
 
+AlifIntT _alifFileIO_closed(AlifObject* _self) { // 91
+	return (ALIFFILEIO_CAST(_self)->fd < 0);
+}
+
+static AlifObject* fileIO_deallocWarn(AlifObject* op, AlifObject* source) { // 100
+	FileIO* self = ALIFFILEIO_CAST(op);
+	if (self->fd >= 0 and self->closefd) {
+		AlifObject* exc = alifErr_getRaisedException();
+		//if (alifErr_resourceWarning(source, 1, "unclosed file %R", source)) {
+		//	if (alifErr_exceptionMatches(_alifExcWarning_))
+		//		alifErr_writeUnraisable((AlifObject*)self);
+		//}
+		alifErr_setRaisedException(exc);
+	}
+	return ALIF_NONE;
+}
+
 static AlifIntT internal_close(FileIO* self) { // 117
 	AlifIntT err = 0;
 	AlifIntT save_errno = 0;
@@ -71,6 +96,42 @@ static AlifIntT internal_close(FileIO* self) { // 117
 	}
 	return 0;
 }
+
+
+static AlifObject* _ioFileIO_closeImpl(FileIO* self, AlifTypeObject* cls) { // 154
+	AlifObject* res{};
+	AlifIntT rc{};
+	AlifIOState* state = getIOState_byCls(cls);
+	res = alifObject_callMethodOneArg((AlifObject*)state->alifRawIOBaseType,
+		&ALIF_STR(Close), (AlifObject*)self);
+	if (!self->closefd) {
+		self->fd = -1;
+		return res;
+	}
+
+	AlifObject* exc = nullptr;
+	if (res == nullptr) {
+		exc = alifErr_getRaisedException();
+	}
+	if (self->finalizing) {
+		AlifObject* r = fileIO_deallocWarn((AlifObject*)self, (AlifObject*)self);
+		if (r) {
+			ALIF_DECREF(r);
+		}
+		else {
+			alifErr_clear();
+		}
+	}
+	rc = internal_close(self);
+	if (res == nullptr) {
+		_alifErr_chainExceptions1(exc);
+	}
+	if (rc < 0) {
+		ALIF_CLEAR(res);
+	}
+	return res;
+}
+
 
 static AlifObject* fileio_new(AlifTypeObject* type,
 	AlifObject* args, AlifObject* kwds) { // 191
@@ -442,6 +503,115 @@ static AlifObject* _ioFileIO_readintoImpl(FileIO* self,
 }
 
 
+static AlifUSizeT new_bufferSize(FileIO* _self, AlifUSizeT _currentSize) { // 703
+	AlifUSizeT addend{};
+	if (_currentSize > LARGE_BUFFER_CUTOFF_SIZE)
+		addend = _currentSize >> 3;
+	else
+		addend = 256 + _currentSize;
+	if (addend < SMALLCHUNK)
+		addend = SMALLCHUNK;
+	return addend + _currentSize;
+}
+
+static AlifObject* _ioFileIO_readallImpl(FileIO* _self) { // 731
+	AlifOffT pos{}, end{};
+	AlifObject* result;
+	AlifSizeT bytesRead = 0;
+	AlifSizeT n{};
+	AlifUSizeT bufsize{};
+
+	if (_self->fd < 0) {
+		return err_closed();
+	}
+
+	if (_self->statAtOpen != nullptr and _self->statAtOpen->size < ALIF_READ_MAX) {
+		end = (AlifOffT)_self->statAtOpen->size;
+	}
+	else {
+		end = -1;
+	}
+	if (end <= 0) {
+		/* Use a default size and resize as needed. */
+		bufsize = SMALLCHUNK;
+	}
+	else {
+		/* This is probably a real file. */
+		if (end > ALIF_READ_MAX - 1) {
+			bufsize = ALIF_READ_MAX;
+		}
+		else {
+			bufsize = (AlifUSizeT)end + 1;
+		}
+
+		if (bufsize > LARGE_BUFFER_CUTOFF_SIZE) {
+			ALIF_BEGIN_ALLOW_THREADS
+			ALIF_BEGIN_SUPPRESS_IPH
+#ifdef _WINDOWS
+			pos = _lseeki64(_self->fd, 0L, SEEK_CUR);
+#else
+			pos = lseek(_self->fd, 0L, SEEK_CUR);
+#endif
+			ALIF_END_SUPPRESS_IPH
+			ALIF_END_ALLOW_THREADS
+
+			if (end >= pos and pos >= 0 and (end - pos) < (ALIF_READ_MAX - 1)) {
+				bufsize = (AlifUSizeT)(end - pos) + 1;
+			}
+		}
+	}
+
+
+	result = alifBytes_fromStringAndSize(nullptr, bufsize);
+	if (result == nullptr)
+		return nullptr;
+
+	while (1) {
+		if (bytesRead >= (AlifSizeT)bufsize) {
+			bufsize = new_bufferSize(_self, bytesRead);
+			if (bufsize > ALIF_SIZET_MAX || bufsize <= 0) {
+				alifErr_setString(_alifExcOverflowError_,
+					"unbounded read returned more bytes "
+					"than a ALIF bytes object can hold");
+				ALIF_DECREF(result);
+				return nullptr;
+			}
+
+			if (ALIFBYTES_GET_SIZE(result) < (AlifSizeT)bufsize) {
+				if (alifBytes_resize(&result, bufsize) < 0)
+					return nullptr;
+			}
+		}
+
+		n = _alif_read(_self->fd,
+			ALIFBYTES_AS_STRING(result) + bytesRead,
+			bufsize - bytesRead);
+
+		if (n == 0)
+			break;
+		if (n == -1) {
+			if (errno == EAGAIN) {
+				alifErr_clear();
+				if (bytesRead > 0)
+					break;
+				ALIF_DECREF(result);
+				return ALIF_NONE;
+			}
+			ALIF_DECREF(result);
+			return nullptr;
+		}
+		bytesRead += n;
+	}
+
+	if (ALIFBYTES_GET_SIZE(result) > bytesRead) {
+		if (alifBytes_resize(&result, bytesRead) < 0)
+			return nullptr;
+	}
+	return result;
+}
+
+
+
 static AlifObject* portable_lseek(FileIO* _self, AlifObject* _posObj,
 	AlifIntT _whence, bool _suppressPipeError) { // 947
 	AlifOffT pos{}, res{};
@@ -531,13 +701,21 @@ static AlifObject* _ioFileIO_isAttyOpenOnly(AlifObject* op, AlifObject* ALIF_UNU
 #include "clinic/FileIO.cpp.h" // 1236
 
 static AlifMethodDef _fileIOMethods_[] = { // 1238
+	_IO_FILEIO_READALL_METHODDEF
 	_IO_FILEIO_READINTO_METHODDEF
+	_IO_FILEIO_CLOSE_METHODDEF
 	_IO_FILEIO_SEEKABLE_METHODDEF
 	_IO_FILEIO_READABLE_METHODDEF
 	{"_isAttyOpenOnly", _ioFileIO_isAttyOpenOnly, METHOD_NOARGS},
+	{"_deallocWarn", fileIO_deallocWarn, METHOD_O},
 	{nullptr, nullptr}             /* sentinel */
 };
 
+
+static AlifObject* fileIO_getClosed(AlifObject* op, void* closure) { // 1261
+	FileIO* self = ALIFFILEIO_CAST(op);
+	return alifBool_fromLong((long)(self->fd < 0));
+}
 
 
 static AlifObject* fileIO_getBlkSize(AlifObject* op, void* closure) { // 1282
@@ -551,6 +729,7 @@ static AlifObject* fileIO_getBlkSize(AlifObject* op, void* closure) { // 1282
 }
 
 static AlifGetSetDef _fileIOGetSetList_[] = { // 1294
+	{"Closed", fileIO_getClosed, nullptr, "True if the file is closed"},
 	{"_blksize", fileIO_getBlkSize, nullptr, "Stat blksize if available"},
 	{nullptr},
 };
