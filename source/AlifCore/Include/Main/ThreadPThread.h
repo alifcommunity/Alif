@@ -57,6 +57,7 @@ void alifThread_condAfter(long long us, struct timespec* abs) { // 154
 
 
 class pthread_lock { // 189
+public:
 	char locked; /* 0=unlocked, 1=locked */
 	/* a <cond, mutex> pair to handle an acquire of a locked lock */
 	pthread_cond_t   lock_released{};
