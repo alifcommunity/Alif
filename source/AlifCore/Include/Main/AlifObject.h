@@ -191,7 +191,7 @@ typedef AlifObject* (*VectorCallFunc)(AlifObject*, AlifObject* const*, AlifUSize
 
 class AlifTypeSlot { // 362
 public:
-	AlifIntT slot{};    /* slot id, see below */
+	AlifIntT slot{};    /* slot id */
 	void* pfunc{}; /* function pointer */
 };
 

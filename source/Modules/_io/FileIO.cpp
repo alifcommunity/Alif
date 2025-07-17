@@ -1,6 +1,6 @@
 #include "alif.h"
 
-#include "AlifCore_Fileutils.h"     
+#include "AlifCore_FileUtils.h"     
 #include "AlifCore_Object.h"       
 #include "AlifCore_Errors.h"     
 

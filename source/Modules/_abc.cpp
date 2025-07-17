@@ -3,7 +3,7 @@
 #include "AlifCore_ModuleObject.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_DureRun.h"
-#include "AlifCore_Setobject.h"
+#include "AlifCore_SetObject.h"
 #include "AlifCore_WeakRef.h"
 
 #include "clinic/_abc.cpp.h"

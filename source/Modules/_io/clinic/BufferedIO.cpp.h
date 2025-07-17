@@ -2,7 +2,7 @@
 #include "AlifCore_DureRun.h"     
 #include "AlifCore_Abstract.h"    
 #include "AlifCore_CriticalSection.h"
-#include "AlifCore_Modsupport.h"    
+#include "AlifCore_ModSupport.h"    
 
 
 
