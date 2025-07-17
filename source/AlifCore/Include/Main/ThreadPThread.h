@@ -185,7 +185,7 @@ void alifThread_freeLock(AlifThreadTypeLock lock) { // 661
 
 	(void)error; /* silence unused-but-set-variable warning */
 
-	status = pthread_condDestroy(&thelock->lock_released);
+	status = pthread_cond_destroy(&thelock->lock_released);
 	CHECK_STATUS_PTHREAD("pthread_cond_destroy");
 
 	status = pthread_mutex_destroy(&thelock->mut);
