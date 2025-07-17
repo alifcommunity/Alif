@@ -41,7 +41,7 @@ static AlifObject* _io_open(AlifObject* module, AlifObject* const* args,
 	AlifSizeT noptargs = nargs + (kwnames ? ALIFTUPLE_GET_SIZE(kwnames) : 0) - 1;
 	AlifObject* file{};
 	const char* mode = "r";
-	int buffering = -1;
+	AlifIntT buffering = -1;
 	const char* encoding{};
 	const char* errors{};
 	const char* newline{};

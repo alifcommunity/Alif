@@ -84,7 +84,7 @@ exit:
 static AlifIntT _ioBufferedReader___init__Impl(Buffered*, AlifObject*, AlifSizeT); // 936
 
 static AlifIntT _ioBufferedReader___init__(AlifObject* self, AlifObject* args, AlifObject* kwargs) { // 940
-	int return_value = -1;
+	AlifIntT returnValue = -1;
 #define NUM_KEYWORDS 2
 	static struct {
 		AlifGCHead _thisNotUsed{};
@@ -132,8 +132,8 @@ static AlifIntT _ioBufferedReader___init__(AlifObject* self, AlifObject* args, A
 		buffer_size = ival;
 	}
 skip_optional_pos:
-	return_value = _ioBufferedReader___init__Impl((Buffered*)self, raw, buffer_size);
+	returnValue = _ioBufferedReader___init__Impl((Buffered*)self, raw, buffer_size);
 
 exit:
-	return return_value;
+	return returnValue;
 }
