@@ -1,4 +1,4 @@
-#include "AlifCore_Gc.h"          
+#include "AlifCore_GC.h"          
 #include "AlifCore_DureRun.h"     
 #include "AlifCore_Abstract.h"    
 #include "AlifCore_CriticalSection.h"

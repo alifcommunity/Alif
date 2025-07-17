@@ -176,6 +176,8 @@
 
 #define HAVE_WCHAR_H 1
 
+#define HAVE_TIMEGM 1
+
 #endif
 
 

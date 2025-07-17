@@ -1,6 +1,6 @@
 #include "alif.h"
 
-#include "AlifCore_Moduleobject.h"
+#include "AlifCore_ModuleObject.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_DureRun.h"
 #include "AlifCore_Setobject.h"
