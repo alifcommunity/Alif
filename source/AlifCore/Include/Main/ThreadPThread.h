@@ -161,7 +161,7 @@ AlifThreadTypeLock alifThread_allocateLock(void) { // 627
 	if (lock) {
 		lock->locked = 0;
 
-		status = pthread_mutexInit(&lock->mut, NULL);
+		status = pthread_mutex_init(&lock->mut, NULL);
 		CHECK_STATUS_PTHREAD("pthread_mutex_init");
 
 		//_ALIF_ANNOTATE_PURE_HAPPENS_BEFORE_MUTEX(&lock->mut);
@@ -180,15 +180,15 @@ AlifThreadTypeLock alifThread_allocateLock(void) { // 627
 
 
 void alifThread_freeLock(AlifThreadTypeLock lock) { // 661
-	pthread_lock* thelock = (PThreadLock*)lock;
+	pthread_lock* thelock = (pthread_lock*)lock;
 	AlifIntT status{}, error = 0;
 
 	(void)error; /* silence unused-but-set-variable warning */
 
-	status = pthread_condDestroy(&thelock->lockReleased);
+	status = pthread_condDestroy(&thelock->lock_released);
 	CHECK_STATUS_PTHREAD("pthread_cond_destroy");
 
-	status = pthread_mutexDestroy(&thelock->mut);
+	status = pthread_mutex_destroy(&thelock->mut);
 	CHECK_STATUS_PTHREAD("pthread_mutex_destroy");
 
 	alifMem_dataFree((void*)thelock);

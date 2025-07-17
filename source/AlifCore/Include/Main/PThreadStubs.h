@@ -45,7 +45,7 @@ typedef struct { unsigned __attr; } pthread_attr_t;
 
 
 
-AlifIntT pthread_mutexDestroy(pthread_mutex_t*); // 61
+AlifIntT pthread_mutex_destroy(pthread_mutex_t*); // 61
 
 AlifIntT pthread_condInit(pthread_cond_t* restrict cond,
 	const pthread_condattr_t* restrict attr); // 67
