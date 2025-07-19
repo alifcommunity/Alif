@@ -37,24 +37,28 @@ extern char* _alif_encodeLocaleRaw(const wchar_t*, AlifUSizeT*); // 59
 #   define ALIF_WRITE_MAX ALIF_SIZET_MAX
 #endif
 
+
+// هذا الصنف تابع لصنف من النظام في لينكس 
+// stat وهو
+// لذلك لا يمكن اتباع قواعد تسمية المتغيرات فيه
 // 78
 #ifdef _WINDOWS
 class AlifStatStruct {
 public:
-	uint64_t dev{};
-	uint64_t ino{};
-	unsigned short mode{};
-	AlifIntT nlink{};
-	AlifIntT uid{};
-	AlifIntT gid{};
-	unsigned long rdev{};
-	__int64 size{};
-	time_t atime{};
-	AlifIntT atimeNSec{};
-	time_t mtime{};
-	AlifIntT mtimeNSec{};
-	time_t ctime{};
-	AlifIntT ctimeNSec{};
+	uint64_t st_dev{};
+	uint64_t st_ino{};
+	unsigned short st_mode{};
+	AlifIntT st_nlink{};
+	AlifIntT st_uid{};
+	AlifIntT st_gid{};
+	unsigned long st_rdev{};
+	__int64 st_size{};
+	time_t st_atime{};
+	AlifIntT st_atime_nsec{};
+	time_t st_mtime{};
+	AlifIntT st_mtime_nsec{};
+	time_t st_ctime{};
+	AlifIntT st_ctime_nsec{};
 	time_t birthtime{};
 	AlifIntT birthtimeNSec{};
 	unsigned long fileAttributes{};

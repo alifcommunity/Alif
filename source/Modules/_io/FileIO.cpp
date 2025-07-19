@@ -45,7 +45,7 @@ public:
 	signed int seekable : 2; /* -1 means unknown */
 	AlifUIntT closefd : 1;
 	char finalizing{};
-	AlifStatStruct* statAtOpen{};
+	struct AlifStatStruct* statAtOpen{};
 	AlifObject* weakRefList{};
 	AlifObject* dict{};
 };
@@ -369,7 +369,7 @@ static AlifIntT _ioFileIO___init__Impl(FileIO* self, AlifObject* nameobj, const 
 	}
 
 	alifMem_dataFree(self->statAtOpen);
-	self->statAtOpen = (AlifStatStruct*)alifMem_dataAlloc(sizeof(AlifStatStruct));
+	self->statAtOpen = (struct AlifStatStruct*)alifMem_dataAlloc(sizeof(struct AlifStatStruct));
 	if (self->statAtOpen == nullptr) {
 		//alifErr_noMemory();
 		goto error;
@@ -393,7 +393,7 @@ static AlifIntT _ioFileIO___init__Impl(FileIO* self, AlifObject* nameobj, const 
 			}
 		else {
 #if defined(S_ISDIR) and defined(EISDIR)
-			if (S_ISDIR(self->statAtOpen->mode)) {
+			if (S_ISDIR(self->statAtOpen->st_mode)) {
 				errno = EISDIR;
 				alifErr_setFromErrnoWithFilenameObject(_alifExcOSError_, nameobj);
 				goto error;
@@ -529,8 +529,8 @@ static AlifObject* _ioFileIO_readallImpl(FileIO* _self) { // 731
 		return err_closed();
 	}
 
-	if (_self->statAtOpen != nullptr and _self->statAtOpen->size < ALIF_READ_MAX) {
-		end = (AlifOffT)_self->statAtOpen->size;
+	if (_self->statAtOpen != nullptr and _self->statAtOpen->st_size < ALIF_READ_MAX) {
+		end = (AlifOffT)_self->statAtOpen->st_size;
 	}
 	else {
 		end = -1;
@@ -696,7 +696,7 @@ static AlifObject* _ioFileIO_isAttyImpl(FileIO* self) { // 1202
 
 static AlifObject* _ioFileIO_isAttyOpenOnly(AlifObject* op, AlifObject* ALIF_UNUSED(ignored)) { // 1226
 	FileIO* self = ALIFFILEIO_CAST(op);
-	if (self->statAtOpen != nullptr and !S_ISCHR(self->statAtOpen->mode)) {
+	if (self->statAtOpen != nullptr and !S_ISCHR(self->statAtOpen->st_mode)) {
 		ALIF_RETURN_FALSE;
 	}
 	return _ioFileIO_isAttyImpl(self);
