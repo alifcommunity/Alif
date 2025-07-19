@@ -1,7 +1,7 @@
 #include "AlifCore_GC.h"         
 #include "AlifCore_DureRun.h"    
 #include "AlifCore_Abstract.h"   
-#include "AlifCore_Modsupport.h" 
+#include "AlifCore_ModSupport.h" 
 
 
 

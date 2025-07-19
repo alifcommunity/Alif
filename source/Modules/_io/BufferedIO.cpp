@@ -597,11 +597,11 @@ static AlifGetSetDef _bufferedReaderGetSet_[] = {
 };
 
 static AlifTypeSlot _bufferedReaderSlots_[] = { // 2554
-	{ALIF_TP_TRAVERSE, buffered_traverse},
+	{ALIF_TP_TRAVERSE, (void*)buffered_traverse},
 	{ALIF_TP_METHODS, _bufferedReaderMethods_},
 	{ALIF_TP_MEMBERS, _bufferedReaderMembers_},
 	{ALIF_TP_GETSET, _bufferedReaderGetSet_},
-	{ALIF_TP_INIT, _ioBufferedReader___init__},
+	{ALIF_TP_INIT, (void*)_ioBufferedReader___init__},
 
 	{0, nullptr},
 };

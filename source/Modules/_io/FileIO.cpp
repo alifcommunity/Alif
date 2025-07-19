@@ -152,6 +152,10 @@ static AlifObject* fileio_new(AlifTypeObject* type,
 	return (AlifObject*)self;
 }
 
+// 213
+#ifdef O_CLOEXEC
+extern AlifIntT _alifOpenCloExecWorks_;
+#endif
 
 
 static AlifIntT _ioFileIO___init__Impl(FileIO* self, AlifObject* nameobj, const char* mode,
@@ -169,7 +173,7 @@ static AlifIntT _ioFileIO___init__Impl(FileIO* self, AlifObject* nameobj, const 
 	AlifIntT fd = -1;
 	AlifIntT fd_is_own = 0;
 #ifdef O_CLOEXEC
-	AlifIntT* atomic_flag_works = &_Py_open_cloexec_works;
+	AlifIntT* atomic_flag_works = &_alifOpenCloExecWorks_;
 #elif !defined(_WINDOWS)
 	AlifIntT* atomic_flag_works = nullptr;
 #endif
@@ -359,8 +363,8 @@ static AlifIntT _ioFileIO___init__Impl(FileIO* self, AlifObject* nameobj, const 
 		fd_is_own = 1;
 
 #ifndef _WINDOWS
-		if (_alif_setInheritable(self->fd, 0, atomic_flag_works) < 0)
-			goto error;
+		// if (_alif_setInheritable(self->fd, 0, atomic_flag_works) < 0)
+		// 	goto error;
 #endif
 	}
 
@@ -743,12 +747,12 @@ static AlifMemberDef _fileIOMembers_[] = { // 1303
 
 
 static AlifTypeSlot _fileIOSlots_[] = { // 1310
-	{ALIF_TP_TRAVERSE, fileIO_traverse},
+	{ALIF_TP_TRAVERSE, (void*)fileIO_traverse},
 	{ALIF_TP_METHODS, _fileIOMethods_},
 	{ALIF_TP_MEMBERS, _fileIOMembers_},
 	{ALIF_TP_GETSET, _fileIOGetSetList_},
-	{ALIF_TP_INIT, _ioFileIO___init__},
-	{ALIF_TP_NEW, fileio_new},
+	{ALIF_TP_INIT, (void*)_ioFileIO___init__},
+	{ALIF_TP_NEW, (void*)fileio_new},
 	{0, nullptr},
 };
 

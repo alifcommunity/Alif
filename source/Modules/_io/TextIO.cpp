@@ -1277,7 +1277,7 @@ static AlifTypeSlot _nlDecoderSlots_[] = { // 3314
 	{ALIF_TP_METHODS, _incrementalNewlineDecoderMethods_},
 	//{ALIF_TP_GETSET, _incrementalNewlineDecoderGetset_},
 	//{ALIF_TP_CLEAR, incrementalnewlinedecoder_clear},
-	{ALIF_TP_INIT, _ioIncrementalNewlineDecoder___init__},
+	{ALIF_TP_INIT, (void*)_ioIncrementalNewlineDecoder___init__},
 	{0, nullptr},
 };
 
@@ -1314,10 +1314,10 @@ static AlifMemberDef _textIOWrapperMembers_[] = { // 3358
 
 
 AlifTypeSlot _textIOWrapperSlots_[] = { // 3380
-	{ALIF_TP_TRAVERSE, textIOWrapper_traverse},
+	{ALIF_TP_TRAVERSE, (void*)textIOWrapper_traverse},
 	{ALIF_TP_METHODS, _textIOWrapperMethods_},
 	{ALIF_TP_MEMBERS, _textIOWrapperMembers_},
-	{ALIF_TP_INIT, _ioTextIOWrapper___init__},
+	{ALIF_TP_INIT, (void*)_ioTextIOWrapper___init__},
 	{0, nullptr},
 };
 

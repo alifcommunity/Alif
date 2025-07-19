@@ -21,6 +21,9 @@ extern int winerror_to_errno(int);
 #  include <fcntl.h>              // fcntl(F_GETFD)
 #endif
 
+#ifdef O_CLOEXEC
+AlifIntT _alifOpenCloExecWorks_ = -1;
+#endif
 
 #define MAX_UNICODE 0x10ffff // 53
 

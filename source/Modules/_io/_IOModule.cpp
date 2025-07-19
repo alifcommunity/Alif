@@ -434,7 +434,7 @@ static AlifIntT iomodule_exec(AlifObject* m) { // 650
 
 
 static AlifModuleDefSlot _ioModuleSlots_[] = { // 717
-	{ALIF_MOD_EXEC, iomodule_exec},
+	{ALIF_MOD_EXEC, (void*)iomodule_exec},
 	{ALIF_MOD_MULTIPLE_INTERPRETERS, ALIF_MOD_PER_INTERPRETER_GIL_SUPPORTED},
 	{ALIF_MOD_GIL, ALIF_MOD_GIL_NOT_USED},
 	{0, nullptr},

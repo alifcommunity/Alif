@@ -229,7 +229,7 @@ static AlifMemberDef _ioBaseMembers_[] = { // 859
 
 
 static AlifTypeSlot _ioBaseSlots_[] = { // 866
-	{ALIF_TP_TRAVERSE, ioBase_traverse},
+	{ALIF_TP_TRAVERSE, (void*)ioBase_traverse},
 	{ALIF_TP_METHODS, _ioBaseMethods_},
 	{ALIF_TP_MEMBERS, _ioBaseMembers_},
 	{ALIF_TP_GETSET, _ioBaseGetSet_},
