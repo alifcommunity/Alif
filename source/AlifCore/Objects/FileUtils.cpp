@@ -466,39 +466,39 @@ void _alifAttribute_dataToStat(BY_HANDLE_FILE_INFORMATION* info, ULONG reparse_t
 	FILE_BASIC_INFO* basic_info, FILE_ID_INFO* id_info,
 	class AlifStatStruct* result) { // 1110
 	memset(result, 0, sizeof(*result));
-	result->mode = attributes_to_mode(info->dwFileAttributes);
-	result->size = (((__int64)info->nFileSizeHigh) << 32) + info->nFileSizeLow;
-	result->dev = id_info ? id_info->VolumeSerialNumber : info->dwVolumeSerialNumber;
-	result->rdev = 0;
+	result->st_mode = attributes_to_mode(info->dwFileAttributes);
+	result->st_size = (((__int64)info->nFileSizeHigh) << 32) + info->nFileSizeLow;
+	result->st_dev = id_info ? id_info->VolumeSerialNumber : info->dwVolumeSerialNumber;
+	result->st_rdev = 0;
 	/* st_ctime is deprecated, but we preserve the legacy value in our caller, not here */
 	if (basic_info) {
 		LARGE_INTEGER_to_time_t_nsec(&basic_info->CreationTime, &result->birthtime, &result->birthtimeNSec);
-		LARGE_INTEGER_to_time_t_nsec(&basic_info->ChangeTime, &result->ctime, &result->ctimeNSec);
-		LARGE_INTEGER_to_time_t_nsec(&basic_info->LastWriteTime, &result->mtime, &result->mtimeNSec);
-		LARGE_INTEGER_to_time_t_nsec(&basic_info->LastAccessTime, &result->atime, &result->atimeNSec);
+		LARGE_INTEGER_to_time_t_nsec(&basic_info->ChangeTime, &result->st_ctime, &result->st_ctime_nsec);
+		LARGE_INTEGER_to_time_t_nsec(&basic_info->LastWriteTime, &result->st_mtime, &result->st_mtime_nsec);
+		LARGE_INTEGER_to_time_t_nsec(&basic_info->LastAccessTime, &result->st_atime, &result->st_atime_nsec);
 	}
 	else {
 		FILE_TIME_to_time_t_nsec(&info->ftCreationTime, &result->birthtime, &result->birthtimeNSec);
-		FILE_TIME_to_time_t_nsec(&info->ftLastWriteTime, &result->mtime, &result->mtimeNSec);
-		FILE_TIME_to_time_t_nsec(&info->ftLastAccessTime, &result->atime, &result->atimeNSec);
+		FILE_TIME_to_time_t_nsec(&info->ftLastWriteTime, &result->st_mtime, &result->st_mtime_nsec);
+		FILE_TIME_to_time_t_nsec(&info->ftLastAccessTime, &result->st_atime, &result->st_atime_nsec);
 	}
-	result->nlink = info->nNumberOfLinks;
+	result->st_nlink = info->nNumberOfLinks;
 
 	if (id_info) {
 		id_128_to_ino file_id;
 		file_id.id = id_info->FileId;
-		result->ino = file_id.ino;
+		result->st_ino = file_id.ino;
 		result->inoHigh = file_id.inoHigh;
 	}
-	if (!result->ino and !result->inoHigh) {
-		result->ino = (((uint64_t)info->nFileIndexHigh) << 32) + info->nFileIndexLow;
+	if (!result->st_ino and !result->inoHigh) {
+		result->st_ino = (((uint64_t)info->nFileIndexHigh) << 32) + info->nFileIndexLow;
 	}
 
 	result->reparseTag = reparse_tag;
 	if (info->dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT &&
 		reparse_tag == IO_REPARSE_TAG_SYMLINK) {
 		/* set the bits that make this a symlink */
-		result->mode = (result->mode & ~S_IFMT) | S_IFLNK;
+		result->st_mode = (result->st_mode & ~S_IFMT) | S_IFLNK;
 	}
 	result->fileAttributes = info->dwFileAttributes;
 }
@@ -537,9 +537,9 @@ AlifIntT _alifFStat_noraise(AlifIntT fd, class AlifStatStruct* status) { // 1235
 
 	if (type != FILE_TYPE_DISK) {
 		if (type == FILE_TYPE_CHAR)
-			status->mode = _S_IFCHR;
+			status->st_mode = _S_IFCHR;
 		else if (type == FILE_TYPE_PIPE)
-			status->mode = _S_IFIFO;
+			status->st_mode = _S_IFIFO;
 		return 0;
 	}
 
