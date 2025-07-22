@@ -82,9 +82,7 @@ static AlifObject* import_getModule(AlifThread* _thread, AlifObject* _name) { //
 
 	AlifObject* m{};
 	ALIF_INCREF(modules);
-	//* هنا يجب أن يتم تحويل الاسم الى ترميز 16 بدل من 8 ليستطيع البحث عن الاسم ضمن فهرس modules
-	AlifObject* name = alifUStr_fromString(alifUStr_asUTF8(_name)); //* todo //* review
-	(void)alifMapping_getOptionalItem(modules, name, &m);
+	(void)alifMapping_getOptionalItem(modules, _name, &m);
 	ALIF_DECREF(modules);
 	return m;
 }
