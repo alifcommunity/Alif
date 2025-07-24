@@ -31,17 +31,17 @@ static AlifStatus alifMain_init(AlifArgv* _args) {
 		- يجب تهيئة ذاكرة ألف العامة قبل البدأ بالبرنامج
 		لأنه سيتم أستخدامها خلال كامل البرنامج
 	*/
-	status.exitcode /* todo */ = alif_preInitFromConfig(&config);
+	status = alif_preInitFromConfig(&config);
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		goto done;
 	}
 
-	status.exitcode /* todo */ = alifArgv_asWStringList(&config, _args);
+	status = alifArgv_asWStringList(&config, _args);
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		goto done;
 	}
 
-	status.exitcode /* todo */ = alif_initFromConfig(&config);
+	status = alif_initFromConfig(&config);
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		goto done;
 	}
