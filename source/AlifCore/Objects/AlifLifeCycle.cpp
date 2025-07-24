@@ -33,13 +33,12 @@ AlifRuntime _alifRuntime_ = ALIF_DURERUNSTATE_INIT(_alifRuntime_); // 103
 
 static AlifIntT runtimeInitialized = 0; // 110
 
-AlifIntT alifDureRun_initialize() { // 112
-
-	if (runtimeInitialized) return 1;
+AlifStatus _alifRuntime_initialize() { // 112
+	if (runtimeInitialized) return ALIFSTATUS_OK();
 
 	runtimeInitialized = 1;
 
-	return alifDureRunState_init(&_alifRuntime_);
+	return _alifRuntimeState_init(&_alifRuntime_);
 }
 
 
@@ -540,7 +539,7 @@ AlifIntT alif_initFromConfig(const AlifConfig* _config) { // 1383
 
 	AlifIntT status{};
 
-	status = alifDureRun_initialize();
+	status = _alifRuntime_initialize();
 	if (status < 1) return status;
 
 	AlifRuntime* dureRun = &_alifRuntime_;
@@ -826,10 +825,10 @@ void ALIF_NO_RETURN alif_exitStatusException(AlifStatus _status) { // 3306
 		exit(_status.exitcode);
 	}
 	else if (ALIFSTATUS_IS_ERROR(_status)) {
-		//fatal_error(fileno(stderr), 1, _status.func, _status.errMsg, 1);
+		fatal_error(fileno(stderr), 1, _status.func, _status.errMsg, 1);
 	}
 	else {
-		//alif_fatalError("alif_exitStatusException() يجب أن لا يتم إستدعاء هذه الدالة في حال انتهى التنفيذ بنجاح");
+		alif_fatalError("alif_exitStatusException() يجب أن لا يتم إستدعاء هذه الدالة في حال انتهى التنفيذ بنجاح");
 	}
 }
 

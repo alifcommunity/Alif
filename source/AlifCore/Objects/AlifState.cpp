@@ -116,7 +116,7 @@ static void init_dureRun(AlifRuntime* _Runtime) { // 411
 	_Runtime->selfInitialized = 1;
 }
 
-AlifIntT alifDureRunState_init(AlifRuntime* _Runtime) { // 441
+AlifStatus _alifRuntimeState_init(AlifRuntime* _Runtime) { // 441
 
 	if (_Runtime->selfInitialized) {
 		memcpy(_Runtime, &_initial_, sizeof(*_Runtime));
@@ -124,16 +124,16 @@ AlifIntT alifDureRunState_init(AlifRuntime* _Runtime) { // 441
 
 	if (threadTSS_init(&_Runtime->autoTSSKey) != 0) {
 		_alifRuntimeState_fini(_Runtime);
-		return -1;
+		return ALIFSTATUS_NO_MEMORY();
 	}
 	if (alifThreadTSS_create(&_Runtime->trashTSSKey) != 0) {
 		_alifRuntimeState_fini(_Runtime);
-		return -1;
+		return ALIFSTATUS_NO_MEMORY();
 	}
 
 	init_dureRun(_Runtime);
 
-	return 1;
+	return ALIFSTATUS_OK();
 }
 
 

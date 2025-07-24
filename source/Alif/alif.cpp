@@ -7,7 +7,7 @@
 #include "AlifCore_Run.h"
 
 
- // 26
+// 26
 #define COPYRIGHT \
     "Type \"help\", \"copyright\", \"credits\" or \"license\" " \
     "for more information."
@@ -15,12 +15,12 @@
 /* ----------------------------------- تهيئة اللغة ----------------------------------- */
 static AlifStatus alifMain_init(AlifArgv* _args) {
 
-	AlifIntT status{};
+	AlifStatus status{};
 	AlifConfig config{};
 
-	status = alifDureRun_initialize();
-	if (status < 1) {
-		return AlifStatus(); //* todo
+	status = _alifRuntime_initialize();
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
 	}
 
 	alifConfig_initAlifConfig(&config);
@@ -31,26 +31,26 @@ static AlifStatus alifMain_init(AlifArgv* _args) {
 		- يجب تهيئة ذاكرة ألف العامة قبل البدأ بالبرنامج
 		لأنه سيتم أستخدامها خلال كامل البرنامج
 	*/
-	status = alif_preInitFromConfig(&config);
-	if (status < 1) {
+	status.exitcode /* todo */ = alif_preInitFromConfig(&config);
+	if (ALIFSTATUS_EXCEPTION(status)) {
 		goto done;
 	}
 
-	status = alifArgv_asWStringList(&config, _args);
-	if (status < 1) {
+	status.exitcode /* todo */ = alifArgv_asWStringList(&config, _args);
+	if (ALIFSTATUS_EXCEPTION(status)) {
 		goto done;
 	}
 
-	status = alif_initFromConfig(&config);
-	if (status < 1) {
+	status.exitcode /* todo */ = alif_initFromConfig(&config);
+	if (ALIFSTATUS_EXCEPTION(status)) {
 		goto done;
 	}
 
-	status = 1;
+	status = ALIFSTATUS_OK();
 
 done:
 	alifConfig_clear(&config);
-	return AlifStatus(); //* todo
+	return status;
 }
 
 
@@ -68,7 +68,7 @@ static AlifIntT alifMain_runFileObj(AlifObject* _pn, AlifObject* _fn, AlifIntT _
 		//alifSys_formatStderr("%S: can't open file %R: [Errno %d] %s\n",
 		//	_pn, _fn, errno, strerror(errno));
 		printf("%s: لا يمكن فتح الملف %s: [Errno %d] %s\n",
-		(const char*)ALIFUSTR_DATA(_pn), (const char*)ALIFUSTR_DATA(_fn), errno, "لا يوجد ملف او مسار بهذا الاسم");
+			(const char*)ALIFUSTR_DATA(_pn), (const char*)ALIFUSTR_DATA(_fn), errno, "لا يوجد ملف او مسار بهذا الاسم");
 		return 2;
 	}
 
@@ -158,28 +158,28 @@ static AlifIntT alifMain_runStartup(AlifConfig* _config, AlifIntT* _exitcode) { 
 		return 0;
 	}
 	AlifObject* startup = nullptr;
-//#ifdef _WINDOWS
-//	const wchar_t* env = _wgetenv(L"ALIFSTARTUP");
-//	if (env == nullptr or env[0] == L'\0') {
-//		return 0;
-//	}
-//	startup = alifUStr_fromWideChar(env, wcslen(env));
-//	if (startup == nullptr) {
-//		goto error;
-//	}
-//#else
-//	const char* env = _alif_getEnv(_config->useEnvironment, "ALIFSTARTUP");
-//	if (env == nullptr) {
-//		return 0;
-//	}
-//	startup = alifUStr_decodeFSDefault(env);
-//	if (startup == nullptr) {
-//		goto error;
-//	}
-//#endif
-	//if (alifSys_audit("alif.run_startup", "O", startup) < 0) {
-	//	goto error;
-	//}
+	//#ifdef _WINDOWS
+	//	const wchar_t* env = _wgetenv(L"ALIFSTARTUP");
+	//	if (env == nullptr or env[0] == L'\0') {
+	//		return 0;
+	//	}
+	//	startup = alifUStr_fromWideChar(env, wcslen(env));
+	//	if (startup == nullptr) {
+	//		goto error;
+	//	}
+	//#else
+	//	const char* env = _alif_getEnv(_config->useEnvironment, "ALIFSTARTUP");
+	//	if (env == nullptr) {
+	//		return 0;
+	//	}
+	//	startup = alifUStr_decodeFSDefault(env);
+	//	if (startup == nullptr) {
+	//		goto error;
+	//	}
+	//#endif
+		//if (alifSys_audit("alif.run_startup", "O", startup) < 0) {
+		//	goto error;
+		//}
 
 	fp = alif_fOpenObj(startup, "r");
 	if (fp == nullptr) {
@@ -360,7 +360,7 @@ static void ALIF_NO_RETURN alifMain_exitError(AlifStatus _status) {
 	if (ALIFSTATUS_IS_EXIT(_status)) {
 		alifMain_free();
 	}
-	//alif_exitStatusException(_status); //* todo
+	alif_exitStatusException(_status); //* todo
 }
 
 static AlifIntT alifMain_main(AlifArgv* _args) {
@@ -399,13 +399,11 @@ static int alif_mainBytes(int _argc, char** _argv) {
 }
 
 #ifdef _WINDOWS
-int wmain(int _argc, wchar_t** _argv)
-{
+int wmain(int _argc, wchar_t** _argv) {
 	return alif_mainWchar(_argc, _argv);
 }
 #else
-int main(int _argc, char** _argv)
-{
+int main(int _argc, char** _argv) {
 	return alif_mainBytes(_argc, _argv);
 }
 #endif

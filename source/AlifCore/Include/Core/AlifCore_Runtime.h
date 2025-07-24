@@ -88,11 +88,11 @@ public:
 
 extern AlifRuntime _alifRuntime_; // 318
 
-extern AlifIntT alifDureRunState_init(AlifRuntime*); // 320
+extern AlifStatus _alifRuntimeState_init(AlifRuntime*); // 320
 extern void _alifRuntimeState_fini(AlifRuntime*); // 321
 
 
-extern AlifIntT alifDureRun_initialize(); // 329
+extern AlifStatus _alifRuntime_initialize(); // 329
 
 
 
