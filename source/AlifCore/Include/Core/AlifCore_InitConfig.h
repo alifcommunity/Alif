@@ -3,8 +3,10 @@
 
 
 
-
-
+#define ALIFSTATUS_IS_EXIT(err) \
+    (err.type == AlifStatus::AlifStatus_Type_EXIT)
+#define ALIFSTATUS_EXCEPTION(err) \
+    (err.type != AlifStatus::AlifStatus_Type_OK)
 
 
 

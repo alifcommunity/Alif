@@ -350,14 +350,13 @@ AlifIntT alif_runMain() { // 770
 /* ----------------------------------- بداية اللغة ----------------------------------- */
 static AlifIntT alifMain_main(AlifArgv* _args) {
 	// هذه الدالة مسوؤلة عن تهيئة اللغة للبدأ بالتنفيذ
-	AlifIntT status = alifMain_init(_args);
-	if (status < 0) {
-		//alifMem_freeInit();
-		exit(-2);
+	AlifStatus status = alifMain_init(_args);
+	if (ALIFSTATUS_IS_EXIT(status)) {
+		alifMain_free();
+		return status.exitcode;
 	}
-	else if (status < 1) {
-		//alifMem_freeInit();
-		return status;
+	else if (ALIFSTATUS_EXCEPTION(status)) {
+		alifMain_exitError();
 	}
 
 	// هذه الدالة مسؤلة عن تشغيل البرنامج
@@ -387,13 +386,11 @@ static int alif_mainBytes(int _argc, char** _argv) {
 #ifdef _WINDOWS
 int wmain(int _argc, wchar_t** _argv)
 {
-	//wchar_t* argsv[] = { (wchar_t*)L"alif", (wchar_t*)L"example.alif" }; //* alif //* delete
 	return alif_mainWchar(_argc, _argv);
 }
 #else
 int main(int _argc, char** _argv)
 {
-	//char* argsv[] = { (char*)"alif", (char*)"example.alif" }; // alif
 	return alif_mainBytes(_argc, _argv);
 }
 #endif

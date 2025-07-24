@@ -1,6 +1,23 @@
 #pragma once
 
 
+
+/* ----------------------------------- AlifStatus ------------------------------------ */
+
+// هذا الصنف يستخدم في مرحلة تهيئة اللغة
+// حيث يحدد حالة المرحلة
+class AlifStatus {
+public:
+	enum {
+		AlifStatus_Type_OK = 0,
+		AlifStatus_Type_ERROR = 1,
+		AlifStatus_Type_EXIT = 2
+	} type{};
+	const char* func{};
+	const char* errMsg{};
+	AlifIntT exitcode{};
+};
+
 /* --------------------------------- AlifWStringList --------------------------------- */
 class AlifWStringList { // 31
 public:
