@@ -21,6 +21,7 @@
 #endif
 
 
+//#define PUTS(_fd, _str) (void)_alifWrite_noRaise(_fd, _str, (AlifIntT)strlen(_str))
 
 
 static AlifIntT init_setBuiltinsOpen(void); // 72
@@ -818,6 +819,117 @@ done:
 	ALIF_XDECREF(iomod);
 	return res;
 }
+
+
+/* Print fatal error message and abort */
+#ifdef _WINDOWS
+static void fatalOutput_debug(const char* _msg) { // 2959
+	WCHAR buffer[256 / sizeof(WCHAR)];
+	size_t buflen = ALIF_ARRAY_LENGTH(buffer) - 1;
+	size_t msglen;
+
+	OutputDebugStringW(L"Fatal Alif error: ");
+
+	msglen = strlen(_msg);
+	while (msglen) {
+		size_t i;
+
+		if (buflen > msglen) {
+			buflen = msglen;
+		}
+
+		for (i = 0; i < buflen; ++i) {
+			buffer[i] = _msg[i];
+		}
+		buffer[i] = L'\0';
+		OutputDebugStringW(buffer);
+
+		_msg += buflen;
+		msglen -= buflen;
+	}
+	OutputDebugStringW(L"\n");
+}
+#endif
+
+static inline void ALIF_NO_RETURN fatalError_exit(AlifIntT _status) { // 3023
+	if (_status < 0) {
+	#if defined(_WINDOWS) and defined(_DEBUG)
+		DebugBreak();
+	#endif
+		abort();
+	}
+	else {
+		exit(_status);
+	}
+}
+
+static void ALIF_NO_RETURN fatal_error(AlifIntT _fd, AlifIntT _header,
+	const char* _prefix, const char* _msg, AlifIntT _status) { // 3167
+	static AlifIntT reEntrant = 0;
+
+	if (reEntrant) {
+		fatalError_exit(_status);
+	}
+	reEntrant = 1;
+
+	if (_header) {
+		//PUTS(_fd, "Fatal Alif error: ");
+		//if (_prefix) {
+		//	PUTS(_fd, _prefix);
+		//	PUTS(_fd, ": ");
+		//}
+		//if (_msg) {
+		//	PUTS(_fd, _msg);
+		//}
+		//else {
+		//	PUTS(_fd, "<message not set>");
+		//}
+		//PUTS(_fd, "\n");
+	}
+
+	//AlifRuntime* runtime = &_alifRuntime_;
+	//fatalError_dumpRuntime(_fd, runtime);
+
+	//AlifThread* tstate = _alifThread_get();
+	//AlifInterpreter* interp = nullptr;
+	//AlifThread* tssThread = alifGILState_getThisThreadState();
+	//if (tstate != nullptr) {
+	//	interp = tstate->interpreter;
+	//}
+	//else if (tssThread != nullptr) {
+	//	interp = tssThread->interpreter;
+	//}
+	//int has_tstate_and_gil = (tssThread != nullptr && tssThread == tstate);
+
+	//if (has_tstate_and_gil) {
+	//	if (!_alifFatalError_printExc(tssThread)) {
+	//		_alifFatalError_dumpTracebacks(_fd, interp, tssThread);
+	//	}
+	//}
+	//else {
+	//	_alifFatalError_dumpTracebacks(_fd, interp, tssThread);
+	//}
+
+	//_alif_dumpExtensionModules(_fd, interp);
+
+	//_alifFaultHandler_Fini();
+
+	//if (has_tstate_and_gil) {
+	//	flush_std_files();
+	//}
+
+#ifdef _WINDOWS
+	fatalOutput_debug(_msg);
+#endif /* _WINDOWS */
+
+	fatalError_exit(_status);
+}
+
+void ALIF_NO_RETURN alif_fatalError(const char* _msg) { // 3252
+	fatal_error(fileno(stderr), 1, nullptr, _msg, -1);
+}
+
+
 
 
 void ALIF_NO_RETURN alif_exitStatusException(AlifStatus _status) { // 3306

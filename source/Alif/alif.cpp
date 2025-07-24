@@ -360,7 +360,7 @@ static void ALIF_NO_RETURN alifMain_exitError(AlifStatus _status) {
 	if (ALIFSTATUS_IS_EXIT(_status)) {
 		alifMain_free();
 	}
-	alif_exitStatusException(_status); //* todo
+	alif_exitStatusException(_status);
 }
 
 static AlifIntT alifMain_main(AlifArgv* _args) {

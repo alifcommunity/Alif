@@ -25,6 +25,8 @@ AlifOSSigHandlerT alifOS_setSig(AlifIntT, AlifOSSigHandlerT); // 61
 
 AlifIntT alif_runMain(); // 31
 
+void ALIF_NO_RETURN alif_exitStatusException(AlifStatus);
+
 // 40
 #define ALIF_INTERPRETERCONFIG_DEFAULT_GIL (0)
 #define ALIF_INTERPRETERCONFIG_SHARED_GIL (1)

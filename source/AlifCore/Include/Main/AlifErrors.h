@@ -14,6 +14,8 @@ AlifObject* alifErr_getRaisedException(void); // 19
 void alifErr_setRaisedException(AlifObject*); // 20
 void alifErr_setHandledException(AlifObject*); // 23
 
+void ALIF_NO_RETURN alif_fatalError(const char* _msg); // 35
+
 AlifIntT alifErr_givenExceptionMatches(AlifObject*, AlifObject*); // 38
 AlifIntT alifErr_exceptionMatches(AlifObject*); // 39
 
@@ -25,7 +27,7 @@ AlifObject* alifException_getContext(AlifObject*); // 51
 void alifException_setContext(AlifObject*, AlifObject*); // 52
 
 
- // 60
+// 60
 #define ALIFEXCEPTIONCLASS_CHECK(_x)  (ALIFTYPE_CHECK(_x)	\
 			and ALIFTYPE_FASTSUBCLASS((AlifTypeObject*)(_x), ALIF_TPFLAGS_BASE_EXC_SUBCLASS))
 
