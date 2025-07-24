@@ -369,10 +369,10 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Dict.h">
       <Filter>Include\Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DureRun.h">
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Runtime.h">
       <Filter>Include\Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DureRunInit.h">
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_RuntimeInit.h">
       <Filter>Include\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Eval.h">

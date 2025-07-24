@@ -16,7 +16,7 @@
 
 // 27
 #define ALIF_GLOBAL_OBJECT(_name) \
-    _alifDureRun_.staticObjects._name
+    _alifRuntime_.staticObjects._name
 #define ALIF_SINGLETON(_name) \
     ALIF_GLOBAL_OBJECT(singletons._name)
 

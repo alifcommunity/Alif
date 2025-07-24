@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AlifCore_DureRun.h"
+#include "AlifCore_Runtime.h"
 
 
 extern AlifObject* alifBuiltin_init(AlifInterpreter*); // 32

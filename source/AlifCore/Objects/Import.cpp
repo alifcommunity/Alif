@@ -23,9 +23,9 @@ extern InitTable _alifImportInitTab_[]; // 55
 
 InitTable* _alifImportInitTable_ = _alifImportInitTab_; // 59
 
-#define INITTABLE _alifDureRun_.imports.initTable // 69
-#define LAST_MODULE_INDEX _alifDureRun_.imports.lastModuleIndex // 70
-#define EXTENSIONS _alifDureRun_.imports.extensions // 71
+#define INITTABLE _alifRuntime_.imports.initTable // 69
+#define LAST_MODULE_INDEX _alifRuntime_.imports.lastModuleIndex // 70
+#define EXTENSIONS _alifRuntime_.imports.extensions // 71
 
 // 80
 #define MODULES(_interp) \
@@ -260,11 +260,11 @@ static AlifIntT exec_builtinOrDynamic(AlifObject* mod) { // 790
 
 
 static inline void extensions_lockAcquire(void) { // 914
-	ALIFMUTEX_LOCK(&_alifDureRun_.imports.extensions.mutex);
+	ALIFMUTEX_LOCK(&_alifRuntime_.imports.extensions.mutex);
 }
 
 static inline void extensions_lockRelease(void) { // 920
-	ALIFMUTEX_UNLOCK(&_alifDureRun_.imports.extensions.mutex);
+	ALIFMUTEX_UNLOCK(&_alifRuntime_.imports.extensions.mutex);
 }
 
 

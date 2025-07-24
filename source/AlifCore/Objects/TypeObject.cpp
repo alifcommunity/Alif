@@ -30,7 +30,7 @@
         ALIFUSTR_CHECKEXACT(_name) and                           \
         (ALIFUSTR_GET_LENGTH(_name) <= MCACHE_MAX_ATTR_SIZE)
 
-#define NEXT_GLOBAL_VERSION_TAG _alifDureRun_.types.nextVersionTag
+#define NEXT_GLOBAL_VERSION_TAG _alifRuntime_.types.nextVersionTag
 #define NEXT_VERSION_TAG(_interp) (_interp)->types.nextVersionTag
 
 
@@ -125,10 +125,10 @@ static void managedStatic_typeStateInit(AlifInterpreter* _interp,
 		: index + ALIFMAX_MANAGED_STATIC_BUILTIN_TYPES;
 
 	(void)alifAtomic_addInt64(
-		&_alifDureRun_.types.managedStatic.types[full_index].interpCount, 1);
+		&_alifRuntime_.types.managedStatic.types[full_index].interpCount, 1);
 
 	if (_initial) {
-		_alifDureRun_.types.managedStatic.types[full_index].type = _self;
+		_alifRuntime_.types.managedStatic.types[full_index].type = _self;
 	}
 
 	ManagedStaticTypeState* state = _isBuiltin

@@ -11,8 +11,8 @@
 #include "AlifCore_LifeCycle.h"
 #include "AlifCore_Memory.h"
 #include "AlifCore_State.h"
-#include "AlifCore_DureRun.h"
-#include "AlifCore_DureRunInit.h"
+#include "AlifCore_Runtime.h"
+#include "AlifCore_RuntimeInit.h"
 
 
 
@@ -29,17 +29,23 @@ static AlifIntT init_sysStreams(AlifThread* _thread); // 73
 
 
 
-AlifDureRun _alifDureRun_ = ALIF_DURERUNSTATE_INIT(_alifDureRun_); // 103
+AlifDureRun _alifRuntime_ = ALIF_DURERUNSTATE_INIT(_alifRuntime_); // 103
 
-static AlifIntT dureRunInitialized = 0; // 110
+static AlifIntT runtimeInitialized = 0; // 110
 
 AlifIntT alifDureRun_initialize() { // 112
 
-	if (dureRunInitialized) return 1;
+	if (runtimeInitialized) return 1;
 
-	dureRunInitialized = 1;
+	runtimeInitialized = 1;
 
-	return alifDureRunState_init(&_alifDureRun_);
+	return alifDureRunState_init(&_alifRuntime_);
+}
+
+
+void _alifRuntime_finalize(void) { // 129
+	_alifRuntimeState_fini(&_alifRuntime_);
+	runtimeInitialized = 0;
 }
 
 
@@ -149,8 +155,7 @@ static AlifIntT initInterpreter_settings(AlifInterpreter* _interp,
 		return -1;
 	}
 	if (!alif_isMainInterpreter(_interp) &&
-		!_config->checkMultiInterpExtensions)
-	{
+		!_config->checkMultiInterpExtensions) {
 		//return ALIFSTATUS_ERR("The free-threaded build does not support "
 		//	"single-phase init extension modules in "
 		//	"subinterpreters");
@@ -538,7 +543,7 @@ AlifIntT alif_initFromConfig(const AlifConfig* _config) { // 1383
 	status = alifDureRun_initialize();
 	if (status < 1) return status;
 
-	AlifDureRun* dureRun = &_alifDureRun_;
+	AlifDureRun* dureRun = &_alifRuntime_;
 	AlifThread* thread_ = nullptr;
 
 	status = alifInit_core(dureRun, _config, &thread_);
@@ -666,7 +671,7 @@ static AlifObject* create_stdio(const AlifConfig* config, AlifObject* io,
 	//	goto error;
 	//}
 
-	stream = _alifObject_callMethod(io, &ALIF_STR(TextIOWrapper), "OOOsOO",buf,
+	stream = _alifObject_callMethod(io, &ALIF_STR(TextIOWrapper), "OOOsOO", buf,
 		encoding_str, nullptr/*errors_str*/, newline, line_buffering, write_through);
 	ALIF_CLEAR(buf);
 	ALIF_CLEAR(encoding_str);
@@ -816,7 +821,17 @@ done:
 }
 
 
-
+void ALIF_NO_RETURN alif_exitStatusException(AlifStatus _status) { // 3306
+	if (ALIFSTATUS_IS_EXIT(_status)) {
+		exit(_status.exitcode);
+	}
+	else if (ALIFSTATUS_IS_ERROR(_status)) {
+		fatal_error(fileno(stderr), 1, _status.func, _status.errMsg, 1);
+	}
+	else {
+		alif_fatalError("alif_exitStatusException() يجب أن لا يتم إستدعاء هذه الدالة في حال انتهى التنفيذ بنجاح");
+	}
+}
 
 
 void ALIF_NO_RETURN alif_exit(AlifIntT _sts) { // 3383

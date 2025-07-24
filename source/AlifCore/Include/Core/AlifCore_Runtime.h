@@ -86,10 +86,10 @@ public:
 	AlifInterpreter mainInterpreter{};
 };
 
-extern AlifDureRun _alifDureRun_; // 318
+extern AlifDureRun _alifRuntime_; // 318
 
 extern AlifIntT alifDureRunState_init(AlifDureRun*); // 320
-extern void alifDureRunState_fini(AlifDureRun*); // 321
+extern void _alifRuntimeState_fini(AlifDureRun*); // 321
 
 
 extern AlifIntT alifDureRun_initialize(); // 329
@@ -97,7 +97,7 @@ extern AlifIntT alifDureRun_initialize(); // 329
 
 
 
-
+extern void _alifRuntime_finalize(void);
 
 static inline AlifThread* alifDureRunState_getFinalizing(AlifDureRun* _dureRun) { // 383
 	return (AlifThread*)alifAtomic_loadPtrRelaxed(&_dureRun->finalizing_);

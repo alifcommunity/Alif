@@ -7,7 +7,7 @@
 #include "AlifCore_Memory.h"
 #include "AlifCore_Long.h"
 #include "AlifCore_State.h"
-#include "AlifCore_DureRun.h"
+#include "AlifCore_Runtime.h"
 
 #include "OSDefs.h"
 
@@ -168,12 +168,12 @@ static void config_usage(AlifIntT _error, const wchar_t* program) { // 2401
 }
 
 
-void alifWStringList_clear(AlifWStringList* _list) { // 516
+void _alifWStringList_clear(AlifWStringList* _list) { // 608
 	for (AlifSizeT i = 0; i < _list->length; i++) {
 		alifMem_dataFree(_list->items[i]);
 	}
 
-	//free(_list->items);
+	alifMem_dataFree(_list->items);
 	_list->length = 0;
 	_list->items = nullptr;
 }
@@ -181,7 +181,7 @@ void alifWStringList_clear(AlifWStringList* _list) { // 516
 AlifIntT alifWStringList_copy(AlifWStringList* _list, const AlifWStringList* _list2) { // 529
 
 	if (_list2->length == 0) {
-		alifWStringList_clear(_list);
+		_alifWStringList_clear(_list);
 		return 0;
 	}
 
@@ -196,14 +196,14 @@ AlifIntT alifWStringList_copy(AlifWStringList* _list, const AlifWStringList* _li
 	for (AlifSizeT i = 0; i < _list2->length; i++) {
 		wchar_t* item = alifMem_wcsDup(_list2->items[i]);
 		if (item == nullptr) {
-			alifWStringList_clear(&copy);
+			_alifWStringList_clear(&copy);
 			return -1;
 		}
 		copy.items[i] = item;
 		copy.length = i + 1;
 	}
 
-	alifWStringList_clear(_list);
+	_alifWStringList_clear(_list);
 	*_list = copy;
 	return 0;
 }
@@ -262,7 +262,7 @@ static AlifIntT alif_setArgcArgv(AlifSizeT _argc, wchar_t* const* _argv) { // 67
 
 	// XXX _alifDureRun_.origArgv only gets cleared by alif_main(),
 	// so it currently leaks for embedders.
-	res = alifWStringList_copy(&_alifDureRun_.origArgv, &argv_list);
+	res = alifWStringList_copy(&_alifRuntime_.origArgv, &argv_list);
 
 	return res;
 }
@@ -294,15 +294,15 @@ void alifConfig_clear(AlifConfig* _config) { // 773
 
 	CLEAR(_config->programName);
 
-	alifWStringList_clear(&_config->argv);
-	alifWStringList_clear(&_config->moduleSearchPaths);
+	_alifWStringList_clear(&_config->argv);
+	_alifWStringList_clear(&_config->moduleSearchPaths);
 	_config->moduleSearchPathsSet = 0;
 
 	CLEAR(_config->runCommand);
 	CLEAR(_config->runModule);
 	CLEAR(_config->runFilename);
 
-	alifWStringList_clear(&_config->origArgv);
+	_alifWStringList_clear(&_config->origArgv);
 #undef CLEAR
 }
 
@@ -702,7 +702,7 @@ static AlifIntT update_argv(AlifConfig* _config, AlifSizeT _index) { // 2803
 	if (arg1 != nullptr) {
 		arg1 = alifMem_wcsDup(arg1);
 		if (arg1 == nullptr) {
-			alifWStringList_clear(&configArgv);
+			_alifWStringList_clear(&configArgv);
 			// memory error
 			return -1;
 		}
@@ -715,7 +715,7 @@ static AlifIntT update_argv(AlifConfig* _config, AlifSizeT _index) { // 2803
 		configArgv.items[0] = arg1;
 	}
 
-	alifWStringList_clear(&_config->argv);
+	_alifWStringList_clear(&_config->argv);
 	_config->argv = configArgv;
 	return 1;
 }
@@ -840,14 +840,14 @@ AlifIntT alifArgv_asWStringList(AlifConfig* _config, AlifArgv* _args) { // 78 in
 			AlifUSizeT len{};
 			wchar_t* arg = alif_decodeLocale(_args->bytesArgv[i], &len);
 			if (arg == nullptr) {
-				alifWStringList_clear(&wArgv);
+				_alifWStringList_clear(&wArgv);
 				return -1;
 			}
 			wArgv.items[i] = arg;
 			wArgv.length++;
 		}
 
-		alifWStringList_clear(&_config->argv);
+		_alifWStringList_clear(&_config->argv);
 		_config->argv = wArgv;
 	}
 	else {

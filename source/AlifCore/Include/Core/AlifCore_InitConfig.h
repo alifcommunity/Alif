@@ -7,10 +7,12 @@
     (err.type == AlifStatus::AlifStatus_Type_EXIT)
 #define ALIFSTATUS_EXCEPTION(err) \
     (err.type != AlifStatus::AlifStatus_Type_OK)
+#define ALIFSTATUS_IS_ERROR(err) \
+    (err.type == AlifStatus::AlifStatus_Type_ERROR)
 
 
 
-extern void alifWStringList_clear(AlifWStringList*); // 59
+extern void _alifWStringList_clear(AlifWStringList*); // 59
 extern AlifIntT alifWStringList_copy(AlifWStringList*, const AlifWStringList*); // 60
 
 

@@ -143,7 +143,7 @@ static inline AlifObject* get_internedDict(AlifInterpreter* _interp) { // 223
 }
 
 
-#define INTERNED_STRINGS _alifDureRun_.cachedObjects.internedStrings // 231
+#define INTERNED_STRINGS _alifRuntime_.cachedObjects.internedStrings // 231
 
 static AlifHashT uStr_hash(AlifObject*); // 263
 

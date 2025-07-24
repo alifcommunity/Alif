@@ -635,8 +635,8 @@ static AlifObject* float_vectorCall(AlifObject* _type, AlifObject* const* _args,
 #define IEEE_BIG_ENDIAN_FORMAT AlifFloatFormatType::Alif_Float_Format_IEEE_Big_Endian
 #define IEEE_LITTLE_ENDIAN_FORMAT AlifFloatFormatType::Alif_Float_Format_IEEE_Little_Endian
 
-#define FLOAT_FORMAT (_alifDureRun_.floatState.floatFormat)
-#define DOUBLE_FORMAT (_alifDureRun_.floatState.doubleFormat)
+#define FLOAT_FORMAT (_alifRuntime_.floatState.floatFormat)
+#define DOUBLE_FORMAT (_alifRuntime_.floatState.doubleFormat)
 
 
 

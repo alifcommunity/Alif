@@ -6,7 +6,7 @@
 #include "AlifCore_Call.h"
 #include "AlifCore_Long.h"
 #include "AlifCore_Object.h"
-#include "AlifCore_DureRun.h"
+#include "AlifCore_Runtime.h"
 
 #include <float.h>
 

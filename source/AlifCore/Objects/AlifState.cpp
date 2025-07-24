@@ -11,7 +11,7 @@
 #include "AlifCore_LifeCycle.h"
 #include "AlifCore_Memory.h"
 #include "AlifCore_State.h"
-#include "AlifCore_DureRunInit.h"
+#include "AlifCore_RuntimeInit.h"
 
 
 
@@ -105,45 +105,45 @@ static void bind_gilStateThread(AlifThread* tstate) { // 318
 /* ------------------------------ AlifCycle ------------------------------- */
 
 
-static const AlifDureRun _initial_ = ALIF_DURERUNSTATE_INIT(_alifDureRun_); // 393
+static const AlifDureRun _initial_ = ALIF_DURERUNSTATE_INIT(_alifRuntime_); // 393
 
 
 
-static void init_dureRun(AlifDureRun* _dureRun) { // 411
+static void init_dureRun(AlifDureRun* _Runtime) { // 411
 
-	_dureRun->mainThreadID = alifThread_getThreadID();
+	_Runtime->mainThreadID = alifThread_getThreadID();
 
-	_dureRun->selfInitialized = 1;
+	_Runtime->selfInitialized = 1;
 }
 
-AlifIntT alifDureRunState_init(AlifDureRun* _dureRun) { // 441
+AlifIntT alifDureRunState_init(AlifDureRun* _Runtime) { // 441
 
-	if (_dureRun->selfInitialized) {
-		memcpy(_dureRun, &_initial_, sizeof(*_dureRun));
+	if (_Runtime->selfInitialized) {
+		memcpy(_Runtime, &_initial_, sizeof(*_Runtime));
 	}
 
-	if (threadTSS_init(&_dureRun->autoTSSKey) != 0) {
-		alifDureRunState_fini(_dureRun);
+	if (threadTSS_init(&_Runtime->autoTSSKey) != 0) {
+		_alifRuntimeState_fini(_Runtime);
 		return -1;
 	}
-	if (alifThreadTSS_create(&_dureRun->trashTSSKey) != 0) {
-		alifDureRunState_fini(_dureRun);
+	if (alifThreadTSS_create(&_Runtime->trashTSSKey) != 0) {
+		_alifRuntimeState_fini(_Runtime);
 		return -1;
 	}
 
-	init_dureRun(_dureRun);
+	init_dureRun(_Runtime);
 
 	return 1;
 }
 
 
-void alifDureRunState_fini(AlifDureRun* _dureRun) { // 477
-	if (alifThreadTSS_isCreated(&_dureRun->autoTSSKey)) {
-		alifThreadTSS_delete(&_dureRun->autoTSSKey);
+void _alifRuntimeState_fini(AlifDureRun* _Runtime) { // 477
+	if (alifThreadTSS_isCreated(&_Runtime->autoTSSKey)) {
+		alifThreadTSS_delete(&_Runtime->autoTSSKey);
 	}
 
-	if (alifThreadTSS_isCreated(&_dureRun->trashTSSKey)) {
-		alifThreadTSS_delete(&_dureRun->trashTSSKey);
+	if (alifThreadTSS_isCreated(&_Runtime->trashTSSKey)) {
+		alifThreadTSS_delete(&_Runtime->trashTSSKey);
 	}
 }
 
@@ -153,8 +153,8 @@ void alifDureRunState_fini(AlifDureRun* _dureRun) { // 477
 //		lifecycle
 // --------------------
 
-AlifIntT alifInterpreter_enable(AlifDureRun* _dureRun) { // 559
-	AlifDureRun::AlifInterpreters* interpreters = &_dureRun->interpreters;
+AlifIntT alifInterpreter_enable(AlifDureRun* _Runtime) { // 559
+	AlifDureRun::AlifInterpreters* interpreters = &_Runtime->interpreters;
 	interpreters->nextID = 0;
 	return 1;
 }
@@ -162,14 +162,14 @@ AlifIntT alifInterpreter_enable(AlifDureRun* _dureRun) { // 559
 
 
 static AlifIntT init_interpreter(AlifInterpreter* _interpreter,
-	AlifDureRun* _dureRun, AlifIntT _id, AlifInterpreter* _next) { // 612
+	AlifDureRun* _Runtime, AlifIntT _id, AlifInterpreter* _next) { // 612
 
 	if (_interpreter->initialized) {
 		// error
 		return -1; //* alif //* delete
 	}
 
-	_interpreter->dureRun = _dureRun;
+	_interpreter->dureRun = _Runtime;
 	_interpreter->id_ = _id;
 	_interpreter->next = _next;
 	alifGC_initState(&_interpreter->gc);
@@ -186,7 +186,7 @@ AlifIntT alifInterpreter_new(AlifThread* _thread, AlifInterpreter** _interpreter
 
 	*_interpreterP = nullptr;
 
-	AlifDureRun* dureRun = &_alifDureRun_;
+	AlifDureRun* dureRun = &_alifRuntime_;
 
 	if (_thread != nullptr) {
 		//error
@@ -547,7 +547,7 @@ static bool park_detachedThreads(StopTheWorldState* stw) { // 2214
 
 
 static void stop_theWorld(StopTheWorldState* _stw) { // 2239
-	AlifDureRun* dureRun = &_alifDureRun_;
+	AlifDureRun* dureRun = &_alifRuntime_;
 
 	ALIFMUTEX_LOCK(&_stw->mutex);
 	if (_stw->isGlobal) {
@@ -598,7 +598,7 @@ static void stop_theWorld(StopTheWorldState* _stw) { // 2239
 
 
 static void start_theWorld(class StopTheWorldState* _stw) { // 2294
-	AlifDureRun* dureRun = &_alifDureRun_;
+	AlifDureRun* dureRun = &_alifRuntime_;
 	HEAD_LOCK(dureRun);
 	_stw->requested = 0;
 	_stw->worldStopped = 0;
@@ -657,7 +657,7 @@ uintptr_t alif_getThreadLocalAddr(void) { // 2463
 
 
 AlifInterpreter* alifInterpreter_head() { // 2485
-	return _alifDureRun_.interpreters.head;
+	return _alifRuntime_.interpreters.head;
 }
 
 
@@ -742,8 +742,8 @@ void _alifThreadState_popFrame(AlifThread* tstate, AlifInterpreterFrame* _frame)
 
 
 AlifIntT alifThreadState_mustExit(AlifThread* _thread) { // 3004
-	unsigned long finalizing_id = alifDureRunState_getFinalizingID(&_alifDureRun_);
-	AlifThread* finalizing = alifDureRunState_getFinalizing(&_alifDureRun_);
+	unsigned long finalizing_id = alifDureRunState_getFinalizingID(&_alifRuntime_);
+	AlifThread* finalizing = alifDureRunState_getFinalizing(&_alifRuntime_);
 
 	if (finalizing == nullptr) {
 		finalizing = alifInterpreterState_getFinalizing(_thread->interpreter);

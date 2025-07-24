@@ -13,14 +13,14 @@
     "for more information."
 
 /* ----------------------------------- تهيئة اللغة ----------------------------------- */
-static AlifIntT alifMain_init(AlifArgv* _args) {
+static AlifStatus alifMain_init(AlifArgv* _args) {
 
 	AlifIntT status{};
 	AlifConfig config{};
 
 	status = alifDureRun_initialize();
 	if (status < 1) {
-		return status;
+		return AlifStatus(); //* todo
 	}
 
 	alifConfig_initAlifConfig(&config);
@@ -50,7 +50,7 @@ static AlifIntT alifMain_init(AlifArgv* _args) {
 
 done:
 	alifConfig_clear(&config);
-	return status;
+	return AlifStatus(); //* todo
 }
 
 
@@ -340,7 +340,7 @@ AlifIntT alif_runMain() { // 770
 
 	//alifMain_free();
 
-	//if (_alifDureRun_.signals.unhandledKeyboardInterrupt) {
+	//if (_alifRuntime_.signals.unhandledKeyboardInterrupt) {
 	//	exitcode = exit_sigint();
 	//}
 
@@ -348,6 +348,21 @@ AlifIntT alif_runMain() { // 770
 }
 
 /* ----------------------------------- بداية اللغة ----------------------------------- */
+
+static void alifMain_free(void) {
+	//_alifImport_fini2();
+	//_alifPathConfig_clearGlobal();
+	_alifWStringList_clear(&_alifRuntime_.origArgv);
+	_alifRuntime_finalize();
+}
+
+static void ALIF_NO_RETURN alifMain_exitError(AlifStatus _status) {
+	if (ALIFSTATUS_IS_EXIT(_status)) {
+		alifMain_free();
+	}
+	//alif_exitStatusException(_status); //* todo
+}
+
 static AlifIntT alifMain_main(AlifArgv* _args) {
 	// هذه الدالة مسوؤلة عن تهيئة اللغة للبدأ بالتنفيذ
 	AlifStatus status = alifMain_init(_args);
@@ -356,7 +371,7 @@ static AlifIntT alifMain_main(AlifArgv* _args) {
 		return status.exitcode;
 	}
 	else if (ALIFSTATUS_EXCEPTION(status)) {
-		alifMain_exitError();
+		alifMain_exitError(status);
 	}
 
 	// هذه الدالة مسؤلة عن تشغيل البرنامج

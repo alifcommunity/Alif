@@ -804,7 +804,7 @@ void alifASTMem_free(AlifASTMem* _astMem) { // 153
 /* ------------------------------- إسناد ذاكرة المفسر ------------------------------- */
 AlifIntT alifInterpreterMem_init(AlifInterpreter* _interpreter) {
 
-	if (_interpreter == _alifDureRun_.interpreters.main) {
+	if (_interpreter == _alifRuntime_.interpreters.main) {
 		_interpreter->memory_ = &_alifMem_;
 	}
 	else {

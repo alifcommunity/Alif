@@ -5,11 +5,11 @@
 
 
 
-#define HANDLERS _alifDureRun_.signals.handlers // 105
+#define HANDLERS _alifRuntime_.signals.handlers // 105
 
 
 typedef SignalsDureRunState SignalStateT; // 110
-#define SIGNAL_GLOBAL_STATE _alifDureRun_.signals
+#define SIGNAL_GLOBAL_STATE _alifRuntime_.signals
 
 
 

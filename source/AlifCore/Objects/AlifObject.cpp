@@ -1117,7 +1117,7 @@ static inline void new_reference(AlifObject* _op) { // 2405
 	_op->refLocal = 1;
 	_op->refShared = 0;
 
-	RefTracerDureRunState* tracer = &_alifDureRun_.refTracer;
+	RefTracerDureRunState* tracer = &_alifRuntime_.refTracer;
 	if (tracer->tracerFunc != nullptr) {
 		void* data = tracer->tracerData;
 		tracer->tracerFunc(_op, AlifRefTracerEvent_::Alif_RefTracer_Create, data);
@@ -1239,7 +1239,7 @@ void alif_dealloc(AlifObject* _op) { // 2868
 	AlifTypeObject* type = ALIF_TYPE(_op);
 	Destructor dealloc = type->dealloc;
 
-	RefTracerDureRunState* tracer = &_alifDureRun_.refTracer;
+	RefTracerDureRunState* tracer = &_alifRuntime_.refTracer;
 	if (tracer->tracerFunc != nullptr) {
 		void* data = tracer->tracerData;
 		tracer->tracerFunc(_op, AlifRefTracerEvent_::Alif_RefTracer_Destroy, data);

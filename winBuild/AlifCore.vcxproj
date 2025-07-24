@@ -48,8 +48,8 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Dict.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DictState.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DoubleToASCII.h" />
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DureRun.h" />
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DureRunInit.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Runtime.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_RuntimeInit.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Eval.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_EvalState.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FileUtils.h" />

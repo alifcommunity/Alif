@@ -1,7 +1,7 @@
 #include "alif.h"
 
 #include "AlifCore_ModuleObject.h"
-#include "AlifCore_DureRun.h"
+#include "AlifCore_Runtime.h"
 #include "AlifCore_Time.h"
 
 

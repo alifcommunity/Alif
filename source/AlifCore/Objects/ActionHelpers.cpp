@@ -7,7 +7,7 @@
 
 
 void* alifParserEngine_dummyName(AlifParser* p, ...) { // 8
-	return &_alifDureRun_.parser.dummyName;
+	return &_alifRuntime_.parser.dummyName;
 }
 
 ASDLSeq* alifParserEngine_singletonSeq(AlifParser* _p, void* _a) { // 15
