@@ -29,7 +29,7 @@ static AlifIntT init_sysStreams(AlifThread* _thread); // 73
 
 
 
-AlifDureRun _alifRuntime_ = ALIF_DURERUNSTATE_INIT(_alifRuntime_); // 103
+AlifRuntime _alifRuntime_ = ALIF_DURERUNSTATE_INIT(_alifRuntime_); // 103
 
 static AlifIntT runtimeInitialized = 0; // 110
 
@@ -125,7 +125,7 @@ static AlifIntT interpreter_updateConfig(AlifThread* tstate,
 }
 
 
-static AlifIntT alifCore_initDureRun(AlifDureRun* _dureRun, const AlifConfig* _config) { // 507
+static AlifIntT alifCore_initDureRun(AlifRuntime* _dureRun, const AlifConfig* _config) { // 507
 
 	if (_dureRun->initialized) {
 		return -1;
@@ -201,7 +201,7 @@ static void initInterpreter_createGIL(AlifThread* tstate, int gil) { // 607
 	alifEval_initGIL(tstate, ownGIL);
 }
 
-static AlifIntT alifCore_createInterpreter(AlifDureRun* _dureRun,
+static AlifIntT alifCore_createInterpreter(AlifRuntime* _dureRun,
 	const AlifConfig* _config, AlifThread** _threadP) { // 637
 
 	AlifIntT status{};
@@ -407,7 +407,7 @@ done:
 
 }
 
-static AlifIntT alifInit_config(AlifDureRun* _dureRun,
+static AlifIntT alifInit_config(AlifRuntime* _dureRun,
 	AlifThread** _threadP, const AlifConfig* _config) { // 917
 
 	AlifIntT status{};
@@ -427,7 +427,7 @@ static AlifIntT alifInit_config(AlifDureRun* _dureRun,
 	return 1;
 }
 
-static AlifIntT alifInit_core(AlifDureRun* _dureRun,
+static AlifIntT alifInit_core(AlifRuntime* _dureRun,
 	const AlifConfig* _config, AlifThread** _threadPtr) { // 1069
 
 	AlifIntT status{};
@@ -543,7 +543,7 @@ AlifIntT alif_initFromConfig(const AlifConfig* _config) { // 1383
 	status = alifDureRun_initialize();
 	if (status < 1) return status;
 
-	AlifDureRun* dureRun = &_alifRuntime_;
+	AlifRuntime* dureRun = &_alifRuntime_;
 	AlifThread* thread_ = nullptr;
 
 	status = alifInit_core(dureRun, _config, &thread_);
@@ -826,10 +826,10 @@ void ALIF_NO_RETURN alif_exitStatusException(AlifStatus _status) { // 3306
 		exit(_status.exitcode);
 	}
 	else if (ALIFSTATUS_IS_ERROR(_status)) {
-		fatal_error(fileno(stderr), 1, _status.func, _status.errMsg, 1);
+		//fatal_error(fileno(stderr), 1, _status.func, _status.errMsg, 1);
 	}
 	else {
-		alif_fatalError("alif_exitStatusException() يجب أن لا يتم إستدعاء هذه الدالة في حال انتهى التنفيذ بنجاح");
+		//alif_fatalError("alif_exitStatusException() يجب أن لا يتم إستدعاء هذه الدالة في حال انتهى التنفيذ بنجاح");
 	}
 }
 
@@ -839,7 +839,7 @@ void ALIF_NO_RETURN alif_exit(AlifIntT _sts) { // 3383
 	if (thread != nullptr and _alifThread_isRunningMain(thread)) {
 		_alifInterpreter_setNotRunningMain(thread->interpreter);
 	}
-	//if (_alif_finalize(&_alifDureRun_) < 0) {
+	//if (_alif_finalize(&_alifRuntime_) < 0) {
 	//	_sts = 120;
 	//}
 

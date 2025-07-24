@@ -61,7 +61,7 @@ public:
 	AlifConfigSysSpec sys{};
 };
 
- // 85
+// 85
 #define SPEC(_member, _type, _visibility, _sys) \
     {#_member, offsetof(AlifConfig, _member), \
      Alif_Config_Member_##_type, Alif_Config_Member_##_visibility, _sys}
@@ -251,8 +251,7 @@ AlifIntT alifWStringList_insert(AlifWStringList* _list,
 	return 1;
 }
 
-AlifIntT alifWStringList_append(AlifWStringList* _list, const wchar_t* _item)
-{ // 605
+AlifIntT alifWStringList_append(AlifWStringList* _list, const wchar_t* _item) { // 605
 	return alifWStringList_insert(_list, _list->length, _item);
 }
 
@@ -260,7 +259,7 @@ static AlifIntT alif_setArgcArgv(AlifSizeT _argc, wchar_t* const* _argv) { // 67
 	const AlifWStringList argv_list = { .length = _argc, .items = (wchar_t**)_argv };
 	AlifIntT res{};
 
-	// XXX _alifDureRun_.origArgv only gets cleared by alif_main(),
+	// XXX _alifRuntime_.origArgv only gets cleared by alif_main(),
 	// so it currently leaks for embedders.
 	res = alifWStringList_copy(&_alifRuntime_.origArgv, &argv_list);
 
@@ -494,15 +493,15 @@ static AlifIntT alif_setFileMode(const AlifConfig* _config) { // 2327
 
 	bool buffIn{ 1 }, buffOut{ 1 }, buffErr{ 1 };
 	if (!_config->bufferedStdio) {
-#ifdef HAVE_SETVBUF
+	#ifdef HAVE_SETVBUF
 		buffIn = setvbuf(stdin, (char*)nullptr, _IONBF, BUFSIZ);
 		buffOut = setvbuf(stdout, (char*)nullptr, _IONBF, BUFSIZ);
 		buffErr = setvbuf(stderr, (char*)nullptr, _IONBF, BUFSIZ);
-#else /* !HAVE_SETVBUF */
+	#else /* !HAVE_SETVBUF */
 		buffIn = setbuf(stdin, (char*)nullptr);
 		buffOut = setbuf(stdout, (char*)nullptr);
 		buffErr = setbuf(stderr, (char*)nullptr);
-#endif /* !HAVE_SETVBUF */
+	#endif /* !HAVE_SETVBUF */
 
 		if (buffIn or buffOut or buffErr) {
 			std::cout << "لم يستطع تهيئة مخزن النصوص الإفتراضي في نظام ويندوز" << std::endl;
@@ -510,30 +509,30 @@ static AlifIntT alif_setFileMode(const AlifConfig* _config) { // 2327
 		}
 	}
 	else if (_config->interactive) {
-#ifdef _WINDOWS
+	#ifdef _WINDOWS
 		/* Doesn't have to have line-buffered -- use unbuffered */
 		buffOut = setvbuf(stdout, (char*)nullptr, _IONBF, BUFSIZ);
 		if (buffOut) {
 			std::cout << "لم يستطع تهيئة مخزن النصوص الإفتراضي في نظام ويندوز" << std::endl;
 			return -1;
 		}
-#else /* !_WINDOWS */
-#ifdef HAVE_SETVBUF
+	#else /* !_WINDOWS */
+	#ifdef HAVE_SETVBUF
 		buffIn = setvbuf(stdin, (char*)nullptr, _IOLBF, BUFSIZ);
 		buffOut = setvbuf(stdout, (char*)nullptr, _IOLBF, BUFSIZ);
 		if (buffIn or buffOut) {
 			std::cout << "لم يستطع تهيئة مخزن النصوص الإفتراضي" << std::endl;
 			return -1;
 		}
-#endif /* HAVE_SETVBUF */
-#endif /* !_WINDOWS */
+	#endif /* HAVE_SETVBUF */
+	#endif /* !_WINDOWS */
 		/* Leave stderr alone - it should be unbuffered. */
 	}
 
 	return 1;
 }
 
-AlifIntT alifConfig_write(const AlifConfig* _config, AlifDureRun* _dureRun) { // 2368
+AlifIntT alifConfig_write(const AlifConfig* _config, AlifRuntime* _dureRun) { // 2368
 
 	if (alif_setArgcArgv(_config->origArgv.length, _config->origArgv.items) < 0) {
 		// memory error
@@ -642,7 +641,8 @@ static AlifIntT parse_consoleLine(AlifConfig* _config, AlifSizeT* _index) { // 2
 			exit(1);
 		}
 
-	} while (true);
+	}
+	while (true);
 
 
 
@@ -802,8 +802,7 @@ AlifIntT alifConfig_read(AlifConfig* _config) { // 3047
 	AlifIntT status{};
 
 	if (_config->origArgv.length == 0 and !(_config->argv.length == 1
-		and wcscmp(_config->argv.items[0], L"") == 0))
-	{
+		and wcscmp(_config->argv.items[0], L"") == 0)) {
 		if (alifWStringList_copy(&_config->origArgv, &_config->argv) < 0) {
 			// memory error
 			return -1;

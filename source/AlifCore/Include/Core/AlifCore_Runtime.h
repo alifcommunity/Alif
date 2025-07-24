@@ -33,7 +33,7 @@ public:
 	void* tracerData{};
 };
 
-class AlifDureRun { // 159
+class AlifRuntime { // 159
 public:
 	AlifIntT selfInitialized{};
 
@@ -86,10 +86,10 @@ public:
 	AlifInterpreter mainInterpreter{};
 };
 
-extern AlifDureRun _alifRuntime_; // 318
+extern AlifRuntime _alifRuntime_; // 318
 
-extern AlifIntT alifDureRunState_init(AlifDureRun*); // 320
-extern void _alifRuntimeState_fini(AlifDureRun*); // 321
+extern AlifIntT alifDureRunState_init(AlifRuntime*); // 320
+extern void _alifRuntimeState_fini(AlifRuntime*); // 321
 
 
 extern AlifIntT alifDureRun_initialize(); // 329
@@ -99,10 +99,10 @@ extern AlifIntT alifDureRun_initialize(); // 329
 
 extern void _alifRuntime_finalize(void);
 
-static inline AlifThread* alifDureRunState_getFinalizing(AlifDureRun* _dureRun) { // 383
+static inline AlifThread* alifDureRunState_getFinalizing(AlifRuntime* _dureRun) { // 383
 	return (AlifThread*)alifAtomic_loadPtrRelaxed(&_dureRun->finalizing_);
 }
 
-static inline unsigned long alifDureRunState_getFinalizingID(AlifDureRun* _dureRun) { // 388
+static inline unsigned long alifDureRunState_getFinalizingID(AlifRuntime* _dureRun) { // 388
 	return ALIFATOMIC_LOAD_ULONG_RELAXED(&_dureRun->finalizingID);
 }

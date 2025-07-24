@@ -59,4 +59,4 @@ extern AlifIntT _alifConfig_initPathConfig(AlifConfig*, AlifIntT); // 174
 extern AlifIntT alif_preInitFromConfig(AlifConfig*); //* alif
 extern AlifIntT _alifConfig_initImportConfig(AlifConfig*); // 177
 extern AlifIntT alifConfig_read(AlifConfig*); // 178
-extern AlifIntT alifConfig_write(const AlifConfig*, class AlifDureRun*); // 179
+extern AlifIntT alifConfig_write(const AlifConfig*, class AlifRuntime*); // 179

@@ -91,7 +91,7 @@ extern void alifThread_bind(AlifThread*); // 222
 
 AlifObject* _alifThreadState_getDict(AlifThread*); // 231
 
-extern AlifIntT alifInterpreter_enable(AlifDureRun*); // 245
+extern AlifIntT alifInterpreter_enable(AlifRuntime*); // 245
 
 
 // 261

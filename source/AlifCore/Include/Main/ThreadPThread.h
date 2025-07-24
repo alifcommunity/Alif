@@ -8,7 +8,7 @@
 #include <unistd.h>
 
 
- // 20
+// 20
 #if defined(__linux__)
 #   include <sys/syscall.h>     /* syscall(SYS_gettid) */
 #elif defined(__FreeBSD__)
@@ -31,7 +31,7 @@
 
 
 
-#define _CONDATTR_MONOTONIC _alifDureRun_.threads.condAttrMonotonic.ptr // 130
+#define _CONDATTR_MONOTONIC _alifRuntime_.threads.condAttrMonotonic.ptr // 130
 
 
 AlifIntT alifThread_condInit(AlifCondT* _cond) { // 147
@@ -47,7 +47,7 @@ void alifThread_condAfter(long long us, struct timespec* abs) { // 154
 		(void)alifTime_monotonicRaw(&t);
 	}
 	else
-#endif
+	#endif
 	{
 		(void)alifTime_timeRaw(&t);
 	}
@@ -82,8 +82,7 @@ AlifUIntT alifThread_getThreadID() { // 365
 
 #ifdef ALIF_HAVE_THREAD_NATIVE_ID
 unsigned long alifThread_getThreadNativeID() { // 372
-	if (!INITIALIZED)
-	{/*alifThread_initThread(); */}
+	if (!INITIALIZED) {/*alifThread_initThread(); */ }
 #ifdef __APPLE__
 	uint64_t nativeID;
 	(void)pthread_threadid_np(nullptr, &nativeID);
@@ -119,11 +118,11 @@ unsigned long alifThread_getThreadNativeID() { // 372
 
 void ALIF_NO_RETURN alifThread_hangThread(void) { // 421
 	while (1) {
-#if defined(__wasi__)
+	#if defined(__wasi__)
 		sleep(9999999);  // WASI doesn't have pause() ?!
-#else
+	#else
 		pause();
-#endif
+	#endif
 	}
 }
 

@@ -49,7 +49,7 @@ AlifIntT alifRun_fileObject(FILE* _fp, AlifObject* _filename,
 	//	}
 	//}
 	//else {
-		res = alifRun_simpleFileObject(_fp, _filename, _closeIt, _flags);
+	res = alifRun_simpleFileObject(_fp, _filename, _closeIt, _flags);
 	//}
 
 	if (decRefFileName) {
@@ -132,8 +132,8 @@ AlifIntT alifRun_simpleFileObject(FILE* _fp, AlifObject* _filename,
 		//	ret = -1;
 		//	goto done;
 		//}
-		v = alifRun_file(_fp, _filename, ALIF_FILE_INPUT, dict, dict,
-			_closeIt, _flags);
+	v = alifRun_file(_fp, _filename, ALIF_FILE_INPUT, dict, dict,
+		_closeIt, _flags);
 	//}
 	//flush_io();
 	if (v == nullptr) {
@@ -267,7 +267,7 @@ static void _alifErr_printEx(AlifThread* _thread, AlifIntT _setSysLastVars) { //
 	//	_alifErr_writeUnraisableMsg("in audit hook", nullptr);
 	//}
 	if (hook) {
-		AlifObject* args[3] = {typ, exc, tb};
+		AlifObject* args[3] = { typ, exc, tb };
 		AlifObject* result = alifObject_vectorCall(hook, args, 3, nullptr);
 		if (result == nullptr) {
 			handle_systemExit();
@@ -563,34 +563,34 @@ void _alifErr_display(AlifObject* file, AlifObject* unused, AlifObject* value, A
 		}
 	}
 
-//	AlifIntT unhandled_keyboard_interrupt = _alifDureRun_.signals.unhandledKeyboardInterrupt;
-//
-//	// Try first with the stdlib traceback module
-//	AlifObject* traceback_module = alifImport_importModule("traceback");
-//
-//	if (traceback_module == nullptr) {
-//		goto fallback;
-//	}
-//
-//	AlifObject* print_exception_fn = alifObject_getAttrString(traceback_module, "_print_exception_bltin");
-//
-//	if (print_exception_fn == nullptr or !ALIFCALLABLE_CHECK(print_exception_fn)) {
-//		ALIF_DECREF(traceback_module);
-//		goto fallback;
-//	}
-//
-//	AlifObject* result = alifObject_callOneArg(print_exception_fn, value);
-//
-//	ALIF_DECREF(traceback_module);
-//	ALIF_XDECREF(print_exception_fn);
-//	if (result) {
-//		ALIF_DECREF(result);
-//		_alifDureRun_.signals.unhandledKeyboardInterrupt = unhandled_keyboard_interrupt;
-//		return;
-//	}
-//fallback:
-//	_alifDureRun_.signals.unhandledKeyboardInterrupt = unhandled_keyboard_interrupt;
-//	alifErr_clear();
+	//	AlifIntT unhandled_keyboard_interrupt = _alifRuntime_.signals.unhandledKeyboardInterrupt;
+	//
+	//	// Try first with the stdlib traceback module
+	//	AlifObject* traceback_module = alifImport_importModule("traceback");
+	//
+	//	if (traceback_module == nullptr) {
+	//		goto fallback;
+	//	}
+	//
+	//	AlifObject* print_exception_fn = alifObject_getAttrString(traceback_module, "_print_exception_bltin");
+	//
+	//	if (print_exception_fn == nullptr or !ALIFCALLABLE_CHECK(print_exception_fn)) {
+	//		ALIF_DECREF(traceback_module);
+	//		goto fallback;
+	//	}
+	//
+	//	AlifObject* result = alifObject_callOneArg(print_exception_fn, value);
+	//
+	//	ALIF_DECREF(traceback_module);
+	//	ALIF_XDECREF(print_exception_fn);
+	//	if (result) {
+	//		ALIF_DECREF(result);
+	//		_alifRuntime_.signals.unhandledKeyboardInterrupt = unhandled_keyboard_interrupt;
+	//		return;
+	//	}
+	//fallback:
+	//	_alifRuntime_.signals.unhandledKeyboardInterrupt = unhandled_keyboard_interrupt;
+	//	alifErr_clear();
 	ExceptionPrintContext ctx{};
 	ctx.file = file;
 
@@ -668,7 +668,7 @@ static AlifObject* alifRun_file(FILE* _fp, AlifObject* _filename,
 static AlifObject* runEval_codeObj(AlifThread* _thread, AlifCodeObject* _co,
 	AlifObject* _globals, AlifObject* _locals) { // 1258
 	AlifObject* v{};
-	//_alifDureRun_.signals.unhandledKeyboardInterrupt = 0;
+	//_alifRuntime_.signals.unhandledKeyboardInterrupt = 0;
 
 	if (!_globals or !ALIFDICT_CHECK(_globals)) {
 		//alifErr_setString(_alifExcSystemError_, "globals must be a real dict");
@@ -680,15 +680,14 @@ static AlifObject* runEval_codeObj(AlifThread* _thread, AlifCodeObject* _co,
 	}
 	if (!hasBuiltins) {
 		if (alifDict_setItemString(_globals, "__builtins__",
-			_thread->interpreter->builtins) < 0)
-		{
+			_thread->interpreter->builtins) < 0) {
 			return nullptr;
 		}
 	}
 
 	v = alifEval_evalCode((AlifObject*)_co, _globals, _locals);
 	//if (!v and _alifErr_Occurred(_thread) == _alifExcKeyboardInterrupt_) {
-	//	_alifDureRun_.signals.unhandledKeyboardInterrupt = 1;
+	//	_alifRuntime_.signals.unhandledKeyboardInterrupt = 1;
 	//}
 	return v;
 }

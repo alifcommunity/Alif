@@ -79,7 +79,7 @@ public:
 		AlifSizeT stackSize{};
 	} threads;
 
-	class AlifDureRun* dureRun{};
+	class AlifRuntime* dureRun{};
 
 	AlifThread* finalizing_{};
 	unsigned long finalizingID{};

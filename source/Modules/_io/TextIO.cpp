@@ -572,7 +572,7 @@ static AlifIntT _ioTextIOWrapper___init__Impl(TextIO* _self, AlifObject* _buffer
 	_self->encodeFunc = nullptr;
 	_self->b2cratIO = 0.0;
 
-	if (_encoding == nullptr /*and _alifDureRun_.preConfig.utf8Mode*/) {
+	if (_encoding == nullptr /*and _alifRuntime_.preConfig.utf8Mode*/) {
 		_self->encoding = &ALIF_STR(utf_8);
 	}
 	//else if (_encoding == nullptr or (strcmp(_encoding, "locale") == 0)) {

@@ -217,9 +217,9 @@ AlifIntT alif_decodeLocaleEx(const char* _arg, wchar_t** _wstr, AlifUSizeT* _wle
 //#ifdef ALIF_FORCE_UTF8_FS_ENCODING
 //	return _alif_decodeUTF8Ex(_arg, strlen(_arg), _wstr, _wlen, _reason, _errors);
 //#else
-//	AlifIntT useUTF8 = (_alifDureRun_.preConfig.utf8Mode >= 1);
+//	AlifIntT useUTF8 = (_alifRuntime_.preConfig.utf8Mode >= 1);
 //#ifdef _WINDOWS
-//	useUTF8 |= (_alifDureRun_.preConfig.legacyWindowsFSEncoding == 0);
+//	useUTF8 |= (_alifRuntime_.preConfig.legacyWindowsFSEncoding == 0);
 //#endif
 //	if (useUTF8) {
 //		return _alif_decodeUTF8Ex(_arg, strlen(_arg), _wstr, _wlen, _reason, _errors);
@@ -367,9 +367,9 @@ static AlifIntT encode_localeEX(const wchar_t* _text, char** _str, AlifUSizeT* _
 //	return _alif_encodeUTF8Ex(_text, _str, _errorpos, _reason,
 //		_rawMalloc, _errors);
 //#else
-//	AlifIntT useUTF8 = (_alifDureRun_.preConfig.utf8Mode >= 1);
+//	AlifIntT useUTF8 = (_alifRuntime_.preConfig.utf8Mode >= 1);
 //#ifdef _WINDOWS
-//	useUTF8 |= (_alifDureRun_.preConfig.legacyWindowsFSEncoding == 0);
+//	useUTF8 |= (_alifRuntime_.preConfig.legacyWindowsFSEncoding == 0);
 //#endif
 //	if (useUTF8) {
 //		return _alif_encodeUTF8Ex(_text, _str, _errorPos, _reason,

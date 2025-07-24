@@ -6,7 +6,7 @@
 
 
 
-#define ALIF_TLS_ENTRIES (_alifDureRun_.threads.stubs.tlsEntries) // 5
+#define ALIF_TLS_ENTRIES (_alifRuntime_.threads.stubs.tlsEntries) // 5
 
 AlifIntT pthread_mutex_destroy(pthread_mutex_t* mutex) { // 15
 	return 0;
