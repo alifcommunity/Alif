@@ -803,15 +803,14 @@ static void destroy_key(void* _key) { // 2604
 
 
 
-AlifIntT alifCode_init(AlifInterpreter* _interp) { // 2611
+AlifStatus alifCode_init(AlifInterpreter* _interp) { // 2611
 	AlifCodeState* state = &_interp->codeState;
 	state->constants = alifHashTable_newFull(&hash_const, &compare_constants,
 		&destroy_key, nullptr, nullptr);
 	if (state->constants == nullptr) {
-		//return ALIFSTATUS_NO_MEMORY();
-		return -1; //* alif
+		return ALIFSTATUS_NO_MEMORY();
 	}
-	return 1;
+	return ALIFSTATUS_OK();
 }
 
 

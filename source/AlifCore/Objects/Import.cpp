@@ -7,6 +7,7 @@
 #include "AlifCore_Errors.h"
 #include "AlifCore_Namespace.h"
 #include "AlifCore_Object.h"
+#include "AlifCore_InitConfig.h"
 
 
 #include "Marshal.h"
@@ -1720,20 +1721,21 @@ err:
 
 // alif
 static void init_importFileTab(); //* delete
-AlifIntT alifImport_init() { // 3954
+AlifStatus alifImport_init() { // 3954
 
 	if (INITTABLE != nullptr) {
-		// error
-		return -1; //* alif
+		return ALIFSTATUS_ERR("global import state already initialized"); //* alif
 	}
 
+	AlifStatus status = ALIFSTATUS_OK();
+
 	if (initBuildin_modulesTable() != 0) {
-		return -1;
+		return ALIFSTATUS_NO_MEMORY();
 	}
 
 	init_importFileTab(); //* alif //* delete
 
-	return 1;
+	return status;
 }
 
 
@@ -1744,7 +1746,7 @@ AlifIntT alifImport_init() { // 3954
 
 
 
-AlifIntT _alifImport_initCore(AlifThread* _thread,
+AlifStatus _alifImport_initCore(AlifThread* _thread,
 	AlifObject* _sysmod, AlifIntT _importLib) { // 4026
 	// XXX Initialize here: interp->modules and interp->importFunc.
 	// XXX Initialize here: sys.modules and sys.meta_path.
@@ -1755,7 +1757,7 @@ AlifIntT _alifImport_initCore(AlifThread* _thread,
 		//}
 	}
 
-	return 1;
+	return ALIFSTATUS_OK();
 }
 
 

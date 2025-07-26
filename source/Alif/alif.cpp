@@ -16,13 +16,21 @@
 static AlifStatus alifMain_init(AlifArgv* _args) {
 
 	AlifStatus status{};
-	AlifConfig config{};
 
 	status = _alifRuntime_initialize();
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		return status;
 	}
 
+	AlifPreConfig preconfig{};
+	alifPreConfig_initAlifConfig(&preconfig);
+
+	//status = _alif_preInitializeFromAlifArgv(&preconfig, _args); //* here
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+
+	AlifConfig config{};
 	alifConfig_initAlifConfig(&config);
 
 	/*
@@ -252,7 +260,7 @@ static void alifMain_runAlif(AlifIntT* _exitcode) { // 614
 
 	AlifObject* path0{}; //* alif
 
-	if (_alifPathConfig_updateGlobal(config) != 1) {
+	if (ALIFSTATUS_EXCEPTION(_alifPathConfig_updateGlobal(config))) {
 		goto error;
 	}
 

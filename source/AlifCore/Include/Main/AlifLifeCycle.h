@@ -5,7 +5,7 @@
 
 
 
-AlifIntT alif_initFromConfig(const AlifConfig*); // 25
+AlifStatus alif_initFromConfig(const AlifConfig*); // 25
 
 void ALIF_NO_RETURN alif_exit(AlifIntT); // 30
 

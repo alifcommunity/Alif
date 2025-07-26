@@ -79,7 +79,7 @@ public:
 		AlifSizeT stackSize{};
 	} threads;
 
-	class AlifRuntime* dureRun{};
+	class AlifRuntime* runtime{};
 
 	AlifThread* finalizing_{};
 	unsigned long finalizingID{};
@@ -173,7 +173,7 @@ static inline AlifThread* alifInterpreter_getFinalizing(AlifInterpreter* _interp
 	return (AlifThread*)alifAtomic_loadPtrRelaxed(&_interp->finalizing);
 }
 
-AlifIntT alifInterpreter_new(AlifThread*, AlifInterpreter**); // 399
+AlifStatus alifInterpreter_new(AlifThread*, AlifInterpreter**); // 399
 
 // 407
 #define RARE_EVENT_INTERP_INC(_interp, _name) \

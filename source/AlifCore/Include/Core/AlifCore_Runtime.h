@@ -25,6 +25,12 @@ public:
 };
 
 
+class AlifAuditHookEntry {
+public:
+	class AlifAuditHookEntry* next{};
+	AlifAuditHookFunction hookCFunction{};
+	void* userData{};
+};
 
 
 class RefTracerDureRunState { // 198
@@ -76,8 +82,17 @@ public:
 	AlifRWMutex stopTheWorldMutex{};
 	StopTheWorldState stopTheWorld{};
 
+	AlifPreConfig preConfig{};
+
+	AlifOpenCodeHookFunction openCodeHook{};
+	void* openCodeUserdata{};
+	struct {
+		AlifMutex mutex{};
+		AlifAuditHookEntry* head{};
+	} auditHooks{};
 
 	AlifFloatRuntimeState floatState{};
+	AlifUnicodeRuntimeState unicodeState{};
 	TypesDureRunState types{};
 
 	AlifCachedObjects cachedObjects{};

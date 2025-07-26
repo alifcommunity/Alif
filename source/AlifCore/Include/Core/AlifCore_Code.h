@@ -29,7 +29,7 @@ public:
 };
 
 
-extern AlifIntT alifCode_init(AlifInterpreter*); // 75
+extern AlifStatus alifCode_init(AlifInterpreter*); // 75
 
 #define CODE_MAX_WATCHERS 8 // 78
 

@@ -1089,12 +1089,11 @@ static AlifTypeObject* staticTypes[] = {
 };
 
 
-AlifIntT alifTypes_initTypes(AlifInterpreter* _interp) { // 2362
+AlifStatus alifTypes_initTypes(AlifInterpreter* _interp) { // 2362
 	for (AlifUSizeT i = 0; i < ALIF_ARRAY_LENGTH(staticTypes); i++) {
 		AlifTypeObject* type = staticTypes[i];
 		if (alifStaticType_initBuiltin(_interp, type) < 0) {
-			//return ALIFSTATUS_ERR("Can't initialize builtin type");
-			return -1; // temp
+			return ALIFSTATUS_ERR("Can't initialize builtin type");
 		}
 		if (type == &_alifTypeType_) {
 			// nothing
@@ -1105,7 +1104,7 @@ AlifIntT alifTypes_initTypes(AlifInterpreter* _interp) { // 2362
 	//	return ALIFSTATUS_ERR("Can't initialize generic types");
 	//}
 
-	return 1;
+	return ALIFSTATUS_OK();
 }
 
 

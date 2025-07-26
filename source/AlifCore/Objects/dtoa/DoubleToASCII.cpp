@@ -2,7 +2,7 @@
 
 #include "AlifCore_DoubleToASCII.h"
 #include "AlifCore_State.h"
-
+#include "AlifCore_InitConfig.h"
 
 
 #include "float.h"
@@ -2271,15 +2271,14 @@ failed_malloc:
 
 
 
-AlifIntT _alifDtoa_init(AlifInterpreter* interp) { // 2804
+AlifStatus _alifDtoa_init(AlifInterpreter* interp) { // 2804
 #if _ALIF_SHORT_FLOAT_REPR == 1 and !defined(ALIF_USING_MEMORY_DEBUGGER)
 	Bigint** p5s = interp->dtoa.p5s;
 
 	// 5**4 = 625
 	Bigint* p5 = i2b(625);
 	if (p5 == nullptr) {
-		//return alifStatus_noMemory();
-		return -1;
+		return ALIFSTATUS_NO_MEMORY();
 	}
 	p5s[0] = p5;
 
@@ -2287,12 +2286,11 @@ AlifIntT _alifDtoa_init(AlifInterpreter* interp) { // 2804
 	for (AlifSizeT i = 1; i < BIGINT_POW5SIZE; i++) {
 		p5 = mult(p5, p5);
 		if (p5 == nullptr) {
-			//return alifStatus_noMemory();
-			return -1;
+			return ALIFSTATUS_NO_MEMORY();
 		}
 		p5s[i] = p5;
 	}
 
 #endif
-	return 1;
+	return ALIFSTATUS_OK();
 }

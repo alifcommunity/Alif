@@ -17,3 +17,8 @@ AlifIntT alifFile_writeString(const char*, AlifObject*); // 16
 
 
 /* ------------------------------------------------------------------------------------------------ */
+
+
+
+
+typedef AlifObject* (*AlifOpenCodeHookFunction)(AlifObject*, void*);

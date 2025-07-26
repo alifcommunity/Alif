@@ -95,6 +95,11 @@ extern AlifIntT _alifOpen_osfHandleNoRaise(void*, AlifIntT); // 197
 
 #endif  /* _WINDOWS */
 
+#define DECODE_LOCALE_ERR(_name, _len) \
+    if(_len == (AlifUSizeT)-2) { \
+     return ALIFSTATUS_ERR("cannot decode " _name); \
+     } else return ALIFSTATUS_NO_MEMORY()
+
 extern AlifIntT alif_decodeUTF8Ex(const char*, AlifSizeT,
 	wchar_t**, AlifUSizeT*, const char**, AlifErrorHandler_); // 210
 

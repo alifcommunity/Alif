@@ -346,6 +346,9 @@
     <ClCompile Include="..\source\Modules\_io\BufferedIO.cpp">
       <Filter>Modules\_io</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\PreConfig.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">

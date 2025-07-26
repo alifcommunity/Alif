@@ -26,8 +26,33 @@ public:
 };
 
 // لماذا يوجد append و insert وتقومان بنفس الوظيفة ??
-AlifIntT alifWStringList_append(AlifWStringList*, const wchar_t*); // 38
-AlifIntT alifWStringList_insert(AlifWStringList*, AlifSizeT, const wchar_t*);
+AlifStatus alifWStringList_append(AlifWStringList*, const wchar_t*); // 38
+AlifStatus alifWStringList_insert(AlifWStringList*, AlifSizeT, const wchar_t*);
+
+
+/* ---------------------------------- AlifPreConfig ---------------------------------- */
+
+class AlifPreConfig {
+public:
+	AlifIntT configInit{};
+	AlifIntT parseArgv{};
+	AlifIntT isolated{};
+	AlifIntT useEnvironment{};
+	AlifIntT configureLocale{};
+	AlifIntT coerceCLocale{};
+	AlifIntT coerceCLocaleWarn{};
+
+#ifdef _WINDOWS
+	AlifIntT legacyWindowsFSEncoding{};
+#endif
+
+	AlifIntT utf8Mode{};
+	AlifIntT devMode{};
+};
+
+void alifPreConfig_initAlifConfig(AlifPreConfig*);
+
+
 
 /* ----------------------------------- AlifConfig ------------------------------------ */
 class AlifConfig { // 134
@@ -93,6 +118,6 @@ AlifIntT alif_setStdioLocale(const AlifConfig*); //* alif
 void alifConfig_initAlifConfig(AlifConfig*); // 239
 
 void alifConfig_clear(AlifConfig*); // 241
-AlifIntT alifConfig_setString(AlifConfig*, wchar_t**, const wchar_t*);
+AlifStatus alifConfig_setString(AlifConfig*, wchar_t**, const wchar_t*);
 
 

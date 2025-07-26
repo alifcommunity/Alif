@@ -79,7 +79,7 @@ public:
 
 
 
-extern AlifIntT alifTypes_initTypes(AlifInterpreter*); // 144
+extern AlifStatus alifTypes_initTypes(AlifInterpreter*); // 144
 
 
 #define MAX_EQUIV 10

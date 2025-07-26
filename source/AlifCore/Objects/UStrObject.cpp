@@ -12,6 +12,7 @@
 #include "AlifCore_CriticalSection.h"
 #include "AlifCore_Format.h"
 #include "AlifCore_UStrObjectStaticStrInit.h"
+#include "AlifCore_InitConfig.h"
 
 
 #include <Equal.h> // 61
@@ -187,7 +188,7 @@ static AlifIntT init_internedDict(AlifInterpreter* interp) { // 302
 }
 
 
-static AlifIntT initGlobal_internedStrings(AlifInterpreter* _interp) { // 308
+static AlifStatus initGlobal_internedStrings(AlifInterpreter* _interp) { // 308
 	AlifHashTableAllocatorT hashTableAlloc = { alifMem_dataAlloc, alifMem_dataFree };
 
 	INTERNED_STRINGS = alifHashTable_newFull(
@@ -197,9 +198,8 @@ static AlifIntT initGlobal_internedStrings(AlifInterpreter* _interp) { // 308
 		nullptr,
 		&hashTableAlloc );
 	if (INTERNED_STRINGS == nullptr) {
-		//alifErr_clear();
-		//return ALIFSTATUS_ERR("failed to create global interned dict");
-		return -1;
+		alifErr_clear();
+		return ALIFSTATUS_ERR("failed to create global interned dict");
 	}
 
 	_alifUStr_initStaticStrings(_interp);
@@ -208,7 +208,7 @@ static AlifIntT initGlobal_internedStrings(AlifInterpreter* _interp) { // 308
 		AlifObject* s = LATIN1(i);
 		_alifUStr_internStatic(_interp, &s);
 	}
-	return 1;
+	return ALIFSTATUS_OK();
 }
 
 
@@ -6287,21 +6287,20 @@ AlifTypeObject _alifUStrType_ = { // 15235
 };
 
 
-AlifIntT alifUStr_initGlobalObjects(AlifInterpreter* _interp) { // 15318
+AlifStatus alifUStr_initGlobalObjects(AlifInterpreter* _interp) { // 15318
 	if (alif_isMainInterpreter(_interp)) {
-		AlifIntT status = initGlobal_internedStrings(_interp);
-		if (status < 1) {
+		AlifStatus status = initGlobal_internedStrings(_interp);
+		if (ALIFSTATUS_EXCEPTION(status)) {
 			return status;
 		}
 	}
 
 	if (init_internedDict(_interp)) {
-		//alifErr_clear();
-		//return ALIFSTATUS_ERR("failed to create interned dict");
-		return -1;
+		alifErr_clear();
+		return ALIFSTATUS_ERR("failed to create interned dict");
 	}
 	 
-	return 1;
+	return ALIFSTATUS_OK();
 }
 
 

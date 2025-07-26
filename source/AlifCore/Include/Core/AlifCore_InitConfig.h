@@ -16,7 +16,7 @@
     { \
         .type = AlifStatus::AlifStatus_Type_ERROR, \
         .func = ALIFSTATUS_GET_FUNC(), \
-        .errMsg = (_errMsg),		\
+        .errMsg = (_errMsg)		\
 	}
 #define ALIFSTATUS_NO_MEMORY_ERRMSG "فشل الحجز في الذاكرة"
 #define ALIFSTATUS_NO_MEMORY() ALIFSTATUS_ERR(ALIFSTATUS_NO_MEMORY_ERRMSG)
@@ -46,7 +46,7 @@ public:
 	wchar_t* const* wcharArgv;
 };
 
-AlifIntT alifArgv_asWStringList(AlifConfig*, AlifArgv*); // 76
+AlifStatus alifArgv_asWStringList(AlifConfig*, AlifArgv*); // 76
 
 
 
@@ -70,11 +70,11 @@ enum AlifConfigGIL_ { // 156
 	AlifConfig_GIL_Enable = 1,
 };
 
-extern AlifIntT alifConfig_copy(AlifConfig*, const AlifConfig*); // 171
+extern AlifStatus alifConfig_copy(AlifConfig*, const AlifConfig*); // 171
 
-extern AlifIntT _alifConfig_initPathConfig(AlifConfig*, AlifIntT); // 174
+extern AlifStatus _alifConfig_initPathConfig(AlifConfig*, AlifIntT); // 174
 
-extern AlifIntT alif_preInitFromConfig(AlifConfig*); //* alif
-extern AlifIntT _alifConfig_initImportConfig(AlifConfig*); // 177
-extern AlifIntT alifConfig_read(AlifConfig*); // 178
-extern AlifIntT alifConfig_write(const AlifConfig*, class AlifRuntime*); // 179
+extern AlifStatus alif_preInitFromConfig(AlifConfig*); //* alif
+extern AlifStatus _alifConfig_initImportConfig(AlifConfig*); // 177
+extern AlifStatus alifConfig_read(AlifConfig*); // 178
+extern AlifStatus alifConfig_write(const AlifConfig*, class AlifRuntime*); // 179
