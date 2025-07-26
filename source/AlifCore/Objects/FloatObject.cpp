@@ -556,6 +556,29 @@ static AlifObject* float_abs(AlifFloatObject* _v) { // 827
 	return alifFloat_fromDouble(fabs(_v->val));
 }
 
+static AlifObject* float_sqrt(AlifObject* _v) { //* alif
+	AlifFloatObject* a_{}, * res{};
+
+	a_ = (AlifFloatObject*)ALIF_NEWREF(_v);
+
+	if (a_->val < 0) {
+		return nullptr;
+	}
+
+	double val = alifFloat_asDouble((AlifObject*)a_);
+
+	double sqrtVal = sqrt(val);
+
+	res = (AlifFloatObject*)alifMem_objAlloc(sizeof(AlifFloatObject) + sizeof(double));
+	if (res == nullptr) return nullptr;
+
+	alifObject_init((AlifObject*)res, &_alifFloatType_);
+	res->val = sqrtVal;
+
+	ALIF_DECREF(a_);
+	return (AlifObject*)res;
+}
+
 static AlifIntT float_bool(AlifFloatObject* _v) { // 833
 	return _v->val != 0.0;
 }
@@ -682,6 +705,7 @@ static AlifNumberMethods _floatAsNumber_ = { // 1811
 	.negative = (UnaryFunc)float_neg,
 	.positive = float_float,
 	.absolute = (UnaryFunc)float_abs,
+	.sqrt = (UnaryFunc)float_sqrt,
 	.bool_ = (Inquiry)float_bool,
 	.invert = 0,
 	.lshift = 0,

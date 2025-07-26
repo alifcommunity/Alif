@@ -4900,8 +4900,8 @@ static AlifIntT codegen_visitExpr(AlifCompiler* _c, ExprTy _e) {
 			ADDOP(_c, loc, unaryop(_e->V.unaryOp.op));
 		}
 		break;
-		//case ExprK_::LambdaK:
-		//	return codegen_lambda(_c, _e);
+	//case ExprK_::LambdaK:
+	//	return codegen_lambda(_c, _e);
 	case ExprK_::IfExprK:
 		return codegen_ifExpr(_c, _e);
 	case ExprK_::DictK:
