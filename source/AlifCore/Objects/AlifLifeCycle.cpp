@@ -48,8 +48,108 @@ void _alifRuntime_finalize(void) { // 129
 	runtimeInitialized = 0;
 }
 
+AlifIntT _alif_legacyLocaleDetected(AlifIntT _warn) { // 185
+#ifndef _WINDOWS
+	if (!_warn) {
+		const char* localeOverride = getenv("LC_ALL");
+		if (localeOverride != nullptr and *localeOverride != '\0') {
+			return 0;
+		}
+	}
 
-char* alif_setLocale(AlifIntT category) {  // 332
+	const char* ctypeLoc = setlocale(LC_CTYPE, nullptr);
+	return ctypeLoc != nullptr and strcmp(ctypeLoc, "C") == 0;
+#else
+	/* Windows uses code pages instead of locales, so no locale is legacy */
+	return 0;
+#endif
+}
+
+
+class LocaleCoercionTarget { // 228
+public:
+	const char* localeName{};
+};
+
+static LocaleCoercionTarget _TargetLocales_[] = { // 232
+	{"C.UTF-8"},
+	{"C.utf8"},
+	{"UTF-8"},
+	{nullptr}
+};
+
+// 253
+#ifdef ALIF_COERCE_C_LOCALE
+static const char _cLocaleCoercionWarning_[] =
+"Alif detected LC_CTYPE=C: LC_CTYPE coerced to %.20s (set another locale "
+"or ALIFCOERCECLOCALE=0 to disable this locale coercion behavior).\n";
+
+static AlifIntT _coerce_defaultLocaleSettings(AlifIntT _warn, const LocaleCoercionTarget* _target) {
+	const char* newloc = _target->localeName;
+
+	/* Reset locale back to currently configured defaults */
+	_alif_setLocaleFromEnv(LC_ALL);
+
+	/* Set the relevant locale environment variable */
+	if (setenv("LC_CTYPE", newloc, 1)) {
+		fprintf(stderr,
+			"Error setting LC_CTYPE, skipping C locale coercion\n");
+		return 0;
+	}
+	if (_warn) {
+		fprintf(stderr, _cLocaleCoercionWarning_, newloc);
+	}
+
+	/* Reconfigure with the overridden environment variables */
+	_alif_setLocaleFromEnv(LC_ALL);
+	return 1;
+}
+#endif
+
+AlifIntT _alif_coerceLegacyLocale(AlifIntT _warn) { // 282
+	AlifIntT coerced = 0;
+#ifdef ALIF_COERCE_C_LOCALE
+	char* oldloc = nullptr;
+
+	oldloc = alifMem_strDup(setlocale(LC_CTYPE, nullptr));
+	if (oldloc == nullptr) {
+		return coerced;
+	}
+
+	const char* localeOverride = getenv("LC_ALL");
+	if (localeOverride == nullptr or *localeOverride == '\0') {
+		/* LC_ALL is also not set (or is set to an empty string) */
+		const LocaleCoercionTarget* target = nullptr;
+		for (target = _TargetLocales_; target->localeName; target++) {
+			const char* newLocale = setlocale(LC_CTYPE,
+				target->localeName);
+			if (newLocale != nullptr) {
+			#if !defined(ALIF_FORCE_UTF8_LOCALE) and defined(HAVE_LANGINFO_H) and defined(CODESET)
+				char* codeset = nl_langinfo(CODESET);
+				if (!codeset or *codeset == '\0') {
+					/* CODESET is not set or empty, so skip coercion */
+					newLocale = nullptr;
+					_alif_setLocaleFromEnv(LC_CTYPE);
+					continue;
+				}
+			#endif
+				/* Successfully configured locale, so make it the default */
+				coerced = _coerce_defaultLocaleSettings(_warn, target);
+				goto done;
+			}
+		}
+	}
+	/* No C locale warning here, as Py_Initialize will emit one later */
+
+	setlocale(LC_CTYPE, oldloc);
+
+done:
+	alifMem_dataFree(oldloc);
+#endif
+	return coerced;
+}
+
+char* _alif_setLocaleFromEnv(AlifIntT category) {  // 332
 
 	char* res;
 #ifdef __ANDROID__
@@ -450,22 +550,59 @@ AlifStatus _alif_preInitializeFromAlifArgv(const AlifPreConfig* _srcConfig,
 		return status;
 	}
 
-	status = _alifPreConfig_read(&config, _args); //* here
+	status = _alifPreConfig_read(&config, _args);
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		return status;
 	}
 
-	//status = _alifPreConfig_write(&config);
-	//if (ALIFSTATUS_EXCEPTION(status)) {
-	//	return status;
-	//}
+	status = _alifPreConfig_write(&config);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
 	runtime->preinitializing = 0;
 	runtime->preinitialized = 1;
 	return ALIFSTATUS_OK();
 }
 
-static AlifStatus alifInit_core(AlifRuntime* _dureRun,
+AlifStatus alif_preInitialize(const AlifPreConfig* _srcConfig) { // 1008
+	return _alif_preInitializeFromAlifArgv(_srcConfig, nullptr);
+}
+
+AlifStatus _alif_preInitializeFromConfig(const AlifConfig* _config,
+	const AlifArgv* _args) { // 1016
+
+	AlifStatus status = _alifRuntime_initialize();
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+	AlifRuntime* runtime = &_alifRuntime_;
+
+	if (runtime->preinitialized) {
+		/* Already initialized: do nothing */
+		return ALIFSTATUS_OK();
+	}
+
+	AlifPreConfig preconfig{};
+
+	_alifPreConfig_initFromConfig(&preconfig, _config);
+
+	if (!_config->parseArgv) {
+		return alif_preInitialize(&preconfig);
+	}
+	else if (_args == nullptr) {
+		AlifArgv config_args = {
+			.argc = _config->argv.length,
+			.useBytesArgv = 0,
+			.wcharArgv = _config->argv.items };
+		return _alif_preInitializeFromAlifArgv(&preconfig, &config_args);
+	}
+	else {
+		return _alif_preInitializeFromAlifArgv(&preconfig, _args);
+	}
+}
+
+static AlifStatus alifInit_core(AlifRuntime* _runtime,
 	const AlifConfig* _config, AlifThread** _threadPtr) { // 1069
 
 	AlifStatus status{};
@@ -479,8 +616,8 @@ static AlifStatus alifInit_core(AlifRuntime* _dureRun,
 	status = alifConfig_read(&config);
 	if (ALIFSTATUS_EXCEPTION(status)) goto done;
 
-	if (!_dureRun->coreInitialized) {
-		status = alifInit_config(_dureRun, _threadPtr, &config);
+	if (!_runtime->coreInitialized) {
+		status = alifInit_config(_runtime, _threadPtr, &config);
 	}
 	else {
 		//status = alifInit_coreReconfig(_dureRun, _threadPtr, &config);

@@ -18,8 +18,10 @@ extern AlifStatus alifGILState_init(AlifInterpreter*); // 63
 
 extern AlifStatus _alif_preInitializeFromAlifArgv(const AlifPreConfig*, const class AlifArgv*); // 69
 
+extern AlifStatus _alif_preInitializeFromConfig(const AlifConfig*, const AlifArgv*); // 72
 
+extern AlifIntT _alif_coerceLegacyLocale(AlifIntT); // 108
+extern AlifIntT _alif_legacyLocaleDetected(AlifIntT);
 
-
-char* alif_setLocale(AlifIntT); // 112
+char* _alif_setLocaleFromEnv(AlifIntT); // 112
 

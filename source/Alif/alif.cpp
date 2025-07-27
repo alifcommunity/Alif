@@ -22,10 +22,16 @@ static AlifStatus alifMain_init(AlifArgv* _args) {
 		return status;
 	}
 
+	// يجب تهيئة ذاكرة ألف العامة قبل البدأ بالبرنامج
+	//	لأنه سيتم أستخدامها خلال كامل البرنامج
+	if (alif_mainMemoryInit() < 1) {
+		return ALIFSTATUS_NO_MEMORY();
+	}
+
 	AlifPreConfig preconfig{};
 	alifPreConfig_initAlifConfig(&preconfig);
 
-	status = _alif_preInitializeFromAlifArgv(&preconfig, _args); //* here
+	status = _alif_preInitializeFromAlifArgv(&preconfig, _args);
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		return status;
 	}
@@ -33,23 +39,17 @@ static AlifStatus alifMain_init(AlifArgv* _args) {
 	AlifConfig config{};
 	alifConfig_initAlifConfig(&config);
 
-	/*
-		- بما أن لغة ألف لغة عربية بالتالي
-		يجب ترميزها قبل البدأ بالبرنامج
-		- يجب تهيئة ذاكرة ألف العامة قبل البدأ بالبرنامج
-		لأنه سيتم أستخدامها خلال كامل البرنامج
-	*/
-	status = alif_preInitFromConfig(&config);
+	if (_args->useBytesArgv) {
+		status = alifConfig_setBytesArgv(&config, _args->argc, _args->bytesArgv);
+	}
+	else {
+		status = alifConfig_setArgv(&config, _args->argc, _args->wcharArgv);
+	}
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		goto done;
 	}
 
-	status = alifArgv_asWStringList(&config, _args);
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		goto done;
-	}
-
-	status = alif_initFromConfig(&config);
+	status = alif_initFromConfig(&config); //* here
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		goto done;
 	}

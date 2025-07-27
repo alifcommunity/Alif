@@ -16,40 +16,47 @@ static const LongOption _longOpts_[] = {
 	هنا يتم عمل تحليل لسطر الطرفية
 */
 
-
-AlifSizeT _optIdx_ = 1;
+AlifIntT _alifOSOptErr_ = 1;
+AlifSizeT _alifOSOptInd_ = 1;
 static const wchar_t* _optPtr_ = L"";
-const wchar_t* _optArg_ = nullptr;
+const wchar_t* _alifOSOptArg_ = nullptr;
 
 
-void alif_resetGetOption() { // 52
-	_optIdx_ = 1;
-	_optArg_ = nullptr;
+void _alifOS_resetGetOpt(void) { // 52
+	_alifOSOptErr_ = 1;
+	_alifOSOptInd_ = 1;
+	_alifOSOptArg_ = nullptr;
 	_optPtr_ = L"";
 }
 
 
-AlifIntT alif_getOption(AlifSizeT _argc, wchar_t* const* _argv, AlifIntT* _longIndex) { // 60
+AlifIntT _alifOS_getOpt(AlifSizeT _argc, wchar_t* const* _argv, AlifIntT* _longIndex) { // 60
 	wchar_t* ptr{};
 	wchar_t option{};
 
 	if (*_optPtr_ == '\0') {
-		if (_optIdx_ >= _argc) {
+		if (_alifOSOptInd_ >= _argc) {
 			return -1;
 		}
-		else if (_argv[_optIdx_][0] != L'-' or _argv[_optIdx_][1] == L'\0') {
+	#ifdef _WINDOWS
+		else if (wcscmp(_argv[_alifOSOptInd_], L"/?") == 0) {
+			++_alifOSOptInd_;
+			return 'h';
+		}
+	#endif
+		else if (_argv[_alifOSOptInd_][0] != L'-' or _argv[_alifOSOptInd_][1] == L'\0') {
 			return -1;
 		}
-		else if (wcscmp(_argv[_optIdx_], L"--version") == 0) {
-			++_optIdx_;
+		else if (wcscmp(_argv[_alifOSOptInd_], L"--version") == 0) {
+			++_alifOSOptInd_;
 			return 'v';
 		}
-		else if (wcscmp(_argv[_optIdx_], L"--help") == 0) {
-			++_optIdx_;
+		else if (wcscmp(_argv[_alifOSOptInd_], L"--help") == 0) {
+			++_alifOSOptInd_;
 			return 'h';
 		}
 
-		_optPtr_ = &_argv[_optIdx_++][1];
+		_optPtr_ = &_argv[_alifOSOptInd_++][1];
 	}
 
 	if ((option = *_optPtr_++) == L'\0') {
@@ -69,18 +76,18 @@ AlifIntT alif_getOption(AlifSizeT _argc, wchar_t* const* _argv, AlifIntT* _longI
 				break;
 		}
 		if (!opt->name) {
-			fprintf(stderr, "خيار غير معروف %ls\n", _argv[_optIdx_ - 1]);
+			fprintf(stderr, "خيار غير معروف %ls\n", _argv[_alifOSOptInd_ - 1]);
 			return '_';
 		}
 		_optPtr_ = L"";
 		if (!opt->hasArg) {
 			return opt->val;
 		}
-		if (_optIdx_ >= _argc) {
-			fprintf(stderr, "يتوقع وجود وسيط للخيار %ls\n", _argv[_optIdx_ - 1]);
+		if (_alifOSOptInd_ >= _argc) {
+			fprintf(stderr, "يتوقع وجود وسيط للخيار %ls\n", _argv[_alifOSOptInd_ - 1]);
 			return '_';
 		}
-		_optArg_ = _argv[_optIdx_++];
+		_alifOSOptArg_ = _argv[_alifOSOptInd_++];
 		return opt->val;
 	}
 
@@ -91,15 +98,15 @@ AlifIntT alif_getOption(AlifSizeT _argc, wchar_t* const* _argv, AlifIntT* _longI
 
 	if (*(ptr + 1) == L':') {
 		if (*_optPtr_ != L'\0') {
-			_optArg_ = _optPtr_;
+			_alifOSOptArg_ = _optPtr_;
 			_optPtr_ = L"";
 		}
 		else {
-			if (_optIdx_ >= _argc) {
+			if (_alifOSOptInd_ >= _argc) {
 				return '-';
 			}
 
-			_optArg_ = _argv[_optIdx_++];
+			_alifOSOptArg_ = _argv[_alifOSOptInd_++];
 		}
 	}
 

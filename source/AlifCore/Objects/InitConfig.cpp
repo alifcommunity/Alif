@@ -151,6 +151,30 @@ arg ...: arguments passed to program in sys.argv[1:]\n\
 -v     : print Alif version number and exit (also --version)\n\
 ";
 
+/* --- Global configuration variables ----------------------------- */
+
+/* UTF-8 mode: if equals to 1, use the UTF-8 encoding, and change
+   stdin and stdout error handler to "surrogateescape". */
+AlifIntT _alifUTF8Mode_ = 0;
+AlifIntT _alifDebugFlag_ = 0;
+AlifIntT _alifVerboseFlag_ = 0;
+AlifIntT _alifQuietFlag_ = 0;
+AlifIntT _alifInteractiveFlag_ = 0;
+AlifIntT _alifInspectFlag_ = 0;
+AlifIntT _alifOptimizeFlag_ = 0;
+AlifIntT _alifNoSiteFlag_ = 0;
+AlifIntT _alifBytesWarningFlag_ = 0;
+AlifIntT _alifFrozenFlag_ = 0;
+AlifIntT _alifIgnoreEnvironmentFlag_ = 0;
+AlifIntT _alifDontWriteBytecodeFlag_ = 0;
+AlifIntT _alifNoUserSiteDirectory_ = 0;
+AlifIntT _alifUnbufferedStdioFlag_ = 0;
+AlifIntT _alifHashRandomizationFlag_ = 0;
+AlifIntT _alifIsolatedFlag_ = 0;
+#ifdef _WINDOWS
+AlifIntT _alifLegacyWindowsFSEncodingFlag_ = 0;
+AlifIntT _alifLegacyWindowsStdioFlag_ = 0;
+#endif
 
 /* -------------------------- AlifConfig command line parser -------------------------- */
 
@@ -302,17 +326,82 @@ void alifConfig_clear(AlifConfig* _config) { // 773
 }
 
 
-void alifConfig_initAlifConfig(AlifConfig* _config) { // 897
-	_config->configInit = ConfigInitEnum_::AlifConfig_Init_Alif;
+void _alifConfig_initCompatConfig(AlifConfig* _config) { // 934
+	memset(_config, 0, sizeof(*_config));
+
+	_config->configInit = (AlifIntT)ConfigInitEnum_::AlifConfig_Init_COMPAT;
+	_config->isolated = -1;
+	_config->useEnvironment = -1;
+	_config->devMode = -1;
 	_config->installSignalHandlers = 1;
+	_config->useHashSeed = -1;
+	_config->faultHandler = -1;
 	_config->tracemalloc = -1;
-	_config->parseArgv = 1;
+	_config->perfProfiling = -1;
+	_config->moduleSearchPathsSet = 0;
+	_config->parseArgv = 0;
+	_config->siteImport = -1;
+	_config->bytesWarning = -1;
+	_config->warnDefaultEncoding = 0;
+	_config->inspect = -1;
+	_config->interactive = -1;
+	_config->optimizationLevel = -1;
+	_config->parserDebug = -1;
+	_config->writeBytecode = -1;
+	_config->verbose = -1;
+	_config->quiet = -1;
+	_config->userSiteDirectory = -1;
+	_config->configureCStdio = 0;
+	_config->bufferedStdio = -1;
+	_config->installImportLib = 1;
+	_config->checkHashAlifCSMode = NULL;
+	_config->pathConfigWarnings = -1;
+	_config->initMain = 1;
+#ifdef _WINDOWS
+	_config->legacyWindowsStdio = -1;
+#endif
+#ifdef ALIF_DEBUG
+	config->useFrozenModules = 0;
+#else
+	_config->useFrozenModules = 1;
+#endif
+	_config->safePath = 0;
+	_config->intMaxStrDigits = -1;
+	_config->isAlifBuild = 0;
+	_config->codeDebugRanges = 1;
+	_config->cpuCount = -1;
+}
+
+
+static void config_initDefaults(AlifConfig* _config) { // 986
+	_alifConfig_initCompatConfig(_config);
+
+	_config->isolated = 0;
+	_config->useEnvironment = 1;
+	_config->siteImport = 1;
+	_config->bytesWarning = 0;
+	_config->inspect = 0;
 	_config->interactive = 0;
 	_config->optimizationLevel = 0;
+	_config->parserDebug = 0;
+	_config->writeBytecode = 1;
+	_config->verbose = 0;
+	_config->quiet = 0;
+	_config->userSiteDirectory = 1;
 	_config->bufferedStdio = 1;
-	_config->installImportLib = 1;
-	_config->initMain = 1;
-	_config->intMaxStrDigits = ALIF_LONG_DEFAULT_MAX_STR_DIGITS; // need review
+	_config->pathConfigWarnings = 1;
+#ifdef _WINDOWS
+	_config->legacyWindowsStdio = 0;
+#endif
+}
+
+
+void alifConfig_initAlifConfig(AlifConfig* config) { // 1011
+	config_initDefaults(config);
+
+	config->configInit = (AlifIntT)ConfigInitEnum_::AlifConfig_Init_ALIF;
+	config->configureCStdio = 1;
+	config->parseArgv = 1;
 }
 
 /* duplicate the string */
@@ -540,35 +629,6 @@ AlifStatus alifConfig_write(const AlifConfig* _config, AlifRuntime* _dureRun) { 
 	return ALIFSTATUS_OK();
 }
 
-AlifIntT alif_setStdioLocale(const AlifConfig* _config) { //* alif
-
-	AlifIntT mode = alif_setFileMode(_config);
-	if (!mode) return -1;
-
-	const char* locale = alif_setLocale(LC_CTYPE);
-	if (locale == nullptr) {
-		std::cout <<
-			"can't init locale for reading Arabic characters" // يجب أن تكون باللغة الاجنبية في حال لم يستطع تهيئة طباعة الاحرف العربية
-			<< std::endl;
-		return -1;
-	}
-
-	return 1;
-}
-
-AlifStatus alif_preInitFromConfig(AlifConfig* _config) { //* alif
-
-	if (alif_mainMemoryInit() < 1) {
-		return ALIFSTATUS_NO_MEMORY();
-	}
-
-	if (alif_setStdioLocale(_config) < 1) {
-		return ALIFSTATUS_NO_MEMORY();
-	}
-
-	return ALIFSTATUS_OK();
-}
-
 
 
 
@@ -583,21 +643,21 @@ static AlifStatus parse_consoleLine(AlifConfig* _config, AlifSizeT* _index) { //
 		program = argv->items[0];
 	}
 
-	alif_resetGetOption();
+	_alifOS_resetGetOpt();
 	do {
 		AlifIntT longIndex = -1;
-		AlifIntT c = alif_getOption(argv->length, argv->items, &longIndex);
+		AlifIntT c = _alifOS_getOpt(argv->length, argv->items, &longIndex);
 
 		if (c == EOF) break;
 
 		if (c == 'c') {
 			if (_config->runCommand == nullptr) {
-				AlifUSizeT len = wcslen(_optArg_) + 1 + 1;
+				AlifUSizeT len = wcslen(_alifOSOptArg_) + 1 + 1;
 				wchar_t* command = (wchar_t*)alifMem_dataAlloc(len * sizeof(wchar_t));
 				if (command == nullptr) {
 					return ALIFSTATUS_NO_MEMORY();
 				}
-				memcpy(command, _optArg_, (len - 2) * sizeof(wchar_t));
+				memcpy(command, _alifOSOptArg_, (len - 2) * sizeof(wchar_t));
 				command[len - 2] = '\n';
 				command[len - 1] = 0;
 				_config->runCommand = command;
@@ -607,7 +667,7 @@ static AlifStatus parse_consoleLine(AlifConfig* _config, AlifSizeT* _index) { //
 
 		if (c == 'm') {
 			if (_config->runModule == nullptr) {
-				_config->runModule = alifMem_wcsDup(_optArg_);
+				_config->runModule = alifMem_wcsDup(_alifOSOptArg_);
 				if (_config->runModule == nullptr) {
 					return ALIFSTATUS_NO_MEMORY();
 				}
@@ -648,9 +708,9 @@ static AlifStatus parse_consoleLine(AlifConfig* _config, AlifSizeT* _index) { //
 	}
 
 	if (_config->runModule == nullptr and _config->runCommand == nullptr
-		and _optIdx_ < argv->length and wcscmp(argv->items[_optIdx_], L"-") != 0
+		and _alifOSOptInd_ < argv->length and wcscmp(argv->items[_alifOSOptInd_], L"-") != 0
 		and _config->runFilename == nullptr) {
-		_config->runFilename = (wchar_t*)alifMem_wcsDup(argv->items[_optIdx_]);
+		_config->runFilename = (wchar_t*)alifMem_wcsDup(argv->items[_alifOSOptInd_]);
 		if (_config->runFilename == nullptr) {
 			return ALIFSTATUS_NO_MEMORY();
 		}
@@ -658,10 +718,10 @@ static AlifStatus parse_consoleLine(AlifConfig* _config, AlifSizeT* _index) { //
 
 	if (_config->runCommand != nullptr or
 		_config->runModule != nullptr) {
-		_optIdx_--;
+		_alifOSOptInd_--;
 	}
 
-	*_index = _optIdx_;
+	*_index = _alifOSOptInd_;
 
 	return ALIFSTATUS_OK();
 }
@@ -807,4 +867,31 @@ AlifStatus alifConfig_read(AlifConfig* _config) { // 3047
 
 
 
+AlifStatus _alifConfig_setAlifArgv(AlifConfig* _config, const AlifArgv* _args) { // 3144
+	AlifStatus status = _alif_preInitializeFromConfig(_config, _args);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
+	return _alifArgv_asWStrList(_args, &_config->argv);
+}
+
+AlifStatus alifConfig_setBytesArgv(AlifConfig* _config,
+	AlifSizeT _argc, char* const* _argv) { // 3158
+	AlifArgv args = {
+		.argc = _argc,
+		.useBytesArgv = 1,
+		.bytesArgv = _argv,
+		.wcharArgv = nullptr };
+	return _alifConfig_setAlifArgv(_config, &args);
+}
+
+AlifStatus alifConfig_setArgv(AlifConfig* _config,
+	AlifSizeT _argc, wchar_t* const* _argv) { // 3170
+	AlifArgv args = {
+		.argc = _argc,
+		.useBytesArgv = 0,
+		.bytesArgv = nullptr,
+		.wcharArgv = _argv };
+	return _alifConfig_setAlifArgv(_config, &args);
+}

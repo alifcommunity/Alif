@@ -31,6 +31,7 @@
 #include "TypeSlots.h"
 #include "ObjImpl.h"
 #include "AlifHash.h"
+#include "AlifDebug.h"
 #include "ByteArrayObject.h"
 #include "LongObject.h"
 #include "BoolObject.h"

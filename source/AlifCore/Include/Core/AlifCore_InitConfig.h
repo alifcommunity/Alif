@@ -30,6 +30,8 @@
 
 /* ---------------------------------------- AlifWStringList --------------------------------------- */
 
+#define ALIFWIDESTRINGLIST_INIT {.length = 0, .items = nullptr}
+
 extern void _alifWStringList_clear(AlifWStringList*); // 59
 extern AlifIntT alifWStringList_copy(AlifWStringList*, const AlifWStringList*); // 60
 
@@ -40,18 +42,20 @@ extern AlifObject* _alifWStringList_asList(const AlifWStringList*); // 64
 
 class AlifArgv { // 69
 public:
-	AlifIntT argc;
-	bool useBytesArgv;
-	char* const* bytesArgv;
-	wchar_t* const* wcharArgv;
+	AlifSizeT argc{};
+	AlifIntT useBytesArgv{};
+	char* const* bytesArgv{};
+	wchar_t* const* wcharArgv{};
 };
 
-AlifStatus alifArgv_asWStringList(AlifConfig*, AlifArgv*); // 76
+AlifStatus _alifArgv_asWStrList(const AlifArgv*, AlifWStringList*); // 76
 
 
 
 
 /* -------------------------------------- Helper functions ------------------------------------- */
+
+extern const wchar_t* _alif_getXOption(const AlifWStringList*, const wchar_t*); // 85
 
 extern const char* _alif_getEnv(AlifIntT, const char*); // 88
 
@@ -68,18 +72,30 @@ public:
 	AlifIntT warnDefaultEncoding{};
 };
 
+#define ALIFPRECMDLINE_INIT \
+    {	.isolated = -1, \
+		.useEnvironment = -1, \
+        .devMode = -1 }
+
+
+extern AlifStatus _alifPreCmdline_setArgv(AlifPreCmdline*, const AlifArgv*); // 119
 
 /* --------------------------------------- AlifPreConfig --------------------------------------- */
 
-
+extern void _alifPreConfig_initFromConfig(AlifPreConfig*, const AlifConfig*); // 133
 extern AlifStatus _alifPreConfig_initFromPreConfig(AlifPreConfig*, const AlifPreConfig*); // 136
 
+extern void _alifPreConfig_getConfig(AlifPreConfig*, const AlifConfig*); // 140
 extern AlifStatus _alifPreConfig_read(AlifPreConfig*, const AlifArgv*); // 142
+
+extern AlifStatus _alifPreConfig_write(const AlifPreConfig*); // 144
 
 /* ---------------------------------------- AlifConfig ----------------------------------------- */
 
 enum ConfigInitEnum_ { // 149
-	AlifConfig_Init_Alif = 1,
+	AlifConfig_Init_COMPAT = 1,
+	AlifConfig_Init_ALIF = 2,
+	AlifConfig_Init_ISOLATED = 3,
 };
 
 enum AlifConfigGIL_ { // 156
@@ -92,7 +108,6 @@ extern AlifStatus alifConfig_copy(AlifConfig*, const AlifConfig*); // 171
 
 extern AlifStatus _alifConfig_initPathConfig(AlifConfig*, AlifIntT); // 174
 
-extern AlifStatus alif_preInitFromConfig(AlifConfig*); //* alif
 extern AlifStatus _alifConfig_initImportConfig(AlifConfig*); // 177
 extern AlifStatus alifConfig_read(AlifConfig*); // 178
 extern AlifStatus alifConfig_write(const AlifConfig*, class AlifRuntime*); // 179
