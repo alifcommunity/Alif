@@ -774,7 +774,7 @@ static AlifIntT alif_extension(wchar_t* _filename) { //* alif
 	const wchar_t* dotSuffix = wcsrchr(_filename, L'.');
 	if (!dotSuffix) { return 0; }
 
-	return wcscmp(dotSuffix, L".alif") == 0;
+	return wcscmp(dotSuffix, L".alif") == 0 or wcscmp(dotSuffix, L".الف") == 0;
 }
 
 static AlifStatus run_absPathFilename(AlifConfig* _config) { // 2888
@@ -784,9 +784,9 @@ static AlifStatus run_absPathFilename(AlifConfig* _config) { // 2888
 		return ALIFSTATUS_OK();
 	}
 
-	// يتم التحقق من لاحقة الملف والتي يجب ان تكون .alif
+	// يتم التحقق من لاحقة الملف والتي يجب ان تكون .alif او .الف
 	if (!alif_extension(filename)) {
-		printf("%s \n\n", "تأكد من لاحقة الملف \n يجب ان ينتهي اسم الملف بـ .alif");
+		printf("%s \n\n", "تأكد من لاحقة الملف \n يجب ان ينتهي اسم الملف بـ .alif او .الف");
 		exit(-1);
 	}
 
