@@ -420,6 +420,51 @@ static AlifStatus alifInit_config(AlifRuntime* _runtime,
 	return ALIFSTATUS_OK();
 }
 
+AlifStatus _alif_preInitializeFromAlifArgv(const AlifPreConfig* _srcConfig,
+	const AlifArgv* _args) { // 945
+
+	AlifStatus status{};
+
+	if (_srcConfig == nullptr) {
+		return ALIFSTATUS_ERR("متغير التهيئة التمهيدية فارغ");
+	}
+
+	status = _alifRuntime_initialize();
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+	AlifRuntime* runtime = &_alifRuntime_;
+
+	if (runtime->preinitialized) {
+		return ALIFSTATUS_OK();
+	}
+
+	/* Note: preinitialized remains 1 on error, it is only set to 0
+	   at exit on success. */
+	runtime->preinitializing = 1;
+
+	AlifPreConfig config{};
+
+	status = _alifPreConfig_initFromPreConfig(&config, _srcConfig);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+
+	status = _alifPreConfig_read(&config, _args); //* here
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+
+	//status = _alifPreConfig_write(&config);
+	//if (ALIFSTATUS_EXCEPTION(status)) {
+	//	return status;
+	//}
+
+	runtime->preinitializing = 0;
+	runtime->preinitialized = 1;
+	return ALIFSTATUS_OK();
+}
+
 static AlifStatus alifInit_core(AlifRuntime* _dureRun,
 	const AlifConfig* _config, AlifThread** _threadPtr) { // 1069
 

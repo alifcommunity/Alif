@@ -126,10 +126,10 @@ static const AlifRuntime _initial_ = ALIF_DURERUNSTATE_INIT(_alifRuntime_); // 3
 
 
 
-static void init_runtime(AlifRuntime* _runtime, void* _openCodeHook, void* _openCodeUserdata,
+static void init_runtime(AlifRuntime* _runtime, AlifOpenCodeHookFunction _openCodeHook, void* _openCodeUserdata,
 	AlifAuditHookEntry* _auditHookHead, AlifSizeT _unicodeNextIndex) { // 411
 
-	_runtime->openCodeHook = (AlifOpenCodeHookFunction)_openCodeHook;
+	_runtime->openCodeHook = _openCodeHook;
 	_runtime->openCodeUserdata = _openCodeUserdata;
 	_runtime->auditHooks.head = _auditHookHead;
 
@@ -144,7 +144,7 @@ static void init_runtime(AlifRuntime* _runtime, void* _openCodeHook, void* _open
 
 AlifStatus _alifRuntimeState_init(AlifRuntime* _runtime) { // 441
 
-	void* openCodeHook = _runtime->openCodeHook;
+	AlifOpenCodeHookFunction openCodeHook = _runtime->openCodeHook;
 	void* openCodeUserdata = _runtime->openCodeUserdata;
 	AlifAuditHookEntry* auditHookHead = _runtime->auditHooks.head;
 	AlifSizeT unicodeNextIndex = _runtime->unicodeState.ids.nextIndex;

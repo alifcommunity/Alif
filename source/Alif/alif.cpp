@@ -25,7 +25,7 @@ static AlifStatus alifMain_init(AlifArgv* _args) {
 	AlifPreConfig preconfig{};
 	alifPreConfig_initAlifConfig(&preconfig);
 
-	//status = _alif_preInitializeFromAlifArgv(&preconfig, _args); //* here
+	status = _alif_preInitializeFromAlifArgv(&preconfig, _args); //* here
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		return status;
 	}
@@ -72,7 +72,7 @@ static AlifIntT alifMain_runFileObj(AlifObject* _pn, AlifObject* _fn, AlifIntT _
 	FILE* fp_ = alif_fOpenObj(_fn, "rb");
 
 	if (fp_ == nullptr) {
-		//alifErr_clear();
+		alifErr_clear();
 		//alifSys_formatStderr("%S: can't open file %R: [Errno %d] %s\n",
 		//	_pn, _fn, errno, strerror(errno));
 		printf("%s: لا يمكن فتح الملف %s: [Errno %d] %s\n",

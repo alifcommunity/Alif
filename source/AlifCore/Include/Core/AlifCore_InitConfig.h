@@ -51,14 +51,32 @@ AlifStatus alifArgv_asWStringList(AlifConfig*, AlifArgv*); // 76
 
 
 
-/* --------------------------------------- Helper functions --------------------------------------- */
+/* -------------------------------------- Helper functions ------------------------------------- */
 
 extern const char* _alif_getEnv(AlifIntT, const char*); // 88
 
 
+/* --------------------------------------- AlifPreCmdline -------------------------------------- */
+
+class AlifPreCmdline { // 102
+public:
+	AlifWStringList argv{};
+	AlifWStringList xoptions{};
+	AlifIntT isolated{};
+	AlifIntT useEnvironment{};
+	AlifIntT devMode{};
+	AlifIntT warnDefaultEncoding{};
+};
 
 
-/* ------------------------------------------ AlifConfig ------------------------------------------- */
+/* --------------------------------------- AlifPreConfig --------------------------------------- */
+
+
+extern AlifStatus _alifPreConfig_initFromPreConfig(AlifPreConfig*, const AlifPreConfig*); // 136
+
+extern AlifStatus _alifPreConfig_read(AlifPreConfig*, const AlifArgv*); // 142
+
+/* ---------------------------------------- AlifConfig ----------------------------------------- */
 
 enum ConfigInitEnum_ { // 149
 	AlifConfig_Init_Alif = 1,

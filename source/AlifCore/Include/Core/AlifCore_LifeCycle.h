@@ -16,7 +16,7 @@ extern AlifIntT _alifSignal_init(AlifIntT _installSignalHandlers); // 48
 
 extern AlifStatus alifGILState_init(AlifInterpreter*); // 63
 
-
+extern AlifStatus _alif_preInitializeFromAlifArgv(const AlifPreConfig*, const class AlifArgv*); // 69
 
 
 
