@@ -21,9 +21,19 @@
 
 
 
+
+/* --------------------------------------------- AlifConfig setters --------------------------------------------- */
+
 typedef AlifObject* (*ConfigSysFlagSetter) (AlifIntT);
 
+static AlifObject* config_sysFlagLong(AlifIntT _value) {
+	return alifLong_fromLong(_value);
+}
 
+static AlifObject* config_sysFlagNot(AlifIntT _value) { // 39
+	_value = not _value;
+	return config_sysFlagLong(_value);
+}
 
 
 
@@ -40,9 +50,9 @@ enum AlifConfigMemberType_ { // 49
 };
 
 enum AlifConfigMemberVisibility { // 60
-	Alif_Config_Member_Init_Only = 0,
-	Alif_Config_Member_Read_Only = 1,
-	Alif_Config_Member_Public = 2,
+	Alif_Config_Member_INIT_ONLY = 0,
+	Alif_Config_Member_READ_ONLY = 1,
+	Alif_Config_Member_PUBLIC = 2,
 };
 
 class AlifConfigSysSpec { // 71
@@ -74,52 +84,88 @@ public:
 static const AlifConfigSpec _alifConfigSpec_[] = { // 95
 
 	// --- Public options -----------
-	SPEC(argv, WSTR_LIST, Public, SYS_ATTR("argv")),
-	SPEC(baseExecPrefix, WSTR_OPT, Public, SYS_ATTR("baseExecPrefix")),
-	SPEC(baseExecutable, WSTR_OPT, Public, SYS_ATTR("_baseExecutable")),
-	SPEC(basePrefix, WSTR_OPT, Public, SYS_ATTR("basePrefix")),
-	SPEC(execPrefix, WSTR_OPT, Public, SYS_ATTR("execPrefix")),
-	SPEC(executable, WSTR_OPT, Public, SYS_ATTR("executable")),
-	SPEC(intMaxStrDigits, UINT, Public, NO_SYS),
-	SPEC(interactive, BOOL, Public, SYS_FLAG(2)),
-	SPEC(moduleSearchPaths, WSTR_LIST, Public, SYS_ATTR("Path")),
-	SPEC(optimizationLevel, UINT, Public, SYS_FLAG(3)),
-	SPEC(platLibDir, WSTR, Public, SYS_ATTR("platLibDir")),
-	SPEC(prefix, WSTR_OPT, Public, SYS_ATTR("prefix")),
-
+	SPEC(argv, WSTR_LIST, PUBLIC, SYS_ATTR("argv")),
+	SPEC(baseExecPrefix, WSTR_OPT, PUBLIC, SYS_ATTR("baseExecPrefix")),
+	SPEC(baseExecutable, WSTR_OPT, PUBLIC, SYS_ATTR("_baseExecutable")),
+	SPEC(basePrefix, WSTR_OPT, PUBLIC, SYS_ATTR("basePrefix")),
+	SPEC(bytesWarning, UINT, PUBLIC, SYS_FLAG(9)),
+	SPEC(execPrefix, WSTR_OPT, PUBLIC, SYS_ATTR("execPrefix")),
+	SPEC(executable, WSTR_OPT, PUBLIC, SYS_ATTR("executable")),
+	SPEC(inspect, BOOL, PUBLIC, SYS_FLAG(1)),
+	SPEC(intMaxStrDigits, UINT, PUBLIC, NO_SYS),
+	SPEC(interactive, BOOL, PUBLIC, SYS_FLAG(2)),
+	SPEC(moduleSearchPaths, WSTR_LIST, PUBLIC, SYS_ATTR("path")),
+	SPEC(optimizationLevel, UINT, PUBLIC, SYS_FLAG(3)),
+	SPEC(parserDebug, BOOL, PUBLIC, SYS_FLAG(0)),
+	SPEC(platLibDir, WSTR, PUBLIC, SYS_ATTR("platLibDir")),
+	SPEC(prefix, WSTR_OPT, PUBLIC, SYS_ATTR("prefix")),
+	SPEC(alifCachePrefix, WSTR_OPT, PUBLIC, SYS_ATTR("alifCachePrefix")),
+	SPEC(quiet, BOOL, PUBLIC, SYS_FLAG(10)),
+	SPEC(stdLibDir, WSTR_OPT, PUBLIC, SYS_ATTR("_stdLibDir")),
+	SPEC(useEnvironment, BOOL, PUBLIC, SYS_FLAG_SETTER(7, config_sysFlagNot)),
+	SPEC(verbose, UINT, PUBLIC, SYS_FLAG(8)),
+	SPEC(warnoptions, WSTR_LIST, PUBLIC, SYS_ATTR("warnoptions")),
+	SPEC(writeBytecode, BOOL, PUBLIC, SYS_FLAG_SETTER(4, config_sysFlagNot)),
+	SPEC(xoptions, WSTR_LIST, PUBLIC, SYS_ATTR("_xoptions")),
 
 	// --- Read-only options -----------
 
-	SPEC(bufferedStdio, BOOL, Read_Only, NO_SYS),
-
-
-	//SPEC(isolated, BOOL, Read_Only, NO_SYS),  // sys.flags.isolated
-#ifdef _WINDOWS
-	SPEC(legacyWindowsStdio, BOOL, Read_Only, NO_SYS),
+#ifdef ALIF_STATS
+	SPEC(_alifstats, BOOL, READ_ONLY, NO_SYS),
 #endif
-	SPEC(origArgv, WSTR_LIST, Read_Only, SYS_ATTR("origArgv")),
-	SPEC(parseArgv, BOOL, Read_Only, NO_SYS),
-	SPEC(programName, WSTR, Read_Only, NO_SYS),
-	SPEC(runCommand, WSTR_OPT, Read_Only, NO_SYS),
-	SPEC(runFilename, WSTR_OPT, Read_Only, NO_SYS),
-	SPEC(runModule, WSTR_OPT, Read_Only, NO_SYS),
-	{nullptr, 0, AlifConfigMemberType_::Alif_Config_Member_INT},
+	SPEC(bufferedStdio, BOOL, READ_ONLY, NO_SYS),
+	SPEC(checkHashAlifCSMode, WSTR, READ_ONLY, NO_SYS),
+	SPEC(codeDebugRanges, BOOL, READ_ONLY, NO_SYS),
+	SPEC(configureCStdio, BOOL, READ_ONLY, NO_SYS),
+	SPEC(cpuCount, INT, READ_ONLY, NO_SYS),
+	SPEC(devMode, BOOL, READ_ONLY, NO_SYS),  // sys.flags.dev_mode
+	SPEC(dumpRefs, BOOL, READ_ONLY, NO_SYS),
+	SPEC(dumpRefsFile, WSTR_OPT, READ_ONLY, NO_SYS),
+	SPEC(faultHandler, BOOL, READ_ONLY, NO_SYS),
+	SPEC(fileSystemEncoding, WSTR, READ_ONLY, NO_SYS),
+	SPEC(fileSystemErrors, WSTR, READ_ONLY, NO_SYS),
+	SPEC(hashSeed, ULONG, READ_ONLY, NO_SYS),
+	SPEC(home, WSTR_OPT, READ_ONLY, NO_SYS),
+	SPEC(importTime, BOOL, READ_ONLY, NO_SYS),
+	SPEC(installSignalHandlers, BOOL, READ_ONLY, NO_SYS),
+	SPEC(isolated, BOOL, READ_ONLY, NO_SYS),  // sys.flags.isolated
+#ifdef _WINDOWS
+	SPEC(legacyWindowsStdio, BOOL, READ_ONLY, NO_SYS),
+#endif
+	SPEC(mallocStats, BOOL, READ_ONLY, NO_SYS),
+	SPEC(origArgv, WSTR_LIST, READ_ONLY, SYS_ATTR("origArgv")),
+	SPEC(parseArgv, BOOL, READ_ONLY, NO_SYS),
+	SPEC(pathConfigWarnings, BOOL, READ_ONLY, NO_SYS),
+	SPEC(perfProfiling, UINT, READ_ONLY, NO_SYS),
+	SPEC(programName, WSTR, READ_ONLY, NO_SYS),
+	SPEC(runCommand, WSTR_OPT, READ_ONLY, NO_SYS),
+	SPEC(runFilename, WSTR_OPT, READ_ONLY, NO_SYS),
+	SPEC(runModule, WSTR_OPT, READ_ONLY, NO_SYS),
 
-	SPEC(safePath, BOOL, Read_Only, NO_SYS),
-	//SPEC(skipSourceFirstLine, BOOL, Read_Only, NO_SYS),
-	SPEC(tracemalloc, UINT, Read_Only, NO_SYS),
+	SPEC(safePath, BOOL, READ_ONLY, NO_SYS),
+	SPEC(showRefCount, BOOL, READ_ONLY, NO_SYS),
+	SPEC(siteImport, BOOL, READ_ONLY, NO_SYS),
+	SPEC(skipFirstLine, BOOL, READ_ONLY, NO_SYS),
+	SPEC(stdioEncoding, WSTR, READ_ONLY, NO_SYS),
+	SPEC(stdioErrors, WSTR, READ_ONLY, NO_SYS),
+	SPEC(tracemalloc, UINT, READ_ONLY, NO_SYS),
+	SPEC(useFrozenModules, BOOL, READ_ONLY, NO_SYS),
+	SPEC(useHashSeed, BOOL, READ_ONLY, NO_SYS),
+	SPEC(userSiteDirectory, BOOL, READ_ONLY, NO_SYS),
+	SPEC(warnDefaultEncoding, BOOL, READ_ONLY, NO_SYS),
 
 	// --- Init-only options -----------
 
-	SPEC(configInit, UINT, Init_Only, NO_SYS),
-	SPEC(initMain, BOOL, Init_Only, NO_SYS),
-	SPEC(installImportLib, BOOL, Init_Only, NO_SYS),
-	SPEC(moduleSearchPathsSet, BOOL, Init_Only, NO_SYS),
-	SPEC(sysPath0, WSTR_OPT, Init_Only, NO_SYS),
+	SPEC(configInit, UINT, INIT_ONLY, NO_SYS),
+	SPEC(initMain, BOOL, INIT_ONLY, NO_SYS),
+	SPEC(installImportLib, BOOL, INIT_ONLY, NO_SYS),
+	SPEC(isAlifBuild, BOOL, INIT_ONLY, NO_SYS),
+	SPEC(moduleSearchPathsSet, BOOL, INIT_ONLY, NO_SYS),
+	SPEC(alifPathEnv, WSTR_OPT, INIT_ONLY, NO_SYS),
+	SPEC(sysPath0, WSTR_OPT, INIT_ONLY, NO_SYS),
 
 	// Array terminator
-	{nullptr, 0, AlifConfigMemberType_::Alif_Config_Member_INT,
-	AlifConfigMemberVisibility::Alif_Config_Member_Init_Only, NO_SYS},
+	{nullptr, 0, (AlifConfigMemberType_)0, (AlifConfigMemberVisibility)0, NO_SYS},
 };
 
 #undef SPEC
@@ -305,21 +351,44 @@ AlifObject* _alifWStringList_asList(const AlifWStringList* _list) { // 729
 }
 
 void alifConfig_clear(AlifConfig* _config) { // 773
-#define CLEAR(_ATTR)							\
-    do {										\
-		alifMem_dataFree(_ATTR);				\
-		_ATTR = nullptr;						\
+#define CLEAR(_attr) \
+    do { \
+        alifMem_dataFree(_attr); \
+        _attr = nullptr; \
     } while (0)
 
+	CLEAR(_config->alifCachePrefix);
+	CLEAR(_config->alifPathEnv);
+	CLEAR(_config->home);
 	CLEAR(_config->programName);
 
 	_alifWStringList_clear(&_config->argv);
+	_alifWStringList_clear(&_config->warnoptions);
+	_alifWStringList_clear(&_config->xoptions);
 	_alifWStringList_clear(&_config->moduleSearchPaths);
 	_config->moduleSearchPathsSet = 0;
+	CLEAR(_config->stdLibDir);
 
+	CLEAR(_config->executable);
+	CLEAR(_config->baseExecutable);
+	CLEAR(_config->prefix);
+	CLEAR(_config->basePrefix);
+	CLEAR(_config->execPrefix);
+	CLEAR(_config->baseExecPrefix);
+	CLEAR(_config->platLibDir);
+	CLEAR(_config->sysPath0);
+
+	CLEAR(_config->fileSystemEncoding);
+	CLEAR(_config->fileSystemErrors);
+	CLEAR(_config->stdioEncoding);
+	CLEAR(_config->stdioErrors);
 	CLEAR(_config->runCommand);
 	CLEAR(_config->runModule);
 	CLEAR(_config->runFilename);
+	CLEAR(_config->checkHashAlifCSMode);
+#ifdef ALIF_DEBUG
+	CLEAR(_config->runPreSite);
+#endif
 
 	_alifWStringList_clear(&_config->origArgv);
 #undef CLEAR
@@ -435,7 +504,7 @@ static inline void* config_getSpecMember(const AlifConfig* _config,
 }
 
 
-AlifStatus alifConfig_copy(AlifConfig* _config, const AlifConfig* _config2) { // 1003
+AlifStatus _alifConfig_copy(AlifConfig* _config, const AlifConfig* _config2) { // 1003
 	alifConfig_clear(_config);
 
 	AlifStatus status{};

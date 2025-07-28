@@ -104,7 +104,7 @@ enum AlifConfigGIL_ { // 156
 	AlifConfig_GIL_Enable = 1,
 };
 
-extern AlifStatus alifConfig_copy(AlifConfig*, const AlifConfig*); // 171
+extern AlifStatus _alifConfig_copy(AlifConfig*, const AlifConfig*); // 171
 
 extern AlifStatus _alifConfig_initPathConfig(AlifConfig*, AlifIntT); // 174
 

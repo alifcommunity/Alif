@@ -309,7 +309,7 @@ static AlifStatus alifCore_createInterpreter(AlifRuntime* _dureRun,
 
 	interpreter->ready = 1;
 
-	status = alifConfig_copy(&interpreter->config, _config);
+	status = _alifConfig_copy(&interpreter->config, _config);
 	if (ALIFSTATUS_EXCEPTION(status)) return status;
 
 	status = alifGILState_init(interpreter);
@@ -603,14 +603,19 @@ AlifStatus _alif_preInitializeFromConfig(const AlifConfig* _config,
 }
 
 static AlifStatus alifInit_core(AlifRuntime* _runtime,
-	const AlifConfig* _config, AlifThread** _threadPtr) { // 1069
+	const AlifConfig* _srcConfig, AlifThread** _threadPtr) { // 1069
 
 	AlifStatus status{};
+
+	status = _alif_preInitializeFromConfig(_srcConfig, nullptr);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
 	AlifConfig config{};
 	alifConfig_initAlifConfig(&config);
 
-	status = alifConfig_copy(&config, _config);
+	status = _alifConfig_copy(&config, _srcConfig);
 	if (ALIFSTATUS_EXCEPTION(status)) goto done;
 
 	status = alifConfig_read(&config);
@@ -711,16 +716,16 @@ AlifStatus alif_initFromConfig(const AlifConfig* _config) { // 1383
 	status = _alifRuntime_initialize();
 	if (ALIFSTATUS_EXCEPTION(status)) return status;
 
-	AlifRuntime* dureRun = &_alifRuntime_;
-	AlifThread* thread_ = nullptr;
+	AlifRuntime* runtime = &_alifRuntime_;
+	AlifThread* thread = nullptr;
 
-	status = alifInit_core(dureRun, _config, &thread_);
+	status = alifInit_core(runtime, _config, &thread); //* here
 	if (ALIFSTATUS_EXCEPTION(status)) return status;
 
-	_config = alifInterpreter_getConfig(thread_->interpreter);
+	_config = alifInterpreter_getConfig(thread->interpreter);
 
 	if (_config->initMain) {
-		status = alifInit_main(thread_);
+		status = alifInit_main(thread);
 		if (ALIFSTATUS_EXCEPTION(status)) return status;
 	}
 
