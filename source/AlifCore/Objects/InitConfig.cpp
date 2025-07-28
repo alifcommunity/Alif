@@ -500,7 +500,8 @@ void alifConfig_initAlifConfig(AlifConfig* config) { // 1011
 }
 
 /* duplicate the string */
-AlifStatus alifConfig_setString(AlifConfig* _config, wchar_t** _configStr, const wchar_t* _str) { // 933
+AlifStatus alifConfig_setString(AlifConfig* _config,
+	wchar_t** _configStr, const wchar_t* _str) { // 933
 
 	AlifStatus status = _alif_preInitializeFromConfig(_config, nullptr);
 	if (ALIFSTATUS_EXCEPTION(status)) {
@@ -522,6 +523,39 @@ AlifStatus alifConfig_setString(AlifConfig* _config, wchar_t** _configStr, const
 	*_configStr = str2;
 	return ALIFSTATUS_OK();
 }
+
+
+static AlifStatus config_setBytesString(AlifConfig* _config, wchar_t** _configStr,
+	const char* _str, const char* _decodeErrMsg) { // 1042
+	AlifStatus status = _alif_preInitializeFromConfig(_config, nullptr);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+
+	wchar_t* str2{};
+	if (_str != nullptr) {
+		AlifUSizeT len{};
+		str2 = alif_decodeLocale(_str, &len);
+		if (str2 == nullptr) {
+			if (len == (AlifUSizeT)-2) {
+				return ALIFSTATUS_ERR(_decodeErrMsg);
+			}
+			else {
+				return  ALIFSTATUS_NO_MEMORY();
+			}
+		}
+	}
+	else {
+		str2 = nullptr;
+	}
+	alifMem_dataFree(*_configStr);
+	*_configStr = str2;
+	return ALIFSTATUS_OK();
+}
+
+
+#define CONFIG_SET_BYTES_STR(config, config_str, str, NAME) \
+    config_set_bytes_string(config, config_str, str, "cannot decode " NAME)
 
 
 static inline void* config_getSpecMember(const AlifConfig* _config,
@@ -574,6 +608,45 @@ AlifStatus _alifConfig_copy(AlifConfig* _config, const AlifConfig* _config2) { /
 	return ALIFSTATUS_OK();
 }
 
+
+static const char* config_getEnv(const AlifConfig* _config, const char* _name) { // 1465
+	return _alif_getEnv(_config->useEnvironment, _name);
+}
+
+
+static AlifStatus config_getEnvDup(AlifConfig* _config,
+	wchar_t** _dest, const wchar_t* _wname, const char* _name,
+	const char* _decodeErrMsg) { // 1474
+
+	if (!_config->useEnvironment) {
+		*_dest = nullptr;
+		return ALIFSTATUS_OK();
+	}
+
+#ifdef _WINDOWS
+	const wchar_t* var = _wgetenv(_wname);
+	if (!var or var[0] == '\0') {
+		*_dest = nullptr;
+		return ALIFSTATUS_OK();
+	}
+
+	return alifConfig_setString(_config, _dest, var);
+#else
+	const char* var = getenv(_name);
+	if (!var or var[0] == '\0') {
+		*_dest = nullptr;
+		return ALIFSTATUS_OK();
+	}
+
+	return config_setBytesString(_config, _dest, var, _decodeErrMsg);
+#endif
+}
+
+
+#define CONFIG_GET_ENV_DUP(_config, _dest, _wname, _name) \
+    config_getEnvDup(_config, _dest, _wname, _name, "cannot decode " _name)
+
+
 static void config_getGlobalVars(AlifConfig* _config) { // 1511
 	ALIF_COMP_DIAG_PUSH;
 	ALIF_COMP_DIAG_IGNORE_DEPR_DECLS;
@@ -614,44 +687,58 @@ static void config_getGlobalVars(AlifConfig* _config) { // 1511
 	ALIF_COMP_DIAG_POP
 }
 
+static const wchar_t* config_getXOption(const AlifConfig* _config, const wchar_t* _name) { // 1597
+	return _alif_getXOption(&_config->xoptions, _name);
+}
+
+static const wchar_t* config_getXOptionValue(const AlifConfig* _config,
+	const wchar_t* _name) { // 1602
+	const wchar_t* xoption = config_getXOption(_config, _name);
+	if (xoption == nullptr) {
+		return nullptr;
+	}
+	const wchar_t* sep = wcschr(xoption, L'=');
+	return sep ? sep + 1 : L"";
+}
+
 static AlifStatus config_initImport(AlifConfig* _config, AlifIntT _computePathConfig) { // 2321
 	AlifStatus status{};
 
-	status = _alifConfig_initPathConfig(_config, _computePathConfig); //* todo
+	status = _alifConfig_initPathConfig(_config, _computePathConfig); //* here
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		return status;
 	}
 
-	//const char* env = config_getEnv(_config, "ALIF_FROZEN_MODULES");
-	//if (env == nullptr) {
-	//}
-	//else if (strcmp(env, "on") == 0) {
-	//	_config->useFrozenModules = 1;
-	//}
-	//else if (strcmp(env, "off") == 0) {
-	//	_config->useFrozenModules = 0;
-	//}
-	//else {
-	//	return alifStatus_error("bad value for ALIF_FROZEN_MODULES "
-	//		"(expected \"on\" or \"off\")");
-	//}
+	const char* env = config_getEnv(_config, "ALIF_FROZEN_MODULES");
+	if (env == nullptr) {
+	}
+	else if (strcmp(env, "on") == 0) {
+		_config->useFrozenModules = 1;
+	}
+	else if (strcmp(env, "off") == 0) {
+		_config->useFrozenModules = 0;
+	}
+	else {
+		return ALIFSTATUS_ERR("bad value for ALIF_FROZEN_MODULES "
+			"(expected \"on\" or \"off\")");
+	}
 
-	//const wchar_t* value = config_getXoptionValue(_config, L"frozen_modules");
-	//if (value == nullptr) {
-	//}
-	//else if (wcscmp(value, L"on") == 0) {
-	//	_config->useFrozenModules = 1;
-	//}
-	//else if (wcscmp(value, L"off") == 0) {
-	//	_config->useFrozenModules = 0;
-	//}
-	//else if (wcslen(value) == 0) {
-	//	_config->useFrozenModules = 1;
-	//}
-	//else {
-	//	return alifStatus_Error("bad value for option -X frozen_modules "
-	//		"(expected \"on\" or \"off\")");
-	//}
+	const wchar_t* value = config_getXOptionValue(_config, L"frozen_modules");
+	if (value == nullptr) {
+	}
+	else if (wcscmp(value, L"on") == 0) {
+		_config->useFrozenModules = 1;
+	}
+	else if (wcscmp(value, L"off") == 0) {
+		_config->useFrozenModules = 0;
+	}
+	else if (wcslen(value) == 0) {
+		_config->useFrozenModules = 1;
+	}
+	else {
+		return ALIFSTATUS_ERR("bad value for option -X frozen_modules "
+			"(expected \"on\" or \"off\")");
+	}
 
 	return ALIFSTATUS_OK();
 }
@@ -661,22 +748,53 @@ AlifStatus _alifConfig_initImportConfig(AlifConfig* _config) { // 2367
 }
 
 
-static AlifStatus config_read(AlifConfig* _config) { // 2215
+static AlifStatus config_read(AlifConfig* _config, AlifIntT _computepathConfig) { // 2306
 	AlifStatus status{};
+	const AlifPreConfig* preconfig = &_alifRuntime_.preConfig;
 
 	//if (_config->useEnvironment) {
 	//	status = config_readEnvVars(_config);
 	//	if (ALIFSTATUS_EXCEPTION(status)) return status;
 	//}
 
-	if (_config->tracemalloc < 0) { // from config_read_complex_options()
-		_config->tracemalloc = 1;
+	if (_config->installImportLib) {
+		status = config_initImport(_config, _computepathConfig); //* here
+		if (ALIFSTATUS_EXCEPTION(status)) {
+			return status;
+		}
 	}
 
 	/* default values */
-	//if (_config->tracemalloc < 0) {
-	//	_config->tracemalloc = 0;
-	//}
+	if (_config->devMode) {
+		if (_config->faultHandler < 0) {
+			_config->faultHandler = 1;
+		}
+	}
+	if (_config->faultHandler < 0) {
+		_config->faultHandler = 0;
+	}
+	if (_config->tracemalloc < 0) { // from config_read_complex_options()
+		_config->tracemalloc = 1;
+	}
+	if (_config->perfProfiling < 0) {
+		_config->perfProfiling = 0;
+	}
+	if (_config->useHashSeed < 0) {
+		_config->useHashSeed = 0;
+		_config->hashSeed = 0;
+	}
+
+	if (_config->fileSystemEncoding == nullptr or _config->fileSystemErrors == nullptr) {
+		status = config_initFSEncoding(_config, preconfig);
+		if (ALIFSTATUS_EXCEPTION(status)) {
+			return status;
+		}
+	}
+
+	status = config_initStdioEncoding(_config, preconfig);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
 	if (_config->argv.length < 1) {
 		/* Ensure at least one (empty) argument is seen */
@@ -684,9 +802,17 @@ static AlifStatus config_read(AlifConfig* _config) { // 2215
 		if (ALIFSTATUS_EXCEPTION(status)) return status;
 	}
 
-	//if (_config->configureStdio < 0) {
-	//	_config->configureStdio = 1;
-	//}
+	if (_config->checkHashAlifCSMode == nullptr) {
+		status = alifConfig_setString(_config, &_config->checkHashAlifCSMode,
+			L"عادي");
+		if (ALIFSTATUS_EXCEPTION(status)) {
+			return status;
+		}
+	}
+
+	if (_config->configureCStdio < 0) {
+		_config->configureCStdio = 1;
+	}
 
 	// Only parse arguments once.
 	if (_config->parseArgv == 1) {
@@ -911,10 +1037,48 @@ static AlifStatus config_parseCMDLine(AlifConfig* _config,
 	return ALIFSTATUS_OK();
 }
 
+#ifdef _WINDOWS
+#  define WCSTOK wcstok_s
+#else
+#  define WCSTOK wcstok
+#endif
+
+static AlifStatus config_initEnvWarnOptions(AlifConfig* _config,
+	AlifWStringList* _warnOptions) { // 2732
+
+	AlifStatus status{};
+
+	wchar_t* env = nullptr;
+	status = CONFIG_GET_ENV_DUP(_config, &env,
+		L"ALIFWARNINGS", "ALIFWARNINGS");
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+
+	/* env var is not set or is empty */
+	if (env == nullptr) {
+		return ALIFSTATUS_OK();
+	}
+
+
+	wchar_t* warning, * context = nullptr;
+	for (warning = WCSTOK(env, L",", &context);
+		warning != nullptr;
+		warning = WCSTOK(nullptr, L",", &context)) {
+		status = alifWStringList_append(_warnOptions, warning);
+		if (ALIFSTATUS_EXCEPTION(status)) {
+			alifMem_dataFree(env);
+			return status;
+		}
+	}
+	alifMem_dataFree(env);
+	return ALIFSTATUS_OK();
+}
+
 
 static AlifStatus config_updateArgv(AlifConfig* _config, AlifSizeT _index) { // 2803
 	const AlifWStringList* cmdlineArgv = &_config->argv;
-	AlifWStringList configArgv = { .length = 0, .items = nullptr };
+	AlifWStringList configArgv = ALIFWIDESTRINGLIST_INIT;
 	if (cmdlineArgv->length <= _index) {
 		AlifStatus status = alifWStringList_append(&configArgv, L"");
 		if (ALIFSTATUS_EXCEPTION(status)) {
@@ -932,10 +1096,10 @@ static AlifStatus config_updateArgv(AlifConfig* _config, AlifSizeT _index) { // 
 
 	wchar_t* arg1{};
 	if (_config->runCommand != nullptr) {
-		arg1 = (wchar_t*)L"-c";
+		arg1 = (wchar_t*)L"-ص";
 	}
 	else if (_config->runModule != nullptr) {
-		arg1 = (wchar_t*)L"-m";
+		arg1 = (wchar_t*)L"-ك";
 	}
 
 	if (arg1 != nullptr) {
@@ -1001,7 +1165,7 @@ static AlifStatus config_runFileNameAbsPath(AlifConfig* _config) { // 2963
 	// يتم التحقق من لاحقة الملف والتي يجب ان تكون .alif او .الف
 	if (!alif_extension(filename)) {
 		printf("%s \n\n", "تأكد من لاحقة الملف \n يجب ان ينتهي اسم الملف بـ .alif او .الف");
-		exit(-1);
+		return ALIFSTATUS_EXIT(0);
 	}
 
 #ifndef _WINDOWS
@@ -1047,7 +1211,7 @@ static AlifStatus config_readCMDLine(AlifConfig* _config) { // 2992
 		if (ALIFSTATUS_EXCEPTION(status)) return status;
 
 		// تقوم هذه الدالة بجلب المسار الخاص بتنفيذ الملف فقط
-		status = config_runFileNameAbsPath(_config);  //* here
+		status = config_runFileNameAbsPath(_config);
 		if (ALIFSTATUS_EXCEPTION(status)) return status;
 
 		// تقوم هذه الدالة بتحديث المعطيات الممررة عبر الطرفية
@@ -1062,12 +1226,12 @@ static AlifStatus config_readCMDLine(AlifConfig* _config) { // 2992
 	}
 
 
-	//if (_config->useEnvironment) {
-	//	status = config_initEnvWarnOptions(_config, &envWarnOptions);
-	//	if (ALIFSTATUS_EXCEPTION(status)) {
-	//		goto done;
-	//	}
-	//}
+	if (_config->useEnvironment) {
+		status = config_initEnvWarnOptions(_config, &envWarnOptions);
+		if (ALIFSTATUS_EXCEPTION(status)) {
+			goto done;
+		}
+	}
 
 	//status = _alifSys_readPreinitWarnOptions(&sysWarnOptions);
 	//if (ALIFSTATUS_EXCEPTION(status)) {
@@ -1120,7 +1284,7 @@ AlifStatus _alifConfig_read(AlifConfig* _config, AlifIntT _computePathConfig) { 
 		_config->userSiteDirectory = 0;
 	}
 
-	status = config_readCMDLine(_config); //* here
+	status = config_readCMDLine(_config);
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		goto done;
 	}
@@ -1130,7 +1294,7 @@ AlifStatus _alifConfig_read(AlifConfig* _config, AlifIntT _computePathConfig) { 
 	//	goto done;
 	//}
 
-	status = config_read(_config);
+	status = config_read(_config, _computePathConfig);
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		goto done;
 	}
@@ -1138,7 +1302,7 @@ AlifStatus _alifConfig_read(AlifConfig* _config, AlifIntT _computePathConfig) { 
 	status = ALIFSTATUS_OK();
 
 done:
-	//_alifPreCMDLine_clear(&precmdline);
+	_alifPreCMDLine_clear(&precmdline);
 	return status;
 }
 

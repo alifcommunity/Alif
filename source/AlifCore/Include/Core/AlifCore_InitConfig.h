@@ -80,7 +80,7 @@ public:
 		.useEnvironment = -1, \
         .devMode = -1 }
 
-
+extern void _alifPreCMDLine_clear(AlifPreCmdline*); // 118
 extern AlifStatus _alifPreCMDLine_setArgv(AlifPreCmdline*, const AlifArgv*); // 119
 extern AlifStatus _alifPreCMDLine_setConfig(const AlifPreCmdline*, AlifConfig*); // 121
 extern AlifStatus _alifPreCMDLine_read(AlifPreCmdline*, const AlifPreConfig*); // 124

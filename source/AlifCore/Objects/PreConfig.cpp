@@ -1,7 +1,7 @@
 #include "alif.h"
 
 #include "AlifCore_FileUtils.h"
-#include "AlifCore_getOption.h"
+#include "AlifCore_GetOption.h"
 #include "AlifCore_InitConfig.h"
 #include "AlifCore_LifeCycle.h"
 #include "AlifCore_Runtime.h"
