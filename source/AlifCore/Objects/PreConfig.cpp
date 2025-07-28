@@ -34,7 +34,7 @@ AlifStatus _alifArgv_asWStrList(const AlifArgv* _args, AlifWStringList* _list) {
 	else {
 		wArgv.length = _args->argc;
 		wArgv.items = (wchar_t**)_args->wcharArgv;
-		if (alifWStringList_copy(_list, &wArgv)) {
+		if (_alifWStringList_copy(_list, &wArgv)) {
 			return ALIFSTATUS_NO_MEMORY();
 		}
 	}
@@ -45,16 +45,16 @@ AlifStatus _alifArgv_asWStrList(const AlifArgv* _args, AlifWStringList* _list) {
 
 /* ---------------------------------- AlifPreCmdline ---------------------------------- */
 
-void _alifPreCmdline_clear(AlifPreCmdline* _cmdline) { // 116
+void _alifPreCMDLine_clear(AlifPreCmdline* _cmdline) { // 116
 	_alifWStringList_clear(&_cmdline->argv);
 	_alifWStringList_clear(&_cmdline->xoptions);
 }
 
-AlifStatus _alifPreCmdline_setArgv(AlifPreCmdline* _cmdline, const AlifArgv* _args) { // 124
+AlifStatus _alifPreCMDLine_setArgv(AlifPreCmdline* _cmdline, const AlifArgv* _args) { // 124
 	return _alifArgv_asWStrList(_args, &_cmdline->argv);
 }
 
-static void preCmdline_getPreConfig(AlifPreCmdline* _cmdline, const AlifPreConfig* _config) { // 131
+static void preCMDLine_getPreConfig(AlifPreCmdline* _cmdline, const AlifPreConfig* _config) { // 131
 #define COPY_ATTR(_attr) \
     if (_config->_attr != -1) { \
         _cmdline->_attr = _config->_attr; \
@@ -67,13 +67,32 @@ static void preCmdline_getPreConfig(AlifPreCmdline* _cmdline, const AlifPreConfi
 #undef COPY_ATTR
 }
 
-static void preCmdline_setPreConfig(const AlifPreCmdline* _cmdline, AlifPreConfig* _config) { // 147
-#define COPY_ATTR(ATTR) \
-    _config->ATTR = _cmdline->ATTR
+static void preCMDLine_setPreConfig(const AlifPreCmdline* _cmdline,
+	AlifPreConfig* _config) { // 147
+#define COPY_ATTR(_attr) \
+    _config->_attr = _cmdline->_attr
 
 	COPY_ATTR(isolated);
 	COPY_ATTR(useEnvironment);
 	COPY_ATTR(devMode);
+
+#undef COPY_ATTR
+}
+
+AlifStatus _alifPreCMDLine_setConfig(const AlifPreCmdline* _cmdline, AlifConfig* _config) { // 154
+#define COPY_ATTR(_attr) \
+    _config->_attr = _cmdline->_attr
+
+	AlifStatus status = _alifWStringList_extend(&_config->xoptions, &_cmdline->xoptions);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+
+	COPY_ATTR(isolated);
+	COPY_ATTR(useEnvironment);
+	COPY_ATTR(devMode);
+	COPY_ATTR(warnDefaultEncoding);
+	return ALIFSTATUS_OK();
 
 #undef COPY_ATTR
 }
@@ -125,9 +144,9 @@ static AlifStatus preCmdline_parseCmdline(AlifPreCmdline* _cmdline) { // 182
 
 
 
-AlifStatus _alifPreCmdline_read(AlifPreCmdline* _cmdline,
+AlifStatus _alifPreCMDLine_read(AlifPreCmdline* _cmdline,
 	const AlifPreConfig* _preConfig) { // 230
-	preCmdline_getPreConfig(_cmdline, _preConfig);
+	preCMDLine_getPreConfig(_cmdline, _preConfig);
 
 	if (_preConfig->parseArgv) {
 		AlifStatus status = preCmdline_parseCmdline(_cmdline);
@@ -514,12 +533,12 @@ static void preConfig_initCoerceCLocale(AlifPreConfig* _config) { // 673
 static AlifStatus preConfig_read(AlifPreConfig* config, AlifPreCmdline* cmdline) { // 745
 	AlifStatus status{};
 
-	status = _alifPreCmdline_read(cmdline, config);
+	status = _alifPreCMDLine_read(cmdline, config);
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		return status;
 	}
 
-	preCmdline_setPreConfig(cmdline, config);
+	preCMDLine_setPreConfig(cmdline, config);
 
 	/* legacyWindowsFSEncoding, coerceCLocale, utf8Mode */
 #ifdef _WINDOWS
@@ -603,7 +622,7 @@ AlifStatus _alifPreConfig_read(AlifPreConfig* _config, const AlifArgv* _args) { 
 		if (_args) {
 			// Set command line arguments at each iteration. If they are bytes
 			// strings, they are decoded from the new encoding.
-			status = _alifPreCmdline_setArgv(&cmdline, _args);
+			status = _alifPreCMDLine_setArgv(&cmdline, _args);
 			if (ALIFSTATUS_EXCEPTION(status)) {
 				goto done;
 			}
@@ -662,7 +681,7 @@ done:
 	setlocale(LC_CTYPE, initCtypeLocale);
 	alifMem_dataFree(initCtypeLocale);
 	preconfig_copy(&_alifRuntime_.preConfig, &saveRuntimeConfig);
-	_alifPreCmdline_clear(&cmdline);
+	_alifPreCMDLine_clear(&cmdline);
 	return status;
 }
 

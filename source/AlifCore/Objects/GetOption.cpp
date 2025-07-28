@@ -2,7 +2,7 @@
 #include "AlifCore_GetOption.h"
 
 // هذا المتغير يحتوي الاحرف التي قد يتم إستخدامها في سطر الطرفية
-#define SHORT_OPTS L"c:hm:v"
+#define SHORT_OPTS L"ص:مك:ن"
 
 static const LongOption _longOpts_[] = {
 	{L"", 1, 0},
@@ -41,19 +41,19 @@ AlifIntT _alifOS_getOpt(AlifSizeT _argc, wchar_t* const* _argv, AlifIntT* _longI
 	#ifdef _WINDOWS
 		else if (wcscmp(_argv[_alifOSOptInd_], L"/?") == 0) {
 			++_alifOSOptInd_;
-			return 'h';
+			return L'م';
 		}
 	#endif
 		else if (_argv[_alifOSOptInd_][0] != L'-' or _argv[_alifOSOptInd_][1] == L'\0') {
 			return -1;
 		}
-		else if (wcscmp(_argv[_alifOSOptInd_], L"--version") == 0) {
+		else if (wcscmp(_argv[_alifOSOptInd_], L"--نسخة") == 0) {
 			++_alifOSOptInd_;
-			return 'v';
+			return L'ن';
 		}
-		else if (wcscmp(_argv[_alifOSOptInd_], L"--help") == 0) {
+		else if (wcscmp(_argv[_alifOSOptInd_], L"--مساعدة") == 0) {
 			++_alifOSOptInd_;
-			return 'h';
+			return L'م';
 		}
 
 		_optPtr_ = &_argv[_alifOSOptInd_++][1];
@@ -92,7 +92,7 @@ AlifIntT _alifOS_getOpt(AlifSizeT _argc, wchar_t* const* _argv, AlifIntT* _longI
 	}
 
 	if ((ptr = (wchar_t*)wcschr(SHORT_OPTS, option)) == nullptr) {
-		fprintf(stderr, "خيار غير معروف: -%c\n", (char)option);
+		fwprintf(stderr, L"خيار غير معروف: -%wc\n", (wchar_t)option);
 		return '-';
 	}
 

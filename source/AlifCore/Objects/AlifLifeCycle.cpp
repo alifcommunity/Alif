@@ -618,7 +618,7 @@ static AlifStatus alifInit_core(AlifRuntime* _runtime,
 	status = _alifConfig_copy(&config, _srcConfig);
 	if (ALIFSTATUS_EXCEPTION(status)) goto done;
 
-	status = alifConfig_read(&config);
+	status = _alifConfig_read(&config, 0); //* here
 	if (ALIFSTATUS_EXCEPTION(status)) goto done;
 
 	if (!_runtime->coreInitialized) {

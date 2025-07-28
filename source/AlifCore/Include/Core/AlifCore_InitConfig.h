@@ -20,12 +20,15 @@
 	}
 #define ALIFSTATUS_NO_MEMORY_ERRMSG "فشل الحجز في الذاكرة"
 #define ALIFSTATUS_NO_MEMORY() ALIFSTATUS_ERR(ALIFSTATUS_NO_MEMORY_ERRMSG)
-#define ALIFSTATUS_IS_EXIT(err) \
-    (err.type == AlifStatus::AlifStatus_Type_EXIT)
-#define ALIFSTATUS_EXCEPTION(err) \
-    (err.type != AlifStatus::AlifStatus_Type_OK)
-#define ALIFSTATUS_IS_ERROR(err) \
-    (err.type == AlifStatus::AlifStatus_Type_ERROR)
+#define ALIFSTATUS_IS_EXIT(_err) \
+    (_err.type == AlifStatus::AlifStatus_Type_EXIT)
+#define ALIFSTATUS_EXCEPTION(_err) \
+    (_err.type != AlifStatus::AlifStatus_Type_OK)
+#define ALIFSTATUS_IS_ERROR(_err) \
+    (_err.type == AlifStatus::AlifStatus_Type_ERROR)
+#define ALIFSTATUS_EXIT(_exitcode) \
+    { .type = AlifStatus::AlifStatus_Type_EXIT, \
+        .exitcode = (_exitcode) }
 
 
 /* ---------------------------------------- AlifWStringList --------------------------------------- */
@@ -33,9 +36,9 @@
 #define ALIFWIDESTRINGLIST_INIT {.length = 0, .items = nullptr}
 
 extern void _alifWStringList_clear(AlifWStringList*); // 59
-extern AlifIntT alifWStringList_copy(AlifWStringList*, const AlifWStringList*); // 60
+extern AlifIntT _alifWStringList_copy(AlifWStringList*, const AlifWStringList*); // 60
 
-
+extern AlifStatus _alifWStringList_extend(AlifWStringList*, const AlifWStringList*); // 62
 extern AlifObject* _alifWStringList_asList(const AlifWStringList*); // 64
 
 /* ------------------------------------------- AlifArgv ------------------------------------------- */
@@ -78,7 +81,9 @@ public:
         .devMode = -1 }
 
 
-extern AlifStatus _alifPreCmdline_setArgv(AlifPreCmdline*, const AlifArgv*); // 119
+extern AlifStatus _alifPreCMDLine_setArgv(AlifPreCmdline*, const AlifArgv*); // 119
+extern AlifStatus _alifPreCMDLine_setConfig(const AlifPreCmdline*, AlifConfig*); // 121
+extern AlifStatus _alifPreCMDLine_read(AlifPreCmdline*, const AlifPreConfig*); // 124
 
 /* --------------------------------------- AlifPreConfig --------------------------------------- */
 
@@ -109,5 +114,5 @@ extern AlifStatus _alifConfig_copy(AlifConfig*, const AlifConfig*); // 171
 extern AlifStatus _alifConfig_initPathConfig(AlifConfig*, AlifIntT); // 174
 
 extern AlifStatus _alifConfig_initImportConfig(AlifConfig*); // 177
-extern AlifStatus alifConfig_read(AlifConfig*); // 178
+extern AlifStatus _alifConfig_read(AlifConfig*, AlifIntT); // 178
 extern AlifStatus alifConfig_write(const AlifConfig*, class AlifRuntime*); // 179
