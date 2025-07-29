@@ -95,6 +95,37 @@ static AlifIntT alifMain_runFileObj(AlifObject* _pn, AlifObject* _fn, AlifIntT _
 	return (run != 0);
 }
 
+static AlifIntT alifMain_runCommand(wchar_t* _command) { // 231
+	AlifObject* unicode{}, * bytes{};
+	AlifIntT ret{};
+	AlifCompilerFlags cf{};
+
+	unicode = alifUStr_fromWideChar(_command, -1);
+	if (unicode == nullptr) {
+		goto error;
+	}
+
+	if (alifSys_audit("alif.run_command", "O", unicode) < 0) {
+		return alifMainExit_errPrint();
+	}
+
+	bytes = _alifUStr_asUTF8String(unicode, nullptr);
+	ALIF_DECREF(unicode);
+	if (bytes == nullptr) {
+		goto error;
+	}
+
+	cf = ALIFCOMPILERFLAGS_INIT;
+	cf.flags |= ALIFCF_IGNORE_COOKIE;
+	ret = _alifRun_simpleStringFlagsWithName(alifBytes_asString(bytes), "<string>", &cf);
+	ALIF_DECREF(bytes);
+	return (ret != 0);
+
+error:
+	alifSys_writeStderr("غير قادر على فك تشفير الأمر من سطر الأوامر:\n");
+	return alifMainExit_errPrint();
+}
+
 static AlifIntT alifMain_runFile(const AlifConfig* _config) { // 414
 	AlifObject* fileName = alifUStr_fromWideChar(_config->runFilename, -1);
 	if (fileName == nullptr) {
