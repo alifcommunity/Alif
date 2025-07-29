@@ -167,7 +167,13 @@ typedef AlifUSizeT AlifUHashT;
 
 
 
+#if defined(__ANDROID__) || defined(__VXWORKS__)
+#  define ALIF_FORCE_UTF8_LOCALE
+#endif
 
+#if defined(ALIF_FORCE_UTF8_LOCALE) || defined(__APPLE__)
+#  define ALIF_FORCE_UTF8_FS_ENCODING
+#endif
 
 
 

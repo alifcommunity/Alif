@@ -78,6 +78,16 @@ static LocaleCoercionTarget _TargetLocales_[] = { // 232
 	{nullptr}
 };
 
+AlifIntT _alif_isLocaleCoercionTarget(const char* _ctypeLoc) { // 240
+	const LocaleCoercionTarget* target = nullptr;
+	for (target = _TargetLocales_; target->localeName; target++) {
+		if (strcmp(_ctypeLoc, target->localeName) == 0) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
 // 253
 #ifdef ALIF_COERCE_C_LOCALE
 static const char _cLocaleCoercionWarning_[] =

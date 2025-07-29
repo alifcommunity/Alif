@@ -3,6 +3,10 @@
 #include "AlifCore_Runtime.h"
 
 
+
+
+extern AlifIntT _alif_isLocaleCoercionTarget(const char*); // 26
+
 extern AlifObject* alifBuiltin_init(AlifInterpreter*); // 32
 extern AlifStatus alifSys_create(AlifThread*, AlifObject**); // 33
 

@@ -555,7 +555,7 @@ static AlifStatus config_setBytesString(AlifConfig* _config, wchar_t** _configSt
 
 
 #define CONFIG_SET_BYTES_STR(config, config_str, str, NAME) \
-    config_set_bytes_string(config, config_str, str, "cannot decode " NAME)
+    config_setBytesString(config, config_str, str, "cannot decode " NAME)
 
 
 static inline void* config_getSpecMember(const AlifConfig* _config,
@@ -687,6 +687,46 @@ static void config_getGlobalVars(AlifConfig* _config) { // 1511
 	ALIF_COMP_DIAG_POP
 }
 
+static void config_setGlobalVars(const AlifConfig* _config) { // 1555
+	ALIF_COMP_DIAG_PUSH;
+	ALIF_COMP_DIAG_IGNORE_DEPR_DECLS;
+#define COPY_FLAG(_attr, _var) \
+        if (_config->_attr != -1) { \
+            _var = _config->_attr; \
+        }
+#define COPY_NOT_FLAG(_attr, _var) \
+        if (_config->_attr != -1) { \
+            _var = !_config->_attr; \
+        }
+
+	COPY_FLAG(isolated, _alifIsolatedFlag_);
+	COPY_NOT_FLAG(useEnvironment, _alifIgnoreEnvironmentFlag_);
+	COPY_FLAG(bytesWarning, _alifBytesWarningFlag_);
+	COPY_FLAG(inspect, _alifInspectFlag_);
+	COPY_FLAG(interactive, _alifInteractiveFlag_);
+	COPY_FLAG(optimizationLevel, _alifOptimizeFlag_);
+	COPY_FLAG(parserDebug, _alifDebugFlag_);
+	COPY_FLAG(verbose, _alifVerboseFlag_);
+	COPY_FLAG(quiet, _alifQuietFlag_);
+#ifdef _WINDOWS
+	COPY_FLAG(legacyWindowsStdio, _alifLegacyWindowsStdioFlag_);
+#endif
+	COPY_NOT_FLAG(pathConfigWarnings, _alifFrozenFlag_);
+
+	COPY_NOT_FLAG(bufferedStdio, _alifUnbufferedStdioFlag_);
+	COPY_NOT_FLAG(siteImport, _alifNoSiteFlag_);
+	COPY_NOT_FLAG(writeBytecode, _alifDontWriteBytecodeFlag_);
+	COPY_NOT_FLAG(userSiteDirectory, _alifNoUserSiteDirectory_);
+
+	/* Random or non-zero hash seed */
+	_alifHashRandomizationFlag_ = (_config->useHashSeed == 0 or
+		_config->hashSeed != 0);
+
+#undef COPY_FLAG
+#undef COPY_NOT_FLAG
+	ALIF_COMP_DIAG_POP
+}
+
 static const wchar_t* config_getXOption(const AlifConfig* _config, const wchar_t* _name) { // 1597
 	return _alif_getXOption(&_config->xoptions, _name);
 }
@@ -699,6 +739,192 @@ static const wchar_t* config_getXOptionValue(const AlifConfig* _config,
 	}
 	const wchar_t* sep = wcschr(xoption, L'=');
 	return sep ? sep + 1 : L"";
+}
+
+static const wchar_t* config_getStdioErrors(const AlifPreConfig* _preConfig) { // 2056
+	if (_preConfig->utf8Mode) {
+		/* UTF-8 Mode uses UTF-8/surrogateescape */
+		return L"surrogateescape";
+	}
+
+#ifndef _WINDOWS
+	const char* loc = setlocale(LC_CTYPE, nullptr);
+	if (loc != nullptr) {
+		/* surrogateescape is the default in the legacy C and POSIX locales */
+		if (strcmp(loc, "C") == 0 or strcmp(loc, "POSIX") == 0) {
+			return L"surrogateescape";
+		}
+
+	#ifdef ALIF_COERCE_C_LOCALE
+		/* surrogateescape is the default in locale coercion target locales */
+		if (_alif_isLocaleCoercionTarget(loc)) {
+			return L"surrogateescape";
+		}
+	#endif
+	}
+
+	return L"strict";
+#else
+	/* On Windows, always use surrogateescape by default */
+	return L"surrogateescape";
+#endif
+}
+
+static AlifStatus config_getLocaleEncoding(AlifConfig* _config,
+	const AlifPreConfig* _preConfig, wchar_t** _localeEncoding) { // 2088
+	wchar_t* encoding{};
+	if (_preConfig->utf8Mode) {
+		encoding = alifMem_wcsDup(L"utf-8");
+	}
+	else {
+		encoding = _alif_getLocaleEncoding();
+	}
+	if (encoding == nullptr) {
+		return ALIFSTATUS_NO_MEMORY();
+	}
+	AlifStatus status = alifConfig_setString(_config, _localeEncoding, encoding);
+	alifMem_dataFree(encoding);
+	return status;
+}
+
+static AlifStatus config_initStdioEncoding(AlifConfig* _config,
+	const AlifPreConfig* _preConfig) { // 2107
+	AlifStatus status{};
+
+	// Exit if encoding and errors are defined
+	if (_config->stdioEncoding != nullptr and _config->stdioErrors != nullptr) {
+		return ALIFSTATUS_OK();
+	}
+
+	/* ALIFIOENCODING environment variable */
+	const char* opt = config_getEnv(_config, "ALIFIOENCODING");
+	if (opt) {
+		char* alifIOEncoding = alifMem_strDup(opt);
+		if (alifIOEncoding == nullptr) {
+			return ALIFSTATUS_NO_MEMORY();
+		}
+
+		char* errors = strchr(alifIOEncoding, ':');
+		if (errors) {
+			*errors = '\0';
+			errors++;
+			if (!errors[0]) {
+				errors = nullptr;
+			}
+		}
+
+		/* Does ALIFIOENCODING contain an encoding? */
+		if (alifIOEncoding[0]) {
+			if (_config->stdioEncoding == nullptr) {
+				status = CONFIG_SET_BYTES_STR(_config, &_config->stdioEncoding,
+					alifIOEncoding,
+					"ALIFIOENCODING environment variable");
+				if (ALIFSTATUS_EXCEPTION(status)) {
+					alifMem_dataFree(alifIOEncoding);
+					return status;
+				}
+			}
+
+			/* If the encoding is set but not the error handler,
+			   use "strict" error handler by default.
+			   ALIFIOENCODING=latin1 behaves as
+			   ALIFIOENCODING=latin1:strict. */
+			if (!errors) {
+				errors = (char*)"strict";
+			}
+		}
+
+		if (_config->stdioErrors == nullptr and errors != nullptr) {
+			status = CONFIG_SET_BYTES_STR(_config, &_config->stdioErrors,
+				errors,
+				"ALIFIOENCODING environment variable");
+			if (ALIFSTATUS_EXCEPTION(status)) {
+				alifMem_dataFree(alifIOEncoding);
+				return status;
+			}
+		}
+
+		alifMem_dataFree(alifIOEncoding);
+	}
+
+	/* Choose the default error handler based on the current locale. */
+	if (_config->stdioEncoding == nullptr) {
+		status = config_getLocaleEncoding(_config, _preConfig,
+			&_config->stdioEncoding);
+		if (ALIFSTATUS_EXCEPTION(status)) {
+			return status;
+		}
+	}
+	if (_config->stdioErrors == nullptr) {
+		const wchar_t* errors = config_getStdioErrors(_preConfig);
+
+		status = alifConfig_setString(_config, &_config->stdioErrors, errors);
+		if (ALIFSTATUS_EXCEPTION(status)) {
+			return status;
+		}
+	}
+
+	return ALIFSTATUS_OK();
+}
+
+static AlifStatus config_getFSEncoding(AlifConfig* _config,
+	const AlifPreConfig* _preConfig, wchar_t** _fsEncoding) { // 2191
+#ifdef ALIF_FORCE_UTF8_FS_ENCODING
+	return alifConfig_setString(_config, _fsEncoding, L"utf-8");
+#elif defined(_WINDOWS)
+	const wchar_t* encoding;
+	if (_preConfig->legacyWindowsFSEncoding) {
+		// Legacy Windows filesystem encoding: mbcs/replace
+		encoding = L"mbcs";
+	}
+	else {
+		// Windows defaults to utf-8/surrogatepass
+		encoding = L"utf-8";
+	}
+	return alifConfig_setString(_config, _fsEncoding, encoding);
+#else  // !_WINDOWS
+	if (_preConfig->utf8Mode) {
+		return alifConfig_setString(_config, _fsEncoding, L"utf-8");
+	}
+
+	//if (_alif_getForceASCII()) {
+	//	return alifConfig_setString(_config, _fsEncoding, L"ascii");
+	//}
+
+	return config_getLocaleEncoding(_config, _preConfig, _fsEncoding);
+#endif  // !_WINDOWS
+}
+
+static AlifStatus config_initFSEncoding(AlifConfig* _config,
+	const AlifPreConfig* _preConfig) { // 2221
+	AlifStatus status{};
+
+	if (_config->fileSystemEncoding == nullptr) {
+		status = config_getFSEncoding(_config, _preConfig,
+			&_config->fileSystemEncoding);
+		if (ALIFSTATUS_EXCEPTION(status)) {
+			return status;
+		}
+	}
+
+	if (_config->fileSystemErrors == nullptr) {
+		const wchar_t* errors;
+	#ifdef _WINDOWS
+		if (_preConfig->legacyWindowsFSEncoding) {
+			errors = L"replace";
+		}
+		else {
+			errors = L"surrogatepass";
+		}
+	#else
+		errors = L"surrogateescape";
+	#endif
+		status = alifConfig_setString(_config, &_config->fileSystemErrors, errors);
+		if (ALIFSTATUS_EXCEPTION(status)) {
+			return status;
+		}
+	}
+	return ALIFSTATUS_OK();
 }
 
 static AlifStatus config_initImport(AlifConfig* _config, AlifIntT _computePathConfig) { // 2321
@@ -773,7 +999,7 @@ static AlifStatus config_read(AlifConfig* _config, AlifIntT _computepathConfig) 
 	if (_config->faultHandler < 0) {
 		_config->faultHandler = 0;
 	}
-	if (_config->tracemalloc < 0) { // from config_read_complex_options()
+	if (_config->tracemalloc < 0) {
 		_config->tracemalloc = 1;
 	}
 	if (_config->perfProfiling < 0) {
@@ -822,66 +1048,55 @@ static AlifStatus config_read(AlifConfig* _config, AlifIntT _computepathConfig) 
 	return ALIFSTATUS_OK();
 }
 
-static AlifIntT alif_setFileMode(const AlifConfig* _config) { // 2327
+static void config_initStdio(const AlifConfig* _config) { // 2327
 
 #if defined(_WINDOWS) or defined(__CYGWIN__)
 	/* don't translate newlines (\r\n <=> \n) */
-	bool modeIn = _setmode(fileno(stdin), O_BINARY);
-	bool modeOut = _setmode(fileno(stdout), O_BINARY);
-	bool modeErr = _setmode(fileno(stderr), O_BINARY);
-
-	if (!modeIn or !modeOut or !modeErr) {
-		std::cout <<
-			"can't init _setmode in windows for reading Arabic characters" // يجب أن تكون باللغة الاجنبية في حال لم يستطع تهيئة طباعة الاحرف العربية
-			<< std::endl;
-		return -1;
-	}
+	_setmode(fileno(stdin), O_BINARY);
+	_setmode(fileno(stdout), O_BINARY);
+	_setmode(fileno(stderr), O_BINARY);
 #endif
 
-	bool buffIn{ 1 }, buffOut{ 1 }, buffErr{ 1 };
 	if (!_config->bufferedStdio) {
 	#ifdef HAVE_SETVBUF
-		buffIn = setvbuf(stdin, (char*)nullptr, _IONBF, BUFSIZ);
-		buffOut = setvbuf(stdout, (char*)nullptr, _IONBF, BUFSIZ);
-		buffErr = setvbuf(stderr, (char*)nullptr, _IONBF, BUFSIZ);
+		setvbuf(stdin, (char*)nullptr, _IONBF, BUFSIZ);
+		setvbuf(stdout, (char*)nullptr, _IONBF, BUFSIZ);
+		setvbuf(stderr, (char*)nullptr, _IONBF, BUFSIZ);
 	#else /* !HAVE_SETVBUF */
-		buffIn = setbuf(stdin, (char*)nullptr);
-		buffOut = setbuf(stdout, (char*)nullptr);
-		buffErr = setbuf(stderr, (char*)nullptr);
+		setbuf(stdin, (char*)nullptr);
+		setbuf(stdout, (char*)nullptr);
+		setbuf(stderr, (char*)nullptr);
 	#endif /* !HAVE_SETVBUF */
-
-		if (buffIn or buffOut or buffErr) {
-			std::cout << "لم يستطع تهيئة مخزن النصوص الإفتراضي في نظام ويندوز" << std::endl;
-			return -1;
-		}
 	}
 	else if (_config->interactive) {
 	#ifdef _WINDOWS
 		/* Doesn't have to have line-buffered -- use unbuffered */
-		buffOut = setvbuf(stdout, (char*)nullptr, _IONBF, BUFSIZ);
-		if (buffOut) {
-			std::cout << "لم يستطع تهيئة مخزن النصوص الإفتراضي في نظام ويندوز" << std::endl;
-			return -1;
-		}
+		setvbuf(stdout, (char*)nullptr, _IONBF, BUFSIZ);
 	#else /* !_WINDOWS */
 	#ifdef HAVE_SETVBUF
-		buffIn = setvbuf(stdin, (char*)nullptr, _IOLBF, BUFSIZ);
-		buffOut = setvbuf(stdout, (char*)nullptr, _IOLBF, BUFSIZ);
-		if (buffIn or buffOut) {
-			std::cout << "لم يستطع تهيئة مخزن النصوص الإفتراضي" << std::endl;
-			return -1;
-		}
+		setvbuf(stdin, (char*)nullptr, _IOLBF, BUFSIZ);
+		setvbuf(stdout, (char*)nullptr, _IOLBF, BUFSIZ);
 	#endif /* HAVE_SETVBUF */
 	#endif /* !_WINDOWS */
 		/* Leave stderr alone - it should be unbuffered. */
 	}
-
-	return 1;
 }
 
-AlifStatus alifConfig_write(const AlifConfig* _config, AlifRuntime* _dureRun) { // 2368
+AlifStatus alifConfig_write(const AlifConfig* _config, AlifRuntime* _runtime) { // 2458
+	config_setGlobalVars(_config);
 
-	if (alif_setArgcArgv(_config->origArgv.length, _config->origArgv.items) < 0) {
+	if (_config->configureCStdio) {
+		config_initStdio(_config);
+	}
+
+	/* Write the new pre-configuration into _alifRuntime_ */
+	AlifPreConfig* preconfig = &_runtime->preConfig;
+	preconfig->isolated = _config->isolated;
+	preconfig->useEnvironment = _config->useEnvironment;
+	preconfig->devMode = _config->devMode;
+
+	if (alif_setArgcArgv(_config->origArgv.length,
+		_config->origArgv.items) < 0) {
 		return ALIFSTATUS_NO_MEMORY();
 	}
 

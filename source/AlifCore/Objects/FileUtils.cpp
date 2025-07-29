@@ -207,38 +207,38 @@ decode_error:
 AlifIntT alif_decodeLocaleEx(const char* _arg, wchar_t** _wstr, AlifUSizeT* _wlen,
 	const char** _reason, AlifIntT _currentLocale, AlifErrorHandler_ _errors) { // 601
 	if (_currentLocale) {
-#ifdef ALIF_FORCE_UTF8_LOCALE
+	#ifdef ALIF_FORCE_UTF8_LOCALE
 		return alif_decodeUTF8Ex(_arg, strlen(_arg), _wstr, _wlen, _reason, _errors);
-#else
+	#else
 		return decode_currentLocale(_arg, _wstr, _wlen, _reason, _errors);
-#endif
+	#endif
 	}
 
-//#ifdef ALIF_FORCE_UTF8_FS_ENCODING
-//	return _alif_decodeUTF8Ex(_arg, strlen(_arg), _wstr, _wlen, _reason, _errors);
-//#else
-//	AlifIntT useUTF8 = (_alifRuntime_.preConfig.utf8Mode >= 1);
-//#ifdef _WINDOWS
-//	useUTF8 |= (_alifRuntime_.preConfig.legacyWindowsFSEncoding == 0);
-//#endif
-//	if (useUTF8) {
-//		return _alif_decodeUTF8Ex(_arg, strlen(_arg), _wstr, _wlen, _reason, _errors);
-//	}
-//
-//#ifdef USE_FORCE_ASCII
-//	if (FORCE_ASCII == -1) {
-//		FORCE_ASCII = check_forceASCII();
-//	}
-//
-//	if (FORCE_ASCII) {
-//		/* force ASCII encoding to workaround mbstowcs() issue */
-//		return decode_ascii(_arg, _wstr, _wlen, _reason, _errors);
-//	}
-//#endif
+	//#ifdef ALIF_FORCE_UTF8_FS_ENCODING
+	//	return _alif_decodeUTF8Ex(_arg, strlen(_arg), _wstr, _wlen, _reason, _errors);
+	//#else
+	//	AlifIntT useUTF8 = (_alifRuntime_.preConfig.utf8Mode >= 1);
+	//#ifdef _WINDOWS
+	//	useUTF8 |= (_alifRuntime_.preConfig.legacyWindowsFSEncoding == 0);
+	//#endif
+	//	if (useUTF8) {
+	//		return _alif_decodeUTF8Ex(_arg, strlen(_arg), _wstr, _wlen, _reason, _errors);
+	//	}
+	//
+	//#ifdef USE_FORCE_ASCII
+	//	if (FORCE_ASCII == -1) {
+	//		FORCE_ASCII = check_forceASCII();
+	//	}
+	//
+	//	if (FORCE_ASCII) {
+	//		/* force ASCII encoding to workaround mbstowcs() issue */
+	//		return decode_ascii(_arg, _wstr, _wlen, _reason, _errors);
+	//	}
+	//#endif
 
 	return alif_decodeUTF8Ex(_arg, strlen(_arg), _wstr, _wlen, _reason, _errors);
 
-//#endif
+	//#endif
 }
 
 wchar_t* alif_decodeLocale(const char* _arg, AlifUSizeT* _wlen) { // 663
@@ -354,42 +354,42 @@ static AlifIntT encode_localeEX(const wchar_t* _text, char** _str, AlifUSizeT* _
 	AlifIntT _currentLocale, AlifErrorHandler_ _errors) { // 792
 
 	if (_currentLocale) {
-#ifdef ALIF_FORCE_UTF8_LOCALE
+	#ifdef ALIF_FORCE_UTF8_LOCALE
 		return _alif_encodeUTF8Ex(_text, _str, _errorPos, _reason,
 			_rawMalloc, _errors);
-#else
+	#else
 		return encode_currentLocale(_text, _str, _errorPos, _reason,
 			_rawMalloc, _errors);
-#endif
+	#endif
 	}
 
-//#ifdef ALIF_FORCE_UTF8_FS_ENCODING
-//	return _alif_encodeUTF8Ex(_text, _str, _errorpos, _reason,
-//		_rawMalloc, _errors);
-//#else
-//	AlifIntT useUTF8 = (_alifRuntime_.preConfig.utf8Mode >= 1);
-//#ifdef _WINDOWS
-//	useUTF8 |= (_alifRuntime_.preConfig.legacyWindowsFSEncoding == 0);
-//#endif
-//	if (useUTF8) {
-//		return _alif_encodeUTF8Ex(_text, _str, _errorPos, _reason,
-//			_rawMalloc, _errors);
-//	}
-//
-//#ifdef USE_FORCE_ASCII
-//	if (FORCE_ASCII == -1) {
-//		FORCE_ASCII = check_forceASCII();
-//	}
-//
-//	if (FORCE_ASCII) {
-//		return encode_ascii(_text, _str, _errorPos, _reason,
-//			_rawMalloc, _errors);
-//	}
-//#endif
+	//#ifdef ALIF_FORCE_UTF8_FS_ENCODING
+	//	return _alif_encodeUTF8Ex(_text, _str, _errorpos, _reason,
+	//		_rawMalloc, _errors);
+	//#else
+	//	AlifIntT useUTF8 = (_alifRuntime_.preConfig.utf8Mode >= 1);
+	//#ifdef _WINDOWS
+	//	useUTF8 |= (_alifRuntime_.preConfig.legacyWindowsFSEncoding == 0);
+	//#endif
+	//	if (useUTF8) {
+	//		return _alif_encodeUTF8Ex(_text, _str, _errorPos, _reason,
+	//			_rawMalloc, _errors);
+	//	}
+	//
+	//#ifdef USE_FORCE_ASCII
+	//	if (FORCE_ASCII == -1) {
+	//		FORCE_ASCII = check_forceASCII();
+	//	}
+	//
+	//	if (FORCE_ASCII) {
+	//		return encode_ascii(_text, _str, _errorPos, _reason,
+	//			_rawMalloc, _errors);
+	//	}
+	//#endif
 
 	return encode_currentLocale(_text, _str, _errorPos, _reason, _rawMalloc, _errors);
 
-//#endif
+	//#endif
 }
 
 
@@ -424,6 +424,41 @@ AlifIntT _alif_encodeLocaleEx(const wchar_t* _text, char** _str,
 }
 
 
+wchar_t* _alif_getLocaleEncoding(void) { // 902
+#ifdef ALIF_FORCE_UTF8_LOCALE
+	// On Android langinfo.h and CODESET are missing,
+	// and UTF-8 is always used in mbstowcs() and wcstombs().
+	return alifMem_wcsDup(L"utf-8");
+#else
+
+#ifdef _WINDOWS
+	wchar_t encoding[23]{};
+	unsigned int ansiCodepage = GetACP();
+	swprintf(encoding, ALIF_ARRAY_LENGTH(encoding), L"cp%u", ansiCodepage);
+	encoding[ALIF_ARRAY_LENGTH(encoding) - 1] = 0;
+	return alifMem_wcsDup(encoding);
+#else
+	const char* encoding = nl_langinfo(CODESET);
+	if (!encoding || encoding[0] == '\0') {
+		// Use UTF-8 if nl_langinfo() returns an empty string. It can happen on
+		// macOS if the LC_CTYPE locale is not supported.
+		return alifMem_wcsDup(L"utf-8");
+	}
+
+	wchar_t* wstr{};
+	AlifIntT res = decode_currentLocale(encoding, &wstr, nullptr,
+		nullptr, AlifErrorHandler_::Alif_Error_SurrogateEscape);
+	if (res < 0) {
+		return nullptr;
+	}
+	return wstr;
+#endif  // !_WINDOWS
+
+#endif  // !ALIF_FORCE_UTF8_LOCALE
+}
+
+
+
 // 1049
 #ifdef _WINDOWS
 static __int64 secs_between_epochs = 11644473600; /* Seconds between 1.1.1601 and 1.1.1970 */
@@ -435,8 +470,7 @@ static void FILE_TIME_to_time_t_nsec(FILETIME* in_ptr, time_t* time_out, int* ns
 	*time_out = ALIF_SAFE_DOWNCAST((in / 10000000) - secs_between_epochs, __int64, time_t);
 }
 
-static void LARGE_INTEGER_to_time_t_nsec(LARGE_INTEGER* in_ptr, time_t* time_out, int* nsec_out)
-{ // 1065
+static void LARGE_INTEGER_to_time_t_nsec(LARGE_INTEGER* in_ptr, time_t* time_out, int* nsec_out) { // 1065
 	*nsec_out = (int)(in_ptr->QuadPart % 10000000) * 100; /* FILETIME is in units of 100 nsec. */
 	*time_out = ALIF_SAFE_DOWNCAST((in_ptr->QuadPart / 10000000) - secs_between_epochs, __int64, time_t);
 }
@@ -595,7 +629,7 @@ AlifIntT _alif_wStat(const wchar_t* path, struct stat* buf) { // 1332
 
 FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) { // 1764
 	FILE* f{};
-    AlifIntT asyncErr = 0;
+	AlifIntT asyncErr = 0;
 #ifdef _WINDOWS
 	wchar_t wmode[10]{};
 	AlifIntT uSize{};
@@ -623,7 +657,8 @@ FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) { // 1764
 		ALIF_BEGIN_ALLOW_THREADS
 			f = _wfopen(wpath, wmode);
 		ALIF_END_ALLOW_THREADS
-	} while (f == nullptr and errno == EINTR /*and !(async_err = alifErr_checkSignals())*/);
+	}
+	while (f == nullptr and errno == EINTR /*and !(async_err = alifErr_checkSignals())*/);
 	AlifIntT savedErrNo = errno;
 	alifMem_dataFree(wpath);
 
@@ -638,7 +673,8 @@ FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) { // 1764
 		ALIF_BEGIN_ALLOW_THREADS
 			f = fopen(pathBytes, _mode);
 		ALIF_END_ALLOW_THREADS
-	} while (f == nullptr and errno == EINTR /*and !(async_err = alifErr_checkSignals())*/);
+	}
+	while (f == nullptr and errno == EINTR /*and !(async_err = alifErr_checkSignals())*/);
 	AlifIntT savedErrNo = errno;
 	ALIF_DECREF(bytes);
 #endif
@@ -670,7 +706,7 @@ AlifSizeT _alif_read(AlifIntT fd, void* buf, AlifUSizeT count) { // 1858
 		do {
 			ALIF_BEGIN_ALLOW_THREADS
 				errno = 0;
-#ifdef _WINDOWS
+		#ifdef _WINDOWS
 			_doserrno = 0;
 			n = read(fd, buf, (AlifIntT)count);
 			if (n < 0 and errno == EINVAL) {
@@ -678,26 +714,27 @@ AlifSizeT _alif_read(AlifIntT fd, void* buf, AlifUSizeT count) { // 1858
 					errno = EAGAIN;
 				}
 			}
-#else
+		#else
 			n = read(fd, buf, count);
-#endif
+		#endif
 			err = errno;
 			ALIF_END_ALLOW_THREADS
-		} while (n < 0 and err == EINTR /*and
-			!(asyncErr = alifErr_checkSignals())*/);
-		ALIF_END_SUPPRESS_IPH
+		}
+	while (n < 0 and err == EINTR /*and
+	 !(asyncErr = alifErr_checkSignals())*/);
+	ALIF_END_SUPPRESS_IPH
 
 		if (asyncErr) {
 			errno = err;
 			return -1;
 		}
-		if (n < 0) {
-			//alifErr_setFromErrno(_alifExcOSError_);
-			errno = err;
-			return -1;
-		}
+	if (n < 0) {
+		//alifErr_setFromErrno(_alifExcOSError_);
+		errno = err;
+		return -1;
+	}
 
-		return n;
+	return n;
 }
 
 #ifdef HAVE_READLINK // 2054
@@ -889,8 +926,7 @@ void _alif_skipRoot(const wchar_t* path, AlifSizeT size,
 				(path[4] == L'U' or path[4] == L'u') and
 				(path[5] == L'N' or path[5] == L'n') and
 				(path[6] == L'C' or path[6] == L'c') and
-				IS_SEP(&path[7]))
-			{
+				IS_SEP(&path[7])) {
 				idx = 8;
 			}
 			else {
@@ -1020,33 +1056,33 @@ wchar_t* _alif_normPathAndSize(wchar_t* path,
 		if (drvsize || rootsize) {
 			// Skip past root and update minP2
 			p1 = &path[drvsize + rootsize];
-#ifndef ALTSEP
+		#ifndef ALTSEP
 			p2 = p1;
-#else
+		#else
 			for (; p2 < p1; ++p2) {
 				if (*p2 == ALTSEP) {
 					*p2 = SEP;
 				}
 			}
-#endif
+		#endif
 			minP2 = p2 - 1;
 			lastC = *minP2;
-#ifdef MS_WINDOWS
+		#ifdef MS_WINDOWS
 			if (lastC != SEP) {
 				minP2++;
 			}
-#endif
+		#endif
 		}
 	}
 
 	/* if pEnd is specified, check that. Else, check for null terminator */
 	for (; !IS_END(p1); ++p1) {
 		wchar_t c = *p1;
-#ifdef ALTSEP
+	#ifdef ALTSEP
 		if (c == ALTSEP) {
 			c = SEP;
 		}
-#endif
+	#endif
 		if (lastC == SEP) {
 			if (c == L'.') {
 				int sep_at_1 = SEP_OR_END(&p1[1]);
@@ -1056,8 +1092,7 @@ wchar_t* _alif_normPathAndSize(wchar_t* path,
 					while (p3 != minP2 && *--p3 == SEP) {}
 					while (p3 != minP2 && *(p3 - 1) != SEP) { --p3; }
 					if (p2 == minP2
-						|| (p3[0] == L'.' && p3[1] == L'.' && IS_SEP(&p3[2])))
-					{
+						|| (p3[0] == L'.' && p3[1] == L'.' && IS_SEP(&p3[2]))) {
 						// Previous segment is also ../, so append instead.
 						// Relative path does not absorb ../ at minP2 as well.
 						*p2++ = L'.';
@@ -1149,10 +1184,10 @@ AlifIntT _alif_dup(AlifIntT fd) { // 2651
 		return -1;
 
 	ALIF_BEGIN_ALLOW_THREADS
-	ALIF_BEGIN_SUPPRESS_IPH
+		ALIF_BEGIN_SUPPRESS_IPH
 		fd = dup(fd);
 	ALIF_END_SUPPRESS_IPH
-	ALIF_END_ALLOW_THREADS
+		ALIF_END_ALLOW_THREADS
 		if (fd < 0) {
 			//alifErr_setFromErrno(_alifExcOSError_);
 			return -1;
@@ -1166,25 +1201,25 @@ AlifIntT _alif_dup(AlifIntT fd) { // 2651
 	//}
 #elif defined(HAVE_FCNTL_H) and defined(F_DUPFD_CLOEXEC)
 	ALIF_BEGIN_ALLOW_THREADS
-	ALIF_BEGIN_SUPPRESS_IPH
-	fd = fcntl(fd, F_DUPFD_CLOEXEC, 0);
+		ALIF_BEGIN_SUPPRESS_IPH
+		fd = fcntl(fd, F_DUPFD_CLOEXEC, 0);
 	ALIF_END_SUPPRESS_IPH
-	ALIF_END_ALLOW_THREADS
-	if (fd < 0) {
-		//alifErr_setFromErrno(_alifExcOSError_);
-		return -1;
-	}
+		ALIF_END_ALLOW_THREADS
+		if (fd < 0) {
+			//alifErr_setFromErrno(_alifExcOSError_);
+			return -1;
+		}
 
 #elif HAVE_DUP
 	ALIF_BEGIN_ALLOW_THREADS
-	ALIF_BEGIN_SUPPRESS_IPH
-	fd = dup(fd);
+		ALIF_BEGIN_SUPPRESS_IPH
+		fd = dup(fd);
 	ALIF_END_SUPPRESS_IPH
-	ALIF_END_ALLOW_THREADS
-	if (fd < 0) {
-		// alifErr_setFromErrno(_alifExcOSError_);
-		return -1;
-	}
+		ALIF_END_ALLOW_THREADS
+		if (fd < 0) {
+			// alifErr_setFromErrno(_alifExcOSError_);
+			return -1;
+		}
 
 	if (_alif_setInheritable(fd, 0, nullptr) < 0) {
 		ALIF_BEGIN_SUPPRESS_IPH
@@ -1211,16 +1246,16 @@ AlifIntT _alif_dup(AlifIntT fd) { // 2651
 void* _alifGet_osfHandleNoRaise(AlifIntT fd) { // 2836
 	void* handle{};
 	ALIF_BEGIN_SUPPRESS_IPH
-	handle = (void*)_get_osfhandle(fd);
+		handle = (void*)_get_osfhandle(fd);
 	ALIF_END_SUPPRESS_IPH
-	return handle;
+		return handle;
 }
 
 
 AlifIntT _alifOpen_osfHandleNoRaise(void* handle, int flags) { // 2856
 	AlifIntT fd{};
 	ALIF_BEGIN_SUPPRESS_IPH
-	fd = _open_osfhandle((intptr_t)handle, flags);
+		fd = _open_osfhandle((intptr_t)handle, flags);
 	ALIF_END_SUPPRESS_IPH
 		return fd;
 }
