@@ -6,7 +6,7 @@
 
 
 
-
+#define ALIF_UNICODE_SIZE SIZEOF_WCHAR_T
 
 
 // 94

@@ -3203,6 +3203,124 @@ AlifIntT alif_decodeUTF8Ex(const char* _s, AlifSizeT size, wchar_t** wstr, AlifU
 }
 
 
+AlifIntT _alif_encodeUTF8Ex(const wchar_t* _text, char** _str, AlifUSizeT* _errorPos,
+	const char** _reason, AlifIntT _rawAlloc, AlifErrorHandler_ _errors) { // 5425
+	const AlifSizeT maxCharSize = 4;
+	AlifSizeT len = wcslen(_text);
+
+	AlifIntT surrogateescape = 0;
+	AlifIntT surrogatepass = 0;
+	switch (_errors) {
+	case AlifErrorHandler_::Alif_Error_Strict:
+		break;
+	case AlifErrorHandler_::Alif_Error_SurrogateEscape:
+		surrogateescape = 1;
+		break;
+	case AlifErrorHandler_::Alif_Error_SurrogatePass:
+		surrogatepass = 1;
+		break;
+	default:
+		return -3;
+	}
+
+	if (len > ALIF_SIZET_MAX / maxCharSize - 1) {
+		return -1;
+	}
+	char* bytes{};
+	if (_rawAlloc) {
+		bytes = (char*)alifMem_dataAlloc((len + 1) * maxCharSize);
+	}
+	else {
+		bytes = (char*)alifMem_dataAlloc((len + 1) * maxCharSize);
+	}
+	if (bytes == nullptr) {
+		return -1;
+	}
+
+	char* p = bytes;
+	AlifSizeT i{};
+	for (i = 0; i < len; ) {
+		AlifSizeT ch_pos = i;
+		AlifUCS4 ch = _text[i];
+		i++;
+	#if ALIF_UNICODE_SIZE == 2
+		if (alifUnicode_isHighSurrogate(ch)
+			and i < len
+			and alifUnicode_isLowSurrogate(_text[i])) {
+			ch = alifUnicode_joinSurrogates(ch, _text[i]);
+			i++;
+		}
+	#endif
+
+		if (ch < 0x80) {
+			/* Encode ASCII */
+			*p++ = (char)ch;
+
+		}
+		else if (ch < 0x0800) {
+			/* Encode Latin-1 */
+			*p++ = (char)(0xc0 | (ch >> 6));
+			*p++ = (char)(0x80 | (ch & 0x3f));
+		}
+		else if (alifUnicode_isSurrogate(ch) && !surrogatepass) {
+			/* surrogateescape error handler */
+			if (!surrogateescape or !(0xDC80 <= ch && ch <= 0xDCFF)) {
+				if (_errorPos != nullptr) {
+					*_errorPos = (size_t)ch_pos;
+				}
+				if (_reason != nullptr) {
+					*_reason = "encoding error";
+				}
+				if (_rawAlloc) {
+					alifMem_dataFree(bytes);
+				}
+				else {
+					alifMem_dataFree(bytes);
+				}
+				return -2;
+			}
+			*p++ = (char)(ch & 0xff);
+		}
+		else if (ch < 0x10000) {
+			*p++ = (char)(0xe0 | (ch >> 12));
+			*p++ = (char)(0x80 | ((ch >> 6) & 0x3f));
+			*p++ = (char)(0x80 | (ch & 0x3f));
+		}
+		else {  /* ch >= 0x10000 */
+			/* Encode UCS4 Unicode ordinals */
+			*p++ = (char)(0xf0 | (ch >> 18));
+			*p++ = (char)(0x80 | ((ch >> 12) & 0x3f));
+			*p++ = (char)(0x80 | ((ch >> 6) & 0x3f));
+			*p++ = (char)(0x80 | (ch & 0x3f));
+		}
+	}
+	*p++ = '\0';
+
+	AlifUSizeT finalSize = (p - bytes);
+	char* bytes2{};
+	if (_rawAlloc) {
+		bytes2 = (char*)alifMem_dataRealloc(bytes, finalSize);
+	}
+	else {
+		bytes2 = (char*)alifMem_dataRealloc(bytes, finalSize);
+	}
+	if (bytes2 == nullptr) {
+		if (_errorPos != nullptr) {
+			*_errorPos = (AlifUSizeT)-1;
+		}
+		if (_rawAlloc) {
+			alifMem_dataFree(bytes);
+		}
+		else {
+			alifMem_dataFree(bytes);
+		}
+		return -1;
+	}
+	*_str = bytes2;
+	return 0;
+}
+
+
 static AlifObject* uStr_encodeUtf8(AlifObject* unicode,
 	AlifErrorHandler_ error_handler, const char* errors) { // 5538
 	if (!ALIFUSTR_CHECK(unicode)) {

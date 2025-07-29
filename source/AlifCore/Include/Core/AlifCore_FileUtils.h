@@ -103,6 +103,9 @@ extern AlifIntT _alifOpen_osfHandleNoRaise(void*, AlifIntT); // 197
 extern AlifIntT alif_decodeUTF8Ex(const char*, AlifSizeT,
 	wchar_t**, AlifUSizeT*, const char**, AlifErrorHandler_); // 210
 
+extern AlifIntT _alif_encodeUTF8Ex(const wchar_t*, char**, AlifUSizeT*,
+	const char**, AlifIntT, AlifErrorHandler_); // 218
+
 extern AlifIntT _alif_wStat(const wchar_t*, struct stat*); // 231
 
 //wchar_t* alifUniversal_newLineFGetsWithSize(wchar_t*, int, FILE*, AlifSizeT*);
