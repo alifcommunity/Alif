@@ -1,6 +1,9 @@
 #include "alif.h"
 
+#include "AlifCore_Call.h"
 #include "AlifCore_InitConfig.h"
+#include "AlifCore_Interpreter.h"
+#include "AlifCore_Long.h"
 #include "AlifCore_PathConfig.h"
 #include "AlifCore_LifeCycle.h"
 #include "AlifCore_State.h"
@@ -105,11 +108,11 @@ static AlifIntT alifMain_runCommand(wchar_t* _command) { // 231
 		goto error;
 	}
 
-	if (alifSys_audit("alif.run_command", "O", unicode) < 0) {
-		return alifMainExit_errPrint();
-	}
+	//if (alifSys_audit("alif.run_command", "O", unicode) < 0) {
+	//	return alifMain_exitErrPrint();
+	//}
 
-	bytes = _alifUStr_asUTF8String(unicode, nullptr);
+	bytes = alifUStr_asUTF8String(unicode);
 	ALIF_DECREF(unicode);
 	if (bytes == nullptr) {
 		goto error;
@@ -122,8 +125,9 @@ static AlifIntT alifMain_runCommand(wchar_t* _command) { // 231
 	return (ret != 0);
 
 error:
-	alifSys_writeStderr("غير قادر على فك تشفير الأمر من سطر الأوامر:\n");
-	return alifMainExit_errPrint();
+	//alifSys_writeStderr("غير قادر على فك ترميز الأمر من سطر الأوامر:\n");
+	//return alifMain_exitErrPrint();
+	return -1; //* delete
 }
 
 static AlifIntT alifMain_runFile(const AlifConfig* _config) { // 414
@@ -341,7 +345,7 @@ static void alifMain_runAlif(AlifIntT* _exitcode) { // 614
 	alifInterpreter_setRunningMain(interp);
 
 	if (config->runCommand) {
-		//*_exitcode = alifMain_runCommand(config->runCommand);
+		*_exitcode = alifMain_runCommand(config->runCommand);
 	}
 	else if (config->runModule) {
 		//*_exitcode = alifMain_runModule(config->runModule, 1);

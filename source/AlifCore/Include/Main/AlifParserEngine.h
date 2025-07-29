@@ -7,7 +7,7 @@
 #include "AlifCore_Array.h"
 
 
- // 12
+// 12
 #define ALIFPARSE_DONT_IMPLY_DEDENT 0x0002
 
 #define ALIFPARSE_IGNORE_COOKIE 0x0010
@@ -261,7 +261,7 @@ AugOperator* alifParserEngine_augOperator(AlifParser*, Operator_); // 323
 KeywordOrStar* alifParserEngine_keywordOrStarred(AlifParser*, void*, AlifIntT); // 326
 ASDLExprSeq* alifParserEngine_seqExtractStarExprs(AlifParser*, ASDLSeq*); // 327
 ASDLKeywordSeq* alifParserEngine_seqDeleteStarExprs(AlifParser*, ASDLSeq*); // 328
-ExprTy alifParserEngine_collectCallSeqs(AlifParser*, ASDLExprSeq*, ASDLSeq*,AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*); // 329
+ExprTy alifParserEngine_collectCallSeqs(AlifParser*, ASDLExprSeq*, ASDLSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*); // 329
 ExprTy alifParserEngine_constantFromToken(AlifParser*, AlifPToken*); // 332
 ExprTy alifParserEngine_decodeConstantFromToken(AlifParser*, AlifPToken*); // 333
 ExprTy alifParserEngine_constantFromString(AlifParser*, AlifPToken*); // 334
@@ -280,6 +280,9 @@ void alifParserEngine_parserFree(AlifParser*); // 353
 //Module* alifParser_astFromFile(FILE*, AlifObject*, int, AlifASTMem*);
 
 //void* alifParserEngine_runParser(AlifParser*);
+
+ModuleTy _alifParserEngine_runParserFromString(const char*, AlifIntT, AlifObject*,
+	AlifCompilerFlags*, AlifASTMem*); // 358
 
 ExprTy alifParserEngine_joinedStr(AlifParser*, AlifPToken*, ASDLExprSeq*, AlifPToken*); // 362
 

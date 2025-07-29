@@ -29,3 +29,4 @@ extern AlifIntT _alif_legacyLocaleDetected(AlifIntT);
 
 char* _alif_setLocaleFromEnv(AlifIntT); // 112
 
+AlifIntT _alifRun_simpleStringFlagsWithName(const char*, const char*, AlifCompilerFlags*); // 115

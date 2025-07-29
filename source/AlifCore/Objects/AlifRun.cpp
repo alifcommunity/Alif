@@ -25,7 +25,8 @@ static AlifObject* alifRun_file(FILE*, AlifObject*, AlifIntT,
 	AlifObject*, AlifObject*, AlifIntT, AlifCompilerFlags*); // 47
 
 
-
+static AlifObject* _alifRun_stringFlagsWithName(const char*, AlifObject*, AlifIntT,
+	AlifObject*, AlifObject*, AlifCompilerFlags*, AlifIntT); // 50
 
 
 AlifIntT alifRun_fileObject(FILE* _fp, AlifObject* _filename,
@@ -158,7 +159,37 @@ done:
 
 
 
+AlifIntT _alifRun_simpleStringFlagsWithName(const char* _command,
+	const char* _name, AlifCompilerFlags* _flags) { // 530
+	AlifObject* mainModule = alifImport_addModuleRef("__main__");
+	if (mainModule == nullptr) {
+		return -1;
+	}
+	AlifObject* dict = alifModule_getDict(mainModule);  // borrowed ref
 
+	AlifObject* res = nullptr;
+	if (_name == nullptr) {
+		res = alifRun_stringFlags(_command, ALIF_FILE_INPUT, dict, dict, _flags);
+	}
+	else {
+		AlifObject* theName = alifUStr_fromString(_name);
+		if (!theName) {
+			alifErr_print();
+			return -1;
+		}
+		res = _alifRun_stringFlagsWithName(_command, theName,
+			ALIF_FILE_INPUT, dict, dict, _flags, 0);
+		ALIF_DECREF(theName);
+	}
+	ALIF_DECREF(mainModule);
+	if (res == nullptr) {
+		alifErr_print();
+		return -1;
+	}
+
+	ALIF_DECREF(res);
+	return 0;
+}
 
 
 
@@ -633,7 +664,39 @@ void alifErr_displayException(AlifObject* _exc) { // 1174
 }
 
 
+static AlifObject* _alifRun_stringFlagsWithName(const char* _str, AlifObject* _name,
+	AlifIntT _start, AlifObject* _globals, AlifObject* _locals,
+	AlifCompilerFlags* _flags, AlifIntT _generateNewSource) { // 1179
+	AlifObject* ret = nullptr;
+	ModuleTy mod{};
+	AlifASTMem* astMem{};
 
+	astMem = alifASTMem_new();
+	if (astMem == nullptr)
+		return nullptr;
+
+	AlifObject* source = nullptr;
+	ALIF_DECLARE_STR(AnonString, "<string>");
+
+	if (_name) {
+		source = alifUStr_fromString(_str);
+		if (!source) {
+			alifErr_clear();
+		}
+	}
+	else {
+		_name = &ALIF_STR(AnonString);
+	}
+
+	mod = _alifParser_astFromString(_str, _name, _start, _flags, astMem);
+
+	if (mod != nullptr) {
+		ret = run_mod(mod, _name, _globals, _locals, _flags, astMem, source, _generateNewSource);
+	}
+	ALIF_XDECREF(source);
+	alifASTMem_free(astMem);
+	return ret;
+}
 
 
 static AlifObject* alifRun_file(FILE* _fp, AlifObject* _filename,
@@ -662,6 +725,13 @@ static AlifObject* alifRun_file(FILE* _fp, AlifObject* _filename,
 	alifASTMem_free(astMem);
 
 	return ret;
+}
+
+
+AlifObject* alifRun_stringFlags(const char* _str, AlifIntT _start, AlifObject* _globals,
+	AlifObject* _locals, AlifCompilerFlags* _flags) { // 1215
+
+	return _alifRun_stringFlagsWithName(_str, nullptr, _start, _globals, _locals, _flags, 0);
 }
 
 
