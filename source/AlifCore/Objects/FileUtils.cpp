@@ -16,6 +16,10 @@
 extern int winerror_to_errno(int);
 #endif
 
+#ifdef HAVE_LANGINFO_H
+#  include <langinfo.h>           // nl_langinfo(CODESET)
+#endif
+
 // 36
 #ifdef HAVE_FCNTL_H
 #  include <fcntl.h>              // fcntl(F_GETFD)
