@@ -66,7 +66,7 @@ public:
 	uint64_t inoHigh{};
 };
 #else
-	#define AlifStatStruct stat
+#define AlifStatStruct stat
 #endif
 
 
@@ -83,7 +83,7 @@ extern int alif_wReadLink(const wchar_t*, wchar_t*, AlifUSizeT); // 151
 extern wchar_t* alif_wRealPath(const wchar_t*, wchar_t*, AlifUSizeT); // 160
 #endif
 
-extern wchar_t* alif_wGetCWD(wchar_t* , AlifUSizeT ); // 168
+extern wchar_t* alif_wGetCWD(wchar_t*, AlifUSizeT); // 168
 
 AlifIntT _alif_dup(AlifIntT); // 185
 
@@ -103,10 +103,15 @@ extern AlifIntT _alifOpen_osfHandleNoRaise(void*, AlifIntT); // 197
 extern AlifIntT alif_decodeUTF8Ex(const char*, AlifSizeT,
 	wchar_t**, AlifUSizeT*, const char**, AlifErrorHandler_); // 210
 
+extern AlifIntT _alif_encodeUTF8Ex(const wchar_t*, char**, AlifUSizeT*,
+	const char**, AlifIntT, AlifErrorHandler_); // 218
+
 extern AlifIntT _alif_wStat(const wchar_t*, struct stat*); // 231
 
 //wchar_t* alifUniversal_newLineFGetsWithSize(wchar_t*, int, FILE*, AlifSizeT*);
 
+
+extern wchar_t* _alif_getLocaleEncoding(void); // 252
 
 extern AlifIntT _alif_isAbs(const wchar_t*); // 267
 extern AlifIntT _alif_absPath(const wchar_t*, wchar_t**); // 268
@@ -118,20 +123,20 @@ extern AlifIntT _alif_addRelfile(wchar_t*, const wchar_t*, AlifUSizeT); // 274
 
 wchar_t* _alif_normPath(wchar_t*, AlifSizeT); // 280
 
- // 302
+// 302
 #if defined _MSC_VER && _MSC_VER >= 1900
 
-	#include <stdlib.h>   // _set_thread_local_invalid_parameter_handler()
+#include <stdlib.h>   // _set_thread_local_invalid_parameter_handler()
 
-	extern _invalid_parameter_handler _alifSilentInvalidParameterHandler_;
-	#define ALIF_BEGIN_SUPPRESS_IPH \
+extern _invalid_parameter_handler _alifSilentInvalidParameterHandler_;
+#define ALIF_BEGIN_SUPPRESS_IPH \
     { _invalid_parameter_handler _alifOldHandler_ = \
       _set_thread_local_invalid_parameter_handler(_alifSilentInvalidParameterHandler_);
-	#define ALIF_END_SUPPRESS_IPH \
+#define ALIF_END_SUPPRESS_IPH \
     _set_thread_local_invalid_parameter_handler(_alifOldHandler_); }
 #else
-	#define ALIF_BEGIN_SUPPRESS_IPH
-	#define ALIF_END_SUPPRESS_IPH
+#define ALIF_BEGIN_SUPPRESS_IPH
+#define ALIF_END_SUPPRESS_IPH
 #endif /* _MSC_VER >= 1900 */
 
 

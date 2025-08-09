@@ -10,7 +10,7 @@
 #include "AlifCore_Memory.h"
 
 
- //* alif
+//* alif
 /*
 	هذا التعريف يستخدم فقط لعد الاحرف والارقام للاسماء
 */
@@ -303,8 +303,7 @@ AlifObject* alifParserEngine_newIdentifier(AlifParser* _p, const char* _s) { // 
 	if (!id) {
 		goto error;
 	}
-	if (!ALIFUSTR_IS_ASCII(id))
-	{
+	if (!ALIFUSTR_IS_ASCII(id)) {
 		//if (!init_normalization(_p))
 		//{
 		//	ALIF_DECREF(id);
@@ -336,8 +335,7 @@ AlifObject* alifParserEngine_newIdentifier(AlifParser* _p, const char* _s) { // 
 	}
 	interp = _alifInterpreter_get();
 	alifUStr_internImmortal(interp, &id);
-	if (alifASTMem_listAddAlifObj(_p->astMem, id) < 0)
-	{
+	if (alifASTMem_listAddAlifObj(_p->astMem, id) < 0) {
 		ALIF_DECREF(id);
 		goto error;
 	}
@@ -484,27 +482,27 @@ ExprTy alifParserEngine_numberToken(AlifParser* _p) { // 684
 }
 
 
-static AlifIntT compute_parserFlags(AlifCompilerFlags* flags) { // 769
-	AlifIntT parser_flags = 0;
-	if (!flags) {
+static AlifIntT compute_parserFlags(AlifCompilerFlags* _flags) { // 769
+	AlifIntT parserFlags = 0;
+	if (!_flags) {
 		return 0;
 	}
-	if (flags->flags & ALIFCF_DONT_IMPLY_DEDENT) {
-		parser_flags |= ALIFPARSE_DONT_IMPLY_DEDENT;
+	if (_flags->flags & ALIFCF_DONT_IMPLY_DEDENT) {
+		parserFlags |= ALIFPARSE_DONT_IMPLY_DEDENT;
 	}
-	if (flags->flags & ALIFCF_IGNORE_COOKIE) {
-		parser_flags |= ALIFPARSE_IGNORE_COOKIE;
+	if (_flags->flags & ALIFCF_IGNORE_COOKIE) {
+		parserFlags |= ALIFPARSE_IGNORE_COOKIE;
 	}
-	if (flags->flags & CO_FUTURE_BARRY_AS_BDFL) {
-		parser_flags |= ALIFPARSE_BARRY_AS_BDFL;
+	if (_flags->flags & CO_FUTURE_BARRY_AS_BDFL) {
+		parserFlags |= ALIFPARSE_BARRY_AS_BDFL;
 	}
-	if (flags->flags & ALIFCF_TYPE_COMMENTS) {
-		parser_flags |= ALIFPARSE_TYPE_COMMENTS;
+	if (_flags->flags & ALIFCF_TYPE_COMMENTS) {
+		parserFlags |= ALIFPARSE_TYPE_COMMENTS;
 	}
-	if (flags->flags & ALIFCF_ALLOW_INCOMPLETE_INPUT) {
-		parser_flags |= ALIFPARSE_ALLOW_INCOMPLETE_INPUT;
+	if (_flags->flags & ALIFCF_ALLOW_INCOMPLETE_INPUT) {
+		parserFlags |= ALIFPARSE_ALLOW_INCOMPLETE_INPUT;
 	}
-	return parser_flags;
+	return parserFlags;
 }
 
 
@@ -651,5 +649,49 @@ ModuleTy alifParser_astFromFile(FILE* _fp, AlifIntT _startRule,
 	}
 error:
 	alifTokenizer_free(tokState);
+	return result;
+}
+
+
+
+
+
+ModuleTy _alifParserEngine_runParserFromString(const char* _str, AlifIntT _startRule,
+	AlifObject* _filenameOb, AlifCompilerFlags* _flags, AlifASTMem* _astMem) { // 976
+	AlifIntT execInput = _startRule == ALIF_FILE_INPUT;
+
+	TokenState* tok{};
+	if (_flags != nullptr and _flags->flags & ALIFCF_IGNORE_COOKIE) {
+		tok = _alifTokenizer_fromUTF8(_str, execInput, 0);
+	}
+	else {
+		//tok = _alifTokenizer_fromString(_str, execInput, 0);
+	}
+	if (tok == nullptr) {
+		if (alifErr_occurred()) {
+			//_alifParserEngine_raiseTokenizerInitError(_filenameOb);
+		}
+		return nullptr;
+	}
+	// This transfers the ownership to the tokenizer
+	tok->fn = ALIF_NEWREF(_filenameOb);
+
+	// We need to clear up from here on
+	ModuleTy result = nullptr;
+
+	AlifIntT parserFlags = compute_parserFlags(_flags);
+	AlifIntT feature_version = _flags and (_flags->flags & ALIFCF_ONLY_AST) ?
+		_flags->featureVersion : ALIF_MINOR_VERSION;
+	AlifParser* p = alifParserEngine_parserNew(tok, _startRule, parserFlags, feature_version,
+		nullptr, _astMem);
+	if (p == nullptr) {
+		goto error;
+	}
+
+	result = (ModuleTy)alifParserEngine_runParser(p);
+	alifParserEngine_parserFree(p);
+
+error:
+	alifTokenizer_free(tok);
 	return result;
 }

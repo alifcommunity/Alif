@@ -178,6 +178,8 @@
 
 #define HAVE_TIMEGM 1
 
+#define HAVE_LANGINFO_H 1 // 663
+
 #endif
 
 

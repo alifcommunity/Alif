@@ -61,10 +61,10 @@ error:
 
 
 
-AlifIntT alifTokenizer_syntaxError(TokenState* tok, const char* format, ...) { // 63
+AlifIntT alifTokenizer_syntaxError(TokenState* _tok, const char* format, ...) { // 63
 	va_list vargs{};
 	va_start(vargs, format);
-	AlifIntT ret = _syntaxError_range(tok, format, -1, -1, vargs);
+	AlifIntT ret = _syntaxError_range(_tok, format, -1, -1, vargs);
 	va_end(vargs);
 	return ret;
 }
@@ -98,4 +98,63 @@ char* alifTokenizer_newString(const char* _s, AlifSizeT _len, TokenState* _tok) 
 	memcpy(result, _s, _len);
 	result[_len] = '\0';
 	return result;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+char* _alifTokenizer_translateNewlines(const char* _s, AlifIntT _execInput,
+	AlifIntT _preserveCRLF, class TokenState* _tok) { // 204
+	AlifIntT skipNextLF = 0;
+	AlifUSizeT neededLength = strlen(_s) + 2, finalLength;
+	char* buf{}, * current{};
+	char c = '\0';
+	buf = (char*)alifMem_dataAlloc(neededLength);
+	if (buf == nullptr) {
+		_tok->done = E_NOMEM;
+		return nullptr;
+	}
+	for (current = buf; *_s; _s++, current++) {
+		c = *_s;
+		if (skipNextLF) {
+			skipNextLF = 0;
+			if (c == '\n') {
+				c = *++_s;
+				if (!c)
+					break;
+			}
+		}
+		if (!_preserveCRLF and c == '\r') {
+			skipNextLF = 1;
+			c = '\n';
+		}
+		*current = c;
+	}
+	/* If this is exec input, add a newline to the end of the string if
+	   there isn't one already. */
+	if (_execInput and c != '\n' and c != '\0') {
+		*current = '\n';
+		current++;
+	}
+	*current = '\0';
+	finalLength = current - buf + 1;
+	if (finalLength < neededLength and finalLength) {
+		/* should never fail */
+		char* result = (char*)alifMem_dataRealloc(buf, finalLength);
+		if (result == nullptr) {
+			alifMem_dataFree(buf);
+		}
+		buf = result;
+	}
+	return buf;
 }

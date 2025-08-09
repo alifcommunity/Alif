@@ -42,7 +42,8 @@ public:
 class AlifRuntime { // 159
 public:
 	AlifIntT selfInitialized{};
-
+	AlifIntT preinitializing{};
+	AlifIntT preinitialized{};
 	AlifIntT coreInitialized{};
 
 	AlifIntT initialized{};

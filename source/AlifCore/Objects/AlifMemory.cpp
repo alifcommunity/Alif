@@ -41,12 +41,10 @@ static void alifMemError_reallocLessThan() {
 
 template<typename T>
 static inline T* alif_new(AlifUSizeT _count = 1) {
-	try
-	{
+	try {
 		return new T[_count]{};
 	}
-	catch (const std::bad_alloc& e)
-	{
+	catch (const std::bad_alloc& e) {
 		std::wcout << e.what() << std::endl;
 		alifMemError_noMemory();
 		return nullptr;
@@ -114,8 +112,7 @@ void* FreeSegments::try_allocFreeSeg() {
 	/* ------------------------------------
 		حاول قطع شظية
 	------------------------------------ */
-	if (fSegs_)
-	{
+	if (fSegs_) {
 		Frag* arr_ = fSegs_;
 
 		fSegs_ = fSegs_->next_;
@@ -163,8 +160,7 @@ void FreeSegments::freeSeg_dealloc(Frag* _seg) {
 /* ------------------------------------ ذاكرة ألف ------------------------------------ */
 
 /* --- ذاكرة المفسر الرئيسي --- */
-AlifIntT alif_mainMemoryInit()
-{
+AlifIntT alif_mainMemoryInit() {
 	/* --- تهيئة ذاكرة الشظايا --- */
 	ALIFMEM_FRAGMEM = FragsBlock();
 	char* fSegs = alif_new<char>(FSEGS_SIZE);
@@ -211,8 +207,7 @@ AlifIntT alif_mainMemoryInit()
 }
 
 /* --- ذاكرة المفسرات الفرعية --- */
-AlifMemory* alif_memoryInit()
-{
+AlifMemory* alif_memoryInit() {
 
 	AlifMemory* memory_ = new AlifMemory();
 
@@ -376,11 +371,9 @@ static inline AlifIntT alifMem_newBlock() {
 	char* s_{};
 	AlifMemBlock* b_{};
 	AlifMemBlock* prev_ = ALIFMEM_CURRENTBLOCK;
-	for (int i_ = 0; i_ <= BLOCK_NUMS; i_++)
-	{
+	for (int i_ = 0; i_ <= BLOCK_NUMS; i_++) {
 		s_ = alif_new<char>(BLOCK_SIZE);
-		if (s_ == nullptr)
-		{
+		if (s_ == nullptr) {
 			if (i_ > 0) {
 				ALIFMEM_FREEBLOCKS_NUM = i_;
 				break;
@@ -429,8 +422,7 @@ static inline void alif_freeLast() {
 	ALIFMEM_FREEDSEGMS->dealloc_(s);
 }
 
-static inline void* alifMem_alloc(AlifUSizeT _size)
-{
+static inline void* alifMem_alloc(AlifUSizeT _size) {
 	if (_size == 0) {
 		alifMemError_tryAllocZero();
 		return nullptr;
@@ -472,8 +464,7 @@ static inline void* alifMem_alloc(AlifUSizeT _size)
 		قم بحجز مجموعة كتل جديدة
 		من ثم الانتقال الى الكتلة الجديدة
 	------------------------------------ */
-	if (ALIFMEM_FREEBLOCKS_NUM < 1)
-	{
+	if (ALIFMEM_FREEBLOCKS_NUM < 1) {
 		if (alifMem_newBlock() < 1) return nullptr;
 	}
 
@@ -570,16 +561,14 @@ static inline void* alif_objToSysAlloc(void* _sourcePtr, AlifUSizeT _distSize) {
 }
 /* ----------------------------------------------------------------------------------- */
 
-void* alifMem_dataRealloc(void* _ptr, AlifUSizeT _size)
-{
+void* alifMem_dataRealloc(void* _ptr, AlifUSizeT _size) {
 	void* sourcePtr = _ptr;
 
 	/*
 		في حال كان مؤشر المصدر فارغ
 		قم بحجز متغير جديد
 	*/
-	if (sourcePtr == nullptr)
-	{
+	if (sourcePtr == nullptr) {
 		return alifMem_alloc(_size);
 	}
 
@@ -640,16 +629,14 @@ void* alifMem_dataRealloc(void* _ptr, AlifUSizeT _size)
 	return sourcePtr;
 }
 
-void* alifMem_objRealloc(void* _ptr, AlifUSizeT _size)
-{
+void* alifMem_objRealloc(void* _ptr, AlifUSizeT _size) {
 	void* sourcePtr = _ptr;
 
 	/*
 		في حال كان مؤشر المصدر فارغ
 		قم بحجز متغير جديد
 	*/
-	if (sourcePtr == nullptr)
-	{
+	if (sourcePtr == nullptr) {
 		return alifMem_alloc(_size);
 	}
 
@@ -841,20 +828,26 @@ wchar_t* alifMem_wcsDup(const wchar_t* _str) {
 }
 
 
-
+char* alifMem_strDup(const char* _str) {
+	AlifUSizeT size = strlen(_str) + 1;
+	char* copy = (char*)alifMem_dataAlloc(size);
+	if (copy == nullptr) {
+		return nullptr;
+	}
+	memcpy(copy, _str, size);
+	return copy;
+}
 
 
 
 
 
 /* ----------------------------------- حالة الذاكرة ----------------------------------- */
-Frag* AlifArray::get_arr()
-{
+Frag* AlifArray::get_arr() {
 	return arr_;
 }
 
-AlifArray FreeSegments::return_freeSegs(unsigned long i)
-{
+AlifArray FreeSegments::return_freeSegs(unsigned long i) {
 	return freeSegs[i];
 }
 
@@ -863,13 +856,11 @@ static std::pair<unsigned long, const char*> convert_(unsigned long _size, const
 		_size /= 1000000000;
 		_unit = "غـ.ـب";
 	}
-	else if (_size > 1048575)
-	{
+	else if (_size > 1048575) {
 		_size /= 1000000;
 		_unit = "مـ.ـب";
 	}
-	else if (_size > 1023)
-	{
+	else if (_size > 1023) {
 		_size /= 1000;
 		_unit = "كـ.ـب";
 	}
@@ -877,8 +868,7 @@ static std::pair<unsigned long, const char*> convert_(unsigned long _size, const
 	return std::pair<unsigned long, const char*>(_size, _unit);
 }
 
-static void rawMem_sizeAllocated()
-{
+static void rawMem_sizeAllocated() {
 	unsigned long sysMemSize = (unsigned long)ALIFMEM_RAWALLOC_SIZE;
 	const char* sysMemSizeUnit = "بايت";
 	std::pair<unsigned long, const char*> sysMemPair =
@@ -892,8 +882,7 @@ static void rawMem_sizeAllocated()
 		sysMemPair.second, sysMemPair.first);
 }
 
-static void alifMem_sizeAllocated()
-{
+static void alifMem_sizeAllocated() {
 	unsigned long alifMemSize{};
 	unsigned long alifAllocSize{};
 	unsigned long wasteSize{};
@@ -947,8 +936,7 @@ static void alifMem_sizeAllocated()
 		wastePair.second, wastePair.first);
 }
 
-static void fragment_sizeAllocated()
-{
+static void fragment_sizeAllocated() {
 	unsigned long freedMemSize{};
 	const char* freedMemSizeUnit = "بايت";
 	std::pair<unsigned long, const char*> freedMemPair =
@@ -972,8 +960,7 @@ static void fragment_sizeAllocated()
 		freedMemPair.second, freedMemPair.first);
 }
 
-static void objects_count()
-{
+static void objects_count() {
 	unsigned long objsNum = (unsigned long)ALIFMEM_OBJNUMS;
 
 	printf("I| --------------------------------------------- |I\n");
@@ -981,8 +968,7 @@ static void objects_count()
 	printf("I| %9sa %9lu                          |I\n", "كائن", objsNum);
 }
 
-static void freeBlocks_count()
-{
+static void freeBlocks_count() {
 	unsigned long freeBlocks = (unsigned long)ALIFMEM_FREEBLOCKS_NUM;
 
 	printf("I| --------------------------------------------- |I\n");
@@ -991,8 +977,7 @@ static void freeBlocks_count()
 		"كتلة", BLOCK_NUMS, "\\", freeBlocks);
 }
 
-static void currentSeg_size()
-{
+static void currentSeg_size() {
 	unsigned long currSegSize = (unsigned long)ALIFMEM_CURRENTBLOCK->freeSize;
 
 	printf("I| --------------------------------------------- |I\n");
@@ -1001,8 +986,7 @@ static void currentSeg_size()
 		"بايت", BLOCK_SIZE, "\\", currSegSize);
 }
 
-const void alif_getMemState()
-{
+const void alif_getMemState() {
 	/* --- sysMemSize --- */
 	rawMem_sizeAllocated();
 	/* --- alifMemSize --- */
@@ -1357,7 +1341,7 @@ AlifTypeObject _alifMemoryViewType_ = {
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "مشهد_ذاكرة",
 	.basicSize = offsetof(AlifMemoryViewObject, array),
-	.itemSize = sizeof(AlifSizeT),                   
+	.itemSize = sizeof(AlifSizeT),
 	.dealloc = memory_dealloc,
 	//.repr = memory_repr,
 	//.asSequence = &_memoryAsSequence_,
