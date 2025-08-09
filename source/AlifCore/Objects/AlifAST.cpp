@@ -469,7 +469,7 @@ StmtTy alifAST_import(ASDLAliasSeq* _names,
 }
 
 StmtTy alifAST_importFrom(AlifObject* _module, ASDLAliasSeq* _names,
-	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo,
+	AlifIntT _level, AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo,
 	AlifIntT _endColOffset, AlifASTMem* _astMem) {
 
 	StmtTy p_{};
@@ -480,6 +480,7 @@ StmtTy alifAST_importFrom(AlifObject* _module, ASDLAliasSeq* _names,
 	p_->type = StmtK_::ImportFromK;
 	p_->V.importFrom.module = _module;
 	p_->V.importFrom.names = _names;
+	p_->V.importFrom.level = _level;
 	p_->lineNo = _lineNo;
 	p_->colOffset = _colOffset;
 	p_->endLineNo = _endLineNo;

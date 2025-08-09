@@ -241,6 +241,7 @@ ASDLSeq* alifParserEngine_singletonSeq(AlifParser*, void*); // 297
 ASDLSeq* alifParserEngine_seqInsertInFront(AlifParser*, void*, ASDLSeq*); // 298
 ASDLSeq* alifParserEngine_seqFlatten(AlifParser*, ASDLSeq*); // 300
 ExprTy alifParserEngine_joinNamesWithDot(AlifParser*, ExprTy, ExprTy); // 301
+AlifIntT alifParserEngine_seqCountDots(ASDLSeq*); // 302
 AliasTy alifParserEngine_aliasForStar(AlifParser*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*); // 303
 ASDLIdentifierSeq* alifParserEngine_mapNamesToIds(AlifParser*, ASDLExprSeq*); // 304
 CompExprPair* alifParserEngine_compExprPair(AlifParser*, CmpOp_, ExprTy); // 305

@@ -11171,8 +11171,164 @@ done:
 	return res;
 }
 
+// ألف30: "."
+static void* alif30(AlifParser* _p) {
 
-// استورد_من: "من" اسم_نقطة "استورد" استورد_من_أهداف
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	void* res{};
+	AlifIntT mark = _p->mark;
+
+	{ // "."
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		AlifPToken* a{};
+		if (
+			(a = alifParserEngine_expectToken(_p, DOT)) // "."
+			)
+		{
+			res = a;
+			goto done;
+		}
+		_p->mark = mark;
+	}
+
+	res = nullptr;
+done:
+	_p->level--;
+	return res;
+}
+// ^
+// |
+// |
+// ألف33_حلقة1: (".")+
+static ASDLSeq* alif33_loop1(AlifParser* _p) {
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	void* res{};
+	AlifIntT mark = _p->mark;
+
+	AlifPArray children{};
+	if (!children.data) {
+		_p->errorIndicator = 1;
+		// alifErr_noMemory();
+		_p->level--;
+		return nullptr;
+	}
+
+	{ // (".")+
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		void* var{};
+		while (
+			(var = alif30(_p)) // (".")+
+			)
+		{
+			res = var;
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
+			}
+			mark = _p->mark;
+		}
+		_p->mark = mark;
+	}
+
+	AlifSizeT size = children.size;
+	if (size == 0 or _p->errorIndicator) {
+		_p->level--;
+		return nullptr;
+	}
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
+		_p->errorIndicator = 1;
+		// alifErr_noMemory();
+		_p->level--;
+		return nullptr;
+	}
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
+
+	_p->level--;
+	return seq;
+}
+//	^
+//	|
+//	|
+// ألف33_حلقة0: (".")*
+static ASDLSeq* alif33_loop0(AlifParser* _p) {
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	void* res{};
+	AlifIntT mark = _p->mark;
+
+	AlifPArray children{};
+	if (!children.data) {
+		_p->errorIndicator = 1;
+		// alifErr_noMemory();
+		_p->level--;
+		return nullptr;
+	}
+
+	{ // (".")*
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		void* var{};
+		while (
+			(var = alif30(_p)) // (".")*
+			)
+		{
+			res = var;
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			if (!children.push_back(res)) {
+				_p->errorIndicator = 1;
+				// alifErr_noMemory();
+				_p->level--;
+				return nullptr;
+			}
+			mark = _p->mark;
+		}
+		_p->mark = mark;
+	}
+
+	AlifSizeT size = children.size;
+	ASDLSeq* seq = (ASDLSeq*)alifNew_genericSeq(size, _p->astMem);
+	if (!seq) {
+		_p->errorIndicator = 1;
+		// alifErr_noMemory();
+		_p->level--;
+		return nullptr;
+	}
+	for (AlifIntT i = 0; i < size; i++) ASDL_SEQ_SETUNTYPED(seq, i, children[i]);
+
+	_p->level--;
+	return seq;
+}
+//	^
+//	|
+//	|
+// استورد_من:
+// "من (".")* " اسم_نقطة "استورد" استورد_من_أهداف
+// "من (".")+ " "استورد" استورد_من_أهداف
 static StmtTy importFrom_rule(AlifParser* _p) { 
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
@@ -11191,21 +11347,24 @@ static StmtTy importFrom_rule(AlifParser* _p) {
 	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
 	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
 
-	{ // "من" اسم_نقطة "استورد" استورد_من_أهداف
+	{ // "من (".")* " اسم_نقطة "استورد" استورد_من_أهداف
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
 		AlifPToken* keyword{};
 		AlifPToken* keyword1{};
-		ExprTy a_{};
-		ASDLAliasSeq* b_{};
+		ASDLSeq* a{};
+		ExprTy b{};
+		ASDLAliasSeq* c{};
 		if (
 			(keyword = alifParserEngine_expectToken(_p, FROM_KW)) // "من"
 			and
-			(a_ = dottedName_rule(_p)) // اسم_نقطة
+			(a = alif33_loop0(_p)) // (".")*
+			and
+			(b = dottedName_rule(_p)) // اسم_نقطة
 			and
 			(keyword1 = alifParserEngine_expectToken(_p, IMPORT_KW)) // "استورد"
 			and
-			(b_ = importFromTargets_rule(_p)) // استورد_من_أهداف
+			(c = importFromTargets_rule(_p)) // استورد_من_أهداف
 			)
 		{
 			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
@@ -11213,7 +11372,41 @@ static StmtTy importFrom_rule(AlifParser* _p) {
 
 			AlifIntT endLineNo = token->endLineNo;
 			AlifIntT endColOffset = token->endColOffset;
-			res = alifAST_importFrom(a_->V.name.name, b_, EXTRA);
+			res = alifAST_importFrom(b->V.name.name, c, alifParserEngine_seqCountDots(a), EXTRA);
+			if (res == nullptr
+				and alifErr_occurred())
+			{
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+	{ // "من (".")+ " "استورد" استورد_من_أهداف
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		AlifPToken* keyword{};
+		AlifPToken* keyword1{};
+		ASDLSeq* a{};
+		ASDLAliasSeq* b{};
+		if (
+			(keyword = alifParserEngine_expectToken(_p, FROM_KW)) // "من"
+			and
+			(a = alif33_loop1(_p)) // (".")+
+			and
+			(keyword1 = alifParserEngine_expectToken(_p, IMPORT_KW)) // "استورد"
+			and
+			(b = importFromTargets_rule(_p)) // استورد_من_أهداف
+			)
+		{
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
+
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_importFrom(nullptr, b, alifParserEngine_seqCountDots(a), EXTRA);
 			if (res == nullptr
 				and alifErr_occurred())
 			{

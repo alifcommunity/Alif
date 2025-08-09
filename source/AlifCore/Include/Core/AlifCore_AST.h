@@ -584,7 +584,7 @@ StmtTy alifAST_asyncWith(ASDLWithItemSeq*, ASDLStmtSeq*, AlifIntT, AlifIntT, Ali
 StmtTy alifAST_try(ASDLStmtSeq*, ASDLExcepthandlerSeq*, ASDLStmtSeq*, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_tryStar(ASDLStmtSeq*, ASDLExcepthandlerSeq*, ASDLStmtSeq*, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_import(ASDLAliasSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
-StmtTy alifAST_importFrom(Identifier, ASDLAliasSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
+StmtTy alifAST_importFrom(Identifier, ASDLAliasSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_global(ASDLIdentifierSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_nonlocal(ASDLIdentifierSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_pass(AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);

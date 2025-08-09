@@ -77,6 +77,25 @@ ExprTy alifParserEngine_joinNamesWithDot(AlifParser* _p,
 	return alifAST_name(str_, ExprContext_::Load, EXTRA_EXPR(_firstName, _secondName));
 }
 
+AlifIntT alifParserEngine_seqCountDots(ASDLSeq* _seq) { // 138
+	AlifIntT numberOfDots = 0;
+	for (AlifSizeT i = 0, l = ASDL_SEQ_LEN(_seq); i < l; i++) {
+		AlifPToken* currentExpr = (AlifPToken*)ASDL_SEQ_GETUNTYPED(_seq, i);
+		switch (currentExpr->type) {
+		case ELLIPSIS:
+			numberOfDots += 3;
+			break;
+		case DOT:
+			numberOfDots += 1;
+			break;
+		default:
+			ALIF_UNREACHABLE();
+		}
+	}
+
+	return numberOfDots;
+}
+
 AliasTy alifParserEngine_aliasForStar(AlifParser* _p,
 	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo,
 	AlifIntT _endColOffset, AlifASTMem* _astMem) { // 160
