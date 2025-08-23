@@ -6,7 +6,7 @@
 #include "AlifCore_Call.h"
 #include "AlifCore_Long.h"
 #include "AlifCore_Object.h"
-#include "AlifCore_DureRun.h"
+#include "AlifCore_Runtime.h"
 
 #include <float.h>
 
@@ -424,8 +424,8 @@ long alifLong_asLong(AlifObject* _obj) { // 540
 	AlifIntT overflow{};
 	long result = alifLong_asLongAndOverflow(_obj, &overflow);
 	if (overflow) {
-		//alifErr_setString(_alifExcOverflowError_,
-			//"alif AlifIntT too large to convert to C long");
+		alifErr_setString(_alifExcOverflowError_,
+			"alif AlifIntT too large to convert to Cpp long");
 	}
 	return result;
 }
@@ -436,8 +436,8 @@ AlifIntT alifLong_asInt(AlifObject* _obj) { // 557
 	if (overflow or result > INT_MAX or result < INT_MIN) {
 		/* XXX: could be cute and give a different
 		   message for overflow == -1 */
-		//alifErr_setString(_alifExcOverflowError_,
-		//	"Alif AlifIntT too large to convert to Cpp AlifIntT");
+		alifErr_setString(_alifExcOverflowError_,
+			"Alif AlifIntT too large to convert to Cpp AlifIntT");
 		return -1;
 	}
 	return (AlifIntT)result;

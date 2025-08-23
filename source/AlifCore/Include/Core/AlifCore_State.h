@@ -1,7 +1,7 @@
 #pragma once
 
 //#include "AlifCore_FreeList.h"
-#include "AlifCore_DureRun.h"
+#include "AlifCore_Runtime.h"
 #include "AlifCore_ThreadState.h"
 
 
@@ -13,12 +13,12 @@
 
 static inline AlifIntT alif_isMainThread(void) { // 47
 	unsigned long thread = alifThread_getThreadID();
-	return (thread == _alifDureRun_.mainThreadID);
+	return (thread == _alifRuntime_.mainThreadID);
 }
 
 
 static inline AlifInterpreter* alifInterpreter_main(void) { // 55
-	return _alifDureRun_.interpreters.main;
+	return _alifRuntime_.interpreters.main;
 }
 
 static inline AlifIntT alif_isMainInterpreter(AlifInterpreter* _interpreter) { // 61
@@ -91,7 +91,7 @@ extern void alifThread_bind(AlifThread*); // 222
 
 AlifObject* _alifThreadState_getDict(AlifThread*); // 231
 
-extern AlifIntT alifInterpreter_enable(AlifDureRun*); // 245
+extern AlifStatus alifInterpreter_enable(AlifRuntime*); // 245
 
 
 // 261

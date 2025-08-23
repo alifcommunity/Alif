@@ -8,7 +8,7 @@ extern AlifIntT _alifImport_fixupBuiltin(AlifThread*, AlifObject*, const char*, 
 
 
 AlifObject* _alifImport_getModuleAttr(AlifObject*, AlifObject*); // 34
-
+AlifObject* _alifImport_getModuleAttrString(const char*, const char*); // 37
 
 class ImportDureRunState { // 40
 public:
@@ -60,9 +60,9 @@ extern AlifObject* _alifImport_getModules(AlifInterpreter*); // 137
 extern AlifIntT _alifImport_initDefaultImportFunc(AlifInterpreter*); // 142
 extern AlifIntT _alifImport_isDefaultImportFunc(AlifInterpreter*, AlifObject*); // 143
 
-extern AlifIntT alifImport_init(); // 161
+extern AlifStatus alifImport_init(); // 161
 
-extern AlifIntT _alifImport_initCore(AlifThread*, AlifObject*, AlifIntT); // 165
+extern AlifStatus _alifImport_initCore(AlifThread*, AlifObject*, AlifIntT); // 165
 
 extern AlifObject* _alifImport_getBuiltinModuleNames(void); // 174
 

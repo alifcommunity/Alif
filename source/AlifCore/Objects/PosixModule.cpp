@@ -59,3 +59,61 @@ AlifIntT alifOS_getFullPathName(const wchar_t* _path, wchar_t** _absPathP) { // 
 
 
 #endif // 5494
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+AlifObject* alifOS_fsPath(AlifObject* path) { // 16477
+	AlifObject* func = nullptr;
+	AlifObject* pathRepr = nullptr;
+
+	if (ALIFUSTR_CHECK(path) or ALIFBYTES_CHECK(path)) {
+		return ALIF_NEWREF(path);
+	}
+
+	//func = alifObject_lookupSpecial(path, &ALIF_ID(__fspath__));
+	//if ((func == nullptr) or (func == ALIF_NONE)) {
+	//	return alifErr_format(_alifExcTypeError_,
+	//		"expected str, bytes or os.PathLike object, "
+	//		"not %.200s",
+	//		_alifType_name(ALIF_TYPE(path)));
+	//}
+
+	//pathRepr = _alifObject_callNoArgs(func);
+	//ALIF_DECREF(func);
+	//if (nullptr == pathRepr) {
+	//	return nullptr;
+	//}
+
+	if (!(ALIFUSTR_CHECK(pathRepr) or ALIFBYTES_CHECK(pathRepr))) {
+		alifErr_format(_alifExcTypeError_,
+			"expected %.200s.__fspath__() to return str or bytes, "
+			"not %.200s", _alifType_name(ALIF_TYPE(path)),
+			_alifType_name(ALIF_TYPE(pathRepr)));
+		ALIF_DECREF(pathRepr);
+		return nullptr;
+	}
+
+	return pathRepr;
+}

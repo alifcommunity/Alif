@@ -1509,7 +1509,7 @@ dispatch_opcode :
 				_alifFrame_setStackPointer(_frame, stackPointer);
 				AlifObject* resObj = _alifEval_importFrom(_thread, alifStackRef_asAlifObjectBorrow(from), name);
 				stackPointer = _alifFrame_getStackPointer(_frame);
-				//if (resObj == nullptr) goto error;
+				if (resObj == nullptr) goto error;
 				res = ALIFSTACKREF_FROMALIFOBJECTSTEAL(resObj);
 				stackPointer[0] = res;
 				stackPointer += 1;

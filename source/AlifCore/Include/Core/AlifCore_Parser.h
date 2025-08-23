@@ -36,5 +36,8 @@ public:
     }
 
 
-ModuleTy alifParser_astFromFile(FILE*, AlifIntT, AlifObject*, const char*, const char*, const char*,
+extern ModuleTy _alifParser_astFromString(const char*, AlifObject*,
+	AlifIntT, AlifCompilerFlags*, AlifASTMem*); // 63
+
+extern ModuleTy alifParser_astFromFile(FILE*, AlifIntT, AlifObject*, const char*, const char*, const char*,
 	AlifCompilerFlags*, AlifIntT*, AlifObject**, AlifASTMem*); // 70

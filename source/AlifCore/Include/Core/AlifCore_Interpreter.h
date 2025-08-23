@@ -18,6 +18,7 @@
 #include "AlifCore_Import.h"
 #include "AlifCore_Tuple.h"
 #include "AlifCore_TypeObject.h"
+#include "AlifCore_Exceptions.h"
 
 
 
@@ -78,7 +79,7 @@ public:
 		AlifSizeT stackSize{};
 	} threads;
 
-	class AlifDureRun* dureRun{};
+	class AlifRuntime* runtime{};
 
 	AlifThread* finalizing_{};
 	unsigned long finalizingID{};
@@ -131,6 +132,7 @@ public:
 	AlifCodeState codeState{};
 
 	AlifDictState dictState{};
+	AlifExcState excState{};
 	AlifMemInterpFreeQueue memFreeQueue{};
 
 	TypesState types{};
@@ -171,7 +173,7 @@ static inline AlifThread* alifInterpreter_getFinalizing(AlifInterpreter* _interp
 	return (AlifThread*)alifAtomic_loadPtrRelaxed(&_interp->finalizing);
 }
 
-AlifIntT alifInterpreter_new(AlifThread*, AlifInterpreter**); // 399
+AlifStatus alifInterpreter_new(AlifThread*, AlifInterpreter**); // 399
 
 // 407
 #define RARE_EVENT_INTERP_INC(_interp, _name) \

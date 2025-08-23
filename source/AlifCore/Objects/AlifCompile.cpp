@@ -523,7 +523,7 @@ static AlifObject* dict_byType(AlifObject* _src, AlifIntT _scopeType,
 			return nullptr;
 		}
 		long vi = alifLong_asLong(v);
-		if (vi == -1 /*and alifErr_occurred()*/) {
+		if (vi == -1 and alifErr_occurred()) {
 			ALIF_DECREF(sortedKeys);
 			ALIF_DECREF(dest);
 			return nullptr;

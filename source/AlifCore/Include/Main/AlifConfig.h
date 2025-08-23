@@ -176,6 +176,10 @@
 
 #define HAVE_WCHAR_H 1
 
+#define HAVE_TIMEGM 1
+
+#define HAVE_LANGINFO_H 1 // 663
+
 #endif
 
 
@@ -193,6 +197,8 @@
 	#define SIZEOF_TIME_T 8
 	#define SIZEOF_LONG_LONG 8 //* alif
 	#define ALIGNOF_MAX_ALIGN_T 8
+
+	#define HAVE_LARGEFILE_SUPPORT
 #else
 	using AlifIntT = int16_t;
 	using AlifUIntT = uint16_t;

@@ -18,7 +18,8 @@ static inline void copy_evalBreakerBits(uintptr_t* _from,
 	uintptr_t newValue{};
 	do {
 		newValue = (oldValue & ~_mask) | fromBits;
-	} while (!alifAtomic_compareExchangeUintptr(_to, &oldValue, newValue));
+	}
+	while (!alifAtomic_compareExchangeUintptr(_to, &oldValue, newValue));
 }
 
 static inline void updateEval_breakerForThread(AlifInterpreter* _interp,
@@ -32,7 +33,7 @@ static inline void updateEval_breakerForThread(AlifInterpreter* _interp,
 	}
 	else if (alif_isMainThread()) {
 		npending = alifAtomic_loadInt32Relaxed(
-			&_alifDureRun_.eval.pendingMainThread.npending);
+			&_alifRuntime_.eval.pendingMainThread.npending);
 		if (npending) {
 			alifSet_evalBreakerBit(_thread, ALIF_CALLS_TO_DO_BIT);
 		}
@@ -162,8 +163,7 @@ static void drop_gil(AlifInterpreter* _interp,
 	if (!_finalRelease and
 		alifEval_breakerBitIsSet(_thread, ALIF_GIL_DROP_REQUEST_BIT)) {
 		MUTEX_LOCK(gil->switchMutex);
-		if (((AlifThread*)alifAtomic_loadPtrRelaxed(&gil->lastHolder)) == _thread)
-		{
+		if (((AlifThread*)alifAtomic_loadPtrRelaxed(&gil->lastHolder)) == _thread) {
 			alifUnset_evalBreakerBit(_thread, ALIF_GIL_DROP_REQUEST_BIT);
 			COND_WAIT(gil->switchCond, gil->switchMutex);
 		}
@@ -201,8 +201,7 @@ static void take_gil(AlifThread* _thread) { // 284
 
 		if (timedOut and
 			alifAtomic_loadIntRelaxed(&gil_->locked) and
-			gil_->switchNumber == savedSwitchNum)
-		{
+			gil_->switchNumber == savedSwitchNum) {
 			AlifThread* holderThread =
 				(AlifThread*)alifAtomic_loadPtrRelaxed(&gil_->lastHolder);
 			if (alifThreadState_mustExit(_thread)) {
@@ -349,7 +348,7 @@ void alifEval_restoreThread(AlifThread* _thread) { // 636
 
 
 static AlifIntT next_pendingCall(PendingCalls* _pending,
-	AlifIntT (**_func)(void*), void** _arg, AlifIntT* _flags) { // 729
+	AlifIntT(**_func)(void*), void** _arg, AlifIntT* _flags) { // 729
 	AlifIntT i = _pending->first;
 	if (_pending->npending == 0) {
 		return -1;
@@ -361,10 +360,10 @@ static AlifIntT next_pendingCall(PendingCalls* _pending,
 }
 
 static void pop_pendingCall(PendingCalls* _pending,
-	AlifIntT (**_func)(void*), void** _arg, AlifIntT* _flags) { // 747
+	AlifIntT(**_func)(void*), void** _arg, AlifIntT* _flags) { // 747
 	AlifIntT i = next_pendingCall(_pending, _func, _arg, _flags);
 	if (i >= 0) {
-		_pending->calls[i] = {0};
+		_pending->calls[i] = { 0 };
 		_pending->first = (i + 1) % PENDINGCALLSARRAYSIZE;
 		alifAtomic_addInt32(&_pending->npending, -1);
 	}
@@ -446,7 +445,7 @@ static void clear_pendingHandlingThread(PendingCalls* pending) { // 897
 static AlifIntT make_pendingCalls(AlifThread* _thread) { // 909
 	AlifInterpreter* interp = _thread->interpreter;
 	PendingCalls* pending = &interp->eval.pending;
-	PendingCalls* pendingMain = &_alifDureRun_.eval.pendingMainThread;
+	PendingCalls* pendingMain = &_alifRuntime_.eval.pendingMainThread;
 
 	ALIFMUTEX_LOCK(&pending->mutex);
 	if (pending->handlingThread != nullptr) {
@@ -487,7 +486,7 @@ static AlifIntT make_pendingCalls(AlifThread* _thread) { // 909
 
 
 void alifSet_evalBreakerBitAll(AlifInterpreter* _interp, uintptr_t _bit) { // 969
-	AlifDureRun* dureRun = &_alifDureRun_;
+	AlifRuntime* dureRun = &_alifRuntime_;
 
 	HEAD_LOCK(dureRun);
 	for (AlifThread* tstate = _interp->threads.head; tstate != nullptr; tstate = tstate->next) {
@@ -497,7 +496,7 @@ void alifSet_evalBreakerBitAll(AlifInterpreter* _interp, uintptr_t _bit) { // 96
 }
 
 void alifUnset_evalBreakerBitAll(AlifInterpreter* _interp, uintptr_t _bit) { // 981
-	AlifDureRun* dureRun = &_alifDureRun_;
+	AlifRuntime* dureRun = &_alifRuntime_;
 
 	HEAD_LOCK(dureRun);
 	for (AlifThread* thread = _interp->threads.head; thread != nullptr; thread = thread->next) {

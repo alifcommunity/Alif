@@ -1174,10 +1174,10 @@ static AlifIntT _parser_init(void* _arg) { // 1944
 	parser->kwTuple = kwtuple;
 	parser->isKwTupleOwned = owned;
 
-	parser->next = (AlifArgParser*)alifAtomic_loadPtr(&_alifDureRun_.getArgs.staticParsers); //* alif
+	parser->next = (AlifArgParser*)alifAtomic_loadPtr(&_alifRuntime_.getArgs.staticParsers); //* alif
 	do {
 		// compare-exchange updates parser->next on failure
-	} while (!alifAtomic_compareExchangePtr(&_alifDureRun_.getArgs.staticParsers,
+	} while (!alifAtomic_compareExchangePtr(&_alifRuntime_.getArgs.staticParsers,
 		&parser->next, parser));
 	return 0;
 }

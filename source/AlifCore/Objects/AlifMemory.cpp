@@ -4,6 +4,7 @@
 #include "AlifCore_State.h"
 #include "AlifCore_Memory.h"
 #include "AlifCore_QSBR.h" // for class QsbrThreadState
+#include "AlifCore_Object.h"
 
 
 #define ALIFMEM_FRAGIDX (_alifMem_.fragIdx)
@@ -40,12 +41,10 @@ static void alifMemError_reallocLessThan() {
 
 template<typename T>
 static inline T* alif_new(AlifUSizeT _count = 1) {
-	try
-	{
+	try {
 		return new T[_count]{};
 	}
-	catch (const std::bad_alloc& e)
-	{
+	catch (const std::bad_alloc& e) {
 		std::wcout << e.what() << std::endl;
 		alifMemError_noMemory();
 		return nullptr;
@@ -113,8 +112,7 @@ void* FreeSegments::try_allocFreeSeg() {
 	/* ------------------------------------
 		حاول قطع شظية
 	------------------------------------ */
-	if (fSegs_)
-	{
+	if (fSegs_) {
 		Frag* arr_ = fSegs_;
 
 		fSegs_ = fSegs_->next_;
@@ -162,8 +160,7 @@ void FreeSegments::freeSeg_dealloc(Frag* _seg) {
 /* ------------------------------------ ذاكرة ألف ------------------------------------ */
 
 /* --- ذاكرة المفسر الرئيسي --- */
-AlifIntT alif_mainMemoryInit()
-{
+AlifIntT alif_mainMemoryInit() {
 	/* --- تهيئة ذاكرة الشظايا --- */
 	ALIFMEM_FRAGMEM = FragsBlock();
 	char* fSegs = alif_new<char>(FSEGS_SIZE);
@@ -210,8 +207,7 @@ AlifIntT alif_mainMemoryInit()
 }
 
 /* --- ذاكرة المفسرات الفرعية --- */
-AlifMemory* alif_memoryInit()
-{
+AlifMemory* alif_memoryInit() {
 
 	AlifMemory* memory_ = new AlifMemory();
 
@@ -375,11 +371,9 @@ static inline AlifIntT alifMem_newBlock() {
 	char* s_{};
 	AlifMemBlock* b_{};
 	AlifMemBlock* prev_ = ALIFMEM_CURRENTBLOCK;
-	for (int i_ = 0; i_ <= BLOCK_NUMS; i_++)
-	{
+	for (int i_ = 0; i_ <= BLOCK_NUMS; i_++) {
 		s_ = alif_new<char>(BLOCK_SIZE);
-		if (s_ == nullptr)
-		{
+		if (s_ == nullptr) {
 			if (i_ > 0) {
 				ALIFMEM_FREEBLOCKS_NUM = i_;
 				break;
@@ -428,8 +422,7 @@ static inline void alif_freeLast() {
 	ALIFMEM_FREEDSEGMS->dealloc_(s);
 }
 
-static inline void* alifMem_alloc(AlifUSizeT _size)
-{
+static inline void* alifMem_alloc(AlifUSizeT _size) {
 	if (_size == 0) {
 		alifMemError_tryAllocZero();
 		return nullptr;
@@ -471,8 +464,7 @@ static inline void* alifMem_alloc(AlifUSizeT _size)
 		قم بحجز مجموعة كتل جديدة
 		من ثم الانتقال الى الكتلة الجديدة
 	------------------------------------ */
-	if (ALIFMEM_FREEBLOCKS_NUM < 1)
-	{
+	if (ALIFMEM_FREEBLOCKS_NUM < 1) {
 		if (alifMem_newBlock() < 1) return nullptr;
 	}
 
@@ -569,16 +561,14 @@ static inline void* alif_objToSysAlloc(void* _sourcePtr, AlifUSizeT _distSize) {
 }
 /* ----------------------------------------------------------------------------------- */
 
-void* alifMem_dataRealloc(void* _ptr, AlifUSizeT _size)
-{
+void* alifMem_dataRealloc(void* _ptr, AlifUSizeT _size) {
 	void* sourcePtr = _ptr;
 
 	/*
 		في حال كان مؤشر المصدر فارغ
 		قم بحجز متغير جديد
 	*/
-	if (sourcePtr == nullptr)
-	{
+	if (sourcePtr == nullptr) {
 		return alifMem_alloc(_size);
 	}
 
@@ -639,16 +629,14 @@ void* alifMem_dataRealloc(void* _ptr, AlifUSizeT _size)
 	return sourcePtr;
 }
 
-void* alifMem_objRealloc(void* _ptr, AlifUSizeT _size)
-{
+void* alifMem_objRealloc(void* _ptr, AlifUSizeT _size) {
 	void* sourcePtr = _ptr;
 
 	/*
 		في حال كان مؤشر المصدر فارغ
 		قم بحجز متغير جديد
 	*/
-	if (sourcePtr == nullptr)
-	{
+	if (sourcePtr == nullptr) {
 		return alifMem_alloc(_size);
 	}
 
@@ -803,7 +791,7 @@ void alifASTMem_free(AlifASTMem* _astMem) { // 153
 /* ------------------------------- إسناد ذاكرة المفسر ------------------------------- */
 AlifIntT alifInterpreterMem_init(AlifInterpreter* _interpreter) {
 
-	if (_interpreter == _alifDureRun_.interpreters.main) {
+	if (_interpreter == _alifRuntime_.interpreters.main) {
 		_interpreter->memory_ = &_alifMem_;
 	}
 	else {
@@ -840,20 +828,26 @@ wchar_t* alifMem_wcsDup(const wchar_t* _str) {
 }
 
 
-
+char* alifMem_strDup(const char* _str) {
+	AlifUSizeT size = strlen(_str) + 1;
+	char* copy = (char*)alifMem_dataAlloc(size);
+	if (copy == nullptr) {
+		return nullptr;
+	}
+	memcpy(copy, _str, size);
+	return copy;
+}
 
 
 
 
 
 /* ----------------------------------- حالة الذاكرة ----------------------------------- */
-Frag* AlifArray::get_arr()
-{
+Frag* AlifArray::get_arr() {
 	return arr_;
 }
 
-AlifArray FreeSegments::return_freeSegs(unsigned long i)
-{
+AlifArray FreeSegments::return_freeSegs(unsigned long i) {
 	return freeSegs[i];
 }
 
@@ -862,13 +856,11 @@ static std::pair<unsigned long, const char*> convert_(unsigned long _size, const
 		_size /= 1000000000;
 		_unit = "غـ.ـب";
 	}
-	else if (_size > 1048575)
-	{
+	else if (_size > 1048575) {
 		_size /= 1000000;
 		_unit = "مـ.ـب";
 	}
-	else if (_size > 1023)
-	{
+	else if (_size > 1023) {
 		_size /= 1000;
 		_unit = "كـ.ـب";
 	}
@@ -876,8 +868,7 @@ static std::pair<unsigned long, const char*> convert_(unsigned long _size, const
 	return std::pair<unsigned long, const char*>(_size, _unit);
 }
 
-static void rawMem_sizeAllocated()
-{
+static void rawMem_sizeAllocated() {
 	unsigned long sysMemSize = (unsigned long)ALIFMEM_RAWALLOC_SIZE;
 	const char* sysMemSizeUnit = "بايت";
 	std::pair<unsigned long, const char*> sysMemPair =
@@ -891,8 +882,7 @@ static void rawMem_sizeAllocated()
 		sysMemPair.second, sysMemPair.first);
 }
 
-static void alifMem_sizeAllocated()
-{
+static void alifMem_sizeAllocated() {
 	unsigned long alifMemSize{};
 	unsigned long alifAllocSize{};
 	unsigned long wasteSize{};
@@ -946,8 +936,7 @@ static void alifMem_sizeAllocated()
 		wastePair.second, wastePair.first);
 }
 
-static void fragment_sizeAllocated()
-{
+static void fragment_sizeAllocated() {
 	unsigned long freedMemSize{};
 	const char* freedMemSizeUnit = "بايت";
 	std::pair<unsigned long, const char*> freedMemPair =
@@ -971,8 +960,7 @@ static void fragment_sizeAllocated()
 		freedMemPair.second, freedMemPair.first);
 }
 
-static void objects_count()
-{
+static void objects_count() {
 	unsigned long objsNum = (unsigned long)ALIFMEM_OBJNUMS;
 
 	printf("I| --------------------------------------------- |I\n");
@@ -980,8 +968,7 @@ static void objects_count()
 	printf("I| %9sa %9lu                          |I\n", "كائن", objsNum);
 }
 
-static void freeBlocks_count()
-{
+static void freeBlocks_count() {
 	unsigned long freeBlocks = (unsigned long)ALIFMEM_FREEBLOCKS_NUM;
 
 	printf("I| --------------------------------------------- |I\n");
@@ -990,8 +977,7 @@ static void freeBlocks_count()
 		"كتلة", BLOCK_NUMS, "\\", freeBlocks);
 }
 
-static void currentSeg_size()
-{
+static void currentSeg_size() {
 	unsigned long currSegSize = (unsigned long)ALIFMEM_CURRENTBLOCK->freeSize;
 
 	printf("I| --------------------------------------------- |I\n");
@@ -1000,8 +986,7 @@ static void currentSeg_size()
 		"بايت", BLOCK_SIZE, "\\", currSegSize);
 }
 
-const void alif_getMemState()
-{
+const void alif_getMemState() {
 	/* --- sysMemSize --- */
 	rawMem_sizeAllocated();
 	/* --- alifMemSize --- */
@@ -1016,7 +1001,362 @@ const void alif_getMemState()
 	/* ملاحظة: حرف ال "أ" الإنكليزي المستخدم في الطباعة فقط لموازنة الطباعة في الطرفية التي لا تدعم العربية */
 }
 
-/* ----------------------------------------------------------------------------------- */
 
 
 
+
+
+
+/* ------------------------------------ ذاكرة المخزن ----------------------------------- */
+
+
+#define MV_C_CONTIGUOUS(flags) (flags&(ALIF_MEMORYVIEW_SCALAR|ALIF_MEMORYVIEW_C))
+#define MV_F_CONTIGUOUS(flags) \
+    (flags&(ALIF_MEMORYVIEW_SCALAR|ALIF_MEMORYVIEW_FORTRAN))
+#define MV_ANY_CONTIGUOUS(flags) \
+    (flags&(ALIF_MEMORYVIEW_SCALAR|ALIF_MEMORYVIEW_C|ALIF_MEMORYVIEW_FORTRAN))
+
+#define MV_CONTIGUOUS_NDIM1(_view) \
+    ((_view)->shape[0] == 1 or (_view)->strides[0] == (_view)->itemSize)
+
+
+#define REQ_INDIRECT(flags) ((flags&ALIFBUF_INDIRECT) == ALIFBUF_INDIRECT)
+#define REQ_C_CONTIGUOUS(flags) ((flags&ALIFBUF_C_CONTIGUOUS) == ALIFBUF_C_CONTIGUOUS)
+#define REQ_F_CONTIGUOUS(flags) ((flags&ALIFBUF_F_CONTIGUOUS) == ALIFBUF_F_CONTIGUOUS)
+#define REQ_ANY_CONTIGUOUS(flags) ((flags&ALIFBUF_ANY_CONTIGUOUS) == ALIFBUF_ANY_CONTIGUOUS)
+#define REQ_STRIDES(flags) ((flags&ALIFBUF_STRIDES) == ALIFBUF_STRIDES)
+#define REQ_SHAPE(flags) ((flags&ALIFBUF_ND) == ALIFBUF_ND)
+#define REQ_WRITABLE(flags) (flags&ALIFBUF_WRITABLE)
+#define REQ_FORMAT(flags) (flags&ALIFBUF_FORMAT)
+
+
+
+
+static inline void initStrides_fromShape(AlifBuffer* view) {
+	AlifSizeT i{};
+
+	view->strides[view->nDim - 1] = view->itemSize;
+	for (i = view->nDim - 2; i >= 0; i--)
+		view->strides[i] = view->strides[i + 1] * view->shape[i + 1];
+}
+
+static inline void init_sharedValues(AlifBuffer* dest, const AlifBuffer* src) {
+	dest->obj = src->obj;
+	dest->buf = src->buf;
+	dest->len = src->len;
+	dest->itemSize = src->itemSize;
+	dest->readonly = src->readonly;
+	src->format ? dest->format = src->format : dest->format = (char*)"B";
+	dest->internal = src->internal;
+}
+
+static void init_shapeStrides(AlifBuffer* dest, const AlifBuffer* src) {
+	AlifSizeT i{};
+
+	if (src->nDim == 0) {
+		dest->shape = nullptr;
+		dest->strides = nullptr;
+		return;
+	}
+	if (src->nDim == 1) {
+		dest->shape[0] = src->shape ? src->shape[0] : src->len / src->itemSize;
+		dest->strides[0] = src->strides ? src->strides[0] : src->itemSize;
+		return;
+	}
+
+	for (i = 0; i < src->nDim; i++)
+		dest->shape[i] = src->shape[i];
+	if (src->strides) {
+		for (i = 0; i < src->nDim; i++)
+			dest->strides[i] = src->strides[i];
+	}
+	else {
+		initStrides_fromShape(dest);
+	}
+}
+
+static inline void init_suboffsets(AlifBuffer* dest, const AlifBuffer* src) {
+	AlifSizeT i{};
+
+	if (src->subOffsets == nullptr) {
+		dest->subOffsets = nullptr;
+		return;
+	}
+	for (i = 0; i < src->nDim; i++)
+		dest->subOffsets[i] = src->subOffsets[i];
+}
+
+static void init_flags(AlifMemoryViewObject* _mv) {
+	const AlifBuffer* view = &_mv->view;
+	AlifIntT flags = 0;
+
+	switch (view->nDim) {
+	case 0:
+		flags |= (ALIF_MEMORYVIEW_SCALAR | ALIF_MEMORYVIEW_C |
+			ALIF_MEMORYVIEW_FORTRAN);
+		break;
+	case 1:
+		if (MV_CONTIGUOUS_NDIM1(view))
+			flags |= (ALIF_MEMORYVIEW_C | ALIF_MEMORYVIEW_FORTRAN);
+		break;
+	default:
+		if (alifBuffer_isContiguous(view, 'C'))
+			flags |= ALIF_MEMORYVIEW_C;
+		if (alifBuffer_isContiguous(view, 'F'))
+			flags |= ALIF_MEMORYVIEW_FORTRAN;
+		break;
+	}
+
+	if (view->subOffsets) {
+		flags |= ALIF_MEMORYVIEW_PIL;
+		flags &= ~(ALIF_MEMORYVIEW_C | ALIF_MEMORYVIEW_FORTRAN);
+	}
+
+	_mv->flags = flags;
+}
+
+static inline AlifMemoryViewObject* memory_alloc(AlifIntT ndim) {
+	AlifMemoryViewObject* mv{};
+
+	mv = (AlifMemoryViewObject*)
+		ALIFOBJECT_GC_NEWVAR(AlifMemoryViewObject, &_alifMemoryViewType_, 3 * ndim);
+	if (mv == nullptr)
+		return nullptr;
+
+	mv->mbuf = nullptr;
+	mv->hash = -1;
+	mv->flags = 0;
+	mv->exports = 0;
+	mv->view.nDim = ndim;
+	mv->view.shape = mv->array;
+	mv->view.strides = mv->array + ndim;
+	mv->view.subOffsets = mv->array + 2 * ndim;
+	mv->weakRefList = nullptr;
+
+	ALIFOBJECT_GC_TRACK(mv);
+	return mv;
+}
+
+static AlifObject* mbuf_addView(AlifManagedBufferObject* _mbuf, const AlifBuffer* _src) {
+	AlifMemoryViewObject* mv{};
+	AlifBuffer* dest{};
+
+	if (_src == nullptr)
+		_src = &_mbuf->master;
+
+	if (_src->nDim > ALIFBUF_MAX_NDIM) {
+		alifErr_setString(_alifExcValueError_,
+			"memoryview: number of dimensions must not exceed "
+			ALIF_STRINGIFY(ALIFBUF_MAX_NDIM));
+		return nullptr;
+	}
+
+	mv = memory_alloc(_src->nDim);
+	if (mv == nullptr)
+		return nullptr;
+
+	dest = &mv->view;
+	init_sharedValues(dest, _src);
+	init_shapeStrides(dest, _src);
+	init_suboffsets(dest, _src);
+	init_flags(mv);
+
+	mv->mbuf = (AlifManagedBufferObject*)ALIF_NEWREF(_mbuf);
+	_mbuf->exports++;
+
+	return (AlifObject*)mv;
+}
+
+
+static inline AlifManagedBufferObject* mbuf_alloc(void) {
+	AlifManagedBufferObject* mbuf{};
+
+	mbuf = (AlifManagedBufferObject*)
+		ALIFOBJECT_GC_NEW(AlifManagedBufferObject, &_alifManagedBufferType_);
+	if (mbuf == nullptr)
+		return nullptr;
+	mbuf->flags = 0;
+	mbuf->exports = 0;
+	mbuf->master.obj = nullptr;
+	ALIFOBJECT_GC_TRACK(mbuf);
+
+	return mbuf;
+}
+
+AlifObject* alifMemoryView_fromBuffer(const AlifBuffer* _info) {
+	AlifManagedBufferObject* mbuf{};
+	AlifObject* mv{};
+
+	if (_info->buf == nullptr) {
+		alifErr_setString(_alifExcValueError_,
+			"alifMemoryView_fromBuffer(): info->buf يجب أن لا تكون فارغة");
+		return nullptr;
+	}
+
+	mbuf = mbuf_alloc();
+	if (mbuf == nullptr)
+		return nullptr;
+
+	mbuf->master = *_info;
+	mbuf->master.obj = nullptr;
+
+	mv = mbuf_addView(mbuf, nullptr);
+	ALIF_DECREF(mbuf);
+
+	return mv;
+}
+
+
+
+
+static void mbuf_release(AlifManagedBufferObject* _self) {
+	if (_self->flags & ALIF_MANAGED_BUFFER_RELEASED)
+		return;
+
+	_self->flags |= ALIF_MANAGED_BUFFER_RELEASED;
+
+	ALIFOBJECT_GC_UNTRACK(_self);
+	alifBuffer_release(&_self->master);
+}
+
+static void _memory_release(AlifMemoryViewObject* _self) {
+	if (_self->flags & ALIF_MEMORYVIEW_RELEASED)
+		return;
+
+	_self->flags |= ALIF_MEMORYVIEW_RELEASED;
+	if (--_self->mbuf->exports == 0) {
+		mbuf_release(_self->mbuf);
+	}
+}
+
+static void memory_dealloc(AlifObject* _self) {
+	AlifMemoryViewObject* self = (AlifMemoryViewObject*)_self;
+	ALIFOBJECT_GC_UNTRACK(self);
+	_memory_release(self);
+	ALIF_CLEAR(self->mbuf);
+	if (self->weakRefList != nullptr)
+		alifObject_clearWeakRefs((AlifObject*)self);
+	alifObject_gcDel(self);
+}
+
+
+
+static AlifIntT memory_getBuf(AlifObject* _self, AlifBuffer* _view, AlifIntT _flags) {
+	AlifMemoryViewObject* self = (AlifMemoryViewObject*)_self;
+	AlifBuffer* base = &self->view;
+	AlifIntT baseflags = self->flags;
+
+	//CHECK_RELEASED_INT(self);
+	//CHECK_RESTRICTED_INT(self);
+
+	*_view = *base;
+	_view->obj = nullptr;
+
+	if (REQ_WRITABLE(_flags) and base->readonly) {
+		//alifErr_setString(_alifExcBufferError_,
+		//	"memoryview: underlying buffer is not writable");
+		return -1;
+	}
+	if (!REQ_FORMAT(_flags)) {
+		_view->format = nullptr;
+	}
+
+	if (REQ_C_CONTIGUOUS(_flags) and !MV_C_CONTIGUOUS(baseflags)) {
+		//alifErr_setString(_alifExcBufferError_,
+		//	"memoryview: underlying buffer is not C-contiguous");
+		return -1;
+	}
+	if (REQ_F_CONTIGUOUS(_flags) and !MV_F_CONTIGUOUS(baseflags)) {
+		//alifErr_setString(_alifExcBufferError_,
+		//	"memoryview: underlying buffer is not Fortran contiguous");
+		return -1;
+	}
+	if (REQ_ANY_CONTIGUOUS(_flags) and !MV_ANY_CONTIGUOUS(baseflags)) {
+		//alifErr_setString(_alifExcBufferError_,
+		//	"memoryview: underlying buffer is not contiguous");
+		return -1;
+	}
+	if (!REQ_INDIRECT(_flags) and (baseflags & ALIF_MEMORYVIEW_PIL)) {
+		//alifErr_setString(_alifExcBufferError_,
+		//	"memoryview: underlying buffer requires suboffsets");
+		return -1;
+	}
+	if (!REQ_STRIDES(_flags)) {
+		if (!MV_C_CONTIGUOUS(baseflags)) {
+			//alifErr_setString(_alifExcBufferError_,
+			//	"memoryview: underlying buffer is not C-contiguous");
+			return -1;
+		}
+		_view->strides = nullptr;
+	}
+	if (!REQ_SHAPE(_flags)) {
+		if (_view->format != nullptr) {
+			//alifErr_format(_alifExcBufferError_,
+			//	"memoryview: cannot cast to unsigned bytes if the format flag "
+			//	"is present");
+			return -1;
+		}
+		_view->nDim = 1;
+		_view->shape = nullptr;
+	}
+
+
+	_view->obj = ALIF_NEWREF(self);
+	self->exports++;
+
+	return 0;
+}
+
+static void memory_releaseBuf(AlifObject* _self, AlifBuffer* _view) {
+	AlifMemoryViewObject* self = (AlifMemoryViewObject*)_self;
+	self->exports--;
+	return;
+}
+
+static AlifBufferProcs _memoryAsBuffer_ = {
+	.getBuffer = memory_getBuf,
+	.releaseBuffer = memory_releaseBuf,
+};
+
+
+
+
+
+
+
+AlifTypeObject _alifManagedBufferType_ = {
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "managedbuffer",
+	.basicSize = sizeof(AlifManagedBufferObject),
+	//.dealloc = mbuf_dealloc,
+	.getAttro = alifObject_genericGetAttr,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
+	//.traverse = mbuf_traverse,
+	//.clear = mbuf_clear,
+};
+
+
+
+AlifTypeObject _alifMemoryViewType_ = {
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "مشهد_ذاكرة",
+	.basicSize = offsetof(AlifMemoryViewObject, array),
+	.itemSize = sizeof(AlifSizeT),
+	.dealloc = memory_dealloc,
+	//.repr = memory_repr,
+	//.asSequence = &_memoryAsSequence_,
+	//.asMapping = &_memoryAsMapping_,
+	//.hash = memory_hash,
+	.getAttro = alifObject_genericGetAttr,
+	.asBuffer = &_memoryAsBuffer_,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
+	   ALIF_TPFLAGS_SEQUENCE,
+	//.traverse = memory_traverse,
+	//.clear = memory_clear,  
+	//.richCompare = memory_richcompare,
+	.weakListOffset = offsetof(AlifMemoryViewObject, weakRefList),
+	//.iter = memory_iter,
+	//.methods = _memoryMethods_,
+	//.getSet = _memoryGetSetList_,
+	//.new_ = memory_view,
+};

@@ -7,7 +7,7 @@
 
 
 void* alifParserEngine_dummyName(AlifParser* p, ...) { // 8
-	return &_alifDureRun_.parser.dummyName;
+	return &_alifRuntime_.parser.dummyName;
 }
 
 ASDLSeq* alifParserEngine_singletonSeq(AlifParser* _p, void* _a) { // 15
@@ -75,6 +75,25 @@ ExprTy alifParserEngine_joinNamesWithDot(AlifParser* _p,
 	}
 
 	return alifAST_name(str_, ExprContext_::Load, EXTRA_EXPR(_firstName, _secondName));
+}
+
+AlifIntT alifParserEngine_seqCountDots(ASDLSeq* _seq) { // 138
+	AlifIntT numberOfDots = 0;
+	for (AlifSizeT i = 0, l = ASDL_SEQ_LEN(_seq); i < l; i++) {
+		AlifPToken* currentExpr = (AlifPToken*)ASDL_SEQ_GETUNTYPED(_seq, i);
+		switch (currentExpr->type) {
+		case ELLIPSIS:
+			numberOfDots += 3;
+			break;
+		case DOT:
+			numberOfDots += 1;
+			break;
+		default:
+			ALIF_UNREACHABLE();
+		}
+	}
+
+	return numberOfDots;
 }
 
 AliasTy alifParserEngine_aliasForStar(AlifParser* _p,

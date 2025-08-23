@@ -7,7 +7,7 @@
 #include "AlifCore_Array.h"
 
 
- // 12
+// 12
 #define ALIFPARSE_DONT_IMPLY_DEDENT 0x0002
 
 #define ALIFPARSE_IGNORE_COOKIE 0x0010
@@ -241,6 +241,7 @@ ASDLSeq* alifParserEngine_singletonSeq(AlifParser*, void*); // 297
 ASDLSeq* alifParserEngine_seqInsertInFront(AlifParser*, void*, ASDLSeq*); // 298
 ASDLSeq* alifParserEngine_seqFlatten(AlifParser*, ASDLSeq*); // 300
 ExprTy alifParserEngine_joinNamesWithDot(AlifParser*, ExprTy, ExprTy); // 301
+AlifIntT alifParserEngine_seqCountDots(ASDLSeq*); // 302
 AliasTy alifParserEngine_aliasForStar(AlifParser*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*); // 303
 ASDLIdentifierSeq* alifParserEngine_mapNamesToIds(AlifParser*, ASDLExprSeq*); // 304
 CompExprPair* alifParserEngine_compExprPair(AlifParser*, CmpOp_, ExprTy); // 305
@@ -261,7 +262,7 @@ AugOperator* alifParserEngine_augOperator(AlifParser*, Operator_); // 323
 KeywordOrStar* alifParserEngine_keywordOrStarred(AlifParser*, void*, AlifIntT); // 326
 ASDLExprSeq* alifParserEngine_seqExtractStarExprs(AlifParser*, ASDLSeq*); // 327
 ASDLKeywordSeq* alifParserEngine_seqDeleteStarExprs(AlifParser*, ASDLSeq*); // 328
-ExprTy alifParserEngine_collectCallSeqs(AlifParser*, ASDLExprSeq*, ASDLSeq*,AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*); // 329
+ExprTy alifParserEngine_collectCallSeqs(AlifParser*, ASDLExprSeq*, ASDLSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*); // 329
 ExprTy alifParserEngine_constantFromToken(AlifParser*, AlifPToken*); // 332
 ExprTy alifParserEngine_decodeConstantFromToken(AlifParser*, AlifPToken*); // 333
 ExprTy alifParserEngine_constantFromString(AlifParser*, AlifPToken*); // 334
@@ -280,6 +281,9 @@ void alifParserEngine_parserFree(AlifParser*); // 353
 //Module* alifParser_astFromFile(FILE*, AlifObject*, int, AlifASTMem*);
 
 //void* alifParserEngine_runParser(AlifParser*);
+
+ModuleTy _alifParserEngine_runParserFromString(const char*, AlifIntT, AlifObject*,
+	AlifCompilerFlags*, AlifASTMem*); // 358
 
 ExprTy alifParserEngine_joinedStr(AlifParser*, AlifPToken*, ASDLExprSeq*, AlifPToken*); // 362
 

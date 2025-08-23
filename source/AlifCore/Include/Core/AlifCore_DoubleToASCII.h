@@ -45,4 +45,4 @@ extern char* _alif_dgDoubletoASCII(double, int, int, int*, int*, char**); // 63
 extern void _alif_dgFreeDoubleToASCII(char*); // 65
 
 
-extern AlifIntT _alifDtoa_init(AlifInterpreter*); // 68
+extern AlifStatus _alifDtoa_init(AlifInterpreter*); // 68

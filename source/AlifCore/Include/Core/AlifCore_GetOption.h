@@ -1,9 +1,10 @@
 #pragma once
 
-extern AlifSizeT _optIdx_;
-extern const wchar_t* _optArg_;
+extern AlifIntT _alifOSOptErr_;
+extern AlifSizeT _alifOSOptInd_;
+extern const wchar_t* _alifOSOptArg_;
 
-extern void alif_resetGetOption(); // 12
+extern void _alifOS_resetGetOpt(); // 12
 
 class LongOption { // 14
 public:
@@ -12,4 +13,4 @@ public:
 	AlifIntT val;
 };
 
-extern AlifIntT alif_getOption(AlifSizeT, wchar_t* const*, AlifIntT*); // 20
+extern AlifIntT _alifOS_getOpt(AlifSizeT, wchar_t* const*, AlifIntT*); // 20

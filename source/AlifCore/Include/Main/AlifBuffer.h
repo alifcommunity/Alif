@@ -22,13 +22,16 @@ typedef void (*ReleaseBufferProc)(AlifObject*, AlifBuffer*);
 
 AlifIntT alifObject_getBuffer(AlifObject* , AlifBuffer* , AlifIntT); // 46
 
-
+AlifIntT alifBuffer_isContiguous(const AlifBuffer*, char); // 80
 
 AlifIntT alifBuffer_fillInfo(AlifBuffer*, AlifObject*, void*,
 	AlifSizeT, AlifIntT, AlifIntT); // 97
 
 
 void alifBuffer_release(AlifBuffer*); // 102
+
+
+#define ALIFBUF_MAX_NDIM 64 // 105
 
 
  // 108

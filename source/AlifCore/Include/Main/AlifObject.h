@@ -191,7 +191,7 @@ typedef AlifObject* (*VectorCallFunc)(AlifObject*, AlifObject* const*, AlifUSize
 
 class AlifTypeSlot { // 362
 public:
-	AlifIntT slot{};    /* slot id, see below */
+	AlifIntT slot{};    /* slot id */
 	void* pfunc{}; /* function pointer */
 };
 
@@ -207,6 +207,8 @@ public:
 
 AlifObject* alifType_fromSpecWithBases(AlifTypeSpec*, AlifObject*); // 377
 
+
+AlifObject* alifType_fromModuleAndSpec(AlifObject*, AlifTypeSpec*, AlifObject*); // 383
 
 AlifObject* alifType_getQualName(AlifTypeObject*); // 389
 
@@ -490,7 +492,11 @@ public:
 
 	unsigned long flags{};
 
+	const char doc{};
+
 	TraverseProc traverse{};
+
+	Inquiry clear{};
 
 	RichCmpFunc richCompare{};
 
@@ -654,3 +660,7 @@ static inline AlifIntT alifType_check(AlifObject* _op) { // 768
 	return ALIFTYPE_FASTSUBCLASS(ALIF_TYPE(_op), ALIF_TPFLAGS_TYPE_SUBCLASS);
 }
 #define ALIFTYPE_CHECK(_op) alifType_check(ALIFOBJECT_CAST(_op))
+
+
+
+AlifObject* alifType_getModuleByDef(AlifTypeObject*, AlifModuleDef*); // 796

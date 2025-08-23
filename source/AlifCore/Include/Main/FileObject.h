@@ -12,8 +12,13 @@ AlifIntT alifFile_writeString(const char*, AlifObject*); // 16
 
 
 
-
+extern AlifIntT _alifUTF8Mode_;
 
 
 
 /* ------------------------------------------------------------------------------------------------ */
+
+
+
+
+typedef AlifObject* (*AlifOpenCodeHookFunction)(AlifObject*, void*);

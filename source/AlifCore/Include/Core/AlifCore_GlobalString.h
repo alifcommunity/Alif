@@ -39,6 +39,7 @@ class AlifGlobalStrings {
 public:
     class {
 	public:
+		STRUCT_FOR_USTR(_windowsConsoleIO, "طرفية_ويندوز")
 		STRUCT_FOR_STR(AnonListComp, "<listcomp>")
 		STRUCT_FOR_STR(AnonModule, "<module>")
 		STRUCT_FOR_STR(AnonString, "<string>")
@@ -46,6 +47,7 @@ public:
 		STRUCT_FOR_STR(Defaults, ".defaults")
 		STRUCT_FOR_STR(DotLocals, ".<locals>")
         STRUCT_FOR_STR(Empty, "")
+		STRUCT_FOR_STR(utf_8, "utf-8")
         STRUCT_FOR_USTR(Excepthook, "خطاف_الخلل")
 		STRUCT_FOR_STR(Format, ".format")
 		STRUCT_FOR_STR(GenericBase, ".generic_base")
@@ -56,11 +58,14 @@ public:
 		STRUCT_FOR_STR(False, "خطأ") //* alif
 		STRUCT_FOR_STR(Mode, "mode") //* alif
 		STRUCT_FOR_STR(Name, "name") //* alif
-		STRUCT_FOR_USTR(Open, "فتح") //* alif
+		STRUCT_FOR_USTR(Open, "افتح") //* alif
+		STRUCT_FOR_USTR(Read, "اقرا") //* alif
+		STRUCT_FOR_USTR(Close, "اغلق") //* alif
 		STRUCT_FOR_STR(Raw, "raw") //* alif
+		STRUCT_FOR_USTR(TextIOWrapper, "غلاف_النص") //* alif
 		STRUCT_FOR_USTR(__init__, "_تهيئة_") //* alif
 		STRUCT_FOR_USTR(__import__, "_استورد_") //* alif
-		STRUCT_FOR_USTR(_io, "تبادل") //* alif
+		STRUCT_FOR_STR(_io, "تبادل") //* alif //* review // Important! don't use STRUCT_FOR_USTR here because it's lead to wrong unicode in import.cpp alifImport_importModuleLevelObject()
     } literals;
 
     class {
@@ -89,6 +94,7 @@ public:
 		STRUCT_FOR_ID(__getAttr__)
 		STRUCT_FOR_ID(__hash__)
 		STRUCT_FOR_ID(__initSubclass__)
+		STRUCT_FOR_ID(__IOBaseClosed)
 		STRUCT_FOR_ID(__lengthHint__)
 		STRUCT_FOR_ID(__loader__)
 		STRUCT_FOR_ID(__main__)
@@ -110,11 +116,22 @@ public:
 		STRUCT_FOR_ID(__typeParams__)
 		STRUCT_FOR_ID(__weakListOffset__)
 		STRUCT_FOR_ID(__weakRef__)
+		STRUCT_FOR_ID(_blksize)
+		STRUCT_FOR_ID(_deallocWarn)
 		STRUCT_FOR_ID(_findAndLoad)
 		STRUCT_FOR_ID(_initializing)
 		STRUCT_FOR_ID(_isTextEncoding)
+		STRUCT_FOR_ID(_isAttyOpenOnly)
 		STRUCT_FOR_ID(_WindowsConsoleIO)
+		STRUCT_FOR_ID(Buffer)
+		STRUCT_FOR_ID(Buffering)
+		STRUCT_FOR_ID(buffersize)
 		STRUCT_FOR_ID(Builtins)
+		STRUCT_FOR_ID(Close)
+		STRUCT_FOR_ID(Closed)
+		STRUCT_FOR_ID(CloseFD)
+		STRUCT_FOR_ID(Decode)
+		STRUCT_FOR_ID(Decoder)
      	STRUCT_FOR_ID(Encoding)
      	STRUCT_FOR_ID(End)
      	STRUCT_FOR_ID(Errors)
@@ -123,28 +140,45 @@ public:
      	STRUCT_FOR_ID(Filename)
      	STRUCT_FOR_ID(Fileno)
      	STRUCT_FOR_ID(Flush)
+     	STRUCT_FOR_ID(GetState)
      	STRUCT_FOR_ID(HasLocation)
      	STRUCT_FOR_ID(Join)
+     	STRUCT_FOR_ID(Key)
      	STRUCT_FOR_ID(keys)
-     	STRUCT_FOR_ID(ListComp)
      	STRUCT_FOR_ID(LastExc)
      	STRUCT_FOR_ID(LastTraceback)
      	STRUCT_FOR_ID(LastType)
      	STRUCT_FOR_ID(LastValue)
+     	STRUCT_FOR_ID(LineBuffering)
+     	STRUCT_FOR_ID(ListComp)
      	STRUCT_FOR_ID(MetaClass)
+     	STRUCT_FOR_ID(Mode)
      	STRUCT_FOR_ID(Mro)
+		STRUCT_FOR_ID(Newline)
 		STRUCT_FOR_ID(NFields)
 		STRUCT_FOR_ID(NSequenceFields)
+     	STRUCT_FOR_ID(Opener)
      	STRUCT_FOR_ID(Origin)
      	STRUCT_FOR_ID(Path)
+     	STRUCT_FOR_ID(Peek)
+     	STRUCT_FOR_ID(Readable)
+     	STRUCT_FOR_ID(Read)
+     	STRUCT_FOR_ID(Read1)
+     	STRUCT_FOR_ID(ReadAll)
      	STRUCT_FOR_ID(ReadInto)
+     	STRUCT_FOR_ID(Reverse)
+     	STRUCT_FOR_ID(Seekable)
      	STRUCT_FOR_ID(Sep)
      	STRUCT_FOR_ID(Stderr)
      	STRUCT_FOR_ID(Stdin)
      	STRUCT_FOR_ID(Stdout)
+     	STRUCT_FOR_ID(strict)
      	STRUCT_FOR_ID(TextIOWrapper)
      	STRUCT_FOR_ID(Top)
+     	STRUCT_FOR_ID(Translate)
      	STRUCT_FOR_ID(Write)
+     	STRUCT_FOR_ID(Writable)
+     	STRUCT_FOR_ID(WriteThrough)
     } identifiers;
 
 	class {

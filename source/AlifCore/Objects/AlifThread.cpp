@@ -8,7 +8,7 @@
 
 
 
-#define INITIALIZED _alifDureRun_.threads.initialized // 43
+#define INITIALIZED _alifRuntime_.threads.initialized // 43
 
 
 

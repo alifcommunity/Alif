@@ -79,7 +79,7 @@ public:
 
 
 
-extern AlifIntT alifTypes_initTypes(AlifInterpreter*); // 144
+extern AlifStatus alifTypes_initTypes(AlifInterpreter*); // 144
 
 
 #define MAX_EQUIV 10
@@ -94,6 +94,14 @@ extern AlifIntT alifStaticType_initBuiltin(AlifInterpreter*, AlifTypeObject*); /
 
 
 extern ManagedStaticTypeState* _alifStaticType_getState(AlifInterpreter*, AlifTypeObject*); // 177
+
+
+static inline void* _alifType_getModuleState(AlifTypeObject* _type) { // 191
+	AlifHeapTypeObject* et = (AlifHeapTypeObject*)_type;
+	AlifModuleObject* mod = (AlifModuleObject*)(et->module_);
+	return mod->state;
+}
+
 
 AlifObject* alifType_getDict(AlifTypeObject*); // 207
 

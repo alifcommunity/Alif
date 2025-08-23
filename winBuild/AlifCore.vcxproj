@@ -48,8 +48,8 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Dict.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DictState.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DoubleToASCII.h" />
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DureRun.h" />
-    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DureRunInit.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Runtime.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_RuntimeInit.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Eval.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_EvalState.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FileUtils.h" />
@@ -186,6 +186,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\Opcode.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\OpcodeIDs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\OSDefs.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\OSModule.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\PThreadStubs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\RangeObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\RefCount.h" />
@@ -224,9 +225,14 @@
     <ClInclude Include="..\source\AlifCore\Objects\clinic\MathModule.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\SetObject.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\SysModule.cpp.h" />
-    <ClInclude Include="..\source\AlifCore\Objects\clinic\TextIO.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\Traceback.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\TypeObject.cpp.h" />
+    <ClInclude Include="..\source\Modules\clinic\_abc.cpp.h" />
+    <ClInclude Include="..\source\Modules\_io\clinic\BufferedIO.cpp.h" />
+    <ClInclude Include="..\source\Modules\_io\clinic\FileIO.cpp.h" />
+    <ClInclude Include="..\source\Modules\_io\clinic\IOBase.cpp.h" />
+    <ClInclude Include="..\source\Modules\_io\clinic\TextIO.cpp.h" />
+    <ClInclude Include="..\source\Modules\_io\clinic\WinConsoleIO.cpp.h" />
     <ClInclude Include="..\source\Modules\_io\clinic\_IOModule.cpp.h" />
     <ClInclude Include="..\source\Modules\_io\_IOModule.h" />
     <ClInclude Include="..\source\Windows\errmap.h" />
@@ -317,8 +323,10 @@
     <ClCompile Include="..\source\AlifCore\Objects\ModuleObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\NamespaceObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ObjectStack.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\ParserEngineAPI.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\PathConfig.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\PosixModule.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\PreConfig.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\QuiescentStatesBiaseRef.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\RangeObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\SetObject.cpp" />
@@ -336,11 +344,16 @@
     <ClCompile Include="..\source\AlifCore\Objects\UnionObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\UStrCppType.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\UStrObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\UTF8Tokenizer.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\WeakRefObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\WinConsoleIO.cpp" />
     <ClCompile Include="..\source\Modules\MathModule.cpp" />
     <ClCompile Include="..\source\Modules\SignalModule.cpp" />
     <ClCompile Include="..\source\Modules\TimeModule.cpp" />
+    <ClCompile Include="..\source\Modules\_abc.cpp" />
+    <ClCompile Include="..\source\Modules\_io\BufferedIO.cpp" />
+    <ClCompile Include="..\source\Modules\_io\FileIO.cpp" />
+    <ClCompile Include="..\source\Modules\_io\IOBase.cpp" />
     <ClCompile Include="..\source\Modules\_io\TextIO.cpp" />
     <ClCompile Include="..\source\Modules\_io\_IOModule.cpp" />
   </ItemGroup>

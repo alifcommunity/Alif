@@ -228,7 +228,7 @@ static AlifModuleDef _sysModule_ = { // 3447
 #define SET_SYS_FROM_STRING(_key, _value) \
         SET_SYS(_key, alifUStr_fromString(_value))
 
-static AlifIntT _alifSys_initCore(AlifThread* tstate, AlifObject* sysdict) { // 3476
+static AlifStatus _alifSys_initCore(AlifThread* tstate, AlifObject* sysdict) { // 3476
 	AlifObject* version_info{};
 	AlifIntT res{};
 	AlifInterpreter* interp = tstate->interpreter;
@@ -267,15 +267,13 @@ static AlifIntT _alifSys_initCore(AlifThread* tstate, AlifObject* sysdict) { // 
 	if (_alifErr_occurred(tstate)) {
 		goto err_occurred;
 	}
-	return 1;
+	return ALIFSTATUS_OK();
 
 type_init_failed:
-	//return _ALIFSTATUS_ERR("failed to initialize a type");
-	return -1; //* alif
+	return ALIFSTATUS_ERR("failed to initialize a type");
 
 err_occurred:
-	//return _ALIFSTATUS_ERR("can't initialize sys module");
-	return -1; //* alif
+	return ALIFSTATUS_ERR("can't initialize sys module");
 }
 
 
@@ -367,9 +365,9 @@ err_occurred:
 #undef SET_SYS_FROM_STRING
 
 
-AlifIntT alifSys_create(AlifThread* _thread, AlifObject** _sysModP) { // 3779
+AlifStatus alifSys_create(AlifThread* _thread, AlifObject** _sysModP) { // 3779
 
-	AlifIntT status{};
+	AlifStatus status{};
 	AlifIntT err{};
 	AlifObject* sysmod{};
 	AlifObject* sysdict{};
@@ -383,8 +381,7 @@ AlifIntT alifSys_create(AlifThread* _thread, AlifObject** _sysModP) { // 3779
 
 	sysmod = alifModule_createInitialized(&_sysModule_/*, ALIF_API_VERSION*/); //* alif
 	if (sysmod == nullptr) {
-		//return ALIFSTATUS_ERR("failed to create a module object");
-		return -1; // temp
+		return ALIFSTATUS_ERR("failed to create a module object");
 	}
 	//alifUnstableModule_setGIL(sysmod, ALIF_MOD_GIL_NOT_USED);
 
@@ -404,12 +401,12 @@ AlifIntT alifSys_create(AlifThread* _thread, AlifObject** _sysModP) { // 3779
 	}
 
 	//status = _alifSys_setPreliminaryStderr(sysdict);
-	//if (status < 1) {
+	//if (ALIFSTATUS_EXCEPTION(status)) {
 	//	return status;
 	//}
 
 	status = _alifSys_initCore(_thread, sysdict);
-	if (status < 1) {
+	if (ALIFSTATUS_EXCEPTION(status)) {
 		return status;
 	}
 
@@ -429,9 +426,8 @@ AlifIntT alifSys_create(AlifThread* _thread, AlifObject** _sysModP) { // 3779
 
 
 	*_sysModP = sysmod;
-	return 1;
+	return ALIFSTATUS_OK();
 
 error:
-	//return ALIFSTATUS_ERR("can't initialize sys module");
-	return -1; //* alif
+	return ALIFSTATUS_ERR("can't initialize sys module");
 }

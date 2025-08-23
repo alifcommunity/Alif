@@ -5,7 +5,7 @@
 
 
 
-AlifIntT alif_initFromConfig(const AlifConfig*); // 25
+AlifStatus alif_initFromConfig(const AlifConfig*); // 25
 
 void ALIF_NO_RETURN alif_exit(AlifIntT); // 30
 
@@ -24,6 +24,8 @@ AlifOSSigHandlerT alifOS_setSig(AlifIntT, AlifOSSigHandlerT); // 61
 
 
 AlifIntT alif_runMain(); // 31
+
+void ALIF_NO_RETURN alif_exitStatusException(AlifStatus);
 
 // 40
 #define ALIF_INTERPRETERCONFIG_DEFAULT_GIL (0)

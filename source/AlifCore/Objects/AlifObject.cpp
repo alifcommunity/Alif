@@ -1069,7 +1069,7 @@ static AlifTypeObject* staticTypes[] = {
 	//&_alifInstructionSequenceType_,
 	//&_alifLegacyEventHandlerType_,
 	//&_alifLineIterator_,
-	//&_alifManagedBufferType_,
+	&_alifManagedBufferType_,
 	//&_alifMemoryIterType_,
 	//&_alifMethodWrapperType_,
 	//&_alifNamespaceType_,
@@ -1089,12 +1089,11 @@ static AlifTypeObject* staticTypes[] = {
 };
 
 
-AlifIntT alifTypes_initTypes(AlifInterpreter* _interp) { // 2362
+AlifStatus alifTypes_initTypes(AlifInterpreter* _interp) { // 2362
 	for (AlifUSizeT i = 0; i < ALIF_ARRAY_LENGTH(staticTypes); i++) {
 		AlifTypeObject* type = staticTypes[i];
 		if (alifStaticType_initBuiltin(_interp, type) < 0) {
-			//return ALIFSTATUS_ERR("Can't initialize builtin type");
-			return -1; // temp
+			return ALIFSTATUS_ERR("Can't initialize builtin type");
 		}
 		if (type == &_alifTypeType_) {
 			// nothing
@@ -1105,7 +1104,7 @@ AlifIntT alifTypes_initTypes(AlifInterpreter* _interp) { // 2362
 	//	return ALIFSTATUS_ERR("Can't initialize generic types");
 	//}
 
-	return 1;
+	return ALIFSTATUS_OK();
 }
 
 
@@ -1117,7 +1116,7 @@ static inline void new_reference(AlifObject* _op) { // 2405
 	_op->refLocal = 1;
 	_op->refShared = 0;
 
-	RefTracerDureRunState* tracer = &_alifDureRun_.refTracer;
+	RefTracerDureRunState* tracer = &_alifRuntime_.refTracer;
 	if (tracer->tracerFunc != nullptr) {
 		void* data = tracer->tracerData;
 		tracer->tracerFunc(_op, AlifRefTracerEvent_::Alif_RefTracer_Create, data);
@@ -1239,7 +1238,7 @@ void alif_dealloc(AlifObject* _op) { // 2868
 	AlifTypeObject* type = ALIF_TYPE(_op);
 	Destructor dealloc = type->dealloc;
 
-	RefTracerDureRunState* tracer = &_alifDureRun_.refTracer;
+	RefTracerDureRunState* tracer = &_alifRuntime_.refTracer;
 	if (tracer->tracerFunc != nullptr) {
 		void* data = tracer->tracerData;
 		tracer->tracerFunc(_op, AlifRefTracerEvent_::Alif_RefTracer_Destroy, data);

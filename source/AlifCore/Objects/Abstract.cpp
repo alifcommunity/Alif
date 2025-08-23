@@ -263,6 +263,69 @@ AlifIntT alifObject_getBuffer(AlifObject* obj, AlifBuffer* view, AlifIntT flags)
 }
 
 
+static AlifIntT _IsFortranContiguous(const AlifBuffer* view) { // 447
+	AlifSizeT sd{}, dim{};
+	AlifIntT i{};
+
+	/* 1) len = product(shape) * itemSize
+	   2) itemSize > 0
+	   3) len = 0 <==> exists i: shape[i] = 0 */
+	if (view->len == 0) return 1;
+	if (view->strides == nullptr) {  /* C-contiguous by definition */
+		/* Trivially F-contiguous */
+		if (view->nDim <= 1) return 1;
+
+		/* Effectively 1-d */
+		sd = 0;
+		for (i = 0; i < view->nDim; i++) {
+			if (view->shape[i] > 1) sd += 1;
+		}
+		return sd <= 1;
+	}
+
+	sd = view->itemSize;
+	for (i = 0; i < view->nDim; i++) {
+		dim = view->shape[i];
+		if (dim > 1 and view->strides[i] != sd) {
+			return 0;
+		}
+		sd *= dim;
+	}
+	return 1;
+}
+
+static AlifIntT _IsCContiguous(const AlifBuffer* view) { // 487
+	AlifSizeT sd{}, dim{};
+	AlifIntT i{};
+
+	/* 1) len = product(shape) * itemSize
+	   2) itemSize > 0
+	   3) len = 0 <==> exists i: shape[i] = 0 */
+	if (view->len == 0) return 1;
+	if (view->strides == nullptr) return 1; /* C-contiguous by definition */
+
+	sd = view->itemSize;
+	for (i = view->nDim - 1; i >= 0; i--) {
+		dim = view->shape[i];
+		if (dim > 1 and view->strides[i] != sd) {
+			return 0;
+		}
+		sd *= dim;
+	}
+	return 1;
+}
+
+AlifIntT alifBuffer_isContiguous(const AlifBuffer* _view, char _order) { // 514
+	if (_view->subOffsets != nullptr) return 0;
+
+	if (_order == 'C')
+		return _IsCContiguous(_view);
+	else if (_order == 'F')
+		return _IsFortranContiguous(_view);
+	else if (_order == 'A')
+		return (_IsCContiguous(_view) or _IsFortranContiguous(_view));
+	return 0;
+}
 
 
 
@@ -384,6 +447,13 @@ done:
 	return result;
 }
 
+
+AlifIntT alifNumber_check(AlifObject* _o) { // 899
+	if (_o == nullptr)
+		return 0;
+	AlifNumberMethods* nb = ALIF_TYPE(_o)->asNumber;
+	return nb and (nb->index or nb->int_ or nb->float_ or ALIFCOMPLEX_CHECK(_o));
+}
 
 #define NB_SLOT(_x) offsetof(AlifNumberMethods, _x) // 910
 #define NB_BINOP(_methods, _slot) \
@@ -771,9 +841,9 @@ AlifObject* _alifNumber_index(AlifObject * _item) { // 1397
 		return ALIF_NEWREF(_item);
 	}
 	if (!alifIndex_check(_item)) {
-		//alifErr_format(_alifExcTypeError_,
-			//"'%.200s' object cannot be interpreted "
-			//"as an integer", ALIF_TYPE(_item)->name);
+		alifErr_format(_alifExcTypeError_,
+			"'%.200s' object cannot be interpreted "
+			"as an integer", ALIF_TYPE(_item)->name);
 		return nullptr;
 	}
 

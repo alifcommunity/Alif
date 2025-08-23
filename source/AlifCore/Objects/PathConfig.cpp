@@ -34,14 +34,14 @@ const wchar_t* _alifPathConfig_getGlobalModuleSearchPath(void) { // 47
 }
 
 
-AlifIntT _alifPathConfig_readGlobal(AlifConfig* _config) { // 81
-	AlifIntT status = 1;
+AlifStatus _alifPathConfig_readGlobal(AlifConfig* _config) { // 81
+	AlifStatus status = ALIFSTATUS_OK();
 
 #define COPY(ATTR) \
     do { \
         if (_alifPathConfig_.ATTR and !_config->ATTR) { \
             status = alifConfig_setString(_config, &_config->ATTR, _alifPathConfig_.ATTR); \
-            if (status < 1) goto done; \
+            if (ALIFSTATUS_EXCEPTION(status)) goto done; \
         } \
     } while (0)
 
@@ -49,7 +49,7 @@ AlifIntT _alifPathConfig_readGlobal(AlifConfig* _config) { // 81
     do { \
         if (_alifPathConfig_.SRCATTR and !_config->ATTR) { \
             status = alifConfig_setString(_config, &_config->ATTR, _alifPathConfig_.SRCATTR); \
-            if (status < 1) goto done; \
+            if (ALIFSTATUS_EXCEPTION(status)) goto done; \
         } \
     } while (0)
 
@@ -78,7 +78,7 @@ AlifIntT _alifPathConfig_readGlobal(AlifConfig* _config) { // 81
 
 
 
-AlifIntT _alifPathConfig_updateGlobal(const AlifConfig* _config) { // 126
+AlifStatus _alifPathConfig_updateGlobal(const AlifConfig* _config) { // 126
 
 #define COPY(_attr) \
     do { \
@@ -145,10 +145,10 @@ AlifIntT _alifPathConfig_updateGlobal(const AlifConfig* _config) { // 126
 		_alifPathConfig_.calculatedModuleSearchPath = path;
 	} while (0);
 
-	return 1;
+	return ALIFSTATUS_OK();
 
 error:
-	return -1;
+	return ALIFSTATUS_NO_MEMORY();
 }
 
 

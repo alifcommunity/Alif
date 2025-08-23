@@ -2422,7 +2422,7 @@ AlifUSizeT _alifDict_keysSize(AlifDictKeysObject* _keys) { // 4509
 static AlifMethodDef _dictMethods_[] = { // 4570
 	DICT_KEYS_METHODDEF
 	//DICT_ITEMS_METHODDEF
-	//DICT_VALUES_METHODDEF
+	DICT_VALUES_METHODDEF
 	{nullptr, nullptr}   /* sentinel */
 };
 
@@ -3004,15 +3004,20 @@ AlifTypeObject _alifDictItemsType_ = { // 6412
 };
 
 
-AlifTypeObject _alifDictValuesType_ = { // 6502
+AlifTypeObject _alifDictValuesType_ = { // 6562
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "قيم_فهرس",                             
 	.basicSize = sizeof(AlifDictViewObject),                
 	/* methods */
+	.repr = dictView_repr,
 	.getAttro = alifObject_genericGetAttr,                  
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
 };
 
+
+static AlifObject* dict_valuesImpl(AlifDictObject* self) { // 6601
+	return _alifDictView_new((AlifObject*)self, &_alifDictValuesType_);
+}
 
 
 AlifDictKeysObject* _alifDict_newKeysForClass(AlifHeapTypeObject* _cls) { // 6561
@@ -3020,7 +3025,7 @@ AlifDictKeysObject* _alifDict_newKeysForClass(AlifHeapTypeObject* _cls) { // 656
 	AlifDictKeysObject* keys = new_keysObject(
 		interp, NEXT_LOG2_SHARED_KEYS_MAX_SIZE, 1);
 	if (keys == nullptr) {
-		//alifErr_clear();
+		alifErr_clear();
 	}
 	else {
 		keys->usable = SHARED_KEYS_MAX_SIZE;

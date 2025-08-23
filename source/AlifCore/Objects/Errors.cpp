@@ -361,6 +361,182 @@ void _alifErr_chainExceptions1(AlifObject* _exc) { // 686
 
 
 
+AlifObject* alifErr_setFromErrnoWithFilenameObject(AlifObject* _exc, AlifObject* _fileNameObject) { // 783
+	return alifErr_setFromErrnoWithFilenameObjects(_exc, _fileNameObject, nullptr);
+}
+
+AlifObject* alifErr_setFromErrnoWithFilenameObjects(AlifObject* exc,
+	AlifObject* filenameObject, AlifObject* filenameObject2) { // 789
+	AlifThread* tstate = _alifThread_get();
+	AlifObject* message{};
+	AlifObject* v{}, * args{};
+	AlifIntT i = errno;
+#ifdef _WINDOWS
+	WCHAR* s_buf = nullptr;
+#endif /* Unix/Windows */
+
+#ifdef EINTR
+	//if (i == EINTR and alifErr_checkSignals())
+	//	return nullptr;
+#endif
+
+#ifndef _WINDOWS
+	if (i != 0) {
+		const char* s = strerror(i);
+		message = alifUStr_decodeLocale(s, "surrogateescape");
+	}
+	else {
+		/* Sometimes errno didn't get set */
+		message = alifUStr_fromString("Error");
+	}
+#else
+	if (i == 0)
+		message = alifUStr_fromString("Error"); /* Sometimes errno didn't get set */
+	else
+	{
+		if (i > 0 and i < _sys_nerr) {
+			message = alifUStr_fromString(_sys_errlist[i]);
+		}
+		else {
+			int len = FormatMessageW(
+				FORMAT_MESSAGE_ALLOCATE_BUFFER |
+				FORMAT_MESSAGE_FROM_SYSTEM |
+				FORMAT_MESSAGE_IGNORE_INSERTS,
+				nullptr,                   /* no message source */
+				i,
+				MAKELANGID(LANG_NEUTRAL,
+					SUBLANG_DEFAULT),
+				/* Default language */
+				(LPWSTR)&s_buf,
+				0,                      /* size not used */
+				nullptr);                  /* no args */
+			if (len == 0) {
+				/* Only ever seen this in out-of-mem
+				   situations */
+				s_buf = nullptr;
+				message = alifUStr_fromFormat("Windows Error 0x%x", i);
+			}
+			else {
+				/* remove trailing cr/lf and dots */
+				while (len > 0 and (s_buf[len - 1] <= L' ' or s_buf[len - 1] == L'.'))
+					s_buf[--len] = L'\0';
+				message = alifUStr_fromWideChar(s_buf, len);
+			}
+		}
+	}
+#endif /* Unix/Windows */
+
+	if (message == nullptr)
+	{
+#ifdef _WINDOWS
+		LocalFree(s_buf);
+#endif
+		return nullptr;
+	}
+
+	if (filenameObject != nullptr) {
+		if (filenameObject2 != nullptr)
+			args = alif_buildValue("(iOOiO)", i, message, filenameObject, 0, filenameObject2);
+		else
+			args = alif_buildValue("(iOO)", i, message, filenameObject);
+	}
+	else {
+		args = alif_buildValue("(iO)", i, message);
+	}
+	ALIF_DECREF(message);
+
+	if (args != nullptr) {
+		v = alifObject_call(exc, args, nullptr);
+		ALIF_DECREF(args);
+		if (v != nullptr) {
+			_alifErr_setObject(tstate, (AlifObject*)ALIF_TYPE(v), v);
+			ALIF_DECREF(v);
+		}
+	}
+#ifdef _WINDOWS
+	LocalFree(s_buf);
+#endif
+	return nullptr;
+}
+
+
+#ifdef _WINDOWS // 911
+
+AlifObject* alifErr_setExcFromWindowsErrWithFilenameObject(
+	AlifObject* exc, AlifIntT ierr, AlifObject* filenameObject) { // 913
+	return alifErr_setExcFromWindowsErrWithFilenameObjects(exc, ierr,
+		filenameObject, nullptr);
+}
+
+AlifObject* alifErr_setExcFromWindowsErrWithFilenameObjects(
+	AlifObject* exc, AlifIntT ierr, AlifObject* filenameObject, AlifObject* filenameObject2) { // 922
+	AlifThread* tstate = _alifThread_get();
+	AlifIntT len{};
+	WCHAR* s_buf = nullptr; /* Free via LocalFree */
+	AlifObject* message{};
+	AlifObject* args{}, * v{};
+
+	DWORD err = (DWORD)ierr;
+	if (err == 0) {
+		err = GetLastError();
+	}
+
+	len = FormatMessageW(
+		/* Error API error */
+		FORMAT_MESSAGE_ALLOCATE_BUFFER |
+		FORMAT_MESSAGE_FROM_SYSTEM |
+		FORMAT_MESSAGE_IGNORE_INSERTS,
+		nullptr,           /* no message source */
+		err,
+		MAKELANGID(LANG_NEUTRAL,
+			SUBLANG_DEFAULT), /* Default language */
+		(LPWSTR)&s_buf,
+		0,              /* size not used */
+		nullptr);          /* no args */
+	if (len == 0) {
+		/* Only seen this in out of mem situations */
+		message = alifUStr_fromFormat("Windows Error 0x%x", err);
+		s_buf = nullptr;
+	}
+	else {
+		/* remove trailing cr/lf and dots */
+		while (len > 0 and (s_buf[len - 1] <= L' ' || s_buf[len - 1] == L'.'))
+			s_buf[--len] = L'\0';
+		message = alifUStr_fromWideChar(s_buf, len);
+	}
+
+	if (message == nullptr)
+	{
+		LocalFree(s_buf);
+		return nullptr;
+	}
+
+	if (filenameObject == nullptr) {
+		filenameObject = filenameObject2 = ALIF_NONE;
+	}
+	else if (filenameObject2 == nullptr)
+		filenameObject2 = ALIF_NONE;
+	args = alif_buildValue("(iOOiO)", 0, message, filenameObject, err, filenameObject2);
+	ALIF_DECREF(message);
+
+	if (args != nullptr) {
+		v = alifObject_call(exc, args, nullptr);
+		ALIF_DECREF(args);
+		if (v != nullptr) {
+			//_alifErr_setObject(tstate, (AlifObject*)ALIF_TYPE(v), v);
+			ALIF_DECREF(v);
+		}
+	}
+	LocalFree(s_buf);
+	return nullptr;
+}
+
+#endif /* _WINDOWS */ // 1046
+
+
+
+
+
 static AlifObject* _alifErr_formatV(AlifThread* _thread, AlifObject* _exception,
 	const char* _format, va_list _vargs) { // 1152
 	AlifObject* string{};

@@ -31,7 +31,7 @@
 
 
 
-static AlifIntT alifConfig_initPathConfigAlif(AlifConfig*, AlifIntT); //* alif
+static AlifStatus alifConfig_initPathConfigAlif(AlifConfig*, AlifIntT); //* alif
 
 
 
@@ -292,16 +292,16 @@ static AlifIntT env_toDict(AlifObject* dict,
 
 
 
-AlifIntT _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePathConfig) { // 863
-	AlifIntT status = _alifPathConfig_readGlobal(_config);
+AlifStatus _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePathConfig) { // 863
+	AlifStatus status = _alifPathConfig_readGlobal(_config);
 
-	if (status != 1 or !_computePathConfig) {
+	if (ALIFSTATUS_EXCEPTION(status) or !_computePathConfig) {
 		return status;
 	}
 
 	/* -------------- alif path config -------------- */
 	status = alifConfig_initPathConfigAlif(_config, _computePathConfig); //* alif
-	if (status < 1) {
+	if (ALIFSTATUS_EXCEPTION(status)) {
 		return status;
 	}
 	/* ------------- !alif path config! ------------- */
@@ -422,7 +422,7 @@ AlifIntT _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePathCo
 //
 //	ALIF_DECREF(dict);
 
-	return 1;
+	return ALIFSTATUS_OK();
 }
 
 
@@ -888,7 +888,7 @@ static wchar_t* add_string(const wchar_t* str1, const wchar_t* str2) {
 }
 
 
-static AlifIntT alifConfig_initPathConfigAlif(AlifConfig* _config, AlifIntT _computePathConfig) {
+static AlifStatus alifConfig_initPathConfigAlif(AlifConfig* _config, AlifIntT _computePathConfig) {
 	//* todo
 
 	wchar_t* programName = _config->programName;
@@ -1037,10 +1037,10 @@ static AlifIntT alifConfig_initPathConfigAlif(AlifConfig* _config, AlifIntT _com
 
 			if (not strLibDirWasSetInConfig) {
 				if (buildStdlibPrefix) {
-					stdLibDir = join_paths(2, buildStdlibPrefix, L"Lib");
+					stdLibDir = join_paths(2, buildStdlibPrefix, L"library");
 				}
 				else {
-					stdLibDir = join_paths(2, buildPrefix, L"Lib");
+					stdLibDir = join_paths(2, buildPrefix, L"library");
 				}
 			}
 
@@ -1130,5 +1130,5 @@ static AlifIntT alifConfig_initPathConfigAlif(AlifConfig* _config, AlifIntT _com
 	_config->platLibDir = platLibDir;
 	_config->stdLibDir = stdLibDir;
 
-	return 1;
+	return ALIFSTATUS_OK();
 }

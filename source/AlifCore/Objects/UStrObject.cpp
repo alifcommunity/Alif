@@ -12,6 +12,7 @@
 #include "AlifCore_CriticalSection.h"
 #include "AlifCore_Format.h"
 #include "AlifCore_UStrObjectStaticStrInit.h"
+#include "AlifCore_InitConfig.h"
 
 
 #include <Equal.h> // 61
@@ -143,7 +144,7 @@ static inline AlifObject* get_internedDict(AlifInterpreter* _interp) { // 223
 }
 
 
-#define INTERNED_STRINGS _alifDureRun_.cachedObjects.internedStrings // 231
+#define INTERNED_STRINGS _alifRuntime_.cachedObjects.internedStrings // 231
 
 static AlifHashT uStr_hash(AlifObject*); // 263
 
@@ -187,7 +188,7 @@ static AlifIntT init_internedDict(AlifInterpreter* interp) { // 302
 }
 
 
-static AlifIntT initGlobal_internedStrings(AlifInterpreter* _interp) { // 308
+static AlifStatus initGlobal_internedStrings(AlifInterpreter* _interp) { // 308
 	AlifHashTableAllocatorT hashTableAlloc = { alifMem_dataAlloc, alifMem_dataFree };
 
 	INTERNED_STRINGS = alifHashTable_newFull(
@@ -195,11 +196,10 @@ static AlifIntT initGlobal_internedStrings(AlifInterpreter* _interp) { // 308
 		hashTable_uStrCompare,
 		nullptr,
 		nullptr,
-		&hashTableAlloc );
+		&hashTableAlloc);
 	if (INTERNED_STRINGS == nullptr) {
-		//alifErr_clear();
-		//return ALIFSTATUS_ERR("failed to create global interned dict");
-		return -1;
+		alifErr_clear();
+		return ALIFSTATUS_ERR("failed to create global interned dict");
 	}
 
 	_alifUStr_initStaticStrings(_interp);
@@ -208,7 +208,7 @@ static AlifIntT initGlobal_internedStrings(AlifInterpreter* _interp) { // 308
 		AlifObject* s = LATIN1(i);
 		_alifUStr_internStatic(_interp, &s);
 	}
-	return 1;
+	return ALIFSTATUS_OK();
 }
 
 
@@ -286,7 +286,7 @@ static AlifObject* uStr_encodeCallErrorhandler(const char*,
 	AlifObject**, const char*, const char*, AlifObject*,
 	AlifObject**, AlifSizeT, AlifSizeT, AlifSizeT*); // 443
 
-AlifErrorHandler_ alif_getErrorHandler(const char* _errors) { // 488
+AlifErrorHandler_ alif_getErrorHandler(const char* _errors) { // 516
 	if (_errors == nullptr or strcmp(_errors, "strict") == 0) {
 		return AlifErrorHandler_::Alif_Error_Strict;
 	}
@@ -625,8 +625,7 @@ static AlifIntT resize_inplace(AlifObject* _uStr, AlifSizeT _length) { // 1126
 	}
 	newSize = (_length + 1) * charSize;
 
-	if (!shareUTF8 and ALIFUSTR_HAS_UTF8_MEMORY(_uStr))
-	{
+	if (!shareUTF8 and ALIFUSTR_HAS_UTF8_MEMORY(_uStr)) {
 		alifMem_objFree(_ALIFUSTR_UTF8(_uStr));
 		_ALIFUSTR_UTF8(_uStr) = nullptr;
 		ALIFUSTR_UTF8_LENGTH(_uStr) = 0;
@@ -816,8 +815,7 @@ static AlifIntT copy_characters(AlifObject* _to, AlifSizeT _toStart, AlifObject*
 	else {
 		if (!_checkMaxChar) {
 			if (fromKind == AlifUStrKind_::AlifUStr_2Byte_Kind
-				and toKind == AlifUStrKind_::AlifUStr_1Byte_Kind)
-			{
+				and toKind == AlifUStrKind_::AlifUStr_1Byte_Kind) {
 				ALIFUSTR_CONVERT_BYTES(
 					AlifUCS2, AlifUCS1,
 					ALIFUSTR_2BYTE_DATA(_from) + _fromStart,
@@ -826,8 +824,7 @@ static AlifIntT copy_characters(AlifObject* _to, AlifSizeT _toStart, AlifObject*
 				);
 			}
 			else if (fromKind == AlifUStrKind_::AlifUStr_4Byte_Kind
-				and toKind == AlifUStrKind_::AlifUStr_1Byte_Kind)
-			{
+				and toKind == AlifUStrKind_::AlifUStr_1Byte_Kind) {
 				ALIFUSTR_CONVERT_BYTES(
 					AlifUCS4, AlifUCS1,
 					ALIFUSTR_4BYTE_DATA(_from) + _fromStart,
@@ -927,17 +924,16 @@ static AlifIntT find_maxCharSurrogates(const wchar_t* _begin, const wchar_t* _en
 	*_maxChar = 0;
 
 	for (iter = _begin; iter < _end; ) {
-#if SIZEOF_WCHAR_T == 2
+	#if SIZEOF_WCHAR_T == 2
 		if (alifUnicode_isHighSurrogate(iter[0])
 			and (iter + 1) < _end
-			and alifUnicode_isLowSurrogate(iter[1]))
-		{
+			and alifUnicode_isLowSurrogate(iter[1])) {
 			ch_ = alifUnicode_joinSurrogates(iter[0], iter[1]);
 			++(*_numSurrogates);
 			iter += 2;
 		}
 		else
-#endif
+		#endif
 		{
 			ch_ = *iter;
 			iter++;
@@ -963,24 +959,24 @@ static void ustr_dealloc(AlifObject* _uStr) { // 1633
 	switch (ALIFUSTR_STATE(_uStr).interned) {
 	case SSTATE_NOT_INTERNED:
 		break;
-	//case SSTATE_INTERNED_MORTAL:
-	//	ALIF_SET_REFCNT(_uStr, 2);
-	//	AlifInterpreter* interp = _alifInterpreter_get();
-	//	AlifObject* interned = get_internedDict(interp);
-	//	AlifObject* popped{};
-	//	AlifIntT r = alifDict_pop(interned, _uStr, &popped);
-	//	if (r == -1) {
-	//		//alifErr_writeUnraisable(unicode);
-	//		alif_setImmortal(_uStr);
-	//		ALIFUSTR_STATE(_uStr).interned = SSTATE_INTERNED_IMMORTAL;
-	//		return;
-	//	}
-	//	if (r == 0) {
-	//		alif_setImmortal(_uStr);
-	//		return;
-	//	}
-	//	ALIF_SET_REFCNT(_uStr, 0);
-	//	break;
+		//case SSTATE_INTERNED_MORTAL:
+		//	ALIF_SET_REFCNT(_uStr, 2);
+		//	AlifInterpreter* interp = _alifInterpreter_get();
+		//	AlifObject* interned = get_internedDict(interp);
+		//	AlifObject* popped{};
+		//	AlifIntT r = alifDict_pop(interned, _uStr, &popped);
+		//	if (r == -1) {
+		//		//alifErr_writeUnraisable(unicode);
+		//		alif_setImmortal(_uStr);
+		//		ALIFUSTR_STATE(_uStr).interned = SSTATE_INTERNED_IMMORTAL;
+		//		return;
+		//	}
+		//	if (r == 0) {
+		//		alif_setImmortal(_uStr);
+		//		return;
+		//	}
+		//	ALIF_SET_REFCNT(_uStr, 0);
+		//	break;
 	default:
 		alif_setImmortal(_uStr);
 		return;
@@ -1074,16 +1070,16 @@ static inline void uStrWrite_wideChar(AlifIntT _kind, void* _data,
 		break;
 
 	case AlifUStrKind_::AlifUStr_2Byte_Kind:
-#if SIZEOF_WCHAR_T == 2
+	#if SIZEOF_WCHAR_T == 2
 		memcpy(_data, _u, _size * 2);
-#else
+	#else
 		ALIFUSTR_CONVERT_BYTES(wchar_t, AlifUCS2, _u, _u + _size, _data);
-#endif
+	#endif
 		break;
 
 	case AlifUStrKind_::AlifUStr_4Byte_Kind:
 	{
-#if SIZEOF_WCHAR_T == 2
+	#if SIZEOF_WCHAR_T == 2
 		// Convert a 16-bits wchar_t representation to UCS4, this will decode
 		// surrogate pairs.
 		const wchar_t* end = _u + _size;
@@ -1091,8 +1087,7 @@ static inline void uStrWrite_wideChar(AlifIntT _kind, void* _data,
 		for (const wchar_t* iter = _u; iter < end; ) {
 			if (alifUnicode_isHighSurrogate(iter[0])
 				and (iter + 1) < end
-				and alifUnicode_isLowSurrogate(iter[1]))
-			{
+				and alifUnicode_isLowSurrogate(iter[1])) {
 				*ucs4_out++ = alifUnicode_joinSurrogates(iter[0], iter[1]);
 				iter += 2;
 			}
@@ -1101,9 +1096,9 @@ static inline void uStrWrite_wideChar(AlifIntT _kind, void* _data,
 				iter++;
 			}
 		}
-#else
+	#else
 		memcpy(_data, _u, _size * 4);
-#endif
+	#endif
 		break;
 	}
 	default:
@@ -1132,8 +1127,8 @@ AlifObject* alifUStr_fromWideChar(const wchar_t* _u, AlifSizeT _size) { // 1956
 	if (_size == 0)
 		ALIF_RETURN_UNICODE_EMPTY
 
-	if (_size == 1 and (AlifUCS4)*_u < 256)
-		return get_latin1Char((unsigned char)*_u);
+		if (_size == 1 and (AlifUCS4)*_u < 256)
+			return get_latin1Char((unsigned char)*_u);
 
 	/* If not empty and not single character, copy the Unicode data
 	   into the new object */
@@ -1574,7 +1569,7 @@ static AlifIntT uStr_fromFormatWriteWCStr(AlifUStrWriter* _writer, const wchar_t
 
 
 
- // 2692
+// 2692
 #define F_LONG 1
 #define F_LONGLONG 2
 #define F_SIZE 3
@@ -1727,11 +1722,11 @@ static const char* uStr_fromFormatArg(AlifUStrWriter* _writer,
 		// `SPRINT` macro does one sprintf
 		// Example usage: SPRINT("l", "X", unsigned long) expands to
 		// sprintf(buffer, "%" "l" "X", va_arg(*vargs, unsigned long))
-#define SPRINT(SIZE_SPEC, FMT_CHAR, TYPE) \
+	#define SPRINT(SIZE_SPEC, FMT_CHAR, TYPE) \
             sprintf(buffer, "%" SIZE_SPEC FMT_CHAR, va_arg(*_vargs, TYPE))
 
 		// One inner switch to handle all format variants
-#define DO_SPRINTS(SIZE_SPEC, SIGNED_TYPE, UNSIGNED_TYPE)             \
+	#define DO_SPRINTS(SIZE_SPEC, SIGNED_TYPE, UNSIGNED_TYPE)             \
             switch (*_f) {                                                     \
                 case 'o': len = SPRINT(SIZE_SPEC, "o", UNSIGNED_TYPE); break; \
                 case 'u': len = SPRINT(SIZE_SPEC, "u", UNSIGNED_TYPE); break; \
@@ -1747,8 +1742,8 @@ static const char* uStr_fromFormatArg(AlifUStrWriter* _writer,
 		case F_INTMAX:   DO_SPRINTS("j", intmax_t, uintmax_t); break;
 		default:         DO_SPRINTS("", AlifIntT, AlifUIntT); break;
 		}
-#undef SPRINT
-#undef DO_SPRINTS
+	#undef SPRINT
+	#undef DO_SPRINTS
 
 		AlifIntT sign = (buffer[0] == '-');
 		len -= sign;
@@ -1967,7 +1962,7 @@ static const char* uStr_fromFormatArg(AlifUStrWriter* _writer,
 	//}
 	//
 	default:
-	invalid_format:
+invalid_format:
 		//alifErr_format(_alifExcSystemError_, "invalid format string: %s", p);
 		return nullptr;
 	}
@@ -2082,12 +2077,12 @@ static void uStr_copyAsWideChar(AlifObject* _uStr, wchar_t* _w, AlifSizeT _size)
 		}
 	}
 	else {
-#if SIZEOF_WCHAR_T == 4
+	#if SIZEOF_WCHAR_T == 4
 		const AlifUCS2* s_ = ALIFUSTR_2BYTE_DATA(_uStr);
 		for (; _size--; ++s_, ++_w) {
 			*_w = *s_;
 		}
-#else
+	#else
 		const AlifUCS4* s_ = ALIFUSTR_4BYTE_DATA(_uStr);
 		for (; _size--; ++s_, ++_w) {
 			AlifUCS4 ch_ = *s_;
@@ -2101,7 +2096,7 @@ static void uStr_copyAsWideChar(AlifObject* _uStr, wchar_t* _w, AlifSizeT _size)
 				*_w = ch_;
 			}
 		}
-#endif
+	#endif
 	}
 }
 
@@ -2250,7 +2245,7 @@ AlifObject* alifUStr_decode(const char* s, AlifSizeT size,
 	AlifBuffer info{};
 	char buflower[11]{};
 
-	//if (uStCheck_encodingErrors(encoding, errors) < 0) {
+	//if (uStr_checkEncodingErrors(encoding, errors) < 0) {
 	//	return nullptr;
 	//}
 
@@ -2289,11 +2284,11 @@ AlifObject* alifUStr_decode(const char* s, AlifSizeT size,
 				or strcmp(lower, "us_ascii") == 0) {
 				//return alifUStr_decodeASCII(s, size, errors);
 			}
-#ifdef _WINDOWS
+		#ifdef _WINDOWS
 			else if (strcmp(lower, "mbcs") == 0) {
 				//return alifUStr_decodeMBCS(s, size, errors);
 			}
-#endif
+		#endif
 			else if (strcmp(lower, "latin1") == 0
 				or strcmp(lower, "latin_1") == 0
 				or strcmp(lower, "iso_8859_1") == 0
@@ -2436,11 +2431,11 @@ AlifObject* alifUStr_asEncodedString(AlifObject* unicode,
 				or strcmp(lower, "us_ascii") == 0) {
 				return _alifUStr_asASCIIString(unicode, errors);
 			}
-#ifdef _WINDOWS
+		#ifdef _WINDOWS
 			else if (strcmp(lower, "mbcs") == 0) {
 				return alifUStr_encodeCodePage(CP_ACP, unicode, errors);
 			}
-#endif
+		#endif
 			else if (strcmp(lower, "latin1") == 0 or
 				strcmp(lower, "latin_1") == 0 or
 				strcmp(lower, "iso_8859_1") == 0 or
@@ -2489,13 +2484,51 @@ AlifObject* alifUStr_asEncodedString(AlifObject* unicode,
 }
 
 
+static AlifObject* uStr_decodeLocale(const char* _str, AlifSizeT _len,
+	AlifErrorHandler_ _errors, AlifIntT _currentLocale) { // 3998
+	if (_str[_len] != '\0' or (AlifUSizeT)_len != strlen(_str)) {
+		alifErr_setString(_alifExcValueError_, "يحتوي على بايت فارغ");
+		return nullptr;
+	}
+
+	wchar_t* wstr{};
+	AlifUSizeT wlen{};
+	const char* reason{};
+	AlifIntT res = alif_decodeLocaleEx(_str, &wstr, &wlen, &reason,
+		_currentLocale, _errors);
+	if (res != 0) {
+		if (res == -2) {
+			AlifObject* exc{};
+			//exc = alifObject_callFunction(_alifExcUStrDecodeError_, "sy#nns",
+			//	"locale", str, len,
+			//	(AlifSizeT)wlen,
+			//	(AlifSizeT)(wlen + 1),
+			//	reason);
+			if (exc != nullptr) {
+				//alifCodec_strictErrors(exc);
+				ALIF_DECREF(exc);
+			}
+		}
+		else if (res == -3) {
+			alifErr_setString(_alifExcValueError_, "معالج خطأ غير مدعوم");
+		}
+		else {
+			//alifErr_noMemory();
+		}
+		return nullptr;
+	}
+
+	AlifObject* unicode = alifUStr_fromWideChar(wstr, wlen);
+	alifMem_dataFree(wstr);
+	return unicode;
+}
 
 
-//AlifObject* alifUStr_decodeFSDefault(const char* _s) { // 4029
-//	AlifSizeT size = (AlifSizeT)strlen(_s);
-//	return alifUStr_decodeFSDefaultAndSize(_s, size);
-//}
-//
+AlifObject* alifUStr_decodeFSDefault(const char* _s) { // 4029
+	AlifSizeT size = (AlifSizeT)strlen(_s);
+	return alifUStr_decodeFSDefaultAndSize(_s, size);
+}
+
 //AlifObject* alifUStr_decodeFSDefaultAndSize(const char* s, AlifSizeT size) { // 4035
 //	AlifInterpreter* interp = _alifInterpreter_get();
 //	AlifUStrFSCodec* fs_codec = &interp->unicode.fs_codec;
@@ -2526,6 +2559,44 @@ AlifObject* alifUStr_asEncodedString(AlifObject* unicode,
 
 
 
+AlifObject* alifUStr_decodeLocale(const char* _str, const char* _errors) { // 4047
+	AlifSizeT size = (AlifSizeT)strlen(_str);
+	AlifErrorHandler_ error_handler = alif_getErrorHandler(_errors);
+	return uStr_decodeLocale(_str, size, error_handler, 1);
+}
+
+
+AlifObject* alifUStr_decodeFSDefaultAndSize(const char* s, AlifSizeT size) { // 4062
+	AlifInterpreter* interp = _alifInterpreter_get();
+	//	AlifUStrFSCodec* fs_codec = &interp->unicode.fs_codec;
+	//	if (fs_codec->utf8) {
+	//		return unicode_decodeUTF8(s, size,
+	//			fs_codec->error_handler,
+	//			fs_codec->errors,
+	//			nullptr);
+	//	}
+	//#ifndef ALIF_FORCE_UTF8_FS_ENCODING
+	//	else if (fs_codec->encoding) {
+	//		return alifUStr_decode(s, size,
+	//			fs_codec->encoding,
+	//			fs_codec->errors);
+	//	}
+	//#endif
+	//	else {
+	const AlifConfig* config = alifInterpreter_getConfig(interp);
+	//const wchar_t* filesystem_errors = config->fileSystemErrors;
+	const wchar_t* filesystem_errors = nullptr; //* delete
+	AlifErrorHandler_ errors = get_errorHandlerWide(filesystem_errors);
+#ifdef ALIF_FORCE_UTF8_FS_ENCODING
+	//		return unicode_decodeUTF8(s, size, errors, nullptr, nullptr);
+#else
+	return uStr_decodeLocale(s, size, errors, 0);
+#endif
+	//}
+}
+
+
+
 AlifIntT alifUStr_fsConverter(AlifObject* _arg, void* _addr) { // 4079
 	AlifObject* path = nullptr;
 	AlifObject* output = nullptr;
@@ -2545,17 +2616,60 @@ AlifIntT alifUStr_fsConverter(AlifObject* _arg, void* _addr) { // 4079
 	//}
 	//else {  // alifOS_fsPath() guarantees its returned value is bytes or str.
 		//output = alifUStr_encodeFSDefault(path);
-		output = alifUStr_encodeFSDefault(_arg);
-		//ALIF_DECREF(path);
-		if (!output) {
-			return 0;
-		}
+	output = alifUStr_encodeFSDefault(_arg);
+	//ALIF_DECREF(path);
+	if (!output) {
+		return 0;
+	}
 	//}
 
 	size = ALIFBYTES_GET_SIZE(output);
 	data = ALIFBYTES_AS_STRING(output);
 	if ((AlifUSizeT)size != strlen(data)) {
 		//alifErr_setString(_alifExcValueError_, "embedded null byte");
+		ALIF_DECREF(output);
+		return 0;
+	}
+	*(AlifObject**)_addr = output;
+	return ALIF_CLEANUP_SUPPORTED;
+}
+
+
+AlifIntT alifUStr_fsDecoder(AlifObject* _arg, void* _addr) { // 4138
+	if (_arg == nullptr) {
+		ALIF_DECREF(*(AlifObject**)_addr);
+		*(AlifObject**)_addr = nullptr;
+		return 1;
+	}
+
+	AlifObject* path = alifOS_fsPath(_arg);
+	if (path == nullptr) {
+		return 0;
+	}
+
+	AlifObject* output = nullptr;
+	if (ALIFUSTR_CHECK(path)) {
+		output = path;
+	}
+	else if (ALIFBYTES_CHECK(path)) {
+		output = alifUStr_decodeFSDefaultAndSize(ALIFBYTES_AS_STRING(path),
+			ALIFBYTES_GET_SIZE(path));
+		ALIF_DECREF(path);
+		if (!output) {
+			return 0;
+		}
+	}
+	else {
+		//alifErr_format(_alifExcTypeError_,
+		//	"path should be string, bytes, or os.PathLike, not %.200s",
+		//	ALIF_TYPE(_arg)->name);
+		ALIF_DECREF(path);
+		return 0;
+	}
+
+	if (findChar(ALIFUSTR_DATA(output), ALIFUSTR_KIND(output),
+		ALIFUSTR_GET_LENGTH(output), 0, 1) >= 0) {
+		alifErr_setString(_alifExcValueError_, "embedded null character");
 		ALIF_DECREF(output);
 		return 0;
 	}
@@ -2592,6 +2706,17 @@ const char* alifUStr_asUTF8AndSize(AlifObject* _uStr, AlifSizeT* _pSize) { // 41
 
 const char* alifUStr_asUTF8(AlifObject* _uStr) { // 4193
 	return alifUStr_asUTF8AndSize(_uStr, nullptr);
+}
+
+
+const char* _alifUStr_asUTF8NoNUL(AlifObject* _unicode) { // 4217
+	AlifSizeT size{};
+	const char* s = alifUStr_asUTF8AndSize(_unicode, &size);
+	if (s and strlen(s) != (AlifUSizeT)size) {
+		alifErr_setString(_alifExcValueError_, "embedded null character");
+		return nullptr;
+	}
+	return s;
 }
 
 
@@ -2728,8 +2853,7 @@ static AlifSizeT ascii_decode(const char* _start, const char* _end, AlifUCS1* _d
 
 #if SIZEOF_SIZE_T <= SIZEOF_VOID_P
 	if (ALIF_IS_ALIGNED(p, ALIGNOF_SIZE_T)
-		and ALIF_IS_ALIGNED(_dest, ALIGNOF_SIZE_T))
-	{
+		and ALIF_IS_ALIGNED(_dest, ALIGNOF_SIZE_T)) {
 		const char* _p = p;
 		AlifUCS1* q = _dest;
 		while (_p + SIZEOF_SIZE_T <= _end) {
@@ -2811,12 +2935,11 @@ static AlifIntT unicode_decodeUTF8Impl(AlifUStrWriter* writer, const char* start
 			break;
 		case 2:
 			if (consumed and (unsigned char)_s[0] == 0xED and end - _s == 2
-				and (unsigned char)_s[1] >= 0xA0 and (unsigned char)_s[1] <= 0xBF)
-			{
+				and (unsigned char)_s[1] >= 0xA0 and (unsigned char)_s[1] <= 0xBF) {
 				/* Truncated surrogate code in range D800-DFFF */
 				goto End;
 			}
-			//ALIF_FALLTHROUGH;
+			ALIF_FALLTHROUGH;
 		case 3:
 		case 4:
 			errMsg = "امتداد بايت غير صحيح";
@@ -2859,13 +2982,13 @@ static AlifIntT unicode_decodeUTF8Impl(AlifUStrWriter* writer, const char* start
 		}
 
 		default:
-			//if (unicodeDecode_callErrorHandlerWriter(
-			//	errors, &errorHandlerObj,
-			//	"utf-8", errMsg,
-			//	&starts, &end, &startInPos, &endInpos, &exc, &_s,
-			//	writer)) {
-			//	goto onError;
-			//}
+			if (uStrDecode_callErrorHandlerWriter(
+				errors, &errorHandlerObj,
+				"utf-8", errMsg,
+				&starts, &end, &startInPos, &endInpos, &exc, &_s,
+				writer)) {
+				goto onError;
+			}
 
 			if (ALIFUSTRWRITER_PREPARE(writer, end - _s, 127) < 0) {
 				return -1;
@@ -2987,8 +3110,7 @@ AlifIntT alif_decodeUTF8Ex(const char* _s, AlifSizeT size, wchar_t** wstr, AlifU
 
 	AlifIntT surrogateescape = 0;
 	AlifIntT surrogatepass = 0;
-	switch (errors)
-	{
+	switch (errors) {
 	case AlifErrorHandler_::Alif_Error_Strict:
 		break;
 	case AlifErrorHandler_::Alif_Error_SurrogateEscape:
@@ -3015,19 +3137,19 @@ AlifIntT alif_decodeUTF8Ex(const char* _s, AlifSizeT size, wchar_t** wstr, AlifU
 	outPos = 0;
 	while (_s < e_) {
 		AlifUCS4 ch_;
-#if SIZEOF_WCHAR_T == 4
+	#if SIZEOF_WCHAR_T == 4
 		ch_ = ucs4Lib_utf8Decode(&_s, e_, (AlifUCS4*)uStr, &outPos);
-#else
+	#else
 		ch_ = ucs2Lib_utf8Decode(&_s, e_, (AlifUCS2*)uStr, &outPos);
-#endif
+	#endif
 		if (ch_ > 0xFF) {
-#if SIZEOF_WCHAR_T == 4
+		#if SIZEOF_WCHAR_T == 4
 			ALIF_UNREACHABLE();
-#else
+		#else
 			/* write a surrogate pair */
 			uStr[outPos++] = (wchar_t)alifUnicode_highSurrogate(ch_);
 			uStr[outPos++] = (wchar_t)alifUnicode_lowSurrogate(ch_);
-#endif
+		#endif
 		}
 		else {
 			if (!ch_ and _s == e_) {
@@ -3043,8 +3165,7 @@ AlifIntT alif_decodeUTF8Ex(const char* _s, AlifSizeT size, wchar_t** wstr, AlifU
 					and (e_ - _s) >= 3
 					and (_s[0] & 0xf0) == 0xe0
 					and (_s[1] & 0xc0) == 0x80
-					and (_s[2] & 0xc0) == 0x80)
-				{
+					and (_s[2] & 0xc0) == 0x80) {
 					ch_ = ((_s[0] & 0x0f) << 12) + ((_s[1] & 0x3f) << 6) + (_s[2] & 0x3f);
 					_s += 3;
 					uStr[outPos++] = ch_;
@@ -3078,6 +3199,124 @@ AlifIntT alif_decodeUTF8Ex(const char* _s, AlifSizeT size, wchar_t** wstr, AlifU
 		*wlen = outPos;
 	}
 	*wstr = uStr;
+	return 0;
+}
+
+
+AlifIntT _alif_encodeUTF8Ex(const wchar_t* _text, char** _str, AlifUSizeT* _errorPos,
+	const char** _reason, AlifIntT _rawAlloc, AlifErrorHandler_ _errors) { // 5425
+	const AlifSizeT maxCharSize = 4;
+	AlifSizeT len = wcslen(_text);
+
+	AlifIntT surrogateescape = 0;
+	AlifIntT surrogatepass = 0;
+	switch (_errors) {
+	case AlifErrorHandler_::Alif_Error_Strict:
+		break;
+	case AlifErrorHandler_::Alif_Error_SurrogateEscape:
+		surrogateescape = 1;
+		break;
+	case AlifErrorHandler_::Alif_Error_SurrogatePass:
+		surrogatepass = 1;
+		break;
+	default:
+		return -3;
+	}
+
+	if (len > ALIF_SIZET_MAX / maxCharSize - 1) {
+		return -1;
+	}
+	char* bytes{};
+	if (_rawAlloc) {
+		bytes = (char*)alifMem_dataAlloc((len + 1) * maxCharSize);
+	}
+	else {
+		bytes = (char*)alifMem_dataAlloc((len + 1) * maxCharSize);
+	}
+	if (bytes == nullptr) {
+		return -1;
+	}
+
+	char* p = bytes;
+	AlifSizeT i{};
+	for (i = 0; i < len; ) {
+		AlifSizeT ch_pos = i;
+		AlifUCS4 ch = _text[i];
+		i++;
+	#if ALIF_UNICODE_SIZE == 2
+		if (alifUnicode_isHighSurrogate(ch)
+			and i < len
+			and alifUnicode_isLowSurrogate(_text[i])) {
+			ch = alifUnicode_joinSurrogates(ch, _text[i]);
+			i++;
+		}
+	#endif
+
+		if (ch < 0x80) {
+			/* Encode ASCII */
+			*p++ = (char)ch;
+
+		}
+		else if (ch < 0x0800) {
+			/* Encode Latin-1 */
+			*p++ = (char)(0xc0 | (ch >> 6));
+			*p++ = (char)(0x80 | (ch & 0x3f));
+		}
+		else if (alifUnicode_isSurrogate(ch) && !surrogatepass) {
+			/* surrogateescape error handler */
+			if (!surrogateescape or !(0xDC80 <= ch && ch <= 0xDCFF)) {
+				if (_errorPos != nullptr) {
+					*_errorPos = (size_t)ch_pos;
+				}
+				if (_reason != nullptr) {
+					*_reason = "encoding error";
+				}
+				if (_rawAlloc) {
+					alifMem_dataFree(bytes);
+				}
+				else {
+					alifMem_dataFree(bytes);
+				}
+				return -2;
+			}
+			*p++ = (char)(ch & 0xff);
+		}
+		else if (ch < 0x10000) {
+			*p++ = (char)(0xe0 | (ch >> 12));
+			*p++ = (char)(0x80 | ((ch >> 6) & 0x3f));
+			*p++ = (char)(0x80 | (ch & 0x3f));
+		}
+		else {  /* ch >= 0x10000 */
+			/* Encode UCS4 Unicode ordinals */
+			*p++ = (char)(0xf0 | (ch >> 18));
+			*p++ = (char)(0x80 | ((ch >> 12) & 0x3f));
+			*p++ = (char)(0x80 | ((ch >> 6) & 0x3f));
+			*p++ = (char)(0x80 | (ch & 0x3f));
+		}
+	}
+	*p++ = '\0';
+
+	AlifUSizeT finalSize = (p - bytes);
+	char* bytes2{};
+	if (_rawAlloc) {
+		bytes2 = (char*)alifMem_dataRealloc(bytes, finalSize);
+	}
+	else {
+		bytes2 = (char*)alifMem_dataRealloc(bytes, finalSize);
+	}
+	if (bytes2 == nullptr) {
+		if (_errorPos != nullptr) {
+			*_errorPos = (AlifUSizeT)-1;
+		}
+		if (_rawAlloc) {
+			alifMem_dataFree(bytes);
+		}
+		else {
+			alifMem_dataFree(bytes);
+		}
+		return -1;
+	}
+	*_str = bytes2;
 	return 0;
 }
 
@@ -3172,10 +3411,13 @@ static AlifIntT uStr_fillUTF8(AlifObject* _uStr) { // 5582
 
 
 
-AlifObject* _alifUStr_asUTF8String(AlifObject* unicode, const char* errors) { // 5633
-	return uStr_encodeUtf8(unicode, AlifErrorHandler_::Alif_Error_Unknown, errors);
+AlifObject* _alifUStr_asUTF8String(AlifObject* _unicode, const char* errors) { // 5633
+	return uStr_encodeUtf8(_unicode, AlifErrorHandler_::Alif_Error_Unknown, errors);
 }
 
+AlifObject* alifUStr_asUTF8String(AlifObject* _unicode) {
+	return _alifUStr_asUTF8String(_unicode, nullptr);
+}
 
 
 AlifObject* _alifUStr_encodeUTF32(AlifObject* str,
@@ -3204,8 +3446,7 @@ AlifObject* _alifUStr_encodeUTF32(AlifObject* str,
 	data = ALIFUSTR_DATA(str);
 	len = ALIFUSTR_GET_LENGTH(str);
 
-	if (len > ALIF_SIZET_MAX / 4 - (byteorder == 0))
-	{
+	if (len > ALIF_SIZET_MAX / 4 - (byteorder == 0)) {
 		//return alifErr_noMemory();
 	}
 	nsize = len + (byteorder == 0);
@@ -3360,7 +3601,7 @@ AlifObject* alifUStr_decodeUTF32Stateful(const char* _s, AlifSizeT _size,
 	if (q_ == e) {
 		if (_consumed)
 			*_consumed = _size;
-			ALIF_RETURN_UNICODE_EMPTY;
+		ALIF_RETURN_UNICODE_EMPTY;
 	}
 
 #ifdef WORDS_BIGENDIAN
@@ -3394,7 +3635,8 @@ AlifObject* alifUStr_decodeUTF32Stateful(const char* _s, AlifSizeT _size,
 						break;
 					ALIFUSTR_WRITE(kind, data, pos_++, ch_);
 					q_ += 4;
-				} while (q_ <= last);
+				}
+				while (q_ <= last);
 			}
 			else {
 				do {
@@ -3406,7 +3648,8 @@ AlifObject* alifUStr_decodeUTF32Stateful(const char* _s, AlifSizeT _size,
 						break;
 					ALIFUSTR_WRITE(kind, data, pos_++, ch_);
 					q_ += 4;
-				} while (q_ <= last);
+				}
+				while (q_ <= last);
 			}
 			writer.pos = pos_;
 		}
@@ -3546,8 +3789,7 @@ AlifObject* alifUStr_decodeUTF16Stateful(const char* s, AlifSizeT size,
 			}
 		}
 
-		switch (ch)
-		{
+		switch (ch) {
 		case 0:
 			/* remaining byte at the end? (size should be even) */
 			if (q == e or consumed)
@@ -3772,6 +4014,7 @@ AlifObject* alifUStr_decodeUStrEscapeInternal(const char* _str, AlifSizeT _size,
 	AlifObject* errorHandler = nullptr;
 	AlifObject* exc = nullptr;
 	//AlifUStrNameCAPI* ucnhash_capi{};
+	bool escape = false; //* alif
 
 	// so we can remember if we've seen an invalid escape char or not
 	*_firstInvalidEscape = nullptr;
@@ -3800,12 +4043,12 @@ AlifObject* alifUStr_decodeUStrEscapeInternal(const char* _str, AlifSizeT _size,
 		AlifIntT count{};
 		const char* message{};
 
-#define WRITE_ASCII_CHAR(_ch)                                                  \
+	#define WRITE_ASCII_CHAR(_ch)                                                  \
             do {                                                              \
                 ALIFUSTR_WRITE(writer.kind, writer.data, writer.pos++, _ch);  \
             } while(0)
 
-#define WRITE_CHAR(_ch)                                                        \
+	#define WRITE_CHAR(_ch)                                                        \
             do {                                                              \
                 if (ch <= writer.maxChar) {                                   \
                     ALIFUSTR_WRITE(writer.kind, writer.data, writer.pos++, _ch); \
@@ -3883,7 +4126,7 @@ AlifObject* alifUStr_decodeUStrEscapeInternal(const char* _str, AlifSizeT _size,
 		case 'U':
 			count = 8;
 			message = "truncated \\UXXXXXXXX escape";
-		hexescape:
+hexescape:
 			for (ch = 0; count; ++_str, --count) {
 				if (_str >= end) {
 					goto incomplete;
@@ -3909,6 +4152,18 @@ AlifObject* alifUStr_decodeUStrEscapeInternal(const char* _str, AlifSizeT _size,
 				message = "illegal Unicode character";
 				goto error;
 			}
+
+			//* alif
+			if (ch == 92) { // تخطى حرف '\\'
+				escape = true;
+				continue;
+			}
+			if (ch == 1587 and escape) { // اذا \س قم بحقن سطر جديد
+				escape = false;
+				WRITE_ASCII_CHAR('\n');
+				continue;
+			}
+			//* alif
 
 			WRITE_CHAR(ch);
 			continue;
@@ -3942,7 +4197,7 @@ AlifObject* alifUStr_decodeUStrEscapeInternal(const char* _str, AlifSizeT _size,
 					/* found a name.  look it up in the unicode database */
 					_str++;
 					ch = 0xffffffff; /* in case 'getcode' messes up */
-					if (namelen <= INT_MAX ) {
+					if (namelen <= INT_MAX) {
 						WRITE_CHAR(ch);
 						continue;
 					}
@@ -3954,31 +4209,31 @@ AlifObject* alifUStr_decodeUStrEscapeInternal(const char* _str, AlifSizeT _size,
 		default:
 			if (*_firstInvalidEscape == nullptr) {
 				*_firstInvalidEscape = _str - 1; /* Back up one char, since we've
-												already incremented _s. */
+												already incremented _str. */
 			}
 			WRITE_ASCII_CHAR('\\');
 			WRITE_CHAR(c);
 			continue;
 		}
 
-	incomplete:
+incomplete:
 		if (_consumed) {
 			*_consumed = startinpos;
 			break;
 		}
-	error:;
+error:
 		AlifSizeT endinpos = _str - starts;
 		writer.minLength = end - _str + writer.pos;
-		//if (uStr_decodeCallErrorhandlerWriter(
-		//	_errors, &errorHandler,
-		//	"unicodeescape", message,
-		//	&starts, &end, &startinpos, &endinpos, &exc, &_str,
-		//	&writer)) {
-		//	goto onError;
-		//}
+		if (uStrDecode_callErrorHandlerWriter(
+			_errors, &errorHandler,
+			"unicodeescape", message,
+			&starts, &end, &startinpos, &endinpos, &exc, &_str,
+			&writer)) {
+			goto onError;
+		}
 
-#undef WRITE_ASCII_CHAR
-#undef WRITE_CHAR
+	#undef WRITE_ASCII_CHAR
+	#undef WRITE_CHAR
 	}
 
 	ALIF_XDECREF(errorHandler);
@@ -4183,8 +4438,7 @@ static AlifObject* uStr_encodeUcs1(AlifObject* unicode,
 
 					if (limit == 256 ?
 						ALIFUSTR_KIND(rep) != AlifUStrKind_::AlifUStr_1Byte_Kind :
-						!ALIFUSTR_IS_ASCII(rep))
-					{
+						!ALIFUSTR_IS_ASCII(rep)) {
 						/* Not all characters are smaller than limit */
 						//raise_encodeException(&exc, encoding, unicode,
 						//	collstart, collend, reason);
@@ -4390,15 +4644,14 @@ static AlifObject* encode_codePage(AlifIntT code_page,
 		return alifBytes_fromStringAndSize(nullptr, 0);
 
 	offset = 0;
-	do
-	{
-#ifdef NEED_RETRY
+	do {
+	#ifdef NEED_RETRY
 		if (len > DECODING_CHUNK_SIZE) {
 			chunk_len = DECODING_CHUNK_SIZE;
 			done = 0;
 		}
 		else
-#endif
+		#endif
 		{
 			chunk_len = (int)len;
 			done = 1;
@@ -4418,7 +4671,8 @@ static AlifObject* encode_codePage(AlifIntT code_page,
 
 		offset += chunk_len;
 		len -= chunk_len;
-	} while (!done);
+	}
+	while (!done);
 
 	return outbytes;
 }
@@ -5139,15 +5393,15 @@ static AlifIntT uStr_compare(AlifObject* _str1, AlifObject* _str2) { // 10847
 			break;
 		case AlifUStrKind_::AlifUStr_4Byte_Kind:
 		{
-#if defined(HAVE_WMEMCMP) and SIZEOF_WCHAR_T == 4
+		#if defined(HAVE_WMEMCMP) and SIZEOF_WCHAR_T == 4
 			AlifIntT cmp_ = wmemcmp((wchar_t*)data1, (wchar_t*)data2, len);
 			if (cmp_ < 0)
 				return -1;
 			if (cmp_ > 0)
 				return 1;
-#else
+		#else
 			COMPARE(AlifUCS4, AlifUCS4);
-#endif
+		#endif
 			break;
 		}
 		default:
@@ -5273,8 +5527,7 @@ AlifIntT alifUStr_equalToUTF8AndSize(AlifObject* _uStr,
 		else if (ch < 0x800) {
 			if ((ends - s_) < 2 or
 				s_[0] != (0xc0 | (ch >> 6)) or
-				s_[1] != (0x80 | (ch & 0x3f)))
-			{
+				s_[1] != (0x80 | (ch & 0x3f))) {
 				return 0;
 			}
 			s_ += 2;
@@ -5284,8 +5537,7 @@ AlifIntT alifUStr_equalToUTF8AndSize(AlifObject* _uStr,
 				(ends - s_) < 3 or
 				s_[0] != (0xe0 | (ch >> 12)) or
 				s_[1] != (0x80 | ((ch >> 6) & 0x3f)) or
-				s_[2] != (0x80 | (ch & 0x3f)))
-			{
+				s_[2] != (0x80 | (ch & 0x3f))) {
 				return 0;
 			}
 			s_ += 3;
@@ -5295,8 +5547,7 @@ AlifIntT alifUStr_equalToUTF8AndSize(AlifObject* _uStr,
 				s_[0] != (0xf0 | (ch >> 18)) or
 				s_[1] != (0x80 | ((ch >> 12) & 0x3f)) or
 				s_[2] != (0x80 | ((ch >> 6) & 0x3f)) or
-				s_[3] != (0x80 | (ch & 0x3f)))
-			{
+				s_[3] != (0x80 | (ch & 0x3f))) {
 				return 0;
 			}
 			s_ += 4;
@@ -5443,8 +5694,7 @@ void alifUStr_append(AlifObject** _pLeft, AlifObject* _right) { // 11344
 	if (uStr_modifiable(left)
 		and ALIFUSTR_CHECKEXACT(_right)
 		and ALIFUSTR_KIND(_right) <= ALIFUSTR_KIND(left)
-		and !(ALIFUSTR_IS_ASCII(left) and !ALIFUSTR_IS_ASCII(_right)))
-	{
+		and !(ALIFUSTR_IS_ASCII(left) and !ALIFUSTR_IS_ASCII(_right))) {
 		/* append inplace */
 		if (uStr_resize(_pLeft, newLen) != 0)
 			goto error;
@@ -5469,6 +5719,12 @@ void alifUStr_append(AlifObject** _pLeft, AlifObject* _right) { // 11344
 
 error:
 	ALIF_CLEAR(*_pLeft);
+}
+
+
+void alifUStr_appendAndDel(AlifObject** _pleft, AlifObject* _right) { // 11448
+	alifUStr_append(_pleft, _right);
+	ALIF_XDECREF(_right);
 }
 
 
@@ -5804,8 +6060,7 @@ AlifIntT alifUStrWriter_prepareInternal(AlifUStrWriter* _writer,
 AlifIntT alifUStrWriter_prepareKindInternal(AlifUStrWriter* _writer, AlifIntT _kind) { // 13526
 	AlifUCS4 maxChar{};
 
-	switch (_kind)
-	{
+	switch (_kind) {
 	case AlifUStrKind_::AlifUStr_1Byte_Kind: maxChar = 0xff; break;
 	case AlifUStrKind_::AlifUStr_2Byte_Kind: maxChar = 0xffff; break;
 	case AlifUStrKind_::AlifUStr_4Byte_Kind: maxChar = MAX_UNICODE; break;
@@ -5954,8 +6209,7 @@ AlifIntT alifUStrWriter_writeASCIIString(AlifUStrWriter* _writer,
 	if (ALIFUSTRWRITER_PREPARE(_writer, _len, 127) == -1)
 		return -1;
 
-	switch (_writer->kind)
-	{
+	switch (_writer->kind) {
 	case AlifUStrKind_::AlifUStr_1Byte_Kind:
 	{
 		const AlifUCS1* str = (const AlifUCS1*)_ascii;
@@ -6012,8 +6266,7 @@ AlifIntT alifUStrWriter_writeString(AlifUStrWriter* _writer,
 	if (ALIFUSTRWRITER_PREPARE(_writer, _len, 256) == -1)
 		return -1;
 
-	switch (_writer->kind)
-	{
+	switch (_writer->kind) {
 	case AlifUStrKind_::AlifUStr_1Byte_Kind:
 	{
 		_ALIFUSTR_CONVERT_BYTES(
@@ -6098,13 +6351,24 @@ void alifUStrWriter_dealloc(AlifUStrWriter* _writer) { // 13852
 //	return alifUStr_format(v, w);
 //}
 
-static AlifNumberMethods _uStrAsNumber_ = { // 14007
+static AlifNumberMethods _uStrAsNumber_ = { // 14049
 	0,              /*add*/
 	0,              /*subtract*/
 	0,              /*multiply*/
 	//uStr_mod,            /*remainder*/
 };
 
+
+static AlifSequenceMethods _uStrAsSequence_ = { // 14056
+	0, // (LenFunc)uStr_length,       /* length */
+	alifUStr_concat,           /* concat */
+	0, // (SizeArgFunc)uStr_repeat,  /* repeat */
+	0, // (SizeArgFunc)uStr_getItem,     /* item */
+	0,                  /* slice */
+	0,                  /* assItem */
+	0,                  /* assSlice */
+	0, // alifUStr_contains,         /* contains */
+};
 
 
 
@@ -6117,6 +6381,7 @@ AlifTypeObject _alifUStrType_ = { // 15235
 	.dealloc = ustr_dealloc,
 	.repr = uStr_repr,
 	.asNumber = &_uStrAsNumber_,
+	.asSequence = &_uStrAsSequence_,
 	.hash = (HashFunc)uStr_hash,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE |
 		ALIF_TPFLAGS_UNICODE_SUBCLASS |
@@ -6126,21 +6391,20 @@ AlifTypeObject _alifUStrType_ = { // 15235
 };
 
 
-AlifIntT alifUStr_initGlobalObjects(AlifInterpreter* _interp) { // 15318
+AlifStatus alifUStr_initGlobalObjects(AlifInterpreter* _interp) { // 15318
 	if (alif_isMainInterpreter(_interp)) {
-		AlifIntT status = initGlobal_internedStrings(_interp);
-		if (status < 1) {
+		AlifStatus status = initGlobal_internedStrings(_interp);
+		if (ALIFSTATUS_EXCEPTION(status)) {
 			return status;
 		}
 	}
 
 	if (init_internedDict(_interp)) {
-		//alifErr_clear();
-		//return ALIFSTATUS_ERR("failed to create interned dict");
-		return -1;
+		alifErr_clear();
+		return ALIFSTATUS_ERR("failed to create interned dict");
 	}
-	 
-	return 1;
+
+	return ALIFSTATUS_OK();
 }
 
 

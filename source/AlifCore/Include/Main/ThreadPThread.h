@@ -8,7 +8,7 @@
 #include <unistd.h>
 
 
- // 20
+// 20
 #if defined(__linux__)
 #   include <sys/syscall.h>     /* syscall(SYS_gettid) */
 #elif defined(__FreeBSD__)
@@ -31,7 +31,7 @@
 
 
 
-#define _CONDATTR_MONOTONIC _alifDureRun_.threads.condAttrMonotonic.ptr // 130
+#define _CONDATTR_MONOTONIC _alifRuntime_.threads.condAttrMonotonic.ptr // 130
 
 
 AlifIntT alifThread_condInit(AlifCondT* _cond) { // 147
@@ -47,7 +47,7 @@ void alifThread_condAfter(long long us, struct timespec* abs) { // 154
 		(void)alifTime_monotonicRaw(&t);
 	}
 	else
-#endif
+	#endif
 	{
 		(void)alifTime_timeRaw(&t);
 	}
@@ -55,6 +55,18 @@ void alifThread_condAfter(long long us, struct timespec* abs) { // 154
 	_alifTime_asTimeSpecClamp(t, abs);
 }
 
+
+class pthread_lock { // 189
+public:
+	char locked; /* 0=unlocked, 1=locked */
+	/* a <cond, mutex> pair to handle an acquire of a locked lock */
+	pthread_cond_t   lock_released{};
+	pthread_mutex_t  mut{};
+};
+
+#define CHECK_STATUS(name)  if (status != 0) { perror(name); error = 1; }
+#define CHECK_STATUS_PTHREAD(name)  if (status != 0) { fprintf(stderr, \
+    "%s: %s\n", name, strerror(status)); error = 1; }
 
 
 
@@ -70,8 +82,7 @@ AlifUIntT alifThread_getThreadID() { // 365
 
 #ifdef ALIF_HAVE_THREAD_NATIVE_ID
 unsigned long alifThread_getThreadNativeID() { // 372
-	if (!INITIALIZED)
-	{/*alifThread_initThread(); */}
+	if (!INITIALIZED) {/*alifThread_initThread(); */ }
 #ifdef __APPLE__
 	uint64_t nativeID;
 	(void)pthread_threadid_np(nullptr, &nativeID);
@@ -107,13 +118,86 @@ unsigned long alifThread_getThreadNativeID() { // 372
 
 void ALIF_NO_RETURN alifThread_hangThread(void) { // 421
 	while (1) {
-#if defined(__wasi__)
+	#if defined(__wasi__)
 		sleep(9999999);  // WASI doesn't have pause() ?!
-#else
+	#else
 		pause();
-#endif
+	#endif
 	}
 }
+
+
+
+#ifdef USE_SEMAPHORES // 433
+
+
+void alifThread_freeLock(AlifThreadTypeLock lock) { // 463
+	SemT* thelock = (SemT*)lock;
+	AlifIntT status{}, error = 0;
+
+	(void)error; /* silence unused-but-set-variable warning */
+
+	if (!thelock)
+		return;
+
+	status = sem_destroy(thelock);
+	CHECK_STATUS("sem_destroy");
+
+	alifMem_dataFree((void*)thelock);
+}
+
+
+#else /* USE_SEMAPHORES */ // 622
+
+AlifThreadTypeLock alifThread_allocateLock(void) { // 627
+	pthread_lock* lock{};
+	AlifIntT status{}, error = 0;
+
+	//if (!INITIALIZED)
+	//	alifThread_initThread();
+
+	lock = (pthread_lock*)alifMem_dataAlloc(sizeof(pthread_lock));
+	if (lock) {
+		lock->locked = 0;
+
+		status = pthread_mutex_init(&lock->mut, NULL);
+		CHECK_STATUS_PTHREAD("pthread_mutex_init");
+
+		//_ALIF_ANNOTATE_PURE_HAPPENS_BEFORE_MUTEX(&lock->mut);
+
+		status = alifThread_condInit(&lock->lock_released);
+		CHECK_STATUS_PTHREAD("pthread_cond_init");
+
+		if (error) {
+			alifMem_dataFree((void*)lock);
+			lock = 0;
+		}
+	}
+
+	return (AlifThreadTypeLock)lock;
+}
+
+
+void alifThread_freeLock(AlifThreadTypeLock lock) { // 661
+	pthread_lock* thelock = (pthread_lock*)lock;
+	AlifIntT status{}, error = 0;
+
+	(void)error; /* silence unused-but-set-variable warning */
+
+	status = pthread_cond_destroy(&thelock->lock_released);
+	CHECK_STATUS_PTHREAD("pthread_cond_destroy");
+
+	status = pthread_mutex_destroy(&thelock->mut);
+	CHECK_STATUS_PTHREAD("pthread_mutex_destroy");
+
+	alifMem_dataFree((void*)thelock);
+}
+
+
+
+
+#endif /* USE_SEMAPHORES */ // 788
+
 
 
 

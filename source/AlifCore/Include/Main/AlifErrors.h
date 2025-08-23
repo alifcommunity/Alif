@@ -14,6 +14,8 @@ AlifObject* alifErr_getRaisedException(void); // 19
 void alifErr_setRaisedException(AlifObject*); // 20
 void alifErr_setHandledException(AlifObject*); // 23
 
+void ALIF_NO_RETURN alif_fatalError(const char* _msg); // 35
+
 AlifIntT alifErr_givenExceptionMatches(AlifObject*, AlifObject*); // 38
 AlifIntT alifErr_exceptionMatches(AlifObject*); // 39
 
@@ -25,7 +27,7 @@ AlifObject* alifException_getContext(AlifObject*); // 51
 void alifException_setContext(AlifObject*, AlifObject*); // 52
 
 
- // 60
+// 60
 #define ALIFEXCEPTIONCLASS_CHECK(_x)  (ALIFTYPE_CHECK(_x)	\
 			and ALIFTYPE_FASTSUBCLASS((AlifTypeObject*)(_x), ALIF_TPFLAGS_BASE_EXC_SUBCLASS))
 
@@ -46,7 +48,7 @@ extern AlifObject* _alifExcBaseExceptionGroup_; // 77
 extern AlifObject* _alifExcStopAsyncIteration_; // 80
 
 extern AlifObject* _alifExcStopIteration_; // 82
-
+extern AlifObject* _alifExcOSError_; // 92
 extern AlifObject* _alifExcImportError_; // 93
 extern AlifObject* _alifExcIndexError_; // 97
 
@@ -61,10 +63,25 @@ extern AlifObject* _alifExcTypeError_; // 114
 
 extern AlifObject* _alifExcValueError_; // 120
 
+extern AlifObject* _alifExcBlockingIOError_; // 124
+
+
+AlifObject* alifErr_setFromErrnoWithFilenameObject(AlifObject*, AlifObject*);
+AlifObject* alifErr_setFromErrnoWithFilenameObjects(AlifObject*, AlifObject*, AlifObject*);
+
 
 AlifObject* alifErr_format(AlifObject*, const char*, ...); // 180
 
 
+
+#ifdef _WINDOWS // 192
+
+AlifObject* alifErr_setExcFromWindowsErrWithFilenameObject(
+	AlifObject*, AlifIntT, AlifObject*);
+AlifObject* alifErr_setExcFromWindowsErrWithFilenameObjects(
+	AlifObject*, AlifIntT, AlifObject*, AlifObject*);
+
+#endif /* _WINDOWS */ // 210
 
 
 
@@ -114,7 +131,18 @@ public:
 };
 
 
-
+class AlifOSErrorObject { // 57
+public:
+	ALIFEXCEPTION_HEAD;
+	AlifObject* myErrno{};
+	AlifObject* strError{};
+	AlifObject* fileName{};
+	AlifObject* fileName2{};
+#ifdef _WINDOWS
+	AlifObject* winError{};
+#endif
+	AlifSizeT written{};
+};
 
 
 class AlifStopIterationObject { // 69

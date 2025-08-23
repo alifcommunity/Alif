@@ -7,6 +7,7 @@
 #include "AlifCore_Errors.h"
 #include "AlifCore_Namespace.h"
 #include "AlifCore_Object.h"
+#include "AlifCore_InitConfig.h"
 
 
 #include "Marshal.h"
@@ -23,9 +24,9 @@ extern InitTable _alifImportInitTab_[]; // 55
 
 InitTable* _alifImportInitTable_ = _alifImportInitTab_; // 59
 
-#define INITTABLE _alifDureRun_.imports.initTable // 69
-#define LAST_MODULE_INDEX _alifDureRun_.imports.lastModuleIndex // 70
-#define EXTENSIONS _alifDureRun_.imports.extensions // 71
+#define INITTABLE _alifRuntime_.imports.initTable // 69
+#define LAST_MODULE_INDEX _alifRuntime_.imports.lastModuleIndex // 70
+#define EXTENSIONS _alifRuntime_.imports.extensions // 71
 
 // 80
 #define MODULES(_interp) \
@@ -260,11 +261,11 @@ static AlifIntT exec_builtinOrDynamic(AlifObject* mod) { // 790
 
 
 static inline void extensions_lockAcquire(void) { // 914
-	ALIFMUTEX_LOCK(&_alifDureRun_.imports.extensions.mutex);
+	ALIFMUTEX_LOCK(&_alifRuntime_.imports.extensions.mutex);
 }
 
 static inline void extensions_lockRelease(void) { // 920
-	ALIFMUTEX_UNLOCK(&_alifDureRun_.imports.extensions.mutex);
+	ALIFMUTEX_UNLOCK(&_alifRuntime_.imports.extensions.mutex);
 }
 
 
@@ -1648,15 +1649,15 @@ AlifObject* alifImport_importModuleLevel(const char* name, AlifObject* globals,
 
 
 
-AlifObject* alifImport_import(AlifObject* module_name) { // 3888
+AlifObject* alifImport_import(AlifObject* _moduleName) { // 3888
 	AlifThread* tstate = _alifThread_get();
 	AlifObject* globals = nullptr;
 	AlifObject* import = nullptr;
 	AlifObject* builtins = nullptr;
 	AlifObject* r = nullptr;
 
-	AlifObject* from_list = alifList_new(0);
-	if (from_list == nullptr) {
+	AlifObject* fromList = alifList_new(0);
+	if (fromList == nullptr) {
 		goto err;
 	}
 
@@ -1696,13 +1697,13 @@ AlifObject* alifImport_import(AlifObject* module_name) { // 3888
 	/* Call the __import__ function with the proper argument list
 	   Always use absolute import here.
 	   Calling for side-effect of import. */
-	r = alifObject_callFunction(import, "OOOOi", module_name, globals,
-		globals, from_list, 0, nullptr);
+	r = alifObject_callFunction(import, "OOOOi", _moduleName, globals,
+		globals, fromList, 0, nullptr);
 	if (r == nullptr)
 		goto err;
 	ALIF_DECREF(r);
 
-	r = import_getModule(tstate, module_name);
+	r = import_getModule(tstate, _moduleName);
 	if (r == nullptr and !_alifErr_occurred(tstate)) {
 		//_alifErr_setObject(tstate, _alifExcKeyError_, module_name);
 	}
@@ -1711,7 +1712,7 @@ err:
 	ALIF_XDECREF(globals);
 	ALIF_XDECREF(builtins);
 	ALIF_XDECREF(import);
-	ALIF_XDECREF(from_list);
+	ALIF_XDECREF(fromList);
 
 	return r;
 }
@@ -1720,20 +1721,21 @@ err:
 
 // alif
 static void init_importFileTab(); //* delete
-AlifIntT alifImport_init() { // 3954
+AlifStatus alifImport_init() { // 3954
 
 	if (INITTABLE != nullptr) {
-		// error
-		return -1; //* alif
+		return ALIFSTATUS_ERR("global import state already initialized"); //* alif
 	}
 
+	AlifStatus status = ALIFSTATUS_OK();
+
 	if (initBuildin_modulesTable() != 0) {
-		return -1;
+		return ALIFSTATUS_NO_MEMORY();
 	}
 
 	init_importFileTab(); //* alif //* delete
 
-	return 1;
+	return status;
 }
 
 
@@ -1744,7 +1746,7 @@ AlifIntT alifImport_init() { // 3954
 
 
 
-AlifIntT _alifImport_initCore(AlifThread* _thread,
+AlifStatus _alifImport_initCore(AlifThread* _thread,
 	AlifObject* _sysmod, AlifIntT _importLib) { // 4026
 	// XXX Initialize here: interp->modules and interp->importFunc.
 	// XXX Initialize here: sys.modules and sys.meta_path.
@@ -1755,7 +1757,7 @@ AlifIntT _alifImport_initCore(AlifThread* _thread,
 		//}
 	}
 
-	return 1;
+	return ALIFSTATUS_OK();
 }
 
 
@@ -1774,6 +1776,21 @@ AlifObject* _alifImport_getModuleAttr(AlifObject* _modName,
 	return result;
 }
 
+AlifObject* _alifImport_getModuleAttrString(const char* _modName, const char* _attrName) { // 4177
+	AlifObject* pmodname = alifUStr_fromString(_modName);
+	if (pmodname == nullptr) {
+		return nullptr;
+	}
+	AlifObject* pattrname = alifUStr_fromString(_attrName);
+	if (pattrname == nullptr) {
+		ALIF_DECREF(pmodname);
+		return nullptr;
+	}
+	AlifObject* result = _alifImport_getModuleAttr(pmodname, pattrname);
+	ALIF_DECREF(pattrname);
+	ALIF_DECREF(pmodname);
+	return result;
+}
 
 
 static AlifMethodDef _impMethods_[] = { // 4788

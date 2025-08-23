@@ -6,7 +6,7 @@
 
 
 
-
+#define ALIF_UNICODE_SIZE SIZEOF_WCHAR_T
 
 
 // 94
@@ -39,7 +39,7 @@ AlifObject* alifUStr_fromFormat(const char*, ...); // 241
 
 AlifObject* alifUStr_fromWideChar(const wchar_t*, AlifSizeT); // 260
 
-AlifSizeT alifUStr_asWideChar(AlifObject* , wchar_t* ,AlifSizeT ); // 277
+AlifSizeT alifUStr_asWideChar(AlifObject*, wchar_t*, AlifSizeT); // 277
 
 
 wchar_t* alifUStr_asWideCharString(AlifObject*, AlifSizeT*); // 291
@@ -66,6 +66,7 @@ AlifObject* alifUStr_decodeUTF8(const char*, AlifSizeT, const char*); // 429
 
 AlifObject* alifUStr_decodeUTF8Stateful(const char*, AlifSizeT, const char*, AlifSizeT*); // 435
 
+AlifObject* alifUStr_asUTF8String(AlifObject*); // 442
 
 const char* alifUStr_asUTF8AndSize(AlifObject*, AlifSizeT*); // 458
 
@@ -88,13 +89,17 @@ AlifObject* alifUStr_decodeUTF16Stateful(const char*, AlifSizeT, const char*, Al
 AlifObject* alifUStr_encodeCodePage(AlifIntT, AlifObject*, const char*); // 695
 
 
-
+AlifObject* alifUStr_decodeLocale(const char*, const char*); // 723
 
 
 AlifIntT alifUStr_fsConverter(AlifObject*, void*); // 743
 
 
+AlifIntT alifUStr_fsDecoder(AlifObject*, void*); // 748
+
 AlifObject* alifUStr_decodeFSDefault(const char*); // 754
+
+AlifObject* alifUStr_decodeFSDefaultAndSize(const char*, AlifSizeT); // 759
 
 AlifObject* alifUStr_encodeFSDefault(AlifObject*); // 766
 
@@ -102,7 +107,9 @@ AlifObject* alifUStr_concat(AlifObject*, AlifObject*); // 778
 
 void alifUStr_append(AlifObject**, AlifObject*); // 786
 
-AlifObject* alifUStr_join(AlifObject* , AlifObject* ); // 881
+void alifUStr_appendAndDel(AlifObject**, AlifObject*); // 794
+
+AlifObject* alifUStr_join(AlifObject*, AlifObject*); // 881
 
 
 AlifSizeT alifUStr_findChar(AlifObject*, AlifUCS4, AlifSizeT, AlifSizeT, AlifIntT); // 911
@@ -347,7 +354,7 @@ static inline AlifUCS4 alifUStr_maxCharValue(AlifObject* _op) { // 359
 
 
 
-AlifObject* alifUStr_new(AlifSizeT, AlifUCS4 ); // 386
+AlifObject* alifUStr_new(AlifSizeT, AlifUCS4); // 386
 
 
 

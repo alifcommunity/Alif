@@ -6,6 +6,27 @@
 
 static AlifObject* va_buildValue(const char*, va_list); // 10
 
+AlifIntT _alifConvertOptional_toSizeT(AlifObject* _obj, void* _result) { // 13
+	AlifSizeT limit{};
+	if (_obj == ALIF_NONE) {
+		return 1;
+	}
+	else if (alifIndex_check(_obj)) {
+		limit = alifNumber_asSizeT(_obj, _alifExcOverflowError_);
+		if (limit == -1 and alifErr_occurred()) {
+			return 0;
+		}
+	}
+	else {
+		alifErr_format(_alifExcTypeError_,
+			"الوسيط يجب أن يكون عدد صحيح او عدم وليس '%.200s'",
+			ALIF_TYPE(_obj)->name);
+		return 0;
+	}
+	*((AlifSizeT*)_result) = limit;
+	return 1;
+}
+
 static AlifSizeT count_format(const char* _format, char _endchar) { // 39
 	AlifSizeT count = 0;
 	AlifIntT level = 0;
@@ -532,6 +553,17 @@ AlifIntT alifModule_addObjectRef(AlifObject* _mod,
 	return alifDict_setItemString(dict, _name, _value);
 }
 
+
+AlifIntT alifModule_add(AlifObject* _mod, const char* _name, AlifObject* _value) { // 609
+	AlifIntT res = alifModule_addObjectRef(_mod, _name, _value);
+	ALIF_XDECREF(_value);
+	return res;
+}
+
+
+AlifIntT alifModule_addIntConstant(AlifObject* _m, const char* _name, long _value) { // 627
+	return alifModule_add(_m, _name, alifLong_fromLong(_value));
+}
 
 
 AlifIntT alifModule_addType(AlifObject* _module, AlifTypeObject* _type) { // 639

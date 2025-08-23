@@ -27,6 +27,9 @@ AlifIntT alifThread_acquireLock(AlifThreadTypeLock, AlifIntT); // 33
 #define WAIT_LOCK       1
 #define NOWAIT_LOCK     0
 
+AlifThreadTypeLock alifThread_allocateLock(void); // 50
+void alifThread_freeLock(AlifThreadTypeLock); // 51
+
 
 // Forward Declaration
 class AlifTssT;

@@ -53,10 +53,25 @@ AlifIntT _alifUStr_equal(AlifObject*, AlifObject*); // 257
 
 AlifSizeT _alifUStr_scanIdentifier(AlifObject*); // 263
 
-extern AlifIntT alifUStr_initGlobalObjects(AlifInterpreter*); // 268
+extern AlifStatus alifUStr_initGlobalObjects(AlifInterpreter*); // 268
 
 void alifUStr_internMortal(AlifInterpreter*, AlifObject**); // 280
 void alifUStr_internImmortal(AlifInterpreter*, AlifObject**); // 281
 
 
 extern void _alifUStr_internStatic(AlifInterpreter*, AlifObject**); // 285
+
+
+class AlifUnicodeRuntimeIds { // 289
+public:
+	AlifMutex mutex{};
+	AlifSizeT nextIndex{};
+};
+
+class AlifUnicodeRuntimeState { // 296
+public:
+	AlifUnicodeRuntimeIds ids{};
+};
+
+
+const char* _alifUStr_asUTF8NoNUL(AlifObject*); // 327

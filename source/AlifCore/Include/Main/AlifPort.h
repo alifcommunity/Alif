@@ -76,7 +76,27 @@ typedef AlifUSizeT AlifUHashT;
 
 #define ALIF_SAFE_DOWNCAST(_val, _wide, _narrow) ALIF_STATIC_CAST(_narrow, (_val)) // 256
 
-
+// 287
+#if defined(__clang__)
+#define ALIF_COMP_DIAG_PUSH _Pragma("clang diagnostic push")
+#define ALIF_COMP_DIAG_IGNORE_DEPR_DECLS \
+    _Pragma("clang diagnostic ignored \"-Wdeprecated-declarations\"")
+#define ALIF_COMP_DIAG_POP _Pragma("clang diagnostic pop")
+#elif defined(__GNUC__) \
+    && ((__GNUC__ >= 5) || (__GNUC__ == 4) && (__GNUC_MINOR__ >= 6))
+#define ALIF_COMP_DIAG_PUSH _Pragma("GCC diagnostic push")
+#define ALIF_COMP_DIAG_IGNORE_DEPR_DECLS \
+    _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
+#define ALIF_COMP_DIAG_POP _Pragma("GCC diagnostic pop")
+#elif defined(_MSC_VER)
+#define ALIF_COMP_DIAG_PUSH __pragma(warning(push))
+#define ALIF_COMP_DIAG_IGNORE_DEPR_DECLS __pragma(warning(disable: 4996))
+#define ALIF_COMP_DIAG_POP __pragma(warning(pop))
+#else
+#define ALIF_COMP_DIAG_PUSH
+#define ALIF_COMP_DIAG_IGNORE_DEPR_DECLS
+#define ALIF_COMP_DIAG_POP
+#endif
 
 // 323 
 #if defined(__GNUC__) \
@@ -147,7 +167,13 @@ typedef AlifUSizeT AlifUHashT;
 
 
 
+#if defined(__ANDROID__) || defined(__VXWORKS__)
+#  define ALIF_FORCE_UTF8_LOCALE
+#endif
 
+#if defined(ALIF_FORCE_UTF8_LOCALE) || defined(__APPLE__)
+#  define ALIF_FORCE_UTF8_FS_ENCODING
+#endif
 
 
 

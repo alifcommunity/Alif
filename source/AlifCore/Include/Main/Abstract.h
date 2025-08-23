@@ -51,6 +51,8 @@ AlifIntT alifIter_check(AlifObject*); // 393
 AlifObject* alifIter_next(AlifObject* ); // 417
 
 
+AlifIntT alifNumber_check(AlifObject*); // 438
+
 AlifObject* alifNumber_add(AlifObject*, AlifObject*); // 443
 AlifObject* alifNumber_subtract(AlifObject*, AlifObject*); // 448
 
@@ -159,5 +161,13 @@ static inline AlifObject* alifObject_callMethodNoArgs(AlifObject* _self, AlifObj
 	AlifUSizeT nargsf = 1 | ALIF_VECTORCALL_ARGUMENTS_OFFSET;
 	return alifObject_vectorCallMethod(_name, &_self, nargsf, nullptr);
 }
+
+static inline AlifObject* alifObject_callMethodOneArg(AlifObject* _self,
+	AlifObject* _name, AlifObject* _arg) { // 68
+	AlifObject* args[2] = { _self, _arg };
+	AlifUSizeT nargsf = 2 | ALIF_VECTORCALL_ARGUMENTS_OFFSET;
+	return alifObject_vectorCallMethod(_name, args, nargsf, nullptr);
+}
+
 
 AlifSizeT alifObject_lengthHint(AlifObject*, AlifSizeT); // 80

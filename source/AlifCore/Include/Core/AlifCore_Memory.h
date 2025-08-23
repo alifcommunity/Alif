@@ -72,8 +72,7 @@ public:
 	Frag* get_arr();
 };
 
-class FreeSegments
-{
+class FreeSegments {
 	AlifArray freeSegs[FRAGS_NUM]{};
 	Frag* fSegs_{};
 
@@ -98,8 +97,7 @@ public:
 
 /* ---------------------------------- إدارة الذاكرة --------------------------------- */
 
-class AlifMemory
-{
+class AlifMemory {
 public:
 	AlifUSizeT fragIdx{};
 	FragsBlock fragMem{};
@@ -170,6 +168,7 @@ void alifASTMem_free(AlifASTMem*);
 /* --------------------------------- ادوات ذاكرة ألف --------------------------------- */
 
 extern wchar_t* alifMem_wcsDup(const wchar_t*);
+extern char* alifMem_strDup(const char*);
 
 
 /* ---------------------------------------AlifCore_Mem-----------------------------------------------------------------*/
