@@ -1025,7 +1025,7 @@ static AlifStatus alifConfig_initPathConfigAlif(AlifConfig* _config, AlifIntT _c
 	wchar_t* buildPrefix{};
 	if ((realExecutableDir and not alifSetPath) or _config->isAlifBuild == 0) {
 		platStdLibDir = realExecutableDir;
-		//buildPrefix = join_paths(2, realExecutableDir, VPATH);
+		//buildPrefix = join_paths(2, realExecutableDir, VPATH); // هنا يتم تحديد المسار الأساسي بالرجوع مجلدين الى الخلف وهذا يسبب عدم إكتشاف لمجلد libraray في حال كان مضمن في نفس مجلد ملف اللغة
 		buildPrefix = realExecutableDir;
 
 		wchar_t* buildStdlibPrefix{};
