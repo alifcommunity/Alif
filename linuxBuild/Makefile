@@ -1,44 +1,44 @@
 CPP = c++ # المترجم
-# CPPFLAGS = -Wall -std=c++20 # معاملات الترجمة
-CPPFLAGS = -w -O3 -std=c++20 # بدون تحذيرات، مع التشغيل على نظام aarch64a
-# CPPFLAGS = -O3 -std=c++20
+CPPFLAGS = -std=c++20
+RELEASE_FLAGS = -O2 -w
+DEBUG_FLAGS = -O0 -g
 # -g تخزين معلومات debug
 # -Wall طباعة معظم التنبيهات
 # -w عدم طباعة التنبيهات
+
+# تحديد اعلام بناء البرنامج
+release: CPPFLAGS += $(RELEASE_FLAGS)
+debug: CPPFLAGS += $(DEBUG_FLAGS)
 
 SOURCE_DIR = ../source
 BUILD_DIR = build
 OBJ_DIR = $(BUILD_DIR)/obj
 TARGET = $(BUILD_DIR)/alif
 
-SOURCES = 	$(wildcard $(SOURCE_DIR)/Alif/*.cpp)					\
-			$(wildcard $(SOURCE_DIR)/AlifCore/Objects/*.cpp)		\
-			$(wildcard $(SOURCE_DIR)/AlifCore/Objects/dtoa/*.cpp)	\
-			$(wildcard $(SOURCE_DIR)/Modules/*.cpp)					\
-			$(wildcard $(SOURCE_DIR)/Modules/_io/*.cpp)				\
 
-INCLUDES =  -I$(SOURCE_DIR)/Alif									\
-			-I$(SOURCE_DIR)/AlifCore/Include/Core					\
-			-I$(SOURCE_DIR)/AlifCore/Include/Main					\
+SOURCES = 	$(wildcard $(SOURCE_DIR)/Alif/*.cpp)				\
+			$(wildcard $(SOURCE_DIR)/AlifCore/Objects/*.cpp)	\
+			$(wildcard $(SOURCE_DIR)/AlifCore/Objects/dtoa/*.cpp)	\
+			$(wildcard $(SOURCE_DIR)/Modules/*.cpp)			\
+			$(wildcard $(SOURCE_DIR)/Modules/_io/*.cpp)		\
+
+INCLUDES =  -I$(SOURCE_DIR)/Alif							\
+			-I$(SOURCE_DIR)/AlifCore/Include/Core				\
+			-I$(SOURCE_DIR)/AlifCore/Include/Main				\
 			-I$(SOURCE_DIR)/AlifCore/Include/Main/Atomics			\
 			-I$(SOURCE_DIR)/AlifCore/Include/Main/mimalloc			\
 			-I$(SOURCE_DIR)/AlifCore/Include/Main/StringLib			\
 			-I$(SOURCE_DIR)/AlifCore/Include/Main/FrozenModules		\
-			-I$(SOURCE_DIR)/AlifCore/Objects/clinic					\
-			-I$(SOURCE_DIR)/Modules/_io								\
-			-I$(SOURCE_DIR)/Modules/_io/clinic						\
+			-I$(SOURCE_DIR)/AlifCore/Objects/clinic				\
+			-I$(SOURCE_DIR)/Modules/_io					\
+			-I$(SOURCE_DIR)/Modules/_io/clinic				\
 
-# مرحلة إنشاء الملفات المطلوبة
-ifeq ($(wildcard $(BUILD_DIR)),)
-$(BUILD_DIR):
-	mkdir -p $@
-	mkdir -p $(OBJ_DIR)
-	mkdir -p $(OBJ_DIR)/Alif
-	mkdir -p $(OBJ_DIR)/AlifCore/Objects
-	mkdir -p $(OBJ_DIR)/AlifCore/Objects/dtoa
-	mkdir -p $(OBJ_DIR)/Modules
-	mkdir -p $(OBJ_DIR)/Modules/_io
-endif
+
+
+all: release
+release: $(TARGET)
+debug: $(TARGET)
+
 
 # تقوم هذه التعليمة بأخذ كل ملفات المصدر المنتهية ب .cpp 
 # وتستبدلها بالملفات المنتهية ب .o
@@ -62,8 +62,6 @@ CPPFLAGS += $(addprefix ,$(INCLUDES))
 $(OBJ_DIR)/%.o: $(SOURCE_DIR)/%.cpp | $(OBJ_DIR)
 	$(CPP) $(CPPFLAGS) -c $< -o $@
 
-
-
 # يقوم بتحديد قاعدة لربط ملفات الكائنات (OBJECTS)
 # إلى ملف الهدف النهائي (TARGET). 
 # يتم تحديد ملفات الكائنات في مسار الكائنات (BUILD_DIR).
@@ -75,13 +73,22 @@ $(OBJ_DIR)/%.o: $(SOURCE_DIR)/%.cpp | $(OBJ_DIR)
 $(TARGET): $(OBJECTS) | $(BUILD_DIR)
 	$(CPP) $^ -o $@
 
+# إنشاء الملفات المطلوبة
+ifeq ($(wildcard $(BUILD_DIR)),)
+$(OBJ_DIR):
+	mkdir -p $@
+	mkdir -p $(OBJ_DIR)/Alif
+	mkdir -p $(OBJ_DIR)/AlifCore/Objects
+	mkdir -p $(OBJ_DIR)/AlifCore/Objects/dtoa
+	mkdir -p $(OBJ_DIR)/Modules
+	mkdir -p $(OBJ_DIR)/Modules/_io
+endif
 
-all: $(TARGET)
 
 clean:
 	rm -rf $(BUILD_DIR)
 
-.PHONY: all clean
+.PHONY: all clean release debug
 
 
 # تقوم هذه التعليمة بإضافة أمر الى make
@@ -89,3 +96,10 @@ clean:
 # وذلك لبناء اللغة بإستخدام ممرات متعددة multithread
 MAKEFLAGS += -j$(shell nproc)
 
+help:
+	@echo "نظام بناء لغة ألف النسخة الخامسة"
+	@echo "طريقة البناء:"
+	@echo "make          # لبناء اللغة في وضع الإصدار"
+	@echo "make release  # لبناء اللغة في وضع الإصدار"
+	@echo "make debug    # لبناء اللغة في وضع تتبع الاخطاء"
+	@echo "make clean    # لحذف جميع ملفات البناء"
