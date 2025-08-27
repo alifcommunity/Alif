@@ -6,10 +6,6 @@ DEBUG_FLAGS = -O0 -g
 # -Wall طباعة معظم التنبيهات
 # -w عدم طباعة التنبيهات
 
-# تحديد اعلام بناء البرنامج
-release: CPPFLAGS += $(RELEASE_FLAGS)
-debug: CPPFLAGS += $(DEBUG_FLAGS)
-
 SOURCE_DIR = ../source
 BUILD_DIR = build
 OBJ_DIR = $(BUILD_DIR)/obj
@@ -31,9 +27,12 @@ INCLUDES =  -I$(SOURCE_DIR)/Alif							\
 			-I$(SOURCE_DIR)/AlifCore/Include/Main/FrozenModules		\
 			-I$(SOURCE_DIR)/AlifCore/Objects/clinic				\
 			-I$(SOURCE_DIR)/Modules/_io					\
-			-I$(SOURCE_DIR)/Modules/_io/clinic				\
+			-I$(SOURCE_DIR)/Modules/_io/clinic			\
 
 
+# تحديد اعلام بناء البرنامج
+release: CPPFLAGS += $(RELEASE_FLAGS)
+debug: CPPFLAGS += $(DEBUG_FLAGS)
 
 all: release
 release: $(TARGET)
@@ -60,7 +59,8 @@ CPPFLAGS += $(addprefix ,$(INCLUDES))
 # يتم استخدام العلامة النسبية % لتحديد الجزء المتغير من الاسم 
 # (على سبيل المثال، file1 في file1.cpp و file1.o).
 $(OBJ_DIR)/%.o: $(SOURCE_DIR)/%.cpp | $(OBJ_DIR)
-	$(CPP) $(CPPFLAGS) -c $< -o $@
+	@echo "ترجمة.." $<
+	@$(CPP) $(CPPFLAGS) -c $< -o $@
 
 # يقوم بتحديد قاعدة لربط ملفات الكائنات (OBJECTS)
 # إلى ملف الهدف النهائي (TARGET). 
@@ -71,17 +71,21 @@ $(OBJ_DIR)/%.o: $(SOURCE_DIR)/%.cpp | $(OBJ_DIR)
 # يتم استخدام العلامة النسبية | لتأكيد أن مسار الكائنات (BUILD_DIR)
 # يجب أن يكون موجودًا قبل بدء عملية الربط.
 $(TARGET): $(OBJECTS) | $(BUILD_DIR)
-	$(CPP) $^ -o $@
+	@echo "جاري الربط..."
+	@$(CPP) $^ -o $@
+	@echo "تم البناء بنجاح"
 
 # إنشاء الملفات المطلوبة
 ifeq ($(wildcard $(BUILD_DIR)),)
+$(BUILD_DIR):
+	@mkdir -p $@
 $(OBJ_DIR):
-	mkdir -p $@
-	mkdir -p $(OBJ_DIR)/Alif
-	mkdir -p $(OBJ_DIR)/AlifCore/Objects
-	mkdir -p $(OBJ_DIR)/AlifCore/Objects/dtoa
-	mkdir -p $(OBJ_DIR)/Modules
-	mkdir -p $(OBJ_DIR)/Modules/_io
+	@mkdir -p $@
+	@mkdir -p $(OBJ_DIR)/Alif
+	@mkdir -p $(OBJ_DIR)/AlifCore/Objects
+	@mkdir -p $(OBJ_DIR)/AlifCore/Objects/dtoa
+	@mkdir -p $(OBJ_DIR)/Modules
+	@mkdir -p $(OBJ_DIR)/Modules/_io
 endif
 
 
