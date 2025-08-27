@@ -9,8 +9,8 @@
 #include "OSDefs.h"
 
 #ifdef _WINDOWS
-	#include <windows.h>
-	#include <pathcch.h>
+#include <windows.h>
+#include <pathcch.h>
 #endif
 
 #ifdef __APPLE__
@@ -66,11 +66,11 @@ static AlifObject* getPath_hasSuffix(AlifObject* ALIF_UNUSED(self), AlifObject* 
 		suffix = alifUStr_asWideCharString(suffixobj, &suffixLen);
 		if (suffix) {
 			if (suffixLen > len or
-#ifdef _WINDOWS
+			#ifdef _WINDOWS
 				wcsicmp(&path[len - suffixLen], suffix) != 0
-#else
+			#else
 				wcscmp(&path[len - suffixLen], suffix) != 0
-#endif
+			#endif
 				) {
 				r = ALIF_NEWREF(ALIF_FALSE);
 			}
@@ -96,20 +96,20 @@ static AlifObject* getPath_isXFile(AlifObject* ALIF_UNUSED(self), AlifObject* ar
 	}
 	path = alifUStr_asWideCharString(pathobj, &cchPath);
 	if (path) {
-#ifdef _WINDOWS
+	#ifdef _WINDOWS
 		DWORD attr = GetFileAttributesW(path);
 		r = (attr != INVALID_FILE_ATTRIBUTES) &&
 			!(attr & FILE_ATTRIBUTE_DIRECTORY) &&
 			(cchPath >= 4) &&
 			(CompareStringOrdinal(path + cchPath - 4, -1, L".exe", -1, 1 /* ignore case */) == CSTR_EQUAL)
 			? ALIF_TRUE : ALIF_FALSE;
-#else
+	#else
 		struct stat st;
 		r = (_alif_wStat(path, &st) == 0) and
 			S_ISREG(st.st_mode) and
 			(st.st_mode & 0111)
 			? ALIF_TRUE : ALIF_FALSE;
-#endif
+	#endif
 		alifMem_dataFree((void*)path);
 	}
 	return ALIF_XNEWREF(r);
@@ -249,11 +249,11 @@ static AlifIntT env_toDict(AlifObject* dict,
 		r = alifDict_setItemString(dict, key, ALIF_NONE) == 0;
 	}
 	if (r and andClear) {
-#ifdef _WINDOWS
+	#ifdef _WINDOWS
 		_wputenv_s(wkey, L"");
-#else
+	#else
 		unsetenv(&key[4]);
-#endif
+	#endif
 	}
 	return r;
 }
@@ -504,11 +504,11 @@ static bool has_suffix(wchar_t* _path, const wchar_t* _suffix) { // 135
 		if (suffix) {
 			suffixLen = wcslen(_suffix);
 			if (suffixLen > len or
-#ifdef _WINDOWS
+			#ifdef _WINDOWS
 				wcsicmp(&path[len - suffixLen], suffix) != 0
-#else
+			#else
 				wcscmp(&path[len - suffixLen], suffix) != 0
-#endif
+			#endif
 				) {
 				r = false;
 			}
@@ -524,14 +524,14 @@ static bool is_file(wchar_t* _path) { // 195
 	bool r{};
 	const wchar_t* path = _path;
 	if (path) {
-#ifdef _WINDOWS
+	#ifdef _WINDOWS
 		DWORD attr = GetFileAttributesW(path);
 		r = (attr != INVALID_FILE_ATTRIBUTES) and
 			!(attr & FILE_ATTRIBUTE_DIRECTORY) ? true : false;
-#else
+	#else
 		struct stat st;
 		r = (_alif_wStat(path, &st) == 0) and S_ISREG(st.st_mode) ? true : false;
-#endif
+	#endif
 	}
 	return r;
 }
@@ -542,20 +542,20 @@ static bool is_xFile(wchar_t* _path) { // 220
 	AlifSizeT cchPath{};
 	if (path) {
 		cchPath = wcslen(_path);
-#ifdef _WINDOWS
+	#ifdef _WINDOWS
 		DWORD attr = GetFileAttributesW(path);
 		r = (attr != INVALID_FILE_ATTRIBUTES) and
 			!(attr & FILE_ATTRIBUTE_DIRECTORY) and
 			(cchPath >= 4) and
 			(CompareStringOrdinal(path + cchPath - 4, -1, L".exe", -1, 1 /* ignore case */) == CSTR_EQUAL)
 			? true : false;
-#else
+	#else
 		struct stat st;
 		r = (_alif_wStat(path, &st) == 0) and
 			S_ISREG(st.st_mode) and
 			(st.st_mode & 0111)
 			? true : false;
-#endif
+	#endif
 	}
 	return r;
 }
@@ -727,25 +727,25 @@ done:
 	}
 	ALIF_END_ALLOW_THREADS
 
-	if (err) {
-		//alifErr_setFromWindowsErr(err);
-		path = nullptr;
-	}
-	else if (len <= MAXPATHLEN) {
-		const wchar_t* p = resolved;
-		if (0 == wcsncmp(p, L"\\\\?\\", 4)) {
-			if (GetFileAttributesW(&p[4]) != INVALID_FILE_ATTRIBUTES) {
-				p += 4;
-				len -= 4;
+		if (err) {
+			//alifErr_setFromWindowsErr(err);
+			path = nullptr;
+		}
+		else if (len <= MAXPATHLEN) {
+			const wchar_t* p = resolved;
+			if (0 == wcsncmp(p, L"\\\\?\\", 4)) {
+				if (GetFileAttributesW(&p[4]) != INVALID_FILE_ATTRIBUTES) {
+					p += 4;
+					len -= 4;
+				}
+			}
+			if (CompareStringOrdinal(path, (int)pathlen, p, len, TRUE) == CSTR_EQUAL) {
+				return path;
+			}
+			else {
+				path = wcsdup(p);
 			}
 		}
-		if (CompareStringOrdinal(path, (int)pathlen, p, len, TRUE) == CSTR_EQUAL) {
-			return path;
-		}
-		else {
-			path = wcsdup(p);
-		}
-	}
 #endif
 
 	return path;
@@ -777,11 +777,11 @@ static wchar_t* alif_env(const char* _env, AlifIntT _andClear) { // 678
 	}
 #endif
 	if (buffer and _andClear) {
-#ifdef _WINDOWS
+	#ifdef _WINDOWS
 		_wputenv_s(wkey, L"");
-#else
+	#else
 		unsetenv(&_env[4]);
-#endif
+	#endif
 	}
 	return buffer;
 }
@@ -863,7 +863,8 @@ static wchar_t* search_up(wchar_t* prefix, const wchar_t* landmark) {
 			return prefix;
 		}
 		reduce(prefix);
-	} while (prefix[0]);
+	}
+	while (prefix[0]);
 	return nullptr;
 }
 
@@ -954,8 +955,7 @@ static AlifStatus alifConfig_initPathConfigAlif(AlifConfig* _config, AlifIntT _c
 		wchar_t* context{};
 		for (wchar_t* p = wcstok(envPath, DELIM, &context);
 			p != nullptr;
-			p = wcstok(nullptr, DELIM, &context))
-		{
+			p = wcstok(nullptr, DELIM, &context)) {
 			p = join_paths(2, p, programName);
 			if (is_xFile(p)) {
 				executable = p;
@@ -1025,15 +1025,16 @@ static AlifStatus alifConfig_initPathConfigAlif(AlifConfig* _config, AlifIntT _c
 	wchar_t* buildPrefix{};
 	if ((realExecutableDir and not alifSetPath) or _config->isAlifBuild == 0) {
 		platStdLibDir = realExecutableDir;
-		buildPrefix = join_paths(2, realExecutableDir, VPATH);
+		//buildPrefix = join_paths(2, realExecutableDir, VPATH); // هنا يتم تحديد المسار الأساسي بالرجوع مجلدين الى الخلف وهذا يسبب عدم إكتشاف لمجلد libraray في حال كان مضمن في نفس مجلد ملف اللغة
+		buildPrefix = realExecutableDir;
 
 		wchar_t* buildStdlibPrefix{};
 		if (buildPrefix) {
-		//#ifdef _WINDOWS
-			//buildStdlibPrefix = buildPrefix;
-		//#else
+			//#ifdef _WINDOWS
+				//buildStdlibPrefix = buildPrefix;
+			//#else
 			buildStdlibPrefix = search_up(buildPrefix, BUILDSTDLIB_LANDMARKS);
-		//#endif
+			//#endif
 
 			if (not strLibDirWasSetInConfig) {
 				if (buildStdlibPrefix) {

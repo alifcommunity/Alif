@@ -82,12 +82,12 @@ static AlifIntT internal_close(FileIO* self) { // 117
 		self->fd = -1;
 		/* fd is accessible and someone else may have closed it */
 		ALIF_BEGIN_ALLOW_THREADS
-		ALIF_BEGIN_SUPPRESS_IPH
+			ALIF_BEGIN_SUPPRESS_IPH
 			err = close(fd);
 		if (err < 0)
 			save_errno = errno;
 		ALIF_END_SUPPRESS_IPH
-		ALIF_END_ALLOW_THREADS
+			ALIF_END_ALLOW_THREADS
 	}
 	if (err < 0) {
 		errno = save_errno;
@@ -208,19 +208,19 @@ static AlifIntT _ioFileIO___init__Impl(FileIO* self, AlifObject* nameobj, const 
 	}
 
 	if (fd < 0) {
-#ifdef _WINDOWS
+	#ifdef _WINDOWS
 		if (!alifUStr_fsDecoder(nameobj, &stringobj)) {
 			return -1;
 		}
 		widename = alifUStr_asWideCharString(stringobj, nullptr);
 		if (widename == nullptr)
 			return -1;
-#else
+	#else
 		if (!alifUStr_fsConverter(nameobj, &stringobj)) {
 			return -1;
 		}
 		name = ALIFBYTES_AS_STRING(stringobj);
-#endif
+	#endif
 	}
 
 	s = mode;
@@ -228,7 +228,7 @@ static AlifIntT _ioFileIO___init__Impl(FileIO* self, AlifObject* nameobj, const 
 		switch (*s++) {
 		case 'x':
 			if (rwa) {
-			bad_mode:
+bad_mode:
 				//alifErr_setString(_alifExcValueError_,
 				//	"Must have exactly one of create/read/write/append "
 				//	"mode and at most one plus");
@@ -315,30 +315,31 @@ static AlifIntT _ioFileIO___init__Impl(FileIO* self, AlifObject* nameobj, const 
 		if (opener == ALIF_NONE) {
 			do {
 				ALIF_BEGIN_ALLOW_THREADS
-#ifdef _WINDOWS
+				#ifdef _WINDOWS
 					self->fd = _wopen(widename, flags, 0666);
-#else
+			#else
 					self->fd = open(name, flags, 0666);
-#endif
+			#endif
 				ALIF_END_ALLOW_THREADS
-			} while (self->fd < 0 and errno == EINTR /*and
-				!(async_err = alifErr_checkSignals())*/);
+			}
+			while (self->fd < 0 and errno == EINTR /*and
+			 !(async_err = alifErr_checkSignals())*/);
 
-				if (async_err)
-					goto error;
+			if (async_err)
+				goto error;
 
-				if (self->fd < 0) {
-					alifErr_setFromErrnoWithFilenameObject(_alifExcOSError_, nameobj);
-					goto error;
-				}
+			if (self->fd < 0) {
+				alifErr_setFromErrnoWithFilenameObject(_alifExcOSError_, nameobj);
+				goto error;
+			}
 		}
 		else {
 			AlifObject* fdobj;
 
-#ifndef _WINDOWS
+		#ifndef _WINDOWS
 			/* the opener may clear the atomic flag */
 			atomic_flag_works = nullptr;
-#endif
+		#endif
 
 			fdobj = alifObject_callFunction(opener, "Oi", nameobj, flags);
 			if (fdobj == nullptr)
@@ -362,10 +363,10 @@ static AlifIntT _ioFileIO___init__Impl(FileIO* self, AlifObject* nameobj, const 
 		}
 		fd_is_own = 1;
 
-#ifndef _WINDOWS
+	#ifndef _WINDOWS
 		// if (_alif_setInheritable(self->fd, 0, atomic_flag_works) < 0)
 		// 	goto error;
-#endif
+	#endif
 	}
 
 	alifMem_dataFree(self->statAtOpen);
@@ -378,27 +379,27 @@ static AlifIntT _ioFileIO___init__Impl(FileIO* self, AlifObject* nameobj, const 
 		fstat_result = _alifFStat_noraise(self->fd, self->statAtOpen);
 	ALIF_END_ALLOW_THREADS
 		if (fstat_result < 0) {
-#ifdef _WINDOWS
+		#ifdef _WINDOWS
 			if (GetLastError() == ERROR_INVALID_HANDLE) {
 				//alifErr_setFromWindowsErr(0);
-#else
+			#else
 			if (errno == EBADF) {
 				//alifErr_setFromErrno(_alifExcOSError_);
-#endif
+			#endif
 				goto error;
 			}
 
 			alifMem_dataFree(self->statAtOpen);
 			self->statAtOpen = nullptr;
-			}
+		}
 		else {
-#if defined(S_ISDIR) and defined(EISDIR)
+		#if defined(S_ISDIR) and defined(EISDIR)
 			if (S_ISDIR(self->statAtOpen->st_mode)) {
 				errno = EISDIR;
 				alifErr_setFromErrnoWithFilenameObject(_alifExcOSError_, nameobj);
 				goto error;
 			}
-#endif /* defined(S_ISDIR) */
+		#endif /* defined(S_ISDIR) */
 		}
 
 #if defined(_WINDOWS) or defined(__CYGWIN__)
@@ -444,7 +445,7 @@ done:
 
 
 
-static AlifIntT fileIO_traverse(AlifObject* op, VisitProc visit, void* arg) { // 539
+static AlifIntT fileIO_traverse(AlifObject * op, VisitProc visit, void* arg) { // 539
 	FileIO* self = ALIFFILEIO_CAST(op);
 	ALIF_VISIT(ALIF_TYPE(self));
 	ALIF_VISIT(self->dict);
@@ -459,13 +460,13 @@ static AlifObject* err_closed(void) { // 580
 
 
 
-static AlifObject* _ioFileIO_readableImpl(FileIO* self) { // 615
+static AlifObject* _ioFileIO_readableImpl(FileIO * self) { // 615
 	if (self->fd < 0)
 		return err_closed();
 	return alifBool_fromLong((long)self->readable);
 }
 
-static AlifObject* _ioFileIO_seekableImpl(FileIO* self) { // 645
+static AlifObject* _ioFileIO_seekableImpl(FileIO * self) { // 645
 	if (self->fd < 0)
 		return err_closed();
 	if (self->seekable < 0) {
@@ -480,8 +481,8 @@ static AlifObject* _ioFileIO_seekableImpl(FileIO* self) { // 645
 	return alifBool_fromLong((long)self->seekable);
 }
 
-static AlifObject* _ioFileIO_readintoImpl(FileIO* self,
-	AlifTypeObject* cls, AlifBuffer* buffer) { // 674
+static AlifObject* _ioFileIO_readintoImpl(FileIO * self,
+	AlifTypeObject * cls, AlifBuffer * buffer) { // 674
 	AlifSizeT n{};
 	AlifIntT err{};
 
@@ -507,7 +508,7 @@ static AlifObject* _ioFileIO_readintoImpl(FileIO* self,
 }
 
 
-static AlifUSizeT new_bufferSize(FileIO* _self, AlifUSizeT _currentSize) { // 703
+static AlifUSizeT new_bufferSize(FileIO * _self, AlifUSizeT _currentSize) { // 703
 	AlifUSizeT addend{};
 	if (_currentSize > LARGE_BUFFER_CUTOFF_SIZE)
 		addend = _currentSize >> 3;
@@ -518,7 +519,7 @@ static AlifUSizeT new_bufferSize(FileIO* _self, AlifUSizeT _currentSize) { // 70
 	return addend + _currentSize;
 }
 
-static AlifObject* _ioFileIO_readallImpl(FileIO* _self) { // 731
+static AlifObject* _ioFileIO_readallImpl(FileIO * _self) { // 731
 	AlifOffT pos{}, end{};
 	AlifObject* result;
 	AlifSizeT bytesRead = 0;
@@ -550,18 +551,18 @@ static AlifObject* _ioFileIO_readallImpl(FileIO* _self) { // 731
 
 		if (bufsize > LARGE_BUFFER_CUTOFF_SIZE) {
 			ALIF_BEGIN_ALLOW_THREADS
-			ALIF_BEGIN_SUPPRESS_IPH
-#ifdef _WINDOWS
-			pos = _lseeki64(_self->fd, 0L, SEEK_CUR);
-#else
-			pos = lseek(_self->fd, 0L, SEEK_CUR);
-#endif
+				ALIF_BEGIN_SUPPRESS_IPH
+			#ifdef _WINDOWS
+				pos = _lseeki64(_self->fd, 0L, SEEK_CUR);
+		#else
+				pos = lseek(_self->fd, 0L, SEEK_CUR);
+		#endif
 			ALIF_END_SUPPRESS_IPH
-			ALIF_END_ALLOW_THREADS
+				ALIF_END_ALLOW_THREADS
 
-			if (end >= pos and pos >= 0 and (end - pos) < (ALIF_READ_MAX - 1)) {
-				bufsize = (AlifUSizeT)(end - pos) + 1;
-			}
+				if (end >= pos and pos >= 0 and (end - pos) < (ALIF_READ_MAX - 1)) {
+					bufsize = (AlifUSizeT)(end - pos) + 1;
+				}
 		}
 	}
 
@@ -616,7 +617,7 @@ static AlifObject* _ioFileIO_readallImpl(FileIO* _self) { // 731
 
 
 
-static AlifObject* portable_lseek(FileIO* _self, AlifObject* _posObj,
+static AlifObject* portable_lseek(FileIO * _self, AlifObject * _posObj,
 	AlifIntT _whence, bool _suppressPipeError) { // 947
 	AlifOffT pos{}, res{};
 	AlifIntT fd = _self->fd;
@@ -624,15 +625,15 @@ static AlifObject* portable_lseek(FileIO* _self, AlifObject* _posObj,
 #ifdef SEEK_SET
 	/* Turn 0, 1, 2 into SEEK_{SET,CUR,END} */
 	switch (_whence) {
-#if SEEK_SET != 0
+	#if SEEK_SET != 0
 	case 0: _whence = SEEK_SET; break;
-#endif
-#if SEEK_CUR != 1
+	#endif
+	#if SEEK_CUR != 1
 	case 1: _whence = SEEK_CUR; break;
-#endif
-#if SEEK_END != 2
+	#endif
+	#if SEEK_END != 2
 	case 2: _whence = SEEK_END; break;
-#endif
+	#endif
 	}
 #endif /* SEEK_SET */
 
@@ -640,24 +641,24 @@ static AlifObject* portable_lseek(FileIO* _self, AlifObject* _posObj,
 		pos = 0;
 	}
 	else {
-#if defined(HAVE_LARGEFILE_SUPPORT)
+	#if defined(HAVE_LARGEFILE_SUPPORT)
 		pos = alifLong_asLongLong(_posObj);
-#else
+	#else
 		pos = alifLong_asLong(_posObj);
-#endif
+	#endif
 		if (alifErr_occurred())
 			return nullptr;
 	}
 
 	ALIF_BEGIN_ALLOW_THREADS
-	ALIF_BEGIN_SUPPRESS_IPH
-#ifdef _WINDOWS
+		ALIF_BEGIN_SUPPRESS_IPH
+	#ifdef _WINDOWS
 		res = _lseeki64(fd, pos, _whence);
 #else
 		res = lseek(fd, pos, _whence);
 #endif
 	ALIF_END_SUPPRESS_IPH
-	ALIF_END_ALLOW_THREADS
+		ALIF_END_ALLOW_THREADS
 
 		if (_self->seekable < 0) {
 			_self->seekable = (res >= 0);
@@ -680,21 +681,21 @@ static AlifObject* portable_lseek(FileIO* _self, AlifObject* _posObj,
 }
 
 
-static AlifObject* _ioFileIO_isAttyImpl(FileIO* self) { // 1202
+static AlifObject* _ioFileIO_isAttyImpl(FileIO * self) { // 1202
 	long res{};
 
 	if (self->fd < 0)
 		return err_closed();
 	ALIF_BEGIN_ALLOW_THREADS
-	ALIF_BEGIN_SUPPRESS_IPH
-	res = isatty(self->fd);
+		ALIF_BEGIN_SUPPRESS_IPH
+		res = isatty(self->fd);
 	ALIF_END_SUPPRESS_IPH
-	ALIF_END_ALLOW_THREADS
-	return alifBool_fromLong(res);
+		ALIF_END_ALLOW_THREADS
+		return alifBool_fromLong(res);
 }
 
 
-static AlifObject* _ioFileIO_isAttyOpenOnly(AlifObject* op, AlifObject* ALIF_UNUSED(ignored)) { // 1226
+static AlifObject* _ioFileIO_isAttyOpenOnly(AlifObject * op, AlifObject * ALIF_UNUSED(ignored)) { // 1226
 	FileIO* self = ALIFFILEIO_CAST(op);
 	if (self->statAtOpen != nullptr and !S_ISCHR(self->statAtOpen->st_mode)) {
 		ALIF_RETURN_FALSE;
@@ -716,13 +717,13 @@ static AlifMethodDef _fileIOMethods_[] = { // 1238
 };
 
 
-static AlifObject* fileIO_getClosed(AlifObject* op, void* closure) { // 1261
+static AlifObject* fileIO_getClosed(AlifObject * op, void* closure) { // 1261
 	FileIO* self = ALIFFILEIO_CAST(op);
 	return alifBool_fromLong((long)(self->fd < 0));
 }
 
 
-static AlifObject* fileIO_getBlkSize(AlifObject* op, void* closure) { // 1282
+static AlifObject* fileIO_getBlkSize(AlifObject * op, void* closure) { // 1282
 	FileIO* self = ALIFFILEIO_CAST(op);
 #ifdef HAVE_STRUCT_STAT_ST_BLKSIZE
 	if (self->statAtOpen != nullptr and self->statAtOpen->blkSize > 1) {
