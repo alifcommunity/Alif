@@ -3202,6 +3202,20 @@ AlifIntT alif_decodeUTF8Ex(const char* _s, AlifSizeT size, wchar_t** wstr, AlifU
 	return 0;
 }
 
+wchar_t* _alifDecodeUTF8_surrogateEscape(const char* _arg, AlifSizeT _argLen,
+	AlifUSizeT* _wlen) { // 5395
+	wchar_t* wstr{};
+	AlifIntT res = alif_decodeUTF8Ex(_arg, _argLen,
+		&wstr, _wlen,
+		nullptr, AlifErrorHandler_::Alif_Error_SurrogateEscape);
+	if (res != 0) {
+		if (_wlen) {
+			*_wlen = (AlifUSizeT)res;
+		}
+		return nullptr;
+	}
+	return wstr;
+}
 
 AlifIntT _alif_encodeUTF8Ex(const wchar_t* _text, char** _str, AlifUSizeT* _errorPos,
 	const char** _reason, AlifIntT _rawAlloc, AlifErrorHandler_ _errors) { // 5425

@@ -18,6 +18,11 @@ public:
 	AlifIntT exitcode{};
 };
 
+AlifStatus alifStatus_ok(void);
+AlifStatus alifStatus_error(const char*);
+AlifStatus alifStatus_noMemory(void);
+AlifStatus alifStatus_exit(AlifIntT);
+
 /* --------------------------------- AlifWStringList --------------------------------- */
 class AlifWStringList { // 31
 public:

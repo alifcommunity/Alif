@@ -238,6 +238,46 @@ static AlifObject* builtin___import__Impl(AlifObject* module, AlifObject* name, 
 
 
 
+
+static AlifObject* builtin_any(AlifObject* _module, AlifObject* _iterable) { // 358
+	AlifObject* it{}, * item{};
+	AlifObject* (*iternext)(AlifObject*);
+	AlifIntT cmp{};
+
+	it = alifObject_getIter(_iterable);
+	if (it == nullptr)
+		return nullptr;
+	iternext = *ALIF_TYPE(it)->iterNext;
+
+	for (;;) {
+		item = iternext(it);
+		if (item == nullptr)
+			break;
+		cmp = alifObject_isTrue(item);
+		ALIF_DECREF(item);
+		if (cmp < 0) {
+			ALIF_DECREF(it);
+			return nullptr;
+		}
+		if (cmp > 0) {
+			ALIF_DECREF(it);
+			ALIF_RETURN_TRUE;
+		}
+	}
+	ALIF_DECREF(it);
+	if (alifErr_occurred()) {
+		if (alifErr_exceptionMatches(_alifExcStopIteration_))
+			alifErr_clear();
+		else
+			return nullptr;
+	}
+	ALIF_RETURN_FALSE;
+}
+
+
+
+
+
 static AlifObject* builtin_len(AlifObject* _module, AlifObject* _obj) { // 1762
 	AlifSizeT res{};
 
@@ -731,6 +771,7 @@ static AlifMethodDef _builtinMethods_[] = { // 3141
 	{"__buildClass__", ALIF_CPPFUNCTION_CAST(builtin___buildClass__),
 	 METHOD_FASTCALL | METHOD_KEYWORDS},
 	BUILTIN___IMPORT___METHODDEF,
+	BUILTIN_ANY_METHODDEF,
 	BUILTIN_INPUT_METHODDEF,
 	BUILTIN_LEN_METHODDEF,
 	{"اقصى", ALIF_CPPFUNCTION_CAST(builtin_max), METHOD_FASTCALL | METHOD_KEYWORDS},

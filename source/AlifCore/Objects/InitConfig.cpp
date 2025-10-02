@@ -254,6 +254,32 @@ static void config_completeUsage(const wchar_t* _program) { // 2510
 }
 
 
+
+
+/* ----------------------------------- AlifStatus ----------------------------------- */
+
+AlifStatus alifStatus_ok(void) { // 533
+	return ALIFSTATUS_OK();
+}
+
+AlifStatus alifStatus_error(const char* _errMsg) { // 536
+	return {
+		.type = AlifStatus::AlifStatus_Type_ERROR,
+		.errMsg = _errMsg
+	};
+}
+
+AlifStatus alifStatus_noMemory(void) { // 543
+	return alifStatus_error("لم يتمكن من الحجز في الذاكرة");
+}
+
+AlifStatus alifStatus_exit(AlifIntT _exitcode) { // 546
+	return ALIFSTATUS_EXIT(_exitcode);
+}
+
+
+
+
 void _alifWStringList_clear(AlifWStringList* _list) { // 608
 	for (AlifSizeT i = 0; i < _list->length; i++) {
 		alifMem_dataFree(_list->items[i]);
@@ -374,6 +400,23 @@ AlifObject* _alifWStringList_asList(const AlifWStringList* _list) { // 729
 		ALIFLIST_SET_ITEM(alifList, i, item);
 	}
 	return alifList;
+}
+
+static AlifObject* _alifWStringList_asTuple(const AlifWStringList* _list) { // 751
+	AlifObject* tuple = alifTuple_new(_list->length);
+	if (tuple == nullptr) {
+		return nullptr;
+	}
+
+	for (AlifSizeT i = 0; i < _list->length; i++) {
+		AlifObject* item = alifUStr_fromWideChar(_list->items[i], -1);
+		if (item == nullptr) {
+			ALIF_DECREF(tuple);
+			return nullptr;
+		}
+		ALIFTUPLE_SET_ITEM(tuple, i, item);
+	}
+	return tuple;
 }
 
 void alifConfig_clear(AlifConfig* _config) { // 773
@@ -606,6 +649,152 @@ AlifStatus _alifConfig_copy(AlifConfig* _config, const AlifConfig* _config2) { /
 		}
 	}
 	return ALIFSTATUS_OK();
+}
+
+
+AlifObject* _alifConfig_asDict(const AlifConfig* _config) { // 1179
+	AlifObject* dict = alifDict_new();
+	if (dict == nullptr) {
+		return nullptr;
+	}
+
+	const AlifConfigSpec* spec = _alifConfigSpec_;
+	for (; spec->name != nullptr; spec++) {
+		AlifObject* obj = config_get(_config, spec, 0);
+		if (obj == nullptr) {
+			ALIF_DECREF(dict);
+			return nullptr;
+		}
+
+		AlifIntT res = alifDict_setItemString(dict, spec->name, obj);
+		ALIF_DECREF(obj);
+		if (res < 0) {
+			ALIF_DECREF(dict);
+			return nullptr;
+		}
+	}
+	return dict;
+}
+
+
+static void config_dictInvalidValue(const char* _name) { // 1206
+	alifErr_format(_alifExcValueError_, "invalid config value: %s", _name);
+}
+
+static AlifIntT config_dictGetInt(AlifObject* _dict,
+	const char* _name, AlifIntT* _result) { // 1213
+	AlifObject* item = config_dictGet(_dict, _name);
+	if (item == nullptr) {
+		return -1;
+	}
+	AlifIntT value = alifLong_asInt(item);
+	ALIF_DECREF(item);
+	if (value == -1 and alifErr_occurred()) {
+		if (alifErr_exceptionMatches(_alifExcTypeError_)) {
+			config_dictInvalidType(_name);
+		}
+		else if (alifErr_exceptionMatches(_alifExcOverflowError_)) {
+			config_dictInvalidValue(_name);
+		}
+		return -1;
+	}
+	*_result = value;
+	return 0;
+}
+
+
+
+AlifIntT _alifConfig_fromDict(AlifConfig* _config, AlifObject* _dict) { // 1413
+	if (!ALIFDICT_CHECK(_dict)) {
+		alifErr_setString(_alifExcTypeError_, "dict expected");
+		return -1;
+	}
+
+	const AlifConfigSpec* spec = _alifConfigSpec_;
+	for (; spec->name != nullptr; spec++) {
+		char* member = (char*)_config + spec->offset;
+		switch (spec->type) {
+		case AlifConfigMemberType_::Alif_Config_Member_INT:
+		case AlifConfigMemberType_::Alif_Config_Member_UINT:
+		case AlifConfigMemberType_::Alif_Config_Member_BOOL:
+		{
+			AlifIntT value{};
+			if (config_dictGetInt(_dict, spec->name, &value) < 0) {
+				return -1;
+			}
+			if (spec->type == AlifConfigMemberType_::Alif_Config_Member_BOOL
+				or spec->type == AlifConfigMemberType_::Alif_Config_Member_UINT)
+			{
+				if (value < 0) {
+					config_dictInvalidValue(spec->name);
+					return -1;
+				}
+			}
+			*(AlifIntT*)member = value;
+			break;
+		}
+		case AlifConfigMemberType_::Alif_Config_Member_ULONG:
+		{
+			if (config_dictGetUlong(_dict, spec->name,
+				(unsigned long*)member) < 0) {
+				return -1;
+			}
+			break;
+		}
+		case AlifConfigMemberType_::Alif_Config_Member_WSTR:
+		{
+			wchar_t** wstr = (wchar_t**)member;
+			if (config_dictGetWStr(_dict, spec->name, _config, wstr) < 0) {
+				return -1;
+			}
+			if (*wstr == nullptr) {
+				config_dictInvalidValue(spec->name);
+				return -1;
+			}
+			break;
+		}
+		case AlifConfigMemberType_::Alif_Config_Member_WSTR_OPT:
+		{
+			wchar_t** wstr = (wchar_t**)member;
+			if (config_dictGetWStr(_dict, spec->name, _config, wstr) < 0) {
+				return -1;
+			}
+			break;
+		}
+		case AlifConfigMemberType_::Alif_Config_Member_WSTR_LIST:
+		{
+			if (strcmp(spec->name, "xoptions") == 0) {
+				if (config_dictGetXoptions(_dict, spec->name, _config,
+					(AlifWStringList*)member) < 0) {
+					return -1;
+				}
+			}
+			else {
+				if (config_dictGetWStrList(_dict, spec->name, _config,
+					(AlifWStringList*)member) < 0) {
+					return -1;
+				}
+			}
+			break;
+		}
+		default:
+			ALIF_UNREACHABLE();
+		}
+	}
+
+	if (!(_config->configInit == ConfigInitEnum_::AlifConfig_Init_COMPAT
+		or _config->configInit == ConfigInitEnum_::AlifConfig_Init_ALIF
+		or _config->configInit == ConfigInitEnum_::AlifConfig_Init_ISOLATED))
+	{
+		config_dictInvalidValue("_config_init");
+		return -1;
+	}
+
+	if (_config->hashSeed > MAX_HASH_SEED) {
+		config_dictInvalidValue("hash_seed");
+		return -1;
+	}
+	return 0;
 }
 
 
@@ -1550,4 +1739,104 @@ AlifStatus alifConfig_setArgv(AlifConfig* _config,
 		.bytesArgv = nullptr,
 		.wcharArgv = _argv };
 	return _alifConfig_setAlifArgv(_config, &args);
+}
+
+
+
+
+
+
+static AlifObject* config_getSys(const char* _name) { // 4029
+	AlifObject* value = alifSys_getObject(_name);
+	if (value == nullptr) {
+		//alifErr_format(_alifExcRuntimeError_, "lost sys.%s", _name);
+		return nullptr;
+	}
+	return ALIF_NEWREF(value);
+}
+
+static AlifIntT config_getSysWriteBytecode(const AlifConfig* _config, AlifIntT* _value) { // 4041
+	AlifObject* attr = config_getSys("dont_write_bytecode");
+	if (attr == nullptr) {
+		return -1;
+	}
+
+	AlifIntT isTrue = alifObject_isTrue(attr);
+	ALIF_DECREF(attr);
+	if (isTrue < 0) {
+		return -1;
+	}
+	*_value = (!isTrue);
+	return 0;
+}
+
+
+static AlifObject* config_get(const AlifConfig* _config,
+	const AlifConfigSpec* _spec, AlifIntT _useSys) { // 4059
+	if (_useSys) {
+		if (_spec->sys.attr != nullptr) {
+			return config_getSys(_spec->sys.attr);
+		}
+
+		if (strcmp(_spec->name, "write_bytecode") == 0) {
+			AlifIntT value;
+			if (config_getSysWriteBytecode(_config, &value) < 0) {
+				return nullptr;
+			}
+			return alifBool_fromLong(value);
+		}
+
+		if (strcmp(_spec->name, "int_max_str_digits") == 0) {
+			AlifInterpreter* interp = _alifInterpreter_get();
+			return alifLong_fromLong(interp->longState.maxStrDigits);
+		}
+	}
+
+	void* member = config_getSpecMember(_config, _spec);
+	switch (_spec->type) {
+	case AlifConfigMemberType_::Alif_Config_Member_INT:
+	case AlifConfigMemberType_::Alif_Config_Member_UINT:
+	{
+		AlifIntT value = *(AlifIntT*)member;
+		return alifLong_fromLong(value);
+	}
+
+	case AlifConfigMemberType_::Alif_Config_Member_BOOL:
+	{
+		AlifIntT value = *(AlifIntT*)member;
+		return alifBool_fromLong(value != 0);
+	}
+
+	case AlifConfigMemberType_::Alif_Config_Member_ULONG:
+	{
+		unsigned long value = *(unsigned long*)member;
+		return alifLong_fromUnsignedLong(value);
+	}
+
+	case AlifConfigMemberType_::Alif_Config_Member_WSTR:
+	case AlifConfigMemberType_::Alif_Config_Member_WSTR_OPT:
+	{
+		wchar_t* wstr = *(wchar_t**)member;
+		if (wstr != nullptr) {
+			return alifUStr_fromWideChar(wstr, -1);
+		}
+		else {
+			return ALIF_NEWREF(ALIF_NONE);
+		}
+	}
+
+	case AlifConfigMemberType_::Alif_Config_Member_WSTR_LIST:
+	{
+		//if (strcmp(_spec->name, "xoptions") == 0) {
+		//	return _alifConfig_createXOptionsDict(_config);
+		//}
+		//else {
+			const AlifWStringList* list = (const AlifWStringList*)member;
+			return _alifWStringList_asTuple(list);
+		//}
+	}
+
+	default:
+		ALIF_UNREACHABLE();
+	}
 }

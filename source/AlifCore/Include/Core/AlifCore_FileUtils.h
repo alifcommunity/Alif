@@ -73,6 +73,8 @@ public:
 
 AlifIntT _alifFStat_noraise(AlifIntT, class AlifStatStruct*); // 110
 
+extern FILE* _alif_wfOpen(const wchar_t*, const wchar_t*); // 129
+
 extern AlifSizeT _alif_read(AlifIntT, void*, AlifUSizeT); // 133
 
 #ifdef HAVE_READLINK
@@ -105,6 +107,8 @@ extern AlifIntT alif_decodeUTF8Ex(const char*, AlifSizeT,
 
 extern AlifIntT _alif_encodeUTF8Ex(const wchar_t*, char**, AlifUSizeT*,
 	const char**, AlifIntT, AlifErrorHandler_); // 218
+
+extern wchar_t* _alifDecodeUTF8_surrogateEscape(const char*, AlifSizeT, AlifUSizeT*); // 226
 
 extern AlifIntT _alif_wStat(const wchar_t*, struct stat*); // 231
 

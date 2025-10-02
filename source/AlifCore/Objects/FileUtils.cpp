@@ -625,10 +625,187 @@ AlifIntT _alif_wStat(const wchar_t* path, struct stat* buf) { // 1332
 }
 
 
+static AlifIntT get_inheritable(AlifIntT fd, AlifIntT raise) { // 1405
+#ifdef _WINDOWS
+	HANDLE handle;
+	DWORD flags;
+
+	handle = _alifGet_osfHandleNoRaise(fd);
+	if (handle == INVALID_HANDLE_VALUE) {
+		//if (raise)
+		//	alifErr_setFromErrno(_alifExcOSError_);
+		return -1;
+	}
+
+	if (!GetHandleInformation(handle, &flags)) {
+		//if (raise)
+		//	alifErr_setFromWindowsErr(0);
+		return -1;
+	}
+
+	return (flags & HANDLE_FLAG_INHERIT);
+#else
+	int flags;
+
+	flags = fcntl(fd, F_GETFD, 0);
+	if (flags == -1) {
+		//if (raise)
+		//	alifErr_setFromErrno(_alifExcOSError_);
+		return -1;
+	}
+	return !(flags & FD_CLOEXEC);
+#endif
+}
+
+static AlifIntT set_inheritable(AlifIntT fd, AlifIntT inheritable,
+	AlifIntT raise, AlifIntT* atomic_flag_works) { // 1450
+#ifdef _WINDOWS
+	HANDLE handle;
+	DWORD flags;
+#else
+#if defined(HAVE_SYS_IOCTL_H) && defined(FIOCLEX) && defined(FIONCLEX)
+	static AlifIntT ioctl_works = -1;
+	AlifIntT request;
+	AlifIntT err;
+#endif
+	AlifIntT flags, new_flags;
+	AlifIntT res;
+#endif
+
+	if (atomic_flag_works != nullptr and !inheritable) {
+		if (*atomic_flag_works == -1) {
+			AlifIntT isInheritable = get_inheritable(fd, raise);
+			if (isInheritable == -1)
+				return -1;
+			*atomic_flag_works = !isInheritable;
+		}
+
+		if (*atomic_flag_works)
+			return 0;
+	}
+
+#ifdef _WINDOWS
+	handle = _alifGet_osfHandleNoRaise(fd);
+	if (handle == INVALID_HANDLE_VALUE) {
+		//if (raise)
+		//	alifErr_setFromErrno(_alifExcOSError_);
+		return -1;
+	}
+
+	if (inheritable)
+		flags = HANDLE_FLAG_INHERIT;
+	else
+		flags = 0;
+
+	if (!SetHandleInformation(handle, HANDLE_FLAG_INHERIT, flags)) {
+		//if (raise)
+		//	alifErr_setFromWindowsErr(0);
+		return -1;
+	}
+	return 0;
+
+#else
+
+#if defined(HAVE_SYS_IOCTL_H) and defined(FIOCLEX) and defined(FIONCLEX)
+	if (raise != 0 and alifAtomic_loadIntRelaxed(&ioctl_works) != 0) {
+		if (inheritable)
+			request = FIONCLEX;
+		else
+			request = FIOCLEX;
+		err = ioctl(fd, request, nullptr);
+		if (!err) {
+			if (alifAtomic_loadIntRelaxed(&ioctl_works) == -1) {
+				alifAtomic_storeIntRelaxed(&ioctl_works, 1);
+			}
+			return 0;
+		}
+
+#ifdef O_PATH
+		if (errno == EBADF) {
+		}
+		else
+#endif
+			if (errno != ENOTTY && errno != EACCES) {
+				//if (raise)
+				//	alifErr_setFromErrno(_alifExcOSError_);
+				return -1;
+			}
+			else {
+				alifAtomic_storeIntRelaxed(&ioctl_works, 0);
+			}
+	}
+#endif
+
+	flags = fcntl(fd, F_GETFD);
+	if (flags < 0) {
+		//if (raise)
+		//	alifErr_setFromErrno(_alifExcOSError_);
+		return -1;
+	}
+
+	if (inheritable) {
+		new_flags = flags & ~FD_CLOEXEC;
+	}
+	else {
+		new_flags = flags | FD_CLOEXEC;
+	}
+
+	if (new_flags == flags) {
+		return 0;
+	}
+
+	res = fcntl(fd, F_SETFD, new_flags);
+	if (res < 0) {
+		//if (raise)
+		//	alifErr_setFromErrno(_alifExcOSError_);
+		return -1;
+	}
+	return 0;
+#endif
+}
+
+static AlifIntT make_nonInheritable(AlifIntT _fd) { // 1582
+	return set_inheritable(_fd, 0, 0, nullptr);
+}
+
+
 //AlifIntT _alif_setInheritable(AlifIntT fd,
 //	AlifIntT inheritable, AlifIntT* atomic_flag_works) { // 1604
 //	return set_inheritable(fd, inheritable, 1, atomic_flag_works);
 //}
+
+
+FILE* _alif_wfOpen(const wchar_t* _path, const wchar_t* _mode) { // 1716
+	FILE* f{};
+	//if (alifSys_audit("open", "uui", _path, _mode, 0) < 0) {
+	//	return nullptr;
+	//}
+#ifndef _WINDOWS
+	char* cpath{};
+	char cmode[10]{};
+	AlifUSizeT r{};
+	r = wcstombs(cmode, _mode, 10);
+	if (r == DECODE_ERROR or r >= 10) {
+		errno = EINVAL;
+		return nullptr;
+	}
+	cpath = _alif_encodeLocaleRaw(_path, nullptr);
+	if (cpath == nullptr) {
+		return nullptr;
+	}
+	f = fopen(cpath, cmode);
+	alifMem_dataFree(cpath);
+#else
+	f = _wfopen(_path, _mode);
+#endif
+	if (f == nullptr)
+		return nullptr;
+	if (make_nonInheritable(fileno(f)) < 0) {
+		fclose(f);
+		return nullptr;
+	}
+	return f;
+}
 
 
 FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) { // 1764

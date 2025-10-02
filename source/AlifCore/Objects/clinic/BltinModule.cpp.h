@@ -86,6 +86,11 @@ exit:
 
 
 
+#define BUILTIN_ANY_METHODDEF    \
+    {"تحقق_اي", (AlifCPPFunction)builtin_any, METHOD_O} // 141
+
+
+
 
 #define BUILTIN_LEN_METHODDEF {"طول", (AlifCPPFunction)builtin_len, METHOD_O} // 771
 
