@@ -1008,6 +1008,9 @@
     <ClInclude Include="..\source\Modules\_io\clinic\TextIO.cpp.h">
       <Filter>Modules\_io\clinic</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\ConfigCommon.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Include">

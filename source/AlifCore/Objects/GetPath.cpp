@@ -827,7 +827,8 @@ AlifStatus _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePath
 	/* reference now held by dict */
 	ALIF_DECREF(configDict);
 
-	AlifObject* co = _alifGet_getPathCodeObject();
+	//AlifObject* co = _alifGet_getPathCodeObject();
+	AlifObject* co = nullptr;
 	if (!co or !ALIFCODE_CHECK(co)) {
 		alifErr_clear();
 		ALIF_XDECREF(co);

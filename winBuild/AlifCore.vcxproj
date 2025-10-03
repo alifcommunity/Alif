@@ -152,6 +152,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\Code.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\ComplexObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\CondVar.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\ConfigCommon.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\CriticalSection.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\DescrObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\DictObject.h" />

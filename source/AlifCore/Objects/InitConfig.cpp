@@ -20,7 +20,7 @@
 #endif
 
 
-
+#include "ConfigCommon.h"
 
 /* --------------------------------------------- AlifConfig setters --------------------------------------------- */
 
@@ -180,6 +180,10 @@ static const AlifConfigSpec _alifConfigSpec_[] = { // 95
 #undef SYS_FLAG
 #undef NO_SYS
 
+
+// Forward declarations
+static AlifObject*
+config_get(const AlifConfig*, const AlifConfigSpec*, AlifIntT); // 225
 
 
 /* --------------------------------------- Command line options --------------------------------------- */
@@ -418,6 +422,12 @@ static AlifObject* _alifWStringList_asTuple(const AlifWStringList* _list) { // 7
 	}
 	return tuple;
 }
+
+
+/* ---------------------------------------- AlifConfig ---------------------------------------- */
+
+#define MAX_HASH_SEED 4294967295UL
+
 
 void alifConfig_clear(AlifConfig* _config) { // 773
 #define CLEAR(_attr) \
@@ -703,6 +713,114 @@ static AlifIntT config_dictGetInt(AlifObject* _dict,
 }
 
 
+static AlifIntT config_dictGetULong(AlifObject* dict,
+	const char* name, unsigned long* result) { // 1236
+	AlifObject* item = config_dictGet(dict, name);
+	if (item == nullptr) {
+		return -1;
+	}
+	unsigned long value = alifLong_asUnsignedLong(item);
+	ALIF_DECREF(item);
+	if (value == (unsigned long)-1 and alifErr_occurred()) {
+		if (alifErr_exceptionMatches(_alifExcTypeError_)) {
+			config_dictInvalidType(name);
+		}
+		else if (alifErr_exceptionMatches(_alifExcOverflowError_)) {
+			config_dictInvalidValue(name);
+		}
+		return -1;
+	}
+	*result = value;
+	return 0;
+}
+
+static AlifIntT config_dictGetWStr(AlifObject* _dict, const char* _name,
+	AlifConfig* _config, wchar_t** _result) { // 1259
+	AlifObject* item = config_dictGet(_dict, _name);
+	if (item == nullptr) {
+		return -1;
+	}
+
+	AlifStatus status{};
+	if (item == ALIF_NONE) {
+		status = alifConfig_setString(_config, _result, nullptr);
+	}
+	else if (!ALIFUSTR_CHECK(item)) {
+		config_dictInvalidType(_name);
+		goto error;
+	}
+	else {
+		wchar_t* wstr = alifUStr_asWideCharString(item, nullptr);
+		if (wstr == nullptr) {
+			goto error;
+		}
+		status = alifConfig_setString(_config, _result, wstr);
+		alifMem_dataFree(wstr);
+	}
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		//alifErr_noMemory();
+		goto error;
+	}
+	ALIF_DECREF(item);
+	return 0;
+
+error:
+	ALIF_DECREF(item);
+	return -1;
+}
+
+static AlifIntT config_dictGetWStrList(AlifObject* _dict, const char* _name,
+	AlifConfig* _config, AlifWStringList* _result) { // 1297
+	AlifObject* list = config_dictGet(_dict, _name);
+	if (list == nullptr) {
+		return -1;
+	}
+
+	AlifIntT isList = ALIFLIST_CHECKEXACT(list);
+	if (!isList and !ALIFTUPLE_CHECKEXACT(list)) {
+		ALIF_DECREF(list);
+		config_dictInvalidType(_name);
+		return -1;
+	}
+
+	AlifWStringList wstrlist = ALIFWIDESTRINGLIST_INIT;
+	AlifSizeT len = isList ? ALIFLIST_GET_SIZE(list) : ALIFTUPLE_GET_SIZE(list);
+	for (AlifSizeT i = 0; i < len; i++) {
+		AlifObject* item = isList ? ALIFLIST_GET_ITEM(list, i) : ALIFTUPLE_GET_ITEM(list, i);
+
+		if (item == ALIF_NONE) {
+			config_dictInvalidValue(_name);
+			goto error;
+		}
+		else if (!ALIFUSTR_CHECK(item)) {
+			config_dictInvalidType(_name);
+			goto error;
+		}
+		wchar_t* wstr = alifUStr_asWideCharString(item, nullptr);
+		if (wstr == nullptr) {
+			goto error;
+		}
+		AlifStatus status = alifWStringList_append(&wstrlist, wstr);
+		alifMem_dataFree(wstr);
+		if (ALIFSTATUS_EXCEPTION(status)) {
+			//alifErr_noMemory();
+			goto error;
+		}
+	}
+
+	if (_alifWStringList_copy(_result, &wstrlist) < 0) {
+		//alifErr_noMemory();
+		goto error;
+	}
+	_alifWStringList_clear(&wstrlist);
+	ALIF_DECREF(list);
+	return 0;
+
+error:
+	_alifWStringList_clear(&wstrlist);
+	ALIF_DECREF(list);
+	return -1;
+}
 
 AlifIntT _alifConfig_fromDict(AlifConfig* _config, AlifObject* _dict) { // 1413
 	if (!ALIFDICT_CHECK(_dict)) {
@@ -735,7 +853,7 @@ AlifIntT _alifConfig_fromDict(AlifConfig* _config, AlifObject* _dict) { // 1413
 		}
 		case AlifConfigMemberType_::Alif_Config_Member_ULONG:
 		{
-			if (config_dictGetUlong(_dict, spec->name,
+			if (config_dictGetULong(_dict, spec->name,
 				(unsigned long*)member) < 0) {
 				return -1;
 			}
@@ -764,10 +882,10 @@ AlifIntT _alifConfig_fromDict(AlifConfig* _config, AlifObject* _dict) { // 1413
 		case AlifConfigMemberType_::Alif_Config_Member_WSTR_LIST:
 		{
 			if (strcmp(spec->name, "xoptions") == 0) {
-				if (config_dictGetXoptions(_dict, spec->name, _config,
-					(AlifWStringList*)member) < 0) {
-					return -1;
-				}
+				//if (config_dictGetXoptions(_dict, spec->name, _config,
+				//	(AlifWStringList*)member) < 0) {
+				//	return -1;
+				//}
 			}
 			else {
 				if (config_dictGetWStrList(_dict, spec->name, _config,
