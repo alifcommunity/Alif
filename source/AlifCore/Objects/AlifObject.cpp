@@ -408,23 +408,23 @@ AlifIntT alifObject_setAttrString(AlifObject* _v,
 }
 
 AlifIntT alifObject_setAttributeErrorContext(AlifObject* _v, AlifObject* _name) { // 1177
-	//if (!alifErr_exceptionMatches(_alifExcAttributeError_)) {
-		//return 0;
-	//}
-	//AlifObject* exc = alifErr_getRaisedException();
-	//if (!alifErr_givenExceptionMatches(exc, _alifExcAttributeError_)) {
-		//goto restore;
-	//}
-	//AlifAttributeErrorObject* theExc = (AlifAttributeErrorObject*)exc;
-	//if (theExc->name or theExc->obj) {
-		//goto restore;
-	//}
-	//if (alifObject_setAttr(exc, &ALIF_ID(_name), _name) or
-		//alifObject_setAttr(exc, &ALIF_ID(obj), _v)) {
-		//return 1;
-	//}
-//restore:
-	//alifErr_setRaisedException(exc);
+	if (!alifErr_exceptionMatches(_alifExcAttributeError_)) {
+		return 0;
+	}
+	AlifObject* exc = alifErr_getRaisedException();
+	if (!alifErr_givenExceptionMatches(exc, _alifExcAttributeError_)) {
+		goto restore;
+	}
+	AlifAttributeErrorObject* theExc; theExc = (AlifAttributeErrorObject*)exc;
+	if (theExc->name or theExc->obj) {
+		goto restore;
+	}
+	if (alifObject_setAttr(exc, &ALIF_STR(Name), _name) or
+		alifObject_setAttr(exc, &ALIF_STR(Obj), _v)) {
+		return 1;
+	}
+restore:
+	alifErr_setRaisedException(exc);
 	return 0;
 }
 
@@ -804,9 +804,9 @@ AlifObject* alifObject_genericGetAttrWithDict(AlifObject* _obj, AlifObject* _nam
 	}
 
 	if (!_suppress) {
-		//alifErr_format(_alifExcAttributeError_,
-		//	"'%.100s' object has no attribute '%U'",
-		//	tp->name, _name);
+		alifErr_format(_alifExcAttributeError_,
+			"'%.100s' الكائن لا يملك هذا المتغير '%U'",
+			tp->name, _name);
 
 		alifObject_setAttributeErrorContext(_obj, _name);
 	}

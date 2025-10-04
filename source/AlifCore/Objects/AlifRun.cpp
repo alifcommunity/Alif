@@ -582,7 +582,8 @@ error:
 	return -1;
 }
 
-void _alifErr_display(AlifObject* file, AlifObject* unused, AlifObject* value, AlifObject* tb) { // 1075
+void _alifErr_display(AlifObject* file, AlifObject* unused,
+	AlifObject* value, AlifObject* tb) { // 1075
 	if (ALIFEXCEPTIONINSTANCE_CHECK(value)
 		and tb != nullptr and ALIFTRACEBACK_CHECK(tb)) {
 		AlifObject* cur_tb = alifException_getTraceback(value);
@@ -632,7 +633,7 @@ void _alifErr_display(AlifObject* file, AlifObject* unused, AlifObject* value, A
 	if (printException_recursive(&ctx, value) < 0) {
 		alifErr_clear();
 		//_alifObject_dump(value);
-		fprintf(stderr, "lost sys.stderr\n");
+		fprintf(stderr, "النظام.إخراج_الخطأ مفقود\n");
 	}
 	ALIF_XDECREF(ctx.seen);
 

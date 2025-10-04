@@ -48,6 +48,7 @@ extern AlifObject* _alifExcBaseExceptionGroup_; // 77
 extern AlifObject* _alifExcStopAsyncIteration_; // 80
 
 extern AlifObject* _alifExcStopIteration_; // 82
+extern AlifObject* _alifExcAttributeError_; // 88
 extern AlifObject* _alifExcOSError_; // 92
 extern AlifObject* _alifExcImportError_; // 93
 extern AlifObject* _alifExcIndexError_; // 97
@@ -152,6 +153,13 @@ public:
 };
 
 
+
+class AlifAttributeErrorObject { // 79
+public:
+	ALIFEXCEPTION_HEAD;
+	AlifObject* obj{};
+	AlifObject* name{};
+};
 
 
 

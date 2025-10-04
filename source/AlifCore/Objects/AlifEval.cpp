@@ -2120,7 +2120,7 @@ dispatch_opcode :
 	//* alif //* delete
 	printf("يبدو أنه يوجد حالة غير مكتملة في مفسر اللغة،						\
 		\nلغة ألف لا تزال تحت التطوير لذلك نرجو التواصل							\
-		\nمع فريق تطوير اللغة على احد وسائل التواصل المدرجة في الموقع الرسم		\
+		\nمع فريق تطوير اللغة على احد وسائل التواصل المدرجة في الموقع الرسمي		\
 		\n www.aliflang.org  \n\n");
 	exit(-7);
 	//* alif
@@ -2190,24 +2190,23 @@ exception_unwind:
 
 
 
-
-
-
 exit_unwind:
-	//_alif_leaveRecursiveCallAlif(_thread);
-	//AlifInterpreterFrame* dying = _frame;
-	//_frame = _thread->currentFrame = dying->previous;
-	//_alifEval_frameClearAndPop(_thread, dying);
-	//_frame->returnOffset = 0;
-	//if (_frame == &entryFrame) {
-	//	_thread->currentFrame = _frame->previous;
-	//	_thread->cppRecursionRemaining += ALIF_EVAL_CPP_STACK_UNITS;
-	//	return nullptr;
-	//}
+	_alif_leaveRecursiveCallAlif(_thread);
+	AlifInterpreterFrame* dying = _frame;
+	_frame = _thread->currentFrame = dying->previous;
+	_alifEval_frameClearAndPop(_thread, dying);
+	_frame->returnOffset = 0;
+	if (_frame == &entryFrame) {
+		_thread->currentFrame = _frame->previous;
+		_thread->cppRecursionRemaining += ALIF_EVAL_CPP_STACK_UNITS;
+		return nullptr;
+	}
 
+resume_with_error:
+	nextInstr = _frame->instrPtr;
+	stackPointer = _alifFrame_getStackPointer(_frame);
+	goto error;
 
-	printf("\n\nحدث خطأ في المفسر \nيرجى مراجعة فريق لغة ألف لتحديد سبب الخطأ\n\n"); //* delete
-	return ALIF_NONE; //* alif //* delete
 }
 
 
@@ -3017,7 +3016,7 @@ AlifObject* _alifEval_importName(AlifThread* _thread, AlifInterpreterFrame* _fra
 		return nullptr;
 	}
 	if (importFunc == nullptr) {
-		_alifErr_setString(_thread, _alifExcImportError_, "لم يتم العثور على _استورد_");
+		_alifErr_setString(_thread, _alifExcImportError_, "لم يتم العثور على __استورد__");
 		return nullptr;
 	}
 

@@ -9,7 +9,7 @@
 
 
 #define BUILTIN___IMPORT___METHODDEF    \
-    {"_استورد_", ALIF_CPPFUNCTION_CAST(builtin___import__), METHOD_FASTCALL | METHOD_KEYWORDS}
+    {"__استورد__", ALIF_CPPFUNCTION_CAST(builtin___import__), METHOD_FASTCALL | METHOD_KEYWORDS}
 
 static AlifObject* builtin___import__Impl(AlifObject*, AlifObject*, AlifObject*,
 	AlifObject*, AlifObject*, AlifIntT); // 35

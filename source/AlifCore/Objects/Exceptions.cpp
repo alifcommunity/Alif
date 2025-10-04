@@ -707,6 +707,48 @@ MIDDLINGEXTENDSEXCEPTION(_excOSError_, BlockingIOError, خطأ_نظام, OSError
 	"I/O operation would block."); // 2169
 
 
+
+
+static AlifIntT attributeError_init(AlifAttributeErrorObject* _self,
+	AlifObject* _args, AlifObject* _kwds) { // 2306
+	static const char* kwlist[] = { "name", "obj", nullptr };
+	AlifObject* name = nullptr;
+	AlifObject* obj = nullptr;
+
+	if (baseException_init((AlifBaseExceptionObject*)_self, _args, nullptr) == -1) {
+		return -1;
+	}
+
+	AlifObject* emptyTuple = alifTuple_new(0);
+	if (!emptyTuple) {
+		return -1;
+	}
+	//if (!alifArg_parseTupleAndKeywords(emptyTuple, _kwds, "|$OO:AttributeError", kwlist,
+	//	&name, &obj)) {
+	//	ALIF_DECREF(emptyTuple);
+	//	return -1;
+	//}
+	ALIF_DECREF(emptyTuple);
+
+	ALIF_XSETREF(_self->name, ALIF_XNEWREF(name));
+	ALIF_XSETREF(_self->obj, ALIF_XNEWREF(obj));
+
+	return 0;
+}
+
+static AlifMemberDef _attributeErrorMembers_[] = { // 2400
+	{"name", ALIF_T_OBJECT, offsetof(AlifAttributeErrorObject, name), 0/*, ALIFDOC_STR("attribute name")*/},
+	{"obj", ALIF_T_OBJECT, offsetof(AlifAttributeErrorObject, obj), 0/*, ALIFDOC_STR("object")*/},
+	{nullptr}  /* Sentinel */
+};
+
+// 2412
+COMPLEXEXTENDSEXCEPTION(_excException_, AttributeError,
+	خطأ_خاصية, attributeError, 0,
+	/*_attributeErrorMethods_*/ nullptr, _attributeErrorMembers_,
+	0, baseException_str, "لم يتم العثور على الخاصية 'المتغير'.");
+
+
 static AlifIntT syntaxError_init(AlifSyntaxErrorObject* self,
 	AlifObject* args, AlifObject* kwds) { // 2421
 	AlifObject* info = nullptr;
@@ -885,7 +927,7 @@ static StaticException _staticExceptions_[] = { // 3615
 	// Level 3: Exception(BaseException) subclasses
 	ITEM(ArithmeticError),
 	//ITEM(AssertionError),
-	//ITEM(AttributeError),
+	ITEM(AttributeError),
 	//ITEM(BufferError),
 	//ITEM(EOFError),
 	//ITEM(ExceptionGroup),

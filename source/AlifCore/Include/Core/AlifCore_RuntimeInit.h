@@ -681,7 +681,7 @@
 #define ALIF_STR_LITERALS_INIT { \
 	INIT_USTR(_windowsConsoleIO, "طرفية_ويندوز"), \
 	INIT_STR(AnonListComp, "<listcomp>"), \
-	INIT_STR(AnonModule, "<module>"), \
+	INIT_USTR(AnonModule, "<وحدة>"), /* //* alif */ \
 	INIT_STR(AnonString, "<string>"), \
     INIT_STR(DblPercent, "%%"), \
     INIT_STR(Defaults, ".defaults"), \
@@ -698,13 +698,14 @@
     INIT_STR(False, "خطأ"), /* //* alif */	\
     INIT_STR(Mode, "mode"), /* //* alif */	\
     INIT_STR(Name, "name"), /* //* alif */	\
+    INIT_STR(Obj, "obj"), /* //* alif */	\
 	INIT_USTR(Open, "افتح"), /* //* alif */	\
 	INIT_USTR(Read, "اقرا"), /* //* alif */	\
 	INIT_USTR(Close, "اغلق"), /* //* alif */	\
 	INIT_STR(Raw, "raw"), /* //* alif */	\
 	INIT_USTR(TextIOWrapper, "غلاف_النص"), /* //* alif */	\
-    INIT_USTR(__init__, "_تهيئة_"), /* //* alif */	\
-    INIT_USTR(__import__, "_استورد_"), /* //* alif */	\
+    INIT_USTR(__init__, "__تهيئة__"), /* //* alif */	\
+    INIT_USTR(__import__, "__استورد__"), /* //* alif */	\
     INIT_STR(_io, "تبادل"), /* //* alif // Important! don't use STRUCT_FOR_USTR here because it's lead to wrong unicode in import.cpp alifImport_importModuleLevelObject() */	\
 }
 

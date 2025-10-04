@@ -41,7 +41,7 @@ public:
 	public:
 		STRUCT_FOR_USTR(_windowsConsoleIO, "طرفية_ويندوز")
 		STRUCT_FOR_STR(AnonListComp, "<listcomp>")
-		STRUCT_FOR_STR(AnonModule, "<module>")
+		STRUCT_FOR_USTR(AnonModule, "<وحدة>") //* alif
 		STRUCT_FOR_STR(AnonString, "<string>")
         STRUCT_FOR_STR(DblPercent, "%%")
 		STRUCT_FOR_STR(Defaults, ".defaults")
@@ -58,13 +58,14 @@ public:
 		STRUCT_FOR_STR(False, "خطأ") //* alif
 		STRUCT_FOR_STR(Mode, "mode") //* alif
 		STRUCT_FOR_STR(Name, "name") //* alif
+		STRUCT_FOR_STR(Obj, "obj") //* alif
 		STRUCT_FOR_USTR(Open, "افتح") //* alif
 		STRUCT_FOR_USTR(Read, "اقرا") //* alif
 		STRUCT_FOR_USTR(Close, "اغلق") //* alif
 		STRUCT_FOR_STR(Raw, "raw") //* alif
 		STRUCT_FOR_USTR(TextIOWrapper, "غلاف_النص") //* alif
-		STRUCT_FOR_USTR(__init__, "_تهيئة_") //* alif
-		STRUCT_FOR_USTR(__import__, "_استورد_") //* alif
+		STRUCT_FOR_USTR(__init__, "__تهيئة__") //* alif
+		STRUCT_FOR_USTR(__import__, "__استورد__") //* alif
 		STRUCT_FOR_STR(_io, "تبادل") //* alif //* review // Important! don't use STRUCT_FOR_USTR here because it's lead to wrong unicode in import.cpp alifImport_importModuleLevelObject()
     } literals;
 

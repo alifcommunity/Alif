@@ -1423,7 +1423,7 @@ static AlifIntT init_importLib(AlifThread* tstate, AlifObject* sysmod) { // 3150
 AlifIntT _alifImport_initDefaultImportFunc(AlifInterpreter* _interp) { // 3338
 	// Get the __import__ function
 	AlifObject* importFunc{};
-	if (alifDict_getItemStringRef(_interp->builtins, "_استورد_", &importFunc) <= 0) {
+	if (alifDict_getItemStringRef(_interp->builtins, "__استورد__", &importFunc) <= 0) {
 		return -1;
 	}
 	IMPORT_FUNC(_interp) = importFunc;
@@ -2104,7 +2104,7 @@ static AlifObject* load_package(const char* name, char* pathname) { // 1035
 	if (err != 0)
 		goto error;
 	buf[0] = '\0';
-	fdp = find_module(name, "_تهيئة_", path, buf, sizeof(buf), &fp, nullptr);
+	fdp = find_module(name, "__تهيئة__", path, buf, sizeof(buf), &fp, nullptr);
 	if (fdp == nullptr) {
 		//if (alifErr_exceptionMatches(_alifExcImportError_)) {
 		//	alifErr_clear();
@@ -2223,7 +2223,7 @@ static FileDescr* find_module(const char* _fullname, const char* _subname, AlifO
 		if (stat(_buf, &statbuf) == 0 and         /* it exists */
 			S_ISDIR(statbuf.st_mode) and         /* it's a directory */
 			case_ok(_buf, len, namelen, name)) { /* case matches */
-			if (find_initModule(_buf)) { /* and has _تهيئة_.aliflib */
+			if (find_initModule(_buf)) { /* and has __تهيئة__.aliflib */
 				ALIF_XDECREF(copy);
 				return &fd_package;
 			}
@@ -2348,7 +2348,7 @@ static AlifIntT case_ok(char* _buf, AlifSizeT _len, AlifSizeT _namelen, char* _n
 static AlifIntT find_initModule(char* buf) { // 1715
 	const AlifUSizeT save_len = strlen(buf);
 	AlifUSizeT i = save_len;
-	char* pname{};  /* pointer to start of _تهيئة_ */
+	char* pname{};  /* pointer to start of __تهيئة__ */
 	struct stat statbuf;
 
 	/*      For calling case_ok(buf, len, namelen, name):
@@ -2363,11 +2363,11 @@ static AlifIntT find_initModule(char* buf) { // 1715
 		return 0;
 	buf[i++] = SEP;
 	pname = buf + i;
-	strcpy(pname, "_تهيئة_.aliflib");
+	strcpy(pname, "__تهيئة__.aliflib");
 	if (stat(buf, &statbuf) == 0) {
 		if (case_ok(buf,
-			save_len + 9,               /* len("/_تهيئة_") */
-			8,                              /* len("_تهيئة_") */
+			save_len + 9,               /* len("/__تهيئة__") */
+			8,                              /* len("__تهيئة__") */
 			pname)) {
 			buf[save_len] = '\0';
 			return 1;
@@ -2766,7 +2766,7 @@ static AlifObject* load_next(AlifObject* mod, AlifObject* altmod,
 
 	if (strlen(name) == 0) {
 		/* completely empty module name should only happen in
-		   'من . استورد' (or '_استورد_("")')*/
+		   'من . استورد' (or '__استورد__("")')*/
 		ALIF_INCREF(mod);
 		*p_name = nullptr;
 		return mod;
