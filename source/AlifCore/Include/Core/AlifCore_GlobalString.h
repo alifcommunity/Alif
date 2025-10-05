@@ -64,8 +64,12 @@ public:
 		STRUCT_FOR_USTR(Close, "اغلق") //* alif
 		STRUCT_FOR_STR(Raw, "raw") //* alif
 		STRUCT_FOR_USTR(TextIOWrapper, "غلاف_النص") //* alif
+		STRUCT_FOR_USTR(__add__, "__اجمع__") //* alif
+		STRUCT_FOR_USTR(__call__, "__استدعاء__") //* alif
 		STRUCT_FOR_USTR(__init__, "__تهيئة__") //* alif
 		STRUCT_FOR_USTR(__import__, "__استورد__") //* alif
+		STRUCT_FOR_USTR(__radd__, "__اجمع_ع__") //* alif
+		STRUCT_FOR_USTR(__repr__, "__عرض__") //* alif
 		STRUCT_FOR_STR(_io, "تبادل") //* alif //* review // Important! don't use STRUCT_FOR_USTR here because it's lead to wrong unicode in import.cpp alifImport_importModuleLevelObject()
     } literals;
 
@@ -78,7 +82,7 @@ public:
         STRUCT_FOR_ID(__bases__)
         STRUCT_FOR_ID(__buildClass__)
         STRUCT_FOR_ID(__builtins__)
-		STRUCT_FOR_ID(__call__)
+		//STRUCT_FOR_ID(__call__)
 		STRUCT_FOR_ID(__class__)
 		STRUCT_FOR_ID(__classCell__)
 		STRUCT_FOR_ID(__classDict__)

@@ -823,15 +823,42 @@ static AlifObject* lookup_method(AlifObject* _self, AlifObject* _attr, AlifIntT*
 	return res_;
 }
 
+
+static inline AlifObject* vectorcall_unbound(AlifThread* _thread, AlifIntT _unbound,
+	AlifObject* _func, AlifObject* const* _args, AlifSizeT _nargs) { // 2764
+	size_t nargsf = _nargs;
+	if (!_unbound) {
+		_args++;
+		nargsf = nargsf - 1 + ALIF_VECTORCALL_ARGUMENTS_OFFSET;
+	}
+	//EVAL_CALL_STAT_INC_IF_FUNCTION(EVAL_CALL_SLOT, _func);
+	return alifObject_vectorCallThread(_thread, _func, _args, nargsf, NULL);
+}
+
+
 static AlifObject* call_unboundNoArg(AlifIntT _unbound,
 	AlifObject* _func, AlifObject* _self) { // 2786
 	if (_unbound) {
-		//return alifObject_callOneArg(_func, _self);
+		return alifObject_callOneArg(_func, _self);
 	}
 	else {
-		//return alifObject_callNoArgs(_func);
+		return _alifObject_callNoArgs(_func);
 	}
-	return nullptr; // temp
+}
+
+static AlifObject* vectorcall_maybe(AlifThread* _thread, AlifObject* _name,
+	AlifObject* const* _args, AlifSizeT _nargs) { // 2814
+	AlifIntT unbound{};
+	AlifObject* self = _args[0];
+	AlifObject* func = lookup_maybeMethod(self, _name, &unbound);
+	if (func == nullptr) {
+		if (!alifErr_occurred())
+			return ALIF_NOTIMPLEMENTED;
+		return nullptr;
+	}
+	AlifObject* retval = vectorcall_unbound(_thread, unbound, func, _args, _nargs);
+	ALIF_DECREF(func);
+	return retval;
 }
 
 static AlifIntT tail_contains(AlifObject* _tuple, AlifIntT _whence, AlifObject* _o) { // 2867
@@ -3930,6 +3957,47 @@ static AlifIntT add_subClass(AlifTypeObject* _base, AlifTypeObject* _type) { // 
 }
 
 
+static AlifIntT check_numArgs(AlifObject* _ob, AlifIntT _n) { // 8748
+	if (!ALIFTUPLE_CHECKEXACT(_ob)) {
+		alifErr_setString(_alifExcSystemError_,
+			"alifArg_unpackTuple() argument list is not a tuple");
+		return 0;
+	}
+	if (_n == ALIFTUPLE_GET_SIZE(_ob))
+		return 1;
+	alifErr_format(
+		_alifExcTypeError_,
+		"expected %d argument%s, got %zd", _n, _n == 1 ? "" : "s", ALIFTUPLE_GET_SIZE(_ob));
+	return 0;
+}
+
+static AlifObject* wrap_binaryFuncL(AlifObject* _self,
+	AlifObject* _args, void* _wrapped) { // 8833
+	BinaryFunc func = (BinaryFunc)_wrapped;
+	AlifObject* other{};
+
+	if (!check_numArgs(_args, 1))
+		return nullptr;
+	other = ALIFTUPLE_GET_ITEM(_args, 0);
+	return (*func)(_self, other);
+}
+
+static AlifObject* wrap_unaryFunc(AlifObject* _self,
+	AlifObject* _args, void* _wrapped) { // 8899
+	UnaryFunc func = (UnaryFunc)_wrapped;
+
+	if (!check_numArgs(_args, 0))
+		return nullptr;
+	return (*func)(_self);
+}
+
+static AlifObject* wrap_call(AlifObject* _self, AlifObject* _args,
+	void* _wrapped, AlifObject* _kwds) { // 9169
+	TernaryFunc func = (TernaryFunc)_wrapped;
+
+	return (*func)(_self, _args, _kwds);
+}
+
 static AlifObject* wrap_init(AlifObject* _self, AlifObject* _args,
 	void* _wrapped, AlifObject* _kwds) { // 9220
 	InitProc func = (InitProc)_wrapped;
@@ -4027,15 +4095,109 @@ static AlifIntT add_tpNewWrapper(AlifTypeObject* _type) { // 9302
 	return r_;
 }
 
+static AlifIntT method_isOverloaded(AlifObject* _left,
+	AlifObject* _right, AlifObject* _name) { // 9463
+	AlifObject* a{}, * b{};
+	AlifIntT ok{};
+
+	if (alifObject_getOptionalAttr((AlifObject*)(ALIF_TYPE(_right)), _name, &b) < 0) {
+		return -1;
+	}
+	if (b == nullptr) {
+		/* If right doesn't have it, it's not overloaded */
+		return 0;
+	}
+
+	if (alifObject_getOptionalAttr((AlifObject*)(ALIF_TYPE(_left)), _name, &a) < 0) {
+		ALIF_DECREF(b);
+		return -1;
+	}
+	if (a == nullptr) {
+		ALIF_DECREF(b);
+		/* If right has it but left doesn't, it's overloaded */
+		return 1;
+	}
+
+	ok = alifObject_richCompareBool(a, b, ALIF_NE);
+	ALIF_DECREF(a);
+	ALIF_DECREF(b);
+	return ok;
+}
+
+// 9494
+#define SLOT1BINFULL(_funcName, _testFunc, _slotName, _dunder, _rdunder) \
+static AlifObject * \
+_funcName(AlifObject *self, AlifObject *other) \
+{ \
+    AlifObject* stack[2]{}; \
+    AlifThread *tstate = _alifThread_get(); \
+    AlifIntT do_other = !ALIF_IS_TYPE(self, ALIF_TYPE(other)) and \
+        ALIF_TYPE(other)->asNumber != nullptr and \
+        ALIF_TYPE(other)->asNumber->_slotName == _testFunc; \
+    if (ALIF_TYPE(self)->asNumber != nullptr and \
+        ALIF_TYPE(self)->asNumber->_slotName == _testFunc) { \
+        AlifObject *r{}; \
+        if (do_other and alifType_isSubType(ALIF_TYPE(other), ALIF_TYPE(self))) { \
+            AlifIntT ok = method_isOverloaded(self, other, &ALIF_STR(_rdunder)); \
+            if (ok < 0) { \
+                return nullptr; \
+            } \
+            if (ok) { \
+                stack[0] = other; \
+                stack[1] = self; \
+                r = vectorcall_maybe(tstate, &ALIF_STR(_rdunder), stack, 2); \
+                if (r != ALIF_NOTIMPLEMENTED) \
+                    return r; \
+                ALIF_DECREF(r); \
+                do_other = 0; \
+            } \
+        } \
+        stack[0] = self; \
+        stack[1] = other; \
+        r = vectorcall_maybe(tstate, &ALIF_STR(_dunder), stack, 2); \
+        if (r != ALIF_NOTIMPLEMENTED or \
+            ALIF_IS_TYPE(other, ALIF_TYPE(self))) \
+            return r; \
+        ALIF_DECREF(r); \
+    } \
+    if (do_other) { \
+        stack[0] = other; \
+        stack[1] = self; \
+        return vectorcall_maybe(tstate, &ALIF_STR(_rdunder), stack, 2); \
+    } \
+    return ALIF_NOTIMPLEMENTED; \
+}
+
+// 9537
+#define SLOT1BIN(_funcName, _slotName, _dunder, _rdunder) \
+    SLOT1BINFULL(_funcName, _funcName, _slotName, _dunder, _rdunder)
 
 
+
+SLOT1BIN(slot_nbAdd, add_, __add__, __radd__) // 9669
+
+
+static AlifObject* slot_tpRepr(AlifObject* self) { // 9793
+	AlifObject* func{}, * res{};
+	AlifIntT unbound{};
+
+	func = lookup_maybeMethod(self, &ALIF_STR(__repr__), &unbound);
+	if (func != nullptr) {
+		res = call_unboundNoArg(unbound, func, self);
+		ALIF_DECREF(func);
+		return res;
+	}
+	alifErr_clear();
+	return alifUStr_fromFormat("<%s كائن في %p>",
+		ALIF_TYPE(self)->name, self);
+}
 
 
 static AlifObject* slot_tpCall(AlifObject* self, AlifObject* args, AlifObject* kwds) { // 9740
 	AlifThread* thread = _alifThread_get();
-	int unbound;
+	AlifIntT unbound{};
 
-	AlifObject* meth = lookup_method(self, &ALIF_ID(__call__), &unbound);
+	AlifObject* meth = lookup_method(self, &ALIF_STR(__call__), &unbound);
 	if (meth == nullptr) {
 		return nullptr;
 	}
@@ -4101,15 +4263,43 @@ static AlifObject* slot_tpNew(AlifTypeObject* _type,
 	return result;
 }
 
- // 10381
+
+#undef TPSLOT
+#undef FLSLOT
+#undef BUFSLOT
+#undef AMSLOT
+#undef ETSLOT
+#undef SQSLOT
+#undef MPSLOT
+#undef NBSLOT
+#undef UNSLOT
+#undef IBSLOT
+#undef BINSLOT
+#undef RBINSLOT
+
+ // 10497
+#define TPSLOT(_name, _slot, _function, _wrapper, _doc) \
+    {.name = #_name, .offset = offsetof(AlifTypeObject, _slot), .function = (void *)(_function), .wrapper = _wrapper, \
+     .doc = ALIFDOC_STR(_doc), .nameStrObj = &ALIF_STR(_name)}
 #define FLSLOT(_name, _slot, _function, _wrapper, _doc, _flags) \
     {.name = #_name, .offset = offsetof(AlifTypeObject, _slot), .function = (void *)(_function), .wrapper = _wrapper, \
      .doc = nullptr, .flags = _flags, .nameStrObj = &ALIF_STR(_name) }
+#define ETSLOT(_name, _slot, _function, _wrapper, _doc) \
+    {.name = #_name, .offset = offsetof(AlifHeapTypeObject, _slot), .function = (void *)(_function), .wrapper = _wrapper, \
+     .doc = ALIFDOC_STR(_doc), .nameStrObj = &ALIF_STR(_name) }
+#define BINSLOT(_name, _slot, _function, _doc) \
+    ETSLOT(_name, number._slot, _function, wrap_binaryFuncL, \
+           nullptr)
 
 static AlifTypeSlotDef _slotDefs_[] = { // 10416
+	TPSLOT(__repr__, repr, slot_tpRepr, wrap_unaryFunc, nullptr),
+	FLSLOT(__call__, call, slot_tpCall, (WrapperFunc)(void(*)(void))wrap_call,
+		nullptr, ALIFWRAPPERFLAG_KEYWORDS),
 	FLSLOT(__init__, init, slot_tpInit, (WrapperFunc)(void(*)(void))wrap_init,
 		   nullptr, ALIFWRAPPERFLAG_KEYWORDS),
 
+
+	BINSLOT(__add__, add_, slot_nbAdd, "+"),
 
 	{nullptr}
 };
