@@ -100,6 +100,23 @@ static AlifObject* _io_IOBase_writableImpl(AlifObject* self) { // 462
 }
 
 
+AlifObject* _alifIOBase_checkWritable(AlifIOState* _state,
+	AlifObject* _self, AlifObject* _args) { // 470
+	AlifObject* res = alifObject_callMethodNoArgs(_self, &ALIF_ID(Writable));
+	if (res == nullptr)
+		return nullptr;
+	if (res != ALIF_TRUE) {
+		ALIF_CLEAR(res);
+		//iobase_unsupported(state, "File or stream is not writable.");
+		return nullptr;
+	}
+	if (_args == ALIF_TRUE) {
+		ALIF_DECREF(res);
+	}
+	return res;
+}
+
+
 static AlifObject* _io_IOBase_readlineImpl(AlifObject* self, AlifSizeT limit) { // 559
 	AlifObject* peek{}, * buffer{}, * result{};
 	AlifSizeT oldSize = -1;
@@ -142,7 +159,8 @@ static AlifObject* _io_IOBase_readlineImpl(AlifObject* self, AlifSizeT limit) { 
 							break;
 						if (buf[n++] == '\n')
 							break;
-					} while (1);
+					}
+					while (1);
 				}
 				else {
 					do {
@@ -150,7 +168,8 @@ static AlifObject* _io_IOBase_readlineImpl(AlifObject* self, AlifSizeT limit) { 
 							break;
 						if (buf[n++] == '\n')
 							break;
-					} while (1);
+					}
+					while (1);
 				}
 				nreadahead = n;
 			}

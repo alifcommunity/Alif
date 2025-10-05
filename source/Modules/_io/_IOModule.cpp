@@ -80,7 +80,7 @@ static AlifObject* _io_openImpl(AlifObject* _module, AlifObject* _file, const ch
 
 		/* c must not be duplicated */
 		if (strchr(_mode + i + 1, c)) {
-		invalid_mode:
+invalid_mode:
 			alifErr_format(_alifExcValueError_, "invalid mode: '%s'", _mode);
 			goto error;
 		}
@@ -177,13 +177,13 @@ static AlifObject* _io_openImpl(AlifObject* _module, AlifObject* _file, const ch
 	AlifIOState* state; state = get_ioState(_module); // because of "goto" error
 	{
 		AlifObject* RawIOClass = (AlifObject*)state->alifFileIOType;
-#ifdef HAVE_WINDOWS_CONSOLE_IO
+	#ifdef HAVE_WINDOWS_CONSOLE_IO
 		const AlifConfig* config = alif_getConfig();
 		if (!config->legacyWindowsStdio and _alifIO_getConsoleType(pathOrFD) != '\0') {
 			RawIOClass = (AlifObject*)state->alifWindowsConsoleIOType;
 			_encoding = "utf-8";
 		}
-#endif
+	#endif
 		raw = alifObject_callFunction(RawIOClass, "OsOO",
 			pathOrFD, rawmode,
 			_closefd ? ALIF_TRUE : ALIF_FALSE,
@@ -379,8 +379,7 @@ static AlifIntT iomodule_exec(AlifObject* m) { // 650
 	if (state->unsupportedOperation == nullptr)
 		return -1;
 	if (alifModule_addObjectRef(m, "UnsupportedOperation",
-		state->unsupportedOperation) < 0)
-	{
+		state->unsupportedOperation) < 0) {
 		return -1;
 	}
 
@@ -405,8 +404,8 @@ static AlifIntT iomodule_exec(AlifObject* m) { // 650
 
 	// alifBufferedIOBaseType(alifIOBaseType) subclasses
 	//ADD_TYPE(m, state->alifBytesIOType, &_bytesIOSpec_, state->alifBufferedIOBaseType);
-	//ADD_TYPE(m, state->alifBufferedWriterType, &_bufferedWriterSpec_,
-	//	state->alifBufferedIOBaseType);
+	ADD_TYPE(m, state->alifBufferedWriterType, &_bufferedWriterSpec_,
+		state->alifBufferedIOBaseType);
 	ADD_TYPE(m, state->alifBufferedReaderType, &_bufferedReaderSpec_,
 		state->alifBufferedIOBaseType);
 	//ADD_TYPE(m, state->alifBufferedRWPairType, &_bufferedRWPairSpec_,

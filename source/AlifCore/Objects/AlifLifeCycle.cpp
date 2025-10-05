@@ -13,6 +13,7 @@
 #include "AlifCore_State.h"
 #include "AlifCore_Runtime.h"
 #include "AlifCore_RuntimeInit.h"
+#include "AlifCore_SysModule.h"
 
 
 
@@ -952,14 +953,14 @@ static AlifStatus init_sysStreams(AlifThread* _thread) { // 2742
 
 	///* Set sys.stdout */
 	fd = fileno(stdout);
-	//std = create_stdio(config, iomod, fd, 1, "<stdout>",
-	//	config->stdioEncoding,
-	//	config->stdioErrors);
-	//if (std == nullptr)
-	//	goto error;
-	//alifSys_setObject("__stdout__", std);
-	//_alifSys_setAttr(&ALIF_ID(stdout), std);
-	//ALIF_DECREF(std);
+	std = create_stdio(config, iomod, fd, 1, "<stdout>",
+		config->stdioEncoding,
+		config->stdioErrors);
+	if (std == nullptr)
+		goto error;
+	alifSys_setObject("__stdout__", std);
+	_alifSys_setAttr(&ALIF_ID(Stdout), std);
+	ALIF_DECREF(std);
 
 	///* Set sys.stderr, replaces the preliminary stderr */
 	//fd = fileno(stderr);

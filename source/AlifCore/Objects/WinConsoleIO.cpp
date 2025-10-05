@@ -159,7 +159,7 @@ static AlifIntT internal_close(WinConsoleIO* _self) { // 184
 	if (_self->fd != -1) {
 		if (_self->closefd) {
 			ALIF_BEGIN_SUPPRESS_IPH
-			close(_self->fd);
+				close(_self->fd);
 			ALIF_END_SUPPRESS_IPH
 		}
 		_self->fd = -1;
@@ -380,7 +380,11 @@ static AlifObject* _io_windowsConsoleIO_readableImpl(WinConsoleIO* self) { // 51
 	return alifBool_fromLong((long)self->readable);
 }
 
-
+static AlifObject* _io_WindowsConsoleIO_writableImpl(WinConsoleIO* _self) { // 527
+	if (_self->fd == -1)
+		return err_closed();
+	return alifBool_fromLong((long)_self->writable);
+}
 
 static AlifObject* _io_windowsConsoleIOIsAttyImpl(WinConsoleIO* _self) { // 1107
 	if (_self->fd == -1)
@@ -401,7 +405,7 @@ static AlifMethodDef _winConsoleIOMethods_[] = { // 1121
 	//_IO__WINDOWSCONSOLEIO_WRITE_METHODDEF
 	//_IO__WINDOWSCONSOLEIO_CLOSE_METHODDEF
 	_IO__WINDOWSCONSOLEIO_READABLE_METHODDEF
-	//_IO__WINDOWSCONSOLEIO_WRITABLE_METHODDEF
+	_IO__WINDOWSCONSOLEIO_WRITABLE_METHODDEF
 	//_IO__WINDOWSCONSOLEIO_FILENO_METHODDEF
 	_IO__WINDOWSCONSOLEIO_ISATTY_METHODDEF
 	{"_isAttyOpenOnly", (AlifCPPFunction)_io_windowsConsoleIOIsAtty, METHOD_NOARGS},

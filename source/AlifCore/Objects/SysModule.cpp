@@ -21,9 +21,9 @@ AlifObject* _alifSys_getAttr(AlifThread* _thread, AlifObject* _name) { // 73
 	if (sd == nullptr) {
 		return nullptr;
 	}
-	//AlifObject* exc = _alifErr_getRaisedException(_thread);
+	AlifObject* exc = _alifErr_getRaisedException(_thread);
 	AlifObject* value = _alifDict_getItemWithError(sd, _name);
-	//_alifErr_setRaisedException(_thread, exc);
+	_alifErr_setRaisedException(_thread, exc);
 	return value;
 }
 
@@ -73,11 +73,24 @@ static AlifIntT sys_setObject(AlifInterpreter* _interp,
 	}
 }
 
-AlifIntT _alifSys_setAttr(AlifObject* _key, AlifObject* _v) {
+AlifIntT _alifSys_setAttr(AlifObject* _key, AlifObject* _v) { // 137
 	AlifInterpreter* interp = _alifInterpreter_get();
 	return sys_setObject(interp, _key, _v);
 }
 
+static AlifIntT sys_setObjectStr(AlifInterpreter* _interp,
+	const char* _name, AlifObject* _v) { // 144
+	AlifObject* key = _v ? alifUStr_internFromString(_name)
+		: alifUStr_fromString(_name);
+	AlifIntT r = sys_setObject(_interp, key, _v);
+	ALIF_XDECREF(key);
+	return r;
+}
+
+AlifIntT alifSys_setObject(const char* _name, AlifObject* _v) { // 154
+	AlifInterpreter* interp = _alifInterpreter_get();
+	return sys_setObjectStr(interp, _name, _v);
+}
 
 
 
@@ -211,7 +224,7 @@ static AlifModuleDef _sysModule_ = { // 3447
 };
 
 
- // 3460
+// 3460
 #define SET_SYS(key, value)                                \
     do {                                                   \
         AlifObject *v = (value);                             \
@@ -414,15 +427,15 @@ AlifStatus alifSys_create(AlifThread* _thread, AlifObject** _sysModP) { // 3779
 		goto error;
 	}
 
-//	monitoring = _alif_createMonitoringObject();
-//	if (monitoring == nullptr) {
-//		goto error;
-//	}
-//	err = alifDict_setItemString(sysdict, "monitoring", monitoring);
-//	ALIF_DECREF(monitoring);
-//	if (err < 0) {
-//		goto error;
-//	}
+	//	monitoring = _alif_createMonitoringObject();
+	//	if (monitoring == nullptr) {
+	//		goto error;
+	//	}
+	//	err = alifDict_setItemString(sysdict, "monitoring", monitoring);
+	//	ALIF_DECREF(monitoring);
+	//	if (err < 0) {
+	//		goto error;
+	//	}
 
 
 	*_sysModP = sysmod;

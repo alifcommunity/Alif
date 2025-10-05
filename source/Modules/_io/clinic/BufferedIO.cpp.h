@@ -73,6 +73,23 @@ static AlifObject* _io_Buffered_readable(Buffered* self, AlifObject* ALIF_UNUSED
 	return return_value;
 }
 
+
+#define _IO__BUFFERED_WRITABLE_METHODDEF    \
+    {"Writable", (AlifCPPFunction)_io_Buffered_writable, METHOD_NOARGS}, // 454
+
+static AlifObject* _io_Buffered_writableImpl(Buffered*);
+
+static AlifObject* _io_Buffered_writable(Buffered* _self, AlifObject* ALIF_UNUSED(ignored)) { // 460
+	AlifObject* returnValue = nullptr;
+
+	ALIF_BEGIN_CRITICAL_SECTION(_self);
+	returnValue = _io_Buffered_writableImpl(_self);
+	ALIF_END_CRITICAL_SECTION();
+
+	return returnValue;
+}
+
+
 // 679
 #define _IO__BUFFERED_READ1_METHODDEF    \
     {"Read1", ALIF_CPPFUNCTION_CAST(_io_Buffered_read1), METHOD_FASTCALL},
@@ -197,4 +214,71 @@ skip_optional_pos:
 
 exit:
 	return returnValue;
+}
+
+
+
+
+static AlifIntT _ioBufferedWriter___init__Impl(Buffered*, AlifObject*, AlifSizeT); // 1013
+
+static AlifIntT _ioBufferedWriter___init__(AlifObject* _self,
+	AlifObject* _args, AlifObject* _kwargs) {
+	AlifIntT return_value = -1;
+#if defined(ALIF_BUILD_CORE) and !defined(ALIF_BUILD_CORE_MODULE)
+
+#define NUM_KEYWORDS 2
+	static struct {
+		AlifGCHead thisIsNotUsed{};
+		ALIFOBJECT_VAR_HEAD;
+		AlifObject* item[NUM_KEYWORDS]{};
+	} _kwtuple = {
+		.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTupleType_, NUM_KEYWORDS),
+		.item = { &ALIF_STR(Raw), &ALIF_ID(bufferSize), },
+	};
+#undef NUM_KEYWORDS
+#define KWTUPLE (&_kwtuple.objBase.objBase)
+
+#else
+#  define KWTUPLE nullptr
+#endif
+
+	static const char* const _keywords[] = { "raw", "buffer_size", nullptr };
+	static AlifArgParser _parser = {
+		.keywords = _keywords,
+		.fname = "BufferedWriter",
+		.kwTuple = KWTUPLE,
+	};
+#undef KWTUPLE
+	AlifObject* argsbuf[2];
+	AlifObject* const* fastargs;
+	AlifSizeT nargs = ALIFTUPLE_GET_SIZE(_args);
+	AlifSizeT noptargs = nargs + (_kwargs ? ALIFDICT_GET_SIZE(_kwargs) : 0) - 1;
+	AlifObject* raw{};
+	AlifSizeT buffer_size = DEFAULT_BUFFER_SIZE;
+
+	fastargs = ALIFARG_UNPACKKEYWORDS(ALIFTUPLE_CAST(_args)->item, nargs, _kwargs, nullptr, &_parser, 1, 2, 0, argsbuf);
+	if (!fastargs) {
+		goto exit;
+	}
+	raw = fastargs[0];
+	if (!noptargs) {
+		goto skip_optional_pos;
+	}
+	{
+		AlifSizeT ival = -1;
+		AlifObject* iobj = _alifNumber_index(fastargs[1]);
+		if (iobj != nullptr) {
+			ival = alifLong_asSizeT(iobj);
+			ALIF_DECREF(iobj);
+		}
+		if (ival == -1 and alifErr_occurred()) {
+			goto exit;
+		}
+		buffer_size = ival;
+	}
+skip_optional_pos:
+	return_value = _ioBufferedWriter___init__Impl((Buffered*)_self, raw, buffer_size);
+
+exit:
+	return return_value;
 }

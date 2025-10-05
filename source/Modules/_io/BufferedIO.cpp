@@ -149,7 +149,7 @@ static AlifIntT buffered_closed(Buffered* _self) { // 505
 
 static AlifObject* _io_Buffered_closedGetImpl(Buffered* self) { // 525
 	CHECK_INITIALIZED(self)
-	return alifObject_getAttr(self->raw, &ALIF_ID(Closed));
+		return alifObject_getAttr(self->raw, &ALIF_ID(Closed));
 }
 
 
@@ -221,6 +221,11 @@ static AlifObject* _io_Buffered_readableImpl(Buffered* self) { // 637
 }
 
 
+static AlifObject* _io_Buffered_writableImpl(Buffered* _self) { // 650
+	CHECK_INITIALIZED(_self);
+	return alifObject_callMethodNoArgs(_self->raw, &ALIF_ID(Writable));
+}
+
 
 static void _bufferedReader_resetBuf(Buffered*); // 720
 static AlifObject* _bufferedReader_readAll(Buffered*); // 727
@@ -289,11 +294,11 @@ static AlifObject* _io_Buffered_readImpl(Buffered* self, AlifSizeT n) { // 976
 	AlifObject* res{};
 
 	CHECK_INITIALIZED(self)
-	if (n < -1) {
-		alifErr_setString(_alifExcValueError_,
-			"read length must be non-negative or -1");
-		return nullptr;
-	}
+		if (n < -1) {
+			alifErr_setString(_alifExcValueError_,
+				"read length must be non-negative or -1");
+			return nullptr;
+		}
 
 	CHECK_CLOSED(self, "محاولة قراءة ملف مغلق");
 
@@ -323,9 +328,9 @@ static AlifObject* _io_Buffered_read1Impl(Buffered* self, AlifSizeT n) { // 1018
 	AlifObject* res = nullptr;
 
 	CHECK_INITIALIZED(self)
-	if (n < 0) {
-		n = self->bufferSize;
-	}
+		if (n < 0) {
+			n = self->bufferSize;
+		}
 
 	CHECK_CLOSED(self, "read of closed file");
 
@@ -416,7 +421,8 @@ static AlifSizeT _bufferedReader_rawRead(Buffered* self, char* start, AlifSizeT 
 		return -1;
 	do {
 		res = alifObject_callMethodOneArg(self->raw, &ALIF_ID(ReadInto), memobj);
-	} while (res == nullptr and _alifIO_trapEintr());
+	}
+	while (res == nullptr and _alifIO_trapEintr());
 	ALIF_DECREF(memobj);
 	if (res == nullptr)
 		return -1;
@@ -554,6 +560,55 @@ static AlifObject* _bufferedReader_readFast(Buffered* self, AlifSizeT n) { // 17
 
 
 
+
+static void _bufferedWriter_resetBuf(Buffered* _self) { // 1906
+	_self->writePos = 0;
+	_self->writeEnd = -1;
+}
+
+
+static AlifIntT _ioBufferedWriter___init__Impl(Buffered* _self, AlifObject* _raw,
+	AlifSizeT _bufferSize) { // 1925
+	_self->ok = 0;
+	_self->detached = 0;
+
+	AlifIOState* state = findIOState_byDef(ALIF_TYPE(_self));
+	if (_alifIOBase_checkWritable(state, _raw, ALIF_TRUE) == nullptr) {
+		return -1;
+	}
+
+	ALIF_INCREF(_raw);
+	ALIF_XSETREF(_self->raw, _raw);
+	_self->readable = 0;
+	_self->writable = 1;
+
+	_self->bufferSize = _bufferSize;
+	if (_buffered_init(_self) < 0)
+		return -1;
+	_bufferedWriter_resetBuf(_self);
+	_self->pos = 0;
+
+	_self->fastClosedChecks = (
+		ALIF_IS_TYPE(_self, state->alifBufferedWriterType) and
+		ALIF_IS_TYPE(_raw, state->alifFileIOType)
+		);
+
+	_self->ok = 1;
+	return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 #include "clinic/BufferedIO.cpp.h" // 2484
 
 
@@ -615,4 +670,57 @@ AlifTypeSpec _bufferedReaderSpec_ = { // 2568
 	.flags = (ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_HAVE_GC |
 			  ALIF_TPFLAGS_IMMUTABLETYPE),
 	.slots = _bufferedReaderSlots_,
+};
+
+
+
+static AlifMethodDef _bufferedWriterMethods_[] = { // 2576
+	/* BufferedIOMixin methods */
+	//_IO__BUFFERED_CLOSE_METHODDEF
+	//_IO__BUFFERED_DETACH_METHODDEF
+	//_IO__BUFFERED_SEEKABLE_METHODDEF
+	_IO__BUFFERED_WRITABLE_METHODDEF
+	//_IO__BUFFERED_FILENO_METHODDEF
+	//_IO__BUFFERED_ISATTY_METHODDEF
+	//_IO__BUFFERED__DEALLOC_WARN_METHODDEF
+
+	//_IO_BUFFEREDWRITER_WRITE_METHODDEF
+	//_IO__BUFFERED_TRUNCATE_METHODDEF
+	//_IO__BUFFERED_FLUSH_METHODDEF
+	//_IO__BUFFERED_SEEK_METHODDEF
+	//_IO__BUFFERED_TELL_METHODDEF
+	//_IO__BUFFERED___SIZEOF___METHODDEF
+
+	//{"__reduce__", _alifIOBase_cannotPickle, METHOD_NOARGS},
+	//{"__reduce_ex__", _alifIOBase_cannotPickle, METHOD_O},
+	{nullptr, nullptr}
+};
+
+static AlifMemberDef _bufferedWriterMembers_[] = { // 2598
+	{"raw", ALIF_T_OBJECT, offsetof(Buffered, raw), ALIF_READONLY},
+	{"_finalizing", ALIF_T_BOOL, offsetof(Buffered, finalizing), 0},
+	{"__weakListOffset__", ALIF_T_ALIFSIZET, offsetof(Buffered, weakRefList), ALIF_READONLY},
+	{"__dictoffset__", ALIF_T_ALIFSIZET, offsetof(Buffered, dict), ALIF_READONLY},
+	{nullptr}
+};
+
+static AlifTypeSlot _bufferedWriterSlots_[] = { // 2614
+	//{ALIF_TP_DEALLOC, buffered_dealloc},
+	//{ALIF_TP_REPR, buffered_repr},
+	//{ALIF_TP_DOC, (void*)_ioBufferedWriter___init____Doc__},
+	{ALIF_TP_TRAVERSE, buffered_traverse},
+	//{ALIF_TP_CLEAR, buffered_clear},
+	{ALIF_TP_METHODS, _bufferedWriterMethods_},
+	{ALIF_TP_MEMBERS, _bufferedWriterMembers_},
+	//{ALIF_TP_GETSET, bufferedWriter_getSet},
+	{ALIF_TP_INIT, _ioBufferedWriter___init__},
+	{0, nullptr},
+};
+
+AlifTypeSpec _bufferedWriterSpec_ = { // 2627
+	.name = "تبادل.كاتب_مخزن",
+	.basicsize = sizeof(Buffered),
+	.flags = (ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_HAVE_GC |
+			  ALIF_TPFLAGS_IMMUTABLETYPE),
+	.slots = _bufferedWriterSlots_,
 };

@@ -95,6 +95,17 @@ static AlifObject* _io_windowsConsoleIO_readable(WinConsoleIO* self, AlifObject*
 
 #endif  // 183
 
+// 193
+#define _IO__WINDOWSCONSOLEIO_WRITABLE_METHODDEF    \
+    {"Writable", (AlifCPPFunction)_io_WindowsConsoleIO_writable, METHOD_NOARGS},
+
+static AlifObject* _io_WindowsConsoleIO_writableImpl(WinConsoleIO*);
+
+static AlifObject* _io_WindowsConsoleIO_writable(WinConsoleIO* _self,
+	AlifObject* ALIF_UNUSED(ignored)) { // 199
+	return _io_WindowsConsoleIO_writableImpl(_self);
+}
+
 
 
 // 411
