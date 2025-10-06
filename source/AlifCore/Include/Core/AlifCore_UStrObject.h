@@ -45,7 +45,7 @@ AlifObject* _alifUStr_transformDecimalAndSpaceToASCII(AlifObject*); // 201
 AlifObject* alifUStr_joinArray(AlifObject*, AlifObject* const*, AlifSizeT); // 206
 
 
-AlifIntT alifUStr_equalToASCIIString(AlifObject* , const char* ); // 224
+AlifIntT alifUStr_equalToASCIIString(AlifObject*, const char*); // 224
 
 
 
@@ -73,5 +73,28 @@ public:
 	AlifUnicodeRuntimeIds ids{};
 };
 
+
+class AlifUnicodeFSCodec { // 302
+public:
+	char* encoding{};   // Filesystem encoding (encoded to UTF-8)
+	AlifIntT utf8{};         // encoding=="utf-8"?
+	char* errors{};     // Filesystem errors (encoded to UTF-8)
+	AlifErrorHandler_ errorHandler{};
+};
+
+class AlifUnicodeIDs { // 309
+public:
+	AlifSizeT size{};
+	AlifObject** array{};
+};
+
+class AlifUnicodeState { // 314
+public:
+	class AlifUnicodeFSCodec fsCodec {};
+
+	//AlifUnicodeNameCAPI* ucnhashCapi{};
+
+	class AlifUnicodeIDs ids {};
+};
 
 const char* _alifUStr_asUTF8NoNUL(AlifObject*); // 327

@@ -19,6 +19,7 @@
 #include "AlifCore_Tuple.h"
 #include "AlifCore_TypeObject.h"
 #include "AlifCore_Exceptions.h"
+#include "AlifCore_UStrObject.h"
 
 
 
@@ -126,6 +127,7 @@ public:
 	uint8_t activeCodeWatchers{};
 
 	//AlifObjectState objectState{};
+	AlifUnicodeState unicode{};
 	AlifLongState longState{};
 	DToAState dtoa{};
 	AlifFuncState funcState{};

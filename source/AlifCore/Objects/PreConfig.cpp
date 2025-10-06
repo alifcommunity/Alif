@@ -7,6 +7,56 @@
 #include "AlifCore_Runtime.h"
 
 
+
+// 20
+const char* _alifFileSystemDefaultEncoding_ = nullptr;
+AlifIntT _alifHasFileSystemDefaultEncoding_ = 0;
+const char* _alifFileSystemDefaultEncodeErrors_ = nullptr;
+AlifIntT _alifHasFileSystemDefaultEncodeErrors_ = 0;
+
+void _alif_clearFileSystemEncoding(void) {
+	ALIF_COMP_DIAG_PUSH
+		ALIF_COMP_DIAG_IGNORE_DEPR_DECLS
+		if (!_alifHasFileSystemDefaultEncoding_ and _alifFileSystemDefaultEncoding_) {
+			alifMem_dataFree((char*)_alifFileSystemDefaultEncoding_);
+			_alifFileSystemDefaultEncoding_ = nullptr;
+		}
+	if (!_alifHasFileSystemDefaultEncodeErrors_ and _alifFileSystemDefaultEncodeErrors_) {
+		alifMem_dataFree((char*)_alifFileSystemDefaultEncodeErrors_);
+		_alifFileSystemDefaultEncodeErrors_ = nullptr;
+	}
+	ALIF_COMP_DIAG_POP
+}
+
+AlifIntT _alif_setFileSystemEncoding(const char* _encoding,
+	const char* _errors) { // 46
+	char* encoding2 = alifMem_strDup(_encoding);
+	if (encoding2 == nullptr) {
+		return -1;
+	}
+
+	char* errors2 = alifMem_strDup(_errors);
+	if (errors2 == nullptr) {
+		alifMem_dataFree(encoding2);
+		return -1;
+	}
+
+	_alif_clearFileSystemEncoding();
+
+	ALIF_COMP_DIAG_PUSH
+		ALIF_COMP_DIAG_IGNORE_DEPR_DECLS
+		_alifFileSystemDefaultEncoding_ = encoding2;
+	_alifHasFileSystemDefaultEncoding_ = 0;
+
+	_alifFileSystemDefaultEncodeErrors_ = errors2;
+	_alifHasFileSystemDefaultEncodeErrors_ = 0;
+	ALIF_COMP_DIAG_POP
+		return 0;
+}
+
+
+
+
 AlifStatus _alifArgv_asWStrList(const AlifArgv* _args, AlifWStringList* _list) { // 78
 
 

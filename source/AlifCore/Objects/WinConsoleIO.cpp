@@ -412,6 +412,25 @@ static AlifMethodDef _winConsoleIOMethods_[] = { // 1121
 	{nullptr, nullptr}             /* sentinel */
 };
 
+static AlifObject* get_closed(WinConsoleIO* _self, void* cl_osure) { // 1137
+	return alifBool_fromLong((long)(_self->fd == -1));
+}
+
+static AlifObject* get_closefd(WinConsoleIO* _self, void* _closure) { // 1143
+	return alifBool_fromLong((long)(_self->closefd));
+}
+
+static AlifObject* get_mode(WinConsoleIO* _self, void* _closure) {
+	return alifUStr_fromString(_self->readable ? "rb" : "wb");
+}
+
+static AlifGetSetDef _winConsoleIOGetSetList_[] = { // 1155
+	{"Closed", (Getter)get_closed, nullptr, "True if the file is closed"},
+	{"Closefd", (Getter)get_closefd, nullptr,
+		"True if the file descriptor will be closed by close()."},
+	{"Mode", (Getter)get_mode, nullptr, "String giving the file mode"},
+	{nullptr},
+};
 
 static AlifMemberDef _winConsoleIOMembers_[] = { // 1163
 	{"_blksize", ALIF_T_UINT, offsetof(WinConsoleIO, blkSize), 0},
@@ -427,6 +446,7 @@ static AlifTypeSlot _winConsoleIOSlots_[] = { // 1171
 	{ALIF_TP_TRAVERSE, winconsoleio_traverse},
 	{ALIF_TP_METHODS, _winConsoleIOMethods_},
 	{ALIF_TP_MEMBERS, _winConsoleIOMembers_},
+	{ALIF_TP_GETSET, _winConsoleIOGetSetList_},
 	{ALIF_TP_INIT, _io_windowsConsoleIO__init__},
 	{ALIF_TP_NEW, winconsoleio_new},
 	{0, nullptr},

@@ -45,7 +45,7 @@ public:
 	signed int seekable : 2; /* -1 means unknown */
 	AlifUIntT closefd : 1;
 	char finalizing{};
-	struct AlifStatStruct* statAtOpen{};
+	class AlifStatStruct* statAtOpen{};
 	AlifObject* weakRefList{};
 	AlifObject* dict{};
 };

@@ -5,6 +5,10 @@
 
 
 
+extern AlifIntT _alif_setFileSystemEncoding(const char*, const char*); // 17
+
+extern AlifStatus _alifUnicode_initEncodings(AlifThread*); // 21
+
 extern AlifIntT _alif_isLocaleCoercionTarget(const char*); // 26
 
 extern AlifObject* alifBuiltin_init(AlifInterpreter*); // 32

@@ -669,8 +669,8 @@ static AlifStatus initInterpreter_main(AlifThread* _thread) { // 1156
 	//status = alifImport_initExternal(_thread);
 	//if (ALIFSTATUS_EXCEPTION(status)) return status;
 
-	//status = alifUnicode_initEncoding(_thread);
-	//if (ALIFSTATUS_EXCEPTION(status)) return status;
+	status = _alifUnicode_initEncodings(_thread);
+	if (ALIFSTATUS_EXCEPTION(status)) return status;
 
 	if (isMainInterpreter) {
 		if (_alifSignal_init(config->installSignalHandlers) < 0) {

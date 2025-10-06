@@ -169,8 +169,7 @@ AlifObject* _alifIncrementalNewlineDecoder_decode(AlifObject* _mySelf,
 
 	if (!_final) {
 		if (outputLen > 0
-			and ALIFUSTR_READ_CHAR(output, outputLen - 1) == '\r')
-		{
+			and ALIFUSTR_READ_CHAR(output, outputLen - 1) == '\r') {
 			AlifObject* modified = alifUStr_subString(output, 0, outputLen - 1);
 			if (modified == nullptr)
 				goto error;
@@ -246,7 +245,7 @@ AlifObject* _alifIncrementalNewlineDecoder_decode(AlifObject* _mySelf,
 				if (seennl == SEEN_ALL)
 					break;
 			}
-		endScan:
+endScan:
 			;
 		}
 		else {
@@ -350,6 +349,7 @@ public:
 	AlifIOState* state{};
 };
 
+static void textIOWrapper_setDecodedChars(TextIO*, AlifObject*); // 720
 
 
 class EncodeFunCentry { // 812
@@ -409,11 +409,11 @@ static AlifIntT set_newline(TextIO* self, const char* newline) { // 844
 		}
 	}
 	else {
-#ifdef _WINDOWS
+	#ifdef _WINDOWS
 		self->writenl = "\r\n";
-#else
+	#else
 		self->writenl = nullptr;
-#endif
+	#endif
 	}
 	ALIF_XDECREF(old);
 	return 0;
@@ -461,8 +461,8 @@ static AlifObject* _textIOWrapper_decode(AlifIOState* state,
 	AlifObject* chars{};
 
 	//if (ALIF_IS_TYPE(decoder, state->alifIncrementalNewlineDecoderType))
-		decoder = (AlifObject*)state->alifIncrementalNewlineDecoderType; //* delete //* alif //* review //* todo
-		chars = _alifIncrementalNewlineDecoder_decode(decoder, bytes, eof);
+	decoder = (AlifObject*)state->alifIncrementalNewlineDecoderType; //* delete //* alif //* review //* todo
+	chars = _alifIncrementalNewlineDecoder_decode(decoder, bytes, eof);
 	//else
 	//	chars = alifObject_callMethodObjArgs(decoder, &ALIF_ID(Decode), bytes,
 	//		eof ? ALIF_TRUE : ALIF_FALSE, nullptr);
@@ -493,9 +493,9 @@ static AlifIntT _textIOWrapper_setEncoder(TextIO* self, AlifObject* codec_info,
 
 	ALIF_CLEAR(self->encoder);
 	self->encodeFunc = nullptr;
-	//self->encoder = _alifCodecInfo_getIncrementalEncoder(codec_info, errors);
-	//if (self->encoder == nullptr)
-	//	return -1;
+	self->encoder = _alifCodecInfo_getIncrementalEncoder(codec_info, errors);
+	if (self->encoder == nullptr)
+		return -1;
 
 	/* Get the normalized named of the codec */
 	//if (alifObject_getOptionalAttr(codec_info, &ALIF_STR(Name), &res) < 0) {
@@ -598,11 +598,11 @@ static AlifIntT _ioTextIOWrapper___init__Impl(TextIO* _self, AlifObject* _buffer
 		goto error;
 	}
 
-	//codecInfo = _alifCodec_lookupTextEncoding(_encoding, "codecs.open()");
-	//if (codecInfo == nullptr) {
-	//	ALIF_CLEAR(_self->encoding);
-	//	goto error;
-	//}
+	codecInfo = _alifCodec_lookupTextEncoding(_encoding, "codecs.open()");
+	if (codecInfo == nullptr) {
+		ALIF_CLEAR(_self->encoding);
+		goto error;
+	}
 
 	_self->errors = ALIF_NEWREF(_errors);
 	_self->chunkSize = 8192;
@@ -626,8 +626,7 @@ static AlifIntT _ioTextIOWrapper___init__Impl(TextIO* _self, AlifObject* _buffer
 
 	if (ALIF_IS_TYPE(_buffer, state->alifBufferedReaderType) or
 		ALIF_IS_TYPE(_buffer, state->alifBufferedWriterType) or
-		ALIF_IS_TYPE(_buffer, state->alifBufferedRandomType))
-	{
+		ALIF_IS_TYPE(_buffer, state->alifBufferedRandomType)) {
 		if (alifObject_getOptionalAttr(_buffer, &ALIF_STR(Raw), &raw) < 0)
 			goto error;
 		if (raw != nullptr) {
@@ -716,6 +715,143 @@ static AlifObject* _ioTextIOWrapper_closedGetImpl(TextIO*); // 1489
         else if (_alifIOBase_checkClosed((AlifObject *)self, ALIF_TRUE) == nullptr) \
             return nullptr; \
     } while (0)
+
+
+
+
+
+
+static AlifObject* _ioTextIOWrapper_writeImpl(TextIO* self, AlifObject* text) { // 1645
+	AlifObject* ret{};
+	AlifObject* b{};
+	AlifSizeT textlen{};
+	AlifIntT haslf = 0;
+	AlifIntT needflush = 0, text_needflush = 0;
+
+	//CHECK_ATTACHED(self);
+	CHECK_CLOSED(self);
+
+	if (self->encoder == nullptr) {
+		//return _unsupported(self->state, "not writable");
+	}
+
+	ALIF_INCREF(text);
+
+	textlen = ALIFUSTR_GET_LENGTH(text);
+
+	if ((self->writetranslate and self->writenl != nullptr) or self->lineBuffering)
+		if (alifUStr_findChar(text, '\n', 0, ALIFUSTR_GET_LENGTH(text), 1) != -1)
+			haslf = 1;
+
+	if (haslf and self->writetranslate and self->writenl != nullptr) {
+		AlifObject* newtext = _alifObject_callMethod(text, &ALIF_ID(Replace),
+			"ss", "\n", self->writenl);
+		ALIF_DECREF(text);
+		if (newtext == nullptr)
+			return nullptr;
+		text = newtext;
+	}
+
+	if (self->writeThrough)
+		text_needflush = 1;
+	if (self->lineBuffering and
+		(haslf or
+			alifUStr_findChar(text, '\r', 0, ALIFUSTR_GET_LENGTH(text), 1) != -1))
+		needflush = 1;
+
+	/* XXX What if we were just reading? */
+	if (self->encodeFunc != nullptr) {
+		if (ALIFUSTR_IS_ASCII(text) and
+			ALIFUSTR_GET_LENGTH(text) <= self->chunkSize /*and
+			is_asciiCompatEncoding(self->encodeFunc)*/) {
+			b = ALIF_NEWREF(text);
+		}
+		else {
+			b = (*self->encodeFunc)((AlifObject*)self, text);
+		}
+		self->encodingStartOfStream = 0;
+	}
+	else {
+		b = alifObject_callMethodOneArg(self->encoder, &ALIF_ID(Encode), text);
+	}
+
+	ALIF_DECREF(text);
+	if (b == nullptr)
+		return nullptr;
+	if (b != text and !ALIFBYTES_CHECK(b)) {
+		alifErr_format(_alifExcTypeError_,
+			"encoder should return a bytes object, not '%.200s'",
+			ALIF_TYPE(b)->name);
+		ALIF_DECREF(b);
+		return nullptr;
+	}
+
+	AlifSizeT bytes_len{};
+	if (b == text) {
+		bytes_len = ALIFUSTR_GET_LENGTH(b);
+	}
+	else {
+		bytes_len = ALIFBYTES_GET_SIZE(b);
+	}
+
+	if (bytes_len >= self->chunkSize) {
+		while (self->pendingBytes != nullptr) {
+			//if (_textIOWrapper_writeFlush(self) < 0) {
+			//	ALIF_DECREF(b);
+			//	return nullptr;
+			//}
+		}
+	}
+
+	if (self->pendingBytes == nullptr) {
+		self->pendingBytes = b;
+	}
+	else if (!ALIFLIST_CHECKEXACT(self->pendingBytes)) {
+		AlifObject* list = alifList_new(2);
+		if (list == nullptr) {
+			ALIF_DECREF(b);
+			return nullptr;
+		}
+		ALIFLIST_SET_ITEM(list, 0, self->pendingBytes);
+		ALIFLIST_SET_ITEM(list, 1, b);
+		self->pendingBytes = list;
+	}
+	else {
+		if (alifList_append(self->pendingBytes, b) < 0) {
+			ALIF_DECREF(b);
+			return nullptr;
+		}
+		ALIF_DECREF(b);
+	}
+
+	self->pendingBytesCount += bytes_len;
+	if (self->pendingBytesCount >= self->chunkSize or needflush or
+		text_needflush) {
+		//if (_textIOWrapper_writeFlush(self) < 0)
+		//	return nullptr;
+	}
+
+	if (needflush) {
+		//if (_alifFile_flush(self->buffer) < 0) {
+		//	return nullptr;
+		//}
+	}
+
+	if (self->snapshot != nullptr) {
+		textIOWrapper_setDecodedChars(self, nullptr);
+		ALIF_CLEAR(self->snapshot);
+	}
+
+	if (self->decoder) {
+		ret = alifObject_callMethodNoArgs(self->decoder, &ALIF_ID(Reset));
+		if (ret == nullptr)
+			return nullptr;
+		ALIF_DECREF(ret);
+	}
+
+	return alifLong_fromSizeT(textlen);
+}
+
 
 
 
@@ -886,9 +1022,9 @@ static AlifObject* _ioTextIOWrapper_readImpl(TextIO* self, AlifSizeT n) { // 197
 
 		AlifIOState* state = self->state;
 		//if (ALIF_IS_TYPE(self->decoder, state->alifIncrementalNewlineDecoderType))
-			self->decoder = (AlifObject*)state->alifIncrementalNewlineDecoderType; //* alif //* delete
-			decoded = _alifIncrementalNewlineDecoder_decode(self->decoder,
-				bytes, 1);
+		self->decoder = (AlifObject*)state->alifIncrementalNewlineDecoderType; //* alif //* delete
+		decoded = _alifIncrementalNewlineDecoder_decode(self->decoder,
+			bytes, 1);
 		//else
 		//	decoded = alifObject_callMethodObjArgs(
 		//		self->decoder, &ALIF_ID(Decode), bytes, ALIF_TRUE, nullptr);
@@ -1291,6 +1427,7 @@ AlifTypeSpec _nlDecoderSpec_ = { // 3325
 };
 
 static AlifMethodDef _textIOWrapperMethods_[] = { // 3334
+	_IO_TEXTIOWRAPPER_WRITE_METHODDEF
 	_IO_TEXTIOWRAPPER_READ_METHODDEF
 	_IO_TEXTIOWRAPPER_READLINE_METHODDEF
 	_IO_TEXTIOWRAPPER_CLOSE_METHODDEF

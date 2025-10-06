@@ -10,6 +10,20 @@
 
 
 
+static AlifObject* bufferedIOBase_unsupported(AlifIOState* _state,
+	const char* _message) { // 111
+	alifErr_setString(_state->unsupportedOperation, _message);
+	return nullptr;
+}
+
+static AlifObject* _io_BufferedIOBase_read1Impl(AlifObject* self, AlifTypeObject* cls,
+	AlifIntT ALIF_UNUSED(size)) { // 185
+	AlifIOState* state = getIOState_byCls(cls);
+	return bufferedIOBase_unsupported(state, "read1");
+}
+
+
+
 typedef class Buffered { // 220
 public:
 	ALIFOBJECT_HEAD;
@@ -615,7 +629,7 @@ static AlifIntT _ioBufferedWriter___init__Impl(Buffered* _self, AlifObject* _raw
 static AlifMethodDef _bufferedIOBaseMethods_[] = { // 2487
 	//_IO__BUFFEREDIOBASE_DETACH_METHODDEF
 	//_IO__BUFFEREDIOBASE_READ_METHODDEF
-	//_IO__BUFFEREDIOBASE_READ1_METHODDEF
+	_IO__BUFFEREDIOBASE_READ1_METHODDEF
 	//_IO__BUFFEREDIOBASE_READINTO_METHODDEF
 	//_IO__BUFFEREDIOBASE_READINTO1_METHODDEF
 	//_IO__BUFFEREDIOBASE_WRITE_METHODDEF
@@ -687,7 +701,7 @@ static AlifMethodDef _bufferedWriterMethods_[] = { // 2576
 	/* BufferedIOMixin methods */
 	//_IO__BUFFERED_CLOSE_METHODDEF
 	//_IO__BUFFERED_DETACH_METHODDEF
-	//_IO__BUFFERED_SEEKABLE_METHODDEF
+	_IO__BUFFERED_SEEKABLE_METHODDEF
 	_IO__BUFFERED_WRITABLE_METHODDEF
 	//_IO__BUFFERED_FILENO_METHODDEF
 	//_IO__BUFFERED_ISATTY_METHODDEF
@@ -713,6 +727,13 @@ static AlifMemberDef _bufferedWriterMembers_[] = { // 2598
 	{nullptr}
 };
 
+static AlifGetSetDef _bufferedWriterGetSet_[] = { // 2606
+	_IO__BUFFERED_CLOSED_GETSETDEF
+	//_IO__BUFFERED_NAME_GETSETDEF
+	//_IO__BUFFERED_MODE_GETSETDEF
+	{nullptr}
+};
+
 static AlifTypeSlot _bufferedWriterSlots_[] = { // 2614
 	//{ALIF_TP_DEALLOC, buffered_dealloc},
 	//{ALIF_TP_REPR, buffered_repr},
@@ -721,7 +742,7 @@ static AlifTypeSlot _bufferedWriterSlots_[] = { // 2614
 	//{ALIF_TP_CLEAR, buffered_clear},
 	{ALIF_TP_METHODS, _bufferedWriterMethods_},
 	{ALIF_TP_MEMBERS, _bufferedWriterMembers_},
-	//{ALIF_TP_GETSET, bufferedWriter_getSet},
+	{ALIF_TP_GETSET, _bufferedWriterGetSet_},
 	{ALIF_TP_INIT, _ioBufferedWriter___init__},
 	{0, nullptr},
 };

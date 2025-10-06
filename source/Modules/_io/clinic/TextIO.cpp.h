@@ -200,7 +200,7 @@ exit:
 #define _IO_TEXTIOWRAPPER_WRITE_METHODDEF    \
     {"اكتب", (AlifCPPFunction)_ioTextIOWrapper_write, METHOD_O},
 
-//static AlifObject* _ioTextIOWrapper_writeImpl(TextIO* self, AlifObject* text);
+static AlifObject* _ioTextIOWrapper_writeImpl(TextIO* self, AlifObject* text);
 
 static AlifObject* _ioTextIOWrapper_write(TextIO* self, AlifObject* arg) { // 759
 	AlifObject* returnValue = nullptr;
@@ -212,7 +212,7 @@ static AlifObject* _ioTextIOWrapper_write(TextIO* self, AlifObject* arg) { // 75
 	}
 	text = arg;
 	ALIF_BEGIN_CRITICAL_SECTION(self);
-	//returnValue = _ioTextIOWrapper_writeImpl(self, text);
+	returnValue = _ioTextIOWrapper_writeImpl(self, text);
 	ALIF_END_CRITICAL_SECTION();
 
 exit:

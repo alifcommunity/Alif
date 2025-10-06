@@ -13,6 +13,7 @@
 #include "AlifCore_Format.h"
 #include "AlifCore_UStrObjectStaticStrInit.h"
 #include "AlifCore_InitConfig.h"
+#include "AlifCore_LifeCycle.h"
 
 
 #include <Equal.h> // 61
@@ -6546,4 +6547,147 @@ AlifObject* alifUStr_internFromString(const char* _cp) { // 15592
 	AlifInterpreter* interp = _alifInterpreter_get();
 	alifUStr_internMortal(interp, &s_);
 	return s_;
+}
+
+
+static AlifIntT encode_wstrUTF8(wchar_t* _wstr,
+	char** _str, const char* _name) { // 15944
+	AlifIntT res{};
+	res = _alif_encodeUTF8Ex(_wstr, _str, nullptr,
+		nullptr, 1, AlifErrorHandler_::Alif_Error_Strict);
+	if (res == -2) {
+		//alifErr_format(_alifExcRuntimeWarning_, "cannot encode %s", _name);
+		return -1;
+	}
+	if (res < 0) {
+		//alifErr_noMemory();
+		return -1;
+	}
+	return 0;
+}
+
+static AlifIntT config_getCodecName(wchar_t** _configEncoding) { // 15961
+	char* encoding{};
+	if (encode_wstrUTF8(*_configEncoding, &encoding, "stdioEncoding") < 0) {
+		return -1;
+	}
+
+	AlifObject* name_obj = nullptr;
+	AlifObject* codec = _alifCodec_lookup(encoding);
+	alifMem_dataFree(encoding);
+
+	if (!codec)
+		goto error;
+
+	name_obj = alifObject_getAttrString(codec, "name");
+	ALIF_CLEAR(codec);
+	if (!name_obj) {
+		goto error;
+	}
+
+	wchar_t* wname; wname = alifUStr_asWideCharString(name_obj, nullptr);
+	ALIF_DECREF(name_obj);
+	if (wname == nullptr) {
+		goto error;
+	}
+
+	wchar_t* raw_wname; raw_wname = alifMem_wcsDup(wname);
+	if (raw_wname == nullptr) {
+		alifMem_dataFree(wname);
+		//alifErr_noMemory();
+		goto error;
+	}
+
+	alifMem_dataFree(*_configEncoding);
+	*_configEncoding = raw_wname;
+
+	alifMem_dataFree(wname);
+	return 0;
+
+error:
+	ALIF_XDECREF(codec);
+	ALIF_XDECREF(name_obj);
+	return -1;
+}
+
+static AlifStatus init_stdioEncoding(AlifInterpreter* interp) { // 16008
+	AlifConfig* config = (AlifConfig*)alifInterpreter_getConfig(interp);
+	if (config_getCodecName(&config->stdioEncoding) < 0) {
+		return ALIFSTATUS_ERR("failed to get the Alif codec name "
+			"of the stdio encoding");
+	}
+	return ALIFSTATUS_OK();
+}
+
+static AlifIntT init_fsCodec(AlifInterpreter* _interp) { // 16021
+	const AlifConfig* config = alifInterpreter_getConfig(_interp);
+
+	AlifErrorHandler_ error_handler{};
+	error_handler = get_errorHandlerWide(config->fileSystemErrors);
+	if (error_handler == AlifErrorHandler_::Alif_Error_Unknown) {
+		//alifErr_setString(_alifExcRuntimeError_, "unknown filesystem error handler");
+		return -1;
+	}
+
+	char* encoding{}, * errors{};
+	if (encode_wstrUTF8(config->fileSystemEncoding,
+		&encoding,
+		"fileSystemEncoding") < 0) {
+		return -1;
+	}
+
+	if (encode_wstrUTF8(config->fileSystemErrors,
+		&errors,
+		"fileSystemErrors") < 0) {
+		alifMem_dataFree(encoding);
+		return -1;
+	}
+
+	AlifUnicodeFSCodec* fsCodec = &_interp->unicode.fsCodec;
+	alifMem_dataFree(fsCodec->encoding);
+	fsCodec->encoding = encoding;
+	fsCodec->utf8 = (strcmp(encoding, "utf-8") == 0);
+	alifMem_dataFree(fsCodec->errors);
+	fsCodec->errors = errors;
+	fsCodec->errorHandler = error_handler;
+
+	if (alif_isMainInterpreter(_interp)) {
+
+		if (_alif_setFileSystemEncoding(fsCodec->encoding,
+			fsCodec->errors) < 0) {
+			//alifErr_noMemory();
+			return -1;
+		}
+	}
+	return 0;
+}
+
+static AlifStatus init_fsEncoding(AlifThread* _thread) { // 16078
+	AlifInterpreter* interp = _thread->interpreter;
+
+	AlifConfig* config = (AlifConfig*)alifInterpreter_getConfig(interp);
+	if (config_getCodecName(&config->fileSystemEncoding) < 0) {
+		//_alif_dumpPathConfig(_thread);
+		return ALIFSTATUS_ERR("failed to get the Alif codec "
+			"of the filesystem encoding");
+	}
+
+	if (init_fsCodec(interp) < 0) {
+		return ALIFSTATUS_ERR("cannot initialize filesystem codec");
+	}
+	return ALIFSTATUS_OK();
+}
+
+
+AlifStatus _alifUnicode_initEncodings(AlifThread* _thread) { // 16100
+	AlifStatus status = _alifCodec_initRegistry(_thread->interpreter);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+	status = init_fsEncoding(_thread);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
+
+	return init_stdioEncoding(_thread->interpreter);
 }

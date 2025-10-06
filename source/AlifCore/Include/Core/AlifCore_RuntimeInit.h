@@ -60,7 +60,7 @@
 			.nextVersionTag = _ALIF_TYPE_BASE_VERSION_TAG,			\
 		},															\
     }
-        //IMPORTS_INIT,
+		//IMPORTS_INIT,
 
 
 
@@ -704,6 +704,7 @@
 	INIT_USTR(Close, "اغلق"), /* //* alif */	\
 	INIT_STR(Raw, "raw"), /* //* alif */	\
 	INIT_USTR(TextIOWrapper, "غلاف_النص"), /* //* alif */	\
+	INIT_USTR(Write, "اكتب"), /* //* alif */	\
     INIT_USTR(__add__, "__اجمع__"), /* //* alif */	\
     INIT_USTR(__call__, "__استدعاء__"), /* //* alif */	\
     INIT_USTR(__init__, "__تهيئة__"), /* //* alif */	\
@@ -776,6 +777,7 @@
 	INIT_ID(CloseFD), \
 	INIT_ID(Decode), \
 	INIT_ID(Decoder), \
+	INIT_ID(Encode), \
 	INIT_ID(Encoding), \
 	INIT_ID(End), \
 	INIT_ID(Errors), \
@@ -810,6 +812,8 @@
 	INIT_ID(Read1), \
 	INIT_ID(ReadAll), \
 	INIT_ID(ReadInto), \
+	INIT_ID(Replace), \
+	INIT_ID(Reset), \
 	INIT_ID(Reverse), \
 	INIT_ID(Seekable), \
 	INIT_ID(Sep), \

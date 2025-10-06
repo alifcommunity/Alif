@@ -8,6 +8,55 @@
 
 
 
+
+// 181
+#define _IO__BUFFEREDIOBASE_READ1_METHODDEF    \
+    {"Read1", ALIF_CPPFUNCTION_CAST(_io_BufferedIOBase_read1), METHOD_METHOD|METHOD_FASTCALL|METHOD_KEYWORDS},
+
+static AlifObject* _io_BufferedIOBase_read1Impl(AlifObject*, AlifTypeObject*,
+	AlifIntT ALIF_UNUSED(size));
+
+static AlifObject* _io_BufferedIOBase_read1(AlifObject* _self,
+	AlifTypeObject* _cls, AlifObject* const* _args,
+	AlifSizeT _nargs, AlifObject* _kwnames) { // 188
+	AlifObject* returnValue = nullptr;
+#if defined(ALIF_BUILD_CORE) and !defined(ALIF_BUILD_CORE_MODULE)
+#  define KWTUPLE (AlifObject *)&ALIF_SINGLETON(tupleEmpty)
+#else
+#  define KWTUPLE nullptr
+#endif
+
+	static const char* const _keywords[] = { "", nullptr };
+	static AlifArgParser _parser = {
+		.keywords = _keywords,
+		.fname = "read1",
+		.kwTuple = KWTUPLE,
+	};
+#undef KWTUPLE
+	AlifObject* argsbuf[1];
+	AlifIntT size = -1;
+
+	_args = ALIFARG_UNPACKKEYWORDS(_args, _nargs, nullptr, _kwnames, &_parser, 0, 1, 0, argsbuf);
+	if (!_args) {
+		goto exit;
+	}
+	if (_nargs < 1) {
+		goto skip_optional_posonly;
+	}
+	size = alifLong_asInt(_args[0]);
+	if (size == -1 and alifErr_occurred()) {
+		goto exit;
+	}
+skip_optional_posonly:
+	returnValue = _io_BufferedIOBase_read1Impl(_self, _cls, size);
+
+exit:
+	return returnValue;
+}
+
+
+
+
 // 339
 #define _IO__BUFFERED_CLOSED_GETSETDEF \
 	{"Closed", (Getter)_io_Buffered_closedGet, nullptr},

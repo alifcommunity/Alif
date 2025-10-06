@@ -76,6 +76,10 @@ static AlifIntT ioBase_traverse(IOBase* self, VisitProc visit, void* arg) { // 3
 }
 
 
+static AlifObject* _io_IOBase_seekableImpl(AlifObject* _self) { // 397
+	ALIF_RETURN_FALSE;
+}
+
 
 static AlifObject* _io_IOBase_readableImpl(AlifObject* _self) { // 429
 	ALIF_RETURN_FALSE;
@@ -231,6 +235,7 @@ fail:
 static AlifMethodDef _ioBaseMethods_[] = { // 824
 	_IO__IOBASE_CLOSE_METHODDEF
 
+	_IO__IOBASE_SEEKABLE_METHODDEF
 	_IO__IOBASE_READLINE_METHODDEF
 	//_IO__IOBASE_READLINES_METHODDEF
 	_IO__IOBASE_READABLE_METHODDEF

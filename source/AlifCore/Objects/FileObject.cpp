@@ -11,13 +11,13 @@
 AlifIntT alifFile_writeObject(AlifObject* _v, AlifObject* _f, AlifIntT _flags) { // 104
 	AlifObject* writer{}, * value{}, * result{};
 
-	//if (_f == nullptr) {
-	//	alifErr_setString(_alifExcTypeError_, "writeobject with nullptr file");
-	//	return -1;
-	//}
-	//writer = alifObject_getAttr(_f, &ALIF_ID(Write));
-	//if (writer == nullptr)
-	//	return -1;
+	if (_f == nullptr) {
+		alifErr_setString(_alifExcTypeError_, "writeobject with nullptr file");
+		return -1;
+	}
+	writer = alifObject_getAttr(_f, &ALIF_STR(Write));
+	if (writer == nullptr)
+		return -1;
 	if (_flags & ALIF_PRINT_RAW) {
 		value = alifObject_str(_v);
 	}
@@ -43,14 +43,14 @@ AlifIntT alifFile_writeObject(AlifObject* _v, AlifObject* _f, AlifIntT _flags) {
 
 
 AlifIntT alifFile_writeString(const char* _s, AlifObject* _f) { // 134
-	//if (_f == nullptr) {
-	//	/* Should be caused by a pre-existing error */
-	//	if (!alifErr_occurred())
-	//		alifErr_setString(_alifExcSystemError_,
-	//			"null file for alifFile_writeString");
-	//	return -1;
-	//}
-	//else if (!alifErr_occurred()) {
+	if (_f == nullptr) {
+		/* Should be caused by a pre-existing error */
+		if (!alifErr_occurred())
+			alifErr_setString(_alifExcSystemError_,
+				"null file for alifFile_writeString");
+		return -1;
+	}
+	else if (!alifErr_occurred()) {
 		AlifObject* v = alifUStr_fromString(_s);
 		AlifIntT err{};
 		if (v == nullptr)
@@ -58,15 +58,15 @@ AlifIntT alifFile_writeString(const char* _s, AlifObject* _f) { // 134
 		err = alifFile_writeObject(v, _f, ALIF_PRINT_RAW);
 		ALIF_DECREF(v);
 		return err;
-	//}
-	//else
+	}
+	else
 		return -1;
 }
 
 
 
 char* alifUniversal_newLineFGetsWithSize(char* _buf,
-	AlifIntT _n, FILE* _stream, AlifObject* _fObj,  AlifUSizeT* _size) { // 228
+	AlifIntT _n, FILE* _stream, AlifObject* _fObj, AlifUSizeT* _size) { // 228
 	char* p = _buf;
 	AlifIntT c_{};
 
