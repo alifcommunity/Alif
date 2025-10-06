@@ -612,9 +612,18 @@ static AlifIntT _ioBufferedWriter___init__Impl(Buffered* _self, AlifObject* _raw
 #include "clinic/BufferedIO.cpp.h" // 2484
 
 
+static AlifMethodDef _bufferedIOBaseMethods_[] = { // 2487
+	//_IO__BUFFEREDIOBASE_DETACH_METHODDEF
+	//_IO__BUFFEREDIOBASE_READ_METHODDEF
+	//_IO__BUFFEREDIOBASE_READ1_METHODDEF
+	//_IO__BUFFEREDIOBASE_READINTO_METHODDEF
+	//_IO__BUFFEREDIOBASE_READINTO1_METHODDEF
+	//_IO__BUFFEREDIOBASE_WRITE_METHODDEF
+	{nullptr, nullptr}
+};
 
 static AlifTypeSlot _bufferedIOBaseSlots_[] = { // 2497
-	//{ALIF_TP_METHODS, _bufferedIOBaseMethods_},
+	{ALIF_TP_METHODS, _bufferedIOBaseMethods_},
 	{0, nullptr},
 };
 
@@ -700,7 +709,7 @@ static AlifMemberDef _bufferedWriterMembers_[] = { // 2598
 	{"raw", ALIF_T_OBJECT, offsetof(Buffered, raw), ALIF_READONLY},
 	{"_finalizing", ALIF_T_BOOL, offsetof(Buffered, finalizing), 0},
 	{"__weakListOffset__", ALIF_T_ALIFSIZET, offsetof(Buffered, weakRefList), ALIF_READONLY},
-	{"__dictoffset__", ALIF_T_ALIFSIZET, offsetof(Buffered, dict), ALIF_READONLY},
+	{"__dictOffset__", ALIF_T_ALIFSIZET, offsetof(Buffered, dict), ALIF_READONLY},
 	{nullptr}
 };
 

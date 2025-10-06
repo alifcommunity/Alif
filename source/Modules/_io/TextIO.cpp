@@ -494,13 +494,13 @@ static AlifIntT _textIOWrapper_setEncoder(TextIO* self, AlifObject* codec_info,
 	ALIF_CLEAR(self->encoder);
 	self->encodeFunc = nullptr;
 	//self->encoder = _alifCodecInfo_getIncrementalEncoder(codec_info, errors);
-	if (self->encoder == nullptr)
-		return -1;
+	//if (self->encoder == nullptr)
+	//	return -1;
 
 	/* Get the normalized named of the codec */
-	if (alifObject_getOptionalAttr(codec_info, &ALIF_STR(Name), &res) < 0) {
-		return -1;
-	}
+	//if (alifObject_getOptionalAttr(codec_info, &ALIF_STR(Name), &res) < 0) {
+	//	return -1;
+	//}
 	if (res != nullptr and ALIFUSTR_CHECK(res)) {
 		const EncodeFunCentry* e = encodefuncs;
 		while (e->name != nullptr) {
@@ -572,7 +572,7 @@ static AlifIntT _ioTextIOWrapper___init__Impl(TextIO* _self, AlifObject* _buffer
 	_self->encodeFunc = nullptr;
 	_self->b2cratIO = 0.0;
 
-	if (_encoding == nullptr /*and _alifRuntime_.preConfig.utf8Mode*/) {
+	if (_encoding == nullptr and _alifRuntime_.preConfig.utf8Mode) {
 		_self->encoding = &ALIF_STR(utf_8);
 	}
 	//else if (_encoding == nullptr or (strcmp(_encoding, "locale") == 0)) {
@@ -616,8 +616,8 @@ static AlifIntT _ioTextIOWrapper___init__Impl(TextIO* _self, AlifObject* _buffer
 
 	AlifIOState* state; state = findIOState_byDef(ALIF_TYPE(_self));
 	_self->state = state;
-	//if (_textIOWrapper_setDecoder(_self, codecInfo, errorsStr) != 0)
-	//	goto error;
+	if (_textIOWrapper_setDecoder(_self, codecInfo, errorsStr) != 0)
+		goto error;
 
 	if (_textIOWrapper_setEncoder(_self, codecInfo, errorsStr) != 0)
 		goto error;

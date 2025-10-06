@@ -847,19 +847,19 @@ static AlifObject* create_stdio(const AlifConfig* config, AlifObject* io,
 		goto error;
 	}
 
-	//AlifObject* errors_str;
-	//errors_str = alifUStr_fromWideChar(errors, -1);
-	//if (errors_str == nullptr) {
-	//	ALIF_CLEAR(buf);
-	//	ALIF_CLEAR(encoding_str);
-	//	goto error;
-	//}
+	AlifObject* errors_str;
+	errors_str = alifUStr_fromWideChar(errors, -1);
+	if (errors_str == nullptr) {
+		ALIF_CLEAR(buf);
+		ALIF_CLEAR(encoding_str);
+		goto error;
+	}
 
 	stream = _alifObject_callMethod(io, &ALIF_STR(TextIOWrapper), "OOOsOO", buf,
-		encoding_str, nullptr/*errors_str*/, newline, line_buffering, write_through);
+		encoding_str, errors_str, newline, line_buffering, write_through);
 	ALIF_CLEAR(buf);
 	ALIF_CLEAR(encoding_str);
-	//ALIF_CLEAR(errors_str);
+	ALIF_CLEAR(errors_str);
 	if (stream == nullptr)
 		goto error;
 

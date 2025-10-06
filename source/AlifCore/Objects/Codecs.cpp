@@ -1,6 +1,7 @@
 #include "alif.h"
 
 #include "AlifCore_State.h"
+#include "AlifCore_Call.h"
 
 
 
@@ -140,6 +141,28 @@ static AlifObject* args_tuple(AlifObject* object,
 		ALIFTUPLE_SET_ITEM(args, 1, v);
 	}
 	return args;
+}
+
+
+static AlifObject* codec_makeIncrementalCodec(AlifObject* _codecInfo,
+	const char* _errors, const char* _attrName) { // 283
+	AlifObject* ret{}, * inccodec{};
+
+	inccodec = alifObject_getAttrString(_codecInfo, _attrName);
+	if (inccodec == nullptr)
+		return nullptr;
+	if (_errors)
+		ret = alifObject_callFunction(inccodec, "s", _errors);
+	else
+		ret = _alifObject_callNoArgs(inccodec);
+	ALIF_DECREF(inccodec);
+	return ret;
+}
+
+AlifObject* _alifCodecInfo_getIncrementalEncoder(AlifObject* _codecInfo,
+	const char* _errors) { // 349
+	return codec_makeIncrementalCodec(_codecInfo, _errors,
+		"incrementalencoder");
 }
 
 

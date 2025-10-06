@@ -777,7 +777,7 @@ AlifObject* alifObject_genericGetAttrWithDict(AlifObject* _obj, AlifObject* _nam
 		}
 		else if (rc < 0) {
 			if (_suppress
-				/*and alifErr_exceptionMatches(alifExcAttributeError)*/
+				and alifErr_exceptionMatches(_alifExcAttributeError_)
 				) {
 				alifErr_clear();
 			}

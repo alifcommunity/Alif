@@ -12,10 +12,10 @@ extern AlifObject* _alifCodec_encodeText(AlifObject*, const char*, const char*);
 
 extern AlifObject* _alifCodec_decodeText(AlifObject*, const char*, const char*); // 46
 
+extern AlifObject* _alifCodecInfo_getIncrementalEncoder(AlifObject*, const char*); // 69
 
 
-
-class CodecsState { // 63
+class CodecsState { // 74
 public:
 	AlifObject* searchPath{};
 	AlifObject* searchCache{};
