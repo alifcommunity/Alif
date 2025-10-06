@@ -21,6 +21,17 @@ static AlifObject* _io_IOBase_close(AlifObject* self, AlifObject* ALIF_UNUSED(ig
 	return _io_IOBase_closeImpl(self);
 }
 
+// 199
+#define _IO__IOBASE_SEEKABLE_METHODDEF    \
+    {"Seekable", (AlifCPPFunction)_io_IOBase_seekable, METHOD_NOARGS},
+
+static AlifObject* _io_IOBase_seekableImpl(AlifObject*);
+
+static AlifObject* _io_IOBase_seekable(AlifObject* _self, AlifObject* ALIF_UNUSED(ignored)) { // 205
+	return _io_IOBase_seekableImpl(_self);
+}
+
+
 // 219
 #define _IO__IOBASE_READABLE_METHODDEF    \
     {"Readable", (AlifCPPFunction)_io_IOBase_readable, METHOD_NOARGS},
