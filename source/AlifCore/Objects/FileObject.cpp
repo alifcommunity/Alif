@@ -27,17 +27,12 @@ AlifIntT alifFile_writeObject(AlifObject* _v, AlifObject* _f, AlifIntT _flags) {
 		ALIF_DECREF(writer);
 		return -1;
 	}
-	//result = alifObject_callOneArg(writer, value);
-	//* alif //* todo
-	char* buf = (char*)alifUStr_asUTF8(value);
-	printf("%s", buf);
-	result = ALIF_NONE;
-	//* alif
+	result = alifObject_callOneArg(writer, value);
 	ALIF_DECREF(value);
-	//ALIF_DECREF(writer);
+	ALIF_DECREF(writer);
 	if (result == nullptr)
 		return -1;
-	//ALIF_DECREF(result);
+	ALIF_DECREF(result);
 	return 0;
 }
 
@@ -96,4 +91,16 @@ char* alifUniversal_newLineFGetsWithSize(char* _buf,
 	*_size = p - _buf;
 	return _buf;
 
+}
+
+
+
+
+AlifIntT _alifFile_flush(AlifObject* _file) { // 533
+	AlifObject* tmp = alifObject_callMethodNoArgs(_file, &ALIF_ID(Flush));
+	if (tmp == nullptr) {
+		return -1;
+	}
+	ALIF_DECREF(tmp);
+	return 0;
 }

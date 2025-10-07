@@ -287,6 +287,8 @@ static AlifObject* uStr_encodeCallErrorhandler(const char*,
 	AlifObject**, const char*, const char*, AlifObject*,
 	AlifObject**, AlifSizeT, AlifSizeT, AlifSizeT*); // 443
 
+#include "clinic/UStrObject.cpp.h"
+
 AlifErrorHandler_ alif_getErrorHandler(const char* _errors) { // 516
 	if (_errors == nullptr or strcmp(_errors, "strict") == 0) {
 		return AlifErrorHandler_::Alif_Error_Strict;
@@ -5838,7 +5840,10 @@ AlifObject* alifUStr_replace(AlifObject* _str,
 
 
 
-
+static AlifObject* unicode_replaceImpl(AlifObject* _self,
+	AlifObject* _old, AlifObject* _new, AlifSizeT _count) { // 12585
+	return replace(_self, _old, _new, _count);
+}
 
 
 
@@ -6358,6 +6363,10 @@ void alifUStrWriter_dealloc(AlifUStrWriter* _writer) { // 13852
 }
 
 
+static AlifMethodDef _uStrMethods_[] = {
+	UNICODE_REPLACE_METHODDEF
+	{nullptr, nullptr}
+};
 
 
 //static AlifObject* uStr_mod(AlifObject* v, AlifObject* w) { // 13999
@@ -6402,6 +6411,7 @@ AlifTypeObject _alifUStrType_ = { // 15235
 		ALIF_TPFLAGS_UNICODE_SUBCLASS |
 		_ALIF_TPFLAGS_MATCH_SELF,
 	.richCompare = alifUStr_richCompare,
+	.methods = _uStrMethods_,
 	.free = alifMem_objFree,
 };
 
@@ -6666,11 +6676,11 @@ static AlifStatus init_fsEncoding(AlifThread* _thread) { // 16078
 	AlifInterpreter* interp = _thread->interpreter;
 
 	AlifConfig* config = (AlifConfig*)alifInterpreter_getConfig(interp);
-	if (config_getCodecName(&config->fileSystemEncoding) < 0) {
-		//_alif_dumpPathConfig(_thread);
-		return ALIFSTATUS_ERR("failed to get the Alif codec "
-			"of the filesystem encoding");
-	}
+	//if (config_getCodecName(&config->fileSystemEncoding) < 0) {
+	//	//_alif_dumpPathConfig(_thread);
+	//	return ALIFSTATUS_ERR("failed to get the Alif codec "
+	//		"of the filesystem encoding");
+	//}
 
 	if (init_fsCodec(interp) < 0) {
 		return ALIFSTATUS_ERR("cannot initialize filesystem codec");
@@ -6689,5 +6699,6 @@ AlifStatus _alifUnicode_initEncodings(AlifThread* _thread) { // 16100
 		return status;
 	}
 
-	return init_stdioEncoding(_thread->interpreter);
+	//return init_stdioEncoding(_thread->interpreter);
+	return ALIFSTATUS_OK(); //* alif
 }

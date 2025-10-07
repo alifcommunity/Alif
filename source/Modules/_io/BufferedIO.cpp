@@ -121,10 +121,24 @@ public:
 #define VALID_READ_BUFFER(_self) \
     (_self->readable and self->readEnd != -1) // 371
 
+#define VALID_WRITE_BUFFER(self) \
+    (self->writable and self->writeEnd != -1) // 374
+
+// 377
+#define ADJUST_POSITION(self, _new_pos) \
+    do { \
+        self->pos = _new_pos; \
+        if (VALID_READ_BUFFER(self) && self->readEnd < self->pos) \
+            self->readEnd = self->pos; \
+    } while(0)
+
 #define READAHEAD(_self) \
     ((self->readable and VALID_READ_BUFFER(_self)) \
         ? (_self->readEnd - _self->pos) : 0) // 384
 
+#define RAW_OFFSET(self) \
+    (((VALID_READ_BUFFER(self) or VALID_WRITE_BUFFER(self)) \
+        and self->rawPos >= 0) ? self->rawPos - self->pos : 0) // 388
 
 
 
@@ -240,11 +254,25 @@ static AlifObject* _io_Buffered_writableImpl(Buffered* _self) { // 650
 	return alifObject_callMethodNoArgs(_self->raw, &ALIF_ID(Writable));
 }
 
-
+static AlifObject* _bufferedWriter_flushUnlocked(Buffered*); // 717
 static void _bufferedReader_resetBuf(Buffered*); // 720
 static AlifObject* _bufferedReader_readAll(Buffered*); // 727
 static AlifObject* _bufferedReader_readFast(Buffered*, AlifSizeT); // 728
 static AlifSizeT _bufferedReader_rawRead(Buffered*, char*, AlifSizeT); // 732
+
+
+
+
+static AlifSizeT* _buffered_checkBlockingError(void) { // 754
+	AlifObject* exc = alifErr_getRaisedException();
+	if (exc == nullptr or !alifErr_givenExceptionMatches(exc, _alifExcBlockingIOError_)) {
+		alifErr_setRaisedException(exc);
+		return nullptr;
+	}
+	AlifOSErrorObject* err = (AlifOSErrorObject*)exc;
+	alifErr_setRaisedException(exc);
+	return &err->written;
+}
 
 
 static AlifIntT _buffered_init(Buffered* self) { // 822
@@ -302,6 +330,39 @@ AlifIntT _alifIO_trapEintr(void) { // 863
 	return 0;
 }
 
+
+static AlifObject* buffered_flushAndRewindUnlocked(Buffered* self) { // 892
+	AlifObject* res{};
+
+	res = _bufferedWriter_flushUnlocked(self);
+	if (res == nullptr)
+		return nullptr;
+	ALIF_DECREF(res);
+
+	if (self->readable) {
+		AlifOffT n{};
+		//n = _buffered_rawSeek(self, -RAW_OFFSET(self), 1);
+		_bufferedReader_resetBuf(self);
+		if (n == -1)
+			return nullptr;
+	}
+	return ALIF_NONE;
+}
+
+
+static AlifObject* _io_Buffered_flushImpl(Buffered* self) { // 919
+	AlifObject* res{};
+
+	CHECK_INITIALIZED(self);
+	CHECK_CLOSED(self, "flush of closed file");
+
+	//if (!ENTER_BUFFERED(self))
+	//	return nullptr;
+	res = buffered_flushAndRewindUnlocked(self);
+	//LEAVE_BUFFERED(self);
+
+	return res;
+}
 
 
 static AlifObject* _io_Buffered_readImpl(Buffered* self, AlifSizeT n) { // 976
@@ -612,11 +673,209 @@ static AlifIntT _ioBufferedWriter___init__Impl(Buffered* _self, AlifObject* _raw
 }
 
 
+static AlifSizeT _bufferedWriter_rawWrite(Buffered* self, char* start, AlifSizeT len) { // 1958
+	AlifBuffer buf{};
+	AlifObject* memobj{}, * res{};
+	AlifSizeT n{};
+	AlifIntT errnum{};
+	if (alifBuffer_fillInfo(&buf, nullptr, start, len, 1, ALIFBUF_CONTIG_RO) == -1)
+		return -1;
+	memobj = alifMemoryView_fromBuffer(&buf);
+	if (memobj == nullptr)
+		return -1;
+	do {
+		errno = 0;
+		res = alifObject_callMethodOneArg(self->raw, &ALIF_ID(Write), memobj);
+		errnum = errno;
+	}
+	while (res == nullptr and _alifIO_trapEintr());
+	ALIF_DECREF(memobj);
+	if (res == nullptr)
+		return -1;
+	if (res == ALIF_NONE) {
+		ALIF_DECREF(res);
+		errno = errnum;
+		return -2;
+	}
+	n = alifNumber_asSizeT(res, _alifExcValueError_);
+	ALIF_DECREF(res);
+	if (n < 0 or n > len) {
+		alifErr_format(_alifExcOSError_,
+			"raw write() returned invalid length %zd "
+			"(should have been between 0 and %zd)", n, len);
+		return -1;
+	}
+	if (n > 0 and self->absPos != -1)
+		self->absPos += n;
+	return n;
+}
+
+
+static AlifObject* _bufferedWriter_flushUnlocked(Buffered* self) { // 2005
+	AlifOffT n{}, rewind{};
+
+	if (!VALID_WRITE_BUFFER(self) or self->writePos == self->writeEnd)
+		goto end;
+	/* First, rewind */
+	rewind = RAW_OFFSET(self) + (self->pos - self->writePos);
+	if (rewind != 0) {
+		//n = _buffered_rawSeek(self, -rewind, 1);
+		//if (n < 0) {
+		//	goto error;
+		//}
+		//self->rawPos -= rewind;
+	}
+	while (self->writePos < self->writeEnd) {
+		n = _bufferedWriter_rawWrite(self,
+			self->buffer + self->writePos,
+			ALIF_SAFE_DOWNCAST(self->writeEnd - self->writePos,
+				AlifoffT, AlifSizeT));
+		if (n == -1) {
+			goto error;
+		}
+		else if (n == -2) {
+			//_set_BlockingIOError("write could not complete without blocking", 0);
+			goto error;
+		}
+		self->writePos += n;
+		self->rawPos = self->writePos;
+		//if (alifErr_checkSignals() < 0)
+		//	goto error;
+	}
+
+
+end:
+	_bufferedWriter_resetBuf(self);
+	return ALIF_NONE;
+
+error:
+	return nullptr;
+}
 
 
 
+static AlifObject* _ioBufferedWriter_writeImpl(Buffered* self, AlifBuffer* buffer) { // 2068
+	AlifObject* res = nullptr;
+	AlifSizeT written{}, avail{}, remaining{};
+	AlifOffT offset{};
 
+	CHECK_INITIALIZED(self);
 
+	//if (!ENTER_BUFFERED(self))
+	//	return nullptr;
+
+	if (IS_CLOSED(self)) {
+		alifErr_setString(_alifExcValueError_, "write to closed file");
+		goto error;
+	}
+
+	/* Fast path: the data to write can be fully buffered. */
+	if (!VALID_READ_BUFFER(self) and !VALID_WRITE_BUFFER(self)) {
+		self->pos = 0;
+		self->rawPos = 0;
+	}
+	avail = ALIF_SAFE_DOWNCAST(self->bufferSize - self->pos, AlifOffT, AlifSizeT);
+	if (buffer->len <= avail and buffer->len < self->bufferSize) {
+		memcpy(self->buffer + self->pos, buffer->buf, buffer->len);
+		if (!VALID_WRITE_BUFFER(self) or self->writePos > self->pos) {
+			self->writePos = self->pos;
+		}
+		ADJUST_POSITION(self, self->pos + buffer->len);
+		if (self->pos > self->writeEnd)
+			self->writeEnd = self->pos;
+		written = buffer->len;
+		goto end;
+	}
+
+	/* First write the current buffer */
+	res = _bufferedWriter_flushUnlocked(self);
+	if (res == nullptr) {
+		AlifSizeT* w = _buffered_checkBlockingError();
+		if (w == nullptr)
+			goto error;
+		if (self->readable)
+			_bufferedReader_resetBuf(self);
+		memmove(self->buffer, self->buffer + self->writePos,
+			ALIF_SAFE_DOWNCAST(self->writeEnd - self->writePos,
+				AlifOffT, AlifSizeT));
+		self->writeEnd -= self->writePos;
+		self->rawPos -= self->writePos;
+		self->pos -= self->writePos;
+		self->writePos = 0;
+		avail = ALIF_SAFE_DOWNCAST(self->bufferSize - self->writeEnd,
+			AlifOffT, AlifSizeT);
+		if (buffer->len <= avail) {
+			/* Everything can be buffered */
+			alifErr_clear();
+			memcpy(self->buffer + self->writeEnd, buffer->buf, buffer->len);
+			self->writeEnd += buffer->len;
+			self->pos += buffer->len;
+			written = buffer->len;
+			goto end;
+		}
+		/* Buffer as much as possible. */
+		memcpy(self->buffer + self->writeEnd, buffer->buf, avail);
+		self->writeEnd += avail;
+		self->pos += avail;
+		//_set_blockingIOError("write could not complete without blocking",
+		//	avail);
+		goto error;
+	}
+	ALIF_CLEAR(res);
+
+	offset = RAW_OFFSET(self);
+	if (offset != 0) {
+		//if (_buffered_rawSeek(self, -offset, 1) < 0)
+		//	goto error;
+		self->rawPos -= offset;
+	}
+
+	remaining = buffer->len;
+	written = 0;
+	while (remaining >= self->bufferSize) {
+		AlifSizeT n = _bufferedWriter_rawWrite(
+			self, (char*)buffer->buf + written, buffer->len - written);
+		if (n == -1) {
+			goto error;
+		}
+		else if (n == -2) {
+			if (remaining > self->bufferSize) {
+				memcpy(self->buffer,
+					(char*)buffer->buf + written, self->bufferSize);
+				self->rawPos = 0;
+				ADJUST_POSITION(self, self->bufferSize);
+				self->writeEnd = self->bufferSize;
+				written += self->bufferSize;
+				//_set_blockingIOError("write could not complete without "
+				//	"blocking", written);
+				goto error;
+			}
+			alifErr_clear();
+			break;
+		}
+		written += n;
+		remaining -= n;
+		//if (alifErr_checkSignals() < 0)
+		//	goto error;
+	}
+	if (self->readable)
+		_bufferedReader_resetBuf(self);
+	if (remaining > 0) {
+		memcpy(self->buffer, (char*)buffer->buf + written, remaining);
+		written += remaining;
+	}
+	self->writePos = 0;
+	self->writeEnd = remaining;
+	ADJUST_POSITION(self, remaining);
+	self->rawPos = 0;
+
+end:
+	res = alifLong_fromSizeT(written);
+
+error:
+	//LEAVE_BUFFERED(self);
+	return res;
+}
 
 
 
@@ -707,9 +966,9 @@ static AlifMethodDef _bufferedWriterMethods_[] = { // 2576
 	//_IO__BUFFERED_ISATTY_METHODDEF
 	//_IO__BUFFERED__DEALLOC_WARN_METHODDEF
 
-	//_IO_BUFFEREDWRITER_WRITE_METHODDEF
+	_IO_BUFFEREDWRITER_WRITE_METHODDEF
 	//_IO__BUFFERED_TRUNCATE_METHODDEF
-	//_IO__BUFFERED_FLUSH_METHODDEF
+	_IO__BUFFERED_FLUSH_METHODDEF
 	//_IO__BUFFERED_SEEK_METHODDEF
 	//_IO__BUFFERED_TELL_METHODDEF
 	//_IO__BUFFERED___SIZEOF___METHODDEF

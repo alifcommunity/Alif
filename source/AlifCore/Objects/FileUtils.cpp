@@ -720,11 +720,11 @@ static AlifIntT set_inheritable(AlifIntT fd, AlifIntT inheritable,
 			return 0;
 		}
 
-#ifdef O_PATH
+	#ifdef O_PATH
 		if (errno == EBADF) {
 		}
 		else
-#endif
+		#endif
 			if (errno != ENOTTY && errno != EACCES) {
 				//if (raise)
 				//	alifErr_setFromErrno(_alifExcOSError_);
@@ -1432,8 +1432,16 @@ void* _alifGet_osfHandleNoRaise(AlifIntT fd) { // 2836
 		return handle;
 }
 
+void* _alifGet_osfHandle(AlifIntT _fd) { // 2846
+	void* handle = _alifGet_osfHandleNoRaise(_fd);
+	if (handle == INVALID_HANDLE_VALUE) {
+		//alifErr_setFromErrno(_alifExcOSError_);
+	}
 
-AlifIntT _alifOpen_osfHandleNoRaise(void* handle, int flags) { // 2856
+	return handle;
+}
+
+AlifIntT _alifOpen_osfHandleNoRaise(void* handle, AlifIntT flags) { // 2856
 	AlifIntT fd{};
 	ALIF_BEGIN_SUPPRESS_IPH
 		fd = _open_osfhandle((intptr_t)handle, flags);

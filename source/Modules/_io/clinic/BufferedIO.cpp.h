@@ -139,6 +139,24 @@ static AlifObject* _io_Buffered_writable(Buffered* _self, AlifObject* ALIF_UNUSE
 }
 
 
+// 577
+#define _IO__BUFFERED_FLUSH_METHODDEF    \
+    {"Flush", (AlifCPPFunction)_io_Buffered_flush, METHOD_NOARGS},
+
+static AlifObject* _io_Buffered_flushImpl(Buffered*);
+
+static AlifObject* _io_Buffered_flush(Buffered* self, AlifObject* ALIF_UNUSED(ignored)) { // 583
+	AlifObject* returnValue = nullptr;
+
+	ALIF_BEGIN_CRITICAL_SECTION(self);
+	returnValue = _io_Buffered_flushImpl(self);
+	ALIF_END_CRITICAL_SECTION();
+
+	return returnValue;
+}
+
+
+
 // 679
 #define _IO__BUFFERED_READ1_METHODDEF    \
     {"Read1", ALIF_CPPFUNCTION_CAST(_io_Buffered_read1), METHOD_FASTCALL},
@@ -330,4 +348,31 @@ skip_optional_pos:
 
 exit:
 	return return_value;
+}
+
+
+// 1085
+#define _IO_BUFFEREDWRITER_WRITE_METHODDEF    \
+    {"Write", (AlifCPPFunction)_ioBufferedWriter_write, METHOD_O},
+
+static AlifObject* _ioBufferedWriter_writeImpl(Buffered*, AlifBuffer*);
+
+static AlifObject* _ioBufferedWriter_write(Buffered* self, AlifObject* arg) { // 1091
+	AlifObject* returnValue = nullptr;
+	AlifBuffer buffer = { nullptr, nullptr };
+
+	if (alifObject_getBuffer(arg, &buffer, ALIFBUF_SIMPLE) != 0) {
+		goto exit;
+	}
+	ALIF_BEGIN_CRITICAL_SECTION(self);
+	returnValue = _ioBufferedWriter_writeImpl(self, &buffer);
+	ALIF_END_CRITICAL_SECTION();
+
+exit:
+	/* Cleanup for buffer */
+	if (buffer.obj) {
+		alifBuffer_release(&buffer);
+	}
+
+	return returnValue;
 }

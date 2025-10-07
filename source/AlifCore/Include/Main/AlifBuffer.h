@@ -3,24 +3,24 @@
 
 class AlifBuffer { // 20
 public:
-    void* buf{};
-    AlifObject* obj{};
-    AlifSizeT len{};
-    AlifSizeT itemSize{};
-    AlifIntT readonly{};
-    AlifIntT nDim{};
-    char* format{};
-    AlifSizeT* shape{};
-    AlifSizeT* strides{};
-    AlifSizeT* subOffsets{};
-    void* internal{};
+	void* buf{};
+	AlifObject* obj{};
+	AlifSizeT len{};
+	AlifSizeT itemSize{};
+	AlifIntT readonly{};
+	AlifIntT nDim{};
+	char* format{};
+	AlifSizeT* shape{};
+	AlifSizeT* strides{};
+	AlifSizeT* subOffsets{};
+	void* internal{};
 };
 
-typedef AlifIntT (*GetBufferProc)(AlifObject*, AlifBuffer*, AlifIntT); // 35
+typedef AlifIntT(*GetBufferProc)(AlifObject*, AlifBuffer*, AlifIntT); // 35
 typedef void (*ReleaseBufferProc)(AlifObject*, AlifBuffer*);
 
 
-AlifIntT alifObject_getBuffer(AlifObject* , AlifBuffer* , AlifIntT); // 46
+AlifIntT alifObject_getBuffer(AlifObject*, AlifBuffer*, AlifIntT); // 46
 
 AlifIntT alifBuffer_isContiguous(const AlifBuffer*, char); // 80
 
@@ -34,7 +34,7 @@ void alifBuffer_release(AlifBuffer*); // 102
 #define ALIFBUF_MAX_NDIM 64 // 105
 
 
- // 108
+// 108
 #define ALIFBUF_SIMPLE 0
 #define ALIFBUF_WRITABLE 0x0001
 
@@ -50,7 +50,7 @@ void alifBuffer_release(AlifBuffer*); // 102
 #define ALIFBUF_INDIRECT (0x0100 | ALIFBUF_STRIDES)
 
 #define ALIFBUF_CONTIG (ALIFBUF_ND | ALIFBUF_WRITABLE) // 124
-
+#define ALIFBUF_CONTIG_RO (ALIFBUF_ND)
 
 
 

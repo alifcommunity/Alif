@@ -92,6 +92,7 @@ AlifIntT _alif_dup(AlifIntT); // 185
 #ifdef _WINDOWS
 extern void* _alifGet_osfHandleNoRaise(AlifIntT); // 192
 
+void* _alifGet_osfHandle(AlifIntT); // 195
 
 extern AlifIntT _alifOpen_osfHandleNoRaise(void*, AlifIntT); // 197
 
@@ -147,6 +148,7 @@ extern _invalid_parameter_handler _alifSilentInvalidParameterHandler_;
 
 char* alifUniversal_newLineFGetsWithSize(char*, AlifIntT, FILE*, AlifObject*, AlifUSizeT*); // 321
 
+extern AlifIntT _alifFile_flush(AlifObject*); // 323
 
 
 AlifIntT _alif_isValidFD(AlifIntT); // 330

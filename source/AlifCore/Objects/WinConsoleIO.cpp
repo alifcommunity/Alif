@@ -25,7 +25,7 @@
 
 
 
-
+#define BUFMAX (32*1024*1024) // 44
 
 #define SMALLBUF 4 // 49
 
@@ -130,6 +130,21 @@ char _alifIO_getConsoleType(AlifObject* _pathOrFd) { // 66
 
 
 
+
+static DWORD _find_lastUTF8Boundary(const char* _buf, DWORD _len) { // 137
+	DWORD count = 1;
+	if (_len == 0 or (_buf[_len - 1] & 0x80) == 0) {
+		return _len;
+	}
+	for (;; count++) {
+		if (count > 3 or count >= _len) {
+			return _len;
+		}
+		if ((_buf[_len - count] & 0xc0) != 0x80) {
+			return _len - count;
+		}
+	}
+}
 
 
 
@@ -386,6 +401,80 @@ static AlifObject* _io_WindowsConsoleIO_writableImpl(WinConsoleIO* _self) { // 5
 	return alifBool_fromLong((long)_self->writable);
 }
 
+
+
+
+
+static AlifObject* _io_WindowsConsoleIO_writeImpl(WinConsoleIO* self,
+	AlifTypeObject* cls, AlifBuffer* b) { // 995
+	BOOL res = TRUE;
+	wchar_t* wbuf{};
+	DWORD len, wlen, n = 0;
+	HANDLE handle;
+
+	if (self->fd == -1)
+		return err_closed();
+	if (!self->writable) {
+		AlifIOState* state = getIOState_byCls(cls);
+		//return err_mode(state, "writing");
+	}
+
+	handle = _alifGet_osfHandle(self->fd);
+	if (handle == INVALID_HANDLE_VALUE)
+		return nullptr;
+
+	if (!b->len) {
+		return alifLong_fromLong(0);
+	}
+	if (b->len > BUFMAX)
+		len = BUFMAX;
+	else
+		len = (DWORD)b->len;
+
+	ALIF_BEGIN_ALLOW_THREADS;
+	wlen = MultiByteToWideChar(CP_UTF8, 0, (LPCCH)b->buf, len, nullptr, 0);
+
+	while (wlen > 32766 / sizeof(wchar_t)) {
+		len /= 2;
+		len = _find_lastUTF8Boundary((const char*)b->buf, len);
+		wlen = MultiByteToWideChar(CP_UTF8, 0, (LPCCH)b->buf, len, nullptr, 0);
+	}
+	ALIF_END_ALLOW_THREADS;
+
+	//if (!wlen)
+	//	return alifErr_setFromWindowsErr(0);
+
+	wbuf = (wchar_t*)alifMem_dataAlloc(wlen * sizeof(wchar_t));
+
+	ALIF_BEGIN_ALLOW_THREADS;
+	wlen = MultiByteToWideChar(CP_UTF8, 0, (LPCCH)b->buf, len, wbuf, wlen);
+	if (wlen) {
+		res = WriteConsoleW(handle, wbuf, wlen, &n, nullptr);
+		if (res and n < wlen) {
+			len = WideCharToMultiByte(CP_UTF8, 0, wbuf, n,
+				nullptr, 0, nullptr, nullptr);
+			if (len) {
+				wlen = MultiByteToWideChar(CP_UTF8, 0, (LPCCH)b->buf, len,
+					nullptr, 0);
+			}
+		}
+	}
+	else
+		res = 0;
+	ALIF_END_ALLOW_THREADS;
+
+	if (!res) {
+		DWORD err = GetLastError();
+		alifMem_dataFree(wbuf);
+		//return alifErr_setFromWindowsErr(err);
+	}
+
+	alifMem_dataFree(wbuf);
+	return alifLong_fromSizeT(len);
+}
+
+
+
 static AlifObject* _io_windowsConsoleIOIsAttyImpl(WinConsoleIO* _self) { // 1107
 	if (_self->fd == -1)
 		return err_closed();
@@ -402,7 +491,7 @@ static AlifMethodDef _winConsoleIOMethods_[] = { // 1121
 	//_IO__WINDOWSCONSOLEIO_READ_METHODDEF
 	//_IO__WINDOWSCONSOLEIO_READALL_METHODDEF
 	//_IO__WINDOWSCONSOLEIO_READINTO_METHODDEF
-	//_IO__WINDOWSCONSOLEIO_WRITE_METHODDEF
+	_IO__WINDOWSCONSOLEIO_WRITE_METHODDEF
 	//_IO__WINDOWSCONSOLEIO_CLOSE_METHODDEF
 	_IO__WINDOWSCONSOLEIO_READABLE_METHODDEF
 	_IO__WINDOWSCONSOLEIO_WRITABLE_METHODDEF

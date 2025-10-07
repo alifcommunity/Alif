@@ -112,17 +112,6 @@ static AlifObject* builtin_printImpl(AlifObject*, AlifObject*,
 static AlifObject* builtin_print(AlifObject* _module, AlifObject* const* _args,
 	AlifSizeT _nargs, AlifObject* _kwnames) { // 907
 
-	//* alif // print
-	ReprFunc func{};
-	AlifObject* res{};
-	for (AlifIntT i = 0; i < _nargs; i++) {
-		res = alifObject_str(_args[i]);
-		char* buf = (char*)alifUStr_asUTF8(res);
-		printf("%s \n", buf);
-	}
-	return ALIF_NONE;
-	//* alif
-
 	AlifObject* returnValue = nullptr;
 #define NUM_KEYWORDS 4
 	static class {

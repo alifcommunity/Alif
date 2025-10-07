@@ -108,6 +108,56 @@ static AlifObject* _io_WindowsConsoleIO_writable(WinConsoleIO* _self,
 
 
 
+
+#if defined(HAVE_WINDOWS_CONSOLE_IO) // 345
+
+#define _IO__WINDOWSCONSOLEIO_WRITE_METHODDEF    \
+    {"Write", ALIF_CPPFUNCTION_CAST(_io_WindowsConsoleIO_write), METHOD_METHOD|METHOD_FASTCALL|METHOD_KEYWORDS},
+
+static AlifObject* _io_WindowsConsoleIO_writeImpl(WinConsoleIO*, AlifTypeObject*, AlifBuffer*);
+
+static AlifObject* _io_WindowsConsoleIO_write(WinConsoleIO* self,
+	AlifTypeObject* cls, AlifObject* const* args, AlifSizeT nargs, AlifObject* kwnames) { // 363
+	AlifObject* returnValue = nullptr;
+#if defined(ALIF_BUILD_CORE) and !defined(ALIF_BUILD_CORE_MODULE)
+#  define KWTUPLE (AlifObject *)&_alifSingleton_(tupleEmpty)
+#else
+#  define KWTUPLE nullptr
+#endif
+
+	static const char* const _keywords[] = { "", nullptr };
+	static AlifArgParser _parser = {
+		.keywords = _keywords,
+		.fname = "write",
+		.kwTuple = KWTUPLE,
+	};
+#undef KWTUPLE
+	AlifObject* argsbuf[1];
+	AlifBuffer b = { nullptr, nullptr };
+
+	args = ALIFARG_UNPACKKEYWORDS(args, nargs, nullptr, kwnames, &_parser, 1, 1, 0, argsbuf);
+	if (!args) {
+		goto exit;
+	}
+	if (alifObject_getBuffer(args[0], &b, ALIFBUF_SIMPLE) != 0) {
+		goto exit;
+	}
+	returnValue = _io_WindowsConsoleIO_writeImpl(self, cls, &b);
+
+exit:
+	/* Cleanup for b */
+	if (b.obj) {
+		alifBuffer_release(&b);
+	}
+
+	return returnValue;
+}
+
+#endif /* defined(HAVE_WINDOWS_CONSOLE_IO) */
+
+
+
+
 // 411
 #define _IO__WINDOWSCONSOLEIO_ISATTY_METHODDEF    \
     {"isatty", (AlifCPPFunction)_io_windowsConsoleIOIsAtty, METHOD_NOARGS},

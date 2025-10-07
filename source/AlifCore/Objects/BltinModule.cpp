@@ -437,7 +437,7 @@ static AlifObject* builtin_printImpl(AlifObject* _module, AlifObject* _args,
 		AlifThread* thread = _alifThread_get();
 		_file = _alifSys_getAttr(thread, &ALIF_ID(Stdout));
 		if (_file == nullptr) {
-		//	//alifErr_setString(_alifExcRuntimeError_, "lost sys.stdout");
+			//	//alifErr_setString(_alifExcRuntimeError_, "lost sys.stdout");
 			return nullptr;
 		}
 
@@ -638,8 +638,7 @@ static AlifObject* builtin_inputImpl(AlifObject* module, AlifObject* prompt) { /
 			goto _readline_errors;
 		}
 		if (!ALIFUSTR_CHECK(stdin_encoding) ||
-			!ALIFUSTR_CHECK(stdin_errors))
-		{
+			!ALIFUSTR_CHECK(stdin_errors)) {
 			tty = 0;
 			goto _readline_errors;
 		}
@@ -669,8 +668,7 @@ static AlifObject* builtin_inputImpl(AlifObject* module, AlifObject* prompt) { /
 				goto _readline_errors;
 			}
 			if (!ALIFUSTR_CHECK(stdout_encoding) ||
-				!ALIFUSTR_CHECK(stdout_errors))
-			{
+				!ALIFUSTR_CHECK(stdout_errors)) {
 				tty = 0;
 				goto _readline_errors;
 			}
@@ -708,7 +706,7 @@ static AlifObject* builtin_inputImpl(AlifObject* module, AlifObject* prompt) { /
 			//alifErr_checkSignals();
 			if (!alifErr_occurred())
 				//alifErr_setNone(_alifExcKeyboardInterrupt_);
-			goto _readline_errors;
+				goto _readline_errors;
 		}
 
 		len = strlen(s);
@@ -743,7 +741,7 @@ static AlifObject* builtin_inputImpl(AlifObject* module, AlifObject* prompt) { /
 
 		return result;
 
-	_readline_errors:
+_readline_errors:
 		ALIF_XDECREF(stdin_encoding);
 		ALIF_XDECREF(stdout_encoding);
 		ALIF_XDECREF(stdin_errors);
@@ -795,7 +793,7 @@ static AlifModuleDef _alifBuiltinsModule_ = { // 3202
 
 
 AlifObject* alifBuiltin_init(AlifInterpreter* _interpreter) { // 3215
-	AlifObject* mod{}, * dict{}, *debug{};
+	AlifObject* mod{}, * dict{}, * debug{};
 
 	const AlifConfig* config = alifInterpreter_getConfig(_interpreter);
 
