@@ -997,12 +997,12 @@ static AlifTypeSlot _bufferedWriterSlots_[] = { // 2614
 	//{ALIF_TP_DEALLOC, buffered_dealloc},
 	//{ALIF_TP_REPR, buffered_repr},
 	//{ALIF_TP_DOC, (void*)_ioBufferedWriter___init____Doc__},
-	{ALIF_TP_TRAVERSE, buffered_traverse},
+	{ALIF_TP_TRAVERSE, (void*)buffered_traverse},
 	//{ALIF_TP_CLEAR, buffered_clear},
 	{ALIF_TP_METHODS, _bufferedWriterMethods_},
 	{ALIF_TP_MEMBERS, _bufferedWriterMembers_},
 	{ALIF_TP_GETSET, _bufferedWriterGetSet_},
-	{ALIF_TP_INIT, _ioBufferedWriter___init__},
+	{ALIF_TP_INIT, (void*)_ioBufferedWriter___init__},
 	{0, nullptr},
 };
 
