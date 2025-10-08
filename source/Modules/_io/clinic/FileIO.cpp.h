@@ -197,6 +197,48 @@ static AlifObject* _ioFileIO_readall(FileIO* self, AlifObject* ALIF_UNUSED(ignor
 
 
 
+// 347
+#define _IO_FILEIO_WRITE_METHODDEF    \
+    {"Write", ALIF_CPPFUNCTION_CAST(_ioFileIO_write), METHOD_METHOD|METHOD_FASTCALL|METHOD_KEYWORDS},
+
+static AlifObject* _ioFileIO_writeImpl(FileIO*, AlifTypeObject*, AlifBuffer*);
+
+static AlifObject* _ioFileIO_write(FileIO* self, AlifTypeObject* cls,
+	AlifObject* const* args, AlifSizeT nargs, AlifObject* kwnames) {
+	AlifObject* return_value = nullptr;
+#if defined(ALIF_BUILD_CORE) and !defined(ALIF_BUILD_CORE_MODULE)
+#  define KWTUPLE (PyObject *)&_alifSingleton_(tupleEmpty)
+#else
+#  define KWTUPLE nullptr
+#endif
+
+	static const char* const _keywords[] = { "", nullptr };
+	static AlifArgParser _parser = {
+		.keywords = _keywords,
+		.fname = "write",
+		.kwTuple = KWTUPLE,
+	};
+#undef KWTUPLE
+	AlifObject* argsbuf[1];
+	AlifBuffer b = { nullptr, nullptr };
+
+	args = ALIFARG_UNPACKKEYWORDS(args, nargs, nullptr, kwnames, &_parser, 1, 1, 0, argsbuf);
+	if (!args) {
+		goto exit;
+	}
+	if (alifObject_getBuffer(args[0], &b, ALIFBUF_SIMPLE) != 0) {
+		goto exit;
+	}
+	return_value = _ioFileIO_writeImpl(self, cls, &b);
+
+exit:
+	/* Cleanup for b */
+	if (b.obj) {
+		alifBuffer_release(&b);
+	}
+
+	return return_value;
+}
 
 
 

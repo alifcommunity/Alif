@@ -929,6 +929,101 @@ AlifSizeT _alif_read(AlifIntT fd, void* buf, AlifUSizeT count) { // 1858
 	return n;
 }
 
+static AlifSizeT _alif_writeImpl(AlifIntT fd, const void* buf,
+	AlifUSizeT count, AlifIntT gil_held) { // 1917
+	AlifSizeT n{};
+	AlifIntT err{};
+	AlifIntT async_err = 0;
+
+	ALIF_BEGIN_SUPPRESS_IPH
+	#ifdef _WINDOWS
+		if (count > 32767) {
+			if (gil_held) {
+				ALIF_BEGIN_ALLOW_THREADS
+					if (isatty(fd)) {
+						count = 32767;
+					}
+				ALIF_END_ALLOW_THREADS
+			}
+			else {
+				if (isatty(fd)) {
+					count = 32767;
+				}
+			}
+		}
+
+#endif
+	if (count > ALIF_WRITE_MAX) {
+		count = ALIF_WRITE_MAX;
+	}
+
+	if (gil_held) {
+		do {
+			ALIF_BEGIN_ALLOW_THREADS
+				errno = 0;
+		#ifdef _WINDOWS
+			AlifIntT c = (AlifIntT)count;
+			do {
+				_doserrno = 0;
+				n = write(fd, buf, c);
+				if (n >= 0 or errno != ENOSPC or _doserrno != 0) {
+					break;
+				}
+				errno = EAGAIN;
+				c /= 2;
+			}
+			while (c > 0);
+		#else
+			n = write(fd, buf, count);
+		#endif
+			err = errno;
+			ALIF_END_ALLOW_THREADS
+		}
+		while (n < 0 and err == EINTR /*and
+			!(async_err = alifErr_checkSignals())*/);
+	}
+	else {
+		do {
+			errno = 0;
+		#ifdef _WINDOWS
+			AlifIntT c = (AlifIntT)count;
+			do {
+				_doserrno = 0;
+				n = write(fd, buf, c);
+				if (n >= 0 or errno != ENOSPC or _doserrno != 0) {
+					break;
+				}
+				errno = EAGAIN;
+				c /= 2;
+			}
+			while (c > 0);
+		#else
+			n = write(fd, buf, count);
+		#endif
+			err = errno;
+		}
+		while (n < 0 && err == EINTR);
+	}
+	ALIF_END_SUPPRESS_IPH
+
+		if (async_err) {
+			errno = err;
+			return -1;
+		}
+	if (n < 0) {
+		if (gil_held)
+			//alifErr_setFromErrno(_alifExcOSError_);
+			errno = err;
+		return -1;
+	}
+
+	return n;
+}
+
+AlifSizeT _alif_write(AlifIntT _fd, const void* _buf, AlifUSizeT _count) { // 2028
+	return _alif_writeImpl(_fd, _buf, _count, 1);
+}
+
 #ifdef HAVE_READLINK // 2054
 
 AlifIntT alif_wReadLink(const wchar_t* path, wchar_t* buf, AlifUSizeT buflen) { // 2061

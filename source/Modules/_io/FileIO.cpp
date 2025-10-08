@@ -621,7 +621,31 @@ static AlifObject* _ioFileIO_readallImpl(FileIO * _self) { // 731
 	return result;
 }
 
+static AlifObject* _ioFileIO_writeImpl(FileIO * self,
+	AlifTypeObject * cls, AlifBuffer * b) { // 915
+	AlifSizeT n{};
+	AlifIntT err{};
 
+	if (self->fd < 0)
+		return err_closed();
+	if (!self->writable) {
+		AlifIOState* state = getIOState_byCls(cls);
+		//return err_mode(state, "writing");
+	}
+
+	n = _alif_write(self->fd, b->buf, b->len);
+	err = errno;
+
+	if (n < 0) {
+		if (err == EAGAIN) {
+			alifErr_clear();
+			return ALIF_NONE;
+		}
+		return nullptr;
+	}
+
+	return alifLong_fromSizeT(n);
+}
 
 static AlifObject* portable_lseek(FileIO * _self, AlifObject * _posObj,
 	AlifIntT _whence, bool _suppressPipeError) { // 947
@@ -715,6 +739,7 @@ static AlifObject* _ioFileIO_isAttyOpenOnly(AlifObject * op,
 static AlifMethodDef _fileIOMethods_[] = { // 1238
 	_IO_FILEIO_READALL_METHODDEF
 	_IO_FILEIO_READINTO_METHODDEF
+	_IO_FILEIO_WRITE_METHODDEF
 	_IO_FILEIO_CLOSE_METHODDEF
 	_IO_FILEIO_SEEKABLE_METHODDEF
 	_IO_FILEIO_READABLE_METHODDEF

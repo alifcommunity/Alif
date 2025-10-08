@@ -77,6 +77,8 @@ extern FILE* _alif_wfOpen(const wchar_t*, const wchar_t*); // 129
 
 extern AlifSizeT _alif_read(AlifIntT, void*, AlifUSizeT); // 133
 
+AlifSizeT _alif_write(AlifIntT, const void*, AlifUSizeT); // 139
+
 #ifdef HAVE_READLINK
 extern int alif_wReadLink(const wchar_t*, wchar_t*, AlifUSizeT); // 151
 #endif
