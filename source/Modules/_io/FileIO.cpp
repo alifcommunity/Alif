@@ -686,16 +686,17 @@ static AlifObject* _ioFileIO_isAttyImpl(FileIO * self) { // 1202
 
 	if (self->fd < 0)
 		return err_closed();
-	ALIF_BEGIN_ALLOW_THREADS
-		ALIF_BEGIN_SUPPRESS_IPH
-		res = isatty(self->fd);
-	ALIF_END_SUPPRESS_IPH
-		ALIF_END_ALLOW_THREADS
-		return alifBool_fromLong(res);
+	ALIF_BEGIN_ALLOW_THREADS;
+	ALIF_BEGIN_SUPPRESS_IPH;
+	res = isatty(self->fd);
+	ALIF_END_SUPPRESS_IPH;
+	ALIF_END_ALLOW_THREADS;
+	return alifBool_fromLong(res);
 }
 
 
-static AlifObject* _ioFileIO_isAttyOpenOnly(AlifObject * op, AlifObject * ALIF_UNUSED(ignored)) { // 1226
+static AlifObject* _ioFileIO_isAttyOpenOnly(AlifObject * op,
+	AlifObject * ALIF_UNUSED(ignored)) { // 1226
 	FileIO* self = ALIFFILEIO_CAST(op);
 	if (self->statAtOpen != nullptr and !S_ISCHR(self->statAtOpen->st_mode)) {
 		ALIF_RETURN_FALSE;
@@ -711,6 +712,7 @@ static AlifMethodDef _fileIOMethods_[] = { // 1238
 	_IO_FILEIO_CLOSE_METHODDEF
 	_IO_FILEIO_SEEKABLE_METHODDEF
 	_IO_FILEIO_READABLE_METHODDEF
+	_IO_FILEIO_ISATTY_METHODDEF
 	{"_isAttyOpenOnly", _ioFileIO_isAttyOpenOnly, METHOD_NOARGS},
 	{"_deallocWarn", fileIO_deallocWarn, METHOD_O},
 	{nullptr, nullptr}             /* sentinel */

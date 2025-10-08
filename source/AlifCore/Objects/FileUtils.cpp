@@ -796,7 +796,7 @@ FILE* _alif_wfOpen(const wchar_t* _path, const wchar_t* _mode) { // 1716
 	char cmode[10]{};
 	AlifUSizeT r{};
 	r = wcstombs(cmode, _mode, 10);
-	if (r == DECODE_ERROR or r >= 10) {
+	if (r == _decodeError_ or r >= 10) {
 		errno = EINVAL;
 		return nullptr;
 	}

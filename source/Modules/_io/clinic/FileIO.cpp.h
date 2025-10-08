@@ -185,3 +185,19 @@ static AlifObject* _ioFileIO_readallImpl(FileIO*);
 static AlifObject* _ioFileIO_readall(FileIO* self, AlifObject* ALIF_UNUSED(ignored)) { // 278
 	return _ioFileIO_readallImpl(self);
 }
+
+
+
+
+
+
+
+// 516
+#define _IO_FILEIO_ISATTY_METHODDEF    \
+    {"isatty", (AlifCPPFunction)_ioFileIO_isAtty, METHOD_NOARGS},
+
+static AlifObject* _ioFileIO_isAttyImpl(FileIO*);
+
+static AlifObject* _ioFileIO_isAtty(FileIO* self, AlifObject* ALIF_UNUSED(ignored)) { // 522
+	return _ioFileIO_isAttyImpl(self);
+}
