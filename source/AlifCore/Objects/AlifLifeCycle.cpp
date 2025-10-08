@@ -924,7 +924,7 @@ static AlifStatus init_sysStreams(AlifThread* _thread) { // 2742
 	AlifObject* iomod = nullptr;
 	AlifObject* std = nullptr;
 	AlifIntT fd{};
-	AlifObject* encoding_attr;
+	AlifObject* encodingAttr;
 	AlifStatus res = ALIFSTATUS_OK();
 	const AlifConfig* config = alifInterpreter_getConfig(_thread->interpreter);
 
@@ -942,14 +942,14 @@ static AlifStatus init_sysStreams(AlifThread* _thread) { // 2742
 
 	/* Set sys.stdin */
 	fd = fileno(stdin);
-	//std = create_stdio(config, iomod, fd, 0, "<stdin>",
-	//	config->stdioEncoding,
-	//	config->stdioErrors);
-	//if (std == nullptr)
-	//	goto error;
-	//alifSys_setObject("__stdin__", std);
-	//_alifSys_setAttr(&ALIF_ID(Stdin), std);
-	//ALIF_DECREF(std);
+	std = create_stdio(config, iomod, fd, 0, "<stdin>",
+		config->stdioEncoding,
+		config->stdioErrors);
+	if (std == nullptr)
+		goto error;
+	alifSys_setObject("__stdin__", std);
+	_alifSys_setAttr(&ALIF_ID(Stdin), std);
+	ALIF_DECREF(std);
 
 	///* Set sys.stdout */
 	fd = fileno(stdout);
@@ -963,33 +963,33 @@ static AlifStatus init_sysStreams(AlifThread* _thread) { // 2742
 	ALIF_DECREF(std);
 
 	///* Set sys.stderr, replaces the preliminary stderr */
-	//fd = fileno(stderr);
-	//std = create_stdio(config, iomod, fd, 1, "<stderr>",
-	//	config->stdioEncoding,
-	//	L"backslashreplace");
-	//if (std == nullptr)
-	//	goto error;
+	fd = fileno(stderr);
+	std = create_stdio(config, iomod, fd, 1, "<stderr>",
+		config->stdioEncoding,
+		L"backslashreplace");
+	if (std == nullptr)
+		goto error;
 
-	//encoding_attr = alifObject_getAttrString(std, "encoding");
-	//if (encoding_attr != nullptr) {
-	//	const char* std_encoding = alifUStr_asUTF8(encoding_attr);
-	//	if (std_encoding != nullptr) {
-	//		AlifObject* codec_info = _alifCodec_lookup(std_encoding);
-	//		ALIF_XDECREF(codec_info);
-	//	}
-	//	ALIF_DECREF(encoding_attr);
-	//}
+	encodingAttr = alifObject_getAttrString(std, "encoding");
+	if (encodingAttr != nullptr) {
+		const char* stdEncoding = alifUStr_asUTF8(encodingAttr);
+		if (stdEncoding != nullptr) {
+			AlifObject* codec_info = _alifCodec_lookup(stdEncoding);
+			ALIF_XDECREF(codec_info);
+		}
+		ALIF_DECREF(encodingAttr);
+	}
 	//_alifErr_clear(_thread);  /* Not a fatal error if codec isn't available */
 
-	//if (alifSys_setObject("__stderr__", std) < 0) {
-	//	ALIF_DECREF(std);
-	//	goto error;
-	//}
-	//if (_alifSys_setAttr(&ALIF_ID(stderr), std) < 0) {
-	//	ALIF_DECREF(std);
-	//	goto error;
-	//}
-	//ALIF_DECREF(std);
+	if (alifSys_setObject("__stderr__", std) < 0) {
+		ALIF_DECREF(std);
+		goto error;
+	}
+	if (_alifSys_setAttr(&ALIF_ID(Stderr), std) < 0) {
+		ALIF_DECREF(std);
+		goto error;
+	}
+	ALIF_DECREF(std);
 
 	goto done;
 

@@ -437,7 +437,7 @@ static AlifObject* builtin_printImpl(AlifObject* _module, AlifObject* _args,
 		AlifThread* thread = _alifThread_get();
 		_file = _alifSys_getAttr(thread, &ALIF_ID(Stdout));
 		if (_file == nullptr) {
-			//	//alifErr_setString(_alifExcRuntimeError_, "lost sys.stdout");
+			//alifErr_setString(_alifExcRuntimeError_, "lost sys.stdout");
 			return nullptr;
 		}
 

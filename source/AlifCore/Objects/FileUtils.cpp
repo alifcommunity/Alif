@@ -461,6 +461,17 @@ wchar_t* _alif_getLocaleEncoding(void) { // 902
 #endif  // !ALIF_FORCE_UTF8_LOCALE
 }
 
+AlifObject* _alif_getLocaleEncodingObject(void) { // 938
+	wchar_t* encoding = _alif_getLocaleEncoding();
+	if (encoding == nullptr) {
+		//alifErr_noMemory();
+		return nullptr;
+	}
+
+	AlifObject* str = alifUStr_fromWideChar(encoding, -1);
+	alifMem_dataFree(encoding);
+	return str;
+}
 
 
 // 1049

@@ -702,6 +702,7 @@
 	INIT_USTR(Open, "افتح"), /* //* alif */	\
 	INIT_USTR(Read, "اقرا"), /* //* alif */	\
 	INIT_USTR(Close, "اغلق"), /* //* alif */	\
+	INIT_USTR(Replace, "استبدل"), /* //* alif */	\
 	INIT_STR(Raw, "raw"), /* //* alif */	\
 	INIT_USTR(TextIOWrapper, "غلاف_النص"), /* //* alif */	\
 	INIT_USTR(Write, "اكتب"), /* //* alif */	\
@@ -812,7 +813,7 @@
 	INIT_ID(Read1), \
 	INIT_ID(ReadAll), \
 	INIT_ID(ReadInto), \
-	INIT_ID(Replace), \
+	/*INIT_ID(Replace),*/ \
 	INIT_ID(Reset), \
 	INIT_ID(Reverse), \
 	INIT_ID(Seekable), \

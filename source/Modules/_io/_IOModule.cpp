@@ -59,6 +59,9 @@ static AlifObject* _io_openImpl(AlifObject* _module, AlifObject* _file, const ch
 		case 130: // 'ق'
 			reading = 1;
 			break;
+		case 'r': //* todo
+			reading = 1;
+			break;
 		case 'w':
 			writing = 1;
 			break;

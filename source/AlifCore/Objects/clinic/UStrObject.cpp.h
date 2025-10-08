@@ -13,7 +13,7 @@
 
 // 919
 #define UNICODE_REPLACE_METHODDEF    \
-    {"Replace", ALIF_CPPFUNCTION_CAST(unicode_replace), METHOD_FASTCALL|METHOD_KEYWORDS},
+    {"استبدل", ALIF_CPPFUNCTION_CAST(unicode_replace), METHOD_FASTCALL|METHOD_KEYWORDS},
 
 static AlifObject* unicode_replaceImpl(AlifObject*, AlifObject*, AlifObject*, AlifSizeT);
 

@@ -81,9 +81,21 @@ static AlifObject* import_getModule(AlifThread* _thread, AlifObject* _name) { //
 		return nullptr;
 	}
 
+	/* //* alif //* todo
+		تمت إضافة هذا المتغير فقط من اجل
+		هذا السطر في ملف AlifLifeCycle
+		winconsoleio_type = (AlifTypeObject*)_alifImport_getModuleAttr(
+		&ALIF_STR(_io), &ALIF_STR(_windowsConsoleIO));
+		حيث _io ليس بترميز عريض
+		وبالتالي نظام الاستيراد يستطيع التعامل معها
+		ولكن alifMapping_getOptionalItem
+		لا يستطيع التعامل معها إن لم تكن ذات ترميز عريض
+	*/
+	AlifObject* name = alifUStr_fromString(alifUStr_asUTF8(_name));
+
 	AlifObject* m{};
 	ALIF_INCREF(modules);
-	(void)alifMapping_getOptionalItem(modules, _name, &m);
+	(void)alifMapping_getOptionalItem(modules, name, &m);
 	ALIF_DECREF(modules);
 	return m;
 }
@@ -896,8 +908,7 @@ main_finally:
 		else {
 			AlifObject* modules = get_modulesDict(tstate, true);
 			if (finish_singlephaseExtension(
-				tstate, mod, cached, info->name, modules) < 0)
-			{
+				tstate, mod, cached, info->name, modules) < 0) {
 				goto error;
 			}
 		}
@@ -998,7 +1009,7 @@ static AlifObject* create_builtin(AlifThread* _thread,
 		_extensions_cacheDelete(info.path, info.name);
 	}
 
-	
+
 	for (InitTable* p = INITTABLE; p->name != nullptr; p++) {
 		//if (alifUStr_equalToASCIIString(info.name, p->name)) {
 		if (alifUStr_equalToUTF8(info.name, p->name)) { //* alif
@@ -1028,7 +1039,7 @@ static AlifObject* create_builtin(AlifThread* _thread,
 	//	goto finally;
 	//}
 
-finally:
+	finally:
 	_alifExtModule_loaderInfoClear(&info);
 	return mod;
 }
@@ -1125,7 +1136,7 @@ enum FrozenStatus { // 2820
 	Frozen_Disabled,
 	Frozen_Excluded,
 
-	Frozen_Invalid,  
+	Frozen_Invalid,
 };
 
 
@@ -1683,13 +1694,13 @@ AlifObject* alifImport_import(AlifObject* _moduleName) { // 3888
 
 	/* Get the __import__ function from the builtins */
 	if (ALIFDICT_CHECK(builtins)) {
-		import = alifObject_getItem(builtins, &ALIF_STR(__import__));
+	import = alifObject_getItem(builtins, &ALIF_STR(__import__));
 		if (import == nullptr) {
 			//_alifErr_setObject(tstate, _alifExcKeyError_, &ALIF_STR(__import__));
 		}
 	}
 	else {
-		import = alifObject_getAttr(builtins, &ALIF_STR(__import__));
+	import = alifObject_getAttr(builtins, &ALIF_STR(__import__));
 	}
 	if (import == nullptr)
 		goto err;
@@ -2111,7 +2122,7 @@ static AlifObject* load_package(const char* name, char* pathname) { // 1035
 		//	ALIF_INCREF(m);
 		//}
 		//else {
-			m = nullptr;
+		m = nullptr;
 		//}
 		goto cleanup;
 	}
@@ -2212,9 +2223,9 @@ static FileDescr* find_module(const char* _fullname, const char* _subname, AlifO
 		/* no hook was found, use builtin import */
 
 		if (len > 0 and _buf[len - 1] != SEP
-#ifdef ALTSEP
+		#ifdef ALTSEP
 			and _buf[len - 1] != ALTSEP
-#endif
+		#endif
 			)
 			_buf[len++] = SEP;
 		strcpy(_buf + len, name);
@@ -2247,7 +2258,7 @@ static FileDescr* find_module(const char* _fullname, const char* _subname, AlifO
 				filemode = "r"; // "b";
 			fp = fopen(_buf, filemode);
 			if (fp != nullptr) {
-					break;
+				break;
 			}
 		}
 		ALIF_XDECREF(copy);
@@ -2324,11 +2335,11 @@ static AlifIntT case_ok(char* _buf, AlifSizeT _len, AlifSizeT _namelen, char* _n
 		char* nameWithExt = buf + len - namelen;
 		while ((dp = readdir(dirp)) != nullptr) {
 			const int thislen =
-#ifdef _DIRENT_HAVE_D_NAMELEN
+			#ifdef _DIRENT_HAVE_D_NAMELEN
 				dp->d_namlen;
-#else
+		#else
 				strlen(dp->d_name);
-#endif
+		#endif
 			if (thislen >= namelen &&
 				strcmp(dp->d_name, nameWithExt) == 0) {
 				(void)closedir(dirp);
@@ -2400,9 +2411,9 @@ static AlifObject* load_module(const char* _name, FILE* fp,
 	case ALIF_SOURCE:
 		m = load_sourceModule(_name, pathname, fp);
 		break;
-	//case ALIF_COMPILED:
-	//	m = load_compiled_module(name, pathname, fp);
-	//	break;
+		//case ALIF_COMPILED:
+		//	m = load_compiled_module(name, pathname, fp);
+		//	break;
 	case PKG_DIRECTORY:
 		m = load_package(_name, pathname);
 		break;
@@ -2519,9 +2530,9 @@ static AlifObject* import_moduleLevel(const char* _name, AlifObject* _globals, A
 	AlifObject* parent{}, * head{}, * next{}, * tail{};
 
 	if (strchr(_name, '/') != nullptr
-#ifdef _WINDOWS
+	#ifdef _WINDOWS
 		or strchr(_name, '\\') != nullptr
-#endif
+	#endif
 		) {
 		//alifErr_setString(_alifExcImportError_,
 		//	"Import by filename is not supported.");

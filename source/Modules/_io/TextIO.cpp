@@ -595,12 +595,12 @@ static AlifIntT _ioTextIOWrapper___init__Impl(TextIO* _self, AlifObject* _buffer
 	if (_encoding == nullptr and _alifRuntime_.preConfig.utf8Mode) {
 		_self->encoding = &ALIF_STR(utf_8);
 	}
-	//else if (_encoding == nullptr or (strcmp(_encoding, "locale") == 0)) {
-	//	_self->encoding = _alif_getLocaleEncodingObject();
-	//	if (_self->encoding == nullptr) {
-	//		goto error;
-	//	}
-	//}
+	else if (_encoding == nullptr or (strcmp(_encoding, "locale") == 0)) {
+		_self->encoding = _alif_getLocaleEncodingObject();
+		if (_self->encoding == nullptr) {
+			goto error;
+		}
+	}
 
 	if (_self->encoding != nullptr) {
 		_encoding = alifUStr_asUTF8(_self->encoding);
@@ -824,7 +824,7 @@ static AlifObject* _ioTextIOWrapper_writeImpl(TextIO* self, AlifObject* text) { 
 			haslf = 1;
 
 	if (haslf and self->writetranslate and self->writenl != nullptr) {
-		AlifObject* newtext = _alifObject_callMethod(text, &ALIF_ID(Replace),
+		AlifObject* newtext = _alifObject_callMethod(text, &ALIF_STR(Replace),
 			"ss", "\n", self->writenl);
 		ALIF_DECREF(text);
 		if (newtext == nullptr)

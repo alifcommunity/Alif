@@ -117,6 +117,7 @@ extern AlifIntT _alif_wStat(const wchar_t*, struct stat*); // 231
 
 
 extern wchar_t* _alif_getLocaleEncoding(void); // 252
+extern AlifObject* _alif_getLocaleEncodingObject(void); // 253
 
 extern AlifIntT _alif_isAbs(const wchar_t*); // 267
 extern AlifIntT _alif_absPath(const wchar_t*, wchar_t**); // 268
