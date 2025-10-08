@@ -466,6 +466,12 @@ static AlifObject* _ioFileIO_readableImpl(FileIO * self) { // 615
 	return alifBool_fromLong((long)self->readable);
 }
 
+static AlifObject* _ioFileIO_writableImpl(FileIO * _self) { // 630
+	if (_self->fd < 0)
+		return err_closed();
+	return alifBool_fromLong((long)_self->writable);
+}
+
 static AlifObject* _ioFileIO_seekableImpl(FileIO * self) { // 645
 	if (self->fd < 0)
 		return err_closed();
@@ -712,6 +718,7 @@ static AlifMethodDef _fileIOMethods_[] = { // 1238
 	_IO_FILEIO_CLOSE_METHODDEF
 	_IO_FILEIO_SEEKABLE_METHODDEF
 	_IO_FILEIO_READABLE_METHODDEF
+	_IO_FILEIO_WRITABLE_METHODDEF
 	_IO_FILEIO_ISATTY_METHODDEF
 	{"_isAttyOpenOnly", _ioFileIO_isAttyOpenOnly, METHOD_NOARGS},
 	{"_deallocWarn", fileIO_deallocWarn, METHOD_O},

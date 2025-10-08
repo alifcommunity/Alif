@@ -121,6 +121,15 @@ static AlifObject* _ioFileIO_readable(FileIO* self, AlifObject* ALIF_UNUSED(igno
 	return _ioFileIO_readableImpl(self);
 }
 
+// 182
+#define _IO_FILEIO_WRITABLE_METHODDEF    \
+    {"Writable", (AlifCPPFunction)_ioFileIO_writable, METHOD_NOARGS},
+
+static AlifObject* _ioFileIO_writableImpl(FileIO*);
+
+static AlifObject* _ioFileIO_writable(FileIO* self, AlifObject* ALIF_UNUSED(ignored)) { // 188
+	return _ioFileIO_writableImpl(self);
+}
 
 // 200
 #define _IO_FILEIO_SEEKABLE_METHODDEF    \
