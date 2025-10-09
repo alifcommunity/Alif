@@ -106,8 +106,16 @@ exit:
 	return return_value;
 }
 
+// 146
+#define _IO_FILEIO_FILENO_METHODDEF    \
+    {"Fileno", (AlifCPPFunction)_ioFileIO_fileno, METHOD_NOARGS},
 
+static AlifObject* _ioFileIO_filenoImpl(FileIO*);
 
+static AlifObject* _ioFileIO_fileno(FileIO* self,
+	AlifObject* ALIF_UNUSED(ignored)) { // 152
+	return _ioFileIO_filenoImpl(self);
+}
 
 
 
