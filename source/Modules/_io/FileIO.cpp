@@ -589,7 +589,7 @@ static AlifObject* _ioFileIO_readallImpl(FileIO * _self) { // 731
 			}
 
 			if (ALIFBYTES_GET_SIZE(result) < (AlifSizeT)bufsize) {
-				if (alifBytes_resize(&result, bufsize) < 0)
+				if (_alifBytes_resize(&result, bufsize) < 0)
 					return nullptr;
 			}
 		}
@@ -615,7 +615,7 @@ static AlifObject* _ioFileIO_readallImpl(FileIO * _self) { // 731
 	}
 
 	if (ALIFBYTES_GET_SIZE(result) > bytesRead) {
-		if (alifBytes_resize(&result, bytesRead) < 0)
+		if (_alifBytes_resize(&result, bytesRead) < 0)
 			return nullptr;
 	}
 	return result;

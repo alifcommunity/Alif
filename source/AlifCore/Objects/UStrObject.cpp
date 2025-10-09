@@ -3542,7 +3542,7 @@ AlifObject* _alifUStr_encodeUTF32(AlifObject* str,
 				//alifErr_noMemory();
 				goto error;
 			}
-			if (alifBytes_resize(&v, ALIFBYTES_GET_SIZE(v) + 4 * moreunits) < 0)
+			if (_alifBytes_resize(&v, ALIFBYTES_GET_SIZE(v) + 4 * moreunits) < 0)
 				goto error;
 			out = (uint32_t*)ALIFBYTES_AS_STRING(v) + outpos;
 		}
@@ -3561,7 +3561,7 @@ AlifObject* _alifUStr_encodeUTF32(AlifObject* str,
 
 	nsize = (unsigned char*)out - (unsigned char*)ALIFBYTES_AS_STRING(v);
 	if (nsize != ALIFBYTES_GET_SIZE(v))
-		alifBytes_resize(&v, nsize);
+		_alifBytes_resize(&v, nsize);
 	ALIF_XDECREF(errorHandler);
 	ALIF_XDECREF(exc);
 done:
@@ -3987,7 +3987,7 @@ AlifObject* _alifUStr_encodeUTF16(AlifObject* str,
 				//alifErr_noMemory();
 				goto error;
 			}
-			if (alifBytes_resize(&v, ALIFBYTES_GET_SIZE(v) + 2 * moreunits) < 0)
+			if (_alifBytes_resize(&v, ALIFBYTES_GET_SIZE(v) + 2 * moreunits) < 0)
 				goto error;
 			out = (unsigned short*)ALIFBYTES_AS_STRING(v) + outpos;
 		}
@@ -4006,7 +4006,7 @@ AlifObject* _alifUStr_encodeUTF16(AlifObject* str,
 
 	nsize = (unsigned char*)out - (unsigned char*)ALIFBYTES_AS_STRING(v);
 	if (nsize != ALIFBYTES_GET_SIZE(v))
-		alifBytes_resize(&v, nsize);
+		_alifBytes_resize(&v, nsize);
 	ALIF_XDECREF(errorHandler);
 	ALIF_XDECREF(exc);
 done:
@@ -4605,7 +4605,7 @@ static AlifIntT encode_codePageStrict(UINT code_page, AlifObject** outbytes,
 			//alifErr_noMemory();
 			goto done;
 		}
-		if (alifBytes_resize(outbytes, n + outsize) < 0) {
+		if (_alifBytes_resize(outbytes, n + outsize) < 0) {
 			goto done;
 		}
 		out = ALIFBYTES_AS_STRING(*outbytes) + n;
@@ -6363,7 +6363,7 @@ void alifUStrWriter_dealloc(AlifUStrWriter* _writer) { // 13852
 }
 
 
-static AlifMethodDef _uStrMethods_[] = {
+static AlifMethodDef _uStrMethods_[] = { // 13987
 	UNICODE_REPLACE_METHODDEF
 	{nullptr, nullptr}
 };

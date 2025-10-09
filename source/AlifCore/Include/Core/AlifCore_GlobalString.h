@@ -64,6 +64,8 @@ public:
 			STRUCT_FOR_USTR(Close, "اغلق") //* alif
 			STRUCT_FOR_USTR(Replace, "استبدل") //* alif
 			STRUCT_FOR_STR(Raw, "raw") //* alif
+			STRUCT_FOR_USTR(End, "النهاية") //* alif
+			STRUCT_FOR_USTR(Sep, "الفاصل") //* alif
 			STRUCT_FOR_USTR(TextIOWrapper, "غلاف_النص") //* alif
 			STRUCT_FOR_USTR(Write, "اكتب") //* alif
 			STRUCT_FOR_USTR(__add__, "__اجمع__") //* alif
@@ -141,7 +143,7 @@ public:
 			STRUCT_FOR_ID(Decoder)
 			STRUCT_FOR_ID(Encode)
 			STRUCT_FOR_ID(Encoding)
-			STRUCT_FOR_ID(End)
+			//STRUCT_FOR_ID(End)
 			STRUCT_FOR_ID(Errors)
 			//STRUCT_FOR_ID(Excepthook)
 			STRUCT_FOR_ID(File)
@@ -174,11 +176,12 @@ public:
 			STRUCT_FOR_ID(Read1)
 			STRUCT_FOR_ID(ReadAll)
 			STRUCT_FOR_ID(ReadInto)
+			STRUCT_FOR_ID(ReadLine)
 			//STRUCT_FOR_ID(Replace)
 			STRUCT_FOR_ID(Reset)
 			STRUCT_FOR_ID(Reverse)
 			STRUCT_FOR_ID(Seekable)
-			STRUCT_FOR_ID(Sep)
+			//STRUCT_FOR_ID(Sep)
 			STRUCT_FOR_ID(Stderr)
 			STRUCT_FOR_ID(Stdin)
 			STRUCT_FOR_ID(Stdout)

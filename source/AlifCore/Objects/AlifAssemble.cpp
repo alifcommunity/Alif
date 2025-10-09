@@ -132,7 +132,7 @@ static AlifIntT assemble_emitExceptionTableEntry(AlifAssembler* _a, AlifIntT _st
 	AlifExceptHandlerInfo* _handler) { // 134
 	AlifSizeT len_ = ALIFBYTES_GET_SIZE(_a->exceptTable);
 	if (_a->exceptTableOff + MAX_SIZE_OF_ENTRY >= len_) {
-		RETURN_IF_ERROR(alifBytes_resize(&_a->exceptTable, len_ * 2));
+		RETURN_IF_ERROR(_alifBytes_resize(&_a->exceptTable, len_ * 2));
 	}
 	AlifIntT size = _end - _start;
 	AlifIntT target = _handlerOffset;
@@ -245,7 +245,7 @@ static void write_locationInfoNoColumn(AlifAssembler* _a, AlifIntT _length, Alif
 static AlifIntT write_locationInfoEntry(AlifAssembler* _a, Location _loc, AlifIntT _iSize) { // 287
 	AlifSizeT len_ = ALIFBYTES_GET_SIZE(_a->lineTable);
 	if (_a->locationOff + THEORETICAL_MAX_ENTRY_SIZE >= len_) {
-		RETURN_IF_ERROR(alifBytes_resize(&_a->lineTable, len_ * 2));
+		RETURN_IF_ERROR(_alifBytes_resize(&_a->lineTable, len_ * 2));
 	}
 	if (_loc.lineNo < 0) {
 		write_locationInfoNone(_a, _iSize);
@@ -361,7 +361,7 @@ static AlifIntT assemble_emitInstr(AlifAssembler* a, Instruction* instr) { // 40
 		if (len > ALIF_SIZET_MAX / 2) {
 			return ERROR;
 		}
-		RETURN_IF_ERROR(alifBytes_resize(&a->bytecode, len * 2));
+		RETURN_IF_ERROR(_alifBytes_resize(&a->bytecode, len * 2));
 	}
 	code = (AlifCodeUnit*)ALIFBYTES_AS_STRING(a->bytecode) + a->offset;
 	a->offset += size;
@@ -383,13 +383,13 @@ static AlifIntT assemble_emit(AlifAssembler* _a, InstrSequence* _instrs,
 
 	RETURN_IF_ERROR(assemble_exceptionTable(_a, _instrs));
 
-	RETURN_IF_ERROR(alifBytes_resize(&_a->exceptTable, _a->exceptTableOff));
+	RETURN_IF_ERROR(_alifBytes_resize(&_a->exceptTable, _a->exceptTableOff));
 	RETURN_IF_ERROR(_alifCompiler_constCacheMergeOne(_constCache, &_a->exceptTable));
 
-	RETURN_IF_ERROR(alifBytes_resize(&_a->lineTable, _a->locationOff));
+	RETURN_IF_ERROR(_alifBytes_resize(&_a->lineTable, _a->locationOff));
 	RETURN_IF_ERROR(_alifCompiler_constCacheMergeOne(_constCache, &_a->lineTable));
 
-	RETURN_IF_ERROR(alifBytes_resize(&_a->bytecode, _a->offset * sizeof(AlifCodeUnit)));
+	RETURN_IF_ERROR(_alifBytes_resize(&_a->bytecode, _a->offset * sizeof(AlifCodeUnit)));
 	RETURN_IF_ERROR(_alifCompiler_constCacheMergeOne(_constCache, &_a->bytecode));
 	return SUCCESS;
 }

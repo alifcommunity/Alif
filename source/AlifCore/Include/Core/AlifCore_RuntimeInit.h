@@ -704,6 +704,8 @@
 	INIT_USTR(Close, "اغلق"), /* //* alif */	\
 	INIT_USTR(Replace, "استبدل"), /* //* alif */	\
 	INIT_STR(Raw, "raw"), /* //* alif */	\
+	INIT_USTR(End, "النهاية"), /* //* alif */	\
+	INIT_USTR(Sep, "الفاصل"), /* //* alif */	\
 	INIT_USTR(TextIOWrapper, "غلاف_النص"), /* //* alif */	\
 	INIT_USTR(Write, "اكتب"), /* //* alif */	\
     INIT_USTR(__add__, "__اجمع__"), /* //* alif */	\
@@ -780,7 +782,7 @@
 	INIT_ID(Decoder), \
 	INIT_ID(Encode), \
 	INIT_ID(Encoding), \
-	INIT_ID(End), \
+	/*INIT_ID(End),*/ \
 	INIT_ID(Errors), \
 	/*INIT_ID(Excepthook),*/ \
 	INIT_ID(File), \
@@ -813,11 +815,12 @@
 	INIT_ID(Read1), \
 	INIT_ID(ReadAll), \
 	INIT_ID(ReadInto), \
+	INIT_ID(ReadLine), \
 	/*INIT_ID(Replace),*/ \
 	INIT_ID(Reset), \
 	INIT_ID(Reverse), \
 	INIT_ID(Seekable), \
-	INIT_ID(Sep), \
+	/*INIT_ID(Sep),*/ \
 	INIT_ID(Stderr), \
 	INIT_ID(Stdin), \
 	INIT_ID(Stdout), \

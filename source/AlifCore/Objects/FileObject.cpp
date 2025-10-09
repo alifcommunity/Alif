@@ -5,7 +5,54 @@
 
 
 
+AlifObject* alifFile_getLine(AlifObject* _f, AlifIntT _n) { // 51
+	AlifObject* result{};
 
+	if (_f == nullptr) {
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
+
+	if (_n <= 0) {
+		result = alifObject_callMethodNoArgs(_f, &ALIF_ID(ReadLine));
+	}
+	else {
+		result = _alifObject_callMethod(_f, &ALIF_ID(ReadLine), "i", _n);
+	}
+	if (result != nullptr and !ALIFBYTES_CHECK(result) and
+		!ALIFUSTR_CHECK(result)) {
+		ALIF_SETREF(result, nullptr);
+		alifErr_setString(_alifExcTypeError_,
+			"object.readline() returned non-string");
+	}
+
+	if (_n < 0 and result != nullptr and ALIFBYTES_CHECK(result)) {
+		const char* s = ALIFBYTES_AS_STRING(result);
+		AlifSizeT len = ALIFBYTES_GET_SIZE(result);
+		if (len == 0) {
+			ALIF_SETREF(result, nullptr);
+			//alifErr_setString(_alifExcEOFError_,
+			//	"EOF when reading a line");
+		}
+		else if (s[len - 1] == '\n') {
+			(void)_alifBytes_resize(&result, len - 1);
+		}
+	}
+	if (_n < 0 and result != nullptr and ALIFUSTR_CHECK(result)) {
+		AlifSizeT len = ALIFUSTR_GET_LENGTH(result);
+		if (len == 0) {
+			ALIF_SETREF(result, nullptr);
+			//alifErr_setString(_alifExcEOFError_,
+			//	"EOF when reading a line");
+		}
+		else if (ALIFUSTR_READ_CHAR(result, len - 1) == '\n') {
+			AlifObject* v{};
+			v = alifUStr_subString(result, 0, len - 1);
+			ALIF_SETREF(result, v);
+		}
+	}
+	return result;
+}
 
 
 AlifIntT alifFile_writeObject(AlifObject* _v, AlifObject* _f, AlifIntT _flags) { // 104

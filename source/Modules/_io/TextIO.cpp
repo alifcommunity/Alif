@@ -32,7 +32,9 @@ typedef class TextIO TextIO;
 
 
 
-
+static AlifObject* _io_TextIOBase_errorsGetImpl(AlifObject* _self) { // 177
+	return ALIF_NONE;
+}
 
 
 
@@ -41,6 +43,7 @@ static AlifMethodDef _textIOBaseMethods_[] = { // 185
 };
 
 static AlifGetSetDef _textIOBaseGetSet_[] = { // 193
+	_IO__TEXTIOBASE_ERRORS_GETSETDEF
 	{nullptr}
 };
 
@@ -1427,7 +1430,19 @@ static AlifObject* _ioTextIOWrapper_readlineImpl(TextIO* self, AlifSizeT size) {
 	return _textIOWrapper_readline(self, size);
 }
 
+static AlifObject* _ioTextIOWrapper_filenoImpl(TextIO* _self) { // 3033
+	//CHECK_ATTACHED(_self);
+	return alifObject_callMethodNoArgs(_self->buffer, &ALIF_ID(Fileno));
+}
 
+static AlifObject* _ioTextIOWrapper_flushImpl(TextIO* self) { // 3098
+	//CHECK_ATTACHED(self);
+	CHECK_CLOSED(self);
+	self->telling = self->seekable;
+	if (_textIOWrapper_writeFlush(self) < 0)
+		return NULL;
+	return alifObject_callMethodNoArgs(self->buffer, &ALIF_ID(Flush));
+}
 
 static AlifObject* _ioTextIOWrapper_closeImpl(TextIO* self) { // 3115
 	AlifObject* res{};
@@ -1457,9 +1472,9 @@ static AlifObject* _ioTextIOWrapper_closeImpl(TextIO* self) { // 3115
 				alifErr_clear();
 			}
 		}
-		//if (_alifFile_flush((AlifObject*)self) < 0) {
-		//	exc = alifErr_getRaisedException();
-		//}
+		if (_alifFile_flush((AlifObject*)self) < 0) {
+			exc = alifErr_getRaisedException();
+		}
 
 		res = alifObject_callMethodNoArgs(self->buffer, &ALIF_STR(Close));
 		if (exc != nullptr) {
@@ -1477,7 +1492,10 @@ static AlifObject* _ioTextIOWrapper_closedGetImpl(TextIO* self) { // 3217
 	return alifObject_getAttr(self->buffer, &ALIF_ID(Closed));
 }
 
-
+static AlifObject* _ioTextIOWrapper_errorsGetImpl(TextIO* _self) {
+	//CHECK_INITIALIZED(_self);
+	return ALIF_NEWREF(_self->errors);
+}
 
 
 static AlifMethodDef _incrementalNewlineDecoderMethods_[] = {
@@ -1510,23 +1528,29 @@ static AlifMethodDef _textIOWrapperMethods_[] = { // 3334
 	_IO_TEXTIOWRAPPER_WRITE_METHODDEF
 	_IO_TEXTIOWRAPPER_READ_METHODDEF
 	_IO_TEXTIOWRAPPER_READLINE_METHODDEF
+	_IO_TEXTIOWRAPPER_FLUSH_METHODDEF
 	_IO_TEXTIOWRAPPER_CLOSE_METHODDEF
+
+	_IO_TEXTIOWRAPPER_FILENO_METHODDEF
 
 	{nullptr, nullptr}
 };
 
 
 static AlifMemberDef _textIOWrapperMembers_[] = { // 3358
-	{"encoding", ALIF_T_OBJECT, offsetof(TextIO, encoding), ALIF_READONLY},
-	{"buffer", ALIF_T_OBJECT, offsetof(TextIO, buffer), ALIF_READONLY},
-	{"line_buffering", ALIF_T_BOOL, offsetof(TextIO, lineBuffering), ALIF_READONLY},
+	{"Encoding", ALIF_T_OBJECT, offsetof(TextIO, encoding), ALIF_READONLY},
+	{"Buffer", ALIF_T_OBJECT, offsetof(TextIO, buffer), ALIF_READONLY},
+	{"LineBuffering", ALIF_T_BOOL, offsetof(TextIO, lineBuffering), ALIF_READONLY},
 	{"__weakListOffset__", ALIF_T_ALIFSIZET, offsetof(TextIO, weakRefList), ALIF_READONLY},
 	{"__dictOffset__", ALIF_T_ALIFSIZET, offsetof(TextIO, dict), ALIF_READONLY},
 	{nullptr}
 };
 
 
-
+static AlifGetSetDef _textIOWrapperGetSet_[] = { // 3369
+	_IO_TEXTIOWRAPPER_ERRORS_GETSETDEF
+	{nullptr}
+};
 
 
 
@@ -1534,6 +1558,7 @@ AlifTypeSlot _textIOWrapperSlots_[] = { // 3380
 	{ALIF_TP_TRAVERSE, (void*)textIOWrapper_traverse},
 	{ALIF_TP_METHODS, _textIOWrapperMethods_},
 	{ALIF_TP_MEMBERS, _textIOWrapperMembers_},
+	{ALIF_TP_GETSET, _textIOWrapperGetSet_},
 	{ALIF_TP_INIT, (void*)_ioTextIOWrapper___init__},
 	{0, nullptr},
 };

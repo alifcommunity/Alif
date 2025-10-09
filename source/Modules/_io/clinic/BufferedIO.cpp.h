@@ -138,6 +138,23 @@ static AlifObject* _io_Buffered_writable(Buffered* _self, AlifObject* ALIF_UNUSE
 	return returnValue;
 }
 
+// 515
+#define _IO__BUFFERED_FILENO_METHODDEF    \
+    {"Fileno", (AlifCPPFunction)_io_Buffered_fileno, METHOD_NOARGS},
+
+static AlifObject* _io_Buffered_filenoImpl(Buffered*);
+
+static AlifObject* _io_Buffered_fileno(Buffered* self,
+	AlifObject* ALIF_UNUSED(ignored)) { // 521
+	AlifObject* returnValue = nullptr;
+
+	ALIF_BEGIN_CRITICAL_SECTION(self);
+	returnValue = _io_Buffered_filenoImpl(self);
+	ALIF_END_CRITICAL_SECTION();
+
+	return returnValue;
+}
+
 
 // 577
 #define _IO__BUFFERED_FLUSH_METHODDEF    \

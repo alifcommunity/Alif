@@ -37,7 +37,8 @@ void alif_decRefSharedDebug(AlifObject* _obj,
 			newShared = shared - (1 << ALIF_REF_SHARED_SHIFT);
 		}
 
-	} while (!alifAtomic_compareExchangeSize(&_obj->refShared,
+	}
+	while (!alifAtomic_compareExchangeSize(&_obj->refShared,
 		&shared, newShared));
 
 	if (shouldQueue) {
@@ -69,7 +70,8 @@ void alif_mergeZeroLocalRefcount(AlifObject* _op) { // 374
 	AlifSizeT newShared{};
 	do {
 		newShared = (shared & ~ALIFREF_SHARED_FLAG_MASK) | ALIF_REF_MERGED;
-	} while (!alifAtomic_compareExchangeSize(&_op->refShared,
+	}
+	while (!alifAtomic_compareExchangeSize(&_op->refShared,
 		&shared, newShared));
 
 	if (newShared == ALIF_REF_MERGED) {
@@ -735,7 +737,7 @@ AlifObject* alifObject_genericGetAttrWithDict(AlifObject* _obj, AlifObject* _nam
 		if (f_ != nullptr and alifDescr_isData(descr)) {
 			res = f_(descr, _obj, (AlifObject*)ALIF_TYPE(_obj));
 			if (res == nullptr and _suppress
-				/*and alifErr_exceptionMatches(alifExcAttributeError)*/
+				and alifErr_exceptionMatches(_alifExcAttributeError_)
 				) {
 				alifErr_clear();
 			}
@@ -1022,7 +1024,7 @@ static AlifTypeObject* staticTypes[] = {
 	&_alifLongRangeIterType_,
 	&_alifLongType_,
 	//&_alifMapType_,
-	&_alifMemberDescrType_, 
+	&_alifMemberDescrType_,
 	//&_alifMemoryViewType_,
 	//&_alifMethodDescrType_,
 	&_alifMethodType_,
@@ -1080,8 +1082,8 @@ static AlifTypeObject* staticTypes[] = {
 	//&_alifUnionType_,
 
 	// class
-	&_alifBoolType_,       
-	&_alifCPPMethodType_,  
+	&_alifBoolType_,
+	&_alifCPPMethodType_,
 	//&_alifODictItemsType_,
 	//&_alifODictKeysType_,
 	//&_alifODictValuesType_,
@@ -1111,7 +1113,7 @@ AlifStatus alifTypes_initTypes(AlifInterpreter* _interp) { // 2362
 static inline void new_reference(AlifObject* _op) { // 2405
 	_op->threadID = alif_threadID();
 	_op->padding = 0;
-	_op->mutex = {.bits = 0};
+	_op->mutex = { .bits = 0 };
 	_op->gcBits = 0;
 	_op->refLocal = 1;
 	_op->refShared = 0;
@@ -1207,7 +1209,7 @@ void alif_reprLeave(AlifObject* _obj) { // 2724
 		}
 	}
 
-finally:
+	finally:
 	//alifErr_setRaisedException(exc);
 	return; //* delete
 }

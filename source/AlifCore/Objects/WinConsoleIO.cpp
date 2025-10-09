@@ -185,7 +185,8 @@ static AlifIntT internal_close(WinConsoleIO* _self) { // 184
 
 
 
-static AlifObject* winconsoleio_new(AlifTypeObject* _type, AlifObject* _args, AlifObject* _kwds) { // 237
+static AlifObject* winconsoleio_new(AlifTypeObject* _type,
+	AlifObject* _args, AlifObject* _kwds) { // 237
 	WinConsoleIO* self{};
 
 	self = (WinConsoleIO*)_type->alloc(_type, 0);
@@ -388,6 +389,12 @@ static AlifObject* err_closed(void) { // 476
 }
 
 
+static AlifObject* _io_WindowsConsoleIO_filenoImpl(WinConsoleIO* self) { // 497
+	if (self->fd < 0)
+		return err_closed();
+	return alifLong_fromLong(self->fd);
+}
+
 
 static AlifObject* _io_windowsConsoleIO_readableImpl(WinConsoleIO* self) { // 512
 	if (self->fd == -1)
@@ -495,7 +502,7 @@ static AlifMethodDef _winConsoleIOMethods_[] = { // 1121
 	//_IO__WINDOWSCONSOLEIO_CLOSE_METHODDEF
 	_IO__WINDOWSCONSOLEIO_READABLE_METHODDEF
 	_IO__WINDOWSCONSOLEIO_WRITABLE_METHODDEF
-	//_IO__WINDOWSCONSOLEIO_FILENO_METHODDEF
+	_IO__WINDOWSCONSOLEIO_FILENO_METHODDEF
 	_IO__WINDOWSCONSOLEIO_ISATTY_METHODDEF
 	{"_isAttyOpenOnly", (AlifCPPFunction)_io_windowsConsoleIOIsAtty, METHOD_NOARGS},
 	{nullptr, nullptr}             /* sentinel */

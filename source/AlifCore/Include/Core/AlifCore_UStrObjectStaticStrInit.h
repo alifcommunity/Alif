@@ -103,8 +103,8 @@ static inline void _alifUStr_initStaticStrings(AlifInterpreter* interp) {
 	_alifUStr_internStatic(interp, &string);
 	string = &ALIF_ID(Encoding);
 	_alifUStr_internStatic(interp, &string);
-	string = &ALIF_ID(End);
-	_alifUStr_internStatic(interp, &string);
+	//string = &ALIF_ID(End);
+	//_alifUStr_internStatic(interp, &string);
 	string = &ALIF_ID(Errors);
 	_alifUStr_internStatic(interp, &string);
 	string = &ALIF_ID(File);
@@ -135,8 +135,8 @@ static inline void _alifUStr_initStaticStrings(AlifInterpreter* interp) {
 	_alifUStr_internStatic(interp, &string);
 	string = &ALIF_ID(ReadInto);
 	_alifUStr_internStatic(interp, &string);
-	string = &ALIF_ID(Sep);
-	_alifUStr_internStatic(interp, &string);
+	//string = &ALIF_ID(Sep);
+	//_alifUStr_internStatic(interp, &string);
 	string = &ALIF_ID(Stderr);
 	_alifUStr_internStatic(interp, &string);
 	string = &ALIF_ID(Stdin);
@@ -185,6 +185,10 @@ static inline void _alifUStr_initStaticStrings(AlifInterpreter* interp) {
 	string = &ALIF_STR(Open);
 	_alifUStr_internStatic(interp, &string);
 	string = &ALIF_STR(Raw);
+	_alifUStr_internStatic(interp, &string);
+	string = &ALIF_STR(End);
+	_alifUStr_internStatic(interp, &string);
+	string = &ALIF_STR(Sep);
 	_alifUStr_internStatic(interp, &string);
 	string = &ALIF_STR(__call__);
 	_alifUStr_internStatic(interp, &string);

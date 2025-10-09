@@ -970,7 +970,7 @@ static AlifStatus init_sysStreams(AlifThread* _thread) { // 2742
 	if (std == nullptr)
 		goto error;
 
-	encodingAttr = alifObject_getAttrString(std, "encoding");
+	encodingAttr = alifObject_getAttrString(std, "Encoding");
 	if (encodingAttr != nullptr) {
 		const char* stdEncoding = alifUStr_asUTF8(encodingAttr);
 		if (stdEncoding != nullptr) {

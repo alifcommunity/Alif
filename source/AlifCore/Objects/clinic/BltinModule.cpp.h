@@ -121,13 +121,13 @@ static AlifObject* builtin_print(AlifObject* _module, AlifObject* const* _args,
 		AlifObject* item[NUM_KEYWORDS]{};
 	} _kwtuple = {
 		.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTupleType_, NUM_KEYWORDS),
-		.item = { &ALIF_ID(Sep), &ALIF_ID(End), &ALIF_ID(File), &ALIF_ID(Flush), },
+		.item = { &ALIF_STR(Sep), &ALIF_STR(End), &ALIF_ID(File), &ALIF_ID(Flush), },
 	};
 #undef NUM_KEYWORDS
 #define KWTUPLE (&_kwtuple.objBase.objBase)
 
 
-	static const char* const keywords[] = { "Sep", "End", "File", "Flush", nullptr };
+	static const char* const keywords[] = { "الفاصل", "النهاية", "File", "Flush", nullptr };
 	static AlifArgParser parser = {
 		.keywords = keywords,
 		.fname = "print",

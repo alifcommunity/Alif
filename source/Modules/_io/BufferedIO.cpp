@@ -254,6 +254,13 @@ static AlifObject* _io_Buffered_writableImpl(Buffered* _self) { // 650
 	return alifObject_callMethodNoArgs(_self->raw, &ALIF_ID(Writable));
 }
 
+
+static AlifObject* _io_Buffered_filenoImpl(Buffered* _self) { // 694
+	CHECK_INITIALIZED(_self);
+	return alifObject_callMethodNoArgs(_self->raw, &ALIF_ID(Fileno));
+}
+
+
 static AlifObject* _bufferedWriter_flushUnlocked(Buffered*); // 717
 static void _bufferedReader_resetBuf(Buffered*); // 720
 static AlifObject* _bufferedReader_readAll(Buffered*); // 727
@@ -445,7 +452,7 @@ static AlifObject* _io_Buffered_read1Impl(Buffered* self, AlifSizeT n) { // 1018
 	if (r == -2)
 		r = 0;
 	if (n > r)
-		alifBytes_resize(&res, r);
+		_alifBytes_resize(&res, r);
 	return res;
 }
 
@@ -913,6 +920,7 @@ static AlifMethodDef _bufferedReaderMethods_[] = { // 2511
 	_IO__BUFFERED_CLOSE_METHODDEF
 	_IO__BUFFERED_SEEKABLE_METHODDEF
 	_IO__BUFFERED_READABLE_METHODDEF
+	_IO__BUFFERED_FILENO_METHODDEF
 
 	_IO__BUFFERED_READ_METHODDEF
 	_IO__BUFFERED_READ1_METHODDEF
@@ -962,7 +970,7 @@ static AlifMethodDef _bufferedWriterMethods_[] = { // 2576
 	//_IO__BUFFERED_DETACH_METHODDEF
 	_IO__BUFFERED_SEEKABLE_METHODDEF
 	_IO__BUFFERED_WRITABLE_METHODDEF
-	//_IO__BUFFERED_FILENO_METHODDEF
+	_IO__BUFFERED_FILENO_METHODDEF
 	//_IO__BUFFERED_ISATTY_METHODDEF
 	//_IO__BUFFERED__DEALLOC_WARN_METHODDEF
 

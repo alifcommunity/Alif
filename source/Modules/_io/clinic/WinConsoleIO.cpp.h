@@ -80,6 +80,19 @@ exit:
 }
 
 
+#if defined(HAVE_WINDOWS_CONSOLE_IO) // 141
+
+#define _IO__WINDOWSCONSOLEIO_FILENO_METHODDEF    \
+    {"Fileno", (AlifCPPFunction)_io_WindowsConsoleIO_fileno, METHOD_NOARGS},
+
+static AlifObject* _io_WindowsConsoleIO_filenoImpl(WinConsoleIO*);
+
+static AlifObject* _io_WindowsConsoleIO_fileno(WinConsoleIO* self,
+	AlifObject* ALIF_UNUSED(ignored)) { // 155
+	return _io_WindowsConsoleIO_filenoImpl(self);
+}
+
+#endif /* defined(HAVE_WINDOWS_CONSOLE_IO) */
 
 
 #if defined(HAVE_WINDOWS_CONSOLE_IO) // 163

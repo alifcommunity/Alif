@@ -18,7 +18,7 @@
 #undef BYTE
 #endif
 
-
+static void flush_io(void); // 41
 static AlifObject* run_mod(ModuleTy, AlifObject*, AlifObject*,
 	AlifObject*, AlifCompilerFlags*, AlifASTMem*, AlifObject*, AlifIntT); // 42
 static AlifObject* alifRun_file(FILE*, AlifObject*, AlifIntT,
@@ -136,7 +136,7 @@ AlifIntT alifRun_simpleFileObject(FILE* _fp, AlifObject* _filename,
 	v = alifRun_file(_fp, _filename, ALIF_FILE_INPUT, dict, dict,
 		_closeIt, _flags);
 	//}
-	//flush_io();
+	flush_io();
 	if (v == nullptr) {
 		ALIF_CLEAR(mainModule);
 		alifErr_print();
@@ -763,6 +763,22 @@ static AlifObject* runEval_codeObj(AlifThread* _thread, AlifCodeObject* _co,
 	return v;
 }
 
+static void flush_ioStream(AlifThread* _thread, AlifObject* _name) { // 1268
+	AlifObject* f = _alifSys_getAttr(_thread, _name);
+	if (f != nullptr) {
+		if (_alifFile_flush(f) < 0) {
+			alifErr_clear();
+		}
+	}
+}
+
+static void flush_io(void) { // 1279
+	AlifThread* thread = _alifThread_get();
+	AlifObject* exc = _alifErr_getRaisedException(thread);
+	flush_ioStream(thread, &ALIF_ID(Stderr));
+	flush_ioStream(thread, &ALIF_ID(Stdout));
+	_alifErr_setRaisedException(thread, exc);
+}
 
 static AlifObject* run_mod(ModuleTy _mod, AlifObject* _filename,
 	AlifObject* _globals, AlifObject* _locals, AlifCompilerFlags* _flags,
