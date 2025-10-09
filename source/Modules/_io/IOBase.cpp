@@ -22,6 +22,18 @@ static AlifIntT ioBase_isClosed(AlifObject* self) { // 76
 	return alifObject_hasAttrWithError(self, &ALIF_ID(__IOBaseClosed));
 }
 
+static AlifObject* _io_IOBase_flushImpl(AlifObject* self) { // 165
+	AlifIntT closed = ioBase_isClosed(self);
+
+	if (!closed) {
+		return ALIF_NONE;
+	}
+	if (closed > 0) {
+		alifErr_setString(_alifExcValueError_, "عملية تبادل على ملف مغلق.");
+	}
+	return nullptr;
+}
+
 static AlifIntT iobase_checkClosed(AlifObject* self) { // 191
 	AlifObject* res{};
 	AlifIntT closed{};
@@ -233,6 +245,7 @@ fail:
 #include "clinic/IOBase.cpp.h"
 
 static AlifMethodDef _ioBaseMethods_[] = { // 824
+	_IO__IOBASE_FLUSH_METHODDEF
 	_IO__IOBASE_CLOSE_METHODDEF
 
 	_IO__IOBASE_SEEKABLE_METHODDEF

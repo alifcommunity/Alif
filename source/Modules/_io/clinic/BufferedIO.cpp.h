@@ -54,7 +54,22 @@ exit:
 	return returnValue;
 }
 
+// 305
+#define _IO__BUFFERED_SIMPLE_FLUSH_METHODDEF    \
+    {"Flush", (AlifCPPFunction)_io_Buffered_simpleFlush, METHOD_NOARGS},
 
+static AlifObject* _io_Buffered_simpleFlushImpl(Buffered*);
+
+static AlifObject* _io_Buffered_simpleFlush(Buffered* self,
+	AlifObject* ALIF_UNUSED(ignored)) { // 311
+	AlifObject* returnValue = nullptr;
+
+	ALIF_BEGIN_CRITICAL_SECTION(self);
+	returnValue = _io_Buffered_simpleFlushImpl(self);
+	ALIF_END_CRITICAL_SECTION();
+
+	return returnValue;
+}
 
 
 // 339

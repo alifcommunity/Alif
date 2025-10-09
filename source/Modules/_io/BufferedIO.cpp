@@ -162,6 +162,13 @@ static AlifObject* _io_Buffered__deallocWarn(Buffered* self, AlifObject* source)
 }
 
 
+static AlifObject* _io_Buffered_simpleFlushImpl(Buffered* _self) { // 497
+	CHECK_INITIALIZED(_self);
+	return alifObject_callMethodNoArgs(_self->raw, &ALIF_ID(Flush));
+}
+
+
+
 static AlifIntT buffered_closed(Buffered* _self) { // 505
 	AlifIntT closed{};
 	AlifObject* res{};
@@ -917,6 +924,7 @@ AlifTypeSpec _bufferedIOBaseSpec_ = { // 2504
 
 
 static AlifMethodDef _bufferedReaderMethods_[] = { // 2511
+	_IO__BUFFERED_SIMPLE_FLUSH_METHODDEF
 	_IO__BUFFERED_CLOSE_METHODDEF
 	_IO__BUFFERED_SEEKABLE_METHODDEF
 	_IO__BUFFERED_READABLE_METHODDEF

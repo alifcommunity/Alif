@@ -340,7 +340,8 @@ static AlifObject* _ioTextIOWrapper_flush(TextIO* self,
 
 static AlifObject* _ioTextIOWrapper_closeImpl(TextIO*);
 
-static AlifObject* _ioTextIOWrapper_close(TextIO* self, AlifObject* ALIF_UNUSED(ignored)) { // 1122
+static AlifObject* _ioTextIOWrapper_close(TextIO* self,
+	AlifObject* ALIF_UNUSED(ignored)) { // 1122
 	AlifObject* returnValue = nullptr;
 
 	ALIF_BEGIN_CRITICAL_SECTION(self);

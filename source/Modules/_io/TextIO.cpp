@@ -1299,8 +1299,8 @@ static AlifObject* _textIOWrapper_readline(TextIO* self, AlifSizeT limit) { // 2
 
 	CHECK_CLOSED(self);
 
-	//if (_textIOWrapper_writeFlush(self) < 0)
-	//	return nullptr;
+	if (_textIOWrapper_writeFlush(self) < 0)
+		return nullptr;
 
 	chunked = 0;
 
