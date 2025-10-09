@@ -575,7 +575,7 @@ static AlifObject* builtin_inputImpl(AlifObject* module, AlifObject* prompt) { /
 		const char* promptstr{};
 		char* s = nullptr;
 		AlifObject* stdinEncoding = nullptr, * stdinErrors = nullptr;
-		AlifObject* stdoutEncoding = nullptr, * stdout_errors = nullptr;
+		AlifObject* stdoutEncoding = nullptr, * stdoutErrors = nullptr;
 		const char* stdinEncodingStr, * stdinErrorsStr;
 		AlifObject* result{};
 		AlifUSizeT len{};
@@ -591,7 +591,7 @@ static AlifObject* builtin_inputImpl(AlifObject* module, AlifObject* prompt) { /
 			tty = 0;
 			goto _readline_errors;
 		}
-		if (!ALIFUSTR_CHECK(stdinEncoding) ||
+		if (!ALIFUSTR_CHECK(stdinEncoding) or
 			!ALIFUSTR_CHECK(stdinErrors)) {
 			tty = 0;
 			goto _readline_errors;
@@ -609,38 +609,38 @@ static AlifObject* builtin_inputImpl(AlifObject* module, AlifObject* prompt) { /
 		}
 		if (prompt != nullptr) {
 			/* We have a prompt, encode it as stdout would */
-			const char* stdout_encoding_str{}, * stdout_errors_str{};
+			const char* stdoutEncodingStr{}, * stdoutErrorsStr{};
 			AlifObject* stringpo{};
 			stdoutEncoding = alifObject_getAttr(fout, &ALIF_ID(Encoding));
 			if (stdoutEncoding == nullptr) {
 				tty = 0;
 				goto _readline_errors;
 			}
-			stdout_errors = alifObject_getAttr(fout, &ALIF_ID(Errors));
-			if (stdout_errors == nullptr) {
+			stdoutErrors = alifObject_getAttr(fout, &ALIF_ID(Errors));
+			if (stdoutErrors == nullptr) {
 				tty = 0;
 				goto _readline_errors;
 			}
 			if (!ALIFUSTR_CHECK(stdoutEncoding) ||
-				!ALIFUSTR_CHECK(stdout_errors)) {
+				!ALIFUSTR_CHECK(stdoutErrors)) {
 				tty = 0;
 				goto _readline_errors;
 			}
-			stdout_encoding_str = alifUStr_asUTF8(stdoutEncoding);
-			if (stdout_encoding_str == nullptr) {
+			stdoutEncodingStr = alifUStr_asUTF8(stdoutEncoding);
+			if (stdoutEncodingStr == nullptr) {
 				goto _readline_errors;
 			}
-			stdout_errors_str = alifUStr_asUTF8(stdout_errors);
-			if (stdout_errors_str == nullptr) {
+			stdoutErrorsStr = alifUStr_asUTF8(stdoutErrors);
+			if (stdoutErrorsStr == nullptr) {
 				goto _readline_errors;
 			}
 			stringpo = alifObject_str(prompt);
 			if (stringpo == nullptr)
 				goto _readline_errors;
 			po = alifUStr_asEncodedString(stringpo,
-				stdout_encoding_str, stdout_errors_str);
+				stdoutEncodingStr, stdoutErrorsStr);
 			ALIF_CLEAR(stdoutEncoding);
-			ALIF_CLEAR(stdout_errors);
+			ALIF_CLEAR(stdoutErrors);
 			ALIF_CLEAR(stringpo);
 			if (po == nullptr)
 				goto _readline_errors;
@@ -699,7 +699,7 @@ _readline_errors:
 		ALIF_XDECREF(stdinEncoding);
 		ALIF_XDECREF(stdoutEncoding);
 		ALIF_XDECREF(stdinErrors);
-		ALIF_XDECREF(stdout_errors);
+		ALIF_XDECREF(stdoutErrors);
 		ALIF_XDECREF(po);
 		if (tty)
 			return nullptr;
