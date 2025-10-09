@@ -739,6 +739,22 @@ static AlifObject* _ioTextIOWrapper_closedGetImpl(TextIO*); // 1489
             return nullptr; \
     } while (0)
 
+// 1519
+#define CHECK_INITIALIZED(_self) \
+    if (_self->ok <= 0) { \
+        alifErr_setString(_alifExcValueError_, \
+            "I/O operation on uninitialized object"); \
+        return nullptr; \
+    }
+
+// 1526
+#define CHECK_ATTACHED(_self) \
+    CHECK_INITIALIZED(_self); \
+    if (self->detached) { \
+        alifErr_setString(_alifExcValueError_, \
+             "underlying buffer has been detached"); \
+        return nullptr; \
+    }
 
 
 static AlifIntT _textIOWrapper_writeFlush(TextIO* self) { // 1568
@@ -811,7 +827,7 @@ static AlifObject* _ioTextIOWrapper_writeImpl(TextIO* self, AlifObject* text) { 
 	AlifIntT haslf = 0;
 	AlifIntT needflush = 0, text_needflush = 0;
 
-	//CHECK_ATTACHED(self);
+	CHECK_ATTACHED(self);
 	CHECK_CLOSED(self);
 
 	if (self->encoder == nullptr) {
@@ -1086,15 +1102,15 @@ fail:
 static AlifObject* _ioTextIOWrapper_readImpl(TextIO* self, AlifSizeT n) { // 1972
 	AlifObject* result = nullptr, * chunks = nullptr;
 
-	//CHECK_ATTACHED(self);
+	CHECK_ATTACHED(self);
 	CHECK_CLOSED(self);
 
 	//if (self->decoder == nullptr) {
 	//	return _unsupported(self->state, "not readable");
 	//}
 
-	//if (_textIOWrapper_writeFlush(self) < 0)
-	//	return nullptr;
+	if (_textIOWrapper_writeFlush(self) < 0)
+		return nullptr;
 
 	if (n < 0) {
 		/* Read everything */
@@ -1426,17 +1442,17 @@ error:
 }
 
 static AlifObject* _ioTextIOWrapper_readlineImpl(TextIO* self, AlifSizeT size) { // 2350
-	//CHECK_ATTACHED(self);
+	CHECK_ATTACHED(self);
 	return _textIOWrapper_readline(self, size);
 }
 
-static AlifObject* _ioTextIOWrapper_filenoImpl(TextIO* _self) { // 3033
-	//CHECK_ATTACHED(_self);
-	return alifObject_callMethodNoArgs(_self->buffer, &ALIF_ID(Fileno));
+static AlifObject* _ioTextIOWrapper_filenoImpl(TextIO* self) { // 3033
+	CHECK_ATTACHED(self);
+	return alifObject_callMethodNoArgs(self->buffer, &ALIF_ID(Fileno));
 }
 
 static AlifObject* _ioTextIOWrapper_flushImpl(TextIO* self) { // 3098
-	//CHECK_ATTACHED(self);
+	CHECK_ATTACHED(self);
 	CHECK_CLOSED(self);
 	self->telling = self->seekable;
 	if (_textIOWrapper_writeFlush(self) < 0)
@@ -1447,7 +1463,7 @@ static AlifObject* _ioTextIOWrapper_flushImpl(TextIO* self) { // 3098
 static AlifObject* _ioTextIOWrapper_closeImpl(TextIO* self) { // 3115
 	AlifObject* res{};
 	AlifIntT r{};
-	//CHECK_ATTACHED(self);
+	CHECK_ATTACHED(self);
 
 	res = _ioTextIOWrapper_closedGetImpl(self);
 	if (res == nullptr)
@@ -1488,12 +1504,12 @@ static AlifObject* _ioTextIOWrapper_closeImpl(TextIO* self) { // 3115
 
 
 static AlifObject* _ioTextIOWrapper_closedGetImpl(TextIO* self) { // 3217
-	//CHECK_ATTACHED(self);
+	CHECK_ATTACHED(self);
 	return alifObject_getAttr(self->buffer, &ALIF_ID(Closed));
 }
 
 static AlifObject* _ioTextIOWrapper_errorsGetImpl(TextIO* _self) {
-	//CHECK_INITIALIZED(_self);
+	CHECK_INITIALIZED(_self);
 	return ALIF_NEWREF(_self->errors);
 }
 
