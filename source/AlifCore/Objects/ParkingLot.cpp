@@ -157,7 +157,7 @@ static AlifIntT alifSemaphore_platformWait(AlifSemaphore* sema, AlifTimeT timeou
 	else {
 		res = Alif_Park_Ok;
 	}
-//#else
+#else
 	pthread_mutex_lock(&sema->mutex);
 	AlifIntT err = 0;
 	if (sema->counter == 0) {
@@ -170,7 +170,7 @@ static AlifIntT alifSemaphore_platformWait(AlifSemaphore* sema, AlifTimeT timeou
 			AlifTimeT now{};
 			(void)alifTime_timeRaw(&now);
 			AlifTimeT deadline = _alifTime_add(now, timeout);
-			alifTime_asTimeSpecClamp(deadline, &ts);
+			_alifTime_asTimeSpecClamp(deadline, &ts);
 
 			err = pthread_cond_timedwait(&sema->cond, &sema->mutex, &ts);
 #endif // HAVE_PTHREAD_COND_TIMEDWAIT_RELATIVE_NP

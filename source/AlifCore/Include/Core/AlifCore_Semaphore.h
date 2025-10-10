@@ -4,7 +4,11 @@
 
 
 
-
+#if (defined(_POSIX_SEMAPHORES) and (_POSIX_SEMAPHORES+0) != -1 and \
+        defined(HAVE_SEM_TIMEDWAIT))
+#   define ALIF_USE_SEMAPHORES
+#   include <semaphore.h>
+#endif
 
 
 class AlifSemaphore { // 34
