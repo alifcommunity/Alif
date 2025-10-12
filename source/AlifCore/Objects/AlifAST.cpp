@@ -12,6 +12,9 @@ public:
 	AlifIntT recursionLimit;            /* recursion limit */
 };
 
+// Forward declaration
+static AlifIntT init_types(void*);
+
 static class ASTState* get_astState(void) { // 24
 	AlifInterpreter* interp = _alifInterpreter_get();
 	class ASTState* state = &interp->ast;
@@ -22,11 +25,1614 @@ static class ASTState* get_astState(void) { // 24
 }
 
 
+static AlifIntT init_identifiers(ASTState* _state) { // 286
+	if ((_state->__dict__ = alifUStr_internFromString("__dict__")) == nullptr) return -1;
+	if ((_state->__doc__ = alifUStr_internFromString("__doc__")) == nullptr) return -1;
+	if ((_state->__match_args__ = alifUStr_internFromString("__match_args__")) == nullptr) return -1;
+	if ((_state->__module__ = alifUStr_internFromString("__module__")) == nullptr) return -1;
+	if ((_state->_attributes = alifUStr_internFromString("_attributes")) == nullptr) return -1;
+	if ((_state->_fields = alifUStr_internFromString("_fields")) == nullptr) return -1;
+	if ((_state->annotation = alifUStr_internFromString("annotation")) == nullptr) return -1;
+	if ((_state->arg = alifUStr_internFromString("arg")) == nullptr) return -1;
+	if ((_state->args = alifUStr_internFromString("args")) == nullptr) return -1;
+	if ((_state->argtypes = alifUStr_internFromString("argtypes")) == nullptr) return -1;
+	if ((_state->asname = alifUStr_internFromString("asname")) == nullptr) return -1;
+	if ((_state->ast = alifUStr_internFromString("ast")) == nullptr) return -1;
+	if ((_state->attr = alifUStr_internFromString("attr")) == nullptr) return -1;
+	if ((_state->bases = alifUStr_internFromString("bases")) == nullptr) return -1;
+	if ((_state->body = alifUStr_internFromString("body")) == nullptr) return -1;
+	if ((_state->bound = alifUStr_internFromString("bound")) == nullptr) return -1;
+	if ((_state->cases = alifUStr_internFromString("cases")) == nullptr) return -1;
+	if ((_state->cause = alifUStr_internFromString("cause")) == nullptr) return -1;
+	if ((_state->cls = alifUStr_internFromString("cls")) == nullptr) return -1;
+	if ((_state->col_offset = alifUStr_internFromString("col_offset")) == nullptr) return -1;
+	if ((_state->comparators = alifUStr_internFromString("comparators")) == nullptr) return -1;
+	if ((_state->context_expr = alifUStr_internFromString("context_expr")) == nullptr) return -1;
+	if ((_state->conversion = alifUStr_internFromString("conversion")) == nullptr) return -1;
+	if ((_state->ctx = alifUStr_internFromString("ctx")) == nullptr) return -1;
+	if ((_state->decorator_list = alifUStr_internFromString("decorator_list")) == nullptr) return -1;
+	if ((_state->default_value = alifUStr_internFromString("default_value")) == nullptr) return -1;
+	if ((_state->defaults = alifUStr_internFromString("defaults")) == nullptr) return -1;
+	if ((_state->elt = alifUStr_internFromString("elt")) == nullptr) return -1;
+	if ((_state->elts = alifUStr_internFromString("elts")) == nullptr) return -1;
+	if ((_state->endColOffset = alifUStr_internFromString("end_col_offset")) == nullptr) return -1;
+	if ((_state->endLineNo = alifUStr_internFromString("end_lineno")) == nullptr) return -1;
+	if ((_state->exc = alifUStr_internFromString("exc")) == nullptr) return -1;
+	if ((_state->finalbody = alifUStr_internFromString("finalbody")) == nullptr) return -1;
+	if ((_state->format_spec = alifUStr_internFromString("format_spec")) == nullptr) return -1;
+	if ((_state->func = alifUStr_internFromString("func")) == nullptr) return -1;
+	if ((_state->generators = alifUStr_internFromString("generators")) == nullptr) return -1;
+	if ((_state->guard = alifUStr_internFromString("guard")) == nullptr) return -1;
+	if ((_state->handlers = alifUStr_internFromString("handlers")) == nullptr) return -1;
+	if ((_state->id = alifUStr_internFromString("id")) == nullptr) return -1;
+	if ((_state->ifs = alifUStr_internFromString("ifs")) == nullptr) return -1;
+	if ((_state->is_async = alifUStr_internFromString("is_async")) == nullptr) return -1;
+	if ((_state->items = alifUStr_internFromString("items")) == nullptr) return -1;
+	if ((_state->iter = alifUStr_internFromString("iter")) == nullptr) return -1;
+	if ((_state->key = alifUStr_internFromString("key")) == nullptr) return -1;
+	if ((_state->keys = alifUStr_internFromString("keys")) == nullptr) return -1;
+	if ((_state->keywords = alifUStr_internFromString("keywords")) == nullptr) return -1;
+	if ((_state->kind = alifUStr_internFromString("kind")) == nullptr) return -1;
+	if ((_state->kw_defaults = alifUStr_internFromString("kw_defaults")) == nullptr) return -1;
+	if ((_state->kwarg = alifUStr_internFromString("kwarg")) == nullptr) return -1;
+	if ((_state->kwd_attrs = alifUStr_internFromString("kwd_attrs")) == nullptr) return -1;
+	if ((_state->kwd_patterns = alifUStr_internFromString("kwd_patterns")) == nullptr) return -1;
+	if ((_state->kwonlyargs = alifUStr_internFromString("kwonlyargs")) == nullptr) return -1;
+	if ((_state->left = alifUStr_internFromString("left")) == nullptr) return -1;
+	if ((_state->level = alifUStr_internFromString("level")) == nullptr) return -1;
+	if ((_state->lineno = alifUStr_internFromString("lineno")) == nullptr) return -1;
+	if ((_state->lower = alifUStr_internFromString("lower")) == nullptr) return -1;
+	if ((_state->module = alifUStr_internFromString("module")) == nullptr) return -1;
+	if ((_state->msg = alifUStr_internFromString("msg")) == nullptr) return -1;
+	if ((_state->name = alifUStr_internFromString("name")) == nullptr) return -1;
+	if ((_state->names = alifUStr_internFromString("names")) == nullptr) return -1;
+	if ((_state->op = alifUStr_internFromString("op")) == nullptr) return -1;
+	if ((_state->operand = alifUStr_internFromString("operand")) == nullptr) return -1;
+	if ((_state->ops = alifUStr_internFromString("ops")) == nullptr) return -1;
+	if ((_state->optional_vars = alifUStr_internFromString("optional_vars")) == nullptr) return -1;
+	if ((_state->orelse = alifUStr_internFromString("orelse")) == nullptr) return -1;
+	if ((_state->pattern = alifUStr_internFromString("pattern")) == nullptr) return -1;
+	if ((_state->patterns = alifUStr_internFromString("patterns")) == nullptr) return -1;
+	if ((_state->posonlyargs = alifUStr_internFromString("posonlyargs")) == nullptr) return -1;
+	if ((_state->rest = alifUStr_internFromString("rest")) == nullptr) return -1;
+	if ((_state->returns = alifUStr_internFromString("returns")) == nullptr) return -1;
+	if ((_state->right = alifUStr_internFromString("right")) == nullptr) return -1;
+	if ((_state->simple = alifUStr_internFromString("simple")) == nullptr) return -1;
+	if ((_state->slice = alifUStr_internFromString("slice")) == nullptr) return -1;
+	if ((_state->step = alifUStr_internFromString("step")) == nullptr) return -1;
+	if ((_state->subject = alifUStr_internFromString("subject")) == nullptr) return -1;
+	if ((_state->tag = alifUStr_internFromString("tag")) == nullptr) return -1;
+	if ((_state->target = alifUStr_internFromString("target")) == nullptr) return -1;
+	if ((_state->targets = alifUStr_internFromString("targets")) == nullptr) return -1;
+	if ((_state->test = alifUStr_internFromString("test")) == nullptr) return -1;
+	if ((_state->type = alifUStr_internFromString("type")) == nullptr) return -1;
+	if ((_state->type_comment = alifUStr_internFromString("type_comment")) == nullptr) return -1;
+	if ((_state->type_ignores = alifUStr_internFromString("type_ignores")) == nullptr) return -1;
+	if ((_state->type_params = alifUStr_internFromString("type_params")) == nullptr) return -1;
+	if ((_state->upper = alifUStr_internFromString("upper")) == nullptr) return -1;
+	if ((_state->value = alifUStr_internFromString("value")) == nullptr) return -1;
+	if ((_state->values = alifUStr_internFromString("values")) == nullptr) return -1;
+	if ((_state->vararg = alifUStr_internFromString("vararg")) == nullptr) return -1;
+	return 0;
+};
 
- // 382
+
+// 382
 GENERATE_SEQ_CONSTRUCTOR(Expr, expr, ExprTy); // هذه الماكرو تقوم بإنشاء جسم دالة عن طريق تمرير المعاملات ك نصوص لإستخدامها ضمن مولد الدالة
 GENERATE_SEQ_CONSTRUCTOR(Arg, arg, ArgTy); // هذه الماكرو تقوم بإنشاء جسم دالة عن طريق تمرير المعاملات ك نصوص لإستخدامها ضمن مولد الدالة
 GENERATE_SEQ_CONSTRUCTOR(Keyword, keyword, KeywordTy); // هذه الماكرو تقوم بإنشاء جسم دالة عن طريق تمرير المعاملات ك نصوص لإستخدامها ضمن مولد الدالة
+
+
+static const char* const _moduleFields_[] = { // 394
+	"body",
+	"type_ignores",
+};
+static const char* const _interactiveFields_[] = {
+	"body",
+};
+static const char* const _expressionFields_[] = {
+	"body",
+};
+static const char* const _functionTypeFields_[] = {
+	"argtypes",
+	"returns",
+};
+static const char* const stmt_attributes[] = {
+	"lineno",
+	"col_offset",
+	"end_lineno",
+	"end_col_offset",
+};
+//static AlifObject* ast2obj_stmt(ASTState*, Validator*, void*);
+static const char* const _functionDefFields_[] = {
+	"name",
+	"args",
+	"body",
+	"decorator_list",
+	"returns",
+	"type_comment",
+	"type_params",
+};
+static const char* const _asyncFunctionDefFields_[] = {
+	"name",
+	"args",
+	"body",
+	"decorator_list",
+	"returns",
+	"type_comment",
+	"type_params",
+};
+static const char* const _classDefFields_[] = {
+	"name",
+	"bases",
+	"keywords",
+	"body",
+	"decorator_list",
+	"type_params",
+};
+static const char* const _returnFields_[] = {
+	"value",
+};
+static const char* const _deleteFields_[] = {
+	"targets",
+};
+static const char* const _assignFields_[] = {
+	"targets",
+	"value",
+	"type_comment",
+};
+static const char* const _typeAliasFields_[] = {
+	"name",
+	"type_params",
+	"value",
+};
+static const char* const _augAssignFields_[] = {
+	"target",
+	"op",
+	"value",
+};
+static const char* const _annAssignFields_[] = {
+	"target",
+	"annotation",
+	"value",
+	"simple",
+};
+static const char* const _forFields_[] = {
+	"target",
+	"iter",
+	"body",
+	"orelse",
+	"type_comment",
+};
+static const char* const _asyncForFields_[] = {
+	"target",
+	"iter",
+	"body",
+	"orelse",
+	"type_comment",
+};
+static const char* const _whileFields_[] = {
+	"test",
+	"body",
+	"orelse",
+};
+static const char* const _ifFields_[] = {
+	"test",
+	"body",
+	"orelse",
+};
+static const char* const _withFields_[] = {
+	"items",
+	"body",
+	"type_comment",
+};
+static const char* const _asyncWithFields_[] = {
+	"items",
+	"body",
+	"type_comment",
+};
+static const char* const _matchFields_[] = {
+	"subject",
+	"cases",
+};
+static const char* const _raiseFields_[] = {
+	"exc",
+	"cause",
+};
+static const char* const _tryFields_[] = {
+	"body",
+	"handlers",
+	"orelse",
+	"finalbody",
+};
+static const char* const _tryStarFields_[] = {
+	"body",
+	"handlers",
+	"orelse",
+	"finalbody",
+};
+static const char* const _assertFields_[] = {
+	"test",
+	"msg",
+};
+static const char* const _importFields_[] = {
+	"names",
+};
+static const char* const _importFromFields_[] = {
+	"module",
+	"names",
+	"level",
+};
+static const char* const _globalFields_[] = {
+	"names",
+};
+static const char* const _nonlocalFields_[] = {
+	"names",
+};
+static const char* const _exprFields_[] = {
+	"value",
+};
+static const char* const _exprAttributes_[] = {
+	"lineno",
+	"col_offset",
+	"end_lineno",
+	"end_col_offset",
+};
+//static AlifObject* ast2obj_expr(ASTState*, Validator*, void*);
+static const char* const _boolOpFields_[] = {
+	"op",
+	"values",
+};
+static const char* const _namedExprFields_[] = {
+	"target",
+	"value",
+};
+static const char* const _binOpFields_[] = {
+	"left",
+	"op",
+	"right",
+};
+static const char* const _unaryOpFields_[] = {
+	"op",
+	"operand",
+};
+static const char* const _lambdaFields_[] = {
+	"args",
+	"body",
+};
+static const char* const _ifExpFields_[] = {
+	"test",
+	"body",
+	"orelse",
+};
+static const char* const _dictFields_[] = {
+	"keys",
+	"values",
+};
+static const char* const _setFields_[] = {
+	"elts",
+};
+static const char* const _listCompFields_[] = {
+	"elt",
+	"generators",
+};
+static const char* const _setCompFields_[] = {
+	"elt",
+	"generators",
+};
+static const char* const _dictCompFields_[] = {
+	"key",
+	"value",
+	"generators",
+};
+static const char* const _generatorExpFields_[] = {
+	"elt",
+	"generators",
+};
+static const char* const _awaitFields_[] = {
+	"value",
+};
+static const char* const _yieldFields_[] = {
+	"value",
+};
+static const char* const _yieldFromFields_[] = {
+	"value",
+};
+static const char* const _compareFields_[] = {
+	"left",
+	"ops",
+	"comparators",
+};
+static const char* const _callFields_[] = {
+	"func",
+	"args",
+	"keywords",
+};
+static const char* const _formattedValueFields_[] = {
+	"value",
+	"conversion",
+	"format_spec",
+};
+static const char* const _joinedStrFields_[] = {
+	"values",
+};
+static const char* const _constantFields_[] = {
+	"value",
+	"kind",
+};
+static const char* const _attributeFields_[] = {
+	"value",
+	"attr",
+	"ctx",
+};
+static const char* const _subScriptFields_[] = {
+	"value",
+	"slice",
+	"ctx",
+};
+static const char* const _starredFields_[] = {
+	"value",
+	"ctx",
+};
+static const char* const _nameFields_[] = {
+	"id",
+	"ctx",
+};
+static const char* const _listFields_[] = {
+	"elts",
+	"ctx",
+};
+static const char* const _tupleFields_[] = {
+	"elts",
+	"ctx",
+};
+static const char* const _sliceFields_[] = { // 662
+	"lower",
+	"upper",
+	"step",
+};
+static const char* const comprehension_fields[] = {
+	"target",
+	"iter",
+	"ifs",
+	"is_async",
+};
+static const char* const excepthandler_attributes[] = {
+	"lineno",
+	"col_offset",
+	"end_lineno",
+	"end_col_offset",
+};
+//static AlifObject* ast2obj_excepthandler(ASTState*, Validator*, void*);
+static const char* const _exceptHandlerFields_[] = {
+	"type",
+	"name",
+	"body",
+};
+//static AlifObject* ast2obj_arguments(ASTState*, Validator*, void*);
+static const char* const _argumentsFields_[] = {
+	"posonlyargs",
+	"args",
+	"vararg",
+	"kwonlyargs",
+	"kw_defaults",
+	"kwarg",
+	"defaults",
+};
+//static AlifObject* ast2obj_arg(ASTState*, Validator*, void*);
+static const char* const _argAttributes_[] = {
+	"lineno",
+	"col_offset",
+	"end_lineno",
+	"end_col_offset",
+};
+static const char* const _argFields_[] = {
+	"arg",
+	"annotation",
+	"type_comment",
+};
+//static AlifObject* ast2obj_keyword(ASTState*, Validator*, void*);
+static const char* const _keywordAttributes_[] = {
+	"lineno",
+	"col_offset",
+	"end_lineno",
+	"end_col_offset",
+};
+static const char* const _keywordFields_[] = {
+	"arg",
+	"value",
+};
+//static AlifObject* ast2obj_alias(ASTState*, Validator*, void*);
+static const char* const _aliasAttributes_[] = {
+	"lineno",
+	"col_offset",
+	"end_lineno",
+	"end_col_offset",
+};
+static const char* const _aliasFields_[] = {
+	"name",
+	"asname",
+};
+//static AlifObject* ast2obj_withitem(ASTState*, Validator*, void*);
+static const char* const _withItemFields_[] = {
+	"context_expr",
+	"optional_vars",
+};
+//static AlifObject* ast2obj_matchCase(ASTState*, Validator*, void*);
+static const char* const _matchCaseFields_[] = {
+	"pattern",
+	"guard",
+	"body",
+};
+static const char* const _patternAttributes_[] = {
+	"lineno",
+	"col_offset",
+	"end_lineno",
+	"end_col_offset",
+};
+//static AlifObject* ast2obj_pattern(ASTState*, Validator*, void*);
+static const char* const _MatchValueFields_[] = {
+	"value",
+};
+static const char* const _matchSingletonFields_[] = {
+	"value",
+};
+static const char* const _MatchSequenceFields_[] = {
+	"patterns",
+};
+static const char* const _matchMappingFields_[] = {
+	"keys",
+	"patterns",
+	"rest",
+};
+static const char* const _matchClassFields_[] = {
+	"cls",
+	"patterns",
+	"kwd_attrs",
+	"kwd_patterns",
+};
+static const char* const _matchStarFields_[] = {
+	"name",
+};
+static const char* const _matchAsFields_[] = {
+	"pattern",
+	"name",
+};
+static const char* const _matchOrFields_[] = { // 794
+	"patterns",
+};
+//static AlifObject* ast2obj_typeIgnore(ASTState*, Validator*, void*);
+static const char* const _typeIgnoreFields_[] = {
+	"lineno",
+	"tag",
+};
+static const char* const _typeParamAttributes_[] = {
+	"lineno",
+	"col_offset",
+	"end_lineno",
+	"end_col_offset",
+};
+//static AlifObject* ast2obj_typeParam(ASTState*, Validator*, void*);
+static const char* const _typeVarFields_[] = {
+	"name",
+	"bound",
+	"default_value",
+};
+static const char* const _paramSpecFields_[] = {
+	"name",
+	"default_value",
+};
+static const char* const _typeVarTupleFields_[] = { // 820
+	"name",
+	"default_value",
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class ASTObject { // 5035
+public:
+	ALIFOBJECT_HEAD;
+	AlifObject* dict;
+};
+
+
+
+static AlifIntT ast_typeInit(AlifObject* self, AlifObject* args, AlifObject* kw) { // 5075
+	ASTState* state = get_astState();
+	if (state == nullptr) {
+		return -1;
+	}
+
+	AlifSizeT i{}, numfields = 0;
+	AlifIntT res = -1;
+	AlifObject* key{}, * value{}, * fields{}, * attributes = nullptr, * remaining_fields = nullptr;
+	if (alifObject_getOptionalAttr((AlifObject*)ALIF_TYPE(self), state->_fields, &fields) < 0) {
+		goto cleanup;
+	}
+	if (fields) {
+		numfields = alifSequence_size(fields);
+		if (numfields == -1) {
+			goto cleanup;
+		}
+		remaining_fields = alifSet_new(fields);
+	}
+	else {
+		remaining_fields = alifSet_new(nullptr);
+	}
+	if (remaining_fields == nullptr) {
+		goto cleanup;
+	}
+
+	res = 0; /* if no error occurs, this stays 0 to the end */
+	if (numfields < ALIFTUPLE_GET_SIZE(args)) {
+		alifErr_format(_alifExcTypeError_, "%.400s constructor takes at most "
+			"%zd positional argument%s",
+			_alifType_name(ALIF_TYPE(self)),
+			numfields, numfields == 1 ? "" : "s");
+		res = -1;
+		goto cleanup;
+	}
+	for (i = 0; i < ALIFTUPLE_GET_SIZE(args); i++) {
+		/* cannot be reached when fields is nullptr */
+		AlifObject* name = alifSequence_getItem(fields, i);
+		if (!name) {
+			res = -1;
+			goto cleanup;
+		}
+		res = alifObject_setAttr(self, name, ALIFTUPLE_GET_ITEM(args, i));
+		if (alifSet_discard(remaining_fields, name) < 0) {
+			res = -1;
+			ALIF_DECREF(name);
+			goto cleanup;
+		}
+		ALIF_DECREF(name);
+		if (res < 0) {
+			goto cleanup;
+		}
+	}
+	if (kw) {
+		i = 0;  /* needed by alifDict_next */
+		while (alifDict_next(kw, &i, &key, &value)) {
+			AlifIntT contains = alifSequence_contains(fields, key);
+			if (contains == -1) {
+				res = -1;
+				goto cleanup;
+			}
+			else if (contains == 1) {
+				AlifIntT p = alifSet_discard(remaining_fields, key);
+				if (p == -1) {
+					res = -1;
+					goto cleanup;
+				}
+				if (p == 0) {
+					alifErr_format(_alifExcTypeError_,
+						"%.400s got multiple values for argument '%U'",
+						ALIF_TYPE(self)->name, key);
+					res = -1;
+					goto cleanup;
+				}
+			}
+			else {
+				// Lazily initialize "attributes"
+				if (attributes == nullptr) {
+					attributes = alifObject_getAttr((AlifObject*)ALIF_TYPE(self), state->_attributes);
+					if (attributes == nullptr) {
+						res = -1;
+						goto cleanup;
+					}
+				}
+				AlifIntT contains = alifSequence_contains(attributes, key);
+				if (contains == -1) {
+					res = -1;
+					goto cleanup;
+				}
+				else if (contains == 0) {
+					//if (alifErr_warnFormat(
+					//	_alifExcDeprecationWarning_, 1,
+					//	"%.400s.__init__ got an unexpected keyword argument '%U'. "
+					//	"Support for arbitrary keyword arguments is deprecated "
+					//	"and will be removed in Alif 5.0.",
+					//	ALIF_TYPE(self)->name, key
+					//) < 0) {
+					//	res = -1;
+					//	goto cleanup;
+					//}
+				}
+			}
+			res = alifObject_setAttr(self, key, value);
+			if (res < 0) {
+				goto cleanup;
+			}
+		}
+	}
+	AlifSizeT size; size = alifSet_size(remaining_fields);
+	AlifObject* field_types; field_types = nullptr;
+	AlifObject* remaining_list; remaining_list = nullptr;
+	if (size > 0) {
+		if (alifObject_getOptionalAttr((AlifObject*)ALIF_TYPE(self), &ALIF_ID(_fieldTypes),
+			&field_types) < 0) {
+			res = -1;
+			goto cleanup;
+		}
+		if (field_types == nullptr) {
+			goto cleanup;
+		}
+		remaining_list = alifSequence_list(remaining_fields);
+		if (!remaining_list) {
+			goto set_remaining_cleanup;
+		}
+		for (AlifSizeT i = 0; i < size; i++) {
+			AlifObject* name = ALIFLIST_GET_ITEM(remaining_list, i);
+			AlifObject* type = alifDict_getItemWithError(field_types, name);
+			if (!type) {
+				if (alifErr_occurred()) {
+					goto set_remaining_cleanup;
+				}
+				else {
+					//if (alifErr_warnFormat(
+					//	_alifExcDeprecationWarning_, 1,
+					//	"Field '%U' is missing from %.400s._field_types. "
+					//	"This will become an error in Alif 5.0.",
+					//	name, ALIF_TYPE(self)->name
+					//) < 0) {
+					//	goto set_remaining_cleanup;
+					//}
+				}
+			}
+			//else if (ALIFUNION_CHECK(type)) {
+			//	// optional field
+			//	// do nothing, we'll have set a None default on the class
+			//}
+			else if (ALIF_IS_TYPE(type, &_alifGenericAliasType_)) {
+				// list field
+				AlifObject* empty = alifList_new(0);
+				if (!empty) {
+					goto set_remaining_cleanup;
+				}
+				res = alifObject_setAttr(self, name, empty);
+				ALIF_DECREF(empty);
+				if (res < 0) {
+					goto set_remaining_cleanup;
+				}
+			}
+			else if (type == state->expr_context_type) {
+				// special case for expr_context: default to Load()
+				res = alifObject_setAttr(self, name, state->Load_singleton);
+				if (res < 0) {
+					goto set_remaining_cleanup;
+				}
+			}
+			else {
+				// simple field (e.g., identifier)
+				//if (alifErr_warnFormat(
+				//	_alifExcDeprecationWarning_, 1,
+				//	"%.400s.__init__ missing 1 required positional argument: '%U'. "
+				//	"This will become an error in Alif 5.0.",
+				//	ALIF_TYPE(self)->name, name
+				//) < 0) {
+				//	goto set_remaining_cleanup;
+				//}
+			}
+		}
+		ALIF_DECREF(remaining_list);
+		ALIF_DECREF(field_types);
+	}
+cleanup:
+	ALIF_XDECREF(attributes);
+	ALIF_XDECREF(fields);
+	ALIF_XDECREF(remaining_fields);
+	return res;
+set_remaining_cleanup:
+	ALIF_XDECREF(remaining_list);
+	ALIF_XDECREF(field_types);
+	res = -1;
+	goto cleanup;
+}
+
+
+
+static AlifTypeSlot _astTypeSlots_[] = { // 5846
+	//{ALIF_TP_DEALLOC, ast_dealloc},
+	//{ALIF_TP_REPR, ast_repr},
+	{ALIF_TP_GETATTRO, alifObject_genericGetAttr},
+	//{ALIF_TP_SETATTRO, alifObject_genericSetAttr},
+	//{ALIF_TP_TRAVERSE, ast_traverse},
+	//{ALIF_TP_CLEAR, ast_clear},
+	//{ALIF_TP_MEMBERS, _astTypeMembers_},
+	//{ALIF_TP_METHODS, _astTypeMethods_},
+	//{ALIF_TP_GETSET, _astTypeGetSets_},
+	{ALIF_TP_INIT, ast_typeInit},
+	//{ALIF_TP_ALLOC, alifType_genericAlloc},
+	{ALIF_TP_NEW, alifType_genericNew},
+	//{ALIF_TP_FREE, alifObject_gcDel},
+	{0, 0},
+};
+
+static AlifTypeSpec _astTypeSpec_ = { // 5863
+	"ast.AST",
+	sizeof(ASTObject),
+	0,
+	ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_HAVE_GC,
+	_astTypeSlots_
+};
+
+static AlifObject* make_type(ASTState* _state, const char* _type, AlifObject* _base,
+	const char* const* _fields, AlifIntT _numFields, const char* _doc) { // 5885
+	AlifObject* fnames{}, * result{};
+	AlifIntT i{};
+	fnames = alifTuple_new(_numFields);
+	if (!fnames) return nullptr;
+	for (i = 0; i < _numFields; i++) {
+		AlifObject* field = alifUStr_internFromString(_fields[i]);
+		if (!field) {
+			ALIF_DECREF(fnames);
+			return nullptr;
+		}
+		ALIFTUPLE_SET_ITEM(fnames, i, field);
+	}
+	result = alifObject_callFunction((AlifObject*)&_alifTypeType_, "s(O){OOOOOOOs}",
+		_type, _base,
+		_state->_fields, fnames,
+		_state->__match_args__, fnames,
+		_state->__module__,
+		_state->ast,
+		_state->__doc__, _doc);
+	ALIF_DECREF(fnames);
+	return result;
+}
+
+static AlifIntT add_attributes(ASTState* _state, AlifObject* _type,
+	const char* const* _attrs, AlifIntT _numFields) { // 5912
+	AlifIntT i{}, result{};
+	AlifObject* s, * l = alifTuple_new(_numFields);
+	if (!l)
+		return -1;
+	for (i = 0; i < _numFields; i++) {
+		s = alifUStr_internFromString(_attrs[i]);
+		if (!s) {
+			ALIF_DECREF(l);
+			return -1;
+		}
+		ALIFTUPLE_SET_ITEM(l, i, s);
+	}
+	result = alifObject_setAttr(_type, _state->_attributes, l);
+	ALIF_DECREF(l);
+	return result;
+}
+
+static AlifIntT add_astFields(ASTState* state) { // 6008
+	AlifObject* emptyTuple{};
+	emptyTuple = alifTuple_new(0);
+	if (!emptyTuple or
+		alifObject_setAttrString(state->astType, "_fields", emptyTuple) < 0 or
+		alifObject_setAttrString(state->astType, "__match_args__", emptyTuple) < 0 or
+		alifObject_setAttrString(state->astType, "_attributes", emptyTuple) < 0) {
+		ALIF_XDECREF(emptyTuple);
+		return -1;
+	}
+	ALIF_DECREF(emptyTuple);
+	return 0;
+}
+
+static AlifIntT init_types(void* arg) { // 6049
+	ASTState* state = (ASTState*)arg;
+	if (init_identifiers(state) < 0) {
+		return -1;
+	}
+	state->astType = alifType_fromSpec(&_astTypeSpec_);
+	if (!state->astType) {
+		return -1;
+	}
+	if (add_astFields(state) < 0) {
+		return -1;
+	}
+	state->mod_type = make_type(state, "mod", state->astType, nullptr, 0,
+		"mod = Module(stmt* body, type_ignore* type_ignores)\n"
+		"    | Interactive(stmt* body)\n"
+		"    | Expression(expr body)\n"
+		"    | FunctionType(expr* argtypes, expr returns)");
+	if (!state->mod_type) return -1;
+	if (add_attributes(state, state->mod_type, nullptr, 0) < 0) return -1;
+	state->Module_type = make_type(state, "Module", state->mod_type,
+		_moduleFields_, 2,
+		"Module(stmt* body, type_ignore* type_ignores)");
+	if (!state->Module_type) return -1;
+	state->Interactive_type = make_type(state, "Interactive", state->mod_type,
+		_interactiveFields_, 1,
+		"Interactive(stmt* body)");
+	if (!state->Interactive_type) return -1;
+	state->Expression_type = make_type(state, "Expression", state->mod_type,
+		_expressionFields_, 1,
+		"Expression(expr body)");
+	if (!state->Expression_type) return -1;
+	state->FunctionType_type = make_type(state, "FunctionType",
+		state->mod_type, _functionTypeFields_,
+		2,
+		"FunctionType(expr* argtypes, expr returns)");
+	if (!state->FunctionType_type) return -1;
+	state->stmt_type = make_type(state, "stmt", state->astType, nullptr, 0,
+		"stmt = FunctionDef(identifier name, arguments args, stmt* body, expr* decorator_list, expr? returns, string? type_comment, type_param* type_params)\n"
+		"     | AsyncFunctionDef(identifier name, arguments args, stmt* body, expr* decorator_list, expr? returns, string? type_comment, type_param* type_params)\n"
+		"     | ClassDef(identifier name, expr* bases, keyword* keywords, stmt* body, expr* decorator_list, type_param* type_params)\n"
+		"     | Return(expr? value)\n"
+		"     | Delete(expr* targets)\n"
+		"     | Assign(expr* targets, expr value, string? type_comment)\n"
+		"     | TypeAlias(expr name, type_param* type_params, expr value)\n"
+		"     | AugAssign(expr target, operator op, expr value)\n"
+		"     | AnnAssign(expr target, expr annotation, expr? value, AlifIntT simple)\n"
+		"     | For(expr target, expr iter, stmt* body, stmt* orelse, string? type_comment)\n"
+		"     | AsyncFor(expr target, expr iter, stmt* body, stmt* orelse, string? type_comment)\n"
+		"     | While(expr test, stmt* body, stmt* orelse)\n"
+		"     | If(expr test, stmt* body, stmt* orelse)\n"
+		"     | With(withitem* items, stmt* body, string? type_comment)\n"
+		"     | AsyncWith(withitem* items, stmt* body, string? type_comment)\n"
+		"     | Match(expr subject, match_case* cases)\n"
+		"     | Raise(expr? exc, expr? cause)\n"
+		"     | Try(stmt* body, excepthandler* handlers, stmt* orelse, stmt* finalbody)\n"
+		"     | TryStar(stmt* body, excepthandler* handlers, stmt* orelse, stmt* finalbody)\n"
+		"     | Assert(expr test, expr? msg)\n"
+		"     | Import(alias* names)\n"
+		"     | ImportFrom(identifier? module, alias* names, AlifIntT? level)\n"
+		"     | Global(identifier* names)\n"
+		"     | Nonlocal(identifier* names)\n"
+		"     | Expr(expr value)\n"
+		"     | Pass\n"
+		"     | Break\n"
+		"     | Continue");
+	if (!state->stmt_type) return -1;
+	if (add_attributes(state, state->stmt_type, stmt_attributes, 4) < 0) return
+		-1;
+	if (alifObject_setAttr(state->stmt_type, state->endLineNo, ALIF_NONE) == -1)
+		return -1;
+	if (alifObject_setAttr(state->stmt_type, state->endColOffset, ALIF_NONE) ==
+		-1)
+		return -1;
+	state->FunctionDef_type = make_type(state, "FunctionDef", state->stmt_type,
+		_functionDefFields_, 7,
+		"FunctionDef(identifier name, arguments args, stmt* body, expr* decorator_list, expr? returns, string? type_comment, type_param* type_params)");
+	if (!state->FunctionDef_type) return -1;
+	if (alifObject_setAttr(state->FunctionDef_type, state->returns, ALIF_NONE) ==
+		-1)
+		return -1;
+	if (alifObject_setAttr(state->FunctionDef_type, state->type_comment, ALIF_NONE)
+		== -1)
+		return -1;
+	state->AsyncFunctionDef_type = make_type(state, "AsyncFunctionDef",
+		state->stmt_type,
+		_asyncFunctionDefFields_, 7,
+		"AsyncFunctionDef(identifier name, arguments args, stmt* body, expr* decorator_list, expr? returns, string? type_comment, type_param* type_params)");
+	if (!state->AsyncFunctionDef_type) return -1;
+	if (alifObject_setAttr(state->AsyncFunctionDef_type, state->returns, ALIF_NONE)
+		== -1)
+		return -1;
+	if (alifObject_setAttr(state->AsyncFunctionDef_type, state->type_comment,
+		ALIF_NONE) == -1)
+		return -1;
+	state->ClassDef_type = make_type(state, "ClassDef", state->stmt_type,
+		_classDefFields_, 6,
+		"ClassDef(identifier name, expr* bases, keyword* keywords, stmt* body, expr* decorator_list, type_param* type_params)");
+	if (!state->ClassDef_type) return -1;
+	state->Return_type = make_type(state, "Return", state->stmt_type,
+		_returnFields_, 1,
+		"Return(expr? value)");
+	if (!state->Return_type) return -1;
+	if (alifObject_setAttr(state->Return_type, state->value, ALIF_NONE) == -1)
+		return -1;
+	state->Delete_type = make_type(state, "Delete", state->stmt_type,
+		_deleteFields_, 1,
+		"Delete(expr* targets)");
+	if (!state->Delete_type) return -1;
+	state->Assign_type = make_type(state, "Assign", state->stmt_type,
+		_assignFields_, 3,
+		"Assign(expr* targets, expr value, string? type_comment)");
+	if (!state->Assign_type) return -1;
+	if (alifObject_setAttr(state->Assign_type, state->type_comment, ALIF_NONE) ==
+		-1)
+		return -1;
+	state->TypeAlias_type = make_type(state, "TypeAlias", state->stmt_type,
+		_typeAliasFields_, 3,
+		"TypeAlias(expr name, type_param* type_params, expr value)");
+	if (!state->TypeAlias_type) return -1;
+	state->AugAssign_type = make_type(state, "AugAssign", state->stmt_type,
+		_augAssignFields_, 3,
+		"AugAssign(expr target, operator op, expr value)");
+	if (!state->AugAssign_type) return -1;
+	state->AnnAssign_type = make_type(state, "AnnAssign", state->stmt_type,
+		_annAssignFields_, 4,
+		"AnnAssign(expr target, expr annotation, expr? value, AlifIntT simple)");
+	if (!state->AnnAssign_type) return -1;
+	if (alifObject_setAttr(state->AnnAssign_type, state->value, ALIF_NONE) == -1)
+		return -1;
+	state->For_type = make_type(state, "For", state->stmt_type, _forFields_, 5,
+		"For(expr target, expr iter, stmt* body, stmt* orelse, string? type_comment)");
+	if (!state->For_type) return -1;
+	if (alifObject_setAttr(state->For_type, state->type_comment, ALIF_NONE) == -1)
+		return -1;
+	state->AsyncFor_type = make_type(state, "AsyncFor", state->stmt_type,
+		_asyncForFields_, 5,
+		"AsyncFor(expr target, expr iter, stmt* body, stmt* orelse, string? type_comment)");
+	if (!state->AsyncFor_type) return -1;
+	if (alifObject_setAttr(state->AsyncFor_type, state->type_comment, ALIF_NONE) ==
+		-1)
+		return -1;
+	state->While_type = make_type(state, "While", state->stmt_type,
+		_whileFields_, 3,
+		"While(expr test, stmt* body, stmt* orelse)");
+	if (!state->While_type) return -1;
+	state->If_type = make_type(state, "If", state->stmt_type, _ifFields_, 3,
+		"If(expr test, stmt* body, stmt* orelse)");
+	if (!state->If_type) return -1;
+	state->With_type = make_type(state, "With", state->stmt_type, _withFields_,
+		3,
+		"With(withitem* items, stmt* body, string? type_comment)");
+	if (!state->With_type) return -1;
+	if (alifObject_setAttr(state->With_type, state->type_comment, ALIF_NONE) == -1)
+		return -1;
+	state->AsyncWith_type = make_type(state, "AsyncWith", state->stmt_type,
+		_asyncWithFields_, 3,
+		"AsyncWith(withitem* items, stmt* body, string? type_comment)");
+	if (!state->AsyncWith_type) return -1;
+	if (alifObject_setAttr(state->AsyncWith_type, state->type_comment, ALIF_NONE)
+		== -1)
+		return -1;
+	state->Match_type = make_type(state, "Match", state->stmt_type,
+		_matchFields_, 2,
+		"Match(expr subject, match_case* cases)");
+	if (!state->Match_type) return -1;
+	state->Raise_type = make_type(state, "Raise", state->stmt_type,
+		_raiseFields_, 2,
+		"Raise(expr? exc, expr? cause)");
+	if (!state->Raise_type) return -1;
+	if (alifObject_setAttr(state->Raise_type, state->exc, ALIF_NONE) == -1)
+		return -1;
+	if (alifObject_setAttr(state->Raise_type, state->cause, ALIF_NONE) == -1)
+		return -1;
+	state->Try_type = make_type(state, "Try", state->stmt_type, _tryFields_, 4,
+		"Try(stmt* body, excepthandler* handlers, stmt* orelse, stmt* finalbody)");
+	if (!state->Try_type) return -1;
+	state->TryStar_type = make_type(state, "TryStar", state->stmt_type,
+		_tryStarFields_, 4,
+		"TryStar(stmt* body, excepthandler* handlers, stmt* orelse, stmt* finalbody)");
+	if (!state->TryStar_type) return -1;
+	state->Assert_type = make_type(state, "Assert", state->stmt_type,
+		_assertFields_, 2,
+		"Assert(expr test, expr? msg)");
+	if (!state->Assert_type) return -1;
+	if (alifObject_setAttr(state->Assert_type, state->msg, ALIF_NONE) == -1)
+		return -1;
+	state->Import_type = make_type(state, "Import", state->stmt_type,
+		_importFields_, 1,
+		"Import(alias* names)");
+	if (!state->Import_type) return -1;
+	state->ImportFrom_type = make_type(state, "ImportFrom", state->stmt_type,
+		_importFromFields_, 3,
+		"ImportFrom(identifier? module, alias* names, AlifIntT? level)");
+	if (!state->ImportFrom_type) return -1;
+	if (alifObject_setAttr(state->ImportFrom_type, state->module, ALIF_NONE) == -1)
+		return -1;
+	if (alifObject_setAttr(state->ImportFrom_type, state->level, ALIF_NONE) == -1)
+		return -1;
+	state->Global_type = make_type(state, "Global", state->stmt_type,
+		_globalFields_, 1,
+		"Global(identifier* names)");
+	if (!state->Global_type) return -1;
+	state->Nonlocal_type = make_type(state, "Nonlocal", state->stmt_type,
+		_nonlocalFields_, 1,
+		"Nonlocal(identifier* names)");
+	if (!state->Nonlocal_type) return -1;
+	state->Expr_type = make_type(state, "Expr", state->stmt_type, _exprFields_,
+		1,
+		"Expr(expr value)");
+	if (!state->Expr_type) return -1;
+	state->Pass_type = make_type(state, "Pass", state->stmt_type, nullptr, 0,
+		"Pass");
+	if (!state->Pass_type) return -1;
+	state->Break_type = make_type(state, "Break", state->stmt_type, nullptr, 0,
+		"Break");
+	if (!state->Break_type) return -1;
+	state->Continue_type = make_type(state, "Continue", state->stmt_type, nullptr,
+		0,
+		"Continue");
+	if (!state->Continue_type) return -1;
+	state->expr_type = make_type(state, "expr", state->astType, nullptr, 0,
+		"expr = BoolOp(boolop op, expr* values)\n"
+		"     | NamedExpr(expr target, expr value)\n"
+		"     | BinOp(expr left, operator op, expr right)\n"
+		"     | UnaryOp(unaryop op, expr operand)\n"
+		"     | Lambda(arguments args, expr body)\n"
+		"     | IfExp(expr test, expr body, expr orelse)\n"
+		"     | Dict(expr* keys, expr* values)\n"
+		"     | Set(expr* elts)\n"
+		"     | ListComp(expr elt, comprehension* generators)\n"
+		"     | SetComp(expr elt, comprehension* generators)\n"
+		"     | DictComp(expr key, expr value, comprehension* generators)\n"
+		"     | GeneratorExp(expr elt, comprehension* generators)\n"
+		"     | Await(expr value)\n"
+		"     | Yield(expr? value)\n"
+		"     | YieldFrom(expr value)\n"
+		"     | Compare(expr left, cmpop* ops, expr* comparators)\n"
+		"     | Call(expr func, expr* args, keyword* keywords)\n"
+		"     | FormattedValue(expr value, AlifIntT conversion, expr? format_spec)\n"
+		"     | JoinedStr(expr* values)\n"
+		"     | Constant(constant value, string? kind)\n"
+		"     | Attribute(expr value, identifier attr, expr_context ctx)\n"
+		"     | Subscript(expr value, expr slice, expr_context ctx)\n"
+		"     | Starred(expr value, expr_context ctx)\n"
+		"     | Name(identifier id, expr_context ctx)\n"
+		"     | List(expr* elts, expr_context ctx)\n"
+		"     | Tuple(expr* elts, expr_context ctx)\n"
+		"     | Slice(expr? lower, expr? upper, expr? step)");
+	if (!state->expr_type) return -1;
+	if (add_attributes(state, state->expr_type, _exprAttributes_, 4) < 0) return
+		-1;
+	if (alifObject_setAttr(state->expr_type, state->endLineNo, ALIF_NONE) == -1)
+		return -1;
+	if (alifObject_setAttr(state->expr_type, state->endColOffset, ALIF_NONE) ==
+		-1)
+		return -1;
+	state->BoolOp_type = make_type(state, "BoolOp", state->expr_type,
+		_boolOpFields_, 2,
+		"BoolOp(boolop op, expr* values)");
+	if (!state->BoolOp_type) return -1;
+	state->NamedExpr_type = make_type(state, "NamedExpr", state->expr_type,
+		_namedExprFields_, 2,
+		"NamedExpr(expr target, expr value)");
+	if (!state->NamedExpr_type) return -1;
+	state->BinOp_type = make_type(state, "BinOp", state->expr_type,
+		_binOpFields_, 3,
+		"BinOp(expr left, operator op, expr right)");
+	if (!state->BinOp_type) return -1;
+	state->UnaryOp_type = make_type(state, "UnaryOp", state->expr_type,
+		_unaryOpFields_, 2,
+		"UnaryOp(unaryop op, expr operand)");
+	if (!state->UnaryOp_type) return -1;
+	state->Lambda_type = make_type(state, "Lambda", state->expr_type,
+		_lambdaFields_, 2,
+		"Lambda(arguments args, expr body)");
+	if (!state->Lambda_type) return -1;
+	state->IfExp_type = make_type(state, "IfExp", state->expr_type,
+		_ifExpFields_, 3,
+		"IfExp(expr test, expr body, expr orelse)");
+	if (!state->IfExp_type) return -1;
+	state->Dict_type = make_type(state, "Dict", state->expr_type, _dictFields_,
+		2,
+		"Dict(expr* keys, expr* values)");
+	if (!state->Dict_type) return -1;
+	state->Set_type = make_type(state, "Set", state->expr_type, _setFields_, 1,
+		"Set(expr* elts)");
+	if (!state->Set_type) return -1;
+	state->ListComp_type = make_type(state, "ListComp", state->expr_type,
+		_listCompFields_, 2,
+		"ListComp(expr elt, comprehension* generators)");
+	if (!state->ListComp_type) return -1;
+	state->SetComp_type = make_type(state, "SetComp", state->expr_type,
+		_setCompFields_, 2,
+		"SetComp(expr elt, comprehension* generators)");
+	if (!state->SetComp_type) return -1;
+	state->DictComp_type = make_type(state, "DictComp", state->expr_type,
+		_dictCompFields_, 3,
+		"DictComp(expr key, expr value, comprehension* generators)");
+	if (!state->DictComp_type) return -1;
+	state->GeneratorExp_type = make_type(state, "GeneratorExp",
+		state->expr_type, _generatorExpFields_,
+		2,
+		"GeneratorExp(expr elt, comprehension* generators)");
+	if (!state->GeneratorExp_type) return -1;
+	state->Await_type = make_type(state, "Await", state->expr_type,
+		_awaitFields_, 1,
+		"Await(expr value)");
+	if (!state->Await_type) return -1;
+	state->Yield_type = make_type(state, "Yield", state->expr_type,
+		_yieldFields_, 1,
+		"Yield(expr? value)");
+	if (!state->Yield_type) return -1;
+	if (alifObject_setAttr(state->Yield_type, state->value, ALIF_NONE) == -1)
+		return -1;
+	state->YieldFrom_type = make_type(state, "YieldFrom", state->expr_type,
+		_yieldFromFields_, 1,
+		"YieldFrom(expr value)");
+	if (!state->YieldFrom_type) return -1;
+	state->Compare_type = make_type(state, "Compare", state->expr_type,
+		_compareFields_, 3,
+		"Compare(expr left, cmpop* ops, expr* comparators)");
+	if (!state->Compare_type) return -1;
+	state->Call_type = make_type(state, "Call", state->expr_type, _callFields_,
+		3,
+		"Call(expr func, expr* args, keyword* keywords)");
+	if (!state->Call_type) return -1;
+	state->FormattedValue_type = make_type(state, "FormattedValue",
+		state->expr_type,
+		_formattedValueFields_, 3,
+		"FormattedValue(expr value, AlifIntT conversion, expr? format_spec)");
+	if (!state->FormattedValue_type) return -1;
+	if (alifObject_setAttr(state->FormattedValue_type, state->format_spec,
+		ALIF_NONE) == -1)
+		return -1;
+	state->JoinedStr_type = make_type(state, "JoinedStr", state->expr_type,
+		_joinedStrFields_, 1,
+		"JoinedStr(expr* values)");
+	if (!state->JoinedStr_type) return -1;
+	state->Constant_type = make_type(state, "Constant", state->expr_type,
+		_constantFields_, 2,
+		"Constant(constant value, string? kind)");
+	if (!state->Constant_type) return -1;
+	if (alifObject_setAttr(state->Constant_type, state->kind, ALIF_NONE) == -1)
+		return -1;
+	state->Attribute_type = make_type(state, "Attribute", state->expr_type,
+		_attributeFields_, 3,
+		"Attribute(expr value, identifier attr, expr_context ctx)");
+	if (!state->Attribute_type) return -1;
+	state->Subscript_type = make_type(state, "Subscript", state->expr_type,
+		_subScriptFields_, 3,
+		"Subscript(expr value, expr slice, expr_context ctx)");
+	if (!state->Subscript_type) return -1;
+	state->Starred_type = make_type(state, "Starred", state->expr_type,
+		_starredFields_, 2,
+		"Starred(expr value, expr_context ctx)");
+	if (!state->Starred_type) return -1;
+	state->Name_type = make_type(state, "Name", state->expr_type, _nameFields_,
+		2,
+		"Name(identifier id, expr_context ctx)");
+	if (!state->Name_type) return -1;
+	state->List_type = make_type(state, "List", state->expr_type, _listFields_,
+		2,
+		"List(expr* elts, expr_context ctx)");
+	if (!state->List_type) return -1;
+	state->Tuple_type = make_type(state, "Tuple", state->expr_type,
+		_tupleFields_, 2,
+		"Tuple(expr* elts, expr_context ctx)");
+	if (!state->Tuple_type) return -1;
+	state->Slice_type = make_type(state, "Slice", state->expr_type,
+		_sliceFields_, 3,
+		"Slice(expr? lower, expr? upper, expr? step)");
+	if (!state->Slice_type) return -1;
+	if (alifObject_setAttr(state->Slice_type, state->lower, ALIF_NONE) == -1)
+		return -1;
+	if (alifObject_setAttr(state->Slice_type, state->upper, ALIF_NONE) == -1)
+		return -1;
+	if (alifObject_setAttr(state->Slice_type, state->step, ALIF_NONE) == -1)
+		return -1;
+	state->expr_context_type = make_type(state, "expr_context",
+		state->astType, nullptr, 0,
+		"expr_context = Load | Store | Del");
+	if (!state->expr_context_type) return -1;
+	if (add_attributes(state, state->expr_context_type, nullptr, 0) < 0) return -1;
+	state->Load_type = make_type(state, "Load", state->expr_context_type, nullptr,
+		0,
+		"Load");
+	if (!state->Load_type) return -1;
+	state->Load_singleton = alifType_genericNew((AlifTypeObject*)state->Load_type,
+		nullptr, nullptr);
+	if (!state->Load_singleton) return -1;
+	state->Store_type = make_type(state, "Store", state->expr_context_type,
+		nullptr, 0,
+		"Store");
+	if (!state->Store_type) return -1;
+	state->Store_singleton = alifType_genericNew((AlifTypeObject
+		*)state->Store_type, nullptr, nullptr);
+	if (!state->Store_singleton) return -1;
+	state->Del_type = make_type(state, "Del", state->expr_context_type, nullptr, 0,
+		"Del");
+	if (!state->Del_type) return -1;
+	state->Del_singleton = alifType_genericNew((AlifTypeObject*)state->Del_type,
+		nullptr, nullptr);
+	if (!state->Del_singleton) return -1;
+	state->boolop_type = make_type(state, "boolop", state->astType, nullptr, 0,
+		"boolop = And | Or");
+	if (!state->boolop_type) return -1;
+	if (add_attributes(state, state->boolop_type, nullptr, 0) < 0) return -1;
+	state->And_type = make_type(state, "And", state->boolop_type, nullptr, 0,
+		"And");
+	if (!state->And_type) return -1;
+	state->And_singleton = alifType_genericNew((AlifTypeObject*)state->And_type,
+		nullptr, nullptr);
+	if (!state->And_singleton) return -1;
+	state->Or_type = make_type(state, "Or", state->boolop_type, nullptr, 0,
+		"Or");
+	if (!state->Or_type) return -1;
+	state->Or_singleton = alifType_genericNew((AlifTypeObject*)state->Or_type,
+		nullptr, nullptr);
+	if (!state->Or_singleton) return -1;
+	state->operator_type = make_type(state, "operator", state->astType, nullptr,
+		0,
+		"operator = Add | Sub | Mult | MatMult | Div | Mod | Pow | LShift | RShift | BitOr | BitXor | BitAnd | FloorDiv");
+	if (!state->operator_type) return -1;
+	if (add_attributes(state, state->operator_type, nullptr, 0) < 0) return -1;
+	state->Add_type = make_type(state, "Add", state->operator_type, nullptr, 0,
+		"Add");
+	if (!state->Add_type) return -1;
+	state->Add_singleton = alifType_genericNew((AlifTypeObject*)state->Add_type,
+		nullptr, nullptr);
+	if (!state->Add_singleton) return -1;
+	state->Sub_type = make_type(state, "Sub", state->operator_type, nullptr, 0,
+		"Sub");
+	if (!state->Sub_type) return -1;
+	state->Sub_singleton = alifType_genericNew((AlifTypeObject*)state->Sub_type,
+		nullptr, nullptr);
+	if (!state->Sub_singleton) return -1;
+	state->Mult_type = make_type(state, "Mult", state->operator_type, nullptr, 0,
+		"Mult");
+	if (!state->Mult_type) return -1;
+	state->Mult_singleton = alifType_genericNew((AlifTypeObject*)state->Mult_type,
+		nullptr, nullptr);
+	if (!state->Mult_singleton) return -1;
+	state->MatMult_type = make_type(state, "MatMult", state->operator_type,
+		nullptr, 0,
+		"MatMult");
+	if (!state->MatMult_type) return -1;
+	state->MatMult_singleton = alifType_genericNew((AlifTypeObject
+		*)state->MatMult_type, nullptr,
+		nullptr);
+	if (!state->MatMult_singleton) return -1;
+	state->Div_type = make_type(state, "Div", state->operator_type, nullptr, 0,
+		"Div");
+	if (!state->Div_type) return -1;
+	state->Div_singleton = alifType_genericNew((AlifTypeObject*)state->Div_type,
+		nullptr, nullptr);
+	if (!state->Div_singleton) return -1;
+	state->Mod_type = make_type(state, "Mod", state->operator_type, nullptr, 0,
+		"Mod");
+	if (!state->Mod_type) return -1;
+	state->Mod_singleton = alifType_genericNew((AlifTypeObject*)state->Mod_type,
+		nullptr, nullptr);
+	if (!state->Mod_singleton) return -1;
+	state->Pow_type = make_type(state, "Pow", state->operator_type, nullptr, 0,
+		"Pow");
+	if (!state->Pow_type) return -1;
+	state->Pow_singleton = alifType_genericNew((AlifTypeObject*)state->Pow_type,
+		nullptr, nullptr);
+	if (!state->Pow_singleton) return -1;
+	state->LShift_type = make_type(state, "LShift", state->operator_type, nullptr,
+		0,
+		"LShift");
+	if (!state->LShift_type) return -1;
+	state->LShift_singleton = alifType_genericNew((AlifTypeObject
+		*)state->LShift_type, nullptr,
+		nullptr);
+	if (!state->LShift_singleton) return -1;
+	state->RShift_type = make_type(state, "RShift", state->operator_type, nullptr,
+		0,
+		"RShift");
+	if (!state->RShift_type) return -1;
+	state->RShift_singleton = alifType_genericNew((AlifTypeObject
+		*)state->RShift_type, nullptr,
+		nullptr);
+	if (!state->RShift_singleton) return -1;
+	state->BitOr_type = make_type(state, "BitOr", state->operator_type, nullptr, 0,
+		"BitOr");
+	if (!state->BitOr_type) return -1;
+	state->BitOr_singleton = alifType_genericNew((AlifTypeObject
+		*)state->BitOr_type, nullptr, nullptr);
+	if (!state->BitOr_singleton) return -1;
+	state->BitXor_type = make_type(state, "BitXor", state->operator_type, nullptr,
+		0,
+		"BitXor");
+	if (!state->BitXor_type) return -1;
+	state->BitXor_singleton = alifType_genericNew((AlifTypeObject
+		*)state->BitXor_type, nullptr,
+		nullptr);
+	if (!state->BitXor_singleton) return -1;
+	state->BitAnd_type = make_type(state, "BitAnd", state->operator_type, nullptr,
+		0,
+		"BitAnd");
+	if (!state->BitAnd_type) return -1;
+	state->BitAnd_singleton = alifType_genericNew((AlifTypeObject
+		*)state->BitAnd_type, nullptr,
+		nullptr);
+	if (!state->BitAnd_singleton) return -1;
+	state->FloorDiv_type = make_type(state, "FloorDiv", state->operator_type,
+		nullptr, 0,
+		"FloorDiv");
+	if (!state->FloorDiv_type) return -1;
+	state->FloorDiv_singleton = alifType_genericNew((AlifTypeObject
+		*)state->FloorDiv_type, nullptr,
+		nullptr);
+	if (!state->FloorDiv_singleton) return -1;
+	state->unaryop_type = make_type(state, "unaryop", state->astType, nullptr, 0,
+		"unaryop = Invert | Not | UAdd | USub");
+	if (!state->unaryop_type) return -1;
+	if (add_attributes(state, state->unaryop_type, nullptr, 0) < 0) return -1;
+	state->Invert_type = make_type(state, "Invert", state->unaryop_type, nullptr,
+		0,
+		"Invert");
+	if (!state->Invert_type) return -1;
+	state->Invert_singleton = alifType_genericNew((AlifTypeObject
+		*)state->Invert_type, nullptr,
+		nullptr);
+	if (!state->Invert_singleton) return -1;
+	state->Not_type = make_type(state, "Not", state->unaryop_type, nullptr, 0,
+		"Not");
+	if (!state->Not_type) return -1;
+	state->Not_singleton = alifType_genericNew((AlifTypeObject*)state->Not_type,
+		nullptr, nullptr);
+	if (!state->Not_singleton) return -1;
+	state->UAdd_type = make_type(state, "UAdd", state->unaryop_type, nullptr, 0,
+		"UAdd");
+	if (!state->UAdd_type) return -1;
+	state->UAdd_singleton = alifType_genericNew((AlifTypeObject*)state->UAdd_type,
+		nullptr, nullptr);
+	if (!state->UAdd_singleton) return -1;
+	state->USub_type = make_type(state, "USub", state->unaryop_type, nullptr, 0,
+		"USub");
+	if (!state->USub_type) return -1;
+	state->USub_singleton = alifType_genericNew((AlifTypeObject*)state->USub_type,
+		nullptr, nullptr);
+	if (!state->USub_singleton) return -1;
+	state->cmpop_type = make_type(state, "cmpop", state->astType, nullptr, 0,
+		"cmpop = Eq | NotEq | Lt | LtE | Gt | GtE | Is | IsNot | In | NotIn");
+	if (!state->cmpop_type) return -1;
+	if (add_attributes(state, state->cmpop_type, nullptr, 0) < 0) return -1;
+	state->Eq_type = make_type(state, "Eq", state->cmpop_type, nullptr, 0,
+		"Eq");
+	if (!state->Eq_type) return -1;
+	state->Eq_singleton = alifType_genericNew((AlifTypeObject*)state->Eq_type,
+		nullptr, nullptr);
+	if (!state->Eq_singleton) return -1;
+	state->NotEq_type = make_type(state, "NotEq", state->cmpop_type, nullptr, 0,
+		"NotEq");
+	if (!state->NotEq_type) return -1;
+	state->NotEq_singleton = alifType_genericNew((AlifTypeObject
+		*)state->NotEq_type, nullptr, nullptr);
+	if (!state->NotEq_singleton) return -1;
+	state->Lt_type = make_type(state, "Lt", state->cmpop_type, nullptr, 0,
+		"Lt");
+	if (!state->Lt_type) return -1;
+	state->Lt_singleton = alifType_genericNew((AlifTypeObject*)state->Lt_type,
+		nullptr, nullptr);
+	if (!state->Lt_singleton) return -1;
+	state->LtE_type = make_type(state, "LtE", state->cmpop_type, nullptr, 0,
+		"LtE");
+	if (!state->LtE_type) return -1;
+	state->LtE_singleton = alifType_genericNew((AlifTypeObject*)state->LtE_type,
+		nullptr, nullptr);
+	if (!state->LtE_singleton) return -1;
+	state->Gt_type = make_type(state, "Gt", state->cmpop_type, nullptr, 0,
+		"Gt");
+	if (!state->Gt_type) return -1;
+	state->Gt_singleton = alifType_genericNew((AlifTypeObject*)state->Gt_type,
+		nullptr, nullptr);
+	if (!state->Gt_singleton) return -1;
+	state->GtE_type = make_type(state, "GtE", state->cmpop_type, nullptr, 0,
+		"GtE");
+	if (!state->GtE_type) return -1;
+	state->GtE_singleton = alifType_genericNew((AlifTypeObject*)state->GtE_type,
+		nullptr, nullptr);
+	if (!state->GtE_singleton) return -1;
+	state->Is_type = make_type(state, "Is", state->cmpop_type, nullptr, 0,
+		"Is");
+	if (!state->Is_type) return -1;
+	state->Is_singleton = alifType_genericNew((AlifTypeObject*)state->Is_type,
+		nullptr, nullptr);
+	if (!state->Is_singleton) return -1;
+	state->IsNot_type = make_type(state, "IsNot", state->cmpop_type, nullptr, 0,
+		"IsNot");
+	if (!state->IsNot_type) return -1;
+	state->IsNot_singleton = alifType_genericNew((AlifTypeObject
+		*)state->IsNot_type, nullptr, nullptr);
+	if (!state->IsNot_singleton) return -1;
+	state->In_type = make_type(state, "In", state->cmpop_type, nullptr, 0,
+		"In");
+	if (!state->In_type) return -1;
+	state->In_singleton = alifType_genericNew((AlifTypeObject*)state->In_type,
+		nullptr, nullptr);
+	if (!state->In_singleton) return -1;
+	state->NotIn_type = make_type(state, "NotIn", state->cmpop_type, nullptr, 0,
+		"NotIn");
+	if (!state->NotIn_type) return -1;
+	state->NotIn_singleton = alifType_genericNew((AlifTypeObject
+		*)state->NotIn_type, nullptr, nullptr);
+	if (!state->NotIn_singleton) return -1;
+	state->comprehension_type = make_type(state, "comprehension",
+		state->astType,
+		comprehension_fields, 4,
+		"comprehension(expr target, expr iter, expr* ifs, AlifIntT is_async)");
+	if (!state->comprehension_type) return -1;
+	if (add_attributes(state, state->comprehension_type, nullptr, 0) < 0) return
+		-1;
+	state->excepthandler_type = make_type(state, "excepthandler",
+		state->astType, nullptr, 0,
+		"excepthandler = ExceptHandler(expr? type, identifier? name, stmt* body)");
+	if (!state->excepthandler_type) return -1;
+	if (add_attributes(state, state->excepthandler_type,
+		excepthandler_attributes, 4) < 0) return -1;
+	if (alifObject_setAttr(state->excepthandler_type, state->endLineNo, ALIF_NONE)
+		== -1)
+		return -1;
+	if (alifObject_setAttr(state->excepthandler_type, state->endColOffset,
+		ALIF_NONE) == -1)
+		return -1;
+	state->ExceptHandler_type = make_type(state, "ExceptHandler",
+		state->excepthandler_type,
+		_exceptHandlerFields_, 3,
+		"ExceptHandler(expr? type, identifier? name, stmt* body)");
+	if (!state->ExceptHandler_type) return -1;
+	if (alifObject_setAttr(state->ExceptHandler_type, state->type, ALIF_NONE) == -1)
+		return -1;
+	if (alifObject_setAttr(state->ExceptHandler_type, state->name, ALIF_NONE) == -1)
+		return -1;
+	state->arguments_type = make_type(state, "arguments", state->astType,
+		_argumentsFields_, 7,
+		"arguments(arg* posonlyargs, arg* args, arg? vararg, arg* kwonlyargs, expr* kw_defaults, arg? kwarg, expr* defaults)");
+	if (!state->arguments_type) return -1;
+	if (add_attributes(state, state->arguments_type, nullptr, 0) < 0) return -1;
+	if (alifObject_setAttr(state->arguments_type, state->vararg, ALIF_NONE) == -1)
+		return -1;
+	if (alifObject_setAttr(state->arguments_type, state->kwarg, ALIF_NONE) == -1)
+		return -1;
+	state->arg_type = make_type(state, "arg", state->astType, _argFields_, 3,
+		"arg(identifier arg, expr? annotation, string? type_comment)");
+	if (!state->arg_type) return -1;
+	if (add_attributes(state, state->arg_type, _argAttributes_, 4) < 0) return
+		-1;
+	if (alifObject_setAttr(state->arg_type, state->annotation, ALIF_NONE) == -1)
+		return -1;
+	if (alifObject_setAttr(state->arg_type, state->type_comment, ALIF_NONE) == -1)
+		return -1;
+	if (alifObject_setAttr(state->arg_type, state->endLineNo, ALIF_NONE) == -1)
+		return -1;
+	if (alifObject_setAttr(state->arg_type, state->endColOffset, ALIF_NONE) == -1)
+		return -1;
+	state->keyword_type = make_type(state, "keyword", state->astType,
+		_keywordFields_, 2,
+		"keyword(identifier? arg, expr value)");
+	if (!state->keyword_type) return -1;
+	if (add_attributes(state, state->keyword_type, _keywordAttributes_, 4) < 0)
+		return -1;
+	if (alifObject_setAttr(state->keyword_type, state->arg, ALIF_NONE) == -1)
+		return -1;
+	if (alifObject_setAttr(state->keyword_type, state->endLineNo, ALIF_NONE) == -1)
+		return -1;
+	if (alifObject_setAttr(state->keyword_type, state->endColOffset, ALIF_NONE)
+		== -1)
+		return -1;
+	state->alias_type = make_type(state, "alias", state->astType,
+		_aliasFields_, 2,
+		"alias(identifier name, identifier? asname)");
+	if (!state->alias_type) return -1;
+	if (add_attributes(state, state->alias_type, _aliasAttributes_, 4) < 0)
+		return -1;
+	if (alifObject_setAttr(state->alias_type, state->asname, ALIF_NONE) == -1)
+		return -1;
+	if (alifObject_setAttr(state->alias_type, state->endLineNo, ALIF_NONE) == -1)
+		return -1;
+	if (alifObject_setAttr(state->alias_type, state->endColOffset, ALIF_NONE) ==
+		-1)
+		return -1;
+	state->withitem_type = make_type(state, "withitem", state->astType,
+		_withItemFields_, 2,
+		"withitem(expr context_expr, expr? optional_vars)");
+	if (!state->withitem_type) return -1;
+	if (add_attributes(state, state->withitem_type, nullptr, 0) < 0) return -1;
+	if (alifObject_setAttr(state->withitem_type, state->optional_vars, ALIF_NONE)
+		== -1)
+		return -1;
+	state->match_case_type = make_type(state, "match_case", state->astType,
+		_matchCaseFields_, 3,
+		"match_case(pattern pattern, expr? guard, stmt* body)");
+	if (!state->match_case_type) return -1;
+	if (add_attributes(state, state->match_case_type, nullptr, 0) < 0) return -1;
+	if (alifObject_setAttr(state->match_case_type, state->guard, ALIF_NONE) == -1)
+		return -1;
+	state->pattern_type = make_type(state, "pattern", state->astType, nullptr, 0,
+		"pattern = MatchValue(expr value)\n"
+		"        | MatchSingleton(constant value)\n"
+		"        | MatchSequence(pattern* patterns)\n"
+		"        | MatchMapping(expr* keys, pattern* patterns, identifier? rest)\n"
+		"        | MatchClass(expr cls, pattern* patterns, identifier* kwd_attrs, pattern* kwd_patterns)\n"
+		"        | MatchStar(identifier? name)\n"
+		"        | MatchAs(pattern? pattern, identifier? name)\n"
+		"        | MatchOr(pattern* patterns)");
+	if (!state->pattern_type) return -1;
+	if (add_attributes(state, state->pattern_type, _patternAttributes_, 4) < 0)
+		return -1;
+	state->MatchValue_type = make_type(state, "MatchValue",
+		state->pattern_type, _MatchValueFields_,
+		1,
+		"MatchValue(expr value)");
+	if (!state->MatchValue_type) return -1;
+	state->MatchSingleton_type = make_type(state, "MatchSingleton",
+		state->pattern_type,
+		_matchSingletonFields_, 1,
+		"MatchSingleton(constant value)");
+	if (!state->MatchSingleton_type) return -1;
+	state->MatchSequence_type = make_type(state, "MatchSequence",
+		state->pattern_type,
+		_MatchSequenceFields_, 1,
+		"MatchSequence(pattern* patterns)");
+	if (!state->MatchSequence_type) return -1;
+	state->MatchMapping_type = make_type(state, "MatchMapping",
+		state->pattern_type,
+		_matchMappingFields_, 3,
+		"MatchMapping(expr* keys, pattern* patterns, identifier? rest)");
+	if (!state->MatchMapping_type) return -1;
+	if (alifObject_setAttr(state->MatchMapping_type, state->rest, ALIF_NONE) == -1)
+		return -1;
+	state->MatchClass_type = make_type(state, "MatchClass",
+		state->pattern_type, _matchClassFields_,
+		4,
+		"MatchClass(expr cls, pattern* patterns, identifier* kwd_attrs, pattern* kwd_patterns)");
+	if (!state->MatchClass_type) return -1;
+	state->MatchStar_type = make_type(state, "MatchStar", state->pattern_type,
+		_matchStarFields_, 1,
+		"MatchStar(identifier? name)");
+	if (!state->MatchStar_type) return -1;
+	if (alifObject_setAttr(state->MatchStar_type, state->name, ALIF_NONE) == -1)
+		return -1;
+	state->MatchAs_type = make_type(state, "MatchAs", state->pattern_type,
+		_matchAsFields_, 2,
+		"MatchAs(pattern? pattern, identifier? name)");
+	if (!state->MatchAs_type) return -1;
+	if (alifObject_setAttr(state->MatchAs_type, state->pattern, ALIF_NONE) == -1)
+		return -1;
+	if (alifObject_setAttr(state->MatchAs_type, state->name, ALIF_NONE) == -1)
+		return -1;
+	state->MatchOr_type = make_type(state, "MatchOr", state->pattern_type,
+		_matchOrFields_, 1,
+		"MatchOr(pattern* patterns)");
+	if (!state->MatchOr_type) return -1;
+	state->type_ignore_type = make_type(state, "type_ignore", state->astType,
+		nullptr, 0,
+		"type_ignore = TypeIgnore(AlifIntT lineno, string tag)");
+	if (!state->type_ignore_type) return -1;
+	if (add_attributes(state, state->type_ignore_type, nullptr, 0) < 0) return -1;
+	state->TypeIgnore_type = make_type(state, "TypeIgnore",
+		state->type_ignore_type,
+		_typeIgnoreFields_, 2,
+		"TypeIgnore(AlifIntT lineno, string tag)");
+	if (!state->TypeIgnore_type) return -1;
+	state->type_param_type = make_type(state, "type_param", state->astType,
+		nullptr, 0,
+		"type_param = TypeVar(identifier name, expr? bound, expr? default_value)\n"
+		"           | ParamSpec(identifier name, expr? default_value)\n"
+		"           | TypeVarTuple(identifier name, expr? default_value)");
+	if (!state->type_param_type) return -1;
+	if (add_attributes(state, state->type_param_type, _typeParamAttributes_, 4)
+		< 0) return -1;
+	state->TypeVar_type = make_type(state, "TypeVar", state->type_param_type,
+		_typeVarFields_, 3,
+		"TypeVar(identifier name, expr? bound, expr? default_value)");
+	if (!state->TypeVar_type) return -1;
+	if (alifObject_setAttr(state->TypeVar_type, state->bound, ALIF_NONE) == -1)
+		return -1;
+	if (alifObject_setAttr(state->TypeVar_type, state->default_value, ALIF_NONE) ==
+		-1)
+		return -1;
+	state->ParamSpec_type = make_type(state, "ParamSpec",
+		state->type_param_type, _paramSpecFields_,
+		2,
+		"ParamSpec(identifier name, expr? default_value)");
+	if (!state->ParamSpec_type) return -1;
+	if (alifObject_setAttr(state->ParamSpec_type, state->default_value, ALIF_NONE)
+		== -1)
+		return -1;
+	state->TypeVarTuple_type = make_type(state, "TypeVarTuple",
+		state->type_param_type,
+		_typeVarTupleFields_, 2,
+		"TypeVarTuple(identifier name, expr? default_value)");
+	if (!state->TypeVarTuple_type) return -1;
+	if (alifObject_setAttr(state->TypeVarTuple_type, state->default_value,
+		ALIF_NONE) == -1)
+		return -1;
+
+	//if (!add_ast_annotations(state)) {
+	//	return -1;
+	//}
+	return 0;
+}
+
 
 ModuleTy alifAST_module(ASDLStmtSeq* _body, AlifASTMem* _astMem) { // 6673
 	ModuleTy p{};
@@ -409,7 +2015,7 @@ StmtTy alifAST_try(ASDLStmtSeq* _body, ASDLExcepthandlerSeq* _handlers,
 
 StmtTy alifAST_tryStar(ASDLStmtSeq* _body, ASDLExcepthandlerSeq* _handlers, ASDLStmtSeq* _else,
 	ASDLStmtSeq* _finalBody, AlifIntT _lineNo, AlifIntT _colOffset,
-	AlifIntT _endLineNo, AlifIntT _endColOffset, AlifASTMem *_astMem) { // 7428
+	AlifIntT _endLineNo, AlifIntT _endColOffset, AlifASTMem* _astMem) { // 7428
 	StmtTy p{};
 	p = (StmtTy)alifASTMem_malloc(_astMem, sizeof(*p));
 	if (!p)
@@ -1177,7 +2783,7 @@ WithItemTy alifAST_withItem(ExprTy _exprCTX, ExprTy _optVars, AlifASTMem* _astMe
 AlifObject* alifAST_getDocString(ASDLStmtSeq* _body) {
 	if (!ASDL_SEQ_LEN(_body)) return nullptr;
 
-	StmtTy stmt = ASDL_SEQ_GET(_body ,0);
+	StmtTy stmt = ASDL_SEQ_GET(_body, 0);
 	if (stmt->type != StmtK_::ExprK) return nullptr;
 
 	ExprTy expr = stmt->V.expression.val;
@@ -1187,6 +2793,98 @@ AlifObject* alifAST_getDocString(ASDLStmtSeq* _body) {
 
 	return nullptr;
 }
+
+
+
+
+
+AlifObject* ast2obj_mod(ASTState* state, Validator* vstate, void* _o) { // 8712
+	ModuleTy o = (ModuleTy)_o;
+	AlifObject* result = nullptr, * value = nullptr;
+	AlifTypeObject* tp;
+	if (!o) {
+		return ALIF_NONE;
+	}
+	if (++vstate->recursionDepth > vstate->recursionLimit) {
+		//alifErr_setString(_alifExcRecursionError_,
+		//	"maximum recursion depth exceeded during ast construction");
+		return nullptr;
+	}
+	switch (o->type) {
+	case ModK_::ModuleK:
+		tp = (AlifTypeObject*)state->Module_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.module.body,
+			ast2obj_stmt);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->body, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate,
+			(ASDLSeq*)o->V.module.typeIgnores,
+			ast2obj_typeIgnore);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->type_ignores, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		break;
+	case ModK_::InteractiveK:
+		tp = (AlifTypeObject*)state->Interactive_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.interactive.body,
+			ast2obj_stmt);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->body, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		break;
+	case ModK_::ExpressionK:
+		tp = (AlifTypeObject*)state->Expression_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = ast2obj_expr(state, vstate, o->V.expression.body);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->body, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		break;
+	case ModK_::FunctionK:
+		tp = (AlifTypeObject*)state->FunctionType_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = ast2obj_list(state, vstate,
+			(ASDLSeq*)o->V.function.argTypes,
+			ast2obj_expr);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->argtypes, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_expr(state, vstate, o->V.function.returns);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->returns, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		break;
+	}
+	vstate->recursionDepth--;
+	return result;
+failed:
+	vstate->recursionDepth--;
+	ALIF_XDECREF(value);
+	ALIF_XDECREF(result);
+	return nullptr;
+}
+
+
+
+
+
+
+
+
+
 
 
 

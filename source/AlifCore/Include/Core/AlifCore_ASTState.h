@@ -7,7 +7,7 @@ class ASTState {
 public:
 	AlifOnceFlag once;
 	AlifIntT finalized;
-	AlifObject* AST_type;
+	AlifObject* astType{};
 	AlifObject* Add_singleton;
 	AlifObject* Add_type;
 	AlifObject* And_singleton;
@@ -179,8 +179,8 @@ public:
 	AlifObject* defaults;
 	AlifObject* elt;
 	AlifObject* elts;
-	AlifObject* end_col_offset;
-	AlifObject* end_lineno;
+	AlifObject* endColOffset;
+	AlifObject* endLineNo;
 	AlifObject* exc;
 	AlifObject* excepthandler_type;
 	AlifObject* expr_context_type;

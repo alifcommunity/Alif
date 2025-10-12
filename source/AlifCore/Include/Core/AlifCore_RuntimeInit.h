@@ -766,6 +766,7 @@
 	INIT_ID(__weakRef__), \
 	INIT_ID(_blksize), \
 	INIT_ID(_deallocWarn), \
+	INIT_ID(_fieldTypes), \
 	INIT_ID(_findAndLoad), \
 	INIT_ID(_initializing), \
 	INIT_ID(_isTextEncoding), \

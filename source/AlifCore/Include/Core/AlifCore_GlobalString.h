@@ -127,6 +127,7 @@ public:
 			STRUCT_FOR_ID(__weakRef__)
 			STRUCT_FOR_ID(_blksize)
 			STRUCT_FOR_ID(_deallocWarn)
+			STRUCT_FOR_ID(_fieldTypes)
 			STRUCT_FOR_ID(_findAndLoad)
 			STRUCT_FOR_ID(_initializing)
 			STRUCT_FOR_ID(_isTextEncoding)

@@ -377,7 +377,7 @@ static void type_mroModified(AlifTypeObject* _type, AlifObject* _bases) { // 111
 			goto clear;
 		}
 		typeMroMeth = lookup_maybeMethod(
-			(AlifObject*) & _alifTypeType_, &ALIF_ID(Mro), &unbound);
+			(AlifObject*)&_alifTypeType_, &ALIF_ID(Mro), &unbound);
 		if (typeMroMeth == nullptr) {
 			ALIF_DECREF(mroMeth);
 			goto clear;
@@ -596,6 +596,10 @@ AlifObject* alifType_genericAlloc(AlifTypeObject* _type, AlifSizeT _nitems) { //
 	return obj;
 }
 
+AlifObject* alifType_genericNew(AlifTypeObject* _type,
+	AlifObject* _args, AlifObject* _kwds) { // 2268
+	return _type->alloc(_type, 0);
+}
 
 static inline AlifMemberDef* _alifHeapType_getMembers(AlifHeapTypeObject* _type) { // 2282
 	return (AlifMemberDef*)alifObject_getItemData((AlifObject*)_type);
@@ -747,7 +751,8 @@ static AlifIntT typeIsSubType_baseChain(AlifTypeObject* _a, AlifTypeObject* _b) 
 		if (_a == _b)
 			return 1;
 		_a = _a->base;
-	} while (_a != nullptr);
+	}
+	while (_a != nullptr);
 
 	return (_b == &_alifBaseObjectType_);
 }
@@ -952,7 +957,7 @@ again:
 			}
 		}
 		goto again;
-	skip:;
+skip:;
 	}
 
 	if (emptyCnt != _toMergeSize) {
@@ -1139,7 +1144,7 @@ static AlifIntT mro_internalUnlocked(AlifTypeObject* _type,
 	}
 
 	if (_pOldMro != nullptr)
-		*_pOldMro = oldMro; 
+		*_pOldMro = oldMro;
 	else
 		ALIF_XDECREF(oldMro);
 
@@ -1201,8 +1206,8 @@ static AlifTypeObject* best_base(AlifObject* bases) { // 3337
 
 
 static AlifIntT shape_differs(AlifTypeObject* _t1, AlifTypeObject* _t2) { // 3392
-	return ( _t1->basicSize != _t2->basicSize
-		or _t1->itemSize != _t2->itemSize );
+	return (_t1->basicSize != _t2->basicSize
+		or _t1->itemSize != _t2->itemSize);
 }
 
 static AlifTypeObject* solid_base(AlifTypeObject* _type) { // 3401
@@ -1384,8 +1389,7 @@ static AlifObject* typeNew_copySlots(TypeNewCtx* ctx, AlifObject* dict) { // 373
 	for (AlifSizeT i = 0; i < nslot; i++) {
 		AlifObject* slot = ALIFTUPLE_GET_ITEM(slots, i);
 		if ((ctx->addDict and _alifUStr_equal(slot, &ALIF_ID(__dict__))) ||
-			(ctx->addWeak and _alifUStr_equal(slot, &ALIF_ID(__weakRef__))))
-		{
+			(ctx->addWeak and _alifUStr_equal(slot, &ALIF_ID(__weakRef__)))) {
 			continue;
 		}
 
@@ -1402,8 +1406,7 @@ static AlifObject* typeNew_copySlots(TypeNewCtx* ctx, AlifObject* dict) { // 373
 		if (r > 0) {
 			if (!_alifUStr_equal(slot, &ALIF_ID(__qualname__)) and
 				!_alifUStr_equal(slot, &ALIF_ID(__classCell__)) and
-				!_alifUStr_equal(slot, &ALIF_ID(__classDictCell__)))
-			{
+				!_alifUStr_equal(slot, &ALIF_ID(__classDictCell__))) {
 				//alifErr_format(_alifExcValueError_,
 				//	"%R in __slots__ conflicts with class variable",
 				//	slot);
@@ -1436,8 +1439,7 @@ static void typeNew_slotsBases(TypeNewCtx* _ctx) { // 3801
 	AlifSizeT nbases = ALIFTUPLE_GET_SIZE(_ctx->bases);
 	if (nbases > 1 and
 		((_ctx->mayAddDict and _ctx->addDict == 0) or
-			(_ctx->mayAddWeak and _ctx->addWeak == 0)))
-	{
+			(_ctx->mayAddWeak and _ctx->addWeak == 0))) {
 		for (AlifSizeT i = 0; i < nbases; i++) {
 			AlifObject* obj = ALIFTUPLE_GET_ITEM(_ctx->bases, i);
 			if (obj == (AlifObject*)_ctx->base) {
@@ -1447,13 +1449,11 @@ static void typeNew_slotsBases(TypeNewCtx* _ctx) { // 3801
 			AlifTypeObject* base = ALIFTYPE_CAST(obj);
 
 			if (_ctx->mayAddDict and _ctx->addDict == 0 and
-				base->dictOffset != 0)
-			{
+				base->dictOffset != 0) {
 				_ctx->addDict++;
 			}
 			if (_ctx->mayAddWeak and _ctx->addWeak == 0 and
-				base->weakListOffset != 0)
-			{
+				base->weakListOffset != 0) {
 				_ctx->addWeak++;
 			}
 			if (_ctx->mayAddDict and _ctx->addDict == 0) {
@@ -2030,8 +2030,7 @@ static AlifObject* type_new(AlifTypeObject* _metatype,
 	if (!alifArg_parseTuple(_args, "UO!O!:type.__new__",
 		&name,
 		&_alifTupleType_, &bases,
-		&_alifDictType_, &orig_dict))
-	{
+		&_alifDictType_, &orig_dict)) {
 		return nullptr;
 	}
 
@@ -2080,81 +2079,81 @@ static AlifObject* type_vectorCall(AlifObject* metatype, AlifObject* const* args
 
 static const AlifSlotOffset _alifSlotOffsets_[] = { // 4549
 	{0, 0},
-//#include "typeslots.inc" //* alif //* review
-	{offsetof(AlifBufferProcs, getBuffer), offsetof(AlifTypeObject, asBuffer)},
-	{offsetof(AlifBufferProcs, releaseBuffer), offsetof(AlifTypeObject, asBuffer)},
-	{offsetof(AlifMappingMethods, assSubscript), offsetof(AlifTypeObject, asMapping)},
-	{offsetof(AlifMappingMethods, length), offsetof(AlifTypeObject, asMapping)},
-	{offsetof(AlifMappingMethods, subscript), offsetof(AlifTypeObject, asMapping)},
-	{offsetof(AlifNumberMethods, absolute), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, add_), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, and_), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, bool_), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, divmod), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, float_), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, floorDivide), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, index), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, inplaceAdd), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, inplaceAnd), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, inplaceFloorDivide), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, inplaceLshift), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, inplaceMultiply), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, inplaceOr), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, inplacePower), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, inplaceRemainder), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, inplaceRshift), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, inplaceSubtract), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, inplaceTrueDivide), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, inplaceXor), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, int_), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, invert), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, lshift), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, multiply), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, negative), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, or_), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, positive), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, power), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, remainder), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, rshift), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, subtract), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, trueDivide), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifNumberMethods, xor_), offsetof(AlifTypeObject, asNumber)},
-	{offsetof(AlifSequenceMethods, assItem), offsetof(AlifTypeObject, asSequence)},
-	{offsetof(AlifSequenceMethods, concat), offsetof(AlifTypeObject, asSequence)},
-	{offsetof(AlifSequenceMethods, contains), offsetof(AlifTypeObject, asSequence)},
-	{offsetof(AlifSequenceMethods, inplaceConcat), offsetof(AlifTypeObject, asSequence)},
-	{offsetof(AlifSequenceMethods, inplaceRepeat), offsetof(AlifTypeObject, asSequence)},
-	{offsetof(AlifSequenceMethods, item), offsetof(AlifTypeObject, asSequence)},
-	{offsetof(AlifSequenceMethods, length), offsetof(AlifTypeObject, asSequence)},
-	{offsetof(AlifSequenceMethods, repeat), offsetof(AlifTypeObject, asSequence)},
-	{-1, offsetof(AlifTypeObject, alloc)},
-	{-1, offsetof(AlifTypeObject, base)},
-	{-1, offsetof(AlifTypeObject, bases)},
-	{-1, offsetof(AlifTypeObject, call)},
-	{-1, offsetof(AlifTypeObject, clear)},
-	{-1, offsetof(AlifTypeObject, dealloc)},
-	{-1, offsetof(AlifTypeObject, del)},
-	{-1, offsetof(AlifTypeObject, descrGet)},
-	{-1, offsetof(AlifTypeObject, descrSet)},
-	{-1, offsetof(AlifTypeObject, doc)},
-	{-1, offsetof(AlifTypeObject, getAttr)},
-	{-1, offsetof(AlifTypeObject, getAttro)},
-	{-1, offsetof(AlifTypeObject, hash)},
-	{-1, offsetof(AlifTypeObject, init)},
-	{-1, offsetof(AlifTypeObject, isGC)},
-	{-1, offsetof(AlifTypeObject, iter)},
-	{-1, offsetof(AlifTypeObject, iterNext)},
-	{-1, offsetof(AlifTypeObject, methods)},
-	{-1, offsetof(AlifTypeObject, new_)},
-	{-1, offsetof(AlifTypeObject, repr)},
-	{-1, offsetof(AlifTypeObject, richCompare)},
-	{-1, offsetof(AlifTypeObject, setAttr)},
-	{-1, offsetof(AlifTypeObject, setAttro)},
-	{-1, offsetof(AlifTypeObject, str)},
-	{-1, offsetof(AlifTypeObject, traverse)},
-	{-1, offsetof(AlifTypeObject, members)},
-	{-1, offsetof(AlifTypeObject, getSet)},
-	{-1, offsetof(AlifTypeObject, free)},
+	//#include "typeslots.inc" //* alif //* review
+		{offsetof(AlifBufferProcs, getBuffer), offsetof(AlifTypeObject, asBuffer)},
+		{offsetof(AlifBufferProcs, releaseBuffer), offsetof(AlifTypeObject, asBuffer)},
+		{offsetof(AlifMappingMethods, assSubscript), offsetof(AlifTypeObject, asMapping)},
+		{offsetof(AlifMappingMethods, length), offsetof(AlifTypeObject, asMapping)},
+		{offsetof(AlifMappingMethods, subscript), offsetof(AlifTypeObject, asMapping)},
+		{offsetof(AlifNumberMethods, absolute), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, add_), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, and_), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, bool_), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, divmod), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, float_), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, floorDivide), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, index), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, inplaceAdd), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, inplaceAnd), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, inplaceFloorDivide), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, inplaceLshift), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, inplaceMultiply), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, inplaceOr), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, inplacePower), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, inplaceRemainder), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, inplaceRshift), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, inplaceSubtract), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, inplaceTrueDivide), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, inplaceXor), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, int_), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, invert), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, lshift), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, multiply), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, negative), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, or_), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, positive), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, power), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, remainder), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, rshift), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, subtract), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, trueDivide), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifNumberMethods, xor_), offsetof(AlifTypeObject, asNumber)},
+		{offsetof(AlifSequenceMethods, assItem), offsetof(AlifTypeObject, asSequence)},
+		{offsetof(AlifSequenceMethods, concat), offsetof(AlifTypeObject, asSequence)},
+		{offsetof(AlifSequenceMethods, contains), offsetof(AlifTypeObject, asSequence)},
+		{offsetof(AlifSequenceMethods, inplaceConcat), offsetof(AlifTypeObject, asSequence)},
+		{offsetof(AlifSequenceMethods, inplaceRepeat), offsetof(AlifTypeObject, asSequence)},
+		{offsetof(AlifSequenceMethods, item), offsetof(AlifTypeObject, asSequence)},
+		{offsetof(AlifSequenceMethods, length), offsetof(AlifTypeObject, asSequence)},
+		{offsetof(AlifSequenceMethods, repeat), offsetof(AlifTypeObject, asSequence)},
+		{-1, offsetof(AlifTypeObject, alloc)},
+		{-1, offsetof(AlifTypeObject, base)},
+		{-1, offsetof(AlifTypeObject, bases)},
+		{-1, offsetof(AlifTypeObject, call)},
+		{-1, offsetof(AlifTypeObject, clear)},
+		{-1, offsetof(AlifTypeObject, dealloc)},
+		{-1, offsetof(AlifTypeObject, del)},
+		{-1, offsetof(AlifTypeObject, descrGet)},
+		{-1, offsetof(AlifTypeObject, descrSet)},
+		{-1, offsetof(AlifTypeObject, doc)},
+		{-1, offsetof(AlifTypeObject, getAttr)},
+		{-1, offsetof(AlifTypeObject, getAttro)},
+		{-1, offsetof(AlifTypeObject, hash)},
+		{-1, offsetof(AlifTypeObject, init)},
+		{-1, offsetof(AlifTypeObject, isGC)},
+		{-1, offsetof(AlifTypeObject, iter)},
+		{-1, offsetof(AlifTypeObject, iterNext)},
+		{-1, offsetof(AlifTypeObject, methods)},
+		{-1, offsetof(AlifTypeObject, new_)},
+		{-1, offsetof(AlifTypeObject, repr)},
+		{-1, offsetof(AlifTypeObject, richCompare)},
+		{-1, offsetof(AlifTypeObject, setAttr)},
+		{-1, offsetof(AlifTypeObject, setAttro)},
+		{-1, offsetof(AlifTypeObject, str)},
+		{-1, offsetof(AlifTypeObject, traverse)},
+		{-1, offsetof(AlifTypeObject, members)},
+		{-1, offsetof(AlifTypeObject, getSet)},
+		{-1, offsetof(AlifTypeObject, free)},
 };
 
 static AlifSizeT _align_up(AlifSizeT size) { // 4557
@@ -2402,8 +2401,7 @@ AlifObject* alifType_fromMetaclass(AlifTypeObject* metaclass, AlifObject* module
 
 		/* Inheriting variable-sized types is limited */
 		if (base->itemSize
-			and !((base->flags | spec->flags) & ALIF_TPFLAGS_ITEMS_AT_END))
-		{
+			and !((base->flags | spec->flags) & ALIF_TPFLAGS_ITEMS_AT_END)) {
 			//alifErr_setString(
 			//	_alifExcSystemError_,
 			//	"Cannot extend variable-size class without ALIF_TPFLAGS_ITEMS_AT_END.");
@@ -2486,8 +2484,7 @@ AlifObject* alifType_fromMetaclass(AlifTypeObject* metaclass, AlifObject* module
 			AlifMemberDef* memb{};
 			AlifSizeT i{};
 			for (memb = _alifHeapType_getMembers(res), i = nmembers;
-				i > 0; ++memb, --i)
-			{
+				i > 0; ++memb, --i) {
 				if (memb->flags & ALIF_RELATIVE_OFFSET) {
 					memb->flags &= ~ALIF_RELATIVE_OFFSET;
 					memb->offset += type_data_offset;
@@ -2584,7 +2581,7 @@ AlifObject* alifType_fromMetaclass(AlifTypeObject* metaclass, AlifObject* module
 			//if (alifErr_warnFormat(_alifExcDeprecationWarning_, 1,
 			//	"builtin type %.200s has no __module__ attribute",
 			//	spec->name))
-				goto finally;
+			goto finally;
 		}
 	}
 
@@ -2608,6 +2605,9 @@ AlifObject* alifType_fromSpecWithBases(AlifTypeSpec* _spec, AlifObject* _bases) 
 	return alifType_fromMetaclass(nullptr, nullptr, _spec, _bases);
 }
 
+AlifObject* alifType_fromSpec(AlifTypeSpec* _spec) { // 5122
+	return alifType_fromMetaclass(nullptr, nullptr, _spec, nullptr);
+}
 
 AlifObject* alifType_getQualName(AlifTypeObject* type) { // 5134
 	return type_qualname(type, nullptr);
@@ -2913,15 +2913,15 @@ static AlifMethodDef _typeMethods_[] = { // 6182
 	TYPE___SUBCLASSES___METHODDEF
 	{"__prepare__", ALIF_CPPFUNCTION_CAST(type_prepare),
 	 METHOD_FASTCALL | METHOD_KEYWORDS | METHOD_CLASS,
-	 /*ALIFDOC_STR("__prepare__($cls, name, bases, /, **kwds)\n"
-			   "--\n"
-			   "\n"
-			   "Create the namespace for the class statement")*/},
-	//TYPE___INSTANCECHECK___METHODDEF
-	//TYPE___SUBCLASSCHECK___METHODDEF
-	//TYPE___DIR___METHODDEF
-	//TYPE___SIZEOF___METHODDEF
-	{0}
+	/*ALIFDOC_STR("__prepare__($cls, name, bases, /, **kwds)\n"
+			  "--\n"
+			  "\n"
+			  "Create the namespace for the class statement")*/},
+			  //TYPE___INSTANCECHECK___METHODDEF
+			  //TYPE___SUBCLASSCHECK___METHODDEF
+			  //TYPE___DIR___METHODDEF
+			  //TYPE___SIZEOF___METHODDEF
+			  {0}
 };
 
 
@@ -3083,7 +3083,7 @@ static AlifMethodDef _objectMethods_[] = { // 7433
 
 AlifTypeObject _alifBaseObjectType_ = { // 7453
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
-	.name = "كائن",              
+	.name = "كائن",
 	.basicSize = sizeof(AlifObject),
 	.itemSize = 0,
 	.dealloc = object_dealloc,
@@ -3413,8 +3413,7 @@ static AlifIntT inherit_slots(AlifTypeObject* _type, AlifTypeObject* _base) { //
 		COPYSLOT(vectorCallOffset);
 
 		if (!_type->call and
-			_alifType_hasFeature(_base, ALIF_TPFLAGS_HAVE_VECTORCALL))
-		{
+			_alifType_hasFeature(_base, ALIF_TPFLAGS_HAVE_VECTORCALL)) {
 			_type->flags |= ALIF_TPFLAGS_HAVE_VECTORCALL;
 		}
 		COPYSLOT(call);
@@ -3424,8 +3423,7 @@ static AlifIntT inherit_slots(AlifTypeObject* _type, AlifTypeObject* _base) { //
 		/* Copy comparison-related slots only when
 		   not overriding them anywhere */
 		if (_type->richCompare == nullptr and
-			_type->hash == nullptr)
-		{
+			_type->hash == nullptr) {
 			AlifIntT r = overrides_hash(_type);
 			if (r < 0) {
 				return -1;
@@ -3445,8 +3443,7 @@ static AlifIntT inherit_slots(AlifTypeObject* _type, AlifTypeObject* _base) { //
 		if (_base->descrGet and
 			_type->descrGet == _base->descrGet and
 			_alifType_hasFeature(_type, ALIF_TPFLAGS_IMMUTABLETYPE) and
-			_alifType_hasFeature(_base, ALIF_TPFLAGS_METHOD_DESCRIPTOR))
-		{
+			_alifType_hasFeature(_base, ALIF_TPFLAGS_METHOD_DESCRIPTOR)) {
 			_type->flags |= ALIF_TPFLAGS_METHOD_DESCRIPTOR;
 		}
 		COPYSLOT(descrSet);
@@ -3590,8 +3587,7 @@ static AlifIntT typeReady_preheader(AlifTypeObject* _type) { // 8172
 	}
 	if (_type->flags & ALIF_TPFLAGS_MANAGED_WEAKREF) {
 		if (_type->weakListOffset != 0 and
-			_type->weakListOffset != MANAGED_WEAKREF_OFFSET)
-		{
+			_type->weakListOffset != MANAGED_WEAKREF_OFFSET) {
 			//alifErr_format(_alifExcTypeError_,
 			//	"type %s has the ALIF_TPFLAGS_MANAGED_WEAKREF flag "
 			//	"but weakListOffset is set",
@@ -3738,8 +3734,7 @@ static AlifIntT typeReady_setNew(AlifTypeObject* _type, AlifIntT _initial) { // 
 	AlifTypeObject* base = _type->base;
 	if (_type->new_ == nullptr
 		and base == &_alifBaseObjectType_
-		and !(_type->flags & ALIF_TPFLAGS_HEAPTYPE))
-	{
+		and !(_type->flags & ALIF_TPFLAGS_HEAPTYPE)) {
 		_type->flags |= ALIF_TPFLAGS_DISALLOW_INSTANTIATION;
 	}
 
@@ -4068,10 +4063,10 @@ static AlifObject* tpNew_wrapper(AlifObject* _self,
 
 static AlifMethodDef _tpNewMethodDef_[] = { // 9294
 	{"__new__", ALIF_CPPFUNCTION_CAST(tpNew_wrapper), METHOD_VARARGS | METHOD_KEYWORDS
-	 /*,ALIFDOC_STR("__new__($type, *args, **kwargs)\n--\n\n"
-			   "Create and return a new object.  "
-			   "See help(type) for accurate signature.")*/},
-	{0}
+	/*,ALIFDOC_STR("__new__($type, *args, **kwargs)\n--\n\n"
+			  "Create and return a new object.  "
+			  "See help(type) for accurate signature.")*/},
+   {0}
 };
 
 
@@ -4277,7 +4272,7 @@ static AlifObject* slot_tpNew(AlifTypeObject* _type,
 #undef BINSLOT
 #undef RBINSLOT
 
- // 10497
+// 10497
 #define TPSLOT(_name, _slot, _function, _wrapper, _doc) \
     {.name = #_name, .offset = offsetof(AlifTypeObject, _slot), .function = (void *)(_function), .wrapper = _wrapper, \
      .doc = ALIFDOC_STR(_doc), .nameStrObj = &ALIF_STR(_name)}
@@ -4387,7 +4382,8 @@ static AlifTypeSlotDef* update_oneSlot(AlifTypeObject* type, AlifTypeSlotDef* p)
 	if (ptr == nullptr) {
 		do {
 			++p;
-		} while (p->offset == offset);
+		}
+		while (p->offset == offset);
 		return p;
 	}
 	do {
@@ -4409,8 +4405,7 @@ static AlifTypeSlotDef* update_oneSlot(AlifTypeObject* type, AlifTypeSlotDef* p)
 			d = (AlifWrapperDescrObject*)descr;
 			if ((specific == nullptr or specific == d->wrapped) and
 				d->base->wrapper == p->wrapper and
-				isSubType_withMro(lookup_tpMro(type), type, ALIFDESCR_TYPE(d)))
-			{
+				isSubType_withMro(lookup_tpMro(type), type, ALIFDESCR_TYPE(d))) {
 				specific = d->wrapped;
 			}
 			else {
@@ -4420,8 +4415,7 @@ static AlifTypeSlotDef* update_oneSlot(AlifTypeObject* type, AlifTypeSlotDef* p)
 		else if (ALIF_IS_TYPE(descr, &_alifCPPFunctionType_) and
 			ALIFCPPFUNCTION_GET_FUNCTION(descr) ==
 			ALIF_CPPFUNCTION_CAST(tpNew_wrapper) and
-			ptr == (void**)&type->new_)
-		{
+			ptr == (void**)&type->new_) {
 			specific = (void*)type->new_;
 		}
 		else if (descr == ALIF_NONE and
@@ -4436,7 +4430,8 @@ static AlifTypeSlotDef* update_oneSlot(AlifTypeObject* type, AlifTypeSlotDef* p)
 			}
 		}
 		ALIF_DECREF(descr);
-	} while ((++p)->offset == offset);
+	}
+	while ((++p)->offset == offset);
 	if (specific && !use_generic)
 		*ptr = specific;
 	else
@@ -4643,7 +4638,8 @@ static AlifObject* _super_lookupDescr(AlifTypeObject* _suType,
 		}
 
 		i++;
-	} while (i < n);
+	}
+	while (i < n);
 	ALIF_DECREF(mro);
 	return nullptr;
 }
@@ -4727,8 +4723,7 @@ static AlifTypeObject* super_check(AlifTypeObject* type, AlifObject* obj) { // 1
 		}
 		if (class_attr != nullptr and
 			ALIFTYPE_CHECK(class_attr) and
-			(AlifTypeObject*)class_attr != ALIF_TYPE(obj))
-		{
+			(AlifTypeObject*)class_attr != ALIF_TYPE(obj)) {
 			AlifIntT ok = alifType_isSubType(
 				(AlifTypeObject*)class_attr, type);
 			if (ok) {
