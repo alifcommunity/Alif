@@ -751,7 +751,9 @@ AlifStatus alif_initFromConfig(const AlifConfig* _config) { // 1383
 
 
 
-
+void alif_finalize(void) { // 2213
+	//(void)_alif_finalize(&_alifRuntime_);
+}
 
 
 

@@ -2,13 +2,14 @@
 
 #include "AlifCore_Call.h"
 #include "AlifCore_Code.h"
+#include "AlifCore_HashTable.h"
 #include "AlifCore_Long.h"
 
 
 
 
 
- // 41
+// 41
 #if defined(_WINDOWS)
 #  define MAX_MARSHAL_STACK_DEPTH 1000
 #elif defined(__wasi__)
@@ -65,6 +66,64 @@
 #define WFERR_CODE_NOT_ALLOWED 4
 
 
+class WFile { // 94
+public:
+	FILE* fp{};
+	AlifIntT error{};
+	AlifIntT depth{};
+	AlifObject* str{};
+	char* ptr{};
+	const char* end{};
+	char* buf{};
+	AlifHashTableT* hashtable{};
+	AlifIntT version{};
+	AlifIntT allowCode{};
+};
+
+// 107
+#define W_BYTE(_c, _p) do {                               \
+        if ((_p)->ptr != (_p)->end or w_reserve((_p), 1))  \
+            *(_p)->ptr++ = (_c);                          \
+    } while(0)
+
+
+static void w_flush(WFile* p) { // 112
+	fwrite(p->buf, 1, p->ptr - p->buf, p->fp);
+	p->ptr = p->buf;
+}
+
+static AlifIntT w_reserve(WFile* _p, AlifSizeT _needed) { // 120
+	AlifSizeT pos{}, size{}, delta{};
+	if (_p->ptr == nullptr)
+		return 0; /* An error already occurred */
+	if (_p->fp != nullptr) {
+		w_flush(_p);
+		return _needed <= _p->end - _p->ptr;
+	}
+	pos = _p->ptr - _p->buf;
+	size = ALIFBYTES_GET_SIZE(_p->str);
+	if (size > 16 * 1024 * 1024)
+		delta = (size >> 3);            /* 12.5% overallocation */
+	else
+		delta = size + 1024;
+	delta = ALIF_MAX(delta, _needed);
+	if (delta > ALIF_SIZET_MAX - size) {
+		_p->error = WFERR_NOMEMORY;
+		return 0;
+	}
+	size += delta;
+	if (_alifBytes_resize(&_p->str, size) != 0) {
+		_p->end = _p->ptr = _p->buf = NULL;
+		return 0;
+	}
+	else {
+		_p->buf = ALIFBYTES_AS_STRING(_p->str);
+		_p->ptr = _p->buf + pos;
+		_p->end = _p->buf + size;
+		return 1;
+	}
+}
+
 
 
 #define SIZE32_MAX  0x7FFFFFFF // 195
@@ -72,7 +131,7 @@
 
 
 
- // 228
+// 228
 #define ALIFLONG_MARSHAL_SHIFT 15
 #define ALIFLONG_MARSHAL_BASE ((short)1 << ALIFLONG_MARSHAL_SHIFT)
 #define ALIFLONG_MARSHAL_MASK (ALIFLONG_MARSHAL_BASE - 1)
@@ -82,6 +141,102 @@
 #define ALIFLONG_MARSHAL_RATIO (ALIFLONG_SHIFT / ALIFLONG_MARSHAL_SHIFT)
 
 
+
+
+static AlifIntT w_ref(AlifObject* _v, char* _flag, WFile* _p) { // 310
+	AlifHashTableEntryT* entry{};
+	AlifIntT w{};
+
+	if (_p->version < 3 or _p->hashtable == nullptr)
+		return 0; /* not writing object references */
+
+	if (ALIF_REFCNT(_v) == 1 and
+		!(ALIFUSTR_CHECKEXACT(_v) and ALIFUSTR_CHECK_INTERNED(_v))) {
+		return 0;
+	}
+
+	entry = _alifHashTable_getEntry(_p->hashtable, _v);
+	if (entry != nullptr) {
+		/* write the reference index to the stream */
+		w = (int)(uintptr_t)entry->value;
+		/* we don't store "long" indices in the dict */
+		w_byte(TYPE_REF, _p);
+		w_long(w, _p);
+		return 1;
+	}
+	else {
+		size_t s = _p->hashtable->nentries;
+		/* we don't support long indices */
+		if (s >= 0x7fffffff) {
+			alifErr_setString(_alifExcValueError_, "too many objects");
+			goto err;
+		}
+		w = (int)s;
+		if (_alifHashTable_set(_p->hashtable, ALIF_NEWREF(_v),
+			(void*)(uintptr_t)w) < 0) {
+			ALIF_DECREF(_v);
+			goto err;
+		}
+		*_flag |= FLAG_REF;
+		return 0;
+	}
+err:
+	_p->error = WFERR_UNMARSHALLABLE;
+	return 1;
+}
+
+
+static void w_object(AlifObject* _v, WFile* _p) { // 361
+	char flag = '\0';
+
+	_p->depth++;
+
+	if (_p->depth > MAX_MARSHAL_STACK_DEPTH) {
+		_p->error = WFERR_NESTEDTOODEEP;
+	}
+	else if (_v == nullptr) {
+		W_BYTE(TYPE_NULL, _p);
+	}
+	else if (_v == ALIF_NONE) {
+		W_BYTE(TYPE_NONE, _p);
+	}
+	else if (_v == _alifExcStopIteration_) {
+		W_BYTE(TYPE_STOPITER, _p);
+	}
+	else if (_v == ALIF_ELLIPSIS) {
+		W_BYTE(TYPE_ELLIPSIS, _p);
+	}
+	else if (_v == ALIF_FALSE) {
+		W_BYTE(TYPE_FALSE, _p);
+	}
+	else if (_v == ALIF_TRUE) {
+		W_BYTE(TYPE_TRUE, _p);
+	}
+	else if (!w_ref(_v, &flag, _p))
+		w_complexObject(_v, flag, _p);
+
+	_p->depth--;
+}
+
+
+static AlifIntT w_initRefs(WFile* wf, AlifIntT version) { // 637
+	if (version >= 3) {
+		wf->hashtable = _alifHashTable_newFull(_alifHashTable_hashPtr,
+			_alifHashTable_compareDirect,
+			w_decrefEntry, nullptr, nullptr);
+		if (wf->hashtable == nullptr) {
+			//alifErr_noMemory();
+			return -1;
+		}
+	}
+	return 0;
+}
+
+static void w_clearRefs(WFile* _wf) { // 652
+	if (_wf->hashtable != nullptr) {
+		_alifHashTable_destroy(_wf->hashtable);
+	}
+}
 
 
 class RFILE { // 695
@@ -148,7 +303,7 @@ static const char* r_string(AlifSizeT n, RFILE* p) { // 707
 
 		res = _alifObject_callMethod(p->readable, &ALIF_ID(ReadInto), "N", mview);
 		if (res != nullptr) {
-			read = alifNumber_asSizeT(res, nullptr /*_alifExcValueError_*/);
+			read = alifNumber_asSizeT(res, _alifExcValueError_);
 			ALIF_DECREF(res);
 		}
 	}
@@ -216,10 +371,10 @@ static long r_long(RFILE* p) { // 821
 		x |= (long)buffer[1] << 8;
 		x |= (long)buffer[2] << 16;
 		x |= (long)buffer[3] << 24;
-#if SIZEOF_LONG > 4
+	#if SIZEOF_LONG > 4
 		/* Sign extension for 64-bit machines */
 		x |= -(x & 0x80000000L);
-#endif
+	#endif
 	}
 	return x;
 }
@@ -382,7 +537,7 @@ static AlifObject* r_object(RFILE* p) { // 1004
 
 	if (p->depth > MAX_MARSHAL_STACK_DEPTH) {
 		p->depth--;
-		//alifErr_setString(_alifExcValueError_, "recursion limit exceeded");
+		alifErr_setString(_alifExcValueError_, "recursion limit exceeded");
 		return nullptr;
 	}
 
@@ -404,7 +559,7 @@ static AlifObject* r_object(RFILE* p) { // 1004
 		break;
 
 	case TYPE_STOPITER:
-		//retval = ALIF_NEWREF(_alifExcStopIteration_);
+		retval = ALIF_NEWREF(_alifExcStopIteration_);
 		break;
 
 	case TYPE_ELLIPSIS:
@@ -533,7 +688,7 @@ static AlifObject* r_object(RFILE* p) { // 1004
 		if (n == EOF) {
 			break;
 		}
-	_read_ascii:
+_read_ascii:
 		{
 			const char* ptr;
 			ptr = r_string(n, p);
@@ -605,7 +760,7 @@ static AlifObject* r_object(RFILE* p) { // 1004
 			}
 			break;
 		}
-	_read_tuple:
+_read_tuple:
 		v = alifTuple_new(n);
 		R_REF(v);
 		if (v == nullptr)
@@ -617,7 +772,7 @@ static AlifObject* r_object(RFILE* p) { // 1004
 				if (!alifErr_occurred())
 					//alifErr_setString(_alifExcTypeError_,
 					//	"nullptr object in marshal data for tuple");
-				ALIF_SETREF(v, nullptr);
+					ALIF_SETREF(v, nullptr);
 				break;
 			}
 			ALIFTUPLE_SET_ITEM(v, i, v2);
@@ -644,7 +799,7 @@ static AlifObject* r_object(RFILE* p) { // 1004
 				if (!alifErr_occurred())
 					//alifErr_setString(_alifExcTypeError_,
 					//	"nullptr object in marshal data for list");
-				ALIF_SETREF(v, nullptr);
+					ALIF_SETREF(v, nullptr);
 				break;
 			}
 			ALIFLIST_SET_ITEM(v, i, v2);
@@ -722,7 +877,7 @@ static AlifObject* r_object(RFILE* p) { // 1004
 					if (!alifErr_occurred())
 						//alifErr_setString(_alifExcTypeError_,
 						//	"nullptr object in marshal data for set");
-					ALIF_SETREF(v, nullptr);
+						ALIF_SETREF(v, nullptr);
 					break;
 				}
 				if (alifSet_add(v, v2) == -1) {
@@ -857,7 +1012,7 @@ static AlifObject* r_object(RFILE* p) { // 1004
 
 		v = r_refInsert(v, idx, flag, p);
 
-	code_error:
+code_error:
 		if (v == nullptr and !alifErr_occurred()) {
 			//alifErr_setString(_alifExcTypeError_,
 			//	"nullptr object in marshal data for code object");
@@ -896,7 +1051,7 @@ static AlifObject* r_object(RFILE* p) { // 1004
 	default:
 		/* Bogus data got written, which isn't ideal.
 		   This will let you keep working and recover. */
-		//alifErr_setString(_alifExcValueError_, "bad marshal data (unknown type code)");
+		   //alifErr_setString(_alifExcValueError_, "bad marshal data (unknown type code)");
 		break;
 
 	}
@@ -948,4 +1103,63 @@ AlifObject* alifMarshal_readObjectFromString(const char* _str, AlifSizeT _len) {
 	if (rf.buf != nullptr)
 		alifMem_dataFree(rf.buf);
 	return result;
+}
+
+
+
+
+static AlifObject* _alifMarshal_writeObjectToString(AlifObject* x, AlifIntT version,
+	AlifIntT allow_code) { // 1725
+	WFile wf{};
+
+	//if (alifSys_audit("marshal.dumps", "Oi", x, version) < 0) {
+	//	return nullptr;
+	//}
+	memset(&wf, 0, sizeof(wf));
+	wf.str = alifBytes_fromStringAndSize((char*)nullptr, 50);
+	if (wf.str == nullptr)
+		return nullptr;
+	wf.ptr = wf.buf = ALIFBYTES_AS_STRING(wf.str);
+	wf.end = wf.ptr + ALIFBYTES_GET_SIZE(wf.str);
+	wf.error = WFERR_OK;
+	wf.version = version;
+	wf.allowCode = allow_code;
+	if (w_initRefs(&wf, version)) {
+		ALIF_DECREF(wf.str);
+		return nullptr;
+	}
+	w_object(x, &wf);
+	w_clearRefs(&wf);
+	if (wf.str != nullptr) {
+		const char* base = ALIFBYTES_AS_STRING(wf.str);
+		if (_alifBytes_resize(&wf.str, (AlifSizeT)(wf.ptr - base)) < 0)
+			return nullptr;
+	}
+	if (wf.error != WFERR_OK) {
+		ALIF_XDECREF(wf.str);
+		switch (wf.error) {
+		case WFERR_NOMEMORY:
+			//alifErr_noMemory();
+			break;
+		case WFERR_NESTEDTOODEEP:
+			alifErr_setString(_alifExcValueError_,
+				"object too deeply nested to marshal");
+			break;
+		case WFERR_CODE_NOT_ALLOWED:
+			alifErr_setString(_alifExcValueError_,
+				"marshalling code objects is disallowed");
+			break;
+		default:
+		case WFERR_UNMARSHALLABLE:
+			alifErr_setString(_alifExcValueError_,
+				"unmarshallable object");
+			break;
+		}
+		return nullptr;
+	}
+	return wf.str;
+}
+
+AlifObject* alifMarshal_writeObjectToString(AlifObject* _x, AlifIntT _version) { // 1778
+	return _alifMarshal_writeObjectToString(_x, _version, 1);
 }
