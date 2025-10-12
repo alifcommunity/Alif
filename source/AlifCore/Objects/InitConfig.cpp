@@ -281,6 +281,10 @@ AlifStatus alifStatus_exit(AlifIntT _exitcode) { // 546
 	return ALIFSTATUS_EXIT(_exitcode);
 }
 
+AlifIntT alifStatus_exception(AlifStatus _status) { // 556
+	return ALIFSTATUS_EXCEPTION(_status);
+}
+
 
 
 
@@ -550,6 +554,26 @@ void alifConfig_initAlifConfig(AlifConfig* config) { // 1011
 	config->configInit = (AlifIntT)ConfigInitEnum_::AlifConfig_Init_ALIF;
 	config->configureCStdio = 1;
 	config->parseArgv = 1;
+}
+
+void alifConfig_initIsolatedConfig(AlifConfig* _config) { // 1022
+	config_initDefaults(_config);
+
+	_config->configInit = (AlifIntT)ConfigInitEnum_::AlifConfig_Init_ISOLATED;
+	_config->isolated = 1;
+	_config->useEnvironment = 0;
+	_config->userSiteDirectory = 0;
+	_config->devMode = 0;
+	_config->installSignalHandlers = 0;
+	_config->useHashSeed = 0;
+	_config->tracemalloc = 0;
+	_config->perfProfiling = 0;
+	_config->intMaxStrDigits = ALIF_LONG_DEFAULT_MAX_STR_DIGITS;
+	_config->safePath = 1;
+	_config->pathConfigWarnings = 0;
+#ifdef _WINDOWS
+	_config->legacyWindowsStdio = 0;
+#endif
 }
 
 /* duplicate the string */

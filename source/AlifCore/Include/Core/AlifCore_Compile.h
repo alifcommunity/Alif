@@ -26,8 +26,8 @@ AlifCodeObject* _alifAST_compile(Module*, AlifObject*,
 
 extern AlifIntT alifAST_optimize(Module*, AlifASTMem*, AlifIntT, AlifIntT);
 
-
-
+extern AlifIntT _alifCompile_astOptimize(ModuleTy, AlifObject*,
+	AlifCompilerFlags*, AlifIntT, AlifASTMem* );
 
 
 

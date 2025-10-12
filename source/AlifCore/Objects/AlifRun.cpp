@@ -638,9 +638,9 @@ void _alifErr_display(AlifObject* file, AlifObject* unused,
 	ALIF_XDECREF(ctx.seen);
 
 	/* Call file.flush() */
-	//if (_alifFile_flush(file) < 0) {
-	//	alifErr_clear();
-	//}
+	if (_alifFile_flush(file) < 0) {
+		alifErr_clear();
+	}
 }
 
 void alifErr_display(AlifObject* unused, AlifObject* value, AlifObject* tb) { // 1151
@@ -860,4 +860,46 @@ static AlifObject* run_mod(ModuleTy _mod, AlifObject* _filename,
 	AlifObject* v = runEval_codeObj(thread, co, _globals, _locals);
 	ALIF_DECREF(co);
 	return v;
+}
+
+
+
+
+AlifObject* alif_compileStringObject(const char* _str, AlifObject* _filename,
+	AlifIntT _start, AlifCompilerFlags* _flags, AlifIntT _optimize) { // 1456
+	AlifCodeObject* co{};
+	ModuleTy mod{};
+	AlifASTMem* astMem = alifASTMem_new();
+	if (astMem == nullptr)
+		return nullptr;
+
+	mod = _alifParser_astFromString(_str, _filename, _start, _flags, astMem);
+	if (mod == nullptr) {
+		alifASTMem_free(astMem);
+		return nullptr;
+	}
+	if (_flags and (_flags->flags & ALIFCF_ONLY_AST)) {
+		if ((_flags->flags & ALIFCF_OPTIMIZED_AST) == ALIFCF_OPTIMIZED_AST) {
+			if (_alifCompile_astOptimize(mod, _filename, _flags, _optimize, astMem) < 0) {
+				return nullptr;
+			}
+		}
+		AlifObject* result = alifAST_mod2obj(mod);
+		alifASTMem_free(astMem);
+		return result;
+	}
+	co = _alifAST_compile(mod, _filename, _flags, _optimize, astMem);
+	alifASTMem_free(astMem);
+	return (AlifObject*)co;
+}
+
+AlifObject* alif_compileStringExFlags(const char* _str, const char* _filenameStr,
+	AlifIntT _start, AlifCompilerFlags* _flags, AlifIntT _optimize) { // 1486
+	AlifObject* filename{}, * co{};
+	filename = alifUStr_decodeFSDefault(_filenameStr);
+	if (filename == nullptr)
+		return nullptr;
+	co = alif_compileStringObject(_str, filename, _start, _flags, _optimize);
+	ALIF_DECREF(filename);
+	return co;
 }

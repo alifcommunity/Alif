@@ -1,9 +1,25 @@
 #include "alif.h"
 
 #include "AlifCore_AST.h"
+#include "AlifCore_ASTState.h"
 #include "AlifCore_Interpreter.h"
 #include "AlifCore_State.h"
 #include "AlifCore_Memory.h"
+
+class Validator { // 16
+public:
+	AlifIntT recursionDepth;            /* current recursion depth */
+	AlifIntT recursionLimit;            /* recursion limit */
+};
+
+static class ASTState* get_astState(void) { // 24
+	AlifInterpreter* interp = _alifInterpreter_get();
+	class ASTState* state = &interp->ast;
+	if (_alifOnceFlag_callOnce(&state->once, (AlifOnceFnT*)&init_types, state) < 0) {
+		return nullptr;
+	}
+	return state;
+}
 
 
 
@@ -1170,4 +1186,36 @@ AlifObject* alifAST_getDocString(ASDLStmtSeq* _body) {
 	}
 
 	return nullptr;
+}
+
+
+
+AlifObject* alifAST_mod2obj(ModuleTy _t) { // 18130
+	class ASTState* state = get_astState();
+	if (state == nullptr) {
+		return nullptr;
+	}
+
+	AlifIntT startingRecursionDepth{};
+	/* Be careful here to prevent overflow. */
+	AlifThread* tstate = _alifThread_get();
+	if (!tstate) {
+		return nullptr;
+	}
+	class Validator vstate {};
+	vstate.recursionLimit = ALIFCPP_RECURSION_LIMIT;
+	AlifIntT recursionDepth = ALIFCPP_RECURSION_LIMIT - tstate->cppRecursionRemaining;
+	startingRecursionDepth = recursionDepth;
+	vstate.recursionDepth = startingRecursionDepth;
+
+	AlifObject* result = ast2obj_mod(state, &vstate, _t);
+
+	/* Check that the recursion depth counting balanced correctly */
+	if (result and vstate.recursionDepth != startingRecursionDepth) {
+		alifErr_format(_alifExcSystemError_,
+			"AST constructor recursion depth mismatch (before=%d, after=%d)",
+			startingRecursionDepth, vstate.recursionDepth);
+		return nullptr;
+	}
+	return result;
 }

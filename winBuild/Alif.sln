@@ -12,6 +12,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "alif", "Alif.vcxproj", "{6F
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AlifCore", "AlifCore.vcxproj", "{8604DB0E-C2A6-49F6-BE9B-755878FDA8F8}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FreezeModule", "FreezeModule.vcxproj", "{CAE31879-3181-4178-8581-FEF6A839652D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -36,6 +38,14 @@ Global
 		{8604DB0E-C2A6-49F6-BE9B-755878FDA8F8}.Release|x64.Build.0 = Release|x64
 		{8604DB0E-C2A6-49F6-BE9B-755878FDA8F8}.Release|x86.ActiveCfg = Release|Win32
 		{8604DB0E-C2A6-49F6-BE9B-755878FDA8F8}.Release|x86.Build.0 = Release|Win32
+		{CAE31879-3181-4178-8581-FEF6A839652D}.Debug|x64.ActiveCfg = Debug|x64
+		{CAE31879-3181-4178-8581-FEF6A839652D}.Debug|x64.Build.0 = Debug|x64
+		{CAE31879-3181-4178-8581-FEF6A839652D}.Debug|x86.ActiveCfg = Debug|Win32
+		{CAE31879-3181-4178-8581-FEF6A839652D}.Debug|x86.Build.0 = Debug|Win32
+		{CAE31879-3181-4178-8581-FEF6A839652D}.Release|x64.ActiveCfg = Release|x64
+		{CAE31879-3181-4178-8581-FEF6A839652D}.Release|x64.Build.0 = Release|x64
+		{CAE31879-3181-4178-8581-FEF6A839652D}.Release|x86.ActiveCfg = Release|Win32
+		{CAE31879-3181-4178-8581-FEF6A839652D}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

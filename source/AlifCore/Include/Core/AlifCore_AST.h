@@ -622,4 +622,6 @@ WithItemTy alifAST_withItem(ExprTy, ExprTy, AlifASTMem*);
 
 
 
+AlifObject* alifAST_mod2obj(ModuleTy); // 909
+
 extern AlifObject* alifAST_getDocString(ASDLStmtSeq*);

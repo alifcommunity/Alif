@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include "AlifCore_ASTState.h"
 #include "AlifCore_DictState.h"
 #include "AlifCore_EvalState.h"
 #include "AlifCore_Code.h"
@@ -137,6 +137,7 @@ public:
 	AlifExcState excState{};
 	AlifMemInterpFreeQueue memFreeQueue{};
 
+	ASTState ast {};
 	TypesState types{};
 
 

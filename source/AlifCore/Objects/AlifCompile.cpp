@@ -683,7 +683,7 @@ AlifIntT _alifCompiler_enterScope(AlifCompiler* _c, Identifier _name,
 
 
 void _alifCompiler_exitScope(AlifCompiler* _c) { // 6931
-	//AlifObject* exc = alifErr_getRaisedException();
+	AlifObject* exc = alifErr_getRaisedException();
 
 	InstrSequence* nestedSeq = nullptr;
 	if (_c->saveNestedSeqs) {
@@ -711,7 +711,7 @@ void _alifCompiler_exitScope(AlifCompiler* _c) { // 6931
 	}
 	ALIF_XDECREF(nestedSeq);
 
-	//alifErr_setRaisedException(exc);
+	alifErr_setRaisedException(exc);
 }
 
 
@@ -1083,29 +1083,6 @@ AlifIntT _alifCompiler_revertInlinedComprehensionScopes(AlifCompiler* _c, Locati
 	}
 	return SUCCESS;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
