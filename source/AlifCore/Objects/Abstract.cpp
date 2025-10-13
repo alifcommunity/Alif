@@ -242,6 +242,11 @@ AlifIntT alifObject_delItem(AlifObject* _o, AlifObject* _key) { // 256
 }
 
 
+AlifIntT alifObject_checkBuffer(AlifObject* _obj) { // 310
+	AlifBufferProcs* tpAsBuffer = ALIF_TYPE(_obj)->asBuffer;
+	return (tpAsBuffer != nullptr and tpAsBuffer->getBuffer != nullptr);
+}
+
 
 AlifIntT alifObject_getBuffer(AlifObject* obj, AlifBuffer* view, AlifIntT flags) { // 425
 	if (flags != ALIFBUF_SIMPLE) {  /* fast path */
@@ -617,7 +622,7 @@ static AlifObject* ternary_op(AlifObject* _v, AlifObject* _w, AlifObject* _z,
 }
 
 
- // 1110
+// 1110
 #define BINARY_FUNC(_func, _op, _opName) \
     AlifObject* _func(AlifObject *_v, AlifObject *_w) { \
         return binary_op(_v, _w, NB_SLOT(_op), _opName); \
@@ -741,7 +746,7 @@ static AlifObject* ternary_iOp(AlifObject* _v, AlifObject* _w,
 	return ternary_op(_v, _w, _z, _opSlot/*, _opName*/);
 }
 
- // 1276
+// 1276
 #define INPLACE_BINOP(_func, _iop, _op) \
     AlifObject * _func(AlifObject *_v, AlifObject *_w) { \
         return binary_iop(_v, _w, NB_SLOT(_iop), NB_SLOT(_op)); \
@@ -808,7 +813,7 @@ AlifObject* _alifNumber_inPlacePowerNoMod(AlifObject* _lhs, AlifObject* _rhs) { 
 	return alifNumber_inPlacePower(_lhs, _rhs, ALIF_NONE);
 }
 
- // 1361
+// 1361
 #define UNARY_FUNC(_func, _op, _methName, _descr)                           \
     AlifObject* _func(AlifObject *o) {                                                  \
         if (o == nullptr) {                                                 \
@@ -832,7 +837,7 @@ UNARY_FUNC(alifNumber_absolute, absolute, __abs__, "abs()")
 UNARY_FUNC(alifNumber_sqrt, sqrt, __sqrt__, "sqrt()") //* alif
 
 
-AlifObject* _alifNumber_index(AlifObject * _item) { // 1397
+AlifObject* _alifNumber_index(AlifObject* _item) { // 1397
 	if (_item == nullptr) {
 		return null_error();
 	}

@@ -19,6 +19,7 @@ public:
 typedef AlifIntT(*GetBufferProc)(AlifObject*, AlifBuffer*, AlifIntT); // 35
 typedef void (*ReleaseBufferProc)(AlifObject*, AlifBuffer*);
 
+AlifIntT alifObject_checkBuffer(AlifObject*); // 39
 
 AlifIntT alifObject_getBuffer(AlifObject*, AlifBuffer*, AlifIntT); // 46
 

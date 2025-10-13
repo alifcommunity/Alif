@@ -813,6 +813,24 @@ static AlifIntT add_attributes(ASTState* _state, AlifObject* _type,
 	return result;
 }
 
+static AlifObject* ast2obj_list(ASTState* state, Validator* vstate, ASDLSeq* seq,
+	AlifObject* (*func)(ASTState* state, Validator* vstate, void*)) { // 5934
+	AlifSizeT i{}, n = ASDL_SEQ_LEN(seq);
+	AlifObject* result = alifList_new(n);
+	AlifObject* value;
+	if (!result)
+		return nullptr;
+	for (i = 0; i < n; i++) {
+		value = func(state, vstate, ASDL_SEQ_GETUNTYPED(seq, i));
+		if (!value) {
+			ALIF_DECREF(result);
+			return nullptr;
+		}
+		ALIFLIST_SET_ITEM(result, i, value);
+	}
+	return result;
+}
+
 static AlifIntT add_astFields(ASTState* state) { // 6008
 	AlifObject* emptyTuple{};
 	emptyTuple = alifTuple_new(0);

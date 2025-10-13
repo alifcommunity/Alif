@@ -66,6 +66,8 @@ AlifHashTableT* _alifHashTable_newFull(AlifHashTableHashFunc,
 	AlifHashTableCompareFunc, AlifHashTableDestroyFunc,
 	AlifHashTableDestroyFunc, AlifHashTableAllocatorT*); // 86
 
+void _alifHashTable_destroy(AlifHashTableT*); // 93
+
 AlifIntT _alifHashTable_set(AlifHashTableT*, const void*, void*); // 114
 
 

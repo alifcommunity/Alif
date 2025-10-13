@@ -203,3 +203,32 @@ AlifHashTableT* _alifHashTable_newFull(
 	}
 	return ht;
 }
+
+
+
+
+
+static void _alifHashTable_destroyEntry(AlifHashTableT* _ht,
+	AlifHashTableEntryT* _entry) { // 378
+	if (_ht->keyDestroyFunc) {
+		_ht->keyDestroyFunc(_entry->key);
+	}
+	if (_ht->valueDestroyFunc) {
+		_ht->valueDestroyFunc(_entry->value);
+	}
+	_ht->alloc.free(_entry);
+}
+
+void _alifHashTable_destroy(AlifHashTableT* _ht) { // 410
+	for (AlifUSizeT i = 0; i < _ht->nbuckets; i++) {
+		AlifHashTableEntryT* entry = TABLE_HEAD(_ht, i);
+		while (entry) {
+			AlifHashTableEntryT* entryNext = ENTRY_NEXT(entry);
+			_alifHashTable_destroyEntry(_ht, entry);
+			entry = entryNext;
+		}
+	}
+
+	_ht->alloc.free(_ht->buckets);
+	_ht->alloc.free(_ht);
+}

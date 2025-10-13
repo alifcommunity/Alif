@@ -3,6 +3,7 @@
 #include "AlifCore_Call.h"
 #include "AlifCore_Code.h"
 #include "AlifCore_HashTable.h"
+#include "AlifCore_SetObject.h"
 #include "AlifCore_Long.h"
 
 
@@ -207,6 +208,49 @@ static void w_shortPstring(const void* _s, AlifSizeT _n, WFile* _p) { // 218
 } while(0)
 
 
+static AlifObject* _alifMarshal_writeObjectToString(AlifObject*, AlifIntT, AlifIntT); // 241
+
+static void w_alifLong(const AlifLongObject* ob, char flag, WFile* p) { // 244
+	AlifSizeT i{}, j{}, n{}, l{};
+	digit d{};
+
+	W_TYPE(TYPE_LONG, p);
+	if (_alifLong_isZero(ob)) {
+		w_long((long)0, p);
+		return;
+	}
+
+	/* set l to number of base ALIFLONG_MARSHAL_BASE digits */
+	n = alifLong_digitCount(ob);
+	l = (n - 1) * ALIFLONG_MARSHAL_RATIO;
+	d = ob->longValue.digit[n - 1];
+	do {
+		d >>= ALIFLONG_MARSHAL_SHIFT;
+		l++;
+	}
+	while (d != 0);
+	if (l > SIZE32_MAX) {
+		p->depth--;
+		p->error = WFERR_UNMARSHALLABLE;
+		return;
+	}
+	w_long((long)(_alifLong_isNegative(ob) ? -l : l), p);
+
+	for (i = 0; i < n - 1; i++) {
+		d = ob->longValue.digit[i];
+		for (j = 0; j < ALIFLONG_MARSHAL_RATIO; j++) {
+			w_short(d & ALIFLONG_MARSHAL_MASK, p);
+			d >>= ALIFLONG_MARSHAL_SHIFT;
+		}
+	}
+	d = ob->longValue.digit[n - 1];
+	do {
+		w_short(d & ALIFLONG_MARSHAL_MASK, p);
+		d >>= ALIFLONG_MARSHAL_SHIFT;
+	}
+	while (d != 0);
+}
+
 static void w_floatBin(double _v, WFile* _) { // 287
 	char buf[8];
 	if (alifFloat_pack8(_v, buf, 1) < 0) {
@@ -216,6 +260,15 @@ static void w_floatBin(double _v, WFile* _) { // 287
 	w_string(buf, 8, _);
 }
 
+static void w_floatStr(double v, WFile* p) { // 298
+	char* buf = alifOS_doubleToString(v, 'g', 17, 0, nullptr);
+	if (!buf) {
+		p->error = WFERR_NOMEMORY;
+		return;
+	}
+	w_shortPstring(buf, strlen(buf), p);
+	alifMem_dataFree(buf);
+}
 
 static AlifIntT w_ref(AlifObject* _v, char* _flag, WFile* _p) { // 310
 	AlifHashTableEntryT* entry{};
@@ -259,6 +312,7 @@ err:
 	return 1;
 }
 
+static void w_complexObject(AlifObject*, char, WFile*); // 358
 
 static void w_object(AlifObject* _v, WFile* _p) { // 361
 	char flag = '\0';
@@ -292,7 +346,7 @@ static void w_object(AlifObject* _v, WFile* _p) { // 361
 	_p->depth--;
 }
 
-static void w_complexObject(AlifObject* v, char flag, WFile* p) {
+static void w_complexObject(AlifObject* v, char flag, WFile* p) { // 395
 	AlifSizeT i{}, n{};
 
 	if (ALIFLONG_CHECKEXACT(v)) {
@@ -448,7 +502,7 @@ static void w_complexObject(AlifObject* v, char flag, WFile* p) {
 			ALIFLIST_SET_ITEM(pairs, i++, pair);
 		}
 		ALIF_END_CRITICAL_SECTION();
-		if (p->error == WFERR_UNMARSHALLABLE || p->error == WFERR_NOMEMORY) {
+		if (p->error == WFERR_UNMARSHALLABLE or p->error == WFERR_NOMEMORY) {
 			ALIF_DECREF(pairs);
 			return;
 		}
@@ -520,6 +574,11 @@ static void w_complexObject(AlifObject* v, char flag, WFile* p) {
 	}
 }
 
+
+static void w_decrefEntry(void* _key) { // 630
+	AlifObject* entryKey = (AlifObject*)_key;
+	ALIF_XDECREF(entryKey);
+}
 
 static AlifIntT w_initRefs(WFile* wf, AlifIntT version) { // 637
 	if (version >= 3) {
@@ -1410,8 +1469,8 @@ AlifObject* alifMarshal_readObjectFromString(const char* _str, AlifSizeT _len) {
 
 
 
-static AlifObject* _alifMarshal_writeObjectToString(AlifObject* x, AlifIntT version,
-	AlifIntT allow_code) { // 1725
+static AlifObject* _alifMarshal_writeObjectToString(AlifObject* _x, AlifIntT _version,
+	AlifIntT _allowCode) { // 1725
 	WFile wf{};
 
 	//if (alifSys_audit("marshal.dumps", "Oi", x, version) < 0) {
@@ -1424,13 +1483,13 @@ static AlifObject* _alifMarshal_writeObjectToString(AlifObject* x, AlifIntT vers
 	wf.ptr = wf.buf = ALIFBYTES_AS_STRING(wf.str);
 	wf.end = wf.ptr + ALIFBYTES_GET_SIZE(wf.str);
 	wf.error = WFERR_OK;
-	wf.version = version;
-	wf.allowCode = allow_code;
-	if (w_initRefs(&wf, version)) {
+	wf.version = _version;
+	wf.allowCode = _allowCode;
+	if (w_initRefs(&wf, _version)) {
 		ALIF_DECREF(wf.str);
 		return nullptr;
 	}
-	w_object(x, &wf);
+	w_object(_x, &wf);
 	w_clearRefs(&wf);
 	if (wf.str != nullptr) {
 		const char* base = ALIFBYTES_AS_STRING(wf.str);

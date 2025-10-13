@@ -439,7 +439,7 @@ static void hashtable_destroyStr(void* _ptr) { // 1188
 
 static AlifIntT _extensions_cacheInit(void) { // 1231
 	AlifHashTableAllocatorT alloc = { alifMem_dataAlloc, alifMem_dataFree };
-	EXTENSIONS.hashtable = alifHashTable_newFull(
+	EXTENSIONS.hashtable = _alifHashTable_newFull(
 		hashtable_hashStr,
 		hashtable_compareStr,
 		hashtable_destroyStr,  // key
@@ -535,7 +535,7 @@ static ExtensionsCacheValue* _extensions_cacheSet(AlifObject* path,
 
 	if (entry == nullptr) {
 		/* It was never added. */
-		if (alifHashTable_set(EXTENSIONS.hashtable, key, newvalue) < 0) {
+		if (_alifHashTable_set(EXTENSIONS.hashtable, key, newvalue) < 0) {
 			//alifErr_noMemory();
 			goto finally;
 		}
