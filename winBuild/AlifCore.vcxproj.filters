@@ -1014,6 +1014,7 @@
     <ClInclude Include="..\source\AlifCore\Objects\clinic\UStrObject.cpp.h">
       <Filter>Objects\clinic</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ASTState.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Include">
