@@ -62,10 +62,11 @@
     <ClCompile Include="..\source\AlifCore\Objects\Codegen.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\CodeObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ComplexObject.cpp" />
-    <ClCompile Include="..\source\AlifCore\Objects\Config.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\ConfigMinimal.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\CriticalSection.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\DescrObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\DictObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\dtoa\DoubleToASCII.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Errors.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Exceptions.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\FileObject.cpp" />
@@ -76,7 +77,6 @@
     <ClCompile Include="..\source\AlifCore\Objects\FormatterUStr.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Frame.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\FrameObject.cpp" />
-    <ClCompile Include="..\source\AlifCore\Objects\Frozen.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\FuncObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Future.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GCFreeThreading.cpp" />
@@ -128,6 +128,31 @@
     <ClCompile Include="..\source\AlifCore\Objects\WeakRefObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\WinConsoleIO.cpp" />
     <ClCompile Include="..\source\FreezeModule\FreezeModule.cpp" />
+    <ClCompile Include="..\source\Modules\SignalModule.cpp" />
+    <ClCompile Include="..\source\Modules\TimeModule.cpp" />
+    <ClCompile Include="..\source\Modules\_abc.cpp" />
+    <ClCompile Include="..\source\Modules\_io\BufferedIO.cpp" />
+    <ClCompile Include="..\source\Modules\_io\FileIO.cpp" />
+    <ClCompile Include="..\source\Modules\_io\IOBase.cpp" />
+    <ClCompile Include="..\source\Modules\_io\TextIO.cpp" />
+    <ClCompile Include="..\source\Modules\_io\_IOModule.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\BltinModule.cpp.h" />
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\DictObject.cpp.h" />
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\FloatObject.cpp.h" />
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\ListObject.cpp.h" />
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\SetObject.cpp.h" />
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\SysModule.cpp.h" />
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\Traceback.cpp.h" />
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\TypeObject.cpp.h" />
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\UStrObject.cpp.h" />
+    <ClInclude Include="..\source\Modules\_io\clinic\BufferedIO.cpp.h" />
+    <ClInclude Include="..\source\Modules\_io\clinic\FileIO.cpp.h" />
+    <ClInclude Include="..\source\Modules\_io\clinic\IOBase.cpp.h" />
+    <ClInclude Include="..\source\Modules\_io\clinic\TextIO.cpp.h" />
+    <ClInclude Include="..\source\Modules\_io\clinic\WinConsoleIO.cpp.h" />
+    <ClInclude Include="..\source\Modules\_io\clinic\_IOModule.cpp.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -187,6 +212,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -202,6 +228,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -216,12 +243,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib;..\source\AlifCore\Include\Main\FrozenModules</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib;..\source\AlifCore\Include\Main\FrozenModules;..\source\AlifCore\Include\Main\mimalloc;..\source\AlifCore\Include\Main\mimalloc\mimalloc;..\source\Windows;..\source\Modules\_io;..\source\Modules\_io\clinic;..\source\Modules\clinic</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>pathcch.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -232,14 +261,16 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib;..\source\AlifCore\Include\Main\FrozenModules</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib;..\source\AlifCore\Include\Main\FrozenModules;..\source\AlifCore\Include\Main\mimalloc;..\source\AlifCore\Include\Main\mimalloc\mimalloc;..\source\Windows;..\source\Modules\_io;..\source\Modules\_io\clinic;..\source\Modules\clinic</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>pathcch.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
