@@ -130,29 +130,11 @@
     <ClCompile Include="..\source\FreezeModule\FreezeModule.cpp" />
     <ClCompile Include="..\source\Modules\SignalModule.cpp" />
     <ClCompile Include="..\source\Modules\TimeModule.cpp" />
-    <ClCompile Include="..\source\Modules\_abc.cpp" />
     <ClCompile Include="..\source\Modules\_io\BufferedIO.cpp" />
     <ClCompile Include="..\source\Modules\_io\FileIO.cpp" />
     <ClCompile Include="..\source\Modules\_io\IOBase.cpp" />
     <ClCompile Include="..\source\Modules\_io\TextIO.cpp" />
     <ClCompile Include="..\source\Modules\_io\_IOModule.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\source\AlifCore\Objects\clinic\BltinModule.cpp.h" />
-    <ClInclude Include="..\source\AlifCore\Objects\clinic\DictObject.cpp.h" />
-    <ClInclude Include="..\source\AlifCore\Objects\clinic\FloatObject.cpp.h" />
-    <ClInclude Include="..\source\AlifCore\Objects\clinic\ListObject.cpp.h" />
-    <ClInclude Include="..\source\AlifCore\Objects\clinic\SetObject.cpp.h" />
-    <ClInclude Include="..\source\AlifCore\Objects\clinic\SysModule.cpp.h" />
-    <ClInclude Include="..\source\AlifCore\Objects\clinic\Traceback.cpp.h" />
-    <ClInclude Include="..\source\AlifCore\Objects\clinic\TypeObject.cpp.h" />
-    <ClInclude Include="..\source\AlifCore\Objects\clinic\UStrObject.cpp.h" />
-    <ClInclude Include="..\source\Modules\_io\clinic\BufferedIO.cpp.h" />
-    <ClInclude Include="..\source\Modules\_io\clinic\FileIO.cpp.h" />
-    <ClInclude Include="..\source\Modules\_io\clinic\IOBase.cpp.h" />
-    <ClInclude Include="..\source\Modules\_io\clinic\TextIO.cpp.h" />
-    <ClInclude Include="..\source\Modules\_io\clinic\WinConsoleIO.cpp.h" />
-    <ClInclude Include="..\source\Modules\_io\clinic\_IOModule.cpp.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
