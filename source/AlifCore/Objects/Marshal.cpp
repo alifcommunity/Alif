@@ -51,6 +51,7 @@
 #define TYPE_UNKNOWN            '?'
 #define TYPE_SET                '<'
 #define TYPE_FROZENSET          '>'
+#define TYPE_SLICE              ':'
 #define FLAG_REF                '\x80' /* with a type, add obj to index */
 
 #define TYPE_ASCII              'a'
@@ -113,7 +114,7 @@ static AlifIntT w_reserve(WFile* _p, AlifSizeT _needed) { // 120
 	}
 	size += delta;
 	if (_alifBytes_resize(&_p->str, size) != 0) {
-		_p->end = _p->ptr = _p->buf = NULL;
+		_p->end = _p->ptr = _p->buf = nullptr;
 		return 0;
 	}
 	else {
@@ -125,11 +126,71 @@ static AlifIntT w_reserve(WFile* _p, AlifSizeT _needed) { // 120
 }
 
 
+static void w_string(const void* _s, AlifSizeT _n, WFile* _p) { // 155
+	AlifSizeT m{};
+	if (!_n or _p->ptr == nullptr)
+		return;
+	m = _p->end - _p->ptr;
+	if (_p->fp != nullptr) {
+		if (_n <= m) {
+			memcpy(_p->ptr, _s, _n);
+			_p->ptr += _n;
+		}
+		else {
+			w_flush(_p);
+			fwrite(_s, 1, _n, _p->fp);
+		}
+	}
+	else {
+		if (_n <= m or w_reserve(_p, _n - m)) {
+			memcpy(_p->ptr, _s, _n);
+			_p->ptr += _n;
+		}
+	}
+}
+
+
+
+static void w_short(AlifIntT _x, WFile* _p) { // 180
+	W_BYTE((char)(_x & 0xff), _p);
+	W_BYTE((char)((_x >> 8) & 0xff), _p);
+}
+
+static void w_long(long _x, WFile* _p) { // 187
+	W_BYTE((char)(_x & 0xff), _p);
+	W_BYTE((char)((_x >> 8) & 0xff), _p);
+	W_BYTE((char)((_x >> 16) & 0xff), _p);
+	W_BYTE((char)((_x >> 24) & 0xff), _p);
+}
+
+
+
 
 #define SIZE32_MAX  0x7FFFFFFF // 195
 
+// 198
+#if SIZEOF_SIZE_T > 4
+# define W_SIZE(_n, _p)  do {                     \
+        if ((_n) > SIZE32_MAX) {                 \
+            (_p)->depth--;                       \
+            (_p)->error = WFERR_UNMARSHALLABLE;  \
+            return;                             \
+        }                                       \
+        w_long((long)(_n), _p);                   \
+    } while(0)
+#else
+# define W_SIZE  w_long
+#endif
 
+static void w_pstring(const void* _s, AlifSizeT _n, WFile* _p) { // 211
+	W_SIZE(_n, _p);
+	w_string(_s, _n, _p);
+}
 
+static void w_shortPstring(const void* _s, AlifSizeT _n, WFile* _p) { // 218
+	W_BYTE(ALIF_SAFE_DOWNCAST(_n, AlifSizeT, unsigned char), _p);
+	w_string(_s, _n, _p);
+}
 
 // 228
 #define ALIFLONG_MARSHAL_SHIFT 15
@@ -140,7 +201,20 @@ static AlifIntT w_reserve(WFile* _p, AlifSizeT _needed) { // 120
 #endif
 #define ALIFLONG_MARSHAL_RATIO (ALIFLONG_SHIFT / ALIFLONG_MARSHAL_SHIFT)
 
+// 237
+#define W_TYPE(_t, _p) do { \
+    W_BYTE((_t) | flag, (_p)); \
+} while(0)
 
+
+static void w_floatBin(double _v, WFile* _) { // 287
+	char buf[8];
+	if (alifFloat_pack8(_v, buf, 1) < 0) {
+		_->error = WFERR_UNMARSHALLABLE;
+		return;
+	}
+	w_string(buf, 8, _);
+}
 
 
 static AlifIntT w_ref(AlifObject* _v, char* _flag, WFile* _p) { // 310
@@ -160,7 +234,7 @@ static AlifIntT w_ref(AlifObject* _v, char* _flag, WFile* _p) { // 310
 		/* write the reference index to the stream */
 		w = (int)(uintptr_t)entry->value;
 		/* we don't store "long" indices in the dict */
-		w_byte(TYPE_REF, _p);
+		W_BYTE(TYPE_REF, _p);
 		w_long(w, _p);
 		return 1;
 	}
@@ -171,7 +245,7 @@ static AlifIntT w_ref(AlifObject* _v, char* _flag, WFile* _p) { // 310
 			alifErr_setString(_alifExcValueError_, "too many objects");
 			goto err;
 		}
-		w = (int)s;
+		w = (AlifIntT)s;
 		if (_alifHashTable_set(_p->hashtable, ALIF_NEWREF(_v),
 			(void*)(uintptr_t)w) < 0) {
 			ALIF_DECREF(_v);
@@ -216,6 +290,234 @@ static void w_object(AlifObject* _v, WFile* _p) { // 361
 		w_complexObject(_v, flag, _p);
 
 	_p->depth--;
+}
+
+static void w_complexObject(AlifObject* v, char flag, WFile* p) {
+	AlifSizeT i{}, n{};
+
+	if (ALIFLONG_CHECKEXACT(v)) {
+		AlifIntT overflow{};
+		long x = alifLong_asLongAndOverflow(v, &overflow);
+		if (overflow) {
+			w_alifLong((AlifLongObject*)v, flag, p);
+		}
+		else {
+		#if SIZEOF_LONG > 4
+			long y = ALIF_ARITHMETIC_RIGHT_SHIFT(long, x, 31);
+			if (y and y != -1) {
+				/* Too large for TYPE_INT */
+				w_alifLong((AlifLongObject*)v, flag, p);
+			}
+			else
+			#endif
+			{
+				W_TYPE(TYPE_INT, p);
+				w_long(x, p);
+			}
+		}
+	}
+	else if (ALIFFLOAT_CHECKEXACT(v)) {
+		if (p->version > 1) {
+			W_TYPE(TYPE_BINARY_FLOAT, p);
+			w_floatBin(ALIFFLOAT_AS_DOUBLE(v), p);
+		}
+		else {
+			W_TYPE(TYPE_FLOAT, p);
+			w_floatStr(ALIFFLOAT_AS_DOUBLE(v), p);
+		}
+	}
+	else if (ALIFCOMPLEX_CHECKEXACT(v)) {
+		if (p->version > 1) {
+			W_TYPE(TYPE_BINARY_COMPLEX, p);
+			//w_floatBin(alifComplex_realAsDouble(v), p);
+			//w_floatBin(alifComplex_imagAsDouble(v), p);
+		}
+		else {
+			W_TYPE(TYPE_COMPLEX, p);
+			//w_floatStr(alifComplex_realAsDouble(v), p);
+			//w_floatStr(alifComplex_imagAsDouble(v), p);
+		}
+	}
+	else if (ALIFBYTES_CHECKEXACT(v)) {
+		W_TYPE(TYPE_STRING, p);
+		w_pstring(ALIFBYTES_AS_STRING(v), ALIFBYTES_GET_SIZE(v), p);
+	}
+	else if (ALIFUSTR_CHECKEXACT(v)) {
+		if (p->version >= 4 and ALIFUSTR_IS_ASCII(v)) {
+			AlifIntT is_short = ALIFUSTR_GET_LENGTH(v) < 256;
+			if (is_short) {
+				if (ALIFUSTR_CHECK_INTERNED(v))
+					W_TYPE(TYPE_SHORT_ASCII_INTERNED, p);
+				else
+					W_TYPE(TYPE_SHORT_ASCII, p);
+				w_shortPstring(ALIFUSTR_1BYTE_DATA(v),
+					ALIFUSTR_GET_LENGTH(v), p);
+			}
+			else {
+				if (ALIFUSTR_CHECK_INTERNED(v))
+					W_TYPE(TYPE_ASCII_INTERNED, p);
+				else
+					W_TYPE(TYPE_ASCII, p);
+				w_pstring(ALIFUSTR_1BYTE_DATA(v),
+					ALIFUSTR_GET_LENGTH(v), p);
+			}
+		}
+		else {
+			AlifObject* utf8{};
+			utf8 = alifUStr_asEncodedString(v, "utf8", "surrogatepass");
+			if (utf8 == nullptr) {
+				p->depth--;
+				p->error = WFERR_UNMARSHALLABLE;
+				return;
+			}
+			if (p->version >= 3 and ALIFUSTR_CHECK_INTERNED(v))
+				W_TYPE(TYPE_INTERNED, p);
+			else
+				W_TYPE(TYPE_UNICODE, p);
+			w_pstring(ALIFBYTES_AS_STRING(utf8), ALIFBYTES_GET_SIZE(utf8), p);
+			ALIF_DECREF(utf8);
+		}
+	}
+	else if (ALIFTUPLE_CHECKEXACT(v)) {
+		n = ALIFTUPLE_GET_SIZE(v);
+		if (p->version >= 4 and n < 256) {
+			W_TYPE(TYPE_SMALL_TUPLE, p);
+			W_BYTE((unsigned char)n, p);
+		}
+		else {
+			W_TYPE(TYPE_TUPLE, p);
+			W_SIZE(n, p);
+		}
+		for (i = 0; i < n; i++) {
+			w_object(ALIFTUPLE_GET_ITEM(v, i), p);
+		}
+	}
+	else if (ALIFLIST_CHECKEXACT(v)) {
+		W_TYPE(TYPE_LIST, p);
+		n = ALIFLIST_GET_SIZE(v);
+		W_SIZE(n, p);
+		for (i = 0; i < n; i++) {
+			w_object(ALIFLIST_GET_ITEM(v, i), p);
+		}
+	}
+	else if (ALIFDICT_CHECKEXACT(v)) {
+		AlifSizeT pos{};
+		AlifObject* key{}, * value{};
+		W_TYPE(TYPE_DICT, p);
+		/* This one is NULL object terminated! */
+		pos = 0;
+		while (alifDict_next(v, &pos, &key, &value)) {
+			w_object(key, p);
+			w_object(value, p);
+		}
+		w_object((AlifObject*)nullptr, p);
+	}
+	else if (ALIFANYSET_CHECKEXACT(v)) {
+		AlifObject* value{};
+		AlifSizeT pos = 0;
+		AlifHashT hash{};
+
+		if (ALIFFROZENSET_CHECKEXACT(v))
+			W_TYPE(TYPE_FROZENSET, p);
+		else
+			W_TYPE(TYPE_SET, p);
+		n = ALIFSET_GET_SIZE(v);
+		W_SIZE(n, p);
+		AlifObject* pairs = alifList_new(n);
+		if (pairs == nullptr) {
+			p->error = WFERR_NOMEMORY;
+			return;
+		}
+		AlifSizeT i = 0;
+		ALIF_BEGIN_CRITICAL_SECTION(v);
+		while (_alifSet_nextEntryRef(v, &pos, &value, &hash)) {
+			AlifObject* dump = _alifMarshal_writeObjectToString(value,
+				p->version, p->allowCode);
+			if (dump == nullptr) {
+				p->error = WFERR_UNMARSHALLABLE;
+				ALIF_DECREF(value);
+				break;
+			}
+			AlifObject* pair = alifTuple_pack(2, dump, value);
+			ALIF_DECREF(dump);
+			ALIF_DECREF(value);
+			if (pair == nullptr) {
+				p->error = WFERR_NOMEMORY;
+				break;
+			}
+			ALIFLIST_SET_ITEM(pairs, i++, pair);
+		}
+		ALIF_END_CRITICAL_SECTION();
+		if (p->error == WFERR_UNMARSHALLABLE || p->error == WFERR_NOMEMORY) {
+			ALIF_DECREF(pairs);
+			return;
+		}
+		if (alifList_sort(pairs)) {
+			p->error = WFERR_NOMEMORY;
+			ALIF_DECREF(pairs);
+			return;
+		}
+		for (AlifSizeT i = 0; i < n; i++) {
+			AlifObject* pair = ALIFLIST_GET_ITEM(pairs, i);
+			value = ALIFTUPLE_GET_ITEM(pair, 1);
+			w_object(value, p);
+		}
+		ALIF_DECREF(pairs);
+	}
+	else if (ALIFCODE_CHECK(v)) {
+		if (!p->allowCode) {
+			p->error = WFERR_CODE_NOT_ALLOWED;
+			return;
+		}
+		AlifCodeObject* co = (AlifCodeObject*)v;
+		AlifObject* co_code = _alifCode_getCode(co);
+		if (co_code == nullptr) {
+			p->error = WFERR_NOMEMORY;
+			return;
+		}
+		W_TYPE(TYPE_CODE, p);
+		w_long(co->argCount, p);
+		w_long(co->posOnlyArgCount, p);
+		w_long(co->kwOnlyArgCount, p);
+		w_long(co->stackSize, p);
+		w_long(co->flags, p);
+		w_object(co_code, p);
+		w_object(co->consts, p);
+		w_object(co->names, p);
+		w_object(co->localsPlusNames, p);
+		w_object(co->localsPlusKinds, p);
+		w_object(co->filename, p);
+		w_object(co->name, p);
+		w_object(co->qualname, p);
+		w_long(co->firstLineno, p);
+		w_object(co->lineTable, p);
+		w_object(co->exceptiontable, p);
+		ALIF_DECREF(co_code);
+	}
+	else if (alifObject_checkBuffer(v)) {
+		/* Write unknown bytes-like objects as a bytes object */
+		AlifBuffer view{};
+		if (alifObject_getBuffer(v, &view, ALIFBUF_SIMPLE) != 0) {
+			W_BYTE(TYPE_UNKNOWN, p);
+			p->depth--;
+			p->error = WFERR_UNMARSHALLABLE;
+			return;
+		}
+		W_TYPE(TYPE_STRING, p);
+		w_pstring(view.buf, view.len, p);
+		alifBuffer_release(&view);
+	}
+	else if (ALIFSLICE_CHECK(v)) {
+		AlifSliceObject* slice = (AlifSliceObject*)v;
+		W_TYPE(TYPE_SLICE, p);
+		w_object(slice->start, p);
+		w_object(slice->stop, p);
+		w_object(slice->step, p);
+	}
+	else {
+		W_TYPE(TYPE_UNKNOWN, p);
+		p->error = WFERR_UNMARSHALLABLE;
+	}
 }
 
 

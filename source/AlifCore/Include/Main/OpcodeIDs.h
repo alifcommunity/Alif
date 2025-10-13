@@ -204,7 +204,7 @@
 //#define INSTRUMENTED_FOR_ITER                  239
 #define INSTRUMENTED_CALL_KW                   240
 //#define INSTRUMENTED_CALL_FUNCTION_EX          241
-//#define INSTRUMENTED_INSTRUCTION               242
+#define INSTRUMENTED_INSTRUCTION               242
 //#define INSTRUMENTED_JUMP_FORWARD              243
 //#define INSTRUMENTED_POP_JUMP_IF_TRUE          244
 //#define INSTRUMENTED_POP_JUMP_IF_FALSE         245
@@ -216,8 +216,8 @@
 //#define INSTRUMENTED_YIELD_VALUE               251
 #define INSTRUMENTED_CALL                      252
 //#define INSTRUMENTED_JUMP_BACKWARD             253
-//#define INSTRUMENTED_LINE                      254
-//#define ENTER_EXECUTOR                         255
+#define INSTRUMENTED_LINE                      254
+#define ENTER_EXECUTOR                         255
 #define JUMP                                   256
 #define JUMP_IF_FALSE                          257
 #define JUMP_IF_TRUE                           258
@@ -231,4 +231,4 @@
 
 //#define HAVE_ARGUMENT                           41
 //#define MIN_SPECIALIZED_OPCODE                 150
-//#define MIN_INSTRUMENTED_OPCODE                236
+#define MIN_INSTRUMENTED_OPCODE                236

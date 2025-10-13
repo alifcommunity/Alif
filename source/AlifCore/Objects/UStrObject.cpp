@@ -192,7 +192,7 @@ static AlifIntT init_internedDict(AlifInterpreter* interp) { // 302
 static AlifStatus initGlobal_internedStrings(AlifInterpreter* _interp) { // 308
 	AlifHashTableAllocatorT hashTableAlloc = { alifMem_dataAlloc, alifMem_dataFree };
 
-	INTERNED_STRINGS = alifHashTable_newFull(
+	INTERNED_STRINGS = _alifHashTable_newFull(
 		hashTable_uStrHash,
 		hashTable_uStrCompare,
 		nullptr,
@@ -6441,7 +6441,7 @@ static AlifObject* intern_static(AlifInterpreter* interp, AlifObject* s /* stole
 		return ALIF_NEWREF(r);
 	}
 
-	if (alifHashTable_set(INTERNED_STRINGS, s, s) < -1) {
+	if (_alifHashTable_set(INTERNED_STRINGS, s, s) < -1) {
 		//alif_fatalError("failed to intern static string");
 	}
 

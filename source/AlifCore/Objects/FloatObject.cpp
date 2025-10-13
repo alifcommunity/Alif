@@ -178,7 +178,7 @@ double alifFloat_asDouble(AlifObject* _op) { // 250
 }
 
 
- // 314
+// 314
 #define CONVERT_TO_DOUBLE(_obj, _dbl)                     \
     if (ALIFFLOAT_CHECK(_obj))                             \
         _dbl = ALIFFLOAT_AS_DOUBLE(_obj);                   \
@@ -315,7 +315,7 @@ static AlifObject* float_richCompare(AlifObject* _v, AlifObject* _w, AlifIntT _o
 			if (r < 0)
 				goto Error;
 			result = alifBool_fromLong(r);
-		Error:
+Error:
 			ALIF_XDECREF(vv);
 			ALIF_XDECREF(ww);
 			return result;
@@ -436,7 +436,7 @@ static void _float_divMod(double _vx, double _wx, double* _floorDiv, double* _mo
 		}
 	}
 	else {
-		*_floorDiv = copysign(0.0, _vx / _wx); 
+		*_floorDiv = copysign(0.0, _vx / _wx);
 	}
 }
 
@@ -482,13 +482,13 @@ static AlifObject* float_pow(AlifObject* _v,
 
 	CONVERT_TO_DOUBLE(_v, iv_);
 	CONVERT_TO_DOUBLE(_w, iw_);
-	if (iw_ == 0) {             
+	if (iw_ == 0) {
 		return alifFloat_fromDouble(1.0);
 	}
-	if (isnan(iv_)) {        
+	if (isnan(iv_)) {
 		return alifFloat_fromDouble(iv_);
 	}
-	if (isnan(iw_)) {        
+	if (isnan(iw_)) {
 		return alifFloat_fromDouble(iv_ == 1.0 ? 1.0 : iw_);
 	}
 	if (isinf(iw_)) {
@@ -508,7 +508,7 @@ static AlifObject* float_pow(AlifObject* _v,
 			return alifFloat_fromDouble(iw_is_odd ?
 				copysign(0.0, iv_) : 0.0);
 	}
-	if (iv_ == 0.0) { 
+	if (iv_ == 0.0) {
 		AlifIntT iw_is_odd = DOUBLE_IS_ODD_INTEGER(iw_);
 		if (iw_ < 0.0) {
 			//alifErr_setString(_alifExcZeroDivisionError_,
@@ -668,7 +668,7 @@ static AlifObject* float___format___impl(AlifObject* _self, AlifObject* _formatS
 	AlifIntT ret{};
 
 	alifUStrWriter_init(&writer);
-	ret = _alifFloat_formatAdvancedWriter( &writer, _self,
+	ret = _alifFloat_formatAdvancedWriter(&writer, _self,
 		_formatSpec, 0, ALIFUSTR_GET_LENGTH(_formatSpec));
 	if (ret == -1) {
 		alifUStrWriter_dealloc(&writer);
@@ -728,8 +728,8 @@ static AlifNumberMethods _floatAsNumber_ = { // 1811
 	.inplaceOr = 0,
 	.floorDivide = float_floorDiv,
 	.trueDivide = float_div,
-	.inplaceFloorDivide = 0,     
-	.inplaceTrueDivide = 0,       
+	.inplaceFloorDivide = 0,
+	.inplaceTrueDivide = 0,
 };
 
 AlifTypeObject _alifFloatType_ = { // 1847
@@ -773,7 +773,131 @@ AlifIntT alifFloat_initTypes(AlifInterpreter* _interp) { // 1951
 
 
 
+AlifIntT alifFloat_pack8(double _x, char* _data, AlifIntT _le) { // 2236
+	unsigned char* p = (unsigned char*)_data;
+	if (DOUBLE_FORMAT == UNKNOWN_FORMAT) {
+		unsigned char sign{};
+		AlifIntT e{};
+		double f{};
+		AlifUIntT fhi{}, flo{};
+		AlifIntT incr = 1;
 
+		if (_le) {
+			p += 7;
+			incr = -1;
+		}
+
+		if (_x < 0) {
+			sign = 1;
+			_x = -_x;
+		}
+		else
+			sign = 0;
+
+		f = frexp(_x, &e);
+
+		/* Normalize f to be in the range [1.0, 2.0) */
+		if (0.5 <= f and f < 1.0) {
+			f *= 2.0;
+			e--;
+		}
+		else if (f == 0.0)
+			e = 0;
+		else {
+			alifErr_setString(_alifExcSystemError_,
+				"frexp() result out of range");
+			return -1;
+		}
+
+		if (e >= 1024)
+			goto Overflow;
+		else if (e < -1022) {
+			/* Gradual underflow */
+			f = ldexp(f, 1022 + e);
+			e = 0;
+		}
+		else if (!(e == 0 and f == 0.0)) {
+			e += 1023;
+			f -= 1.0; /* Get rid of leading 1 */
+		}
+
+		/* fhi receives the high 28 bits; flo the low 24 bits (== 52 bits) */
+		f *= 268435456.0; /* 2**28 */
+		fhi = (unsigned int)f; /* Truncate */
+
+		f -= (double)fhi;
+		f *= 16777216.0; /* 2**24 */
+		flo = (unsigned int)(f + 0.5); /* Round */
+		if (flo >> 24) {
+			/* The carry propagated out of a string of 24 1 bits. */
+			flo = 0;
+			++fhi;
+			if (fhi >> 28) {
+				/* And it also propagated out of the next 28 bits. */
+				fhi = 0;
+				++e;
+				if (e >= 2047)
+					goto Overflow;
+			}
+		}
+
+		/* First byte */
+		*p = (sign << 7) | (e >> 4);
+		p += incr;
+
+		/* Second byte */
+		*p = (unsigned char)(((e & 0xF) << 4) | (fhi >> 24));
+		p += incr;
+
+		/* Third byte */
+		*p = (fhi >> 16) & 0xFF;
+		p += incr;
+
+		/* Fourth byte */
+		*p = (fhi >> 8) & 0xFF;
+		p += incr;
+
+		/* Fifth byte */
+		*p = fhi & 0xFF;
+		p += incr;
+
+		/* Sixth byte */
+		*p = (flo >> 16) & 0xFF;
+		p += incr;
+
+		/* Seventh byte */
+		*p = (flo >> 8) & 0xFF;
+		p += incr;
+
+		/* Eighth byte */
+		*p = flo & 0xFF;
+		/* p += incr; */
+
+		/* Done */
+		return 0;
+
+Overflow:
+		alifErr_setString(_alifExcOverflowError_,
+			"float too large to pack with d format");
+		return -1;
+	}
+	else {
+		const unsigned char* s = (unsigned char*)&_x;
+		AlifIntT i{}, incr = 1;
+
+		if ((DOUBLE_FORMAT == IEEE_LITTLE_ENDIAN_FORMAT and !_le)
+			or (DOUBLE_FORMAT == IEEE_BIG_ENDIAN_FORMAT and _le)) {
+			p += 7;
+			incr = -1;
+		}
+
+		for (i = 0; i < 8; i++) {
+			*p = *s++;
+			p += incr;
+		}
+		return 0;
+	}
+}
 
 
 double alifFloat_unpack8(const char* data, AlifIntT le) { // 2462

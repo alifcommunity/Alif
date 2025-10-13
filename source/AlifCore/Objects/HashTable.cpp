@@ -32,12 +32,12 @@ static void alifSList_prepend(AlifSListT* _list, AlifSListItemT* _item) { // 74
 
 
 
-AlifUHashT alifHashTable_hashPtr(const void* _key) { // 92
+AlifUHashT _alifHashTable_hashPtr(const void* _key) { // 92
 	return (AlifUHashT)alif_hashPointerRaw(_key);
 }
 
 
-AlifIntT alifHashTable_compareDirect(const void* _key1, const void* _key2) { // 99
+AlifIntT _alifHashTable_compareDirect(const void* _key1, const void* _key2) { // 99
 	return (_key1 == _key2);
 }
 
@@ -70,7 +70,7 @@ AlifHashTableEntryT* alifHashTable_getEntryGeneric(AlifHashTableT* ht, const voi
 
 
 static AlifHashTableEntryT* alifHashTable_getEntryPtr(AlifHashTableT* _ht, const void* _key) { // 161
-	AlifUHashT keyHash = alifHashTable_hashPtr(_key);
+	AlifUHashT keyHash = _alifHashTable_hashPtr(_key);
 	AlifUSizeT index = keyHash & (_ht->nbuckets - 1);
 	AlifHashTableEntryT* entry = TABLE_HEAD(_ht, index);
 	while (1) {
@@ -85,7 +85,7 @@ static AlifHashTableEntryT* alifHashTable_getEntryPtr(AlifHashTableT* _ht, const
 	return entry;
 }
 
-AlifIntT alifHashTable_set(AlifHashTableT* _ht, const void* _key, void* _value) { // 217
+AlifIntT _alifHashTable_set(AlifHashTableT* _ht, const void* _key, void* _value) { // 217
 	AlifHashTableEntryT* entry{};
 
 	entry = (AlifHashTableEntryT*)_ht->alloc.malloc(sizeof(AlifHashTableEntryT));
@@ -159,7 +159,7 @@ void* alifHashTable_get(AlifHashTableT* _ht, const void* _key) { // 255
 
 
 
-AlifHashTableT* alifHashTable_newFull(
+AlifHashTableT* _alifHashTable_newFull(
 	AlifHashTableHashFunc _hashFunc,
 	AlifHashTableCompareFunc _compareFunc,
 	AlifHashTableDestroyFunc _keyDestroyFunc,
@@ -197,9 +197,8 @@ AlifHashTableT* alifHashTable_newFull(
 	ht->keyDestroyFunc = _keyDestroyFunc;
 	ht->valueDestroyFunc = _valueDestroyFunc;
 	ht->alloc = alloc;
-	if (ht->hashFunc == alifHashTable_hashPtr
-		and ht->compareFunc == alifHashTable_compareDirect)
-	{
+	if (ht->hashFunc == _alifHashTable_hashPtr
+		and ht->compareFunc == _alifHashTable_compareDirect) {
 		ht->getEntryFunc = alifHashTable_getEntryPtr;
 	}
 	return ht;
