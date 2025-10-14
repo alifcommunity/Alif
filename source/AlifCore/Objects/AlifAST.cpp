@@ -392,6 +392,8 @@ static const char* const _sliceFields_[] = { // 662
 	"step",
 };
 static AlifObject* ast2obj_exprContext(ASTState*, Validator*, ExprContext_); // 667
+static AlifObject* ast2obj_unaryOp(ASTState*, Validator*, UnaryOp_); // 673
+static AlifObject* ast2obj_cmpOp(ASTState*, Validator*, CmpOp_); // 675
 static const char* const _comprehensionFields_[] = {
 	"target",
 	"iter",
@@ -1069,10 +1071,10 @@ static AlifIntT init_types(void* arg) { // 6049
 		_nonlocalFields_, 1,
 		"Nonlocal(identifier* names)");
 	if (!state->Nonlocal_type) return -1;
-	state->Expr_type = make_type(state, "Expr", state->stmt_type, _exprFields_,
+	state->ExprType = make_type(state, "Expr", state->stmt_type, _exprFields_,
 		1,
 		"Expr(expr value)");
-	if (!state->Expr_type) return -1;
+	if (!state->ExprType) return -1;
 	state->Pass_type = make_type(state, "Pass", state->stmt_type, nullptr, 0,
 		"Pass");
 	if (!state->Pass_type) return -1;
@@ -1385,28 +1387,28 @@ static AlifIntT init_types(void* arg) { // 6049
 		0,
 		"Invert");
 	if (!state->Invert_type) return -1;
-	state->Invert_singleton = alifType_genericNew((AlifTypeObject
+	state->InvertSingleton = alifType_genericNew((AlifTypeObject
 		*)state->Invert_type, nullptr,
 		nullptr);
-	if (!state->Invert_singleton) return -1;
+	if (!state->InvertSingleton) return -1;
 	state->Not_type = make_type(state, "Not", state->unaryop_type, nullptr, 0,
 		"Not");
 	if (!state->Not_type) return -1;
-	state->Not_singleton = alifType_genericNew((AlifTypeObject*)state->Not_type,
+	state->NotSingleton = alifType_genericNew((AlifTypeObject*)state->Not_type,
 		nullptr, nullptr);
-	if (!state->Not_singleton) return -1;
+	if (!state->NotSingleton) return -1;
 	state->UAdd_type = make_type(state, "UAdd", state->unaryop_type, nullptr, 0,
 		"UAdd");
 	if (!state->UAdd_type) return -1;
-	state->UAdd_singleton = alifType_genericNew((AlifTypeObject*)state->UAdd_type,
+	state->UAddSingleton = alifType_genericNew((AlifTypeObject*)state->UAdd_type,
 		nullptr, nullptr);
-	if (!state->UAdd_singleton) return -1;
+	if (!state->UAddSingleton) return -1;
 	state->USub_type = make_type(state, "USub", state->unaryop_type, nullptr, 0,
 		"USub");
 	if (!state->USub_type) return -1;
-	state->USub_singleton = alifType_genericNew((AlifTypeObject*)state->USub_type,
+	state->USubSingleton = alifType_genericNew((AlifTypeObject*)state->USub_type,
 		nullptr, nullptr);
-	if (!state->USub_singleton) return -1;
+	if (!state->USubSingleton) return -1;
 	state->cmpop_type = make_type(state, "cmpop", state->astType, nullptr, 0,
 		"cmpop = Eq | NotEq | Lt | LtE | Gt | GtE | Is | IsNot | In | NotIn");
 	if (!state->cmpop_type) return -1;
@@ -1414,63 +1416,63 @@ static AlifIntT init_types(void* arg) { // 6049
 	state->Eq_type = make_type(state, "Eq", state->cmpop_type, nullptr, 0,
 		"Eq");
 	if (!state->Eq_type) return -1;
-	state->Eq_singleton = alifType_genericNew((AlifTypeObject*)state->Eq_type,
+	state->EqSingleton = alifType_genericNew((AlifTypeObject*)state->Eq_type,
 		nullptr, nullptr);
-	if (!state->Eq_singleton) return -1;
+	if (!state->EqSingleton) return -1;
 	state->NotEq_type = make_type(state, "NotEq", state->cmpop_type, nullptr, 0,
 		"NotEq");
 	if (!state->NotEq_type) return -1;
-	state->NotEq_singleton = alifType_genericNew((AlifTypeObject
+	state->NotEqSingleton = alifType_genericNew((AlifTypeObject
 		*)state->NotEq_type, nullptr, nullptr);
-	if (!state->NotEq_singleton) return -1;
+	if (!state->NotEqSingleton) return -1;
 	state->Lt_type = make_type(state, "Lt", state->cmpop_type, nullptr, 0,
 		"Lt");
 	if (!state->Lt_type) return -1;
-	state->Lt_singleton = alifType_genericNew((AlifTypeObject*)state->Lt_type,
+	state->LtSingleton = alifType_genericNew((AlifTypeObject*)state->Lt_type,
 		nullptr, nullptr);
-	if (!state->Lt_singleton) return -1;
+	if (!state->LtSingleton) return -1;
 	state->LtE_type = make_type(state, "LtE", state->cmpop_type, nullptr, 0,
 		"LtE");
 	if (!state->LtE_type) return -1;
-	state->LtE_singleton = alifType_genericNew((AlifTypeObject*)state->LtE_type,
+	state->LtESingleton = alifType_genericNew((AlifTypeObject*)state->LtE_type,
 		nullptr, nullptr);
-	if (!state->LtE_singleton) return -1;
+	if (!state->LtESingleton) return -1;
 	state->Gt_type = make_type(state, "Gt", state->cmpop_type, nullptr, 0,
 		"Gt");
 	if (!state->Gt_type) return -1;
-	state->Gt_singleton = alifType_genericNew((AlifTypeObject*)state->Gt_type,
+	state->GtSingleton = alifType_genericNew((AlifTypeObject*)state->Gt_type,
 		nullptr, nullptr);
-	if (!state->Gt_singleton) return -1;
+	if (!state->GtSingleton) return -1;
 	state->GtE_type = make_type(state, "GtE", state->cmpop_type, nullptr, 0,
 		"GtE");
 	if (!state->GtE_type) return -1;
-	state->GtE_singleton = alifType_genericNew((AlifTypeObject*)state->GtE_type,
+	state->GtESingleton = alifType_genericNew((AlifTypeObject*)state->GtE_type,
 		nullptr, nullptr);
-	if (!state->GtE_singleton) return -1;
+	if (!state->GtESingleton) return -1;
 	state->Is_type = make_type(state, "Is", state->cmpop_type, nullptr, 0,
 		"Is");
 	if (!state->Is_type) return -1;
-	state->Is_singleton = alifType_genericNew((AlifTypeObject*)state->Is_type,
+	state->IsSingleton = alifType_genericNew((AlifTypeObject*)state->Is_type,
 		nullptr, nullptr);
-	if (!state->Is_singleton) return -1;
+	if (!state->IsSingleton) return -1;
 	state->IsNot_type = make_type(state, "IsNot", state->cmpop_type, nullptr, 0,
 		"IsNot");
 	if (!state->IsNot_type) return -1;
-	state->IsNot_singleton = alifType_genericNew((AlifTypeObject
+	state->IsNotSingleton = alifType_genericNew((AlifTypeObject
 		*)state->IsNot_type, nullptr, nullptr);
-	if (!state->IsNot_singleton) return -1;
+	if (!state->IsNotSingleton) return -1;
 	state->In_type = make_type(state, "In", state->cmpop_type, nullptr, 0,
 		"In");
 	if (!state->In_type) return -1;
-	state->In_singleton = alifType_genericNew((AlifTypeObject*)state->In_type,
+	state->InSingleton = alifType_genericNew((AlifTypeObject*)state->In_type,
 		nullptr, nullptr);
-	if (!state->In_singleton) return -1;
+	if (!state->InSingleton) return -1;
 	state->NotIn_type = make_type(state, "NotIn", state->cmpop_type, nullptr, 0,
 		"NotIn");
 	if (!state->NotIn_type) return -1;
-	state->NotIn_singleton = alifType_genericNew((AlifTypeObject
+	state->NotInSingleton = alifType_genericNew((AlifTypeObject
 		*)state->NotIn_type, nullptr, nullptr);
-	if (!state->NotIn_singleton) return -1;
+	if (!state->NotInSingleton) return -1;
 	state->comprehension_type = make_type(state, "comprehension",
 		state->astType,
 		_comprehensionFields_, 4,
@@ -3467,19 +3469,19 @@ AlifObject* ast2obj_stmt(ASTState* state, Validator* vstate, void* _o) { // 8793
 			goto failed;
 		ALIF_DECREF(value);
 		break;
-	case StmtK_::NonlocalK:
-		tp = (AlifTypeObject*)state->Nonlocal_type;
-		result = alifType_genericNew(tp, nullptr, nullptr);
-		if (!result) goto failed;
-		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.nonlocal.names,
-			AST2OBJ_IDENTIFIER);
-		if (!value) goto failed;
-		if (alifObject_setAttr(result, state->names, value) == -1)
-			goto failed;
-		ALIF_DECREF(value);
-		break;
+		//case StmtK_::NonlocalK:
+		//	tp = (AlifTypeObject*)state->Nonlocal_type;
+		//	result = alifType_genericNew(tp, nullptr, nullptr);
+		//	if (!result) goto failed;
+		//	value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.nonlocal.names,
+		//		AST2OBJ_IDENTIFIER);
+		//	if (!value) goto failed;
+		//	if (alifObject_setAttr(result, state->names, value) == -1)
+		//		goto failed;
+		//	ALIF_DECREF(value);
+		//	break;
 	case StmtK_::ExprK:
-		tp = (AlifTypeObject*)state->Expr_type;
+		tp = (AlifTypeObject*)state->ExprType;
 		result = alifType_genericNew(tp, nullptr, nullptr);
 		if (!result) goto failed;
 		value = ast2obj_expr(state, vstate, o->V.expression.val);
@@ -3550,7 +3552,7 @@ AlifObject* ast2obj_expr(ASTState* state, Validator* vstate, void* _o) { // 9415
 		tp = (AlifTypeObject*)state->BoolOp_type;
 		result = alifType_genericNew(tp, nullptr, nullptr);
 		if (!result) goto failed;
-		value = ast2obj_boolop(state, vstate, o->V.boolOp.op);
+		value = ast2obj_boolOp(state, vstate, o->V.boolOp.op);
 		if (!value) goto failed;
 		if (alifObject_setAttr(result, state->op, value) == -1)
 			goto failed;
@@ -3601,7 +3603,7 @@ AlifObject* ast2obj_expr(ASTState* state, Validator* vstate, void* _o) { // 9415
 		tp = (AlifTypeObject*)state->UnaryOp_type;
 		result = alifType_genericNew(tp, nullptr, nullptr);
 		if (!result) goto failed;
-		value = ast2obj_unaryop(state, vstate, o->V.unaryOp.op);
+		value = ast2obj_unaryOp(state, vstate, o->V.unaryOp.op);
 		if (!value) goto failed;
 		if (alifObject_setAttr(result, state->op, value) == -1)
 			goto failed;
@@ -3791,7 +3793,7 @@ AlifObject* ast2obj_expr(ASTState* state, Validator* vstate, void* _o) { // 9415
 			value = alifList_new(n);
 			if (!value) goto failed;
 			for (i = 0; i < n; i++)
-				ALIFLIST_SET_ITEM(value, i, ast2obj_cmpop(state, vstate, (CmpOpTy)ASDL_SEQ_GET(o->V.compare.ops, i)));
+				ALIFLIST_SET_ITEM(value, i, ast2obj_cmpOp(state, vstate, (CmpOp_)ASDL_SEQ_GET(o->V.compare.ops, i)));
 		}
 		if (!value) goto failed;
 		if (alifObject_setAttr(result, state->ops, value) == -1)
@@ -4036,6 +4038,49 @@ AlifObject* ast2obj_exprContext(ASTState* _state, Validator
 	}
 	ALIF_UNREACHABLE();
 }
+
+
+AlifObject* ast2obj_unaryOp(ASTState* _state, Validator* _vstate,
+	UnaryOp_ _o) { // 9965
+	switch (_o) {
+	case UnaryOp_::Invert:
+		return ALIF_NEWREF(_state->InvertSingleton);
+	case UnaryOp_::Not:
+		return ALIF_NEWREF(_state->NotSingleton);
+	case UnaryOp_::UAdd:
+		return ALIF_NEWREF(_state->UAddSingleton);
+	case UnaryOp_::USub:
+		return ALIF_NEWREF(_state->USubSingleton);
+	}
+	ALIF_UNREACHABLE();
+}
+AlifObject* ast2obj_cmpOp(ASTState* _state, Validator* _vstate,
+	CmpOp_ _o) { // 9980
+	switch (_o) {
+	case CmpOp_::Equal:
+		return ALIF_NEWREF(_state->EqSingleton);
+	case CmpOp_::NotEq:
+		return ALIF_NEWREF(_state->NotEqSingleton);
+	case CmpOp_::LessThan:
+		return ALIF_NEWREF(_state->LtSingleton);
+	case CmpOp_::LessThanEq:
+		return ALIF_NEWREF(_state->LtESingleton);
+	case CmpOp_::GreaterThan:
+		return ALIF_NEWREF(_state->GtSingleton);
+	case CmpOp_::GreaterThanEq:
+		return ALIF_NEWREF(_state->GtESingleton);
+	case CmpOp_::Is:
+		return ALIF_NEWREF(_state->IsSingleton);
+	case CmpOp_::IsNot:
+		return ALIF_NEWREF(_state->IsNotSingleton);
+	case CmpOp_::In:
+		return ALIF_NEWREF(_state->InSingleton);
+	case CmpOp_::NotIn:
+		return ALIF_NEWREF(_state->NotInSingleton);
+	}
+	ALIF_UNREACHABLE();
+}
+
 
 
 
