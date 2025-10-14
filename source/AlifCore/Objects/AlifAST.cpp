@@ -90,7 +90,7 @@ static AlifIntT init_identifiers(ASTState* _state) { // 286
 	if ((_state->operand = alifUStr_internFromString("operand")) == nullptr) return -1;
 	if ((_state->ops = alifUStr_internFromString("ops")) == nullptr) return -1;
 	if ((_state->optional_vars = alifUStr_internFromString("optional_vars")) == nullptr) return -1;
-	if ((_state->orelse = alifUStr_internFromString("orelse")) == nullptr) return -1;
+	if ((_state->else_ = alifUStr_internFromString("orelse")) == nullptr) return -1;
 	if ((_state->pattern = alifUStr_internFromString("pattern")) == nullptr) return -1;
 	if ((_state->patterns = alifUStr_internFromString("patterns")) == nullptr) return -1;
 	if ((_state->posonlyargs = alifUStr_internFromString("posonlyargs")) == nullptr) return -1;
@@ -108,7 +108,7 @@ static AlifIntT init_identifiers(ASTState* _state) { // 286
 	if ((_state->type = alifUStr_internFromString("type")) == nullptr) return -1;
 	if ((_state->type_comment = alifUStr_internFromString("type_comment")) == nullptr) return -1;
 	if ((_state->type_ignores = alifUStr_internFromString("type_ignores")) == nullptr) return -1;
-	if ((_state->type_params = alifUStr_internFromString("type_params")) == nullptr) return -1;
+	if ((_state->typeParams = alifUStr_internFromString("type_params")) == nullptr) return -1;
 	if ((_state->upper = alifUStr_internFromString("upper")) == nullptr) return -1;
 	if ((_state->value = alifUStr_internFromString("value")) == nullptr) return -1;
 	if ((_state->values = alifUStr_internFromString("values")) == nullptr) return -1;
@@ -137,13 +137,13 @@ static const char* const _functionTypeFields_[] = {
 	"argtypes",
 	"returns",
 };
-static const char* const stmt_attributes[] = {
+static const char* const _stmtAttributes_[] = {
 	"lineno",
 	"col_offset",
 	"end_lineno",
 	"end_col_offset",
 };
-//static AlifObject* ast2obj_stmt(ASTState*, Validator*, void*);
+static AlifObject* ast2obj_stmt(ASTState*, Validator*, void*);
 static const char* const _functionDefFields_[] = {
 	"name",
 	"args",
@@ -911,21 +911,21 @@ static AlifIntT init_types(void* arg) { // 6049
 		"     | Break\n"
 		"     | Continue");
 	if (!state->stmt_type) return -1;
-	if (add_attributes(state, state->stmt_type, stmt_attributes, 4) < 0) return
+	if (add_attributes(state, state->stmt_type, _stmtAttributes_, 4) < 0) return
 		-1;
 	if (alifObject_setAttr(state->stmt_type, state->endLineNo, ALIF_NONE) == -1)
 		return -1;
 	if (alifObject_setAttr(state->stmt_type, state->endColOffset, ALIF_NONE) ==
 		-1)
 		return -1;
-	state->FunctionDef_type = make_type(state, "FunctionDef", state->stmt_type,
+	state->FunctionDefType = make_type(state, "FunctionDef", state->stmt_type,
 		_functionDefFields_, 7,
 		"FunctionDef(identifier name, arguments args, stmt* body, expr* decorator_list, expr? returns, string? type_comment, type_param* type_params)");
-	if (!state->FunctionDef_type) return -1;
-	if (alifObject_setAttr(state->FunctionDef_type, state->returns, ALIF_NONE) ==
+	if (!state->FunctionDefType) return -1;
+	if (alifObject_setAttr(state->FunctionDefType, state->returns, ALIF_NONE) ==
 		-1)
 		return -1;
-	if (alifObject_setAttr(state->FunctionDef_type, state->type_comment, ALIF_NONE)
+	if (alifObject_setAttr(state->FunctionDefType, state->type_comment, ALIF_NONE)
 		== -1)
 		return -1;
 	state->AsyncFunctionDef_type = make_type(state, "AsyncFunctionDef",
@@ -943,21 +943,21 @@ static AlifIntT init_types(void* arg) { // 6049
 		_classDefFields_, 6,
 		"ClassDef(identifier name, expr* bases, keyword* keywords, stmt* body, expr* decorator_list, type_param* type_params)");
 	if (!state->ClassDef_type) return -1;
-	state->Return_type = make_type(state, "Return", state->stmt_type,
+	state->ReturnType = make_type(state, "Return", state->stmt_type,
 		_returnFields_, 1,
 		"Return(expr? value)");
-	if (!state->Return_type) return -1;
-	if (alifObject_setAttr(state->Return_type, state->value, ALIF_NONE) == -1)
+	if (!state->ReturnType) return -1;
+	if (alifObject_setAttr(state->ReturnType, state->value, ALIF_NONE) == -1)
 		return -1;
-	state->Delete_type = make_type(state, "Delete", state->stmt_type,
+	state->DeleteType = make_type(state, "Delete", state->stmt_type,
 		_deleteFields_, 1,
 		"Delete(expr* targets)");
-	if (!state->Delete_type) return -1;
-	state->Assign_type = make_type(state, "Assign", state->stmt_type,
+	if (!state->DeleteType) return -1;
+	state->AssignType = make_type(state, "Assign", state->stmt_type,
 		_assignFields_, 3,
 		"Assign(expr* targets, expr value, string? type_comment)");
-	if (!state->Assign_type) return -1;
-	if (alifObject_setAttr(state->Assign_type, state->type_comment, ALIF_NONE) ==
+	if (!state->AssignType) return -1;
+	if (alifObject_setAttr(state->AssignType, state->type_comment, ALIF_NONE) ==
 		-1)
 		return -1;
 	state->TypeAlias_type = make_type(state, "TypeAlias", state->stmt_type,
@@ -2839,13 +2839,13 @@ AlifObject* ast2obj_mod(ASTState* state, Validator* vstate, void* _o) { // 8712
 		if (alifObject_setAttr(result, state->body, value) == -1)
 			goto failed;
 		ALIF_DECREF(value);
-		value = ast2obj_list(state, vstate,
-			(ASDLSeq*)o->V.module.typeIgnores,
-			ast2obj_typeIgnore);
-		if (!value) goto failed;
-		if (alifObject_setAttr(result, state->type_ignores, value) == -1)
-			goto failed;
-		ALIF_DECREF(value);
+		//value = ast2obj_list(state, vstate,
+		//	(ASDLSeq*)o->V.module.typeIgnores,
+		//	ast2obj_typeIgnore);
+		//if (!value) goto failed;
+		//if (alifObject_setAttr(result, state->type_ignores, value) == -1)
+		//	goto failed;
+		//ALIF_DECREF(value);
 		break;
 	case ModK_::InteractiveK:
 		tp = (AlifTypeObject*)state->Interactive_type;
@@ -2895,6 +2895,625 @@ failed:
 	return nullptr;
 }
 
+AlifObject* ast2obj_stmt(ASTState* state,Validator* vstate, void* _o) { // 8793
+	StmtTy o = (StmtTy)_o;
+	AlifObject* result = nullptr, * value = nullptr;
+	AlifTypeObject* tp{};
+	if (!o) {
+		return ALIF_NONE;
+	}
+	if (++vstate->recursionDepth > vstate->recursionLimit) {
+		//alifErr_setString(_alifExcRecursionError_,
+		//	"maximum recursion depth exceeded during ast construction");
+		return nullptr;
+	}
+	switch (o->type) {
+	case StmtK_::FunctionDefK:
+		tp = (AlifTypeObject*)state->FunctionDefType;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = AST2OBJ_IDENTIFIER(state, vstate, o->V.functionDef.name);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->name, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_arguments(state, vstate, o->V.functionDef.args);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->args, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.functionDef.body,
+			ast2obj_stmt);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->body, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		//value = ast2obj_list(state, vstate,
+		//	(ASDLSeq*)o->V.functionDef.decoratorList,
+		//	ast2obj_expr);
+		//if (!value) goto failed;
+		//if (alifObject_setAttr(result, state->decorator_list, value) == -1)
+		//	goto failed;
+		//ALIF_DECREF(value);
+		value = ast2obj_expr(state, vstate, o->V.functionDef.returns);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->returns, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		//value = ast2obj_string(state, vstate, o->V.functionDef.typeComment);
+		//if (!value) goto failed;
+		//if (alifObject_setAttr(result, state->type_comment, value) == -1)
+		//	goto failed;
+		//ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate,
+			(ASDLSeq*)o->V.functionDef.typeParams,
+			ast2obj_typeParam);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->typeParams, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		break;
+	case StmtK_::AsyncFunctionDefK:
+		tp = (AlifTypeObject*)state->AsyncFunctionDef_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = ast2obj_identifier(state, vstate, o->V.asyncFunctionDef.name);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->name, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_arguments(state, vstate, o->V.asyncFunctionDef.args);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->args, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate,
+			(ASDLSeq*)o->V.asyncFunctionDef.body,
+			ast2obj_stmt);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->body, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		//value = ast2obj_list(state, vstate,
+		//	(ASDLSeq*)o->V.asyncFunctionDef.decoratorList,
+		//	ast2obj_expr);
+		//if (!value) goto failed;
+		//if (alifObject_setAttr(result, state->decorator_list, value) == -1)
+		//	goto failed;
+		//ALIF_DECREF(value);
+		value = ast2obj_expr(state, vstate, o->V.asyncFunctionDef.returns);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->returns, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		//value = ast2obj_string(state, vstate, o->V.asyncFunctionDef.typeComment);
+		//if (!value) goto failed;
+		//if (alifObject_setAttr(result, state->type_comment, value) == -1)
+		//	goto failed;
+		//ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate,
+			(ASDLSeq*)o->V.asyncFunctionDef.typeParams,
+			ast2obj_typeParam);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->typeParams, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		break;
+	case StmtK_::ClassDefK:
+		tp = (AlifTypeObject*)state->ClassDef_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = ast2obj_identifier(state, vstate, o->V.classDef.name);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->name, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.classDef.bases,
+			ast2obj_expr);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->bases, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.classDef.keywords,
+			ast2obj_keyword);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->keywords, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.classDef.body,
+			ast2obj_stmt);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->body, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		//value = ast2obj_list(state, vstate,
+		//	(ASDLSeq*)o->V.classDef.decoratorlist,
+		//	ast2obj_expr);
+		//if (!value) goto failed;
+		//if (alifObject_setAttr(result, state->decorator_list, value) == -1)
+		//	goto failed;
+		//ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate,
+			(ASDLSeq*)o->V.classDef.typeParams,
+			ast2obj_typeParam);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->typeParams, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		break;
+	case StmtK_::ReturnK:
+		tp = (AlifTypeObject*)state->ReturnType;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = ast2obj_expr(state, vstate, o->V.return_.val);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->value, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		break;
+	case StmtK_::DeleteK:
+		tp = (AlifTypeObject*)state->DeleteType;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.delete_.targets,
+			ast2obj_expr);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->targets, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		break;
+	case StmtK_::AssignK:
+		tp = (AlifTypeObject*)state->AssignType;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.assign.targets,
+			ast2obj_expr);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->targets, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_expr(state, vstate, o->V.assign.val);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->value, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		//value = ast2obj_string(state, vstate, o->V.assign.typeComment);
+		//if (!value) goto failed;
+		//if (alifObject_setAttr(result, state->type_comment, value) == -1)
+		//	goto failed;
+		//ALIF_DECREF(value);
+		break;
+	//case StmtK_::TypeAliasK:
+	//	tp = (AlifTypeObject*)state->TypeAlias_type;
+	//	result = alifType_genericNew(tp, nullptr, nullptr);
+	//	if (!result) goto failed;
+	//	value = ast2obj_expr(state, vstate, o->V.typeAlias.name);
+	//	if (!value) goto failed;
+	//	if (alifObject_setAttr(result, state->name, value) == -1)
+	//		goto failed;
+	//	ALIF_DECREF(value);
+	//	value = ast2obj_list(state, vstate,
+	//		(ASDLSeq*)o->V.typeAlias.type_params,
+	//		ast2obj_type_param);
+	//	if (!value) goto failed;
+	//	if (alifObject_setAttr(result, state->typeParams, value) == -1)
+	//		goto failed;
+	//	ALIF_DECREF(value);
+	//	value = ast2obj_expr(state, vstate, o->V.typeAlias.value);
+	//	if (!value) goto failed;
+	//	if (alifObject_setAttr(result, state->value, value) == -1)
+	//		goto failed;
+	//	ALIF_DECREF(value);
+	//	break;
+	case StmtK_::AugAssignK:
+		tp = (AlifTypeObject*)state->AugAssign_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = ast2obj_expr(state, vstate, o->V.augAssign.target);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->target, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_operator(state, vstate, o->V.augAssign.op);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->op, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_expr(state, vstate, o->V.augAssign.val);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->value, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		break;
+	//case StmtK_::AnnAssignK:
+	//	tp = (AlifTypeObject*)state->AnnAssign_type;
+	//	result = alifType_genericNew(tp, nullptr, nullptr);
+	//	if (!result) goto failed;
+	//	value = ast2obj_expr(state, vstate, o->V.annAssign.target);
+	//	if (!value) goto failed;
+	//	if (alifObject_setAttr(result, state->target, value) == -1)
+	//		goto failed;
+	//	ALIF_DECREF(value);
+	//	value = ast2obj_expr(state, vstate, o->V.annAssign.annotation);
+	//	if (!value) goto failed;
+	//	if (alifObject_setAttr(result, state->annotation, value) == -1)
+	//		goto failed;
+	//	ALIF_DECREF(value);
+	//	value = ast2obj_expr(state, vstate, o->V.annAssign.value);
+	//	if (!value) goto failed;
+	//	if (alifObject_setAttr(result, state->value, value) == -1)
+	//		goto failed;
+	//	ALIF_DECREF(value);
+	//	value = ast2obj_int(state, vstate, o->V.annAssign.simple);
+	//	if (!value) goto failed;
+	//	if (alifObject_setAttr(result, state->simple, value) == -1)
+	//		goto failed;
+	//	ALIF_DECREF(value);
+	//	break;
+	case StmtK_::ForK:
+		tp = (AlifTypeObject*)state->For_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = ast2obj_expr(state, vstate, o->V.for_.target);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->target, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_expr(state, vstate, o->V.for_.iter);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->iter, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.for_.body,
+			ast2obj_stmt);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->body, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		//value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.for_.else_,
+		//	ast2obj_stmt);
+		//if (!value) goto failed;
+		//if (alifObject_setAttr(result, state->orelse, value) == -1)
+		//	goto failed;
+		//ALIF_DECREF(value);
+		//value = ast2obj_string(state, vstate, o->V.for_.typeComment);
+		//if (!value) goto failed;
+		//if (alifObject_setAttr(result, state->type_comment, value) == -1)
+		//	goto failed;
+		//ALIF_DECREF(value);
+		break;
+	case StmtK_::AsyncForK:
+		tp = (AlifTypeObject*)state->AsyncFor_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = ast2obj_expr(state, vstate, o->V.asyncFor.target);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->target, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_expr(state, vstate, o->V.asyncFor.iter);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->iter, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.asyncFor.body,
+			ast2obj_stmt);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->body, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		//value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.asyncFor.else_,
+		//	ast2obj_stmt);
+		//if (!value) goto failed;
+		//if (alifObject_setAttr(result, state->orelse, value) == -1)
+		//	goto failed;
+		//ALIF_DECREF(value);
+		//value = ast2obj_string(state, vstate, o->V.asyncFor.typeComment);
+		//if (!value) goto failed;
+		//if (alifObject_setAttr(result, state->type_comment, value) == -1)
+		//	goto failed;
+		//ALIF_DECREF(value);
+		break;
+	case StmtK_::WhileK:
+		tp = (AlifTypeObject*)state->While_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = ast2obj_expr(state, vstate, o->V.while_.condition);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->test, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.while_.body,
+			ast2obj_stmt);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->body, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		//value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.while_.else_,
+		//	ast2obj_stmt);
+		//if (!value) goto failed;
+		//if (alifObject_setAttr(result, state->else_, value) == -1)
+		//	goto failed;
+		//ALIF_DECREF(value);
+		break;
+	case StmtK_::IfK:
+		tp = (AlifTypeObject*)state->If_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = ast2obj_expr(state, vstate, o->V.if_.condition);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->test, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.if_.body,
+			ast2obj_stmt);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->body, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.if_.else_,
+			ast2obj_stmt);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->else_, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		break;
+	case StmtK_::WithK:
+		tp = (AlifTypeObject*)state->With_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.with_.items,
+			ast2obj_withItem);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->items, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.with_.body,
+			ast2obj_stmt);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->body, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		//value = ast2obj_string(state, vstate, o->V.with_.typeComment);
+		//if (!value) goto failed;
+		//if (alifObject_setAttr(result, state->type_comment, value) == -1)
+		//	goto failed;
+		//ALIF_DECREF(value);
+		break;
+	case StmtK_::AsyncWithK:
+		tp = (AlifTypeObject*)state->AsyncWith_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.asyncWith.items,
+			ast2obj_withitem);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->items, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.asyncWith.body,
+			ast2obj_stmt);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->body, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		//value = ast2obj_string(state, vstate, o->V.asyncWith.typeComment);
+		//if (!value) goto failed;
+		//if (alifObject_setAttr(result, state->type_comment, value) == -1)
+		//	goto failed;
+		//ALIF_DECREF(value);
+		break;
+	//case StmtK_::MatchK:
+	//	tp = (AlifTypeObject*)state->Match_type;
+	//	result = alifType_genericNew(tp, nullptr, nullptr);
+	//	if (!result) goto failed;
+	//	value = ast2obj_expr(state, vstate, o->V.match.subject);
+	//	if (!value) goto failed;
+	//	if (alifObject_setAttr(result, state->subject, value) == -1)
+	//		goto failed;
+	//	ALIF_DECREF(value);
+	//	value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.match.cases,
+	//		ast2obj_matchCase);
+	//	if (!value) goto failed;
+	//	if (alifObject_setAttr(result, state->cases, value) == -1)
+	//		goto failed;
+	//	ALIF_DECREF(value);
+	//	break;
+	//case StmtK_::RaiseK:
+	//	tp = (AlifTypeObject*)state->Raise_type;
+	//	result = alifType_genericNew(tp, nullptr, nullptr);
+	//	if (!result) goto failed;
+	//	value = ast2obj_expr(state, vstate, o->V.raise.exc);
+	//	if (!value) goto failed;
+	//	if (alifObject_setAttr(result, state->exc, value) == -1)
+	//		goto failed;
+	//	ALIF_DECREF(value);
+	//	value = ast2obj_expr(state, vstate, o->V.raise.cause);
+	//	if (!value) goto failed;
+	//	if (alifObject_setAttr(result, state->cause, value) == -1)
+	//		goto failed;
+	//	ALIF_DECREF(value);
+	//	break;
+	case StmtK_::TryK:
+		tp = (AlifTypeObject*)state->Try_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.try_.body,
+			ast2obj_stmt);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->body, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.try_.handlers,
+			ast2obj_excepthandler);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->handlers, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.try_.else_,
+			ast2obj_stmt);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->else_, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.try_.finalBody,
+			ast2obj_stmt);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->finalbody, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		break;
+	case StmtK_::TryStarK:
+		tp = (AlifTypeObject*)state->TryStar_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.tryStar.body,
+			ast2obj_stmt);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->body, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.tryStar.handlers,
+			ast2obj_excepthandler);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->handlers, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.tryStar.else_,
+			ast2obj_stmt);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->else_, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.tryStar.finalBody,
+			ast2obj_stmt);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->finalbody, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		break;
+	//case StmtK_::AssertK:
+	//	tp = (AlifTypeObject*)state->Assert_type;
+	//	result = alifType_genericNew(tp, nullptr, nullptr);
+	//	if (!result) goto failed;
+	//	value = ast2obj_expr(state, vstate, o->V.assert.test);
+	//	if (!value) goto failed;
+	//	if (alifObject_setAttr(result, state->test, value) == -1)
+	//		goto failed;
+	//	ALIF_DECREF(value);
+	//	value = ast2obj_expr(state, vstate, o->V.assert.msg);
+	//	if (!value) goto failed;
+	//	if (alifObject_setAttr(result, state->msg, value) == -1)
+	//		goto failed;
+	//	ALIF_DECREF(value);
+	//	break;
+	case StmtK_::ImportK:
+		tp = (AlifTypeObject*)state->Import_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.import.names,
+			ast2obj_alias);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->names, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		break;
+	case StmtK_::ImportFromK:
+		tp = (AlifTypeObject*)state->ImportFrom_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = ast2obj_identifier(state, vstate, o->V.importFrom.module);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->module, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.importFrom.names,
+			ast2obj_alias);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->names, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_int(state, vstate, o->V.importFrom.level);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->level, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		break;
+	case StmtK_::GlobalK:
+		tp = (AlifTypeObject*)state->Global_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.global.names,
+			ast2obj_identifier);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->names, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		break;
+	case StmtK_::NonlocalK:
+		tp = (AlifTypeObject*)state->Nonlocal_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.nonlocal.names,
+			ast2obj_identifier);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->names, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		break;
+	case StmtK_::ExprK:
+		tp = (AlifTypeObject*)state->Expr_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = ast2obj_expr(state, vstate, o->V.expression.val);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->value, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		break;
+	case StmtK_::PassK:
+		tp = (AlifTypeObject*)state->Pass_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		break;
+	case StmtK_::BreakK:
+		tp = (AlifTypeObject*)state->Break_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		break;
+	case StmtK_::ContinueK:
+		tp = (AlifTypeObject*)state->Continue_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		break;
+	}
+	value = ast2obj_int(state, vstate, o->lineNo);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->lineno, value) < 0)
+		goto failed;
+	ALIF_DECREF(value);
+	value = ast2obj_int(state, vstate, o->colOffset);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->col_offset, value) < 0)
+		goto failed;
+	ALIF_DECREF(value);
+	value = ast2obj_int(state, vstate, o->endLineNo);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->endLineNo, value) < 0)
+		goto failed;
+	ALIF_DECREF(value);
+	value = ast2obj_int(state, vstate, o->endColOffset);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->endColOffset, value) < 0)
+		goto failed;
+	ALIF_DECREF(value);
+	vstate->recursionDepth--;
+	return result;
+failed:
+	vstate->recursionDepth--;
+	ALIF_XDECREF(value);
+	ALIF_XDECREF(result);
+	return nullptr;
+}
 
 
 

@@ -14,7 +14,7 @@ public:
 	AlifObject* And_type;
 	AlifObject* AnnAssign_type;
 	AlifObject* Assert_type;
-	AlifObject* Assign_type;
+	AlifObject* AssignType;
 	AlifObject* AsyncFor_type;
 	AlifObject* AsyncFunctionDef_type;
 	AlifObject* AsyncWith_type;
@@ -37,7 +37,7 @@ public:
 	AlifObject* Continue_type;
 	AlifObject* Del_singleton;
 	AlifObject* Del_type;
-	AlifObject* Delete_type;
+	AlifObject* DeleteType;
 	AlifObject* DictComp_type;
 	AlifObject* Dict_type;
 	AlifObject* Div_singleton;
@@ -51,7 +51,7 @@ public:
 	AlifObject* FloorDiv_type;
 	AlifObject* For_type;
 	AlifObject* FormattedValue_type;
-	AlifObject* FunctionDef_type;
+	AlifObject* FunctionDefType;
 	AlifObject* FunctionType_type;
 	AlifObject* GeneratorExp_type;
 	AlifObject* Global_type;
@@ -118,7 +118,7 @@ public:
 	AlifObject* RShift_singleton;
 	AlifObject* RShift_type;
 	AlifObject* Raise_type;
-	AlifObject* Return_type;
+	AlifObject* ReturnType;
 	AlifObject* SetComp_type;
 	AlifObject* Set_type;
 	AlifObject* Slice_type;
@@ -221,7 +221,7 @@ public:
 	AlifObject* operator_type;
 	AlifObject* ops;
 	AlifObject* optional_vars;
-	AlifObject* orelse;
+	AlifObject* else_;
 	AlifObject* pattern;
 	AlifObject* pattern_type;
 	AlifObject* patterns;
@@ -243,7 +243,7 @@ public:
 	AlifObject* type_ignore_type;
 	AlifObject* type_ignores;
 	AlifObject* type_param_type;
-	AlifObject* type_params;
+	AlifObject* typeParams;
 	AlifObject* unaryop_type;
 	AlifObject* upper;
 	AlifObject* value;
