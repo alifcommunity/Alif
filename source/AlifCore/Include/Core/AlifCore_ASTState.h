@@ -168,7 +168,7 @@ public:
 	AlifObject* cause;
 	AlifObject* cls;
 	AlifObject* cmpop_type;
-	AlifObject* col_offset;
+	AlifObject* colOffset;
 	AlifObject* comparators;
 	AlifObject* comprehension_type;
 	AlifObject* context_expr;
