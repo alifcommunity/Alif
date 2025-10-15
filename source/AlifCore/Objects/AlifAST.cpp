@@ -3196,7 +3196,7 @@ AlifObject* ast2obj_stmt(ASTState* state, Validator* vstate, void* _o) { // 8793
 		//value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.for_.else_,
 		//	ast2obj_stmt);
 		//if (!value) goto failed;
-		//if (alifObject_setAttr(result, state->orelse, value) == -1)
+		//if (alifObject_setAttr(result, state->else_, value) == -1)
 		//	goto failed;
 		//ALIF_DECREF(value);
 		//value = AST2OBJ_STRING(state, vstate, o->V.for_.typeComment);
@@ -3228,7 +3228,7 @@ AlifObject* ast2obj_stmt(ASTState* state, Validator* vstate, void* _o) { // 8793
 		//value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.asyncFor.else_,
 		//	ast2obj_stmt);
 		//if (!value) goto failed;
-		//if (alifObject_setAttr(result, state->orelse, value) == -1)
+		//if (alifObject_setAttr(result, state->else_, value) == -1)
 		//	goto failed;
 		//ALIF_DECREF(value);
 		//value = AST2OBJ_STRING(state, vstate, o->V.asyncFor.typeComment);

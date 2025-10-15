@@ -357,13 +357,13 @@
     <ClCompile Include="..\source\AlifCore\Objects\dtoa\DoubleToASCII.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\ConfigMinimal.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\AlifArray.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\StringTokenizer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Windows\ConfigMinimal.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
