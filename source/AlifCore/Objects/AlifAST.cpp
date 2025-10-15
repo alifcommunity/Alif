@@ -66,14 +66,14 @@ static AlifIntT init_identifiers(ASTState* _state) { // 286
 	if ((_state->handlers = alifUStr_internFromString("handlers")) == nullptr) return -1;
 	if ((_state->id = alifUStr_internFromString("id")) == nullptr) return -1;
 	if ((_state->ifs = alifUStr_internFromString("ifs")) == nullptr) return -1;
-	if ((_state->is_async = alifUStr_internFromString("is_async")) == nullptr) return -1;
+	if ((_state->isAsync = alifUStr_internFromString("isAsync")) == nullptr) return -1;
 	if ((_state->items = alifUStr_internFromString("items")) == nullptr) return -1;
 	if ((_state->iter = alifUStr_internFromString("iter")) == nullptr) return -1;
 	if ((_state->key = alifUStr_internFromString("key")) == nullptr) return -1;
 	if ((_state->keys = alifUStr_internFromString("keys")) == nullptr) return -1;
 	if ((_state->keywords = alifUStr_internFromString("keywords")) == nullptr) return -1;
 	if ((_state->kind = alifUStr_internFromString("kind")) == nullptr) return -1;
-	if ((_state->kw_defaults = alifUStr_internFromString("kw_defaults")) == nullptr) return -1;
+	if ((_state->kwDefaults = alifUStr_internFromString("kwDefaults")) == nullptr) return -1;
 	if ((_state->kwarg = alifUStr_internFromString("kwarg")) == nullptr) return -1;
 	if ((_state->kwd_attrs = alifUStr_internFromString("kwd_attrs")) == nullptr) return -1;
 	if ((_state->kwd_patterns = alifUStr_internFromString("kwd_patterns")) == nullptr) return -1;
@@ -106,7 +106,7 @@ static AlifIntT init_identifiers(ASTState* _state) { // 286
 	if ((_state->targets = alifUStr_internFromString("targets")) == nullptr) return -1;
 	if ((_state->test = alifUStr_internFromString("test")) == nullptr) return -1;
 	if ((_state->type = alifUStr_internFromString("type")) == nullptr) return -1;
-	if ((_state->type_comment = alifUStr_internFromString("type_comment")) == nullptr) return -1;
+	if ((_state->typeComment = alifUStr_internFromString("typeComment")) == nullptr) return -1;
 	if ((_state->type_ignores = alifUStr_internFromString("type_ignores")) == nullptr) return -1;
 	if ((_state->typeParams = alifUStr_internFromString("type_params")) == nullptr) return -1;
 	if ((_state->upper = alifUStr_internFromString("upper")) == nullptr) return -1;
@@ -150,7 +150,7 @@ static const char* const _functionDefFields_[] = {
 	"body",
 	"decorator_list",
 	"returns",
-	"type_comment",
+	"typeComment",
 	"type_params",
 };
 static const char* const _asyncFunctionDefFields_[] = {
@@ -159,7 +159,7 @@ static const char* const _asyncFunctionDefFields_[] = {
 	"body",
 	"decorator_list",
 	"returns",
-	"type_comment",
+	"typeComment",
 	"type_params",
 };
 static const char* const _classDefFields_[] = {
@@ -179,7 +179,7 @@ static const char* const _deleteFields_[] = {
 static const char* const _assignFields_[] = {
 	"targets",
 	"value",
-	"type_comment",
+	"typeComment",
 };
 static const char* const _typeAliasFields_[] = {
 	"name",
@@ -202,14 +202,14 @@ static const char* const _forFields_[] = {
 	"iter",
 	"body",
 	"orelse",
-	"type_comment",
+	"typeComment",
 };
 static const char* const _asyncForFields_[] = {
 	"target",
 	"iter",
 	"body",
 	"orelse",
-	"type_comment",
+	"typeComment",
 };
 static const char* const _whileFields_[] = {
 	"test",
@@ -224,12 +224,12 @@ static const char* const _ifFields_[] = {
 static const char* const _withFields_[] = {
 	"items",
 	"body",
-	"type_comment",
+	"typeComment",
 };
 static const char* const _asyncWithFields_[] = {
 	"items",
 	"body",
-	"type_comment",
+	"typeComment",
 };
 static const char* const _matchFields_[] = {
 	"subject",
@@ -278,7 +278,7 @@ static const char* const _exprAttributes_[] = {
 	"end_lineno",
 	"end_col_offset",
 };
-//static AlifObject* ast2obj_expr(ASTState*, Validator*, void*);
+static AlifObject* ast2obj_expr(ASTState*, Validator*, void*); // 553
 static const char* const _boolOpFields_[] = {
 	"op",
 	"values",
@@ -392,13 +392,16 @@ static const char* const _sliceFields_[] = { // 662
 	"step",
 };
 static AlifObject* ast2obj_exprContext(ASTState*, Validator*, ExprContext_); // 667
+static AlifObject* ast2obj_boolOp(ASTState*, Validator*, BoolOp_);
+static AlifObject* ast2obj_operator(ASTState*, Validator*, Operator_);
 static AlifObject* ast2obj_unaryOp(ASTState*, Validator*, UnaryOp_); // 673
 static AlifObject* ast2obj_cmpOp(ASTState*, Validator*, CmpOp_); // 675
+static AlifObject* ast2obj_comprehension(ASTState*, Validator*, void*);; // 677
 static const char* const _comprehensionFields_[] = {
 	"target",
 	"iter",
 	"ifs",
-	"is_async",
+	"isAsync",
 };
 static const char* const _excepthandlerAttributes_[] = {
 	"lineno",
@@ -406,23 +409,23 @@ static const char* const _excepthandlerAttributes_[] = {
 	"end_lineno",
 	"end_col_offset",
 };
-//static AlifObject* ast2obj_excepthandler(ASTState*, Validator*, void*);
+static AlifObject* ast2obj_exceptHandler(ASTState*, Validator*, void*); // 691
 static const char* const _exceptHandlerFields_[] = {
 	"type",
 	"name",
 	"body",
 };
-//static AlifObject* ast2obj_arguments(ASTState*, Validator*, void*);
+static AlifObject* ast2obj_arguments(ASTState*, Validator*, void*); // 698
 static const char* const _argumentsFields_[] = {
 	"posonlyargs",
 	"args",
 	"vararg",
 	"kwonlyargs",
-	"kw_defaults",
+	"kwDefaults",
 	"kwarg",
 	"defaults",
 };
-//static AlifObject* ast2obj_arg(ASTState*, Validator*, void*);
+static AlifObject* ast2obj_arg(ASTState*, Validator*, void*); // 709
 static const char* const _argAttributes_[] = {
 	"lineno",
 	"col_offset",
@@ -432,7 +435,7 @@ static const char* const _argAttributes_[] = {
 static const char* const _argFields_[] = {
 	"arg",
 	"annotation",
-	"type_comment",
+	"typeComment",
 };
 static AlifObject* ast2obj_keyword(ASTState*, Validator*, void*); // 722
 static const char* const _keywordAttributes_[] = {
@@ -445,7 +448,7 @@ static const char* const _keywordFields_[] = {
 	"arg",
 	"value",
 };
-//static AlifObject* ast2obj_alias(ASTState*, Validator*, void*);
+static AlifObject* ast2obj_alias(ASTState*, Validator*, void*); // 734
 static const char* const _aliasAttributes_[] = {
 	"lineno",
 	"col_offset",
@@ -456,7 +459,7 @@ static const char* const _aliasFields_[] = {
 	"name",
 	"asname",
 };
-//static AlifObject* ast2obj_withitem(ASTState*, Validator*, void*);
+static AlifObject* ast2obj_withItem(ASTState*, Validator*, void*); // 746
 static const char* const _withItemFields_[] = {
 	"context_expr",
 	"optional_vars",
@@ -515,7 +518,7 @@ static const char* const _typeParamAttributes_[] = {
 	"end_lineno",
 	"end_col_offset",
 };
-//static AlifObject* ast2obj_typeParam(ASTState*, Validator*, void*);
+static AlifObject* ast2obj_typeParam(ASTState*, Validator*, void*); // 809
 static const char* const _typeVarFields_[] = {
 	"name",
 	"bound",
@@ -902,21 +905,21 @@ static AlifIntT init_types(void* arg) { // 6049
 		"FunctionType(expr* argtypes, expr returns)");
 	if (!state->FunctionType_type) return -1;
 	state->stmt_type = make_type(state, "stmt", state->astType, nullptr, 0,
-		"stmt = FunctionDef(identifier name, arguments args, stmt* body, expr* decorator_list, expr? returns, string? type_comment, type_param* type_params)\n"
-		"     | AsyncFunctionDef(identifier name, arguments args, stmt* body, expr* decorator_list, expr? returns, string? type_comment, type_param* type_params)\n"
+		"stmt = FunctionDef(identifier name, arguments args, stmt* body, expr* decorator_list, expr? returns, string? typeComment, type_param* type_params)\n"
+		"     | AsyncFunctionDef(identifier name, arguments args, stmt* body, expr* decorator_list, expr? returns, string? typeComment, type_param* type_params)\n"
 		"     | ClassDef(identifier name, expr* bases, keyword* keywords, stmt* body, expr* decorator_list, type_param* type_params)\n"
 		"     | Return(expr? value)\n"
 		"     | Delete(expr* targets)\n"
-		"     | Assign(expr* targets, expr value, string? type_comment)\n"
+		"     | Assign(expr* targets, expr value, string? typeComment)\n"
 		"     | TypeAlias(expr name, type_param* type_params, expr value)\n"
 		"     | AugAssign(expr target, operator op, expr value)\n"
 		"     | AnnAssign(expr target, expr annotation, expr? value, AlifIntT simple)\n"
-		"     | For(expr target, expr iter, stmt* body, stmt* orelse, string? type_comment)\n"
-		"     | AsyncFor(expr target, expr iter, stmt* body, stmt* orelse, string? type_comment)\n"
+		"     | For(expr target, expr iter, stmt* body, stmt* orelse, string? typeComment)\n"
+		"     | AsyncFor(expr target, expr iter, stmt* body, stmt* orelse, string? typeComment)\n"
 		"     | While(expr test, stmt* body, stmt* orelse)\n"
 		"     | If(expr test, stmt* body, stmt* orelse)\n"
-		"     | With(withitem* items, stmt* body, string? type_comment)\n"
-		"     | AsyncWith(withitem* items, stmt* body, string? type_comment)\n"
+		"     | With(withitem* items, stmt* body, string? typeComment)\n"
+		"     | AsyncWith(withitem* items, stmt* body, string? typeComment)\n"
 		"     | Match(expr subject, match_case* cases)\n"
 		"     | Raise(expr? exc, expr? cause)\n"
 		"     | Try(stmt* body, excepthandler* handlers, stmt* orelse, stmt* finalbody)\n"
@@ -940,23 +943,23 @@ static AlifIntT init_types(void* arg) { // 6049
 		return -1;
 	state->FunctionDefType = make_type(state, "FunctionDef", state->stmt_type,
 		_functionDefFields_, 7,
-		"FunctionDef(identifier name, arguments args, stmt* body, expr* decorator_list, expr? returns, string? type_comment, type_param* type_params)");
+		"FunctionDef(identifier name, arguments args, stmt* body, expr* decorator_list, expr? returns, string? typeComment, type_param* type_params)");
 	if (!state->FunctionDefType) return -1;
 	if (alifObject_setAttr(state->FunctionDefType, state->returns, ALIF_NONE) ==
 		-1)
 		return -1;
-	if (alifObject_setAttr(state->FunctionDefType, state->type_comment, ALIF_NONE)
+	if (alifObject_setAttr(state->FunctionDefType, state->typeComment, ALIF_NONE)
 		== -1)
 		return -1;
 	state->AsyncFunctionDef_type = make_type(state, "AsyncFunctionDef",
 		state->stmt_type,
 		_asyncFunctionDefFields_, 7,
-		"AsyncFunctionDef(identifier name, arguments args, stmt* body, expr* decorator_list, expr? returns, string? type_comment, type_param* type_params)");
+		"AsyncFunctionDef(identifier name, arguments args, stmt* body, expr* decorator_list, expr? returns, string? typeComment, type_param* type_params)");
 	if (!state->AsyncFunctionDef_type) return -1;
 	if (alifObject_setAttr(state->AsyncFunctionDef_type, state->returns, ALIF_NONE)
 		== -1)
 		return -1;
-	if (alifObject_setAttr(state->AsyncFunctionDef_type, state->type_comment,
+	if (alifObject_setAttr(state->AsyncFunctionDef_type, state->typeComment,
 		ALIF_NONE) == -1)
 		return -1;
 	state->ClassDef_type = make_type(state, "ClassDef", state->stmt_type,
@@ -975,9 +978,9 @@ static AlifIntT init_types(void* arg) { // 6049
 	if (!state->DeleteType) return -1;
 	state->AssignType = make_type(state, "Assign", state->stmt_type,
 		_assignFields_, 3,
-		"Assign(expr* targets, expr value, string? type_comment)");
+		"Assign(expr* targets, expr value, string? typeComment)");
 	if (!state->AssignType) return -1;
-	if (alifObject_setAttr(state->AssignType, state->type_comment, ALIF_NONE) ==
+	if (alifObject_setAttr(state->AssignType, state->typeComment, ALIF_NONE) ==
 		-1)
 		return -1;
 	state->TypeAlias_type = make_type(state, "TypeAlias", state->stmt_type,
@@ -995,15 +998,15 @@ static AlifIntT init_types(void* arg) { // 6049
 	if (alifObject_setAttr(state->AnnAssign_type, state->value, ALIF_NONE) == -1)
 		return -1;
 	state->For_type = make_type(state, "For", state->stmt_type, _forFields_, 5,
-		"For(expr target, expr iter, stmt* body, stmt* orelse, string? type_comment)");
+		"For(expr target, expr iter, stmt* body, stmt* orelse, string? typeComment)");
 	if (!state->For_type) return -1;
-	if (alifObject_setAttr(state->For_type, state->type_comment, ALIF_NONE) == -1)
+	if (alifObject_setAttr(state->For_type, state->typeComment, ALIF_NONE) == -1)
 		return -1;
 	state->AsyncFor_type = make_type(state, "AsyncFor", state->stmt_type,
 		_asyncForFields_, 5,
-		"AsyncFor(expr target, expr iter, stmt* body, stmt* orelse, string? type_comment)");
+		"AsyncFor(expr target, expr iter, stmt* body, stmt* orelse, string? typeComment)");
 	if (!state->AsyncFor_type) return -1;
-	if (alifObject_setAttr(state->AsyncFor_type, state->type_comment, ALIF_NONE) ==
+	if (alifObject_setAttr(state->AsyncFor_type, state->typeComment, ALIF_NONE) ==
 		-1)
 		return -1;
 	state->While_type = make_type(state, "While", state->stmt_type,
@@ -1015,15 +1018,15 @@ static AlifIntT init_types(void* arg) { // 6049
 	if (!state->If_type) return -1;
 	state->With_type = make_type(state, "With", state->stmt_type, _withFields_,
 		3,
-		"With(withitem* items, stmt* body, string? type_comment)");
+		"With(withitem* items, stmt* body, string? typeComment)");
 	if (!state->With_type) return -1;
-	if (alifObject_setAttr(state->With_type, state->type_comment, ALIF_NONE) == -1)
+	if (alifObject_setAttr(state->With_type, state->typeComment, ALIF_NONE) == -1)
 		return -1;
 	state->AsyncWith_type = make_type(state, "AsyncWith", state->stmt_type,
 		_asyncWithFields_, 3,
-		"AsyncWith(withitem* items, stmt* body, string? type_comment)");
+		"AsyncWith(withitem* items, stmt* body, string? typeComment)");
 	if (!state->AsyncWith_type) return -1;
-	if (alifObject_setAttr(state->AsyncWith_type, state->type_comment, ALIF_NONE)
+	if (alifObject_setAttr(state->AsyncWith_type, state->typeComment, ALIF_NONE)
 		== -1)
 		return -1;
 	state->Match_type = make_type(state, "Match", state->stmt_type,
@@ -1292,93 +1295,93 @@ static AlifIntT init_types(void* arg) { // 6049
 	state->Add_type = make_type(state, "Add", state->operator_type, nullptr, 0,
 		"Add");
 	if (!state->Add_type) return -1;
-	state->Add_singleton = alifType_genericNew((AlifTypeObject*)state->Add_type,
+	state->AddSingleton = alifType_genericNew((AlifTypeObject*)state->Add_type,
 		nullptr, nullptr);
-	if (!state->Add_singleton) return -1;
+	if (!state->AddSingleton) return -1;
 	state->Sub_type = make_type(state, "Sub", state->operator_type, nullptr, 0,
 		"Sub");
 	if (!state->Sub_type) return -1;
-	state->Sub_singleton = alifType_genericNew((AlifTypeObject*)state->Sub_type,
+	state->SubSingleton = alifType_genericNew((AlifTypeObject*)state->Sub_type,
 		nullptr, nullptr);
-	if (!state->Sub_singleton) return -1;
+	if (!state->SubSingleton) return -1;
 	state->Mult_type = make_type(state, "Mult", state->operator_type, nullptr, 0,
 		"Mult");
 	if (!state->Mult_type) return -1;
-	state->Mult_singleton = alifType_genericNew((AlifTypeObject*)state->Mult_type,
+	state->MultSingleton = alifType_genericNew((AlifTypeObject*)state->Mult_type,
 		nullptr, nullptr);
-	if (!state->Mult_singleton) return -1;
+	if (!state->MultSingleton) return -1;
 	state->MatMult_type = make_type(state, "MatMult", state->operator_type,
 		nullptr, 0,
 		"MatMult");
 	if (!state->MatMult_type) return -1;
-	state->MatMult_singleton = alifType_genericNew((AlifTypeObject
+	state->MatMultSingleton = alifType_genericNew((AlifTypeObject
 		*)state->MatMult_type, nullptr,
 		nullptr);
-	if (!state->MatMult_singleton) return -1;
+	if (!state->MatMultSingleton) return -1;
 	state->Div_type = make_type(state, "Div", state->operator_type, nullptr, 0,
 		"Div");
 	if (!state->Div_type) return -1;
-	state->Div_singleton = alifType_genericNew((AlifTypeObject*)state->Div_type,
+	state->DivSingleton = alifType_genericNew((AlifTypeObject*)state->Div_type,
 		nullptr, nullptr);
-	if (!state->Div_singleton) return -1;
+	if (!state->DivSingleton) return -1;
 	state->Mod_type = make_type(state, "Mod", state->operator_type, nullptr, 0,
 		"Mod");
 	if (!state->Mod_type) return -1;
-	state->Mod_singleton = alifType_genericNew((AlifTypeObject*)state->Mod_type,
+	state->ModSingleton = alifType_genericNew((AlifTypeObject*)state->Mod_type,
 		nullptr, nullptr);
-	if (!state->Mod_singleton) return -1;
+	if (!state->ModSingleton) return -1;
 	state->Pow_type = make_type(state, "Pow", state->operator_type, nullptr, 0,
 		"Pow");
 	if (!state->Pow_type) return -1;
-	state->Pow_singleton = alifType_genericNew((AlifTypeObject*)state->Pow_type,
+	state->PowSingleton = alifType_genericNew((AlifTypeObject*)state->Pow_type,
 		nullptr, nullptr);
-	if (!state->Pow_singleton) return -1;
+	if (!state->PowSingleton) return -1;
 	state->LShift_type = make_type(state, "LShift", state->operator_type, nullptr,
 		0,
 		"LShift");
 	if (!state->LShift_type) return -1;
-	state->LShift_singleton = alifType_genericNew((AlifTypeObject
+	state->LShiftSingleton = alifType_genericNew((AlifTypeObject
 		*)state->LShift_type, nullptr,
 		nullptr);
-	if (!state->LShift_singleton) return -1;
+	if (!state->LShiftSingleton) return -1;
 	state->RShift_type = make_type(state, "RShift", state->operator_type, nullptr,
 		0,
 		"RShift");
 	if (!state->RShift_type) return -1;
-	state->RShift_singleton = alifType_genericNew((AlifTypeObject
+	state->RShiftSingleton = alifType_genericNew((AlifTypeObject
 		*)state->RShift_type, nullptr,
 		nullptr);
-	if (!state->RShift_singleton) return -1;
+	if (!state->RShiftSingleton) return -1;
 	state->BitOr_type = make_type(state, "BitOr", state->operator_type, nullptr, 0,
 		"BitOr");
 	if (!state->BitOr_type) return -1;
-	state->BitOr_singleton = alifType_genericNew((AlifTypeObject
+	state->BitOrSingleton = alifType_genericNew((AlifTypeObject
 		*)state->BitOr_type, nullptr, nullptr);
-	if (!state->BitOr_singleton) return -1;
+	if (!state->BitOrSingleton) return -1;
 	state->BitXor_type = make_type(state, "BitXor", state->operator_type, nullptr,
 		0,
 		"BitXor");
 	if (!state->BitXor_type) return -1;
-	state->BitXor_singleton = alifType_genericNew((AlifTypeObject
+	state->BitXorSingleton = alifType_genericNew((AlifTypeObject
 		*)state->BitXor_type, nullptr,
 		nullptr);
-	if (!state->BitXor_singleton) return -1;
+	if (!state->BitXorSingleton) return -1;
 	state->BitAnd_type = make_type(state, "BitAnd", state->operator_type, nullptr,
 		0,
 		"BitAnd");
 	if (!state->BitAnd_type) return -1;
-	state->BitAnd_singleton = alifType_genericNew((AlifTypeObject
+	state->BitAndSingleton = alifType_genericNew((AlifTypeObject
 		*)state->BitAnd_type, nullptr,
 		nullptr);
-	if (!state->BitAnd_singleton) return -1;
+	if (!state->BitAndSingleton) return -1;
 	state->FloorDiv_type = make_type(state, "FloorDiv", state->operator_type,
 		nullptr, 0,
 		"FloorDiv");
 	if (!state->FloorDiv_type) return -1;
-	state->FloorDiv_singleton = alifType_genericNew((AlifTypeObject
+	state->FloorDivSingleton = alifType_genericNew((AlifTypeObject
 		*)state->FloorDiv_type, nullptr,
 		nullptr);
-	if (!state->FloorDiv_singleton) return -1;
+	if (!state->FloorDivSingleton) return -1;
 	state->unaryop_type = make_type(state, "unaryop", state->astType, nullptr, 0,
 		"unaryop = Invert | Not | UAdd | USub");
 	if (!state->unaryop_type) return -1;
@@ -1476,7 +1479,7 @@ static AlifIntT init_types(void* arg) { // 6049
 	state->comprehension_type = make_type(state, "comprehension",
 		state->astType,
 		_comprehensionFields_, 4,
-		"comprehension(expr target, expr iter, expr* ifs, AlifIntT is_async)");
+		"comprehension(expr target, expr iter, expr* ifs, AlifIntT isAsync)");
 	if (!state->comprehension_type) return -1;
 	if (add_attributes(state, state->comprehension_type, nullptr, 0) < 0) return
 		-1;
@@ -1503,7 +1506,7 @@ static AlifIntT init_types(void* arg) { // 6049
 		return -1;
 	state->arguments_type = make_type(state, "arguments", state->astType,
 		_argumentsFields_, 7,
-		"arguments(arg* posonlyargs, arg* args, arg? vararg, arg* kwonlyargs, expr* kw_defaults, arg? kwarg, expr* defaults)");
+		"arguments(arg* posonlyargs, arg* args, arg? vararg, arg* kwonlyargs, expr* kwDefaults, arg? kwarg, expr* defaults)");
 	if (!state->arguments_type) return -1;
 	if (add_attributes(state, state->arguments_type, nullptr, 0) < 0) return -1;
 	if (alifObject_setAttr(state->arguments_type, state->vararg, ALIF_NONE) == -1)
@@ -1511,13 +1514,13 @@ static AlifIntT init_types(void* arg) { // 6049
 	if (alifObject_setAttr(state->arguments_type, state->kwarg, ALIF_NONE) == -1)
 		return -1;
 	state->arg_type = make_type(state, "arg", state->astType, _argFields_, 3,
-		"arg(identifier arg, expr? annotation, string? type_comment)");
+		"arg(identifier arg, expr? annotation, string? typeComment)");
 	if (!state->arg_type) return -1;
 	if (add_attributes(state, state->arg_type, _argAttributes_, 4) < 0) return
 		-1;
 	if (alifObject_setAttr(state->arg_type, state->annotation, ALIF_NONE) == -1)
 		return -1;
-	if (alifObject_setAttr(state->arg_type, state->type_comment, ALIF_NONE) == -1)
+	if (alifObject_setAttr(state->arg_type, state->typeComment, ALIF_NONE) == -1)
 		return -1;
 	if (alifObject_setAttr(state->arg_type, state->endLineNo, ALIF_NONE) == -1)
 		return -1;
@@ -1648,12 +1651,12 @@ static AlifIntT init_types(void* arg) { // 6049
 	if (alifObject_setAttr(state->TypeVar_type, state->default_value, ALIF_NONE) ==
 		-1)
 		return -1;
-	state->ParamSpec_type = make_type(state, "ParamSpec",
+	state->ParamSpecType = make_type(state, "ParamSpec",
 		state->type_param_type, _paramSpecFields_,
 		2,
 		"ParamSpec(identifier name, expr? default_value)");
-	if (!state->ParamSpec_type) return -1;
-	if (alifObject_setAttr(state->ParamSpec_type, state->default_value, ALIF_NONE)
+	if (!state->ParamSpecType) return -1;
+	if (alifObject_setAttr(state->ParamSpecType, state->default_value, ALIF_NONE)
 		== -1)
 		return -1;
 	state->TypeVarTuple_type = make_type(state, "TypeVarTuple",
@@ -2962,7 +2965,7 @@ AlifObject* ast2obj_stmt(ASTState* state, Validator* vstate, void* _o) { // 8793
 		ALIF_DECREF(value);
 		//value = AST2OBJ_STRING(state, vstate, o->V.functionDef.typeComment);
 		//if (!value) goto failed;
-		//if (alifObject_setAttr(result, state->type_comment, value) == -1)
+		//if (alifObject_setAttr(result, state->typeComment, value) == -1)
 		//	goto failed;
 		//ALIF_DECREF(value);
 		value = ast2obj_list(state, vstate,
@@ -3008,7 +3011,7 @@ AlifObject* ast2obj_stmt(ASTState* state, Validator* vstate, void* _o) { // 8793
 		//ALIF_DECREF(value);
 		//value = AST2OBJ_STRING(state, vstate, o->V.asyncFunctionDef.typeComment);
 		//if (!value) goto failed;
-		//if (alifObject_setAttr(result, state->type_comment, value) == -1)
+		//if (alifObject_setAttr(result, state->typeComment, value) == -1)
 		//	goto failed;
 		//ALIF_DECREF(value);
 		value = ast2obj_list(state, vstate,
@@ -3099,7 +3102,7 @@ AlifObject* ast2obj_stmt(ASTState* state, Validator* vstate, void* _o) { // 8793
 		ALIF_DECREF(value);
 		//value = AST2OBJ_STRING(state, vstate, o->V.assign.typeComment);
 		//if (!value) goto failed;
-		//if (alifObject_setAttr(result, state->type_comment, value) == -1)
+		//if (alifObject_setAttr(result, state->typeComment, value) == -1)
 		//	goto failed;
 		//ALIF_DECREF(value);
 		break;
@@ -3198,7 +3201,7 @@ AlifObject* ast2obj_stmt(ASTState* state, Validator* vstate, void* _o) { // 8793
 		//ALIF_DECREF(value);
 		//value = AST2OBJ_STRING(state, vstate, o->V.for_.typeComment);
 		//if (!value) goto failed;
-		//if (alifObject_setAttr(result, state->type_comment, value) == -1)
+		//if (alifObject_setAttr(result, state->typeComment, value) == -1)
 		//	goto failed;
 		//ALIF_DECREF(value);
 		break;
@@ -3230,7 +3233,7 @@ AlifObject* ast2obj_stmt(ASTState* state, Validator* vstate, void* _o) { // 8793
 		//ALIF_DECREF(value);
 		//value = AST2OBJ_STRING(state, vstate, o->V.asyncFor.typeComment);
 		//if (!value) goto failed;
-		//if (alifObject_setAttr(result, state->type_comment, value) == -1)
+		//if (alifObject_setAttr(result, state->typeComment, value) == -1)
 		//	goto failed;
 		//ALIF_DECREF(value);
 		break;
@@ -3296,7 +3299,7 @@ AlifObject* ast2obj_stmt(ASTState* state, Validator* vstate, void* _o) { // 8793
 		ALIF_DECREF(value);
 		//value = AST2OBJ_STRING(state, vstate, o->V.with_.typeComment);
 		//if (!value) goto failed;
-		//if (alifObject_setAttr(result, state->type_comment, value) == -1)
+		//if (alifObject_setAttr(result, state->typeComment, value) == -1)
 		//	goto failed;
 		//ALIF_DECREF(value);
 		break;
@@ -3318,7 +3321,7 @@ AlifObject* ast2obj_stmt(ASTState* state, Validator* vstate, void* _o) { // 8793
 		ALIF_DECREF(value);
 		//value = AST2OBJ_STRING(state, vstate, o->V.asyncWith.typeComment);
 		//if (!value) goto failed;
-		//if (alifObject_setAttr(result, state->type_comment, value) == -1)
+		//if (alifObject_setAttr(result, state->typeComment, value) == -1)
 		//	goto failed;
 		//ALIF_DECREF(value);
 		break;
@@ -4038,8 +4041,48 @@ AlifObject* ast2obj_exprContext(ASTState* _state, Validator
 	}
 	ALIF_UNREACHABLE();
 }
-
-
+AlifObject* ast2obj_boolOp(ASTState* _state, Validator* _vstate,
+	BoolOp_ _o) { // 9921
+	switch (_o) {
+	case And:
+		return ALIF_NEWREF(_state->And_singleton);
+	case Or:
+		return ALIF_NEWREF(_state->Or_singleton);
+	}
+	ALIF_UNREACHABLE();
+}
+AlifObject* ast2obj_operator(ASTState* _state, Validator* _vstate,
+	Operator_ _o) { // 9921
+	switch (_o) {
+	case Operator_::Add:
+		return ALIF_NEWREF(_state->AddSingleton);
+	case Operator_::Sub:
+		return ALIF_NEWREF(_state->SubSingleton);
+	case Operator_::Mult:
+		return ALIF_NEWREF(_state->MultSingleton);
+		//case Operator_::MatMult:
+		//	return ALIF_NEWREF(_state->MatMultSingleton);
+	case Operator_::Div:
+		return ALIF_NEWREF(_state->DivSingleton);
+	case Operator_::Mod:
+		return ALIF_NEWREF(_state->ModSingleton);
+	case Operator_::Pow:
+		return ALIF_NEWREF(_state->PowSingleton);
+	case Operator_::LShift:
+		return ALIF_NEWREF(_state->LShiftSingleton);
+	case Operator_::RShift:
+		return ALIF_NEWREF(_state->RShiftSingleton);
+	case Operator_::BitOr:
+		return ALIF_NEWREF(_state->BitOrSingleton);
+	case Operator_::BitXor:
+		return ALIF_NEWREF(_state->BitXorSingleton);
+	case Operator_::BitAnd:
+		return ALIF_NEWREF(_state->BitAndSingleton);
+	case Operator_::FloorDiv:
+		return ALIF_NEWREF(_state->FloorDivSingleton);
+	}
+	ALIF_UNREACHABLE();
+}
 AlifObject* ast2obj_unaryOp(ASTState* _state, Validator* _vstate,
 	UnaryOp_ _o) { // 9965
 	switch (_o) {
@@ -4080,8 +4123,233 @@ AlifObject* ast2obj_cmpOp(ASTState* _state, Validator* _vstate,
 	}
 	ALIF_UNREACHABLE();
 }
+AlifObject* ast2obj_comprehension(ASTState* state,
+	Validator* vstate, void* _o) { // 10007
+	ComprehensionTy o = (ComprehensionTy)_o;
+	AlifObject* result = nullptr, * value = nullptr;
+	AlifTypeObject* tp;
+	if (!o) {
+		return ALIF_NONE;
+	}
+	if (++vstate->recursionDepth > vstate->recursionLimit) {
+		//alifErr_setString(_alifExcRecursionError_,
+		//	"maximum recursion depth exceeded during ast construction");
+		return nullptr;
+	}
+	tp = (AlifTypeObject*)state->comprehension_type;
+	result = alifType_genericNew(tp, nullptr, nullptr);
+	if (!result) return nullptr;
+	value = ast2obj_expr(state, vstate, o->target);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->target, value) == -1)
+		goto failed;
+	ALIF_DECREF(value);
+	value = ast2obj_expr(state, vstate, o->iter);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->iter, value) == -1)
+		goto failed;
+	ALIF_DECREF(value);
+	value = ast2obj_list(state, vstate, (ASDLSeq*)o->ifs, ast2obj_expr);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->ifs, value) == -1)
+		goto failed;
+	ALIF_DECREF(value);
+	value = ast2obj_int(state, vstate, o->isAsync);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->isAsync, value) == -1)
+		goto failed;
+	ALIF_DECREF(value);
+	vstate->recursionDepth--;
+	return result;
+failed:
+	vstate->recursionDepth--;
+	ALIF_XDECREF(value);
+	ALIF_XDECREF(result);
+	return nullptr;
+}
+AlifObject* ast2obj_exceptHandler(ASTState* state,
+	Validator* vstate, void* _o) { // 10054
+	ExcepthandlerTy o = (ExcepthandlerTy)_o;
+	AlifObject* result = nullptr, * value = nullptr;
+	AlifTypeObject* tp;
+	if (!o) {
+		return ALIF_NONE;
+	}
+	if (++vstate->recursionDepth > vstate->recursionLimit) {
+		//alifErr_setString(_alifExcRecursionError_,
+		//	"maximum recursion depth exceeded during ast construction");
+		return nullptr;
+	}
+	switch (o->type) {
+	case ExcepthandlerK_::ExceptHandlerK:
+		tp = (AlifTypeObject*)state->ExceptHandler_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = ast2obj_expr(state, vstate, o->V.exceptHandler.type);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->type, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = AST2OBJ_IDENTIFIER(state, vstate, o->V.exceptHandler.name);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->name, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.exceptHandler.body,
+			ast2obj_stmt);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->body, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		break;
+	}
+	value = ast2obj_int(state, vstate, o->lineNo);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->lineno, value) < 0)
+		goto failed;
+	ALIF_DECREF(value);
+	value = ast2obj_int(state, vstate, o->colOffset);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->colOffset, value) < 0)
+		goto failed;
+	ALIF_DECREF(value);
+	value = ast2obj_int(state, vstate, o->endLineNo);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->endLineNo, value) < 0)
+		goto failed;
+	ALIF_DECREF(value);
+	value = ast2obj_int(state, vstate, o->endColOffset);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->endColOffset, value) < 0)
+		goto failed;
+	ALIF_DECREF(value);
+	vstate->recursionDepth--;
+	return result;
+failed:
+	vstate->recursionDepth--;
+	ALIF_XDECREF(value);
+	ALIF_XDECREF(result);
+	return nullptr;
+}
 
 
+AlifObject* ast2obj_arguments(ASTState* state, Validator* vstate, void* _o) { // 10121
+	ArgumentsTy o = (ArgumentsTy)_o;
+	AlifObject* result = nullptr, * value = nullptr;
+	AlifTypeObject* tp{};
+	if (!o) {
+		return ALIF_NONE;
+	}
+	if (++vstate->recursionDepth > vstate->recursionLimit) {
+		//alifErr_setString(_alifExcRecursionError_,
+		//	"maximum recursion depth exceeded during ast construction");
+		return nullptr;
+	}
+	tp = (AlifTypeObject*)state->arguments_type;
+	result = alifType_genericNew(tp, nullptr, nullptr);
+	if (!result) return nullptr;
+	value = ast2obj_list(state, vstate, (ASDLSeq*)o->posOnlyArgs, ast2obj_arg);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->posonlyargs, value) == -1)
+		goto failed;
+	ALIF_DECREF(value);
+	value = ast2obj_list(state, vstate, (ASDLSeq*)o->args, ast2obj_arg);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->args, value) == -1)
+		goto failed;
+	ALIF_DECREF(value);
+	value = ast2obj_arg(state, vstate, o->varArg);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->vararg, value) == -1)
+		goto failed;
+	ALIF_DECREF(value);
+	value = ast2obj_list(state, vstate, (ASDLSeq*)o->kwOnlyArgs, ast2obj_arg);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->kwonlyargs, value) == -1)
+		goto failed;
+	ALIF_DECREF(value);
+	value = ast2obj_list(state, vstate, (ASDLSeq*)o->kwDefaults,
+		ast2obj_expr);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->kwDefaults, value) == -1)
+		goto failed;
+	ALIF_DECREF(value);
+	value = ast2obj_arg(state, vstate, o->kwArg);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->kwarg, value) == -1)
+		goto failed;
+	ALIF_DECREF(value);
+	value = ast2obj_list(state, vstate, (ASDLSeq*)o->defaults, ast2obj_expr);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->defaults, value) == -1)
+		goto failed;
+	ALIF_DECREF(value);
+	vstate->recursionDepth--;
+	return result;
+failed:
+	vstate->recursionDepth--;
+	ALIF_XDECREF(value);
+	ALIF_XDECREF(result);
+	return nullptr;
+}
+AlifObject* ast2obj_arg(ASTState* state, Validator* vstate, void* _o) { // 10183
+	ArgTy o = (ArgTy)_o;
+	AlifObject* result = nullptr, * value = nullptr;
+	AlifTypeObject* tp;
+	if (!o) {
+		return ALIF_NONE;
+	}
+	if (++vstate->recursionDepth > vstate->recursionLimit) {
+		//alifErr_setString(_alifExcRecursionError_,
+		//	"maximum recursion depth exceeded during ast construction");
+		return nullptr;
+	}
+	tp = (AlifTypeObject*)state->arg_type;
+	result = alifType_genericNew(tp, nullptr, nullptr);
+	if (!result) return nullptr;
+	value = AST2OBJ_IDENTIFIER(state, vstate, o->arg);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->arg, value) == -1)
+		goto failed;
+	ALIF_DECREF(value);
+	//value = ast2obj_expr(state, vstate, o->annotation);
+	//if (!value) goto failed;
+	//if (alifObject_setAttr(result, state->annotation, value) == -1)
+	//	goto failed;
+	//ALIF_DECREF(value);
+	//value = AST2OBJ_STRING(state, vstate, o->typeComment);
+	//if (!value) goto failed;
+	//if (alifObject_setAttr(result, state->typeComment, value) == -1)
+	//	goto failed;
+	//ALIF_DECREF(value);
+	value = ast2obj_int(state, vstate, o->lineNo);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->lineno, value) < 0)
+		goto failed;
+	ALIF_DECREF(value);
+	value = ast2obj_int(state, vstate, o->colOffset);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->colOffset, value) < 0)
+		goto failed;
+	ALIF_DECREF(value);
+	value = ast2obj_int(state, vstate, o->endLineNo);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->endLineNo, value) < 0)
+		goto failed;
+	ALIF_DECREF(value);
+	value = ast2obj_int(state, vstate, o->endColOffset);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->endColOffset, value) < 0)
+		goto failed;
+	ALIF_DECREF(value);
+	vstate->recursionDepth--;
+	return result;
+failed:
+	vstate->recursionDepth--;
+	ALIF_XDECREF(value);
+	ALIF_XDECREF(result);
+	return nullptr;
+}
 
 
 AlifObject* ast2obj_keyword(ASTState* _state,
@@ -4138,8 +4406,185 @@ failed:
 	ALIF_XDECREF(result);
 	return nullptr;
 }
+AlifObject* ast2obj_alias(ASTState* state, Validator* vstate, void* _o) { // 10300
+	AliasTy o = (AliasTy)_o;
+	AlifObject* result = nullptr, * value = nullptr;
+	AlifTypeObject* tp;
+	if (!o) {
+		return ALIF_NONE;
+	}
+	if (++vstate->recursionDepth > vstate->recursionLimit) {
+		//alifErr_setString(_alifExcRecursionError_,
+		//	"maximum recursion depth exceeded during ast construction");
+		return nullptr;
+	}
+	tp = (AlifTypeObject*)state->alias_type;
+	result = alifType_genericNew(tp, nullptr, nullptr);
+	if (!result) return nullptr;
+	value = AST2OBJ_IDENTIFIER(state, vstate, o->name);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->name, value) == -1)
+		goto failed;
+	ALIF_DECREF(value);
+	value = AST2OBJ_IDENTIFIER(state, vstate, o->asName);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->asname, value) == -1)
+		goto failed;
+	ALIF_DECREF(value);
+	value = ast2obj_int(state, vstate, o->lineNo);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->lineno, value) < 0)
+		goto failed;
+	ALIF_DECREF(value);
+	value = ast2obj_int(state, vstate, o->colOffset);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->colOffset, value) < 0)
+		goto failed;
+	ALIF_DECREF(value);
+	value = ast2obj_int(state, vstate, o->endLineNo);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->endLineNo, value) < 0)
+		goto failed;
+	ALIF_DECREF(value);
+	value = ast2obj_int(state, vstate, o->endColOffset);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->endColOffset, value) < 0)
+		goto failed;
+	ALIF_DECREF(value);
+	vstate->recursionDepth--;
+	return result;
+failed:
+	vstate->recursionDepth--;
+	ALIF_XDECREF(value);
+	ALIF_XDECREF(result);
+	return nullptr;
+}
+AlifObject* ast2obj_withItem(ASTState* state, Validator* vstate, void* _o) { // 10356
+	WithItemTy o = (WithItemTy)_o;
+	AlifObject* result = nullptr, * value = nullptr;
+	AlifTypeObject* tp;
+	if (!o) {
+		return ALIF_NONE;
+	}
+	if (++vstate->recursionDepth > vstate->recursionLimit) {
+		//alifErr_setString(_alifExcRecursionError_,
+		//	"maximum recursion depth exceeded during ast construction");
+		return nullptr;
+	}
+	tp = (AlifTypeObject*)state->withitem_type;
+	result = alifType_genericNew(tp, nullptr, nullptr);
+	if (!result) return nullptr;
+	value = ast2obj_expr(state, vstate, o->contextExpr);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->context_expr, value) == -1)
+		goto failed;
+	ALIF_DECREF(value);
+	value = ast2obj_expr(state, vstate, o->optionalVars);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->optional_vars, value) == -1)
+		goto failed;
+	ALIF_DECREF(value);
+	vstate->recursionDepth--;
+	return result;
+failed:
+	vstate->recursionDepth--;
+	ALIF_XDECREF(value);
+	ALIF_XDECREF(result);
+	return nullptr;
+}
 
-
+AlifObject* ast2obj_typeParam(ASTState* state, Validator* vstate, void* _o) { // 10640
+	TypeParamTy o = (TypeParamTy)_o;
+	AlifObject* result = nullptr, * value = nullptr;
+	AlifTypeObject* tp;
+	if (!o) {
+		return ALIF_NONE;
+	}
+	if (++vstate->recursionDepth > vstate->recursionLimit) {
+		//alifErr_setString(_alifExcRecursionError_,
+		//	"maximum recursion depth exceeded during ast construction");
+		return nullptr;
+	}
+	switch (o->type) {
+	case TypeParamK::TypeVarK:
+		tp = (AlifTypeObject*)state->TypeVar_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = AST2OBJ_IDENTIFIER(state, vstate, o->V.typeVar.name);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->name, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_expr(state, vstate, o->V.typeVar.bound);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->bound, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		//value = ast2obj_expr(state, vstate, o->V.typeVar.defaultValue);
+		//if (!value) goto failed;
+		//if (alifObject_setAttr(result, state->default_value, value) == -1)
+		//	goto failed;
+		//ALIF_DECREF(value);
+		break;
+	case TypeParamK::ParamSpecK:
+		tp = (AlifTypeObject*)state->ParamSpecType;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = AST2OBJ_IDENTIFIER(state, vstate, o->V.paramSpec.name);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->name, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		//value = ast2obj_expr(state, vstate, o->V.paramSpec.defaultValue);
+		//if (!value) goto failed;
+		//if (alifObject_setAttr(result, state->default_value, value) == -1)
+		//	goto failed;
+		//ALIF_DECREF(value);
+		break;
+	case TypeParamK::TypeVarTupleK:
+		tp = (AlifTypeObject*)state->TypeVarTuple_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = AST2OBJ_IDENTIFIER(state, vstate, o->V.typeVarTuple.name);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->name, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		//value = ast2obj_expr(state, vstate, o->V.typeVarTuple.defaultValue);
+		//if (!value) goto failed;
+		//if (alifObject_setAttr(result, state->default_value, value) == -1)
+		//	goto failed;
+		//ALIF_DECREF(value);
+		break;
+	}
+	value = ast2obj_int(state, vstate, o->lineNo);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->lineno, value) < 0)
+		goto failed;
+	ALIF_DECREF(value);
+	value = ast2obj_int(state, vstate, o->colOffset);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->colOffset, value) < 0)
+		goto failed;
+	ALIF_DECREF(value);
+	value = ast2obj_int(state, vstate, o->endLineNo);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->endLineNo, value) < 0)
+		goto failed;
+	ALIF_DECREF(value);
+	value = ast2obj_int(state, vstate, o->endColOffset);
+	if (!value) goto failed;
+	if (alifObject_setAttr(result, state->endColOffset, value) < 0)
+		goto failed;
+	ALIF_DECREF(value);
+	vstate->recursionDepth--;
+	return result;
+failed:
+	vstate->recursionDepth--;
+	ALIF_XDECREF(value);
+	ALIF_XDECREF(result);
+	return nullptr;
+}
 
 
 
