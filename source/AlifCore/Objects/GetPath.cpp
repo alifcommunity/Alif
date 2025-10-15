@@ -6,6 +6,7 @@
 #include "AlifCore_Memory.h"
 #include "AlifCore_State.h"
 
+#include "Marshal.h"
 #include "OSDefs.h"
 
 #ifdef _WINDOWS
@@ -18,6 +19,8 @@
 #  include <mach-o/dyld.h>
 #endif
 
+#include "FrozenModules/getpath.h"
+
 //* alif
 #define PREFIX nullptr
 #define EXEC_PREFIX nullptr
@@ -28,9 +31,9 @@
 #define ALIFDEBUGEXT ""
 //* alif
 
-#if (!defined(PREFIX) || !defined(EXEC_PREFIX) \
-        || !defined(VERSION) || !defined(VPATH) \
-        || !defined(PLATLIBDIR))
+#if (!defined(PREFIX) or !defined(EXEC_PREFIX) \
+        or !defined(VERSION) or !defined(VPATH) \
+        or !defined(PLATLIBDIR))
 #error "PREFIX, EXEC_PREFIX, VERSION, VPATH and PLATLIBDIR macros must be defined"
 #endif
 
@@ -170,14 +173,14 @@ static AlifObject* getPath_isDir(AlifObject* ALIF_UNUSED(self), AlifObject* _arg
 	}
 	path = alifUStr_asWideCharString(pathObj, nullptr);
 	if (path) {
-#ifdef _WINDOWS
+	#ifdef _WINDOWS
 		DWORD attr = GetFileAttributesW(path);
 		r = (attr != INVALID_FILE_ATTRIBUTES) and
 			(attr & FILE_ATTRIBUTE_DIRECTORY) ? ALIF_TRUE : ALIF_FALSE;
-#else
+	#else
 		struct stat st;
 		r = (_alif_wStat(path, &st) == 0) && S_ISDIR(st.st_mode) ? ALIF_TRUE : ALIF_FALSE;
-#endif
+	#endif
 		alifMem_dataFree((void*)path);
 	}
 	return ALIF_XNEWREF(r);
@@ -193,14 +196,14 @@ static AlifObject* getPath_isFile(AlifObject* ALIF_UNUSED(self), AlifObject* _ar
 	}
 	path = alifUStr_asWideCharString(pathObj, nullptr);
 	if (path) {
-#ifdef _WINDOWS
+	#ifdef _WINDOWS
 		DWORD attr = GetFileAttributesW(path);
 		r = (attr != INVALID_FILE_ATTRIBUTES) and
 			!(attr & FILE_ATTRIBUTE_DIRECTORY) ? ALIF_TRUE : ALIF_FALSE;
-#else
+	#else
 		struct stat st;
 		r = (_alif_wStat(path, &st) == 0) and S_ISREG(st.st_mode) ? ALIF_TRUE : ALIF_FALSE;
-#endif
+	#endif
 		alifMem_dataFree((void*)path);
 	}
 	return ALIF_XNEWREF(r);
@@ -785,6 +788,10 @@ static AlifIntT library_toDict(AlifObject* _dict, const char* _key) { // 803
 	return alifDict_setItemString(_dict, _key, ALIF_NONE) == 0;
 }
 
+AlifObject* _alifGet_getPathCodeObject(void) { // 841
+	return alifMarshal_readObjectFromString(
+		(const char*)_ALIF_M__getpath, sizeof(_ALIF_M__getpath));
+}
 
 AlifStatus _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePathConfig) { // 863
 	AlifStatus status = _alifPathConfig_readGlobal(_config);
@@ -827,8 +834,7 @@ AlifStatus _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePath
 	/* reference now held by dict */
 	ALIF_DECREF(configDict);
 
-	//AlifObject* co = _alifGet_getPathCodeObject();
-	AlifObject* co = nullptr;
+	AlifObject* co = _alifGet_getPathCodeObject();
 	if (!co or !ALIFCODE_CHECK(co)) {
 		alifErr_clear();
 		ALIF_XDECREF(co);
@@ -854,18 +860,18 @@ AlifStatus _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePath
 #endif
 
 	if (
-#ifdef _WINDOWS
+	#ifdef _WINDOWS
 		!decode_toDict(dict, "os_name", "nt") or
-#elif defined(__APPLE__)
+	#elif defined(__APPLE__)
 		!decode_toDict(dict, "os_name", "darwin") or
-#else
+	#else
 		!decode_toDict(dict, "os_name", "posix") or
-#endif
-#ifdef WITH_NEXT_FRAMEWORK
+	#endif
+	#ifdef WITH_NEXT_FRAMEWORK
 		!int_toDict(dict, "WITH_NEXT_FRAMEWORK", 1) or
-#else
+	#else
 		!int_toDict(dict, "WITH_NEXT_FRAMEWORK", 0) or
-#endif
+	#endif
 		!decode_toDict(dict, "PREFIX", PREFIX) or
 		!decode_toDict(dict, "EXEC_PREFIX", EXEC_PREFIX) or
 		!decode_toDict(dict, "ALIFPATH", ALIFPATH) or
@@ -888,9 +894,9 @@ AlifStatus _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePath
 
 		!decode_toDict(dict, "ABI_THREAD", "t") or
 
-#ifndef _WINDOWS
+	#ifndef _WINDOWS
 		alifDict_setItemString(dict, "winreg", ALIF_NONE) < 0 or
-#endif
+	#endif
 		alifDict_setItemString(dict, "__builtins__", alifEval_getBuiltins()) < 0
 		) {
 		ALIF_DECREF(co);

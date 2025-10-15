@@ -1446,7 +1446,7 @@ static AlifObject* read_object(RFILE* p) { // 1548
 }
 
 
-AlifObject* alifMarshal_readObjectFromString(const char* _str, AlifSizeT _len) { // 1669
+AlifObject* alifMarshal_readObjectFromString(const char* _str, AlifSizeT _len) { // 1703
 	RFILE rf{};
 	AlifObject* result{};
 	rf.allowCode = 1;

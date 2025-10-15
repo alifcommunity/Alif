@@ -1023,6 +1023,9 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ASTState.h">
       <Filter>Include\Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\FrozenModules\getpath.h">
+      <Filter>Include\Main\FrozenModules</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Include">

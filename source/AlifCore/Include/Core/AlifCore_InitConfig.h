@@ -120,3 +120,4 @@ extern AlifStatus alifConfig_write(const AlifConfig*, class AlifRuntime*); // 17
 
 AlifObject* _alifConfig_asDict(const AlifConfig*); // 192
 AlifIntT _alifConfig_fromDict(AlifConfig*, AlifObject*); // 193
+AlifObject* _alifGet_getPathCodeObject(void); // 194

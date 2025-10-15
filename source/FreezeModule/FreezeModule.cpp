@@ -27,7 +27,7 @@ const struct Frozen* _alifImportFrozenModules_;
 const struct ModuleAlias* _alifImportFrozenAliases_;
 
 static const char _header_[] =
-"/* هذا الملف تم إنشائه عن طريق البرنامج source/FreezeModule/FreezeModule.cpp */";
+"/* تم إنشائه هذا الملف عن طريق البرنامج source/FreezeModule/FreezeModule.cpp */";
 
 
 static void runtime_init(void) {
