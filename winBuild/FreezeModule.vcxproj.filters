@@ -363,5 +363,8 @@
     <ClCompile Include="..\source\AlifCore\Objects\AlifArray.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\StringTokenizer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

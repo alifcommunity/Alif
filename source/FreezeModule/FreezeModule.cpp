@@ -2,6 +2,7 @@
 #include <marshal.h>
 
 #include "AlifCore_FileUtils.h"
+#include "AlifCore_Memory.h"
 #include <AlifCore_Import.h>
 
 #include <stdio.h>
@@ -26,7 +27,7 @@ const struct Frozen* _alifImportFrozenModules_;
 const struct ModuleAlias* _alifImportFrozenAliases_;
 
 static const char _header_[] =
-"/* هذا الملف تم إنشائه بشكل تلقائي عن طريق البرنامج source/FreezeModule/FreezeModule.cpp */";
+"/* هذا الملف تم إنشائه عن طريق البرنامج source/FreezeModule/FreezeModule.cpp */";
 
 
 static void runtime_init(void) {
@@ -34,6 +35,14 @@ static void runtime_init(void) {
 	alifConfig_initIsolatedConfig(&config);
 
 	config.siteImport = 0;
+
+	//* alif
+	// يجب تهيئة ذاكرة ألف العامة قبل البدأ بالبرنامج
+	//	لأنه سيتم أستخدامها خلال كامل البرنامج
+	if (alif_mainMemoryInit() < 1) {
+		return;
+	}
+	//* alif
 
 	AlifStatus status;
 	status = alifConfig_setString(&config, &config.programName,

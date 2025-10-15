@@ -142,7 +142,7 @@ TokenState* alifTokenizerInfo_fromFile(FILE* _fp, const char* _enc,
 	if (_enc != nullptr) {
 		/* Must copy encoding declaration since it
 		   gets copied into the parse tree. */
-		tokState->encoding = alifTokenizer_newString(_enc, strlen(_enc), tokState);
+		tokState->encoding = _alifTokenizer_newString(_enc, strlen(_enc), tokState);
 		if (!tokState->encoding) {
 			alifTokenizer_free(tokState);
 			return nullptr;

@@ -665,7 +665,7 @@ ModuleTy _alifParserEngine_runParserFromString(const char* _str, AlifIntT _start
 		tok = _alifTokenizer_fromUTF8(_str, execInput, 0);
 	}
 	else {
-		//tok = _alifTokenizer_fromString(_str, execInput, 0);
+		tok = _alifTokenizer_fromString(_str, execInput, 0);
 	}
 	if (tok == nullptr) {
 		if (alifErr_occurred()) {
