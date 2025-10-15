@@ -64,7 +64,7 @@ static AlifStatus alifConfig_initPathConfigAlif(AlifConfig*, AlifIntT); //* alif
 
 
 
-/* HELPER FUNCTIONS for getpath.aliflib */
+/* HELPER FUNCTIONS for getpath.alif */
 
 static AlifObject* getPath_absPath(AlifObject* ALIF_UNUSED(self), AlifObject* _args) { // 60
 	AlifObject* r = nullptr;
