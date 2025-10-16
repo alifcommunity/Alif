@@ -29,6 +29,40 @@ static const char* _nonInitCoroMsg_ = "can't send non-None value to a "
 
 
 
+static void gen_dealloc(AlifObject* self) { // 137
+	AlifGenObject* gen = ALIFGEN_CAST(self);
+
+	ALIFOBJECT_GC_UNTRACK(gen);
+
+	if (gen->giWeakRefList != nullptr)
+		alifObject_clearWeakRefs(self);
+
+	ALIFOBJECT_GC_TRACK(self);
+
+	if (alifObject_callFinalizerFromDealloc(self))
+		return;                     /* resurrected.  :( */
+
+	ALIFOBJECT_GC_UNTRACK(self);
+	if (ALIFASYNCGEN_CHECKEXACT(gen)) {
+		ALIF_CLEAR(((AlifAsyncGenObject*)gen)->agOriginOrFinalizer);
+	}
+	if (ALIFCORO_CHECKEXACT(gen)) {
+		ALIF_CLEAR(((AlifCoroObject*)gen)->crOriginOrFinalizer);
+	}
+	if (gen->giFrameState != AlifFrameState_::Frame_Cleared) {
+		AlifInterpreterFrame* frame = &gen->giIFrame;
+		gen->giFrameState = AlifFrameState_::Frame_Cleared;
+		frame->previous = nullptr;
+		_alifFrame_clearExceptCode(frame);
+		_alifErr_clearExcState(&gen->giExcState);
+	}
+	ALIFSTACKREF_CLEAR(gen->giIFrame.executable);
+	ALIF_CLEAR(gen->giName);
+	ALIF_CLEAR(gen->giQualname);
+
+	alifObject_gcDel(gen);
+}
+
 
 static AlifSendResult gen_sendEx2(AlifGenObject* gen, AlifObject* arg,
 	AlifObject** presult, AlifIntT exc, AlifIntT closing) { // 177
@@ -146,7 +180,7 @@ AlifTypeObject _alifGenType_ = { // 847
 	.basicSize = offsetof(AlifGenObject, giIFrame.localsPlus),
 	.itemSize = sizeof(AlifObject*),
 	/* methods */
-	//.dealloc = gen_dealloc,
+	.dealloc = gen_dealloc,
 	//&_genAsAsync_,                              /* tp_as_async */
 	//.repr = gen_repr,
 	.getAttro = alifObject_genericGetAttr,

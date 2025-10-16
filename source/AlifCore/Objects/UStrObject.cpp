@@ -6394,7 +6394,7 @@ static AlifSequenceMethods _uStrAsSequence_ = { // 14056
 };
 
 
-
+static AlifObject* uStr_iter(AlifObject*); // 15275
 
 AlifTypeObject _alifUStrType_ = { // 15235
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
@@ -6569,14 +6569,84 @@ public:
 	AlifObject* itSeq{};
 };
 
-static AlifObject* uStr_iter(AlifObject* seq) { // 15921
+static void uStrIter_dealloc(UStrIterObject* _it) { // 15752
+	ALIFOBJECT_GC_UNTRACK(_it);
+	ALIF_XDECREF(_it->itSeq);
+	alifObject_gcDel(_it);
+}
+
+static AlifObject* UStrIter_next(UStrIterObject* it) { // 15767
+	AlifObject* seq{};
+
+	seq = it->itSeq;
+	if (seq == nullptr)
+		return nullptr;
+
+	if (it->itIndex < ALIFUSTR_GET_LENGTH(seq)) {
+		AlifIntT kind = ALIFUSTR_KIND(seq);
+		const void* data = ALIFUSTR_DATA(seq);
+		AlifUCS4 chr = ALIFUSTR_READ(kind, data, it->itIndex);
+		it->itIndex++;
+		return uStr_char(chr);
+	}
+
+	it->itSeq = nullptr;
+	ALIF_DECREF(seq);
+	return nullptr;
+}
+
+static AlifObject* uStr_asciiIterNext(UStrIterObject* _it) { // 15791
+	AlifObject* seq = _it->itSeq;
+	if (seq == nullptr) {
+		return nullptr;
+	}
+	if (_it->itIndex < ALIFUSTR_GET_LENGTH(seq)) {
+		const void* data = ((void*)(ALIFASCIIOBJECT_CAST(seq) + 1));
+		AlifUCS1 chr = (AlifUCS1)ALIFUSTR_READ(AlifUStrKind_::AlifUStr_1Byte_Kind,
+			data, _it->itIndex);
+		_it->itIndex++;
+		return (AlifObject*)&ALIF_SINGLETON(strings).ascii[chr];
+	}
+	_it->itSeq = nullptr;
+	ALIF_DECREF(seq);
+	return nullptr;
+}
+
+AlifTypeObject _alifUStrIterType_ = { // 15875
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "تكرار_نص",
+	.basicSize = sizeof(UStrIterObject),
+	/* methods */
+	.dealloc = (Destructor)uStrIter_dealloc,
+	.getAttro = alifObject_genericGetAttr,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,/* tp_flags */
+	//.traverse = (TraverseProc)UStrIter_traverse,
+	.iter = alifObject_selfIter,
+	.iterNext = (IterNextFunc)UStrIter_next,
+	//.methods = _UStrIterMethods_,
+};
+
+AlifTypeObject _alifUStrASCIIIterType_ = { // 15908
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "تكرار_نص_ضيق",
+	.basicSize = sizeof(UStrIterObject),
+	.dealloc = (Destructor)uStrIter_dealloc,
+	.getAttro = alifObject_genericGetAttr,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
+	//.traverse = (TraverseProc)uStrIter_traverse,
+	.iter = alifObject_selfIter,
+	.iterNext = (IterNextFunc)uStr_asciiIterNext,
+	//.methods = _uStrIterMethods_,
+};
+
+static AlifObject* uStr_iter(AlifObject* _seq) { // 15921
 	UStrIterObject* it{};
 
-	if (!ALIFUSTR_CHECK(seq)) {
+	if (!ALIFUSTR_CHECK(_seq)) {
 		//ALIFERR_BADINTERNALCALL();
 		return nullptr;
 	}
-	if (ALIFUSTR_IS_COMPACT_ASCII(seq)) {
+	if (ALIFUSTR_IS_COMPACT_ASCII(_seq)) {
 		it = ALIFOBJECT_GC_NEW(UStrIterObject, &_alifUStrASCIIIterType_);
 	}
 	else {
@@ -6585,7 +6655,7 @@ static AlifObject* uStr_iter(AlifObject* seq) { // 15921
 	if (it == nullptr)
 		return nullptr;
 	it->itIndex = 0;
-	it->itSeq = ALIF_NEWREF(seq);
+	it->itSeq = ALIF_NEWREF(_seq);
 	ALIFOBJECT_GC_TRACK(it);
 	return (AlifObject*)it;
 }

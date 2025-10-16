@@ -1132,12 +1132,12 @@ AlifObject* alifSequence_tuple(AlifObject* v) { // 1992
 	for (j = 0; ; ++j) {
 		AlifObject* item = alifIter_next(it);
 		if (item == nullptr) {
-			//if (alifErr_occurred())
-			//	goto Fail;
+			if (alifErr_occurred())
+				goto Fail;
 			break;
 		}
 		if (j >= n) {
-			size_t newn = (size_t)n;
+			AlifUSizeT newn = (AlifUSizeT)n;
 			/* The over-allocation strategy can grow a bit faster
 			   than for lists because unlike lists the
 			   over-allocation isn't permanent -- we reclaim
@@ -1597,15 +1597,14 @@ static AlifIntT iter_next(AlifObject* _iter, AlifObject** _item) { // 2871
 	}
 
 	AlifThread* threadState = _alifThread_get();
-	//if (!alifErr_occurred(threadState)) {
-		//return 0;
-	//}
-	//if (alifErr_exceptionMatches(threadState, _alifExcStopIteration_)) {
-		//alifErr_clear(threadState);
-		//return 0;
-	//}
+	if (!_alifErr_occurred(threadState)) {
+		return 0;
+	}
+	if (_alifErr_exceptionMatches(threadState, _alifExcStopIteration_)) {
+		_alifErr_clear(threadState);
+		return 0;
+	}
 
-	return 0; // temp
 	return -1;
 }
 
