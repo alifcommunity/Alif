@@ -2408,6 +2408,28 @@ ExprTy alifAST_dictComp(ExprTy _key, ExprTy _val, ASDLComprehensionSeq* _generat
 	return p;
 }
 
+ExprTy alifAST_generatorExp(ExprTy _elt, ASDLComprehensionSeq* _generators, AlifIntT
+	_lineNo, AlifIntT _colOffset, AlifIntT _endLineNo, AlifIntT _endColOffset,
+	AlifASTMem* _astMem) {
+	ExprTy p{};
+	if (!_elt) {
+		alifErr_setString(_alifExcValueError_,
+			"field 'elt' is required for GeneratorExp");
+		return nullptr;
+	}
+	p = (ExprTy)alifASTMem_malloc(_astMem, sizeof(*p));
+	if (!p)
+		return nullptr;
+	p->type = GeneratorExprK;
+	p->V.generatorExp.elt = _elt;
+	p->V.generatorExp.generators = _generators;
+	p->lineNo = _lineNo;
+	p->colOffset = _colOffset;
+	p->endLineNo = _endLineNo;
+	p->endColOffset = _endColOffset;
+	return p;
+}
+
 ExprTy alifAST_await(ExprTy _val,
 	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo, AlifIntT _endColOffset, AlifASTMem* _astMem) {
 

@@ -30,6 +30,19 @@ public:
 extern AlifFrameObject* _alifFrame_newNoTrack(AlifCodeObject*); // 38
 
 
+enum AlifFrameState_ { // 43
+	Frame_Created = -3,
+	Frame_Suspended = -2,
+	Frame_Suspended_Yield_From = -1,
+	Frame_Executing = 0,
+	Frame_Completed = 1,
+	Frame_Cleared = 4
+};
+
+#define FRAME_STATE_SUSPENDED(_s) ((_s) == AlifFrameState_::Frame_Suspended \
+	or (_s) == AlifFrameState_::Frame_Suspended_Yield_From)
+#define FRAME_STATE_FINISHED(_s) ((_s) >= AlifFrameState_::Frame_Completed)
+
 
 enum FrameOwner { // 55
 	FRAME_OWNED_BY_THREAD = 0,
@@ -60,7 +73,7 @@ public:
 	AlifStackRef localsPlus[1]{};
 };
 
- // 78
+// 78
 #define ALIFINTERPRETERFRAME_LASTI(_if) \
     ((AlifIntT)((_if)->instrPtr - ALIFCODE_CODE(_alifFrame_getCode(_if))))
 
@@ -84,6 +97,36 @@ static inline AlifStackRef* _alifFrame_stackBase(AlifInterpreterFrame* _f) { // 
 
 #define FRAME_SPECIALS_SIZE ((AlifIntT)((sizeof(AlifInterpreterFrame)-1)/sizeof(AlifObject*))) // 107
 
+
+static inline void _alifFrame_stackPush(AlifInterpreterFrame* _f,
+	AlifStackRef _value) { // 109
+	*_f->stackPointer = _value;
+	_f->stackPointer++;
+}
+
+
+static inline AlifIntT _alifFrame_numSlotsForCodeObject(AlifCodeObject* _code) { // 116
+	return _code->frameSize - FRAME_SPECIALS_SIZE;
+}
+
+
+static inline void _alifFrame_copy(AlifInterpreterFrame* _src,
+	AlifInterpreterFrame* _dest) { // 125
+	*_dest = *_src;
+	AlifIntT stacktop = (AlifIntT)(_src->stackPointer - _src->localsPlus);
+	_dest->stackPointer = _dest->localsPlus + stacktop;
+	for (AlifIntT i = 1; i < stacktop; i++) {
+		_dest->localsPlus[i] = _src->localsPlus[i];
+	}
+	// Don't leave a dangling pointer to the old frame when creating generators
+	// and coroutines:
+	_dest->previous = nullptr;
+
+	AlifCodeObject* co = _alifFrame_getCode(_dest);
+	for (AlifIntT i = stacktop; i < co->nLocalsPlus + co->stackSize; i++) {
+		_dest->localsPlus[i] = _alifStackRefNull_;
+	}
+}
 
 
 

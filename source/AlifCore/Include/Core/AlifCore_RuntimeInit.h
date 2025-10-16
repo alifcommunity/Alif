@@ -680,6 +680,7 @@
 
 #define ALIF_STR_LITERALS_INIT { \
 	INIT_USTR(_windowsConsoleIO, "طرفية_ويندوز"), \
+	INIT_STR(AnonGenExpr, "<genexpr>"), \
 	INIT_STR(AnonListComp, "<listcomp>"), \
 	INIT_USTR(AnonModule, "<وحدة>"), /* //* alif */ \
 	INIT_STR(AnonString, "<string>"), \
@@ -790,6 +791,7 @@
 	INIT_ID(Filename), \
 	INIT_ID(Fileno), \
 	INIT_ID(Flush), \
+	INIT_ID(GenExpr), \
 	INIT_ID(GetState), \
 	INIT_ID(HasLocation), \
 	INIT_ID(Join), \

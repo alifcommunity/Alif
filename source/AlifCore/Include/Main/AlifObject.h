@@ -351,11 +351,17 @@ extern AlifObject _alifNotImplementedClass_;  // 642
 #define ALIF_GE 5
 
 
+#if !defined(ALIF_LIMITED_API) or ALIF_LIMITED_API+0 >= 0x030A0000
+enum AlifSendResult { // 673
+	AlifGen_Return = 0,
+	AlifGen_Error = -1,
+	AlifGen_Next = 1,
+};
+#endif
 
 
 
-
- // 675
+// 675
 #define ALIF_RETURN_RICHCOMPARE(_val1, _val2, _op)                               \
     do {                                                                    \
         switch (_op) {                                                       \

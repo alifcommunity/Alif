@@ -6410,6 +6410,7 @@ AlifTypeObject _alifUStrType_ = { // 15235
 		ALIF_TPFLAGS_UNICODE_SUBCLASS |
 		_ALIF_TPFLAGS_MATCH_SELF,
 	.richCompare = alifUStr_richCompare,
+	.iter = uStr_iter,
 	.methods = _uStrMethods_,
 	.free = alifMem_objFree,
 };
@@ -6558,6 +6559,36 @@ AlifObject* alifUStr_internFromString(const char* _cp) { // 15592
 	return s_;
 }
 
+
+/* ---------------------------- UStr Iterator ---------------------------- */
+
+class UStrIterObject { // 15746
+public:
+	ALIFOBJECT_HEAD;
+	AlifSizeT itIndex{};
+	AlifObject* itSeq{};
+};
+
+static AlifObject* uStr_iter(AlifObject* seq) { // 15921
+	UStrIterObject* it{};
+
+	if (!ALIFUSTR_CHECK(seq)) {
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
+	if (ALIFUSTR_IS_COMPACT_ASCII(seq)) {
+		it = ALIFOBJECT_GC_NEW(UStrIterObject, &_alifUStrASCIIIterType_);
+	}
+	else {
+		it = ALIFOBJECT_GC_NEW(UStrIterObject, &_alifUStrIterType_);
+	}
+	if (it == nullptr)
+		return nullptr;
+	it->itIndex = 0;
+	it->itSeq = ALIF_NEWREF(seq);
+	ALIFOBJECT_GC_TRACK(it);
+	return (AlifObject*)it;
+}
 
 static AlifIntT encode_wstrUTF8(wchar_t* _wstr,
 	char** _str, const char* _name) { // 15944

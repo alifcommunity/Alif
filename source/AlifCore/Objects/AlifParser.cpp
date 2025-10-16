@@ -129,6 +129,7 @@ static ASDLStmtSeq* statements_rule(AlifParser*);
 static ASDLStmtSeq* block_rule(AlifParser*);
 static ExprTy bitwiseOr_rule(AlifParser*);
 static ExprTy bitwiseXOr_rule(AlifParser*);
+static ExprTy bitwiseAnd_rule(AlifParser*);
 static ExprTy shiftExpr_rule(AlifParser*);
 static ExprTy term_rule(AlifParser*);
 static ExprTy factor_rule(AlifParser*);
@@ -3903,6 +3904,105 @@ done:
 	return res;
 }
 
+static ExprTy alif31(AlifParser* _p) {
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	ExprTy res = nullptr;
+	AlifIntT mark = _p->mark;
+	//{ // تعبير_إسناد
+	//	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	//	ExprTy assignmentExpressionVar{};
+	//	if (
+	//		(assignmentExpressionVar = assignmentExpression_rule(_p))  // تعبير_إسناد
+	//		) {
+	//		res = assignmentExpressionVar;
+	//		goto done;
+	//	}
+	//	_p->mark = mark;
+	//}
+	{ // تعبير
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		ExprTy expressionVar{};
+		if (
+			(expressionVar = expression_rule(_p))  // تعبير
+			) {
+			res = expressionVar;
+			goto done;
+		}
+		_p->mark = mark;
+	}
+
+	res = nullptr;
+done:
+	_p->level--;
+	return res;
+}
+// ^
+// |
+// |
+// تعبير_توليدي: "(" (تعبير_إسناد | تعبير) لكل_اذا_بنود ")"
+static ExprTy genExpr_rule(AlifParser* _p) {
+
+	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
+	if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+	ExprTy res{};
+	AlifIntT mark = _p->mark;
+	if (_p->mark == _p->fill
+		and
+		alifParserEngine_fillToken(_p) < 0) {
+		_p->errorIndicator = 1;
+		_p->level--;
+		return nullptr;
+	}
+
+	AlifIntT startLineNo = _p->tokens[mark]->lineNo;
+	AlifIntT startColOffset = _p->tokens[mark]->colOffset;
+	{ // "(" (تعبير_إسناد | تعبير) لكل_اذا_بنود ")"
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+		AlifPToken* literal{};
+		AlifPToken* literal1{};
+		ExprTy a{};
+		ASDLComprehensionSeq* b{};
+		if (
+			(literal = alifParserEngine_expectToken(_p, LPAR))  // "("
+			and
+			(a = alif31(_p))  // تعبير_إسناد | تعبير
+			and
+			(b = forIfClauses_rule(_p))  // لكل_اذا_بنود
+			and
+			(literal1 = alifParserEngine_expectToken(_p, RPAR))  // ")"
+			) {
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
+
+
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_generatorExp(a, b, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred()) {
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
+
+	res = nullptr;
+done:
+	_p->level--;
+	return res;
+}
+// ^
+// |
+// |
 // ألف29: تعبير_ولد > تعبير
 static ExprTy alif29(AlifParser* _p) {
 
@@ -3986,7 +4086,7 @@ done:
 // ^
 // |
 // |
-// ألف28: مترابطة > مجموعة
+// ألف28: مترابطة > مجموعة > تعبير_توليدي
 static ExprTy alif28(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
@@ -4010,6 +4110,16 @@ static ExprTy alif28(AlifParser* _p) {
 		ExprTy groupVar{};
 		if ((groupVar = group_rule(_p))) {
 			res = groupVar;
+			goto done;
+		}
+		_p->mark = mark;
+	}
+	{ // تعبير_توليدي
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		ExprTy genExprVar{};
+		if ((genExprVar = genExpr_rule(_p))) {
+			res = genExprVar;
 			goto done;
 		}
 		_p->mark = mark;
@@ -4270,7 +4380,7 @@ static ExprTy atom_rule(AlifParser* _p) {
 		if (
 			alifParserEngine_lookaheadWithInt(1, alifParserEngine_expectToken, _p, LPAR) // "("
 			and
-			(val = alif28(_p)) // مترابطة > مجموعة
+			(val = alif28(_p)) // مترابطة > مجموعة > تعبير_توليدي
 			) {
 			res = val;
 			goto done;
@@ -5591,7 +5701,7 @@ static ExprTy bitwiseAnd_raw(AlifParser* _p) {
 		ExprTy a_{};
 		ExprTy b_{};
 		if (
-			(a_ = shiftExpr_rule(_p)) // وحدة_و
+			(a_ = bitwiseAnd_rule(_p)) // وحدة_و
 			and
 			(literal = alifParserEngine_expectToken(_p, AMPER))  // "&"
 			and
@@ -10675,8 +10785,7 @@ static void* alif30(AlifParser* _p) {
 		AlifPToken* a{};
 		if (
 			(a = alifParserEngine_expectToken(_p, DOT)) // "."
-			)
-		{
+			) {
 			res = a;
 			goto done;
 		}
@@ -10714,12 +10823,10 @@ static ASDLSeq* alif33_loop1(AlifParser* _p) {
 		void* var{};
 		while (
 			(var = alif30(_p)) // (".")+
-			)
-		{
+			) {
 			res = var;
 			if (res == nullptr
-				and alifErr_occurred())
-			{
+				and alifErr_occurred()) {
 				_p->errorIndicator = 1;
 				_p->level--;
 				return nullptr;
@@ -10778,12 +10885,10 @@ static ASDLSeq* alif33_loop0(AlifParser* _p) {
 		void* var{};
 		while (
 			(var = alif30(_p)) // (".")*
-			)
-		{
+			) {
 			res = var;
 			if (res == nullptr
-				and alifErr_occurred())
-			{
+				and alifErr_occurred()) {
 				_p->errorIndicator = 1;
 				_p->level--;
 				return nullptr;
@@ -10818,7 +10923,7 @@ static ASDLSeq* alif33_loop0(AlifParser* _p) {
 // استورد_من:
 // "من (".")* " اسم_نقطة "استورد" استورد_من_أهداف
 // "من (".")+ " "استورد" استورد_من_أهداف
-static StmtTy importFrom_rule(AlifParser* _p) { 
+static StmtTy importFrom_rule(AlifParser* _p) {
 
 	if (_p->level++ == MAXSTACK) alifParserEngineError_stackOverflow(_p);
 	if (_p->errorIndicator) { _p->level--; return nullptr; }
@@ -10853,8 +10958,7 @@ static StmtTy importFrom_rule(AlifParser* _p) {
 			(keyword1 = alifParserEngine_expectToken(_p, IMPORT_KW)) // "استورد"
 			and
 			(c = importFromTargets_rule(_p)) // استورد_من_أهداف
-			)
-		{
+			) {
 			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
 			if (token == nullptr) { _p->level--; return nullptr; }
 
@@ -10862,8 +10966,7 @@ static StmtTy importFrom_rule(AlifParser* _p) {
 			AlifIntT endColOffset = token->endColOffset;
 			res = alifAST_importFrom(b->V.name.name, c, alifParserEngine_seqCountDots(a), EXTRA);
 			if (res == nullptr
-				and alifErr_occurred())
-			{
+				and alifErr_occurred()) {
 				_p->errorIndicator = 1;
 				_p->level--;
 				return nullptr;
@@ -10887,8 +10990,7 @@ static StmtTy importFrom_rule(AlifParser* _p) {
 			(keyword1 = alifParserEngine_expectToken(_p, IMPORT_KW)) // "استورد"
 			and
 			(b = importFromTargets_rule(_p)) // استورد_من_أهداف
-			)
-		{
+			) {
 			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
 			if (token == nullptr) { _p->level--; return nullptr; }
 

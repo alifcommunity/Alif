@@ -40,6 +40,7 @@ public:
 	class {
 	public:
 		STRUCT_FOR_USTR(_windowsConsoleIO, "طرفية_ويندوز")
+			STRUCT_FOR_STR(AnonGenExpr, "<genexpr>")
 			STRUCT_FOR_STR(AnonListComp, "<listcomp>")
 			STRUCT_FOR_USTR(AnonModule, "<وحدة>") //* alif
 			STRUCT_FOR_STR(AnonString, "<string>")
@@ -151,6 +152,7 @@ public:
 			STRUCT_FOR_ID(Filename)
 			STRUCT_FOR_ID(Fileno)
 			STRUCT_FOR_ID(Flush)
+			STRUCT_FOR_ID(GenExpr)
 			STRUCT_FOR_ID(GetState)
 			STRUCT_FOR_ID(HasLocation)
 			STRUCT_FOR_ID(Join)

@@ -94,6 +94,8 @@ public:
 
 	uintptr_t criticalSection{};
 
+	AlifIntT coroutineOriginTrackingDepth{};
+
 	AlifSizeT id{};
 
 	AlifStackChunk* dataStackChunk{};

@@ -65,6 +65,7 @@
 #include "AlifTime.h"
 #include "IterObject.h"
 #include "AlifState.h"
+#include "GenObject.h"
 #include "WeakRefObject.h"
 #include "StructSeq.h"
 #include "GenericAliasObject.h"

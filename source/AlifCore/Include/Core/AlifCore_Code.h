@@ -40,6 +40,15 @@ extern AlifStatus alifCode_init(AlifInterpreter*); // 75
 
 
 
+class AlifSendCache { // 173
+public:
+	AlifBackoffCounter counter{};
+};
+
+#define INLINE_CACHE_ENTRIES_SEND CACHE_ENTRIES(AlifSendCache)
+
+
+
 class AlifCallCache { // 153
 public:
 	AlifBackoffCounter counter{};
