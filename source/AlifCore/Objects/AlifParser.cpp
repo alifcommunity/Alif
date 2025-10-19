@@ -123,6 +123,7 @@ static ExprTy arguments_rule(AlifParser*);
 static ExprTy tPrimary_rule(AlifParser*);
 static ExprTy starTarget_rule(AlifParser*);
 static ExprTy alif7(AlifParser*);
+static ExprTy genExpr_rule(AlifParser*);
 static ExprTy dottedName_rule(AlifParser*);
 static ASDLStmtSeq* simpleStmts_rule(AlifParser*);
 static ASDLStmtSeq* statements_rule(AlifParser*);
@@ -651,6 +652,35 @@ static ExprTy tPrimary_raw(AlifParser* _p) {
 		}
 		_p->mark = mark;
 	}
+	{ // هدف_اولي تعبير_توليدي &هدف_تالي
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		ExprTy a{};
+		ExprTy b{};
+		if (
+			(a = tPrimary_rule(_p))  // هدف_اولي
+			and
+			(b = genExpr_rule(_p))  // تعبير_توليدي
+			and
+			alifParserEngine_lookahead(1, (void* (*)(AlifParser*)) tLookahead_rule, _p)
+			)
+		{
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
+
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_call(a, (ASDLExprSeq*)alifParserEngine_singletonSeq(_p, b), nullptr, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred()) {
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
 	{ // هدف_اولي "(" الوسيطات? ")" &هدف_تالي
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
@@ -716,6 +746,7 @@ done:
 	هدف_اولي:
 		> هدف_اولي "." *اسم* &هدف_تالي
 		> هدف_اولي "[" قواطع "]" &هدف_تالي
+		> هدف_اولي تعبير_توليدي &هدف_تالي
 		> هدف_اولي "(" الوسيطات? ")" &هدف_تالي
 		> جزء &هدف_تالي
 */
@@ -4788,6 +4819,33 @@ static ExprTy primary_raw(AlifParser* _p) {
 		}
 		_p->mark = mark;
 	}
+	{ // أولي تعبير_توليدي
+		if (_p->errorIndicator) { _p->level--; return nullptr; }
+
+		ExprTy a{};
+		ExprTy b{};
+		if (
+			(a = primary_rule(_p))  // أولي
+			and
+			(b = genExpr_rule(_p))  // تعبير_توليدي
+			)
+		{
+			AlifPToken* token = alifParserEngine_getLastNonWhitespaceToken(_p);
+			if (token == nullptr) { _p->level--; return nullptr; }
+
+			AlifIntT endLineNo = token->endLineNo;
+			AlifIntT endColOffset = token->endColOffset;
+			res = alifAST_call(a, (ASDLExprSeq*)alifParserEngine_singletonSeq(_p, b), nullptr, EXTRA);
+			if (res == nullptr
+				and alifErr_occurred()) {
+				_p->errorIndicator = 1;
+				_p->level--;
+				return nullptr;
+			}
+			goto done;
+		}
+		_p->mark = mark;
+	}
 	{ // اولي "(" وسيطات? ")"
 		if (_p->errorIndicator) { _p->level--; return nullptr; }
 
@@ -4873,6 +4931,7 @@ done:
 	Left-recursive
 	اولي:
 		> اولي "." *اسم*
+		> اولي تعبير_توليدي
 		> اولي "(" وسيطات? ")"
 		> اولي "[" قواطع "]"
 		> جزء
