@@ -8,8 +8,34 @@
 
 
 
+// 75
+#define DICT_GET_METHODDEF    \
+    {"احضر", ALIF_CPPFUNCTION_CAST(dict_get), METHOD_FASTCALL},
 
+static AlifObject* dict_getImpl(AlifDictObject*, AlifObject*, AlifObject*);
 
+static AlifObject* dict_get(AlifDictObject* _self,
+	AlifObject* const* _args, AlifSizeT _nargs) { // 81
+	AlifObject* returnValue = nullptr;
+	AlifObject* key{};
+	AlifObject* defaultValue = ALIF_NONE;
+
+	if (!_ALIFARG_CHECKPOSITIONAL("احضر", _nargs, 1, 2)) {
+		goto exit;
+	}
+	key = _args[0];
+	if (_nargs < 2) {
+		goto skip_optional;
+	}
+	defaultValue = _args[1];
+skip_optional:
+	ALIF_BEGIN_CRITICAL_SECTION(_self);
+	returnValue = dict_getImpl(_self, key, defaultValue);
+	ALIF_END_CRITICAL_SECTION();
+
+exit:
+	return returnValue;
+}
 
 
 

@@ -2371,6 +2371,25 @@ error:
 	return -1;
 }
 
+static AlifObject* dict_getImpl(AlifDictObject* _self,
+	AlifObject* _key, AlifObject* _defaultValue) { // 4188
+	AlifObject* val{};
+	AlifHashT hash{};
+	AlifSizeT ix{};
+
+	hash = alifObject_hashFast(_key);
+	if (hash == -1) {
+		return nullptr;
+	}
+	ix = alifDict_lookupThreadSafe(_self, _key, hash, &val);
+	if (ix == DKIX_ERROR)
+		return nullptr;
+	if (ix == DKIX_EMPTY or val == nullptr) {
+		val = ALIF_NEWREF(_defaultValue);
+	}
+	return val;
+}
+
 AlifIntT alifDict_setDefaultRef(AlifObject* _d, AlifObject* _key,
 	AlifObject* _defaultValue, AlifObject** _result) { // 4262
 	AlifIntT res{};
@@ -2419,6 +2438,7 @@ AlifUSizeT _alifDict_keysSize(AlifDictKeysObject* _keys) { // 4509
 
 
 static AlifMethodDef _dictMethods_[] = { // 4570
+	DICT_GET_METHODDEF
 	DICT_KEYS_METHODDEF
 	//DICT_ITEMS_METHODDEF
 	DICT_VALUES_METHODDEF
