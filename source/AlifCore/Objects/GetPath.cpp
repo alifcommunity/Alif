@@ -19,7 +19,7 @@
 #  include <mach-o/dyld.h>
 #endif
 
-#include "FrozenModules/getpath.h"
+#include "FrozenModules/GetPath.h"
 
 //* alif
 #define PREFIX nullptr
@@ -550,14 +550,14 @@ done:
 }
 
 static AlifMethodDef _getPathMethods_[] = { // 563
-	{"المسار_المطلق", getPath_absPath, METHOD_VARARGS/*, nullptr*/},
+	{"مسار_مطلق", getPath_absPath, METHOD_VARARGS/*, nullptr*/},
 	{"اسم_الاساس", getPath_baseName, METHOD_VARARGS/*, nullptr*/},
 	{"اسم_المجلد", getPath_dirName, METHOD_VARARGS/*, nullptr*/},
-	{"يملك_بادئة", getPath_hasSuffix, METHOD_VARARGS/*, nullptr*/},
+	{"يملك_لاحقة", getPath_hasSuffix, METHOD_VARARGS/*, nullptr*/},
 	{"هل_مطلق", getPath_isAbs, METHOD_VARARGS/*, nullptr*/},
 	{"هل_مجلد", getPath_isDir, METHOD_VARARGS/*, nullptr*/},
 	{"هل_ملف", getPath_isFile, METHOD_VARARGS/*, nullptr*/},
-	{"هل_ملف_خاص", getPath_isXFile, METHOD_VARARGS/*, nullptr*/},
+	{"هل_ملف_تنفيذي", getPath_isXFile, METHOD_VARARGS/*, nullptr*/},
 	{"ضم_المسار", getPath_joinPath, METHOD_VARARGS/*, nullptr*/},
 	{"قراءة_الاسطر", getPath_readLines, METHOD_VARARGS/*, nullptr*/},
 	{"مسار_حقيقي", getPath_realPath, METHOD_VARARGS/*, nullptr*/},
@@ -790,7 +790,7 @@ static AlifIntT library_toDict(AlifObject* _dict, const char* _key) { // 803
 
 AlifObject* _alifGet_getPathCodeObject(void) { // 841
 	return alifMarshal_readObjectFromString(
-		(const char*)_ALIF_M__getpath, sizeof(_ALIF_M__getpath));
+		(const char*)_ALIF_M__GetPath, sizeof(_ALIF_M__GetPath));
 }
 
 AlifStatus _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePathConfig) { // 863
@@ -861,11 +861,11 @@ AlifStatus _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePath
 
 	if (
 	#ifdef _WINDOWS
-		!decode_toDict(dict, "os_name", "nt") or
+		!decode_toDict(dict, "النظام", "ويندوز") or
 	#elif defined(__APPLE__)
-		!decode_toDict(dict, "os_name", "darwin") or
+		!decode_toDict(dict, "النظام", "أبل") or
 	#else
-		!decode_toDict(dict, "os_name", "posix") or
+		!decode_toDict(dict, "النظام", "يونكس") or
 	#endif
 	#ifdef WITH_NEXT_FRAMEWORK
 		!int_toDict(dict, "WITH_NEXT_FRAMEWORK", 1) or
@@ -881,15 +881,15 @@ AlifStatus _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePath
 		!int_toDict(dict, "VERSION_MAJOR", ALIF_MAJOR_VERSION) or
 		!int_toDict(dict, "VERSION_MINOR", ALIF_MINOR_VERSION) or
 		!decode_toDict(dict, "ALIFWINVER", ALIFWINVER) or
-		!wchar_toDict(dict, "EXE_SUFFIX", EXE_SUFFIX) or
+		!wchar_toDict(dict, "لاحقة_تنفيذ", EXE_SUFFIX) or
 		!env_toDict(dict, "ENV_PATH", 0) or
 		!env_toDict(dict, "ENV_ALIFHOME", 0) or
 		!env_toDict(dict, "ENV_ALIFEXECUTABLE", 0) or
 		!env_toDict(dict, "ENV___ALIFVENV_LAUNCHER__", 1) or
-		!progname_toDict(dict, "real_executable") or
+		!progname_toDict(dict, "تنفيذي_حقيقي") or
 		!library_toDict(dict, "library") or
 		!wchar_toDict(dict, "executable_dir", nullptr) or
-		!wchar_toDict(dict, "alif_setpath", _alifPathConfig_getGlobalModuleSearchPath()) or
+		!wchar_toDict(dict, "ألف_اضبط_المسار", _alifPathConfig_getGlobalModuleSearchPath()) or
 		!funcs_toDict(dict, _config->pathConfigWarnings) or
 
 		!decode_toDict(dict, "ABI_THREAD", "t") or
@@ -920,6 +920,7 @@ AlifStatus _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePath
 		ALIF_DECREF(dict);
 		return alifStatus_error("error getting getpath results");
 	}
+
 
 	ALIF_DECREF(dict);
 

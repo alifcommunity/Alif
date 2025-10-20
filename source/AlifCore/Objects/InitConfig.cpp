@@ -72,8 +72,8 @@ public:
 };
 
 // 85
-#define SPEC(_member, _type, _visibility, _sys) \
-    {#_member, offsetof(AlifConfig, _member), \
+#define SPEC(_name, _member, _type, _visibility, _sys) \
+    {#_name, offsetof(AlifConfig, _member), \
      Alif_Config_Member_##_type, Alif_Config_Member_##_visibility, _sys}
 
 #define SYS_ATTR(name) {name, -1, nullptr}
@@ -84,85 +84,85 @@ public:
 static const AlifConfigSpec _alifConfigSpec_[] = { // 95
 
 	// --- Public options -----------
-	SPEC(argv, WSTR_LIST, PUBLIC, SYS_ATTR("argv")),
-	SPEC(baseExecPrefix, WSTR_OPT, PUBLIC, SYS_ATTR("baseExecPrefix")),
-	SPEC(baseExecutable, WSTR_OPT, PUBLIC, SYS_ATTR("_baseExecutable")),
-	SPEC(basePrefix, WSTR_OPT, PUBLIC, SYS_ATTR("basePrefix")),
-	SPEC(bytesWarning, UINT, PUBLIC, SYS_FLAG(9)),
-	SPEC(execPrefix, WSTR_OPT, PUBLIC, SYS_ATTR("execPrefix")),
-	SPEC(executable, WSTR_OPT, PUBLIC, SYS_ATTR("executable")),
-	SPEC(inspect, BOOL, PUBLIC, SYS_FLAG(1)),
-	SPEC(intMaxStrDigits, UINT, PUBLIC, NO_SYS),
-	SPEC(interactive, BOOL, PUBLIC, SYS_FLAG(2)),
-	SPEC(moduleSearchPaths, WSTR_LIST, PUBLIC, SYS_ATTR("path")),
-	SPEC(optimizationLevel, UINT, PUBLIC, SYS_FLAG(3)),
-	SPEC(parserDebug, BOOL, PUBLIC, SYS_FLAG(0)),
-	SPEC(platLibDir, WSTR, PUBLIC, SYS_ATTR("platLibDir")),
-	SPEC(prefix, WSTR_OPT, PUBLIC, SYS_ATTR("prefix")),
-	SPEC(alifCachePrefix, WSTR_OPT, PUBLIC, SYS_ATTR("alifCachePrefix")),
-	SPEC(quiet, BOOL, PUBLIC, SYS_FLAG(10)),
-	SPEC(stdLibDir, WSTR_OPT, PUBLIC, SYS_ATTR("stdLibDir")),
-	SPEC(useEnvironment, BOOL, PUBLIC, SYS_FLAG_SETTER(7, config_sysFlagNot)),
-	SPEC(verbose, UINT, PUBLIC, SYS_FLAG(8)),
-	SPEC(warnoptions, WSTR_LIST, PUBLIC, SYS_ATTR("warnoptions")),
-	SPEC(writeBytecode, BOOL, PUBLIC, SYS_FLAG_SETTER(4, config_sysFlagNot)),
-	SPEC(xoptions, WSTR_LIST, PUBLIC, SYS_ATTR("xoptions")),
+	SPEC(argv, argv, WSTR_LIST, PUBLIC, SYS_ATTR("argv")),
+	SPEC(سابقة_اساسية_تنفيذ, baseExecPrefix, WSTR_OPT, PUBLIC, SYS_ATTR("baseExecPrefix")),
+	SPEC(تنفيذي_اساسي, baseExecutable, WSTR_OPT, PUBLIC, SYS_ATTR("baseExecutable")),
+	SPEC(سابقة_اساسية, basePrefix, WSTR_OPT, PUBLIC, SYS_ATTR("basePrefix")),
+	SPEC(bytesWarning, bytesWarning, UINT, PUBLIC, SYS_FLAG(9)),
+	SPEC(سابقة_التنفيذ, execPrefix, WSTR_OPT, PUBLIC, SYS_ATTR("execPrefix")),
+	SPEC(تنفيذي, executable, WSTR_OPT, PUBLIC, SYS_ATTR("executable")),
+	SPEC(inspect, inspect, BOOL, PUBLIC, SYS_FLAG(1)),
+	SPEC(intMaxStrDigits, intMaxStrDigits, UINT, PUBLIC, NO_SYS),
+	SPEC(interactive, interactive, BOOL, PUBLIC, SYS_FLAG(2)),
+	SPEC(مسارات_البحث_الوحدة, moduleSearchPaths, WSTR_LIST, PUBLIC, SYS_ATTR("path")),
+	SPEC(optimizationLevel, optimizationLevel, UINT, PUBLIC, SYS_FLAG(3)),
+	SPEC(parserDebug, parserDebug, BOOL, PUBLIC, SYS_FLAG(0)),
+	SPEC(platLibDir, platLibDir, WSTR, PUBLIC, SYS_ATTR("platLibDir")),
+	SPEC(السابقة, prefix, WSTR_OPT, PUBLIC, SYS_ATTR("prefix")),
+	SPEC(alifCachePrefix, alifCachePrefix, WSTR_OPT, PUBLIC, SYS_ATTR("alifCachePrefix")),
+	SPEC(quiet, quiet, BOOL, PUBLIC, SYS_FLAG(10)),
+	SPEC(مسار_المكتبة_القياسية, stdLibDir, WSTR_OPT, PUBLIC, SYS_ATTR("stdLibDir")),
+	SPEC(useEnvironment, useEnvironment, BOOL, PUBLIC, SYS_FLAG_SETTER(7, config_sysFlagNot)),
+	SPEC(verbose, verbose, UINT, PUBLIC, SYS_FLAG(8)),
+	SPEC(warnoptions, warnoptions, WSTR_LIST, PUBLIC, SYS_ATTR("warnoptions")),
+	SPEC(writeBytecode, writeBytecode, BOOL, PUBLIC, SYS_FLAG_SETTER(4, config_sysFlagNot)),
+	SPEC(xoptions, xoptions, WSTR_LIST, PUBLIC, SYS_ATTR("xoptions")),
 
 	// --- Read-only options -----------
 
 #ifdef ALIF_STATS
 	SPEC(_alifstats, BOOL, READ_ONLY, NO_SYS),
 #endif
-	SPEC(bufferedStdio, BOOL, READ_ONLY, NO_SYS),
-	SPEC(checkHashAlifCSMode, WSTR, READ_ONLY, NO_SYS),
-	SPEC(codeDebugRanges, BOOL, READ_ONLY, NO_SYS),
-	SPEC(configureCStdio, BOOL, READ_ONLY, NO_SYS),
-	SPEC(cpuCount, INT, READ_ONLY, NO_SYS),
-	SPEC(devMode, BOOL, READ_ONLY, NO_SYS),  // sys.flags.devMode
-	SPEC(dumpRefs, BOOL, READ_ONLY, NO_SYS),
-	SPEC(dumpRefsFile, WSTR_OPT, READ_ONLY, NO_SYS),
-	SPEC(faultHandler, BOOL, READ_ONLY, NO_SYS),
-	SPEC(fileSystemEncoding, WSTR, READ_ONLY, NO_SYS),
-	SPEC(fileSystemErrors, WSTR, READ_ONLY, NO_SYS),
-	SPEC(hashSeed, ULONG, READ_ONLY, NO_SYS),
-	SPEC(home, WSTR_OPT, READ_ONLY, NO_SYS),
-	SPEC(importTime, BOOL, READ_ONLY, NO_SYS),
-	SPEC(installSignalHandlers, BOOL, READ_ONLY, NO_SYS),
-	SPEC(isolated, BOOL, READ_ONLY, NO_SYS),  // sys.flags.isolated
+	SPEC(bufferedStdio, bufferedStdio, BOOL, READ_ONLY, NO_SYS),
+	SPEC(checkHashAlifCSMode, checkHashAlifCSMode, WSTR, READ_ONLY, NO_SYS),
+	SPEC(codeDebugRanges, codeDebugRanges, BOOL, READ_ONLY, NO_SYS),
+	SPEC(configureCStdio, configureCStdio, BOOL, READ_ONLY, NO_SYS),
+	SPEC(cpuCount, cpuCount, INT, READ_ONLY, NO_SYS),
+	SPEC(devMode, devMode, BOOL, READ_ONLY, NO_SYS),  // sys.flags.devMode
+	SPEC(dumpRefs, dumpRefs, BOOL, READ_ONLY, NO_SYS),
+	SPEC(dumpRefsFile, dumpRefsFile, WSTR_OPT, READ_ONLY, NO_SYS),
+	SPEC(faultHandler, faultHandler, BOOL, READ_ONLY, NO_SYS),
+	SPEC(fileSystemEncoding, fileSystemEncoding, WSTR, READ_ONLY, NO_SYS),
+	SPEC(fileSystemErrors, fileSystemErrors, WSTR, READ_ONLY, NO_SYS),
+	SPEC(hashSeed, hashSeed, ULONG, READ_ONLY, NO_SYS),
+	SPEC(الرئيسية, home, WSTR_OPT, READ_ONLY, NO_SYS),
+	SPEC(importTime, importTime, BOOL, READ_ONLY, NO_SYS),
+	SPEC(installSignalHandlers, installSignalHandlers, BOOL, READ_ONLY, NO_SYS),
+	SPEC(isolated, isolated, BOOL, READ_ONLY, NO_SYS),  // sys.flags.isolated
 #ifdef _WINDOWS
-	SPEC(legacyWindowsStdio, BOOL, READ_ONLY, NO_SYS),
+	SPEC(legacyWindowsStdio, legacyWindowsStdio, BOOL, READ_ONLY, NO_SYS),
 #endif
-	SPEC(mallocStats, BOOL, READ_ONLY, NO_SYS),
-	SPEC(origArgv, WSTR_LIST, READ_ONLY, SYS_ATTR("origArgv")),
-	SPEC(parseArgv, BOOL, READ_ONLY, NO_SYS),
-	SPEC(pathConfigWarnings, BOOL, READ_ONLY, NO_SYS),
-	SPEC(perfProfiling, UINT, READ_ONLY, NO_SYS),
-	SPEC(programName, WSTR, READ_ONLY, NO_SYS),
-	SPEC(runCommand, WSTR_OPT, READ_ONLY, NO_SYS),
-	SPEC(runFilename, WSTR_OPT, READ_ONLY, NO_SYS),
-	SPEC(runModule, WSTR_OPT, READ_ONLY, NO_SYS),
+	SPEC(mallocStats, mallocStats, BOOL, READ_ONLY, NO_SYS),
+	SPEC(الوسيطات_الرئيسية, origArgv, WSTR_LIST, READ_ONLY, SYS_ATTR("origArgv")),
+	SPEC(parseArgv, parseArgv, BOOL, READ_ONLY, NO_SYS),
+	SPEC(pathConfigWarnings, pathConfigWarnings, BOOL, READ_ONLY, NO_SYS),
+	SPEC(perfProfiling, perfProfiling, UINT, READ_ONLY, NO_SYS),
+	SPEC(اسم_البرنامج, programName, WSTR, READ_ONLY, NO_SYS),
+	SPEC(runCommand, runCommand, WSTR_OPT, READ_ONLY, NO_SYS),
+	SPEC(runFilename, runFilename, WSTR_OPT, READ_ONLY, NO_SYS),
+	SPEC(runModule, runModule, WSTR_OPT, READ_ONLY, NO_SYS),
 
-	SPEC(safePath, BOOL, READ_ONLY, NO_SYS),
-	SPEC(showRefCount, BOOL, READ_ONLY, NO_SYS),
-	SPEC(siteImport, BOOL, READ_ONLY, NO_SYS),
-	SPEC(skipFirstLine, BOOL, READ_ONLY, NO_SYS),
-	SPEC(stdioEncoding, WSTR, READ_ONLY, NO_SYS),
-	SPEC(stdioErrors, WSTR, READ_ONLY, NO_SYS),
-	SPEC(tracemalloc, UINT, READ_ONLY, NO_SYS),
-	SPEC(useFrozenModules, BOOL, READ_ONLY, NO_SYS),
-	SPEC(useHashSeed, BOOL, READ_ONLY, NO_SYS),
-	SPEC(userSiteDirectory, BOOL, READ_ONLY, NO_SYS),
-	SPEC(warnDefaultEncoding, BOOL, READ_ONLY, NO_SYS),
+	SPEC(safePath, safePath, BOOL, READ_ONLY, NO_SYS),
+	SPEC(showRefCount, showRefCount, BOOL, READ_ONLY, NO_SYS),
+	SPEC(siteImport, siteImport, BOOL, READ_ONLY, NO_SYS),
+	SPEC(skipFirstLine, skipFirstLine, BOOL, READ_ONLY, NO_SYS),
+	SPEC(stdioEncoding, stdioEncoding, WSTR, READ_ONLY, NO_SYS),
+	SPEC(stdioErrors, stdioErrors, WSTR, READ_ONLY, NO_SYS),
+	SPEC(tracemalloc, tracemalloc, UINT, READ_ONLY, NO_SYS),
+	SPEC(useFrozenModules, useFrozenModules, BOOL, READ_ONLY, NO_SYS),
+	SPEC(useHashSeed, useHashSeed, BOOL, READ_ONLY, NO_SYS),
+	SPEC(userSiteDirectory, userSiteDirectory, BOOL, READ_ONLY, NO_SYS),
+	SPEC(warnDefaultEncoding, warnDefaultEncoding, BOOL, READ_ONLY, NO_SYS),
 
 	// --- Init-only options -----------
 
-	SPEC(configInit, UINT, INIT_ONLY, NO_SYS),
-	SPEC(initMain, BOOL, INIT_ONLY, NO_SYS),
-	SPEC(installImportLib, BOOL, INIT_ONLY, NO_SYS),
-	SPEC(isAlifBuild, BOOL, INIT_ONLY, NO_SYS),
-	SPEC(moduleSearchPathsSet, BOOL, INIT_ONLY, NO_SYS),
-	SPEC(alifPathEnv, WSTR_OPT, INIT_ONLY, NO_SYS),
-	SPEC(sysPath0, WSTR_OPT, INIT_ONLY, NO_SYS),
+	SPEC(configInit, configInit, UINT, INIT_ONLY, NO_SYS),
+	SPEC(initMain, initMain, BOOL, INIT_ONLY, NO_SYS),
+	SPEC(installImportLib, installImportLib, BOOL, INIT_ONLY, NO_SYS),
+	SPEC(isAlifBuild, isAlifBuild, BOOL, INIT_ONLY, NO_SYS),
+	SPEC(ضبط_مسارات_البحث_الوحدة, moduleSearchPathsSet, BOOL, INIT_ONLY, NO_SYS),
+	SPEC(alifPathEnv, alifPathEnv, WSTR_OPT, INIT_ONLY, NO_SYS),
+	SPEC(sysPath0, sysPath0, WSTR_OPT, INIT_ONLY, NO_SYS),
 
 	// Array terminator
 	{nullptr, 0, (AlifConfigMemberType_)0, (AlifConfigMemberVisibility)0, NO_SYS},
@@ -865,8 +865,7 @@ AlifIntT _alifConfig_fromDict(AlifConfig* _config, AlifObject* _dict) { // 1413
 				return -1;
 			}
 			if (spec->type == AlifConfigMemberType_::Alif_Config_Member_BOOL
-				or spec->type == AlifConfigMemberType_::Alif_Config_Member_UINT)
-			{
+				or spec->type == AlifConfigMemberType_::Alif_Config_Member_UINT) {
 				if (value < 0) {
 					config_dictInvalidValue(spec->name);
 					return -1;
@@ -926,8 +925,7 @@ AlifIntT _alifConfig_fromDict(AlifConfig* _config, AlifObject* _dict) { // 1413
 
 	if (!(_config->configInit == ConfigInitEnum_::AlifConfig_Init_COMPAT
 		or _config->configInit == ConfigInitEnum_::AlifConfig_Init_ALIF
-		or _config->configInit == ConfigInitEnum_::AlifConfig_Init_ISOLATED))
-	{
+		or _config->configInit == ConfigInitEnum_::AlifConfig_Init_ISOLATED)) {
 		config_dictInvalidValue("_config_init");
 		return -1;
 	}
@@ -1973,8 +1971,8 @@ static AlifObject* config_get(const AlifConfig* _config,
 		//	return _alifConfig_createXOptionsDict(_config);
 		//}
 		//else {
-			const AlifWStringList* list = (const AlifWStringList*)member;
-			return _alifWStringList_asTuple(list);
+		const AlifWStringList* list = (const AlifWStringList*)member;
+		return _alifWStringList_asTuple(list);
 		//}
 	}
 
