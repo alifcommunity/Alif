@@ -358,9 +358,6 @@
     <ClCompile Include="..\source\AlifCore\Objects\StringTokenizer.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Windows\ConfigMinimal.cpp">
-      <Filter>Windows</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\GenObject.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
