@@ -134,10 +134,25 @@ error:
 static AlifTypeObject _flagsType_; // 3094
 
 static AlifStructSequenceField _flagsFields_[] = {
+	{"debug",                   "-d"},
+	{"inspect",                 "-i"},
 	{"interactive",             "-i"},
 	{"optimize",                "-O or -OO"},
-	{"safePath",					 "-P"},
-	{"intMaxStrDigits",      "-X int_max_str_digits"},
+	{"dontWriteBytecode",     "-B"},
+	{"noUserSite",            "-s"},
+	{"noSite",                 "-S"},
+	{"ignoreEnvironment",      "-E"},
+	{"verbose",                 "-v"},
+	{"bytesWarning",           "-b"},
+	{"quiet",                   "-q"},
+	{"hashRandomization",      "-R"},
+	{"isolated",                "-I"},
+	{"devMode",                "-X dev"},
+	{"utf8Mode",               "-X utf8"},
+	{"warnDefaultEncoding",   "-X warnDefaultEncoding"},
+	{"safePath", "-P"},
+	{"intMaxStrDigits",      "-X intMaxStrDigits"},
+	{"gil",                     "-X gil"},
 	{0}
 };
 
@@ -159,7 +174,7 @@ static void sys_setFlag(AlifObject* _flags, AlifSizeT _pos, AlifObject* _value) 
 
 
 static AlifIntT setFlags_fromConfig(AlifInterpreter* _interp, AlifObject* _flags) { // 3170
-	//const AlifPreConfig* preconfig = &_interp->dureRun->preConfig;
+	const AlifPreConfig* preconfig = &_interp->runtime->preConfig;
 	const AlifConfig* config = alifInterpreter_getConfig(_interp);
 
 	AlifSizeT pos = 0;
@@ -175,16 +190,16 @@ static AlifIntT setFlags_fromConfig(AlifInterpreter* _interp, AlifObject* _flags
     } while (0)
 #define SetFlag(expr) SetFlagObj(alifLong_fromLong(expr))
 
-
+	SetFlag(config->inspect);
 	SetFlag(config->interactive);
 	SetFlag(config->optimizationLevel);
-	//SetFlag(!config->writeBytecode);
+	SetFlag(!config->writeBytecode);
 	//SetFlag(!config->userSiteDirectory);
 	//SetFlag(!config->siteImport);
-	//SetFlag(!config->useEnvironment);
+	SetFlag(!config->useEnvironment);
 	//SetFlag(config->useHashSeed == 0 or config->hashSeed != 0);
 	//SetFlag(config->isolated);
-	//SetFlag(config->utf8Mode);
+	SetFlag(preconfig->utf8Mode);
 	SetFlagObj(alifBool_fromLong(config->safePath));
 	SetFlag(config->intMaxStrDigits);
 

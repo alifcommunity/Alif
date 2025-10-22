@@ -66,7 +66,7 @@ AlifStatus _alifPathConfig_readGlobal(AlifConfig* _config) { // 81
 	COPY(programName);
 	COPY(home);
 	COPY2(executable, programFullPath);
-	//COPY_INT(_isAlifBuild);
+	COPY_INT(isAlifBuild);
 	// module_search_path must be initialised - not read
 #undef COPY
 #undef COPY2
@@ -111,7 +111,7 @@ AlifStatus _alifPathConfig_updateGlobal(const AlifConfig* _config) { // 126
 	COPY(programName);
 	COPY(home);
 	COPY2(programFullPath, executable);
-	//COPY_INT(isAlifBuild);
+	COPY_INT(isAlifBuild);
 #undef COPY
 #undef COPY2
 #undef COPY_INT
@@ -141,9 +141,11 @@ AlifStatus _alifPathConfig_updateGlobal(const AlifConfig* _config) { // 126
 
 		do {
 			*p = L'\0';
-		} while (p != path && *--p == DELIM);
+		}
+		while (p != path && *--p == DELIM);
 		_alifPathConfig_.calculatedModuleSearchPath = path;
-	} while (0);
+	}
+	while (0);
 
 	return ALIFSTATUS_OK();
 
@@ -179,14 +181,14 @@ AlifIntT _alifPathConfig_computeSysPath0(const AlifWStringList* _argv,
 #endif
 
 	if (haveModuleArg) {
-#if defined(HAVE_REALPATH) or defined(_WINDOWS)
+	#if defined(HAVE_REALPATH) or defined(_WINDOWS)
 		if (!alif_wGetCWD(fullpath, ALIF_ARRAY_LENGTH(fullpath))) {
 			return 0;
 		}
 		path0 = fullpath;
-#else
+	#else
 		path0 = L".";
-#endif
+	#endif
 		n = wcslen(path0);
 	}
 
@@ -232,7 +234,7 @@ AlifIntT _alifPathConfig_computeSysPath0(const AlifWStringList* _argv,
 	/* Special case for Microsoft filename syntax */
 	if (haveScriptArg) {
 		wchar_t* q{};
-#if defined(_WINDOWS)
+	#if defined(_WINDOWS)
 		/* Replace the first element in argv with the full path. */
 		wchar_t* ptemp;
 		if (GetFullPathNameW(path0,
@@ -241,7 +243,7 @@ AlifIntT _alifPathConfig_computeSysPath0(const AlifWStringList* _argv,
 			&ptemp)) {
 			path0 = fullpath;
 		}
-#endif
+	#endif
 		p = wcsrchr(path0, SEP);
 		/* Test for alternate separator */
 		q = wcsrchr(p ? p : path0, '/');
@@ -256,21 +258,21 @@ AlifIntT _alifPathConfig_computeSysPath0(const AlifWStringList* _argv,
 #else
 	/* All other filename syntaxes */
 	if (haveScriptArg) {
-#if defined(HAVE_REALPATH)
+	#if defined(HAVE_REALPATH)
 		if (alif_wRealPath(path0, fullpath, ALIF_ARRAY_LENGTH(fullpath))) {
 			path0 = fullpath;
 		}
-#endif
+	#endif
 		p = wcsrchr(path0, SEP);
 	}
 	if (p != nullptr) {
 		n = p + 1 - path0;
-#if SEP == '/' /* Special case for Unix filename syntax */
+	#if SEP == '/' /* Special case for Unix filename syntax */
 		if (n > 1) {
 			/* Drop trailing separator */
 			n--;
 		}
-#endif /* Unix */
+	#endif /* Unix */
 	}
 #endif /* All others */
 

@@ -874,14 +874,14 @@ FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) { // 1764
 
 	if (f == nullptr) {
 		errno = savedErrNo;
-		//alifErr_setFromErrnoWithFilenameObject(_alifExcOSError_, _path);
+		alifErr_setFromErrnoWithFilenameObject(_alifExcOSError_, _path);
 		return nullptr;
 	}
 
-	//if (set_inheritable(fileno(f), 0, 1, nullptr) < 0) {
-	//	fclose(f);
-	//	return nullptr;
-	//}
+	if (set_inheritable(fileno(f), 0, 1, nullptr) < 0) {
+		fclose(f);
+		return nullptr;
+	}
 	return f;
 }
 

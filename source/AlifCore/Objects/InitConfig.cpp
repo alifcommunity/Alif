@@ -81,7 +81,7 @@ public:
 #define SYS_FLAG(index) SYS_FLAG_SETTER(index, nullptr)
 #define NO_SYS SYS_ATTR(nullptr)
 
-static const AlifConfigSpec _alifConfigSpec_[] = { // 95
+static const AlifConfigSpec _alifConfigSpec_[] = { // 95 //* todo //* important
 
 	// --- Public options -----------
 	SPEC(argv, argv, WSTR_LIST, PUBLIC, SYS_ATTR("argv")),
@@ -97,12 +97,12 @@ static const AlifConfigSpec _alifConfigSpec_[] = { // 95
 	SPEC(مسارات_البحث_الوحدة, moduleSearchPaths, WSTR_LIST, PUBLIC, SYS_ATTR("path")),
 	SPEC(optimizationLevel, optimizationLevel, UINT, PUBLIC, SYS_FLAG(3)),
 	SPEC(parserDebug, parserDebug, BOOL, PUBLIC, SYS_FLAG(0)),
-	SPEC(platLibDir, platLibDir, WSTR, PUBLIC, SYS_ATTR("platLibDir")),
+	SPEC(مسار_مكتبة_المنصة, platLibDir, WSTR, PUBLIC, SYS_ATTR("platLibDir")),
 	SPEC(السابقة, prefix, WSTR_OPT, PUBLIC, SYS_ATTR("prefix")),
 	SPEC(alifCachePrefix, alifCachePrefix, WSTR_OPT, PUBLIC, SYS_ATTR("alifCachePrefix")),
 	SPEC(quiet, quiet, BOOL, PUBLIC, SYS_FLAG(10)),
 	SPEC(مسار_المكتبة_القياسية, stdLibDir, WSTR_OPT, PUBLIC, SYS_ATTR("stdLibDir")),
-	SPEC(useEnvironment, useEnvironment, BOOL, PUBLIC, SYS_FLAG_SETTER(7, config_sysFlagNot)),
+	SPEC(استخدم_البيئة, useEnvironment, BOOL, PUBLIC, SYS_FLAG_SETTER(7, config_sysFlagNot)),
 	SPEC(verbose, verbose, UINT, PUBLIC, SYS_FLAG(8)),
 	SPEC(warnoptions, warnoptions, WSTR_LIST, PUBLIC, SYS_ATTR("warnoptions")),
 	SPEC(writeBytecode, writeBytecode, BOOL, PUBLIC, SYS_FLAG_SETTER(4, config_sysFlagNot)),
@@ -596,7 +596,7 @@ AlifStatus alifConfig_setString(AlifConfig* _config,
 		str2 = nullptr;
 	}
 
-	free(*_configStr);
+	alifMem_dataFree(*_configStr);
 	*_configStr = str2;
 	return ALIFSTATUS_OK();
 }

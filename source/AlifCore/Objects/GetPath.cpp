@@ -876,7 +876,7 @@ AlifStatus _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePath
 		!decode_toDict(dict, "EXEC_PREFIX", EXEC_PREFIX) or
 		!decode_toDict(dict, "ALIFPATH", ALIFPATH) or
 		!decode_toDict(dict, "VPATH", VPATH) or
-		!decode_toDict(dict, "PLATLIBDIR", PLATLIBDIR) or
+		!decode_toDict(dict, "_مسار_مكتبة_المنصة", PLATLIBDIR) or
 		!decode_toDict(dict, "ALIFDEBUGEXT", ALIFDEBUGEXT) or
 		!int_toDict(dict, "VERSION_MAJOR", ALIF_MAJOR_VERSION) or
 		!int_toDict(dict, "VERSION_MINOR", ALIF_MINOR_VERSION) or
@@ -888,7 +888,7 @@ AlifStatus _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePath
 		!env_toDict(dict, "ENV___ALIFVENV_LAUNCHER__", 1) or
 		!progname_toDict(dict, "تنفيذي_حقيقي") or
 		!library_toDict(dict, "library") or
-		!wchar_toDict(dict, "executable_dir", nullptr) or
+		!wchar_toDict(dict, "مسار_التنفيذي", nullptr) or
 		!wchar_toDict(dict, "ألف_اضبط_المسار", _alifPathConfig_getGlobalModuleSearchPath()) or
 		!funcs_toDict(dict, _config->pathConfigWarnings) or
 
