@@ -868,9 +868,9 @@ AlifStatus _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePath
 		!decode_toDict(dict, "النظام", "يونكس") or
 	#endif
 	#ifdef WITH_NEXT_FRAMEWORK
-		!int_toDict(dict, "WITH_NEXT_FRAMEWORK", 1) or
+		!int_toDict(dict, "مع_إطار_عمل_تالي", 1) or
 	#else
-		!int_toDict(dict, "WITH_NEXT_FRAMEWORK", 0) or
+		!int_toDict(dict, "مع_إطار_عمل_تالي", 0) or
 	#endif
 		!decode_toDict(dict, "PREFIX", PREFIX) or
 		!decode_toDict(dict, "EXEC_PREFIX", EXEC_PREFIX) or
@@ -882,12 +882,12 @@ AlifStatus _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePath
 		!int_toDict(dict, "VERSION_MINOR", ALIF_MINOR_VERSION) or
 		!decode_toDict(dict, "ALIFWINVER", ALIFWINVER) or
 		!wchar_toDict(dict, "لاحقة_تنفيذ", EXE_SUFFIX) or
-		!env_toDict(dict, "ENV_PATH", 0) or
-		!env_toDict(dict, "ENV_ALIFHOME", 0) or
-		!env_toDict(dict, "ENV_ALIFEXECUTABLE", 0) or
-		!env_toDict(dict, "ENV___ALIFVENV_LAUNCHER__", 1) or
+		!env_toDict(dict, "مسارات_البيئة", 0) or
+		!env_toDict(dict, "بيئة_ألف_الرئيسية", 0) or
+		!env_toDict(dict, "بيئة_ألف_تنفيذي", 0) or
+		!env_toDict(dict, "بيئة_اطلاق_بيئة_افتراضية", 1) or
 		!progname_toDict(dict, "تنفيذي_حقيقي") or
-		!library_toDict(dict, "library") or
+		!library_toDict(dict, "مكتبة") or
 		!wchar_toDict(dict, "مسار_التنفيذي", nullptr) or
 		!wchar_toDict(dict, "ألف_اضبط_المسار", _alifPathConfig_getGlobalModuleSearchPath()) or
 		!funcs_toDict(dict, _config->pathConfigWarnings) or

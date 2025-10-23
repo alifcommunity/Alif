@@ -205,6 +205,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\FindMaxChar.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Replace.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Repr.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Split.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS1Lib.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS2Lib.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS4Lib.h" />
@@ -487,6 +488,7 @@
       <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib;..\source\AlifCore\Include\Main\mimalloc;..\source\AlifCore\Include\Main\mimalloc\mimalloc;..\source\AlifCore\Objects\mimalloc;..\source\Modules\_io;..\source\Modules\_io\clinic;..\source\Windows</AdditionalIncludeDirectories>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -508,6 +510,7 @@
       <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib;..\source\AlifCore\Include\Main\mimalloc;..\source\AlifCore\Include\Main\mimalloc\mimalloc;..\source\AlifCore\Objects\mimalloc;..\source\Modules\_io;..\source\Modules\_io\clinic;..\source\Windows</AdditionalIncludeDirectories>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

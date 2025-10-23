@@ -86,3 +86,75 @@ skip_optional_pos:
 exit:
 	return return_value;
 }
+
+
+// 1245
+#define UNICODE_SPLIT_METHODDEF    \
+    {"افصل", ALIF_CPPFUNCTION_CAST(unicode_split), METHOD_FASTCALL|METHOD_KEYWORDS},
+
+static AlifObject* unicode_splitImpl(AlifObject*, AlifObject*, AlifSizeT);
+
+static AlifObject* unicode_split(AlifObject* _self, AlifObject* const* _args,
+	AlifSizeT _nargs, AlifObject* _kwnames) { // 1251
+	AlifObject* returnValue = nullptr;
+#if defined(ALIF_BUILD_CORE) and !defined(ALIF_BUILD_CORE_MODULE)
+
+#define NUM_KEYWORDS 2
+	static struct {
+		AlifGCHead thisIsNotUsed;
+		ALIFOBJECT_VAR_HEAD;
+		AlifObject* item[NUM_KEYWORDS];
+	} _kwtuple = {
+		.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTupleType_, NUM_KEYWORDS),
+		.item = { &ALIF_STR(Sep), &ALIF_ID(MaxSplit), },
+	};
+#undef NUM_KEYWORDS
+#define KWTUPLE (&_kwtuple.objBase.objBase)
+
+#else 
+#  define KWTUPLE nullptr
+#endif
+
+	static const char* const _keywords[] = { "Sep", "MaxSplit", nullptr };
+	static AlifArgParser _parser = {
+		.keywords = _keywords,
+		.fname = "split",
+		.kwTuple = KWTUPLE,
+	};
+#undef KWTUPLE
+	AlifObject* argsbuf[2];
+	AlifSizeT noptargs = _nargs + (_kwnames ? ALIFTUPLE_GET_SIZE(_kwnames) : 0) - 0;
+	AlifObject* sep = ALIF_NONE;
+	AlifSizeT maxsplit = -1;
+
+	_args = ALIFARG_UNPACKKEYWORDS(_args, _nargs, nullptr, _kwnames, &_parser, 0, 2, 0, argsbuf);
+	if (!_args) {
+		goto exit;
+	}
+	if (!noptargs) {
+		goto skip_optional_pos;
+	}
+	if (_args[0]) {
+		sep = _args[0];
+		if (!--noptargs) {
+			goto skip_optional_pos;
+		}
+	}
+	{
+		AlifSizeT ival = -1;
+		AlifObject* iobj = _alifNumber_index(_args[1]);
+		if (iobj != NULL) {
+			ival = alifLong_asSizeT(iobj);
+			ALIF_DECREF(iobj);
+		}
+		if (ival == -1 and alifErr_occurred()) {
+			goto exit;
+		}
+		maxsplit = ival;
+	}
+skip_optional_pos:
+	returnValue = unicode_splitImpl(_self, sep, maxsplit);
+
+exit:
+	return returnValue;
+}

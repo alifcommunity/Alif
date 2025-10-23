@@ -250,11 +250,18 @@ error:
 	goto done;
 }
 
+static void alifMain_setInspect(AlifConfig* _config, AlifIntT _inspect) {
+	_config->inspect = _inspect;
+	ALIF_COMP_DIAG_PUSH
+		ALIF_COMP_DIAG_IGNORE_DEPR_DECLS
+		_alifInspectFlag_ = _inspect;
+	ALIF_COMP_DIAG_POP
+}
 
 static AlifIntT alifMain_runStdin(AlifConfig* _config) { // 542
 	if (stdin_isInteractive(_config)) {
 		// do exit on SystemExit
-		//alifMain_setInspect(_config, 0);
+		alifMain_setInspect(_config, 0);
 
 		AlifIntT exitcode{};
 		if (alifMain_runStartup(_config, &exitcode)) {

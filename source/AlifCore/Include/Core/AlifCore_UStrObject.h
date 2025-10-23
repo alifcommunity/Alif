@@ -21,7 +21,7 @@ extern void alifUStr_fastCopyCharacters(AlifObject*, AlifSizeT,
 
 
 
-extern AlifObject* alifUStr_fromASCII(const char*, AlifSizeT); // 65
+extern AlifObject* _alifUStr_fromASCII(const char*, AlifSizeT); // 65
 
 AlifObject* _alifUStr_asUTF8String(AlifObject*, const char*); // 98
 

@@ -9,6 +9,10 @@
 #define STRINGLIB_SIZEOF_CHAR    4
 #define STRINGLIB_MAX_CHAR       0x10FFFFu
 #define STRINGLIB_CHAR           AlifUCS4 
+#define STRINGLIB_ISSPACE        alifUStr_isSpace
+#define STRINGLIB_NEW            _alifUStr_fromUCS4
+#define STRINGLIB_CHECK_EXACT    ALIFUSTR_CHECKEXACT
+
 
 #if SIZEOF_WCHAR_T == 4
 #define STRINGLIB_FAST_MEMCHR(s, c, n)              \

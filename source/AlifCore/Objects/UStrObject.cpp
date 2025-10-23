@@ -248,7 +248,7 @@ static inline void uStr_fill(AlifIntT kind, void* data, AlifUCS4 value,
 
 
 
-const unsigned char _alifASCIIWhitespace_[] = { // 400
+const unsigned char _alifASCIIWhitespace_[] = { // 427
 	0, 0, 0, 0, 0, 0, 0, 0,
 	/*     case 0x0009: * CHARACTER TABULATION */
 	/*     case 0x000A: * LINE FEED */
@@ -283,9 +283,13 @@ const unsigned char _alifASCIIWhitespace_[] = { // 400
 
 static AlifIntT uStr_modifiable(AlifObject*); // 432
 
+static AlifObject* _alifUStr_fromUCS1(const AlifUCS1*, AlifSizeT);
+static AlifObject* _alifUStr_fromUCS2(const AlifUCS2*, AlifSizeT);
+static AlifObject* _alifUStr_fromUCS4(const AlifUCS4*, AlifSizeT); // 463
+
 static AlifObject* uStr_encodeCallErrorhandler(const char*,
 	AlifObject**, const char*, const char*, AlifObject*,
-	AlifObject**, AlifSizeT, AlifSizeT, AlifSizeT*); // 443
+	AlifObject**, AlifSizeT, AlifSizeT, AlifSizeT*); // 469
 
 #include "clinic/UStrObject.cpp.h"
 
@@ -514,6 +518,7 @@ static AlifIntT ensure_uStr(AlifObject* _obj) { // 960
 // 976
 #include "StringLib/ASCIILib.h"
 #include "StringLib/FastSearch.h"
+#include "StringLib/Split.h"
 #include "StringLib/Count.h"
 #include "StringLib/Find.h"
 #include "StringLib/FindMaxChar.h"
@@ -521,6 +526,7 @@ static AlifIntT ensure_uStr(AlifObject* _obj) { // 960
 
 #include "StringLib/UCS1Lib.h"
 #include "StringLib/FastSearch.h"
+#include "StringLib/Split.h"
 #include "StringLib/Count.h"
 #include "StringLib/Find.h"
 #include "StringLib/Replace.h"
@@ -530,6 +536,7 @@ static AlifIntT ensure_uStr(AlifObject* _obj) { // 960
 
 #include "StringLib/UCS2Lib.h"
 #include "StringLib/FastSearch.h"
+#include "StringLib/Split.h"
 #include "StringLib/Count.h"
 #include "StringLib/Find.h"
 #include "StringLib/Replace.h"
@@ -539,6 +546,7 @@ static AlifIntT ensure_uStr(AlifObject* _obj) { // 960
 
 #include "StringLib/UCS4Lib.h"
 #include "StringLib/FastSearch.h"
+#include "StringLib/Split.h"
 #include "StringLib/Count.h"
 #include "StringLib/Find.h"
 #include "StringLib/Replace.h"
@@ -1226,7 +1234,7 @@ AlifObject* alifUStr_fromString(const char* u) { // 2084
 
 
 
-AlifObject* alifUStr_fromASCII(const char* _buffer, AlifSizeT _size) { // 2179
+AlifObject* _alifUStr_fromASCII(const char* _buffer, AlifSizeT _size) { // 2179
 	const unsigned char* s_ = (const unsigned char*)_buffer;
 	AlifObject* uStr{};
 	if (_size == 1) {
@@ -5007,6 +5015,95 @@ AlifSizeT alifUStr_fill(AlifObject* _unicode, AlifSizeT _start,
 }
 
 
+static AlifObject* split(AlifObject* _self,
+	AlifObject* _subString, AlifSizeT _maxCount) { // 10258
+	AlifIntT kind1{}, kind2{};
+	const void* buf1{}, * buf2{};
+	AlifSizeT len1{}, len2{};
+	AlifObject* out{};
+	len1 = ALIFUSTR_GET_LENGTH(_self);
+	kind1 = ALIFUSTR_KIND(_self);
+
+	if (_subString == nullptr) {
+		if (_maxCount < 0) {
+			_maxCount = (len1 - 1) / 2 + 1;
+		}
+		switch (kind1) {
+		case AlifUStrKind_::AlifUStr_1Byte_Kind:
+			if (ALIFUSTR_IS_ASCII(_self))
+				return asciiLib_splitWhitespace(
+					_self, ALIFUSTR_1BYTE_DATA(_self),
+					len1, _maxCount
+				);
+			else
+				return ucs1Lib_splitWhitespace(
+					_self, ALIFUSTR_1BYTE_DATA(_self),
+					len1, _maxCount
+				);
+		case AlifUStrKind_::AlifUStr_2Byte_Kind:
+			return ucs2Lib_splitWhitespace(
+				_self, ALIFUSTR_2BYTE_DATA(_self),
+				len1, _maxCount
+			);
+		case AlifUStrKind_::AlifUStr_4Byte_Kind:
+			return ucs4Lib_splitWhitespace(
+				_self, ALIFUSTR_4BYTE_DATA(_self),
+				len1, _maxCount
+			);
+		default:
+			ALIF_UNREACHABLE();
+		}
+	}
+
+	kind2 = ALIFUSTR_KIND(_subString);
+	len2 = ALIFUSTR_GET_LENGTH(_subString);
+	if (_maxCount < 0) {
+		// if len2 == 0, it will raise ValueError.
+		_maxCount = len2 == 0 ? 0 : (len1 / len2) + 1;
+		// handle expected overflow case: (ALIF_SIZET_MAX / 1) + 1
+		_maxCount = _maxCount < 0 ? len1 : _maxCount;
+	}
+	if (kind1 < kind2 or len1 < len2) {
+		out = alifList_new(1);
+		if (out == nullptr)
+			return nullptr;
+		ALIFLIST_SET_ITEM(out, 0, ALIF_NEWREF(_self));
+		return out;
+	}
+	buf1 = ALIFUSTR_DATA(_self);
+	buf2 = ALIFUSTR_DATA(_subString);
+	if (kind2 != kind1) {
+		buf2 = unicode_asKind(kind2, buf2, len2, kind1);
+		if (!buf2)
+			return nullptr;
+	}
+
+	switch (kind1) {
+	case AlifUStrKind_::AlifUStr_1Byte_Kind:
+		if (ALIFUSTR_IS_ASCII(_self) and ALIFUSTR_IS_ASCII(_subString))
+			out = asciiLib_split(
+				_self, (const AlifUCS1*)buf1, len1, (const AlifUCS1*)buf2, len2, _maxCount);
+		else
+			out = ucs1Lib_split(
+				_self, (const AlifUCS1*)buf1, len1, (const AlifUCS1*)buf2, len2, _maxCount);
+		break;
+	case AlifUStrKind_::AlifUStr_2Byte_Kind:
+		out = ucs2Lib_split(
+			_self, (const AlifUCS2*)buf1, len1, (const AlifUCS2*)buf2, len2, _maxCount);
+		break;
+	case AlifUStrKind_::AlifUStr_4Byte_Kind:
+		out = ucs4Lib_split(
+			_self, (const AlifUCS4*)buf1, len1, (const AlifUCS4*)buf2, len2, _maxCount);
+		break;
+	default:
+		out = nullptr;
+	}
+	if (kind2 != kind1)
+		alifMem_dataFree((void*)buf2);
+	return out;
+}
+
+
 static AlifSizeT anyLib_find(AlifIntT _kind, AlifObject* _str1,
 	const void* _buf1, AlifSizeT _len1, AlifObject* _str2,
 	const void* _buf2, AlifSizeT _len2, AlifSizeT _offset) { // 10407
@@ -5816,7 +5913,7 @@ AlifObject* alifUStr_subString(AlifObject* _self,
 	length = _end - _start;
 	if (ALIFUSTR_IS_ASCII(_self)) {
 		data = ALIFUSTR_1BYTE_DATA(_self);
-		return alifUStr_fromASCII((const char*)(data + _start), length);
+		return _alifUStr_fromASCII((const char*)(data + _start), length);
 	}
 	else {
 		kind = ALIFUSTR_KIND(_self);
@@ -5939,7 +6036,18 @@ static AlifObject* uStr_repr(AlifObject* _UStr) { // 12621
 
 
 
+static AlifObject* unicode_splitImpl(AlifObject* _self,
+	AlifObject* _sep, AlifSizeT _maxSplit) { // 12838
+	if (_sep == ALIF_NONE)
+		return split(_self, nullptr, _maxSplit);
+	if (ALIFUSTR_CHECK(_sep))
+		return split(_self, _sep, _maxSplit);
 
+	alifErr_format(_alifExcTypeError_,
+		"must be str or None, not %.100s",
+		ALIF_TYPE(_sep)->name);
+	return nullptr;
+}
 
 
 
@@ -6214,7 +6322,7 @@ AlifIntT alifUStrWriter_writeASCIIString(AlifUStrWriter* _writer,
 	if (_writer->buffer == nullptr and !_writer->overAllocate) {
 		AlifObject* str;
 
-		str = alifUStr_fromASCII(_ascii, _len);
+		str = _alifUStr_fromASCII(_ascii, _len);
 		if (str == nullptr)
 			return -1;
 
@@ -6364,6 +6472,7 @@ void alifUStrWriter_dealloc(AlifUStrWriter* _writer) { // 13852
 
 static AlifMethodDef _uStrMethods_[] = { // 13987
 	UNICODE_REPLACE_METHODDEF
+	UNICODE_SPLIT_METHODDEF
 	{nullptr, nullptr}
 };
 

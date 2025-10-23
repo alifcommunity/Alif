@@ -1070,6 +1070,34 @@ static const wchar_t* config_getXOptionValue(const AlifConfig* _config,
 	return sep ? sep + 1 : L"";
 }
 
+
+static AlifStatus config_initIntMaxStrDigits(AlifConfig* _config) { // 1944
+	AlifIntT maxdigits{};
+
+	//* todo
+
+
+	if (_config->intMaxStrDigits < 0) {
+		_config->intMaxStrDigits = ALIF_LONG_DEFAULT_MAX_STR_DIGITS;
+	}
+	return ALIFSTATUS_OK();
+}
+
+static AlifStatus config_readComplexOptions(AlifConfig* _config) { // 2049
+
+	AlifStatus status{};
+
+	if (_config->intMaxStrDigits < 0) {
+		status = config_initIntMaxStrDigits(_config);
+		if (ALIFSTATUS_EXCEPTION(status)) {
+			return status;
+		}
+	}
+
+
+	return ALIFSTATUS_OK();
+}
+
 static const wchar_t* config_getStdioErrors(const AlifPreConfig* _preConfig) { // 2056
 	if (_preConfig->utf8Mode) {
 		/* UTF-8 Mode uses UTF-8/surrogateescape */
@@ -1311,6 +1339,12 @@ static AlifStatus config_read(AlifConfig* _config, AlifIntT _computepathConfig) 
 	//	status = config_readEnvVars(_config);
 	//	if (ALIFSTATUS_EXCEPTION(status)) return status;
 	//}
+
+
+	status = config_readComplexOptions(_config);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
 	if (_config->installImportLib) {
 		status = config_initImport(_config, _computepathConfig); //* here

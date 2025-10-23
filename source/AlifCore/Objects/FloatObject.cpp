@@ -213,7 +213,7 @@ static AlifObject* float_repr(AlifFloatObject* _v) { // 341
 		//return alifErr_noMemory();
 		return nullptr; //* alif
 	}
-	result = alifUStr_fromASCII(buf, strlen(buf));
+	result = _alifUStr_fromASCII(buf, strlen(buf));
 	alifMem_dataFree(buf);
 	return result;
 }

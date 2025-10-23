@@ -1029,6 +1029,9 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\FrozenModules\GetPath.h">
       <Filter>Include\Main\FrozenModules</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Split.h">
+      <Filter>Include\Main\StringLib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Include">
