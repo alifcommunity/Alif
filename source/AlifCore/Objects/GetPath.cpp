@@ -871,13 +871,13 @@ AlifStatus _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePath
 		!int_toDict(dict, "VERSION_MINOR", ALIF_MINOR_VERSION) or
 		!decode_toDict(dict, "ALIFWINVER", ALIFWINVER) or
 		!wchar_toDict(dict, "_لاحقة_التنفيذي", EXE_SUFFIX) or
-		!env_toDict(dict, "مسارات_البيئة", 0) or
-		!env_toDict(dict, "بيئة_ألف_الرئيسية", 0) or
-		!env_toDict(dict, "بيئة_ألف_تنفيذي", 0) or
-		!env_toDict(dict, "بيئة_اطلاق_بيئة_افتراضية", 1) or
+		!env_toDict(dict, "_مسارات_البيئة", 0) or
+		!env_toDict(dict, "_بيئة_ألف_الرئيسية", 0) or
+		!env_toDict(dict, "_بيئة_ألف_تنفيذي", 0) or
+		!env_toDict(dict, "_بيئة_اطلاق_بيئة_افتراضية", 1) or
 		!progname_toDict(dict, "تنفيذي_حقيقي") or
 		!library_toDict(dict, "مكتبة") or
-		!wchar_toDict(dict, "مسار_التنفيذي", nullptr) or
+		!wchar_toDict(dict, "مجلد_التنفيذي", nullptr) or
 		!wchar_toDict(dict, "ألف_اضبط_المسار", _alifPathConfig_getGlobalModuleSearchPath()) or
 		!funcs_toDict(dict, _config->pathConfigWarnings) or
 
