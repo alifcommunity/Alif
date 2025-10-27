@@ -613,15 +613,15 @@ static AlifIntT calculate_stackDepth(CFGBuilder* _g) { // 803
 			CFGInstr* instr_ = &b_->instr[i];
 			AlifIntT effect = stack_effect(instr_->opcode, instr_->oparg, 0);
 			if (effect == ALIF_INVALID_STACK_EFFECT) {
-				//alifErr_format(_alifExcSystemError_,
-					//"Invalid stack effect for opcode=%d, arg=%i",
-					//instr->opcode, instr->oparg);
+				alifErr_format(_alifExcSystemError_,
+					"Invalid stack effect for opcode=%d, arg=%i",
+					instr_->opcode, instr_->oparg);
 				goto error;
 			}
 			AlifIntT newDepth = depth + effect;
 			if (newDepth < 0) {
-				//alifErr_format(_alifExcValueError_,
-					//"Invalid CFG, stack underflow");
+				alifErr_format(_alifExcValueError_,
+					"Invalid CFG, stack underflow");
 				goto error;
 			}
 			if (newDepth > maxDepth) {
@@ -630,9 +630,9 @@ static AlifIntT calculate_stackDepth(CFGBuilder* _g) { // 803
 			if (HAS_TARGET(instr_->opcode)) {
 				effect = stack_effect(instr_->opcode, instr_->oparg, 1);
 				if (effect == ALIF_INVALID_STACK_EFFECT) {
-					//alifErr_format(_alifExcSystemError_,
-						//"Invalid stack effect for opcode=%d, arg=%i",
-						//instr->opcode, instr->oparg);
+					alifErr_format(_alifExcSystemError_,
+						"Invalid stack effect for opcode=%d, arg=%i",
+						instr_->opcode, instr_->oparg);
 					goto error;
 				}
 				AlifIntT targetDepth = depth + effect;
