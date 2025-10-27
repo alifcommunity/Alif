@@ -34,28 +34,27 @@ static AlifObject* stopIteration_error(AlifThread* tstate, AlifObject* exc) { //
 		}
 	}
 	else if ((_alifFrame_getCode(frame)->flags & CO_ASYNC_GENERATOR) and
-		alifErr_givenExceptionMatches(exc, _alifExcStopAsyncIteration_))
-	{
+		alifErr_givenExceptionMatches(exc, _alifExcStopAsyncIteration_)) {
 		/* code in `gen` raised a StopAsyncIteration error:
 		raise a RuntimeError.
 		*/
 		msg = "async generator raised StopAsyncIteration";
 	}
-	//if (msg != nullptr) {
-	//	AlifObject* message = _alifUStr_fromASCII(msg, strlen(msg));
-	//	if (message == nullptr) {
-	//		return nullptr;
-	//	}
-	//	AlifObject* error = alifObject_callOneArg(_alifExcRuntimeError_, message);
-	//	if (error == nullptr) {
-	//		ALIF_DECREF(message);
-	//		return nullptr;
-	//	}
-	//	alifException_setCause(error, ALIF_NEWREF(exc));
-	//	alifException_setContext(error, ALIF_NEWREF(exc));
-	//	ALIF_DECREF(message);
-	//	return error;
-	//}
+	if (msg != nullptr) {
+		AlifObject* message = _alifUStr_fromASCII(msg, strlen(msg));
+		if (message == nullptr) {
+			return nullptr;
+		}
+		AlifObject* error = alifObject_callOneArg(_alifExcRuntimeError_, message);
+		if (error == nullptr) {
+			ALIF_DECREF(message);
+			return nullptr;
+		}
+		alifException_setCause(error, ALIF_NEWREF(exc));
+		alifException_setContext(error, ALIF_NEWREF(exc));
+		ALIF_DECREF(message);
+		return error;
+	}
 	return ALIF_NEWREF(exc);
 }
 

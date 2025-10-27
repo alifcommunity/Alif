@@ -22,6 +22,7 @@ AlifIntT alifErr_exceptionMatches(AlifObject*); // 39
 AlifIntT alifException_setTraceback(AlifObject*, AlifObject*); // 43
 AlifObject* alifException_getTraceback(AlifObject*); // 44
 
+void alifException_setCause(AlifObject*, AlifObject*); // 48
 
 AlifObject* alifException_getContext(AlifObject*); // 51
 void alifException_setContext(AlifObject*, AlifObject*); // 52
@@ -56,6 +57,7 @@ extern AlifObject* _alifExcIndexError_; // 97
 
 
 extern AlifObject* _alifExcOverflowError_; // 102
+extern AlifObject* _alifExcRuntimeError_; // 102
 
 extern AlifObject* _alifExcSyntaxError_; // 108
 extern AlifObject* _alifExcIndentationError_; // 109
