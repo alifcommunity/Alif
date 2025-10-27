@@ -870,7 +870,7 @@ AlifStatus _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePath
 		!int_toDict(dict, "VERSION_MAJOR", ALIF_MAJOR_VERSION) or
 		!int_toDict(dict, "VERSION_MINOR", ALIF_MINOR_VERSION) or
 		!decode_toDict(dict, "ALIFWINVER", ALIFWINVER) or
-		!wchar_toDict(dict, "لاحقة_تنفيذ", EXE_SUFFIX) or
+		!wchar_toDict(dict, "_لاحقة_التنفيذي", EXE_SUFFIX) or
 		!env_toDict(dict, "مسارات_البيئة", 0) or
 		!env_toDict(dict, "بيئة_ألف_الرئيسية", 0) or
 		!env_toDict(dict, "بيئة_ألف_تنفيذي", 0) or
