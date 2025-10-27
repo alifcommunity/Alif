@@ -865,7 +865,7 @@ AlifStatus _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePath
 		!decode_toDict(dict, "_سابقة_التنفيذي", EXEC_PREFIX) or
 		!decode_toDict(dict, "_مسار_ألف", ALIFPATH) or
 		!decode_toDict(dict, "VPATH", VPATH) or
-		!decode_toDict(dict, "_مسار_مكتبة_المنصة", PLATLIBDIR) or
+		!decode_toDict(dict, "_مجلد_مكتبة_المنصة", PLATLIBDIR) or
 		!decode_toDict(dict, "ALIFDEBUGEXT", ALIFDEBUGEXT) or
 		!int_toDict(dict, "VERSION_MAJOR", ALIF_MAJOR_VERSION) or
 		!int_toDict(dict, "VERSION_MINOR", ALIF_MINOR_VERSION) or

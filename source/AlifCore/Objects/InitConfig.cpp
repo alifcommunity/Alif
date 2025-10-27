@@ -85,7 +85,7 @@ static const AlifConfigSpec _alifConfigSpec_[] = { // 95 //* todo //* important
 
 	// --- Public options -----------
 	SPEC(argv, argv, WSTR_LIST, PUBLIC, SYS_ATTR("argv")),
-	SPEC(سابقة_اساسية_تنفيذ, baseExecPrefix, WSTR_OPT, PUBLIC, SYS_ATTR("baseExecPrefix")),
+	SPEC(سابقة_اساسية_تنفيذي, baseExecPrefix, WSTR_OPT, PUBLIC, SYS_ATTR("baseExecPrefix")),
 	SPEC(تنفيذي_اساسي, baseExecutable, WSTR_OPT, PUBLIC, SYS_ATTR("baseExecutable")),
 	SPEC(سابقة_اساسية, basePrefix, WSTR_OPT, PUBLIC, SYS_ATTR("basePrefix")),
 	SPEC(bytesWarning, bytesWarning, UINT, PUBLIC, SYS_FLAG(9)),
@@ -97,11 +97,11 @@ static const AlifConfigSpec _alifConfigSpec_[] = { // 95 //* todo //* important
 	SPEC(مسارات_البحث_الوحدة, moduleSearchPaths, WSTR_LIST, PUBLIC, SYS_ATTR("path")),
 	SPEC(optimizationLevel, optimizationLevel, UINT, PUBLIC, SYS_FLAG(3)),
 	SPEC(parserDebug, parserDebug, BOOL, PUBLIC, SYS_FLAG(0)),
-	SPEC(مسار_مكتبة_المنصة, platLibDir, WSTR, PUBLIC, SYS_ATTR("platLibDir")),
+	SPEC(مجلد_مكتبة_المنصة, platLibDir, WSTR, PUBLIC, SYS_ATTR("platLibDir")),
 	SPEC(السابقة, prefix, WSTR_OPT, PUBLIC, SYS_ATTR("prefix")),
 	SPEC(alifCachePrefix, alifCachePrefix, WSTR_OPT, PUBLIC, SYS_ATTR("alifCachePrefix")),
 	SPEC(quiet, quiet, BOOL, PUBLIC, SYS_FLAG(10)),
-	SPEC(مسار_المكتبة_القياسية, stdLibDir, WSTR_OPT, PUBLIC, SYS_ATTR("stdLibDir")),
+	SPEC(مجلد_المكتبة_القياسية, stdLibDir, WSTR_OPT, PUBLIC, SYS_ATTR("stdLibDir")),
 	SPEC(استخدم_البيئة, useEnvironment, BOOL, PUBLIC, SYS_FLAG_SETTER(7, config_sysFlagNot)),
 	SPEC(verbose, verbose, UINT, PUBLIC, SYS_FLAG(8)),
 	SPEC(warnoptions, warnoptions, WSTR_LIST, PUBLIC, SYS_ATTR("warnoptions")),
