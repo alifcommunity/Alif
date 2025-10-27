@@ -128,7 +128,7 @@ AlifObject* alifObject_makeTpCall(AlifThread* _thread, AlifObject* _callable,
 		return nullptr;
 	}
 
-	AlifObject* argsTuple = alifTuple_fromArray(_args, _nargs);
+	AlifObject* argsTuple = _alifTuple_fromArray(_args, _nargs);
 	if (argsTuple == nullptr) {
 		return nullptr;
 	}

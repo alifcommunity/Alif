@@ -92,7 +92,7 @@ exit:
 #define UNICODE_SPLIT_METHODDEF    \
     {"افصل", ALIF_CPPFUNCTION_CAST(unicode_split), METHOD_FASTCALL|METHOD_KEYWORDS},
 
-static AlifObject* unicode_splitImpl(AlifObject*, AlifObject*, AlifSizeT);
+static AlifObject* uStr_splitImpl(AlifObject*, AlifObject*, AlifSizeT);
 
 static AlifObject* unicode_split(AlifObject* _self, AlifObject* const* _args,
 	AlifSizeT _nargs, AlifObject* _kwnames) { // 1251
@@ -153,8 +153,15 @@ static AlifObject* unicode_split(AlifObject* _self, AlifObject* const* _args,
 		maxsplit = ival;
 	}
 skip_optional_pos:
-	returnValue = unicode_splitImpl(_self, sep, maxsplit);
+	returnValue = uStr_splitImpl(_self, sep, maxsplit);
 
 exit:
 	return returnValue;
 }
+
+
+
+
+// 1330
+#define UNICODE_PARTITION_METHODDEF    \
+    {"قسم", (AlifCPPFunction)uStr_partition, METHOD_O},

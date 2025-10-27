@@ -89,7 +89,7 @@ static const AlifConfigSpec _alifConfigSpec_[] = { // 95 //* todo //* important
 	SPEC(تنفيذي_اساسي, baseExecutable, WSTR_OPT, PUBLIC, SYS_ATTR("baseExecutable")),
 	SPEC(سابقة_اساسية, basePrefix, WSTR_OPT, PUBLIC, SYS_ATTR("basePrefix")),
 	SPEC(bytesWarning, bytesWarning, UINT, PUBLIC, SYS_FLAG(9)),
-	SPEC(سابقة_التنفيذ, execPrefix, WSTR_OPT, PUBLIC, SYS_ATTR("execPrefix")),
+	SPEC(سابقة_التنفيذي, execPrefix, WSTR_OPT, PUBLIC, SYS_ATTR("execPrefix")),
 	SPEC(تنفيذي, executable, WSTR_OPT, PUBLIC, SYS_ATTR("executable")),
 	SPEC(inspect, inspect, BOOL, PUBLIC, SYS_FLAG(1)),
 	SPEC(intMaxStrDigits, intMaxStrDigits, UINT, PUBLIC, NO_SYS),

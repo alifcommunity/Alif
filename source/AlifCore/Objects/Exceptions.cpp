@@ -77,7 +77,7 @@ static AlifObject* baseException_vectorCall(AlifObject* type_obj, AlifObject* co
 	self->context = nullptr;
 	self->suppressContext = 0;
 
-	self->args = alifTuple_fromArray(args, ALIFVECTORCALL_NARGS(nargsf));
+	self->args = _alifTuple_fromArray(args, ALIFVECTORCALL_NARGS(nargsf));
 	if (!self->args) {
 		ALIF_DECREF(self);
 		return nullptr;

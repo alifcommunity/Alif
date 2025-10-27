@@ -87,6 +87,12 @@ AlifCodeUnit _alif_getBaseCodeUnit(AlifCodeObject* _code, AlifIntT _i) { // 583
 }
 
 
+//AlifIntT _alif_callInstrumentation2args( AlifThread* _thread, AlifIntT _event, AlifInterpreterFrame* _frame,
+//	AlifCodeUnit* _instr, AlifObject* _arg0, AlifObject* _arg1) { // 1164
+//	AlifObject* args[5] = { nullptr, nullptr, nullptr, _arg0, _arg1 };
+//	return call_instrumentationVector(_thread, _event, _frame, _instr, 4, args);
+//}
+
 
 static AlifIntT instrument_lockHeld(AlifCodeObject* _code, AlifInterpreter* _interp) { // 1852
 	//if (isVersion_upToDate(_code, _interp)) {

@@ -105,7 +105,7 @@ static AlifObject* builtin___buildClass__(AlifObject* _self,
 		//	"__buildClass__: name is not a string");
 		return nullptr;
 	}
-	orig_bases = alifTuple_fromArray(_args + 2, _nargs - 2);
+	orig_bases = _alifTuple_fromArray(_args + 2, _nargs - 2);
 	if (orig_bases == nullptr)
 		return nullptr;
 

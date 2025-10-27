@@ -84,8 +84,8 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 		//	return 2 + _oparg;
 		//case CALL_BUILTIN_O:
 		//	return 2 + _oparg;
-		//case CALL_FUNCTION_EX:
-		//	return 3 + (_oparg & 1);
+	case CALL_FUNCTION_EX:
+		return 3 + (_oparg & 1);
 	case CALL_INTRINSIC_1:
 		return 1;
 	case CALL_INTRINSIC_2:
@@ -552,8 +552,8 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 		//	return 1;
 		//case CALL_BUILTIN_O:
 		//	return 1;
-		//case CALL_FUNCTION_EX:
-		//	return 1;
+	case CALL_FUNCTION_EX:
+		return 1;
 	case CALL_INTRINSIC_1:
 		return 1;
 	case CALL_INTRINSIC_2:
@@ -1387,7 +1387,7 @@ const uint8_t _alifOpcodeDeopt_[256] = {
 	BUILD_STRING, // BUILD_STRING // 47
 	BUILD_TUPLE, // BUILD_TUPLE // 48
 	CALL, // CALL // 49
-	0,//CALL_FUNCTION_EX, // CALL_FUNCTION_EX // 50
+	CALL_FUNCTION_EX, // CALL_FUNCTION_EX // 50
 	CALL_INTRINSIC_1, // CALL_INTRINSIC_1 // 51
 	CALL_INTRINSIC_2, // CALL_INTRINSIC_2 // 52
 	CALL_KW, // CALL_KW // 53

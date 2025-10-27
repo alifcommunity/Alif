@@ -256,7 +256,7 @@ static AlifObject* tuple_item(AlifObject* _op, AlifSizeT _i) { // 364
 }
 
 
-AlifObject* alifTuple_fromArray(AlifObject* const* _src, AlifSizeT _n) { // 371
+AlifObject* _alifTuple_fromArray(AlifObject* const* _src, AlifSizeT _n) { // 371
 	if (_n == 0) {
 		return tuple_getEmpty();
 	}
@@ -307,7 +307,7 @@ static AlifObject* tuple_slice(AlifTupleObject* a, AlifSizeT ilow,
 	if (ilow == 0 and ihigh == ALIF_SIZE(a) and ALIFTUPLE_CHECKEXACT(a)) {
 		return ALIF_NEWREF(a);
 	}
-	return alifTuple_fromArray(a->item + ilow, ihigh - ilow);
+	return _alifTuple_fromArray(a->item + ilow, ihigh - ilow);
 }
 
 

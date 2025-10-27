@@ -134,7 +134,7 @@ static inline void alifUStrWriter_initWithBuffer(AlifUStrWriter*, AlifObject*);
 static AlifIntT uStr_decodeUTF8Writer(AlifUStrWriter*, const char*, AlifSizeT,
 	AlifErrorHandler_, const char*, AlifSizeT*); // 203
 
-static inline AlifObject* unicode_getEmpty() { // 214
+static inline AlifObject* uStr_getEmpty() { // 214
 	ALIF_DECLARE_STR(Empty, "");
 	return &ALIF_STR(Empty);
 }
@@ -214,7 +214,7 @@ static AlifStatus initGlobal_internedStrings(AlifInterpreter* _interp) { // 308
 
 
 // 360
-#define ALIF_RETURN_UNICODE_EMPTY return unicode_getEmpty();
+#define ALIF_RETURN_UNICODE_EMPTY return uStr_getEmpty();
 
 
 
@@ -348,7 +348,7 @@ static AlifErrorHandler_ get_errorHandlerWide(const wchar_t* _errors) { // 516
 static AlifObject* uStr_result(AlifObject* _uStr) { // 727
 	AlifSizeT length = ALIFUSTR_GET_LENGTH(_uStr);
 	if (length == 0) {
-		AlifObject* empty = unicode_getEmpty();
+		AlifObject* empty = uStr_getEmpty();
 		if (_uStr != empty) {
 			ALIF_DECREF(_uStr);
 		}
@@ -514,10 +514,12 @@ static AlifIntT ensure_uStr(AlifObject* _obj) { // 960
 }
 
 
+#define STRINGLIB_GET_EMPTY() uStr_getEmpty() // 1001
 
-// 976
+// 1003
 #include "StringLib/ASCIILib.h"
 #include "StringLib/FastSearch.h"
+#include "StringLib/Partition.h"
 #include "StringLib/Split.h"
 #include "StringLib/Count.h"
 #include "StringLib/Find.h"
@@ -526,6 +528,7 @@ static AlifIntT ensure_uStr(AlifObject* _obj) { // 960
 
 #include "StringLib/UCS1Lib.h"
 #include "StringLib/FastSearch.h"
+#include "StringLib/Partition.h"
 #include "StringLib/Split.h"
 #include "StringLib/Count.h"
 #include "StringLib/Find.h"
@@ -536,6 +539,7 @@ static AlifIntT ensure_uStr(AlifObject* _obj) { // 960
 
 #include "StringLib/UCS2Lib.h"
 #include "StringLib/FastSearch.h"
+#include "StringLib/Partition.h"
 #include "StringLib/Split.h"
 #include "StringLib/Count.h"
 #include "StringLib/Find.h"
@@ -546,6 +550,7 @@ static AlifIntT ensure_uStr(AlifObject* _obj) { // 960
 
 #include "StringLib/UCS4Lib.h"
 #include "StringLib/FastSearch.h"
+#include "StringLib/Partition.h"
 #include "StringLib/Split.h"
 #include "StringLib/Count.h"
 #include "StringLib/Find.h"
@@ -677,7 +682,7 @@ static AlifObject* resize_copy(AlifObject* _uStr, AlifSizeT _length) { // 1182
 AlifObject* alifUStr_new(AlifSizeT _size, AlifUCS4 _maxChar) { // 1282
 	/* Optimization for empty strings */
 	if (_size == 0) {
-		return unicode_getEmpty();
+		return uStr_getEmpty();
 	}
 
 	AlifObject* obj{};
@@ -1025,7 +1030,7 @@ static AlifIntT uStr_resize(AlifObject** _pUStr, AlifSizeT _length) { // 1758
 		return 0;
 
 	if (_length == 0) {
-		AlifObject* empty = unicode_getEmpty();
+		AlifObject* empty = uStr_getEmpty();
 		ALIF_SETREF(*_pUStr, empty);
 		return 0;
 	}
@@ -1219,7 +1224,7 @@ AlifObject* alifUStr_fromStringAndSize(const char* _u, AlifSizeT _size) { // 206
 		//	"nullptr string with positive size with nullptr passed to alifUStr_fromStringAndSize");
 		return nullptr;
 	}
-	return unicode_getEmpty();
+	return uStr_getEmpty();
 }
 
 
@@ -1416,7 +1421,7 @@ AlifObject* _alifUStr_copy(AlifObject* _uStr) { // 2436
 }
 
 
-static void* unicode_asKind(AlifIntT _sKind, void const* _data,
+static void* uStr_asKind(AlifIntT _sKind, void const* _data,
 	AlifSizeT _len, AlifIntT _kind) { // 2463
 	void* result{};
 
@@ -5073,7 +5078,7 @@ static AlifObject* split(AlifObject* _self,
 	buf1 = ALIFUSTR_DATA(_self);
 	buf2 = ALIFUSTR_DATA(_subString);
 	if (kind2 != kind1) {
-		buf2 = unicode_asKind(kind2, buf2, len2, kind1);
+		buf2 = uStr_asKind(kind2, buf2, len2, kind1);
 		if (!buf2)
 			return nullptr;
 	}
@@ -5225,7 +5230,7 @@ static AlifObject* replace(AlifObject* _self, AlifObject* _str1,
 
 			if (kind1 < rkind) {
 				/* widen substring */
-				buf1 = unicode_asKind(kind1, buf1, len1, rkind);
+				buf1 = uStr_asKind(kind1, buf1, len1, rkind);
 				if (!buf1) goto error;
 				release1 = 1;
 			}
@@ -5234,7 +5239,7 @@ static AlifObject* replace(AlifObject* _self, AlifObject* _str1,
 				goto nothing;
 			if (rkind > kind2) {
 				/* widen replacement */
-				buf2 = unicode_asKind(kind2, buf2, len2, rkind);
+				buf2 = uStr_asKind(kind2, buf2, len2, rkind);
 				if (!buf2) goto error;
 				release2 = 1;
 			}
@@ -5246,10 +5251,10 @@ static AlifObject* replace(AlifObject* _self, AlifObject* _str1,
 					buf1 = ALIFUSTR_DATA(_str1);
 					release1 = 0;
 				}
-				sbuf = (const char*)unicode_asKind(skind, sbuf, slen, rkind);
+				sbuf = (const char*)uStr_asKind(skind, sbuf, slen, rkind);
 				if (!sbuf) goto error;
 				srelease = 1;
-				buf1 = unicode_asKind(kind1, buf1, len1, rkind);
+				buf1 = uStr_asKind(kind1, buf1, len1, rkind);
 				if (!buf1) goto error;
 				release1 = 1;
 			}
@@ -5286,7 +5291,7 @@ static AlifObject* replace(AlifObject* _self, AlifObject* _str1,
 
 		if (kind1 < rkind) {
 			/* widen substring */
-			buf1 = unicode_asKind(kind1, buf1, len1, rkind);
+			buf1 = uStr_asKind(kind1, buf1, len1, rkind);
 			if (!buf1) goto error;
 			release1 = 1;
 		}
@@ -5295,14 +5300,14 @@ static AlifObject* replace(AlifObject* _self, AlifObject* _str1,
 			goto nothing;
 		if (kind2 < rkind) {
 			/* widen replacement */
-			buf2 = unicode_asKind(kind2, buf2, len2, rkind);
+			buf2 = uStr_asKind(kind2, buf2, len2, rkind);
 			if (!buf2) goto error;
 			release2 = 1;
 		}
 		else if (kind2 > rkind) {
 			/* widen self and buf1 */
 			rkind = kind2;
-			sbuf = (const char*)unicode_asKind(skind, sbuf, slen, rkind);
+			sbuf = (const char*)uStr_asKind(skind, sbuf, slen, rkind);
 			if (!sbuf) goto error;
 			srelease = 1;
 			if (release1) {
@@ -5310,7 +5315,7 @@ static AlifObject* replace(AlifObject* _self, AlifObject* _str1,
 				buf1 = ALIFUSTR_DATA(_str1);
 				release1 = 0;
 			}
-			buf1 = unicode_asKind(kind1, buf1, len1, rkind);
+			buf1 = uStr_asKind(kind1, buf1, len1, rkind);
 			if (!buf1) goto error;
 			release1 = 1;
 		}
@@ -5323,7 +5328,7 @@ static AlifObject* replace(AlifObject* _self, AlifObject* _str1,
 		}
 		new_size = slen + n * (len2 - len1);
 		if (new_size == 0) {
-			u = unicode_getEmpty();
+			u = uStr_getEmpty();
 			goto done;
 		}
 		if (new_size > (ALIF_SIZET_MAX / rkind)) {
@@ -5736,7 +5741,7 @@ AlifObject* alifUStr_concat(AlifObject* _left, AlifObject* _right) { // 11295
 	}
 
 	/* Shortcuts */
-	AlifObject* empty = unicode_getEmpty();  // Borrowed reference
+	AlifObject* empty = uStr_getEmpty();  // Borrowed reference
 	if (_left == empty) {
 		return alifUStr_fromObject(_right);
 	}
@@ -5785,7 +5790,7 @@ void alifUStr_append(AlifObject** _pLeft, AlifObject* _right) { // 11344
 	}
 
 	/* Shortcuts */
-	empty = unicode_getEmpty();  // Borrowed reference
+	empty = uStr_getEmpty();  // Borrowed reference
 	if (left == empty) {
 		ALIF_DECREF(left);
 		*_pLeft = ALIF_NEWREF(_right);
@@ -5904,7 +5909,7 @@ AlifObject* alifUStr_subString(AlifObject* _self,
 		return uStr_resultUnchanged(_self);
 
 	if (_start < 0 or _end < 0) {
-		//alifErr_setString(_alifExcIndexError_, "string index out of range");
+		alifErr_setString(_alifExcIndexError_, "مؤشر النص تجاوز الحد");
 		return nullptr;
 	}
 	if (_start >= length or _end < _start)
@@ -6036,7 +6041,7 @@ static AlifObject* uStr_repr(AlifObject* _UStr) { // 12621
 
 
 
-static AlifObject* unicode_splitImpl(AlifObject* _self,
+static AlifObject* uStr_splitImpl(AlifObject* _self,
 	AlifObject* _sep, AlifSizeT _maxSplit) { // 12838
 	if (_sep == ALIF_NONE)
 		return split(_self, nullptr, _maxSplit);
@@ -6050,7 +6055,57 @@ static AlifObject* unicode_splitImpl(AlifObject* _self,
 }
 
 
+AlifObject* alifUStr_partition(AlifObject* _strObj, AlifObject* _sepObj) { // 12853
+	AlifObject* out{};
+	AlifIntT kind1{}, kind2{};
+	const void* buf1{}, * buf2{};
+	AlifSizeT len1{}, len2{};
 
+	if (ensure_uStr(_strObj) < 0 or ensure_uStr(_sepObj) < 0)
+		return nullptr;
+
+	kind1 = ALIFUSTR_KIND(_strObj);
+	kind2 = ALIFUSTR_KIND(_sepObj);
+	len1 = ALIFUSTR_GET_LENGTH(_strObj);
+	len2 = ALIFUSTR_GET_LENGTH(_sepObj);
+	if (kind1 < kind2 or len1 < len2) {
+		AlifObject* empty = uStr_getEmpty();  // Borrowed reference
+		return alifTuple_pack(3, _strObj, empty, empty);
+	}
+	buf1 = ALIFUSTR_DATA(_strObj);
+	buf2 = ALIFUSTR_DATA(_sepObj);
+	if (kind2 != kind1) {
+		buf2 = uStr_asKind(kind2, buf2, len2, kind1);
+		if (!buf2)
+			return nullptr;
+	}
+
+	switch (kind1) {
+	case AlifUStrKind_::AlifUStr_1Byte_Kind:
+		if (ALIFUSTR_IS_ASCII(_strObj) and ALIFUSTR_IS_ASCII(_sepObj))
+			out = asciiLib_partition(_strObj, (const AlifUCS1*)buf1, len1, _sepObj, (const AlifUCS1*)buf2, len2);
+		else
+			out = ucs1Lib_partition(_strObj, (const AlifUCS1*)buf1, len1, _sepObj, (const AlifUCS1*)buf2, len2);
+		break;
+	case AlifUStrKind_::AlifUStr_2Byte_Kind:
+		out = ucs2Lib_partition(_strObj, (const AlifUCS2*)buf1, len1, _sepObj, (const AlifUCS2*)buf2, len2);
+		break;
+	case AlifUStrKind_::AlifUStr_4Byte_Kind:
+		out = ucs4Lib_partition(_strObj, (const AlifUCS4*)buf1, len1, _sepObj, (const AlifUCS4*)buf2, len2);
+		break;
+	default:
+		ALIF_UNREACHABLE();
+	}
+
+	if (kind2 != kind1)
+		alifMem_dataFree((void*)buf2);
+
+	return out;
+}
+
+static AlifObject* uStr_partition(AlifObject* _self, AlifObject* _sep) { // 12972
+	return alifUStr_partition(_self, _sep);
+}
 
 
 
@@ -6473,6 +6528,7 @@ void alifUStrWriter_dealloc(AlifUStrWriter* _writer) { // 13852
 static AlifMethodDef _uStrMethods_[] = { // 13987
 	UNICODE_REPLACE_METHODDEF
 	UNICODE_SPLIT_METHODDEF
+	UNICODE_PARTITION_METHODDEF
 	{nullptr, nullptr}
 };
 

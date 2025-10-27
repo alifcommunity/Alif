@@ -26,3 +26,20 @@
 #define INTRINSIC_TYPEVAR_WITH_CONSTRAINTS       3
 #define INTRINSIC_SET_FUNCTION_TYPE_PARAMS       4
 #define INTRINSIC_SET_TYPEPARAM_DEFAULT          5
+
+
+typedef AlifObject* (*IntrinsicFunc1)(AlifThread*, AlifObject*);
+typedef AlifObject* (*IntrinsicFunc2)(AlifThread*, AlifObject*, AlifObject*);
+
+class IntrinsicFunc1Info {
+public:
+	IntrinsicFunc1 func{};
+	const char* name{};
+};
+
+
+
+
+
+
+extern const IntrinsicFunc1Info _alifIntrinsicsUnaryFunctions_[];

@@ -2135,7 +2135,7 @@ AlifObject* alifList_asTuple(AlifObject* _v) { // 3129
 	AlifObject* ret_{};
 	AlifListObject* self = (AlifListObject*)_v;
 	ALIF_BEGIN_CRITICAL_SECTION(self);
-	ret_ = alifTuple_fromArray(self->item, ALIF_SIZE(_v));
+	ret_ = _alifTuple_fromArray(self->item, ALIF_SIZE(_v));
 	ALIF_END_CRITICAL_SECTION();
 	return ret_;
 }

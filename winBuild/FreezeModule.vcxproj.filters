@@ -369,5 +369,8 @@
     <ClCompile Include="..\source\AlifCore\Objects\GenObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\Intrinsics.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

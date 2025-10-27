@@ -277,7 +277,7 @@ static AlifObject* getPath_joinPath(AlifObject* ALIF_UNUSED(self), AlifObject* a
 			}
 		}
 		else {
-			alifErr_setString(_alifExcTypeError_, "all arguments to joinpath() must be str or None");
+			alifErr_setString(_alifExcTypeError_, "جميع الوسيطات الممررة لدالة ضم_المسار() يجب أن تكون من نوع نص او عدم");
 			cchFinal = -1;
 			break;
 		}
@@ -318,7 +318,7 @@ static AlifObject* getPath_joinPath(AlifObject* ALIF_UNUSED(self), AlifObject* a
 	}
 	alifMem_dataFree(parts);
 	if (!final) {
-		//alifErr_setString(_alifExcSystemError_, "failed to join paths");
+		alifErr_setString(_alifExcSystemError_, "فشل ضم المسار");
 		return nullptr;
 	}
 	AlifObject* r = alifUStr_fromWideChar(_alif_normPath(final, -1), -1);
@@ -579,8 +579,8 @@ static AlifObject* getPath_nowarn(AlifObject* ALIF_UNUSED(self), AlifObject* _ar
 }
 
 
-static AlifMethodDef _getPathWarnMethod_ = { "warn", getPath_warn, METHOD_VARARGS/*, nullptr*/ };
-static AlifMethodDef _getPathNowarnMethod_ = { "warn", getPath_nowarn, METHOD_VARARGS/*, nullptr*/ };
+static AlifMethodDef _getPathWarnMethod_ = { "تحذير", getPath_warn, METHOD_VARARGS/*, nullptr*/ };
+static AlifMethodDef _getPathNowarnMethod_ = { "تحذير", getPath_nowarn, METHOD_VARARGS/*, nullptr*/ };
 
 static AlifIntT funcs_toDict(AlifObject* dict, AlifIntT warnings) { // 605
 	for (AlifMethodDef* m = _getPathMethods_; m->name; ++m) {
@@ -801,11 +801,11 @@ AlifStatus _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePath
 	}
 
 	/* -------------- alif path config -------------- */
-	status = alifConfig_initPathConfigAlif(_config, _computePathConfig); //* alif
-	if (ALIFSTATUS_EXCEPTION(status)) {
-		return status;
-	}
-	return ALIFSTATUS_OK();
+	//status = alifConfig_initPathConfigAlif(_config, _computePathConfig); //* alif
+	//if (ALIFSTATUS_EXCEPTION(status)) {
+	//	return status;
+	//}
+	//return ALIFSTATUS_OK();
 	/* ------------- !alif path config! ------------- */
 
 	if (!_alifThread_get()) {
@@ -872,9 +872,9 @@ AlifStatus _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePath
 	#else
 		!int_toDict(dict, "مع_إطار_عمل_تالي", 0) or
 	#endif
-		!decode_toDict(dict, "PREFIX", PREFIX) or
-		!decode_toDict(dict, "EXEC_PREFIX", EXEC_PREFIX) or
-		!decode_toDict(dict, "ALIFPATH", ALIFPATH) or
+		!decode_toDict(dict, "_السابقة", PREFIX) or
+		!decode_toDict(dict, "_سابقة_التنفيذي", EXEC_PREFIX) or
+		!decode_toDict(dict, "_مسار_ألف", ALIFPATH) or
 		!decode_toDict(dict, "VPATH", VPATH) or
 		!decode_toDict(dict, "_مسار_مكتبة_المنصة", PLATLIBDIR) or
 		!decode_toDict(dict, "ALIFDEBUGEXT", ALIFDEBUGEXT) or

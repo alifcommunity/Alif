@@ -92,6 +92,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\InitConfig.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\InstructionSequence.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Instrumentation.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\Intrinsics.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\InvalidParameterHandler.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\IterObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ListObject.cpp" />

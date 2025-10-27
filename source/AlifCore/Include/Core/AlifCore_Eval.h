@@ -119,7 +119,9 @@ void _alifEval_loadGlobalStackRef(AlifObject*, AlifObject*, AlifObject*, AlifSta
 
 AlifObject* _alifEval_loadName(AlifThread*, AlifInterpreterFrame*, AlifObject*); // 276
 
-// 279
+AlifIntT _alifCheck_argsIterable(AlifThread*, AlifObject*, AlifObject*); // 279
+
+// 282
 #define ALIF_GIL_DROP_REQUEST_BIT (1U << 0)
 #define ALIF_SIGNALS_PENDING_BIT (1U << 1)
 #define ALIF_CALLS_TO_DO_BIT (1U << 2)

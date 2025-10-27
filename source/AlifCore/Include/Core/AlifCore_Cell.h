@@ -22,3 +22,13 @@ static inline void alifCell_setTakeRef(AlifCellObject* _cell, AlifObject* _value
 	AlifObject* oldValue = alifCell_swapTakeRef(_cell, _value);
 	ALIF_XDECREF(oldValue);
 }
+
+
+// Gets the cell contents. Returns a new reference.
+static inline AlifObject* alifCell_getRef(AlifCellObject* _cell) { // 34
+	AlifObject* res{};
+	ALIF_BEGIN_CRITICAL_SECTION(_cell);
+	res = ALIF_XNEWREF(_cell->ref);
+	ALIF_END_CRITICAL_SECTION();
+	return res;
+}
