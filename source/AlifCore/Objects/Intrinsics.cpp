@@ -21,7 +21,43 @@ static AlifObject* no_intrinsic1(AlifThread* _thread, AlifObject* _unused) { // 
 
 
 
-
+static AlifObject* stopIteration_error(AlifThread* tstate, AlifObject* exc) { // 141
+	AlifInterpreterFrame* frame = tstate->currentFrame;
+	const char* msg = nullptr;
+	if (alifErr_givenExceptionMatches(exc, _alifExcStopIteration_)) {
+		msg = "generator raised StopIteration";
+		if (_alifFrame_getCode(frame)->flags & CO_ASYNC_GENERATOR) {
+			msg = "async generator raised StopIteration";
+		}
+		else if (_alifFrame_getCode(frame)->flags & CO_COROUTINE) {
+			msg = "coroutine raised StopIteration";
+		}
+	}
+	else if ((_alifFrame_getCode(frame)->flags & CO_ASYNC_GENERATOR) and
+		alifErr_givenExceptionMatches(exc, _alifExcStopAsyncIteration_))
+	{
+		/* code in `gen` raised a StopAsyncIteration error:
+		raise a RuntimeError.
+		*/
+		msg = "async generator raised StopAsyncIteration";
+	}
+	//if (msg != nullptr) {
+	//	AlifObject* message = _alifUStr_fromASCII(msg, strlen(msg));
+	//	if (message == nullptr) {
+	//		return nullptr;
+	//	}
+	//	AlifObject* error = alifObject_callOneArg(_alifExcRuntimeError_, message);
+	//	if (error == nullptr) {
+	//		ALIF_DECREF(message);
+	//		return nullptr;
+	//	}
+	//	alifException_setCause(error, ALIF_NEWREF(exc));
+	//	alifException_setContext(error, ALIF_NEWREF(exc));
+	//	ALIF_DECREF(message);
+	//	return error;
+	//}
+	return ALIF_NEWREF(exc);
+}
 
 
 
@@ -38,7 +74,7 @@ const IntrinsicFunc1Info _alifIntrinsicsUnaryFunctions_[] = { // 209
 	{ no_intrinsic1, "INTRINSIC_1_INVALID" },
 	{nullptr},//{print_expr, "INTRINSIC_PRINT"},
 	{nullptr},//{import_star, "INTRINSIC_IMPORT_STAR"},
-	{nullptr},//{stopIteration_error, "INTRINSIC_STOPITERATION_ERROR"},
+	{stopIteration_error, "INTRINSIC_STOPITERATION_ERROR"},
 	{nullptr},//{_alif_asyncGenValueWrapperNew, "INTRINSIC_ASYNC_GEN_WRAP"},
 	{nullptr},//{unary_pos, "INTRINSIC_UNARY_POSITIVE"},
 	{list_toTuple, "INTRINSIC_LIST_TO_TUPLE"},

@@ -3,7 +3,7 @@
 #include "AlifCore_Call.h"         
 #include "AlifCore_Eval.h"        
 #include "AlifCore_Frame.h"        
-#include "AlifCore_Freelist.h"
+#include "AlifCore_FreeList.h"
 #include "AlifCore_GC.h"           
 #include "AlifCore_ModSupport.h"   
 #include "AlifCore_Object.h"       
