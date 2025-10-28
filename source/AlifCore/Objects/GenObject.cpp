@@ -172,6 +172,14 @@ AlifIntT _alifGen_setStopIterationValue(AlifObject* _value) { // 627
 }
 
 
+static AlifObject* gen_repr(AlifObject* self) { // 684
+	AlifGenObject* gen = ALIFGEN_CAST(self);
+	return alifUStr_fromFormat("<generator object %S at %p>",
+		gen->giQualname, gen);
+}
+
+
+
 
 
 AlifTypeObject _alifGenType_ = { // 847
@@ -182,7 +190,7 @@ AlifTypeObject _alifGenType_ = { // 847
 	/* methods */
 	.dealloc = gen_dealloc,
 	//&_genAsAsync_,                              /* tp_as_async */
-	//.repr = gen_repr,
+	.repr = gen_repr,
 	.getAttro = alifObject_genericGetAttr,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
 	//.traverse = gen_traverse,
