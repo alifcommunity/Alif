@@ -167,3 +167,8 @@ public:
 
 
 void _alifErr_chainExceptions1(AlifObject*); // 93
+
+
+
+
+AlifObject* alifErr_programTextObject(AlifObject*, AlifIntT); // 119

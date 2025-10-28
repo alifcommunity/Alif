@@ -5,7 +5,7 @@
 #include "AlifCore_FlowGraph.h"
 #include "AlifCore_State.h"
 #include "AlifCore_SetObject.h"
-
+#include "AlifCore_Errors.h"
 
 #include "Code.h"
 
@@ -189,8 +189,7 @@ AlifIntT _alifCompiler_maybeAddStaticAttributeToClass(AlifCompiler* _c, ExprTy _
 	ExprTy attr_value = _e->V.attribute.val;
 	if (attr_value->type != ExprK_::NameK or
 		_e->V.attribute.ctx != ExprContext_::Store or
-		!alifUStr_equalToUTF8(attr_value->V.name.name, "هذا"))
-	{
+		!alifUStr_equalToUTF8(attr_value->V.name.name, "هذا")) {
 		return SUCCESS;
 	}
 	AlifSizeT stackSize = ALIFLIST_GET_SIZE(_c->stack);
@@ -251,8 +250,7 @@ static AlifIntT compiler_setQualname(AlifCompiler* _c) {
 		if (!forceGlobal) {
 			if (parent->scopeType == ScopeType_::Compiler_Scope_Function
 				or parent->scopeType == ScopeType_::Compiler_Scope_Async_Function
-				or parent->scopeType == ScopeType_::Compiler_Scope_Lambda)
-			{
+				or parent->scopeType == ScopeType_::Compiler_Scope_Lambda) {
 				base = alifUStr_concat(parent->metadata.qualname,
 					&ALIF_STR(DotLocals));
 				if (base == nullptr) {
@@ -725,20 +723,20 @@ void _alifCompiler_exitScope(AlifCompiler* _c) { // 6931
  * Frame block handling functions
  */
 AlifIntT _alifCompiler_pushFBlock(AlifCompiler* _c, Location _loc,
- 	FBlockType _t, JumpTargetLabel _blockLabel,
- 	JumpTargetLabel _exit, void* _datum) {
- 	FBlockInfo* f{};
- 	if (_c->u_->nfBlocks >= MAXBLOCKS) {
- 		//return _alifCompiler_error(_c, _loc, "too many statically nested blocks");
- 	}
- 	f = &_c->u_->fBlock[_c->u_->nfBlocks++];
- 	f->type = _t;
- 	f->block = _blockLabel;
- 	f->loc = _loc;
- 	f->exit = _exit;
- 	f->datum = _datum;
- 	return SUCCESS;
- }
+	FBlockType _t, JumpTargetLabel _blockLabel,
+	JumpTargetLabel _exit, void* _datum) {
+	FBlockInfo* f{};
+	if (_c->u_->nfBlocks >= MAXBLOCKS) {
+		//return _alifCompiler_error(_c, _loc, "too many statically nested blocks");
+	}
+	f = &_c->u_->fBlock[_c->u_->nfBlocks++];
+	f->type = _t;
+	f->block = _blockLabel;
+	f->loc = _loc;
+	f->exit = _exit;
+	f->datum = _datum;
+	return SUCCESS;
+}
 
 
 
@@ -772,7 +770,7 @@ static Location start_location(ASDLStmtSeq* _stmts) {
 		StmtTy st = (StmtTy)ASDL_SEQ_GET(_stmts, 0);
 		return SRC_LOCATION_FROM_AST(st);
 	}
-	return AlifSourceLocation({1, 1, 0, 0});
+	return AlifSourceLocation({ 1, 1, 0, 0 });
 }
 
 
@@ -819,7 +817,7 @@ static AlifCodeObject* compiler_mod(AlifCompiler* _c, ModuleTy _mod) {
 		goto finally;
 	}
 	co = _alifCompiler_optimizeAndAssemble(_c, addNone);
-finally:
+	finally:
 	_alifCompiler_exitScope(_c);
 	return co;
 }
@@ -1114,19 +1112,19 @@ AlifIntT _alifCompiler_revertInlinedComprehensionScopes(AlifCompiler* _c, Locati
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+AlifIntT _alifCompiler_error(AlifCompiler* c, Location loc, const char* format, ...) {
+	va_list vargs;
+	va_start(vargs, format);
+	AlifObject* msg = alifUStr_fromFormatV(format, vargs);
+	va_end(vargs);
+	if (msg == nullptr) {
+		return ERROR;
+	}
+	_alifErr_raiseSyntaxError(msg, c->filename, loc.lineNo, loc.colOffset + 1,
+		loc.endLineNo, loc.endColOffset + 1);
+	ALIF_DECREF(msg);
+	return ERROR;
+}
 
 
 
@@ -1199,9 +1197,9 @@ AlifIntT _alifCompiler_optimizationLevel(AlifCompiler* _c) {
 
 
 
-
-
-
+AlifIntT _alifCompile_scopeType(AlifCompiler* _c) {
+	return _c->u_->scopeType;
+}
 
 
 

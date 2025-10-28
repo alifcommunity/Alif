@@ -71,7 +71,7 @@ class AlifCompiler;
 #define SYMTABLE(_c) _alifCompiler_symTable(_c) 
 #define SYMTABLE_ENTRY(_c) _alifCompiler_symTableEntry(_c)
 #define OPTIMIZATION_LEVEL(_c) _alifCompiler_optimizationLevel(_c)
-
+#define SCOPE_TYPE(_c) _alifCompile_scopeType(_c)
 
 
 #define QUALNAME(_c) _alifCompiler_qualname(_c)
@@ -4907,31 +4907,31 @@ static AlifIntT codegen_visitExpr(AlifCompiler* _c, ExprTy _e) {
 		//case ExprK_::SetCompK:
 		//	return codegen_setComp(_c, _e);
 		//case ExprK_::DictCompK:
-		//	return codegen_dictComp(_c, _e);
-		//case ExprK_::YieldK:
-		//	if (!alifST_isFunctionLike(SYMTABLE_ENTRY(_c))) {
-		//		return compiler_error(_c, loc, "'yield' outside function");
-		//	}
-		//	if (_e->V.yield.val) {
-		//		VISIT(_c, Expr, _e->V.yield.val);
-		//	}
-		//	else {
-		//		ADDOP_LOAD_CONST(_c, loc, ALIF_NONE);
-		//	}
-		//	ADDOP_YIELD(_c, loc);
-		//	break;
-		//case ExprK_::YieldFromK:
-		//	if (!alifST_isFunctionLike(SYMTABLE_ENTRY(_c))) {
-		//		return compiler_error(_c, loc, "'yield from' outside function");
-		//	}
-		//	if (SCOPE_TYPE(_c) == COMPILER_SCOPE_ASYNC_FUNCTION) {
-		//		return compiler_error(_c, loc, "'yield from' inside async function");
-		//	}
-		//	VISIT(_c, Expr, _e->V.yieldFrom.val);
-		//	ADDOP(_c, loc, GET_YIELD_FROM_ITER);
-		//	ADDOP_LOAD_CONST(_c, loc, ALIF_NONE);
-		//	ADD_YIELD_FROM(_c, loc, 0);
-		//	break;
+		//return codegen_dictComp(_c, _e);
+	case ExprK_::YieldK:
+		if (!alifST_isFunctionLike(SYMTABLE_ENTRY(_c))) {
+			return _alifCompiler_error(_c, loc, "'yield' outside function");
+		}
+		if (_e->V.yield.val) {
+			VISIT(_c, Expr, _e->V.yield.val);
+		}
+		else {
+			ADDOP_LOAD_CONST(_c, loc, ALIF_NONE);
+		}
+		ADDOP_YIELD(_c, loc);
+		break;
+	case ExprK_::YieldFromK:
+		if (!alifST_isFunctionLike(SYMTABLE_ENTRY(_c))) {
+			return _alifCompiler_error(_c, loc, "'yield from' outside function");
+		}
+		if (SCOPE_TYPE(_c) == ScopeType_::Compiler_Scope_Async_Function) {
+			return _alifCompiler_error(_c, loc, "'yield from' inside async function");
+		}
+		VISIT(_c, Expr, _e->V.yieldFrom.val);
+		ADDOP(_c, loc, GET_YIELD_FROM_ITER);
+		ADDOP_LOAD_CONST(_c, loc, ALIF_NONE);
+		ADD_YIELD_FROM(_c, loc, 0);
+		break;
 		//case ExprK_::AwaitK:
 		//	VISIT(_c, Expr, _e->V.await.val);
 		//	ADDOP_I(_c, loc, GET_AWAITABLE, 0);
@@ -4982,18 +4982,18 @@ static AlifIntT codegen_visitExpr(AlifCompiler* _c, ExprTy _e) {
 		break;
 	case ExprK_::SubScriptK:
 		return codegen_subScript(_c, _e);
-		//case ExprK_::StarK:
-		//	switch (_e->V.star.ctx) {
-		//	case Store:
-		//		/* In all legitimate cases, the Starred node was already replaced
-		//		 * by codegen_list/codegen_tuple. XXX: is that okay? */
-		//		return compiler_error(_c, loc,
-		//			"starred assignment target must be in a list or tuple");
-		//	default:
-		//		return compiler_error(_c, loc,
-		//			"can't use starred expression here");
-		//	}
-		//	break;
+	case ExprK_::StarK:
+		switch (_e->V.star.ctx) {
+		case Store:
+			/* In all legitimate cases, the Starred node was already replaced
+			 * by codegen_list/codegen_tuple. XXX: is that okay? */
+			return _alifCompiler_error(_c, loc,
+				"starred assignment target must be in a list or tuple");
+		default:
+			return _alifCompiler_error(_c, loc,
+				"can't use starred expression here");
+		}
+		break;
 	case ExprK_::SliceK:
 	{
 		RETURN_IF_ERROR(codegen_slice(_c, _e));

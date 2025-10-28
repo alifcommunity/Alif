@@ -107,8 +107,7 @@ AlifErrStackItem* _alifErr_getTopMostException(AlifThread* _thread) { // 118
 	AlifErrStackItem* excInfo = _thread->excInfo;
 
 	while (excInfo->excValue == nullptr
-		and excInfo->previousItem != nullptr)
-	{
+		and excInfo->previousItem != nullptr) {
 		excInfo = excInfo->previousItem;
 	}
 	return excInfo;
@@ -186,7 +185,7 @@ void _alifErr_setObject(AlifThread* _thread,
 		ALIF_INCREF(excValue);
 		if (excValue != _value) {
 			AlifObject* o_ = excValue, * context;
-			AlifObject* slowObj = o_; 
+			AlifObject* slowObj = o_;
 			AlifIntT slowUpdateToggle = 0;
 			while ((context = alifException_getContext(o_))) {
 				ALIF_DECREF(context);
@@ -260,8 +259,7 @@ AlifIntT alifErr_givenExceptionMatches(AlifObject* _err, AlifObject* _exc) { // 
 		for (i = 0; i < n; i++) {
 			/* Test recursively */
 			if (alifErr_givenExceptionMatches(
-				_err, ALIFTUPLE_GET_ITEM(_exc, i)))
-			{
+				_err, ALIFTUPLE_GET_ITEM(_exc, i))) {
 				return 1;
 			}
 		}
@@ -392,8 +390,7 @@ AlifObject* alifErr_setFromErrnoWithFilenameObjects(AlifObject* exc,
 #else
 	if (i == 0)
 		message = alifUStr_fromString("Error"); /* Sometimes errno didn't get set */
-	else
-	{
+	else {
 		if (i > 0 and i < _sys_nerr) {
 			message = alifUStr_fromString(_sys_errlist[i]);
 		}
@@ -426,11 +423,10 @@ AlifObject* alifErr_setFromErrnoWithFilenameObjects(AlifObject* exc,
 	}
 #endif /* Unix/Windows */
 
-	if (message == nullptr)
-	{
-#ifdef _WINDOWS
+	if (message == nullptr) {
+	#ifdef _WINDOWS
 		LocalFree(s_buf);
-#endif
+	#endif
 		return nullptr;
 	}
 
@@ -505,8 +501,7 @@ AlifObject* alifErr_setExcFromWindowsErrWithFilenameObjects(
 		message = alifUStr_fromWideChar(s_buf, len);
 	}
 
-	if (message == nullptr)
-	{
+	if (message == nullptr) {
 		LocalFree(s_buf);
 		return nullptr;
 	}
@@ -575,6 +570,24 @@ AlifObject* alifErr_format(AlifObject* _exception,
 
 
 
+void _alifErr_raiseSyntaxError(AlifObject* _msg, AlifObject* _filename, AlifIntT _lineno, AlifIntT _colOffset,
+	AlifIntT _endLineno, AlifIntT _endColOffset) { // 1856
+	AlifObject* text = alifErr_programTextObject(_filename, _lineno);
+	if (text == nullptr) {
+		text = ALIF_NEWREF(ALIF_NONE);
+	}
+	AlifObject* args = alif_buildValue("O(OiiOii)", _msg, _filename,
+		_lineno, _colOffset, text,
+		_endLineno, _endColOffset);
+	if (args == nullptr) {
+		goto exit;
+	}
+	alifErr_setObject(_alifExcSyntaxError_, args);
+exit:
+	ALIF_DECREF(text);
+	ALIF_XDECREF(args);
+}
+
 
 static AlifObject* err_programText(FILE* _fp, AlifIntT _lineno, const char* _encoding) { // 1905
 	char linebuf[1000]{};
@@ -583,15 +596,13 @@ static AlifObject* err_programText(FILE* _fp, AlifIntT _lineno, const char* _enc
 	for (AlifIntT i = 0; i < _lineno; ) {
 		line_size = 0;
 		if (alifUniversal_newLineFGetsWithSize(linebuf, sizeof(linebuf),
-			_fp, nullptr, &line_size) == nullptr)
-		{
+			_fp, nullptr, &line_size) == nullptr) {
 			/* Error or EOF. */
 			return nullptr;
 		}
 		if (i + 1 < _lineno
 			and line_size == sizeof(linebuf) - 1
-			and linebuf[sizeof(linebuf) - 2] != '\n')
-		{
+			and linebuf[sizeof(linebuf) - 2] != '\n') {
 			continue;
 		}
 		i++;
@@ -643,4 +654,11 @@ AlifObject* _alifErr_programDecodedTextObject(AlifObject* filename, AlifIntT lin
 	fclose(fp);
 	alifMem_dataFree(found_encoding);
 	return res;
+}
+
+
+
+
+AlifObject* alifErr_programTextObject(AlifObject* _filename, AlifIntT _lineno) { // 2000
+	return _alifErr_programDecodedTextObject(_filename, _lineno, nullptr);
 }

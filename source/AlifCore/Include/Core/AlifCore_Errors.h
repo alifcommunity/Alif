@@ -38,6 +38,9 @@ void _alifErr_clear(AlifThread*); // 117
 
 void _alifErr_setString(AlifThread*, AlifObject*, const char*); // 123
 
+extern void _alifErr_raiseSyntaxError(AlifObject*, AlifObject*,
+	AlifIntT, AlifIntT, AlifIntT, AlifIntT); // 152
+
 AlifObject* _alifErr_format(AlifThread*, AlifObject*, const char*, ...); // 128
 
 
