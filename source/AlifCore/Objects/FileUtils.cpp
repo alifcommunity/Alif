@@ -367,33 +367,33 @@ static AlifIntT encode_localeEX(const wchar_t* _text, char** _str, AlifUSizeT* _
 	#endif
 	}
 
-	#ifdef ALIF_FORCE_UTF8_FS_ENCODING
-		return _alif_encodeUTF8Ex(_text, _str, _errorpos, _reason,
+#ifdef ALIF_FORCE_UTF8_FS_ENCODING
+	return _alif_encodeUTF8Ex(_text, _str, _errorPos, _reason,
+		_rawMalloc, _errors);
+#else
+	AlifIntT useUTF8 = (_alifRuntime_.preConfig.utf8Mode >= 1);
+#ifdef _WINDOWS
+	useUTF8 |= (_alifRuntime_.preConfig.legacyWindowsFSEncoding == 0);
+#endif
+	if (useUTF8) {
+		return _alif_encodeUTF8Ex(_text, _str, _errorPos, _reason,
 			_rawMalloc, _errors);
-	#else
-		AlifIntT useUTF8 = (_alifRuntime_.preConfig.utf8Mode >= 1);
-	#ifdef _WINDOWS
-		useUTF8 |= (_alifRuntime_.preConfig.legacyWindowsFSEncoding == 0);
-	#endif
-		if (useUTF8) {
-			return _alif_encodeUTF8Ex(_text, _str, _errorPos, _reason,
-				_rawMalloc, _errors);
-		}
-	
-	#ifdef USE_FORCE_ASCII
-		if (FORCE_ASCII == -1) {
-			FORCE_ASCII = check_forceASCII();
-		}
-	
-		if (FORCE_ASCII) {
-			return encode_ascii(_text, _str, _errorPos, _reason,
-				_rawMalloc, _errors);
-		}
-	#endif
+	}
+
+#ifdef USE_FORCE_ASCII
+	if (FORCE_ASCII == -1) {
+		FORCE_ASCII = check_forceASCII();
+	}
+
+	if (FORCE_ASCII) {
+		return encode_ascii(_text, _str, _errorPos, _reason,
+			_rawMalloc, _errors);
+	}
+#endif
 
 	return encode_currentLocale(_text, _str, _errorPos, _reason, _rawMalloc, _errors);
 
-	#endif
+#endif
 }
 
 
