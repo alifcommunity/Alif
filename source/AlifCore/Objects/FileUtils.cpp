@@ -218,31 +218,31 @@ AlifIntT alif_decodeLocaleEx(const char* _arg, wchar_t** _wstr, AlifUSizeT* _wle
 	#endif
 	}
 
-	//#ifdef ALIF_FORCE_UTF8_FS_ENCODING
-	//	return _alif_decodeUTF8Ex(_arg, strlen(_arg), _wstr, _wlen, _reason, _errors);
-	//#else
-	//	AlifIntT useUTF8 = (_alifRuntime_.preConfig.utf8Mode >= 1);
-	//#ifdef _WINDOWS
-	//	useUTF8 |= (_alifRuntime_.preConfig.legacyWindowsFSEncoding == 0);
-	//#endif
-	//	if (useUTF8) {
-	//		return _alif_decodeUTF8Ex(_arg, strlen(_arg), _wstr, _wlen, _reason, _errors);
-	//	}
-	//
-	//#ifdef USE_FORCE_ASCII
-	//	if (FORCE_ASCII == -1) {
-	//		FORCE_ASCII = check_forceASCII();
-	//	}
-	//
-	//	if (FORCE_ASCII) {
-	//		/* force ASCII encoding to workaround mbstowcs() issue */
-	//		return decode_ascii(_arg, _wstr, _wlen, _reason, _errors);
-	//	}
-	//#endif
+#ifdef ALIF_FORCE_UTF8_FS_ENCODING
+	return alif_decodeUTF8Ex(_arg, strlen(_arg), _wstr, _wlen, _reason, _errors);
+#else
+	AlifIntT useUTF8 = (_alifRuntime_.preConfig.utf8Mode >= 1);
+#ifdef _WINDOWS
+	useUTF8 |= (_alifRuntime_.preConfig.legacyWindowsFSEncoding == 0);
+#endif
+	if (useUTF8) {
+		return alif_decodeUTF8Ex(_arg, strlen(_arg), _wstr, _wlen, _reason, _errors);
+	}
+
+#ifdef USE_FORCE_ASCII
+	if (FORCE_ASCII == -1) {
+		FORCE_ASCII = check_forceASCII();
+	}
+
+	if (FORCE_ASCII) {
+		/* force ASCII encoding to workaround mbstowcs() issue */
+		return decode_ascii(_arg, _wstr, _wlen, _reason, _errors);
+	}
+#endif
 
 	return alif_decodeUTF8Ex(_arg, strlen(_arg), _wstr, _wlen, _reason, _errors);
 
-	//#endif
+#endif
 }
 
 wchar_t* alif_decodeLocale(const char* _arg, AlifUSizeT* _wlen) { // 663
