@@ -1804,27 +1804,27 @@ static const char* uStr_fromFormatArg(AlifUStrWriter* _writer,
 		break;
 	}
 
-	//case 'p':
-	//{
-	//	char number[MAX_INTMAX_CHARS]{};
+	case 'p':
+	{
+		char number[MAX_INTMAX_CHARS]{};
 
-	//	len = sprintf(number, "%p", va_arg(*_vargs, void*));
+		len = sprintf(number, "%p", va_arg(*_vargs, void*));
 
-	//	/* %p is ill-defined:  ensure leading 0x. */
-	//	if (number[1] == 'X')
-	//		number[1] = 'x';
-	//	else if (number[1] != 'x') {
-	//		memmove(number + 2, number,
-	//			strlen(number) + 1);
-	//		number[0] = '0';
-	//		number[1] = 'x';
-	//		len += 2;
-	//	}
+		/* %p is ill-defined:  ensure leading 0x. */
+		if (number[1] == 'X')
+			number[1] = 'x';
+		else if (number[1] != 'x') {
+			memmove(number + 2, number,
+				strlen(number) + 1);
+			number[0] = '0';
+			number[1] = 'x';
+			len += 2;
+		}
 
-	//	if (alifUStrWriter_writeASCIIString(_writer, number, len) < 0)
-	//		return nullptr;
-	//	break;
-	//}
+		if (alifUStrWriter_writeASCIIString(_writer, number, len) < 0)
+			return nullptr;
+		break;
+	}
 
 	case 's':
 	{
@@ -1851,31 +1851,31 @@ static const char* uStr_fromFormatArg(AlifUStrWriter* _writer,
 		break;
 	}
 
-	//case 'V':
-	//{
-	//	AlifObject* obj = va_arg(*_vargs, AlifObject*);
-	//	const char* str{};
-	//	const wchar_t* wstr{};
-	//	if (sizemod) {
-	//		wstr = va_arg(*_vargs, const wchar_t*);
-	//	}
-	//	else {
-	//		str = va_arg(*_vargs, const char*);
-	//	}
-	//	if (obj) {
-	//		if (unicode_fromformat_write_str(_writer, obj, width, precision, flags) == -1)
-	//			return nullptr;
-	//	}
-	//	else if (sizemod) {
-	//		if (unicode_fromformat_write_wcstr(_writer, wstr, width, precision, flags) < 0)
-	//			return nullptr;
-	//	}
-	//	else {
-	//		if (unicode_fromformat_write_utf8(_writer, str, width, precision, flags) < 0)
-	//			return nullptr;
-	//	}
-	//	break;
-	//}
+	case 'V':
+	{
+		AlifObject* obj = va_arg(*_vargs, AlifObject*);
+		const char* str{};
+		const wchar_t* wstr{};
+		if (sizemod) {
+			wstr = va_arg(*_vargs, const wchar_t*);
+		}
+		else {
+			str = va_arg(*_vargs, const char*);
+		}
+		if (obj) {
+			if (uStr_fromFormatWriteStr(_writer, obj, width, precision, flags) == -1)
+				return nullptr;
+		}
+		else if (sizemod) {
+			if (uStr_fromFormatWriteWCStr(_writer, wstr, width, precision, flags) < 0)
+				return nullptr;
+		}
+		else {
+			if (uStr_fromFormatWriteUTF8(_writer, str, width, precision, flags) < 0)
+				return nullptr;
+		}
+		break;
+	}
 
 	case 'S':
 	{
@@ -1979,7 +1979,7 @@ static const char* uStr_fromFormatArg(AlifUStrWriter* _writer,
 	//
 	default:
 invalid_format:
-		//alifErr_format(_alifExcSystemError_, "invalid format string: %s", p);
+		alifErr_format(_alifExcSystemError_, "invalid format string: %s", p);
 		return nullptr;
 	}
 
