@@ -159,7 +159,7 @@ static const AlifConfigSpec _alifConfigSpec_[] = { // 95 //* todo //* important
 	SPEC(configInit, configInit, UINT, INIT_ONLY, NO_SYS),
 	SPEC(initMain, initMain, BOOL, INIT_ONLY, NO_SYS),
 	SPEC(installImportLib, installImportLib, BOOL, INIT_ONLY, NO_SYS),
-	SPEC(isAlifBuild, isAlifBuild, BOOL, INIT_ONLY, NO_SYS),
+	SPEC(هل_ألف_بناء, isAlifBuild, BOOL, INIT_ONLY, NO_SYS),
 	SPEC(ضبط_مسارات_البحث_الوحدة, moduleSearchPathsSet, BOOL, INIT_ONLY, NO_SYS),
 	SPEC(alifPathEnv, alifPathEnv, WSTR_OPT, INIT_ONLY, NO_SYS),
 	SPEC(sysPath0, sysPath0, WSTR_OPT, INIT_ONLY, NO_SYS),

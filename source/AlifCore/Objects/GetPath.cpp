@@ -22,13 +22,23 @@
 #include "FrozenModules/GetPath.h"
 
 //* alif
+#ifdef _WINDOWS
 #define PREFIX nullptr
 #define EXEC_PREFIX nullptr
 #define VERSION nullptr
 #define ALIFPATH nullptr
-#define VPATH "..\\.."
+#define VPATH "..\\..\\.."
 #define PLATLIBDIR "DLLs"
 #define ALIFDEBUGEXT ""
+#else
+#define PREFIX nullptr
+#define EXEC_PREFIX nullptr
+#define VERSION nullptr
+#define ALIFPATH nullptr
+#define VPATH ".."
+#define PLATLIBDIR "lib"
+#define ALIFDEBUGEXT ""
+#endif
 //* alif
 
 #if (!defined(PREFIX) or !defined(EXEC_PREFIX) \
@@ -864,7 +874,7 @@ AlifStatus _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePath
 		!decode_toDict(dict, "_السابقة", PREFIX) or
 		!decode_toDict(dict, "_سابقة_التنفيذي", EXEC_PREFIX) or
 		!decode_toDict(dict, "_مسار_ألف", ALIFPATH) or
-		!decode_toDict(dict, "VPATH", VPATH) or
+		!decode_toDict(dict, "_مسار_افتراضي", VPATH) or
 		!decode_toDict(dict, "_مجلد_مكتبة_المنصة", PLATLIBDIR) or
 		!decode_toDict(dict, "ALIFDEBUGEXT", ALIFDEBUGEXT) or
 		!int_toDict(dict, "VERSION_MAJOR", ALIF_MAJOR_VERSION) or
