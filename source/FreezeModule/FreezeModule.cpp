@@ -27,7 +27,7 @@ const struct Frozen* _alifImportFrozenModules_;
 const struct ModuleAlias* _alifImportFrozenAliases_;
 
 static const char _header_[] =
-"/* تم إنشائه هذا الملف عن طريق البرنامج source/FreezeModule/FreezeModule.cpp */";
+"/* تم إنشائه هذا الملف بشكل تلقيائي عن طريق البرنامج source/FreezeModule/FreezeModule.cpp */";
 
 
 static void runtime_init(void) {
@@ -104,7 +104,7 @@ static AlifObject* compile_andMarshal(const char* name, const char* text) {
 		//return alifErr_noMemory();
 		return nullptr;
 	}
-	sprintf(filename, "<frozen %s>", name);
+	sprintf(filename, "<جرد %s>", name);
 	AlifObject* code = alif_compileStringExFlags(text, filename,
 		ALIF_FILE_INPUT, nullptr, 0);
 	free(filename);
