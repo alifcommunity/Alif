@@ -1288,7 +1288,7 @@ static AlifIntT codegen_function(AlifCompiler* _c, StmtTy _s, AlifIntT _isAsync)
 	}
 	else {
 		args = _s->V.functionDef.args;
-		//returns = _s->V.functionDef.returns;
+		returns = _s->V.functionDef.returns;
 		//decos = _s->V.functionDef.decoratorList;
 		name = _s->V.functionDef.name;
 		typeParams = _s->V.functionDef.typeParams;

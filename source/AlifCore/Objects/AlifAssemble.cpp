@@ -403,7 +403,7 @@ static AlifObject* dict_keysInorder(AlifObject* _dict, AlifSizeT _offset) { // 4
 		return nullptr;
 	while (alifDict_next(_dict, &pos, &k, &v)) {
 		AlifSizeT i = alifLong_asSizeT(v);
-		if (i == -1 /*and alifErr_occurred()*/) {
+		if (i == -1 and alifErr_occurred()) {
 			ALIF_DECREF(tuple);
 			return nullptr;
 		}
