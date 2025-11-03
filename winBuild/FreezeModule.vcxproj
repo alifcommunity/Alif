@@ -91,7 +91,6 @@
     <ClCompile Include="..\source\AlifCore\Objects\GenObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GetArgs.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GetOption.cpp" />
-    <ClCompile Include="..\source\AlifCore\Objects\GetPath.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GetVersion.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\HashTable.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Helpers.cpp" />
@@ -138,6 +137,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\WeakRefObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\WinConsoleIO.cpp" />
     <ClCompile Include="..\source\FreezeModule\FreezeModule.cpp" />
+    <ClCompile Include="..\source\FreezeModule\GetPath_Freeze.cpp" />
     <ClCompile Include="..\source\Modules\SignalModule.cpp" />
     <ClCompile Include="..\source\Modules\TimeModule.cpp" />
     <ClCompile Include="..\source\Modules\_io\BufferedIO.cpp" />

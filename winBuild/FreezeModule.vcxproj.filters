@@ -204,9 +204,6 @@
     <ClCompile Include="..\source\AlifCore\Objects\GetOption.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\AlifCore\Objects\GetPath.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\GetVersion.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -370,6 +367,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\source\AlifCore\Objects\Intrinsics.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\FreezeModule\GetPath_Freeze.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

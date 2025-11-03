@@ -1952,7 +1952,7 @@ static AlifObject* config_get(const AlifConfig* _config,
 			return config_getSys(_spec->sys.attr);
 		}
 
-		if (strcmp(_spec->name, "write_bytecode") == 0) {
+		if (strcmp(_spec->name, "writeBytecode") == 0) {
 			AlifIntT value;
 			if (config_getSysWriteBytecode(_config, &value) < 0) {
 				return nullptr;
@@ -1960,7 +1960,7 @@ static AlifObject* config_get(const AlifConfig* _config,
 			return alifBool_fromLong(value);
 		}
 
-		if (strcmp(_spec->name, "int_max_str_digits") == 0) {
+		if (strcmp(_spec->name, "intMaxStrDigits") == 0) {
 			AlifInterpreter* interp = _alifInterpreter_get();
 			return alifLong_fromLong(interp->longState.maxStrDigits);
 		}
