@@ -369,7 +369,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\Intrinsics.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\FreezeModule\GetPath_Freeze.cpp">
+    <ClCompile Include="..\source\FreezeModule\GetPathFreeze.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

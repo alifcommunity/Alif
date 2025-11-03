@@ -137,7 +137,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\WeakRefObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\WinConsoleIO.cpp" />
     <ClCompile Include="..\source\FreezeModule\FreezeModule.cpp" />
-    <ClCompile Include="..\source\FreezeModule\GetPath_Freeze.cpp" />
+    <ClCompile Include="..\source\FreezeModule\GetPathFreeze.cpp" />
     <ClCompile Include="..\source\Modules\SignalModule.cpp" />
     <ClCompile Include="..\source\Modules\TimeModule.cpp" />
     <ClCompile Include="..\source\Modules\_io\BufferedIO.cpp" />
