@@ -315,7 +315,7 @@ resume_frame:
 				_frame->instrPtr = nextInstr;
 				nextInstr += 1;
 				//ALIF_FATALERROR("Executing a cache.");
-				printf("Executing a cache. error");
+				printf("Executing a cache. error\n");
 				DISPATCH();
 			} // ------------------------------------------------------------ //
 			TARGET(BINARY_SLICE) {
@@ -1660,18 +1660,18 @@ resume_frame:
 					AlifObject* nextObj = (*ALIF_TYPE(iterObj)->iterNext)(iterObj);
 					stackPointer = _alifFrame_getStackPointer(_frame);
 					if (nextObj == nullptr) {
-						//if (_alifErr_occurred(_thread)) {
-						//	_alifFrame_setStackPointer(_frame, stackPointer);
-						//	AlifIntT matches = _alifErr_exceptionMatches(_thread, _alifExcStopIteration_);
-						//	stackPointer = _alifFrame_getStackPointer(_frame);
-						//	if (!matches) {
-						//		goto error;
-						//	}
-						// _alifFrame_setStackPointer(_frame, stackPointer);
-						//	_alifEval_monitorRaise(_thread, _frame, thisInstr);
-						//	_alifErr_clear(_thread);
-						//	stackPointer = _alifFrame_getStackPointer(_frame);
-						//}
+						if (_alifErr_occurred(_thread)) {
+							_alifFrame_setStackPointer(_frame, stackPointer);
+							AlifIntT matches = _alifErr_exceptionMatches(_thread, _alifExcStopIteration_);
+							stackPointer = _alifFrame_getStackPointer(_frame);
+							if (!matches) {
+								goto error;
+							}
+						 _alifFrame_setStackPointer(_frame, stackPointer);
+							// _alifEval_monitorRaise(_thread, _frame, thisInstr);
+							_alifErr_clear(_thread);
+							stackPointer = _alifFrame_getStackPointer(_frame);
+						}
 						/* iterator ended normally */
 						ALIFSTACKREF_CLOSE(iter);
 						STACK_SHRINK(1);
