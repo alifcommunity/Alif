@@ -9,14 +9,17 @@ DEBUG_FLAGS = -O0 -g
 SOURCE_DIR = ../source
 BUILD_DIR = build
 OBJ_DIR = $(BUILD_DIR)/obj
-TARGET = $(BUILD_DIR)/alif
+TARGET_FREEZE =  $(BUILD_DIR)/freezemodule
+TARGET_ALIF = $(BUILD_DIR)/alif
 
 
 SOURCES = 	$(wildcard $(SOURCE_DIR)/Alif/*.cpp)				\
-			$(wildcard $(SOURCE_DIR)/AlifCore/Objects/*.cpp)	\
+			$(filter-out $(SOURCE_DIR)/AlifCore/Objects/GetPath.cpp, $(wildcard $(SOURCE_DIR)/AlifCore/Objects/*.cpp))	\
 			$(wildcard $(SOURCE_DIR)/AlifCore/Objects/dtoa/*.cpp)	\
 			$(wildcard $(SOURCE_DIR)/Modules/*.cpp)			\
 			$(wildcard $(SOURCE_DIR)/Modules/_io/*.cpp)		\
+			$(wildcard $(SOURCE_DIR)/FreezeModule/*.cpp)		\
+
 
 INCLUDES =  -I$(SOURCE_DIR)/Alif							\
 			-I$(SOURCE_DIR)/AlifCore/Include/Core				\
@@ -30,13 +33,29 @@ INCLUDES =  -I$(SOURCE_DIR)/Alif							\
 			-I$(SOURCE_DIR)/Modules/_io/clinic			\
 
 
-# تحديد اعلام بناء البرنامج
-release: CPPFLAGS += $(RELEASE_FLAGS)
-debug: CPPFLAGS += $(DEBUG_FLAGS)
-
 all: release
-release: $(TARGET)
-debug: $(TARGET)
+
+# تحديد اعلام بناء البرنامج
+freeze_release: CPPFLAGS += $(RELEASE_FLAGS)
+alif_release:  CPPFLAGS += $(RELEASE_FLAGS)
+freeze_debug: CPPFLAGS += $(DEBUG_FLAGS)
+alif_debug: CPPFLAGS += $(DEBUG_FLAGS)
+
+# تقوم هذه التعليمة بإضافة أمر الى make
+# حيث يصبح make -j(nproc)
+# وذلك لبناء اللغة بإستخدام ممرات متعددة multithread
+release:
+	@make -j$(shell nproc) freeze_release
+	@make alif_release
+
+debug:
+	@make -j2 freeze_debug
+	@make alif_debug 
+
+freeze_release: $(TARGET_FREEZE)
+alif_release : $(TARGET_ALIF)
+freeze_debug: $(TARGET_FREEZE)
+alif_debug: $(TARGET_ALIF)
 
 
 # تقوم هذه التعليمة بأخذ كل ملفات المصدر المنتهية ب .cpp 
@@ -70,10 +89,23 @@ $(OBJ_DIR)/%.o: $(SOURCE_DIR)/%.cpp | $(OBJ_DIR)
 # يعتمد على جميع ملفات الكائنات (OBJECTS).
 # يتم استخدام العلامة النسبية | لتأكيد أن مسار الكائنات (BUILD_DIR)
 # يجب أن يكون موجودًا قبل بدء عملية الربط.
-$(TARGET): $(OBJECTS) | $(BUILD_DIR)
-	@echo "جاري الربط..."
-	@$(CPP) $^ -o $@
-	@echo "تم البناء بنجاح"
+$(TARGET_FREEZE): $(OBJECTS) | $(BUILD_DIR)
+	@echo "جاري ربط مجرد الشيفرة..."
+	@$(CPP) $(filter-out build/obj/Alif/alif.o build/obj/AlifCore/Objects/Frozen.o, $^) -o $@
+	@echo "تم بناء مجرد الشيفرة بنجاح"
+	@echo "جاري بناء ومعالجة البرامج المكتوبة بلغة ألف"
+	@$(shell) ./build/freezemodule GetPath ../source/Modules/تحديد_المسارات.alif GetPath.h
+	@$(shell) mv -f GetPath.h ../source/AlifCore/Include/Main/FrozenModules
+
+
+$(TARGET_ALIF): $(OBJECTS) | $(BUILD_DIR)
+	@echo "ترجمة.." $(SOURCE_DIR)/AlifCore/Objects/GetPath.cpp
+	@$(CPP) $(CPPFLAGS) -c $(SOURCE_DIR)/AlifCore/Objects/GetPath.cpp -o $(OBJ_DIR)/AlifCore/Objects/GetPath.o
+	@echo "جاري ربط لغة ألف..."
+	@$(CPP) $(filter-out build/obj/FreezeModule/FreezeModule.o build/obj/FreezeModule/GetPathFreeze.o, $^)	\
+	 -o $@ $(OBJ_DIR)/AlifCore/Objects/GetPath.o
+	@echo "تم بناء لغة ألف بنجاح"
+
 
 # إنشاء الملفات المطلوبة
 ifeq ($(wildcard $(BUILD_DIR)),)
@@ -86,6 +118,7 @@ $(OBJ_DIR):
 	@mkdir -p $(OBJ_DIR)/AlifCore/Objects/dtoa
 	@mkdir -p $(OBJ_DIR)/Modules
 	@mkdir -p $(OBJ_DIR)/Modules/_io
+	@mkdir -p $(OBJ_DIR)/FreezeModule
 endif
 
 
@@ -95,11 +128,6 @@ clean:
 .PHONY: all clean release debug
 
 
-# تقوم هذه التعليمة بإضافة أمر الى make
-# حيث يصبح make -j(nproc) 
-# وذلك لبناء اللغة بإستخدام ممرات متعددة multithread
-MAKEFLAGS += -j$(shell nproc)
-
 help:
 	@echo "نظام بناء لغة ألف النسخة الخامسة"
 	@echo "طريقة البناء:"
@@ -107,3 +135,4 @@ help:
 	@echo "make release  # لبناء اللغة في وضع الإصدار"
 	@echo "make debug    # لبناء اللغة في وضع تتبع الاخطاء"
 	@echo "make clean    # لحذف جميع ملفات البناء"
+
