@@ -28,6 +28,8 @@ extern AlifStatus _alif_preInitializeFromAlifArgv(const AlifPreConfig*, const cl
 
 extern AlifStatus _alif_preInitializeFromConfig(const AlifConfig*, const AlifArgv*); // 72
 
+extern AlifIntT _alif_handleSystemExit(AlifIntT*); // 78
+
 extern AlifIntT _alif_coerceLegacyLocale(AlifIntT); // 108
 extern AlifIntT _alif_legacyLocaleDetected(AlifIntT);
 

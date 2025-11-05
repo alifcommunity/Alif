@@ -146,6 +146,64 @@ AlifIntT alifObject_callFinalizerFromDealloc(AlifObject* _self) { // 500
 	return -1;
 }
 
+AlifIntT alifObject_print(AlifObject* op, FILE* fp, AlifIntT flags) { // 535
+	AlifIntT ret = 0;
+	AlifIntT write_error = 0;
+	//if (alifErr_checkSignals())
+	//	return -1;
+#ifdef USE_STACKCHECK
+	if (alifOS_checkStack()) {
+		alifErr_setString(_alifExcMemoryError_, "stack overflow");
+		return -1;
+	}
+#endif
+	clearerr(fp); /* Clear any previous error condition */
+	if (op == nullptr) {
+		ALIF_BEGIN_ALLOW_THREADS
+			fprintf(fp, "<nil>");
+		ALIF_END_ALLOW_THREADS
+	}
+	else {
+		if (ALIF_REFCNT(op) <= 0) {
+			ALIF_BEGIN_ALLOW_THREADS
+				fprintf(fp, "<مرجع_رقم %zd في %p>", ALIF_REFCNT(op), (void*)op);
+			ALIF_END_ALLOW_THREADS
+		}
+		else {
+			AlifObject* s{};
+			if (flags & ALIF_PRINT_RAW)
+				s = alifObject_str(op);
+			else
+				s = alifObject_repr(op);
+			if (s == nullptr) {
+				ret = -1;
+			}
+			else {
+				const char* t{};
+				AlifSizeT len{};
+				t = alifUStr_asUTF8AndSize(s, &len);
+				if (t == nullptr) {
+					ret = -1;
+				}
+				else {
+					if (fwrite(t, 1, len, fp) != (AlifUSizeT)len) {
+						write_error = 1;
+					}
+				}
+				ALIF_DECREF(s);
+			}
+		}
+	}
+	if (ret == 0) {
+		if (write_error or ferror(fp)) {
+			//alifErr_setFromErrno(_alifExcOSError_);
+			clearerr(fp);
+			ret = -1;
+		}
+	}
+	return ret;
+}
+
 
 AlifObject* alifObject_repr(AlifObject* _v) { // 662
 	AlifObject* res{};

@@ -196,55 +196,54 @@ AlifIntT _alifRun_simpleStringFlagsWithName(const char* _command,
 
 
 AlifIntT _alif_handleSystemExit(AlifIntT* _exitcodeP) { // 566
-	//AlifIntT inspect = alif_getConfig()->inspect;
-	//if (inspect) {
-	//	return 0;
-	//}
+	AlifIntT inspect = alif_getConfig()->inspect;
+	if (inspect) {
+		return 0;
+	}
 
 	//if (!alifErr_exceptionMatches(_alifExcSystemExit_)) {
 	//	return 0;
 	//}
 
-	//fflush(stdout);
+	fflush(stdout);
 
-	//AlifIntT exitcode = 0;
+	AlifIntT exitcode = 0;
 
-	//AlifObject* exc = alifErr_getRaisedException();
-	//if (exc == nullptr) {
-	//	goto done;
-	//}
+	AlifObject* exc = alifErr_getRaisedException();
+	if (exc == nullptr) {
+		goto done;
+	}
 
-	//AlifObject* code = alifObject_getAttr(exc, &ALIF_ID(Code));
-	//if (code) {
-	//	ALIF_SETREF(exc, code);
-	//	if (exc == ALIF_NONE) {
-	//		goto done;
-	//	}
-	//}
+	AlifObject* code; code = alifObject_getAttr(exc, &ALIF_ID(Code));
+	if (code) {
+		ALIF_SETREF(exc, code);
+		if (exc == ALIF_NONE) {
+			goto done;
+		}
+	}
 
-	//if (ALIFLONG_CHECK(exc)) {
-	//	exitcode = (AlifIntT)alifLong_asLong(exc);
-	//}
-	//else {
-	//	AlifThread* tstate = _alifThread_get();
-	//	AlifObject* sys_stderr = _alifSys_getAttr(tstate, &ALIF_ID(Stderr));
-	//	alifErr_clear();
-	//	if (sys_stderr != nullptr and sys_stderr != ALIF_NONE) {
-	//		alifFile_writeObject(exc, sys_stderr, ALIF_PRINT_RAW);
-	//	}
-	//	else {
-	//		alifObject_print(exc, stderr, ALIF_PRINT_RAW);
-	//		fflush(stderr);
-	//	}
-	//	alifSys_writeStderr("\n");
-	//	exitcode = 1;
-	//}
+	if (ALIFLONG_CHECK(exc)) {
+		exitcode = (AlifIntT)alifLong_asLong(exc);
+	}
+	else {
+		AlifThread* tstate = _alifThread_get();
+		AlifObject* sysStderr = _alifSys_getAttr(tstate, &ALIF_ID(Stderr));
+		alifErr_clear();
+		if (sysStderr != nullptr and sysStderr != ALIF_NONE) {
+			alifFile_writeObject(exc, sysStderr, ALIF_PRINT_RAW);
+		}
+		else {
+			alifObject_print(exc, stderr, ALIF_PRINT_RAW);
+			fflush(stderr);
+		}
+		//alifSys_writeStderr("\n");
+		exitcode = 1;
+	}
 
 done:
-	//ALIF_CLEAR(exc);
-	//*_exitcodeP = exitcode;
-	//return 1;
-	return 0; //* alif
+	ALIF_CLEAR(exc);
+	*_exitcodeP = exitcode;
+	return 1;
 }
 
 

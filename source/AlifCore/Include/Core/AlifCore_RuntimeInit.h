@@ -780,6 +780,7 @@
 	INIT_ID(Close), \
 	INIT_ID(Closed), \
 	INIT_ID(CloseFD), \
+	INIT_ID(Code), \
 	INIT_ID(Decode), \
 	INIT_ID(Decoder), \
 	INIT_ID(Encode), \

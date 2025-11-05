@@ -141,6 +141,7 @@ public:
 			STRUCT_FOR_ID(Close)
 			STRUCT_FOR_ID(Closed)
 			STRUCT_FOR_ID(CloseFD)
+			STRUCT_FOR_ID(Code)
 			STRUCT_FOR_ID(Decode)
 			STRUCT_FOR_ID(Decoder)
 			STRUCT_FOR_ID(Encode)

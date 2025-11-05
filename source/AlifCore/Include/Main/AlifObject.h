@@ -572,7 +572,7 @@ public:
 
 const char* _alifType_name(AlifTypeObject*); // 280
 AlifObject* alifType_lookupRef(AlifTypeObject*, AlifObject*); // 281
-
+AlifIntT alifObject_print(AlifObject*, FILE*, AlifIntT); // 285
 void alifObject_callFinalizer(AlifObject*); // 291
 AlifIntT alifObject_callFinalizerFromDealloc(AlifObject*); // 292
 
