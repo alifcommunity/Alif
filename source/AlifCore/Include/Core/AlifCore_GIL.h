@@ -10,7 +10,7 @@
 
 
 
-struct GILDureRunState { // 22
+struct GILRuntimeState { // 22
 	AlifIntT enabled{};
 
 	unsigned long interval{};

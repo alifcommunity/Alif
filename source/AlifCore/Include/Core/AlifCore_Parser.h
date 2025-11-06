@@ -9,7 +9,7 @@
 
 
 
-class AlifParserDureRunState { // 21
+class AlifParserRuntimeState { // 21
 public:
 	AlifMutex mutex{};
 	Expr dummyName{};
@@ -17,7 +17,7 @@ public:
 
 
 // 49
-#define PARSER_DURERUN_STATE_INIT \
+#define PARSER_RUNTIME_STATE_INIT \
     { \
 		.mutex = {0},							\
         .dummyName = {							\

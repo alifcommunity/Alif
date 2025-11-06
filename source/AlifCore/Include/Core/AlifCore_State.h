@@ -95,9 +95,9 @@ extern AlifStatus alifInterpreter_enable(AlifRuntime*); // 245
 
 
 // 261
-#define HEAD_LOCK(_dureRun) \
-    alifMutex_lockFlags(&(_dureRun)->interpreters.mutex, AlifLockFlags_::Alif_Lock_Dont_Detach)
-#define HEAD_UNLOCK(_dureRun) \
-    ALIFMUTEX_UNLOCK(&(_dureRun)->interpreters.mutex)
+#define HEAD_LOCK(_runtime) \
+    alifMutex_lockFlags(&(_runtime)->interpreters.mutex, AlifLockFlags_::Alif_Lock_Dont_Detach)
+#define HEAD_UNLOCK(_runtime) \
+    ALIFMUTEX_UNLOCK(&(_runtime)->interpreters.mutex)
 
 const AlifConfig* alif_getConfig(); // 269

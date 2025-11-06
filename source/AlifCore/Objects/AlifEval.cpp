@@ -1,6 +1,7 @@
 #include "alif.h"
 
 #include "AlifCore_Abstract.h"
+#include "AlifCore_Audit.h"
 #include "AlifCore_Backoff.h"
 #include "AlifCore_Call.h"
 #include "AlifCore_Cell.h"
@@ -70,8 +71,8 @@
 
 
 static AlifIntT get_exceptionHandler(AlifCodeObject*, AlifIntT, AlifIntT*, AlifIntT*, AlifIntT*); // 277
-static AlifInterpreterFrame* _alifEval_framePushAndInitEx(AlifThread *, AlifStackRef, AlifObject *,
-	AlifSizeT, AlifObject *, AlifObject *, AlifInterpreterFrame *); // 279
+static AlifInterpreterFrame* _alifEval_framePushAndInitEx(AlifThread*, AlifStackRef, AlifObject*,
+	AlifSizeT, AlifObject*, AlifObject*, AlifInterpreterFrame*); // 279
 
 
 AlifIntT alif_checkRecursiveCall(AlifThread* _thread, const char* _where) { // 305
@@ -1667,7 +1668,7 @@ resume_frame:
 							if (!matches) {
 								goto error;
 							}
-						 _alifFrame_setStackPointer(_frame, stackPointer);
+							_alifFrame_setStackPointer(_frame, stackPointer);
 							// _alifEval_monitorRaise(_thread, _frame, thisInstr);
 							_alifErr_clear(_thread);
 							stackPointer = _alifFrame_getStackPointer(_frame);

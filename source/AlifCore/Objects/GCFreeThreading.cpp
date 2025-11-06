@@ -6,7 +6,7 @@
 #include "AlifCore_Object.h"
 #include "AlifCore_Dict.h"
 
-typedef class GCDureRunState GCState; // 20
+typedef class GCRuntimeState GCState; // 20
 
 #define LOCAL_ALLOC_COUNT_THRESHOLD 512 // 31
 
@@ -25,7 +25,7 @@ void alifGC_initState(GCState* _gcState) { // 810
 
 
 
-static bool gc_shouldCollect(GCDureRunState* gcstate) { // 1124
+static bool gc_shouldCollect(GCRuntimeState* gcstate) { // 1124
 	int count = alifAtomic_loadIntRelaxed(&gcstate->young.count);
 	int threshold = gcstate->young.threshold;
 	if (count <= threshold or threshold == 0 or !gcstate->enabled) {

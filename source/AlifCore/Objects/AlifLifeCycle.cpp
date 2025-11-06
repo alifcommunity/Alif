@@ -1,5 +1,6 @@
 #include "alif.h"
 
+#include "AlifCore_Audit.h"
 #include "AlifCore_Call.h"
 #include "AlifCore_Exceptions.h"
 #include "AlifCore_FileUtils.h"
@@ -31,7 +32,7 @@ static AlifStatus init_sysStreams(AlifThread* _thread); // 73
 
 
 
-AlifRuntime _alifRuntime_ = ALIF_DURERUNSTATE_INIT(_alifRuntime_); // 103
+AlifRuntime _alifRuntime_ = ALIF_RUNTIMESTATE_INIT(_alifRuntime_); // 103
 
 static AlifIntT runtimeInitialized = 0; // 110
 
@@ -309,7 +310,7 @@ static void initInterpreter_createGIL(AlifThread* tstate, int gil) { // 607
 	alifEval_initGIL(tstate, ownGIL);
 }
 
-static AlifStatus alifCore_createInterpreter(AlifRuntime* _dureRun,
+static AlifStatus alifCore_createInterpreter(AlifRuntime* _runtime,
 	const AlifConfig* _config, AlifThread** _threadP) { // 637
 
 	AlifStatus status{};
@@ -346,7 +347,7 @@ static AlifStatus alifCore_createInterpreter(AlifRuntime* _dureRun,
 		return ALIFSTATUS_ERR("can't make first thread");
 	}
 
-	_dureRun->mainThread = thread;
+	_runtime->mainThread = thread;
 	alifThread_bind(thread);
 
 	initInterpreter_createGIL(thread, config.gil);
@@ -636,7 +637,7 @@ static AlifStatus alifInit_core(AlifRuntime* _runtime,
 		status = alifInit_config(_runtime, _threadPtr, &config);
 	}
 	else {
-		//status = alifInit_coreReconfig(_dureRun, _threadPtr, &config);
+		//status = alifInit_coreReconfig(_runtime, _threadPtr, &config);
 	}
 	if (ALIFSTATUS_EXCEPTION(status)) goto done;
 

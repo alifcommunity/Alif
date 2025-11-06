@@ -100,14 +100,14 @@ static inline void updateEval_breakerForThread(AlifInterpreter* _interp,
     } \
 
 
-static AlifIntT gil_created(GILDureRunState* gil) { // 154
+static AlifIntT gil_created(GILRuntimeState* gil) { // 154
 	if (gil == nullptr) {
 		return 0;
 	}
 	return (alifAtomic_loadIntAcquire(&gil->locked) >= 0);
 }
 
-static void create_gil(struct GILDureRunState* gil) { // 162
+static void create_gil(struct GILRuntimeState* gil) { // 162
 	MUTEX_INIT(gil->mutex);
 #ifdef FORCE_SWITCHING
 	MUTEX_INIT(gil->switchMutex);
@@ -120,7 +120,7 @@ static void create_gil(struct GILDureRunState* gil) { // 162
 	alifAtomic_storeIntRelease(&gil->locked, 0);
 }
 
-static void destroy_gil(GILDureRunState* gil) { // 177
+static void destroy_gil(GILRuntimeState* gil) { // 177
 	COND_FINI(gil->cond);
 	MUTEX_FINI(gil->mutex);
 #ifdef FORCE_SWITCHING
@@ -130,7 +130,7 @@ static void destroy_gil(GILDureRunState* gil) { // 177
 	alifAtomic_storeIntRelease(&gil->locked, -1);
 }
 
-static inline void drop_gilImpl(AlifThread* _thread, GILDureRunState* _gil) { // 201
+static inline void drop_gilImpl(AlifThread* _thread, GILRuntimeState* _gil) { // 201
 	MUTEX_LOCK(_gil->mutex);
 	alifAtomic_storeIntRelaxed(&_gil->locked, 0);
 	if (_thread != nullptr) {
@@ -145,7 +145,7 @@ static void drop_gil(AlifInterpreter* _interp,
 
 	AlifEval* ceval = &_interp->eval;
 
-	GILDureRunState* gil = ceval->gil_;
+	GILRuntimeState* gil = ceval->gil_;
 	if (_thread != nullptr and !_thread->status.holdsGIL) {
 		return;
 	}
@@ -184,7 +184,7 @@ static void take_gil(AlifThread* _thread) { // 284
 	}
 
 	AlifInterpreter* interp = _thread->interpreter;
-	GILDureRunState* gil_ = interp->eval.gil_;
+	GILRuntimeState* gil_ = interp->eval.gil_;
 	if (!alifAtomic_loadIntRelaxed(&gil_->enabled)) {
 		return;
 	}
@@ -254,12 +254,12 @@ static void take_gil(AlifThread* _thread) { // 284
 	return;
 }
 
-static void init_sharedGIL(AlifInterpreter* _interp, GILDureRunState* _gil) { // 466
+static void init_sharedGIL(AlifInterpreter* _interp, GILRuntimeState* _gil) { // 466
 	_interp->eval.gil_ = _gil;
 	_interp->eval.ownGIL = 0;
 }
 
-static void init_ownGIL(AlifInterpreter* _interp, GILDureRunState* _gil) { // 474
+static void init_ownGIL(AlifInterpreter* _interp, GILRuntimeState* _gil) { // 474
 	const AlifConfig* config = alifInterpreter_getConfig(_interp);
 	//_gil->enabled = (config->enableGIL == AlifConfigGIL_::AlifConfig_GIL_Enable)
 	//	? INT_MAX : 0; //* review //* delete
@@ -271,7 +271,7 @@ static void init_ownGIL(AlifInterpreter* _interp, GILDureRunState* _gil) { // 47
 void alifEval_initGIL(AlifThread* _thread, AlifIntT _ownGIL) { // 488
 	if (!_ownGIL) {
 		AlifInterpreter* main_interp = alifInterpreter_main();
-		GILDureRunState* gil = main_interp->eval.gil_;
+		GILRuntimeState* gil = main_interp->eval.gil_;
 		init_sharedGIL(_thread->interpreter, gil);
 	}
 	else {
@@ -284,7 +284,7 @@ void alifEval_initGIL(AlifThread* _thread, AlifIntT _ownGIL) { // 488
 
 
 void alifEval_finiGIL(AlifInterpreter* interp) { // 509
-	GILDureRunState* gil = interp->eval.gil_;
+	GILRuntimeState* gil = interp->eval.gil_;
 	if (gil == nullptr) {
 		return;
 	}
@@ -486,23 +486,23 @@ static AlifIntT make_pendingCalls(AlifThread* _thread) { // 909
 
 
 void alifSet_evalBreakerBitAll(AlifInterpreter* _interp, uintptr_t _bit) { // 969
-	AlifRuntime* dureRun = &_alifRuntime_;
+	AlifRuntime* runtime = &_alifRuntime_;
 
-	HEAD_LOCK(dureRun);
+	HEAD_LOCK(runtime);
 	for (AlifThread* tstate = _interp->threads.head; tstate != nullptr; tstate = tstate->next) {
 		alifSet_evalBreakerBit(tstate, _bit);
 	}
-	HEAD_UNLOCK(dureRun);
+	HEAD_UNLOCK(runtime);
 }
 
 void alifUnset_evalBreakerBitAll(AlifInterpreter* _interp, uintptr_t _bit) { // 981
-	AlifRuntime* dureRun = &_alifRuntime_;
+	AlifRuntime* runtime = &_alifRuntime_;
 
-	HEAD_LOCK(dureRun);
+	HEAD_LOCK(runtime);
 	for (AlifThread* thread = _interp->threads.head; thread != nullptr; thread = thread->next) {
 		alifUnset_evalBreakerBit(thread, _bit);
 	}
-	HEAD_UNLOCK(dureRun);
+	HEAD_UNLOCK(runtime);
 }
 
 

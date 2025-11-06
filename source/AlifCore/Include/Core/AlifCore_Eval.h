@@ -58,7 +58,7 @@ extern void alifEval_releaseLock(AlifInterpreter*, AlifThread*, AlifIntT); // 13
 
 
 static inline AlifIntT alifEval_isGILEnabled(AlifThread* _thread) { // 145
-	GILDureRunState* gil = _thread->interpreter->eval.gil_;
+	GILRuntimeState* gil = _thread->interpreter->eval.gil_;
 	return alifAtomic_loadIntRelaxed(&gil->enabled) != 0;
 }
 

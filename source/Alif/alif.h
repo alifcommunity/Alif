@@ -76,6 +76,7 @@
 #include "Abstract.h"
 #include "AlifCppType.h"
 #include "SysModule.h"
+#include "Audit.h"
 #include "OSModule.h"
 #include "Import.h"
 #include "BltinModule.h"

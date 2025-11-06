@@ -628,7 +628,7 @@ static AlifIntT alifGet_systemClock(AlifTimeT* tp, AlifClockInfoT* info, AlifInt
 
 #ifdef HAVE_CLOCK_GETTIME_RUNTIME
 	if (HAVE_CLOCK_GETTIME_RUNTIME) {
-#endif
+	#endif
 
 		err = clock_gettime(CLOCK_REALTIME, &ts);
 		if (err) {
@@ -654,14 +654,14 @@ static AlifIntT alifGet_systemClock(AlifTimeT* tp, AlifClockInfoT* info, AlifInt
 			}
 		}
 
-#ifdef HAVE_CLOCK_GETTIME_RUNTIME
+	#ifdef HAVE_CLOCK_GETTIME_RUNTIME
 	}
 	else {
-#endif
+	#endif
 
-#endif
+	#endif
 
-#if !defined(HAVE_CLOCK_GETTIME) || defined(HAVE_CLOCK_GETTIME_RUNTIME)
+	#if !defined(HAVE_CLOCK_GETTIME) || defined(HAVE_CLOCK_GETTIME_RUNTIME)
 
 		/* test gettimeofday() */
 		err = gettimeofday(&tv, (struct timezone*)NULL);
@@ -682,7 +682,7 @@ static AlifIntT alifGet_systemClock(AlifTimeT* tp, AlifClockInfoT* info, AlifInt
 			info->adjustable = 1;
 		}
 
-#if defined(HAVE_CLOCK_GETTIME_RUNTIME) && defined(HAVE_CLOCK_GETTIME)
+	#if defined(HAVE_CLOCK_GETTIME_RUNTIME) && defined(HAVE_CLOCK_GETTIME)
 	} /* end of availability block */
 #endif
 
@@ -728,8 +728,8 @@ static AlifIntT alifWin_perfCounterFrequency(AlifTimeFraction* _base,
 	// * 3,579,545 Hz (3.6 MHz): 279 ns resolution
 	if (alifTimeFraction_set(_base, SEC_TO_NS, denom) < 0) {
 		if (_raiseExc) {
-			//alifErr_setString(alifExcDureRunError,
-			//	"invalid QueryPerformanceFrequency");
+			alifErr_setString(_alifExcRuntimeError_,
+				"invalid QueryPerformanceFrequency");
 		}
 		return -1;
 	}
@@ -784,8 +784,8 @@ static AlifIntT alifMach_timeBaseInfo(AlifTimeFraction* base, AlifIntT raise_exc
 	// * (1000000000, 25000000) on PowerPC: 40 ns
 	if (alifTimeFraction_set(base, numer, denom) < 0) {
 		if (raise_exc) {
-			//alifErr_setString(alifExcDureRunError,
-			//	"invalid mach_timebase_info");
+			alifErr_setString(alifExcRuntimeError,
+				"invalid mach_timebase_info");
 		}
 		return -1;
 	}

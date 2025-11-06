@@ -10,16 +10,16 @@
 #include "AlifCore_Thread.h"
 
 
-#define ALIF_DURERUNSTATE_INIT(dureRun)												\
+#define ALIF_RUNTIMESTATE_INIT(_runtime)												\
 	{																				\
         .selfInitialized = 0,														\
 		.interpreters = {.nextID = -1},												\
 		.mainThreadID = 0,															\
-		.threads = ALIFTHREAD_DURERUN_INIT(dureRun.threads),						\
+		.threads = ALIFTHREAD_RUNTIME_INIT(_runtime.threads),						\
 		.signals = SIGNALS_RUNTIME_INIT,											\
 		.autoTSSKey = 0,															\
 		.trashTSSKey = 0,															\
-		.parser = PARSER_DURERUN_STATE_INIT,										\
+		.parser = PARSER_RUNTIME_STATE_INIT,										\
         .staticObjects = { \
             .singletons = { \
                 .smallInts = ALIF_SMALL_INTS_INIT, \
@@ -42,7 +42,7 @@
                 },*/ \
             }, \
         }, \
-        .mainInterpreter = ALIF_INTERPRETERSTATE_INIT(_dureRun_.mainInterpreter),	\
+        .mainInterpreter = ALIF_INTERPRETERSTATE_INIT(_runtime.mainInterpreter),	\
 	}
 
 
@@ -148,7 +148,7 @@
 
 
 
-/* ------------------------------ AlifCore_DureRunInitGenerated.h ------------------------------ */
+/* ------------------------------ AlifCore_RuntimeInitGenerated.h ------------------------------ */
 
 
 #define ALIF_SMALL_INTS_INIT { \

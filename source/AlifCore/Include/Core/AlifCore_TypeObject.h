@@ -5,7 +5,7 @@
 #include "AlifCore_Lock.h"
 
 
- // 17
+// 17
 #define _ALIF_TYPE_BASE_VERSION_TAG (2<<16)
 #define ALIF_MAX_GLOBAL_TYPE_VERSION_TAG (_ALIF_TYPE_BASE_VERSION_TAG - 1)
 
@@ -15,7 +15,7 @@
     (ALIFMAX_MANAGED_STATIC_BUILTIN_TYPES + ALIFMAX_MANAGED_STATIC_EXT_TYPES)
 
 
-class TypesDureRunState { // 27
+class TypesRuntimeState { // 27
 public:
 	AlifUIntT nextVersionTag{};
 	class {
@@ -109,9 +109,9 @@ static inline AlifIntT alifType_isReady(AlifTypeObject* _type) { // 221
 	return alifType_getDict(_type) != nullptr;
 }
 
-extern AlifObject* alifType_getAttroImpl(AlifTypeObject* , AlifObject* , AlifIntT* ); // 226
+extern AlifObject* alifType_getAttroImpl(AlifTypeObject*, AlifObject*, AlifIntT*); // 226
 
-extern AlifObject* alifType_getAttro(AlifObject* , AlifObject* ); // 228
+extern AlifObject* alifType_getAttro(AlifObject*, AlifObject*); // 228
 
 
 

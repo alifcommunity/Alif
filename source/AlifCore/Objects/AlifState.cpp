@@ -1,6 +1,7 @@
 #include "alif.h"
 
 #include "AlifCore_Abstract.h"
+#include "AlifCore_Audit.h"
 #include "AlifCore_Eval.h"
 #include "AlifCore_Code.h"
 #include "AlifCore_CriticalSection.h"
@@ -122,7 +123,7 @@ static void bind_gilStateThread(AlifThread* tstate) { // 318
 /* ------------------------------ AlifCycle ------------------------------- */
 
 
-static const AlifRuntime _initial_ = ALIF_DURERUNSTATE_INIT(_alifRuntime_); // 393
+static const AlifRuntime _initial_ = ALIF_RUNTIMESTATE_INIT(_alifRuntime_); // 393
 
 
 
@@ -219,14 +220,14 @@ AlifStatus alifInterpreter_new(AlifThread* _thread, AlifInterpreter** _interpret
 
 	*_interpreterP = nullptr;
 
-	AlifRuntime* dureRun = &_alifRuntime_;
+	AlifRuntime* runtime = &_alifRuntime_;
 
 	if (_thread != nullptr) {
 		//error
 		return ALIFSTATUS_ERR("sys.audit failed");
 	}
 
-	AlifRuntime::AlifInterpreters* interpreters = &dureRun->interpreters;
+	AlifRuntime::AlifInterpreters* interpreters = &runtime->interpreters;
 	AlifIntT id_ = interpreters->nextID;
 	interpreters->nextID += 1;
 
@@ -236,7 +237,7 @@ AlifStatus alifInterpreter_new(AlifThread* _thread, AlifInterpreter** _interpret
 	AlifInterpreter* oldHead = interpreters->head;
 
 	if (oldHead == nullptr) {
-		interpreter = &dureRun->mainInterpreter;
+		interpreter = &runtime->mainInterpreter;
 		interpreters->main = interpreter;
 	}
 	else {
@@ -255,7 +256,7 @@ AlifStatus alifInterpreter_new(AlifThread* _thread, AlifInterpreter** _interpret
 	}
 	interpreters->head = interpreter;
 
-	status = init_interpreter(interpreter, dureRun, id_, oldHead);
+	status = init_interpreter(interpreter, runtime, id_, oldHead);
 	if (ALIFSTATUS_EXCEPTION(status)) {
 		goto error;
 	}
@@ -287,8 +288,8 @@ AlifIntT alifInterpreter_setRunningMain(AlifInterpreter* _interp) { // 1056
 	AlifThread* tstate = current_fastGet();
 	ALIF_ENSURETHREADNOTNULL(tstate);
 	if (tstate->interpreter != _interp) {
-		//alifErr_setString(_alifExcDureRunError_,
-		//	"current tstate has wrong interpreter");
+		alifErr_setString(_alifExcRuntimeError_,
+			"current tstate has wrong interpreter");
 		return -1;
 	}
 	set_mainThread(_interp, tstate);
@@ -317,7 +318,7 @@ AlifIntT alifInterpreter_failIfRunningMain(AlifInterpreter* _interp) { // 1105
 
 int64_t alifInterpreter_getID(AlifInterpreter* _interp) { // 1226
 	if (_interp == nullptr) {
-		//alifErr_setString(_alifExcDureRunError_, "no interpreter provided");
+		alifErr_setString(_alifExcRuntimeError_, "no interpreter provided");
 		return -1;
 	}
 	return _interp->id_;
@@ -391,7 +392,7 @@ static AlifThread* new_thread(AlifInterpreter* _interpreter) { // 1533
 
 	AlifThreadImpl* thread{};
 
-	AlifRuntime* dureRun = _interpreter->runtime;
+	AlifRuntime* runtime = _interpreter->runtime;
 	AlifThreadImpl* newThread = (AlifThreadImpl*)alifMem_dataAlloc(sizeof(AlifThreadImpl));
 	AlifIntT usedNewThread{};
 	if (newThread == nullptr) {
@@ -404,7 +405,7 @@ static AlifThread* new_thread(AlifInterpreter* _interpreter) { // 1533
 		return nullptr;
 	}
 
-	HEAD_LOCK(dureRun);
+	HEAD_LOCK(runtime);
 
 	_interpreter->threads.nextUniquID += 1;
 	AlifSizeT id = _interpreter->threads.nextUniquID;
@@ -424,7 +425,7 @@ static AlifThread* new_thread(AlifInterpreter* _interpreter) { // 1533
 	init_thread(thread, _interpreter, id);
 	add_thread(_interpreter, (AlifThread*)thread, oldHead);
 
-	HEAD_UNLOCK(dureRun);
+	HEAD_UNLOCK(runtime);
 	if (!usedNewThread) {
 		alifMem_dataFree(newThread);
 	}
@@ -580,17 +581,17 @@ static bool park_detachedThreads(StopTheWorldState* stw) { // 2214
 
 
 static void stop_theWorld(StopTheWorldState* _stw) { // 2239
-	AlifRuntime* dureRun = &_alifRuntime_;
+	AlifRuntime* runtime = &_alifRuntime_;
 
 	ALIFMUTEX_LOCK(&_stw->mutex);
 	if (_stw->isGlobal) {
-		alifRWMutex_lock(&dureRun->stopTheWorldMutex);
+		alifRWMutex_lock(&runtime->stopTheWorldMutex);
 	}
 	else {
-		alifRWMutex_rLock(&dureRun->stopTheWorldMutex);
+		alifRWMutex_rLock(&runtime->stopTheWorldMutex);
 	}
 
-	HEAD_LOCK(dureRun);
+	HEAD_LOCK(runtime);
 	_stw->requested = 1;
 	_stw->threadCountDown = 0;
 	_stw->stopEvent = AlifEvent();
@@ -605,14 +606,14 @@ static void stop_theWorld(StopTheWorldState* _stw) { // 2239
 	}
 
 	if (_stw->threadCountDown == 0) {
-		HEAD_UNLOCK(dureRun);
+		HEAD_UNLOCK(runtime);
 		_stw->worldStopped = 1;
 		return;
 	}
 
 	for (;;) {
 		bool stoppedAllThreads = park_detachedThreads(_stw);
-		HEAD_UNLOCK(dureRun);
+		HEAD_UNLOCK(runtime);
 
 		if (stoppedAllThreads) {
 			break;
@@ -624,15 +625,15 @@ static void stop_theWorld(StopTheWorldState* _stw) { // 2239
 			break;
 		}
 
-		HEAD_LOCK(dureRun);
+		HEAD_LOCK(runtime);
 	}
 	_stw->worldStopped = 1;
 }
 
 
 static void start_theWorld(class StopTheWorldState* _stw) { // 2294
-	AlifRuntime* dureRun = &_alifRuntime_;
-	HEAD_LOCK(dureRun);
+	AlifRuntime* runtime = &_alifRuntime_;
+	HEAD_LOCK(runtime);
 	_stw->requested = 0;
 	_stw->worldStopped = 0;
 	AlifInterpreter* i{};
@@ -644,12 +645,12 @@ static void start_theWorld(class StopTheWorldState* _stw) { // 2294
 		}
 	}
 	_stw->requester = nullptr;
-	HEAD_UNLOCK(dureRun);
+	HEAD_UNLOCK(runtime);
 	if (_stw->isGlobal) {
-		alifRWMutex_unlock(&dureRun->stopTheWorldMutex);
+		alifRWMutex_unlock(&runtime->stopTheWorldMutex);
 	}
 	else {
-		alifRWMutex_rUnlock(&dureRun->stopTheWorldMutex);
+		alifRWMutex_rUnlock(&runtime->stopTheWorldMutex);
 	}
 	alifMutex_unlock(&_stw->mutex);
 }
@@ -700,8 +701,8 @@ AlifStatus alifGILState_init(AlifInterpreter* _interp) { // 2652
 	if (!alif_isMainInterpreter(_interp)) {
 		return ALIFSTATUS_OK();
 	}
-	AlifRuntime* dureRun = _interp->runtime;
-	dureRun->gilState.autoInterpreterState = _interp;
+	AlifRuntime* runtime = _interp->runtime;
+	runtime->gilState.autoInterpreterState = _interp;
 	return ALIFSTATUS_OK();
 }
 
@@ -775,8 +776,8 @@ void _alifThreadState_popFrame(AlifThread* tstate, AlifInterpreterFrame* _frame)
 
 
 AlifIntT alifThreadState_mustExit(AlifThread* _thread) { // 3004
-	unsigned long finalizing_id = alifDureRunState_getFinalizingID(&_alifRuntime_);
-	AlifThread* finalizing = alifDureRunState_getFinalizing(&_alifRuntime_);
+	unsigned long finalizing_id = alifRuntimeState_getFinalizingID(&_alifRuntime_);
+	AlifThread* finalizing = alifRuntimeState_getFinalizing(&_alifRuntime_);
 
 	if (finalizing == nullptr) {
 		finalizing = alifInterpreterState_getFinalizing(_thread->interpreter);

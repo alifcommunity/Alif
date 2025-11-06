@@ -8,7 +8,7 @@
 #define HANDLERS _alifRuntime_.signals.handlers // 105
 
 
-typedef SignalsDureRunState SignalStateT; // 110
+typedef SignalsRuntimeState SignalStateT; // 110
 #define SIGNAL_GLOBAL_STATE _alifRuntime_.signals
 
 

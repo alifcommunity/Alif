@@ -10,7 +10,7 @@ extern AlifIntT _alifImport_fixupBuiltin(AlifThread*, AlifObject*, const char*, 
 AlifObject* _alifImport_getModuleAttr(AlifObject*, AlifObject*); // 34
 AlifObject* _alifImport_getModuleAttrString(const char*, const char*); // 37
 
-class ImportDureRunState { // 40
+class ImportRuntimeState { // 40
 public:
 	class InitTable* initTable{};
 
@@ -41,11 +41,11 @@ public:
 // 119
 /*
 #define IMPORTS_INIT \
-    { \
-        .findAndLoad = { \
-            .header = 1, \
-        }, \
-    }
+	{ \
+		.findAndLoad = { \
+			.header = 1, \
+		}, \
+	}
 */
 
 

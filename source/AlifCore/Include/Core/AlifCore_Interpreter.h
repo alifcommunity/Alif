@@ -94,7 +94,7 @@ public:
 
 	uint8_t activeFuncWatchers{};
 
-	GCDureRunState gc{};
+	GCRuntimeState gc{};
 
 	AlifObject* sysDict{};
 
@@ -102,7 +102,7 @@ public:
 
 	ImportState imports{};
 
-	GILDureRunState gil_{};
+	GILRuntimeState gil_{};
 
 	CodecsState codecs{};
 
@@ -137,7 +137,7 @@ public:
 	AlifExcState excState{};
 	AlifMemInterpFreeQueue memFreeQueue{};
 
-	ASTState ast {};
+	ASTState ast{};
 	TypesState types{};
 
 
