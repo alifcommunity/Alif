@@ -195,7 +195,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

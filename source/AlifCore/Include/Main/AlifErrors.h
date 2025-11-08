@@ -92,10 +92,10 @@ AlifObject* alifErr_setExcFromWindowsErrWithFilenameObjects(
 /* --------------------------------------------------------------------------------- */
 
  // 8
-#define ALIFEXCEPTION_HEAD ALIFOBJECT_HEAD; AlifObject *dict;\
-             AlifObject *args; AlifObject *notes; AlifObject *traceback;\
-             AlifObject *context; AlifObject *cause;\
-             char suppressContext;
+#define ALIFEXCEPTION_HEAD ALIFOBJECT_HEAD; AlifObject *dict{};\
+             AlifObject *args{}; AlifObject *notes{}; AlifObject *traceback{};\
+             AlifObject *context{}; AlifObject *cause{};\
+             char suppressContext{};
 
 class AlifBaseExceptionObject { // 13
 public:
