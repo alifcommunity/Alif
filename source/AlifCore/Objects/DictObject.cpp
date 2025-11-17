@@ -3196,16 +3196,25 @@ static AlifIntT storeInstance_attrLockHeld(AlifObject* obj, AlifDictValues* valu
 		return res;
 	}
 
-	AlifObject* old_value = values->values[ix];
+	AlifObject* oldValue = values->values[ix];
+
+	if (oldValue == nullptr and value == nullptr) {
+		alifErr_format(_alifExcAttributeError_,
+			"'%.100s' object has no attribute '%U'",
+			ALIF_TYPE(obj)->name, name);
+		return -1;
+	}
+	if (dict) {
+		AlifInterpreter* interp = _alifInterpreter_get();
+		AlifDictWatchEvent_ event = (oldValue == nullptr ? AlifDictWatchEvent_::AlifDict_Event_Added :
+			value == nullptr ? AlifDictWatchEvent_::AlifDict_Event_Deleted :
+			AlifDictWatchEvent_::AlifDict_Event_Modified);
+		_alifDict_notifyEvent(interp, event, dict, name, value);
+	}
+
 	alifAtomic_storePtrRelease(&values->values[ix], ALIF_XNEWREF(value));
 
-	if (old_value == nullptr) {
-		if (value == nullptr) {
-			//alifErr_format(_alifExcAttributeError_,
-			//	"'%.100s' object has no attribute '%U'",
-			//	ALIF_TYPE(obj)->name, name);
-			return -1;
-		}
+	if (oldValue == nullptr) {
 		alifDictValues_addToInsertionOrder(values, ix);
 		if (dict) {
 			STORE_USED(dict, dict->used + 1);
@@ -3218,7 +3227,7 @@ static AlifIntT storeInstance_attrLockHeld(AlifObject* obj, AlifDictValues* valu
 				STORE_USED(dict, dict->used - 1);
 			}
 		}
-		ALIF_DECREF(old_value);
+		ALIF_DECREF(oldValue);
 	}
 	return 0;
 }
