@@ -1,5 +1,7 @@
 #include "alif.h"
 
+#include "AlifCore_Dict.h"
+#include "AlifCore_Interpreter.h"
 #include "AlifCore_Import.h"
 #include "AlifCore_ModSupport.h"
 #include "AlifCore_ModuleObject.h"
@@ -80,7 +82,7 @@ static AlifModuleObject* newModule_noTrack(AlifTypeObject* mt) { // 82
 
 
 static void track_module(AlifModuleObject* _m) { // 101
-	alifObject_setDeferredRefcount(_m->dict);
+	_alifDict_enablePerThreadRefcounting(_m->dict);
 	alifObject_gcTrack(_m->dict);
 
 	alifObject_setDeferredRefcount((AlifObject*)_m);
@@ -238,7 +240,7 @@ AlifObject* alifModule_fromDefAndSpec2(AlifModuleDef* _def,
 				//	name);
 				goto error;
 			}
-			create = (AlifObject* (*)(AlifObject*, AlifModuleDef*))curSlot->value; //* alif
+			create = (AlifObject * (*)(AlifObject*, AlifModuleDef*))curSlot->value; //* alif
 
 			break;
 		case ALIF_MOD_EXEC:
@@ -418,7 +420,7 @@ AlifIntT alifModule_execDef(AlifObject* _module, AlifModuleDef* _def) { // 460
 			/* handled in alifModule_fromDefAndSpec2 */
 			break;
 		case ALIF_MOD_EXEC:
-			ret = ((AlifIntT (*)(AlifObject*))curSlot->value)(_module);
+			ret = ((AlifIntT(*)(AlifObject*))curSlot->value)(_module);
 			if (ret != 0) {
 				if (!alifErr_occurred()) {
 					//alifErr_format(
@@ -662,7 +664,7 @@ AlifObject* alifModule_getAttroImpl(AlifModuleObject* _m,
 	}
 	if (_suppress == 1) {
 		if (alifErr_occurred()) {
-			 // pass up non-AttributeError exception
+			// pass up non-AttributeError exception
 			return nullptr;
 		}
 	}
@@ -799,8 +801,7 @@ static AlifIntT module_traverse(AlifObject* _self,
 	VisitProc visit, void* arg) { // 1070
 	AlifModuleObject* m = ALIFMODULE_CAST(_self);
 	if (m->def and m->def->traverse
-		and (m->def->size <= 0 or m->state != nullptr))
-	{
+		and (m->def->size <= 0 or m->state != nullptr)) {
 		AlifIntT res = m->def->traverse((AlifObject*)m, visit, arg);
 		if (res)
 			return res;

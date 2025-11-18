@@ -941,6 +941,18 @@ static inline AlifIntT insert_combinedDict(AlifInterpreter* _interp, AlifDictObj
 	return 0;
 }
 
+void _alifDict_enablePerThreadRefcounting(AlifObject* _op) { // 1639
+	AlifSizeT id = _alifObject_assignUniqueId(_op);
+	if ((uint64_t)id >= (uint64_t)DICT_UNIQUE_ID_MAX) {
+		_alifObject_releaseUniqueId(id);
+		return;
+	}
+
+	AlifDictObject* mp = (AlifDictObject*)_op;
+	// Plus 1 so that watcherTag=0 represents an unassigned id
+	mp->watcherTag += ((uint64_t)id + 1) << DICT_UNIQUE_ID_SHIFT;
+}
+
 static AlifSizeT insert_splitKey(AlifDictKeysObject* _keys,
 	AlifObject* _key, AlifHashT _hash) { // 1658
 	AlifSizeT ix_{};
@@ -3200,7 +3212,7 @@ static AlifIntT storeInstance_attrLockHeld(AlifObject* obj, AlifDictValues* valu
 
 	if (oldValue == nullptr and value == nullptr) {
 		alifErr_format(_alifExcAttributeError_,
-			"'%.100s' object has no attribute '%U'",
+			"'%.100s' الكائن لا يحتوي خاصية '%U'",
 			ALIF_TYPE(obj)->name, name);
 		return -1;
 	}

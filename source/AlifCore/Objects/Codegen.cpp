@@ -4150,6 +4150,7 @@ static AlifIntT codegen_syncComprehensionGenerator(AlifCompiler* _c, Location _l
 
 	if (IS_JUMP_TARGET_LABEL(start)) {
 		_depth++;
+		ADDOP(_c, LOC(gen->iter), GET_ITER);
 		USE_LABEL(_c, start);
 		ADDOP_JUMP(_c, LOC(gen->iter), FOR_ITER, anchor);
 	}

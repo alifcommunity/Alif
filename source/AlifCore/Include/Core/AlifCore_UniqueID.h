@@ -21,7 +21,9 @@ public:
 };
 
 
-extern AlifSizeT _alifObject_assignUniqueId(AlifObject*); // 52
+extern AlifSizeT _alifObject_assignUniqueId(AlifObject*); // 49
+
+extern void _alifObject_releaseUniqueId(AlifSizeT); // 52
 
 extern void _alifObject_disablePerThreadRefcounting(AlifObject*); // 55
 

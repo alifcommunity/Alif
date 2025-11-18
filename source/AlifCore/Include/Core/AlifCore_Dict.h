@@ -12,7 +12,7 @@ AlifIntT alifDict_delItemKnownHash(AlifObject*, AlifObject*, AlifHashT); // 29
 extern AlifIntT alifDict_containsKnownHash(AlifObject*, AlifObject*, AlifHashT); // 31
 
 
-extern AlifIntT _alifDict_next(AlifObject* , AlifSizeT* , AlifObject** , AlifObject** , AlifHashT* ); // 40
+extern AlifIntT _alifDict_next(AlifObject*, AlifSizeT*, AlifObject**, AlifObject**, AlifHashT*); // 40
 
 
 extern AlifIntT _alifDict_hasOnlyStringKeys(AlifObject*); // 43
@@ -53,7 +53,7 @@ AlifObject* _alifDict_loadGlobal(AlifDictObject*, AlifDictObject*, AlifObject*);
 void _alifDict_loadGlobalStackRef(AlifDictObject*, AlifDictObject*, AlifObject*, AlifStackRef*); // 109
 extern AlifIntT alifDict_setItemLockHeld(AlifDictObject*, AlifObject*, AlifObject*); // 110
 
-extern AlifIntT alifDict_getItemRefKnownHash(AlifDictObject* , AlifObject* , AlifHashT , AlifObject** ); // 116
+extern AlifIntT alifDict_getItemRefKnownHash(AlifDictObject*, AlifObject*, AlifHashT, AlifObject**); // 116
 
 extern AlifIntT alifObjectDict_setItem(AlifTypeObject*, AlifObject*, AlifObject**, AlifObject*, AlifObject*); // 118
 
@@ -67,7 +67,7 @@ extern AlifIntT alifDict_popKnownHash(AlifDictObject*, AlifObject*, AlifHashT, A
 #define DKIX_KEY_CHANGED (-4)
 
 
- enum DictKeysKind_ { // 131
+enum DictKeysKind_ { // 131
 	Dict_Keys_General = 0,
 	Dict_Keys_UStr = 1,
 	Dict_Keys_Split = 2
@@ -128,7 +128,8 @@ static inline AlifDictUStrEntry* dk_uStrEntries(AlifDictKeysObject* _dk) { // 21
 #define DICT_VERSION_INCREMENT (1 << (DICT_MAX_WATCHERS + DICT_WATCHED_MUTATION_BITS))
 #define DICT_WATCHER_MASK ((1 << DICT_MAX_WATCHERS) - 1)
 #define DICT_WATCHER_AND_MODIFICATION_MASK ((1 << (DICT_MAX_WATCHERS + DICT_WATCHED_MUTATION_BITS)) - 1)
-
+#define DICT_UNIQUE_ID_SHIFT (32)
+#define DICT_UNIQUE_ID_MAX ((UINT64_C(1) << (64 - DICT_UNIQUE_ID_SHIFT)) - 1)
 
 
 
@@ -148,7 +149,7 @@ static inline void _alifDict_notifyEvent(AlifInterpreter* _interp,
 }
 
 
-extern AlifDictObject* alifObject_materializeManagedDict(AlifObject* ); // 279
+extern AlifDictObject* alifObject_materializeManagedDict(AlifObject*); // 279
 
 AlifObject* _alifDict_fromItems(AlifObject* const*, AlifSizeT,
 	AlifObject* const*, AlifSizeT, AlifSizeT); // 281
@@ -171,11 +172,28 @@ static inline AlifUSizeT sharedKeys_usableSize(AlifDictKeysObject* _keys) { // 3
 	return dkNentries + dkUsable;
 }
 
-static inline AlifUSizeT alifInline_valuesSize(AlifTypeObject* _tp) { // 320
+
+static inline AlifUSizeT alifInline_valuesSize(AlifTypeObject* _tp) { // 299
 	AlifDictKeysObject* keys = ((AlifHeapTypeObject*)_tp)->cachedKeys;
 	AlifUSizeT size = sharedKeys_usableSize(keys);
 	AlifUSizeT prefixSize = ALIF_SIZE_ROUND_UP(size, sizeof(AlifObject*));
 	return prefixSize + (size + 1) * sizeof(AlifObject*);
 }
 
+// Enables per-thread ref counting on this dict in the free threading build
+extern void _alifDict_enablePerThreadRefcounting(AlifObject*); // 312
 
+static inline AlifSizeT _alifDict_uniqueId(AlifDictObject* _mp) {
+	// Offset by one so that watcherTag=0 represents an unassigned id
+	return (AlifSizeT)(_mp->watcherTag >> DICT_UNIQUE_ID_SHIFT) - 1;
+}
+
+static inline void _alif_increfDict(AlifObject* _op) {
+	AlifSizeT id = _alifDict_uniqueId((AlifDictObject*)_op);
+	_alif_threadIncRefObject(_op, id);
+}
+
+static inline void _alif_decrefDict(AlifObject* _op) {
+	AlifSizeT id = _alifDict_uniqueId((AlifDictObject*)_op);
+	_alif_threadDecRefObject(_op, id);
+}
