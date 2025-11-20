@@ -337,6 +337,11 @@ static AlifStatus alifCore_createInterpreter(AlifRuntime* _runtime,
 		return status;
 	}
 
+	//status = _alifObject_initState(interpreter);
+	//if (ALIFSTATUS_EXCEPTION(status)) {
+	//	return status;
+	//}
+
 	if (alifInterpreterMem_init(interpreter) < 1) {
 		return ALIFSTATUS_NO_MEMORY();
 	}
