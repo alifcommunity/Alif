@@ -193,9 +193,25 @@ AlifIntT _alifRun_simpleStringFlagsWithName(const char* _command,
 
 
 
+static AlifIntT parse_exitCode(AlifObject* _code, AlifIntT* _exitcodeP) { // 567
+	if (ALIFLONG_CHECK(_code)) {
+		AlifIntT exitcode = (AlifIntT)alifLong_asLongLong(_code);
+		if (exitcode == -1 and alifErr_occurred()) {
+			alifErr_clear();
+			*_exitcodeP = -1;
+			return 1;
+		}
+		*_exitcodeP = exitcode;
+		return 1;
+	}
+	else if (_code == ALIF_NONE) {
+		*_exitcodeP = 0;
+		return 1;
+	}
+	return 0;
+}
 
-
-AlifIntT _alif_handleSystemExit(AlifIntT* _exitcodeP) { // 566
+AlifIntT _alif_handleSystemExit(AlifIntT* _exitcodeP) { // 591
 	AlifIntT inspect = alif_getConfig()->inspect;
 	if (inspect) {
 		return 0;
@@ -207,42 +223,37 @@ AlifIntT _alif_handleSystemExit(AlifIntT* _exitcodeP) { // 566
 
 	fflush(stdout);
 
-	AlifIntT exitcode = 0;
-
 	AlifObject* exc = alifErr_getRaisedException();
-	if (exc == nullptr) {
-		goto done;
-	}
 
 	AlifObject* code; code = alifObject_getAttr(exc, &ALIF_ID(Code));
-	if (code) {
-		ALIF_SETREF(exc, code);
-		if (exc == ALIF_NONE) {
-			goto done;
-		}
+	if (code == nullptr) {
+		alifErr_clear();
 	}
-
-	if (ALIFLONG_CHECK(exc)) {
-		exitcode = (AlifIntT)alifLong_asLong(exc);
+	else if (parse_exitCode(code, _exitcodeP)) {
+		ALIF_DECREF(code);
+		ALIF_CLEAR(exc);
+		return 1;
 	}
 	else {
-		AlifThread* tstate = _alifThread_get();
-		AlifObject* sysStderr = _alifSys_getAttr(tstate, &ALIF_ID(Stderr));
-		alifErr_clear();
-		if (sysStderr != nullptr and sysStderr != ALIF_NONE) {
-			alifFile_writeObject(exc, sysStderr, ALIF_PRINT_RAW);
-		}
-		else {
-			alifObject_print(exc, stderr, ALIF_PRINT_RAW);
-			fflush(stderr);
-		}
-		//alifSys_writeStderr("\n");
-		exitcode = 1;
+		ALIF_SETREF(exc, code);
 	}
 
-done:
+	AlifThread* thread = _alifThread_get();
+	AlifObject* sysStderr = _alifSys_getAttr(thread, &ALIF_ID(Stderr));
+	if (sysStderr != nullptr and sysStderr != ALIF_NONE) {
+		if (alifFile_writeObject(exc, sysStderr, ALIF_PRINT_RAW) < 0) {
+			alifErr_clear();
+		}
+	}
+	else {
+		if (alifObject_print(exc, stderr, ALIF_PRINT_RAW) < 0) {
+			alifErr_clear();
+		}
+		fflush(stderr);
+	}
+	//alifSys_writeStderr("\n");
 	ALIF_CLEAR(exc);
-	*_exitcodeP = exitcode;
+	*_exitcodeP = 1;
 	return 1;
 }
 
