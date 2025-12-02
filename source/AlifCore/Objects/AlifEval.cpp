@@ -154,7 +154,7 @@ AlifObject* alifEval_evalCode(AlifObject* _co,
 	if (_locals == nullptr) {
 		_locals = _globals;
 	}
-	AlifObject* builtins = _alifEval_builtinsFromGlobals(thread, _globals); // borrowed ref
+	AlifObject* builtins = _alifDict_loadBuiltinsFromGlobals(_globals);
 	if (builtins == nullptr) {
 		return nullptr;
 	}
@@ -169,6 +169,7 @@ AlifObject* alifEval_evalCode(AlifObject* _co,
 		.closure = nullptr
 	};
 	AlifFunctionObject* func = _alifFunction_fromConstructor(&desc);
+	_alif_decrefBuiltins(builtins);
 	if (func == nullptr) {
 		return nullptr;
 	}

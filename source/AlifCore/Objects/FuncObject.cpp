@@ -1,6 +1,5 @@
 #include "alif.h"
 
-#include "AlifCore_Eval.h"
 #include "AlifCore_Dict.h"
 #include "AlifCore_Long.h"
 #include "AlifCore_ModSupport.h"
@@ -58,12 +57,7 @@ AlifFunctionObject* _alifFunction_fromConstructor(AlifFrameConstructor* _constr)
 	}
 	_alif_increfDict(_constr->globals);
 	op_->globals = _constr->globals;
-	if (ALIFDICT_CHECK(_constr->builtins)) {
-		_alif_increfDict(_constr->builtins);
-	}
-	else {
-		ALIF_INCREF(_constr->builtins);
-	}
+	_alif_increfBuiltins(_constr->builtins);
 	op_->builtins = _constr->builtins;
 	op_->name = ALIF_NEWREF(_constr->name);
 	op_->qualname = ALIF_NEWREF(_constr->qualname);
@@ -93,8 +87,6 @@ AlifObject* alifFunction_newWithQualName(AlifObject* _code,
 
 	AlifFunctionObject* op{}; //* alif
 	_alif_increfDict(_globals);
-
-	AlifThread* thread = _alifThread_get();
 
 	AlifCodeObject* codeObj = (AlifCodeObject*)_code;
 	_alif_incRefCode(codeObj);
@@ -126,15 +118,9 @@ AlifObject* alifFunction_newWithQualName(AlifObject* _code,
 		goto error;
 	}
 
-	builtins = _alifEval_builtinsFromGlobals(thread, _globals); // borrowed ref
+	builtins = _alifDict_loadBuiltinsFromGlobals(_globals);
 	if (builtins == nullptr) {
 		goto error;
-	}
-	if (ALIFDICT_CHECK(builtins)) {
-		_alif_increfDict(builtins);
-	}
-	else {
-		ALIF_INCREF(builtins);
 	}
 
 	op = ALIFOBJECT_GC_NEW(AlifFunctionObject, &_alifFunctionType_);
@@ -213,12 +199,7 @@ static AlifIntT func_clear(AlifObject* _self) { // 1053
 	AlifObject* builtins = op->builtins;
 	op->builtins = nullptr;
 	if (builtins != nullptr) {
-		if (ALIFDICT_CHECK(builtins)) {
-			_alif_decrefDict(builtins);
-		}
-		else {
-			ALIF_DECREF(builtins);
-		}
+		_alif_decrefBuiltins(builtins);
 	}
 	ALIF_CLEAR(op->module);
 	ALIF_CLEAR(op->defaults);

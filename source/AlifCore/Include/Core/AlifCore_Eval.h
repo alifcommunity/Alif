@@ -26,7 +26,6 @@ AlifIntT alifEval_makePendingCalls(AlifThread*); // 37
 
 
 extern AlifObject* _alifEval_getBuiltins(AlifThread*); // 85
-extern AlifObject* _alifEval_builtinsFromGlobals(AlifThread*, AlifObject*); // 86
 
 
 

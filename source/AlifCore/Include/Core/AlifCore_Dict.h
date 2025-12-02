@@ -51,13 +51,16 @@ extern void alifDictKeys_decRef(AlifDictKeysObject*); // 96
 
 AlifObject* _alifDict_loadGlobal(AlifDictObject*, AlifDictObject*, AlifObject*); // 106
 void _alifDict_loadGlobalStackRef(AlifDictObject*, AlifDictObject*, AlifObject*, AlifStackRef*); // 109
-extern AlifIntT alifDict_setItemLockHeld(AlifDictObject*, AlifObject*, AlifObject*); // 110
 
-extern AlifIntT alifDict_getItemRefKnownHash(AlifDictObject*, AlifObject*, AlifHashT, AlifObject**); // 116
+extern AlifObject* _alifDict_loadBuiltinsFromGlobals(AlifObject*); // 112
 
-extern AlifIntT alifObjectDict_setItem(AlifTypeObject*, AlifObject*, AlifObject**, AlifObject*, AlifObject*); // 118
+extern AlifIntT alifDict_setItemLockHeld(AlifDictObject*, AlifObject*, AlifObject*); // 116
 
-extern AlifIntT alifDict_popKnownHash(AlifDictObject*, AlifObject*, AlifHashT, AlifObject**); // 120
+extern AlifIntT alifDict_getItemRefKnownHash(AlifDictObject*, AlifObject*, AlifHashT, AlifObject**); // 122
+
+extern AlifIntT alifObjectDict_setItem(AlifTypeObject*, AlifObject*, AlifObject**, AlifObject*, AlifObject*); // 124
+
+extern AlifIntT alifDict_popKnownHash(AlifDictObject*, AlifObject*, AlifHashT, AlifObject**); // 126
 
 
 // 126
@@ -196,4 +199,22 @@ static inline void _alif_increfDict(AlifObject* _op) {
 static inline void _alif_decrefDict(AlifObject* _op) {
 	AlifSizeT id = _alifDict_uniqueId((AlifDictObject*)_op);
 	_alif_threadDecRefObject(_op, id);
+}
+
+static inline void _alif_increfBuiltins(AlifObject* _op) { // 352
+	if (ALIFDICT_CHECKEXACT(_op)) {
+		_alif_increfDict(_op);
+	}
+	else {
+		ALIF_INCREF(_op);
+	}
+}
+
+static inline void _alif_decrefBuiltins(AlifObject* _op) {
+	if (ALIFDICT_CHECKEXACT(_op)) {
+		_alif_decrefDict(_op);
+	}
+	else {
+		ALIF_DECREF(_op);
+	}
 }

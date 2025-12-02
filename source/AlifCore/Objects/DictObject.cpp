@@ -1451,6 +1451,33 @@ AlifObject* _alifDict_loadGlobal(AlifDictObject* _globals,
 	return value;
 }
 
+AlifObject* _alifDict_loadBuiltinsFromGlobals(AlifObject* _globals) { // 2514
+	if (!ALIFDICT_CHECK(_globals)) {
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
+
+	AlifDictObject* mp = (AlifDictObject*)_globals;
+	AlifObject* key = &ALIF_ID(__builtins__);
+	AlifHashT hash = uStr_getHash(key);
+
+	AlifStackRef ref{};
+	AlifSizeT ix = _alifDict_lookupThreadSafeStackRef(mp, key, hash, &ref);
+	if (ix == DKIX_ERROR) {
+		return nullptr;
+	}
+	if (ALIFSTACKREF_ISNULL(ref)) {
+		return ALIF_NEWREF(alifEval_getBuiltins());
+	}
+	AlifObject* builtins = alifStackRef_asAlifObjectBorrow(ref);
+	if (ALIFMODULE_CHECK(builtins)) {
+		builtins = _alifModule_getDict(builtins);
+	}
+	_alif_increfBuiltins(builtins);
+	ALIFSTACKREF_CLOSE(ref);
+	return builtins;
+}
+
 static AlifIntT setItemTake2_lockHeld(AlifDictObject* _mp,
 	AlifObject* _key, AlifObject* _value) { // 2424
 	AlifHashT hash = alifObject_hashFast(_key);
