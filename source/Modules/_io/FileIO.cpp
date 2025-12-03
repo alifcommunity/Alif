@@ -370,7 +370,7 @@ bad_mode:
 	}
 
 	alifMem_dataFree(self->statAtOpen);
-	self->statAtOpen = (struct AlifStatStruct*)alifMem_dataAlloc(sizeof(struct AlifStatStruct));
+	self->statAtOpen = (class AlifStatStruct*)alifMem_dataAlloc(sizeof(class AlifStatStruct));
 	if (self->statAtOpen == nullptr) {
 		//alifErr_noMemory();
 		goto error;

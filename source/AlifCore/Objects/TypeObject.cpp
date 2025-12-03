@@ -46,7 +46,8 @@
 #define END_TYPE_DICT_LOCK() ALIF_END_CRITICAL_SECTION2()
 
 
-typedef struct AlifSlotOffset { // 87
+class AlifSlotOffset { // 87
+public:
 	short subSlotOffset{};
 	short slotOffset{};
 };

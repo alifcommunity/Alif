@@ -24,7 +24,7 @@ static AlifObject* _io_BufferedIOBase_read1Impl(AlifObject* self, AlifTypeObject
 
 
 
-typedef class Buffered { // 220
+class Buffered { // 220
 public:
 	ALIFOBJECT_HEAD;
 	AlifObject* raw{};
