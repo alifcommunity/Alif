@@ -515,18 +515,18 @@ static AlifObject* builtin_inputImpl(AlifObject* module, AlifObject* prompt) { /
 
 	/* Check that stdin/out/err are intact */
 	if (fin == nullptr or fin == ALIF_NONE) {
-		//alifErr_setString(_alifExcRuntimeError_,
-		//	"input(): lost sys.stdin");
+		alifErr_setString(_alifExcRuntimeError_,
+			"ادخل(): مفقود النظام.الإدخال");
 		return nullptr;
 	}
 	if (fout == nullptr or fout == ALIF_NONE) {
-		//alifErr_setString(_alifExcRuntimeError_,
-		//	"input(): lost sys.stdout");
+		alifErr_setString(_alifExcRuntimeError_,
+			"ادخل(): مفقود النظام.الإخراج");
 		return nullptr;
 	}
 	if (ferr == nullptr or ferr == ALIF_NONE) {
-		//alifErr_setString(_alifExcRuntimeError_,
-		//	"input(): lost sys.stderr");
+		alifErr_setString(_alifExcRuntimeError_,
+			"ادخل(): مفقود النظام.الخطأ");
 		return nullptr;
 	}
 

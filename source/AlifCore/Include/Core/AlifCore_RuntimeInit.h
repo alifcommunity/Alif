@@ -701,6 +701,7 @@
     INIT_STR(Name, "name"), /* //* alif */	\
     INIT_STR(Obj, "obj"), /* //* alif */	\
 	INIT_USTR(Open, "افتح"), /* //* alif */	\
+	INIT_USTR(ReadLine, "اقرا_سطر"), /* //* alif */	\
 	INIT_USTR(Read, "اقرا"), /* //* alif */	\
 	INIT_USTR(Close, "اغلق"), /* //* alif */	\
 	INIT_USTR(Replace, "استبدل"), /* //* alif */	\
@@ -819,7 +820,7 @@
 	INIT_ID(Read1), \
 	INIT_ID(ReadAll), \
 	INIT_ID(ReadInto), \
-	INIT_ID(ReadLine), \
+	/*INIT_ID(ReadLine),*/ \
 	/*INIT_ID(Replace),*/ \
 	INIT_ID(Reset), \
 	INIT_ID(Reverse), \

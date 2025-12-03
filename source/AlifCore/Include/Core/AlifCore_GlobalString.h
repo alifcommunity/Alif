@@ -61,6 +61,7 @@ public:
 			STRUCT_FOR_STR(Name, "name") //* alif
 			STRUCT_FOR_STR(Obj, "obj") //* alif
 			STRUCT_FOR_USTR(Open, "افتح") //* alif
+			STRUCT_FOR_USTR(ReadLine, "اقرا_سطر") //* alif
 			STRUCT_FOR_USTR(Read, "اقرا") //* alif
 			STRUCT_FOR_USTR(Close, "اغلق") //* alif
 			STRUCT_FOR_USTR(Replace, "استبدل") //* alif
@@ -180,7 +181,7 @@ public:
 			STRUCT_FOR_ID(Read1)
 			STRUCT_FOR_ID(ReadAll)
 			STRUCT_FOR_ID(ReadInto)
-			STRUCT_FOR_ID(ReadLine)
+			//STRUCT_FOR_ID(ReadLine)
 			//STRUCT_FOR_ID(Replace)
 			STRUCT_FOR_ID(Reset)
 			STRUCT_FOR_ID(Reverse)

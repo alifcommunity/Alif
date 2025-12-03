@@ -14,10 +14,10 @@ AlifObject* alifFile_getLine(AlifObject* _f, AlifIntT _n) { // 51
 	}
 
 	if (_n <= 0) {
-		result = alifObject_callMethodNoArgs(_f, &ALIF_ID(ReadLine));
+		result = alifObject_callMethodNoArgs(_f, &ALIF_STR(ReadLine));
 	}
 	else {
-		result = _alifObject_callMethod(_f, &ALIF_ID(ReadLine), "i", _n);
+		result = _alifObject_callMethod(_f, &ALIF_STR(ReadLine), "i", _n);
 	}
 	if (result != nullptr and !ALIFBYTES_CHECK(result) and
 		!ALIFUSTR_CHECK(result)) {

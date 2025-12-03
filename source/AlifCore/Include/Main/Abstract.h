@@ -1,7 +1,7 @@
 #pragma once
 
 
-AlifObject* alifObject_callOneArg(AlifObject* , AlifObject* ); // 59
+AlifObject* alifObject_callOneArg(AlifObject*, AlifObject*); // 59
 
 
 AlifObject* alifObject_call(AlifObject*, AlifObject*, AlifObject*); // 201
@@ -18,7 +18,7 @@ AlifObject* alifObject_callMethodObjArgs(AlifObject*, AlifObject*, ...); // 260
 
 AlifObject* alifVectorCall_call(AlifObject*, AlifObject*, AlifObject*); // 273
 
- // 276
+// 276
 #define ALIF_VECTORCALL_ARGUMENTS_OFFSET \
     (ALIF_STATIC_CAST(AlifUSizeT, 1) << (8 * sizeof(AlifUSizeT) - 1))
 
@@ -48,7 +48,7 @@ AlifObject* alifObject_getIter(AlifObject*); // 383
 
 AlifIntT alifIter_check(AlifObject*); // 393
 
-AlifObject* alifIter_next(AlifObject* ); // 417
+AlifObject* alifIter_next(AlifObject*); // 417
 
 
 AlifIntT alifNumber_check(AlifObject*); // 438
@@ -112,7 +112,7 @@ AlifObject* alifSequence_list(AlifObject*); // 727
 AlifObject* alifSequence_fast(AlifObject*, const char*); // 736
 
 
- // 740
+// 740
 #define ALIFSEQUENCE_FAST_GET_SIZE(o) \
     (ALIFLIST_CHECK(o) ? ALIFLIST_GET_SIZE(o) : ALIFTUPLE_GET_SIZE(o))
 

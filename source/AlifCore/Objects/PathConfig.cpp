@@ -187,7 +187,7 @@ AlifIntT _alifPathConfig_computeSysPath0(const AlifWStringList* _argv,
 		}
 		path0 = fullpath;
 	#else
-		path0 = L".";
+		path0 = (wchar_t*)L".";
 	#endif
 		n = wcslen(path0);
 	}

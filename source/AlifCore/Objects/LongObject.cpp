@@ -1659,7 +1659,7 @@ static AlifIntT longTo_decimalStringInternal(AlifObject* _aa,
 	}
 
 #undef WRITE_DIGITS
-#undef WRITE_USTR_DIGITS
+#undef WRITE_UNICODE_DIGITS
 
 	_alif_decrefInt(scratch);
 	if (_writer) {
