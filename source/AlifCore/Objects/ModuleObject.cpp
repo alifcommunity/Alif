@@ -580,7 +580,7 @@ AlifIntT _alifModuleSpec_isInitializing(AlifObject* _spec) { // 793
 
 
 
-static AlifIntT getFileOrigin_fromSpec(AlifObject* _spec, AlifObject** _pOrigin) { // 828
+AlifIntT _alifModuleSpec_getFileOrigin(AlifObject* _spec, AlifObject** _pOrigin) { // 839
 	AlifObject* hasLocation = nullptr;
 	AlifIntT rc_ = alifObject_getOptionalAttr(_spec, &ALIF_ID(HasLocation), &hasLocation);
 	if (rc_ <= 0) {
@@ -604,7 +604,7 @@ static AlifIntT getFileOrigin_fromSpec(AlifObject* _spec, AlifObject** _pOrigin)
 	return 1;
 }
 
-static AlifIntT isModule_possiblyShadowing(AlifObject* _origin) { // 859
+AlifIntT _alifModule_isPossiblyShadowing(AlifObject* _origin) { // 870
 	if (_origin == nullptr) {
 		return 0;
 	}
@@ -715,11 +715,11 @@ AlifObject* alifModule_getAttroImpl(AlifModuleObject* _m,
 	}
 
 	AlifObject* origin = nullptr;
-	if (getFileOrigin_fromSpec(spec, &origin) < 0) {
+	if (_alifModuleSpec_getFileOrigin(spec, &origin) < 0) {
 		goto done;
 	}
 
-	isPossiblyShadowing = isModule_possiblyShadowing(origin);
+	isPossiblyShadowing = _alifModule_isPossiblyShadowing(origin);
 	if (isPossiblyShadowing < 0) {
 		goto done;
 	}
@@ -739,48 +739,51 @@ AlifObject* alifModule_getAttroImpl(AlifModuleObject* _m,
 		//	"module '%U' has no attribute '%U' "
 		//	"(consider renaming '%U' since it has the same "
 		//	"name as the standard library module named '%U' "
-		//	"and the import system gives it precedence)",
+		//  "and prevents importing that standard library module)",
 		//	modName, name, origin, modName);
 	}
 	else {
-		//AlifIntT rc_ = alifModuleSpec_isInitializing(spec);
-		//if (rc_ > 0) {
-		//	if (isPossiblyShadowing) {
-		//	//	alifErr_format(_alifExcAttributeError_,
-		//				//"module '%U' has no attribute '%U' "
-		//					//"(consider renaming '%U' if it has the same name "
-		//					//"as a third-party module you intended to import)",
-		//					//modName, name, origin);
-		//	}
-		//	else if (origin) {
-		//	//	alifErr_format(_alifExcAttributeError_,
-		//		//"partially initialized "
-		//			//"module '%U' from '%U' has no attribute '%U' "
-		//			//"(most likely due to a circular import)",
-		//			//modName, origin, name);
-		//	}
-		//	else {
-		//	//	alifErr_format(_alifExcAttributeError_,
-		//		//"partially initialized "
-		//			//"module '%U' has no attribute '%U' "
-		//			//"(most likely due to a circular import)",
-		//			//modName, name);
-		//	}
-		//}
-		//else if (rc_ == 0) {
-		//	rc_ = alifModuleSpec_isUninitializedSubmodule(spec, _name);
-		//	if (rc_ > 0) {
-		//	//	alifErr_format(_alifExcAttributeError_,
-		//		//"cannot access submodule '%U' of module '%U' "
-		//			//"(most likely due to a circular import)",
-		//			//name, modName);
-		//	}
-		//	else if (rc_ == 0) {
-		//	//	alifErr_format(_alifExcAttributeError_,
-		//		//"module '%U' has no attribute '%U'",
-		//			//modName, name);
-		//	}
-		//}
+		AlifIntT rc_ = _alifModuleSpec_isInitializing(spec);
+		if (rc_ < 0) {
+			goto done;
+		}
+		else if (rc_ > 0) {
+			if (isPossiblyShadowing) {
+				//alifErr_format(_alifExcAttributeError_,
+				//		"module '%U' has no attribute '%U' "
+				//			"(consider renaming '%U' if it has the same name "
+				//			"as a library you intended to import)",
+				//			modName, name, origin);
+			}
+			else if (origin) {
+				//alifErr_format(_alifExcAttributeError_,
+				//"partially initialized "
+				//	"module '%U' from '%U' has no attribute '%U' "
+				//	"(most likely due to a circular import)",
+				//	modName, origin, name);
+			}
+			else {
+				//	alifErr_format(_alifExcAttributeError_,
+					//"partially initialized "
+						//"module '%U' has no attribute '%U' "
+						//"(most likely due to a circular import)",
+						//modName, name);
+			}
+		}
+		else {
+			//rc_ = _alifModuleSpec_isUninitializedSubModule(spec, _name);
+			if (rc_ > 0) {
+				//alifErr_format(_alifExcAttributeError_,
+				//"cannot access submodule '%U' of module '%U' "
+				//	"(most likely due to a circular import)",
+				//	_name, modName);
+			}
+			else if (rc_ == 0) {
+				//alifErr_format(_alifExcAttributeError_,
+				//"module '%U' has no attribute '%U'",
+				//	modName, _name);
+			}
+		}
 	}
 
 done:

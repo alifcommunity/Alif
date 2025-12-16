@@ -3316,22 +3316,22 @@ AlifObject* _alifEval_importName(AlifThread* _thread, AlifInterpreterFrame* _fra
 AlifObject* _alifEval_importFrom(AlifThread* _thread,
 	AlifObject* _v, AlifObject* _name) { // 2722
 	AlifObject* x{};
-	AlifObject* fullmodname{}, * pkgname{}, * pkgpath{}, * pkgname_or_unknown{}, * errmsg{};
+	AlifObject* fullmodname{}, * modName{}, * origin{}, * modNameOrUnknown{}, * errmsg{}, * spec{};
 
 	if (alifObject_getOptionalAttr(_v, _name, &x) != 0) {
 		return x;
 	}
 
-	if (alifObject_getOptionalAttr(_v, &ALIF_ID(__name__), &pkgname) < 0) {
+	if (alifObject_getOptionalAttr(_v, &ALIF_ID(__name__), &modName) < 0) {
 		return nullptr;
 	}
-	if (pkgname == nullptr or !ALIFUSTR_CHECK(pkgname)) {
-		ALIF_CLEAR(pkgname);
+	if (modName == nullptr or !ALIFUSTR_CHECK(modName)) {
+		ALIF_CLEAR(modName);
 		goto error;
 	}
-	fullmodname = alifUStr_fromFormat("%U.%U", pkgname, _name);
+	fullmodname = alifUStr_fromFormat("%U.%U", modName, _name);
 	if (fullmodname == nullptr) {
-		ALIF_DECREF(pkgname);
+		ALIF_DECREF(modName);
 		return nullptr;
 	}
 	x = alifImport_getModule(fullmodname);
@@ -3339,64 +3339,114 @@ AlifObject* _alifEval_importFrom(AlifThread* _thread,
 	if (x == nullptr and !_alifErr_occurred(_thread)) {
 		goto error;
 	}
-	ALIF_DECREF(pkgname);
+	ALIF_DECREF(modName);
 	return x;
 error:
-	if (pkgname == nullptr) {
-		pkgname_or_unknown = alifUStr_fromString("<unknown module name>");
-		if (pkgname_or_unknown == nullptr) {
+	if (modName == nullptr) {
+		modNameOrUnknown = alifUStr_fromString("<unknown module name>");
+		if (modNameOrUnknown == nullptr) {
 			return nullptr;
 		}
 	}
 	else {
-		pkgname_or_unknown = pkgname;
+		modNameOrUnknown = modName;
 	}
 
-	pkgpath = nullptr;
-	if (ALIFMODULE_CHECK(_v)) {
-		pkgpath = alifModule_getFilenameObject(_v);
-		if (pkgpath == nullptr) {
-			//if (!alifErr_exceptionMatches(_alifExcSystemError_)) {
-			//	ALIF_DECREF(pkgname_or_unknown);
-			//	return nullptr;
-			//}
-			// module filename missing
-			//_alifErr_clear(tstate);
-		}
+	origin = nullptr;
+	if (alifObject_getOptionalAttr(_v, &ALIF_ID(__spec__), &spec) < 0) {
+		ALIF_DECREF(modNameOrUnknown);
+		return nullptr;
 	}
-	if (pkgpath == nullptr or !ALIFUSTR_CHECK(pkgpath)) {
-		ALIF_CLEAR(pkgpath);
+	if (spec == nullptr) {
 		errmsg = alifUStr_fromFormat(
 			"cannot import name %R from %R (unknown location)",
-			_name, pkgname_or_unknown
+			_name, modNameOrUnknown
+		);
+		goto done_with_errmsg;
+	}
+	if (_alifModuleSpec_getFileOrigin(spec, &origin) < 0) {
+		goto done;
+	}
+
+	AlifIntT isPossiblyShadowing; isPossiblyShadowing = _alifModule_isPossiblyShadowing(origin);
+	if (isPossiblyShadowing < 0) {
+		goto done;
+	}
+	AlifIntT isPossiblyShadowingStdlib; isPossiblyShadowingStdlib = 0;
+	if (isPossiblyShadowing) {
+		AlifObject* stdlibModules = alifSys_getObject("stdlib_module_names");
+		if (stdlibModules and ALIFANYSET_CHECK(stdlibModules)) {
+			isPossiblyShadowingStdlib = alifSet_contains(stdlibModules, modNameOrUnknown);
+			if (isPossiblyShadowingStdlib < 0) {
+				goto done;
+			}
+		}
+	}
+
+	if (isPossiblyShadowingStdlib) {
+		errmsg = alifUStr_fromFormat(
+			"cannot import name %R from %R "
+			"(consider renaming %R since it has the same "
+			"name as the standard library module named %R "
+			"and prevents importing that standard library module)",
+			_name, modNameOrUnknown, origin, modNameOrUnknown
 		);
 	}
 	else {
-		AlifObject* spec{};
-		AlifIntT rc = alifObject_getOptionalAttr(_v, &ALIF_ID(__spec__), &spec);
-		if (rc > 0) {
-			rc = _alifModuleSpec_isInitializing(spec);
-			ALIF_DECREF(spec);
-		}
+		AlifIntT rc = _alifModuleSpec_isInitializing(spec);
 		if (rc < 0) {
-			ALIF_DECREF(pkgname_or_unknown);
-			ALIF_DECREF(pkgpath);
-			return nullptr;
+			goto done;
 		}
-		const char* fmt =
-			rc ?
-			"cannot import name %R from partially initialized module %R "
-			"(most likely due to a circular import) (%S)" :
-			"cannot import name %R from %R (%S)";
-
-		errmsg = alifUStr_fromFormat(fmt, _name, pkgname_or_unknown, pkgpath);
+		else if (rc > 0) {
+			if (isPossiblyShadowing) {
+				// For non-stdlib modules, only mention the possibility of
+				// shadowing if the module is being initialized.
+				errmsg = alifUStr_fromFormat(
+					"cannot import name %R from %R "
+					"(consider renaming %R if it has the same name "
+					"as a library you intended to import)",
+					_name, modNameOrUnknown, origin
+				);
+			}
+			else if (origin) {
+				errmsg = alifUStr_fromFormat(
+					"cannot import name %R from partially initialized module %R "
+					"(most likely due to a circular import) (%S)",
+					_name, modNameOrUnknown, origin
+				);
+			}
+			else {
+				errmsg = alifUStr_fromFormat(
+					"cannot import name %R from partially initialized module %R "
+					"(most likely due to a circular import)",
+					_name, modNameOrUnknown
+				);
+			}
+		}
+		else {
+			if (origin) {
+				errmsg = alifUStr_fromFormat(
+					"cannot import name %R from %R (%S)",
+					_name, modNameOrUnknown, origin
+				);
+			}
+			else {
+				errmsg = alifUStr_fromFormat(
+					"cannot import name %R from %R (unknown location)",
+					_name, modNameOrUnknown
+				);
+			}
+		}
 	}
 
-	//_alifErr_setImportErrorWithNameFrom(errmsg, pkgname, pkgpath, name);
+done_with_errmsg:
+	//_alifErr_setImportErrorWithNameFrom(errmsg, modName, origin, _name);
+	ALIF_DECREF(errmsg);
 
-	ALIF_XDECREF(errmsg);
-	ALIF_DECREF(pkgname_or_unknown);
-	ALIF_XDECREF(pkgpath);
+done:
+	ALIF_XDECREF(origin);
+	ALIF_XDECREF(spec);
+	ALIF_DECREF(modNameOrUnknown);
 	return nullptr;
 }
 
