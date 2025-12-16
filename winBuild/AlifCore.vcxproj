@@ -378,6 +378,11 @@
     <ClCompile Include="..\source\Modules\_io\TextIO.cpp" />
     <ClCompile Include="..\source\Modules\_io\_IOModule.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="FreezeModule.vcxproj">
+      <Project>{cae31879-3181-4178-8581-fef6a839652d}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
