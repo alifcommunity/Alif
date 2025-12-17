@@ -134,7 +134,6 @@ public:
 	AlifSizeT longLivedTotal{};
 
 	AlifSizeT longLivedPending{};
-	AlifIntT immortalize{};
 };
 
 class GCThreadState { // 357

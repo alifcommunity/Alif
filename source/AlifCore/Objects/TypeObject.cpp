@@ -2193,27 +2193,51 @@ inline static AlifObject* get_basesTuple(AlifObject* bases_in, AlifTypeSpec* spe
 }
 
 
+static AlifIntT check_immutableBases(const char* _typeName,
+	AlifObject* _bases, AlifIntT _skipFirst) { // 4640
+	AlifSizeT i = 0;
+	if (_skipFirst) {
+		// When testing the MRO, skip the type itself
+		i = 1;
+	}
+	for (; i < ALIFTUPLE_GET_SIZE(_bases); i++) {
+		AlifTypeObject* b = (AlifTypeObject*)ALIFTUPLE_GET_ITEM(_bases, i);
+		if (!b) {
+			return -1;
+		}
+		if (!_alifType_hasFeature(b, ALIF_TPFLAGS_IMMUTABLETYPE)) {
+			alifErr_format(
+				_alifExcTypeError_,
+				"إنشاء نوع ثابت %s من أصل غير ثابت %N",
+				_typeName, b
+			);
+			return -1;
+		}
+	}
+	return 0;
+}
+
 static inline AlifIntT specialOffset_fromMember(
-	const AlifMemberDef* memb /* may be nullptr */,
-	AlifSizeT type_data_offset,
-	AlifSizeT* dest /* not nullptr */) { // 4643
-	if (memb == nullptr) {
-		*dest = 0;
+	const AlifMemberDef* _memb /* may be nullptr */,
+	AlifSizeT _typeDataOffset,
+	AlifSizeT* _dest /* not nullptr */) { // 4643
+	if (_memb == nullptr) {
+		*_dest = 0;
 		return 0;
 	}
-	if (memb->type != ALIF_T_ALIFSIZET) {
+	if (_memb->type != ALIF_T_ALIFSIZET) {
 		//alifErr_format(
 		//	_alifExcSystemError_,
 		//	"type of %s must be ALIF_T_ALIFSIZET",
 		//	memb->name);
 		return -1;
 	}
-	if (memb->flags == ALIF_READONLY) {
-		*dest = memb->offset;
+	if (_memb->flags == ALIF_READONLY) {
+		*_dest = _memb->offset;
 		return 0;
 	}
-	else if (memb->flags == (ALIF_READONLY | ALIF_RELATIVE_OFFSET)) {
-		*dest = memb->offset + type_data_offset;
+	else if (_memb->flags == (ALIF_READONLY | ALIF_RELATIVE_OFFSET)) {
+		*_dest = _memb->offset + _typeDataOffset;
 		return 0;
 	}
 	//alifErr_format(
@@ -2343,19 +2367,8 @@ AlifObject* alifType_fromMetaclass(AlifTypeObject* metaclass, AlifObject* module
 	}
 
 	if (spec->flags & ALIF_TPFLAGS_IMMUTABLETYPE) {
-		for (AlifIntT i = 0; i < ALIFTUPLE_GET_SIZE(bases); i++) {
-			AlifTypeObject* b = (AlifTypeObject*)ALIFTUPLE_GET_ITEM(bases, i);
-			if (!b) {
-				goto finally;
-			}
-			if (!_alifType_hasFeature(b, ALIF_TPFLAGS_IMMUTABLETYPE)) {
-				//alifErr_format(
-				//	_alifExcTypeError_,
-				//	"Creating immutable type %s from mutable base %N",
-				//	spec->name, b
-				//);
-				goto finally;
-			}
+		if (check_immutableBases(spec->name, bases, 0) < 0) {
+			goto finally;
 		}
 	}
 

@@ -45,25 +45,10 @@ static void notify_codeWatchers(AlifCodeEvent _event, AlifCodeObject* _co) { // 
 	}
 }
 
-static AlifIntT should_internString(AlifObject* _o) { // 106
-	AlifInterpreter* interp = _alifInterpreter_get();
-	if (alifAtomic_loadInt(&interp->gc.immortalize) < 0) {
-		return 1;
-	}
-
-	const unsigned char* s_{}, * e_{};
-
-	if (!ALIFUSTR_IS_ASCII(_o))
-		return 0;
-
-	s_ = ALIFUSTR_1BYTE_DATA(_o);
-	e_ = s_ + ALIFUSTR_GET_LENGTH(_o);
-	for (; s_ != e_; s_++) {
-		if (!ALIF_ISALNUM(*s_) and *s_ != '_')
-			return 0;
-	}
-	return 1;
-}
+//static AlifIntT should_internString(AlifObject* _o) { // 106
+//	// The free-threaded build interns (and immortalizes) all string constants
+//	return 1;
+//}
 
 static AlifObject* intern_oneConstant(AlifObject*); // 133
 
@@ -89,16 +74,17 @@ static AlifIntT intern_constants(AlifObject* _tuple, AlifIntT* _modified) { // 1
 	for (AlifSizeT i = ALIFTUPLE_GET_SIZE(_tuple); --i >= 0; ) {
 		AlifObject* v = ALIFTUPLE_GET_ITEM(_tuple, i);
 		if (ALIFUSTR_CHECKEXACT(v)) {
-			if (should_internString(v)) {
-				AlifObject* w = v;
-				alifUStr_internMortal(interp, &v);
-				if (w != v) {
-					ALIFTUPLE_SET_ITEM(_tuple, i, v);
-					if (_modified) {
-						*_modified = 1;
-					}
+			//if (should_internString(v)) { //* alif
+			// The free-threaded build interns (and immortalizes) all string constants
+			AlifObject* w = v;
+			alifUStr_internMortal(interp, &v);
+			if (w != v) {
+				ALIFTUPLE_SET_ITEM(_tuple, i, v);
+				if (_modified) {
+					*_modified = 1;
 				}
 			}
+			//}
 		}
 		else if (ALIFTUPLE_CHECKEXACT(v)) {
 			if (intern_constants(v, nullptr) < 0) {
@@ -162,10 +148,10 @@ static AlifIntT intern_constants(AlifObject* _tuple, AlifIntT* _modified) { // 1
 			ALIF_DECREF(tmp);
 		}
 
-		AlifThread* tstate = alifThread_get();
-		if (!ALIF_ISIMMORTAL(v) and !ALIFCODE_CHECK(v) and
-			!ALIFUSTR_CHECKEXACT(v) and
-			alifAtomic_loadInt(&tstate->interpreter->gc.immortalize) >= 0) {
+		// Intern non-string constants in the free-threaded build
+		AlifThreadImpl* thread = (AlifThreadImpl*)_alifThread_get();
+		if (!alif_isImmortal(v) and !ALIFCODE_CHECK(v) and
+			!ALIFUSTR_CHECKEXACT(v) and !thread->suppressCoConstImmortalization) {
 			AlifObject* interned = intern_oneConstant(v);
 			if (interned == nullptr) {
 				return -1;
