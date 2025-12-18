@@ -964,7 +964,7 @@ static AlifObject* textIOWrapper_getDecodedChars(TextIO* _self, AlifSizeT _n) { 
 	AlifSizeT avail{};
 
 	if (_self->decodedChars == nullptr)
-		return alifUStr_fromStringAndSize(nullptr, 0);
+		return alif_getConstant(ALIF_CONSTANT_EMPTY_STR);
 
 	/* decodedChars is guaranteed to be "ready". */
 	avail = (ALIFUSTR_GET_LENGTH(_self->decodedChars)

@@ -117,7 +117,7 @@ static AlifObject* getPath_dirName(AlifObject* ALIF_UNUSED(self), AlifObject* ar
 	AlifSizeT end = ALIFUSTR_GET_LENGTH(path);
 	AlifSizeT pos = alifUStr_findChar(path, SEP, 0, end, -1);
 	if (pos < 0) {
-		return alifUStr_fromStringAndSize(nullptr, 0);
+		return alif_getConstant(ALIF_CONSTANT_EMPTY_STR);
 	}
 	return alifUStr_subString(path, 0, pos);
 }
@@ -255,7 +255,7 @@ static AlifObject* getPath_joinPath(AlifObject* ALIF_UNUSED(self), AlifObject* a
 	}
 	AlifSizeT n = ALIFTUPLE_GET_SIZE(args);
 	if (n == 0) {
-		return alifUStr_fromStringAndSize(nullptr, 0);
+		return alif_getConstant(ALIF_CONSTANT_EMPTY_STR);
 	}
 	/* Convert all parts to wchar and accumulate max final length */
 	wchar_t** parts = (wchar_t**)alifMem_dataAlloc(n * sizeof(wchar_t*));
@@ -301,7 +301,7 @@ static AlifObject* getPath_joinPath(AlifObject* ALIF_UNUSED(self), AlifObject* a
 			//alifErr_noMemory();
 			return nullptr;
 		}
-		return alifUStr_fromStringAndSize(nullptr, 0);
+		return alif_getConstant(ALIF_CONSTANT_EMPTY_STR);
 	}
 
 	final[0] = '\0';
