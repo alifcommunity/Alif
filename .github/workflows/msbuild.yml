@@ -29,7 +29,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        repository: "Alif/Allif5.0"
+        repository: "Alif/Alif5.0"
         submodules: true
         lfs: true
 
