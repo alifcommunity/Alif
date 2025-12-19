@@ -13,14 +13,14 @@ on:
 
 env:
   # Path to the solution file relative to the root of the project.
-  SOLUTION_FILE_PATH: winBuild/Alif.sln
+  SOLUTION_FILE_PATH: "winBuild/Alif.sln"
 
 permissions:
   contents: read
 
 jobs:
   build:
-    runs-on: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: [windows]
     strategy:
       fail-fast: false
       matrix: 
@@ -29,7 +29,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        repository: 'Alif/Allif5.0'
+        repository: "Alif/Allif5.0"
         submodules: true
         lfs: true
 
@@ -40,4 +40,4 @@ jobs:
       working-directory: ${{env.GITHUB_WORKSPACE}}
       # Add additional options to the MSBuild command line here (like platform or verbosity level).
       # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
-      run: msbuild ${{env.SOLUTION_FILE_PATH}} /m /p:Configuration=${{matrix.build-configuration}} ${{env.SOLUTION_FILE_PATH}}
+      run: msbuild /m /p:Configuration=${{matrix.build-configuration}} ${{env.SOLUTION_FILE_PATH}}
