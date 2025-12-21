@@ -277,7 +277,7 @@
       <AdditionalDependencies>pathcch.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>pushd "$(ProjectDir)..\source\Modules" &amp;&amp; "$(LocalDebuggerCommand)" GetPath تحديد_المسارات.alif GetPath.h &amp;&amp; move GetPath.h "$(ProjectDir)..\source\AlifCore\Include\Main\FrozenModules" &amp;&amp; popd</Command>
+      <Command>"$(LocalDebuggerCommand)" GetPath "$(ProjectDir)..\source\Modules\تحديد_المسارات.alif" GetPath.h &amp;&amp; move GetPath.h "$(ProjectDir)..\source\AlifCore\Include\Main\FrozenModules"</Command>
     </PostBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -300,7 +300,7 @@
       <AdditionalDependencies>pathcch.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>pushd "$(ProjectDir)..\source\Modules" &amp;&amp; "$(LocalDebuggerCommand)" GetPath تحديد_المسارات.alif GetPath.h &amp;&amp; move GetPath.h "$(ProjectDir)..\source\AlifCore\Include\Main\FrozenModules" &amp;&amp; popd</Command>
+      <Command>"$(LocalDebuggerCommand)" GetPath "$(ProjectDir)..\source\Modules\تحديد_المسارات.alif" GetPath.h &amp;&amp; move GetPath.h "$(ProjectDir)..\source\AlifCore\Include\Main\FrozenModules"</Command>
     </PostBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -327,7 +327,7 @@
       <AdditionalDependencies>pathcch.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>pushd "$(ProjectDir)..\source\Modules" &amp;&amp; "$(LocalDebuggerCommand)" GetPath تحديد_المسارات.alif GetPath.h &amp;&amp; move GetPath.h "$(ProjectDir)..\source\AlifCore\Include\Main\FrozenModules" &amp;&amp; popd</Command>
+      <Command>"$(LocalDebuggerCommand)" GetPath "$(ProjectDir)..\source\Modules\تحديد_المسارات.alif" GetPath.h &amp;&amp; move GetPath.h "$(ProjectDir)..\source\AlifCore\Include\Main\FrozenModules"</Command>
     </PostBuildEvent>
     <CustomBuildStep>
       <Command>
