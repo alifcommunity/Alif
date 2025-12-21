@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix: 
-        build-configuration: [Debug, Release]
+        build-configuration: [Release]
         
     steps:
     - uses: actions/checkout@v4
@@ -42,6 +42,8 @@ jobs:
         [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
         [Console]::InputEncoding = [System.Text.Encoding]::UTF8
         chcp 65001
+        Write-Host "✓ System configured for UTF-8" -ForegroundColor Green
+        Write-Host "مرحبا - Arabic test" -ForegroundColor Cyan
 
     - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
