@@ -277,8 +277,7 @@
       <AdditionalDependencies>pathcch.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>"$(LocalDebuggerCommand)" GetPath "$(ProjectDir)..\source\Modules\pathd.alif" GetPath.h &amp;&amp; move GetPath.h "$(ProjectDir)..\source\AlifCore\Include\Main\FrozenModules"</Command>
     </PostBuildEvent>
     <CustomBuildStep>
       <Command>
