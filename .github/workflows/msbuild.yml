@@ -7,9 +7,9 @@ name: Win-MSBuild
 
 on:
   push:
-    branches: [ "Alif5.0" ]
+    branches: ["Alif5.0"]
   pull_request:
-    branches: [ "Alif5.0" ]
+    branches: ["Alif5.0"]
 
 env:
   # Path to the solution file relative to the root of the project.
@@ -23,30 +23,20 @@ jobs:
     runs-on: [windows-latest]
     strategy:
       fail-fast: false
-      matrix: 
-        build-configuration: [Release]
-        
+      matrix:
+        build-configuration: [Debug]
+
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
-        lfs: false
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          lfs: false
 
-    - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v1.0.2
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v1.0.2
 
-    # Set console encoding to UTF-8
-    - name: Set console encoding to UTF-8
-      shell: pwsh
-      run: |
-        [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-        [Console]::InputEncoding = [System.Text.Encoding]::UTF8
-        chcp 65001
-        Write-Host "✓ System configured for UTF-8" -ForegroundColor Green
-        Write-Host "مرحبا - Arabic test" -ForegroundColor Cyan
-
-    - name: Build
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      # Add additional options to the MSBuild command line here (like platform or verbosity level).
-      # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
-      run: msbuild /m /p:Configuration=${{matrix.build-configuration}} ${{env.SOLUTION_FILE_PATH}}
+      - name: Build
+        working-directory: ${{env.GITHUB_WORKSPACE}}
+        # Add additional options to the MSBuild command line here (like platform or verbosity level).
+        # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
+        run: msbuild /m /p:Configuration=${{matrix.build-configuration}} ${{env.SOLUTION_FILE_PATH}}

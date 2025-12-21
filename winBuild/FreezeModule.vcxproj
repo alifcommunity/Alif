@@ -277,7 +277,7 @@
       <AdditionalDependencies>pathcch.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>"$(LocalDebuggerCommand)" GetPath "$(ProjectDir)..\source\Modules\pathd.alif" GetPath.h &amp;&amp; move GetPath.h "$(ProjectDir)..\source\AlifCore\Include\Main\FrozenModules"</Command>
+      <Command>powershell -Command chcp 65001 &amp;&amp; "$(LocalDebuggerCommand)" GetPath "$(ProjectDir)..\source\Modules\تحديد_المسارات.alif" GetPath.h &amp;&amp; move GetPath.h "$(ProjectDir)..\source\AlifCore\Include\Main\FrozenModules"</Command>
     </PostBuildEvent>
     <CustomBuildStep>
       <Command>
