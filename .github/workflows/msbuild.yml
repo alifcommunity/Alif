@@ -20,7 +20,8 @@ permissions:
 
 jobs:
   build:
-    runs-on: [windows]
+    timeout-minutes: 4320
+    runs-on: [windows-latest]
     strategy:
       fail-fast: false
       matrix: 
