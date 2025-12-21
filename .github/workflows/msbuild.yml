@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: [windows]
+    runs-on: [windows-latest]
     strategy:
       fail-fast: false
       matrix: 
@@ -29,9 +29,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        repository: "Alif/Alif5.0"
         submodules: true
-        lfs: true
+        lfs: false
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
@@ -40,4 +39,6 @@ jobs:
       working-directory: ${{env.GITHUB_WORKSPACE}}
       # Add additional options to the MSBuild command line here (like platform or verbosity level).
       # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
-      run: msbuild /m /p:Configuration=${{matrix.build-configuration}} ${{env.SOLUTION_FILE_PATH}}
+      run: | 
+        chcp 65001 
+        msbuild /m /p:Configuration=${{matrix.build-configuration}} ${{env.SOLUTION_FILE_PATH}}
