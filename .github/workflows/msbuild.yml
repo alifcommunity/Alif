@@ -20,7 +20,6 @@ permissions:
 
 jobs:
   build:
-    timeout-minutes: 4320
     runs-on: [windows-latest]
     strategy:
       fail-fast: false
@@ -30,7 +29,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        repository: "Alif/Alif5.0"
         submodules: true
         lfs: true
 
