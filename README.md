@@ -1,5 +1,7 @@
 <div dir="rtl">
 
+[![Win-MSBuild](https://github.com/Shad7ows/Alif/actions/workflows/msbuild.yml/badge.svg)](https://github.com/Shad7ows/Alif/actions/workflows/msbuild.yml)
+
 <br>
 
 <center style=font-family 'Tajawal'; font-size = 130px>
