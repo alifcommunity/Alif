@@ -35,10 +35,16 @@ jobs:
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
 
+    # Set console encoding to UTF-8
+    - name: Set console encoding to UTF-8
+      shell: pwsh
+      run: |
+        [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+        [Console]::InputEncoding = [System.Text.Encoding]::UTF8
+        chcp 65001
+
     - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
       # Add additional options to the MSBuild command line here (like platform or verbosity level).
       # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
-      run: | 
-        chcp 65001 
-        msbuild /m /p:Configuration=${{matrix.build-configuration}} ${{env.SOLUTION_FILE_PATH}}
+      run: msbuild /m /p:Configuration=${{matrix.build-configuration}} ${{env.SOLUTION_FILE_PATH}}
