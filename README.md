@@ -2,6 +2,8 @@
 
 [![Win-MSBuild](https://github.com/Shad7ows/Alif/actions/workflows/msbuild.yml/badge.svg)](https://github.com/Shad7ows/Alif/actions/workflows/msbuild.yml)
 
+[![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/aliflang)
+
 <br>
 
 <center style=font-family 'Tajawal'; font-size = 130px>
