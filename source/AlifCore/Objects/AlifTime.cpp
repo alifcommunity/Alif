@@ -784,7 +784,7 @@ static AlifIntT alifMach_timeBaseInfo(AlifTimeFraction* base, AlifIntT raise_exc
 	// * (1000000000, 25000000) on PowerPC: 40 ns
 	if (alifTimeFraction_set(base, numer, denom) < 0) {
 		if (raise_exc) {
-			alifErr_setString(alifExcRuntimeError,
+			alifErr_setString(_alifExcRuntimeError_,
 				"invalid mach_timebase_info");
 		}
 		return -1;
