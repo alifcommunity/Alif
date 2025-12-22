@@ -1,18 +1,13 @@
-name: Alif-Build-Unix
+name: Alif Unix Build
 
 on:
   push:
-    branches: [ "Alif5.0" ]
+    branches: ["Alif5.0"]
   pull_request:
-    branches: [ "Alif5.0" ]
-
-env:
-  # Path to the solution file relative to the root of the project.
-  SOLUTION_FILE_PATH: "linuxBuild"
+    branches: ["Alif5.0"]
 
 jobs:
-  build:
-
+  linux-build:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -20,12 +15,28 @@ jobs:
         BUILD-CONFIGURATION: [debug, release]
 
     steps:
-    - uses: actions/checkout@v4
-    # - name: configure
-    #   run: ./configure
-    - name: make
-      run: cd linuxBuild && make ${{matrix.BUILD-CONFIGURATION}}
+      - uses: actions/checkout@v4
+      # - name: configure
+      #   run: ./configure
+      - name: make
+        run: cd linuxBuild && make ${{matrix.BUILD-CONFIGURATION}}
     # - name: make check
     #   run: make check
     # - name: make distcheck
     #   run: make distcheck
+
+  macos-build:
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        BUILD-CONFIGURATION: [debug, release]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          lfs: true
+
+      - name: make
+        run: cd linuxBuild && make ${{matrix.BUILD-CONFIGURATION}}

@@ -3,7 +3,7 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Alif-Build-Win
+name: Alif Windows Build
 
 on:
   push:
@@ -30,6 +30,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
+          lfs: true
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v1.0.2
