@@ -48,7 +48,7 @@ AlifIntT _alifUStr_isXIDStart(AlifUCS4 ch) { // 84
 }
 
 
-int _alifUStr_isXIDContinue(AlifUCS4 ch) { // 94
+AlifIntT _alifUStr_isXIDContinue(AlifUCS4 ch) { // 94
 	const AlifUStrTypeRecord* ctype = get_typeRecord(ch);
 
 	return (ctype->flags & XID_CONTINUE_MASK) != 0;
