@@ -18,6 +18,7 @@
 #endif
 
 #ifndef _WINDOWS
+#include <cstdint>
 #include <unistd.h>
 #endif
 
