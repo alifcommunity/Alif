@@ -1,5 +1,5 @@
 CPP = c++ # المترجم
-CPPFLAGS = -std=c++20
+CPPFLAGS = -std=c++20 -m64
 RELEASE_FLAGS = -O2 -w
 DEBUG_FLAGS = -O0 -g
 # -g تخزين معلومات debug
