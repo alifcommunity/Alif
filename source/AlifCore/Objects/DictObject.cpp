@@ -196,7 +196,7 @@ static inline uint8_t estimate_log2Keysize(AlifSizeT _n) { // 569
 #define GROWTH_RATE(_d) ((_d)->used*3) // 585
 
 static AlifDictKeysObject _emptyKeysStruct_ = { // 590
-		.refCnt = ALIF_DICT_IMMORTAL_INITIAL_REFCNT,
+		.refCnt = static_cast<AlifSizeT>(ALIF_DICT_IMMORTAL_INITIAL_REFCNT),
 		.log2Size = 0,
 		.log2IndexBytes = 0,
 		.kind = DictKeysKind_::Dict_Keys_UStr,
