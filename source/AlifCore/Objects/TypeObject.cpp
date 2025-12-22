@@ -920,7 +920,7 @@ static AlifIntT p_merge(AlifObject* _acc,
 	AlifSizeT i_{}, j_{}, emptyCnt{};
 	AlifIntT* remain{};
 
-	remain = (int*)alifMem_dataAlloc(_toMergeSize * sizeof(int)); // ALIFMEM_NEW(int, _toMergeSize)
+	remain = (AlifIntT*)alifMem_dataAlloc(_toMergeSize * sizeof(AlifIntT)); // ALIFMEM_NEW(int, _toMergeSize)
 	if (remain == nullptr) {
 		//alifErr_noMemory();
 		return -1;
@@ -4390,7 +4390,7 @@ static AlifTypeSlotDef* update_oneSlot(AlifTypeObject* type, AlifTypeSlotDef* p)
 	int use_generic = 0;
 
 	int offset = p->offset;
-	int error;
+	AlifIntT error{};
 	void** ptr = slot_ptr(type, offset);
 
 	if (ptr == nullptr) {
