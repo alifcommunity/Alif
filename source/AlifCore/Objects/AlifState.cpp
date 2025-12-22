@@ -811,7 +811,7 @@ static void thread_mimallocBind(AlifThread* _thread) { // 3037
 		{},
 		baseOffset,
 		baseOffset,
-		baseOffset + 2 * sizeof(AlifObject*),
+		static_cast<AlifUSizeT>(baseOffset + 2 * sizeof(AlifObject*)),
 	};
 
 	// Initialize each heap
