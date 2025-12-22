@@ -7,7 +7,6 @@
 #include <stdarg.h>
 #include <math.h>
 #include <string.h>
-#include <cstdint>
 
 #include "AlifVersion.h"
 #include "AlifConfig.h"

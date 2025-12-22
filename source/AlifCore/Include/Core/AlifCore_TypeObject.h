@@ -61,7 +61,7 @@ public:
 
 class TypesState { // 78
 public:
-	AlifUIntT nextVersionTag{};
+	unsigned int nextVersionTag{};
 	TypeCache typeCache{};
 	class {
 	public:
