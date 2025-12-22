@@ -164,7 +164,7 @@ error:
 
 
 
-// 923
+ // 923
 #define OFS_INF 0
 #define OFS_NAN 1
 #define OFS_E 2
@@ -183,10 +183,10 @@ static const char* const _ucFloatStrings_[] = { // 933
 
 
 static char* format_floatShort(double _d, char _formatCode,
-	int _mode, int _precision, int _alwaysAddSign,
-	int _addDot0IfInteger, int _useAltFormatting,
-	int _noNegativeZero, const char* const* _floatStrings,
-	int* _type) { // 968
+	AlifIntT _mode, AlifIntT _precision, AlifIntT _alwaysAddSign,
+	AlifIntT _addDot0IfInteger, AlifIntT _useAltFormatting,
+	AlifIntT _noNegativeZero, const char* const* _floatStrings,
+	AlifIntT* _type) { // 968
 
 	char* buf = nullptr;
 	char* p = nullptr;
@@ -359,9 +359,9 @@ exit:
 
 
 char* alifOS_doubleToString(double _val, char _formatCode,
-	int _precision, int _flags, int* _type) { // 1221
+	AlifIntT _precision, AlifIntT _flags, AlifIntT* _type) { // 1221
 	const char* const* float_strings = _lcFloatStrings_;
-	int mode{};
+	AlifIntT mode{};
 
 	/* Validate format_code, and map upper and lower case. Compute the
 	   mode and make any adjustments as needed. */
