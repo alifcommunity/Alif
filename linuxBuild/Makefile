@@ -12,6 +12,9 @@ OBJ_DIR = $(BUILD_DIR)/obj
 TARGET_FREEZE =  $(BUILD_DIR)/freezemodule
 TARGET_ALIF = $(BUILD_DIR)/alif
 
+# اكتشاف النظام
+OS_NAME := $(shell uname -s)
+
 
 SOURCES = 	$(wildcard $(SOURCE_DIR)/Alif/*.cpp)				\
 			$(filter-out $(SOURCE_DIR)/AlifCore/Objects/GetPath.cpp, $(wildcard $(SOURCE_DIR)/AlifCore/Objects/*.cpp))	\
@@ -45,7 +48,13 @@ alif_debug: CPPFLAGS += $(DEBUG_FLAGS)
 # حيث يصبح make -j(nproc)
 # وذلك لبناء اللغة بإستخدام ممرات متعددة multithread
 release:
+ifeq ($(OS_NAME),Darwin)
+	@make -j$(shell sysctl -n hw.physicalcpu) freeze_release
+else ifeq ($(OS_NAME),Linux)
 	@make -j$(shell nproc) freeze_release
+else
+	@make -j2 freeze_debug
+endif
 	@make alif_release
 
 debug:
