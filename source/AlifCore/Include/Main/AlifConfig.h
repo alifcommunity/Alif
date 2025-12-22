@@ -33,13 +33,13 @@
 	#endif
 #elif defined(__APPLE__)
 	#define _MAC
-	#if defined(__i386__) or defined (_M_IX86)
+	#if (defined(__i386__) or defined (_M_IX86))
 		#define _MAC32
 		#define _OS32
-	#elif defined(_M_X64) or defined(__amd64__)
+	#elif (defined(__x86_64__) or defined(_M_X64))
 		#define _MAC64
 		#define _OS64
-	#elif defined(__aarch64) or defined(_M_ARM64)
+	#elif (defined(__arm64__) or defined(__aarch64__) or defined(_M_ARM64))
 		#define _MAC64_ARM
 		#define _OS64
 	#endif 
