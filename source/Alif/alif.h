@@ -3,7 +3,12 @@
 #include <iostream>
 #include <algorithm>
 #include <limits.h>
+#ifdef _WIN32
 #include <stdint.h> // uint64_t
+#else
+#include <cstdint>
+#endif // _WINDOWS
+
 #include <stdarg.h>
 #include <math.h>
 #include <string.h>
