@@ -777,7 +777,7 @@ AlifIntT alifFloat_pack8(double _x, char* _data, AlifIntT _le) { // 2236
 	unsigned char* p = (unsigned char*)_data;
 	if (DOUBLE_FORMAT == UNKNOWN_FORMAT) {
 		unsigned char sign{};
-		AlifIntT e{};
+		int e{};
 		double f{};
 		AlifUIntT fhi{}, flo{};
 		AlifIntT incr = 1;
