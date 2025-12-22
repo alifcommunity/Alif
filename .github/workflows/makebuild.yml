@@ -39,4 +39,4 @@ jobs:
           # lfs: true
 
       - name: make
-        run: cd linuxBuild && make -m64 ${{matrix.BUILD-CONFIGURATION}}
+        run: cd linuxBuild && make ${{matrix.BUILD-CONFIGURATION}}
