@@ -7,6 +7,7 @@
 #include <stdarg.h>
 #include <math.h>
 #include <string.h>
+#include <cstdint>
 
 #include "AlifVersion.h"
 #include "AlifConfig.h"
@@ -18,7 +19,6 @@
 #endif
 
 #ifndef _WINDOWS
-#include <cstdint>
 #include <unistd.h>
 #endif
 
