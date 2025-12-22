@@ -72,7 +72,7 @@ static inline AlifTypeObject* type_fromRef(AlifObject* ref) { // 108
 
 
 static inline AlifUSizeT managedStatic_typeIndexGet(AlifTypeObject* _self) { // 130
-	return static_cast<AlifUSizeT>((uintptr_t)_self->subclasses - 1);
+	return (AlifUSizeT)_self->subclasses - 1;
 }
 
 static inline void managedStatic_typeIndexSet(AlifTypeObject* _self,

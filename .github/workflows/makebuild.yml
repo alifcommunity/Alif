@@ -7,23 +7,23 @@ on:
     branches: ["Alif5.0"]
 
 jobs:
-  # linux-build:
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       BUILD-CONFIGURATION: [debug, release]
+  linux-build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        BUILD-CONFIGURATION: [debug, release]
 
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     # - name: configure
-  #     #   run: ./configure
-  #     - name: make
-  #       run: cd linuxBuild && make ${{matrix.BUILD-CONFIGURATION}}
-  #   # - name: make check
-  #   #   run: make check
-  #   # - name: make distcheck
-  #   #   run: make distcheck
+    steps:
+      - uses: actions/checkout@v4
+      # - name: configure
+      #   run: ./configure
+      - name: make
+        run: cd linuxBuild && make ${{matrix.BUILD-CONFIGURATION}}
+    # - name: make check
+    #   run: make check
+    # - name: make distcheck
+    #   run: make distcheck
 
   macos-build:
     runs-on: macos-latest
