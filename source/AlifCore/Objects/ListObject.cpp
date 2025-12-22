@@ -1443,7 +1443,7 @@ static void merge_init(MergeState* _ms, AlifSizeT _listSize, AlifIntT _hasKeyFun
 
 static void merge_freeMem(MergeState* _ms) { // 2135
 	if (_ms->a_.keys != _ms->temparray) {
-		alifMem_dataAlloc((AlifUSizeT)_ms->a_.keys);
+		alifMem_dataFree(_ms->a_.keys);
 		_ms->a_.keys = nullptr;
 	}
 }
