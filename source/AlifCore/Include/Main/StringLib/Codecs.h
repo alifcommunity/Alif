@@ -39,7 +39,7 @@ STRINGLIB(utf8Decode)(const char** _inPtr, const char* _end,
 					/* Read a whole AlifUSizeT at a time (either 4 or 8 bytes),
 					   and do a fast unrolled copy if it only contains ASCII
 					   characters. */
-					AlifUSizeT value = *(const AlifUSizeT*)_s;
+					size_t value = *(const size_t*)_s;
 					if (value & ASCII_CHAR_MASK)
 						break;
 #if ALIF_LITTLE_ENDIAN

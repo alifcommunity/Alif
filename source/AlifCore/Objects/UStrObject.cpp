@@ -2845,10 +2845,10 @@ static AlifSizeT ascii_decode(const char* _start, const char* _end, AlifUCS1* _d
 		const char* _p = p;
 		AlifUCS1* q = _dest;
 		while (_p + SIZEOF_SIZE_T <= _end) {
-			AlifUSizeT value = *(const AlifUSizeT*)_p;
+			size_t value = *(const size_t*)_p;
 			if (value & ASCII_CHAR_MASK)
 				break;
-			*((AlifUSizeT*)q) = value;
+			*((size_t*)q) = value;
 			_p += SIZEOF_SIZE_T;
 			q += SIZEOF_SIZE_T;
 		}

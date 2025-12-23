@@ -190,7 +190,6 @@
 	using AlifSizeT = int64_t;
 	using AlifUSizeT = uint64_t;
 	#define ALIF_SIZET_MAX LLONG_MAX
-	#define ALIF_SIZET_MIN LLONG_MIN
 	#define SIZEOF_SIZE_T 8
 	#define ALIGNOF_SIZE_T 8
 	#define SIZEOF_VOID_P 8
@@ -205,8 +204,7 @@
 	using AlifSizeT = int32_t;
 	using AlifUSizeT = uint32_t;
 	#define ALIF_SIZET INT_MAX
-	#define ALIF_SIZET_MAX LLONG_MAX
-	#define ALIF_SIZET_MIN LLONG_MIN
+	#define ALIF_SIZET_MAX INT_MAX
 	#define SIZEOF_VOID_P 4
 	#define ALIGNOF_SIZE_T 4
 	#define SIZEOF_SIZE_T 4

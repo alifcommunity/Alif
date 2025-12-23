@@ -185,7 +185,7 @@ public:
 		AlifUIntT compact : 1;
 		AlifUIntT ascii : 1;
 		AlifUIntT staticallyAllocated : 1;
-		AlifUIntT : 24;
+		unsigned int : 24;
 	} state{};
 };
 
