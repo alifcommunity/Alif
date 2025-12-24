@@ -199,10 +199,10 @@
 
 	#define HAVE_LARGEFILE_SUPPORT
 #else
-	using AlifIntT = int16_t;
-	using AlifUIntT = uint16_t;
-	using AlifSizeT = int32_t;
-	using AlifUSizeT = uint32_t;
+	using AlifIntT = int;
+	using AlifUIntT = unsigned int;
+	using AlifSizeT = long;
+	using AlifUSizeT = unsigned long;
 	#define ALIF_SIZET INT_MAX
 	#define ALIF_SIZET_MAX INT_MAX
 	#define SIZEOF_VOID_P 4
