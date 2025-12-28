@@ -2,9 +2,9 @@ name: Alif Unix Build
 
 on:
   push:
-    branches: ["Alif5.0"]
+    branches: ["main"]
   pull_request:
-    branches: ["Alif5.0"]
+    branches: ["main"]
 
 jobs:
   linux-build:

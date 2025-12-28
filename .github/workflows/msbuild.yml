@@ -7,9 +7,9 @@ name: Alif Windows Build
 
 on:
   push:
-    branches: ["Alif5.0"]
+    branches: ["main"]
   pull_request:
-    branches: ["Alif5.0"]
+    branches: ["main"]
 
 env:
   # Path to the solution file relative to the root of the project.
