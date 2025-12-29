@@ -621,8 +621,9 @@ resume_frame:
 				/* Restore previous frame and return. */
 				_thread->currentFrame = _frame->previous;
 				_thread->cppRecursionRemaining += ALIF_EVAL_CPP_STACK_UNITS;
-				return alifStackRef_asAlifObjectSteal(retval);
-				stackPointer += -1; //* review
+				AlifObject *result = alifStackRef_asAlifObjectSteal(retval);
+				stackPointer += -1;
+				return result;
 			} // ------------------------------------------------------------ //
 			TARGET(LOAD_BUILD_CLASS) {
 				_frame->instrPtr = nextInstr;

@@ -229,7 +229,7 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 		//case INSTRUMENTED_LINE:
 		//	return 0;
 		//case INSTRUMENTED_LOAD_SUPER_ATTR:
-		//	return 3;
+		//	return 0;
 		//case INSTRUMENTED_POP_JUMP_IF_FALSE:
 		//	return 0;
 		//case INSTRUMENTED_POP_JUMP_IF_NONE:
@@ -246,8 +246,8 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 		//	return 1;
 		//case INSTRUMENTED_YIELD_VALUE:
 		//	return 1;
-		//case INTERPRETER_EXIT:
-		//	return 1;
+	case INTERPRETER_EXIT:
+		return 1;
 	case IS_OP:
 		return 2;
 	case JUMP:
@@ -697,7 +697,7 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 		//case INSTRUMENTED_LINE:
 		//	return 0;
 		//case INSTRUMENTED_LOAD_SUPER_ATTR:
-		//	return 1 + (_oparg & 1);
+		//	return 0;
 		//case INSTRUMENTED_POP_JUMP_IF_FALSE:
 		//	return 0;
 		//case INSTRUMENTED_POP_JUMP_IF_NONE:
@@ -714,8 +714,8 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 		//	return 1;
 		//case INSTRUMENTED_YIELD_VALUE:
 		//	return 1;
-		//case INTERPRETER_EXIT:
-		//	return 0;
+	case INTERPRETER_EXIT:
+		return 0;
 	case IS_OP:
 		return 1;
 	case JUMP:
@@ -1357,7 +1357,7 @@ const uint8_t _alifOpcodeDeopt_[256] = {
 	0,//RESERVED, // RESERVED // 17
 	0,//GET_LEN, // GET_LEN // 18
 	0,//GET_YIELD_FROM_ITER, // GET_YIELD_FROM_ITER // 19
-	0,//INTERPRETER_EXIT, // INTERPRETER_EXIT // 20
+	INTERPRETER_EXIT, // INTERPRETER_EXIT // 20
 	LOAD_BUILD_CLASS, // LOAD_BUILD_CLASS // 21
 	LOAD_LOCALS, // LOAD_LOCALS // 22
 	MAKE_FUNCTION, // MAKE_FUNCTION // 23
