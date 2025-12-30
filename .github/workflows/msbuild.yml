@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: [Win-MSBuild]
+    runs-on: [Windows]
     strategy:
       fail-fast: false
       matrix:
